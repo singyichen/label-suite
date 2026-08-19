@@ -1938,7 +1938,7 @@ function buildRelationStateMachine(container, relationTypes, refresh, allowEntit
   function chip(label, slot, active) {
     var c = document.createElement('span');
     var filled = !!slot;
-    c.style.cssText = 'display:inline-flex;gap:4px;padding:2px 8px;border-radius:999px;border:1.5px solid ' + (active ? 'var(--color-primary)' : 'var(--color-border)') + ';background:' + (filled ? '#EEF2FF' : 'transparent') + ';color:' + (filled ? 'var(--color-primary)' : 'var(--color-text-soft)') + ';font-weight:600;';
+    c.style.cssText = 'display:inline-flex;gap:4px;padding:2px 8px;border-radius:999px;border:1.5px solid ' + (active ? 'var(--color-primary)' : 'var(--color-border)') + ';background:' + (filled ? 'var(--color-primary-soft-bg)' : 'transparent') + ';color:' + (filled ? 'var(--color-primary)' : 'var(--color-text-soft)') + ';font-weight:600;';
     c.textContent = label + '：' + (filled ? fmtRelSpan(slot) : '—');
     return c;
   }
@@ -2009,7 +2009,7 @@ function buildRelationStateMachine(container, relationTypes, refresh, allowEntit
 
   if (state.relMsg) {
     var msg = document.createElement('div');
-    msg.style.cssText = 'font-size:0.75rem;color:#E74C3C;margin-bottom:8px;';
+    msg.style.cssText = 'font-size:0.75rem;color:var(--color-error);margin-bottom:8px;';
     msg.textContent = state.relMsg;
     container.appendChild(msg);
   }
@@ -2035,7 +2035,7 @@ function buildEntityListRow(ent, color, opts) {
   var lang = (opts && opts.lang) || 'zh';
   var row = document.createElement('div');
   row.setAttribute('data-testid', 'entity-list-row');
-  row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 10px;margin-bottom:4px;background:#f8fafc;border-radius:6px;font-size:0.85rem;';
+  row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 10px;margin-bottom:4px;background:var(--color-slate-50);border-radius:6px;font-size:0.85rem;';
   var badge = document.createElement('span');
   badge.style.cssText = 'display:inline-block;padding:1px 6px;border-radius:4px;font-size:0.7rem;font-weight:700;color:#fff;background:' + (color || '#6366F1') + ';flex-shrink:0;';
   badge.textContent = ent.type;
@@ -2053,7 +2053,7 @@ function buildEntityListRow(ent, color, opts) {
   if (opts && opts.onDelete) {
     var delBtn = document.createElement('button');
     delBtn.type = 'button';
-    delBtn.style.cssText = 'border:1.5px solid #E74C3C;background:transparent;color:#E74C3C;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:0.7rem;font-weight:700;flex-shrink:0;';
+    delBtn.style.cssText = 'border:1.5px solid var(--color-error);background:transparent;color:var(--color-error);border-radius:4px;padding:2px 6px;cursor:pointer;font-size:0.7rem;font-weight:700;flex-shrink:0;';
     delBtn.textContent = lang === 'zh' ? '刪除' : 'Del';
     delBtn.addEventListener('click', function() { opts.onDelete(); });
     row.appendChild(delBtn);
@@ -2088,7 +2088,7 @@ function buildRelationTripleRow(triple, allRelTypes, opts) {
   content.appendChild(objSpan);
   if (triple.relType && allRelTypes.indexOf(triple.relType) >= 0) {
     var typeBadge = document.createElement('span');
-    typeBadge.style.cssText = 'margin-left:8px;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;background:#ECFDF5;color:#059669;border:1px solid rgba(5,150,105,0.3);';
+    typeBadge.style.cssText = 'margin-left:8px;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;background:var(--color-success-bg);color:var(--color-success);border:1px solid var(--color-success-border);';
     typeBadge.textContent = (lang === 'zh' ? '類型：' : 'type: ') + triple.relType;
     content.appendChild(typeBadge);
   }
@@ -2102,11 +2102,11 @@ function buildRelationTripleRow(triple, allRelTypes, opts) {
     typeBtn.style.cssText = 'border:1.5px solid var(--color-primary);background:transparent;color:var(--color-primary);border-radius:4px;padding:2px 6px;cursor:pointer;font-size:0.7rem;font-weight:700;';
     typeBtn.textContent = lang === 'zh' ? '類型' : 'type';
     var typeMenu = document.createElement('div');
-    typeMenu.style.cssText = 'display:none;position:absolute;right:0;bottom:calc(100% + 4px);background:#2c2c2c;border-radius:8px;padding:4px 0;min-width:180px;max-height:220px;overflow-y:auto;z-index:100;box-shadow:0 4px 16px rgba(0,0,0,0.3);';
+    typeMenu.style.cssText = 'display:none;position:absolute;right:0;bottom:calc(100% + 4px);background:var(--color-white);border:1px solid var(--color-border);border-radius:8px;padding:4px 0;min-width:180px;max-height:220px;overflow-y:auto;z-index:100;box-shadow:0 4px 16px rgba(0,0,0,0.3);';
     allRelTypes.forEach(function(rt) {
       var item = document.createElement('div');
-      item.style.cssText = 'padding:6px 14px;font-size:0.8rem;color:#e0e0e0;cursor:pointer;display:flex;align-items:center;gap:6px;';
-      item.addEventListener('mouseenter', function() { item.style.background = '#3c3c3c'; });
+      item.style.cssText = 'padding:6px 14px;font-size:0.8rem;color:var(--color-ink);cursor:pointer;display:flex;align-items:center;gap:6px;';
+      item.addEventListener('mouseenter', function() { item.style.background = 'var(--color-slate-50)'; });
       item.addEventListener('mouseleave', function() { item.style.background = 'transparent'; });
       var check = document.createElement('span');
       check.style.cssText = 'width:14px;font-size:0.75rem;';
@@ -2135,7 +2135,7 @@ function buildRelationTripleRow(triple, allRelTypes, opts) {
   if (opts && opts.onDelete) {
     var delBtn = document.createElement('button');
     delBtn.type = 'button';
-    delBtn.style.cssText = 'border:1.5px solid #E74C3C;background:transparent;color:#E74C3C;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:0.7rem;font-weight:700;flex-shrink:0;margin-left:4px;';
+    delBtn.style.cssText = 'border:1.5px solid var(--color-error);background:transparent;color:var(--color-error);border-radius:4px;padding:2px 6px;cursor:pointer;font-size:0.7rem;font-weight:700;flex-shrink:0;margin-left:4px;';
     delBtn.textContent = lang === 'zh' ? '刪除' : 'Del';
     delBtn.addEventListener('click', function() { opts.onDelete(); });
     row.appendChild(delBtn);
@@ -3029,8 +3029,8 @@ function renderTokenClassPreview(container, outKey) {
     var tag = ps.tokens[i];
     var matchedLabel = labels.find(function(label) { return getSequenceBaseLabel(tag, [label]) === label.name; });
     var matchedColor = matchedLabel ? safeCssColor(matchedLabel.color, '#6366F1') : null;
-    var bgColor = matchedColor ? matchedColor + '33' : '#f1f5f9';
-    var borderColor = matchedColor || '#e2e8f0';
+    var bgColor = matchedColor ? matchedColor + '33' : 'var(--color-border-muted)';
+    var borderColor = matchedColor || 'var(--color-border)';
     var textColor = matchedColor || 'var(--color-ink)';
     tokEl.setAttribute(
       'aria-label',
@@ -3609,7 +3609,7 @@ function renderSchemaFields() {
       var evValue = document.createElement('div');
       evValue.className = 'field-readonly-value';
       evValue.textContent = evidenceFields.join(', ');
-      evValue.style.cssText = 'padding:6px 10px;background:#f1f5f9;border-radius:6px;color:#475569;font-size:0.85rem;';
+      evValue.style.cssText = 'padding:6px 10px;background:var(--color-border-muted);border-radius:6px;color:var(--color-text-soft);font-size:0.85rem;';
       evWrap.appendChild(evValue);
       fieldSection.appendChild(evWrap);
     }
@@ -4000,7 +4000,7 @@ function renderSentencePairsPreview(preview, config) {
 
   if (config.allow_unsure) {
     var unsureDiv = document.createElement('div');
-    unsureDiv.style.cssText = 'margin-top:8px;padding-top:8px;border-top:1px solid #e2e8f0;';
+    unsureDiv.style.cssText = 'margin-top:8px;padding-top:8px;border-top:1px solid var(--color-border);';
     var unsureRow = document.createElement('label');
     unsureRow.className = 'annotation-preview-option';
     var unsureRadio = document.createElement('input');
@@ -4009,7 +4009,7 @@ function renderSentencePairsPreview(preview, config) {
     unsureRadio.disabled = true;
     unsureRow.appendChild(unsureRadio);
     var unsureSpan = document.createElement('span');
-    unsureSpan.style.color = '#94a3b8';
+    unsureSpan.style.color = 'var(--color-ink-muted)';
     unsureSpan.textContent = state.lang === 'en' ? 'Unsure' : '不確定';
     unsureRow.appendChild(unsureSpan);
     unsureDiv.appendChild(unsureRow);
@@ -4022,7 +4022,7 @@ function renderSentencePairsPreview(preview, config) {
     var noteTextarea = document.createElement('textarea');
     noteTextarea.disabled = true;
     noteTextarea.placeholder = state.lang === 'en' ? 'Add a note (optional)' : '新增備註（選填）';
-    noteTextarea.style.cssText = 'width:100%;border:1px solid #e2e8f0;border-radius:6px;padding:6px 10px;font-size:0.8rem;resize:vertical;min-height:48px;background:#f8fafc;color:#94a3b8;';
+    noteTextarea.style.cssText = 'width:100%;border:1px solid var(--color-border);border-radius:6px;padding:6px 10px;font-size:0.8rem;resize:vertical;min-height:48px;background:var(--color-slate-50);color:var(--color-ink-muted);';
     noteWrap.appendChild(noteTextarea);
     preview.appendChild(noteWrap);
   }

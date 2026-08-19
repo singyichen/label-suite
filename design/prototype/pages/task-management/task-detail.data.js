@@ -20,9 +20,9 @@
           type: 'single_label',
           config: {
             label_options: [
-              { name: 'positive', color: '#2ECC71' },
-              { name: 'neutral', color: '#F39C12' },
-              { name: 'negative', color: '#E74C3C' }
+              { name: 'positive', color: '#10B981' },
+              { name: 'neutral', color: '#F59E0B' },
+              { name: 'negative', color: '#EC4899' }
             ]
           }
         }
@@ -66,12 +66,12 @@
           type: 'multi_label',
           config: {
             label_options: [
-              { name: 'happy', color: '#2ECC71' },
-              { name: 'sad', color: '#3498DB' },
-              { name: 'angry', color: '#E74C3C' },
-              { name: 'surprise', color: '#F39C12' },
-              { name: 'fear', color: '#9B59B6' },
-              { name: 'disgust', color: '#1ABC9C' }
+              { name: 'happy', color: '#10B981' },
+              { name: 'sad', color: '#0EA5E9' },
+              { name: 'angry', color: '#EC4899' },
+              { name: 'surprise', color: '#F59E0B' },
+              { name: 'fear', color: '#8B5CF6' },
+              { name: 'disgust', color: '#14B8A6' }
             ],
             max_selections: 3
           }
@@ -325,10 +325,10 @@
           type: 'sequence_tagging',
           config: {
             entities: [
-              { name: 'PER', color: '#E74C3C' },
-              { name: 'ORG', color: '#3498DB' },
-              { name: 'LOC', color: '#2ECC71' },
-              { name: 'TIME', color: '#F39C12' }
+              { name: 'PER', color: '#EC4899' },
+              { name: 'ORG', color: '#0EA5E9' },
+              { name: 'LOC', color: '#10B981' },
+              { name: 'TIME', color: '#F59E0B' }
             ],
             tagging_scheme: 'BIO',
             tokenization: {
@@ -379,9 +379,9 @@
           type: 'entity_recognition',
           config: {
             entities: [
-              { name: 'target', color: '#3498DB' },
-              { name: 'aspect', color: '#2ECC71' },
-              { name: 'opinion', color: '#E74C3C' }
+              { name: 'target', color: '#0EA5E9' },
+              { name: 'aspect', color: '#10B981' },
+              { name: 'opinion', color: '#EC4899' }
             ],
             allow_overlapping: false
           }
@@ -609,16 +609,16 @@
           type: 'entity_recognition',
           config: {
             entities: [
-              { name: 'BODY', color: '#4A90D9' },
-              { name: 'DISE', color: '#E74C3C' },
-              { name: 'SYMP', color: '#F39C12' },
-              { name: 'DRUG', color: '#2ECC71' },
-              { name: 'INST', color: '#9B59B6' },
-              { name: 'SUPP', color: '#1ABC9C' },
-              { name: 'EXAM', color: '#E67E22' },
-              { name: 'TREAT', color: '#3498DB' },
-              { name: 'CHEM', color: '#95A5A6' },
-              { name: 'TIME', color: '#34495E' }
+              { name: 'BODY', color: '#6366F1' },
+              { name: 'DISE', color: '#EC4899' },
+              { name: 'SYMP', color: '#F59E0B' },
+              { name: 'DRUG', color: '#10B981' },
+              { name: 'INST', color: '#8B5CF6' },
+              { name: 'SUPP', color: '#14B8A6' },
+              { name: 'EXAM', color: '#F97316' },
+              { name: 'TREAT', color: '#0EA5E9' },
+              { name: 'CHEM', color: '#6366F1' },
+              { name: 'TIME', color: '#10B981' }
             ],
             allow_overlapping: false
           }
@@ -810,9 +810,9 @@
           type: 'single_label',
           config: {
             label_options: [
-              { name: 'entailment', color: '#2ECC71' },
-              { name: 'neutral', color: '#F39C12' },
-              { name: 'contradiction', color: '#E74C3C' }
+              { name: 'entailment', color: '#10B981' },
+              { name: 'neutral', color: '#F59E0B' },
+              { name: 'contradiction', color: '#EC4899' }
             ]
           }
         }
@@ -919,9 +919,9 @@
           type: 'entity_recognition',
           config: {
             entities: [
-              { name: 'Target', color: '#3498DB' },
-              { name: 'Aspect', color: '#2ECC71' },
-              { name: 'Opinion', color: '#E74C3C' }
+              { name: 'Target', color: '#0EA5E9' },
+              { name: 'Aspect', color: '#10B981' },
+              { name: 'Opinion', color: '#EC4899' }
             ],
             allow_overlapping: true
           }
