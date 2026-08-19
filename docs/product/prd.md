@@ -1,17 +1,17 @@
 # Label Suite — 產品需求文件（Product Requirements Document）
 
-**版本：** 1.0.0
-**日期：** 2026-06-02
+**版本：** 1.1.0
+**日期：** 2026-08-19
 **狀態：** Draft
 **撰寫者：** Team Lead（基於 Research Phase 綜合）
 **可追溯來源：**
 - `specs/_governance/constitution.md` v1.29.1
-- `docs/product/ia/information-architecture.md` v1.4.3
-- `docs/product/story-map/story-map.md` v1.3.0
-- `docs/product/impact-map/impact-map.md` v1.1.0
+- `docs/product/ia/information-architecture.md` v1.5.0
+- `docs/product/story-map/story-map.md` v1.4.0
+- `docs/product/impact-map/impact-map.md` v1.2.0
 - `docs/product/functional-map/functional-map.md` v6
 - `docs/product/functional-map/task-type-taxonomy.md`
-- `docs/product/baseline/product-baseline-summary.md` v1.0.0
+- `docs/product/baseline/product-baseline-summary.md` v1.1.0
 - `docs/thesis/outline.zh-TW.md`
 - `specs/STATUS.md`
 - `README.md`
@@ -45,7 +45,7 @@ Label Suite 的核心價值主張在於：研究人員只需撰寫一份簡單�
 
 | 論文貢獻 | 系統功能對應 |
 |---------|------------|
-| C-01：配置驅動通用型標記平台 | Config Builder（spec 013）+ task type registry + foundation spec |
+| C-01：配置驅動通用型標記平台 | Config Builder（spec 013）+ outputs[] registry（ADR-029）+ foundation spec |
 | C-02：整合一體化標記工作流 | 任務建立 → Dry Run → IAA → Official Run → 匯出（specs 013, 014, 015） |
 | C-03：內建資料集分析功能 | Dataset Stats（spec 016）+ Quality Monitor（spec 017） |
 | C-04：降低進入門檻 | 四步驟精靈建立任務（spec 013）+ 直覺式標記介面（spec 015） |
@@ -70,7 +70,7 @@ Label Suite 的核心價值主張在於：研究人員只需撰寫一份簡單�
 | 識別碼 | 名稱 | 職責 | 取得方式 |
 |--------|------|------|----------|
 | `project_leader` | 專案負責人 | 建立任務、設定流程、指派成員、主導 Dry/Official Run、匯出結果 | 建立任務時自動取得 |
-| `reviewer` | 審核員 | 審查標記結果、協助產出標準答案、查看品質報告 | 由 `project_leader` 指派 |
+| `reviewer` | 審核員 | 逐標記員審核標記結果、不一致時直接修正標籤、查看品質報告 | 由 `project_leader` 指派 |
 | `annotator` | 標記員 | 執行標記作業（試標/正式標）、查看個人進度 | 由 `project_leader` 指派 |
 
 > 重要原則：同一使用者可在任務 A 擔任 `project_leader`，同時在任務 B 擔任 `annotator`。任務角色不依賴系統角色繼承。
@@ -99,7 +99,7 @@ Label Suite 的核心價值主張在於：研究人員只需撰寫一份簡單�
 → Dashboard 查看待標記任務（Dry Run 或 Official Run）
 → 點擊「開始 / 繼續標記」→ annotation-list 清單頁
 → 點擊單筆資料 → annotation-workspace
-→ 依 task_type 執行標記（分類 / 回歸 / 序列標記 / 關係抽取）
+→ 依 outputs[] 組合執行標記（分類 / 回歸 / 實體辨識 / 關係識別 / 序列標記 等）
 → 草稿自動儲存；提交並載入下一筆
 → 全部完成 → 回到清單，樣本狀態更新為已提交
 ```
@@ -110,7 +110,7 @@ Label Suite 的核心價值主張在於：研究人員只需撰寫一份簡單�
 登入
 → Dashboard 查看待審任務
 → annotation-list（審核清單）→ annotation-workspace（審核模式）
-→ 通過 / 退回標記結果（附原因）；協助產出 Dry Run 標準答案
+→ 逐標記員審核：一致 → 下一筆；不一致 → 當場直接修正標籤，無法決定則歸入爭議池由第三人仲裁
 → dataset-analysis stats tab：查看統計總覽
 → dataset-analysis quality tab：查看 IAA 報告 / 異常偵測
 ```
@@ -174,7 +174,7 @@ Label Suite 的核心價值主張在於：研究人員只需撰寫一份簡單�
 |-------|------|--------|-----------|
 | FR-T01 | `project_leader` 可透過四步驟精靈建立任務（基本資料 + 標記設定檔 + 啟動設定 + 標記說明），建立完成後自動取得任務 `project_leader` 角色 | P0 | spec 013 |
 | FR-T02 | Config Builder 提供視覺化（Visual 模式，預設）與原始碼（Code 模式）兩種設定介面，兩者可互相切換 | P0 | spec 013；IA §4 |
-| FR-T03 | Config Builder 必須支援：單句分類（含多標籤）、單句評分 / 回歸、句對任務、序列標記（NER / Aspect）、關係抽取（含 Triple）五種任務類型 | P0 | spec 013；task-type-taxonomy |
+| FR-T03 | Config Builder 必須支援以 `input_type`（`single_item` / `item_pair`）與可組合的 `outputs[]`（`single_label`、`multi_label`、`single_dim`、`multi_dim`、`entity_recognition`、`relation_identification`、`sequence_tagging`、`free_text`）定義任務，取代固定任務類型 enum | P0 | spec 013；ADR-029；task-type-taxonomy |
 | FR-T04 | 新增任務類型必須透過 registry / schema 擴充，不修改 Step 1~4 核心流程 | P0 | ADR-010；constitution 原則 II |
 | FR-T05 | 任務列表頁顯示使用者有成員資格的任務（`super_admin` 顯示全平台任務），支援搜尋與狀態篩選 | P1 | spec 010 |
 | FR-T06 | 任務詳情頁提供「任務概覽」、「標記結果」、「標記進度」、「工時紀錄」、「成員管理」五個 tab | P1 | spec 014 |
@@ -195,7 +195,7 @@ Label Suite 的核心價值主張在於：研究人員只需撰寫一份簡單�
 | FR-AN04 | Dry Run 模式：所有 annotator 標記相同樣本，結果不計入正式資料集 | P0 | spec 015；constitution 原則 III |
 | FR-AN05 | Official Run 模式：每位 annotator 分配不重疊的資料（依樣本快照切分） | P0 | spec 015 |
 | FR-AN06 | Annotator 介面的 Ground Truth 答案永不暴露（Data Fairness）；Reviewer 可見但 Annotator 不可見 | P0 | constitution 原則 III / NON-NEGOTIABLE |
-| FR-AN07 | Reviewer 在 `annotation-workspace` 可執行審核模式：通過 / 退回標記結果、修改或刪除錯誤標記 | P1 | spec 015 |
+| FR-AN07 | Reviewer 在 `annotation-workspace` 逐標記員審核：一致 → 下一筆；不一致 → 當場修改或刪除錯誤標記；無法決定則歸入爭議池由第三人仲裁 | P1 | spec 015 |
 | FR-AN08 | 右欄「說明與檔案」在每筆標記頁必須持續可見，翻頁時不收起或清空 | P0 | spec 015；IA §4 |
 | FR-AN09 | `annotation-workspace` 必須記錄標記歷程（History），Reviewer 可追溯每筆的修改紀錄 | P1 | spec 015 |
 
@@ -350,7 +350,7 @@ Label Suite 的核心價值主張在於：研究人員只需撰寫一份簡單�
 | QID | 問題 | 影響範圍 | 需確認對象 |
 |-----|------|---------|-----------|
 | Q-01 | Help Button（spec 018）目前標記為 `deferred`，是否確認排除於 Demo Paper 範疇？ | shared 模組 | 論文作者 |
-| Q-02 | 句對任務（`sentence_pairs`）的 demo dataset 與使用情境是否已確定？目前 spec 013 / 015 / 017 已將句對納入 config、workspace 與品質分析範圍 | spec 013 / 015 / 017 | 論文作者 |
+| Q-02 | 項目對型任務（`input_type = item_pair`）的 demo dataset 與使用情境是否已確定？目前 spec 013 / 015 / 017 已將 item_pair 輸入類型納入 config、workspace 與品質分析範圍 | spec 013 / 015 / 017 | 論文作者 |
 | Q-03 | 資料集匯入目前僅支援 txt / csv / tsv / json（spec 013）。是否有其他格式需求（如 JSONL）？ | spec 013 | 論文作者 |
 | Q-04 | SUS 問卷的受試者招募策略（5~10 位實驗室成員），目前 user study 的計畫時程是否確定？ | R2/R3 驗收 | 指導教授 / 論文作者 |
 | Q-05 | `annotation-workspace` 中「標記說明強制顯示」（spec 013/015）的確認狀態是否需要持久化至 DB？若使用者換瀏覽器，應重新顯示還是跳過？ | spec 015 | 論文作者 |
@@ -363,3 +363,4 @@ Label Suite 的核心價值主張在於：研究人員只需撰寫一份簡單�
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
 | 1.0.0 | 2026-06-02 | 初始版本；依 research phase 綜合結果建立，彙整產品目標、使用者旅程、功能需求、非功能需求、架構約束、範疇外與開放問題 |
+| 1.1.0 | 2026-08-19 | 同步審核員模型（逐標記員審核 + 當場直接修正 + 爭議池第三人仲裁，取代通過/退回聚合語意）、gold 語意（僅 Official Run 審核定案後產生）、輸出類型改為 `input_type` + `outputs[]` 組合模型（取代固定任務類型 enum）；依 issue #202 |

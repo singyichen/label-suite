@@ -3,7 +3,7 @@
 > **用途：** 作為 SDD 開發的參考基準。每份 `spec.md` 撰寫前，應先對照本文件確認頁面歸屬、使用者角色、進入條件與導覽關係。
 >
 > **基礎來源：** [`functional-map.md`](../functional-map/functional-map.md)
-> **版本：** 1.4.3（2026-05-29）
+> **版本：** 1.5.0（2026-08-19）
 
 ---
 
@@ -25,7 +25,7 @@
 | 任務角色 | 識別碼 | 職責 | 指派方式 |
 |----------|--------|------|----------|
 | 專案負責人 | `project_leader` | 管理任務設定、指派成員、發布 Dry Run / Official Run、匯出資料 | 建立任務時**自動指派**給任務建立者 |
-| 審核員 | `reviewer` | 審查標記結果、協助產出標準答案、查看品質報告 | 由任務 `project_leader` 指派 |
+| 審核員 | `reviewer` | 逐標記員審核標記結果、不一致時直接修正標籤、查看品質報告 | 由任務 `project_leader` 指派 |
 | 標記員 | `annotator` | 執行標記作業（試標 / 正式標）、查看個人進度 | 由任務 `project_leader` 指派 |
 
 > **Task Role 重點：** 同一使用者可在任務 A 擔任 `project_leader`，同時在任務 B 擔任 `annotator`。任務層級的授權透過查詢 `task_membership(task_id, user_id, task_role)` 表決定，不依賴 JWT 系統角色。系統角色不再有繼承關係。
@@ -315,7 +315,7 @@ flowchart TD
   - 上傳資料集（txt / csv / tsv / json）
   - 選擇任務類型（決定 Step 2 的 標記設定檔 內容）
 - **Step 2 — 標記設定檔（介面輔助設定，無需手寫 config）：**
-  - **架構原則：** `task_type` 由 registry / schema 驅動，不得寫死於前端流程；新增任務類型不得要求修改核心流程或路由
+  - **架構原則：** `input_type` + `outputs[]` 組合由 registry / schema 驅動，不得寫死於前端流程；新增輸出類型不得要求修改核心流程或路由
   - 提供「從範本開始」入口：常用任務類型的預設 config（如多標籤分類、VA 評分、醫療 NER、關係抽取），可直接套用後微調，降低設定門檻
   - **Visual 模式（預設）：**
     - **單句分類型（示例）：** 新增 / 編輯標籤清單（Label Name + 說明），支援多標籤 / 單標籤切換（對應 MultiLabel 實務）
@@ -332,16 +332,16 @@ flowchart TD
   - 分別維護「提供給標記員」與「提供給審核員」的說明內容與附件
   - 上傳標記範本 / 說明文件（PDF / 圖片 / Markdown），顯示於 `annotation-workspace` 的「說明與檔案」區
   - 可設定「開始標記前強制顯示」：Annotator 首次進入該任務標記介面時先跳出說明 modal，確認後才進入標記介面；同一使用者已確認後不因重新整理重複彈出
-- **任務類型（`task_type`）：**
-  - 由 `task_type` registry 決定可選型別與對應 config schema
-  - **研究情境必備預設（第一層）：** 單句分類（含多標籤）、單句評分 / 回歸、序列標記（含 Aspect 抽取）、關係抽取（含 Triple / 可擴充五元組）
-  - **延伸預設（第二層）：** 句對任務（相似度 / 蘊含）
-  - 新增任務類型時應透過 registry / schema 擴充，不修改核心流程（Step 1–4）、核心路由或權限框架
+- **輸出類型組合（`input_type` + `outputs[]`）：**
+  - 由 `outputs[]` registry 決定可選輸出類型與對應 config schema；`input_type`（`single_item` / `item_pair`）決定輸入結構
+  - **研究情境必備預設：** `single_label`（含多標籤 `multi_label`）、`single_dim` / `multi_dim` 評分、`sequence_tagging`（含 Aspect 抽取）、`entity_recognition` + `relation_identification`（含 Triple）
+  - **延伸預設：** `item_pair` 輸入型任務（相似度 / 蘊含，搭配 `single_label` / `multi_label`）
+  - 新增輸出類型時應透過 registry / schema 擴充，不修改核心流程（Step 1–4）、核心路由或權限框架
   - **研究生目前使用情境覆蓋檢核：**
-    - MultiLabel 勾選分類 → 單句分類（已覆蓋）
-    - VA 分數標記 → 單句評分 / 回歸（已覆蓋）
-    - Aspect 抽取 / 校正 → 序列標記（已覆蓋）
-    - Entity + Relation + Triple（五元組流程）→ 關係抽取（已覆蓋；五元組由 relation schema 擴充欄位承接）
+    - MultiLabel 勾選分類 → `multi_label`（已覆蓋）
+    - VA 分數標記 → `multi_dim`（已覆蓋）
+    - Aspect 抽取 / 校正 → `sequence_tagging`（已覆蓋）
+    - Entity + Relation + Triple（五元組流程）→ `entity_recognition` + `relation_identification`（已覆蓋；五元組由 relation schema 擴充欄位承接）
 - **空狀態：** 不適用（此頁為建立流程，永遠有內容）
 - **任務建立完成：** 系統自動在 `task_membership` 建立一筆紀錄，任務建立者的任務角色設為 `project_leader`
 - **離開方式：** 建立成功 → `task-detail`；取消 → `task-list`
@@ -360,7 +360,7 @@ flowchart TD
 - **Tab 切換：** 頁內切換，不觸發路由跳轉
 - **Overview IA 結構：**
   - `基本資料`：任務名稱、任務類型、資料集總筆數、建立者、建立/更新時間；資料集檔案清單只在編輯模式揭露
-  - `標記設定`：依 `task_type` registry / schema 動態顯示摘要與編輯欄位，不顯示與目前任務類型無關的固定欄位
+  - `標記設定`：依 `outputs[]` registry / schema 動態顯示摘要與編輯欄位，不顯示與目前輸出類型無關的固定欄位
   - `說明文件上傳`：分為 `提供給標記員` 與 `提供給審核員` 兩個角色區塊，並共用「開始標記前強制顯示」狀態
   - `抽樣設定`：管理每回合抽樣筆數、IAA 計算方式、目標 IAA、最少標記者數與資料隔離；固定筆數模式，不提供百分比抽樣
   - `任務狀態與執行控制`：顯示任務階段、試標回合、樣本池分配、達標條件、回合歷程與下一步操作
@@ -442,7 +442,7 @@ flowchart TD
   - 說明檔案至少支援快速預覽（圖片/Markdown）與新分頁開啟（PDF）
 - **功能（Annotator）：** 標記操作區、說明與範例、進度指示器（即時顯示完成數）、儲存 / 提交
   - **標記說明強制顯示：** 若 Project Leader 在任務設定中啟用，Annotator 首次進入該任務時先顯示一次說明 modal；確認後不因重新整理重複彈出，進入後右欄仍持續顯示說明與檔案
-- **功能（Reviewer）：** 審查模式，可通過 / 退回標記結果、直接修改或刪除錯誤標記、協助產出 Dry Run 標準答案（多數決或手動確認）
+- **功能（Reviewer）：** 逐標記員審核模式，一致 → 下一筆；不一致 → 當場直接修改或刪除錯誤標記；不一致項進入爭議池由第三人仲裁
 - **標記歷程（History）：** 每筆資料的所有標記修改紀錄（誰、何時、改成什麼），Reviewer 可追溯標記變更歷程
 - **介面骨架（Mobile，`<= MOBILE_BP`）：**
   - 保留上方任務目標列（精簡版）與中欄主操作區
@@ -586,8 +586,8 @@ sequenceDiagram
 
   R->>AL: 先進入標記清單，選擇待審資料
   R->>AW: 進入審查模式，逐筆審核
-  R->>AW: 通過 / 退回標記結果
-  Note over AW: Dry Run 階段：協助產出標準答案（多數決 / 手動確認）
+  R->>AW: 逐標記員審核：一致 → 下一筆，不一致 → 當場修正標籤
+  Note over AW: 不一致項進入爭議池，由第三人仲裁
   R->>DS: 查看統計總覽（Sentence / Token / Label 分佈）
   R->>DQ: 查看 IAA 報告與異常偵測結果
 ```
@@ -731,6 +731,7 @@ specs/foundation/000-foundation/
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.5.0 | 2026-08-19 | 同步審核員模型（逐標記員審核 + 當場直接修正 + 爭議池第三人仲裁，取代通過/退回聚合語意，含旅程 C 序列圖）、`task-new` 任務類型敘述改為 `input_type` + `outputs[]` 組合模型（取代固定 `task_type` registry 語意，`dataset-analysis` 統計/品質章節不在本次調整範圍）；依 issue #202 |
 | 1.4.3 | 2026-05-29 | 補充 Foundation Spec 與 IA / SDD 的關係：Foundation 作為所有 feature spec 的上游工程基準，新增 P0 Foundation 開發批次與 `000-foundation` spec 條目 |
 | 1.4.2 | 2026-05-19 | 同步通知設定 IA：`profile` 納入通知設定區塊，通知欄位改為「電子郵件」，事件增為六項並新增「正式標記全員完成」；Official Run 全員完成時通知 `project_leader` |
 | 1.4.1 | 2026-05-19 | 依 `014-task-detail` 最新規格同步 `task-detail` IA：補齊 Overview 5 區塊、`draft → dry_run_in_progress → waiting_iaa_confirmation → official_run_in_progress → completed` 狀態機、stepper 顯示階段、單一執行判定 banner、樣本池分配、試標回合歷程、執行控制按鈕對應與標記清單建立時機 |
