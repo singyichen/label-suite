@@ -601,7 +601,7 @@
       var isActive = ps.activeEntityType === label.name;
       btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
       var color = label.color || 'var(--color-primary)';
-      btn.style.cssText = 'padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid ' + color + ';color:' + (isActive ? '#fff' : color) + ';background:' + (isActive ? color : 'transparent') + ';';
+      btn.style.cssText = 'padding:4px 10px;border-radius:var(--radius-md);font-size:12px;font-weight:700;cursor:pointer;border:2px solid ' + color + ';color:' + (isActive ? 'var(--color-white)' : color) + ';background:' + (isActive ? color : 'transparent') + ';';
       btn.textContent = label.name;
       btn.addEventListener('click', function () {
         ps.activeEntityType = label.name;
@@ -2441,7 +2441,7 @@
     card.appendChild(title);
 
     var note = document.createElement('p');
-    note.style.cssText = 'font-size:12px;color:var(--color-text-secondary);margin:0 0 10px;';
+    note.style.cssText = 'font-size:12px;color:var(--color-text-soft);margin:0 0 10px;';
     note.textContent = t('arbitrationNote');
     card.appendChild(note);
 
