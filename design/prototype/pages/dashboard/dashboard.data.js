@@ -206,7 +206,11 @@
           'Reviewer A · 8 Annotators · 18% Completed'
         ),
         progress: 18,
-        runType: 'dry_run',
+        /* Matches T003's annotator/reviewer work items in
+           LabelSuiteAssignmentSeeds (dashboard.assignments.js), which are
+           both official_run -- was 'dry_run' and contradicted task-list.html
+           /task-detail.html's official_run_in_progress status (issue #194). */
+        runType: 'official_run',
         status: 'in_progress',
       },
       {
