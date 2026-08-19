@@ -2254,6 +2254,12 @@
       </div>
 
       <div id="tabPanelMount"></div>
+
+      <div id="taskNotFound" class="panel hidden" role="alert" aria-live="polite">
+        <p class="panel-title" id="taskNotFoundTitle"></p>
+        <p class="status-hint" id="taskNotFoundMessage"></p>
+        <a class="mini-btn mini-btn-primary" id="taskNotFoundBackLink" href="./task-list.html" style="display:inline-block;margin-top:var(--space-md);text-decoration:none;"></a>
+      </div>
     </section>
   </div>
 </main>
@@ -2329,6 +2335,9 @@
       docTitle: '任務詳情 — Label Suite（原型）',
       bcRoot: '任務管理',
       bcCurrent: '任務詳情',
+      notFoundTitle: '找不到任務',
+      notFoundMessageTpl: '任務代碼 {taskId} 不存在，請確認網址或回到任務列表重新選擇任務。',
+      notFoundBackBtn: '回任務列表',
       pageTitle: '任務詳情',
       pageSubtitle: '檢視任務概覽與執行控制',
       tabOverview: '任務概覽',
@@ -2810,6 +2819,9 @@
       docTitle: 'Task Detail — Label Suite (Prototype)',
       bcRoot: 'Task Management',
       bcCurrent: 'Task Detail',
+      notFoundTitle: 'Task not found',
+      notFoundMessageTpl: 'Task {taskId} does not exist. Please check the URL or return to the task list to pick another task.',
+      notFoundBackBtn: 'Back to task list',
       pageTitle: 'Task detail',
       pageSubtitle: 'Review overview and run control',
       tabOverview: 'Task overview',
@@ -4281,19 +4293,28 @@ function interpolate(template, payload) {
 
   /* Resolves the current task against the unified seed data (single source of
      truth: task-list.data.js for name/status, task-detail.data.js for the
-     ADR-029 outputs[]/dataset/field-role config). Falls back to T001 when
-     taskId is missing or unknown to either seed. */
+     ADR-029 outputs[]/dataset/field-role config). Falls back to T001 only
+     when taskId is missing; an explicit but unknown taskId sets
+     TASK_NOT_FOUND instead of silently rendering T001 (issue #200). */
+  var TASK_NOT_FOUND = false;
+
   function resetTaskData(taskId) {
     TASK_DATA = cloneData(DEFAULT_TASK_DATA);
-    var resolvedId = (taskId && taskId.trim()) ? taskId.trim() : 'T001';
+    var requestedId = (taskId && taskId.trim()) ? taskId.trim() : '';
+    var resolvedId = requestedId || 'T001';
     var listTasks = (window.LabelSuiteTaskListData && window.LabelSuiteTaskListData.tasks) || [];
     var profiles = (window.LabelSuiteTaskDetailData && window.LabelSuiteTaskDetailData.profiles) || {};
     var listEntry = listTasks.filter(function(item) { return item.id === resolvedId; })[0];
     var profile = profiles[resolvedId];
+    TASK_NOT_FOUND = false;
     if (!listEntry || !profile) {
-      resolvedId = 'T001';
-      listEntry = listTasks.filter(function(item) { return item.id === resolvedId; })[0];
-      profile = profiles[resolvedId];
+      if (requestedId) {
+        TASK_NOT_FOUND = true;
+      } else {
+        resolvedId = 'T001';
+        listEntry = listTasks.filter(function(item) { return item.id === resolvedId; })[0];
+        profile = profiles[resolvedId];
+      }
     }
     TASK_DATA.taskId = resolvedId;
     if (listEntry) {
@@ -4328,6 +4349,29 @@ function interpolate(template, payload) {
     resetRunProgressData();
   }
 
+  /* Issue #200: renders the not-found state (mirrors annotation-list's
+     issue #154 fix) in place of the tabs/skeleton/panel content when the
+     requested task_id does not resolve to a known task. */
+  function renderTaskNotFoundState() {
+    var tabsBar = document.querySelector('.admin-tabs');
+    if (tabsBar) tabsBar.classList.add('hidden');
+    var skeleton = document.getElementById('loadingSkeleton');
+    if (skeleton) skeleton.classList.add('hidden');
+    var mount = document.getElementById('tabPanelMount');
+    if (mount) mount.classList.add('hidden');
+
+    state.lang = window.LabelSuiteSharedSidebar
+      ? window.LabelSuiteSharedSidebar.getStoredLang()
+      : 'zh';
+
+    var notFound = document.getElementById('taskNotFound');
+    if (!notFound) return;
+    notFound.classList.remove('hidden');
+    setText('taskNotFoundTitle', t('notFoundTitle'));
+    setText('taskNotFoundMessage', interpolate(t('notFoundMessageTpl'), { taskId: TASK_DATA.taskId }));
+    setText('taskNotFoundBackLink', t('notFoundBackBtn'));
+  }
+
   function parseRole() {
     var params = new URLSearchParams(window.location.search);
     var role = params.get('task_role') || params.get('role') || 'project_leader';
@@ -4342,6 +4386,7 @@ function interpolate(template, payload) {
     if (taskId && taskId.trim()) {
       TASK_DATA.taskId = taskId.trim();
     }
+    if (TASK_NOT_FOUND) return;
     applySamplingDefaultsToTaskData();
     if (urlStatus && STATUS_ORDER.indexOf(urlStatus) >= 0) TASK_DATA.status = urlStatus;
     normalizeTaskRunState();
@@ -9536,6 +9581,10 @@ document.getElementById('memberProgressSort').addEventListener('change', functio
 
   function init() {
     parseRole();
+    if (TASK_NOT_FOUND) {
+      renderTaskNotFoundState();
+      return;
+    }
     syncStatusFromDryRunProgress();
 
     state.lang = window.LabelSuiteSharedSidebar
