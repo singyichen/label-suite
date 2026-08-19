@@ -1,67 +1,59 @@
 # Label Suite — 里程碑規劃（Milestone Plan）
 
-**版本：** 1.0.1
-**日期：** 2026-06-03
-**可追溯來源：**
-- `docs/product/prd.md` v1.0.0
-- `docs/product/story-map/story-map.md` v1.3.0（R1 / R2 / R3 切片定義）
-- `specs/STATUS.md`（各 spec 目前開發狀態）
-- `README.md`（Research Roadmap：Phase 3 預計 2026-12 ~ 2028-02；Phase 4 預計 2028-01 ~ 2028-04）
-- `docs/thesis/outline.zh-TW.md`（論文章節與各項實驗時程）
+**版本：** 2.0.0
+
+**最後驗證：** 2026-08-19（17-spec inventory）
+
+**文件定位：** Navigation；產品里程碑目標，不是 feature 行為或實作狀態正典
+
+> [!IMPORTANT]
+> [`specs/STATUS.md`](../../specs/STATUS.md) 是 feature pipeline 狀態的唯一來源。本頁的狀態只是一個有日期的摘要；issue、PR、prototype 或歷史計畫完成都不等於 feature 已交付。行為以 owner spec 為準，未解衝突見 [`decision-log.md`](./decision-log.md)。
 
 ---
 
-## Overview（規劃說明）
+## 2026-08-19 交付狀態摘要
 
-### 規劃邏輯
+本次直接核對 `STATUS.md` 的 17 份現存 spec：
 
-里程碑規劃以**三個維度**為基礎：
+| Pipeline 狀態 | 數量 | Spec |
+|---|---:|---|
+| `plan-ready` | 2 | foundation-000、account-001 |
+| `in-progress` | 5 | dashboard-012、task-management-010／013／014、dataset-016 |
+| `spec-ready` | 9 | account-002～005、admin-006～007、shared-008、annotation-015、dataset-017 |
+| `deferred` | 1 | shared-018；不屬目前交付能力 |
 
-1. **Spec 完成度**：以 `specs/STATUS.md` 為真實狀態，foundation-000 目前 `in-progress`（最高上游依賴），其餘功能 spec 狀態為 `spec-ready` 或 `plan-ready`。
-2. **Story Map Release 切片**：R1（Demo Core）→ R2（Complete Role Flows）→ R3（Admin & Quality）為可驗收的功能批次。
-3. **論文截止日期**：依 `README.md` Research Roadmap，Phase 4（論文寫作）從 2028-01 開始，Advisor review 結束於 2028-04；因此**系統 Demo-Ready 的硬截止日期約為 2027-12**。
+規格成熟度表示 spec／plan／tasks／實作流程走到哪裡；產品里程碑表示希望可展示的能力與依賴。兩者不可互相推導。Foundation 目前是 `plan-ready`，而不是已完成的產品功能。
 
-### 關鍵前置依賴
+## 現行產品契約
 
-```
-Foundation（M0）← 所有功能模組的工程基準（不可繞過）
-  ↓
-Auth + Shared Sidebar（M1）← 所有頁面的前提
-  ↓
-Dashboard + Core Task Flow（M2 / M3）← R1 Demo Core 的核心
-  ↓
-Complete Role Flows（M4 / M5）← R2 四角色協作
-  ↓
-Dataset Analytics（M6）← IAA + 統計分析
-  ↓
-Admin & Quality（M7）← R3 完整功能集
-  ↓
-Demo-Ready（M8）← 論文 demo video + User Study
-```
+- **任務建立與輸出**：四步建立流程目前只接受 JSON 資料集；任務由 `input_type + outputs[] + field_role_map` 組成。八個 output key 為 `sequence_tagging`、`entity_recognition`、`relation_identification`、`single_label`、`multi_label`、`single_dim`、`multi_dim`、`free_text`，正典見 [ADR-029](../adr/029-output-type-composition.md) 與 [013](../../specs/task-management/013-task-new/spec.md)。
+- **生命週期**：`draft → dry_run_in_progress → waiting_iaa_confirmation → official_run_in_progress → completed`。完成前需正式標記全數提交、應完成 review unit 全數定案、無未解爭議、應仲裁項目完成，且品質指標可用；正典見 [ADR-022](../adr/022-task-state-machine-location.md) 與 [014](../../specs/task-management/014-task-detail/spec.md)。
+- **審核與仲裁**：`ReviewUnit = sample × annotator × run`，狀態為 `pending | approved | modified | disputed | finalized`；差異形成 `DisputeItem`，由合格且非當事人的 arbiter 仲裁。隱藏的 test-set ground truth 不得提供給 annotator 或 reviewer；正典見 [015](../../specs/annotation/015-annotation-workspace/spec.md)。
+- **品質分析**：依 `outputs[].type` 逐型統計與計算 IAA，複合任務逐型呈現；`free_text = not_applicable`，不計自動 IAA。指標與 threshold 只引用 [017 `OUTPUT_TYPE_IAA_REGISTRY`](../../specs/dataset/017-dataset-analysis-detail/spec.md)，本頁不複製技術表。
+- **交付輸出**：Task Detail 匯出為 JSON／JSON-MIN；review、dispute、arbitration 與 lifecycle gate 都必須保留可追溯證據。
 
----
+## 產品里程碑目標
 
-## Milestone Table（里程碑總表）
+下表描述成果門檻，不宣告實作已完成；每次 `STATUS.md` 變動後都需重新基準化。
 
-| 里程碑 | 目標 | 涵蓋模組 / 功能 | 主要交付物 | 預估週數 | 依賴 |
-|--------|------|----------------|-----------|---------|------|
-| **M0** | Foundation — 工程基準與 CI | foundation | FastAPI 骨架、DB migrations、Celery、Redis、CI pipeline、Prometheus / Sentry 整合 | 3 週 | — |
-| **M1** | Auth + Shared Sidebar | account（001）、shared（008）| Email / Password 登入 / 登出、JWT cookie auth、Sidebar Navbar RWD | 2 週 | M0 |
-| **M2** | Dashboard + 任務列表 | dashboard（012）、task-management（010） | 五角色動態 Dashboard、任務列表頁（搜尋 / 篩選） | 2 週 | M1 |
-| **M3** | 新增任務（Config Builder） | task-management（013）| 四步驟精靈、Config Builder 視覺 / Code 模式、8 種輸出類型與複選組合 | 4 週 | M2 |
-| **M4** | Annotation Workspace（Annotator 核心路徑） | annotation（015 — Annotator flow）| annotation-list、annotation-workspace（Dry Run / Official Run）、草稿儲存 | 4 週 | M3 |
-| **M5** | 任務管理完整協作流程 | task-management（014）| 任務詳情五 Tab、狀態機轉換（draft → dry_run → iaa → official → completed）、成員管理、工時紀錄 | 4 週 | M4 |
-| **M6** | 資料集分析 + 品質監控 | dataset（016 + 017） | 統計總覽（#Sentence/#Token/#Label）、IAA 計算（Kappa / F1 / ICC）、異常偵測 | 4 週 | M5 |
-| **M7** | Reviewer 審核 + 帳號完整 + Admin | annotation（015 — Reviewer flow）、account（003/004/005）、admin（006/007） | Reviewer 審核模式、帳號模組完整、使用者管理、角色設定 | 3 週 | M5 |
-| **M8** | Demo-Ready — 整合 + User Study | — | SUS 問卷、demo video、Label Studio 對比實驗、系統截圖 | 3 週 | M6 + M7 |
+| 里程碑 | 可展示成果 | Owner spec | 依賴與驗收證據 | 主要風險 |
+|---|---|---|---|---|
+| **M0** 工程基準 | 跨模組可依共同約束建置與驗證 | foundation-000 | Foundation plan 與成功標準 | 上游約束變動影響全線 |
+| **M1** 帳號與導覽 | Email／Password 入口、共用導覽與角色 gating | 001、008 | 角色邊界與 zh/en、RWD 驗收 | 002 仍只是 Google SSO no-op 入口 |
+| **M2** 任務入口 | 角色化 Dashboard 與任務列表 | 012、010 | membership、搜尋、篩選與多 output 標籤 | 依賴任務與成員資料一致性 |
+| **M3** 任務建立 | 四步精靈建立可組合 output 任務 | 013 | JSON upload、8-key registry、config 驗證 | producer 與 consumer 同步漂移 |
+| **M4** 標記作業 | 依 `outputs[]` 執行試標與正式標記 | 015 | 逐型作答、保存、提交與資料公平驗收 | 複合輸出與 tokenization 整合 |
+| **M5** 任務協作 | 五 Tab、成員、完整 lifecycle、審核設定與匯出 | 014 | 五態轉換、完成 gate、JSON／JSON-MIN | 跨角色 gate 缺一不可完成 |
+| **M6** 分析與品質 | 列表入口、逐 output 統計與 IAA | 016、017 | `x/y` gate、`free_text` 不適用、低一致樣本 | 小樣本與逐型指標誤讀 |
+| **M7** 審核與管理 | ReviewUnit 審核、爭議仲裁、帳號與 Admin | 015、002～007 | DisputeItem、RBAC 與審計證據 | 仲裁資格與隱藏答案隔離 |
+| **M8** Demo-ready | 端到端旅程與研究展示 | 上述 owner specs | 建立 → 試標／IAA → 正式標記 → 審核／仲裁 → completed → export | 研究時程不代表工程狀態 |
 
-**總預估：** 33 週（約 8 個月，含 1 個月整合緩衝）
-**建議開始日期：** 2026-12-01（對應 README Research Roadmap Phase 3 — Project infrastructure & CI 啟動時間）
-**建議 Demo-Ready 日期：** 2027-08 ~ 2027-09（符合 Phase 4 論文寫作啟動需求）
+## 歷史附件：2026-06 技術實作計畫（Frozen）
 
----
+> [!WARNING]
+> 以下 v1.0.1 內容只保留作為當時的規劃與決策背景，**不是現行需求、實作狀態、開發指令或驗收清單**。其中 endpoint、store、hook、資料表、library、coverage、日期、舊型別與簡寫狀態均已被上方現行摘要及 owner specs 取代；不得用來判定 feature 已交付。
 
-## Milestone Details（里程碑詳述）
+### 歷史 Milestone Details（里程碑詳述）
 
 ---
 
@@ -71,7 +63,7 @@ Demo-Ready（M8）← 論文 demo video + User Study
 
 建立所有功能模組必須遵守的工程基準：目錄結構、API 合約規範、後端分層、前端 vertical slice、Auth 骨架、Config-driven extensibility 契約、測試策略、CI quality gate，以及可觀測性（Prometheus / Sentry）整合。
 
-**涵蓋 Spec：** `specs/foundation/000-foundation/spec.md` v1.11.3（目前 `in-progress`）
+**涵蓋 Spec（當時快照）：** `specs/foundation/000-foundation/spec.md` v1.11.3；當時記錄為 `in-progress`，現況已由上方摘要取代
 
 **Definition of Done**
 
@@ -95,7 +87,7 @@ Demo-Ready（M8）← 論文 demo video + User Study
 **風險**
 
 - Celery + Redis 在 Docker Compose 的網路設定較複雜，可能需要額外調試時間
-- Foundation spec（spec v1.11.3）仍在 `in-progress`，若 spec 有重大修訂會影響後續里程碑的接口設計
+- 當時 Foundation spec 若有重大修訂，會影響後續里程碑的介面設計；現行成熟度只查 `STATUS.md`
 
 ---
 
@@ -248,7 +240,7 @@ Demo-Ready（M8）← 論文 demo video + User Study
 - [ ] 成員管理 tab：搜尋 + Email 邀請、指派任務角色
 - [ ] 標記結果 tab：JSON / JSON-MIN 匯出，記錄匯出歷程
 - [ ] 工時紀錄：`project_leader` 可依成員 / 日期 / 階段篩選；`reviewer` 只看自己
-- [ ] 狀態機 unit tests：合法 / 非法轉換（≥ 90% branch coverage）
+- [ ] 狀態機 unit tests：合法 / 非法轉換（當時規劃為 ≥ 90% 分支覆蓋率）
 - [ ] Integration tests：Celery 任務派送在狀態轉換後被呼叫
 
 **關鍵技術決策**
