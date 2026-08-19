@@ -32,14 +32,16 @@ Issue: <https://github.com/singyichen/label-suite/issues/180>
 
 ## 階段三：Playwright 驗收文件
 
-- [ ] 撰寫 `docs/product/e2e/cross-role-task-lifecycle-playwright-plan.md`
-- [ ] 正典旅程 Given/When/Then + 各角色獨立 BrowserContext/storage state
-- [ ] deterministic fixture、scenario ID、清理與平行隔離策略
-- [ ] 每個關鍵動作的 UI/URL/資料狀態/audit log 斷言
-- [ ] 錯誤情境（重新整理、重複提交、逾時、失敗復原、多人同時操作）
-- [ ] 證據保存規則（screenshot/trace/video）＋鍵盤/a11y/i18n/responsive 驗收
-- [ ] 主 agent 統一檢查：traceability coverage、placeholder、內部連結、Mermaid、驗收條件二元可測性
-- [ ] 必要時由 nlp-research-advisor 補充 IAA/試標抽樣/仲裁規則檢查
+四條平行工作流（W4 正典旅程／W5 fixture 基礎設施／W6 錯誤邊界+a11y／W7 方法論審查）草稿收於 `issue-180/phase3-drafts/`；整合層文件為正式產出。
+
+- [x] 撰寫 `docs/product/e2e/cross-role-task-lifecycle-playwright-plan.md`（v1.0，整合層＋四份 annex）
+- [x] 正典旅程 Given/When/Then（w4：12 步主線＋25 原子測試，🟢20／🟡5）＋ BrowserContext 分層聲明（共享 context＋每角色一 Page；storageState 留正式 E2E，矩陣裁決 #2）
+- [x] deterministic fixture、scenario ID、清理與平行隔離策略（w5：`cross-role/` 目錄、`XROLE-{slug}-{run_id}`、唯一 task_id 天然隔離＋`beforeEach` clear）
+- [x] 每個關鍵動作的 UI/URL/資料狀態/audit log 斷言（audit 原型層一律 N/A → 節點 15 `[Spike]`）
+- [x] 錯誤情境（w6：32 情境——重新整理/重複提交/失敗復原/近似並發；6 項全端-only 明文排除）
+- [x] 證據保存規則（trace 現況＋`cross-role` 局部 screenshot/video 覆蓋提案）＋鍵盤/a11y/i18n/responsive 驗收（A11Y/I18N/RESP 系列；F-11 補登矩陣裁決 #4）
+- [x] 主 agent 統一檢查：traceability 16/16、關鍵證據抽查相符、無 placeholder、內部連結有效、Mermaid 合法、二元可測性（plan doc §11）
+- [x] nlp-research-advisor 補充 IAA/試標抽樣/仲裁規則檢查（w7：n=2 僅驗 gate 統計聲明、dispute 逐型構造規則、gold 規則、anchoring bias 措辭紀律）
 
 ## 階段四：Finding triage 與建立 issues
 
@@ -50,4 +52,4 @@ Issue: <https://github.com/singyichen/label-suite/issues/180>
 - [ ] issue register 回填 #180，確認每項發現皆有處置
 
 ---
-最後更新：2026-08-18 — 階段二完成（決策 D1–D4 已裁決、追溯矩陣草稿完成）；下一步：階段三撰寫驗收文件
+最後更新：2026-08-19 — 階段三完成（驗收計畫 v1.0＋四份草稿附件；10 項整合裁決見 plan doc §10）；下一步：階段四 finding register＋建 issue（需使用者確認後執行）
