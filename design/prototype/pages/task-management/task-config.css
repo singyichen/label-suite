@@ -538,3 +538,23 @@
     /* radio-style (single-select) chip */
     .task-type-chip[role="radio"] .task-type-chip-check { border-radius: 50%; }
     .task-type-chip[role="radio"].selected .task-type-chip-check::after { width: 6px; height: 6px; border: none; border-radius: 50%; background: white; transform: none; }
+
+    /* ── Dark-mode rules for engine-generated components (shared by task-new + task-detail) ── */
+    html[data-theme="dark"] .regression-dimension-color-0 { --regression-dimension-color: #A5B4FC; }
+    html[data-theme="dark"] .regression-dimension-color-1 { --regression-dimension-color: #7DD3FC; }
+    html[data-theme="dark"] .regression-dimension-color-2 { --regression-dimension-color: #6EE7B7; }
+    html[data-theme="dark"] .regression-dimension-color-3 { --regression-dimension-color: #FCD34D; }
+    html[data-theme="dark"] .regression-dimension-color-4 { --regression-dimension-color: #F9A8D4; }
+    html[data-theme="dark"] .regression-dimension-color-5 { --regression-dimension-color: #D8B4FE; }
+    html[data-theme="dark"] .regression-dimension-color-6 { --regression-dimension-color: #FDBA74; }
+    html[data-theme="dark"] .regression-dimension-color-7 { --regression-dimension-color: #5EEAD4; }
+    html[data-theme="dark"] .regression-value-input { background: var(--color-surface); }
+    html[data-theme="dark"] .code-editor { background: #0D0D14; border-color: var(--color-border); }
+    html[data-theme="dark"] .entity-color-dot,
+    html[data-theme="dark"] .annotation-preview-color { border-color: rgba(226,232,240,0.18); }
+    html[data-theme="dark"] .tag-pill { background: #1E1B4B; color: #A5B4FC; border-color: #3730A3; }
+    html[data-theme="dark"] .schema-toggle-card.is-on { border-color: #3730A3; background: #1E1B4B; }
+    html[data-theme="dark"] .re-preview-entity-row { background: var(--color-white); }
+    html[data-theme="dark"] .re-preview-triple-row { background: var(--color-white); }
+    html[data-theme="dark"] .re-preview-select { background: var(--color-white); }
+    html[data-theme="dark"] .re-preview-relation-badge { background: #1E1B4B; color: #818CF8; border-color: rgba(129,140,248,0.3); }

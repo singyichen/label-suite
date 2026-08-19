@@ -9,24 +9,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../assets/tokens.css" />
   <link rel="stylesheet" href="task-config.css">
   <style>
     :root {
-      --color-primary: #6366F1; --color-cta: #10B981; --color-surface: #F5F3FF;
-      --color-white: #FFFFFF; --color-ink: #1E1B4B; --color-ink-muted: #94A3B8;
-      --color-text-soft: #64748B; --color-border: #E2E8F0; --color-border-muted: #F1F5F9;
-      --color-primary-soft-bg: #EEF2FF; --color-slate-50: #F8FAFC;
-      --color-error: #B91C1C; --color-error-soft-bg: #FEF2F2; --color-error-soft-border: #FECACA;
-      --color-success: #15803D; --color-success-bg: #F0FDF4; --color-success-border: #BBF7D0;
-      --color-warning: #A16207; --color-warning-bg: #FEFCE8; --color-warning-border: #FEF08A;
-      --font-serif-display: 'Crimson Pro','Noto Serif TC',Georgia,serif;
-      --font-sans: 'Inter','Noto Sans TC',-apple-system,sans-serif;
-      --font-mono: 'JetBrains Mono',ui-monospace,Menlo,monospace;
-      --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px; --radius-xl: 16px; --radius-full: 9999px;
-      --shadow-lg: 0 10px 15px rgba(0,0,0,0.1); --shadow-xl: 0 20px 25px rgba(0,0,0,0.15);
-      --space-xs: 4px; --space-sm: 8px; --space-md: 16px; --space-lg: 24px; --space-xl: 32px;
+      /* Host-page mobile layout contract (see MASTER.md — Sidebar) */
       --navbar-mobile-height: 84px; --navbar-mobile-top-height: 64px;
-      --dur-fast: 150ms; --dur-normal: 200ms; --ease-standard: cubic-bezier(0.4,0,0.2,1);
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { font-size: 16px; }
@@ -79,7 +67,7 @@
     .modal.modal-xl { max-width: 1280px; width: 92vw; max-height: 88vh; display: flex; flex-direction: column; }
     .modal-xl-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: var(--space-md); }
     .modal-close-btn { width: 32px; height: 32px; border: none; background: none; cursor: pointer; color: var(--color-ink-muted); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: color var(--dur-fast), background var(--dur-fast); }
-    .modal-close-btn:hover { background: var(--color-slate-100); color: var(--color-ink); }
+    .modal-close-btn:hover { background: var(--color-border-muted); color: var(--color-ink); }
     .preview-hint { font-size: 12px; color: var(--color-text-soft); margin: 2px 0 0; }
     .preview-json-wrap { overflow: auto; flex: 1; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-slate-50); }
     .preview-json { margin: 0; padding: var(--space-md); font-family: var(--font-mono); font-size: 12.5px; line-height: 1.7; color: var(--color-ink); white-space: pre-wrap; word-break: break-word; }
@@ -109,14 +97,14 @@
     /* .field-label-row / .field-help-tooltip / .tooltip-bubble moved to task-config.css (shared with task-detail) */
     .sampling-dist-wrap { margin: 12px 0 16px; }
     .sampling-dist-bar { height: 14px; border-radius: 7px; overflow: hidden; display: flex; background: var(--color-border); }
-    .sampling-dist-trial { background: #6366f1; transition: width 0.2s ease; min-width: 0; }
-    .sampling-dist-official { background: #22c55e; transition: width 0.2s ease; flex: 1; }
+    .sampling-dist-trial { background: var(--color-primary); transition: width 0.2s ease; min-width: 0; }
+    .sampling-dist-official { background: var(--color-cta); transition: width 0.2s ease; flex: 1; }
     .sampling-dist-legend { display: flex; gap: 16px; margin-top: 8px; font-size: 12px; color: var(--color-text-soft); flex-wrap: wrap; }
     .sampling-dist-legend span { display: inline-flex; align-items: center; gap: 4px; }
     .legend-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-    .legend-dot-total { background: #94a3b8; }
-    .legend-dot-trial { background: #6366f1; }
-    .legend-dot-official { background: #22c55e; }
+    .legend-dot-total { background: var(--color-ink-muted); }
+    .legend-dot-trial { background: var(--color-primary); }
+    .legend-dot-official { background: var(--color-cta); }
 
     /* ── Guideline list ── */
     .guideline-role-grid { display: flex; flex-direction: column; gap: var(--space-md); }
@@ -151,7 +139,7 @@
     .banner-error.show { display: flex; }
 
     /* ── Notice ── */
-    .notice-info { display: flex; align-items: flex-start; gap: 8px; padding: 10px 12px; background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: var(--radius-md); font-size: 12px; color: #1D4ED8; margin-bottom: var(--space-md); }
+    .notice-info { display: flex; align-items: flex-start; gap: 8px; padding: 10px 12px; background: var(--color-info-bg); border: 1px solid var(--color-info-border); border-radius: var(--radius-md); font-size: 12px; color: var(--color-info); margin-bottom: var(--space-md); }
 
     /* ── Modal ── */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 300; }
@@ -208,78 +196,6 @@
     }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: 0.01ms !important; } }
     .char-count { font-size: 11px; color: var(--color-ink-muted); text-align: right; margin-top: 2px; }
-
-    /* ── Dark mode overrides ──────────────────────────────────── */
-    html[data-theme="dark"] {
-      /* Re-map root tokens (standalone page — no tokens.css) */
-      --color-primary: #818CF8;
-      --color-cta: #34D399;
-      --color-surface: #0B0B12;
-      --color-white: #16161F;
-      --color-ink: #E2E8F0;
-      --color-ink-muted: #9CA3AF;
-      --color-text-soft: #A1A1AA;
-      --color-border: #2A2A35;
-      --color-border-muted: #1F1F28;
-      --color-primary-soft-bg: #1E1B4B;
-      --color-slate-50: #1F1F28;
-      --color-error: #FCA5A5;
-      --color-error-soft-bg: #3B1515;
-      --color-error-soft-border: #7F1D1D;
-      --color-success: #34D399;
-      --color-success-bg: #0F2A18;
-      --color-success-border: #1F5132;
-      --color-warning: #FACC15;
-      --color-warning-bg: #2A2210;
-      --color-warning-border: #5C4A1A;
-      --shadow-lg: 0 10px 15px rgba(0,0,0,0.4);
-      --shadow-xl: 0 20px 25px rgba(0,0,0,0.5);
-
-      .regression-dimension-color-0 { --regression-dimension-color: #A5B4FC; }
-      .regression-dimension-color-1 { --regression-dimension-color: #7DD3FC; }
-      .regression-dimension-color-2 { --regression-dimension-color: #6EE7B7; }
-      .regression-dimension-color-3 { --regression-dimension-color: #FCD34D; }
-      .regression-dimension-color-4 { --regression-dimension-color: #F9A8D4; }
-      .regression-dimension-color-5 { --regression-dimension-color: #D8B4FE; }
-      .regression-dimension-color-6 { --regression-dimension-color: #FDBA74; }
-      .regression-dimension-color-7 { --regression-dimension-color: #5EEAD4; }
-      .regression-value-input { background: var(--color-surface); }
-
-      /* Code editor — shift hardcoded indigo bg to true dark surface */
-      .code-editor { background: #0D0D14; border-color: var(--color-border); }
-
-      /* Generated Step 2 form controls */
-      .entity-color-dot,
-      .annotation-preview-color {
-        border-color: rgba(226,232,240,0.18);
-      }
-      .tag-pill {
-        background: #1E1B4B;
-        color: #A5B4FC;
-        border-color: #3730A3;
-      }
-      .schema-toggle-card.is-on {
-        border-color: #3730A3;
-        background: #1E1B4B;
-      }
-
-      /* Notice info — hardcoded light blue → dark blue */
-      .notice-info { background: #0C1E3B; border-color: #1E3A5F; color: #93C5FD; }
-
-      /* RE preview: entity/triple rows and selects must stay on form surfaces */
-      .re-preview-entity-row  { background: var(--color-white); }
-      .re-preview-triple-row  { background: var(--color-white); }
-      .re-preview-select      { background: var(--color-white); }
-
-      /* Relation badge */
-      .re-preview-relation-badge { background: #1E1B4B; color: #818CF8; border-color: rgba(129,140,248,0.3); }
-
-      /* Sampling distribution bars */
-      .sampling-dist-trial    { background: #818CF8; }
-      .sampling-dist-official { background: #34D399; }
-      .legend-dot-trial       { background: #818CF8; }
-      .legend-dot-official    { background: #34D399; }
-    }
   </style>
 </head>
 <body>
