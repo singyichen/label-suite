@@ -299,7 +299,11 @@ test.describe('Task detail profile mapping', () => {
     });
   }
 
-  for (const task of TASK_PROFILES) {
+  /* T003 is seeded as an in-progress official run (issue #194), so its
+     settings are read-only (isSettingsEditable() requires status==='draft')
+     -- excluded from the draft-only edit-form loop below and covered by its
+     own case instead. */
+  for (const task of TASK_PROFILES.filter((t) => t.id !== 'T003')) {
     test(`opens the settings edit form with one accordion per output for ${task.id}`, async ({ page }) => {
       await page.goto(`${TASK_DETAIL_URL}?task_id=${task.id}`);
 
@@ -313,6 +317,13 @@ test.describe('Task detail profile mapping', () => {
       await expect(page.locator('#schemaFields .output-accordion:not(.item-pair-labels-card)')).toHaveCount(task.outputCount);
     });
   }
+
+  test('settings edit form is read-only for the in-progress official run T003 (issue #194)', async ({ page }) => {
+    await page.goto(`${TASK_DETAIL_URL}?task_id=T003`);
+
+    await expect(page.locator('#statusBadge')).toContainText('正式標記進行中', { timeout: PANEL_LOAD_TIMEOUT });
+    await expect(page.locator('#settingsEditBtn')).toBeDisabled();
+  });
 
   test('persists edited item pair labels across settings edit sessions for T011', async ({ page }) => {
     await page.goto(`${TASK_DETAIL_URL}?task_id=T011`);

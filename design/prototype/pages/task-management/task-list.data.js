@@ -89,8 +89,13 @@
       nameEn: 'Patient Emotion and Care Context Hierarchical Classification',
       sourceFile: 'multi-label-hierarchical.json',
       outputTypes: ['multi_label'],
-      runType: 'dry_run',
-      status: 'draft',
+      /* Matches the dashboard's assignment seed for T003
+         (pages/dashboard/dashboard.assignments.js -- LabelSuiteAssignmentSeeds,
+         taxonomy-001 work item: runType 'official_run'). task-list.html and
+         task-detail.html both render from this record, so it must agree with
+         the dashboard instead of defaulting to draft (issue #194). */
+      runType: 'official_run',
+      status: 'official_run_in_progress',
       updatedAt: '2026-07-27',
       canViewDetail: true,
       isMine: true,
