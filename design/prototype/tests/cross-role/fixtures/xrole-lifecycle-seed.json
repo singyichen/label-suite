@@ -1,0 +1,27 @@
+[
+  {
+    "id": "xr-dry-001",
+    "text": "回診時醫師詳細解說檢查報告，讓我對後續治療更有信心。",
+    "gold_label": "positive"
+  },
+  {
+    "id": "xr-dry-002",
+    "text": "批價櫃檯人手不足，光是結帳就排了快一個小時。",
+    "gold_label": "negative"
+  },
+  {
+    "id": "xr-off-001",
+    "text": "門診大樓的指標清楚，但電梯數量偏少，尖峰時段要等較久。",
+    "gold_label": "neutral"
+  },
+  {
+    "id": "xr-off-002",
+    "text": "護理人員換藥手法俐落，過程幾乎不會痛，非常專業。",
+    "gold_label": "positive"
+  },
+  {
+    "id": "xr-off-003",
+    "text": "檢驗報告延遲三天才收到，影響了後續回診安排，體驗不佳。",
+    "gold_label": "negative"
+  }
+]
