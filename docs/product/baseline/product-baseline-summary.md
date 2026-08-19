@@ -1,8 +1,9 @@
 # Label Suite — 產品基線摘要
 
-**版本**：1.1.0  
-**建立日期**：2026-04-14  
-**用途**：作為後續撰寫 spec、切分 release、對齊頁面與角色權限時的統一基線摘要。  
+**版本**：1.2.0
+**基線 SHA**：`2328392f2fc50ca171c485582e26ab7d577be52b`
+**盤點日期**：2026-08-19（17 份現存 spec；`shared/018-help-button` 為 deferred，不是目前交付能力）
+**用途**：供 Agent 快速導覽產品全景；不是 feature 行為 SSOT。閱讀順序與權威邊界見 [README 的 Agent Context Contract](../agent-context-contract.md)，交付實作狀態只以 [`specs/STATUS.md`](../../../specs/STATUS.md) 為準。
 **基礎來源**：[`information-architecture.md`](../ia/information-architecture.md) · [`impact-map.md`](../impact-map/impact-map.md) · [`story-map.md`](../story-map/story-map.md)
 
 ---
@@ -52,24 +53,25 @@ Label Suite 是一套**可配置、通用型 NLP 標記與自動評估平台**�
 | 帳號模組 | `login`、`register`、`forgot-password`、`reset-password`、`profile` | 全角色 |
 | 儀表板 | `dashboard` | 全角色 |
 | 任務管理模組 | `task-list`、`task-new`、`task-detail` | `project_leader`、`reviewer` |
-| 標記任務模組 | `annotation-workspace` | `annotator`、`reviewer` |
-| 資料集分析模組 | `dataset-stats`、`dataset-quality` | `project_leader`、`reviewer` |
+| 標記任務模組 | Annotation List、`annotation-workspace` | `annotator`、`reviewer` |
+| 資料集分析模組 | Dataset Analysis List、Dataset Analysis Detail | `project_leader`、`reviewer` |
 | 系統管理模組 | `user-management`、`role-settings` | `super_admin` |
 
 補充原則：
-- 任務成員挑選與工時/工作量紀錄由 `task-detail` 的成員管理與工時紀錄面板承接
+- `task-detail` 以設定、成員、進度、結果、工時五個 tabs 管理任務；成員挑選與工時/工作量紀錄都由此承接
 - `user-management` 只管理系統角色與平台帳號狀態
 
 ---
 
 ## 4. 支援的任務類型
 
-任務類型不再是固定 5 選 1 的 `task_type` enum，而是由 `input_type`（`single_item` / `item_pair`）與可組合的 `outputs[]` 陣列決定（ADR-029 Output-Type Composition Model）：
+任務由 `input_type`（`single_item` / `item_pair`）與可組合的 `outputs[]` 陣列決定（ADR-029 Output-Type Composition Model）：
 
 - `outputs[]` 可選輸出類型：`single_label`、`multi_label`、`single_dim`、`multi_dim`、`entity_recognition`、`relation_identification`、`sequence_tagging`、`free_text`
 - 同一任務可組合多個輸出類型（如 `entity_recognition` + `relation_identification` 同時使用）
 
 所有輸出類型都必須透過 config 驅動，不可依賴硬編碼流程。
+十三個 prototype fixtures 僅用於驗收例示，並非產品任務或可組合輸出的白名單。品質分析依 output type 呈現；`free_text` 不適用自動 IAA，指標與 threshold 以 `017` registry 為準。
 
 ---
 
@@ -77,22 +79,23 @@ Label Suite 是一套**可配置、通用型 NLP 標記與自動評估平台**�
 
 ### 任務生命週期
 
-`草稿` → `Dry Run 進行中` → `等待 IAA 確認` → `Official Run 進行中` → `已完成`
+`draft` → `dry_run_in_progress` → `waiting_iaa_confirmation` → `official_run_in_progress` → `completed`
 
 ### 協作流程
 
-1. `project_leader` 建立任務並完成 Config Builder 設定
-2. `project_leader` 在任務詳情中挑選平台成員加入任務，指派 `annotator` / `reviewer`
-3. 發布 Dry Run，讓所有標記員標記相同樣本
-4. 系統產生 IAA 與品質報告，由 `project_leader` / `reviewer` 確認
-5. 達標後發布 Official Run，分配正式資料進行標記
-6. 完成後由 `project_leader` 匯出結果供後續訓練或研究使用
+1. `project_leader` 以四步驟建立任務：taxonomy、可組合 outputs、啟動設定與 guidelines；資料集上傳只接受 JSON
+2. 在 Task Detail 的成員 tab 指派 `annotator` / `reviewer`，發布試標並由相同樣本產生 IAA gate
+3. IAA 確認後發布正式標記，標記員提交資料；審核員以每個 `sample × annotator × run` 的 review unit 逐筆定案
+4. 不一致可直接修正；無法決定的項目交由合格且非當事人的 arbiter 仲裁
+5. 所有正式提交、必要 review unit 與仲裁完成，沒有未解爭議且品質指標可用後，任務才進入 `completed`
+6. `project_leader` 由結果 tab 匯出 JSON／JSON-MIN，供後續訓練或研究使用
 
 ### 資料隔離原則
 
 - Dry Run 與 Official Run 必須資料隔離
 - Annotator 可見資料不得暴露 test set ground truth
-- Reviewer 的審查與修正應保留歷程紀錄
+- Official gold 僅能在 Official Run 的適用 review unit 全部定案後形成，且不得向 annotator 下發
+- Reviewer 的審查、修正與仲裁決定應保留歷程紀錄
 
 ---
 
@@ -130,6 +133,8 @@ Label Suite 是一套**可配置、通用型 NLP 標記與自動評估平台**�
 
 ### R1 — Demo Core
 
+> Release 是規劃切片，不表示已實作；各 spec 的實作／流程狀態請查 [`specs/STATUS.md`](../../../specs/STATUS.md)。
+
 最小可展示集合，覆蓋：
 - `001` Login
 - `012` Dashboard
@@ -146,12 +151,10 @@ Label Suite 是一套**可配置、通用型 NLP 標記與自動評估平台**�
 
 補齊 Project Leader、Annotator、Reviewer 的完整協作流程，新增：
 - `003` Register
-- `008` Annotator List
-- `009` Work Log
 - `010` Task List
 - `014` Task Detail
 - `015` Reviewer Flow
-- `016` Dataset Stats
+- `016` Dataset Analysis List
 
 展示重點：
 - 挑選成員並指派任務角色
@@ -167,12 +170,14 @@ Label Suite 是一套**可配置、通用型 NLP 標記與自動評估平台**�
 - `005` Profile Settings
 - `006` User Management
 - `007` Role & Permission Settings
-- `017` Dataset Quality
+- `017` Dataset Analysis Detail
 
 展示重點：
 - 平台級帳號管理
 - 角色權限管理
 - IAA 與品質分析
+
+`002` 的 Google SSO 是可操作入口與未來整合預留，目前為 no-op，不代表 OAuth flow 已可登入。
 
 ---
 
@@ -194,5 +199,5 @@ Label Suite 是一套**可配置、通用型 NLP 標記與自動評估平台**�
 1. 功能屬於哪個模組
 2. 主要使用者是系統角色還是任務角色
 3. 是否會影響任務生命週期或資料隔離原則
-4. 應歸屬於 R1 / R2 / R3 哪個 release
+4. 應歸屬於 R1 / R2 / R3 哪個規劃 release（不以此判斷實作狀態）
 5. 是否已超出 Demo Paper 範圍
