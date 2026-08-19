@@ -2813,13 +2813,46 @@
   }
 
   /* ── guideline modal ──────────────────────────────────────────────── */
+  /* Gate depends on the task's own "開始標記前強制顯示" setting
+     (currentProfile.forceShowGuideline, task-detail.panels/overview.html
+     #editForceGuidelineToggle) -- tasks that don't enable it never show
+     the modal (issue #184). The seen-flag is keyed per taskId so
+     confirming it for one task never suppresses it for another, and
+     switching tasks (a fresh page load with a different task_id)
+     re-evaluates against that task's own setting from scratch. */
+  function guidelineModalStorageKey(taskId) {
+    return 'labelsuite.guidelineModalSeen.' + taskId;
+  }
   function setupGuidelineModal() {
     var modal = document.getElementById('wsGuidelineModal');
     var confirmBtn = document.getElementById('wsGuidelineModalConfirm');
+    var body = document.getElementById('wsGuidelineModalBody');
     if (!modal || !confirmBtn) return;
+    if (!currentProfile || !currentProfile.forceShowGuideline) {
+      modal.classList.add('hidden');
+      return;
+    }
+    if (body) {
+      /* Same data source as the right-side 說明 tab (renderGuidelinePanel):
+         guidelineFiles[]. The markdown entry's `content` is the only
+         actual prose text in that data -- pdf/image entries are links,
+         not text -- so it's what "guideline text" means here. */
+      var files = currentProfile.guidelineFiles || [];
+      var mdFile = files.filter(function (file) {
+        return file.type === 'markdown';
+      })[0];
+      body.textContent = mdFile
+        ? mdFile.content
+        : files
+            .map(function (file) {
+              return file.name;
+            })
+            .join('\n');
+    }
+    var storageKey = guidelineModalStorageKey(currentProfile.id);
     var seen = null;
     try {
-      seen = window.localStorage.getItem('labelsuite.guidelineModalSeen');
+      seen = window.localStorage.getItem(storageKey);
     } catch (e) {
       /* treat blocked storage as not-seen: showing the modal again is safe */
     }
@@ -2830,7 +2863,7 @@
     }
     confirmBtn.addEventListener('click', function () {
       try {
-        window.localStorage.setItem('labelsuite.guidelineModalSeen', '1');
+        window.localStorage.setItem(storageKey, '1');
       } catch (e) {
         /* ignore quota/serialization errors in the prototype */
       }
