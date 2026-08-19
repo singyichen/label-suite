@@ -21,16 +21,28 @@
     return nested[key] || key;
   }
 
-  function showToast(message) {
+  /* Auto-dismiss per UXC-07: Error never auto-dismisses (manual close only). */
+  var TOAST_DURATIONS = { success: 3000, info: 5000, warning: 8000, error: 0 };
+
+  function showToast(message, variant) {
     var toast = document.getElementById('toast');
     if (!toast) return;
     var messageElement = document.getElementById('toastMsg');
     if (messageElement) messageElement.textContent = message;
-    toast.classList.add('show');
+    var v = TOAST_DURATIONS.hasOwnProperty(variant) ? variant : 'success';
+    toast.className = 'toast toast-' + v + ' visible';
     global.clearTimeout(toastTimer);
-    toastTimer = global.setTimeout(function () {
-      toast.classList.remove('show');
-    }, 3000);
+    if (TOAST_DURATIONS[v] > 0) {
+      toastTimer = global.setTimeout(function () {
+        toast.classList.remove('visible');
+      }, TOAST_DURATIONS[v]);
+    }
+  }
+
+  function hideToast() {
+    var toast = document.getElementById('toast');
+    if (toast) toast.classList.remove('visible');
+    global.clearTimeout(toastTimer);
   }
 
   function getTrackingContext() {
@@ -275,6 +287,9 @@
         handleLanguageToggle('mobile');
       });
     }
+
+    var toastCloseButton = document.getElementById('toastClose');
+    if (toastCloseButton) toastCloseButton.addEventListener('click', hideToast);
   }
 
   function init() {

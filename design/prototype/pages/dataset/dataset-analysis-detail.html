@@ -171,10 +171,20 @@
     .btn-secondary:hover{border-color:var(--color-primary);color:var(--color-primary)}
     .btn-sm{padding:6px 12px;font-size:13px}
 
-    /* Toast */
-    .toast-container{position:fixed;right:24px;bottom:24px;z-index:var(--z-toast);pointer-events:none}
-    .toast{display:inline-flex;align-items:center;gap:8px;border-radius:var(--radius-lg);padding:11px 14px;background:var(--color-ink);color:var(--color-white);font-size:13px;font-weight:500;box-shadow:var(--shadow-lg);opacity:0;transform:translateY(8px);transition:opacity var(--dur-normal),transform var(--dur-normal);min-width:200px;max-width:340px}
-    .toast.show{opacity:1;transform:translateY(0)}
+    /* Toast (top-center, UXC-07 / MASTER §Toast) */
+    .toast-container{position:fixed;top:24px;left:50%;transform:translateX(-50%);z-index:var(--z-toast);width:min(384px,calc(100vw - 32px));pointer-events:none}
+    /* shadow-md: Toast is an approved exception to the no-shadow rule.
+       visibility keeps the hidden close button out of the tab order;
+       its 0s transition is delayed so the fade-out still plays. */
+    .toast{display:flex;align-items:flex-start;gap:12px;padding:12px 16px;border:1px solid transparent;border-radius:var(--radius-md);font-size:14px;font-weight:500;box-shadow:var(--shadow-md);opacity:0;visibility:hidden;transition:opacity var(--dur-fast),visibility 0s var(--dur-fast)}
+    .toast.visible{opacity:1;visibility:visible;pointer-events:auto;transition:opacity var(--dur-fast)}
+    .toast-success{color:var(--color-success);background:var(--color-success-bg);border-color:var(--color-success-border)}
+    .toast-info{color:var(--color-info);background:var(--color-info-bg);border-color:var(--color-info-border)}
+    .toast-warning{color:var(--color-warning);background:var(--color-warning-bg);border-color:var(--color-warning-border)}
+    .toast-error{color:var(--color-error);background:var(--color-error-bg);border-color:var(--color-error-border)}
+    .toast-msg{flex:1}
+    .toast-close{background:none;border:none;color:inherit;opacity:.6;cursor:pointer;font-size:14px;line-height:1.4;padding:0}
+    .toast-close:hover{opacity:1}
 
     /* Stats tab */
     .stats-metric-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
@@ -221,8 +231,6 @@
       .stats-hist-grid{grid-template-columns:1fr}
       .stats-summary-grid{grid-template-columns:1fr}
       .stats-hbar-row{grid-template-columns:80px 1fr 60px}
-      .toast-container{right:12px;left:12px;bottom:90px}
-      .toast{width:100%}
     }
     @media(prefers-reduced-motion:reduce){
       *,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}
@@ -368,7 +376,7 @@
 
 <!-- ══ TOAST ═════════════════════════════════════════════════════════ -->
 <div class="toast-container" aria-live="polite" aria-atomic="true">
-  <div class="toast" id="toast" role="alert"><span id="toastMsg"></span></div>
+  <div class="toast" id="toast"><span id="toastMsg" class="toast-msg"></span><button type="button" class="toast-close" id="toastClose" aria-label="關閉通知">✕</button></div>
 </div>
 
 <script src="../../assets/theme.js"></script>
@@ -1813,6 +1821,12 @@ document.getElementById('tabStats').addEventListener('click', function() {
 });
 document.getElementById('tabQuality').addEventListener('click', function() {
   switchTab('quality');
+});
+
+var toastCloseBtn = document.getElementById('toastClose');
+if (toastCloseBtn) toastCloseBtn.addEventListener('click', function() {
+  var toastNode = document.getElementById('toast');
+  if (toastNode) toastNode.classList.remove('visible');
 });
 
 function resetSequenceAndAltViews() {
