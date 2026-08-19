@@ -13,11 +13,24 @@ import { test, expect } from '@playwright/test';
  * baselines by task-detail-stage-flow.spec.ts, task-list-run-materialization
  * .spec.ts, and task-detail-task-profiles.spec.ts, so this fix stays scoped
  * to the one task the issue reports instead of re-deriving status for every
- * seed task. The dashboard's own project-leader widget
- * (dashboard.data.js roleLists.projectLeader) is a separate, independently
- * hardcoded array and is not touched by this fix. */
+ * seed task.
+ *
+ * The dashboard's own project-leader widget (dashboard.data.js
+ * roleLists.projectLeader) is a separate, independently hardcoded array and
+ * is the issue's reported entry point (Dashboard PL view -> task-list ->
+ * task-detail), so its T003 entry's runType is corrected from 'dry_run' to
+ * 'official_run' too, matching LabelSuiteAssignmentSeeds. */
 
 test.describe('Issue #194: T003 status stays in sync', () => {
+  test('dashboard project-leader card shows T003 as an official run, not a dry run', async ({ page }) => {
+    await page.goto('/pages/dashboard/dashboard.html');
+    await page.locator('.scenario-pill[data-scenario="project_leader"]').click();
+
+    const card = page.locator('#plTaskList [data-example-task-id="T003"]');
+    await expect(card).toContainText('正式標記');
+    await expect(card).not.toContainText('試標');
+  });
+
   test('task list shows T003 as an in-progress official run, not draft', async ({ page }) => {
     await page.goto('/pages/task-management/task-list.html?task_role=project_leader');
 
