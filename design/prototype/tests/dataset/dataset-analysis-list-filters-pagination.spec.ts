@@ -325,6 +325,46 @@ test.describe('Dataset analysis list filters and pagination', () => {
     ).toHaveText('6');
   });
 
+  test('renders ellipsis markers between non-adjacent numbered pagination buttons', async ({
+    page,
+  }) => {
+    await page.goto(DATASET_ANALYSIS_URL);
+
+    await page.evaluate(() => {
+      const runtime = window as unknown as DatasetAnalysisWindow;
+      const seed = runtime.state.tasks[0];
+      runtime.state.tasks = Array.from({ length: 240 }, (_, index) => ({
+        ...seed,
+        id: `PX-${index + 1}`,
+        nameZh: `大量資料集分析 ${index + 1}`,
+        nameEn: `Large Dataset Analysis ${index + 1}`,
+      }));
+      runtime.state.limit = 20;
+      runtime.state.offset = 100;
+      runtime.render();
+    });
+
+    const ellipsis = page.locator('#paginationControls .page-ellipsis');
+    await expect(ellipsis).toHaveCount(2);
+    await expect(ellipsis.first()).toHaveText('…');
+
+    await page.evaluate(() => {
+      const runtime = window as unknown as DatasetAnalysisWindow;
+      runtime.state.offset = 0;
+      runtime.render();
+    });
+    await expect(ellipsis).toHaveCount(1);
+
+    await page.evaluate(() => {
+      const runtime = window as unknown as DatasetAnalysisWindow;
+      runtime.state.tasks = runtime.state.tasks.slice(0, 120);
+      runtime.state.offset = 0;
+      runtime.render();
+    });
+    await expect(ellipsis).toHaveCount(0);
+    await expect(page.locator('#paginationControls [data-page]')).toHaveCount(6);
+  });
+
   test('restores output_type, limit, and offset and normalizes invalid or legacy query parameters', async ({
     page,
   }) => {

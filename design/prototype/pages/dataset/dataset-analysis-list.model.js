@@ -178,9 +178,11 @@
     interiorStart = Math.max(2, interiorEnd - 4);
 
     var pages = [1];
+    if (interiorStart > 2) pages.push('ellipsis');
     for (var pageNumber = interiorStart; pageNumber <= interiorEnd; pageNumber += 1) {
       pages.push(pageNumber);
     }
+    if (interiorEnd < totalPages - 1) pages.push('ellipsis');
     pages.push(totalPages);
     return pages;
   }

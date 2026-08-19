@@ -204,14 +204,22 @@
       var controls = document.getElementById('paginationControls');
       if (!controls || !nextButton) return;
       Array.prototype.forEach.call(
-        controls.querySelectorAll('[data-page]'),
-        function (button) {
-          button.remove();
+        controls.querySelectorAll('[data-page], .page-ellipsis'),
+        function (node) {
+          node.remove();
         }
       );
 
       if (state.loadFailed || total === 0) return;
       model.getVisiblePaginationPages(totalPages, currentPage).forEach(function (pageNumber) {
+        if (pageNumber === 'ellipsis') {
+          var gap = document.createElement('span');
+          gap.className = 'page-ellipsis';
+          gap.textContent = '…';
+          gap.setAttribute('aria-hidden', 'true');
+          nextButton.insertAdjacentElement('beforebegin', gap);
+          return;
+        }
         var button = document.createElement('button');
         button.className = 'page-btn' + (pageNumber === currentPage ? ' active' : '');
         button.dataset.page = String(pageNumber);

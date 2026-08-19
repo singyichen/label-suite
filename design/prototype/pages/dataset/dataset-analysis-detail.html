@@ -50,6 +50,7 @@
     .panel{border:1px solid var(--color-border);border-radius:var(--radius-lg);background:var(--color-white);padding:var(--space-lg);margin-bottom:var(--space-md)}
     .panel-head-row{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-sm);margin-bottom:var(--space-md);flex-wrap:wrap}
     .panel-title{font-size:16px;font-weight:700;color:var(--color-ink)}
+    .panel-load-error{display:flex;flex-direction:column;align-items:flex-start;gap:8px}
     .panel-subtitle{font-size:13px;color:var(--color-text-soft);margin-top:2px}
     .panel-divider{border:none;border-top:1px solid var(--color-border-muted);margin:var(--space-md) 0}
 
@@ -262,6 +263,13 @@
 <main id="detailMain">
 <div class="layout">
 
+  <!-- Breadcrumb -->
+  <nav class="breadcrumb" aria-label="breadcrumb">
+    <a href="./dataset-analysis-list.html" id="bcRoot">資料集分析</a>
+    <span class="breadcrumb-sep" aria-hidden="true">›</span>
+    <span id="bcCurrent">產品評論序列標記（NER / Aspect）</span>
+  </nav>
+
   <!-- Page header -->
   <header class="page-header">
     <div>
@@ -270,21 +278,14 @@
     </div>
   </header>
 
-  <!-- Breadcrumb -->
-  <nav class="breadcrumb" aria-label="breadcrumb">
-    <a href="./dataset-analysis-list.html" id="bcRoot">資料集分析</a>
-    <span class="breadcrumb-sep" aria-hidden="true">›</span>
-    <span id="bcCurrent">產品評論序列標記（NER / Aspect）</span>
-  </nav>
-
   <!-- Tabs -->
   <div class="admin-tabs" role="tablist">
-    <button class="admin-tab active" id="tabStats" type="button" role="tab" aria-selected="true">統計總覽</button>
-    <button class="admin-tab" id="tabQuality" type="button" role="tab" aria-selected="false">品質監控</button>
+    <button class="admin-tab active" id="tabStats" type="button" role="tab" aria-selected="true" aria-controls="statsPanel">統計總覽</button>
+    <button class="admin-tab" id="tabQuality" type="button" role="tab" aria-selected="false" aria-controls="qualityPanel">品質監控</button>
   </div>
 
   <!-- ═══ Stats Tab ══════════════════════════════════════════════ -->
-  <div id="statsPanel">
+  <div id="statsPanel" role="tabpanel" aria-labelledby="tabStats">
     <!-- Empty state -->
     <div id="statsEmpty" class="hidden stats-empty">
       <div class="stats-empty-icon">
@@ -335,7 +336,7 @@
   </div>
 
   <!-- ═══ Quality Tab ══════════════════════════════════════════════ -->
-  <div id="qualityPanel" class="hidden">
+  <div id="qualityPanel" class="hidden" role="tabpanel" aria-labelledby="tabQuality">
 
     <!-- Empty state (shown when qualityState != ready) -->
     <div id="qualityEmpty" class="hidden quality-empty">
@@ -380,6 +381,9 @@ var I18N = {
     bcRoot: '資料集分析', bcCurrent: '任務詳情',
     pageTitle: '任務詳情',
     pageSubtitle: '檢視統計總覽與品質監控',
+    panelErrorTitle: '資料載入失敗',
+    panelErrorDesc: '無法載入此面板的內容，請稍後再試。',
+    panelErrorRetry: '重新載入',
     tabStats: '統計總覽', tabQuality: '品質監控',
     statsSharedTitle:'共用指標',
     statsLblSentence:'句子數量',statsDescSentence:'分析母體',
@@ -573,6 +577,7 @@ var I18N = {
     qualityListRank: {
       lowConsistencyTitle: '一致性最低樣本清單',
       lowConsistencySubtitle: '依分歧度由高到低排序，可作為 Reviewer 仲裁優先順序參考（與 dry_run 仲裁 divergent 概念同源）',
+      lowConsistencyCountFmt: '{count} 筆',
       headerSample: '樣本',
       headerScore: '分歧分數',
       headerDetail: '分歧描述',
@@ -717,6 +722,9 @@ var I18N = {
     bcRoot: 'Dataset Analysis', bcCurrent: 'Task Detail',
     pageTitle: 'Task detail',
     pageSubtitle: 'Review statistics and quality monitoring',
+    panelErrorTitle: 'Failed to load data',
+    panelErrorDesc: 'This panel could not be loaded. Please try again later.',
+    panelErrorRetry: 'Reload',
     tabStats: 'Statistics', tabQuality: 'Quality Monitor',
     statsSharedTitle:'Shared Metrics',
     statsLblSentence:'Sentence Count',statsDescSentence:'Analysis population',
@@ -910,6 +918,7 @@ var I18N = {
     qualityListRank: {
       lowConsistencyTitle: 'Low-consistency Sample List',
       lowConsistencySubtitle: 'Sorted by disagreement score, highest first; usable as a reviewer arbitration priority reference (same concept as dry_run "divergent" arbitration)',
+      lowConsistencyCountFmt: '{count} items',
       headerSample: 'Sample',
       headerScore: 'Disagreement Score',
       headerDetail: 'Disagreement Detail',
@@ -1320,9 +1329,7 @@ function loadStatsPanel() {
       applyDataI18n(mount);
       updateStatsEmptyBtn();
     })
-    .catch(function() {
-      if (mount) mount.innerHTML = '<div class="panel"><p class="panel-subtitle">統計資料載入失敗，請重新整理頁面。</p></div>';
-    });
+    .catch(function() { renderPanelLoadError('statsPanelMount'); });
 }
 
 function updateStatsEmptyBtn() {
@@ -1342,10 +1349,28 @@ function applyStatsState() {
   updateStatsEmptyBtn();
 }
 
-function renderPanelLoadError() {
-  var mount = document.getElementById('qualityPanelMount');
+function renderPanelLoadError(mountId) {
+  var mount = document.getElementById(mountId || 'qualityPanelMount');
   if (!mount) return;
-  mount.innerHTML = '<section class="panel" aria-live="polite"><p class="panel-subtitle">Panel 載入失敗，請重新整理頁面。</p></section>';
+  mount.innerHTML = '';
+  var section = document.createElement('section');
+  section.className = 'panel panel-load-error';
+  section.setAttribute('aria-live', 'polite');
+  var title = document.createElement('p');
+  title.className = 'panel-title';
+  title.textContent = t('panelErrorTitle');
+  var desc = document.createElement('p');
+  desc.className = 'panel-subtitle';
+  desc.textContent = t('panelErrorDesc');
+  var retry = document.createElement('button');
+  retry.className = 'btn btn-secondary btn-sm';
+  retry.type = 'button';
+  retry.textContent = t('panelErrorRetry');
+  retry.addEventListener('click', function() { window.location.reload(); });
+  section.appendChild(title);
+  section.appendChild(desc);
+  section.appendChild(retry);
+  mount.appendChild(section);
 }
 
 function currentMembershipRole() {
@@ -1597,6 +1622,19 @@ function wireSequenceToggle() {
   });
 }
 
+/* The low-consistency count badge is derived from the mounted table's row
+   count so the seven quality partials don't each carry a hardcoded copy. */
+function updateLowConsistencyCountBadge() {
+  var mount = document.getElementById('qualityPanelMount');
+  if (!mount) return;
+  var section = mount.querySelector('section[aria-labelledby="lowConsistencyTitle"]');
+  if (!section) return;
+  var badge = section.querySelector('.panel-head-row .badge-neutral');
+  var rows = section.querySelectorAll('tbody tr').length;
+  if (!badge || !rows) return;
+  badge.textContent = fmt(tPath('qualityListRank.lowConsistencyCountFmt'), { count: rows });
+}
+
 function wireQualityPanelInteractions() {
   wireAltToggle('altBtnVA', 'altBodyVA');
   wireAltToggle('altBtnCls', 'altBodyCls');
@@ -1652,6 +1690,7 @@ function loadQualityPanel() {
   var finish = function() {
     SIMPLE_IDS.forEach(function(id) { setText(id, id); });
     applyDataI18n(mount);
+    updateLowConsistencyCountBadge();
     updateConsistencyDeviationTexts();
     closeAllAltToggles();
     syncSequenceUi();
