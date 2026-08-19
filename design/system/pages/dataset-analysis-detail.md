@@ -2,7 +2,9 @@
 
 Per-task analysis detail with Stats / Quality tabs. Tabs carry full
 `tablist`/`tab`/`aria-selected` + `tabpanel`/`aria-controls` wiring, the
-breadcrumb renders above the page header (MASTER order), and all icons are
+breadcrumb renders below the page header (the task-detail convention,
+locked by the shared page-heading baseline spec — MASTER defines
+breadcrumb style only, not its order), and all icons are
 inline Lucide SVGs (ADR-030) — the primary-metric star chip
 (`.iaa-primary-star`) and speed-anomaly flag (`.speed-flag`) size their SVG
 children from the wrapper class.
