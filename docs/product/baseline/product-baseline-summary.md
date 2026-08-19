@@ -1,6 +1,6 @@
 # Label Suite — 產品基線摘要
 
-**版本**：1.0.0  
+**版本**：1.1.0  
 **建立日期**：2026-04-14  
 **用途**：作為後續撰寫 spec、切分 release、對齊頁面與角色權限時的統一基線摘要。  
 **基礎來源**：[`information-architecture.md`](../ia/information-architecture.md) · [`impact-map.md`](../impact-map/impact-map.md) · [`story-map.md`](../story-map/story-map.md)
@@ -34,7 +34,7 @@ Label Suite 是一套**可配置、通用型 NLP 標記與自動評估平台**�
 | 角色 | 識別碼 | 說明 |
 |------|--------|------|
 | 專案負責人 | `project_leader` | 建立任務、設定流程、指派成員、啟動 Dry Run / Official Run、匯出結果 |
-| 審核員 | `reviewer` | 審查標記結果、協助產出標準答案、查看品質報告 |
+| 審核員 | `reviewer` | 逐標記員審核標記結果、不一致時直接修正標籤、查看品質報告 |
 | 標記員 | `annotator` | 執行標記、查看個人進度與工時 |
 
 基線原則：
@@ -64,15 +64,12 @@ Label Suite 是一套**可配置、通用型 NLP 標記與自動評估平台**�
 
 ## 4. 支援的任務類型
 
-目前產品基線支援 5 種 `task_type`：
+任務類型不再是固定 5 選 1 的 `task_type` enum，而是由 `input_type`（`single_item` / `item_pair`）與可組合的 `outputs[]` 陣列決定（ADR-029 Output-Type Composition Model）：
 
-1. 單句分類
-2. 單句評分 / 回歸
-3. 句對任務
-4. 序列標記（NER、詞性標記）
-5. 關係抽取
+- `outputs[]` 可選輸出類型：`single_label`、`multi_label`、`single_dim`、`multi_dim`、`entity_recognition`、`relation_identification`、`sequence_tagging`、`free_text`
+- 同一任務可組合多個輸出類型（如 `entity_recognition` + `relation_identification` 同時使用）
 
-所有任務類型都必須透過 config 驅動，不可依賴硬編碼流程。
+所有輸出類型都必須透過 config 驅動，不可依賴硬編碼流程。
 
 ---
 
@@ -117,9 +114,9 @@ Label Suite 是一套**可配置、通用型 NLP 標記與自動評估平台**�
 
 ### Reviewer
 
-- 查閱與審查已提交標記
-- 修改、退回或標記錯誤標記
-- 查看 IAA 與品質報告，協助形成標記共識
+- 逐標記員審查已提交標記
+- 一致 → 下一筆；不一致 → 當場直接修正標籤；無法決定則歸入爭議池由第三人仲裁
+- 查看 IAA 與品質報告、每位標記員的修正率
 
 ### Super Admin
 

@@ -1,6 +1,6 @@
 # Impact Map — Label Suite
 
-**版本**：1.1.0
+**版本**：1.2.0
 **建立日期**：2026-04-14
 **目標受眾**：論文指導教授、開發者
 
@@ -35,7 +35,7 @@
 |--------------------------|----------------------|
 | 能透過 email 或 Google OAuth 快速登入 | `001` Login Email、`002` Login Google SSO |
 | 能從 Dashboard 即時看到被分配的任務與進度 | `012` Dashboard |
-| 能依任務類型（分類、評分/迴歸、句對、NER、關係抽取）執行標記 | `015` Annotation Workspace |
+| 能依 outputs[] 組合（分類、評分/迴歸、實體辨識、關係識別、序列標記 等）執行標記 | `015` Annotation Workspace |
 | 能即時看到自己的完成筆數（進度條） | `015` Annotation Workspace — 進度追蹤 |
 
 ---
@@ -44,9 +44,9 @@
 
 | How（需要做到的行為改變） | What（對應功能／Spec） |
 |--------------------------|----------------------|
-| 能查閱已提交的標記結果，執行抽查或全審 | `015` Annotation Workspace — Reviewer 視角 |
-| 能修改、刪除、標記錯誤標記 | `015` Annotation Workspace — 審核操作 |
-| 能查看 IAA 報告，協助產生 Ground Truth | `017` Dataset Quality |
+| 能逐標記員審核已提交的標記結果，一致 → 下一筆，不一致 → 當場修正 | `015` Annotation Workspace — Reviewer 視角 |
+| 能修改、刪除、標記錯誤標記；無法決定時歸入爭議池由第三人仲裁 | `015` Annotation Workspace — 審核操作 |
+| 能查看 IAA 報告與標記員修正率；gold 僅於 Official Run 審核定案後產生 | `017` Dataset Quality |
 
 ---
 
