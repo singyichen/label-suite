@@ -3519,6 +3519,8 @@
     showSkeleton: true,
     pendingAction: null,
     isolationConfirmed: false,
+    publishingDryRun: false,
+    publishingOfficialRun: false,
     pendingMemberAction: null,
     pendingReviewerTabToast: false,
     overviewEditMode: false,
@@ -8816,7 +8818,10 @@ function getTaskTypeLabel() {
   }
 
   function publishDryRun() {
+    if (state.publishingDryRun) return;
     if (!canPublish()) return;
+    state.publishingDryRun = true;
+    setTimeout(function() { state.publishingDryRun = false; }, 200);
     var nextRound = getTrialRounds().length + 1;
     var scenario = getTrialRoundScenario(nextRound);
     if (!Array.isArray(TASK_DATA.trialRounds)) TASK_DATA.trialRounds = [];
@@ -8844,7 +8849,10 @@ function getTaskTypeLabel() {
   }
 
   function publishOfficialRun() {
+    if (state.publishingOfficialRun) return;
     if (!canPublish()) return;
+    state.publishingOfficialRun = true;
+    setTimeout(function() { state.publishingOfficialRun = false; }, 200);
     TASK_DATA.status = 'official_run_in_progress';
     TASK_DATA.updatedAt = '2026-05-04 11:20';
     showToast(t('toastPublishedOfficial'));
