@@ -58,6 +58,17 @@ const TASK_CASES: TaskCase[] = [
     expectedCauseTexts: ['No anomaly cause', 'No anomaly cause', 'No anomaly cause'],
     expectedConsistencyUnit: 'Comparable Samples',
   },
+  {
+    taskId: 'T108',
+    riskTableLabel: 'Annotator analysis (single-dimension scoring)',
+    groupAvgId: 'singleDimGroupAvg',
+    expectedGroupAvg: 'Group avg — ICC(2,1): 0.79 / Avg speed: 31.0s/sent',
+    expectedHeaders: ['Annotator', 'Avg Speed', 'ICC(2,1)', 'Risk Level', 'Cause', 'Sample Count', 'Recommended Action'],
+    expectedRiskLevels: ['Normal', 'Normal', 'Normal'],
+    expectedActions: ['Review annotations', 'Review annotations', 'Review annotations'],
+    expectedCauseTexts: ['No anomaly cause', 'No anomaly cause', 'No anomaly cause'],
+    expectedConsistencyUnit: 'Comparable Samples',
+  },
 ];
 
 async function gotoEnglishQuality(page: Page, taskId: string) {

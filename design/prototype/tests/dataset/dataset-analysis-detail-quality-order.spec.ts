@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 const DETAIL_URL = '/pages/dataset/dataset-analysis-detail.html';
 
-const TASK_IDS = ['T101', 'T102', 'T103', 'T104', 'T105'];
+const TASK_IDS = ['T101', 'T102', 'T103', 'T104', 'T105', 'T108'];
 
 test.describe('Dataset analysis detail quality block order', () => {
   for (const taskId of TASK_IDS) {
