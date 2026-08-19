@@ -70,9 +70,10 @@
 | 3 | **跑 #212 驗收套件前** | #192、#201（修復後 XROLE-24 🟡→🟢）、#194、#198、#199、#200＋例外納入 #184（Blocking，標記員主線第一步） | prototype 行為缺陷：不修則 25 條原子測試在已知缺陷上紅，驗收無意義；亦為 demo 前置 |
 | 4 | 正式開發 backlog | #185、#186、#195（High，視 demo 時程提前）、#187、#188、#191、#196、#197、#207 | UX 打磨：React 重寫時會重做，先修 prototype 報酬率低 |
 | 時點另計 | 正式開發 kickoff 第一件事 | #203（正式 E2E 目錄 ADR） | 寫正式 E2E 前決議即可 |
-| 時點另計 | 第三波清完後執行 | #212（驗收套件實作） | prototype 凍結前的最終驗收 |
+| 時點另計 | 第三波清完後執行 | #212（驗收套件實作）、#209（data-fairness 強負向測資，套件 fixture 前置） | prototype 凍結前的最終驗收 |
 
 硬門檻總結：正式開發前＝第一波 7 張 spec 調整；prototype 凍結前＝第三波修完＋#212 跑綠。
+GitHub milestones 已鏡射本表（Wave 1–4＋Gate — Formal-dev kickoff＋Gate — Acceptance suite run），29 張 issue 逐張掛載。
 
 ## E. 完成門檻自查（issue #180 §11）
 
