@@ -3,8 +3,11 @@
     }
 
     .list-item:hover {
+      background: var(--color-slate-50);
+    }
+
+    .list-item.role-task-card:hover {
       border-color: var(--color-primary);
-      background: #F9FAFB;
     }
 
     .list-item-title {
@@ -57,9 +60,9 @@
       height: 32px;
     }
 
-    .role-avatar--emerald { background: #D1FAE5; color: #059669; }
+    .role-avatar--emerald { background: #D1FAE5; color: var(--color-cta-hover); }
     .role-avatar--violet  { background: #EDE9FE; color: #7C3AED; }
-    .role-avatar--indigo  { background: #DBEAFE; color: #1D4ED8; }
+    .role-avatar--indigo  { background: #E0E7FF; color: #4F46E5; }
 
     .role-name {
       font-size: 1.0625rem;
@@ -108,11 +111,8 @@
       height: 20px;
     }
 
-    .step-icon--emerald-solid { background: #10B981; color: #fff; }
-    .step-icon--emerald       { background: #D1FAE5; color: #059669; }
-    .step-icon--violet-solid  { background: #7C3AED; color: #fff; }
+    .step-icon--emerald       { background: #D1FAE5; color: var(--color-cta-hover); }
     .step-icon--violet        { background: #EDE9FE; color: #7C3AED; }
-    .step-icon--indigo-solid  { background: #4F46E5; color: #fff; }
     .step-icon--indigo        { background: #E0E7FF; color: #4F46E5; }
     .step-icon--ink           { color: var(--color-ink); }
 
@@ -153,8 +153,8 @@
 
     .btn-emerald {
       color: #fff;
-      background: #10B981;
-      border-color: #10B981;
+      background: var(--color-cta);
+      border-color: var(--color-cta);
     }
 
     .btn-emerald:hover {
@@ -235,7 +235,7 @@
     .progress {
       height: 6px;
       border-radius: var(--radius-full);
-      background: #E2E8F0;
+      background: var(--color-border);
       overflow: hidden;
     }
 
@@ -334,8 +334,7 @@
         border-color: #818CF8;
       }
 
-      /* Step icons — solid: keep same vibrant hue; non-solid: match brightness with lighter icon */
-      .step-icon--emerald-solid { background: #047857; }
+      /* Step icons — match brightness with lighter icon */
       .step-icon--emerald       { background: #059669; color: #D1FAE5; }
       .step-icon--violet        { background: #6D28D9; color: #EDE9FE; }
       .step-icon--indigo        { background: #4338CA; color: #E0E7FF; }
@@ -349,17 +348,9 @@
       .workflow-step-connector { opacity: 0.45; }
       .workflow-step-connector img { filter: brightness(0) invert(1); }
 
-      /* Badges — replace hardcoded light-bg with dark equivalents */
-      .badge-info {
-        color: var(--color-info);
-        background: var(--color-info-bg);
-        border-color: var(--color-info-border);
-      }
-      .badge-success {
-        color: var(--color-success);
-        background: var(--color-success-soft-bg);
-        border-color: var(--color-success-soft-border);
-      }
+      /* Badges — replace hardcoded light-bg with dark equivalents
+         (info/success/warning need no override: light rules use semantic
+         tokens that flip in tokens.css) */
       .badge-dry-run {
         color: #9CA3AF;
         background: #1F1F28;
@@ -400,18 +391,6 @@
         background: #1F1F28;
         border-color: #2A2A35;
       }
-      .badge-warning {
-        color: #FACC15;
-        background: #2A2210;
-        border-color: #5C4A1A;
-      }
-
       /* <img> SVG icons — invert to white (currentColor not inherited by <img>) */
       .step-icon img, .role-avatar img { filter: brightness(0) invert(1); }
-
-      /* List item hover — use dark hover bg token */
-      .list-item:hover { background: var(--color-slate-50); }
-
-      /* Progress track */
-      .progress { background: var(--color-border); }
     }
