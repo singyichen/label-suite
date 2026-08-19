@@ -354,6 +354,8 @@
       font-size: 14px;
       border-top: 1px solid var(--color-border);
     }
+    .empty .empty-msg { margin: 0; }
+    .empty .clear-btn { margin-top: 10px; }
     .pagination {
       display: flex;
       align-items: center;
@@ -652,6 +654,7 @@
       statusFilterAll: '全部完成狀態',
       clearFiltersLabel: '清除篩選',
       emptyNoResults: '找不到符合條件的資料。',
+      emptyNoData: '目前尚無資料。',
       paginationTpl: '共 {total} 筆 · 第 {page} / {totalPages} 頁',
       pageSizeTpl: '{size} / 頁',
       roleLabelAnnotator: '標記員',
@@ -708,6 +711,7 @@
       statusFilterAll: 'All statuses',
       clearFiltersLabel: 'Clear filters',
       emptyNoResults: 'No matching data.',
+      emptyNoData: 'No data yet.',
       paginationTpl: 'Total {total} · Page {page} / {totalPages}',
       pageSizeTpl: '{size} / page',
       roleLabelAnnotator: 'Annotator',
@@ -970,6 +974,9 @@
       statusFilter.appendChild(option);
     });
     statusFilter.value = FILTER_STATE.status;
+    /* A status carried in the URL that this role's option list doesn't
+       offer would filter everything while the select shows 全部. */
+    if (statusFilter.value !== FILTER_STATE.status) FILTER_STATE.status = '';
   }
 
   function parseContext() {
@@ -997,6 +1004,32 @@
     page: 1,
     pageSize: 20
   };
+
+  /* UXC-11: filter/search/pagination live in the URL (limit/offset
+     convention) so F5 restores the view and the link is shareable.
+     Context params from parseContext() (task_id, role, identity…) are
+     left untouched; defaults are dropped to keep the URL clean. */
+  function applyListStateFromUrl() {
+    var params = new URLSearchParams(window.location.search);
+    FILTER_STATE.status = params.get('status') || '';
+    FILTER_STATE.query = (params.get('q') || '').trim();
+    var limit = parseInt(params.get('limit') || '', 10);
+    if ([20, 50, 100].indexOf(limit) !== -1) PAGINATION_STATE.pageSize = limit;
+    var offset = parseInt(params.get('offset') || '', 10);
+    if (Number.isFinite(offset) && offset > 0) {
+      PAGINATION_STATE.page = Math.floor(offset / PAGINATION_STATE.pageSize) + 1;
+    }
+  }
+
+  function syncUrlToListState() {
+    var params = new URLSearchParams(window.location.search);
+    if (FILTER_STATE.status) params.set('status', FILTER_STATE.status); else params.delete('status');
+    if (FILTER_STATE.query) params.set('q', FILTER_STATE.query); else params.delete('q');
+    if (PAGINATION_STATE.pageSize !== 20) params.set('limit', String(PAGINATION_STATE.pageSize)); else params.delete('limit');
+    var offset = (PAGINATION_STATE.page - 1) * PAGINATION_STATE.pageSize;
+    if (offset > 0) params.set('offset', String(offset)); else params.delete('offset');
+    window.history.replaceState(null, '', window.location.pathname + '?' + params.toString());
+  }
 
   function updateClearFilterState() {
     var clearFiltersBtn = document.getElementById('clearFiltersBtn');
@@ -1354,8 +1387,10 @@
     var visibleRows = filterRows(rows);
     var totalPages = renderPagination(visibleRows.length, context);
     if (PAGINATION_STATE.page > totalPages) PAGINATION_STATE.page = totalPages;
+    syncUrlToListState();
 
     if (visibleRows.length === 0) {
+      renderEmptyState(emptyEl, rows.length > 0, context);
       emptyEl.classList.remove('hidden');
       return;
     }
@@ -1459,14 +1494,41 @@
     });
 
     clearFiltersBtn.addEventListener('click', function () {
-      FILTER_STATE.status = '';
-      FILTER_STATE.query = '';
-      resetPaginationToFirstPage();
-      statusFilter.value = '';
-      searchInput.value = '';
-      updateClearFilterState();
-      renderRows(context);
+      clearAllFilters(context);
     });
+  }
+
+  function clearAllFilters(context) {
+    FILTER_STATE.status = '';
+    FILTER_STATE.query = '';
+    resetPaginationToFirstPage();
+    var statusFilter = document.getElementById('statusFilter');
+    var searchInput = document.getElementById('searchInput');
+    if (statusFilter) statusFilter.value = '';
+    if (searchInput) searchInput.value = '';
+    updateClearFilterState();
+    renderRows(context);
+  }
+
+  /* UXC-09: first-use "no data" and "filters matched nothing" are
+     different situations — only the latter offers a clear-filters CTA. */
+  function renderEmptyState(emptyEl, hasAnyRows, context) {
+    emptyEl.innerHTML = '';
+    var msg = document.createElement('p');
+    msg.className = 'empty-msg';
+    msg.textContent = t(hasAnyRows ? 'emptyNoResults' : 'emptyNoData');
+    emptyEl.appendChild(msg);
+    if (hasAnyRows) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'clear-btn';
+      btn.setAttribute('data-testid', 'empty-clear-filters');
+      btn.textContent = t('clearFiltersLabel');
+      btn.addEventListener('click', function () {
+        clearAllFilters(context);
+      });
+      emptyEl.appendChild(btn);
+    }
   }
 
   function renderTaskInfo(context, profile) {
@@ -1584,8 +1646,6 @@
     renderStatusFilterOptions(context.role);
     var clearFiltersBtn = document.getElementById('clearFiltersBtn');
     if (clearFiltersBtn) clearFiltersBtn.setAttribute('aria-label', t('clearFiltersLabel'));
-    var emptyState = document.getElementById('emptyState');
-    if (emptyState) emptyState.textContent = t('emptyNoResults');
 
     renderTableHeader(context.role);
 
@@ -1607,10 +1667,15 @@
     var context = parseContext();
     CURRENT_LANG = window.LabelSuiteSharedSidebar ? window.LabelSuiteSharedSidebar.getStoredLang() : 'zh';
     context.profile = resolveTaskProfile(context.taskId);
+    applyListStateFromUrl();
 
     renderContext(context);
 
     if (context.profile) {
+      var searchInput = document.getElementById('searchInput');
+      if (searchInput) searchInput.value = FILTER_STATE.query;
+      var pageSizeSelect = document.getElementById('pageSizeSelect');
+      if (pageSizeSelect) pageSizeSelect.value = String(PAGINATION_STATE.pageSize);
       bindPagination(context);
       bindFilters(context);
       updateClearFilterState();
