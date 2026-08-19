@@ -20,7 +20,7 @@ jobs:
     name: Deploy
     runs-on: [self-hosted, deploy-develop]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Sync compose config (preserve .env)
         run: |
