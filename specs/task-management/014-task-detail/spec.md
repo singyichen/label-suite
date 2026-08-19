@@ -1,7 +1,7 @@
 ---
-功能分支: docs/190-completed-preconditions
+功能分支: docs/189-member-shortfall-gate
 建立日期: 2026-04-20
-版本: 2.7.0
+版本: 2.8.0
 狀態: Draft
 ---
 
@@ -418,6 +418,7 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 7. **Given** 任務為 `draft`，**When** `project_leader` 在「審核設定」把每筆資料審核員數改為 `3`、指派方式改為手動並勾選仲裁者，**Then** 摘要即時更新為 `3`／`手動指派`／`啟用 · 仲裁者 N 人` 且儲存後持久化。
 8. **Given** 使用者在「審核設定」輸入 `0` 或留空，**When** 儲存，**Then** 系統阻擋儲存並顯示可修正錯誤訊息，維持編輯模式。
 9. **Given** 任務為 `official_run_in_progress` 且仍有未定案 review unit 或未解決爭議，**When** `project_leader` 嘗試標記完成，**Then** 系統阻擋轉換為 `completed` 並逐項列出未滿足的前置條件（FR-008b）。
+10. **Given** 抽樣設定 `min_annotators = 3` 且任務僅有 2 位 `membership_status = active` 的標記員，**When** `project_leader` 嘗試發布試標回合，**Then** 系統阻擋發布並顯示標記員「還差 1 位」的缺口訊息（FR-010t）。
 
 **行為規則**：
 
@@ -538,6 +539,7 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 - **FR-010s**：Overview 必須在「抽樣設定」之後提供獨立「審核設定」區塊。檢視模式顯示四個欄位：`每筆資料審核員數`（`min_reviewers`）、`審核指派方式`（`review_assignment_mode`，顯示 `自動輪派`／`手動指派`）、`一致即定案`（`agreement_auto_finalize`，顯示 `啟用`／`停用`）、`第三人仲裁`（`arbitration_enabled` + `arbiter_ids`）。編輯權限與抽樣設定相同（`OVERVIEW_EDITABLE_STATUS` + `OVERVIEW_EDITABLE_ROLE`），編輯／儲存／取消與未儲存離開確認行為與抽樣設定一致。
 - **FR-010s-1**：審核設定編輯模式必須提供：`min_reviewers` 可直接鍵入的數字輸入框（不得使用瀏覽器內建 spinner 作為主要互動）、`REVIEW_ASSIGNMENT_MODES` 單選、`agreement_auto_finalize` 與 `arbitration_enabled` 兩個 toggle、仲裁者多選清單（候選 = `ARBITER_CANDIDATE_RULE`）。`arbitration_enabled = false` 時不得顯示仲裁者選擇。驗證：`min_reviewers` 不符 `MIN_REVIEWERS_RULE` 時阻擋儲存並顯示可修正錯誤訊息。
 - **FR-010s-2**：`第三人仲裁` 摘要值規則：停用 → `停用`；啟用且 `arbiter_ids` 為空 → `啟用 · 未指定仲裁者`；啟用且已指定 → `啟用 · 仲裁者 N 人`。
+- **FR-010t**：發布 `新增試標回合 R{n}` 或 `開始正式標記` 前，系統必須驗證實際啟用成員人數：`membership_status = active` 且 `task_role = annotator` 的人數 `>= min_annotators`，且 `membership_status = active` 且 `task_role = reviewer` 的人數 `>= min_reviewers`；任一角色人數不足時，系統必須阻擋發布，並逐角色顯示缺口訊息「還差 N 位」（`N = 設定最低人數 - 實際啟用人數`）。發布前檢查不得僅驗證抽樣／審核設定值本身（決策 D3，issue #189）。
 - **FR-011**：頁面必須支援 `RWD_VIEWPORTS`，在 `<= MOBILE_BP` 仍可完成核心查看與操作。
 - **FR-011a**：在 `375px`、`768px`、`1440px` 三個 viewport，必須可完成：進入詳情、tab 切換、run 發布權限顯示、`project_leader` 成員管理、`work-log` 篩選、匯出操作，且不得資訊重疊。
 - **FR-012**：Prototype 必須提供三類畫面狀態：`loading`、`empty`、`error`，且各 tab 至少有一組可展示案例。
@@ -705,6 +707,7 @@ flowchart LR
 - **SC-035**：`annotation-results` 展開列可完整呈現「標記員 → 審核員 → 仲裁」縮排時間軸（含具名人員、決策與時間），同一樣本多位標記員時逐標記員各自成段；審核狀態 badge 採 `AR_REVIEW_STATUS` 五態語彙；審核員與審核狀態兩個新篩選可實際過濾樣本列，且全部文案雙語一致。
 - **SC-036**：`work-log` 工時明細表以 `標記筆數`／`審核筆數`／`仲裁筆數` 三欄呈現完成筆數，角色不適用欄位顯示 `—`；匯總列呈現 `總工時`、`總標記筆數`、`總審核筆數`、`加權平均速度` 四卡與「每筆平均耗時」次要說明列，且全部文案雙語一致。
 - **SC-037**：任務僅在正式標記全數提交、應完成 review unit 全數定案、無未解決爭議、應仲裁項目全數完成且品質指標可用時，才可由 `official_run_in_progress` 轉為 `completed`；任一條件不符時轉換被阻擋，並逐項顯示未滿足的具體原因。
+- **SC-038**：實際啟用成員人數不足（active 標記員 `< min_annotators` 或 active 審核員 `< min_reviewers`）時，試標回合與正式標記發布皆被阻擋，且介面逐角色顯示「還差 N 位」缺口訊息；補足人數後方可發布。
 
 ---
 
@@ -712,6 +715,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.8.0 | 2026-08-19 | **成員不足發布阻擋（issue #189，決策 D3，minor）**：發布試標回合／正式標記前必須驗證實際啟用成員人數（active 標記員 `>= min_annotators`、active 審核員 `>= min_reviewers`），任一角色不足時阻擋發布並逐角色顯示「還差 N 位」缺口訊息；發布前檢查不得僅驗證設定值本身。新增 FR-010t、SC-038、使用者故事 3 驗收情境 10 |
 | 2.7.0 | 2026-08-19 | **`completed` 前置條件完整化（issue #190，決策 D2，minor）**：任務由 `official_run_in_progress` 轉為 `completed` 前必須滿足 issue #180 完整條件（正式標記全數提交＋應完成 review unit 全數定案＋無未解決爭議＋應仲裁項目全數完成＋品質指標可用），任一不符時阻擋轉換並逐項列出原因，不得僅以「全部標記已提交」作為完成依據；同步修訂 ADR-022 轉換表與 Amendment（2026-08-19）。新增 FR-008b、SC-037、使用者故事 3 驗收情境 9 |
 | 2.6.0 | 2026-08-18 | **工時紀錄完成筆數拆欄（issue #149 P5 之二，minor）**：`work-log` 工時明細表 `完成筆數` 拆為 `標記筆數`／`審核筆數`／`仲裁筆數` 三欄，角色不適用欄位顯示 `—`；匯總卡片改為 `總工時`、`總標記筆數`、`總審核筆數`、`加權平均速度` 四張，`加權平均速度` 卡附「每筆平均耗時」次要說明列；逐列平均速度與異常提醒計算改以三類筆數總和為分子；`WorkLogEntry.completed_count` 拆為 `annotated_count`／`reviewed_count`／`arbitrated_count`（角色不適用為 `null`）。新增 FR-007b、SC-036 |
 | 2.5.0 | 2026-08-18 | **標記結果審核歷程可視化（issue #149 P5 之一，minor）**：`annotation-results` 展開列於每位標記員子列下方新增「審核員 → 仲裁」縮排時間軸（審核員名稱＋`同意`／`修改→{修正後結果}`＋審核時間；經仲裁定案再一行仲裁者名稱＋`採 A`／`採 B`＋仲裁時間；`待審` 不顯示歷程行）；審核狀態 badge 語彙自 `通過／退回／待審核` 三態改為 `AR_REVIEW_STATUS` 五態（沿用 015 `REVIEW_UNIT_STATUS`：待審／已同意／已修改／爭議中／已定稿）；篩選列新增「審核員」與「審核狀態」下拉（審核狀態選項由常數推導）。新增常數 `AR_REVIEW_STATUS`、FR-015a-1、FR-015d-4、SC-035；改寫 FR-015a、FR-015d。工時紀錄完成筆數拆欄屬 P5 後續 PR |
