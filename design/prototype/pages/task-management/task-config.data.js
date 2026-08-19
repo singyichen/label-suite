@@ -178,9 +178,9 @@ var OUTPUT_TYPE_REGISTRY = {
     ],
     defaultConfig: {
       entities: [
-        { name: 'PER', color: '#FF6B6B' },
-        { name: 'ORG', color: '#4ECDC4' },
-        { name: 'LOC', color: '#45B7D1' },
+        { name: 'PER', color: '#EC4899' },
+        { name: 'ORG', color: '#14B8A6' },
+        { name: 'LOC', color: '#0EA5E9' },
       ],
       tagging_scheme: 'BIO',
       tokenization: {
@@ -213,9 +213,9 @@ var OUTPUT_TYPE_REGISTRY = {
     ],
     defaultConfig: {
       entities: [
-        { name: 'target', color: '#FF6B6B' },
-        { name: 'aspect', color: '#4ECDC4' },
-        { name: 'opinion', color: '#45B7D1' },
+        { name: 'target', color: '#EC4899' },
+        { name: 'aspect', color: '#14B8A6' },
+        { name: 'opinion', color: '#0EA5E9' },
       ],
       allow_overlapping: true,
     },
@@ -240,9 +240,9 @@ var OUTPUT_TYPE_REGISTRY = {
     ],
     defaultConfig: {
       label_options: [
-        { name: 'positive', color: '#2ECC71' },
-        { name: 'neutral', color: '#F39C12' },
-        { name: 'negative', color: '#E74C3C' },
+        { name: 'positive', color: '#10B981' },
+        { name: 'neutral', color: '#F59E0B' },
+        { name: 'negative', color: '#EC4899' },
       ],
     },
   },
@@ -265,12 +265,12 @@ var OUTPUT_TYPE_REGISTRY = {
             {
               id: 'negative', name: 'negative', children: [
                 { id: 'sad', name: 'sad', color: '#6366F1' },
-                { id: 'angry', name: 'angry', color: '#E74C3C' },
+                { id: 'angry', name: 'angry', color: '#EC4899' },
               ],
             },
           ],
         },
-        { id: 'surprise', name: 'surprise', color: '#F39C12' },
+        { id: 'surprise', name: 'surprise', color: '#F59E0B' },
       ],
       max_selections: 0,
     },
@@ -457,9 +457,9 @@ var ABSA_MULTI_OUTPUT_TEMPLATE = {
       type: 'entity_recognition',
       config: {
         entities: [
-          { name: 'target', color: '#FF6B6B' },
-          { name: 'aspect', color: '#4ECDC4' },
-          { name: 'opinion', color: '#45B7D1' },
+          { name: 'target', color: '#EC4899' },
+          { name: 'aspect', color: '#14B8A6' },
+          { name: 'opinion', color: '#0EA5E9' },
         ],
         allow_overlapping: true,
       },
