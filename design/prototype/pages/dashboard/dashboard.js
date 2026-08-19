@@ -263,11 +263,17 @@
     var taskMap = buildMap(data.tasks, 'id');
     var outputTypeMap = buildMap(data.outputTypes, 'key');
     var entries = data.roleLists[listKey] || [];
-    container.innerHTML = entries.map(function (entry, index) {
+    var markup = entries.map(function (entry, index) {
       var task = taskMap[entry.exampleTaskId];
       if (!task || !Array.isArray(task.outputTypes)) return '';
       return createTaskCard(entry, task, role, index, outputTypeMap);
     }).join('');
+    if (!markup) {
+      markup = '<p class="list-empty" data-testid="task-list-empty">'
+        + escapeHtml(t('taskListEmpty'))
+        + '</p>';
+    }
+    container.innerHTML = markup;
     bindRoleTaskEvents(container, role, entries);
   }
 
@@ -335,32 +341,57 @@
     });
   }
 
+  function applyScenario(nextScenario) {
+    scenario = nextScenario;
+    Array.prototype.forEach.call(
+      document.querySelectorAll('.scenario-pill'),
+      function (item) {
+        item.classList.toggle(
+          'active',
+          item.dataset.scenario === scenario
+        );
+      }
+    );
+    global.LabelSuiteSharedSidebar.setSystemRole(
+      scenarioToSystemRole(scenario)
+    );
+    syncSidebarIdentity();
+    Array.prototype.forEach.call(
+      document.querySelectorAll('.view'),
+      function (view) {
+        view.classList.remove('is-active');
+      }
+    );
+    var targetView = document.getElementById('view-' + scenario);
+    if (targetView) targetView.classList.add('is-active');
+  }
+
+  function syncScenarioToUrl() {
+    var url = new URL(global.location.href);
+    if (scenario === 'user') {
+      url.searchParams.delete('scenario');
+    } else {
+      url.searchParams.set('scenario', scenario);
+    }
+    global.history.replaceState(null, '', url.toString());
+  }
+
+  function applyScenarioFromUrl() {
+    var requested = new URL(global.location.href)
+      .searchParams.get('scenario');
+    if (!requested || requested === scenario) return;
+    if (!document.getElementById('view-' + requested)) return;
+    applyScenario(requested);
+  }
+
   function bindScenarioEvents() {
     Array.prototype.forEach.call(
       document.querySelectorAll('.scenario-pill'),
       function (pill) {
         pill.addEventListener('click', function () {
           var previousScenario = scenario;
-          Array.prototype.forEach.call(
-            document.querySelectorAll('.scenario-pill'),
-            function (item) {
-              item.classList.remove('active');
-            }
-          );
-          pill.classList.add('active');
-          scenario = pill.dataset.scenario;
-          global.LabelSuiteSharedSidebar.setSystemRole(
-            scenarioToSystemRole(scenario)
-          );
-          syncSidebarIdentity();
-          Array.prototype.forEach.call(
-            document.querySelectorAll('.view'),
-            function (view) {
-              view.classList.remove('is-active');
-            }
-          );
-          var targetView = document.getElementById('view-' + scenario);
-          if (targetView) targetView.classList.add('is-active');
+          applyScenario(pill.dataset.scenario);
+          syncScenarioToUrl();
           global.LabelSuiteAnalytics.track(
             'prototype_scenario_switched',
             {
@@ -385,6 +416,13 @@
       'click',
       function () {
         handleLangToggle('mobile_toggle');
+      }
+    );
+    document.getElementById('ctaLeaderBtn').addEventListener(
+      'click',
+      function () {
+        global.LabelSuiteSharedSidebar.setSystemRole('user');
+        global.location.href = '../task-management/task-new.html';
       }
     );
     document.getElementById('ctaAnnotatorBtn').addEventListener(
@@ -458,6 +496,7 @@
     global.LabelSuiteSharedSidebar.setSystemRole(
       scenarioToSystemRole(scenario)
     );
+    applyScenarioFromUrl();
     applyLang(lang);
     Array.prototype.forEach.call(
       document.querySelectorAll('.scenario-pill'),
