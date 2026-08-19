@@ -210,10 +210,21 @@
      修改內容). */
   function appendHistoryEvent(entry, action, role, summary, actorId) {
     if (!Array.isArray(entry.history)) entry.history = [];
+    var normalizedActorId = actorId || null;
+    var last = entry.history[entry.history.length - 1];
+    /* Double-submit guard (issue #201 / w6 DUP-01): a double-click can run
+       markSampleSubmitted twice for the same sample/annotator/run before
+       handleSubmit's busy-flag registers -- drop an identical consecutive
+       'submitted' event instead of appending a duplicate that would
+       corrupt the audit trail. Reviewer submit hits this same function,
+       so the guard covers that path too. */
+    if (action === 'submitted' && last && last.action === 'submitted' && last.role === role && last.actorId === normalizedActorId) {
+      return;
+    }
     entry.history.push({
       action: action,
       role: role,
-      actorId: actorId || null,
+      actorId: normalizedActorId,
       at: new Date().toISOString(),
       summary: summary || '',
     });
