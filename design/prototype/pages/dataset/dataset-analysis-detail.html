@@ -65,7 +65,8 @@
     /* IAA method row */
     .iaa-method-row{display:flex;align-items:center;gap:8px;margin-bottom:var(--space-md);font-size:13px;color:var(--color-text-soft)}
     .iaa-method-name{font-weight:700;color:var(--color-ink)}
-    .iaa-primary-star{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;font-size:11px;background:var(--color-warning-bg);border:1px solid var(--color-warning-border);border-radius:var(--radius-sm);color:var(--color-warning);font-weight:700;flex-shrink:0}
+    .iaa-primary-star{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;background:var(--color-warning-bg);border:1px solid var(--color-warning-border);border-radius:var(--radius-sm);color:var(--color-warning);flex-shrink:0}
+    .iaa-primary-star svg{width:11px;height:11px}
 
     /* IAA score cards */
     .iaa-score-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:var(--space-md)}
@@ -137,7 +138,8 @@
     .annotator-name{font-weight:700}
     .delta-pos{color:var(--color-success);font-weight:600}
     .delta-neg{color:var(--color-error);font-weight:600}
-    .speed-flag{color:var(--color-warning);font-size:12px;margin-left:4px}
+    .speed-flag{display:inline-flex;color:var(--color-warning);margin-left:4px;vertical-align:middle}
+    .speed-flag svg{width:13px;height:13px}
     .speed-warn{color:var(--color-warning)}
     .group-avg-note{font-size:12px;color:var(--color-text-soft);margin-top:10px}
     .risk-level-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:var(--radius-full);border:1px solid transparent;font-size:12px;font-weight:700;white-space:nowrap}
