@@ -11,30 +11,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet" />
   <style>
+    /* Color/font/radius/shadow/spacing/motion/z-index tokens come from
+       ../../assets/tokens.css; only page-local layout variables live here. */
     :root {
-      --color-primary:          #6366F1;
-      --color-cta:              #10B981;
-      --color-surface:          #F5F3FF;
-      --color-white:            #FFFFFF;
-      --color-ink:              #1E1B4B;
-      --color-ink-muted:        #94A3B8;
-      --color-text-soft:        #64748B;
-      --color-border:           #E2E8F0;
-      --color-border-muted:     #F1F5F9;
-      --color-primary-soft-bg:  #EEF2FF;
-      --color-slate-50:         #F8FAFC;
-      --color-error:            #B91C1C;
-      --color-error-soft-bg:    #FEF2F2;
-      --color-error-soft-border:#FECACA;
-      --font-serif-display: 'Crimson Pro', 'Noto Serif TC', 'Source Han Serif TC', Georgia, serif;
-      --font-sans: 'Inter', 'Noto Sans TC', 'PingFang TC', -apple-system, sans-serif;
-      --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px;
-      --radius-xl: 16px; --radius-full: 9999px;
-      --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
-      --space-xs: 4px; --space-sm: 8px; --space-md: 16px;
-      --space-lg: 24px; --space-xl: 32px;
-      --dur-fast: 150ms; --dur-normal: 200ms;
-      --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
       --navbar-mobile-height: 84px; --navbar-mobile-top-height: 64px;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -220,16 +199,17 @@
     .badge-iaa-not-started { color: var(--color-text-soft);    background: var(--color-slate-50);        border-color: var(--color-border);          }
     .badge-iaa-not-applicable { color: var(--color-text-soft); background: var(--color-slate-50);        border-color: var(--color-border);          border-style: dashed; }
     /* Role badge */
-    .badge-role-pl    { color: var(--color-primary);  background: var(--color-primary-soft-bg); border-color: var(--color-info-border); }
+    .badge-role-pl    { color: var(--color-primary);  background: var(--color-primary-soft-bg); border-color: var(--color-primary-border); }
     .badge-role-rev   { color: var(--color-info);     background: var(--color-info-bg);         border-color: var(--color-info-border); }
 
     /* ── Empty state ─────────────────────────────────────────── */
-    .empty-row { cursor: default !important; }
-    .empty-row:hover { background: transparent !important; }
+    .empty-row, .error-row { cursor: default !important; }
+    .empty-row:hover, .error-row:hover { background: transparent !important; }
     .empty-row-cell { padding: 48px 20px !important; }
     .empty-row-wrap { text-align: center; max-width: 420px; margin: 0 auto; }
-    .empty-title { font-size: 20px; font-weight: 700; color: var(--color-ink); margin: 0 0 8px; }
-    .empty-desc { font-size: 14px; color: var(--color-text-soft); margin: 0; }
+    .empty-title, .error-title { font-size: 20px; font-weight: 700; color: var(--color-ink); margin: 0 0 8px; }
+    .empty-desc, .error-desc { font-size: 14px; color: var(--color-text-soft); margin: 0 0 16px; }
+    .empty-desc { margin-bottom: 0; }
 
     /* ── Pagination ──────────────────────────────────────────── */
     .pagination {
@@ -249,7 +229,7 @@
       transition: all var(--dur-fast);
     }
     .page-btn:hover:not(:disabled):not(.active) { border-color: var(--color-primary); background: var(--color-primary-soft-bg); color: var(--color-primary); }
-    .page-btn.active { background: var(--color-primary); color: white; border-color: var(--color-primary); }
+    .page-btn.active { background: var(--color-primary); color: var(--color-white); border-color: var(--color-primary); }
     .page-btn:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
     .page-size-select {
       padding: 5px 28px 5px 10px; border: 1px solid var(--color-border); border-radius: var(--radius-md);
