@@ -1577,7 +1577,11 @@
    * `decisions` is [{itemId, choice: 'A'|'B', value}] where `value` is the
    * concrete winning value (A -> annotatorValue, B -> the chosen reviewer
    * value). The prototype has a single arbiter per claim, so each vote
-   * finalizes its item immediately. */
+   * finalizes its item immediately. A resubmission by the same arbiter
+   * (issue #199: double-click / re-trigger) overwrites that arbiter's
+   * existing votes[] entry in place instead of appending a duplicate --
+   * finalized_value/finalized_by are already last-write-wins for the same
+   * item, so votes[] must stay one entry per arbiter to match. */
   function submitArbitration(taskId, runType, sampleId, identity, decisions) {
     var store = readArbitrationStore();
     var key = arbitrationBucketKey(taskId, runType, identity);
@@ -1586,7 +1590,16 @@
     var arbiterId = (identity && identity.reviewerId) || DEFAULT_REVIEWER_ID;
     (decisions || []).forEach(function (decision) {
       var item = store[key][sampleId][decision.itemId] || { votes: [] };
-      item.votes.push({ arbiter_id: arbiterId, choice: decision.choice, voted_at: new Date().toISOString() });
+      var vote = { arbiter_id: arbiterId, choice: decision.choice, voted_at: new Date().toISOString() };
+      var existingIndex = -1;
+      item.votes.forEach(function (v, i) {
+        if (v.arbiter_id === arbiterId) existingIndex = i;
+      });
+      if (existingIndex === -1) {
+        item.votes.push(vote);
+      } else {
+        item.votes[existingIndex] = vote;
+      }
       item.finalized_value = decision.value;
       item.finalized_by = arbiterId;
       store[key][sampleId][decision.itemId] = item;
