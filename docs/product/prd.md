@@ -196,7 +196,7 @@ Foundation 提供可擴充、可觀測與安全的共同能力；API、資料模
 | FR-DS01 | 資料集分析模組入口（`/dataset-analysis`）列出使用者具 `project_leader` 或 `reviewer` 角色的任務 | P1 | spec 016 |
 | FR-DS02 | 統計總覽 tab（`?tab=stats`）顯示共用指標：Sentence 數量、Token 數量、整體完成率 | P1 | spec 016 |
 | FR-DS03 | 統計總覽依 `outputs[].type` 逐型顯示，複合任務逐型彙整 | P1 | spec 016 |
-| FR-DS04 | 品質監控的 IAA 指標與預設門檻取自 spec 017 的 registry；只有 `free_text` 的任務呈現 `not_applicable` | P1 | spec 017 |
+| FR-DS04 | 品質監控的 IAA 指標與預設門檻取自 spec 017 的 registry；`free_text` output 的自動 IAA 為 `not_applicable`，混合任務的其他 outputs 仍逐型套用該 registry | P1 | spec 017 |
 | FR-DS05 | 品質監控提供資料品質觀察；異常與比較規則以 spec 017 為準 | P2 | spec 017 |
 
 ### 4.7 模組：admin（系統管理模組）

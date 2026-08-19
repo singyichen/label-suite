@@ -10,19 +10,22 @@
 
 ## Authority order
 
-固定讀取順序如下；發生衝突時回到較高階正典，不得以產品摘要自行裁決：
+發生衝突時，依下列正典權威階層回到較高階來源，不得以產品摘要自行裁決：
 
 1. main constitution
 2. applicable domain constitutions
-3. Product Baseline
-4. [`specs/STATUS.md`](../../specs/STATUS.md)
-5. target spec
-6. upstream/downstream specs
-7. [shared constants](../../specs/_shared/constants.md)
-8. prototype/design
-9. approved plan/tasks
+3. active feature specs
+4. [shared constants](../../specs/_shared/constants.md)
+5. [`specs/STATUS.md`](../../specs/STATUS.md)
+6. accepted ADRs
+7. prototype/design
+8. product docs
 
-`STATUS.md` 是交付流程狀態來源；target spec 是該功能行為來源；shared constants 是跨 spec enum／route／breakpoint 的正名來源；ADR 是已接受決策來源。Product Baseline、PRD、Impact Map、Story Map、IA 與 Milestones 僅提供產品導航。
+`STATUS.md` 是交付流程狀態來源；feature spec 是行為來源；shared constants 是跨 spec enum／route／breakpoint 的正名來源；ADR 是已接受決策來源。Product Baseline、PRD、Impact Map、Story Map、IA 與 Milestones 僅提供產品導航。
+
+## Required reading sequence
+
+開啟任務時固定依下列順序閱讀：main constitution → applicable domain constitutions → Product Baseline → `STATUS.md` → target spec → upstream/downstream specs → shared constants → prototype/design → approved plan/tasks。
 
 ## Required task packet
 
