@@ -1,6 +1,6 @@
 # 任務類型分類法（ Task Type Taxonomy ）
 
-> **定位與權威：** 本文件僅提供產品 taxonomy 導覽；組合模型以 [ADR-029](../../adr/029-output-type-composition.md) 與 [013 Task New](../../../specs/task-management/013-task-new/spec.md) 為準。最後驗證：2026-08-19（013 v6.9.1、ADR-029／031）。
+> **定位與權威：** 本文件僅提供產品 taxonomy 導覽；組合模型以 [ADR-029](../../adr/029-output-type-composition.md) 與 [013 Task New](../../../specs/task-management/013-task-new/spec.md) 為準。最後驗證：2026-08-19（013 v6.9.1、ADR-029／031）。`input_type` 僅有 `single_item | item_pair`，`item_pair_labels` 保存兩側顯示名稱；`field_role_map` 將欄位指定為 Evidence、Input 或可編修預標記的 Output，未指定欄位不進入標記脈絡，Output 不等於隱藏 test-set 答案。生命週期與完成 gate 回鏈 014，review unit（sample × annotator × run）／仲裁回鏈 015，IAA 回鏈 017（`free_text` 不適用自動 IAA）；Dataset 僅呈現具 `project_leader` 或 `reviewer` membership 的任務，行為回鏈 016／017。
 ## 三層結構
 
 ```
@@ -14,8 +14,6 @@
 > 本節是 **task type taxonomy**（任務 category／input／output 的組合），不是 `multi_label` 的 **label taxonomy**。標籤樹可遞迴建立多層，但受平台資源上限約束。
 >
 > 「整篇文章」與「句子／段落」視為相同輸入類型（ `single_item` ），差異只在資料長度，不影響 task config 結構。
->
-> `input_type` 僅有 `single_item | item_pair`；`item_pair` 以 `item_pair_labels` 保存兩側產品顯示名稱。`field_role_map` 將資料欄位指定為 Evidence（背景）、Input（作答輸入）或 Output（可編修預標記），未指定欄位不進入標記脈絡；Output 不等於可下發的隱藏 test-set 答案。
 
 > 本次同步遷移顯示名稱與技術識別碼：`span` → `entity_recognition`、`relation_triple` → `relation_identification`、`token_class` → `sequence_tagging`。舊 key 與 `entity_relation`、`boundary` 均已自合法任務類型移除，不提供相容別名。
 
@@ -186,7 +184,6 @@ max_selections: 0
 ## 5. 混合（ Mixed ）
 
 > 混合任務由 ADR-029 的 `outputs[]` composition 組成，不另建立固定的 `mixed` output type。
-> 下游生命週期與完成 gate 回鏈 014；review unit（sample × annotator × run）及仲裁回鏈 015；IAA 依 output type 由 017 判定（`free_text` 不適用自動 IAA），Dataset 僅呈現具 `project_leader` 或 `reviewer` membership 的任務。
 
 ---
 
@@ -205,4 +202,4 @@ max_selections: 0
 | 序列（ sequence ） | 單一項目（ single_item ） | Sequence Tagging 序列標註（ `sequence_tagging` ） | POS tagging、Chunking、token-level NER | `entities[]: { name, color }`、`tokenization.unit: character\|word`、`tagging_scheme: BIO\|BIOES\|IOB2\|SINGLE` |
 | 序列（ sequence ） | 單一項目（ single_item ） | Entity Recognition 實體辨識（ `entity_recognition` ） | NER（ span-level ）、Aspect Term Extraction、Keyword Extraction、ABSA | `entities[]: { name, color }` 或 `polarity_options[]: { name, color? }`（ 見 `entity_recognition` Config 說明 ） |
 | 序列（ sequence ） | 單一項目（ single_item ） | Relation Identification 關係識別（ `relation_identification` ） | OpenIE、Relation Extraction | `relation_types[]: string`（語意類型標籤） |
-| 生成（ generation ） | 單一項目（ single_item ） | 自由文字（ free_text ） | Summarization、Question Answering、Translation、Paraphrase | `max_length` |
+| 生成（ generation ） | 單一項目（ single_item ） | 自由文字（ free_text ） | Summarization、Question Answering、Translation、Paraphrase | `input_instruction`、`output_instruction`、`max_length` |

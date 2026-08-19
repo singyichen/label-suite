@@ -3,7 +3,6 @@
 > **用途：** 作為 SDD 開發的參考基準。每份 `spec.md` 撰寫前，應先對照本文件確認頁面歸屬、使用者角色、進入條件與導覽關係。
 >
 > **正典來源：** [`specs/STATUS.md`](../../../specs/STATUS.md) 與 active feature specs；[`functional-map.md`](../functional-map/functional-map.md) 僅為非權威視覺索引
-> **版本：** 1.6.0（2026-08-19）
 
 ---
 
@@ -20,7 +19,7 @@
 
 > **Account prototype 邊界：** 本節帳號流程描述 prototype 合約；Email / Password 自行註冊（`/register`）後取得 `user` 系統角色，Google SSO 僅為可操作入口與未來整合預留，點擊為 no-op，不代表 OAuth 已可登入。
 
-### 任務角色（Task Role）— `task_membership` 表，任務層級
+### 任務角色（Task Role）— 任務層級
 
 | 任務角色 | 識別碼 | 職責 | 指派方式 |
 |----------|--------|------|----------|
@@ -28,7 +27,6 @@
 | 審核員 | `reviewer` | 逐標記員審核標記結果、不一致時直接修正標籤、查看品質報告 | 由任務 `project_leader` 指派 |
 | 標記員 | `annotator` | 執行標記作業（試標 / 正式標）、查看個人進度 | 由任務 `project_leader` 指派 |
 
-> **Task Role 重點：** 同一使用者可在任務 A 擔任 `project_leader`，同時在任務 B 擔任 `annotator`。任務層級的授權透過查詢 `task_membership(task_id, user_id, task_role)` 表決定，不依賴 JWT 系統角色。系統角色不再有繼承關係。
 
 ---
 
@@ -257,7 +255,7 @@ flowchart TD
 **角色分流邏輯（與 spec 012 一致）：**
 - 先讀取 `system role`
   - `super_admin`：顯示 Super Admin Dashboard
-  - `user`：再讀取 `task_membership` 判斷主視圖
+  - `user`：再依任務角色資格判斷主視圖
     - 無任務關係：一般使用者 Dashboard
     - 有 `project_leader` 任務：Project Leader Dashboard
     - 有 `annotator` 任務：Annotator Dashboard
@@ -343,7 +341,6 @@ flowchart TD
     - Aspect 抽取 / 校正 → `sequence_tagging`（已覆蓋）
     - Entity + Relation + Triple（五元組流程）→ `entity_recognition` + `relation_identification`（已覆蓋；五元組由 relation schema 擴充欄位承接）
 - **空狀態：** 不適用（此頁為建立流程，永遠有內容）
-- **任務建立完成：** 系統自動在 `task_membership` 建立一筆紀錄，任務建立者的任務角色設為 `project_leader`
 - **離開方式：** 建立成功 → `task-detail`；取消 → `task-list`
 
 #### `task-detail` 任務詳情頁（含 5 個 tab）
@@ -378,8 +375,7 @@ flowchart TD
   - 系統狀態機：`draft` → `dry_run_in_progress` → `waiting_iaa_confirmation` → `official_run_in_progress` → `completed`
   - IA 顯示階段：stepper 維持 `draft` → `trial stage` → `official_run_in_progress` → `completed`；`dry_run_in_progress` 與 `waiting_iaa_confirmation` 皆屬 `trial stage`
   - **Dry Run 完成通知：** 僅當任務內每位 `active annotator` 都滿足 `assigned_count == completed_count`，系統才可自動切換至 `waiting_iaa_confirmation`，並在 Dashboard 待處理事項區新增 badge 提醒任務 `project_leader`
-  - **Official Run 完成 gate：** 正式標記全數提交後，仍須所有應完成 review unit 定案、無未解爭議、應仲裁項目完成且品質指標可用，才可切換至 `completed`
-  - 任務狀態轉換需留下 `RunStateTransition` 紀錄，至少包含 `from_status`、`to_status`、`triggered_by`、`triggered_at`
+  - **Official Run 完成 gate：** 正式標記全數提交後，仍須所有應完成 review unit 定案、無未解爭議、應仲裁項目完成且品質指標可用，才可切換至 `completed`；狀態轉換需可追溯，紀錄契約以 active 014 spec 為準
 - **任務狀態與執行控制（Overview 區塊）：**
   - 頂層階段只由 stepper 表示，不另以 `草稿` / `已隔離` badge 或 stage meta pills 重複呈現
   - 單一執行判定 banner 僅顯示最近試標回合或正式標記的判定標題與下一步說明；不得再顯示額外「目前任務階段」標題/描述，也不得另設獨立「正式標記判定」卡
@@ -459,7 +455,7 @@ flowchart TD
 
 - **進入方式：** Navbar → 資料集分析
 - **顯示：** 列出使用者具 `project_leader` 或 `reviewer` membership 的任務（含任務名稱、所有 `outputs[].type` tags、完成率、IAA 狀態徽章、成員角色）
-- **操作：** 關鍵字搜尋、輸出類型篩選、IAA 狀態篩選與分頁
+- **操作：** 關鍵字搜尋、輸出類型篩選、IAA 狀態篩選與分頁；合法查詢條件同步至 URL query，保留 deep-link、返回與篩選／分頁狀態
 - **空狀態（無任務）：** 說明文字「尚無可分析的任務」
 - **離開方式：** 點擊任務列 → `/dataset-analysis-detail/:task_id?tab=stats`
 
@@ -531,12 +527,12 @@ sequenceDiagram
   AW-->>TD: 任務狀態切換 → 等待 IAA 確認
   TD-->>PL: Dashboard 待處理事項 badge：「Dry Run 已全員完成」
   PL->>DQ: 從 badge 連結進入，查看 IAA 結果
-  alt IAA ≥ 0.8
+  alt 適用 outputs[] 的品質 gate 全數達標
     PL->>TD: 確認標記準則，發布 Official Run
     Note over AW: 各標記員分配不重疊資料
     AW-->>TD: 標記進度更新
     PL->>TD: 正式提交、review unit 定案、爭議與仲裁完成且品質可用後，完成任務並匯出 JSON / JSON-MIN
-  else IAA < 0.8
+  else 任一適用 output 未達 gate（free_text 為 not_applicable 且不納入）
     PL->>DQ: 查看差異報告，召開討論修正準則
     PL->>TD: 重新發布 Dry Run
   end
@@ -564,7 +560,6 @@ sequenceDiagram
 
 ### 旅程 C — 審核員審查並查看品質報告
 
-> 審核員（`reviewer`）是任務角色（task role），透過 `task_membership` 表在任務層級指派，與系統角色（system role）無關、無繼承關係。同一使用者可在同一任務同時被指派為 `project_leader` 與 `reviewer`，但這是兩筆獨立的 `task_membership` 記錄，而非角色繼承。
 
 ```mermaid
 sequenceDiagram
@@ -578,8 +573,7 @@ sequenceDiagram
   R->>AW: 進入審查模式，逐筆審核
   R->>AW: 逐 review unit（sample × annotator × run）審核：一致前進，不一致直接修正
   Note over AW: 不一致項進入爭議池，由第三人仲裁
-  R->>DS: 查看統計總覽（Sentence / Token / Label 分佈）
-  R->>DQ: 查看 IAA 報告與異常偵測結果
+  Note over DS,DQ: 共用摘要 + outputs[] 逐型統計／IAA；free_text IAA 顯示 not_applicable
 ```
 
 ### 旅程 D — Super Admin 使用者管理
@@ -688,7 +682,6 @@ specs/foundation/000-foundation/
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
-| 1.6.0 | 2026-08-19 | 對齊 active specs 的導覽、角色 gating、outputs-driven Dataset 分析與完整 review／completion journey；移除自管 P1/P2 與交付狀態快照 |
 | 1.5.0 | 2026-08-19 | 同步審核員模型（逐標記員審核 + 當場直接修正 + 爭議池第三人仲裁，取代通過/退回聚合語意，含旅程 C 序列圖）、`task-new` 任務類型敘述改為 `input_type` + `outputs[]` 組合模型（取代固定 `task_type` registry 語意，`dataset-analysis` 統計/品質章節不在本次調整範圍）；依 issue #202 |
 | 1.4.3 | 2026-05-29 | 補充 Foundation Spec 與 IA / SDD 的關係：Foundation 作為所有 feature spec 的上游工程基準，新增 P0 Foundation 開發批次與 `000-foundation` spec 條目 |
 | 1.4.2 | 2026-05-19 | 同步通知設定 IA：`profile` 納入通知設定區塊，通知欄位改為「電子郵件」，事件增為六項並新增「正式標記全員完成」；Official Run 全員完成時通知 `project_leader` |
