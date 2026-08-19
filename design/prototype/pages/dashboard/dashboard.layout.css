@@ -404,3 +404,12 @@
       transition: background 150ms, border-color 150ms;
     }
 
+    .list-empty {
+      padding: var(--space-md);
+      border-radius: var(--radius-md);
+      border: 1px dashed var(--color-border);
+      color: var(--color-ink-muted);
+      font-size: 0.875rem;
+      text-align: center;
+    }
+
