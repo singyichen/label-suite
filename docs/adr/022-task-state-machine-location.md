@@ -2,6 +2,7 @@
 
 **Status**: Accepted
 **Date**: 2026-05-29
+**Amended**: 2026-08-19 — `official_run_in_progress → completed` pre-conditions strengthened (issue #190, decision D2)
 
 ## Context
 
@@ -86,11 +87,23 @@ Implement task state machine logic exclusively in the **service layer** (`app/se
 | `dry_run_in_progress` | `waiting_iaa_confirmation` | All dry-run annotations submitted; IAA calculated |
 | `waiting_iaa_confirmation` | `official_run_in_progress` | Project leader confirms IAA; `confirmed_by` recorded |
 | `waiting_iaa_confirmation` | `draft` | Project leader rejects IAA; `sample_snapshot_id` cleared to allow re-dry-run |
-| `official_run_in_progress` | `completed` | All official-run annotations submitted; final scores calculated |
+| `official_run_in_progress` | `completed` | All official-run annotations submitted; all required review units finalized; no unresolved disputes; all required arbitrations completed; final quality scores calculated (see Amendment 2026-08-19) |
 
 Reverse transitions (other than `waiting_iaa_confirmation → draft`) are **not permitted**. Any attempt raises `InvalidTransitionError`.
 
 > **Design note — `dry_run_in_progress → draft` is intentionally excluded.** Allowing this transition would require cancelling all in-progress dry-run annotations and deciding how to handle already-submitted ones, which creates orphaned annotation data and complicates the cleanup path. The intended recovery flow for configuration errors discovered during a dry run is to have annotators complete (or abandon by submitting placeholder annotations) the current dry run, advance to `waiting_iaa_confirmation`, reject the IAA, and return to `draft` — at which point `sample_snapshot_id` is cleared and a fresh configuration and dry run can begin. This keeps cleanup logic in one transition (`waiting_iaa_confirmation → draft`) rather than two.
+
+### Amendment (2026-08-19) — Strengthened `completed` Pre-conditions
+
+Issue #180's cross-role lifecycle review found that the original `official_run_in_progress → completed` pre-condition ("All official-run annotations submitted; final scores calculated") ignored the review pipeline: a task could reach `completed` while review units were still open, disputes were unresolved, or arbitrations were pending. Per user decision D2 (issue #190; decision record: `docs/product/e2e/issue-180/phase2-decision-list.md`), the transition now requires **all** of the following:
+
+1. All official-run annotations submitted (excluded assignments do not count) — unchanged.
+2. All required review units finalized under the effective review settings (`min_reviewers`).
+3. No unresolved disputes remain.
+4. All required arbitrations completed.
+5. Final quality scores calculated and available — unchanged.
+
+`check_preconditions` must evaluate all five conditions for this transition; a failed check must surface the specific unmet conditions to the caller rather than a generic error. The user-facing behavior (confirmation and blocking-reason display) is specified in `specs/task-management/014-task-detail/` FR-008b.
 
 ### `validate_transition` Implementation
 
