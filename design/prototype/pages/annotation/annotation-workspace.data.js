@@ -339,8 +339,13 @@
    * reviewer aggregate review card's actor, regardless of which bucket is
    * being modified. Mirrors markSampleSaved/markSampleSubmitted's
    * read-modify-write shape; when no entry exists yet, a fresh
-   * pending-status entry is created so the rejection is still traceable. */
+   * pending-status entry is created so the rejection is still traceable.
+   * spec 015 AC-3.15/AC-6.4/FR-014I (issue #192): this rollback-to-pending
+   * mechanism applies only to `run_type = official_run` -- `dry_run` has no
+   * "退回個人重標" channel, so a dry_run reject decision must not touch the
+   * annotator's submission status. */
   function markSampleRejected(taskId, role, runType, sampleId, historySummary, identity) {
+    if (runType !== 'official_run') return;
     var store = readSubmissionStore();
     var key = submissionBucketKey(taskId, role, runType, identity);
     if (!store[key]) store[key] = {};

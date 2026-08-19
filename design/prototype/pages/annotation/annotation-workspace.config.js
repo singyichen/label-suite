@@ -2646,7 +2646,10 @@
       summary,
       currentIdentity
     );
-    if (currentRejectedSomewhere) {
+    /* spec 015 AC-3.15/AC-6.4/FR-014I (issue #192): the reject -> pending
+       rollback only applies to official_run -- dry_run has no "退回個人重標"
+       channel, so a dry_run reject decision must not roll the sample back. */
+    if (currentRejectedSomewhere && currentRunType === 'official_run') {
       window.LabelSuiteAnnotationWorkspaceData.markSampleRejected(currentProfile.id, 'annotator', currentRunType, currentSampleId, summary, currentIdentity);
     }
 
