@@ -1,7 +1,7 @@
 ---
-功能分支: docs/189-member-shortfall-gate
+功能分支: docs/210-official-assignment-rule
 建立日期: 2026-04-20
-版本: 2.8.0
+版本: 2.9.0
 狀態: Draft
 ---
 
@@ -419,6 +419,7 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 8. **Given** 使用者在「審核設定」輸入 `0` 或留空，**When** 儲存，**Then** 系統阻擋儲存並顯示可修正錯誤訊息，維持編輯模式。
 9. **Given** 任務為 `official_run_in_progress` 且仍有未定案 review unit 或未解決爭議，**When** `project_leader` 嘗試標記完成，**Then** 系統阻擋轉換為 `completed` 並逐項列出未滿足的前置條件（FR-008b）。
 10. **Given** 抽樣設定 `min_annotators = 3` 且任務僅有 2 位 `membership_status = active` 的標記員，**When** `project_leader` 嘗試發布試標回合，**Then** 系統阻擋發布並顯示標記員「還差 1 位」的缺口訊息（FR-010t）。
+11. **Given** 任務有 3 位 `membership_status = active` 的標記員且扣除試標後剩餘 5 筆正式標記樣本，**When** `project_leader` 開始正式標記，**Then** 系統依輪流分派建立 assignment，每筆樣本恰指派一位標記員，且任兩位標記員的分派筆數差距不超過 1（FR-010f-4）。
 
 **行為規則**：
 
@@ -526,6 +527,7 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 - **FR-010f-1**：任務建立時不得預先建立標記清單資料；系統必須只在 `ANNOTATION_LIST_MATERIALIZATION_EVENTS` 發生時建立對應 `AnnotationListItem` / assignment。
 - **FR-010f-2**：每次 `新增試標回合 R{n}` 成功時，系統必須建立該回合獨立的試標清單，筆數等於 `sampling_value`，且不得重用前一回合已建立的清單資料。
 - **FR-010f-3**：`開始正式標記` 成功時，系統必須以扣除所有已建立試標回合後的剩餘樣本建立正式標記清單，筆數等於 `dataset_total - sum(trial_round.sampling_value)`。
+- **FR-010f-4**：`開始正式標記` 建立正式標記清單時，系統必須同時以輪流分派（round-robin）建立樣本-標記員 assignment：每筆正式標記樣本恰指派給一位 `membership_status = active` 且 `task_role = annotator` 的標記員，依成員清單固定順序輪流分配直到全部樣本指派完畢；樣本數不可整除時，任兩位標記員的分派筆數差距不得超過 1。`min_annotators` 僅約束試標回合的重疊標記人數與 FR-010t 的發布前人數檢查，不改變正式標記「每筆單一標記員」的分派語意；發布後的成員異動不得自動重算既有 assignment，其處置依成員管理規則（FR-005f 系列）。
 - **FR-010h**：Overview 必須顯示資料隔離狀態（`已隔離`/`未隔離`）與最後變更資訊。
 - **FR-010i**：匯出結果檔 metadata 必須包含 `run_stage`、`isolation_enabled`、`sampling_value`、`applied_iaa_metrics`（逐輸出類型指標名稱與生效門檻）、`sample_snapshot_id`，以及該匯出範圍內被排除標記作業的摘要紀錄（若有）。
 - **FR-010i-1**：所有匯出結果檔 metadata 必須額外包含 `export_format`、`exported_at`、`exported_by`、`schema_version` 與 `applied_filters`，以支援審計與下游解析。
@@ -708,6 +710,7 @@ flowchart LR
 - **SC-036**：`work-log` 工時明細表以 `標記筆數`／`審核筆數`／`仲裁筆數` 三欄呈現完成筆數，角色不適用欄位顯示 `—`；匯總列呈現 `總工時`、`總標記筆數`、`總審核筆數`、`加權平均速度` 四卡與「每筆平均耗時」次要說明列，且全部文案雙語一致。
 - **SC-037**：任務僅在正式標記全數提交、應完成 review unit 全數定案、無未解決爭議、應仲裁項目全數完成且品質指標可用時，才可由 `official_run_in_progress` 轉為 `completed`；任一條件不符時轉換被阻擋，並逐項顯示未滿足的具體原因。
 - **SC-038**：實際啟用成員人數不足（active 標記員 `< min_annotators` 或 active 審核員 `< min_reviewers`）時，試標回合與正式標記發布皆被阻擋，且介面逐角色顯示「還差 N 位」缺口訊息；補足人數後方可發布。
+- **SC-039**：`開始正式標記` 成功後，每筆正式標記樣本恰有一位啟用中標記員的 assignment，不存在未指派或重複指派的樣本，且任兩位標記員的分派筆數差距不超過 1。
 
 ---
 
@@ -715,6 +718,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.9.0 | 2026-08-19 | **正式標記樣本分派演算法（issue #210，minor）**：`開始正式標記` 建立清單時同步以輪流分派建立樣本-標記員 assignment——每筆樣本恰指派一位啟用中標記員，依成員清單固定順序輪流直到全部分派完畢，樣本數不可整除時任兩人筆數差距 `<= 1`；`min_annotators` 僅約束試標重疊標記與 FR-010t 發布前人數檢查，不改變正式標記「每筆單一標記員」語意；發布後成員異動不自動重算既有 assignment（處置依 FR-005f 系列）。新增 FR-010f-4、SC-039、使用者故事 3 驗收情境 11 |
 | 2.8.0 | 2026-08-19 | **成員不足發布阻擋（issue #189，決策 D3，minor）**：發布試標回合／正式標記前必須驗證實際啟用成員人數（active 標記員 `>= min_annotators`、active 審核員 `>= min_reviewers`），任一角色不足時阻擋發布並逐角色顯示「還差 N 位」缺口訊息；發布前檢查不得僅驗證設定值本身。新增 FR-010t、SC-038、使用者故事 3 驗收情境 10 |
 | 2.7.0 | 2026-08-19 | **`completed` 前置條件完整化（issue #190，決策 D2，minor）**：任務由 `official_run_in_progress` 轉為 `completed` 前必須滿足 issue #180 完整條件（正式標記全數提交＋應完成 review unit 全數定案＋無未解決爭議＋應仲裁項目全數完成＋品質指標可用），任一不符時阻擋轉換並逐項列出原因，不得僅以「全部標記已提交」作為完成依據；同步修訂 ADR-022 轉換表與 Amendment（2026-08-19）。新增 FR-008b、SC-037、使用者故事 3 驗收情境 9 |
 | 2.6.0 | 2026-08-18 | **工時紀錄完成筆數拆欄（issue #149 P5 之二，minor）**：`work-log` 工時明細表 `完成筆數` 拆為 `標記筆數`／`審核筆數`／`仲裁筆數` 三欄，角色不適用欄位顯示 `—`；匯總卡片改為 `總工時`、`總標記筆數`、`總審核筆數`、`加權平均速度` 四張，`加權平均速度` 卡附「每筆平均耗時」次要說明列；逐列平均速度與異常提醒計算改以三類筆數總和為分子；`WorkLogEntry.completed_count` 拆為 `annotated_count`／`reviewed_count`／`arbitrated_count`（角色不適用為 `null`）。新增 FR-007b、SC-036 |
