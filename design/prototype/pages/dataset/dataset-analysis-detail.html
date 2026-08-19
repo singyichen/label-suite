@@ -11,30 +11,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
+    /* Color/font/radius/shadow/spacing/motion/z-index tokens come from
+       ../../assets/tokens.css; only page-local layout variables live here.
+       (The removed local --z-toast: 300 collided with the canonical
+       --z-modal — toasts now stack at the canonical --z-toast: 400.) */
     :root {
-      --color-primary:             #6366F1;
-      --color-cta:                 #10B981;
-      --color-surface:             #F5F3FF;
-      --color-white:               #FFFFFF;
-      --color-ink:                 #1E1B4B;
-      --color-ink-muted:           #94A3B8;
-      --color-text-soft:           #64748B;
-      --color-border:              #E2E8F0;
-      --color-border-muted:        #F1F5F9;
-      --color-primary-soft-bg:     #EEF2FF;
-      --color-primary-soft-border: #C7D2FE;
-      --color-slate-50:            #F8FAFC;
-      --font-serif-display: 'Crimson Pro', 'Noto Serif TC', Georgia, serif;
-      --font-sans:  'Inter', 'Noto Sans TC', -apple-system, sans-serif;
-      --font-mono:  'JetBrains Mono', ui-monospace, Menlo, monospace;
-      --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px;
-      --radius-xl: 16px; --radius-full: 9999px;
-      --shadow-lg: 0 10px 15px rgba(0,0,0,.1);
-      --space-xs: 4px; --space-sm: 8px; --space-md: 16px;
-      --space-lg: 24px; --space-xl: 32px;
-      --dur-fast: 150ms; --dur-normal: 200ms;
-      --ease-standard: cubic-bezier(.4,0,.2,1);
-      --z-toast: 300;
       --navbar-mobile-height: 84px; --navbar-mobile-top-height: 64px;
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -116,7 +97,7 @@
     /* Match toggle (sequence labeling) */
     .match-toggle{display:inline-flex;border:1px solid var(--color-border);border-radius:var(--radius-md);padding:2px;background:var(--color-slate-50);gap:2px;margin-bottom:var(--space-sm)}
     .match-btn{border:1px solid transparent;border-radius:6px;background:transparent;color:var(--color-text-soft);font-size:12px;font-weight:600;padding:5px 10px}
-    .match-btn.active{background:var(--color-white);color:var(--color-primary);border-color:var(--color-primary-soft-border)}
+    .match-btn.active{background:var(--color-white);color:var(--color-primary);border-color:var(--color-primary-border)}
     .match-btn:hover{color:var(--color-primary)}
 
     /* Collapsible alt metrics */
@@ -164,7 +145,7 @@
     .risk-level-badge.high{color:var(--color-error);background:var(--color-error-bg);border-color:var(--color-error-border)}
     .risk-level-badge.insufficient{color:var(--color-text-soft);background:var(--color-slate-50);border-color:var(--color-border)}
     .cause-stack{display:flex;flex-wrap:wrap;gap:6px;min-width:180px}
-    .cause-chip{display:inline-flex;align-items:center;padding:3px 8px;border-radius:var(--radius-full);background:var(--color-primary-soft-bg);border:1px solid var(--color-primary-soft-border);color:var(--color-primary);font-size:11px;font-weight:600}
+    .cause-chip{display:inline-flex;align-items:center;padding:3px 8px;border-radius:var(--radius-full);background:var(--color-primary-soft-bg);border:1px solid var(--color-primary-border);color:var(--color-primary);font-size:11px;font-weight:600}
     .cause-text-block{display:grid;gap:4px;min-width:180px}
     .cause-line{font-size:12px;color:var(--color-ink)}
     .cause-line strong{color:var(--color-ink-muted);font-weight:700}
