@@ -138,7 +138,7 @@ Used for status badges, error banners, alerts, and feedback messages.
 | Dry Run | `badge-dry-run` | `#6B7280` (gray-500) | `#F3F4F6` (gray-100) | `#D1D5DB` (gray-300) |
 | Unmaterialized | `badge-run-unmaterialized` | `#64748B` (slate-500) | `#F8FAFC` (slate-50) | `#CBD5E1` (slate-300) |
 
-> Naming note: `task-list.html` ships `badge-run-official` / `badge-run-dry` as aliases of `badge-official` / `badge-dry-run` (same values). The MASTER names are canonical; the `badge-run-*` aliases are flagged for renaming in the issue #183 task-management fix PR.
+> Naming note: `task-list.html`'s former `badge-run-official` / `badge-run-dry` aliases were renamed to the canonical classes above in the issue #183 task-management fix PR. `task-detail.html` still ships a separate legacy pair under the same alias names whose values drift from this table (see `design/system/pages/task-detail.md`) — flagged for a follow-up rename.
 
 **Base badge CSS:**
 
@@ -277,7 +277,7 @@ Reference values for task-type badges in dark mode:
 | `badge-task-type-scoring` | `#C084FC` (purple-400) | `#1A0A2E` | `#4C1D95` |
 | `badge-official` | `#A78BFA` (violet-400) | `#1E1B4B` | `#3730A3` |
 | `badge-dry-run` | `#9CA3AF` (gray-400) | `#1F1F28` | `#2A2A35` |
-| `badge-draft` / `badge-run-dry` / `badge-run-unmaterialized` | `#9CA3AF` (gray-400) | `#1F1F28` | `#2A2A35` |
+| `badge-draft` / `badge-run-unmaterialized` | `#9CA3AF` (gray-400) | `#1F1F28` | `#2A2A35` |
 
 #### 6. Reviewer action buttons — use semantic tokens (no per-page dark overrides)
 
@@ -318,15 +318,26 @@ html[data-theme="dark"] {
 }
 ```
 
-#### 8. VA / classification chips dark overrides
+#### 8. VA / classification chips — light values + dark overrides
 
-VA scoring chips (`ar-va-chip-normal` / `ar-va-chip-outlier`) and classification chips (`ar-classif-chip`) in task-detail:
+VA scoring chips (`ar-va-chip-*`), classification chips (`ar-classif-chip`), and member-detail chips (`md-chip`) in task-detail. Pill shell: `padding: 2px 10px; border-radius: 9999px;` — VA chips are `inline-flex` at `13px` mono, classification/member chips `inline-block` at `12px`. Light values (shipped):
+
+| Class | Text | Background | Border |
+|-------|------|-----------|--------|
+| `ar-va-chip-normal` | `#166534` | `#DCFCE7` | `#86EFAC` |
+| `ar-va-chip-outlier` | `#991B1B` | `#FEE2E2` | `#FCA5A5` |
+| `ar-va-chip-default` | `var(--color-ink)` | `var(--color-surface)` | `var(--color-border)` |
+| `ar-classif-chip` | `#5B21B6` | `#EDE9FE` | `#DDD6FE` |
+| `md-chip` | `#5B21B6` | `#EDE9FE` | `#DDD6FE` |
+
+Dark overrides (`ar-va-chip-default` flips automatically via its tokens):
 
 ```css
 html[data-theme="dark"] {
   .ar-va-chip-normal  { background: #0F2A18; color: #4ADE80; border-color: #1F5132; }
   .ar-va-chip-outlier { background: #2A1414; color: #F87171; border-color: #5B2222; }
   .ar-classif-chip    { background: #1E1B4B; color: #A78BFA; border-color: #3730A3; }
+  .md-chip            { background: #1E1B4B; color: #A78BFA; border-color: #3730A3; }
 }
 ```
 
@@ -2729,3 +2740,4 @@ Before delivering any UI code, verify:
 | v1.7.1 | 2026-05-21 | **Spec drift 修正** — Button padding 統一：`.btn-primary` / `.btn-secondary` 由 `12px 24px` 改為 `10px 20px`（對齊 CTA 實作值）；`.btn-secondary` border 由 `2px solid --color-primary` 改為 `1px solid --color-border`；Token canonical name 修正：`--color-ink-muted` 升為 Supporting token，`--color-text-muted` 降為 deprecated alias；新增 **Run Mode Badge Mapping（light mode）** 章節（badge-official indigo 色板、badge-dry-run gray 色板）；同步修正 `design-system.pen` Button/Primary 與 Button/Secondary 的 padding 與 stroke 屬性 |
 | v1.8 | 2026-08-19 | **Baseline arbitration batch (issue #183)** — Toast re-specified to top-center with per-variant auto-dismiss (Success 3s / Info 5s / Warning 8s / Error manual-only), one-at-a-time; UXC-07 declared single source of truth for Toast behavior; Dark Rule 6 rewritten to semantic-token `mini-btn-active-*` classes (per-page hardcoded overrides deprecated); Dark Rule 7 gains shipped light-value table; Dark Rule 9 auth template migrated to canonical token names (`--color-surface` = page ground, new `--color-card` = card surface; `--color-background`/`--color-text`/`--color-text-muted` deprecated); new Status Pill (borderless, soft) component spec; Sidebar width corrected to `w-60` (240px, matches shipped `sidebar.css`); Prototype-Only State Switcher re-specified to shipped `scenario-pill` pattern; line 71 alias note translated to English |
 | v1.9 | 2026-08-19 | **Cross-module spec debt (issue #183)** — new specs for components shipped in 2+ modules but previously undefined: Mini Buttons (`mini-btn` / `-primary` / `-danger`), solid Danger confirm button, Progress Bar, Metric KPI Tile, dense Table variant, Sidebar collapsed mode + Notification Bell/Badge/Dropdown + Shortcut keycap + mobile layout contract (`--navbar-mobile-*`); badge tables gain `badge-task-type-default` and `badge-run-unmaterialized` light values with a naming note flagging the `badge-run-*` aliases; established `design/system/pages/` with a README defining the page-scoped override convention |
+| v1.10 | 2026-08-19 | **Task-management page specs (issue #183)** — Dark Rule 8 rewritten with shipped light-value table for `ar-va-chip-*` / `ar-classif-chip` and gains the previously undocumented `md-chip` (light + dark); run-badge naming note updated after the `badge-run-*` alias rename in task-list (task-detail's drifted legacy pair remains flagged); dark badge reference row drops the removed `badge-run-dry` alias; added `design/system/pages/task-new.md`, `task-detail.md`, `task-list.md` |
