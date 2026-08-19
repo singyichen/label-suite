@@ -69,8 +69,19 @@ import path from 'path';
 
 type SeedRecord = { id: string; text: string; gold_label: 'positive' | 'negative' | 'neutral' };
 
-const SEED_PATH = path.join(__dirname, 'xrole-lifecycle-seed.json');
-const SEED_RECORDS: SeedRecord[] = JSON.parse(fs.readFileSync(SEED_PATH, 'utf8'));
+/* Lazy-loaded so the sync read happens on first call, not at module import
+ * time (bot review, PR #247): Playwright workers import every spec/fixture
+ * module up front, so a top-level readFileSync would run during worker
+ * bootstrap rather than when a test actually needs the fixture. */
+let SEED_RECORDS: SeedRecord[] | undefined;
+function loadSeedRecords(): SeedRecord[] {
+  if (!SEED_RECORDS) {
+    const SEED_PATH = path.join(__dirname, 'xrole-lifecycle-seed.json');
+    const loaded: SeedRecord[] = JSON.parse(fs.readFileSync(SEED_PATH, 'utf8'));
+    SEED_RECORDS = loaded;
+  }
+  return SEED_RECORDS;
+}
 
 /* w5 §1.2: 2 dry_run records + 3 official_run records; `xr-off-002` is the
  * forced-divergence official sample (R01 approves the annotator's answer,
@@ -95,7 +106,7 @@ const ARBITER_REVIEWER_ID = 'R03';
  * fixture records), and an arbiter-eligible roster entry. */
 export function buildXRoleSeedPatch(taskId: string): string {
   const id = JSON.stringify(taskId);
-  const records = JSON.stringify(SEED_RECORDS);
+  const records = JSON.stringify(loadSeedRecords());
   const arbiterId = JSON.stringify(ARBITER_REVIEWER_ID);
 
   return `
@@ -135,7 +146,11 @@ export function buildXRoleSeedPatch(taskId: string): string {
         fieldRoleMap: { text: 'input', gold_label: 'output' },
         datasetFileName: 'xrole-lifecycle-seed.json',
         datasetRecords: ${records},
-        materializedRuns: { dry_run: { round: 1, total: 2 } }
+        /* w5 §1.2: 2 dry_run + 3 official_run records (bot review, PR #247 --
+         * the annotation-list/workspace fallback to datasetRecords.length
+         * already made this harmless, but declaring both run types keeps the
+         * seed profile's counts explicit and matches the fixture split). */
+        materializedRuns: { dry_run: { round: 1, total: 2 }, official_run: { round: 1, total: 3 } }
       };
     }
 
