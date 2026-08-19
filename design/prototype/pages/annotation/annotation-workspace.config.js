@@ -1587,6 +1587,16 @@
   }
 
   function handleSubmit() {
+    /* Double-click guard (issue #201 / w6 DUP-01): a busy flag plus a
+       temporary native disable so a rapid second click is inert instead of
+       re-running the submit flow (backed by the appendHistoryEvent dedupe
+       in annotation-workspace.data.js, which catches any click that still
+       slips through). */
+    if (state.submitBusy) return;
+    state.submitBusy = true;
+    var submitBtnEl = document.getElementById('wsSubmitBtn');
+    if (submitBtnEl) submitBtnEl.disabled = true;
+
     clearAllPanelErrors();
     var allAnswered = true;
     state.selectedOutputTypes.forEach(function (outKey) {
@@ -1598,6 +1608,8 @@
     });
     if (!allAnswered) {
       showToast(t('wsSubmitIncomplete'));
+      state.submitBusy = false;
+      if (submitBtnEl) submitBtnEl.disabled = false;
       return;
     }
     window.LabelSuiteAnnotationWorkspaceData.markSampleSubmitted(currentProfile.id, currentRole, currentRunType, currentSampleId, collectAnswerPayload(), buildHistorySummary(), currentIdentity);
@@ -1615,6 +1627,8 @@
     renderSampleNav();
     renderHistoryPanel();
     showToast(t('wsSubmitSuccess'));
+    state.submitBusy = false;
+    if (submitBtnEl) submitBtnEl.disabled = false;
   }
 
   /* ── reviewer mode (Phase 3, FR-024L / FR-024L-1 / FR-014A-C) ────────
