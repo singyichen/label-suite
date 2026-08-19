@@ -50,6 +50,11 @@
       taskInputTypes: detail.taskInputTypes || ['single_item'],
       itemPairLabels: detail.itemPairLabels || null,
       guidelineFiles: detail.guidelineFiles || [],
+      /* issue #184: task-detail overview's "開始標記前強制顯示" toggle
+         (task-detail.panels/overview.html #editForceGuidelineToggle) --
+         gates the workspace's first-visit guideline modal. Defaults to
+         false so tasks that never set it keep today's no-gate behavior. */
+      forceShowGuideline: detail.forceShowGuideline || false,
       materializedRuns: detail.materializedRuns || null,
     };
   }
