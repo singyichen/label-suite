@@ -28,18 +28,18 @@ test.describe('Dataset detail — tabs and breadcrumb structure', () => {
     await expect(page.locator('#qualityPanel')).toHaveAttribute('aria-labelledby', 'tabQuality');
   });
 
-  test('breadcrumb renders above the page header', async ({ page }) => {
+  test('breadcrumb renders below the page header (task-detail convention)', async ({ page }) => {
     await page.goto(DETAIL_URL);
 
-    const breadcrumbFirst = await page.evaluate(() => {
+    const headerFirst = await page.evaluate(() => {
       const breadcrumb = document.querySelector('.breadcrumb');
       const header = document.querySelector('.page-header');
       if (!breadcrumb || !header) return false;
       return Boolean(
-        breadcrumb.compareDocumentPosition(header) & Node.DOCUMENT_POSITION_FOLLOWING,
+        header.compareDocumentPosition(breadcrumb) & Node.DOCUMENT_POSITION_FOLLOWING,
       );
     });
-    expect(breadcrumbFirst).toBe(true);
+    expect(headerFirst).toBe(true);
   });
 });
 
