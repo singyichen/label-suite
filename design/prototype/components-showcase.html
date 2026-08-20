@@ -138,7 +138,8 @@
        MASTER.md canonical component CSS — copied verbatim from
        §Buttons, §Inputs, §Toggle Switch, §Semantic State Colors,
        §Status Pill, §Error / Alert Banner, §Toast (behavior per
-       UXC-07), §Skeleton, §Chip, §Pagination, §Breadcrumb.
+       UXC-07), §Skeleton, §Chip, §Pagination, §Breadcrumb,
+       §Color Dot, §Accordion, §Progress Bar, §Metric KPI Tile.
        Do not edit here; change
        MASTER.md first, then re-sync this block.
        ================================================================== */
@@ -648,8 +649,145 @@
       font-size: 11px;
     }
 
+    /* §Color Dot (verbatim) */
+    .entity-color-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: var(--radius-sm);           /* 4px — rounded square */
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      flex-shrink: 0;
+    }
+
+    /* Smaller variant for annotation previews */
+    .annotation-preview-color {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      flex-shrink: 0;
+    }
+
+    /* §Color Dot status-dot variant — 8×8 circle per the variants table;
+       shipped CSS (dataset-analysis-detail.html) */
+    .t-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+    /* §Accordion (verbatim) */
+    .output-accordion {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);           /* 8px */
+      overflow: hidden;
+    }
+
+    .output-accordion + .output-accordion {
+      margin-top: var(--space-sm);               /* 8px */
+    }
+
+    .output-accordion-header {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      padding: 12px var(--space-md);             /* 12px 16px */
+      background: var(--color-slate-50);         /* #F8FAFC */
+      cursor: pointer;
+      user-select: none;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-ink);
+      transition: background var(--dur-fast);
+    }
+
+    .output-accordion-header:hover {
+      background: var(--color-primary-soft-bg);  /* #EEF2FF */
+    }
+
+    .output-accordion-chevron {
+      width: 16px;
+      height: 16px;
+      margin-left: auto;
+      color: var(--color-text-soft);
+      transition: transform var(--dur-fast);
+    }
+
+    .output-accordion.collapsed .output-accordion-chevron {
+      transform: rotate(-90deg);
+    }
+
+    .output-accordion-body {
+      padding: var(--space-md);                  /* 16px */
+      border-top: 1px solid var(--color-border);
+    }
+
+    .output-accordion.collapsed .output-accordion-body {
+      display: none;
+    }
+
+    /* §Progress Bar (verbatim) */
+    .progress {
+      height: 6px;
+      border-radius: var(--radius-full);
+      background: var(--color-border);   /* shipped page uses literal #E2E8F0 — same value; migrate to the var (issue #183) */
+      overflow: hidden;
+    }
+    .progress > span {
+      height: 100%;
+      border-radius: var(--radius-full);
+      background: var(--color-cta);
+      display: block;
+      transition: width 300ms ease;
+    }
+
+    /* §Metric KPI Tile (verbatim) */
+    .metric {
+      padding: var(--space-md);              /* 16px */
+      border-radius: var(--radius-lg);
+      background: var(--color-white);
+      border: 1px solid var(--color-border);
+    }
+    .metric span {                           /* label */
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--color-ink-muted);
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .metric strong {                         /* value */
+      font-size: 1.35rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    /* §Divider — token-rendered (no canonical CSS block in MASTER §Divider;
+       its Tailwind-only samples are mapped to tokens here, per the
+       Banner/Toast precedent) */
+    .divider-hr {
+      height: 1px;                             /* h-px */
+      background: var(--color-border);         /* bg-slate-200 */
+      border: 0;
+      margin: 24px 0;                          /* my-6 */
+    }
+    .divider-text { display: flex; align-items: center; gap: 12px; margin: 24px 0; }
+    .divider-text .divider-hr { flex: 1; margin: 0; }
+    .divider-text span { font-size: 14px; color: var(--color-ink-muted); }  /* text-sm text-slate-400 */
+    .divider-list { list-style: none; }
+    .divider-list li { padding: 16px 0; font-size: 14px; }    /* py-4 */
+    .divider-list li + li { border-top: 1px solid #F1F5F9; }  /* divide-slate-100 — MASTER §Divider list variant literal */
+
     /* Showcase chrome — demo columns for skeleton variants (not canonical) */
     .demo-col { flex: 1 1 240px; min-width: 240px; display: grid; gap: 10px; align-content: start; }
+
+    /* Showcase chrome — KPI demo grid (§Metric KPI Tile names the wrapper
+       spec but ships no class; non-canonical demo wrapper) */
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: var(--space-md);
+      width: 100%;
+    }
+    /* Shipped dashboard.layout.css gives .metric span/strong display:block;
+       MASTER §Metric KPI Tile omits it — mirrored here as chrome so the
+       canonical block above stays verbatim. */
+    .metric-grid .metric span, .metric-grid .metric strong { display: block; }
 
     @media (prefers-reduced-motion: reduce) {
       * { transition: none !important; animation: none !important; }
@@ -702,7 +840,7 @@
 
     <section id="components" aria-labelledby="componentsHeading">
       <h2 class="section-heading" id="componentsHeading">Components</h2>
-      <p class="section-note">MASTER.md canonical markup — controls 批次（Buttons / Inputs / Toggle Switch）+ feedback 批次（Badges / Banner / Toast / Skeleton）+ structure 批次（Chip / Pagination / Breadcrumb）。composite 批次於後續 stacked PR 加入。</p>
+      <p class="section-note">MASTER.md canonical markup — controls 批次（Buttons / Inputs / Toggle Switch）+ feedback 批次（Badges / Banner / Toast / Skeleton）+ structure 批次（Chip / Pagination / Breadcrumb）+ composite 批次（Color Dot / Divider / Accordion / Progress / KPI）。最終批次（State Panel / Avatar）於後續 stacked PR 加入。</p>
 
       <div class="component-card" id="comp-buttons">
         <h3>Buttons</h3>
@@ -881,6 +1019,99 @@
           </nav>
         </div>
       </div>
+
+      <div class="component-card" id="comp-colordot">
+        <h3>Color Dot</h3>
+        <p class="component-note">§Color Dot — 三種尺寸：標準 20×20（4px 圓角方，表單實體類型列）/ 預覽 12×12 / 狀態圓點 .t-dot 8×8（IAA 門檻通過與否）；顏色一律以 inline style.background 套用。</p>
+        <div class="component-demo">
+          <!-- Default 8-color palette — hex values verbatim from MASTER §Color Dot -->
+          <span class="entity-color-dot" style="background: #6366F1" title="#6366F1"></span>
+          <span class="entity-color-dot" style="background: #10B981" title="#10B981"></span>
+          <span class="entity-color-dot" style="background: #F59E0B" title="#F59E0B"></span>
+          <span class="entity-color-dot" style="background: #EC4899" title="#EC4899"></span>
+          <span class="entity-color-dot" style="background: #8B5CF6" title="#8B5CF6"></span>
+          <span class="entity-color-dot" style="background: #0EA5E9" title="#0EA5E9"></span>
+          <span class="entity-color-dot" style="background: #F97316" title="#F97316"></span>
+          <span class="entity-color-dot" style="background: #14B8A6" title="#14B8A6"></span>
+        </div>
+        <div class="component-demo">
+          <span class="annotation-preview-color" style="background: #6366F1"></span>
+          <span class="annotation-preview-color" style="background: #10B981"></span>
+          <span class="annotation-preview-color" style="background: #F59E0B"></span>
+          <span class="t-dot" style="background: var(--color-success)" title="IAA 達標"></span>
+          <span class="t-dot" style="background: var(--color-error)" title="IAA 未達標"></span>
+        </div>
+      </div>
+
+      <div class="component-card" id="comp-divider">
+        <h3>Divider</h3>
+        <p class="component-note">§Divider — 水平線 / 文字分隔（僅登入頁 OAuth 與帳號登入之間）/ 清單分隔（divide-slate-100）；MASTER 僅提供 Tailwind 範例，此處以 token 對應呈現。</p>
+        <div class="component-demo component-demo--stack">
+          <div>
+            <div>區塊 A</div>
+            <hr class="divider-hr" />
+            <div>區塊 B</div>
+          </div>
+          <div class="divider-text">
+            <hr class="divider-hr" />
+            <span>or</span>
+            <hr class="divider-hr" />
+          </div>
+          <ul class="divider-list">
+            <li>建立任務「情緒分類 v2」</li>
+            <li>上傳資料集 reviews.csv</li>
+            <li>邀請 3 位標記員</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="component-card" id="comp-accordion">
+        <h3>Accordion</h3>
+        <p class="component-note">§Accordion — 可折疊表單分區；點擊或 Enter / Space 切換，多面板可同時展開；header role="button" + aria-expanded，body role="region" 與 aria-controls 配對。</p>
+        <div class="component-demo component-demo--stack">
+          <div>
+            <div class="output-accordion" id="showcase-accordion-1">
+              <div class="output-accordion-header" role="button" tabindex="0" aria-expanded="true" aria-controls="showcase-accordion-1-body">
+                <span class="output-accordion-number">1</span>
+                <span class="output-accordion-title">分類設定</span>
+                <!-- chevron path inlined from assets/icons/chevron-down.svg (ADR-030 reuse-only) -->
+                <svg class="output-accordion-chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </div>
+              <div class="output-accordion-body" id="showcase-accordion-1-body" role="region" aria-label="分類設定">標籤集、單選／多選與 Bypass 選項設定。</div>
+            </div>
+            <div class="output-accordion collapsed" id="showcase-accordion-2">
+              <div class="output-accordion-header" role="button" tabindex="0" aria-expanded="false" aria-controls="showcase-accordion-2-body">
+                <span class="output-accordion-number">2</span>
+                <span class="output-accordion-title">實體辨識設定</span>
+                <svg class="output-accordion-chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </div>
+              <div class="output-accordion-body" id="showcase-accordion-2-body" role="region" aria-label="實體辨識設定">實體類型與顏色指派。</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="component-card" id="comp-progress">
+        <h3>Progress Bar</h3>
+        <p class="component-note">§Progress Bar — 6px 藥丸軌道，fill 一律 --color-cta（無逐狀態色，狀態語意請搭配 Status Badge）；wrapper 帶 role="progressbar" 與 aria-value*。</p>
+        <div class="component-demo component-demo--stack">
+          <div class="progress" role="progressbar" aria-valuenow="65" aria-valuemin="0" aria-valuemax="100" aria-label="任務完成度 65%">
+            <span style="width: 65%"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="component-card" id="comp-metric">
+        <h3>Metric KPI Tile</h3>
+        <p class="component-note">§Metric KPI Tile — dashboard 密集 16px KPI 磚：label 11px 大寫、value 1.35rem/700；grid wrapper repeat(auto-fit, minmax(100px, 1fr)) 為示範用、非正典。</p>
+        <div class="component-demo">
+          <div class="metric-grid">
+            <div class="metric"><span>已完成任務</span><strong>128</strong></div>
+            <div class="metric"><span>平均 IAA</span><strong>0.82</strong></div>
+            <div class="metric"><span>進行中批次</span><strong>6</strong></div>
+          </div>
+        </div>
+      </div>
     </section>
   </main>
 
@@ -1053,6 +1284,22 @@
           chip.addEventListener('click', function () {
             radios.forEach(function (peer) { setChipState(peer, peer === chip); });
           });
+        });
+      });
+
+      /* Accordion — §Accordion behavior: click / Enter / Space toggles
+         collapsed state + aria-expanded; panels are independent */
+      document.querySelectorAll('.output-accordion-header').forEach(function (header) {
+        function toggleAccordion() {
+          var collapsed = header.closest('.output-accordion').classList.toggle('collapsed');
+          header.setAttribute('aria-expanded', String(!collapsed));
+        }
+        header.addEventListener('click', toggleAccordion);
+        header.addEventListener('keydown', function (event) {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            toggleAccordion();
+          }
         });
       });
     })();
