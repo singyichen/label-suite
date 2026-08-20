@@ -191,12 +191,11 @@
       font-size: 14px;
       font-weight: 500;
       cursor: pointer;
-      transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+      transition: border-color 0.15s, background 0.15s;
     }
     .sso-btn:hover {
       border-color: var(--color-primary);
       background: var(--color-primary-light);
-      box-shadow: 0 0 0 3px rgba(99,102,241,0.08);
     }
 
     /* ── Divider ────────────────────────────────────────────────── */
@@ -314,10 +313,10 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
-      transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+      transition: background 0.15s, transform 0.1s;
       margin-top: 4px;
     }
-    .login-btn:hover { background: var(--color-cta-hover); box-shadow: 0 2px 8px rgba(16,185,129,0.25); }
+    .login-btn:hover { background: var(--color-cta-hover); }
     .login-btn:active { transform: translateY(1px); }
     .login-btn:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
     .login-btn:focus-visible { outline: 2px solid var(--color-cta); outline-offset: 2px; }
