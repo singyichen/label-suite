@@ -1,7 +1,7 @@
 ---
 功能分支: feat/dashboard-output-types
 建立日期: 2026-04-05
-版本: 2.0.3
+版本: 2.0.4
 狀態: In Progress
 ---
 
@@ -452,6 +452,16 @@ flowchart LR
 - **LanguageState**：當前語言狀態。關鍵欄位：`lang`（`zh` / `en`）、`storage_key = labelsuite.lang`。
 - **DashboardViewModel（原型）**：畫面展示資料，包含 metrics、task list、progress 與 action label；每筆 task summary 只含 `task_id`、任務名稱、`outputs: { type: OUTPUT_TYPE_KEYS }[]`、階段、狀態、角色摘要與進度等安全 metadata。
 
+## Prototype Traceability
+
+| Artifact | Responsibility | Covered FR/SC | Verification | Status |
+|----------|----------------|---------------|--------------|--------|
+| [design/prototype/pages/dashboard/dashboard.html](../../../design/prototype/pages/dashboard/dashboard.html) | Dashboard page shell, visual hierarchy, observable interaction, responsive presentation, and shared selector behavior only; the spec remains authoritative for product behavior and contracts. | FR-001–FR-019; SC-001–SC-024 | [design/prototype/tests/dashboard/dashboard.spec.ts](../../../design/prototype/tests/dashboard/dashboard.spec.ts)<br>[design/prototype/tests/dashboard/dashboard-output-types.spec.ts](../../../design/prototype/tests/dashboard/dashboard-output-types.spec.ts)<br>[design/prototype/tests/dashboard/dashboard-behavior.spec.ts](../../../design/prototype/tests/dashboard/dashboard-behavior.spec.ts) | Active; page |
+| [design/prototype/pages/dashboard/dashboard.js](../../../design/prototype/pages/dashboard/dashboard.js)<br>[design/prototype/pages/dashboard/dashboard.data.js](../../../design/prototype/pages/dashboard/dashboard.data.js)<br>[design/prototype/pages/dashboard/dashboard.assignments.js](../../../design/prototype/pages/dashboard/dashboard.assignments.js)<br>[design/prototype/pages/dashboard/dashboard.i18n.js](../../../design/prototype/pages/dashboard/dashboard.i18n.js)<br>[design/prototype/pages/dashboard/dashboard.layout.css](../../../design/prototype/pages/dashboard/dashboard.layout.css)<br>[design/prototype/pages/dashboard/dashboard.components.css](../../../design/prototype/pages/dashboard/dashboard.components.css) | Page-owned rendering, synthetic safe prototype summaries, assignment scenarios, i18n, layout, and component styling. Fixtures are only prototype acceptance baselines, never API, membership, output-combination, renderer, or product-authority whitelists. | FR-001–FR-019; SC-001–SC-024 | [design/prototype/tests/dashboard/dashboard.spec.ts](../../../design/prototype/tests/dashboard/dashboard.spec.ts)<br>[design/prototype/tests/dashboard/dashboard-output-types.spec.ts](../../../design/prototype/tests/dashboard/dashboard-output-types.spec.ts)<br>[design/prototype/tests/dashboard/dashboard-behavior.spec.ts](../../../design/prototype/tests/dashboard/dashboard-behavior.spec.ts) | Active; page-owned assets |
+| [design/system/pages/dashboard.md](../../../design/system/pages/dashboard.md)<br>[design/wireframes/pages/dashboard/dashboard.pen](../../../design/wireframes/pages/dashboard/dashboard.pen) | Page-scoped design reference and optional visual wireframe only; neither defines runtime behavior, APIs, data, or product contracts. | No additional FR/SC | N/A (design references) | Active; optional wireframe |
+
+---
+
 ## 規格相依性 *(本功能依賴其他規格，或被其他規格依賴時填寫)*
 
 ### 上游（本規格依賴的規格）
@@ -513,6 +523,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.0.4 | 2026-08-20 | Issue #261：新增 Prototype Traceability，對應 Dashboard 頁面、完整 page-owned asset set、page-scoped design 與設計層驗證；fixture 維持為 prototype 驗收基線，非產品契約。 |
 | 2.0.3 | 2026-08-19 | **Reviewer 行動卡文案對齊 annotation-015 審核模型（issue #191）**：行動卡 C 內文改為「逐標記員獨立審核，直接修正結果，歧異交付仲裁。」、步驟 2 改名「修正或仲裁」（原「核準或修正」），路徑 C 第 4 步同步改為「修正或仲裁」；退回通道依 annotation-015 AC-3.15／AC-6.4 僅限 official_run，二元「通過/退回」語意不再出現於 dashboard 文案。 |
 | 2.0.2 | 2026-07-29 | **記錄 legacy `labelsuite.activeTaskType` 過渡寫入**：明確 Dashboard 為該 `localStorage` 鍵目前唯一寫入者（010 v2.0.0 已移除其寫入），值僅取自獨立 `task_type` compatibility 欄位、不得由 `outputs[]` 推導；014／015 遷移完成後一併移除。 |
 | 2.0.1 | 2026-07-29 | **補齊 Annotator／Reviewer 的 13 任務導頁基線**：兩個 prototype 場景皆依 T001–T013 呈現完整安全摘要，每筆保留獨立 task／sample／compatibility route 並可進入對應角色介面；正式產品的 membership 權限與任務數量不受 13 筆示例限制。 |

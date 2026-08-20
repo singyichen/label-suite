@@ -2,8 +2,9 @@ import { test, expect } from '@playwright/test';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html?task_id=T001';
 
-// Tab panels arrive via fetched partials and event bindings only attach after
-// the last partial (#workLogPanel) lands; wait for it before interacting.
+// #workLogPanel attachment only signals that fetched partials have landed.
+// Initialization then shows a skeleton and rerenders the panels, so wait for
+// #loadingSkeleton to hide before interacting with elements that get replaced.
 const PANEL_LOAD_TIMEOUT = 15000;
 
 /* w6-resilience-a11y.md RESP-02 / RESP-03: task-detail had zero mobile-width
@@ -17,6 +18,7 @@ test.describe('Task detail overview panel at mobile width (RESP-02)', () => {
   test('status badge and publish action stay visible, operable, and inside the viewport', async ({ page }) => {
     await page.goto(TASK_DETAIL_URL + '&status=draft');
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
+    await page.locator('#loadingSkeleton').waitFor({ state: 'hidden', timeout: PANEL_LOAD_TIMEOUT });
 
     // The task status stays readable at mobile width. Note: #statusBadge
     // itself sits inside a markup-level `.exec-badges hidden` wrapper on
@@ -53,6 +55,7 @@ test.describe('Member management and review settings at mobile width (RESP-03)',
   test('member management form controls stay focusable and operable', async ({ page }) => {
     await page.goto(TASK_DETAIL_URL);
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
+    await page.locator('#loadingSkeleton').waitFor({ state: 'hidden', timeout: PANEL_LOAD_TIMEOUT });
     await page.locator('#tabMemberManagement').click();
     await expect(page.locator('#memberManagementPanel')).not.toHaveClass(/hidden/);
 
@@ -89,6 +92,7 @@ test.describe('Member management and review settings at mobile width (RESP-03)',
   test('review settings edit form stays operable', async ({ page }) => {
     await page.goto(TASK_DETAIL_URL);
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
+    await page.locator('#loadingSkeleton').waitFor({ state: 'hidden', timeout: PANEL_LOAD_TIMEOUT });
 
     await page.locator('#reviewEditBtn').click();
 

@@ -1,7 +1,7 @@
 ---
 功能分支: feat/admin/006-user-management
 建立日期: 2026-04-16
-版本: 1.0.8
+版本: 1.0.9
 狀態: Clarified
 ---
 
@@ -296,6 +296,15 @@ flowchart LR
 
 ---
 
+## Prototype Traceability
+
+| Artifact | Responsibility | Covered FR/SC | Verification | Status |
+|----------|----------------|---------------|--------------|--------|
+| [design/prototype/pages/admin/user-management.html](../../../design/prototype/pages/admin/user-management.html) | User-list and account-management layout, observable interactions, responsive states, and page-level i18n only; it does not define authorization, API, audit, or account-lifecycle contracts. | FR-001–FR-013c; SC-001–SC-012 | [design/prototype/tests/admin/user-management.spec.ts](../../../design/prototype/tests/admin/user-management.spec.ts) | Active |
+| [design/prototype/pages/admin/role-settings.html](../../../design/prototype/pages/admin/role-settings.html) | Admin-tab navigation cross-reference only; Role & Permission Settings behavior is owned by spec 007 and is not co-owned by this spec. | FR-010; SC-001 | [design/prototype/tests/admin/user-management.spec.ts](../../../design/prototype/tests/admin/user-management.spec.ts) | Active; navigation cross-reference only |
+
+---
+
 ## 規格相依性 *(本功能依賴其他規格，或被其他規格依賴時填寫)*
 
 ### 上游（本規格依賴的規格）
@@ -364,6 +373,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.0.9 | 2026-08-20 | Issue #261：新增 Prototype Traceability，界定 `user-management.html` 的頁面責任，並將 `role-settings.html` 限定為 admin tab 導覽交叉參照。 |
 | 1.0.8 | 2026-05-22 | Prototype 同步：補齊列內「異動紀錄」icon、目標帳號異動紀錄 drawer、空狀態、i18n 與行動版 bottom sheet 行為 |
 | 1.0.7 | 2026-05-22 | `/speckit.clarify` 回寫 5 項決議：啟用帳號、seeder/最後 active super_admin 保護、自停用導頁、帳號管理審計、設定密碼信寄送失敗不建立帳號；狀態更新為 Clarified |
 | 1.0.6 | 2026-05-21 | 補充輸入與產生規則、已釐清事項、審查清單與執行狀態；同步功能分支格式 |
