@@ -24,10 +24,10 @@
 | ID | 功能 | 模組 | 狀態 | 分支 | 備註 |
 | --- | --- | --- | --- | --- | --- |
 | foundation-000 | Foundation — 工程基準與共同約束 | foundation | `plan-ready` | `feat/foundation/000-foundation` | spec v1.12.2；FR-001~131；SC-001~045；plan v2.0.0（Foundation-Core）；Observability 延後 |
-| account-001 | Login — Email / Password | account | `plan-ready` | `feat/account/001-login-email-password` | spec v1.2.3；規格狀態：Clarified |
-| account-002 | Login — Google SSO | account | `spec-ready` | `feat/account/002-login-google-sso` | spec v1.2.2；規格狀態：Clarified |
-| account-003 | Register — Email / Password | account | `spec-ready` | `feat/account/003-register-email-password` | spec v1.2.6；規格狀態：Clarified |
-| account-004 | Forgot / Reset Password | account | `spec-ready` | `feat/account/004-forgot-reset-password` | spec v1.1.3；規格狀態：Clarified |
+| account-001 | Login — Email / Password | account | `plan-ready` | `feat/account/001-login-email-password` | spec v1.2.4；規格狀態：Clarified |
+| account-002 | Login — Google SSO | account | `spec-ready` | `feat/account/002-login-google-sso` | spec v1.2.3；規格狀態：Clarified |
+| account-003 | Register — Email / Password | account | `spec-ready` | `feat/account/003-register-email-password` | spec v1.2.7；規格狀態：Clarified |
+| account-004 | Forgot / Reset Password | account | `spec-ready` | `feat/account/004-forgot-reset-password` | spec v1.1.4；規格狀態：Clarified |
 | account-005 | Profile Settings | account | `spec-ready` | `feat/account/005-profile-settings` | spec v1.2.9；規格狀態：Clarified |
 | admin-006 | User Management | admin | `spec-ready` | `feat/admin/006-user-management` | spec v1.0.8；規格狀態：Clarified |
 | admin-007 | Role & Permission Settings | admin | `spec-ready` | `feat/admin/007-role-settings` | spec v1.1.11；規格狀態：Draft |

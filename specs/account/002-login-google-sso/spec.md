@@ -1,7 +1,7 @@
 ---
 功能分支: feat/account/002-login-google-sso
 建立日期: 2026-04-05
-版本: 1.2.2
+版本: 1.2.3
 狀態: Clarified
 ---
 
@@ -215,10 +215,19 @@ flowchart LR
 
 ---
 
+## Prototype Traceability
+
+| Spec | Artifact and responsibility | Covered FR/SC | Verification | Status |
+|------|-----------------------------|---------------|--------------|--------|
+| account-002 | [design/prototype/pages/account/login.html](../../../design/prototype/pages/account/login.html): Google button visibility, accessible label, language switching and prototype no-op only; OAuth/callback/session are out of scope. | FR-001–FR-006; SC-001–SC-004 | [design/prototype/tests/account/login.spec.ts](../../../design/prototype/tests/account/login.spec.ts) (`google-login-btn` cases) | Active; HTML shared with 001 |
+
+---
+
 ## Changelog
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.2.3 | 2026-08-20 | Issue #261：新增 Prototype Traceability，定義與 001 共用 login HTML 時僅由本規格擁有的 Google 入口、i18n、可存取標籤與 no-op 行為；OAuth、callback 與 session 維持範圍外。 |
 | 1.2.2 | 2026-05-21 | 補充輸入與產生規則、已釐清事項、審查清單與執行狀態；同步功能分支格式 |
 | 1.2.1 | 2026-04-16 | 新增跨頁語言持久化規範：返回 login 頁時 SSO 文案/aria 必須維持同語系 |
 | 1.2.0 | 2026-04-15 | 語言切換按鈕描述改為單一語言代碼顯示（`ZH` / `EN`），移除 `ZH \| EN` 寫法 |

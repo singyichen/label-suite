@@ -1,7 +1,7 @@
 ---
 功能分支: feat/account/004-forgot-reset-password
 建立日期: 2026-04-05
-版本: 1.1.3
+版本: 1.1.4
 狀態: Clarified
 ---
 
@@ -290,10 +290,19 @@ flowchart LR
 
 ---
 
+## Prototype Traceability
+
+| Spec | Artifact and responsibility | Covered FR/SC | Verification | Status |
+|------|-----------------------------|---------------|--------------|--------|
+| account-004 | [design/prototype/pages/account/forgot-password.html](../../../design/prototype/pages/account/forgot-password.html): forgot flow and full-page loading lock. [design/prototype/pages/account/reset-password.html](../../../design/prototype/pages/account/reset-password.html): valid/expired/used reset states and full-page loading lock. [design/wireframes/pages/account/forgot-password.pen](../../../design/wireframes/pages/account/forgot-password.pen) and [design/wireframes/pages/account/reset-password.pen](../../../design/wireframes/pages/account/reset-password.pen): optional visual references only. | Forgot: FR-001–FR-004, FR-011/11A, FR-013/13A, SC-001/002/005–007. Reset: FR-005–FR-013A, SC-003–SC-007. | [design/prototype/tests/account/forgot-password.spec.ts](../../../design/prototype/tests/account/forgot-password.spec.ts); [design/prototype/tests/account/reset-password.spec.ts](../../../design/prototype/tests/account/reset-password.spec.ts) | Active; multi-page |
+
+---
+
 ## Changelog
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.1.4 | 2026-08-20 | Issue #261：新增 Prototype Traceability，分別對應 forgot 與 reset 原型、全頁 loading lock、可選 wireframe 參考及兩個設計層驗證檔；本規格維持多頁擁有權。 |
 | 1.1.3 | 2026-05-22 | 釐清 forgot/reset 送出後 loading 期間全頁不可互動，並同步更新流程、FR、狀態模型與成功標準 |
 | 1.1.2 | 2026-05-21 | 補充輸入與產生規則、已釐清事項、審查清單與執行狀態；同步功能分支格式 |
 | 1.1.1 | 2026-04-16 | 新增跨頁語言持久化規範：forgot/reset 與 login 導頁後必須維持同語系 |
