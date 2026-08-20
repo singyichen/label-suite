@@ -6,7 +6,7 @@ test.describe('Profile notification settings', () => {
   test('defaults every notification channel to enabled', async ({ page }) => {
     await page.goto(PROFILE_URL);
 
-    const toggles = page.locator('#notification-section .toggle-switch');
+    const toggles = page.locator('#notification-section .toggle-switch input[type="checkbox"]');
     await expect(toggles).toHaveCount(12);
 
     for (let index = 0; index < await toggles.count(); index += 1) {
