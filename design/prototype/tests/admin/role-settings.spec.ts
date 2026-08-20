@@ -178,4 +178,29 @@ test.describe('Admin role settings matrix behavior', () => {
     await page.locator('#tabUsers').click();
     await expect(page).toHaveURL(/user-management\.html/);
   });
+
+  test('aligns page-level details with the design system', async ({ page }) => {
+    // Task-role badge renders an inline Lucide SVG, not an emoji glyph
+    const badge = page.locator('.task-role-badge').first();
+    await expect(badge.locator('svg')).toHaveCount(1);
+    await expect(badge).not.toContainText('⛔');
+
+    // Section description drops emoji glyph references
+    await expect(page.locator('#matrixSectionDesc')).not.toContainText('⛔');
+    await expect(page.locator('#matrixSectionDesc')).not.toContainText('🔒');
+
+    // Permission keys use the shared mono font stack
+    await expect(page.locator('.perm-key').first()).toHaveCSS('font-family', /JetBrains Mono/);
+
+    // Page title uses the shared serif display stack
+    await expect(page.locator('.page-title')).toHaveCSS('font-family', /Crimson Pro/);
+
+    // Admin tabs expose an accessible name
+    await expect(page.locator('.admin-tabs')).toHaveAttribute('aria-label', /.+/);
+
+    // Matrix wrapper is flat (border instead of shadow)
+    const wrapper = page.locator('.matrix-scroll-wrapper');
+    await expect(wrapper).toHaveCSS('box-shadow', 'none');
+    await expect(wrapper).toHaveCSS('border-top-width', '1px');
+  });
 });

@@ -38,7 +38,7 @@
     }
     .page-header-left { flex: 1; min-width: 0; }
     .page-main-title {
-      font-family: 'Crimson Pro', 'Noto Serif TC', serif;
+      font-family: var(--font-serif-display);
       font-size: 28px; line-height: 1.3; font-weight: 700; color: var(--color-ink); margin: 0 0 4px;
     }
     .page-main-subtitle { font-size: 14px; line-height: 1.8; color: var(--color-text-soft); margin: 0; }
@@ -64,15 +64,6 @@
       transition: opacity 150ms, transform 150ms; cursor: pointer;
     }
     .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
-    .btn-secondary {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: var(--color-white); color: var(--color-ink);
-      border: 1px solid var(--color-border);
-      padding: 9px 18px; border-radius: var(--radius-md);
-      font-size: 14px; font-weight: 600;
-      transition: background 150ms, border-color 150ms, color 150ms; cursor: pointer;
-    }
-    .btn-secondary:hover { border-color: var(--color-primary); color: var(--color-primary); }
     .btn-ghost {
       display: inline-flex; align-items: center; gap: 6px;
       background: transparent; color: var(--color-ink-muted); border: none;
@@ -81,26 +72,14 @@
       transition: color 150ms, background 150ms; cursor: pointer;
     }
     .btn-ghost:hover { color: var(--color-ink); background: var(--color-slate-50); }
+    /* Solid destructive confirm — modal-only variant (MASTER §Danger (solid)) */
     .btn-danger {
       display: inline-flex; align-items: center; gap: 6px;
-      background: transparent; color: var(--color-error);
-      border: 1px solid var(--color-border);
-      padding: 7px 14px; border-radius: var(--radius-md);
-      font-size: 13px; font-weight: 500;
-      transition: background 150ms, border-color 150ms; cursor: pointer;
+      padding: 8px 20px; border-radius: var(--radius-md); font-size: 14px; font-weight: 600;
+      border: none; background: var(--color-error); color: var(--color-white); transition: opacity 150ms;
+      cursor: pointer;
     }
-    .btn-danger:hover { background: var(--color-error-soft-bg); border-color: var(--color-error-soft-border); }
-    .btn-danger:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
-    .btn-sm { padding: 6px 12px !important; font-size: 12px !important; }
-    .btn-enable {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: transparent; color: var(--color-success);
-      border: 1px solid var(--color-border);
-      padding: 6px 12px; border-radius: var(--radius-md);
-      font-size: 12px; font-weight: 500;
-      transition: background 150ms, border-color 150ms; cursor: pointer;
-    }
-    .btn-enable:hover { background: var(--color-success-soft-bg); border-color: var(--color-success-soft-border); }
+    .btn-danger:hover { opacity: 0.9; }
 
     /* ── Filter Bar ─────────────────────────────────────────────── */
     .filter-bar {
@@ -155,7 +134,7 @@
     }
     .badge-active   { background: var(--color-success-soft-bg); color: var(--color-success); border-color: var(--color-success-border); }
     .badge-disabled { background: var(--color-slate-50); color: var(--color-text-soft); border-color: var(--color-border); }
-    .badge-admin    { background: var(--color-primary-soft-bg); color: var(--color-primary); border-color: var(--color-info-border); }
+    .badge-admin    { background: var(--color-primary-soft-bg); color: var(--color-primary); border-color: var(--color-primary-border); }
     .badge-user     { background: var(--color-success-soft-bg); color: var(--color-success); border-color: var(--color-success-border); }
 
     /* ── Mini action buttons (aligned with task-list) ────────── */
@@ -238,7 +217,7 @@
       justify-content: space-between; gap: var(--space-md); margin-bottom: var(--space-lg);
     }
     .modal-title {
-      font-family: 'Crimson Pro', 'Noto Serif TC', serif;
+      font-family: var(--font-serif-display);
       font-size: 22px; font-weight: 700; color: var(--color-ink);
     }
     .modal-close {
@@ -335,7 +314,7 @@
 
     /* ── Audit Drawer ───────────────────────────────────────────── */
     .audit-drawer-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 250;
+      position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: var(--z-modal);
       opacity: 0; pointer-events: none;
       transition: opacity var(--dur-normal) var(--ease-standard);
     }
@@ -343,7 +322,7 @@
 
     .audit-drawer {
       position: fixed; top: 0; right: 0; bottom: 0; width: 480px;
-      background: var(--color-white); z-index: 260;
+      background: var(--color-white); z-index: calc(var(--z-modal) + 10);
       display: flex; flex-direction: column;
       transform: translateX(100%);
       transition: transform var(--dur-normal) var(--ease-standard);
@@ -358,7 +337,7 @@
       border-bottom: 1px solid var(--color-border); flex-shrink: 0;
     }
     .audit-drawer-title {
-      font-family: 'Crimson Pro', 'Noto Serif TC', serif;
+      font-family: var(--font-serif-display);
       font-size: 20px; font-weight: 700; color: var(--color-ink); margin: 0 0 2px;
     }
     .audit-drawer-subtitle { font-size: 13px; color: var(--color-text-soft); margin: 0; }
@@ -450,7 +429,7 @@
       </div>
 
       <!-- Admin Tabs -->
-      <div class="admin-tabs" role="tablist">
+      <div class="admin-tabs" id="adminTabs" role="tablist" aria-label="管理功能分頁">
         <a id="tabUsers" class="admin-tab active" href="user-management.html" role="tab" aria-selected="true">使用者管理</a>
         <a id="tabRoles" class="admin-tab" href="role-settings.html" role="tab" aria-selected="false">角色設定</a>
       </div>
@@ -512,11 +491,11 @@
                 <td class="td-muted">2026-01-05</td>
                 <td>
                   <div class="td-actions">
-                    <button class="mini-btn mini-btn-danger" disabled id="seederDisableBtn" title="Seeder 超管不可停用" aria-label="Seeder 超管不可停用">
-                      <span class="disable-btn-text">停用</span>
-                    </button>
                     <button class="mini-btn mini-btn-primary" onclick="openEditModal('u-001')">
                       <span class="edit-btn-text">編輯</span>
+                    </button>
+                    <button class="mini-btn mini-btn-danger" disabled id="seederDisableBtn" title="Seeder 超管不可停用" aria-label="Seeder 超管不可停用">
+                      <span class="disable-btn-text">停用</span>
                     </button>
                   </div>
                 </td>
@@ -530,11 +509,11 @@
                 <td class="td-muted">2026-01-18</td>
                 <td>
                   <div class="td-actions">
-                    <button class="mini-btn mini-btn-danger" onclick="openDisableModal('u-002')">
-                      <span class="disable-btn-text">停用</span>
-                    </button>
                     <button class="mini-btn mini-btn-primary" onclick="openEditModal('u-002')">
                       <span class="edit-btn-text">編輯</span>
+                    </button>
+                    <button class="mini-btn mini-btn-danger" onclick="openDisableModal('u-002')">
+                      <span class="disable-btn-text">停用</span>
                     </button>
                   </div>
                 </td>
@@ -548,11 +527,11 @@
                 <td class="td-muted">2026-02-03</td>
                 <td>
                   <div class="td-actions">
-                    <button class="mini-btn mini-btn-danger" onclick="openDisableModal('u-003')">
-                      <span class="disable-btn-text">停用</span>
-                    </button>
                     <button class="mini-btn mini-btn-primary" onclick="openEditModal('u-003')">
                       <span class="edit-btn-text">編輯</span>
+                    </button>
+                    <button class="mini-btn mini-btn-danger" onclick="openDisableModal('u-003')">
+                      <span class="disable-btn-text">停用</span>
                     </button>
                   </div>
                 </td>
@@ -566,11 +545,11 @@
                 <td class="td-muted">2026-02-20</td>
                 <td>
                   <div class="td-actions">
-                    <button class="mini-btn mini-btn-success" onclick="handleReEnable('u-004')">
-                      <span class="enable-btn-text">啟用</span>
-                    </button>
                     <button class="mini-btn mini-btn-primary" onclick="openEditModal('u-004')">
                       <span class="edit-btn-text">編輯</span>
+                    </button>
+                    <button class="mini-btn mini-btn-success" onclick="handleReEnable('u-004')">
+                      <span class="enable-btn-text">啟用</span>
                     </button>
                   </div>
                 </td>
@@ -584,11 +563,11 @@
                 <td class="td-muted">2026-03-01</td>
                 <td>
                   <div class="td-actions">
-                    <button class="mini-btn mini-btn-danger" onclick="openDisableModal('u-005')">
-                      <span class="disable-btn-text">停用</span>
-                    </button>
                     <button class="mini-btn mini-btn-primary" onclick="openEditModal('u-005')">
                       <span class="edit-btn-text">編輯</span>
+                    </button>
+                    <button class="mini-btn mini-btn-danger" onclick="openDisableModal('u-005')">
+                      <span class="disable-btn-text">停用</span>
                     </button>
                   </div>
                 </td>
@@ -597,7 +576,7 @@
           </table>
         </div>
         <!-- Pagination -->
-        <div class="pagination">
+        <nav class="pagination" id="paginationNav" aria-label="分頁">
           <div style="display:flex;align-items:center;gap:var(--space-md)">
             <span id="paginationInfo" class="pagination-info">共 24 筆 · 第 1 / 2 頁</span>
             <select class="page-size-select" id="pageSizeSelect" aria-label="每頁顯示">
@@ -616,7 +595,7 @@
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
             </button>
           </div>
-        </div>
+        </nav>
       </div>
 
       <!-- Empty State -->
@@ -787,10 +766,7 @@
       </p>
       <div class="modal-footer">
         <button type="button" class="btn-ghost" onclick="closeModal('disableModal')" id="disableCancelBtn">取消</button>
-        <button type="button" id="disableConfirmBtn"
-          style="display:inline-flex;align-items:center;gap:6px;background:var(--color-error);color:white;border:none;padding:10px 20px;border-radius:var(--radius-md);font-size:14px;font-weight:600;cursor:pointer;transition:opacity 150ms"
-          onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'"
-          onclick="confirmDisable()">
+        <button type="button" id="disableConfirmBtn" class="btn-danger" onclick="confirmDisable()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <path d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728L5.636 5.636"/>
           </svg>
@@ -924,6 +900,8 @@
         auditDrawerCloseBtn:   '關閉',
         auditDrawerEmptyText:  '尚無異動紀錄',
         auditBtnLabel:         '查看異動紀錄',
+        adminTabsAria:         '管理功能分頁',
+        paginationAria:        '分頁',
         auditActorPrefix:      '操作者：',
         auditActionCreate:     '新增',
         auditActionEdit:       '編輯',
@@ -996,6 +974,8 @@
         auditDrawerCloseBtn:   'Close',
         auditDrawerEmptyText:  'No changes recorded',
         auditBtnLabel:         'View change history',
+        adminTabsAria:         'Admin sections',
+        paginationAria:        'Pagination',
         auditActorPrefix:      'By: ',
         auditActionCreate:     'Created',
         auditActionEdit:       'Edited',
@@ -1061,6 +1041,11 @@
       });
 
       document.getElementById('searchInput').placeholder = t.searchPlaceholder;
+
+      const adminTabs = document.getElementById('adminTabs');
+      if (adminTabs && t.adminTabsAria) adminTabs.setAttribute('aria-label', t.adminTabsAria);
+      const paginationNav = document.getElementById('paginationNav');
+      if (paginationNav && t.paginationAria) paginationNav.setAttribute('aria-label', t.paginationAria);
 
       // Update all repeated button labels in table rows
       document.querySelectorAll('.edit-btn-text').forEach(el => { el.textContent = t.editBtnText; });
@@ -1196,35 +1181,6 @@
         const actions = document.createElement('div');
         actions.className = 'td-actions';
 
-        if (user.status === 'active') {
-          const disableBtn = document.createElement('button');
-          disableBtn.className = 'mini-btn mini-btn-danger';
-          disableBtn.type = 'button';
-          if (user.isSeeder) {
-            disableBtn.disabled = true;
-            disableBtn.id = 'seederDisableBtn';
-            disableBtn.title = t.seederDisableTitle;
-            disableBtn.setAttribute('aria-label', t.seederDisableTitle);
-          } else {
-            disableBtn.addEventListener('click', () => openDisableModal(user.id));
-          }
-          const disableText = document.createElement('span');
-          disableText.className = 'disable-btn-text';
-          disableText.textContent = t.disableBtnText;
-          disableBtn.appendChild(disableText);
-          actions.appendChild(disableBtn);
-        } else {
-          const enableBtn = document.createElement('button');
-          enableBtn.className = 'mini-btn mini-btn-success';
-          enableBtn.type = 'button';
-          enableBtn.addEventListener('click', () => handleReEnable(user.id));
-          const enableText = document.createElement('span');
-          enableText.className = 'enable-btn-text';
-          enableText.textContent = t.enableBtnText;
-          enableBtn.appendChild(enableText);
-          actions.appendChild(enableBtn);
-        }
-
         const editBtn = document.createElement('button');
         editBtn.className = 'mini-btn mini-btn-primary';
         editBtn.type = 'button';
@@ -1254,6 +1210,36 @@
         logBtn.appendChild(logSvg);
         actions.appendChild(logBtn);
 
+        // Destructive action stays at the far right (MASTER dense-row mapping)
+        if (user.status === 'active') {
+          const disableBtn = document.createElement('button');
+          disableBtn.className = 'mini-btn mini-btn-danger';
+          disableBtn.type = 'button';
+          if (user.isSeeder) {
+            disableBtn.disabled = true;
+            disableBtn.id = 'seederDisableBtn';
+            disableBtn.title = t.seederDisableTitle;
+            disableBtn.setAttribute('aria-label', t.seederDisableTitle);
+          } else {
+            disableBtn.addEventListener('click', () => openDisableModal(user.id));
+          }
+          const disableText = document.createElement('span');
+          disableText.className = 'disable-btn-text';
+          disableText.textContent = t.disableBtnText;
+          disableBtn.appendChild(disableText);
+          actions.appendChild(disableBtn);
+        } else {
+          const enableBtn = document.createElement('button');
+          enableBtn.className = 'mini-btn mini-btn-success';
+          enableBtn.type = 'button';
+          enableBtn.addEventListener('click', () => handleReEnable(user.id));
+          const enableText = document.createElement('span');
+          enableText.className = 'enable-btn-text';
+          enableText.textContent = t.enableBtnText;
+          enableBtn.appendChild(enableText);
+          actions.appendChild(enableBtn);
+        }
+
         actionCell.appendChild(actions);
         row.appendChild(actionCell);
         tbody.appendChild(row);
@@ -1268,6 +1254,19 @@
       renderPagination(totalPages);
     }
 
+    // Lucide chevron SVG for pagination arrows — static points, no user data
+    function makeChevronSvg(points) {
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('width', '14'); svg.setAttribute('height', '14');
+      svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('fill', 'none');
+      svg.setAttribute('stroke', 'currentColor'); svg.setAttribute('stroke-width', '2');
+      svg.setAttribute('aria-hidden', 'true');
+      const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+      polyline.setAttribute('points', points);
+      svg.appendChild(polyline);
+      return svg;
+    }
+
     function renderPagination(totalPages) {
       const controls = document.querySelector('.pagination-controls');
       controls.textContent = '';
@@ -1277,7 +1276,7 @@
       prevBtn.type = 'button';
       prevBtn.disabled = currentPage === 1;
       prevBtn.setAttribute('aria-label', lang === 'zh' ? '上一頁' : 'Previous page');
-      prevBtn.textContent = '<';
+      prevBtn.appendChild(makeChevronSvg('15 18 9 12 15 6'));
       prevBtn.addEventListener('click', () => {
         if (currentPage > 1) {
           currentPage -= 1;
@@ -1304,7 +1303,7 @@
       nextBtn.type = 'button';
       nextBtn.disabled = currentPage >= totalPages;
       nextBtn.setAttribute('aria-label', lang === 'zh' ? '下一頁' : 'Next page');
-      nextBtn.textContent = '>';
+      nextBtn.appendChild(makeChevronSvg('9 18 15 12 9 6'));
       nextBtn.addEventListener('click', () => {
         if (currentPage < totalPages) {
           currentPage += 1;

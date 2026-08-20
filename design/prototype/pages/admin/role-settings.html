@@ -70,7 +70,7 @@
     /* ── Page Header ─────────────────────────────────────────────── */
     .page-header { display: flex; flex-direction: column; gap: 0; margin-bottom: 24px; }
     .page-header-main { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-lg); flex-wrap: wrap; }
-    .page-title { font-family: 'Crimson Pro', 'Noto Serif TC', serif; font-weight: 700; font-size: 28px; color: var(--color-ink); line-height: 1.3; margin: 0 0 4px; }
+    .page-title { font-family: var(--font-serif-display); font-weight: 700; font-size: 28px; color: var(--color-ink); line-height: 1.3; margin: 0 0 4px; }
     .page-subtitle { font-size: 14px; line-height: 1.8; color: var(--color-text-soft); margin: 0; }
     .page-actions { display: flex; align-items: center; gap: var(--space-sm); flex-shrink: 0; }
 
@@ -111,11 +111,11 @@
     /* ── Mobile Notice ───────────────────────────────────────────── */
     /* ── Matrix Section ──────────────────────────────────────────── */
     .matrix-section { display: flex; flex-direction: column; gap: var(--space-lg); }
-    .section-title { font-family: 'Crimson Pro', 'Noto Serif TC', serif; font-weight: 600; font-size: 18px; color: var(--color-ink); }
+    .section-title { font-family: var(--font-serif-display); font-weight: 600; font-size: 18px; color: var(--color-ink); }
     .section-desc { font-size: 13px; color: var(--color-ink-muted); line-height: 1.6; margin-top: var(--space-xs); }
 
     /* ── Matrix Table ────────────────────────────────────────────── */
-    .matrix-scroll-wrapper { overflow-x: auto; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); }
+    .matrix-scroll-wrapper { overflow-x: auto; border-radius: var(--radius-lg); border: 1px solid var(--color-border); }
     .matrix-table {
       width: 100%; border-collapse: collapse; background: var(--color-white);
       font-size: 13px; min-width: 780px;
@@ -173,7 +173,7 @@
     }
     .perm-row:hover .perm-cell { background: var(--color-primary-soft-bg); }
     .perm-key {
-      display: block; font-family: 'Atkinson Hyperlegible', monospace;
+      display: block; font-family: var(--font-mono);
       font-size: 12px; font-weight: 600; color: var(--color-primary); line-height: 1.4;
     }
     .perm-desc {
@@ -246,8 +246,8 @@
 
     /* ── Modal ───────────────────────────────────────────────────── */
     .modal-overlay {
-      position: fixed; inset: 0; z-index: 500;
-      background: rgba(0,0,0,0.4);
+      position: fixed; inset: 0; z-index: var(--z-modal);
+      background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
       display: flex; align-items: center; justify-content: center;
       padding: var(--space-md);
     }
@@ -283,14 +283,14 @@
 
     /* ── Audit Drawer ───────────────────────────────────── */
     .audit-drawer-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 250;
+      position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: var(--z-modal);
       opacity: 0; pointer-events: none;
       transition: opacity 200ms ease;
     }
     .audit-drawer-overlay.open { opacity: 1; pointer-events: auto; }
     .audit-drawer {
       position: fixed; top: 0; right: 0; bottom: 0; width: 480px;
-      background: var(--color-white); z-index: 260;
+      background: var(--color-white); z-index: calc(var(--z-modal) + 10);
       display: flex; flex-direction: column;
       transform: translateX(100%);
       transition: transform 200ms ease;
@@ -304,7 +304,7 @@
       border-bottom: 1px solid var(--color-border); flex-shrink: 0;
     }
     .audit-drawer-title {
-      font-family: 'Crimson Pro', 'Noto Serif TC', serif;
+      font-family: var(--font-serif-display);
       font-size: 20px; font-weight: 700; color: var(--color-ink); margin: 0 0 2px;
     }
     .audit-drawer-subtitle { font-size: 13px; color: var(--color-text-soft); margin: 0; }
@@ -356,10 +356,9 @@
       /* Teal task column — replace light mint with dark teal */
       --color-task-soft-bg:  #0C2A27;
       --color-task-header:   #2DD4BF;
-
-      /* CTA button */
-      .btn-cta { color: #064E3B; background: #34D399; }
     }
+    /* Bright CTA backgrounds need dark text in dark mode (MASTER §CTA button contrast) */
+    html[data-theme="dark"] .btn-cta { color: #0F172A; }
   </style>
 </head>
 <body>
@@ -411,7 +410,7 @@
       </div>
 
       <!-- Admin Tabs -->
-      <div class="admin-tabs" role="tablist">
+      <div class="admin-tabs" id="adminTabs" role="tablist" aria-label="管理功能分頁">
         <a id="tabUsers" class="admin-tab" href="user-management.html" role="tab" aria-selected="false">使用者管理</a>
         <a id="tabRoles" class="admin-tab active" href="role-settings.html" role="tab" aria-selected="true">角色設定</a>
       </div>
@@ -421,7 +420,7 @@
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-lg);flex-wrap:wrap;margin-bottom:var(--space-md);">
           <div>
             <h2 class="section-title" id="matrixSectionTitle">角色權限矩陣</h2>
-            <p class="section-desc" id="matrixSectionDesc">設定各角色對平台功能的存取權限。⛔ 表示需透過任務角色授權，不由系統角色直接控制。🔒 表示核心管理權限，不可關閉。</p>
+            <p class="section-desc" id="matrixSectionDesc">設定各角色對平台功能的存取權限。「需任務角色」徽章表示需透過任務角色授權，不由系統角色直接控制。鎖頭圖示表示核心管理權限，不可關閉。</p>
           </div>
           <div class="page-actions">
             <button class="btn-ghost" id="editBtn" onclick="enterEditMode()">
@@ -581,10 +580,10 @@
                   <span class="perm-desc" id="permDesc_task_detail_view">檢視任務詳情</span>
                 </td>
                 <td class="check-cell sys-bg">
-                  <span class="task-role-badge">⛔ <span class="trb-text">需任務角色</span></span>
+                  <span class="task-role-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg><span class="trb-text">需任務角色</span></span>
                 </td>
                 <td class="check-cell sys-bg sa-col">
-                  <span class="task-role-badge">⛔ <span class="trb-text">需任務角色</span></span>
+                  <span class="task-role-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg><span class="trb-text">需任務角色</span></span>
                 </td>
                 <td class="check-cell task-bg">
                   <input type="checkbox" class="matrix-checkbox task-check" data-key="task.detail.view" data-role="project_leader" checked onchange="onCheckboxChange()" aria-label="project_leader - task.detail.view" />
@@ -603,10 +602,10 @@
                   <span class="perm-desc" id="permDesc_task_members_manage">管理任務成員與任務角色</span>
                 </td>
                 <td class="check-cell sys-bg">
-                  <span class="task-role-badge">⛔ <span class="trb-text">需任務角色</span></span>
+                  <span class="task-role-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg><span class="trb-text">需任務角色</span></span>
                 </td>
                 <td class="check-cell sys-bg sa-col">
-                  <span class="task-role-badge">⛔ <span class="trb-text">需任務角色</span></span>
+                  <span class="task-role-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg><span class="trb-text">需任務角色</span></span>
                 </td>
                 <td class="check-cell task-bg">
                   <input type="checkbox" class="matrix-checkbox task-check" data-key="task.members.manage" data-role="project_leader" checked onchange="onCheckboxChange()" aria-label="project_leader - task.members.manage" />
@@ -629,10 +628,10 @@
                   <span class="perm-desc" id="permDesc_annotation_workspace_annotate">以 annotator 模式執行標記</span>
                 </td>
                 <td class="check-cell sys-bg">
-                  <span class="task-role-badge">⛔ <span class="trb-text">需任務角色</span></span>
+                  <span class="task-role-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg><span class="trb-text">需任務角色</span></span>
                 </td>
                 <td class="check-cell sys-bg sa-col">
-                  <span class="task-role-badge">⛔ <span class="trb-text">需任務角色</span></span>
+                  <span class="task-role-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg><span class="trb-text">需任務角色</span></span>
                 </td>
                 <td class="check-cell task-bg">
                   <input type="checkbox" class="matrix-checkbox task-check" data-key="annotation.workspace.annotate" data-role="project_leader" onchange="onCheckboxChange()" aria-label="project_leader - annotation.workspace.annotate" />
@@ -650,10 +649,10 @@
                   <span class="perm-desc" id="permDesc_annotation_workspace_review">以 reviewer 模式執行審核</span>
                 </td>
                 <td class="check-cell sys-bg">
-                  <span class="task-role-badge">⛔ <span class="trb-text">需任務角色</span></span>
+                  <span class="task-role-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg><span class="trb-text">需任務角色</span></span>
                 </td>
                 <td class="check-cell sys-bg sa-col">
-                  <span class="task-role-badge">⛔ <span class="trb-text">需任務角色</span></span>
+                  <span class="task-role-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg><span class="trb-text">需任務角色</span></span>
                 </td>
                 <td class="check-cell task-bg">
                   <input type="checkbox" class="matrix-checkbox task-check" data-key="annotation.workspace.review" data-role="project_leader" onchange="onCheckboxChange()" aria-label="project_leader - annotation.workspace.review" />
@@ -676,10 +675,10 @@
                   <span class="perm-desc" id="permDesc_dataset_stats_view">檢視資料集統計</span>
                 </td>
                 <td class="check-cell sys-bg">
-                  <span class="task-role-badge">⛔ <span class="trb-text">需任務角色</span></span>
+                  <span class="task-role-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg><span class="trb-text">需任務角色</span></span>
                 </td>
                 <td class="check-cell sys-bg sa-col">
-                  <span class="task-role-badge">⛔ <span class="trb-text">需任務角色</span></span>
+                  <span class="task-role-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg><span class="trb-text">需任務角色</span></span>
                 </td>
                 <td class="check-cell task-bg">
                   <input type="checkbox" class="matrix-checkbox task-check" data-key="dataset.stats.view" data-role="project_leader" checked onchange="onCheckboxChange()" aria-label="project_leader - dataset.stats.view" />
@@ -697,10 +696,10 @@
                   <span class="perm-desc" id="permDesc_dataset_quality_view">檢視資料品質頁</span>
                 </td>
                 <td class="check-cell sys-bg">
-                  <span class="task-role-badge">⛔ <span class="trb-text">需任務角色</span></span>
+                  <span class="task-role-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg><span class="trb-text">需任務角色</span></span>
                 </td>
                 <td class="check-cell sys-bg sa-col">
-                  <span class="task-role-badge">⛔ <span class="trb-text">需任務角色</span></span>
+                  <span class="task-role-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg><span class="trb-text">需任務角色</span></span>
                 </td>
                 <td class="check-cell task-bg">
                   <input type="checkbox" class="matrix-checkbox task-check" data-key="dataset.quality.view" data-role="project_leader" checked onchange="onCheckboxChange()" aria-label="project_leader - dataset.quality.view" />
@@ -718,10 +717,10 @@
                   <span class="perm-desc" id="permDesc_dataset_export">下載/匯出資料結果</span>
                 </td>
                 <td class="check-cell sys-bg">
-                  <span class="task-role-badge">⛔ <span class="trb-text">需任務角色</span></span>
+                  <span class="task-role-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg><span class="trb-text">需任務角色</span></span>
                 </td>
                 <td class="check-cell sys-bg sa-col">
-                  <span class="task-role-badge">⛔ <span class="trb-text">需任務角色</span></span>
+                  <span class="task-role-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg><span class="trb-text">需任務角色</span></span>
                 </td>
                 <td class="check-cell task-bg">
                   <input type="checkbox" class="matrix-checkbox task-check" data-key="dataset.export" data-role="project_leader" checked onchange="onCheckboxChange()" aria-label="project_leader - dataset.export" />
@@ -906,12 +905,13 @@
         cancelBtnLabel:          '取消',
         saveBtnLabel:            '儲存',
         matrixSectionTitle:      '角色權限矩陣',
-        matrixSectionDesc:       '設定各角色對平台功能的存取權限。⛔ 表示需透過任務角色授權，不由系統角色直接控制。🔒 表示核心管理權限，不可關閉。',
+        matrixSectionDesc:       '設定各角色對平台功能的存取權限。「需任務角色」徽章表示需透過任務角色授權，不由系統角色直接控制。鎖頭圖示表示核心管理權限，不可關閉。',
         thPermission:            '功能權限',
         thSystemRoles:           '系統角色',
         thTaskRoles:             '任務角色',
         legendTaskBadgeText:     '需任務角色',
         auditLogBtnLabel:        '操作紀錄',
+        adminTabsAria:           '管理功能分頁',
         auditDrawerTitle:        '操作紀錄',
         auditDrawerSubtitle:     '角色權限矩陣',
         auditDrawerCloseBtn:     '關閉',
@@ -968,12 +968,13 @@
         cancelBtnLabel:          'Cancel',
         saveBtnLabel:            'Save',
         matrixSectionTitle:      'Role Permission Matrix',
-        matrixSectionDesc:       'Configure feature access for each role. ⛔ means delegated to task roles, not controlled by system roles. 🔒 means critical admin permission, cannot be disabled.',
+        matrixSectionDesc:       'Configure feature access for each role. The "task role required" badge means delegated to task roles, not controlled by system roles. The lock icon means critical admin permission, cannot be disabled.',
         thPermission:            'Permission',
         thSystemRoles:           'System Roles',
         thTaskRoles:             'Task Roles',
         legendTaskBadgeText:     'Task role required',
         auditLogBtnLabel:        'Change History',
+        adminTabsAria:           'Admin sections',
         auditDrawerTitle:        'Change History',
         auditDrawerSubtitle:     'Role Permission Matrix',
         auditDrawerCloseBtn:     'Close',
@@ -1118,6 +1119,9 @@
         auditBtn.title = t.auditLogBtnLabel;
         auditBtn.setAttribute('aria-label', t.auditLogBtnLabel);
       }
+
+      const adminTabs = document.getElementById('adminTabs');
+      if (adminTabs && t.adminTabsAria) adminTabs.setAttribute('aria-label', t.adminTabsAria);
 
       /* Update all task-role badge texts (class selector, not innerHTML) */
       document.querySelectorAll('.trb-text').forEach(el => {
