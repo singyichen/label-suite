@@ -77,7 +77,16 @@ test.describe.configure({ mode: 'serial' });
 const SEED_FIXTURE_FILE = path.resolve(__dirname, 'fixtures/xrole-lifecycle-seed.json');
 const PANEL_LOAD_TIMEOUT = 15000;
 const SAMPLING_VALUE = String(DRY_RUN_RECORD_IDS.length); // '2' -- matches the seeded dry_run record count so checkpoint A's numbers line up by design.
-const ACTIVE_ANNOTATOR_COUNT = '2'; // TASK_MEMBERS (task-detail.html:3388-3395) ships 2 active annotators by default (Alex Wang, Olivia Lin).
+const ACTIVE_ANNOTATOR_COUNT = '1'; // TASK_MEMBERS (task-detail.html:3388-3395) ships 2 active annotators by default
+// (Alex Wang, Olivia Lin), but by the time this constant is used (XROLE-07,
+// which runs after XROLE-06 in serial order) XROLE-06 has already disabled
+// Alex Wang, leaving only Olivia Lin active -- '1' reflects the real
+// headcount at that point, not the original seed value. The
+// minAnnotatorsInput 'input' listener (task-detail.html:9152-9157) clamps
+// state.samplingDraft.minAnnotators to a floor of 2 regardless of what is
+// typed, so this still exercises a value at/below true active headcount
+// (the same "happy path, not the D3 gap" intent as before) without
+// asserting a headcount that no longer holds by this point in the journey.
 
 let context: BrowserContext;
 let plPage: Page;
@@ -198,7 +207,7 @@ test('XROLE-01: project leader creates a task through the task-new wizard', asyn
   await expect(plPage.locator('#taskNotFoundTitle')).toHaveText('找不到任務', { timeout: PANEL_LOAD_TIMEOUT });
 });
 
-test('XROLE-02b: fixture-seeded task dataset total reconciles with the 5 seeded records', async () => {
+test('XROLE-02b: fixture-seeded task dataset total reconciles with the 5 seeded records (w4 §2 step 2 three-way chain: upload=preview=list)', async () => {
   await plPage.goto(`/pages/task-management/task-detail.html?task_role=project_leader&task_id=${fixtureTaskId}`);
   await plPage.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
   // TASK_DATA.datasetTotal is auto-computed from datasetRecords.length
@@ -206,6 +215,21 @@ test('XROLE-02b: fixture-seeded task dataset total reconciles with the 5 seeded 
   // the seeded profile, so this is a genuine reconciliation between the
   // fixture's 5 records and what the PL page independently derives.
   await expect(plPage.locator('#valueDatasetSummary')).toHaveText('5 筆');
+
+  // Third leg of the w4 three-way reconciliation (upload count = preview
+  // count = list count, W3 coverage gap #1): XROLE-01 already covers the
+  // first two legs against the wizard-created task (upload file content is
+  // the 5-record SEED_FIXTURE_FILE; #inlinePreviewHint asserts '5' at
+  // XROLE-02 leg 1 above). This leg checks annotation-list against the
+  // fixture-seeded task instead of the wizard task, per this file's
+  // documented two-task-id limitation (see file-level doc comment) --
+  // navigating WITHOUT a run_type param is deliberate: buildXRoleSeedPatch
+  // only run-scopes datasetRecords when run_type is dry_run/official_run
+  // (fixtures/build-xrole-patch.ts:96-98), so an unscoped visit is the only
+  // URL shape that resolves all 5 seeded records rather than the 2-record
+  // dry_run subset.
+  await a01Page.goto(`/pages/annotation/annotation-list.html?task_id=${fixtureTaskId}&role=annotator&annotator_id=A01`);
+  await expect(a01Page.getByTestId('ws-sample-item')).toHaveCount(5);
 });
 
 test('XROLE-03: guideline uploaded by the project leader is readable in the annotator workspace', async () => {
@@ -299,11 +323,27 @@ test('XROLE-05: project leader adds a new member via email invite', async () => 
   await expect(plPage.locator('#memberTableBody')).toContainText('邀請中');
 });
 
-test('XROLE-06: project leader removes an existing member', async () => {
-  await plPage.locator('#memberTableBody tr').filter({ hasText: 'Alex Wang' }).locator('button:has-text("移除")').click();
+test('XROLE-06: project leader disables an existing member (w4 §2 step 5 -- covers the W3 §1.4 gap: this is a status-flip test, not a removal test)', async () => {
+  const memberRow = plPage.locator('#memberTableBody tr').filter({ hasText: 'Alex Wang' });
+  // toggleBtn's label mirrors member.status: 'active' -> t('actionDisable')
+  // ('停用', task-detail.html:6464-6468). openMemberActionModal({type:'disable',...})
+  // (task-detail.html:6469-6479) queues the action; executeMemberAction()'s
+  // 'disable' branch (task-detail.html:6702-6704) only flips
+  // target.status = 'disabled' -- unlike 'remove' it never splices
+  // TASK_MEMBERS, so the row must remain in the table.
+  await memberRow.locator('button:has-text("停用")').click();
   await plPage.locator('#memberActionConfirmBtn').click();
 
-  await expect(plPage.locator('#memberTableBody')).not.toContainText('Alex Wang');
+  await expect(plPage.locator('#memberTableBody')).toContainText('Alex Wang');
+  // Status badge text is t('memberStatusDisabled') ('停用',
+  // task-detail.html:2592/6438) -- '.badge' is unambiguous within this row:
+  // the role-badge span uses 'role-badge role-badge-annotator', not
+  // '.badge' (getTaskRoleBadgeClass(), task-detail.html:6333-6335).
+  await expect(memberRow.locator('.badge')).toHaveText('停用');
+  // Known requirement gap (w4 §2 step 5, §7 item 2): disabling an annotator
+  // has no defined effect on samples already assigned to them (unlike
+  // reviewers, task-detail-review-assignment.spec.ts:134) -- this test
+  // intentionally asserts UI/status only, not assignment behavior.
 });
 
 test('XROLE-07: project leader publishes the dry run round (checkpoint A: annotation-list count reconciles with sampling settings)', async () => {
