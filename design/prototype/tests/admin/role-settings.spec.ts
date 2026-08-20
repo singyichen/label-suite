@@ -116,8 +116,46 @@ test.describe('Admin role settings matrix behavior', () => {
     await taskCreateUser.uncheck();
     await expect(page.locator('#dirtyBanner')).toBeVisible();
 
+    // Cancel while dirty routes through the UXC-03 guard modal
     await page.locator('#cancelBtn').click();
+    await page.locator('#dirtyModal').getByText('放棄變更').click();
     await expect(page).toHaveURL(/role-settings\.html/);
+    await expect(taskCreateUser).toBeChecked();
+    await expect(page.locator('#dirtyBanner')).toBeHidden();
+  });
+
+  test('guards unsaved changes behind the dirty modal (UXC-03)', async ({ page }) => {
+    const taskCreateUser = page.locator('[data-key="task.create"][data-role="user"]');
+    const modal = page.locator('#dirtyModal');
+
+    // Cancel with no edits exits immediately — no guard
+    await page.locator('#editBtn').click();
+    await page.locator('#cancelBtn').click();
+    await expect(modal).toBeHidden();
+
+    // Cancel while dirty opens the guard modal instead of discarding
+    await page.locator('#editBtn').click();
+    await taskCreateUser.uncheck();
+    await page.locator('#cancelBtn').click();
+    await expect(modal).toBeVisible();
+
+    // Stay keeps the edits in place
+    await modal.getByText('繼續編輯').click();
+    await expect(modal).toBeHidden();
+    await expect(taskCreateUser).not.toBeChecked();
+    await expect(page.locator('#dirtyBanner')).toBeVisible();
+
+    // Escape also stays
+    await page.locator('#cancelBtn').click();
+    await expect(modal).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(modal).toBeHidden();
+    await expect(taskCreateUser).not.toBeChecked();
+
+    // Leave discards the edits and exits edit mode
+    await page.locator('#cancelBtn').click();
+    await modal.getByText('放棄變更').click();
+    await expect(modal).toBeHidden();
     await expect(taskCreateUser).toBeChecked();
     await expect(page.locator('#dirtyBanner')).toBeHidden();
   });

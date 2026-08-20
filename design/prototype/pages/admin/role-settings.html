@@ -1252,8 +1252,30 @@
       document.getElementById('dirtyBanner').classList.toggle('hidden', !dirty);
     }
 
-    /* ── Cancel: revert all changes and exit edit mode ──── */
+    /* UXC-03: browser navigation (F5, close tab) gets the native guard */
+    window.addEventListener('beforeunload', (e) => {
+      if (!isDirty) return;
+      e.preventDefault();
+      e.returnValue = '';
+    });
+
+    /* UXC-10 keyboard: Escape cancels, Enter confirms the open dialog */
+    document.addEventListener('keydown', (e) => {
+      const dirtyModalOpen = !document.getElementById('dirtyModal').classList.contains('hidden');
+      if (e.key === 'Escape') {
+        if (dirtyModalOpen) hideDirtyModal();
+        else closeAuditDrawer();
+      } else if (e.key === 'Enter' && dirtyModalOpen) {
+        confirmDiscardChanges();
+      }
+    });
+
+    /* ── Cancel: guard dirty edits behind the UXC-03 modal ──── */
     function cancelEdit() {
+      if (isDirty) {
+        showDirtyModal();
+        return;
+      }
       doExitCancel();
     }
 

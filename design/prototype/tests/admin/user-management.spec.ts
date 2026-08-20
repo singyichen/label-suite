@@ -133,6 +133,56 @@ test.describe('Admin user management list interactions', () => {
     await expect(page).toHaveURL(/role-settings\.html/);
   });
 
+  test('confirms disable with an action verb and keyboard support (UXC-10)', async ({ page }) => {
+    const alexRow = page.locator('#userTableBody tr', { hasText: 'Alex Wang' });
+    const modal = page.locator('#disableModal');
+
+    await alexRow.getByText('停用').click();
+    await expect(modal).toBeVisible();
+
+    // Primary button names the action, not a generic 確認
+    await expect(page.locator('#disableConfirmBtn')).toContainText('停用');
+
+    // Overlay click must NOT dismiss a destructive confirmation
+    await modal.click({ position: { x: 8, y: 8 } });
+    await expect(modal).toBeVisible();
+
+    // Escape cancels without disabling
+    await page.keyboard.press('Escape');
+    await expect(modal).toBeHidden();
+    await expect(alexRow.getByText('停用')).toBeVisible();
+
+    // Enter confirms the disable
+    await alexRow.getByText('停用').click();
+    await expect(modal).toBeVisible();
+    await page.keyboard.press('Enter');
+    await expect(modal).toBeHidden();
+    await expect(alexRow.getByText('啟用')).toBeVisible();
+  });
+
+  test('syncs filters and pagination to the URL (UXC-11)', async ({ page }) => {
+    // Loading with params restores the same view
+    await page.goto(`${USER_MANAGEMENT_URL}?q=mandy&role=super_admin`);
+    await expect(page.locator('#searchInput')).toHaveValue('mandy');
+    await expect(page.locator('#roleFilter')).toHaveValue('super_admin');
+    await expect(await visibleUserRows(page)).toHaveCount(1);
+    await expect(page.locator('#userTableBody')).toContainText('Mandy Chen');
+
+    // Changing filters rewrites the URL via replaceState
+    await page.locator('#searchInput').fill('');
+    await page.locator('#roleFilter').selectOption('');
+    await page.locator('#statusFilter').selectOption('disabled');
+    await expect(page).toHaveURL(/status=disabled/);
+    await expect(page).not.toHaveURL(/role=/);
+    await expect(page).not.toHaveURL(/q=/);
+
+    // Invalid values are dropped instead of applied
+    await page.goto(`${USER_MANAGEMENT_URL}?role=nonsense&offset=-5`);
+    await expect(page.locator('#roleFilter')).toHaveValue('');
+    await expect(await visibleUserRows(page)).toHaveCount(5);
+    await expect(page).not.toHaveURL(/nonsense/);
+  });
+
   test('follows the UXC-07 toast contract', async ({ page }) => {
     // Top-center container on the shared z-toast layer
     const container = page.locator('.toast-container');
