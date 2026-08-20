@@ -68,7 +68,7 @@ Report the exact conflict or missing artifact — never resolve silently or assu
 
 ## Design Principles
 
-- Wireframes live at `design/wireframes/pages/[module]/[page].pen` — created and edited via the `pencil-wireframe` skill.
+- Wireframes live at `design/wireframes/pages/[module]/[page].pen` — frozen 2026-08-20 (issue #183, see design/wireframes/README.md); read-only reference, no new wireframe work.
 - Prototypes live at `design/prototype/pages/[module]/[page].html` — generated via the `label-suite-design` skill.
 - Annotators are the primary productivity users: the annotation interface must minimize cognitive load and support rapid, accurate labeling with no training required.
 - Configuration screens (task setup) should make complex NLP task definitions self-explanatory through progressive disclosure and inline guidance.

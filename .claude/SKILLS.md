@@ -16,7 +16,7 @@ This document provides a comprehensive overview of all available Spec-Kit Comman
 │   ├── speckit.checklist.md     # Generate quality checklist
 │   ├── speckit.constitution.md  # Update project constitution
 │   ├── speckit.taskstoissues.md # Convert tasks to GitHub Issues
-│   ├── pencil-wireframe.md      # Draw 6-frame wireframes via Pencil MCP
+│   ├── pencil-wireframe.md      # Draw 6-frame wireframes via Pencil MCP (frozen — see design/wireframes/README.md)
 │   ├── pr-flow.md               # Full PR flow (commit → review → test → merge)
 │   ├── review-resolve.md        # Fetch PR review threads, fix findings, resolve
 │   └── agent-team.md            # Multi-phase agent team workflow for new features
@@ -84,7 +84,7 @@ Spec-Kit commands provide a Spec-Driven Development (SDD) workflow powered by [G
 ### SDD Workflow
 
 ```
-/speckit.specify → /ui-ux-pro-max (prototype) → /pencil-wireframe (optional) → /speckit.clarify → /spec-review
+/speckit.specify → /ui-ux-pro-max (prototype) → /pencil-wireframe (frozen) → /speckit.clarify → /spec-review
                                                                                                      ↓
                                                                           /speckit.plan → /speckit.tasks → /speckit.analyze → /speckit.implement
                                                                                                                         ↓                                    ↓
@@ -106,7 +106,7 @@ Commands for broader development workflow tasks (PR management, wireframing, mul
 | Command | Purpose | Example Usage |
 |---------|---------|---------------|
 | `/ui-ux-pro-max` | Generate HTML prototype + design system before planning | `/ui-ux-pro-max Build dashboard page prototype` |
-| `/pencil-wireframe` | Draw 6-frame wireframes via Pencil MCP (optional after prototype) | `/pencil-wireframe` |
+| `/pencil-wireframe` | Draw 6-frame wireframes via Pencil MCP (frozen 2026-08-20 — see design/wireframes/README.md) | `/pencil-wireframe` |
 | `/pr-flow` | Full PR flow (commit → review → test → merge) | `/pr-flow` |
 | `/review-resolve` | Fetch PR review threads, fix all findings, resolve | `/review-resolve 21` |
 | `/agent-team` | Multi-phase agent team workflow for new features | `/agent-team` |
