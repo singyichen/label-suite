@@ -8,27 +8,24 @@
 
 | 文件 | 路徑 | 用途 |
 |------|------|------|
-| Product Requirements Document | [`prd.md`](./prd.md) | 產品層需求總結，彙整目標、角色旅程、功能需求、NFR、架構約束與開放問題 |
+| Product Requirements Document | [`prd.md`](./prd.md) | 產品層需求總結；feature 行為與工程契約回鏈對應 spec、Constitution 與 ADR |
+| Agent Context Contract | [`agent-context-contract.md`](./agent-context-contract.md) | Agent 開啟產品／規格工作前的必讀順序、追溯輸出與漂移檢查 |
+| Decision Log | [`decision-log.md`](./decision-log.md) | 基線、跨文件採用決策與不得自行裁決的已知衝突 |
 | Milestone Plan | [`milestones.md`](./milestones.md) | 產品交付里程碑規劃，依 PRD、story map 與 `specs/STATUS.md` 彙整 release 順序與進入條件 |
 | Product Baseline Summary | [`baseline/product-baseline-summary.md`](./baseline/product-baseline-summary.md) | 後續撰寫 spec 時優先參考的產品基線摘要 |
-| Functional Map | [`functional-map/functional-map.md`](./functional-map/functional-map.md) | 功能全景盤點，作為 IA 與 spec 的上游來源 |
+| Functional Map | [`functional-map/functional-map.md`](./functional-map/functional-map.md) | 探索性功能全景視圖，不作為 feature 行為或 IA 的上游權威 |
+| Task Type Taxonomy | [`functional-map/task-type-taxonomy.md`](./functional-map/task-type-taxonomy.md) | `outputs[]` taxonomy 導覽；schema 詳情以 spec 013 為準 |
 | Information Architecture | [`ia/information-architecture.md`](./ia/information-architecture.md) | 定義角色模型、模組歸屬、頁面結構、導覽與核心使用者旅程 |
 | Impact Map | [`impact-map/impact-map.md`](./impact-map/impact-map.md) | 對齊產品目標、角色行為改變與對應功能 |
 | Story Map | [`story-map/story-map.md`](./story-map/story-map.md) | 以用戶活動流與 release 切片規劃功能落地順序 |
 | Label Studio Reference | [`ia/label-studio-functional-map.md`](./ia/label-studio-functional-map.md) | 競品或參考系統拆解，用於比較與借鑑，不作為本產品權威基線 |
-| Reviewer Model Redesign | [`reviewer-model-redesign.md`](./reviewer-model-redesign.md) | 審核員模型重構規劃（2026-08-14）：定案決策、目標流程、畫面與資料模型變更、五個 PR 拆分 |
+| Reviewer Model Redesign | [`reviewer-model-redesign.md`](./reviewer-model-redesign.md) | 已完成的歷史決策與交付背景；現行審核、仲裁與完成條件以 014／015／017 為準 |
 
 ---
 
 ## 建議閱讀順序
 
-1. [`prd.md`](./prd.md)
-2. [`baseline/product-baseline-summary.md`](./baseline/product-baseline-summary.md)
-3. [`impact-map/impact-map.md`](./impact-map/impact-map.md)
-4. [`story-map/story-map.md`](./story-map/story-map.md)
-5. [`ia/information-architecture.md`](./ia/information-architecture.md)
-6. [`functional-map/functional-map.md`](./functional-map/functional-map.md)
-7. [`milestones.md`](./milestones.md)
+依 [`agent-context-contract.md`](./agent-context-contract.md) 的固定順序讀取。其核心原則是：`specs/STATUS.md` 是交付狀態來源；feature spec 是行為來源；Product Baseline 與本目錄文件只作產品導覽，不取代 `AGENTS.md` 或 Constitution。
 
 ---
 
@@ -103,9 +100,9 @@
 
 ## 使用原則
 
-- `prd.md` 是產品層總結文件；`specs/STATUS.md` 與各 `spec.md` 仍是實作狀態與規格細節的單一真實來源
+- `prd.md` 是產品層總結文件；[`specs/STATUS.md`](../../specs/STATUS.md) 是唯一交付狀態來源，各 `spec.md` 是行為細節來源
 - `milestones.md` 是由 PRD、story map 與 `specs/STATUS.md` 彙整出的規劃文件；當上游文件重大變更時需同步檢查
-- 若要撰寫新 spec，先以 `product-baseline-summary.md` 為準，再對照 `story-map.md` 與 `information-architecture.md`
+- 若要撰寫新 spec，依 Agent Context Contract 先讀 Product Baseline，再讀 STATUS、目標 spec、相依 spec 與 shared constants
 - 若調整角色、模組歸屬、頁面責任或 release 切片，應同步更新 `baseline / impact-map / story-map / ia`
 - 若只是擴充功能細節，但不改變產品基線，可只更新對應文件與 spec
 - `label-studio-functional-map.md` 僅作為參考資料，不應直接覆蓋本產品定義
@@ -116,7 +113,7 @@
 
 出現以下任一情況時，應回頭更新本目錄文件：
 
-- 新增或移除任務類型
+- 調整 input type、output type 或合法 `outputs[]` 組合
 - 調整角色模型或權限邏輯
 - 新增主要頁面或模組
 - 重新切分 R1 / R2 / R3 範圍

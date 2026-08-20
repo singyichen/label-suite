@@ -2,8 +2,7 @@
 
 > **用途：** 作為 SDD 開發的參考基準。每份 `spec.md` 撰寫前，應先對照本文件確認頁面歸屬、使用者角色、進入條件與導覽關係。
 >
-> **基礎來源：** [`functional-map.md`](../functional-map/functional-map.md)
-> **版本：** 1.5.0（2026-08-19）
+> **正典來源：** [`specs/STATUS.md`](../../../specs/STATUS.md) 與 active feature specs；[`functional-map.md`](../functional-map/functional-map.md) 僅為非權威視覺索引
 
 ---
 
@@ -18,9 +17,9 @@
 | 平台成員 | `user` | 使用平台所有功能、建立任務、被邀請加入任務 | 自行註冊後自動取得 |
 | 系統管理員 | `super_admin` | 平台維護、跨專案使用者管理、系統角色指派 | Super Admin 指派 |
 
-> **新使用者預設狀態：** 任何人皆可透過 Google SSO 登入或 Email / Password 自行註冊（`/register`）進入系統，帳號建立後**立即取得 `user` 系統角色**，無需等待審核。
+> **Account prototype 邊界：** 本節帳號流程描述 prototype 合約；Email / Password 自行註冊（`/register`）後取得 `user` 系統角色，Google SSO 僅為可操作入口與未來整合預留，點擊為 no-op，不代表 OAuth 已可登入。
 
-### 任務角色（Task Role）— `task_membership` 表，任務層級
+### 任務角色（Task Role）— 任務層級
 
 | 任務角色 | 識別碼 | 職責 | 指派方式 |
 |----------|--------|------|----------|
@@ -28,7 +27,6 @@
 | 審核員 | `reviewer` | 逐標記員審核標記結果、不一致時直接修正標籤、查看品質報告 | 由任務 `project_leader` 指派 |
 | 標記員 | `annotator` | 執行標記作業（試標 / 正式標）、查看個人進度 | 由任務 `project_leader` 指派 |
 
-> **Task Role 重點：** 同一使用者可在任務 A 擔任 `project_leader`，同時在任務 B 擔任 `annotator`。任務層級的授權透過查詢 `task_membership(task_id, user_id, task_role)` 表決定，不依賴 JWT 系統角色。系統角色不再有繼承關係。
 
 ---
 
@@ -47,7 +45,7 @@
 | `task-detail` | 任務詳情頁 | 任務管理模組 | ✅ | ✅ | `project_leader` 或 `reviewer`（任務） | 含「任務概覽」、「標記結果」、「標記進度」、「工時紀錄」、「成員管理」五個 tab，預設停留在「任務概覽」tab；`annotator` 不得進入，只能從 dashboard 進入 `annotation-list` |
 | `annotation-list` | 標記清單頁 | 標記任務模組 | ✅ | ✅ | `annotator` 或 `reviewer`（任務） | 標記模組入口頁；顯示可執行任務與資料筆次清單，點擊單筆後進入 `annotation-workspace` |
 | `annotation-workspace` | 標記作業頁 | 標記任務模組 | ✅ | ✅ | `annotator` 或 `reviewer`（任務）| 單筆標記工作區；模式依任務角色切換 |
-| `dataset-analysis-list` (`/dataset-analysis`) | 資料集分析任務列表頁（模組入口） | 資料集分析模組 | ✅ | ✅ | `project_leader` 或 `reviewer`（任務） | Prototype 檔案為 `dataset-analysis-list.html`；產品路由為 `/dataset-analysis`；`annotator` 導回 `dashboard` |
+| `dataset-analysis-list` (`/dataset-analysis`) | 資料集分析任務列表頁（模組入口） | 資料集分析模組 | ✅ | ✅ | — | 僅列出具 `project_leader` 或 `reviewer` membership 的任務；僅具 `annotator` membership 時顯示空狀態 |
 | `/dataset-analysis-detail/:task_id` | 任務分析詳情頁（統計總覽 / 品質監控雙 Tab） | 資料集分析模組 | ✅ | ✅ | `project_leader` 或 `reviewer`（任務） | Tab 由 `?tab=stats`/`?tab=quality` 標示；task_id 無效導回 `/dataset-analysis` |
 | `user-management` | 使用者管理頁 | 系統管理模組 | ❌ | ✅ | — | 平台級系統角色管理；頁首 admin tabs 可導向 `role-settings` |
 | `role-settings` | 角色權限設定頁 | 系統管理模組 | ❌ | ✅ | — | Prototype 為獨立頁 `role-settings.html`；與 `user-management` 透過 admin tabs 互相連結 |
@@ -86,7 +84,7 @@
 | 儀表板（`dashboard`） | ✅ | ✅ | 無 |
 | 任務管理（`task-list`） | ✅ | ✅ | 無 |
 | 標記作業（`annotation-list`） | ✅ | ✅ | 需為當前任務 `annotator` 或 `reviewer`，否則導回 `dashboard` |
-| 資料集分析（`/dataset-analysis`） | ✅ | ✅ | 需為當前任務 `project_leader` 或 `reviewer`，否則導回 `dashboard` |
+| 資料集分析（`/dataset-analysis`） | ✅ | ✅ | 列表僅顯示具 `project_leader` 或 `reviewer` membership 的任務；詳情頁無資格時導回列表 |
 | 系統管理（`user-management`） | ❌ | ✅ | 僅 `super_admin` 可見 |
 | 個人設定（`profile`） | ✅ | ✅ | 無 |
 
@@ -102,7 +100,7 @@
 | `annotation-list` | 標記作業 | 標記任務清單（篩選 / 搜尋 / 完成狀態） |
 | `annotation-workspace` | 標記作業 | 單筆作業操作區（Annotator / Reviewer 模式切換） |
 | `dataset-analysis-list` (`/dataset-analysis`) | 資料集分析 | 任務列表（依角色篩選） |
-| `/dataset-analysis-detail/:task_id?tab=stats` | 資料集分析 | 共用指標 + task_type 特定指標 |
+| `/dataset-analysis-detail/:task_id?tab=stats` | 資料集分析 | 共用摘要 + `outputs[]` 逐型統計 |
 | `/dataset-analysis-detail/:task_id?tab=quality` | 資料集分析 | IAA / 異常偵測 / 標記一致性偏離分析 / 速度統計 |
 | `user-management` | 系統管理 | 使用者管理頁；admin tab 可導向 `role-settings` |
 | `role-settings` | 系統管理 | 角色權限設定頁；admin tab 可返回 `user-management` |
@@ -257,7 +255,7 @@ flowchart TD
 **角色分流邏輯（與 spec 012 一致）：**
 - 先讀取 `system role`
   - `super_admin`：顯示 Super Admin Dashboard
-  - `user`：再讀取 `task_membership` 判斷主視圖
+  - `user`：再依任務角色資格判斷主視圖
     - 無任務關係：一般使用者 Dashboard
     - 有 `project_leader` 任務：Project Leader Dashboard
     - 有 `annotator` 任務：Annotator Dashboard
@@ -272,21 +270,21 @@ flowchart TD
 
 **Project Leader 視角（任務角色：`project_leader`）：**
 - **任務概況：** 總任務、進行中、等待 IAA 確認、速度異常
-- **任務列表：** 任務名稱、摘要、Task Type / Run Type / Status badge、進度條、查看全部
+- **任務列表：** 任務名稱、摘要、依 `outputs[].type` 原順序呈現的一至多個輸出類型 tag、Annotation Stage / Status badge、進度條、查看全部
 
 **Annotator 視角（任務角色：`annotator`）：**
 - **標記概況：** 待標記、今日完成、平均速度
-- **任務列表：** 任務名稱、進度摘要、Task Type / Run Type / Status badge、進度條、快速繼續
+- **任務列表：** 任務名稱、進度摘要、依 `outputs[].type` 原順序呈現的一至多個輸出類型 tag、Annotation Stage / Status badge、進度條、快速繼續
 
 **Reviewer 視角（任務角色：`reviewer`）：**
 - **審核概況：** 待審總數、今日已審、IAA 摘要
-- **任務列表：** 任務名稱、審查摘要、Task Type / Run Type / Status badge、進度條、快速審核
+- **任務列表：** 任務名稱、審查摘要、依 `outputs[].type` 原順序呈現的一至多個輸出類型 tag、Annotation Stage / Status badge、進度條、快速審核
 
 **Super Admin 視角（系統角色：`super_admin`）：**
 - **平台使用者統計：** 總用戶、專案負責人、標記員、審核員
 - **任務概況：** 總任務、進行中、等待 IAA 確認、速度異常
 - **最近提醒：** 系統提醒清單
-- **任務列表：** 任務名稱、摘要、Task Type / Run Type / Status badge、進度條、查看全部
+- **任務列表：** 任務名稱、摘要、依 `outputs[].type` 原順序呈現的一至多個輸出類型 tag、Annotation Stage / Status badge、進度條、查看全部
 
 **導覽與語言切換（RWD）：**
 - `> MOBILE_BP`：左側側邊欄；語言切換按鈕位於品牌列（Logo + Label Suite）右側，顯示單一語言代碼（`ZH` 或 `EN`）
@@ -312,8 +310,8 @@ flowchart TD
 - **流程：** 分四步驟完成（Step 1 → Step 2 → Step 3 → Step 4）
 - **Step 1 — 基本資料：**
   - 填寫任務名稱
-  - 上傳資料集（txt / csv / tsv / json）
-  - 選擇任務類型（決定 Step 2 的 標記設定檔 內容）
+  - 上傳 JSON 資料集
+  - 選擇 `input_type` 與 `outputs[]`（決定 Step 2 的標記設定檔內容）
 - **Step 2 — 標記設定檔（介面輔助設定，無需手寫 config）：**
   - **架構原則：** `input_type` + `outputs[]` 組合由 registry / schema 驅動，不得寫死於前端流程；新增輸出類型不得要求修改核心流程或路由
   - 提供「從範本開始」入口：常用任務類型的預設 config（如多標籤分類、VA 評分、醫療 NER、關係抽取），可直接套用後微調，降低設定門檻
@@ -343,7 +341,6 @@ flowchart TD
     - Aspect 抽取 / 校正 → `sequence_tagging`（已覆蓋）
     - Entity + Relation + Triple（五元組流程）→ `entity_recognition` + `relation_identification`（已覆蓋；五元組由 relation schema 擴充欄位承接）
 - **空狀態：** 不適用（此頁為建立流程，永遠有內容）
-- **任務建立完成：** 系統自動在 `task_membership` 建立一筆紀錄，任務建立者的任務角色設為 `project_leader`
 - **離開方式：** 建立成功 → `task-detail`；取消 → `task-list`
 
 #### `task-detail` 任務詳情頁（含 5 個 tab）
@@ -378,8 +375,7 @@ flowchart TD
   - 系統狀態機：`draft` → `dry_run_in_progress` → `waiting_iaa_confirmation` → `official_run_in_progress` → `completed`
   - IA 顯示階段：stepper 維持 `draft` → `trial stage` → `official_run_in_progress` → `completed`；`dry_run_in_progress` 與 `waiting_iaa_confirmation` 皆屬 `trial stage`
   - **Dry Run 完成通知：** 僅當任務內每位 `active annotator` 都滿足 `assigned_count == completed_count`，系統才可自動切換至 `waiting_iaa_confirmation`，並在 Dashboard 待處理事項區新增 badge 提醒任務 `project_leader`
-  - **Official Run 完成通知：** 僅當任務內每位 `active annotator` 都完成正式標記清單，系統才可切換至 `completed`，並通知任務 `project_leader`「正式標記全員完成」
-  - 任務狀態轉換需留下 `RunStateTransition` 紀錄，至少包含 `from_status`、`to_status`、`triggered_by`、`triggered_at`
+  - **Official Run 完成 gate：** 正式標記全數提交後，仍須所有應完成 review unit 定案、無未解爭議、應仲裁項目完成且品質指標可用，才可切換至 `completed`；狀態轉換需可追溯，紀錄契約以 active 014 spec 為準
 - **任務狀態與執行控制（Overview 區塊）：**
   - 頂層階段只由 stepper 表示，不另以 `草稿` / `已隔離` badge 或 stage meta pills 重複呈現
   - 單一執行判定 banner 僅顯示最近試標回合或正式標記的判定標題與下一步說明；不得再顯示額外「目前任務階段」標題/描述，也不得另設獨立「正式標記判定」卡
@@ -434,7 +430,7 @@ flowchart TD
   - **上方任務目標列（固定顯示）：** 左側顯示任務目標與當前操作指引；右側顯示「已標記數量 / 本輪總量 / 階段（Dry Run / Official Run）」與小型進度視覺
   - **三欄工作區：**
     - 左欄：標記清單與目前定位（可快速跳筆、顯示完成狀態）
-    - 中欄：當前樣本內容與標記操作主區（不同 `task_type` 動態渲染控制項）
+    - 中欄：當前樣本內容與依 `outputs[]` registry 動態渲染的標記操作主區
     - 右欄：`說明與檔案`（預設頁）與 `History`（次頁）兩個 panel
 - **說明與檔案常駐規則（本模組強制）：**
   - 每一筆標記頁都必須顯示任務說明摘要與說明檔案清單（不可僅在進入前 modal 顯示）
@@ -453,13 +449,13 @@ flowchart TD
 
 ### 資料集分析模組
 
-> 本模組依任務類型動態調整顯示內容。使用者進入模組後先選取任務，再於雙 Tab 介面查看統計總覽與品質監控。所有分析視角均以當前任務的 `task_type` 作為切換依據。
+> 本模組以任務 `outputs[]` 動態呈現內容。使用者先在列表選取任務，再於同一詳情頁的雙 Tab 查看統計總覽與品質監控；行為分別以 [016](../../../specs/dataset/016-dataset-analysis-list/spec.md) 與 [017](../../../specs/dataset/017-dataset-analysis-detail/spec.md) 為準。
 
 #### `dataset-analysis-list` 任務列表頁（模組入口；產品路由 `/dataset-analysis`）
 
 - **進入方式：** Navbar → 資料集分析
-- **顯示：** 列出使用者具 `project_leader` 或 `reviewer` 角色的所有任務（含任務名稱、任務類型、完成率、IAA 狀態徽章、成員角色）
-- **操作：** 關鍵字搜尋、任務類型篩選、IAA 狀態篩選、分頁；查詢條件以 URL query 保留
+- **顯示：** 列出使用者具 `project_leader` 或 `reviewer` membership 的任務（含任務名稱、所有 `outputs[].type` tags、完成率、IAA 狀態徽章、成員角色）
+- **操作：** 關鍵字搜尋、輸出類型篩選、IAA 狀態篩選與分頁；合法查詢條件同步至 URL query，保留 deep-link、返回與篩選／分頁狀態
 - **空狀態（無任務）：** 說明文字「尚無可分析的任務」
 - **離開方式：** 點擊任務列 → `/dataset-analysis-detail/:task_id?tab=stats`
 
@@ -470,26 +466,16 @@ flowchart TD
 - **Tab 結構：**
   - **統計總覽 tab（`?tab=stats`，預設）：**
     - 共用指標（所有任務）：Sentence 數量、Token 數量、整體完成率
-    - 任務類型特定指標：
-      - **single_sentence_classification 單句分類（含多標籤）：** 各標籤次數 / 比例長條圖、多標籤共現矩陣（co-occurrence matrix）
-      - **single_sentence_va_scoring 單句 VA 雙維度評分（Valence / Arousal）：** Valence / Arousal 分佈直方圖、平均值 / 標準差 / 中位數、二維分佈（V–A scatter plot）
-      - **sequence_labeling 序列標記（含 Aspect / NER）：** 實體類型分佈、每句平均實體數、Entity span 長度分佈
-      - **relation_extraction 關係抽取（Entity + Relation + Triple）：** 實體類型分佈、關係類型分佈、Triple 數量統計
-      - **sentence_pairs 句對任務（相似度 / 蘊含）：** 分類型 → 標籤分佈；評分型 → 分數分佈
+    - 依 `outputs[]` 原順序逐型呈現 017 定義的統計區塊；複合任務不得壓縮成單一固定類型，`item_pair` 仍依實際 output 統計
     - 空狀態（尚無標記資料）：說明文字「尚無標記資料，請先發布 Dry Run」與「前往任務詳情」次要按鈕（→ `task-detail`）
   - **品質監控 tab（`?tab=quality`）：**
-    - IAA 計算方法（依任務類型）：
-      - **single_sentence_classification：** 主要指標 Krippendorff’s Alpha（nominal）⭐️；替代 Cohen’s Kappa / Fleiss’ Kappa；多標籤 label-wise α → macro average；目標 ≥ 0.8
-      - **single_sentence_va_scoring：** 主要指標 ICC ⭐️；輔助 Krippendorff’s Alpha（interval）/ Pearson / Spearman；分別計算 IAA_V / IAA_A，Overall = (IAA_V + IAA_A) / 2；目標 ≥ 0.75（建議）/ ≥ 0.8（嚴格）
-      - **sequence_labeling：** 主要指標 Pairwise Entity-level F1 ⭐️；strict match（預設）/ partial overlap match（進階）；目標 ≥ 0.8（strict）/ ≥ 0.7（較寬鬆）
-      - **relation_extraction：** 主要指標 Pairwise Triple-level F1 ⭐️（subject + relation + object 完全一致）；輔助 entity-level F1 / relation-only agreement；目標 ≥ 0.75（合理）/ ≥ 0.8（高品質）
-      - **sentence_pairs（分類型）：** 主要指標 Krippendorff’s Alpha（nominal）⭐️；替代 Fleiss’ Kappa；目標 ≥ 0.8
+    - 逐 output type 顯示 017 registry 的 IAA 結果與任務層級摘要；`free_text` 不計自動 IAA 並顯示 `not_applicable`，本 IA 不複製指標或 threshold
     - 共用品質監控功能（所有任務）：
       - 異常偵測：標記速度異常、離群標記值
       - 標記一致性偏離分析：每位標記員在可比較單位中的群體偏離次數與比例，至少顯示可比較單位數、`離群值(1.5xSTD)筆數`、`離群值(1.5xSTD)比例`、`離群值(2xSTD)筆數`、`離群值(2xSTD)比例`；作為觀測訊號，不直接等同風險等級
       - 標記員分析：個別速度、個別 IAA vs 群體平均
     - 空狀態（Dry Run 尚未完成）：說明文字「IAA 報告將在 Dry Run 完成後產生」與「前往任務詳情」次要按鈕（→ `task-detail`）
-- **離開方式：** 麵包屑返回任務列表；空狀態按鈕跳轉至 `task-detail`；無任務成員資格時導回 `dashboard`
+- **離開方式：** 麵包屑返回任務列表；空狀態按鈕跳轉至 `task-detail`；無符合資格的任務 membership 時導回 `/dataset-analysis`
 
 ---
 
@@ -528,12 +514,12 @@ sequenceDiagram
   participant AW as annotation-workspace
   participant DQ as dataset-analysis/task_id (quality tab)
 
-  PL->>LOGIN: 登入（Google SSO 或 Email）
+  PL->>LOGIN: 以 Email / Password 登入
   LOGIN-->>DASHBOARD: 導向儀表板頁
-  PL->>TN: 上傳資料集 + 設定任務類型
+  PL->>TN: 上傳 JSON 資料集 + 設定 input_type、outputs[] 與 field_role_map
   TN-->>TD: 建立成功，跳轉詳情頁（PL 自動取得 project_leader 角色）
   PL->>TD: 在任務成員管理中選取平台使用者並加入任務，指派任務角色
-  AN->>LOGIN: 自行以 Google SSO 登入（首次，自動取得 user 角色）
+  AN->>LOGIN: 以 Email / Password 註冊或登入
   LOGIN-->>DASHBOARD: 導向儀表板頁
   TD-->>AN: 取得任務角色（annotator / reviewer）
   PL->>TD: 發布 Dry Run（依抽樣設定鎖定共同樣本）
@@ -541,12 +527,12 @@ sequenceDiagram
   AW-->>TD: 任務狀態切換 → 等待 IAA 確認
   TD-->>PL: Dashboard 待處理事項 badge：「Dry Run 已全員完成」
   PL->>DQ: 從 badge 連結進入，查看 IAA 結果
-  alt IAA ≥ 0.8
+  alt 適用 outputs[] 的品質 gate 全數達標
     PL->>TD: 確認標記準則，發布 Official Run
     Note over AW: 各標記員分配不重疊資料
     AW-->>TD: 標記進度更新
-    PL->>TD: 全部完成後，匯出標記結果（JSON / JSON-MIN）
-  else IAA < 0.8
+    PL->>TD: 正式提交、review unit 定案、爭議與仲裁完成且品質可用後，完成任務並匯出 JSON / JSON-MIN
+  else 任一適用 output 未達 gate（free_text 為 not_applicable 且不納入）
     PL->>DQ: 查看差異報告，召開討論修正準則
     PL->>TD: 重新發布 Dry Run
   end
@@ -574,7 +560,6 @@ sequenceDiagram
 
 ### 旅程 C — 審核員審查並查看品質報告
 
-> 審核員（`reviewer`）是任務角色（task role），透過 `task_membership` 表在任務層級指派，與系統角色（system role）無關、無繼承關係。同一使用者可在同一任務同時被指派為 `project_leader` 與 `reviewer`，但這是兩筆獨立的 `task_membership` 記錄，而非角色繼承。
 
 ```mermaid
 sequenceDiagram
@@ -586,10 +571,9 @@ sequenceDiagram
 
   R->>AL: 先進入標記清單，選擇待審資料
   R->>AW: 進入審查模式，逐筆審核
-  R->>AW: 逐標記員審核：一致 → 下一筆，不一致 → 當場修正標籤
+  R->>AW: 逐 review unit（sample × annotator × run）審核：一致前進，不一致直接修正
   Note over AW: 不一致項進入爭議池，由第三人仲裁
-  R->>DS: 查看統計總覽（Sentence / Token / Label 分佈）
-  R->>DQ: 查看 IAA 報告與異常偵測結果
+  Note over DS,DQ: 共用摘要 + outputs[] 逐型統計／IAA；free_text IAA 顯示 not_applicable
 ```
 
 ### 旅程 D — Super Admin 使用者管理
@@ -633,9 +617,9 @@ Foundation Spec 是所有功能 spec 的上游工程基準，不取代本 IA，�
 |------|----------|
 | 本 IA | 定義產品資訊架構：角色、頁面、導覽、進入條件、模組歸屬與 user journey |
 | Foundation Spec | 定義工程基準：架構邊界、API 慣例、錯誤格式、測試策略、task config extensibility、安全約束 |
-| Feature Spec | 定義單一功能或操作流程，且必須同時符合本 IA 與 Foundation Spec |
+| Active Feature Spec | 定義單一功能或操作流程；本 IA 等產品文件必須與其對齊 |
 
-產製任何 feature spec 前，應先確認 Foundation Spec 是否已覆蓋該功能需要的共同約束；若缺少共同約束，應先補 Foundation Spec，再產製 feature spec。若本 IA、Foundation Spec 與 Constitution 之間出現衝突，應以 Constitution 為最高準則，並更新衝突文件使規則一致。
+規劃任何 feature spec 時，應確認 Foundation Spec 是否已覆蓋該功能需要的共同約束；若缺少共同約束，應先補 Foundation Spec，再產製 feature spec。若本 IA 與 active feature spec、Foundation Spec 或 Constitution 衝突，依 [Agent Context Contract](../agent-context-contract.md) 的正典權威階層處理；本 IA 必須更新以對齊較高階來源，不得反向要求 active spec 遷就產品摘要。
 
 建議 Foundation Spec 位置：
 
@@ -658,72 +642,39 @@ specs/foundation/000-foundation/
 > **注意：** 此清單為實際建立的 spec 檔案清單，以 `specs/STATUS.md` 為真值。  
 > 各 spec 的詳細開發狀態（branch、進行中、已完成）請查 `specs/STATUS.md`。
 
-**開發批次：**
-
-- **P0 — Foundation**（000）：所有功能 spec 的工程基準與共同約束
-- **P1 — 基礎建設**（001–007 + 012 + Shared）：帳號系統、角色管理、共用導覽、儀表板，所有功能的前提
-- **P2 — 核心功能**（010 + 013–017）：任務建立到標記完整流程、資料集分析
-
 ### Spec 清單
 
 #### foundation
 
-| # | Spec 名稱 | 頁面 / 範圍 | 模組 | 複雜度 | 批次 | 狀態 |
-| --- | ----------- | ------------ | ------ | -------- | ------ | ------ |
-| 000 | Foundation — 工程基準與共同約束 | 全 codebase；非單一頁面 | foundation | ★★★☆☆ | P0 | ⬜ 待做 |
+- `000` Foundation — 工程基準與共同約束：全 codebase，非單一頁面；全部頁面 mapping 的交付狀態見 [`specs/STATUS.md`](../../../specs/STATUS.md)。
 
 #### shared
 
-| # | Spec 名稱 | 頁面 / 範圍 | 模組 | 複雜度 | 批次 | 狀態 |
-| --- | ----------- | ------------ | ------ | -------- | ------ | ------ |
-| 008 | Sidebar Navbar 共用規格 | 所有登入後頁面（shared layout） | shared | ★★☆☆☆ | P1 | 🔄 進行中 |
-| 018 | Help Button — 平台說明入口 | deferred；最新 prototype 尚未提供 Help 按鈕 | shared | ★☆☆☆☆ | P1 | ⬜ 待做 |
+- `008` Sidebar Navbar：所有登入後頁面；`018` Help Button：deferred，尚非目前交付能力。
 
 #### account
 
-| # | Spec 名稱 | 頁面 / 範圍 | 模組 | 複雜度 | 批次 | 狀態 |
-| --- | ----------- | ------------ | ------ | -------- | ------ | ------ |
-| 001 | 登入 — Email/Password + 頁面 UI | `login` | account | ★☆☆☆☆ | P1 | 🔄 進行中 |
-| 002 | 登入 — Google SSO 整合 | `login` | account | ★★☆☆☆ | P1 | 🔄 進行中 |
-| 003 | 自行註冊（Email/Password） | `register` | account | ★☆☆☆☆ | P1 | 🔄 進行中 |
-| 004 | 忘記密碼 / 重設密碼（Resend） | `forgot-password` · `reset-password` | account | ★★☆☆☆ | P1 | 🔄 進行中 |
-| 005 | 個人設定（資料編輯 + Email 變更 + 偏好設定 + 修改密碼 + 通知設定） | `profile` | account | ★☆☆☆☆ | P1 | ⬜ 待做 |
+- `001`／`002` → `login`（Google SSO 為 no-op 入口）；`003` → `register`；`004` → `forgot-password`／`reset-password`；`005` → `profile`。
 
 #### dashboard
 
-| # | Spec 名稱 | 頁面 / 範圍 | 模組 | 複雜度 | 批次 | 狀態 |
-| --- | ----------- | ------------ | ------ | -------- | ------ | ------ |
-| 012 | 儀表板（全角色：User / PL / Annotator / Reviewer / Super Admin） | `dashboard` | dashboard | ★★★☆☆ | P1 | 🔄 進行中 |
+- `012` → `dashboard`（User／PL／Annotator／Reviewer／Super Admin 角色視圖）。
 
 #### task-management
 
-| # | Spec 名稱 | 頁面 / 範圍 | 模組 | 複雜度 | 批次 | 狀態 |
-| --- | ----------- | ------------ | ------ | -------- | ------ | ------ |
-| 010 | 任務列表（搜尋、篩選、空狀態） | `task-list` | task-management | ★★☆☆☆ | P2 | ⬜ 待做 |
-| 013 | 新增任務（Step 1–4 + 啟動設定 + 標記設定檔 全任務類型） | `task-new` | task-management | ★★★★☆ | P2 | ⬜ 待做 |
-| 014 | 任務詳情（5 tabs：概覽 / 標記結果 / 標記進度 / 工時 / 成員管理） | `task-detail` | task-management | ★★★★☆ | P2 | ⬜ 待做 |
+- `010` → `task-list`；`013` → `task-new`（4 steps）；`014` → `task-detail`（5 tabs）。
 
 #### annotation
 
-| # | Spec 名稱 | 頁面 / 範圍 | 模組 | 複雜度 | 批次 | 狀態 |
-| --- | ----------- | ------------ | ------ | -------- | ------ | ------ |
-| 015 | 標記清單＋標記作業（Annotator / Reviewer 模式，全任務類型） | `annotation-list` + `annotation-workspace` | annotation | ★★★★☆ | P2 | ⬜ 待做 |
+- `015` → `annotation-list` + `annotation-workspace`（Annotator／Reviewer）。
 
 #### dataset
 
-| # | Spec 名稱 | 頁面 / 範圍 | 模組 | 複雜度 | 批次 | 狀態 |
-| --- | ----------- | ------------ | ------ | -------- | ------ | ------ |
-| 016 | 資料集分析列表 + 統計總覽（任務列表入口 + 共用指標 + 任務類型特定） | `dataset-analysis-list` (`/dataset-analysis`) + `/dataset-analysis-detail/:task_id?tab=stats` | dataset | ★★★★☆ | P2 | ⬜ 待做 |
-| 017 | 品質監控（IAA / 異常偵測 / 速度統計，全任務類型） | `/dataset-analysis-detail/:task_id?tab=quality` | dataset | ★★★★☆ | P2 | ⬜ 待做 |
+- `016` → `/dataset-analysis` 列表；`017` → `/dataset-analysis-detail/:task_id` 的 stats／quality 雙 Tab。
 
 #### admin
 
-| # | Spec 名稱 | 頁面 / 範圍 | 模組 | 複雜度 | 批次 | 狀態 |
-| --- | ----------- | ------------ | ------ | -------- | ------ | ------ |
-| 006 | 使用者列表與管理 | `user-management`（Admin tab 連到 `role-settings`） | admin | ★★☆☆☆ | P1 | ⬜ 待做 |
-| 007 | 角色權限設定 | `role-settings`（獨立 prototype 頁） | admin | ★★☆☆☆ | P1 | ⬜ 待做 |
-
-> 狀態標示：⬜ 待做 · 🔄 進行中 · ✅ 完成　　批次：P1 基礎建設 · P2 核心功能
+- `006` → `user-management`；`007` → `role-settings`，兩頁以 Admin tabs 互連。
 
 ---
 

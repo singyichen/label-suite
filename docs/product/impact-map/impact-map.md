@@ -1,7 +1,7 @@
 # Impact Map — Label Suite
 
-**版本**：1.2.0
-**建立日期**：2026-04-14
+**版本**：1.3.0
+**最後驗證**：2026-08-19；產品導航而非 feature SSOT，實作狀態以 [`specs/STATUS.md`](../../../specs/STATUS.md) 為準。
 **目標受眾**：論文指導教授、開發者
 
 ---
@@ -15,17 +15,19 @@
 
 ## Who × How × What
 
+共同產品契約：任務以 `outputs[]` 的八個 output key 組合，生命週期為 `draft` → `dry_run_in_progress` → `waiting_iaa_confirmation` → `official_run_in_progress` → `completed`；各 key 與 IAA 詳情以 active `013`／`017` 為準，不在本地圖重複 registry。
+
 ### Actor 1 — Project Leader（專案負責人）
 
 | How（需要做到的行為改變） | What（對應功能／Spec） |
 |--------------------------|----------------------|
-| 不依賴工程師，能獨立透過 Config Builder 配置並啟動標記任務 | `013` New Task + Config Builder |
+| 不依賴工程師，能以四步驟 Config Builder 配置可組合 `outputs[]` 並啟動標記任務 | `013` New Task + Config Builder |
 | 能查看所有任務狀態，快速掌握進度 | `010` Task List、`012` Dashboard |
 | 能在任務詳情頁邀請成員、指派角色 | `014` Task Detail — 成員管理 |
 | 能在任務詳情頁挑選可加入成員並查看工時紀錄 | `014` Task Detail（可加入成員名單／任務內工時） |
 | 能主導 Dry Run → 確認 IAA → 發布 Official Run 生命週期 | `014` Task Detail — 任務狀態流 |
-| 能匯出最終標記結果供模型訓練 | `014` Task Detail — 匯出功能 |
-| 能監控標記進度與異常 | `016` Dataset Stats |
+| 能在完成 gate 後匯出 JSON／JSON-MIN 結果供模型訓練 | `014` Task Detail — 結果 tab／匯出功能 |
+| 能從 Dataset Analysis List 監控標記進度與異常，進入 detail 查看品質 | `016` Dataset Analysis List、`017` Dataset Analysis Detail |
 
 ---
 
@@ -33,7 +35,7 @@
 
 | How（需要做到的行為改變） | What（對應功能／Spec） |
 |--------------------------|----------------------|
-| 能透過 email 或 Google OAuth 快速登入 | `001` Login Email、`002` Login Google SSO |
+| 能以 Email + Password 登入；Google SSO 入口目前為 no-op，保留未來整合 | `001` Login Email、`002` Login Google SSO |
 | 能從 Dashboard 即時看到被分配的任務與進度 | `012` Dashboard |
 | 能依 outputs[] 組合（分類、評分/迴歸、實體辨識、關係識別、序列標記 等）執行標記 | `015` Annotation Workspace |
 | 能即時看到自己的完成筆數（進度條） | `015` Annotation Workspace — 進度追蹤 |
@@ -45,8 +47,8 @@
 | How（需要做到的行為改變） | What（對應功能／Spec） |
 |--------------------------|----------------------|
 | 能逐標記員審核已提交的標記結果，一致 → 下一筆，不一致 → 當場修正 | `015` Annotation Workspace — Reviewer 視角 |
-| 能修改、刪除、標記錯誤標記；無法決定時歸入爭議池由第三人仲裁 | `015` Annotation Workspace — 審核操作 |
-| 能查看 IAA 報告與標記員修正率；gold 僅於 Official Run 審核定案後產生 | `017` Dataset Quality |
+| 能以 review unit 直接修正；無法決定時建立爭議項，由合格且非當事 arbiter 仲裁 | `015` Annotation Workspace — 審核操作 |
+| 能查看逐 output type 品質分析與 IAA；`free_text` 不適用自動 IAA | `016` Dataset Analysis List、`017` Dataset Analysis Detail |
 
 ---
 
@@ -69,7 +71,7 @@ Why（Demo Paper 目標）
 │   ├── How: 管理任務生命週期 → What: spec 014
 │   ├── How: 監控進度 → What: spec 010, 012, 016
 │   ├── How: 邀請成員並查看工時 → What: spec 014
-│   └── How: 匯出結果 → What: spec 014 (export)
+│   └── How: 完成後匯出 JSON／JSON-MIN → What: spec 014 (export)
 │
 ├── Annotator
 │   ├── How: 快速登入 → What: spec 001, 002
@@ -77,7 +79,7 @@ Why（Demo Paper 目標）
 │   └── How: 執行標記 → What: spec 015
 │
 ├── Reviewer
-│   ├── How: 審核標記 → What: spec 015 (reviewer flow)
+│   ├── How: 逐標記員審核／仲裁 → What: spec 015 (reviewer flow)
 │   └── How: 查看 IAA → What: spec 017
 │
 └── Super Admin
@@ -87,7 +89,8 @@ Why（Demo Paper 目標）
 
 ---
 
-## 範疇外（Out of Scope for Demo Paper）
+## 範疇與安全邊界
 
-- 批次資料匯入（UI 未完成前由後端直接操作）
-- 多語言介面切換（中文介面為 Demo 唯一目標語言）
+- Task New 資料集上傳目前只接受 JSON；資料格式擴充不在此地圖承諾。
+- zh/en 介面切換屬目前範圍；實際交付狀態不由 release 切片推定。
+- Annotator 及其可見資料不得取得 test-set ground truth 或 gold；完成與品質條件回鏈 `014`／`015`／`017`。
