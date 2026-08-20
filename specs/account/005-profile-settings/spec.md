@@ -1,7 +1,7 @@
 ---
 功能分支: feat/account/005-profile-settings
 建立日期: 2026-04-05
-版本: 1.2.9
+版本: 1.2.10
 狀態: Clarified
 ---
 
@@ -434,8 +434,8 @@ flowchart LR
 ### Wireframe 畫面總覽
 
 > 本節定義 spec 005 `/profile` 頁面的 wireframe 範圍。
-> 單一檔案：`design/wireframes/pages/account/profile.pen`
-> 最新 HTML（`design/prototype/pages/account/profile.html`）已移除頁首 Prototype 狀態切換導引列（P-0 ~ P-5 按鈕），狀態切換改為頁內流程事件觸發。
+> **Missing：** `design/wireframes/pages/account/profile.pen` 目前不存在，並非現行 artifact，故不建立連結或視為可驗證的 wireframe。
+> 現行 UI baseline 為 [design/prototype/pages/account/profile.html](../../../design/prototype/pages/account/profile.html)；該頁已移除頁首 Prototype 狀態切換導引列（P-0 ~ P-5 按鈕），狀態切換改為頁內流程事件觸發。
 
 #### 總計：6 張
 
@@ -462,9 +462,9 @@ flowchart LR
 
 #### 畫面 ID 彙整索引
 
-檔案：`design/wireframes/pages/account/profile.pen`
+**Missing：** `design/wireframes/pages/account/profile.pen` 目前不存在，以下僅保留規劃中的畫面索引，非現行 wireframe artifact。
 
-| 畫面 ID | 畫面狀態 | Page 名稱（profile.pen 內） |
+| 畫面 ID | 畫面狀態 | 規劃中的 Page 名稱 |
 |--------|---------|----------------------------|
 | P-0 | Skeleton | `P-0 Profile Skeleton` |
 | P-1 | Email / Password 帳號 | `P-1 Profile Email 帳號` |
@@ -481,6 +481,15 @@ flowchart LR
 - **LanguageState**：語言狀態。關鍵欄位：`lang`（`zh` / `en`）、`storage_key = labelsuite.lang`。
 - **AppearanceState**：外觀偏好。關鍵欄位：`mode`（`light` / `dark` / `system`）、`storage_key = label-suite-theme`（client-side）；詳細定義見 spec 008。
 - **NotificationPreference**：帳號層級通知偏好。關鍵欄位：`user_id`、`event_key`、`in_app_enabled`、`email_enabled`；`event_key` 僅可為本規格列出的六項支援事件。
+
+---
+
+## Prototype Traceability
+
+| Artifact | Responsibility | Covered FR/SC | Verification | Status |
+|----------|----------------|---------------|--------------|--------|
+| [design/prototype/pages/account/profile.html](../../../design/prototype/pages/account/profile.html) | Profile page sections and in-page observable states only; it does not define API, persistence, session, or account-security contracts. | FR-001–FR-015; SC-001–SC-011 | [design/prototype/tests/account/profile-notification-settings.spec.ts](../../../design/prototype/tests/account/profile-notification-settings.spec.ts) | Active UI baseline |
+| Missing: `design/wireframes/pages/account/profile.pen` (intentionally unlinked; not a current artifact) | No wireframe responsibility or verification authority until the missing artifact is created through a separately approved change. | No additional FR/SC | N/A | Absent |
 
 ---
 
@@ -558,6 +567,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.2.10 | 2026-08-20 | Issue #261：新增 Prototype Traceability，將 `profile.html` 定義為現行 UI baseline，並明確標示 `profile.pen` 缺失且非現行 artifact。 |
 | 1.2.9 | 2026-05-22 | `/speckit.clarify` 補齊五項決策：頭像上傳納入本版、通知設定後端持久化、Email 驗證成功後失效所有 sessions、驗證信重送 cooldown、單一 pending Email 覆蓋規則 |
 | 1.2.8 | 2026-05-21 | 補充輸入與產生規則、已釐清事項、審查清單與執行狀態；同步功能分支格式 |
 | 1.2.7 | 2026-05-19 | 調整通知設定欄位文案為「電子郵件」，新增 `formal_annotation_all_done` 正式標記全員完成事件；通知事件總數更新為六項 |

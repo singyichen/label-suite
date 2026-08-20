@@ -1,7 +1,7 @@
 ---
 功能分支: feat/admin/007-role-settings
 建立日期: 2026-04-16
-版本: 1.1.11
+版本: 1.1.12
 狀態: Draft
 ---
 
@@ -333,6 +333,15 @@ flowchart LR
 
 ---
 
+## Prototype Traceability
+
+| Artifact | Responsibility | Covered FR/SC | Verification | Status |
+|----------|----------------|---------------|--------------|--------|
+| [design/prototype/pages/admin/role-settings.html](../../../design/prototype/pages/admin/role-settings.html) | Role-matrix modes, discard confirmation, conflict, toast, audit, responsive, and other observable page states only; it does not define authorization, persistence, or permission-contract authority. | FR-001–FR-010a; SC-001–SC-010 | [design/prototype/tests/admin/role-settings.spec.ts](../../../design/prototype/tests/admin/role-settings.spec.ts) | Active |
+| [design/prototype/pages/admin/user-management.html](../../../design/prototype/pages/admin/user-management.html) | Admin-tab navigation cross-reference only; User Management behavior is owned by spec 006 and is not co-owned by this spec. | FR-006; SC-001 | [design/prototype/tests/admin/role-settings.spec.ts](../../../design/prototype/tests/admin/role-settings.spec.ts) | Active; navigation cross-reference only |
+
+---
+
 ## 規格相依性 *(本功能依賴其他規格，或被其他規格依賴時填寫)*
 
 ### 上游（本規格依賴的規格）
@@ -399,6 +408,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.1.12 | 2026-08-20 | Issue #261：新增 Prototype Traceability，界定 `role-settings.html` 的頁面責任，並將 `user-management.html` 限定為 admin tab 導覽交叉參照。 |
 | 1.1.11 | 2026-05-22 | Spec gap 補齊：新增區塊 D（版本衝突 Banner）、區塊 E（取消確認對話框）、區塊 F（Toast 通知）至使用者故事 1 介面定義 |
 | 1.1.10 | 2026-05-22 | Prototype 同步：操作紀錄按鈕移至「編輯」右側；修正 drawer 關閉按鈕（icon-only × SVG）與 badge 樣式（補齊 .badge base CSS） |
 | 1.1.9 | 2026-05-22 | Prototype 同步：操作紀錄按鈕從頁面頂部移至矩陣區塊右上角（與「編輯」並排），改為 icon-only 樣式，與 user-management 一致 |
