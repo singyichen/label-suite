@@ -14,11 +14,11 @@
       --color-primary-light: #EEF2FF;
       --color-cta:        #10B981;
       --color-cta-hover:  #059669;
-      --color-background: #F5F3FF;
-      --color-surface:    #FFFFFF;
+      --color-surface:    #F5F3FF;
+      --color-card:       #FFFFFF;
       --color-border:     #E2E8F0;
       --color-border-focus: #6366F1;
-      --color-text:       #1E1B4B;
+      --color-ink:        #1E1B4B;
       --color-ink-muted: #94A3B8;
       --color-error:      #B91C1C;
       --color-error-bg:   #FEF2F2;
@@ -35,8 +35,8 @@
     html { font-size: 16px; }
     body {
       font-family: var(--font-sans);
-      background: var(--color-background);
-      color: var(--color-text);
+      background: var(--color-surface);
+      color: var(--color-ink);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -45,7 +45,7 @@
     /* ── Navbar ─────────────────────────────────────────────────── */
     .navbar {
       height: 64px;
-      background: var(--color-surface);
+      background: var(--color-card);
       border-bottom: 1px solid var(--color-border);
       display: flex;
       align-items: center;
@@ -79,7 +79,7 @@
       font-family: 'Crimson Pro', serif;
       font-weight: 700;
       font-size: 18px;
-      color: var(--color-text);
+      color: var(--color-ink);
       line-height: 1;
     }
     .lang-toggle {
@@ -89,8 +89,8 @@
       border: 1px solid var(--color-border);
       border-radius: var(--radius-md);
       padding: 6px 12px;
-      background: var(--color-surface);
-      color: var(--color-text);
+      background: var(--color-card);
+      color: var(--color-ink);
       font-family: 'Inter', sans-serif;
       font-size: 13px;
       font-weight: 500;
@@ -115,7 +115,7 @@
 
     /* ── Card ───────────────────────────────────────────────────── */
     .card {
-      background: var(--color-surface);
+      background: var(--color-card);
       border-radius: var(--radius-lg);
       box-shadow: var(--shadow-card);
       padding: 40px 40px 36px;
@@ -149,7 +149,7 @@
       font-family: 'Crimson Pro', serif;
       font-weight: 700;
       font-size: 22px;
-      color: var(--color-text);
+      color: var(--color-ink);
       line-height: 1.2;
     }
     .card-subtitle {
@@ -185,8 +185,8 @@
       border: 1px solid var(--color-border);
       border-radius: var(--radius-md);
       padding: 11px 16px;
-      background: var(--color-surface);
-      color: var(--color-text);
+      background: var(--color-card);
+      color: var(--color-ink);
       font-family: 'Inter', sans-serif;
       font-size: 14px;
       font-weight: 500;
@@ -228,7 +228,7 @@
     label {
       font-size: 14px;
       font-weight: 500;
-      color: var(--color-text);
+      color: var(--color-ink);
     }
     .forgot-link {
       font-size: 13px;
@@ -258,8 +258,8 @@
       padding: 9px 40px 9px 40px;
       font-family: 'Inter', sans-serif;
       font-size: 14px;
-      color: var(--color-text);
-      background: var(--color-surface);
+      color: var(--color-ink);
+      background: var(--color-card);
       transition: border-color 0.15s, box-shadow 0.15s;
       outline: none;
     }
@@ -292,7 +292,7 @@
       border-radius: 4px;
       transition: color 0.15s;
     }
-    .eye-toggle:hover { color: var(--color-text); }
+    .eye-toggle:hover { color: var(--color-ink); }
     .eye-toggle:focus-visible {
       outline: 2px solid var(--color-primary);
       outline-offset: 1px;
@@ -366,11 +366,11 @@
     /* ── Dark mode overrides ──────────────────────────────────── */
     html[data-theme="dark"] {
       /* Re-map local token names — these pages do not import tokens.css */
-      --color-background:    #0B0B12;
-      --color-surface:       #16161F;
+      --color-surface:       #0B0B12;
+      --color-card:          #16161F;
       --color-border:        #2A2A35;
       --color-border-focus:  #818CF8;
-      --color-text:          #E2E8F0;
+      --color-ink:           #E2E8F0;
       --color-ink-muted:    #9CA3AF;
       --color-link:          #818CF8;
       --color-primary:       #818CF8;
