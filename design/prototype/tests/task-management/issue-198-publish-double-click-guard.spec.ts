@@ -128,4 +128,21 @@ test.describe('Publish button double-click guard (issue #198)', () => {
 
     await expect(page.locator('#statusBadge')).toHaveText('正式標記進行中');
   });
+
+  /* w6-resilience-a11y.md DUP-03/DUP-04, remaining leg: the isolation-enabled
+   * branch (T001's default) must skip the riskModal entirely -- publishing is
+   * guarded by the busy flag alone, and no second-confirmation dialog ever
+   * opens. The isolation-DISABLED branch, where the modal must open, is
+   * covered by task-detail-publish-risk-confirm.spec.ts (DUP-06). */
+  test('with isolation enabled the riskModal never opens on publish (DUP-03/04)', async ({ page }) => {
+    await page.goto(TASK_DETAIL_URL + '&status=draft');
+
+    const dryRunBtn = page.locator('#publishDryRunBtn');
+    await expect(dryRunBtn).toBeVisible();
+    await dryRunBtn.click();
+
+    await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(1);
+    await expect(page.locator('#riskModal')).toHaveAttribute('aria-hidden', 'true');
+    await expect(page.locator('#riskModal')).not.toHaveClass(/show/);
+  });
 });
