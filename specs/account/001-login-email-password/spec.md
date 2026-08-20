@@ -1,7 +1,7 @@
 ---
 功能分支: feat/account/001-login-email-password
 建立日期: 2026-04-05
-版本: 1.2.3
+版本: 1.2.4
 狀態: Clarified
 ---
 
@@ -234,6 +234,15 @@ flowchart LR
 
 ---
 
+## Prototype Traceability
+
+| Artifact | Responsibility | Covered FR/SC | Verification | Status |
+|----------|----------------|---------------|--------------|--------|
+| [design/prototype/pages/account/login.html](../../../design/prototype/pages/account/login.html) | Email/password form, validation, navigation, page-level i18n, and RWD. Google entry and no-op behavior are owned exclusively by account-002. | FR-001 (shell and Email/Password portions only), FR-002–FR-011, FR-013–FR-015B; SC-001 (shell and Email/Password portions only), SC-002–SC-006 | [design/prototype/tests/account/login.spec.ts](../../../design/prototype/tests/account/login.spec.ts) | Active; HTML shared with account-002 |
+| [design/wireframes/pages/account/login.pen](../../../design/wireframes/pages/account/login.pen) | Optional visual reference only. | No additional FR/SC | N/A (optional visual reference) | Active; optional visual reference |
+
+---
+
 ## 規格相依性 *(本功能依賴其他規格，或被其他規格依賴時填寫)*
 
 ### 上游（本規格依賴的規格）
@@ -299,6 +308,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.2.4 | 2026-08-20 | Issue #261：新增 Prototype Traceability，明確對應 login 原型的 Email/Password 責任、可選 wireframe 參考與設計層驗證；Google SSO 行為仍由 002 擁有。 |
 | 1.2.3 | 2026-07-21 | AC 對齊 blueprint-grade 寫作原則：檢視型 When 改為可觀察事件；新增 `REDIRECT_DELAY_MS` 常數取代「約 800ms」；邊界情況補齊規則同時觸發、時間邊界與異常資料情境；驗收情境補上 `AC-N.N` 穩定 ID（spec-template v1.5.0）；新增 AC-4.5 覆蓋 `en → zh` 反向語言切換；移除重複的需求來源行 |
 | 1.2.2 | 2026-05-21 | 補充輸入與產生規則、已釐清事項、審查清單與執行狀態；同步功能分支格式 |
 | 1.2.1 | 2026-04-16 | 新增跨頁語言持久化規範：登入頁切換語言後，導向 register/forgot-password/dashboard 必須維持同語系 |

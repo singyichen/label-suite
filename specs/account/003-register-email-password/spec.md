@@ -1,7 +1,7 @@
 ---
 功能分支: feat/account/003-register-email-password
 建立日期: 2026-04-05
-版本: 1.2.6
+版本: 1.2.7
 狀態: Clarified
 ---
 
@@ -234,6 +234,15 @@ flowchart LR
 
 ---
 
+## Prototype Traceability
+
+| Artifact | Responsibility | Covered FR/SC | Verification | Status |
+|----------|----------------|---------------|--------------|--------|
+| [design/prototype/pages/account/register.html](../../../design/prototype/pages/account/register.html) | Registration form, validation, submit/success, navigation, i18n, and RWD. | FR-001–FR-013A; SC-001–SC-006 | [design/prototype/tests/account/register.spec.ts](../../../design/prototype/tests/account/register.spec.ts) | Active |
+| [design/wireframes/pages/account/register.pen](../../../design/wireframes/pages/account/register.pen) | Optional visual reference only. | No additional FR/SC | N/A (optional visual reference) | Active; optional visual reference |
+
+---
+
 ## 規格相依性 *(本功能依賴其他規格，或被其他規格依賴時填寫)*
 
 ### 上游（本規格依賴的規格）
@@ -298,6 +307,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.2.7 | 2026-08-20 | Issue #261：新增 Prototype Traceability，對應註冊原型的表單、驗證、送出／成功、導頁、i18n、RWD、可選 wireframe 參考與設計層驗證。 |
 | 1.2.6 | 2026-05-22 | 釐清錯誤 banner 關閉行為：新增 FR-011A（重新輸入自動清除）與 US-3 驗收情境 5 |
 | 1.2.5 | 2026-05-22 | 釐清 isSubmitting 按鈕行為：新增 FR-010A（disabled 防重複送出）與 US-3 驗收情境 4 |
 | 1.2.4 | 2026-05-22 | 釐清 name 欄位驗證行為：新增 FR-005A（trim 後非空）與對應邊界情況 |
