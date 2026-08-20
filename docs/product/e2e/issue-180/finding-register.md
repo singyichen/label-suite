@@ -54,7 +54,7 @@
 | w4 §7-5：多筆/人分頁情境 | w4 | **記錄即可**（plan §10-10）：刻意的最小 fixture 設計限制，非疏漏 |
 | w4 §7-6：screenshot/video 設定 | w4 | **併入 #212**：以局部 `test.use` 覆蓋實作（plan §7 已定案做法） |
 | IA dataset-analysis 章節舊 `TASK_TYPE_ENUM` | W1 §3.7 | **本輪不處置**：依 issue #180 邊界留待 dataset 模組盤點 |
-| w6 DUP-02／CONT-01／CONT-02／CONT-04／FAIL-01~04／CONC-01~03／A11Y-03~05／I18N-01~02／RESP-01~03 | w6 | **非缺陷**：正向驗收情境（現況行為正確），由 #212 實作斷言 |
+| w6 DUP-02／CONT-01／CONT-02／CONT-04／FAIL-01~04／CONC-01~03／A11Y-03~05／I18N-01~02／RESP-01~03 | w6 | **非缺陷**：正向驗收情境（現況行為正確），由 #212 實作斷言（已交付，見 §F） |
 | w6 FAIL-D01~06 | w6 | **明文排除**：全端-only 情境，留待正式 E2E（#203 之後） |
 | w6 I18N-03 | w6 | **併入 F-08-a（#191）**：同一文案根因，修復後啟用斷言 |
 | w6 DUP-08／A11Y-01／A11Y-02 | w6 | **併入 F-07（#190）／F-11（#195）**：同根因，修復後啟用斷言 |
@@ -70,7 +70,7 @@
 | 3 | **跑 #212 驗收套件前** | #192、#201（修復後 XROLE-24 🟡→🟢）、#194、#198、#199、#200＋例外納入 #184（Blocking，標記員主線第一步） | prototype 行為缺陷：不修則 25 條原子測試在已知缺陷上紅，驗收無意義；亦為 demo 前置 |
 | 4 | 正式開發 backlog | #185、#186、#195（High，視 demo 時程提前）、#187、#188、#191、#196、#197、#207 | UX 打磨：React 重寫時會重做，先修 prototype 報酬率低 |
 | 時點另計 | 正式開發 kickoff 第一件事 | #203（正式 E2E 目錄 ADR） | 寫正式 E2E 前決議即可 |
-| 時點另計 | 第三波清完後執行 | #212（驗收套件實作）、#209（data-fairness 強負向測資，套件 fixture 前置） | prototype 凍結前的最終驗收 |
+| 時點另計 | 第三波清完後執行 | #212（驗收套件實作，**已交付**——PR #247/#265/#273/#277 全 merge，見 §F）、#209（data-fairness 強負向測資，套件 fixture 前置） | prototype 凍結前的最終驗收 |
 
 硬門檻總結：正式開發前＝第一波 7 張 spec 調整；prototype 凍結前＝第三波修完＋#212 跑綠。
 GitHub milestones 已鏡射本表（Wave 1–4＋Gate — Formal-dev kickoff＋Gate — Acceptance suite run），29 張 issue 逐張掛載。
@@ -83,3 +83,36 @@ GitHub milestones 已鏡射本表（Wave 1–4＋Gate — Formal-dev kickoff＋G
 - [x] 每張 issue 含重現證據（file:line）、正典引用、預期 vs 實際、驗收條件、Finding ID、parent #180、🤖 Opened by
 - [x] 每張已回報 `ISSUE OPENED: <url> — <summary>`
 - [x] Critical/High 安全發現：無（不需私下 escalation）
+
+## F. #212 驗收套件交付紀錄（2026-08-20）
+
+驗收套件依 §D「時點另計」波次交付完成：四支 test-only PR 全數 merge（前置：CI 豁免 PR #257、I18N-03 文案解鎖 PR #258）。issue #212 依系列約定保持開啟至使用者結案。
+
+| PR | 範圍 | 交付內容 |
+|---|---|---|
+| [#247](https://github.com/singyichen/label-suite/pull/247) | Fixture 基礎設施 | `design/prototype/tests/cross-role/` 目錄＋`fixtures/xrole-lifecycle-seed.json`（2 dry＋3 official 記錄）＋`build-xrole-patch.ts`（run-scoped 記錄過濾＋`REVIEWER_MOCK_ROWS` seeding）＋smoke spec |
+| [#265](https://github.com/singyichen/label-suite/pull/265) | XROLE-01~09 | 正典旅程單檔 `xrole-canonical-journey.spec.ts` 前段；XROLE-04 以 `test.fail()` 標注 expected failure（D3 未落地，#189） |
+| [#273](https://github.com/singyichen/label-suite/pull/273) | XROLE-10~25 | 正典旅程後段 16 列；XROLE-20/21 `test.fail()`（D2 未落地，#190） |
+| [#277](https://github.com/singyichen/label-suite/pull/277) | w6 韌性情境 | 23 列新實作＋5 列沿用既有 spec 對照（FAIL-01~05）；17 測試檔（8 新／9 擴充）、零 production 檔變更 |
+
+**原子測試狀態結算**（plan §3.1 的實作輪落點）：
+
+- 🟢 **22 項全綠**：原 20 項＋XROLE-13（#192 已修）＋XROLE-24（#201 已修）。
+- 🟡 **3 項維持 expected failure**（`test.fail()` 保 CI 綠）：XROLE-04（D3，#189）、XROLE-20/21（D2，#190）——對應缺陷修復 PR merge 後轉綠即符合 plan §12 完成判準。
+- w6 28 項原型層情境：23 列新實作＋5 列沿用；3 列 gated 維持排除（DUP-08→#190、A11Y-01/02→#195）；CONT-05 依 plan §10-6 不入本輪；I18N-03 已隨 #191 修復（PR #258）解鎖啟用。
+
+merge 後 main 整合驗證：完整 prototype 套件 853 測試全數通過（`test.fail()` 預期失敗計入 passed；高負載下 3 筆既知 flake 均經單獨重跑定讞為綠）。
+
+### F.1 實作期新發現（階段四 triage 候選，尚未建單）
+
+| # | 發現 | 證據 | 追蹤狀態 |
+|---|---|---|---|
+| N-01 | 提交儲存層 lost-update 窗口：`labelsuite.wsSubmissions` 為單一 key 的整包 read-modify-write，多 Page 並行儲存時後寫者以舊讀快照覆蓋對方 bucket | `annotation-workspace.data.js`（readSubmissionStore／writeSubmissionStore）；PR #277 首輪 CI 於 CONC-03 重現 | **待 triage**：prototype-only（正式後端取代 localStorage 即消失）；驗收測試已序列化儲存並在 spec header 記錄限制 |
+| N-02 | 審核列 ✓/✕ 按鈕 icon-only、無 accessible name | `annotation-workspace.config.js` `buildRowDecisionButtons` | **待 triage**：可併 #195 無障礙群或另立 `[UI]` |
+| N-03 | w6 annex DUP-07 引用的 `#deleteTaskModal` 正向對照不存在（全庫 grep 零命中） | PR #277 驗收紀錄 | **annex 勘誤**：本表記錄即結案（w6 草稿不回改）；plan §6 該範疇提醒隨之失效 |
+| N-04 | 成員停用不落地：`TASK_MEMBERS` 純 in-memory 且 roster 未連結 annotator_id，CONC-02 只能驗「不干擾」 | PR #277 偏差紀錄 | 併 #211（停用行為 requirement gap）作實作參照 |
+| N-05 | annotation-results／export 吃 `T001` seed fallback，journey 產生的資料進不了 PL 面板與匯出 | `task-detail.html:7815` | **待 triage**：XROLE-19/22 以 UI surface＋資料層真值雙斷言繞行 |
+| N-06 | task-new `submitTask()` 不落地 TaskListData／TaskDetailData（wizard 建立的任務是死巷）；`saveGuidelineEdit()` 純 in-memory；`DRY_RUN_PROGRESS_KEY` 單一全域＝last-writer | PR #265 偏差紀錄；`task-new.html:1398`、`annotation-workspace.data.js:18` | **待 triage**：正式開發依 spec 實作即消失；驗收以雙 task-id／`&status=` override 繞行 |
+| N-07 | `dataset-analysis-list-toast.spec.ts:12` 在 info toast 5 秒 auto-dismiss 預算內夾多個斷言，高負載下 flaky | `dataset-analysis-list.js:25`（`TOAST_DURATIONS.info=5000`） | **待 triage**：測試設計問題非產品缺陷，可開 `[Bug]` 修測試 |
+
+已由既有 issue 涵蓋、不重複列入：`canPublish()` 不查 active 人數（#189／D3）、`publishComplete()` 無完成閘門（#190／D2）。

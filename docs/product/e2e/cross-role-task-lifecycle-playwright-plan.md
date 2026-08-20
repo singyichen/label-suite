@@ -8,6 +8,8 @@
 > - [w5-fixtures-infra.md](issue-180/phase3-drafts/w5-fixtures-infra.md) — fixture／隔離／基礎設施
 > - [w6-resilience-a11y.md](issue-180/phase3-drafts/w6-resilience-a11y.md) — 錯誤邊界 32 情境 ＋ a11y/i18n/responsive
 > - [w7-iaa-research-review.md](issue-180/phase3-drafts/w7-iaa-research-review.md) — IAA／抽樣／仲裁方法論審查
+>
+> **交付狀態（2026-08-20）**：實作輪（#212）已完成——PR #247（fixture）／#265（XROLE-01~09）／#273（XROLE-10~25）／#277（w6 情境）全 merge。原子測試結算（🟢 22／🟡 3 以 `test.fail()` 標注待 #189/#190）、w6 落點與實作期新發現見 [finding-register.md §F](issue-180/finding-register.md)；本文以下內容維持規劃時點原貌，狀態以 §F 為準。
 
 ## 1. 正典依據與決策約束
 
