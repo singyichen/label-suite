@@ -132,4 +132,37 @@ test.describe('Admin user management list interactions', () => {
     await page.locator('#tabRoles').click();
     await expect(page).toHaveURL(/role-settings\.html/);
   });
+
+  test('aligns page-level details with the design system', async ({ page }) => {
+    // Pagination is a nav landmark with an accessible name
+    const pagination = page.locator('nav.pagination');
+    await expect(pagination).toHaveAttribute('aria-label', /.+/);
+
+    // super_admin badge stays inside the primary token family
+    const adminBadge = page.locator('.badge-admin').first();
+    await expect(adminBadge).toHaveCSS('border-color', 'rgb(199, 210, 254)');
+
+    // Destructive row action sits at the far right (MASTER dense-row mapping)
+    const actions = page
+      .locator('#userTableBody tr', { hasText: 'Rachel Su' })
+      .locator('.td-actions');
+    await expect(actions.locator('button').last()).toHaveAccessibleName(/停用/);
+
+    // Disable-modal confirm uses the canonical solid btn-danger class
+    await expect(page.locator('#disableConfirmBtn')).toHaveClass(/btn-danger/);
+
+    // Page title uses the shared serif display stack
+    await expect(page.locator('.page-main-title')).toHaveCSS('font-family', /Crimson Pro/);
+
+    // Admin tabs expose an accessible name
+    await expect(page.locator('.admin-tabs')).toHaveAttribute('aria-label', /.+/);
+
+    // JS re-render (runs on load) keeps SVG chevrons instead of '<' / '>' text arrows
+    const prevBtn = page.locator('.pagination-controls button').first();
+    const nextBtn = page.locator('.pagination-controls button').last();
+    await expect(prevBtn.locator('svg')).toHaveCount(1);
+    await expect(prevBtn).not.toContainText('<');
+    await expect(nextBtn.locator('svg')).toHaveCount(1);
+    await expect(nextBtn).not.toContainText('>');
+  });
 });
