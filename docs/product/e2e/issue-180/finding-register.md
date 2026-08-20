@@ -86,7 +86,7 @@ GitHub milestones 已鏡射本表（Wave 1–4＋Gate — Formal-dev kickoff＋G
 
 ## F. #212 驗收套件交付紀錄（2026-08-20）
 
-驗收套件依 §D「時點另計」波次交付完成：四支 test-only PR 全數 merge（前置：CI 豁免 PR #257、I18N-03 文案解鎖 PR #258）。issue #212 依系列約定保持開啟至使用者結案。
+驗收套件依 §D「時點另計」波次交付完成：四支 test-only PR 全數 merge（前置：CI 豁免 PR #257、I18N-03 文案解鎖 PR #258）。issue #212 已於 2026-08-20 結案（PR #279 收尾＋§F.1 逐項 triage 建單完成後）。
 
 | PR | 範圍 | 交付內容 |
 |---|---|---|
@@ -103,16 +103,16 @@ GitHub milestones 已鏡射本表（Wave 1–4＋Gate — Formal-dev kickoff＋G
 
 merge 後 main 整合驗證：完整 prototype 套件 853 測試全數通過（`test.fail()` 預期失敗計入 passed；高負載下 3 筆既知 flake 均經單獨重跑定讞為綠）。
 
-### F.1 實作期新發現（階段四 triage 候選，尚未建單）
+### F.1 實作期新發現（2026-08-20 triage 定案，逐項建單／併單完畢）
 
 | # | 發現 | 證據 | 追蹤狀態 |
 |---|---|---|---|
-| N-01 | 提交儲存層 lost-update 窗口：`labelsuite.wsSubmissions` 為單一 key 的整包 read-modify-write，多 Page 並行儲存時後寫者以舊讀快照覆蓋對方 bucket | `annotation-workspace.data.js`（readSubmissionStore／writeSubmissionStore）；PR #277 首輪 CI 於 CONC-03 重現 | **待 triage**：prototype-only（正式後端取代 localStorage 即消失）；驗收測試已序列化儲存並在 spec header 記錄限制 |
-| N-02 | 審核列 ✓/✕ 按鈕 icon-only、無 accessible name | `annotation-workspace.config.js` `buildRowDecisionButtons` | **待 triage**：可併 #195 無障礙群或另立 `[UI]` |
+| N-01 | 提交儲存層 lost-update 窗口：`labelsuite.wsSubmissions` 為單一 key 的整包 read-modify-write，多 Page 並行儲存時後寫者以舊讀快照覆蓋對方 bucket | `annotation-workspace.data.js`（readSubmissionStore／writeSubmissionStore）；PR #277 首輪 CI 於 CONC-03 重現 | **已建單 [#283](https://github.com/singyichen/label-suite/issues/283)**（Bug，backlog）：prototype-only，驗收測試已序列化儲存並在 spec header 記錄限制 |
+| N-02 | 審核列 ✓/✕ 按鈕 icon-only、無 accessible name | `annotation-workspace.config.js` `buildRowDecisionButtons` | **已併 #195**（[comment](https://github.com/singyichen/label-suite/issues/195#issuecomment-5352881723)）：與 focus 管理同批修復，補 aria-label |
 | N-03 | w6 annex DUP-07 引用的 `#deleteTaskModal` 正向對照不存在（全庫 grep 零命中） | PR #277 驗收紀錄 | **annex 勘誤**：本表記錄即結案（w6 草稿不回改）；plan §6 該範疇提醒隨之失效 |
-| N-04 | 成員停用不落地：`TASK_MEMBERS` 純 in-memory 且 roster 未連結 annotator_id，CONC-02 只能驗「不干擾」 | PR #277 偏差紀錄 | 併 #211（停用行為 requirement gap）作實作參照 |
-| N-05 | annotation-results／export 吃 `T001` seed fallback，journey 產生的資料進不了 PL 面板與匯出 | `task-detail.html:7815` | **待 triage**：XROLE-19/22 以 UI surface＋資料層真值雙斷言繞行 |
-| N-06 | task-new `submitTask()` 不落地 TaskListData／TaskDetailData（wizard 建立的任務是死巷）；`saveGuidelineEdit()` 純 in-memory；`DRY_RUN_PROGRESS_KEY` 單一全域＝last-writer | PR #265 偏差紀錄；`task-new.html:1398`、`annotation-workspace.data.js:18` | **待 triage**：正式開發依 spec 實作即消失；驗收以雙 task-id／`&status=` override 繞行 |
-| N-07 | `dataset-analysis-list-toast.spec.ts:12` 在 info toast 5 秒 auto-dismiss 預算內夾多個斷言，高負載下 flaky | `dataset-analysis-list.js:25`（`TOAST_DURATIONS.info=5000`） | **待 triage**：測試設計問題非產品缺陷，可開 `[Bug]` 修測試 |
+| N-04 | 成員停用不落地：`TASK_MEMBERS` 純 in-memory 且 roster 未連結 annotator_id，CONC-02 只能驗「不干擾」 | PR #277 偏差紀錄 | **已留參照於 #211**（[comment](https://github.com/singyichen/label-suite/issues/211#issuecomment-5352881980)，issue 已關，spec 落地時參照） |
+| N-05 | annotation-results／export 吃 `T001` seed fallback，journey 產生的資料進不了 PL 面板與匯出 | `task-detail.html:7815` | **已建單 [#284](https://github.com/singyichen/label-suite/issues/284)**（Bug）：XROLE-19/22 以雙斷言繞行 |
+| N-06 | task-new `submitTask()` 不落地 TaskListData／TaskDetailData（wizard 建立的任務是死巷）；`saveGuidelineEdit()` 純 in-memory；`DRY_RUN_PROGRESS_KEY` 單一全域＝last-writer | PR #265 偏差紀錄；`task-new.html:1398`、`annotation-workspace.data.js:18` | **已建單 [#285](https://github.com/singyichen/label-suite/issues/285)**（Bug，demo 可見）：驗收以雙 task-id／`&status=` override 繞行 |
+| N-07 | `dataset-analysis-list-toast.spec.ts:12` 在 info toast 5 秒 auto-dismiss 預算內夾多個斷言，高負載下 flaky | `dataset-analysis-list.js:25`（`TOAST_DURATIONS.info=5000`） | **已建單 [#286](https://github.com/singyichen/label-suite/issues/286)**（Bug，測試設計非產品缺陷） |
 
 已由既有 issue 涵蓋、不重複列入：`canPublish()` 不查 active 人數（#189／D3）、`publishComplete()` 無完成閘門（#190／D2）。
