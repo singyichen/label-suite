@@ -92,6 +92,61 @@ test.describe('Forgot Password page — form validation (spec 004 US1 scenario 3
   });
 });
 
+test.describe('Forgot Password page — loading lock (spec 004 FR-003 / SC-006)', () => {
+  const languages = [
+    { name: 'Traditional Chinese', toggle: false, loading: '載入中' },
+    { name: 'English', toggle: true, loading: 'Loading' },
+  ];
+
+  for (const language of languages) {
+    test(`locks full page with accessible ${language.name} status`, async ({ page }) => {
+      // Catches the regression where only the submit button is disabled, leaving
+      // the email field, language toggle, and page navigation interactive.
+      await page.goto(FORGOT_URL);
+      if (language.toggle) await page.getByTestId('lang-toggle').click();
+      await page.getByTestId('email-input').fill('anyone@example.com');
+      await page.getByTestId('send-reset-btn').click();
+
+      const pageRoot = page.locator('body');
+      const lockedRegions = [page.locator('.navbar'), page.locator('.main')];
+      const pageControls = [
+        page.getByTestId('email-input'),
+        page.getByTestId('send-reset-btn'),
+        page.getByTestId('lang-toggle'),
+        page.locator('.navbar-brand'),
+        page.getByTestId('back-to-login-link'),
+        page.locator('#successBackLink'),
+      ];
+
+      expect(await pageRoot.getAttribute('aria-busy')).toBeNull();
+      expect(await pageRoot.getAttribute('inert')).toBeNull();
+      for (const region of lockedRegions) {
+        await expect(region).toHaveAttribute('aria-busy', 'true');
+        await expect(region).toHaveAttribute('inert', '');
+      }
+      const loadingStatus = page.getByTestId('loading-status');
+      await expect(loadingStatus).toHaveAttribute('role', 'status');
+      await expect(loadingStatus).toHaveAttribute('aria-live', 'polite');
+      await expect(loadingStatus).toHaveText(language.loading);
+      expect(await loadingStatus.evaluate(element => element.closest('[inert]') === null)).toBe(true);
+      expect(await loadingStatus.evaluate(element => element.closest('[aria-busy="true"]') === null)).toBe(true);
+      for (const control of pageControls) {
+        expect(await control.evaluate(element =>
+          element.matches(':disabled') || element.getAttribute('aria-disabled') === 'true' || element.closest('[inert]') !== null
+        )).toBe(true);
+      }
+
+      await expect(page.locator('#successPanel')).toHaveClass(/visible/, { timeout: 5000 });
+      for (const region of lockedRegions) {
+        await expect(region).not.toHaveAttribute('aria-busy', 'true');
+        await expect(region).not.toHaveAttribute('inert', '');
+      }
+      await expect(loadingStatus).toBeEmpty();
+      await expect(page.locator('#successBackLink')).toBeEnabled();
+    });
+  }
+});
+
 test.describe('Forgot Password page — submit success (spec 004 FR-004)', () => {
   // Prototype simulates 1 200 ms API delay then always shows success panel
   // (generic message regardless of whether the email exists — SC-002)
