@@ -234,6 +234,15 @@ flowchart LR
 
 ---
 
+## Prototype Traceability
+
+| Artifact | Responsibility | Covered FR/SC | Verification | Status |
+|----------|----------------|---------------|--------------|--------|
+| [design/prototype/pages/account/register.html](../../../design/prototype/pages/account/register.html) | Registration form, validation, submit/success, navigation, i18n, and RWD. | FR-001–FR-013A; SC-001–SC-006 | [design/prototype/tests/account/register.spec.ts](../../../design/prototype/tests/account/register.spec.ts) | Active |
+| [design/wireframes/pages/account/register.pen](../../../design/wireframes/pages/account/register.pen) | Optional visual reference only. | No additional FR/SC | N/A (optional visual reference) | Active; optional visual reference |
+
+---
+
 ## 規格相依性 *(本功能依賴其他規格，或被其他規格依賴時填寫)*
 
 ### 上游（本規格依賴的規格）
@@ -291,14 +300,6 @@ flowchart LR
 - [x] 功能需求已定義。
 - [x] 關鍵實體或狀態模型已定義。
 - [x] Review checklist 已通過。
-
----
-
-## Prototype Traceability
-
-| Spec | Artifact and responsibility | Covered FR/SC | Verification | Status |
-|------|-----------------------------|---------------|--------------|--------|
-| account-003 | [design/prototype/pages/account/register.html](../../../design/prototype/pages/account/register.html): registration form, validation, submit/success, navigation, i18n and RWD. [design/wireframes/pages/account/register.pen](../../../design/wireframes/pages/account/register.pen): optional visual reference only. | FR-001–FR-013A; SC-001–SC-006 | [design/prototype/tests/account/register.spec.ts](../../../design/prototype/tests/account/register.spec.ts) | Active |
 
 ---
 

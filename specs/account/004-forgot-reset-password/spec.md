@@ -230,6 +230,17 @@ flowchart LR
 
 ---
 
+## Prototype Traceability
+
+| Artifact | Responsibility | Covered FR/SC | Verification | Status |
+|----------|----------------|---------------|--------------|--------|
+| [design/prototype/pages/account/forgot-password.html](../../../design/prototype/pages/account/forgot-password.html) | Forgot flow and full-page loading lock. | FR-001–FR-004, FR-011, FR-011A, FR-013, FR-013A; SC-001, SC-002, SC-005–SC-007 | [design/prototype/tests/account/forgot-password.spec.ts](../../../design/prototype/tests/account/forgot-password.spec.ts) | Active; multi-page |
+| [design/prototype/pages/account/reset-password.html](../../../design/prototype/pages/account/reset-password.html) | Valid, expired, and used reset states and full-page loading lock. | FR-005–FR-013A; SC-003–SC-007 | [design/prototype/tests/account/reset-password.spec.ts](../../../design/prototype/tests/account/reset-password.spec.ts) | Active; multi-page |
+| [design/wireframes/pages/account/forgot-password.pen](../../../design/wireframes/pages/account/forgot-password.pen) | Optional visual reference only. | No additional FR/SC | N/A (optional visual reference) | Active; optional visual reference |
+| [design/wireframes/pages/account/reset-password.pen](../../../design/wireframes/pages/account/reset-password.pen) | Optional visual reference only. | No additional FR/SC | N/A (optional visual reference) | Active; optional visual reference |
+
+---
+
 ## 規格相依性 *(本功能依賴其他規格，或被其他規格依賴時填寫)*
 
 ### 上游（本規格依賴的規格）
@@ -287,14 +298,6 @@ flowchart LR
 - [x] 功能需求已定義。
 - [x] 關鍵實體或狀態模型已定義。
 - [x] Review checklist 已通過。
-
----
-
-## Prototype Traceability
-
-| Spec | Artifact and responsibility | Covered FR/SC | Verification | Status |
-|------|-----------------------------|---------------|--------------|--------|
-| account-004 | [design/prototype/pages/account/forgot-password.html](../../../design/prototype/pages/account/forgot-password.html): forgot flow and full-page loading lock. [design/prototype/pages/account/reset-password.html](../../../design/prototype/pages/account/reset-password.html): valid/expired/used reset states and full-page loading lock. [design/wireframes/pages/account/forgot-password.pen](../../../design/wireframes/pages/account/forgot-password.pen) and [design/wireframes/pages/account/reset-password.pen](../../../design/wireframes/pages/account/reset-password.pen): optional visual references only. | Forgot: FR-001–FR-004, FR-011/11A, FR-013/13A, SC-001/002/005–007. Reset: FR-005–FR-013A, SC-003–SC-007. | [design/prototype/tests/account/forgot-password.spec.ts](../../../design/prototype/tests/account/forgot-password.spec.ts); [design/prototype/tests/account/reset-password.spec.ts](../../../design/prototype/tests/account/reset-password.spec.ts) | Active; multi-page |
 
 ---
 

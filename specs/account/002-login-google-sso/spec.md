@@ -158,6 +158,14 @@ flowchart LR
 
 ---
 
+## Prototype Traceability
+
+| Artifact | Responsibility | Covered FR/SC | Verification | Status |
+|----------|----------------|---------------|--------------|--------|
+| [design/prototype/pages/account/login.html](../../../design/prototype/pages/account/login.html) | Google button visibility, accessible label, language switching, and prototype no-op only. OAuth, callback, and session behavior are out of scope. | FR-001–FR-006; SC-001–SC-004 | [design/prototype/tests/account/login.spec.ts](../../../design/prototype/tests/account/login.spec.ts) (`google-login-btn` cases) | Active; HTML shared with account-001 |
+
+---
+
 ## 規格相依性 *(本功能依賴其他規格，或被其他規格依賴時填寫)*
 
 ### 上游（本規格依賴的規格）
@@ -212,14 +220,6 @@ flowchart LR
 - [x] 功能需求已定義。
 - [x] 關鍵實體已定義。
 - [x] Review checklist 已通過。
-
----
-
-## Prototype Traceability
-
-| Spec | Artifact and responsibility | Covered FR/SC | Verification | Status |
-|------|-----------------------------|---------------|--------------|--------|
-| account-002 | [design/prototype/pages/account/login.html](../../../design/prototype/pages/account/login.html): Google button visibility, accessible label, language switching and prototype no-op only; OAuth/callback/session are out of scope. | FR-001–FR-006; SC-001–SC-004 | [design/prototype/tests/account/login.spec.ts](../../../design/prototype/tests/account/login.spec.ts) (`google-login-btn` cases) | Active; HTML shared with 001 |
 
 ---
 

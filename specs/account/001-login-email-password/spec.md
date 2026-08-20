@@ -234,6 +234,15 @@ flowchart LR
 
 ---
 
+## Prototype Traceability
+
+| Artifact | Responsibility | Covered FR/SC | Verification | Status |
+|----------|----------------|---------------|--------------|--------|
+| [design/prototype/pages/account/login.html](../../../design/prototype/pages/account/login.html) | Email/password form, validation, navigation, page-level i18n, and RWD. Google entry and no-op behavior are owned exclusively by account-002. | FR-001 (shell and Email/Password portions only), FR-002–FR-011, FR-013–FR-015B; SC-001 (shell and Email/Password portions only), SC-002–SC-006 | [design/prototype/tests/account/login.spec.ts](../../../design/prototype/tests/account/login.spec.ts) | Active; HTML shared with account-002 |
+| [design/wireframes/pages/account/login.pen](../../../design/wireframes/pages/account/login.pen) | Optional visual reference only. | No additional FR/SC | N/A (optional visual reference) | Active; optional visual reference |
+
+---
+
 ## 規格相依性 *(本功能依賴其他規格，或被其他規格依賴時填寫)*
 
 ### 上游（本規格依賴的規格）
@@ -292,14 +301,6 @@ flowchart LR
 - [x] 功能需求已定義。
 - [x] 關鍵實體已定義。
 - [x] Review checklist 已通過。
-
----
-
-## Prototype Traceability
-
-| Spec | Artifact and responsibility | Covered FR/SC | Verification | Status |
-|------|-----------------------------|---------------|--------------|--------|
-| account-001 | [design/prototype/pages/account/login.html](../../../design/prototype/pages/account/login.html): Email/password form, validation, navigation, i18n and RWD; explicitly excludes Google SSO behavior owned by 002. [design/wireframes/pages/account/login.pen](../../../design/wireframes/pages/account/login.pen): optional visual reference only. | FR-001–FR-015B; SC-001–SC-006 | [design/prototype/tests/account/login.spec.ts](../../../design/prototype/tests/account/login.spec.ts) | Active; HTML shared with 002 |
 
 ---
 
