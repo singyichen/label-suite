@@ -159,10 +159,7 @@ test.describe('Reset Password page — form validation (spec 004 US2 scenario 4)
   });
 });
 
-test.describe('Reset Password page — submit success (spec 004 FR-007)', () => {
-  // Prototype simulates an API call and then shows the success panel.
-  // Actual redirect to /login + DB update requires backend (not tested here).
-
+test.describe('Reset Password page — loading lock (spec 004 FR-008 / SC-006)', () => {
   test('locks full page during loading to prevent recovery-state changes', async ({ page }) => {
     // Catches the regression where only the submit button is disabled, leaving
     // password fields, visibility toggles, token-state controls, language, and navigation interactive.
@@ -200,6 +197,11 @@ test.describe('Reset Password page — submit success (spec 004 FR-007)', () => 
     await expect(pageRoot).not.toHaveAttribute('aria-busy', 'true');
     await expect(pageRoot).not.toHaveAttribute('inert', '');
   });
+});
+
+test.describe('Reset Password page — submit success (spec 004 FR-007)', () => {
+  // Prototype simulates an API call and then shows the success panel.
+  // Actual redirect to /login + DB update requires backend (not tested here).
 
   test('shows success panel after valid passwords are submitted', async ({ page }) => {
     await page.goto(RESET_URL);

@@ -92,10 +92,7 @@ test.describe('Forgot Password page — form validation (spec 004 US1 scenario 3
   });
 });
 
-test.describe('Forgot Password page — submit success (spec 004 FR-004)', () => {
-  // Prototype simulates 1 200 ms API delay then always shows success panel
-  // (generic message regardless of whether the email exists — SC-002)
-
+test.describe('Forgot Password page — loading lock (spec 004 FR-003 / SC-006)', () => {
   test('locks full page during loading to prevent duplicate recovery actions', async ({ page }) => {
     // Catches the regression where only the submit button is disabled, leaving
     // the email field, language toggle, and page navigation interactive.
@@ -124,6 +121,11 @@ test.describe('Forgot Password page — submit success (spec 004 FR-004)', () =>
     await expect(pageRoot).not.toHaveAttribute('aria-busy', 'true');
     await expect(pageRoot).not.toHaveAttribute('inert', '');
   });
+});
+
+test.describe('Forgot Password page — submit success (spec 004 FR-004)', () => {
+  // Prototype simulates 1 200 ms API delay then always shows success panel
+  // (generic message regardless of whether the email exists — SC-002)
 
   test('shows success panel after valid email is submitted', async ({ page }) => {
     await page.goto(FORGOT_URL);
