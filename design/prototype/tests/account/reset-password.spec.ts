@@ -187,6 +187,12 @@ test.describe('Reset Password page — loading lock (spec 004 FR-008 / SC-006)',
     ];
 
     await expect(pageRoot).toHaveAttribute('aria-busy', 'true');
+    expect(await pageRoot.getAttribute('inert')).toBeNull();
+    const loadingStatus = page.getByTestId('loading-status');
+    await expect(loadingStatus).toHaveAttribute('role', 'status');
+    await expect(loadingStatus).toHaveAttribute('aria-live', 'polite');
+    await expect(loadingStatus).toHaveText('載入中');
+    expect(await loadingStatus.evaluate(element => element.closest('[inert]') === null)).toBe(true);
     for (const control of pageControls) {
       expect(await control.evaluate(element =>
         element.matches(':disabled') || element.getAttribute('aria-disabled') === 'true' || element.closest('[inert]') !== null
@@ -196,6 +202,7 @@ test.describe('Reset Password page — loading lock (spec 004 FR-008 / SC-006)',
     await expect(page.locator('#successPanel')).toHaveClass(/visible/, { timeout: 5000 });
     await expect(pageRoot).not.toHaveAttribute('aria-busy', 'true');
     await expect(pageRoot).not.toHaveAttribute('inert', '');
+    await expect(loadingStatus).toBeEmpty();
   });
 });
 
