@@ -24,8 +24,10 @@
       --color-error-bg:   #FEF2F2;
       --color-error-border: #FECACA;
       --color-link:       #6366F1;
+      --radius-sm:        4px;
       --radius-md:        8px;
       --radius-lg:        12px;
+      --z-sticky:         200;
       --shadow-card:      0 4px 24px rgba(99, 102, 241, 0.10), 0 1px 4px rgba(0,0,0,0.06);
       --font-sans:        'Inter', 'Noto Sans TC', 'PingFang TC', -apple-system, sans-serif;
     }
@@ -53,7 +55,7 @@
       padding: 0 32px;
       position: sticky;
       top: 0;
-      z-index: 100;
+      z-index: var(--z-sticky);
     }
     .navbar-brand {
       display: flex;
@@ -288,7 +290,7 @@
       display: flex;
       align-items: center;
       padding: 2px;
-      border-radius: 4px;
+      border-radius: var(--radius-sm);
       transition: color 0.15s;
     }
     .eye-toggle:hover { color: var(--color-ink); }
@@ -394,7 +396,7 @@
 <body>
 
   <!-- ── Navbar ─────────────────────────────────────────────────── -->
-  <nav class="navbar" role="banner">
+  <header class="navbar" role="banner">
     <a class="navbar-brand" href="#" aria-label="Label Suite 首頁">
       <!-- Logo 32×32 -->
       <div class="navbar-logo" aria-hidden="true">
@@ -416,7 +418,7 @@
       </svg>
       <span id="langLabel" data-testid="lang-label">ZH</span>
     </button>
-  </nav>
+  </header>
 
   <!-- ── Main ───────────────────────────────────────────────────── -->
   <main class="main" role="main">
