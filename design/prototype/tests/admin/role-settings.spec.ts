@@ -165,7 +165,7 @@ test.describe('Admin role settings matrix behavior', () => {
     await page.locator('#saveBtn').click();
 
     await expect(page.locator('#conflictBanner')).toBeVisible();
-    await expect(page.locator('#toastInner')).toHaveClass(/error/);
+    await expect(page.locator('#toast')).toHaveClass(/toast-error/);
     await expect(page.locator('#saveBtn')).toBeDisabled();
 
     await page.locator('#reloadBtn').click();
@@ -177,6 +177,27 @@ test.describe('Admin role settings matrix behavior', () => {
   test('user management tab returns to the user management page', async ({ page }) => {
     await page.locator('#tabUsers').click();
     await expect(page).toHaveURL(/user-management\.html/);
+  });
+
+  test('follows the UXC-07 toast contract', async ({ page }) => {
+    // Top-center container on the shared z-toast layer
+    const container = page.locator('.toast-container');
+    await expect(container).toHaveCSS('top', '24px');
+    await expect(container).toHaveCSS('z-index', '400');
+
+    const toast = page.locator('#toast');
+    await expect(toast).toBeHidden();
+
+    await page.locator('#editBtn').click();
+    await page.locator('[data-key="task.create"][data-role="user"]').uncheck();
+    await page.locator('#saveBtn').click();
+
+    await expect(toast).toBeVisible();
+    await expect(toast).toHaveClass(/toast-success/);
+
+    // Manual close control
+    await page.locator('#toastClose').click();
+    await expect(toast).toBeHidden();
   });
 
   test('aligns page-level details with the design system', async ({ page }) => {

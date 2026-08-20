@@ -266,27 +266,41 @@
       border-color: var(--color-warning-soft-border); color: var(--color-warning);
     }
 
-    /* ── Toast ──────────────────────────────────────────────────── */
-    #toast {
-      position: fixed; bottom: 24px; right: 24px; z-index: 400;
-      max-width: 360px; width: calc(100% - 48px);
-      transition: opacity 150ms ease;
+    /* ── Toast (top-center, UXC-07 / MASTER §Toast) ─────────────── */
+    .toast-container {
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: var(--z-toast);
+      width: min(384px, calc(100vw - 32px));
+      pointer-events: none;
     }
-    #toast.hidden { opacity: 0; pointer-events: none; }
-    .toast-inner {
-      display: flex; align-items: flex-start; gap: 12px;
-      padding: 14px 16px; border-radius: var(--radius-lg);
-      border: 1px solid; box-shadow: var(--shadow-md); font-size: 14px;
+    .toast {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 16px;
+      border: 1px solid transparent;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 500;
+      /* shadow-md: Toast is an approved exception to the no-shadow rule */
+      box-shadow: var(--shadow-md);
+      opacity: 0;
+      /* visibility keeps the hidden close button out of the tab order;
+         its 0s transition is delayed so the fade-out still plays. */
+      visibility: hidden;
+      transition: opacity var(--dur-fast), visibility 0s var(--dur-fast);
     }
-    .toast-inner.success {
-      background: var(--color-success-soft-bg);
-      border-color: var(--color-success-soft-border); color: var(--color-success);
-    }
-    .toast-inner.error {
-      background: var(--color-error-soft-bg);
-      border-color: var(--color-error-soft-border); color: var(--color-error);
-    }
+    .toast.visible { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity var(--dur-fast); }
+    .toast-success { color: var(--color-success); background: var(--color-success-bg); border-color: var(--color-success-border); }
+    .toast-info    { color: var(--color-info);    background: var(--color-info-bg);    border-color: var(--color-info-border); }
+    .toast-warning { color: var(--color-warning); background: var(--color-warning-bg); border-color: var(--color-warning-border); }
+    .toast-error   { color: var(--color-error);   background: var(--color-error-bg);   border-color: var(--color-error-border); }
     .toast-body { flex: 1; }
+    .toast-msg { font-weight: 600; font-size: 14px; }
+    .toast-sub { font-size: 12px; opacity: 0.8; margin-top: 2px; }
     .toast-close {
       flex-shrink: 0; background: transparent; border: none;
       cursor: pointer; color: inherit; opacity: 0.6;
@@ -806,8 +820,8 @@
   <!-- ═══════════════════════════════════════════════════════════ -->
   <!-- TOAST                                                      -->
   <!-- ═══════════════════════════════════════════════════════════ -->
-  <div id="toast" class="hidden" aria-live="polite" aria-atomic="true">
-    <div class="toast-inner success" id="toastInner">
+  <div class="toast-container" aria-live="polite" aria-atomic="true">
+    <div class="toast toast-success" id="toast">
       <!-- success icon (shown by default) -->
       <svg id="toastIconSuccess" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
@@ -817,10 +831,10 @@
         <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
       </svg>
       <div class="toast-body">
-        <p id="toastMsg" style="font-weight:600;font-size:14px">儲存成功</p>
-        <p id="toastSub" style="font-size:12px;opacity:0.8;margin-top:2px"></p>
+        <p id="toastMsg" class="toast-msg">儲存成功</p>
+        <p id="toastSub" class="toast-sub"></p>
       </div>
-      <button class="toast-close" onclick="hideToast()" aria-label="關閉通知">
+      <button type="button" class="toast-close" id="toastClose" onclick="hideToast()" aria-label="關閉通知">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
         </svg>
@@ -1538,20 +1552,24 @@
 
     /* ── Toast ──────────────────────────────────────────────────── */
     let toastTimer = null;
+    /* Auto-dismiss per UXC-07: Error never auto-dismisses (manual close only). */
+    const TOAST_DURATIONS = { success: 3000, info: 5000, warning: 8000, error: 0 };
+
     function showToast(type, msg, sub) {
-      const el    = document.getElementById('toast');
-      const inner = document.getElementById('toastInner');
-      inner.className = 'toast-inner ' + type;
+      const variant = Object.prototype.hasOwnProperty.call(TOAST_DURATIONS, type) ? type : 'success';
       document.getElementById('toastMsg').textContent = msg;
       document.getElementById('toastSub').textContent = sub || '';
       // swap icons using hidden class (no innerHTML)
-      document.getElementById('toastIconSuccess').classList.toggle('hidden', type !== 'success');
-      document.getElementById('toastIconError').classList.toggle('hidden',   type !== 'error');
-      el.classList.remove('hidden');
+      document.getElementById('toastIconSuccess').classList.toggle('hidden', variant !== 'success');
+      document.getElementById('toastIconError').classList.toggle('hidden',   variant !== 'error');
+      document.getElementById('toast').className = 'toast toast-' + variant + ' visible';
       clearTimeout(toastTimer);
-      toastTimer = setTimeout(hideToast, 4000);
+      if (TOAST_DURATIONS[variant] > 0) toastTimer = setTimeout(hideToast, TOAST_DURATIONS[variant]);
     }
-    function hideToast() { document.getElementById('toast').classList.add('hidden'); }
+    function hideToast() {
+      document.getElementById('toast').classList.remove('visible');
+      clearTimeout(toastTimer);
+    }
 
     /* ── Language toggle ────────────────────────────────────────── */
     function handleLangToggle(source) {

@@ -83,7 +83,7 @@ test.describe('Admin user management list interactions', () => {
 
     await expect(page.locator('#addModal')).toBeVisible();
     await expect(page.locator('#toast')).toBeVisible();
-    await expect(page.locator('#toastInner')).toHaveClass(/error/);
+    await expect(page.locator('#toast')).toHaveClass(/toast-error/);
   });
 
   test('edits an existing user and immediately updates the table', async ({ page }) => {
@@ -131,6 +131,32 @@ test.describe('Admin user management list interactions', () => {
   test('role settings tab navigates to role-settings page', async ({ page }) => {
     await page.locator('#tabRoles').click();
     await expect(page).toHaveURL(/role-settings\.html/);
+  });
+
+  test('follows the UXC-07 toast contract', async ({ page }) => {
+    // Top-center container on the shared z-toast layer
+    const container = page.locator('.toast-container');
+    await expect(container).toHaveCSS('top', '24px');
+    await expect(container).toHaveCSS('z-index', '400');
+
+    const toast = page.locator('#toast');
+    await expect(toast).toBeHidden();
+
+    // Error variant via the duplicate-email path
+    await page.locator('#addUserBtn').click();
+    await page.locator('#addName').fill('Duplicate Mandy');
+    await page.locator('#addEmail').fill('mandy@labelsuite.io');
+    await page.locator('#addSaveBtn').click();
+
+    await expect(toast).toBeVisible();
+    await expect(toast).toHaveClass(/toast-error/);
+
+    // UXC-07: an error toast never auto-dismisses (legacy code hid it at 4000ms)
+    await page.waitForTimeout(4500);
+    await expect(toast).toBeVisible();
+
+    await page.locator('#toastClose').click();
+    await expect(toast).toBeHidden();
   });
 
   test('aligns page-level details with the design system', async ({ page }) => {
