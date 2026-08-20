@@ -9,7 +9,7 @@
   padding: var(--space-lg) var(--space-md);
   position: sticky;
   top: 0;
-  z-index: 200;
+  z-index: var(--z-sticky);
   overflow-y: auto;
   flex-shrink: 0;
   transition: width var(--dur-normal, 200ms), padding var(--dur-normal, 200ms);
@@ -20,6 +20,17 @@
 .navbar a:focus,
 .navbar a:active {
   text-decoration: none;
+}
+
+/* The fragment ships its own affordance instead of relying on host-page button resets. */
+.sidebar-utility-btn,
+.lang-toggle,
+.mobile-lang-toggle,
+.logout-btn,
+.mobile-top-logout,
+.mobile-theme-toggle-btn,
+.shortcut-help-close {
+  cursor: pointer;
 }
 
 .brand-section {
@@ -412,7 +423,7 @@
 
 .shortcut-help-section h3 {
   margin: 0;
-  color: var(--color-ink-muted, #64748B);
+  color: var(--color-ink-muted, #94A3B8);
   font-size: 12px;
   font-weight: 600;
   line-height: 1.25;
@@ -561,10 +572,6 @@ body.sidebar-collapsed .logout-btn {
 }
 
 /* ── Dark mode overrides ──────────────────────────────────── */
-html[data-theme="dark"] .navbar {
-  border-right-color: #3A3A4A;
-}
-
 html[data-theme="dark"] .shortcut-keycap {
   box-shadow: 0 2px 0 rgba(0, 0, 0, 0.45), 0 1px 4px rgba(0, 0, 0, 0.35);
 }
@@ -676,32 +683,19 @@ html[data-theme="dark"] .shortcut-help-dialog {
   margin-top: 1px;
 }
 
-.notif-icon-check {
-  background: #D1FAE5;
-  color: #065F46;
+.notif-item-icon svg {
+  width: 12px;
+  height: 12px;
 }
 
-.notif-icon-check::before {
-  content: '';
-  display: block;
-  width: 10px;
-  height: 6px;
-  border-left: 2px solid #065F46;
-  border-bottom: 2px solid #065F46;
-  transform: rotate(-45deg) translateY(-1px);
+.notif-icon-check {
+  background: var(--color-success-bg);
+  color: var(--color-success);
 }
 
 .notif-icon-assign {
-  background: #EDE9FE;
-  color: #5B21B6;
-}
-
-.notif-icon-assign::before {
-  content: '+';
-  font-size: 14px;
-  font-weight: 700;
-  color: #5B21B6;
-  line-height: 1;
+  background: var(--color-primary-soft-bg);
+  color: var(--color-primary);
 }
 
 .notif-item-body {
@@ -717,7 +711,7 @@ html[data-theme="dark"] .shortcut-help-dialog {
   word-break: break-word;
 }
 
-.notif-item.is-read .notif-item-text { color: var(--color-ink-muted, #64748B); }
+.notif-item.is-read .notif-item-text { color: var(--color-ink-muted, #94A3B8); }
 
 .notif-item-time {
   font-size: 11px;
