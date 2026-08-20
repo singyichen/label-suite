@@ -160,50 +160,71 @@ test.describe('Reset Password page — form validation (spec 004 US2 scenario 4)
 });
 
 test.describe('Reset Password page — loading lock (spec 004 FR-008 / SC-006)', () => {
-  test('locks full page during loading to prevent recovery-state changes', async ({ page }) => {
-    // Catches the regression where only the submit button is disabled, leaving
-    // password fields, visibility toggles, token-state controls, language, and navigation interactive.
-    await page.goto(RESET_URL);
-    await setProtoState(page, '有效 token');
-    await page.getByTestId('new-password-input').fill('newpassword123');
-    await page.getByTestId('confirm-password-input').fill('newpassword123');
-    await page.getByTestId('update-password-btn').click();
+  const languages = [
+    { name: 'Traditional Chinese', toggle: false, loading: '載入中' },
+    { name: 'English', toggle: true, loading: 'Loading' },
+  ];
 
-    const pageRoot = page.locator('body');
-    const pageControls = [
-      page.getByTestId('new-password-input'),
-      page.getByTestId('confirm-password-input'),
-      page.locator('#eyeToggleNew'),
-      page.locator('#eyeToggleConfirm'),
-      page.getByTestId('update-password-btn'),
-      page.getByTestId('lang-toggle'),
-      page.locator('.navbar-brand'),
-      page.getByTestId('back-to-login-link'),
-      page.locator('#successBackLink'),
-      page.getByTestId('reapply-link'),
-      page.locator('#btnValid'),
-      page.locator('#btnExpired'),
-      page.locator('#btnUsed'),
-    ];
+  for (const language of languages) {
+    test(`locks full page with accessible ${language.name} status`, async ({ page }) => {
+      // Catches the regression where only the submit button is disabled, leaving
+      // password fields, visibility toggles, token-state controls, language, and navigation interactive.
+      await page.goto(RESET_URL);
+      await setProtoState(page, '有效 token');
+      if (language.toggle) await page.getByTestId('lang-toggle').click();
+      await page.getByTestId('new-password-input').fill('newpassword123');
+      await page.getByTestId('confirm-password-input').fill('newpassword123');
+      await page.getByTestId('update-password-btn').click();
 
-    await expect(pageRoot).toHaveAttribute('aria-busy', 'true');
-    expect(await pageRoot.getAttribute('inert')).toBeNull();
-    const loadingStatus = page.getByTestId('loading-status');
-    await expect(loadingStatus).toHaveAttribute('role', 'status');
-    await expect(loadingStatus).toHaveAttribute('aria-live', 'polite');
-    await expect(loadingStatus).toHaveText('載入中');
-    expect(await loadingStatus.evaluate(element => element.closest('[inert]') === null)).toBe(true);
-    for (const control of pageControls) {
-      expect(await control.evaluate(element =>
-        element.matches(':disabled') || element.getAttribute('aria-disabled') === 'true' || element.closest('[inert]') !== null
-      )).toBe(true);
-    }
+      const pageRoot = page.locator('body');
+      const lockedRegions = [
+        page.locator('.navbar'),
+        page.locator('.main'),
+        page.locator('.proto-toggle-bar'),
+      ];
+      const pageControls = [
+        page.getByTestId('new-password-input'),
+        page.getByTestId('confirm-password-input'),
+        page.locator('#eyeToggleNew'),
+        page.locator('#eyeToggleConfirm'),
+        page.getByTestId('update-password-btn'),
+        page.getByTestId('lang-toggle'),
+        page.locator('.navbar-brand'),
+        page.getByTestId('back-to-login-link'),
+        page.locator('#successBackLink'),
+        page.getByTestId('reapply-link'),
+        page.locator('#btnValid'),
+        page.locator('#btnExpired'),
+        page.locator('#btnUsed'),
+      ];
 
-    await expect(page.locator('#successPanel')).toHaveClass(/visible/, { timeout: 5000 });
-    await expect(pageRoot).not.toHaveAttribute('aria-busy', 'true');
-    await expect(pageRoot).not.toHaveAttribute('inert', '');
-    await expect(loadingStatus).toBeEmpty();
-  });
+      expect(await pageRoot.getAttribute('aria-busy')).toBeNull();
+      expect(await pageRoot.getAttribute('inert')).toBeNull();
+      for (const region of lockedRegions) {
+        await expect(region).toHaveAttribute('aria-busy', 'true');
+        await expect(region).toHaveAttribute('inert', '');
+      }
+      const loadingStatus = page.getByTestId('loading-status');
+      await expect(loadingStatus).toHaveAttribute('role', 'status');
+      await expect(loadingStatus).toHaveAttribute('aria-live', 'polite');
+      await expect(loadingStatus).toHaveText(language.loading);
+      expect(await loadingStatus.evaluate(element => element.closest('[inert]') === null)).toBe(true);
+      expect(await loadingStatus.evaluate(element => element.closest('[aria-busy="true"]') === null)).toBe(true);
+      for (const control of pageControls) {
+        expect(await control.evaluate(element =>
+          element.matches(':disabled') || element.getAttribute('aria-disabled') === 'true' || element.closest('[inert]') !== null
+        )).toBe(true);
+      }
+
+      await expect(page.locator('#successPanel')).toHaveClass(/visible/, { timeout: 5000 });
+      for (const region of lockedRegions) {
+        await expect(region).not.toHaveAttribute('aria-busy', 'true');
+        await expect(region).not.toHaveAttribute('inert', '');
+      }
+      await expect(loadingStatus).toBeEmpty();
+      await expect(page.locator('#successBackLink')).toBeEnabled();
+    });
+  }
 });
 
 test.describe('Reset Password page — submit success (spec 004 FR-007)', () => {
