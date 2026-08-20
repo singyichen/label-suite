@@ -784,7 +784,7 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <path d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728L5.636 5.636"/>
           </svg>
-          <span id="disableConfirmBtnLabel">確認</span>
+          <span id="disableConfirmBtnLabel">停用</span>
         </button>
       </div>
     </div>
@@ -893,7 +893,7 @@
         editSaveBtnLabel:      '儲存',
         disableWarningText:    '停用帳號後，該使用者將立即無法登入，所有活躍 session/token 也會被撤銷。',
         disableCancelBtn:      '取消',
-        disableConfirmBtnLabel:'確認',
+        disableConfirmBtnLabel:'停用',
         editBtnText:           '編輯',
         disableBtnText:        '停用',
         enableBtnText:         '啟用',
@@ -967,7 +967,7 @@
         editSaveBtnLabel:      'Save',
         disableWarningText:    'After disabling, the user will immediately lose access and all active sessions/tokens will be revoked.',
         disableCancelBtn:      'Cancel',
-        disableConfirmBtnLabel:'Confirm',
+        disableConfirmBtnLabel:'Disable',
         editBtnText:           'Edit',
         disableBtnText:        'Disable',
         enableBtnText:         'Enable',
@@ -1129,6 +1129,43 @@
       return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
     }
 
+    /* ── URL state (UXC-11): q / role / status / limit / offset ── */
+    const VALID_URL_ROLES = ['user', 'super_admin'];
+    const VALID_URL_STATUSES = ['active', 'disabled'];
+    const VALID_URL_LIMITS = [20, 50, 100];
+
+    function applyListStateFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      const q = (params.get('q') || '').trim();
+      if (q) document.getElementById('searchInput').value = q;
+      const role = params.get('role') || '';
+      if (VALID_URL_ROLES.includes(role)) document.getElementById('roleFilter').value = role;
+      const status = params.get('status') || '';
+      if (VALID_URL_STATUSES.includes(status)) document.getElementById('statusFilter').value = status;
+      const limit = parseInt(params.get('limit') || '', 10);
+      if (VALID_URL_LIMITS.includes(limit)) {
+        pageSize = limit;
+        document.getElementById('pageSizeSelect').value = String(limit);
+      }
+      const offset = parseInt(params.get('offset') || '', 10);
+      if (Number.isFinite(offset) && offset > 0) currentPage = Math.floor(offset / pageSize) + 1;
+    }
+
+    function syncUrlToListState() {
+      const params = new URLSearchParams();
+      const keyword = document.getElementById('searchInput').value.trim();
+      if (keyword) params.set('q', keyword);
+      const role = document.getElementById('roleFilter').value;
+      if (role) params.set('role', role);
+      const status = document.getElementById('statusFilter').value;
+      if (status) params.set('status', status);
+      if (pageSize !== 20) params.set('limit', String(pageSize));
+      const offset = (currentPage - 1) * pageSize;
+      if (offset > 0) params.set('offset', String(offset));
+      const query = params.toString();
+      window.history.replaceState(null, '', window.location.pathname + (query ? '?' + query : ''));
+    }
+
     function getFilteredUsers() {
       const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
       const role = document.getElementById('roleFilter').value;
@@ -1266,6 +1303,7 @@
           ? `共 ${filteredUsers.length} 筆 · 第 ${currentPage} / ${totalPages} 頁`
           : `${filteredUsers.length} records · Page ${currentPage} / ${totalPages}`;
       renderPagination(totalPages);
+      syncUrlToListState();
     }
 
     // Lucide chevron SVG for pagination arrows — static points, no user data
@@ -1362,7 +1400,8 @@
       document.body.style.overflow = '';
     }
 
-    ['addModal','editModal','disableModal'].forEach(id => {
+    /* UXC-10: a destructive confirmation must not dismiss on overlay click */
+    ['addModal','editModal'].forEach(id => {
       document.getElementById(id).addEventListener('click', e => {
         if (e.target === document.getElementById(id)) closeModal(id);
       });
@@ -1371,6 +1410,11 @@
       if (e.key === 'Escape') {
         ['addModal','editModal','disableModal'].forEach(closeModal);
         closeAuditDrawer();
+        return;
+      }
+      /* UXC-10 keyboard: Enter confirms the open destructive dialog */
+      if (e.key === 'Enter' && !document.getElementById('disableModal').classList.contains('hidden')) {
+        confirmDisable();
       }
     });
 
@@ -1618,6 +1662,7 @@
       roleLabel:   lang === 'zh' ? '系統管理員' : 'Super Admin',
       avatarLabel: 'M',
     });
+    applyListStateFromUrl();
     applyLang(lang);
   </script>
 </body>
