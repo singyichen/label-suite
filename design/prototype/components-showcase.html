@@ -773,6 +773,118 @@
     .divider-list li { padding: 16px 0; font-size: 14px; }    /* py-4 */
     .divider-list li + li { border-top: 1px solid #F1F5F9; }  /* divide-slate-100 — MASTER §Divider list variant literal */
 
+    /* §State Panel — token-rendered (MASTER §State Panel ships Tailwind-only
+       samples; mapped to tokens here per the Divider precedent; rounded-md →
+       var(--radius-md), matching the shipped account state panels) */
+    .state-panel {
+      border-radius: var(--radius-md);
+      border: 1px solid;
+      padding: 20px;                             /* p-5 */
+      text-align: center;
+    }
+    .state-panel--success {
+      background: var(--color-success-bg);       /* bg-green-50 */
+      border-color: var(--color-success-border); /* border-green-200 */
+    }
+    .state-panel--error {
+      background: var(--color-error-bg);         /* bg-red-50 */
+      border-color: var(--color-error-border);   /* border-red-200 */
+    }
+    .state-panel-icon {
+      width: 40px;                               /* w-10 h-10 */
+      height: 40px;
+      border-radius: var(--radius-full);
+      margin: 0 auto 12px;                       /* mx-auto mb-3 */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .state-panel-icon svg { width: 20px; height: 20px; }
+    .state-panel--success .state-panel-icon {
+      background: #DCFCE7;      /* green-100 — MASTER §State Panel literal */
+      color: var(--color-success);               /* text-green-700 */
+    }
+    .state-panel--error .state-panel-icon {
+      background: #FEE2E2;      /* red-100 — MASTER §State Panel literal */
+      color: var(--color-error);                 /* text-red-700 */
+    }
+    .state-panel-title {
+      font-size: 16px;                           /* text-base */
+      font-weight: 600;                          /* font-semibold */
+    }
+    .state-panel--success .state-panel-title { color: #166534; }  /* green-800 — MASTER §State Panel literal */
+    .state-panel--error .state-panel-title { color: #991B1B; }    /* red-800 — MASTER §State Panel literal */
+    .state-panel-desc {
+      margin-top: 4px;                           /* mt-1 */
+      font-size: 14px;                           /* text-sm */
+    }
+    .state-panel--success .state-panel-desc { color: var(--color-success); }  /* text-green-700 */
+    .state-panel--error .state-panel-desc { color: var(--color-error); }      /* text-red-700 */
+    .state-panel-action {
+      display: inline-flex;                      /* mt-4 inline-flex */
+      margin-top: 16px;
+      font-size: 14px;                           /* text-sm */
+      font-weight: 500;                          /* font-medium */
+      color: var(--color-primary);               /* text-primary */
+      text-decoration: none;
+    }
+    .state-panel-action:hover { text-decoration: underline; }
+
+    /* §Avatar — token-rendered (Tailwind-only samples mapped to tokens; the
+       one canonical CSS line — the hover-overlay rule — is kept verbatim) */
+    .avatar-sm {
+      width: 32px;                               /* w-8 h-8 */
+      height: 32px;
+      border-radius: var(--radius-full);
+      border: 2px solid rgba(99, 102, 241, 0.2); /* border-primary/20 — MASTER §Avatar literal */
+    }
+    .avatar-wrap {
+      position: relative;
+      cursor: pointer;
+      flex-shrink: 0;
+      width: 80px;                               /* md:w-20 — desktop demo size */
+    }
+    .avatar-wrap:focus-visible {                 /* focus:ring-2 focus:ring-primary */
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+    }
+    .avatar-preview {
+      width: 80px;                               /* md:w-20 md:h-20 */
+      height: 80px;
+      border-radius: var(--radius-full);
+      background: var(--color-primary);          /* bg-primary */
+      color: var(--color-white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;                           /* md:text-2xl */
+      font-weight: 700;
+      overflow: hidden;
+      user-select: none;
+    }
+    .avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
+    .avatar-overlay {
+      position: absolute;
+      inset: 0;
+      border-radius: var(--radius-full);
+      background: rgba(0, 0, 0, 0.5);            /* bg-black/50 */
+      color: var(--color-white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity var(--dur-normal);     /* duration-200 */
+    }
+    .avatar-overlay svg { width: 20px; height: 20px; }  /* w-5 h-5 */
+
+    /* §Avatar canonical hover-overlay rule (verbatim) */
+    .avatar-wrap:hover .avatar-overlay { opacity: 1; }
+
+    .avatar-wrap input[type="file"] { display: none; }  /* class="hidden" in the sample */
+    .avatar-error { display: none; font-size: 12px; color: var(--color-error); margin-top: 4px; }  /* text-xs text-red-500 → error token */
+    .avatar-error.visible { display: block; }
+    .avatar-hint { font-size: 12px; color: var(--color-ink-muted); margin-top: 4px; }  /* text-xs text-slate-500 */
+
     /* Showcase chrome — demo columns for skeleton variants (not canonical) */
     .demo-col { flex: 1 1 240px; min-width: 240px; display: grid; gap: 10px; align-content: start; }
 
@@ -840,7 +952,7 @@
 
     <section id="components" aria-labelledby="componentsHeading">
       <h2 class="section-heading" id="componentsHeading">Components</h2>
-      <p class="section-note">MASTER.md canonical markup — controls 批次（Buttons / Inputs / Toggle Switch）+ feedback 批次（Badges / Banner / Toast / Skeleton）+ structure 批次（Chip / Pagination / Breadcrumb）+ composite 批次（Color Dot / Divider / Accordion / Progress / KPI）。最終批次（State Panel / Avatar）於後續 stacked PR 加入。</p>
+      <p class="section-note">MASTER.md canonical markup — controls 批次（Buttons / Inputs / Toggle Switch）+ feedback 批次（Badges / Banner / Toast / Skeleton）+ structure 批次（Chip / Pagination / Breadcrumb）+ composite 批次（Color Dot / Divider / Accordion / Progress / KPI）+ 最終批次（State Panel / Avatar）。</p>
 
       <div class="component-card" id="comp-buttons">
         <h3>Buttons</h3>
@@ -1112,6 +1224,50 @@
           </div>
         </div>
       </div>
+
+      <div class="component-card" id="comp-statepanel">
+        <h3>State Panel</h3>
+        <p class="component-note">§State Panel — 表單層級狀態容器：提交成功或 token 驗證失敗後「取代」表單區塊（非堆疊於其上）；與 Alert Banner（表單仍在時的 inline 訊息）、Toast（浮動自動消失）區分。error 變體帶 role="alert"。</p>
+        <div class="component-demo component-demo--stack">
+          <!-- MASTER samples use h2 titles; h4 here keeps the showcase heading order -->
+          <section class="state-panel state-panel--success">
+            <div class="state-panel-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </div>
+            <h4 class="state-panel-title">Check your email</h4>
+            <p class="state-panel-desc">We've sent a reset link to your inbox.</p>
+            <a href="#comp-statepanel" class="state-panel-action">Back to login</a>
+          </section>
+          <section class="state-panel state-panel--error" role="alert">
+            <div class="state-panel-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            </div>
+            <h4 class="state-panel-title">Reset link is invalid</h4>
+            <p class="state-panel-desc">Please request a new password reset email.</p>
+            <a href="#comp-statepanel" class="state-panel-action">Request new link</a>
+          </section>
+        </div>
+      </div>
+
+      <div class="component-card" id="comp-avatar">
+        <h3>Avatar</h3>
+        <p class="component-note">§Avatar — 兩種模式：display-only（navbar 32px，2px primary/20 邊框）與 uploadable（profile 64/80px，initials fallback、hover 上傳遮罩、focus ring、鍵盤可觸發；格式 JPG/PNG/WebP ≤ 5 MB，違規以 role="alert" 錯誤呈現）。點擊下方 demo 可實際選檔預覽。</p>
+        <div class="component-demo">
+          <img src="assets/logo/icon-colored.svg" alt="User avatar" class="avatar-sm" />
+          <div>
+            <div class="avatar-wrap" role="button" tabindex="0"
+                 aria-label="Upload avatar" aria-describedby="avatar-error">
+              <div id="avatar-preview" class="avatar-preview">陳</div>
+              <div class="avatar-overlay" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+              </div>
+              <input id="avatar-input" type="file" accept="image/jpeg,image/png,image/webp" aria-hidden="true" />
+            </div>
+            <p id="avatar-error" class="avatar-error" role="alert"></p>
+            <p class="avatar-hint">JPG, PNG, or WebP — max 5 MB</p>
+          </div>
+        </div>
+      </div>
     </section>
   </main>
 
@@ -1302,6 +1458,44 @@
           }
         });
       });
+
+      /* Avatar — §Avatar upload contract: click / Enter / Space opens the
+         file picker; JPEG/PNG/WebP ≤ 5 MB, violations surface in the
+         role="alert" error line; preview via URL.createObjectURL with
+         revoke-on-load (never innerHTML) */
+      var avatarWrap = document.querySelector('#comp-avatar .avatar-wrap');
+      if (avatarWrap) {
+        var avatarInput = document.getElementById('avatar-input');
+        var avatarPreview = document.getElementById('avatar-preview');
+        var avatarError = document.getElementById('avatar-error');
+        var AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+        var AVATAR_MAX_BYTES = 5 * 1024 * 1024;
+
+        avatarWrap.addEventListener('click', function () { avatarInput.click(); });
+        avatarWrap.addEventListener('keydown', function (event) {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            avatarInput.click();
+          }
+        });
+        avatarInput.addEventListener('change', function () {
+          var file = avatarInput.files && avatarInput.files[0];
+          if (!file) return;
+          var problem =
+            AVATAR_TYPES.indexOf(file.type) === -1 ? '僅接受 JPG、PNG 或 WebP 格式。'
+            : file.size > AVATAR_MAX_BYTES ? '檔案大小不可超過 5 MB。'
+            : '';
+          avatarError.textContent = problem;
+          avatarError.classList.toggle('visible', problem !== '');
+          if (problem) return;
+          var img = document.createElement('img');
+          var url = URL.createObjectURL(file);
+          img.addEventListener('load', function () { URL.revokeObjectURL(url); });
+          img.src = url;
+          img.alt = 'User avatar';
+          avatarPreview.replaceChildren(img);
+        });
+      }
     })();
   </script>
 </body>
