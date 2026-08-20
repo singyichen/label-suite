@@ -44,12 +44,19 @@ test.describe('Profile — UXC-07 toast contract', () => {
     await expect(page.locator('.toast.error')).toHaveCount(0);
   });
 
-  test('warning and info variants resolve semantic token colors', async ({ page }) => {
+  test('a new toast replaces the visible one (single-instance rule)', async ({ page }) => {
     await page.evaluate(() => {
-      window.showToast('warning', 'careful', '');
-      window.showToast('info', 'fyi', '');
+      window.showToast('error', 'first', '');
+      window.showToast('success', 'second', '');
     });
+    await expect(page.locator('.toast')).toHaveCount(1);
+    await expect(page.locator('.toast.success')).toBeVisible();
+  });
+
+  test('warning and info variants resolve semantic token colors', async ({ page }) => {
+    await page.evaluate(() => window.showToast('warning', 'careful', ''));
     await expect(page.locator('.toast.warning')).toHaveCSS('color', 'rgb(161, 98, 7)');
+    await page.evaluate(() => window.showToast('info', 'fyi', ''));
     await expect(page.locator('.toast.info')).toHaveCSS('color', 'rgb(29, 78, 216)');
   });
 });
