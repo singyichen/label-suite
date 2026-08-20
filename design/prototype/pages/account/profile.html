@@ -315,6 +315,31 @@
     .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
     .btn-primary:focus { outline: 2px solid var(--color-cta); outline-offset: 3px; }
     .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    /* UXC-06 / MASTER Loading state: opacity-70 + spinner while pending */
+    .btn-primary.is-loading {
+      opacity: 0.7;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .btn-primary.is-loading::before {
+      content: '';
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      margin-right: 8px;
+      vertical-align: -1px;
+      border: 2px solid rgba(255,255,255,0.35);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: btn-spin 0.6s linear infinite;
+    }
+
+    @keyframes btn-spin {
+      to { transform: rotate(360deg); }
+    }
+
     #saveProfileBtn, #savePwBtn, #saveNotifBtn { margin-left: auto; }
 
     .btn-secondary {
@@ -430,17 +455,18 @@
 
     .resend-link:hover { text-decoration-color: var(--color-primary); }
 
-    /* ── Toast ───────────────────────────────────────────────────── */
+    /* ── Toast (UXC-07: top-center stack, semantic variants) ────── */
     #toast-container {
       position: fixed;
-      bottom: 24px;
-      right: 24px;
-      z-index: 400;
-      max-width: 360px;
-      width: 100%;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: var(--z-toast);
+      width: min(384px, calc(100vw - 32px));
       display: flex;
       flex-direction: column;
       gap: 8px;
+      pointer-events: none;
     }
 
     .toast {
@@ -449,9 +475,10 @@
       gap: 12px;
       padding: 12px 16px;
       border-radius: var(--radius-md);
-      box-shadow: var(--shadow-md);
+      box-shadow: var(--shadow-md); /* UXC-07 approved exception to the no-shadow rule */
       font-size: 13px;
       animation: toast-in 0.15s ease;
+      pointer-events: auto;
     }
 
     .toast.success {
@@ -464,6 +491,18 @@
       background: var(--color-error-bg);
       border: 1px solid var(--color-error-border);
       color: var(--color-error);
+    }
+
+    .toast.warning {
+      background: var(--color-warning-bg);
+      border: 1px solid var(--color-warning-border);
+      color: var(--color-warning);
+    }
+
+    .toast.info {
+      background: var(--color-info-bg);
+      border: 1px solid var(--color-info-border);
+      color: var(--color-info);
     }
 
     .toast-icon { width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; }
@@ -486,7 +525,7 @@
     .toast-close:hover { opacity: 1; }
 
     @keyframes toast-in {
-      from { opacity: 0; transform: translateY(8px); }
+      from { opacity: 0; transform: translateY(-8px); }
       to   { opacity: 1; transform: translateY(0); }
     }
 
@@ -539,23 +578,32 @@
 
     .toggle-wrap { display: flex; align-items: center; justify-content: center; }
 
+    /* MASTER toggle-switch contract: label > hidden input + .toggle-slider */
     .toggle-switch {
-      -webkit-appearance: none;
-      appearance: none;
+      position: relative;
+      display: inline-block;
       width: 40px;
       height: 22px;
-      border-radius: 9999px;
-      background: var(--color-border);
-      position: relative;
-      cursor: pointer;
-      transition: background 200ms;
       flex-shrink: 0;
-      outline: none;
+      cursor: pointer;
     }
 
-    .toggle-switch:checked { background: var(--color-primary); }
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+      position: absolute;
+    }
 
-    .toggle-switch::after {
+    .toggle-slider {
+      position: absolute;
+      inset: 0;
+      background: var(--color-border);
+      border-radius: var(--radius-full);
+      transition: background var(--dur-fast);
+    }
+
+    .toggle-slider::before {
       content: '';
       position: absolute;
       width: 16px;
@@ -564,12 +612,12 @@
       background: white;
       top: 3px;
       left: 3px;
-      transition: transform 200ms;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+      transition: transform var(--dur-fast);
     }
 
-    .toggle-switch:checked::after { transform: translateX(18px); }
-    .toggle-switch:focus-visible { box-shadow: 0 0 0 3px rgba(99,102,241,0.25); }
+    .toggle-switch input:checked + .toggle-slider { background: var(--color-primary); }
+    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(18px); }
+    .toggle-switch input:focus-visible + .toggle-slider { box-shadow: 0 0 0 3px rgba(99,102,241,0.25); }
 
     /* ── Responsive ──────────────────────────────────────────────── */
     @media (max-width: 767px) {
@@ -632,7 +680,7 @@
       <!-- ──────────────────────────────────────────────────────── -->
       <!-- P-0: SKELETON STATE                                     -->
       <!-- ──────────────────────────────────────────────────────── -->
-      <div id="skeletonState">
+      <div id="skeletonState" aria-busy="true" aria-live="polite">
         <!-- Profile section skeleton -->
         <div class="section-card">
           <div class="skeleton skel-line" style="width:100px; margin-bottom:8px;"></div>
@@ -694,6 +742,7 @@
             </div>
             <div>
               <p class="avatar-hint" id="avatarHintText">JPG, PNG 或 WebP，上限 5 MB</p>
+              <p class="field-error" id="avatarError" role="alert" style="display:none;"></p>
             </div>
           </div>
 
@@ -887,8 +936,8 @@
                     <span class="event-trigger" id="notifE1Trigger">有人完成所有標記項目時通知我</span>
                   </div>
                 </td>
-                <td class="col-ch"><div class="toggle-wrap"><input type="checkbox" class="toggle-switch" id="ne1-inapp" checked aria-label="標記員完成標記作業 — 站內通知" /></div></td>
-                <td class="col-ch"><div class="toggle-wrap"><input type="checkbox" class="toggle-switch" id="ne1-email" checked aria-label="標記員完成標記作業 — Email" /></div></td>
+                <td class="col-ch"><div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" id="ne1-inapp" checked aria-label="標記員完成標記作業 — 站內通知" /><span class="toggle-slider"></span></label></div></td>
+                <td class="col-ch"><div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" id="ne1-email" checked aria-label="標記員完成標記作業 — Email" /><span class="toggle-slider"></span></label></div></td>
               </tr>
               <tr>
                 <td>
@@ -897,8 +946,8 @@
                     <span class="event-trigger" id="notifE2Trigger">有人完成所有審核項目時通知我</span>
                   </div>
                 </td>
-                <td class="col-ch"><div class="toggle-wrap"><input type="checkbox" class="toggle-switch" id="ne2-inapp" checked aria-label="審核員完成審核 — 站內通知" /></div></td>
-                <td class="col-ch"><div class="toggle-wrap"><input type="checkbox" class="toggle-switch" id="ne2-email" checked aria-label="審核員完成審核 — Email" /></div></td>
+                <td class="col-ch"><div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" id="ne2-inapp" checked aria-label="審核員完成審核 — 站內通知" /><span class="toggle-slider"></span></label></div></td>
+                <td class="col-ch"><div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" id="ne2-email" checked aria-label="審核員完成審核 — Email" /><span class="toggle-slider"></span></label></div></td>
               </tr>
               <tr>
                 <td>
@@ -907,8 +956,8 @@
                     <span class="event-trigger" id="notifE3Trigger">所有參與者完成試標時通知我</span>
                   </div>
                 </td>
-                <td class="col-ch"><div class="toggle-wrap"><input type="checkbox" class="toggle-switch" id="ne3-inapp" checked aria-label="試標全員完成 — 站內通知" /></div></td>
-                <td class="col-ch"><div class="toggle-wrap"><input type="checkbox" class="toggle-switch" id="ne3-email" checked aria-label="試標全員完成 — Email" /></div></td>
+                <td class="col-ch"><div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" id="ne3-inapp" checked aria-label="試標全員完成 — 站內通知" /><span class="toggle-slider"></span></label></div></td>
+                <td class="col-ch"><div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" id="ne3-email" checked aria-label="試標全員完成 — Email" /><span class="toggle-slider"></span></label></div></td>
               </tr>
               <tr>
                 <td>
@@ -917,8 +966,8 @@
                     <span class="event-trigger" id="notifE4Trigger">所有參與者完成正式標記時通知我</span>
                   </div>
                 </td>
-                <td class="col-ch"><div class="toggle-wrap"><input type="checkbox" class="toggle-switch" id="ne4-inapp" checked aria-label="正式標記全員完成 — 站內通知" /></div></td>
-                <td class="col-ch"><div class="toggle-wrap"><input type="checkbox" class="toggle-switch" id="ne4-email" checked aria-label="正式標記全員完成 — Email" /></div></td>
+                <td class="col-ch"><div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" id="ne4-inapp" checked aria-label="正式標記全員完成 — 站內通知" /><span class="toggle-slider"></span></label></div></td>
+                <td class="col-ch"><div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" id="ne4-email" checked aria-label="正式標記全員完成 — Email" /><span class="toggle-slider"></span></label></div></td>
               </tr>
               <tr>
                 <td>
@@ -927,8 +976,8 @@
                     <span class="event-trigger" id="notifE5Trigger">有新的標記清單指派給我時通知我</span>
                   </div>
                 </td>
-                <td class="col-ch"><div class="toggle-wrap"><input type="checkbox" class="toggle-switch" id="ne5-inapp" checked aria-label="你被分配標記清單 — 站內通知" /></div></td>
-                <td class="col-ch"><div class="toggle-wrap"><input type="checkbox" class="toggle-switch" id="ne5-email" checked aria-label="你被分配標記清單 — Email" /></div></td>
+                <td class="col-ch"><div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" id="ne5-inapp" checked aria-label="你被分配標記清單 — 站內通知" /><span class="toggle-slider"></span></label></div></td>
+                <td class="col-ch"><div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" id="ne5-email" checked aria-label="你被分配標記清單 — Email" /><span class="toggle-slider"></span></label></div></td>
               </tr>
               <tr>
                 <td>
@@ -937,8 +986,8 @@
                     <span class="event-trigger" id="notifE6Trigger">有新的審核清單指派給我時通知我</span>
                   </div>
                 </td>
-                <td class="col-ch"><div class="toggle-wrap"><input type="checkbox" class="toggle-switch" id="ne6-inapp" checked aria-label="你被分配審核清單 — 站內通知" /></div></td>
-                <td class="col-ch"><div class="toggle-wrap"><input type="checkbox" class="toggle-switch" id="ne6-email" checked aria-label="你被分配審核清單 — Email" /></div></td>
+                <td class="col-ch"><div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" id="ne6-inapp" checked aria-label="你被分配審核清單 — 站內通知" /><span class="toggle-slider"></span></label></div></td>
+                <td class="col-ch"><div class="toggle-wrap"><label class="toggle-switch"><input type="checkbox" id="ne6-email" checked aria-label="你被分配審核清單 — Email" /><span class="toggle-slider"></span></label></div></td>
               </tr>
             </tbody>
           </table>
@@ -1133,6 +1182,8 @@
         toastNotifSuccess:       '通知設定已儲存',
         errNameRequired:         '姓名為必填欄位',
         errContactTooLong:       '聯絡方式不能超過 255 個字元',
+        errAvatarInvalid:        '檔案格式或大小不符：請選擇 JPG、PNG 或 WebP，且不超過 5 MB',
+        toastPwFailed:           '密碼更新失敗',
         errCurrentPwWrong:       '現有密碼錯誤',
         errNewPwWeak:            '密碼須至少 8 個字元，含大寫英文、小寫英文與數字',
         errPwMismatch:           '密碼不一致，請重新輸入',
@@ -1221,6 +1272,8 @@
         toastNotifSuccess:       'Notification settings saved',
         errNameRequired:         'Name is required',
         errContactTooLong:       'Contact info must be 255 characters or fewer',
+        errAvatarInvalid:        'Invalid file: choose a JPG, PNG or WebP up to 5 MB',
+        toastPwFailed:           'Password update failed',
         errCurrentPwWrong:       'Current password is incorrect',
         errNewPwWeak:            'Password must be 8+ chars with uppercase, lowercase, and a number',
         errPwMismatch:           'Passwords do not match',
@@ -1299,24 +1352,8 @@
     });
 
     /* ── State Switcher ─────────────────────────────────────────── */
-    const STATE_BTN_IDS = {
-      skeleton:    'stateP0',
-      email:       'stateP1',
-      sso:         'stateP2',
-      error:       'stateP3',
-      emailChange: 'stateP4',
-      emailSent:   'stateP5',
-    };
-
     function setState(state) {
       currentState = state;
-
-      Object.values(STATE_BTN_IDS).forEach(id => {
-        const btn = document.getElementById(id);
-        if (btn) btn.classList.remove('active');
-      });
-      const activeBtn = document.getElementById(STATE_BTN_IDS[state]);
-      if (activeBtn) activeBtn.classList.add('active');
 
       const isSkeleton    = state === 'skeleton';
       const isEmailChange = state === 'emailChange';
@@ -1397,9 +1434,14 @@
       }
 
       window.LabelSuiteAnalytics && LabelSuiteAnalytics.track('prototype_profile_info_attempted');
-      document.getElementById('userName').textContent       = name;
-      showToast('success', t('toastSaveSuccess'), t('toastSaveSuccessDesc'));
-      window.LabelSuiteAnalytics && LabelSuiteAnalytics.track('prototype_profile_info_saved');
+      // UXC-06: loading state + double-submission guard while the (simulated) request runs.
+      setBtnLoading('saveProfileBtn', true);
+      setTimeout(() => {
+        setBtnLoading('saveProfileBtn', false);
+        document.getElementById('userName').textContent = name;
+        showToast('success', t('toastSaveSuccess'), t('toastSaveSuccessDesc'));
+        window.LabelSuiteAnalytics && LabelSuiteAnalytics.track('prototype_profile_info_saved');
+      }, 600);
     }
 
     /* ── Password save ──────────────────────────────────────────── */
@@ -1430,20 +1472,27 @@
       }
 
       window.LabelSuiteAnalytics && LabelSuiteAnalytics.track('prototype_password_attempted');
+      // UXC-06: loading state; the error demo state resolves as a server-side
+      // failure — inputs stay intact, field error + error toast explain why.
+      setBtnLoading('savePwBtn', true);
+      setTimeout(() => {
+        setBtnLoading('savePwBtn', false);
 
-      if (isError) {
-        showFieldError('fieldCurrentPw', 'currentPwError', t('errCurrentPwWrong'));
-        window.LabelSuiteAnalytics && LabelSuiteAnalytics.track('prototype_password_failed_validation', { reason: 'wrong_current_password' });
-        return;
-      }
+        if (isError) {
+          showFieldError('fieldCurrentPw', 'currentPwError', t('errCurrentPwWrong'));
+          showToast('error', t('toastPwFailed'), t('errCurrentPwWrong'));
+          window.LabelSuiteAnalytics && LabelSuiteAnalytics.track('prototype_password_failed_validation', { reason: 'wrong_current_password' });
+          return;
+        }
 
-      const titleKey = isSSO ? 'toastPwSetSuccess'     : 'toastPwSuccess';
-      const descKey  = isSSO ? 'toastPwSetSuccessDesc' : 'toastPwSuccessDesc';
-      showToast('success', t(titleKey), t(descKey));
-      document.getElementById('fieldCurrentPw').value = '';
-      document.getElementById('fieldNewPw').value     = '';
-      document.getElementById('fieldConfirmPw').value = '';
-      window.LabelSuiteAnalytics && LabelSuiteAnalytics.track('prototype_password_succeeded');
+        const titleKey = isSSO ? 'toastPwSetSuccess'     : 'toastPwSuccess';
+        const descKey  = isSSO ? 'toastPwSetSuccessDesc' : 'toastPwSuccessDesc';
+        showToast('success', t(titleKey), t(descKey));
+        document.getElementById('fieldCurrentPw').value = '';
+        document.getElementById('fieldNewPw').value     = '';
+        document.getElementById('fieldConfirmPw').value = '';
+        window.LabelSuiteAnalytics && LabelSuiteAnalytics.track('prototype_password_succeeded');
+      }, 600);
     }
 
     /* ── Email change handlers ──────────────────────────────────── */
@@ -1482,6 +1531,13 @@
     }
 
     /* ── Helpers ────────────────────────────────────────────────── */
+    function setBtnLoading(btnId, loading) {
+      const btn = document.getElementById(btnId);
+      if (!btn) return;
+      btn.disabled = loading;
+      btn.classList.toggle('is-loading', loading);
+    }
+
     function showFieldError(inputId, errorId, msg) {
       const input = document.getElementById(inputId);
       if (input) input.classList.add('error');
@@ -1491,8 +1547,15 @@
       }
     }
 
+    // UXC-07 auto-dismiss tiers; errors stay until manually closed.
+    const TOAST_DURATIONS = { success: 3000, info: 5000, warning: 8000, error: 0 };
+    let toastTimer = null;
+
     function showToast(type, title, desc) {
       const container = document.getElementById('toast-container');
+      // UXC-07 single-instance rule: a new toast replaces the previous one.
+      clearTimeout(toastTimer);
+      container.replaceChildren();
 
       const toast = document.createElement('div');
       toast.className = 'toast ' + type;
@@ -1553,7 +1616,10 @@
       toast.appendChild(closeBtn);
 
       container.appendChild(toast);
-      setTimeout(() => { if (toast.parentNode) toast.remove(); }, 4000);
+      const duration = TOAST_DURATIONS[type] ?? TOAST_DURATIONS.info;
+      if (duration > 0) {
+        toastTimer = setTimeout(() => { if (toast.parentNode) toast.remove(); }, duration);
+      }
     }
 
     function toggleEye(inputId, btn) {
@@ -1572,8 +1638,16 @@
     document.getElementById('avatarInput').addEventListener('change', function(e) {
       const file = e.target.files[0];
       if (!file) return;
+      const avatarErr = document.getElementById('avatarError');
       const allowed = ['image/jpeg', 'image/png', 'image/webp'];
-      if (!allowed.includes(file.type) || file.size > 5 * 1024 * 1024) return;
+      if (!allowed.includes(file.type) || file.size > 5 * 1024 * 1024) {
+        // Fail loudly: announce why the file was rejected instead of ignoring it.
+        avatarErr.textContent = t('errAvatarInvalid');
+        avatarErr.style.display = '';
+        return;
+      }
+      avatarErr.style.display = 'none';
+      avatarErr.textContent = '';
       const url = URL.createObjectURL(file);
       const preview = document.getElementById('avatarPreview');
       const img = document.createElement('img');
