@@ -1,24 +1,31 @@
 import { test, expect, type Page, type BrowserContext } from '@playwright/test';
+import { readFile } from 'fs/promises';
 import path from 'path';
 import {
+  assertNoPageErrors,
   buildListUrl,
   buildWorkspaceUrl,
   patchDataFile,
   skipGuidelineModal,
+  trackPageErrors,
 } from '../annotation/_workspace-helpers';
 import {
   buildXRoleSeedPatch,
   DRY_RUN_RECORD_IDS,
+  FORCED_DIVERGENCE_RECORD_ID,
+  OFFICIAL_RUN_ASSIGNMENTS,
+  OFFICIAL_RUN_RECORD_IDS,
 } from './fixtures/build-xrole-patch';
 
-/* Cross-role canonical journey, first half (issue #212, PR-B1).
+/* Cross-role canonical journey (issue #212, PR-B1 + PR-B2).
  *
- * Covers XROLE-01 through XROLE-09 -- journey steps 1-7 (task creation ->
- * dataset upload -> guideline -> sampling/review settings -> member
- * management -> dry-run marking -> IAA gate) plus the two cross-page
+ * PR-B1 covers XROLE-01 through XROLE-09 -- journey steps 1-7 (task
+ * creation -> dataset upload -> guideline -> sampling/review settings ->
+ * member management -> dry-run marking -> IAA gate) plus the two cross-page
  * reconciliation checkpoints (A: publish -> annotation-list count, B: 6
  * dry-run submissions -> status sync). PR-B2 extends this same file with
- * XROLE-10 onward (official run, review, dispute/arbitration).
+ * XROLE-10 through XROLE-25 (official run -> review -> dispute/arbitration
+ * -> completion gaps -> export -> resilience checks).
  *
  * ── Two task ids, by design (not an oversight) ────────────────────────────
  * `task-new.html`'s `submitTask()` (task-new.html:1398-1414) never writes
@@ -37,7 +44,7 @@ import {
  *
  * ── Shared BrowserContext (w4 plan §0.1, mandatory) ────────────────────────
  * One `browser.newContext()` + one `context.newPage()` per role (PL, A01,
- * A02, A03 -- reviewer pages are PR-B2 scope) instead of independent
+ * A02, A03, and PR-B2's reviewer pages R01, R02, R03) instead of independent
  * contexts/storageState, because the dry-run submission buckets and
  * `DRY_RUN_PROGRESS_KEY` (annotation-workspace.data.js:314-345,
  * task-detail.html:4418-4439) live in `localStorage`, which is scoped to
@@ -70,6 +77,30 @@ import {
  *   implemented in the prototype.
  * - Audit-log assertions are N/A throughout -- the prototype has no audit
  *   log data source to assert against.
+ *
+ * ── PR-B2 simplifications (each documented in detail at its test) ─────────
+ * - Checkpoint C (XROLE-10) cannot be a strict equality: task-detail's
+ *   official count is `datasetTotal - sampling-derived trial usage`
+ *   (task-detail.html:4823-4830), decoupled from the fixture's run-scoped
+ *   3-record official subset. Both numbers are asserted explicitly.
+ * - There is no per-annotator official assignment concept in the prototype
+ *   -- every annotator's official_run list shows all 3 run-scoped records.
+ *   OFFICIAL_RUN_ASSIGNMENTS is a fixture convention for who submits what.
+ * - Reviewer corrections go through the real UI (correction chip + ✕ +
+ *   submit), which in official_run triggers the FR-014I rollback
+ *   (annotation-workspace.config.js:2703-2705): the annotator's sample
+ *   drops back to pending and the annotator must resubmit before the
+ *   review unit derives again. XROLE-14/16 assert that loop instead of
+ *   papering over it with data-layer seeding.
+ * - The seeded profile carries no review settings, so getReviewUnitStatus'
+ *   minReviewers defaults to 1 (annotation-workspace.data.js:1478-1482) --
+ *   units finalize after the FIRST agreeing review; w4's "n=2=min" wording
+ *   assumed min_reviewers=2.
+ * - The annotation-results panel and its export never read localStorage
+ *   submissions: getAnnotationResultsData() (task-detail.html:7815) falls
+ *   back to the ANNOTATION_RESULTS_BY_TASK.T001 seed for any unknown task
+ *   id, so XROLE-19/22 assert the real cross-page sync at the reviewer
+ *   list / data layer and only the UI affordance on the seeded panel.
  */
 test.use({ screenshot: 'only-on-failure', video: 'retain-on-failure' });
 test.describe.configure({ mode: 'serial' });
@@ -88,13 +119,44 @@ const ACTIVE_ANNOTATOR_COUNT = '1'; // TASK_MEMBERS (task-detail.html:3388-3395)
 // (the same "happy path, not the D3 gap" intent as before) without
 // asserting a headcount that no longer holds by this point in the journey.
 
+/* PR-B2 role/value constants. R03 mirrors the fixture's internal
+ * ARBITER_REVIEWER_ID (fixtures/build-xrole-patch.ts:137, not exported):
+ * the patch pushes it onto REVIEWER_ROSTER with can_arbitrate: true. R01 and
+ * R02 are plain reviewer identities -- isArbiterCandidate() only needs the
+ * ARBITER id on the roster; ordinary reviewers are identified purely by the
+ * reviewer_id in the bucket key. */
+const REVIEWER_R01 = 'R01';
+const REVIEWER_R02 = 'R02';
+const ARBITER_R03 = 'R03';
+/* Annotator-side official answers are the records' gold labels
+ * (fixtures/xrole-lifecycle-seed.json): gold_label is mapped to the output
+ * role, so the workspace prefills it and XROLE-10/11's submissions carry it
+ * (same gold-prefill mechanism XROLE-08 relied on). */
+const OFFICIAL_GOLD: Record<string, string> = {
+  'xr-off-001': 'neutral',
+  'xr-off-002': 'positive',
+  'xr-off-003': 'negative',
+};
+/* R02's correction on the forced-divergence record (≠ its gold 'positive'),
+ * and the value R01+R02 both correct xr-off-003 to (≠ its gold 'negative'). */
+const DIVERGENCE_CORRECTION = 'negative';
+const CONVERGENCE_CORRECTION = 'positive';
+
 let context: BrowserContext;
 let plPage: Page;
 let a01Page: Page;
 let a02Page: Page;
 let a03Page: Page;
+let r01Page: Page;
+let r02Page: Page;
+let r03Page: Page;
 let fixtureTaskId: string;
 let wizardTaskId: string | null = null;
+/* XROLE-25: page-error tracking across the whole mainline. Attached in
+ * beforeAll (before any navigation) so every step of the journey is
+ * covered; the isolated gap tests (XROLE-04/20/21/24) run on their own
+ * fresh pages and are out of this net's scope by design. */
+let pageErrorsByRole: Record<string, Error[]> = {};
 
 test.beforeAll(async ({ browser }, testInfo) => {
   context = await browser.newContext();
@@ -102,6 +164,19 @@ test.beforeAll(async ({ browser }, testInfo) => {
   a01Page = await context.newPage();
   a02Page = await context.newPage();
   a03Page = await context.newPage();
+  r01Page = await context.newPage();
+  r02Page = await context.newPage();
+  r03Page = await context.newPage();
+
+  pageErrorsByRole = {
+    PL: trackPageErrors(plPage),
+    A01: trackPageErrors(a01Page),
+    A02: trackPageErrors(a02Page),
+    A03: trackPageErrors(a03Page),
+    R01: trackPageErrors(r01Page),
+    R02: trackPageErrors(r02Page),
+    R03: trackPageErrors(r03Page),
+  };
 
   fixtureTaskId = `XROLE-journey-${testInfo.workerIndex}-${Date.now()}`;
 
@@ -129,10 +204,16 @@ test.beforeAll(async ({ browser }, testInfo) => {
   await patchDataFile(a01Page, 'annotation-workspace.data.js', seedPatchWithGuideline);
   await patchDataFile(a02Page, 'annotation-workspace.data.js', buildXRoleSeedPatch(fixtureTaskId));
   await patchDataFile(a03Page, 'annotation-workspace.data.js', buildXRoleSeedPatch(fixtureTaskId));
+  await patchDataFile(r01Page, 'annotation-workspace.data.js', buildXRoleSeedPatch(fixtureTaskId));
+  await patchDataFile(r02Page, 'annotation-workspace.data.js', buildXRoleSeedPatch(fixtureTaskId));
+  await patchDataFile(r03Page, 'annotation-workspace.data.js', buildXRoleSeedPatch(fixtureTaskId));
 
   await skipGuidelineModal(a01Page);
   await skipGuidelineModal(a02Page);
   await skipGuidelineModal(a03Page);
+  await skipGuidelineModal(r01Page);
+  await skipGuidelineModal(r02Page);
+  await skipGuidelineModal(r03Page);
 });
 
 test.afterAll(async () => {
@@ -419,4 +500,512 @@ test('XROLE-09: IAA gate banner is readable and the project leader can proceed o
   // scope) and return affordance both exist from this gate state.
   await expect(plPage.locator('#publishOfficialRunBtn')).toBeVisible();
   await expect(plPage.locator('#bcRoot')).toBeVisible();
+});
+
+/* ══════════════════════ PR-B2: XROLE-10 through XROLE-25 ══════════════════
+ * Data-layer evaluate helpers. Every call passes fixtureTaskId from the
+ * module scope and requires the target Page to have annotation-workspace.
+ * data.js loaded (i.e. the page has visited annotation-list/-workspace at
+ * least once); localStorage is context-shared, so ANY workspace page can
+ * read ANY identity's buckets -- the identity is a bucket-key argument,
+ * not an auth boundary (there is no auth in the prototype). */
+
+type XRoleTrailEvent = { action: string; role: string; actorId: string | null; at: string; summary: string };
+type XRoleDisputeItem = { outKey: string; key: string; annotatorValue: unknown; reviewerValues: Record<string, unknown> };
+type XRoleArbitrationState = Record<
+  string,
+  { votes: Array<{ arbiter_id: string; choice: 'A' | 'B'; voted_at: string }>; finalized_value?: unknown; finalized_by?: string }
+>;
+
+function readSampleStatus(page: Page, runType: string, sampleId: string, annotatorId: string): Promise<string> {
+  return page.evaluate(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (a) => (window as any).LabelSuiteAnnotationWorkspaceData.getSampleStatus(
+      a.taskId, 'annotator', a.runType, a.sampleId, { annotatorId: a.annotatorId }),
+    { taskId: fixtureTaskId, runType, sampleId, annotatorId }
+  );
+}
+
+/* getSampleHistory merges the annotator's own bucket with every reviewer
+ * bucket on that annotator's work (annotation-workspace.data.js:298-312);
+ * filtering role === 'reviewer' mirrors annotation-workspace-review-identity
+ * .spec.ts and isolates what a peer can see of review activity. */
+function readReviewerTrail(page: Page, runType: string, sampleId: string, annotatorId: string): Promise<XRoleTrailEvent[]> {
+  return page.evaluate(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (a) => (window as any).LabelSuiteAnnotationWorkspaceData.getSampleHistory(
+      a.taskId, a.runType, a.sampleId, { annotatorId: a.annotatorId })
+      .filter((event: { role: string }) => event.role === 'reviewer'),
+    { taskId: fixtureTaskId, runType, sampleId, annotatorId }
+  );
+}
+
+function readUnitStatus(page: Page, sampleId: string, annotatorId: string): Promise<string | null> {
+  return page.evaluate(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (a) => (window as any).LabelSuiteAnnotationWorkspaceData.getReviewUnitStatus(
+      a.taskId, 'official_run', a.sampleId, { annotatorId: a.annotatorId }, ['single_label']),
+    { taskId: fixtureTaskId, sampleId, annotatorId }
+  );
+}
+
+function readDisputeItems(page: Page, sampleId: string, annotatorId: string): Promise<XRoleDisputeItem[]> {
+  return page.evaluate(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (a) => (window as any).LabelSuiteAnnotationWorkspaceData.getDisputeItems(
+      a.taskId, 'official_run', a.sampleId, { annotatorId: a.annotatorId }, ['single_label']),
+    { taskId: fixtureTaskId, sampleId, annotatorId }
+  );
+}
+
+function readArbitrationState(page: Page, sampleId: string, annotatorId: string): Promise<XRoleArbitrationState> {
+  return page.evaluate(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (a) => (window as any).LabelSuiteAnnotationWorkspaceData.getArbitrationState(
+      a.taskId, 'official_run', a.sampleId, { annotatorId: a.annotatorId }),
+    { taskId: fixtureTaskId, sampleId, annotatorId }
+  );
+}
+
+function annotatorOfficialUrl(sampleId: string, annotatorId: string): string {
+  return buildWorkspaceUrl({
+    task_id: fixtureTaskId, sample_id: sampleId, role: 'annotator',
+    run_type: 'official_run', annotator_id: annotatorId,
+  });
+}
+
+function gotoReview(page: Page, sampleId: string, annotatorId: string, reviewerId: string, runType: 'dry_run' | 'official_run' = 'official_run') {
+  return page.goto(buildWorkspaceUrl({
+    task_id: fixtureTaskId, sample_id: sampleId, role: 'reviewer',
+    run_type: runType, annotator_id: annotatorId, reviewer_id: reviewerId,
+  }));
+}
+
+/* One review card row per (outKey, reviewed annotator) -- official_run
+ * narrows to exactly one row (annotation-workspace.config.js:2646-2648),
+ * so the single approve/reject button is unambiguous. */
+async function submitApproval(page: Page, sampleId: string, annotatorId: string, reviewerId: string) {
+  await gotoReview(page, sampleId, annotatorId, reviewerId);
+  await page.getByTestId('ws-review-row-approve').click();
+  await page.getByTestId('ws-review-submit-btn').click();
+  await expect(page.locator('#toastMsg')).toHaveText('審查已提交');
+}
+
+/* Real-UI correction: pick a different label in the correction panel (it is
+ * seeded with the reviewed annotator's own answer), mark the row rejected
+ * (✕ is the prototype's "修正" decision), submit. handleReviewSubmit()
+ * stores collectAnswerPayload() -- the corrected value -- as the reviewer's
+ * submission, then (official_run only) markSampleRejected() rolls the
+ * ANNOTATOR's sample back to pending (FR-014I,
+ * annotation-workspace.config.js:2690-2705). The review unit derives to
+ * null until the annotator resubmits -- see resubmitAfterRollback(). */
+async function submitCorrection(page: Page, sampleId: string, annotatorId: string, reviewerId: string, correctedLabel: string) {
+  await gotoReview(page, sampleId, annotatorId, reviewerId);
+  await page.getByTestId('ws-review-correct-single_label').getByTestId(`ws-single-label-chip-${correctedLabel}`).click();
+  await page.getByTestId('ws-review-row-reject').click();
+  await page.getByTestId('ws-review-submit-btn').click();
+  await expect(page.locator('#toastMsg')).toHaveText('審查已提交');
+}
+
+/* FR-014I second half: the rolled-back annotator reopens the sample (the
+ * kept answers / gold prefill both restore the original label -- for this
+ * fixture they are the same value) and resubmits it unchanged, restoring
+ * the submission the review unit derives from. */
+async function resubmitAfterRollback(page: Page, sampleId: string, annotatorId: string) {
+  await page.goto(annotatorOfficialUrl(sampleId, annotatorId));
+  await expect(page.getByTestId(`ws-single-label-chip-${OFFICIAL_GOLD[sampleId]}`)).toHaveAttribute('aria-pressed', 'true');
+  await page.getByTestId('ws-submit-btn').click();
+  await expect.poll(() => readSampleStatus(page, 'official_run', sampleId, annotatorId)).toBe('submitted');
+}
+
+test('XROLE-10: project leader publishes the official run and the assigned annotators submit (checkpoint C)', async () => {
+  // Serial continuation from XROLE-09's IAA-gate state: plPage still sits on
+  // the task-detail load whose status synced to waiting_iaa_confirmation.
+  await plPage.locator('#publishOfficialRunBtn').click();
+  await expect(plPage.locator('#statusStepper .step-current .step-label-wrap')).toHaveText('正式標記中');
+
+  /* Checkpoint C, task-detail side: the official count the banner shows is
+   * datasetTotal(5) - sampling-derived trial usage, and this page load's
+   * samplingValue was re-derived to 1 by applySamplingDefaultsToTaskData()
+   * (task-detail.html:4766-4775: round(5 × 12%) clamped to 1 -- XROLE-07's
+   * UI-set value of 2 lived in the previous page load's memory only). The
+   * banner therefore reads 4, NOT the fixture's 3 run-scoped official
+   * records: the two numbers come from unrelated sources (sampling math vs
+   * the run_type-scoped seed) and the prototype has no bridge between them.
+   * Asserting 4 pins that decoupling honestly instead of papering over it. */
+  await expect(plPage.locator('.exec-stage-banner #trialDecisionTitle')).toHaveText('正式標記進行中，共 4 筆');
+
+  /* Checkpoint C, annotator side: w4 assumed "3 筆剩餘資料已分配" as 1
+   * record per annotator, but no per-annotator assignment concept exists in
+   * the prototype -- every annotator's official_run list resolves all 3
+   * run-scoped records (build-xrole-patch.ts run_type scoping). The fixture's
+   * OFFICIAL_RUN_ASSIGNMENTS is purely a convention for who SUBMITS what. */
+  await a01Page.goto(buildListUrl({ task_id: fixtureTaskId, role: 'annotator', run_type: 'official_run', annotator_id: 'A01' }));
+  await expect(a01Page.getByTestId('ws-sample-item')).toHaveCount(OFFICIAL_RUN_RECORD_IDS.length);
+
+  // A01 and A03 submit their assigned records (gold prefill supplies the
+  // answer, as in XROLE-08). A02's submission is deferred to XROLE-11 so the
+  // cross-annotator isolation check has a genuine before/after boundary.
+  for (const [sampleId, page, nth] of [
+    ['xr-off-001', a01Page, 0],
+    ['xr-off-003', a03Page, 2],
+  ] as const) {
+    await page.goto(annotatorOfficialUrl(sampleId, OFFICIAL_RUN_ASSIGNMENTS[sampleId]));
+    await page.getByTestId('ws-submit-btn').click();
+    await expect(page.getByTestId('ws-sample-item').nth(nth)).toHaveAttribute('data-submitted', 'true');
+  }
+});
+
+test('XROLE-11: cross-annotator isolation -- peers read a bare status enum, never answer content', async () => {
+  const divergenceAnnotator = OFFICIAL_RUN_ASSIGNMENTS[FORCED_DIVERGENCE_RECORD_ID]; // A02
+
+  // Before A02 submits: A01's page reads A02's official sample as pending.
+  expect(await readSampleStatus(a01Page, 'official_run', FORCED_DIVERGENCE_RECORD_ID, divergenceAnnotator)).toBe('pending');
+
+  await a02Page.goto(annotatorOfficialUrl(FORCED_DIVERGENCE_RECORD_ID, divergenceAnnotator));
+  await a02Page.getByTestId('ws-submit-btn').click();
+  await expect(a02Page.getByTestId('ws-sample-item').nth(1)).toHaveAttribute('data-submitted', 'true');
+
+  /* After: the same cross-identity read flips to 'submitted'. The explicit
+   * safety assertion w4 asks for: getSampleStatus() returns entryStatus()
+   * -- a bare status string (annotation-workspace.data.js:196-198) -- so a
+   * peer polling another annotator's progress can never obtain the answer
+   * payload through this API. (The prototype has no auth: getSampleAnswers
+   * on a foreign identity WOULD return answers. The assertion documents the
+   * status API's shape, not an access-control gate.) */
+  const status = await readSampleStatus(a01Page, 'official_run', FORCED_DIVERGENCE_RECORD_ID, divergenceAnnotator);
+  expect(status).toBe('submitted');
+  expect(typeof status).toBe('string');
+});
+
+test('XROLE-12: blind review -- reviewer events are invisible to peers until the first reviewer submits', async () => {
+  const divergenceAnnotator = OFFICIAL_RUN_ASSIGNMENTS[FORCED_DIVERGENCE_RECORD_ID];
+
+  // r02Page's first navigation (list) also loads the data API for evaluates.
+  await r02Page.goto(buildListUrl({ task_id: fixtureTaskId, role: 'reviewer', run_type: 'official_run', reviewer_id: REVIEWER_R02 }));
+  expect(await readReviewerTrail(r02Page, 'official_run', FORCED_DIVERGENCE_RECORD_ID, divergenceAnnotator)).toEqual([]);
+
+  // R01 approves A02's answer on the forced-divergence record (this is also
+  // the first half of XROLE-14's divergence construction).
+  await submitApproval(r01Page, FORCED_DIVERGENCE_RECORD_ID, divergenceAnnotator, REVIEWER_R01);
+
+  const trail = await readReviewerTrail(r02Page, 'official_run', FORCED_DIVERGENCE_RECORD_ID, divergenceAnnotator);
+  expect(trail).toHaveLength(1);
+  expect(trail[0].action).toBe('submitted');
+  expect(trail[0].actorId).toBe(REVIEWER_R01);
+});
+
+test('XROLE-13: dry_run reject never rolls the annotator sample back to pending (issue #192 regression, cross-role)', async () => {
+  // A01 submitted both dry samples in XROLE-08. R01 rejects one in dry_run:
+  // the FR-014I rollback is official_run-only (markSampleRejected() returns
+  // early for other run types, annotation-workspace.data.js:363-364), so the
+  // sample must stay submitted.
+  expect(await readSampleStatus(r01Page, 'dry_run', DRY_RUN_RECORD_IDS[0], 'A01')).toBe('submitted');
+
+  await gotoReview(r01Page, DRY_RUN_RECORD_IDS[0], 'A01', REVIEWER_R01, 'dry_run');
+  await r01Page.getByTestId('ws-review-row-reject').click();
+  await r01Page.getByTestId('ws-review-submit-btn').click();
+  await expect(r01Page.locator('#toastMsg')).toHaveText('審查已提交');
+
+  expect(await readSampleStatus(r01Page, 'dry_run', DRY_RUN_RECORD_IDS[0], 'A01')).toBe('submitted');
+});
+
+test('XROLE-14: a reviewer correction produces a disputed unit with one dispute item (via the FR-014I rollback loop)', async () => {
+  const divergenceAnnotator = OFFICIAL_RUN_ASSIGNMENTS[FORCED_DIVERGENCE_RECORD_ID];
+
+  // R02 corrects A02's 'positive' to 'negative' through the real UI.
+  await submitCorrection(r02Page, FORCED_DIVERGENCE_RECORD_ID, divergenceAnnotator, REVIEWER_R02, DIVERGENCE_CORRECTION);
+
+  // FR-014I: the official_run reject decision rolled A02's sample back.
+  expect(await readSampleStatus(r02Page, 'official_run', FORCED_DIVERGENCE_RECORD_ID, divergenceAnnotator)).toBe('pending');
+
+  // A02 resubmits the same answer; only now does the unit derive again.
+  await resubmitAfterRollback(a02Page, FORCED_DIVERGENCE_RECORD_ID, divergenceAnnotator);
+
+  /* Derivation (annotation-workspace.data.js:1483-1519): R02's stored value
+   * differs -> changed; 2 reviewer submissions >= min(1) -> enough; the one
+   * dispute item is a 1-1 tie under N=2 (R01's approval is an implicit vote
+   * for the annotator's value) -> resolveDisputeConvergence finds no strict
+   * majority -> DISPUTED. */
+  expect(await readUnitStatus(r02Page, FORCED_DIVERGENCE_RECORD_ID, divergenceAnnotator)).toBe('disputed');
+
+  // Exactly one dispute item; R01 (agreeing) contributes no B value.
+  const items = await readDisputeItems(r02Page, FORCED_DIVERGENCE_RECORD_ID, divergenceAnnotator);
+  expect(items).toHaveLength(1);
+  expect(items[0].annotatorValue).toBe(OFFICIAL_GOLD[FORCED_DIVERGENCE_RECORD_ID]);
+  expect(items[0].reviewerValues).toEqual({ [REVIEWER_R02]: DIVERGENCE_CORRECTION });
+});
+
+test('XROLE-15: unanimous approvals finalize the unit', async () => {
+  /* Deviation from w4's "n=2=min": the seeded profile carries no review
+   * settings, so minReviewers defaults to 1 (annotation-workspace.data.js:
+   * 1478-1482) and the unit is finalized after R01's approval alone
+   * (unchanged + enough reviewers). Both approvals still happen -- that is
+   * the journey -- and the status is asserted after each to pin that the
+   * second agreeing review keeps the unit finalized rather than regressing. */
+  await submitApproval(r01Page, 'xr-off-001', 'A01', REVIEWER_R01);
+  expect(await readUnitStatus(r01Page, 'xr-off-001', 'A01')).toBe('finalized');
+
+  await submitApproval(r02Page, 'xr-off-001', 'A01', REVIEWER_R02);
+  expect(await readUnitStatus(r02Page, 'xr-off-001', 'A01')).toBe('finalized');
+});
+
+test('XROLE-16: both reviewers correcting to the same value converges to finalized without arbitration', async () => {
+  // R01 corrects A03's 'negative' to 'positive' -> rollback -> A03 resubmits.
+  await submitCorrection(r01Page, 'xr-off-003', 'A03', REVIEWER_R01, CONVERGENCE_CORRECTION);
+  await resubmitAfterRollback(a03Page, 'xr-off-003', 'A03');
+
+  // R02 makes the same correction -> second rollback -> A03 resubmits again.
+  await submitCorrection(r02Page, 'xr-off-003', 'A03', REVIEWER_R02, CONVERGENCE_CORRECTION);
+  await resubmitAfterRollback(a03Page, 'xr-off-003', 'A03');
+
+  /* Both reviewers voted 'positive' against the annotator's 'negative':
+   * 2/2 is a strict majority under N=2, so resolveDisputeConvergence
+   * converges the only dispute item and the unit finalizes WITHOUT entering
+   * the arbitration pool (annotation-workspace.data.js:1502-1512). */
+  expect(await readUnitStatus(r02Page, 'xr-off-003', 'A03')).toBe('finalized');
+  // Convergence, not arbitration: no vote was ever stored for this unit.
+  expect(await readArbitrationState(r02Page, 'xr-off-003', 'A03')).toEqual({});
+});
+
+test('XROLE-17: the arbitrate entry is offered only to the eligible non-participant arbiter on the disputed row', async () => {
+  const divergenceAnnotator = OFFICIAL_RUN_ASSIGNMENTS[FORCED_DIVERGENCE_RECORD_ID];
+
+  // R03 (can_arbitrate, no submission on the unit) sees 仲裁 on the disputed
+  // row only; the two finalized rows keep the plain edit entry.
+  await r03Page.goto(buildListUrl({ task_id: fixtureTaskId, role: 'reviewer', run_type: 'official_run', reviewer_id: ARBITER_R03 }));
+  const disputedRow = r03Page.getByTestId('ws-sample-item').filter({ hasText: FORCED_DIVERGENCE_RECORD_ID });
+  await expect(disputedRow.locator('.status-badge')).toHaveText('爭議中');
+  await expect(disputedRow.getByTestId('list-review-annotator')).toHaveText(divergenceAnnotator);
+  await expect(disputedRow.getByTestId('list-arbitrate-entry')).toHaveText('仲裁');
+  for (const finalizedId of ['xr-off-001', 'xr-off-003']) {
+    const row = r03Page.getByTestId('ws-sample-item').filter({ hasText: finalizedId });
+    await expect(row.locator('.status-badge')).toHaveText('已定稿');
+    await expect(row.getByTestId('list-arbitrate-entry')).toHaveCount(0);
+  }
+
+  // R01 is a dispute participant (and holds no can_arbitrate flag): the same
+  // disputed row keeps the ordinary 編輯 entry (FR-060).
+  await r01Page.goto(buildListUrl({ task_id: fixtureTaskId, role: 'reviewer', run_type: 'official_run', reviewer_id: REVIEWER_R01 }));
+  const participantRow = r01Page.getByTestId('ws-sample-item').filter({ hasText: FORCED_DIVERGENCE_RECORD_ID });
+  await expect(participantRow.getByTestId('list-arbitrate-entry')).toHaveCount(0);
+  await expect(participantRow.locator('.mini-btn-primary')).toHaveText('編輯');
+});
+
+test('XROLE-18: the arbiter votes B and the unit finalizes with the arbitrated value', async () => {
+  const divergenceAnnotator = OFFICIAL_RUN_ASSIGNMENTS[FORCED_DIVERGENCE_RECORD_ID];
+
+  // Entering through the list entry carries the full identity into the
+  // workspace URL (annotation-list-dispute-entry.spec.ts pattern).
+  await r03Page.getByTestId('ws-sample-item')
+    .filter({ hasText: FORCED_DIVERGENCE_RECORD_ID })
+    .getByTestId('list-arbitrate-entry')
+    .click();
+  await expect(r03Page).toHaveURL(new RegExp(`annotation-workspace\\.html.*sample_id=${FORCED_DIVERGENCE_RECORD_ID}`));
+  await expect(r03Page).toHaveURL(new RegExp(`annotator_id=${divergenceAnnotator}`));
+  await expect(r03Page).toHaveURL(new RegExp(`reviewer_id=${ARBITER_R03}`));
+
+  // The review card renders in arbitration layout: one A/B item carrying the
+  // annotator's value (A) and R02's correction (B).
+  await expect(r03Page.getByTestId('ws-arbitration-card')).toBeVisible();
+  const items = r03Page.getByTestId('ws-arbitration-item');
+  await expect(items).toHaveCount(1);
+  await expect(items.first().getByTestId('ws-arbitration-choose-a')).toContainText(OFFICIAL_GOLD[FORCED_DIVERGENCE_RECORD_ID]);
+  await expect(items.first().getByTestId('ws-arbitration-choose-b')).toContainText(DIVERGENCE_CORRECTION);
+
+  await r03Page.getByTestId('ws-arbitration-choose-b').click();
+  await r03Page.getByTestId('ws-arbitration-submit').click();
+
+  const state = await readArbitrationState(r03Page, FORCED_DIVERGENCE_RECORD_ID, divergenceAnnotator);
+  const item = state['single_label::single_label'];
+  expect(item).toBeTruthy();
+  expect(item.votes).toHaveLength(1);
+  expect(item.votes[0].arbiter_id).toBe(ARBITER_R03);
+  expect(item.votes[0].choice).toBe('B');
+  expect(item.finalized_value).toBe(DIVERGENCE_CORRECTION);
+  expect(item.finalized_by).toBe(ARBITER_R03);
+
+  expect(await readUnitStatus(r03Page, FORCED_DIVERGENCE_RECORD_ID, divergenceAnnotator)).toBe('finalized');
+});
+
+test('XROLE-19: checkpoint E -- the arbitrated unit reads as finalized across pages', async () => {
+  // Real cross-page sync: a participant reviewer's list re-derives the same
+  // unit as 已定稿 purely from the shared localStorage buckets.
+  await r01Page.goto(buildListUrl({ task_id: fixtureTaskId, role: 'reviewer', run_type: 'official_run', reviewer_id: REVIEWER_R01 }));
+  await expect(
+    r01Page.getByTestId('ws-sample-item').filter({ hasText: FORCED_DIVERGENCE_RECORD_ID }).locator('.status-badge')
+  ).toHaveText('已定稿');
+
+  /* PL-side annotation-results panel: getAnnotationResultsData()
+   * (task-detail.html:7815) falls back to the ANNOTATION_RESULTS_BY_TASK.T001
+   * seed for any unknown task id -- the journey's live arbitration outcome
+   * can never reach this panel (a real prototype gap, documented in the
+   * final report). What CAN be asserted is the w4-required UI affordance:
+   * the panel's finalized badge + arbitration history line render (from the
+   * seed's CLS-004 entry, task-detail-review-history.spec.ts:54-70), so the
+   * checkpoint-E surface exists and is wired for the day the data does sync. */
+  await plPage.goto(`/pages/task-management/task-detail.html?task_role=project_leader&task_id=${fixtureTaskId}&tab=annotation-results`);
+  await expect(plPage.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
+  await plPage.locator('#arResultTableBody tr.ar-summary-row').filter({ hasText: 'CLS-004' }).click();
+  await expect(
+    plPage.locator('#arResultTableBody .annotator-row').filter({ hasText: '113450022' }).locator('.ar-review-badge .badge')
+  ).toHaveText('已定稿');
+  const arbitrationLine = plPage.locator('#arResultTableBody .ar-history-line.ar-history-arbitration');
+  await expect(arbitrationLine).toHaveCount(1);
+  await expect(arbitrationLine).toContainText('仲裁');
+  await expect(arbitrationLine).toContainText('採 B');
+});
+
+test.describe('XROLE-20: completion is not blocked by unresolved disputes (documents the D2 gap)', () => {
+  test('publishing complete with an unresolved dispute should be blocked but is not', async ({ page }) => {
+    /* D2 gap (w4 §5, "Spec-defined (pending revision)"): publishComplete()
+     * (task-detail.html:8863-8869) sets status = 'completed' unconditionally
+     * -- it consults no review-unit state, no dispute pool, no submission
+     * progress. Seeding a real disputed unit here would be moot: the page
+     * reads none of it, which is exactly the gap. Runs isolated from the
+     * shared journey (fresh page + own task id) like XROLE-04. */
+    test.fail();
+
+    const gapTaskId = `XROLE-gap-d2-block-${Date.now()}`;
+    await patchDataFile(page, 'task-detail.data.js', buildXRoleSeedPatch(gapTaskId));
+    await page.goto(`/pages/task-management/task-detail.html?task_role=project_leader&task_id=${gapTaskId}&status=official_run_in_progress`);
+    await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
+
+    await expect(page.locator('#publishCompleteBtn')).toBeVisible();
+    await page.locator('#publishCompleteBtn').click();
+    // Desired behavior: with an unresolved dispute the task must stay in
+    // official marking and surface the blocking gap list. Actual behavior:
+    // the stepper advances to 已完成 immediately, so this assertion fails.
+    await expect(page.locator('#statusStepper .step-current .step-label-wrap')).toHaveText('正式標記中');
+  });
+});
+
+test.describe('XROLE-21: completion has no confirmation modal (documents the D2 gap)', () => {
+  test('publishing complete should require a second confirmation before advancing', async ({ page }) => {
+    /* Same D2 family as XROLE-20 but a distinct missing affordance: w4
+     * expects a 二次確認 modal equivalent to the existing riskModal mechanism
+     * (openRiskModal(), task-detail.html:8796-8801) before the terminal,
+     * irreversible completion -- publishComplete() advances without any
+     * confirmation step. */
+    test.fail();
+
+    const gapTaskId = `XROLE-gap-d2-confirm-${Date.now()}`;
+    await patchDataFile(page, 'task-detail.data.js', buildXRoleSeedPatch(gapTaskId));
+    await page.goto(`/pages/task-management/task-detail.html?task_role=project_leader&task_id=${gapTaskId}&status=official_run_in_progress`);
+    await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
+
+    await page.locator('#publishCompleteBtn').click();
+    // Desired behavior: a confirmation modal opens (riskModal gains .show)
+    // and the status has not advanced yet. Actual behavior: no modal exists
+    // on this path, so this assertion fails.
+    await expect(page.locator('#riskModal')).toHaveClass(/show/);
+  });
+});
+
+test('XROLE-22: official-stage export carries the official run_stage; the arbitrated value lives at the data layer', async () => {
+  // plPage still sits on the annotation-results tab from XROLE-19.
+  await plPage.locator('#arStageSelect').selectOption('official');
+
+  const downloadPromise = plPage.waitForEvent('download');
+  await plPage.locator('#arExportJsonBtn').click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toMatch(/\.json$/);
+
+  const downloadPath = await download.path();
+  expect(downloadPath).not.toBeNull();
+  const payload = JSON.parse(await readFile(downloadPath as string, 'utf8'));
+
+  expect(payload.manifest.applied_filters.run_stage).toBe('official');
+  expect(Array.isArray(payload.items)).toBe(true);
+  expect(payload.items.length).toBeGreaterThan(0);
+  expect(payload.items.every((item: { run_stage: string }) => item.run_stage === 'official')).toBe(true);
+
+  /* Deviation from w4's "匯出 JSON 的 xrole-003 標註值為仲裁後 negative":
+   * the export serializes getAnnotationResultsData(), which for this task id
+   * is the T001 seed fallback (task-detail.html:7815) -- the journey's
+   * items/values cannot appear in it (same gap as XROLE-19, reported in the
+   * final report). The arbitrated-value truth w4 wants is therefore pinned
+   * at the data layer the export WOULD read from once wired: the finalized
+   * value is R02's correction, not the annotator's original gold answer. */
+  const state = await readArbitrationState(r03Page, FORCED_DIVERGENCE_RECORD_ID, OFFICIAL_RUN_ASSIGNMENTS[FORCED_DIVERGENCE_RECORD_ID]);
+  expect(state['single_label::single_label'].finalized_value).toBe(DIVERGENCE_CORRECTION);
+  expect(state['single_label::single_label'].finalized_value).not.toBe(OFFICIAL_GOLD[FORCED_DIVERGENCE_RECORD_ID]);
+});
+
+test('XROLE-23: mid-work state survives a reload and never leaks across roles', async () => {
+  /* w4 wrote this row against R01's un-submitted review decisions, but the
+   * prototype has no reviewer draft channel at all: reviewRowDecisions is an
+   * in-memory object reset on every render (annotation-workspace.config.js:
+   * 1676/2568) and reviewer mode hides the save button
+   * (annotation-workspace-save-draft.spec.ts:58-63). The reload-restore
+   * guarantee only exists for the ANNOTATOR draft channel (FR-026), so this
+   * test covers the row's two intents on the mechanisms that exist:
+   * restore-after-reload via an annotator draft, and cross-role invisibility
+   * of un-submitted work via the submitted-only getSubmission contract. */
+  const sampleId = FORCED_DIVERGENCE_RECORD_ID;
+
+  // A01 never submitted this record (it is A02's assignment): A01's own
+  // bucket is untouched, so a draft can be created on the live journey task.
+  await a01Page.goto(annotatorOfficialUrl(sampleId, 'A01'));
+  // Pick a value different from the gold prefill ('positive') so the
+  // restored chip below can only come from the draft, not the prefill.
+  await a01Page.getByTestId('ws-single-label-chip-negative').click();
+  await a01Page.getByTestId('ws-save-btn').click();
+  await expect.poll(() => readSampleStatus(a01Page, 'official_run', sampleId, 'A01')).toBe('saved');
+
+  await a01Page.goto(annotatorOfficialUrl(sampleId, 'A01'));
+  await expect(a01Page.getByTestId('ws-single-label-chip-negative')).toHaveAttribute('aria-pressed', 'true');
+
+  // Cross-role invisibility: drafts are never a submission -- getSubmission
+  // is submitted-only by contract (annotation-workspace.data.js:272-278,
+  // "reviewers must never see drafts"), so the reviewer side reads null.
+  const visibleToReviewer = await r01Page.evaluate(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (a) => (window as any).LabelSuiteAnnotationWorkspaceData.getSubmission(
+      a.taskId, 'annotator', 'official_run', a.sampleId, { annotatorId: 'A01' }),
+    { taskId: fixtureTaskId, sampleId }
+  );
+  expect(visibleToReviewer).toBeNull();
+});
+
+test.describe('XROLE-24: double-clicking submit records exactly one history event (issue #201 regression, journey fixture)', () => {
+  test('a rapid double submit on an XROLE official sample stays a single audit event', async ({ page }) => {
+    /* Isolated from the shared journey (own task id, fresh page) because the
+     * double-click must target a sample whose submission history this test
+     * owns end-to-end -- replaying it on fixtureTaskId would append to
+     * XROLE-10's audit trail. Mirrors issue-201-submit-busy-guard.spec.ts:
+     * both clicks are dispatched before the busy flag can settle, and the
+     * appendHistoryEvent() guard (annotation-workspace.data.js:210-224)
+     * plus handleSubmit's busy flag must keep the trail at one event. */
+    const dupTaskId = `XROLE-journey-dup-${Date.now()}`;
+    await skipGuidelineModal(page);
+    await patchDataFile(page, 'annotation-workspace.data.js', buildXRoleSeedPatch(dupTaskId));
+    await page.goto(buildWorkspaceUrl({
+      task_id: dupTaskId, sample_id: 'xr-off-001', role: 'annotator',
+      run_type: 'official_run', annotator_id: 'A01',
+    }));
+
+    // Gold prefill supplies the answer; both clicks race the busy flag.
+    const submitBtn = page.getByTestId('ws-submit-btn');
+    await Promise.all([submitBtn.click(), submitBtn.click()]);
+
+    const submittedEvents = await page.evaluate(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (taskId) => (window as any).LabelSuiteAnnotationWorkspaceData.getSampleHistory(
+        taskId, 'official_run', 'xr-off-001', { annotatorId: 'A01' })
+        .filter((event: { action: string }) => event.action === 'submitted'),
+      dupTaskId
+    );
+    expect(submittedEvents).toHaveLength(1);
+  });
+});
+
+test('XROLE-25: no page ever raised an unexpected JS exception across the whole mainline', async () => {
+  // trackPageErrors was attached to all seven shared pages in beforeAll,
+  // before any navigation -- this net therefore spans every mainline step
+  // (XROLE-01 through XROLE-23). The isolated gap tests run on their own
+  // fresh pages outside this net by design.
+  for (const errors of Object.values(pageErrorsByRole)) {
+    assertNoPageErrors(errors);
+  }
 });
