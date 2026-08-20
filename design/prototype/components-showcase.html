@@ -138,7 +138,8 @@
        MASTER.md canonical component CSS — copied verbatim from
        §Buttons, §Inputs, §Toggle Switch, §Semantic State Colors,
        §Status Pill, §Error / Alert Banner, §Toast (behavior per
-       UXC-07), §Skeleton. Do not edit here; change
+       UXC-07), §Skeleton, §Chip, §Pagination, §Breadcrumb.
+       Do not edit here; change
        MASTER.md first, then re-sync this block.
        ================================================================== */
 
@@ -466,6 +467,187 @@
       background-image: linear-gradient(90deg, #1F1F28 25%, #2A2A35 50%, #1F1F28 75%);
     }
 
+    /* §Chip — interactive select chip (verbatim) */
+    .task-type-chip-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .task-type-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-full);         /* 9999px — pill */
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--color-ink);
+      background: var(--color-white);
+      cursor: pointer;
+      user-select: none;
+      transition: border-color var(--dur-fast), background var(--dur-fast), color var(--dur-fast);
+    }
+    .task-type-chip:hover {
+      border-color: var(--color-primary);
+      background: var(--color-primary-soft-bg);
+      color: var(--color-primary);
+    }
+    .task-type-chip.selected {
+      border-color: var(--color-primary);
+      background: var(--color-primary-soft-bg);
+      color: var(--color-primary);
+      font-weight: 600;
+    }
+    .task-type-chip-check {
+      width: 14px;
+      height: 14px;
+      border: 1.5px solid currentColor;
+      border-radius: 3px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .task-type-chip.selected .task-type-chip-check {
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+    }
+    .task-type-chip.selected .task-type-chip-check::after {
+      content: "";
+      width: 8px;
+      height: 5px;
+      border-left: 2px solid white;
+      border-bottom: 2px solid white;
+      transform: rotate(-45deg) translate(1px, -1px);
+    }
+    .task-type-chip[role="radio"] .task-type-chip-check {
+      border-radius: 50%;
+    }
+    .task-type-chip[role="radio"].selected .task-type-chip-check::after {
+      width: 6px;
+      height: 6px;
+      border: none;
+      border-radius: 50%;
+      background: white;
+      transform: none;
+    }
+
+    /* §Chip — display chips (verbatim) */
+    .ar-classif-chip {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 9999px;
+      font-size: 12px;
+      white-space: nowrap;
+      background: #EDE9FE;              /* violet-100 */
+      color: #5B21B6;                    /* violet-800 */
+      border: 1px solid #DDD6FE;        /* violet-200 */
+    }
+    .ar-va-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 10px;
+      border-radius: 9999px;
+      font-size: 13px;
+      font-family: var(--font-mono);
+      border: 1px solid;
+      white-space: nowrap;
+    }
+    .ar-va-chip-normal  { background: #DCFCE7; color: #166534; border-color: #86EFAC; }
+    .ar-va-chip-outlier { background: #FEE2E2; color: #991B1B; border-color: #FCA5A5; }
+    .round-metric-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: var(--color-white);
+      border: 1px solid var(--color-border);
+      color: var(--color-text-soft);
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .cause-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      border-radius: var(--radius-full);
+      background: var(--color-primary-soft-bg);
+      border: 1px solid var(--color-primary-border);   /* #C7D2FE */
+      color: var(--color-primary);
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    /* §Pagination (verbatim) */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-md) var(--space-lg);  /* 16px 24px */
+      border-top: 1px solid var(--color-border);
+      font-size: 13px;
+      color: var(--color-text-soft);
+    }
+    .page-btn {
+      width: 32px;
+      height: 32px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);           /* 8px */
+      background: var(--color-white);
+      color: var(--color-ink);
+      font-size: 13px;
+      cursor: pointer;
+      transition: background var(--dur-fast), border-color var(--dur-fast);
+    }
+    .page-btn:hover {
+      background: var(--color-primary-soft-bg);
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+    .page-btn.active {
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+      color: var(--color-white); /* token, not literal — flips with the dark palette */
+      font-weight: 600;
+    }
+    .page-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .page-size-select {
+      padding: 6px 28px 6px 10px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      background: var(--color-white);
+      appearance: none;
+    }
+
+    /* §Breadcrumb (verbatim) */
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--color-text-soft);
+      margin-bottom: 12px;
+    }
+    .breadcrumb a {
+      color: var(--color-primary);
+    }
+    .breadcrumb a:hover {
+      text-decoration: underline;
+    }
+    .breadcrumb-sep {
+      color: var(--color-ink-muted);             /* #94A3B8 */
+      font-size: 11px;
+    }
+
     /* Showcase chrome — demo columns for skeleton variants (not canonical) */
     .demo-col { flex: 1 1 240px; min-width: 240px; display: grid; gap: 10px; align-content: start; }
 
@@ -520,7 +702,7 @@
 
     <section id="components" aria-labelledby="componentsHeading">
       <h2 class="section-heading" id="componentsHeading">Components</h2>
-      <p class="section-note">MASTER.md canonical markup — controls 批次（Buttons / Inputs / Toggle Switch）+ feedback 批次（Badges / Banner / Toast / Skeleton）。structure 批次於後續 stacked PR 加入。</p>
+      <p class="section-note">MASTER.md canonical markup — controls 批次（Buttons / Inputs / Toggle Switch）+ feedback 批次（Badges / Banner / Toast / Skeleton）+ structure 批次（Chip / Pagination / Breadcrumb）。composite 批次於後續 stacked PR 加入。</p>
 
       <div class="component-card" id="comp-buttons">
         <h3>Buttons</h3>
@@ -632,6 +814,71 @@
             <div class="skeleton skel-input"></div>
             <div class="skeleton skel-btn"></div>
           </div>
+        </div>
+      </div>
+
+      <div class="component-card" id="comp-chips">
+        <h3>Chip</h3>
+        <p class="component-note">§Chip — 選取 chip（checkbox 多選 / radio 單選，點擊可切換）與四種唯讀顯示 chip；語意狀態請改用 Status Badge。</p>
+        <div class="component-demo">
+          <div class="task-type-chip-grid" role="group" aria-label="任務類別（多選）">
+            <button class="task-type-chip selected" type="button" role="checkbox" aria-checked="true"><span class="task-type-chip-check" aria-hidden="true"></span>分類</button>
+            <button class="task-type-chip" type="button" role="checkbox" aria-checked="false"><span class="task-type-chip-check" aria-hidden="true"></span>實體辨識</button>
+            <button class="task-type-chip" type="button" role="checkbox" aria-checked="false"><span class="task-type-chip-check" aria-hidden="true"></span>自由文字</button>
+          </div>
+        </div>
+        <div class="component-demo">
+          <div class="task-type-chip-grid" role="radiogroup" aria-label="輸出類型（單選）">
+            <button class="task-type-chip selected" type="button" role="radio" aria-checked="true"><span class="task-type-chip-check" aria-hidden="true"></span>單一標籤</button>
+            <button class="task-type-chip" type="button" role="radio" aria-checked="false"><span class="task-type-chip-check" aria-hidden="true"></span>多重標籤</button>
+          </div>
+        </div>
+        <div class="component-demo">
+          <span class="ar-classif-chip">正面情緒</span>
+          <span class="ar-va-chip ar-va-chip-normal">V 6.2</span>
+          <span class="ar-va-chip ar-va-chip-outlier">A 1.4</span>
+          <span class="round-metric-chip">IAA 0.82</span>
+          <span class="cause-chip">標準不一致</span>
+        </div>
+      </div>
+
+      <div class="component-card" id="comp-pagination">
+        <h3>Pagination</h3>
+        <p class="component-note">§Pagination — 32px 頁碼鈕、最多 5 顆可見頁碼加省略號、每頁筆數選單；行為契約見 UXC-11（limit/offset、URL 同步）。</p>
+        <div class="component-demo">
+          <nav class="pagination" aria-label="Pagination" style="flex: 1;">
+            <div class="pagination-info">共 <strong>128</strong> 筆 · 第 <strong>1</strong>/<strong>7</strong> 頁</div>
+            <div class="pagination-controls">
+              <button class="page-btn" type="button" aria-label="Previous page" disabled>‹</button>
+              <button class="page-btn active" type="button" aria-current="page">1</button>
+              <button class="page-btn" type="button">2</button>
+              <button class="page-btn" type="button">3</button>
+              <span class="page-ellipsis">…</span>
+              <button class="page-btn" type="button">7</button>
+              <button class="page-btn" type="button" aria-label="Next page">›</button>
+            </div>
+            <div class="pagination-size">
+              <label>每頁
+                <select class="page-size-select">
+                  <option>20</option>
+                  <option>50</option>
+                  <option selected>100</option>
+                </select>
+              </label>
+            </div>
+          </nav>
+        </div>
+      </div>
+
+      <div class="component-card" id="comp-breadcrumb">
+        <h3>Breadcrumb</h3>
+        <p class="component-note">§Breadcrumb — 清單頁下一層的詳情頁路徑導覽；分隔符 ›（aria-hidden），最深兩層。</p>
+        <div class="component-demo">
+          <nav class="breadcrumb" aria-label="breadcrumb">
+            <a href="#comp-breadcrumb">任務管理</a>
+            <span class="breadcrumb-sep" aria-hidden="true">›</span>
+            <span aria-current="page">任務詳情</span>
+          </nav>
         </div>
       </div>
     </section>
@@ -787,6 +1034,25 @@
       document.querySelectorAll('[data-toast-variant]').forEach(function (btn) {
         btn.addEventListener('click', function () {
           showToast(btn.getAttribute('data-toast-variant'));
+        });
+      });
+
+      /* Chip — §Chip accessibility contract: aria-checked toggled on click */
+      function setChipState(chip, on) {
+        chip.classList.toggle('selected', on);
+        chip.setAttribute('aria-checked', String(on));
+      }
+      document.querySelectorAll('.task-type-chip[role="checkbox"]').forEach(function (chip) {
+        chip.addEventListener('click', function () {
+          setChipState(chip, chip.getAttribute('aria-checked') !== 'true');
+        });
+      });
+      document.querySelectorAll('[role="radiogroup"]').forEach(function (group) {
+        var radios = group.querySelectorAll('.task-type-chip[role="radio"]');
+        radios.forEach(function (chip) {
+          chip.addEventListener('click', function () {
+            radios.forEach(function (peer) { setChipState(peer, peer === chip); });
+          });
         });
       });
     })();
