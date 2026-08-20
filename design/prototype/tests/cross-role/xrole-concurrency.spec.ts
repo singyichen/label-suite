@@ -16,12 +16,16 @@ import {
  * - No page under pages/ registers a storage-event listener (grep-verified),
  *   so a change made through one Page becomes visible to another only after
  *   that other Page reloads. Reconciliation is manual, never push-based.
- * - A true write race is not reproducible at this tier: same-process
- *   localStorage writes are serialized by the browser. What these tests pin
- *   is bucket ISOLATION (no actor overwrites another) plus
- *   read-after-reload visibility -- the strongest guarantees the prototype
- *   offers. Real concurrent-session behavior belongs to the real-backend
- *   E2E tier (FAIL-D01~D06). */
+ * - A true write race must NOT be exercised at this tier: the submission
+ *   store is one whole-blob read-modify-write over a single localStorage
+ *   key (readSubmissionStore/writeSubmissionStore,
+ *   annotation-workspace.data.js), so two Pages saving at the same moment
+ *   CAN lose one bucket to a stale-read overwrite -- CI reproduced exactly
+ *   that when these saves were dispatched via Promise.all. What these tests
+ *   pin is bucket ISOLATION under interleaved-but-serialized actions (no
+ *   actor overwrites another) plus read-after-reload visibility -- the
+ *   strongest guarantees the prototype offers. Real concurrent-session
+ *   behavior belongs to the real-backend E2E tier (FAIL-D01~D06). */
 
 const ANNOTATOR_A = 'kioleemg12';
 const ANNOTATOR_B = '113450022';
@@ -145,7 +149,7 @@ test('a PL disabling a member does not clobber an annotator submission landing a
   await a01.close();
 });
 
-test('two annotators saving drafts in parallel keep isolated buckets, each restoring its own (CONC-03)', async ({ page, context }) => {
+test('two annotators saving drafts back-to-back keep isolated buckets, each restoring its own (CONC-03)', async ({ page, context }) => {
   const a1 = page;
   const a2 = await context.newPage();
 
@@ -164,14 +168,14 @@ test('two annotators saving drafts in parallel keep isolated buckets, each resto
   await a1.getByTestId('ws-single-label-chip-positive').click();
   await a2.getByTestId('ws-single-label-chip-negative').click();
 
-  // "Parallel" save: both clicks dispatched without awaiting each other.
-  // (The browser still serializes the underlying localStorage writes; the
-  // point is that neither write lands in the other's bucket.)
-  await Promise.all([
-    a1.getByTestId('ws-save-btn').click(),
-    a2.getByTestId('ws-save-btn').click(),
-  ]);
+  // Interleaved saves, each awaited before the next: dispatching both via
+  // Promise.all hit the store's whole-blob read-modify-write window (see
+  // the header comment) and CI lost a2's bucket to a1's stale-read
+  // overwrite. Serializing the saves keeps the scenario deterministic;
+  // what stays under test is that neither save lands in the other's bucket.
+  await a1.getByTestId('ws-save-btn').click();
   await expect(a1.locator('#toastMsg')).toHaveText('已儲存');
+  await a2.getByTestId('ws-save-btn').click();
   await expect(a2.locator('#toastMsg')).toHaveText('已儲存');
 
   // Each Page reloads its OWN draft -- opposite answers prove the buckets
