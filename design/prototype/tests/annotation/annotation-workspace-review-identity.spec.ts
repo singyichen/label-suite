@@ -152,6 +152,54 @@ test.describe('review identity foundation', () => {
     ]);
   });
 
+  /* w6-resilience-a11y.md CONT-04 ("re-login" approximation): every other
+   * test in this file operates a single `page` sequentially; this one opens
+   * a SECOND Page in the same BrowserContext with the same annotator_id and
+   * reads the first Page's submission back through it.
+   * 限制標注: the prototype has no real session/JWT -- this only verifies
+   * that re-entering with the same identity params reads back one's own
+   * localStorage-bucketed data; token expiry / cross-device sync belong to
+   * the real-backend E2E tier. */
+  test('a second Page with the same annotator identity reads back the prior submission (CONT-04)', async ({ page, context }) => {
+    await page.goto(
+      buildWorkspaceUrl({
+        task_id: 'T001',
+        sample_id: 'sent-001',
+        run_type: 'official_run',
+        annotator_id: ANNOTATOR_A,
+      })
+    );
+    await dismissGuidelineModal(page);
+    await page.getByTestId('ws-single-label-chip-negative').click();
+    await page.getByTestId('ws-submit-btn').click();
+
+    const relogin = await context.newPage();
+    await skipGuidelineModal(relogin);
+    await relogin.goto(
+      buildWorkspaceUrl({
+        task_id: 'T001',
+        sample_id: 'sent-001',
+        run_type: 'official_run',
+        annotator_id: ANNOTATOR_A,
+      })
+    );
+    await dismissGuidelineModal(relogin);
+
+    const status = await readSampleStatus(relogin, {
+      taskId: 'T001',
+      role: 'annotator',
+      runType: 'official_run',
+      sampleId: 'sent-001',
+      annotatorId: ANNOTATOR_A,
+    });
+    expect(status).toBe('submitted');
+
+    const annotatorEvents = (await readTrail(relogin, TRAIL)).filter((e) => e.role === 'annotator');
+    expect(annotatorEvents.map((e) => e.actorId)).toEqual([ANNOTATOR_A]);
+
+    await relogin.close();
+  });
+
   test('omitting the identity params resolves to the default roster identity', async ({ page }) => {
     await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', run_type: 'official_run' }));
     await dismissGuidelineModal(page);
