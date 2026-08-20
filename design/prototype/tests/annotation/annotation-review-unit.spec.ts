@@ -354,3 +354,63 @@ test.describe('review unit: five-state machine', () => {
     ]);
   });
 });
+
+/* w6-resilience-a11y.md DUP-02: double-clicking 送出審核.
+ *
+ * Which guard is actually in play (verified against current code):
+ * handleReviewSubmit (annotation-workspace.config.js) has NO submit-busy
+ * flag -- unlike the annotator path, whose issue #201 fix added
+ * state.submitBusy to handleSubmit. The reviewer path's idempotency comes
+ * entirely from the data layer: markSampleSubmitted() overwrites the same
+ * bucket key (never appends a second record), and appendHistoryEvent()
+ * drops an identical consecutive 'submitted' event for the same role/actor
+ * (annotation-workspace.data.js -- the same dedup guard the annotator path
+ * relies on). So the review unit stays a single terminal state and the
+ * audit trail stays at one reviewer event, which is what this asserts. */
+test.describe('review unit: double submit stays a single terminal unit (DUP-02)', () => {
+  test('double-clicking 送出審核 leaves one review unit state and one reviewer history event', async ({ page }) => {
+    await seed(page, {
+      role: 'annotator',
+      runType: 'official_run',
+      payload: labelPayload('sad'),
+      identity: { annotatorId: ANNOTATOR },
+    });
+
+    await page.goto(
+      buildWorkspaceUrl({
+        task_id: TASK,
+        sample_id: SAMPLE,
+        role: 'reviewer',
+        run_type: 'official_run',
+        reviewer_id: REVIEWER_A,
+      })
+    );
+    await page.getByTestId('ws-review-row-approve').click();
+    const submitBtn = page.getByTestId('ws-review-submit-btn');
+    await Promise.all([submitBtn.click(), submitBtn.click()]);
+
+    // With min_reviewers=1 satisfied and the single review an unchanged
+    // approval, the five-state machine lands on the terminal 'finalized'
+    // (same convergence as the seeded five-state tests above) -- and stays
+    // there: the duplicate submit adds no second unit and no state change.
+    expect(await statusOf(page, { runType: 'official_run', minReviewers: 1 })).toBe('finalized');
+
+    const reviewerSubmitted = await page.evaluate(() => {
+      const data = (window as unknown as {
+        LabelSuiteAnnotationWorkspaceData: {
+          getSampleHistory: (
+            taskId: string,
+            runType: string,
+            sampleId: string,
+            identity: Record<string, never>
+          ) => Array<{ action: string; role: string; actorId: string | null }>;
+        };
+      }).LabelSuiteAnnotationWorkspaceData;
+      return data
+        .getSampleHistory('T001', 'official_run', 'sent-001', {})
+        .filter((e) => e.role === 'reviewer' && e.action === 'submitted');
+    });
+    expect(reviewerSubmitted).toHaveLength(1);
+    expect(reviewerSubmitted[0].actorId).toBe(REVIEWER_A);
+  });
+});

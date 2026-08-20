@@ -181,3 +181,34 @@ test.describe('Ctrl/Cmd+Enter submits the unit on screen', () => {
     await expect(page.locator('#toastMsg')).toHaveText('請完成每位標記員的審核決策');
   });
 });
+
+/* w6-resilience-a11y.md A11Y-04: the primary annotator actions must be
+ * reachable through role + accessible name (what a screen reader announces),
+ * not only through test ids. These role-based lookups sit ALONGSIDE the
+ * testid-based assertions elsewhere in this file -- they do not replace
+ * them.
+ *
+ * Known gap, recorded as a deviation in the PR report rather than papered
+ * over here: the reviewer rows' per-type ✓/✕ decision buttons
+ * (buildRowDecisionButtons, annotation-workspace.config.js) are icon-only
+ * with no aria-label, so they expose NO accessible name and cannot be
+ * located by role+name at all. Adding aria-labels is a production change
+ * outside this test-only PR, so the assertions below target the
+ * text-bearing action-bar buttons. */
+test.describe('Action-bar buttons are reachable by role and accessible name (A11Y-04)', () => {
+  test('儲存草稿 and 提交 resolve via getByRole and still operate', async ({ page }) => {
+    await skipGuidelineModal(page);
+    await page.goto(ANNOTATOR_URL);
+
+    const saveBtn = page.getByRole('button', { name: '儲存草稿', exact: true });
+    await expect(saveBtn).toBeVisible();
+    await saveBtn.click();
+    await expect(page.locator('#toastMsg')).toHaveText('已儲存');
+
+    await page.getByTestId('ws-single-label-chip-negative').click();
+    const submitBtn = page.getByRole('button', { name: '提交', exact: true });
+    await expect(submitBtn).toBeVisible();
+    await submitBtn.click();
+    await expect(page.locator('#toastMsg')).toHaveText('已提交');
+  });
+});

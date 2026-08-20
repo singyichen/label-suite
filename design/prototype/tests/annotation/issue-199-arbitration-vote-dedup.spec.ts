@@ -132,6 +132,24 @@ test.describe('arbitration vote dedup (issue #199)', () => {
     expect(item.finalized_by).toBe(ARBITER);
   });
 
+  /* w6-resilience-a11y.md DUP-05, remaining leg: the annex names "reload 後
+   * 對同一批未變更的決策再次提交" as an equally valid duplicate-submission
+   * vector; the two tests above only cover same-page-lifetime resubmits. */
+  test('a reload between identical resubmissions still leaves exactly one vote entry (DUP-05)', async ({ page }) => {
+    await submit(page, 'B', 'fear');
+
+    await page.reload();
+    await submit(page, 'B', 'fear');
+
+    const state = await readState(page);
+    const item = state[ITEM_ID];
+    expect(item.votes).toHaveLength(1);
+    expect(item.votes[0].arbiter_id).toBe(ARBITER);
+    expect(item.votes[0].choice).toBe('B');
+    expect(item.finalized_value).toBe('fear');
+    expect(item.finalized_by).toBe(ARBITER);
+  });
+
   test('a single vote still records normally (regression)', async ({ page }) => {
     await submit(page, 'B', 'fear');
 

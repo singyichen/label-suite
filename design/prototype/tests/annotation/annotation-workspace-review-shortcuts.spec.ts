@@ -129,3 +129,29 @@ test.describe('Keystrokes that must not decide', () => {
     assertNoPageErrors(errors);
   });
 });
+
+/* w6-resilience-a11y.md A11Y-05: the reviewer's submit action must be
+ * reachable through role + accessible name (what a screen reader announces),
+ * alongside -- not replacing -- the testid lookups used everywhere else in
+ * this file.
+ *
+ * Known gap, recorded as a deviation in the PR report: the per-row ✓/✕
+ * decision buttons themselves (ws-review-row-approve / ws-review-row-reject,
+ * built by buildRowDecisionButtons in annotation-workspace.config.js) are
+ * icon-only with no aria-label, hence NO accessible name -- they cannot be
+ * located by role+name. Fixing that is a production change out of scope for
+ * this test-only PR, so the decision below is made via the keyboard
+ * shortcut and only the text-bearing 送出審核 control is located by role. */
+test.describe('Review submit is reachable by role and accessible name (A11Y-05)', () => {
+  test('送出審核 resolves via getByRole and submits the decided unit', async ({ page }) => {
+    await gotoReviewer(page, 'T001', 'sent-001');
+
+    await page.keyboard.press('a');
+    await expect(page.getByTestId('ws-review-row-approve')).toHaveAttribute('aria-pressed', 'true');
+
+    const submitBtn = page.getByRole('button', { name: '送出審核', exact: true });
+    await expect(submitBtn).toBeVisible();
+    await submitBtn.click();
+    await expect(page.locator('#toastMsg')).toHaveText('審查已提交');
+  });
+});
