@@ -6,8 +6,10 @@
  *   --color-surface = page ground (#F5F3FF / #0B0B12)
  *   --color-card    = card ground (#FFFFFF / #16161F)
  *   --color-ink     = primary text (#1E1B4B / #E2E8F0)
- * The deprecated names (--color-background, --color-text, and
- * --color-surface-as-card) must no longer be defined.
+ *   --color-primary-soft-bg = soft hover ground (#EEF2FF / #1E1B4B)
+ * The deprecated names (--color-background, --color-text,
+ * --color-primary-light, and --color-surface-as-card) must no longer be
+ * defined.
  *
  * Visual invariance: this is a pure rename — computed body/card colors
  * must stay identical in both themes.
@@ -38,11 +40,13 @@ for (const { name, url } of AUTH_PAGES) {
       expect(await tokenValue(page, '--color-surface')).toBe('#F5F3FF');
       expect(await tokenValue(page, '--color-card')).toBe('#FFFFFF');
       expect(await tokenValue(page, '--color-ink')).toBe('#1E1B4B');
+      expect(await tokenValue(page, '--color-primary-soft-bg')).toBe('#EEF2FF');
     });
 
     test('deprecated token names are gone', async ({ page }) => {
       expect(await tokenValue(page, '--color-background')).toBe('');
       expect(await tokenValue(page, '--color-text')).toBe('');
+      expect(await tokenValue(page, '--color-primary-light')).toBe('');
     });
 
     test('dark theme remaps the canonical names', async ({ page }) => {
@@ -50,6 +54,7 @@ for (const { name, url } of AUTH_PAGES) {
       expect(await tokenValue(page, '--color-surface')).toBe('#0B0B12');
       expect(await tokenValue(page, '--color-card')).toBe('#16161F');
       expect(await tokenValue(page, '--color-ink')).toBe('#E2E8F0');
+      expect(await tokenValue(page, '--color-primary-soft-bg')).toBe('#1E1B4B');
     });
 
     test('visual invariance: body ground unchanged in both themes', async ({ page }) => {
