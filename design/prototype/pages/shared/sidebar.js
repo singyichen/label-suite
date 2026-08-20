@@ -544,14 +544,20 @@
 
     var shortcutModal = document.getElementById('shortcutHelpModal');
     var shortcutCloseBtn = document.getElementById('shortcutHelpCloseBtn');
+    var shortcutHelpInvoker = null;
     function openShortcutHelp() {
       if (!shortcutModal) return;
+      shortcutHelpInvoker = document.activeElement;
       shortcutModal.classList.remove('hidden');
       if (shortcutCloseBtn) shortcutCloseBtn.focus();
     }
     function closeShortcutHelp() {
       if (!shortcutModal) return;
       shortcutModal.classList.add('hidden');
+      if (shortcutHelpInvoker && typeof shortcutHelpInvoker.focus === 'function') {
+        shortcutHelpInvoker.focus();
+      }
+      shortcutHelpInvoker = null;
     }
 
     ['shortcutHelpBtn'].forEach(function (id) {
@@ -692,6 +698,10 @@
 
         var iconSpan = document.createElement('span');
         iconSpan.className = 'notif-item-icon' + (isAssign ? ' notif-icon-assign' : ' notif-icon-check');
+        // Lucide plus / check — static markup, no user data
+        iconSpan.innerHTML = isAssign
+          ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>'
+          : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
         itemDiv.appendChild(iconSpan);
 
         var bodyDiv = document.createElement('div');
@@ -792,6 +802,22 @@
     if (shortcutModal) {
       shortcutModal.addEventListener('click', function (event) {
         if (event.target === shortcutModal) closeShortcutHelp();
+      });
+      shortcutModal.addEventListener('keydown', function (event) {
+        if (event.key !== 'Tab') return;
+        var focusables = shortcutModal.querySelectorAll(
+          'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (!focusables.length) return;
+        var first = focusables[0];
+        var last = focusables[focusables.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
       });
     }
     document.addEventListener('keydown', function (event) {
