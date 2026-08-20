@@ -111,14 +111,224 @@
     .swatch--radius { background: var(--color-primary-soft-bg); border-color: var(--color-primary); }
     .swatch--plain { border-style: dashed; }
 
-    .placeholder-note {
-      border: 1px dashed var(--color-border);
+    /* ---- Components section chrome ---- */
+    .component-card {
+      background: var(--color-white);
+      border: 1px solid var(--color-border);
       border-radius: var(--radius-lg);
       padding: 20px 24px;
-      font-size: 13px;
-      color: var(--color-ink-muted);
-      background: var(--color-white);
+      margin-bottom: 24px;
     }
+    .component-card h3 { font-size: 16px; font-weight: 600; }
+    .component-note { font-size: 12px; color: var(--color-ink-muted); margin: 2px 0 16px; }
+    .component-demo { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+    .component-demo + .component-demo { margin-top: 16px; }
+    .component-demo--stack { flex-direction: column; align-items: stretch; max-width: 360px; }
+    .component-demo--stack .input { width: 100%; }
+    /* Element-level resets: lower specificity than the canonical .btn-* /
+       .input class rules below, so every canonical declaration wins. */
+    button { font-family: inherit; font-size: 14px; border: none; background: transparent; }
+    input { font-family: inherit; }
+    .toggle-row { display: flex; justify-content: space-between; align-items: center; gap: 16px; max-width: 360px; }
+    .toggle-info { display: flex; flex-direction: column; }
+    .toggle-label-text { font-size: 14px; font-weight: 500; }
+    .toggle-desc { font-size: 12px; color: var(--color-ink-muted); }
+
+    /* ==================================================================
+       MASTER.md canonical component CSS — copied verbatim from
+       §Buttons, §Inputs, §Toggle Switch. Do not edit here; change
+       MASTER.md first, then re-sync this block.
+       ================================================================== */
+
+    /* Primary Button */
+    .btn-primary {
+      background: var(--color-cta);
+      color: white;
+      padding: 10px 20px;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      transition: all 200ms ease;
+      cursor: pointer;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    /* Secondary Button */
+    .btn-secondary {
+      background: transparent;
+      color: var(--color-primary);
+      border: 1px solid var(--color-border);
+      padding: 10px 20px;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      transition: all 200ms ease;
+      cursor: pointer;
+    }
+
+    /* Danger Button — destructive actions (logout, delete) */
+    .btn-danger {
+      background: transparent;
+      color: #B91C1C;           /* red-700 */
+      border: 1px solid #E2E8F0;
+      padding: 8px 12px;
+      border-radius: var(--radius-md);
+      font-weight: 500;
+      transition: all 200ms ease;
+      cursor: pointer;
+    }
+
+    .btn-danger:hover {
+      color: #B91C1C;
+      background: #FEF2F2;      /* red-50 */
+      border-color: #FECACA;    /* red-200 */
+    }
+
+    /* Ghost / Text Button — low-emphasis actions (view all, cancel) */
+    .btn-ghost {
+      background: transparent;
+      color: var(--color-primary);
+      border: none;
+      padding: 8px 12px;
+      border-radius: var(--radius-md);
+      font-weight: 500;
+      transition: all 200ms ease;
+      cursor: pointer;
+    }
+
+    .btn-ghost:hover {
+      text-decoration: underline;
+    }
+
+    /* Loading state — applies to any button variant */
+    .btn-loading {
+      opacity: 0.7;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    /* Disabled state — applies to any button variant */
+    .btn-disabled,
+    button[disabled] {
+      opacity: 0.4;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    /* OAuth Button — third-party auth entry (Google, GitHub) */
+    .btn-oauth {
+      background: white;
+      color: #334155;           /* slate-700 */
+      border: 1px solid #E2E8F0;
+      padding: 10px 16px;
+      border-radius: var(--radius-md);
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background-color 200ms ease, border-color 200ms ease;
+      cursor: pointer;
+    }
+
+    .btn-oauth:hover {
+      background: #F8FAFC;      /* slate-50 */
+      border-color: #CBD5E1;    /* slate-300 */
+    }
+
+    /* Icon-only Button — compact trigger (mobile menu, utility controls) */
+    .btn-icon {
+      width: 36px;
+      height: 36px;
+      border: 1px solid #E2E8F0;
+      border-radius: var(--radius-md);
+      background: white;
+      color: #475569;           /* slate-600 */
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease;
+      cursor: pointer;
+    }
+
+    .btn-icon:hover {
+      background: #F8FAFC;      /* slate-50 */
+      border-color: #CBD5E1;    /* slate-300 */
+      color: #1E293B;           /* slate-800 */
+    }
+
+    /* Language Toggle Button — locale switcher (zh-TW / EN) */
+    .btn-language {
+      background: white;
+      color: #334155;           /* slate-700 */
+      border: 1px solid #E2E8F0;
+      padding: 8px 12px;
+      min-height: 36px;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background-color 200ms ease, border-color 200ms ease;
+      cursor: pointer;
+    }
+
+    .btn-language:hover {
+      background: #F8FAFC;      /* slate-50 */
+      border-color: #CBD5E1;    /* slate-300 */
+    }
+
+    .input {
+      padding: 12px 16px;
+      border: 1px solid #E2E8F0;
+      border-radius: var(--radius-md);
+      font-size: 16px;
+      transition: border-color 200ms ease;
+    }
+
+    .input:focus {
+      border-color: var(--color-primary);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+    }
+
+    .input.error {
+      border-color: #B91C1C;
+    }
+
+    /* Readonly — managed by system, not user-editable (e.g. SSO email) */
+    .input[readonly],
+    .input.readonly {
+      background: #F8FAFC;      /* slate-50 */
+      border-color: #F1F5F9;    /* slate-100 */
+      color: #94A3B8;            /* slate-400 */
+      cursor: not-allowed;
+    }
+
+    /* Supporting text under field */
+    .field-hint {
+      margin-top: 6px;
+      font-size: 12px;
+      line-height: 1.4;
+      color: #64748B;            /* slate-500 */
+    }
+
+    .field-error {
+      margin-top: 6px;
+      font-size: 12px;
+      line-height: 1.4;
+      color: #B91C1C;            /* red-700 */
+    }
+
+    .toggle-switch { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .toggle-slider { position: absolute; inset: 0; background: var(--color-border); border-radius: var(--radius-full); cursor: pointer; transition: background var(--dur-fast); }
+    .toggle-slider::before { content: ''; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px; border-radius: 50%; background: white; transition: transform var(--dur-fast); }
+    .toggle-switch input:checked + .toggle-slider { background: var(--color-primary); }
+    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(18px); }
 
     @media (prefers-reduced-motion: reduce) {
       * { transition: none !important; animation: none !important; }
@@ -171,9 +381,57 @@
 
     <section id="components" aria-labelledby="componentsHeading">
       <h2 class="section-heading" id="componentsHeading">Components</h2>
-      <p class="placeholder-note" id="componentsPlaceholder">
-        Component cards（MASTER.md canonical markup，含 hover / disabled / error states）於 stacked PR 加入。
-      </p>
+      <p class="section-note">MASTER.md canonical markup — controls 批次（Buttons / Inputs / Toggle Switch）。feedback 與 structure 批次於後續 stacked PR 加入。</p>
+
+      <div class="component-card" id="comp-buttons">
+        <h3>Buttons</h3>
+        <p class="component-note">§Buttons — 七個 variant 與 loading / disabled 狀態；hover 效果為真實 :hover 規則，移入即可檢視。</p>
+        <div class="component-demo">
+          <button class="btn-primary" type="button">建立任務</button>
+          <button class="btn-secondary" type="button">儲存草稿</button>
+          <button class="btn-danger" type="button">刪除任務</button>
+          <button class="btn-ghost" type="button">查看全部</button>
+          <button class="btn-oauth" type="button"><img src="assets/google-g.svg" width="16" height="16" alt="" /> Continue with Google</button>
+          <button class="btn-icon" type="button" aria-label="設定"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
+          <button class="btn-language" type="button"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg> EN</button>
+        </div>
+        <div class="component-demo">
+          <button class="btn-primary btn-loading" type="button">建立中…</button>
+          <button class="btn-primary" type="button" disabled>建立任務</button>
+          <button class="btn-secondary" type="button" disabled>儲存草稿</button>
+        </div>
+      </div>
+
+      <div class="component-card" id="comp-inputs">
+        <h3>Inputs</h3>
+        <p class="component-note">§Inputs — default（點擊可見 focus ring）/ error / readonly，搭配 field-hint 與 field-error。</p>
+        <div class="component-demo component-demo--stack">
+          <div>
+            <input class="input" type="text" placeholder="任務名稱" aria-label="任務名稱（default 示例）" />
+            <p class="field-hint">3–40 字元，建立後可修改。</p>
+          </div>
+          <div>
+            <input class="input error" type="text" value="＠＠" aria-label="任務名稱（error 示例）" />
+            <p class="field-error" role="alert">名稱含有不允許的字元。</p>
+          </div>
+          <input class="input" type="text" value="sso-user@example.com" readonly aria-label="Email（readonly 示例）" />
+        </div>
+      </div>
+
+      <div class="component-card" id="comp-toggle">
+        <h3>Toggle Switch</h3>
+        <p class="component-note">§Toggle Switch — 40×22 track、16px thumb、checked 時 track 轉 --color-primary。</p>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <span class="toggle-label-text">Dry-run mode</span>
+            <span class="toggle-desc">Run without materializing results</span>
+          </div>
+          <label class="toggle-switch" aria-label="Toggle dry-run mode">
+            <input type="checkbox">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
     </section>
   </main>
 
