@@ -85,15 +85,51 @@ function loadSeedRecords(): SeedRecord[] {
 
 /* w5 §1.2: 2 dry_run records + 3 official_run records; `xr-off-002` is the
  * forced-divergence official sample (R01 approves the annotator's answer,
- * R02 corrects it, so the review unit lands in the dispute pool). The
- * dry/official split here is descriptive only -- `datasetRecords` stays one
- * flat array (matching every existing seed profile, e.g. T001), because
- * neither `resolveTaskProfile` nor `annotation-list.html`'s row builders
- * filter `datasetRecords` by run_type; only the `materializedRuns` count
- * badge is run_type-aware. */
+ * R02 corrects it, so the review unit lands in the dispute pool).
+ *
+ * The prototype itself never filters `datasetRecords` by run_type (neither
+ * `resolveTaskProfile` nor `annotation-list.html`'s row builders do; only
+ * the `materializedRuns` count badge is run_type-aware), because no
+ * existing seed task carries both runs. The XROLE lifecycle is the first
+ * task that does, and the canonical journey audits per-run counts (w4
+ * XROLE-07: 2 common dry samples; XROLE-10: 3 assigned official samples),
+ * so the patch script scopes the seeded `datasetRecords` to the page's
+ * `run_type` query param at seed time (bot review, PR #247). Pages
+ * navigated without a `run_type` param see all 5 records. */
 export const DRY_RUN_RECORD_IDS = ['xr-dry-001', 'xr-dry-002'];
 export const OFFICIAL_RUN_RECORD_IDS = ['xr-off-001', 'xr-off-002', 'xr-off-003'];
 export const FORCED_DIVERGENCE_RECORD_ID = 'xr-off-002';
+
+/* Annotator seat plan (w4 §1): the 3 annotators jointly mark both dry
+ * samples (XROLE-07 needs 2 common samples × 3 annotators for the IAA
+ * gate), while each official record is assigned round-robin to exactly one
+ * annotator (w4 §1.1's stated assumption for XROLE-10; 013/014 leave the
+ * official assignment algorithm undefined, so the fixture pins one).
+ * `annotation-list.html` builds reviewer rows exclusively from
+ * `REVIEWER_MOCK_ROWS[taskId]` (buildReviewUnitRows -> getReviewerMockRows,
+ * `annotation-list.html:1345-1374`) -- without these rows the reviewer list
+ * is empty and the review/dispute/arbitration stages are unreachable (bot
+ * review, PR #247), so `buildXRoleSeedPatch` seeds them per record. */
+export const DRY_RUN_ANNOTATOR_IDS = ['A01', 'A02', 'A03'];
+export const OFFICIAL_RUN_ASSIGNMENTS: Record<string, string> = {
+  'xr-off-001': 'A01',
+  'xr-off-002': 'A02',
+  'xr-off-003': 'A03',
+};
+
+/* Mock reviewer rows follow the existing REVIEWER_MOCK_ROWS convention
+ * (`annotation-workspace.data.js:394-399`): each row's answers derive from
+ * the record's gold answer. The row enumerates the review unit; once an
+ * annotator stores a real submission, status/timestamps read from it. */
+function buildReviewerMockRows(): Record<string, { annotator: string; answers: { single_label: string } }[]> {
+  const rows: Record<string, { annotator: string; answers: { single_label: string } }[]> = {};
+  for (const record of loadSeedRecords()) {
+    rows[record.id] = DRY_RUN_RECORD_IDS.includes(record.id)
+      ? DRY_RUN_ANNOTATOR_IDS.map((annotator) => ({ annotator, answers: { single_label: record.gold_label } }))
+      : [{ annotator: OFFICIAL_RUN_ASSIGNMENTS[record.id], answers: { single_label: record.gold_label } }];
+  }
+  return rows;
+}
 
 /* Arbiter roster entry the patch grants can_arbitrate to. Kept distinct from
  * any reviewer_id a scenario uses as R01/R02 -- isArbiterCandidate() also
@@ -107,9 +143,21 @@ const ARBITER_REVIEWER_ID = 'R03';
 export function buildXRoleSeedPatch(taskId: string): string {
   const id = JSON.stringify(taskId);
   const records = JSON.stringify(loadSeedRecords());
+  const dryIds = JSON.stringify(DRY_RUN_RECORD_IDS);
+  const mockRows = JSON.stringify(buildReviewerMockRows());
   const arbiterId = JSON.stringify(ARBITER_REVIEWER_ID);
 
   return `
+    var xroleAllRecords = ${records};
+    var xroleDryIds = ${dryIds};
+    var xroleRunType = new URLSearchParams(window.location.search).get('run_type');
+    var xroleRecords = xroleAllRecords;
+    if (xroleRunType === 'dry_run' || xroleRunType === 'official_run') {
+      xroleRecords = xroleAllRecords.filter(function (r) {
+        return (xroleDryIds.indexOf(r.id) !== -1) === (xroleRunType === 'dry_run');
+      });
+    }
+
     if (window.LabelSuiteTaskListData && Array.isArray(window.LabelSuiteTaskListData.tasks)) {
       var xroleListEntry = {
         id: ${id},
@@ -145,13 +193,15 @@ export function buildXRoleSeedPatch(taskId: string): string {
         }],
         fieldRoleMap: { text: 'input', gold_label: 'output' },
         datasetFileName: 'xrole-lifecycle-seed.json',
-        datasetRecords: ${records},
-        /* w5 §1.2: 2 dry_run + 3 official_run records (bot review, PR #247 --
-         * the annotation-list/workspace fallback to datasetRecords.length
-         * already made this harmless, but declaring both run types keeps the
-         * seed profile's counts explicit and matches the fixture split). */
+        datasetRecords: xroleRecords,
+        /* w5 §1.2: 2 dry_run + 3 official_run records; totals match the
+         * run-scoped datasetRecords above. */
         materializedRuns: { dry_run: { round: 1, total: 2 }, official_run: { round: 1, total: 3 } }
       };
+    }
+
+    if (window.LabelSuiteAnnotationWorkspaceData && window.LabelSuiteAnnotationWorkspaceData.REVIEWER_MOCK_ROWS) {
+      window.LabelSuiteAnnotationWorkspaceData.REVIEWER_MOCK_ROWS[${id}] = ${mockRows};
     }
 
     if (window.LabelSuiteAnnotationWorkspaceData && Array.isArray(window.LabelSuiteAnnotationWorkspaceData.REVIEWER_ROSTER)) {
