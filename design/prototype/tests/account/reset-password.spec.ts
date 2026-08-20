@@ -163,6 +163,44 @@ test.describe('Reset Password page — submit success (spec 004 FR-007)', () => 
   // Prototype simulates an API call and then shows the success panel.
   // Actual redirect to /login + DB update requires backend (not tested here).
 
+  test('locks full page during loading to prevent recovery-state changes', async ({ page }) => {
+    // Catches the regression where only the submit button is disabled, leaving
+    // password fields, visibility toggles, token-state controls, language, and navigation interactive.
+    await page.goto(RESET_URL);
+    await setProtoState(page, '有效 token');
+    await page.getByTestId('new-password-input').fill('newpassword123');
+    await page.getByTestId('confirm-password-input').fill('newpassword123');
+    await page.getByTestId('update-password-btn').click();
+
+    const pageRoot = page.locator('body');
+    const pageControls = [
+      page.getByTestId('new-password-input'),
+      page.getByTestId('confirm-password-input'),
+      page.locator('#eyeToggleNew'),
+      page.locator('#eyeToggleConfirm'),
+      page.getByTestId('update-password-btn'),
+      page.getByTestId('lang-toggle'),
+      page.locator('.navbar-brand'),
+      page.getByTestId('back-to-login-link'),
+      page.locator('#successBackLink'),
+      page.getByTestId('reapply-link'),
+      page.locator('#btnValid'),
+      page.locator('#btnExpired'),
+      page.locator('#btnUsed'),
+    ];
+
+    await expect(pageRoot).toHaveAttribute('aria-busy', 'true');
+    for (const control of pageControls) {
+      expect(await control.evaluate(element =>
+        element.matches(':disabled') || element.getAttribute('aria-disabled') === 'true' || element.closest('[inert]') !== null
+      )).toBe(true);
+    }
+
+    await expect(page.locator('#successPanel')).toHaveClass(/visible/, { timeout: 5000 });
+    await expect(pageRoot).not.toHaveAttribute('aria-busy', 'true');
+    await expect(pageRoot).not.toHaveAttribute('inert', '');
+  });
+
   test('shows success panel after valid passwords are submitted', async ({ page }) => {
     await page.goto(RESET_URL);
     await setProtoState(page, '有效 token');

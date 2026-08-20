@@ -96,6 +96,35 @@ test.describe('Forgot Password page — submit success (spec 004 FR-004)', () =>
   // Prototype simulates 1 200 ms API delay then always shows success panel
   // (generic message regardless of whether the email exists — SC-002)
 
+  test('locks full page during loading to prevent duplicate recovery actions', async ({ page }) => {
+    // Catches the regression where only the submit button is disabled, leaving
+    // the email field, language toggle, and page navigation interactive.
+    await page.goto(FORGOT_URL);
+    await page.getByTestId('email-input').fill('anyone@example.com');
+    await page.getByTestId('send-reset-btn').click();
+
+    const pageRoot = page.locator('body');
+    const pageControls = [
+      page.getByTestId('email-input'),
+      page.getByTestId('send-reset-btn'),
+      page.getByTestId('lang-toggle'),
+      page.locator('.navbar-brand'),
+      page.getByTestId('back-to-login-link'),
+      page.locator('#successBackLink'),
+    ];
+
+    await expect(pageRoot).toHaveAttribute('aria-busy', 'true');
+    for (const control of pageControls) {
+      expect(await control.evaluate(element =>
+        element.matches(':disabled') || element.getAttribute('aria-disabled') === 'true' || element.closest('[inert]') !== null
+      )).toBe(true);
+    }
+
+    await expect(page.locator('#successPanel')).toHaveClass(/visible/, { timeout: 5000 });
+    await expect(pageRoot).not.toHaveAttribute('aria-busy', 'true');
+    await expect(pageRoot).not.toHaveAttribute('inert', '');
+  });
+
   test('shows success panel after valid email is submitted', async ({ page }) => {
     await page.goto(FORGOT_URL);
     await page.getByTestId('email-input').fill('anyone@example.com');
