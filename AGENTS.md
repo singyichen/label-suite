@@ -8,7 +8,7 @@
 frontend/src/features/[module]/    ← feature-owned; no cross-feature imports
 frontend/src/shared/               ← only if used by 2+ distinct feature modules
 specs/[module]/NNN-feature/        ← spec artifacts per feature
-design/wireframes/pages/[module]/  ← Pencil wireframes (.pen files)
+design/wireframes/pages/[module]/  ← Pencil wireframes (.pen files; frozen 2026-08-20 — see design/wireframes/README.md)
 design/prototype/pages/[module]/   ← HTML prototypes
 ```
 
@@ -91,7 +91,7 @@ Review output format:
 New features, behavior changes, breaking API changes, and architectural changes must go through:
 
 ```
-/superpowers:brainstorm → /speckit.specify → /label-suite-design (prototype) → /pencil-wireframe (optional)
+/superpowers:brainstorm → /speckit.specify → /label-suite-design (prototype) → /pencil-wireframe (frozen — see design/wireframes/README.md)
 → /speckit.plan → /speckit.tasks → /speckit.implement → /speckit.analyze → /pr-flow
 ```
 

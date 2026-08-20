@@ -86,7 +86,7 @@ Every implementation sprint follows a strict **Planner → Generator → Evaluat
 Full pipeline — each stage is a hard gate:
 
 ```text
-/superpowers:brainstorm → /speckit.specify → /label-suite-design (prototype) → /pencil-wireframe (optional)
+/superpowers:brainstorm → /speckit.specify → /label-suite-design (prototype) → /pencil-wireframe (frozen — see design/wireframes/README.md)
   → /speckit.clarify (optional)
   → /speckit.plan → /speckit.tasks → /speckit.implement → /speckit.analyze → /speckit.checklist → /pr-flow
 ```
@@ -100,8 +100,9 @@ Full pipeline — each stage is a hard gate:
 
 **Design artifact paths:**
 
-- Wireframes: `design/wireframes/pages/[module]/[page].pen`
+- Wireframes: `design/wireframes/pages/[module]/[page].pen` (frozen 2026-08-20, issue #183 — see design/wireframes/README.md)
 - Prototypes: `design/prototype/pages/[module]/[page].html`
+- Living styleguide: `design/prototype/components-showcase.html`
 - Specs: `specs/[module]/NNN-feature/`
 
 **Spec status**: Update `specs/STATUS.md` at every pipeline stage transition (see STATUS.md for full trigger list).
