@@ -374,8 +374,6 @@ html[data-theme="dark"] {
 }
 ```
 
-> Migration note: shipped auth pages currently use the deprecated names above; they will be migrated to canonical names in the issue #183 account page-fix PR. Until then this template is the target state, not the shipped state.
-
 ### Typography
 
 - **Heading Font:** Crimson Pro (`--font-serif-display`)
@@ -2743,3 +2741,4 @@ Before delivering any UI code, verify:
 | v1.10 | 2026-08-19 | **Task-management page specs (issue #183)** — Dark Rule 8 rewritten with shipped light-value table for `ar-va-chip-*` / `ar-classif-chip` and gains the previously undocumented `md-chip` (light + dark); run-badge naming note updated after the `badge-run-*` alias rename in task-list (task-detail's drifted legacy pair remains flagged); dark badge reference row drops the removed `badge-run-dry` alias; added `design/system/pages/task-new.md`, `task-detail.md`, `task-list.md` |
 | v1.11 | 2026-08-19 | **Dataset page specs (issue #183)** — Pagination `.page-btn.active` color corrected from literal `white` to `var(--color-white)` (dashboard and dataset shipped the token form so it flips with the dark palette); added `design/system/pages/dataset-analysis-list.md`, `dataset-analysis-detail.md` |
 | v1.12 | 2026-08-20 | **Admin page specs + sidebar arbitration (issue #183)** — Notification item-icon row updated to the shipped Lucide-SVG-on-semantic-tokens form (success / primary families); the v1.9 "known deviations" note replaced by the arbitration record: `.notif-badge` `#EF4444`/white sanctioned as constant across themes, fragment z-index values (600/700/300/320) sanctioned as a shared-fragment exception; added `design/system/pages/role-settings.md`, `user-management.md` |
+| v1.13 | 2026-08-20 | **Auth page specs (issue #183)** — Dark Rule 9 migration note removed: shipped auth pages now use the canonical local token names, so the template is the shipped state; added `design/system/pages/login.md` (hosts the shared auth-chrome arbitrations: shadow-elevated card vs Login Card, `.lang-toggle`/`.sso-btn` indigo hover vs `btn-language`/`btn-oauth`, auth navbar variant, `.eye-toggle`), `register.md` (`.banner` error/success family, `.field-hint`), `forgot-password.md` (shipped State Panel / Success), `reset-password.md` (shipped State Panel / Token Error, `proto-toggle-bar` deferral) |
