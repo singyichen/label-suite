@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Label Suite — Components Showcase</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/tokens.css" />
+  <style>
+    /* Living styleguide (issue #183). Tokens come exclusively from
+       assets/tokens.css — this block styles the showcase chrome only. */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-surface);
+      color: var(--color-ink);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    .showcase-header {
+      position: sticky;
+      top: 0;
+      z-index: var(--z-sticky);
+      height: 64px;
+      background: var(--color-white);
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+    }
+
+    .showcase-title {
+      font-family: var(--font-serif-display);
+      font-weight: 700;
+      font-size: 18px;
+    }
+
+    .showcase-note { font-size: 12px; color: var(--color-ink-muted); }
+
+    .theme-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 6px 12px;
+      background: var(--color-white);
+      color: var(--color-ink);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: border-color var(--dur-fast), background var(--dur-fast);
+    }
+    .theme-toggle:hover { border-color: var(--color-primary); background: var(--color-primary-soft-bg); }
+    .theme-toggle:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+
+    main { max-width: 960px; margin: 0 auto; padding: 32px 24px 96px; }
+
+    main > section { margin-bottom: 40px; }
+
+    .section-heading {
+      font-family: var(--font-serif-display);
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .section-note { font-size: 13px; color: var(--color-text-soft); margin-bottom: 16px; }
+
+    .subgroup-heading {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--color-ink-muted);
+      margin: 16px 0 8px;
+    }
+
+    .token-grid {
+      background: var(--color-white);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 8px 16px;
+    }
+
+    .token-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 0;
+      font-size: 13px;
+    }
+    .token-row + .token-row { border-top: 1px solid var(--color-border-muted, var(--color-border)); }
+
+    .token-name, .token-value { font-family: var(--font-mono, monospace); }
+    .token-name { flex-shrink: 0; min-width: 240px; }
+    .token-value { color: var(--color-ink-muted); overflow-wrap: anywhere; }
+
+    .swatch {
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+    }
+    .swatch--radius { background: var(--color-primary-soft-bg); border-color: var(--color-primary); }
+    .swatch--plain { border-style: dashed; }
+
+    .placeholder-note {
+      border: 1px dashed var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 20px 24px;
+      font-size: 13px;
+      color: var(--color-ink-muted);
+      background: var(--color-white);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; animation: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="showcase-header" role="banner">
+    <div>
+      <div class="showcase-title">Label Suite — Components Showcase</div>
+      <div class="showcase-note">Living styleguide · tokens enumerated at runtime from assets/tokens.css</div>
+    </div>
+    <button class="theme-toggle" id="themeToggle" type="button" aria-pressed="false">深色模式</button>
+  </header>
+
+  <main>
+    <section id="palette" aria-labelledby="paletteHeading">
+      <h2 class="section-heading" id="paletteHeading">Palette</h2>
+      <p class="section-note">核心色盤與別名。State 色系見下一節。</p>
+      <div class="token-grid" data-token-group="palette"></div>
+    </section>
+
+    <section id="state-colors" aria-labelledby="stateHeading">
+      <h2 class="section-heading" id="stateHeading">State Colors</h2>
+      <p class="section-note">success / error / warning / info 語意色家族。</p>
+      <div class="token-grid" data-token-group="state"></div>
+    </section>
+
+    <section id="typography" aria-labelledby="typeHeading">
+      <h2 class="section-heading" id="typeHeading">Typography</h2>
+      <p class="section-note">字族、字級與行高 token。</p>
+      <div class="token-grid" data-token-group="typography"></div>
+    </section>
+
+    <section id="spacing" aria-labelledby="spacingHeading">
+      <h2 class="section-heading" id="spacingHeading">Spacing</h2>
+      <div class="token-grid" data-token-group="spacing"></div>
+    </section>
+
+    <section id="radius" aria-labelledby="radiusHeading">
+      <h2 class="section-heading" id="radiusHeading">Radius</h2>
+      <div class="token-grid" data-token-group="radius"></div>
+    </section>
+
+    <section id="z-index" aria-labelledby="zHeading">
+      <h2 class="section-heading" id="zHeading">Z-index</h2>
+      <div class="token-grid" data-token-group="z"></div>
+    </section>
+
+    <section id="components" aria-labelledby="componentsHeading">
+      <h2 class="section-heading" id="componentsHeading">Components</h2>
+      <p class="placeholder-note" id="componentsPlaceholder">
+        Component cards（MASTER.md canonical markup，含 hover / disabled / error states）於 stacked PR 加入。
+      </p>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      'use strict';
+
+      var STATE_RE = /^--color-(success|error|warning|info)/;
+
+      /* Group predicates, checked in order. Anything unmatched lands in
+         the palette's trailing "Other tokens" subgroup so every variable
+         tokens.css defines renders live somewhere on this page. */
+      var GROUPS = [
+        { key: 'state',      test: function (n) { return STATE_RE.test(n); } },
+        { key: 'palette',    test: function (n) { return /^--(color|fg|bg)-/.test(n); } },
+        { key: 'typography', test: function (n) { return /^--(font|text|leading)-/.test(n); } },
+        { key: 'spacing',    test: function (n) { return /^--space-/.test(n); } },
+        { key: 'radius',     test: function (n) { return /^--radius-/.test(n); } },
+        { key: 'z',          test: function (n) { return /^--z-/.test(n); } },
+      ];
+
+      function collectTokenNames() {
+        var names = [];
+        var seen = {};
+        for (var s = 0; s < document.styleSheets.length; s++) {
+          var sheet = document.styleSheets[s];
+          if (!sheet.href || sheet.href.indexOf('tokens.css') === -1) continue;
+          var rules = sheet.cssRules;
+          for (var r = 0; r < rules.length; r++) {
+            var style = rules[r].style;
+            if (!style) continue;
+            for (var p = 0; p < style.length; p++) {
+              var prop = style[p];
+              if (prop.indexOf('--') === 0 && !seen[prop]) {
+                seen[prop] = true;
+                names.push(prop);
+              }
+            }
+          }
+        }
+        return names;
+      }
+
+      function groupOf(name) {
+        for (var i = 0; i < GROUPS.length; i++) {
+          if (GROUPS[i].test(name)) return GROUPS[i].key;
+        }
+        return 'other';
+      }
+
+      function swatchFor(name, group) {
+        var el = document.createElement('span');
+        el.setAttribute('aria-hidden', 'true');
+        if (group === 'palette' || group === 'state') {
+          el.className = 'swatch';
+          el.style.background = 'var(' + name + ')';
+        } else if (group === 'radius') {
+          el.className = 'swatch swatch--radius';
+          el.style.borderRadius = 'var(' + name + ')';
+        } else {
+          el.className = 'swatch swatch--plain';
+        }
+        return el;
+      }
+
+      function render() {
+        var names = collectTokenNames();
+        var rootStyle = getComputedStyle(document.documentElement);
+        var grids = {};
+        document.querySelectorAll('[data-token-group]').forEach(function (grid) {
+          grids[grid.getAttribute('data-token-group')] = grid;
+          grid.replaceChildren();
+        });
+
+        var otherHeadingAdded = false;
+        names.forEach(function (name) {
+          var group = groupOf(name);
+          var grid = grids[group === 'other' ? 'palette' : group];
+          if (!grid) return;
+          if (group === 'other' && !otherHeadingAdded) {
+            var h = document.createElement('div');
+            h.className = 'subgroup-heading';
+            h.textContent = 'Other tokens (shadow / motion / layout offsets)';
+            grid.appendChild(h);
+            otherHeadingAdded = true;
+          }
+          var row = document.createElement('div');
+          row.className = 'token-row';
+          row.appendChild(swatchFor(name, group));
+          var nameEl = document.createElement('code');
+          nameEl.className = 'token-name';
+          nameEl.textContent = name;
+          var valueEl = document.createElement('code');
+          valueEl.className = 'token-value';
+          valueEl.textContent = rootStyle.getPropertyValue(name).trim();
+          row.appendChild(nameEl);
+          row.appendChild(valueEl);
+          grid.appendChild(row);
+        });
+      }
+
+      var toggle = document.getElementById('themeToggle');
+      toggle.addEventListener('click', function () {
+        var dark = document.documentElement.getAttribute('data-theme') !== 'dark';
+        document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+        toggle.setAttribute('aria-pressed', String(dark));
+        toggle.textContent = dark ? '淺色模式' : '深色模式';
+        render(); /* token values change with the theme */
+      });
+
+      render();
+    })();
+  </script>
+</body>
+</html>
