@@ -288,13 +288,36 @@
     renderTaskList('reviewerTaskList', 'reviewer', 'reviewer');
   }
 
-  function openTaskList(taskRole) {
+  function openTaskList(taskRole, status) {
     var systemRole = taskRole === 'super_admin'
       ? 'super_admin'
       : 'user';
     global.LabelSuiteSharedSidebar.setSystemRole(systemRole);
-    global.location.href = '../task-management/task-list.html?task_role='
+    var url = '../task-management/task-list.html?task_role='
       + encodeURIComponent(taskRole);
+    if (status) url += '&status=' + encodeURIComponent(status);
+    global.location.href = url;
+  }
+
+  function bindPendingIaaStatEvent(elementId, taskRole) {
+    var element = document.getElementById(elementId);
+    if (!element) return;
+    function activate() {
+      global.LabelSuiteAnalytics.track('prototype_cta_clicked', {
+        cta: 'pending_iaa_stat_clicked',
+        task_role: taskRole,
+        lang: lang,
+        scenario: scenario,
+      });
+      openTaskList(taskRole, 'waiting_iaa_confirmation');
+    }
+    element.addEventListener('click', activate);
+    element.addEventListener('keydown', function (event) {
+      if (event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar') {
+        event.preventDefault();
+        activate();
+      }
+    });
   }
 
   function applyLang(language) {
@@ -449,6 +472,8 @@
         openTaskList('project_leader');
       }
     );
+    bindPendingIaaStatEvent('adminPendingIaaValue', 'super_admin');
+    bindPendingIaaStatEvent('plPendingIaaValue', 'project_leader');
   }
 
   function getTrackingContext() {

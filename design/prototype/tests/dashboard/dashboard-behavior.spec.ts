@@ -5,6 +5,8 @@
  *   - Leader CTA navigates to task creation (was analytics-only dead button)
  *   - UXC-11: scenario round-trips through the URL (?scenario=)
  *   - UXC-09: an empty task list renders an explicit empty state
+ *   - Issue #186: pending-IAA stat is a clickable, keyboard-operable entry
+ *     point that reconciles with the task list it links to
  */
 import { test, expect } from '@playwright/test';
 
@@ -62,5 +64,41 @@ test.describe('Dashboard — UXC-09 empty task list', () => {
     const emptyState = page.getByTestId('annotator-view').getByTestId('task-list-empty');
     await expect(emptyState).toBeVisible();
     await expect(emptyState).toHaveText(/目前沒有進行中的任務|No active tasks yet/);
+  });
+});
+
+test.describe('Dashboard — issue #186 pending-IAA stat entry point', () => {
+  test('admin stat is clickable and reconciles with the filtered task list', async ({ page }) => {
+    await page.goto(DASHBOARD_URL);
+    await page.locator('.scenario-pill[data-scenario="super_admin_data"]').click();
+
+    const stat = page.locator('#adminPendingIaaValue');
+    await expect(stat).toHaveAttribute('role', 'button');
+    await expect(stat).toHaveAttribute('tabindex', '0');
+    await expect(stat).toHaveText('5 個');
+    await stat.click();
+
+    await expect(page).toHaveURL(
+      /\/pages\/task-management\/task-list\.html\?task_role=super_admin&status=waiting_iaa_confirmation$/,
+    );
+    await expect(page.locator('#statusFilter')).toHaveValue('waiting_iaa_confirmation');
+    await expect(page.locator('#paginationInfo')).toContainText('共 5 筆');
+    await expect(page.locator('#taskTableBody tr')).toHaveCount(5);
+  });
+
+  test('project leader stat is keyboard-operable and reconciles with the filtered task list', async ({ page }) => {
+    await page.goto(DASHBOARD_URL);
+    await page.locator('.scenario-pill[data-scenario="project_leader"]').click();
+
+    const stat = page.locator('#plPendingIaaValue');
+    await expect(stat).toHaveAttribute('role', 'button');
+    await stat.focus();
+    await page.keyboard.press('Enter');
+
+    await expect(page).toHaveURL(
+      /\/pages\/task-management\/task-list\.html\?task_role=project_leader&status=waiting_iaa_confirmation$/,
+    );
+    await expect(page.locator('#paginationInfo')).toContainText('共 5 筆');
+    await expect(page.locator('#taskTableBody tr')).toHaveCount(5);
   });
 });
