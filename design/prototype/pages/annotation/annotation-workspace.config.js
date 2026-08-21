@@ -79,6 +79,7 @@
       unitStateDisputed: '爭議中',
       unitStateFinalized: '已定稿',
       unitStateNone: '尚無標記提交',
+      reviewEmptyUnitNote: '此標記員尚未提交此樣本，暫無可審核的內容。',
     },
     en: {
       sampleListTitle: 'Samples',
@@ -143,6 +144,7 @@
       unitStateDisputed: 'Disputed',
       unitStateFinalized: 'Finalized',
       unitStateNone: 'No submission yet',
+      reviewEmptyUnitNote: 'This annotator has not submitted this sample yet; there is nothing to review.',
     },
   };
   if (window.TASK_CONFIG_I18N) {
@@ -2710,6 +2712,25 @@
       renderArbitrationCard(preview, submission);
       return;
     }
+    /* Empty review unit gate (issue #307): "truly empty" reuses the exact
+       two sources the FR-064 banner and the FR-044a fallback already read —
+       no stored annotator submission (unitStatus === null) AND no
+       REVIEWER_MOCK_ROWS stand-in for this group (demoAnnotatorRow() null;
+       T015's ofs-05-not-submitted is the seeded demo point). Without the
+       gate getReviewerRows() returns [] here, so the review card rendered
+       submit-able chrome whose all-decided validation passed vacuously and
+       an empty review could be filed against nothing. Keeping the footer
+       submit hidden also blocks the FR-058 Ctrl/Cmd+Enter path
+       (setupActionShortcuts skips hidden buttons). */
+    if (unitStatus === null && !demoAnnotatorRow()) {
+      if (reviewSubmitBtn) reviewSubmitBtn.classList.add('hidden');
+      var emptyCard = document.createElement('div');
+      emptyCard.className = 'content-card';
+      emptyCard.setAttribute('data-testid', 'ws-review-empty-unit');
+      emptyCard.textContent = t('reviewEmptyUnitNote');
+      preview.appendChild(emptyCard);
+      return;
+    }
     if (reviewSubmitBtn) reviewSubmitBtn.classList.remove('hidden');
 
     /* Output types whose registry entry declares rendersInputPreview:true
@@ -2765,6 +2786,12 @@
   function handleReviewSubmit() {
     var history = document.getElementById('wsReviewHistory');
     if (!history) return;
+    /* issue #307: a truly empty unit (no stored submission, no mock-row
+       stand-in) yields zero review rows, so the all-decided check below
+       would pass vacuously and submit an empty review. The render path
+       already hides the submit button; this guard keeps any residual
+       invocation path inert. */
+    if (!getAnnotatorSubmission() && !demoAnnotatorRow()) return;
     var rowsByOutKey = {};
     var allDecided = true;
     var annotatorId = currentAnnotatorId();
