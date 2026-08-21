@@ -57,7 +57,9 @@ test.describe('The reviewer left column lists review units', () => {
       await skipGuidelineModal(page);
       await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer', run_type: runType }));
 
-      await expect(page.getByTestId('ws-progress-text')).toHaveText(`0 / ${T001_UNITS} 已提交`);
+      /* Wording is the reviewer's 已審 x / n (issue #309), the denominator
+         is still the review-unit count this suite pins. */
+      await expect(page.getByTestId('ws-progress-text')).toHaveText(`已審 0 / ${T001_UNITS}`);
     });
   }
 });
