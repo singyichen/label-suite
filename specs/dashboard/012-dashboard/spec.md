@@ -1,7 +1,7 @@
 ---
 功能分支: feat/dashboard-output-types
 建立日期: 2026-04-05
-版本: 2.1.0
+版本: 2.2.0
 狀態: In Progress
 ---
 
@@ -377,6 +377,7 @@ Super Admin 登入後看到平台層級總覽，用於掌握整體人員、任�
 - **FR-011B1**：點擊 Reviewer 任務列中除 `快速審核` 按鈕以外的區域時，系統必須以該列任務上下文導向 `annotation-list`（至少包含 `task_id`、`role=reviewer`、`run_type`、`task_type`）；`task_type` 是 015 尚未遷移前的獨立 routing compatibility 欄位，不得由 `outputs[]` 第一項或其組合推導。
 - **FR-011B2**：Reviewer 每筆可見任務必須保留獨立 `task_id`、可操作 sample 與 routing compatibility metadata，不得因多筆任務具有相同 `outputs[].type` 或相同 compatibility renderer 而合併導頁上下文。
 - **FR-011C**：點擊 Reviewer 任務列 `快速審核` 時，若任務存在非 `已提交` sample，系統必須導向 `annotation-workspace`（帶入 `task_id`、`role=reviewer`、第一筆非 `已提交` sample 的 `sample_id`；可為 `已儲存` 或 `待審核`）；若所有 sample 均已提交，則導向該任務 `annotation-list`（不帶 `sample_id`）。
+- **FR-011D**（v2.2.0 新增，審核流程示範任務專用）：審核流程示範任務（T014–T017）的 Reviewer 任務列必須攜帶審核員身分 seed（prototype 欄位 `reviewerId = reviewer_chen`，015 名冊中唯一具 `can_arbitrate` 旗標者），列點擊與 `快速審核` 導頁網址皆須附帶 `reviewer_id` 參數（`annotation-list` 依 015 FR-049 續傳至工作區）；且其 `快速審核` 的 `sample_id` 固定指向該任務資料集**第一筆**樣本，不依 FR-011C 的「第一筆非 `已提交`」規則推導。理由：示範任務的目的為讓審核流程四種模型自儀表板一鍵可視——015 的仲裁版面（FR-061）只對具仲裁資格者渲染，而工作區預設審核員身分（名冊第一位）不具旗標，不帶身分參數則仲裁初始畫面自儀表板入口永不可達；落在第一筆樣本則使四任務的示範起點固定可預期。本條僅適用示範任務列，一般任務列維持 FR-011B1／FR-011C 既有規則，不帶 `reviewer_id`。
 - **FR-012**：四種有任務角色的 Dashboard 列項必須依 `outputs[]` 原始順序，為每個 `output.type` 各呈現一個唯讀 tag；複合任務不得只顯示第一項或合成固定任務類型名稱。
 - **FR-012A**：輸出類型 tag 的合法值與 zh-TW／en 文案必須來自 `OUTPUT_TYPE_SOURCE` 的 8 個 `OUTPUT_TYPE_KEYS`；標籤群組須有完整可存取名稱，且不得只靠顏色傳達類型。
 - **FR-012B**：`docs/product/example-data/` 的 17 份 fixture 只作 prototype 驗收基線，不是 API、任務數量、合法組合或 renderer 白名單；於示例基線之外再加入一筆任意合法 `outputs[]` 組合後，具相應 membership 的角色視圖必須無需新增分支即可呈現。
@@ -530,6 +531,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.2.0 | 2026-08-21 | **FR-011D：審核流程示範任務 reviewer 身分導覽 + 第一筆落點**（審核流程 demo 走查回饋，配套 015 v4.12.0 脈絡橫幅）：示範任務 reviewer 列攜帶 `reviewerId = reviewer_chen` 身分 seed，列點擊與 `快速審核` 網址附帶 `reviewer_id`（annotation-list 依 015 FR-049 續傳）；`快速審核` 的 `sample_id` 固定指向資料集第一筆，不依 FR-011C「第一筆非已提交」推導。理由：015 仲裁版面（FR-061）只對具 `can_arbitrate` 者渲染，預設審核員身分不具旗標，不帶身分則仲裁初始畫面自儀表板永不可達。僅適用 T014–T017 示範列，一般任務列規則不變。 |
 | 2.1.0 | 2026-08-21 | **示例基線擴充至 17 筆（審核流程示範 seed）**：Annotator／Reviewer 場景基線由 T001–T013 擴充為 T001–T017，納入四筆 `single_label` 審核流程示範任務（`review-flow-*.json`，T014 為 `dry_run`、T015–T017 為 `official_run`）；dashboard assignments 為 run_type 導頁的唯一綁定來源，reviewer 工作列數字依 boot seeder 的審核狀態矩陣（待審 6/1/0/1）呈現；泛化驗收改以基線外合成任務表述，`medical-ner-re.json`／`absa-va.json` 複合映射不變；SC-025 對帳基線註明 T014（dry_run）不計入待 IAA 筆數 |
 | 2.0.5 | 2026-08-21 | Issue #186：「等待 IAA 確認」指標卡新增可執行待辦入口（role=button、鍵盤可操作，導向 `/task-list?status=waiting_iaa_confirmation`）；新增 FR-008F、FR-009A1、SC-025 與導頁流程圖/表格條目；prototype 示範資料同步調整，使指標卡數字與 `/task-list` 篩選後筆數對帳（基線為 1：僅 dry_run 種子 T002 轉為 `waiting_iaa_confirmation`，對齊 dashboard adminTask1 卡片；IAA 確認依 014 生命週期僅接續 dry run 完成，其餘種子維持 draft 供 task-detail 設定編輯測試使用）。 |
 | 2.0.4 | 2026-08-20 | Issue #261：新增 Prototype Traceability，對應 Dashboard 頁面、完整 page-owned asset set、page-scoped design 與設計層驗證；fixture 維持為 prototype 驗收基線，非產品契約。 |

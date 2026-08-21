@@ -97,6 +97,7 @@ test.describe('Dashboard — review-flow demo tasks (T014-T017)', () => {
     await expect(page).toHaveURL(/task_id=T014/);
     await expect(page).toHaveURL(/role=reviewer/);
     await expect(page).toHaveURL(/run_type=dry_run/);
+    await expect(page).toHaveURL(/reviewer_id=reviewer_chen/);
     await expect(page).not.toHaveURL(/sample_id=/);
   });
 
@@ -112,6 +113,25 @@ test.describe('Dashboard — review-flow demo tasks (T014-T017)', () => {
     await expect(page).toHaveURL(/task_id=T017/);
     await expect(page).toHaveURL(/role=reviewer/);
     await expect(page).toHaveURL(/run_type=official_run/);
+    await expect(page).toHaveURL(/reviewer_id=reviewer_chen/);
     await expect(page).not.toHaveURL(/sample_id=/);
+  });
+
+  /* The quick-review action must land on each demo task's FIRST dataset
+     record as the can_arbitrate reviewer, so the workspace opens on the
+     initial reviewer screen (and disputed units render the arbitration
+     entry screen instead of hiding it behind the default identity). */
+  test('reviewer quick-review opens the workspace on the first record as reviewer_chen', async ({ page }) => {
+    await openScenario(page, 'reviewer');
+
+    const row = page.locator('#reviewerTaskList [data-example-task-id="T014"]');
+    await row.locator('.role-task-action-btn').click();
+
+    await expect(page).toHaveURL(/\/pages\/annotation\/annotation-workspace\.html\?/);
+    await expect(page).toHaveURL(/task_id=T014/);
+    await expect(page).toHaveURL(/sample_id=dry-01-all-agree/);
+    await expect(page).toHaveURL(/role=reviewer/);
+    await expect(page).toHaveURL(/run_type=dry_run/);
+    await expect(page).toHaveURL(/reviewer_id=reviewer_chen/);
   });
 });

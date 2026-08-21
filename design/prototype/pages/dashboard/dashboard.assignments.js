@@ -11,7 +11,8 @@
     detailEn,
     progress,
     runType,
-    status
+    status,
+    reviewerId
   ) {
     return {
       latestUnfinishedSampleId: sampleId,
@@ -19,6 +20,7 @@
       progress: progress,
       runType: runType,
       status: status,
+      reviewerId: reviewerId || '',
     };
   }
 
@@ -283,7 +285,12 @@
        annotation-workspace.data.js: pending counts are the review units
        still 待審 (T014=6 of 15, T015=1 of 4, T016=0 of 5, T017=1 of 5)
        and reviewer progress is the share of units past 待審. Reviewer
-       sample ids point at actionable review units. */
+       sample ids point at each task's first dataset record so the
+       quick-review entry lands on the initial reviewer screen, and every
+       demo reviewer entry enters as reviewer_chen -- the only
+       can_arbitrate reviewer (FR-060) -- so disputed units surface the
+       arbitration entry screen instead of staying invisible under the
+       default reviewer identity. */
     {
       exampleTaskId: 'T014',
       annotator: workItem(
@@ -295,12 +302,13 @@
         'in_progress'
       ),
       reviewer: workItem(
-        'dry-03-dispute-open',
+        'dry-01-all-agree',
         '待審 6 筆 · 進度 60% · IAA 0.72',
         '6 Pending · 60% Progress · IAA 0.72',
         60,
         'dry_run',
-        'pending_review'
+        'pending_review',
+        'reviewer_chen'
       ),
     },
     {
@@ -314,12 +322,13 @@
         'continue'
       ),
       reviewer: workItem(
-        'ofs-04-pending-review',
+        'ofs-01-agree-gold',
         '待審 1 筆 · 進度 75% · IAA 0.81',
         '1 Pending · 75% Progress · IAA 0.81',
         75,
         'official_run',
-        'pending_review'
+        'pending_review',
+        'reviewer_chen'
       ),
     },
     {
@@ -333,12 +342,13 @@
         'in_progress'
       ),
       reviewer: workItem(
-        'ofm-05-all-divergent',
+        'ofm-01-unanimous-gold',
         '待審 0 筆 · 進度 100% · IAA 0.68',
         '0 Pending · 100% Progress · IAA 0.68',
         100,
         'official_run',
-        'in_progress'
+        'in_progress',
+        'reviewer_chen'
       ),
     },
     {
@@ -357,7 +367,8 @@
         '1 Pending · 80% Progress · IAA 0.70',
         80,
         'official_run',
-        'pending_review'
+        'pending_review',
+        'reviewer_chen'
       ),
     },
   ];
@@ -380,6 +391,7 @@
       progress: work.progress,
       runType: work.runType,
       status: work.status,
+      reviewerId: work.reviewerId,
     };
   }
 
