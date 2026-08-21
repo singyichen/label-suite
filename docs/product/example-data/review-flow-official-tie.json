@@ -1,0 +1,27 @@
+[
+  {
+    "id": "oft-01-even-tie",
+    "text": "餐廳景觀一流，可以看到整片河岸夜景，但餐點的表現撐不起這個價位。",
+    "gold_label": "neutral"
+  },
+  {
+    "id": "oft-02-approved-interim",
+    "text": "兒童友善空間規劃得很好，餐具和座椅都有替小朋友準備，家庭聚餐首選。",
+    "gold_label": "positive"
+  },
+  {
+    "id": "oft-03-modified-interim",
+    "text": "咖哩飯口味偏甜，附餐的沙拉倒是很新鮮，喜不喜歡見仁見智。",
+    "gold_label": "neutral"
+  },
+  {
+    "id": "oft-04-unanimous-gold",
+    "text": "壽司的新鮮度沒話說，師傅還會依季節推薦食材，每次來都很滿意。",
+    "gold_label": "positive"
+  },
+  {
+    "id": "oft-05-pending-review",
+    "text": "新開的早午餐店，鬆餅口感紮實，佐餐咖啡的比例也調得剛剛好。",
+    "gold_label": "positive"
+  }
+]

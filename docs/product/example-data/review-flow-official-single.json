@@ -1,0 +1,27 @@
+[
+  {
+    "id": "ofs-01-agree-gold",
+    "text": "等了四十分鐘餐點才上桌，牛排要的五分熟卻煎到全熟，體驗很差。",
+    "gold_label": "negative"
+  },
+  {
+    "id": "ofs-02-modified-dispute",
+    "text": "整體來說中規中矩，飲料好喝但主餐略鹹，看個人接受度。",
+    "gold_label": "neutral"
+  },
+  {
+    "id": "ofs-03-arbitrated-gold",
+    "text": "店面剛裝潢過，座位變得舒適許多，不過菜單品項也變少了。",
+    "gold_label": "neutral"
+  },
+  {
+    "id": "ofs-04-pending-review",
+    "text": "主廚特餐每天不同，今天的燉飯米心軟硬適中，醬汁也很入味。",
+    "gold_label": "positive"
+  },
+  {
+    "id": "ofs-05-not-submitted",
+    "text": "老闆娘會記得常客的喜好，這種人情味在連鎖餐廳感受不到。",
+    "gold_label": "positive"
+  }
+]
