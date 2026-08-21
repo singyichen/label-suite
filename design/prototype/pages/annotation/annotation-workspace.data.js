@@ -136,6 +136,11 @@
     { id: 'reviewer_wang', name: '王小明' },
     { id: 'reviewer_li', name: '李大華' },
     { id: 'reviewer_chen', name: '陳美玲', can_arbitrate: true },
+    /* Review-flow demo Phase 2: a third plain reviewer so T016's
+       min_reviewers = 3 quorum (wang/li/lin) leaves chen -- the only
+       can_arbitrate reviewer -- outside every dispute and thus eligible
+       to arbitrate it (FR-060). */
+    { id: 'reviewer_lin', name: '林佳蓉' },
   ];
   var DEFAULT_REVIEWER_ID = REVIEWER_ROSTER[0].id;
   /* Annotator buckets have no reviewer dimension; a literal placeholder keeps
@@ -1091,6 +1096,92 @@
         { annotator: 'kioleemg12', answers: { free_text: '建議每天早晚各量一次血壓，休息 5 分鐘後測量並連續記錄一週；飲食上採得舒飲食，鈉攝取每天不超過 2,300 毫克。' } },
         { annotator: '113450022', answers: { free_text: '建議每天早晚各量一次血壓，休息 5 分鐘後測量並連續記錄一週；飲食上採得舒飲食，鈉攝取每天不超過 2,300 毫克。' } },
         { annotator: 'tony0950127', answers: { free_text: '建議每天早晚各量一次血壓，休息 5 分鐘後測量並連續記錄一週；飲食上採得舒飲食，鈉攝取每天不超過 2,300 毫克。' } }
+      ]
+    },
+
+    /* T014-T017: review-flow demo tasks (Phase 2). T014 keeps the dry_run
+     * 3-annotator convention; T015-T017 are official_run tasks with a
+     * single annotator per sample. T015 deliberately OMITS
+     * ofs-05-not-submitted: a sample with no mock row renders no review
+     * unit, which is exactly that sample's demo point. Answers align with
+     * the submissions seedReviewFlowDemo() stages, so the list's answer
+     * column and the derived unit status always describe the same value. */
+    T014: {
+      'dry-01-all-agree': [
+        { annotator: 'kioleemg12', answers: { single_label: 'positive' } },
+        { annotator: '113450022', answers: { single_label: 'positive' } },
+        { annotator: 'tony0950127', answers: { single_label: 'positive' } }
+      ],
+      'dry-02-one-divergent': [
+        { annotator: 'kioleemg12', answers: { single_label: 'neutral' } },
+        { annotator: '113450022', answers: { single_label: 'neutral' } },
+        { annotator: 'tony0950127', answers: { single_label: 'positive' } }
+      ],
+      'dry-03-dispute-open': [
+        { annotator: 'kioleemg12', answers: { single_label: 'neutral' } },
+        { annotator: '113450022', answers: { single_label: 'neutral' } },
+        { annotator: 'tony0950127', answers: { single_label: 'neutral' } }
+      ],
+      'dry-04-dispute-resolved': [
+        { annotator: 'kioleemg12', answers: { single_label: 'negative' } },
+        { annotator: '113450022', answers: { single_label: 'neutral' } },
+        { annotator: 'tony0950127', answers: { single_label: 'negative' } }
+      ],
+      'dry-05-pending-review': [
+        { annotator: 'kioleemg12', answers: { single_label: 'positive' } },
+        { annotator: '113450022', answers: { single_label: 'positive' } },
+        { annotator: 'tony0950127', answers: { single_label: 'positive' } }
+      ]
+    },
+
+    T015: {
+      'ofs-01-agree-gold': [
+        { annotator: 'kioleemg12', answers: { single_label: 'negative' } }
+      ],
+      'ofs-02-modified-dispute': [
+        { annotator: 'kioleemg12', answers: { single_label: 'neutral' } }
+      ],
+      'ofs-03-arbitrated-gold': [
+        { annotator: 'kioleemg12', answers: { single_label: 'positive' } }
+      ],
+      'ofs-04-pending-review': [
+        { annotator: 'kioleemg12', answers: { single_label: 'positive' } }
+      ]
+    },
+
+    T016: {
+      'ofm-01-unanimous-gold': [
+        { annotator: 'kioleemg12', answers: { single_label: 'positive' } }
+      ],
+      'ofm-02-approved-interim': [
+        { annotator: 'kioleemg12', answers: { single_label: 'negative' } }
+      ],
+      'ofm-03-modified-interim': [
+        { annotator: 'kioleemg12', answers: { single_label: 'neutral' } }
+      ],
+      'ofm-04-majority-converged': [
+        { annotator: 'kioleemg12', answers: { single_label: 'positive' } }
+      ],
+      'ofm-05-all-divergent': [
+        { annotator: 'kioleemg12', answers: { single_label: 'neutral' } }
+      ]
+    },
+
+    T017: {
+      'oft-01-even-tie': [
+        { annotator: 'kioleemg12', answers: { single_label: 'neutral' } }
+      ],
+      'oft-02-approved-interim': [
+        { annotator: 'kioleemg12', answers: { single_label: 'positive' } }
+      ],
+      'oft-03-modified-interim': [
+        { annotator: 'kioleemg12', answers: { single_label: 'neutral' } }
+      ],
+      'oft-04-unanimous-gold': [
+        { annotator: 'kioleemg12', answers: { single_label: 'positive' } }
+      ],
+      'oft-05-pending-review': [
+        { annotator: 'kioleemg12', answers: { single_label: 'positive' } }
       ]
     },
 
