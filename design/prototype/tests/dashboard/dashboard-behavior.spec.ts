@@ -75,15 +75,17 @@ test.describe('Dashboard — issue #186 pending-IAA stat entry point', () => {
     const stat = page.locator('#adminPendingIaaValue');
     await expect(stat).toHaveAttribute('role', 'button');
     await expect(stat).toHaveAttribute('tabindex', '0');
-    await expect(stat).toHaveText('5 個');
+    /* Baseline: T002 is the only waiting_iaa_confirmation seed
+       (task-list.data.js), so the stat must read 1. */
+    await expect(stat).toHaveText('1 個');
     await stat.click();
 
     await expect(page).toHaveURL(
       /\/pages\/task-management\/task-list\.html\?task_role=super_admin&status=waiting_iaa_confirmation$/,
     );
     await expect(page.locator('#statusFilter')).toHaveValue('waiting_iaa_confirmation');
-    await expect(page.locator('#paginationInfo')).toContainText('共 5 筆');
-    await expect(page.locator('#taskTableBody tr')).toHaveCount(5);
+    await expect(page.locator('#paginationInfo')).toContainText('共 1 筆');
+    await expect(page.locator('#taskTableBody tr')).toHaveCount(1);
   });
 
   test('project leader stat is keyboard-operable and reconciles with the filtered task list', async ({ page }) => {
@@ -98,7 +100,7 @@ test.describe('Dashboard — issue #186 pending-IAA stat entry point', () => {
     await expect(page).toHaveURL(
       /\/pages\/task-management\/task-list\.html\?task_role=project_leader&status=waiting_iaa_confirmation$/,
     );
-    await expect(page.locator('#paginationInfo')).toContainText('共 5 筆');
-    await expect(page.locator('#taskTableBody tr')).toHaveCount(5);
+    await expect(page.locator('#paginationInfo')).toContainText('共 1 筆');
+    await expect(page.locator('#taskTableBody tr')).toHaveCount(1);
   });
 });

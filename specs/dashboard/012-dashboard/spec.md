@@ -524,13 +524,13 @@ flowchart LR
 - **SC-022**：Dashboard 及其可供 Annotator 存取的資料不得出現 fixture／任務中的 answer、gold、reference、ground truth 或等價答案內容。
 - **SC-023**：本版新增或修改的 prototype 驗收情境皆有對應 Playwright 測試，涵蓋四角色、13 筆基線、複合 tag、第 14 筆泛化、i18n、可存取名稱與手機換行。
 - **SC-024**：Prototype 的 Annotator 與 Reviewer 場景各有 13 個快速操作；T001–T013 每筆具有獨立 `task_id`、非空 `sample_id` 與明確 compatibility route，並能以 `role=annotator`／`role=reviewer` 成功載入標記／審核介面。
-- **SC-025**：Super Admin／Project Leader Dashboard 的「等待 IAA 確認」指標卡可點擊且鍵盤可操作，導向套用 `status=waiting_iaa_confirmation` 篩選的 `/task-list`；該指標卡數字須與 `/task-list` 篩選後的實際筆數一致（prototype 基線：兩者皆為 5），不得出現數字與可導頁任務筆數對不上帳的情形。
+- **SC-025**：Super Admin／Project Leader Dashboard 的「等待 IAA 確認」指標卡可點擊且鍵盤可操作，導向套用 `status=waiting_iaa_confirmation` 篩選的 `/task-list`；該指標卡數字須與 `/task-list` 篩選後的實際筆數一致（prototype 基線：兩者皆為 1，即唯一的 dry_run 待 IAA 種子 T002），不得出現數字與可導頁任務筆數對不上帳的情形。
 
 ## Changelog
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
-| 2.0.5 | 2026-08-21 | Issue #186：「等待 IAA 確認」指標卡新增可執行待辦入口（role=button、鍵盤可操作，導向 `/task-list?status=waiting_iaa_confirmation`）；新增 FR-008F、FR-009A1、SC-025 與導頁流程圖/表格條目；prototype 示範資料同步調整，使指標卡數字與 `/task-list` 篩選後筆數對帳。 |
+| 2.0.5 | 2026-08-21 | Issue #186：「等待 IAA 確認」指標卡新增可執行待辦入口（role=button、鍵盤可操作，導向 `/task-list?status=waiting_iaa_confirmation`）；新增 FR-008F、FR-009A1、SC-025 與導頁流程圖/表格條目；prototype 示範資料同步調整，使指標卡數字與 `/task-list` 篩選後筆數對帳（基線為 1：僅 dry_run 種子 T002 轉為 `waiting_iaa_confirmation`，對齊 dashboard adminTask1 卡片；IAA 確認依 014 生命週期僅接續 dry run 完成，其餘種子維持 draft 供 task-detail 設定編輯測試使用）。 |
 | 2.0.4 | 2026-08-20 | Issue #261：新增 Prototype Traceability，對應 Dashboard 頁面、完整 page-owned asset set、page-scoped design 與設計層驗證；fixture 維持為 prototype 驗收基線，非產品契約。 |
 | 2.0.3 | 2026-08-19 | **Reviewer 行動卡文案對齊 annotation-015 審核模型（issue #191）**：行動卡 C 內文改為「逐標記員獨立審核，直接修正結果，歧異交付仲裁。」、步驟 2 改名「修正或仲裁」（原「核準或修正」），路徑 C 第 4 步同步改為「修正或仲裁」；退回通道依 annotation-015 AC-3.15／AC-6.4 僅限 official_run，二元「通過/退回」語意不再出現於 dashboard 文案。 |
 | 2.0.2 | 2026-07-29 | **記錄 legacy `labelsuite.activeTaskType` 過渡寫入**：明確 Dashboard 為該 `localStorage` 鍵目前唯一寫入者（010 v2.0.0 已移除其寫入），值僅取自獨立 `task_type` compatibility 欄位、不得由 `outputs[]` 推導；014／015 遷移完成後一併移除。 |

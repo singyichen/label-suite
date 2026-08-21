@@ -299,11 +299,11 @@ test.describe('Task detail profile mapping', () => {
     });
   }
 
-  /* T003 is seeded as an in-progress official run (issue #194), so its
-     settings are read-only (isSettingsEditable() requires status==='draft')
-     -- excluded from the draft-only edit-form loop below and covered by its
-     own case instead. */
-  for (const task of TASK_PROFILES.filter((t) => t.id !== 'T003')) {
+  /* T003 is seeded as an in-progress official run (issue #194) and T002 as
+     waiting IAA confirmation (issue #186), so their settings are read-only
+     (isSettingsEditable() requires status==='draft') -- excluded from the
+     draft-only edit-form loop below and covered by their own cases instead. */
+  for (const task of TASK_PROFILES.filter((t) => t.id !== 'T002' && t.id !== 'T003')) {
     test(`opens the settings edit form with one accordion per output for ${task.id}`, async ({ page }) => {
       await page.goto(`${TASK_DETAIL_URL}?task_id=${task.id}`);
 
@@ -322,6 +322,13 @@ test.describe('Task detail profile mapping', () => {
     await page.goto(`${TASK_DETAIL_URL}?task_id=T003`);
 
     await expect(page.locator('#statusBadge')).toContainText('正式標記進行中', { timeout: PANEL_LOAD_TIMEOUT });
+    await expect(page.locator('#settingsEditBtn')).toBeDisabled();
+  });
+
+  test('settings edit form is read-only for the waiting-IAA dry run T002 (issue #186)', async ({ page }) => {
+    await page.goto(`${TASK_DETAIL_URL}?task_id=T002`);
+
+    await expect(page.locator('#statusBadge')).toContainText('待 IAA 確認', { timeout: PANEL_LOAD_TIMEOUT });
     await expect(page.locator('#settingsEditBtn')).toBeDisabled();
   });
 

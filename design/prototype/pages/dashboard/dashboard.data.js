@@ -222,10 +222,7 @@
         ),
         progress: 64,
         runType: 'official_run',
-        /* Mirrors admin's T002 (adminTask1) precedent so the PL "等待 IAA
-           確認" stat has a matching visible card instead of showing a
-           number with zero corroborating tasks (issue #186). */
-        status: 'waiting_confirmation',
+        status: 'in_progress',
       },
       {
         exampleTaskId: 'T010',

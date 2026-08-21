@@ -40,7 +40,9 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(leaderView.getByRole('heading', { name: /任務概況|Task Overview/ })).toBeVisible();
     await expect(leaderView.locator('.metric strong').nth(0)).toContainText('127');
     await expect(leaderView.locator('.metric strong').nth(1)).toContainText('24');
-    await expect(leaderView.locator('.metric strong').nth(2)).toContainText('5');
+    /* Pending-IAA stat reconciles with the single waiting_iaa_confirmation
+       seed (T002) in task-list.data.js (issue #186). */
+    await expect(leaderView.locator('.metric strong').nth(2)).toContainText('1');
     await expect(leaderView.locator('.metric strong').nth(3)).toContainText('3');
     await expect(leaderView.getByText('病患情緒與照護情境階層分類')).toBeVisible();
     await expect(leaderView.getByText('產品評論觀點實體辨識')).toBeVisible();

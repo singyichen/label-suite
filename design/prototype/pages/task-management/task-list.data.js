@@ -78,8 +78,12 @@
       outputTypes: ['multi_label'],
       runType: 'dry_run',
       /* Matches the dashboard's admin sample card (adminTask1 / T002,
-         dashboard.data.js) so the "等待 IAA 確認" stat and this filtered
-         list reconcile instead of contradicting each other (issue #186). */
+         dashboard.data.js, runType dry_run) so the "等待 IAA 確認" stat and
+         the /task-list?status=waiting_iaa_confirmation filter reconcile
+         instead of contradicting each other (issue #186). Only this dry_run
+         seed carries the status: IAA confirmation follows dry-run completion
+         (spec 014 lifecycle), and the other seeds must stay draft for the
+         task-detail settings-edit tests. */
       status: 'waiting_iaa_confirmation',
       updatedAt: '2026-07-28',
       canViewDetail: true,
@@ -111,9 +115,7 @@
       sourceFile: 'single-dim.json',
       outputTypes: ['single_dim'],
       runType: 'official_run',
-      /* One of 5 seeds reconciled with the dashboard's "等待 IAA 確認：5 個"
-         stat (issue #186); see task-list.html getFilteredTasks status filter. */
-      status: 'waiting_iaa_confirmation',
+      status: 'draft',
       updatedAt: '2026-07-26',
       canViewDetail: true,
       isMine: true,
@@ -152,10 +154,7 @@
       sourceFile: 'entity-recognition.json',
       outputTypes: ['entity_recognition'],
       runType: 'official_run',
-      /* Matches the dashboard's PL sample card (plTask2 / T007,
-         dashboard.data.js) so the "等待 IAA 確認" stat and this filtered
-         list reconcile instead of contradicting each other (issue #186). */
-      status: 'waiting_iaa_confirmation',
+      status: 'draft',
       updatedAt: '2026-07-23',
       canViewDetail: true,
       isMine: true,
@@ -181,9 +180,7 @@
       sourceFile: 'free-text.json',
       outputTypes: ['free_text'],
       runType: 'official_run',
-      /* One of 5 seeds reconciled with the dashboard's "等待 IAA 確認：5 個"
-         stat (issue #186); see task-list.html getFilteredTasks status filter. */
-      status: 'waiting_iaa_confirmation',
+      status: 'draft',
       updatedAt: '2026-07-21',
       canViewDetail: true,
       isMine: true,
@@ -209,9 +206,7 @@
       sourceFile: 'nli.json',
       outputTypes: ['single_label'],
       runType: 'dry_run',
-      /* One of 5 seeds reconciled with the dashboard's "等待 IAA 確認：5 個"
-         stat (issue #186); see task-list.html getFilteredTasks status filter. */
-      status: 'waiting_iaa_confirmation',
+      status: 'draft',
       updatedAt: '2026-07-19',
       canViewDetail: true,
       isMine: true,
