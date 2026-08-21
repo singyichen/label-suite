@@ -1,7 +1,7 @@
 ---
 功能分支: docs/208-official-gold-fr
 建立日期: 2026-04-23
-版本: 4.10.0
+版本: 4.11.0
 狀態: Draft
 ---
 
@@ -14,7 +14,7 @@
 - 本版以既有需求來源、task-management-013 v6.9.0 outputs[] 契約，以及本文件中的流程圖、使用者情境、功能需求、成功標準作為 scope baseline。
 - 跨頁或跨模組共用行為需透過「規格相依性」追蹤，不在本文件中隱含建立未列出的依賴。
 - 若後續新增實作層契約，需先確認是否構成行為變更；若是，必須依 SDD 流程更新 spec。
-- `docs/product/example-data` 的 13 份 fixture（T001–T013）僅為 prototype 示例基線；任意合法 `outputs[]` 組合皆適用，13 筆非白名單，不構成 workspace 可支援的輸出類型組合上限（對齊 013 v6.4.1／v6.4.3 changelog 措辭）。
+- `docs/product/example-data` 的 17 份 fixture（T001–T017，其中 T014–T017 為 v4.11.0 審核流程示範任務）僅為 prototype 示例基線；任意合法 `outputs[]` 組合皆適用，17 筆非白名單，不構成 workspace 可支援的輸出類型組合上限（對齊 013 v6.4.1／v6.4.3 changelog 措辭）。
 - Reviewer 呈現改為 registry 驅動：每個 output type 定義自己的審查結果呈現方式（標籤分布、分數統計、entity diff、triple 清單、文字比對），不得逐 task 硬編分支；全部 8 個 output type 皆提供 reviewer row-level 直接修正入口，修正 UI 重用對應 annotator 作答互動控件並以 annotator 答案為初始值（seed），此為本規格 workspace 端呈現決策（見 FR-024L 系列），不需 013 registry 額外定義欄位。
 
 ## 規格常數
@@ -34,7 +34,7 @@
 - `SUBMISSION_BUCKET_DIMENSIONS = task_id × role × run_type × annotator_id × reviewer_id`（v3.8.0 新增；標記/審核提交紀錄的定址維度，見 FR-049。`role = annotator` 之紀錄無審核員維度）
 - `ANNOTATION_IDENTITY_SOURCE = route_query_with_default`（v3.8.0 新增；`annotator_id` / `reviewer_id` 缺值時套用 `DEFAULT_ANNOTATOR_ID` / `DEFAULT_REVIEWER_ID`，與 `role` / `run_type` 的缺值處理一致，見 FR-049）
 - `DEFAULT_ANNOTATOR_ID = kioleemg12`（v3.8.0 新增；刻意等同 `REVIEWER_MOCK_ANNOTATORS` 第一位，使訪客的真實提交與 FR-044a 的示範遞補屬於同一人，審核歷程為單一連續鏈而非分裂為兩個身分）
-- `REVIEWER_ROSTER = reviewer_wang（王小明）| reviewer_li（李大華）| reviewer_chen（陳美玲，`can_arbitrate = true`）`（v3.8.0 新增；prototype 示範審核員名冊，地位同 `REVIEWER_MOCK_ANNOTATORS`，後端接上後由真實帳號取代。`can_arbitrate` 為爭議池第三人仲裁者旗標，本版僅定義欄位、不定義仲裁行為）
+- `REVIEWER_ROSTER = reviewer_wang（王小明）| reviewer_li（李大華）| reviewer_chen（陳美玲，`can_arbitrate = true`）| reviewer_lin（林佳蓉）`（v3.8.0 新增；prototype 示範審核員名冊，地位同 `REVIEWER_MOCK_ANNOTATORS`，後端接上後由真實帳號取代。`can_arbitrate` 為爭議池第三人仲裁者旗標，v3.8.0 僅定義欄位、不定義仲裁行為。v4.11.0 新增第四位 `reviewer_lin`（無 `can_arbitrate`）：T016 的 `min_reviewers = 3` 額度由 wang／li／lin 補滿，使唯一具仲裁旗標的 chen 不參與任何示範爭議、依 FR-060 保持仲裁資格）
 - `DEFAULT_REVIEWER_ID = reviewer_wang`（v3.8.0 新增；`REVIEWER_ROSTER` 第一位）
 - `TASK_CONTEXT_SOURCE = route_query`（`role` / `run_type` 缺值或非支援值時套用預設值；`task_id` 查無對應 `TaskProfile` 時導回 `annotation-list`，不再有 localStorage fallback）
 - `TASK_PROFILE_SOURCE = task-detail 已發布的 TaskConfig（task-management-013 outputs[] config、field_role_map、item_pair_labels）+ sample_snapshot_id`
@@ -50,11 +50,11 @@
 - `CONFLICT_RESOLUTION_POLICY = optimistic-lock-with-version-check`
 - `MOBILE_BP = 767px`
 - `RWD_VIEWPORTS = 375px / 768px / 1440px`
-- `REVIEWER_MOCK_ANNOTATORS = kioleemg12 | 113450022 | tony0950127`（US3 聚合審核卡的固定模擬標記員帳號，供 13 個任務 × 8 種輸出類型的審查流程端到端驗證；不含目前登入使用者本人的既有提交，見 `ReviewerMockRow（Prototype）`；**v3.0.0 起多標記員清單僅適用 `run_type = dry_run`，見 FR-044；v3.7.0 起 `official_run` 於無真實提交時以同源的 `REVIEWER_MOCK_ROWS` 第一列遞補 seed，見 FR-044a**）
+- `REVIEWER_MOCK_ANNOTATORS = kioleemg12 | 113450022 | tony0950127`（US3 聚合審核卡的固定模擬標記員帳號，供 17 個任務 × 8 種輸出類型的審查流程端到端驗證；不含目前登入使用者本人的既有提交，見 `ReviewerMockRow（Prototype）`；**v3.0.0 起多標記員清單僅適用 `run_type = dry_run`，見 FR-044；v3.7.0 起 `official_run` 於無真實提交時以同源的 `REVIEWER_MOCK_ROWS` 第一列遞補 seed，見 FR-044a**）
 - `REVIEW_MODEL_BY_RUN_TYPE = dry_run: consensus_adjudication | official_run: single_annotator_review`（v3.0.0 新增；reviewer 呈現依 `run_type` 分流的頂層規則來源，`annotation-list` 與 `annotation-workspace` 的 reviewer 視圖皆須讀取此規則決定渲染分支，不得逐頁各自硬編判斷，見 FR-030。**v4.0.0 廢止**：審核單位（FR-051）與審核卡版面（FR-053）皆不再依 `run_type` 分流，本常數已無消費端，ID 保留不重用）
 - `REVIEW_UNIT_DIMENSIONS = sample_id × annotator_id × run_type`（v3.9.0 新增；審核單位的定址維度——同一樣本由 N 位標記員標記即為 N 個各自獨立的審核單位，兩種 `run_type` 一致，見 FR-051）
 - `REVIEW_UNIT_STATUS = pending | approved | modified | disputed | finalized`（v3.9.0 新增；審核單位狀態機，單一狀態欄線性推進，見 FR-051）
-- `MIN_REVIEWERS_DEFAULT = 1`（v3.9.0 新增；審核單位進入終態所需之最少審核員人數預設值。本版為固定值，可設定的 `min_reviewers` 屬後續 PR 範圍；此參數是 `approved`/`modified` 兩個中繼態存在的理由——同意或有異動但人數未達門檻）
+- `MIN_REVIEWERS_DEFAULT = 1`（v3.9.0 新增；審核單位進入終態所需之最少審核員人數預設值。預設值維持 1；v4.11.0 起可由 `TaskProfile` 的 prototype seed 欄位 `minReviewers` 逐任務覆寫（示範任務 T016 = 3、T017 = 2，未設定者一律取預設值），`getReviewUnitStatus()` 的兩個消費端（`annotation-list` 清單徽章與工作區審核卡）皆須傳入該任務生效值，取代 v3.9.0「本版為固定值，可設定的 `min_reviewers` 屬後續 PR 範圍」之措辭；此參數是 `approved`/`modified` 兩個中繼態存在的理由——同意或有異動但人數未達門檻）
 - `CONSENSUS_MERGE_KEYS`（v3.0.0 新增；dry_run 共識合併鍵，逐輸出類型定義；**v4.0.0 起共識合併本身已廢止，本常數僅存續為 FR-052 審核單位差異比對的鍵定義來源**）：`entity_recognition` = `start + end + type` 精確匹配；`relation_identification` = `subj + obj + type` 精確匹配（`type` 缺值視為固定佔位鍵值，仍需精確相同）
 - `DISPUTE_ITEM_SOURCE = derived-from-review-diffs`（v4.6.0 新增；爭議項（`DisputeItem`）於每次讀取時由 FR-052 差異比對推導、不實體化儲存，仲裁投票與定案值為僅有的寫入狀態，見 FR-059）
 - `DISPUTE_CONVERGENCE_RULE = per-item-strict-majority`（v4.8.0 新增；單一爭議項於 N 位審核員間的嚴格多數（> N/2）自動收斂規則，未出現於 `reviewer_values` 的審核員計為對 `annotator_value` 的隱含同意票；N=1、偶數平手、全數分歧皆不收斂而留在爭議池待仲裁，見 FR-061）
@@ -423,7 +423,7 @@ Reviewer 在 `run_type = dry_run` 的工作區中，依任務 `outputs[]` 逐一
 - （**official_run 沿用**）「目前標記員」被 `退回` 時的狀態回退機制沿用不變，僅適用範圍收斂為 `official_run`（見 FR-014I、AC-3.15、AC-6.4）；`dry_run` 不提供逐標記員通過/退回，個人品質問題交由 IAA 閘門與重新試跑處理，不觸發個別標記員狀態回退。
 - 標記分布統計盒（`ws-review-stats`，僅 `dry_run` 適用）必須於渲染時依當前標記員清單計算，不得使用預先寫死的統計字串；已標記為 Bypass 的標記員結果不計入統計（見 FR-014F、FR-038）。
 - 工作區 reviewer 的「送出審核」（`ws-review-submit-btn`）於 `dry_run` 下驗證當前樣本所有 outKey 的分歧項皆已有 gold 值，缺值時顯示 toast「請先裁定所有分歧項目」並中止（見 FR-041、AC-3.29）；`official_run` 驗證規則見 FR-044、AC-6.5。
-- 本模組於 `dry_run` 以固定模擬標記員（`REVIEWER_MOCK_ANNOTATORS`）呈現除目前登入使用者外的標記員列，供 13 個任務 × 8 種輸出類型的審查流程端到端驗證；此為 prototype 資料模擬機制（見 `ReviewerMockRow（Prototype）`、FR-014J）；`official_run` 不使用模擬標記員（見 FR-044）。
+- 本模組於 `dry_run` 以固定模擬標記員（`REVIEWER_MOCK_ANNOTATORS`）呈現除目前登入使用者外的標記員列，供 17 個任務 × 8 種輸出類型的審查流程端到端驗證；此為 prototype 資料模擬機制（見 `ReviewerMockRow（Prototype）`、FR-014J）；`official_run` 不使用模擬標記員（見 FR-044）。
 - 手機版（`<= MOBILE_BP`）Reviewer 工作區中（`dry_run`），套用多數決按鈕與標記員清單需右對齊；各標記員列的 result tag 與逐列裁定操作也需靠右對齊，維持一致的行尾操作視覺。
 
 ---
@@ -793,7 +793,7 @@ flowchart LR
 - **DisputeItem**（v4.6.0 新增，兩種 `run_type` 皆適用）：一個審核單位內、單一 `outKey × 合併鍵` 上標記員與審核員的具體分歧，作為爭議池逐項仲裁的最小單位。欄位：`output_type`（outKey）、`item_key`（合併鍵，FR-052 差異項之 `key`）、`annotator_value?`（標記員側值，僅存在於審核員側者為空值）、`reviewer_values`（`Record<reviewer_id, value?>`，僅收與標記員有差異的審核員）、`votes[]?`（仲裁投票：`arbiter_id`、`choice: A | B`、`voted_at`）、`finalized_value?` / `finalized_by?`（定案值與定案者）。識別與 A/B 值一律由 FR-052 差異比對**推導**（`DISPUTE_ITEM_SOURCE`），不實體化儲存；`votes[]` 與 `finalized_*` 為僅有的寫入狀態，其寫入行為見 FR-061（v4.8.0），以審核單位定址儲存。原型實作為 `getDisputeItems()`，回傳 `{outKey, key, annotatorValue, reviewerValues}`；仲裁狀態讀寫為 `getArbitrationState()` / `submitArbitration()`，收斂推導為 `resolveDisputeConvergence()`。
 - **AdjudicationItem**（v3.0.0 新增，僅適用 `run_type = dry_run`；**v4.0.0 廢止**——共識/仲裁模型移除後不再有此單位，名稱保留不重用，見 FR-053）：單一樣本、單一輸出類型下的一個仲裁單位（`single_label`/`free_text` 為整個 outKey 一項；`multi_label`/`entity_recognition`/`relation_identification`/`sequence_tagging` 為聯集中每個標籤/實體/關係/token 各一項；`single_dim`/`multi_dim` 為每個維度一項）。欄位：`sample_id`、`output_type`（`OUTPUT_TYPE_KEYS`）、`item_key`（合併鍵，依 FR-031 ~ FR-035 定義）、`status`（`ADJUDICATION_STATUS`，見 FR-040）、`consensus_value?`（一致判定時的合併結果）、`gold_value?`（裁定後寫入的 gold 值）、`agreement_count`（一致人數）、`total_count`（排除 Bypass 後的可比較分母，依 FR-038）、`contributors[]`（提出該項目的標記員 ID 清單）。
 - **GoldRecord**（v3.0.0 新增，僅適用 `run_type = dry_run`；**v4.0.0 廢止**——dry_run 不再產出樣本層級 gold，名稱保留不重用，見 FR-053）：單一樣本、單一輸出類型的 gold 仲裁彙總結果。欄位：`sample_id`、`output_type`（`OUTPUT_TYPE_KEYS`）、`gold_status`（`GOLD_STATUS`，見 FR-041）、`gold_answer`（與 `OutputAnswer` 同形狀，彙總各 AdjudicationItem 的 `gold_value` / `consensus_value`）、`adjudicated_by`（reviewer_id）、`adjudicated_at`。`gold_status` 由 `draft` 轉為 `gold_confirmed` 後若被重新開啟（見邊界情況第 2 項），須回到 `draft` 並新增 `gold_reopened` 歷程事件，既有歷程事件不得被覆寫。
-- **ReviewerMockRow（Prototype）**: US3 聚合審核卡的模擬標記員提交資料，來源為 `annotation-workspace.data.js` 的 `REVIEWER_MOCK_ROWS`（13 個任務全樣本 × 固定 3 位標記員 `REVIEWER_MOCK_ANNOTATORS`），透過 `getReviewerMockRows(taskId, sampleId)` 取得。每位標記員逐 outKey 攜帶精簡答案格式：`single_label` → `string`、`multi_label` → `string[]`、`single_dim` → `number`、`multi_dim` → `{dim: number}`、`sequence_tagging` → `{text, tag}[]`、`entity_recognition` → `{text, type}[]`、`relation_identification` → `{subj, rel, obj}[]`、`free_text` → `string`；可選 `bypass` map（依 outKey 標記該標記員該輸出類型是否為 Bypass，Bypass 者不計入 `ws-review-stats` 統計）。若目前登入使用者於該樣本已提交，畫面於清單最上方插入代表目前使用者的列（`data-annotator` 為其真實 `annotator_id`；v3.8.0 以前為字面值 `current`，見 FR-050），其資料來源為真實 `AnnotationRecord` 而非模擬資料。
+- **ReviewerMockRow（Prototype）**: US3 聚合審核卡的模擬標記員提交資料，來源為 `annotation-workspace.data.js` 的 `REVIEWER_MOCK_ROWS`（17 個任務全樣本 × 固定 3 位標記員 `REVIEWER_MOCK_ANNOTATORS`；v4.11.0 例外：審核流程示範任務 T015–T017 為 `official_run` 單一標記員形態、每樣本僅一列 `kioleemg12`，且 T015 的 `ofs-05-not-submitted` 刻意不設列——無提交即無審核單位，即為該樣本的示範重點），透過 `getReviewerMockRows(taskId, sampleId)` 取得。每位標記員逐 outKey 攜帶精簡答案格式：`single_label` → `string`、`multi_label` → `string[]`、`single_dim` → `number`、`multi_dim` → `{dim: number}`、`sequence_tagging` → `{text, tag}[]`、`entity_recognition` → `{text, type}[]`、`relation_identification` → `{subj, rel, obj}[]`、`free_text` → `string`；可選 `bypass` map（依 outKey 標記該標記員該輸出類型是否為 Bypass，Bypass 者不計入 `ws-review-stats` 統計）。若目前登入使用者於該樣本已提交，畫面於清單最上方插入代表目前使用者的列（`data-annotator` 為其真實 `annotator_id`；v3.8.0 以前為字面值 `current`，見 FR-050），其資料來源為真實 `AnnotationRecord` 而非模擬資料。
 - **AnnotationHistoryItem**: 標記歷程節點，包含操作者、時間、對應輸出類型、修改前後差異、來源動作。欄位：`action`、`role`（`TASK_ROLES`）、`actor_id`（v3.8.0 新增，實際操作者的真實 ID，見 FR-050；v3.8.0 以前寫入的事件無此欄位，讀取端須容忍缺值）、`at`、`summary`。`action` 可能值：`approved` / `rejected`（v3.0.0 起僅 `official_run` 產生，`rejected` 於 `role='reviewer'` 時以紅色徽章顯示，見 FR-014I）、`overridden`（v3.0.0 新增，橘色徽章，`dry_run` 一致項被覆寫）、`adjudicated`（v3.0.0 新增，藍色徽章，`dry_run` 分歧項完成裁定）、`gold_confirmed`（v3.0.0 新增，綠色徽章）、`gold_reopened`（v3.0.0 新增，橘色徽章）；詳見 FR-043。
 - **GuidelineAsset**: 任務說明資產，包含文字摘要、檔案清單（來源為 `TaskProfile.guidelineFiles`，`{ name, type, url }[]`）、modal 與右欄同步呈現設定。
 
@@ -836,7 +836,7 @@ flowchart LR
 - **SC-004**: 8 種 `OUTPUT_TYPE_KEYS`（`sequence_tagging`、`entity_recognition`、`relation_identification`、`single_label`、`multi_label`、`single_dim`、`multi_dim`、`free_text`）各自可在單一輸出任務中完成標記並提交。
 - **SC-004A**: 最後一筆提交後可自動導回 `annotation-list`，且該任務樣本狀態皆顯示 `已提交`。
 - **SC-004B**: 多輸出任務（含 `entity_recognition + relation_identification` 整合模式、`entity_recognition + relation_identification + multi_dim` 三輸出組合）可在同一 sample 頁面內逐一完成所有輸出類型的作答並提交，任一輸出類型的互動不影響其他輸出類型的既有作答。
-- **SC-004C**: 任意合法 `outputs[]` 組合（不限於 `docs/product/example-data` 的 13 份 fixture）皆可在不新增 workspace 分支邏輯的前提下完成標記與審查流程。
+- **SC-004C**: 任意合法 `outputs[]` 組合（不限於 `docs/product/example-data` 的 17 份 fixture）皆可在不新增 workspace 分支邏輯的前提下完成標記與審查流程。
 - **SC-004D**（v3.0.0 起本條僅適用 `run_type = official_run`；`dry_run` 對應標準改為 SC-004F/SC-004G）: Reviewer 檢視涵蓋 5 種呈現規則（標籤分布、分數統計、entity diff、triple 清單、文字比對）的任務時，皆可正確辨識審查摘要並完成通過 / 退回決策；全部 8 個 `OUTPUT_TYPE_KEYS` 皆可完成直接修正（重用對應 annotator 作答控件並以其答案為初始值）並保留修正 diff。
 - **SC-004E**: `TaskProfile.input_type = item_pair` 的任務在 workspace 中正確顯示雙欄配對版面與 `item_pair_labels` 生效值；`single_item` 任務僅顯示單欄版面。
 - **SC-004F**（v3.0.0 新增；**v4.0.0 廢止**）: ~~`dry_run` 下 8 種 `OUTPUT_TYPE_KEYS` 的共識/分歧判定規則（FR-031 ~ FR-035）判定結果 100% 符合各條規則定義。~~ 共識判定隨 FR-053 移除；對應的差異比對標準改由 SC-004K 涵蓋。
@@ -883,6 +883,7 @@ flowchart LR
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 4.11.0 | 2026-08-21 | **審核流程示範任務 T014–T017：逐任務 `min_reviewers` 生效 + 展示狀態 seeder**（審核流程 demo Phase 2；接續 Phase 1 的 T014–T017 任務／資料集 seed）：Phase 1 只建立了任務外殼——`REVIEWER_MOCK_ROWS` 停在 T013、`min_reviewers` 仍是寫死的 1，四個示範任務的審核清單渲染零筆審核單位，v3.9.0 起定義的五態機、額度門檻（`approved`/`modified` 中繼態）、多數決收斂（FR-061）與仲裁（FR-060）在 demo 中沒有任何可見路徑。三項變更：（1）**逐任務 `min_reviewers`**——`TaskProfile` 新增 prototype seed 欄位 `minReviewers`（T014/T015 = 1、T016 = 3、T017 = 2，未設定者取 `MIN_REVIEWERS_DEFAULT`），`getReviewUnitStatus()` 的兩個消費端（清單徽章、工作區審核卡）皆傳入該任務生效值；（2）**名冊與模擬列**——`REVIEWER_ROSTER` 新增第四位 `reviewer_lin`（無 `can_arbitrate`，使 T016 三人額度不佔用 chen 的仲裁資格）；`REVIEWER_MOCK_ROWS` 補齊 T014–T017（T014 沿用 dry_run 3 標記員形態、T015–T017 為單一標記員，T015 的 `ofs-05-not-submitted` 刻意無列）；（3）**展示狀態 seeder**——`annotation-workspace.data.js` 於載入時一次性播種 29 個審核單位的標記／審核／仲裁狀態（重用 `markSampleSubmitted`／`submitArbitration`，與真實互動寫入同形），以 marker key `labelsuite.reviewFlowDemoSeed.v1` 保證冪等：重載不重寫時間戳、不重複歷程事件、不覆寫訪客後續變更；僅觸及 T014–T017 bucket，且不同步 dry-run 進度（審核側 fixture，非訪客本人的標記進度）。播種矩陣覆蓋全部五態、T016 的 `ofm-04` 多數決自動收斂（無仲裁紀錄即 `finalized`，依 FR-061 不再進入仲裁版面）、`ofm-05` 的 1/1/1 全數分歧滯留爭議池、T017 `oft-01` 的 1:1 平手爭議（chen 唯一可仲裁）。**純 prototype 資料層變更**：不新增任何 FR/AC；`MIN_REVIEWERS_DEFAULT` 條目同步改寫（v3.9.0「本版為固定值」措辭由本版取代），13 → 17 任務／fixture 措辭全文同步。 |
 | 4.10.0 | 2026-08-19 | **official_run 定案即產生 gold——決策文件既有規則升格為正式 FR**（issue #208，源自 issue #180 驗收規劃 w7 方法論審查建議事項 §6.2-2）：「official_run 定案即產生 gold」此前僅存在於產品決策文件 `docs/product/reviewer-model-redesign.md`（決策②、目標流程分岔節點、資料模型變更表 `GoldRecord` 縮限條目），spec 015 正文只有反向的廢止條文（規格常數 `GOLD_STATUS` v4.0.0 廢止：dry_run 不再產出樣本層級 gold）——廢止條文只回答「dry_run 不產」，從未正面定義「official_run 何時產、產什麼、如何追溯」，驗收文件與 Demo Paper 缺乏可引用的 spec 級契約。新增 **FR-063**、**AC-4.26**、**SC-004V**：產生時點（official_run 審核單位推導為 `finalized` 時，FR-051／FR-061 兩條路徑皆適用）、gold 承載內容契約（一致項自動保留＋不一致項採收斂或仲裁定案值；可追溯來源審核單位與定案者）、dry_run 不產 gold 邊界（試標品質產出為 IAA 與每位標記員的被修改率，指標細節屬 dataset-017）。**純 spec 補完，不改變任何行為**：條文忠實鏡射決策文件既有定案，決策文件未定之處（gold 儲存實體形狀）明文留待後端接上時定義而不自行發明；已廢止之 `GoldRecord`／`AdjudicationItem` 實體不恢復（名稱保留不重用）。 |
 | 4.9.0 | 2026-08-19 | **盲審隔離：未提交的審核判斷僅本人可見**（issue #193，源自 issue #180 驗收規劃 finding F-09、追溯矩陣裁決 #3）：AC-2.11 定義歷程頁籤含 `saved` 事件、FR-016B 要求合併為單一時序清單，但從未規範**跨審核員可見性**——R01 儲存審核草稿後，R02 開啟同一審核單位的 `歷程` 頁籤即可能看到 R01 的 `saved` 事件；即使草稿事件多僅含一般性摘要，「已有動作」的事實本身即構成盲審污染，獨立審核（FR-049 一式 N 份定址）在呈現層失去意義。新增 **FR-062**、**AC-4.25**、**SC-004U**：未提交的審核判斷（草稿決策與其 `saved` 歷程事件）僅對該審核員本人可見，其他審核員（含仲裁者）於任何 reviewer 可見路徑皆不得看到；已提交判斷維持既有規則（FR-049／FR-050／FR-061）、annotator 事件不受影響。連帶修訂 AC-2.11 與 FR-016B（合併清單納入 reviewer 事件時受 FR-062 約束）。**本版僅定義規格規則，不動任何原型程式**：`getSampleHistory`（`annotation-workspace.data.js`）合併全部 reviewer bucket 歷程而不過濾提交狀態（`entryStatus`），自本版起定案為 Implementation mismatch，其修正屬原型層後續 PR。 |
 | 4.8.0 | 2026-08-18 | **爭議池仲裁版面：逐項 A/B 投票與多數決收斂**（issue #147，P3c；接續 v4.6.0 資料模型與 v4.7.0 清單入口，P3 收尾）：v4.7.0 的 `仲裁` 入口導向工作區後，工作區仍渲染 FR-053 審核卡——仲裁者只能重新當一次審核員，DisputeItem 的 `votes[]` / `finalized_*` 欄位定義了卻沒有任何寫入路徑。新增 **FR-061**、**AC-4.22 ~ AC-4.24**、**SC-004T**、規格常數 `DISPUTE_CONVERGENCE_RULE`，並修訂 FR-051：`disputed` 不再是終態，所有爭議項解決後推導為 `finalized`。**三項設計決策**：（1）仲裁者**選邊、不重標**——整張審核卡切換為仲裁版面，修正控件與 ✕/✓ 一律不渲染，仲裁產出是「採哪一側」而非第三份答案；（2）多數決收斂為**推導**而非寫入（與 `DISPUTE_ITEM_SOURCE` 同一哲學），嚴格多數（> N/2，含對標記員值的隱含同意票）自動定案，N=1／偶數平手／全數分歧進池；（3）仲裁狀態以**審核單位**定址儲存、不入 reviewer bucket——爭議屬於單位，任何仲裁者的定案對所有檢視者可見。原型：`annotation-workspace.data.js` 新增 `getArbitrationState()` / `submitArbitration()` / `resolveDisputeConvergence()` 並延伸 `getReviewUnitStatus()`；`annotation-workspace.config.js` 新增仲裁版面渲染分支；新增 14 個工作區仲裁測試（版面切換、三種反例、投票寫入、收斂契約）。 |
