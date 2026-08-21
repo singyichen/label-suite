@@ -102,7 +102,7 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(annotatorView.getByText(/已完成 76% · 今日 18 筆 · 平均速度 4.2/)).toBeVisible();
     await expect(annotatorView.getByText(/試標|Dry Run/).first()).toBeVisible();
     await expect(annotatorView.getByText(/正式標記|Official Run/).first()).toBeVisible();
-    await expect(annotatorView.getByRole('button', { name: /快速繼續|Continue/ })).toHaveCount(13);
+    await expect(annotatorView.getByRole('button', { name: /快速繼續|Continue/ })).toHaveCount(17);
   });
 
   test('annotator output tags use registry colors and preserve composite outputs', async ({ page }) => {
@@ -147,7 +147,7 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(reviewerView.getByText('醫療翻譯品質多維度評分')).toBeVisible();
     await expect(reviewerView.getByText(/待審 12 筆 · 進度 18% · IAA 0.81/)).toBeVisible();
     await expect(reviewerView.getByText(/待審 8 筆 · 進度 76% · IAA 0.78/)).toBeVisible();
-    await expect(reviewerView.getByRole('button', { name: /快速審核|Quick Review/ })).toHaveCount(13);
+    await expect(reviewerView.getByRole('button', { name: /快速審核|Quick Review/ })).toHaveCount(17);
   });
 
   test('annotator quick continue routes to workspace first non-submitted sample', async ({ page }) => {

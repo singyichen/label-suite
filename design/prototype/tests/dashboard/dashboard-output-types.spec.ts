@@ -29,7 +29,18 @@ const EXAMPLE_DATA_FILES = [
   'nli.json',
   'mrc.json',
   'absa-va.json',
+  'review-flow-dry-run.json',
+  'review-flow-official-single.json',
+  'review-flow-official-multi.json',
+  'review-flow-official-tie.json',
 ] as const;
+
+/* T014-T017 are the review-flow demo tasks: annotation-workspace.data.js
+ * stages their submission/review states in localStorage at boot (the
+ * labelsuite.reviewFlowDemoSeed.v1 seeder), so their first sample rows may
+ * legitimately start out submitted. The fresh-first-sample invariant below
+ * only holds for the un-staged T001-T013 baseline. */
+const DEMO_STAGED_TASK_IDS = new Set(['T014', 'T015', 'T016', 'T017']);
 
 const ROLE_EXPECTATIONS = {
   super_admin_data: {
@@ -48,6 +59,7 @@ const ROLE_EXPECTATIONS = {
     taskIds: [
       'T001', 'T002', 'T003', 'T004', 'T005', 'T006', 'T007',
       'T008', 'T009', 'T010', 'T011', 'T012', 'T013',
+      'T014', 'T015', 'T016', 'T017',
     ],
   },
   reviewer: {
@@ -56,6 +68,7 @@ const ROLE_EXPECTATIONS = {
     taskIds: [
       'T001', 'T002', 'T003', 'T004', 'T005', 'T006', 'T007',
       'T008', 'T009', 'T010', 'T011', 'T012', 'T013',
+      'T014', 'T015', 'T016', 'T017',
     ],
   },
 } as const;
@@ -123,7 +136,7 @@ async function openScenario(
 }
 
 test.describe('Dashboard output-type task summaries', () => {
-  test('loads the eight-output registry and all 13 safe example summaries', async ({
+  test('loads the eight-output registry and all 17 safe example summaries', async ({
     page,
   }) => {
     await page.goto(DASHBOARD_URL);
@@ -136,7 +149,7 @@ test.describe('Dashboard output-type task summaries', () => {
     expect(dashboardData.outputTypes.map((item) => item.key)).toEqual(
       OUTPUT_TYPE_KEYS,
     );
-    expect(dashboardData.tasks).toHaveLength(13);
+    expect(dashboardData.tasks).toHaveLength(17);
     expect(dashboardData.tasks.map((task) => task.sourceFile).sort()).toEqual(
       [...EXAMPLE_DATA_FILES].sort(),
     );
@@ -222,7 +235,7 @@ test.describe('Dashboard output-type task summaries', () => {
   });
 
   for (const role of ['annotator', 'reviewer'] as const) {
-    test(`${role} exposes all 13 tasks with independent workspace routes`, async ({
+    test(`${role} exposes all 17 tasks with independent workspace routes`, async ({
       page,
     }) => {
       await openScenario(page, role);
@@ -329,10 +342,14 @@ test.describe('Dashboard output-type task summaries', () => {
         await expect(page.getByTestId('ws-input-content')).toContainText(inputSnippet);
 
         // The URL's sample is a fresh, unfinished sample — the corresponding
-        // row must not already carry the submitted contract flag.
-        await expect(
-          page.getByTestId('ws-sample-item').first(),
-        ).not.toHaveAttribute('data-submitted', 'true');
+        // row must not already carry the submitted contract flag. Demo-staged
+        // tasks (T014-T017) are exempt: their boot-time localStorage seeder
+        // legitimately pre-submits first rows (see DEMO_STAGED_TASK_IDS).
+        if (!DEMO_STAGED_TASK_IDS.has(entry.exampleTaskId)) {
+          await expect(
+            page.getByTestId('ws-sample-item').first(),
+          ).not.toHaveAttribute('data-submitted', 'true');
+        }
       }
     });
   }
@@ -356,22 +373,24 @@ test.describe('Dashboard output-type task summaries', () => {
     await expect(page).not.toHaveURL(/task_type=/);
   });
 
-  test('renders a fourteenth legal output composition without a task-specific branch', async ({
+  test('renders an extra legal output composition without a task-specific branch', async ({
     page,
   }) => {
     await openScenario(page, 'annotator');
 
+    // T999 mirrors the impossible-id idiom used by the not-found specs;
+    // T014 is now a real review-flow demo task and would collide.
     await page.evaluate(() => {
       const dashboardWindow = window as unknown as DashboardWindow;
       dashboardWindow.LabelSuiteDashboard.data.tasks.push({
-        id: 'T014',
+        id: 'T999',
         nameZh: '可讀性理由補充',
         nameEn: 'Readability with rationale',
         sourceFile: 'synthetic-fourteenth.json',
         outputTypes: ['single_dim', 'free_text'],
       });
       dashboardWindow.LabelSuiteDashboard.data.roleLists.annotator.push({
-        exampleTaskId: 'T014',
+        exampleTaskId: 'T999',
         latestUnfinishedSampleId: 'SYN-001',
         runType: 'official_run',
         progress: 33,
@@ -389,7 +408,7 @@ test.describe('Dashboard output-type task summaries', () => {
     });
 
     const syntheticRow = page.locator(
-      '#annotatorTaskList [data-example-task-id="T014"]',
+      '#annotatorTaskList [data-example-task-id="T999"]',
     );
     await expect(syntheticRow.locator('.output-type-tag')).toHaveText([
       '單維度',
