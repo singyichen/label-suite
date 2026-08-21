@@ -149,6 +149,7 @@ pnpm playwright test
 ```
 
 Every CI job must have a matching local command above — when adding a CI job, add its command here in the same PR.
+Exception: `.github/workflows/claude.yml` is an agent trigger (summons Claude Code on `@claude` comments), not a verification gate — it has no local equivalent and never blocks a merge.
 
 Definition of Done: all commands above exit 0 + `/speckit.analyze` reports zero findings.
 
