@@ -125,7 +125,8 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(entityBadges.first()).toHaveClass(/badge-task-type-sequence/);
     await expect(relationBadges).toHaveCount(3);
     await expect(relationBadges.first()).toHaveClass(/badge-task-type-relation/);
-    await expect(singleLabelBadge).toHaveCount(2);
+    // T001 + T011 + the four single_label review-flow demo tasks (T014-T017)
+    await expect(singleLabelBadge).toHaveCount(6);
     await expect(singleLabelBadge.first()).toHaveClass(/badge-task-type-single/);
 
     await expect(multiLabelBadge.first()).toHaveCSS('background-color', 'rgb(236, 254, 255)');
