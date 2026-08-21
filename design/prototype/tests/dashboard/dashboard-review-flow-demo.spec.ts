@@ -8,8 +8,12 @@
  * tests pin:
  *   - the demo tasks appear in the annotator/reviewer task lists
  *   - card clicks route to annotation-list with the correct run_type
- *   - reviewer pending counts match the seeded review-state matrix
- *     (T014=6, T015=1, T016=0, T017=1 pending review units)
+ *   - reviewer summaries match the seeded review-state matrix
+ *     (T014=6, T015=1, T016=0, T017=1 pending review units) using the
+ *     review-coverage wording (issue #310): the share of units past 待審 is
+ *     labeled 審核覆蓋率, and T016 — whose pending count is 0 while
+ *     1 disputed + 2 more units are still unfinalized — must disclose
+ *     未定稿 3 · 爭議 1 instead of reading as a completed task.
  */
 import { test, expect, type Page } from '@playwright/test';
 
@@ -29,30 +33,34 @@ const DEMO_TASKS = [
     id: 'T014',
     runType: 'dry_run',
     runTypeBadge: '試標',
-    reviewerPendingText: '待審 6 筆',
+    reviewerSummaryZh: '待審 6 筆 · 審核覆蓋率 60% · IAA 0.72',
+    reviewerSummaryEn: '6 Pending · 60% Review Coverage · IAA 0.72',
   },
   {
     id: 'T015',
     runType: 'official_run',
     runTypeBadge: '正式標記',
-    reviewerPendingText: '待審 1 筆',
+    reviewerSummaryZh: '待審 1 筆 · 審核覆蓋率 75% · IAA 0.81',
+    reviewerSummaryEn: '1 Pending · 75% Review Coverage · IAA 0.81',
   },
   {
     id: 'T016',
     runType: 'official_run',
     runTypeBadge: '正式標記',
-    reviewerPendingText: '待審 0 筆',
+    reviewerSummaryZh: '審核覆蓋率 100% · 未定稿 3 筆 · 爭議 1 筆 · IAA 0.68',
+    reviewerSummaryEn: '100% Review Coverage · 3 Unfinalized · 1 Disputed · IAA 0.68',
   },
   {
     id: 'T017',
     runType: 'official_run',
     runTypeBadge: '正式標記',
-    reviewerPendingText: '待審 1 筆',
+    reviewerSummaryZh: '待審 1 筆 · 審核覆蓋率 80% · IAA 0.70',
+    reviewerSummaryEn: '1 Pending · 80% Review Coverage · IAA 0.70',
   },
 ] as const;
 
 test.describe('Dashboard — review-flow demo tasks (T014-T017)', () => {
-  test('reviewer list renders every demo task with matrix-consistent pending counts', async ({ page }) => {
+  test('reviewer list renders every demo task with matrix-consistent review summaries', async ({ page }) => {
     await openScenario(page, 'reviewer');
 
     for (const demoTask of DEMO_TASKS) {
@@ -61,13 +69,41 @@ test.describe('Dashboard — review-flow demo tasks (T014-T017)', () => {
       );
       await expect(row).toBeVisible();
       await expect(row.locator('.list-item-detail')).toContainText(
-        demoTask.reviewerPendingText,
+        demoTask.reviewerSummaryZh,
       );
       await expect(
         row.locator('.task-item-badges .badge').filter({
           hasText: demoTask.runTypeBadge,
         }),
       ).toBeVisible();
+    }
+  });
+
+  /* Issue #310 regression: T016 has 0 units pending MY review but 3 units
+     still unfinalized (1 approved, 1 modified, 1 disputed awaiting
+     arbitration), so its summary must never read as a finished task. */
+  test('T016 reviewer summary does not present the misleading done state', async ({ page }) => {
+    await openScenario(page, 'reviewer');
+
+    const detail = page.locator(
+      '#reviewerTaskList [data-example-task-id="T016"] .list-item-detail',
+    );
+    await expect(detail).toBeVisible();
+    await expect(detail).not.toContainText('進度 100%');
+    await expect(detail).not.toContainText('待審 0');
+  });
+
+  test('demo reviewer summaries switch to the English copy on language toggle', async ({ page }) => {
+    await openScenario(page, 'reviewer');
+    await page.getByTestId('lang-toggle').click();
+
+    for (const demoTask of DEMO_TASKS) {
+      const row = page.locator(
+        `#reviewerTaskList [data-example-task-id="${demoTask.id}"]`,
+      );
+      await expect(row.locator('.list-item-detail')).toContainText(
+        demoTask.reviewerSummaryEn,
+      );
     }
   });
 
