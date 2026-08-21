@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
+import { buildWorkspaceUrl, patchDataFile, skipGuidelineModal } from './_workspace-helpers';
 
 /* Workspace arbitration layout (spec 015 v4.8.0, issue #147 P3c).
  *
@@ -133,13 +133,20 @@ test.describe('arbitration layout: negative paths keep the normal review card', 
   });
 
   test('an arbiter on a non-disputed unit reviews normally', async ({ page }) => {
-    /* Overwrite the participant's decision with an agreeing one: the unit
-       derives to approved, so there is nothing to arbitrate. */
+    /* Overwrite the participant's decision with an agreeing one so there
+       is nothing to arbitrate. Under T001's default minReviewers = 1 one
+       agreeing review would derive FINALIZED (which issue #308 locks into
+       the read-only card, a different branch than the one under test), so
+       the threshold is raised to 2: one agreeing review of two required
+       derives APPROVED, the interim state that keeps the normal card. */
     await seed(page, {
       role: 'reviewer',
       payload: labelPayload('sad'),
       identity: { annotatorId: ANNOTATOR, reviewerId: PARTICIPANT },
     });
+    await patchDataFile(page, 'task-detail.data.js', `
+      window.LabelSuiteTaskDetailData.profiles.${TASK}.minReviewers = 2;
+    `);
     await page.reload();
     await expect(page.getByTestId('ws-arbitration-card')).toHaveCount(0);
     await expect(page.getByTestId('ws-review-row-approve').first()).toBeVisible();

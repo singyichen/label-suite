@@ -136,6 +136,16 @@ function buildReviewerMockRows(): Record<string, { annotator: string; answers: {
  * requires the identity NOT already hold a reviewer submission on the unit. */
 const ARBITER_REVIEWER_ID = 'R03';
 
+/* Review quorum for the seeded profile (w4's "n=2=min" review model). The
+ * profile originally carried no review settings, so minReviewers defaulted
+ * to 1 and units finalized after the FIRST agreeing review; issue #308 then
+ * locked finalized units read-only, which would break the journey's
+ * two-reviewer flow (XROLE-14's correction and XROLE-15's second approval
+ * both land on a unit the first review would have finalized). Pinning 2
+ * restores w4's intended model. Exported so readUnitStatus() in the journey
+ * spec derives with the same threshold the workspace UI uses. */
+export const FIXTURE_MIN_REVIEWERS = 2;
+
 /** Builds a patch script for `patchDataFile(page, 'annotation-workspace.data.js', ...)`
  * that seeds a `taskId`-scoped XROLE task profile: a task-list entry, a
  * task-detail profile (single_label / positive-negative-neutral, the 5
@@ -196,7 +206,8 @@ export function buildXRoleSeedPatch(taskId: string): string {
         datasetRecords: xroleRecords,
         /* w5 §1.2: 2 dry_run + 3 official_run records; totals match the
          * run-scoped datasetRecords above. */
-        materializedRuns: { dry_run: { round: 1, total: 2 }, official_run: { round: 1, total: 3 } }
+        materializedRuns: { dry_run: { round: 1, total: 2 }, official_run: { round: 1, total: 3 } },
+        minReviewers: ${FIXTURE_MIN_REVIEWERS}
       };
     }
 

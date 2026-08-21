@@ -54,9 +54,13 @@ test.describe('issue #307 -- truly empty review unit renders no review controls'
     await expect(page.locator('#toastMsg')).not.toHaveText('審查已提交');
   });
 
-  test('T015 ofs-01: seeded submission keeps the full review card (gate must not overfire)', async ({ page }) => {
+  test('T015 ofs-04: seeded submission keeps the full review card (gate must not overfire)', async ({ page }) => {
+    /* ofs-04 is the seeded PENDING unit. The original overfire probe used
+       ofs-01, but that unit is seeded finalized and issue #308 now renders
+       it as the read-only locked card -- a different (correct) suppression
+       than the empty gate under test here. */
     await skipGuidelineModal(page);
-    await page.goto(reviewerUrl('ofs-01-agree-gold'));
+    await page.goto(reviewerUrl('ofs-04-pending-review'));
     await expectFullReviewCard(page);
   });
 
