@@ -284,7 +284,12 @@
        seeded review-state matrix staged at boot by
        annotation-workspace.data.js: pending counts are the review units
        still 待審 (T014=6 of 15, T015=1 of 4, T016=0 of 5, T017=1 of 5)
-       and reviewer progress is the share of units past 待審. Reviewer
+       and the percentage is the share of units past 待審 — labeled
+       審核覆蓋率 (review coverage), not 進度, because a unit past MY review
+       is not necessarily finalized (issue #310): T016 sits at coverage
+       100% with 3 units still unfinalized (1 approved + 1 modified +
+       1 disputed awaiting arbitration), so its summary swaps the vacuous
+       待審 0 for the 未定稿 3 · 爭議 1 breakdown. Reviewer
        sample ids point at each task's first dataset record so the
        quick-review entry lands on the initial reviewer screen, and every
        demo reviewer entry enters as reviewer_chen -- the only
@@ -303,8 +308,8 @@
       ),
       reviewer: workItem(
         'dry-01-all-agree',
-        '待審 6 筆 · 進度 60% · IAA 0.72',
-        '6 Pending · 60% Progress · IAA 0.72',
+        '待審 6 筆 · 審核覆蓋率 60% · IAA 0.72',
+        '6 Pending · 60% Review Coverage · IAA 0.72',
         60,
         'dry_run',
         'pending_review',
@@ -323,8 +328,8 @@
       ),
       reviewer: workItem(
         'ofs-01-agree-gold',
-        '待審 1 筆 · 進度 75% · IAA 0.81',
-        '1 Pending · 75% Progress · IAA 0.81',
+        '待審 1 筆 · 審核覆蓋率 75% · IAA 0.81',
+        '1 Pending · 75% Review Coverage · IAA 0.81',
         75,
         'official_run',
         'pending_review',
@@ -343,8 +348,8 @@
       ),
       reviewer: workItem(
         'ofm-01-unanimous-gold',
-        '待審 0 筆 · 進度 100% · IAA 0.68',
-        '0 Pending · 100% Progress · IAA 0.68',
+        '審核覆蓋率 100% · 未定稿 3 筆 · 爭議 1 筆 · IAA 0.68',
+        '100% Review Coverage · 3 Unfinalized · 1 Disputed · IAA 0.68',
         100,
         'official_run',
         'in_progress',
@@ -363,8 +368,8 @@
       ),
       reviewer: workItem(
         'oft-01-even-tie',
-        '待審 1 筆 · 進度 80% · IAA 0.70',
-        '1 Pending · 80% Progress · IAA 0.70',
+        '待審 1 筆 · 審核覆蓋率 80% · IAA 0.70',
+        '1 Pending · 80% Review Coverage · IAA 0.70',
         80,
         'official_run',
         'pending_review',
