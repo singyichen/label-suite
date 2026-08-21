@@ -1,7 +1,7 @@
 ---
 功能分支: feat/dashboard-output-types
 建立日期: 2026-04-05
-版本: 2.3.0
+版本: 2.3.1
 狀態: In Progress
 ---
 
@@ -532,6 +532,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.3.1 | 2026-08-21 | **Prototype 合規修正（issue #311，無新增 FR）**：(1) Annotator／Reviewer 任務卡互動列補上 `role="button"`、`tabindex="0"`、`aria-label`（任務標題）與 Enter/Space 鍵盤觸發（與列點擊同導頁路徑，沿用 issue #186 FR-008F 指標卡鍵盤模式；內層快速操作按鈕的 keydown 不受列攔截）；(2) 列點擊導頁 URL 恢復 FR-010B1／FR-011B1 要求的 `task_type` 參數——2026-08-10 的 4-param 遷移 commit（eff1938）移除了 `annotationTaskType` 獨立欄位與 URL 參數但未同步本 spec；本次恢復 dashboard.assignments.js 的逐任務 `annotationTaskType` compatibility seed（T001–T013 依 eff1938 前原值、T014–T017 示範任務比照 T001 為 `single_sentence_classification`），值不得由 `outputs[]` 推導；`annotation-list` 依 `task_id` 解析任務、忽略並保留該參數。v2.0.2 所述 legacy `labelsuite.activeTaskType` localStorage 寫入路徑同於 eff1938 移除，本次不恢復（issue #311 範圍僅列點擊 URL）。 |
 | 2.3.0 | 2026-08-21 | **FR-011E：示範任務 reviewer 審查摘要改用審核覆蓋率語意**（issue #310，Codex [High]／T016 U7 驗收缺陷）：T014–T017 示範列的審查摘要百分比由「進度」改標示為「審核覆蓋率」（en `Review Coverage`，語意＝已離開本人待審狀態之審核單位佔比）；T016 因待審 0 但仍有 3 筆未定稿（approved 1／modified 1／disputed 1，ofm-05 1/1/1 全歧仲裁中），摘要改為「審核覆蓋率 100% · 未定稿 3 筆 · 爭議 1 筆」以避免「待審 0 · 進度 100%」的任務完結誤讀；數字維持靜態 seed 並與 boot seeder 審核狀態矩陣一致。僅適用示範任務列，T001–T013 一般列摘要語意不變。 |
 | 2.2.0 | 2026-08-21 | **FR-011D：審核流程示範任務 reviewer 身分導覽 + 第一筆落點**（審核流程 demo 走查回饋，配套 015 v4.12.0 脈絡橫幅）：示範任務 reviewer 列攜帶 `reviewerId = reviewer_chen` 身分 seed，列點擊與 `快速審核` 網址附帶 `reviewer_id`（annotation-list 依 015 FR-049 續傳）；`快速審核` 的 `sample_id` 固定指向資料集第一筆，不依 FR-011C「第一筆非已提交」推導。理由：015 仲裁版面（FR-061）只對具 `can_arbitrate` 者渲染，預設審核員身分不具旗標，不帶身分則仲裁初始畫面自儀表板永不可達。僅適用 T014–T017 示範列，一般任務列規則不變。 |
 | 2.1.0 | 2026-08-21 | **示例基線擴充至 17 筆（審核流程示範 seed）**：Annotator／Reviewer 場景基線由 T001–T013 擴充為 T001–T017，納入四筆 `single_label` 審核流程示範任務（`review-flow-*.json`，T014 為 `dry_run`、T015–T017 為 `official_run`）；dashboard assignments 為 run_type 導頁的唯一綁定來源，reviewer 工作列數字依 boot seeder 的審核狀態矩陣（待審 6/1/0/1）呈現；泛化驗收改以基線外合成任務表述，`medical-ner-re.json`／`absa-va.json` 複合映射不變；SC-025 對帳基線註明 T014（dry_run）不計入待 IAA 筆數 |

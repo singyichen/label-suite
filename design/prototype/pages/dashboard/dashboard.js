@@ -130,9 +130,16 @@
   function createTaskCard(entry, task, role, index, outputTypeMap) {
     var isInteractive = role === 'annotator' || role === 'reviewer';
     var cardClass = 'list-item' + (isInteractive ? ' role-task-card' : '');
+    /* role=button + tabindex mirror the pending-IAA stat pattern
+       (issue #186): the row click must stay keyboard operable
+       (issue #311). aria-label gives the row an accessible name (the
+       task title) without swallowing the inner quick-action button's
+       own name into the row's computed name. */
     var interactiveAttributes = isInteractive
       ? ' data-role="' + escapeHtml(role)
         + '" data-task-index="' + String(index) + '"'
+        + ' role="button" tabindex="0"'
+        + ' aria-label="' + escapeHtml(getTaskTitle(task)) + '"'
       : '';
     var slotId = entry.slotId || '';
     var titleId = slotId ? ' id="' + escapeHtml(slotId + 'Title') + '"' : '';
@@ -213,10 +220,15 @@
       lang: lang,
       scenario: scenario,
     });
+    /* task_type is the independent legacy routing compatibility field
+       (spec 012 FR-010B1/FR-011B1, issue #311): sourced from the
+       annotationTaskType assignment seed, never derived from outputs[].
+       annotation-list resolves the task from task_id and ignores it. */
     var listUrl = '../annotation/annotation-list.html?task_id='
       + encodeURIComponent(entry.exampleTaskId || '')
       + '&role=' + encodeURIComponent(role)
       + '&run_type=' + encodeURIComponent(entry.runType || '')
+      + '&task_type=' + encodeURIComponent(entry.annotationTaskType || '')
       + identityQuery(role, entry);
     global.location.href = listUrl;
   }
@@ -255,6 +267,16 @@
           if (target) openAnnotationList(role, target);
         }
         card.addEventListener('click', openList);
+        card.addEventListener('keydown', function (event) {
+          /* Only react to keys on the card itself: keydown bubbling up
+             from the inner quick-action button must keep its native
+             workspace routing (issue #311). */
+          if (event.target !== card) return;
+          if (event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar') {
+            event.preventDefault();
+            openList();
+          }
+        });
       }
     );
     Array.prototype.forEach.call(
