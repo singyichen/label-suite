@@ -1,0 +1,58 @@
+name: Claude Code
+
+# Agent trigger, NOT a verification gate: commenting "@claude ..." on an issue
+# or PR summons Claude to work on it (implement, answer, open a PR). It has no
+# local equivalent and never blocks a merge; the carve-out from the "every CI
+# job has a matching local command" rule is recorded in CLAUDE.md.
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+
+# One run at a time per issue/PR: a second "@claude" comment queues instead of
+# running in parallel. Deliberately NO cancel-in-progress (unlike ci.yml) — an
+# agent killed mid-run leaves half-finished branches behind.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.issue.number || github.event.pull_request.number }}
+
+jobs:
+  claude:
+    name: Claude Code Agent
+    # Owner-only trigger: only the repository owner's comments containing
+    # "@claude" start a run — blocks drive-by triggers on public issues and
+    # bot-to-bot loops. This gates WHO can trigger, not WHAT Claude reads:
+    # third-party issue/PR text still enters the agent's context, so vet it
+    # before summoning.
+    if: |
+      contains(github.event.comment.body, '@claude') &&
+      github.event.comment.user.login == github.repository_owner
+    runs-on: ubuntu-24.04
+    # Hard deadline: a hung agent run would otherwise bill the runner for
+    # GitHub's 6-hour default.
+    timeout-minutes: 60
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      # Required by claude-code-action for OIDC token exchange
+      id-token: write
+      # Lets Claude read CI results on the PRs it works on
+      actions: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+      - uses: anthropics/claude-code-action@v1
+        with:
+          # Long-lived OAuth token from `claude setup-token` (Claude Pro/Max
+          # subscription), stored as a repo secret — no Anthropic API key.
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Workflow-level `actions: read` only scopes the runner token; the
+          # action swaps OIDC for its own app token, which needs the same
+          # grant here to actually read CI results.
+          additional_permissions: |
+            actions: read
+          # Cap agent iterations so a runaway cloud run cannot burn tokens;
+          # stop a run early with `gh run cancel <run-id>` when needed.
+          claude_args: "--max-turns 50"
