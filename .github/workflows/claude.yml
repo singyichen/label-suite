@@ -58,3 +58,13 @@ jobs:
           # and this repo's flow burns turns fast). The runaway backstops are
           # `timeout-minutes: 60` and subscription billing; stop a run early
           # with `gh run cancel <run-id>` when needed.
+          #
+          # Auto-open the PR: by default the action only pushes a branch and
+          # links a prefilled PR page (FAQ "Why won't Claude create a pull
+          # request?"). Opt in to direct creation via an allowed `gh pr create`
+          # plus a system-prompt instruction — merge stays the human gate, so
+          # review control is unchanged. Issue-triggered runs only: on an
+          # existing PR the agent pushes to that PR's branch instead.
+          claude_args: |
+            --allowedTools "Bash(gh pr create:*)"
+            --append-system-prompt "When triggered on an issue and you have pushed your work to a branch, open the pull request yourself with 'gh pr create' (base main; title and body in English following .github/PULL_REQUEST_TEMPLATE.md; add the matching type label such as 'bug', 'enhancement', or 'feature'). Include the created PR URL in your final comment instead of a prefilled-PR link. When triggered on an existing pull request, never create a new one."
