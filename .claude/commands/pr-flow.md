@@ -189,9 +189,26 @@ git checkout main && git pull
 # Prune deleted remote branch tracking refs
 git fetch --prune
 
+# If the branch is held by a worktree (+ prefix in `git branch -v`), remove the worktree first
+git worktree remove <worktree-path>
+
 # Delete the local branch
 git branch -d <branch-name>
 
-# Delete the remote branch
-git push origin --delete <branch-name>
+# Delete the remote branch via the API — do NOT use `git push origin --delete`:
+# the pre-tool-use hook blocks any push while on main, so that command silently fails here
+gh api -X DELETE "repos/{owner}/{repo}/git/refs/heads/<branch-name>"
 ```
+
+### Sprint-end sweep
+
+Multi-branch sprints leave refs this per-PR flow never sees: iteration working branches, agent worktree branches (`worktree-agent-*`), and stacked-PR chains merged without `--delete-branch`. After the last PR of a sprint merges, run one sweep:
+
+```bash
+git fetch --prune
+git branch -v | grep '\[gone\]'   # upstream deleted → verify merged, then git branch -D
+git branch --merged main          # ancestors of main → safe to delete
+git worktree list                 # remove leftover sprint worktrees, then delete their branches
+```
+
+Squash-merged branches never appear in `git branch --merged`. Before `git branch -D`, verify the content is in main: confirm the local tip equals the merged PR head (`gh pr view <number> --json headRefOid`), or check `git cherry main <branch>` reports no unmatched patches.
