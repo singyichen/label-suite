@@ -173,7 +173,9 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(page).toHaveURL(/role=annotator/);
     await expect(page).toHaveURL(/task_id=T001/);
     await expect(page).toHaveURL(/run_type=official_run/);
-    await expect(page).not.toHaveURL(/task_type=/);
+    // Row-click list URL carries the independent legacy task_type
+    // compatibility field (spec 012 FR-010B1, issue #311).
+    await expect(page).toHaveURL(/task_type=single_sentence_classification/);
     await expect(page).not.toHaveURL(/sub_type=/);
     await expect(page).not.toHaveURL(/sample_id=/);
   });
@@ -232,7 +234,9 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(page).toHaveURL(/role=reviewer/);
     await expect(page).toHaveURL(/task_id=T001/);
     await expect(page).toHaveURL(/run_type=official_run/);
-    await expect(page).not.toHaveURL(/task_type=/);
+    // Row-click list URL carries the independent legacy task_type
+    // compatibility field (spec 012 FR-011B1, issue #311).
+    await expect(page).toHaveURL(/task_type=single_sentence_classification/);
     await expect(page).not.toHaveURL(/sub_type=/);
     await expect(page).not.toHaveURL(/sample_id=/);
   });

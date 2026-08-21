@@ -31,10 +31,15 @@
    * label/badge is resolved from the shared seeds at render time.
    * latestUnfinishedSampleId references the first datasetRecords[] id of
    * the matching profile in task-detail.data.js.
+   * annotationTaskType is the independent legacy routing compatibility
+   * field required by spec 012 FR-010B1/FR-011B1 (issue #311). It is an
+   * explicit per-task seed, never derived from the task outputs, and does
+   * not redefine the output-type contract.
    */
   var assignments = [
     {
       exampleTaskId: 'T001',
+      annotationTaskType: 'single_sentence_classification',
       annotator: workItem(
         'sent-001',
         '已完成 34% · 今日 21 筆 · 平均速度 3.1',
@@ -54,6 +59,7 @@
     },
     {
       exampleTaskId: 'T002',
+      annotationTaskType: 'single_sentence_classification',
       annotator: workItem(
         'emo-001',
         '已完成 48% · 今日 17 筆 · 平均速度 3.6',
@@ -73,6 +79,7 @@
     },
     {
       exampleTaskId: 'T003',
+      annotationTaskType: 'single_sentence_classification',
       annotator: workItem(
         'taxonomy-001',
         '已完成 18% · 今日 53 筆 · 平均速度 3.0',
@@ -92,6 +99,7 @@
     },
     {
       exampleTaskId: 'T004',
+      annotationTaskType: 'single_sentence_va_scoring',
       annotator: workItem(
         'read-001',
         '已完成 61% · 今日 29 筆 · 平均速度 2.9',
@@ -111,6 +119,7 @@
     },
     {
       exampleTaskId: 'T005',
+      annotationTaskType: 'single_sentence_va_scoring',
       annotator: workItem(
         'mt-001',
         '已完成 76% · 今日 18 筆 · 平均速度 4.2',
@@ -130,6 +139,7 @@
     },
     {
       exampleTaskId: 'T006',
+      annotationTaskType: 'sequence_labeling',
       annotator: workItem(
         'sequence-tagging-001',
         '已完成 71% · 今日 12 筆 · 平均速度 2.5',
@@ -149,6 +159,7 @@
     },
     {
       exampleTaskId: 'T007',
+      annotationTaskType: 'sequence_labeling',
       annotator: workItem(
         'entity-recognition-001',
         '已完成 64% · 今日 31 筆 · 平均速度 2.8',
@@ -168,6 +179,7 @@
     },
     {
       exampleTaskId: 'T008',
+      annotationTaskType: 'relation_extraction',
       annotator: workItem(
         'rel-001',
         '已完成 45% · 今日 16 筆 · 平均速度 4.8',
@@ -187,6 +199,7 @@
     },
     {
       exampleTaskId: 'T009',
+      annotationTaskType: 'single_sentence_classification',
       annotator: workItem(
         'sum-001',
         '已完成 37% · 今日 9 筆 · 平均速度 5.4',
@@ -206,6 +219,7 @@
     },
     {
       exampleTaskId: 'T010',
+      annotationTaskType: 'relation_extraction',
       annotator: workItem(
         'med-001',
         '已完成 53% · 今日 14 筆 · 平均速度 5.1',
@@ -225,6 +239,7 @@
     },
     {
       exampleTaskId: 'T011',
+      annotationTaskType: 'sentence_pairs',
       annotator: workItem(
         '00183',
         '已完成 82% · 今日 25 筆 · 平均速度 3.4',
@@ -244,6 +259,7 @@
     },
     {
       exampleTaskId: 'T012',
+      annotationTaskType: 'sentence_pairs',
       annotator: workItem(
         'eac8d013',
         '已完成 29% · 今日 8 筆 · 平均速度 5.8',
@@ -263,6 +279,7 @@
     },
     {
       exampleTaskId: 'T013',
+      annotationTaskType: 'relation_extraction',
       annotator: workItem(
         'absa-001',
         '已完成 58% · 今日 13 筆 · 平均速度 5.0',
@@ -298,6 +315,7 @@
        default reviewer identity. */
     {
       exampleTaskId: 'T014',
+      annotationTaskType: 'single_sentence_classification',
       annotator: workItem(
         'dry-01-all-agree',
         '已完成 100% · 今日 15 筆 · 平均速度 2.4',
@@ -318,6 +336,7 @@
     },
     {
       exampleTaskId: 'T015',
+      annotationTaskType: 'single_sentence_classification',
       annotator: workItem(
         'ofs-05-not-submitted',
         '已完成 80% · 今日 4 筆 · 平均速度 2.7',
@@ -338,6 +357,7 @@
     },
     {
       exampleTaskId: 'T016',
+      annotationTaskType: 'single_sentence_classification',
       annotator: workItem(
         'ofm-01-unanimous-gold',
         '已完成 100% · 今日 15 筆 · 平均速度 2.9',
@@ -358,6 +378,7 @@
     },
     {
       exampleTaskId: 'T017',
+      annotationTaskType: 'single_sentence_classification',
       annotator: workItem(
         'oft-01-even-tie',
         '已完成 100% · 今日 10 筆 · 平均速度 3.2',
@@ -391,6 +412,7 @@
     var work = assignment[role];
     return {
       exampleTaskId: assignment.exampleTaskId,
+      annotationTaskType: assignment.annotationTaskType,
       latestUnfinishedSampleId: work.latestUnfinishedSampleId,
       detail: work.detail,
       progress: work.progress,
