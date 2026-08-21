@@ -799,7 +799,8 @@
       outputTypes: listEntry.outputTypes || [],
       fieldRoleMap: detailProfile.fieldRoleMap || {},
       datasetRecords: detailProfile.datasetRecords || [],
-      materializedRuns: detailProfile.materializedRuns || null
+      materializedRuns: detailProfile.materializedRuns || null,
+      minReviewers: detailProfile.minReviewers || 1
     };
   }
 
@@ -1352,7 +1353,8 @@
       mockRows.forEach(function (mockRow, rowIdx) {
         var identity = { annotatorId: mockRow.annotator, reviewerId: context.identity.reviewerId };
         var status = data.getReviewUnitStatus(
-          profile.id, context.runType, recordId, identity, profile.outputTypes) || REVIEW_UNIT_STATUS.PENDING;
+          profile.id, context.runType, recordId, identity, profile.outputTypes,
+          { minReviewers: profile.minReviewers || 1 }) || REVIEW_UNIT_STATUS.PENDING;
         var submittedAt = data.getSampleSubmittedAt(
           profile.id, 'annotator', context.runType, recordId, identity);
         units.push({

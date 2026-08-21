@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-detail-config-sync
 建立日期: 2026-04-20
-版本: 2.0.2
+版本: 2.1.0
 狀態: In Progress
 ---
 
@@ -11,7 +11,7 @@
 
 ## 功能目標
 
-讓使用者以 config-driven 的輸出類型快速辨識、搜尋與篩選任務；任務列表直接消費 `outputs[].type`，並以一至多個唯讀標籤呈現組合，不將任務壓縮回單一固定類型。Prototype 以 `docs/product/example-data/` 的 13 份任務作為可驗收示例資料，但系統能力不得被限制為這 13 筆、既有組合或固定任務名稱。
+讓使用者以 config-driven 的輸出類型快速辨識、搜尋與篩選任務；任務列表直接消費 `outputs[].type`，並以一至多個唯讀標籤呈現組合，不將任務壓縮回單一固定類型。Prototype 以 `docs/product/example-data/` 的 17 份任務作為可驗收示例資料，但系統能力不得被限制為這 17 筆、既有組合或固定任務名稱。
 
 ## 輸入與生成規則
 
@@ -320,10 +320,14 @@ flowchart LR
 | `absa-va.json` | `entity_recognition`、`relation_identification`、`multi_dim` |
 | `free-text.json` | `free_text` |
 | `mrc.json` | `free_text` |
+| `review-flow-dry-run.json` | `single_label` |
+| `review-flow-official-single.json` | `single_label` |
+| `review-flow-official-multi.json` | `single_label` |
+| `review-flow-official-tie.json` | `single_label` |
 
-依 membership 語意套用單一輸出類型篩選時，這 13 筆示例的命中數必須為：`single_label = 2`、`multi_label = 2`、`single_dim = 1`、`multi_dim = 2`、`sequence_tagging = 1`、`entity_recognition = 3`、`relation_identification = 3`、`free_text = 2`。
+依 membership 語意套用單一輸出類型篩選時，這 17 筆示例的命中數必須為：`single_label = 6`、`multi_label = 2`、`single_dim = 1`、`multi_dim = 2`、`sequence_tagging = 1`、`entity_recognition = 3`、`relation_identification = 3`、`free_text = 2`。
 
-13 筆示例 seed 一律以 `status = draft` 起始（供 `014-task-detail` 的 draft 設定編輯情境驗收）；非 `draft` 狀態的行為驗收（如刪除拒絕）以測試注入的合成任務涵蓋，不依賴示例基線。
+原 13 筆示例 seed（T001–T013）一律以 `status = draft` 起始（供 `014-task-detail` 的 draft 設定編輯情境驗收）；非 `draft` 狀態的行為驗收（如刪除拒絕）以測試注入的合成任務涵蓋，不依賴示例基線。審核流程示範 seed（T014–T017，`review-flow-*.json`）為示範進行中審核流程而以進行中狀態起始：T014 為 `dry_run_in_progress`，T015–T017 為 `official_run_in_progress`。
 
 ---
 
@@ -363,12 +367,12 @@ flowchart LR
 - **SC-007**：無資料與空結果時，`task-list` 皆保留表頭，並於 `tbody` 顯示對應 empty row 內容。
 - **SC-008**：`尚無任務` 狀態僅保留頁面主 `新增任務` CTA；`空結果` 狀態可直接清除篩選返回列表。
 - **SC-009**：點擊任務列 `編輯` 可導向 `/task-detail`；點擊 `刪除` 後任務會軟刪除並從列表隱藏。
-- **SC-010**：Prototype 預設資料顯示上表 13 筆不同任務；`全部輸出類型` 不遺漏任一筆，且 8 個單一篩選結果命中數完全符合示例基線。
+- **SC-010**：Prototype 預設資料顯示上表 17 筆不同任務；`全部輸出類型` 不遺漏任一筆，且 8 個單一篩選結果命中數完全符合示例基線。
 - **SC-011**：任務列表載入失敗時，頁面保留表頭並顯示錯誤列與重試操作，不得誤呈現為無資料或空結果。
 - **SC-012**：`medical-ner-re.json` 顯示 2 個輸出類型 tag，`absa-va.json` 顯示 3 個；tag 文字、順序、可存取名稱與換行行為均由 `outputs[]` 與 registry metadata 驅動。
-- **SC-013**：新增第 14 筆具有任意合法 `outputs[]` 組合的任務後，列表與對應 `output_type` 篩選可直接呈現該任務，不需新增任務名稱、輸出組合或 renderer/filter 分支。
+- **SC-013**：於示例基線之外再新增一筆具有任意合法 `outputs[]` 組合的任務後，列表與對應 `output_type` 篩選可直接呈現該任務，不需新增任務名稱、輸出組合或 renderer/filter 分支。
 - **SC-014**：任務列表及其可供 annotator 存取的資料不得出現任何示例 fixture 的 gold、reference、answer、ground truth 或等價答案內容。
-- **SC-015**：本版新增或修改的 prototype 驗收情境皆有對應 Playwright 測試，涵蓋 13 筆基線、8 個篩選器選項與命中數、複合 tag、14th-task 泛化及三個 `RWD_VIEWPORTS`。
+- **SC-015**：本版新增或修改的 prototype 驗收情境皆有對應 Playwright 測試，涵蓋 17 筆基線、8 個篩選器選項與命中數、複合 tag、額外合成任務泛化及三個 `RWD_VIEWPORTS`。
 
 ---
 
@@ -406,6 +410,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.1.0 | 2026-08-21 | **示例基線擴充至 17 筆（審核流程示範 seed）**：新增 `review-flow-dry-run.json`、`review-flow-official-single.json`、`review-flow-official-multi.json`、`review-flow-official-tie.json` 四筆 `single_label` 示範任務（T014–T017），命中數基線 `single_label` 由 2 調整為 6，其餘輸出類型命中數不變；T014 以 `dry_run_in_progress`、T015–T017 以 `official_run_in_progress` 起始以示範進行中審核流程，原 13 筆 seed 的 draft 起始約定不變；016 Dataset Analysis List 與 dashboard 的 13 筆基線刻意不隨本次擴充 |
 | 2.0.2 | 2026-07-31 | **示例基線狀態統一為 draft**：13 筆 prototype seed 全數以 `status = draft` 起始，支援 014 任務詳情 draft 編輯情境；非 `draft` 行為（刪除拒絕等）改由測試注入合成任務驗收；命中數基線不變 |
 | 2.0.1 | 2026-07-29 | **同步 Dataset Analysis List 相依性**：016 列表已採用 `outputs[].type` 多 tag、8 類 membership 篩選、13 筆示例基線與 `limit`／`offset`；延後範圍收斂為 014／015／017，且不把列表相容性延伸至 detail／workspace consumer。 |
 | 2.0.0 | 2026-07-29 | **任務列表遷移至可組合輸出類型**：移除固定 `TASK_TYPE_ENUM`、`task_type` 篩選與 `labelsuite.activeTaskType` 單值快取契約；列表改以 `outputs[].type` 逐項呈現可換行、具文字與可存取名稱的 tag，篩選器由 `OUTPUT_TYPE_REGISTRY` 列出 8 個合法 key 並以 membership 語意比對。URL query 與分頁改為 `output_type`、`limit`、`offset`。加入 13 份 prototype 示例 fixture 的 mapping／命中數基線、複合 tag、14th-task 泛化與答案資料不外露驗收；13 筆僅為示例，不構成系統上限。014／015／016／017 consumer 同步維持延後。 |

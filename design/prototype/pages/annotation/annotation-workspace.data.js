@@ -56,6 +56,9 @@
          false so tasks that never set it keep today's no-gate behavior. */
       forceShowGuideline: detail.forceShowGuideline || false,
       materializedRuns: detail.materializedRuns || null,
+      /* Per-task min_reviewers threshold (review-flow demo Phase 2):
+         profiles without the seed keep MIN_REVIEWERS_DEFAULT = 1. */
+      minReviewers: detail.minReviewers || 1,
     };
   }
 
@@ -133,6 +136,11 @@
     { id: 'reviewer_wang', name: '王小明' },
     { id: 'reviewer_li', name: '李大華' },
     { id: 'reviewer_chen', name: '陳美玲', can_arbitrate: true },
+    /* Review-flow demo Phase 2: a third plain reviewer so T016's
+       min_reviewers = 3 quorum (wang/li/lin) leaves chen -- the only
+       can_arbitrate reviewer -- outside every dispute and thus eligible
+       to arbitrate it (FR-060). */
+    { id: 'reviewer_lin', name: '林佳蓉' },
   ];
   var DEFAULT_REVIEWER_ID = REVIEWER_ROSTER[0].id;
   /* Annotator buckets have no reviewer dimension; a literal placeholder keeps
@@ -1091,6 +1099,92 @@
       ]
     },
 
+    /* T014-T017: review-flow demo tasks (Phase 2). T014 keeps the dry_run
+     * 3-annotator convention; T015-T017 are official_run tasks with a
+     * single annotator per sample. T015 deliberately OMITS
+     * ofs-05-not-submitted: a sample with no mock row renders no review
+     * unit, which is exactly that sample's demo point. Answers align with
+     * the submissions seedReviewFlowDemo() stages, so the list's answer
+     * column and the derived unit status always describe the same value. */
+    T014: {
+      'dry-01-all-agree': [
+        { annotator: 'kioleemg12', answers: { single_label: 'positive' } },
+        { annotator: '113450022', answers: { single_label: 'positive' } },
+        { annotator: 'tony0950127', answers: { single_label: 'positive' } }
+      ],
+      'dry-02-one-divergent': [
+        { annotator: 'kioleemg12', answers: { single_label: 'neutral' } },
+        { annotator: '113450022', answers: { single_label: 'neutral' } },
+        { annotator: 'tony0950127', answers: { single_label: 'positive' } }
+      ],
+      'dry-03-dispute-open': [
+        { annotator: 'kioleemg12', answers: { single_label: 'neutral' } },
+        { annotator: '113450022', answers: { single_label: 'neutral' } },
+        { annotator: 'tony0950127', answers: { single_label: 'neutral' } }
+      ],
+      'dry-04-dispute-resolved': [
+        { annotator: 'kioleemg12', answers: { single_label: 'negative' } },
+        { annotator: '113450022', answers: { single_label: 'neutral' } },
+        { annotator: 'tony0950127', answers: { single_label: 'negative' } }
+      ],
+      'dry-05-pending-review': [
+        { annotator: 'kioleemg12', answers: { single_label: 'positive' } },
+        { annotator: '113450022', answers: { single_label: 'positive' } },
+        { annotator: 'tony0950127', answers: { single_label: 'positive' } }
+      ]
+    },
+
+    T015: {
+      'ofs-01-agree-gold': [
+        { annotator: 'kioleemg12', answers: { single_label: 'negative' } }
+      ],
+      'ofs-02-modified-dispute': [
+        { annotator: 'kioleemg12', answers: { single_label: 'neutral' } }
+      ],
+      'ofs-03-arbitrated-gold': [
+        { annotator: 'kioleemg12', answers: { single_label: 'positive' } }
+      ],
+      'ofs-04-pending-review': [
+        { annotator: 'kioleemg12', answers: { single_label: 'positive' } }
+      ]
+    },
+
+    T016: {
+      'ofm-01-unanimous-gold': [
+        { annotator: 'kioleemg12', answers: { single_label: 'positive' } }
+      ],
+      'ofm-02-approved-interim': [
+        { annotator: 'kioleemg12', answers: { single_label: 'negative' } }
+      ],
+      'ofm-03-modified-interim': [
+        { annotator: 'kioleemg12', answers: { single_label: 'neutral' } }
+      ],
+      'ofm-04-majority-converged': [
+        { annotator: 'kioleemg12', answers: { single_label: 'positive' } }
+      ],
+      'ofm-05-all-divergent': [
+        { annotator: 'kioleemg12', answers: { single_label: 'neutral' } }
+      ]
+    },
+
+    T017: {
+      'oft-01-even-tie': [
+        { annotator: 'kioleemg12', answers: { single_label: 'neutral' } }
+      ],
+      'oft-02-approved-interim': [
+        { annotator: 'kioleemg12', answers: { single_label: 'positive' } }
+      ],
+      'oft-03-modified-interim': [
+        { annotator: 'kioleemg12', answers: { single_label: 'neutral' } }
+      ],
+      'oft-04-unanimous-gold': [
+        { annotator: 'kioleemg12', answers: { single_label: 'positive' } }
+      ],
+      'oft-05-pending-review': [
+        { annotator: 'kioleemg12', answers: { single_label: 'positive' } }
+      ]
+    },
+
     T013: {
       'absa-001': [
         {
@@ -1670,6 +1764,94 @@
     })[0];
     return winner ? { converged: true, value: values[winner] } : { converged: false };
   }
+
+  /* ---- Review-flow demo seeder (Phase 2 slice C) -------------------------
+   * Stages the T014-T017 demo review states at boot so every review-flow
+   * scenario (five unit states, quorum thresholds, majority convergence,
+   * tie -> arbitration) is visible without clicking through 29 submissions.
+   * Idempotent: the marker key short-circuits every later page load, so
+   * timestamps and history events are written exactly once -- and any state
+   * the demo visitor then changes (their own reviews, arbitrations) is
+   * never overwritten. T014-T017 ONLY; other tasks' buckets stay untouched,
+   * and dry-run progress (DRY_RUN_PROGRESS_KEY) is deliberately not synced
+   * -- these are review-side fixtures, not the visitor's own annotation
+   * progress. */
+  var REVIEW_FLOW_DEMO_SEED_KEY = 'labelsuite.reviewFlowDemoSeed.v1';
+
+  function seedReviewFlowDemo() {
+    try {
+      if (global.localStorage.getItem(REVIEW_FLOW_DEMO_SEED_KEY)) return;
+      global.localStorage.setItem(REVIEW_FLOW_DEMO_SEED_KEY, new Date().toISOString());
+    } catch (e) {
+      return; /* storage unavailable: nothing to stage into */
+    }
+
+    var A = 'kioleemg12';
+    var B = '113450022';
+    var C = 'tony0950127';
+    /* One row per review unit: annotator `a` answered `v`; `rev` maps each
+       reviewer to their decision (same value = agree, different = changed);
+       `arb` is chen's arbitration picking that reviewer value (choice B).
+       Annotator values MUST match REVIEWER_MOCK_ROWS above -- the list's
+       answer column and the derived unit status describe the same
+       submission. Derived states are noted per sample. */
+    var scripts = [
+      /* T014 dry_run, min_reviewers = 1 */
+      { t: 'T014', r: 'dry_run', s: 'dry-01-all-agree', a: A, v: 'positive', rev: { reviewer_wang: 'positive' } }, // finalized
+      { t: 'T014', r: 'dry_run', s: 'dry-01-all-agree', a: B, v: 'positive', rev: { reviewer_wang: 'positive' } }, // finalized
+      { t: 'T014', r: 'dry_run', s: 'dry-01-all-agree', a: C, v: 'positive', rev: { reviewer_wang: 'positive' } }, // finalized
+      { t: 'T014', r: 'dry_run', s: 'dry-02-one-divergent', a: A, v: 'neutral', rev: { reviewer_wang: 'neutral' } }, // finalized
+      { t: 'T014', r: 'dry_run', s: 'dry-02-one-divergent', a: B, v: 'neutral', rev: { reviewer_wang: 'positive' } }, // disputed
+      { t: 'T014', r: 'dry_run', s: 'dry-02-one-divergent', a: C, v: 'positive' }, // pending
+      { t: 'T014', r: 'dry_run', s: 'dry-03-dispute-open', a: A, v: 'neutral' }, // pending
+      { t: 'T014', r: 'dry_run', s: 'dry-03-dispute-open', a: B, v: 'neutral', rev: { reviewer_wang: 'negative' } }, // disputed
+      { t: 'T014', r: 'dry_run', s: 'dry-03-dispute-open', a: C, v: 'neutral' }, // pending
+      { t: 'T014', r: 'dry_run', s: 'dry-04-dispute-resolved', a: A, v: 'negative', rev: { reviewer_wang: 'negative' } }, // finalized
+      { t: 'T014', r: 'dry_run', s: 'dry-04-dispute-resolved', a: B, v: 'neutral', rev: { reviewer_wang: 'negative' }, arb: 'negative' }, // finalized by arbitration
+      { t: 'T014', r: 'dry_run', s: 'dry-04-dispute-resolved', a: C, v: 'negative', rev: { reviewer_wang: 'negative' } }, // finalized
+      { t: 'T014', r: 'dry_run', s: 'dry-05-pending-review', a: A, v: 'positive' }, // pending
+      { t: 'T014', r: 'dry_run', s: 'dry-05-pending-review', a: B, v: 'positive' }, // pending
+      { t: 'T014', r: 'dry_run', s: 'dry-05-pending-review', a: C, v: 'positive' }, // pending
+      /* T015 official_run, min_reviewers = 1 (ofs-05 stays unsubmitted) */
+      { t: 'T015', r: 'official_run', s: 'ofs-01-agree-gold', a: A, v: 'negative', rev: { reviewer_wang: 'negative' } }, // finalized
+      { t: 'T015', r: 'official_run', s: 'ofs-02-modified-dispute', a: A, v: 'neutral', rev: { reviewer_wang: 'positive' } }, // disputed
+      { t: 'T015', r: 'official_run', s: 'ofs-03-arbitrated-gold', a: A, v: 'positive', rev: { reviewer_wang: 'neutral' }, arb: 'neutral' }, // finalized by arbitration
+      { t: 'T015', r: 'official_run', s: 'ofs-04-pending-review', a: A, v: 'positive' }, // pending
+      /* T016 official_run, min_reviewers = 3 */
+      { t: 'T016', r: 'official_run', s: 'ofm-01-unanimous-gold', a: A, v: 'positive', rev: { reviewer_wang: 'positive', reviewer_li: 'positive', reviewer_lin: 'positive' } }, // finalized
+      { t: 'T016', r: 'official_run', s: 'ofm-02-approved-interim', a: A, v: 'negative', rev: { reviewer_wang: 'negative' } }, // approved (1 < 3)
+      { t: 'T016', r: 'official_run', s: 'ofm-03-modified-interim', a: A, v: 'neutral', rev: { reviewer_wang: 'negative' } }, // modified (1 < 3)
+      { t: 'T016', r: 'official_run', s: 'ofm-04-majority-converged', a: A, v: 'positive', rev: { reviewer_wang: 'neutral', reviewer_li: 'neutral', reviewer_lin: 'positive' } }, // finalized (neutral 2 > 3/2)
+      { t: 'T016', r: 'official_run', s: 'ofm-05-all-divergent', a: A, v: 'neutral', rev: { reviewer_wang: 'positive', reviewer_li: 'negative', reviewer_lin: 'neutral' } }, // disputed (1/1/1)
+      /* T017 official_run, min_reviewers = 2 */
+      { t: 'T017', r: 'official_run', s: 'oft-01-even-tie', a: A, v: 'neutral', rev: { reviewer_wang: 'positive', reviewer_li: 'neutral' } }, // disputed (1:1 tie)
+      { t: 'T017', r: 'official_run', s: 'oft-02-approved-interim', a: A, v: 'positive', rev: { reviewer_wang: 'positive' } }, // approved (1 < 2)
+      { t: 'T017', r: 'official_run', s: 'oft-03-modified-interim', a: A, v: 'neutral', rev: { reviewer_wang: 'positive' } }, // modified (1 < 2)
+      { t: 'T017', r: 'official_run', s: 'oft-04-unanimous-gold', a: A, v: 'positive', rev: { reviewer_wang: 'positive', reviewer_li: 'positive' } }, // finalized
+      { t: 'T017', r: 'official_run', s: 'oft-05-pending-review', a: A, v: 'positive' }, // pending
+    ];
+
+    function labelPayload(value) {
+      return { previewState: { single_label: { selected: value } } };
+    }
+
+    scripts.forEach(function (row) {
+      markSampleSubmitted(row.t, 'annotator', row.r, row.s, labelPayload(row.v), '', { annotatorId: row.a });
+      Object.keys(row.rev || {}).forEach(function (reviewerId) {
+        markSampleSubmitted(row.t, 'reviewer', row.r, row.s, labelPayload(row.rev[reviewerId]), '', {
+          annotatorId: row.a,
+          reviewerId: reviewerId,
+        });
+      });
+      if (row.arb) {
+        submitArbitration(row.t, row.r, row.s, { annotatorId: row.a, reviewerId: 'reviewer_chen' }, [
+          { itemId: 'single_label::single_label', choice: 'B', value: row.arb },
+        ]);
+      }
+    });
+  }
+
+  seedReviewFlowDemo();
 
   global.LabelSuiteAnnotationWorkspaceData = {
     resolveTaskProfile: resolveTaskProfile,

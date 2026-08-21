@@ -1,5 +1,5 @@
 /*
- * Seed configuration profiles for the 13 task-list example tasks (T001-T013).
+ * Seed configuration profiles for the 17 task-list example tasks (T001-T017).
  *
  * Sources:
  *  - docs/product/task-configs/<sourceFile>   -> outputs[] (ADR-029 composition model)
@@ -1003,6 +1003,202 @@
           ]
         }
       ]
+    },
+
+    /* T014-T017: review-flow demo seeds. Same single_label sentiment
+       schema (docs/product/task-configs/review-flow-*.json) with label
+       colors mapped to the prototype palette exactly as T001 maps
+       single-label.json; records copied verbatim from
+       docs/product/example-data/review-flow-*.json. `minReviewers` seeds
+       the per-task min_reviewers threshold consumed by
+       getReviewUnitStatus(); profiles without the field default to 1
+       (MIN_REVIEWERS_DEFAULT). */
+    T014: {
+      taskCategories: ['classification'],
+      taskInputTypes: ['single_item'],
+      minReviewers: 1,
+      outputs: [
+        {
+          type: 'single_label',
+          config: {
+            label_options: [
+              { name: 'positive', color: '#10B981' },
+              { name: 'neutral', color: '#F59E0B' },
+              { name: 'negative', color: '#EC4899' }
+            ]
+          }
+        }
+      ],
+      fieldRoleMap: { text: 'input', gold_label: 'output' },
+      datasetFileName: 'review-flow-dry-run.json',
+      datasetRecords: [
+        {
+          id: 'dry-01-all-agree',
+          text: '餐點份量十足，服務生態度親切，上菜速度也很快，整體用餐體驗非常好。',
+          gold_label: 'positive'
+        },
+        {
+          id: 'dry-02-one-divergent',
+          text: '口味還不錯，但價格偏高，如果有折扣的話應該會再訪。',
+          gold_label: 'neutral'
+        },
+        {
+          id: 'dry-03-dispute-open',
+          text: '環境普通，餐點也沒什麼特色，不算難吃但應該不會特地再來。',
+          gold_label: 'neutral'
+        },
+        {
+          id: 'dry-04-dispute-resolved',
+          text: '服務人員把飲料打翻在我外套上，雖然有道歉但處理態度很敷衍。',
+          gold_label: 'negative'
+        },
+        {
+          id: 'dry-05-pending-review',
+          text: '甜點是隱藏亮點，尤其是烤布蕾，外層焦糖的脆度恰到好處。',
+          gold_label: 'positive'
+        }
+      ]
+    },
+
+    T015: {
+      taskCategories: ['classification'],
+      taskInputTypes: ['single_item'],
+      minReviewers: 1,
+      outputs: [
+        {
+          type: 'single_label',
+          config: {
+            label_options: [
+              { name: 'positive', color: '#10B981' },
+              { name: 'neutral', color: '#F59E0B' },
+              { name: 'negative', color: '#EC4899' }
+            ]
+          }
+        }
+      ],
+      fieldRoleMap: { text: 'input', gold_label: 'output' },
+      datasetFileName: 'review-flow-official-single.json',
+      datasetRecords: [
+        {
+          id: 'ofs-01-agree-gold',
+          text: '等了四十分鐘餐點才上桌，牛排要的五分熟卻煎到全熟，體驗很差。',
+          gold_label: 'negative'
+        },
+        {
+          id: 'ofs-02-modified-dispute',
+          text: '整體來說中規中矩，飲料好喝但主餐略鹹，看個人接受度。',
+          gold_label: 'neutral'
+        },
+        {
+          id: 'ofs-03-arbitrated-gold',
+          text: '店面剛裝潢過，座位變得舒適許多，不過菜單品項也變少了。',
+          gold_label: 'neutral'
+        },
+        {
+          id: 'ofs-04-pending-review',
+          text: '主廚特餐每天不同，今天的燉飯米心軟硬適中，醬汁也很入味。',
+          gold_label: 'positive'
+        },
+        {
+          id: 'ofs-05-not-submitted',
+          text: '老闆娘會記得常客的喜好，這種人情味在連鎖餐廳感受不到。',
+          gold_label: 'positive'
+        }
+      ]
+    },
+
+    T016: {
+      taskCategories: ['classification'],
+      taskInputTypes: ['single_item'],
+      minReviewers: 3,
+      outputs: [
+        {
+          type: 'single_label',
+          config: {
+            label_options: [
+              { name: 'positive', color: '#10B981' },
+              { name: 'neutral', color: '#F59E0B' },
+              { name: 'negative', color: '#EC4899' }
+            ]
+          }
+        }
+      ],
+      fieldRoleMap: { text: 'input', gold_label: 'output' },
+      datasetFileName: 'review-flow-official-multi.json',
+      datasetRecords: [
+        {
+          id: 'ofm-01-unanimous-gold',
+          text: '從前菜到甜點每一道都很用心，擺盤精緻、味道也無可挑剔，值得專程前往。',
+          gold_label: 'positive'
+        },
+        {
+          id: 'ofm-02-approved-interim',
+          text: '訂位系統顯示訂位成功，到現場卻說沒有紀錄，白跑一趟非常生氣。',
+          gold_label: 'negative'
+        },
+        {
+          id: 'ofm-03-modified-interim',
+          text: '湯頭喝得出有熬過，但配料普通，加點的滷味倒是出乎意料地好。',
+          gold_label: 'neutral'
+        },
+        {
+          id: 'ofm-04-majority-converged',
+          text: '平日中午人不多用餐很安靜，餐點水準就是一般商業午餐的等級。',
+          gold_label: 'neutral'
+        },
+        {
+          id: 'ofm-05-all-divergent',
+          text: '餐點好吃但服務很糟，價格又偏貴，實在說不上推不推薦。',
+          gold_label: 'neutral'
+        }
+      ]
+    },
+
+    T017: {
+      taskCategories: ['classification'],
+      taskInputTypes: ['single_item'],
+      minReviewers: 2,
+      outputs: [
+        {
+          type: 'single_label',
+          config: {
+            label_options: [
+              { name: 'positive', color: '#10B981' },
+              { name: 'neutral', color: '#F59E0B' },
+              { name: 'negative', color: '#EC4899' }
+            ]
+          }
+        }
+      ],
+      fieldRoleMap: { text: 'input', gold_label: 'output' },
+      datasetFileName: 'review-flow-official-tie.json',
+      datasetRecords: [
+        {
+          id: 'oft-01-even-tie',
+          text: '餐廳景觀一流，可以看到整片河岸夜景，但餐點的表現撐不起這個價位。',
+          gold_label: 'neutral'
+        },
+        {
+          id: 'oft-02-approved-interim',
+          text: '兒童友善空間規劃得很好，餐具和座椅都有替小朋友準備，家庭聚餐首選。',
+          gold_label: 'positive'
+        },
+        {
+          id: 'oft-03-modified-interim',
+          text: '咖哩飯口味偏甜，附餐的沙拉倒是很新鮮，喜不喜歡見仁見智。',
+          gold_label: 'neutral'
+        },
+        {
+          id: 'oft-04-unanimous-gold',
+          text: '壽司的新鮮度沒話說，師傅還會依季節推薦食材，每次來都很滿意。',
+          gold_label: 'positive'
+        },
+        {
+          id: 'oft-05-pending-review',
+          text: '新開的早午餐店，鬆餅口感紮實，佐餐咖啡的比例也調得剛剛好。',
+          gold_label: 'positive'
+        }
+      ]
     }
   };
 
@@ -1010,7 +1206,7 @@
    * TaskProfile carries a generic, task-agnostic file list -- the
    * annotation workspace's right-column panel renders these purely by
    * `type` (pdf/image/markdown), never by task_id or task category
-   * (Generalization-First). One shared demo file set covers all 13 seed
+   * (Generalization-First). One shared demo file set covers all 17 seed
    * profiles; the only real binary asset shipped with the prototype is
    * reused for every image entry. */
   var DEFAULT_GUIDELINE_FILES = [

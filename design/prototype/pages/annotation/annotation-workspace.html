@@ -308,6 +308,53 @@
     }
     .rv-summary-text { font-size: 13px; color: var(--color-ink); white-space: pre-line; }
 
+    /* ── Reviewer mode: review-unit context banner (issue #302) ──
+       One strip above the review card naming the task's review model:
+       run type, quorum, annotator, reviewed progress, five-state pill.
+       FR-051 makes the review card identical for every model, so this
+       banner is what tells the four demo review models apart. */
+    .rv-unit-context {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      margin-bottom: 10px;
+    }
+    .rv-unit-chip {
+      font-size: 12px;
+      color: var(--color-ink-muted);
+      background: var(--color-white);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-full);
+      padding: 2px 10px;
+      white-space: nowrap;
+    }
+    .rv-unit-run {
+      color: var(--color-primary);
+      background: var(--color-primary-soft-bg);
+      border-color: var(--color-primary-border);
+      font-weight: 700;
+    }
+    .rv-unit-state {
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: var(--radius-full);
+      padding: 2px 10px;
+      margin-left: auto;
+      white-space: nowrap;
+      color: var(--color-ink-muted);
+      background: var(--color-white);
+      border: 1px solid var(--color-border);
+    }
+    .rv-unit-state-approved { color: var(--color-info); background: var(--color-info-bg); border-color: var(--color-info-border); }
+    .rv-unit-state-modified { color: var(--color-warning); background: var(--color-warning-bg); border-color: var(--color-warning-border); }
+    .rv-unit-state-disputed { color: var(--color-error); background: var(--color-error-bg); border-color: var(--color-error-border); }
+    .rv-unit-state-finalized { color: var(--color-success); background: var(--color-success-bg); border-color: var(--color-success-border); }
+
     .rv-bulk-bar {
       display: flex;
       align-items: center;

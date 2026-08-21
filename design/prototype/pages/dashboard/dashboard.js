@@ -193,6 +193,16 @@
       + '</div>';
   }
 
+  /* Reviewer entries may pin a reviewer identity (review-flow demo tasks
+     enter as the can_arbitrate reviewer, FR-060); annotation-list forwards
+     it into every workspace link (FR-049). Absent -> param stays absent and
+     both pages fall back to the same default roster identity. */
+  function identityQuery(role, entry) {
+    return role === 'reviewer' && entry.reviewerId
+      ? '&reviewer_id=' + encodeURIComponent(entry.reviewerId)
+      : '';
+  }
+
   function openAnnotationList(role, entry) {
     global.LabelSuiteAnalytics.track('prototype_cta_clicked', {
       cta: role === 'annotator'
@@ -206,7 +216,8 @@
     var listUrl = '../annotation/annotation-list.html?task_id='
       + encodeURIComponent(entry.exampleTaskId || '')
       + '&role=' + encodeURIComponent(role)
-      + '&run_type=' + encodeURIComponent(entry.runType || '');
+      + '&run_type=' + encodeURIComponent(entry.runType || '')
+      + identityQuery(role, entry);
     global.location.href = listUrl;
   }
 
@@ -229,7 +240,8 @@
       + encodeURIComponent(entry.exampleTaskId || '')
       + '&sample_id=' + encodeURIComponent(sampleId)
       + '&role=' + encodeURIComponent(role)
-      + '&run_type=' + encodeURIComponent(entry.runType || '');
+      + '&run_type=' + encodeURIComponent(entry.runType || '')
+      + identityQuery(role, entry);
     global.location.href = workspaceUrl;
   }
 

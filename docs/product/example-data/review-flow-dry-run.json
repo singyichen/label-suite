@@ -1,0 +1,27 @@
+[
+  {
+    "id": "dry-01-all-agree",
+    "text": "餐點份量十足，服務生態度親切，上菜速度也很快，整體用餐體驗非常好。",
+    "gold_label": "positive"
+  },
+  {
+    "id": "dry-02-one-divergent",
+    "text": "口味還不錯，但價格偏高，如果有折扣的話應該會再訪。",
+    "gold_label": "neutral"
+  },
+  {
+    "id": "dry-03-dispute-open",
+    "text": "環境普通，餐點也沒什麼特色，不算難吃但應該不會特地再來。",
+    "gold_label": "neutral"
+  },
+  {
+    "id": "dry-04-dispute-resolved",
+    "text": "服務人員把飲料打翻在我外套上，雖然有道歉但處理態度很敷衍。",
+    "gold_label": "negative"
+  },
+  {
+    "id": "dry-05-pending-review",
+    "text": "甜點是隱藏亮點，尤其是烤布蕾，外層焦糖的脆度恰到好處。",
+    "gold_label": "positive"
+  }
+]

@@ -11,7 +11,8 @@
     detailEn,
     progress,
     runType,
-    status
+    status,
+    reviewerId
   ) {
     return {
       latestUnfinishedSampleId: sampleId,
@@ -19,6 +20,7 @@
       progress: progress,
       runType: runType,
       status: status,
+      reviewerId: reviewerId || '',
     };
   }
 
@@ -278,6 +280,97 @@
         'pending_review'
       ),
     },
+    /* T014-T017: review-flow demo tasks (issue #302). Numbers follow the
+       seeded review-state matrix staged at boot by
+       annotation-workspace.data.js: pending counts are the review units
+       still 待審 (T014=6 of 15, T015=1 of 4, T016=0 of 5, T017=1 of 5)
+       and reviewer progress is the share of units past 待審. Reviewer
+       sample ids point at each task's first dataset record so the
+       quick-review entry lands on the initial reviewer screen, and every
+       demo reviewer entry enters as reviewer_chen -- the only
+       can_arbitrate reviewer (FR-060) -- so disputed units surface the
+       arbitration entry screen instead of staying invisible under the
+       default reviewer identity. */
+    {
+      exampleTaskId: 'T014',
+      annotator: workItem(
+        'dry-01-all-agree',
+        '已完成 100% · 今日 15 筆 · 平均速度 2.4',
+        '100% Completed · 15 Today · Avg Speed 2.4',
+        100,
+        'dry_run',
+        'in_progress'
+      ),
+      reviewer: workItem(
+        'dry-01-all-agree',
+        '待審 6 筆 · 進度 60% · IAA 0.72',
+        '6 Pending · 60% Progress · IAA 0.72',
+        60,
+        'dry_run',
+        'pending_review',
+        'reviewer_chen'
+      ),
+    },
+    {
+      exampleTaskId: 'T015',
+      annotator: workItem(
+        'ofs-05-not-submitted',
+        '已完成 80% · 今日 4 筆 · 平均速度 2.7',
+        '80% Completed · 4 Today · Avg Speed 2.7',
+        80,
+        'official_run',
+        'continue'
+      ),
+      reviewer: workItem(
+        'ofs-01-agree-gold',
+        '待審 1 筆 · 進度 75% · IAA 0.81',
+        '1 Pending · 75% Progress · IAA 0.81',
+        75,
+        'official_run',
+        'pending_review',
+        'reviewer_chen'
+      ),
+    },
+    {
+      exampleTaskId: 'T016',
+      annotator: workItem(
+        'ofm-01-unanimous-gold',
+        '已完成 100% · 今日 15 筆 · 平均速度 2.9',
+        '100% Completed · 15 Today · Avg Speed 2.9',
+        100,
+        'official_run',
+        'in_progress'
+      ),
+      reviewer: workItem(
+        'ofm-01-unanimous-gold',
+        '待審 0 筆 · 進度 100% · IAA 0.68',
+        '0 Pending · 100% Progress · IAA 0.68',
+        100,
+        'official_run',
+        'in_progress',
+        'reviewer_chen'
+      ),
+    },
+    {
+      exampleTaskId: 'T017',
+      annotator: workItem(
+        'oft-01-even-tie',
+        '已完成 100% · 今日 10 筆 · 平均速度 3.2',
+        '100% Completed · 10 Today · Avg Speed 3.2',
+        100,
+        'official_run',
+        'in_progress'
+      ),
+      reviewer: workItem(
+        'oft-01-even-tie',
+        '待審 1 筆 · 進度 80% · IAA 0.70',
+        '1 Pending · 80% Progress · IAA 0.70',
+        80,
+        'official_run',
+        'pending_review',
+        'reviewer_chen'
+      ),
+    },
   ];
 
   /* Shared export: annotation-list.html reads the same seeds so its task
@@ -298,6 +391,7 @@
       progress: work.progress,
       runType: work.runType,
       status: work.status,
+      reviewerId: work.reviewerId,
     };
   }
 
