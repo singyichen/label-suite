@@ -2577,7 +2577,8 @@
     var workspaceData = window.LabelSuiteAnnotationWorkspaceData;
     var reviewSubmitBtn = document.getElementById('wsReviewSubmitBtn');
     var unitStatus = workspaceData.getReviewUnitStatus(
-      currentProfile.id, currentRunType, currentSampleId, currentIdentity, state.selectedOutputTypes
+      currentProfile.id, currentRunType, currentSampleId, currentIdentity, state.selectedOutputTypes,
+      { minReviewers: currentProfile.minReviewers || 1 }
     );
     if (
       unitStatus === workspaceData.REVIEW_UNIT_STATUS.DISPUTED &&

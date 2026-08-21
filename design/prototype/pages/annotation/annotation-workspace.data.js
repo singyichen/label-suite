@@ -56,6 +56,9 @@
          false so tasks that never set it keep today's no-gate behavior. */
       forceShowGuideline: detail.forceShowGuideline || false,
       materializedRuns: detail.materializedRuns || null,
+      /* Per-task min_reviewers threshold (review-flow demo Phase 2):
+         profiles without the seed keep MIN_REVIEWERS_DEFAULT = 1. */
+      minReviewers: detail.minReviewers || 1,
     };
   }
 

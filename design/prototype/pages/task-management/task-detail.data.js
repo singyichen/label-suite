@@ -1009,10 +1009,14 @@
        schema (docs/product/task-configs/review-flow-*.json) with label
        colors mapped to the prototype palette exactly as T001 maps
        single-label.json; records copied verbatim from
-       docs/product/example-data/review-flow-*.json. */
+       docs/product/example-data/review-flow-*.json. `minReviewers` seeds
+       the per-task min_reviewers threshold consumed by
+       getReviewUnitStatus(); profiles without the field default to 1
+       (MIN_REVIEWERS_DEFAULT). */
     T014: {
       taskCategories: ['classification'],
       taskInputTypes: ['single_item'],
+      minReviewers: 1,
       outputs: [
         {
           type: 'single_label',
@@ -1059,6 +1063,7 @@
     T015: {
       taskCategories: ['classification'],
       taskInputTypes: ['single_item'],
+      minReviewers: 1,
       outputs: [
         {
           type: 'single_label',
@@ -1105,6 +1110,7 @@
     T016: {
       taskCategories: ['classification'],
       taskInputTypes: ['single_item'],
+      minReviewers: 3,
       outputs: [
         {
           type: 'single_label',
@@ -1151,6 +1157,7 @@
     T017: {
       taskCategories: ['classification'],
       taskInputTypes: ['single_item'],
+      minReviewers: 2,
       outputs: [
         {
           type: 'single_label',
