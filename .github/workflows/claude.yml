@@ -53,6 +53,8 @@ jobs:
           # grant here to actually read CI results.
           additional_permissions: |
             actions: read
-          # Cap agent iterations so a runaway cloud run cannot burn tokens;
-          # stop a run early with `gh run cancel <run-id>` when needed.
-          claude_args: "--max-turns 50"
+          # No --max-turns cap: 50 proved too low in practice (run 32440113238
+          # died mid-analysis on a real issue — every tool call is one turn,
+          # and this repo's flow burns turns fast). The runaway backstops are
+          # `timeout-minutes: 60` and subscription billing; stop a run early
+          # with `gh run cancel <run-id>` when needed.
