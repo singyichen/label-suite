@@ -66,6 +66,18 @@
       historyActionOverridden: '已覆寫',
       historyActionGoldConfirmed: '已確認標準答案',
       historyActionGoldReopened: '重新開放標準答案',
+      unitCtxRunDry: '試標',
+      unitCtxRunOfficial: '正式標記',
+      unitCtxThreshold: '審核門檻 {n} 位審核員',
+      unitCtxAnnotator: '標記員 {id}',
+      unitCtxRoster: '本樣本 {m} 位標記員',
+      unitCtxReviewed: '已審 {x} / {n}',
+      unitStatePending: '待審',
+      unitStateApproved: '已同意',
+      unitStateModified: '已修改',
+      unitStateDisputed: '爭議中',
+      unitStateFinalized: '已定稿',
+      unitStateNone: '尚無標記提交',
     },
     en: {
       sampleListTitle: 'Samples',
@@ -117,6 +129,18 @@
       historyActionOverridden: 'Overridden',
       historyActionGoldConfirmed: 'Gold confirmed',
       historyActionGoldReopened: 'Gold reopened',
+      unitCtxRunDry: 'Dry Run',
+      unitCtxRunOfficial: 'Official Run',
+      unitCtxThreshold: 'Review quorum: {n} reviewer(s)',
+      unitCtxAnnotator: 'Annotator {id}',
+      unitCtxRoster: '{m} annotators on this sample',
+      unitCtxReviewed: 'Reviewed {x} / {n}',
+      unitStatePending: 'Pending review',
+      unitStateApproved: 'Approved',
+      unitStateModified: 'Modified',
+      unitStateDisputed: 'Disputed',
+      unitStateFinalized: 'Finalized',
+      unitStateNone: 'No submission yet',
     },
   };
   if (window.TASK_CONFIG_I18N) {
@@ -2561,6 +2585,63 @@
     preview.appendChild(card);
   }
 
+  /* Review-unit context banner (issue #302): FR-051 renders the SAME
+     review card for every review model, so run type, quorum, annotator
+     roster, reviewed progress, and the unit's five-state pill are the only
+     way a reviewer can tell one review model from another inside the
+     workspace. Rendered above the card in every reviewer path, including
+     the arbitration branch. */
+  function buildReviewUnitContext(unitStatus) {
+    var workspaceData = window.LabelSuiteAnnotationWorkspaceData;
+    var minReviewers = currentProfile.minReviewers || 1;
+    var reviewedCount = workspaceData.readReviewerSubmissions(
+      currentProfile.id, currentRunType, currentSampleId, currentIdentity
+    ).length;
+    var rosterSize = (workspaceData.getReviewerMockRows(currentProfile.id, currentSampleId) || []).length;
+
+    var banner = document.createElement('div');
+    banner.className = 'rv-unit-context';
+    banner.setAttribute('data-testid', 'ws-review-unit-context');
+
+    function chip(text, extraClass) {
+      var node = document.createElement('span');
+      node.className = 'rv-unit-chip' + (extraClass ? ' ' + extraClass : '');
+      node.textContent = text;
+      banner.appendChild(node);
+    }
+
+    chip(
+      t(currentRunType === 'official_run' ? 'unitCtxRunOfficial' : 'unitCtxRunDry'),
+      'rv-unit-run'
+    );
+    chip(t('unitCtxThreshold').replace('{n}', String(minReviewers)));
+    chip(
+      t('unitCtxAnnotator').replace('{id}', currentAnnotatorId()) +
+        (rosterSize > 1 ? ' · ' + t('unitCtxRoster').replace('{m}', String(rosterSize)) : '')
+    );
+    if (unitStatus !== null) {
+      chip(
+        t('unitCtxReviewed')
+          .replace('{x}', String(reviewedCount))
+          .replace('{n}', String(minReviewers))
+      );
+    }
+
+    var stateKeyByStatus = {
+      pending: 'unitStatePending',
+      approved: 'unitStateApproved',
+      modified: 'unitStateModified',
+      disputed: 'unitStateDisputed',
+      finalized: 'unitStateFinalized',
+    };
+    var statePill = document.createElement('span');
+    statePill.className =
+      'rv-unit-state' + (unitStatus ? ' rv-unit-state-' + unitStatus : '');
+    statePill.textContent = t(stateKeyByStatus[unitStatus] || 'unitStateNone');
+    banner.appendChild(statePill);
+    return banner;
+  }
+
   function renderReviewerWorkspace() {
     var preview = document.getElementById('annotationPreview');
     if (!preview) return;
@@ -2580,6 +2661,7 @@
       currentProfile.id, currentRunType, currentSampleId, currentIdentity, state.selectedOutputTypes,
       { minReviewers: currentProfile.minReviewers || 1 }
     );
+    preview.appendChild(buildReviewUnitContext(unitStatus));
     if (
       unitStatus === workspaceData.REVIEW_UNIT_STATUS.DISPUTED &&
       workspaceData.isArbiterCandidate(currentProfile.id, currentRunType, currentSampleId, currentIdentity)

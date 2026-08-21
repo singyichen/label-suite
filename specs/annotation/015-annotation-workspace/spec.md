@@ -1,7 +1,7 @@
 ---
 功能分支: docs/208-official-gold-fr
 建立日期: 2026-04-23
-版本: 4.11.0
+版本: 4.12.0
 狀態: Draft
 ---
 
@@ -499,6 +499,7 @@ Reviewer 在 `run_type = official_run` 的工作區中，針對「目前標記�
 24. **AC-4.24（v4.8.0 新增，逐項多數決收斂）**：**Given** 一個爭議項與該單位共 N 位已提交審核員，**When** 依 `DISPUTE_CONVERGENCE_RULE` 推導收斂，**Then** 得票嚴格過半（> N/2，未出現於 `reviewer_values` 者計為對 `annotator_value` 的隱含同意票）的值必須自動收斂定案——仲裁版面以唯讀收斂列呈現（`ws-arbitration-converged`）、不渲染 A/B 列；**And** N=1、偶數平手、全數分歧三種情境必須不收斂、維持待仲裁（見 FR-061）。
 25. **AC-4.25（v4.9.0 新增，未提交審核判斷之跨審核員隔離）**：**Given** 審核員 R01 已對某審核單位儲存審核草稿但尚未提交，**When** 另一位審核員 R02 開啟同一審核單位並切換至右欄 `歷程` 頁籤，**Then** R02 看到的歷程清單不得包含 R01 的任何未提交事件（含僅具一般性摘要的 `saved` 草稿事件——「已有動作」的事實本身即構成盲審污染）；**And** R01 本人重新開啟時仍可看到自己的草稿事件；**And** R01 提交後，其審核決策事件依 FR-050 既有規則對 R02 可見（見 FR-062）。
 26. **AC-4.26（v4.10.0 新增，official_run 定案產生 gold）**：**Given** `run_type = official_run` 之審核單位，**When** 其狀態推導為 `finalized`（FR-051：全數一致達 `min_reviewers` 門檻，或爭議項全數解決），**Then** 系統必須自該單位之定案判斷產生 gold——一致項自動保留、不一致項採收斂或仲裁定案值，且該 gold 可追溯至來源審核單位（`sample_id × annotator_id × run_type`）與定案者；**And** `run_type = dry_run` 之審核單位於相同條件下不得產生任何樣本層級 gold（見 FR-063）。
+27. **AC-4.27（v4.12.0 新增，審核單位脈絡橫幅）**：**Given** 審核員開啟任一審核單位的 workspace reviewer 視圖，**When** 預覽區渲染，**Then** 審核卡（或仲裁版面）上方必須恰渲染一個審核單位脈絡橫幅（`ws-review-unit-context`），內容依序為：`run_type` 徽章（`試標`／`正式標記`）、該任務生效之審核門檻（`min_reviewers`）、受審標記員帳號（同一樣本有多位標記員時附註名冊人數）、已提交審核進度 `已審 x / n`（僅審核單位成立時）、以及該單位的 `REVIEW_UNIT_STATUS` 五態 pill；**And** 標記員未提交（審核單位不成立）時 pill 顯示 `尚無標記提交` 且不顯示已審進度；**And** 橫幅於 FR-053 審核卡與 FR-061 仲裁版面兩種版面下皆存在（見 FR-064）。
 
 **行為規則**：
 
@@ -688,6 +689,7 @@ Reviewer 在 `run_type = official_run` 的工作區中，針對「目前標記�
   3. **dry_run 不產 gold**：`dry_run` 審核單位定案不產生任何樣本層級 gold——維持規格常數 `GOLD_STATUS` 之 v4.0.0 廢止條目（dry_run 不再產出樣本層級 gold，`GoldRecord` 一併失效）；試標的品質產出為 IAA 與每位標記員的被修改率（概念性提及，指標細節屬 dataset-017 範圍，本條僅界定「不產 gold」的邊界）。
 
   本條僅定義資料層契約，不改變任何版面呈現，亦不恢復已廢止之 `AdjudicationItem`／`GoldRecord` 實體（dry_run 共識仲裁彙總實體，名稱保留不重用，見 FR-053）；official_run gold 的儲存實體形狀決策文件未定，留待後端接上時定義，本條僅鎖定產生時點、來源判斷與可追溯性三項契約。
+- **FR-064**（v4.12.0 新增，對應 AC-4.27）：**審核單位脈絡橫幅——審核模型的工作區可視性**。workspace reviewer 視圖必須於審核卡（FR-053）或仲裁版面（FR-061）上方渲染一個審核單位脈絡橫幅（testid `ws-review-unit-context`），逐審核單位呈現：（1）`run_type` 徽章（`試標`／`正式標記`）；（2）該任務生效之審核門檻——`審核門檻 {min_reviewers} 位審核員`（逐任務生效值，見 `MIN_REVIEWERS_DEFAULT` v4.11.0 條目）；（3）受審標記員帳號，且同一樣本之標記員名冊多於一人時附註 `本樣本 {m} 位標記員`；（4）已提交審核進度 `已審 {x} / {n}`（`n` = 門檻、`x` = 該單位已提交之審核員數，僅審核單位成立時渲染）；（5）該單位 `REVIEW_UNIT_STATUS` 之五態 pill（`disputed` 用 error 色系、`finalized` 用 success 色系、`approved`／`modified` 各用 info／warning 色系），標記員未提交時 pill 改顯示 `尚無標記提交`。理由：FR-051 使審核單位定址與 FR-053 使審核卡版面於兩種 `run_type` 完全一致後，四種審核模型（dry_run 共識、單審核員、三人多數決、雙人平手仲裁）在工作區內已無任何可見差異——審核員無從得知目前單位的審核模型、門檻與進度，唯一的區辨資訊（`min_reviewers`、roster、已審人數）全部只存在於資料層。本條為呈現層補充，不改變 FR-051 狀態機與 FR-053／FR-061 版面契約本身；橫幅資訊一律由既有資料層讀取（`getReviewUnitStatus` 及其輸入），不得另行維護狀態。
 - **FR-016**: 系統必須記錄每筆資料的標記歷程（操作者、時間、修改內容、對應輸出類型）。
 - **FR-016A**: Reviewer 在 Dry Run 與 Official Run 執行修正/刪除時，系統必須強制填寫審計理由並記錄。
 - **FR-016B**: 標記歷程必須於右欄 `歷程` 頁籤呈現，annotator 與 reviewer 視角皆可查看；同一樣本的 annotator 與 reviewer 事件（儲存/提交/決策）合併為單一時序清單，每筆事件包含操作者角色、時間、動作與對應輸出類型作答摘要，最新事件在前；尚無紀錄時顯示空狀態文案。**v4.9.0 修訂**：合併清單納入 reviewer 事件時受 FR-062 盲審隔離約束——僅納入已提交之審核事件與檢視者本人的草稿事件，其他審核員未提交的事件不得納入。
@@ -856,6 +858,7 @@ flowchart LR
 - **SC-004T**（v4.8.0 新增）: 仲裁版面切換 100% 符合「`disputed` AND 仲裁資格」——不符合任一條件時 0 個 `ws-arbitration-card` 節點；仲裁版面內修正控件與 ✕/✓ 決策按鈕 100% 為 0 節點；送出後 `votes[]` 與 `finalized_value` / `finalized_by` 與所選 100% 一致，未逐項裁定的送出 0 寫入；收斂規則之嚴格多數情境 100% 自動定案且不渲染 A/B 列，N=1／偶數平手／全數分歧情境 100% 維持待仲裁；所有爭議項皆解決之單位 100% 推導為 `finalized`（AC-4.22 ~ AC-4.24、FR-061）。
 - **SC-004U**（v4.9.0 新增）: 跨審核員草稿隔離 100% 成立——任一審核員視角下，歷程頁籤與任何 reviewer 可見的呈現路徑中，他人未提交之審核事件為 0 筆；本人草稿事件與他人已提交事件之可見性 100% 維持既有規則（AC-4.25、FR-062）。
 - **SC-004V**（v4.10.0 新增）: gold 產出邊界 100% 符合「僅 `official_run` 審核單位 `finalized` 時產生」——`dry_run` 定案產生之樣本層級 gold 為 0 筆；每筆 gold 皆可追溯至其來源審核單位（`sample_id × annotator_id × run_type`）與定案者（AC-4.26、FR-063）。
+- **SC-004W**（v4.12.0 新增）: 任一審核單位的 reviewer 視圖 100% 恰渲染一個 `ws-review-unit-context` 橫幅（審核卡與仲裁版面皆然），其 `run_type` 徽章、審核門檻、標記員帳號、`已審 x / n` 與五態 pill 與該單位資料層推導值 100% 一致；四個審核流程示範任務（T014–T017）自各自第一筆樣本進入時，橫幅內容即可區辨四種審核模型（AC-4.27、FR-064）。
 - **SC-005**: 在 `375px / 768px / 1440px` 下，翻筆後 `說明與檔案` 內容維持，Desktop 可收合/展開且 Mobile 抽屜開合可用。
 - **SC-005B**: 點擊右欄圖片檔後，會開啟圖片預覽 modal 並顯示對應大圖；使用者可透過關閉按鈕、遮罩背景或 `Esc` 成功關閉。
 - **SC-005A**: 在 `375px`（行動版）檢視 `annotation-list` 時，清單首列不得出現異常大列高或內容下沉；列表可維持單列緊湊掃讀。
@@ -883,6 +886,7 @@ flowchart LR
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 4.12.0 | 2026-08-21 | **審核單位脈絡橫幅（FR-064）——審核模型的工作區可視性**（審核流程 demo 走查回饋）：v4.0.0 的 FR-051／FR-053 讓兩種 `run_type` 共用同一審核單位定址與同一張審核卡後，四種審核模型（dry_run 共識、單審核員、三人多數決、雙人平手仲裁）在工作區內完全無法區辨——`min_reviewers`、roster、已審人數只存在於資料層，審核員開啟 T014–T017 任一單位看到的畫面一模一樣。新增 **FR-064**、**AC-4.27**、**SC-004W**：審核卡／仲裁版面上方渲染審核單位脈絡橫幅（`ws-review-unit-context`），呈現 `run_type` 徽章、生效審核門檻、受審標記員（含名冊人數）、`已審 x / n` 進度與五態 pill（標記員未提交時顯示 `尚無標記提交`）；橫幅一律讀取既有資料層（`getReviewUnitStatus` 及其輸入），不另行維護狀態。呈現層補充，不改變 FR-051 狀態機與 FR-053／FR-061 版面契約。同輪配套（dashboard 側，見 spec 012 v2.2.0）：示範任務 reviewer 導覽帶 `reviewer_id` 身分參數並落在各任務第一筆樣本，使仲裁初始畫面（FR-061）自儀表板入口可達。 |
 | 4.11.0 | 2026-08-21 | **審核流程示範任務 T014–T017：逐任務 `min_reviewers` 生效 + 展示狀態 seeder**（審核流程 demo Phase 2；接續 Phase 1 的 T014–T017 任務／資料集 seed）：Phase 1 只建立了任務外殼——`REVIEWER_MOCK_ROWS` 停在 T013、`min_reviewers` 仍是寫死的 1，四個示範任務的審核清單渲染零筆審核單位，v3.9.0 起定義的五態機、額度門檻（`approved`/`modified` 中繼態）、多數決收斂（FR-061）與仲裁（FR-060）在 demo 中沒有任何可見路徑。三項變更：（1）**逐任務 `min_reviewers`**——`TaskProfile` 新增 prototype seed 欄位 `minReviewers`（T014/T015 = 1、T016 = 3、T017 = 2，未設定者取 `MIN_REVIEWERS_DEFAULT`），`getReviewUnitStatus()` 的兩個消費端（清單徽章、工作區審核卡）皆傳入該任務生效值；（2）**名冊與模擬列**——`REVIEWER_ROSTER` 新增第四位 `reviewer_lin`（無 `can_arbitrate`，使 T016 三人額度不佔用 chen 的仲裁資格）；`REVIEWER_MOCK_ROWS` 補齊 T014–T017（T014 沿用 dry_run 3 標記員形態、T015–T017 為單一標記員，T015 的 `ofs-05-not-submitted` 刻意無列）；（3）**展示狀態 seeder**——`annotation-workspace.data.js` 於載入時一次性播種 29 個審核單位的標記／審核／仲裁狀態（重用 `markSampleSubmitted`／`submitArbitration`，與真實互動寫入同形），以 marker key `labelsuite.reviewFlowDemoSeed.v1` 保證冪等：重載不重寫時間戳、不重複歷程事件、不覆寫訪客後續變更；僅觸及 T014–T017 bucket，且不同步 dry-run 進度（審核側 fixture，非訪客本人的標記進度）。播種矩陣覆蓋全部五態、T016 的 `ofm-04` 多數決自動收斂（無仲裁紀錄即 `finalized`，依 FR-061 不再進入仲裁版面）、`ofm-05` 的 1/1/1 全數分歧滯留爭議池、T017 `oft-01` 的 1:1 平手爭議（chen 唯一可仲裁）。**純 prototype 資料層變更**：不新增任何 FR/AC；`MIN_REVIEWERS_DEFAULT` 條目同步改寫（v3.9.0「本版為固定值」措辭由本版取代），13 → 17 任務／fixture 措辭全文同步。 |
 | 4.10.0 | 2026-08-19 | **official_run 定案即產生 gold——決策文件既有規則升格為正式 FR**（issue #208，源自 issue #180 驗收規劃 w7 方法論審查建議事項 §6.2-2）：「official_run 定案即產生 gold」此前僅存在於產品決策文件 `docs/product/reviewer-model-redesign.md`（決策②、目標流程分岔節點、資料模型變更表 `GoldRecord` 縮限條目），spec 015 正文只有反向的廢止條文（規格常數 `GOLD_STATUS` v4.0.0 廢止：dry_run 不再產出樣本層級 gold）——廢止條文只回答「dry_run 不產」，從未正面定義「official_run 何時產、產什麼、如何追溯」，驗收文件與 Demo Paper 缺乏可引用的 spec 級契約。新增 **FR-063**、**AC-4.26**、**SC-004V**：產生時點（official_run 審核單位推導為 `finalized` 時，FR-051／FR-061 兩條路徑皆適用）、gold 承載內容契約（一致項自動保留＋不一致項採收斂或仲裁定案值；可追溯來源審核單位與定案者）、dry_run 不產 gold 邊界（試標品質產出為 IAA 與每位標記員的被修改率，指標細節屬 dataset-017）。**純 spec 補完，不改變任何行為**：條文忠實鏡射決策文件既有定案，決策文件未定之處（gold 儲存實體形狀）明文留待後端接上時定義而不自行發明；已廢止之 `GoldRecord`／`AdjudicationItem` 實體不恢復（名稱保留不重用）。 |
 | 4.9.0 | 2026-08-19 | **盲審隔離：未提交的審核判斷僅本人可見**（issue #193，源自 issue #180 驗收規劃 finding F-09、追溯矩陣裁決 #3）：AC-2.11 定義歷程頁籤含 `saved` 事件、FR-016B 要求合併為單一時序清單，但從未規範**跨審核員可見性**——R01 儲存審核草稿後，R02 開啟同一審核單位的 `歷程` 頁籤即可能看到 R01 的 `saved` 事件；即使草稿事件多僅含一般性摘要，「已有動作」的事實本身即構成盲審污染，獨立審核（FR-049 一式 N 份定址）在呈現層失去意義。新增 **FR-062**、**AC-4.25**、**SC-004U**：未提交的審核判斷（草稿決策與其 `saved` 歷程事件）僅對該審核員本人可見，其他審核員（含仲裁者）於任何 reviewer 可見路徑皆不得看到；已提交判斷維持既有規則（FR-049／FR-050／FR-061）、annotator 事件不受影響。連帶修訂 AC-2.11 與 FR-016B（合併清單納入 reviewer 事件時受 FR-062 約束）。**本版僅定義規格規則，不動任何原型程式**：`getSampleHistory`（`annotation-workspace.data.js`）合併全部 reviewer bucket 歷程而不過濾提交狀態（`entryStatus`），自本版起定案為 Implementation mismatch，其修正屬原型層後續 PR。 |
