@@ -77,7 +77,14 @@
       sourceFile: 'multi-label.json',
       outputTypes: ['multi_label'],
       runType: 'dry_run',
-      status: 'draft',
+      /* Matches the dashboard's admin sample card (adminTask1 / T002,
+         dashboard.data.js, runType dry_run) so the "等待 IAA 確認" stat and
+         the /task-list?status=waiting_iaa_confirmation filter reconcile
+         instead of contradicting each other (issue #186). Only this dry_run
+         seed carries the status: IAA confirmation follows dry-run completion
+         (spec 014 lifecycle), and the other seeds must stay draft for the
+         task-detail settings-edit tests. */
+      status: 'waiting_iaa_confirmation',
       updatedAt: '2026-07-28',
       canViewDetail: true,
       isMine: true,
