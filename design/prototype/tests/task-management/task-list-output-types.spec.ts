@@ -25,13 +25,17 @@ const EXAMPLE_DATA_FILES = [
   'multi-label.json',
   'nli.json',
   'relation-identification.json',
+  'review-flow-dry-run.json',
+  'review-flow-official-multi.json',
+  'review-flow-official-single.json',
+  'review-flow-official-tie.json',
   'sequence-tagging.json',
   'single-dim.json',
   'single-label.json',
 ];
 
 const FILTER_COUNTS: Record<string, number> = {
-  single_label: 2,
+  single_label: 6,
   multi_label: 2,
   single_dim: 1,
   multi_dim: 2,
@@ -69,7 +73,7 @@ async function visibleSourceFiles(
 }
 
 test.describe('Task list output-type model', () => {
-  test('renders the 13 illustrative example-data tasks and canonical filter', async ({
+  test('renders the 17 illustrative example-data tasks and canonical filter', async ({
     page,
   }) => {
     await page.goto(TASK_LIST_URL);
@@ -77,7 +81,7 @@ test.describe('Task list output-type model', () => {
     await expect(page.locator('#thTaskType')).toHaveText('輸出類型');
 
     const rows = page.locator('#taskTableBody tr[data-source-file]');
-    await expect(rows).toHaveCount(13);
+    await expect(rows).toHaveCount(17);
 
     const sourceFiles = await rows.evaluateAll((elements) =>
       elements
