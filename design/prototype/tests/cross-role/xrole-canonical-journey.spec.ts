@@ -12,6 +12,7 @@ import {
 import {
   buildXRoleSeedPatch,
   DRY_RUN_RECORD_IDS,
+  FIXTURE_MIN_REVIEWERS,
   FORCED_DIVERGENCE_RECORD_ID,
   OFFICIAL_RUN_ASSIGNMENTS,
   OFFICIAL_RUN_RECORD_IDS,
@@ -92,10 +93,12 @@ import {
  *   drops back to pending and the annotator must resubmit before the
  *   review unit derives again. XROLE-14/16 assert that loop instead of
  *   papering over it with data-layer seeding.
- * - The seeded profile carries no review settings, so getReviewUnitStatus'
- *   minReviewers defaults to 1 (annotation-workspace.data.js:1478-1482) --
- *   units finalize after the FIRST agreeing review; w4's "n=2=min" wording
- *   assumed min_reviewers=2.
+ * - The seeded profile pins minReviewers = 2 (FIXTURE_MIN_REVIEWERS),
+ *   matching w4's "n=2=min" wording: units finalize only at the second
+ *   agreeing review. (The profile originally carried no review settings and
+ *   defaulted to 1; issue #308's finalized-unit lock made that untenable --
+ *   the first approval would have locked the unit before XROLE-14/15's
+ *   second-reviewer interactions.)
  * - The annotation-results panel and its export never read localStorage
  *   submissions: getAnnotationResultsData() (task-detail.html:7815) falls
  *   back to the ANNOTATION_RESULTS_BY_TASK.T001 seed for any unknown task
@@ -544,8 +547,9 @@ function readUnitStatus(page: Page, sampleId: string, annotatorId: string): Prom
   return page.evaluate(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (a) => (window as any).LabelSuiteAnnotationWorkspaceData.getReviewUnitStatus(
-      a.taskId, 'official_run', a.sampleId, { annotatorId: a.annotatorId }, ['single_label']),
-    { taskId: fixtureTaskId, sampleId, annotatorId }
+      a.taskId, 'official_run', a.sampleId, { annotatorId: a.annotatorId }, ['single_label'],
+      { minReviewers: a.minReviewers }),
+    { taskId: fixtureTaskId, sampleId, annotatorId, minReviewers: FIXTURE_MIN_REVIEWERS }
   );
 }
 
@@ -723,7 +727,7 @@ test('XROLE-14: a reviewer correction produces a disputed unit with one dispute 
   await resubmitAfterRollback(a02Page, FORCED_DIVERGENCE_RECORD_ID, divergenceAnnotator);
 
   /* Derivation (annotation-workspace.data.js:1483-1519): R02's stored value
-   * differs -> changed; 2 reviewer submissions >= min(1) -> enough; the one
+   * differs -> changed; 2 reviewer submissions >= min(2) -> enough; the one
    * dispute item is a 1-1 tie under N=2 (R01's approval is an implicit vote
    * for the annotator's value) -> resolveDisputeConvergence finds no strict
    * majority -> DISPUTED. */
@@ -737,14 +741,12 @@ test('XROLE-14: a reviewer correction produces a disputed unit with one dispute 
 });
 
 test('XROLE-15: unanimous approvals finalize the unit', async () => {
-  /* Deviation from w4's "n=2=min": the seeded profile carries no review
-   * settings, so minReviewers defaults to 1 (annotation-workspace.data.js:
-   * 1478-1482) and the unit is finalized after R01's approval alone
-   * (unchanged + enough reviewers). Both approvals still happen -- that is
-   * the journey -- and the status is asserted after each to pin that the
-   * second agreeing review keeps the unit finalized rather than regressing. */
+  /* w4's "n=2=min" model, now backed by the fixture's minReviewers = 2:
+   * R01's approval alone is an interim APPROVED (1 < min 2, still
+   * interactive per issue #308's lock boundary); R02's second agreeing
+   * review reaches the quorum and finalizes the unit. */
   await submitApproval(r01Page, 'xr-off-001', 'A01', REVIEWER_R01);
-  expect(await readUnitStatus(r01Page, 'xr-off-001', 'A01')).toBe('finalized');
+  expect(await readUnitStatus(r01Page, 'xr-off-001', 'A01')).toBe('approved');
 
   await submitApproval(r02Page, 'xr-off-001', 'A01', REVIEWER_R02);
   expect(await readUnitStatus(r02Page, 'xr-off-001', 'A01')).toBe('finalized');

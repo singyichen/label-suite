@@ -80,6 +80,8 @@
       unitStateFinalized: '已定稿',
       unitStateNone: '尚無標記提交',
       reviewEmptyUnitNote: '此標記員尚未提交此樣本，暫無可審核的內容。',
+      reviewFinalizedTitle: '審核已定稿',
+      reviewFinalizedNote: '此審核單位已達定稿門檻，結果為唯讀。',
     },
     en: {
       sampleListTitle: 'Samples',
@@ -145,6 +147,8 @@
       unitStateFinalized: 'Finalized',
       unitStateNone: 'No submission yet',
       reviewEmptyUnitNote: 'This annotator has not submitted this sample yet; there is nothing to review.',
+      reviewFinalizedTitle: 'Review finalized',
+      reviewFinalizedNote: 'This review unit has met its finalization threshold; results are read-only.',
     },
   };
   if (window.TASK_CONFIG_I18N) {
@@ -2627,6 +2631,69 @@
     preview.appendChild(card);
   }
 
+  /* Finalized unit lock (issue #308): a FINALIZED unit renders this
+     read-only results card instead of the interactive review card -- no
+     ✕/✓ rows, no correction controls, no submit path. Mirrors the
+     arbitration card's read-only layout: the annotator's answers per
+     outKey, plus one resolved row per dispute item showing how it closed
+     (majority convergence or an arbiter's finalized value). The FR-016A
+     reopen-with-audit-reason flow is deferred to the backend phase, so the
+     notice deliberately offers no way out of the lock. `submission` is
+     never null here: getReviewUnitStatus() cannot return FINALIZED without
+     a stored annotator submission. */
+  function renderFinalizedCard(preview, submission) {
+    var data = window.LabelSuiteAnnotationWorkspaceData;
+
+    var card = document.createElement('div');
+    card.className = 'content-card';
+    card.setAttribute('data-testid', 'ws-review-finalized-card');
+
+    var title = document.createElement('h3');
+    title.style.cssText = 'font-size:14px;margin:0 0 4px;';
+    title.textContent = t('reviewFinalizedTitle');
+    card.appendChild(title);
+
+    var note = document.createElement('p');
+    note.style.cssText = 'font-size:12px;color:var(--color-text-soft);margin:0 0 10px;';
+    note.textContent = t('reviewFinalizedNote');
+    card.appendChild(note);
+
+    state.selectedOutputTypes.forEach(function (outKey) {
+      var line = document.createElement('div');
+      line.style.cssText = 'font-size:12px;white-space:pre-line;margin-bottom:2px;';
+      line.textContent = outKey + '：'
+        + (describeCompactAnswer(outKey, data.convertSubmissionAnswer(outKey, submission)) || t('reviewNoAnswer'));
+      card.appendChild(line);
+    });
+
+    var items = data.getDisputeItems(
+      currentProfile.id, currentRunType, currentSampleId, currentIdentity, state.selectedOutputTypes
+    );
+    if (items.length) {
+      var reviewerCount = data.readReviewerSubmissions(
+        currentProfile.id, currentRunType, currentSampleId, currentIdentity
+      ).length;
+      var arbState = data.getArbitrationState(currentProfile.id, currentRunType, currentSampleId, currentIdentity);
+      items.forEach(function (item) {
+        var convergence = data.resolveDisputeConvergence(item, reviewerCount);
+        if (convergence.converged) {
+          card.appendChild(buildArbitrationResolvedRow(
+            item, convergence.value, t('arbitrationConvergedNote'), 'ws-finalized-resolved'
+          ));
+          return;
+        }
+        var stored = arbState[disputeItemId(item)];
+        if (stored && stored.finalized_by) {
+          card.appendChild(buildArbitrationResolvedRow(
+            item, stored.finalized_value, stored.finalized_by, 'ws-finalized-resolved'
+          ));
+        }
+      });
+    }
+
+    preview.appendChild(card);
+  }
+
   /* Review-unit context banner (issue #302): FR-051 renders the SAME
      review card for every review model, so run type, quorum, annotator
      roster, reviewed progress, and the unit's five-state pill are the only
@@ -2712,6 +2779,26 @@
       renderArbitrationCard(preview, submission);
       return;
     }
+    /* Finalized unit lock (issue #308): both finalize paths -- quorum
+       convergence and arbitration resolution -- land here, replacing the
+       interactive review card with the read-only results card. Without
+       this branch a reviewer could reject + submit on a finalized
+       official_run unit, and markSampleRejected() would roll the
+       annotator's sample back to pending, erasing the finalized unit.
+       Hiding the footer submit also blocks the FR-058 Ctrl/Cmd+Enter
+       shortcut (setupActionShortcuts skips hidden buttons). Mutually
+       exclusive with the arbitration branch above (disputed ≠ finalized)
+       and the empty gate below (finalized requires a submission). */
+    if (unitStatus === workspaceData.REVIEW_UNIT_STATUS.FINALIZED) {
+      if (reviewSubmitBtn) reviewSubmitBtn.classList.add('hidden');
+      var lockedInputCard = document.createElement('div');
+      lockedInputCard.className = 'content-card';
+      lockedInputCard.setAttribute('data-testid', 'ws-input-content');
+      lockedInputCard.textContent = buildReviewerInputText(rawRecord, currentProfile.fieldRoleMap);
+      preview.appendChild(lockedInputCard);
+      renderFinalizedCard(preview, submission);
+      return;
+    }
     /* Empty review unit gate (issue #307): "truly empty" reuses the exact
        two sources the FR-064 banner and the FR-044a fallback already read —
        no stored annotator submission (unitStatus === null) AND no
@@ -2792,6 +2879,15 @@
        already hides the submit button; this guard keeps any residual
        invocation path inert. */
     if (!getAnnotatorSubmission() && !demoAnnotatorRow()) return;
+    /* issue #308: finalized units are fully read-only. The render path
+       already replaces the card and hides the submit button; this guard
+       keeps any residual invocation path inert. Evaluated at entry, so the
+       submit that CAUSES the finalize still goes through. */
+    var lockedStatus = window.LabelSuiteAnnotationWorkspaceData.getReviewUnitStatus(
+      currentProfile.id, currentRunType, currentSampleId, currentIdentity, state.selectedOutputTypes,
+      { minReviewers: currentProfile.minReviewers || 1 }
+    );
+    if (lockedStatus === window.LabelSuiteAnnotationWorkspaceData.REVIEW_UNIT_STATUS.FINALIZED) return;
     var rowsByOutKey = {};
     var allDecided = true;
     var annotatorId = currentAnnotatorId();
