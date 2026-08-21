@@ -1,7 +1,7 @@
 ---
 功能分支: feat/dashboard-output-types
 建立日期: 2026-04-05
-版本: 2.0.5
+版本: 2.1.0
 狀態: In Progress
 ---
 
@@ -9,7 +9,7 @@
 
 ## 功能目標
 
-讓 Super Admin、Project Leader、Annotator 與 Reviewer 在 Dashboard 任務列表中直接依任務 `outputs[].type` 辨識一至多個輸出類型；標籤由共用 registry 驅動，且不得把 13 筆 prototype 示例誤當成任務、輸出組合或產品能力的白名單。
+讓 Super Admin、Project Leader、Annotator 與 Reviewer 在 Dashboard 任務列表中直接依任務 `outputs[].type` 辨識一至多個輸出類型；標籤由共用 registry 驅動，且不得把 17 筆 prototype 示例誤當成任務、輸出組合或產品能力的白名單。
 
 **需求來源**: 最新原型 [design/prototype/pages/dashboard/dashboard.html](../../../design/prototype/pages/dashboard/dashboard.html)
 
@@ -25,7 +25,7 @@
 
 ### Session 2026-07-29
 
-- Q: Prototype 的 Annotator 與 Reviewer 場景應呈現哪些任務？ → A: 兩個場景都以 `docs/product/example-data/` 的 T001–T013 作完整驗收基線，且每筆皆須能以對應角色導向標記／審核介面；此基線只驗證清單與導頁能力，不代表正式系統固定只有 13 個任務或所有使用者都可看見全部任務。
+- Q: Prototype 的 Annotator 與 Reviewer 場景應呈現哪些任務？ → A: 兩個場景都以 `docs/product/example-data/` 的 T001–T017 作完整驗收基線（v2.1.0 起含 T014–T017 審核流程示範 seed），且每筆皆須能以對應角色導向標記／審核介面；此基線只驗證清單與導頁能力，不代表正式系統固定只有 17 個任務或所有使用者都可看見全部任務。
 
 ## 規格常數
 
@@ -379,7 +379,7 @@ Super Admin 登入後看到平台層級總覽，用於掌握整體人員、任�
 - **FR-011C**：點擊 Reviewer 任務列 `快速審核` 時，若任務存在非 `已提交` sample，系統必須導向 `annotation-workspace`（帶入 `task_id`、`role=reviewer`、第一筆非 `已提交` sample 的 `sample_id`；可為 `已儲存` 或 `待審核`）；若所有 sample 均已提交，則導向該任務 `annotation-list`（不帶 `sample_id`）。
 - **FR-012**：四種有任務角色的 Dashboard 列項必須依 `outputs[]` 原始順序，為每個 `output.type` 各呈現一個唯讀 tag；複合任務不得只顯示第一項或合成固定任務類型名稱。
 - **FR-012A**：輸出類型 tag 的合法值與 zh-TW／en 文案必須來自 `OUTPUT_TYPE_SOURCE` 的 8 個 `OUTPUT_TYPE_KEYS`；標籤群組須有完整可存取名稱，且不得只靠顏色傳達類型。
-- **FR-012B**：`docs/product/example-data/` 的 13 份 fixture 只作 prototype 驗收基線，不是 API、任務數量、合法組合或 renderer 白名單；加入第 14 筆任意合法 `outputs[]` 組合後，具相應 membership 的角色視圖必須無需新增分支即可呈現。
+- **FR-012B**：`docs/product/example-data/` 的 17 份 fixture 只作 prototype 驗收基線，不是 API、任務數量、合法組合或 renderer 白名單；於示例基線之外再加入一筆任意合法 `outputs[]` 組合後，具相應 membership 的角色視圖必須無需新增分支即可呈現。
 - **FR-012C**：Dashboard 只能消費任務名稱、`outputs[].type`、階段、狀態、角色摘要與進度等安全 summary metadata；不得讀取、顯示、快取或序列化 fixture／任務資料中的 answer、gold、reference、ground truth 或等價答案內容。
 - **FR-012D**：Super Admin 可見全平台任務；其他角色仍只可見具有相應 `task_membership` 的任務，不得依任務名稱或輸出類型決定權限。
 - **FR-013**：頁面必須支援 zh-TW / en 語言切換，且切換不需重載。
@@ -476,7 +476,7 @@ flowchart LR
 |---------|------|----------------|
 | 001 | Login — Email / Password | 已登入狀態與 `system role` |
 | 008 | Shared Sidebar Navbar | 全站語言持久化契約（跨頁維持同語系） |
-| 010 | Task List | `outputs[].type` 多 tag、13 筆 prototype 基線與 config-driven generalization 契約 |
+| 010 | Task List | `outputs[].type` 多 tag、17 筆 prototype 基線與 config-driven generalization 契約 |
 | 013 | New Task | `OUTPUT_TYPE_REGISTRY`、8 個 `OUTPUT_TYPE_KEYS` 與 `outputs[]` producer contract |
 
 ### 下游（依賴本規格的規格）
@@ -518,18 +518,19 @@ flowchart LR
 - **SC-016**：Annotator/Reviewer 視圖點擊任務列非 `快速繼續/快速審核` 區域後，必須導向對應任務的 `annotation-list`，且帶入正確 `task_id`、`role`、`run_type` 與獨立 legacy routing compatibility `task_type`；不得把 `outputs[]` 壓縮成該值。
 - **SC-017**：進入 `/dashboard` 後，在 `task_membership` API 回應前，頁面必須顯示 Skeleton 佔位塊（主要內容區域有灰色佔位），不得出現空白頁或未樣式化的裸 DOM。
 - **SC-018**：`task_membership` API 回傳 5xx 或逾時時，Skeleton 必須結束並顯示 i18n 錯誤訊息與可操作的重試按鈕；不得顯示一般使用者視圖，不得清除 session。
-- **SC-019**：四種有任務角色的 Dashboard 均依 registry 逐項顯示被指派摘要的 `outputs[].type`；Prototype 的 Annotator 與 Reviewer 場景各自依 T001–T013 順序呈現完整 13 筆安全摘要，其中 `medical-ner-re.json` 映射 2 個、`absa-va.json` 映射 3 個順序正確的輸出類型；正式產品仍只呈現登入者 membership 範圍內的摘要。
-- **SC-020**：13 筆示例涵蓋全部 8 個 `OUTPUT_TYPE_KEYS`；加入第 14 筆任意合法組合及 membership 後，相應角色視圖可直接呈現，無需新增任務名稱、組合或 renderer 分支。
+- **SC-019**：四種有任務角色的 Dashboard 均依 registry 逐項顯示被指派摘要的 `outputs[].type`；Prototype 的 Annotator 與 Reviewer 場景各自依 T001–T017 順序呈現完整 17 筆安全摘要，其中 `medical-ner-re.json` 映射 2 個、`absa-va.json` 映射 3 個順序正確的輸出類型；正式產品仍只呈現登入者 membership 範圍內的摘要。
+- **SC-020**：17 筆示例涵蓋全部 8 個 `OUTPUT_TYPE_KEYS`；於示例基線之外再加入一筆任意合法組合及 membership 後，相應角色視圖可直接呈現，無需新增任務名稱、組合或 renderer 分支。
 - **SC-021**：輸出類型 tag 可即時切換 zh-TW／en，tag 群組具完整可存取名稱，並在 `RWD_VIEWPORTS` 下正確換行。
 - **SC-022**：Dashboard 及其可供 Annotator 存取的資料不得出現 fixture／任務中的 answer、gold、reference、ground truth 或等價答案內容。
-- **SC-023**：本版新增或修改的 prototype 驗收情境皆有對應 Playwright 測試，涵蓋四角色、13 筆基線、複合 tag、第 14 筆泛化、i18n、可存取名稱與手機換行。
-- **SC-024**：Prototype 的 Annotator 與 Reviewer 場景各有 13 個快速操作；T001–T013 每筆具有獨立 `task_id`、非空 `sample_id` 與明確 compatibility route，並能以 `role=annotator`／`role=reviewer` 成功載入標記／審核介面。
-- **SC-025**：Super Admin／Project Leader Dashboard 的「等待 IAA 確認」指標卡可點擊且鍵盤可操作，導向套用 `status=waiting_iaa_confirmation` 篩選的 `/task-list`；該指標卡數字須與 `/task-list` 篩選後的實際筆數一致（prototype 基線：兩者皆為 1，即唯一的 dry_run 待 IAA 種子 T002），不得出現數字與可導頁任務筆數對不上帳的情形。
+- **SC-023**：本版新增或修改的 prototype 驗收情境皆有對應 Playwright 測試，涵蓋四角色、17 筆基線、複合 tag、額外合成任務泛化、i18n、可存取名稱與手機換行。
+- **SC-024**：Prototype 的 Annotator 與 Reviewer 場景各有 17 個快速操作；T001–T017 每筆具有獨立 `task_id`、非空 `sample_id` 與明確 compatibility route，並能以 `role=annotator`／`role=reviewer` 成功載入標記／審核介面。
+- **SC-025**：Super Admin／Project Leader Dashboard 的「等待 IAA 確認」指標卡可點擊且鍵盤可操作，導向套用 `status=waiting_iaa_confirmation` 篩選的 `/task-list`；該指標卡數字須與 `/task-list` 篩選後的實際筆數一致（prototype 基線：兩者皆為 1，即唯一的 dry_run 待 IAA 種子 T002；T014 雖為 dry_run 但 seed 狀態非 `waiting_iaa_confirmation`，不計入），不得出現數字與可導頁任務筆數對不上帳的情形。
 
 ## Changelog
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.1.0 | 2026-08-21 | **示例基線擴充至 17 筆（審核流程示範 seed）**：Annotator／Reviewer 場景基線由 T001–T013 擴充為 T001–T017，納入四筆 `single_label` 審核流程示範任務（`review-flow-*.json`，T014 為 `dry_run`、T015–T017 為 `official_run`）；dashboard assignments 為 run_type 導頁的唯一綁定來源，reviewer 工作列數字依 boot seeder 的審核狀態矩陣（待審 6/1/0/1）呈現；泛化驗收改以基線外合成任務表述，`medical-ner-re.json`／`absa-va.json` 複合映射不變；SC-025 對帳基線註明 T014（dry_run）不計入待 IAA 筆數 |
 | 2.0.5 | 2026-08-21 | Issue #186：「等待 IAA 確認」指標卡新增可執行待辦入口（role=button、鍵盤可操作，導向 `/task-list?status=waiting_iaa_confirmation`）；新增 FR-008F、FR-009A1、SC-025 與導頁流程圖/表格條目；prototype 示範資料同步調整，使指標卡數字與 `/task-list` 篩選後筆數對帳（基線為 1：僅 dry_run 種子 T002 轉為 `waiting_iaa_confirmation`，對齊 dashboard adminTask1 卡片；IAA 確認依 014 生命週期僅接續 dry run 完成，其餘種子維持 draft 供 task-detail 設定編輯測試使用）。 |
 | 2.0.4 | 2026-08-20 | Issue #261：新增 Prototype Traceability，對應 Dashboard 頁面、完整 page-owned asset set、page-scoped design 與設計層驗證；fixture 維持為 prototype 驗收基線，非產品契約。 |
 | 2.0.3 | 2026-08-19 | **Reviewer 行動卡文案對齊 annotation-015 審核模型（issue #191）**：行動卡 C 內文改為「逐標記員獨立審核，直接修正結果，歧異交付仲裁。」、步驟 2 改名「修正或仲裁」（原「核準或修正」），路徑 C 第 4 步同步改為「修正或仲裁」；退回通道依 annotation-015 AC-3.15／AC-6.4 僅限 official_run，二元「通過/退回」語意不再出現於 dashboard 文案。 |
