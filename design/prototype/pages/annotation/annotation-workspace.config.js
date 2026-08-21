@@ -26,6 +26,7 @@
       wsPrevBtnLabel: '上一筆',
       wsNextBtnLabel: '下一筆',
       wsProgressText: '{done} / {total} 已提交',
+      wsProgressTextReview: '已審 {done} / {total}',
       wsAutosaveSaved: '草稿已自動儲存',
       wsAutosaveSaving: '儲存中…',
       wsTabGuideline: '說明與檔案',
@@ -89,6 +90,7 @@
       wsPrevBtnLabel: 'Previous',
       wsNextBtnLabel: 'Next',
       wsProgressText: '{done} / {total} submitted',
+      wsProgressTextReview: 'Reviewed {done} / {total}',
       wsAutosaveSaved: 'Draft auto-saved',
       wsAutosaveSaving: 'Saving…',
       wsTabGuideline: 'Guidelines & Files',
@@ -1251,6 +1253,34 @@
     return { annotatorId: unit.annotatorId, reviewerId: currentIdentity.reviewerId };
   }
 
+  /* REVIEW_UNIT_STATUS -> i18n key, shared by the context banner (FR-064)
+     and the reviewer left column (issue #309): both must speak the same
+     five-state vocabulary annotation-list settled on in AC-1.15. */
+  var REVIEW_STATE_I18N_KEYS = {
+    pending: 'unitStatePending',
+    approved: 'unitStateApproved',
+    modified: 'unitStateModified',
+    disputed: 'unitStateDisputed',
+    finalized: 'unitStateFinalized',
+  };
+
+  /* Mirrors annotation-list's buildReviewUnitRows(): getReviewUnitStatus
+     returns null while the annotator has no STORED submission, but the mock
+     row IS that annotator's answer, so an un-stored unit is still awaiting
+     review (pending), not absent. */
+  function reviewUnitState(unit) {
+    return (
+      window.LabelSuiteAnnotationWorkspaceData.getReviewUnitStatus(
+        currentProfile.id,
+        currentRunType,
+        unit.recordId,
+        unitIdentity(unit),
+        state.selectedOutputTypes,
+        { minReviewers: currentProfile.minReviewers || 1 }
+      ) || 'pending'
+    );
+  }
+
   function isCurrentUnit(unit) {
     if (unit.recordId !== String(currentSampleId)) return false;
     return currentRole !== 'reviewer' || unit.annotatorId === currentAnnotatorId();
@@ -1285,9 +1315,13 @@
     var total = units.length;
     var done = countSubmittedUnits(units);
     if (done > total) done = total;
+    /* issue #309: a reviewer's count is reviewed units, not their own
+       submissions -- the annotator's N 已提交 wording is wrong for them. */
     setText(
       'wsProgressText',
-      t('wsProgressText').replace('{done}', String(done)).replace('{total}', String(total))
+      t(currentRole === 'reviewer' ? 'wsProgressTextReview' : 'wsProgressText')
+        .replace('{done}', String(done))
+        .replace('{total}', String(total))
     );
     var pct = total > 0 ? Math.round((done / total) * 100) : 0;
     var fill = document.getElementById('wsProgressFill');
@@ -1530,8 +1564,14 @@
       var statusLabel = document.createElement('span');
       statusLabel.className = 'sample-status-label status-color-' + status;
       statusLabel.setAttribute('data-testid', 'ws-sample-status');
+      /* issue #309: a reviewer's entry is a review unit, so its label is the
+         REVIEW_UNIT_STATUS five-state (待審/已同意/已修改/爭議中/已定稿),
+         never the annotator tri-state. The tri-state keeps driving the badge
+         tint / data-submitted above for both roles. */
       statusLabel.textContent =
-        status === 'submitted' ? t('wsStatusSubmitted') : status === 'saved' ? t('wsStatusSaved') : t('wsStatusPending');
+        currentRole === 'reviewer'
+          ? t(REVIEW_STATE_I18N_KEYS[reviewUnitState(unit)])
+          : status === 'submitted' ? t('wsStatusSubmitted') : status === 'saved' ? t('wsStatusSaved') : t('wsStatusPending');
       meta.appendChild(statusLabel);
       item.appendChild(meta);
 
@@ -2627,17 +2667,10 @@
       );
     }
 
-    var stateKeyByStatus = {
-      pending: 'unitStatePending',
-      approved: 'unitStateApproved',
-      modified: 'unitStateModified',
-      disputed: 'unitStateDisputed',
-      finalized: 'unitStateFinalized',
-    };
     var statePill = document.createElement('span');
     statePill.className =
       'rv-unit-state' + (unitStatus ? ' rv-unit-state-' + unitStatus : '');
-    statePill.textContent = t(stateKeyByStatus[unitStatus] || 'unitStateNone');
+    statePill.textContent = t(REVIEW_STATE_I18N_KEYS[unitStatus] || 'unitStateNone');
     banner.appendChild(statePill);
     return banner;
   }
@@ -3055,6 +3088,14 @@
     setText('wsMobileDrawerTitle', t('mobileDrawerTitle'));
     var closeBtn = document.getElementById('wsGuidelineImageModalClose');
     if (closeBtn) closeBtn.setAttribute('aria-label', t('guidelineImageModalCloseAria'));
+    /* issue #309: the shared sidebar mounts with its 一般使用者 default;
+       reviewers must read as 審核員 (same role noun the history trail uses).
+       Annotator view keeps the shared default untouched. Runs at boot and on
+       every language toggle, so it survives both. */
+    if (currentRole === 'reviewer') {
+      var roleIndicatorEl = document.getElementById('roleIndicator');
+      if (roleIndicatorEl) roleIndicatorEl.textContent = t('wsHistoryRoleReviewer');
+    }
     var taskName = currentProfile ? (state.lang === 'zh' ? currentProfile.nameZh : currentProfile.nameEn) : '';
     setText('guidelineSummaryText', taskName);
     setText('wsMobileGuidelineSummaryText', taskName);
