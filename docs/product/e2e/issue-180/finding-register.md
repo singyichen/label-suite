@@ -107,7 +107,7 @@ merge 後 main 整合驗證：完整 prototype 套件 853 測試全數通過（`
 
 | # | 發現 | 證據 | 追蹤狀態 |
 |---|---|---|---|
-| N-01 | 提交儲存層 lost-update 窗口：`labelsuite.wsSubmissions` 為單一 key 的整包 read-modify-write，多 Page 並行儲存時後寫者以舊讀快照覆蓋對方 bucket | `annotation-workspace.data.js`（readSubmissionStore／writeSubmissionStore）；PR #277 首輪 CI 於 CONC-03 重現 | **已建單 [#283](https://github.com/singyichen/label-suite/issues/283)**（Bug，backlog）：prototype-only，驗收測試已序列化儲存並在 spec header 記錄限制 |
+| N-01 | 提交儲存層 lost-update 窗口：`labelsuite.wsSubmissions` 為單一 key 的整包 read-modify-write，多 Page 並行儲存時後寫者以舊讀快照覆蓋對方 bucket | `annotation-workspace.data.js`（readSubmissionStore／writeSubmissionStore）；PR #277 首輪 CI 於 CONC-03 重現 | **已建單 [#283](https://github.com/singyichen/label-suite/issues/283)**（Bug，backlog）：prototype-only，驗收測試曾序列化儲存並在 spec header 記錄限制；**已修復**（spec 015 v4.14.1，`fix/ws-submission-store-lost-update`）：改 per-bucket keys＋開機遷移舊 blob，真並行儲存回歸測試（Promise.all）見 `annotation-workspace-concurrent-save.spec.ts`，xrole CONC-03 序列化註記已更新為歷史說明 |
 | N-02 | 審核列 ✓/✕ 按鈕 icon-only、無 accessible name | `annotation-workspace.config.js` `buildRowDecisionButtons` | **已併 #195**（[comment](https://github.com/singyichen/label-suite/issues/195#issuecomment-5352881723)）：與 focus 管理同批修復，補 aria-label |
 | N-03 | w6 annex DUP-07 引用的 `#deleteTaskModal` 正向對照不存在（全庫 grep 零命中） | PR #277 驗收紀錄 | **annex 勘誤**：本表記錄即結案（w6 草稿不回改）；plan §6 該範疇提醒隨之失效 |
 | N-04 | 成員停用不落地：`TASK_MEMBERS` 純 in-memory 且 roster 未連結 annotator_id，CONC-02 只能驗「不干擾」 | PR #277 偏差紀錄 | **已留參照於 #211**（[comment](https://github.com/singyichen/label-suite/issues/211#issuecomment-5352881980)，issue 已關，spec 落地時參照） |

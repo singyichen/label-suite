@@ -14,16 +14,17 @@
   var OUTPUT_ROLE = 'output';
   /* Each submission bucket lives under its own localStorage key
    * (`labelsuite.wsSubmissions.<bucketKey>`), NOT one shared blob (issue
-   * #283): two pages saving concurrently each rebuild the whole blob from
-   * their own snapshot -- and a write committed by another page is not even
-   * visible to a page whose synchronous save block is already running
-   * (cross-process localStorage propagation waits for the reader's event
-   * loop) -- so the later writer clobbers the other's bucket. Distinct keys
-   * make concurrent writers to different buckets non-overlapping by
-   * construction. Within ONE bucket, last-write-wins remains (one person
-   * saving the same sample in two tabs), which is acceptable prototype
-   * semantics. The bare legacy key (no trailing dot) is deliberately
-   * ignored. */
+   * #283): a write committed by another page is invisible to a page whose
+   * synchronous save block is already running (cross-process localStorage
+   * propagation waits for the reader's event loop), so shared-blob writers
+   * clobbered each other's buckets. Distinct keys make concurrent writers
+   * to different buckets non-overlapping by construction. Caveat: writes to
+   * the SAME bucket still race (e.g. a reviewer reject targets the
+   * annotator's bucket while that annotator saves another sample) -- the
+   * prototype accepts last-write-wins there; the real conflict policy is
+   * the backend's (spec 015 CONFLICT_RESOLUTION_POLICY). The bare legacy
+   * whole-blob key is fanned out once at boot by
+   * migrateLegacySubmissionStore(). */
   var SUBMISSION_KEY_PREFIX = 'labelsuite.wsSubmissions.';
   /* Mirrors task-detail.html's own DRY_RUN_PROGRESS_KEY constant (that page
      owns the read side / status flip; this file owns the write side). */
@@ -122,7 +123,10 @@
   function readSubmissionBucket(bucketKey) {
     try {
       var raw = global.localStorage.getItem(SUBMISSION_KEY_PREFIX + bucketKey);
-      return raw ? JSON.parse(raw) : {};
+      var parsed = raw ? JSON.parse(raw) : null;
+      /* A key holding "null" (or any non-object) must degrade to an empty
+         bucket, matching the old store's tolerance, not throw downstream. */
+      return parsed && typeof parsed === 'object' ? parsed : {};
     } catch (e) {
       return {};
     }
@@ -137,7 +141,11 @@
   }
 
   /* Bucket keys currently in storage, for the prefix-scanning readers
-   * (getSampleHistory / readReviewerSubmissions). */
+   * (getSampleHistory / readReviewerSubmissions). Sorted because
+   * localStorage.key(i) order is implementation-defined: sorting keeps
+   * merged history stable for equal timestamps (annotator buckets sort
+   * before reviewer buckets) and dispute reviewer rows deterministic
+   * across browsers and reloads. */
   function listSubmissionBucketKeys() {
     var keys = [];
     try {
@@ -150,7 +158,38 @@
     } catch (e) {
       /* storage unavailable: nothing to list */
     }
-    return keys;
+    return keys.sort();
+  }
+
+  /* One-shot fan-out of the pre-issue-#283 whole-blob store into per-bucket
+   * keys: a returning visitor holds their drafts AND the already-run demo
+   * seed inside the bare legacy key (and the reviewFlowDemoSeed marker stops
+   * the seeder from re-staging), so without this the prototype boots with
+   * everything invisible and permanently pending. Existing per-bucket keys
+   * win over the legacy copy; the legacy key is removed either way. */
+  function migrateLegacySubmissionStore() {
+    var LEGACY_KEY = 'labelsuite.wsSubmissions';
+    try {
+      var raw = global.localStorage.getItem(LEGACY_KEY);
+      if (!raw) return;
+      var store = JSON.parse(raw);
+      if (store && typeof store === 'object') {
+        Object.keys(store).forEach(function (bucketKey) {
+          if (!global.localStorage.getItem(SUBMISSION_KEY_PREFIX + bucketKey)) {
+            writeSubmissionBucket(bucketKey, store[bucketKey]);
+          }
+        });
+      }
+      global.localStorage.removeItem(LEGACY_KEY);
+    } catch (e) {
+      /* corrupt legacy blob or unavailable storage: drop it rather than
+         blocking boot */
+      try {
+        global.localStorage.removeItem(LEGACY_KEY);
+      } catch (e2) {
+        /* storage unavailable: nothing to clean up */
+      }
+    }
   }
 
   /* ── Review identity (v3.8.0, FR-049) ─────────────────────────────────
@@ -1872,6 +1911,7 @@
     });
   }
 
+  migrateLegacySubmissionStore();
   seedReviewFlowDemo();
 
   global.LabelSuiteAnnotationWorkspaceData = {

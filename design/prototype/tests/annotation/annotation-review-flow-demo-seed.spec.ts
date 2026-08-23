@@ -194,7 +194,9 @@ test.describe('seeder idempotence', () => {
 
     const first = await readStores();
     expect(first.marker).toBeTruthy();
-    expect(first.submissions).toBeTruthy();
+    // Non-empty guard: with per-bucket keys, "seeder wrote nothing" would
+    // serialize to '' and trivially equal itself across reloads.
+    expect(first.submissions).not.toBe('');
     expect(first.arbitration).toBeTruthy();
 
     await page.reload();

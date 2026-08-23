@@ -6,16 +6,15 @@ import {
   skipGuidelineModal,
 } from './_workspace-helpers';
 
-/* Regression test for issue #283: the submission store
- * (labelsuite.wsSubmissions) is a single localStorage key with whole-blob
- * read-modify-write (readSubmissionStore/writeSubmissionStore,
- * annotation-workspace.data.js). Two pages (multi-tab / multi-role windows)
- * saving concurrently can each hold a stale read snapshot of the blob, so
- * the later writer clobbers the bucket the other page just wrote --
- * reproduced in PR #277's first CI run (scenario CONC-03) when the saves
- * were dispatched via Promise.all. xrole-concurrency.spec.ts's CONC-03 test
- * works around this today by serializing the two saves; this test exercises
- * the real race directly (Promise.all) to pin the fix. */
+/* Regression test for issue #283: the submission store USED to be a single
+ * localStorage key with whole-blob read-modify-write, so two pages
+ * (multi-tab / multi-role windows) saving concurrently could each hold a
+ * stale snapshot of the blob and the later writer clobbered the bucket the
+ * other page just wrote -- reproduced in PR #277's first CI run (scenario
+ * CONC-03) when the saves were dispatched via Promise.all, which is why
+ * CONC-03 serialized its saves at the time. The store now keeps each bucket
+ * under its own key (annotation-workspace.data.js SUBMISSION_KEY_PREFIX);
+ * this test exercises the real race directly (Promise.all) to pin that. */
 
 const ANNOTATOR_A = 'kioleemg12';
 const ANNOTATOR_B = '113450022';
