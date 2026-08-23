@@ -6,10 +6,10 @@ import { buildListUrl } from './_workspace-helpers';
  * pending record, else the last saved record, else fall back to the task's
  * last record).
  *
- * Sample state is seeded directly into the workspace submission store
- * (labelsuite.wsSubmissions) — the same store annotation-workspace.data.js
- * writes — so these list-side specs don't have to drive the full workspace
- * UI per sample.
+ * Sample state is seeded directly into the workspace submission store —
+ * the same per-bucket keys (`labelsuite.wsSubmissions.<bucketKey>`, issue
+ * #283) annotation-workspace.data.js writes — so these list-side specs
+ * don't have to drive the full workspace UI per sample.
  *
  * The bucket key gained its identity dimensions in spec 015 v3.8.0
  * (FR-049): `taskId::role::runType::annotatorId::reviewerId`, where an
@@ -21,7 +21,7 @@ const DEFAULT_ANNOTATOR_BUCKET = 'T001::annotator::official_run::kioleemg12::-';
 function seedSubmissionStore(page: Page, bucket: Record<string, { status: string }>) {
   return page.addInitScript(
     ([key, bucketJson]) => {
-      window.localStorage.setItem('labelsuite.wsSubmissions', JSON.stringify({ [key]: JSON.parse(bucketJson) }));
+      window.localStorage.setItem('labelsuite.wsSubmissions.' + key, bucketJson);
     },
     [DEFAULT_ANNOTATOR_BUCKET, JSON.stringify(bucket)]
   );

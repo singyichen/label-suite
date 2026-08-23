@@ -182,7 +182,13 @@ test.describe('seeder idempotence', () => {
     const readStores = () =>
       page.evaluate((marker) => ({
         marker: window.localStorage.getItem(marker),
-        submissions: window.localStorage.getItem('labelsuite.wsSubmissions'),
+        // Submission buckets each live under their own key (issue #283);
+        // serialize them all, sorted, so the comparison stays order-stable.
+        submissions: Object.keys(window.localStorage)
+          .filter((key) => key.indexOf('labelsuite.wsSubmissions.') === 0)
+          .sort()
+          .map((key) => key + '=' + window.localStorage.getItem(key))
+          .join('\n'),
         arbitration: window.localStorage.getItem('labelsuite.wsArbitration'),
       }), SEED_MARKER);
 
@@ -203,7 +209,10 @@ test.describe('seeder idempotence', () => {
 
     const foreignKeys = await page.evaluate(() => {
       const parse = (raw: string | null) => (raw ? Object.keys(JSON.parse(raw)) : []);
-      return parse(window.localStorage.getItem('labelsuite.wsSubmissions'))
+      const submissionBucketKeys = Object.keys(window.localStorage)
+        .filter((key) => key.indexOf('labelsuite.wsSubmissions.') === 0)
+        .map((key) => key.slice('labelsuite.wsSubmissions.'.length));
+      return submissionBucketKeys
         .concat(parse(window.localStorage.getItem('labelsuite.wsArbitration')))
         .filter((key) => !/^T01[4-7]::/.test(key));
     });
