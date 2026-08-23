@@ -12,7 +12,20 @@
   'use strict';
 
   var OUTPUT_ROLE = 'output';
-  var SUBMISSION_STORAGE_KEY = 'labelsuite.wsSubmissions';
+  /* Each submission bucket lives under its own localStorage key
+   * (`labelsuite.wsSubmissions.<bucketKey>`), NOT one shared blob (issue
+   * #283): a write committed by another page is invisible to a page whose
+   * synchronous save block is already running (cross-process localStorage
+   * propagation waits for the reader's event loop), so shared-blob writers
+   * clobbered each other's buckets. Distinct keys make concurrent writers
+   * to different buckets non-overlapping by construction. Caveat: writes to
+   * the SAME bucket still race (e.g. a reviewer reject targets the
+   * annotator's bucket while that annotator saves another sample) -- the
+   * prototype accepts last-write-wins there; the real conflict policy is
+   * the backend's (spec 015 CONFLICT_RESOLUTION_POLICY). The bare legacy
+   * whole-blob key is fanned out once at boot by
+   * migrateLegacySubmissionStore(). */
+  var SUBMISSION_KEY_PREFIX = 'labelsuite.wsSubmissions.';
   /* Mirrors task-detail.html's own DRY_RUN_PROGRESS_KEY constant (that page
      owns the read side / status flip; this file owns the write side). */
   var DRY_RUN_PROGRESS_KEY = 'labelsuite.prototypeDryRunProgress';
@@ -107,20 +120,75 @@
     return record && record.id != null ? String(record.id) : '';
   }
 
-  function readSubmissionStore() {
+  function readSubmissionBucket(bucketKey) {
     try {
-      var raw = global.localStorage.getItem(SUBMISSION_STORAGE_KEY);
-      return raw ? JSON.parse(raw) : {};
+      var raw = global.localStorage.getItem(SUBMISSION_KEY_PREFIX + bucketKey);
+      var parsed = raw ? JSON.parse(raw) : null;
+      /* A key holding "null" (or any non-object) must degrade to an empty
+         bucket, matching the old store's tolerance, not throw downstream. */
+      return parsed && typeof parsed === 'object' ? parsed : {};
     } catch (e) {
       return {};
     }
   }
 
-  function writeSubmissionStore(store) {
+  function writeSubmissionBucket(bucketKey, bucket) {
     try {
-      global.localStorage.setItem(SUBMISSION_STORAGE_KEY, JSON.stringify(store));
+      global.localStorage.setItem(SUBMISSION_KEY_PREFIX + bucketKey, JSON.stringify(bucket));
     } catch (e) {
       /* ignore quota/serialization errors in the prototype */
+    }
+  }
+
+  /* Bucket keys currently in storage, for the prefix-scanning readers
+   * (getSampleHistory / readReviewerSubmissions). Sorted because
+   * localStorage.key(i) order is implementation-defined: sorting keeps
+   * merged history stable for equal timestamps (annotator buckets sort
+   * before reviewer buckets) and dispute reviewer rows deterministic
+   * across browsers and reloads. */
+  function listSubmissionBucketKeys() {
+    var keys = [];
+    try {
+      for (var i = 0; i < global.localStorage.length; i++) {
+        var key = global.localStorage.key(i);
+        if (key && key.indexOf(SUBMISSION_KEY_PREFIX) === 0) {
+          keys.push(key.slice(SUBMISSION_KEY_PREFIX.length));
+        }
+      }
+    } catch (e) {
+      /* storage unavailable: nothing to list */
+    }
+    return keys.sort();
+  }
+
+  /* One-shot fan-out of the pre-issue-#283 whole-blob store into per-bucket
+   * keys: a returning visitor holds their drafts AND the already-run demo
+   * seed inside the bare legacy key (and the reviewFlowDemoSeed marker stops
+   * the seeder from re-staging), so without this the prototype boots with
+   * everything invisible and permanently pending. Existing per-bucket keys
+   * win over the legacy copy; the legacy key is removed either way. */
+  function migrateLegacySubmissionStore() {
+    var LEGACY_KEY = 'labelsuite.wsSubmissions';
+    try {
+      var raw = global.localStorage.getItem(LEGACY_KEY);
+      if (!raw) return;
+      var store = JSON.parse(raw);
+      if (store && typeof store === 'object') {
+        Object.keys(store).forEach(function (bucketKey) {
+          if (!global.localStorage.getItem(SUBMISSION_KEY_PREFIX + bucketKey)) {
+            writeSubmissionBucket(bucketKey, store[bucketKey]);
+          }
+        });
+      }
+      global.localStorage.removeItem(LEGACY_KEY);
+    } catch (e) {
+      /* corrupt legacy blob or unavailable storage: drop it rather than
+         blocking boot */
+      try {
+        global.localStorage.removeItem(LEGACY_KEY);
+      } catch (e2) {
+        /* storage unavailable: nothing to clean up */
+      }
     }
   }
 
@@ -180,9 +248,8 @@
   }
 
   function readSampleEntry(taskId, role, runType, sampleId, identity) {
-    var store = readSubmissionStore();
-    var bucket = store[submissionBucketKey(taskId, role, runType, identity)];
-    return (bucket && bucket[sampleId]) || null;
+    var bucket = readSubmissionBucket(submissionBucketKey(taskId, role, runType, identity));
+    return bucket[sampleId] || null;
   }
 
   /* Entries written before the saved-draft feature carry no status field;
@@ -239,15 +306,14 @@
   }
 
   function markSampleSubmitted(taskId, role, runType, sampleId, payload, historySummary, identity) {
-    var store = readSubmissionStore();
     var key = submissionBucketKey(taskId, role, runType, identity);
-    if (!store[key]) store[key] = {};
-    var existing = store[key][sampleId];
+    var bucket = readSubmissionBucket(key);
+    var existing = bucket[sampleId];
     var entry = { status: 'submitted', submittedAt: new Date().toISOString(), answers: payload || {} };
     if (existing && Array.isArray(existing.history)) entry.history = existing.history;
     appendHistoryEvent(entry, 'submitted', role, historySummary, actorIdFor(role, identity));
-    store[key][sampleId] = entry;
-    writeSubmissionStore(store);
+    bucket[sampleId] = entry;
+    writeSubmissionBucket(key, bucket);
   }
 
   /* Draft save (AC-2.3 / FR-013). Saving never downgrades an
@@ -255,10 +321,9 @@
      only its answers are refreshed (spec 015 has no un-submit transition);
      pending samples become 'saved'. */
   function markSampleSaved(taskId, role, runType, sampleId, payload, historySummary, identity) {
-    var store = readSubmissionStore();
     var key = submissionBucketKey(taskId, role, runType, identity);
-    if (!store[key]) store[key] = {};
-    var existing = store[key][sampleId];
+    var bucket = readSubmissionBucket(key);
+    var existing = bucket[sampleId];
     var actorId = actorIdFor(role, identity);
     if (existing && entryStatus(existing) === 'submitted') {
       existing.answers = payload || {};
@@ -268,9 +333,9 @@
       var entry = { status: 'saved', savedAt: new Date().toISOString(), answers: payload || {} };
       if (existing && Array.isArray(existing.history)) entry.history = existing.history;
       appendHistoryEvent(entry, 'saved', role, historySummary, actorId);
-      store[key][sampleId] = entry;
+      bucket[sampleId] = entry;
     }
-    writeSubmissionStore(store);
+    writeSubmissionBucket(key, bucket);
   }
 
   /* Reviewer mode (Phase 3, FR-024L-1) reads back the annotator's own
@@ -304,13 +369,12 @@
   }
 
   function getSampleHistory(taskId, runType, sampleId, identity) {
-    var store = readSubmissionStore();
     var annotatorKey = submissionBucketKey(taskId, 'annotator', runType, identity);
     var reviewerPrefix = reviewerBucketPrefix(taskId, runType, identity);
     var merged = [];
-    Object.keys(store).forEach(function (key) {
+    listSubmissionBucketKeys().forEach(function (key) {
       if (key !== annotatorKey && key.indexOf(reviewerPrefix) !== 0) return;
-      var entry = store[key][sampleId];
+      var entry = readSubmissionBucket(key)[sampleId];
       if (entry && Array.isArray(entry.history)) merged = merged.concat(entry.history);
     });
     merged.sort(function (a, b) {
@@ -320,9 +384,7 @@
   }
 
   function getSubmittedSampleCount(taskId, role, runType, identity) {
-    var store = readSubmissionStore();
-    var bucket = store[submissionBucketKey(taskId, role, runType, identity)];
-    if (!bucket) return 0;
+    var bucket = readSubmissionBucket(submissionBucketKey(taskId, role, runType, identity));
     return Object.keys(bucket).filter(function (sampleId) {
       return entryStatus(bucket[sampleId]) === 'submitted';
     }).length;
@@ -370,10 +432,9 @@
    * annotator's submission status. */
   function markSampleRejected(taskId, role, runType, sampleId, historySummary, identity) {
     if (runType !== 'official_run') return;
-    var store = readSubmissionStore();
     var key = submissionBucketKey(taskId, role, runType, identity);
-    if (!store[key]) store[key] = {};
-    var existing = store[key][sampleId];
+    var bucket = readSubmissionBucket(key);
+    var existing = bucket[sampleId];
     var actorId = actorIdFor('reviewer', identity);
     if (existing) {
       existing.status = 'pending';
@@ -381,9 +442,9 @@
     } else {
       var entry = { status: 'pending', answers: {} };
       appendHistoryEvent(entry, 'rejected', 'reviewer', historySummary, actorId);
-      store[key][sampleId] = entry;
+      bucket[sampleId] = entry;
     }
-    writeSubmissionStore(store);
+    writeSubmissionBucket(key, bucket);
   }
 
   /* Reviewer aggregate review mock data (restores the legacy per-output-type
@@ -1557,12 +1618,11 @@
    * suffix (FR-049) -- dispute items need it to record WHOSE B value each
    * disagreement carries. */
   function readReviewerSubmissions(taskId, runType, sampleId, identity) {
-    var store = readSubmissionStore();
     var prefix = reviewerBucketPrefix(taskId, runType, identity);
-    return Object.keys(store)
+    return listSubmissionBucketKeys()
       .filter(function (key) { return key.indexOf(prefix) === 0; })
       .map(function (key) {
-        var entry = store[key][sampleId];
+        var entry = readSubmissionBucket(key)[sampleId];
         if (!entry || entryStatus(entry) !== 'submitted') return null;
         return { reviewerId: key.slice(prefix.length), answers: entry.answers };
       })
@@ -1722,7 +1782,7 @@
     try {
       global.localStorage.setItem(ARBITRATION_STORAGE_KEY, JSON.stringify(store));
     } catch (e) {
-      /* storage unavailable: same silent-tolerant stance as writeSubmissionStore */
+      /* storage unavailable: same silent-tolerant stance as writeSubmissionBucket */
     }
   }
 
@@ -1851,6 +1911,7 @@
     });
   }
 
+  migrateLegacySubmissionStore();
   seedReviewFlowDemo();
 
   global.LabelSuiteAnnotationWorkspaceData = {

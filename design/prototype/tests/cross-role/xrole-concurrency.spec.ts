@@ -16,15 +16,14 @@ import {
  * - No page under pages/ registers a storage-event listener (grep-verified),
  *   so a change made through one Page becomes visible to another only after
  *   that other Page reloads. Reconciliation is manual, never push-based.
- * - A true write race must NOT be exercised at this tier: the submission
- *   store is one whole-blob read-modify-write over a single localStorage
- *   key (readSubmissionStore/writeSubmissionStore,
- *   annotation-workspace.data.js), so two Pages saving at the same moment
- *   CAN lose one bucket to a stale-read overwrite -- CI reproduced exactly
- *   that when these saves were dispatched via Promise.all. What these tests
- *   pin is bucket ISOLATION under interleaved-but-serialized actions (no
- *   actor overwrites another) plus read-after-reload visibility -- the
- *   strongest guarantees the prototype offers. Real concurrent-session
+ * - The submission store keeps each bucket under its own localStorage key
+ *   (issue #283 fix, annotation-workspace.data.js SUBMISSION_KEY_PREFIX),
+ *   so a true two-annotator write race is safe and IS exercised -- by
+ *   tests/annotation/annotation-workspace-concurrent-save.spec.ts. What
+ *   these tests pin is bucket ISOLATION under interleaved actions (no
+ *   actor overwrites another) plus read-after-reload visibility. Writes to
+ *   the SAME bucket (e.g. reviewer reject vs. annotator save) still race
+ *   last-write-wins at the prototype tier; real concurrent-session
  *   behavior belongs to the real-backend E2E tier (FAIL-D01~D06). */
 
 const ANNOTATOR_A = 'kioleemg12';
@@ -168,11 +167,12 @@ test('two annotators saving drafts back-to-back keep isolated buckets, each rest
   await a1.getByTestId('ws-single-label-chip-positive').click();
   await a2.getByTestId('ws-single-label-chip-negative').click();
 
-  // Interleaved saves, each awaited before the next: dispatching both via
-  // Promise.all hit the store's whole-blob read-modify-write window (see
-  // the header comment) and CI lost a2's bucket to a1's stale-read
-  // overwrite. Serializing the saves keeps the scenario deterministic;
-  // what stays under test is that neither save lands in the other's bucket.
+  // Interleaved saves, each awaited before the next. (Historical note:
+  // dispatching both via Promise.all once hit the old shared-blob store's
+  // read-modify-write window and CI lost a2's bucket -- fixed by per-bucket
+  // keys in issue #283, and the true concurrent shape is now pinned by
+  // tests/annotation/annotation-workspace-concurrent-save.spec.ts.) What
+  // stays under test here is that neither save lands in the other's bucket.
   await a1.getByTestId('ws-save-btn').click();
   await expect(a1.locator('#toastMsg')).toHaveText('已儲存');
   await a2.getByTestId('ws-save-btn').click();
