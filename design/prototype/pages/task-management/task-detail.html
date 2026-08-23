@@ -4128,8 +4128,8 @@
   /* Structural remap after the 13-seed data unification: mock result sets
      are matched to each task's annotation STRUCTURE (labels / VA scores /
      aspects / relations / pairs / entities), not its domain text. T009 and
-     T012 (free-text generation) intentionally have no entry and fall back
-     to the classification set via getAnnotationResults(). */
+     T012 (free-text generation) intentionally reuse the classification set,
+     recorded here explicitly rather than relying on an implicit fallback. */
   var ANNOTATION_RESULTS_BY_TASK = {
     T001: AR_SAMPLES_CLASSIFICATION,
     T002: AR_SAMPLES_CLASSIFICATION,
@@ -4139,8 +4139,10 @@
     T006: AR_SAMPLES_NER,
     T007: AR_SAMPLES_ASPECT,
     T008: AR_SAMPLES_RELATION,
+    T009: AR_SAMPLES_CLASSIFICATION,
     T010: AR_SAMPLES_NER,
     T011: AR_SAMPLES_PAIRS,
+    T012: AR_SAMPLES_CLASSIFICATION,
     T013: AR_SAMPLES_VA
   };
 
@@ -7254,7 +7256,7 @@ function getTaskTypeLabel() {
 
     titleEl.textContent = memberName + (state.lang === 'zh' ? ' 的標記細項' : "'s annotation details");
 
-    var taskResults = getAnnotationResultsData() || [];
+    var taskResults = getAnnotationResultsData();
     var taskMap = MEMBER_ANNOTATOR_MAP[TASK_DATA.taskId] || {};
     var annotatorId = taskMap[memberName];
 
@@ -7811,8 +7813,14 @@ function getTaskTypeLabel() {
     renderWorkLogPagination(entries.length);
   }
 
+  /* Issue #284: a task_id with no ANNOTATION_RESULTS_BY_TASK entry (e.g. a
+     seeded task like T014-T017 that was never added to the mock table, or a
+     real task created during a journey) used to silently fall back to
+     T001's seed results here and in export. Return an empty set instead so
+     renderAnnotationResults() shows the existing arEmptyState empty state
+     (spec 014 Tab D 空狀態) rather than another task's data. */
   function getAnnotationResultsData() {
-    return ANNOTATION_RESULTS_BY_TASK[TASK_DATA.taskId] || ANNOTATION_RESULTS_BY_TASK.T001;
+    return ANNOTATION_RESULTS_BY_TASK[TASK_DATA.taskId] || [];
   }
 
   function computeVaStats(annotations) {
