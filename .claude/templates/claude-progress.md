@@ -14,7 +14,7 @@ Spec: specs/<module>/NNN-feature/
 - [ ] Generator: 實作 item 1 — <description>
 - [ ] Generator: 實作 item 2 — <description>
 - [ ] Evaluator: pytest / mypy / ruff / tsc / Playwright 全部通過
-- [ ] /speckit.analyze 零 findings
+- [ ] /opsx:verify（或 `openspec validate`）零 findings + 回寫 Source-Verify 通過
 - [ ] PR 開出並通過 review
 
 ## Problems & Solutions

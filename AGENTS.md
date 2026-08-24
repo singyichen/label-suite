@@ -31,7 +31,7 @@ design/prototype/pages/[module]/   ← HTML prototypes
 - All Python commands via `uv run` (`uv run pytest`, `uv run uvicorn app.main:app --reload`, etc.)
 - All frontend commands via `pnpm` from `frontend/`
 - Write a failing test before writing implementation — no exceptions (TDD)
-- Run `/speckit.analyze` and resolve all findings before opening a PR
+- Run `/opsx:verify` (or `openspec validate`) and resolve all findings, plus the write-back Source-Verify gate, before opening a PR
 - Read relevant files before making any changes
 - Always read the main constitution plus every applicable domain constitution before planning, analyzing, implementing, or reviewing work:
   - `.specify/memory/backend-constitution.md` for backend/API/schema/service/database/migration/Redis/Celery/OpenAPI/backend security/backend performance/backend deployment work
@@ -92,7 +92,7 @@ New features, behavior changes, breaking API changes, and architectural changes 
 
 ```
 /superpowers:brainstorm → /speckit.specify → /label-suite-design (prototype) → /pencil-wireframe (frozen — see design/wireframes/README.md)
-→ /speckit.plan → /speckit.tasks → /speckit.implement → /speckit.analyze → /pr-flow
+→ /opsx:propose → /opsx:apply → /opsx:archive → /pr-flow
 ```
 
 Update `specs/STATUS.md` at every pipeline stage transition. After a PR merges: `mv specs/[module]/NNN-feature specs/_archive/`.
@@ -146,12 +146,12 @@ Multi-agent workflow: `/agent-team` command · `.claude/commands/agent-team.md` 
 Invoke at the start of any multi-agent sprint:
 
 ```text
-Use team-lead to orchestrate implementation of [feature] from specs/[module]/NNN-feature/tasks.md
+Use team-lead to orchestrate implementation of [feature] from openspec/changes/<change>/tasks.md
 ```
 
 ### Phase Mapping
 
-#### Phase 1 — Research (read-only, before `/speckit.plan`)
+#### Phase 1 — Research (read-only, before `/opsx:propose`)
 
 | Agent | Role | When |
 |---|---|---|
