@@ -1,7 +1,7 @@
 ---
 功能分支: docs/208-official-gold-fr
 建立日期: 2026-04-23
-版本: 4.14.1
+版本: 4.14.2
 狀態: Draft
 ---
 
@@ -888,6 +888,7 @@ flowchart LR
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 4.14.2 | 2026-08-24 | **修正：仲裁儲存層並行仲裁 lost-update**（issue #319，issue #283 code review 發現之同型未修範圍）：`labelsuite.wsArbitration` 原為單一 key 的整包 read-modify-write，與 #283 同型受影響。但此 store 的 bucket key（`taskId::runType::annotatorId`）刻意不含 `reviewerId`（多位仲裁者共用 bucket），且一個 bucket 橫跨該標記員的所有樣本／爭議項，故僅拆至 #283 的 bucket 粒度仍不足以修復——兩位仲裁者（或同一仲裁者兩分頁）對同 bucket 內不同樣本或不同爭議項並行送出仍會互相覆蓋整包快照。改為**每個爭議項獨立 key**（`labelsuite.wsArbitration.<bucketKey>::<sampleId>::<itemId>`），不同爭議項的並行寫入在構造上不重疊；開機一次性將舊整包 blob 展開為 per-item keys；`readArbitrationItem` 對非物件內容降級為「無此項」；item key 列舉固定排序（跨瀏覽器決定性）。**規格條文未變**：同一爭議項的並行仲裁維持原型層 last-write-wins（FR-059/FR-061 定案語意不變）。新增回歸測試：真並行雙仲裁者不同爭議項送出（Promise.all）、舊 blob 開機遷移、corrupt 值降級；`annotation-review-flow-demo-seed.spec.ts` 既有 idempotence 測試同步改為掃描 per-item keys。 |
 | 4.14.1 | 2026-08-23 | **修正：提交儲存層並行儲存 lost-update**（issue #283，PR #277 首輪 CI 於 CONC-03 重現）：`labelsuite.wsSubmissions` 原為單一 key 的整包 read-modify-write，多分頁並行儲存時後寫者以舊讀快照覆蓋他人 bucket——且另一分頁已提交的寫入在同步儲存區塊內根本不可見（跨程序 localStorage 傳播需等讀方事件迴圈輪轉），故「寫入前重讀合併」修不了。改為**每個 bucket 獨立 key**（`labelsuite.wsSubmissions.<bucketKey>`），不同 bucket 的並行寫入在構造上不重疊；開機一次性將舊整包 blob 展開為 per-bucket keys（保留訪客草稿與已播種 demo 狀態，`reviewFlowDemoSeed.v1` marker 免 bump）；`readSubmissionBucket` 對非物件內容降級為空 bucket；bucket key 列舉固定排序（等時間戳歷程順序與爭議審核員列跨瀏覽器決定性）。**規格條文未變**：同 bucket 寫入維持原型層 last-write-wins（正式衝突政策屬後端 `CONFLICT_RESOLUTION_POLICY`）；殘餘同 bucket race（審核員退回 vs 標記員儲存）與仲裁 store 同型問題另行建單追蹤。新增回歸測試：真並行雙標記員儲存（Promise.all）、舊 blob 開機遷移、corrupt 值降級。 |
 | 4.14.0 | 2026-08-21 | **已定稿單位全面唯讀鎖定**（issue #308，P0）：FR-051 的 `已定稿` 是五態機的終態，但工作區從未對它分流——已定稿單位照樣重新渲染一般互動審核卡，`official_run` 下審核員可對定稿單位退回＋送出，`markSampleRejected()`（FR-014I）隨即把標記員樣本回滾至 pending，**定稿單位被抹除**。修法：（1）`renderReviewerWorkspace()` 新增 finalized 分支（與仲裁分支、v4.13.0 空單位閘門互斥）：隱藏送出按鈕（FR-058 快捷鍵同步失效）、渲染唯讀結果卡 `ws-review-finalized-card`（每個 outKey 的定稿作答＋每個爭議項一列收斂/仲裁結果 `ws-finalized-resolved`，沿用仲裁卡已裁定列版式）；（2）`handleReviewSubmit()` 加進入時守衛（促成定稿的那一筆送出不受影響）。兩種定稿路徑皆涵蓋——法定人數收斂（T015 `ofs-01` min=1、T017 `oft-04` 2/2）與仲裁落定（T015 `ofs-03` seed、仲裁者現場送出後即時鎖定）；中間狀態不鎖（T017 `oft-02` 1/2 已通過單位，第二位審核員仍可送出至定稿）。**設計決策**：已定稿＝全面唯讀；FR-016A 重啟（審計理由）流程延後至後端階段，原型不提供任何解鎖入口。新增 **AC-3.39**、FR-053 已定稿單位鎖定段落。既有測試修正（原依賴本缺陷行為）：xrole 正典旅程 fixture 補上 `minReviewers: 2`（回復 w4「n=2=min」原意，XROLE-15 斷言改 approved→finalized）；仲裁測試「非爭議單位正常審核」改以門檻 2 推導 `已通過`（原註解在 min=1 下誤標 approved、實為 finalized，僅因本缺陷仍渲染一般卡而通過）。 |
 | 4.13.0 | 2026-08-21 | **空審核單位閘門：真空單位不得渲染可送出的審核卡**（issue #307，P0）：FR-044a 定義了審查列的兩個 seed 來源（真實提交 → `REVIEWER_MOCK_ROWS` 遞補列），FR-064 橫幅也已對「兩者皆缺」的單位顯示 `尚無標記提交`（T015 `ofs-05-not-submitted` 為刻意設計的示範點），但審核卡本身從未處理此情境——`getReviewerRows()` 回傳空陣列後，審核卡照樣渲染送出按鈕，且「每個 outKey 一筆決策」驗證對零列**空泛通過**（vacuous pass），審核員可對不存在的標記送出一筆空審核。修法：（1）`renderReviewerWorkspace()` 於「無儲存提交（unitStatus null）且無遞補列」時渲染空狀態卡（`ws-review-empty-unit`）並隱藏送出按鈕（FR-058 快捷鍵派發跳過 hidden 按鈕，同步失效）；判定與 FR-064 橫幅、FR-044a 遞補**同源**，不另行實作第二份；（2）`handleReviewSubmit()` 加同源守衛，杜絕殘餘呼叫路徑。新增 **AC-3.38**、FR-053 空審核單位閘門段落。標記員實際提交後閘門即釋放（回歸測試涵蓋：annotator 提交 `ofs-05` → reviewer 重載恢復完整審核卡並送出至定稿）；T015 其餘樣本與所有依 FR-044a 遞補的既有任務不受影響。 |
