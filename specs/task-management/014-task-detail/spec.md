@@ -1,7 +1,7 @@
 ---
 功能分支: docs/211-disabled-annotator-rule
 建立日期: 2026-04-20
-版本: 2.10.1
+版本: 2.10.2
 狀態: Draft
 ---
 
@@ -721,6 +721,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.10.2 | 2026-08-24 | **修正：13 個示範任務共用同一組誤導性指引附件（issue #185，issue-180 finding F-02）**：`DEFAULT_GUIDELINE_FILES`（`task-detail.data.js`）原對所有 17 個 seed profile 附加同一張 VA 情緒量表示意圖（`VA_emj.png`）＋一份指向不存在目錄的 PDF（`assets/guidelines/annotation-guideline.pdf`），對 NER／摘要／QA 等非 VA 任務的標記員造成誤導，且 PDF 於「強制閱讀」流程中為死連結。改為：(1) 圖片項目換成明確標示「通用範例圖」的占位圖（新增 `assets/images/task-management/generic-guideline-example.svg`），維持所有任務共用同一份 config-driven 檔案清單（不逐任務類型硬編，符合 Generalization-First 與 annotation-015 `TaskProfile.guidelineFiles` 條文）；(2) 移除死連結 PDF 項目（不虛構假檔案）。規格條文未變（`guidelineFiles` 資料形狀不變）。新增回歸測試：逐 profile 檔案存在性 assertion（每個 `guidelineFiles[].url` 皆需 200 回應）＋非 VA 任務範例圖標示斷言。 |
 | 2.10.1 | 2026-08-23 | **修正：annotation-results 面板與匯出對未知任務靜默回退 T001 seed**（issue #284，issue-180 finding N-05）：`getAnnotationResultsData()` 對 `ANNOTATION_RESULTS_BY_TASK` 查無的 `task_id`（如 T014–T017 或 journey 動態任務）原本回退 T001 的 seed 結果——面板與 JSON／JSON-MIN 匯出顯示**別的任務的資料**。改為回傳空集合：面板顯示既有 `arEmptyState` 空狀態（Tab D 空狀態條文本即如此要求），匯出 `items` 為空陣列（manifest 與 `applied_filters` 照常）；T009／T012 原依賴 fallback 取得分類 seed，改為明確登錄。**規格條文未變**（空狀態行為本為 Tab D 既有規範，僅修正實作偏離）；journey 即時資料仍不入面板（既有 gap，xrole 正典旅程 XROLE-19/22 斷言同步改為誠實空狀態）。新增回歸測試 `issue-284-annotation-results-fallback.spec.ts`（面板空狀態＋兩種匯出零筆且不含 T001 內容）。 |
 | 2.10.0 | 2026-08-19 | **停用標記員之已指派樣本處置（issue #211，minor）**：停用 `annotator` 成員時，已提交標記全數保留（繼續計入歷史統計與 IAA，既有 review unit 不受影響）；未提交（含草稿）之已指派作業退回未指派池，依 FR-005g 重新指派或 FR-005h 排除（比照 FR-005j 審核員 `pending` 退回規則）；停用期間不得受派亦不得提交；重新啟用僅恢復可被指派資格，不自動取回先前退回作業；停用操作不受 FR-010t 阻擋，但致 active 標記員 `< min_annotators` 時二次確認 modal 需加註後續發布將被阻擋的警告。新增 FR-005l、SC-040、使用者故事 1 驗收情境 7 |
 | 2.9.0 | 2026-08-19 | **正式標記樣本分派演算法（issue #210，minor）**：`開始正式標記` 建立清單時同步以輪流分派建立樣本-標記員 assignment——每筆樣本恰指派一位啟用中標記員，依成員清單固定順序輪流直到全部分派完畢，樣本數不可整除時任兩人筆數差距 `<= 1`；`min_annotators` 僅約束試標重疊標記與 FR-010t 發布前人數檢查，不改變正式標記「每筆單一標記員」語意；發布後成員異動不自動重算既有 assignment（處置依 FR-005f 系列）。新增 FR-010f-4、SC-039、使用者故事 3 驗收情境 11 |

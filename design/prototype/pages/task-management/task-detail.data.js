@@ -1206,12 +1206,25 @@
    * TaskProfile carries a generic, task-agnostic file list -- the
    * annotation workspace's right-column panel renders these purely by
    * `type` (pdf/image/markdown), never by task_id or task category
-   * (Generalization-First). One shared demo file set covers all 17 seed
-   * profiles; the only real binary asset shipped with the prototype is
-   * reused for every image entry. */
+   * (Generalization-First; annotation-015 spec's TaskProfile entity
+   * explicitly forbids per-task-type hardcoded file lists here). One
+   * shared demo file set covers all 17 seed profiles.
+   *
+   * issue #185: the image entry used to be VA_emj.png (a valence/arousal
+   * emotion-scale image), which reads as task-specific and misleads
+   * annotators on the other 16 non-VA profiles; it is now a generic
+   * placeholder explicitly labeled "通用範例圖" (generic example) instead
+   * of fabricating per-category example images, which would need either
+   * 13 bespoke assets or per-task-type branching that the entity above
+   * disallows. The PDF entry pointed at assets/guidelines/, a directory
+   * that doesn't exist in this prototype, so it was a dead link inside the
+   * "force reading" guideline flow -- removed rather than fabricated. */
   var DEFAULT_GUIDELINE_FILES = [
-    { name: '標記範例圖.png', type: 'image', url: '../../assets/images/task-management/VA_emj.png' },
-    { name: '標記指引.pdf', type: 'pdf', url: '../../assets/guidelines/annotation-guideline.pdf' },
+    {
+      name: '通用範例圖.svg',
+      type: 'image',
+      url: '../../assets/images/task-management/generic-guideline-example.svg'
+    },
     {
       name: '常見問題.md',
       type: 'markdown',
