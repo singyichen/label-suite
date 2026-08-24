@@ -286,6 +286,7 @@
     originalUpdateAnnotationPreview();
     if (!currentProfile || currentRole === 'reviewer') return;
     patchEvidenceAndInputContent();
+    renderEvidenceReferenceCard();
     patchItemPairLayout();
     wrapAnnotatorCards();
   }
@@ -965,6 +966,52 @@
       );
     });
     if (fallback) fallback.setAttribute('data-testid', 'ws-input-content');
+  }
+
+  /* ── evidence-role reference card, general fallback (FR-024N, issue #89) ──
+     task-config.engine.js's updateAnnotationPreview() only builds the
+     generation-evidence-preview wrap (renamed to ws-evidence-card above)
+     when the selected output type's registry entry declares
+     rendersEvidencePreview: true -- today only free_text (FR-024H,
+     AC-2B.3). task-new Step 2 preview intentionally suppresses Evidence for
+     every other output type (013 FR-003g-2) and defers its display to this
+     workspace instead (013 v3.1.0 changelog) -- that promise has no landing
+     spot for the other 7 OUTPUT_TYPE_KEYS without this patch. Left as a
+     patch here rather than a change to the shared engine gate, since that
+     gate must stay untouched for task-new's own preview. Read-only: plain
+     text nodes only, no input/editable control. */
+  function renderEvidenceReferenceCard() {
+    var preview = document.getElementById('annotationPreview');
+    if (!preview) return;
+    if (preview.querySelector('[data-testid="ws-evidence-card"]')) return;
+    var evidenceCols = getFieldsByRole('evidence');
+    if (evidenceCols.length === 0) return;
+
+    var evidenceWrap = document.createElement('div');
+    evidenceWrap.setAttribute('data-testid', 'ws-evidence-card');
+
+    var heading = document.createElement('div');
+    heading.className = 'annotation-preview-task-title';
+    heading.style.marginBottom = '8px';
+    heading.textContent = t('previewEvidenceHeading');
+    evidenceWrap.appendChild(heading);
+
+    evidenceCols.forEach(function (col) {
+      if (evidenceCols.length > 1) {
+        var label = document.createElement('div');
+        label.className = 'annotation-preview-pair-label';
+        label.textContent = col;
+        evidenceWrap.appendChild(label);
+      }
+      var raw = state.datasetRawFirstRow ? state.datasetRawFirstRow[col] : undefined;
+      var text = raw === undefined || raw === null ? '' : (typeof raw === 'object' ? JSON.stringify(raw) : String(raw));
+      var content = document.createElement('div');
+      content.className = 'annotation-preview-sample';
+      content.textContent = text.length > 500 ? text.substring(0, 500) + '…' : text;
+      evidenceWrap.appendChild(content);
+    });
+
+    preview.insertBefore(evidenceWrap, preview.firstChild);
   }
 
   /* ── item_pair input layout (FR-024K / US2B) ─────────────────────
