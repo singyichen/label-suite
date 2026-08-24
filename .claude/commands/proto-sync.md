@@ -24,20 +24,25 @@ If no modified prototype files found, inform user and stop.
 
 ## Step 2 — Map Prototype → Spec
 
-For each modified prototype file, derive the corresponding spec:
+For each modified prototype file, derive the corresponding spec(s) using this priority order:
 
-**Path mapping:**
+**2a. Exact-path search (primary).** Grep every `specs/**/spec.md` for the modified file's repo-relative path (e.g. `design/prototype/pages/account/login.html`) inside that spec's `## Prototype Traceability` table. A prototype file may legitimately map to **more than one spec** — collect every match, don't stop at the first:
+- `design/prototype/pages/account/login.html` → both `001-login-email-password` (owns the Email/Password shell) and `002-login-google-sso` (owns the Google entry point) list this exact path
+- `design/prototype/pages/account/forgot-password.html` and `reset-password.html` → both map to `004-forgot-reset-password` (multi-page single spec)
+- `design/prototype/pages/account/profile.html` → `005-profile-settings`
+- `design/prototype/pages/annotation/annotation-list.html` and `annotation-workspace.html` → both map to `015-annotation-workspace` (multi-page single spec)
+- `design/prototype/pages/shared/sidebar.js` / `sidebar.css` → `008-sidebar-navbar-shared`, but this file is referenced by every module's shell page as a *shared component*, not owned by any of them — do not also attach findings to the consuming page's own spec unless the change is specific to that page's usage
+
+**2b. Folder-suffix fallback.** If 2a finds no match (the spec predates its Prototype Traceability table, or the file is new), fall back to the legacy heuristic: scan `specs/[module]/` for the directory whose name ends with `-[page]` (the NNN prefix varies per feature).
 ```
 design/prototype/pages/[module]/[page].html
   → specs/[module]/NNN-[page]/spec.md
 ```
+Example: `task-management/task-new.html` → scan `specs/task-management/` → find `013-task-new/` → target is `specs/task-management/013-task-new/spec.md`.
 
-**Discovery:** Scan `specs/[module]/` directories to find the one whose name ends with `-[page]` (the NNN prefix varies per feature). Example:
-- `task-management/task-new.html` → scan `specs/task-management/` → find `013-task-new/` → target is `specs/task-management/013-task-new/spec.md`
+**2c. No match found.** If neither 2a nor 2b resolves a spec, **stop and report the file to the user explicitly** — list it under a "無法映射" heading with the path searched. Never silently skip an unmapped file; an unreported skip looks identical to "nothing needed updating," which is the failure mode this step exists to prevent.
 
-**Panel/partial files:** If the modified file is under `[page].panels/` or `[page].partials/`, map it to the parent page's spec.
-
-If no matching spec found, report to user and skip that file.
+**Panel/partial files:** If the modified file is under `[page].panels/` or `[page].partials/`, map it to the parent page's spec (same resolution order: check if the specific partial path is listed in a Prototype Traceability table first, then fall back to the parent page's mapping).
 
 ## Step 3 — Read Full Sources
 
