@@ -29,17 +29,21 @@ import {
  * -> completion gaps -> export -> resilience checks).
  *
  * ── Two task ids, by design (not an oversight) ────────────────────────────
- * `task-new.html`'s `submitTask()` (task-new.html:1398-1414) never writes
- * the wizard's state into `window.LabelSuiteTaskListData` /
- * `window.LabelSuiteTaskDetailData` -- it only generates an id and redirects
- * to `task-detail.html?task_id=<id>`. `resetTaskData()`
- * (task-detail.html:4303-4352) sets `TASK_NOT_FOUND = true` for any id it
- * cannot resolve from those profiles, so the wizard-created task is a dead
- * end for every stage after creation. XROLE-01/02's wizard walkthrough
- * therefore runs against its own generated `wizardTaskId`, purely to prove
- * the creation UI works end-to-end; every later stage (guideline onward)
- * runs against a separate `fixtureTaskId` seeded via `buildXRoleSeedPatch`
- * (PR-A, already merged), matching the established pattern in
+ * Issue #285 fixed `task-new.html`'s `submitTask()` (task-new.html:1398) so
+ * it now persists the wizard's result into a `labelsuite.createdTasks`
+ * localStorage bucket that `task-list.data.js` / `task-detail.data.js` merge
+ * into `window.LabelSuiteTaskListData.tasks` / `window.LabelSuiteTaskDetailData
+ * .profiles` at load time -- `resetTaskData()` (task-detail.html:4303-4352)
+ * now resolves the wizard-created id instead of falling into
+ * `TASK_NOT_FOUND`. XROLE-01/02 still run their wizard walkthrough against
+ * its own generated `wizardTaskId` and every later stage (guideline onward)
+ * still runs against a separate `fixtureTaskId` seeded via
+ * `buildXRoleSeedPatch` (PR-A, already merged) -- not because the wizard task
+ * is a dead end anymore, but because the persisted profile only carries what
+ * the wizard itself collected (name/category/output config/a 2-record
+ * dataset preview) and none of the richer fixture state (member roster,
+ * dry-run/review settings, multi-record run-scoped dataset) the rest of the
+ * journey needs. This matches the established pattern in
  * `xrole-fixture-smoke.spec.ts` and the single-page task-detail specs this
  * file's steps mirror.
  *
@@ -275,7 +279,8 @@ test('XROLE-01: project leader creates a task through the task-new wizard', asyn
   // Guideline step is explicitly optional in the wizard (s4NoticeText:
   // "此步驟為選填。不上傳說明，仍可完成任務建立。"); XROLE-03 covers
   // guideline upload against the fixture-seeded task instead, since the
-  // wizard-created task can never be revisited (see file-level doc comment).
+  // persisted wizard profile carries no member/review/dry-run fixture state
+  // (see file-level doc comment).
   await expect(plPage.locator('#step4Panel')).not.toHaveClass(/hidden/);
   await plPage.locator('#nextBtn').click();
 
@@ -285,12 +290,12 @@ test('XROLE-01: project leader creates a task through the task-new wizard', asyn
   wizardTaskId = new URL(plPage.url()).searchParams.get('task_id');
   expect(wizardTaskId).toBeTruthy();
 
-  // XROLE-02 leg 3: the wizard-created task cannot be resolved by
-  // task-detail.html (resetTaskData() sets TASK_NOT_FOUND for any id absent
-  // from window.LabelSuiteTaskDetailData.profiles) -- the redirect landing
-  // on a not-found state is itself proof that the wizard and the seeded
-  // fixture are two genuinely separate tasks, not evidence of a bug.
-  await expect(plPage.locator('#taskNotFoundTitle')).toHaveText('找不到任務', { timeout: PANEL_LOAD_TIMEOUT });
+  // XROLE-02 leg 3 (issue #285 fix): the wizard-created task now resolves
+  // in task-detail.html instead of falling into TASK_NOT_FOUND --
+  // resetTaskData() (task-detail.html:4303-4352) finds both a list entry
+  // and a profile for wizardTaskId via the localStorage-merged seed.
+  await expect(plPage.locator('#taskNotFound')).toHaveClass(/hidden/, { timeout: PANEL_LOAD_TIMEOUT });
+  await plPage.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
 });
 
 test('XROLE-02b: fixture-seeded task dataset total reconciles with the 5 seeded records (w4 §2 step 2 three-way chain: upload=preview=list)', async () => {
