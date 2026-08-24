@@ -2077,6 +2077,24 @@
     return span;
   }
 
+  /* Reviewer draft persistence (issue #196, CONT-03 / role symmetry with the
+     annotator's markSampleSaved): every row-decision change writes the
+     review unit's current decisions into a dedicated localStorage draft
+     bucket (annotation-workspace.data.js's saveReviewRowDecisionDraft), so
+     an in-progress (pre-submit) approve/reject choice survives a reload
+     instead of only living in the module-level reviewRowDecisions var. */
+  function persistReviewDraft() {
+    var annotatorId = currentAnnotatorId();
+    var decisions = {};
+    state.selectedOutputTypes.forEach(function (outKey) {
+      var decision = reviewRowDecisions[decisionKey(outKey, annotatorId)];
+      if (decision) decisions[outKey] = decision;
+    });
+    window.LabelSuiteAnnotationWorkspaceData.saveReviewRowDecisionDraft(
+      currentProfile.id, currentRunType, currentSampleId, decisions, currentIdentity
+    );
+  }
+
   /* FR-014B: pass/reject toggle -- clicking the already-active decision
      cancels it back to undecided. Returns {el, refresh} so the bulk bar
      can force every row's buttons to redraw after a bulk decision. */
@@ -2107,12 +2125,14 @@
       var key = decisionKey(outKey, rowName);
       reviewRowDecisions[key] = reviewRowDecisions[key] === 'approve' ? null : 'approve';
       refresh();
+      persistReviewDraft();
       if (onChange) onChange();
     });
     rejectBtn.addEventListener('click', function () {
       var key = decisionKey(outKey, rowName);
       reviewRowDecisions[key] = reviewRowDecisions[key] === 'reject' ? null : 'reject';
       refresh();
+      persistReviewDraft();
       if (onChange) onChange();
     });
     refresh();
@@ -2146,6 +2166,7 @@
     reviewDecisionRefreshers.forEach(function (refresh) {
       refresh();
     });
+    persistReviewDraft();
   }
 
   /* free_text corrections are typed, so `a` and `r` are ordinary input the
@@ -2751,6 +2772,19 @@
     reviewRowDecisions = {};
     reviewRowOriginals = {};
     reviewDecisionRefreshers = [];
+    /* issue #196 (CONT-03): restore any in-progress decisions persisted by
+       persistReviewDraft() before this render -- a reload must not silently
+       undecide rows the reviewer already chose. */
+    (function restoreReviewDraft() {
+      var draft = window.LabelSuiteAnnotationWorkspaceData.getReviewRowDecisionDraft(
+        currentProfile.id, currentRunType, currentSampleId, currentIdentity
+      );
+      if (!draft) return;
+      var annotatorId = currentAnnotatorId();
+      Object.keys(draft).forEach(function (outKey) {
+        reviewRowDecisions[decisionKey(outKey, annotatorId)] = draft[outKey];
+      });
+    })();
 
     /* null, not {}: seedReviewRow() branches on whether a real submission
        exists at all. */
@@ -2935,6 +2969,13 @@
       currentIdentity
     );
     clearUnsaved();
+    /* issue #196: the draft's job ends at submit -- the decision is now
+       recorded in the real submission bucket, so leaving the draft behind
+       would only resurface stale per-row state if this unit ever becomes
+       interactively reviewable again. */
+    window.LabelSuiteAnnotationWorkspaceData.clearReviewRowDecisionDraft(
+      currentProfile.id, currentRunType, currentSampleId, currentIdentity
+    );
     /* spec 015 AC-3.15/AC-6.4/FR-014I (issue #192): the reject -> pending
        rollback only applies to official_run -- dry_run has no "退回個人重標"
        channel, so a dry_run reject decision must not roll the sample back. */
