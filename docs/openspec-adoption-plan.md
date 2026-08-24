@@ -1,6 +1,6 @@
 # OpenSpec 導入計畫（分階段）
 
-> **狀態：提案草稿，待維護者核准。** 本文件是 [ADR-033](adr/033-openspec-change-workflow.md) 的落地路線圖。合併 ADR-033 僅代表核准 **Phase 1**；Phase 2 之後每一階段各自開 PR。
+> **狀態：ADR-033 已 Accepted，Open Questions 已裁示；Phase 1 治理條文改寫 PR 進行中。** 本文件是 [ADR-033](adr/033-openspec-change-workflow.md) 的落地路線圖。Phase 2 之後每一階段各自開 PR。
 > **來源**：issue #294。
 
 ## 階段總覽
@@ -22,9 +22,9 @@
 
 ### 完成條件
 
-1. 維護者核准 ADR-033，Status 由 `Proposed` 改為 `Accepted`。
-2. 附錄清單逐項套用，作為一個獨立的 governance PR（憲章修訂類 PR 依 Principle X 免除檔案數上限，但仍須單一目的）。
-3. 未決問題（ADR-033 `Open Questions` 四項）全部有明確裁示。
+1. ~~維護者核准 ADR-033，Status 由 `Proposed` 改為 `Accepted`。~~ 已完成（2026-08-24）。
+2. 附錄清單逐項套用，作為一個獨立的 governance PR（憲章修訂類 PR 依 Principle X 免除檔案數上限，但仍須單一目的）。**進行中，見後續 PR。**
+3. ~~未決問題（ADR-033 `Open Questions` 四項）全部有明確裁示。~~ 已完成（2026-08-24，裁示內容見 ADR-033 `Open Questions — Resolved`）。
 
 ---
 
