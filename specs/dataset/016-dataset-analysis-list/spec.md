@@ -1,7 +1,7 @@
 ---
 功能分支: feat/dataset-analysis-output-types
 建立日期: 2026-04-24
-版本: 2.1.0
+版本: 2.1.1
 狀態: In Progress
 ---
 
@@ -216,6 +216,16 @@ flowchart LR
 
 ---
 
+## Prototype Traceability
+
+| Artifact | Responsibility | Covered FR/SC | Verification | Status |
+|----------|----------------|---------------|--------------|--------|
+| [design/prototype/pages/dataset/dataset-analysis-list.html](../../../design/prototype/pages/dataset/dataset-analysis-list.html) | List page shell, filters, pagination, output-type membership tags, IAA status badges, observable interaction, and RWD only; the spec remains authoritative for membership, filtering, and data contracts. | All FR/SC in this spec | [design/prototype/tests/dataset/](../../../design/prototype/tests/dataset/) (`dataset-analysis-list-*.spec.ts`, 4 files) | Active |
+| [design/prototype/pages/dataset/dataset-analysis-list.js](../../../design/prototype/pages/dataset/dataset-analysis-list.js)<br>[design/prototype/pages/dataset/dataset-analysis-list.data.js](../../../design/prototype/pages/dataset/dataset-analysis-list.data.js)<br>[design/prototype/pages/dataset/dataset-analysis-list.i18n.js](../../../design/prototype/pages/dataset/dataset-analysis-list.i18n.js)<br>[design/prototype/pages/dataset/dataset-analysis-list.model.js](../../../design/prototype/pages/dataset/dataset-analysis-list.model.js)<br>[design/prototype/pages/dataset/dataset-analysis-list.view.js](../../../design/prototype/pages/dataset/dataset-analysis-list.view.js) | Page-owned rendering, view-state model, i18n, and synthetic safe prototype fixtures. Fixtures are prototype acceptance baselines, never an API, membership, or answer-content whitelist. | All FR/SC in this spec | [design/prototype/tests/dataset/](../../../design/prototype/tests/dataset/) (`dataset-analysis-list-*.spec.ts`, 4 files) | Active; page-owned |
+| [design/system/pages/dataset-analysis-list.md](../../../design/system/pages/dataset-analysis-list.md) | Page-scoped design reference only; does not define runtime behavior, APIs, data, or product contracts. | No additional FR/SC | N/A (design reference) | Active; no wireframe (frozen baseline predates this page) |
+
+---
+
 ## 規格相依性 *(本功能依賴其他規格，或被其他規格依賴時填寫)*
 
 ### 上游（本規格依賴的規格）
@@ -257,6 +267,7 @@ flowchart LR
 
 | Version | Date | Change Summary |
 | --- | --- | --- |
+| 2.1.1 | 2026-08-24 | Issue #261：新增 Prototype Traceability，明確對應 dataset-analysis-list 原型頁面、資料層與設計層參考的責任邊界；規格條文未變。 |
 | 2.1.0 | 2026-08-12 | **同步 dataset-017 v2.0.0 IAA 策略 v2（minor）**：`IAA_BADGE_STATES` 新增 `not_applicable`（任務 `outputs[]` 僅含 IAA 排除類型如 `free_text` 時，徽章顯示 `not_applicable` 而非 `pass`／`fail`／`pending`／`not_started` 或空白），更新 FR-004A 與 `IAAStatusSummary` 實體；移除已過時的「v2.0.0 scope boundary（detail 待同步）」註記，改記錄 dataset-017 已完成 8-key `outputs[]` 遷移，detail 頁現支援全部 8 種輸出類型與複合組合。 |
 | 2.0.0 | 2026-07-29 | **Dataset Analysis List 遷移至可組合輸出類型**：移除固定單一 `task_type` 與 `page`／`page_size` 契約，改以 `outputs[].type` 多 tag、registry-driven 8 種輸出類型 membership filter、raw／localized 搜尋及 `output_type`／`limit`／`offset` URL query。加入 empty/error 分流、摘要 metadata 安全界線、13 筆 prototype baseline 與 filter／IAA／角色分布、medical／ABSA 複合 tag、第 14 筆合法任務泛化及 Playwright 驗收。13 筆只作示意，不構成產品上限；dataset-017 detail consumer 仍延後。 |
 | 1.3.1 | 2026-05-21 | 補充輸入與產生規則、已釐清事項、審查清單與執行狀態；同步功能分支格式 |
