@@ -171,14 +171,14 @@ a{color:#6366F1}a:hover{color:#4F46E5}
         <div>
           <div style="font-size:11px;font-weight:700;margin-bottom:6px;color:#64748B">LIGHT · 1440px</div>
           <div style="overflow:hidden;border:1px solid #E2E8F0;border-radius:12px;background:#fff;width:{{ s.boxW }}px;height:{{ s.boxH }}px">
-            <iframe src="{{ s.path }}" onLoad="{{ lighten }}" title="{{ s.en }} light" style="width:1440px;border:0;transform-origin:0 0;height:{{ s.h }}px;transform:scale({{ zoom }})"></iframe>
+            <iframe src="{{ s.path }}" loading="lazy" onLoad="{{ lighten }}" title="{{ s.en }} light" style="width:1440px;border:0;transform-origin:0 0;height:{{ s.h }}px;transform:scale({{ zoom }})"></iframe>
           </div>
         </div>
         <sc-if value="{{ showDark }}" hint-placeholder-val="{{ true }}">
           <div>
             <div style="font-size:11px;font-weight:700;margin-bottom:6px;color:#64748B">DARK · data-theme="dark"</div>
             <div style="overflow:hidden;border:1px solid #2A2A35;border-radius:12px;background:#0B0B12;width:{{ s.boxW }}px;height:{{ s.boxH }}px">
-              <iframe src="{{ s.path }}" onLoad="{{ darken }}" title="{{ s.en }} dark" style="width:1440px;border:0;transform-origin:0 0;height:{{ s.h }}px;transform:scale({{ zoom }})"></iframe>
+              <iframe src="{{ s.path }}" loading="lazy" onLoad="{{ darken }}" title="{{ s.en }} dark" style="width:1440px;border:0;transform-origin:0 0;height:{{ s.h }}px;transform:scale({{ zoom }})"></iframe>
             </div>
           </div>
         </sc-if>
@@ -187,9 +187,39 @@ a{color:#6366F1}a:hover{color:#4F46E5}
   </sc-for>
 </div>
 
-<!-- ═══ 4 · MATRIX ═══ -->
+<!-- ═══ 4 · IN-PAGE VIEWS ═══ -->
+<div style="padding:36px 56px 8px">
+  <h2 style="font-family:'Crimson Pro','Noto Serif TC',serif;font-size:28px;font-weight:700;margin:0 0 4px">4 · 同頁多重視圖 In-Page View Inventory（36 視圖）</h2>
+  <p style="font-size:13px;color:#64748B;margin:0 0 24px;max-width:1000px">同一 HTML 依 URL 參數／頁內狀態切換的所有視圖，依 NAVIGATION.md「動態載入片段」與各頁實際支援的 query 參數逐一展開（角色視角、tab、8 種標記型態、錯誤／空狀態）。此區僅顯示 Light（Dark 對照見第 3 區，token 全域翻轉）。</p>
+  <sc-for list="{{ viewGroups }}" as="vg" hint-placeholder-count="3">
+    <div style="margin-bottom:40px">
+      <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:4px">
+        <span style="font-family:'Crimson Pro','Noto Serif TC',serif;font-size:19px;font-weight:700">{{ vg.title }}</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#6366F1">{{ vg.file }}</span>
+      </div>
+      <p style="font-size:12.5px;color:#64748B;margin:0 0 14px;max-width:1000px">{{ vg.desc }}</p>
+      <div style="display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start">
+        <sc-for list="{{ vg.views }}" as="v" hint-placeholder-count="4">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;align-items:baseline;gap:8px">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:600;background:#6366F1;color:#fff;border-radius:4px;padding:2px 6px">{{ v.no }}</span>
+              <span style="font-size:13px;font-weight:700">{{ v.name }}</span>
+            </div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#94A3B8;max-width:520px;word-break:break-all">{{ v.qs }}</div>
+            <div style="font-size:12px;color:#334155;max-width:520px;line-height:1.55">{{ v.note }}</div>
+            <div style="overflow:hidden;border:1px solid #E2E8F0;border-radius:12px;background:#fff;width:{{ v.boxW }}px;height:{{ v.boxH }}px">
+              <iframe src="{{ v.src }}" loading="lazy" onLoad="{{ lighten }}" title="{{ v.no }} {{ v.name }}" style="width:1440px;border:0;transform-origin:0 0;height:{{ v.h }}px;transform:scale({{ zoom }})"></iframe>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-for>
+</div>
+
+<!-- ═══ 5 · MATRIX ═══ -->
 <div style="padding:36px 56px 72px">
-  <h2 style="font-family:'Crimson Pro','Noto Serif TC',serif;font-size:28px;font-weight:700;margin:0 0 4px">4 · 畫面 × 元件對照表 Screen × Component Matrix</h2>
+  <h2 style="font-family:'Crimson Pro','Noto Serif TC',serif;font-size:28px;font-weight:700;margin:0 0 4px">5 · 畫面 × 元件對照表 Screen × Component Matrix</h2>
   <p style="font-size:13px;color:#64748B;margin:0 0 16px">依 <code style="font-family:'JetBrains Mono',monospace;font-size:12px">design/system/inventory.md</code>（最後掃描 2026-07-10）整理。</p>
   <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;max-width:1300px">
     <sc-for list="{{ screens }}" as="s" hint-placeholder-count="8">
@@ -411,7 +441,69 @@ class Component extends DCLogic {
       cells: mask.split('').map(ch => ({ m: ch === 'X' ? '●' : '·' })),
     }));
 
-    return { darken: dark, lighten: light, zoom, showDark, colorGroups, spacings, libGroups, screens, matrix };
+    const VG = [
+      { title: '入口 Entry', file: 'index.html', desc: 'Meta refresh 導向 login 的入口頁（fallback link）。', views: [
+        { no: 'V00', name: '入口導向頁', qs: 'index.html', p: '../prototype/index.html', h: 500, note: 'Prototype 入口，自動導向 pages/account/login.html。' },
+      ]},
+      { title: '儀表板 · 4 角色視角', file: 'dashboard/dashboard.html?scenario=', desc: '雙層角色模型（system role + task role）在 prototype 收斂為 4 種可切換視角；預設 user 視圖見 06。切換器本身為 prototype-only。', views: [
+        { no: 'V01', name: '系統管理員 super_admin', qs: '?scenario=super_admin_data', p: '../prototype/pages/dashboard/dashboard.html?scenario=super_admin_data', h: 1500, note: '平台總覽 KPI 卡（grid-3）、使用者管理快捷入口。' },
+        { no: 'V02', name: '專案負責人 project_leader', qs: '?scenario=project_leader', p: '../prototype/pages/dashboard/dashboard.html?scenario=project_leader', h: 1500, note: '空狀態 CTA「建立第一個任務」→ task-new。' },
+        { no: 'V03', name: '標記員 annotator', qs: '?scenario=annotator', p: '../prototype/pages/dashboard/dashboard.html?scenario=annotator', h: 1500, note: '待辦標記清單、快速繼續標記入口。' },
+        { no: 'V04', name: '審核員 reviewer', qs: '?scenario=reviewer', p: '../prototype/pages/dashboard/dashboard.html?scenario=reviewer', h: 1500, note: '審查佇列、快速審查入口。' },
+      ]},
+      { title: '任務列表 · 角色與錯誤態', file: 'task-management/task-list.html', desc: '?task_role= 切換操作權限視角；?view=error 為載入失敗狀態。', views: [
+        { no: 'V05', name: '專案負責人視角', qs: '?task_role=project_leader', p: '../prototype/pages/task-management/task-list.html?task_role=project_leader', h: 1500, note: '建立任務 CTA、run materialization 控制。' },
+        { no: 'V06', name: '標記員視角', qs: '?task_role=annotator', p: '../prototype/pages/task-management/task-list.html?task_role=annotator', h: 1500, note: '唯讀列表，操作按鈕依權限收斂。' },
+        { no: 'V07', name: '審核員視角', qs: '?task_role=reviewer', p: '../prototype/pages/task-management/task-list.html?task_role=reviewer', h: 1500, note: '審查導向的列操作。' },
+        { no: 'V08', name: '載入失敗 error', qs: '?view=error', p: '../prototype/pages/task-management/task-list.html?view=error', h: 900, note: 'Error state：Alert Banner + 重試。' },
+      ]},
+      { title: '任務詳情 · 5 Tabs + 審核員', file: 'task-management/task-detail.html', desc: 'Desktop Content Tabs 以 fetch 動態載入 task-detail.panels/*；reviewer 角色隱藏成員管理 tab。overview 見 09。', views: [
+        { no: 'V09', name: '標記進度 annotation-progress', qs: '?tab=annotation-progress', p: '../prototype/pages/task-management/task-detail.html?tab=annotation-progress', h: 1700, note: '進度表格 + Pagination、狀態徽章。' },
+        { no: 'V10', name: '標記結果 annotation-results', qs: '?tab=annotation-results', p: '../prototype/pages/task-management/task-detail.html?tab=annotation-results', h: 1700, note: 'Expandable rows（inline chevron）、VA scoring chips（normal/outlier）。' },
+        { no: 'V11', name: '成員管理 member-management', qs: '?tab=member-management', p: '../prototype/pages/task-management/task-detail.html?tab=member-management', h: 1700, note: 'md-chip、密集列操作（新增=Primary／停用=Warning／移除=Danger）。' },
+        { no: 'V12', name: '工時紀錄 work-log', qs: '?tab=work-log', p: '../prototype/pages/task-management/task-detail.html?tab=work-log', h: 1700, note: '工時表格 + Pagination。' },
+        { no: 'V13', name: '審核員角色', qs: '?task_role=reviewer', p: '../prototype/pages/task-management/task-detail.html?task_role=reviewer', h: 1700, note: '成員管理 tab 隱藏；被阻擋時顯示 Toast。' },
+      ]},
+      { title: '標記清單 · 審核佇列', file: 'annotation/annotation-list.html', desc: '?role=reviewer 切換為審查單元（sample × annotator × run_type）佇列。', views: [
+        { no: 'V14', name: '審核員佇列 reviewer', qs: '?role=reviewer', p: '../prototype/pages/annotation/annotation-list.html?role=reviewer', h: 1400, note: '審查單元列、unit 狀態 pill（pending/disputed/finalized）。' },
+      ]},
+      { title: '標記工作區 · 8 種輸出型態', file: 'annotation/annotation-workspace.html', desc: 'Config-driven：依 task_type 載入對應標記面板（ADR-029 output type composition）。', views: [
+        { no: 'V15', name: '單一分類 single_label', qs: '?task_id=T001&sample_id=sent-001&role=annotator&run_type=official_run&task_type=single_label', p: '../prototype/pages/annotation/annotation-workspace.html?task_id=T001&sample_id=sent-001&role=annotator&run_type=official_run&task_type=single_label', h: 1400, note: '分類 chips（radio 語意）。' },
+        { no: 'V16', name: '多重分類 multi_label', qs: '?task_id=T002&sample_id=emo-001&…&task_type=multi_label', p: '../prototype/pages/annotation/annotation-workspace.html?task_id=T002&sample_id=emo-001&role=annotator&run_type=official_run&task_type=multi_label', h: 1400, note: '多選 chips（checkbox 語意）。' },
+        { no: 'V17', name: '單維評分 single_dim', qs: '?task_id=T004&sample_id=read-001&…&task_type=single_dim', p: '../prototype/pages/annotation/annotation-workspace.html?task_id=T004&sample_id=read-001&role=annotator&run_type=official_run&task_type=single_dim', h: 1400, note: '評分滑桿 slider。' },
+        { no: 'V18', name: '多維評分 multi_dim', qs: '?task_id=T005&sample_id=mt-001&…&task_type=multi_dim', p: '../prototype/pages/annotation/annotation-workspace.html?task_id=T005&sample_id=mt-001&role=annotator&run_type=official_run&task_type=multi_dim', h: 1400, note: '多維度滑桿（fluency/adequacy/coherence）。' },
+        { no: 'V19', name: '序列標記 sequence_tagging', qs: '?task_id=T006&sample_id=sequence-tagging-001&…&task_type=sequence_tagging', p: '../prototype/pages/annotation/annotation-workspace.html?task_id=T006&sample_id=sequence-tagging-001&role=annotator&run_type=official_run&task_type=sequence_tagging', h: 1500, note: 'Token 級標記（BIO scheme）、entity type bar + Color Dot。' },
+        { no: 'V20', name: '實體辨識 entity_recognition', qs: '?task_id=T007&sample_id=entity-recognition-001&…&task_type=entity_recognition', p: '../prototype/pages/annotation/annotation-workspace.html?task_id=T007&sample_id=entity-recognition-001&role=annotator&run_type=official_run&task_type=entity_recognition', h: 1500, note: 'Span 選取高亮、entity 色點。' },
+        { no: 'V21', name: '關係抽取 relation_identification', qs: '?task_id=T008&sample_id=rel-001&…&task_type=relation_identification', p: '../prototype/pages/annotation/annotation-workspace.html?task_id=T008&sample_id=rel-001&role=annotator&run_type=official_run&task_type=relation_identification', h: 1500, note: '實體對關係連結 UI。' },
+        { no: 'V22', name: '自由文字 free_text', qs: '?task_id=T009&sample_id=sum-001&…&task_type=free_text', p: '../prototype/pages/annotation/annotation-workspace.html?task_id=T009&sample_id=sum-001&role=annotator&run_type=official_run&task_type=free_text', h: 1400, note: 'Textarea 生成式輸入（摘要）。' },
+        { no: 'V23', name: '組合輸出 ABSA（ER+RI+multi_dim）', qs: '?task_id=T013&sample_id=absa-001&role=annotator&run_type=official_run', p: '../prototype/pages/annotation/annotation-workspace.html?task_id=T013&sample_id=absa-001&role=annotator&run_type=official_run', h: 1700, note: 'ADR-029 多輸出組合：整合面板。' },
+        { no: 'V24', name: '審查模式 reviewer', qs: '?task_id=T001&sample_id=sent-001&role=reviewer&run_type=official_run&task_type=single_label', p: '../prototype/pages/annotation/annotation-workspace.html?task_id=T001&sample_id=sent-001&role=reviewer&run_type=official_run&task_type=single_label', h: 1500, note: 'Approve/Reject mini buttons（語意 token active 態）、annotator 答案 diff。' },
+      ]},
+      { title: '資料集分析詳情 · 型態 × Tab', file: 'dataset/dataset-analysis-detail.html', desc: '?task_id 決定輸出型態組合（TASK_META），?tab=stats|quality 切換統計總覽／品質監控 partial。', views: [
+        { no: 'V25', name: 'single_label 統計', qs: '?task_id=T001&tab=stats', p: '../prototype/pages/dataset/dataset-analysis-detail.html?task_id=T001&tab=stats', h: 1700, note: '標籤分佈統計卡。' },
+        { no: 'V26', name: 'multi_label 統計', qs: '?task_id=T002&tab=stats', p: '../prototype/pages/dataset/dataset-analysis-detail.html?task_id=T002&tab=stats', h: 1700, note: '多標籤共現統計。' },
+        { no: 'V27', name: 'single_dim 統計', qs: '?task_id=T004&tab=stats', p: '../prototype/pages/dataset/dataset-analysis-detail.html?task_id=T004&tab=stats', h: 1700, note: '分數分佈直方。' },
+        { no: 'V28', name: 'multi_dim 統計', qs: '?task_id=T005&tab=stats', p: '../prototype/pages/dataset/dataset-analysis-detail.html?task_id=T005&tab=stats', h: 1700, note: '各維度分佈。' },
+        { no: 'V29', name: 'sequence_tagging 統計', qs: '?task_id=T006&tab=stats', p: '../prototype/pages/dataset/dataset-analysis-detail.html?task_id=T006&tab=stats', h: 1700, note: 'Tag 分佈、token 統計。' },
+        { no: 'V30', name: 'entity_recognition 統計', qs: '?task_id=T007&tab=stats', p: '../prototype/pages/dataset/dataset-analysis-detail.html?task_id=T007&tab=stats', h: 1700, note: 'Entity 型別統計 + Color Dot。' },
+        { no: 'V31', name: 'relation_identification 統計（IAA 未通過）', qs: '?task_id=T008&tab=stats', p: '../prototype/pages/dataset/dataset-analysis-detail.html?task_id=T008&tab=stats', h: 1700, note: 'IAA fail 狀態：Status Dot（紅）。' },
+        { no: 'V32', name: 'free_text 統計', qs: '?task_id=T009&tab=stats', p: '../prototype/pages/dataset/dataset-analysis-detail.html?task_id=T009&tab=stats', h: 1700, note: '長度分佈等文字統計。' },
+        { no: 'V33', name: '品質監控 quality（single_label）', qs: '?task_id=T001&tab=quality', p: '../prototype/pages/dataset/dataset-analysis-detail.html?task_id=T001&tab=quality', h: 1700, note: 'IAA 門檻 Status Dot、Cause Tag 品質風險原因。' },
+        { no: 'V34', name: '品質監控 quality（組合輸出 T013）', qs: '?task_id=T013&tab=quality', p: '../prototype/pages/dataset/dataset-analysis-detail.html?task_id=T013&tab=quality', h: 1700, note: 'ER+RI+multi_dim 三輸出品質分區。' },
+        { no: 'V35', name: '空狀態 empty', qs: '?task_id=T001&tab=stats&s_state=empty', p: '../prototype/pages/dataset/dataset-analysis-detail.html?task_id=T001&tab=stats&s_state=empty', h: 1100, note: 'Empty state：前往任務詳情 CTA。' },
+      ]},
+    ];
+    const viewGroups = VG.map(g => ({
+      ...g,
+      views: g.views.map(v => ({
+        ...v,
+        src: v.p,
+        boxW: Math.round(1440 * zoom),
+        boxH: Math.round(v.h * zoom),
+      })),
+    }));
+
+    return { darken: dark, lighten: light, zoom, showDark, colorGroups, spacings, libGroups, screens, matrix, viewGroups };
   }
 }
 </script>
