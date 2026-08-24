@@ -160,14 +160,12 @@ test.describe('Right column: 說明與檔案 / 歷程 tabs', () => {
 
     await expect(page.locator('.guideline-summary-title svg')).toBeVisible();
 
+    // issue #185: the dead-link PDF entry was removed, so only the
+    // generic-example image and the FAQ markdown remain.
     const items = page.getByTestId('ws-guideline-file-item');
-    await expect(items).toHaveCount(3);
+    await expect(items).toHaveCount(2);
 
-    const pdfRow = items.filter({ hasText: '標記指引.pdf' });
-    await expect(pdfRow.locator('.guideline-file-icon.pdf svg')).toBeVisible();
-    await expect(pdfRow.locator('.guideline-file-action')).toHaveText('新分頁');
-
-    const imgRow = items.filter({ hasText: '標記範例圖.png' });
+    const imgRow = items.filter({ hasText: '通用範例圖.svg' });
     await expect(imgRow.locator('.guideline-file-icon.img svg')).toBeVisible();
     await expect(imgRow.locator('.guideline-file-action')).toHaveText('預覽');
 
@@ -182,5 +180,48 @@ test.describe('Right column: 說明與檔案 / 歷程 tabs', () => {
 
     await expect(page.getByTestId('ws-guideline-tab-guideline')).toBeVisible();
     await expect(page.getByTestId('ws-guideline-tab-history')).toBeVisible();
+  });
+});
+
+/* Issue #185: DEFAULT_GUIDELINE_FILES (task-detail.data.js) previously
+ * attached the same VA_emj.png (a valence/arousal emotion-scale image) plus
+ * a PDF pointing at a directory that doesn't exist (assets/guidelines/) to
+ * all 17 illustrative task profiles, regardless of task category. Non-VA
+ * annotators (NER, summarization, QA, ...) saw an unrelated emotion scale,
+ * and the "force reading" guideline flow linked to a 404. */
+test.describe('Issue #185: guideline attachment content', () => {
+  test('every guideline file referenced by any task profile resolves with 200 (no dead links)', async ({ page }) => {
+    await gotoT001(page);
+
+    const urls: string[] = await page.evaluate(() => {
+      const profiles = (window as unknown as {
+        LabelSuiteTaskDetailData: { profiles: Record<string, { guidelineFiles?: { url?: string }[] }> };
+      }).LabelSuiteTaskDetailData.profiles;
+      const found = new Set<string>();
+      Object.keys(profiles).forEach((taskId) => {
+        (profiles[taskId].guidelineFiles || []).forEach((file) => {
+          if (file.url) found.add(new URL(file.url, window.location.href).href);
+        });
+      });
+      return Array.from(found);
+    });
+
+    expect(urls.length).toBeGreaterThan(0);
+    for (const url of urls) {
+      const response = await page.request.get(url);
+      expect(response.ok(), `guideline file should resolve with 200: ${url}`).toBeTruthy();
+    }
+  });
+
+  test('a non-VA task (T004, readability regression) shows its example image labeled as a generic placeholder, not an unlabeled VA scale', async ({ page }) => {
+    await page.goto(buildWorkspaceUrl({ task_id: 'T004', sample_id: 'read-001' }));
+    await dismissGuidelineModal(page);
+
+    const items = page.getByTestId('ws-guideline-file-item');
+    const imgRow = items.filter({ hasText: '通用範例圖.svg' });
+    await expect(imgRow).toBeVisible();
+
+    // The old shared asset, VA_emj.png, must not appear on a non-VA task.
+    await expect(items.filter({ hasText: 'VA_emj.png' })).toHaveCount(0);
   });
 });

@@ -1,7 +1,7 @@
 ---
 功能分支: docs/211-disabled-annotator-rule
 建立日期: 2026-04-20
-版本: 2.10.2
+版本: 2.10.3
 狀態: Draft
 ---
 
@@ -726,6 +726,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.10.3 | 2026-08-24 | **修正：13 個示範任務共用同一組誤導性指引附件（issue #185，issue-180 finding F-02）**：`DEFAULT_GUIDELINE_FILES`（`task-detail.data.js`）原對所有 17 個 seed profile 附加同一張 VA 情緒量表示意圖（`VA_emj.png`）＋一份指向不存在目錄的 PDF（`assets/guidelines/annotation-guideline.pdf`），對 NER／摘要／QA 等非 VA 任務的標記員造成誤導，且 PDF 於「強制閱讀」流程中為死連結。改為：(1) 圖片項目換成明確標示「通用範例圖」的占位圖（新增 `assets/images/task-management/generic-guideline-example.svg`），維持所有任務共用同一份 config-driven 檔案清單（不逐任務類型硬編，符合 Generalization-First 與 annotation-015 `TaskProfile.guidelineFiles` 條文）；(2) 移除死連結 PDF 項目（不虛構假檔案）。規格條文未變（`guidelineFiles` 資料形狀不變）。新增回歸測試：逐 profile 檔案存在性 assertion（每個 `guidelineFiles[].url` 皆需 200 回應）＋非 VA 任務範例圖標示斷言。 |
 | 2.10.2 | 2026-08-24 | **抽樣摘要區小樣本 IAA 忠告文案（issue #207，patch，措辭層級）**：013／014／015／017 全文皆無「建議最低試標抽樣筆數」的統計有效性門檻，僅有表單合法值下限 `sampling_value >= 1`（FR-010d／FR-010q），PL 設定極小抽樣（如 n=2）時 IAA 指標方差過大、不具統計推論意義卻無任何提示。新增 **FR-010o-2**：Overview「抽樣設定」唯讀摘要區塊於 `sampling_value < IAA_SMALL_SAMPLE_THRESHOLD`（沿用 `dataset-017` 規格常數、現行值 5）時，緊鄰 `sampling_value` 顯示雙語忠告文案（zh／en 兩語系皆定義），唯讀提示、不阻擋任何操作，不改變 `sampling_value` 既有驗證下限或任何 IAA 計算邏輯。**純措辭層級新增，非新功能**；prototype 端呈現屬後續獨立實作 PR 範圍（spec-first）。 |
 | 2.10.1 | 2026-08-23 | **修正：annotation-results 面板與匯出對未知任務靜默回退 T001 seed**（issue #284，issue-180 finding N-05）：`getAnnotationResultsData()` 對 `ANNOTATION_RESULTS_BY_TASK` 查無的 `task_id`（如 T014–T017 或 journey 動態任務）原本回退 T001 的 seed 結果——面板與 JSON／JSON-MIN 匯出顯示**別的任務的資料**。改為回傳空集合：面板顯示既有 `arEmptyState` 空狀態（Tab D 空狀態條文本即如此要求），匯出 `items` 為空陣列（manifest 與 `applied_filters` 照常）；T009／T012 原依賴 fallback 取得分類 seed，改為明確登錄。**規格條文未變**（空狀態行為本為 Tab D 既有規範，僅修正實作偏離）；journey 即時資料仍不入面板（既有 gap，xrole 正典旅程 XROLE-19/22 斷言同步改為誠實空狀態）。新增回歸測試 `issue-284-annotation-results-fallback.spec.ts`（面板空狀態＋兩種匯出零筆且不含 T001 內容）。 |
 | 2.10.0 | 2026-08-19 | **停用標記員之已指派樣本處置（issue #211，minor）**：停用 `annotator` 成員時，已提交標記全數保留（繼續計入歷史統計與 IAA，既有 review unit 不受影響）；未提交（含草稿）之已指派作業退回未指派池，依 FR-005g 重新指派或 FR-005h 排除（比照 FR-005j 審核員 `pending` 退回規則）；停用期間不得受派亦不得提交；重新啟用僅恢復可被指派資格，不自動取回先前退回作業；停用操作不受 FR-010t 阻擋，但致 active 標記員 `< min_annotators` 時二次確認 modal 需加註後續發布將被阻擋的警告。新增 FR-005l、SC-040、使用者故事 1 驗收情境 7 |

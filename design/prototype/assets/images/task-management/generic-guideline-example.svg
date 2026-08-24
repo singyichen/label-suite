@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 320" role="img" aria-label="通用範例圖 Generic Example placeholder, not task-specific">
+  <rect width="480" height="320" rx="12" fill="#EEF2FF"/>
+  <rect x="16" y="16" width="448" height="288" rx="8" fill="none" stroke="#6366F1" stroke-width="2" stroke-dasharray="8 6"/>
+  <rect x="200" y="110" width="80" height="64" rx="6" fill="#C7D2FE"/>
+  <path d="M200 174 l24 -32 l16 20 l16 -14 l24 26 z" fill="#818CF8"/>
+  <circle cx="222" cy="128" r="8" fill="#EEF2FF"/>
+  <text x="240" y="220" text-anchor="middle" font-family="'Noto Sans TC','Segoe UI',sans-serif" font-size="22" font-weight="700" fill="#4338CA">通用範例圖</text>
+  <text x="240" y="248" text-anchor="middle" font-family="'Segoe UI',sans-serif" font-size="14" fill="#6366F1">GENERIC EXAMPLE — not task-specific</text>
+</svg>
