@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-list-output-types
 建立日期: 2026-04-20
-版本: 6.9.1
+版本: 6.9.2
 狀態: Draft
 ---
 
@@ -769,6 +769,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 6.9.2 | 2026-08-24 | **修正 prototype 送出未落地（patch，issue #285）**：`task-new.html` 的 `submitTask()` 先前只產生 `task_id` 並導頁，未寫入任何 prototype 資料層，導致 FR-006a／SC-002 描述的「建立成功即有 membership／任務清單資料」在 prototype 端無法示範（新任務清單看不到、task-detail 落 not-found）。修正後 `submitTask()` 將精靈已收集的欄位（名稱、taxonomy 選擇、`outputs[]`、`fieldRoleMap`、2 筆資料集預覽列）寫入 `labelsuite.createdTasks` localStorage bucket；`task-list.data.js`／`task-detail.data.js` 於載入時合併該 bucket 進 `window.LabelSuiteTaskListData.tasks`／`window.LabelSuiteTaskDetailData.profiles`，使建立的任務以 `draft` 狀態出現在任務清單並可從 task-detail 開啟。FR-006a／FR-008a／SC-002／SC-005 描述的「正式後端」行為不變，本次僅修正 prototype 端過去從未真正示範到的落地缺口；不影響 011（列表）/014（詳情）既有 seed 資料契約。 |
 | 6.9.1 | 2026-08-12 | **IAA 策略 v2 — generation 分類不再顯示建議 IAA（patch）**：`SAMPLING_DEFAULTS_BY_CATEGORY` 表格 `generation` 列「建議 IAA」欄由 `0.70` 改為「不適用（free_text 由審核員評估，不計自動 IAA）」，對齊 `dataset-017` v2.0.0 `free_text` 排除自動 IAA 的規則；`試標比例參數` 與其餘欄位不變，不新增 UI 或 FR。**（同版本內修訂，speckit.analyze）**：依 spec-template v1.6.0 移除過時 meta 區塊（輸入與生成規則樣板、審查與驗收清單、執行狀態），「已釐清事項」升為頂層章節 |
 | 6.9.0 | 2026-07-31 | **項目對名稱設定**：輸入類型為 `item_pair` 時，Step 2 標記設定於手風琴清單上方新增不可收合的「項目對名稱」設定卡，兩個單行文字欄位預設帶入 Step 1 兩個 Input 欄位的原始欄位名稱並開放編輯；標記預覽配對區塊小標即時顯示生效值，欄位清空時該側回退原始欄位名稱，更換資料集或角色指定時重新初始化。unified config 於 `item_pair` 輸入時新增頂層 `item_pair_labels: [string, string]` 並於 Code 儲存回填時驗證；014 經共用引擎同步生效並於儲存時持久化。新增 FR-003k 與驗收情境 32，更新 FR-003g-3、介面定義與 Prototype Playwright 斷言；`single_item` 與傳統 `sentence_pairs` 路徑不受影響。 |
 | 6.8.0 | 2026-07-31 | **序列標註預覽移除輸出卡片標題**：`sequence_tagging` 於 `OUTPUT_TYPE_REGISTRY` 宣告 `hidePreviewTitle: true`，Step 2 標記預覽不再顯示輸出卡片的「序列標註」標題（含多輸出組合的獨立卡片路徑），預覽直接以「原始文本」區塊起始；014 Overview「標記設定」編輯模式經共用引擎同步生效。其他輸出類型卡片標題與多輸出組合之間的分隔線行為不變；更新驗收情境 10、FR-003d-1 與 Prototype Playwright 斷言。 |
