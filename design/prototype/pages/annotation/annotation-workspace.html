@@ -813,6 +813,7 @@
 
 <div id="sharedSidebarMount"></div>
 <script src="../shared/sidebar.js"></script>
+<script src="../shared/modal-focus.js"></script>
 <script>
   var annotationListHref = '../annotation/annotation-list.html' + window.location.search;
   window.LabelSuiteSharedSidebar.mountSidebar({
@@ -853,7 +854,7 @@
   </div>
 </div>
 
-<div class="workspace-root" id="wsRoot" data-testid="ws-root">
+<div class="workspace-root" id="wsRoot" data-testid="ws-root" tabindex="-1">
   <div class="workspace-body" id="workspaceBody">
     <button class="guideline-collapse-btn" type="button" id="wsGuidelineCollapseBtn" data-testid="ws-guideline-collapse-btn" aria-label="收合說明區" aria-expanded="true">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>

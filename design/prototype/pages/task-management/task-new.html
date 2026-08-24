@@ -1394,6 +1394,49 @@ function redirectToTaskDetail(taskId) {
   window.location.assign(detailUrl.toString());
 }
 
+/* ── Persist wizard result (issue #285) ─────────────────────────
+   submitTask() used to only generate an id and redirect -- it never wrote
+   the wizard's result anywhere, so the created task never appeared in the
+   task list and task-detail.html's resetTaskData() fell into
+   TASK_NOT_FOUND for the id it had just generated. Mirrors the
+   localStorage-bucket convention in annotation-workspace.data.js: task-list
+   .data.js / task-detail.data.js (the "same layer" the seeds already live
+   in) read this bucket at load time and merge it into
+   window.LabelSuiteTaskListData.tasks / window.LabelSuiteTaskDetailData
+   .profiles. This key is mirrored (not shared via import) in those two
+   files, matching this repo's existing cross-file constant convention. */
+var CREATED_TASKS_KEY = 'labelsuite.createdTasks';
+
+function persistCreatedTask(taskId) {
+  try {
+    var raw = localStorage.getItem(CREATED_TASKS_KEY);
+    var created = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(created)) created = [];
+    created.push({
+      id: taskId,
+      nameZh: state.taskName,
+      nameEn: state.taskName,
+      sourceFile: (state.datasetFiles[0] && state.datasetFiles[0].name) || '',
+      outputTypes: state.selectedOutputTypes.slice(),
+      runType: 'official_run',
+      status: 'draft',
+      updatedAt: new Date().toISOString().slice(0, 10),
+      canViewDetail: true,
+      isMine: true,
+      deletedAt: '',
+      taskCategories: state.taskCategories.slice(),
+      taskInputTypes: state.taskInputTypes.slice(),
+      outputs: state.selectedOutputTypes.map(function(outKey) {
+        return { type: outKey, config: state.outputConfigs[outKey] || {} };
+      }),
+      fieldRoleMap: Object.assign({}, state.fieldRoleMap),
+      datasetFileName: (state.datasetFiles[0] && state.datasetFiles[0].name) || '',
+      datasetRecords: state.datasetPreviewRawRows.slice()
+    });
+    localStorage.setItem(CREATED_TASKS_KEY, JSON.stringify(created));
+  } catch (e) { /* quota exceeded or private mode */ }
+}
+
 /* ── Submit ──────────────────────────────────────────────────── */
 function submitTask() {
   if (state.isSubmitting) return;
@@ -1404,6 +1447,7 @@ function submitTask() {
   track('prototype_cta_clicked', { cta: 'create_task', taskType: state.taskType });
   setTimeout(function() {
     var createdTaskId = generateCreatedTaskId();
+    persistCreatedTask(createdTaskId);
     state.isSubmitting = false;
     state.isDirty = false;
     clearWizardState();
