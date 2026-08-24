@@ -315,8 +315,53 @@
       }
     }
 
+    /* ── Skeleton (FR-018) ────────────────────────────────────── */
+    .dashboard-skeleton {
+      display: grid;
+      gap: var(--space-lg);
+    }
+
+    .skeleton {
+      background: linear-gradient(90deg, #E2E8F0 25%, #F1F5F9 50%, #E2E8F0 75%);
+      background-size: 200% 100%;
+      animation: dashboard-skeleton-shimmer 1.5s infinite;
+      border-radius: var(--radius-md);
+    }
+
+    @keyframes dashboard-skeleton-shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .skel-line   { height: 12px; }
+    .skel-metric { height: 52px; }
+    .skel-row    { height: 48px; }
+
+    /* ── Error state (FR-019) ─────────────────────────────────── */
+    .dashboard-error-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: var(--space-sm);
+      padding: var(--space-2xl) var(--space-lg);
+      border-radius: var(--radius-lg);
+      background: var(--color-white);
+      border: 1px solid var(--color-border);
+    }
+
+    .error-state-icon { color: var(--color-error); }
+    .error-state-title { font-size: 1rem; font-weight: 700; margin: 0; }
+    .error-state-desc { font-size: 13px; color: var(--color-ink-muted); margin: 0 0 var(--space-sm); }
+
     /* ── Dark mode overrides ──────────────────────────────────── */
     html[data-theme="dark"] {
+      /* .dashboard-error-state uses --color-white/--color-border, which
+         tokens.css already redefines for dark mode; only the skeleton
+         shimmer's hardcoded gradient stops need an explicit override. */
+      .skeleton {
+        background: linear-gradient(90deg, #1F1F28 25%, #2A2A35 50%, #1F1F28 75%);
+      }
       /* CTA role buttons — dark text on bright bg for contrast */
       .btn-emerald {
         color: #064E3B;

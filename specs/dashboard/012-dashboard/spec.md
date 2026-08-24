@@ -1,7 +1,7 @@
 ---
 功能分支: feat/dashboard-output-types
 建立日期: 2026-04-05
-版本: 2.4.0
+版本: 2.4.1
 狀態: In Progress
 ---
 
@@ -539,6 +539,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.4.1 | 2026-08-24 | Issue #261 drift 修正（FR-018／FR-019、SC-017／SC-018）：dashboard.html 先前完全未實作 Skeleton 與 API 錯誤／重試狀態，`task_membership` 一律同步渲染。新增 `task_membership` 模擬非同步載入（原型無後端，`MEMBERSHIP_LOAD_DELAY_MS = 400`）：載入中顯示 Skeleton（指標卡與任務列表佔位塊，對應最常見的有任務角色版面，`aria-busy="true"`）；失敗時結束 Skeleton、顯示 i18n 錯誤訊息與重試按鈕，不 fallback 至一般使用者視圖、不清除 session、不導向 `/login`；點擊重試即恢復（比照 `task-list.html` 既有重試慣例：重試視為必定成功，示範復原路徑而非重跑同一失敗）。測試沿用 `task-list.html` 既有的 `?view=error` 慣例，另新增 `?view=skeleton` 使 Skeleton 永久停留以利決定性測試（非正式產品 query，僅原型測試 hook）。新增回歸測試 `dashboard-membership-load.spec.ts`（5 案例，含驗證 `?view=skeleton` 確實超過模擬延遲仍不消失，排除誤判為競態僥倖通過）；連帶修正既有 `renders without horizontal overflow` 測試——原本以恆常可見的 `dashboard-shell` 作為就緒訊號，實際上會量測 Skeleton 版面而非最終內容版面，改為等待 `#contentGrid` 可見。`tests/dashboard/`（65）、`tests/shared/page-heading-baseline.spec.ts`、`tests/cross-role/xrole-language-inheritance.spec.ts` 全數通過，`tsc --noEmit` 乾淨。規格條文本已正確（v1.3.30／v1.3.32 已定義 FR-018／FR-019），僅原型未落實。 |
 | 2.4.0 | 2026-08-24 | **FR-010D／FR-011F：Annotator／Reviewer 任務列表新增依進度排序控制**（issue #187，Finding F-04）：兩視圖任務列表新增排序下拉（預設順序／進度：高到低／進度：低到高），複用既有 `progress` 數值欄位（reviewer 示範任務列的「審核覆蓋率」共用同一欄位語意，見 FR-011E）；排序不影響既有卡片欄位、CTA 與導頁行為；語言切換即時更新控制標籤與選項文案（新增 SC-026）。範圍說明：(1) 目前 `dashboard.assignments.js` 未提供「最後提交時間」或「待審筆數」的獨立數值欄位，故本版不新增此二排序鍵，避免發明未經授權的資料欄位；(2) 「清單呈現使用者實際被指派子集」同樣受限於現有資料模型——`assignments` 陣列為每任務單一 annotator／reviewer work item（非逐使用者指派），Annotator／Reviewer 清單維持現況顯示全部 17 筆 prototype 基線任務，未新增個人化篩選，詳見 PR 說明。 |
 | 2.3.1 | 2026-08-21 | **Prototype 合規修正（issue #311，無新增 FR）**：(1) Annotator／Reviewer 任務卡互動列補上 `role="button"`、`tabindex="0"`、`aria-label`（任務標題）與 Enter/Space 鍵盤觸發（與列點擊同導頁路徑，沿用 issue #186 FR-008F 指標卡鍵盤模式；內層快速操作按鈕的 keydown 不受列攔截）；(2) 列點擊導頁 URL 恢復 FR-010B1／FR-011B1 要求的 `task_type` 參數——2026-08-10 的 4-param 遷移 commit（eff1938）移除了 `annotationTaskType` 獨立欄位與 URL 參數但未同步本 spec；本次恢復 dashboard.assignments.js 的逐任務 `annotationTaskType` compatibility seed（T001–T013 依 eff1938 前原值、T014–T017 示範任務比照 T001 為 `single_sentence_classification`），值不得由 `outputs[]` 推導；`annotation-list` 依 `task_id` 解析任務、忽略並保留該參數。v2.0.2 所述 legacy `labelsuite.activeTaskType` localStorage 寫入路徑同於 eff1938 移除，本次不恢復（issue #311 範圍僅列點擊 URL）。 |
 | 2.3.0 | 2026-08-21 | **FR-011E：示範任務 reviewer 審查摘要改用審核覆蓋率語意**（issue #310，Codex [High]／T016 U7 驗收缺陷）：T014–T017 示範列的審查摘要百分比由「進度」改標示為「審核覆蓋率」（en `Review Coverage`，語意＝已離開本人待審狀態之審核單位佔比）；T016 因待審 0 但仍有 3 筆未定稿（approved 1／modified 1／disputed 1，ofm-05 1/1/1 全歧仲裁中），摘要改為「審核覆蓋率 100% · 未定稿 3 筆 · 爭議 1 筆」以避免「待審 0 · 進度 100%」的任務完結誤讀；數字維持靜態 seed 並與 boot seeder 審核狀態矩陣一致。僅適用示範任務列，T001–T013 一般列摘要語意不變。 |
