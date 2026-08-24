@@ -2996,17 +2996,24 @@
      data, not sample-level -- this is what makes AC-5.1 ("切換下一筆，右
      欄說明不收起且內容不重置") and AC-5.2 ("切換下一筆，抽屜維持目前開合
      狀態") hold for free: nothing here ever re-runs on sample switch. */
-  function openGuidelineImageModal(src, altText) {
+  function openGuidelineImageModal(src, altText, triggerEl) {
     var modal = document.getElementById('wsGuidelineImageModal');
     var image = document.getElementById('wsGuidelineImageModalPreview');
     if (!modal || !image) return;
     image.src = src;
     image.alt = altText || '';
     modal.classList.remove('hidden');
+    if (window.LabelSuiteModalFocus) {
+      window.LabelSuiteModalFocus.open(modal, {
+        trigger: triggerEl || document.activeElement,
+        onClose: closeGuidelineImageModal
+      });
+    }
   }
   function closeGuidelineImageModal() {
     var modal = document.getElementById('wsGuidelineImageModal');
     if (modal) modal.classList.add('hidden');
+    if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(modal);
   }
   function showGuidelineMarkdownPreview(content) {
     var preview = document.getElementById('wsGuidelineMdPreview');
@@ -3048,7 +3055,7 @@
         if (file.type === 'pdf') {
           window.open(file.url, '_blank');
         } else if (file.type === 'image') {
-          openGuidelineImageModal(file.url, file.name);
+          openGuidelineImageModal(file.url, file.name, item);
         } else if (file.type === 'markdown') {
           showGuidelineMarkdownPreview(file.content);
         }
@@ -3070,9 +3077,8 @@
         if (e.target === modal) closeGuidelineImageModal();
       });
     }
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') closeGuidelineImageModal();
-    });
+    /* Escape-to-close is now handled by the LabelSuiteModalFocus trap
+       registered in openGuidelineImageModal() (issue #195). */
   }
   function setupGuidelineCollapse() {
     var btn = document.getElementById('wsGuidelineCollapseBtn');
@@ -3186,8 +3192,21 @@
     } catch (e) {
       /* treat blocked storage as not-seen: showing the modal again is safe */
     }
+    function hideGuidelineModal() {
+      modal.classList.add('hidden');
+      if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(modal);
+    }
     if (!seen) {
       modal.classList.remove('hidden');
+      if (window.LabelSuiteModalFocus) {
+        /* No user click triggers this modal (shown automatically on first
+           visit), so focus returns to the workspace root landmark on close
+           rather than to a trigger element. */
+        window.LabelSuiteModalFocus.open(modal, {
+          trigger: document.getElementById('wsRoot'),
+          onClose: hideGuidelineModal
+        });
+      }
     } else {
       modal.classList.add('hidden');
     }
@@ -3197,7 +3216,7 @@
       } catch (e) {
         /* ignore quota/serialization errors in the prototype */
       }
-      modal.classList.add('hidden');
+      hideGuidelineModal();
     });
   }
 

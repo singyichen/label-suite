@@ -1206,12 +1206,25 @@
    * TaskProfile carries a generic, task-agnostic file list -- the
    * annotation workspace's right-column panel renders these purely by
    * `type` (pdf/image/markdown), never by task_id or task category
-   * (Generalization-First). One shared demo file set covers all 17 seed
-   * profiles; the only real binary asset shipped with the prototype is
-   * reused for every image entry. */
+   * (Generalization-First; annotation-015 spec's TaskProfile entity
+   * explicitly forbids per-task-type hardcoded file lists here). One
+   * shared demo file set covers all 17 seed profiles.
+   *
+   * issue #185: the image entry used to be VA_emj.png (a valence/arousal
+   * emotion-scale image), which reads as task-specific and misleads
+   * annotators on the other 16 non-VA profiles; it is now a generic
+   * placeholder explicitly labeled "通用範例圖" (generic example) instead
+   * of fabricating per-category example images, which would need either
+   * 13 bespoke assets or per-task-type branching that the entity above
+   * disallows. The PDF entry pointed at assets/guidelines/, a directory
+   * that doesn't exist in this prototype, so it was a dead link inside the
+   * "force reading" guideline flow -- removed rather than fabricated. */
   var DEFAULT_GUIDELINE_FILES = [
-    { name: '標記範例圖.png', type: 'image', url: '../../assets/images/task-management/VA_emj.png' },
-    { name: '標記指引.pdf', type: 'pdf', url: '../../assets/guidelines/annotation-guideline.pdf' },
+    {
+      name: '通用範例圖.svg',
+      type: 'image',
+      url: '../../assets/images/task-management/generic-guideline-example.svg'
+    },
     {
       name: '常見問題.md',
       type: 'markdown',
@@ -1220,6 +1233,36 @@
   ];
   Object.keys(profiles).forEach(function (taskId) {
     profiles[taskId].guidelineFiles = DEFAULT_GUIDELINE_FILES;
+  });
+
+  /* Wizard-created tasks (issue #285): merge the same localStorage bucket
+   * task-list.data.js reads, so resetTaskData() (task-detail.html:4303)
+   * can resolve a profile for the id task-new.html just created instead of
+   * falling into TASK_NOT_FOUND. Key is mirrored from task-new.html's
+   * CREATED_TASKS_KEY / task-list.data.js's loadCreatedTasks() (cross-file
+   * constant convention already used for DRY_RUN_PROGRESS_KEY). */
+  var CREATED_TASKS_KEY = 'labelsuite.createdTasks';
+
+  function loadCreatedTasks() {
+    try {
+      var raw = global.localStorage ? global.localStorage.getItem(CREATED_TASKS_KEY) : null;
+      var created = raw ? JSON.parse(raw) : [];
+      return Array.isArray(created) ? created : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  loadCreatedTasks().forEach(function (created) {
+    profiles[created.id] = {
+      taskCategories: created.taskCategories || [],
+      taskInputTypes: created.taskInputTypes || [],
+      outputs: created.outputs || [],
+      fieldRoleMap: created.fieldRoleMap || {},
+      datasetFileName: created.datasetFileName || '',
+      datasetRecords: created.datasetRecords || [],
+      guidelineFiles: DEFAULT_GUIDELINE_FILES
+    };
   });
 
   global.LabelSuiteTaskDetailData = {

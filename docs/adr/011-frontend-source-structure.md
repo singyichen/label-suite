@@ -2,6 +2,7 @@
 
 **Status**: Accepted
 **Date**: 2026-04-03
+**Superseded in part by**: [ADR-034](034-formal-e2e-directory-location.md) — the *Playwright Test Structure* section's root directory moves from `frontend/tests/` to root `e2e/[module]/`. The `frontend/src/` vertical feature slicing that is this ADR's actual decision is unchanged.
 
 ## Context
 
@@ -415,6 +416,8 @@ Each widget file is lazy-imported so only the widget for the active task type is
 ---
 
 ### Playwright Test Structure
+
+> **Superseded in part by [ADR-034](034-formal-e2e-directory-location.md)**: formal E2E tests live in root `e2e/[module]/`, not `frontend/tests/`. The journey-based organisation, the tree's module grouping, and the role fixture table below all carry over unchanged — only the root directory moves. `frontend/` retains its co-located Vitest component tests (ADR-012).
 
 E2E tests live in `frontend/tests/` organized by **user journey**, not by page or feature. A single user journey typically spans multiple features:
 
