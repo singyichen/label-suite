@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-list-output-types
 建立日期: 2026-04-20
-版本: 6.9.1
+版本: 6.9.2
 狀態: Draft
 ---
 
@@ -769,6 +769,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 6.9.2 | 2026-08-24 | **issue #197 追蹤 — 精靈離頁保護回歸測試補齊（patch，無條文變更）**：issue #197（w6-resilience-a11y CONT-05）回報精靈重新整理即遺失進度、無離頁提示，經查該行為已由 v3.3.1（session storage 精靈狀態持久化）與既有 FR-007a（未儲存變更離頁前確認視窗）於 2026-07-09 落地，findings 早於本次 issue 建立（審計快照落後於實作），非回歸。本版僅新增 Prototype Playwright 回歸測試（`task-new-wizard-draft-warning.spec.ts`：dirty 時 `beforeunload` 觸發、clean 時不觸發、reload 後草稿還原），FR-007a 與 v3.3.1 條文不變；評估精靈草稿改採 `localStorage`（跨分頁持久化）之成本效益後維持現行 `sessionStorage` 方案（沿用 v3.3.1 決策）：`sessionStorage` 天然以分頁為界，避免多分頁同時編輯精靈互相覆寫，亦避免草稿（含資料集預覽片段）於共用實驗室電腦上無限期殘留；`beforeunload` 已涵蓋關閉分頁情境的離頁提示，`localStorage` 額外可承受的僅為瀏覽器崩潰情境，成本（跨分頁衝突與資料殘留風險）大於效益，故不採用。 |
 | 6.9.1 | 2026-08-12 | **IAA 策略 v2 — generation 分類不再顯示建議 IAA（patch）**：`SAMPLING_DEFAULTS_BY_CATEGORY` 表格 `generation` 列「建議 IAA」欄由 `0.70` 改為「不適用（free_text 由審核員評估，不計自動 IAA）」，對齊 `dataset-017` v2.0.0 `free_text` 排除自動 IAA 的規則；`試標比例參數` 與其餘欄位不變，不新增 UI 或 FR。**（同版本內修訂，speckit.analyze）**：依 spec-template v1.6.0 移除過時 meta 區塊（輸入與生成規則樣板、審查與驗收清單、執行狀態），「已釐清事項」升為頂層章節 |
 | 6.9.0 | 2026-07-31 | **項目對名稱設定**：輸入類型為 `item_pair` 時，Step 2 標記設定於手風琴清單上方新增不可收合的「項目對名稱」設定卡，兩個單行文字欄位預設帶入 Step 1 兩個 Input 欄位的原始欄位名稱並開放編輯；標記預覽配對區塊小標即時顯示生效值，欄位清空時該側回退原始欄位名稱，更換資料集或角色指定時重新初始化。unified config 於 `item_pair` 輸入時新增頂層 `item_pair_labels: [string, string]` 並於 Code 儲存回填時驗證；014 經共用引擎同步生效並於儲存時持久化。新增 FR-003k 與驗收情境 32，更新 FR-003g-3、介面定義與 Prototype Playwright 斷言；`single_item` 與傳統 `sentence_pairs` 路徑不受影響。 |
 | 6.8.0 | 2026-07-31 | **序列標註預覽移除輸出卡片標題**：`sequence_tagging` 於 `OUTPUT_TYPE_REGISTRY` 宣告 `hidePreviewTitle: true`，Step 2 標記預覽不再顯示輸出卡片的「序列標註」標題（含多輸出組合的獨立卡片路徑），預覽直接以「原始文本」區塊起始；014 Overview「標記設定」編輯模式經共用引擎同步生效。其他輸出類型卡片標題與多輸出組合之間的分隔線行為不變；更新驗收情境 10、FR-003d-1 與 Prototype Playwright 斷言。 |
