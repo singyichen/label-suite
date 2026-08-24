@@ -120,9 +120,12 @@
     return record && record.id != null ? String(record.id) : '';
   }
 
-  function readSubmissionBucket(bucketKey) {
+  /* Generic localStorage-backed JSON object store, factored out so the
+     review-decision-draft store below (issue #196) can reuse the same
+     read/write tolerance as the submission buckets without duplicating it. */
+  function readJsonBucket(fullKey) {
     try {
-      var raw = global.localStorage.getItem(SUBMISSION_KEY_PREFIX + bucketKey);
+      var raw = global.localStorage.getItem(fullKey);
       var parsed = raw ? JSON.parse(raw) : null;
       /* A key holding "null" (or any non-object) must degrade to an empty
          bucket, matching the old store's tolerance, not throw downstream. */
@@ -132,12 +135,20 @@
     }
   }
 
-  function writeSubmissionBucket(bucketKey, bucket) {
+  function writeJsonBucket(fullKey, bucket) {
     try {
-      global.localStorage.setItem(SUBMISSION_KEY_PREFIX + bucketKey, JSON.stringify(bucket));
+      global.localStorage.setItem(fullKey, JSON.stringify(bucket));
     } catch (e) {
       /* ignore quota/serialization errors in the prototype */
     }
+  }
+
+  function readSubmissionBucket(bucketKey) {
+    return readJsonBucket(SUBMISSION_KEY_PREFIX + bucketKey);
+  }
+
+  function writeSubmissionBucket(bucketKey, bucket) {
+    writeJsonBucket(SUBMISSION_KEY_PREFIX + bucketKey, bucket);
   }
 
   /* Bucket keys currently in storage, for the prefix-scanning readers
@@ -445,6 +456,41 @@
       bucket[sampleId] = entry;
     }
     writeSubmissionBucket(key, bucket);
+  }
+
+  /* Reviewer per-row decision drafts (issue #196, CONT-03): approve/reject
+   * choices made before 送出審核 have no home in the submission bucket --
+   * that bucket represents a FINAL saved/submitted answer, and every entry
+   * write there appends a history event (appendHistoryEvent), which would
+   * spam the 歷程 tab with a 'saved' entry on every single row click. A
+   * separate, history-free bucket keyed the same way as the submission
+   * buckets (task/role=reviewer/run/identity) holds just the in-progress
+   * decision map per sample so a reload can restore it before the row
+   * buttons render, without disturbing the review unit's actual status or
+   * audit trail. */
+  var REVIEW_DECISION_DRAFT_KEY_PREFIX = 'labelsuite.wsReviewDecisionDrafts.';
+
+  function reviewDecisionDraftKey(taskId, runType, identity) {
+    return REVIEW_DECISION_DRAFT_KEY_PREFIX + submissionBucketKey(taskId, 'reviewer', runType, identity);
+  }
+
+  function saveReviewRowDecisionDraft(taskId, runType, sampleId, decisions, identity) {
+    var key = reviewDecisionDraftKey(taskId, runType, identity);
+    var bucket = readJsonBucket(key);
+    bucket[sampleId] = decisions;
+    writeJsonBucket(key, bucket);
+  }
+
+  function getReviewRowDecisionDraft(taskId, runType, sampleId, identity) {
+    var bucket = readJsonBucket(reviewDecisionDraftKey(taskId, runType, identity));
+    return bucket[sampleId] || null;
+  }
+
+  function clearReviewRowDecisionDraft(taskId, runType, sampleId, identity) {
+    var key = reviewDecisionDraftKey(taskId, runType, identity);
+    var bucket = readJsonBucket(key);
+    delete bucket[sampleId];
+    writeJsonBucket(key, bucket);
   }
 
   /* Reviewer aggregate review mock data (restores the legacy per-output-type
@@ -1925,6 +1971,9 @@
     markSampleSubmitted: markSampleSubmitted,
     markSampleSaved: markSampleSaved,
     markSampleRejected: markSampleRejected,
+    saveReviewRowDecisionDraft: saveReviewRowDecisionDraft,
+    getReviewRowDecisionDraft: getReviewRowDecisionDraft,
+    clearReviewRowDecisionDraft: clearReviewRowDecisionDraft,
     getSubmission: getSubmission,
     getSampleAnswers: getSampleAnswers,
     getSampleHistory: getSampleHistory,
