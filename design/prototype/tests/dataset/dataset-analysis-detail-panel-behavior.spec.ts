@@ -18,7 +18,7 @@ async function useEnglish(page: Page) {
 
 test.describe('Dataset detail — tabs and breadcrumb structure', () => {
   test('tabs are wired to their panels with aria-controls and tabpanel roles', async ({ page }) => {
-    await page.goto(DETAIL_URL);
+    await page.goto(`${DETAIL_URL}?task_id=T001`);
 
     await expect(page.locator('#tabStats')).toHaveAttribute('aria-controls', 'statsPanel');
     await expect(page.locator('#tabQuality')).toHaveAttribute('aria-controls', 'qualityPanel');
@@ -29,7 +29,7 @@ test.describe('Dataset detail — tabs and breadcrumb structure', () => {
   });
 
   test('breadcrumb renders below the page header (task-detail convention)', async ({ page }) => {
-    await page.goto(DETAIL_URL);
+    await page.goto(`${DETAIL_URL}?task_id=T001`);
 
     const headerFirst = await page.evaluate(() => {
       const breadcrumb = document.querySelector('.breadcrumb');

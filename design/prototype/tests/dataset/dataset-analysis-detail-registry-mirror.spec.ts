@@ -34,8 +34,17 @@ test.describe('Dataset detail — registry mirror coherence', () => {
     await expect(page).toHaveURL(/task_id=T010/);
   });
 
-  test('an unknown id still falls back to the default task', async ({ page }) => {
+  test('an unknown id redirects to the list with an error toast (issue #261 drift, FR-002)', async ({ page }) => {
     await page.goto(`${DETAIL_URL}?task_id=T999`);
-    await expect(page.locator('#bcCurrent')).toHaveText('醫療文本情感分類');
+    await page.waitForURL(/dataset-analysis-list\.html/);
+    await expect(page.locator('#toast')).toHaveClass(/toast-error/);
+    await expect(page.locator('#toast')).toHaveClass(/visible/);
+    await expect(page.locator('#toastMsg')).toHaveText('找不到指定的任務，或您沒有該任務的存取權限。');
+  });
+
+  test('a missing task_id redirects to the list with an error toast (issue #261 drift, FR-002)', async ({ page }) => {
+    await page.goto(DETAIL_URL);
+    await page.waitForURL(/dataset-analysis-list\.html/);
+    await expect(page.locator('#toast')).toHaveClass(/toast-error/);
   });
 });
