@@ -1222,6 +1222,36 @@
     profiles[taskId].guidelineFiles = DEFAULT_GUIDELINE_FILES;
   });
 
+  /* Wizard-created tasks (issue #285): merge the same localStorage bucket
+   * task-list.data.js reads, so resetTaskData() (task-detail.html:4303)
+   * can resolve a profile for the id task-new.html just created instead of
+   * falling into TASK_NOT_FOUND. Key is mirrored from task-new.html's
+   * CREATED_TASKS_KEY / task-list.data.js's loadCreatedTasks() (cross-file
+   * constant convention already used for DRY_RUN_PROGRESS_KEY). */
+  var CREATED_TASKS_KEY = 'labelsuite.createdTasks';
+
+  function loadCreatedTasks() {
+    try {
+      var raw = global.localStorage ? global.localStorage.getItem(CREATED_TASKS_KEY) : null;
+      var created = raw ? JSON.parse(raw) : [];
+      return Array.isArray(created) ? created : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  loadCreatedTasks().forEach(function (created) {
+    profiles[created.id] = {
+      taskCategories: created.taskCategories || [],
+      taskInputTypes: created.taskInputTypes || [],
+      outputs: created.outputs || [],
+      fieldRoleMap: created.fieldRoleMap || {},
+      datasetFileName: created.datasetFileName || '',
+      datasetRecords: created.datasetRecords || [],
+      guidelineFiles: DEFAULT_GUIDELINE_FILES
+    };
+  });
+
   global.LabelSuiteTaskDetailData = {
     profiles: profiles
   };

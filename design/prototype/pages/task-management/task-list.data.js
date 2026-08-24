@@ -296,6 +296,41 @@
     }
   ];
 
+  /* Wizard-created tasks (issue #285): task-new.html's submitTask() writes
+   * the wizard result into this localStorage bucket instead of nowhere, so
+   * merge it into the seed list here -- the created task shows up in the
+   * task list in draft status. Key is mirrored from task-new.html's
+   * CREATED_TASKS_KEY (cross-file constant convention already used for
+   * DRY_RUN_PROGRESS_KEY between annotation-workspace.data.js and
+   * task-detail.html). */
+  var CREATED_TASKS_KEY = 'labelsuite.createdTasks';
+
+  function loadCreatedTasks() {
+    try {
+      var raw = global.localStorage ? global.localStorage.getItem(CREATED_TASKS_KEY) : null;
+      var created = raw ? JSON.parse(raw) : [];
+      return Array.isArray(created) ? created : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  loadCreatedTasks().forEach(function (created) {
+    tasks.push({
+      id: created.id,
+      nameZh: created.nameZh,
+      nameEn: created.nameEn,
+      sourceFile: created.sourceFile,
+      outputTypes: Array.isArray(created.outputTypes) ? created.outputTypes : [],
+      runType: created.runType,
+      status: created.status,
+      updatedAt: created.updatedAt,
+      canViewDetail: created.canViewDetail,
+      isMine: created.isMine,
+      deletedAt: created.deletedAt || ''
+    });
+  });
+
   global.LabelSuiteTaskListData = {
     outputTypes: outputTypes,
     tasks: tasks
