@@ -2,6 +2,7 @@
 
 **Status**: Accepted
 **Date**: 2026-04-03
+**Superseded in part by**: [ADR-034](034-formal-e2e-directory-location.md) — every `frontend/tests/` path in this ADR becomes root `e2e/`, and the fixture `storageState:` literals become `shared/fixtures/.auth/*.json`. The two-layer strategy, the Vitest/RTL component layer, the five role fixtures, the Page Object Model layout, and the E2E coverage matrix rows are all unchanged.
 
 ## Context
 
@@ -26,6 +27,8 @@ Use a **two-layer testing strategy** for the frontend:
 |-------|------|-------|----------|
 | Component / Unit | Vitest + React Testing Library | Individual components, hooks, widget logic, role dispatch | Co-located with source: `*.test.tsx` next to `*.tsx` |
 | E2E (User Journey) | Playwright | Full user journeys across pages and roles | `frontend/tests/` |
+
+> **Superseded in part by [ADR-034](034-formal-e2e-directory-location.md)**: the E2E row's location is now root `e2e/[module]/`. The component row is unchanged.
 
 The two layers have complementary — not overlapping — responsibilities. Do not test pure UI logic in Playwright, and do not test multi-page user journeys in Vitest.
 
@@ -303,6 +306,8 @@ test.each(cases)('role=$role allow=$allow → $permitted', ({ role, allow, permi
 ---
 
 ## E2E Testing (Playwright)
+
+> **Superseded in part by [ADR-034](034-formal-e2e-directory-location.md)**: this whole section relocates to root `e2e/`. Read `frontend/tests/shared/fixtures/` as `e2e/shared/fixtures/`, and each `storageState: 'tests/shared/fixtures/.auth/*.json'` literal as `'shared/fixtures/.auth/*.json'`. The fixture pattern, the five role fixtures, the coverage matrix rows, and every test example below are otherwise unchanged.
 
 ### Playwright Fixture Pattern
 
