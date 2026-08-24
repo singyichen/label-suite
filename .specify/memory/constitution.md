@@ -7,41 +7,32 @@
 > When amending the constitution, always edit `specs/_governance/constitution.md` first,
 > then copy the full content here to keep agents in sync.
 
-<!-- BEGIN CACHE — synced from specs/_governance/constitution.md @ v1.31.0 (2026-06-02) -->
+<!-- BEGIN CACHE — synced from specs/_governance/constitution.md @ v1.31.1 (2026-08-24) -->
 
 <!--
-Sync Impact Report — constitution v1.31.0
-Generated: 2026-06-02
+Sync Impact Report — constitution v1.31.1
+Generated: 2026-08-24
 
-Version change: v1.30.0 → v1.31.0
-Bump type: MINOR — split domain-specific governance into backend, frontend, and testing constitutions while keeping the main constitution focused on project-wide authority
+Version change: v1.31.0 → v1.31.1
+Bump type: PATCH — adopt OpenSpec (ADR-033, issue #294) as the implementation/change workflow layer; update cross-references from retired Spec Kit artifacts/commands to their OpenSpec equivalents without redefining any principle
 
 Changed principles:
-- I. Spec-First Development — keep project-wide SDD rules and move detailed task decomposition rules to testing/backend/frontend constitutions
-- IV. Test-First — keep TDD as a project-wide rule and delegate coverage/tooling details to testing constitution
-- VII. Design Consistency — keep design-system authority and delegate React/runtime details to frontend constitution
-- VIII. Performance Baseline — keep project-wide performance expectations and delegate implementation details to backend/frontend constitutions
-- X. Change Scope Discipline — keep PR scope rules and delegate layer-specific PR guidance to backend/frontend constitutions
-- XVII. CI/CD Quality Gates — keep global merge gate and delegate command details to testing constitution
-- XVIII. Deployment Safety & Rollback — keep rollback requirement and delegate migration detail to backend constitution
-- XX. Code Comment Policy — preserved as project-wide XXI after domain-rule split
-- Former XXI-XXIX domain-specific principles — moved into applicable backend/frontend/testing constitutions where they are loaded by task scope
+- I. Spec-First Development — Goal Declaration sub-rule now targets `spec.md` for `## 功能目標` and an OpenSpec change's `tasks.md`/`design.md` for `**故事目標**`, replacing the retired Spec Kit `plan.md`
 
-New sections:
-- Domain Constitutions
+Changed governance gates:
+- Feature Goal Alignment Gate — now compares the OpenSpec change's stated goal against the spec's `## 功能目標`, checked via `/opsx:verify` (or `openspec validate`) instead of the retired `/speckit.analyze`
+- Compliance Review — now uses `/opsx:verify` (or `openspec validate`) plus the write-back Source-Verify gate instead of `/speckit.analyze`
+- Dependency Governance — notes that global tool installs (e.g. `pnpm add -g`) are exempt from the `npm install` prohibition
 
-Removed sections:
-- None semantically; domain-specific implementation rules now live in `.specify/memory/backend-constitution.md`, `.specify/memory/frontend-constitution.md`, and `.specify/memory/testing-constitution.md`
+New sections: none
+Removed sections: none
 
 Templates sync status:
-- .claude/commands/speckit.plan.md: Updated — load applicable domain constitutions by affected scope
-- .claude/commands/speckit.analyze.md: Updated — include applicable domain constitutions in the ruleset
-- .claude/commands/speckit.constitution.md: Updated — propagate main-constitution amendments through domain constitution sources and memory caches
-- AGENTS.md: Updated — document required domain constitution loading
-- .specify/templates/plan-template.md: Updated — replaced stale XXI/XXII/XXIV/XXVI/XXVIII principle checkboxes with Domain Constitution Loading section, corrected frontend i18n paths to `frontend/src/locales/{zh-TW,en}/`, and bumped to v1.8.1
-- .specify/templates/tasks-template.md: Updated — split T010 into T010a/T010b, split frontend foundation, split backend/user-story PR boundaries, added command-only verification support, switched component tasks to file-level paths, fixed numbering/dependencies, and bumped to v1.14.0
-- .claude/commands/speckit.tasks.md: Updated — allow command-only verification tasks without file paths when exact commands are listed
-- .specify/templates/checklist-template.md: Updated — replaced stale XXI/XXII/XXVIII/XXX principle citations with applicable domain constitution citations and bumped to v1.8.0
+- .specify/memory/constitution.md: Updated — full content sync per Amendment Procedure
+- CLAUDE.md: Updated — SDD pipeline, Pre-PR gate, Modify Existing Feature, Lightweight Path, DoD, Three-Layer Sprint Architecture mapping, Prohibitions exception (same PR, see docs/openspec-adoption-plan.md appendix)
+- specs/_governance/testing-constitution.md + .specify/memory/testing-constitution.md: Updated — `/speckit.analyze` references replaced (same PR)
+- .claude/skills/sdd-workflow/SKILL.md, AGENTS.md, .claude/agents/team-lead.md, .claude/commands/agent-team.md, .claude/templates/claude-progress.md: Updated — retired-stage references replaced (same PR)
+- .specify/templates/plan-template.md, tasks-template.md, checklist-template.md: Marked deprecated except the foundation-000 standing-plan exception (same PR)
 
 Deferred TODOs: none
 -->
@@ -61,7 +52,7 @@ New features should begin with a spec. The deciding question for skipping SDD is
 - Spec versions follow semantic meaning: PATCH = clarification/wording; MINOR = new/changed User Story; MAJOR = breaking change to an existing story or API contract
 - When a spec version changes, every spec listed in its `## Spec Dependencies → Downstream` section must be reviewed and updated if affected
 - Every spec, plan, and tasks file must state a clear, verifiable feature goal before requirements or tasks are written
-- `spec.md` and `plan.md` must include a `## 功能目標` section; `tasks.md` must include `**故事目標**` for each User Story phase
+- `spec.md` must include a `## 功能目標` section; an OpenSpec change's `tasks.md` must include `**故事目標**` for each User Story phase, and its `design.md` (when present) must restate the goal it serves (ADR-033)
 
 **Skip SDD and modify code directly for**:
 - Bug fixes — making code match existing specs, not changing specs
@@ -310,18 +301,19 @@ Constitution principles take precedence over all other conventions.
 - Changelog entries must be written in descending version order, with the newest version first
 - Constitution changelog entries use English summaries; changelog entries in `.specify/templates/` use Chinese summaries
 
-**Feature Goal Alignment Gate**: During PR review, the reviewer must confirm that the plan's `## 功能目標` matches the spec's `## 功能目標`. A mismatch is a blocking finding. Use `/speckit.analyze` to flag Feature Goal divergence as an alignment error.
+**Feature Goal Alignment Gate**: During PR review, the reviewer must confirm that the OpenSpec change's stated goal (`design.md` when present, else `proposal.md`) matches the spec's `## 功能目標`. A mismatch is a blocking finding. Use `/opsx:verify` (or `openspec validate`) to flag Feature Goal divergence as an alignment error.
 
-**Dependency Governance**: New external dependencies must be evaluated for security, maintenance activity, and bundle-size impact before being added. Use `uv add` for backend and `pnpm add` for frontend; never `pip install` or `npm install`.
+**Dependency Governance**: New external dependencies must be evaluated for security, maintenance activity, and bundle-size impact before being added. Use `uv add` for backend and `pnpm add` for frontend; never `pip install` or `npm install` (global tool installs such as `pnpm add -g` are exempt — see ADR-033).
 
-**Compliance Review**: All PRs must verify compliance with the main constitution and every applicable domain constitution before merging. Use `/speckit.analyze` to check cross-artifact consistency and constitution alignment.
+**Compliance Review**: All PRs must verify compliance with the main constitution and every applicable domain constitution before merging. Use `/opsx:verify` (or `openspec validate`) plus the write-back Source-Verify gate to check cross-artifact consistency and constitution alignment.
 
-**Version**: 1.31.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-06-02
+**Version**: 1.31.1 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-08-24
 
 ## Changelog
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 1.31.1 | 2026-08-24 | Adopt OpenSpec as the implementation/change workflow layer per ADR-033 (issue #294): Principle I's Goal Declaration sub-rule now points `## 功能目標` at `spec.md` and `**故事目標**`/goal restatement at an OpenSpec change's `tasks.md`/`design.md` instead of the retired Spec Kit `plan.md`; Feature Goal Alignment Gate and Compliance Review now cite `/opsx:verify` (or `openspec validate`) instead of the retired `/speckit.analyze`; Dependency Governance notes the `pnpm add -g` global-install exception |
 | 1.31.0 | 2026-06-02 | Split detailed backend, frontend, and testing governance out of the main constitution into mandatory domain constitutions; add Domain Constitutions loading rules; update compliance review to cover applicable domain constitutions |
 | 1.30.0 | 2026-06-02 | Strengthen Principle I (add task granularity: one file per task, TDD task separation, Storybook task separation, migration decomposition into upgrade/downgrade/roundtrip); strengthen Principle X (add PR size limit ≤ 5 files / ≤ 300 lines, backend layer PR separation, frontend layer PR separation, BE/FE independence rule); strengthen Principle XVIII (migration PRs must be standalone, every migration PR requires a Rollback Plan section) |
 | 1.29.1 | 2026-05-29 | Strengthen Principle VII (add Storybook story requirement for non-page components); Principle XXIII (add prototype↔React data-testid contract binding rule); Principle XXIX (add universal explicit-TTL requirement for all cache entries) |
