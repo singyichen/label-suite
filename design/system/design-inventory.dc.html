@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@600;700&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;family=Noto+Sans+TC:wght@400;500;700&amp;family=Noto+Serif+TC:wght@700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#EDEBF6;font-family:'Inter','Noto Sans TC','PingFang TC',sans-serif;color:#1E1B4B}
+a{color:#6366F1}a:hover{color:#4F46E5}
+</style>
+</helmet>
+
+<div style="padding:44px 56px 4px;max-width:1900px">
+  <div style="display:inline-flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;letter-spacing:0.08em;background:#1E1B4B;color:#fff;padding:5px 10px;border-radius:4px">LABEL SUITE · DESIGN INVENTORY</div>
+  <h1 style="font-family:'Crimson Pro','Noto Serif TC',serif;font-size:42px;font-weight:700;line-height:1.25;margin:14px 0 6px">元件與畫面盤點 <span style="color:#6366F1">Component &amp; Screen Inventory</span></h1>
+  <p style="font-size:14px;line-height:1.8;color:#64748B;max-width:980px;margin:0">來源 Sources：<code style="font-family:'JetBrains Mono',monospace;font-size:12px;background:#fff;border:1px solid #E2E8F0;border-radius:4px;padding:1px 6px">design/system/MASTER.md</code> · <code style="font-family:'JetBrains Mono',monospace;font-size:12px;background:#fff;border:1px solid #E2E8F0;border-radius:4px;padding:1px 6px">design/system/inventory.md</code>（掃描 2026-07-10）· <code style="font-family:'JetBrains Mono',monospace;font-size:12px;background:#fff;border:1px solid #E2E8F0;border-radius:4px;padding:1px 6px">design/prototype/assets/tokens.css</code>。所有畫面為 prototype 原始 HTML 之即時嵌入（pixel-perfect），左為 Light、右為 Dark（<code style="font-family:'JetBrains Mono',monospace;font-size:12px">data-theme="dark"</code>）。本檔為 derived view——只讀不定義；元件規格正典見 MASTER.md。</p>
+</div>
+
+<!-- ═══ 1 · TOKENS ═══ -->
+<div style="padding:36px 56px 8px;max-width:1900px">
+  <h2 style="font-family:'Crimson Pro','Noto Serif TC',serif;font-size:28px;font-weight:700;margin:0 0 4px">1 · Design Tokens 設計變數</h2>
+  <p style="font-size:13px;color:#64748B;margin:0 0 20px">每個色彩 token 顯示 Light → Dark 對照（tokens.css 以 <code style="font-family:'JetBrains Mono',monospace">html[data-theme="dark"]</code> 重新映射同名變數）。</p>
+  <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+    <sc-for list="{{ colorGroups }}" as="grp" hint-placeholder-count="3">
+      <div style="background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:20px;width:430px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:12px">{{ grp.name }}</div>
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <sc-for list="{{ grp.items }}" as="t" hint-placeholder-count="6">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:11px;width:168px;color:#1E1B4B">{{ t.n }}</div>
+              <div style="width:26px;height:26px;border-radius:6px;border:1px solid rgba(0,0,0,0.12);background:{{ t.l }}"></div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#64748B;width:58px">{{ t.l }}</div>
+              <div style="color:#94A3B8;font-size:11px">→</div>
+              <div style="width:26px;height:26px;border-radius:6px;border:1px solid rgba(0,0,0,0.25);background:{{ t.d }}"></div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#64748B;width:58px">{{ t.d }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-for>
+
+    <div style="display:flex;flex-direction:column;gap:20px;width:560px">
+      <div style="background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:20px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:12px">字體 Typography</div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px">
+          <div style="display:flex;gap:10px;font-size:12px"><span style="font-family:'JetBrains Mono',monospace;width:170px;color:#64748B">--font-serif-display</span><span style="font-family:'Crimson Pro','Noto Serif TC',serif;font-weight:700">Crimson Pro / Noto Serif TC — 標題</span></div>
+          <div style="display:flex;gap:10px;font-size:12px"><span style="font-family:'JetBrains Mono',monospace;width:170px;color:#64748B">--font-sans</span><span>Inter / Noto Sans TC — 內文與 UI</span></div>
+          <div style="display:flex;gap:10px;font-size:12px"><span style="font-family:'JetBrains Mono',monospace;width:170px;color:#64748B">--font-sans-reading</span><span>Atkinson Hyperlegible — 標記閱讀面板</span></div>
+          <div style="display:flex;gap:10px;font-size:12px"><span style="font-family:'JetBrains Mono',monospace;width:170px;color:#64748B">--font-mono</span><span style="font-family:'JetBrains Mono',monospace">JetBrains Mono — Schema / code</span></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;border-top:1px solid #F1F5F9;padding-top:14px">
+          <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'Crimson Pro','Noto Serif TC',serif;font-size:48px;font-weight:700;line-height:1.2">Display 標題</span><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#94A3B8">48 / 700 / 1.2</span></div>
+          <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'Crimson Pro','Noto Serif TC',serif;font-size:36px;font-weight:700;line-height:1.3">H1 頁面標題</span><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#94A3B8">36 / 700 / 1.3</span></div>
+          <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'Crimson Pro','Noto Serif TC',serif;font-size:28px;font-weight:700;line-height:1.3">Page Title 模組頁首</span><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#94A3B8">28 / 700 / 1.3</span></div>
+          <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'Crimson Pro','Noto Serif TC',serif;font-size:24px;font-weight:600;line-height:1.4">H2 區段標題</span><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#94A3B8">24 / 600 / 1.4</span></div>
+          <div style="display:flex;align-items:baseline;gap:12px"><span style="font-size:18px;font-weight:600;line-height:1.5">H3 卡片標題（Inter）</span><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#94A3B8">18 / 600 / 1.5</span></div>
+          <div style="display:flex;align-items:baseline;gap:12px"><span style="font-size:16px;line-height:1.6">Body 內文 — EN 1.6 / 中文 1.8</span><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#94A3B8">16 / 400</span></div>
+          <div style="display:flex;align-items:baseline;gap:12px"><span style="font-size:14px;color:#64748B">Caption 輔助說明</span><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#94A3B8">14 / 400 / 1.5</span></div>
+          <div style="display:flex;align-items:baseline;gap:12px"><span style="font-size:12px;font-weight:500;color:#64748B">LABEL 標籤 / 徽章 / 表單標籤</span><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#94A3B8">12 / 500 / 1.4</span></div>
+        </div>
+      </div>
+
+      <div style="background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:20px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:12px">間距 Spacing</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <sc-for list="{{ spacings }}" as="s" hint-placeholder-count="7">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;width:120px;color:#64748B">{{ s.n }}</span>
+              <div style="height:12px;background:#6366F1;border-radius:2px;width:{{ s.v }}px"></div>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#94A3B8">{{ s.v }}px</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:20px;width:430px">
+      <div style="background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:20px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:12px">圓角 Radius</div>
+        <div style="display:flex;gap:14px;align-items:flex-end">
+          <div style="text-align:center"><div style="width:52px;height:52px;border:2px solid #6366F1;background:#EEF2FF;border-radius:4px"></div><div style="font-family:'JetBrains Mono',monospace;font-size:10px;margin-top:6px;color:#64748B">sm 4</div></div>
+          <div style="text-align:center"><div style="width:52px;height:52px;border:2px solid #6366F1;background:#EEF2FF;border-radius:8px"></div><div style="font-family:'JetBrains Mono',monospace;font-size:10px;margin-top:6px;color:#64748B">md 8</div></div>
+          <div style="text-align:center"><div style="width:52px;height:52px;border:2px solid #6366F1;background:#EEF2FF;border-radius:12px"></div><div style="font-family:'JetBrains Mono',monospace;font-size:10px;margin-top:6px;color:#64748B">lg 12</div></div>
+          <div style="text-align:center"><div style="width:52px;height:52px;border:2px solid #6366F1;background:#EEF2FF;border-radius:16px"></div><div style="font-family:'JetBrains Mono',monospace;font-size:10px;margin-top:6px;color:#64748B">xl 16</div></div>
+          <div style="text-align:center"><div style="width:52px;height:52px;border:2px solid #6366F1;background:#EEF2FF;border-radius:9999px"></div><div style="font-family:'JetBrains Mono',monospace;font-size:10px;margin-top:6px;color:#64748B">full 9999</div></div>
+        </div>
+        <div style="font-size:11px;color:#94A3B8;margin-top:10px">badge → 按鈕/輸入 → 卡片 → modal → 頭像/pill</div>
+      </div>
+      <div style="background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:20px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:12px">陰影 Shadows</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <div style="width:110px;height:64px;background:#fff;border-radius:8px;box-shadow:0 1px 2px rgba(0,0,0,0.05);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:10px;color:#64748B">sm</div>
+          <div style="width:110px;height:64px;background:#fff;border-radius:8px;box-shadow:0 4px 6px rgba(0,0,0,0.10);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:10px;color:#64748B">md</div>
+          <div style="width:110px;height:64px;background:#fff;border-radius:8px;box-shadow:0 10px 15px rgba(0,0,0,0.10);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:10px;color:#64748B">lg</div>
+          <div style="width:110px;height:64px;background:#fff;border-radius:8px;box-shadow:0 20px 25px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:10px;color:#64748B">xl</div>
+          <div style="width:110px;height:64px;background:#fff;border-radius:8px;box-shadow:0 4px 24px rgba(99,102,241,0.10),0 1px 4px rgba(0,0,0,0.06);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:10px;color:#64748B">card</div>
+        </div>
+      </div>
+      <div style="background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:20px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:12px">Z-index · Motion</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2;color:#334155">base 0 · raised 10 · dropdown 100 · sticky 200<br>modal 300 · toast 400 · tooltip 500</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2;color:#334155;border-top:1px solid #F1F5F9;margin-top:10px;padding-top:10px">dur-fast 150ms · dur-normal 200ms<br>ease-standard cubic-bezier(0.4, 0, 0.2, 1)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 2 · COMPONENT LIBRARY ═══ -->
+<div style="padding:36px 56px 8px;max-width:1900px">
+  <h2 style="font-family:'Crimson Pro','Noto Serif TC',serif;font-size:28px;font-weight:700;margin:0 0 4px">2 · 元件庫總覽 Component Library</h2>
+  <p style="font-size:13px;color:#64748B;margin:0 0 14px;max-width:980px">45 個 reusable components（design-system.pen 實測）。下方嵌入專案自帶的 living styleguide <code style="font-family:'JetBrains Mono',monospace;font-size:12px">components-showcase.html</code>（左 Light / 右 Dark）——每個元件依 MASTER.md 規格實際繪製並含變體與狀態。</p>
+  <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;max-width:1400px">
+    <sc-for list="{{ libGroups }}" as="g" hint-placeholder-count="6">
+      <div style="background:#fff;border:1px solid #E2E8F0;border-radius:8px;padding:10px 14px;font-size:12px;line-height:1.6"><span style="font-weight:700">{{ g.name }}</span> <span style="color:#6366F1;font-weight:700">{{ g.count }}</span><br><span style="color:#64748B">{{ g.items }}</span></div>
+    </sc-for>
+  </div>
+  <div style="display:flex;gap:24px;align-items:flex-start">
+    <div>
+      <div style="font-size:12px;font-weight:700;margin-bottom:8px;color:#64748B">LIGHT</div>
+      <div style="width:620px;height:4800px;overflow:hidden;border:1px solid #E2E8F0;border-radius:12px;background:#fff">
+        <iframe src="../prototype/components-showcase.html" onLoad="{{ lighten }}" title="showcase light" style="width:1030px;height:8000px;border:0;transform:scale(0.6);transform-origin:0 0"></iframe>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:12px;font-weight:700;margin-bottom:8px;color:#64748B">DARK</div>
+      <div style="width:620px;height:4800px;overflow:hidden;border:1px solid #2A2A35;border-radius:12px;background:#0B0B12">
+        <iframe src="../prototype/components-showcase.html" onLoad="{{ darken }}" title="showcase dark" style="width:1030px;height:8000px;border:0;transform:scale(0.6);transform-origin:0 0"></iframe>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 3 · SCREENS ═══ -->
+<div style="padding:36px 56px 8px">
+  <h2 style="font-family:'Crimson Pro','Noto Serif TC',serif;font-size:28px;font-weight:700;margin:0 0 4px">3 · 畫面盤點 Screen Inventory（15 頁）</h2>
+  <p style="font-size:13px;color:#64748B;margin:0 0 24px;max-width:980px">每個畫面：左側為使用元件清單（依 inventory.md 對照），中為 Light、右為 Dark 即時嵌入（可直接互動、捲動）。標示 <span style="background:#FEF08A;border-radius:3px;padding:0 4px;font-size:11px;font-weight:600">PROTO</span> 者為 prototype-only 元件，不屬正式產品 UI。</p>
+
+  <sc-for list="{{ screens }}" as="s" hint-placeholder-count="4">
+    <div style="margin-bottom:44px" data-screen-label="{{ s.no }} {{ s.en }}">
+      <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:12px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;background:#1E1B4B;color:#fff;border-radius:4px;padding:3px 8px">{{ s.no }}</span>
+        <span style="font-family:'Crimson Pro','Noto Serif TC',serif;font-size:22px;font-weight:700">{{ s.zh }}</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#6366F1">{{ s.en }}</span>
+        <span style="font-size:11px;font-weight:600;color:#64748B;background:#fff;border:1px solid #E2E8F0;border-radius:9999px;padding:2px 10px">{{ s.mod }}</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#94A3B8">{{ s.spec }}</span>
+      </div>
+      <div style="display:flex;gap:20px;align-items:flex-start">
+        <div style="width:320px;flex:none;background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:18px 20px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;color:#94A3B8;margin-bottom:10px">COMPONENTS 使用元件</div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <sc-for list="{{ s.groups }}" as="grp" hint-placeholder-count="4">
+              <div>
+                <div style="font-size:11px;font-weight:700;color:#6366F1;margin-bottom:4px">{{ grp.g }}</div>
+                <div style="display:flex;flex-direction:column;gap:3px">
+                  <sc-for list="{{ grp.items }}" as="it" hint-placeholder-count="3">
+                    <div style="font-size:12px;line-height:1.55;color:#334155;display:flex;gap:6px"><span style="color:#C7D2FE">▪</span><span>{{ it }}</span></div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;margin-bottom:6px;color:#64748B">LIGHT · 1440px</div>
+          <div style="overflow:hidden;border:1px solid #E2E8F0;border-radius:12px;background:#fff;width:{{ s.boxW }}px;height:{{ s.boxH }}px">
+            <iframe src="{{ s.path }}" loading="lazy" onLoad="{{ lighten }}" title="{{ s.en }} light" style="width:1440px;border:0;transform-origin:0 0;height:{{ s.h }}px;transform:scale({{ zoom }})"></iframe>
+          </div>
+        </div>
+        <sc-if value="{{ showDark }}" hint-placeholder-val="{{ true }}">
+          <div>
+            <div style="font-size:11px;font-weight:700;margin-bottom:6px;color:#64748B">DARK · data-theme="dark"</div>
+            <div style="overflow:hidden;border:1px solid #2A2A35;border-radius:12px;background:#0B0B12;width:{{ s.boxW }}px;height:{{ s.boxH }}px">
+              <iframe src="{{ s.path }}" loading="lazy" onLoad="{{ darken }}" title="{{ s.en }} dark" style="width:1440px;border:0;transform-origin:0 0;height:{{ s.h }}px;transform:scale({{ zoom }})"></iframe>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </sc-for>
+</div>
+
+<!-- ═══ 4 · IN-PAGE VIEWS ═══ -->
+<div style="padding:36px 56px 8px">
+  <h2 style="font-family:'Crimson Pro','Noto Serif TC',serif;font-size:28px;font-weight:700;margin:0 0 4px">4 · 同頁多重視圖 In-Page View Inventory（36 視圖）</h2>
+  <p style="font-size:13px;color:#64748B;margin:0 0 24px;max-width:1000px">同一 HTML 依 URL 參數／頁內狀態切換的所有視圖，依 NAVIGATION.md「動態載入片段」與各頁實際支援的 query 參數逐一展開（角色視角、tab、8 種標記型態、錯誤／空狀態）。此區僅顯示 Light（Dark 對照見第 3 區，token 全域翻轉）。</p>
+  <sc-for list="{{ viewGroups }}" as="vg" hint-placeholder-count="3">
+    <div style="margin-bottom:40px">
+      <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:4px">
+        <span style="font-family:'Crimson Pro','Noto Serif TC',serif;font-size:19px;font-weight:700">{{ vg.title }}</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#6366F1">{{ vg.file }}</span>
+      </div>
+      <p style="font-size:12.5px;color:#64748B;margin:0 0 14px;max-width:1000px">{{ vg.desc }}</p>
+      <div style="display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start">
+        <sc-for list="{{ vg.views }}" as="v" hint-placeholder-count="4">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;align-items:baseline;gap:8px">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:600;background:#6366F1;color:#fff;border-radius:4px;padding:2px 6px">{{ v.no }}</span>
+              <span style="font-size:13px;font-weight:700">{{ v.name }}</span>
+            </div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#94A3B8;max-width:520px;word-break:break-all">{{ v.qs }}</div>
+            <div style="font-size:12px;color:#334155;max-width:520px;line-height:1.55">{{ v.note }}</div>
+            <div style="overflow:hidden;border:1px solid #E2E8F0;border-radius:12px;background:#fff;width:{{ v.boxW }}px;height:{{ v.boxH }}px">
+              <iframe src="{{ v.src }}" loading="lazy" onLoad="{{ lighten }}" title="{{ v.no }} {{ v.name }}" style="width:1440px;border:0;transform-origin:0 0;height:{{ v.h }}px;transform:scale({{ zoom }})"></iframe>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-for>
+</div>
+
+<!-- ═══ 5 · MATRIX ═══ -->
+<div style="padding:36px 56px 72px">
+  <h2 style="font-family:'Crimson Pro','Noto Serif TC',serif;font-size:28px;font-weight:700;margin:0 0 4px">5 · 畫面 × 元件對照表 Screen × Component Matrix</h2>
+  <p style="font-size:13px;color:#64748B;margin:0 0 16px">依 <code style="font-family:'JetBrains Mono',monospace;font-size:12px">design/system/inventory.md</code>（最後掃描 2026-07-10）整理。</p>
+  <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;max-width:1300px">
+    <sc-for list="{{ screens }}" as="s" hint-placeholder-count="8">
+      <span style="font-size:11px;background:#fff;border:1px solid #E2E8F0;border-radius:9999px;padding:3px 10px"><span style="font-family:'JetBrains Mono',monospace;font-weight:600;color:#6366F1">{{ s.no }}</span> {{ s.zh }} <span style="color:#94A3B8">{{ s.short }}</span></span>
+    </sc-for>
+  </div>
+  <div style="background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:20px;display:inline-block">
+    <div style="display:flex;border-bottom:2px solid #E2E8F0;padding-bottom:8px;margin-bottom:4px">
+      <div style="width:300px;font-size:11px;font-weight:700;color:#94A3B8">COMPONENT 元件</div>
+      <sc-for list="{{ screens }}" as="s" hint-placeholder-count="8">
+        <div style="width:44px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:#6366F1" title="{{ s.zh }}">{{ s.no }}</div>
+      </sc-for>
+    </div>
+    <sc-for list="{{ matrix }}" as="row" hint-placeholder-count="10">
+      <div style="display:flex;align-items:center;padding:3px 0;border-bottom:1px solid #F8FAFC">
+        <div style="width:300px;font-size:12px;color:#334155">{{ row.name }}</div>
+        <sc-for list="{{ row.cells }}" as="c" hint-placeholder-count="8">
+          <div style="width:44px;text-align:center;font-size:12px;color:#6366F1">{{ c.m }}</div>
+        </sc-for>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;zoom&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.5,&quot;min&quot;:0.35,&quot;max&quot;:0.75,&quot;step&quot;:0.05,&quot;unit&quot;:&quot;×&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;檢視 View&quot;},&quot;showDark&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;檢視 View&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const dark = (e) => { try { e.target.contentDocument.documentElement.setAttribute('data-theme', 'dark'); } catch (_) {} };
+    const light = (e) => { try { e.target.contentDocument.documentElement.setAttribute('data-theme', 'light'); } catch (_) {} };
+    const zoom = this.props.zoom ?? 0.5;
+    const showDark = this.props.showDark ?? true;
+
+    const colorGroups = [
+      { name: '核心 Core Palette', items: [
+        { n: '--color-primary', l: '#6366F1', d: '#818CF8' },
+        { n: '--color-secondary', l: '#818CF8', d: '#A5B4FC' },
+        { n: '--color-cta', l: '#10B981', d: '#34D399' },
+        { n: '--color-cta-hover', l: '#059669', d: '#10B981' },
+        { n: '--color-surface', l: '#F5F3FF', d: '#0B0B12' },
+        { n: '--color-white (card)', l: '#FFFFFF', d: '#16161F' },
+        { n: '--color-ink', l: '#1E1B4B', d: '#E2E8F0' },
+        { n: '--color-primary-soft-bg', l: '#EEF2FF', d: '#1E1B4B' },
+        { n: '--color-primary-border', l: '#C7D2FE', d: '#3730A3' },
+      ]},
+      { name: '輔助 Supporting', items: [
+        { n: '--color-border', l: '#E2E8F0', d: '#2A2A35' },
+        { n: '--color-border-muted', l: '#F1F5F9', d: '#1F1F28' },
+        { n: '--color-ink-muted', l: '#94A3B8', d: '#9CA3AF' },
+        { n: '--color-text-soft', l: '#64748B', d: '#A1A1AA' },
+        { n: '--color-slate-50 (hover)', l: '#F8FAFC', d: '#1F1F28' },
+        { n: '--nav-active-bg', l: '#F5F3FF', d: '#2A2A35' },
+      ]},
+      { name: '語意狀態 Semantic State', items: [
+        { n: '--color-error / bg / border', l: '#B91C1C', d: '#F87171' },
+        { n: '  error-bg', l: '#FEF2F2', d: '#2A1414' },
+        { n: '  error-border', l: '#FECACA', d: '#5B2222' },
+        { n: '--color-success', l: '#15803D', d: '#4ADE80' },
+        { n: '  success-bg', l: '#F0FDF4', d: '#0F2A18' },
+        { n: '  success-border', l: '#BBF7D0', d: '#1F5132' },
+        { n: '--color-warning', l: '#A16207', d: '#FACC15' },
+        { n: '  warning-bg', l: '#FEFCE8', d: '#2A2210' },
+        { n: '  warning-border', l: '#FEF08A', d: '#5C4A1A' },
+        { n: '--color-info', l: '#1D4ED8', d: '#60A5FA' },
+        { n: '  info-bg', l: '#EFF6FF', d: '#0F1F33' },
+        { n: '  info-border', l: '#BFDBFE', d: '#1E3A66' },
+      ]},
+    ];
+
+    const spacings = [
+      { n: '--space-xs', v: 4 }, { n: '--space-sm', v: 8 }, { n: '--space-md', v: 16 },
+      { n: '--space-lg', v: 24 }, { n: '--space-xl', v: 32 }, { n: '--space-2xl', v: 48 }, { n: '--space-3xl', v: 64 },
+    ];
+
+    const libGroups = [
+      { name: 'Buttons', count: 13, items: 'Primary · Secondary · Ghost · Danger · OAuth · Icon-only · CTA(Default/Hover/Loading/Disabled) · Language Toggle(×3)' },
+      { name: 'Inputs', count: 6, items: 'Default · Focus · Inline(Default/Focus/Error) · Readonly' },
+      { name: 'Feedback', count: 5, items: 'Toast(Success/Error) · Alert Banner(Error) · State Panel(Success/Token Error)' },
+      { name: 'Status + Link', count: 8, items: 'Badge(Not Started/In Progress/Submitted/Error) · Link(Inline/Action/Nav Active/Nav Inactive)' },
+      { name: 'Layout + Data', count: 9, items: 'Navbar · Sidebar · Content Tabs · Table · Activity List · Divider(×2) · Tooltip · Mobile Tab Bar' },
+      { name: 'Profile + Other', count: 5, items: 'Card · Modal · Avatar(Small/Large/Uploadable)' },
+    ];
+
+    const S = [
+      { no: '01', zh: '登入', short: 'login', en: 'account/login.html', mod: 'account', spec: 'specs/account/001 · pages/login.md', h: 1050, groups: [
+        { g: '佈局 Layout', items: ['Auth Card 登入卡片（rounded-2xl / p-8）', 'Logo + Wordmark', 'Language Toggle 語言切換'] },
+        { g: '表單 Form', items: ['Input 輸入框（Email / 密碼）', 'Eye Toggle 密碼顯示切換', 'Inline Field Error 行內錯誤'] },
+        { g: '按鈕 Buttons', items: ['Button / CTA（登入，emerald）', 'Button / OAuth（Google SSO）'] },
+        { g: '回饋 Feedback', items: ['Alert Banner / Error 錯誤橫幅'] },
+        { g: '其他 Others', items: ['Divider / Text「或」', 'Link / Inline（服務條款）', 'Link / Action（忘記密碼、註冊）'] },
+      ]},
+      { no: '02', zh: '註冊', short: 'register', en: 'account/register.html', mod: 'account', spec: 'specs/account/003 · pages/register.md', h: 1150, groups: [
+        { g: '佈局 Layout', items: ['Auth Card', 'Logo + Wordmark', 'Language Toggle'] },
+        { g: '表單 Form', items: ['Input + Leading Icon（mail / user / lock）', 'Eye Toggle 密碼顯示切換', 'Field Hint 密碼規則提示', 'Inline Field Error 行內錯誤', 'Required Indicator 必填指示'] },
+        { g: '按鈕 Buttons', items: ['Button / CTA（建立帳號）'] },
+        { g: '其他 Others', items: ['Link / Action（回登入）'] },
+      ]},
+      { no: '03', zh: '忘記密碼', short: 'forgot-pw', en: 'account/forgot-password.html', mod: 'account', spec: 'specs/account/004 · pages/forgot-password.md', h: 950, groups: [
+        { g: '佈局 Layout', items: ['Auth Card', 'Logo', 'Language Toggle'] },
+        { g: '表單 Form', items: ['Input + Leading Icon（mail）', 'Inline Field Error'] },
+        { g: '按鈕 Buttons', items: ['Button / CTA（含 Loading 狀態）'] },
+        { g: '回饋 Feedback', items: ['State Panel / Success（取代整個 form）', 'Loading Status（aria-live）'] },
+        { g: '其他 Others', items: ['Link / Action（返回登入）'] },
+      ]},
+      { no: '04', zh: '重設密碼', short: 'reset-pw', en: 'account/reset-password.html', mod: 'account', spec: 'specs/account/004 · pages/reset-password.md', h: 1000, groups: [
+        { g: '佈局 Layout', items: ['Auth Card', 'Logo', 'Language Toggle'] },
+        { g: '表單 Form', items: ['Input + Leading Icon（lock）', 'Eye Toggle', 'Field Hint', 'Inline Field Error'] },
+        { g: '按鈕 Buttons', items: ['Button / CTA（重設密碼）'] },
+        { g: '回饋 Feedback', items: ['State Panel / Success', 'State Panel / Token Error（token 無效時取代 form）'] },
+      ]},
+      { no: '05', zh: '個人資料', short: 'profile', en: 'account/profile.html', mod: 'account', spec: 'specs/account/005 · pages/profile.md', h: 1350, groups: [
+        { g: '佈局 Layout', items: ['Navbar + Sidebar（shared/sidebar.js）', 'Card 非互動卡片', 'Divider 分隔線'] },
+        { g: '身分 Identity', items: ['Avatar / Large（Uploadable，上傳驗證）', 'Role Badge（indigo pill + icon）'] },
+        { g: '表單 Form', items: ['Input（Normal / Error）', 'Input / Readonly（SSO Email，bg-slate-50）'] },
+        { g: '回饋 Feedback', items: ['Toast / Success · Error（浮動、自動消失）', 'Skeleton / Shimmer（表單載入佔位）'] },
+      ]},
+      { no: '06', zh: '儀表板', short: 'dashboard', en: 'dashboard/dashboard.html', mod: 'dashboard', spec: 'specs/dashboard/012 · pages/dashboard.md', h: 1500, groups: [
+        { g: '佈局 Layout', items: ['Navbar + Sidebar（shared）', 'Mobile Bottom Tab Bar（RWD）', 'Summary Card（KPI，interactive hover）'] },
+        { g: '資料 Data', items: ['Table 任務表格', 'Activity List 活動清單', 'Status Badge（In Progress / Not Started / Submitted）', 'Avatar / Small（navbar）'] },
+        { g: '按鈕 Buttons', items: ['Primary / Secondary / Ghost / Danger（登出）', 'Icon-only（mobile menu）'] },
+        { g: '回饋 Feedback', items: ['Modal 登出確認（focus trap / Escape）'] },
+        { g: 'Prototype-only', items: ['Scenario Switcher 角色切換 pill bar ⚠ PROTO', '四種角色視圖：系統管理員／專案負責人／標記員／審核員'] },
+      ]},
+      { no: '07', zh: '任務列表', short: 'task-list', en: 'task-management/task-list.html', mod: 'task', spec: 'specs/task-management/010 · pages/task-list.md', h: 1500, groups: [
+        { g: '佈局 Layout', items: ['Navbar + Sidebar（shared）'] },
+        { g: '工具 Toolbar', items: ['Toolbar：Search（leading icon）+ Filter Select + Clear', 'Button / Primary（建立任務）'] },
+        { g: '資料 Data', items: ['Table（row hover / cursor-pointer）', 'Badge / Task Status（Draft / Dry Run / IAA / In Progress / Completed）', 'Badge / Task Type（Single / Sequence / Relation / Pairs / Scoring）', 'Badge / Run Mode（Official / Dry Run / Unmaterialized）', 'Pagination 分頁 + page-size select'] },
+        { g: '回饋 Feedback', items: ['Modal（modal-focus.js focus trap）', 'Mini Button 列內操作'] },
+      ]},
+      { no: '08', zh: '建立任務', short: 'task-new', en: 'task-management/task-new.html', mod: 'task', spec: 'specs/task-management/013 · pages/task-new.md', h: 1900, groups: [
+        { g: '佈局 Layout', items: ['Navbar + Sidebar（shared）', 'Step Indicator 步驟指示（circle + connector）'] },
+        { g: '表單 Form', items: ['Upload Zone 拖放上傳（default/hover/error + file preview row）', 'Tag Input / Tag Pill 標籤輸入', 'Toggle Switch 開關（40×22）', 'Code Editor（JSON Schema，JetBrains Mono）', 'Chip / Select（checkbox + radio）', 'Chip / Bypass Toggle'] },
+        { g: '資料 Data', items: ['Accordion（Output Type 手風琴面板）', 'Color Dot（Entity 20px / Preview 12px）'] },
+        { g: '按鈕 Buttons', items: ['Primary（下一步）／Secondary（上一步）'] },
+      ]},
+      { no: '09', zh: '任務詳情', short: 'task-detail', en: 'task-management/task-detail.html', mod: 'task', spec: 'specs/task-management/014 · pages/task-detail.md', h: 1900, groups: [
+        { g: '佈局 Layout', items: ['Navbar + Sidebar（shared）', 'Breadcrumb 麵包屑（任務列表 › 任務詳情）', 'Desktop Content Tabs（底線型）'] },
+        { g: '子面板 Panels（fetch partials ×5）', items: ['overview 總覽', 'annotation-progress 標記進度', 'annotation-results 標記結果', 'member-management 成員管理', 'work-log 工作日誌'] },
+        { g: '資料 Data', items: ['Table（expandable rows，inline chevron）', 'Pagination（各子面板）', 'Chip / VA Scoring（normal / outlier）', 'Chip / Classification · Metric · md-chip', 'Badge / Run Mode（legacy alias，待統一 → issue #183）', 'Color Dot / Entity'] },
+        { g: '回饋 Feedback', items: ['Skeleton / Pulse（卡片載入佔位）', 'Modal + Mini Button'] },
+      ]},
+      { no: '10', zh: '標記任務列表', short: 'annot-list', en: 'annotation/annotation-list.html', mod: 'annotation', spec: 'pages/annotation-list.md', h: 1400, groups: [
+        { g: '佈局 Layout', items: ['Navbar + Sidebar（shared）'] },
+        { g: '工具 Toolbar', items: ['Toolbar：Search + Filter + Clear'] },
+        { g: '資料 Data', items: ['樣本列 List / Table', 'Status Pill（Submitted / Saved / Pending，無框軟底 rounded-full）', 'Pagination'] },
+        { g: '按鈕 Buttons', items: ['Mini Button 列內操作（繼續標記等）'] },
+      ]},
+      { no: '11', zh: '標記工作區', short: 'workspace', en: 'annotation/annotation-workspace.html', mod: 'annotation', spec: 'specs/annotation/015 · pages/annotation-workspace.md', h: 1400, groups: [
+        { g: '佈局 Layout', items: ['Navbar + Sidebar（shared）', '閱讀面板（Atkinson Hyperlegible 閱讀字體）'] },
+        { g: '標記 Annotation', items: ['Config-driven 任務型態（8 種 output type）', 'Result Tag（green / blue / red，!important + dark override）', 'Chip / Classification 分類展示'] },
+        { g: '按鈕 Buttons', items: ['Mini Button / Approve · Reject（active 用語意 token：success-bg / error-bg）'] },
+        { g: '回饋 Feedback', items: ['Modal（modal-focus.js）'] },
+      ]},
+      { no: '12', zh: '使用者管理', short: 'user-mgmt', en: 'admin/user-management.html', mod: 'admin', spec: 'specs/admin/006 · pages/user-management.md', h: 1400, groups: [
+        { g: '佈局 Layout', items: ['Navbar + Sidebar（shared）', 'Desktop Content Tabs（底線型）'] },
+        { g: '資料 Data', items: ['Table 使用者表格', 'Role / Status Badge', 'Pagination'] },
+        { g: '按鈕 Buttons', items: ['Mini Button（primary / danger）— 密集列操作對應：新增=Primary、停用=Warning、移除=Danger（最右）'] },
+        { g: '回饋 Feedback', items: ['Modal 確認對話框'] },
+      ]},
+      { no: '13', zh: '角色設定', short: 'role-set', en: 'admin/role-settings.html', mod: 'admin', spec: 'specs/admin/007 · pages/role-settings.md', h: 1400, groups: [
+        { g: '佈局 Layout', items: ['Navbar + Sidebar（shared）', 'Desktop Content Tabs'] },
+        { g: '資料 Data', items: ['Table 角色權限表格'] },
+        { g: '回饋 Feedback', items: ['Modal / Destructive（alertdialog）', 'Button / Danger（solid，僅用於破壞性 modal confirm）'] },
+      ]},
+      { no: '14', zh: '資料集分析列表', short: 'ds-list', en: 'dataset/dataset-analysis-list.html', mod: 'dataset', spec: 'specs/dataset/016 · pages/dataset-analysis-list.md', h: 1400, groups: [
+        { g: '佈局 Layout', items: ['Navbar + Sidebar（shared）'] },
+        { g: '工具 Toolbar', items: ['Toolbar：Search + Filter + Clear'] },
+        { g: '資料 Data', items: ['Table 資料集表格', 'Badge / Task Type', 'Pagination'] },
+      ]},
+      { no: '15', zh: '資料集分析詳情', short: 'ds-detail', en: 'dataset/dataset-analysis-detail.html', mod: 'dataset', spec: 'specs/dataset/017 · pages/dataset-analysis-detail.md', h: 1900, groups: [
+        { g: '佈局 Layout', items: ['Navbar + Sidebar（shared）', 'Breadcrumb 麵包屑'] },
+        { g: '資料 Data', items: ['Stats / Quality partial 卡片（8 種任務型態 × stats + quality）', 'Status Dot（8px，IAA 門檻通過／失敗）', 'Chip / Cause Tag（品質風險原因）', 'Table 統計表格'] },
+      ]},
+    ];
+
+    const screens = S.map(s => ({
+      ...s,
+      path: '../prototype/pages/' + s.en,
+      boxW: Math.round(1440 * zoom),
+      boxH: Math.round(s.h * zoom),
+    }));
+
+    // Matrix: columns follow screens order 01..15
+    const M = [
+      ['Navbar / Sidebar（共用側欄）', '....XXXXXXXXXXX'],
+      ['Language Toggle 語言切換', 'XXXXXXXXXXXXXXX'],
+      ['Button 按鈕（CTA / Primary…）', 'XXXXXXXXXXXXXXX'],
+      ['Mini Button 列內小按鈕', '......X.XXXX...'],
+      ['Input 輸入框', 'XXXXX..X.......'],
+      ['Card 卡片', 'XXXXXX..X.....X'],
+      ['Status Badge 狀態徽章', '....XXX.X..X...'],
+      ['Task Type / Run Mode Badge', '......X.X....X.'],
+      ['Status Pill（無框軟底）', '.........X.....'],
+      ['Chip（VA / 分類 / Cause…）', '.......XX.X...X'],
+      ['Alert Banner 警示橫幅', 'X..............'],
+      ['Toast 浮動提示', '....X..........'],
+      ['State Panel 狀態面板', '..XX...........'],
+      ['Modal 對話框', '.....XX.X.XXX..'],
+      ['Table 表格', '.....XX.XX.XXX.'],
+      ['Activity List 活動清單', '.....X.........'],
+      ['Toolbar（搜尋+篩選+清除）', '......X..X...X.'],
+      ['Pagination 分頁', '......X.XX.X.X.'],
+      ['Desktop Content Tabs 內容頁籤', '........X..XX..'],
+      ['Breadcrumb 麵包屑', '........X.....X'],
+      ['Step Indicator 步驟指示', '.......X.......'],
+      ['Upload Zone 上傳區', '.......X.......'],
+      ['Tag Input / Pill 標籤輸入', '.......X.......'],
+      ['Toggle Switch 開關', '.......X.......'],
+      ['Code Editor（Schema）', '.......X.......'],
+      ['Accordion 手風琴', '.......X.......'],
+      ['Avatar 頭像', '....XX.........'],
+      ['Skeleton 載入佔位', '....X...X......'],
+      ['Color Dot 色點', '.......XX.....X'],
+      ['Divider 分隔線', 'X...XX.........'],
+      ['Link 連結（Inline / Action）', 'XXXX.X.........'],
+      ['State Switcher（prototype-only ⚠）', '.....X.........'],
+    ];
+    const matrix = M.map(([name, mask]) => ({
+      name,
+      cells: mask.split('').map(ch => ({ m: ch === 'X' ? '●' : '·' })),
+    }));
+
+    const VG = [
+      { title: '入口 Entry', file: 'index.html', desc: 'Meta refresh 導向 login 的入口頁（fallback link）。', views: [
+        { no: 'V00', name: '入口導向頁', qs: 'index.html', p: '../prototype/index.html', h: 500, note: 'Prototype 入口，自動導向 pages/account/login.html。' },
+      ]},
+      { title: '儀表板 · 4 角色視角', file: 'dashboard/dashboard.html?scenario=', desc: '雙層角色模型（system role + task role）在 prototype 收斂為 4 種可切換視角；預設 user 視圖見 06。切換器本身為 prototype-only。', views: [
+        { no: 'V01', name: '系統管理員 super_admin', qs: '?scenario=super_admin_data', p: '../prototype/pages/dashboard/dashboard.html?scenario=super_admin_data', h: 1500, note: '平台總覽 KPI 卡（grid-3）、使用者管理快捷入口。' },
+        { no: 'V02', name: '專案負責人 project_leader', qs: '?scenario=project_leader', p: '../prototype/pages/dashboard/dashboard.html?scenario=project_leader', h: 1500, note: '空狀態 CTA「建立第一個任務」→ task-new。' },
+        { no: 'V03', name: '標記員 annotator', qs: '?scenario=annotator', p: '../prototype/pages/dashboard/dashboard.html?scenario=annotator', h: 1500, note: '待辦標記清單、快速繼續標記入口。' },
+        { no: 'V04', name: '審核員 reviewer', qs: '?scenario=reviewer', p: '../prototype/pages/dashboard/dashboard.html?scenario=reviewer', h: 1500, note: '審查佇列、快速審查入口。' },
+      ]},
+      { title: '任務列表 · 角色與錯誤態', file: 'task-management/task-list.html', desc: '?task_role= 切換操作權限視角；?view=error 為載入失敗狀態。', views: [
+        { no: 'V05', name: '專案負責人視角', qs: '?task_role=project_leader', p: '../prototype/pages/task-management/task-list.html?task_role=project_leader', h: 1500, note: '建立任務 CTA、run materialization 控制。' },
+        { no: 'V06', name: '標記員視角', qs: '?task_role=annotator', p: '../prototype/pages/task-management/task-list.html?task_role=annotator', h: 1500, note: '唯讀列表，操作按鈕依權限收斂。' },
+        { no: 'V07', name: '審核員視角', qs: '?task_role=reviewer', p: '../prototype/pages/task-management/task-list.html?task_role=reviewer', h: 1500, note: '審查導向的列操作。' },
+        { no: 'V08', name: '載入失敗 error', qs: '?view=error', p: '../prototype/pages/task-management/task-list.html?view=error', h: 900, note: 'Error state：Alert Banner + 重試。' },
+      ]},
+      { title: '任務詳情 · 5 Tabs + 審核員', file: 'task-management/task-detail.html', desc: 'Desktop Content Tabs 以 fetch 動態載入 task-detail.panels/*；reviewer 角色隱藏成員管理 tab。overview 見 09。', views: [
+        { no: 'V09', name: '標記進度 annotation-progress', qs: '?tab=annotation-progress', p: '../prototype/pages/task-management/task-detail.html?tab=annotation-progress', h: 1700, note: '進度表格 + Pagination、狀態徽章。' },
+        { no: 'V10', name: '標記結果 annotation-results', qs: '?tab=annotation-results', p: '../prototype/pages/task-management/task-detail.html?tab=annotation-results', h: 1700, note: 'Expandable rows（inline chevron）、VA scoring chips（normal/outlier）。' },
+        { no: 'V11', name: '成員管理 member-management', qs: '?tab=member-management', p: '../prototype/pages/task-management/task-detail.html?tab=member-management', h: 1700, note: 'md-chip、密集列操作（新增=Primary／停用=Warning／移除=Danger）。' },
+        { no: 'V12', name: '工時紀錄 work-log', qs: '?tab=work-log', p: '../prototype/pages/task-management/task-detail.html?tab=work-log', h: 1700, note: '工時表格 + Pagination。' },
+        { no: 'V13', name: '審核員角色', qs: '?task_role=reviewer', p: '../prototype/pages/task-management/task-detail.html?task_role=reviewer', h: 1700, note: '成員管理 tab 隱藏；被阻擋時顯示 Toast。' },
+      ]},
+      { title: '標記清單 · 審核佇列', file: 'annotation/annotation-list.html', desc: '?role=reviewer 切換為審查單元（sample × annotator × run_type）佇列。', views: [
+        { no: 'V14', name: '審核員佇列 reviewer', qs: '?role=reviewer', p: '../prototype/pages/annotation/annotation-list.html?role=reviewer', h: 1400, note: '審查單元列、unit 狀態 pill（pending/disputed/finalized）。' },
+      ]},
+      { title: '標記工作區 · 8 種輸出型態', file: 'annotation/annotation-workspace.html', desc: 'Config-driven：依 task_type 載入對應標記面板（ADR-029 output type composition）。', views: [
+        { no: 'V15', name: '單一分類 single_label', qs: '?task_id=T001&sample_id=sent-001&role=annotator&run_type=official_run&task_type=single_label', p: '../prototype/pages/annotation/annotation-workspace.html?task_id=T001&sample_id=sent-001&role=annotator&run_type=official_run&task_type=single_label', h: 1400, note: '分類 chips（radio 語意）。' },
+        { no: 'V16', name: '多重分類 multi_label', qs: '?task_id=T002&sample_id=emo-001&…&task_type=multi_label', p: '../prototype/pages/annotation/annotation-workspace.html?task_id=T002&sample_id=emo-001&role=annotator&run_type=official_run&task_type=multi_label', h: 1400, note: '多選 chips（checkbox 語意）。' },
+        { no: 'V17', name: '單維評分 single_dim', qs: '?task_id=T004&sample_id=read-001&…&task_type=single_dim', p: '../prototype/pages/annotation/annotation-workspace.html?task_id=T004&sample_id=read-001&role=annotator&run_type=official_run&task_type=single_dim', h: 1400, note: '評分滑桿 slider。' },
+        { no: 'V18', name: '多維評分 multi_dim', qs: '?task_id=T005&sample_id=mt-001&…&task_type=multi_dim', p: '../prototype/pages/annotation/annotation-workspace.html?task_id=T005&sample_id=mt-001&role=annotator&run_type=official_run&task_type=multi_dim', h: 1400, note: '多維度滑桿（fluency/adequacy/coherence）。' },
+        { no: 'V19', name: '序列標記 sequence_tagging', qs: '?task_id=T006&sample_id=sequence-tagging-001&…&task_type=sequence_tagging', p: '../prototype/pages/annotation/annotation-workspace.html?task_id=T006&sample_id=sequence-tagging-001&role=annotator&run_type=official_run&task_type=sequence_tagging', h: 1500, note: 'Token 級標記（BIO scheme）、entity type bar + Color Dot。' },
+        { no: 'V20', name: '實體辨識 entity_recognition', qs: '?task_id=T007&sample_id=entity-recognition-001&…&task_type=entity_recognition', p: '../prototype/pages/annotation/annotation-workspace.html?task_id=T007&sample_id=entity-recognition-001&role=annotator&run_type=official_run&task_type=entity_recognition', h: 1500, note: 'Span 選取高亮、entity 色點。' },
+        { no: 'V21', name: '關係抽取 relation_identification', qs: '?task_id=T008&sample_id=rel-001&…&task_type=relation_identification', p: '../prototype/pages/annotation/annotation-workspace.html?task_id=T008&sample_id=rel-001&role=annotator&run_type=official_run&task_type=relation_identification', h: 1500, note: '實體對關係連結 UI。' },
+        { no: 'V22', name: '自由文字 free_text', qs: '?task_id=T009&sample_id=sum-001&…&task_type=free_text', p: '../prototype/pages/annotation/annotation-workspace.html?task_id=T009&sample_id=sum-001&role=annotator&run_type=official_run&task_type=free_text', h: 1400, note: 'Textarea 生成式輸入（摘要）。' },
+        { no: 'V23', name: '組合輸出 ABSA（ER+RI+multi_dim）', qs: '?task_id=T013&sample_id=absa-001&role=annotator&run_type=official_run', p: '../prototype/pages/annotation/annotation-workspace.html?task_id=T013&sample_id=absa-001&role=annotator&run_type=official_run', h: 1700, note: 'ADR-029 多輸出組合：整合面板。' },
+        { no: 'V24', name: '審查模式 reviewer', qs: '?task_id=T001&sample_id=sent-001&role=reviewer&run_type=official_run&task_type=single_label', p: '../prototype/pages/annotation/annotation-workspace.html?task_id=T001&sample_id=sent-001&role=reviewer&run_type=official_run&task_type=single_label', h: 1500, note: 'Approve/Reject mini buttons（語意 token active 態）、annotator 答案 diff。' },
+      ]},
+      { title: '資料集分析詳情 · 型態 × Tab', file: 'dataset/dataset-analysis-detail.html', desc: '?task_id 決定輸出型態組合（TASK_META），?tab=stats|quality 切換統計總覽／品質監控 partial。', views: [
+        { no: 'V25', name: 'single_label 統計', qs: '?task_id=T001&tab=stats', p: '../prototype/pages/dataset/dataset-analysis-detail.html?task_id=T001&tab=stats', h: 1700, note: '標籤分佈統計卡。' },
+        { no: 'V26', name: 'multi_label 統計', qs: '?task_id=T002&tab=stats', p: '../prototype/pages/dataset/dataset-analysis-detail.html?task_id=T002&tab=stats', h: 1700, note: '多標籤共現統計。' },
+        { no: 'V27', name: 'single_dim 統計', qs: '?task_id=T004&tab=stats', p: '../prototype/pages/dataset/dataset-analysis-detail.html?task_id=T004&tab=stats', h: 1700, note: '分數分佈直方。' },
+        { no: 'V28', name: 'multi_dim 統計', qs: '?task_id=T005&tab=stats', p: '../prototype/pages/dataset/dataset-analysis-detail.html?task_id=T005&tab=stats', h: 1700, note: '各維度分佈。' },
+        { no: 'V29', name: 'sequence_tagging 統計', qs: '?task_id=T006&tab=stats', p: '../prototype/pages/dataset/dataset-analysis-detail.html?task_id=T006&tab=stats', h: 1700, note: 'Tag 分佈、token 統計。' },
+        { no: 'V30', name: 'entity_recognition 統計', qs: '?task_id=T007&tab=stats', p: '../prototype/pages/dataset/dataset-analysis-detail.html?task_id=T007&tab=stats', h: 1700, note: 'Entity 型別統計 + Color Dot。' },
+        { no: 'V31', name: 'relation_identification 統計（IAA 未通過）', qs: '?task_id=T008&tab=stats', p: '../prototype/pages/dataset/dataset-analysis-detail.html?task_id=T008&tab=stats', h: 1700, note: 'IAA fail 狀態：Status Dot（紅）。' },
+        { no: 'V32', name: 'free_text 統計', qs: '?task_id=T009&tab=stats', p: '../prototype/pages/dataset/dataset-analysis-detail.html?task_id=T009&tab=stats', h: 1700, note: '長度分佈等文字統計。' },
+        { no: 'V33', name: '品質監控 quality（single_label）', qs: '?task_id=T001&tab=quality', p: '../prototype/pages/dataset/dataset-analysis-detail.html?task_id=T001&tab=quality', h: 1700, note: 'IAA 門檻 Status Dot、Cause Tag 品質風險原因。' },
+        { no: 'V34', name: '品質監控 quality（組合輸出 T013）', qs: '?task_id=T013&tab=quality', p: '../prototype/pages/dataset/dataset-analysis-detail.html?task_id=T013&tab=quality', h: 1700, note: 'ER+RI+multi_dim 三輸出品質分區。' },
+        { no: 'V35', name: '空狀態 empty', qs: '?task_id=T001&tab=stats&s_state=empty', p: '../prototype/pages/dataset/dataset-analysis-detail.html?task_id=T001&tab=stats&s_state=empty', h: 1100, note: 'Empty state：前往任務詳情 CTA。' },
+      ]},
+    ];
+    const viewGroups = VG.map(g => ({
+      ...g,
+      views: g.views.map(v => ({
+        ...v,
+        src: v.p,
+        boxW: Math.round(1440 * zoom),
+        boxH: Math.round(v.h * zoom),
+      })),
+    }));
+
+    return { darken: dark, lighten: light, zoom, showDark, colorGroups, spacings, libGroups, screens, matrix, viewGroups };
+  }
+}
+</script>
+</body>
+</html>

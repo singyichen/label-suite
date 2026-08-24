@@ -6,6 +6,7 @@
 > **最後掃描：** 2026-07-10
 > **掃描頁面：** account/login.html、account/register.html、account/forgot-password.html、account/reset-password.html、account/profile.html、dashboard/dashboard.html、admin/user-management.html、admin/role-settings.html、task-management/task-detail.html、task-management/task-list.html、task-management/task-new.html、task-management/task-detail.panels/*、annotation/annotation-list.html、annotation/annotation-workspace.html、annotation/annotation-workspace.panels/*、dataset/dataset-analysis-list.html、dataset/dataset-analysis-detail.html、dataset/dataset-analysis-detail.partials/*
 > **Design Token 來源：** `design/prototype/assets/tokens.css`
+> **反向索引：** [screen-inventory.md](screen-inventory.md)（「頁面 → 元件」視角；兩檔掃描日期必須一致）
 
 ---
 
@@ -19,6 +20,7 @@
 | MASTER.md 補上該元件規格 | 狀態改為 ✅ 已定義 |
 | 既有元件出現在新頁面 | 更新該元件的「出現頁面」欄 |
 | 元件從所有 prototype 中移除 | 狀態改為 🔒 封存 |
+| 本文件重新掃描 | 同步重掃 [screen-inventory.md](screen-inventory.md)，兩檔掃描日期保持一致 |
 
 > `/label-suite-design` skill 以條件式引用本文件：僅在引入新 UI 元件時讀取，不在每次生成頁面時讀取。
 
