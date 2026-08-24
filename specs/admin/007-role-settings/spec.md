@@ -1,7 +1,7 @@
 ---
 功能分支: feat/admin/007-role-settings
 建立日期: 2026-04-16
-版本: 1.1.12
+版本: 1.1.13
 狀態: Draft
 ---
 
@@ -145,6 +145,14 @@ Super Admin 可在角色設定頁看到完整角色矩陣，清楚區分 system 
     - 手動關閉按鈕
   - 顯示於頁面右下角；4 秒後自動消失，或使用者手動關閉
   - 儲存成功與版本衝突各觸發不同訊息文案
+- 區塊 G：`未儲存變更 Banner`
+  - 觸發：編輯模式下有任何欄位變更且尚未儲存（`isDirty = true`）
+  - 必要元素：
+    - 警示圖示
+    - 標題：`有未儲存的變更`
+  - 預設為隱藏；顯示於頁面頂部，`role="alert"` 可被螢幕報讀器主動宣告
+  - 儲存成功、或透過區塊 E 確認放棄變更後，隨即隱藏
+  - 與區塊 E（取消確認對話框）為互補關係：本 banner 是持續性狀態指示，區塊 E 才是實際攔截「取消」動作的決策點；banner 本身不提供任何互動控制項
 
 **行為規則**：
 
@@ -408,6 +416,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.1.13 | 2026-08-24 | Issue #261 drift 修正：v1.1.7 記錄「移除頂部有未儲存變更 banner，改以取消確認對話框」，但核實 git 歷程與現行 `role-settings.html`／`role-settings.spec.ts`，banner 已於 PR #50 review 後（`524dfbd`）刻意加回並持續維護、有 6 個既有 Playwright 斷言鎖定其顯示/隱藏行為，且具 `role="alert"` 可及性語意；取消確認對話框（區塊 E）亦確認已正確實作（`cancelEdit()` 有未儲存變更時呼叫 `showDirtyModal()`），並非 issue 原始核實所述的直接放棄。banner 與確認對話框為互補關係非互斥，新增區塊 G（未儲存變更 Banner）補齊此前缺漏的介面定義，不修改任何 prototype 程式碼或測試；v1.1.7 歷史記錄保留不變，本次以新增條目方式修正認知落差。 |
 | 1.1.12 | 2026-08-20 | Issue #261：新增 Prototype Traceability，界定 `role-settings.html` 的頁面責任，並將 `user-management.html` 限定為 admin tab 導覽交叉參照。 |
 | 1.1.11 | 2026-05-22 | Spec gap 補齊：新增區塊 D（版本衝突 Banner）、區塊 E（取消確認對話框）、區塊 F（Toast 通知）至使用者故事 1 介面定義 |
 | 1.1.10 | 2026-05-22 | Prototype 同步：操作紀錄按鈕移至「編輯」右側；修正 drawer 關閉按鈕（icon-only × SVG）與 badge 樣式（補齊 .badge base CSS） |
