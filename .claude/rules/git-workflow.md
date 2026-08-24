@@ -13,6 +13,7 @@ One purpose = one cohesive unit that a reviewer can understand with a single men
 - One refactor (one structural concern: rename, extract, simplify)
 - One infra/tooling change (one build/CI/config concern)
 - One governance change (constitution amendment + all propagation caches, templates, and commands)
+- One OpenSpec change (`openspec/changes/<change>/`) — propose, apply, and archive stay in the same PR; if a change touches requirements, the write-back to the canonical `specs/[module]/spec.md` (version bump + Changelog) must land in the same PR (ADR-033 Rule 1)
 
 ### What must be split into separate PRs
 

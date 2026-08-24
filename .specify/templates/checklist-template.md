@@ -19,8 +19,8 @@
   /speckit.checklist 必須根據以下內容產生實際項目：
   - 所請求的清單類型
   - spec.md 中的功能需求
-  - plan.md 中的技術脈絡
-  - tasks.md 中有助識別需求缺口的相關任務脈絡
+  - design.md 中的技術脈絡（OpenSpec change，若存在；foundation-000 等例外情形則為 plan.md）
+  - tasks.md 中有助識別需求缺口的相關任務脈絡（OpenSpec change 的 tasks.md）
 
   產生的清單檔案不得保留任何示例項目。
   清單項目必須驗證需求完整性、清晰度、一致性、可量化性與涵蓋範圍。
@@ -80,7 +80,7 @@
 - [ ] CHK019 上下游相依性與假設是否附有驗證期望？[Assumption, Spec §已釐清事項]
 - [ ] CHK020 範圍外項目或延後決定是否明確列出（含多期交付的分期邊界表），以免被誤認為需求？[Completeness, Spec §範圍外]
 - [ ] CHK021 需求是否具備足夠的可追蹤性，使任務可對應回使用者故事或 FR ID？[Traceability, Spec §功能需求]
-- [ ] CHK022 功能目標是否已在 spec.md 中明確陳述，且 plan.md 的功能目標與其一致？[Traceability, Spec §功能目標]
+- [ ] CHK022 功能目標是否已在 spec.md 中明確陳述，且 OpenSpec change 的 design.md（若存在，否則 proposal.md）所述目標與其一致？[Traceability, Spec §功能目標]
 
 ## 備註
 

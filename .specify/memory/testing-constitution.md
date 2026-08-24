@@ -157,6 +157,6 @@ pnpm playwright test --headed
 
 ## XIV. Merge Gate
 
-A change is test-complete only when Red-Green-Refactor evidence exists in local or PR history, all relevant backend/frontend/prototype/security/E2E tests pass, coverage thresholds are met, no debug `print` or `console.log` remains, and `/speckit.analyze` findings are resolved before PR creation.
+A change is test-complete only when Red-Green-Refactor evidence exists in local or PR history, all relevant backend/frontend/prototype/security/E2E tests pass, coverage thresholds are met, no debug `print` or `console.log` remains, and `/opsx:verify` (or `openspec validate`) findings are resolved before PR creation.
 
 All PRs must verify compliance with `.specify/memory/constitution.md` and every applicable domain constitution before merging.

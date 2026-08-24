@@ -1,16 +1,15 @@
 # 規格狀態索引
 
 > **用途**：作為所有功能規格流程狀態的單一真實來源（Single Source of Truth）。
-> **更新規則**：當建立新的 spec 產物、開啟分支，或功能被封存時，需更新本表。
+> **更新規則**：當建立新的 spec 產物、開啟分支、開啟或封存 OpenSpec change，或功能被封存時，需更新本表。
 > **封存規則**：功能實作合併至 `main` 後，執行 `mv specs/[module]/NNN-feature specs/_archive/NNN-feature`，並將 Status 更新為 `archived`。
 
 ## 狀態說明
 
 | Status | 說明 |
 |--------|------|
-| `spec-ready` | 已有 `spec.md`，尚未開始 planning |
-| `plan-ready` | 已建立 `plan.md`，尚未拆解 tasks |
-| `tasks-ready` | 已建立 `tasks.md`，尚未開始實作 |
+| `spec-ready` | 已有 `spec.md`，尚未開啟 OpenSpec change |
+| `change-open` | `openspec/changes/<change>/` 已建立（`/opsx:propose` 已完成），尚未 `/opsx:archive`。進入條件：change 的 `proposal.md` frontmatter 標明對應此 spec；離開條件：`/opsx:archive` 完成（回寫正典 spec 版本號與 Changelog），轉為 `in-progress` 或 `done` |
 | `in-progress` | 實作分支進行中 |
 | `review` | PR 已開啟，等待合併 |
 | `done` | 已合併至 `main`，尚未封存 |
@@ -23,8 +22,8 @@
 
 | ID | 功能 | 模組 | 狀態 | 分支 | 備註 |
 | --- | --- | --- | --- | --- | --- |
-| foundation-000 | Foundation — 工程基準與共同約束 | foundation | `plan-ready` | `feat/foundation/000-foundation` | spec v1.12.2；FR-001~131；SC-001~045；plan v2.0.0（Foundation-Core）；Observability 延後 |
-| account-001 | Login — Email / Password | account | `plan-ready` | `feat/account/001-login-email-password` | spec v1.2.4；規格狀態：Clarified |
+| foundation-000 | Foundation — 工程基準與共同約束 | foundation | `spec-ready` | `feat/foundation/000-foundation` | spec v1.12.2；FR-001~131；SC-001~045；plan.md v2.0.0（Foundation-Core）保留為常設架構文件（ADR-033 例外，非 OpenSpec change 產物）；Observability 延後 |
+| account-001 | Login — Email / Password | account | `spec-ready` | `feat/account/001-login-email-password` | spec v1.2.4；規格狀態：Clarified；plan.md v2.0.0 於首個 OpenSpec change 作為 design.md 參考素材，之後歸檔（ADR-033） |
 | account-002 | Login — Google SSO | account | `spec-ready` | `feat/account/002-login-google-sso` | spec v1.2.3；規格狀態：Clarified |
 | account-003 | Register — Email / Password | account | `spec-ready` | `feat/account/003-register-email-password` | spec v1.2.7；規格狀態：Clarified |
 | account-004 | Forgot / Reset Password | account | `spec-ready` | `feat/account/004-forgot-reset-password` | spec v1.1.4；規格狀態：Clarified |
@@ -55,6 +54,7 @@
 
 | 日期 | 更新內容 |
 |------|----------|
+| 2026-08-24 | Issue #294（ADR-033 治理條文改寫）：狀態機簡化，移除 `plan-ready`／`tasks-ready` 兩態，新增 `change-open`（對應 `openspec/changes/<change>/` propose 已建立、尚未 archive）；`foundation-000` 與 `account-001` 由 `plan-ready` 改標 `spec-ready`，其 `plan.md` 分別保留為常設架構文件（ADR-033 例外）與首個 OpenSpec change 的 `design.md` 參考素材。純狀態機與備註欄調整，不影響 spec 版本號。 |
 | 2026-08-24 | Issue #261 drift 修正（最後一項，issue #261 涵蓋範圍全數完成）：`dashboard-012` 更新至 v2.4.1（FR-018／FR-019、SC-017／SC-018）——`task_membership` 先前完全同步渲染、無 Skeleton 亦無 API 錯誤／重試狀態。新增模擬非同步載入（`MEMBERSHIP_LOAD_DELAY_MS = 400`，原型無後端）：載入中顯示 Skeleton（指標卡＋任務列表佔位塊、`aria-busy="true"`）；失敗時結束 Skeleton、顯示 i18n 錯誤訊息與重試按鈕，不 fallback 一般使用者視圖、不清除 session、不導向 `/login`；重試比照 `task-list.html` 既有慣例視為必定成功。沿用既有 `?view=error` 慣例並新增 `?view=skeleton`（僅原型測試 hook，非正式產品 query）供決定性測試。新增 `dashboard-membership-load.spec.ts`（5 案例）；連帶修正既有 overflow 測試誤以恆常可見的 `dashboard-shell` 作為就緒訊號、實際量測 Skeleton 版面而非最終內容版面的問題。`tests/dashboard/`（65）、`tests/shared/`、`tests/cross-role/` 相關測試全數通過。規格條文本已正確，僅原型未落實。issue #261 的文件層（15 UI spec traceability）、proto-sync.md 更新、6 項行為 drift 至此全數完成。 |
 | 2026-08-24 | Issue #261 drift 修正：`dataset-017` 更新至 v2.1.2（FR-002／`INVALID_TASK_TRIGGER`）——`dataset-analysis-detail.html` 的 `applyRouteTask()` 先前對未知或缺漏 `task_id` 靜默回退至 `DEFAULT_TASK_ID`（T001），與規格「導回 `/dataset-analysis` 並顯示錯誤提示」不符（規格條文本已正確，僅原型未落實）。修正為 init 階段驗證 `task_id` 存在於 `TASK_META`，不存在則導向列表頁並帶 `invalid_task=1`，列表頁顯示錯誤 toast（新增 i18n 鍵 `toastInvalidTask`）。TDD：先將既有鎖定回退行為的測試（`dataset-analysis-detail-registry-mirror.spec.ts`）改為斷言正確導回行為並新增缺漏 `task_id` 情境，確認紅燈後才實作；連帶修正兩個原依賴回退行為省略 `task_id` 的既有測試。`tests/dataset/`（76）、`tests/shared/`＋`tests/cross-role/`（109，2 項 pre-existing D2 gap `test.fail()` 不計入）、`tests/dashboard/`（60）全數通過，`tsc --noEmit` 乾淨。 |
 | 2026-08-24 | Issue #261 drift 修正：`admin-007` 更新至 v1.1.13——核實 git 歷程與現行 `role-settings.html`／`role-settings.spec.ts`，發現 v1.1.7 記錄的「移除頂部未儲存變更 banner」與實際程式碼不符：banner 於 PR #50 review 後（`524dfbd`）刻意加回並持續維護，有 6 個既有 Playwright 斷言鎖定其顯示/隱藏、具 `role="alert"` 可及性語意；取消確認對話框（區塊 E）也已正確實作，並非直接放棄變更。banner 與確認對話框為互補關係，新增區塊 G 補齊介面定義；純文件修正，v1.1.7 歷史記錄保留不變，不改變任何 prototype 程式碼或測試。 |

@@ -5,6 +5,8 @@
 狀態: Draft
 ---
 
+> **⚠️ Deprecated（ADR-033，issue #294）**：`/speckit.plan` 已退役，一般功能改用 OpenSpec `/opsx:propose` 產出 `design.md`。本樣板僅保留給 `specs/foundation/000-foundation/plan.md` 這類常設架構文件例外使用；新功能請勿再套用本樣板。
+
 # 實作計畫：[功能名稱]
 
 **規格**: [連結至 `specs/[module]/NNN-feature/spec.md`]

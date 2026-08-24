@@ -26,7 +26,7 @@ Add to `~/.claude/settings.json`:
   → [senior-uiux review]         Review prototype: fidelity, a11y, ZH/EN/mobile symmetry
   → /speckit.clarify (optional)  Prototype + optional wireframe make ambiguities concrete
 
-  [Optional: Research Agents] — spawn before /speckit.plan for complex features
+  [Optional: Research Agents] — spawn before /opsx:propose for complex features
 
   ├──→ [ArchitectAgent]         overall structure, cross-cutting integration points, naming conventions
   ├──→ [SAAgent]                business flow analysis → Mermaid flowchart   ← from spec.md scenarios, not codebase
@@ -41,11 +41,11 @@ Add to `~/.claude/settings.json`:
        ↓ Team Lead synthesizes findings
   ⚠️  Human Review — confirm research findings before writing plan
 
-/speckit.plan → /speckit.checklist → /speckit.tasks → /speckit.analyze
-  → Fix every analyze finding and rerun /speckit.analyze until clear before Phase 2
+/opsx:propose (drafts design.md + tasks.md) → /speckit.checklist → /opsx:verify
+  → Fix every verify finding and rerun /opsx:verify until clear before Phase 2
 
 ── Phase 2: Agent Team Implementation ────────────────────────────────────────
-[Team Lead] reads tasks.md and spawns teammates:
+[Team Lead] reads the change's tasks.md and spawns teammates:
 
   ⚠️  Human Review checkpoint — required before any DB schema or API contract change
 
@@ -98,8 +98,8 @@ Run /pr-flow
 | Teammate | Agent Type | Responsible For |
 |---|---|---|
 | ArchitectAgent | `senior-architect` | Overall structure, cross-cutting integration points, naming conventions |
-| SAAgent | `senior-sa` | Business flow analysis from `spec.md` user scenarios → Mermaid flowchart, embedded in `plan.md` |
-| SDAgent | `senior-sd` | UML class / sequence diagrams (Mermaid) for the planned feature, embedded in `plan.md` |
+| SAAgent | `senior-sa` | Business flow analysis from `spec.md` user scenarios → Mermaid flowchart, embedded in `design.md` |
+| SDAgent | `senior-sd` | UML class / sequence diagrams (Mermaid) for the planned feature, embedded in `design.md` |
 | DBResearchAgent | `senior-dba` | Review DB schema, identify migration strategy |
 | APIDesignAgent | `senior-api-designer` | Existing API contracts, REST naming, OpenAPI conflicts |
 | BackendResearchAgent | `senior-backend` | Service boundaries in `backend/app/services/` |
@@ -162,17 +162,17 @@ Before writing the plan for [feature], spawn a read-only research team:
 - NLPAdvisorAgent (nlp-research-advisor): for annotation or NLP task features, review annotation
   schema, IAA metrics, and Demo Paper framing
 All agents are read-only — no file edits. SAAgent and SDAgent return diagrams as Mermaid text in their
-findings; the diagrams feed into /speckit.plan and are written into plan.md's diagram sections when the
-template is filled (plan.md does not exist before /speckit.plan runs). Synthesize all findings for plan.md.
+findings; the diagrams feed into /opsx:propose and are written into design.md's diagram sections when the
+change is drafted (design.md does not exist before /opsx:propose runs). Synthesize all findings for design.md.
 ```
 
 ### Implementation Team
 
 ```
-Create an agent team to implement [feature] based on specs/[module]/NNN-feature/tasks.md.
+Create an agent team to implement [feature] based on openspec/changes/<change>/tasks.md.
 Spawn in this order (TDD):
 Before Step A — verify current branch is not main, run /speckit.checklist if not already complete,
-confirm specs/[module]/NNN-feature/tasks.md exists, and run /speckit.analyze until clear.
+confirm openspec/changes/<change>/tasks.md exists, and run /opsx:verify until clear.
 Step A — senior-qa: write failing tests first (own backend/tests/, frontend/tests/, e2e/)
           ↓ confirm newly added tests fail (red); existing passing tests must remain green
 Step B — parallel implementation (after failing tests confirmed):

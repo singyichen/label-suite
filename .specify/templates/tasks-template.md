@@ -5,6 +5,8 @@
 狀態: Draft
 ---
 
+> **⚠️ Deprecated（ADR-033，issue #294）**：`/speckit.tasks` 已退役。任務分解改由 OpenSpec `/opsx:propose` 產出 `openspec/changes/<change>/tasks.md`；本樣板的任務粒度／TDD 拆分規則仍適用於該 `tasks.md`，但不再由 `/speckit.tasks` 指令產生。
+
 # 任務：[功能名稱]
 
 **輸入**: `specs/[module]/NNN-feature/` 下的設計文件
