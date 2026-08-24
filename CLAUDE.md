@@ -79,21 +79,23 @@ Every implementation sprint follows a strict **Planner → Generator → Evaluat
 
 **Evaluator**: External tools only — pytest, mypy, ruff, tsc, Playwright. No self-assessment. **Hard threshold**: any single failure = sprint failure; stop and surface to user.
 
-> SDD mapping: Planner ≈ `speckit.specify → speckit.plan → speckit.tasks` · Generator ≈ `speckit.implement` · Evaluator ≈ `speckit.analyze → speckit.checklist`
+> SDD mapping: Planner ≈ `speckit.specify` / `speckit.clarify` + OpenSpec propose · Generator ≈ OpenSpec apply · Evaluator ≈ verification commands + write-back Source-Verify gate
 
 ## Spec-Driven Development (SDD)
 
-Full pipeline — each stage is a hard gate:
+Full pipeline — each stage is a hard gate. OpenSpec is the implementation/change-workflow layer; `specs/` remains the sole canon (SSoT) — see [ADR-033](docs/adr/033-openspec-change-workflow.md).
 
 ```text
 /superpowers:brainstorm → /speckit.specify → /label-suite-design (prototype) → /pencil-wireframe (frozen — see design/wireframes/README.md)
   → /speckit.clarify (optional)
-  → /speckit.plan → /speckit.tasks → /speckit.implement → /speckit.analyze → /speckit.checklist → /pr-flow
+  → /opsx:propose → /opsx:apply → /opsx:archive → /pr-flow
 ```
 
 **TDD (REQUIRED)**: You MUST NOT write implementation code before writing a failing test. No exceptions.
 
-**Pre-PR gate (REQUIRED)**: `/speckit.analyze` must report zero findings before every PR.
+**Pre-PR gate (REQUIRED)**: the OpenSpec change must pass `/opsx:verify` (or `openspec validate` — see ADR-033 Open Questions), and the write-back Source-Verify gate must pass, before every PR.
+
+**Write-back is a hard gate**: archiving a change must write back to the canonical `specs/[module]/NNN-feature/spec.md` — a version bump plus a Changelog entry. A PR whose change touches requirements but does not update the canonical `spec.md` must not be merged (ADR-033 Rule 1).
 
 **Module names** (align with `features/` and `specs/[module]/`):
 `account` · `dashboard` · `task-management` · `annotation` · `dataset` · `admin`
@@ -109,18 +111,18 @@ Full pipeline — each stage is a hard gate:
 
 **Archive**: After PR merged → `mv specs/[module]/NNN-feature specs/_archive/` → update `specs/STATUS.md`.
 
-**Modify Existing Feature**: When changing an already-merged feature, do NOT create a new spec from scratch:
+**Modify Existing Feature**: When changing an already-merged feature, carry the change in an OpenSpec change folder — do NOT create a new spec from scratch:
 
-1. `mv specs/_archive/NNN-feature specs/[module]/NNN-feature` — retrieve from archive
-2. `git checkout -b feat/[module]/NNN-feature` — create/switch to feature branch (Speckit scripts resolve from branch name; running from `main` aborts the pipeline)
-3. Bump spec version + record change in spec Changelog
-4. Resume pipeline from `/speckit.clarify` (skip brainstorm + specify)
-5. Re-archive after the modification PR merges
+1. `openspec/changes/<change>/proposal.md` names the corresponding canonical spec (`specs/[module]/NNN-feature/spec.md`) in its frontmatter; retrieve the spec from `specs/_archive/` first only if it needs direct editing during apply
+2. `/opsx:propose` — draft the delta (`## MODIFIED Requirements`, referencing stable FR/AC IDs) + `tasks.md` (+ `design.md` if the change touches an API contract or DB schema)
+3. `/opsx:apply` — implement via TDD
+4. `/opsx:archive` — dual-write: auto-merge into the derived `openspec/specs/` view, and write back to the canonical `specs/[module]/NNN-feature/spec.md` (version bump + Changelog entry — the hard gate above)
+5. Re-archive the canonical spec after the modification PR merges, if it was retrieved from `specs/_archive/`
 
-**Lightweight Path**: Skip the full pipeline when ALL of the following are true: ≤ 2 production code files changed (spec and test files excluded) · no API contract changes · minor behavior change requiring a spec update.
+**Lightweight Path**: Skip the full OpenSpec change container when ALL of the following are true: ≤ 2 production code files changed (spec and test files excluded) · no API contract changes · minor behavior change requiring a spec update · **no requirement (FR/AC) is added or removed, only clarified**.
 Lightweight sequence: **TDD → implement → spec consistency review → `/pr-flow`**
 (Spec consistency review: verify spec version bump and Changelog entry, confirm no downstream specs affected, confirm no API contracts changed.)
-If any condition is uncertain, default to the full pipeline.
+If any condition is uncertain, default to the full OpenSpec change flow.
 
 ## Constitution
 
@@ -151,7 +153,7 @@ pnpm playwright test
 Every CI job must have a matching local command above — when adding a CI job, add its command here in the same PR.
 Exception: `.github/workflows/claude.yml` is an agent trigger (summons Claude Code on `@claude` comments), not a verification gate — it has no local equivalent and never blocks a merge.
 
-Definition of Done: all commands above exit 0 + `/speckit.analyze` reports zero findings.
+Definition of Done: all commands above exit 0 + OpenSpec change verification (`/opsx:verify` or `openspec validate`) passes + write-back Source-Verify gate passes.
 
 ## Prohibitions
 
@@ -161,6 +163,7 @@ Each rule traces to a specific incident (Ratchet Principle — Mitchell Hashimot
   - Reason: 2026-04 — violated twice; PreToolUse hook now blocks `git push origin main`
 - ❌ `pip install` or `npm install`
   - Reason: lockfile divergence causes silent CI failures; use `uv add` / `pnpm add`
+  - Exception: global tool installs (e.g. `pnpm add -g openspec`) don't write to a repo lockfile, so they aren't covered by this prohibition (ADR-033 Open Questions #2)
 - ❌ Chinese text in commit messages or PR descriptions
   - Reason: 2026-04 — PR description contained Chinese; breaks English-only contract
 - ❌ `allow_origins=["*"]` in CORS config
