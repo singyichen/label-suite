@@ -1,7 +1,7 @@
 ---
 功能分支: docs/208-official-gold-fr
 建立日期: 2026-04-23
-版本: 4.16.0
+版本: 4.17.0
 狀態: Draft
 ---
 
@@ -142,6 +142,7 @@ Annotator / Reviewer 進入標記模組時，支援兩種入口：dashboard 任�
 16. **AC-1.16（v4.2.0 新增，對應 FR-055）**：**Given** `role = reviewer` 於清單點擊任一列的 `編輯` 按鈕或資料列本身，**When** 觸發導頁，**Then** 導向 `annotation-workspace` 並帶入 `task_id/sample_id/run_type/role` 與**該列的 `annotator_id`**（沿用 FR-049 身分參數傳遞規則），使工作區審核卡開在同一個審核單位上；**And** 清單不得提供任何逐列或批次的 `通過` / `退回` 決策控件，亦不得提供 `送出審核` 按鈕——兩種 `run_type` 皆然。
 17. **AC-1.17（v4.2.0 新增，對應 FR-055）**：**Given** `role = reviewer` 清單含標記分布統計欄，**When** 同一樣本展開為多個審核單位列，**Then** 各列統計欄顯示相同的跨標記員分布數值（統計單位仍為樣本，非審核單位），且與工作區統計取自同一實作來源；**And** 該欄純為唯讀比對脈絡，不承載任何決策語意。
 18. **AC-1.18（v4.7.0 新增，對應 FR-060）**：**Given** 一個 `official_run` 審核單位因標記員與某審核員答案不一致而推導為 `爭議中`，**When** 具 `can_arbitrate` 旗標且未參與該單位審核的審核員開啟清單並選擇 `爭議中` 篩選，**Then** 恰顯示該爭議列（含 `爭議中` 徽章與標記員帳號），其列動作為 `仲裁`（`list-arbitrate-entry`），點擊後導向工作區且網址攜帶完整審核單位身分（`task_id / sample_id / annotator_id / reviewer_id`）；**And** 提交差異決策的當事審核員與未具旗標的審核員於同一爭議列維持 `編輯`；**And** 非 `disputed` 之列對任何審核員皆不出現 `仲裁`。
+19. **AC-1.19（v4.15.0 新增，對應 FR-007I，issue #188）**：**Given** 清單中某列的文本摘要長度超過截斷行數（如長文本任務 QA／摘要／多輪對話種子 T009／T012／T013），**When** 清單渲染完成，**Then** 該列文本摘要預設以固定行數 CSS line-clamp 截斷、列高不因原文長度撐高，且該列渲染「展開全文」toggle（`list-text-toggle`）；**And** 點擊 toggle 後該列全文展開顯示、按鈕文字切換為「收合」，再次點擊恢復截斷狀態；**And** toggle 點擊不得觸發該列既有的導頁至 `annotation-workspace` 行為（`stopPropagation`，Annotator／Reviewer 視圖皆適用）；**And** 文本摘要未超過截斷行數的資料列（如 `single_label` 短句）不渲染 toggle。
 
 **介面定義（需與 IA 導覽語意一致）**：
 
@@ -595,6 +596,7 @@ Reviewer 在 `run_type = official_run` 的工作區中，針對「目前標記�
 - **FR-007E**: 在 `<= MOBILE_BP` 時，清單列內容必須避免異常垂直撐高；文本摘要需提供行動版可讀截斷策略，且儲存格對齊不得造成首列明顯下沉。
 - **FR-007G**: `annotation-list` 的資料表底部必須提供與 `task-list` 一致的 footer pagination，至少包含總筆數 / 目前頁數、每頁筆數切換與上一頁 / 下一頁 / 頁碼按鈕，且 Annotator / Reviewer 兩種視圖皆適用。
 - **FR-007H**: `annotation-list` 套用完成狀態篩選、關鍵字搜尋或清除篩選時，footer pagination 必須回到第 1 頁，並依目前結果集即時重算總筆數與頁數；當結果為空時可隱藏 pagination。
+- **FR-007I**（v4.15.0 新增，對應 AC-1.19，issue #188）：`annotation-list` 的文本摘要欄位（Annotator 與 Reviewer 視圖皆適用）預設必須以固定行數 CSS line-clamp 截斷呈現，不得因原文長度撐高列高；文本長度超過截斷行數的資料列必須提供「展開全文」toggle 按鈕，點擊後切換該列全文顯示與截斷狀態，且該按鈕點擊不得觸發該列既有的導頁至 `annotation-workspace` 行為（`stopPropagation`）。本條與 FR-007E 的行動版緊湊列高需求互補——行動版沿用同一截斷＋toggle 機制，不另立第二套策略。
 - **FR-008**: Annotator 視圖下點擊清單任一資料列或其 `編輯` 按鈕時，必須導向 `annotation-workspace` 並帶入 `task_id/sample_id/run_type/role`；Reviewer 視圖下資料列點擊為展開/收合標記員明細，導頁僅經由每列 `編輯` 按鈕觸發（帶入相同參數）。
 - **FR-009**: 由 `annotation-workspace` 返回 `annotation-list` 時，系統必須還原 `task_id` / `run_type` 上下文並保留捲動位置。
 - **FR-010**: 清單中被鎖定資料必須可辨識，且點擊時必須阻擋寫入模式並提供唯讀檢視或重試提示。
@@ -900,6 +902,7 @@ flowchart LR
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 4.17.0 | 2026-08-24 | **文本摘要截斷 + 展開 toggle**（issue #188，源自 issue #180 finding F-05）：長文本任務（QA／摘要／多輪對話，如 T009／T012／T013 種子）清單列因 `.text-snippet` 明確停用截斷（`overflow: visible; text-overflow: clip`）而整段原文換行，列高過高降低清單可掃描性。改為預設固定行數（3 行）CSS line-clamp，超出截斷行數的資料列另提供「展開全文」toggle（`list-text-toggle`），點擊切換該列全文/截斷狀態；toggle 點擊 `stopPropagation`，不與既有列點擊導頁至 `annotation-workspace` 行為衝突（Annotator／Reviewer 視圖皆適用，沿用 v4.2.0 起 reviewer 列點擊即導頁的既有行為）。新增 **FR-007I**、**AC-1.19**。原型：`.text-snippet-content` 承載 line-clamp／`.text-snippet-toggle` 為新增按鈕元件，兩處既有的 `textTd.textContent = item.text` 手動組裝改為共用 `buildTextCell()` helper（annotator／reviewer 兩條渲染路徑同一實作來源）；新增 5 個 Playwright 測試（長文本列預設截斷＋toggle、短文本列無 toggle、toggle 展開/收合不導頁、annotator／reviewer 兩視圖列點擊仍正常導頁）。 |
 | 4.16.0 | 2026-08-24 | **指引閘門 modal——工作區進入前的說明確認流程之正式契約**（issue #287，源自 issue #184 修復／PR #228 之縫隙標記）：task-management-013 FR-005c／SC-006a 已定義觸發行為（`force_guideline` 時首次進入顯示說明彈窗，確認後不重複顯示），但 015 從未定義 workspace 端資料模型——modal 的觸發判定、內容來源、確認紀錄存放位置皆無正典可核對。新增 **FR-066**：（1）觸發判定沿用 `TaskProfile.forceShowGuideline`（即 013 `force_guideline`）；（2）modal 內容與右欄「說明與檔案」面板同一資料來源（`guidelineFiles` markdown 條目），不另維護第二份文字；（3）確認紀錄逐 `task_id` 獨立記錄，原型以 `localStorage`（`labelsuite.guidelineModalSeen.<task_id>`）示範，正式儲存實體留待後端定義；（4）**新增契約**——指引內容於任務發布後異動時，既有確認紀錄必須失效並強制重新確認，`TaskProfile` 須攜帶指引版本標記（具體形狀留待後端定義），確認紀錄比對須同時比對 `task_id` 與版本標記。同步擴充 `TaskProfile` 實體（`forceShowGuideline?`、`guidelineVersion?`）與 `GuidelineAsset` 實體（指引閘門確認紀錄段落）。**第 1–3 點為既有原型行為之正式化，第 4 點為新增契約，原型尚未實作版本追蹤**，其原型化屬本 FR 之後續 PR 範圍；不改變任何既有版面呈現。 |
 | 4.15.0 | 2026-08-24 | **仲裁重複投票（改票）之冪等語意**（issue #288，源自 issue #199 修復／PR #230 之縫隙標記）：`submitArbitration()`（`annotation-workspace.data.js:1751-1787`）自 issue #199 起已將同一仲裁者對同一爭議項的重複送出改為覆寫 `votes[]` 既有條目而非新增重複項，但此僅為實作選擇，spec 從未定義其為正式契約——正式開發的仲裁 API 因此缺乏重複投票的 HTTP 語意依據（idempotent PUT vs 409 conflict）。新增 **FR-065**：（1）覆寫、不新增，`votes[]` 每爭議項對同一仲裁者恰一筆，未來 API 對應端點須採 idempotent PUT 語意、不得回傳 409；（2）改票僅可能發生於審核單位仍為 `disputed` 期間，單位一旦 `finalized`（FR-051）即受 FR-053（v4.14.0）全面唯讀鎖定，不另發明解鎖流程；（3）覆寫後 `voted_at` 更新為最新時間，但不保留覆寫前的歷史值——逐次改票的完整歷程留待正式 API 審計歷程層設計；（4）逐項多數決收斂（FR-061）之輸入為審核員提交值，與仲裁者 `votes[]` 無關，改票不影響已收斂項；`ReviewUnit.status` 與收斂結果皆為推導、不快取（FR-051／FR-059），故改票後無需另行觸發重算步驟。**純 spec 補完，不改變任何原型行為**。 |
 | 4.14.1 | 2026-08-23 | **修正：提交儲存層並行儲存 lost-update**（issue #283，PR #277 首輪 CI 於 CONC-03 重現）：`labelsuite.wsSubmissions` 原為單一 key 的整包 read-modify-write，多分頁並行儲存時後寫者以舊讀快照覆蓋他人 bucket——且另一分頁已提交的寫入在同步儲存區塊內根本不可見（跨程序 localStorage 傳播需等讀方事件迴圈輪轉），故「寫入前重讀合併」修不了。改為**每個 bucket 獨立 key**（`labelsuite.wsSubmissions.<bucketKey>`），不同 bucket 的並行寫入在構造上不重疊；開機一次性將舊整包 blob 展開為 per-bucket keys（保留訪客草稿與已播種 demo 狀態，`reviewFlowDemoSeed.v1` marker 免 bump）；`readSubmissionBucket` 對非物件內容降級為空 bucket；bucket key 列舉固定排序（等時間戳歷程順序與爭議審核員列跨瀏覽器決定性）。**規格條文未變**：同 bucket 寫入維持原型層 last-write-wins（正式衝突政策屬後端 `CONFLICT_RESOLUTION_POLICY`）；殘餘同 bucket race（審核員退回 vs 標記員儲存）與仲裁 store 同型問題另行建單追蹤。新增回歸測試：真並行雙標記員儲存（Promise.all）、舊 blob 開機遷移、corrupt 值降級。 |
