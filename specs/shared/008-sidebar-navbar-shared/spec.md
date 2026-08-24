@@ -1,7 +1,7 @@
 ---
 功能分支: feat/shared/008-sidebar-navbar-shared
 建立日期: 2026-04-16
-版本: 1.4.1
+版本: 1.4.2
 狀態: Clarified
 ---
 
@@ -403,6 +403,15 @@ flowchart LR
 
 ---
 
+## Prototype Traceability
+
+| Artifact | Responsibility | Covered FR/SC | Verification | Status |
+|----------|----------------|---------------|--------------|--------|
+| [design/prototype/pages/shared/sidebar.js](../../../design/prototype/pages/shared/sidebar.js)<br>[design/prototype/pages/shared/sidebar.css](../../../design/prototype/pages/shared/sidebar.css) | Shared sidebar/navbar component: navigation, role-based menu, language toggle, notification dropdown, keyboard shortcuts overview, and RWD only; not exclusive to any single page — reused as-is (`<script src="../shared/sidebar.js">`) by every module's shell page. Consumed by 14 pages across account (5), admin (2), annotation (2), dashboard (1), dataset (2), task-management (3). | All FR/SC in this spec | [design/prototype/tests/shared/](../../../design/prototype/tests/shared/) (`sidebar-*.spec.ts`, `mobile-top-actions.spec.ts`) | Active; shared component |
+| [design/prototype/components-showcase.html](../../../design/prototype/components-showcase.html) | Living styleguide reference for shared component visual states; not a functional consumer page. | No additional FR/SC | [design/prototype/tests/shared/](../../../design/prototype/tests/shared/) (`components-showcase*.spec.ts`) | Active; reference only |
+
+---
+
 ## 規格相依性
 
 ### 上游（本規格依賴）
@@ -508,6 +517,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.4.2 | 2026-08-24 | Issue #261：新增 Prototype Traceability，明確對應共用 `sidebar.js`／`sidebar.css`（14 個消費頁面）與 living styleguide 參考頁的責任邊界；規格條文未變。 |
 | 1.4.1 | 2026-08-19 | 快捷鍵總覽 `R` 列標籤改為「退回目前結果（限正式標記）」（zh）／「Return current result (formal runs only)」（en）：annotation-015 AC-3.15／AC-6.4 將退回通道收斂為 official_run 專屬，標籤補上適用範圍註記（issue #191）；`A` 列標籤不變。同步修訂 AC 6 例示、FR-016G 與 SC-009D 的標籤字面。 |
 | 1.4.0 | 2026-08-17 | 移除快捷鍵總覽 `審核` section 的批次兩列（`Shift+A` 全部通過、`Shift+R` 全部退回）：annotation-015 v4.0.0 起審核單位為「樣本 × 標記員」，一次審核只涉及一位標記員，批次操作沒有可批次的對象；同版落地的 `A`／`R` 行為定義見 annotation-015 FR-054。新增 FR-016G，修訂 FR-016E 例示與 SC-009D 列舉。 |
 | 1.3.10 | 2026-05-22 | 釐清 Mobile 不支援快捷鍵總覽入口與 `?` 開啟行為；將快捷鍵 modal 入口與驗收收斂為 Desktop-only；固定缺少任務角色或上下文時的 gating fallback：標記作業導回 `/dashboard`、資料集分析導回 `/task-list`；界定通知 dropdown 僅為前端展示契約，資料由頁面或 prototype mock 提供 |
