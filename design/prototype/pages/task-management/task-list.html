@@ -345,6 +345,7 @@
 <!-- ══ NAVBAR ══════════════════════════════════════════════════ -->
 <div id="sharedSidebarMount"></div>
 <script src="../shared/sidebar.js"></script>
+<script src="../shared/modal-focus.js"></script>
 <script>
   window.LabelSuiteSharedSidebar.mountSidebar({
     mountId: 'sharedSidebarMount',
@@ -804,7 +805,7 @@
     render();
   }
 
-  function openDeleteModal(task) {
+  function openDeleteModal(task, triggerEl) {
     if (getDisplayedTaskRole() !== 'super_admin' && getDisplayedTaskRole() !== 'project_leader') {
       showToast(t('toastDeleteForbidden'), true);
       return;
@@ -819,6 +820,9 @@
     var modal = document.getElementById('deleteTaskModal');
     modal.classList.add('show');
     modal.setAttribute('aria-hidden', 'false');
+    if (window.LabelSuiteModalFocus) {
+      window.LabelSuiteModalFocus.open(modal, { trigger: triggerEl, onClose: closeDeleteModal });
+    }
   }
 
   function closeDeleteModal() {
@@ -826,6 +830,7 @@
     var modal = document.getElementById('deleteTaskModal');
     modal.classList.remove('show');
     modal.setAttribute('aria-hidden', 'true');
+    if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(modal);
   }
 
   function confirmDeleteModal() {
@@ -922,7 +927,7 @@
       deleteBtn.textContent = t('actionDelete');
       deleteBtn.addEventListener('click', function(e) {
         e.stopPropagation();
-        openDeleteModal(task);
+        openDeleteModal(task, e.target);
       });
       deleteBtn.addEventListener('keydown', function(e) {
         if (e.key === 'Enter' || e.key === ' ') e.stopPropagation();
@@ -1305,10 +1310,8 @@
   document.getElementById('deleteTaskModal').addEventListener('click', function(e) {
     if (e.target === this) closeDeleteModal();
   });
-  document.addEventListener('keydown', function(e) {
-    var modal = document.getElementById('deleteTaskModal');
-    if (e.key === 'Escape' && modal.classList.contains('show')) closeDeleteModal();
-  });
+  /* Escape-to-close is now handled by the LabelSuiteModalFocus trap
+     (pages/shared/modal-focus.js), scoped to the modal itself. */
 
   /* ── Init ────────────────────────────────────────────────────── */
   (function initStateFromUrl() {

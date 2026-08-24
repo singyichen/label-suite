@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-detail-config-sync
 建立日期: 2026-04-20
-版本: 2.1.0
+版本: 2.1.1
 狀態: In Progress
 ---
 
@@ -331,6 +331,16 @@ flowchart LR
 
 ---
 
+## Prototype Traceability
+
+| Artifact | Responsibility | Covered FR/SC | Verification | Status |
+|----------|----------------|---------------|--------------|--------|
+| [design/prototype/pages/task-management/task-list.html](../../../design/prototype/pages/task-management/task-list.html) | Task-list page shell, filters, sorting, pagination, delete-confirm flow, observable interaction, and RWD only; the spec remains authoritative for membership, filtering, and data contracts. | All FR/SC in this spec | [design/prototype/tests/task-management/](../../../design/prototype/tests/task-management/) (`task-list-*.spec.ts`, 3 files) | Active |
+| [design/prototype/pages/task-management/task-list.data.js](../../../design/prototype/pages/task-management/task-list.data.js) | Synthetic safe prototype fixtures and list-derivation helpers only; fixtures are prototype acceptance baselines, never an API, membership, or output-combination whitelist. | All FR/SC in this spec | [design/prototype/tests/task-management/](../../../design/prototype/tests/task-management/) (`task-list-*.spec.ts`, 3 files) | Active; page-owned data |
+| [design/system/pages/task-list.md](../../../design/system/pages/task-list.md) | Page-scoped design reference only; does not define runtime behavior, APIs, data, or product contracts. | No additional FR/SC | N/A (design reference) | Active; no wireframe (frozen baseline predates this page) |
+
+---
+
 ## 規格相依性 *(本功能依賴其他規格，或被其他規格依賴時填寫)*
 
 ### 上游（本規格依賴的規格）
@@ -410,6 +420,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.1.1 | 2026-08-24 | Issue #261：新增 Prototype Traceability，明確對應 task-list 原型頁面、prototype 資料層與設計層參考的責任邊界；規格條文未變。 |
 | 2.1.0 | 2026-08-21 | **示例基線擴充至 17 筆（審核流程示範 seed）**：新增 `review-flow-dry-run.json`、`review-flow-official-single.json`、`review-flow-official-multi.json`、`review-flow-official-tie.json` 四筆 `single_label` 示範任務（T014–T017），命中數基線 `single_label` 由 2 調整為 6，其餘輸出類型命中數不變；T014 以 `dry_run_in_progress`、T015–T017 以 `official_run_in_progress` 起始以示範進行中審核流程，原 13 筆 seed 的 draft 起始約定不變；016 Dataset Analysis List 與 dashboard 的 13 筆基線刻意不隨本次擴充 |
 | 2.0.2 | 2026-07-31 | **示例基線狀態統一為 draft**：13 筆 prototype seed 全數以 `status = draft` 起始，支援 014 任務詳情 draft 編輯情境；非 `draft` 行為（刪除拒絕等）改由測試注入合成任務驗收；命中數基線不變 |
 | 2.0.1 | 2026-07-29 | **同步 Dataset Analysis List 相依性**：016 列表已採用 `outputs[].type` 多 tag、8 類 membership 篩選、13 筆示例基線與 `limit`／`offset`；延後範圍收斂為 014／015／017，且不把列表相容性延伸至 detail／workspace consumer。 |

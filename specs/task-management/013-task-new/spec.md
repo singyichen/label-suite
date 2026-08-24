@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-list-output-types
 建立日期: 2026-04-20
-版本: 6.9.3
+版本: 6.9.4
 狀態: Draft
 ---
 
@@ -669,6 +669,16 @@ flowchart LR
 
 ---
 
+## Prototype Traceability
+
+| Artifact | Responsibility | Covered FR/SC | Verification | Status |
+|----------|----------------|---------------|--------------|--------|
+| [design/prototype/pages/task-management/task-new.html](../../../design/prototype/pages/task-management/task-new.html) | Four-step wizard shell (Step 1–4), Step 1/2 taxonomy and output-type selection UI, config-builder preview, observable interaction, and RWD only; the spec remains authoritative for creation contracts, permissions, and idempotency. | All FR/SC in this spec | [design/prototype/tests/task-management/](../../../design/prototype/tests/task-management/) (`task-new-*.spec.ts`, 15 files) | Active |
+| [design/prototype/pages/task-management/task-config.data.js](../../../design/prototype/pages/task-management/task-config.data.js)<br>[design/prototype/pages/task-management/task-config.engine.js](../../../design/prototype/pages/task-management/task-config.engine.js)<br>[design/prototype/pages/task-management/task-config.yaml.js](../../../design/prototype/pages/task-management/task-config.yaml.js)<br>[design/prototype/pages/task-management/task-config.dataset.js](../../../design/prototype/pages/task-management/task-config.dataset.js)<br>[design/prototype/pages/task-management/task-config.css](../../../design/prototype/pages/task-management/task-config.css) | Shared `OUTPUT_TYPE_REGISTRY` config engine (Step 1/2 field rendering, preview, YAML/JSON code view, styling); co-owned with `014-task-detail`'s Overview/labeling-settings edit mode, which reuses the same engine for structural parity — not exclusive to this spec. | All FR/SC in this spec | [design/prototype/tests/task-management/](../../../design/prototype/tests/task-management/) (`task-new-*.spec.ts`, `task-detail-config-parity.spec.ts`) | Active; shared with 014 |
+| [design/system/pages/task-new.md](../../../design/system/pages/task-new.md) | Page-scoped design reference only; does not define runtime behavior, APIs, data, or product contracts. | No additional FR/SC | N/A (design reference) | Active; no wireframe (frozen baseline predates this page) |
+
+---
+
 ## 規格相依性 *(本功能依賴其他規格，或被其他規格依賴時填寫)*
 
 ### 上游（本規格依賴的規格）
@@ -769,6 +779,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 6.9.4 | 2026-08-24 | Issue #261：新增 Prototype Traceability，明確對應 task-new 原型頁面、與 014 共用的 `OUTPUT_TYPE_REGISTRY` 設定引擎、設計層參考的責任邊界；規格條文未變。 |
 | 6.9.3 | 2026-08-24 | **issue #197 追蹤 — 精靈離頁保護回歸測試補齊（patch，無條文變更）**：issue #197（w6-resilience-a11y CONT-05）回報精靈重新整理即遺失進度、無離頁提示，經查該行為已由 v3.3.1（session storage 精靈狀態持久化）與既有 FR-007a（未儲存變更離頁前確認視窗）於 2026-07-09 落地，findings 早於本次 issue 建立（審計快照落後於實作），非回歸。本版僅新增 Prototype Playwright 回歸測試（`task-new-wizard-draft-warning.spec.ts`：dirty 時 `beforeunload` 觸發、clean 時不觸發、reload 後草稿還原），FR-007a 與 v3.3.1 條文不變；評估精靈草稿改採 `localStorage`（跨分頁持久化）之成本效益後維持現行 `sessionStorage` 方案（沿用 v3.3.1 決策）：`sessionStorage` 天然以分頁為界，避免多分頁同時編輯精靈互相覆寫，亦避免草稿（含資料集預覽片段）於共用實驗室電腦上無限期殘留；`beforeunload` 已涵蓋關閉分頁情境的離頁提示，`localStorage` 額外可承受的僅為瀏覽器崩潰情境，成本（跨分頁衝突與資料殘留風險）大於效益，故不採用。 |
 | 6.9.2 | 2026-08-24 | **修正 prototype 送出未落地（patch，issue #285）**：`task-new.html` 的 `submitTask()` 先前只產生 `task_id` 並導頁，未寫入任何 prototype 資料層，導致 FR-006a／SC-002 描述的「建立成功即有 membership／任務清單資料」在 prototype 端無法示範（新任務清單看不到、task-detail 落 not-found）。修正後 `submitTask()` 將精靈已收集的欄位（名稱、taxonomy 選擇、`outputs[]`、`fieldRoleMap`、2 筆資料集預覽列）寫入 `labelsuite.createdTasks` localStorage bucket；`task-list.data.js`／`task-detail.data.js` 於載入時合併該 bucket 進 `window.LabelSuiteTaskListData.tasks`／`window.LabelSuiteTaskDetailData.profiles`，使建立的任務以 `draft` 狀態出現在任務清單並可從 task-detail 開啟。FR-006a／FR-008a／SC-002／SC-005 描述的「正式後端」行為不變，本次僅修正 prototype 端過去從未真正示範到的落地缺口；不影響 011（列表）/014（詳情）既有 seed 資料契約。 |
 | 6.9.1 | 2026-08-12 | **IAA 策略 v2 — generation 分類不再顯示建議 IAA（patch）**：`SAMPLING_DEFAULTS_BY_CATEGORY` 表格 `generation` 列「建議 IAA」欄由 `0.70` 改為「不適用（free_text 由審核員評估，不計自動 IAA）」，對齊 `dataset-017` v2.0.0 `free_text` 排除自動 IAA 的規則；`試標比例參數` 與其餘欄位不變，不新增 UI 或 FR。**（同版本內修訂，speckit.analyze）**：依 spec-template v1.6.0 移除過時 meta 區塊（輸入與生成規則樣板、審查與驗收清單、執行狀態），「已釐清事項」升為頂層章節 |

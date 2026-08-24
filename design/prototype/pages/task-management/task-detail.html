@@ -2201,6 +2201,7 @@
 <body>
 <div id="sharedSidebarMount"></div>
 <script src="../shared/sidebar.js"></script>
+<script src="../shared/modal-focus.js"></script>
 <script>
   window.LabelSuiteSharedSidebar.mountSidebar({
     mountId: 'sharedSidebarMount',
@@ -8800,11 +8801,14 @@ function getTaskTypeLabel() {
     }, extra || {}));
   }
 
-  function openRiskModal(actionName) {
+  function openRiskModal(actionName, triggerEl) {
     state.pendingAction = actionName;
     var modal = document.getElementById('riskModal');
     modal.classList.add('show');
     modal.setAttribute('aria-hidden', 'false');
+    if (window.LabelSuiteModalFocus) {
+      window.LabelSuiteModalFocus.open(modal, { trigger: triggerEl, onClose: closeRiskModal });
+    }
   }
 
   function closeRiskModal() {
@@ -8812,6 +8816,7 @@ function getTaskTypeLabel() {
     modal.classList.remove('show');
     modal.setAttribute('aria-hidden', 'true');
     state.pendingAction = null;
+    if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(modal);
   }
 
   function canPublish() {
@@ -9182,7 +9187,7 @@ function getTaskTypeLabel() {
       if (e.target.id === 'publishDryRunBtn') {
         trackEvent('prototype_cta_clicked', { cta: 'publish_dry_run' });
         if (!TASK_DATA.isolationEnabled && !state.isolationConfirmed) {
-          openRiskModal('publishDryRun');
+          openRiskModal('publishDryRun', e.target);
           return;
         }
         publishDryRun();
@@ -9191,7 +9196,7 @@ function getTaskTypeLabel() {
       if (e.target.id === 'publishOfficialRunBtn') {
         trackEvent('prototype_cta_clicked', { cta: 'publish_official_run' });
         if (!TASK_DATA.isolationEnabled && !state.isolationConfirmed) {
-          openRiskModal('publishOfficialRun');
+          openRiskModal('publishOfficialRun', e.target);
           return;
         }
         publishOfficialRun();
