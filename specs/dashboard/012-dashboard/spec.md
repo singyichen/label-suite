@@ -1,7 +1,7 @@
 ---
 功能分支: feat/dashboard-output-types
 建立日期: 2026-04-05
-版本: 2.3.1
+版本: 2.4.0
 狀態: In Progress
 ---
 
@@ -254,6 +254,7 @@ Super Admin 登入後看到平台層級總覽，用於掌握整體人員、任�
 2. **Given** 同上，**When** 檢視任務列表，**Then** 每列包含名稱、進度摘要、依 `outputs[].type` 順序呈現的一至多個輸出類型 tag、階段／狀態 badge、進度條與「快速繼續」按鈕。
 3. **Given** 位於標記員任務列表且點擊某任務列的非 CTA 區域，**When** 系統導頁，**Then** 需進入該任務對應的 `annotation-list`，並帶入該任務 `task_id`、`role=annotator`、`run_type` 與 `task_type`。
 4. **Given** 位於標記員任務列表且點擊某任務 `快速繼續`，**When** 系統導頁，**Then** 需進入該任務對應的 `annotation-workspace`，並帶入該任務第一筆非 `已提交` sample 的 `sample_id`（可為 `已儲存` 或 `待標記`）。
+5. **Given** 位於標記員任務列表，**When** 選擇排序控制的「進度：高到低」或「進度：低到高」，**Then** 清單依 `progress` 值重新排序；選擇「預設順序」則恢復原始清單順序，且不影響任何任務卡的欄位或導頁行為。
 
 **標記員介面定義（需與原型一致）**：
 
@@ -280,6 +281,7 @@ Super Admin 登入後看到平台層級總覽，用於掌握整體人員、任�
 - 在 `<= MOBILE_BP` 時，任務列中的 badge 群組與 `快速繼續` CTA 必須改為垂直堆疊；多個輸出類型 tag 需先完整換行顯示，CTA 另起一列，不得將 `試標 / 正式標記 / 進行中` 等標籤擠出卡片邊界。
 - 點擊任務列中除 `快速繼續` 以外的區域時，必須帶入被點擊任務上下文（`task_id`、`role=annotator`、`run_type`、`task_type`）導向 `annotation-list`。
 - 點擊 `快速繼續` 必須帶入被點擊任務上下文（`task_id`、`role=annotator`、第一筆非 `已提交` sample 的 `sample_id`）導向標記作業頁。
+- 任務列表上方必須提供排序下拉控制（預設順序／進度：高到低／進度：低到高），選擇後清單即時依所選鍵值重新排序（FR-010D）。
 - 語言切換時，區塊標題/副標、指標標籤、任務摘要、按鈕、badge 文案必須即時切換。
 
 ### 使用者故事 5 — Reviewer 儀表板（優先級：P1）
@@ -296,6 +298,7 @@ Super Admin 登入後看到平台層級總覽，用於掌握整體人員、任�
 2. **Given** 同上，**When** 檢視任務列表，**Then** 每列包含名稱、審查摘要、依 `outputs[].type` 順序呈現的一至多個輸出類型 tag、階段／狀態 badge、進度條與「快速審核」按鈕。
 3. **Given** 位於審核員任務列表且點擊某任務列的非 CTA 區域，**When** 系統導頁，**Then** 需進入該任務對應的 `annotation-list`，並帶入該任務 `task_id`、`role=reviewer`、`run_type` 與 `task_type`。
 4. **Given** 位於審核員任務列表且點擊某任務 `快速審核`，**When** 系統導頁，**Then** 需進入該任務對應的 `annotation-workspace`，並帶入該任務第一筆非 `已提交` sample 的 `sample_id`（可為 `已儲存` 或 `待審核`）。
+5. **Given** 位於審核員任務列表，**When** 選擇排序控制的「進度：高到低」或「進度：低到高」，**Then** 清單依 `progress` 值（一般任務列為進度、示範任務列依 FR-011E 為審核覆蓋率，共用同一數值欄位）重新排序；選擇「預設順序」則恢復原始清單順序，且不影響任何任務卡的欄位或導頁行為。
 
 **審核員介面定義（需與原型一致）**：
 
@@ -322,6 +325,7 @@ Super Admin 登入後看到平台層級總覽，用於掌握整體人員、任�
 - 在 `<= MOBILE_BP` 時，任務列中的 badge 群組與 `快速審核` CTA 必須改為垂直堆疊；多個輸出類型 tag 需先完整換行顯示，CTA 另起一列，不得將 `試標 / 正式標記 / 進行中` 等標籤擠出卡片邊界。
 - 點擊任務列中除 `快速審核` 以外的區域時，必須帶入被點擊任務上下文（`task_id`、`role=reviewer`、`run_type`、`task_type`）導向 `annotation-list`。
 - 點擊 `快速審核` 必須帶入被點擊任務上下文（`task_id`、`role=reviewer`、第一筆非 `已提交` sample 的 `sample_id`）導向標記作業頁。
+- 任務列表上方必須提供排序下拉控制（預設順序／進度：高到低／進度：低到高），選擇後清單即時依所選鍵值重新排序（FR-011F）。
 - 語言切換時，區塊標題/副標、指標標籤、任務摘要、按鈕、badge 文案必須即時切換。
 
 ### 邊界情況
@@ -371,6 +375,7 @@ Super Admin 登入後看到平台層級總覽，用於掌握整體人員、任�
 - **FR-010B1**：點擊 Annotator 任務列中除 `快速繼續` 按鈕以外的區域時，系統必須以該列任務上下文導向 `annotation-list`（至少包含 `task_id`、`role=annotator`、`run_type`、`task_type`）；`task_type` 是 015 尚未遷移前的獨立 routing compatibility 欄位，不得由 `outputs[]` 第一項或其組合推導。
 - **FR-010B2**：Annotator 每筆可見任務必須保留獨立 `task_id`、可操作 sample 與 routing compatibility metadata，不得因多筆任務具有相同 `outputs[].type` 或相同 compatibility renderer 而合併導頁上下文。
 - **FR-010C**：點擊 Annotator 任務列 `快速繼續` 時，若任務存在非 `已提交` sample，系統必須導向 `annotation-workspace`（帶入 `task_id`、`role=annotator`、第一筆非 `已提交` sample 的 `sample_id`；可為 `已儲存` 或 `待標記`）；若所有 sample 均已提交，則導向該任務 `annotation-list`（不帶 `sample_id`）。
+- **FR-010D**（v2.4.0 新增，issue #187）：Annotator Dashboard 任務列表必須提供排序控制（下拉選單），至少支援「依進度排序」（高到低／低到高，含恢復原始順序的預設選項）；切換排序鍵後清單須即時依所選鍵值重新排序，且不得影響既有欄位、CTA 與導頁行為（FR-010B、FR-010B1、FR-010C）；語言切換時排序控制標籤與選項文案需同步在地化。理由：`dashboard.assignments.js` 資料模型目前未提供「最後提交時間」或「待審筆數」的獨立數值欄位（僅內嵌於在地化摘要文字中），為避免發明未經授權的資料欄位，本版僅實作進度排序。
 - **FR-011**：Reviewer Dashboard 必須包含：審核概況、任務列表、快速審核按鈕。
 - **FR-011A**：Reviewer Dashboard 的「審核概況」必須包含 3 張指標卡：待審總數（筆）、今日已審（筆）、IAA 摘要（無單位，0–1 係數）；各卡標籤顯示於數值上方。
 - **FR-011B**：Reviewer Dashboard 的任務列表每列必須包含審查摘要、`快速審核` 按鈕、一至多個輸出類型 tag、Annotation Stage／Status badge 與 progress bar。
@@ -379,6 +384,7 @@ Super Admin 登入後看到平台層級總覽，用於掌握整體人員、任�
 - **FR-011C**：點擊 Reviewer 任務列 `快速審核` 時，若任務存在非 `已提交` sample，系統必須導向 `annotation-workspace`（帶入 `task_id`、`role=reviewer`、第一筆非 `已提交` sample 的 `sample_id`；可為 `已儲存` 或 `待審核`）；若所有 sample 均已提交，則導向該任務 `annotation-list`（不帶 `sample_id`）。
 - **FR-011D**（v2.2.0 新增，審核流程示範任務專用）：審核流程示範任務（T014–T017）的 Reviewer 任務列必須攜帶審核員身分 seed（prototype 欄位 `reviewerId = reviewer_chen`，015 名冊中唯一具 `can_arbitrate` 旗標者），列點擊與 `快速審核` 導頁網址皆須附帶 `reviewer_id` 參數（`annotation-list` 依 015 FR-049 續傳至工作區）；且其 `快速審核` 的 `sample_id` 固定指向該任務資料集**第一筆**樣本，不依 FR-011C 的「第一筆非 `已提交`」規則推導。理由：示範任務的目的為讓審核流程四種模型自儀表板一鍵可視——015 的仲裁版面（FR-061）只對具仲裁資格者渲染，而工作區預設審核員身分（名冊第一位）不具旗標，不帶身分參數則仲裁初始畫面自儀表板入口永不可達；落在第一筆樣本則使四任務的示範起點固定可預期。本條僅適用示範任務列，一般任務列維持 FR-011B1／FR-011C 既有規則，不帶 `reviewer_id`。
 - **FR-011E**（v2.3.0 新增，審核流程示範任務專用）：審核流程示範任務（T014–T017）Reviewer 任務列的審查摘要百分比必須標示為「審核覆蓋率」（en：`Review Coverage`；語意＝已離開本人待審狀態之審核單位佔比），不得標示為「進度」；當某示範任務待審筆數為 0 但仍有未定稿審核單位時（T016：finalized 2／approved 1／modified 1／disputed 1），該列不得同時呈現「待審 0」與「100%」造成任務完結誤讀，須改以「審核覆蓋率 100% · 未定稿 N 筆 · 爭議 N 筆」揭示實際狀態（T016：未定稿 3、爭議 1，其中爭議計入未定稿）；未定稿／爭議筆數必須與 boot seeder 審核狀態矩陣一致。理由：示範列的百分比為本人審核覆蓋佔比而非任務定稿進度——本人已審核的單位仍可能停留在 approved／modified／disputed 未定稿狀態（T016 的 ofm-05 為 1/1/1 全歧仲裁中），「待審 0 · 進度 100%」會誤導審核流程示範的走查者以為任務已完結。本條僅適用示範任務列；一般任務列（T001–T013）審查摘要維持既有欄位語意不變。
+- **FR-011F**（v2.4.0 新增，issue #187）：Reviewer Dashboard 任務列表必須提供排序控制（下拉選單），至少支援「依進度排序」（高到低／低到高，含恢復原始順序的預設選項；一般任務列的 `進度` 與示範任務列依 FR-011E 的「審核覆蓋率」共用同一數值欄位）；切換排序鍵後清單須即時依所選鍵值重新排序，且不得影響既有欄位、CTA 與導頁行為（FR-011B、FR-011B1、FR-011C、FR-011D、FR-011E）；語言切換時排序控制標籤與選項文案需同步在地化。理由：同 FR-010D，目前資料模型未提供「最後提交時間」或「待審筆數」獨立數值欄位，本版僅實作進度排序。
 - **FR-012**：四種有任務角色的 Dashboard 列項必須依 `outputs[]` 原始順序，為每個 `output.type` 各呈現一個唯讀 tag；複合任務不得只顯示第一項或合成固定任務類型名稱。
 - **FR-012A**：輸出類型 tag 的合法值與 zh-TW／en 文案必須來自 `OUTPUT_TYPE_SOURCE` 的 8 個 `OUTPUT_TYPE_KEYS`；標籤群組須有完整可存取名稱，且不得只靠顏色傳達類型。
 - **FR-012B**：`docs/product/example-data/` 的 17 份 fixture 只作 prototype 驗收基線，不是 API、任務數量、合法組合或 renderer 白名單；於示例基線之外再加入一筆任意合法 `outputs[]` 組合後，具相應 membership 的角色視圖必須無需新增分支即可呈現。
@@ -527,11 +533,13 @@ flowchart LR
 - **SC-023**：本版新增或修改的 prototype 驗收情境皆有對應 Playwright 測試，涵蓋四角色、17 筆基線、複合 tag、額外合成任務泛化、i18n、可存取名稱與手機換行。
 - **SC-024**：Prototype 的 Annotator 與 Reviewer 場景各有 17 個快速操作；T001–T017 每筆具有獨立 `task_id`、非空 `sample_id` 與明確 compatibility route，並能以 `role=annotator`／`role=reviewer` 成功載入標記／審核介面。
 - **SC-025**：Super Admin／Project Leader Dashboard 的「等待 IAA 確認」指標卡可點擊且鍵盤可操作，導向套用 `status=waiting_iaa_confirmation` 篩選的 `/task-list`；該指標卡數字須與 `/task-list` 篩選後的實際筆數一致（prototype 基線：兩者皆為 1，即唯一的 dry_run 待 IAA 種子 T002；T014 雖為 dry_run 但 seed 狀態非 `waiting_iaa_confirmation`，不計入），不得出現數字與可導頁任務筆數對不上帳的情形。
+- **SC-026**（issue #187）：Annotator／Reviewer 任務列表提供排序下拉控制，選擇「進度：高到低」／「進度：低到高」後清單順序須正確反映所選鍵值，並可切回「預設順序」還原原始清單順序；排序後任務卡既有欄位、CTA 與導頁行為（FR-010B1／FR-010C／FR-011B1／FR-011C 等）不受影響；語言切換時排序控制標籤與選項文案即時更新。
 
 ## Changelog
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.4.0 | 2026-08-24 | **FR-010D／FR-011F：Annotator／Reviewer 任務列表新增依進度排序控制**（issue #187，Finding F-04）：兩視圖任務列表新增排序下拉（預設順序／進度：高到低／進度：低到高），複用既有 `progress` 數值欄位（reviewer 示範任務列的「審核覆蓋率」共用同一欄位語意，見 FR-011E）；排序不影響既有卡片欄位、CTA 與導頁行為；語言切換即時更新控制標籤與選項文案（新增 SC-026）。範圍說明：(1) 目前 `dashboard.assignments.js` 未提供「最後提交時間」或「待審筆數」的獨立數值欄位，故本版不新增此二排序鍵，避免發明未經授權的資料欄位；(2) 「清單呈現使用者實際被指派子集」同樣受限於現有資料模型——`assignments` 陣列為每任務單一 annotator／reviewer work item（非逐使用者指派），Annotator／Reviewer 清單維持現況顯示全部 17 筆 prototype 基線任務，未新增個人化篩選，詳見 PR 說明。 |
 | 2.3.1 | 2026-08-21 | **Prototype 合規修正（issue #311，無新增 FR）**：(1) Annotator／Reviewer 任務卡互動列補上 `role="button"`、`tabindex="0"`、`aria-label`（任務標題）與 Enter/Space 鍵盤觸發（與列點擊同導頁路徑，沿用 issue #186 FR-008F 指標卡鍵盤模式；內層快速操作按鈕的 keydown 不受列攔截）；(2) 列點擊導頁 URL 恢復 FR-010B1／FR-011B1 要求的 `task_type` 參數——2026-08-10 的 4-param 遷移 commit（eff1938）移除了 `annotationTaskType` 獨立欄位與 URL 參數但未同步本 spec；本次恢復 dashboard.assignments.js 的逐任務 `annotationTaskType` compatibility seed（T001–T013 依 eff1938 前原值、T014–T017 示範任務比照 T001 為 `single_sentence_classification`），值不得由 `outputs[]` 推導；`annotation-list` 依 `task_id` 解析任務、忽略並保留該參數。v2.0.2 所述 legacy `labelsuite.activeTaskType` localStorage 寫入路徑同於 eff1938 移除，本次不恢復（issue #311 範圍僅列點擊 URL）。 |
 | 2.3.0 | 2026-08-21 | **FR-011E：示範任務 reviewer 審查摘要改用審核覆蓋率語意**（issue #310，Codex [High]／T016 U7 驗收缺陷）：T014–T017 示範列的審查摘要百分比由「進度」改標示為「審核覆蓋率」（en `Review Coverage`，語意＝已離開本人待審狀態之審核單位佔比）；T016 因待審 0 但仍有 3 筆未定稿（approved 1／modified 1／disputed 1，ofm-05 1/1/1 全歧仲裁中），摘要改為「審核覆蓋率 100% · 未定稿 3 筆 · 爭議 1 筆」以避免「待審 0 · 進度 100%」的任務完結誤讀；數字維持靜態 seed 並與 boot seeder 審核狀態矩陣一致。僅適用示範任務列，T001–T013 一般列摘要語意不變。 |
 | 2.2.0 | 2026-08-21 | **FR-011D：審核流程示範任務 reviewer 身分導覽 + 第一筆落點**（審核流程 demo 走查回饋，配套 015 v4.12.0 脈絡橫幅）：示範任務 reviewer 列攜帶 `reviewerId = reviewer_chen` 身分 seed，列點擊與 `快速審核` 網址附帶 `reviewer_id`（annotation-list 依 015 FR-049 續傳）；`快速審核` 的 `sample_id` 固定指向資料集第一筆，不依 FR-011C「第一筆非已提交」推導。理由：015 仲裁版面（FR-061）只對具 `can_arbitrate` 者渲染，預設審核員身分不具旗標，不帶身分則仲裁初始畫面自儀表板永不可達。僅適用 T014–T017 示範列，一般任務列規則不變。 |
