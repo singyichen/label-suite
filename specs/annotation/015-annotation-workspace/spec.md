@@ -1,7 +1,7 @@
 ---
 功能分支: docs/208-official-gold-fr
 建立日期: 2026-04-23
-版本: 4.20.0
+版本: 4.20.1
 狀態: Draft
 ---
 
@@ -821,6 +821,18 @@ flowchart LR
 
 ---
 
+## Prototype Traceability
+
+| Artifact | Responsibility | Covered FR/SC | Verification | Status |
+|----------|----------------|---------------|--------------|--------|
+| [design/prototype/pages/annotation/annotation-list.html](../../../design/prototype/pages/annotation/annotation-list.html) | Annotator/reviewer queue page: sample list, filters, status badges, dispute/arbitrate entry, review-unit grouping, observable interaction, and RWD only; the spec remains authoritative for review-unit derivation, permissions, and status-machine contracts. | All FR/SC in this spec | [design/prototype/tests/annotation/](../../../design/prototype/tests/annotation/) (`annotation-list-*.spec.ts`, 6 files) | Active |
+| [design/prototype/pages/annotation/annotation-workspace.html](../../../design/prototype/pages/annotation/annotation-workspace.html) | Labeling/review/arbitration workspace page shell: sample navigation, guideline panel, autosave bar, and RWD only; per-output-type field rendering is owned by `task-management/013-task-new`'s shared `OUTPUT_TYPE_REGISTRY` engine (reused here, not redefined). | All FR/SC in this spec | [design/prototype/tests/annotation/](../../../design/prototype/tests/annotation/) (`annotation-workspace-*.spec.ts`, 31 files) | Active |
+| [design/prototype/pages/annotation/annotation-workspace.config.js](../../../design/prototype/pages/annotation/annotation-workspace.config.js)<br>[design/prototype/pages/annotation/annotation-workspace.data.js](../../../design/prototype/pages/annotation/annotation-workspace.data.js) | Page-owned monkeypatches over the shared config engine (card regrouping, evidence reference card, guideline modal, reviewer decision/arbitration data layer). Not an API, membership, or answer-content whitelist. | All FR/SC in this spec | [design/prototype/tests/annotation/](../../../design/prototype/tests/annotation/) (57 files total across `annotation-list-*`, `annotation-workspace-*`, `annotation-*`, and `issue-*` regression specs) | Active; page-owned |
+| [design/prototype/pages/shared/modal-focus.js](../../../design/prototype/pages/shared/modal-focus.js) | Shared keyboard focus-trap helper (issue #195); co-owned with `task-management/014-task-detail`'s `#riskModal`/`#deleteTaskModal` — not exclusive to this spec. | FR-066 (guideline modal) | [annotation-guideline-modal-focus.spec.ts](../../../design/prototype/tests/annotation/annotation-guideline-modal-focus.spec.ts) | Active; shared with 014 |
+| [design/system/pages/annotation-list.md](../../../design/system/pages/annotation-list.md)<br>[design/system/pages/annotation-workspace.md](../../../design/system/pages/annotation-workspace.md) | Page-scoped design references only; do not define runtime behavior, APIs, data, or product contracts. | No additional FR/SC | N/A (design references) | Active; no wireframe (frozen baseline predates these pages) |
+
+---
+
 ## 規格相依性 *(本功能依賴其他規格，或被其他規格依賴時填寫)*
 
 ### 上游（本規格依賴的規格）
@@ -906,6 +918,7 @@ flowchart LR
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 4.20.1 | 2026-08-24 | Issue #261：新增 Prototype Traceability，明確對應 annotation-list／annotation-workspace 兩頁、頁面資料層、與 014 共用的 modal-focus.js、設計層參考的責任邊界；規格條文未變。 |
 | 4.20.0 | 2026-08-24 | **Evidence 角色欄位的通用參考卡**（issue #89）：task-management-013 v3.1.0（FR-003g-2）已將 Evidence 自 Step 2 標記預覽移除，並明定「其內容留待標記工作區呈現」，但本規格與 annotation prototype 先前僅由 FR-024H／AC-2B.3 涵蓋 `free_text`（唯一宣告 `rendersEvidencePreview: true` 的輸出類型）——其餘 7 種 `OUTPUT_TYPE_KEYS` 即使 `field_role_map` 已指定 Evidence 角色欄位，工作區也從未呈現，013 的延後承諾沒有落點。新增 **FR-024N**、**AC-2B.5**：`field_role_map` 存在 `evidence` 角色欄位、且已選輸出類型皆未透過 `rendersEvidencePreview` 自行呈現 Evidence 時，工作區仍須於題目卡最上方顯示唯讀「背景參考 (Evidence)」卡片，位置早於 Input 內容卡與所有輸出類型作答控制項；卡片純文字呈現，不提供任何可編輯輸入或選取控制項。修訂使用者故事 2B「行為規則」一節，釐清 `rendersEvidencePreview` 僅決定專屬預覽內嵌顯示、不再是唯一顯示路徑。原型：`annotation-workspace.config.js` 新增 `renderEvidenceReferenceCard()`（`patchedUpdateAnnotationPreview` 內呼叫，annotator-only），重用既有 `ws-evidence-card` testid 並在引擎已渲染時略過以避免重複；不修改 `task-config.engine.js` 共用引擎的 `rendersEvidencePreview` 閘門（task-new Step 2 預覽的抑制行為維持不變）。新增 2 個 Playwright 測試（T005 `multi_dim` 正向路徑、T001 `single_label` 無 evidence 欄位負向路徑）。 |
 | 4.19.0 | 2026-08-24 | **新增：Reviewer 逐列決策草稿持久化（issue #196，CONT-03）**：`w6-resilience-a11y.md` CONT-03 核實出審核員逐列 `通過`/`退回` 決策僅存於模組層記憶體變數（`reviewRowDecisions`），未送出審核前整頁重新整理即全數遺失，與標記員草稿持久化（`markSampleSaved`）行為不對稱。issue 本文建議「提供以維持角色對稱」；因無同步產品負責人可裁決，依 issue 自身建議定案為產品決策採納之。實作：新增 `saveReviewRowDecisionDraft` / `getReviewRowDecisionDraft` / `clearReviewRowDecisionDraft`（`annotation-workspace.data.js`），以獨立於提交 bucket 的 `labelsuite.wsReviewDecisionDrafts.<bucketKey>` 儲存區保存草稿——刻意不重用 `markSampleSaved`，因其對同一 bucket 的每次寫入皆會附加一筆歷程事件，若逐列決策每次點擊都呼叫將把 `歷程` 頁籤洗版，且違反 FR-062 盲審隔離（未送出決策的存在本身不得被其他審核員看見）。`persistReviewDraft()` 於 `ws-review-row-approve`/`ws-review-row-reject` 點擊與 `A`/`R` 快捷鍵（FR-054）後寫入草稿；`renderReviewerWorkspace()` 於重繪決策按鈕前還原草稿；`handleReviewSubmit()` 送出成功後清除草稿。新增 FR-014S、AC-6.10；`annotation-reviewer-decision-persistence.spec.ts` 由原本斷言「reload 後決策遺失（現況記錄）」改為斷言「reload 後決策保留」並新增 toggle-取消後 reload 仍為未決策的回歸案例。範圍**不**包含直接修正控件內尚未送出的文字/數值編輯持久化（沿用既有記憶體內狀態），亦不涉及仲裁投票（issue #319，另案）或說明彈窗（issue #195／#287，另案）。 |
 | 4.18.1 | 2026-08-24 | **修正：仲裁儲存層並行仲裁 lost-update**（issue #319，issue #283 code review 發現之同型未修範圍）：`labelsuite.wsArbitration` 原為單一 key 的整包 read-modify-write，與 #283 同型受影響。但此 store 的 bucket key（`taskId::runType::annotatorId`）刻意不含 `reviewerId`（多位仲裁者共用 bucket），且一個 bucket 橫跨該標記員的所有樣本／爭議項，故僅拆至 #283 的 bucket 粒度仍不足以修復——兩位仲裁者（或同一仲裁者兩分頁）對同 bucket 內不同樣本或不同爭議項並行送出仍會互相覆蓋整包快照。改為**每個爭議項獨立 key**（`labelsuite.wsArbitration.<bucketKey>::<sampleId>::<itemId>`），不同爭議項的並行寫入在構造上不重疊；開機一次性將舊整包 blob 展開為 per-item keys；`readArbitrationItem` 對非物件內容降級為「無此項」；item key 列舉固定排序（跨瀏覽器決定性）。**規格條文未變**：同一爭議項的並行仲裁維持原型層 last-write-wins（FR-059/FR-061 定案語意不變）。新增回歸測試：真並行雙仲裁者不同爭議項送出（Promise.all）、舊 blob 開機遷移、corrupt 值降級；`annotation-review-flow-demo-seed.spec.ts` 既有 idempotence 測試同步改為掃描 per-item keys。 |
