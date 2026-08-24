@@ -120,9 +120,12 @@
     return record && record.id != null ? String(record.id) : '';
   }
 
-  function readSubmissionBucket(bucketKey) {
+  /* Generic localStorage-backed JSON object store, factored out so the
+     review-decision-draft store below (issue #196) can reuse the same
+     read/write tolerance as the submission buckets without duplicating it. */
+  function readJsonBucket(fullKey) {
     try {
-      var raw = global.localStorage.getItem(SUBMISSION_KEY_PREFIX + bucketKey);
+      var raw = global.localStorage.getItem(fullKey);
       var parsed = raw ? JSON.parse(raw) : null;
       /* A key holding "null" (or any non-object) must degrade to an empty
          bucket, matching the old store's tolerance, not throw downstream. */
@@ -132,12 +135,20 @@
     }
   }
 
-  function writeSubmissionBucket(bucketKey, bucket) {
+  function writeJsonBucket(fullKey, bucket) {
     try {
-      global.localStorage.setItem(SUBMISSION_KEY_PREFIX + bucketKey, JSON.stringify(bucket));
+      global.localStorage.setItem(fullKey, JSON.stringify(bucket));
     } catch (e) {
       /* ignore quota/serialization errors in the prototype */
     }
+  }
+
+  function readSubmissionBucket(bucketKey) {
+    return readJsonBucket(SUBMISSION_KEY_PREFIX + bucketKey);
+  }
+
+  function writeSubmissionBucket(bucketKey, bucket) {
+    writeJsonBucket(SUBMISSION_KEY_PREFIX + bucketKey, bucket);
   }
 
   /* Bucket keys currently in storage, for the prefix-scanning readers
@@ -445,6 +456,41 @@
       bucket[sampleId] = entry;
     }
     writeSubmissionBucket(key, bucket);
+  }
+
+  /* Reviewer per-row decision drafts (issue #196, CONT-03): approve/reject
+   * choices made before 送出審核 have no home in the submission bucket --
+   * that bucket represents a FINAL saved/submitted answer, and every entry
+   * write there appends a history event (appendHistoryEvent), which would
+   * spam the 歷程 tab with a 'saved' entry on every single row click. A
+   * separate, history-free bucket keyed the same way as the submission
+   * buckets (task/role=reviewer/run/identity) holds just the in-progress
+   * decision map per sample so a reload can restore it before the row
+   * buttons render, without disturbing the review unit's actual status or
+   * audit trail. */
+  var REVIEW_DECISION_DRAFT_KEY_PREFIX = 'labelsuite.wsReviewDecisionDrafts.';
+
+  function reviewDecisionDraftKey(taskId, runType, identity) {
+    return REVIEW_DECISION_DRAFT_KEY_PREFIX + submissionBucketKey(taskId, 'reviewer', runType, identity);
+  }
+
+  function saveReviewRowDecisionDraft(taskId, runType, sampleId, decisions, identity) {
+    var key = reviewDecisionDraftKey(taskId, runType, identity);
+    var bucket = readJsonBucket(key);
+    bucket[sampleId] = decisions;
+    writeJsonBucket(key, bucket);
+  }
+
+  function getReviewRowDecisionDraft(taskId, runType, sampleId, identity) {
+    var bucket = readJsonBucket(reviewDecisionDraftKey(taskId, runType, identity));
+    return bucket[sampleId] || null;
+  }
+
+  function clearReviewRowDecisionDraft(taskId, runType, sampleId, identity) {
+    var key = reviewDecisionDraftKey(taskId, runType, identity);
+    var bucket = readJsonBucket(key);
+    delete bucket[sampleId];
+    writeJsonBucket(key, bucket);
   }
 
   /* Reviewer aggregate review mock data (restores the legacy per-output-type
@@ -1720,32 +1766,121 @@
 
   /* ---- Arbitration state (spec 015 v4.8.0, issue #147 P3c) ---------------
    * The ONLY stored dispute state: arbitration votes and the finalized value
-   * (DisputeItem entity, FR-059). Everything else stays derived. Keyed by the
-   * unit (task × run_type × annotator × sample), not by any reviewer bucket
-   * -- a dispute belongs to the unit, and whichever arbiter resolves it must
-   * be visible to every other viewer of that unit. */
+   * (DisputeItem entity, FR-059). Everything else stays derived. Each dispute
+   * ITEM lives under its own localStorage key
+   * (`labelsuite.wsArbitration.<bucketKey>::<sampleId>::<itemId>`), NOT one
+   * shared blob (issue #319, same-shape fix as #283's wsSubmissions split):
+   * the bucket key (task × run_type × annotator) deliberately excludes
+   * reviewerId so multiple arbiters share a bucket, and one bucket also
+   * spans every sample/item of that annotator's review units -- splitting
+   * only at the #283 bucket granularity would still let two arbiters
+   * finalizing DIFFERENT samples (or items) in the same bucket clobber each
+   * other's whole-blob snapshot. Item-level keys make concurrent writes to
+   * different items non-overlapping by construction; two arbiters racing the
+   * SAME item still last-write-wins, the same accepted caveat as #283. The
+   * bare legacy whole-blob key is fanned out once at boot by
+   * migrateLegacyArbitrationStore(). */
   var ARBITRATION_STORAGE_KEY = 'labelsuite.wsArbitration';
-
-  function readArbitrationStore() {
-    try {
-      var raw = global.localStorage.getItem(ARBITRATION_STORAGE_KEY);
-      return raw ? JSON.parse(raw) : {};
-    } catch (e) {
-      return {};
-    }
-  }
+  var ARBITRATION_KEY_PREFIX = 'labelsuite.wsArbitration.';
 
   function arbitrationBucketKey(taskId, runType, identity) {
     identity = identity || {};
     return taskId + '::' + runType + '::' + (identity.annotatorId || DEFAULT_ANNOTATOR_ID);
   }
 
+  function arbitrationItemKey(bucketKey, sampleId, itemId) {
+    return bucketKey + '::' + sampleId + '::' + itemId;
+  }
+
+  function readArbitrationItem(itemKey) {
+    try {
+      var raw = global.localStorage.getItem(ARBITRATION_KEY_PREFIX + itemKey);
+      var parsed = raw ? JSON.parse(raw) : null;
+      /* A key holding "null" (or any non-object) degrades to "no item"
+         instead of throwing downstream, mirroring readSubmissionBucket's
+         tolerance for corrupt content. */
+      return parsed && typeof parsed === 'object' ? parsed : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function writeArbitrationItem(itemKey, item) {
+    try {
+      global.localStorage.setItem(ARBITRATION_KEY_PREFIX + itemKey, JSON.stringify(item));
+    } catch (e) {
+      /* storage unavailable: same silent-tolerant stance as writeSubmissionBucket */
+    }
+  }
+
+  /* Item keys currently in storage, for getArbitrationState's prefix scan.
+   * Sorted for the same cross-browser determinism reason as
+   * listSubmissionBucketKeys (localStorage.key(i) order is implementation-
+   * defined). */
+  function listArbitrationItemKeys() {
+    var keys = [];
+    try {
+      for (var i = 0; i < global.localStorage.length; i++) {
+        var key = global.localStorage.key(i);
+        if (key && key.indexOf(ARBITRATION_KEY_PREFIX) === 0) {
+          keys.push(key.slice(ARBITRATION_KEY_PREFIX.length));
+        }
+      }
+    } catch (e) {
+      /* storage unavailable: nothing to list */
+    }
+    return keys.sort();
+  }
+
+  /* One-shot fan-out of the pre-issue-#319 whole-blob arbitration store into
+   * per-item keys, mirroring migrateLegacySubmissionStore(). Existing
+   * per-item keys win over the legacy copy; the legacy key is removed either
+   * way. */
+  function migrateLegacyArbitrationStore() {
+    try {
+      var raw = global.localStorage.getItem(ARBITRATION_STORAGE_KEY);
+      if (!raw) return;
+      var store = JSON.parse(raw);
+      if (store && typeof store === 'object') {
+        Object.keys(store).forEach(function (bucketKey) {
+          var bucket = store[bucketKey];
+          if (!bucket || typeof bucket !== 'object') return;
+          Object.keys(bucket).forEach(function (sampleId) {
+            var items = bucket[sampleId];
+            if (!items || typeof items !== 'object') return;
+            Object.keys(items).forEach(function (itemId) {
+              var itemKey = arbitrationItemKey(bucketKey, sampleId, itemId);
+              if (!global.localStorage.getItem(ARBITRATION_KEY_PREFIX + itemKey)) {
+                writeArbitrationItem(itemKey, items[itemId]);
+              }
+            });
+          });
+        });
+      }
+      global.localStorage.removeItem(ARBITRATION_STORAGE_KEY);
+    } catch (e) {
+      /* corrupt legacy blob or unavailable storage: drop it rather than
+         blocking boot */
+      try {
+        global.localStorage.removeItem(ARBITRATION_STORAGE_KEY);
+      } catch (e2) {
+        /* storage unavailable: nothing to clean up */
+      }
+    }
+  }
+
   /* Returns { [itemId]: { votes: [{arbiter_id, choice, voted_at}],
    * finalized_value?, finalized_by? } } for one review unit; itemId is the
    * getDisputeItems() identity `outKey::key`. */
   function getArbitrationState(taskId, runType, sampleId, identity) {
-    var bucket = readArbitrationStore()[arbitrationBucketKey(taskId, runType, identity)];
-    return (bucket && bucket[sampleId]) || {};
+    var prefix = arbitrationBucketKey(taskId, runType, identity) + '::' + sampleId + '::';
+    var result = {};
+    listArbitrationItemKeys().forEach(function (key) {
+      if (key.indexOf(prefix) !== 0) return;
+      var item = readArbitrationItem(key);
+      if (item) result[key.slice(prefix.length)] = item;
+    });
+    return result;
   }
 
   /* Writes one arbiter's complete pass over a unit's open dispute items:
@@ -1758,13 +1893,11 @@
    * finalized_value/finalized_by are already last-write-wins for the same
    * item, so votes[] must stay one entry per arbiter to match. */
   function submitArbitration(taskId, runType, sampleId, identity, decisions) {
-    var store = readArbitrationStore();
-    var key = arbitrationBucketKey(taskId, runType, identity);
-    if (!store[key]) store[key] = {};
-    if (!store[key][sampleId]) store[key][sampleId] = {};
+    var bucketKey = arbitrationBucketKey(taskId, runType, identity);
     var arbiterId = (identity && identity.reviewerId) || DEFAULT_REVIEWER_ID;
     (decisions || []).forEach(function (decision) {
-      var item = store[key][sampleId][decision.itemId] || { votes: [] };
+      var itemKey = arbitrationItemKey(bucketKey, sampleId, decision.itemId);
+      var item = readArbitrationItem(itemKey) || { votes: [] };
       var vote = { arbiter_id: arbiterId, choice: decision.choice, voted_at: new Date().toISOString() };
       var existingIndex = -1;
       item.votes.forEach(function (v, i) {
@@ -1777,13 +1910,8 @@
       }
       item.finalized_value = decision.value;
       item.finalized_by = arbiterId;
-      store[key][sampleId][decision.itemId] = item;
+      writeArbitrationItem(itemKey, item);
     });
-    try {
-      global.localStorage.setItem(ARBITRATION_STORAGE_KEY, JSON.stringify(store));
-    } catch (e) {
-      /* storage unavailable: same silent-tolerant stance as writeSubmissionBucket */
-    }
   }
 
   /* Per-item majority convergence (issue #147 ⑥③): decides whether one
@@ -1912,6 +2040,7 @@
   }
 
   migrateLegacySubmissionStore();
+  migrateLegacyArbitrationStore();
   seedReviewFlowDemo();
 
   global.LabelSuiteAnnotationWorkspaceData = {
@@ -1925,6 +2054,9 @@
     markSampleSubmitted: markSampleSubmitted,
     markSampleSaved: markSampleSaved,
     markSampleRejected: markSampleRejected,
+    saveReviewRowDecisionDraft: saveReviewRowDecisionDraft,
+    getReviewRowDecisionDraft: getReviewRowDecisionDraft,
+    clearReviewRowDecisionDraft: clearReviewRowDecisionDraft,
     getSubmission: getSubmission,
     getSampleAnswers: getSampleAnswers,
     getSampleHistory: getSampleHistory,
