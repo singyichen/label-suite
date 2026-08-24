@@ -58,8 +58,49 @@
         </div>
       </section>
 
+      <!-- Skeleton (FR-018): shown before the simulated task_membership load resolves -->
+      <section id="dashboardSkeleton" class="dashboard-skeleton" aria-busy="true" aria-live="polite" data-testid="dashboard-skeleton">
+        <article class="panel">
+          <div class="panel-header">
+            <div>
+              <div class="skeleton skel-line" style="width:100px;"></div>
+              <div class="skeleton skel-line" style="width:160px; margin-top:6px;"></div>
+            </div>
+          </div>
+          <div class="metrics">
+            <div class="metric"><div class="skeleton skel-metric"></div></div>
+            <div class="metric"><div class="skeleton skel-metric"></div></div>
+            <div class="metric"><div class="skeleton skel-metric"></div></div>
+            <div class="metric"><div class="skeleton skel-metric"></div></div>
+          </div>
+        </article>
+        <article class="panel">
+          <div class="panel-header">
+            <div>
+              <div class="skeleton skel-line" style="width:100px;"></div>
+              <div class="skeleton skel-line" style="width:160px; margin-top:6px;"></div>
+            </div>
+          </div>
+          <div class="list">
+            <div class="skeleton skel-row"></div>
+            <div class="skeleton skel-row"></div>
+            <div class="skeleton skel-row"></div>
+          </div>
+        </article>
+      </section>
+
+      <!-- Error state (FR-019): shown when the simulated task_membership load fails -->
+      <section id="dashboardErrorState" class="dashboard-error-state hidden" role="alert" data-testid="dashboard-error-state">
+        <svg class="error-state-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <p id="errorLoadTitle" class="error-state-title"></p>
+        <p id="errorLoadDesc" class="error-state-desc"></p>
+        <button id="errorRetryLabel" class="btn btn-primary" type="button"></button>
+      </section>
+
       <!-- Content Grid -->
-      <div class="content-grid">
+      <div class="content-grid hidden" id="contentGrid">
         <!-- User View (Default) -->
         <section class="view is-active" id="view-user" data-scenario="user" data-testid="user-view">
           <article class="panel">
