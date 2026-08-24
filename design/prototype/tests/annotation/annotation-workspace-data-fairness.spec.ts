@@ -1,5 +1,11 @@
 import { test, expect } from '@playwright/test';
-import { buildListUrl, buildWorkspaceUrl, dismissGuidelineModal, skipGuidelineModal } from './_workspace-helpers';
+import {
+  buildListUrl,
+  buildWorkspaceUrl,
+  dismissGuidelineModal,
+  patchDataFile,
+  skipGuidelineModal,
+} from './_workspace-helpers';
 
 /* Data Fairness (constitution NON-NEGOTIABLE): annotator-facing responses
  * must never expose ground-truth/hidden data the annotator wasn't meant to
@@ -13,10 +19,10 @@ import { buildListUrl, buildWorkspaceUrl, dismissGuidelineModal, skipGuidelineMo
  * (an explicit, allowed exception: task-creator-declared annotator-visible
  * preannotation, distinct from hidden ground truth). The closest available
  * leak-prevention proxy in the current fixtures is unassigned record
- * METADATA (id-like / source-tracking fields) that must never render. This
- * is flagged in the QA report as a fixture gap for a stronger negative
- * control (a profile with an unmapped field that holds real answer
- * content) if one is desired later. */
+ * METADATA (id-like / source-tracking fields) that must never render. The
+ * negative-control describe block below (issue #209) closes that gap with a
+ * runtime-patched field that carries real answer CONTENT rather than
+ * metadata. */
 
 test.beforeEach(async ({ page }) => {
   await skipGuidelineModal(page);
@@ -75,5 +81,49 @@ test.describe('reviewer mode does not leak unassigned metadata either', () => {
     for (const forbidden of ['32895f62', 'sp1.hso.mohw.gov.tw']) {
       await expect(root).not.toContainText(forbidden);
     }
+  });
+});
+
+/* Negative control (issue #209, w7 §6.2-3): every existing case above tests
+ * unmapped record METADATA (ids / source tracking) or an output-role field
+ * that's a legitimate visible answer OPTION (e.g. T001's "positive" chip
+ * label) -- neither proves the unmapped-fields-never-render guarantee holds
+ * for a field that carries genuine, unambiguous GOLD ANSWER CONTENT. This
+ * patches an unmapped field onto T001's dataset record whose value is real
+ * gold-verification content (not just an id) and asserts it never reaches
+ * the annotator/reviewer DOM.
+ *
+ * Scope limit (explicitly acknowledged, w7 §4): this is a prototype-layer
+ * DOM-rendering check only. It cannot verify the field is withheld at the
+ * network/API layer -- this static prototype has no backend, so the full
+ * dataset JSON (including this unmapped field) is always fully fetched to
+ * the browser; the fairness guarantee here is "never rendered", not "never
+ * transmitted". Backend access-control verification requires the formal
+ * full-stack E2E phase (blocked on the e2e/ + backend infra scaffolded per
+ * ADR-034 / issue #203, which does not exist yet) and remains open. */
+test.describe('negative control: unmapped GOLD CONTENT (not just metadata) never leaks', () => {
+  const GOLD_CONTENT_MARKER = 'GOLD-GUARD-9f31: 資深標記員覆核判定為 positive，理由：語氣正向、無負面詞彙';
+
+  test.beforeEach(async ({ page }) => {
+    await patchDataFile(
+      page,
+      'task-detail.data.js',
+      `var record = window.LabelSuiteTaskDetailData.profiles.T001.datasetRecords.find(function (r) { return r.id === 'sent-001'; });
+       record.internal_gold_verification_note = ${JSON.stringify(GOLD_CONTENT_MARKER)};`
+    );
+  });
+
+  test('annotator view never renders the unmapped gold-verification field', async ({ page }) => {
+    await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001' }));
+    await dismissGuidelineModal(page);
+
+    await expect(page.getByTestId('ws-root')).not.toContainText(GOLD_CONTENT_MARKER);
+  });
+
+  test('reviewer view never renders the unmapped gold-verification field', async ({ page }) => {
+    await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer' }));
+    await dismissGuidelineModal(page);
+
+    await expect(page.getByTestId('ws-root')).not.toContainText(GOLD_CONTENT_MARKER);
   });
 });
