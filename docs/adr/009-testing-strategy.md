@@ -2,7 +2,7 @@
 
 **Status**: Accepted
 **Date**: 2026-03-19
-**Superseded in part by**: [ADR-033](033-formal-e2e-directory-location.md) — the E2E test location in *Test Categories* and in *Consequences → Easier* moves from `frontend/tests/` to root `e2e/[module]/`. Everything else in this ADR stands.
+**Superseded in part by**: [ADR-034](034-formal-e2e-directory-location.md) — the E2E test location in *Test Categories* and in *Consequences → Easier* moves from `frontend/tests/` to root `e2e/[module]/`. Everything else in this ADR stands.
 
 ## Context
 
@@ -91,7 +91,7 @@ def test_f1_macro_empty_raises():
 
 ### Test Categories
 
-> **Superseded in part by [ADR-033](033-formal-e2e-directory-location.md)**: the E2E row's location is now `e2e/[module]/`, not `frontend/tests/`.
+> **Superseded in part by [ADR-034](034-formal-e2e-directory-location.md)**: the E2E row's location is now `e2e/[module]/`, not `frontend/tests/`.
 
 | Category | Tool | Location | When Run |
 |----------|------|----------|----------|
@@ -118,7 +118,7 @@ async def test_submission_response_excludes_answers(client):
 ### Easier
 - `pytest-asyncio` allows testing async FastAPI routes and SQLAlchemy sessions without sync wrappers.
 - `httpx.AsyncClient` with `app=app` provides a real ASGI test client — no mocking of HTTP transport.
-- Playwright TypeScript tests co-locate with the frontend (`frontend/tests/`) and share type definitions. *(Superseded by [ADR-033](033-formal-e2e-directory-location.md): E2E lives in root `e2e/`; type sharing is a cross-package `tsconfig` reference rather than co-location.)*
+- Playwright TypeScript tests co-locate with the frontend (`frontend/tests/`) and share type definitions. *(Superseded by [ADR-034](034-formal-e2e-directory-location.md): E2E lives in root `e2e/`; type sharing is a cross-package `tsconfig` reference rather than co-location.)*
 - Coverage reports (`pytest --cov`) integrate with CI to enforce thresholds per module.
 - The `@pytest.mark.security` convention makes leakage tests easily identifiable and runnable in isolation (`pytest -m security`).
 - Playwright's `codegen` tool accelerates writing E2E tests for the annotation workflow.

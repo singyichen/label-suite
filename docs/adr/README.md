@@ -51,4 +51,4 @@ Each ADR follows this structure:
 | [030](030-icon-library-lucide.md) | Icon Library — Lucide | Accepted | 2026-07-02 |
 | [031](031-sequence-tagging-tokenization-contract.md) | Sequence Tagging Tokenization — Versioned Annotation Contract | Accepted | 2026-07-28 |
 | [032](032-user-action-audit-trail.md) | User-Action Audit Trail | Proposed | 2026-08-19 |
-| [033](033-formal-e2e-directory-location.md) | Formal E2E Test Directory — Root `e2e/[module]/` | Proposed | 2026-08-24 |
+| [034](034-formal-e2e-directory-location.md) | Formal E2E Test Directory — Root `e2e/[module]/` | Proposed | 2026-08-24 |

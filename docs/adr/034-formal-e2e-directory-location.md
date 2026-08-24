@@ -1,4 +1,4 @@
-# ADR-033: Formal E2E Test Directory — Root `e2e/[module]/`
+# ADR-034: Formal E2E Test Directory — Root `e2e/[module]/`
 
 **Status**: Proposed
 **Date**: 2026-08-24
