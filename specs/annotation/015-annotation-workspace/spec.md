@@ -1,7 +1,7 @@
 ---
 功能分支: docs/208-official-gold-fr
 建立日期: 2026-04-23
-版本: 4.14.1
+版本: 4.15.0
 狀態: Draft
 ---
 
@@ -294,11 +294,12 @@ Annotator 在 `input_type = item_pair` 的任務中，以雙欄呈現兩個比�
 2. **AC-2B.2**：**Given** `TaskProfile.input_type = single_item`，**When** annotator 進入工作區，**Then** 中欄僅顯示單一「原始文本」區塊，不得顯示雙欄配對版面。
 3. **AC-2B.3**：**Given** 任一已選輸出類型於 registry 宣告 `rendersEvidencePreview: true`（目前為 `free_text`）且 `field_role_map` 已指定 Evidence 角色欄位，**When** annotator 進入工作區，**Then** 「背景參考 (Evidence)」卡片必須顯示於 Input 內容卡與該輸出類型作答控制項之前；未指定 Evidence 時不得顯示空的背景區塊。
 4. **AC-2B.4**：**Given** `outputs[]` 含 `free_text`，**When** annotator 進入工作區，**Then** 必須依序顯示 `input_instruction`、Input 內容卡、`output_instruction`、作答 textarea 與字元計數。
+5. **AC-2B.5**（v4.15.0 新增，issue #89）：**Given** `field_role_map` 已指定 Evidence 角色欄位，且已選輸出類型皆未宣告 `rendersEvidencePreview: true`（即 AC-2B.3 以外的其餘 7 種 `OUTPUT_TYPE_KEYS`），**When** annotator 進入工作區，**Then** 系統仍必須於題目卡最上方顯示唯讀「背景參考 (Evidence)」卡片並呈現該欄位實際內容，位置早於 Input 內容卡與所有輸出類型作答控制項；卡片內容為純文字呈現，不得包含任何可編輯輸入或選取控制項。
 
 **行為規則**：
 
 - `item_pair` 的雙欄小標名稱來源為 `TaskProfile.item_pair_labels`，僅影響顯示文案，不改變 `field_role_map` 或資料欄位本身。
-- Evidence 呈現位置與是否顯示完全由該輸出類型 registry 的 `rendersEvidencePreview` metadata 決定，workspace 不得為特定輸出類型硬編顯示順序例外。
+- `rendersEvidencePreview` metadata 決定該輸出類型是否於其專屬預覽內自行嵌入 Evidence 顯示順序（如 `free_text` 的「Evidence → Input → 回答框」，見 FR-024H、AC-2B.3）；未宣告該 metadata 的輸出類型不重複顯示專屬 Evidence 卡，改由 FR-024N 的通用 Evidence 參考卡於題目卡最上方統一呈現（AC-2B.5），workspace 不得為特定輸出類型另行硬編顯示順序例外。
 - 當多個已選輸出類型宣告 `rendersInputPreview: true`（例如 `sequence_tagging`、`entity_recognition`、`relation_identification`、`free_text`）時，通用輸入文字區塊不得重複顯示；輸入內容改由該輸出類型的專屬或整合預覽完整呈現，行為對齊 013 FR-003g-3。
 
 ---
@@ -735,6 +736,7 @@ Reviewer 在 `run_type = official_run` 的工作區中，針對「目前標記�
 - **FR-024L-2**: Reviewer 對任一輸出類型執行直接修正時，系統必須同時保留 annotator 原始提交、reviewer 修正後結果與修正 diff（新增/刪除/修改，依輸出類型呈現對應差異形式：分類型為選值差異、分數型為數值差異、序列/實體/關係型為結構化 diff、文字型為文字差異），供品質追溯。
 - **FR-024M**: 當 `field_role_map` 中存在對應輸出類型的 `output` 角色欄位時，`annotation-workspace` 初始化該筆樣本時必須以該欄位實際值初始化對應輸出類型的作答控制項，呈現為 annotator-visible preannotation（可編修、可直接提交），此規則適用全部 8 個 `OUTPUT_TYPE_KEYS`：`single_label` 預選匹配標籤；`multi_label` 以正規化後的 paths 預選；`single_dim` 滑桿設於實際分數值；`multi_dim` 各維度滑桿設於對應維度值；`sequence_tagging` 以符合目前方案且與 Token 等長的可見預標記初始化；`entity_recognition` 以實際實體列表初始化；`relation_identification` 以實際三元組初始化；`free_text` 預填實際答案文字（見 FR-024H-1）。此初始化行為對齊 013 FR-003g-5 的 Step 2 預覽初始化契約。無對應 `output` 角色欄位時，該輸出類型必須依 FR-026 維持空白/未選取狀態。
 - **FR-024M-1**: Output-role prefill 僅限 `field_role_map` 明文映射為 `output` 角色的欄位；未映射任何角色、或映射為 `input`/`evidence` 角色的欄位一律於送達 annotator 前剝除，不得以任何形式（API、前端 state、預覽）下發隱藏的 test-set ground truth（對齊 FR-023、Data Fairness NON-NEGOTIABLE）。
+- **FR-024N**（v4.15.0 新增，對應 AC-2B.5，issue #89）：當 `field_role_map` 存在 `evidence` 角色欄位、且該筆樣本已選輸出類型皆未透過 registry `rendersEvidencePreview` metadata 自行呈現 Evidence（見 FR-024H、AC-2B.3，目前僅 `free_text` 具備此 metadata）時，`annotation-workspace` 仍必須於題目卡最上方（Input 內容卡與所有輸出類型作答控制項之前）以唯讀「背景參考 (Evidence)」卡片呈現該欄位的實際內容，供 annotator 標記時參考。此為 013 FR-003g-2（v3.1.0）「Step 2 標記預覽區不再為 evidence 角色欄位顯示獨立卡片，其內容留待標記工作區呈現」承諾的落點。卡片內容僅供閱讀，不提供任何可編輯輸入或選取控制項；無 evidence 角色欄位時不得顯示空的背景區塊；已由 FR-024H 專屬預覽呈現 Evidence 的輸出類型不得重複顯示第二張 Evidence 卡。
 - **FR-026**: `annotation-workspace` 初始化每一筆樣本時，所有輸出類型的標記控制項（分類選項、階層選擇器、維度 sliders、Token 網格、entity/triple 建構器、textarea 等）必須呈現空白/未選取狀態，**除非該筆樣本已有儲存的標記結果**（`status=saved` 且含有效值，或 `status=submitted`），**或該輸出類型依 FR-024M 具備 Output-role preannotation**。`status=pending`、無儲存值且無 Output-role preannotation 的輸出類型，不得預填任何合成預設選取值（包含數值中間點如 5）；range slider 即使因原生控制項需要視覺 thumb 位置，也必須以未評分狀態區分，且在使用者操作前不得被提交為有效值。
 - **FR-027**（v3.0.0 起僅適用 `run_type = official_run`；**v4.2.0 廢止**）：~~`annotation-list` 在 `role=reviewer` 且 `run_type=official_run` 時，toolbar 右側必須顯示 `送出審核` 按鈕（`i18n: submitReviewLabel`）。~~ 清單層級決策整體移除後已無可送出之標的，該按鈕與 `submitReviewLabel` 一併移除；ID 保留不重用（見 FR-055）。
 - **FR-028**（v4.2.0 修訂）：`annotation-list` 頁面必須支援 `labelsuite:langchange` 事件，接收到語言切換後需重新套用 i18n strings（至少包含：頁面副標題、依角色分流的表頭欄名與狀態篩選選項，見 AC-1.15）。
@@ -888,6 +890,7 @@ flowchart LR
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 4.15.0 | 2026-08-24 | **Evidence 角色欄位的通用參考卡**（issue #89）：task-management-013 v3.1.0（FR-003g-2）已將 Evidence 自 Step 2 標記預覽移除，並明定「其內容留待標記工作區呈現」，但本規格與 annotation prototype 先前僅由 FR-024H／AC-2B.3 涵蓋 `free_text`（唯一宣告 `rendersEvidencePreview: true` 的輸出類型）——其餘 7 種 `OUTPUT_TYPE_KEYS` 即使 `field_role_map` 已指定 Evidence 角色欄位，工作區也從未呈現，013 的延後承諾沒有落點。新增 **FR-024N**、**AC-2B.5**：`field_role_map` 存在 `evidence` 角色欄位、且已選輸出類型皆未透過 `rendersEvidencePreview` 自行呈現 Evidence 時，工作區仍須於題目卡最上方顯示唯讀「背景參考 (Evidence)」卡片，位置早於 Input 內容卡與所有輸出類型作答控制項；卡片純文字呈現，不提供任何可編輯輸入或選取控制項。修訂使用者故事 2B「行為規則」一節，釐清 `rendersEvidencePreview` 僅決定專屬預覽內嵌顯示、不再是唯一顯示路徑。原型：`annotation-workspace.config.js` 新增 `renderEvidenceReferenceCard()`（`patchedUpdateAnnotationPreview` 內呼叫，annotator-only），重用既有 `ws-evidence-card` testid 並在引擎已渲染時略過以避免重複；不修改 `task-config.engine.js` 共用引擎的 `rendersEvidencePreview` 閘門（task-new Step 2 預覽的抑制行為維持不變）。新增 2 個 Playwright 測試（T005 `multi_dim` 正向路徑、T001 `single_label` 無 evidence 欄位負向路徑）。 |
 | 4.14.1 | 2026-08-23 | **修正：提交儲存層並行儲存 lost-update**（issue #283，PR #277 首輪 CI 於 CONC-03 重現）：`labelsuite.wsSubmissions` 原為單一 key 的整包 read-modify-write，多分頁並行儲存時後寫者以舊讀快照覆蓋他人 bucket——且另一分頁已提交的寫入在同步儲存區塊內根本不可見（跨程序 localStorage 傳播需等讀方事件迴圈輪轉），故「寫入前重讀合併」修不了。改為**每個 bucket 獨立 key**（`labelsuite.wsSubmissions.<bucketKey>`），不同 bucket 的並行寫入在構造上不重疊；開機一次性將舊整包 blob 展開為 per-bucket keys（保留訪客草稿與已播種 demo 狀態，`reviewFlowDemoSeed.v1` marker 免 bump）；`readSubmissionBucket` 對非物件內容降級為空 bucket；bucket key 列舉固定排序（等時間戳歷程順序與爭議審核員列跨瀏覽器決定性）。**規格條文未變**：同 bucket 寫入維持原型層 last-write-wins（正式衝突政策屬後端 `CONFLICT_RESOLUTION_POLICY`）；殘餘同 bucket race（審核員退回 vs 標記員儲存）與仲裁 store 同型問題另行建單追蹤。新增回歸測試：真並行雙標記員儲存（Promise.all）、舊 blob 開機遷移、corrupt 值降級。 |
 | 4.14.0 | 2026-08-21 | **已定稿單位全面唯讀鎖定**（issue #308，P0）：FR-051 的 `已定稿` 是五態機的終態，但工作區從未對它分流——已定稿單位照樣重新渲染一般互動審核卡，`official_run` 下審核員可對定稿單位退回＋送出，`markSampleRejected()`（FR-014I）隨即把標記員樣本回滾至 pending，**定稿單位被抹除**。修法：（1）`renderReviewerWorkspace()` 新增 finalized 分支（與仲裁分支、v4.13.0 空單位閘門互斥）：隱藏送出按鈕（FR-058 快捷鍵同步失效）、渲染唯讀結果卡 `ws-review-finalized-card`（每個 outKey 的定稿作答＋每個爭議項一列收斂/仲裁結果 `ws-finalized-resolved`，沿用仲裁卡已裁定列版式）；（2）`handleReviewSubmit()` 加進入時守衛（促成定稿的那一筆送出不受影響）。兩種定稿路徑皆涵蓋——法定人數收斂（T015 `ofs-01` min=1、T017 `oft-04` 2/2）與仲裁落定（T015 `ofs-03` seed、仲裁者現場送出後即時鎖定）；中間狀態不鎖（T017 `oft-02` 1/2 已通過單位，第二位審核員仍可送出至定稿）。**設計決策**：已定稿＝全面唯讀；FR-016A 重啟（審計理由）流程延後至後端階段，原型不提供任何解鎖入口。新增 **AC-3.39**、FR-053 已定稿單位鎖定段落。既有測試修正（原依賴本缺陷行為）：xrole 正典旅程 fixture 補上 `minReviewers: 2`（回復 w4「n=2=min」原意，XROLE-15 斷言改 approved→finalized）；仲裁測試「非爭議單位正常審核」改以門檻 2 推導 `已通過`（原註解在 min=1 下誤標 approved、實為 finalized，僅因本缺陷仍渲染一般卡而通過）。 |
 | 4.13.0 | 2026-08-21 | **空審核單位閘門：真空單位不得渲染可送出的審核卡**（issue #307，P0）：FR-044a 定義了審查列的兩個 seed 來源（真實提交 → `REVIEWER_MOCK_ROWS` 遞補列），FR-064 橫幅也已對「兩者皆缺」的單位顯示 `尚無標記提交`（T015 `ofs-05-not-submitted` 為刻意設計的示範點），但審核卡本身從未處理此情境——`getReviewerRows()` 回傳空陣列後，審核卡照樣渲染送出按鈕，且「每個 outKey 一筆決策」驗證對零列**空泛通過**（vacuous pass），審核員可對不存在的標記送出一筆空審核。修法：（1）`renderReviewerWorkspace()` 於「無儲存提交（unitStatus null）且無遞補列」時渲染空狀態卡（`ws-review-empty-unit`）並隱藏送出按鈕（FR-058 快捷鍵派發跳過 hidden 按鈕，同步失效）；判定與 FR-064 橫幅、FR-044a 遞補**同源**，不另行實作第二份；（2）`handleReviewSubmit()` 加同源守衛，杜絕殘餘呼叫路徑。新增 **AC-3.38**、FR-053 空審核單位閘門段落。標記員實際提交後閘門即釋放（回歸測試涵蓋：annotator 提交 `ofs-05` → reviewer 重載恢復完整審核卡並送出至定稿）；T015 其餘樣本與所有依 FR-044a 遞補的既有任務不受影響。 |
