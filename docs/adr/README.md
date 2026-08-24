@@ -51,3 +51,4 @@ Each ADR follows this structure:
 | [030](030-icon-library-lucide.md) | Icon Library — Lucide | Accepted | 2026-07-02 |
 | [031](031-sequence-tagging-tokenization-contract.md) | Sequence Tagging Tokenization — Versioned Annotation Contract | Accepted | 2026-07-28 |
 | [032](032-user-action-audit-trail.md) | User-Action Audit Trail | Proposed | 2026-08-19 |
+| [033](033-openspec-change-workflow.md) | OpenSpec as the Change Workflow Layer (`specs/` Remains Canon) | Proposed | 2026-08-24 |
