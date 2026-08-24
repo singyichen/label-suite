@@ -1,7 +1,7 @@
 ---
 功能分支: feat/dataset-analysis-output-types
 建立日期: 2026-04-24
-版本: 2.1.1
+版本: 2.1.2
 狀態: In Progress
 ---
 
@@ -150,7 +150,7 @@ Prototype 使用 task-management-010「Prototype 示例資料基線」所列的�
 - 複合任務：
   - `medical-ner-re.json` 顯示 `entity_recognition`、`relation_identification` 兩個 tag。
   - `absa-va.json` 顯示 `entity_recognition`、`relation_identification`、`multi_dim` 三個 tag。
-- IAA 示意分布：`pass = 6`、`pending = 3`、`fail = 2`、`not_started = 2`。
+- IAA 示意分布：`pass = 5`、`pending = 3`、`fail = 2`、`not_started = 1`、`not_applicable = 2`（`not_applicable` 為 2 筆 `free_text`-only 任務，依 FR-004A 顯示 `not_applicable` 而非 `pass`／`not_started`）。
 - 成員角色示意分布：`project_leader = 6`、`reviewer = 7`。
 
 ### 邊界情況
@@ -267,6 +267,7 @@ flowchart LR
 
 | Version | Date | Change Summary |
 | --- | --- | --- |
+| 2.1.2 | 2026-08-24 | Issue #261 drift 修正：更正「Prototype 示例資料基線」的 IAA 示意分布敘述——`pass = 6`／`not_started = 2` 為 v2.1.0 引入 `not_applicable` 徽章狀態前的舊值，未同步更新；實際 prototype fixture（`dataset-analysis-list.data.js`）與既有回歸測試（`dataset-analysis-list-filters-pagination.spec.ts` `IAA_FILTER_COUNTS`）皆為 `pass = 5`、`not_started = 1`、`not_applicable = 2`（2 筆 `free_text`-only 任務 T009／T012，依 FR-004A 顯示 `not_applicable`），純文字修正對齊既有正確行為，不改變任何 prototype 程式碼或測試。 |
 | 2.1.1 | 2026-08-24 | Issue #261：新增 Prototype Traceability，明確對應 dataset-analysis-list 原型頁面、資料層與設計層參考的責任邊界；規格條文未變。 |
 | 2.1.0 | 2026-08-12 | **同步 dataset-017 v2.0.0 IAA 策略 v2（minor）**：`IAA_BADGE_STATES` 新增 `not_applicable`（任務 `outputs[]` 僅含 IAA 排除類型如 `free_text` 時，徽章顯示 `not_applicable` 而非 `pass`／`fail`／`pending`／`not_started` 或空白），更新 FR-004A 與 `IAAStatusSummary` 實體；移除已過時的「v2.0.0 scope boundary（detail 待同步）」註記，改記錄 dataset-017 已完成 8-key `outputs[]` 遷移，detail 頁現支援全部 8 種輸出類型與複合組合。 |
 | 2.0.0 | 2026-07-29 | **Dataset Analysis List 遷移至可組合輸出類型**：移除固定單一 `task_type` 與 `page`／`page_size` 契約，改以 `outputs[].type` 多 tag、registry-driven 8 種輸出類型 membership filter、raw／localized 搜尋及 `output_type`／`limit`／`offset` URL query。加入 empty/error 分流、摘要 metadata 安全界線、13 筆 prototype baseline 與 filter／IAA／角色分布、medical／ABSA 複合 tag、第 14 筆合法任務泛化及 Playwright 驗收。13 筆只作示意，不構成產品上限；dataset-017 detail consumer 仍延後。 |
