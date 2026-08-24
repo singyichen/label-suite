@@ -8,7 +8,7 @@ const pagesWithTopHeading = [
   '/pages/task-management/task-detail.html',
   '/pages/annotation/annotation-list.html',
   '/pages/dataset/dataset-analysis-list.html',
-  '/pages/dataset/dataset-analysis-detail.html',
+  '/pages/dataset/dataset-analysis-detail.html?task_id=T001',
   '/pages/admin/user-management.html',
   '/pages/admin/role-settings.html',
   '/pages/account/profile.html',

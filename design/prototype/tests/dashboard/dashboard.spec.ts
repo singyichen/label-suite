@@ -348,7 +348,10 @@ test.describe('Dashboard page — responsive rendering', () => {
     test(`renders without horizontal overflow at ${vp.name}`, async ({ page }) => {
       await page.setViewportSize({ width: vp.width, height: vp.height });
       await page.goto(DASHBOARD_URL);
-      await expect(page.getByTestId('dashboard-shell')).toBeVisible();
+      // dashboard-shell is visible even during the Skeleton (issue #261
+      // drift, FR-018); wait for the real content grid so this measures
+      // final layout, not the simpler skeleton placeholder layout.
+      await expect(page.locator('#contentGrid')).toBeVisible();
       const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
       const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
       expect(scrollWidth).toBeLessThanOrEqual(clientWidth + 1);

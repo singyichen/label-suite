@@ -142,6 +142,9 @@
     reviewerSortOptionDefault: '預設順序',
     reviewerSortOptionProgressDesc: '進度：高到低',
     reviewerSortOptionProgressAsc: '進度：低到高',
+    errorLoadTitle:       '儀表板載入失敗',
+    errorLoadDesc:        '無法載入任務成員資格資料，請稍後再試。',
+    errorRetryLabel:      '重試',
   },
   en: {
     pageTitle:            'Dashboard — Label Suite (Prototype)',
@@ -282,6 +285,9 @@
     reviewerSortOptionDefault: 'Default order',
     reviewerSortOptionProgressDesc: 'Progress: High to Low',
     reviewerSortOptionProgressAsc: 'Progress: Low to High',
+    errorLoadTitle:       'Failed to load dashboard',
+    errorLoadDesc:        'Task membership data could not be loaded. Please try again.',
+    errorRetryLabel:      'Retry',
   },
 };
   global.LabelSuiteDashboard = dashboard;

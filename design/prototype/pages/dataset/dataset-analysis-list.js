@@ -293,6 +293,11 @@
   }
 
   function init() {
+    /* Captured before applyLang()'s render()->syncUrl() chain rewrites the
+       URL from state fields only, which would otherwise strip this param
+       before it could be read (issue #261 drift, FR-002). */
+    var hasInvalidTaskParam = new URLSearchParams(global.location.search).get('invalid_task') === '1';
+
     model.parseInitialState(global.location.search);
     view = global.LabelSuiteDatasetAnalysisView.create({
       model: model,
@@ -310,6 +315,12 @@
       ? global.LabelSuiteSharedSidebar.getStoredLang()
       : 'zh';
     applyLang(initialLanguage);
+
+    /* FR-002 / INVALID_TASK_TRIGGER: the detail page redirects here with
+       ?invalid_task=1 when task_id is unknown or missing (issue #261 drift). */
+    if (hasInvalidTaskParam) {
+      showToast(t('toastInvalidTask'), 'error');
+    }
 
     if (global.LabelSuiteAnalytics) {
       global.LabelSuiteAnalytics.init({ page: 'dataset-analysis-list' });

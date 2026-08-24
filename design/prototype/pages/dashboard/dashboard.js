@@ -12,6 +12,12 @@
   var lang = global.LabelSuiteSharedSidebar.getStoredLang();
   var scenario = 'user';
 
+  /* FR-018/FR-019: task_membership load simulation. Real duration is
+     arbitrary (prototype has no backend); short enough to stay
+     unobtrusive, long enough for the skeleton to be observable. */
+  var MEMBERSHIP_LOAD_DELAY_MS = 400;
+  var membershipState = 'loading';
+
   var RUN_TYPE_CLASS = {
     official_run: 'badge-official',
     dry_run: 'badge-dry-run',
@@ -482,6 +488,65 @@
     global.history.replaceState(null, '', url.toString());
   }
 
+  /* FR-018/FR-019: toggles the Skeleton / error-state / real-content
+     sections. Only one is ever visible; the real content stays hidden
+     until membershipState reaches 'ready'. */
+  function renderMembershipState() {
+    var skeleton = document.getElementById('dashboardSkeleton');
+    var errorState = document.getElementById('dashboardErrorState');
+    var contentGrid = document.getElementById('contentGrid');
+    if (!skeleton || !errorState || !contentGrid) return;
+
+    /* Error-state text (#errorLoadTitle/#errorLoadDesc/#errorRetryLabel)
+       is already set by applyLang()'s generic id-matching loop, called
+       unconditionally at init -- no separate text assignment needed here. */
+    skeleton.classList.toggle('hidden', membershipState !== 'loading');
+    errorState.classList.toggle('hidden', membershipState !== 'error');
+    contentGrid.classList.toggle('hidden', membershipState !== 'ready');
+  }
+
+  /* Runs the rest of init() once task_membership is confirmed ready --
+     these steps depend on the scenario/task data becoming visible. */
+  function onMembershipReady() {
+    global.LabelSuiteSharedSidebar.setSystemRole(
+      scenarioToSystemRole(scenario)
+    );
+    applyScenarioFromUrl();
+    Array.prototype.forEach.call(
+      document.querySelectorAll('.scenario-pill'),
+      function (pill) {
+        pill.disabled = false;
+      }
+    );
+  }
+
+  function loadMembership() {
+    var requestedView = new URL(global.location.href).searchParams.get('view');
+    membershipState = 'loading';
+    renderMembershipState();
+
+    if (requestedView === 'skeleton') return; /* stays loading forever, for deterministic testing */
+
+    global.setTimeout(function () {
+      membershipState = requestedView === 'error' ? 'error' : 'ready';
+      renderMembershipState();
+      if (membershipState === 'ready') onMembershipReady();
+    }, MEMBERSHIP_LOAD_DELAY_MS);
+  }
+
+  function bindRetryButton() {
+    var retryButton = document.getElementById('errorRetryLabel');
+    if (!retryButton) return;
+    retryButton.addEventListener('click', function () {
+      global.LabelSuiteAnalytics.track('prototype_dashboard_membership_retry', {});
+      /* Retry always succeeds (matches task-list.html's retry precedent --
+         demonstrates recovery rather than re-running the same failure). */
+      membershipState = 'ready';
+      renderMembershipState();
+      onMembershipReady();
+    });
+  }
+
   function applyScenarioFromUrl() {
     var requested = new URL(global.location.href)
       .searchParams.get('scenario');
@@ -603,17 +668,12 @@
       'dashboard',
       getTrackingContext
     );
-    global.LabelSuiteSharedSidebar.setSystemRole(
-      scenarioToSystemRole(scenario)
-    );
-    applyScenarioFromUrl();
+    /* Static chrome (title, sidebar labels, hidden task lists) translates
+       immediately so there's no flash of the wrong language once the
+       skeleton clears; role/scenario setup waits for onMembershipReady. */
     applyLang(lang);
-    Array.prototype.forEach.call(
-      document.querySelectorAll('.scenario-pill'),
-      function (pill) {
-        pill.disabled = false;
-      }
-    );
+    bindRetryButton();
+    loadMembership();
   }
 
   dashboard.renderTaskLists = renderTaskLists;

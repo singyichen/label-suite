@@ -1848,7 +1848,15 @@ function applyRouteTask(taskId) {
   var params;
   try {
     params = new URLSearchParams(window.location.search);
-    applyRouteTask(params.get('task_id'));
+    var routeTaskId = params.get('task_id');
+    if (!routeTaskId || !TASK_META[routeTaskId]) {
+      /* FR-002 / INVALID_TASK_TRIGGER: unknown or missing task_id must redirect
+         to the list with an error toast, not silently fall back to a default
+         task (issue #261 drift). */
+      window.location.href = './dataset-analysis-list.html?invalid_task=1';
+      return;
+    }
+    applyRouteTask(routeTaskId);
     var qState = params.get('q_state');
     if (qState === 'dry_run_in_progress' || qState === 'report_pending' || qState === 'report_generating' || qState === 'ready') {
       S.qState = qState;
