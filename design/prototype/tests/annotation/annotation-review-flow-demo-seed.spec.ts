@@ -189,15 +189,21 @@ test.describe('seeder idempotence', () => {
           .sort()
           .map((key) => key + '=' + window.localStorage.getItem(key))
           .join('\n'),
-        arbitration: window.localStorage.getItem('labelsuite.wsArbitration'),
+        // Arbitration items each live under their own key too (issue #319);
+        // serialize them all, sorted, so the comparison stays order-stable.
+        arbitration: Object.keys(window.localStorage)
+          .filter((key) => key.indexOf('labelsuite.wsArbitration.') === 0)
+          .sort()
+          .map((key) => key + '=' + window.localStorage.getItem(key))
+          .join('\n'),
       }), SEED_MARKER);
 
     const first = await readStores();
     expect(first.marker).toBeTruthy();
-    // Non-empty guard: with per-bucket keys, "seeder wrote nothing" would
-    // serialize to '' and trivially equal itself across reloads.
+    // Non-empty guard: with per-bucket/per-item keys, "seeder wrote nothing"
+    // would serialize to '' and trivially equal itself across reloads.
     expect(first.submissions).not.toBe('');
-    expect(first.arbitration).toBeTruthy();
+    expect(first.arbitration).not.toBe('');
 
     await page.reload();
     // Timestamps come from `new Date()` at seed time: a second seeding pass
@@ -210,12 +216,14 @@ test.describe('seeder idempotence', () => {
     await page.goto(buildListUrl({ task_id: 'T014', role: 'reviewer', run_type: 'dry_run' }));
 
     const foreignKeys = await page.evaluate(() => {
-      const parse = (raw: string | null) => (raw ? Object.keys(JSON.parse(raw)) : []);
       const submissionBucketKeys = Object.keys(window.localStorage)
         .filter((key) => key.indexOf('labelsuite.wsSubmissions.') === 0)
         .map((key) => key.slice('labelsuite.wsSubmissions.'.length));
+      const arbitrationItemKeys = Object.keys(window.localStorage)
+        .filter((key) => key.indexOf('labelsuite.wsArbitration.') === 0)
+        .map((key) => key.slice('labelsuite.wsArbitration.'.length));
       return submissionBucketKeys
-        .concat(parse(window.localStorage.getItem('labelsuite.wsArbitration')))
+        .concat(arbitrationItemKeys)
         .filter((key) => !/^T01[4-7]::/.test(key));
     });
     expect(foreignKeys).toEqual([]);
