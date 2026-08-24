@@ -1,6 +1,6 @@
 # ADR-033: OpenSpec as the Change Workflow Layer (`specs/` Remains Canon)
 
-**Status**: Proposed
+**Status**: Accepted
 **Date**: 2026-08-24
 
 > This ADR is a **decision draft** raised by issue #294. Merging it ratifies Phase 1 only (the decision and its governance shape). Tooling initialization, Spec Kit retirement, and the pilot are separate, later steps — see [OpenSpec Adoption Plan](../openspec-adoption-plan.md).
@@ -100,7 +100,7 @@ Spec Kit narrows to a **spec production tool** (the WHAT side); OpenSpec takes o
 
 Four accompanying decisions:
 
-1. **`specs/foundation/000-foundation/plan.md` is preserved as an exception.** It is the project-wide engineering baseline (API conventions, Pydantic schema layering, project structure), not an ordinary feature plan. It is retained as a standing architecture document (or its content is promoted into an ADR / CLAUDE.md) and referenced by every change's `design.md`. `specs/account/001-login-email-password/plan.md` serves as reference material for the first login change and is archived afterwards.
+1. **`specs/foundation/000-foundation/plan.md` is preserved as an exception.** It is the project-wide engineering baseline (API conventions, Pydantic schema layering, project structure), not an ordinary feature plan. It is retained in place as a standing architecture document, referenced by every change's `design.md`. `specs/account/001-login-email-password/plan.md` serves as reference material for the first login change and is archived afterwards.
 2. **The constitution check gate moves.** The plan-template's design-time principle checks move into the OpenSpec flow: `openspec/config.yaml` `rules` requires a constitution-check section in `proposal.md` / `design.md`.
 3. **Definition of Done is rewritten.** CLAUDE.md's current DoD — "all commands above exit 0 + `/speckit.analyze` reports zero findings" — loses meaning once plan/tasks retire. It becomes: `/opsx:verify` passes + write-back Source-Verify passes + all verification commands exit 0.
 4. **`specs/STATUS.md`'s state machine is simplified.** The `plan-ready` and `tasks-ready` states disappear; a representation for "a change is in flight" is added.
@@ -146,14 +146,14 @@ Same as C but `openspec/specs/` is never generated.
 
 Four phases, with acceptance criteria per phase, are specified in [docs/openspec-adoption-plan.md](../openspec-adoption-plan.md). Phase 1 is ratified by merging this ADR; Phases 2–4 require separate PRs.
 
-## Open Questions
+## Open Questions — Resolved
 
-Left for the maintainer to settle before Phase 2:
+Settled by the maintainer on 2026-08-24:
 
-1. **`/opsx:verify` availability.** The Spec Kit division-of-labor table assigns change-level verification to `/opsx:verify`. The OpenSpec README documents `openspec validate` and the `/opsx:propose|apply|archive|explore` commands; it does not name `/opsx:verify`. Confirm the command exists in the installed version, or substitute `openspec validate`.
-2. **CLI installation route.** OpenSpec's README installs globally with `npm install -g`, which the CLAUDE.md prohibition on `npm install` forbids. Issue #294 proposes `pnpm add -g` instead — global, so no repo lockfile is touched. Confirm this reading of the prohibition (it targets lockfile divergence, not global tool installs).
-3. **Fate of `specs/foundation/000-foundation/plan.md`.** Keep it in place as a standing architecture document, or promote its content into an ADR / CLAUDE.md and archive the file?
-4. **Pilot subject.** Issue #294 offers foundation-000 or a small spec adjustment. A small adjustment exercises the whole loop at lower risk; foundation-000 exercises the "first implementation" claim. Only one is needed to declare Phase 4 done.
+1. **`/opsx:verify` availability.** Confirmed: `/opsx:verify` exists, but only under OpenSpec's **Expanded Profile**, activated via `openspec config profile` + `openspec update`. It is not present in the default profile. Phase 2's `openspec init` step must select the Expanded Profile so `/opsx:verify` is available for the Spec Kit division-of-labor table above.
+2. **CLI installation route.** Resolved: use `pnpm add -g` as Issue #294 proposed. This is a global install, not a repo lockfile write, so it does not trigger the CLAUDE.md prohibition on `npm install` (which targets lockfile divergence).
+3. **Fate of `specs/foundation/000-foundation/plan.md`.** Resolved: keep it in place as a standing architecture document. No promotion into an ADR or CLAUDE.md; the file and its current path stay as-is, referenced by every change's `design.md` per accompanying decision 1 above.
+4. **Pilot subject.** Resolved: a small spec adjustment, not foundation-000. Lower risk, exercises the full propose→apply→archive loop; the specific spec item is chosen when Phase 4 starts.
 
 ## Referenced by
 
