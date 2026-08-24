@@ -369,6 +369,14 @@
                 <h2 id="annotatorTaskListTitle" class="panel-title">任務列表</h2>
                 <span id="annotatorTaskListSubtitle" class="panel-subtitle">我的進行中任務</span>
               </div>
+              <div class="btn-row">
+                <label id="annotatorSortLabel" for="annotatorSortSelect" class="controls-label">排序</label>
+                <select id="annotatorSortSelect" class="filter-select" data-testid="annotator-sort-select">
+                  <option id="annotatorSortOptionDefault" value="default">預設順序</option>
+                  <option id="annotatorSortOptionProgressDesc" value="progress_desc">進度：高到低</option>
+                  <option id="annotatorSortOptionProgressAsc" value="progress_asc">進度：低到高</option>
+                </select>
+              </div>
             </div>
             <div class="list" id="annotatorTaskList"></div>
           </article>
@@ -404,6 +412,14 @@
               <div>
                 <h2 id="reviewerTaskListTitle" class="panel-title">任務列表</h2>
                 <span id="reviewerTaskListSubtitle" class="panel-subtitle">我的待審任務</span>
+              </div>
+              <div class="btn-row">
+                <label id="reviewerSortLabel" for="reviewerSortSelect" class="controls-label">排序</label>
+                <select id="reviewerSortSelect" class="filter-select" data-testid="reviewer-sort-select">
+                  <option id="reviewerSortOptionDefault" value="default">預設順序</option>
+                  <option id="reviewerSortOptionProgressDesc" value="progress_desc">進度：高到低</option>
+                  <option id="reviewerSortOptionProgressAsc" value="progress_asc">進度：低到高</option>
+                </select>
               </div>
             </div>
             <div class="list" id="reviewerTaskList"></div>

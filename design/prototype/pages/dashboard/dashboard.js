@@ -24,6 +24,27 @@
     pending_review: 'badge-warning',
   };
 
+  /* Issue #187: sort control for the Annotator/Reviewer task lists.
+     'progress' is the only structured numeric field the assignment seed
+     model (dashboard.assignments.js) exposes -- there is no separate
+     "last submission time" or "pending review count" field (those only
+     ever appear embedded inside the localized `detail` text), so only a
+     progress-based key is offered here. */
+  var taskListSort = { annotator: 'default', reviewer: 'default' };
+  var SORT_COMPARATORS = {
+    progress_desc: function (a, b) {
+      return (Number(b.progress) || 0) - (Number(a.progress) || 0);
+    },
+    progress_asc: function (a, b) {
+      return (Number(a.progress) || 0) - (Number(b.progress) || 0);
+    },
+  };
+
+  function sortEntries(entries, sortKey) {
+    var comparator = SORT_COMPARATORS[sortKey];
+    return comparator ? entries.slice().sort(comparator) : entries;
+  }
+
   function localizedText(source) {
     return (source && (source[lang] || source.zh || source.en)) || '';
   }
@@ -291,12 +312,12 @@
     );
   }
 
-  function renderTaskList(containerId, listKey, role) {
+  function renderTaskList(containerId, listKey, role, sortKey) {
     var container = document.getElementById(containerId);
     if (!container) return;
     var taskMap = buildMap(data.tasks, 'id');
     var outputTypeMap = buildMap(data.outputTypes, 'key');
-    var entries = data.roleLists[listKey] || [];
+    var entries = sortEntries(data.roleLists[listKey] || [], sortKey);
     var markup = entries.map(function (entry, index) {
       var task = taskMap[entry.exampleTaskId];
       if (!task || !Array.isArray(task.outputTypes)) return '';
@@ -318,8 +339,36 @@
       'projectLeader',
       'project_leader'
     );
-    renderTaskList('annotatorTaskList', 'annotator', 'annotator');
-    renderTaskList('reviewerTaskList', 'reviewer', 'reviewer');
+    renderTaskList(
+      'annotatorTaskList',
+      'annotator',
+      'annotator',
+      taskListSort.annotator
+    );
+    renderTaskList(
+      'reviewerTaskList',
+      'reviewer',
+      'reviewer',
+      taskListSort.reviewer
+    );
+  }
+
+  function bindSortSelect(selectId, role) {
+    var select = document.getElementById(selectId);
+    if (!select) return;
+    select.addEventListener('change', function () {
+      taskListSort[role] = select.value;
+      global.LabelSuiteAnalytics.track('prototype_cta_clicked', {
+        cta: role === 'annotator'
+          ? 'annotator_task_list_sorted'
+          : 'reviewer_task_list_sorted',
+        sort_key: select.value,
+        task_role: role,
+        lang: lang,
+        scenario: scenario,
+      });
+      renderTaskLists();
+    });
   }
 
   function openTaskList(taskRole, status) {
@@ -508,6 +557,8 @@
     );
     bindPendingIaaStatEvent('adminPendingIaaValue', 'super_admin');
     bindPendingIaaStatEvent('plPendingIaaValue', 'project_leader');
+    bindSortSelect('annotatorSortSelect', 'annotator');
+    bindSortSelect('reviewerSortSelect', 'reviewer');
   }
 
   function getTrackingContext() {

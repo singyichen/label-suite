@@ -309,10 +309,34 @@
       max-width: 520px;
       white-space: normal;
       word-break: break-word;
-      overflow: visible;
-      text-overflow: clip;
       line-height: 1.6;
     }
+    /* Fixed-line clamp by default (issue #188) -- long-text tasks (QA /
+       summary / multi-turn) used to render the full original text and blow
+       up row height. The toggle below (per row) switches this to
+       overflow: visible / -webkit-line-clamp: unset. */
+    .text-snippet-content {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .text-snippet-content.expanded {
+      -webkit-line-clamp: unset;
+      overflow: visible;
+    }
+    .text-snippet-toggle {
+      display: block;
+      margin-top: 4px;
+      padding: 0;
+      border: none;
+      background: none;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-primary);
+      cursor: pointer;
+    }
+    .text-snippet-toggle:hover { text-decoration: underline; }
     .status-badge {
       display: inline-flex;
       align-items: center;
@@ -680,6 +704,8 @@
       reviewFreeTextStats: '自由文本任務 — 請並列比對各標記員結果',
       reviewBypassPill: '無法判定 (Bypass)',
       reviewNoAnswer: '（無）',
+      textExpandLabel: '展開全文',
+      textCollapseLabel: '收合',
     },
     en: {
       pageTitle: 'Annotation List',
@@ -737,6 +763,8 @@
       reviewFreeTextStats: 'Free-text task — compare annotator answers side by side',
       reviewBypassPill: 'Bypassed (cannot determine)',
       reviewNoAnswer: '(none)',
+      textExpandLabel: 'Show full text',
+      textCollapseLabel: 'Collapse',
     }
   };
   function t(key, vars) {
@@ -1133,6 +1161,41 @@
     return td;
   }
 
+  /* Text summary cell (issue #188, FR-007I): clamps to a fixed line count by
+     default via .text-snippet-content's CSS, and only renders the expand
+     toggle when the text is long enough to plausibly overflow that clamp --
+     short snippets (e.g. single_label sentences) stay toggle-free. The
+     toggle stops propagation so it never triggers the row's own
+     click-to-open-workspace behavior (FR-008). */
+  var TEXT_SNIPPET_TOGGLE_THRESHOLD = 60;
+  function buildTextCell(text) {
+    var td = document.createElement('td');
+    td.className = 'text-snippet';
+
+    var content = document.createElement('span');
+    content.className = 'text-snippet-content';
+    content.textContent = text;
+    td.appendChild(content);
+
+    if (text && text.length > TEXT_SNIPPET_TOGGLE_THRESHOLD) {
+      var toggleBtn = document.createElement('button');
+      toggleBtn.type = 'button';
+      toggleBtn.className = 'text-snippet-toggle';
+      toggleBtn.setAttribute('data-testid', 'list-text-toggle');
+      toggleBtn.setAttribute('aria-expanded', 'false');
+      toggleBtn.textContent = t('textExpandLabel');
+      toggleBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var isExpanded = content.classList.toggle('expanded');
+        toggleBtn.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+        toggleBtn.textContent = t(isExpanded ? 'textCollapseLabel' : 'textExpandLabel');
+      });
+      td.appendChild(toggleBtn);
+    }
+
+    return td;
+  }
+
   function makeTh(text, width) {
     var th = document.createElement('th');
     th.textContent = text;
@@ -1300,9 +1363,7 @@
       statsEl.setAttribute('data-testid', 'list-review-stats');
       statsEl.textContent = buildReviewStatsText(profile, item.mockRows);
 
-      var textTd = document.createElement('td');
-      textTd.className = 'text-snippet';
-      textTd.textContent = item.text;
+      var textTd = buildTextCell(item.text);
 
       tr.appendChild(makeTd(item.recordId));
       tr.appendChild(makeTd(annotatorSpan));
@@ -1427,9 +1488,7 @@
       editBtn.textContent = t('editBtnLabel');
       editBtn.addEventListener('click', function (e) { e.stopPropagation(); openWorkspace(); });
 
-      var textTd = document.createElement('td');
-      textTd.className = 'text-snippet';
-      textTd.textContent = item.text;
+      var textTd = buildTextCell(item.text);
 
       tr.appendChild(makeTd(item.recordId));
       tr.appendChild(makeTd(statusSpan));
