@@ -212,7 +212,7 @@ jobs:
 # Skipped when frontend/package.json does not exist yet.
 
   frontend-lint:
-    name: Frontend — Lint & Type Check & Build
+    name: Frontend — Lint & Type Check & Test & Build
     runs-on: ubuntu-24.04
     needs: validate
     if: needs.validate.outputs.frontend-exists == 'true'
@@ -247,6 +247,9 @@ jobs:
 
       - name: Lint
         run: pnpm lint
+
+      - name: Test
+        run: pnpm test
 
       - name: Build
         run: pnpm build
