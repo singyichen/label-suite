@@ -91,6 +91,10 @@ When creating a **new prototype page** under `design/prototype/pages/`, do not i
 - [ ] Uses shared global language pattern (`getStoredLang` + `applyGlobalLanguage` + centralized `i18n` object).
 - [ ] Imports `assets/analytics.js`, calls `init(...)`, and sends `trackPageView(...)`.
 
+### Anti-pattern audit (after prototype, before wireframe freeze)
+
+After generating or substantially revising prototype pages — and **before** handing off to `/pencil-wireframe` — walk each affected page under `design/prototype/pages/**/*.html` against **`design/system/anti-pattern-checklist.md`** (anti-AI-boilerplate rules A1–F2). For every violation, record: page · rule ID · what was found · remedy direction using existing MASTER.md tokens. Fix violations in the prototype, or document the rationale for keeping them, before the wireframe freeze locks the layout. Do not invent new tokens as remedies — raise token gaps against MASTER.md instead.
+
 ## When this skill is invoked
 If the user invokes this skill without any specific task, ask what they want to build or design. Ask a few clarifying questions about audience, flow, and variations, then act as an expert Label Suite designer.
 
