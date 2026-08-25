@@ -1,8 +1,9 @@
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { ESLint } from 'eslint';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
+
+import { FRONTEND_ROOT, hasRuleViolation, lintFixtures, resultFor } from '../testing/eslint-harness';
 
 /**
  * Regression test for the module-boundary rules in `frontend/eslint.config.js`
@@ -10,17 +11,14 @@ import { afterEach, beforeAll, describe, expect, it } from 'vitest';
  * internals", "shared/ must not import from features/", and "the route tree
  * must not load feature internals directly".
  *
- * `eslint-plugin-boundaries` resolves its element patterns (`src/features/*`,
- * `src/shared`) relative to `process.cwd()`, and the boundaries rule is only
- * attached to files matched by the `files: ['src/**\/*.{ts,tsx}']` block in
- * eslint.config.js (itself resolved relative to the config file's directory).
- * So the fixtures below must be real, temporary files under the project's
- * actual `src/features/` and `src/shared/` — a fixture directory outside
- * `src/` would never be classified as a `feature`/`shared` element and the
- * rule would silently not apply, defeating the test.
+ * The boundaries rule is only attached to files matched by the
+ * `files: ['src/**\/*.{ts,tsx}']` block in eslint.config.js (resolved relative
+ * to the config file's directory), so the fixtures below must be real,
+ * temporary files under the project's actual `src/` tree — a fixture directory
+ * outside `src/` would never be classified as a `feature`/`shared`/`routes`
+ * element and the rule would silently not apply, defeating the test.
  */
 
-const FRONTEND_ROOT = join(import.meta.dirname, '..', '..');
 const FIXTURE_FEATURE_A = join(FRONTEND_ROOT, 'src/features/__eslint_boundary_fixture_a__');
 const FIXTURE_FEATURE_B = join(FRONTEND_ROOT, 'src/features/__eslint_boundary_fixture_b__');
 const FIXTURE_SHARED = join(FRONTEND_ROOT, 'src/shared/__eslint_boundary_fixture__');
@@ -83,9 +81,8 @@ function writeFixtures(): void {
   );
 }
 
-async function lintFixtures() {
-  const eslint = new ESLint({ cwd: FRONTEND_ROOT });
-  return eslint.lintFiles([
+async function lintAllFixtures() {
+  return lintFixtures([
     join(FIXTURE_FEATURE_A, 'index.ts'),
     join(FIXTURE_FEATURE_A, 'violation.ts'),
     join(FIXTURE_SHARED, 'violation.ts'),
@@ -94,20 +91,8 @@ async function lintFixtures() {
   ]);
 }
 
-function hasBoundaryViolation(messages: { ruleId: string | null }[]): boolean {
-  return messages.some((message) => message.ruleId === 'boundaries/dependencies');
-}
-
-/**
- * Finds the lint result for one fixture by its absolute path.
- *
- * Matching on an absolute path rather than a substring matters: the shared and
- * routes fixture directories share the `__eslint_boundary_fixture__` name, so a
- * substring match would silently resolve to whichever result happens to come
- * first and the test would assert against the wrong file.
- */
-function resultFor(results: { filePath: string }[], fixturePath: string) {
-  return results.find((result) => result.filePath === fixturePath);
+function hasBoundaryViolation(messages: readonly { ruleId: string | null }[]): boolean {
+  return hasRuleViolation(messages, 'boundaries/dependencies');
 }
 
 describe('eslint.config.js module boundary rules', () => {
@@ -125,7 +110,7 @@ describe('eslint.config.js module boundary rules', () => {
   it('reports a feature importing another feature’s internals', async () => {
     writeFixtures();
 
-    const results = await lintFixtures();
+    const results = await lintAllFixtures();
     const violation = resultFor(results, join(FIXTURE_FEATURE_A, 'violation.ts'));
 
     expect(violation).toBeDefined();
@@ -135,7 +120,7 @@ describe('eslint.config.js module boundary rules', () => {
   it('reports shared/ importing from features/', async () => {
     writeFixtures();
 
-    const results = await lintFixtures();
+    const results = await lintAllFixtures();
     const violation = resultFor(results, join(FIXTURE_SHARED, 'violation.ts'));
 
     expect(violation).toBeDefined();
@@ -145,7 +130,7 @@ describe('eslint.config.js module boundary rules', () => {
   it('does not report a legitimate same-feature internal import', async () => {
     writeFixtures();
 
-    const results = await lintFixtures();
+    const results = await lintAllFixtures();
     const legit = resultFor(results, join(FIXTURE_FEATURE_A, 'index.ts'));
 
     expect(legit).toBeDefined();
@@ -155,7 +140,7 @@ describe('eslint.config.js module boundary rules', () => {
   it('reports the route tree importing a feature’s internal file', async () => {
     writeFixtures();
 
-    const results = await lintFixtures();
+    const results = await lintAllFixtures();
     const violation = resultFor(results, join(FIXTURE_ROUTES, 'violation.ts'));
 
     expect(violation).toBeDefined();
@@ -165,7 +150,7 @@ describe('eslint.config.js module boundary rules', () => {
   it('does not report the route tree importing a feature’s public entry point', async () => {
     writeFixtures();
 
-    const results = await lintFixtures();
+    const results = await lintAllFixtures();
     const legit = resultFor(results, join(FIXTURE_ROUTES, 'legit.ts'));
 
     expect(legit).toBeDefined();

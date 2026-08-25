@@ -1,8 +1,9 @@
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { ESLint } from 'eslint';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
+
+import { FRONTEND_ROOT, hasRuleViolation, lintFixtures, resultFor } from '../testing/eslint-harness';
 
 /**
  * Regression test for SC-019's second clause (task 7.3): a TanStack Query hook
@@ -20,7 +21,6 @@ import { afterEach, beforeAll, describe, expect, it } from 'vitest';
  * the test would pass for the wrong reason.
  */
 
-const FRONTEND_ROOT = join(import.meta.dirname, '..', '..');
 const FIXTURE_DIR = join(FRONTEND_ROOT, 'src/features/__eslint_query_key_fixture__');
 
 const RULE_ID = 'no-restricted-syntax';
@@ -52,21 +52,16 @@ function writeFixtures(): void {
   );
 }
 
-async function lintFixtures() {
-  const eslint = new ESLint({ cwd: FRONTEND_ROOT });
-  return eslint.lintFiles([
+async function lintAllFixtures() {
+  return lintFixtures([
     join(FIXTURE_DIR, 'violation.ts'),
     join(FIXTURE_DIR, 'legit.ts'),
     join(FIXTURE_DIR, 'unrelated.ts'),
   ]);
 }
 
-function hasQueryKeyViolation(messages: { ruleId: string | null }[]): boolean {
-  return messages.some((message) => message.ruleId === RULE_ID);
-}
-
-function resultFor(results: { filePath: string }[], fixturePath: string) {
-  return results.find((result) => result.filePath === fixturePath);
+function hasQueryKeyViolation(messages: readonly { ruleId: string | null }[]): boolean {
+  return hasRuleViolation(messages, RULE_ID);
 }
 
 describe('eslint.config.js inline queryKey rule (SC-019)', () => {
@@ -82,7 +77,7 @@ describe('eslint.config.js inline queryKey rule (SC-019)', () => {
   it('reports an inline string array used as a queryKey', async () => {
     writeFixtures();
 
-    const results = await lintFixtures();
+    const results = await lintAllFixtures();
     const violation = resultFor(results, join(FIXTURE_DIR, 'violation.ts'));
 
     expect(violation).toBeDefined();
@@ -92,7 +87,7 @@ describe('eslint.config.js inline queryKey rule (SC-019)', () => {
   it('does not report a queryKey sourced from the QUERY_KEYS factory', async () => {
     writeFixtures();
 
-    const results = await lintFixtures();
+    const results = await lintAllFixtures();
     const legit = resultFor(results, join(FIXTURE_DIR, 'legit.ts'));
 
     expect(legit).toBeDefined();
@@ -102,7 +97,7 @@ describe('eslint.config.js inline queryKey rule (SC-019)', () => {
   it('does not report a string array that is not a queryKey', async () => {
     writeFixtures();
 
-    const results = await lintFixtures();
+    const results = await lintAllFixtures();
     const unrelated = resultFor(results, join(FIXTURE_DIR, 'unrelated.ts'));
 
     expect(unrelated).toBeDefined();
