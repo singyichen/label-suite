@@ -24,7 +24,10 @@ import {
  *   actor overwrites another) plus read-after-reload visibility. Writes to
  *   the SAME bucket (e.g. reviewer reject vs. annotator save) still race
  *   last-write-wins at the prototype tier; real concurrent-session
- *   behavior belongs to the real-backend E2E tier (FAIL-D01~D06). */
+ *   behavior belongs to the real-backend E2E tier (FAIL-D01~D06).
+ *
+ * Traceability: specs/annotation/015-annotation-workspace/spec.md
+ *   FR-014S, FR-049, FR-050, FR-062 */
 
 const ANNOTATOR_A = 'kioleemg12';
 const ANNOTATOR_B = '113450022';
