@@ -310,7 +310,7 @@ Run:
 ```bash
 openspec validate --changes --no-interactive
 rg -n 'senior-qa|expected failure|Exception:|Project SDD lint|final PR' openspec/config.yaml
-if rg -n 'eight principles|/opsx:verify.*\(or[[:space:]]+.*openspec validate' openspec/config.yaml; then exit 1; fi
+if rg -n 'eight principles|opsx:verify[^[:alnum:]_]*(\(or[[:space:]]+|or[[:space:]]+)[^[:alnum:]_]*openspec validate' openspec/config.yaml; then exit 1; fi
 git diff --check
 ```
 
@@ -350,7 +350,7 @@ Run:
 
 ```bash
 rg -n 'Frontend Ready Gate|OpenSpec schema|Project SDD lint|Red.*senior-qa|Green|final PR' AGENTS.md
-if rg -n 'opsx:verify.*\(or[[:space:]]+.*openspec validate|senior-qa.*frontend/tests' AGENTS.md; then exit 1; fi
+if rg -n 'opsx:verify[^[:alnum:]_]*(\(or[[:space:]]+|or[[:space:]]+)[^[:alnum:]_]*openspec validate|senior-qa.*frontend/tests' AGENTS.md; then exit 1; fi
 git diff --check
 ```
 
@@ -388,7 +388,7 @@ Run:
 
 ```bash
 rg -n 'Frontend Ready Gate|all applicable constitution principles|senior-qa.*Red|OpenSpec schema|Project SDD lint|final PR' CLAUDE.md
-if rg -n 'eight core principles|opsx:verify.*\(or[[:space:]]+.*openspec validate' CLAUDE.md; then exit 1; fi
+if rg -n 'eight core principles|opsx:verify[^[:alnum:]_]*(\(or[[:space:]]+|or[[:space:]]+)[^[:alnum:]_]*openspec validate' CLAUDE.md; then exit 1; fi
 git diff --check
 ```
 
@@ -426,7 +426,7 @@ Run:
 
 ```bash
 rg -n 'expected failure|Red|Green|Project SDD lint|Source-Verify|checkbox' .claude/agents/team-lead.md
-if rg -n 'frontend/tests|/speckit.checklist|opsx:verify.*\(or[[:space:]]+.*openspec validate' .claude/agents/team-lead.md; then exit 1; fi
+if rg -n 'frontend/tests|/speckit.checklist|opsx:verify[^[:alnum:]_]*(\(or[[:space:]]+|or[[:space:]]+)[^[:alnum:]_]*openspec validate' .claude/agents/team-lead.md; then exit 1; fi
 git diff --check
 ```
 
@@ -460,7 +460,7 @@ Run:
 
 ```bash
 rg -n '/label-suite-design|expected failure|Red|Green|Project SDD lint|Source-Verify' .claude/commands/agent-team.md
-if rg -n 'frontend/tests|/speckit.checklist|opsx:verify.*\(or[[:space:]]+.*openspec validate' .claude/commands/agent-team.md; then exit 1; fi
+if rg -n 'frontend/tests|/speckit.checklist|opsx:verify[^[:alnum:]_]*(\(or[[:space:]]+|or[[:space:]]+)[^[:alnum:]_]*openspec validate' .claude/commands/agent-team.md; then exit 1; fi
 git diff --check
 ```
 
@@ -552,7 +552,7 @@ rg -n 'Frontend Ready Gate|Project SDD lint|Source-Verify|senior-qa|final PR' \
   AGENTS.md CLAUDE.md docs/sdd-workflow.md .claude/skills/sdd-workflow/SKILL.md \
   .claude/agents/team-lead.md .claude/commands/agent-team.md openspec/config.yaml
 
-if rg -n '(^|[^[:alnum:]_])npm (test|run)|eight principles|8 principles|八原則|/speckit.checklist|opsx:verify.*\(or[[:space:]]+.*openspec validate' \
+if rg -n '(^|[^[:alnum:]_])npm (test|run)|eight principles|8 principles|八原則|/speckit.checklist|opsx:verify[^[:alnum:]_]*(\(or[[:space:]]+|or[[:space:]]+)[^[:alnum:]_]*openspec validate' \
   AGENTS.md CLAUDE.md docs/sdd-workflow.md .claude/skills/sdd-workflow/SKILL.md \
   .claude/agents/team-lead.md .claude/commands/agent-team.md openspec/config.yaml; then
   exit 1
