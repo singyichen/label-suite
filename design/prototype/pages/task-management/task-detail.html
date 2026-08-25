@@ -4338,6 +4338,7 @@ function interpolate(template, payload) {
       TASK_DATA.datasetFileName = profile.datasetFileName || TASK_DATA.datasetSourceZh;
       TASK_DATA.datasetRecords = cloneData(profile.datasetRecords || []);
       TASK_DATA.datasetTotal = TASK_DATA.datasetRecords.length;
+      if (profile.minReviewers !== undefined) TASK_DATA.minReviewers = profile.minReviewers;
       /* DEFAULT_TASK_DATA.samplingValue targets its legacy 3200-record
          dataset; re-derive from this profile's actual record count. */
       TASK_DATA.samplingValue = null;
