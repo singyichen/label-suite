@@ -81,19 +81,21 @@ class Settings(BaseSettings):
         """Enforce FR-021 and derive the FR-070 OpenAPI docs default.
 
         Raises:
-            ValueError: If running in production with a wildcard entry in
-                `allowed_origins` (FR-021). Non-production environments may
-                use a wildcard for local convenience — FR-021 scopes the
-                prohibition to production only, and disallowing it
-                everywhere would invent a constraint the canonical spec
-                never states.
+            ValueError: If `allowed_origins` contains a wildcard entry, in
+                any environment. FR-021 names the production case
+                explicitly; the project's CORS prohibition (CLAUDE.md,
+                "❌ allow_origins=[\"*\"]") is unconditional, and a
+                publicly reachable staging or test deployment is exposed by
+                a wildcard exactly as production is. Rejecting everywhere
+                is a superset of FR-021, so it satisfies the canonical
+                requirement rather than narrowing or contradicting it.
 
         Returns:
             This instance, with `enable_openapi_docs` resolved to a
             concrete `bool`.
         """
-        if self.environment == "production" and "*" in self.allowed_origins:
-            raise ValueError("ALLOWED_ORIGINS must not contain a wildcard ('*') in production")
+        if "*" in self.allowed_origins:
+            raise ValueError("ALLOWED_ORIGINS must not contain a wildcard ('*')")
 
         if self.enable_openapi_docs is None:
             # FR-070: enabled by default outside production, disabled by

@@ -109,12 +109,40 @@ class TestRequiredEnvVarsFailFast:
 
 
 class TestAllowedOriginsCors:
-    """FR-021: production rejects wildcard ALLOWED_ORIGINS."""
+    """FR-021 + CLAUDE.md CORS prohibition: no environment accepts a wildcard."""
 
     def test_production_rejects_wildcard_allowed_origins(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         _apply_env(monkeypatch, {"ENVIRONMENT": "production", "ALLOWED_ORIGINS": "*"})
+
+        with pytest.raises(ValidationError):
+            _build_settings()
+
+    @pytest.mark.parametrize("environment", ["local", "test", "staging"])
+    def test_non_production_also_rejects_wildcard_allowed_origins(
+        self, monkeypatch: pytest.MonkeyPatch, environment: str
+    ) -> None:
+        # FR-021 states the production case explicitly; CLAUDE.md's
+        # prohibition ("❌ allow_origins=[\"*\"]", reason: security boundary)
+        # is unconditional, and a publicly reachable staging deployment is
+        # exposed by a wildcard exactly as production is. Rejecting in every
+        # environment is a superset of FR-021, so it satisfies the canonical
+        # requirement rather than contradicting it.
+        _apply_env(monkeypatch, {"ENVIRONMENT": environment, "ALLOWED_ORIGINS": "*"})
+
+        with pytest.raises(ValidationError):
+            _build_settings()
+
+    def test_wildcard_rejected_even_alongside_explicit_origins(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # A wildcard entry widens the allow-list to every origin regardless of
+        # what else is listed, so mixing it with explicit origins must fail too.
+        _apply_env(
+            monkeypatch,
+            {"ENVIRONMENT": "local", "ALLOWED_ORIGINS": "http://localhost:5173,*"},
+        )
 
         with pytest.raises(ValidationError):
             _build_settings()
