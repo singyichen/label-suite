@@ -62,8 +62,11 @@ PR 拆分計畫（依 config 任務粒度規則明示）：下方每個 `## N.` 
 
 - [ ] 7.1 以 MSW 撰寫失敗元件測試 `src/features/health/__tests__/HealthCheckPage.test.tsx`：成功渲染狀態文字；網路錯誤渲染行內錯誤；載入中顯示 "Checking..."；驗證：先確認為紅 `[@senior-frontend]`
 - [ ] 7.2 實作 `features/health/HealthCheckPage.tsx` + 公開 `/health-check` 路由組合；驗證：元件測試綠 + tsc + lint exit 0 `[@senior-frontend]`
+- [ ] 7.3 補齊本組落地 `routes/` 與第一個 feature 後才可驗的兩項防護：(a) `eslint.config.js` 的 `boundaries/elements` 加入 `routes` 型別（目前 `routes/` → `features/*/內部檔案` 不會被回報）；(b) SC-019 後半段的強制機制（ESLint 規則或 grep 檢查），禁止 feature service 以 inline string array 當 queryKey；驗證：兩者各有 Vitest 回歸測試，且移除對應規則後轉紅 `[@senior-frontend]`
 
-> 依賴：依賴第 6 組；與後端鏈可平行（同第 5 組說明）。7.1 → 7.2 序列。
+> 依賴：依賴第 6 組；與後端鏈可平行（同第 5 組說明）。7.1 → 7.2 序列，7.3 於 7.2 之後。
+>
+> 7.3 補的是第 6 組驗收揭露的缺口：SC-019 有兩半，第 6 組只完成「檔案必須存在」那半；「不得使用 inline string array」目前僅因無人呼叫 `useQuery` 而成立，CI 沒有任何機制在第一個 feature service 寫出違規時攔下。`routes` 邊界型別同理，要等 `routes/` 真的存在才驗得了。
 
 ## 8. PR-FOUND-DEVOPS —— bootstrap 契約
 
