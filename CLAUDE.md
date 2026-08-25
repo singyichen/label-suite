@@ -103,7 +103,7 @@ Full pipeline — each stage is a hard gate. OpenSpec is the implementation/chan
 1. **OpenSpec schema validation** checks schema, delta, and scenario structure. Use a non-strict schema gate such as `openspec validate --changes --no-interactive`; it does not validate project headings, ownership, status, or retired paths.
 2. **Project SDD lint** checks project headings plus goal/status/ownership/retired-path rules. Until tooling exists, use the canonical workflow checklist and review evidence.
 3. **Code/test gates** check affected Red/Green evidence and applicable type, lint, unit, integration, prototype, E2E, and security commands.
-4. **Source-Verify + write-back/archive** checks archive-time canonical IDs, version, and Changelog integrity.
+4. **Source-Verify + write-back/archive** checks archive-time canonical IDs, version, and Changelog integrity, and — after archiving — that every canonical citation in the derived view is individually locatable by `grep` (FR/AC IDs, section references, file paths, ADR/issue/PR numbers, and requirement clauses that were paraphrased). `openspec archive` copies propose-time delta text verbatim, so wrong or omitted citations survive into the derived view and no CLI check catches them; see [docs/sdd-workflow.md](docs/sdd-workflow.md) §6.2 for the required step.
 
 `/opsx:verify` may run applicable checks, but does not replace any gate. `openspec validate` is only the non-strict OpenSpec schema gate.
 

@@ -38,7 +38,7 @@ Keep exactly these four checkpoints distinct; passing one never substitutes for 
 1. **OpenSpec schema validation** — non-strict schema, delta, and scenario structure, such as `openspec validate --changes --no-interactive`.
 2. **Project SDD lint** — project headings and goal/status/ownership/retired-path rules. Until its tooling exists, retain the workflow checklist and review evidence.
 3. **Code/test gates** — committed Red expected-failure evidence, Green exit-0 evidence, and the applicable backend, frontend, prototype, E2E, security, type, and lint commands.
-4. **Source-Verify + final archive/write-back** — before final archive, validate every touched FR/AC ID against the canonical spec and confirm the canonical version and Changelog update. Successful write-back in the final PR group completes this checkpoint.
+4. **Source-Verify + final archive/write-back** — before final archive, validate every touched FR/AC ID against the canonical spec and confirm the canonical version and Changelog update. After archiving, `grep`-verify every canonical citation in the derived view (`docs/sdd-workflow.md` §6.2); `openspec archive` copies propose-time delta text verbatim, so no CLI check catches a wrong citation. Successful write-back plus a clean citation check completes this checkpoint.
 
 The Frontend Ready Gate and stacked-PR timing remain separate workflow stages defined by `docs/sdd-workflow.md`.
 
