@@ -85,6 +85,18 @@ rules:
     - >-
       HARD RULE: task descriptions MUST be Traditional Chinese; commands,
       file paths, and code identifiers stay in English (see context).
+    - >-
+      Agent assignment: every task line MUST end with exactly one inline
+      assignee tag `[@agent-name]` naming an agent defined in .claude/agents/
+      (e.g. [@senior-backend], [@senior-dba], [@senior-frontend],
+      [@senior-devops], [@senior-qa]), or [@main] for tasks the main session
+      must run itself (openspec CLI workflows, PR operations, archive
+      write-back).
+    - >-
+      Execution defaults to strictly serial. Wrap same-group tasks that may
+      run concurrently in <!-- parallel:start --> / <!-- parallel:end -->
+      markers, and state cross-group parallelism and dependencies in a
+      blockquote under each group heading; anything unmarked runs serial.
 
 operations:
   apply:
@@ -97,6 +109,15 @@ operations:
       - >-
         Never commit to main; branch per CLAUDE.md naming
         (<type>/<short-description>).
+      - >-
+        Dispatch each task to the subagent named by its [@agent-name] tag
+        (Agent tool with the matching agent type); [@main] tasks run in the
+        main session. The main session stays the orchestrator: it hands the
+        subagent the task text plus the change's context files, requires
+        incremental commits on long tasks, verifies the task's verification
+        command exits 0, and marks the checkbox itself. Honor the tasks.md
+        parallel markers and dependency blockquotes; use worktree isolation
+        only when a parallel group touches the same files.
   archive:
     guidance:
       - >-

@@ -21,7 +21,7 @@ Rules in `.claude/rules/` load per situation: files with `paths:` frontmatter lo
 
 - **English:** code, comments, commit messages, API contracts, `design/system/MASTER.md`
 - **Traditional Chinese allowed:** `docs/`, `specs/`, `design/prototype/`, `design/wireframes/`, `design/system/inventory.md`
-- **Traditional Chinese REQUIRED (hard rule, 2026-08-25):** every OpenSpec-produced artifact (`openspec/changes/**`, `openspec/specs/**` — proposal.md, spec deltas, design.md, tasks.md, derived views) must be written in Traditional Chinese; only technical terms stay in English (FR/AC IDs, code identifiers, commands, file paths, and OpenSpec structural keywords such as `## ADDED Requirements`, `### Requirement:`, `#### Scenario:`, WHEN/THEN). These documents are reviewed by the maintainer.
+- **Traditional Chinese REQUIRED:** every OpenSpec-produced artifact (`openspec/changes/**`, `openspec/specs/**` — proposal.md, spec deltas, design.md, tasks.md, derived views) must be written in Traditional Chinese; only technical terms stay in English (FR/AC IDs, code identifiers, commands, file paths, and OpenSpec structural keywords such as `## ADDED Requirements`, `### Requirement:`, `#### Scenario:`, WHEN/THEN). These documents are reviewed by the maintainer.
 - All conversations with Claude should be responded to in Traditional Chinese.
 
 ## General Coding Rules
