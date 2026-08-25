@@ -46,7 +46,10 @@ function writeFixtures(): void {
     "import { helper } from './helper';\n\nexport const aValue: string = helper();\n",
   );
 
-  // feature -> other-feature import — must be reported.
+  // feature -> other-feature import — must be reported. FR-014 names the
+  // direct-internals import and the barrel detour as separate things to
+  // block, so both get their own fixture: a rule narrowed to one of them
+  // (as the routes policy deliberately is) must not pass as covering both.
   writeFileSync(
     join(FIXTURE_FEATURE_B, 'internal.ts'),
     "export const bInternal = 'b-internal';\n",
@@ -57,7 +60,11 @@ function writeFixtures(): void {
   );
   writeFileSync(
     join(FIXTURE_FEATURE_A, 'violation.ts'),
-    "import { bValue } from '../__eslint_boundary_fixture_b__/index';\n\nexport const usesB: string = bValue;\n",
+    "import { bInternal } from '../__eslint_boundary_fixture_b__/internal';\n\nexport const usesB: string = bInternal;\n",
+  );
+  writeFileSync(
+    join(FIXTURE_FEATURE_A, 'barrel-violation.ts'),
+    "import { bValue } from '../__eslint_boundary_fixture_b__';\n\nexport const usesBBarrel: string = bValue;\n",
   );
 
   // shared/ -> features/ import — must be reported.
@@ -85,6 +92,7 @@ async function lintAllFixtures() {
   return lintFixtures([
     join(FIXTURE_FEATURE_A, 'index.ts'),
     join(FIXTURE_FEATURE_A, 'violation.ts'),
+    join(FIXTURE_FEATURE_A, 'barrel-violation.ts'),
     join(FIXTURE_SHARED, 'violation.ts'),
     join(FIXTURE_ROUTES, 'violation.ts'),
     join(FIXTURE_ROUTES, 'legit.ts'),
@@ -112,6 +120,16 @@ describe('eslint.config.js module boundary rules', () => {
 
     const results = await lintAllFixtures();
     const violation = resultFor(results, join(FIXTURE_FEATURE_A, 'violation.ts'));
+
+    expect(violation).toBeDefined();
+    expect(hasBoundaryViolation(violation?.messages ?? [])).toBe(true);
+  });
+
+  it('reports a feature reaching another feature through its barrel', async () => {
+    writeFixtures();
+
+    const results = await lintAllFixtures();
+    const violation = resultFor(results, join(FIXTURE_FEATURE_A, 'barrel-violation.ts'));
 
     expect(violation).toBeDefined();
     expect(hasBoundaryViolation(violation?.messages ?? [])).toBe(true);
