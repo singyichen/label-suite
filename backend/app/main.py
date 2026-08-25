@@ -22,7 +22,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1.router import api_v1_router
 from app.core.config import Settings, get_settings
-from app.middleware import CorrelationIdMiddleware, register_exception_handlers
+from app.middleware import (
+    CORRELATION_ID_HEADER,
+    CorrelationIdMiddleware,
+    register_exception_handlers,
+)
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -57,11 +61,16 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     # mechanism that does not exist. The module that introduces
     # cookie-based sessions (account/001, ADR-021) turns it on alongside
     # tests that actually exercise it.
+    # `expose_headers` is required for `X-Correlation-ID`: it is not a
+    # CORS-safelisted response header, so a cross-origin caller reads `null`
+    # for it unless it is listed here — the header would be on the wire but
+    # invisible to the frontend client that is supposed to propagate it.
     app.add_middleware(
         CORSMiddleware,
         allow_origins=resolved_settings.allowed_origins,
         allow_methods=["*"],
         allow_headers=["*"],
+        expose_headers=[CORRELATION_ID_HEADER],
     )
     app.add_middleware(CorrelationIdMiddleware)
     register_exception_handlers(app)

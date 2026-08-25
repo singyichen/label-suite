@@ -54,6 +54,13 @@ assets/logo/*.png
 # Playwright test artifacts
 test-results/
 
+# eslint-boundaries.test.ts fixtures — written under real src/features/ and
+# src/shared/ trees to satisfy eslint-plugin-boundaries path resolution;
+# normally cleaned up in afterEach, but an interrupted run can leave these on
+# disk untracked.
+frontend/src/features/__eslint_boundary_fixture*__/
+frontend/src/shared/__eslint_boundary_fixture*__/
+
 # Qodo code review bot working directory
 .qodo/
 
