@@ -147,6 +147,8 @@ uv run --no-dev --with pip-audit pip-audit --desc
 pnpm tsc --noEmit
 pnpm lint
 pnpm test
+pnpm build
+pnpm audit --prod --audit-level high
 
 # Prototype (run from design/prototype/, when design/prototype/** changed)
 pnpm typecheck
