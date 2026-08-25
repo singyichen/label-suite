@@ -88,13 +88,19 @@ export default tseslint.config(
   // factory in shared/constants/query-keys.ts. An inline array hard-codes a
   // cache key at one call site, so the invalidation call elsewhere has nothing
   // to stay in sync with and silently stops matching when either side changes.
+  //
+  // The selector matches any array expression in `queryKey` position, not just
+  // one holding string literals: `queryKey: [taskId]` bypasses the factory just
+  // as much. A key hoisted into a variable first (`queryKey: TASKS_KEY`) is out
+  // of reach of a syntax selector — resolving it needs scope analysis — and is
+  // also outside SC-019's wording, which bans an *inline* array.
   {
     files: ['src/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-syntax': [
         'error',
         {
-          selector: "Property[key.name='queryKey'] > ArrayExpression > Literal",
+          selector: "Property[key.name='queryKey'] > ArrayExpression",
           message:
             'Use a key from QUERY_KEYS (shared/constants/query-keys.ts) instead of an inline queryKey array (SC-019).',
         },
