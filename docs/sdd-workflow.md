@@ -198,63 +198,75 @@ archive 回寫 ──→ specs/[module]/NNN-feature/spec.md（版本升級 + Cha
 
 ## 8. 各階段提示詞範例
 
-> 以下範例以「標記任務指派功能」為例，change 名稱 `task-assignment`，對應正典 spec `specs/task-management/018-task-assignment/spec.md`。實際使用時請替換。
+> **參數約定**：`<spec>` ＝ 正典 spec 路徑（如 `specs/foundation/000-foundation/spec.md`）、`<change>` ＝ change 名稱（kebab-case，如 `implement-foundation-core`）。
+>
+> **[5]–[8] 是固定範本**：逐字沿用、只代入上述兩個參數，不必每次檢查調整——語言硬規（全繁中）、`[@agent-name]` 派工標籤、TDD、PR 上限等規則已寫在 `openspec/config.yaml`，`/opsx:propose`／`/opsx:apply` 執行時由 CLI 自動注入（`openspec instructions` 的 rules 與 operationGuidance），提示詞不必重複。
+>
+> **從既有 spec 開始實作**（spec 已 spec-ready，[1]–[4] 已完成或不適用）時，直接從 [5] 進場——`specs/foundation/000-foundation/spec.md` 即為此例。
 
-### [1]–[2] 需求 → 規格
+### [1]–[2] 需求 → 規格（新功能才需要）
 
 ```text
-/superpowers:brainstorm 我想做標記任務指派功能：管理員可以把任務批次指派給標記員…
+/superpowers:brainstorm 我想做<功能描述>…
 ```
 
 ```text
-/speckit.specify 標記任務指派功能——管理員在任務清單勾選多筆任務後批次指派給指定標記員，
-含指派衝突檢查與通知。模組：task-management。
+/speckit.specify <功能描述>。模組：<module>。
 ```
 
-### [3] Prototype
+### [3] Prototype（新頁面才需要）
 
 ```text
-/label-suite-design 依 specs/task-management/018-task-assignment/spec.md 產出
-task-assignment 頁面 prototype。先讀 design/system/MASTER.md。
+/label-suite-design 依 <spec> 產出 <page> 頁面 prototype。先讀 design/system/MASTER.md。
 完成後補 prototype Playwright 測試（Red → Green，建立 data-testid 契約）。
 ```
 
 ### [4] Clarify（選用）
 
 ```text
-/speckit.clarify specs/task-management/018-task-assignment/spec.md
+/speckit.clarify <spec>
 ```
 
-### [5] Propose
+### [5] Propose — 固定範本
 
 ```text
-/opsx:propose 依 specs/task-management/018-task-assignment/spec.md（v1.0.0）建立
-change task-assignment。範圍：後端指派 API + 前端批次指派 UI。
-記得：文件全繁中；tasks.md 每個任務加 [@agent-name] 派工標籤與依賴／平行標記。
+/opsx:propose 依 <spec> 建立 change <change>。範圍：<一句話；有既定計畫文件時附路徑>。
 ```
 
-### [6] Apply（含派工）
+實例（foundation-000）：
 
 ```text
-/opsx:apply task-assignment
+/opsx:propose 依 specs/foundation/000-foundation/spec.md（v1.12.2）建立 change
+implement-foundation-core。範圍依 plan.md v2.0.0 的 Foundation-Core。
+```
 
-派工規則（依 openspec/config.yaml）：
-- 依 tasks.md 的 [@agent-name] 逐列派給對應 subagent；[@main] 由主 session 親自執行
-- 預設序列；parallel 標記群組可同時派出；平行群組觸及同檔才用 worktree
-- 長任務指示實作 agent 增量 commit
-- 每個 task 驗證指令 exit 0 後由你（主 agent）打勾
+### [6] Apply — 固定範本（含 config.yaml 未涵蓋的補充規則，逐字沿用）
+
+```text
+/opsx:apply <change>
+
+補充規則：
 - 每個 PR 群組全數 [x] 後、開 PR 前：senior-code-reviewer Code Review
   + senior-qa Scenario 驗收（對照 change specs delta 的 WHEN/THEN）
 - 同 task 失敗 ≥ 3 次或同群組審查退回 ≥ 2 次，停下回報給我
 ```
 
-### [7]–[8] Archive → PR
+（其餘派工規則——`[@agent-name]` 逐列派工、序列預設、parallel 標記、worktree 時機、增量 commit、主 agent 驗證後打勾——由 config.yaml 的 apply guidance 自動注入，不必寫進提示詞。）
+
+### [7] Archive — 固定範本
 
 ```text
-tasks.md 全部 [x]、驗證指令全綠。請 /opsx:archive task-assignment：
+tasks.md 全部 [x]、驗證指令全綠。/opsx:archive <change>：
 回寫正典 spec（版本升級 + Changelog）、合併 derived view、openspec validate 過。
-完成後 /pr-flow。
 ```
+
+### [8] PR — 固定範本
+
+```text
+/pr-flow
+```
+
+（stacked PR 的 change：每個 PR 群組完成 [6] 的審查後各跑一次 `/pr-flow`；archive 隨最後一個 PR 進版。）
 
 ### 通用提醒
 
