@@ -1,3 +1,7 @@
+/*
+ * Traceability: specs/task-management/013-task-new/spec.md
+ *   FR-002c-2
+ */
 import { test, expect } from '@playwright/test';
 import path from 'path';
 
