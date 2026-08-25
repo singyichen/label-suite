@@ -1,3 +1,9 @@
+/*
+ * Traceability: specs/task-management/010-task-list/spec.md
+ *   FR-004e, FR-008c, FR-010e, FR-010f, SC-011
+ * Traceability: specs/annotation/015-annotation-workspace/spec.md
+ *   FR-007C, AC-1.9
+ */
 import { test, expect } from '@playwright/test';
 import { buildListUrl, buildWorkspaceUrl, patchDataFile, skipGuidelineModal } from '../annotation/_workspace-helpers';
 
