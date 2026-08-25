@@ -1,6 +1,11 @@
 import { test, expect } from '@playwright/test';
 import { buildWorkspaceUrl, dismissGuidelineModal, skipGuidelineModal } from './_workspace-helpers';
 
+/*
+ * Traceability: specs/annotation/015-annotation-workspace/spec.md
+ *   FR-018, SC-005
+ */
+
 test('keeps single-column content width on mobile even after guideline panel is collapsed', async ({ page }) => {
   await skipGuidelineModal(page);
   await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001' }));

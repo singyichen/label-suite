@@ -8,7 +8,11 @@ import { buildWorkspaceUrl, dismissGuidelineModal } from './_workspace-helpers';
  * Scope deliberately EXCLUDES the guideline/attachment CONTENT itself:
  * uploaded guideline files are single-language source data (F-02), the same
  * UI-chrome-only scope rationale documented at the top of
- * annotation-workspace-i18n.spec.ts. */
+ * annotation-workspace-i18n.spec.ts.
+ *
+ * Traceability: specs/annotation/015-annotation-workspace/spec.md
+ *   FR-014D
+ */
 
 test.describe('Guideline tab and panel chrome localization (I18N-02)', () => {
   test('renders the Chinese chrome by default', async ({ page }) => {
