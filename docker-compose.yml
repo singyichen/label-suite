@@ -1,0 +1,52 @@
+# docker-compose.yml — PostgreSQL for local CI-equivalent / integration testing.
+#
+# Scope of THIS file: this Foundation-Core change (PR-FOUND-DEVOPS, task 8.1)
+# only implements a PostgreSQL service, gated behind the `ci` profile, so
+# that `docker compose up` with no profile starts nothing. Quick local
+# development does not need this file at all: `Settings.database_url`
+# (backend/app/core/config.py) already defaults to a local SQLite file, so
+# `cd backend && uv run uvicorn app.main:create_app --factory --reload`
+# works with zero containers. (`app/main.py` deliberately exposes only the
+# factory, so the shorter `app.main:app` form does not exist.)
+#
+# The `ci` profile exists to give contributors a way to run backend
+# integration tests (foundation spec FR-031, ADR-024) against the same
+# PostgreSQL target CI uses, without needing a separately installed
+# PostgreSQL server: `docker compose --profile ci up -d`, then set
+# DATABASE_URL to the `postgres` service before running `uv run pytest`.
+# Credentials and the database name below intentionally match the
+# `postgres` service container in .github/workflows/ci.yml so a passing
+# local run and a passing CI run exercise the same target.
+#
+# This file is NOT the full quick-start stack described in ADR-024's
+# "Repo Directory Structure" section (backend + frontend + nginx +
+# docker-compose.prod.yml / docker-compose.dev.yml) — those Dockerfiles and
+# app sources do not exist yet in this change. Adding backend/frontend/redis
+# services here would reference images/build contexts that don't exist and
+# would be broken by construction. That full stack is a later change's scope.
+
+services:
+  postgres:
+    profiles:
+      - ci
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: label_eval_test
+    ports:
+      # Bound to the loopback interface on purpose. The credentials below are
+      # the throwaway ones CI uses; publishing that database on every
+      # interface would hand any machine on the same network a trivially
+      # guessable superuser login.
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_ci_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d label_eval_test"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_ci_data:

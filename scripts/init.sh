@@ -10,9 +10,9 @@
 #   dev startup command; use 'uv run uvicorn ...' / 'pnpm dev' directly instead.
 #
 # How it works:
-#   Copies .env.example → .env if .env is absent, verifies uv and pnpm are
-#   installed, then runs 'uv sync' in backend/ and 'pnpm install' in frontend/
-#   if the respective package manifests exist.
+#   Copies .env.example → backend/.env if that file is absent, verifies uv and
+#   pnpm are installed, then runs 'uv sync' in backend/ and 'pnpm install' in
+#   frontend/ if the respective package manifests exist.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -20,11 +20,16 @@ cd "$(dirname "$0")/.."
 echo "=== Label Suite — Environment Setup ==="
 
 # 1. .env
-if [ ! -f .env ]; then
-  cp .env.example .env
-  echo "⚠️  Created .env from .env.example — REVIEW AND UPDATE all values (SECRET_KEY, DATABASE_URL, etc.) before running" >&2
+# Written to backend/, not the project root. Settings.model_config sets
+# env_file=".env" (backend/app/core/config.py), which pydantic-settings resolves
+# against the process working directory — and every backend command runs from
+# backend/. A root-level .env would be read by nothing.
+if [ ! -f backend/.env ]; then
+  mkdir -p backend
+  cp .env.example backend/.env
+  echo "⚠️  Created backend/.env from .env.example — REVIEW AND UPDATE all values (SECRET_KEY, DATABASE_URL, etc.) before running" >&2
 else
-  echo "✅ .env already exists"
+  echo "✅ backend/.env already exists"
 fi
 
 # 2. uv (backend package manager)
@@ -61,5 +66,8 @@ fi
 
 echo ""
 echo "=== Setup complete ==="
-echo "  Backend:  cd backend && uv run uvicorn app.main:app --reload"
+echo "  Verify:   bash scripts/verify-bootstrap.sh"
+# app/main.py exports a create_app factory and no module-level `app` object,
+# so --factory is required; `app.main:app` does not exist.
+echo "  Backend:  cd backend && uv run uvicorn app.main:create_app --factory --reload"
 echo "  Frontend: cd frontend && pnpm dev"
