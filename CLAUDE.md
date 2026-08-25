@@ -84,19 +84,29 @@ Every implementation sprint follows a strict **Planner → Generator → Evaluat
 
 ## Spec-Driven Development (SDD)
 
-Full pipeline — each stage is a hard gate. OpenSpec is the implementation/change-workflow layer; `specs/` remains the sole canon (SSoT) — see [ADR-033](docs/adr/033-openspec-change-workflow.md).
+Full pipeline — each stage is a hard gate. OpenSpec is the implementation/change-workflow layer; `specs/` remains the sole canon (SSoT). For authoritative stages, Frontend Ready Gate checklist, gate boundaries, and archive timing, follow [docs/sdd-workflow.md](docs/sdd-workflow.md); this file is a Claude-facing summary, not a second policy source.
 
 ```text
-/superpowers:brainstorm → /speckit.specify → /label-suite-design (prototype) → /pencil-wireframe (frozen — see design/wireframes/README.md)
-  → /speckit.clarify (optional)
-  → /opsx:propose → /opsx:apply → /opsx:archive → /pr-flow
+/superpowers:brainstorm → /speckit.specify → Spec Lint
+  → /label-suite-design (prototype) → prototype shell → Red → Green → page design
+  → /speckit.clarify (optional) → Frontend Ready Gate
+  → /opsx:propose → OpenSpec schema validation + Project SDD lint
+  → /opsx:apply → final PR /opsx:archive write-back → /pr-flow final merge
+  → post-merge `specs/STATUS.md` update and canonical spec movement to `specs/_archive/`
 ```
 
-**TDD (REQUIRED)**: You MUST NOT write implementation code before writing a failing test. No exceptions.
+**TDD (REQUIRED)**: `senior-qa` owns each separate Red test task and must commit and run its expected failure before the paired Green task starts. The implementation agent owns Green work and must not weaken or rewrite the Red contract to make it pass. The main agent/team lead verifies the committed Red evidence and Green exit-0 evidence, and is the only role that updates `tasks.md` checkboxes. A static prototype shell may precede Red, but target selectors and behavior may not.
 
-**Pre-PR gate (REQUIRED)**: the OpenSpec change must pass `/opsx:verify` (or `openspec validate` — see ADR-033 Open Questions), and the write-back Source-Verify gate must pass, before every PR.
+**Four verification gates (REQUIRED)**: these gates have distinct responsibilities and must not be treated as equivalents:
 
-**Write-back is a hard gate**: archiving a change must write back to the canonical `specs/[module]/NNN-feature/spec.md` — a version bump plus a Changelog entry. A PR whose change touches requirements but does not update the canonical `spec.md` must not be merged (ADR-033 Rule 1).
+1. **OpenSpec schema validation** checks schema, delta, and scenario structure. Use a non-strict schema gate such as `openspec validate --changes --no-interactive`; it does not validate project headings, ownership, status, or retired paths.
+2. **Project SDD lint** checks project headings plus goal/status/ownership/retired-path rules. Until tooling exists, use the canonical workflow checklist and review evidence.
+3. **Code/test gates** check affected Red/Green evidence and applicable type, lint, unit, integration, prototype, E2E, and security commands.
+4. **Source-Verify + write-back/archive** checks archive-time canonical IDs, version, and Changelog integrity.
+
+`/opsx:verify` may coordinate workflow-specific checks, but does not replace any gate. `openspec validate` is only the non-strict OpenSpec schema gate.
+
+**Archive and delivery timing**: intermediate stacked PR groups complete Red, Green, task verification, and group review, then merge while the OpenSpec change stays open. Only the final PR group may collect Source-Verify evidence and run `/opsx:archive`; its archive/write-back belongs in that final PR and completes gate 4 only after successful canonical write-back. Archiving must write back to the canonical `specs/[module]/NNN-feature/spec.md` with a version bump and Changelog entry. After the final PR merges, update `specs/STATUS.md` to archived and move the canonical spec to `specs/_archive/`.
 
 **Module names** (align with `features/` and `specs/[module]/`):
 `account` · `dashboard` · `task-management` · `annotation` · `dataset` · `admin`
@@ -110,15 +120,15 @@ Full pipeline — each stage is a hard gate. OpenSpec is the implementation/chan
 
 **Spec status**: Update `specs/STATUS.md` at every pipeline stage transition (see STATUS.md for full trigger list).
 
-**Archive**: After PR merged → `mv specs/[module]/NNN-feature specs/_archive/` → update `specs/STATUS.md`.
+**Archive**: Only the final PR runs archive/write-back. After the final PR merges → update `specs/STATUS.md` → `mv specs/[module]/NNN-feature specs/_archive/`.
 
 **Modify Existing Feature**: When changing an already-merged feature, carry the change in an OpenSpec change folder — do NOT create a new spec from scratch:
 
 1. `openspec/changes/<change>/proposal.md` names the corresponding canonical spec (`specs/[module]/NNN-feature/spec.md`) in its frontmatter; retrieve the spec from `specs/_archive/` first only if it needs direct editing during apply
 2. `/opsx:propose` — draft the delta (`## MODIFIED Requirements`, referencing stable FR/AC IDs) + `tasks.md` (+ `design.md` if the change touches an API contract or DB schema)
 3. `/opsx:apply` — implement via TDD
-4. `/opsx:archive` — dual-write: auto-merge into the derived `openspec/specs/` view, and write back to the canonical `specs/[module]/NNN-feature/spec.md` (version bump + Changelog entry — the hard gate above)
-5. Re-archive the canonical spec after the modification PR merges, if it was retrieved from `specs/_archive/`
+4. In the final PR group only, `/opsx:archive` — dual-write: auto-merge into the derived `openspec/specs/` view, and write back to the canonical `specs/[module]/NNN-feature/spec.md` (version bump + Changelog entry — the final archive gate)
+5. After the final PR merges, update `specs/STATUS.md` and re-archive the canonical spec if it was retrieved from `specs/_archive/`
 
 **Lightweight Path**: Skip the full OpenSpec change container when ALL of the following are true: ≤ 2 production code files changed (spec and test files excluded) · no API contract changes · minor behavior change requiring a spec update · **no requirement (FR/AC) is added or removed, only clarified**.
 Lightweight sequence: **TDD → implement → spec consistency review → `/pr-flow`**
@@ -127,7 +137,7 @@ If any condition is uncertain, default to the full OpenSpec change flow.
 
 ## Constitution
 
-All development must follow the eight core principles in [constitution.md](specs/_governance/constitution.md).
+All development must follow all applicable constitution principles in [constitution.md](specs/_governance/constitution.md) and every applicable domain constitution.
 
 NON-NEGOTIABLEs: **Generalization-First** (config-driven, no hardcoded task logic) · **Data Fairness** (prevent test-set answer leakage).
 
@@ -154,7 +164,7 @@ pnpm playwright test
 Every CI job must have a matching local command above — when adding a CI job, add its command here in the same PR.
 Exception: `.github/workflows/claude.yml` is an agent trigger (summons Claude Code on `@claude` comments), not a verification gate — it has no local equivalent and never blocks a merge.
 
-Definition of Done: all commands above exit 0 + OpenSpec change verification (`/opsx:verify` or `openspec validate`) passes + write-back Source-Verify gate passes.
+Definition of Done: the applicable four verification gates have evidence. Intermediate PR groups require gates 1–3 plus their Red/Green and group-review evidence; the final PR group additionally requires Source-Verify evidence and successful archive/write-back for gate 4. Canonical spec movement occurs only after final merge.
 
 ## Prohibitions
 
