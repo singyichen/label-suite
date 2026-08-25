@@ -16,9 +16,9 @@ PR 拆分計畫（依 config 任務粒度規則明示）：下方每個 `## N.` 
 
 ## 2. PR-FOUND-BE2 —— 後端 DB 與 session 基線
 
-- [ ] 2.1 撰寫失敗測試 `tests/db/test_session.py`：`get_db` yield async session 並負責 commit/rollback；`tests/db/test_naming.py`：metadata 命名慣例涵蓋 ix/uq/ck/fk/pk；驗證：先確認為紅 `[@senior-dba]`
-- [ ] 2.2 實作 `app/db/base.py`（DeclarativeBase + 命名慣例）與 `app/db/session.py`（由 `DATABASE_URL` 建 async engine、SQLite 預設、`get_db` 依賴）；驗證：db 測試綠 + mypy strict `[@senior-dba]`
-- [ ] 2.3 接上 Alembic：`alembic.ini`（可讀檔名模板）、`alembic/env.py` async `run_sync` 模式、空的 `versions/`；驗證：`uv run alembic upgrade head` 對 SQLite exit 0 `[@senior-dba]`
+- [x] 2.1 撰寫失敗測試 `tests/db/test_session.py`：`get_db` yield async session 並負責 commit/rollback；`tests/db/test_naming.py`：metadata 命名慣例涵蓋 ix/uq/ck/fk/pk；驗證：先確認為紅 `[@senior-dba]`
+- [x] 2.2 實作 `app/db/base.py`（DeclarativeBase + 命名慣例）與 `app/db/session.py`（由 `DATABASE_URL` 建 async engine、SQLite 預設、`get_db` 依賴）；驗證：db 測試綠 + mypy strict `[@senior-dba]`
+- [x] 2.3 接上 Alembic：`alembic.ini`（可讀檔名模板）、`alembic/env.py` async `run_sync` 模式、空的 `versions/`；驗證：`uv run alembic upgrade head` 對 SQLite exit 0 `[@senior-dba]`
 
 > 依賴：依賴第 1 組（`Settings` 提供 `DATABASE_URL`）；2.1 → 2.2 → 2.3 序列。本組全數 `[@senior-dba]`（schema 層 base／session／migration 同一人維護，避免跨 agent 交接）。
 
