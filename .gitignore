@@ -37,6 +37,7 @@ junit.xml
 htmlcov/
 .pytest_cache/
 .mypy_cache/
+.ruff_cache/
 design/prototype/test-results/
 design/prototype/playwright-report/
 
