@@ -7,34 +7,34 @@
 > When amending the constitution, always edit `specs/_governance/constitution.md` first,
 > then copy the full content here to keep agents in sync.
 
-<!-- BEGIN CACHE — synced from specs/_governance/constitution.md @ v1.31.1 (2026-08-24) -->
+<!-- BEGIN CACHE — synced from specs/_governance/constitution.md @ v1.32.0 (2026-08-25) -->
 
 <!--
-Sync Impact Report — constitution v1.31.1
-Generated: 2026-08-24
+Sync Impact Report — constitution v1.32.0
+Generated: 2026-08-25
 
-Version change: v1.31.0 → v1.31.1
-Bump type: PATCH — adopt OpenSpec (ADR-033, issue #294) as the implementation/change workflow layer; update cross-references from retired Spec Kit artifacts/commands to their OpenSpec equivalents without redefining any principle
+Version change: v1.31.1 → v1.32.0
+Bump type: MINOR — Principle VI gains coverage it did not have before (GitHub issues and pull requests). Not PATCH, because this adds a new artifact class to the language rule rather than rewording an existing one; not MAJOR, because no principle is removed and no existing clause is redefined — commit messages, code, comments and API contracts keep exactly the rules they had.
 
 Changed principles:
-- I. Spec-First Development — Goal Declaration sub-rule now targets `spec.md` for `## 功能目標` and an OpenSpec change's `tasks.md`/`design.md` for `**故事目標**`, replacing the retired Spec Kit `plan.md`
+- VI. English-First — Traditional Chinese is now REQUIRED for AI-agent-opened GitHub issues and pull requests (body plus the descriptive part of the title). Titles keep an English structural head; technical terms stay in English. Commit messages are explicitly excluded and remain English-only.
 
-Changed governance gates:
-- Feature Goal Alignment Gate — now compares the OpenSpec change's stated goal against the spec's `## 功能目標`, checked via `/opsx:verify` (or `openspec validate`) instead of the retired `/speckit.analyze`
-- Compliance Review — now uses `/opsx:verify` (or `openspec validate`) plus the write-back Source-Verify gate instead of `/speckit.analyze`
-- Dependency Governance — notes that global tool installs (e.g. `pnpm add -g`) are exempt from the `npm install` prohibition
+Changed governance gates: none
 
 New sections: none
 Removed sections: none
 
-Templates sync status:
-- .specify/memory/constitution.md: Updated — full content sync per Amendment Procedure
-- CLAUDE.md: Updated — SDD pipeline, Pre-PR gate, Modify Existing Feature, Lightweight Path, DoD, Three-Layer Sprint Architecture mapping, Prohibitions exception (same PR, see docs/openspec-adoption-plan.md appendix)
-- specs/_governance/testing-constitution.md + .specify/memory/testing-constitution.md: Updated — `/speckit.analyze` references replaced (same PR)
-- .claude/skills/sdd-workflow/SKILL.md, AGENTS.md, .claude/agents/team-lead.md, .claude/commands/agent-team.md, .claude/templates/claude-progress.md: Updated — retired-stage references replaced (same PR)
-- .specify/templates/plan-template.md, tasks-template.md, checklist-template.md: Marked deprecated except the foundation-000 standing-plan exception (same PR)
+Rationale (issue #380): the English-only contract exists to protect code and API contracts. Issue bodies and PR descriptions are maintainer-facing collaboration documents, the same class as OpenSpec artifacts, which CLAUDE.md already requires in Traditional Chinese. Keeping them in English forced the maintainer to read one change chain in two languages.
 
-Deferred TODOs: none
+Safety premise: `main` integrates via merge commits (`Merge pull request #N from <branch>`), so a Chinese PR title never becomes a commit subject and `git log` stays English. If the repository ever switches to squash merging, this premise fails and Principle VI must be re-examined.
+
+Templates sync status:
+- .specify/memory/constitution.md: Updated — full content sync per Amendment Procedure (this PR)
+- CLAUDE.md: Already updated — Communication rule and narrowed Prohibitions entry landed in PR #382
+- AGENTS.md, .claude/rules/issue-reporting.md: Pending — issue #380 PR-B
+- .github/PULL_REQUEST_TEMPLATE.md, .github/issue-templates.md: Pending — issue #380 PR-C
+- .claude/commands/pr-flow.md, .claude/skills/pr-review/SKILL.md: Pending — issue #380 PR-D
+- .claude/commands/commit.md: Unchanged by design — commit messages stay English-only
 -->
 
 # Label Suite Constitution
@@ -111,6 +111,7 @@ Code must be simple, readable, and consistently styled. **Overdesign is a defect
 - Traditional Chinese is permitted in `docs/`, `specs/`, `design/prototype/`, `design/wireframes/`, and `design/system/inventory.md`
 - `design/system/MASTER.md` must be written in English only
 - The only fully Chinese file outside those directories is `README.zh-TW.md`
+- Traditional Chinese is REQUIRED for GitHub issues and pull requests opened by an AI agent — the body and the descriptive part of the title. Titles keep an English structural head (`[Enhancement] <scope>: ...` for issues, `<type>: ...` for PRs), and technical terms stay in English: title prefixes, Conventional Commit types, label names, FR/AC IDs, code identifiers, file paths, commands, and verbatim error output. Commit messages are excluded and remain English-only; `main` integrates via merge commits, so a Chinese PR title never becomes a commit subject (issue #380)
 
 ### VII. Design Consistency (RECOMMENDED)
 
@@ -307,12 +308,13 @@ Constitution principles take precedence over all other conventions.
 
 **Compliance Review**: All PRs must verify compliance with the main constitution and every applicable domain constitution before merging. Use `/opsx:verify` (or `openspec validate`) plus the write-back Source-Verify gate to check cross-artifact consistency and constitution alignment.
 
-**Version**: 1.31.1 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-08-24
+**Version**: 1.32.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-08-25
 
 ## Changelog
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 1.32.0 | 2026-08-25 | Extend Principle VI (English-First) to cover collaboration artifacts (issue #380): GitHub issues and pull requests opened by an AI agent are now written in Traditional Chinese — body plus the descriptive part of the title — while titles keep an English structural head and technical terms stay in English. Commit messages are explicitly excluded and remain English-only, which is safe because `main` integrates via merge commits and a PR title never becomes a commit subject. MINOR rather than PATCH: Principle VI previously said nothing about issues or PRs, so this adds coverage rather than rewording existing coverage; it is not MAJOR because no principle is removed or redefined |
 | 1.31.1 | 2026-08-24 | Adopt OpenSpec as the implementation/change workflow layer per ADR-033 (issue #294): Principle I's Goal Declaration sub-rule now points `## 功能目標` at `spec.md` and `**故事目標**`/goal restatement at an OpenSpec change's `tasks.md`/`design.md` instead of the retired Spec Kit `plan.md`; Feature Goal Alignment Gate and Compliance Review now cite `/opsx:verify` (or `openspec validate`) instead of the retired `/speckit.analyze`; Dependency Governance notes the `pnpm add -g` global-install exception |
 | 1.31.0 | 2026-06-02 | Split detailed backend, frontend, and testing governance out of the main constitution into mandatory domain constitutions; add Domain Constitutions loading rules; update compliance review to cover applicable domain constitutions |
 | 1.30.0 | 2026-06-02 | Strengthen Principle I (add task granularity: one file per task, TDD task separation, Storybook task separation, migration decomposition into upgrade/downgrade/roundtrip); strengthen Principle X (add PR size limit ≤ 5 files / ≤ 300 lines, backend layer PR separation, frontend layer PR separation, BE/FE independence rule); strengthen Principle XVIII (migration PRs must be standalone, every migration PR requires a Rollback Plan section) |
