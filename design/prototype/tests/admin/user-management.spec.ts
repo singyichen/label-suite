@@ -1,3 +1,8 @@
+/**
+ * Traceability: specs/admin/006-user-management/spec.md
+ *   FR-004, FR-004a, FR-005, FR-006, FR-007, FR-008, FR-008b, FR-010,
+ *   FR-012, SC-002, SC-003
+ */
 import { test, expect } from '@playwright/test';
 
 const USER_MANAGEMENT_URL = '/pages/admin/user-management.html';

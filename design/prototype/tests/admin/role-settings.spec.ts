@@ -1,3 +1,8 @@
+/**
+ * Traceability: specs/admin/007-role-settings/spec.md
+ *   FR-003, FR-003b, FR-003c, FR-003d, FR-004, FR-005, FR-005a, FR-005b,
+ *   FR-006, FR-009, SC-003, SC-007
+ */
 import { test, expect } from '@playwright/test';
 
 const ROLE_SETTINGS_URL = '/pages/admin/role-settings.html';
