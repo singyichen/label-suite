@@ -141,7 +141,10 @@ jobs:
       - name: Install production dependencies only
         run: uv sync --no-dev --locked
       - name: Security audit with pip-audit
-        run: uv run pip-audit --desc --fail-on high
+        # pip-audit is installed into an ephemeral overlay rather than added as
+        # a dependency, so the audited environment stays exactly the production
+        # dependency set that `uv sync --no-dev` just installed.
+        run: uv run --no-dev --with pip-audit pip-audit --desc
 
   backend-test:
     name: Backend — Tests (pytest)
