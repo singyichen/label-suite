@@ -7,13 +7,13 @@
 > When amending the constitution, always edit `specs/_governance/constitution.md` first,
 > then copy the full content here to keep agents in sync.
 
-<!-- BEGIN CACHE — synced from specs/_governance/constitution.md @ v1.31.2 (2026-08-25) -->
+<!-- BEGIN CACHE — synced from specs/_governance/constitution.md @ v1.32.1 (2026-08-25) -->
 
 <!--
-Sync Impact Report — constitution v1.31.2
+Sync Impact Report — constitution v1.32.1
 Generated: 2026-08-25
 
-Version change: v1.31.1 → v1.31.2
+Version change: v1.32.0 → v1.32.1
 Bump type: PATCH — clarify SDD governance authority boundaries and separate validation responsibilities without redefining any principle
 
 Changed principles: none
@@ -107,6 +107,7 @@ Code must be simple, readable, and consistently styled. **Overdesign is a defect
 - Traditional Chinese is permitted in `docs/`, `specs/`, `design/prototype/`, `design/wireframes/`, and `design/system/inventory.md`
 - `design/system/MASTER.md` must be written in English only
 - The only fully Chinese file outside those directories is `README.zh-TW.md`
+- Traditional Chinese is REQUIRED for GitHub issues and pull requests opened by an AI agent — the body and the descriptive part of the title. Titles keep an English structural head (`[Enhancement] <scope>: ...` for issues, `<type>: ...` for PRs), and technical terms stay in English: title prefixes, Conventional Commit types, label names, FR/AC IDs, code identifiers, file paths, commands, and verbatim error output. Commit messages are excluded and remain English-only; `main` integrates via merge commits, so a Chinese PR title never becomes a commit subject (issue #380)
 
 ### VII. Design Consistency (RECOMMENDED)
 
@@ -323,13 +324,14 @@ Proposed ADRs do not supersede current rules. `specs/STATUS.md` is the delivery-
 - code/test gates = affected implementation verification
 - Source-Verify + write-back = archive-time canonical ID/version/Changelog integrity
 
-**Version**: 1.31.2 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-08-25
+**Version**: 1.32.1 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-08-25
 
 ## Changelog
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
-| 1.31.2 | 2026-08-25 | Clarify the SDD governance authority order: Proposed ADRs remain non-binding, `specs/STATUS.md` is the delivery-state source, and derived/cache files defer to upstream authority; separate OpenSpec schema validation, project SDD lint, affected code/test verification, and archive-time Source-Verify/write-back integrity |
+| 1.32.1 | 2026-08-25 | Clarify the SDD governance authority order: Proposed ADRs remain non-binding, `specs/STATUS.md` is the delivery-state source, and derived/cache files defer to upstream authority; separate OpenSpec schema validation, project SDD lint, affected code/test verification, and archive-time Source-Verify/write-back integrity |
+| 1.32.0 | 2026-08-25 | Extend Principle VI (English-First) to cover collaboration artifacts (issue #380): GitHub issues and pull requests opened by an AI agent are now written in Traditional Chinese — body plus the descriptive part of the title — while titles keep an English structural head and technical terms stay in English. Commit messages are explicitly excluded and remain English-only, which is safe because `main` integrates via merge commits and a PR title never becomes a commit subject. MINOR rather than PATCH: Principle VI previously said nothing about issues or PRs, so this adds coverage rather than rewording existing coverage; it is not MAJOR because no principle is removed or redefined |
 | 1.31.1 | 2026-08-24 | Adopt OpenSpec as the implementation/change workflow layer per ADR-033 (issue #294): Principle I's Goal Declaration sub-rule now points `## 功能目標` at `spec.md` and `**故事目標**`/goal restatement at an OpenSpec change's `tasks.md`/`design.md` instead of the retired Spec Kit `plan.md`; Feature Goal Alignment Gate and Compliance Review now cite `/opsx:verify` (or `openspec validate`) instead of the retired `/speckit.analyze`; Dependency Governance notes the `pnpm add -g` global-install exception |
 | 1.31.0 | 2026-06-02 | Split detailed backend, frontend, and testing governance out of the main constitution into mandatory domain constitutions; add Domain Constitutions loading rules; update compliance review to cover applicable domain constitutions |
 | 1.30.0 | 2026-06-02 | Strengthen Principle I (add task granularity: one file per task, TDD task separation, Storybook task separation, migration decomposition into upgrade/downgrade/roundtrip); strengthen Principle X (add PR size limit ≤ 5 files / ≤ 300 lines, backend layer PR separation, frontend layer PR separation, BE/FE independence rule); strengthen Principle XVIII (migration PRs must be standalone, every migration PR requires a Rollback Plan section) |

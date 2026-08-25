@@ -38,7 +38,7 @@
 
 **Interfaces:**
 - Consumes: the authority matrix, validation boundaries, and ADR status rules from the approved design.
-- Produces: constitution version `1.31.2`, the canonical authority order, the four-gate boundary, and exact cache content used by Tasks 2–10.
+- Produces: constitution version `1.32.1`, the canonical authority order, the four-gate boundary, and exact cache content used by Tasks 2–10.
 
 - [ ] **Step 1: Verify the starting version and cache marker**
 
@@ -53,7 +53,7 @@ Expected: the source version and cache marker both report `1.31.1`.
 
 - [ ] **Step 2: Add the PATCH amendment to the source**
 
-Update the Sync Impact Report, version line, and newest changelog row to `1.31.2` dated `2026-08-25`. Add a Governance subsection named `Source of Truth And Authority Order` containing this order:
+Update the Sync Impact Report, version line, and newest changelog row to `1.32.1` dated `2026-08-25`. Add a Governance subsection named `Source of Truth And Authority Order` containing this order:
 
 ```text
 main constitution
@@ -77,7 +77,7 @@ Source-Verify + write-back = archive-time canonical ID/version/Changelog integri
 
 - [ ] **Step 3: Synchronize the cache exactly**
 
-Copy the complete amended source between the cache's `BEGIN CACHE` and `END CACHE` markers. Preserve only the cache-specific wrapper above `BEGIN CACHE`, and update its marker to `v1.31.2 (2026-08-25)`.
+Copy the complete amended source between the cache's `BEGIN CACHE` and `END CACHE` markers. Preserve only the cache-specific wrapper above `BEGIN CACHE`, and update its marker to `v1.32.1 (2026-08-25)`.
 
 - [ ] **Step 4: Verify version, authority wording, and exact cache body**
 
@@ -101,7 +101,7 @@ git add specs/_governance/constitution.md .specify/memory/constitution.md
 git commit -m "docs: clarify SDD governance authority boundaries" \
   -m "- **Define** the canonical authority order and keep Proposed ADRs non-binding" \
   -m "- **Separate** OpenSpec schema checks from project lint and archive verification" \
-  -m "- **Synchronize** the constitution tool cache with version 1.31.2" \
+  -m "- **Synchronize** the constitution tool cache with version 1.32.1" \
   -m "Co-Authored-By: OpenAI Codex GPT-5.6 <noreply@openai.com>"
 ```
 

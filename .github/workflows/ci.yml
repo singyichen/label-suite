@@ -141,7 +141,10 @@ jobs:
       - name: Install production dependencies only
         run: uv sync --no-dev --locked
       - name: Security audit with pip-audit
-        run: uv run pip-audit --desc --fail-on high
+        # pip-audit is installed into an ephemeral overlay rather than added as
+        # a dependency, so the audited environment stays exactly the production
+        # dependency set that `uv sync --no-dev` just installed.
+        run: uv run --no-dev --with pip-audit pip-audit --desc
 
   backend-test:
     name: Backend — Tests (pytest)
@@ -175,7 +178,10 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     env:
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/label_eval_test
+      # The `+asyncpg` driver is required: the backend builds an async engine,
+      # and a bare `postgresql://` URL resolves to SQLAlchemy's default sync
+      # driver (psycopg2), which the async engine cannot use.
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/label_eval_test
       REDIS_URL: redis://localhost:6379/0
       SECRET_KEY: "ci-test-only-not-a-real-secret"
       ENVIRONMENT: "test"

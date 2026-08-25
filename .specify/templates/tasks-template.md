@@ -1,7 +1,7 @@
 ---
 功能分支: feat/[module]/NNN-feature
 建立日期: YYYY-MM-DD
-版本: 1.22.4
+版本: 1.22.5
 狀態: Draft
 ---
 
@@ -368,7 +368,7 @@ Task: "在 e2e/[module]/[feature].spec.ts 撰寫 Playwright E2E 測試（T015）
 # Backend（從 backend/ 執行）
 uv run pytest tests/ -q
 uv run pytest --cov=app tests/ -q        # coverage check
-uv run mypy app/ --strict
+uv run mypy .
 uv run ruff check . && uv run ruff format --check .
 # 含 @pytest.mark.security 標記的安全洩漏測試必須全數通過
 
@@ -413,6 +413,7 @@ pnpm exec playwright test                # E2E gate
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.22.5 | 2026-08-25 | 驗證清單的 mypy 指令由 `uv run mypy app/ --strict` 校準為 `uv run mypy .`，對齊 CLAUDE.md、CI 與正典 spec v1.12.3 的 SC-002（本樣板依 ADR-033 已 Deprecated，此處僅同步指令措辭，未改動任務粒度規則） |
 | 1.22.4 | 2026-06-05 | 任務相依順序與驗證清單補齊 Repository 層：Model → Repository → Service → API，並要求每個 US Phase 含 PR-USN-BE-REPO |
 | 1.22.3 | 2026-06-05 | 後端 schema、route、model、service 任務路徑改為 `backend/app/modules/[module]/{schemas,router,models,service}/[feature].py`，對齊 module-first 與 feature 分檔規則 |
 | 1.22.2 | 2026-06-05 | Bruno skeleton 與 update 任務路徑改為 `backend/bruno/[module]/[feature]/<api>.bru`，對齊模組 → 功能 → API 分層追蹤 |

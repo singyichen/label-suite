@@ -22,6 +22,7 @@ Rules in `.claude/rules/` load per situation: files with `paths:` frontmatter lo
 - **English:** code, comments, commit messages, API contracts, `design/system/MASTER.md`
 - **Traditional Chinese allowed:** `docs/`, `specs/`, `design/prototype/`, `design/wireframes/`, `design/system/inventory.md`
 - **Traditional Chinese REQUIRED:** every OpenSpec-produced artifact (`openspec/changes/**`, `openspec/specs/**` — proposal.md, spec deltas, design.md, tasks.md, derived views) must be written in Traditional Chinese; only technical terms stay in English (FR/AC IDs, code identifiers, commands, file paths, and OpenSpec structural keywords such as `## ADDED Requirements`, `### Requirement:`, `#### Scenario:`, WHEN/THEN). These documents are reviewed by the maintainer.
+- **Traditional Chinese REQUIRED:** GitHub issues (every issue type) and pull requests opened by an AI agent — both the body and the descriptive part of the title. Titles keep an English structural head: `[Enhancement] <scope>: <中文描述>` for issues, `<type>: <中文描述>` for PRs. Only technical terms stay in English — title prefixes (`[Bug]`, `[Enhancement]`, ...), Conventional Commit types (`feat`, `fix`, ...), GitHub label names, FR/AC IDs, code identifiers, file paths, commands, and verbatim error output. Commit messages are NOT covered and remain English-only (see Prohibitions); this stays safe because `main` merges with merge commits, so a Chinese PR title never becomes a commit subject.
 - All conversations with Claude should be responded to in Traditional Chinese.
 
 ## General Coding Rules
@@ -148,13 +149,17 @@ Run after every change. Task is NOT complete until all pass.
 ```bash
 # Backend (run from backend/)
 uv run pytest tests/ -q
-uv run mypy app/ --strict
+uv run pytest --cov=app --cov-report=term-missing --cov-fail-under=80
+uv run mypy .   # whole tree, tests included — matches CI; `mypy app/` misses test-file errors
 uv run ruff check . && uv run ruff format --check .
+uv run --no-dev --with pip-audit pip-audit --desc
 
 # Frontend (run from frontend/)
 pnpm tsc --noEmit
 pnpm lint
 pnpm test
+pnpm build
+pnpm audit --prod --audit-level high
 
 # Prototype (run from design/prototype/, when design/prototype/** changed)
 pnpm typecheck
@@ -175,8 +180,9 @@ Each rule traces to a specific incident (Ratchet Principle — Mitchell Hashimot
 - ❌ `pip install` or `npm install`
   - Reason: lockfile divergence causes silent CI failures; use `uv add` / `pnpm add`
   - Exception: global tool installs (e.g. `pnpm add -g openspec`) don't write to a repo lockfile, so they aren't covered by this prohibition (ADR-033 Open Questions #2)
-- ❌ Chinese text in commit messages or PR descriptions
+- ❌ Chinese text in commit messages
   - Reason: 2026-04 — PR description contained Chinese; breaks English-only contract
+  - Scope narrowed 2026-08-25 (issue #380): issue bodies and PR descriptions are human-collaboration documents the maintainer reviews in Traditional Chinese, so they now follow the Communication section. Commit messages stay English-only — Conventional Commit tooling, `git log` readability, and hook/CI parsing depend on it.
 - ❌ `allow_origins=["*"]` in CORS config
   - Reason: security boundary; explicitly list allowed origins
 - ❌ Hardcoded API keys or secrets in source files

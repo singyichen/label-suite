@@ -109,6 +109,7 @@ For the authoritative SDD stages, Frontend Ready Gate checklist, four-gate bound
 | Code, comments, commits, API contracts | English only |
 | `docs/`, `specs/`, `design/prototype/`, `design/wireframes/` | Traditional Chinese allowed |
 | `design/system/MASTER.md` | English only (consumed by AI agents) |
+| GitHub issues and PRs opened by an agent | Traditional Chinese REQUIRED — body and the descriptive part of the title; titles keep an English structural head (`[Enhancement] <scope>: ...`, `<type>: ...`) and technical terms stay in English. Commit messages are excluded and stay English-only (issue #380) |
 
 ## Dev Commands
 

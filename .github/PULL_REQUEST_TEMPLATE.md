@@ -1,24 +1,24 @@
 ## Purpose
 
-<!-- What is this PR trying to achieve? One sentence is enough. -->
+<!-- 這個 PR 想達成什麼？一句話就夠。 -->
 
 ## Reason
 
-<!-- Why is this change needed? What triggered it? -->
+<!-- 為什麼需要這個變更？是什麼觸發的？ -->
 
-<!-- Example — Scenario table:
-| Scenario | Given | When | Then |
-|----------|-------|------|------|
+<!-- 範例 —— 情境表：
+| 情境 | Given | When | Then |
+|------|-------|------|------|
 | ... | ... | ... | ... |
 -->
 
 ## Result
 
-<!-- What does the PR deliver? Summarize the outcome. -->
+<!-- 這個 PR 交付了什麼？摘要結果。 -->
 
-<!-- Example — Decision table:
-| # | Condition | Action | Expected |
-|---|-----------|--------|----------|
+<!-- 範例 —— 決策表：
+| # | 條件 | 動作 | 預期 |
+|---|------|------|------|
 | 1 | ... | ... | ... |
 -->
 
@@ -26,66 +26,66 @@
 
 | File | Change |
 |------|--------|
-| `path/to/file` | <!-- Brief description --> |
+| `path/to/file` | <!-- 簡述變更內容 --> |
 
 ## Test Plan
 
-<!-- Every item must be individually verified; mark passed as [x], failed as [ ] with reason -->
+<!-- 每一項都必須逐項驗證；通過標 [x]，失敗標 [ ] 並附原因 -->
 
-- [ ] Verification item
+- [ ] 驗證項目
 
 ## Notes
 
-<!-- Delete this section if not applicable -->
+<!-- 不適用時請刪除本段 -->
 
-- [ ] Includes database migration — run before deploy
-- [ ] Includes config changes (`.env`, settings)
-- [ ] Requires cache clear
-- [ ] API field/schema changed
-- [ ] Third-party service integration changed
+- [ ] 含資料庫 migration —— 部署前須先執行
+- [ ] 含設定變更（`.env`、settings）
+- [ ] 需要清除快取
+- [ ] API 欄位／schema 有變更
+- [ ] 第三方服務串接有變更
 
 ## Rollback Plan (Migration PR only)
 
-<!-- Fill in only when this PR includes a database migration; otherwise delete this section -->
+<!-- 僅在本 PR 含資料庫 migration 時填寫；否則刪除本段 -->
 
-**Before state**: <!-- Schema / data state before migration -->
+**Before state**：<!-- migration 前的 schema／資料狀態 -->
 
-**After state**: <!-- Schema / data state after migration -->
+**After state**：<!-- migration 後的 schema／資料狀態 -->
 
-**Rollback procedure**:
-1. <!-- Run `uv run alembic downgrade -1` or specific command -->
-2. <!-- Any additional data recovery steps -->
+**Rollback procedure**：
+1. <!-- 執行 `uv run alembic downgrade -1` 或特定指令 -->
+2. <!-- 其他資料復原步驟 -->
 
 ## Impact Scope
 
-<!-- Check the areas affected by this PR -->
+<!-- 勾選本 PR 影響到的範圍 -->
 
-- [ ] Frontend pages (list: )
-- [ ] Admin pages (list: )
-- [ ] API (list: )
-- [ ] Scheduled jobs / Queue
-- [ ] Other (describe: )
+- [ ] 前端頁面（列出： ）
+- [ ] 後台頁面（列出： ）
+- [ ] API（列出： ）
+- [ ] 排程／佇列
+- [ ] 其他（說明： ）
 
 ## Related
 
-- Issue: #<!-- issue number, or "None" -->
+- Issue: #<!-- issue 編號，或填 "None" -->
 
 ## Checklist
 
-- [ ] I have tested locally and confirmed functionality and stability
-- [ ] I have added necessary comments, especially for hard-to-understand parts
-- [ ] My PR title follows the format: `<type>: <description>`
+- [ ] 已在本機測試並確認功能與穩定性
+- [ ] 已補上必要註解，特別是不易理解的部分
+- [ ] PR 標題符合格式：`<type>: <中文描述>`
 
 ## Type Reference
 
 | Type | Description |
 |------|-------------|
-| feat | New feature |
-| fix | Bug fix |
-| docs | Documentation only |
-| refactor | Code restructuring without behavior change |
-| test | Adding or updating tests only |
-| style | Formatting, whitespace, lint fixes |
-| chore | Tooling, config, dependency updates |
-| perf | Performance improvement |
-| ci | CI/CD pipeline changes |
+| feat | 新功能 |
+| fix | 錯誤修正 |
+| docs | 僅文件變更 |
+| refactor | 重構，不改變行為 |
+| test | 僅新增或更新測試 |
+| style | 格式、空白、lint 修正 |
+| chore | 工具、設定、相依套件更新 |
+| perf | 效能優化 |
+| ci | CI/CD pipeline 變更 |

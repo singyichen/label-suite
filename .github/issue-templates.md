@@ -2,30 +2,32 @@
 
 > Extracted from `.claude/rules/issue-reporting.md` on 2026-07-03 to keep the always-loaded rules file small.
 > Read the scenario → issue-type mapping and the security escalation rules THERE first; come here only to copy a template.
+>
+> **Language (issue #380)**: bodies are written in Traditional Chinese; titles use an English structural head plus a Chinese description (`[Bug] <component>: <中文描述>`); labels stay in English.
 
 ### Bug Report — `[Bug]`
 
 ```bash
 cat <<'EOF' | gh issue create \
-  --title "[Bug] <component>: <one-line description>" \
+  --title "[Bug] <component>: <一行問題描述>" \
   --label "bug" \
   --body-file -
 ## 📌 問題描述
-<description>
+<問題描述>
 
 ## 🔁 重現步驟
-<steps or file:line reference>
+<重現步驟，或 file:line 位置>
 
 ## ✅ 預期結果 vs ❌ 實際結果
-**預期結果：** <expected>
-**實際結果：** <actual>
+**預期結果：** <預期行為>
+**實際結果：** <實際行為>
 
 ## 🧾 錯誤訊息
-⚠️ Remove tokens, cookies, env values, request bodies, and PII before pasting. If evidence cannot be made public, report via private channel instead.
-<error log or code snippet — sensitive data removed>
+⚠️ 貼上前請移除 token、cookie、環境變數值、request body 與個資。若證據無法公開，改走私下管道回報。
+<錯誤 log 或程式碼片段 —— 已移除敏感資料>
 
 ## 🤖 Opened by
-Agent: <agent-name> | Context: <phase or trigger>
+Agent: <agent-name> | Context: <階段或觸發情境>
 EOF
 ```
 
@@ -33,21 +35,21 @@ EOF
 
 ```bash
 cat <<'EOF' | gh issue create \
-  --title "[Feature] <module/page>: <short description>" \
+  --title "[Feature] <module/page>: <中文描述>" \
   --label "feature" \
   --body-file -
 ## 👤 使用情境 / 功能範圍
-<who needs this, when, and what should be included/excluded>
+<誰在什麼情境下需要，範圍包含什麼、排除什麼>
 
 ## 🎯 需求目標
-<desired outcome>
+<期望達成的結果>
 
 ## ✅ 驗收條件
-- [ ] <acceptance criterion 1>
-- [ ] <acceptance criterion 2>
+- [ ] <驗收條件 1>
+- [ ] <驗收條件 2>
 
 ## 🤖 Opened by
-Agent: <agent-name> | Context: <phase or trigger>
+Agent: <agent-name> | Context: <階段或觸發情境>
 EOF
 ```
 
@@ -55,20 +57,20 @@ EOF
 
 ```bash
 cat <<'EOF' | gh issue create \
-  --title "[Enhancement] <module/page>: <short description>" \
+  --title "[Enhancement] <module/page>: <中文描述>" \
   --label "enhancement" \
   --body-file -
 ## 🎯 修改目的
-<why the existing behavior needs to change>
+<既有行為為什麼需要調整>
 
 ## 🔁 現況 / 觸發情境
-<current behavior and where it appears>
+<目前行為，以及出現在哪裡>
 
 ## ✅ 預期調整
-<expected behavior after the change>
+<變更後的預期行為>
 
 ## 🤖 Opened by
-Agent: <agent-name> | Context: <phase or trigger>
+Agent: <agent-name> | Context: <階段或觸發情境>
 EOF
 ```
 
@@ -76,19 +78,19 @@ EOF
 
 ```bash
 cat <<'EOF' | gh issue create \
-  --title "[Task] <short description>" \
+  --title "[Task] <中文描述>" \
   --label "task" \
   --body-file -
 ## 🎯 目的
-<why this task is needed>
+<為什麼需要這項任務>
 
 ## ✅ 任務項目
-- [ ] <sub-task 1>
-- [ ] <sub-task 2>
+- [ ] <子任務 1>
+- [ ] <子任務 2>
 
 ## 📝 附註
 - 相關連結：
-- 注意事項：<blocker details>
+- 注意事項：<阻塞細節>
 
 ## 🤖 Opened by
 Agent: <agent-name> | Blocked task: <task-id>
@@ -99,18 +101,18 @@ EOF
 
 ```bash
 cat <<'EOF' | gh issue create \
-  --title "[UI] <component>: <short description>" \
+  --title "[UI] <component>: <中文描述>" \
   --label "ui" \
   --body-file -
 ## 📌 問題描述
-<UI / styling issue>
+<UI／樣式問題>
 
 ## 🔁 重現步驟
 See: <file>:<line>
 
 ## ✅ 預期結果 vs ❌ 實際結果
-**預期結果：** <correct appearance / behavior>
-**實際結果：** <actual appearance / behavior>
+**預期結果：** <正確的外觀／行為>
+**實際結果：** <實際的外觀／行為>
 
 ## 🤖 Opened by
 Agent: <agent-name>
@@ -121,18 +123,18 @@ EOF
 
 ```bash
 cat <<'EOF' | gh issue create \
-  --title "[Spike] <research topic>" \
+  --title "[Spike] <研究主題>" \
   --label "spike" \
   --body-file -
 ## 🎯 研究目標
-<what needs to be understood>
+<需要釐清的問題是什麼>
 
 ## ❓ 關鍵問題
-- <question 1>
-- <question 2>
+- <關鍵問題 1>
+- <關鍵問題 2>
 
 ## 📝 背景
-<why this is blocking implementation>
+<為什麼這件事卡住實作>
 
 ## 🤖 Opened by
 Agent: <agent-name> | Blocked task: <task-id>
@@ -143,11 +145,11 @@ EOF
 
 ```bash
 cat <<'EOF' | gh issue create \
-  --title "[Docs] <short description>" \
+  --title "[Docs] <中文描述>" \
   --label "docs" \
   --body-file -
 ## 📌 問題描述
-<what documentation is missing or incorrect>
+<缺少或有誤的文件內容>
 
 ## 📝 附註
 - 相關連結：
@@ -162,17 +164,17 @@ EOF
 
 ```bash
 cat <<'EOF' | gh issue create \
-  --title "[Question] <short description>" \
+  --title "[Question] <中文描述>" \
   --label "question" \
   --body-file -
 ## 📌 問題 / 想問的事
-<question or support request>
+<問題或協助需求>
 
 ## 🔎 已嘗試
-<what has already been checked>
+<已經確認過哪些事>
 
 ## 🤖 Opened by
-Agent: <agent-name> | Context: <phase or trigger>
+Agent: <agent-name> | Context: <階段或觸發情境>
 EOF
 ```
 
@@ -180,22 +182,22 @@ EOF
 
 ```bash
 cat <<'EOF' | gh issue create \
-  --title "[Incident] <short description>" \
+  --title "[Incident] <中文描述>" \
   --label "incident" \
   --body-file -
 ## 🔥 嚴重度
 <P0/P1/P2/P3>
 
 ## 📌 事故摘要
-<what happened and who is affected>
+<發生什麼事、影響到誰>
 
 ## 🕒 時間線
-- <timestamp>: <event>
+- <時間戳>：<事件>
 
 ## ✅ 目前處置
-<mitigation or next action>
+<已採取的緩解措施或下一步>
 
 ## 🤖 Opened by
-Agent: <agent-name> | Context: <phase or trigger>
+Agent: <agent-name> | Context: <階段或觸發情境>
 EOF
 ```

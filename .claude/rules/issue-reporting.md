@@ -26,7 +26,7 @@ Critical or High security vulnerabilities are the exception: do **not** create a
 
 The full `gh issue create` command for every issue type lives in
 [.github/issue-templates.md](../../.github/issue-templates.md).
-**Read that file only when actually opening an issue**, then fill the matching template verbatim. Body sections are in Traditional Chinese; titles and labels stay in English.
+**Read that file only when actually opening an issue**, then fill the matching template verbatim. Body sections are in Traditional Chinese. Titles use an English structural head plus a Chinese description — `[Enhancement] <scope>: <中文描述>` — and labels stay in English (issue #380). The same rule applies to the PR that resolves the issue: Chinese body, `<type>: <中文描述>` title. Commit messages are excluded and remain English-only.
 
 ## After Opening an Issue
 
