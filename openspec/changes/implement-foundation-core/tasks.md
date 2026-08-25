@@ -7,7 +7,7 @@ PR 拆分計畫（依 config 任務粒度規則明示）：下方每個 `## N.` 
 ## 1. PR-FOUND-BE1 —— 後端專案 + 核心 schemas 與設定
 
 - [x] 1.1 以 uv 建立 `backend/` 骨架（`pyproject.toml` 含 `requires-python`、fastapi、pydantic-settings，dev 依賴 pytest/httpx；`app/__init__.py`、`tests/`）；驗證：`uv run pytest tests/ -q` 可執行（收集 0 個測試、exit 0）且 `uv run ruff check .` exit 0 `[@senior-backend]`
-- [ ] 1.2 撰寫失敗測試 `tests/core/test_schemas.py`：`AppBaseModel` 的 model_config、`ErrorDetail`/`ErrorResponse` 欄位、`PaginatedResponse[T]` 衍生欄位 `has_more`/`total_pages`/`next_offset`（含 offset ≥ total ⇒ 空頁語意）；驗證：於 1.3 前確認測試為紅 `[@senior-backend]`
+- [x] 1.2 撰寫失敗測試 `tests/core/test_schemas.py`：`AppBaseModel` 的 model_config、`ErrorDetail`/`ErrorResponse` 欄位、`PaginatedResponse[T]` 衍生欄位 `has_more`/`total_pages`/`next_offset`（含 offset ≥ total ⇒ 空頁語意）；驗證：於 1.3 前確認測試為紅 `[@senior-backend]`
 - [ ] 1.3 實作 `app/schemas/common.py`（`AppBaseModel`、`ErrorDetail`、`ErrorResponse`、泛型 `PaginatedResponse[T]`、`HealthResponse`）；驗證：`uv run pytest tests/core/test_schemas.py -q` 綠且 `uv run mypy app/ --strict` exit 0 `[@senior-backend]`
 - [ ] 1.4 撰寫失敗測試 `tests/core/test_config.py`：缺必要環境變數即 fail-fast；production 模式拒絕 `ALLOWED_ORIGINS=*`；驗證：於 1.5 前確認為紅 `[@senior-backend]`
 - [ ] 1.5 實作 `app/core/config.py`（pydantic-settings `Settings`、啟動驗證含萬用字元 CORS 防護、`ENABLE_OPENAPI_DOCS` 預設矩陣）；驗證：`uv run pytest tests/core/ -q` 綠 + mypy + ruff 皆 exit 0 `[@senior-backend]`
