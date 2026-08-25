@@ -3465,7 +3465,12 @@
     reviewer: 'mandy@labelsuite.io',
   };
 
-  var ANNOTATION_PROGRESS = {
+  /* DEFAULT_ANNOTATION_PROGRESS is the legacy shared figure kept for every
+     task without its own entry in ANNOTATION_PROGRESS_BY_TASK (issue #397);
+     member-removal handling mutates the working ANNOTATION_PROGRESS copy in
+     place, so resetTaskData() re-clones it per task the same way TASK_DATA
+     re-clones DEFAULT_TASK_DATA. */
+  var DEFAULT_ANNOTATION_PROGRESS = {
     rounds: [
       {
         id: 'r1',
@@ -3516,7 +3521,67 @@
     },
   };
 
-  var UNASSIGNED_ANNOTATION_ASSIGNMENTS = [
+  /* issue #397: T014-T017 (review-flow demo, 5 dataset records each) get
+     progress figures proportionate to that data volume instead of the
+     legacy shared 40/124/1160-sample scale. T014 is a dry_run task (one
+     active round, official not yet reached); T015-T017 are official_run
+     tasks (no dry-run rounds, official reflects each task's own submission
+     count from annotation-workspace.data.js's seedReviewFlowDemo()). */
+  var ANNOTATION_PROGRESS_BY_TASK = {
+    T014: {
+      rounds: [
+        {
+          id: 'r1', roundNum: 1, status: 'active', result: null, iaa: 0.75,
+          totalSamples: 5, completedSamples: 5, avgSpeed: 6.5,
+          remainingEta: '-', remainingEtaEn: '-',
+          members: [
+            { name: 'Alex Wang', role: 'annotator', completed: 5, pending: 0, avgSpeed: 6.5, lastSubmitted: '2026-08-21 09:40', quality: 'good' },
+            { name: 'Mandy Chen', role: 'reviewer', completed: 4, pending: 1, avgSpeed: 5.0, lastSubmitted: '2026-08-21 10:30', quality: 'good' },
+          ],
+        },
+      ],
+      official: { id: 'official', status: 'pending', result: null, iaa: null, totalSamples: 0, completedSamples: 0, avgSpeed: 0, remainingEta: '-', remainingEtaEn: '-', members: [] },
+    },
+    T015: {
+      rounds: [],
+      official: {
+        id: 'official', status: 'active', result: null, iaa: null,
+        totalSamples: 5, completedSamples: 4, avgSpeed: 5.0,
+        remainingEta: '30分鐘', remainingEtaEn: '30m',
+        members: [
+          { name: 'Alex Wang', role: 'annotator', completed: 4, pending: 1, avgSpeed: 5.0, lastSubmitted: '2026-08-21 09:35', quality: 'good' },
+          { name: 'Mandy Chen', role: 'reviewer', completed: 3, pending: 1, avgSpeed: 4.5, lastSubmitted: '2026-08-21 10:25', quality: 'good' },
+        ],
+      },
+    },
+    T016: {
+      rounds: [],
+      official: {
+        id: 'official', status: 'active', result: null, iaa: 0.62,
+        totalSamples: 5, completedSamples: 5, avgSpeed: 5.5,
+        remainingEta: '-', remainingEtaEn: '-',
+        members: [
+          { name: 'Alex Wang', role: 'annotator', completed: 5, pending: 0, avgSpeed: 5.5, lastSubmitted: '2026-08-21 09:40', quality: 'good' },
+          { name: 'Mandy Chen', role: 'reviewer', completed: 5, pending: 0, avgSpeed: 5.5, lastSubmitted: '2026-08-21 10:40', quality: 'good' },
+        ],
+      },
+    },
+    T017: {
+      rounds: [],
+      official: {
+        id: 'official', status: 'active', result: null, iaa: 0.55,
+        totalSamples: 5, completedSamples: 5, avgSpeed: 5.2,
+        remainingEta: '-', remainingEtaEn: '-',
+        members: [
+          { name: 'Alex Wang', role: 'annotator', completed: 5, pending: 0, avgSpeed: 5.2, lastSubmitted: '2026-08-21 09:40', quality: 'good' },
+          { name: 'Mandy Chen', role: 'reviewer', completed: 5, pending: 0, avgSpeed: 5.2, lastSubmitted: '2026-08-21 10:35', quality: 'good' },
+        ],
+      },
+    },
+  };
+  var ANNOTATION_PROGRESS = cloneData(DEFAULT_ANNOTATION_PROGRESS);
+
+  var DEFAULT_UNASSIGNED_ANNOTATION_ASSIGNMENTS = [
     {
       assignmentId: 'unassigned-r2-asp-041-044',
       stage: 'dry',
@@ -3540,10 +3605,16 @@
       createdAt: '2026-05-22 10:18'
     }
   ];
+  /* T014-T017 have no "member removed mid-run" backstory, so they start
+     with an empty unassigned pool instead of inheriting T001's demo
+     entries (whose roundId: 'official' would otherwise leak Jason Huang's
+     phantom ASP-1201~1203 rows into every official_run task). */
+  var UNASSIGNED_ANNOTATION_ASSIGNMENTS_BY_TASK = { T014: [], T015: [], T016: [], T017: [] };
+  var UNASSIGNED_ANNOTATION_ASSIGNMENTS = cloneData(DEFAULT_UNASSIGNED_ANNOTATION_ASSIGNMENTS);
 
   var EXCLUDED_ANNOTATION_ASSIGNMENTS = [];
 
-  var WORK_LOG_ENTRIES = [
+  var DEFAULT_WORK_LOG_ENTRIES = [
     { date: '2026-04-19', memberEmail: 'alex.wang@labelsuite.io', memberName: 'Alex Wang', loginAt: '09:02', logoutAt: '12:28', durationHours: 3.2, annotatedCount: 72, reviewedCount: null, arbitratedCount: null, stage: 'dry' },
     { date: '2026-04-19', memberEmail: 'olivia.lin@labelsuite.io', memberName: 'Olivia Lin', loginAt: '09:18', logoutAt: '13:07', durationHours: 3.6, annotatedCount: 61, reviewedCount: null, arbitratedCount: null, stage: 'dry' },
     { date: '2026-04-20', memberEmail: 'alex.wang@labelsuite.io', memberName: 'Alex Wang', loginAt: '10:11', logoutAt: '13:19', durationHours: 2.8, annotatedCount: 55, reviewedCount: null, arbitratedCount: null, stage: 'dry' },
@@ -3552,6 +3623,25 @@
     { date: '2026-04-21', memberEmail: 'olivia.lin@labelsuite.io', memberName: 'Olivia Lin', loginAt: '13:12', logoutAt: '16:36', durationHours: 3.1, annotatedCount: 44, reviewedCount: null, arbitratedCount: null, stage: 'official' },
     { date: '2026-04-21', memberEmail: 'mandy@labelsuite.io', memberName: 'Mandy Chen', loginAt: '15:08', logoutAt: '17:21', durationHours: 1.8, annotatedCount: null, reviewedCount: 7, arbitratedCount: 2, stage: 'official' },
   ];
+  var WORK_LOG_ENTRIES_BY_TASK = {
+    T014: [
+      { date: '2026-08-21', memberEmail: 'alex.wang@labelsuite.io', memberName: 'Alex Wang', loginAt: '09:00', logoutAt: '09:40', durationHours: 0.7, annotatedCount: 5, reviewedCount: null, arbitratedCount: null, stage: 'dry' },
+      { date: '2026-08-21', memberEmail: 'mandy@labelsuite.io', memberName: 'Mandy Chen', loginAt: '10:00', logoutAt: '10:30', durationHours: 0.5, annotatedCount: null, reviewedCount: 4, arbitratedCount: 1, stage: 'dry' },
+    ],
+    T015: [
+      { date: '2026-08-21', memberEmail: 'alex.wang@labelsuite.io', memberName: 'Alex Wang', loginAt: '09:00', logoutAt: '09:35', durationHours: 0.6, annotatedCount: 4, reviewedCount: null, arbitratedCount: null, stage: 'official' },
+      { date: '2026-08-21', memberEmail: 'mandy@labelsuite.io', memberName: 'Mandy Chen', loginAt: '10:00', logoutAt: '10:25', durationHours: 0.4, annotatedCount: null, reviewedCount: 3, arbitratedCount: 1, stage: 'official' },
+    ],
+    T016: [
+      { date: '2026-08-21', memberEmail: 'alex.wang@labelsuite.io', memberName: 'Alex Wang', loginAt: '09:00', logoutAt: '09:40', durationHours: 0.7, annotatedCount: 5, reviewedCount: null, arbitratedCount: null, stage: 'official' },
+      { date: '2026-08-21', memberEmail: 'mandy@labelsuite.io', memberName: 'Mandy Chen', loginAt: '10:00', logoutAt: '10:40', durationHours: 0.7, annotatedCount: null, reviewedCount: 5, arbitratedCount: 1, stage: 'official' },
+    ],
+    T017: [
+      { date: '2026-08-21', memberEmail: 'alex.wang@labelsuite.io', memberName: 'Alex Wang', loginAt: '09:00', logoutAt: '09:40', durationHours: 0.7, annotatedCount: 5, reviewedCount: null, arbitratedCount: null, stage: 'official' },
+      { date: '2026-08-21', memberEmail: 'mandy@labelsuite.io', memberName: 'Mandy Chen', loginAt: '10:00', logoutAt: '10:35', durationHours: 0.6, annotatedCount: null, reviewedCount: 5, arbitratedCount: 1, stage: 'official' },
+    ],
+  };
+  var WORK_LOG_ENTRIES = cloneData(DEFAULT_WORK_LOG_ENTRIES);
 
   var state = {
     lang: 'zh',
@@ -4487,6 +4577,18 @@ function interpolate(template, payload) {
     /* issue #396: re-clone the review-assignment workload per task instead
        of leaving every task pointed at the same mutable global object. */
     REVIEW_WORKLOAD = cloneData(REVIEW_WORKLOAD_BY_TASK[resolvedId] || DEFAULT_REVIEW_WORKLOAD);
+    /* issue #397: same re-clone-per-task treatment for the annotation
+       progress / work-log seeds, which were previously generic figures
+       shared by every task regardless of its actual dataset size. Point
+       state.progressStage at the freshly-cloned data's own latest round
+       (or "official" when it has none), matching the original hardcoded
+       'r2' default's intent of always landing on a real bucket. */
+    ANNOTATION_PROGRESS = cloneData(ANNOTATION_PROGRESS_BY_TASK[resolvedId] || DEFAULT_ANNOTATION_PROGRESS);
+    UNASSIGNED_ANNOTATION_ASSIGNMENTS = cloneData(UNASSIGNED_ANNOTATION_ASSIGNMENTS_BY_TASK[resolvedId] || DEFAULT_UNASSIGNED_ANNOTATION_ASSIGNMENTS);
+    WORK_LOG_ENTRIES = cloneData(WORK_LOG_ENTRIES_BY_TASK[resolvedId] || DEFAULT_WORK_LOG_ENTRIES);
+    state.progressStage = ANNOTATION_PROGRESS.rounds.length
+      ? ANNOTATION_PROGRESS.rounds[ANNOTATION_PROGRESS.rounds.length - 1].id
+      : 'official';
     if (listEntry) {
       TASK_DATA.taskNameZh = listEntry.nameZh;
       TASK_DATA.taskNameEn = listEntry.nameEn;
