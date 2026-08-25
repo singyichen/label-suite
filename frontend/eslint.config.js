@@ -25,8 +25,9 @@ export default tseslint.config(
     },
   },
   // Module boundary rules (FR-013, FR-014): vertical feature slicing —
-  // features/* may not import each other's internals, and shared/ may not
-  // depend on features/ (shared must stay feature-agnostic).
+  // features/* may not import each other's internals, shared/ may not depend
+  // on features/ (shared must stay feature-agnostic), and the route tree may
+  // only reach a feature through its public entry point.
   {
     files: ['src/**/*.{ts,tsx}'],
     plugins: { boundaries },
@@ -39,6 +40,7 @@ export default tseslint.config(
       'boundaries/elements': [
         { type: 'feature', pattern: 'src/features/*', capture: ['feature'] },
         { type: 'shared', pattern: 'src/shared' },
+        { type: 'routes', pattern: 'src/routes' },
       ],
     },
     rules: {
@@ -64,7 +66,43 @@ export default tseslint.config(
               disallow: { to: { element: { type: 'feature' } } },
               message: 'shared/ must not import from features/ (shared code must stay feature-agnostic).',
             },
+            // FR-014's fourth clause. The route tree is the one place outside
+            // a feature that legitimately loads it, so it cannot simply be
+            // denied — it is restricted to the feature's `index.ts` barrel.
+            // Anything deeper couples the router to a feature's internal
+            // layout and makes that layout unrefactorable.
+            {
+              from: { element: { type: 'routes' } },
+              disallow: {
+                to: { element: { type: 'feature', fileInternalPath: '!index.ts' } },
+              },
+              message:
+                'The route tree must load a feature through its public entry point (features/<name>/index.ts), not its internal files.',
+            },
           ],
+        },
+      ],
+    },
+  },
+  // SC-019 (second clause): TanStack Query keys come from the `QUERY_KEYS`
+  // factory in shared/constants/query-keys.ts. An inline array hard-codes a
+  // cache key at one call site, so the invalidation call elsewhere has nothing
+  // to stay in sync with and silently stops matching when either side changes.
+  //
+  // The selector matches any array expression in `queryKey` position, not just
+  // one holding string literals: `queryKey: [taskId]` bypasses the factory just
+  // as much. A key hoisted into a variable first (`queryKey: TASKS_KEY`) is out
+  // of reach of a syntax selector — resolving it needs scope analysis — and is
+  // also outside SC-019's wording, which bans an *inline* array.
+  {
+    files: ['src/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "Property[key.name='queryKey'] > ArrayExpression",
+          message:
+            'Use a key from QUERY_KEYS (shared/constants/query-keys.ts) instead of an inline queryKey array (SC-019).',
         },
       ],
     },
