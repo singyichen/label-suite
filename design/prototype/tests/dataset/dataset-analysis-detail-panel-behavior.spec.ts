@@ -4,6 +4,9 @@
  * Before the fix the two panel-load catch paths rendered hardcoded Chinese
  * strings without a retry affordance, the tabs had no aria-controls/tabpanel
  * wiring, and the seven quality partials each hardcoded a "2 筆" count badge.
+ *
+ * Traceability: specs/dataset/017-dataset-analysis-detail/spec.md
+ *   FR-005, FR-006, FR-008A, FR-019, FR-022, FR-035
  */
 import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';

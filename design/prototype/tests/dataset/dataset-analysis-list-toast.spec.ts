@@ -3,6 +3,9 @@
  *
  * Before the fix the toast was a bottom-right dark-ink banner with a fixed
  * 3000ms auto-dismiss and no close control or semantic variants.
+ *
+ * Traceability: specs/dataset/016-dataset-analysis-list/spec.md
+ *   FR-006
  */
 import { test, expect } from '@playwright/test';
 
