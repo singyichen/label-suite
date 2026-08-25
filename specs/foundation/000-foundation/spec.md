@@ -1,7 +1,7 @@
 ---
 功能分支: feat/foundation/000-foundation
 建立日期: 2026-05-29
-版本: 1.12.2
+版本: 1.12.3
 狀態: Draft
 ---
 
@@ -771,7 +771,7 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 ## 成功標準
 
 - **SC-001**：`uv run pytest tests/ -q` exit 0，且 backend coverage 不低於 80% 或維持既有更高門檻；若 foundation bootstrap 階段尚未達 80%，正式 feature PR 不得再降低覆蓋率並須有提升計畫。
-- **SC-002**：`uv run mypy app/ --strict` exit 0；不得有非必要 `# type: ignore`。
+- **SC-002**：`uv run mypy .` exit 0；不得有非必要 `# type: ignore`。範圍為整個 `backend/` 樹（含 `tests/`），`strict = true` 由 `pyproject.toml` 全樹設定，因此不需再帶 `--strict` 旗標；僅檢查 `app/` 會漏掉測試檔的型別錯誤。
 - **SC-003**：`uv run ruff check .` exit 0；無 debug `print`。
 - **SC-004**：`pnpm tsc --noEmit` exit 0；`any` 型別為零。
 - **SC-005**：`pnpm lint` exit 0；frontend module boundary 無違規。
@@ -845,6 +845,7 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.12.3 | 2026-08-25 | SC-002 驗證指令由 `uv run mypy app/ --strict` 校準為 `uv run mypy .`，與 `.github/workflows/ci.yml` 及 testing-constitution XII/XIII 實際採用的指令一致；原措辭範圍較窄，`mypy app/` 會漏掉 `tests/` 的型別錯誤，已於 foundation-core BE2 群組造成一次 CI 紅燈。新指令為原指令的嚴格超集合（`strict = true` 由 `pyproject.toml` 全樹設定），驗收語意未放寬，無 FR/SC 新增或移除 |
 | 1.12.2 | 2026-06-05 | FR-131 route gate 移除舊 `backend/app/api/routes/` 例外路徑，改為只追蹤 `backend/app/modules/*/router.py` 與 `backend/app/modules/*/router/` |
 | 1.12.1 | 2026-06-05 | FR-131 Bruno API 請求檔案路徑改為 `backend/bruno/[module]/[feature]/<api>.bru`，對齊模組 → 功能 → API 分層追蹤 |
 | 1.12.0 | 2026-06-04 | 將分頁參數由 `page`/`page_size` 改為 `limit`/`offset`；架構常數更名為 `PAGINATION_DEFAULT_LIMIT`/`PAGINATION_MAX_LIMIT`；`PaginatedResponse[T]` 新增 `next_offset: int \| None` 欄位（後端衍生，frontend 無需計算翻頁偏移量）；更新 FR-003、FR-068、FR-069；FR-069 邊界條件改為「大於或等於 total」；FR-003 標注 task-list 與 dataset-analysis-list spec 待移轉 |

@@ -65,7 +65,7 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 
 ## Review Standards
 
-- **Backend — Python**: 4-space indentation, snake_case, complete type hints, docstrings (Args/Returns/Raises). All code must pass `uv run ruff check .` and `uv run mypy app/ --strict`.
+- **Backend — Python**: 4-space indentation, snake_case, complete type hints, docstrings (Args/Returns/Raises). All code must pass `uv run ruff check .` and `uv run mypy .` (whole tree, `tests/` included — that is what CI runs).
 - **Frontend — TypeScript**: 2-space indentation, camelCase / PascalCase, no `any` types, strict mode enforced.
 - **Single responsibility**: each function does one thing; each module has one responsibility.
 - **No debug artifacts**: no leftover `print` / `console.log` statements.

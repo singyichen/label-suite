@@ -74,7 +74,7 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 - **SQLAlchemy 2.0 async**: All queries use `async with session` and `await session.execute()`; no synchronous ORM calls.
 - **Alembic**: Every schema change has a migration with a working `downgrade()` path.
 - **Celery**: Tasks must declare `max_retries`, `default_retry_delay`, and handle transient failures without data loss.
-- **ruff + mypy --strict**: All code must pass `uv run ruff check .` and `uv run mypy app/ --strict` before opening a PR.
+- **ruff + mypy**: All code must pass `uv run ruff check .` and `uv run mypy .` before opening a PR. Run `mypy .`, not `mypy app/` — `strict = true` is set tree-wide in `pyproject.toml`, so CI type-checks `tests/` just as strictly, and `mypy app/` silently skips those errors.
 - Follow `.claude/rules/backend.md` and `.claude/rules/api.md`.
 
 ## Quality Checklist
