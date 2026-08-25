@@ -44,6 +44,15 @@ function writeFixtures(): void {
     "import { QUERY_KEYS } from '../../shared/constants/query-keys';\n\nexport const options = { queryKey: QUERY_KEYS.health.status };\n",
   );
 
+  // An inline array built from a variable rather than string literals — must
+  // also be reported. This is the shape a feature service naturally reaches
+  // for when a key is parameterised (`queryKey: [taskId]`), and it bypasses
+  // the QUERY_KEYS factory exactly as much as a literal array does.
+  writeFileSync(
+    join(FIXTURE_DIR, 'identifier-array.ts'),
+    "export const options = (taskId: string) => ({ queryKey: [taskId] });\n",
+  );
+
   // A string array that is not a queryKey — must NOT be reported, so the rule
   // cannot be satisfied by banning array literals wholesale.
   writeFileSync(
@@ -56,6 +65,7 @@ async function lintAllFixtures() {
   return lintFixtures([
     join(FIXTURE_DIR, 'violation.ts'),
     join(FIXTURE_DIR, 'legit.ts'),
+    join(FIXTURE_DIR, 'identifier-array.ts'),
     join(FIXTURE_DIR, 'unrelated.ts'),
   ]);
 }
@@ -92,6 +102,16 @@ describe('eslint.config.js inline queryKey rule (SC-019)', () => {
 
     expect(legit).toBeDefined();
     expect(hasQueryKeyViolation(legit?.messages ?? [])).toBe(false);
+  });
+
+  it('reports an inline queryKey array built from a variable', async () => {
+    writeFixtures();
+
+    const results = await lintAllFixtures();
+    const violation = resultFor(results, join(FIXTURE_DIR, 'identifier-array.ts'));
+
+    expect(violation).toBeDefined();
+    expect(hasQueryKeyViolation(violation?.messages ?? [])).toBe(true);
   });
 
   it('does not report a string array that is not a queryKey', async () => {
