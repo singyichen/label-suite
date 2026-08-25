@@ -1,3 +1,7 @@
+/*
+ * Traceability: specs/task-management/014-task-detail/spec.md
+ *   FR-015f, FR-015g, FR-015h
+ */
 import fs from 'node:fs/promises';
 import { test, expect } from '@playwright/test';
 

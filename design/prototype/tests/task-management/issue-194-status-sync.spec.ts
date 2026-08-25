@@ -1,3 +1,9 @@
+/*
+ * Traceability: specs/task-management/010-task-list/spec.md
+ *   FR-011b
+ * Traceability: specs/task-management/014-task-detail/spec.md
+ *   SC-019
+ */
 import { test, expect } from '@playwright/test';
 
 /* Issue #194: T003 is seeded as an in-progress official run in the

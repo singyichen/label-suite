@@ -1,3 +1,7 @@
+/*
+ * Traceability: specs/task-management/010-task-list/spec.md
+ *   FR-011b, SC-010
+ */
 import { expect, test } from '@playwright/test';
 
 const TASK_LIST_URL =

@@ -1,3 +1,7 @@
+/*
+ * Traceability: specs/task-management/010-task-list/spec.md
+ *   FR-010d
+ */
 import { test, expect } from '@playwright/test';
 
 /* Issue #195 / F-11 (WCAG 2.1 AA 2.4.3), A11Y-02 follow-up to the A11Y-01
