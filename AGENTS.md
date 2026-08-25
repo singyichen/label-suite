@@ -31,7 +31,7 @@ design/prototype/pages/[module]/   ← HTML prototypes
 - All Python commands via `uv run` (`uv run pytest`, `uv run uvicorn app.main:app --reload`, etc.)
 - All frontend commands via `pnpm` from `frontend/`
 - Write a failing test before writing implementation — no exceptions (TDD)
-- Run `/opsx:verify` (or `openspec validate`) and resolve all findings, plus the write-back Source-Verify gate, before opening a PR
+- Complete the four distinct gates at their applicable stages: OpenSpec schema validation (`openspec validate` for schema/delta/scenario structure); Project SDD lint (project headings, goal/status/ownership/retired-path rules); code/test gates (affected implementation verification); and Source-Verify + write-back/archive (archive-time canonical ID/version/Changelog integrity). `/opsx:verify` may coordinate workflow-specific checks but does not replace these gates.
 - Read relevant files before making any changes
 - Always read the main constitution plus every applicable domain constitution before planning, analyzing, implementing, or reviewing work:
   - `.specify/memory/backend-constitution.md` for backend/API/schema/service/database/migration/Redis/Celery/OpenAPI/backend security/backend performance/backend deployment work
@@ -91,11 +91,14 @@ Review output format:
 New features, behavior changes, breaking API changes, and architectural changes must go through:
 
 ```
-/superpowers:brainstorm → /speckit.specify → /label-suite-design (prototype) → /pencil-wireframe (frozen — see design/wireframes/README.md)
-→ /opsx:propose → /opsx:apply → /opsx:archive → /pr-flow
+/superpowers:brainstorm → /speckit.specify → Spec Lint
+→ /label-suite-design (prototype) → prototype shell → Red → Green → page design
+→ Frontend Ready Gate → /opsx:propose → OpenSpec schema validation + Project SDD lint
+→ /opsx:apply → final PR /opsx:archive write-back → /pr-flow final merge
+→ post-merge `specs/STATUS.md` update and canonical spec movement to `specs/_archive/`
 ```
 
-Update `specs/STATUS.md` at every pipeline stage transition. After a PR merges: `mv specs/[module]/NNN-feature specs/_archive/`.
+For the authoritative SDD stages, Frontend Ready Gate checklist, four-gate boundaries, and archive timing, follow [docs/sdd-workflow.md](docs/sdd-workflow.md). `AGENTS.md` is a concise Codex-facing summary, not a second policy source.
 
 **Skip SDD only for**: bug fixes, typo/comment changes, non-breaking dep updates, adding tests for existing behavior.
 
@@ -143,6 +146,8 @@ Multi-agent workflow: `/agent-team` command · `.claude/commands/agent-team.md` 
 
 `team-lead` is the orchestrator — the only agent that talks directly to you. It sequences all other agents, enforces file ownership, and reports progress in Traditional Chinese at every checkpoint.
 
+The main session/team lead alone verifies Red and Green evidence and updates `tasks.md` checkboxes. Detailed TDD ownership and evidence requirements are in [specs/_governance/testing-constitution.md](specs/_governance/testing-constitution.md).
+
 Invoke at the start of any multi-agent sprint:
 
 ```text
@@ -168,11 +173,11 @@ Use team-lead to orchestrate implementation of [feature] from openspec/changes/<
 
 | Agent | Owns |
 |---|---|
-| `senior-qa` | `backend/tests/`, `frontend/tests/`, `e2e/` |
+| `senior-qa` | Separate Red test tasks |
 
-> Newly added tests must fail (red); existing passing tests must remain green. Confirm new tests are red before starting Phase 2B.
+> Red test tasks are owned by `senior-qa`, which commits and runs each Red task before its paired Green task starts, recording the expected failure reason. Existing tests must remain green; the main session/team lead confirms Red evidence before Phase 2B.
 
-#### Phase 2B — Implementation (parallel, after failing tests confirmed)
+#### Phase 2B — Green Implementation (parallel, after committed Red evidence is confirmed)
 
 | Agent | Owns | Model |
 |---|---|---|
@@ -181,7 +186,7 @@ Use team-lead to orchestrate implementation of [feature] from openspec/changes/<
 | `senior-i18n` | `frontend/src/locales/` | Haiku 4.5 |
 | `senior-devops` _(optional)_ | `docker-compose.yml`, `.github/` | Haiku 4.5 |
 
-> ⚠️ **User checkpoint required** before any DB schema or API contract change proceeds.
+> Implementation agents own only their paired Green tasks and must not weaken or rewrite the Red contract to make it pass. ⚠️ **User checkpoint required** before any DB schema or API contract change proceeds.
 
 #### Phase 2C — DB Migrations (after Phase 2B models confirmed)
 
