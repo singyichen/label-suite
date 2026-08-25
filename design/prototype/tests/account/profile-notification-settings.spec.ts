@@ -1,3 +1,10 @@
+/**
+ * Profile notification settings tests — event table, per-channel toggles,
+ * and save action placement.
+ *
+ * Traceability: specs/account/005-profile-settings/spec.md
+ *   FR-013B, SC-010
+ */
 import { test, expect } from '@playwright/test';
 
 const PROFILE_URL = '/pages/account/profile.html';

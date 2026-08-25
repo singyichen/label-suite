@@ -15,6 +15,11 @@
  *   - US1.3  Already-logged-in user redirected to /dashboard
  *   - US2    Logout clears JWT
  *   - US3    Protected-route guard
+ *
+ * Traceability: specs/account/001-login-email-password/spec.md
+ *   FR-001, FR-003, FR-005, FR-007, FR-013, FR-014, FR-015, SC-001, SC-002, SC-004, SC-006
+ * Traceability: specs/account/002-login-google-sso/spec.md
+ *   FR-001, SC-001
  */
 import { test, expect } from '@playwright/test';
 

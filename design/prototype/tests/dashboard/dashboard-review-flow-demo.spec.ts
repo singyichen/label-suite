@@ -14,6 +14,9 @@
  *     labeled 審核覆蓋率, and T016 — whose pending count is 0 while
  *     1 disputed + 2 more units are still unfinalized — must disclose
  *     未定稿 3 · 爭議 1 instead of reading as a completed task.
+ *
+ * Traceability: specs/dashboard/012-dashboard/spec.md
+ *   FR-010B, FR-011B1, FR-011D, FR-011E, SC-016
  */
 import { test, expect, type Page } from '@playwright/test';
 

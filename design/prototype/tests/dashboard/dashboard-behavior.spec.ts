@@ -7,6 +7,9 @@
  *   - UXC-09: an empty task list renders an explicit empty state
  *   - Issue #186: pending-IAA stat is a clickable, keyboard-operable entry
  *     point that reconciles with the task list it links to
+ *
+ * Traceability: specs/dashboard/012-dashboard/spec.md
+ *   FR-007B, FR-008F, FR-009A1, SC-025
  */
 import { test, expect } from '@playwright/test';
 

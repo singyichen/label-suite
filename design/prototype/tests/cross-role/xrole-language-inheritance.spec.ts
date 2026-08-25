@@ -9,7 +9,14 @@ import { buildWorkspaceUrl, dismissGuidelineModal, skipGuidelineModal } from '..
  * user opening another tab"). Only pages opened after the switch inherit it
  * at load -- no storage-event listener pushes the change into already-open
  * pages (that manual-reload reconciliation model is pinned by
- * xrole-concurrency.spec.ts). */
+ * xrole-concurrency.spec.ts).
+ *
+ * Traceability: specs/shared/008-sidebar-navbar-shared/spec.md
+ *   FR-009B, SC-006
+ * Traceability: specs/dashboard/012-dashboard/spec.md
+ *   FR-013
+ * Traceability: specs/annotation/015-annotation-workspace/spec.md
+ *   FR-014D */
 
 test('a language switched on the dashboard is inherited by a workspace opened afterwards (I18N-01)', async ({ page, context }) => {
   await page.goto('/pages/dashboard/dashboard.html');

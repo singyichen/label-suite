@@ -11,7 +11,10 @@ const DASHBOARD_URL = '/pages/dashboard/dashboard.html';
  * language silently keeping the old 退回-only wording (the F-08a defect) now
  * fails the corresponding exact match. The shortcut-help R row is rendered
  * by the shared sidebar into the (initially hidden) help modal; toHaveText
- * resolves textContent, so the modal does not need to be opened. */
+ * resolves textContent, so the modal does not need to be opened.
+ *
+ * Traceability: specs/dashboard/012-dashboard/spec.md
+ *   FR-007A, FR-007F */
 
 test('the Chinese reviewer copy reflects the correct-or-arbitrate model (I18N-03)', async ({ page }) => {
   await page.goto(DASHBOARD_URL);
