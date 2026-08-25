@@ -77,6 +77,30 @@ describe('apiRequest', () => {
     expect(result.data).toBeUndefined();
   });
 
+  it('throws instead of silently yielding undefined data on a malformed success body', async () => {
+    const correlationId = '22222222-2222-4222-8222-222222222222';
+    server.use(
+      http.get(
+        'http://localhost:8000/api/v1/health',
+        () =>
+          new HttpResponse('{"status":"ok","versio', {
+            status: 200,
+            headers: { 'Content-Type': 'application/json', 'X-Correlation-ID': correlationId },
+          }),
+      ),
+    );
+
+    let caughtError: unknown;
+    try {
+      await apiRequest<HealthPayload>('/health');
+    } catch (error) {
+      caughtError = error;
+    }
+
+    expect(caughtError).toBeInstanceOf(ApiRequestError);
+    expect((caughtError as ApiRequestError).correlationId).toBe(correlationId);
+  });
+
   it('throws an ApiRequestError with a synthesized ErrorResponse on a non-JSON error body', async () => {
     server.use(
       http.get('http://localhost:8000/api/v1/health', () =>
