@@ -114,8 +114,9 @@
             │
             ↓
 🗣️ [7] /opsx:archive（只在 final PR group）
-        Source-Verify 後在 final PR 內執行 archive/write-back：合併 derived view
-        （openspec/specs/）＋回寫正典 spec（版本升級 + Changelog 條目）
+        第 1–3 層完成且已有 Source-Verify evidence 後，在 final PR 內執行 archive/write-back：
+        合併 derived view（openspec/specs）＋回寫正典 spec（版本升級 + Changelog 條目），
+        成功完成後才算通過第 4 層 Source-Verify + write-back/archive gate
             │
             ↓
 🗣️ [8] /pr-flow
@@ -201,11 +202,11 @@ Page-scoped feature 在進入 `/opsx:propose` 前必須逐項通過下列檢查�
 | [1] brainstorm | 🗣️ | 主 agent | 需求共識 | 2–3 方案已比較、YAGNI 已套用 |
 | [2] specify | 🗣️ | 主 agent | `specs/[module]/NNN-feature/spec.md` | Process/User Flow 齊備；FR/AC 有穩定 ID；STATUS.md → spec-ready |
 | [3] prototype | 🗣️ | 主 agent + `senior-qa` Red／實作 agent Green（+ senior-uiux 選用） | static shell + Red/Green Playwright 證據 + page design | shell 後先有已提交的預期 Red；Green 全綠；data-testid 契約建立；MASTER.md 遵循 |
-| [3d] Frontend Ready Gate | ⚙️ | 主 agent | page readiness evidence | 八項 page-scoped 檢查均通過，或明示 N/A 與理由 |
-| [4] clarify | 🗣️ | 主 agent | 釐清問答 + spec 回修 | 所有 Q 有答（選用階段） |
+| [4] clarify（選用） | 🗣️ | 主 agent | 釐清問答 + spec 回修 | prototype/page design 暴露模糊點時回寫正典 spec，並重走受影響的 Gate |
+| [3d] Frontend Ready Gate | ⚙️ | 主 agent | page readiness evidence | [4] clarify 已完成或不適用後，八項 page-scoped 檢查均通過，或明示 N/A 與理由 |
 | [5] propose | 🗣️ | 主 agent | change 四件套（繁中） | OpenSpec schema validation 與 Project SDD lint 分別通過；派工標籤齊備；憲章檢查段落存在 |
 | [6] apply | 🗣️ | 主 agent 派工 + 實作/品質 subagents | 分離的 Red/Green task、程式、測試與 `[x]` | Red 預期失敗與 Green 驗證均有證據；每 PR 群組過 ③a/③b 審查 |
-| [7] archive | 🗣️ | 主 agent（final PR group） | derived view + 正典回寫 | 僅 final PR 內：Source-Verify、版本升級與 Changelog 通過 |
+| [7] archive | 🗣️ | 主 agent（final PR group） | derived view + 正典回寫 | 第 1–3 層與 Source-Verify evidence 先完成；僅 final PR 內成功 write-back 後才完成第 4 層 |
 | [8] pr-flow | 🗣️ | 主 agent | intermediate 或 final PR → merge | intermediate PR 不 archive；final PR merge 後更新 STATUS 並將 spec 移至 `_archive/` |
 
 ---
@@ -254,7 +255,7 @@ archive 回寫 ──→ specs/[module]/NNN-feature/spec.md（版本升級 + Cha
 | 1. OpenSpec schema validation | OpenSpec schema、delta 與 scenario 結構 | `openspec validate <change> --type change` 或 `openspec validate --changes --no-interactive`；採 non-strict schema gate |
 | 2. Project SDD lint | 專案 headings、goal/status/ownership/retired-path 規則 | Project SDD lint 指令（後續工具落地前，依 workflow checklist 與 review evidence 執行） |
 | 3. Code/test gates | 受影響實作的 Red/Green evidence、type、unit、integration、E2E、security 與 lint | `uv run ...`、`pnpm ...`、prototype Playwright 與 CI 對應指令 |
-| 4. Source-Verify + write-back/archive gate | archive-time 正典 ID、version 與 Changelog 完整性 | Source-Verify 與 `/opsx:archive` write-back，僅 final PR group 執行 |
+| 4. Source-Verify + write-back/archive gate | archive-time 正典 ID、version 與 Changelog 完整性 | 第 1–3 層與 Source-Verify evidence 是 `/opsx:archive` 的前提；final PR group 成功 write-back 才完成本層 |
 
 ---
 
@@ -326,7 +327,7 @@ implement-foundation-core。範圍依 plan.md v2.0.0 的 Foundation-Core。
 - implementation agent 不得修改 Red contract 以使其通過；主 agent 是唯一更新 checkbox 的角色
 - 每個 PR 群組全數 [x] 後、開 PR 前：senior-code-reviewer Code Review
   + senior-qa Scenario 驗收（對照 change specs delta 的 WHEN/THEN）
-- intermediate PR group 合併後 OpenSpec change 保持 open；只有 final PR group 在完整驗證與 Source-Verify 後執行 archive/write-back
+- intermediate PR group 合併後 OpenSpec change 保持 open；只有 final PR group 在第 1–3 層與 Source-Verify evidence 完成後執行 archive/write-back，以完成第 4 層
 - 同 task 失敗 ≥ 3 次或同群組審查退回 ≥ 2 次，停下回報給我
 ```
 
@@ -335,9 +336,9 @@ implement-foundation-core。範圍依 plan.md v2.0.0 的 Foundation-Core。
 ### [7] Archive — 固定範本
 
 ```text
-這是 final PR group，tasks.md 全部 [x]、四層驗證完成且 Source-Verify 通過。/opsx:archive <change>：
-在 final PR 內回寫正典 spec（版本升級 + Changelog）、合併 derived view，並保留 post-merge 才將
-canonical spec 移至 `specs/_archive/` 的時序。
+這是 final PR group，tasks.md 全部 [x]、第 1–3 層完成且已有 Source-Verify evidence。/opsx:archive <change>：
+在 final PR 內回寫正典 spec（版本升級 + Changelog）、合併 derived view；成功 write-back 才完成第 4 層，
+並保留 post-merge 才將 canonical spec 移至 `specs/_archive/` 的時序。
 ```
 
 ### [8] PR — 固定範本
