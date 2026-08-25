@@ -138,8 +138,10 @@ Run after every change. Task is NOT complete until all pass.
 ```bash
 # Backend (run from backend/)
 uv run pytest tests/ -q
+uv run pytest --cov=app --cov-report=term-missing --cov-fail-under=80
 uv run mypy app/ --strict
 uv run ruff check . && uv run ruff format --check .
+uv run --no-dev --with pip-audit pip-audit --desc
 
 # Frontend (run from frontend/)
 pnpm tsc --noEmit
