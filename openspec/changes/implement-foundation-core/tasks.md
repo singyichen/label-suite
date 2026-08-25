@@ -41,8 +41,8 @@ PR 拆分計畫（依 config 任務粒度規則明示）：下方每個 `## N.` 
 
 ## 5. PR-FOUND-FE1 —— 前端專案 scaffold
 
-- [ ] 5.1 建立 `frontend/` 骨架（Vite + React + TS strict：`package.json` 含 `engines`、`vite.config.ts`、`tsconfig.json`、`eslint.config.js` 含禁止 feature→feature 與 shared→features import 的邊界規則、`src/` vertical-slice 骨架 `features/`+`shared/`）；驗證：`corepack pnpm tsc --noEmit` 與 `corepack pnpm lint` exit 0 `[@senior-frontend]`
-- [ ] 5.2 加入證明邊界規則會觸發的 lint fixture（在 test-only 檔放暫時性違規 import，以 ESLint 結束碼斷言後移除，或保留為 lint 測試）；驗證：邊界違規被回報，且乾淨狀態 lint 綠 `[@senior-frontend]`
+- [x] 5.1 建立 `frontend/` 骨架（Vite + React + TS strict：`package.json` 含 `engines`、`vite.config.ts`、`tsconfig.json`、`eslint.config.js` 含禁止 feature→feature 與 shared→features import 的邊界規則、`src/` vertical-slice 骨架 `features/`+`shared/`）；驗證：`corepack pnpm tsc --noEmit` 與 `corepack pnpm lint` exit 0 `[@senior-frontend]`
+- [x] 5.2 加入證明邊界規則會觸發的 lint fixture（在 test-only 檔放暫時性違規 import，以 ESLint 結束碼斷言後移除，或保留為 lint 測試）；驗證：邊界違規被回報，且乾淨狀態 lint 綠 `[@senior-frontend]`
 
 > 依賴：與後端鏈（第 1–4 組）**零檔案交集，可平行**（`[@senior-frontend]` ∥ `[@senior-backend]`；health 契約已凍結於 design.md，前端測試以 MSW mock，不需等後端程式碼）。平行派工時以 worktree 隔離前端軌，避免與後端軌同時寫入 repo。5.1 → 5.2 序列。
 
@@ -50,8 +50,11 @@ PR 拆分計畫（依 config 任務粒度規則明示）：下方每個 `## N.` 
 
 - [ ] 6.1 撰寫失敗測試 `src/shared/__tests__/api-client.test.ts`（client 暴露回應的 `X-Correlation-ID`）與 `query-client.test.ts`（401 ⇒ 不重試，SC-020）；驗證：先確認為紅（Vitest）`[@senior-frontend]`
 - [ ] 6.2 實作 `shared/api/api-client.ts`、`shared/api/query-client.ts`、`shared/constants/query-keys.ts`（`QUERY_KEYS.health.status`，SC-019）、`shared/types/api.ts` 暫代型別；驗證：`corepack pnpm test` 綠 + tsc + lint exit 0 `[@senior-frontend]`
+- [ ] 6.3 以 Vitest 補上 `eslint.config.js` 邊界規則的回歸測試（對暫存 fixture 目錄執行 ESLint，斷言 feature→feature 與 shared→features 兩種違規回非零結束碼，合法的同 feature 內部 import 不被回報）；驗證：測試綠，且把 `eslint.config.js` 的 boundaries 區塊移除後該測試轉紅 `[@senior-frontend]`
 
-> 依賴：依賴第 5 組；與後端鏈可平行（同第 5 組說明）。6.1 → 6.2 序列。
+> 依賴：依賴第 5 組；與後端鏈可平行（同第 5 組說明）。6.1 → 6.2 序列，6.3 可於 6.1 之後任意時點進行。
+>
+> 6.3 補的是第 5 組審查揭露的缺口：任務 5.2 的字面做法是「以結束碼斷言後移除」fixture，移除後 CI 便無任何機制保護邊界規則（實測刪掉整個 boundaries 區塊，`tsc --noEmit`／`pnpm lint`／`pnpm build` 三者皆 exit 0）。使用者裁定不在第 5 組另建無框架腳本，改在本組隨 Vitest 一併補上。
 
 ## 7. PR-FOUND-FE3 —— 前端 health check 頁面
 
