@@ -7,6 +7,12 @@
  * and Skeleton (pulse + shimmer). Asserted values come verbatim from
  * design/system/MASTER.md §Semantic State Colors, §Status Badges,
  * §Status Pill, §Error / Alert Banner, §Toast and §Skeleton.
+ *
+ * This file verifies a design-system contract rather than a feature-spec FR
+ * (spec 008 Prototype Traceability lists the showcase as reference-only).
+ * Traceability: design/system/MASTER.md
+ *   §Semantic State Colors, §Status Badges, §Status Pill,
+ *   §Error / Alert Banner, §Toast, §Skeleton
  */
 import { test, expect } from '@playwright/test';
 

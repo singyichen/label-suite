@@ -6,6 +6,12 @@
  * reflect on reload with zero sync cost, and that section order matches
  * the frozen design-system.pen layout:
  *   Palette → State Colors → Typography → Spacing → Radius → Z-index → Components
+ *
+ * This file verifies a design-system contract rather than a feature-spec FR
+ * (spec 008 Prototype Traceability lists the showcase as reference-only).
+ * Traceability: design/system/MASTER.md
+ *   §Color Palette, §Semantic State Colors, §Typography, §Spacing Variables,
+ *   §Border Radius Scale, §Z-index Scale
  */
 import { test, expect } from '@playwright/test';
 

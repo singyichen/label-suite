@@ -6,6 +6,11 @@
  * hint/error text), and Toggle Switch. Every asserted value is verbatim
  * from design/system/MASTER.md canonical CSS, so a drifting copy of the
  * canonical block fails here.
+ *
+ * This file verifies a design-system contract rather than a feature-spec FR
+ * (spec 008 Prototype Traceability lists the showcase as reference-only).
+ * Traceability: design/system/MASTER.md
+ *   §Buttons, §Inputs, §Toggle Switch
  */
 import { test, expect } from '@playwright/test';
 
