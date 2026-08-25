@@ -3396,8 +3396,13 @@
   ];
 
   /* Review workload seed (issue #148). `已指派` is always derived as
-     pending + done, so only the two live counters are stored per reviewer. */
-  var REVIEW_WORKLOAD = {
+     pending + done, so only the two live counters are stored per reviewer.
+     DEFAULT_REVIEW_WORKLOAD is the legacy shared figure kept for every task
+     without its own entry in REVIEW_WORKLOAD_BY_TASK (issue #396); auto-
+     fill/manual-assign actions mutate the working REVIEW_WORKLOAD copy in
+     place, so resetTaskData() re-clones it per task the same way TASK_DATA
+     re-clones DEFAULT_TASK_DATA. */
+  var DEFAULT_REVIEW_WORKLOAD = {
     unassignedCount: 18,
     disputeCount: 7,
     byReviewer: {
@@ -3406,6 +3411,48 @@
       'rachel.wu@labelsuite.io': { pending: 5, done: 13 },
     },
   };
+  var REVIEW_WORKLOAD_BY_TASK = {
+    /* T014-T017 (review-flow demo, 5 dataset records each): small figures
+       proportionate to that data volume instead of the legacy shared
+       18-116-item scale. */
+    T014: {
+      unassignedCount: 2,
+      disputeCount: 0,
+      byReviewer: {
+        'mandy@labelsuite.io': { pending: 1, done: 2 },
+        'kevin.liu@labelsuite.io': { pending: 1, done: 1 },
+        'rachel.wu@labelsuite.io': { pending: 0, done: 1 },
+      },
+    },
+    T015: {
+      unassignedCount: 1,
+      disputeCount: 1,
+      byReviewer: {
+        'mandy@labelsuite.io': { pending: 1, done: 2 },
+        'kevin.liu@labelsuite.io': { pending: 0, done: 1 },
+        'rachel.wu@labelsuite.io': { pending: 0, done: 0 },
+      },
+    },
+    T016: {
+      unassignedCount: 3,
+      disputeCount: 1,
+      byReviewer: {
+        'mandy@labelsuite.io': { pending: 2, done: 4 },
+        'kevin.liu@labelsuite.io': { pending: 1, done: 3 },
+        'rachel.wu@labelsuite.io': { pending: 1, done: 1 },
+      },
+    },
+    T017: {
+      unassignedCount: 2,
+      disputeCount: 1,
+      byReviewer: {
+        'mandy@labelsuite.io': { pending: 1, done: 3 },
+        'kevin.liu@labelsuite.io': { pending: 1, done: 2 },
+        'rachel.wu@labelsuite.io': { pending: 0, done: 0 },
+      },
+    },
+  };
+  var REVIEW_WORKLOAD = cloneData(DEFAULT_REVIEW_WORKLOAD);
 
   var PLATFORM_USERS = [
     { account: 'alex.wang', name: 'Alex Wang', email: 'alex.wang@labelsuite.io', activeTaskCount: 1 },
@@ -4437,6 +4484,9 @@ function interpolate(template, payload) {
       }
     }
     TASK_DATA.taskId = resolvedId;
+    /* issue #396: re-clone the review-assignment workload per task instead
+       of leaving every task pointed at the same mutable global object. */
+    REVIEW_WORKLOAD = cloneData(REVIEW_WORKLOAD_BY_TASK[resolvedId] || DEFAULT_REVIEW_WORKLOAD);
     if (listEntry) {
       TASK_DATA.taskNameZh = listEntry.nameZh;
       TASK_DATA.taskNameEn = listEntry.nameEn;
