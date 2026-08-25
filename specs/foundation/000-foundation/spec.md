@@ -1,7 +1,7 @@
 ---
 功能分支: feat/foundation/000-foundation
 建立日期: 2026-05-29
-版本: 1.12.3
+版本: 1.12.4
 狀態: Draft
 ---
 
@@ -845,6 +845,7 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.12.4 | 2026-08-25 | OpenSpec change `implement-foundation-core`（issue #356 Phase 4 pilot）歸檔回寫：Foundation-Core 範圍（plan.md v2.0.0 的 F-01–F-10、F-13、F-16、F-18）已由 9 個 stacked PR（#374、#378、#381、#379、#388、#389、#390、#391、#392）落地於 `backend/` 與 `frontend/`。**無 FR/SC 新增、移除或措辭變更**——本次為實作回寫，非需求變更。三項實作與正典文字的落差，依維護者裁決記錄於此而不改動需求原文：<br>(a) **FR-021 的實作比字面更嚴格**：原文僅要求「`ALLOWED_ORIGINS=*` 在 production 視為 CI 或 startup failure」，實作（`backend/app/core/config.py`）在**所有環境**無條件拒絕萬用字元。維護者裁決保留 FR-021 原文，因為更嚴格的實作不違反該需求，且與 CLAUDE.md Prohibitions 的 `allow_origins=["*"]` 禁令一致。<br>(b) **SC-020 僅完成第一子句**：`QueryClient` 的 401 不重試單元測試已落地（`frontend/src/shared/services/__tests__/query-client.test.ts`）；第二子句要求的「`api-client.ts` 的 401 interceptor 於 refresh 失敗情境的整合測試」尚無對應實作——Foundation-Core 沒有認證端點，refresh 流程隨 account/001 進場，該整合測試一併延後至 account/001。<br>(c) **SC-045 僅完成 bootstrap 契約部分**：`.env.example`、local service profile（`docker-compose.yml` 的 `ci` profile）、seed data 策略（`scripts/seed.sh`）、one-command verification（`scripts/verify-bootstrap.sh`）與 CI shell check 皆已落地；但 SC-045 同一條列出的「OpenAPI export / type generation command」**未實作**，該項實際歸屬 FR-071 與 SC-018，本變更範圍不含，目前全專案無對應任務。SC-045 不得被讀作已完全滿足。<br>另：F-17 Observability（FR-091–FR-100、SC-021–SC-028）與 Celery 相關需求依 plan.md 延後，不在本次實作範圍 |
 | 1.12.3 | 2026-08-25 | SC-002 驗證指令由 `uv run mypy app/ --strict` 校準為 `uv run mypy .`，與 `.github/workflows/ci.yml` 及 testing-constitution XII/XIII 實際採用的指令一致；原措辭範圍較窄，`mypy app/` 會漏掉 `tests/` 的型別錯誤，已於 foundation-core BE2 群組造成一次 CI 紅燈。新指令為原指令的嚴格超集合（`strict = true` 由 `pyproject.toml` 全樹設定），驗收語意未放寬，無 FR/SC 新增或移除 |
 | 1.12.2 | 2026-06-05 | FR-131 route gate 移除舊 `backend/app/api/routes/` 例外路徑，改為只追蹤 `backend/app/modules/*/router.py` 與 `backend/app/modules/*/router/` |
 | 1.12.1 | 2026-06-05 | FR-131 Bruno API 請求檔案路徑改為 `backend/bruno/[module]/[feature]/<api>.bru`，對齊模組 → 功能 → API 分層追蹤 |
