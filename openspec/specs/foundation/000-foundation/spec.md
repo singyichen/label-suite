@@ -105,7 +105,7 @@ Label Suite 的工程基線能力：所有功能模組共同依賴的跨模組 A
 - **THEN** client 將該值暴露給呼叫端
 
 ### Requirement: 前端 health check 頁面
-前端必須提供公開的 `/health-check` 路由，呼叫 health 端點並渲染 Loading、Success（狀態文字）、Error（行內錯誤文字）三態。此頁為內部工程驗證頁，豁免 Storybook、i18n 與響應式需求。（正典：plan.md §Phase 1.3；FR-108）
+前端必須提供公開的 `/health-check` 路由，呼叫 health 端點並渲染 Loading、Success（狀態文字）、Error（行內錯誤文字）三態。此頁為內部工程驗證頁，豁免 Storybook、i18n 與響應式需求。（正典：`plan.md` v2.0.0 §Phase 1 第 3 節「前端切版分析」的前端路由表；FR-108）
 
 #### Scenario: 渲染成功狀態
 - **WHEN** 頁面掛載且 health API 回傳 `200`
@@ -117,6 +117,8 @@ Label Suite 的工程基線能力：所有功能模組共同依賴的跨模組 A
 
 ### Requirement: 可重現的本機 bootstrap
 Repo 必須提供可重現的本機 bootstrap 契約：涵蓋所有必要變數的 `.env.example`、供 CI／整合測試的 PostgreSQL Docker Compose profile、seed 資料策略 stub，以及能證明後端與前端可啟動且 health check 通過的驗證腳本（或文件化指令清單）。Bruno collection 骨架（`backend/bruno/`，含 `bruno.json`、local environment 與 health 請求）必須隨 health 路由一併進版。（正典：FR-130、FR-131；SC-045）
+
+> **範圍註記**：FR-130 與 SC-045 同一條並列的「OpenAPI export / frontend type generation command」**不在** Foundation-Core 範圍內，本 derived view 也未涵蓋——該項實際歸屬 FR-071 與 SC-018。因此 FR-130／SC-045 不得被讀作已完全滿足，詳見正典 `specs/foundation/000-foundation/spec.md` v1.12.4 的 Changelog 條目 (c)。
 
 #### Scenario: bootstrap 驗證
 - **WHEN** 開發者在乾淨 checkout 上遵循 bootstrap 契約
