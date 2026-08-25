@@ -2,7 +2,7 @@ import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { ESLint } from 'eslint';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 
 /**
  * Regression test for the module-boundary rules in `frontend/eslint.config.js`
@@ -73,6 +73,13 @@ function hasBoundaryViolation(messages: { ruleId: string | null }[]): boolean {
 }
 
 describe('eslint.config.js module boundary rules', () => {
+  // Removes fixtures left behind by a previously interrupted run (Ctrl-C,
+  // CI OOM-kill) before the suite starts, in addition to the `afterEach`
+  // cleanup below.
+  beforeAll(() => {
+    cleanupFixtures();
+  });
+
   afterEach(() => {
     cleanupFixtures();
   });
