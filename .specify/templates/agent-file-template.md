@@ -45,16 +45,15 @@ New feature development must follow this process:
 /ui-ux-pro-max                          → design/prototype/pages/[module]/[page].html + design/system/ (recommended, after specify)
 /pencil-wireframe                       → design/wireframes/pages/[module]/[page].pen (optional, after prototype)
 /speckit.clarify                        → clarify spec ambiguities (optional)
-/speckit.plan                           → specs/[module]/NNN-feature/plan.md
-/speckit.tasks                          → specs/[module]/NNN-feature/tasks.md
-/speckit.analyze                        → consistency check (optional)
-/speckit.implement                      → execute implementation
+/opsx:propose                           → openspec/changes/<change>/ (proposal.md, tasks.md, design.md when needed, specs/ delta)
+/opsx:apply                             → execute implementation (TDD)
+/opsx:archive                           → dual write: openspec/specs/ derived view + canonical spec.md version bump & Changelog
 /speckit.checklist                      → specs/[module]/NNN-feature/checklists/
 ```
 
 **Key Rules**:
 - Feature branches must be named `feat/[module]/NNN-feature` matching the spec directory
-- Each spec directory contains: `spec.md`, `plan.md`, `tasks.md`, `checklists/`
+- Each spec directory contains: `spec.md`, `checklists/`; in-flight work lives in `openspec/changes/<change>/` (ADR-033)
 - Implement User Stories in priority order (P1 → P2 → P3)
 
 ## Constitution Reference
@@ -83,6 +82,7 @@ All development must comply with [constitution.md](.specify/memory/constitution.
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.1.0 | 2026-08-25 | SDD workflow updated to the OpenSpec change loop (ADR-033, issue #356): retired /speckit.plan//speckit.tasks//speckit.analyze//speckit.implement replaced by /opsx:propose → /opsx:apply → /opsx:archive |
 | 1.0.2 | 2026-05-22 | Changelog table headers aligned to Traditional Chinese |
 | 1.0.1 | 2026-05-21 | Align SDD workflow paths with module-based spec directories |
 | 1.0.0 | [YYYY-MM-DD] | Initial spec |
