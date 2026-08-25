@@ -6,7 +6,9 @@
 >
 > When amending, always edit the source file in `specs/_governance/` first, then copy the full content here.
 
-Source of truth: `specs/_governance/constitution.md`, `specs/_governance/testing-constitution.md`, `docs/adr/003-backend-framework-fastapi.md`, `docs/adr/004-frontend-framework-react-vite.md`, `docs/adr/005-database-postgresql.md`, `docs/adr/006-caching-queue-redis.md`, `docs/adr/007-async-tasks-celery.md`, `docs/adr/009-testing-strategy.md`, `docs/adr/010-config-driven-architecture.md`, `docs/adr/012-frontend-testing-strategy.md`, and `docs/adr/014-prototype-playwright-testing.md`.
+# Testing Constitution
+
+Source of truth: `specs/_governance/constitution.md`, `docs/adr/003-backend-framework-fastapi.md`, `docs/adr/004-frontend-framework-react-vite.md`, `docs/adr/005-database-postgresql.md`, `docs/adr/006-caching-queue-redis.md`, `docs/adr/007-async-tasks-celery.md`, `docs/adr/009-testing-strategy.md`, `docs/adr/010-config-driven-architecture.md`, `docs/adr/012-frontend-testing-strategy.md`, and `docs/adr/014-prototype-playwright-testing.md`.
 
 ## I. Mandatory TDD
 
@@ -18,12 +20,30 @@ All behavior changes must follow Red-Green-Refactor.
 
 No implementation may be considered complete unless the failing test was written and run before implementation. Bug fixes, new features, frontend components, backend services, API routes, scoring logic, security controls, and prototype behavior all require test-first development.
 
-Test tasks and implementation tasks must always be separate. A test task must be committed and confirmed failing before its paired implementation task may begin.
+Test tasks and implementation tasks must always be separate. `senior-qa` owns each separate Red test task. The Red task must be committed and run before its paired Green task begins, and the expected failure reason must be recorded in the task evidence.
+
+The implementation agent owns the paired Green task and must not modify the Red contract merely to make it pass. Main/team lead verifies both Red and Green evidence and is the only role that marks task checkboxes. A static prototype shell may precede Red; target selectors and behavior then follow Red → Green.
 
 ## II. Task Decomposition For Testability
 
-- Each implementation or artifact-producing task in `tasks.md` must touch exactly one file. Package-manager tasks (`pnpm add` / `uv add`) are exempt from this rule because they always update both the manifest (`package.json` / `pyproject.toml`) and the lockfile (`pnpm-lock.yaml` / `uv.lock`). Scaffold and initial-setup tasks (such as creating a module directory structure, bootstrapping configuration, or updating documentation across multiple files) are also exempt when they explicitly list every file they produce.
-- Command-only verification tasks may touch no files when they are explicitly labeled as verification and list the exact command to run.
+- Each implementation or artifact-producing task in `tasks.md` must touch exactly one file. The only exception identifiers are:
+
+```text
+package-manager
+scaffold
+governance-propagation
+```
+
+  Every exception must include all of these fields in its task text:
+
+```text
+Exception: <identifier>
+Files: <complete explicit file list>
+Reason: <why atomic multi-file output is unavoidable>
+```
+
+- A PR may contain multiple one-file tasks.
+- Command-only verification tasks may touch no files only when explicitly labeled as verification and when their task text lists the exact commands and expected results.
 - Tasks with sequential dependencies must be ordered, not merged into a single task.
 - Storybook stories for non-page components are always a separate parallel task (`[P]`) from the component implementation task.
 - Database migration work must be split into three sequential tasks: `upgrade()`, `downgrade()` with no `pass`, and roundtrip verification.
@@ -157,6 +177,11 @@ pnpm playwright test --headed
 
 ## XIV. Merge Gate
 
-A change is test-complete only when Red-Green-Refactor evidence exists in local or PR history, all relevant backend/frontend/prototype/security/E2E tests pass, coverage thresholds are met, no debug `print` or `console.log` remains, and `/opsx:verify` (or `openspec validate`) findings are resolved before PR creation.
+All PRs must verify compliance with `specs/_governance/constitution.md` and every applicable domain constitution before merging. The four gates have distinct boundaries:
 
-All PRs must verify compliance with `.specify/memory/constitution.md` and every applicable domain constitution before merging.
+- `openspec validate` = OpenSpec schema/delta/scenario structure.
+- project SDD lint = project headings, goal/status/ownership/retired-path rules.
+- code/test gates = affected implementation verification, including Red-Green-Refactor evidence, relevant backend/frontend/prototype/security/E2E tests, coverage thresholds, and no debug `print` or `console.log`.
+- Source-Verify + write-back = archive-time canonical ID/version/Changelog integrity.
+
+`/opsx:verify` may orchestrate workflow-specific checks, but it is not a project-wide equivalent of `openspec validate` and does not replace any of the four gates.
