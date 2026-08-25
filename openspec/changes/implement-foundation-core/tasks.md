@@ -24,10 +24,10 @@ PR 拆分計畫（依 config 任務粒度規則明示）：下方每個 `## N.` 
 
 ## 3. PR-FOUND-BE3 —— 後端安全與 middleware
 
-- [ ] 3.1 撰寫失敗測試 `tests/core/test_security.py`：bcrypt 雜湊／驗證往返、錯誤密碼負向案例、cost ≥ 12；驗證：先確認為紅 `[@senior-backend]`
-- [ ] 3.2 實作 `app/core/security.py`（bcrypt hash/verify 輔助函式）；驗證：security 測試綠 + mypy strict `[@senior-backend]`
-- [ ] 3.3 撰寫失敗測試 `tests/middleware/test_correlation.py`：每個回應皆帶 UUID v4 `X-Correlation-ID`；日誌紀錄含同一 id；驗證：先確認為紅 `[@senior-backend]`
-- [ ] 3.4 實作 `app/middleware/`（correlation middleware + 以標準 logging 輸出 JSON 請求日誌）與輸出 `ErrorResponse` 的統一例外處理器；驗證：middleware 測試綠，且 SC-035 處理器測試（自訂例外 ⇒ `ErrorResponse`，非 FastAPI 預設格式）通過 `[@senior-backend]`
+- [x] 3.1 撰寫失敗測試 `tests/core/test_security.py`：bcrypt 雜湊／驗證往返、錯誤密碼負向案例、cost ≥ 12；驗證：先確認為紅 `[@senior-backend]`
+- [x] 3.2 實作 `app/core/security.py`（bcrypt hash/verify 輔助函式）；驗證：security 測試綠 + mypy strict `[@senior-backend]`
+- [x] 3.3 撰寫失敗測試 `tests/middleware/test_correlation.py`：每個回應皆帶 UUID v4 `X-Correlation-ID`；日誌紀錄含同一 id；驗證：先確認為紅 `[@senior-backend]`
+- [x] 3.4 實作 `app/middleware/`（correlation middleware + 以標準 logging 輸出 JSON 請求日誌）與輸出 `ErrorResponse` 的統一例外處理器；驗證：middleware 測試綠，且 SC-035 處理器測試（自訂例外 ⇒ `ErrorResponse`，非 FastAPI 預設格式）通過 `[@senior-backend]`
 
 > 依賴：依賴第 1 組（schemas／Settings）；不依賴第 2 組資料表，但 stacked 鏈順序為 2 → 3。3.1 → 3.2 與 3.3 → 3.4 兩對 TDD 序列。
 
