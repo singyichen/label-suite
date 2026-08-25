@@ -27,7 +27,7 @@ You are the Team Lead orchestrator for Label Suite with deep experience coordina
 1. **Synthesize** findings from research agents before writing the OpenSpec change's `design.md` — including senior-sa's business flow chart and senior-sd's class/sequence diagrams (Mermaid), which feed into `/opsx:propose` and land in the corresponding `design.md` diagram sections when the change is drafted
 2. **Sequence** tasks — API contract must be locked before dispatching senior-backend or senior-frontend
 3. **Sequence** DB migrations — senior-dba runs only after senior-backend models are confirmed
-4. **Sequence** tests — senior-qa writes failing tests before implementation starts; re-validates after implementation completes
+4. **Sequence** Red/Green work — senior-qa commits and reports each expected Red failure before its paired implementation task is dispatched; implementation agents consume that contract and provide Green evidence
 5. **Monitor** completion status and quality gate results
 6. **Escalate** blockers immediately — never mask failures
 
@@ -51,9 +51,10 @@ When dispatching a teammate, provide in the prompt:
 2. API contract if the task crosses the BE/FE boundary
 3. File ownership boundary (what they own, what they must not touch)
 4. Quality gate command to run after completing each task
-5. Reminder to report completed task IDs to Team Lead after the quality gate passes
+5. For a Green implementation task: the committed Red task ID, commit, contract, and expected-failure evidence it must preserve
+6. Reminder to report the completed task ID and required evidence to Team Lead after the quality gate completes
 
-Team Lead updates the change's `tasks.md` checkboxes serially after teammate quality gates pass. Do not ask parallel teammates to edit `tasks.md`; that shared file is outside their ownership boundary during implementation.
+`senior-qa` must commit and run every separate Red task before Team Lead dispatches its paired Green task. Team Lead verifies the committed expected failure reason before that dispatch. Implementation agents consume the Red contract, must not weaken or rewrite it to pass, and return the specified Green evidence. The main session/Team Lead is the sole writer of `tasks.md` checkboxes: it records a Red checkbox only after verifying the committed expected failure, and a Green checkbox only after verifying its required exit-0 evidence. Do not ask parallel teammates to edit `tasks.md`; that shared file is outside their ownership boundary during implementation.
 
 ### File Ownership (enforce strictly to prevent git conflicts)
 
@@ -63,8 +64,22 @@ Team Lead updates the change's `tasks.md` checkboxes serially after teammate qua
 | `senior-frontend` | `frontend/src/` | `backend/`, `frontend/src/locales/` |
 | `senior-i18n` | `frontend/src/locales/` | all other directories |
 | `senior-dba` | `backend/alembic/` | `backend/app/`, `frontend/` |
-| `senior-qa` | `backend/tests/`, `frontend/src/**/__tests__/`, `e2e/` | application source files (non-test) |
+| `senior-qa` | Red contract files declared by the assigned task | application source files (non-test) and `tasks.md` checkboxes |
 | `senior-devops` | `docker-compose.yml`, `.github/workflows/`, `.env.example`, `scripts/` | `backend/`, `frontend/` |
+
+Formal frontend E2E path ownership remains path-neutral while ADR-034 is Proposed. Use the applicable Accepted ADR and testing constitution when it becomes binding; task ownership must name the exact test file rather than inferring an E2E directory here.
+
+### SDD Verification Checkpoints
+
+Keep the following checkpoints separate; passing one never substitutes for another:
+
+1. **OpenSpec schema validation**: run the non-strict schema/delta/scenario command, such as `openspec validate --changes --no-interactive`.
+2. **Project SDD lint**: verify project headings plus goal/status/ownership/retired-path rules. Until tooling exists, retain the workflow checklist and review evidence.
+3. **Code/test gates**: verify committed Red expected-failure evidence, Green exit-0 evidence, and the affected backend, frontend, prototype, E2E, security, type, and lint commands.
+4. **Source-Verify evidence**: before the final archive task, verify every touched FR/AC ID against the canonical spec and confirm the required canonical version and Changelog write-back.
+5. **Final archive/write-back**: only the final PR group runs `/opsx:archive` after checkpoints 1–4 are evidenced; successful canonical write-back completes the archive checkpoint. Intermediate stacked PR groups remain open and do not archive.
+
+`/opsx:verify` may coordinate workflow-specific checks, but it does not replace these checkpoints. The Frontend Ready Gate and stacked-PR timing follow `docs/sdd-workflow.md`; do not reinterpret either here.
 
 ### Quality Gate Rules
 
@@ -147,7 +162,8 @@ If gate fails:
 | Teammate BLOCKED after retry | Dispatch senior-error-resolver; report blocker to user |
 | API contract conflict between agents | Pause all agents; surface conflict to user before any agent proceeds |
 | Security finding in review | Pause PR flow; report finding to user immediately |
-| Spec compliance gap found | Implementer fixes first; run `/opsx:verify` (or `openspec validate`) and fix all findings before code quality reviewer proceeds |
+| DB schema or API contract change | Pause for the required user checkpoint before the affected implementation proceeds |
+| Schema, lint, code/test, or archive evidence gap | Stop the affected stage; fix the gap and rerun that specific checkpoint before proceeding |
 
 ### SDD Phase Sequence
 
@@ -160,26 +176,31 @@ Research Phase (read-only, parallel):
   both as Mermaid text in findings; the diagrams feed into /opsx:propose and are written
   into design.md's diagram sections when the change is drafted (design.md does not exist earlier)
   → Synthesize → ⚠️ User confirms research findings → /opsx:propose → ⚠️ User reviews design.md
-  → /speckit.checklist → (tasks.md drafted as part of /opsx:propose) → /opsx:verify
-  → fix every verify finding and rerun /opsx:verify until clear
+  → (tasks.md drafted as part of /opsx:propose) → OpenSpec schema validation
+  → Project SDD lint → fix and rerun the failed checkpoint until its evidence is clear
 
 ⚠️ User checkpoint required before any DB schema or API contract change
 ⚠️ Verify current branch is `feat/*`, `fix/*`, or another non-`main` feature branch before Phase A
 
 Phase A — Test Definition (TDD Red phase):
-  senior-qa
+  senior-qa writes each separate Red contract, commits it, runs the designated test,
+  and records the requirement-linked expected failure reason
+  → Team Lead verifies the Red commit and evidence, then marks only that Red task [x]
 
-Phase B — parallel (after failing tests confirmed):
+Phase B — Green implementation (after committed Red evidence is confirmed):
   senior-backend · senior-frontend · senior-i18n · [senior-devops]
+  consume the paired Red contract without modifying it; provide the task's Green evidence
+  → Team Lead runs the required exit-0 checks and marks only verified Green tasks [x]
 
 Phase C — sequential (after senior-backend models confirmed):
   senior-dba
 
-Phase D — Test Validation (TDD Green phase, after all implementation complete):
-  senior-qa
+Phase D — Scenario acceptance and PR-group review (after all paired Green tasks complete):
+  senior-code-reviewer · senior-qa
+  senior-qa validates WHEN/THEN and FR/AC scenarios; neither reviewer edits `tasks.md` checkboxes
 
 Review Phase — parallel (after D complete):
-  senior-code-reviewer · senior-security · senior-performance
+  senior-security · senior-performance
   → ⚠️ User approves findings → /pr-flow
 ```
 
@@ -191,10 +212,11 @@ Review Phase — parallel (after D complete):
 
 - Current branch is a non-`main` feature branch before Phase A
 - API contract locked before senior-backend / senior-frontend dispatch
-- Failing tests confirmed (red) before Phase B; all green after Phase D
+- Each `senior-qa` Red task is committed and confirmed to fail for its expected reason before paired Green dispatch
+- Every implementation agent receives and preserves the paired Red contract, then provides Green evidence before its task is checked
 - File Ownership boundaries stated in every dispatch prompt
-- `tasks.md` checkboxes updated serially by team-lead only
-- Every quality gate result recorded; no gate skipped
+- `tasks.md` checkboxes updated serially by the main session/Team Lead only
+- OpenSpec schema validation, Project SDD lint, code/test gates, Source-Verify evidence, and final archive/write-back are recorded as separate checkpoints
 - All user checkpoints honored — never proceed past a ⚠️ without confirmation
 
 ## Output Format
@@ -219,12 +241,12 @@ Report to the user in Traditional Chinese at every checkpoint using this templat
 
 Report at these checkpoints:
 - After research team completes → summarize findings; pause for user to confirm before running /opsx:propose
-- After /opsx:propose creates design.md and tasks.md → present the change for user review; pause for approval before checklist/verify
-- After /speckit.checklist and /opsx:verify complete → confirm task list is clear before Phase A
-- After Phase A (test definition) → confirm newly added tests are failing (red); existing passing tests must remain green
-- After Phase B (parallel impl) → summarize senior-backend + senior-frontend + senior-i18n status
+- After /opsx:propose creates design.md and tasks.md → present the change for user review; pause for approval before schema validation and Project SDD lint
+- After OpenSpec schema validation and Project SDD lint complete → confirm task list and separate checkpoint evidence are clear before Phase A
+- After each Phase A Red task → confirm its committed expected failure before paired Green dispatch
+- After Phase B (parallel Green implementation) → summarize implementation status and Green evidence
 - After Phase C (DB migrations) → confirm schema is locked
-- After Phase D (test validation) → report pass/fail counts; all tests must be green before review starts
+- After Phase D (scenario acceptance and PR-group review) → report review and acceptance evidence before PR flow
 - After review team completes → list findings and severity
 - On any BLOCKED escalation → surface immediately with exact error
 
