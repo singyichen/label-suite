@@ -22,6 +22,14 @@ context: |
   Generalization-First and Data Fairness are NON-NEGOTIABLE). Conversations in
   Traditional Chinese; code, commits, and PR descriptions in English.
 
+  Language (HARD RULE, 2026-08-25): every OpenSpec-produced artifact
+  (proposal.md, spec deltas, design.md, tasks.md, derived views) MUST be
+  written in Traditional Chinese, keeping only technical terms in English —
+  FR/AC IDs, code identifiers, commands, file paths, and OpenSpec structural
+  keywords (## ADDED/MODIFIED/REMOVED Requirements, ### Requirement:,
+  #### Scenario:, WHEN/THEN). These documents are reviewed by the maintainer
+  in Traditional Chinese.
+
 rules:
   proposal:
     - >-
@@ -37,6 +45,9 @@ rules:
     - >-
       Every cited FR/AC ID MUST be locatable via grep in the canonical
       spec.md (Source-Verify gate).
+    - >-
+      HARD RULE: body text MUST be Traditional Chinese; only technical terms
+      and OpenSpec structural keywords stay in English (see context).
   design:
     - >-
       design.md is OPTIONAL by default (KISS), but MANDATORY when the change
@@ -47,6 +58,9 @@ rules:
     - >-
       May reference specs/foundation/000-foundation/plan.md as the standing
       architecture baseline.
+    - >-
+      HARD RULE: body text MUST be Traditional Chinese; only technical terms
+      and OpenSpec structural keywords stay in English (see context).
   specs:
     - >-
       Delta spec files MUST reference stable FR/AC IDs from the canonical
@@ -57,6 +71,10 @@ rules:
     - >-
       No delta headings (e.g. "## ADDED Requirements") may remain in derived
       views after archive.
+    - >-
+      HARD RULE: requirement and scenario body text MUST be Traditional
+      Chinese; delta/structural headings, FR/AC IDs, and WHEN/THEN keywords
+      stay in English (see context).
   tasks:
     - >-
       TDD is required: every implementation task is preceded by a failing
@@ -64,6 +82,9 @@ rules:
     - >-
       Task granularity must keep each PR within ≤ 5 files / ≤ 300 diff lines
       (tests excluded), or state the split plan explicitly.
+    - >-
+      HARD RULE: task descriptions MUST be Traditional Chinese; commands,
+      file paths, and code identifiers stay in English (see context).
 
 operations:
   apply:
