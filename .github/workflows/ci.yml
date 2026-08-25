@@ -234,6 +234,10 @@ jobs:
         with:
           node-version: '20'
           cache: 'pnpm'
+          # `defaults.run.working-directory` only applies to `run` steps, so the
+          # action resolves this path from the repo root and cannot find the
+          # lockfile under frontend/ without it.
+          cache-dependency-path: frontend/pnpm-lock.yaml
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
