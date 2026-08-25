@@ -23,8 +23,8 @@ Add to `~/.claude/settings.json`:
   → /speckit.specify → Spec Lint
   → /label-suite-design → static shell → Red → Green → page design
   → /speckit.clarify (optional) → Frontend Ready Gate
-  → /opsx:propose → Gate 1 → Gate 2
-  → user confirmation → /opsx:apply → Gate 3 per task and PR group
+  → /opsx:propose → Gate 1 → Gate 2 → explicit user confirmation
+  → /opsx:apply → Gate 3 per task and PR group
   → final PR group: Gate 4 → /opsx:archive → /pr-flow
   → post-merge STATUS update and canonical spec movement
 ```
@@ -59,7 +59,7 @@ Research agents are optional, read-only, and may run in parallel for complex fea
 | I18nAgent | `senior-i18n` | zh-TW/en strings to externalize |
 | NLPAdvisorAgent | `nlp-research-advisor` | Annotation schema and IAA for annotation features |
 
-Team Lead synthesizes findings, pauses for the research checkpoint, then runs `/opsx:propose`. After the user reviews the generated `design.md` and `tasks.md`, complete Gate 1 and Gate 2 separately before `/opsx:apply`.
+Team Lead synthesizes findings, pauses for the research checkpoint, then runs `/opsx:propose`. Complete Gate 1 and Gate 2 separately, then obtain the user's explicit confirmation of the generated `design.md` and `tasks.md` before `/opsx:apply`.
 
 ## Phase 2 — Task Execution
 
@@ -92,8 +92,10 @@ After all paired Green tasks in one PR group are checked, but before that group'
 
 1. `senior-code-reviewer` performs Code Review for architecture, type safety, logic, applicable constitutions, and `design.md` contract compliance.
 2. `senior-qa` performs Scenario acceptance against the change delta's WHEN/THEN scenarios and the canonical spec's FR/AC. It does not perform Code Review.
+3. `senior-security` performs the security review for every PR group, including RBAC, input validation, and test-set-answer leakage where applicable. Any finding pauses the PR flow and is reported to the user immediately.
+4. `senior-performance` performs the performance review when the PR group's scope or milestone rules require it.
 
-Neither reviewer writes `tasks.md` checkboxes. If review returns work, the implementation agent corrects it and Team Lead reruns the affected Green checks plus this PR-group review sequence. Stop and report to the user after two PR-group review returns.
+No reviewer writes `tasks.md` checkboxes. If review returns work, the implementation agent corrects it and Team Lead reruns the affected Green checks plus this PR-group review sequence. Team Lead reports the PR-group review results and obtains the user's explicit confirmation before that group's `/pr-flow`. Stop and report to the user after two PR-group review returns.
 
 ## PR Timing and Archive
 
