@@ -164,6 +164,9 @@ pnpm audit --prod --audit-level high
 # Prototype (run from design/prototype/, when design/prototype/** changed)
 pnpm typecheck
 pnpm playwright test
+
+# Bootstrap contract (run from project root — SC-045; see docs/bootstrap.md)
+bash scripts/verify-bootstrap.sh
 ```
 
 Every CI job must have a matching local command above — when adding a CI job, add its command here in the same PR.
