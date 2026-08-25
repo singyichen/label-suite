@@ -148,12 +148,16 @@ Four phases, with acceptance criteria per phase, are specified in [docs/openspec
 
 ## Open Questions — Resolved
 
-Settled by the maintainer on 2026-08-24:
+Settled by the maintainer on 2026-08-24. **Items 1 and 4 were later superseded** — item 1 by OpenSpec CLI 1.10.0 reality (surfaced in PR #362, which listed this amendment as a follow-up), item 4 by a maintainer decision on 2026-08-25. Both carry a note below; items 2 and 3 stand as written.
 
 1. **`/opsx:verify` availability.** Confirmed: `/opsx:verify` exists, but only under OpenSpec's **Expanded Profile**, activated via `openspec config profile` + `openspec update`. It is not present in the default profile. Phase 2's `openspec init` step must select the Expanded Profile so `/opsx:verify` is available for the Spec Kit division-of-labor table above.
+
+   > **Superseded 2026-08-25 — this resolution could not be carried out.** OpenSpec CLI 1.10.0 has neither an Expanded Profile nor an `/opsx:verify` command; `openspec config profile` offers only the `core` preset. Phase 2 (PR #362) therefore could not select the profile this item requires, and the Phase 4 pilot (issue #356) confirmed the command is absent end-to-end. Change-level verification is instead carried by `openspec validate` (non-strict **schema** gate only) plus this repository's own gates. The authoritative model is the **four verification gates** in [docs/sdd-workflow.md](../sdd-workflow.md) and CLAUDE.md; every `/opsx:verify` mention in this ADR — including the division-of-labor table and the Definition of Done rewrite above — must be read through that model, not as a runnable command.
 2. **CLI installation route.** Resolved: use `pnpm add -g` as Issue #294 proposed. This is a global install, not a repo lockfile write, so it does not trigger the CLAUDE.md prohibition on `npm install` (which targets lockfile divergence).
 3. **Fate of `specs/foundation/000-foundation/plan.md`.** Resolved: keep it in place as a standing architecture document. No promotion into an ADR or CLAUDE.md; the file and its current path stay as-is, referenced by every change's `design.md` per accompanying decision 1 above.
 4. **Pilot subject.** Resolved: a small spec adjustment, not foundation-000. Lower risk, exercises the full propose→apply→archive loop; the specific spec item is chosen when Phase 4 starts.
+
+   > **Superseded 2026-08-25 by maintainer decision.** The pilot subject became the implementation of `specs/foundation/000-foundation/spec.md` (Foundation-Core, `plan.md` v2.0.0 scope) — the opposite of what this item resolved. The full propose→apply→archive loop ran across 9 stacked PRs; the change is archived at `openspec/changes/archive/2026-08-25-implement-foundation-core/` and the canon was written back to v1.12.4 (PR #412). Outcome, the 7 pilot acceptance criteria one by one, and 4 pilot findings are recorded in [issue #356](https://github.com/singyichen/label-suite/issues/356#issuecomment-5410799424).
 
 ## Referenced by
 
@@ -161,3 +165,4 @@ Settled by the maintainer on 2026-08-24:
 - [Constitution](../../specs/_governance/constitution.md) — Principle I (Spec-First Development), Principle X (Change Scope Discipline), Principle XX (Source of Truth & Contract Governance)
 - [ADR-017](017-three-layer-agent-architecture.md) — Planner / Generator / Evaluator mapping to SDD skills
 - Issue #294 — governance: adopt OpenSpec as spec-change workflow for formal development
+- Issue #356 — Phases 2–4 rollout; its Phase 4 pilot supersedes Open Questions 1 and 4 above
