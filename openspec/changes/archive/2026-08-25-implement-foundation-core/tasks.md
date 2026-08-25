@@ -77,8 +77,8 @@ PR 拆分計畫（依 config 任務粒度規則明示）：下方每個 `## N.` 
 
 ## 9. 整合驗證與 pilot 收尾（隨最後一個 PR 進版）
 
-- [ ] 9.1 端到端檢查：後端啟動、前端 dev server 啟動、`/health-check` 頁面顯示來自真實 API 的狀態；驗證：手動確認並記錄於 PR body `[@senior-qa]`
-- [ ] 9.2 執行完整驗證矩陣（後端 pytest/mypy/ruff；前端 tsc/lint/test）並確認每個 stacked PR 的 CI 綠燈；驗證：全部 exit 0 `[@senior-qa]`
-- [ ] 9.3 歸檔變更（`/opsx:archive`）：回寫正典 `specs/foundation/000-foundation/spec.md`（版本升級 + Changelog 條目記錄 Foundation-Core 實作）、產生 derived view、執行 pilot 漂移檢查清單（derived capability 標頭載明正典路徑與 FR ID；不殘留 delta 標題；FR-ID 交叉 grep）；驗證：`openspec validate` exit 0 且 issue #356 的採用計畫 Pilot 驗收清單已打勾 `[@main]`
+- [x] 9.1 端到端檢查：後端啟動、前端 dev server 啟動、`/health-check` 頁面顯示來自真實 API 的狀態；驗證：手動確認並記錄於 PR body `[@senior-qa]`
+- [x] 9.2 執行完整驗證矩陣（後端 pytest/mypy/ruff；前端 tsc/lint/test）並確認每個 stacked PR 的 CI 綠燈；驗證：全部 exit 0 `[@senior-qa]`
+- [x] 9.3 歸檔變更（`/opsx:archive`）：回寫正典 `specs/foundation/000-foundation/spec.md`（版本升級 + Changelog 條目記錄 Foundation-Core 實作）、產生 derived view、執行 pilot 漂移檢查清單（derived capability 標頭載明正典路徑與 FR ID；不殘留 delta 標題；FR-ID 交叉 grep）；驗證：`openspec validate` exit 0 且 issue #356 的採用計畫 Pilot 驗收清單已打勾 `[@main]`
 
 > 依賴：9.1 依賴第 1–8 組全部；9.2 依賴 9.1；9.3 依賴 9.2（archive 是最後動作，由主 session 執行 openspec CLI 工作流與正典回寫）。
