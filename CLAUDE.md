@@ -104,7 +104,7 @@ Full pipeline — each stage is a hard gate. OpenSpec is the implementation/chan
 3. **Code/test gates** check affected Red/Green evidence and applicable type, lint, unit, integration, prototype, E2E, and security commands.
 4. **Source-Verify + write-back/archive** checks archive-time canonical IDs, version, and Changelog integrity.
 
-`/opsx:verify` may coordinate workflow-specific checks, but does not replace any gate. `openspec validate` is only the non-strict OpenSpec schema gate.
+`/opsx:verify` may run applicable checks, but does not replace any gate. `openspec validate` is only the non-strict OpenSpec schema gate.
 
 **Archive and delivery timing**: intermediate stacked PR groups complete Red, Green, task verification, and group review, then merge while the OpenSpec change stays open. Only the final PR group may collect Source-Verify evidence and run `/opsx:archive`; its archive/write-back belongs in that final PR and completes gate 4 only after successful canonical write-back. Archiving must write back to the canonical `specs/[module]/NNN-feature/spec.md` with a version bump and Changelog entry. After the final PR merges, update `specs/STATUS.md` to archived and move the canonical spec to `specs/_archive/`.
 
