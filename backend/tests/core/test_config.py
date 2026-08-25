@@ -48,8 +48,9 @@ later task implements `Settings` (strict TDD — no implementation here).
 """
 
 import pytest
-from app.core.config import Settings
 from pydantic import ValidationError
+
+from app.core.config import Settings
 
 # Complete, valid baseline env for non-production. Individual tests override
 # or delete specific keys via monkeypatch to isolate the behavior under test.
@@ -58,6 +59,21 @@ _BASE_ENV = {
     "ALLOWED_ORIGINS": "http://localhost:5173,http://localhost:3000",
     "DATABASE_URL": "sqlite+aiosqlite:///./local.db",
 }
+
+
+def _build_settings() -> Settings:
+    """Construct `Settings` isolated from any local `backend/.env` file.
+
+    pydantic-settings reads dotenv values from disk rather than from
+    `os.environ`, so `monkeypatch.delenv` alone cannot simulate an unset
+    variable once a developer creates a local `backend/.env`. Disabling the
+    dotenv source keeps these tests asserting purely on the process
+    environment they control.
+
+    Returns:
+        A `Settings` instance built only from the current process environment.
+    """
+    return Settings(_env_file=None)
 
 
 def _apply_env(monkeypatch: pytest.MonkeyPatch, overrides: dict[str, str | None]) -> None:
@@ -89,7 +105,7 @@ class TestRequiredEnvVarsFailFast:
         _apply_env(monkeypatch, {"ALLOWED_ORIGINS": None})
 
         with pytest.raises(ValidationError):
-            Settings()
+            _build_settings()
 
 
 class TestAllowedOriginsCors:
@@ -101,7 +117,7 @@ class TestAllowedOriginsCors:
         _apply_env(monkeypatch, {"ENVIRONMENT": "production", "ALLOWED_ORIGINS": "*"})
 
         with pytest.raises(ValidationError):
-            Settings()
+            _build_settings()
 
     def test_production_accepts_explicit_allowed_origins_list(
         self, monkeypatch: pytest.MonkeyPatch
@@ -114,7 +130,7 @@ class TestAllowedOriginsCors:
             },
         )
 
-        settings = Settings()
+        settings = _build_settings()
 
         assert settings.allowed_origins == [
             "https://app.example.com",
@@ -128,7 +144,7 @@ class TestEnableOpenApiDocsMatrix:
     def test_defaults_enabled_outside_production(self, monkeypatch: pytest.MonkeyPatch) -> None:
         _apply_env(monkeypatch, {"ENVIRONMENT": "local", "ENABLE_OPENAPI_DOCS": None})
 
-        settings = Settings()
+        settings = _build_settings()
 
         assert settings.enable_openapi_docs is True
 
@@ -142,7 +158,7 @@ class TestEnableOpenApiDocsMatrix:
             },
         )
 
-        settings = Settings()
+        settings = _build_settings()
 
         assert settings.enable_openapi_docs is False
 
@@ -158,7 +174,7 @@ class TestEnableOpenApiDocsMatrix:
             },
         )
 
-        settings = Settings()
+        settings = _build_settings()
 
         assert settings.enable_openapi_docs is True
 
@@ -167,7 +183,7 @@ class TestEnableOpenApiDocsMatrix:
     ) -> None:
         _apply_env(monkeypatch, {"ENVIRONMENT": "local", "ENABLE_OPENAPI_DOCS": "false"})
 
-        settings = Settings()
+        settings = _build_settings()
 
         assert settings.enable_openapi_docs is False
 
@@ -180,7 +196,7 @@ class TestSecretsFromEnvironmentOnly:
     ) -> None:
         _apply_env(monkeypatch, {"DATABASE_URL": "postgresql+asyncpg://user:pw@db/label_suite"})
 
-        settings = Settings()
+        settings = _build_settings()
 
         assert settings.database_url == "postgresql+asyncpg://user:pw@db/label_suite"
 
@@ -191,9 +207,9 @@ class TestSecretsFromEnvironmentOnly:
         # fixed/hardcoded constant: two distinct env values must yield two
         # distinct Settings.database_url values.
         _apply_env(monkeypatch, {"DATABASE_URL": "sqlite+aiosqlite:///./a.db"})
-        settings_a = Settings()
+        settings_a = _build_settings()
 
         _apply_env(monkeypatch, {"DATABASE_URL": "sqlite+aiosqlite:///./b.db"})
-        settings_b = Settings()
+        settings_b = _build_settings()
 
         assert settings_a.database_url != settings_b.database_url
