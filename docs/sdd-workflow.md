@@ -51,6 +51,8 @@
 └ Subagents — 品質層（Red task 與 PR 群組層審查）
     senior-code-reviewer   Code Review（架構／命名／憲章／design.md 符合度）
     senior-qa              獨立 Red test task；Scenario 驗收（對照 spec 的 WHEN/THEN 與 AC）
+    senior-security        每個 PR 群組的安全審查（RBAC／輸入驗證／test-set leakage）
+    senior-performance     milestone／scope 規則適用時的效能審查
 ```
 
 > **執行原則**：subagent 不能自行呼叫其他 subagent；所有跨 agent 的銜接皆由**主 agent**（與使用者對話的 Claude 主 session）依據 `tasks.md` 的派工標記驅動（規範落點：`openspec/config.yaml` 的 `rules.tasks` 與 `operations.apply.guidance`）。
@@ -111,6 +113,9 @@
             ↓  使用者確認 artifacts 後明示觸發
 🗣️ [6] /opsx:apply
         主 agent 依 tasks.md 逐列派工 → 微觀交付迴圈（見 §3）→ 全 task [x]
+        每個 PR group 固定審查順序：senior-code-reviewer Code Review
+        → senior-qa QA Scenario acceptance → senior-security（always）
+        → senior-performance（milestone／scope 適用時）→ 使用者明確確認；之後才可進入該群組的 /pr-flow
             │
             ↓
 🗣️ [7] /opsx:archive（只在 final PR group）
@@ -120,8 +125,9 @@
             │
             ↓
 🗣️ [8] /pr-flow
-        intermediate PR group：review → test → PR → merge，OpenSpec change 保持 open
-        final PR group：archive/write-back 已在 final PR 內完成 → final PR → merge
+        intermediate PR group：完成固定審查順序與使用者確認 → PR → merge，OpenSpec change 保持 open
+        final PR group：完成固定審查順序與使用者確認，且 archive/write-back 已在 final PR 內完成
+        → final PR → merge
         ⚙️ final PR merge 後：更新 STATUS → archived，再將正典 spec 移至 specs/_archive/
 ```
 
@@ -177,6 +183,10 @@ Page-scoped feature 在進入 `/opsx:propose` 前必須逐項通過下列檢查�
            憲章遵循、是否符合 design.md 契約）
         b. senior-qa Scenario 驗收（逐一對照 change specs delta 的
            WHEN/THEN 與正典 spec.md 的 AC；不做 Code Review）
+        c. senior-security 安全審查（每個 PR 群組必做；RBAC、輸入驗證、
+           test-set answer leakage 與該 scope 的適用安全風險）
+        d. senior-performance 效能審查（依既有 milestone／scope 規則適用時執行）
+        e. 主 agent 回報上述證據並取得使用者明確確認
         ├─ 退回 → 回實作 agent 修正 → 重走 ②③（同群組退回 ≥ 2 次 → 停下回報使用者）
         └─ 通過 ▼
     ④ intermediate PR group：/pr-flow 開 PR 後依 stacked 順序 merge；change 保持 open
@@ -188,7 +198,7 @@ Page-scoped feature 在進入 `/opsx:propose` 前必須逐項通過下列檢查�
 
 | 面向 | duty-mate | Label Suite（本專案） | 理由 |
 |------|-----------|----------------------|------|
-| 審查時點 | 每個 task 過 Code Review + QA 才打勾 | task 過**外部驗證指令**即打勾；審查集中在 **PR 群組層**（開 PR 前一輪） | Evaluator 只認外部工具（pytest/mypy/ruff/tsc/Playwright），單人論文專案 per-task 雙審成本過高；stacked PR 節奏天然形成審查批次 |
+| 審查時點 | 每個 task 過 Code Review + QA 才打勾 | task 過**外部驗證指令**即打勾；Code Review、QA Scenario、安全審查與適用的效能審查集中在 **PR 群組層**（開 PR 前一輪） | Evaluator 只認外部工具（pytest/mypy/ruff/tsc/Playwright），單人論文專案 per-task 多重審查成本過高；stacked PR 節奏天然形成審查批次 |
 | 打勾權責 | tech-lead 打勾 | **主 agent** 驗證 exit 0 後親自打勾 | 已定於 `openspec/config.yaml` operations.apply.guidance；qa 與 reviewer 不打勾 |
 | TDD ownership | 實作 task 內自行完成 Red/Green | `senior-qa` 先提交獨立 Red task；implementation agent 消費 contract 完成 Green task | 可稽核的預期失敗證據先於實作，且保護 Red contract 不被為求通過而改寫 |
 | 驗收準繩 | OpenSpec spec Scenario | change specs delta 的 WHEN/THEN ＋ 正典 `spec.md` 的 FR/AC | 本專案正典在 `specs/`，delta 只是變更視圖 |
@@ -205,7 +215,7 @@ Page-scoped feature 在進入 `/opsx:propose` 前必須逐項通過下列檢查�
 | [4] clarify（選用） | 🗣️ | 主 agent | 釐清問答 + spec 回修 | prototype/page design 暴露模糊點時回寫正典 spec，並重走受影響的 Gate |
 | [3d] Frontend Ready Gate | ⚙️ | 主 agent | page readiness evidence | [4] clarify 已完成或不適用後，八項 page-scoped 檢查均通過，或明示 N/A 與理由 |
 | [5] propose | 🗣️ | 主 agent | change 四件套（繁中） | OpenSpec schema validation 與 Project SDD lint 分別通過；派工標籤齊備；憲章檢查段落存在 |
-| [6] apply | 🗣️ | 主 agent 派工 + 實作/品質 subagents | 分離的 Red/Green task、程式、測試與 `[x]` | Red 預期失敗與 Green 驗證均有證據；每 PR 群組過 ③a/③b 審查 |
+| [6] apply | 🗣️ | 主 agent 派工 + 實作/品質 subagents | 分離的 Red/Green task、程式、測試與 `[x]` | Red 預期失敗與 Green 驗證均有證據；每 PR 群組過 ③a–e 審查並取得使用者明確確認 |
 | [7] archive | 🗣️ | 主 agent（final PR group） | derived view + 正典回寫 | 第 1–3 層與 Source-Verify evidence 先完成；僅 final PR 內成功 write-back 後才完成第 4 層 |
 | [8] pr-flow | 🗣️ | 主 agent | intermediate 或 final PR → merge | intermediate PR 不 archive；final PR merge 後更新 STATUS 並將 spec 移至 `_archive/` |
 
@@ -240,9 +250,12 @@ archive 回寫 ──→ specs/[module]/NNN-feature/spec.md（版本升級 + Cha
 | **外部驗證**（Green 打勾前提） | 主 agent 執行 | pytest／mypy／ruff／tsc／lint／Playwright，全 exit 0 |
 | **Code Review**（架構層） | senior-code-reviewer | 分層、SOLID、命名、憲章、design.md 契約符合度 |
 | **驗收審查**（review） | senior-qa | 逐一對照 WHEN/THEN 與 FR/AC；不做 Code Review |
+| **安全審查**（每個 PR 群組） | senior-security | RBAC、輸入驗證、test-set answer leakage 與該群組的適用安全風險；finding 會暫停 PR flow |
+| **效能審查**（適用時） | senior-performance | 依既有 milestone／scope 規則檢查 API latency、DB query efficiency 與該群組的適用效能風險 |
+| **PR 群組確認** | 主 agent + 使用者 | 主 agent 依序回報 Code Review、QA Scenario、安全與適用效能證據；使用者明確確認後才進 `/pr-flow` |
 | **第二道防線** | PR bots／Codex | PR 層自動 review；unresolved threads 歸零才 merge |
 
-順序：每個可觀察行為先由 `senior-qa` 產出已提交的 Red evidence，再由 implementation agent 交付 Green；PR 群組內則先 Code Review、後 QA Scenario 驗收，互補不取代。senior-qa **不**做 Code Review，senior-code-reviewer **不**做 Scenario 驗收；兩者皆**不**打勾。
+順序：每個可觀察行為先由 `senior-qa` 產出已提交的 Red evidence，再由 implementation agent 交付 Green；每個 PR 群組則依序執行 Code Review → QA Scenario acceptance → senior-security（always）→ senior-performance（適用時）→ 使用者明確確認 → `/pr-flow`。final PR group 仍須在 `/pr-flow` 前完成 Gate 4 archive/write-back。各 reviewer 互補不取代，且皆**不**打勾。
 
 ---
 
@@ -254,7 +267,7 @@ archive 回寫 ──→ specs/[module]/NNN-feature/spec.md（版本升級 + Cha
 |------|----------|----------|
 | 1. OpenSpec schema validation | OpenSpec schema、delta 與 scenario 結構 | `openspec validate <change> --type change` 或 `openspec validate --changes --no-interactive`；採 non-strict schema gate |
 | 2. Project SDD lint | 專案 headings、goal/status/ownership/retired-path 規則 | Project SDD lint 指令（後續工具落地前，依 workflow checklist 與 review evidence 執行） |
-| 3. Code/test gates | 受影響實作的 Red/Green evidence、type、unit、integration、E2E、security 與 lint | `uv run ...`、`pnpm ...`、prototype Playwright 與 CI 對應指令 |
+| 3. Code/test gates | 受影響實作的 Red/Green evidence、type、unit、integration、E2E、security 與 lint，以及每個 PR 群組依序完成 Code Review、QA Scenario、安全、適用效能審查與使用者確認 | `uv run ...`、`pnpm ...`、prototype Playwright、CI 對應指令與 PR-group review evidence |
 | 4. Source-Verify + write-back/archive gate | archive-time 正典 ID、version 與 Changelog 完整性 | 第 1–3 層與 Source-Verify evidence 是 `/opsx:archive` 的前提；final PR group 成功 write-back 才完成本層 |
 
 ---
@@ -327,6 +340,9 @@ implement-foundation-core。範圍依 plan.md v2.0.0 的 Foundation-Core。
 - implementation agent 不得修改 Red contract 以使其通過；主 agent 是唯一更新 checkbox 的角色
 - 每個 PR 群組全數 [x] 後、開 PR 前：senior-code-reviewer Code Review
   + senior-qa Scenario 驗收（對照 change specs delta 的 WHEN/THEN）
+  + senior-security 安全審查（每個 PR 群組必做）
+  + senior-performance 效能審查（依既有 milestone／scope 規則適用時執行）
+  + 主 agent 回報上述證據並取得使用者明確確認，才可進入該群組的 /pr-flow
 - intermediate PR group 合併後 OpenSpec change 保持 open；只有 final PR group 在第 1–3 層與 Source-Verify evidence 完成後執行 archive/write-back，以完成第 4 層
 - 同 task 失敗 ≥ 3 次或同群組審查退回 ≥ 2 次，停下回報給我
 ```
@@ -353,4 +369,4 @@ implement-foundation-core。範圍依 plan.md v2.0.0 的 Foundation-Core。
 
 - **不要跳階段**：propose 完成後停下等使用者確認，才進 apply（opsx:propose 的 planning boundary）。
 - **不要省略「必讀」**：派工提示詞明列前置文件路徑（proposal／design／specs delta／正典 spec），避免 subagent 只看對話 context。
-- **打勾只有主 agent 做**：實作 agent、senior-qa、senior-code-reviewer 皆不動 `tasks.md` 的 checkbox。
+- **打勾只有主 agent 做**：實作 agent、senior-qa、senior-code-reviewer、senior-security、senior-performance 皆不動 `tasks.md` 的 checkbox。
