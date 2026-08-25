@@ -1,34 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { QUERY_KEYS } from '../../../shared/constants/query-keys';
-import { ApiRequestError, apiRequest } from '../../../shared/services/api-client';
+import { apiRequest } from '../../../shared/services/api-client';
 
 /** `GET /api/v1/health`'s response body (`HealthResponse` in design.md). */
 interface HealthStatus {
   status: string;
   version: string;
-}
-
-const FALLBACK_ERROR_MESSAGE = 'Health check failed.';
-
-/**
- * Resolves a user-facing message for a failed health check.
- *
- * An `ApiRequestError` carries the backend's own `detail` (already
- * localized per ADR-026), which must be rendered verbatim rather than
- * re-worded. Any other rejection — e.g. the `TypeError` `fetch` throws when
- * the request never reaches the backend at all — has no backend-owned
- * `detail` to show, so it falls back to the thrown error's own message, and
- * finally to a generic string if even that is empty.
- */
-function getErrorMessage(error: unknown): string {
-  if (error instanceof ApiRequestError && typeof error.errorResponse.detail === 'string') {
-    return error.errorResponse.detail;
-  }
-  if (error instanceof Error && error.message.trim().length > 0) {
-    return error.message;
-  }
-  return FALLBACK_ERROR_MESSAGE;
 }
 
 /**
@@ -55,7 +33,13 @@ export function HealthCheckPage() {
   }
 
   if (status === 'error') {
-    return <p role="alert">{getErrorMessage(error)}</p>;
+    // `error.message` is already the right string to show: `ApiRequestError`
+    // puts the backend's own `detail` there (api-client.ts), which ADR-026
+    // says must be rendered verbatim, and any other rejection — e.g. the
+    // `TypeError` `fetch` throws when the request never reaches the backend —
+    // carries its own description. Re-deriving it here would just duplicate
+    // that mapping in a second place.
+    return <p role="alert">{error.message}</p>;
   }
 
   return (
