@@ -65,14 +65,17 @@ async def probe_table(monkeypatch: pytest.MonkeyPatch) -> AsyncGenerator[None, N
         None, with the table present for the duration of the test.
     """
     monkeypatch.setenv("ALLOWED_ORIGINS", "http://localhost:5173")
+    # Read the `Table` back out of the metadata rather than through
+    # `PgProbe.__table__`, which the SQLAlchemy stubs type as `FromClause`.
+    probe_table = Base.metadata.tables[PgProbe.__tablename__]
     engine = get_engine()
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all, tables=[PgProbe.__table__])
+        await conn.run_sync(Base.metadata.create_all, tables=[probe_table])
     try:
         yield
     finally:
         async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.drop_all, tables=[PgProbe.__table__])
+            await conn.run_sync(Base.metadata.drop_all, tables=[probe_table])
         await engine.dispose()
 
 

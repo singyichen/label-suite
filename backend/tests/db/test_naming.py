@@ -39,12 +39,17 @@ class TestNamingConventionAppliesToConstraints:
             id: sa.orm.Mapped[int] = sa.orm.mapped_column(primary_key=True)
             code: sa.orm.Mapped[str] = sa.orm.mapped_column(sa.String(32), unique=True)
 
-        pk = NamingProbe.__table__.primary_key
-        assert pk.name == "pk_naming_probe"
+        # Read the `Table` back out of the metadata rather than through
+        # `NamingProbe.__table__`, which the SQLAlchemy stubs type as the
+        # looser `FromClause`; CI runs `mypy .` with `strict = true`, so the
+        # test files are type-checked as strictly as `app/`.
+        probe_table = Base.metadata.tables[NamingProbe.__tablename__]
+
+        assert probe_table.primary_key.name == "pk_naming_probe"
 
         unique_constraints = [
             constraint
-            for constraint in NamingProbe.__table__.constraints
+            for constraint in probe_table.constraints
             if isinstance(constraint, sa.UniqueConstraint)
         ]
         assert len(unique_constraints) == 1
@@ -52,4 +57,4 @@ class TestNamingConventionAppliesToConstraints:
 
         # Clean up so this throwaway table doesn't leak into other tests that
         # import `Base` and rely on `Base.metadata` being otherwise empty.
-        Base.metadata.remove(NamingProbe.__table__)
+        Base.metadata.remove(probe_table)
