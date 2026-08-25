@@ -101,7 +101,7 @@ Comprehensive PR review covering description quality, change scope, security (te
 | No N+1 queries | ✅ / ⚠️ | |
 | Celery tasks idempotent | ✅ / N/A | |
 | YAGNI / no speculative code | ✅ / ⚠️ | |
-| English only (non-README files) | ✅ / ⚠️ | |
+| Source files English-only (code, comments, docstrings, identifiers) | ✅ / ⚠️ | Does not apply to the PR/issue description, which is Traditional Chinese per issue #380 |
 
 ---
 

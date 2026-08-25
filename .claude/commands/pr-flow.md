@@ -18,6 +18,8 @@ git commit -F - <<'EOF'
 
 Co-Authored-By: <model full name> <noreply@anthropic.com>
 EOF
+# Commit messages stay English-only (issue #380 D1). The PR title and body created
+# in Step 5b are written in Traditional Chinese — do not carry this English rule over.
 ```
 
 > Follow the [Commit Convention](commit.md): every commit must include body bullets with bold action words — no subject-only commits.
@@ -82,7 +84,7 @@ Every PR must carry at least one **type label** (from branch prefix) and zero or
 
 ```bash
 gh pr create \
-  --title "<type>: <description>" \
+  --title "<type>: <中文描述>" \
   --base main --head <branch-name> \
   --label "<type-label>" \
   --body "..."
@@ -90,6 +92,7 @@ gh pr create \
 ```
 
 **PR body requirements** (structure mirrors `.github/PULL_REQUEST_TEMPLATE.md`):
+- **Language** — the body is written in Traditional Chinese (issue #380). The `##` section headings below stay in English because they are structural keywords, as do file paths, identifiers, commands, Conventional Commit types, and label names
 - **Purpose** — what this PR is trying to achieve (one sentence)
 - **Reason** — why this change is needed
 - **Result** — what the PR delivers; prefer tables when structured comparison improves readability (scenarios, decisions, before/after)
