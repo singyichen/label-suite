@@ -11,7 +11,11 @@ import { buildListUrl, buildWorkspaceUrl, patchDataFile, skipGuidelineModal } fr
  * with min_reviewers = 2, ONE agreeing reviewer submission must read
  * approved (已同意) instead of finalized, and ONE changed submission must
  * read modified (已修改) instead of disputed -- which also means the
- * arbitration layout must NOT engage yet for an eligible arbiter. */
+ * arbitration layout must NOT engage yet for an eligible arbiter.
+ *
+ * Traceability: specs/annotation/015-annotation-workspace/spec.md
+ *   FR-051, FR-055, FR-061
+ */
 
 const TASK = 'T001';
 const SAMPLE = 'sent-001';

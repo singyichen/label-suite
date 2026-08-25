@@ -11,6 +11,9 @@ import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
  * `annotator_id` has to travel with `sample_id` -- syncing only the sample
  * would reload onto the default annotator, i.e. a different unit than the one
  * on screen.
+ *
+ * Traceability: specs/annotation/015-annotation-workspace/spec.md
+ *   FR-057, AC-4.16, AC-4.17, SC-004P
  */
 
 function paramsOf(url: string): URLSearchParams {

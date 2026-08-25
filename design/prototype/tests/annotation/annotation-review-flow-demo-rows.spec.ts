@@ -11,7 +11,11 @@ import { buildListUrl } from './_workspace-helpers';
  * wang/li/lin leave chen eligible to arbitrate) and the per-task mock row
  * shape: T014 keeps the 3-annotator dry_run convention, T015-T017 are
  * official_run single-annotator tasks -- and T015's ofs-05-not-submitted
- * sample deliberately ships NO mock row (no submission -> no review unit). */
+ * sample deliberately ships NO mock row (no submission -> no review unit).
+ *
+ * Traceability: specs/annotation/015-annotation-workspace/spec.md
+ *   FR-055, FR-060, SC-004N
+ */
 
 type RosterEntry = { id: string; name: string; can_arbitrate?: boolean };
 

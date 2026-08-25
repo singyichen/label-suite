@@ -11,7 +11,11 @@ import { buildWorkspaceUrl, dismissGuidelineModal, skipGuidelineModal } from './
  * These tests pin the identity dimensions themselves, not a layout: they
  * assert through getSampleHistory()'s trail (annotator -> reviewer, each
  * event carrying its actor id) rather than through bucket key strings, so
- * the storage key format stays an implementation detail. */
+ * the storage key format stays an implementation detail.
+ *
+ * Traceability: specs/annotation/015-annotation-workspace/spec.md
+ *   FR-049, FR-050, AC-4.5, AC-4.6, AC-4.7, AC-4.8, SC-004J
+ */
 
 type TrailEvent = { action: string; role: string; actorId: string | null; at: string; summary: string };
 
