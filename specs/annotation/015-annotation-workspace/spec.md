@@ -1,7 +1,7 @@
 ---
 功能分支: docs/208-official-gold-fr
 建立日期: 2026-04-23
-版本: 4.20.1
+版本: 4.21.0
 狀態: Draft
 ---
 
@@ -383,10 +383,11 @@ Reviewer 在 `run_type = dry_run` 的工作區中，依任務 `outputs[]` 逐一
   - 必要元素：操作者角色、時間、動作（儲存/提交/決策）、對應輸出類型摘要
   - 合併規則：同一樣本的 annotator 與 reviewer 事件合併為單一時序清單，兩種角色檢視內容一致，最新事件在前
 - 區塊 C：`右欄說明與檔案`
-  - 必要元素：任務說明摘要、檔案列表、預覽/新分頁開啟能力
+  - 必要元素：任務說明摘要、檔案列表、頁面內預覽能力
   - 任務說明標題規範：`任務說明` 標題左側必須帶提示圖示（info/驚嘆號 circle icon），與標題同色並排呈現
-  - 檔案列規範：每列必須依檔案類型顯示對應小圖示（PDF/圖片/Markdown 三型各異，並以類型色彩區分），檔名之後靠右顯示動作提示文字——PDF 顯示 `新分頁`、圖片與 Markdown 顯示 `預覽`；動作提示文字須隨語言切換更新
+  - 檔案列規範：每列必須依檔案類型顯示對應小圖示（PDF/圖片/Markdown 三型各異，並以類型色彩區分），檔名之後靠右顯示動作提示文字——三種類型皆顯示 `預覽`（v4.21.0 起 PDF 不再顯示 `新分頁`）；動作提示文字須隨語言切換更新
   - 圖片預覽規範：點擊圖片檔後，必須以置中的圖片預覽 modal 顯示大圖；不可僅在右欄底部以小尺寸 inline 圖片呈現
+  - PDF 預覽規範：點擊 PDF 檔後，必須以置中的 modal 於頁面內內嵌預覽（比照圖片預覽 modal 的互動模式），不得開新分頁
 
 **Testid 契約（審查列）**：
 
@@ -528,8 +529,8 @@ Reviewer 在 `run_type = official_run` 的工作區中，針對「目前標記�
 
 1. **AC-5.1**：**Given** Desktop 三欄佈局，**When** 切換下一筆，**Then** 右欄說明不收起且內容不重置。
 2. **AC-5.2**：**Given** Mobile 底部抽屜模式，**When** 切換下一筆，**Then** 抽屜維持目前開合狀態。
-3. **AC-5.3**：**Given** 檔案為 PDF/圖片/Markdown，**When** 在右欄點擊檔案，**Then** PDF 以新分頁開啟、Markdown 以面板內預覽、圖片以 modal 顯示大圖預覽。
-4. **AC-5.4**：**Given** 右欄說明與檔案面板，**When** 查看任務說明與檔案列表，**Then** `任務說明` 標題帶提示圖示，且每個檔案列顯示對應類型小圖示與動作提示文字（PDF → `新分頁`、圖片/Markdown → `預覽`）。
+3. **AC-5.3**：**Given** 檔案為 PDF/圖片/Markdown，**When** 在右欄點擊檔案，**Then** PDF 以 modal 於頁面內內嵌預覽（不開新分頁）、Markdown 以面板內預覽、圖片以 modal 顯示大圖預覽。
+4. **AC-5.4**：**Given** 右欄說明與檔案面板，**When** 查看任務說明與檔案列表，**Then** `任務說明` 標題帶提示圖示，且每個檔案列顯示對應類型小圖示與動作提示文字（PDF/圖片/Markdown 皆 → `預覽`）。
 
 **行為規則**：
 
@@ -715,9 +716,10 @@ Reviewer 在 `run_type = official_run` 的工作區中，針對「目前標記�
 - **FR-017**: Desktop 介面必須提供三欄工作區與固定任務目標列。
 - **FR-018**: Mobile 介面必須提供精簡目標列、主操作區與底部抽屜說明區（預設收合）。
 - **FR-019**: `說明與檔案` 面板必須於翻筆後持續可見，不可自動收起或清空。
-- **FR-020**: 說明檔案至少必須支援圖片/Markdown 快速預覽與 PDF 新分頁開啟。
+- **FR-020**: 說明檔案至少必須支援圖片/Markdown 快速預覽與 PDF 頁面內 modal 預覽。
 - **FR-020A**: 圖片類說明檔在右欄被點擊時，必須開啟置中 modal 顯示大圖；modal 需支援關閉按鈕、點擊遮罩關閉與 `Esc` 關閉，且不得以僅限右欄底部的小圖 inline 預覽取代。
-- **FR-020B**: `任務說明` 摘要標題必須帶提示圖示（info circle icon）；檔案列表每列必須依檔案類型（PDF/圖片/Markdown）顯示對應的小圖示，並於檔名右側顯示動作提示文字（PDF → `新分頁`、圖片/Markdown → `預覽`），動作提示文字須隨語言切換即時更新。圖示與動作提示由檔案 `type` 欄位驅動，不得依任務別硬編。
+- **FR-020B**: `任務說明` 摘要標題必須帶提示圖示（info circle icon）；檔案列表每列必須依檔案類型（PDF/圖片/Markdown）顯示對應的小圖示，並於檔名右側顯示動作提示文字（PDF/圖片/Markdown 皆 → `預覽`），動作提示文字須隨語言切換即時更新。圖示與動作提示由檔案 `type` 欄位驅動，不得依任務別硬編。
+- **FR-020C**: PDF 類說明檔在右欄被點擊時，必須開啟置中 modal 於頁面內內嵌預覽（不得開新分頁）；modal 需支援關閉按鈕、點擊遮罩關閉與 `Esc` 關閉，並比照 FR-020A 圖片 modal 的鍵盤焦點管理（開啟時焦點移入、`Tab` 侷限於 modal 內、關閉後焦點歸還觸發元素）。modal 標題顯示檔案名稱。標記員與審核員共用同一面板與行為。
 - **FR-021**: 原型頁每次 page load 進入時，必須顯示一次說明 modal。
 - **FR-022**: 自動儲存必須支援 `on-sample-switch`、`on-save-click` 與每 `AUTOSAVE_HEARTBEAT_INTERVAL_SECONDS` 秒 heartbeat 觸發。
 - **FR-022A**: 提交後預設行為必須為載入下一筆（`SUBMIT_DEFAULT_ACTION`）。
@@ -893,6 +895,7 @@ flowchart LR
 - **SC-004W**（v4.12.0 新增）: 任一審核單位的 reviewer 視圖 100% 恰渲染一個 `ws-review-unit-context` 橫幅（審核卡與仲裁版面皆然），其 `run_type` 徽章、審核門檻、標記員帳號、`已審 x / n` 與五態 pill 與該單位資料層推導值 100% 一致；四個審核流程示範任務（T014–T017）自各自第一筆樣本進入時，橫幅內容即可區辨四種審核模型（AC-4.27、FR-064）。
 - **SC-005**: 在 `375px / 768px / 1440px` 下，翻筆後 `說明與檔案` 內容維持，Desktop 可收合/展開且 Mobile 抽屜開合可用。
 - **SC-005B**: 點擊右欄圖片檔後，會開啟圖片預覽 modal 並顯示對應大圖；使用者可透過關閉按鈕、遮罩背景或 `Esc` 成功關閉。
+- **SC-005C**（v4.21.0 新增）: 點擊右欄 PDF 檔後，會於頁面內開啟 PDF 預覽 modal 並內嵌顯示該檔案，且不產生新分頁；使用者可透過關閉按鈕、遮罩背景或 `Esc` 成功關閉（AC-5.3、FR-020C）。
 - **SC-005A**: 在 `375px`（行動版）檢視 `annotation-list` 時，清單首列不得出現異常大列高或內容下沉；列表可維持單列緊湊掃讀。
 - **SC-006**: Annotator 與 Reviewer 主要流程（標記/審查/提交/返回）端到端可完成，且關鍵操作皆有歷程可追溯。
 - **SC-007**: autosave 提示於 sample 切換、手動儲存、15 秒 heartbeat 皆可被觸發。
@@ -918,6 +921,7 @@ flowchart LR
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 4.21.0 | 2026-08-25 | **PDF 附件由「開新分頁」改為頁面內 modal 預覽**（issue #353）：使用者要求點擊 PDF 附件時不再 `window.open` 開新分頁，改為比照圖片預覽 modal（`#wsGuidelineImageModal`）的互動模式，於頁面內以置中 modal 內嵌預覽（`#wsGuidelinePdfModal`，iframe 內嵌；modal 標題顯示檔案名稱，屬單語言來源資料非 UI chrome）。修訂 AC-5.3、AC-5.4、FR-020、FR-020B（動作提示文字三型統一為 `預覽`，`新分頁` 措辭與 i18n key 一併移除）；新增 FR-020C（PDF modal 行為與焦點管理，重用 `LabelSuiteModalFocus`）、SC-005C。標記員與審核員共用 `renderGuidelineFileList()`，行為同步調整。示範資料補回 PDF 項目：issue #185 移除的是指向不存在目錄的死連結，本版於 `assets/guidelines/annotation-guideline-sample.pdf` 提交真實資產並在 `DEFAULT_GUIDELINE_FILES` 末位新增 PDF 列（置於末位以保持既有測試點擊首列命中圖片項的穩定性）。新增 Playwright 回歸測試 `annotation-guideline-pdf-preview.spec.ts`（modal 開啟且零新分頁、動作提示文字、關閉按鈕與 `Esc` 關閉）。PDF 檢視進階功能（下載、換頁、縮放）維持 issue #353 所述待後續設計釐清，不在本版範圍。 |
 | 4.20.1 | 2026-08-24 | Issue #261：新增 Prototype Traceability，明確對應 annotation-list／annotation-workspace 兩頁、頁面資料層、與 014 共用的 modal-focus.js、設計層參考的責任邊界；規格條文未變。 |
 | 4.20.0 | 2026-08-24 | **Evidence 角色欄位的通用參考卡**（issue #89）：task-management-013 v3.1.0（FR-003g-2）已將 Evidence 自 Step 2 標記預覽移除，並明定「其內容留待標記工作區呈現」，但本規格與 annotation prototype 先前僅由 FR-024H／AC-2B.3 涵蓋 `free_text`（唯一宣告 `rendersEvidencePreview: true` 的輸出類型）——其餘 7 種 `OUTPUT_TYPE_KEYS` 即使 `field_role_map` 已指定 Evidence 角色欄位，工作區也從未呈現，013 的延後承諾沒有落點。新增 **FR-024N**、**AC-2B.5**：`field_role_map` 存在 `evidence` 角色欄位、且已選輸出類型皆未透過 `rendersEvidencePreview` 自行呈現 Evidence 時，工作區仍須於題目卡最上方顯示唯讀「背景參考 (Evidence)」卡片，位置早於 Input 內容卡與所有輸出類型作答控制項；卡片純文字呈現，不提供任何可編輯輸入或選取控制項。修訂使用者故事 2B「行為規則」一節，釐清 `rendersEvidencePreview` 僅決定專屬預覽內嵌顯示、不再是唯一顯示路徑。原型：`annotation-workspace.config.js` 新增 `renderEvidenceReferenceCard()`（`patchedUpdateAnnotationPreview` 內呼叫，annotator-only），重用既有 `ws-evidence-card` testid 並在引擎已渲染時略過以避免重複；不修改 `task-config.engine.js` 共用引擎的 `rendersEvidencePreview` 閘門（task-new Step 2 預覽的抑制行為維持不變）。新增 2 個 Playwright 測試（T005 `multi_dim` 正向路徑、T001 `single_label` 無 evidence 欄位負向路徑）。 |
 | 4.19.0 | 2026-08-24 | **新增：Reviewer 逐列決策草稿持久化（issue #196，CONT-03）**：`w6-resilience-a11y.md` CONT-03 核實出審核員逐列 `通過`/`退回` 決策僅存於模組層記憶體變數（`reviewRowDecisions`），未送出審核前整頁重新整理即全數遺失，與標記員草稿持久化（`markSampleSaved`）行為不對稱。issue 本文建議「提供以維持角色對稱」；因無同步產品負責人可裁決，依 issue 自身建議定案為產品決策採納之。實作：新增 `saveReviewRowDecisionDraft` / `getReviewRowDecisionDraft` / `clearReviewRowDecisionDraft`（`annotation-workspace.data.js`），以獨立於提交 bucket 的 `labelsuite.wsReviewDecisionDrafts.<bucketKey>` 儲存區保存草稿——刻意不重用 `markSampleSaved`，因其對同一 bucket 的每次寫入皆會附加一筆歷程事件，若逐列決策每次點擊都呼叫將把 `歷程` 頁籤洗版，且違反 FR-062 盲審隔離（未送出決策的存在本身不得被其他審核員看見）。`persistReviewDraft()` 於 `ws-review-row-approve`/`ws-review-row-reject` 點擊與 `A`/`R` 快捷鍵（FR-054）後寫入草稿；`renderReviewerWorkspace()` 於重繪決策按鈕前還原草稿；`handleReviewSubmit()` 送出成功後清除草稿。新增 FR-014S、AC-6.10；`annotation-reviewer-decision-persistence.spec.ts` 由原本斷言「reload 後決策遺失（現況記錄）」改為斷言「reload 後決策保留」並新增 toggle-取消後 reload 仍為未決策的回歸案例。範圍**不**包含直接修正控件內尚未送出的文字/數值編輯持久化（沿用既有記憶體內狀態），亦不涉及仲裁投票（issue #319，另案）或說明彈窗（issue #195／#287，另案）。 |

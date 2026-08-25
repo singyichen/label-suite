@@ -164,10 +164,10 @@ test.describe('Right column: 說明與檔案 / 歷程 tabs', () => {
 
     await expect(page.locator('.guideline-summary-title svg')).toBeVisible();
 
-    // issue #185: the dead-link PDF entry was removed, so only the
-    // generic-example image and the FAQ markdown remain.
+    // issue #185 removed the dead-link PDF entry; issue #353 reinstated a
+    // PDF backed by a real asset, so all three typed rows render again.
     const items = page.getByTestId('ws-guideline-file-item');
-    await expect(items).toHaveCount(2);
+    await expect(items).toHaveCount(3);
 
     const imgRow = items.filter({ hasText: '通用範例圖.svg' });
     await expect(imgRow.locator('.guideline-file-icon.img svg')).toBeVisible();
@@ -176,6 +176,12 @@ test.describe('Right column: 說明與檔案 / 歷程 tabs', () => {
     const mdRow = items.filter({ hasText: '常見問題.md' });
     await expect(mdRow.locator('.guideline-file-icon.md svg')).toBeVisible();
     await expect(mdRow.locator('.guideline-file-action')).toHaveText('預覽');
+
+    // spec 015 v4.21.0 (issue #353): the PDF row's action hint is 預覽 too,
+    // no longer 新分頁.
+    const pdfRow = items.filter({ hasText: '標記指引範例.pdf' });
+    await expect(pdfRow.locator('.guideline-file-icon.pdf svg')).toBeVisible();
+    await expect(pdfRow.locator('.guideline-file-action')).toHaveText('預覽');
   });
 
   test('reviewer view renders the same two tabs', async ({ page }) => {

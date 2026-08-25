@@ -692,6 +692,8 @@
       padding: 4px;
     }
     .image-modal-preview { display: block; width: 100%; height: auto; max-height: 520px; object-fit: contain; border-radius: var(--radius-sm); }
+    .pdf-modal { max-width: 860px; width: 92vw; }
+    .pdf-modal-preview { display: block; width: 100%; height: 70vh; border: 0; border-radius: var(--radius-sm); background: var(--color-surface, #fff); }
 
     /* ── Mobile drawer (spec 015 v2.0.0 AC-5.2) ────────────────── */
     .mobile-drawer { display: none; }
@@ -851,6 +853,21 @@
       </button>
     </div>
     <img class="image-modal-preview" id="wsGuidelineImageModalPreview" data-testid="ws-guideline-image-modal-preview" alt="">
+  </div>
+</div>
+
+<!-- Guideline PDF preview modal (spec 015 AC-5.3 / SC-005C, issue #353):
+     mirrors the image modal's closing paths -- close button, backdrop
+     click, Esc key (Esc via the LabelSuiteModalFocus trap). -->
+<div class="modal-overlay hidden" id="wsGuidelinePdfModal" role="dialog" aria-modal="true" aria-labelledby="wsGuidelinePdfModalTitleText" data-testid="ws-guideline-pdf-modal">
+  <div class="modal image-modal pdf-modal">
+    <div class="image-modal-header">
+      <h2 class="modal-title" id="wsGuidelinePdfModalTitleText"></h2>
+      <button class="image-modal-close" type="button" id="wsGuidelinePdfModalClose" data-testid="ws-guideline-pdf-modal-close" aria-label="關閉 PDF 預覽">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <iframe class="pdf-modal-preview" id="wsGuidelinePdfModalPreview" data-testid="ws-guideline-pdf-modal-preview" title="PDF 預覽"></iframe>
   </div>
 </div>
 
