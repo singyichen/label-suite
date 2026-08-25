@@ -1,3 +1,12 @@
+/**
+ * Mobile top brand bar action cluster (language / appearance / notification /
+ * logout) must share identical size, spacing, radius and non-compressible
+ * behavior across all sidebar consumer modules, measured against the Task
+ * Management baseline at the 375px mobile viewport.
+ *
+ * Traceability: specs/shared/008-sidebar-navbar-shared/spec.md
+ *   FR-011A, SC-005A
+ */
 import { test, expect, type Page } from '@playwright/test';
 
 const BASELINE_URL = '/pages/task-management/task-list.html';

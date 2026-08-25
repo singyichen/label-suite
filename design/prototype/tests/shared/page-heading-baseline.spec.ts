@@ -1,3 +1,12 @@
+/**
+ * Top-level page heading blocks (h1 title + subtitle) on every module page
+ * must align with the Dashboard baseline at the 1440px desktop viewport:
+ * same position and typography metrics (title size, subtitle size and
+ * line-height, spacing below the heading block).
+ *
+ * Traceability: specs/shared/008-sidebar-navbar-shared/spec.md
+ *   FR-017, SC-010
+ */
 import { test, expect, type Page } from '@playwright/test';
 
 const BASELINE_URL = '/pages/dashboard/dashboard.html';

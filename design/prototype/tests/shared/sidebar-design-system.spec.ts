@@ -1,3 +1,14 @@
+/**
+ * Shared sidebar design-system alignment: dark navbar border on the
+ * canonical border token, navbar on the z-sticky (200) layer, pointer
+ * cursors on sidebar fragment buttons, Lucide SVG notification icons on
+ * semantic token colors, and the shortcut dialog honoring the MASTER
+ * modal focus-trap contract.
+ *
+ * This file verifies design-system contracts rather than feature-spec FRs.
+ * Traceability: design/system/MASTER.md
+ *   §Dark Mode Tokens, §Z-index Scale, §Sidebar, §Modals
+ */
 import { test, expect } from '@playwright/test';
 
 const HOST_PAGE_URL = '/pages/dashboard/dashboard.html';

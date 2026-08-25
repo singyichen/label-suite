@@ -1,3 +1,11 @@
+/**
+ * Brand link and L0 module nav links in the shared sidebar must render with
+ * no text underline (computed text-decoration-line: none) across all
+ * sidebar consumer module pages.
+ *
+ * Traceability: specs/shared/008-sidebar-navbar-shared/spec.md
+ *   FR-013A, SC-005B
+ */
 import { test, expect, type Page } from '@playwright/test';
 
 const sidebarPages = [
