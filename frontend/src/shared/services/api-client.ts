@@ -41,6 +41,33 @@ export class ApiRequestError extends Error {
 }
 
 /**
+ * Fallback `ErrorResponse` synthesized when a non-2xx response has no body
+ * (e.g. some edge-case error responses) or a body that isn't valid JSON
+ * (e.g. an HTML error page from a proxy on 502/504). Guarantees callers
+ * always see an `ApiRequestError`, never a raw `SyntaxError` (FR-041).
+ */
+function unparseableErrorResponse(status: number): ErrorResponse {
+  return { detail: `Request failed with status ${status}` };
+}
+
+/**
+ * Parses a response body as JSON, returning `undefined` for an empty body
+ * (the project's `204 No Content` convention, `.claude/rules/api.md`) or a
+ * body that isn't valid JSON.
+ */
+async function parseJsonBody(response: Response): Promise<unknown> {
+  const text = await response.text();
+  if (text.length === 0) {
+    return undefined;
+  }
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
  * Fetch wrapper for the Label Suite API (`shared/services/api-client.ts`
  * per design.md's API contract section).
  *
@@ -69,10 +96,11 @@ export async function apiRequest<T>(path: string, init: RequestInit = {}): Promi
   const correlationId = response.headers.get(CORRELATION_ID_HEADER);
 
   if (!response.ok) {
-    const errorResponse = (await response.json()) as ErrorResponse;
+    const body = await parseJsonBody(response);
+    const errorResponse = (body ?? unparseableErrorResponse(response.status)) as ErrorResponse;
     throw new ApiRequestError(response.status, correlationId, errorResponse);
   }
 
-  const data = (await response.json()) as T;
+  const data = (await parseJsonBody(response)) as T;
   return { data, correlationId };
 }
