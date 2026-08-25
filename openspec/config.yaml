@@ -2,6 +2,8 @@ schema: spec-driven
 
 # Phase 2 configuration per docs/openspec-adoption-plan.md and ADR-033.
 # openspec/specs/ is a DERIVED view; the canonical truth lives in specs/.
+# List items use >- block scalars so embedded colons (e.g. "對應 Spec:") stay
+# plain text instead of being parsed as YAML mapping keys.
 
 context: |
   Label Suite — configurable NLP data labeling and automated evaluation portal
@@ -22,48 +24,64 @@ context: |
 
 rules:
   proposal:
-    - Frontmatter MUST name the canonical spec it changes, e.g.
+    - >-
+      Frontmatter MUST name the canonical spec it changes, e.g.
       "對應 Spec: specs/[module]/NNN-feature/spec.md".
-    - MUST include a constitution-check section walking the design-time
+    - >-
+      MUST include a constitution-check section walking the design-time
       principles of specs/_governance/constitution.md relevant to the change.
-    - Spec deltas MUST reference stable FR/AC IDs
+    - >-
+      Spec deltas MUST reference stable FR/AC IDs
       (e.g. "MODIFIED Requirement: FR-NNN"); never paraphrase a requirement
       without its ID.
-    - Every cited FR/AC ID MUST be locatable via grep in the canonical
+    - >-
+      Every cited FR/AC ID MUST be locatable via grep in the canonical
       spec.md (Source-Verify gate).
   design:
-    - design.md is OPTIONAL by default (KISS), but MANDATORY when the change
+    - >-
+      design.md is OPTIONAL by default (KISS), but MANDATORY when the change
       touches an API contract or a DB schema; it must then contain the
       contract definition (endpoints / schema / migration impact).
-    - MUST include a constitution-check section when present.
-    - May reference specs/foundation/000-foundation/plan.md as the standing
+    - >-
+      MUST include a constitution-check section when present.
+    - >-
+      May reference specs/foundation/000-foundation/plan.md as the standing
       architecture baseline.
   specs:
-    - Delta spec files MUST reference stable FR/AC IDs from the canonical
+    - >-
+      Delta spec files MUST reference stable FR/AC IDs from the canonical
       spec.md; new requirements get the next free FR/AC ID in that spec.
-    - Derived capability files MUST carry a header naming the canonical path
+    - >-
+      Derived capability files MUST carry a header naming the canonical path
       (specs/[module]/NNN-feature/spec.md) and the corresponding FR/AC IDs.
-    - No delta headings (e.g. "## ADDED Requirements") may remain in derived
+    - >-
+      No delta headings (e.g. "## ADDED Requirements") may remain in derived
       views after archive.
   tasks:
-    - TDD is required: every implementation task is preceded by a failing
+    - >-
+      TDD is required: every implementation task is preceded by a failing
       test task; never implement before the test exists and fails.
-    - Task granularity must keep each PR within ≤ 5 files / ≤ 300 diff lines
+    - >-
+      Task granularity must keep each PR within ≤ 5 files / ≤ 300 diff lines
       (tests excluded), or state the split plan explicitly.
 
 operations:
   apply:
     guidance:
-      - Run the verification commands from CLAUDE.md for the touched area
+      - >-
+        Run the verification commands from CLAUDE.md for the touched area
         (backend uv run pytest/mypy/ruff; frontend pnpm tsc/lint/test;
         prototype corepack pnpm typecheck + playwright) — all must exit 0
         before a task is considered done.
-      - Never commit to main; branch per CLAUDE.md naming
+      - >-
+        Never commit to main; branch per CLAUDE.md naming
         (<type>/<short-description>).
   archive:
     guidance:
-      - Write back to the canonical spec.md (version bump + Changelog entry)
+      - >-
+        Write back to the canonical spec.md (version bump + Changelog entry)
         before regenerating derived views.
-      - Verify every FR/AC ID touched by the change greps in the canonical
+      - >-
+        Verify every FR/AC ID touched by the change greps in the canonical
         spec.md (Source-Verify gate) and no delta headings remain in
         openspec/specs/.
