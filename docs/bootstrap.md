@@ -65,6 +65,13 @@ cd backend && DATABASE_URL=postgresql+asyncpg://postgres:postgres@127.0.0.1:5432
 映像檔、帳密與資料庫名稱刻意與 `.github/workflows/ci.yml` 的 `postgres` service
 container 一致，本機綠燈與 CI 綠燈才會指向同一個目標。
 
+資料存在具名 volume `postgres_ci_data`，會跨多次 `up` 保留。要回到全新資料庫
+（例如上一輪整合測試留下的資料在干擾判讀）：
+
+```bash
+docker compose --profile ci down -v
+```
+
 ## Seed 資料
 
 ```bash

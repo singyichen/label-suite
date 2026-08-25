@@ -40,11 +40,11 @@ def _env_example_path() -> Path:
 
     Returns:
         Absolute path to the repo-root `.env.example`. Computed from
-        `__file__` (this test lives at `backend/tests/test_env_example.py`,
-        two directories below the repo root) rather than `os.getcwd()`, so
+        `__file__` (this test lives at `backend/tests/core/test_env_example.py`,
+        three directories below the repo root) rather than `os.getcwd()`, so
         the result does not depend on the directory pytest was invoked from.
     """
-    return Path(__file__).resolve().parents[2] / ".env.example"
+    return Path(__file__).resolve().parents[3] / ".env.example"
 
 
 @pytest.fixture
