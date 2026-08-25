@@ -1,3 +1,7 @@
+/*
+ * Traceability: specs/task-management/014-task-detail/spec.md
+ *   FR-014a, FR-014i, FR-014l, FR-014l-1, FR-014l-2, FR-014m
+ */
 import { test, expect } from '@playwright/test';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';

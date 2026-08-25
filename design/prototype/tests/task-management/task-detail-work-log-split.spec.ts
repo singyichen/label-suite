@@ -1,3 +1,7 @@
+/*
+ * Traceability: specs/task-management/014-task-detail/spec.md
+ *   FR-007b, SC-036
+ */
 import { test, expect } from '@playwright/test';
 
 /* Spec 014 v2.6.0 (issue #149 P5) — work-log completed-count split into

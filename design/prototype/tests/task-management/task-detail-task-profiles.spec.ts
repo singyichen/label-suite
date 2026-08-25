@@ -1,3 +1,7 @@
+/*
+ * Traceability: specs/task-management/014-task-detail/spec.md
+ *   FR-001, FR-013, FR-014, FR-014i, FR-014l, FR-014l-3, SC-011
+ */
 import { test, expect } from '@playwright/test';
 import path from 'path';
 
