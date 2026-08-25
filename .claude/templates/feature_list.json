@@ -29,6 +29,6 @@
     "All features status == done",
     "uv run pytest tests/ -q exits 0",
     "pnpm tsc --noEmit exits 0",
-    "/speckit.analyze reports zero findings"
+    "OpenSpec change verification (/opsx:verify or openspec validate) passes + write-back Source-Verify gate passes"
   ]
 }

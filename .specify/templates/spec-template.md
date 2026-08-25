@@ -40,7 +40,7 @@
 ## 規格常數
 
 <!--
-  共用常數（出現在 ≥2 份 spec 者）一律引用 specs/_shared/constants.md，不得在本章節重複定義（由 /speckit.analyze 檢查）。
+  共用常數（出現在 ≥2 份 spec 者）一律引用 specs/_shared/constants.md，不得在本章節重複定義。
   本章節只定義該 spec 特有的常數，並在 FR / SC 章節中引用。
 -->
 
@@ -239,7 +239,7 @@ flowchart LR
 ---
 
 <!--
-  作者自檢清單 — /speckit.specify 產生後逐項自檢，不得輸出到 spec 實例；正式審查由 /spec-review 與 /speckit.analyze 執行。
+  作者自檢清單 — /speckit.specify 產生後逐項自檢，不得輸出到 spec 實例；正式審查由 /spec-review 執行。
 
   內容品質：
 
@@ -272,6 +272,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.6.1 | 2026-08-25 | 移除已退役 /speckit.analyze 引用（ADR-033、issue #356）：共用常數重複定義與正式審查改由 spec 審查與 OpenSpec change 驗證把關 |
 | 1.6.0 | 2026-07-21 | What/How 分離：生成規則與審查清單轉為 HTML 註解（不落地實例）、刪除執行狀態章節（STATUS.md 為唯一來源）、規格常數改為引用 specs/_shared/constants.md、流程圖禁止系統層 participant、輸入描述併入需求來源 |
 | 1.5.1 | 2026-07-21 | 補充故事編號穩定規則：編號是身分不是位置，新增故事取下一個未用編號、不重編既有故事，AC ID 不隨顯示順序改變 |
 | 1.5.0 | 2026-07-21 | 驗收情境條目新增穩定 ID（`AC-<故事編號>.<序號>`），與 FR-*/SC-* 一致；插入情境時沿用字尾字母（AC-1.2A）避免重編號 |

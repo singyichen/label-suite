@@ -8,11 +8,11 @@ This document provides a comprehensive overview of all available Spec-Kit Comman
 .claude/
 ├── commands/                    # Spec-Kit Commands + Workflow Commands
 │   ├── speckit.specify.md       # Create feature spec
-│   ├── speckit.plan.md          # Create implementation plan
-│   ├── speckit.tasks.md         # Generate task list
-│   ├── speckit.implement.md     # Execute implementation
+│   ├── speckit.plan.md          # DEPRECATED (ADR-033) — use /opsx:propose (design.md)
+│   ├── speckit.tasks.md         # DEPRECATED (ADR-033) — use /opsx:propose (tasks.md)
+│   ├── speckit.implement.md     # DEPRECATED (ADR-033) — use /opsx:apply
 │   ├── speckit.clarify.md       # Clarify spec ambiguities
-│   ├── speckit.analyze.md       # Cross-artifact analysis
+│   ├── speckit.analyze.md       # DEPRECATED (ADR-033) — use /opsx:verify + Source-Verify gate
 │   ├── speckit.checklist.md     # Generate quality checklist
 │   ├── speckit.constitution.md  # Update project constitution
 │   ├── speckit.taskstoissues.md # Convert tasks to GitHub Issues
@@ -72,23 +72,23 @@ Spec-Kit commands provide a Spec-Driven Development (SDD) workflow powered by [G
 | Command | Purpose | Example Usage |
 |---------|---------|---------------|
 | `/speckit.specify` | Create or update feature spec from natural language | `/speckit.specify annotation submission with scoring` |
-| `/speckit.plan` | Create technical implementation plan from spec | `/speckit.plan` |
-| `/speckit.tasks` | Generate actionable task list from plan | `/speckit.tasks` |
-| `/speckit.implement` | Execute implementation following task list | `/speckit.implement` |
+| `/speckit.plan` | **DEPRECATED** (ADR-033) — technical design now in an OpenSpec change's `design.md` | `/opsx:propose` |
+| `/speckit.tasks` | **DEPRECATED** (ADR-033) — task breakdown now in an OpenSpec change's `tasks.md` | `/opsx:propose` |
+| `/speckit.implement` | **DEPRECATED** (ADR-033) — implementation now runs through OpenSpec apply | `/opsx:apply` |
 | `/speckit.clarify` | Identify and resolve spec ambiguities (max 5 questions) | `/speckit.clarify` |
-| `/speckit.analyze` | Cross-artifact consistency analysis (read-only) | `/speckit.analyze` |
+| `/speckit.analyze` | **DEPRECATED** (ADR-033) — use `/opsx:verify` (or `openspec validate`) + Source-Verify gate | `/opsx:verify` |
 | `/speckit.checklist` | Generate quality validation checklist | `/speckit.checklist security` |
 | `/speckit.constitution` | Create or update the project constitution | `/speckit.constitution` |
 | `/speckit.taskstoissues` | Convert tasks.md into GitHub Issues | `/speckit.taskstoissues` |
 
 ### SDD Workflow
 
+OpenSpec is the implementation/change workflow layer; `specs/` remains the sole canon — see [ADR-033](../docs/adr/033-openspec-change-workflow.md).
+
 ```
 /speckit.specify → /ui-ux-pro-max (prototype) → /pencil-wireframe (frozen) → /speckit.clarify → /spec-review
                                                                                                      ↓
-                                                                          /speckit.plan → /speckit.tasks → /speckit.analyze → /speckit.implement
-                                                                                                                        ↓                                    ↓
-                                                                                                        /speckit.taskstoissues              /speckit.checklist
+                                                                          /opsx:propose → /opsx:apply → /opsx:archive → /pr-flow
 ```
 
 ### Related Files
@@ -270,7 +270,7 @@ For the Label Suite project, these skills enforce additional constraints for the
 | 2. SDD Spec | `/speckit.specify` → `/spec-review` → `/spec-to-plan` |
 | 3. Design | `/api-spec` → `/backend-spec` → `/frontend-spec` → `/data-model` → `/flowchart` |
 | 3b. UI Design | `/ui-ux-pro-max` (design system) → `/frontend-spec` (component spec) |
-| 4. Implementation | `/speckit.plan` → `/speckit.tasks` → `/speckit.implement` |
+| 4. Implementation | `/opsx:propose` → `/opsx:apply` → `/opsx:archive` (ADR-033) |
 | 5. Testing | `/test-plan` → `/test-data-strategy` → `/test-coverage` |
 | 6. Code Review | `/code-review-checklist` → `/code-review-deep` → `/pr-review` |
 | 7. QA | `/quality-gate` → `/traceability-matrix` → `/test-report` |
@@ -287,5 +287,5 @@ For the Label Suite project, these skills enforce additional constraints for the
 
 ---
 
-*Last Updated: 2026-07-21*
+*Last Updated: 2026-08-25*
 *Total Skills: 30 | Spec-Kit Commands: 9 | Workflow Commands: 4*
