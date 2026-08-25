@@ -1216,9 +1216,11 @@
    * placeholder explicitly labeled "通用範例圖" (generic example) instead
    * of fabricating per-category example images, which would need either
    * 13 bespoke assets or per-task-type branching that the entity above
-   * disallows. The PDF entry pointed at assets/guidelines/, a directory
-   * that doesn't exist in this prototype, so it was a dead link inside the
-   * "force reading" guideline flow -- removed rather than fabricated. */
+   * disallows. The PDF entry issue #185 removed was a dead link into a
+   * nonexistent assets/guidelines/; issue #353 reinstates a PDF entry
+   * backed by a real committed asset so the in-page PDF preview modal
+   * (spec 015 AC-5.3) is demonstrable. Kept last so tests clicking the
+   * first file item keep hitting the image entry. */
   var DEFAULT_GUIDELINE_FILES = [
     {
       name: '通用範例圖.svg',
@@ -1229,6 +1231,11 @@
       name: '常見問題.md',
       type: 'markdown',
       content: '# 常見問題\n\n- **Q: 如何開始標記？** 依左側清單逐筆完成標記，完成後點擊提交。\n- **Q: 不確定答案怎麼辦？** 可於備註欄說明特殊情況，交由 Reviewer 複核。'
+    },
+    {
+      name: '標記指引範例.pdf',
+      type: 'pdf',
+      url: '../../assets/guidelines/annotation-guideline-sample.pdf'
     }
   ];
   Object.keys(profiles).forEach(function (taskId) {

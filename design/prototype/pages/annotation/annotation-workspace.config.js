@@ -40,10 +40,10 @@
       guidelineModalTitle: '請先閱讀任務說明',
       guidelineModalConfirm: '我已閱讀，開始標記',
       guidelineSummaryTitle: '任務說明',
-      guidelineFileActionNewTab: '新分頁',
       guidelineFileActionPreview: '預覽',
       mobileDrawerTitle: '說明與檔案',
       guidelineImageModalCloseAria: '關閉圖片預覽',
+      guidelinePdfModalCloseAria: '關閉 PDF 預覽',
       wsSubmitIncomplete: '請完成所有標記項目後再提交',
       wsSubmitSuccess: '已提交',
       reviewSubmitLabel: '送出審核',
@@ -107,10 +107,10 @@
       guidelineModalTitle: 'Please read the task guideline first',
       guidelineModalConfirm: "I've read it, start annotating",
       guidelineSummaryTitle: 'Task Guideline',
-      guidelineFileActionNewTab: 'New tab',
       guidelineFileActionPreview: 'Preview',
       mobileDrawerTitle: 'Guidelines & Files',
       guidelineImageModalCloseAria: 'Close image preview',
+      guidelinePdfModalCloseAria: 'Close PDF preview',
       wsSubmitIncomplete: 'Please answer every output before submitting',
       wsSubmitSuccess: 'Submitted',
       reviewSubmitLabel: 'Submit review',
@@ -3062,6 +3062,30 @@
     if (modal) modal.classList.add('hidden');
     if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(modal);
   }
+  /* issue #353 (spec 015 AC-5.3 / SC-005C): PDF guideline files preview in
+     an in-page modal (mirroring the image modal's interaction contract)
+     instead of window.open(..., '_blank'). The modal title carries the file
+     name -- single-language source data, not UI chrome, so it is set here
+     rather than in applyI18n(). */
+  function openGuidelinePdfModal(src, name, triggerEl) {
+    var modal = document.getElementById('wsGuidelinePdfModal');
+    var frame = document.getElementById('wsGuidelinePdfModalPreview');
+    if (!modal || !frame) return;
+    frame.src = src;
+    setText('wsGuidelinePdfModalTitleText', name || '');
+    modal.classList.remove('hidden');
+    if (window.LabelSuiteModalFocus) {
+      window.LabelSuiteModalFocus.open(modal, {
+        trigger: triggerEl || document.activeElement,
+        onClose: closeGuidelinePdfModal
+      });
+    }
+  }
+  function closeGuidelinePdfModal() {
+    var modal = document.getElementById('wsGuidelinePdfModal');
+    if (modal) modal.classList.add('hidden');
+    if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(modal);
+  }
   function showGuidelineMarkdownPreview(content) {
     var preview = document.getElementById('wsGuidelineMdPreview');
     if (!preview) return;
@@ -3096,11 +3120,13 @@
       item.appendChild(name);
       var action = document.createElement('span');
       action.className = 'guideline-file-action';
-      action.textContent = file.type === 'pdf' ? t('guidelineFileActionNewTab') : t('guidelineFileActionPreview');
+      /* All three types preview in-page since issue #353 (PDF used to say
+         新分頁 and open a new tab). */
+      action.textContent = t('guidelineFileActionPreview');
       item.appendChild(action);
       item.addEventListener('click', function () {
         if (file.type === 'pdf') {
-          window.open(file.url, '_blank');
+          openGuidelinePdfModal(file.url, file.name, item);
         } else if (file.type === 'image') {
           openGuidelineImageModal(file.url, file.name, item);
         } else if (file.type === 'markdown') {
@@ -3126,6 +3152,18 @@
     }
     /* Escape-to-close is now handled by the LabelSuiteModalFocus trap
        registered in openGuidelineImageModal() (issue #195). */
+  }
+  function setupGuidelinePdfModal() {
+    var modal = document.getElementById('wsGuidelinePdfModal');
+    var closeBtn = document.getElementById('wsGuidelinePdfModalClose');
+    if (closeBtn) closeBtn.addEventListener('click', closeGuidelinePdfModal);
+    if (modal) {
+      modal.addEventListener('click', function (e) {
+        if (e.target === modal) closeGuidelinePdfModal();
+      });
+    }
+    /* Escape-to-close comes from the LabelSuiteModalFocus trap registered
+       in openGuidelinePdfModal(), same as the image modal. */
   }
   function setupGuidelineCollapse() {
     var btn = document.getElementById('wsGuidelineCollapseBtn');
@@ -3318,6 +3356,8 @@
     setText('wsMobileDrawerTitle', t('mobileDrawerTitle'));
     var closeBtn = document.getElementById('wsGuidelineImageModalClose');
     if (closeBtn) closeBtn.setAttribute('aria-label', t('guidelineImageModalCloseAria'));
+    var pdfCloseBtn = document.getElementById('wsGuidelinePdfModalClose');
+    if (pdfCloseBtn) pdfCloseBtn.setAttribute('aria-label', t('guidelinePdfModalCloseAria'));
     /* issue #309: the shared sidebar mounts with its 一般使用者 default;
        reviewers must read as 審核員 (same role noun the history trail uses).
        Annotator view keeps the shared default untouched. Runs at boot and on
@@ -3399,6 +3439,7 @@
     );
     renderGuidelinePanel();
     setupGuidelineImageModal();
+    setupGuidelinePdfModal();
     setupGuidelineCollapse();
     setupGuidelineTabs();
     setupSampleNav();
