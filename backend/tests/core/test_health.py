@@ -119,6 +119,24 @@ def test_health_response_carries_a_correlation_id_header() -> None:
     assert uuid.UUID(correlation_id).version == 4
 
 
+def test_correlation_id_header_is_exposed_to_cross_origin_callers() -> None:
+    """`X-Correlation-ID` is readable by the browser, not just present on the wire.
+
+    `X-Correlation-ID` is not a CORS-safelisted response header, so a
+    cross-origin caller gets `null` from `response.headers.get(...)` unless
+    the server lists it in `Access-Control-Expose-Headers`. Without this the
+    frontend `api-client`'s correlation-id propagation silently degrades to
+    `null` in every real browser call while still passing its own tests.
+    """
+    origin = "http://localhost:5173"
+    client = TestClient(create_app(settings=_settings(allowed_origins=[origin])))
+
+    response = client.get("/api/v1/health", headers={"Origin": origin})
+
+    exposed = response.headers["Access-Control-Expose-Headers"]
+    assert CORRELATION_ID_HEADER in [header.strip() for header in exposed.split(",")]
+
+
 def test_validation_error_on_assembled_app_uses_error_response_envelope() -> None:
     """The assembled app has `register_exception_handlers` wired in (SC-035).
 
