@@ -1,3 +1,16 @@
+/**
+ * Shared language-switch consistency across sidebar consumer pages: every
+ * page must delegate to the shared sidebar global language API (no direct
+ * html[lang] writes or direct persistence), the mobile toggle must stay in
+ * sync with the desktop one, and admin nav labels must remain translatable.
+ * The final case pins the serif fallback stack in assets/tokens.css.
+ *
+ * Traceability: specs/shared/008-sidebar-navbar-shared/spec.md
+ *   FR-009, FR-009A, FR-009B, SC-006, SC-006A
+ * Traceability: design/system/MASTER.md (serif fallback stack — design-system
+ * contract, not a feature-spec FR)
+ *   §Typography
+ */
 import { test, expect } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';

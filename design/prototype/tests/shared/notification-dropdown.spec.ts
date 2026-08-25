@@ -1,3 +1,12 @@
+/**
+ * Shared notification dropdown contract: no "notification settings" link
+ * inside the dropdown (preferences live on /profile), fully localized
+ * dropdown content on language switch, and the removed standalone
+ * notification-settings page must stay removed.
+ *
+ * Traceability: specs/shared/008-sidebar-navbar-shared/spec.md
+ *   FR-018C, FR-018C1, FR-018E
+ */
 import { test, expect } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';

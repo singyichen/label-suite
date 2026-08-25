@@ -7,6 +7,11 @@
  * .output-accordion family + ARIA/toggle contract), Progress Bar and
  * Metric KPI Tile. Asserted values come verbatim from design/system/MASTER.md
  * §Color Dot, §Divider, §Accordion, §Progress Bar and §Metric KPI Tile.
+ *
+ * This file verifies a design-system contract rather than a feature-spec FR
+ * (spec 008 Prototype Traceability lists the showcase as reference-only).
+ * Traceability: design/system/MASTER.md
+ *   §Color Dot, §Divider, §Accordion, §Progress Bar, §Metric KPI Tile
  */
 import { test, expect } from '@playwright/test';
 

@@ -7,6 +7,11 @@
  * Tailwind-only samples, so assertions target the token-rendered mapping
  * (state token families per tokens.css, radius per the shipped account
  * state panels).
+ *
+ * This file verifies a design-system contract rather than a feature-spec FR
+ * (spec 008 Prototype Traceability lists the showcase as reference-only).
+ * Traceability: design/system/MASTER.md
+ *   §State Panel, §Avatar
  */
 import { test, expect } from '@playwright/test';
 

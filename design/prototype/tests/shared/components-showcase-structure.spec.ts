@@ -5,6 +5,11 @@
  * chips in checkbox/radio mode + the four read-only display chip families),
  * Pagination, and Breadcrumb. Asserted values come verbatim from
  * design/system/MASTER.md §Chip, §Pagination and §Breadcrumb.
+ *
+ * This file verifies a design-system contract rather than a feature-spec FR
+ * (spec 008 Prototype Traceability lists the showcase as reference-only).
+ * Traceability: design/system/MASTER.md
+ *   §Chip, §Pagination, §Breadcrumb
  */
 import { test, expect } from '@playwright/test';
 
