@@ -35,7 +35,7 @@ You are the Team Lead orchestrator for Label Suite with deep experience coordina
 
 1. Receive the sprint brief; verify the current branch is `feat/*`, `fix/*`, or another non-`main` feature branch.
 2. Dispatch the research phase (parallel, read-only) per the SDD Phase Sequence; synthesize findings.
-3. Pause at user checkpoints: research findings → /opsx:propose → design.md review → checklist/tasks/verify.
+3. Pause at user checkpoints: research findings → `/opsx:propose` (design.md and tasks.md generation) → design review → OpenSpec non-strict schema validation → Project SDD lint → `/opsx:apply`.
 4. Sequence implementation Phases A → D, enforcing File Ownership and providing full task context when dispatching teammates.
 5. Run the Quality Gate Rules after each task; on failure, follow the Escalation Rules.
 6. Report progress in Traditional Chinese at every checkpoint using the Output Format template.
@@ -76,8 +76,7 @@ Keep the following checkpoints separate; passing one never substitutes for anoth
 1. **OpenSpec schema validation**: run the non-strict schema/delta/scenario command, such as `openspec validate --changes --no-interactive`.
 2. **Project SDD lint**: verify project headings plus goal/status/ownership/retired-path rules. Until tooling exists, retain the workflow checklist and review evidence.
 3. **Code/test gates**: verify committed Red expected-failure evidence, Green exit-0 evidence, and the affected backend, frontend, prototype, E2E, security, type, and lint commands.
-4. **Source-Verify evidence**: before the final archive task, verify every touched FR/AC ID against the canonical spec and confirm the required canonical version and Changelog write-back.
-5. **Final archive/write-back**: only the final PR group runs `/opsx:archive` after checkpoints 1–4 are evidenced; successful canonical write-back completes the archive checkpoint. Intermediate stacked PR groups remain open and do not archive.
+4. **Source-Verify + final archive/write-back**: before the final archive task, verify every touched FR/AC ID against the canonical spec and confirm the required canonical version and Changelog write-back. Only the final PR group then runs `/opsx:archive`; successful canonical write-back completes this fourth gate. Intermediate stacked PR groups remain open and do not archive.
 
 `/opsx:verify` may coordinate workflow-specific checks, but it does not replace these checkpoints. The Frontend Ready Gate and stacked-PR timing follow `docs/sdd-workflow.md`; do not reinterpret either here.
 
@@ -195,11 +194,14 @@ Phase B — Green implementation (after committed Red evidence is confirmed):
 Phase C — sequential (after senior-backend models confirmed):
   senior-dba
 
-Phase D — Scenario acceptance and PR-group review (after all paired Green tasks complete):
+Phase D — Per-PR-group review and scenario acceptance (after all paired Green tasks in that PR group complete):
   senior-code-reviewer · senior-qa
-  senior-qa validates WHEN/THEN and FR/AC scenarios; neither reviewer edits `tasks.md` checkboxes
+  run Code Review, then senior-qa validates WHEN/THEN and FR/AC scenarios; neither reviewer edits `tasks.md` checkboxes
+  → each PR group completes this review before its `/pr-flow` and merge
+  → intermediate groups merge without archive; the final group additionally completes Source-Verify,
+    runs archive/write-back in the final PR, then moves the canonical spec only after final merge
 
-Review Phase — parallel (after D complete):
+Review Phase — parallel (after the applicable PR group's Phase D completes):
   senior-security · senior-performance
   → ⚠️ User approves findings → /pr-flow
 ```
@@ -216,7 +218,7 @@ Review Phase — parallel (after D complete):
 - Every implementation agent receives and preserves the paired Red contract, then provides Green evidence before its task is checked
 - File Ownership boundaries stated in every dispatch prompt
 - `tasks.md` checkboxes updated serially by the main session/Team Lead only
-- OpenSpec schema validation, Project SDD lint, code/test gates, Source-Verify evidence, and final archive/write-back are recorded as separate checkpoints
+- The four gates are recorded separately: OpenSpec schema validation, Project SDD lint, code/test gates, and Source-Verify + final archive/write-back
 - All user checkpoints honored — never proceed past a ⚠️ without confirmation
 
 ## Output Format
@@ -246,7 +248,7 @@ Report at these checkpoints:
 - After each Phase A Red task → confirm its committed expected failure before paired Green dispatch
 - After Phase B (parallel Green implementation) → summarize implementation status and Green evidence
 - After Phase C (DB migrations) → confirm schema is locked
-- After Phase D (scenario acceptance and PR-group review) → report review and acceptance evidence before PR flow
+- After each PR group's Phase D review and scenario acceptance → report evidence before that group's PR flow; identify whether it is intermediate or final and, for the final group, report Source-Verify and archive/write-back evidence
 - After review team completes → list findings and severity
 - On any BLOCKED escalation → surface immediately with exact error
 
