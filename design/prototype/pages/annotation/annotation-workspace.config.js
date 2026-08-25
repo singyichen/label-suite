@@ -54,6 +54,7 @@
       reviewNote: '通過：此筆標記有效。退回：該標記狀態會回到未標記，標記員需要重新標記。',
       reviewCorrectionTitle: '直接修正',
       toastSelectDecision: '請完成每位標記員的審核決策',
+      toastReviewCorrectionReset: '偵測到直接修正的內容因重新整理而遺失，對應的通過／退回決策已重置，請重新確認後再送出',
       toastResolveDivergent: '請先裁定所有分歧項目',
       arbitrationTitle: '爭議仲裁',
       arbitrationNote: '此審核單位已進入爭議池。請逐項裁定採用 A（標記員）或 B（審核員）的結果；仲裁不重新標記。',
@@ -121,6 +122,7 @@
       reviewNote: 'Approve: this annotation is valid. Reject: the sample returns to pending and the annotator must redo it.',
       reviewCorrectionTitle: 'Direct correction',
       toastSelectDecision: 'Please decide on every annotator before submitting',
+      toastReviewCorrectionReset: 'The direct correction was lost on reload, so the matching approve/reject decision was reset -- please re-confirm before submitting',
       toastResolveDivergent: 'Please resolve every divergent item first',
       arbitrationTitle: 'Dispute arbitration',
       arbitrationNote: 'This review unit is in the dispute pool. Decide each item as A (annotator) or B (reviewer); arbitration does not re-annotate.',
@@ -2124,18 +2126,36 @@
     return span;
   }
 
+  /* issue #398: whether outKey's current correction control value differs
+     from the reviewed annotator's original answer. FR-014S deliberately
+     does NOT persist the correction's own value across a reload -- it
+     always reseeds from the original (seedReviewRow()) -- so a decision
+     recorded while this is true cannot be trusted to still match what is
+     on screen after a reload; see restoreReviewDraft() below. */
+  function isRowCorrected(outKey) {
+    var corrected = describeOutputAnswer(outKey, {
+      previewState: state.previewState,
+      previewEntities: state.previewEntities,
+      previewTriples: state.previewTriples,
+    });
+    return corrected !== (reviewRowOriginals[outKey] || '');
+  }
+
   /* Reviewer draft persistence (issue #196, CONT-03 / role symmetry with the
      annotator's markSampleSaved): every row-decision change writes the
      review unit's current decisions into a dedicated localStorage draft
      bucket (annotation-workspace.data.js's saveReviewRowDecisionDraft), so
      an in-progress (pre-submit) approve/reject choice survives a reload
-     instead of only living in the module-level reviewRowDecisions var. */
+     instead of only living in the module-level reviewRowDecisions var.
+     Each entry also records whether the correction was edited at the time
+     of the decision (issue #398) -- not the correction's value itself,
+     which stays outside FR-014S's persistence scope. */
   function persistReviewDraft() {
     var annotatorId = currentAnnotatorId();
     var decisions = {};
     state.selectedOutputTypes.forEach(function (outKey) {
       var decision = reviewRowDecisions[decisionKey(outKey, annotatorId)];
-      if (decision) decisions[outKey] = decision;
+      if (decision) decisions[outKey] = { decision: decision, corrected: isRowCorrected(outKey) };
     });
     window.LabelSuiteAnnotationWorkspaceData.saveReviewRowDecisionDraft(
       currentProfile.id, currentRunType, currentSampleId, decisions, currentIdentity
@@ -2835,16 +2855,29 @@
     reviewDecisionRefreshers = [];
     /* issue #196 (CONT-03): restore any in-progress decisions persisted by
        persistReviewDraft() before this render -- a reload must not silently
-       undecide rows the reviewer already chose. */
+       undecide rows the reviewer already chose.
+       issue #398: EXCEPT a decision recorded while its correction was
+       edited -- the correction control itself reseeds from the annotator's
+       original answer on this same render (seedReviewRow(), outside
+       FR-014S's persistence scope), so restoring that decision would keep
+       it "approved"/"rejected" against a value the reviewer never actually
+       confirmed. Reset those instead and tell the reviewer why. */
     (function restoreReviewDraft() {
       var draft = window.LabelSuiteAnnotationWorkspaceData.getReviewRowDecisionDraft(
         currentProfile.id, currentRunType, currentSampleId, currentIdentity
       );
       if (!draft) return;
       var annotatorId = currentAnnotatorId();
+      var correctionLost = false;
       Object.keys(draft).forEach(function (outKey) {
-        reviewRowDecisions[decisionKey(outKey, annotatorId)] = draft[outKey];
+        var entry = draft[outKey];
+        if (entry.corrected) {
+          correctionLost = true;
+          return;
+        }
+        reviewRowDecisions[decisionKey(outKey, annotatorId)] = entry.decision;
       });
+      if (correctionLost) showToast(t('toastReviewCorrectionReset'), 'warning');
     })();
 
     /* null, not {}: seedReviewRow() branches on whether a real submission
