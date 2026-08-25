@@ -19,7 +19,11 @@ import {
  *   ws-multi-label-node-{label}     <- engine `taxonomy-preview-option`
  *   ws-multi-label-chip-{label}     <- engine `taxonomy-selected-path`
  *                                       (SELECTED-PATH chip, not a
- *                                       standalone clickable toggle) */
+ *                                       standalone clickable toggle)
+ *
+ * Traceability: specs/annotation/015-annotation-workspace/spec.md
+ *   FR-024E, FR-024E-1, FR-024J
+ */
 
 test.beforeEach(async ({ page }) => {
   await skipGuidelineModal(page);

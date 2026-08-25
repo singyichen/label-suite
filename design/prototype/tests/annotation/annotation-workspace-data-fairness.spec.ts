@@ -22,7 +22,11 @@ import {
  * METADATA (id-like / source-tracking fields) that must never render. The
  * negative-control describe block below (issue #209) closes that gap with a
  * runtime-patched field that carries real answer CONTENT rather than
- * metadata. */
+ * metadata.
+ *
+ * Traceability: specs/annotation/015-annotation-workspace/spec.md
+ *   FR-023, FR-024M, FR-024M-1
+ */
 
 test.beforeEach(async ({ page }) => {
   await skipGuidelineModal(page);

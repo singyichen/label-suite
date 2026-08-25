@@ -9,7 +9,11 @@ import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
  * otherwise see every past arbitration vanish once the store moves to
  * per-item keys, since the new readers never look at the legacy key again.
  * The migration fans the legacy blob out into per-item keys once and removes
- * the legacy key. */
+ * the legacy key.
+ *
+ * Traceability: specs/annotation/015-annotation-workspace/spec.md
+ *   FR-059, FR-061
+ */
 
 const LEGACY_KEY = 'labelsuite.wsArbitration';
 const BUCKET_KEY = 'T001::official_run::kioleemg12';

@@ -14,7 +14,11 @@ import {
  * CONC-03) when the saves were dispatched via Promise.all, which is why
  * CONC-03 serialized its saves at the time. The store now keeps each bucket
  * under its own key (annotation-workspace.data.js SUBMISSION_KEY_PREFIX);
- * this test exercises the real race directly (Promise.all) to pin that. */
+ * this test exercises the real race directly (Promise.all) to pin that.
+ *
+ * Traceability: specs/annotation/015-annotation-workspace/spec.md
+ *   FR-049
+ */
 
 const ANNOTATOR_A = 'kioleemg12';
 const ANNOTATOR_B = '113450022';
