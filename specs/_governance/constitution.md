@@ -1,29 +1,25 @@
 <!--
-Sync Impact Report — constitution v1.32.0
+Sync Impact Report — constitution v1.32.1
 Generated: 2026-08-25
 
-Version change: v1.31.1 → v1.32.0
-Bump type: MINOR — Principle VI gains coverage it did not have before (GitHub issues and pull requests). Not PATCH, because this adds a new artifact class to the language rule rather than rewording an existing one; not MAJOR, because no principle is removed and no existing clause is redefined — commit messages, code, comments and API contracts keep exactly the rules they had.
+Version change: v1.32.0 → v1.32.1
+Bump type: PATCH — clarify SDD governance authority boundaries and separate validation responsibilities without redefining any principle
 
-Changed principles:
-- VI. English-First — Traditional Chinese is now REQUIRED for AI-agent-opened GitHub issues and pull requests (body plus the descriptive part of the title). Titles keep an English structural head; technical terms stay in English. Commit messages are explicitly excluded and remain English-only.
+Changed principles: none
 
-Changed governance gates: none
+Changed governance gates:
+- Source of Truth And Authority Order — establishes the canonical authority order, keeps Proposed ADRs non-binding, names `specs/STATUS.md` as the delivery-state source, and requires derived/cache files to fail toward their upstream authority
+- Feature Goal Alignment Gate — assigns project headings, goal/status/ownership, and retired-path checks to project SDD lint rather than OpenSpec schema validation
+- Compliance Review — separates OpenSpec schema/delta/scenario structure, project SDD lint, affected code/test verification, and archive-time Source-Verify/write-back integrity
 
-New sections: none
+New sections: `Governance → Source of Truth And Authority Order`
 Removed sections: none
 
-Rationale (issue #380): the English-only contract exists to protect code and API contracts. Issue bodies and PR descriptions are maintainer-facing collaboration documents, the same class as OpenSpec artifacts, which CLAUDE.md already requires in Traditional Chinese. Keeping them in English forced the maintainer to read one change chain in two languages.
-
-Safety premise: `main` integrates via merge commits (`Merge pull request #N from <branch>`), so a Chinese PR title never becomes a commit subject and `git log` stays English. If the repository ever switches to squash merging, this premise fails and Principle VI must be re-examined.
-
 Templates sync status:
-- .specify/memory/constitution.md: Updated — full content sync per Amendment Procedure (this PR)
-- CLAUDE.md: Already updated — Communication rule and narrowed Prohibitions entry landed in PR #382
-- AGENTS.md, .claude/rules/issue-reporting.md: Pending — issue #380 PR-B
-- .github/PULL_REQUEST_TEMPLATE.md, .github/issue-templates.md: Pending — issue #380 PR-C
-- .claude/commands/pr-flow.md, .claude/skills/pr-review/SKILL.md: Pending — issue #380 PR-D
-- .claude/commands/commit.md: Unchanged by design — commit messages stay English-only
+- .specify/memory/constitution.md: Updated — full content sync per Amendment Procedure
+- Dependent governance consumers: Pending — handled by the declared governance-propagation tasks
+
+Deferred TODOs: none
 -->
 
 # Label Suite Constitution
@@ -270,6 +266,21 @@ If a domain constitution conflicts with this main constitution, this main consti
 
 Constitution principles take precedence over all other conventions.
 
+### Source of Truth And Authority Order
+
+When authorities conflict, apply them in this order:
+
+```text
+main constitution
+→ applicable domain constitution
+→ Accepted ADR
+→ canonical feature spec
+→ docs/sdd-workflow.md for SDD orchestration
+→ machine guidance and derived views
+```
+
+Proposed ADRs do not supersede current rules. `specs/STATUS.md` is the delivery-state source. Derived and cache files must fail toward their upstream authority rather than override it.
+
 **Amendment Procedure**:
 - Update `specs/_governance/constitution.md` first
 - Sync the full content to `.specify/memory/constitution.md` as the tool cache
@@ -291,18 +302,24 @@ Constitution principles take precedence over all other conventions.
 - Changelog entries must be written in descending version order, with the newest version first
 - Constitution changelog entries use English summaries; changelog entries in `.specify/templates/` use Chinese summaries
 
-**Feature Goal Alignment Gate**: During PR review, the reviewer must confirm that the OpenSpec change's stated goal (`design.md` when present, else `proposal.md`) matches the spec's `## 功能目標`. A mismatch is a blocking finding. Use `/opsx:verify` (or `openspec validate`) to flag Feature Goal divergence as an alignment error.
+**Feature Goal Alignment Gate**: During PR review, the reviewer must confirm that the OpenSpec change's stated goal (`design.md` when present, else `proposal.md`) matches the spec's `## 功能目標`. A mismatch is a blocking finding. Project SDD lint checks project headings and goal/status/ownership/retired-path rules; it is the project-specific alignment check.
 
 **Dependency Governance**: New external dependencies must be evaluated for security, maintenance activity, and bundle-size impact before being added. Use `uv add` for backend and `pnpm add` for frontend; never `pip install` or `npm install` (global tool installs such as `pnpm add -g` are exempt — see ADR-033).
 
-**Compliance Review**: All PRs must verify compliance with the main constitution and every applicable domain constitution before merging. Use `/opsx:verify` (or `openspec validate`) plus the write-back Source-Verify gate to check cross-artifact consistency and constitution alignment.
+**Compliance Review**: All PRs must verify compliance with the main constitution and every applicable domain constitution before merging. The four gates have distinct boundaries:
 
-**Version**: 1.32.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-08-25
+- `openspec validate` = OpenSpec schema/delta/scenario structure
+- project SDD lint = project headings, goal/status/ownership/retired-path rules
+- code/test gates = affected implementation verification
+- Source-Verify + write-back = archive-time canonical ID/version/Changelog integrity
+
+**Version**: 1.32.1 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-08-25
 
 ## Changelog
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 1.32.1 | 2026-08-25 | Clarify the SDD governance authority order: Proposed ADRs remain non-binding, `specs/STATUS.md` is the delivery-state source, and derived/cache files defer to upstream authority; separate OpenSpec schema validation, project SDD lint, affected code/test verification, and archive-time Source-Verify/write-back integrity |
 | 1.32.0 | 2026-08-25 | Extend Principle VI (English-First) to cover collaboration artifacts (issue #380): GitHub issues and pull requests opened by an AI agent are now written in Traditional Chinese — body plus the descriptive part of the title — while titles keep an English structural head and technical terms stay in English. Commit messages are explicitly excluded and remain English-only, which is safe because `main` integrates via merge commits and a PR title never becomes a commit subject. MINOR rather than PATCH: Principle VI previously said nothing about issues or PRs, so this adds coverage rather than rewording existing coverage; it is not MAJOR because no principle is removed or redefined |
 | 1.31.1 | 2026-08-24 | Adopt OpenSpec as the implementation/change workflow layer per ADR-033 (issue #294): Principle I's Goal Declaration sub-rule now points `## 功能目標` at `spec.md` and `**故事目標**`/goal restatement at an OpenSpec change's `tasks.md`/`design.md` instead of the retired Spec Kit `plan.md`; Feature Goal Alignment Gate and Compliance Review now cite `/opsx:verify` (or `openspec validate`) instead of the retired `/speckit.analyze`; Dependency Governance notes the `pnpm add -g` global-install exception |
 | 1.31.0 | 2026-06-02 | Split detailed backend, frontend, and testing governance out of the main constitution into mandatory domain constitutions; add Domain Constitutions loading rules; update compliance review to cover applicable domain constitutions |

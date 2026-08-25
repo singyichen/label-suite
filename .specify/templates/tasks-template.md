@@ -5,7 +5,7 @@
 狀態: Draft
 ---
 
-> **⚠️ Deprecated（ADR-033，issue #294）**：`/speckit.tasks` 已退役。任務分解改由 OpenSpec `/opsx:propose` 產出 `openspec/changes/<change>/tasks.md`；本樣板的任務粒度／TDD 拆分規則仍適用於該 `tasks.md`，但不再由 `/speckit.tasks` 指令產生。
+> **⚠️ Deprecated（ADR-033，issue #294）**：本檔案僅保留為 historical、non-normative example。Active task generation uses `openspec/changes/<change>/tasks.md`、`openspec/config.yaml` 與 `specs/_governance/testing-constitution.md`；以下範例不定義現行 ownership、paths、gates 或 PR grouping。
 
 # 任務：[功能名稱]
 

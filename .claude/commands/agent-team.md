@@ -1,10 +1,11 @@
 # Agent Team — New Feature Full Workflow
 
-Use for features spanning frontend + backend. For bug fixes or single-layer changes, use a single session instead.
+Use for cross-layer features or changes that need coordinated, independently owned tasks. For a bug fix or a single-layer change, use a single session instead.
 
 ## Enable Agent Teams
 
 Add to `~/.claude/settings.json`:
+
 ```json
 {
   "env": {
@@ -13,176 +14,117 @@ Add to `~/.claude/settings.json`:
 }
 ```
 
----
+## Canonical Flow
 
-## Full Workflow
+`docs/sdd-workflow.md` is the authority for SDD orchestration. Proposed ADRs do not change this command; in particular, formal frontend E2E placement remains path-neutral while ADR-034 is Proposed. Each task must name its exact test file, and the applicable Accepted ADR plus the testing constitution decide formal E2E placement.
 
-```
-── Phase 1: Spec ─────────────────────────────────────────────────────────────
-/speckit.specify
-  → specs/[module]/NNN-feature/spec.md
-  → [/label-suite-design]         Generate Label Suite HTML prototype + design system
-  → [/pencil-wireframe]          Draw 6 frames in design/wireframes/pages/[module]/[page].pen  (optional, after prototype)
-  → [senior-uiux review]         Review prototype: fidelity, a11y, ZH/EN/mobile symmetry
-  → /speckit.clarify (optional)  Prototype + optional wireframe make ambiguities concrete
-
-  [Optional: Research Agents] — spawn before /opsx:propose for complex features
-
-  ├──→ [ArchitectAgent]         overall structure, cross-cutting integration points, naming conventions
-  ├──→ [SAAgent]                business flow analysis → Mermaid flowchart   ← from spec.md scenarios, not codebase
-  ├──→ [SDAgent]                UML class / sequence diagrams (Mermaid)      ← new feature design, not existing code
-  ├──→ [DBResearchAgent]        existing DB schema, migration strategy
-  ├──→ [APIDesignAgent]         existing API contracts, REST naming consistency  ← no overlap with Architect
-  ├──→ [BackendResearchAgent]   service boundaries in backend/app/services/      ← no overlap with APIDesign
-  ├──→ [FrontendResearchAgent]  reusable components, UI integration points
-  ├──→ [UXAgent]                annotation interface UX feasibility
-  ├──→ [I18nAgent]              UI strings needing zh-TW/en externalization
-  └──→ [NLPAdvisorAgent]        annotation schema / IAA review for annotation or NLP task features
-       ↓ Team Lead synthesizes findings
-  ⚠️  Human Review — confirm research findings before writing plan
-
-/opsx:propose (drafts design.md + tasks.md) → /speckit.checklist → /opsx:verify
-  → Fix every verify finding and rerun /opsx:verify until clear before Phase 2
-
-── Phase 2: Agent Team Implementation ────────────────────────────────────────
-[Team Lead] reads the change's tasks.md and spawns teammates:
-
-  ⚠️  Human Review checkpoint — required before any DB schema or API contract change
-
-  Step A — Test Definition (TDD Red phase, before implementation):
-  └──→ [senior-qa]      owns: backend/tests/ + frontend/tests/ + e2e/  (write failing tests first)
-       ↓ Confirm newly added tests fail (red); existing passing tests must remain green
-
-  Step B — parallel (after failing tests confirmed):
-  ├──→ [senior-backend]   owns: backend/app/              (FastAPI routes / models / services)
-  ├──→ [senior-frontend]  owns: frontend/src/             (React components / pages / services)
-  ├──→ [senior-i18n]      owns: frontend/src/locales/     (zh-TW / en translation strings)
-  └──→ [senior-devops]    owns: docker-compose.yml, .github/workflows/  (optional)
-
-  Step C — after senior-backend models are confirmed:
-  └──→ [senior-dba]     owns: backend/migrations/       (Alembic migrations, index strategy)
-
-  Step D — Test Validation (TDD Green phase, after all implementation complete):
-  └──→ [senior-qa]      re-runs full test suite; all tests must pass before review
-
-  TaskCompleted hook — auto quality gate after each task:
-    backend task  → cd backend && uv run ruff check . && uv run mypy .
-    frontend task → if frontend/package.json exists: cd frontend && pnpm tsc --noEmit && pnpm lint
-    devops task   → if compose file exists: docker compose config --quiet
-                    always run: git diff --check -- .github/workflows/ docker-compose.yml docker-compose.yaml compose.yml compose.yaml
-    if fails      → teammate retries (max 2), then escalates to Team Lead
-    if retry > 2  → [senior-error-resolver] takes over for root-cause debugging
-
-  TeammateIdle hook — when Step D passes, Team Lead spawns review team:
-  ├──→ [senior-code-reviewer]  code quality, type safety, logic correctness
-  ├──→ [senior-security]       RBAC, JWT handling, input validation, data leakage
-  └──→ [senior-performance]    API p95 latency, DB query efficiency, annotation write throughput
-
-  ⚠️  Human Review interrupt — approve before proceeding to PR
-      Review team posts consolidated findings; you confirm or redirect
-
-── Phase 3: PR Flow ──────────────────────────────────────────────────────────
-Run /pr-flow
-
-── Post-PR (optional) ────────────────────────────────────────────────────────
-  [TechWriterAgent]   update README / API docs after merge
-  [NLPAdvisorAgent]   on-demand for NLP task config or annotation schema decisions
+```text
+/superpowers:brainstorm
+  → /speckit.specify → Spec Lint
+  → /label-suite-design → static shell → Red → Green → page design
+  → /speckit.clarify (optional) → Frontend Ready Gate
+  → /opsx:propose → Gate 1 → Gate 2 → explicit user confirmation
+  → /opsx:apply → Gate 3 per task and PR group
+  → final PR group: Gate 4 → /opsx:archive → /pr-flow
+  → post-merge STATUS update and canonical spec movement
 ```
 
----
+For a page-scoped feature, `/label-suite-design` first creates a loadable static shell without target interaction. `senior-qa` then commits and runs the expected-failure Red Playwright contract. Only after Team Lead confirms that evidence may the implementation agent add the target `data-testid` selector contract and behavior, make it Green, refactor, and finish page design.
 
-## Agent Roles
+## Four Verification Checkpoints
 
-### Phase 1 — Research Agents (read-only, optional)
+Keep exactly these four checkpoints distinct; passing one never substitutes for another.
 
-| Teammate | Agent Type | Responsible For |
+1. **OpenSpec schema validation** — non-strict schema, delta, and scenario structure, such as `openspec validate --changes --no-interactive`.
+2. **Project SDD lint** — project headings and goal/status/ownership/retired-path rules. Until its tooling exists, retain the workflow checklist and review evidence.
+3. **Code/test gates** — committed Red expected-failure evidence, Green exit-0 evidence, and the applicable backend, frontend, prototype, E2E, security, type, and lint commands.
+4. **Source-Verify + final archive/write-back** — before final archive, validate every touched FR/AC ID against the canonical spec and confirm the canonical version and Changelog update. Successful write-back in the final PR group completes this checkpoint.
+
+The Frontend Ready Gate and stacked-PR timing remain separate workflow stages defined by `docs/sdd-workflow.md`.
+
+## Phase 1 — Research and Change Preparation
+
+Research agents are optional, read-only, and may run in parallel for complex features:
+
+| Teammate | Agent type | Focus |
 |---|---|---|
-| ArchitectAgent | `senior-architect` | Overall structure, cross-cutting integration points, naming conventions |
-| SAAgent | `senior-sa` | Business flow analysis from `spec.md` user scenarios → Mermaid flowchart, embedded in `design.md` |
-| SDAgent | `senior-sd` | UML class / sequence diagrams (Mermaid) for the planned feature, embedded in `design.md` |
-| DBResearchAgent | `senior-dba` | Review DB schema, identify migration strategy |
-| APIDesignAgent | `senior-api-designer` | Existing API contracts, REST naming, OpenAPI conflicts |
-| BackendResearchAgent | `senior-backend` | Service boundaries in `backend/app/services/` |
-| FrontendResearchAgent | `senior-frontend` | Identify reusable components, UI integration points |
-| UXAgent | `senior-uiux` | Assess annotation interface UX feasibility |
-| I18nAgent | `senior-i18n` | UI strings needing zh-TW / en externalization |
-| NLPAdvisorAgent _(annotation features)_ | `nlp-research-advisor` | Annotation schema, IAA metrics, Demo Paper framing |
+| ArchitectAgent | `senior-architect` | Structure, integration points, and naming conventions |
+| SAAgent | `senior-sa` | Business flow from canonical spec scenarios |
+| SDAgent | `senior-sd` | Class and sequence diagrams for the planned change |
+| DBResearchAgent | `senior-dba` | Schema review and migration strategy |
+| APIDesignAgent | `senior-api-designer` | API contracts, REST naming, and OpenAPI conflicts |
+| BackendResearchAgent | `senior-backend` | Service boundaries |
+| FrontendResearchAgent | `senior-frontend` | Reusable UI and integration points |
+| UXAgent | `senior-uiux` | Prototype fidelity, accessibility, and annotation UX |
+| I18nAgent | `senior-i18n` | zh-TW/en strings to externalize |
+| NLPAdvisorAgent | `nlp-research-advisor` | Annotation schema and IAA for annotation features |
 
-### Phase 2 — Implementation Agents
+Team Lead synthesizes findings, pauses for the research checkpoint, then runs `/opsx:propose`. Complete Gate 1 and Gate 2 separately, then obtain the user's explicit confirmation of the generated `design.md` and `tasks.md` before `/opsx:apply`.
 
-| Teammate | Agent Type | Owns | Responsible For |
-|---|---|---|---|
-| BackendAgent | `senior-backend` | `backend/app/` | FastAPI routes, models, schemas, services |
-| FrontendAgent | `senior-frontend` | `frontend/src/` | React components, pages, hooks, API services |
-| I18nAgent | `senior-i18n` | `frontend/src/locales/` | zh-TW / en translation strings |
-| DBAgent | `senior-dba` | `backend/migrations/` | Schema migrations, index strategy |
-| TestAgent | `senior-qa` | `backend/tests/`, `frontend/tests/`, `e2e/` | pytest + Playwright E2E |
-| DevOpsAgent _(optional)_ | `senior-devops` | `docker-compose.yml`, `.github/` | Docker, CI/CD |
+## Phase 2 — Task Execution
 
-### Phase 2 — Review Agents (parallel, after implementation)
+Before Phase A, Team Lead verifies a non-`main` feature branch. A DB schema or API contract change requires the user checkpoint before the affected implementation proceeds.
 
-| Teammate | Agent Type | Responsible For |
+### Phase A — Red Test Definition
+
+`senior-qa` owns each separate Red task. It must create the requirement-linked contract, commit it, run the designated test, and record its expected failure reason. Team Lead verifies the commit and evidence, then is the only role that marks that Red task checkbox in `tasks.md`.
+
+### Phase B — Green Implementation
+
+Only after the paired committed Red evidence is confirmed may the appropriate implementation agent begin its Green task:
+
+| Teammate | Agent type | Owns |
 |---|---|---|
-| ReviewAgent | `senior-code-reviewer` | Code quality, type safety, logic correctness |
-| SecurityAgent | `senior-security` | RBAC, JWT handling, input validation, data leakage |
-| PerformanceAgent | `senior-performance` | API p95 latency, DB query efficiency, write throughput |
+| BackendAgent | `senior-backend` | `backend/app/`, `backend/bruno/` |
+| FrontendAgent | `senior-frontend` | `frontend/src/` |
+| I18nAgent | `senior-i18n` | `frontend/src/locales/` |
+| DevOpsAgent (optional) | `senior-devops` | `docker-compose.yml`, `.github/workflows/`, `.env.example`, `scripts/` |
 
-### On-Demand Agents
+The implementation agent consumes the Red contract, does not weaken or rewrite it merely to pass, and reports Green evidence. Team Lead runs the required exit-0 checks and is the only role that marks the verified Green checkbox.
 
-| Teammate | Agent Type | When to Spawn |
-|---|---|---|
-| `senior-error-resolver` | `senior-error-resolver` | TaskCompleted retry > 2 times (3 attempts exhausted) |
-| TechWriterAgent | `senior-technical-writer` | After PR merge, update README / API docs |
-| NLPAdvisorAgent | `nlp-research-advisor` | NLP task config or annotation schema decisions |
+### Phase C — Database Migrations
 
-**File ownership is critical** — each teammate owns distinct directories to prevent git conflicts.
+After senior-backend models are confirmed, `senior-dba` owns the declared migration tasks. Preserve the DB user checkpoint and run the migration-specific checks stated in `tasks.md`.
 
----
+### Phase D — Per-PR-Group Review and Acceptance
 
-## Spawn Prompt Templates
+After all paired Green tasks in one PR group are checked, but before that group's `/pr-flow`:
 
-### Research Team
+1. `senior-code-reviewer` performs Code Review for architecture, type safety, logic, applicable constitutions, and `design.md` contract compliance.
+2. `senior-qa` performs Scenario acceptance against the change delta's WHEN/THEN scenarios and the canonical spec's FR/AC. It does not perform Code Review.
+3. `senior-security` performs the security review for every PR group, including RBAC, input validation, and test-set-answer leakage where applicable. Any finding pauses the PR flow and is reported to the user immediately.
+4. `senior-performance` performs the performance review when the PR group's scope or milestone rules require it.
 
-```
-Before writing the plan for [feature], spawn a read-only research team:
-- ArchitectAgent (senior-architect): scan overall codebase structure, cross-cutting integration points,
-  naming conventions, and architectural conflicts (do NOT duplicate backend-specific API review)
-- SAAgent (senior-sa): analyze business processes from spec.md user scenarios and produce a Mermaid
-  flowchart of the end-to-end business flow (scope: spec scenarios, not codebase structure)
-- SDAgent (senior-sd): design Mermaid class and sequence diagrams for the planned feature's components
-  and interactions (scope: new feature design, not existing API contracts — that is APIDesignAgent's scope)
-- DBResearchAgent (senior-dba): review existing DB schema and propose migration strategy
-- APIDesignAgent (senior-api-designer): review existing API contracts, REST naming consistency,
-  and OpenAPI spec for conflicts with the planned feature
-- BackendResearchAgent (senior-backend): identify service boundaries and business logic integration
-  points within backend/app/ (focus on services/, not API contracts — that is APIDesignAgent's scope)
-- FrontendResearchAgent (senior-frontend): identify reusable components in frontend/src/
-- UXAgent (senior-uiux): assess annotation interface UX feasibility
-- I18nAgent (senior-i18n): identify UI strings needing zh-TW/en translation
-- NLPAdvisorAgent (nlp-research-advisor): for annotation or NLP task features, review annotation
-  schema, IAA metrics, and Demo Paper framing
-All agents are read-only — no file edits. SAAgent and SDAgent return diagrams as Mermaid text in their
-findings; the diagrams feed into /opsx:propose and are written into design.md's diagram sections when the
-change is drafted (design.md does not exist before /opsx:propose runs). Synthesize all findings for design.md.
-```
+No reviewer writes `tasks.md` checkboxes. If review returns work, the implementation agent corrects it and Team Lead reruns the affected Green checks plus this PR-group review sequence. Team Lead reports the PR-group review results and obtains the user's explicit confirmation before that group's `/pr-flow`. Stop and report to the user after two PR-group review returns.
 
-### Implementation Team
+## PR Timing and Archive
 
-```
-Create an agent team to implement [feature] based on openspec/changes/<change>/tasks.md.
-Spawn in this order (TDD):
-Before Step A — verify current branch is not main, run /speckit.checklist if not already complete,
-confirm openspec/changes/<change>/tasks.md exists, and run /opsx:verify until clear.
-Step A — senior-qa: write failing tests first (own backend/tests/, frontend/tests/, e2e/)
-          ↓ confirm newly added tests fail (red); existing passing tests must remain green
-Step B — parallel implementation (after failing tests confirmed):
-  - senior-backend: backend tasks, owns backend/app/
-  - senior-frontend: frontend tasks, owns frontend/src/
-  - senior-i18n: translation strings, owns frontend/src/locales/
-  - senior-devops (optional): Docker/CI tasks, owns docker-compose.yml, .github/workflows/
-Step C — senior-dba: migrations after senior-backend models confirmed, owns backend/migrations/
-Step D — senior-qa: re-run full test suite; all tests must be green before review
-Require plan approval before any DB schema or API contract changes.
-After each task quality gate passes, teammates report completed task IDs to Team Lead.
-Team Lead serially marks completed task IDs in tasks.md as [X] to avoid parallel write conflicts.
-```
+Each PR group completes Phase D before its own `/pr-flow`.
+
+- **Intermediate PR group:** run `/pr-flow` and merge in stacked order. The OpenSpec change stays open; do not archive.
+- **Final PR group:** after Phase D and Gate 1–3 evidence, collect Source-Verify evidence, run `/opsx:archive` and canonical write-back inside the final PR, and thereby complete Gate 4. Then run `/pr-flow` and merge. Only after the final merge may `specs/STATUS.md` move to archived and the canonical spec move to `specs/_archive/`.
+
+## Team Lead Dispatch Contract
+
+For every teammate, Team Lead supplies:
+
+1. The complete assigned task text from `tasks.md`.
+2. The API contract when the task crosses the backend/frontend boundary.
+3. The exact file ownership boundary, including files the teammate must not touch.
+4. The task's quality-gate command and expected result.
+5. For Green tasks, the Red task ID, commit, contract, and expected-failure evidence to preserve.
+
+Subagents do not spawn subagents and do not edit `tasks.md` checkboxes. Team Lead alone updates checkboxes serially after personally verifying the required Red or Green evidence.
+
+## Escalation and Quality Checklist
+
+- Any Gate 1, Gate 2, Gate 3, or Gate 4 evidence gap stops its affected stage until that specific checkpoint is repaired and rerun.
+- A teammate may retry a failed task twice. On the third failure, Team Lead dispatches `senior-error-resolver` with the exact error output.
+- An API contract conflict pauses affected agents for the required user decision.
+- A security finding pauses the PR flow and is reported immediately.
+- Never proceed beyond a DB schema or API contract checkpoint without user confirmation.
+- The main session/Team Lead is the sole checkbox writer; `senior-qa`, implementation agents, and reviewers never mark tasks complete.
+
+## Progress Reporting
+
+Team Lead reports to the user in Traditional Chinese after research, Gate 1–2, each committed Red task, Green implementation, each PR group's Phase D review, and final archive/write-back. Each report states completed work, verification evidence, remaining work, and any required user confirmation.
