@@ -48,11 +48,13 @@ PR 拆分計畫（依 config 任務粒度規則明示）：下方每個 `## N.` 
 
 ## 6. PR-FOUND-FE2 —— 前端共用基礎設施
 
-- [ ] 6.1 撰寫失敗測試 `src/shared/__tests__/api-client.test.ts`（client 暴露回應的 `X-Correlation-ID`）與 `query-client.test.ts`（401 ⇒ 不重試，SC-020）；驗證：先確認為紅（Vitest）`[@senior-frontend]`
-- [ ] 6.2 實作 `shared/api/api-client.ts`、`shared/api/query-client.ts`、`shared/constants/query-keys.ts`（`QUERY_KEYS.health.status`，SC-019）、`shared/types/api.ts` 暫代型別；驗證：`corepack pnpm test` 綠 + tsc + lint exit 0 `[@senior-frontend]`
-- [ ] 6.3 以 Vitest 補上 `eslint.config.js` 邊界規則的回歸測試（對暫存 fixture 目錄執行 ESLint，斷言 feature→feature 與 shared→features 兩種違規回非零結束碼，合法的同 feature 內部 import 不被回報）；驗證：測試綠，且把 `eslint.config.js` 的 boundaries 區塊移除後該測試轉紅 `[@senior-frontend]`
+- [x] 6.1 撰寫失敗測試 `src/shared/services/__tests__/api-client.test.ts`（client 暴露回應的 `X-Correlation-ID`）與 `src/shared/services/__tests__/query-client.test.ts`（401 ⇒ 不重試，SC-020）；驗證：先確認為紅（Vitest）`[@senior-frontend]`
+- [x] 6.2 實作 `shared/services/api-client.ts`、`shared/services/query-client.ts`、`shared/constants/query-keys.ts`（`QUERY_KEYS.health.status`，SC-019）、`shared/types/api.ts` 暫代型別；驗證：`corepack pnpm test` 綠 + tsc + lint exit 0 `[@senior-frontend]`
+- [x] 6.3 以 Vitest 補上 `eslint.config.js` 邊界規則的回歸測試（對暫存 fixture 目錄執行 ESLint，斷言 feature→feature 與 shared→features 兩種違規回非零結束碼，合法的同 feature 內部 import 不被回報）；驗證：測試綠，且把 `eslint.config.js` 的 boundaries 區塊移除後該測試轉紅 `[@senior-frontend]`
 
 > 依賴：依賴第 5 組；與後端鏈可平行（同第 5 組說明）。6.1 → 6.2 序列，6.3 可於 6.1 之後任意時點進行。
+>
+> 路徑更正（2026-08-25）：6.1／6.2 原寫 `shared/api/`，但正典 `specs/foundation/000-foundation/spec.md:792`（SC-020）與 `plan.md` 目錄樹皆寫 `shared/services/api-client.ts`。正典為 SSoT，故改為 `shared/services/`；測試路徑一併對齊 `.claude/rules/testing-frontend.md` 的「測試檔鏡像原始碼結構」規則。
 >
 > 6.3 補的是第 5 組審查揭露的缺口：任務 5.2 的字面做法是「以結束碼斷言後移除」fixture，移除後 CI 便無任何機制保護邊界規則（實測刪掉整個 boundaries 區塊，`tsc --noEmit`／`pnpm lint`／`pnpm build` 三者皆 exit 0）。使用者裁定不在第 5 組另建無框架腳本，改在本組隨 Vitest 一併補上。
 

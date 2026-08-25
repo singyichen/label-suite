@@ -17,6 +17,7 @@
 **非目標：**
 
 - 不含認證端點、領域模組、Celery、Prometheus/Grafana/Sentry（Foundation-Observability 後續處理）、`RestrictedClientSafeBaseSchema`（隨第一個承載資料的模組）、OpenAPI-to-TypeScript codegen（隨 account/001 第一個真實 API 啟用 —— 先以 `frontend/src/shared/types/` 手寫暫代型別）。
+- 不含 SC-020 第二子句（`shared/services/api-client.ts` 的「401 interceptor refresh 失敗情境整合測試」）與 `plan.md` 目錄樹列出的 `shared/services/auth.ts`（401 refresh 佔位）。理由：兩者都以「有 refresh 端點可打」為前提，而認證端點在上一條已明列為非目標，本變更沒有可測的 refresh 流程。SC-020 第一子句（`QueryClient` retry callback 的 401 不重試單元測試）在第 6 組實作並有測試。第二子句隨 account/001 的認證實作補齊；archive（任務 9.3）時 SC-020 不得標記為完全滿足，須在正典 spec 的 Changelog 記錄此延後。
 
 ## API Contract（API 契約 —— 強制章節：本變更引入 API 基線）
 
