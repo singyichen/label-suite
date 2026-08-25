@@ -70,8 +70,8 @@ PR 拆分計畫（依 config 任務粒度規則明示）：下方每個 `## N.` 
 
 ## 8. PR-FOUND-DEVOPS —— bootstrap 契約
 
-- [ ] 8.1 加入 `docker-compose.yml`（PostgreSQL profile 供 CI／整合測試）、涵蓋 `app/core/config.py` 所有必要變數的 `.env.example`、seed 策略 stub；驗證：`docker compose config` exit 0 且以腳本比對 `.env.example` 鍵與 Settings 欄位一致 `[@senior-devops]`
-- [ ] 8.2 加入 `scripts/verify-bootstrap.sh`（啟動後端、curl `/api/v1/health`、回報 pass/fail）並文件化 bootstrap 指令清單；驗證：在乾淨 checkout 以 SQLite 預設執行該腳本 exit 0（SC-045／FR-130）`[@senior-devops]`
+- [x] 8.1 加入 `docker-compose.yml`（PostgreSQL profile 供 CI／整合測試）、涵蓋 `app/core/config.py` 所有必要變數的 `.env.example`、seed 策略 stub；驗證：`docker compose config` exit 0 且以腳本比對 `.env.example` 鍵與 Settings 欄位一致 `[@senior-devops]`
+- [x] 8.2 加入 `scripts/verify-bootstrap.sh`（啟動後端、curl `/api/v1/health`、回報 pass/fail）並文件化 bootstrap 指令清單；驗證：在乾淨 checkout 以 SQLite 預設執行該腳本 exit 0（SC-045／FR-130）`[@senior-devops]`
 
 > 依賴：8.1 依賴 1.5（`.env.example` 需比對 `Settings` 欄位）；8.2 依賴第 4 組（health 端點需可啟動）。與前端軌可平行。8.1 → 8.2 序列。
 
