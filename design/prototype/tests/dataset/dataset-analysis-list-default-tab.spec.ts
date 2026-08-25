@@ -1,3 +1,7 @@
+/**
+ * Traceability: specs/dataset/016-dataset-analysis-list/spec.md
+ *   FR-001, FR-006, SC-007
+ */
 import { test, expect } from '@playwright/test';
 
 const DATASET_ANALYSIS_URL = '/pages/dataset/dataset-analysis-list.html';

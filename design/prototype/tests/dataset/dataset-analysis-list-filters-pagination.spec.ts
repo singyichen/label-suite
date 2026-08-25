@@ -1,3 +1,8 @@
+/**
+ * Traceability: specs/dataset/016-dataset-analysis-list/spec.md
+ *   FR-002, FR-003, FR-004, FR-004A, FR-004B, FR-004C, FR-004D, FR-004E,
+ *   FR-004F, FR-004G, FR-005B, SC-008
+ */
 import { expect, test } from '@playwright/test';
 
 const DATASET_ANALYSIS_URL = '/pages/dataset/dataset-analysis-list.html';

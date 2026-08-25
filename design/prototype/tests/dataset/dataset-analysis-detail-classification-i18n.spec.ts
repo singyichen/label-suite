@@ -1,3 +1,7 @@
+/**
+ * Traceability: specs/dataset/017-dataset-analysis-detail/spec.md
+ *   FR-009G, FR-016, FR-019, FR-025, FR-026, FR-027
+ */
 import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
