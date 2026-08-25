@@ -1,27 +1,23 @@
 <!--
-Sync Impact Report — constitution v1.31.1
-Generated: 2026-08-24
+Sync Impact Report — constitution v1.31.2
+Generated: 2026-08-25
 
-Version change: v1.31.0 → v1.31.1
-Bump type: PATCH — adopt OpenSpec (ADR-033, issue #294) as the implementation/change workflow layer; update cross-references from retired Spec Kit artifacts/commands to their OpenSpec equivalents without redefining any principle
+Version change: v1.31.1 → v1.31.2
+Bump type: PATCH — clarify SDD governance authority boundaries and separate validation responsibilities without redefining any principle
 
-Changed principles:
-- I. Spec-First Development — Goal Declaration sub-rule now targets `spec.md` for `## 功能目標` and an OpenSpec change's `tasks.md`/`design.md` for `**故事目標**`, replacing the retired Spec Kit `plan.md`
+Changed principles: none
 
 Changed governance gates:
-- Feature Goal Alignment Gate — now compares the OpenSpec change's stated goal against the spec's `## 功能目標`, checked via `/opsx:verify` (or `openspec validate`) instead of the retired `/speckit.analyze`
-- Compliance Review — now uses `/opsx:verify` (or `openspec validate`) plus the write-back Source-Verify gate instead of `/speckit.analyze`
-- Dependency Governance — notes that global tool installs (e.g. `pnpm add -g`) are exempt from the `npm install` prohibition
+- Source of Truth And Authority Order — establishes the canonical authority order, keeps Proposed ADRs non-binding, names `specs/STATUS.md` as the delivery-state source, and requires derived/cache files to fail toward their upstream authority
+- Feature Goal Alignment Gate — assigns project headings, goal/status/ownership, and retired-path checks to project SDD lint rather than OpenSpec schema validation
+- Compliance Review — separates OpenSpec schema/delta/scenario structure, project SDD lint, affected code/test verification, and archive-time Source-Verify/write-back integrity
 
-New sections: none
+New sections: `Governance → Source of Truth And Authority Order`
 Removed sections: none
 
 Templates sync status:
 - .specify/memory/constitution.md: Updated — full content sync per Amendment Procedure
-- CLAUDE.md: Updated — SDD pipeline, Pre-PR gate, Modify Existing Feature, Lightweight Path, DoD, Three-Layer Sprint Architecture mapping, Prohibitions exception (same PR, see docs/openspec-adoption-plan.md appendix)
-- specs/_governance/testing-constitution.md + .specify/memory/testing-constitution.md: Updated — `/speckit.analyze` references replaced (same PR)
-- .claude/skills/sdd-workflow/SKILL.md, AGENTS.md, .claude/agents/team-lead.md, .claude/commands/agent-team.md, .claude/templates/claude-progress.md: Updated — retired-stage references replaced (same PR)
-- .specify/templates/plan-template.md, tasks-template.md, checklist-template.md: Marked deprecated except the foundation-000 standing-plan exception (same PR)
+- Dependent governance consumers: Pending — handled by the declared governance-propagation tasks
 
 Deferred TODOs: none
 -->
@@ -269,6 +265,21 @@ If a domain constitution conflicts with this main constitution, this main consti
 
 Constitution principles take precedence over all other conventions.
 
+### Source of Truth And Authority Order
+
+When authorities conflict, apply them in this order:
+
+```text
+main constitution
+→ applicable domain constitution
+→ Accepted ADR
+→ canonical feature spec
+→ docs/sdd-workflow.md for SDD orchestration
+→ machine guidance and derived views
+```
+
+Proposed ADRs do not supersede current rules. `specs/STATUS.md` is the delivery-state source. Derived and cache files must fail toward their upstream authority rather than override it.
+
 **Amendment Procedure**:
 - Update `specs/_governance/constitution.md` first
 - Sync the full content to `.specify/memory/constitution.md` as the tool cache
@@ -290,18 +301,24 @@ Constitution principles take precedence over all other conventions.
 - Changelog entries must be written in descending version order, with the newest version first
 - Constitution changelog entries use English summaries; changelog entries in `.specify/templates/` use Chinese summaries
 
-**Feature Goal Alignment Gate**: During PR review, the reviewer must confirm that the OpenSpec change's stated goal (`design.md` when present, else `proposal.md`) matches the spec's `## 功能目標`. A mismatch is a blocking finding. Use `/opsx:verify` (or `openspec validate`) to flag Feature Goal divergence as an alignment error.
+**Feature Goal Alignment Gate**: During PR review, the reviewer must confirm that the OpenSpec change's stated goal (`design.md` when present, else `proposal.md`) matches the spec's `## 功能目標`. A mismatch is a blocking finding. Project SDD lint checks project headings and goal/status/ownership/retired-path rules; it is the project-specific alignment check.
 
 **Dependency Governance**: New external dependencies must be evaluated for security, maintenance activity, and bundle-size impact before being added. Use `uv add` for backend and `pnpm add` for frontend; never `pip install` or `npm install` (global tool installs such as `pnpm add -g` are exempt — see ADR-033).
 
-**Compliance Review**: All PRs must verify compliance with the main constitution and every applicable domain constitution before merging. Use `/opsx:verify` (or `openspec validate`) plus the write-back Source-Verify gate to check cross-artifact consistency and constitution alignment.
+**Compliance Review**: All PRs must verify compliance with the main constitution and every applicable domain constitution before merging. The four gates have distinct boundaries:
 
-**Version**: 1.31.1 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-08-24
+- `openspec validate` = OpenSpec schema/delta/scenario structure
+- project SDD lint = project headings, goal/status/ownership/retired-path rules
+- code/test gates = affected implementation verification
+- Source-Verify + write-back = archive-time canonical ID/version/Changelog integrity
+
+**Version**: 1.31.2 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-08-25
 
 ## Changelog
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 1.31.2 | 2026-08-25 | Clarify the SDD governance authority order: Proposed ADRs remain non-binding, `specs/STATUS.md` is the delivery-state source, and derived/cache files defer to upstream authority; separate OpenSpec schema validation, project SDD lint, affected code/test verification, and archive-time Source-Verify/write-back integrity |
 | 1.31.1 | 2026-08-24 | Adopt OpenSpec as the implementation/change workflow layer per ADR-033 (issue #294): Principle I's Goal Declaration sub-rule now points `## 功能目標` at `spec.md` and `**故事目標**`/goal restatement at an OpenSpec change's `tasks.md`/`design.md` instead of the retired Spec Kit `plan.md`; Feature Goal Alignment Gate and Compliance Review now cite `/opsx:verify` (or `openspec validate`) instead of the retired `/speckit.analyze`; Dependency Governance notes the `pnpm add -g` global-install exception |
 | 1.31.0 | 2026-06-02 | Split detailed backend, frontend, and testing governance out of the main constitution into mandatory domain constitutions; add Domain Constitutions loading rules; update compliance review to cover applicable domain constitutions |
 | 1.30.0 | 2026-06-02 | Strengthen Principle I (add task granularity: one file per task, TDD task separation, Storybook task separation, migration decomposition into upgrade/downgrade/roundtrip); strengthen Principle X (add PR size limit ≤ 5 files / ≤ 300 lines, backend layer PR separation, frontend layer PR separation, BE/FE independence rule); strengthen Principle XVIII (migration PRs must be standalone, every migration PR requires a Rollback Plan section) |
