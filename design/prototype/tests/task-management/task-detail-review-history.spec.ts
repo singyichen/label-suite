@@ -1,3 +1,7 @@
+/*
+ * Traceability: specs/task-management/014-task-detail/spec.md
+ *   FR-015a, FR-015a-1, FR-015d, FR-015d-4, SC-035
+ */
 import { test, expect } from '@playwright/test';
 
 /* Spec 014 v2.5.0 (issue #149 P5) — annotation-results review history timeline

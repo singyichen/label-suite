@@ -1,3 +1,7 @@
+/*
+ * Traceability: specs/task-management/014-task-detail/spec.md
+ *   FR-010b, FR-010c
+ */
 import { test, expect, type Page } from '@playwright/test';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html?task_id=T001';
