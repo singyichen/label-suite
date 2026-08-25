@@ -127,8 +127,11 @@ operations:
       - >-
         Run the verification commands from CLAUDE.md for the touched area
         (backend uv run pytest/mypy/ruff; frontend pnpm tsc/lint/test;
-        prototype corepack pnpm typecheck + playwright) — all must exit 0
-        before a task is considered done.
+        prototype corepack pnpm typecheck + playwright). A Red task completes
+        when its designated new test fails for the expected requirement-linked
+        reason and that failure evidence is committed; existing and unrelated
+        checks must remain green. Green implementation tasks and all other
+        applicable verification commands must exit 0 before completion.
       - >-
         Never commit to main; branch per CLAUDE.md naming
         (<type>/<short-description>).
@@ -140,7 +143,8 @@ operations:
         dispatching its paired Green implementation task. The main session
         stays the orchestrator: it hands the subagent the task text plus the
         change's context files, requires incremental commits on long tasks,
-        verifies the task's verification command exits 0, and marks the
+        verifies the applicable completion evidence (committed expected
+        failure for Red; exit 0 for Green and other tasks), and marks the
         checkbox itself. Honor the tasks.md parallel markers and dependency
         blockquotes; use worktree isolation only when a parallel group touches
         the same files.
