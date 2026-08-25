@@ -33,9 +33,9 @@ PR 拆分計畫（依 config 任務粒度規則明示）：下方每個 `## N.` 
 
 ## 4. PR-FOUND-BE4 —— health 端點 + 應用組裝 + Bruno
 
-- [ ] 4.1 撰寫失敗測試 `tests/core/test_health.py`：`GET /api/v1/health` ⇒ 200 `HealthResponse`；回應帶 `X-Correlation-ID`；422 路徑回 `ErrorResponse`；production 模式未設 `ENABLE_OPENAPI_DOCS` 時 docs 停用；驗證：先確認為紅 `[@senior-backend]`
-- [ ] 4.2 實作 `app/modules/health/router.py`（僅 router 的模組）、`app/api/v1/router.py`、`app/main.py`（app factory 串接 settings／middleware／handlers／docs 開關）；驗證：`uv run pytest tests/ -q`、mypy strict、ruff 皆 exit 0 `[@senior-backend]`
-- [ ] 4.3 加入 Bruno 骨架 `backend/bruno/`（`bruno.json`、`environments/local.bru`、`foundation/000-foundation/get-health.bru` 含範例回應）；驗證：檔案存在且 get-health.bru 描述該請求（FR-131 主規則 —— 與路由同 PR）`[@senior-backend]`
+- [x] 4.1 撰寫失敗測試 `tests/core/test_health.py`：`GET /api/v1/health` ⇒ 200 `HealthResponse`；回應帶 `X-Correlation-ID`；422 路徑回 `ErrorResponse`；production 模式未設 `ENABLE_OPENAPI_DOCS` 時 docs 停用；驗證：先確認為紅 `[@senior-backend]`
+- [x] 4.2 實作 `app/modules/health/router.py`（僅 router 的模組）、`app/api/v1/router.py`、`app/main.py`（app factory 串接 settings／middleware／handlers／docs 開關）；驗證：`uv run pytest tests/ -q`、mypy strict、ruff 皆 exit 0 `[@senior-backend]`
+- [x] 4.3 加入 Bruno 骨架 `backend/bruno/`（`bruno.json`、`environments/local.bru`、`foundation/000-foundation/get-health.bru` 含範例回應）；驗證：檔案存在且 get-health.bru 描述該請求（FR-131 主規則 —— 與路由同 PR）`[@senior-backend]`
 
 > 依賴：依賴第 1–3 組全部（app factory 組裝所有前置件）；4.1 → 4.2 → 4.3 序列。
 
