@@ -10,7 +10,7 @@ PR 拆分計畫（依 config 任務粒度規則明示）：下方每個 `## N.` 
 - [x] 1.2 撰寫失敗測試 `tests/core/test_schemas.py`：`AppBaseModel` 的 model_config、`ErrorDetail`/`ErrorResponse` 欄位、`PaginatedResponse[T]` 衍生欄位 `has_more`/`total_pages`/`next_offset`（含 offset ≥ total ⇒ 空頁語意）；驗證：於 1.3 前確認測試為紅 `[@senior-backend]`
 - [x] 1.3 實作 `app/schemas/common.py`（`AppBaseModel`、`ErrorDetail`、`ErrorResponse`、泛型 `PaginatedResponse[T]`、`HealthResponse`）；驗證：`uv run pytest tests/core/test_schemas.py -q` 綠且 `uv run mypy app/ --strict` exit 0 `[@senior-backend]`
 - [x] 1.4 撰寫失敗測試 `tests/core/test_config.py`：缺必要環境變數即 fail-fast；production 模式拒絕 `ALLOWED_ORIGINS=*`；驗證：於 1.5 前確認為紅 `[@senior-backend]`
-- [ ] 1.5 實作 `app/core/config.py`（pydantic-settings `Settings`、啟動驗證含萬用字元 CORS 防護、`ENABLE_OPENAPI_DOCS` 預設矩陣）；驗證：`uv run pytest tests/core/ -q` 綠 + mypy + ruff 皆 exit 0 `[@senior-backend]`
+- [x] 1.5 實作 `app/core/config.py`（pydantic-settings `Settings`、啟動驗證含萬用字元 CORS 防護、`ENABLE_OPENAPI_DOCS` 預設矩陣）；驗證：`uv run pytest tests/core/ -q` 綠 + mypy + ruff 皆 exit 0 `[@senior-backend]`
 
 > 依賴：1.1 → 1.2 → 1.3 → 1.4 → 1.5 序列（TDD 紅綠成對）。本組全數 `[@senior-backend]`；是整條後端鏈的起點，無前置依賴。
 
