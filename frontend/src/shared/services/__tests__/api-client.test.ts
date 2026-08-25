@@ -38,4 +38,32 @@ describe('apiRequest', () => {
 
     expect(result.correlationId).toBeNull();
   });
+
+  it('does not set Content-Type on a bodyless request, avoiding a CORS preflight', async () => {
+    let receivedContentType: string | null = 'unset';
+    server.use(
+      http.get('http://localhost:8000/api/v1/health', ({ request }) => {
+        receivedContentType = request.headers.get('Content-Type');
+        return HttpResponse.json<HealthPayload>({ status: 'ok', version: '0.1.0' });
+      }),
+    );
+
+    await apiRequest<HealthPayload>('/health');
+
+    expect(receivedContentType).toBeNull();
+  });
+
+  it('sets Content-Type: application/json on a request with a body', async () => {
+    let receivedContentType: string | null = null;
+    server.use(
+      http.post('http://localhost:8000/api/v1/health', ({ request }) => {
+        receivedContentType = request.headers.get('Content-Type');
+        return HttpResponse.json<HealthPayload>({ status: 'ok', version: '0.1.0' });
+      }),
+    );
+
+    await apiRequest<HealthPayload>('/health', { method: 'POST', body: JSON.stringify({}) });
+
+    expect(receivedContentType).toBe('application/json');
+  });
 });

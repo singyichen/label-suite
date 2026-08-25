@@ -44,11 +44,13 @@ export class ApiRequestError extends Error {
  * Fetch wrapper for the Label Suite API (`shared/services/api-client.ts`
  * per design.md's API contract section).
  *
- * Resolves `path` against `API_BASE_URL`, sends credentials for
- * cookie-based session support, parses JSON responses, and exposes the
- * response's `X-Correlation-ID` header to callers via `ApiResult`. Non-2xx
- * responses are parsed as `ErrorResponse` (FR-115) and thrown as
- * `ApiRequestError`.
+ * Resolves `path` against `API_BASE_URL`, parses JSON responses, and
+ * exposes the response's `X-Correlation-ID` header to callers via
+ * `ApiResult`. Non-2xx responses are parsed as `ErrorResponse` (FR-115) and
+ * thrown as `ApiRequestError`. `Content-Type: application/json` is only set
+ * when the request has a body — `application/json` is not a CORS-safelisted
+ * content type, so setting it unconditionally would force a preflight on
+ * every bodyless (e.g. `GET`) request.
  *
  * @param path - Path relative to `API_BASE_URL` (e.g. `/health`).
  * @param init - Standard `fetch` options, merged with request defaults.
@@ -58,9 +60,8 @@ export class ApiRequestError extends Error {
 export async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<ApiResult<T>> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
-    credentials: 'include',
     headers: {
-      'Content-Type': 'application/json',
+      ...(init.body ? { 'Content-Type': 'application/json' } : {}),
       ...init.headers,
     },
   });
