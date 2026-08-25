@@ -121,7 +121,8 @@
 🗣️ [7] /opsx:archive（只在 final PR group）
         第 1–3 層完成且已有 Source-Verify evidence 後，在 final PR 內執行 archive/write-back：
         合併 derived view（openspec/specs）＋回寫正典 spec（版本升級 + Changelog 條目），
-        成功完成後才算通過第 4 層 Source-Verify + write-back/archive gate
+        再逐條 grep 驗證 derived view 的每一條正典引用（見 §6.2），
+        全部通過後才算通過第 4 層 Source-Verify + write-back/archive gate
             │
             ↓
 🗣️ [8] /pr-flow
@@ -268,7 +269,21 @@ archive 回寫 ──→ specs/[module]/NNN-feature/spec.md（版本升級 + Cha
 | 1. OpenSpec schema validation | OpenSpec schema、delta 與 scenario 結構 | `openspec validate <change> --type change` 或 `openspec validate --changes --no-interactive`；採 non-strict schema gate |
 | 2. Project SDD lint | 專案 headings、goal/status/ownership/retired-path 規則 | Project SDD lint 指令（後續工具落地前，依 workflow checklist 與 review evidence 執行） |
 | 3. Code/test gates | 受影響實作的 Red/Green evidence、type、unit、integration、E2E、security 與 lint，以及每個 PR 群組依序完成 Code Review、QA Scenario、安全、適用效能審查與使用者確認 | `uv run ...`、`pnpm ...`、prototype Playwright、CI 對應指令與 PR-group review evidence |
-| 4. Source-Verify + write-back/archive gate | archive-time 正典 ID、version 與 Changelog 完整性 | 第 1–3 層與 Source-Verify evidence 是 `/opsx:archive` 的前提；final PR group 成功 write-back 才完成本層 |
+| 4. Source-Verify + write-back/archive gate | archive-time 正典 ID、version 與 Changelog 完整性，**以及 derived view 每一條正典引用的可定位性** | 第 1–3 層與 Source-Verify evidence 是 `/opsx:archive` 的前提；archive 後須逐條 grep 驗證 derived view 的正典引用（見 §6.2）；final PR group 成功 write-back 才完成本層 |
+
+## 6.2 archive 後的引用驗證（第 4 層必做步驟）
+
+`openspec archive` 產出的 derived view 會**逐字沿用 propose 當時寫的 delta 文字**，包含當時就寫錯的引用與漏述；`openspec validate` 只檢查 schema，這類錯誤 CLI 完全不檢查（issue #356 pilot 發現 ③：derived view 引用了根本不存在的 `plan.md §Phase 1.3`，另有一條 SC 的子句被靜默省略，兩者都只靠人工 code review 才抓到）。
+
+因此 archive 後、final PR merge 前，對 derived view（`openspec/specs/**` 與 `openspec/changes/archive/<change>/**`）中**每一條**指向正典的引用逐條 grep 驗證，缺一不可：
+
+- **FR/AC ID** — 每個 ID 都能在正典 `spec.md` 中 grep 到。
+- **章節引用** — `plan.md §X`、`design.md §Y` 之類的節標題實際存在於被引用的檔案。
+- **檔案路徑** — 引用到的路徑實際存在。
+- **ADR／issue／PR 編號** — 編號實際存在且內容相符。
+- **需求原文** — 被改寫或摘要的 FR/SC 未遺漏子句；與正典逐句對照，不接受「大意相同」。
+
+任一條無法定位即修正或刪除，**不得近似**（CLAUDE.md § Source-Verify gate）。驗證結果寫進 final PR 的 Test Plan。
 
 ---
 
@@ -353,7 +368,9 @@ implement-foundation-core。範圍依 plan.md v2.0.0 的 Foundation-Core。
 
 ```text
 這是 final PR group，tasks.md 全部 [x]、第 1–3 層完成且已有 Source-Verify evidence。/opsx:archive <change>：
-在 final PR 內回寫正典 spec（版本升級 + Changelog）、合併 derived view；成功 write-back 才完成第 4 層，
+在 final PR 內回寫正典 spec（版本升級 + Changelog）、合併 derived view。
+接著依 §6.2 逐條 grep 驗證 derived view 的每一條正典引用（FR/AC ID、章節引用、檔案路徑、ADR／issue／PR 編號、需求原文子句），
+任一條無法定位就修正或刪除，並把驗證結果寫進 PR 的 Test Plan；成功 write-back 且引用驗證全數通過才完成第 4 層，
 並保留 post-merge 才將 canonical spec 移至 `specs/_archive/` 的時序。
 ```
 
