@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import { delay, http, HttpResponse } from 'msw';
 import type { ReactElement } from 'react';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import type { ErrorResponse } from '../../../shared/types/api';
 import { server } from '../../../testing/msw-server';
@@ -30,6 +30,14 @@ function renderWithQueryClient(ui: ReactElement): void {
   });
   render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
 }
+
+// Testing Library only auto-registers `cleanup` when Vitest runs with
+// `globals: true`, which this project deliberately does not. Without an
+// explicit unmount the previous test's DOM stays in `document.body`, and a
+// `findBy*` query resolves instantly against that stale node instead of
+// waiting for the component under test — silently passing assertions that
+// were never actually exercised.
+afterEach(cleanup);
 
 describe('HealthCheckPage', () => {
   it('shows a "Checking..." status while the health request is in flight', () => {
