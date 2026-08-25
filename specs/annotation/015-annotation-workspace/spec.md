@@ -1,7 +1,7 @@
 ---
 功能分支: docs/208-official-gold-fr
 建立日期: 2026-04-23
-版本: 4.21.0
+版本: 4.21.1
 狀態: Draft
 ---
 
@@ -921,6 +921,7 @@ flowchart LR
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 4.21.1 | 2026-08-25 | **修復 PDF 預覽 modal 實際顯示為下載對話框**（issue #376）：v4.21.0 的 FR-020C 內嵌預覽在原型上未真正生效——modal 正常開啟、iframe `src` 亦正確，但原型靜態伺服器 `design/prototype/tests/serve.mjs` 的 MIME 對照表未隨 v4.21.0 新增的 `assets/guidelines/annotation-guideline-sample.pdf` 一併補上 `.pdf`，回應落入 fallback 的 `application/octet-stream`，瀏覽器遂以附件下載取代內嵌渲染。修法為 MIME 表新增 `'.pdf': 'application/pdf'`。既有回歸測試僅斷言 iframe `src` 屬性因而漏接此缺陷，本版於 `annotation-guideline-pdf-preview.spec.ts` 增加一條直接斷言該資源回應標頭為 `application/pdf` 的測試。規格條文（FR-020、FR-020B、FR-020C、AC-5.3、AC-5.4、SC-005C）未變。**併釐清 v4.21.0「下載不在本版範圍」的措辭**：內嵌渲染生效後，瀏覽器內建 PDF 檢視器會自帶其工具列（縮放、換頁、下載），使用者因而仍可下載該 PDF。經維護者裁定接受此行為——該能力由瀏覽器提供而非本專案實作，且本平台為研究用標註工具，指引檔外流風險低、標記員離線查閱指引的需求高。v4.21.0 所述「不在本版範圍」應理解為本專案不自行實作下載／換頁／縮放控制項，而非必須抑制瀏覽器原生能力。 |
 | 4.21.0 | 2026-08-25 | **PDF 附件由「開新分頁」改為頁面內 modal 預覽**（issue #353）：使用者要求點擊 PDF 附件時不再 `window.open` 開新分頁，改為比照圖片預覽 modal（`#wsGuidelineImageModal`）的互動模式，於頁面內以置中 modal 內嵌預覽（`#wsGuidelinePdfModal`，iframe 內嵌；modal 標題顯示檔案名稱，屬單語言來源資料非 UI chrome）。修訂 AC-5.3、AC-5.4、FR-020、FR-020B（動作提示文字三型統一為 `預覽`，`新分頁` 措辭與 i18n key 一併移除）；新增 FR-020C（PDF modal 行為與焦點管理，重用 `LabelSuiteModalFocus`）、SC-005C。標記員與審核員共用 `renderGuidelineFileList()`，行為同步調整。示範資料補回 PDF 項目：issue #185 移除的是指向不存在目錄的死連結，本版於 `assets/guidelines/annotation-guideline-sample.pdf` 提交真實資產並在 `DEFAULT_GUIDELINE_FILES` 末位新增 PDF 列（置於末位以保持既有測試點擊首列命中圖片項的穩定性）。新增 Playwright 回歸測試 `annotation-guideline-pdf-preview.spec.ts`（modal 開啟且零新分頁、動作提示文字、關閉按鈕與 `Esc` 關閉）。PDF 檢視進階功能（下載、換頁、縮放）維持 issue #353 所述待後續設計釐清，不在本版範圍。 |
 | 4.20.1 | 2026-08-24 | Issue #261：新增 Prototype Traceability，明確對應 annotation-list／annotation-workspace 兩頁、頁面資料層、與 014 共用的 modal-focus.js、設計層參考的責任邊界；規格條文未變。 |
 | 4.20.0 | 2026-08-24 | **Evidence 角色欄位的通用參考卡**（issue #89）：task-management-013 v3.1.0（FR-003g-2）已將 Evidence 自 Step 2 標記預覽移除，並明定「其內容留待標記工作區呈現」，但本規格與 annotation prototype 先前僅由 FR-024H／AC-2B.3 涵蓋 `free_text`（唯一宣告 `rendersEvidencePreview: true` 的輸出類型）——其餘 7 種 `OUTPUT_TYPE_KEYS` 即使 `field_role_map` 已指定 Evidence 角色欄位，工作區也從未呈現，013 的延後承諾沒有落點。新增 **FR-024N**、**AC-2B.5**：`field_role_map` 存在 `evidence` 角色欄位、且已選輸出類型皆未透過 `rendersEvidencePreview` 自行呈現 Evidence 時，工作區仍須於題目卡最上方顯示唯讀「背景參考 (Evidence)」卡片，位置早於 Input 內容卡與所有輸出類型作答控制項；卡片純文字呈現，不提供任何可編輯輸入或選取控制項。修訂使用者故事 2B「行為規則」一節，釐清 `rendersEvidencePreview` 僅決定專屬預覽內嵌顯示、不再是唯一顯示路徑。原型：`annotation-workspace.config.js` 新增 `renderEvidenceReferenceCard()`（`patchedUpdateAnnotationPreview` 內呼叫，annotator-only），重用既有 `ws-evidence-card` testid 並在引擎已渲染時略過以避免重複；不修改 `task-config.engine.js` 共用引擎的 `rendersEvidencePreview` 閘門（task-new Step 2 預覽的抑制行為維持不變）。新增 2 個 Playwright 測試（T005 `multi_dim` 正向路徑、T001 `single_label` 無 evidence 欄位負向路徑）。 |

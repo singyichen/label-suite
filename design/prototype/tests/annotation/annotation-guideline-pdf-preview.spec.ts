@@ -53,3 +53,26 @@ test('closes via close button and via Esc', async ({ page }) => {
   await page.keyboard.press('Escape');
   await expect(pdfModal).toBeHidden();
 });
+
+/* Issue #376: the modal opened and the src attribute was correct, yet the
+ * browser still downloaded the file instead of rendering it, because the
+ * static server had no MIME entry for ".pdf" and fell back to
+ * application/octet-stream. An src assertion alone cannot catch that — the
+ * bug lives in the response header, so assert on the header itself.
+ */
+test('serves the previewed PDF as application/pdf so the iframe renders it', async ({ page, request }) => {
+  await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001' }));
+  await dismissGuidelineModal(page);
+
+  await pdfItem(page).click();
+
+  // The DOM src property resolves the relative attribute against the page
+  // URL, so this is exactly the request the iframe itself issues.
+  const src = await page
+    .getByTestId('ws-guideline-pdf-modal-preview')
+    .evaluate((el) => (el as HTMLIFrameElement).src);
+
+  const response = await request.get(src);
+  expect(response.status()).toBe(200);
+  expect(response.headers()['content-type']).toBe('application/pdf');
+});
