@@ -2153,12 +2153,16 @@
     rejectBtn.type = 'button';
     rejectBtn.className = 'mini-btn mini-btn-reject';
     rejectBtn.setAttribute('data-testid', 'ws-review-row-reject');
+    /* issue #399 (WCAG 2.1 SC 4.1.2): the icon-only '✕' span left the
+       button with no accessible name at all -- give it one. */
+    rejectBtn.setAttribute('aria-label', t('reviewRejectLabel'));
     rejectBtn.appendChild(buildIconSpan('✕'));
 
     var approveBtn = document.createElement('button');
     approveBtn.type = 'button';
     approveBtn.className = 'mini-btn mini-btn-approve';
     approveBtn.setAttribute('data-testid', 'ws-review-row-approve');
+    approveBtn.setAttribute('aria-label', t('reviewApproveLabel'));
     approveBtn.appendChild(buildIconSpan('✓'));
 
     function refresh() {
@@ -2375,6 +2379,16 @@
     correctionTitle.className = 'rv-correction-title';
     correctionTitle.textContent = t('reviewCorrectionTitle');
     row.appendChild(correctionTitle);
+
+    /* issue #399: reviewNote explains what approve/reject actually do (a
+       reject rolls the sample back to pending for the annotator to redo),
+       but was defined in I18N and never rendered anywhere -- render it so
+       reviewers can actually read it before deciding. */
+    var note = document.createElement('p');
+    note.className = 'rv-review-note';
+    note.setAttribute('data-testid', 'ws-review-note');
+    note.textContent = t('reviewNote');
+    row.appendChild(note);
 
     var correction = document.createElement('div');
     correction.setAttribute('data-testid', 'ws-review-correct-' + (testidSuffix || outKey));
