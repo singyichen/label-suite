@@ -1,0 +1,25 @@
+meta {
+  name: Health Check
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/health
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+docs {
+  Public, unauthenticated uptime/smoke-test endpoint (Foundation FR-002,
+  FR-004, FR-007). No request body or query parameters.
+
+  Example response — 200 OK:
+  {
+    "status": "ok",
+    "version": "0.1.0"
+  }
+}
