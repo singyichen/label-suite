@@ -1,356 +1,96 @@
 ---
 name: sdd-workflow
-description: Complete Spec-Driven Development workflow for Label Suite — pipeline, commands, module paths, when to skip, flow chart ownership.
+description: Machine guidance for Label Suite Spec-Driven Development. Defers SDD orchestration to docs/sdd-workflow.md.
 ---
 
 # SDD Workflow — Label Suite
 
-This project adopts Spec-Driven Development (SDD). New features follow the sequence below. OpenSpec is the implementation/change-workflow layer; `specs/` remains the sole canon (SSoT) — see [ADR-033](../../../docs/adr/033-openspec-change-workflow.md).
+This is machine guidance, not the workflow authority. For SDD stages, role sequencing, delivery timing, and prompt examples, follow [docs/sdd-workflow.md](../../../docs/sdd-workflow.md). When this guide conflicts with that workflow or with a higher authority, stop and follow the canonical source rather than inventing a local rule.
 
-## Pipeline
+Authority order is: main constitution → applicable domain constitution → Accepted ADR → canonical feature spec → `docs/sdd-workflow.md` for SDD orchestration → machine guidance and derived views. Proposed ADRs are nonbinding.
 
-Each stage is a **hard gate** — do not advance until the current stage is complete.
+## Canonical Flow
 
-```
-/superpowers:brainstorm                 → requirements agreed; 2-3 design alternatives considered; YAGNI applied
-/speckit.specify <feature description>  → specs/[module]/NNN-feature/spec.md
-                                          ↳ Process Flow      (spec.md § Process Flow — cross-role business process)
-                                          ↳ User Flow         (spec.md § User Flow & Navigation — screens + triggers)
-                                          ↳ Update specs/STATUS.md → spec-ready
-/ui-ux-pro-max                          → design/prototype/pages/[module]/[page].html + design/system/  (recommended, after specify; before OpenSpec propose)
-                                          ⚠ Before generating: read MASTER.md (+ wireframe via Pencil MCP if one already exists)
-/pencil-wireframe                       → design/wireframes/pages/[module]/[page].pen  (optional, after prototype)
-[senior-uiux review]                    → prototype QA: spec fidelity, design system compliance, a11y; check wireframe consistency when present  (optional)
-[prototype Playwright tests]            → design/prototype/tests/[module]/[page].spec.ts  (after prototype HTML, before OpenSpec propose)
-                                          ⚠ See § Prototype Playwright Tests below
-/speckit.clarify                        → clarify requirements  (optional; prototype + optional wireframe surface ambiguities)
-/opsx:propose                           → openspec/changes/<change>/proposal.md + tasks.md (+ design.md if API contract/DB schema touched)
-                                          ↳ System Flow       (design.md § System Flow & Data Flow — API/service/DB layers, when design.md exists)
-                                          ↳ proposal.md frontmatter names the corresponding spec: specs/[module]/NNN-feature/spec.md
-                                          ↳ Update specs/STATUS.md → change-open
-/opsx:apply                             → execute implementation (single session or /agent-team)
-                                          ↳ TDD: write failing test FIRST — no exceptions (see § TDD Rule)
-                                          ↳ React components reuse data-testid values from prototype tests
-                                          ↳ Update specs/STATUS.md → in-progress (when branch opened)
-/opsx:archive                           → dual write: auto-merge into openspec/specs/ (derived view) + write back specs/[module]/NNN-feature/spec.md (version bump + Changelog — hard gate, ADR-033 Rule 1)
-                                          ↳ /opsx:verify (or `openspec validate`) must pass — REQUIRED gate, zero findings before PR
-/pr-flow                                → commit → review → test → push → PR → merge
-                                          ↳ Update specs/STATUS.md → review → done → archived
-                                          ↳ Archive: mv specs/[module]/NNN-feature specs/_archive/NNN-feature
+Use the canonical stages and gates from `docs/sdd-workflow.md`:
+
+```text
+/superpowers:brainstorm
+→ /speckit.specify
+→ Spec Lint
+→ /label-suite-design
+→ prototype shell → Red Playwright failure → selector/behavior Green → refactor/page design
+→ Frontend Ready Gate
+→ /opsx:propose
+→ OpenSpec schema validation + Project SDD lint
+→ /opsx:apply
+→ final-PR /opsx:archive write-back
+→ /pr-flow final merge
+→ post-merge STATUS update and canonical spec movement to specs/_archive/
 ```
 
----
+`/pencil-wireframe` and `senior-uiux` review are optional where the canonical workflow permits them. A UI/UX capability may assist with design, but `/label-suite-design` is the canonical prototype-stage command.
 
-## Module Names
+## Prototype TDD
 
-Align with `frontend/src/features/` and `specs/[module]/`:
+For a new prototype page, read the canonical spec and `design/system/MASTER.md`, then follow this exact order:
 
-`account` · `dashboard` · `task-management` · `annotation` · `dataset` · `admin`
+1. Create a loadable static shell without target selectors or behavior.
+2. `senior-qa` writes, commits, and runs a Playwright Red test; record the expected failure.
+3. Only after the confirmed Red result, the implementation agent adds the `data-testid` selector contract and target behavior to make the test Green.
+4. Refactor only while the tests remain Green.
 
----
+Prototype tests live under `design/prototype/tests/` and cover static-HTML behavior. Stable `data-testid` values are the shared contract for the prototype and React implementation. Formal React E2E placement follows the applicable Accepted ADR and testing constitution authority; do not infer or introduce a path from this guide.
 
-## Spec Directory Structure
-
-```
-specs/                        # Canon (SSoT) — never migrated to OpenSpec capability format
-├── STATUS.md                # Global pipeline index — update at every stage transition
-├── _archive/                # Completed features (moved here after PR merged to main)
-└── [module]/
-    └── NNN-feature/
-        ├── spec.md          # Feature specification (sole canon)
-        └── checklists/
-            ├── ac-checklist.md
-            └── security-checklist.md
-
-openspec/                     # Implementation/change workflow layer (ADR-033)
-├── config.yaml               # context (reads specs/[module]/spec.md) + rules (write-back gate, ID traceability, hard gates)
-├── specs/                    # Derived view — auto-merged at archive time only; never hand-edited; never authoritative
-└── changes/
-    ├── <change>/
-    │   ├── proposal.md       # Rationale + scope; frontmatter names the corresponding specs/[module]/NNN-feature/spec.md
-    │   ├── design.md         # Technical approach (optional; mandatory if API contract/DB schema touched)
-    │   ├── tasks.md          # Task breakdown
-    │   └── specs/            # Requirement deltas (## ADDED/MODIFIED/REMOVED Requirements, referencing stable FR/AC IDs)
-    └── archive/               # Completed changes, timestamped — work record only (ADR-033 Rule 4)
-```
-
-- `NNN` is zero-padded (001, 002, …), `feature` is kebab-case
-- Mark completion: `touch specs/[module]/NNN-feature/.completed` + update `specs/STATUS.md`
-- Follow User Story priority order: P1 → P2 → P3
-- Archive after merge: `mv specs/[module]/NNN-feature specs/_archive/NNN-feature`
-- **Exception**: `specs/foundation/000-foundation/plan.md` is retained in place as a standing architecture document (project-wide engineering baseline), not an ordinary feature plan — referenced by every change's `design.md` (ADR-033 Open Questions #3)
-
----
-
-## Flow Chart Ownership
-
-| Flow Type | Document | When | Purpose |
-|-----------|----------|------|---------|
-| Process Flow | `spec.md` | During `/speckit.specify` | Cross-role business process; WHO does WHAT |
-| User Flow | `spec.md` | During `/speckit.specify` | Screen navigation; prevents orphan pages |
-| System Flow | `design.md` | During `/opsx:propose` | Data path through API → Service → DB layers |
-
-All diagrams use Mermaid (`sequenceDiagram` for process/system flows, `flowchart LR` for navigation). Renders natively on GitHub.
-
----
-
-## Prototype Playwright Tests
-
-### Position in Pipeline
-
-Prototype Playwright tests sit **after the prototype HTML is built, before `/opsx:propose`**. They are the closing validation step of the prototype phase, not the opening step of the spec phase.
-
-```
-❌ Wrong:  /speckit.specify → Playwright tests → prototype HTML → /opsx:propose
-✓ Correct: /speckit.specify → prototype HTML → (optional) wireframe → Playwright tests → /opsx:propose
-```
-
-Writing tests before the prototype exists produces untestable stubs. Writing them after `/opsx:propose` loses the benefit: the change's `design.md` should already reference the `data-testid` contract that tests establish.
-
-### Purpose
-
-| Benefit | Detail |
-|---------|--------|
-| Executable spec | Given-When-Then AC in `spec.md` → runnable `test()` blocks |
-| `data-testid` contract | Selector names defined once here; React components reuse them verbatim |
-| Early validation | Catches spec gaps and prototype UI errors before implementation begins |
-| Regression guard | Prototype edits that break selectors or behavior fail tests immediately |
-
-### What to Test (and What Not To)
-
-**In scope — static HTML can validate:**
-- Required UI elements present and visible
-- Client-side form validation (required, format, length, match)
-- Navigation between prototype pages
-- i18n language toggle (immediate, no page reload)
-- Responsive rendering (no horizontal overflow at 375px / 768px / 1440px)
-- Simulated server error display (hardcoded in prototype JS)
-
-**Out of scope — requires backend, exclude and document:**
-- Authenticated routes / JWT state
-- Backend API responses
-- Role-based redirects
-- SSO OAuth flows
-
-Document excluded scenarios with a comment block at the top of each spec file.
-
-### TDD Workflow
-
-Follow Red-Green-Refactor at the design layer:
-
-1. **Red** — Write `design/prototype/tests/[module]/[page].spec.ts` using `getByTestId()` selectors. Run tests; they fail because `data-testid` attributes are not yet in the HTML.
-2. **Green** — Add `data-testid` attributes to the prototype HTML. Run tests; they all pass.
-3. **Refactor** — Align test descriptions precisely with spec AC wording; confirm tests stay green.
-
-### `data-testid` Naming Convention
-
-Use kebab-case: `[purpose]-[element-type]` or just `[element-type]` when unambiguous.
-
-Examples: `email-input` · `password-input` · `submit-btn` · `login-link` · `error-banner` · `success-banner` · `lang-toggle` · `lang-label` · `name-error`
-
-These names must be used verbatim in the React component (`<input data-testid="email-input" />`). Never invent new selector names in `frontend/tests/` for elements that already exist in the prototype.
-
-### File Structure
-
-```
-design/prototype/
-├── package.json               # @playwright/test only; separate from frontend/
-├── playwright.config.ts       # webServer: node tests/serve.mjs; baseURL: http://127.0.0.1:8888
-└── tests/
-    └── [module]/
-        └── [page].spec.ts     # mirrors specs/[module]/NNN-feature/
-```
-
-### Running Tests
+Run prototype checks from `design/prototype/` with:
 
 ```bash
-# From design/prototype/
-npm test                  # headless (CI)
-npm run test:headed       # with browser (debug)
-npm run test:ui           # Playwright UI mode
+pnpm test
+pnpm run test:headed
+pnpm run test:ui
 ```
 
-### Relationship to `frontend/tests/`
+## TDD Ownership And Tasks
 
-Prototype tests are **precursors**, not replacements, for the React E2E suite. When React is implemented, `frontend/tests/[module]/[page].spec.ts` extends the prototype tests with backend-dependent scenarios using the same `data-testid` selectors. Prototype tests are not deleted — they continue to guard the design artifact.
+All behavior changes use Red → Green → Refactor. The testing constitution is authoritative for the full rule.
 
-See ADR-014 for the full architectural rationale.
+- `senior-qa` owns each separate Red test task and commits/runs the expected failure before Green work starts.
+- The implementation agent owns the paired Green task and does not weaken or rewrite the Red contract to pass it.
+- The main agent/team lead verifies Red and Green evidence and is the only role that updates task checkboxes.
+- A static prototype shell may precede Red; target selectors and behavior may not.
 
----
+Each artifact-producing task normally modifies one file. Only `package-manager`, `scaffold`, and `governance-propagation` may be multi-file exceptions; the task text must state `Exception:`, the complete `Files:` list, and the `Reason:` it is atomic. Command-only verification tasks state their exact commands and expected results.
 
-## TDD Rule
+## Four-Layer Verification
 
-> **You MUST NOT write implementation code before writing a failing test.**
+The four-layer gate model in [docs/sdd-workflow.md](../../../docs/sdd-workflow.md#61-四層驗證閘) has distinct responsibilities:
 
-### Workflow
-1. Write the test — confirm it **fails** (Red)
-2. Write the minimum implementation to make it pass (Green)
-3. Refactor — keep tests green
+1. **OpenSpec schema validation** checks OpenSpec schema, delta, and scenario structure. Use the non-strict schema gate, such as `openspec validate --changes --no-interactive`; it does not validate project headings, ownership, status, or retired paths.
+2. **Project SDD lint** checks project headings and goal/status/ownership/retired-path rules. Until its tooling exists, use the canonical workflow checklist and review evidence.
+3. **Code/test gates** verify affected Red/Green evidence and relevant type, lint, unit, integration, prototype, E2E, and security checks.
+4. **Source-Verify + write-back/archive** verifies archive-time canonical IDs, version, and Changelog integrity.
 
-### Applies to
-Every task in `tasks.md` that involves logic: API endpoints, services, utilities, reducers, hooks.
+`/opsx:verify` may coordinate workflow-specific checks, but does not replace any of the four layers. Do not present it or `openspec validate` as a project-wide consistency gate.
 
-### Rationalisations that are NOT accepted
-| Excuse | Why it's rejected |
-|--------|-----------------|
-| "It's too simple to need a test" | Simple code breaks too. Simple tests are cheap. |
-| "I tested it manually" | Manual tests don't run in CI and don't document intent. |
-| "There's no logic, just wiring" | Wiring tests catch integration failures. |
-| "I'll add tests after" | Tests written after are shaped to pass existing code, not to specify behavior. |
+## Archive And Delivery Timing
 
-### If you wrote code first
-Delete the implementation. Restart with the test. There is no exception to this rule.
+Intermediate PR groups complete Red, Green, task verification, and group review, then merge while the OpenSpec change stays open. For the final PR group, complete layers 1–3 and collect Source-Verify evidence before running `/opsx:archive`; archive/write-back belongs in that final PR and completes layer 4 only after successful canonical write-back.
 
----
+After the final PR merges, update `specs/STATUS.md` to archived and move the canonical feature spec to `specs/_archive/`. Do not move the canonical spec during an intermediate PR or before final merge.
 
-## Iteration Workflow (1→N)
+## When SDD Applies
 
-Use this section when you are **modifying an existing feature**, not building from scratch.
+Ask: **will this change make the system behave differently from what the specs define?**
 
-### Update Existing Spec vs. Create a New Spec
+Skip a full SDD flow for code changes that preserve specified behavior: bug fixes that restore the spec, typo/formatting/comment edits, non-breaking dependency updates, configuration adjustments without behavior change, and tests for existing behavior.
 
-| Scenario | Action |
-|----------|--------|
-| Add a new User Story to an existing feature | Update existing `spec.md` + version bump |
-| Change what an existing User Story does | Update existing `spec.md` + version bump |
-| Independent new behaviour that reuses the same module | New spec (`specs/[module]/NNN-feature/`) |
-| Bug fix (code does not match spec) | Fix code only — spec is already correct |
-| Refactor / perf / cleanup — no behaviour change | No spec change needed |
+Use SDD for a new feature, behavior change, breaking API/contract change, or architectural change. A very small behavior clarification may use the Lightweight Path only when every trigger in `docs/sdd-workflow.md` and the applicable governance sources is satisfied; otherwise use the full OpenSpec flow.
 
-**Decision question**: Does this change add or alter *expected behaviour* already documented in a spec?
-- Yes → version-bump that spec
-- No, but it is new behaviour → new spec
-- Neither → no spec change (bug-fix / refactor path)
+## Machine Checklist
 
-### Version Bump Rules
+Before advancing a stage, confirm that:
 
-Spec versions follow semantic versioning — update `**Version**` in frontmatter and add a row to `## Changelog`:
-
-| Change | Bump | Example |
-|--------|------|---------|
-| Clarification, wording, non-semantic fix | PATCH | 1.0.0 → 1.0.1 |
-| New User Story added | MINOR | 1.0.0 → 1.1.0 |
-| Existing Story behaviour changed | MINOR | 1.0.0 → 1.1.0 |
-| Breaking change (remove story, change API contract) | MAJOR | 1.0.0 → 2.0.0 |
-
-### Updating an Existing Spec — Checklist
-
-When a spec that already has a `change-open` or later status is changed, carry the change in an OpenSpec change folder (ADR-033):
-
-0. **If spec is archived**: `mv specs/_archive/NNN-feature specs/[module]/NNN-feature` — retrieve from archive only if it needs direct editing during apply; re-archive after the modification PR merges
-1. **`/opsx:propose`**: draft `openspec/changes/<change>/proposal.md` (frontmatter names `specs/[module]/NNN-feature/spec.md`), `tasks.md`, and `design.md` if the change touches an API contract or DB schema; the change's `specs/` delta references stable FR/AC IDs (`MODIFIED Requirement: FR-NNN`)
-2. **`/opsx:apply`**: implement via TDD
-3. **`/opsx:archive`**: dual write — auto-merge into the derived `openspec/specs/` view, and write back to the canonical `specs/[module]/NNN-feature/spec.md`:
-   - Bump the version in frontmatter (`**Version**`)
-   - Add a row to `## Changelog` with date and summary
-   - Open `## Spec Dependencies → Downstream` — review every listed spec for impact
-4. Update `specs/STATUS.md` — `change-open` while the change is in flight, then the version note in the notes column (e.g., `v1.1.0 — added Story 3`) after archive
-5. **Post-implementation write-back**: if implementation decisions deviated from the spec during coding (any FR / SC changed), bump spec version again and record the reason in `## Changelog` before PR merge — this is a hard gate (ADR-033 Rule 1); a PR whose change touches requirements but does not update the canonical `spec.md` must not be merged
-
----
-
-## Cross-Spec Dependencies
-
-### Declaring Dependencies
-
-Every spec has a `## Spec Dependencies` section. Fill it in at `/speckit.specify` time:
-
-- **Upstream**: specs this feature must have available (must be `spec-ready` or implemented first)
-- **Downstream**: specs that rely on something this spec defines (these must be notified on any version bump)
-
-### Impact Process (when spec A is versioned up)
-
-1. Open `spec A → ## Spec Dependencies → Downstream`
-2. For each downstream spec B: check whether spec A's change breaks or changes an assumption spec B made
-3. If yes: version-bump spec B and propagate to its OpenSpec change `tasks.md` / `design.md` as needed
-4. Update `specs/STATUS.md` for every affected spec
-
-### opsx:verify — Cross-Spec Check
-
-`/opsx:verify` (or `openspec validate`) checks cross-spec consistency as part of its gate:
-
-- All upstream specs listed in `## Spec Dependencies` are `spec-ready` or implemented
-- No downstream spec references a capability that this spec has removed or changed without a corresponding update
-
----
-
-## Lightweight Path
-
-Use this when a change is too small for a full OpenSpec change container but still modifies expected behaviour.
-
-**Triggers — ALL must be true:**
-- ≤ 2 production code files changed (spec and test files are not counted toward this limit)
-- No API contract changes (no new endpoints, no changes to existing endpoint response shape, status codes, or semantics)
-- Minor behavior change requiring a spec update
-- No requirement (FR/AC) is added or removed, only clarified — a pure bug fix with no requirement change always qualifies
-
-**Sequence:** TDD → implement → spec consistency review → `/pr-flow`
-
-**Spec consistency review** (replaces `/opsx:verify`, which requires an OpenSpec change folder):
-- Verify spec version was bumped and Changelog entry matches the change
-- Confirm no downstream specs reference the changed behavior without an update
-- Confirm no new API contracts were introduced beyond the trigger scope
-
-Skip: brainstorm, specify, wireframe, OpenSpec propose/apply/archive, checklist.
-
-> If any trigger condition is uncertain, default to the full OpenSpec change flow.
-
----
-
-## When to Skip SDD
-
-**Deciding question: will this change make the system behave differently from what the specs define?**
-
-### Skip SDD — modify code directly
-
-| Case | Examples |
-|---|---|
-| Bug fix | Spec says login failure returns 401, but code returns 500 — fix it |
-| Typo / formatting / comment | No behavior change |
-| Non-breaking dependency update | Bumping a package version with no API changes |
-| Config adjustment | Changing a timeout value, env var default |
-| Adding tests for existing behavior | Spec defines the behavior; tests just verify it |
-
-> If the fix is complex or you want a decision record, opening a spec is still fine.
-
-### Must go through SDD
-
-| Case | Examples |
-|---|---|
-| New feature | Anything that adds behavior not currently in specs |
-| Behavior change | Changing what an existing endpoint returns |
-| Breaking change | Removing a field, changing an API contract |
-| Architectural change | New service, new data model, new async flow |
-
----
-
-## Spec-Kit Commands
-
-Spec Kit narrows to spec production (the WHAT side); OpenSpec owns the implementation workflow (the HOW side). `/speckit.plan`, `/speckit.tasks`, `/speckit.implement` are retired.
-
-| Command | Purpose | Output |
-|---|---|---|
-| `/superpowers:brainstorm` | Clarify requirements via Socratic dialogue; propose 2-3 design alternatives with trade-offs | Agreed requirements |
-| `/speckit.specify` | Create feature spec from description | `specs/[module]/NNN-feature/spec.md` |
-| `/ui-ux-pro-max` | Generate HTML prototype + design system (after specify, before OpenSpec propose) | `design/prototype/pages/[module]/[page].html` |
-| `/pencil-wireframe` | Draw 6 frames (Desktop/Mobile ZH·EN + Components, optional after prototype) | `design/wireframes/pages/[module]/[page].pen` |
-| `/speckit.clarify` | Identify and clarify ambiguous requirements | Questions + answers |
-| `/opsx:propose` | Draft change proposal + design + tasks + requirement deltas | `openspec/changes/<change>/` |
-| `/opsx:apply` | Execute implementation from the proposal's tasks | Code changes |
-| `/opsx:archive` | Archive the change: auto-merge derived view + write back canonical spec (**REQUIRED gate before PR**) | `openspec/specs/` update + `specs/[module]/NNN-feature/spec.md` version bump |
-| `/opsx:verify` | Cross-document consistency check for the change (or `openspec validate` if unavailable) | Verification report |
-| `/agent-team` | Multi-phase agent team workflow for cross-layer features | — |
-| `/pr-flow` | Full PR flow (commit → review → test → merge) | — |
-
----
-
-## SDD Rules
-
-1. **No code without a spec** — every feature branch must have a corresponding `spec.md`
-2. **No OpenSpec change without a validated spec** — validate spec completeness before `/opsx:propose`
-3. **TDD — no implementation before a failing test** — write the test first, confirm it fails, then implement; if you wrote code first, delete it and restart with the test; rationalisations ("it's too simple", "I tested manually") are not accepted
-4. **No PR without a clean verify** — `/opsx:verify` (or `openspec validate`) must report zero findings, and the write-back Source-Verify gate must pass; fix all issues and re-run until clean
-5. **No merge without a checklist** — all ACs must be verified before PR creation
-6. **Spec immutability** — once planning begins, spec changes require a version bump
-7. **One spec per feature** — do not bundle unrelated features into one spec
-8. **Archive on merge** — after PR merged to `main`, move `specs/[module]/NNN-feature` to `specs/_archive/` and update `specs/STATUS.md`
+- the canonical feature spec has a verifiable `## 功能目標`, FR/AC/SC, and dependencies;
+- the Frontend Ready Gate is satisfied (or each inapplicable item is explicitly `N/A` with a reason);
+- the Red contract was committed and failed for its stated reason before Green implementation;
+- the appropriate four-layer gates have evidence for the current stage; and
+- archive/write-back occurs only in the final PR, with canonical spec movement only after merge.
