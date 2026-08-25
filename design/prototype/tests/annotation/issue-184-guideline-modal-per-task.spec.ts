@@ -8,7 +8,11 @@ import { buildWorkspaceUrl, patchDataFile } from './_workspace-helpers';
  * (task-detail.panels/overview.html #editForceGuidelineToggle ->
  * TaskProfile.forceShowGuideline). None of the 13 illustrative seeds set
  * forceShowGuideline, so these tests stub it at runtime via
- * patchDataFile() -- never edits a file under pages/. */
+ * patchDataFile() -- never edits a file under pages/.
+ *
+ * Traceability: specs/annotation/015-annotation-workspace/spec.md
+ *   FR-066
+ */
 
 test.describe('Guideline gate modal (issue #184)', () => {
   test('force-show task renders the task guideline text on first entry', async ({ page }) => {

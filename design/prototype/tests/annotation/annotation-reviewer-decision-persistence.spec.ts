@@ -11,7 +11,11 @@ import { buildWorkspaceUrl, dismissGuidelineModal, skipGuidelineModal } from './
  * every decision change, and renderReviewerWorkspace() restores it before
  * the row buttons render. These tests pin the NEW behavior: an unsent
  * decision now survives a reload, and an already-submitted review is
- * unaffected either way. */
+ * unaffected either way.
+ *
+ * Traceability: specs/annotation/015-annotation-workspace/spec.md
+ *   FR-014S, AC-6.10
+ */
 
 const REVIEWER_URL = buildWorkspaceUrl({
   task_id: 'T001',

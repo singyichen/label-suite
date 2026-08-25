@@ -1,6 +1,11 @@
 import { test, expect } from '@playwright/test';
 import { buildWorkspaceUrl, dismissGuidelineModal } from './_workspace-helpers';
 
+/*
+ * Traceability: specs/annotation/015-annotation-workspace/spec.md
+ *   FR-020A, SC-005B
+ */
+
 test('opens guideline image modal when image file is clicked', async ({ page }) => {
   await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001' }));
   await dismissGuidelineModal(page);

@@ -20,6 +20,9 @@ import { buildListUrl, buildWorkspaceUrl, skipGuidelineModal } from './_workspac
  *     (majority convergence, no arbitration) · disputed (1/1/1 stalemate)
  *   T017 official (min=2): disputed (1:1 tie) · approved · modified ·
  *     finalized · pending
+ *
+ * Traceability: specs/annotation/015-annotation-workspace/spec.md
+ *   FR-051, FR-059, FR-060, FR-061
  */
 
 const SEED_MARKER = 'labelsuite.reviewFlowDemoSeed.v1';

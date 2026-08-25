@@ -13,6 +13,9 @@ import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
  *      answer", per output type, reusing the existing merge keys.
  *   2. getReviewUnitStatus() -- the five-state machine derived from the
  *      annotator's submission plus every reviewer submission on it.
+ *
+ * Traceability: specs/annotation/015-annotation-workspace/spec.md
+ *   FR-051, FR-052, AC-4.9, AC-4.10, AC-4.11, SC-004K
  */
 
 type Diff = { key: string; annotator: unknown; reviewer: unknown };

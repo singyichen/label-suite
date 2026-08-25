@@ -1,6 +1,11 @@
 import { test, expect } from '@playwright/test';
 import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
 
+/*
+ * Traceability: specs/annotation/015-annotation-workspace/spec.md
+ *   FR-017
+ */
+
 test.beforeEach(async ({ page }) => {
   await skipGuidelineModal(page);
 });

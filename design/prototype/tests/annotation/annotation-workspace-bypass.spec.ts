@@ -11,7 +11,11 @@ import {
  * don't natively set allow_bypass=true (unlike T003/multi_label and
  * T006/sequence_tagging, whose native bypass behavior is already covered
  * in their own per-type spec files). Patches allow_bypass at runtime via
- * patchDataFile() — never edits a file under pages/. */
+ * patchDataFile() — never edits a file under pages/.
+ *
+ * Traceability: specs/annotation/015-annotation-workspace/spec.md
+ *   FR-024J
+ */
 
 test.beforeEach(async ({ page }) => {
   await skipGuidelineModal(page);

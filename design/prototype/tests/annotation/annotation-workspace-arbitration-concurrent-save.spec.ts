@@ -13,7 +13,11 @@ import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
  * the same task/annotator (same bucket) but different samples, submitted via
  * Promise.all so the race is deterministic rather than a rare CI flake --
  * same technique as annotation-workspace-concurrent-save.spec.ts (issue
- * #283). */
+ * #283).
+ *
+ * Traceability: specs/annotation/015-annotation-workspace/spec.md
+ *   FR-059, FR-061
+ */
 
 const TASK = 'T001';
 const ANNOTATOR = 'kioleemg12';

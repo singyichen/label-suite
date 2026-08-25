@@ -11,7 +11,11 @@ import { buildWorkspaceUrl, dismissGuidelineModal, patchDataFile } from './_work
  *
  * A11Y-02 (#riskModal / #deleteTaskModal in task-management pages) is
  * deferred to a follow-up PR -- see issue #195 PR discussion for the
- * single-purpose / file-count split rationale. */
+ * single-purpose / file-count split rationale.
+ *
+ * Traceability: specs/annotation/015-annotation-workspace/spec.md
+ *   FR-066, FR-020A, AC-5.3
+ */
 
 test.describe('Guideline modal keyboard focus management (A11Y-01)', () => {
   test.beforeEach(async ({ page }) => {

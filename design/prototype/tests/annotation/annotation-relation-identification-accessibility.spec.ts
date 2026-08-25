@@ -1,6 +1,11 @@
 import { test, expect } from '@playwright/test';
 import { buildWorkspaceUrl } from './_workspace-helpers';
 
+/*
+ * Traceability: specs/annotation/015-annotation-workspace/spec.md
+ *   FR-024C-1, FR-014D
+ */
+
 test.describe('Relation identification accessibility', () => {
   test('undo button keeps a localized aria-label', async ({ page }) => {
     // T008: pure-mode relation_identification (no entity_recognition output).

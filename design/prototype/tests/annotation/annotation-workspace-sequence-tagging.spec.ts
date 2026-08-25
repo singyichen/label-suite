@@ -4,7 +4,11 @@ import { buildWorkspaceUrl, dismissGuidelineModal, skipGuidelineModal } from './
 /* sequence_tagging annotator interaction (spec 015 v2.0.0, ADR-031). T006:
  * PER/ORG/LOC/TIME entities, BIO scheme, character-unit tokenization
  * (frozen contract — tokens[] come from the fixture, not client-side
- * re-tokenization), allow_bypass=true configured natively. */
+ * re-tokenization), allow_bypass=true configured natively.
+ *
+ * Traceability: specs/annotation/015-annotation-workspace/spec.md
+ *   FR-024A, FR-024A-1, FR-024J
+ */
 
 test.beforeEach(async ({ page }) => {
   await skipGuidelineModal(page);

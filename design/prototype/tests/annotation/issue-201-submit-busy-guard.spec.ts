@@ -12,7 +12,11 @@ import {
  * appendHistoryEvent appended TWO 'submitted' history events for the same
  * sample/annotator/run -- history inflation that would corrupt audit
  * reconstruction. Uses T001 (single_label, 5 records), same fixture as
- * annotation-workspace-common.spec.ts. */
+ * annotation-workspace-common.spec.ts.
+ *
+ * Traceability: specs/annotation/015-annotation-workspace/spec.md
+ *   FR-013, FR-016, FR-050
+ */
 
 type TrailEvent = { action: string; role: string; actorId: string | null; at: string; summary: string };
 

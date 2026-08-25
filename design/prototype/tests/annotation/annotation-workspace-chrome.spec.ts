@@ -10,7 +10,11 @@ import {
  * left-column per-sample status labels, middle-column top sample nav with
  * progress summary, question/annotation card separation, bottom autosave
  * status bar + save-draft button, and the right-column 說明與檔案 / 歷程
- * tabs. Uses T001 (single_label, 5 records) as the simplest legal fixture. */
+ * tabs. Uses T001 (single_label, 5 records) as the simplest legal fixture.
+ *
+ * Traceability: specs/annotation/015-annotation-workspace/spec.md
+ *   FR-013A, FR-013B, FR-013C, FR-013D, FR-013E, FR-016B, FR-020B
+ */
 
 test.beforeEach(async ({ page }) => {
   await skipGuidelineModal(page);

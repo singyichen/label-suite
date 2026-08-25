@@ -8,7 +8,11 @@ import { buildListUrl } from './_workspace-helpers';
  * `labelsuite.reviewFlowDemoSeed.v1` marker, so without a migration the
  * seeder short-circuits, the new per-bucket readers see nothing, and the
  * prototype silently renders everything as pending. The migration fans the
- * legacy blob out into per-bucket keys once and removes the legacy key. */
+ * legacy blob out into per-bucket keys once and removes the legacy key.
+ *
+ * Traceability: specs/annotation/015-annotation-workspace/spec.md
+ *   FR-049
+ */
 
 const LEGACY_KEY = 'labelsuite.wsSubmissions';
 const BUCKET_KEY = 'T001::annotator::official_run::kioleemg12::-';
