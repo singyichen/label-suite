@@ -55,8 +55,8 @@
       ),
       reviewer: workItem(
         'sent-001',
-        '待審 7 筆 · 進度 34% · IAA 0.80',
-        '7 Pending · 34% Progress · IAA 0.80',
+        '待審 7 個審核單位 · 任務覆蓋率 34% · IAA 0.80',
+        '7 review units pending · 34% task coverage · IAA 0.80',
         34,
         'official_run',
         'pending_review',
@@ -77,8 +77,8 @@
       ),
       reviewer: workItem(
         'emo-001',
-        '待審 6 筆 · 進度 48% · IAA 0.76',
-        '6 Pending · 48% Progress · IAA 0.76',
+        '待審 6 個審核單位 · 任務覆蓋率 48% · IAA 0.76',
+        '6 review units pending · 48% task coverage · IAA 0.76',
         48,
         'dry_run',
         'pending_review',
@@ -99,8 +99,8 @@
       ),
       reviewer: workItem(
         'taxonomy-001',
-        '待審 12 筆 · 進度 18% · IAA 0.81',
-        '12 Pending · 18% Progress · IAA 0.81',
+        '待審 12 個審核單位 · 任務覆蓋率 18% · IAA 0.81',
+        '12 review units pending · 18% task coverage · IAA 0.81',
         18,
         'official_run',
         'pending_review',
@@ -121,8 +121,8 @@
       ),
       reviewer: workItem(
         'read-001',
-        '待審 5 筆 · 進度 61% · IAA 0.84',
-        '5 Pending · 61% Progress · IAA 0.84',
+        '待審 5 個審核單位 · 任務覆蓋率 61% · IAA 0.84',
+        '5 review units pending · 61% task coverage · IAA 0.84',
         61,
         'dry_run',
         'in_progress',
@@ -143,8 +143,8 @@
       ),
       reviewer: workItem(
         'mt-001',
-        '待審 8 筆 · 進度 76% · IAA 0.78',
-        '8 Pending · 76% Progress · IAA 0.78',
+        '待審 8 個審核單位 · 任務覆蓋率 76% · IAA 0.78',
+        '8 review units pending · 76% task coverage · IAA 0.78',
         76,
         'dry_run',
         'in_progress',
@@ -165,8 +165,8 @@
       ),
       reviewer: workItem(
         'sequence-tagging-001',
-        '待審 10 筆 · 進度 71% · IAA 0.79',
-        '10 Pending · 71% Progress · IAA 0.79',
+        '待審 10 個審核單位 · 任務覆蓋率 71% · IAA 0.79',
+        '10 review units pending · 71% task coverage · IAA 0.79',
         71,
         'official_run',
         'pending_review',
@@ -187,8 +187,8 @@
       ),
       reviewer: workItem(
         'entity-recognition-001',
-        '待審 15 筆 · 進度 64% · IAA 0.83',
-        '15 Pending · 64% Progress · IAA 0.83',
+        '待審 15 個審核單位 · 任務覆蓋率 64% · IAA 0.83',
+        '15 review units pending · 64% task coverage · IAA 0.83',
         64,
         'official_run',
         'pending_review',
@@ -209,8 +209,8 @@
       ),
       reviewer: workItem(
         'rel-001',
-        '待審 13 筆 · 進度 45% · IAA 0.77',
-        '13 Pending · 45% Progress · IAA 0.77',
+        '待審 13 個審核單位 · 任務覆蓋率 45% · IAA 0.77',
+        '13 review units pending · 45% task coverage · IAA 0.77',
         45,
         'official_run',
         'pending_review',
@@ -231,8 +231,8 @@
       ),
       reviewer: workItem(
         'sum-001',
-        '待審 4 筆 · 進度 37% · IAA 0.74',
-        '4 Pending · 37% Progress · IAA 0.74',
+        '待審 4 個審核單位 · 任務覆蓋率 37% · IAA 0.74',
+        '4 review units pending · 37% task coverage · IAA 0.74',
         37,
         'dry_run',
         'in_progress',
@@ -253,8 +253,8 @@
       ),
       reviewer: workItem(
         'med-001',
-        '待審 9 筆 · 進度 53% · IAA 0.79',
-        '9 Pending · 53% Progress · IAA 0.79',
+        '待審 9 個審核單位 · 任務覆蓋率 53% · IAA 0.79',
+        '9 review units pending · 53% task coverage · IAA 0.79',
         53,
         'official_run',
         'in_progress',
@@ -275,8 +275,8 @@
       ),
       reviewer: workItem(
         '00183',
-        '待審 11 筆 · 進度 82% · IAA 0.82',
-        '11 Pending · 82% Progress · IAA 0.82',
+        '待審 11 個審核單位 · 任務覆蓋率 82% · IAA 0.82',
+        '11 review units pending · 82% task coverage · IAA 0.82',
         82,
         'dry_run',
         'pending_review',
@@ -297,8 +297,8 @@
       ),
       reviewer: workItem(
         'eac8d013',
-        '待審 5 筆 · 進度 29% · IAA 0.75',
-        '5 Pending · 29% Progress · IAA 0.75',
+        '待審 5 個審核單位 · 任務覆蓋率 29% · IAA 0.75',
+        '5 review units pending · 29% task coverage · IAA 0.75',
         29,
         'official_run',
         'pending_review',
@@ -319,8 +319,8 @@
       ),
       reviewer: workItem(
         'absa-001',
-        '待審 8 筆 · 進度 58% · IAA 0.80',
-        '8 Pending · 58% Progress · IAA 0.80',
+        '待審 8 個審核單位 · 任務覆蓋率 58% · IAA 0.80',
+        '8 review units pending · 58% task coverage · IAA 0.80',
         58,
         'official_run',
         'pending_review',
@@ -332,12 +332,14 @@
        seeded review-state matrix staged at boot by
        annotation-workspace.data.js: pending counts are the review units
        still 待審 (T014=6 of 15, T015=1 of 4, T016=0 of 5, T017=1 of 5)
-       and the percentage is the share of units past 待審 — labeled
-       審核覆蓋率 (review coverage), not 進度, because a unit past MY review
-       is not necessarily finalized (issue #310): T016 sits at coverage
-       100% with 3 units still unfinalized (1 approved + 1 modified +
-       1 disputed awaiting arbitration), so its summary swaps the vacuous
-       待審 0 for the 未定稿 3 · 爭議 1 breakdown. Reviewer
+       and 任務覆蓋 counts the units past 待審 over the review-unit total
+       — a coverage count, not a completion count, because a unit past MY
+       review is not necessarily finalized (issue #310): T016 sits at
+       5 / 5 coverage with 3 units still short of their finalize threshold
+       (1 approved + 1 modified + 1 disputed awaiting arbitration), so its
+       summary swaps the vacuous 待審 0 for the 未達定稿門檻 3 · 爭議中 1
+       breakdown. Every seeded summary here names its subject and its
+       denominator unit (issue #452). Reviewer
        sample ids point at each task's first dataset record so the
        quick-review entry lands on the initial reviewer screen, and every
        demo reviewer entry enters as reviewer_chen -- the only
@@ -357,8 +359,8 @@
       ),
       reviewer: workItem(
         'dry-01-all-agree',
-        '待審 6 筆 · 審核覆蓋率 60% · IAA 0.72',
-        '6 Pending · 60% Review Coverage · IAA 0.72',
+        '任務覆蓋 9 / 15 個審核單位 · 待審 6 個 · IAA 0.72',
+        'Task coverage 9 / 15 review units · 6 pending · IAA 0.72',
         60,
         'dry_run',
         'pending_review',
@@ -379,8 +381,8 @@
       ),
       reviewer: workItem(
         'ofs-01-agree-gold',
-        '待審 1 筆 · 審核覆蓋率 75% · IAA 0.81',
-        '1 Pending · 75% Review Coverage · IAA 0.81',
+        '任務覆蓋 3 / 4 個審核單位 · 待審 1 個 · IAA 0.81',
+        'Task coverage 3 / 4 review units · 1 pending · IAA 0.81',
         75,
         'official_run',
         'pending_review',
@@ -401,8 +403,8 @@
       ),
       reviewer: workItem(
         'ofm-01-unanimous-gold',
-        '審核覆蓋率 100% · 未定稿 3 筆 · 爭議 1 筆 · IAA 0.68',
-        '100% Review Coverage · 3 Unfinalized · 1 Disputed · IAA 0.68',
+        '任務覆蓋 5 / 5 個審核單位 · 未達定稿門檻 3 個 · 爭議中 1 個 · IAA 0.68',
+        'Task coverage 5 / 5 review units · 3 short of finalize threshold · 1 disputed · IAA 0.68',
         100,
         'official_run',
         'in_progress',
@@ -423,8 +425,8 @@
       ),
       reviewer: workItem(
         'oft-01-even-tie',
-        '待審 1 筆 · 審核覆蓋率 80% · IAA 0.70',
-        '1 Pending · 80% Review Coverage · IAA 0.70',
+        '任務覆蓋 4 / 5 個審核單位 · 待審 1 個 · IAA 0.70',
+        'Task coverage 4 / 5 review units · 1 pending · IAA 0.70',
         80,
         'official_run',
         'pending_review',

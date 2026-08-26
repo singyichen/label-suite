@@ -74,7 +74,7 @@ test.describe('issue #452 — task-level coverage names the review-unit denomina
     await expect(trigger).toBeVisible();
     await trigger.click();
 
-    const card = page.locator('.role-task-card[data-example-task-id="T016"]').first();
+    const card = page.locator('.role-task-card[data-role="reviewer"][data-example-task-id="T016"]').first();
     await expect(card).toContainText('任務覆蓋 5 / 5 個審核單位');
     await expect(card).toContainText('未達定稿門檻 3 個');
   });
@@ -85,7 +85,7 @@ test.describe('issue #452 — task-level coverage names the review-unit denomina
     await expect(trigger).toBeVisible();
     await trigger.click();
 
-    const card = page.locator('.role-task-card[data-example-task-id="T001"]').first();
+    const card = page.locator('.role-task-card[data-role="reviewer"][data-example-task-id="T001"]').first();
     await expect(card).toContainText('個審核單位');
     await expect(card).not.toContainText('進度');
   });
