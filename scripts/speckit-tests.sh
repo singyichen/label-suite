@@ -198,11 +198,11 @@ switch (mode) {
     process.exit(1);
     break;
   case 'prefix':
-    process.stdout.write(`RAW_SENTINEL_PREFIX\n${sentinel}\n`);
+    process.stdout.write(`RAW_SENTINEL_PREFIX${sentinel}\n`);
     process.exit(1);
     break;
   case 'suffix':
-    process.stdout.write(`${sentinel}\nRAW_SENTINEL_SUFFIX\n`);
+    process.stdout.write(`${sentinel}RAW_SENTINEL_SUFFIX\n`);
     process.exit(1);
     break;
   case 'extra-line':
@@ -493,6 +493,14 @@ assert_inventory_failure() {
         exit 1
     fi
     assert_contains "$output" "ERROR [$rule] $path:"
+    case "$rule" in
+        INVENTORY_FRESHNESS)
+            assert_not_contains "$output" "INVENTORY_CHECK_CONFIG"
+            ;;
+        INVENTORY_CHECK_CONFIG)
+            assert_not_contains "$output" "[INVENTORY_FRESHNESS]"
+            ;;
+    esac
     assert_not_contains "$output" "$raw_child_text"
     assert_not_contains "$output" "$INVENTORY_SENTINEL"
     assert_not_contains "$output" "INVENTORY_FRESHNESS_UNVERIFIED"
@@ -663,6 +671,14 @@ test_check_sdd_inventory_fresh_has_no_diagnostic() {
     repo="$(make_sdd_repo)"
 
     assert_inventory_success "$repo"
+
+    repo="$(make_sdd_repo)"
+    sed -i.bak '1a\\
+## 功能目標\
+\
+Legacy goal.' "$repo/specs/dataset/001-legacy/spec.md"
+    : > "$repo/scripts/sdd-lint-baseline.txt"
+    assert_inventory_success "$repo" --strict
 }
 
 test_check_sdd_inventory_exact_stale_sentinel() {
