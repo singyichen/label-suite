@@ -638,7 +638,7 @@ test_check_sdd_fails_for_new_baseline_violation() {
 test_check_sdd_fails_for_stale_baseline_entry() {
     local repo
     repo="$(make_sdd_repo)"
-    sed -i.bak '1a\\
+    sed -i.bak '1a\
 ## 功能目標\
 \
 Legacy goal.' "$repo/specs/dataset/001-legacy/spec.md"
@@ -673,7 +673,7 @@ test_check_sdd_inventory_fresh_has_no_diagnostic() {
     assert_inventory_success "$repo"
 
     repo="$(make_sdd_repo)"
-    sed -i.bak '1a\\
+    sed -i.bak '1a\
 ## 功能目標\
 \
 Legacy goal.' "$repo/specs/dataset/001-legacy/spec.md"
