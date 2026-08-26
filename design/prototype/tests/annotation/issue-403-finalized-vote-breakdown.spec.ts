@@ -18,7 +18,7 @@ import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
  * own row.
  *
  * Traceability: specs/annotation/015-annotation-workspace/spec.md
- *   FR-069, AC-1.22
+ *   FR-069, AC-4.28
  */
 
 function reviewerUrl(reviewerId: string) {
