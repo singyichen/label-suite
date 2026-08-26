@@ -1,0 +1,14 @@
+LEGACY_SPEC_HEADING	specs/account/001-login-email-password/spec.md	missing:## 功能目標
+LEGACY_SPEC_HEADING	specs/account/002-login-google-sso/spec.md	missing:## 功能目標
+LEGACY_SPEC_HEADING	specs/account/003-register-email-password/spec.md	missing:## 功能目標
+LEGACY_SPEC_HEADING	specs/account/004-forgot-reset-password/spec.md	missing:## 功能目標
+LEGACY_SPEC_HEADING	specs/account/005-profile-settings/spec.md	missing:## 功能目標
+LEGACY_SPEC_HEADING	specs/admin/006-user-management/spec.md	missing:## 功能目標
+LEGACY_SPEC_HEADING	specs/admin/007-role-settings/spec.md	missing:## 功能目標
+LEGACY_SPEC_HEADING	specs/annotation/015-annotation-workspace/spec.md	missing:## 功能目標
+LEGACY_SPEC_HEADING	specs/dataset/017-dataset-analysis-detail/spec.md	missing:## 功能目標
+LEGACY_SPEC_HEADING	specs/shared/008-sidebar-navbar-shared/spec.md	missing:## 功能目標
+LEGACY_SPEC_HEADING	specs/shared/018-help-button/spec.md	missing:## Prototype Traceability
+LEGACY_SPEC_HEADING	specs/shared/018-help-button/spec.md	missing:## 功能目標
+LEGACY_SPEC_HEADING	specs/shared/018-help-button/spec.md	missing:## 規格相依性
+LEGACY_SPEC_HEADING	specs/task-management/014-task-detail/spec.md	missing:## 功能目標
