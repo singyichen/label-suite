@@ -299,15 +299,16 @@ TASKS
 FR-003 SC-003 AC-2.1
 DELTA
     cat > "$repo/scripts/sdd-lint-baseline.txt" <<'BASELINE'
-LEGACY_SPEC_HEADING	specs/dataset/001-legacy/spec.md	功能目標
+LEGACY_SPEC_HEADING	specs/dataset/001-legacy/spec.md	missing:## 功能目標
 BASELINE
 
     echo "$repo"
 }
 
-run_check_sdd() {
-    local repo="$1"
-    shift
+run_check_sdd_from() {
+    local caller="$1"
+    local repo="$2"
+    shift 2
     local command="$ROOT/scripts/check-sdd.sh"
 
     if [[ ! -x "$command" ]]; then
@@ -316,23 +317,50 @@ run_check_sdd() {
     fi
 
     (
-        cd "$TMP_ROOT"
+        cd "$caller"
         "$command" "$@" "$repo"
     )
 }
 
+run_check_sdd() {
+    local repo="$1"
+    shift
+
+    run_check_sdd_from "$TMP_ROOT" "$repo" "$@"
+}
+
 assert_command_fails_with() {
     local repo="$1"
-    local expected="$2"
-    shift 2
-    local output
+    local rule="$2"
+    local path="$3"
+    shift 3
+    local output status
     output="$(mktemp "$TMP_ROOT/check-sdd.XXXXXX")"
 
     if run_check_sdd "$repo" "$@" >"$output" 2>&1; then
-        echo "Expected check-sdd.sh to fail" >&2
+        echo "Expected check-sdd.sh to exit 1" >&2
+        exit 1
+    else
+        status=$?
+    fi
+    if [[ "$status" -ne 1 ]]; then
+        echo "Expected check-sdd.sh to exit 1, got: $status" >&2
+        cat "$output" >&2
         exit 1
     fi
-    assert_contains "$output" "$expected"
+    assert_contains "$output" "$rule"
+    assert_contains "$output" "$path"
+}
+
+assert_not_contains() {
+    local path="$1"
+    local text="$2"
+
+    if grep -Fq "$text" "$path"; then
+        echo "Expected $path not to contain: $text" >&2
+        cat "$path" >&2
+        exit 1
+    fi
 }
 
 test_check_sdd_passes_for_valid_repo() {
@@ -345,12 +373,15 @@ test_check_sdd_passes_for_valid_repo() {
 }
 
 test_check_sdd_uses_explicit_repo_root() {
-    local repo output
+    local caller repo output
+    caller="$(make_sdd_repo)"
     repo="$(make_sdd_repo)"
     output="$(mktemp "$TMP_ROOT/check-sdd.XXXXXX")"
+    sed -i.bak '/^## 功能目標$/,/^## 規格相依性$/d' "$caller/specs/foundation/001-project-sdd-lint/spec.md"
 
-    run_check_sdd "$repo" >"$output" 2>&1
+    run_check_sdd_from "$caller" "$repo" >"$output" 2>&1
     assert_contains "$output" "Project SDD lint: 0 error(s)"
+    assert_not_contains "$output" "SPEC_REQUIRED_HEADING"
 }
 
 test_check_sdd_fails_for_missing_goal_heading() {
@@ -358,7 +389,7 @@ test_check_sdd_fails_for_missing_goal_heading() {
     repo="$(make_sdd_repo)"
     sed -i.bak '/^## 功能目標$/,/^## 規格相依性$/d' "$repo/specs/foundation/001-project-sdd-lint/spec.md"
 
-    assert_command_fails_with "$repo" "SPEC_REQUIRED_HEADING"
+    assert_command_fails_with "$repo" "SPEC_REQUIRED_HEADING" "specs/foundation/001-project-sdd-lint/spec.md"
 }
 
 test_check_sdd_fails_for_active_change_stage_drift() {
@@ -366,7 +397,7 @@ test_check_sdd_fails_for_active_change_stage_drift() {
     repo="$(make_sdd_repo)"
     sed -i.bak 's/`in-progress`/`spec-ready`/' "$repo/specs/STATUS.md"
 
-    assert_command_fails_with "$repo" "ACTIVE_CHANGE_STAGE"
+    assert_command_fails_with "$repo" "ACTIVE_CHANGE_STAGE" "specs/STATUS.md"
 }
 
 test_check_sdd_fails_for_missing_source_id() {
@@ -374,15 +405,24 @@ test_check_sdd_fails_for_missing_source_id() {
     repo="$(make_sdd_repo)"
     printf '\nFR-999\n' >> "$repo/openspec/changes/project-sdd-lint/proposal.md"
 
-    assert_command_fails_with "$repo" "SOURCE_VERIFY_ID"
+    assert_command_fails_with "$repo" "SOURCE_VERIFY_ID" "openspec/changes/project-sdd-lint/proposal.md"
 }
 
 test_check_sdd_fails_for_invalid_assignee() {
     local repo
+
+    repo="$(make_sdd_repo)"
+    sed -i.bak '/^\*\*故事目標\*\*/d' "$repo/openspec/changes/project-sdd-lint/tasks.md"
+    assert_command_fails_with "$repo" "TASK_STORY_GOAL" "openspec/changes/project-sdd-lint/tasks.md"
+
+    repo="$(make_sdd_repo)"
+    sed -i.bak 's/SC-001/SC-999/' "$repo/openspec/changes/project-sdd-lint/tasks.md"
+    assert_command_fails_with "$repo" "TASK_STORY_GOAL" "openspec/changes/project-sdd-lint/tasks.md"
+
     repo="$(make_sdd_repo)"
     sed -i.bak 's/\[@senior-qa\]/[@missing-agent]/' "$repo/openspec/changes/project-sdd-lint/tasks.md"
 
-    assert_command_fails_with "$repo" "TASK_ASSIGNEE"
+    assert_command_fails_with "$repo" "TASK_ASSIGNEE" "openspec/changes/project-sdd-lint/tasks.md"
 }
 
 test_check_sdd_fails_for_incomplete_exception() {
@@ -390,7 +430,7 @@ test_check_sdd_fails_for_incomplete_exception() {
     repo="$(make_sdd_repo)"
     printf '\n- [ ] 1.3 Scaffold. Exception: scaffold; Files: `scripts/a.sh`, `scripts/b.sh`. [@senior-devops]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
 
-    assert_command_fails_with "$repo" "TASK_EXCEPTION"
+    assert_command_fails_with "$repo" "TASK_EXCEPTION" "openspec/changes/project-sdd-lint/tasks.md"
 }
 
 test_check_sdd_fails_for_wrong_red_owner() {
@@ -398,15 +438,31 @@ test_check_sdd_fails_for_wrong_red_owner() {
     repo="$(make_sdd_repo)"
     sed -i.bak 's/Red contract in `scripts\/speckit-tests.sh`. \[@senior-qa\]/Red contract in `scripts\/speckit-tests.sh`. [@senior-devops]/' "$repo/openspec/changes/project-sdd-lint/tasks.md"
 
-    assert_command_fails_with "$repo" "TASK_RED_OWNER"
+    assert_command_fails_with "$repo" "TASK_RED_OWNER" "openspec/changes/project-sdd-lint/tasks.md"
+
+    repo="$(make_sdd_repo)"
+    sed -i.bak 's/Green command in `scripts\/check-sdd.sh`. \[@senior-devops\]/Green command in `scripts\/check-sdd.sh`. [@senior-qa]/' "$repo/openspec/changes/project-sdd-lint/tasks.md"
+    assert_command_fails_with "$repo" "TASK_FILE_OWNER" "openspec/changes/project-sdd-lint/tasks.md"
 }
 
 test_check_sdd_fails_for_retired_command() {
     local repo
+
     repo="$(make_sdd_repo)"
     printf '\nnpm test\n' >> "$repo/AGENTS.md"
+    assert_command_fails_with "$repo" "RETIRED_COMMAND" "AGENTS.md"
 
-    assert_command_fails_with "$repo" "RETIRED_COMMAND"
+    repo="$(make_sdd_repo)"
+    printf '\nnpm run lint\n' >> "$repo/AGENTS.md"
+    assert_command_fails_with "$repo" "RETIRED_COMMAND" "AGENTS.md"
+
+    repo="$(make_sdd_repo)"
+    printf '\n/ui-ux-pro-max\n' >> "$repo/AGENTS.md"
+    assert_command_fails_with "$repo" "RETIRED_COMMAND" "AGENTS.md"
+
+    repo="$(make_sdd_repo)"
+    printf '\n/speckit.analyze\n' >> "$repo/AGENTS.md"
+    assert_command_fails_with "$repo" "RETIRED_COMMAND" "AGENTS.md"
 }
 
 test_check_sdd_does_not_match_pnpm() {
@@ -433,7 +489,7 @@ test_check_sdd_fails_for_new_baseline_violation() {
     mkdir -p "$repo/specs/dataset/002-new-debt"
     printf '# New legacy debt\n' > "$repo/specs/dataset/002-new-debt/spec.md"
 
-    assert_command_fails_with "$repo" "LEGACY_SPEC_HEADING"
+    assert_command_fails_with "$repo" "LEGACY_SPEC_HEADING" "specs/dataset/002-new-debt/spec.md"
 }
 
 test_check_sdd_fails_for_stale_baseline_entry() {
@@ -444,22 +500,27 @@ test_check_sdd_fails_for_stale_baseline_entry() {
 \
 Legacy goal.' "$repo/specs/dataset/001-legacy/spec.md"
 
-    assert_command_fails_with "$repo" "stale"
+    assert_command_fails_with "$repo" "BASELINE_STALE" "scripts/sdd-lint-baseline.txt"
 }
 
 test_check_sdd_fails_for_duplicate_or_unsorted_baseline() {
     local repo
     repo="$(make_sdd_repo)"
-    printf 'LEGACY_SPEC_HEADING\tspecs/dataset/001-legacy/spec.md\t功能目標\n' >> "$repo/scripts/sdd-lint-baseline.txt"
+    printf 'LEGACY_SPEC_HEADING\tspecs/dataset/001-legacy/spec.md\tmissing:## 功能目標\n' >> "$repo/scripts/sdd-lint-baseline.txt"
+    assert_command_fails_with "$repo" "BASELINE_FORMAT" "scripts/sdd-lint-baseline.txt"
 
-    assert_command_fails_with "$repo" "BASELINE_FORMAT"
+    repo="$(make_sdd_repo)"
+    mkdir -p "$repo/specs/dataset/000-earlier"
+    printf '# Earlier legacy debt\n' > "$repo/specs/dataset/000-earlier/spec.md"
+    printf 'LEGACY_SPEC_HEADING\tspecs/dataset/000-earlier/spec.md\tmissing:## 功能目標\n' >> "$repo/scripts/sdd-lint-baseline.txt"
+    assert_command_fails_with "$repo" "BASELINE_FORMAT" "scripts/sdd-lint-baseline.txt"
 }
 
 test_check_sdd_strict_promotes_baseline_debt() {
     local repo
     repo="$(make_sdd_repo)"
 
-    assert_command_fails_with "$repo" "LEGACY_SPEC_HEADING" --strict
+    assert_command_fails_with "$repo" "LEGACY_SPEC_HEADING" "specs/dataset/001-legacy/spec.md" --strict
 }
 
 test_check_sdd_inventory_warning_is_non_blocking() {
