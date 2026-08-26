@@ -602,6 +602,10 @@
 
   <section class="empty hidden" id="taskNotFound" data-testid="list-task-not-found"></section>
 
+  <!-- Issue #449: shown when the reviewer arrived from the quick-review CTA
+       and no review unit on this task is actionable for them. -->
+  <section class="empty hidden" id="noActionableNotice" role="status" data-testid="list-no-actionable-notice"></section>
+
   <div class="toolbar" role="search" aria-label="標記清單搜尋與篩選" id="listToolbar">
     <div class="toolbar-left">
       <!-- Options are role-dependent (completion tri-state vs. review unit
@@ -700,6 +704,8 @@
       clearFiltersLabel: '清除篩選',
       emptyNoResults: '找不到符合條件的資料。',
       emptyNoData: '目前尚無資料。',
+      noActionableReviewTitle: '目前沒有可處理項目',
+      noActionableReviewMessage: '這個任務的審核單位都已定稿，或不在你的可處理範圍內。',
       paginationTpl: '共 {total} 筆 · 第 {page} / {totalPages} 頁',
       pageSizeTpl: '{size} / 頁',
       roleLabelAnnotator: '標記員',
@@ -762,6 +768,8 @@
       clearFiltersLabel: 'Clear filters',
       emptyNoResults: 'No matching data.',
       emptyNoData: 'No data yet.',
+      noActionableReviewTitle: 'No actionable items right now',
+      noActionableReviewMessage: 'Every review unit on this task is finalized or outside what you can act on.',
       paginationTpl: 'Total {total} · Page {page} / {totalPages}',
       pageSizeTpl: '{size} / page',
       roleLabelAnnotator: 'Annotator',
@@ -1048,7 +1056,8 @@
       identityParams: {
         annotator_id: params.get('annotator_id'),
         reviewer_id: params.get('reviewer_id')
-      }
+      },
+      notice: params.get('notice') || ''
     };
   }
 
@@ -1751,9 +1760,26 @@
     document.getElementById('taskInfoTitle').textContent =
       (isEn && profile.nameEn) ? profile.nameEn : profile.nameZh;
 
+    /* Issue #450: a reviewer's summary, progress bar and completion badge
+       are DERIVED from the live review-unit state via the shared
+       computeReviewSummary() formula, so they can never contradict the
+       review-unit rows below. Null for annotators, and for reviewer tasks
+       with no stored review-unit state to derive from. */
+    var reviewSummary = null;
+    if (context.role === 'reviewer') {
+      var derivedSummary = window.LabelSuiteAnnotationWorkspaceData.computeReviewSummary(
+        profile.id, context.runType);
+      if (derivedSummary.derivable) reviewSummary = derivedSummary;
+    }
+
     var completionMap = readCompletionStateMap();
     var completionState = completionMap[completionStateKey(context.role, profile.id, context.runType)];
-    var isCompleted = Boolean(completionState && completionState.allSubmitted);
+    /* 審核覆蓋率 100% is not "done": a covered unit may still be awaiting
+       quorum, modified or disputed, so only a fully finalized task counts
+       as completed for a reviewer (issue #310/#450). */
+    var isCompleted = reviewSummary
+      ? reviewSummary.unfinalized === 0
+      : Boolean(completionState && completionState.allSubmitted);
 
     /* Count follows the materialized run context when the profile declares
        one for this run_type (spec 015: list items are materialized by
@@ -1764,11 +1790,17 @@
       : profile.datasetRecords.length;
     /* Progress summary reuses the dashboard assignment seeds so the card
        shows the exact stats/progress of the matching dashboard row
-       (FR-007C/FR-007D: same progress contract as the dashboard list). */
+       (FR-007C/FR-007D: same progress contract as the dashboard list).
+       Reviewers override that seed with the derived summary above -- both
+       pages compose it from the same formula, so they still agree. */
     var stats = findAssignmentStats(profile.id, context.role);
+    var summaryText = reviewSummary
+      ? window.LabelSuiteAnnotationWorkspaceData.formatReviewSummary(
+          reviewSummary, stats ? stats.iaa : null)
+      : (stats ? stats.detail : null);
     var detailParts = [];
-    if (stats && stats.detail) {
-      detailParts.push(isEn ? stats.detail.en : stats.detail.zh);
+    if (summaryText) {
+      detailParts.push(isEn ? summaryText.en : summaryText.zh);
     }
     if (context.runType === 'dry_run') {
       var round = runCtx && runCtx.round != null ? runCtx.round : 1;
@@ -1798,9 +1830,11 @@
     statusEl.textContent = isCompleted ? t('taskStatusCompleted') : t('taskStatusInProgress');
     statusEl.className = 'badge ' + (isCompleted ? 'badge-success' : 'badge-info');
 
-    var progressPct = isCompleted
-      ? 100
-      : (stats && typeof stats.progress === 'number' ? stats.progress : 0);
+    var progressPct = reviewSummary
+      ? reviewSummary.coveragePct
+      : (isCompleted
+        ? 100
+        : (stats && typeof stats.progress === 'number' ? stats.progress : 0));
     document.getElementById('taskInfoProgressBar').style.width = progressPct + '%';
 
     var quickBtn = document.getElementById('taskQuickContinueBtn');
@@ -1844,6 +1878,29 @@
     el.appendChild(linkRow);
   }
 
+  /* Issue #449: the reviewer quick-review CTA sends `notice` instead of
+     opening an arbitrary read-only unit when it finds nothing actionable.
+     Rendered from renderContext() so the language toggle re-renders it with
+     everything else. */
+  function renderNoActionableNotice(context) {
+    var el = document.getElementById('noActionableNotice');
+    if (!el) return;
+    if (context.notice !== 'no_actionable_review' || context.role !== 'reviewer') {
+      el.classList.add('hidden');
+      return;
+    }
+    el.innerHTML = '';
+    var title = document.createElement('strong');
+    title.style.display = 'block';
+    title.style.marginBottom = '4px';
+    title.textContent = t('noActionableReviewTitle');
+    var message = document.createElement('span');
+    message.textContent = t('noActionableReviewMessage');
+    el.appendChild(title);
+    el.appendChild(message);
+    el.classList.remove('hidden');
+  }
+
   function renderContext(context) {
     document.getElementById('pageTitle').textContent = t('pageTitle');
     document.getElementById('pageSubtitle').textContent =
@@ -1862,6 +1919,7 @@
 
     if (context.profile) {
       renderTaskInfo(context, context.profile);
+      renderNoActionableNotice(context);
     } else {
       renderNotFound(context.taskId);
     }

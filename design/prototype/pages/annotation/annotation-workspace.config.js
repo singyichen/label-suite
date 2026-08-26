@@ -18,8 +18,6 @@
   var I18N = {
     zh: {
       sampleListTitle: '標記清單',
-      noteLabel: '備註（選填）',
-      notePlaceholder: '若有特殊情況可在此說明…',
       submitLabel: '提交',
       saveLabel: '儲存草稿',
       wsSaveSuccess: '已儲存',
@@ -51,7 +49,7 @@
       reviewRejectLabel: '退回',
       wsReviewSubmitSuccess: '審查已提交',
       reviewNoAnswer: '（無）',
-      reviewNote: '通過：此筆標記有效。退回：該標記狀態會回到未標記，標記員需要重新標記。',
+      reviewNote: '通過：採用此筆標記。退回：記錄審核決策與修正差異，與回退標記員狀態是不同層級的效果——正式標記退回後該樣本回到待標記，產生標記員重標待辦；試標退回不改變標記員狀態，品質問題由 IAA 閘門與下一輪試標處理。',
       reviewCorrectionTitle: '直接修正',
       toastSelectDecision: '請完成每位標記員的審核決策',
       toastReviewCorrectionReset: '偵測到直接修正的內容因重新整理而遺失，對應的通過／退回決策已重置，請重新確認後再送出',
@@ -65,6 +63,14 @@
       wsArbitrationSubmitSuccess: '仲裁已提交',
       arbitrationChoiceA: 'A・標記員',
       arbitrationChoiceB: 'B・審核員',
+      arbitrationQuorum: '已提交審核員 {x} 位 · 定稿門檻 {n} 位 · 嚴格多數需 > {th} 票',
+      arbitrationVoteTally: '{value}：{count} 票（{pct}%）',
+      arbitrationVoteAnnotator: '標記員原答案',
+      arbitrationVoteDistSep: '：',
+      arbitrationVoteReasonEvenTie: '未收斂原因：{dist} 平手，沒有值取得嚴格多數（需 > {th} 票）',
+      arbitrationVoteReasonAllDivergent: '未收斂原因：{dist} 全數分歧，沒有值取得嚴格多數（需 > {th} 票）',
+      arbitrationVoteReasonNoMajority: '未收斂原因：票數分布 {dist}，沒有值取得嚴格多數（需 > {th} 票）',
+      arbitrationVoteReasonSingleReviewer: '未收斂原因：僅 1 位審核員提出異議，單一審核員不足以推翻標記員答案',
       historyActionOverridden: '已覆寫',
       historyActionGoldConfirmed: '已確認標準答案',
       historyActionGoldReopened: '重新開放標準答案',
@@ -74,6 +80,9 @@
       unitCtxAnnotator: '標記員 {id}',
       unitCtxRoster: '本樣本 {m} 位標記員',
       unitCtxReviewed: '已審 {x} / {n}',
+      wsSampleGroupCount: '{n} 位標記員',
+      wsSampleGroupAria: '樣本 {sample}，{n} 位標記員',
+      wsSampleUnitAria: '樣本 {sample}，標記員 {annotator}，{state}',
       unitStatePending: '待審',
       unitStateApproved: '已同意',
       unitStateModified: '已修改',
@@ -88,8 +97,6 @@
     },
     en: {
       sampleListTitle: 'Samples',
-      noteLabel: 'Notes (optional)',
-      notePlaceholder: 'Describe special cases here...',
       submitLabel: 'Submit',
       saveLabel: 'Save draft',
       wsSaveSuccess: 'Saved',
@@ -121,7 +128,7 @@
       reviewRejectLabel: 'Reject',
       wsReviewSubmitSuccess: 'Review submitted',
       reviewNoAnswer: '(none)',
-      reviewNote: 'Approve: this annotation is valid. Reject: the sample returns to pending and the annotator must redo it.',
+      reviewNote: 'Approve: accept this annotation. Reject: records the review decision and any correction, which is a different level of effect from rolling back the annotator status -- in an official run a reject returns the sample to pending and creates a re-annotation task for the annotator; in a dry run a reject leaves the annotator status unchanged, and quality issues are handled by the IAA gate and the next dry run.',
       reviewCorrectionTitle: 'Direct correction',
       toastSelectDecision: 'Please decide on every annotator before submitting',
       toastReviewCorrectionReset: 'The direct correction was lost on reload, so the matching approve/reject decision was reset -- please re-confirm before submitting',
@@ -135,6 +142,14 @@
       wsArbitrationSubmitSuccess: 'Arbitration submitted',
       arbitrationChoiceA: 'A · Annotator',
       arbitrationChoiceB: 'B · Reviewer',
+      arbitrationQuorum: 'Submitted reviewers {x} · finalization threshold {n} · strict majority needs > {th} votes',
+      arbitrationVoteTally: '{value}: {count} votes ({pct}%)',
+      arbitrationVoteAnnotator: "annotator's original answer",
+      arbitrationVoteDistSep: ' : ',
+      arbitrationVoteReasonEvenTie: 'Not converged: {dist} tie, no value reached a strict majority (needs > {th} votes)',
+      arbitrationVoteReasonAllDivergent: 'Not converged: {dist} all divergent, no value reached a strict majority (needs > {th} votes)',
+      arbitrationVoteReasonNoMajority: 'Not converged: vote split {dist}, no value reached a strict majority (needs > {th} votes)',
+      arbitrationVoteReasonSingleReviewer: 'Not converged: only one reviewer dissented, and a single reviewer cannot outvote the annotator',
       historyActionOverridden: 'Overridden',
       historyActionGoldConfirmed: 'Gold confirmed',
       historyActionGoldReopened: 'Gold reopened',
@@ -144,6 +159,9 @@
       unitCtxAnnotator: 'Annotator {id}',
       unitCtxRoster: '{m} annotators on this sample',
       unitCtxReviewed: 'Reviewed {x} / {n}',
+      wsSampleGroupCount: '{n} annotators',
+      wsSampleGroupAria: 'Sample {sample}, {n} annotators',
+      wsSampleUnitAria: 'Sample {sample}, annotator {annotator}, {state}',
       unitStatePending: 'Pending review',
       unitStateApproved: 'Approved',
       unitStateModified: 'Modified',
@@ -1546,6 +1564,63 @@
     window.history.replaceState(null, '', window.location.pathname + '?' + params.toString());
   }
 
+  /* Reviewer-only sample group wrapper (issue #455). One review unit per
+     row (FR-056) means a 3-annotator sample renders three rows whose ONLY
+     difference is the annotator account -- the record snippet above it is
+     byte-identical three times over, and in a 256px column it is the
+     snippet that wins the reviewer's attention. Hoisting the sample
+     identity plus the shared snippet into one header per sample lets each
+     row below it carry only what actually differs (annotator + review
+     state), and gives the sample boundary a structural marker instead of
+     asking the reviewer to diff three lines of small print.
+     `role="group"` + `aria-label` is the ARIA-sanctioned way to partition a
+     listbox, so the grouping is exposed to AT rather than being purely
+     visual (the annotation-list counterpart, FR-067, only had table rows to
+     work with and had to settle for a border + de-emphasis). */
+  function buildSampleGroup(record, recordId, unitCount) {
+    var group = document.createElement('div');
+    group.className = 'sample-group';
+    group.setAttribute('role', 'group');
+    group.setAttribute('data-testid', 'ws-sample-group');
+    group.setAttribute('data-sample-id', recordId);
+    group.setAttribute(
+      'aria-label',
+      t('wsSampleGroupAria').replace('{sample}', recordId).replace('{n}', String(unitCount))
+    );
+
+    var header = document.createElement('div');
+    header.className = 'sample-group-header';
+
+    var title = document.createElement('div');
+    title.className = 'sample-group-title';
+    var idEl = document.createElement('span');
+    idEl.className = 'sample-group-id';
+    idEl.setAttribute('data-testid', 'ws-sample-group-id');
+    /* The column is narrow enough to ellipsise a realistic sample_id, so the
+       full value has to stay reachable without leaving the page. */
+    idEl.setAttribute('title', recordId);
+    idEl.textContent = recordId;
+    var countEl = document.createElement('span');
+    countEl.className = 'sample-group-count';
+    countEl.setAttribute('data-testid', 'ws-sample-group-count');
+    countEl.textContent = t('wsSampleGroupCount').replace('{n}', String(unitCount));
+    title.appendChild(idEl);
+    title.appendChild(countEl);
+    header.appendChild(title);
+
+    var snippet = document.createElement('div');
+    snippet.className = 'sample-group-snippet';
+    snippet.setAttribute('data-testid', 'ws-sample-group-snippet');
+    snippet.textContent = window.LabelSuiteAnnotationWorkspaceData.getRecordPreviewText(
+      record,
+      currentProfile.fieldRoleMap
+    );
+    header.appendChild(snippet);
+
+    group.appendChild(header);
+    return group;
+  }
+
   function renderSampleList() {
     var listEl = document.getElementById('sampleList');
     var countEl = document.getElementById('sampleListCount');
@@ -1566,6 +1641,16 @@
       currentRole === 'reviewer' || !runCtx || typeof runCtx.total !== 'number' ? units.length : runCtx.total;
     if (countEl) countEl.textContent = totalCount + (state.lang === 'zh' ? ' 筆' : ' items');
 
+    /* Group size is the roster size of that sample, counted off the same
+       flattened `units` the rows come from -- never re-derived from the
+       profile, so the header can never disagree with the rows under it. */
+    var unitsPerSample = {};
+    units.forEach(function (unit) {
+      unitsPerSample[unit.recordId] = (unitsPerSample[unit.recordId] || 0) + 1;
+    });
+    var openGroupId = null;
+    var openGroupEl = null;
+
     units.forEach(function (unit, idx) {
       var record = unit.record;
       var recordId = unit.recordId;
@@ -1578,13 +1663,19 @@
         recordId,
         unitIdentity(unit)
       );
+      var isActive = isCurrentUnit(unit);
       var item = document.createElement('button');
       item.type = 'button';
-      item.className = 'sample-item' + (isCurrentUnit(unit) ? ' active' : '');
+      item.className = 'sample-item' + (isActive ? ' active' : '');
       if (status === 'submitted') item.classList.add('status-submitted');
       else if (status === 'saved') item.classList.add('status-saved');
       item.setAttribute('data-testid', 'ws-sample-item');
       item.setAttribute('data-submitted', status === 'submitted' ? 'true' : 'false');
+      /* Both halves of the review unit are addressable on the entry itself
+         (issue #455), so "which unit am I on" no longer depends on reading
+         two truncated text spans. */
+      item.setAttribute('data-sample-id', recordId);
+      item.setAttribute('data-annotator-id', unit.annotatorId);
 
       var indexBadge = document.createElement('span');
       indexBadge.className = 'sample-index';
@@ -1593,31 +1684,38 @@
 
       var meta = document.createElement('div');
       meta.className = 'sample-meta';
-      var snippet = document.createElement('div');
-      snippet.className = 'sample-snippet';
-      snippet.textContent = window.LabelSuiteAnnotationWorkspaceData.getRecordPreviewText(
-        record,
-        currentProfile.fieldRoleMap
-      );
-      meta.appendChild(snippet);
-      /* Three consecutive reviewer entries share one snippet, so the entry
-         has to name the unit it stands for (FR-056). */
-      if (currentRole === 'reviewer') {
+      /* Reviewer entries drop the snippet: it is identical for every unit of
+         the sample and now lives once in the group header (issue #455).
+         Annotator entries keep it -- one entry per record, nothing repeats. */
+      if (currentRole !== 'reviewer') {
+        var snippet = document.createElement('div');
+        snippet.className = 'sample-snippet';
+        snippet.textContent = window.LabelSuiteAnnotationWorkspaceData.getRecordPreviewText(
+          record,
+          currentProfile.fieldRoleMap
+        );
+        meta.appendChild(snippet);
+      } else {
+        /* The annotator leads (it is what distinguishes the units of one
+           group); the sample ID stays as a muted trailing echo so the entry
+           remains self-describing when read out of its group context. */
         var unitLine = document.createElement('div');
         unitLine.className = 'sample-unit-line';
-        var unitId = document.createElement('span');
-        unitId.className = 'sample-unit-id';
-        unitId.textContent = recordId;
-        var unitSep = document.createElement('span');
-        unitSep.className = 'sample-unit-sep';
-        unitSep.textContent = '·';
         var unitAnnotator = document.createElement('span');
         unitAnnotator.className = 'sample-unit-annotator';
         unitAnnotator.setAttribute('data-testid', 'ws-sample-annotator');
+        unitAnnotator.setAttribute('title', unit.annotatorId);
         unitAnnotator.textContent = unit.annotatorId;
-        unitLine.appendChild(unitId);
-        unitLine.appendChild(unitSep);
+        var unitSep = document.createElement('span');
+        unitSep.className = 'sample-unit-sep';
+        unitSep.textContent = '·';
+        var unitId = document.createElement('span');
+        unitId.className = 'sample-unit-id';
+        unitId.setAttribute('title', recordId);
+        unitId.textContent = recordId;
         unitLine.appendChild(unitAnnotator);
+        unitLine.appendChild(unitSep);
+        unitLine.appendChild(unitId);
         meta.appendChild(unitLine);
       }
       var statusLabel = document.createElement('span');
@@ -1633,11 +1731,35 @@
           : status === 'submitted' ? t('wsStatusSubmitted') : status === 'saved' ? t('wsStatusSaved') : t('wsStatusPending');
       meta.appendChild(statusLabel);
       item.appendChild(meta);
+      /* The visible entry no longer repeats the snippet, so its accessible
+         name is spelled out rather than left to concatenated text nodes --
+         a screen-reader user must still hear the full sample AND annotator,
+         neither of which is guaranteed to be untruncated on screen. */
+      if (currentRole === 'reviewer') {
+        item.setAttribute(
+          'aria-label',
+          t('wsSampleUnitAria')
+            .replace('{sample}', recordId)
+            .replace('{annotator}', unit.annotatorId)
+            .replace('{state}', statusLabel.textContent)
+        );
+      }
 
       item.addEventListener('click', function () {
         selectSample(recordId, unit.annotatorId);
       });
-      listEl.appendChild(item);
+
+      if (currentRole !== 'reviewer') {
+        listEl.appendChild(item);
+        return;
+      }
+      if (openGroupId !== recordId) {
+        openGroupId = recordId;
+        openGroupEl = buildSampleGroup(record, recordId, unitsPerSample[recordId]);
+        listEl.appendChild(openGroupEl);
+      }
+      if (isActive) openGroupEl.classList.add('has-active');
+      openGroupEl.appendChild(item);
     });
   }
 
@@ -2404,10 +2526,16 @@
     correctionTitle.textContent = t('reviewCorrectionTitle');
     row.appendChild(correctionTitle);
 
-    /* issue #399: reviewNote explains what approve/reject actually do (a
-       reject rolls the sample back to pending for the annotator to redo),
-       but was defined in I18N and never rendered anywhere -- render it so
-       reviewers can actually read it before deciding. */
+    /* issue #399: reviewNote explains what approve/reject actually do, but
+       was defined in I18N and never rendered anywhere -- render it so
+       reviewers can actually read it before deciding.
+       issue #451 (FR-070/AC-3.40): that explanation used to promise the
+       annotator-status rollback unconditionally, while FR-014I scopes the
+       rollback to official_run (AC-3.15/AC-6.4). Since AC-3.33 forbids any
+       run_type presentation branch on the review card, the note stays ONE
+       run-type-invariant string that names both outcomes and separates the
+       review decision from the annotator-status rollback -- same shape as
+       the run-type-qualified sidebar shortcut label (issue #409). */
     var note = document.createElement('p');
     note.className = 'rv-review-note';
     note.setAttribute('data-testid', 'ws-review-note');
@@ -2595,6 +2723,54 @@
     return item.key === item.outKey ? item.outKey : item.outKey + ' · ' + item.key;
   }
 
+  /* Pre-decision dispute context (issue #454, FR-074): the A/B buttons alone
+     never said WHY the item is unresolved, so a 1:1 tie and a not-yet-met
+     quorum looked identical. Renders the aggregate tally and the failed
+     strict-majority condition derived by describeDisputeVotes() -- the same
+     derivation resolveDisputeConvergence() decides on, so the explanation
+     can never contradict the verdict. Aggregate only: no reviewer id or name
+     is ever attributed to a value, so the block is safe under blind review
+     (FR-062), and only submitted answers feed it (Data Fairness). */
+  var ARBITRATION_REASON_I18N_KEYS = {
+    even_tie: 'arbitrationVoteReasonEvenTie',
+    all_divergent: 'arbitrationVoteReasonAllDivergent',
+    no_majority: 'arbitrationVoteReasonNoMajority',
+    single_reviewer: 'arbitrationVoteReasonSingleReviewer',
+  };
+
+  function buildArbitrationVotesBlock(votes) {
+    var block = document.createElement('div');
+    block.setAttribute('data-testid', 'ws-arbitration-votes');
+    block.style.cssText = 'font-size:12px;color:var(--color-text-soft);margin-bottom:6px;';
+    votes.candidates.forEach(function (candidate) {
+      var label = formatDisputeValue(candidate.value);
+      var row = document.createElement('div');
+      row.setAttribute('data-testid', 'ws-arbitration-vote-tally');
+      row.setAttribute('data-value', label);
+      row.setAttribute('data-count', String(candidate.count));
+      if (candidate.isAnnotatorValue) row.setAttribute('data-annotator', 'true');
+      row.textContent = t('arbitrationVoteTally')
+        .replace('{value}', label)
+        .replace('{count}', String(candidate.count))
+        .replace('{pct}', String(votes.reviewerCount
+          ? Math.round((candidate.count / votes.reviewerCount) * 100)
+          : 0))
+        + (candidate.isAnnotatorValue ? ' · ' + t('arbitrationVoteAnnotator') : '');
+      block.appendChild(row);
+    });
+    var reason = document.createElement('div');
+    reason.setAttribute('data-testid', 'ws-arbitration-vote-reason');
+    reason.setAttribute('data-reason', votes.reason);
+    reason.style.cssText = 'margin-top:4px;';
+    reason.textContent = t(ARBITRATION_REASON_I18N_KEYS[votes.reason])
+      .replace('{dist}', votes.candidates.map(function (candidate) {
+        return String(candidate.count);
+      }).join(t('arbitrationVoteDistSep')))
+      .replace('{th}', String(votes.majorityThreshold));
+    block.appendChild(reason);
+    return block;
+  }
+
   function buildArbitrationChoiceButton(testid, label, value, onSelect) {
     var btn = document.createElement('button');
     btn.type = 'button';
@@ -2606,7 +2782,7 @@
     return btn;
   }
 
-  function buildArbitrationItemRow(item) {
+  function buildArbitrationItemRow(item, votes) {
     var itemId = disputeItemId(item);
     var row = document.createElement('div');
     row.setAttribute('data-testid', 'ws-arbitration-item');
@@ -2616,6 +2792,7 @@
     label.style.cssText = 'font-size:12px;font-weight:600;margin-bottom:6px;';
     label.textContent = disputeItemLabel(item);
     row.appendChild(label);
+    row.appendChild(buildArbitrationVotesBlock(votes));
 
     var group = document.createElement('div');
     group.className = 'rv-choice-group';
@@ -2712,6 +2889,23 @@
     note.textContent = t('arbitrationNote');
     card.appendChild(note);
 
+    var reviewerCount = data.readReviewerSubmissions(
+      currentProfile.id, currentRunType, currentSampleId, currentIdentity
+    ).length;
+
+    /* Submitted reviewers against the finalization threshold (issue #454):
+       without it "2 reviewers disagreed" and "the quorum is not met yet"
+       render identically, and the arbiter cannot tell which one they are
+       resolving. */
+    var quorum = document.createElement('div');
+    quorum.setAttribute('data-testid', 'ws-arbitration-quorum');
+    quorum.style.cssText = 'font-size:12px;color:var(--color-text-soft);margin:0 0 10px;';
+    quorum.textContent = t('arbitrationQuorum')
+      .replace('{x}', String(reviewerCount))
+      .replace('{n}', String(currentProfile.minReviewers || 1))
+      .replace('{th}', String(reviewerCount / 2));
+    card.appendChild(quorum);
+
     /* Read-only context: the annotator's full answers, so the arbiter sees
        the agreed parts around each disputed value. */
     var agreedTitle = document.createElement('div');
@@ -2729,9 +2923,6 @@
     var items = data.getDisputeItems(
       currentProfile.id, currentRunType, currentSampleId, currentIdentity, state.selectedOutputTypes
     );
-    var reviewerCount = data.readReviewerSubmissions(
-      currentProfile.id, currentRunType, currentSampleId, currentIdentity
-    ).length;
     var arbState = data.getArbitrationState(currentProfile.id, currentRunType, currentSampleId, currentIdentity);
     var openItemIds = [];
     items.forEach(function (item) {
@@ -2750,7 +2941,7 @@
         return;
       }
       openItemIds.push(disputeItemId(item));
-      card.appendChild(buildArbitrationItemRow(item));
+      card.appendChild(buildArbitrationItemRow(item, data.describeDisputeVotes(item, reviewerCount)));
     });
 
     if (openItemIds.length) {
@@ -3447,10 +3638,6 @@
     setText('wsAutosaveLabel', t('wsAutosaveSaved'));
     setText('wsTabGuidelineLabel', t('wsTabGuideline'));
     setText('wsTabHistoryLabel', t('wsTabHistory'));
-    var noteLabel = document.getElementById('wsNoteLabel');
-    if (noteLabel) noteLabel.textContent = t('noteLabel');
-    var noteInput = document.getElementById('wsNoteInput');
-    if (noteInput) noteInput.placeholder = t('notePlaceholder');
     setText('wsGuidelineModalTitleText', t('guidelineModalTitle'));
     setText('wsGuidelineModalConfirm', t('guidelineModalConfirm'));
     setText('guidelineSummaryTitle', t('guidelineSummaryTitle'));

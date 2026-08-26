@@ -1939,26 +1939,269 @@
     return JSON.stringify(value);
   }
 
+  /* The tally itself, extracted so the convergence verdict and the
+   * pre-decision context an arbiter reads (describeDisputeVotes, FR-074)
+   * can never disagree about who voted for what -- one derivation, two
+   * consumers. Returns [{ value, count, isAnnotatorValue }] in A-then-B
+   * order (the annotator's value first, mirroring the arbitration card's
+   * A/B buttons), with zero-vote candidates dropped: when every reviewer
+   * dissented, the annotator's value is nobody's vote and must not be
+   * offered as a 0-vote candidate. */
+  function tallyDisputeVotes(item, reviewerCount) {
+    var tally = {};
+    var values = {};
+    var order = [];
+    function vote(value, count) {
+      var key = valueKey(value);
+      if (!Object.prototype.hasOwnProperty.call(tally, key)) {
+        order.push(key);
+        values[key] = value;
+        tally[key] = 0;
+      }
+      tally[key] += count;
+    }
+    var reviewerIds = Object.keys(item.reviewerValues);
+    var annotatorKey = valueKey(item.annotatorValue);
+    vote(item.annotatorValue, reviewerCount - reviewerIds.length);
+    reviewerIds.forEach(function (reviewerId) {
+      vote(item.reviewerValues[reviewerId], 1);
+    });
+    return order
+      .filter(function (key) { return tally[key] > 0; })
+      .map(function (key) {
+        return { value: values[key], count: tally[key], isAnnotatorValue: key === annotatorKey };
+      });
+  }
+
   function resolveDisputeConvergence(item, reviewerCount) {
     /* A single reviewer's dissent can never outvote the annotator, even
        though 1 > 1/2 is technically a strict majority. */
     if (reviewerCount < 2) return { converged: false };
-    var tally = {};
-    var values = {};
-    function vote(value, count) {
-      var key = valueKey(value);
-      tally[key] = (tally[key] || 0) + count;
-      values[key] = value;
-    }
-    var reviewerIds = Object.keys(item.reviewerValues);
-    reviewerIds.forEach(function (reviewerId) {
-      vote(item.reviewerValues[reviewerId], 1);
-    });
-    vote(item.annotatorValue, reviewerCount - reviewerIds.length);
-    var winner = Object.keys(tally).filter(function (key) {
-      return tally[key] > reviewerCount / 2;
+    var winner = tallyDisputeVotes(item, reviewerCount).filter(function (candidate) {
+      return candidate.count > reviewerCount / 2;
     })[0];
-    return winner ? { converged: true, value: values[winner] } : { converged: false };
+    return winner ? { converged: true, value: winner.value } : { converged: false };
+  }
+
+  /* ---- Pre-decision dispute context (spec 015 v4.29.0, issue #454) -------
+   * Why one dispute item failed to converge, in the arbiter's terms. The
+   * arbitration card used to render two bare candidate values, so a 1:1 tie
+   * and an unmet quorum looked identical. This exposes the same numbers
+   * resolveDisputeConvergence() decides on -- candidate tallies, the strict
+   * majority threshold (> N/2) and which non-convergence shape applies:
+   *   single_reviewer N < 2 -- one dissenting reviewer cannot outvote the
+   *                   annotator even though 1 > 1/2 holds arithmetically,
+   *                   so this case must NOT be explained as "> N/2 unmet"
+   *   even_tie      exactly two candidate values share the lead (1:1, 2:2)
+   *   all_divergent three or more candidates with one vote each (1/1/1)
+   *   no_majority   anything else short of a strict majority
+   * The two-candidate case is classified as a tie BEFORE the all-divergent
+   * check so N=2 (where both shapes technically hold) reads as 平手, the
+   * distinction the arbiter actually acts on.
+   *
+   * Candidate identity is deliberately absent: the tally is an aggregate,
+   * never "reviewer X voted Y", so it is safe to render under any
+   * blind-review setting (FR-062). Only submitted answers feed it -- no
+   * gold/ground-truth column is read (Data Fairness). */
+  function describeDisputeVotes(item, reviewerCount) {
+    var candidates = tallyDisputeVotes(item, reviewerCount);
+    var converged = resolveDisputeConvergence(item, reviewerCount).converged;
+    var leadCount = candidates.reduce(function (max, candidate) {
+      return Math.max(max, candidate.count);
+    }, 0);
+    var leaders = candidates.filter(function (candidate) { return candidate.count === leadCount; });
+    var reason = null;
+    if (!converged) {
+      if (reviewerCount < 2) reason = 'single_reviewer';
+      else if (candidates.length === 2 && leaders.length === 2) reason = 'even_tie';
+      else if (candidates.length >= 3 && leaders.length === candidates.length) reason = 'all_divergent';
+      else reason = 'no_majority';
+    }
+    return {
+      reviewerCount: reviewerCount,
+      majorityThreshold: reviewerCount / 2,
+      candidates: candidates,
+      converged: converged,
+      reason: reason,
+    };
+  }
+
+  /* ---- Reviewer task summary (spec 015 v4.27.0 FR-072, issue #450) ------
+   * SINGLE SOURCE OF TRUTH for the reviewer counters shown on the dashboard
+   * task card and the annotation-list task info card. Both used to print a
+   * prebuilt display string from dashboard.assignments.js while the review
+   * unit rows on the same screen derived their state from storage, so a
+   * finished review flipped the row to 已定稿 while the summary above it
+   * still promised 待審 1 筆.
+   *
+   * Review units are enumerated exactly the way annotation-list's
+   * buildReviewUnitRows() enumerates its rows -- one unit per
+   * datasetRecord x mock annotator row -- and each one's state comes from
+   * getReviewUnitStatus(). A unit whose annotator has not submitted derives
+   * null and is counted as 待審, matching the row's own `|| PENDING`
+   * fallback. */
+  function listReviewUnits(taskId, runType) {
+    var listEntry = findTaskListEntry(taskId);
+    var detail = findTaskDetailProfile(taskId);
+    if (!listEntry || !detail) return [];
+    var outKeys = listEntry.outputTypes || [];
+    var opts = { minReviewers: detail.minReviewers || 1 };
+    var units = [];
+    (detail.datasetRecords || []).forEach(function (record, index) {
+      var sampleId = getRecordId(record, index);
+      getReviewerMockRows(taskId, sampleId).forEach(function (mockRow) {
+        units.push({
+          sampleId: sampleId,
+          annotatorId: mockRow.annotator,
+          status: getReviewUnitStatus(
+            taskId, runType, sampleId, { annotatorId: mockRow.annotator }, outKeys, opts),
+        });
+      });
+    });
+    return units;
+  }
+
+  /* Issue #449 keeps the enumeration in listReviewUnits() and leaves this
+     the projection the counters need, so the summary and the quick-review
+     target can never disagree about which units exist. */
+  function listReviewUnitStatuses(taskId, runType) {
+    return listReviewUnits(taskId, runType).map(function (unit) { return unit.status; });
+  }
+
+  /* The counting formulas, defined once:
+   *   total       = review units
+   *   pending     = units nobody has reviewed yet
+   *   disputed    = units sitting in the dispute pool
+   *   unfinalized = total - finalized (pending units included: not final)
+   *   coveragePct = round((total - pending) / total * 100), 0 when total = 0
+   * 審核覆蓋率 is the share of units past 待審, NOT a completion rate
+   * (issue #310): a unit past MY review can still be approved-but-short-of-
+   * quorum, modified or disputed, so 100% coverage must never be rendered
+   * as a finished task -- read `unfinalized`/`disputed` for that.
+   *
+   * `derivable` is false when NO unit has stored review-unit state at all;
+   * the task then has nothing to derive and its consumer keeps the seeded
+   * illustrative summary. The condition is the presence of data, never a
+   * task id (Generalization-First). */
+  function computeReviewSummary(taskId, runType) {
+    var statuses = listReviewUnitStatuses(taskId, runType);
+    var counts = { pending: 0, approved: 0, modified: 0, disputed: 0, finalized: 0 };
+    var derivable = false;
+    statuses.forEach(function (status) {
+      if (status === null) { counts.pending += 1; return; }
+      derivable = true;
+      if (counts[status] !== undefined) counts[status] += 1;
+    });
+    var total = statuses.length;
+    return {
+      total: total,
+      pending: counts.pending,
+      approved: counts.approved,
+      modified: counts.modified,
+      disputed: counts.disputed,
+      finalized: counts.finalized,
+      unfinalized: total - counts.finalized,
+      coveragePct: total === 0 ? 0 : Math.round(((total - counts.pending) / total) * 100),
+      derivable: derivable,
+    };
+  }
+
+  /* Renders a computeReviewSummary() result as the localized summary text
+   * both consumers display. One rule, no per-task branches: coverage is
+   * always shown, every other counter appears only when non-zero, so a
+   * vacuous "待審 0 筆" never crowds out the 未定稿/爭議 breakdown that
+   * actually needs the reviewer's attention. `iaa` is the seed's structured
+   * inter-annotator agreement value (not derivable from review units) and is
+   * omitted when absent. */
+  var REVIEW_SUMMARY_LABELS = {
+    zh: {
+      pending: '待審 {n} 筆',
+      coverage: '審核覆蓋率 {n}%',
+      unfinalized: '未定稿 {n} 筆',
+      disputed: '爭議 {n} 筆',
+      iaa: 'IAA {n}',
+    },
+    en: {
+      pending: '{n} Pending',
+      coverage: '{n}% Review Coverage',
+      unfinalized: '{n} Unfinalized',
+      disputed: '{n} Disputed',
+      iaa: 'IAA {n}',
+    },
+  };
+
+  function formatReviewSummary(summary, iaa) {
+    var result = {};
+    Object.keys(REVIEW_SUMMARY_LABELS).forEach(function (lang) {
+      var labels = REVIEW_SUMMARY_LABELS[lang];
+      var parts = [];
+      function push(key, value) { parts.push(labels[key].replace('{n}', String(value))); }
+      if (summary.pending > 0) push('pending', summary.pending);
+      push('coverage', summary.coveragePct);
+      if (summary.unfinalized > 0) push('unfinalized', summary.unfinalized);
+      if (summary.disputed > 0) push('disputed', summary.disputed);
+      /* IAA keeps the 2-decimal presentation used everywhere else. */
+      if (iaa !== undefined && iaa !== null) push('iaa', Number(iaa).toFixed(2));
+      result[lang] = parts.join(' · ');
+    });
+    return result;
+  }
+
+  /* ---- Next actionable review unit (spec 015 v4.28.0 FR-073, issue #449) --
+   * Which unit a reviewer should be handed next, over the SAME enumeration
+   * the summary counts (listReviewUnits). The dashboard quick-review CTA
+   * used to open each task's first dataset record, so on most tasks it
+   * landed on a finalized, read-only unit and the reviewer had to go find
+   * their actual backlog.
+   *
+   * Rank 0 means "not actionable for this reviewer" and is the answer for
+   * finalized units (terminal) and for units this reviewer has already
+   * decided or may not decide. Lower rank wins; ties keep enumeration order,
+   * so the earliest unit of the strongest category is the target.
+   *
+   *   1  pending    -- nobody has reviewed it yet. A null status (annotator
+   *                    has not submitted) ranks here too, matching how
+   *                    computeReviewSummary counts it and how the list row
+   *                    renders it, so the CTA can never contradict the 待審
+   *                    count shown next to it.
+   *   2  disputed   -- only when FR-060 lets THIS reviewer arbitrate it:
+   *                    can_arbitrate plus no submission of their own on the
+   *                    unit. A reviewer who produced the dispute must never
+   *                    be routed to decide it.
+   *   3  approved / modified -- decided, but short of min_reviewers, so one
+   *                    more judgement still moves it; skipped when this
+   *                    reviewer is the one who already judged it.
+   *
+   * Nothing here reads a task id: the rule is task state plus reviewer
+   * identity only (Generalization-First). */
+  function reviewUnitActionRank(taskId, runType, unit, reviewerId) {
+    var identity = { annotatorId: unit.annotatorId, reviewerId: reviewerId };
+    if (unit.status === null || unit.status === REVIEW_UNIT_STATUS.PENDING) return 1;
+    if (unit.status === REVIEW_UNIT_STATUS.DISPUTED) {
+      return isArbiterCandidate(taskId, runType, unit.sampleId, identity) ? 2 : 0;
+    }
+    if (unit.status === REVIEW_UNIT_STATUS.APPROVED
+      || unit.status === REVIEW_UNIT_STATUS.MODIFIED) {
+      return getSubmission(taskId, 'reviewer', runType, unit.sampleId, identity) ? 0 : 3;
+    }
+    return 0;
+  }
+
+  /* Returns { sampleId, annotatorId, status } or null when this reviewer has
+     nothing left to do on the task -- the caller must then say so rather
+     than opening an arbitrary read-only unit. */
+  function findNextActionableReviewUnit(taskId, runType, reviewerId) {
+    var best = null;
+    var bestRank = 0;
+    listReviewUnits(taskId, runType).forEach(function (unit) {
+      var rank = reviewUnitActionRank(taskId, runType, unit, reviewerId);
+      if (rank === 0) return;
+      if (best === null || rank < bestRank) {
+        best = unit;
+        bestRank = rank;
+      }
+    });
+    return best;
   }
 
   /* ---- Review-flow demo seeder (Phase 2 slice C) -------------------------
@@ -2083,11 +2326,16 @@
     REVIEW_UNIT_STATUS: REVIEW_UNIT_STATUS,
     compareOutputAnswer: compareOutputAnswer,
     getReviewUnitStatus: getReviewUnitStatus,
+    computeReviewSummary: computeReviewSummary,
+    formatReviewSummary: formatReviewSummary,
+    listReviewUnits: listReviewUnits,
+    findNextActionableReviewUnit: findNextActionableReviewUnit,
     getDisputeItems: getDisputeItems,
     isArbiterCandidate: isArbiterCandidate,
     readReviewerSubmissions: readReviewerSubmissions,
     getArbitrationState: getArbitrationState,
     submitArbitration: submitArbitration,
     resolveDisputeConvergence: resolveDisputeConvergence,
+    describeDisputeVotes: describeDisputeVotes,
   };
 })(window);

@@ -475,6 +475,12 @@
   <!-- ═══════════════════════════════════════════════════════════ -->
   <script src="../../assets/theme.js"></script>
   <script src="../../assets/analytics.js"></script>
+  <!-- Issue #450: the reviewer cards derive their summary from live
+       review-unit state, so the dashboard needs the same seeds and
+       derivation helpers annotation-list uses. -->
+  <script src="../task-management/task-list.data.js"></script>
+  <script src="../task-management/task-detail.data.js"></script>
+  <script src="../annotation/annotation-workspace.data.js"></script>
   <script src="./dashboard.data.js"></script>
   <script src="./dashboard.assignments.js"></script>
   <script src="./dashboard.i18n.js"></script>

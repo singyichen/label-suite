@@ -231,13 +231,33 @@
      enter as the can_arbitrate reviewer, FR-060); annotation-list forwards
      it into every workspace link (FR-049). Absent -> param stays absent and
      both pages fall back to the same default roster identity. */
+  /* Issue #449: the reviewer quick-review target is DERIVED from the live
+     review-unit state for the signed-in reviewer instead of the
+     dashboard.assignments.js `latestUnfinishedSampleId` seed, which always
+     pointed at the task's first dataset record -- already finalized on most
+     tasks, so the CTA opened a read-only card. Priority and eligibility live
+     in annotation-workspace.data.js (the same enumeration the card summary
+     counts); this only forwards the signed-in reviewer. */
+  function nextActionableUnit(entry) {
+    var workspaceData = global.LabelSuiteAnnotationWorkspaceData;
+    if (!workspaceData || !workspaceData.findNextActionableReviewUnit) return null;
+    return workspaceData.findNextActionableReviewUnit(
+      entry.exampleTaskId,
+      entry.runType,
+      entry.reviewerId || workspaceData.DEFAULT_REVIEWER_ID
+    );
+  }
+
   function identityQuery(role, entry) {
     return role === 'reviewer' && entry.reviewerId
       ? '&reviewer_id=' + encodeURIComponent(entry.reviewerId)
       : '';
   }
 
-  function openAnnotationList(role, entry) {
+  /* `notice` surfaces WHY the list was opened when the caller wanted the
+     workspace but had nothing to open (issue #449); annotation-list renders
+     the matching empty state. Absent for a plain list click. */
+  function openAnnotationList(role, entry, notice) {
     global.LabelSuiteAnalytics.track('prototype_cta_clicked', {
       cta: role === 'annotator'
         ? 'annotator_task_list_open'
@@ -256,7 +276,8 @@
       + '&role=' + encodeURIComponent(role)
       + '&run_type=' + encodeURIComponent(entry.runType || '')
       + '&task_type=' + encodeURIComponent(entry.annotationTaskType || '')
-      + identityQuery(role, entry);
+      + identityQuery(role, entry)
+      + (notice ? '&notice=' + encodeURIComponent(notice) : '');
     global.location.href = listUrl;
   }
 
@@ -271,6 +292,19 @@
       scenario: scenario,
     });
     var sampleId = entry.latestUnfinishedSampleId || '';
+    var annotatorId = '';
+    if (role === 'reviewer') {
+      var unit = nextActionableUnit(entry);
+      /* Nothing this reviewer may act on: the list states that outright.
+         Falling back to the seed's first record would reopen the very
+         read-only unit this CTA exists to skip past (issue #449). */
+      if (!unit) {
+        openAnnotationList(role, entry, 'no_actionable_review');
+        return;
+      }
+      sampleId = unit.sampleId;
+      annotatorId = unit.annotatorId;
+    }
     if (!sampleId) {
       openAnnotationList(role, entry);
       return;
@@ -280,7 +314,11 @@
       + '&sample_id=' + encodeURIComponent(sampleId)
       + '&role=' + encodeURIComponent(role)
       + '&run_type=' + encodeURIComponent(entry.runType || '')
-      + identityQuery(role, entry);
+      + identityQuery(role, entry)
+      /* A review unit is sample x annotator, so the annotator the target
+         unit belongs to has to travel with it -- without it the workspace
+         resolves the default annotator and opens a different unit. */
+      + (annotatorId ? '&annotator_id=' + encodeURIComponent(annotatorId) : '');
     global.location.href = workspaceUrl;
   }
 
@@ -318,12 +356,34 @@
     );
   }
 
+  /* Issue #450: a reviewer card's summary and progress bar are DERIVED from
+     the live review-unit state (annotation-workspace.data.js
+     computeReviewSummary -- the single formula source shared with
+     annotation-list), so finishing a review updates the card instead of
+     leaving the seed's prebuilt string contradicting the unit rows. Tasks
+     with no stored review-unit state have nothing to derive and keep their
+     seeded illustrative summary. Applied before sortEntries() so the
+     progress sort orders by the same number the card shows. */
+  function deriveReviewerEntry(entry) {
+    var workspaceData = global.LabelSuiteAnnotationWorkspaceData;
+    if (!workspaceData || !workspaceData.computeReviewSummary) return entry;
+    var summary = workspaceData.computeReviewSummary(entry.exampleTaskId, entry.runType);
+    if (!summary.derivable) return entry;
+    var derived = {};
+    Object.keys(entry).forEach(function (key) { derived[key] = entry[key]; });
+    derived.detail = workspaceData.formatReviewSummary(summary, entry.iaa);
+    derived.progress = summary.coveragePct;
+    return derived;
+  }
+
   function renderTaskList(containerId, listKey, role, sortKey) {
     var container = document.getElementById(containerId);
     if (!container) return;
     var taskMap = buildMap(data.tasks, 'id');
     var outputTypeMap = buildMap(data.outputTypes, 'key');
-    var entries = sortEntries(data.roleLists[listKey] || [], sortKey);
+    var sourceEntries = data.roleLists[listKey] || [];
+    if (role === 'reviewer') sourceEntries = sourceEntries.map(deriveReviewerEntry);
+    var entries = sortEntries(sourceEntries, sortKey);
     var markup = entries.map(function (entry, index) {
       var task = taskMap[entry.exampleTaskId];
       if (!task || !Array.isArray(task.outputTypes)) return '';
