@@ -13,6 +13,7 @@ dependencies = [
     "pydantic>=2.13.4",
     "pydantic-settings>=2.5",
     "sqlalchemy>=2.0.52",
+    "uvicorn>=0.52.4",
 ]
 
 [dependency-groups]
