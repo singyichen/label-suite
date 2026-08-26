@@ -1,6 +1,6 @@
 ## Purpose
 
-Project SDD lint 的 derived capability；正典為 `specs/foundation/001-project-sdd-lint/spec.md` v1.0.0。本變更實作既有 FR-001–FR-008、AC-1.1–AC-4.1 與 SC-001–SC-006，不發明新 ID。
+Project SDD lint 的 derived capability；正典為 `specs/foundation/001-project-sdd-lint/spec.md` v1.1.0。本變更實作正典 FR-001–FR-009、AC-1.1–AC-4.3 與 SC-001–SC-007。
 
 ## ADDED Requirements
 
@@ -30,7 +30,7 @@ Project SDD lint 的 derived capability；正典為 `specs/foundation/001-projec
 
 ### Requirement: Task 與來源治理
 
-本需求依正典 `specs/foundation/001-project-sdd-lint/spec.md` 的 FR-003、FR-005、FR-006、AC-2.1、AC-2.2、AC-2.3 與 SC-006。系統 MUST 驗證 active OpenSpec change 的正典來源、task ownership 與 retired guidance，並阻擋不符合治理契約的 active artifact。
+本需求依正典 `specs/foundation/001-project-sdd-lint/spec.md` 的 FR-003、FR-005、FR-006、AC-2.1、AC-2.2、AC-2.3 與 SC-007。系統 MUST 驗證 active OpenSpec change 的正典來源、task ownership 與 retired guidance，並阻擋不符合治理契約的 active artifact；Issue #375 handoff 只得勾選實際交付的七個 D 子項與指定的 combined acceptance，inventory workstream C 與其他 acceptance items 保持不變。
 
 #### Scenario: AC-2.1 assignee 無效
 - **GIVEN** task 沒有恰好一個結尾 assignee，或 assignee 指向不存在的 agent
@@ -66,11 +66,21 @@ Project SDD lint 的 derived capability；正典為 `specs/foundation/001-projec
 - **WHEN** 以 `--strict` 執行 lint command
 - **THEN** command 以 exit `1` 結束，且 warning-only rule 不會因 `--strict` 升級為 blocking error
 
-### Requirement: 獨立 CI gate
+### Requirement: 獨立 CI gate 與 generated screen inventory freshness
 
-本需求依正典 `specs/foundation/001-project-sdd-lint/spec.md` 的 FR-008、AC-4.1 與 SC-005。CI MUST 以獨立 `Project SDD Lint` job 執行與本地相同的 lint command，且不得包裝或取代 `openspec validate`。
+本需求依正典 `specs/foundation/001-project-sdd-lint/spec.md` 的 FR-008、FR-009、AC-4.1、AC-4.2、AC-4.3、SC-005 與 SC-006。CI MUST 以獨立 `Project SDD Lint` job 執行與本地相同的 lint command，且不得包裝或取代 `openspec validate`。lint MUST 在 resolved target root 執行 `node "$repo_root/scripts/gen-screen-inventory.mjs" --check`，capture 並 suppress generator raw output；此 freshness claim 僅涵蓋 generated `design/system/screen-inventory.md`，不涵蓋 hand-maintained `design/system/inventory.md` 或 `design-inventory.dc.html`。`--strict` 不得改變 inventory severity。
 
-#### Scenario: AC-4.1 inventory freshness 尚未驗證
-- **GIVEN** inventory generator 尚不存在
+#### Scenario: AC-4.1 fresh inventory 不產生診斷
+- **GIVEN** resolved target root 的 `node scripts/gen-screen-inventory.mjs --check` exit `0`
 - **WHEN** CI 執行 Project SDD lint
-- **THEN** job 顯示 `INVENTORY_FRESHNESS_UNVERIFIED` warning，不宣稱 freshness 已通過，並依其他 blocking rules 決定 exit code
+- **THEN** 不輸出 inventory diagnostic，且 lint outcome 依其他 rules 決定
+
+#### Scenario: AC-4.2 exact stale sentinel 映射為 blocking error
+- **GIVEN** resolved target root 的 generator `--check` exit `1`，且 child output 含 versioned generator 的 exact stale sentinel `design/system/screen-inventory.md is stale — run: node scripts/gen-screen-inventory.mjs`
+- **WHEN** CI 執行 Project SDD lint
+- **THEN** suppress child raw output，輸出 `ERROR [INVENTORY_FRESHNESS] design/system/screen-inventory.md: ...`，並以 exit `1` 結束，除非其他 scanner configuration error 要求 exit `2`
+
+#### Scenario: AC-4.3 inventory check configuration error
+- **GIVEN** resolved target root 缺少 generator、generator 無法讀取、load 或執行、執行環境缺少 Node、generator exit `2`、generator exit `1` 但無 exact stale sentinel，或回傳任何其他 unexpected result
+- **WHEN** CI 執行 Project SDD lint
+- **THEN** suppress child raw output，輸出 `ERROR [INVENTORY_CHECK_CONFIG] scripts/gen-screen-inventory.mjs: ...`，並以 exit `2` 結束
