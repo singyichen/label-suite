@@ -63,8 +63,9 @@ write-back/archive 仍各自報告。
    卻會重新混淆 schema、文件治理與 code/test 的結果。
 4. **組合已交付的 generator contract，將 inventory freshness 設為 blocking。**
    lint 使用 resolved target root 呼叫既有 `--check`，capture 並 suppress child
-   stdout/stderr，再依 versioned exact sentinel 與 child exit 對應
-   `INVENTORY_FRESHNESS` 或 `INVENTORY_CHECK_CONFIG`。這讓 generator 保持 manifest、
+   combined stdout/stderr，再以 child exit 與 normalized whole-output equality 對照
+   versioned sentinel，映射 `INVENTORY_FRESHNESS` 或 `INVENTORY_CHECK_CONFIG`。這讓
+   generator 保持 manifest、
    source set、validation 與 rendering 的唯一 authority；相較之下，保留 retired
    inventory warning 會與 canonical v1.1.0 衝突，以 mtime、日期或 Bash 重作
    freshness 也無法提供相同的 byte-current 契約。
@@ -114,8 +115,27 @@ raw output 不得直接進入 lint output：
 | Generator result | Project SDD lint result |
 |---|---|
 | exit `0` | 不輸出 inventory diagnostic；lint outcome 依其他 rules 決定。 |
-| exit `1` 且 captured output 含 exact sentinel `design/system/screen-inventory.md is stale — run: node scripts/gen-screen-inventory.mjs` | 輸出 `ERROR [INVENTORY_FRESHNESS] design/system/screen-inventory.md: ...`；lint exit 至少為 `1`。 |
-| generator 或 Node 缺少、generator 無法讀取、load 或執行、exit `2`、exit `1` 但無 exact sentinel，或任何其他 unexpected result | 輸出 `ERROR [INVENTORY_CHECK_CONFIG] scripts/gen-screen-inventory.mjs: ...`；lint exit `2`。 |
+| exit `1`，且 command substitution 移除 trailing newlines 後的 captured combined stdout/stderr 整體字串恰好等於 sentinel `design/system/screen-inventory.md is stale — run: node scripts/gen-screen-inventory.mjs` | 輸出 `ERROR [INVENTORY_FRESHNESS] design/system/screen-inventory.md: ...`；lint exit 至少為 `1`。 |
+| generator 或 Node 缺少、generator 無法讀取、load 或執行、exit `2`、exit `1` 但整體 captured combined output 不恰好等於 sentinel（包括 prefix、suffix 或額外 nonblank line），或任何其他 unexpected result | 輸出 `ERROR [INVENTORY_CHECK_CONFIG] scripts/gen-screen-inventory.mjs: ...`；lint exit `2`。 |
+
+Bash boundary 使用一個 immutable sentinel constant，並以 `if` command context
+capture combined stdout/stderr 與保存 child status，避免 `set -e` 在 nonzero child
+result 時提前終止 scanner：
+
+```bash
+readonly inventory_sentinel='design/system/screen-inventory.md is stale — run: node scripts/gen-screen-inventory.mjs'
+if inventory_output="$(node "$repo_root/scripts/gen-screen-inventory.mjs" --check 2>&1)"; then
+    inventory_status=0
+else
+    inventory_status=$?
+fi
+```
+
+Bash command substitution 會移除 captured output 的所有 trailing newline characters；
+因此 mapping 必須在此 normalization 之後，以 `[ "$inventory_output" =
+"$inventory_sentinel" ]` 比較整個字串。不得使用 substring search、逐行 match 或
+任何 filter 來判斷 stale；只有 child status `1` 且 whole-string equality 成立才是
+`INVENTORY_FRESHNESS`。
 
 configuration exit `2` 優先於 stale 或其他 governance exit `1`，但 scanner 仍可
 render 已安全收集的穩定 diagnostics 與 summary；不得洩漏 captured child raw
@@ -145,10 +165,11 @@ inputs 存在。strict 與 eligible collector 均輸出相同 key 形狀，避�
 message 反向比對。baseline 比較在 `LC_ALL=C` 排序後透過 `comm` 產生新增與
 stale 集合；warning-only collector 在比較後執行，確保其結果不會進入
 baseline 或影響 ratchet 結果。inventory collector 只執行 resolved target root
-的既有 generator，將 stdout/stderr capture 到 temporary boundary，判斷 exact
-sentinel 後只寫入 normalized Project SDD lint record。即使 inventory 或其他
-configuration check 需要 exit `2`，已安全收集的穩定 diagnostics 仍可排序渲染，
-最後再套用 configuration precedence。
+的既有 generator，以不受 `set -e` 中斷的 `if` context capture combined stdout/stderr
+與 child status；command substitution 移除 trailing newlines 後，再以 entire-string
+equality 對照單一 sentinel constant，最後只寫入 normalized Project SDD lint
+record。即使 inventory 或其他 configuration check 需要 exit `2`，已安全收集的
+穩定 diagnostics 仍可排序渲染，最後再套用 configuration precedence。
 
 ## Ratchet baseline algorithm
 
@@ -189,11 +210,11 @@ cleanup 同時修正 artifact 與移除相同 baseline entry，才會恢復通�
 | Strict | `TASK_FILE_OWNER` | file path 唯一且 ownership map 明確時，owner 必須符合已對齊的責任：`scripts/*-tests.sh` 屬 `senior-qa`，production `scripts/` 屬 `senior-devops`；對齊 guidance 的 `governance-propagation` task 必須排在相關 Red task 前。 |
 | Strict | `RETIRED_COMMAND` | active guidance 不得含 repository-local `npm test`、`npm run ...`、pipeline stage `/ui-ux-pro-max` 或非歷史 `/speckit.analyze`；`pnpm` 是 negative control。 |
 | Strict | `BASELINE_FORMAT` | baseline 的排序、唯一、path、rule eligibility 與 new/stale 比較皆有效。 |
-| Strict | `INVENTORY_FRESHNESS` | resolved target root generator exit `1` 且 captured output 含 exact stale sentinel；path 固定為 `design/system/screen-inventory.md`，blocking exit 為 `1`，除非 configuration error 要求 exit `2`。 |
+| Strict | `INVENTORY_FRESHNESS` | resolved target root generator exit `1`，且 command substitution 移除 trailing newlines 後的 captured combined output 整體恰好等於單一 stale sentinel；path 固定為 `design/system/screen-inventory.md`，blocking exit 為 `1`，除非 configuration error 要求 exit `2`。 |
 
 | 類別 | Rule ID | 機械檢查邊界 |
 |---|---|---|
-| Configuration | `INVENTORY_CHECK_CONFIG` | generator 或 Node 缺少、generator 無法讀取/load/執行、exit `2`、sentinel-less exit `1` 或其他 unexpected result；path 固定為 `scripts/gen-screen-inventory.mjs`，suppress raw child output 並要求 exit `2`。 |
+| Configuration | `INVENTORY_CHECK_CONFIG` | generator 或 Node 缺少、generator 無法讀取/load/執行、exit `2`、sentinel-less exit `1`、exit `1` + sentinel prefix/suffix/額外 nonblank line，或其他 unexpected result；path 固定為 `scripts/gen-screen-inventory.mjs`，suppress raw child output 並要求 exit `2`。 |
 
 | 類別 | Rule ID | 處理方式 |
 |---|---|---|
@@ -280,10 +301,10 @@ final archive PR。
 - [Node 或 generator boundary 不可用時，inventory freshness 無法可信判斷] →
   不降級為 warning 或假 fresh；以 `INVENTORY_CHECK_CONFIG`、固定 generator path
   與 exit `2` fail closed，且 CI/local 都不加入會掩蓋環境差異的 setup step。
-- [generator 的一般 exit `1` 可能與 stale exit 混淆] → 僅接受 versioned exact
-  sentinel 作為 `INVENTORY_FRESHNESS`，其餘 exit `1`、load/runtime failure 與
-  unexpected result 一律視為 configuration error；capture/suppress raw output，
-  只渲染穩定 lint diagnostic。
+- [generator 的一般 exit `1` 或 load/runtime error 可能回顯 sentinel 而與 stale
+  混淆] → 只接受 normalized combined output 整體恰好等於 versioned sentinel；
+  prefix、suffix、額外 nonblank line 與其他 exit `1` 一律視為 configuration error，
+  capture/suppress raw output，只渲染穩定 lint diagnostic。
 - [獨立 CI gate rollout 可能暫時影響合併流程] → 先以本地與 CI evidence 驗證
   command，再由 maintainer 設定外部 required check；rollback 先移除或停用外部
   required-check expectation，再回復 intermediate CI integration 的 workflow 與
@@ -302,8 +323,8 @@ final archive PR。
 2. `[@senior-qa]` 再提交 fixture Red contract，記錄 `scripts/check-sdd.sh` 缺失
    的預期 failure；`[@senior-devops]` 之後新增排序 baseline 與 Bash command，使
    同一 contract 轉綠。
-3. 在 synthetic target-root generator boundary fixtures 先證明 fresh、exact-sentinel
-   stale 與各 configuration result，再在 real repository 直接執行
+3. 在 synthetic target-root generator boundary fixtures 先證明 fresh、whole-output
+   exact-sentinel stale 與各 configuration result，再在 real repository 直接執行
    `node scripts/gen-screen-inventory.mjs --check` 與 Project SDD lint；不得重新生成
    inventory，也不得出現 retired inventory warning。
 4. 在 intermediate CI integration PR 先提交 CI Red，再新增獨立 `sdd-lint`
@@ -339,8 +360,10 @@ Red 前先由 `governance-propagation` task 對齊兩份 authoritative agent gui
 passing、strict mutations、task ownership、retired command（含 `pnpm` negative
 control）、baseline exact/new/stale/duplicate/unsorted、explicit root、`--strict`
 與 inventory generator boundary。inventory fixtures 在 synthetic target root 放置
-最小 generator doubles，分別涵蓋 fresh exit `0`、exit `1` + exact stale sentinel、
-missing generator、unreadable generator、unloadable generator、unrunnable Node/
+最小 generator doubles，分別涵蓋 fresh exit `0`、exit `1` + whole output 恰為
+exact stale sentinel、exit `1` + sentinel prefix、exit `1` + sentinel suffix、
+exit `1` + sentinel 及額外 nonblank line、missing generator、unreadable generator、
+unloadable generator、unrunnable Node/
 generator boundary、exit `2` 與 sentinel-less exit `1`；assert raw child output 被
 suppress、diagnostic path/exit mapping 正確，且 default/`--strict` 結果不變。
 explicit-root case 在 caller checkout 放置 decoy boundary，證明實際呼叫 target root；
@@ -374,10 +397,13 @@ apply checkboxes 完成後以 non-checkbox continuation 執行。
   收集其他 deterministic diagnostics，最後 exit `1`。
 - baseline 格式錯誤優先表示 scanner 無法可信比較，維持 exit `2`；有效 baseline
   的 new/stale 及 strict-mode eligible debt 則是 exit `1`。
-- inventory child stdout/stderr 必須先 capture；只有 exit `1` + exact stale sentinel
-  可映射到 `INVENTORY_FRESHNESS` 與 `design/system/screen-inventory.md`。缺少或
-  unreadable generator、缺少 Node、load/execute failure、exit `2`、sentinel-less
-  exit `1` 或其他 unexpected result 一律映射到 `INVENTORY_CHECK_CONFIG` 與
+- inventory child combined stdout/stderr 與 status 必須透過不受 `set -e` 中斷的
+  `if` context capture；command substitution 移除 trailing newlines 後，只有 exit
+  `1` 且 whole output 以 `=` 恰好等於單一 sentinel constant，可映射到
+  `INVENTORY_FRESHNESS` 與 `design/system/screen-inventory.md`。缺少或 unreadable
+  generator、缺少 Node、load/execute failure、exit `2`、sentinel-less exit `1`、
+  exit `1` + sentinel prefix/suffix/額外 nonblank line，或其他 unexpected result
+  一律映射到 `INVENTORY_CHECK_CONFIG` 與
   `scripts/gen-screen-inventory.mjs`，suppress raw child output，並使最終 exit `2`。
 - configuration error 對最終 exit code 有 precedence，但不得吞掉已安全收集的
   stable diagnostics；default 與 `--strict` 不改變 inventory severity。
@@ -392,9 +418,10 @@ apply checkboxes 完成後以 non-checkbox continuation 執行。
   FR/AC/SC ID 作為可追溯 contract。
 - **IV. Test-First**：fixture Red commit 與預期失敗先於 Green command，細節遵循
   [`testing constitution`](../../../specs/_governance/testing-constitution.md)；
-  synthetic target-root doubles 覆蓋 fresh、exact-sentinel stale、configuration、
-  explicit-root 與 retired-warning absence，real repository 再以直接 generator
-  `--check` 提供 freshness evidence。
+  synthetic target-root doubles 覆蓋 fresh、whole-output exact-sentinel stale、
+  prefix/suffix/額外 nonblank line、其他 configuration、explicit-root 與
+  retired-warning absence，real repository 再以直接 generator `--check` 提供
+  freshness evidence。
 - **X. Change Scope Discipline**：僅定義 lint、baseline、fixture 與獨立 CI 的
   實作邊界，不混入 cleanup、inventory regeneration、API、DB 或產品行為。
   Intermediate CI integration PR 遵守一般 guardrails；依憲法 v1.33.0，final
