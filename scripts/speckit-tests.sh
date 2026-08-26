@@ -434,8 +434,7 @@ assert_command_fails_with() {
         cat "$output" >&2
         exit 1
     fi
-    assert_contains "$output" "$rule"
-    assert_contains "$output" "$path"
+    assert_contains "$output" "ERROR [$rule] $path:"
 }
 
 assert_not_contains() {
@@ -790,6 +789,51 @@ test_check_sdd_inventory_uses_target_root_generator() {
     assert_not_contains "$output" "RAW_FRESH_CHILD_OUTPUT"
 }
 
+test_check_sdd_fails_for_near_match_goal_heading() {
+    local repo
+    repo="$(make_sdd_repo)"
+    sed -i.bak 's/^## 功能目標$/## 功能目標（錯誤）/' "$repo/specs/foundation/001-project-sdd-lint/spec.md"
+
+    assert_command_fails_with "$repo" 1 "SPEC_REQUIRED_HEADING" "specs/foundation/001-project-sdd-lint/spec.md"
+}
+
+test_check_sdd_fails_for_malformed_baseline_rows() {
+    local baseline_content repo
+
+    repo="$(make_sdd_repo)"
+    baseline_content="$(cat "$repo/scripts/sdd-lint-baseline.txt")"
+    printf '\n%s\n' "$baseline_content" > "$repo/scripts/sdd-lint-baseline.txt"
+    assert_command_fails_with "$repo" 2 "BASELINE_FORMAT" "scripts/sdd-lint-baseline.txt"
+
+    repo="$(make_sdd_repo)"
+    printf 'LEGACY_SPEC_HEADING\tspecs/dataset/001-legacy/spec.md\tmissing:## 功能目標\t\n' > "$repo/scripts/sdd-lint-baseline.txt"
+    assert_command_fails_with "$repo" 2 "BASELINE_FORMAT" "scripts/sdd-lint-baseline.txt"
+}
+
+test_check_sdd_fails_for_explicit_multi_file_task() {
+    local repo
+    repo="$(make_sdd_repo)"
+    printf '\n- [ ] 1.3 Modify `scripts/a.sh` and `scripts/b.sh`. [@senior-devops]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+
+    assert_command_fails_with "$repo" 1 "TASK_EXCEPTION" "openspec/changes/project-sdd-lint/tasks.md"
+}
+
+test_check_sdd_fails_without_exact_spec_declaration() {
+    local repo
+    repo="$(make_sdd_repo)"
+    sed -i.bak 's/^對應 Spec:/Canonical mention:/' "$repo/openspec/changes/project-sdd-lint/proposal.md"
+
+    assert_command_fails_with "$repo" 1 "ACTIVE_CHANGE_SPEC" "openspec/changes/project-sdd-lint/proposal.md"
+}
+
+test_check_sdd_fails_for_status_module_mismatch() {
+    local repo
+    repo="$(make_sdd_repo)"
+    sed -i.bak 's/| foundation-001 | Project SDD lint | foundation |/| foundation-001 | Project SDD lint | dataset |/' "$repo/specs/STATUS.md"
+
+    assert_command_fails_with "$repo" 1 "STATUS_ARTIFACT_SYNC" "specs/STATUS.md"
+}
+
 test_prerequisites_resolve_module_feature_paths
 test_create_feature_creates_module_branch_spec_and_status
 test_setup_plan_and_status_update
@@ -817,5 +861,10 @@ test_check_sdd_inventory_rejects_near_sentinels
 test_check_sdd_inventory_configuration_failures
 test_check_sdd_inventory_strict_config_mapping_is_invariant
 test_check_sdd_inventory_uses_target_root_generator
+test_check_sdd_fails_for_near_match_goal_heading
+test_check_sdd_fails_for_malformed_baseline_rows
+test_check_sdd_fails_for_explicit_multi_file_task
+test_check_sdd_fails_without_exact_spec_declaration
+test_check_sdd_fails_for_status_module_mismatch
 
 echo "speckit script tests passed"
