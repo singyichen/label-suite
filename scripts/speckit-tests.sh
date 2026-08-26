@@ -331,20 +331,21 @@ run_check_sdd() {
 
 assert_command_fails_with() {
     local repo="$1"
-    local rule="$2"
-    local path="$3"
-    shift 3
+    local expected_status="$2"
+    local rule="$3"
+    local path="$4"
+    shift 4
     local output status
     output="$(mktemp "$TMP_ROOT/check-sdd.XXXXXX")"
 
     if run_check_sdd "$repo" "$@" >"$output" 2>&1; then
-        echo "Expected check-sdd.sh to exit 1" >&2
+        echo "Expected check-sdd.sh to exit $expected_status" >&2
         exit 1
     else
         status=$?
     fi
-    if [[ "$status" -ne 1 ]]; then
-        echo "Expected check-sdd.sh to exit 1, got: $status" >&2
+    if [[ "$status" -ne "$expected_status" ]]; then
+        echo "Expected check-sdd.sh to exit $expected_status, got: $status" >&2
         cat "$output" >&2
         exit 1
     fi
@@ -389,7 +390,7 @@ test_check_sdd_fails_for_missing_goal_heading() {
     repo="$(make_sdd_repo)"
     sed -i.bak '/^## 功能目標$/,/^## 規格相依性$/d' "$repo/specs/foundation/001-project-sdd-lint/spec.md"
 
-    assert_command_fails_with "$repo" "SPEC_REQUIRED_HEADING" "specs/foundation/001-project-sdd-lint/spec.md"
+    assert_command_fails_with "$repo" 1 "SPEC_REQUIRED_HEADING" "specs/foundation/001-project-sdd-lint/spec.md"
 }
 
 test_check_sdd_fails_for_active_change_stage_drift() {
@@ -397,7 +398,7 @@ test_check_sdd_fails_for_active_change_stage_drift() {
     repo="$(make_sdd_repo)"
     sed -i.bak 's/`in-progress`/`spec-ready`/' "$repo/specs/STATUS.md"
 
-    assert_command_fails_with "$repo" "ACTIVE_CHANGE_STAGE" "specs/STATUS.md"
+    assert_command_fails_with "$repo" 1 "ACTIVE_CHANGE_STAGE" "specs/STATUS.md"
 }
 
 test_check_sdd_fails_for_missing_source_id() {
@@ -405,7 +406,7 @@ test_check_sdd_fails_for_missing_source_id() {
     repo="$(make_sdd_repo)"
     printf '\nFR-999\n' >> "$repo/openspec/changes/project-sdd-lint/proposal.md"
 
-    assert_command_fails_with "$repo" "SOURCE_VERIFY_ID" "openspec/changes/project-sdd-lint/proposal.md"
+    assert_command_fails_with "$repo" 1 "SOURCE_VERIFY_ID" "openspec/changes/project-sdd-lint/proposal.md"
 }
 
 test_check_sdd_fails_for_invalid_assignee() {
@@ -413,16 +414,16 @@ test_check_sdd_fails_for_invalid_assignee() {
 
     repo="$(make_sdd_repo)"
     sed -i.bak '/^\*\*故事目標\*\*/d' "$repo/openspec/changes/project-sdd-lint/tasks.md"
-    assert_command_fails_with "$repo" "TASK_STORY_GOAL" "openspec/changes/project-sdd-lint/tasks.md"
+    assert_command_fails_with "$repo" 1 "TASK_STORY_GOAL" "openspec/changes/project-sdd-lint/tasks.md"
 
     repo="$(make_sdd_repo)"
     sed -i.bak 's/SC-001/SC-999/' "$repo/openspec/changes/project-sdd-lint/tasks.md"
-    assert_command_fails_with "$repo" "TASK_STORY_GOAL" "openspec/changes/project-sdd-lint/tasks.md"
+    assert_command_fails_with "$repo" 1 "TASK_STORY_GOAL" "openspec/changes/project-sdd-lint/tasks.md"
 
     repo="$(make_sdd_repo)"
     sed -i.bak 's/\[@senior-qa\]/[@missing-agent]/' "$repo/openspec/changes/project-sdd-lint/tasks.md"
 
-    assert_command_fails_with "$repo" "TASK_ASSIGNEE" "openspec/changes/project-sdd-lint/tasks.md"
+    assert_command_fails_with "$repo" 1 "TASK_ASSIGNEE" "openspec/changes/project-sdd-lint/tasks.md"
 }
 
 test_check_sdd_fails_for_incomplete_exception() {
@@ -430,7 +431,7 @@ test_check_sdd_fails_for_incomplete_exception() {
     repo="$(make_sdd_repo)"
     printf '\n- [ ] 1.3 Scaffold. Exception: scaffold; Files: `scripts/a.sh`, `scripts/b.sh`. [@senior-devops]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
 
-    assert_command_fails_with "$repo" "TASK_EXCEPTION" "openspec/changes/project-sdd-lint/tasks.md"
+    assert_command_fails_with "$repo" 1 "TASK_EXCEPTION" "openspec/changes/project-sdd-lint/tasks.md"
 }
 
 test_check_sdd_fails_for_wrong_red_owner() {
@@ -438,11 +439,11 @@ test_check_sdd_fails_for_wrong_red_owner() {
     repo="$(make_sdd_repo)"
     sed -i.bak 's/Red contract in `scripts\/speckit-tests.sh`. \[@senior-qa\]/Red contract in `scripts\/speckit-tests.sh`. [@senior-devops]/' "$repo/openspec/changes/project-sdd-lint/tasks.md"
 
-    assert_command_fails_with "$repo" "TASK_RED_OWNER" "openspec/changes/project-sdd-lint/tasks.md"
+    assert_command_fails_with "$repo" 1 "TASK_RED_OWNER" "openspec/changes/project-sdd-lint/tasks.md"
 
     repo="$(make_sdd_repo)"
     sed -i.bak 's/Green command in `scripts\/check-sdd.sh`. \[@senior-devops\]/Green command in `scripts\/check-sdd.sh`. [@senior-qa]/' "$repo/openspec/changes/project-sdd-lint/tasks.md"
-    assert_command_fails_with "$repo" "TASK_FILE_OWNER" "openspec/changes/project-sdd-lint/tasks.md"
+    assert_command_fails_with "$repo" 1 "TASK_FILE_OWNER" "openspec/changes/project-sdd-lint/tasks.md"
 }
 
 test_check_sdd_fails_for_retired_command() {
@@ -450,19 +451,19 @@ test_check_sdd_fails_for_retired_command() {
 
     repo="$(make_sdd_repo)"
     printf '\nnpm test\n' >> "$repo/AGENTS.md"
-    assert_command_fails_with "$repo" "RETIRED_COMMAND" "AGENTS.md"
+    assert_command_fails_with "$repo" 1 "RETIRED_COMMAND" "AGENTS.md"
 
     repo="$(make_sdd_repo)"
     printf '\nnpm run lint\n' >> "$repo/AGENTS.md"
-    assert_command_fails_with "$repo" "RETIRED_COMMAND" "AGENTS.md"
+    assert_command_fails_with "$repo" 1 "RETIRED_COMMAND" "AGENTS.md"
 
     repo="$(make_sdd_repo)"
     printf '\n/ui-ux-pro-max\n' >> "$repo/AGENTS.md"
-    assert_command_fails_with "$repo" "RETIRED_COMMAND" "AGENTS.md"
+    assert_command_fails_with "$repo" 1 "RETIRED_COMMAND" "AGENTS.md"
 
     repo="$(make_sdd_repo)"
     printf '\n/speckit.analyze\n' >> "$repo/AGENTS.md"
-    assert_command_fails_with "$repo" "RETIRED_COMMAND" "AGENTS.md"
+    assert_command_fails_with "$repo" 1 "RETIRED_COMMAND" "AGENTS.md"
 }
 
 test_check_sdd_does_not_match_pnpm() {
@@ -489,7 +490,7 @@ test_check_sdd_fails_for_new_baseline_violation() {
     mkdir -p "$repo/specs/dataset/002-new-debt"
     printf '# New legacy debt\n' > "$repo/specs/dataset/002-new-debt/spec.md"
 
-    assert_command_fails_with "$repo" "LEGACY_SPEC_HEADING" "specs/dataset/002-new-debt/spec.md"
+    assert_command_fails_with "$repo" 1 "LEGACY_SPEC_HEADING" "specs/dataset/002-new-debt/spec.md"
 }
 
 test_check_sdd_fails_for_stale_baseline_entry() {
@@ -500,27 +501,27 @@ test_check_sdd_fails_for_stale_baseline_entry() {
 \
 Legacy goal.' "$repo/specs/dataset/001-legacy/spec.md"
 
-    assert_command_fails_with "$repo" "BASELINE_STALE" "scripts/sdd-lint-baseline.txt"
+    assert_command_fails_with "$repo" 1 "BASELINE_STALE" "scripts/sdd-lint-baseline.txt"
 }
 
 test_check_sdd_fails_for_duplicate_or_unsorted_baseline() {
     local repo
     repo="$(make_sdd_repo)"
     printf 'LEGACY_SPEC_HEADING\tspecs/dataset/001-legacy/spec.md\tmissing:## 功能目標\n' >> "$repo/scripts/sdd-lint-baseline.txt"
-    assert_command_fails_with "$repo" "BASELINE_FORMAT" "scripts/sdd-lint-baseline.txt"
+    assert_command_fails_with "$repo" 2 "BASELINE_FORMAT" "scripts/sdd-lint-baseline.txt"
 
     repo="$(make_sdd_repo)"
     mkdir -p "$repo/specs/dataset/000-earlier"
     printf '# Earlier legacy debt\n' > "$repo/specs/dataset/000-earlier/spec.md"
     printf 'LEGACY_SPEC_HEADING\tspecs/dataset/000-earlier/spec.md\tmissing:## 功能目標\n' >> "$repo/scripts/sdd-lint-baseline.txt"
-    assert_command_fails_with "$repo" "BASELINE_FORMAT" "scripts/sdd-lint-baseline.txt"
+    assert_command_fails_with "$repo" 2 "BASELINE_FORMAT" "scripts/sdd-lint-baseline.txt"
 }
 
 test_check_sdd_strict_promotes_baseline_debt() {
     local repo
     repo="$(make_sdd_repo)"
 
-    assert_command_fails_with "$repo" "LEGACY_SPEC_HEADING" "specs/dataset/001-legacy/spec.md" --strict
+    assert_command_fails_with "$repo" 1 "LEGACY_SPEC_HEADING" "specs/dataset/001-legacy/spec.md" --strict
 }
 
 test_check_sdd_inventory_warning_is_non_blocking() {
