@@ -88,12 +88,16 @@ export default tseslint.config(
   // factory in shared/constants/query-keys.ts. An inline array hard-codes a
   // cache key at one call site, so the invalidation call elsewhere has nothing
   // to stay in sync with and silently stops matching when either side changes.
+  // SC-019 names `useQuery`/`useMutation`/`useInfiniteQuery` together, so the
+  // same ban applies to `useMutation`'s `mutationKey` (issue #420) — otherwise
+  // that half of the hook surface is unchecked.
   //
-  // The selector matches any array expression in `queryKey` position, not just
-  // one holding string literals: `queryKey: [taskId]` bypasses the factory just
-  // as much. A key hoisted into a variable first (`queryKey: TASKS_KEY`) is out
-  // of reach of a syntax selector — resolving it needs scope analysis — and is
-  // also outside SC-019's wording, which bans an *inline* array.
+  // The selectors match any array expression in `queryKey`/`mutationKey`
+  // position, not just one holding string literals: `queryKey: [taskId]`
+  // bypasses the factory just as much. A key hoisted into a variable first
+  // (`queryKey: TASKS_KEY`) is out of reach of a syntax selector — resolving
+  // it needs scope analysis — and is also outside SC-019's wording, which
+  // bans an *inline* array.
   {
     files: ['src/**/*.{ts,tsx}'],
     rules: {
@@ -103,6 +107,11 @@ export default tseslint.config(
           selector: "Property[key.name='queryKey'] > ArrayExpression",
           message:
             'Use a key from QUERY_KEYS (shared/constants/query-keys.ts) instead of an inline queryKey array (SC-019).',
+        },
+        {
+          selector: "Property[key.name='mutationKey'] > ArrayExpression",
+          message:
+            'Use a key from QUERY_KEYS (shared/constants/query-keys.ts) instead of an inline mutationKey array (SC-019).',
         },
       ],
     },
