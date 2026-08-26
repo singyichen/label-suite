@@ -28,13 +28,18 @@ test.describe('Annotation workspace UI-chrome localization', () => {
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
   }
 
-  test('annotation note label and placeholder follow English language mode', async ({ page }) => {
+  // Covered the 備註 label + placeholder until issue #457 removed that
+  // never-persisted field. The subject was never the note itself but
+  // applyStaticI18nText(), so the assertions moved to three other labels the
+  // same function drives -- nav on both sides plus an action-bar button.
+  test('workspace chrome labels follow English language mode', async ({ page }) => {
     await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001' }));
     await dismissGuidelineModal(page);
     await ensureEnglishMode(page);
 
-    await expect(page.getByTestId('ws-note-label')).toHaveText('Notes (optional)');
-    await expect(page.getByTestId('ws-note-input')).toHaveAttribute('placeholder', 'Describe special cases here...');
+    await expect(page.getByTestId('ws-prev-btn')).toHaveText('Previous');
+    await expect(page.getByTestId('ws-next-btn')).toHaveText('Next');
+    await expect(page.getByTestId('ws-save-btn')).toHaveText('Save draft');
   });
 
   test('submit validation error follows English language mode', async ({ page }) => {

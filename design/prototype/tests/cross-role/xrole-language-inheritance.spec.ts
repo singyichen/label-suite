@@ -32,6 +32,6 @@ test('a language switched on the dashboard is inherited by a workspace opened af
   await expect(next.locator('html')).toHaveAttribute('lang', 'en');
   // A workspace-owned label proves the page actually rendered in English
   // rather than merely carrying the lang attribute.
-  await expect(next.getByTestId('ws-note-label')).toHaveText('Notes (optional)');
+  await expect(next.getByTestId('ws-prev-btn')).toHaveText('Previous');
   await next.close();
 });

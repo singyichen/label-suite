@@ -18,8 +18,6 @@
   var I18N = {
     zh: {
       sampleListTitle: '標記清單',
-      noteLabel: '備註（選填）',
-      notePlaceholder: '若有特殊情況可在此說明…',
       submitLabel: '提交',
       saveLabel: '儲存草稿',
       wsSaveSuccess: '已儲存',
@@ -99,8 +97,6 @@
     },
     en: {
       sampleListTitle: 'Samples',
-      noteLabel: 'Notes (optional)',
-      notePlaceholder: 'Describe special cases here...',
       submitLabel: 'Submit',
       saveLabel: 'Save draft',
       wsSaveSuccess: 'Saved',
@@ -3642,10 +3638,6 @@
     setText('wsAutosaveLabel', t('wsAutosaveSaved'));
     setText('wsTabGuidelineLabel', t('wsTabGuideline'));
     setText('wsTabHistoryLabel', t('wsTabHistory'));
-    var noteLabel = document.getElementById('wsNoteLabel');
-    if (noteLabel) noteLabel.textContent = t('noteLabel');
-    var noteInput = document.getElementById('wsNoteInput');
-    if (noteInput) noteInput.placeholder = t('notePlaceholder');
     setText('wsGuidelineModalTitleText', t('guidelineModalTitle'));
     setText('wsGuidelineModalConfirm', t('guidelineModalConfirm'));
     setText('guidelineSummaryTitle', t('guidelineSummaryTitle'));

@@ -275,7 +275,6 @@
       transition: width var(--dur-normal) var(--ease-standard);
     }
 
-    .field-group { margin-top: var(--space-md); }
     .field-label {
       display: block;
       font-size: 12px;
@@ -288,19 +287,6 @@
        mirror the same rule here so they don't fall back to browser
        defaults on this page. */
     .field-hint { font-size: 12px; color: var(--color-text-soft); margin-top: 4px; }
-    .field-textarea {
-      width: 100%;
-      min-height: 64px;
-      padding: 10px 12px;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      font-size: 13px;
-      color: var(--color-ink);
-      resize: vertical;
-      background: var(--color-white);
-      outline: none;
-    }
-    .field-textarea:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
 
     /* ── Buttons ─────────────────────────────────────────────── */
     .btn {
@@ -952,11 +938,6 @@
         <!-- Engine mounts the evidence card / input content / output-type
              panels here (updateAnnotationPreview / renderOutputPreview) -->
         <div id="annotationPreview"></div>
-
-        <div class="field-group">
-          <label class="field-label" for="wsNoteInput" id="wsNoteLabel" data-testid="ws-note-label"></label>
-          <textarea class="field-textarea" id="wsNoteInput" data-testid="ws-note-input" rows="2"></textarea>
-        </div>
 
         <!-- Reviewer mode only: original vs. corrected answer history,
              populated after ws-review-submit-btn is clicked (FR-024L-1) -->
