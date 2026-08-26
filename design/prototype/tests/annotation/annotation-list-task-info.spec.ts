@@ -46,7 +46,7 @@ test.describe('Annotation list task info card: progress summary', () => {
     await page.goto(buildListUrl({ task_id: 'T001', role: 'reviewer', run_type: 'official_run' }));
 
     await expect(page.locator('#taskInfoDetail')).toHaveText(
-      '待審 7 筆 · 進度 34% · IAA 0.80 · 共 5 筆資料'
+      '待審 7 個審核單位 · 任務覆蓋率 34% · IAA 0.80 · 共 5 筆資料'
     );
     expect(await progressBarWidth(page)).toBe('34%');
   });
