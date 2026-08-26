@@ -7,7 +7,15 @@
 #
 # Rule (CLAUDE.md → Commit Convention):
 #   Every commit must serve exactly one change purpose. As a mechanical proxy,
-#   staged changes exceeding 10 files OR 300 non-test lines are blocked.
+#   staged changes exceeding 10 files OR 600 non-test lines (added+deleted,
+#   per `git diff --cached --numstat`) are blocked.
+#
+# Scope note:
+#   This guard applies to a single commit. Constitution Principle X's
+#   300-line limit (see .claude/rules/git-workflow.md "Size guardrails")
+#   applies to a single PR instead — different unit of measure, not the
+#   same rule scaled up. Don't treat this hook as a mechanical proxy for
+#   the Principle X PR limit.
 #
 # Exemptions:
 #   - Merge commits (MERGE_HEAD present) pass through.
