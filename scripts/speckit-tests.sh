@@ -169,12 +169,88 @@ test_ci_uses_pnpm_for_prototype_jobs() {
     fi
 }
 
+INVENTORY_SENTINEL='design/system/screen-inventory.md is stale — run: node scripts/gen-screen-inventory.mjs'
+
+write_inventory_generator_double() {
+    local repo="$1"
+
+    cat > "$repo/scripts/gen-screen-inventory.mjs" <<'GENERATOR'
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const scriptDir = path.dirname(fileURLToPath(import.meta.url));
+const mode = fs.readFileSync(path.join(scriptDir, 'inventory-double-mode.txt'), 'utf8').trim();
+const sentinel = 'design/system/screen-inventory.md is stale — run: node scripts/gen-screen-inventory.mjs';
+
+if (process.argv.slice(2).join(' ') !== '--check') {
+  process.stderr.write('RAW_WRONG_GENERATOR_ARGUMENTS\n');
+  process.exit(9);
+}
+
+switch (mode) {
+  case 'fresh':
+    process.stdout.write('RAW_FRESH_CHILD_OUTPUT\n');
+    process.exit(0);
+    break;
+  case 'stale':
+    process.stderr.write(`${sentinel}\n`);
+    process.exit(1);
+    break;
+  case 'prefix':
+    process.stdout.write(`RAW_SENTINEL_PREFIX\n${sentinel}\n`);
+    process.exit(1);
+    break;
+  case 'suffix':
+    process.stdout.write(`${sentinel}\nRAW_SENTINEL_SUFFIX\n`);
+    process.exit(1);
+    break;
+  case 'extra-line':
+    process.stdout.write(`${sentinel}\nRAW_EXTRA_NONBLANK_LINE\n`);
+    process.exit(1);
+    break;
+  case 'sentinel-less':
+    process.stderr.write('RAW_SENTINEL_LESS_EXIT_ONE\n');
+    process.exit(1);
+    break;
+  case 'exit-two':
+    process.stderr.write('RAW_GENERATOR_EXIT_TWO\n');
+    process.exit(2);
+    break;
+  case 'unexpected-exit':
+    process.stderr.write('RAW_GENERATOR_UNEXPECTED_EXIT\n');
+    process.exit(7);
+    break;
+  case 'unrunnable':
+    process.stderr.write('RAW_GENERATOR_UNRUNNABLE\n');
+    process.exit(126);
+    break;
+  case 'caller-decoy':
+    process.stderr.write('RAW_CALLER_GENERATOR_USED\n');
+    process.exit(7);
+    break;
+  default:
+    process.stderr.write('RAW_UNKNOWN_GENERATOR_MODE\n');
+    process.exit(8);
+}
+GENERATOR
+    printf 'fresh\n' > "$repo/scripts/inventory-double-mode.txt"
+}
+
+set_inventory_generator_mode() {
+    local repo="$1"
+    local mode="$2"
+
+    printf '%s\n' "$mode" > "$repo/scripts/inventory-double-mode.txt"
+}
+
 make_sdd_repo() {
     local repo
     repo="$(mktemp -d "$TMP_ROOT/sdd-repo.XXXXXX")"
 
     mkdir -p \
         "$repo/.claude/agents" \
+        "$repo/design/system" \
         "$repo/docs" \
         "$repo/openspec/changes/project-sdd-lint/specs/foundation/001-project-sdd-lint" \
         "$repo/openspec" \
@@ -234,12 +310,15 @@ None.
 ### FR-005
 ### FR-006
 ### FR-007
+### FR-008
+### FR-009
 ### SC-001
 ### SC-002
 ### SC-003
 ### SC-004
 ### SC-005
 ### SC-006
+### SC-007
 ### AC-1.1
 ### AC-1.2
 ### AC-1.3
@@ -251,6 +330,8 @@ None.
 ### AC-3.2
 ### AC-3.3
 ### AC-4.1
+### AC-4.2
+### AC-4.3
 SPEC
     cat > "$repo/specs/dataset/001-legacy/spec.md" <<'SPEC'
 # Legacy dataset fixture
@@ -301,6 +382,10 @@ DELTA
     cat > "$repo/scripts/sdd-lint-baseline.txt" <<'BASELINE'
 LEGACY_SPEC_HEADING	specs/dataset/001-legacy/spec.md	missing:## 功能目標
 BASELINE
+    cat > "$repo/design/system/screen-inventory.md" <<'INVENTORY'
+# Synthetic screen inventory
+INVENTORY
+    write_inventory_generator_double "$repo"
 
     echo "$repo"
 }
@@ -362,6 +447,55 @@ assert_not_contains() {
         cat "$path" >&2
         exit 1
     fi
+}
+
+assert_inventory_success() {
+    local repo="$1"
+    shift
+    local output status
+    output="$(mktemp "$TMP_ROOT/check-sdd-inventory.XXXXXX")"
+
+    if run_check_sdd "$repo" "$@" >"$output" 2>&1; then
+        status=0
+    else
+        status=$?
+    fi
+    if [[ "$status" -ne 0 ]]; then
+        echo "Expected fresh inventory lint to exit 0, got: $status" >&2
+        cat "$output" >&2
+        exit 1
+    fi
+    assert_contains "$output" "Project SDD lint: 0 error(s)"
+    assert_not_contains "$output" "INVENTORY_FRESHNESS]"
+    assert_not_contains "$output" "INVENTORY_CHECK_CONFIG"
+    assert_not_contains "$output" "INVENTORY_FRESHNESS_UNVERIFIED"
+    assert_not_contains "$output" "RAW_FRESH_CHILD_OUTPUT"
+}
+
+assert_inventory_failure() {
+    local repo="$1"
+    local expected_status="$2"
+    local rule="$3"
+    local path="$4"
+    local raw_child_text="$5"
+    shift 5
+    local output status
+    output="$(mktemp "$TMP_ROOT/check-sdd-inventory.XXXXXX")"
+
+    if run_check_sdd "$repo" "$@" >"$output" 2>&1; then
+        status=0
+    else
+        status=$?
+    fi
+    if [[ "$status" -ne "$expected_status" ]]; then
+        echo "Expected inventory lint to exit $expected_status, got: $status" >&2
+        cat "$output" >&2
+        exit 1
+    fi
+    assert_contains "$output" "ERROR [$rule] $path:"
+    assert_not_contains "$output" "$raw_child_text"
+    assert_not_contains "$output" "$INVENTORY_SENTINEL"
+    assert_not_contains "$output" "INVENTORY_FRESHNESS_UNVERIFIED"
 }
 
 test_check_sdd_passes_for_valid_repo() {
@@ -524,13 +658,120 @@ test_check_sdd_strict_promotes_baseline_debt() {
     assert_command_fails_with "$repo" 1 "LEGACY_SPEC_HEADING" "specs/dataset/001-legacy/spec.md" --strict
 }
 
-test_check_sdd_inventory_warning_is_non_blocking() {
-    local repo output
+test_check_sdd_inventory_fresh_has_no_diagnostic() {
+    local repo
     repo="$(make_sdd_repo)"
-    output="$(mktemp "$TMP_ROOT/check-sdd.XXXXXX")"
 
-    run_check_sdd "$repo" >"$output" 2>&1
-    assert_contains "$output" "INVENTORY_FRESHNESS_UNVERIFIED"
+    assert_inventory_success "$repo"
+}
+
+test_check_sdd_inventory_exact_stale_sentinel() {
+    local repo
+
+    repo="$(make_sdd_repo)"
+    set_inventory_generator_mode "$repo" stale
+    assert_inventory_failure "$repo" 1 "INVENTORY_FRESHNESS" "design/system/screen-inventory.md" "$INVENTORY_SENTINEL"
+
+    repo="$(make_sdd_repo)"
+    set_inventory_generator_mode "$repo" stale
+    assert_inventory_failure "$repo" 1 "INVENTORY_FRESHNESS" "design/system/screen-inventory.md" "$INVENTORY_SENTINEL" --strict
+}
+
+test_check_sdd_inventory_rejects_near_sentinels() {
+    local repo
+
+    repo="$(make_sdd_repo)"
+    set_inventory_generator_mode "$repo" prefix
+    assert_inventory_failure "$repo" 2 "INVENTORY_CHECK_CONFIG" "scripts/gen-screen-inventory.mjs" "RAW_SENTINEL_PREFIX"
+
+    repo="$(make_sdd_repo)"
+    set_inventory_generator_mode "$repo" suffix
+    assert_inventory_failure "$repo" 2 "INVENTORY_CHECK_CONFIG" "scripts/gen-screen-inventory.mjs" "RAW_SENTINEL_SUFFIX"
+
+    repo="$(make_sdd_repo)"
+    set_inventory_generator_mode "$repo" extra-line
+    assert_inventory_failure "$repo" 2 "INVENTORY_CHECK_CONFIG" "scripts/gen-screen-inventory.mjs" "RAW_EXTRA_NONBLANK_LINE"
+
+    repo="$(make_sdd_repo)"
+    set_inventory_generator_mode "$repo" sentinel-less
+    assert_inventory_failure "$repo" 2 "INVENTORY_CHECK_CONFIG" "scripts/gen-screen-inventory.mjs" "RAW_SENTINEL_LESS_EXIT_ONE"
+}
+
+test_check_sdd_inventory_configuration_failures() {
+    local node_bin repo
+
+    repo="$(make_sdd_repo)"
+    mv "$repo/scripts/gen-screen-inventory.mjs" "$repo/scripts/gen-screen-inventory.mjs.missing"
+    assert_inventory_failure "$repo" 2 "INVENTORY_CHECK_CONFIG" "scripts/gen-screen-inventory.mjs" "MODULE_NOT_FOUND"
+
+    repo="$(make_sdd_repo)"
+    chmod 000 "$repo/scripts/gen-screen-inventory.mjs"
+    assert_inventory_failure "$repo" 2 "INVENTORY_CHECK_CONFIG" "scripts/gen-screen-inventory.mjs" "EACCES"
+
+    repo="$(make_sdd_repo)"
+    cat > "$repo/scripts/gen-screen-inventory.mjs" <<'GENERATOR'
+const RAW_UNLOADABLE_GENERATOR = ;
+GENERATOR
+    assert_inventory_failure "$repo" 2 "INVENTORY_CHECK_CONFIG" "scripts/gen-screen-inventory.mjs" "RAW_UNLOADABLE_GENERATOR"
+
+    repo="$(make_sdd_repo)"
+    set_inventory_generator_mode "$repo" unrunnable
+    assert_inventory_failure "$repo" 2 "INVENTORY_CHECK_CONFIG" "scripts/gen-screen-inventory.mjs" "RAW_GENERATOR_UNRUNNABLE"
+
+    repo="$(make_sdd_repo)"
+    set_inventory_generator_mode "$repo" exit-two
+    assert_inventory_failure "$repo" 2 "INVENTORY_CHECK_CONFIG" "scripts/gen-screen-inventory.mjs" "RAW_GENERATOR_EXIT_TWO"
+
+    repo="$(make_sdd_repo)"
+    set_inventory_generator_mode "$repo" unexpected-exit
+    assert_inventory_failure "$repo" 2 "INVENTORY_CHECK_CONFIG" "scripts/gen-screen-inventory.mjs" "RAW_GENERATOR_UNEXPECTED_EXIT"
+
+    repo="$(make_sdd_repo)"
+    node_bin="$(mktemp -d "$TMP_ROOT/node-unavailable.XXXXXX")"
+    cat > "$node_bin/node" <<'NODE'
+#!/bin/sh
+echo 'RAW_NODE_UNAVAILABLE' >&2
+exit 127
+NODE
+    chmod +x "$node_bin/node"
+    (
+        PATH="$node_bin:$PATH"
+        export PATH
+        assert_inventory_failure "$repo" 2 "INVENTORY_CHECK_CONFIG" "scripts/gen-screen-inventory.mjs" "RAW_NODE_UNAVAILABLE"
+    )
+}
+
+test_check_sdd_inventory_strict_config_mapping_is_invariant() {
+    local repo
+
+    repo="$(make_sdd_repo)"
+    set_inventory_generator_mode "$repo" exit-two
+    assert_inventory_failure "$repo" 2 "INVENTORY_CHECK_CONFIG" "scripts/gen-screen-inventory.mjs" "RAW_GENERATOR_EXIT_TWO" --strict
+}
+
+test_check_sdd_inventory_uses_target_root_generator() {
+    local caller output repo status
+    caller="$(make_sdd_repo)"
+    repo="$(make_sdd_repo)"
+    output="$(mktemp "$TMP_ROOT/check-sdd-inventory.XXXXXX")"
+    set_inventory_generator_mode "$caller" caller-decoy
+
+    if run_check_sdd_from "$caller" "$repo" >"$output" 2>&1; then
+        status=0
+    else
+        status=$?
+    fi
+    if [[ "$status" -ne 0 ]]; then
+        echo "Expected explicit target-root inventory lint to exit 0, got: $status" >&2
+        cat "$output" >&2
+        exit 1
+    fi
+    assert_contains "$output" "Project SDD lint: 0 error(s)"
+    assert_not_contains "$output" "INVENTORY_FRESHNESS]"
+    assert_not_contains "$output" "INVENTORY_CHECK_CONFIG"
+    assert_not_contains "$output" "INVENTORY_FRESHNESS_UNVERIFIED"
+    assert_not_contains "$output" "RAW_CALLER_GENERATOR_USED"
+    assert_not_contains "$output" "RAW_FRESH_CHILD_OUTPUT"
 }
 
 test_prerequisites_resolve_module_feature_paths
@@ -554,6 +795,11 @@ test_check_sdd_fails_for_new_baseline_violation
 test_check_sdd_fails_for_stale_baseline_entry
 test_check_sdd_fails_for_duplicate_or_unsorted_baseline
 test_check_sdd_strict_promotes_baseline_debt
-test_check_sdd_inventory_warning_is_non_blocking
+test_check_sdd_inventory_fresh_has_no_diagnostic
+test_check_sdd_inventory_exact_stale_sentinel
+test_check_sdd_inventory_rejects_near_sentinels
+test_check_sdd_inventory_configuration_failures
+test_check_sdd_inventory_strict_config_mapping_is_invariant
+test_check_sdd_inventory_uses_target_root_generator
 
 echo "speckit script tests passed"
