@@ -34,7 +34,7 @@
 
 本段不屬於 `/opsx:apply`，不得轉成 apply task。Main session 先執行 `openspec instructions apply --change implement-project-sdd-lint --json | jq -e '.progress.remaining == 0'` 並確認 exit `0`，再執行 `/opsx:archive implement-project-sdd-lint`：回寫 `specs/foundation/001-project-sdd-lint/spec.md` 的 version/Changelog、產生 `openspec/specs/foundation/001-project-sdd-lint/spec.md`，並將 proposal、design、tasks、delta 四個 active artifacts 移到 `openspec/changes/archive/2026-08-26-implement-project-sdd-lint/`。此 procedure 明確排除 `specs/STATUS.md`。
 
-維護者已於 2026-08-26 明確核准一次性 final archive PR-size exception，且只涵蓋以下恰好六個 logical non-test files；每個 source→destination pair 視為一個 logical rename：
+依 Principle X v1.33.0，以下恰好六個 logical non-test artifacts 全部位於 `specs/**` 或 `openspec/**`，因此都不納入 PR file-count 或 line-count threshold arithmetic。這是一般 threshold arithmetic；每個 source→destination pair 視為一個 logical rename，single-purpose rule 與下方 exact scope-drift checkpoint 仍完整適用：
 
 1. canonical write-back：`specs/foundation/001-project-sdd-lint/spec.md`
 2. derived spec：`openspec/specs/foundation/001-project-sdd-lint/spec.md`
@@ -43,7 +43,7 @@
 5. tasks rename：`openspec/changes/implement-project-sdd-lint/tasks.md` → `openspec/changes/archive/2026-08-26-implement-project-sdd-lint/tasks.md`
 6. delta rename：`openspec/changes/implement-project-sdd-lint/specs/foundation/001-project-sdd-lint/spec.md` → `openspec/changes/archive/2026-08-26-implement-project-sdd-lint/specs/foundation/001-project-sdd-lint/spec.md`
 
-本一次性核准不涵蓋 `.github/workflows/ci.yml`、`CLAUDE.md`、`specs/STATUS.md`、agent guidance、scripts 或任何其他檔案。Archive 後先執行 `git status --short --untracked-files=all`，逐項比對上述六個 logical files；若 generated paths、logical file count 或 scope 有任何增加或差異，main session 必須在 commit 前停止並回到新的 maintainer checkpoint，不得沿用本次核准。
+Final archive scope 明確排除 `.github/workflows/ci.yml`、`CLAUDE.md`、`specs/STATUS.md`、agent guidance、scripts 或任何其他檔案。Archive 後先執行 `git status --short --untracked-files=all`，逐項比對上述六個 logical artifacts；若 generated paths、logical artifact count 或 scope 有任何增加或差異，main session 必須在 commit 前停止並回到新的 maintainer checkpoint；threshold exclusion 不得擴張 exact scope 或 single-purpose rule。
 
 Scope 完全一致時，執行 `test "$(rg -c '^版本: [0-9]+\.[0-9]+\.[0-9]+$|^## Changelog$' specs/foundation/001-project-sdd-lint/spec.md)" -eq 2`、`rg -o 'FR-[0-9]{3}|SC-[0-9]{3}|AC-[0-9]+\.[0-9]+' openspec/specs/foundation/001-project-sdd-lint/spec.md | sort -u | while IFS= read -r citation; do grep -F "$citation" specs/foundation/001-project-sdd-lint/spec.md >/dev/null || exit 1; done`、`grep -F 'specs/foundation/001-project-sdd-lint/spec.md' openspec/specs/foundation/001-project-sdd-lint/spec.md` 與 `! rg -n '^## (ADDED|MODIFIED|REMOVED) Requirements$' openspec/specs/foundation/001-project-sdd-lint/spec.md`；四個 commands 均須 exit `0`，以證明 canonical version/Changelog、derived canonical path、逐 ID citation 與無 delta headings 的 write-back contract。
 
