@@ -1009,6 +1009,18 @@ test_check_sdd_accepts_complete_exception_files_list() {
     assert_command_succeeds "$repo"
 }
 
+test_check_sdd_accepts_complete_exception_with_root_extensionless_path() {
+    local repo
+    repo="$(make_sdd_repo)"
+    printf 'Synthetic license fixture.\n' > "$repo/LICENSE"
+    printf '#!/bin/sh\n' > "$repo/scripts/a.sh"
+    git -C "$repo" init -q
+    git -C "$repo" add LICENSE scripts/a.sh
+    printf '\n- [ ] 1.3 Scaffold `LICENSE` and `scripts/a.sh`. Exception: scaffold; Files: `LICENSE`, `scripts/a.sh`; Reason: Bootstrap requires both files. [@senior-devops]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+
+    assert_command_succeeds "$repo" --not-rule TASK_EXCEPTION
+}
+
 test_check_sdd_rejects_non_shell_red_task_with_non_qa_owner() {
     local repo
     repo="$(make_sdd_repo)"
@@ -1067,6 +1079,7 @@ test_check_sdd_excludes_deprecated_task_template_retired_wording
 test_check_sdd_rejects_nonpath_exception_files_value
 test_check_sdd_rejects_partial_exception_files_list
 test_check_sdd_accepts_complete_exception_files_list
+test_check_sdd_accepts_complete_exception_with_root_extensionless_path
 test_check_sdd_rejects_non_shell_red_task_with_non_qa_owner
 test_check_sdd_accepts_non_shell_red_task_with_qa_owner
 
