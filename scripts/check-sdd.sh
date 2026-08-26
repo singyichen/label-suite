@@ -2,18 +2,12 @@
 set -u
 readonly inventory_sentinel='design/system/screen-inventory.md is stale — run: node scripts/gen-screen-inventory.mjs'
 strict=0; id_pattern='FR-[0-9][0-9][0-9][[:alnum:]]*(-[[:alnum:]]+)*|SC-[0-9][0-9][0-9][[:alnum:]]*(-[[:alnum:]]+)*|AC-[0-9]+[[:alpha:]]*[.][0-9]+[[:alnum:]]*(-[[:alnum:]]+)*'
-root_arg=''; root_provided=0
-config_failed=0
-governance_failed=0
+root_arg=''; root_provided=0; config_failed=0; governance_failed=0
 tmp_dir="$(mktemp -d "${TMPDIR:-/tmp}/label-suite-sdd.XXXXXX")" || exit 2
 trap 'rm -rf "$tmp_dir"' EXIT
-diagnostics="$tmp_dir/diagnostics.tsv"
-status_rows="$tmp_dir/status.tsv"
-active_specs="$tmp_dir/active-specs.txt"
-eligible="$tmp_dir/eligible.tsv"
-: >"$diagnostics"
-: >"$active_specs"
-: >"$eligible"
+diagnostics="$tmp_dir/diagnostics.tsv"; status_rows="$tmp_dir/status.tsv"
+active_specs="$tmp_dir/active-specs.txt"; eligible="$tmp_dir/eligible.tsv"
+: >"$diagnostics"; : >"$active_specs"; : >"$eligible"
 add_record() { printf '%s\t%s\t%s\t%s\n' "$1" "$2" "$3" "$4" >>"$diagnostics"; }
 add_error() { governance_failed=1; add_record ERROR "$1" "$2" "$3"; }
 add_config_error() { config_failed=1; add_record ERROR "$1" "$2" "$3"; }
@@ -44,11 +38,7 @@ for arg in "$@"; do
 done
 [ "$root_provided" -eq 0 ] || [ -n "$root_arg" ] || add_config_error SCANNER_CONFIG . 'repository root is invalid or unreadable'
 if [ "$config_failed" -ne 0 ]; then finish; fi
-if [ "$root_provided" -eq 0 ]; then
-    repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)"
-else
-    repo_root="$(cd "$root_arg" 2>/dev/null && pwd)"
-fi
+if [ "$root_provided" -eq 0 ]; then repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)"; else repo_root="$(cd "$root_arg" 2>/dev/null && pwd)"; fi
 if [ -z "${repo_root:-}" ] || [ ! -d "$repo_root" ]; then add_config_error SCANNER_CONFIG . 'repository root is invalid or unreadable'; finish; fi
 for required in specs/STATUS.md scripts/sdd-lint-baseline.txt openspec/changes .claude/agents; do
     [ -r "$repo_root/$required" ] || add_config_error SCANNER_CONFIG "$required" 'required scanner input is missing or unreadable'
@@ -69,17 +59,19 @@ function trim(value) {
 while IFS= read -r spec_file; do
     relative="${spec_file#"$repo_root"/}"
     spec_dir="$(basename "$(dirname "$spec_file")")"
-    module="$(basename "$(dirname "$(dirname "$spec_file")")")"
     number="${spec_dir%%-*}"
-    id="$module-$number"
-    count="$(awk -F '\t' -v id="$id" '$1 == id { count++ } END { print count + 0 }' "$status_rows")"
-    [ "$count" -eq 1 ] || add_error STATUS_ARTIFACT_SYNC "$relative" "expected exactly one STATUS row for $id"
+    case "$relative" in
+        specs/_archive/*) count="$(awk -F '\t' -v number="$number" '$1 ~ ("-" number "$") && $3 == "archived" { count++ } END { print count + 0 }' "$status_rows")"; identity="archived STATUS row for feature $number" ;;
+        *) module="$(basename "$(dirname "$(dirname "$spec_file")")")"; id="$module-$number"; count="$(awk -F '\t' -v id="$id" '$1 == id { count++ } END { print count + 0 }' "$status_rows")"; identity="STATUS row for $id" ;;
+    esac
+    [ "$count" -eq 1 ] || add_error STATUS_ARTIFACT_SYNC "$relative" "expected exactly one $identity"
 done < <(find "$repo_root/specs" -mindepth 3 -maxdepth 3 -path '*/[0-9][0-9][0-9]-*/spec.md' -print | LC_ALL=C sort)
 while IFS="$(printf '\t')" read -r id module status branch; do
     [ -n "$id" ] || continue
     number="${id##*-}"; id_module="${id%-*}"
     [ "$id_module" = "$module" ] || add_error STATUS_ARTIFACT_SYNC specs/STATUS.md "STATUS row $id contradicts module $module"
-    count="$(find "$repo_root/specs/$module" -mindepth 2 -maxdepth 2 -path "*/$number-*/spec.md" -print 2>/dev/null | wc -l | tr -d ' ')"
+    canonical_root="$repo_root/specs/$module"; [ "$status" != archived ] || canonical_root="$repo_root/specs/_archive"
+    count="$(find "$canonical_root" -mindepth 2 -maxdepth 2 -path "*/$number-*/spec.md" -print 2>/dev/null | wc -l | tr -d ' ')"
     [ "$count" -eq 1 ] || add_error STATUS_ARTIFACT_SYNC specs/STATUS.md "STATUS row $id does not resolve to exactly one canonical spec"
     case "$status" in
         spec-ready|change-open|in-progress|review|done|archived|deferred) ;;
@@ -105,6 +97,13 @@ verify_citations() {
     while IFS= read -r citation; do
         [ -z "$citation" ] || grep -Fqx "$citation" "$tmp_dir/canonical-citations" || add_error SOURCE_VERIFY_ID "${artifact#"$repo_root"/}" "canonical spec does not define $citation"
     done <"$tmp_dir/citations"
+}
+verify_required_ids() {
+    local canonical="$1" relative="$2" missing_ids=''
+    grep -Eq 'FR-[0-9][0-9][0-9]' "$canonical" || missing_ids="$missing_ids FR"
+    grep -Eq 'SC-[0-9][0-9][0-9]' "$canonical" || missing_ids="$missing_ids SC"
+    grep -Eq 'AC-[0-9]+[.][0-9]+' "$canonical" || missing_ids="$missing_ids AC"
+    [ -z "$missing_ids" ] || add_error SPEC_REQUIRED_IDS "$relative" "canonical spec is missing required identifiers:$missing_ids"
 }
 for change_dir in "$repo_root"/openspec/changes/*; do
     [ -d "$change_dir" ] || continue
@@ -138,11 +137,7 @@ for change_dir in "$repo_root"/openspec/changes/*; do
     fi
     section_is_valid "$canonical" '## 功能目標' exact || add_error SPEC_REQUIRED_HEADING "$canonical_relative" 'required heading is missing, duplicated, or empty: ## 功能目標'
     section_is_valid "$canonical" '## 規格相依性' dependency || add_error SPEC_REQUIRED_HEADING "$canonical_relative" 'required heading is missing, duplicated, or empty: ## 規格相依性'
-    missing_ids=''
-    grep -Eq 'FR-[0-9][0-9][0-9]' "$canonical" || missing_ids="$missing_ids FR"
-    grep -Eq 'SC-[0-9][0-9][0-9]' "$canonical" || missing_ids="$missing_ids SC"
-    grep -Eq 'AC-[0-9]+[.][0-9]+' "$canonical" || missing_ids="$missing_ids AC"
-    [ -z "$missing_ids" ] || add_error SPEC_REQUIRED_IDS "$canonical_relative" "canonical spec is missing required identifiers:$missing_ids"
+    verify_required_ids "$canonical" "$canonical_relative"
     if requires_page_traceability "$module" "$canonical" && ! grep -Eq '^## Prototype Traceability|Frontend Ready Gate.*不適用|prototype.*不適用' "$canonical"; then add_error SPEC_REQUIRED_IDS "$canonical_relative" 'page traceability or an explicit non-page exception is required'; fi
     for artifact in "$proposal" "$change_dir/design.md" "$change_dir/tasks.md"; do
         verify_citations "$artifact" "$canonical"
@@ -222,7 +217,12 @@ LC_ALL=C sort -u "$active_specs" -o "$active_specs"
 while IFS= read -r spec_file; do
     relative="${spec_file#"$repo_root"/}"
     grep -Fqx "$relative" "$active_specs" && continue
-    module="$(basename "$(dirname "$(dirname "$spec_file")")")"
+    spec_dir="$(basename "$(dirname "$spec_file")")"; number="${spec_dir%%-*}"
+    case "$relative" in
+        specs/_archive/*) module="$(awk -F '\t' -v number="$number" '$1 ~ ("-" number "$") && $3 == "archived" { print $2; exit }' "$status_rows")"; status=archived ;;
+        *) module="$(basename "$(dirname "$(dirname "$spec_file")")")"; id="$module-$number"; status="$(awk -F '\t' -v id="$id" '$1 == id { print $3; exit }' "$status_rows")" ;;
+    esac
+    if [ "$status" = spec-ready ] && section_is_valid "$spec_file" '## 功能目標' exact && section_is_valid "$spec_file" '## 規格相依性' dependency; then verify_required_ids "$spec_file" "$relative"; fi
     grep -Eq '^## 功能目標([[:space:]]|$)' "$spec_file" || printf 'LEGACY_SPEC_HEADING\t%s\tmissing:## 功能目標\n' "$relative" >>"$eligible"
     grep -Eq '^## 規格相依性( \*\(本功能依賴其他規格，或被其他規格依賴時填寫\)\*)?$' "$spec_file" || printf 'LEGACY_SPEC_HEADING\t%s\tmissing:## 規格相依性\n' "$relative" >>"$eligible"
     if requires_page_traceability "$module" "$spec_file" && ! grep -Fqx '## Prototype Traceability' "$spec_file"; then printf 'LEGACY_SPEC_HEADING\t%s\tmissing:## Prototype Traceability\n' "$relative" >>"$eligible"; fi
