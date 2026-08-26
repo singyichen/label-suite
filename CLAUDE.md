@@ -167,6 +167,12 @@ pnpm playwright test
 
 # Bootstrap contract (run from project root — SC-045; see docs/development.md)
 bash scripts/verify-bootstrap.sh
+
+# OpenSpec schema validation (run from project root)
+openspec validate --changes --no-interactive
+
+# Project SDD lint (run from project root)
+scripts/check-sdd.sh
 ```
 
 Every CI job must have a matching local command above — when adding a CI job, add its command here in the same PR.
