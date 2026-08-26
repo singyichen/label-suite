@@ -42,7 +42,7 @@ test.describe('Sample-level gold status badge (removed v3.1.0)', () => {
 
     await page.getByTestId('ws-review-row-approve').click();
     await page.getByTestId('ws-review-submit-btn').click();
-    await expect(page.locator('#toastMsg')).toHaveText('審查已提交');
+    await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
     await expect(page.getByTestId('ws-review-gold-status')).toHaveCount(0);
   });
 });
@@ -254,11 +254,11 @@ test.describe('Review card converged across run types (v4.0.0)', () => {
     await gotoT001Reviewer(page);
 
     await page.getByTestId('ws-review-submit-btn').click();
-    await expect(page.locator('#toastMsg')).not.toHaveText('審查已提交');
+    await expect(page.locator('#toastMsg')).not.toHaveText('審核已送出');
 
     await page.getByTestId('ws-review-row-approve').click();
     await page.getByTestId('ws-review-submit-btn').click();
-    await expect(page.locator('#toastMsg')).toHaveText('審查已提交');
+    await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
   });
 
   /* The 原始文本 card only ever earned its place by showing the UNION across

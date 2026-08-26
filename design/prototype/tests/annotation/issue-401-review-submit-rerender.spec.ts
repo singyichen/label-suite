@@ -34,7 +34,7 @@ test.describe('issue #401 -- reviewer submit re-renders the finalized lock immed
 
     await page.getByTestId('ws-review-row-approve').click();
     await page.getByTestId('ws-review-submit-btn').click();
-    await expect(page.locator('#toastMsg')).toHaveText('審查已提交');
+    await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
 
     // No reload: the render must reflect FINALIZED immediately.
     await expect(page.locator('[data-testid="ws-review-unit-context"] .rv-unit-state'))

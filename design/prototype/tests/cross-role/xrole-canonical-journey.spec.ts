@@ -599,7 +599,7 @@ async function submitApproval(page: Page, sampleId: string, annotatorId: string,
   await gotoReview(page, sampleId, annotatorId, reviewerId);
   await page.getByTestId('ws-review-row-approve').click();
   await page.getByTestId('ws-review-submit-btn').click();
-  await expect(page.locator('#toastMsg')).toHaveText('審查已提交');
+  await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
 }
 
 /* Real-UI correction: pick a different label in the correction panel (it is
@@ -615,7 +615,7 @@ async function submitCorrection(page: Page, sampleId: string, annotatorId: strin
   await page.getByTestId('ws-review-correct-single_label').getByTestId(`ws-single-label-chip-${correctedLabel}`).click();
   await page.getByTestId('ws-review-row-reject').click();
   await page.getByTestId('ws-review-submit-btn').click();
-  await expect(page.locator('#toastMsg')).toHaveText('審查已提交');
+  await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
 }
 
 /* FR-014I second half: the rolled-back annotator reopens the sample (the
@@ -716,7 +716,7 @@ test('XROLE-13: dry_run reject never rolls the annotator sample back to pending 
   await gotoReview(r01Page, DRY_RUN_RECORD_IDS[0], 'A01', REVIEWER_R01, 'dry_run');
   await r01Page.getByTestId('ws-review-row-reject').click();
   await r01Page.getByTestId('ws-review-submit-btn').click();
-  await expect(r01Page.locator('#toastMsg')).toHaveText('審查已提交');
+  await expect(r01Page.locator('#toastMsg')).toHaveText('審核已送出');
 
   expect(await readSampleStatus(r01Page, 'dry_run', DRY_RUN_RECORD_IDS[0], 'A01')).toBe('submitted');
 });
