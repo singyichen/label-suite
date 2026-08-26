@@ -16,11 +16,9 @@ finish() {
     local sorted="$tmp_dir/diagnostics.sorted" errors warnings
     LC_ALL=C sort "$diagnostics" >"$sorted"
     awk -F '\t' '{ printf "%s [%s] %s: %s\n", $1, $2, $3, $4 }' "$sorted"
-    errors="$(awk -F '\t' '$1 == "ERROR" { count++ } END { print count + 0 }' "$sorted")"
-    warnings="$(awk -F '\t' '$1 == "WARNING" { count++ } END { print count + 0 }' "$sorted")"
+    errors="$(awk -F '\t' '$1 == "ERROR" { count++ } END { print count + 0 }' "$sorted")"; warnings="$(awk -F '\t' '$1 == "WARNING" { count++ } END { print count + 0 }' "$sorted")"
     printf 'Project SDD lint: %s error(s), %s warning(s)\n' "$errors" "$warnings"
-    [ "$config_failed" -eq 0 ] || exit 2
-    [ "$governance_failed" -eq 0 ] || exit 1
+    [ "$config_failed" -eq 0 ] || exit 2; [ "$governance_failed" -eq 0 ] || exit 1
     exit 0
 }
 for arg in "$@"; do
@@ -40,9 +38,7 @@ done
 if [ "$config_failed" -ne 0 ]; then finish; fi
 if [ "$root_provided" -eq 0 ]; then repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)"; else repo_root="$(cd "$root_arg" 2>/dev/null && pwd)"; fi
 if [ -z "${repo_root:-}" ] || [ ! -d "$repo_root" ]; then add_config_error SCANNER_CONFIG . 'repository root is invalid or unreadable'; finish; fi
-for required in specs/STATUS.md scripts/sdd-lint-baseline.txt openspec/changes .claude/agents; do
-    [ -r "$repo_root/$required" ] || add_config_error SCANNER_CONFIG "$required" 'required scanner input is missing or unreadable'
-done
+for required in specs/STATUS.md scripts/sdd-lint-baseline.txt openspec/changes .claude/agents; do [ -r "$repo_root/$required" ] || add_config_error SCANNER_CONFIG "$required" 'required scanner input is missing or unreadable'; done
 if [ "$config_failed" -ne 0 ]; then finish; fi
 awk -F '|' '
 function trim(value) {
@@ -62,7 +58,7 @@ while IFS= read -r spec_file; do
     number="${spec_dir%%-*}"
     case "$relative" in
         specs/_archive/*) count="$(awk -F '\t' -v number="$number" '$1 ~ ("-" number "$") && $3 == "archived" { count++ } END { print count + 0 }' "$status_rows")"; identity="archived STATUS row for feature $number" ;;
-        *) module="$(basename "$(dirname "$(dirname "$spec_file")")")"; id="$module-$number"; count="$(awk -F '\t' -v id="$id" '$1 == id { count++ } END { print count + 0 }' "$status_rows")"; identity="STATUS row for $id" ;;
+        *) module="$(basename "$(dirname "$(dirname "$spec_file")")")"; id="$module-$number"; count="$(awk -F '\t' -v id="$id" '$1 == id && $3 != "archived" { count++ } END { print count + 0 }' "$status_rows")"; identity="non-archived STATUS row for $id" ;;
     esac
     [ "$count" -eq 1 ] || add_error STATUS_ARTIFACT_SYNC "$relative" "expected exactly one $identity"
 done < <(find "$repo_root/specs" -mindepth 3 -maxdepth 3 -path '*/[0-9][0-9][0-9]-*/spec.md' -print | LC_ALL=C sort)
@@ -87,9 +83,7 @@ section_is_valid() {
     END { exit !(found == 1 && content == 1) }
     ' "$1"
 }
-requires_page_traceability() {
-    [ "$1" != foundation ] && grep -Eq 'Prototype|design/prototype|產品 UI|頁面' "$2"
-}
+requires_page_traceability() { [ "$1" != foundation ] && grep -Eq 'Prototype|design/prototype|產品 UI|頁面' "$2"; }
 verify_citations() {
     local artifact="$1" canonical="$2" citation
     [ -r "$artifact" ] || return
@@ -222,8 +216,14 @@ while IFS= read -r spec_file; do
         specs/_archive/*) module="$(awk -F '\t' -v number="$number" '$1 ~ ("-" number "$") && $3 == "archived" { print $2; exit }' "$status_rows")"; status=archived ;;
         *) module="$(basename "$(dirname "$(dirname "$spec_file")")")"; id="$module-$number"; status="$(awk -F '\t' -v id="$id" '$1 == id { print $3; exit }' "$status_rows")" ;;
     esac
-    if [ "$status" = spec-ready ] && section_is_valid "$spec_file" '## 功能目標' exact && section_is_valid "$spec_file" '## 規格相依性' dependency; then verify_required_ids "$spec_file" "$relative"; fi
-    grep -Eq '^## 功能目標([[:space:]]|$)' "$spec_file" || printf 'LEGACY_SPEC_HEADING\t%s\tmissing:## 功能目標\n' "$relative" >>"$eligible"
+    if [ "$status" = spec-ready ]; then
+        goal_valid=1; section_is_valid "$spec_file" '## 功能目標' exact || goal_valid=0
+        dependency_valid=1; section_is_valid "$spec_file" '## 規格相依性' dependency || dependency_valid=0
+        [ "$goal_valid" -eq 1 ] || grep -Fqx "$(printf 'LEGACY_SPEC_HEADING\t%s\tmissing:## 功能目標' "$relative")" "$repo_root/scripts/sdd-lint-baseline.txt" || add_error SPEC_REQUIRED_HEADING "$relative" 'required heading is missing, duplicated, or empty: ## 功能目標'
+        [ "$dependency_valid" -eq 1 ] || grep -Fqx "$(printf 'LEGACY_SPEC_HEADING\t%s\tmissing:## 規格相依性' "$relative")" "$repo_root/scripts/sdd-lint-baseline.txt" || add_error SPEC_REQUIRED_HEADING "$relative" 'required heading is missing, duplicated, or empty: ## 規格相依性'
+        if [ "$goal_valid" -eq 1 ] && [ "$dependency_valid" -eq 1 ]; then verify_required_ids "$spec_file" "$relative"; fi
+    fi
+    grep -Fqx '## 功能目標' "$spec_file" || printf 'LEGACY_SPEC_HEADING\t%s\tmissing:## 功能目標\n' "$relative" >>"$eligible"
     grep -Eq '^## 規格相依性( \*\(本功能依賴其他規格，或被其他規格依賴時填寫\)\*)?$' "$spec_file" || printf 'LEGACY_SPEC_HEADING\t%s\tmissing:## 規格相依性\n' "$relative" >>"$eligible"
     if requires_page_traceability "$module" "$spec_file" && ! grep -Fqx '## Prototype Traceability' "$spec_file"; then printf 'LEGACY_SPEC_HEADING\t%s\tmissing:## Prototype Traceability\n' "$relative" >>"$eligible"; fi
 done < <(find "$repo_root/specs" -mindepth 3 -maxdepth 3 -path '*/[0-9][0-9][0-9]-*/spec.md' -print | LC_ALL=C sort)
