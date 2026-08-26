@@ -1134,7 +1134,7 @@
 
     @media (max-width: 768px) {
       .layout { padding: var(--space-md) var(--space-md) var(--space-xl); }
-      .admin-tabs { overflow-x: auto; }
+      .admin-tabs { overflow-x: auto; flex-wrap: wrap; }
       .kv-grid { grid-template-columns: 1fr; }
       .sampling-grid { grid-template-columns: 1fr; }
 .progress-metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -2158,6 +2158,10 @@
       .overview-edit-grid { grid-template-columns: 1fr; }
       .settings-editor-layout { grid-template-columns: 1fr; }
       .member-entry-grid { grid-template-columns: 1fr; }
+      /* Grid items default to min-width:auto, so .member-entry-card would
+         otherwise refuse to shrink below its child table's min-width:640px
+         and force `main` to overflow horizontally (issue #406). */
+      .member-entry-card { min-width: 0; }
       .member-entry-row {
         flex-direction: column;
         align-items: stretch;
