@@ -54,7 +54,7 @@ test.describe('issue #455 -- the reviewer left column groups review units by sam
     await expect(page.getByTestId('ws-sample-item')).toHaveCount(15);
     // Denominator stays the review-unit count (T014's numerator is whatever
     // seedReviewFlowDemo staged, which this spec has no stake in).
-    await expect(page.getByTestId('ws-progress-text')).toHaveText(/\/ 15$/);
+    await expect(page.getByTestId('ws-progress-text')).toHaveText(/\/ 15 個審核單位$/);
 
     for (let g = 0; g < 5; g += 1) {
       const group = groups.nth(g);
