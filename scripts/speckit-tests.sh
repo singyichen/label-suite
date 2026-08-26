@@ -291,6 +291,10 @@ GUIDANCE
 GUIDANCE
     cat > "$repo/openspec/config.yaml" <<'CONFIG'
 schema: specification
+rules:
+  tasks:
+    - >-
+      Use pnpm test for active task guidance.
 CONFIG
     cat > "$repo/specs/foundation/001-project-sdd-lint/spec.md" <<'SPEC'
 # Project SDD lint
@@ -448,7 +452,12 @@ assert_command_fails_with() {
 assert_command_succeeds() {
     local repo="$1"
     shift
-    local output status
+    local excluded_rule='' output status
+
+    if [[ "${1:-}" == "--not-rule" ]]; then
+        excluded_rule="$2"
+        shift 2
+    fi
     output="$(mktemp "$TMP_ROOT/check-sdd.XXXXXX")"
 
     if run_check_sdd "$repo" "$@" >"$output" 2>&1; then
@@ -462,6 +471,9 @@ assert_command_succeeds() {
         exit 1
     fi
     assert_contains "$output" "Project SDD lint: 0 error(s)"
+    if [[ -n "$excluded_rule" ]]; then
+        assert_not_contains "$output" "ERROR [$excluded_rule]"
+    fi
 }
 
 assert_not_contains() {
@@ -952,9 +964,23 @@ test_check_sdd_rejects_suffixed_source_verify_id() {
 test_check_sdd_rejects_retired_command_in_active_openspec_config() {
     local repo
     repo="$(make_sdd_repo)"
-    printf '\nnpm run lint\n' >> "$repo/openspec/config.yaml"
+    cat >> "$repo/openspec/config.yaml" <<'CONFIG'
+    - >-
+      Run npm run lint before applying active task guidance.
+CONFIG
 
     assert_command_fails_with "$repo" 1 "RETIRED_COMMAND" "openspec/config.yaml"
+}
+
+test_check_sdd_excludes_deprecated_task_template_retired_wording() {
+    local repo
+    repo="$(make_sdd_repo)"
+    mkdir -p "$repo/.specify/templates"
+    cat > "$repo/.specify/templates/tasks-template.md" <<'TEMPLATE'
+> Deprecated historical example: npm test
+TEMPLATE
+
+    assert_command_succeeds "$repo" --not-rule RETIRED_COMMAND
 }
 
 test_check_sdd_rejects_nonpath_exception_files_value() {
@@ -1035,6 +1061,7 @@ test_check_sdd_rejects_arbitrary_dependency_heading_suffix
 test_check_sdd_accepts_approved_dependency_heading_suffix
 test_check_sdd_rejects_suffixed_source_verify_id
 test_check_sdd_rejects_retired_command_in_active_openspec_config
+test_check_sdd_excludes_deprecated_task_template_retired_wording
 test_check_sdd_rejects_nonpath_exception_files_value
 test_check_sdd_rejects_partial_exception_files_list
 test_check_sdd_accepts_complete_exception_files_list
