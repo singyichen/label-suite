@@ -34,6 +34,27 @@ write-back/archive 仍各自報告。
 - 不把 `openspec validate`、`/opsx:verify` 或 `check-spec-artifacts.sh`
   宣稱為本 command 的等價替代。
 
+## Decisions
+
+1. **採用 Bash 3.2-compatible、零 dependency 的 entry point。** 維護者的
+   macOS 與 Ubuntu CI 都可直接執行，且治理 gate 不需先安裝 language runtime 或
+   test framework。相較之下，現代 Bash 功能、Bats、Python 或 Node 可使程式較短，
+   但會新增環境與安裝契約，違反本變更的離線、local/CI parity 邊界。
+2. **採用 strict／baseline-eligible／warning-only 三條 diagnostics stream 與
+   normalized TSV ratchet。** strict stream 立即阻擋 active artifacts；eligible
+   stream 以同一格式交給 `comm` 比對，讓 legacy debt 可見但不得增加；deferred
+   stream 保留不可靠的機械判斷為 warning。立即全 repository strict 會被既有
+   debt 阻塞，全部 audit-only 則不能形成 gate；以 human-readable message 當
+   baseline key 也會因文案變動產生不穩定結果。
+3. **採用獨立的 `Project SDD Lint` CI job。** job 只執行與本地相同的 command，
+   讓 governance failure 可被直接辨識，並維持四個 gate 的責任分界。把它包入
+   `openspec validate`、generic validation 或 application test job 雖可減少 YAML，
+   卻會重新混淆 schema、文件治理與 code/test 的結果。
+4. **在 generator contract 出現前將 inventory freshness 維持 warning-only。**
+   `INVENTORY_FRESHNESS_UNVERIFIED` 每次都可見，誠實表示尚無 manifest、source
+   set、normalization 與 `--check`。以 mtime、日期或猜測的檔案集合宣稱 freshness
+   已驗證，會產生不可重複且不可信的 blocking 結果。
+
 ## Command contract
 
 `scripts/check-sdd.sh` 使用 macOS Bash 3.2 與 Ubuntu Bash 都可執行的語法。
@@ -105,15 +126,15 @@ cleanup 同時修正 artifact 與移除相同 baseline entry，才會恢復通�
 
 | 類別 | Rule ID | 機械檢查邊界 |
 |---|---|---|
-| Strict | `STATUS_ARTIFACT_SYNC` | active canonical spec 與唯一可解析的 STATUS row、ID/module/number 與允許狀態同步。 |
-| Strict | `ACTIVE_CHANGE_SPEC` | 每個非 archive change 的 `proposal.md` 恰好引用一個存在的 `對應 Spec:` path。 |
-| Strict | `ACTIVE_CHANGE_STAGE` | active change 對應 STATUS 不可為 `spec-ready`、`done`、`archived` 或 `deferred`。 |
+| Strict | `STATUS_ARTIFACT_SYNC` | 每個 active canonical spec 有且只有一個 STATUS row，且每個 STATUS feature row 均可解析到唯一對應 spec；ID/module/number 與允許狀態同步。 |
+| Strict | `ACTIVE_CHANGE_SPEC` | 每個非 archive change 的 `proposal.md` 恰好引用一個存在的 `對應 Spec:` path，且該 path 可解析到 STATUS row。 |
+| Strict | `ACTIVE_CHANGE_STAGE` | active change 對應 STATUS 不可為 `spec-ready`、`done`、`archived` 或 `deferred`；branch/stage 的純 repository-local contradiction 亦為 error。 |
 | Strict | `SPEC_REQUIRED_HEADING` | active/new canonical spec 恰有一個非空 `## 功能目標` 與 `## 規格相依性`。 |
 | Strict | `SPEC_REQUIRED_IDS` | active/new canonical spec 有 FR、SC、適用 AC 與 page-scoped traceability 或明確 exception。 |
 | Strict | `SOURCE_VERIFY_ID` | active proposal/design/tasks/delta 的既有 FR/SC/AC token 在其 canonical spec 逐字可定位。 |
 | Strict | `TASK_ASSIGNEE` | 每個 checkbox task line 結尾恰一個存在的 `[@agent-name]` 或 `[@main]`。 |
 | Strict | `TASK_STORY_GOAL` | 每個 User Story phase 有 `**故事目標**` 且引用至少一個 canonical SC ID。 |
-| Strict | `TASK_EXCEPTION` | 僅接受 `package-manager`、`scaffold`、`governance-propagation`，且完整提供 `Exception:`、`Files:`、`Reason:`。 |
+| Strict | `TASK_EXCEPTION` | 僅接受 `package-manager`、`scaffold`、`governance-propagation`；使用 exception 時必須恰有一組完整且非空的 `Exception:`、`Files:`、`Reason:`。 |
 | Strict | `TASK_RED_OWNER` | 明確 Red task 由 `[@senior-qa]` 擁有，且位於 paired Green task 前。 |
 | Strict | `TASK_FILE_OWNER` | file path 唯一且 ownership map 明確時，owner 必須符合對應責任。 |
 | Strict | `RETIRED_COMMAND` | active guidance 不得含 repository-local `npm test`、`npm run ...`、pipeline stage `/ui-ux-pro-max` 或非歷史 `/speckit.analyze`；`pnpm` 是 negative control。 |
@@ -155,6 +176,33 @@ root 的相同 local command，維持 local/CI parity。
 此 job 與 `openspec validate --changes --no-interactive` 分開，既不包裝也不取代
 OpenSpec schema validation。branch protection 是否將 job 設為 required 是 GitHub
 外部狀態，PR handoff 必須明確提出，但不由離線 scanner 判定。
+
+## Risks / Trade-offs
+
+- [regex 可能將相似但非現行的文字誤判為 retired command] → 僅掃描列出的 active
+  inputs、保留歷史／scratch exclusions，並以 `pnpm` negative control fixture 防止
+  將非 `npm` command 誤報。
+- [baseline 可能遮蔽長期 legacy debt] → baseline 只允許兩個 eligible rule、必須
+  排序唯一且無 glob；new/stale entry 均失敗，`--strict` 與後續 cleanup 可逐步將
+  debt 歸零。
+- [獨立 CI gate rollout 可能暫時影響合併流程] → 先以本地與 CI evidence 驗證
+  command，再由 maintainer 設定外部 required check；rollback 先移除或停用外部
+  required-check expectation，再回復 workflow job，且不把移除 gate 描述為 scanner
+  成功。
+
+## Migration Plan
+
+1. `[@senior-qa]` 先提交 fixture Red contract，記錄 `scripts/check-sdd.sh` 缺失
+   的預期 failure；`[@senior-devops]` 再新增排序 baseline 與 Bash command，使同一
+   contract 轉綠。
+2. 在 repository 與 synthetic fixtures 執行 command、baseline、OpenSpec schema
+   與其他適用 evidence，確認 `INVENTORY_FRESHNESS_UNVERIFIED` 可見但不單獨造成
+   nonzero。
+3. 新增獨立 `sdd-lint` workflow job 與相同 local command；CI 成功觀察後，PR
+   handoff 才請 maintainer 將 `Project SDD Lint` 設為外部 required check。
+4. 若 rollout 必須回復，先由 maintainer 移除或停用外部 required-check expectation，
+   避免 PR 因不存在的 check 卡住；再回復 `sdd-lint` workflow gate。此 rollback
+   只撤回 gate 的強制性，不宣稱 scanner 已成功或已驗證 inventory freshness。
 
 ## TDD and evidence
 
