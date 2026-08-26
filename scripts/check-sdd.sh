@@ -76,7 +76,8 @@ while IFS= read -r spec_file; do
 done < <(find "$repo_root/specs" -mindepth 3 -maxdepth 3 -path '*/[0-9][0-9][0-9]-*/spec.md' -print | LC_ALL=C sort)
 while IFS="$(printf '\t')" read -r id module status branch; do
     [ -n "$id" ] || continue
-    number="${id##*-}"
+    number="${id##*-}"; id_module="${id%-*}"
+    [ "$id_module" = "$module" ] || add_error STATUS_ARTIFACT_SYNC specs/STATUS.md "STATUS row $id contradicts module $module"
     count="$(find "$repo_root/specs/$module" -mindepth 2 -maxdepth 2 -path "*/$number-*/spec.md" -print 2>/dev/null | wc -l | tr -d ' ')"
     [ "$count" -eq 1 ] || add_error STATUS_ARTIFACT_SYNC specs/STATUS.md "STATUS row $id does not resolve to exactly one canonical spec"
     case "$status" in
@@ -86,8 +87,8 @@ while IFS="$(printf '\t')" read -r id module status branch; do
     [ "$status" != review ] || add_warning STATUS_EXTERNAL_STATE specs/STATUS.md "external PR state for $id requires maintainer review"
 done <"$status_rows"
 section_is_valid() {
-    awk -v heading="$2" '
-    substr($0, 1, length(heading)) == heading { found++; inside = 1; next }
+    awk -v heading="$2" -v mode="$3" '
+    (mode == "exact" ? $0 == heading : substr($0, 1, length(heading)) == heading) { found++; inside = 1; next }
     inside && /^##[[:space:]]/ { inside = 0 }
     inside && $0 !~ /^[[:space:]]*$/ && $0 !~ /^[[:space:]]*<!--/ { content = 1 }
     END { exit !(found == 1 && content == 1) }
@@ -110,10 +111,9 @@ for change_dir in "$repo_root"/openspec/changes/*; do
     proposal="$change_dir/proposal.md"
     relative_proposal="${proposal#"$repo_root"/}"
     if [ ! -r "$proposal" ]; then add_error ACTIVE_CHANGE_SPEC "${change_dir#"$repo_root"/}" 'active change is missing a readable proposal.md'; continue; fi
-    refs="$tmp_dir/refs.$(basename "$change_dir")"
-    grep -Eo 'specs/[[:alnum:]-]+/[0-9][0-9][0-9]-[[:alnum:]_.-]+/spec\.md' "$proposal" | LC_ALL=C sort -u >"$refs" || true
-    ref_count="$(wc -l <"$refs" | tr -d ' ')"
-    if [ "$ref_count" -ne 1 ]; then add_error ACTIVE_CHANGE_SPEC "$relative_proposal" 'proposal must reference exactly one canonical spec'; continue; fi
+    refs="$tmp_dir/refs.$(basename "$change_dir")"; grep -E '^對應 Spec:[[:space:]]*specs/[[:alnum:]-]+/[0-9][0-9][0-9]-[[:alnum:]_.-]+/spec\.md[[:space:]]*$' "$proposal" | sed 's/^對應 Spec:[[:space:]]*//; s/[[:space:]]*$//' >"$refs" || true
+    declaration_count="$(grep -Ec '^對應 Spec:' "$proposal" || true)"; ref_count="$(wc -l <"$refs" | tr -d ' ')"
+    if [ "$declaration_count" -ne 1 ] || [ "$ref_count" -ne 1 ]; then add_error ACTIVE_CHANGE_SPEC "$relative_proposal" 'proposal must reference exactly one canonical spec'; continue; fi
     canonical_relative="$(sed -n '1p' "$refs")"
     canonical="$repo_root/$canonical_relative"
     if [ ! -r "$canonical" ]; then add_error ACTIVE_CHANGE_SPEC "$relative_proposal" "canonical spec is missing: $canonical_relative"; continue; fi
@@ -135,9 +135,8 @@ for change_dir in "$repo_root"/openspec/changes/*; do
         spec_branch="$(sed -n 's/^功能分支:[[:space:]]*//p' "$canonical" | sed 's/`//g' | sed -n '1p')"
         if [ -n "$spec_branch" ] && [ "$spec_branch" != "$status_branch" ]; then add_error ACTIVE_CHANGE_STAGE specs/STATUS.md "branch for $id contradicts canonical frontmatter"; fi
     fi
-    for heading in '## 功能目標' '## 規格相依性'; do
-        section_is_valid "$canonical" "$heading" || add_error SPEC_REQUIRED_HEADING "$canonical_relative" "required heading is missing, duplicated, or empty: $heading"
-    done
+    section_is_valid "$canonical" '## 功能目標' exact || add_error SPEC_REQUIRED_HEADING "$canonical_relative" 'required heading is missing, duplicated, or empty: ## 功能目標'
+    section_is_valid "$canonical" '## 規格相依性' prefix || add_error SPEC_REQUIRED_HEADING "$canonical_relative" 'required heading is missing, duplicated, or empty: ## 規格相依性'
     missing_ids=''
     grep -Eq 'FR-[0-9][0-9][0-9]' "$canonical" || missing_ids="$missing_ids FR"
     grep -Eq 'SC-[0-9][0-9][0-9]' "$canonical" || missing_ids="$missing_ids SC"
@@ -177,6 +176,8 @@ EOF
         seen_red_groups=' '
         while IFS= read -r task_line; do
             first_path="$(printf '%s\n' "$task_line" | grep -o '`[^`]*`' | sed -n '1p' | sed 's/^`//; s/`$//')"
+            action_clause="$(printf '%s\n' "$task_line" | sed 's/[，。].*//; s/[.][[:space:]].*//')"
+            explicit_files="$(printf '%s\n' "$action_clause" | grep -Eo '`[^`]*(/|[.])[^`]*`' | wc -l | tr -d ' ')"
             task_group="$(printf '%s\n' "$task_line" | sed -n 's/^- \[[ xX]\] \([0-9][0-9]*\)[.].*/\1/p')"
             assignee_count="$(printf '%s\n' "$task_line" | grep -o '\[@[^]]*\]' | wc -l | tr -d ' ')"
             terminal="$(printf '%s\n' "$task_line" | sed -n 's/.*\(\[@[^]]*\]\)[[:space:]]*$/\1/p')"
@@ -192,6 +193,9 @@ EOF
                 case "$exception" in package-manager|scaffold|governance-propagation) ;; *) exception=invalid ;; esac
                 exception_fields="$(printf '%s\n' "$task_line" | grep -Eo 'Exception:|Files:|Reason:' | wc -l | tr -d ' ')"
                 if [ "$exception" = invalid ] || [ "$exception_fields" -ne 3 ] || printf '%s\n' "$task_line" | grep -Eq 'Files:[[:space:]]*;|Reason:[[:space:]]*(;|\[@)'; then add_error TASK_EXCEPTION "$task_relative" 'exception record is incomplete or uses a disallowed identifier'; fi
+            fi
+            if [ -z "$exception" ] && ! printf '%s\n' "$task_line" | grep -Eq '^- \[[ xX]\] [0-9.]+ 執行'; then
+                if [ "$explicit_files" -gt 1 ]; then add_error TASK_EXCEPTION "$task_relative" 'task names multiple artifacts without an allowed exception'; elif [ "$explicit_files" -eq 0 ]; then add_warning TASK_FILE_COUNT_REVIEW "$task_relative" 'task file count requires human review'; fi
             fi
             if [ "$exception" != governance-propagation ] && printf '%s\n' "$first_path" | grep -Eq '^scripts/.*-tests[.]sh$' && printf '%s\n' "$task_line" | grep -Eq '(^|[^[:alnum:]_])[Rr]ed([^[:alnum:]_]|$)'; then
                 [ "$assignee" = senior-qa ] || add_error TASK_RED_OWNER "$task_relative" 'Red task must be owned by senior-qa'
@@ -229,6 +233,7 @@ baseline_valid=1
 LC_ALL=C sort "$baseline" >"$baseline_sorted"
 cmp -s "$baseline" "$baseline_sorted" || baseline_valid=0
 if [ -n "$(LC_ALL=C sort "$baseline" | uniq -d)" ]; then baseline_valid=0; fi
+awk -F '\t' 'NF != 3 || $1 == "" || $2 == "" || $3 == "" { invalid = 1 } END { exit invalid }' "$baseline" || baseline_valid=0
 while IFS="$(printf '\t')" read -r rule path detail extra; do
     [ -n "$rule$path$detail$extra" ] || continue
     case "$rule" in LEGACY_SPEC_HEADING|LEGACY_STATUS_DRIFT) ;; *) baseline_valid=0 ;; esac
@@ -282,11 +287,7 @@ if [ ! -f "$generator" ] || [ ! -r "$generator" ] || ! command -v node >/dev/nul
     add_config_error INVENTORY_CHECK_CONFIG scripts/gen-screen-inventory.mjs 'inventory checker is missing, unreadable, or unavailable'
 else
     inventory_output=''
-    if inventory_output="$(node "$generator" --check 2>&1)"; then
-        inventory_status=0
-    else
-        inventory_status=$?
-    fi
+    if inventory_output="$(node "$generator" --check 2>&1)"; then inventory_status=0; else inventory_status=$?; fi
     if [ "$inventory_status" -eq 0 ]; then
         :
     elif [ "$inventory_status" -eq 1 ] && [ "$inventory_output" = "$inventory_sentinel" ]; then
