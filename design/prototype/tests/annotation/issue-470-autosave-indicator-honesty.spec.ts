@@ -199,7 +199,7 @@ test.describe('Autosave indicator honesty (issue #470)', () => {
     await dismissGuidelineModal(page);
     await page.getByTestId('ws-review-row-reject').click();
     await page.getByTestId('ws-review-submit-btn').click();
-    await expect(page.locator('#toastMsg')).toHaveText('審查已提交');
+    await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
 
     await gotoSample(page, 'sent-001');
 

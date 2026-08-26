@@ -73,7 +73,7 @@ test.describe('A / R decide the current review unit', () => {
     }
 
     await page.getByTestId('ws-review-submit-btn').click();
-    await expect(page.locator('#toastMsg')).toHaveText('審查已提交');
+    await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
   });
 });
 
@@ -152,6 +152,6 @@ test.describe('Review submit is reachable by role and accessible name (A11Y-05)'
     const submitBtn = page.getByRole('button', { name: '送出審核', exact: true });
     await expect(submitBtn).toBeVisible();
     await submitBtn.click();
-    await expect(page.locator('#toastMsg')).toHaveText('審查已提交');
+    await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
   });
 });

@@ -124,7 +124,7 @@ test.describe('issue #450 -- annotation-list task info card', () => {
     }));
     await page.getByTestId('ws-review-row-approve').click();
     await page.getByTestId('ws-review-submit-btn').click();
-    await expect(page.locator('#toastMsg')).toHaveText('審查已提交');
+    await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
 
     await page.goto(T015_LIST_URL);
     const detail = page.locator('#taskInfoDetail');
@@ -156,7 +156,7 @@ test.describe('issue #450 -- dashboard reviewer card', () => {
     }));
     await page.getByTestId('ws-review-row-approve').click();
     await page.getByTestId('ws-review-submit-btn').click();
-    await expect(page.locator('#toastMsg')).toHaveText('審查已提交');
+    await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
 
     await openReviewerDashboard(page);
     await expect(page.locator(T015_CARD)).not.toContainText('待審');
