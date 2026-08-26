@@ -2109,23 +2109,32 @@
   /* Renders a computeReviewSummary() result as the localized summary text
    * both consumers display. One rule, no per-task branches: coverage is
    * always shown, every other counter appears only when non-zero, so a
-   * vacuous "待審 0 筆" never crowds out the 未定稿/爭議 breakdown that
-   * actually needs the reviewer's attention. `iaa` is the seed's structured
-   * inter-annotator agreement value (not derivable from review units) and is
-   * omitted when absent. */
+   * vacuous "待審 0 個" never crowds out the 未達定稿門檻/爭議中 breakdown
+   * that actually needs the reviewer's attention. `iaa` is the seed's
+   * structured inter-annotator agreement value (not derivable from review
+   * units) and is omitted when absent.
+   *
+   * Issue #452: coverage leads the line and names both its subject (任務)
+   * and its denominator unit (個審核單位) as a raw x / total count instead
+   * of a bare percentage, because the same page also shows a per-reviewer
+   * count and a per-unit threshold count -- three numbers that used to be
+   * spelled 「已審 / 覆蓋」 alike. The counters that follow inherit that
+   * unit, so 「任務覆蓋 5 / 5 個審核單位 · 未達定稿門檻 3 個」 reads as one
+   * sentence and full coverage can no longer be misread as a finished
+   * task. */
   var REVIEW_SUMMARY_LABELS = {
     zh: {
-      pending: '待審 {n} 筆',
-      coverage: '審核覆蓋率 {n}%',
-      unfinalized: '未定稿 {n} 筆',
-      disputed: '爭議 {n} 筆',
+      coverage: '任務覆蓋 {n} / {total} 個審核單位',
+      pending: '待審 {n} 個',
+      unfinalized: '未達定稿門檻 {n} 個',
+      disputed: '爭議中 {n} 個',
       iaa: 'IAA {n}',
     },
     en: {
-      pending: '{n} Pending',
-      coverage: '{n}% Review Coverage',
-      unfinalized: '{n} Unfinalized',
-      disputed: '{n} Disputed',
+      coverage: 'Task coverage {n} / {total} review units',
+      pending: '{n} pending',
+      unfinalized: '{n} short of finalize threshold',
+      disputed: '{n} disputed',
       iaa: 'IAA {n}',
     },
   };
@@ -2135,9 +2144,12 @@
     Object.keys(REVIEW_SUMMARY_LABELS).forEach(function (lang) {
       var labels = REVIEW_SUMMARY_LABELS[lang];
       var parts = [];
-      function push(key, value) { parts.push(labels[key].replace('{n}', String(value))); }
+      function push(key, value, total) {
+        var text = labels[key].replace('{n}', String(value));
+        parts.push(total === undefined ? text : text.replace('{total}', String(total)));
+      }
+      push('coverage', summary.total - summary.pending, summary.total);
       if (summary.pending > 0) push('pending', summary.pending);
-      push('coverage', summary.coveragePct);
       if (summary.unfinalized > 0) push('unfinalized', summary.unfinalized);
       if (summary.disputed > 0) push('disputed', summary.disputed);
       /* IAA keeps the 2-decimal presentation used everywhere else. */

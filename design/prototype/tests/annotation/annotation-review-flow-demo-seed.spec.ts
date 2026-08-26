@@ -27,11 +27,20 @@ import { buildListUrl, buildWorkspaceUrl, skipGuidelineModal } from './_workspac
 
 const SEED_MARKER = 'labelsuite.reviewFlowDemoSeed.v1';
 
+/* Issue #452 appended a finalize-threshold qualifier to every non-待審
+   badge so colour is never the only signal. This suite pins the five-state
+   SPREAD, so it names the base state and derives the qualifier; the literal
+   rendered strings are pinned in issue-452-review-progress-subjects.spec.ts. */
+function badgeText(state: string): string {
+  if (state === '待審') return state;
+  return state === '已定稿' ? '已定稿 · 已鎖定' : `${state} · 未定稿`;
+}
+
 async function expectBadges(page: Page, expected: string[]) {
   const rows = page.getByTestId('ws-sample-item');
   await expect(rows).toHaveCount(expected.length);
   for (let i = 0; i < expected.length; i += 1) {
-    await expect(rows.nth(i).locator('.status-badge')).toHaveText(expected[i]);
+    await expect(rows.nth(i).locator('.status-badge')).toHaveText(badgeText(expected[i]));
   }
 }
 

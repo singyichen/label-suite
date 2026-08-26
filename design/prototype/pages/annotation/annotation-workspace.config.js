@@ -24,7 +24,7 @@
       wsPrevBtnLabel: '上一筆',
       wsNextBtnLabel: '下一筆',
       wsProgressText: '{done} / {total} 已提交',
-      wsProgressTextReview: '已審 {done} / {total}',
+      wsProgressTextReview: '我的審核提交 {done} / {total} 個審核單位',
       wsAutosaveSaved: '草稿已自動儲存',
       wsAutosaveSaving: '儲存中…',
       wsTabGuideline: '說明與檔案',
@@ -76,10 +76,9 @@
       historyActionGoldReopened: '重新開放標準答案',
       unitCtxRunDry: '試標',
       unitCtxRunOfficial: '正式標記',
-      unitCtxThreshold: '審核門檻 {n} 位審核員',
+      unitCtxThreshold: '定稿門檻 {x} / {n} 位審核員',
       unitCtxAnnotator: '標記員 {id}',
       unitCtxRoster: '本樣本 {m} 位標記員',
-      unitCtxReviewed: '已審 {x} / {n}',
       wsSampleGroupCount: '{n} 位標記員',
       wsSampleGroupAria: '樣本 {sample}，{n} 位標記員',
       wsSampleUnitAria: '樣本 {sample}，標記員 {annotator}，{state}',
@@ -94,6 +93,11 @@
       reviewFinalizedNote: '此審核單位已達定稿門檻，結果為唯讀。',
       finalizedVoteReviewer: '審核員',
       finalizedVoteSelf: '你',
+      unitStateInterimNote: '未達定稿門檻 {x} / {n}',
+      unitStateDisputedNote: '未定稿，待仲裁',
+      unitStateFinalizedNote: '已鎖定',
+      unitStateAria: '{state}，已有 {x} 位審核員／共需 {n} 位',
+      unitStateAriaFinalized: '{state}，已達 {n} 位審核員門檻，內容已鎖定',
     },
     en: {
       sampleListTitle: 'Samples',
@@ -103,7 +107,7 @@
       wsPrevBtnLabel: 'Previous',
       wsNextBtnLabel: 'Next',
       wsProgressText: '{done} / {total} submitted',
-      wsProgressTextReview: 'Reviewed {done} / {total}',
+      wsProgressTextReview: 'My review submissions {done} / {total} review units',
       wsAutosaveSaved: 'Draft auto-saved',
       wsAutosaveSaving: 'Saving…',
       wsTabGuideline: 'Guidelines & Files',
@@ -155,10 +159,9 @@
       historyActionGoldReopened: 'Gold reopened',
       unitCtxRunDry: 'Dry Run',
       unitCtxRunOfficial: 'Official Run',
-      unitCtxThreshold: 'Review quorum: {n} reviewer(s)',
+      unitCtxThreshold: 'Finalize threshold {x} / {n} reviewers',
       unitCtxAnnotator: 'Annotator {id}',
       unitCtxRoster: '{m} annotators on this sample',
-      unitCtxReviewed: 'Reviewed {x} / {n}',
       wsSampleGroupCount: '{n} annotators',
       wsSampleGroupAria: 'Sample {sample}, {n} annotators',
       wsSampleUnitAria: 'Sample {sample}, annotator {annotator}, {state}',
@@ -173,6 +176,11 @@
       reviewFinalizedNote: 'This review unit has met its finalization threshold; results are read-only.',
       finalizedVoteReviewer: 'Reviewer',
       finalizedVoteSelf: 'you',
+      unitStateInterimNote: '{x} / {n} toward finalize threshold',
+      unitStateDisputedNote: 'not finalized, awaiting arbitration',
+      unitStateFinalizedNote: 'locked',
+      unitStateAria: '{state}, {x} of {n} required reviewers',
+      unitStateAriaFinalized: '{state}, met the {n}-reviewer threshold, locked',
     },
   };
   if (window.TASK_CONFIG_I18N) {
@@ -3065,23 +3073,55 @@
       t(currentRunType === 'official_run' ? 'unitCtxRunOfficial' : 'unitCtxRunDry'),
       'rv-unit-run'
     );
-    chip(t('unitCtxThreshold').replace('{n}', String(minReviewers)));
+    /* issue #452: quorum and reviewed-so-far used to be two chips whose
+       numbers were the SAME pair (reviewedCount, minReviewers) under two
+       different labels -- one reading 「審核門檻 3 位審核員」, the other
+       「已審 1 / 3」, which a reviewer read as a second progress bar. One
+       chip, one subject: this unit's distance from its finalize threshold. */
+    chip(
+      t('unitCtxThreshold')
+        .replace('{x}', String(reviewedCount))
+        .replace('{n}', String(minReviewers)),
+      'rv-unit-threshold'
+    );
     chip(
       t('unitCtxAnnotator').replace('{id}', currentAnnotatorId()) +
         (rosterSize > 1 ? ' · ' + t('unitCtxRoster').replace('{m}', String(rosterSize)) : '')
     );
-    if (unitStatus !== null) {
-      chip(
-        t('unitCtxReviewed')
-          .replace('{x}', String(reviewedCount))
-          .replace('{n}', String(minReviewers))
-      );
-    }
 
     var statePill = document.createElement('span');
     statePill.className =
       'rv-unit-state' + (unitStatus ? ' rv-unit-state-' + unitStatus : '');
-    statePill.textContent = t(REVIEW_STATE_I18N_KEYS[unitStatus] || 'unitStateNone');
+    var stateText = t(REVIEW_STATE_I18N_KEYS[unitStatus] || 'unitStateNone');
+    /* FINALIZED is the ONLY terminal state (issue #452): approved/modified
+       are short of the threshold and disputed is past it but unresolved, so
+       every non-terminal pill carries a note saying so in words. Colour
+       alone must not be the difference -- `data-terminal` exposes the same
+       split to assistive tech and tests. */
+    var terminal = unitStatus === workspaceData.REVIEW_UNIT_STATUS.FINALIZED;
+    var note = '';
+    if (terminal) {
+      note = t('unitStateFinalizedNote');
+    } else if (unitStatus === workspaceData.REVIEW_UNIT_STATUS.DISPUTED) {
+      note = t('unitStateDisputedNote');
+    } else if (unitStatus !== null && unitStatus !== workspaceData.REVIEW_UNIT_STATUS.PENDING) {
+      /* 待審 already means "nobody has reviewed", so a 0 / n note adds noise
+         rather than disambiguating -- the list badge omits it too. */
+      note = t('unitStateInterimNote')
+        .replace('{x}', String(reviewedCount))
+        .replace('{n}', String(minReviewers));
+    }
+    statePill.textContent = note ? stateText + ' · ' + note : stateText;
+    if (unitStatus !== null) {
+      statePill.setAttribute('data-terminal', terminal ? 'true' : 'false');
+      statePill.setAttribute(
+        'aria-label',
+        t(terminal ? 'unitStateAriaFinalized' : 'unitStateAria')
+          .replace('{state}', stateText)
+          .replace('{x}', String(reviewedCount))
+          .replace('{n}', String(minReviewers))
+      );
+    }
     banner.appendChild(statePill);
     return banner;
   }

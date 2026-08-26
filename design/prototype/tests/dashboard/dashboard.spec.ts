@@ -146,8 +146,8 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(reviewerView.locator('.metric strong').nth(2)).toContainText('0.81');
     await expect(reviewerView.getByText('病患情緒與照護情境階層分類')).toBeVisible();
     await expect(reviewerView.getByText('醫療翻譯品質多維度評分')).toBeVisible();
-    await expect(reviewerView.getByText(/待審 12 筆 · 進度 18% · IAA 0.81/)).toBeVisible();
-    await expect(reviewerView.getByText(/待審 8 筆 · 進度 76% · IAA 0.78/)).toBeVisible();
+    await expect(reviewerView.getByText(/待審 12 個審核單位 · 任務覆蓋率 18% · IAA 0.81/)).toBeVisible();
+    await expect(reviewerView.getByText(/待審 8 個審核單位 · 任務覆蓋率 76% · IAA 0.78/)).toBeVisible();
     await expect(reviewerView.getByRole('button', { name: /快速審核|Quick Review/ })).toHaveCount(17);
   });
 

@@ -8,14 +8,15 @@
  * dashboard.assignments.js, while the review-unit rows on the very same
  * page derived their state from localStorage. Finishing a review therefore
  * flipped the row to 已定稿 while the summary above it still promised
- * 待審 1 筆 · 審核覆蓋率 75%.
+ * a stale pending count. (Issue #452 later renamed the rendered wording to
+ * 任務覆蓋 x / n 個審核單位; the counters pinned here are unchanged.)
  *
  * The contract pinned here:
  *   - computeReviewSummary() is the ONLY place the counters are computed
  *     (pending / unfinalized / disputed / coverage), and both consumers
  *     read it.
- *   - 審核覆蓋率 is share-of-units-past-待審, NOT a completion rate: T016
- *     sits at 100% coverage while still disclosing 未定稿 3 · 爭議 1.
+ *   - coverage is share-of-units-past-待審, NOT a completion rate: T016
+ *     sits at 5 / 5 coverage while still disclosing 未達定稿門檻 3 · 爭議中 1.
  *   - a task with no stored annotator submissions has nothing to derive and
  *     keeps its seeded illustrative summary (`derivable: false`) -- the
  *     condition is the presence of review-unit data, never a task id.
@@ -108,7 +109,7 @@ test.describe('issue #450 -- annotation-list task info card', () => {
     await page.goto(buildListUrl({ task_id: 'T016', role: 'reviewer', run_type: 'official_run' }));
 
     await expect(page.locator('#taskInfoDetail')).toContainText(
-      '審核覆蓋率 100% · 未定稿 3 筆 · 爭議 1 筆 · IAA 0.68',
+      '任務覆蓋 5 / 5 個審核單位 · 未達定稿門檻 3 個 · 爭議中 1 個 · IAA 0.68',
     );
     await expect(page.locator('#taskInfoStatus')).not.toHaveText('已完成');
   });
@@ -116,7 +117,7 @@ test.describe('issue #450 -- annotation-list task info card', () => {
   test('T015 drops its pending count once the last 待審 unit is submitted', async ({ page }) => {
     await skipGuidelineModal(page);
     await page.goto(T015_LIST_URL);
-    await expect(page.locator('#taskInfoDetail')).toContainText('待審 1 筆 · 審核覆蓋率 75%');
+    await expect(page.locator('#taskInfoDetail')).toContainText('任務覆蓋 3 / 4 個審核單位 · 待審 1 個');
 
     await page.goto(buildWorkspaceUrl({
       task_id: 'T015', sample_id: 'ofs-04-pending-review', role: 'reviewer', run_type: 'official_run',
@@ -128,12 +129,12 @@ test.describe('issue #450 -- annotation-list task info card', () => {
     await page.goto(T015_LIST_URL);
     const detail = page.locator('#taskInfoDetail');
     await expect(detail).not.toContainText('待審');
-    await expect(detail).toContainText('審核覆蓋率 100% · 未定稿 1 筆 · 爭議 1 筆 · IAA 0.81');
+    await expect(detail).toContainText('任務覆蓋 4 / 4 個審核單位 · 未達定稿門檻 1 個 · 爭議中 1 個 · IAA 0.81');
 
     // Reload: the derived numbers must be stable, not a one-shot render.
     await page.reload();
     await expect(page.locator('#taskInfoDetail'))
-      .toContainText('審核覆蓋率 100% · 未定稿 1 筆 · 爭議 1 筆 · IAA 0.81');
+      .toContainText('任務覆蓋 4 / 4 個審核單位 · 未達定稿門檻 1 個 · 爭議中 1 個 · IAA 0.81');
   });
 });
 
@@ -148,7 +149,7 @@ test.describe('issue #450 -- dashboard reviewer card', () => {
   test('the T015 card recomputes after the reviewer submits the last 待審 unit', async ({ page }) => {
     await skipGuidelineModal(page);
     await openReviewerDashboard(page);
-    await expect(page.locator(T015_CARD)).toContainText('待審 1 筆 · 審核覆蓋率 75%');
+    await expect(page.locator(T015_CARD)).toContainText('任務覆蓋 3 / 4 個審核單位 · 待審 1 個');
 
     await page.goto(buildWorkspaceUrl({
       task_id: 'T015', sample_id: 'ofs-04-pending-review', role: 'reviewer', run_type: 'official_run',
@@ -160,7 +161,7 @@ test.describe('issue #450 -- dashboard reviewer card', () => {
     await openReviewerDashboard(page);
     await expect(page.locator(T015_CARD)).not.toContainText('待審');
     await expect(page.locator(T015_CARD))
-      .toContainText('審核覆蓋率 100% · 未定稿 1 筆 · 爭議 1 筆 · IAA 0.81');
+      .toContainText('任務覆蓋 4 / 4 個審核單位 · 未達定稿門檻 1 個 · 爭議中 1 個 · IAA 0.81');
   });
 
   /* Non-derivable tasks keep their seeded illustrative summary, so the
@@ -170,6 +171,6 @@ test.describe('issue #450 -- dashboard reviewer card', () => {
 
     await expect(
       page.locator('#reviewerTaskList [data-example-task-id="T001"] .list-item-detail'),
-    ).toHaveText('待審 7 筆 · 進度 34% · IAA 0.80');
+    ).toHaveText('待審 7 個審核單位 · 任務覆蓋率 34% · IAA 0.80');
   });
 });

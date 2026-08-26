@@ -100,6 +100,6 @@ test.describe('issue #307 -- truly empty review unit renders no review controls'
     await expect(page.locator('#toastMsg')).toHaveText('審查已提交');
     await page.reload();
     await expect(page.locator('[data-testid="ws-review-unit-context"] .rv-unit-state'))
-      .toHaveText('已定稿');
+      .toHaveText('已定稿 · 已鎖定');
   });
 });

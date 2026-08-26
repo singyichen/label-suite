@@ -40,11 +40,11 @@ test.describe('Reviewer view speaks review vocabulary (zh)', () => {
     }
   });
 
-  test('progress summary reads 已審 x / n, not N 已提交', async ({ page }) => {
+  test('progress summary reads 我的審核提交 x / n, not N 已提交', async ({ page }) => {
     await skipGuidelineModal(page);
     await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer', run_type: 'dry_run' }));
 
-    await expect(page.getByTestId('ws-progress-text')).toHaveText('已審 0 / 15');
+    await expect(page.getByTestId('ws-progress-text')).toHaveText('我的審核提交 0 / 15 個審核單位');
   });
 
   test('sidebar role indicator reads 審核員, not 一般使用者', async ({ page }) => {
@@ -87,7 +87,9 @@ test.describe('Reviewer view speaks review vocabulary (en)', () => {
     await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer', run_type: 'dry_run' }));
 
     await expect(page.getByTestId('ws-sample-status').first()).toHaveText('Pending review');
-    await expect(page.getByTestId('ws-progress-text')).toHaveText('Reviewed 0 / 15');
+    await expect(page.getByTestId('ws-progress-text')).toHaveText(
+      'My review submissions 0 / 15 review units',
+    );
     await expect(page.getByTestId('role-indicator')).toHaveText('Reviewer');
   });
 });
