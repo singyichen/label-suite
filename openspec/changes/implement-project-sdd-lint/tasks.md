@@ -17,7 +17,7 @@
 
 **故事目標**：落實 SC-005–SC-006，以 committed CI Red/Green、獨立 `Project SDD Lint` job、相同本地 command 與 lint 所組合的 inventory generator contract 完成可合併的 CI integration PR。
 
-- [ ] 2.1 修改 `scripts/speckit-tests.sh`，加入獨立 CI job 的 contract test；以獨立 CI Red commit 提交後執行 `bash scripts/speckit-tests.sh`，預期只因 `.github/workflows/ci.yml` 尚無 `sdd-lint` job 而失敗，並記錄 expected failure。 [@senior-qa]
+- [x] 2.1 修改 `scripts/speckit-tests.sh`，加入獨立 CI job 的 contract test；以獨立 CI Red commit 提交後執行 `bash scripts/speckit-tests.sh`，預期只因 `.github/workflows/ci.yml` 尚無 `sdd-lint` job 而失敗，並記錄 expected failure。 [@senior-qa]
 - [ ] 2.2 修改 `.github/workflows/ci.yml`，新增不依賴 app installs 的 top-level `sdd-lint` job，display name 為 `Project SDD Lint` 且只 checkout + 執行 `scripts/check-sdd.sh`；lint 會組合 repository 既有 generator，因此不得新增 app install、Node setup 或其他 setup step。不得修改 `scripts/speckit-tests.sh`，以獨立 CI Green commit 提交後執行 `bash scripts/speckit-tests.sh` 並驗證 exit `0`。 [@senior-devops]
 - [ ] 2.3 修改 `CLAUDE.md` 的 Verification Commands，加入 project-root `scripts/check-sdd.sh`，保持 `openspec validate --changes --no-interactive` 為獨立 gate；使用者已於 2026-08-26 明確授權，執行 `rg -n 'scripts/check-sdd\.sh|openspec validate --changes --no-interactive' CLAUDE.md` 並驗證兩個 commands 均可定位。 [@main]
 - [ ] 2.4 執行 command-only CI/local parity verification：`bash scripts/speckit-tests.sh`、`rg -n 'sdd-lint:|name: Project SDD Lint|scripts/check-sdd\.sh' .github/workflows/ci.yml`、`rg -n 'scripts/check-sdd\.sh|openspec validate --changes --no-interactive' CLAUDE.md`、`git diff --check`；逐一記錄四個 commands 均 exit `0`，並確認 CI 與本地使用相同的 `scripts/check-sdd.sh` 且 OpenSpec schema command 仍為獨立 gate。 [@main]
