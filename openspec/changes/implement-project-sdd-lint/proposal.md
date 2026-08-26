@@ -12,6 +12,7 @@ Issue #375 已有治理規則，但尚未有可執行的 Project SDD Lint，因�
 - 新增獨立的 CI job，並在 `CLAUDE.md` 加入相同的本地 command；此 job 保持與 `openspec validate` 分離，不取代 OpenSpec schema validation、code/test gates 或 Source-Verify + write-back/archive。
 - Inventory freshness 在 generator branch 提供 manifest、source set 與 `--check` contract 前維持 warning-only，不宣稱 freshness 已驗證。
 - 不變更 API、DB、產品 UI、dependency、ADR-034 decision，亦不進行 inventory regeneration。
+- 在 Red 前以 governance-propagation 明確對齊 shell test-harness ownership：`scripts/*-tests.sh` 由 `senior-qa` 擁有，production `scripts/` 仍由 `senior-devops` 擁有。
 - PR 依單一目的拆分為 Design/Specify、Propose、Red/Green 與 CI/final groups；每個 group 各自維持 single-purpose scope。
 
 ## Capabilities
@@ -28,6 +29,7 @@ Issue #375 已有治理規則，但尚未有可執行的 Project SDD Lint，因�
 
 - 影響 `scripts/check-sdd.sh`、`scripts/sdd-lint-baseline.txt` 與 `scripts/speckit-tests.sh` fixture harness，新增可重複執行的 lint、baseline 與驗證表面。
 - 影響 `.github/workflows/ci.yml` 的獨立 CI workflow job，以及 `CLAUDE.md` 的對等本地 command。
+- 影響 `.claude/agents/senior-qa.md` 與 `.claude/agents/senior-devops.md` 的 file-ownership governance guidance。
 - 不影響 API、DB、產品 UI 或 dependency。
 
 ## Constitution Check
