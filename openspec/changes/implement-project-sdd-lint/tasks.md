@@ -1,37 +1,32 @@
 # Tasks: implement-project-sdd-lint
 
-## 1. PR-SDD-LINT-RED — Fixture contract
+## 1. PR-SDD-LINT-RED-GREEN — Ownership, fixture contract, baseline, and lint engine
 
-> **相依與平行性**：本群組採序列執行，不使用 parallel markers；前置任務：無；後續任務：2.1。所有實作任務都消費同一個已提交的 Red/baseline contract，因此不得平行執行。
+> **相依與平行性**：本群組嚴格序列執行，不使用 parallel markers；前置任務：無；本群組順序：1.1 → 1.2 → 1.3 → 1.4；後續任務：2.1。1.1 必須先建立 ownership contract，1.2 的 committed Red evidence 必須先於 1.3 與 1.4，且本 PR 必須以 1.4 Green 結束。
 
-**故事目標**：以 SC-001、SC-002、SC-003 建立可證明 command、rule、baseline 與 warning contract 的預期失敗測試。
+**故事目標**：落實 SC-001–SC-004，以明確 ownership、committed Red contract、ratchet baseline 與零 dependency command 完成可合併的 Red/Green PR。
 
-- [ ] 1.1 修改 `scripts/speckit-tests.sh`，加入 passing、strict mutation、task ownership、retired command、baseline 與 warning fixtures；提交後執行 `bash scripts/speckit-tests.sh`，預期因 `scripts/check-sdd.sh` 不存在而失敗，並記錄該 expected failure。 [@senior-qa]
+- [ ] 1.1 對齊 shell test-harness ownership，明定 `scripts/*-tests.sh` 由 `senior-qa` 擁有，production `scripts/` 由 `senior-devops` 擁有且不得修改這些 test harnesses。Exception: governance-propagation; Files: `.claude/agents/senior-qa.md`, `.claude/agents/senior-devops.md`; Reason: Red 前必須原子同步兩個 authoritative ownership definitions，避免同一路徑同時屬於 QA 與 DevOps。執行 `rg -n 'Owns.*scripts/\*-tests\.sh' .claude/agents/senior-qa.md` 與 `rg -n 'Must Not Touch.*scripts/\*-tests\.sh' .claude/agents/senior-devops.md`，驗證兩個 commands 均 exit `0`。 [@main]
+- [ ] 1.2 修改 `scripts/speckit-tests.sh`，加入 passing、strict mutation、task ownership、retired command、baseline 與 warning fixtures；以獨立 Red commit 提交後執行 `bash scripts/speckit-tests.sh`，預期只因 `scripts/check-sdd.sh` 不存在而失敗，並記錄該 expected failure。 [@senior-qa]
+- [ ] 1.3 建立 `scripts/sdd-lint-baseline.txt`，只收錄目前 12 個缺 `## 功能目標`、shared-018 缺 `## 規格相依性` 與 `## Prototype Traceability` 的 14 筆排序 legacy entries；執行 `LC_ALL=C sort -c scripts/sdd-lint-baseline.txt`、`test "$(wc -l < scripts/sdd-lint-baseline.txt)" -eq 14`、`test -z "$(LC_ALL=C sort scripts/sdd-lint-baseline.txt | uniq -d)"` 與 `cut -f2 scripts/sdd-lint-baseline.txt | while IFS= read -r path; do test -e "$path" || exit 1; done`，驗證四個 commands 均 exit `0`。 [@senior-devops]
+- [ ] 1.4 建立 Bash 3.2-compatible `scripts/check-sdd.sh`，實作 FR-001–FR-007，使 committed Red contract 轉綠且不得修改 `scripts/speckit-tests.sh`；以獨立 Green commit 提交後執行 `bash -n scripts/check-sdd.sh scripts/speckit-tests.sh`、`bash scripts/speckit-tests.sh` 與 `scripts/check-sdd.sh`，驗證三個 commands 均 exit `0`。 [@senior-devops]
 
-## 2. PR-SDD-LINT-GREEN — Baseline and lint engine
+## 2. PR-SDD-LINT-CI-FINAL — CI gate, local parity, verification, and archive
 
-> **相依與平行性**：本群組採序列執行，不使用 parallel markers；前置任務：1.1；本群組順序：2.1 → 2.2；後續任務：3.1。所有實作任務都消費同一個已提交的 Red/baseline contract，因此不得平行執行。
+> **相依與平行性**：本群組嚴格序列執行，不使用 parallel markers；前置任務：1.4；本群組順序：2.1 → 2.2 → 2.3 → 2.4 → 2.5；後續 apply 任務：無。2.1 的 committed CI Red evidence 必須先於 2.2，且本 PR 必須以 2.5 pre-merge archive/write-back 結束；final PR merge 後才進入下方非 checkbox continuation。
 
-**故事目標**：落實 SC-001–SC-004，使 Red contract 轉綠並保持零 dependency。
+**故事目標**：落實 SC-005、SC-006，以獨立 CI job、本地 command、四個 gate evidence、pre-merge write-back 與明確 post-merge handoff 完成 final PR。
 
-- [ ] 2.1 建立 `scripts/sdd-lint-baseline.txt`，只收錄目前 12 個缺 `## 功能目標`、shared-018 缺 `## 規格相依性` 與 `## Prototype Traceability` 的 14 筆排序 legacy entries；驗證格式無重複且路徑存在。 [@senior-devops]
-- [ ] 2.2 建立 Bash 3.2-compatible `scripts/check-sdd.sh`，實作 FR-001–FR-007，使 committed Red contract 全綠；驗證 `bash -n scripts/check-sdd.sh scripts/speckit-tests.sh`、`bash scripts/speckit-tests.sh` 與 `scripts/check-sdd.sh` 均 exit `0`。 [@senior-devops]
+- [ ] 2.1 修改 `scripts/speckit-tests.sh`，加入獨立 CI job 的 contract test；以獨立 CI Red commit 提交後執行 `bash scripts/speckit-tests.sh`，預期只因 `.github/workflows/ci.yml` 尚無 `sdd-lint` job 而失敗，並記錄 expected failure。 [@senior-qa]
+- [ ] 2.2 修改 `.github/workflows/ci.yml`，新增不依賴 app installs 的 top-level `sdd-lint` job，display name 為 `Project SDD Lint` 且只 checkout + 執行 `scripts/check-sdd.sh`；不得修改 `scripts/speckit-tests.sh`，以獨立 CI Green commit 提交後執行 `bash scripts/speckit-tests.sh` 並驗證 exit `0`。 [@senior-devops]
+- [ ] 2.3 修改 `CLAUDE.md` 的 Verification Commands，加入 project-root `scripts/check-sdd.sh`，保持 `openspec validate --changes --no-interactive` 為獨立 gate；使用者已於 2026-08-26 明確授權，執行 `rg -n 'scripts/check-sdd\.sh|openspec validate --changes --no-interactive' CLAUDE.md` 並驗證兩個 commands 均可定位。 [@main]
+- [ ] 2.4 執行完整 verification：`bash -n scripts/check-sdd.sh scripts/speckit-tests.sh`、`bash scripts/speckit-tests.sh`、`scripts/check-sdd.sh`、`scripts/check-spec-artifacts.sh`、`openspec validate --changes --no-interactive`、`git diff --check`；逐一記錄六個 commands 均 exit `0`，並驗證 `INVENTORY_FRESHNESS_UNVERIFIED` warning 可見且不得宣稱已驗證 freshness。 [@main]
+- [ ] 2.5 在 final PR merge 前完成 Source-Verify 與 `/opsx:archive implement-project-sdd-lint` write-back，升級 canonical spec version、加入 Changelog、產生 derived view 並移動 active change artifacts。Exception: governance-propagation; Files: `specs/foundation/001-project-sdd-lint/spec.md`, `openspec/specs/foundation/001-project-sdd-lint/spec.md`, `openspec/changes/implement-project-sdd-lint/proposal.md`, `openspec/changes/implement-project-sdd-lint/design.md`, `openspec/changes/implement-project-sdd-lint/tasks.md`, `openspec/changes/implement-project-sdd-lint/specs/foundation/001-project-sdd-lint/spec.md`, `openspec/changes/archive/2026-08-26-implement-project-sdd-lint/proposal.md`, `openspec/changes/archive/2026-08-26-implement-project-sdd-lint/design.md`, `openspec/changes/archive/2026-08-26-implement-project-sdd-lint/tasks.md`, `openspec/changes/archive/2026-08-26-implement-project-sdd-lint/specs/foundation/001-project-sdd-lint/spec.md`; Reason: OpenSpec archive 必須原子移動四個 change artifacts，並同步 canonical 與 derived specs；此 scope 明確排除 `specs/STATUS.md`。若 archive 產生、刪除或修改的 paths 超出或不同於此 Files 清單，main session 必須停在 maintainer checkpoint，未獲明確核准不得繼續；執行 `test "$(rg -c '^版本: [0-9]+\.[0-9]+\.[0-9]+$|^## Changelog$' specs/foundation/001-project-sdd-lint/spec.md)" -eq 2`、`rg -o 'FR-[0-9]{3}|SC-[0-9]{3}|AC-[0-9]+\.[0-9]+' openspec/specs/foundation/001-project-sdd-lint/spec.md | sort -u | while IFS= read -r citation; do grep -F "$citation" specs/foundation/001-project-sdd-lint/spec.md >/dev/null || exit 1; done`、`grep -F 'specs/foundation/001-project-sdd-lint/spec.md' openspec/specs/foundation/001-project-sdd-lint/spec.md` 與 `! rg -n '^## (ADDED|MODIFIED|REMOVED) Requirements$' openspec/specs/foundation/001-project-sdd-lint/spec.md`，驗證四個 commands 均 exit `0`、每個 canonical citation 可定位且 derived view 無 delta headings。 [@main]
 
-## 3. PR-SDD-LINT-CI — Independent CI gate
+## Post-merge continuation (outside /opsx:apply) — NON-CHECKBOX
 
-> **相依與平行性**：本群組採序列執行，不使用 parallel markers；前置任務：2.2；本群組順序：3.1 → 3.2 → 3.3；後續任務：4.1。所有實作任務都消費同一個已提交的 Red/baseline contract，因此不得平行執行。
+本段不屬於 `/opsx:apply`，不得轉成 apply checkbox。Final PR merge 後，main session 更新 `specs/STATUS.md`：將 `foundation-001` 設為 `done`，依核准的 Issue #375 umbrella exception 保留 active canonical path，並在備註記錄 exception；執行 `rg -n '^\| foundation-001 \|.*\| \x60done\x60 \|.*Issue #375.*umbrella' specs/STATUS.md` 驗證 resulting row。
 
-**故事目標**：落實 SC-005，以獨立 CI job 與相同本地 command 曝露 Project SDD lint。
+STATUS 更新後，main session 先執行 `gh issue view 375 --json body --jq .body` 重新讀取最新 Issue #375，再只將下列六個已交付的 D items 更新為 checked，且不得改動其他 checkbox：`驗證 canonical spec 必要章節與精確標題。`、`驗證 STATUS、active change、branch、stage 一致性。`、`驗證 FR/SC/AC Source-Verify。`、`驗證 task one-file rule 與例外。`、`驗證 assignee 與 file ownership。`、`阻擋 retired path/command，例如 npm、舊 frontend/tests/ E2E 路徑與不存在的 panels directory。`
 
-- [ ] 3.1 修改 `scripts/speckit-tests.sh`，加入獨立 CI job 的 contract test；提交後執行 `bash scripts/speckit-tests.sh`，預期因 `sdd-lint` job 尚不存在而失敗，並記錄 expected failure。 [@senior-qa]
-- [ ] 3.2 修改 `.github/workflows/ci.yml`，新增不依賴 app installs 的 top-level `sdd-lint` job，display name 為 `Project SDD Lint` 且只 checkout + 執行 `scripts/check-sdd.sh`；驗證 committed CI Red contract 轉綠。 [@senior-devops]
-- [ ] 3.3 修改 `CLAUDE.md` 的 Verification Commands，加入 project-root `scripts/check-sdd.sh`，保持 OpenSpec command 為獨立 gate；使用者已於 2026-08-26 明確授權，並以 `rg -n 'scripts/check-sdd\.sh|openspec validate --changes --no-interactive' CLAUDE.md` 驗證兩個 gate 均可定位。 [@main]
-
-## 4. Final verification and archive
-
-> **相依與平行性**：本群組採序列執行，不使用 parallel markers；前置任務：3.3；本群組順序：4.1 → 4.2；後續任務：無。所有實作任務都消費同一個已提交的 Red/baseline contract，因此不得平行執行。
-
-**故事目標**：以 SC-001–SC-006 完成四個 gate 的獨立 evidence、write-back 與誠實的 Issue #375 checkbox 更新。
-
-- [ ] 4.1 執行 `bash -n scripts/check-sdd.sh scripts/speckit-tests.sh`、`bash scripts/speckit-tests.sh`、`scripts/check-sdd.sh`、`scripts/check-spec-artifacts.sh`、`openspec validate --changes --no-interactive`、`git diff --check`，逐命令記錄 exit `0`；驗證 inventory warning 可見且不得宣稱已驗證 freshness。 [@main]
-- [ ] 4.2 執行 Source-Verify 與 `/opsx:archive` write-back；更新 canonical spec version/Changelog 與 derived view。Exception: governance-propagation; Files: `specs/foundation/001-project-sdd-lint/spec.md`, `openspec/specs/foundation/001-project-sdd-lint/spec.md`, `specs/STATUS.md`; Reason: archive-time canonical write-back、derived view 同步與 delivery status 必須保持原子一致。`foundation-001` 依核准的 umbrella exception 保留 active path、STATUS 在 final merge 後設 `done`，直到 Issue #375 全部子工作流完成才移動；驗證每個 canonical citation 均以 `grep` 可定位，且 `openspec/specs/` 不含 delta headings。 [@main]
+明確保持 D item `驗證 design inventory freshness。` 與 acceptance item `CI 或本地單一命令可偵測 STATUS drift、retired path、規格必要段落與 inventory stale。` 為 unchecked；任何未由本工作流交付的 cleanup、inventory 或其他 items 亦維持原狀。更新後再次執行 `gh issue view 375 --json body --jq .body`，驗證上述六項為 `- [x]`、兩個指定項為 `- [ ]`，且其他 checkbox 未被改動。
