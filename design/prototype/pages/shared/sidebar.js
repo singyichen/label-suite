@@ -46,8 +46,12 @@
       reviewTitle: '審核',
       reviewApprove: '通過目前結果',
       /* Issue #191: AC-3.15 / AC-6.4 (spec 015) allow the reject channel in
-       * official_run only, so the label carries the run-type qualifier. */
-      reviewReject: '退回目前結果（限正式標記）',
+       * official_run only, so the label carries the run-type qualifier.
+       * Issue #409: the reject control/key itself is NOT run-type-gated
+       * (spec 015 AC-3.33 forbids any run_type presentation branch on the
+       * review card) -- only the annotator-status rollback side effect is,
+       * so the qualifier must attach to that, not the action as a whole. */
+      reviewReject: '退回目前結果（回退標記員狀態僅限正式標記）',
       switchToDark: '切換為深色模式',
       switchToLight: '切換為淺色模式'
     },
@@ -65,7 +69,7 @@
       workspaceNext: 'Next sample',
       reviewTitle: 'Review',
       reviewApprove: 'Approve current result',
-      reviewReject: 'Return current result (formal runs only)',
+      reviewReject: 'Return current result (annotator status rollback is formal-run only)',
       switchToDark: 'Switch to dark mode',
       switchToLight: 'Switch to light mode'
     }
@@ -511,7 +515,7 @@
               '</div>' +
               '<dl class="shortcut-help-list">' +
                 '<div class="shortcut-help-row"><dt><strong id="shortcutReviewApprove">通過目前結果</strong></dt>' + keyGroup(['A']) + '</div>' +
-                '<div class="shortcut-help-row"><dt><strong id="shortcutReviewReject">退回目前結果（限正式標記）</strong></dt>' + keyGroup(['R']) + '</div>' +
+                '<div class="shortcut-help-row"><dt><strong id="shortcutReviewReject">退回目前結果（回退標記員狀態僅限正式標記）</strong></dt>' + keyGroup(['R']) + '</div>' +
               '</dl>' +
             '</div>' +
           '</section>' +

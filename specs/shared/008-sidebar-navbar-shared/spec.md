@@ -1,7 +1,7 @@
 ---
 功能分支: feat/shared/008-sidebar-navbar-shared
 建立日期: 2026-04-16
-版本: 1.4.2
+版本: 1.4.3
 狀態: Clarified
 ---
 
@@ -258,7 +258,7 @@ Desktop 使用者可將左側 Sidebar 收合為 icon-only，以增加主內容�
 3. **Given** viewport `> MOBILE_BP`，**When** 使用者點擊 keyboard icon 或按 `?`，**Then** 開啟 modal 並顯示目前頁面可用快捷鍵總覽。
 4. **Given** 快捷鍵含多個按鍵，**When** 顯示於 modal，**Then** 每個按鍵必須以獨立 keycap 呈現，不得以 `Ctrl / Cmd + S` 這類連續文字呈現。
 5. **Given** 使用者切換 zh/en，**When** 檢查快捷鍵入口與 modal，**Then** `aria-label`、標題、說明與 section 文案同步切換。
-6. **Given** 快捷鍵總覽列出多個方向或決策動作，**When** 使用者檢視清單，**Then** 每個 action 必須獨立成列；例如 `上一筆` 與 `下一筆` 不得合併成 `上一筆 / 下一筆`，`通過目前結果` 與 `退回目前結果（限正式標記）` 也不得合併。
+6. **Given** 快捷鍵總覽列出多個方向或決策動作，**When** 使用者檢視清單，**Then** 每個 action 必須獨立成列；例如 `上一筆` 與 `下一筆` 不得合併成 `上一筆 / 下一筆`，`通過目前結果` 與 `退回目前結果（回退標記員狀態僅限正式標記）` 也不得合併。
 
 **快捷鍵總覽行為規則**：
 
@@ -327,7 +327,7 @@ Desktop 使用者可將左側 Sidebar 收合為 icon-only，以增加主內容�
 - **FR-016C**：Desktop 快捷鍵總覽 modal 中的快捷鍵按鍵必須以獨立 keycap 元素呈現，不得以合併字串呈現。
 - **FR-016D**：快捷鍵總覽第一版僅顯示跨任務共用快捷鍵，不得納入 task-specific 作答快捷鍵。
 - **FR-016E**：快捷鍵總覽中每個 action 必須獨立成列，不得將相反或相關 action 合併顯示（例如不得以 `上一筆 / 下一筆`、`通過 / 退回目前結果` 作為單一列）。
-- **FR-016G**（v1.4.0 新增）：`審核` section 僅列出 `A`（`通過目前結果`）與 `R`（`退回目前結果（限正式標記）`，v1.4.1 起標籤註記退回僅限 official_run，見 annotation-015 AC-3.15／AC-6.4）兩列；批次快捷鍵 `Shift+A`（全部通過）與 `Shift+R`（全部退回）**不得**出現於總覽——annotation-015 v4.0.0 起審核單位為「樣本 × 標記員」，一次審核只涉及一位標記員，批次操作已無可批次的對象（其行為定義見 annotation-015 FR-054）。總覽只承諾實際存在的快捷鍵。
+- **FR-016G**（v1.4.0 新增）：`審核` section 僅列出 `A`（`通過目前結果`）與 `R`（`退回目前結果（回退標記員狀態僅限正式標記）`，v1.4.1 起標籤註記退回僅限 official_run、v1.4.3 起精確化為「僅回退標記員狀態」以避免誤讀為整個退回動作僅限 official_run，見 annotation-015 AC-3.15／AC-6.4／AC-3.33）兩列；批次快捷鍵 `Shift+A`（全部通過）與 `Shift+R`（全部退回）**不得**出現於總覽——annotation-015 v4.0.0 起審核單位為「樣本 × 標記員」，一次審核只涉及一位標記員，批次操作已無可批次的對象（其行為定義見 annotation-015 FR-054）。總覽只承諾實際存在的快捷鍵。
 - **FR-016F**：Desktop 快捷鍵總覽 modal 採緊湊視覺密度：section 標題以小寫全大寫（uppercase、muted 色）呈現；每列 action 間距僅以 padding 分隔，列與列之間不加分隔線；按鍵標籤為緊湊尺寸（≤28px 高），複合按鍵間距 ≤6px。
 - **FR-017**：登入後模組頁若包含最上層 `h1` 頁首標題與副標題，該 heading block 必須對齊 Dashboard baseline：`1440px` desktop viewport 下與 Dashboard 相同的左上位置、`28px` serif title、`14px / 1.8` subtitle、title/subtitle 間距 `4px`、heading block 下方留白 `24px`。
 - **FR-018**：Sidebar 必須提供通知鈴鐺（`notification_bell`）入口；Desktop 位於 Sidebar 底部 utility row（`notificationBellBtn`），Mobile 位於 top brand bar（`mobileNotificationBellBtn`）。
@@ -465,7 +465,7 @@ flowchart LR
 - **SC-009A**：Desktop 點擊 keyboard icon 或按 `?` 可開啟快捷鍵總覽 modal；按 `Esc` 或點擊 backdrop 可關閉。Mobile 不顯示 keyboard icon，且按 `?` 不開啟快捷鍵總覽。
 - **SC-009B**：快捷鍵總覽 modal 的 zh/en 文案、section 與可存取屬性同步切換。
 - **SC-009C**：快捷鍵總覽中的複合快捷鍵以獨立 keycap 呈現，例如 `CTRL`、`CMD`、`S` 為三個元素。
-- **SC-009D**（v1.4.0 修訂）：快捷鍵總覽不得出現合併 action 列；`上一筆`、`下一筆`、`通過目前結果`、`退回目前結果（限正式標記）` 各自獨立顯示，且 `全部通過`、`全部退回` 兩列為 0 個 DOM 節點（見 FR-016G）。
+- **SC-009D**（v1.4.0 修訂，v1.4.3 標籤字面更新）：快捷鍵總覽不得出現合併 action 列；`上一筆`、`下一筆`、`通過目前結果`、`退回目前結果（回退標記員狀態僅限正式標記）` 各自獨立顯示，且 `全部通過`、`全部退回` 兩列為 0 個 DOM 節點（見 FR-016G）。
 - **SC-010**：在 `1440px` desktop viewport 下，`dashboard / task-management / annotation / dataset / admin / account` 主要模組頁的最上層 heading block 與 Dashboard baseline 的計算位置與 typography 相符。
 - **SC-011**：Desktop `notificationBellBtn` 與 Mobile `mobileNotificationBellBtn` 的 badge 未讀數與 `aria-expanded` 在 dropdown 開關時同步一致。
 - **SC-011A**：未讀數 = 0 時 badge 不顯示；1–9 顯示實際數字；>9 顯示 `9+`。
@@ -517,6 +517,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.4.3 | 2026-08-26 | **修正快捷鍵總覽 `R` 列標籤誤導性文案**（issue #409）：v1.4.1 加上的「（限正式標記）」註記，字面上讀起來像整個退回動作／`R` 快捷鍵都被限制在 `official_run`，但實際上 reject 控件與 `R` 鍵在 `dry_run` 一樣可用且必須維持一致呈現（annotation-015 **AC-3.33** 禁止審核卡上任何依 `run_type` 分流的呈現分支）——僅有「退回時把標記員狀態回退為待標記」這個副作用（annotation-015 FR-014I／AC-3.15／AC-6.4）才是 `official_run` 專屬。修法：標籤字面由「退回目前結果（限正式標記）」改為「退回目前結果（回退標記員狀態僅限正式標記）」（en：「Return current result (formal runs only)」改為「Return current result (annotator status rollback is formal-run only)」），將限定範圍精確掛在「回退標記員狀態」上。規格條文未變（FR-016G／SC-009D 既有行為的標籤字面精確化，非新增契約）；同步修訂 AC 6 例示、FR-016G 與 SC-009D 的標籤字面。 |
 | 1.4.2 | 2026-08-24 | Issue #261：新增 Prototype Traceability，明確對應共用 `sidebar.js`／`sidebar.css`（14 個消費頁面）與 living styleguide 參考頁的責任邊界；規格條文未變。 |
 | 1.4.1 | 2026-08-19 | 快捷鍵總覽 `R` 列標籤改為「退回目前結果（限正式標記）」（zh）／「Return current result (formal runs only)」（en）：annotation-015 AC-3.15／AC-6.4 將退回通道收斂為 official_run 專屬，標籤補上適用範圍註記（issue #191）；`A` 列標籤不變。同步修訂 AC 6 例示、FR-016G 與 SC-009D 的標籤字面。 |
 | 1.4.0 | 2026-08-17 | 移除快捷鍵總覽 `審核` section 的批次兩列（`Shift+A` 全部通過、`Shift+R` 全部退回）：annotation-015 v4.0.0 起審核單位為「樣本 × 標記員」，一次審核只涉及一位標記員，批次操作沒有可批次的對象；同版落地的 `A`／`R` 行為定義見 annotation-015 FR-054。新增 FR-016G，修訂 FR-016E 例示與 SC-009D 列舉。 |
