@@ -124,7 +124,7 @@
       <text x="400" y="664" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">最終狀態 · 沒有解鎖入口</text>
 
       <!-- ══ T017 推導標註（annotation，非節點） ══ -->
-      <line x1="920" y1="232" x2="920" y2="616" stroke="#6366F1" stroke-width="1.2"/>
+      <line x1="920" y1="232" x2="920" y2="632" stroke="#6366F1" stroke-width="1.2"/>
       <text x="940" y="240" fill="#6366F1" font-size="8" font-family="'JetBrains Mono', monospace" letter-spacing="0.18em">T017 · OFT-01-EVEN-TIE</text>
       <text x="940" y="260" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">需 2 位審核員 · 標記項目：單選標籤</text>
 
@@ -134,8 +134,8 @@
       <text x="940" y="338" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">審核員 reviewer_wang ···· positive（改動）</text>
 
       <text x="940" y="366" fill="#1E1B4B" font-size="11" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif">② 嚴格多數決（n = 2）</text>
-      <text x="940" y="384" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">positive ··· 1 票（wang）</text>
-      <text x="940" y="400" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">neutral ···· 1 票（未異議者計入原標）</text>
+      <text x="940" y="384" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">positive ··· 1 票（reviewer_wang）</text>
+      <text x="940" y="400" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">neutral ···· 1 票（沒改動的人＝同意標記員）</text>
       <text x="940" y="416" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">過半門檻 → 至少需 2 票，無人達標</text>
 
       <rect x="940" y="432" width="52" height="16" rx="4" fill="#FEF2F2" stroke="#FECACA" stroke-width="1"/>
@@ -143,19 +143,20 @@
       <text x="1000" y="443" fill="#94A3B8" font-size="8" font-family="'JetBrains Mono', monospace">1:1 平手 → 爭議池</text>
 
       <text x="940" y="476" fill="#1E1B4B" font-size="11" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif">③ 仲裁資格</text>
-      <text x="940" y="494" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">wang / li ··· 已審本單位 → 不可仲裁</text>
-      <text x="940" y="510" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">lin ········· 無仲裁資格 → 不可</text>
-      <text x="940" y="526" fill="#6366F1" font-size="9" font-family="'JetBrains Mono', monospace">chen ········ 有仲裁資格 ＋ 未參與 ✓</text>
+      <text x="940" y="494" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">reviewer_wang · 已審本單位 → 不可</text>
+      <text x="940" y="510" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">reviewer_li ·· 已審本單位 → 不可</text>
+      <text x="940" y="526" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">reviewer_lin · 無仲裁資格 → 不可</text>
+      <text x="940" y="542" fill="#6366F1" font-size="9" font-family="'JetBrains Mono', monospace">reviewer_chen 有資格＋未參與 ✓</text>
 
-      <text x="940" y="554" fill="#1E1B4B" font-size="11" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif">④ 裁定與定稿</text>
-      <text x="940" y="572" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">chen 選 B（審核員）→ positive</text>
+      <text x="940" y="570" fill="#1E1B4B" font-size="11" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif">④ 裁定與定稿</text>
+      <text x="940" y="588" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">reviewer_chen 選 B（審核員）→ positive</text>
 
-      <rect x="940" y="588" width="52" height="16" rx="4" fill="#F0FDF4" stroke="#BBF7D0" stroke-width="1"/>
-      <text x="966" y="599" fill="#15803D" font-size="9" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">已定稿</text>
-      <text x="1000" y="599" fill="#94A3B8" font-size="8" font-family="'JetBrains Mono', monospace">最終答案 = positive</text>
+      <rect x="940" y="604" width="52" height="16" rx="4" fill="#F0FDF4" stroke="#BBF7D0" stroke-width="1"/>
+      <text x="966" y="615" fill="#15803D" font-size="9" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">已定稿</text>
+      <text x="1000" y="615" fill="#94A3B8" font-size="8" font-family="'JetBrains Mono', monospace">最終答案 = positive</text>
 
-      <text x="920" y="640" fill="#64748B" font-size="14" font-style="italic" font-family="'Crimson Pro','Noto Serif TC',serif">預設種子停在「爭議中」，</text>
-      <text x="920" y="660" fill="#64748B" font-size="14" font-style="italic" font-family="'Crimson Pro','Noto Serif TC',serif">positive 是實際點擊仲裁後的結果。</text>
+      <text x="920" y="656" fill="#64748B" font-size="14" font-style="italic" font-family="'Crimson Pro','Noto Serif TC',serif">這筆示範資料出廠時停在「爭議中」，</text>
+      <text x="920" y="676" fill="#64748B" font-size="14" font-style="italic" font-family="'Crimson Pro','Noto Serif TC',serif">positive 是實際點擊仲裁後的結果。</text>
 
       <!-- ══ Legend ══ -->
       <line x1="40" y1="712" x2="1160" y2="712" stroke="rgba(30,27,75,0.10)" stroke-width="0.8"/>
