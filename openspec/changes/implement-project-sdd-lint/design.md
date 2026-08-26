@@ -54,6 +54,13 @@ write-back/archive 仍各自報告。
    `INVENTORY_FRESHNESS_UNVERIFIED` 每次都可見，誠實表示尚無 manifest、source
    set、normalization 與 `--check`。以 mtime、日期或猜測的檔案集合宣稱 freshness
    已驗證，會產生不可重複且不可信的 blocking 結果。
+5. **在 Red 前先對齊 shell test-harness ownership。** 以
+   `governance-propagation` 同步 `.claude/agents/senior-qa.md` 與
+   `.claude/agents/senior-devops.md`，明定 `scripts/*-tests.sh` 由
+   `senior-qa` 擁有，而 production `scripts/` 仍由 `senior-devops` 擁有。
+   不把 Red 改派給 `senior-devops`，因 testing constitution 要求 Red 必須由
+   `senior-qa` 擁有；也不搬移既有 Bash harness，因為另建 QA test path 會拆散
+   repository 已採用的 hermetic shell-test 慣例。
 
 ## Command contract
 
@@ -136,7 +143,7 @@ cleanup 同時修正 artifact 與移除相同 baseline entry，才會恢復通�
 | Strict | `TASK_STORY_GOAL` | 每個 User Story phase 有 `**故事目標**` 且引用至少一個 canonical SC ID。 |
 | Strict | `TASK_EXCEPTION` | 僅接受 `package-manager`、`scaffold`、`governance-propagation`；使用 exception 時必須恰有一組完整且非空的 `Exception:`、`Files:`、`Reason:`。 |
 | Strict | `TASK_RED_OWNER` | 明確 Red task 由 `[@senior-qa]` 擁有，且位於 paired Green task 前。 |
-| Strict | `TASK_FILE_OWNER` | file path 唯一且 ownership map 明確時，owner 必須符合對應責任。 |
+| Strict | `TASK_FILE_OWNER` | file path 唯一且 ownership map 明確時，owner 必須符合已對齊的責任：`scripts/*-tests.sh` 屬 `senior-qa`，production `scripts/` 屬 `senior-devops`；對齊 guidance 的 `governance-propagation` task 必須排在相關 Red task 前。 |
 | Strict | `RETIRED_COMMAND` | active guidance 不得含 repository-local `npm test`、`npm run ...`、pipeline stage `/ui-ux-pro-max` 或非歷史 `/speckit.analyze`；`pnpm` 是 negative control。 |
 | Strict | `BASELINE_FORMAT` | baseline 的排序、唯一、path、rule eligibility 與 new/stale 比較皆有效。 |
 
@@ -192,24 +199,32 @@ OpenSpec schema validation。branch protection 是否將 job 設為 required 是
 
 ## Migration Plan
 
-1. `[@senior-qa]` 先提交 fixture Red contract，記錄 `scripts/check-sdd.sh` 缺失
-   的預期 failure；`[@senior-devops]` 再新增排序 baseline 與 Bash command，使同一
-   contract 轉綠。
-2. 在 repository 與 synthetic fixtures 執行 command、baseline、OpenSpec schema
+1. 在 Red 前先完成 `governance-propagation`：同步
+   `.claude/agents/senior-qa.md` 與 `.claude/agents/senior-devops.md`，使
+   `scripts/*-tests.sh` 的 `senior-qa` ownership 與 production `scripts/` 的
+   `senior-devops` ownership 成為 authoritative guidance。
+2. `[@senior-qa]` 再提交 fixture Red contract，記錄 `scripts/check-sdd.sh` 缺失
+   的預期 failure；`[@senior-devops]` 之後新增排序 baseline 與 Bash command，使
+   同一 contract 轉綠。
+3. 在 repository 與 synthetic fixtures 執行 command、baseline、OpenSpec schema
    與其他適用 evidence，確認 `INVENTORY_FRESHNESS_UNVERIFIED` 可見但不單獨造成
    nonzero。
-3. 新增獨立 `sdd-lint` workflow job 與相同 local command；CI 成功觀察後，PR
+4. 新增獨立 `sdd-lint` workflow job 與相同 local command；CI 成功觀察後，PR
    handoff 才請 maintainer 將 `Project SDD Lint` 設為外部 required check。
-4. 若 rollout 必須回復，先由 maintainer 移除或停用外部 required-check expectation，
+5. 若 rollout 必須回復，先由 maintainer 移除或停用外部 required-check expectation，
    避免 PR 因不存在的 check 卡住；再回復 `sdd-lint` workflow gate。此 rollback
    只撤回 gate 的強制性，不宣稱 scanner 已成功或已驗證 inventory freshness。
 
 ## TDD and evidence
 
-先由 `scripts/speckit-tests.sh` 建立 synthetic throwaway repository fixtures，
-覆蓋 passing、strict mutations、task ownership、retired command（含 `pnpm`
-negative control）、baseline exact/new/stale/duplicate/unsorted、explicit root、
-`--strict` 與 inventory warning。Red task 僅修改測試，必須先 commit 並確認因
+Red 前先由 `governance-propagation` task 對齊兩份 authoritative agent guidance：
+`.claude/agents/senior-qa.md` 將 `scripts/*-tests.sh` 納入 QA ownership，
+`.claude/agents/senior-devops.md` 則保留 production `scripts/` ownership 並排除
+該 test-harness glob。完成此順序後，`senior-qa` 才在既有
+`scripts/speckit-tests.sh` 建立 synthetic throwaway repository fixtures，覆蓋
+passing、strict mutations、task ownership、retired command（含 `pnpm` negative
+control）、baseline exact/new/stale/duplicate/unsorted、explicit root、`--strict`
+與 inventory warning。Red task 僅修改測試，必須先 commit 並確認因
 `scripts/check-sdd.sh` 不存在而以預期原因失敗；Green task 不得修改 Red contract。
 
 Green evidence 至少包括：
