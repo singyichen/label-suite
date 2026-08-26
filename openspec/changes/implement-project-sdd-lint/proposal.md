@@ -14,7 +14,7 @@ Issue #375 已有治理規則，但尚未有可執行的 Project SDD Lint，因�
 - 不變更 API、DB、產品 UI、dependency、ADR-034 decision，亦不進行 inventory regeneration。
 - 在 Red 前以 governance-propagation 明確對齊 shell test-harness ownership：`scripts/*-tests.sh` 由 `senior-qa` 擁有，production `scripts/` 仍由 `senior-devops` 擁有。
 - PR 依單一目的拆分為 Design/Specify、Propose、Red/Green、CI integration 與 final archive groups。CI integration 是遵守一般 file-count 與 diff-size guardrails 的 intermediate PR，只包含 committed CI Red/Green 與 `CLAUDE.md` local parity，且不執行 archive。
-- 所有 `/opsx:apply` checkboxes 完成後，archive/write-back 才在 `/opsx:apply` 外進入獨立 final archive PR；該 PR 只包含 command-only final verification，以及 canonical write-back、derived spec、proposal／design／tasks／delta 四個 OpenSpec artifact renames 所構成的六個 logical non-test files。維護者已於 2026-08-26 明確核准這個一次性 atomic six-file exception；此例外不涵蓋 CI files、`CLAUDE.md`、`specs/STATUS.md` 或其他修改。
+- 所有 `/opsx:apply` checkboxes 完成後，archive/write-back 才在 `/opsx:apply` 外進入獨立 final archive PR；該 PR 只包含 command-only final verification，以及 canonical write-back、derived spec、proposal／design／tasks／delta 四個 OpenSpec artifact renames 所構成的六個 logical artifacts。依憲法 v1.33.0 Principle X，`specs/**` 與 `openspec/**` artifacts 同時排除於 file-count 與 line-count threshold arithmetic，因此這六個 archive artifacts 按一般規則即在門檻內，但仍受 single-purpose 與 scope-drift rules 約束。若 archive 產生、刪除或修改的 paths 超出或不同於這六個 logical artifacts，main session 必須停在 maintainer scope-drift checkpoint，未獲明確核准不得繼續；final archive PR 不包含 CI files、`CLAUDE.md`、`specs/STATUS.md` 或其他修改。
 
 ## Capabilities
 
@@ -36,7 +36,7 @@ Issue #375 已有治理規則，但尚未有可執行的 Project SDD Lint，因�
 ## Constitution Check
 
 - **IV. Test-First**：fixture 測試先以 Red commit 確認缺少 `scripts/check-sdd.sh` 的預期失敗，再由 Green work 實作 command 與 baseline；不弱化 Red contract。
-- **X. Change Scope Discipline**：本變更只處理 Project SDD Lint 與其 local/CI parity；不混入 canonical spec cleanup、inventory regeneration 或 ADR-034 E2E path migration。Intermediate CI integration PR 遵守一般 guardrails；final archive PR 的六個 logical non-test files 則依 2026-08-26 維護者明確核准的一次性 atomic exception 處理，且不擴張至其他檔案。
+- **X. Change Scope Discipline**：本變更只處理 Project SDD Lint 與其 local/CI parity；不混入 canonical spec cleanup、inventory regeneration 或 ADR-034 E2E path migration。Intermediate CI integration PR 遵守一般 guardrails；依憲法 v1.33.0，final archive PR 的六個 `specs/**`／`openspec/**` logical artifacts 均排除於 file-count 與 line-count threshold arithmetic，按一般門檻計算即在範圍內，且仍維持 single-purpose scope 與 scope-drift checkpoint。
 - **XVII. CI/CD Quality Gates**：新增獨立 Project SDD Lint CI job 與對等本地 command，並保留 OpenSpec schema validation 為不同 gate。
 - **XX. Source of Truth & Contract Governance**：正典來源維持 `specs/foundation/001-project-sdd-lint/spec.md`；本 proposal 的 FR/SC 引用均可在該 canonical spec 定位，derived artifacts 與 baseline 不會改寫 canonical authority。
 - **II. Generalization-First（NON-NEGOTIABLE）**：不觸及 task-type 邏輯、registry 或產品 runtime，故不受影響。
