@@ -3,9 +3,10 @@
 ## Context（脈絡）
 
 本設計實作 [proposal.md](proposal.md) 的 Project SDD lint，服務
-`specs/foundation/001-project-sdd-lint/spec.md` 定義的 FR-001–FR-008、
-AC-1.1–AC-4.1 與 SC-001–SC-006。目標是把可離線、可機械判斷的文件治理
-規則變成單一 command，而不是重述或取代既有治理內容。
+`specs/foundation/001-project-sdd-lint/spec.md` v1.1.0 定義的 FR-001–FR-009、
+AC-1.1–AC-4.3 與 SC-001–SC-007。目標是把可離線、可機械判斷的文件治理
+規則變成單一 command，並組合已交付的 generated screen inventory freshness
+contract，而不是重述或取代既有治理內容。
 
 正典 authority、四個 gate 與 archive 時的 Source-Verify 責任維持由
 [`specs/_governance/constitution.md`](../../../specs/_governance/constitution.md)
@@ -24,11 +25,18 @@ write-back/archive 仍各自報告。
   以穩定排序診斷與 exit `0`、`1`、`2` 供本地與 CI 使用。
 - 對 active change 與其 canonical spec 採 strict 驗證，並以版本化 baseline
   隔離未被 active change 引用的既有 legacy debt。
+- 以 resolved target root 組合既有 `scripts/gen-screen-inventory.mjs --check`，
+  將 fresh、exact-sentinel stale 與 scanner configuration result 映射為穩定的
+  Project SDD lint diagnostic 與 exit code。
 
 **Non-Goals：**
 
-- 不新增 API、DB、產品 runtime、dependency、inventory generator 或
-  ADR-034 E2E path 的正式裁決。
+- 不新增 API、DB、產品 runtime、package dependency、inventory generator 或
+  ADR-034 E2E path 的正式裁決；不修改 generator、manifest、prototype、inventory
+  tests 或 generated output，也不重新實作或觸發 inventory regeneration。
+- freshness claim 僅涵蓋 generated `design/system/screen-inventory.md`。
+- 不宣稱 hand-maintained `design/system/inventory.md` 或 `design-inventory.dc.html`
+  freshness、generation、byte-current 或 coverage 已受驗證。
 - 不以字串相似度判定 goal 語意、查詢 GitHub PR 外部狀態，或將 warning-only
   項目暗中升級為 blocking rule。
 - 不把 `openspec validate`、`/opsx:verify` 或 `check-spec-artifacts.sh`
@@ -36,10 +44,13 @@ write-back/archive 仍各自報告。
 
 ## Decisions
 
-1. **採用 Bash 3.2-compatible、零 dependency 的 entry point。** 維護者的
-   macOS 與 Ubuntu CI 都可直接執行，且治理 gate 不需先安裝 language runtime 或
-   test framework。相較之下，現代 Bash 功能、Bats、Python 或 Node 可使程式較短，
-   但會新增環境與安裝契約，違反本變更的離線、local/CI parity 邊界。
+1. **採用 Bash 3.2-compatible、無新增 package dependency 的 entry point。**
+   scanner 主體維持 Bash 3.2 與既有 POSIX 工具，只對 inventory freshness 以
+   `node "$repo_root/scripts/gen-screen-inventory.mjs" --check` 組合 repository
+   已交付且已版本化的 generator；CI 與本地都不增加 install 或 setup step。
+   相較之下，將 scanner 全面改寫為 Node、Python 或 Bats 會擴張 runtime 與測試
+   邊界，而在 Bash 內重作 manifest/source/render 邏輯則會建立第二套 freshness
+   authority，因此兩者皆不採用。
 2. **採用 strict／baseline-eligible／warning-only 三條 diagnostics stream 與
    normalized TSV ratchet。** strict stream 立即阻擋 active artifacts；eligible
    stream 以同一格式交給 `comm` 比對，讓 legacy debt 可見但不得增加；deferred
@@ -50,10 +61,13 @@ write-back/archive 仍各自報告。
    讓 governance failure 可被直接辨識，並維持四個 gate 的責任分界。把它包入
    `openspec validate`、generic validation 或 application test job 雖可減少 YAML，
    卻會重新混淆 schema、文件治理與 code/test 的結果。
-4. **在 generator contract 出現前將 inventory freshness 維持 warning-only。**
-   `INVENTORY_FRESHNESS_UNVERIFIED` 每次都可見，誠實表示尚無 manifest、source
-   set、normalization 與 `--check`。以 mtime、日期或猜測的檔案集合宣稱 freshness
-   已驗證，會產生不可重複且不可信的 blocking 結果。
+4. **組合已交付的 generator contract，將 inventory freshness 設為 blocking。**
+   lint 使用 resolved target root 呼叫既有 `--check`，capture 並 suppress child
+   stdout/stderr，再依 versioned exact sentinel 與 child exit 對應
+   `INVENTORY_FRESHNESS` 或 `INVENTORY_CHECK_CONFIG`。這讓 generator 保持 manifest、
+   source set、validation 與 rendering 的唯一 authority；相較之下，保留 retired
+   inventory warning 會與 canonical v1.1.0 衝突，以 mtime、日期或 Bash 重作
+   freshness 也無法提供相同的 byte-current 契約。
 5. **在 Red 前先對齊 shell test-harness ownership。** 以
    `governance-propagation` 同步 `.claude/agents/senior-qa.md` 與
    `.claude/agents/senior-devops.md`，明定 `scripts/*-tests.sh` 由
@@ -76,7 +90,10 @@ write-back/archive 仍各自報告。
 `scripts/check-sdd.sh` 使用 macOS Bash 3.2 與 Ubuntu Bash 都可執行的語法。
 實作只使用 Bash 3.2、POSIX `awk`、`grep`、`sed`、`sort`、`comm` 與標準
 檔案工具；不得使用 associative arrays、`mapfile`、`readarray`、`grep -P`、
-`sed -r`、GNU-only flags、Python、Node、Bats 或新 dependency。
+`sed -r`、GNU-only flags、Python、Bats 或新 dependency。唯一的 Node boundary
+是 resolved target root 的既有 generator：
+`node "$repo_root/scripts/gen-screen-inventory.mjs" --check`；command 不安裝 Node、
+不新增 package，也不重作或執行 inventory write mode。
 
 預設模式將 baseline-eligible 的既有 debt 視為 warning；`--strict` 將該類
 debt 升級為 error。兩種模式都不升級明確 deferred warning。command 不修改
@@ -91,7 +108,18 @@ Project SDD lint: <errors> error(s), <warnings> warning(s)
 診斷以 severity、rule ID、path、message 的順序穩定排序。exit `0` 表示沒有
 blocking error；exit `1` 表示 strict violation、new/stale baseline entry 或
 strict mode 升級的 eligible debt；exit `2` 表示 usage、必要 scanner input
-或 baseline 格式不正確而無法可靠掃描。
+或 baseline 格式不正確而無法可靠掃描。inventory mapping 固定如下，且 child
+raw output 不得直接進入 lint output：
+
+| Generator result | Project SDD lint result |
+|---|---|
+| exit `0` | 不輸出 inventory diagnostic；lint outcome 依其他 rules 決定。 |
+| exit `1` 且 captured output 含 exact sentinel `design/system/screen-inventory.md is stale — run: node scripts/gen-screen-inventory.mjs` | 輸出 `ERROR [INVENTORY_FRESHNESS] design/system/screen-inventory.md: ...`；lint exit 至少為 `1`。 |
+| generator 或 Node 缺少、generator 無法讀取、load 或執行、exit `2`、exit `1` 但無 exact sentinel，或任何其他 unexpected result | 輸出 `ERROR [INVENTORY_CHECK_CONFIG] scripts/gen-screen-inventory.mjs: ...`；lint exit `2`。 |
+
+configuration exit `2` 優先於 stale 或其他 governance exit `1`，但 scanner 仍可
+render 已安全收集的穩定 diagnostics 與 summary；不得洩漏 captured child raw
+stdout/stderr。default 與 `--strict` 使用完全相同的 inventory severity 與 mapping。
 
 ## Diagnostic pipeline
 
@@ -105,8 +133,10 @@ resolve root/config
 → validate/sort baseline
 → comm actual vs baseline for new/stale entries
 → collect warning-only diagnostics
+→ run target-root inventory check and capture child output/status
+→ map inventory result to stable lint diagnostic
 → stable sort/render
-→ exit 0/1/2
+→ select exit 2 > 1 > 0
 ```
 
 `resolve root/config` 驗證 CLI 旗標、解析 script-relative default root 或傳入
@@ -114,7 +144,11 @@ root，並確認 `specs/STATUS.md`、active change 目錄、baseline 與必要�
 inputs 存在。strict 與 eligible collector 均輸出相同 key 形狀，避免以 human
 message 反向比對。baseline 比較在 `LC_ALL=C` 排序後透過 `comm` 產生新增與
 stale 集合；warning-only collector 在比較後執行，確保其結果不會進入
-baseline 或影響 ratchet 結果。
+baseline 或影響 ratchet 結果。inventory collector 只執行 resolved target root
+的既有 generator，將 stdout/stderr capture 到 temporary boundary，判斷 exact
+sentinel 後只寫入 normalized Project SDD lint record。即使 inventory 或其他
+configuration check 需要 exit `2`，已安全收集的穩定 diagnostics 仍可排序渲染，
+最後再套用 configuration precedence。
 
 ## Ratchet baseline algorithm
 
@@ -155,6 +189,11 @@ cleanup 同時修正 artifact 與移除相同 baseline entry，才會恢復通�
 | Strict | `TASK_FILE_OWNER` | file path 唯一且 ownership map 明確時，owner 必須符合已對齊的責任：`scripts/*-tests.sh` 屬 `senior-qa`，production `scripts/` 屬 `senior-devops`；對齊 guidance 的 `governance-propagation` task 必須排在相關 Red task 前。 |
 | Strict | `RETIRED_COMMAND` | active guidance 不得含 repository-local `npm test`、`npm run ...`、pipeline stage `/ui-ux-pro-max` 或非歷史 `/speckit.analyze`；`pnpm` 是 negative control。 |
 | Strict | `BASELINE_FORMAT` | baseline 的排序、唯一、path、rule eligibility 與 new/stale 比較皆有效。 |
+| Strict | `INVENTORY_FRESHNESS` | resolved target root generator exit `1` 且 captured output 含 exact stale sentinel；path 固定為 `design/system/screen-inventory.md`，blocking exit 為 `1`，除非 configuration error 要求 exit `2`。 |
+
+| 類別 | Rule ID | 機械檢查邊界 |
+|---|---|---|
+| Configuration | `INVENTORY_CHECK_CONFIG` | generator 或 Node 缺少、generator 無法讀取/load/執行、exit `2`、sentinel-less exit `1` 或其他 unexpected result；path 固定為 `scripts/gen-screen-inventory.mjs`，suppress raw child output 並要求 exit `2`。 |
 
 | 類別 | Rule ID | 處理方式 |
 |---|---|---|
@@ -165,7 +204,6 @@ cleanup 同時修正 artifact 與移除相同 baseline entry，才會恢復通�
 | Warning-only | `TASK_RED_EVIDENCE_REVIEW` | commit 順序與預期 failure 屬 runtime evidence。 |
 | Warning-only | `STATUS_EXTERNAL_STATE` | GitHub PR/merge 狀態不可離線可靠證明。 |
 | Warning-only | `E2E_PATH_DECISION` | ADR-034 未接受，不裁決 `frontend/tests/` 與 root `e2e/`。 |
-| Warning-only | `INVENTORY_FRESHNESS_UNVERIFIED` | 無 generator manifest/source set/normalization/`--check` contract 時固定可見，且永不單獨導致非零。 |
 
 ## Scan boundaries
 
@@ -177,19 +215,24 @@ active task templates。
 
 scanner 明確排除 `openspec/changes/archive/`、`docs/adr/` 的歷史內容/changelog、
 `docs/superpowers/` 的方案比較或 retired wording、`.worktrees/`、`.superpowers/`、
-其他 ignored scratch space 與 generated inventory views。`RETIRED_COMMAND` 只掃描
-active inputs，避免把「已退役」的歷史敘述誤報為現行指引。inventory 不以 mtime 或
-日期推論 freshness；在 generator branch 提供 manifest 與 `--check` 前，
-`INVENTORY_FRESHNESS_UNVERIFIED` 每次執行都輸出。
+其他 ignored scratch space 與 generated inventory views 的直接文字掃描。
+`RETIRED_COMMAND` 只掃描 active inputs，避免把「已退役」的歷史敘述誤報為現行
+指引。inventory rule 是唯一例外 boundary：它不以 mtime、日期或 lint 自行猜測
+input set，而只委派 resolved target root 的 generator `--check`；Project SDD lint
+據此只宣稱 generated `design/system/screen-inventory.md` byte-current；不宣稱
+hand-maintained `design/system/inventory.md` 或 `design-inventory.dc.html` 的
+freshness 或 coverage 已受驗證。
 
 ## CI integration
 
 `.github/workflows/ci.yml` 建立 top-level `sdd-lint` job，display name 為
 `Project SDD Lint`，只 checkout repository 並執行 `scripts/check-sdd.sh`；它不
-依賴 backend、frontend 或 prototype install。`CLAUDE.md` 同一 PR 列出 project
-root 的相同 local command，維持 local/CI parity。該 PR 是 intermediate CI
-integration group，只包含 committed CI Red/Green 與 local parity，遵守一般
-file-count／diff-size guardrails，且不執行 archive。
+依賴 backend、frontend 或 prototype install，也不新增 Node setup step；runner
+與本地若沒有 Node，或 resolved target root 的 generator 不可用，lint 以
+`INVENTORY_CHECK_CONFIG` 與 exit `2` 明確失敗。`CLAUDE.md` 同一 PR 列出 project
+root 的相同 local command，維持相同的 no-setup、target-root 與 exit mapping。
+該 PR 是 intermediate CI integration group，只包含 committed CI Red/Green 與
+local parity，遵守一般 file-count／diff-size guardrails，且不執行 archive。
 
 此 job 與 `openspec validate --changes --no-interactive` 分開，既不包裝也不取代
 OpenSpec schema validation。branch protection 是否將 job 設為 required 是 GitHub
@@ -234,6 +277,13 @@ final archive PR。
 - [baseline 可能遮蔽長期 legacy debt] → baseline 只允許兩個 eligible rule、必須
   排序唯一且無 glob；new/stale entry 均失敗，`--strict` 與後續 cleanup 可逐步將
   debt 歸零。
+- [Node 或 generator boundary 不可用時，inventory freshness 無法可信判斷] →
+  不降級為 warning 或假 fresh；以 `INVENTORY_CHECK_CONFIG`、固定 generator path
+  與 exit `2` fail closed，且 CI/local 都不加入會掩蓋環境差異的 setup step。
+- [generator 的一般 exit `1` 可能與 stale exit 混淆] → 僅接受 versioned exact
+  sentinel 作為 `INVENTORY_FRESHNESS`，其餘 exit `1`、load/runtime failure 與
+  unexpected result 一律視為 configuration error；capture/suppress raw output，
+  只渲染穩定 lint diagnostic。
 - [獨立 CI gate rollout 可能暫時影響合併流程] → 先以本地與 CI evidence 驗證
   command，再由 maintainer 設定外部 required check；rollback 先移除或停用外部
   required-check expectation，再回復 intermediate CI integration 的 workflow 與
@@ -252,9 +302,10 @@ final archive PR。
 2. `[@senior-qa]` 再提交 fixture Red contract，記錄 `scripts/check-sdd.sh` 缺失
    的預期 failure；`[@senior-devops]` 之後新增排序 baseline 與 Bash command，使
    同一 contract 轉綠。
-3. 在 repository 與 synthetic fixtures 執行 command、baseline、OpenSpec schema
-   與其他適用 evidence，確認 `INVENTORY_FRESHNESS_UNVERIFIED` 可見但不單獨造成
-   nonzero。
+3. 在 synthetic target-root generator boundary fixtures 先證明 fresh、exact-sentinel
+   stale 與各 configuration result，再在 real repository 直接執行
+   `node scripts/gen-screen-inventory.mjs --check` 與 Project SDD lint；不得重新生成
+   inventory，也不得出現 retired inventory warning。
 4. 在 intermediate CI integration PR 先提交 CI Red，再新增獨立 `sdd-lint`
    workflow job使其轉綠，最後加入相同 local command；本 PR 遵守一般 guardrails，
    且不執行 archive。CI 成功觀察後，handoff 才請 maintainer 將
@@ -269,7 +320,9 @@ final archive PR。
 6. 若 CI rollout 必須回復，先由 maintainer 移除或停用外部 required-check
    expectation，避免 PR 因不存在的 check 卡住；再回復 intermediate CI integration
    的 workflow 與 `CLAUDE.md` local parity。此 rollback 不宣稱 scanner 成功或
-   inventory freshness 已驗證。
+   inventory freshness 已驗證，也不得以 retired warning 取代 canonical v1.1.0
+   的 blocking contract；若需撤回該 contract，必須先走正典 spec 變更而非只改
+   scanner。
 7. 若 final archive 在 merge 前需要回復，撤回只含上述六個 logical artifacts 的
    final archive PR 並保持 OpenSpec change 為 active；其 threshold arithmetic
    仍依 v1.33.0 的一般排除規則。已合併的 CI integration PR 目的獨立，不因
@@ -285,14 +338,22 @@ Red 前先由 `governance-propagation` task 對齊兩份 authoritative agent gui
 `scripts/speckit-tests.sh` 建立 synthetic throwaway repository fixtures，覆蓋
 passing、strict mutations、task ownership、retired command（含 `pnpm` negative
 control）、baseline exact/new/stale/duplicate/unsorted、explicit root、`--strict`
-與 inventory warning。Red task 僅修改測試，必須先 commit 並確認因
-`scripts/check-sdd.sh` 不存在而以預期原因失敗；Green task 不得修改 Red contract。
+與 inventory generator boundary。inventory fixtures 在 synthetic target root 放置
+最小 generator doubles，分別涵蓋 fresh exit `0`、exit `1` + exact stale sentinel、
+missing generator、unreadable generator、unloadable generator、unrunnable Node/
+generator boundary、exit `2` 與 sentinel-less exit `1`；assert raw child output 被
+suppress、diagnostic path/exit mapping 正確，且 default/`--strict` 結果不變。
+explicit-root case 在 caller checkout 放置 decoy boundary，證明實際呼叫 target root；
+另斷言 retired inventory warning 不再出現。Red task 僅修改測試，
+必須先 commit 並確認因 `scripts/check-sdd.sh` 不存在而以預期原因失敗；Green task
+不得修改 Red contract。
 
 Green evidence 至少包括：
 
 ```bash
 bash -n scripts/check-sdd.sh scripts/speckit-tests.sh
 bash scripts/speckit-tests.sh
+node scripts/gen-screen-inventory.mjs --check
 scripts/check-sdd.sh
 scripts/check-spec-artifacts.sh
 openspec validate --changes --no-interactive
@@ -313,6 +374,13 @@ apply checkboxes 完成後以 non-checkbox continuation 執行。
   收集其他 deterministic diagnostics，最後 exit `1`。
 - baseline 格式錯誤優先表示 scanner 無法可信比較，維持 exit `2`；有效 baseline
   的 new/stale 及 strict-mode eligible debt 則是 exit `1`。
+- inventory child stdout/stderr 必須先 capture；只有 exit `1` + exact stale sentinel
+  可映射到 `INVENTORY_FRESHNESS` 與 `design/system/screen-inventory.md`。缺少或
+  unreadable generator、缺少 Node、load/execute failure、exit `2`、sentinel-less
+  exit `1` 或其他 unexpected result 一律映射到 `INVENTORY_CHECK_CONFIG` 與
+  `scripts/gen-screen-inventory.mjs`，suppress raw child output，並使最終 exit `2`。
+- configuration error 對最終 exit code 有 precedence，但不得吞掉已安全收集的
+  stable diagnostics；default 與 `--strict` 不改變 inventory severity。
 - 可重用 `scripts/check-spec-artifacts.sh` 的 STATUS contract；若其失敗，保留
   stderr 並輸出 `STATUS_ARTIFACT_SYNC`，不可被其他成功規則掩蓋。
 - 需要重新定義治理才能判斷的項目維持 warning 並連結 canonical authority，
@@ -323,7 +391,10 @@ apply checkboxes 完成後以 non-checkbox continuation 執行。
 - **I. Spec-First**：本設計重述的功能目標與正典 `## 功能目標` 一致，並以既有
   FR/AC/SC ID 作為可追溯 contract。
 - **IV. Test-First**：fixture Red commit 與預期失敗先於 Green command，細節遵循
-  [`testing constitution`](../../../specs/_governance/testing-constitution.md)。
+  [`testing constitution`](../../../specs/_governance/testing-constitution.md)；
+  synthetic target-root doubles 覆蓋 fresh、exact-sentinel stale、configuration、
+  explicit-root 與 retired-warning absence，real repository 再以直接 generator
+  `--check` 提供 freshness evidence。
 - **X. Change Scope Discipline**：僅定義 lint、baseline、fixture 與獨立 CI 的
   實作邊界，不混入 cleanup、inventory regeneration、API、DB 或產品行為。
   Intermediate CI integration PR 遵守一般 guardrails；依憲法 v1.33.0，final
@@ -333,9 +404,14 @@ apply checkboxes 完成後以 non-checkbox continuation 執行。
   `CLAUDE.md`、STATUS 或 unexpected archive paths；post-merge umbrella
   active-path exception 維持獨立，不與 archive 門檻混用。
 - **XVII. CI/CD Quality Gates**：同一 local command 由獨立 CI job 執行，且不混淆
-  四個 gate。
+  四個 gate；inventory composition 不增加 install/setup step，缺少 Node 或 generator
+  時以 configuration error fail closed。
+- **XIX. Environment & Configuration Integrity**：CI 與本地使用相同 Node/generator
+  boundary；unavailable、unreadable、unloadable、unrunnable 或 unexpected result
+  均以 stable `INVENTORY_CHECK_CONFIG` 與 exit `2` 顯示，不靜默降級。
 - **XX. Source of Truth & Contract Governance**：canonical spec 與治理文件維持
-  authority；baseline 與 OpenSpec artifact 僅消費、不覆寫正典。
+  authority；Project SDD lint 組合既有 generator 而不重作或 regenerate inventory，
+  baseline 與 OpenSpec artifact 僅消費、不覆寫正典。
 - **II. Generalization-First** 與 **III. Data Fairness**：本 command 不變更
   task runtime、dataset、annotator response、gold answer 或 scoring metadata，
   因此不引入這兩項 NON-NEGOTIABLE 的風險。
