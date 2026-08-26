@@ -153,6 +153,26 @@ test_fallback_blocks_push_when_cwd_field_missing() {
     echo "PASS: missing 'cwd' field falls back to protective blocking (exit 2)"
 }
 
+test_fallback_blocks_push_when_cwd_resolves_to_no_branch() {
+    local non_repo_dir main_repo
+    non_repo_dir="$(mktemp -d "$TMP_ROOT/non-repo.XXXXXX")"
+    main_repo="$(make_repo main)"
+    local payload
+    payload="$(payload_with_cwd "git push" "$non_repo_dir")"
+
+    # Regression: a payload "cwd" that is present but resolves to no git
+    # branch (not a repo, a nonexistent path, or a detached HEAD) makes
+    # `git -C "$CWD" branch --show-current` yield an empty string. If the
+    # hook trusts that empty BRANCH as "not main/master", the push is
+    # wrongly ALLOWED — even though the hook process itself is spawned from
+    # inside a repo checked out on main. This is strictly weaker than the
+    # pre-fix behavior, which fell back to the hook's own process cwd and
+    # correctly blocked.
+    run_hook "$main_repo" "$payload"
+    assert_exit_code 2 "fallback: a payload 'cwd' that exists but resolves to no git branch must degrade to protective blocking, never to 'allow'"
+    echo "PASS: unresolvable 'cwd' branch falls back to protective blocking (exit 2)"
+}
+
 assert_file "$HOOK"
 
 TESTS=(
@@ -161,6 +181,7 @@ TESTS=(
     test_red_worktree_push_is_not_blocked_by_main_workspace_branch
     test_guard_blocks_explicit_push_to_main_from_feature_branch
     test_fallback_blocks_push_when_cwd_field_missing
+    test_fallback_blocks_push_when_cwd_resolves_to_no_branch
 )
 
 FAILED=0
