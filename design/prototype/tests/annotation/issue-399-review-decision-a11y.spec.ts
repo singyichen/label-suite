@@ -7,9 +7,12 @@ import { buildWorkspaceUrl, dismissGuidelineModal, skipGuidelineModal } from './
  * only appended an icon-only <span> ('✓' / '✕') to each decision button --
  * no aria-label, no title -- so a screen reader announced nothing but the
  * raw glyph (WCAG 2.1 SC 4.1.2, Name/Role/Value). Separately, the `reviewNote`
- * string ("通過：此筆標記有效。退回：該標記狀態會回到未標記，標記員需要
- * 重新標記。") was defined in the I18N table but never consumed anywhere in
- * the file, so no reviewer -- sighted or not -- could ever see it.
+ * string was defined in the I18N table but never consumed anywhere in the
+ * file, so no reviewer -- sighted or not -- could ever see it.
+ *
+ * This spec owns "the note is rendered at all"; its wording is owned by
+ * issue-451-reject-copy-run-type.spec.ts, so the assertion below keys off
+ * the note's testid rather than duplicating the copy verbatim.
  *
  * This spec pins two behaviors:
  *   1. ws-review-row-approve / ws-review-row-reject each expose a real
@@ -62,6 +65,8 @@ test.describe('Review decision buttons have accessible names and the review note
     // The defined-but-never-consumed reviewNote string must now appear as
     // real visible text somewhere on the page, not merely exist as dead
     // data in the I18N table.
-    await expect(page.getByText('通過：此筆標記有效。退回：該標記狀態會回到未標記，標記員需要重新標記。')).toBeVisible();
+    const note = page.getByTestId('ws-review-note').first();
+    await expect(note).toBeVisible();
+    await expect(note).not.toBeEmpty();
   });
 });
