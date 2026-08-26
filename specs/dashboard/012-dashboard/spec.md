@@ -1,7 +1,7 @@
 ---
 功能分支: feat/dashboard-output-types
 建立日期: 2026-04-05
-版本: 2.4.1
+版本: 2.5.0
 狀態: In Progress
 ---
 
@@ -212,6 +212,7 @@ Super Admin 登入後看到平台層級總覽，用於掌握整體人員、任�
 
 1. **Given** `role = user` 且有 `project_leader` 任務，**When** 進入 `/dashboard`，**Then** 顯示任務概況（總任務、進行中、等待 IAA 確認、速度異常）。
 2. **Given** 同上，**When** 檢視任務列表，**Then** 每列包含任務名稱、摘要、依 `outputs[].type` 順序呈現的一至多個輸出類型 tag、Annotation Stage badge、狀態 badge 與進度條。
+3. **Given** 任務資料中存在至少一筆帶有 `demoCategory` 標記的任務，**When** 進入 PL 任務列表區塊，**Then** 顯示對應類別的快捷分類按鈕；點擊後導向 `/task-list?task_role=project_leader&keyword=<類別標籤>`，並可篩選出該類別下的任務。
 
 **專案負責人介面定義（需與原型一致）**：
 
@@ -369,6 +370,7 @@ Super Admin 登入後看到平台層級總覽，用於掌握整體人員、任�
 - **FR-009B**：Project Leader Dashboard 的「任務列表」必須顯示「查看全部」按鈕，且按鈕文字可 i18n 切換。
 - **FR-009C**：Project Leader Dashboard 的「任務列表」每列必須包含任務名稱、任務摘要、一至多個輸出類型 tag、Annotation Stage／Status badge 與 progress bar。
 - **FR-009D**：Project Leader Dashboard 點擊「查看全部」時，系統必須導向 `/task-list`，並沿用登入者 `user` 身分只顯示其具 `task_membership` 的任務。
+- **FR-009E**（v2.5.0 新增，issue #404）：Project Leader Dashboard 的「任務列表」區塊必須依任務資料的 `demoCategory` 標記動態渲染「示範任務快捷分類」按鈕：當且僅當 `dashboard.data.js` 中存在至少一筆任務帶有相同 `demoCategory` 值時，才顯示對應類別的按鈕；按鈕文字取自該類別的 i18n 標籤（zh/en），點擊時導向 `/task-list?task_role=project_leader&keyword=<類別標籤>`，套用既有關鍵字搜尋機制篩選出該類別任務。渲染邏輯不得以任務 ID 白名單（如列舉特定 `task_id`）作為顯示條件。
 - **FR-010**：Annotator Dashboard 必須包含：標記概況、任務列表、快速繼續按鈕。
 - **FR-010A**：Annotator Dashboard 的「標記概況」必須包含 3 張指標卡：待標記（筆）、今日完成（筆）、平均速度（分/筆）；各卡標籤顯示於數值上方。
 - **FR-010B**：Annotator Dashboard 的任務列表每列必須包含進度摘要、`快速繼續` 按鈕、一至多個輸出類型 tag、Annotation Stage／Status badge 與 progress bar。
@@ -534,11 +536,13 @@ flowchart LR
 - **SC-024**：Prototype 的 Annotator 與 Reviewer 場景各有 17 個快速操作；T001–T017 每筆具有獨立 `task_id`、非空 `sample_id` 與明確 compatibility route，並能以 `role=annotator`／`role=reviewer` 成功載入標記／審核介面。
 - **SC-025**：Super Admin／Project Leader Dashboard 的「等待 IAA 確認」指標卡可點擊且鍵盤可操作，導向套用 `status=waiting_iaa_confirmation` 篩選的 `/task-list`；該指標卡數字須與 `/task-list` 篩選後的實際筆數一致（prototype 基線：兩者皆為 1，即唯一的 dry_run 待 IAA 種子 T002；T014 雖為 dry_run 但 seed 狀態非 `waiting_iaa_confirmation`，不計入），不得出現數字與可導頁任務筆數對不上帳的情形。
 - **SC-026**（issue #187）：Annotator／Reviewer 任務列表提供排序下拉控制，選擇「進度：高到低」／「進度：低到高」後清單順序須正確反映所選鍵值，並可切回「預設順序」還原原始清單順序；排序後任務卡既有欄位、CTA 與導頁行為（FR-010B1／FR-010C／FR-011B1／FR-011C 等）不受影響；語言切換時排序控制標籤與選項文案即時更新。
+- **SC-027**（issue #404）：PL Dashboard 的任務列表區塊必須提供資料驅動的「示範任務快捷分類」入口——當任務資料含 `demoCategory` 標記時渲染對應快捷按鈕，點擊後導向套用 `keyword` 篩選的 `/task-list`，且該篩選結果須完整涵蓋所有帶相同 `demoCategory` 的任務（prototype 基線：`review_flow` 類別涵蓋 T014–T017 四筆）；若移除所有任務的 `demoCategory` 標記，快捷按鈕不得顯示，證明其為資料驅動而非硬編碼任務 ID 清單。
 
 ## Changelog
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.5.0 | 2026-08-26 | **FR-009E：PL Dashboard 任務列表新增資料驅動的示範任務快捷分類入口**（issue #404）：審核流程示範任務（T014–T017）先前只能透過標記員／審核員清單或已知在 `/task-list` 搜尋「審核流程示範」關鍵字才能發現，PL 場景走查無法自然找到；本次於 `dashboard.data.js` 為任務新增泛用 `demoCategory` 標記與對應 `demoCategories` 目錄（比照既有 `outputTypes` 目錄模式），PL 任務列表區塊依此資料動態渲染快捷分類按鈕（文字取自類別標籤），點擊導向 `/task-list?task_role=project_leader&keyword=<標籤>` 套用既有關鍵字搜尋；渲染邏輯不檢查任何具體 `task_id`，未來新增其他示範批次僅需標記 `demoCategory` 即可自動出現對應入口（Generalization-First）。新增 FR-009E、SC-027；`dashboard-pl-review-flow-demo-entry.spec.ts` 覆蓋按鈕出現、導頁篩選結果與「無 `demoCategory` 時不渲染」的資料驅動迴歸測試。 |
 | 2.4.1 | 2026-08-24 | Issue #261 drift 修正（FR-018／FR-019、SC-017／SC-018）：dashboard.html 先前完全未實作 Skeleton 與 API 錯誤／重試狀態，`task_membership` 一律同步渲染。新增 `task_membership` 模擬非同步載入（原型無後端，`MEMBERSHIP_LOAD_DELAY_MS = 400`）：載入中顯示 Skeleton（指標卡與任務列表佔位塊，對應最常見的有任務角色版面，`aria-busy="true"`）；失敗時結束 Skeleton、顯示 i18n 錯誤訊息與重試按鈕，不 fallback 至一般使用者視圖、不清除 session、不導向 `/login`；點擊重試即恢復（比照 `task-list.html` 既有重試慣例：重試視為必定成功，示範復原路徑而非重跑同一失敗）。測試沿用 `task-list.html` 既有的 `?view=error` 慣例，另新增 `?view=skeleton` 使 Skeleton 永久停留以利決定性測試（非正式產品 query，僅原型測試 hook）。新增回歸測試 `dashboard-membership-load.spec.ts`（5 案例，含驗證 `?view=skeleton` 確實超過模擬延遲仍不消失，排除誤判為競態僥倖通過）；連帶修正既有 `renders without horizontal overflow` 測試——原本以恆常可見的 `dashboard-shell` 作為就緒訊號，實際上會量測 Skeleton 版面而非最終內容版面，改為等待 `#contentGrid` 可見。`tests/dashboard/`（65）、`tests/shared/page-heading-baseline.spec.ts`、`tests/cross-role/xrole-language-inheritance.spec.ts` 全數通過，`tsc --noEmit` 乾淨。規格條文本已正確（v1.3.30／v1.3.32 已定義 FR-018／FR-019），僅原型未落實。 |
 | 2.4.0 | 2026-08-24 | **FR-010D／FR-011F：Annotator／Reviewer 任務列表新增依進度排序控制**（issue #187，Finding F-04）：兩視圖任務列表新增排序下拉（預設順序／進度：高到低／進度：低到高），複用既有 `progress` 數值欄位（reviewer 示範任務列的「審核覆蓋率」共用同一欄位語意，見 FR-011E）；排序不影響既有卡片欄位、CTA 與導頁行為；語言切換即時更新控制標籤與選項文案（新增 SC-026）。範圍說明：(1) 目前 `dashboard.assignments.js` 未提供「最後提交時間」或「待審筆數」的獨立數值欄位，故本版不新增此二排序鍵，避免發明未經授權的資料欄位；(2) 「清單呈現使用者實際被指派子集」同樣受限於現有資料模型——`assignments` 陣列為每任務單一 annotator／reviewer work item（非逐使用者指派），Annotator／Reviewer 清單維持現況顯示全部 17 筆 prototype 基線任務，未新增個人化篩選，詳見 PR 說明。 |
 | 2.3.1 | 2026-08-21 | **Prototype 合規修正（issue #311，無新增 FR）**：(1) Annotator／Reviewer 任務卡互動列補上 `role="button"`、`tabindex="0"`、`aria-label`（任務標題）與 Enter/Space 鍵盤觸發（與列點擊同導頁路徑，沿用 issue #186 FR-008F 指標卡鍵盤模式；內層快速操作按鈕的 keydown 不受列攔截）；(2) 列點擊導頁 URL 恢復 FR-010B1／FR-011B1 要求的 `task_type` 參數——2026-08-10 的 4-param 遷移 commit（eff1938）移除了 `annotationTaskType` 獨立欄位與 URL 參數但未同步本 spec；本次恢復 dashboard.assignments.js 的逐任務 `annotationTaskType` compatibility seed（T001–T013 依 eff1938 前原值、T014–T017 示範任務比照 T001 為 `single_sentence_classification`），值不得由 `outputs[]` 推導；`annotation-list` 依 `task_id` 解析任務、忽略並保留該參數。v2.0.2 所述 legacy `labelsuite.activeTaskType` localStorage 寫入路徑同於 eff1938 移除，本次不恢復（issue #311 範圍僅列點擊 URL）。 |

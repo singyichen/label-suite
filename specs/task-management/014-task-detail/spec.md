@@ -1,7 +1,7 @@
 ---
 功能分支: docs/211-disabled-annotator-rule
 建立日期: 2026-04-20
-版本: 2.10.4
+版本: 2.10.5
 狀態: Draft
 ---
 
@@ -742,6 +742,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.10.5 | 2026-08-26 | **修正：T014–T017 提供給審核員的指引內容從缺（issue #405）**：`task-detail.data.js` 的 T014–T017 profile 原未設定任何 `reviewerGuidelineText`，Overview「提供給審核員」卡片因此對四個審核流程示範任務全數落回共用空狀態（`未上傳`／`尚無說明內容`），即使四者各自示範不同審核情境（dry_run 共識仲裁／單一審核員核可／三審核員多數決收斂／兩審核員平手）。比照 issue #395 `forceShowGuideline` 的既有機制，`resetTaskData()` 新增一行泛用讀取（`if (profile.reviewerGuidelineText) ...`，不含任何 task_id 分支），並為 T014–T017 各自 seed 對應審核情境的指引文字（含共用的 single_label 情感三分類判準與與標記員不一致時的處理原則）。**規格條文未變**（FR-014f-1 雙角色結構本已涵蓋，僅補齊 seed 資料）。新增回歸測試 `issue-405-reviewer-guideline-t014-t017.spec.ts`（逐任務斷言審核員指引狀態轉為已上傳且內容含對應審核情境關鍵字）。 |
 | 2.10.4 | 2026-08-24 | Issue #261：新增 Prototype Traceability，明確對應 task-detail 主頁 shell、五個 tab partial、頁面資料層、與 013 共用的 `OUTPUT_TYPE_REGISTRY` 設定引擎、設計層參考的責任邊界；規格條文未變。 |
 | 2.10.3 | 2026-08-24 | **修正：13 個示範任務共用同一組誤導性指引附件（issue #185，issue-180 finding F-02）**：`DEFAULT_GUIDELINE_FILES`（`task-detail.data.js`）原對所有 17 個 seed profile 附加同一張 VA 情緒量表示意圖（`VA_emj.png`）＋一份指向不存在目錄的 PDF（`assets/guidelines/annotation-guideline.pdf`），對 NER／摘要／QA 等非 VA 任務的標記員造成誤導，且 PDF 於「強制閱讀」流程中為死連結。改為：(1) 圖片項目換成明確標示「通用範例圖」的占位圖（新增 `assets/images/task-management/generic-guideline-example.svg`），維持所有任務共用同一份 config-driven 檔案清單（不逐任務類型硬編，符合 Generalization-First 與 annotation-015 `TaskProfile.guidelineFiles` 條文）；(2) 移除死連結 PDF 項目（不虛構假檔案）。規格條文未變（`guidelineFiles` 資料形狀不變）。新增回歸測試：逐 profile 檔案存在性 assertion（每個 `guidelineFiles[].url` 皆需 200 回應）＋非 VA 任務範例圖標示斷言。 |
 | 2.10.2 | 2026-08-24 | **抽樣摘要區小樣本 IAA 忠告文案（issue #207，patch，措辭層級）**：013／014／015／017 全文皆無「建議最低試標抽樣筆數」的統計有效性門檻，僅有表單合法值下限 `sampling_value >= 1`（FR-010d／FR-010q），PL 設定極小抽樣（如 n=2）時 IAA 指標方差過大、不具統計推論意義卻無任何提示。新增 **FR-010o-2**：Overview「抽樣設定」唯讀摘要區塊於 `sampling_value < IAA_SMALL_SAMPLE_THRESHOLD`（沿用 `dataset-017` 規格常數、現行值 5）時，緊鄰 `sampling_value` 顯示雙語忠告文案（zh／en 兩語系皆定義），唯讀提示、不阻擋任何操作，不改變 `sampling_value` 既有驗證下限或任何 IAA 計算邏輯。**純措辭層級新增，非新功能**；prototype 端呈現屬後續獨立實作 PR 範圍（spec-first）。 |

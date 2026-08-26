@@ -11,6 +11,19 @@
 (function (global) {
   'use strict';
 
+  /* Shared reviewer guideline text for the single_label sentiment schema
+     used by T001 and the T014-T017 review-flow demo seeds (issue #405).
+     Each of T014-T017 appends its own review-model addendum below so the
+     "提供給審核員" content actually matches that task's demo scenario
+     instead of generic boilerplate -- see seedReviewFlowDemo() in
+     annotation-workspace.data.js and PR #305 for the scenario source. */
+  var REVIEWER_GUIDELINE_SENTIMENT_BOUNDARY_ZH =
+    '審核判準（single_label 情感三分類）：\n' +
+    '· positive：內容整體評價正面、無保留的稱讚或滿意陳述。\n' +
+    '· neutral：中立敘述、有褒有貶或程度輕微的評論，找不到明確正負傾向時歸此類。\n' +
+    '· negative：內容整體評價負面、抱怨或不滿意陳述。\n' +
+    '與標記員標註不一致時，請依上述判準重新檢視文本語意後決定核可或修改，不可僅以標記員多數意見為準。\n';
+
   var profiles = {
     T001: {
       taskCategories: ['classification'],
@@ -1016,7 +1029,12 @@
        `forceShowGuideline` (issue #395) -- they keep the shared false
        default on both task-detail.html's overview and
        annotation-workspace.data.js's resolveTaskProfile(), same as every
-       other profile in this file. */
+       other profile in this file. `reviewerGuidelineText` (issue #405)
+       seeds the per-task "提供給審核員" overview content: the shared
+       sentiment label-boundary criteria plus each task's own review-model
+       addendum, so a reviewer opening the task sees guidance that matches
+       that task's actual review scenario instead of the shared empty
+       state. */
     T014: {
       taskCategories: ['classification'],
       taskInputTypes: ['single_item'],
@@ -1034,6 +1052,11 @@
         }
       ],
       fieldRoleMap: { text: 'input', gold_label: 'output' },
+      reviewerGuidelineText:
+        REVIEWER_GUIDELINE_SENTIMENT_BOUNDARY_ZH +
+        '（T014）本任務為 dry_run 共識校準情境，審核門檻為 1 位審核員；出現 ' +
+        'dry-03-dispute-open、dry-04-dispute-resolved 等標記員分歧的項目時，' +
+        '需由具 can_arbitrate 權限的審核員仲裁決定最終標籤，不可逕自採多數意見核可。',
       datasetFileName: 'review-flow-dry-run.json',
       datasetRecords: [
         {
@@ -1081,6 +1104,11 @@
         }
       ],
       fieldRoleMap: { text: 'input', gold_label: 'output' },
+      reviewerGuidelineText:
+        REVIEWER_GUIDELINE_SENTIMENT_BOUNDARY_ZH +
+        '（T015）本任務為正式標記單一審核員核可情境，審核門檻為 1 位審核員；' +
+        '審核員可直接核可（approved）或修改（modified）標記員的標註結果，如 ' +
+        'ofs-02-modified-dispute 項目。',
       datasetFileName: 'review-flow-official-single.json',
       datasetRecords: [
         {
@@ -1128,6 +1156,11 @@
         }
       ],
       fieldRoleMap: { text: 'input', gold_label: 'output' },
+      reviewerGuidelineText:
+        REVIEWER_GUIDELINE_SENTIMENT_BOUNDARY_ZH +
+        '（T016）本任務為正式標記三審核員多數決收斂情境，審核門檻為 3 位審核員；' +
+        '當三位審核員的判斷出現分歧（如 ofm-05-all-divergent）且未達過半多數時，' +
+        '須轉交仲裁員決定，不可逕自收斂。',
       datasetFileName: 'review-flow-official-multi.json',
       datasetRecords: [
         {
@@ -1175,6 +1208,11 @@
         }
       ],
       fieldRoleMap: { text: 'input', gold_label: 'output' },
+      reviewerGuidelineText:
+        REVIEWER_GUIDELINE_SENTIMENT_BOUNDARY_ZH +
+        '（T017）本任務為正式標記兩審核員情境，審核門檻為 2 位審核員；' +
+        '兩位審核員意見不一致時（如 oft-01-even-tie）屬平手情況，依 ' +
+        'per-item-strict-majority 規則不會自動收斂，須轉交仲裁員決定最終結果。',
       datasetFileName: 'review-flow-official-tie.json',
       datasetRecords: [
         {

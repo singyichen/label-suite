@@ -1,7 +1,7 @@
 ---
 功能分支: feat/[module]/NNN-feature
 建立日期: YYYY-MM-DD
-版本: 1.22.5
+版本: 1.23.0
 狀態: Draft
 ---
 
@@ -76,7 +76,7 @@
 - [ ] T006b [P] 建立 Bruno 集合根目錄初始化檔案（僅首次建立時執行，已存在則略過）— `backend/bruno/bruno.json`、`backend/bruno/environments/local.bru`、`backend/bruno/environments/staging.bru`
 - [ ] T006c [P] 為本功能各規劃端點建立 Bruno 請求 skeleton（依 plan.md API 清單逐一列出每個檔案，例如：`backend/bruno/[module]/[feature]/[endpoint1].bru`、`backend/bruno/[module]/[feature]/[endpoint2].bru`…）— skeleton only，每個 endpoint 對應一個 .bru 檔案
 
-> **PR 邊界**：T006b/T006c 合計檔案數 = 3（bootstrap）+ N（endpoint 數量）。N ≤ 2 時合併為單一 `PR-FOUND-BRUNO`（3+2=5，恰好達 ≤5 files gate 上限）；N > 2 時拆為 `PR-FOUND-BRUNO-INIT`（T006b，3 個 bootstrap 檔案）與 `PR-FOUND-BRUNO-SKEL`（T006c，N 個 .bru skeleton）兩個獨立 PR。`[Principle: X; Backend Constitution XIII; Foundation FR-131]`
+> **PR 邊界**：T006b/T006c 合計檔案數 = 3（bootstrap）+ N（endpoint 數量）。依 Principle X，3 個 bootstrap 檔案（`bruno.json` 與兩個 environment `.bru`）屬工具／專案設定檔，**不計入 ≤5 files gate**，實際計入者僅 N 個 endpoint skeleton。因此 N ≤ 5 時合併為單一 `PR-FOUND-BRUNO`；N > 5 時拆為 `PR-FOUND-BRUNO-INIT`（T006b，3 個 bootstrap 檔案）與 `PR-FOUND-BRUNO-SKEL`（T006c，每批 ≤ 5 個 .bru skeleton，必要時分多批）兩類獨立 PR。`[Principle: X; Backend Constitution XIII; Foundation FR-131]`
 
 ### PR-FOUND-FE-API：前端 API 基礎建設（依賴 PR-FOUND-FE-TYPES merged；可與 PR-FOUND-BE-* 並行）
 
@@ -402,17 +402,18 @@ pnpm exec playwright test                # E2E gate
 - [ ] Story 任務涵蓋 Default + 邊界狀態（Empty / Loading / Error）
 - [ ] 優化階段包含文件、清理、安全性與效能（含 P95 量測工具）檢查
 - [ ] 每個使用者故事 Phase 的故事目標皆追蹤至至少一個 SC-ID（來自 spec.md 成功標準）
-- [ ] Phase 2 拆分為 PR-FOUND-MIGRATION / PR-FOUND-BE-SCHEMA / PR-FOUND-BE-API / PR-FOUND-BRUNO（或 N > 2 時拆為 PR-FOUND-BRUNO-INIT + PR-FOUND-BRUNO-SKEL）/ PR-FOUND-BE-CORE / PR-FOUND-FE-API / PR-FOUND-FE-ROUTING / PR-FOUND-FE-I18N / PR-FOUND-BE-I18N（條件性，若本功能有新增後端訊息）/ PR-FOUND-FE-TYPES 九至十一個獨立 PR 邊界
+- [ ] Phase 2 拆分為 PR-FOUND-MIGRATION / PR-FOUND-BE-SCHEMA / PR-FOUND-BE-API / PR-FOUND-BRUNO（或 N > 5 時拆為 PR-FOUND-BRUNO-INIT + PR-FOUND-BRUNO-SKEL）/ PR-FOUND-BE-CORE / PR-FOUND-FE-API / PR-FOUND-FE-ROUTING / PR-FOUND-FE-I18N / PR-FOUND-BE-I18N（條件性，若本功能有新增後端訊息）/ PR-FOUND-FE-TYPES 九至十一個獨立 PR 邊界
 - [ ] Phase 2 有前端 TypeScript 型別合約任務（`frontend/src/features/[module]/types/[feature].ts`），且其 PR 邊界（PR-FOUND-FE-TYPES）早於 services / components 任務
 - [ ] Migration PR 邊界（PR-FOUND-MIGRATION）不含任何應用程式碼，且 PR description 模板含 Rollback Plan 欄位
 - [ ] 每個 US Phase 的實作區塊含 PR-USN-BE-MODEL / PR-USN-BE-REPO / PR-USN-BE-SERVICE / PR-USN-BE-API 以及 PR-USN-FE-COMPONENT / PR-USN-FE-PAGE 邊界標記
-- [ ] 每個 PR 邊界觸及檔案數 ≤ 5 個（不含測試時 diff ≤ 300 行）
-- [ ] 每個 `PR-USN-BE-API` 含對應的 Bruno `.bru` 更新任務（Foundation FR-131）；`PR-FOUND-BRUNO` 含 T006b（集合初始化）與 T006c（endpoint skeleton，每個 .bru 檔案逐一明列）兩項 Bruno 任務，且與 `PR-FOUND-BE-API`（T006 route skeleton）分為兩個獨立 PR 邊界；若功能端點數 N > 2，T006b/T006c 進一步拆為 `PR-FOUND-BRUNO-INIT`（3 個 bootstrap 檔案）與 `PR-FOUND-BRUNO-SKEL`（N 個 .bru skeleton）
+- [ ] 每個 PR 邊界觸及檔案數 ≤ 5 個、diff ≤ 300 行（兩者皆依 Principle X 排除測試、lockfile、產生檔、工具／專案設定檔、空或僅 re-export 的 `__init__.py`/`index.ts`，以及 `specs/**`／`openspec/**`）
+- [ ] 每個 `PR-USN-BE-API` 含對應的 Bruno `.bru` 更新任務（Foundation FR-131）；`PR-FOUND-BRUNO` 含 T006b（集合初始化）與 T006c（endpoint skeleton，每個 .bru 檔案逐一明列）兩項 Bruno 任務，且與 `PR-FOUND-BE-API`（T006 route skeleton）分為兩個獨立 PR 邊界；若功能端點數 N > 5，T006b/T006c 進一步拆為 `PR-FOUND-BRUNO-INIT`（3 個 bootstrap 檔案）與 `PR-FOUND-BRUNO-SKEL`（每批 ≤ 5 個 .bru skeleton）
 
 ## Changelog
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.23.0 | 2026-08-26 | 同步 Constitution v1.33.0（issue #424）：PR 規模門檻的檔案數與行數改為只計算手寫生產程式碼，共用同一份排除清單；PR-FOUND-BRUNO 邊界原本依賴「3+2=5 恰好達上限」的推算，因 bootstrap 設定檔被排除而重算為 N ≤ 5 |
 | 1.22.5 | 2026-08-25 | 驗證清單的 mypy 指令由 `uv run mypy app/ --strict` 校準為 `uv run mypy .`，對齊 CLAUDE.md、CI 與正典 spec v1.12.3 的 SC-002（本樣板依 ADR-033 已 Deprecated，此處僅同步指令措辭，未改動任務粒度規則） |
 | 1.22.4 | 2026-06-05 | 任務相依順序與驗證清單補齊 Repository 層：Model → Repository → Service → API，並要求每個 US Phase 含 PR-USN-BE-REPO |
 | 1.22.3 | 2026-06-05 | 後端 schema、route、model、service 任務路徑改為 `backend/app/modules/[module]/{schemas,router,models,service}/[feature].py`，對齊 module-first 與 feature 分檔規則 |

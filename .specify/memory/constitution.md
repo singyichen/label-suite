@@ -8,27 +8,29 @@
 > then copy the full content here to keep agents in sync.
 
 <!-- BEGIN CACHE — synced from specs/_governance/constitution.md @ v1.32.1 (2026-08-25) -->
-
+<!-- BEGIN CACHE — synced from specs/_governance/constitution.md @ v1.33.0 (2026-08-26) --><!--
 <!--
-Sync Impact Report — constitution v1.32.1
-Generated: 2026-08-25
+Sync Impact Report — constitution v1.33.0
+Generated: 2026-08-26
 
-Version change: v1.32.0 → v1.32.1
-Bump type: PATCH — clarify SDD governance authority boundaries and separate validation responsibilities without redefining any principle
+Version change: v1.32.1 → v1.33.0
+Bump type: MINOR — Principle X gains an explicit exclusion list for PR size arithmetic; no principle is removed or redefined and the 5 files / 300 lines thresholds are unchanged
 
-Changed principles: none
+Changed principles:
+- X. Change Scope Discipline — the file-count and line-count thresholds now both measure hand-written production changes only, excluding tests, lockfiles, generated files, tool/project configuration files, empty or re-export-only `__init__.py`/`index.ts`, and `specs/**`/`openspec/**` artifacts; excluded files stay in the PR and remain bound by the single-purpose rule
 
-Changed governance gates:
-- Source of Truth And Authority Order — establishes the canonical authority order, keeps Proposed ADRs non-binding, names `specs/STATUS.md` as the delivery-state source, and requires derived/cache files to fail toward their upstream authority
-- Feature Goal Alignment Gate — assigns project headings, goal/status/ownership, and retired-path checks to project SDD lint rather than OpenSpec schema validation
-- Compliance Review — separates OpenSpec schema/delta/scenario structure, project SDD lint, affected code/test verification, and archive-time Source-Verify/write-back integrity
+Changed governance gates: none
 
-New sections: `Governance → Source of Truth And Authority Order`
+New sections: none
 Removed sections: none
 
 Templates sync status:
 - .specify/memory/constitution.md: Updated — full content sync per Amendment Procedure
-- Dependent governance consumers: Pending — handled by the declared governance-propagation tasks
+- .claude/rules/git-workflow.md: Updated — Size guardrails restatement
+- CLAUDE.md: Updated — Escalation gates restatement
+- docs/sdd-workflow.md: Updated — PR scope restatement
+- openspec/config.yaml: Updated — task granularity rule restatement
+- .specify/templates/tasks-template.md: Updated — PR boundary checklist plus the PR-FOUND-BRUNO derivation that assumed exactly 5 counted files
 
 Deferred TODOs: none
 -->
@@ -145,7 +147,16 @@ Changes must be confined to the requested feature, bug, or spec scope.
 - Opportunistic refactors, formatting sweeps, and unrelated renames are not permitted unless required to complete the change safely
 - If adjacent code is problematic, flag it rather than silently fixing unrelated scope
 - Large changes must be split into independently reviewable units
-- A single PR must not touch more than 5 files or exceed 300 lines of diff excluding tests; PRs exceeding either threshold must be split before opening. Governance PRs that propagate a constitution amendment (source + caches + templates + commands) are exempt from the file count limit; all propagation files must be included in a single governance PR to prevent temporary inconsistency.
+- A single PR must not touch more than 5 files or exceed 300 lines of diff; PRs exceeding either threshold must be split before opening
+- Both thresholds count hand-written production changes only. The following are excluded from the file count **and** the line count:
+  - Tests
+  - Lockfiles (`uv.lock`, `pnpm-lock.yaml`)
+  - Generated files (OpenAPI exports, type codegen output, build output)
+  - Tool and project configuration files (`pyproject.toml`, `tsconfig.json`, `eslint.config.js`, `vite.config.ts`, `.gitignore`, and equivalents)
+  - Empty or re-export-only `__init__.py` / `index.ts`
+  - Spec and OpenSpec artifacts (`specs/**`, `openspec/**`)
+- Excluded files still belong in the PR that needs them; exclusion applies to threshold arithmetic only, never to the single-purpose rule
+- Governance PRs that propagate a constitution amendment (source + caches + templates + commands) are exempt from the file count limit; all propagation files must be included in a single governance PR to prevent temporary inconsistency
 - Backend/frontend layer split details are governed by applicable domain constitutions
 
 ### XI. Security & Privacy Baseline (NON-NEGOTIABLE)
@@ -330,6 +341,7 @@ Proposed ADRs do not supersede current rules. `specs/STATUS.md` is the delivery-
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 1.33.0 | 2026-08-26 | Principle X: define how PR size is measured (issue #424). Both the 5-file and the 300-line thresholds now count hand-written production changes only and share one exclusion list — tests, lockfiles, generated files, tool/project configuration files, empty or re-export-only `__init__.py`/`index.ts`, and `specs/**`/`openspec/**` artifacts. Threshold values are unchanged. Motivated by the foundation-core pilot (issue #356 finding 4), where all 10 PRs breached the literal rule purely on lockfiles, config files, and generated output while the hand-written logic stayed well inside both limits. Excluded files still ship in the PR that needs them and remain bound by the single-purpose rule. MINOR rather than PATCH: the measurement basis is new coverage, not a rewording; not MAJOR because no principle is removed or redefined |
 | 1.32.1 | 2026-08-25 | Clarify the SDD governance authority order: Proposed ADRs remain non-binding, `specs/STATUS.md` is the delivery-state source, and derived/cache files defer to upstream authority; separate OpenSpec schema validation, project SDD lint, affected code/test verification, and archive-time Source-Verify/write-back integrity |
 | 1.32.0 | 2026-08-25 | Extend Principle VI (English-First) to cover collaboration artifacts (issue #380): GitHub issues and pull requests opened by an AI agent are now written in Traditional Chinese — body plus the descriptive part of the title — while titles keep an English structural head and technical terms stay in English. Commit messages are explicitly excluded and remain English-only, which is safe because `main` integrates via merge commits and a PR title never becomes a commit subject. MINOR rather than PATCH: Principle VI previously said nothing about issues or PRs, so this adds coverage rather than rewording existing coverage; it is not MAJOR because no principle is removed or redefined |
 | 1.31.1 | 2026-08-24 | Adopt OpenSpec as the implementation/change workflow layer per ADR-033 (issue #294): Principle I's Goal Declaration sub-rule now points `## 功能目標` at `spec.md` and `**故事目標**`/goal restatement at an OpenSpec change's `tasks.md`/`design.md` instead of the retired Spec Kit `plan.md`; Feature Goal Alignment Gate and Compliance Review now cite `/opsx:verify` (or `openspec validate`) instead of the retired `/speckit.analyze`; Dependency Governance notes the `pnpm add -g` global-install exception |

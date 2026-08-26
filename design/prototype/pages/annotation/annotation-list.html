@@ -305,6 +305,18 @@
       outline: 2px solid var(--color-primary);
       outline-offset: -2px;
     }
+    /* Issue #407: separates one sample's review-unit group (one row per
+       annotator, FR-055) from the next without inventing a new component --
+       a top border on every group-start row after the first. */
+    #sampleRows tr[data-group-start="true"]:not(:first-child) {
+      border-top: 1px solid var(--color-border);
+    }
+    /* De-emphasizes the repeated sample-ID text on a group's continuation
+       rows; the text itself is unchanged, only its color/weight. */
+    .list-review-id-muted {
+      color: var(--color-ink-muted);
+      font-weight: 400;
+    }
     .text-snippet {
       max-width: 520px;
       white-space: normal;
@@ -569,6 +581,7 @@
         <div class="task-item-summary">
           <span class="list-item-title" id="taskInfoTitle">-</span>
           <span class="list-item-detail" id="taskInfoDetail">-</span>
+          <span class="list-item-detail hidden" id="taskInfoNotSubmittedNote" data-testid="list-not-submitted-note"></span>
         </div>
         <div class="task-item-meta">
           <div class="task-item-badges" id="taskInfoOutputTypes"></div>
@@ -715,6 +728,8 @@
       reviewNoAnswer: '（無）',
       textExpandLabel: '展開全文',
       textCollapseLabel: '收合',
+      notSubmittedNoteTpl: '其中 {count} 筆尚未提交，不計入審核清單：',
+      notSubmittedEntryLabel: '查看 {id}',
     },
     en: {
       pageTitle: 'Annotation List',
@@ -775,6 +790,8 @@
       reviewNoAnswer: '(none)',
       textExpandLabel: 'Show full text',
       textCollapseLabel: 'Collapse',
+      notSubmittedNoteTpl: '{count} sample(s) not yet submitted, excluded from this review list:',
+      notSubmittedEntryLabel: 'View {id}',
     }
   };
   function t(key, vars) {
@@ -1379,13 +1396,24 @@
 
   function renderReviewerRows(pagedRows, tbodyEl, context) {
     var profile = context.profile;
-    pagedRows.forEach(function (item) {
+    pagedRows.forEach(function (item, index) {
       var tr = document.createElement('tr');
       tr.style.cursor = 'pointer';
       tr.setAttribute('tabindex', '0');
       tr.setAttribute('role', 'button');
       tr.setAttribute('aria-label', t('openSampleAriaTpl', { id: item.recordId }));
       tr.setAttribute('data-testid', 'ws-sample-item');
+
+      /* Visual grouping (issue #407, RV-08): a sample with N annotators
+         renders N consecutive rows (FR-055) with nothing marking where one
+         sample's group ends and the next begins. Mark the first row of
+         each group so CSS can draw a boundary, and de-emphasize the
+         repeated sample-ID text on the group's continuation rows -- the
+         text itself is unchanged, only its style, so existing row lookups
+         that match on ID text (e.g. annotation-review-flow-demo-rows.spec.ts)
+         are unaffected. */
+      var isGroupStart = index === 0 || pagedRows[index - 1].recordId !== item.recordId;
+      tr.setAttribute('data-group-start', isGroupStart ? 'true' : 'false');
 
       function openWorkspace() {
         window.location.href = buildWorkspaceUrl(profile.id, item.recordId, context, item.annotator);
@@ -1428,7 +1456,13 @@
 
       var textTd = buildTextCell(item.text);
 
-      tr.appendChild(makeTd(item.recordId));
+      var idTd = makeTd(item.recordId);
+      idTd.setAttribute('data-testid', 'list-review-id');
+      if (!isGroupStart) {
+        idTd.classList.add('list-review-id-muted');
+      }
+
+      tr.appendChild(idTd);
       tr.appendChild(makeTd(annotatorSpan));
       tr.appendChild(makeTd(statusSpan));
       tr.appendChild(makeTd(item.completedAt));
@@ -1658,6 +1692,55 @@
     }
   }
 
+  /* Issue #402 (RV-07): the "共 N 筆資料" banner count keeps its existing
+     dataset-sample-count meaning (a multi-annotator task like T001/T014
+     legitimately has MORE review-unit rows than that count -- that is not
+     a bug). The actual gap is samples with ZERO review units at all
+     (nobody submitted, so buildReviewUnitRows() skips them entirely and
+     the list gives no way to reach them). This note makes that specific
+     gap explicit and links straight into each such sample's workspace,
+     which already renders the correct empty state (issue #307). */
+  function renderNotSubmittedNote(context, profile) {
+    var noteEl = document.getElementById('taskInfoNotSubmittedNote');
+    if (!noteEl) return;
+    noteEl.innerHTML = '';
+
+    if (context.role !== 'reviewer') {
+      noteEl.classList.add('hidden');
+      return;
+    }
+
+    var recordIdsWithUnits = {};
+    buildReviewUnitRows(context).forEach(function (unit) {
+      recordIdsWithUnits[unit.recordId] = true;
+    });
+    var notSubmittedIds = profile.datasetRecords
+      .map(function (record, index) { return getRecordId(record, index); })
+      .filter(function (recordId) { return !recordIdsWithUnits[recordId]; });
+
+    if (notSubmittedIds.length === 0) {
+      noteEl.classList.add('hidden');
+      return;
+    }
+
+    noteEl.classList.remove('hidden');
+    var textSpan = document.createElement('span');
+    textSpan.textContent = t('notSubmittedNoteTpl', { count: notSubmittedIds.length });
+    noteEl.appendChild(textSpan);
+
+    notSubmittedIds.forEach(function (recordId) {
+      var entryBtn = document.createElement('button');
+      entryBtn.type = 'button';
+      entryBtn.className = 'mini-btn';
+      entryBtn.setAttribute('data-testid', 'list-not-submitted-entry');
+      entryBtn.textContent = t('notSubmittedEntryLabel', { id: recordId });
+      entryBtn.addEventListener('click', function () {
+        window.location.href = buildWorkspaceUrl(profile.id, recordId, context);
+      });
+      noteEl.appendChild(entryBtn);
+    });
+  }
+
   function renderTaskInfo(context, profile) {
     document.getElementById('taskInfoCard').classList.remove('hidden');
     document.getElementById('listToolbar').classList.remove('hidden');
@@ -1695,6 +1778,7 @@
       detailParts.push(t('sampleCountTpl', { total: totalCount }));
     }
     document.getElementById('taskInfoDetail').textContent = detailParts.join(' · ');
+    renderNotSubmittedNote(context, profile);
 
     var outputTypesEl = document.getElementById('taskInfoOutputTypes');
     outputTypesEl.innerHTML = '';

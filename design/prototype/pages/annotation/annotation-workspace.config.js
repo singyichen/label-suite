@@ -83,6 +83,8 @@
       reviewEmptyUnitNote: '此標記員尚未提交此樣本，暫無可審核的內容。',
       reviewFinalizedTitle: '審核已定稿',
       reviewFinalizedNote: '此審核單位已達定稿門檻，結果為唯讀。',
+      finalizedVoteReviewer: '審核員',
+      finalizedVoteSelf: '你',
     },
     en: {
       sampleListTitle: 'Samples',
@@ -151,6 +153,8 @@
       reviewEmptyUnitNote: 'This annotator has not submitted this sample yet; there is nothing to review.',
       reviewFinalizedTitle: 'Review finalized',
       reviewFinalizedNote: 'This review unit has met its finalization threshold; results are read-only.',
+      finalizedVoteReviewer: 'Reviewer',
+      finalizedVoteSelf: 'you',
     },
   };
   if (window.TASK_CONFIG_I18N) {
@@ -2657,6 +2661,39 @@
     return row;
   }
 
+  /* Per-reviewer vote breakdown for a resolved dispute item (issue #403):
+   * the resolved row above only shows the converged/arbitrated VALUE, never
+   * which reviewer voted for what, so a minority-side reviewer has no way to
+   * see they were outvoted other than comparing the resolved value against
+   * their own memory. Reuses the arbitration card's label：value pattern
+   * (A・標記員 / B・審核員) with the real reviewer id in place of the A/B
+   * letter, and derives each reviewer's vote the SAME way
+   * resolveDisputeConvergence() tallies them: a reviewer present in
+   * item.reviewerValues dissented to that value, every other reviewer of the
+   * unit implicitly agreed with item.annotatorValue. Fully config-driven --
+   * no task_id or reviewer id is ever hardcoded. */
+  function buildFinalizedVoteRow(reviewerId, value, isSelf) {
+    var row = document.createElement('div');
+    row.setAttribute('data-testid', 'ws-finalized-vote');
+    row.setAttribute('data-reviewer-id', reviewerId);
+    if (isSelf) row.setAttribute('data-self', 'true');
+    row.style.cssText = 'padding:6px 0 6px 12px;font-size:12px;color:var(--color-text-soft);';
+    row.textContent = reviewerId + '・' + t('finalizedVoteReviewer') + '：' + formatDisputeValue(value)
+      + (isSelf ? '（' + t('finalizedVoteSelf') + '）' : '');
+    return row;
+  }
+
+  function buildFinalizedVoteRows(item, reviewerSubmissions) {
+    return reviewerSubmissions.map(function (submission) {
+      var reviewerId = submission.reviewerId;
+      var value = Object.prototype.hasOwnProperty.call(item.reviewerValues, reviewerId)
+        ? item.reviewerValues[reviewerId]
+        : item.annotatorValue;
+      var isSelf = !!currentIdentity && currentIdentity.reviewerId === reviewerId;
+      return buildFinalizedVoteRow(reviewerId, value, isSelf);
+    });
+  }
+
   function renderArbitrationCard(preview, submission) {
     var data = window.LabelSuiteAnnotationWorkspaceData;
     arbitrationChoices = {};
@@ -2782,16 +2819,17 @@
       currentProfile.id, currentRunType, currentSampleId, currentIdentity, state.selectedOutputTypes
     );
     if (items.length) {
-      var reviewerCount = data.readReviewerSubmissions(
+      var reviewerSubmissions = data.readReviewerSubmissions(
         currentProfile.id, currentRunType, currentSampleId, currentIdentity
-      ).length;
+      );
       var arbState = data.getArbitrationState(currentProfile.id, currentRunType, currentSampleId, currentIdentity);
       items.forEach(function (item) {
-        var convergence = data.resolveDisputeConvergence(item, reviewerCount);
+        var convergence = data.resolveDisputeConvergence(item, reviewerSubmissions.length);
         if (convergence.converged) {
           card.appendChild(buildArbitrationResolvedRow(
             item, convergence.value, t('arbitrationConvergedNote'), 'ws-finalized-resolved'
           ));
+          buildFinalizedVoteRows(item, reviewerSubmissions).forEach(function (row) { card.appendChild(row); });
           return;
         }
         var stored = arbState[disputeItemId(item)];
@@ -2799,6 +2837,7 @@
           card.appendChild(buildArbitrationResolvedRow(
             item, stored.finalized_value, stored.finalized_by, 'ws-finalized-resolved'
           ));
+          buildFinalizedVoteRows(item, reviewerSubmissions).forEach(function (row) { card.appendChild(row); });
         }
       });
     }

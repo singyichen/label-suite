@@ -386,7 +386,15 @@
     listSubmissionBucketKeys().forEach(function (key) {
       if (key !== annotatorKey && key.indexOf(reviewerPrefix) !== 0) return;
       var entry = readSubmissionBucket(key)[sampleId];
-      if (entry && Array.isArray(entry.history)) merged = merged.concat(entry.history);
+      if (!entry || !Array.isArray(entry.history)) return;
+      /* FR-062 blind-review isolation (issue #410): an unsubmitted reviewer
+         draft's history must stay visible only to that reviewer, never to
+         peers -- a reviewer bucket only contributes once it has actually
+         been submitted. The annotator's own bucket is explicitly exempt
+         (FR-062: annotator save/submit events are part of the reviewed
+         content itself). */
+      if (key !== annotatorKey && entryStatus(entry) !== 'submitted') return;
+      merged = merged.concat(entry.history);
     });
     merged.sort(function (a, b) {
       return String(a.at).localeCompare(String(b.at));
