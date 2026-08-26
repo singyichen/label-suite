@@ -21,11 +21,13 @@ description: Use when porting a Label Suite diagram (docs/diagrams/**, design/pr
 | URL | editorType | 走本文件哪一節 |
 |---|---|---|
 | `figma.com/board/<key>` | `figjam` | §3（已實證） |
-| `figma.com/design/<key>` | `figma` | §4（**未實證**，先跑能力探測） |
+| `figma.com/design/<key>` | `figma` | §4（已實證） |
 
 ```js
-console.log(figma.editorType, figma.currentPage.id);
+return { editorType: figma.editorType, pageId: figma.currentPage.id };
 ```
+
+**必須用 `return`，不能用 `console.log`。** `use_figma` 只把 `return` 的值交給 agent，`console.log` 的輸出永遠看不到（官方 `figma-use` 規則 4）——照著印會得到空結果然後對著空手除錯。本文件所有腳本都遵守這條。
 
 ## 1. 中間表示（IR）——兩種 mode 共用
 
@@ -109,7 +111,10 @@ local = 2 · svg + 標題區偏移
 - `figma.createRectangle()` — 泳道分隔線底襯、圖例色塊、標籤遮罩都靠它
 - `figma.createLine()` — 泳道分隔線
 - `figma.createFrame()`
+- `figma.createVector()`
 - 巢狀 `Section`
+
+2026-08-26 用 §4.1 的同一支探測腳本在 board `X9FrC1vXYbdNQU6agmGYsF` 覆驗：十種 create API **10/10 全部 `OK`**，含上述四支。
 
 照上游文件走只能產出降級版（無泳道分隔線、無圖例色塊、無虛線 ghost 框）。**以本文件為準。**
 
@@ -147,7 +152,7 @@ const abs = (sec, x, y) => ({ x: sec.x + x, y: sec.y + y });
 
 `use_figma` 呼叫間**不共享狀態**，每次呼叫都要整段重貼——這砍不掉。以下是可整段複製的原文：
 
-> ⚠ **狀態：由已記錄的 API 語義重建，尚未在 board 上逐行回歸。** 首次使用時第一輪截圖請特別檢查雙字階與 connector 標籤；若有偏差，修正後回頭更新本節。
+> **狀態：已逐行回歸（2026-08-26，board `X9FrC1vXYbdNQU6agmGYsF`）。** `mkNode` × 3（`SYSTEM` 雙字階／`DIAMOND` 雙字階／`TERMINAL` 無副行）＋ `link` × 2（`MAIN`／`ACCENT`，皆帶標籤）五步全通、零錯誤。以 `getStyledTextSegments` 驗回雙字階實際落地為兩段——`24px Semi Bold #1E1B4B` ＋ `16px Regular #64748B`，與 §1.1 的 token 逐位元相符；兩條 connector 的 `characters` 與 `ELBOWED` 皆正確且 `parent` 確實是 Section。
 
 ```js
 // ── 常數：hex 讀自 tokens.css，見 §1.1 ──────────────────────
@@ -269,13 +274,13 @@ function pill(sec, x, y, str, o = {}) {
 }
 ```
 
-## 4. Design 模式（**未實證——先跑能力探測**）
+## 4. Design 模式（已實證）
 
-⚠ **本節是設計提案，不是實測結論。** 首次在 Design file 建圖前必須先跑 §4.1，把結果寫回本節並刪掉這個警告。
+證據來源：Design file `xWvoreTTZhY5KSgBCyEVwc`，與 §3 同一份三節點 IR，2026-08-26 建成並截圖比對。
 
-### 4.1 能力探測（第一次呼叫必跑）
+### 4.1 能力探測
 
-逐一 try/catch，把實際可用性記回 §4.2 的表：
+換一個沒跑過的 Design file 時重跑一次即可；`figma` mode 的結果已載於 §4.2。
 
 ```js
 const probe = {};
@@ -292,21 +297,62 @@ for (const [k, f] of Object.entries({
   Text:          () => figma.createText(),
 })) {
   try { const n = f(); probe[k] = "OK"; n.remove(); }
-  catch (e) { probe[k] = String(e.message || e); }
+  catch (e) { probe[k] = String((e && e.message) || e); }
 }
-console.log(figma.editorType, JSON.stringify(probe, null, 2));
+return { editorType: figma.editorType, probe };
 ```
 
-**預期**（待驗證）：`ShapeWithText` / `Connector` / `Sticky` / `CodeBlock` 在 Design file 被封鎖，其餘可用。
+**實測結果**（2026-08-26，兩種 mode 同一支腳本）：
 
-### 4.2 節點與連線表示法（提案）
-
-| 對象 | FigJam | Design（提案） |
+| API | Design (`figma`) | FigJam (`figjam`) |
 |---|---|---|
-| 節點 | `ShapeWithText` | `createFrame()` + `layoutMode="VERTICAL"` auto-layout，內含標題／副行兩個 Text 子節點 |
-| 連線 | `Connector`（原生磁吸） | `createVector()` 或 `createLine()`，端點自行計算 |
+| `ShapeWithText` / `Connector` / `Sticky` / `CodeBlock` | ❌ `no such property` | ✅ OK |
+| `Section` / `Frame` / `Rectangle` / `Line` / `Vector` / `Text` | ✅ OK | ✅ OK |
+
+那四支在 Design mode 是 **`figma` 全域物件上根本沒有這個 property**，不是執行期權限拒絕——`typeof figma.createConnector === "undefined"`，所以功能偵測要測 property 是否存在，不要靠 try/catch 接執行期錯誤。
+
+### 4.2 節點與連線表示法（已實證）
+
+| 對象 | FigJam | Design |
+|---|---|---|
+| 節點 | `ShapeWithText` | `figma.createAutoLayout("VERTICAL")` + padding，內含標題／副行兩個 Text 子節點 |
+| 連線 | `Connector`（原生磁吸） | `createVector()` + `setVectorNetworkAsync()`，端點自行計算 |
 | 連線標籤 | `connector.text` | 獨立 Text + `rect()` 遮罩（同 `pill()`） |
-| 判斷節點 | `DIAMOND` shapeType | 正方 frame `rotation = 45`，內文反向旋轉 −45 |
+| 判斷節點 | `DIAMOND` shapeType | `createVector()` 菱形路徑 + 另一個置中的文字 frame |
+
+三點實測補充：
+
+- **用 `figma.createAutoLayout("VERTICAL")`，不要 `createFrame()` + 手設 `layoutMode`。** 前者建出來就是兩軸 hug，省掉 `primaryAxisSizingMode` / `counterAxisSizingMode` 的設定順序雷（官方 `figma-use` 規則 12b：`layoutSizing*` 與 `*AxisSizingMode` 是兩組不同的 enum，交叉使用會丟錯）。
+- **菱形兩種作法都可行，本文件採 Vector 路徑。** 原提案的「正方 frame `rotation = 45` + 內文反向 −45」實測**成立**（auto-layout frame 可旋轉，其子節點也能獨立設 `rotation = -45`）。改採 Vector 是因為菱形長寬比要能獨立於內文調整，旋轉法會把兩者綁死。若採旋轉法，**務必記得把子節點的 rotation 也還原**——只還原 frame 會留下一個斜的標題，且截圖上很像字型問題。
+- **`LineNode.strokeCap` 套用在線段兩端**，`"ARROW_LINES"` 會畫出雙頭箭頭。單向連線必須改用 vector network 逐頂點指定：
+
+```js
+async function arrow(x1, x2, y, accent) {
+  const v = figma.createVector();
+  figma.currentPage.appendChild(v);
+  v.x = x1; v.y = y;
+  await v.setVectorNetworkAsync({
+    vertices: [
+      { x: 0,       y: 0, strokeCap: "NONE" },
+      { x: x2 - x1, y: 0, strokeCap: "ARROW_LINES" },
+    ],
+    segments: [{ start: 0, end: 1, tangentStart: { x: 0, y: 0 }, tangentEnd: { x: 0, y: 0 } }],
+    regions: [],
+  });
+  v.strokes = solid(accent ? PRIMARY : SOFT);
+  v.strokeWeight = accent ? 1.4 : 1.2;
+  v.fills = [];            // vector 預設有 fill，不清掉線條會被填成一片
+  return v;
+}
+```
+
+### 4.2.1 畫布底色必須顯式設定
+
+**Design file 的預設畫布是深色，FigJam 不是。** 沿用 §1.1 的角色表（`SYSTEM` 是 `--color-ink` @ 5%、標題是 `--color-ink`）而不動背景，深藍文字會落在深底上近乎不可讀，且截圖看起來像是填色沒生效。每次建圖第一支腳本就設：
+
+```js
+figma.currentPage.backgrounds = solid("#F5F3FF");   // --color-surface
+```
 
 **採 auto-layout 承載節點內文**：FigJam 的文字內距裁切問題（§3.4 尺寸下限的成因）在 auto-layout 下由 `paddingLeft/Right/Top/Bottom` + `primaryAxisSizingMode = "AUTO"` 直接解掉，節點高度隨內容長。因此 Design 模式**不沿用 §3.4 的固定下限**，改設最小寬度＋內距，高度交給 auto-layout。
 
@@ -321,9 +367,31 @@ Design file 沒有原生 Connector，**連線不會跟隨節點移動**。兩條
 
 **決策**：Design 模式產出的是**交付用靜態高保真稿**——排版定稿後才移植，移植後不在 Figma 內搬節點。需要邊畫邊調位置的探索階段，一律用 FigJam。若日後 Design 稿確實需要反覆搬移，再回頭評估 B，不預先建設。
 
-### 4.4 尺寸下限表
+### 4.4 尺寸下限表（實測）
 
-**待量測**——auto-layout 改變了成因，§3.4 的數字不可直接沿用。跑完 §4.1 後用同一份 IR 實建一次再回填。
+**結論：Design 模式沒有尺寸下限，不要設。** §3.4 那組 520×128 / 480×240 是 FigJam 的文字內距裁切補償，在 auto-layout 下成因已消失——把尺寸交給 hug，內容多高節點就多高。
+
+量測條件：`paddingLeft/Right = 32`、`paddingTop/Bottom = 24`、`itemSpacing = 8`、標題 `Inter Semi Bold 24`、副行 `Inter Regular 16`。
+
+| 節點（同 §3 那份 IR） | hug 尺寸 | 對照：FigJam 下限 |
+|---|---|---|
+| `審核單位` ＋ 13 字副行 | **248 × 104** | 520 × 128 |
+| `票數判定` ＋ 8 字副行 | **180 × 104** | 520 × 128 |
+| `定稿`（無副行） | **112 × 77** | 520 × 128 |
+
+**高度可精確預測**，兩次量測完全一致：
+
+```
+H = 2·paddingY + titleH + (sub ? itemSpacing + subH : 0)
+  有副行：24 + 29 + 8 + 19 + 24 = 104
+  無副行：24 + 29 + 24           = 77
+```
+
+其中 `titleH = 29`（24px Semi Bold 單行）、`subH = 19`（16px Regular 單行）。
+
+**寬度不要拿來做精確對齊。** `W = 2·paddingX + max(titleW, subW)` 大方向成立，但同一節點兩次量到 247／248、114／112——文字量測有次像素捨入，會漂 ±2px。需要多節點左右對齊或等寬欄位時，設固定寬度（`layoutSizingHorizontal = "FIXED"` + `resize()`）再讓高度 hug，不要靠兩軸都 hug 去湊齊。
+
+**菱形另計。** 菱形的可用內接矩形只有外框的一半，所以 `W ≥ 2 × 文字寬`、`H ≥ 2 × 文字高`，再留邊距。實測 **360 × 200** 承載 116 × 56 的文字堆疊（`票數判定` ＋ `是否達 N/2 門檻`）視覺寬鬆、無裁切。
 
 ## 5. 字型現況（實測，2026-08-26）
 
@@ -339,8 +407,10 @@ Design file 沒有原生 Connector，**連線不會跟隨節點移動**。兩條
 - [ ] editor mode 已確認，走對 §3／§4
 - [ ] 節點清單／連線清單先寫完才開第一次 `use_figma`
 - [ ] 色值讀自 `tokens.css`，skill 內沒有另一份色票
+- [ ] 腳本用 `return` 輸出，沒有靠 `console.log`
+- [ ] Design 模式已設 `figma.currentPage.backgrounds`（預設深色，見 §4.2.1）
 - [ ] 每建完一層截一次圖（節點 → 連線 → 標註 → 圖例）
-- [ ] 所有節點尺寸 ≥ 下限表；無文字裁切
+- [ ] FigJam 節點尺寸 ≥ §3.4 下限；Design 節點交給 auto-layout hug（§4.4）；無文字裁切
 - [ ] 無節點重疊；分支標籤兩側水平間距 ≥ 140px
 - [ ] 連線走向正確，且都已 `appendChild` 進 Section
 - [ ] 同一份 IR 在 FigJam 與 Design 各產一張，截圖比對無裁切／無重疊／走向一致
