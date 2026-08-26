@@ -23,7 +23,7 @@
 | ID | 功能 | 模組 | 狀態 | 分支 | 備註 |
 | --- | --- | --- | --- | --- | --- |
 | foundation-000 | Foundation — 工程基準與共同約束 | foundation | `done` | `feat/foundation-core-*`（9 個 stacked PR，皆已合併） | spec v1.12.4；FR-001~131；SC-001~045；plan.md v2.0.0（Foundation-Core）保留為常設架構文件（ADR-033 例外，非 OpenSpec change 產物）。**Foundation-Core 範圍**已由 OpenSpec change `implement-foundation-core`（issue #356 Phase 4 pilot）實作完成並 archive；**未封存**：本 spec 為全 repo 以路徑引用的跨模組長期基線，且 F-17 Observability（FR-091~100、SC-021~028）與 Celery 相關需求依 plan.md 延後、尚未實作，封存與否待維護者裁決 |
-| foundation-001 | Project SDD Lint | foundation | `change-open` | `feat/issue-375-sdd-lint` | spec v1.0.0；OpenSpec change `implement-project-sdd-lint`；Issue #375 follow-up；command-line tooling，prototype／Frontend Ready Gate 不適用 |
+| foundation-001 | Project SDD Lint | foundation | `change-open` | `feat/issue-375-sdd-lint` | spec v1.1.0；OpenSpec change `implement-project-sdd-lint`；Issue #375 follow-up；blocking generated `design/system/screen-inventory.md` freshness 使用既有 generator exact-sentinel contract；command-line tooling，prototype／Frontend Ready Gate 不適用 |
 | account-001 | Login — Email / Password | account | `spec-ready` | `feat/account/001-login-email-password` | spec v1.2.4；規格狀態：Clarified；plan.md v2.0.0 於首個 OpenSpec change 作為 design.md 參考素材，之後歸檔（ADR-033） |
 | account-002 | Login — Google SSO | account | `spec-ready` | `feat/account/002-login-google-sso` | spec v1.2.3；規格狀態：Clarified |
 | account-003 | Register — Email / Password | account | `spec-ready` | `feat/account/003-register-email-password` | spec v1.2.7；規格狀態：Clarified |
@@ -55,6 +55,7 @@
 
 | 日期 | 更新內容 |
 |------|----------|
+| 2026-08-26 | `foundation-001` 更新至 canonical spec v1.1.0：Project SDD Lint 新增 FR-009、AC-4.1–AC-4.3、SC-006–SC-007，將 generated `design/system/screen-inventory.md` freshness 升為 exact-sentinel blocking contract（stale exit `1`；不可執行、sentinel-less 或其他 configuration result exit `2`）。本 integration branch 合併 upstream source additions 後，以既有 generator 刷新該 generated view 並驗證 `--check` current；generator／manifest implementation 與其他 inventory views 不在此變更範圍。 |
 | 2026-08-26 | `foundation-001` 完成 `/opsx:propose`，OpenSpec change `implement-project-sdd-lint` 已建立，狀態由 `spec-ready` 更新為 `change-open`；branch 維持 `feat/issue-375-sdd-lint`。 |
 | 2026-08-26 | 新增 `foundation-001` Project SDD Lint canonical spec v1.0.0，狀態設為 `spec-ready`；範圍為 ratchet baseline、task/Source-Verify/retired guidance checks 與獨立 CI gate。 |
 | 2026-08-26 | `task-management-014` 更新至 v2.10.5（`feat/task-detail-reviewer-guideline-t014-t017`，issue #405）：修正 T014–T017 提供給審核員的指引內容從缺——`task-detail.data.js` 的四個審核流程示範任務 profile 原未設定 `reviewerGuidelineText`，Overview「提供給審核員」卡片全數落回共用空狀態，即使四者各自示範不同審核情境（dry_run 共識仲裁／單一審核員核可／三審核員多數決收斂／兩審核員平手）。比照 issue #395 `forceShowGuideline` 機制，`resetTaskData()` 新增一行泛用讀取（不含 task_id 分支），四任務各自 seed 對應審核情境的指引文字（含共用的 single_label 情感三分類判準）。**規格條文未變**（FR-014f-1 雙角色結構本已涵蓋，僅補齊 seed 資料）。新增回歸測試 `issue-405-reviewer-guideline-t014-t017.spec.ts`。 |
