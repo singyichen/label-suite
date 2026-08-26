@@ -18,7 +18,7 @@ Issue #375 已有治理規則，但尚未有可執行的 Project SDD Lint，因�
 
 ### New Capabilities
 
-- `project-sdd-lint`：提供可離線執行、以正典規格與治理規則為依據的 Project SDD Lint capability。
+- `foundation/001-project-sdd-lint`：提供可離線執行、以正典規格與治理規則為依據的 Project SDD Lint capability。
 
 ### Modified Capabilities
 
