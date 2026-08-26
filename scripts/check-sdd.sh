@@ -176,8 +176,8 @@ EOF
         seen_red_groups=' '
         while IFS= read -r task_line; do
             first_path="$(printf '%s\n' "$task_line" | grep -o '`[^`]*`' | sed -n '1p' | sed 's/^`//; s/`$//')"
-            action_clause="$(printf '%s\n' "$task_line" | sed 's/[，。].*//; s/[.][[:space:]].*//')"
-            explicit_files="$(printf '%s\n' "$action_clause" | grep -Eo '`[^`]*(/|[.])[^`]*`' | wc -l | tr -d ' ')"
+            action_clause="$(printf '%s\n' "$task_line" | awk '{ sub(/^- \[[ xX]\] [0-9.]+[[:space:]]*/, ""); gsub(/[.][[:space:]]/, "。"); count = split($0, clauses, /[，。；;]/); for (i = 1; i <= count; i++) { clause = clauses[i]; if (clause ~ /(不得|禁止|不可|不應|無需)/) continue; if (clause ~ /(Exception:|執行[[:space:]]*`|驗證[：:[:space:]]*`|預期|[Vv]erification[：:[:space:]]*`|[Vv]erify[[:space:]]*`|[Rr]un[[:space:]]*`|[Ee]xpect)/) continue; if (i == 1 || clause ~ /(修改|建立|新增|刪除|移除|撰寫|補上|更新|[Mm]odif(y|ied)|[Cc]reat(e|ed)|[Dd]elet(e|ed)|[Rr]emov(e|ed)|[Ww]rit(e|ten)|[Uu]pdat(e|ed)|加入[[:space:]]*`|[Aa]dd[[:space:]]*`)/) print clause } }')"
+            explicit_files="$(printf '%s\n' "$action_clause" | grep -Eo '`[^`[:space:]]*(/|[.])[^`[:space:]]*`' | wc -l | tr -d ' ')"
             task_group="$(printf '%s\n' "$task_line" | sed -n 's/^- \[[ xX]\] \([0-9][0-9]*\)[.].*/\1/p')"
             assignee_count="$(printf '%s\n' "$task_line" | grep -o '\[@[^]]*\]' | wc -l | tr -d ' ')"
             terminal="$(printf '%s\n' "$task_line" | sed -n 's/.*\(\[@[^]]*\]\)[[:space:]]*$/\1/p')"
