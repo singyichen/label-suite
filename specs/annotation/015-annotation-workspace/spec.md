@@ -1,7 +1,7 @@
 ---
 功能分支: docs/208-official-gold-fr
 建立日期: 2026-04-23
-版本: 4.25.0
+版本: 4.26.0
 狀態: Draft
 ---
 
@@ -229,7 +229,7 @@ Annotator 可在同一工作區中，依任務 `outputs[]` 組成逐一完成各
 - 區塊 A：`上方任務目標列（固定）`
   - 必要元素：任務目標、操作指引、已標記數量、總量、當前階段、微型進度視覺
 - 區塊 B：`三欄工作區（Desktop）`
-  - 左欄：標記清單、目前定位；annotator 視角每筆樣本下方顯示三態完成狀態標籤（`已提交` / `已儲存` / `待標記`）；reviewer 視角下一列為一個審核單位，狀態標籤改用 `REVIEW_UNIT_STATUS` 五態語彙（`待審` / `已同意` / `已修改` / `爭議中` / `已定稿`，與 AC-1.15 清單、FR-064 脈絡橫幅同源；標記員無儲存提交時依 FR-044a 遞補語意視為 `待審`），並另加一行 `樣本 ID · 標記員帳號`（見 FR-056）
+  - 左欄：標記清單、目前定位；annotator 視角每筆樣本下方顯示三態完成狀態標籤（`已提交` / `已儲存` / `待標記`）；reviewer 視角下一列為一個審核單位，狀態標籤改用 `REVIEW_UNIT_STATUS` 五態語彙（`待審` / `已同意` / `已修改` / `爭議中` / `已定稿`，與 AC-1.15 清單、FR-064 脈絡橫幅同源；標記員無儲存提交時依 FR-044a 遞補語意視為 `待審`），並另加一行 `標記員帳號 · 樣本 ID`（見 FR-056）；**v4.26.0 修訂**：reviewer 視角同一樣本的審核單位項目必須包在該樣本的分組容器內，樣本 ID、標記員人數與文本摘要由分組表頭承載且文本摘要每組僅一次，項目本身不再各自渲染文本摘要（見 FR-071）
   - 中欄（上）：樣本導覽列——`上一筆` 按鈕、進度摘要（含進度條；annotator 為 `已提交筆數 / 總筆數`，reviewer 為 `已審 x / n`——分子為已提交審核之審核單位數、分母為審核單位總數）、`下一筆` 按鈕；位於首筆/末筆時對應按鈕停用
   - 中欄（主體）：題目區塊與標記區塊以獨立卡片區隔——題目卡承載 Evidence 與 input 內容，標記卡承載依 `outputs[]` 順序逐一渲染的輸出類型標記區（見使用者故事 2A）；輸出類型無獨立題目呈現時（其標記區內嵌原文，如 `sequence_tagging`／`entity_recognition`），題目卡可省略
   - 卡片內視覺：卡片邊框為題目/標記區塊的唯一外框——題目卡內的 input 內容直接呈現，不得再包一層內框；標記卡內不得殘留水平分隔線（含區塊分隔線與 Bypass 選項上方的虛線隔線）；Bypass 選項自身的虛線外框為刻意設計，予以保留
@@ -511,6 +511,8 @@ Reviewer 在 `run_type = official_run` 的工作區中，針對「目前標記�
 27. **AC-4.27（v4.12.0 新增，審核單位脈絡橫幅）**：**Given** 審核員開啟任一審核單位的 workspace reviewer 視圖，**When** 預覽區渲染，**Then** 審核卡（或仲裁版面）上方必須恰渲染一個審核單位脈絡橫幅（`ws-review-unit-context`），內容依序為：`run_type` 徽章（`試標`／`正式標記`）、該任務生效之審核門檻（`min_reviewers`）、受審標記員帳號（同一樣本有多位標記員時附註名冊人數）、已提交審核進度 `已審 x / n`（僅審核單位成立時）、以及該單位的 `REVIEW_UNIT_STATUS` 五態 pill；**And** 標記員未提交（審核單位不成立）時 pill 顯示 `尚無標記提交` 且不顯示已審進度；**And** 橫幅於 FR-053 審核卡與 FR-061 仲裁版面兩種版面下皆存在（見 FR-064）。
 28. **AC-4.28（v4.24.0 新增，對應 FR-069，issue #403）**：**Given** 一個因逐項多數決收斂（FR-061 第4點）或仲裁定案（FR-061 第3點）而推導為 `已定稿` 的 `official_run` 審核單位（`min_reviewers` ≥ 2 且至少一位審核員提交與標記員不同的答案），**When** 任一參與過該單位審核的審核員經由清單或工作區導覽開啟此單位，**Then** FR-053 已定稿唯讀卡的每一個已解決爭議項下方，必須逐位列出全部已提交審核員之帳號與其投票值（沿用 FR-059 `reviewerValues` 之推導輸入，不另立第二套推導規則）；**And** 當前檢視者本人的投票列必須以獨立標記與其餘審核員區分，使少數方審核員無須自行比對即可得知自己的票落於哪一側；**And** 未對該項爭議提出差異意見的審核員（提交值與標記員一致）亦須列出，其票值顯示為與標記員相同之值。
 
+29. **AC-4.29（v4.26.0 新增，對應 FR-071，issue #455）**：**Given** 5 筆樣本 × 3 位標記員的 reviewer 任務（如 T014，`dry_run`），**When** 以 reviewer 身分進入 `annotation-workspace`，**Then** 左欄必須渲染 5 個分組容器（`ws-sample-group`，`role="group"`、`aria-label` 含樣本 ID 與標記員人數、`data-sample-id` 為該樣本 ID），每個分組內恰含 3 個審核單位項目（`ws-sample-item`），項目總數維持 15 且進度分母維持 15（FR-056 不變）；**And** 樣本文本摘要每個分組恰渲染一次（`ws-sample-group-snippet` 共 5 個），分組內的審核單位項目不得再各自渲染文本摘要（`.sample-item .sample-snippet` 為 0 個）；**And** 群組表頭樣本 ID 與項目內標記員帳號皆帶 `title` 屬性攜帶完整值；**And** 每個審核單位項目之 `aria-label` 同時包含樣本 ID 與標記員帳號，且項目維持原生 `<button>`（可 focus、按 `Enter` 即選取該單位）；**And** 目前選取項目之 `data-sample-id` 與 `data-annotator-id` 同時標示樣本與標記員，其所屬分組容器帶 `has-active` 標記；**And** `上一筆`／`下一筆` 仍逐一前進一個審核單位（同樣本內換標記員、跨樣本時進入下一組第一位），網址之 `sample_id`／`annotator_id`／`task_id`／`role`／`run_type` 契約完全不變（FR-057）；**And** 375px 下左欄依 AC-5.2 維持整欄收合、審核單位身分由 FR-064 脈絡橫幅承載，768px／1024px／一般 desktop 寬度下樣本 ID、標記員帳號與審核狀態皆可見且左欄無水平溢出；**And** annotator 視角不渲染任何分組容器、每筆樣本維持一個項目且保留逐項目文本摘要。
+
 **行為規則**：
 
 - 原型模式下，清單與工作區啟動上下文以 query + `TaskProfile` 查詢為主，不在頁面內做 API 權限判斷。
@@ -730,6 +732,18 @@ Reviewer 在 `run_type = official_run` 的工作區中，針對「目前標記�
   4. **中英文同步**：zh 與 en 兩份文案必須表達相同的三項語意（決策層級、`official_run` 重標待辦、`dry_run` 不回退），不得僅修正單一語言。
 
   本條僅約束說明文案，不改變 FR-014I 的回退機制、FR-051 狀態機，亦不改變決策控件本身的呈現——通過/退回按鈕在兩種 `run_type` 皆必須存在（見 AC-3.33、FR-014P）。
+- **FR-071**（v4.26.0 新增，對應 AC-4.29，issue #455）：**工作區左欄審核單位依樣本分組**。`annotation-workspace` reviewer 視角左欄依 FR-056 一列一個審核單位，同一樣本的 N 個審核單位必須包裹於一個以該樣本為範圍的分組容器中：
+
+  1. **分組容器**：每個樣本恰渲染一個分組容器（testid `ws-sample-group`，`data-sample-id` 攜帶該樣本 ID），其 `role="group"` 且 `aria-label` 必須同時包含樣本 ID 與該樣本的標記員人數，使分組同時是視覺與輔助科技可感知的結構，而非僅止於視覺線索（此為與 FR-068 之差異：`annotation-list` 受表格列結構限制，只能以邊框與弱化樣式表達分組）。
+  2. **群組表頭承載共用資訊**：分組表頭必須顯示該樣本 ID（testid `ws-sample-group-id`）、標記員人數（testid `ws-sample-group-count`）與該樣本的文本摘要（testid `ws-sample-group-snippet`）。文本摘要每個分組**恰渲染一次**——同一樣本的所有審核單位共用同一段原始文本，逐列重複渲染會讓最無鑑別度的內容占據最大視覺權重。
+  3. **群組內項目只承載差異資訊**：reviewer 視角的審核單位項目不得再各自渲染文本摘要（`sample-snippet`），改以「標記員帳號（主）· 樣本 ID（弱化）」與審核狀態標籤（`REVIEW_UNIT_STATUS` 五態，issue #309 既有規則）呈現；樣本 ID 保留於項目內、僅弱化樣式，使項目脫離群組脈絡時仍可自我描述。
+  4. **截斷值可還原**：左欄寬度固定（`--col-samples-width`），樣本 ID 與標記員帳號皆可能被 ellipsis 截斷，因此兩者與群組表頭樣本 ID 皆必須設定 `title` 屬性攜帶完整值。
+  5. **選取狀態同時標示樣本與標記員**：每個審核單位項目必須以 `data-sample-id` 與 `data-annotator-id` 屬性攜帶審核單位身分的兩半；目前選取項目所屬的分組容器必須另加標記（`has-active`），使選取位置於群組層級亦可辨識。
+  6. **可存取名稱**：reviewer 視角的審核單位項目必須設定 `aria-label`，內容同時包含樣本 ID、標記員帳號與該單位的審核狀態；項目本身維持原生 `<button>`（focus state 與 Enter／Space 啟用維持不變），`#sampleList` 之 `role="listbox"` 不變。
+  7. **不改變的部分**：審核單位資料模型維持 `sample × annotator × run_type`（FR-051），不合併任何審核紀錄；左欄項目總數、`上一筆`／`下一筆` 與進度分母的粒度（FR-056）、以及網址同步契約（FR-057）皆不受本條影響。annotator 視角每筆樣本本即一個項目、無重複文本，不適用本條分組規則，維持逐項目文本摘要。
+  8. **響應式**：`< 768px` 時左欄依 FR-018／AC-5.2 既有規則整欄收合，本條分組不改變該行為；該寬度下審核單位身分改由 FR-064 審核單位脈絡橫幅承載。`≥ 768px` 各寬度下樣本 ID、標記員帳號與審核狀態皆須可見且左欄不得產生水平溢出。
+
+  理由：T014（`dry_run`，5 樣本 × 3 標記員）左欄展開為 15 個高度相似的項目，同一段文本連續重複三次，真正用來區分審核單位的標記員帳號卻位於次要位置且常被截斷，審核員無從快速判斷自己是切換到「同一樣本的另一位標記員」還是「下一個樣本」。呈現層變更為主，不新增資料契約。
 - **FR-016**: 系統必須記錄每筆資料的標記歷程（操作者、時間、修改內容、對應輸出類型）。
 - **FR-016A**: Reviewer 在 Dry Run 與 Official Run 執行修正/刪除時，系統必須強制填寫審計理由並記錄。
 - **FR-016B**: 標記歷程必須於右欄 `歷程` 頁籤呈現，annotator 與 reviewer 視角皆可查看；同一樣本的 annotator 與 reviewer 事件（儲存/提交/決策）合併為單一時序清單，每筆事件包含操作者角色、時間、動作與對應輸出類型作答摘要，最新事件在前；尚無紀錄時顯示空狀態文案。**v4.9.0 修訂**：合併清單納入 reviewer 事件時受 FR-062 盲審隔離約束——僅納入已提交之審核事件與檢視者本人的草稿事件，其他審核員未提交的事件不得納入。
@@ -941,6 +955,7 @@ flowchart LR
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 4.26.0 | 2026-08-26 | **工作區左欄審核單位依樣本分組**（issue #455）：`annotation-workspace` reviewer 左欄依 FR-056 一列一個審核單位，T014（`dry_run`，5 樣本 × 3 標記員）因此展開為 15 個高度相似的項目——同一段文本摘要連續重複三次且占據最大視覺權重，真正用來區分審核單位的標記員帳號卻在次要行且於 256px 欄寬下被 ellipsis 截斷，審核員無法快速判斷自己是切換到「同一樣本的另一位標記員」還是「下一個樣本」。新增 **FR-071**、**AC-4.29**：同一樣本的審核單位包在一個 `role="group"` 分組容器（`ws-sample-group`）內，樣本 ID（`ws-sample-group-id`）、標記員人數（`ws-sample-group-count`）與文本摘要（`ws-sample-group-snippet`）移至分組表頭且文本摘要每組只渲染一次；群組內項目改以「標記員帳號（主）· 樣本 ID（弱化）」加審核狀態呈現，並以 `title` 還原被截斷的完整值、以 `aria-label` 提供含樣本與標記員的可存取名稱、以 `data-sample-id`／`data-annotator-id`（及分組容器的 `has-active`）標示目前選取的審核單位兩半。與 FR-068（`annotation-list` 同樣本分組）的差異在於載體：清單受表格列結構限制只能用邊框與弱化樣式，工作區左欄可用真正的分組容器，因此分組同時對輔助科技可感知。**刻意不改變**：審核單位資料模型維持 `sample × annotator × run_type`（FR-051，不合併任何審核紀錄）、左欄項目總數與 `上一筆`／`下一筆` 及進度分母粒度（FR-056）、網址同步契約（FR-057）、`#sampleList` 的 `role="listbox"` 與項目的原生 `<button>` 語意；annotator 視角完全不受影響（每筆樣本一個項目、保留逐項目文本摘要）。**響應式**：`< 768px` 沿用 AC-5.2 整欄收合，該寬度下身分資訊由 FR-064 脈絡橫幅承載。原型：`annotation-workspace.config.js` 新增 `buildSampleGroup()` 並改寫 `renderSampleList()` 的 reviewer 分支、`annotation-workspace.html` 新增 `.sample-group*` 樣式（僅重用既有 token `--color-border`／`--color-ink-muted`／`--color-text-soft`／`--color-primary`，未新增顏色或元件）；新增 12 個 Playwright 測試（`issue-455-workspace-unit-grouping.spec.ts`：分組結構、文本摘要去重、`title` 還原、可存取名稱、選取標示、翻頁粒度與 URL 契約、鍵盤操作、768／1024／1440 響應式與 375px 收合、annotator 視角不變）。**編號依存**：本版號 `4.26.0` 與 `FR-071` 為平行 issue 批次預先配號（`4.25.0`／`FR-070` 由同批另一 PR 取用）；`AC-4.29` 接續本檔 `AC-4.x` 現有最大編號 `AC-4.28`，若同批另有 PR 亦取用 `AC-4.x` 則以先合併者為準、後者重新編號。 |
 | 4.25.0 | 2026-08-26 | **審核決策說明文案改為與各 `run_type` 真實效果一致**（issue #451）：`reviewNote`（`ws-review-note`）此前在 `dry_run` 與 `official_run` 皆顯示「通過：此筆標記有效。退回：該標記狀態會回到未標記，標記員需要重新標記。」，但 FR-014I 的狀態回退自 v3.0.0 起即收斂為 `official_run` 專屬（AC-3.15、AC-6.4），既有回歸測試 `issue-192-dry-run-reject-guard.spec.ts` 亦已證明 `dry_run` 退回後標記員 submission 維持 `submitted`——介面因此對試標審核員承諾了一個永不發生的狀態轉換。新增 **FR-070**、**AC-3.40**：文案必須分開陳述「審核決策」與「回退標記員狀態」兩個層級，明文寫出 `official_run` 退回產生標記員重標待辦、`dry_run` 退回不改變標記員狀態（品質問題交由 IAA 閘門與下一輪試標），且 zh／en 同步。刻意**不**依 `run_type` 切換兩份文案：AC-3.33 禁止審核卡出現任何 `run_type` 呈現分支，故採單一 run-type-invariant 字串，與 sidebar 快捷鍵標籤（issue #409 已改為「退回目前結果（回退標記員狀態僅限正式標記）」）同一措辭策略；通過/退回按鈕在兩種 `run_type` 皆維持渲染，不受本條影響。**FR-014I 機制與 FR-051 狀態機未變**，本版僅修正呈現層文案。原型：`annotation-workspace.config.js` 之 zh／en `reviewNote` 兩處字串（無邏輯變更）。新增 Playwright 回歸測試 `issue-451-reject-copy-run-type.spec.ts`（7 個測試：dry_run／official_run 文案、決策與回退分層措辭、跨 run_type 文案同一性、en 同步、以及兩種 `run_type` 退回送出後的真實 submission 狀態）；`issue-399-review-decision-a11y.spec.ts` 的文案逐字斷言改為以 `ws-review-note` testid 斷言「已渲染且非空」，避免同一段文案由兩個 spec 各自複寫。**編號依存**：本版基於 4.24.0（`FR-069`／`AC-4.28`，issue #403）編號為 `4.25.0`／`FR-070`；`AC-3.40` 接續本規格既有最大 `AC-3.39`，`AC-3.x` 系列自 v4.0.0 起即為兩種 `run_type` 共用審核卡的契約所在（AC-3.33／AC-3.37～AC-3.39 皆非 `dry_run` 專屬）。 |
 | 4.24.0 | 2026-08-26 | **已定稿審核卡新增逐位審核員投票明細**（issue #403）：`renderFinalizedCard()` 此前對每個已解決爭議項僅渲染最終收斂／仲裁值（如「single_label：positive（已依審核員多數決收斂）」），少數方審核員無法直接得知自己與其他審核員各投了什麼，只能自行比對記憶。新增 **FR-069**、**AC-4.28**：每個已解決爭議項下方逐位列出全部已提交審核員之帳號與投票值（testid `ws-finalized-vote`），推導規則與 FR-061 `DISPUTE_CONVERGENCE_RULE` 完全同源（出現於 `reviewerValues` 者即該值，其餘已提交審核員視為與 `annotatorValue` 一致），視覺樣式直接重用仲裁版面既有的「識別符・角色：值」呈現（不新建元件／CSS），並以獨立標記區分當前檢視者本人的那一票。原型：`annotation-workspace.config.js` 新增 `buildFinalizedVoteRow()` / `buildFinalizedVoteRows()`，`renderFinalizedCard()` 改為保留完整 `reviewerSubmissions` 陣列（原僅取用其 `.length`）以供逐位渲染；新增 Playwright 回歸測試 `issue-403-finalized-vote-breakdown.spec.ts`（以既有種子 T016/`ofm-04-majority-converged` 驗證少數方與多數方視角）。**編號依存（issue #403 任務指派時已知的跨 PR 保留序號）**：本版號 `4.24.0` 與 `FR-069` 假設 #438（4.21.2）／#445（4.21.3）／#437（4.22.0，FR-067）／#441（4.23.0，FR-068）依序保留其各自版號與 FR 編號區間；本 PR 須於 #441 合併之後才可合併，若合併順序反轉則版號與 FR 編號須重新調整，不可逕行套用。`AC-4.28` 不在此依存範圍內——#437／#441 取用的是 `AC-1.20`／`AC-1.21`（使用者故事 1 的清單導覽系列），與本條所屬的 `AC-4.x` 爭議／仲裁系列互不重疊；本條依內容主題（FR-059 `reviewerValues` 推導、FR-061 收斂與仲裁）編入 `AC-4.x`，接續現有最大編號 `AC-4.27`。 |
 | 4.23.0 | 2026-08-26 | **審核清單同樣本審核單位列的視覺分組**（issue #407）：T014（`dry_run`，5 樣本 × 3 標記員 = 15 列）等多標記員任務下，`annotation-list` reviewer 視圖同一樣本展開的連續審核單位列（FR-055）彼此無任何分組線索，隨標記員數／`min_reviewers` 增加，掃讀成本線性上升。新增 **FR-068**、**AC-1.21**：每組第一列標記 `data-group-start="true"` 並以上邊框（重用既有 `--color-border` token）與前一組區隔；同組後續列的樣本 ID 儲存格（新增 `list-review-id` testid）套用 `list-review-id-muted`（重用既有 `--color-ink-muted` token）弱化樣式，文字內容不變。刻意不採全列底色分組（`--color-slate-50` 已用於既有 hover 狀態，會與 hover 回饋衝突）、不省略或隱藏續行 ID 文字（`annotation-review-flow-demo-rows.spec.ts` 既有斷言仰賴每列皆可見完整 ID 文字）。單一標記員任務（如 T015）每列皆為分組第一列，`data-group-start` 恆為 `true` 且不套用弱化樣式，行為不變。原型：僅修改 `renderReviewerRows()` 與既有 `<style>` 區塊，未新增元件；annotator 視圖與工作區皆不受影響。新增 3 個 Playwright 測試（`issue-407-review-unit-grouping.spec.ts`：T014 分組邊界、續行弱化樣式與 ID 文字保留、T015 單標記員全數為分組起始且無弱化）。**編號依存**：本版基於 PR #437（issue #402）已建立的 4.22.0（`FR-067`／`AC-1.20`）而編號至 `FR-068`／`AC-1.21`／`4.23.0`，避免兩條平行分支自同一 4.21.1 基準各自新增 `FR-067`／`AC-1.20` 造成穩定 ID 撞號；本 PR 須在 #437 之後合併，若合併順序顛倒，需重新編號回 `FR-067`／`AC-1.20`／`4.22.0`。 |
