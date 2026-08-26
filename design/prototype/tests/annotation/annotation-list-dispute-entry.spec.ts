@@ -82,7 +82,7 @@ test.describe('爭議中 filter: positive path', () => {
 
     const rows = page.getByTestId('ws-sample-item');
     await expect(rows).toHaveCount(1);
-    await expect(rows.first().locator('.status-badge')).toHaveText('爭議中');
+    await expect(rows.first().locator('.status-badge')).toHaveText('爭議中 · 未定稿');
     await expect(rows.first().getByTestId('list-review-annotator')).toHaveText(ANNOTATOR);
   });
 });

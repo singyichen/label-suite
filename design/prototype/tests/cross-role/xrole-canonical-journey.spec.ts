@@ -784,12 +784,12 @@ test('XROLE-17: the arbitrate entry is offered only to the eligible non-particip
   // row only; the two finalized rows keep the plain edit entry.
   await r03Page.goto(buildListUrl({ task_id: fixtureTaskId, role: 'reviewer', run_type: 'official_run', reviewer_id: ARBITER_R03 }));
   const disputedRow = r03Page.getByTestId('ws-sample-item').filter({ hasText: FORCED_DIVERGENCE_RECORD_ID });
-  await expect(disputedRow.locator('.status-badge')).toHaveText('爭議中');
+  await expect(disputedRow.locator('.status-badge')).toHaveText('爭議中 · 未定稿');
   await expect(disputedRow.getByTestId('list-review-annotator')).toHaveText(divergenceAnnotator);
   await expect(disputedRow.getByTestId('list-arbitrate-entry')).toHaveText('仲裁');
   for (const finalizedId of ['xr-off-001', 'xr-off-003']) {
     const row = r03Page.getByTestId('ws-sample-item').filter({ hasText: finalizedId });
-    await expect(row.locator('.status-badge')).toHaveText('已定稿');
+    await expect(row.locator('.status-badge')).toHaveText('已定稿 · 已鎖定');
     await expect(row.getByTestId('list-arbitrate-entry')).toHaveCount(0);
   }
 
@@ -843,7 +843,7 @@ test('XROLE-19: checkpoint E -- the arbitrated unit reads as finalized across pa
   await r01Page.goto(buildListUrl({ task_id: fixtureTaskId, role: 'reviewer', run_type: 'official_run', reviewer_id: REVIEWER_R01 }));
   await expect(
     r01Page.getByTestId('ws-sample-item').filter({ hasText: FORCED_DIVERGENCE_RECORD_ID }).locator('.status-badge')
-  ).toHaveText('已定稿');
+  ).toHaveText('已定稿 · 已鎖定');
 
   /* PL-side annotation-results panel: the journey's live arbitration
    * outcome still cannot reach this panel (the remaining prototype gap,
