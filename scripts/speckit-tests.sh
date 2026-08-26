@@ -1421,6 +1421,31 @@ SPEC
     assert_command_fails_with "$repo" 1 "SPEC_REQUIRED_HEADING" "specs/dataset/002-near-match-heading/spec.md"
 }
 
+test_check_sdd_baseline_cannot_suppress_spec_ready_required_heading() {
+    local repo
+    repo="$(make_sdd_repo)"
+    mkdir -p "$repo/specs/dataset/002-baseline-bypass"
+    cat > "$repo/specs/dataset/002-baseline-bypass/spec.md" <<'SPEC'
+# Baseline-listed spec-ready dataset feature
+
+## 功能目標 BAD
+
+Define a new dataset behavior before proposal.
+
+## 規格相依性
+
+None.
+
+### FR-001
+### SC-001
+### AC-1.1
+SPEC
+    printf '| dataset-002 | Baseline-listed dataset feature | dataset | `spec-ready` | `feat/dataset/002-baseline-bypass` | fixture |\n' >> "$repo/specs/STATUS.md"
+    printf 'LEGACY_SPEC_HEADING\tspecs/dataset/002-baseline-bypass/spec.md\tmissing:## 功能目標\n' >> "$repo/scripts/sdd-lint-baseline.txt"
+
+    assert_command_fails_with "$repo" 1 "SPEC_REQUIRED_HEADING" "specs/dataset/002-baseline-bypass/spec.md"
+}
+
 test_check_sdd_rejects_arbitrary_dependency_heading_suffix() {
     local repo
     repo="$(make_sdd_repo)"
@@ -1572,6 +1597,7 @@ test_check_sdd_accepts_archived_canonical_spec_location
 test_check_sdd_fails_for_spec_ready_spec_without_required_ids
 test_check_sdd_fails_when_archived_status_has_active_canonical_duplicate
 test_check_sdd_fails_for_spec_ready_near_match_goal_heading_without_ids
+test_check_sdd_baseline_cannot_suppress_spec_ready_required_heading
 test_check_sdd_rejects_arbitrary_dependency_heading_suffix
 test_check_sdd_accepts_approved_dependency_heading_suffix
 test_check_sdd_rejects_suffixed_source_verify_id
