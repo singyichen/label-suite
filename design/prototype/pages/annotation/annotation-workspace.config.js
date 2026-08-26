@@ -3080,6 +3080,12 @@
     renderSampleList();
     renderSampleNav();
     renderHistoryPanel();
+    /* issue #401: submitting can finalize the unit (e.g. the first review on
+       a min_reviewers=1 unit) -- without re-rendering, the context banner and
+       card stay on their pre-submit state until a manual reload, and a
+       second click on the now-stale submit button silently no-ops against
+       the FINALIZED guard above with no feedback at all. */
+    renderReviewerWorkspace();
     showToast(t('wsReviewSubmitSuccess'));
   }
 
