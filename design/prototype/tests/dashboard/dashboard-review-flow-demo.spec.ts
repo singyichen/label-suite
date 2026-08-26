@@ -15,6 +15,11 @@
  *     1 disputed + 2 more units are still unfinalized — must disclose
  *     未定稿 3 · 爭議 1 instead of reading as a completed task.
  *
+ * Issue #450: these summaries are no longer the seed's prebuilt display
+ * string — computeReviewSummary() derives them from the stored review-unit
+ * state, so every non-zero counter (待審 / 未定稿 / 爭議) now appears under
+ * one shared rule instead of being hand-written per demo task.
+ *
  * Traceability: specs/dashboard/012-dashboard/spec.md
  *   FR-010B, FR-011B1, FR-011D, FR-011E, SC-016
  */
@@ -36,15 +41,15 @@ const DEMO_TASKS = [
     id: 'T014',
     runType: 'dry_run',
     runTypeBadge: '試標',
-    reviewerSummaryZh: '待審 6 筆 · 審核覆蓋率 60% · IAA 0.72',
-    reviewerSummaryEn: '6 Pending · 60% Review Coverage · IAA 0.72',
+    reviewerSummaryZh: '待審 6 筆 · 審核覆蓋率 60% · 未定稿 8 筆 · 爭議 2 筆 · IAA 0.72',
+    reviewerSummaryEn: '6 Pending · 60% Review Coverage · 8 Unfinalized · 2 Disputed · IAA 0.72',
   },
   {
     id: 'T015',
     runType: 'official_run',
     runTypeBadge: '正式標記',
-    reviewerSummaryZh: '待審 1 筆 · 審核覆蓋率 75% · IAA 0.81',
-    reviewerSummaryEn: '1 Pending · 75% Review Coverage · IAA 0.81',
+    reviewerSummaryZh: '待審 1 筆 · 審核覆蓋率 75% · 未定稿 2 筆 · 爭議 1 筆 · IAA 0.81',
+    reviewerSummaryEn: '1 Pending · 75% Review Coverage · 2 Unfinalized · 1 Disputed · IAA 0.81',
   },
   {
     id: 'T016',
@@ -57,8 +62,8 @@ const DEMO_TASKS = [
     id: 'T017',
     runType: 'official_run',
     runTypeBadge: '正式標記',
-    reviewerSummaryZh: '待審 1 筆 · 審核覆蓋率 80% · IAA 0.70',
-    reviewerSummaryEn: '1 Pending · 80% Review Coverage · IAA 0.70',
+    reviewerSummaryZh: '待審 1 筆 · 審核覆蓋率 80% · 未定稿 4 筆 · 爭議 1 筆 · IAA 0.70',
+    reviewerSummaryEn: '1 Pending · 80% Review Coverage · 4 Unfinalized · 1 Disputed · IAA 0.70',
   },
 ] as const;
 
