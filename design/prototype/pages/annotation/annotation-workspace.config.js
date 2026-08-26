@@ -65,6 +65,14 @@
       wsArbitrationSubmitSuccess: '仲裁已提交',
       arbitrationChoiceA: 'A・標記員',
       arbitrationChoiceB: 'B・審核員',
+      arbitrationQuorum: '已提交審核員 {x} 位 · 定稿門檻 {n} 位 · 嚴格多數需 > {th} 票',
+      arbitrationVoteTally: '{value}：{count} 票（{pct}%）',
+      arbitrationVoteAnnotator: '標記員原答案',
+      arbitrationVoteDistSep: '：',
+      arbitrationVoteReasonEvenTie: '未收斂原因：{dist} 平手，沒有值取得嚴格多數（需 > {th} 票）',
+      arbitrationVoteReasonAllDivergent: '未收斂原因：{dist} 全數分歧，沒有值取得嚴格多數（需 > {th} 票）',
+      arbitrationVoteReasonNoMajority: '未收斂原因：票數分布 {dist}，沒有值取得嚴格多數（需 > {th} 票）',
+      arbitrationVoteReasonSingleReviewer: '未收斂原因：僅 1 位審核員提出異議，單一審核員不足以推翻標記員答案',
       historyActionOverridden: '已覆寫',
       historyActionGoldConfirmed: '已確認標準答案',
       historyActionGoldReopened: '重新開放標準答案',
@@ -138,6 +146,14 @@
       wsArbitrationSubmitSuccess: 'Arbitration submitted',
       arbitrationChoiceA: 'A · Annotator',
       arbitrationChoiceB: 'B · Reviewer',
+      arbitrationQuorum: 'Submitted reviewers {x} · finalization threshold {n} · strict majority needs > {th} votes',
+      arbitrationVoteTally: '{value}: {count} votes ({pct}%)',
+      arbitrationVoteAnnotator: "annotator's original answer",
+      arbitrationVoteDistSep: ' : ',
+      arbitrationVoteReasonEvenTie: 'Not converged: {dist} tie, no value reached a strict majority (needs > {th} votes)',
+      arbitrationVoteReasonAllDivergent: 'Not converged: {dist} all divergent, no value reached a strict majority (needs > {th} votes)',
+      arbitrationVoteReasonNoMajority: 'Not converged: vote split {dist}, no value reached a strict majority (needs > {th} votes)',
+      arbitrationVoteReasonSingleReviewer: 'Not converged: only one reviewer dissented, and a single reviewer cannot outvote the annotator',
       historyActionOverridden: 'Overridden',
       historyActionGoldConfirmed: 'Gold confirmed',
       historyActionGoldReopened: 'Gold reopened',
@@ -2711,6 +2727,54 @@
     return item.key === item.outKey ? item.outKey : item.outKey + ' · ' + item.key;
   }
 
+  /* Pre-decision dispute context (issue #454, FR-074): the A/B buttons alone
+     never said WHY the item is unresolved, so a 1:1 tie and a not-yet-met
+     quorum looked identical. Renders the aggregate tally and the failed
+     strict-majority condition derived by describeDisputeVotes() -- the same
+     derivation resolveDisputeConvergence() decides on, so the explanation
+     can never contradict the verdict. Aggregate only: no reviewer id or name
+     is ever attributed to a value, so the block is safe under blind review
+     (FR-062), and only submitted answers feed it (Data Fairness). */
+  var ARBITRATION_REASON_I18N_KEYS = {
+    even_tie: 'arbitrationVoteReasonEvenTie',
+    all_divergent: 'arbitrationVoteReasonAllDivergent',
+    no_majority: 'arbitrationVoteReasonNoMajority',
+    single_reviewer: 'arbitrationVoteReasonSingleReviewer',
+  };
+
+  function buildArbitrationVotesBlock(votes) {
+    var block = document.createElement('div');
+    block.setAttribute('data-testid', 'ws-arbitration-votes');
+    block.style.cssText = 'font-size:12px;color:var(--color-text-soft);margin-bottom:6px;';
+    votes.candidates.forEach(function (candidate) {
+      var label = formatDisputeValue(candidate.value);
+      var row = document.createElement('div');
+      row.setAttribute('data-testid', 'ws-arbitration-vote-tally');
+      row.setAttribute('data-value', label);
+      row.setAttribute('data-count', String(candidate.count));
+      if (candidate.isAnnotatorValue) row.setAttribute('data-annotator', 'true');
+      row.textContent = t('arbitrationVoteTally')
+        .replace('{value}', label)
+        .replace('{count}', String(candidate.count))
+        .replace('{pct}', String(votes.reviewerCount
+          ? Math.round((candidate.count / votes.reviewerCount) * 100)
+          : 0))
+        + (candidate.isAnnotatorValue ? ' · ' + t('arbitrationVoteAnnotator') : '');
+      block.appendChild(row);
+    });
+    var reason = document.createElement('div');
+    reason.setAttribute('data-testid', 'ws-arbitration-vote-reason');
+    reason.setAttribute('data-reason', votes.reason);
+    reason.style.cssText = 'margin-top:4px;';
+    reason.textContent = t(ARBITRATION_REASON_I18N_KEYS[votes.reason])
+      .replace('{dist}', votes.candidates.map(function (candidate) {
+        return String(candidate.count);
+      }).join(t('arbitrationVoteDistSep')))
+      .replace('{th}', String(votes.majorityThreshold));
+    block.appendChild(reason);
+    return block;
+  }
+
   function buildArbitrationChoiceButton(testid, label, value, onSelect) {
     var btn = document.createElement('button');
     btn.type = 'button';
@@ -2722,7 +2786,7 @@
     return btn;
   }
 
-  function buildArbitrationItemRow(item) {
+  function buildArbitrationItemRow(item, votes) {
     var itemId = disputeItemId(item);
     var row = document.createElement('div');
     row.setAttribute('data-testid', 'ws-arbitration-item');
@@ -2732,6 +2796,7 @@
     label.style.cssText = 'font-size:12px;font-weight:600;margin-bottom:6px;';
     label.textContent = disputeItemLabel(item);
     row.appendChild(label);
+    row.appendChild(buildArbitrationVotesBlock(votes));
 
     var group = document.createElement('div');
     group.className = 'rv-choice-group';
@@ -2828,6 +2893,23 @@
     note.textContent = t('arbitrationNote');
     card.appendChild(note);
 
+    var reviewerCount = data.readReviewerSubmissions(
+      currentProfile.id, currentRunType, currentSampleId, currentIdentity
+    ).length;
+
+    /* Submitted reviewers against the finalization threshold (issue #454):
+       without it "2 reviewers disagreed" and "the quorum is not met yet"
+       render identically, and the arbiter cannot tell which one they are
+       resolving. */
+    var quorum = document.createElement('div');
+    quorum.setAttribute('data-testid', 'ws-arbitration-quorum');
+    quorum.style.cssText = 'font-size:12px;color:var(--color-text-soft);margin:0 0 10px;';
+    quorum.textContent = t('arbitrationQuorum')
+      .replace('{x}', String(reviewerCount))
+      .replace('{n}', String(currentProfile.minReviewers || 1))
+      .replace('{th}', String(reviewerCount / 2));
+    card.appendChild(quorum);
+
     /* Read-only context: the annotator's full answers, so the arbiter sees
        the agreed parts around each disputed value. */
     var agreedTitle = document.createElement('div');
@@ -2845,9 +2927,6 @@
     var items = data.getDisputeItems(
       currentProfile.id, currentRunType, currentSampleId, currentIdentity, state.selectedOutputTypes
     );
-    var reviewerCount = data.readReviewerSubmissions(
-      currentProfile.id, currentRunType, currentSampleId, currentIdentity
-    ).length;
     var arbState = data.getArbitrationState(currentProfile.id, currentRunType, currentSampleId, currentIdentity);
     var openItemIds = [];
     items.forEach(function (item) {
@@ -2866,7 +2945,7 @@
         return;
       }
       openItemIds.push(disputeItemId(item));
-      card.appendChild(buildArbitrationItemRow(item));
+      card.appendChild(buildArbitrationItemRow(item, data.describeDisputeVotes(item, reviewerCount)));
     });
 
     if (openItemIds.length) {

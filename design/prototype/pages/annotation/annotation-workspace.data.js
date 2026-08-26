@@ -1939,26 +1939,91 @@
     return JSON.stringify(value);
   }
 
+  /* The tally itself, extracted so the convergence verdict and the
+   * pre-decision context an arbiter reads (describeDisputeVotes, FR-074)
+   * can never disagree about who voted for what -- one derivation, two
+   * consumers. Returns [{ value, count, isAnnotatorValue }] in A-then-B
+   * order (the annotator's value first, mirroring the arbitration card's
+   * A/B buttons), with zero-vote candidates dropped: when every reviewer
+   * dissented, the annotator's value is nobody's vote and must not be
+   * offered as a 0-vote candidate. */
+  function tallyDisputeVotes(item, reviewerCount) {
+    var tally = {};
+    var values = {};
+    var order = [];
+    function vote(value, count) {
+      var key = valueKey(value);
+      if (!Object.prototype.hasOwnProperty.call(tally, key)) {
+        order.push(key);
+        values[key] = value;
+        tally[key] = 0;
+      }
+      tally[key] += count;
+    }
+    var reviewerIds = Object.keys(item.reviewerValues);
+    var annotatorKey = valueKey(item.annotatorValue);
+    vote(item.annotatorValue, reviewerCount - reviewerIds.length);
+    reviewerIds.forEach(function (reviewerId) {
+      vote(item.reviewerValues[reviewerId], 1);
+    });
+    return order
+      .filter(function (key) { return tally[key] > 0; })
+      .map(function (key) {
+        return { value: values[key], count: tally[key], isAnnotatorValue: key === annotatorKey };
+      });
+  }
+
   function resolveDisputeConvergence(item, reviewerCount) {
     /* A single reviewer's dissent can never outvote the annotator, even
        though 1 > 1/2 is technically a strict majority. */
     if (reviewerCount < 2) return { converged: false };
-    var tally = {};
-    var values = {};
-    function vote(value, count) {
-      var key = valueKey(value);
-      tally[key] = (tally[key] || 0) + count;
-      values[key] = value;
-    }
-    var reviewerIds = Object.keys(item.reviewerValues);
-    reviewerIds.forEach(function (reviewerId) {
-      vote(item.reviewerValues[reviewerId], 1);
-    });
-    vote(item.annotatorValue, reviewerCount - reviewerIds.length);
-    var winner = Object.keys(tally).filter(function (key) {
-      return tally[key] > reviewerCount / 2;
+    var winner = tallyDisputeVotes(item, reviewerCount).filter(function (candidate) {
+      return candidate.count > reviewerCount / 2;
     })[0];
-    return winner ? { converged: true, value: values[winner] } : { converged: false };
+    return winner ? { converged: true, value: winner.value } : { converged: false };
+  }
+
+  /* ---- Pre-decision dispute context (spec 015 v4.29.0, issue #454) -------
+   * Why one dispute item failed to converge, in the arbiter's terms. The
+   * arbitration card used to render two bare candidate values, so a 1:1 tie
+   * and an unmet quorum looked identical. This exposes the same numbers
+   * resolveDisputeConvergence() decides on -- candidate tallies, the strict
+   * majority threshold (> N/2) and which non-convergence shape applies:
+   *   single_reviewer N < 2 -- one dissenting reviewer cannot outvote the
+   *                   annotator even though 1 > 1/2 holds arithmetically,
+   *                   so this case must NOT be explained as "> N/2 unmet"
+   *   even_tie      exactly two candidate values share the lead (1:1, 2:2)
+   *   all_divergent three or more candidates with one vote each (1/1/1)
+   *   no_majority   anything else short of a strict majority
+   * The two-candidate case is classified as a tie BEFORE the all-divergent
+   * check so N=2 (where both shapes technically hold) reads as 平手, the
+   * distinction the arbiter actually acts on.
+   *
+   * Candidate identity is deliberately absent: the tally is an aggregate,
+   * never "reviewer X voted Y", so it is safe to render under any
+   * blind-review setting (FR-062). Only submitted answers feed it -- no
+   * gold/ground-truth column is read (Data Fairness). */
+  function describeDisputeVotes(item, reviewerCount) {
+    var candidates = tallyDisputeVotes(item, reviewerCount);
+    var converged = resolveDisputeConvergence(item, reviewerCount).converged;
+    var leadCount = candidates.reduce(function (max, candidate) {
+      return Math.max(max, candidate.count);
+    }, 0);
+    var leaders = candidates.filter(function (candidate) { return candidate.count === leadCount; });
+    var reason = null;
+    if (!converged) {
+      if (reviewerCount < 2) reason = 'single_reviewer';
+      else if (candidates.length === 2 && leaders.length === 2) reason = 'even_tie';
+      else if (candidates.length >= 3 && leaders.length === candidates.length) reason = 'all_divergent';
+      else reason = 'no_majority';
+    }
+    return {
+      reviewerCount: reviewerCount,
+      majorityThreshold: reviewerCount / 2,
+      candidates: candidates,
+      converged: converged,
+      reason: reason,
+    };
   }
 
   /* ---- Reviewer task summary (spec 015 v4.27.0 FR-072, issue #450) ------
@@ -2271,5 +2336,6 @@
     getArbitrationState: getArbitrationState,
     submitArbitration: submitArbitration,
     resolveDisputeConvergence: resolveDisputeConvergence,
+    describeDisputeVotes: describeDisputeVotes,
   };
 })(window);
