@@ -823,6 +823,44 @@ test_check_sdd_fails_for_explicit_multi_file_task() {
     assert_command_fails_with "$repo" 1 "TASK_EXCEPTION" "openspec/changes/project-sdd-lint/tasks.md"
 }
 
+test_check_sdd_accepts_english_negative_task_clauses() {
+    local output repo status
+
+    repo="$(make_sdd_repo)"
+    output="$(mktemp "$TMP_ROOT/check-sdd-negative-task.XXXXXX")"
+    printf '\n- [ ] 1.3 Modify `scripts/a.sh`，do not modify `scripts/b.sh`. [@senior-devops]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+
+    if run_check_sdd "$repo" >"$output" 2>&1; then
+        status=0
+    else
+        status=$?
+    fi
+    if [[ "$status" -ne 0 ]]; then
+        echo "Expected do-not-modify task lint to exit 0, got: $status" >&2
+        cat "$output" >&2
+        exit 1
+    fi
+    assert_contains "$output" "Project SDD lint: 0 error(s), 3 warning(s)"
+    assert_not_contains "$output" "TASK_EXCEPTION"
+
+    repo="$(make_sdd_repo)"
+    output="$(mktemp "$TMP_ROOT/check-sdd-negative-task.XXXXXX")"
+    printf '\n- [ ] 1.3 Modify `scripts/a.sh`；must not modify `scripts/b.sh`. [@senior-devops]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+
+    if run_check_sdd "$repo" >"$output" 2>&1; then
+        status=0
+    else
+        status=$?
+    fi
+    if [[ "$status" -ne 0 ]]; then
+        echo "Expected must-not-modify task lint to exit 0, got: $status" >&2
+        cat "$output" >&2
+        exit 1
+    fi
+    assert_contains "$output" "Project SDD lint: 0 error(s), 3 warning(s)"
+    assert_not_contains "$output" "TASK_EXCEPTION"
+}
+
 test_check_sdd_fails_without_exact_spec_declaration() {
     local repo
     repo="$(make_sdd_repo)"
@@ -869,6 +907,7 @@ test_check_sdd_inventory_uses_target_root_generator
 test_check_sdd_fails_for_near_match_goal_heading
 test_check_sdd_fails_for_malformed_baseline_rows
 test_check_sdd_fails_for_explicit_multi_file_task
+test_check_sdd_accepts_english_negative_task_clauses
 test_check_sdd_fails_without_exact_spec_declaration
 test_check_sdd_fails_for_status_module_mismatch
 
