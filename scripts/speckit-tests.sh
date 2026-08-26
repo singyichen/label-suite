@@ -1316,6 +1316,50 @@ test_check_sdd_fails_for_status_module_mismatch() {
     assert_command_fails_with "$repo" 1 "STATUS_ARTIFACT_SYNC" "specs/STATUS.md"
 }
 
+test_check_sdd_accepts_archived_canonical_spec_location() {
+    local repo
+    repo="$(make_sdd_repo)"
+    mkdir -p "$repo/specs/_archive/002-finished"
+    cat > "$repo/specs/_archive/002-finished/spec.md" <<'SPEC'
+# Archived dataset fixture
+
+## 功能目標
+
+Preserve a completed dataset feature contract.
+
+## 規格相依性
+
+None.
+
+### FR-001
+### SC-001
+### AC-1.1
+SPEC
+    printf '| dataset-002 | Finished dataset feature | dataset | `archived` | `main` | fixture |\n' >> "$repo/specs/STATUS.md"
+
+    assert_command_succeeds "$repo" --not-rule STATUS_ARTIFACT_SYNC
+}
+
+test_check_sdd_fails_for_spec_ready_spec_without_required_ids() {
+    local repo
+    repo="$(make_sdd_repo)"
+    mkdir -p "$repo/specs/dataset/002-new-feature"
+    cat > "$repo/specs/dataset/002-new-feature/spec.md" <<'SPEC'
+# New dataset feature
+
+## 功能目標
+
+Define a new dataset behavior before proposal.
+
+## 規格相依性
+
+None.
+SPEC
+    printf '| dataset-002 | New dataset feature | dataset | `spec-ready` | `feat/dataset/002-new-feature` | fixture |\n' >> "$repo/specs/STATUS.md"
+
+    assert_command_fails_with "$repo" 1 "SPEC_REQUIRED_IDS" "specs/dataset/002-new-feature/spec.md"
+}
+
 test_check_sdd_rejects_arbitrary_dependency_heading_suffix() {
     local repo
     repo="$(make_sdd_repo)"
@@ -1463,6 +1507,8 @@ test_check_sdd_fails_for_explicit_multi_file_task
 test_check_sdd_accepts_english_negative_task_clauses
 test_check_sdd_fails_without_exact_spec_declaration
 test_check_sdd_fails_for_status_module_mismatch
+test_check_sdd_accepts_archived_canonical_spec_location
+test_check_sdd_fails_for_spec_ready_spec_without_required_ids
 test_check_sdd_rejects_arbitrary_dependency_heading_suffix
 test_check_sdd_accepts_approved_dependency_heading_suffix
 test_check_sdd_rejects_suffixed_source_verify_id
