@@ -288,6 +288,20 @@
     return entryStatus(entry) === 'submitted' ? entry.submittedAt || null : null;
   }
 
+  /* issue #470: the bottom-bar autosave indicator's SAVED state reads the
+     time of an actually persisted write, never a fabricated one. A 'saved'
+     or 'submitted' entry both count as real persistence; savedAt wins when
+     both are present (handleSave can re-save an already-submitted sample).
+     'pending' (including a reviewer-rejected sample awaiting reannotation)
+     deliberately returns null -- it has no persisted write that reflects
+     the sample's current state. */
+  function getSampleSavedAt(taskId, role, runType, sampleId, identity) {
+    var entry = readSampleEntry(taskId, role, runType, sampleId, identity);
+    var status = entryStatus(entry);
+    if (status !== 'saved' && status !== 'submitted') return null;
+    return (entry && (entry.savedAt || entry.submittedAt)) || null;
+  }
+
   /* Per-sample history events (FR-016 / AC-3.8): every save/submit appends
      {action, role, actorId, at, summary} onto the entry, so the right-column
      歷程 tab can trace who did what and when. v3.8.0 adds `actorId` (FR-050):
@@ -2314,6 +2328,7 @@
     isSampleSubmitted: isSampleSubmitted,
     getSampleStatus: getSampleStatus,
     getSampleSubmittedAt: getSampleSubmittedAt,
+    getSampleSavedAt: getSampleSavedAt,
     markSampleSubmitted: markSampleSubmitted,
     markSampleSaved: markSampleSaved,
     markSampleRejected: markSampleRejected,
