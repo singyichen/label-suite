@@ -34,16 +34,27 @@ jobs:
       - uses: actions/checkout@v5
       - name: Check spec artifact sync
         run: scripts/check-spec-artifacts.sh
-      # SC-045 requires a shell check, not a prose description, as the CI
-      # gate for the bootstrap contract. Only file presence is asserted here:
-      # actually booting the backend is what scripts/verify-bootstrap.sh does
-      # locally, and the backend-tests job already proves the app starts.
-      - name: Check bootstrap contract files
-        run: |
-          test -f .env.example
-          test -f docker-compose.yml
-          test -x scripts/seed.sh
-          test -x scripts/verify-bootstrap.sh
+      # SC-045 requires a shell check, not a prose description, as the CI gate
+      # for the bootstrap contract. This actually runs scripts/verify-bootstrap.sh
+      # (see that script for what it proves), not just a file-presence check, so
+      # a regression in the script itself — a changed factory signature, a
+      # Settings field that now requires a value, a moved health path — fails
+      # CI instead of silently rotting until someone runs it locally (issue
+      # #417). It only needs `uv`: the script's own zero-prerequisite design
+      # (default SQLite database_url, no container) means the `validate` job
+      # does not need Postgres/Redis services or a `backend-test`-style env
+      # block, and running it here — rather than in `backend-test`, whose job
+      # env sets DATABASE_URL to Postgres — keeps that zero-prerequisite path
+      # itself under test.
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "backend/uv.lock"
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Verify bootstrap contract
+        run: bash scripts/verify-bootstrap.sh
       - name: Check project structure
         id: check
         run: |
