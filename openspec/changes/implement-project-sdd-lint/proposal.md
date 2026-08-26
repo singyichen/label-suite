@@ -14,6 +14,22 @@ Issue #375 已有治理規則，但尚未有可執行的 Project SDD Lint，因�
 - 不變更 API、DB、產品 UI、dependency、ADR-034 decision，亦不進行 inventory regeneration。
 - PR 依單一目的拆分為 Design/Specify、Propose、Red/Green 與 CI/final groups；每個 group 各自維持 single-purpose scope。
 
+## Capabilities
+
+### New Capabilities
+
+- `project-sdd-lint`：提供可離線執行、以正典規格與治理規則為依據的 Project SDD Lint capability。
+
+### Modified Capabilities
+
+無。
+
+## Impact
+
+- 影響 `scripts/check-sdd.sh`、`scripts/sdd-lint-baseline.txt` 與 `scripts/speckit-tests.sh` fixture harness，新增可重複執行的 lint、baseline 與驗證表面。
+- 影響 `.github/workflows/ci.yml` 的獨立 CI workflow job，以及 `CLAUDE.md` 的對等本地 command。
+- 不影響 API、DB、產品 UI 或 dependency。
+
 ## Constitution Check
 
 - **IV. Test-First**：fixture 測試先以 Red commit 確認缺少 `scripts/check-sdd.sh` 的預期失敗，再由 Green work 實作 command 與 baseline；不弱化 Red contract。
