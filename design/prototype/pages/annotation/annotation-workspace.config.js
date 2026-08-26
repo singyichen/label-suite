@@ -51,7 +51,7 @@
       reviewRejectLabel: '退回',
       wsReviewSubmitSuccess: '審查已提交',
       reviewNoAnswer: '（無）',
-      reviewNote: '通過：此筆標記有效。退回：該標記狀態會回到未標記，標記員需要重新標記。',
+      reviewNote: '通過：採用此筆標記。退回：記錄審核決策與修正差異，與回退標記員狀態是不同層級的效果——正式標記退回後該樣本回到待標記，產生標記員重標待辦；試標退回不改變標記員狀態，品質問題由 IAA 閘門與下一輪試標處理。',
       reviewCorrectionTitle: '直接修正',
       toastSelectDecision: '請完成每位標記員的審核決策',
       toastReviewCorrectionReset: '偵測到直接修正的內容因重新整理而遺失，對應的通過／退回決策已重置，請重新確認後再送出',
@@ -121,7 +121,7 @@
       reviewRejectLabel: 'Reject',
       wsReviewSubmitSuccess: 'Review submitted',
       reviewNoAnswer: '(none)',
-      reviewNote: 'Approve: this annotation is valid. Reject: the sample returns to pending and the annotator must redo it.',
+      reviewNote: 'Approve: accept this annotation. Reject: records the review decision and any correction, which is a different level of effect from rolling back the annotator status -- in an official run a reject returns the sample to pending and creates a re-annotation task for the annotator; in a dry run a reject leaves the annotator status unchanged, and quality issues are handled by the IAA gate and the next dry run.',
       reviewCorrectionTitle: 'Direct correction',
       toastSelectDecision: 'Please decide on every annotator before submitting',
       toastReviewCorrectionReset: 'The direct correction was lost on reload, so the matching approve/reject decision was reset -- please re-confirm before submitting',
@@ -2404,10 +2404,16 @@
     correctionTitle.textContent = t('reviewCorrectionTitle');
     row.appendChild(correctionTitle);
 
-    /* issue #399: reviewNote explains what approve/reject actually do (a
-       reject rolls the sample back to pending for the annotator to redo),
-       but was defined in I18N and never rendered anywhere -- render it so
-       reviewers can actually read it before deciding. */
+    /* issue #399: reviewNote explains what approve/reject actually do, but
+       was defined in I18N and never rendered anywhere -- render it so
+       reviewers can actually read it before deciding.
+       issue #451 (FR-070/AC-6.11): that explanation used to promise the
+       annotator-status rollback unconditionally, while FR-014I scopes the
+       rollback to official_run (AC-3.15/AC-6.4). Since AC-3.33 forbids any
+       run_type presentation branch on the review card, the note stays ONE
+       run-type-invariant string that names both outcomes and separates the
+       review decision from the annotator-status rollback -- same shape as
+       the run-type-qualified sidebar shortcut label (issue #409). */
     var note = document.createElement('p');
     note.className = 'rv-review-note';
     note.setAttribute('data-testid', 'ws-review-note');
