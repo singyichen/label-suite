@@ -816,6 +816,11 @@ test_check_sdd_fails_for_explicit_multi_file_task() {
     printf '\n- [ ] 1.3 Modify `scripts/a.sh` and `scripts/b.sh`. [@senior-devops]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
 
     assert_command_fails_with "$repo" 1 "TASK_EXCEPTION" "openspec/changes/project-sdd-lint/tasks.md"
+
+    repo="$(make_sdd_repo)"
+    printf '\n- [ ] 1.3 Modify `scripts/a.sh`，then modify `scripts/b.sh`. [@senior-devops]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+
+    assert_command_fails_with "$repo" 1 "TASK_EXCEPTION" "openspec/changes/project-sdd-lint/tasks.md"
 }
 
 test_check_sdd_fails_without_exact_spec_declaration() {
