@@ -836,6 +836,24 @@
       padding: 0;
     }
     .toast-close:hover { opacity: 1; }
+
+    /* ── Reviewer mode: original-answer label + pre-submit summary
+         (FR-077 / AC-3.42, issue #453) ─────────────────────────────── */
+    .rv-btn-text { line-height: 1; }
+    .rv-answer-origin { font-size: 12px; color: var(--color-ink-muted); margin-top: 12px; }
+    .rv-submit-summary { display: flex; flex-direction: column; gap: 10px; }
+    .rv-summary-title { font-size: 13px; font-weight: 700; color: var(--color-ink); }
+    .rv-summary-row {
+      display: flex; flex-direction: column; gap: 2px;
+      padding: 8px 10px; border: 1px solid var(--color-border); border-radius: var(--radius-md);
+    }
+    .rv-summary-row[data-decision="approve"] { border-color: var(--color-success-border); }
+    .rv-summary-row[data-decision="reject"] { border-color: var(--color-error-border); }
+    .rv-summary-head { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; color: var(--color-ink-muted); }
+    .rv-summary-line { font-size: 12px; color: var(--color-ink); word-break: break-word; }
+    .rv-summary-note { font-size: 12px; color: var(--color-ink-muted); }
+    .rv-summary-pending { margin: 0; font-size: 12px; color: var(--color-warning); }
+    .rv-summary-effect { margin: 0; font-size: 12px; color: var(--color-ink-muted); }
   </style>
 </head>
 <body>
@@ -942,6 +960,13 @@
         <!-- Reviewer mode only: original vs. corrected answer history,
              populated after ws-review-submit-btn is clicked (FR-024L-1) -->
         <div class="content-card hidden" id="wsReviewHistory" data-testid="ws-review-history"></div>
+
+        <!-- Reviewer mode only: pre-submit summary of the annotator's
+             original answer, the reviewer's corrected answer, the per-output
+             decision and the submit consequence (FR-077 / AC-3.42). Lives
+             here rather than on the review card so its run-type-dependent
+             consequence line does not breach AC-3.33. -->
+        <div class="content-card rv-submit-summary hidden" id="wsReviewSubmitSummary" data-testid="ws-review-submit-summary"></div>
       </div>
 
       <div class="action-bar">

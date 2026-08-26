@@ -50,7 +50,7 @@
       wsReviewSubmitSuccess: '審查已提交',
       reviewNoAnswer: '（無）',
       reviewNote: '通過：採用此筆標記。退回：記錄審核決策與修正差異，與回退標記員狀態是不同層級的效果——正式標記退回後該樣本回到待標記，產生標記員重標待辦；試標退回不改變標記員狀態，品質問題由 IAA 閘門與下一輪試標處理。',
-      reviewCorrectionTitle: '直接修正',
+      reviewCorrectionTitle: '直接修正（Reviewer 修正後答案）',
       toastSelectDecision: '請完成每位標記員的審核決策',
       toastReviewCorrectionReset: '偵測到直接修正的內容因重新整理而遺失，對應的通過／退回決策已重置，請重新確認後再送出',
       toastResolveDivergent: '請先裁定所有分歧項目',
@@ -98,6 +98,19 @@
       unitStateFinalizedNote: '已鎖定',
       unitStateAria: '{state}，已有 {x} 位審核員／共需 {n} 位',
       unitStateAriaFinalized: '{state}，已達 {n} 位審核員門檻，內容已鎖定',
+      reviewOriginalAnswerLabel: '標記員原答案：',
+      reviewCorrectedAnswerLabel: 'Reviewer 修正後答案：',
+      summaryTitle: '送出前確認',
+      summaryNoteApproveUnchanged: '通過且未修改：將保存與標記員原答案相同的 reviewer answer。',
+      summaryNoteApproveChanged: '通過的是您修正後的答案（非標記員原答案）：將保存修正後的 reviewer answer，並記錄為差異，納入爭議推導。',
+      summaryNoteRejectUnchanged: '退回但未修改答案：將保存與標記員原答案相同的 reviewer answer，並記錄退回決策。',
+      summaryNoteRejectChanged: '退回並修改答案：將保存您修正後的 reviewer answer，並記錄退回決策與差異，納入爭議推導。',
+      summaryNoteUndecided: '尚未決策：此輸出類型必須完成通過／退回才能送出。',
+      summaryPending: '尚未完成決策：{list}',
+      summaryPendingNone: '所有輸出類型皆已完成決策。',
+      summaryEffectOfficial: '送出後影響：任一輸出類型判定退回時，此正式標記單位會回到待標記並產生標記員重標待辦；全部通過則標記員狀態不變。',
+      summaryEffectDry: '送出後影響：試標退回不會個別回退標記員狀態，僅記錄審核決策與修正差異，品質問題由任務層級 IAA 閘門與下一輪試標處理。',
+      toastReviewDecisionResetOnEdit: '直接修正的值已變更，對應的通過／退回決策已重置，請重新確認後再送出',
     },
     en: {
       sampleListTitle: 'Samples',
@@ -133,7 +146,7 @@
       wsReviewSubmitSuccess: 'Review submitted',
       reviewNoAnswer: '(none)',
       reviewNote: 'Approve: accept this annotation. Reject: records the review decision and any correction, which is a different level of effect from rolling back the annotator status -- in an official run a reject returns the sample to pending and creates a re-annotation task for the annotator; in a dry run a reject leaves the annotator status unchanged, and quality issues are handled by the IAA gate and the next dry run.',
-      reviewCorrectionTitle: 'Direct correction',
+      reviewCorrectionTitle: "Direct correction (reviewer's corrected answer)",
       toastSelectDecision: 'Please decide on every annotator before submitting',
       toastReviewCorrectionReset: 'The direct correction was lost on reload, so the matching approve/reject decision was reset -- please re-confirm before submitting',
       toastResolveDivergent: 'Please resolve every divergent item first',
@@ -181,6 +194,19 @@
       unitStateFinalizedNote: 'locked',
       unitStateAria: '{state}, {x} of {n} required reviewers',
       unitStateAriaFinalized: '{state}, met the {n}-reviewer threshold, locked',
+      reviewOriginalAnswerLabel: "Annotator's original answer: ",
+      reviewCorrectedAnswerLabel: "Reviewer's corrected answer: ",
+      summaryTitle: 'Confirm before submitting',
+      summaryNoteApproveUnchanged: 'Approved with no edit: the stored reviewer answer will be identical to the annotator’s original answer.',
+      summaryNoteApproveChanged: 'What you approve is your corrected answer, not the annotator’s original: the corrected reviewer answer is stored and recorded as a difference feeding dispute derivation.',
+      summaryNoteRejectUnchanged: 'Rejected with no edit: the stored reviewer answer will be identical to the annotator’s original answer, alongside the reject decision.',
+      summaryNoteRejectChanged: 'Rejected with an edit: your corrected reviewer answer is stored alongside the reject decision and recorded as a difference feeding dispute derivation.',
+      summaryNoteUndecided: 'Not decided yet: this output type needs an approve/reject before you can submit.',
+      summaryPending: 'Still undecided: {list}',
+      summaryPendingNone: 'Every output type has been decided.',
+      summaryEffectOfficial: 'After submitting: if any output type is rejected, this official-run unit returns to pending and creates a re-annotation task for the annotator; if everything is approved the annotator status is unchanged.',
+      summaryEffectDry: 'After submitting: a dry-run reject does not roll back the annotator status individually; it only records the review decision and any correction, and quality issues are handled by the task-level IAA gate and the next dry run.',
+      toastReviewDecisionResetOnEdit: 'The direct correction changed, so the matching approve/reject decision was reset -- please re-confirm before submitting',
     },
   };
   if (window.TASK_CONFIG_I18N) {
@@ -2260,6 +2286,29 @@
     return span;
   }
 
+  /* issue #453 (AC-3.42): issue #399 gave the decision buttons an
+     aria-label, which fixed the screen-reader path only -- for a sighted
+     reviewer the meaning still rode entirely on a '✕' / '✓' glyph. The
+     visible label is the same string as the accessible name, so aria-label
+     keeps winning the accessible-name computation and issue #399's
+     getByRole('button', { name }) contract is unchanged. */
+  function buildLabelSpan(text) {
+    var span = document.createElement('span');
+    span.className = 'rv-btn-text';
+    span.textContent = text;
+    return span;
+  }
+
+  /* The reviewer's live answer for outKey, read off the same engine state
+     the correction control writes to. */
+  function currentRowAnswer(outKey) {
+    return describeOutputAnswer(outKey, {
+      previewState: state.previewState,
+      previewEntities: state.previewEntities,
+      previewTriples: state.previewTriples,
+    });
+  }
+
   /* issue #398: whether outKey's current correction control value differs
      from the reviewed annotator's original answer. FR-014S deliberately
      does NOT persist the correction's own value across a reload -- it
@@ -2267,12 +2316,7 @@
      recorded while this is true cannot be trusted to still match what is
      on screen after a reload; see restoreReviewDraft() below. */
   function isRowCorrected(outKey) {
-    var corrected = describeOutputAnswer(outKey, {
-      previewState: state.previewState,
-      previewEntities: state.previewEntities,
-      previewTriples: state.previewTriples,
-    });
-    return corrected !== (reviewRowOriginals[outKey] || '');
+    return currentRowAnswer(outKey) !== (reviewRowOriginals[outKey] || '');
   }
 
   /* Reviewer draft persistence (issue #196, CONT-03 / role symmetry with the
@@ -2311,6 +2355,7 @@
        button with no accessible name at all -- give it one. */
     rejectBtn.setAttribute('aria-label', t('reviewRejectLabel'));
     rejectBtn.appendChild(buildIconSpan('✕'));
+    rejectBtn.appendChild(buildLabelSpan(t('reviewRejectLabel')));
 
     var approveBtn = document.createElement('button');
     approveBtn.type = 'button';
@@ -2318,6 +2363,7 @@
     approveBtn.setAttribute('data-testid', 'ws-review-row-approve');
     approveBtn.setAttribute('aria-label', t('reviewApproveLabel'));
     approveBtn.appendChild(buildIconSpan('✓'));
+    approveBtn.appendChild(buildLabelSpan(t('reviewApproveLabel')));
 
     function refresh() {
       var decision = reviewRowDecisions[decisionKey(outKey, rowName)];
@@ -2326,9 +2372,13 @@
       rejectBtn.setAttribute('aria-pressed', decision === 'reject' ? 'true' : 'false');
       rejectBtn.classList.toggle('mini-btn-active-reject', decision === 'reject');
     }
+    /* issue #453 (AC-3.42): snapshot the answer the decision was made
+       against, so syncDecisionsWithCorrections() can tell a later edit of
+       that answer apart from an untouched one. */
     approveBtn.addEventListener('click', function () {
       var key = decisionKey(outKey, rowName);
       reviewRowDecisions[key] = reviewRowDecisions[key] === 'approve' ? null : 'approve';
+      reviewDecisionAnswers[key] = currentRowAnswer(outKey);
       refresh();
       persistReviewDraft();
       if (onChange) onChange();
@@ -2336,6 +2386,7 @@
     rejectBtn.addEventListener('click', function () {
       var key = decisionKey(outKey, rowName);
       reviewRowDecisions[key] = reviewRowDecisions[key] === 'reject' ? null : 'reject';
+      reviewDecisionAnswers[key] = currentRowAnswer(outKey);
       refresh();
       persistReviewDraft();
       if (onChange) onChange();
@@ -2365,13 +2416,18 @@
     var cancels = keys.every(function (key) {
       return reviewRowDecisions[key] === decision;
     });
-    keys.forEach(function (key) {
+    state.selectedOutputTypes.forEach(function (outKey) {
+      var key = decisionKey(outKey, rowName);
       reviewRowDecisions[key] = cancels ? null : decision;
+      /* Same AC-3.42 snapshot the click handlers take -- the shortcut is
+         the other way to reach the exact same decision. */
+      reviewDecisionAnswers[key] = currentRowAnswer(outKey);
     });
     reviewDecisionRefreshers.forEach(function (refresh) {
       refresh();
     });
     persistReviewDraft();
+    renderReviewSubmitSummary();
   }
 
   /* free_text corrections are typed, so `a` and `r` are ordinary input the
@@ -2528,9 +2584,28 @@
 
   /* testidSuffix defaults to outKey; the merged span card passes 'span'
      because its single panel stands in for both of its output types. */
-  function appendCorrectionControl(row, outKey, testidSuffix) {
+  function appendCorrectionControl(row, outKey, testidSuffix, originKeys) {
+    /* issue #453 (AC-3.42): the correction control is display AND editor in
+       one, so the moment a reviewer edits it the annotator's original
+       answer is nowhere on screen and "what am I approving?" has no answer.
+       Name the original next to the editor, and name the editor as the
+       reviewer's corrected answer. originKeys covers the FR-014N merged
+       span card, where one panel stands in for two output types. */
+    (originKeys || [outKey]).forEach(function (originKey) {
+      var origin = document.createElement('div');
+      origin.className = 'rv-answer-origin';
+      origin.setAttribute('data-testid', 'ws-review-original-answer');
+      origin.setAttribute('data-outkey', originKey);
+      var originalAnswer = reviewRowOriginals[originKey] || '';
+      origin.setAttribute('data-answer', originalAnswer);
+      origin.textContent =
+        t('reviewOriginalAnswerLabel') + (originalAnswer || t('reviewNoAnswer'));
+      row.appendChild(origin);
+    });
+
     var correctionTitle = document.createElement('div');
     correctionTitle.className = 'rv-correction-title';
+    correctionTitle.setAttribute('data-testid', 'ws-review-corrected-answer-title');
     correctionTitle.textContent = t('reviewCorrectionTitle');
     row.appendChild(correctionTitle);
 
@@ -2630,6 +2705,172 @@
     return row;
   }
 
+  /* ── Pre-submit review summary (spec 015 v4.32.0, FR-077/AC-3.42,
+     issue #453) ──────────────────────────────────────────────────────
+     The direct correction (engine state) and the approve/reject decision
+     (reviewRowDecisions) are two independent stores that read as ONE
+     action on screen, so nothing told a reviewer whether 通過 accepts the
+     annotator's answer or the edited one, what a 退回 with no edit stores,
+     or what submitting does to the annotator's status. Two halves close
+     that gap:
+       (1) every decision records the answer it was made against, so a
+           later edit of that answer invalidates it instead of silently
+           riding along -- the live-edit twin of issue #398's reload path
+           (which stays as-is: FR-014S/AC-6.10 still excludes the
+           correction's own value from draft persistence);
+       (2) the submit area restates, per output type, the original answer,
+           the corrected answer, the decision and the submit consequence.
+     Placement is deliberate: the consequence line is run-type dependent,
+     and AC-3.33 forbids a run_type presentation branch on the REVIEW CARD.
+     Rendering it in the submit area keeps that contract intact -- the same
+     reason FR-064's run-type-aware context banner sits outside the card. */
+  var reviewDecisionAnswers = {};
+
+  /* AC-3.42: a decision must never outlive the value it judged. A restored
+     FR-014S draft (AC-6.10) carries no snapshot, and is only ever restored
+     when its correction was untouched -- so the freshly seeded answer IS
+     the value it was made against; adopt it rather than resetting it. */
+  function syncDecisionsWithCorrections() {
+    var rowName = currentAnnotatorId();
+    var reset = false;
+    state.selectedOutputTypes.forEach(function (outKey) {
+      var key = decisionKey(outKey, rowName);
+      if (!reviewRowDecisions[key]) return;
+      var answer = currentRowAnswer(outKey);
+      if (!(key in reviewDecisionAnswers)) {
+        reviewDecisionAnswers[key] = answer;
+        return;
+      }
+      if (reviewDecisionAnswers[key] === answer) return;
+      reviewRowDecisions[key] = null;
+      delete reviewDecisionAnswers[key];
+      reset = true;
+    });
+    if (!reset) return;
+    reviewDecisionRefreshers.forEach(function (refresh) {
+      refresh();
+    });
+    persistReviewDraft();
+    showToast(t('toastReviewDecisionResetOnEdit'), 'warning');
+  }
+
+  function appendSummaryLine(parent, testid, label, value) {
+    var line = document.createElement('div');
+    line.className = 'rv-summary-line';
+    line.setAttribute('data-testid', testid);
+    line.setAttribute('data-answer', value);
+    line.textContent = label + (value || t('reviewNoAnswer'));
+    parent.appendChild(line);
+  }
+
+  var SUMMARY_NOTE_KEYS = {
+    'approve-unchanged': 'summaryNoteApproveUnchanged',
+    'approve-changed': 'summaryNoteApproveChanged',
+    'reject-unchanged': 'summaryNoteRejectUnchanged',
+    'reject-changed': 'summaryNoteRejectChanged',
+    undecided: 'summaryNoteUndecided',
+  };
+
+  function buildSummaryRow(outKey, rowName) {
+    var decision = reviewRowDecisions[decisionKey(outKey, rowName)] || null;
+    var original = reviewRowOriginals[outKey] || '';
+    var corrected = currentRowAnswer(outKey);
+    var changed = corrected !== original;
+
+    var row = document.createElement('div');
+    row.className = 'rv-summary-row';
+    row.setAttribute('data-testid', 'ws-review-summary-row');
+    row.setAttribute('data-outkey', outKey);
+    row.setAttribute('data-decision', decision || 'none');
+    row.setAttribute('data-changed', changed ? 'true' : 'false');
+
+    var head = document.createElement('div');
+    head.className = 'rv-summary-head';
+    head.textContent = outKey;
+    row.appendChild(head);
+
+    appendSummaryLine(row, 'ws-review-summary-original', t('reviewOriginalAnswerLabel'), original);
+    appendSummaryLine(row, 'ws-review-summary-corrected', t('reviewCorrectedAnswerLabel'), corrected);
+
+    var kind = decision ? decision + '-' + (changed ? 'changed' : 'unchanged') : 'undecided';
+    var note = document.createElement('div');
+    note.className = 'rv-summary-note';
+    note.setAttribute('data-testid', 'ws-review-summary-note');
+    note.setAttribute('data-kind', kind);
+    note.textContent = t(SUMMARY_NOTE_KEYS[kind]);
+    row.appendChild(note);
+    return row;
+  }
+
+  function hideReviewSubmitSummary() {
+    var panel = document.getElementById('wsReviewSubmitSummary');
+    if (!panel) return;
+    while (panel.firstChild) panel.removeChild(panel.firstChild);
+    panel.classList.add('hidden');
+  }
+
+  function renderReviewSubmitSummary() {
+    var panel = document.getElementById('wsReviewSubmitSummary');
+    if (!panel) return;
+    hideReviewSubmitSummary();
+    if (currentRole !== 'reviewer' || !state.selectedOutputTypes.length) return;
+    var rowName = currentAnnotatorId();
+
+    var title = document.createElement('div');
+    title.className = 'rv-summary-title';
+    title.textContent = t('summaryTitle');
+    panel.appendChild(title);
+
+    var pendingKeys = [];
+    state.selectedOutputTypes.forEach(function (outKey) {
+      if (!reviewRowDecisions[decisionKey(outKey, rowName)]) pendingKeys.push(outKey);
+      panel.appendChild(buildSummaryRow(outKey, rowName));
+    });
+
+    var pending = document.createElement('p');
+    pending.className = 'rv-summary-pending';
+    pending.setAttribute('data-testid', 'ws-review-summary-pending');
+    pending.setAttribute('data-count', String(pendingKeys.length));
+    pending.textContent = pendingKeys.length
+      ? t('summaryPending').replace('{list}', pendingKeys.join('、'))
+      : t('summaryPendingNone');
+    panel.appendChild(pending);
+
+    var effect = document.createElement('p');
+    effect.className = 'rv-summary-effect';
+    effect.setAttribute('data-testid', 'ws-review-summary-effect');
+    effect.setAttribute('data-run-type', currentRunType);
+    effect.textContent = t(
+      currentRunType === 'official_run' ? 'summaryEffectOfficial' : 'summaryEffectDry'
+    );
+    panel.appendChild(effect);
+
+    panel.classList.remove('hidden');
+  }
+
+  /* The shared engine owns every correction control and exposes no change
+     hook, so mirror markUnsaved()'s delegated-capture approach on the
+     preview root and re-derive on the next tick, after the engine's own
+     handler has written the new value into state. Decision clicks land here
+     too, which is what keeps the summary in step with them. */
+  (function watchReviewEdits() {
+    var previewRoot = document.getElementById('annotationPreview');
+    if (!previewRoot) return;
+    var queued = false;
+    function schedule() {
+      if (currentRole !== 'reviewer' || queued) return;
+      queued = true;
+      setTimeout(function () {
+        queued = false;
+        syncDecisionsWithCorrections();
+        renderReviewSubmitSummary();
+      }, 0);
+    }
+    ['input', 'change', 'click'].forEach(function (eventName) {
+      previewRoot.addEventListener(eventName, schedule, true);
+    });
+  })();
+
   /* FR-014N: entity_recognition and relation_identification are two stages
      of ONE annotation action (mark the spans, then link them), and the
      engine already models them that way -- the relation panel it mounts is
@@ -2676,7 +2917,7 @@
       seedReviewRow(outKey, submission);
     });
 
-    var correction = appendCorrectionControl(row, 'relation_identification', 'span');
+    var correction = appendCorrectionControl(row, 'relation_identification', 'span', outKeys);
     dockDecisionsOnBypassRow(correction, decisionEls);
     return row;
   }
@@ -3133,6 +3374,11 @@
     reviewRowDecisions = {};
     reviewRowOriginals = {};
     reviewDecisionRefreshers = [];
+    reviewDecisionAnswers = {};
+    /* issue #453: every early return below (arbitration / finalized /
+       empty unit) is a path with nothing to summarize, so hide first and
+       let the interactive path re-render it at the end. */
+    hideReviewSubmitSummary();
     /* issue #196 (CONT-03): restore any in-progress decisions persisted by
        persistReviewDraft() before this render -- a reload must not silently
        undecide rows the reviewer already chose.
@@ -3265,6 +3511,7 @@
       }
       preview.appendChild(buildReviewRow(outKey, submission));
     });
+    renderReviewSubmitSummary();
   }
 
   function appendReviewHistoryEntry(history, text) {
