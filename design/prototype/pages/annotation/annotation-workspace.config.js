@@ -2581,6 +2581,16 @@
     return item.outKey + '::' + item.key;
   }
 
+  /* issue #408: compareOutputAnswer()'s default branch (single_label /
+     single_dim / free_text -- any output type with no merge-key concept)
+     sets diff.key = outKey, so item.key === item.outKey for every dispute
+     item on those output types. Rendering both unconditionally duplicated
+     the outKey ("single_label · single_label"); only append the key when
+     it actually adds information beyond the outKey. */
+  function disputeItemLabel(item) {
+    return item.key === item.outKey ? item.outKey : item.outKey + ' · ' + item.key;
+  }
+
   function buildArbitrationChoiceButton(testid, label, value, onSelect) {
     var btn = document.createElement('button');
     btn.type = 'button';
@@ -2600,7 +2610,7 @@
 
     var label = document.createElement('div');
     label.style.cssText = 'font-size:12px;font-weight:600;margin-bottom:6px;';
-    label.textContent = item.outKey + ' · ' + item.key;
+    label.textContent = disputeItemLabel(item);
     row.appendChild(label);
 
     var group = document.createElement('div');
@@ -2643,7 +2653,7 @@
     var row = document.createElement('div');
     row.setAttribute('data-testid', testid);
     row.style.cssText = 'padding:10px 0;border-top:1px solid var(--color-border);font-size:12px;';
-    row.textContent = item.outKey + ' · ' + item.key + '：' + formatDisputeValue(value) + '（' + note + '）';
+    row.textContent = disputeItemLabel(item) + '：' + formatDisputeValue(value) + '（' + note + '）';
     return row;
   }
 
