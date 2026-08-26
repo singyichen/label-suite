@@ -22,7 +22,10 @@ test('the Chinese reviewer copy reflects the correct-or-arbitrate model (I18N-03
   await expect(page.locator('#roleReviewerSubtitle')).toHaveText('逐標記員獨立審核，直接修正結果，歧異交付仲裁。');
   await expect(page.locator('#stepReviewer2Title')).toHaveText('修正或仲裁');
   await expect(page.locator('#stepReviewer2Desc')).toHaveText('直接修正結果；退回僅限正式標記');
-  await expect(page.locator('#shortcutReviewReject')).toHaveText('退回目前結果（限正式標記）');
+  /* issue #409: the qualifier now attaches to the annotator-status rollback
+   * side effect specifically, not the reject action/key as a whole (spec
+   * 015 AC-3.33 keeps the reject control itself run-type-agnostic). */
+  await expect(page.locator('#shortcutReviewReject')).toHaveText('退回目前結果（回退標記員狀態僅限正式標記）');
 });
 
 test('the English reviewer copy carries the same semantics (I18N-03)', async ({ page }) => {
@@ -35,5 +38,5 @@ test('the English reviewer copy carries the same semantics (I18N-03)', async ({ 
   await expect(page.locator('#roleReviewerSubtitle')).toHaveText('Review each annotator independently, correct results directly, and arbitrate disputes.');
   await expect(page.locator('#stepReviewer2Title')).toHaveText('Correct or Arbitrate');
   await expect(page.locator('#stepReviewer2Desc')).toHaveText('Correct directly; return applies to formal runs only');
-  await expect(page.locator('#shortcutReviewReject')).toHaveText('Return current result (formal runs only)');
+  await expect(page.locator('#shortcutReviewReject')).toHaveText('Return current result (annotator status rollback is formal-run only)');
 });
