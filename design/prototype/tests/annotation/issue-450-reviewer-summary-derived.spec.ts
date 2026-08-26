@@ -1,7 +1,7 @@
 /**
  * Reviewer summaries derive from live review-unit state (issue #450).
  * Source specs: specs/annotation/015-annotation-workspace/spec.md (FR-072),
- *               specs/dashboard/012-dashboard/spec.md (FR-013)
+ *               specs/dashboard/012-dashboard/spec.md (FR-020)
  *
  * Before this fix the annotation-list task info card and the dashboard
  * reviewer card both printed the pre-composed `detail` string from
