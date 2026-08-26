@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Label Suite 審核流程總覽 · Swimlane</title>
+  <title>Label Suite 審核流程總覽（泳道圖）</title>
   <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@400;600&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -49,9 +49,9 @@
 </head>
 <body>
   <div class="frame">
-    <p class="eyebrow">Swimlane · Label Suite Review</p>
+    <p class="eyebrow">泳道圖 · 審核流程</p>
     <h1>審核流程總覽</h1>
-    <p class="standfirst">審核單位 = 樣本 × 標記員 × run_type。狀態由「審核員是否改動答案」與「審核人數是否達門檻」兩軸推導，並非由通過／退回按鈕直接決定。</p>
+    <p class="standfirst">審核單位 = 一份樣本 × 一位標記員 × 一種執行類型（試標或正式標記）。狀態由「審核員是否改動答案」與「審核人數是否達門檻」兩軸推導，並非由通過／退回按鈕直接決定。</p>
 
     <svg viewBox="0 0 1240 640" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="rvov-title rvov-desc">
       <title id="rvov-title">Label Suite 審核流程總覽</title>
@@ -106,16 +106,16 @@
 
       <!-- ══ Connector labels (mask + text) ══ -->
       <rect x="434" y="188" width="60" height="12" rx="2" fill="#F5F3FF"/>
-      <text x="490" y="197" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" text-anchor="end" letter-spacing="0.06em">submitted</text>
+      <text x="490" y="197" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" text-anchor="end" letter-spacing="0.06em">已提交</text>
 
       <rect x="702" y="306" width="80" height="12" rx="2" fill="#F5F3FF"/>
       <text x="706" y="315" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" letter-spacing="0.06em">寫入審核結果</text>
 
       <rect x="768" y="356" width="56" height="12" rx="2" fill="#F5F3FF"/>
-      <text x="796" y="365" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="0.06em">n ≥ min</text>
+      <text x="796" y="365" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="0.06em">已達門檻</text>
 
       <rect x="438" y="326" width="56" height="12" rx="2" fill="#F5F3FF"/>
-      <text x="466" y="335" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="0.06em">n &lt; min</text>
+      <text x="466" y="335" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="0.06em">未達門檻</text>
 
       <rect x="960" y="356" width="52" height="12" rx="2" fill="#F5F3FF"/>
       <text x="986" y="365" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="0.06em">收斂</text>
@@ -139,17 +139,17 @@
       <!-- L1 · 提交標記 -->
       <rect x="232" y="128" width="152" height="48" rx="6" fill="#FFFFFF" stroke="#1E1B4B" stroke-width="1"/>
       <text x="308" y="150" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">提交標記</text>
-      <text x="308" y="164" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">dry_run / official_run</text>
+      <text x="308" y="164" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">試標 / 正式標記</text>
 
       <!-- L1 · 重新標記 -->
       <rect x="616" y="128" width="160" height="48" rx="6" fill="#1E1B4B0D" stroke="#94A3B8" stroke-width="1" stroke-dasharray="4,3"/>
       <text x="696" y="150" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">重新標記</text>
-      <text x="696" y="164" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">status → pending</text>
+      <text x="696" y="164" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">樣本狀態回到「待標記」</text>
 
       <!-- L2 · 開啟審核單位 -->
       <rect x="424" y="240" width="152" height="48" rx="6" fill="#FFFFFF" stroke="#1E1B4B" stroke-width="1"/>
       <text x="500" y="262" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">開啟審核單位</text>
-      <text x="500" y="276" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">樣本 × 標記員 × run</text>
+      <text x="500" y="276" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">樣本 × 標記員 × 執行類型</text>
 
       <!-- L2 · 通過 / 修正 / 退回 -->
       <rect x="616" y="240" width="160" height="48" rx="6" fill="#FFFFFF" stroke="#1E1B4B" stroke-width="1"/>
@@ -159,22 +159,22 @@
       <!-- L3 · 彙總 · 審核人數門檻 -->
       <rect x="616" y="352" width="160" height="48" rx="6" fill="#1E1B4B0D" stroke="#64748B" stroke-width="1"/>
       <text x="696" y="374" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">彙總 · 審核人數門檻</text>
-      <text x="696" y="388" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">min_reviewers</text>
+      <text x="696" y="388" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">需幾位審核員才開始計票</text>
 
       <!-- L3 · 嚴格多數決 -->
       <rect x="816" y="352" width="152" height="48" rx="6" fill="#1E1B4B0D" stroke="#64748B" stroke-width="1"/>
       <text x="892" y="374" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">嚴格多數決</text>
-      <text x="892" y="388" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">count &gt; n / 2</text>
+      <text x="892" y="388" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">票數需超過半數</text>
 
       <!-- L3 · 已定稿（FOCAL） -->
       <rect x="1008" y="352" width="176" height="48" rx="6" fill="#EEF2FF" stroke="#6366F1" stroke-width="1"/>
       <text x="1096" y="374" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">已定稿 · 唯讀</text>
-      <text x="1096" y="388" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">finalized · 終態</text>
+      <text x="1096" y="388" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">最終狀態 · 不可再修改</text>
 
       <!-- L4 · 爭議池 -->
       <rect x="816" y="464" width="152" height="48" rx="6" fill="#FFFFFF" stroke="#1E1B4B" stroke-width="1"/>
       <text x="892" y="486" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">爭議池</text>
-      <text x="892" y="500" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">disputed · 逐項列管</text>
+      <text x="892" y="500" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">爭議中 · 逐項列管</text>
 
       <!-- L4 · 逐項裁定 -->
       <rect x="1008" y="464" width="176" height="48" rx="6" fill="#FFFFFF" stroke="#1E1B4B" stroke-width="1"/>
@@ -187,7 +187,7 @@
 
       <!-- ══ Legend ══ -->
       <line x1="40" y1="576" x2="1200" y2="576" stroke="rgba(30,27,75,0.10)" stroke-width="0.8"/>
-      <text x="40" y="592" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" letter-spacing="0.18em">LEGEND</text>
+      <text x="40" y="592" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" letter-spacing="0.18em">圖例</text>
 
       <rect x="40" y="608" width="14" height="10" rx="2" fill="#FFFFFF" stroke="#1E1B4B" stroke-width="1"/>
       <text x="60" y="616" fill="#64748B" font-size="8.5" font-family="'Inter','Noto Sans TC',sans-serif">人為動作</text>
