@@ -364,12 +364,29 @@ test.describe('review unit: five-state machine', () => {
  * handleReviewSubmit (annotation-workspace.config.js) has NO submit-busy
  * flag -- unlike the annotator path, whose issue #201 fix added
  * state.submitBusy to handleSubmit. The reviewer path's idempotency comes
- * entirely from the data layer: markSampleSubmitted() overwrites the same
- * bucket key (never appends a second record), and appendHistoryEvent()
- * drops an identical consecutive 'submitted' event for the same role/actor
- * (annotation-workspace.data.js -- the same dedup guard the annotator path
- * relies on). So the review unit stays a single terminal state and the
- * audit trail stays at one reviewer event, which is what this asserts. */
+ * from TWO layers, the second added by issue #401:
+ *   1. Data layer (pre-existing): markSampleSubmitted() overwrites the same
+ *      bucket key (never appends a second record), and appendHistoryEvent()
+ *      drops an identical consecutive 'submitted' event for the same
+ *      role/actor (annotation-workspace.data.js).
+ *   2. UI layer (issue #401): handleReviewSubmit() now calls
+ *      renderReviewerWorkspace() synchronously on success. For a
+ *      min_reviewers=1 unit the first submit finalizes it, and
+ *      renderReviewerWorkspace()'s FINALIZED branch hides the footer
+ *      submit button (classList.add('hidden'), which is `display:none
+ *      !important` -- see annotation-workspace.html's .hidden rule). A
+ *      genuine second click can no longer even land on the button:
+ *      Playwright's actionability check (element must be visible) times
+ *      out exactly the way a real second mouse click would find nothing
+ *      to hit. That is a STRONGER guard than "clickable but no-ops" --
+ *      before issue #401 the button stayed clickable after finalizing and
+ *      only the data layer silently absorbed the duplicate; now the
+ *      duplicate can't be dispatched by user interaction at all.
+ * This test asserts both layers: the button becomes hidden after the
+ * first submit (UI layer), and forcing a second click anyway (bypassing
+ * Playwright's visibility check, the way a stray programmatic dispatch
+ * might) still leaves exactly one review unit state and one reviewer
+ * history event (data layer backstop, preserved unchanged from before). */
 test.describe('review unit: double submit stays a single terminal unit (DUP-02)', () => {
   test('double-clicking 送出審核 leaves one review unit state and one reviewer history event', async ({ page }) => {
     await seed(page, {
@@ -390,7 +407,18 @@ test.describe('review unit: double submit stays a single terminal unit (DUP-02)'
     );
     await page.getByTestId('ws-review-row-approve').click();
     const submitBtn = page.getByTestId('ws-review-submit-btn');
-    await Promise.all([submitBtn.click(), submitBtn.click()]);
+    await submitBtn.click();
+
+    // issue #401: the first submit finalizes this min_reviewers=1 unit,
+    // and the resulting re-render hides the submit button (display:none).
+    // A real second mouse click has nothing left to hit -- Playwright's
+    // `{ force: true }` still refuses (a display:none element has no box
+    // to click), which itself confirms the guard. Exercise the underlying
+    // click *handler* directly (DOM .click(), which fires regardless of
+    // visibility) to prove the pre-existing data-layer dedup still backstops
+    // any second invocation that did get dispatched some other way.
+    await expect(submitBtn).toBeHidden();
+    await page.evaluate(() => document.getElementById('wsReviewSubmitBtn')?.click());
 
     // With min_reviewers=1 satisfied and the single review an unchanged
     // approval, the five-state machine lands on the terminal 'finalized'
