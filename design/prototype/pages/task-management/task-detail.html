@@ -4147,6 +4147,121 @@
     T013: AR_SAMPLES_VA
   };
 
+  /* Issue #393: T014-T017 (review-flow demo tasks) never appeared in
+     ANNOTATION_RESULTS_BY_TASK, so the "標記結果" panel always fell back to
+     the empty state for them -- even though their review journeys (dry-run
+     quorum, single-reviewer approval, three-reviewer majority convergence,
+     a two-reviewer tie) are exactly what those tasks exist to demonstrate.
+     REVIEW_FLOW_UNITS translates the same review outcomes seeded into
+     annotation-workspace.data.js's seedReviewFlowDemo() scripts (reviewer
+     ids/values and the resulting REVIEW_UNIT_STATUS, derived from
+     getReviewUnitStatus()'s quorum/majority rules) into this page's own
+     AR_SAMPLES-shape records; row.rv entries are
+     [reviewerId, 'approved'|'modified', modifiedValue?]. Sample text is
+     read from this page's own profile.datasetRecords instead of being
+     duplicated here. */
+  var REVIEWER_DEMO_NAME = {
+    reviewer_wang: '王小明',
+    reviewer_li: '李大華',
+    reviewer_lin: '林佳蓉',
+    reviewer_chen: '陳美玲'
+  };
+
+  var REVIEW_FLOW_UNITS = {
+    T014: [
+      { id: 'dry-01-all-agree', rows: [
+        { a: 'kioleemg12', v: 'positive', rs: 'finalized', rv: [['reviewer_wang', 'approved']] },
+        { a: '113450022', v: 'positive', rs: 'finalized', rv: [['reviewer_wang', 'approved']] },
+        { a: 'tony0950127', v: 'positive', rs: 'finalized', rv: [['reviewer_wang', 'approved']] }
+      ] },
+      { id: 'dry-02-one-divergent', rows: [
+        { a: 'kioleemg12', v: 'neutral', rs: 'finalized', rv: [['reviewer_wang', 'approved']] },
+        { a: '113450022', v: 'neutral', rs: 'disputed', rv: [['reviewer_wang', 'modified', 'positive']] },
+        { a: 'tony0950127', v: 'positive', rs: 'pending', rv: [] }
+      ] },
+      { id: 'dry-03-dispute-open', rows: [
+        { a: 'kioleemg12', v: 'neutral', rs: 'pending', rv: [] },
+        { a: '113450022', v: 'neutral', rs: 'disputed', rv: [['reviewer_wang', 'modified', 'negative']] },
+        { a: 'tony0950127', v: 'neutral', rs: 'pending', rv: [] }
+      ] },
+      { id: 'dry-04-dispute-resolved', rows: [
+        { a: 'kioleemg12', v: 'negative', rs: 'finalized', rv: [['reviewer_wang', 'approved']] },
+        { a: '113450022', v: 'neutral', rs: 'finalized', rv: [['reviewer_wang', 'modified', 'negative']], arb: 'reviewer_chen' },
+        { a: 'tony0950127', v: 'negative', rs: 'finalized', rv: [['reviewer_wang', 'approved']] }
+      ] },
+      { id: 'dry-05-pending-review', rows: [
+        { a: 'kioleemg12', v: 'positive', rs: 'pending', rv: [] },
+        { a: '113450022', v: 'positive', rs: 'pending', rv: [] },
+        { a: 'tony0950127', v: 'positive', rs: 'pending', rv: [] }
+      ] }
+    ],
+    T015: [
+      { id: 'ofs-01-agree-gold', rows: [{ a: 'kioleemg12', v: 'negative', rs: 'finalized', rv: [['reviewer_wang', 'approved']] }] },
+      { id: 'ofs-02-modified-dispute', rows: [{ a: 'kioleemg12', v: 'neutral', rs: 'disputed', rv: [['reviewer_wang', 'modified', 'positive']] }] },
+      { id: 'ofs-03-arbitrated-gold', rows: [{ a: 'kioleemg12', v: 'positive', rs: 'finalized', rv: [['reviewer_wang', 'modified', 'neutral']], arb: 'reviewer_chen' }] },
+      { id: 'ofs-04-pending-review', rows: [{ a: 'kioleemg12', v: 'positive', rs: 'pending', rv: [] }] }
+    ],
+    T016: [
+      { id: 'ofm-01-unanimous-gold', rows: [{ a: 'kioleemg12', v: 'positive', rs: 'finalized', rv: [['reviewer_wang', 'approved'], ['reviewer_li', 'approved'], ['reviewer_lin', 'approved']] }] },
+      { id: 'ofm-02-approved-interim', rows: [{ a: 'kioleemg12', v: 'negative', rs: 'approved', rv: [['reviewer_wang', 'approved']] }] },
+      { id: 'ofm-03-modified-interim', rows: [{ a: 'kioleemg12', v: 'neutral', rs: 'modified', rv: [['reviewer_wang', 'modified', 'negative']] }] },
+      { id: 'ofm-04-majority-converged', rows: [{ a: 'kioleemg12', v: 'positive', rs: 'finalized', rv: [['reviewer_wang', 'modified', 'neutral'], ['reviewer_li', 'modified', 'neutral'], ['reviewer_lin', 'approved']] }] },
+      { id: 'ofm-05-all-divergent', rows: [{ a: 'kioleemg12', v: 'neutral', rs: 'disputed', rv: [['reviewer_wang', 'modified', 'positive'], ['reviewer_li', 'modified', 'negative'], ['reviewer_lin', 'approved']] }] }
+    ],
+    T017: [
+      { id: 'oft-01-even-tie', rows: [{ a: 'kioleemg12', v: 'neutral', rs: 'disputed', rv: [['reviewer_wang', 'modified', 'positive'], ['reviewer_li', 'approved']] }] },
+      { id: 'oft-02-approved-interim', rows: [{ a: 'kioleemg12', v: 'positive', rs: 'approved', rv: [['reviewer_wang', 'approved']] }] },
+      { id: 'oft-03-modified-interim', rows: [{ a: 'kioleemg12', v: 'neutral', rs: 'modified', rv: [['reviewer_wang', 'modified', 'positive']] }] },
+      { id: 'oft-04-unanimous-gold', rows: [{ a: 'kioleemg12', v: 'positive', rs: 'finalized', rv: [['reviewer_wang', 'approved'], ['reviewer_li', 'approved']] }] },
+      { id: 'oft-05-pending-review', rows: [{ a: 'kioleemg12', v: 'positive', rs: 'pending', rv: [] }] }
+    ]
+  };
+
+  function buildReviewFlowAnnotation(row) {
+    var annotation = {
+      annotator: row.a,
+      value: { labels: [row.v] },
+      submittedAt: '2026-08-22 09:00',
+      reviewStatus: row.rs,
+      reviews: row.rv.map(function(entry) {
+        var review = { reviewer: REVIEWER_DEMO_NAME[entry[0]] || entry[0], decision: entry[1], reviewedAt: '2026-08-22 10:00' };
+        if (entry[1] === 'modified') review.result = { labels: [entry[2]] };
+        return review;
+      })
+    };
+    if (row.arb) {
+      annotation.arbitration = {
+        arbiter: REVIEWER_DEMO_NAME[row.arb] || row.arb,
+        pick: 'B',
+        decidedAt: '2026-08-22 11:00'
+      };
+    }
+    return annotation;
+  }
+
+  function buildReviewFlowResults(taskId) {
+    var profiles = (window.LabelSuiteTaskDetailData && window.LabelSuiteTaskDetailData.profiles) || {};
+    var records = (profiles[taskId] && profiles[taskId].datasetRecords) || [];
+    var textById = {};
+    records.forEach(function(record) { textById[record.id] = record.text; });
+    var stage = taskId === 'T014' ? 'dry' : 'official';
+    return (REVIEW_FLOW_UNITS[taskId] || []).map(function(unit) {
+      return {
+        sampleId: unit.id,
+        stage: stage,
+        textZh: textById[unit.id] || '',
+        textEn: '',
+        status: 'submitted',
+        completedAt: '2026-08-22',
+        annotations: unit.rows.map(buildReviewFlowAnnotation)
+      };
+    });
+  }
+
+  ['T014', 'T015', 'T016', 'T017'].forEach(function(taskId) {
+    ANNOTATION_RESULTS_BY_TASK[taskId] = buildReviewFlowResults(taskId);
+  });
+
   var MEMBER_ANNOTATOR_MAP = {
     T001: { 'Alex Wang': 'kioleemg12', 'Olivia Lin': '113450022', 'Mandy Chen': 'tony0950127' },
     T002: { 'Alex Wang': 'kioleemg12', 'Olivia Lin': '113450022', 'Mandy Chen': 'tony0950127' },
