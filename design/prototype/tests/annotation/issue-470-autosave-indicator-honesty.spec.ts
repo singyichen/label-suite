@@ -179,4 +179,32 @@ test.describe('Autosave indicator honesty (issue #470)', () => {
     await page.getByTestId('ws-review-row-approve').first().click();
     await expect(status).toBeHidden();
   });
+
+  test('a rejected sample shows 尚未儲存, never the pre-rejection save time', async ({ page }) => {
+    // Setup path reused from issue-192-dry-run-reject-guard.spec.ts's
+    // official_run reject flow: annotator saves + submits, then a reviewer
+    // rejects the row and submits their review, which flips the sample's
+    // status back to 'pending' via markSampleRejected
+    // (annotation-workspace.data.js:452) WITHOUT clearing savedAt/
+    // submittedAt. getSampleSavedAt() (annotation-workspace.data.js:291)
+    // must still gate on entryStatus being 'saved'/'submitted' so this
+    // stale timestamp never resurfaces once the sample is back with the
+    // annotator for re-annotation.
+    await gotoSample(page, 'sent-001');
+    await page.getByTestId('ws-single-label-chip-positive').click();
+    await page.getByTestId('ws-save-btn').click();
+    await page.getByTestId('ws-submit-btn').click();
+
+    await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer' }));
+    await dismissGuidelineModal(page);
+    await page.getByTestId('ws-review-row-reject').click();
+    await page.getByTestId('ws-review-submit-btn').click();
+    await expect(page.locator('#toastMsg')).toHaveText('審查已提交');
+
+    await gotoSample(page, 'sent-001');
+
+    const status = autosaveStatus(page);
+    await expect(status).toHaveText('尚未儲存');
+    await expect(status).not.toContainText('上次儲存於');
+  });
 });
