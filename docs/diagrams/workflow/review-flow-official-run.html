@@ -51,11 +51,11 @@
   <div class="frame">
     <p class="eyebrow">流程圖 · 正式標記審核</p>
     <h1>正式標記、多數決與仲裁詳細流程</h1>
-    <p class="standfirst">判斷路徑與試標完全相同——差別只有兩處：正式標記的退回會把樣本退回標記員重標，而正式標記的定稿判斷會成為 gold。嚴格多數決要求票數嚴格大於人數的一半，未提出異議的審核員其票算給標記員的原標，因此平手或三方全分歧都無法收斂。右欄是 T017 平手案例的實際推導。</p>
+    <p class="standfirst">判斷路徑與試標完全相同——差別有三處：正式標記每筆樣本恰指派一位標記員（試標則由多位重疊標記，一筆樣本因此拆成多個審核單位）、正式標記的退回會把樣本退回標記員重標，而正式標記的定稿判斷會成為 gold。嚴格多數決要求票數嚴格大於人數的一半，已提交審核但該項未改動的審核員，其票算給標記員的原標（尚未提交者不計入分母），因此平手、三方全分歧或任何未過半的分佈都無法收斂。右欄是 T017 平手案例的實際推導。</p>
 
     <svg viewBox="0 0 1200 1080" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="rvoff-title rvoff-desc">
       <title id="rvoff-title">正式標記、多數決與仲裁詳細流程</title>
-      <desc id="rvoff-desc">流程圖：正式標記提交後由審核員逐單位審核，退回會把樣本狀態退回待標記並產生重標待辦。先判斷已審人數是否達門檻，未達則停在已同意或已修改的過渡狀態；達門檻後判斷審核員是否改動答案，無人改動即定稿，有改動則進入逐項嚴格多數決，票數需嚴格大於人數的一半才算收斂並定稿，平手或全分歧則落入爭議池，由具仲裁資格且未參與該單位審核的審核員逐項裁定 A 標記員或 B 審核員後定稿。正式標記的定稿判斷會成為 gold。右欄標註 T017 oft-01-even-tie 一比一平手案例的推導，含仲裁資格為名冊屬性的說明。底部為任務層級的完成 gate 與匯出，完成 gate 共五項前置條件。</desc>
+      <desc id="rvoff-desc">流程圖：正式標記提交後由審核員逐單位審核，退回會把樣本狀態退回待標記並產生重標待辦。先判斷已審人數是否達門檻，未達則停在已同意或已修改的過渡狀態；達門檻後判斷審核員是否改動答案，無人改動即定稿，有改動則進入逐項嚴格多數決，票數需嚴格大於人數的一半才算收斂並定稿，平手或全分歧則落入爭議池，由具仲裁資格且未參與該單位審核的審核員逐項裁定 A 標記員或 B 審核員後定稿。正式標記的定稿判斷會成為 gold，且每筆樣本恰指派一位標記員因此只產生一個審核單位。右欄標註 T017 oft-01-even-tie 一比一平手案例的推導，含仲裁資格為名冊屬性的說明。底部為任務層級的完成 gate 與匯出，完成 gate 共五項前置條件。</desc>
 
       <defs>
         <marker id="arw" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#64748B"/></marker>
@@ -118,10 +118,10 @@
       <text x="410" y="507" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" letter-spacing="0.06em">是 · 有任何改動</text>
 
       <rect x="406" y="650" width="100" height="12" rx="2" fill="#F5F3FF"/>
-      <text x="410" y="659" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" letter-spacing="0.06em">收斂 · 票數過半</text>
+      <text x="410" y="659" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" letter-spacing="0.06em">逐項皆已收斂</text>
 
       <rect x="516" y="560" width="112" height="12" rx="2" fill="#F5F3FF"/>
-      <text x="572" y="569" fill="#6366F1" font-size="8" font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="0.06em">平手 · 全分歧 · 單審</text>
+      <text x="572" y="569" fill="#6366F1" font-size="8" font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="0.06em">未達 &gt; N/2 票</text>
 
       <rect x="736" y="638" width="152" height="12" rx="2" fill="#F5F3FF"/>
       <text x="740" y="647" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" letter-spacing="0.06em">具仲裁資格 · 未參與本單位</text>
@@ -159,13 +159,14 @@
 
       <polygon points="400,536 496,580 400,624 304,580" fill="#FFFFFF" stroke="#1E1B4B" stroke-width="1"/>
       <text x="400" y="573" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">逐項嚴格多數決？</text>
-      <text x="400" y="587" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">票數需超過半數</text>
+      <text x="400" y="587" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">需 &gt; 已提交審核員半數</text>
 
       <!-- 計票規則註記（左側留白，避免擠壓菱形） -->
       <text x="64" y="556" fill="#1E1B4B" font-size="9" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif">計票規則</text>
-      <text x="64" y="572" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">候選值含標記員的原答案；</text>
-      <text x="64" y="588" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">未提出異議的審核員，其票</text>
-      <text x="64" y="604" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">計為投給原答案。</text>
+      <text x="64" y="572" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">已提交審核、但這一項沒改動</text>
+      <text x="64" y="588" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">的審核員，其票計給標記員的</text>
+      <text x="64" y="604" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">原答案；尚未提交者不計入。</text>
+      <text x="64" y="620" fill="#94A3B8" font-size="9" font-family="'JetBrains Mono', monospace">全員都改動時，原答案不列為候選。</text>
 
       <!-- 爭議池（系統推導狀態，配色比照過渡狀態） -->
       <rect x="640" y="552" width="176" height="56" rx="6" fill="#1E1B4B0D" stroke="#64748B" stroke-width="1"/>
@@ -195,9 +196,9 @@
       <text x="900" y="342" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">審核員 reviewer_wang ···· positive（改動）</text>
 
       <text x="900" y="374" fill="#1E1B4B" font-size="11" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif">② 嚴格多數決（n = 2）</text>
-      <text x="900" y="392" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">positive ··· 1 票（reviewer_wang）</text>
-      <text x="900" y="408" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">neutral ···· 1 票（沒改動的人＝同意標記員）</text>
-      <text x="900" y="424" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">過半門檻 → 至少需 2 票，無人達標</text>
+      <text x="900" y="392" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">positive ··· 1 票（產品畫面為匿名聚合）</text>
+      <text x="900" y="408" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">neutral ···· 1 票（li 已提交但未改動）</text>
+      <text x="900" y="424" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">需 &gt; 2 的半數 → 至少 2 票，無人達標</text>
 
       <rect x="900" y="440" width="52" height="16" rx="4" fill="#FEF2F2" stroke="#FECACA" stroke-width="1"/>
       <text x="926" y="451" fill="#B91C1C" font-size="9" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">爭議中</text>
@@ -220,8 +221,8 @@
       <text x="900" y="692" fill="#64748B" font-size="14" font-style="italic" font-family="'Crimson Pro','Noto Serif TC',serif">positive 是實際點擊仲裁後的結果。</text>
 
       <text x="900" y="740" fill="#64748B" font-size="14" font-style="italic" font-family="'Crimson Pro','Noto Serif TC',serif">左邊的判斷路徑與試標完全相同。</text>
-      <text x="900" y="760" fill="#64748B" font-size="14" font-style="italic" font-family="'Crimson Pro','Noto Serif TC',serif">只有「退回會回退標記員狀態」與</text>
-      <text x="900" y="780" fill="#64748B" font-size="14" font-style="italic" font-family="'Crimson Pro','Noto Serif TC',serif">「定稿產生 gold」兩處是正式標記專屬。</text>
+      <text x="900" y="760" fill="#64748B" font-size="14" font-style="italic" font-family="'Crimson Pro','Noto Serif TC',serif">「每筆樣本恰一位標記員」「退回會回退</text>
+      <text x="900" y="780" fill="#64748B" font-size="14" font-style="italic" font-family="'Crimson Pro','Noto Serif TC',serif">標記員狀態」「定稿產生 gold」三處專屬。</text>
 
       <!-- ══ 任務層級：定稿之後 ══ -->
       <line x1="40" y1="890" x2="1160" y2="890" stroke="rgba(30,27,75,0.10)" stroke-width="0.8"/>
@@ -249,7 +250,7 @@
 
       <rect x="40" y="1040" width="52" height="16" rx="4" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
       <text x="66" y="1051" fill="#64748B" font-size="9" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">待審</text>
-      <text x="100" y="1051" fill="#94A3B8" font-size="8" font-family="'JetBrains Mono', monospace">尚未有人審核 · 未定稿</text>
+      <text x="100" y="1051" fill="#94A3B8" font-size="8" font-family="'JetBrains Mono', monospace">尚未有人審核</text>
 
       <rect x="244" y="1040" width="52" height="16" rx="4" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="1"/>
       <text x="270" y="1051" fill="#1D4ED8" font-size="9" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">已同意</text>
@@ -265,7 +266,7 @@
 
       <rect x="872" y="1040" width="52" height="16" rx="4" fill="#F0FDF4" stroke="#BBF7D0" stroke-width="1"/>
       <text x="898" y="1051" fill="#15803D" font-size="9" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">已定稿</text>
-      <text x="932" y="1051" fill="#94A3B8" font-size="8" font-family="'JetBrains Mono', monospace">收斂或仲裁完成 · 已鎖定（終態）</text>
+      <text x="932" y="1051" fill="#94A3B8" font-size="8" font-family="'JetBrains Mono', monospace">全員無異議、收斂或仲裁完成（終態）</text>
     </svg>
   </div>
 </body>
