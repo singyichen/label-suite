@@ -24,7 +24,7 @@ import {
  * annotator's status.
  *
  * Traceability: specs/annotation/015-annotation-workspace/spec.md FR-070,
- * AC-6.11; related FR-014I, AC-3.15, AC-3.33, AC-6.4.
+ * AC-3.40; related FR-014I, AC-3.15, AC-3.33, AC-6.4.
  */
 
 const NOTE_ZH =
