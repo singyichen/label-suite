@@ -48,7 +48,7 @@
       reviewSubmitLabel: '送出審核',
       reviewApproveLabel: '通過',
       reviewRejectLabel: '退回',
-      wsReviewSubmitSuccess: '審查已提交',
+      wsReviewSubmitSuccess: '審核已送出',
       reviewNoAnswer: '（無）',
       reviewNote: '通過：採用此筆標記。退回：記錄審核決策與修正差異，與回退標記員狀態是不同層級的效果——正式標記退回後該樣本回到待標記，產生標記員重標待辦；試標退回不改變標記員狀態，品質問題由 IAA 閘門與下一輪試標處理。',
       reviewCorrectionTitle: '直接修正（Reviewer 修正後答案）',
