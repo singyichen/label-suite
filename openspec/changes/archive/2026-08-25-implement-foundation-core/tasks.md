@@ -70,15 +70,15 @@ PR 拆分計畫（依 config 任務粒度規則明示）：下方每個 `## N.` 
 
 ## 8. PR-FOUND-DEVOPS —— bootstrap 契約
 
-- [ ] 8.1 加入 `docker-compose.yml`（PostgreSQL profile 供 CI／整合測試）、涵蓋 `app/core/config.py` 所有必要變數的 `.env.example`、seed 策略 stub；驗證：`docker compose config` exit 0 且以腳本比對 `.env.example` 鍵與 Settings 欄位一致 `[@senior-devops]`
-- [ ] 8.2 加入 `scripts/verify-bootstrap.sh`（啟動後端、curl `/api/v1/health`、回報 pass/fail）並文件化 bootstrap 指令清單；驗證：在乾淨 checkout 以 SQLite 預設執行該腳本 exit 0（SC-045／FR-130）`[@senior-devops]`
+- [x] 8.1 加入 `docker-compose.yml`（PostgreSQL profile 供 CI／整合測試）、涵蓋 `app/core/config.py` 所有必要變數的 `.env.example`、seed 策略 stub；驗證：`docker compose config` exit 0 且以腳本比對 `.env.example` 鍵與 Settings 欄位一致 `[@senior-devops]`
+- [x] 8.2 加入 `scripts/verify-bootstrap.sh`（啟動後端、curl `/api/v1/health`、回報 pass/fail）並文件化 bootstrap 指令清單；驗證：在乾淨 checkout 以 SQLite 預設執行該腳本 exit 0（SC-045／FR-130）`[@senior-devops]`
 
 > 依賴：8.1 依賴 1.5（`.env.example` 需比對 `Settings` 欄位）；8.2 依賴第 4 組（health 端點需可啟動）。與前端軌可平行。8.1 → 8.2 序列。
 
 ## 9. 整合驗證與 pilot 收尾（隨最後一個 PR 進版）
 
-- [ ] 9.1 端到端檢查：後端啟動、前端 dev server 啟動、`/health-check` 頁面顯示來自真實 API 的狀態；驗證：手動確認並記錄於 PR body `[@senior-qa]`
-- [ ] 9.2 執行完整驗證矩陣（後端 pytest/mypy/ruff；前端 tsc/lint/test）並確認每個 stacked PR 的 CI 綠燈；驗證：全部 exit 0 `[@senior-qa]`
-- [ ] 9.3 歸檔變更（`/opsx:archive`）：回寫正典 `specs/foundation/000-foundation/spec.md`（版本升級 + Changelog 條目記錄 Foundation-Core 實作）、產生 derived view、執行 pilot 漂移檢查清單（derived capability 標頭載明正典路徑與 FR ID；不殘留 delta 標題；FR-ID 交叉 grep）；驗證：`openspec validate` exit 0 且 issue #356 的採用計畫 Pilot 驗收清單已打勾 `[@main]`
+- [x] 9.1 端到端檢查：後端啟動、前端 dev server 啟動、`/health-check` 頁面顯示來自真實 API 的狀態；驗證：手動確認並記錄於 PR body `[@senior-qa]`
+- [x] 9.2 執行完整驗證矩陣（後端 pytest/mypy/ruff；前端 tsc/lint/test）並確認每個 stacked PR 的 CI 綠燈；驗證：全部 exit 0 `[@senior-qa]`
+- [x] 9.3 歸檔變更（`/opsx:archive`）：回寫正典 `specs/foundation/000-foundation/spec.md`（版本升級 + Changelog 條目記錄 Foundation-Core 實作）、產生 derived view、執行 pilot 漂移檢查清單（derived capability 標頭載明正典路徑與 FR ID；不殘留 delta 標題；FR-ID 交叉 grep）；驗證：`openspec validate` exit 0 且 issue #356 的採用計畫 Pilot 驗收清單已打勾 `[@main]`
 
 > 依賴：9.1 依賴第 1–8 組全部；9.2 依賴 9.1；9.3 依賴 9.2（archive 是最後動作，由主 session 執行 openspec CLI 工作流與正典回寫）。

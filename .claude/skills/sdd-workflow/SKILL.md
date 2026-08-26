@@ -67,7 +67,7 @@ The four-layer gate model in [docs/sdd-workflow.md](../../../docs/sdd-workflow.m
 1. **OpenSpec schema validation** checks OpenSpec schema, delta, and scenario structure. Use the non-strict schema gate, such as `openspec validate --changes --no-interactive`; it does not validate project headings, ownership, status, or retired paths.
 2. **Project SDD lint** checks project headings and goal/status/ownership/retired-path rules. Until its tooling exists, use the canonical workflow checklist and review evidence.
 3. **Code/test gates** verify affected Red/Green evidence and relevant type, lint, unit, integration, prototype, E2E, and security checks.
-4. **Source-Verify + write-back/archive** verifies archive-time canonical IDs, version, and Changelog integrity.
+4. **Source-Verify + write-back/archive** verifies archive-time canonical IDs, version, and Changelog integrity, then verifies by `grep` that every canonical citation in the derived view is locatable — FR/AC IDs, section references, file paths, ADR/issue/PR numbers, and paraphrased requirement clauses. `openspec archive` copies propose-time delta text verbatim, so a citation that was wrong at propose time survives into the derived view and no CLI check catches it. See `docs/sdd-workflow.md` §6.2.
 
 `/opsx:verify` may coordinate workflow-specific checks, but does not replace any of the four layers. Do not present it or `openspec validate` as a project-wide consistency gate.
 
