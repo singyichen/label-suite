@@ -32,7 +32,12 @@ cd "$(dirname "$0")/.."
 
 PORT="${VERIFY_BOOTSTRAP_PORT:-8765}"
 TIMEOUT="${VERIFY_BOOTSTRAP_TIMEOUT:-30}"
-LOG_FILE="$(mktemp -t verify-bootstrap-uvicorn)"
+# Explicit TMPDIR-anchored template, not `mktemp -t <prefix>`: BSD mktemp
+# (macOS) reads -t as a bare prefix, but GNU coreutils reads it as a
+# deprecated TEMPLATE form that demands >= 3 trailing X's and aborts with
+# "too few X's in template" -- so the bare-prefix form passed locally and
+# failed on every Linux runner. This template satisfies both.
+LOG_FILE="$(mktemp "${TMPDIR:-/tmp}/verify-bootstrap-uvicorn.XXXXXX")"
 SERVER_PID=""
 
 # Kills the whole process group, not just $SERVER_PID. `uv run` spawns uvicorn
