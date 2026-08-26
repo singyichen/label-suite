@@ -29,7 +29,7 @@ interface ReviewUnit {
   status: string | null;
 }
 
-interface WorkspaceDataWindow extends Window {
+interface WorkspaceDataWindow {
   LabelSuiteAnnotationWorkspaceData: {
     findNextActionableReviewUnit: (
       taskId: string,
