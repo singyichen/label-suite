@@ -4,7 +4,7 @@
 >
 > **掃描範圍：** `design/prototype/` 所有頁面
 > **最後掃描：** 2026-07-10
-> **掃描頁面：** account/login.html、account/register.html、account/forgot-password.html、account/reset-password.html、account/profile.html、dashboard/dashboard.html、admin/user-management.html、admin/role-settings.html、task-management/task-detail.html、task-management/task-list.html、task-management/task-new.html、task-management/task-detail.panels/*、annotation/annotation-list.html、annotation/annotation-workspace.html、annotation/annotation-workspace.panels/*、dataset/dataset-analysis-list.html、dataset/dataset-analysis-detail.html、dataset/dataset-analysis-detail.partials/*
+> **掃描頁面：** account/login.html、account/register.html、account/forgot-password.html、account/reset-password.html、account/profile.html、dashboard/dashboard.html、admin/user-management.html、admin/role-settings.html、task-management/task-detail.html、task-management/task-list.html、task-management/task-new.html、task-management/task-detail.panels/*、annotation/annotation-list.html、annotation/annotation-workspace.html、dataset/dataset-analysis-list.html、dataset/dataset-analysis-detail.html、dataset/dataset-analysis-detail.partials/*
 > **Design Token 來源：** `design/prototype/assets/tokens.css`
 > **反向索引：** [screen-inventory.md](screen-inventory.md)（「頁面 → 元件」視角；該檔為 generated view，由 [inventory-manifest.json](inventory-manifest.json) 產生）
 
