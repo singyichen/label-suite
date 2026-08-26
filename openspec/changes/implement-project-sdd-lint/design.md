@@ -61,6 +61,13 @@ write-back/archive 仍各自報告。
    不把 Red 改派給 `senior-devops`，因 testing constitution 要求 Red 必須由
    `senior-qa` 擁有；也不搬移既有 Bash harness，因為另建 QA test path 會拆散
    repository 已採用的 hermetic shell-test 慣例。
+6. **將 CI integration 與 final archive 拆成兩個 PR group。** Intermediate
+   CI integration PR 只承載 committed CI Red/Green 與 `CLAUDE.md` local parity，
+   並遵守一般 file-count／diff-size guardrails；所有 `/opsx:apply` checkboxes
+   完成後，獨立 final archive PR 才執行 command-only verification 與 apply 外的
+   non-checkbox pre-merge archive。將兩者合併會超過一般五檔限制；維護者於
+   2026-08-26 核准的例外只涵蓋 archive 的恰好六個 logical non-test files，不能用來
+   承接 CI、`CLAUDE.md`、STATUS 或其他 scope。
 
 ## Command contract
 
@@ -178,11 +185,39 @@ active inputs，避免把「已退役」的歷史敘述誤報為現行指引。i
 `.github/workflows/ci.yml` 建立 top-level `sdd-lint` job，display name 為
 `Project SDD Lint`，只 checkout repository 並執行 `scripts/check-sdd.sh`；它不
 依賴 backend、frontend 或 prototype install。`CLAUDE.md` 同一 PR 列出 project
-root 的相同 local command，維持 local/CI parity。
+root 的相同 local command，維持 local/CI parity。該 PR 是 intermediate CI
+integration group，只包含 committed CI Red/Green 與 local parity，遵守一般
+file-count／diff-size guardrails，且不執行 archive。
 
 此 job 與 `openspec validate --changes --no-interactive` 分開，既不包裝也不取代
 OpenSpec schema validation。branch protection 是否將 job 設為 required 是 GitHub
 外部狀態，PR handoff 必須明確提出，但不由離線 scanner 判定。
+
+## SDD and PR sequencing
+
+本變更依序使用 Design/Specify、Propose、Red/Green、CI integration 與 final
+archive groups。Red 與 Green 維持 serial、separate commits，但 Red/Green PR
+結束時測試必須為綠；CI integration 則在另一個 intermediate PR 依序完成 CI Red、
+CI Green 與 `CLAUDE.md` local parity，並在一般 guardrails 內合併，不攜帶任何
+archive/write-back 檔案。
+
+Final archive PR 先執行 command-only final verification，並將它作為最後一個
+`/opsx:apply` checkbox。所有 apply tasks 完成後，才在 `/opsx:apply` 外執行
+non-checkbox pre-merge archive/write-back。維護者已於 2026-08-26 明確核准一次性
+atomic six-file exception，且只涵蓋下列恰好六個 logical non-test archive files：
+
+1. canonical `specs/foundation/001-project-sdd-lint/spec.md` write-back；
+2. derived `openspec/specs/foundation/001-project-sdd-lint/spec.md`；
+3. `proposal.md` 的 active-to-archive rename；
+4. `design.md` 的 active-to-archive rename；
+5. `tasks.md` 的 active-to-archive rename；
+6. delta spec 的 active-to-archive rename。
+
+每一組 source/destination 視為一個 logical rename。此例外不涵蓋
+`.github/workflows/ci.yml`、`CLAUDE.md`、`specs/STATUS.md`、agent guidance 或
+其他檔案；若 archive 實際產生任何額外或不同 path，流程在 commit 前停止並回到
+maintainer checkpoint。`specs/STATUS.md` 的 umbrella `done` transition 與
+active-path retention 留在 final merge 後的 non-apply continuation，不進入本例外。
 
 ## Risks / Trade-offs
 
@@ -194,8 +229,11 @@ OpenSpec schema validation。branch protection 是否將 job 設為 required 是
   debt 歸零。
 - [獨立 CI gate rollout 可能暫時影響合併流程] → 先以本地與 CI evidence 驗證
   command，再由 maintainer 設定外部 required check；rollback 先移除或停用外部
-  required-check expectation，再回復 workflow job，且不把移除 gate 描述為 scanner
-  成功。
+  required-check expectation，再回復 intermediate CI integration 的 workflow 與
+  local parity，且不把移除 gate 描述為 scanner 成功。
+- [archive 可能產生超出核准六檔的 generated scope] → 在 commit 前比對 canonical
+  write-back、derived spec 與四個 artifact renames；任何額外或不同 path 都停止並
+  回到 maintainer checkpoint，不以一次性例外推定批准。
 
 ## Migration Plan
 
@@ -209,11 +247,21 @@ OpenSpec schema validation。branch protection 是否將 job 設為 required 是
 3. 在 repository 與 synthetic fixtures 執行 command、baseline、OpenSpec schema
    與其他適用 evidence，確認 `INVENTORY_FRESHNESS_UNVERIFIED` 可見但不單獨造成
    nonzero。
-4. 新增獨立 `sdd-lint` workflow job 與相同 local command；CI 成功觀察後，PR
-   handoff 才請 maintainer 將 `Project SDD Lint` 設為外部 required check。
-5. 若 rollout 必須回復，先由 maintainer 移除或停用外部 required-check expectation，
-   避免 PR 因不存在的 check 卡住；再回復 `sdd-lint` workflow gate。此 rollback
-   只撤回 gate 的強制性，不宣稱 scanner 已成功或已驗證 inventory freshness。
+4. 在 intermediate CI integration PR 先提交 CI Red，再新增獨立 `sdd-lint`
+   workflow job使其轉綠，最後加入相同 local command；本 PR 遵守一般 guardrails，
+   且不執行 archive。CI 成功觀察後，handoff 才請 maintainer 將
+   `Project SDD Lint` 設為外部 required check。
+5. 在獨立 final archive PR 執行 command-only final verification，完成最後一個
+   `/opsx:apply` checkbox；確認所有 apply tasks 已完成後，才在 apply 外執行
+   non-checkbox pre-merge archive。archive 只可產生核准的 canonical write-back、
+   derived spec 與四個 OpenSpec artifact renames；scope 不一致就停止於 checkpoint。
+6. 若 CI rollout 必須回復，先由 maintainer 移除或停用外部 required-check
+   expectation，避免 PR 因不存在的 check 卡住；再回復 intermediate CI integration
+   的 workflow 與 `CLAUDE.md` local parity。此 rollback 不宣稱 scanner 成功或
+   inventory freshness 已驗證。
+7. 若 final archive 在 merge 前需要回復，撤回只含核准六個 logical files 的
+   final archive PR 並保持 OpenSpec change 為 active；已合併的 CI integration PR
+   不因 archive rollback 被納入一次性例外或一併回復。
 
 ## TDD and evidence
 
@@ -240,7 +288,9 @@ git diff --check
 
 上述命令分別記錄。lint、OpenSpec schema、受影響 code/test 與 archive-time
 Source-Verify/write-back 仍是四個獨立 gate；archive 後另逐一 grep derived view
-的 canonical citations。
+的 canonical citations。CI Red/Green 與 local parity 在 intermediate PR 完成；
+command-only final verification 是最後一個 apply task，pre-merge archive 則在所有
+apply checkboxes 完成後以 non-checkbox continuation 執行。
 
 ## Error handling
 
@@ -263,6 +313,9 @@ Source-Verify/write-back 仍是四個獨立 gate；archive 後另逐一 grep der
   [`testing constitution`](../../../specs/_governance/testing-constitution.md)。
 - **X. Change Scope Discipline**：僅定義 lint、baseline、fixture 與獨立 CI 的
   實作邊界，不混入 cleanup、inventory regeneration、API、DB 或產品行為。
+  Intermediate CI integration PR 遵守一般 guardrails；final archive 的六個
+  logical non-test files 依 2026-08-26 maintainer 明確核准的一次性例外處理，且
+  不擴張至 CI、`CLAUDE.md`、STATUS 或 unexpected archive scope。
 - **XVII. CI/CD Quality Gates**：同一 local command 由獨立 CI job 執行，且不混淆
   四個 gate。
 - **XX. Source of Truth & Contract Governance**：canonical spec 與治理文件維持
