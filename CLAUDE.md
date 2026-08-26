@@ -21,7 +21,7 @@ Rules in `.claude/rules/` load per situation: files with `paths:` frontmatter lo
 
 - **English:** code, comments, commit messages, API contracts, `design/system/MASTER.md`
 - **Traditional Chinese allowed:** `docs/`, `specs/`, `design/prototype/`, `design/wireframes/`, `design/system/inventory.md`
-- **Traditional Chinese REQUIRED:** every OpenSpec-produced artifact (`openspec/changes/**`, `openspec/specs/**` — proposal.md, spec deltas, design.md, tasks.md, derived views) must be written in Traditional Chinese; only technical terms stay in English (FR/AC IDs, code identifiers, commands, file paths, and OpenSpec structural keywords such as `## ADDED Requirements`, `### Requirement:`, `#### Scenario:`, WHEN/THEN). These documents are reviewed by the maintainer.
+- **Traditional Chinese REQUIRED:** every OpenSpec-produced artifact (`openspec/changes/**`, `openspec/specs/**` — proposal.md, spec deltas, design.md, tasks.md, derived views) must be written in Traditional Chinese; only technical terms stay in English (FR/AC IDs, code identifiers, commands, file paths, and OpenSpec structural keywords such as `## ADDED Requirements`, `### Requirement:`, `#### Scenario:`, WHEN/THEN). `proposal.md`'s two section headings — `## Why` and `## What Changes` — are structural keywords too and must stay exactly that, with no Chinese gloss appended: the OpenSpec CLI matches them literally and `openspec archive` warns when they differ (issue #356 pilot finding ①). Their body text is still Traditional Chinese. These documents are reviewed by the maintainer.
 - **Traditional Chinese REQUIRED:** GitHub issues (every issue type) and pull requests opened by an AI agent — both the body and the descriptive part of the title. Titles keep an English structural head: `[Enhancement] <scope>: <中文描述>` for issues, `<type>: <中文描述>` for PRs. Only technical terms stay in English — title prefixes (`[Bug]`, `[Enhancement]`, ...), Conventional Commit types (`feat`, `fix`, ...), GitHub label names, FR/AC IDs, code identifiers, file paths, commands, and verbatim error output. Commit messages are NOT covered and remain English-only (see Prohibitions); this stays safe because `main` merges with merge commits, so a Chinese PR title never becomes a commit subject.
 - All conversations with Claude should be responded to in Traditional Chinese.
 
@@ -103,7 +103,7 @@ Full pipeline — each stage is a hard gate. OpenSpec is the implementation/chan
 1. **OpenSpec schema validation** checks schema, delta, and scenario structure. Use a non-strict schema gate such as `openspec validate --changes --no-interactive`; it does not validate project headings, ownership, status, or retired paths.
 2. **Project SDD lint** checks project headings plus goal/status/ownership/retired-path rules. Until tooling exists, use the canonical workflow checklist and review evidence.
 3. **Code/test gates** check affected Red/Green evidence and applicable type, lint, unit, integration, prototype, E2E, and security commands.
-4. **Source-Verify + write-back/archive** checks archive-time canonical IDs, version, and Changelog integrity.
+4. **Source-Verify + write-back/archive** checks archive-time canonical IDs, version, and Changelog integrity, and — after archiving — that every canonical citation in the derived view is individually locatable by `grep` (FR/AC IDs, section references, file paths, ADR/issue/PR numbers, and requirement clauses that were paraphrased). `openspec archive` copies propose-time delta text verbatim, so wrong or omitted citations survive into the derived view and no CLI check catches them; see [docs/sdd-workflow.md](docs/sdd-workflow.md) §6.2 for the required step.
 
 `/opsx:verify` may run applicable checks, but does not replace any gate. `openspec validate` is only the non-strict OpenSpec schema gate.
 
@@ -164,6 +164,9 @@ pnpm audit --prod --audit-level high
 # Prototype (run from design/prototype/, when design/prototype/** changed)
 pnpm typecheck
 pnpm playwright test
+
+# Bootstrap contract (run from project root — SC-045; see docs/bootstrap.md)
+bash scripts/verify-bootstrap.sh
 ```
 
 Every CI job must have a matching local command above — when adding a CI job, add its command here in the same PR.
