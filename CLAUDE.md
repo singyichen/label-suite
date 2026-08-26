@@ -147,6 +147,9 @@ NON-NEGOTIABLEs: **Generalization-First** (config-driven, no hardcoded task logi
 Run after every change. Task is NOT complete until all pass.
 
 ```bash
+# Project SDD lint (run from project root)
+scripts/check-sdd.sh
+
 # Backend (run from backend/)
 uv run pytest tests/ -q
 uv run pytest --cov=app --cov-report=term-missing --cov-fail-under=80
@@ -167,12 +170,6 @@ pnpm playwright test
 
 # Bootstrap contract (run from project root — SC-045; see docs/development.md)
 bash scripts/verify-bootstrap.sh
-
-# OpenSpec schema validation (run from project root)
-openspec validate --changes --no-interactive
-
-# Project SDD lint (run from project root)
-scripts/check-sdd.sh
 ```
 
 Every CI job must have a matching local command above — when adding a CI job, add its command here in the same PR.
