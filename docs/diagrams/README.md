@@ -1,12 +1,11 @@
 # 圖表工具鏈分工
 
-`docs/diagrams/` 底下同時存在三套圖表工具鏈。它們各自解決不同問題，不互相取代。本文說明何時用哪一套、產出放哪裡。
+`docs/diagrams/` 底下存在兩套圖表工具鏈。它們各自解決不同問題，不互相取代。本文說明何時用哪一套、產出放哪裡。
 
 ## 分工表
 
 | 工具 | 安裝位置 | 產出格式 | 適用場景 |
 |------|---------|---------|---------|
-| **D2** | 外部 CLI（未納入 repo 建置） | `.d2` 原始檔 + `.png` | Thesis 章節架構圖 |
 | **`flowchart` skill** | `.claude/skills/flowchart/` | Mermaid（`.mmd`）+ `.png` | 開發者導向的系統流程、狀態機、時序圖 |
 | **`diagram-design` skill** | 全域 `~/.claude/skills/diagram-design/`（見下） | 自包含 `.html` + inline SVG | 給非工程受眾看的流程圖，需套用 Label Suite 品牌樣式 |
 
@@ -15,20 +14,17 @@
 **先問受眾是誰。**
 
 - **受眾是工程師或 code reviewer** → `flowchart` skill。Mermaid 純文字、diff 友善、GitHub 原生渲染，改一行就看得出改了什麼。缺點是版面與配色不可控。
-- **受眾是教授、口試委員、Demo Paper 讀者** → D2（thesis 章節）或 `diagram-design`（流程說明）。兩者都能產出印刷品質的圖。
-- **受眾是產品使用者（標記員、審核員）** → `diagram-design`。它是唯一能套用專案 design token 的一套，圖面顏色會跟實際產品畫面一致；且輸出為單一 HTML 檔，直接用瀏覽器開就能看，不需要任何 renderer。
+- **受眾是產品使用者（標記員、審核員）、教授或 Demo Paper 讀者** → `diagram-design`。它是唯一能套用專案 design token 的一套，圖面顏色會跟實際產品畫面一致；且輸出為單一 HTML 檔，直接用瀏覽器開就能看，不需要任何 renderer。
 
-**再問要不要進版控做逐行比對。** 需要 → Mermaid 或 D2（原始碼是純文字）。不需要、重點是視覺成品 → `diagram-design`。
+**再問要不要進版控做逐行比對。** 需要 → Mermaid（原始碼是純文字）。不需要、重點是視覺成品 → `diagram-design`。
 
 ## 產出位置慣例
 
-| 目錄 | 內容 |
-|------|------|
-| `docs/diagrams/thesis/` | Thesis 各章架構圖（D2） |
-| `docs/diagrams/workflow/` | 系統流程與審核流程圖 |
-| `docs/diagrams/shared/` | D2 共用 class 定義（`_base.d2`） |
+所有圖表放在 `docs/diagrams/workflow/`。
 
-Mermaid 與 D2 都要**同時提交原始檔與算繪後的圖檔**，否則沒有 renderer 的讀者看不到內容。`diagram-design` 的 HTML 本身即成品，不需要另附圖檔。
+Mermaid 要**同時提交 `.mmd` 原始檔與算繪後的 `.png`**，否則沒有 renderer 的讀者看不到內容。`diagram-design` 的 HTML 本身即成品，不需要另附圖檔。
+
+> 專案先前另有一套 D2 工具鏈（`.d2` 原始檔 + `.png`，用於 thesis 章節架構圖），因無人引用且無建置接線而移除，見 PR #474。若日後需要，可自 git 歷史取回。
 
 ## `diagram-design` 的安裝與樣式
 
