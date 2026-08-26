@@ -161,11 +161,13 @@ test.describe('Dashboard — review-flow demo tasks (T014-T017)', () => {
     await expect(page).not.toHaveURL(/sample_id=/);
   });
 
-  /* The quick-review action must land on each demo task's FIRST dataset
-     record as the can_arbitrate reviewer, so the workspace opens on the
-     initial reviewer screen (and disputed units render the arbitration
-     entry screen instead of hiding it behind the default identity). */
-  test('reviewer quick-review opens the workspace on the first record as reviewer_chen', async ({ page }) => {
+  /* Issue #449: the quick-review action lands on the next unit the
+     can_arbitrate reviewer can actually act on, not the task's first dataset
+     record -- T014's first record is finalized for every annotator, so the
+     first actionable unit is the pending dry-02 x tony0950127 one. The
+     per-priority rule itself is pinned by
+     dashboard-quick-review-next-actionable.spec.ts. */
+  test('reviewer quick-review opens the workspace on the next actionable unit as reviewer_chen', async ({ page }) => {
     await openScenario(page, 'reviewer');
 
     const row = page.locator('#reviewerTaskList [data-example-task-id="T014"]');
@@ -173,7 +175,8 @@ test.describe('Dashboard — review-flow demo tasks (T014-T017)', () => {
 
     await expect(page).toHaveURL(/\/pages\/annotation\/annotation-workspace\.html\?/);
     await expect(page).toHaveURL(/task_id=T014/);
-    await expect(page).toHaveURL(/sample_id=dry-01-all-agree/);
+    await expect(page).toHaveURL(/sample_id=dry-02-one-divergent/);
+    await expect(page).toHaveURL(/annotator_id=tony0950127/);
     await expect(page).toHaveURL(/role=reviewer/);
     await expect(page).toHaveURL(/run_type=dry_run/);
     await expect(page).toHaveURL(/reviewer_id=reviewer_chen/);
