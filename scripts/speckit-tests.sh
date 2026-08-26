@@ -420,7 +420,12 @@ assert_command_fails_with() {
     local rule="$3"
     local path="$4"
     shift 4
-    local output status
+    local excluded_rule='' output status
+
+    if [[ "${1:-}" == "--not-rule" ]]; then
+        excluded_rule="$2"
+        shift 2
+    fi
     output="$(mktemp "$TMP_ROOT/check-sdd.XXXXXX")"
 
     if run_check_sdd "$repo" "$@" >"$output" 2>&1; then
@@ -435,6 +440,28 @@ assert_command_fails_with() {
         exit 1
     fi
     assert_contains "$output" "ERROR [$rule] $path:"
+    if [[ -n "$excluded_rule" ]]; then
+        assert_not_contains "$output" "ERROR [$excluded_rule]"
+    fi
+}
+
+assert_command_succeeds() {
+    local repo="$1"
+    shift
+    local output status
+    output="$(mktemp "$TMP_ROOT/check-sdd.XXXXXX")"
+
+    if run_check_sdd "$repo" "$@" >"$output" 2>&1; then
+        status=0
+    else
+        status=$?
+    fi
+    if [[ "$status" -ne 0 ]]; then
+        echo "Expected check-sdd.sh to exit 0, got: $status" >&2
+        cat "$output" >&2
+        exit 1
+    fi
+    assert_contains "$output" "Project SDD lint: 0 error(s)"
 }
 
 assert_not_contains() {
@@ -897,6 +924,79 @@ test_check_sdd_fails_for_status_module_mismatch() {
     assert_command_fails_with "$repo" 1 "STATUS_ARTIFACT_SYNC" "specs/STATUS.md"
 }
 
+test_check_sdd_rejects_arbitrary_dependency_heading_suffix() {
+    local repo
+    repo="$(make_sdd_repo)"
+    sed -i.bak 's/^## 規格相依性$/## 規格相依性 BAD/' "$repo/specs/foundation/001-project-sdd-lint/spec.md"
+
+    assert_command_fails_with "$repo" 1 "SPEC_REQUIRED_HEADING" "specs/foundation/001-project-sdd-lint/spec.md" --not-rule SPEC_REQUIRED_IDS
+}
+
+test_check_sdd_accepts_approved_dependency_heading_suffix() {
+    local repo
+    repo="$(make_sdd_repo)"
+    sed -i.bak 's/^## 規格相依性$/## 規格相依性 *(本功能依賴其他規格，或被其他規格依賴時填寫)*/' "$repo/specs/foundation/001-project-sdd-lint/spec.md"
+
+    assert_command_succeeds "$repo"
+}
+
+test_check_sdd_rejects_suffixed_source_verify_id() {
+    local repo
+    repo="$(make_sdd_repo)"
+    printf '\n### FR-013A\n' >> "$repo/specs/foundation/001-project-sdd-lint/spec.md"
+    printf '\nFR-013B\n' >> "$repo/openspec/changes/project-sdd-lint/design.md"
+
+    assert_command_fails_with "$repo" 1 "SOURCE_VERIFY_ID" "openspec/changes/project-sdd-lint/design.md" --not-rule SPEC_REQUIRED_IDS
+}
+
+test_check_sdd_rejects_retired_command_in_active_openspec_config() {
+    local repo
+    repo="$(make_sdd_repo)"
+    printf '\nnpm run lint\n' >> "$repo/openspec/config.yaml"
+
+    assert_command_fails_with "$repo" 1 "RETIRED_COMMAND" "openspec/config.yaml"
+}
+
+test_check_sdd_rejects_nonpath_exception_files_value() {
+    local repo
+    repo="$(make_sdd_repo)"
+    printf '\n- [ ] 1.3 Scaffold outputs. Exception: scaffold; Files: not-a-path; Reason: Bootstrap requires both files. [@senior-devops]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+
+    assert_command_fails_with "$repo" 1 "TASK_EXCEPTION" "openspec/changes/project-sdd-lint/tasks.md" --not-rule TASK_FILE_OWNER
+}
+
+test_check_sdd_rejects_partial_exception_files_list() {
+    local repo
+    repo="$(make_sdd_repo)"
+    printf '\n- [ ] 1.3 Scaffold `scripts/a.sh` and `scripts/b.sh`. Exception: scaffold; Files: `scripts/a.sh`; Reason: Bootstrap requires both files. [@senior-devops]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+
+    assert_command_fails_with "$repo" 1 "TASK_EXCEPTION" "openspec/changes/project-sdd-lint/tasks.md" --not-rule TASK_FILE_OWNER
+}
+
+test_check_sdd_accepts_complete_exception_files_list() {
+    local repo
+    repo="$(make_sdd_repo)"
+    printf '\n- [ ] 1.3 Scaffold `scripts/a.sh` and `scripts/b.sh`. Exception: scaffold; Files: `scripts/a.sh`, `scripts/b.sh`; Reason: Bootstrap requires both files. [@senior-devops]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+
+    assert_command_succeeds "$repo"
+}
+
+test_check_sdd_rejects_non_shell_red_task_with_non_qa_owner() {
+    local repo
+    repo="$(make_sdd_repo)"
+    printf '\n- [ ] 1.3 Red backend regression in `backend/tests/test_sdd_lint.py`. [@senior-devops]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+
+    assert_command_fails_with "$repo" 1 "TASK_RED_OWNER" "openspec/changes/project-sdd-lint/tasks.md" --not-rule TASK_FILE_OWNER
+}
+
+test_check_sdd_accepts_non_shell_red_task_with_qa_owner() {
+    local repo
+    repo="$(make_sdd_repo)"
+    printf '\n- [ ] 1.3 Red backend regression in `backend/tests/test_sdd_lint.py`. [@senior-qa]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+
+    assert_command_succeeds "$repo"
+}
+
 test_prerequisites_resolve_module_feature_paths
 test_create_feature_creates_module_branch_spec_and_status
 test_setup_plan_and_status_update
@@ -931,5 +1031,14 @@ test_check_sdd_fails_for_explicit_multi_file_task
 test_check_sdd_accepts_english_negative_task_clauses
 test_check_sdd_fails_without_exact_spec_declaration
 test_check_sdd_fails_for_status_module_mismatch
+test_check_sdd_rejects_arbitrary_dependency_heading_suffix
+test_check_sdd_accepts_approved_dependency_heading_suffix
+test_check_sdd_rejects_suffixed_source_verify_id
+test_check_sdd_rejects_retired_command_in_active_openspec_config
+test_check_sdd_rejects_nonpath_exception_files_value
+test_check_sdd_rejects_partial_exception_files_list
+test_check_sdd_accepts_complete_exception_files_list
+test_check_sdd_rejects_non_shell_red_task_with_non_qa_owner
+test_check_sdd_accepts_non_shell_red_task_with_qa_owner
 
 echo "speckit script tests passed"
