@@ -4616,6 +4616,10 @@ function interpolate(template, payload) {
          true, so the PL overview and the workspace's guideline gate can
          never disagree about a task that never set the field. */
       TASK_DATA.forceGuideline = Boolean(profile.forceShowGuideline);
+      /* issue #405: same per-task-profile pattern as forceShowGuideline
+         above -- only overwrite the shared DEFAULT_TASK_DATA reviewer
+         guideline text when this profile actually seeds one. */
+      if (profile.reviewerGuidelineText) TASK_DATA.reviewerGuidelineText = profile.reviewerGuidelineText;
       /* DEFAULT_TASK_DATA.samplingValue targets its legacy 3200-record
          dataset; re-derive from this profile's actual record count. */
       TASK_DATA.samplingValue = null;
