@@ -72,8 +72,8 @@ PR 上以 `Project SDD Lint` 獨立 job 顯示結果，本地使用相同 comman
 **驗收情境**：
 
 1. **AC-4.1**：**Given** resolved target root 的 `node scripts/gen-screen-inventory.mjs --check` exit `0`，**When** Project SDD lint 執行 inventory freshness rule，**Then** 不輸出 inventory diagnostic，且 lint outcome 依其他 rules 決定。
-2. **AC-4.2**：**Given** resolved target root 的 generator `--check` exit `1`，**When** Project SDD lint 執行 inventory freshness rule，**Then** 輸出 `ERROR [INVENTORY_FRESHNESS] design/system/screen-inventory.md: ...`，且 lint exit `1`，除非其他 scanner configuration error 要求 exit `2`。
-3. **AC-4.3**：**Given** resolved target root 缺少 `scripts/gen-screen-inventory.mjs`、執行環境缺少 Node、generator exit `2` 或回傳 `1` 以外的任何 unexpected nonzero，**When** Project SDD lint 執行 inventory freshness rule，**Then** 輸出 `ERROR [INVENTORY_CHECK_CONFIG] scripts/gen-screen-inventory.mjs: ...` 且 lint exit `2`。
+2. **AC-4.2**：**Given** resolved target root 的 generator `--check` exit `1` 且伴隨 versioned generator 的 exact stale sentinel `design/system/screen-inventory.md is stale — run: node scripts/gen-screen-inventory.mjs`，**When** Project SDD lint 執行 inventory freshness rule，**Then** 輸出 `ERROR [INVENTORY_FRESHNESS] design/system/screen-inventory.md: ...`，且 lint exit `1`，除非其他 scanner configuration error 要求 exit `2`。
+3. **AC-4.3**：**Given** resolved target root 缺少 generator、generator 無法讀取、load 或執行、執行環境缺少 Node、generator exit `2`、generator exit `1` 但未伴隨 exact stale sentinel，或回傳任何其他 unexpected result，**When** Project SDD lint 執行 inventory freshness rule，**Then** 輸出 `ERROR [INVENTORY_CHECK_CONFIG] scripts/gen-screen-inventory.mjs: ...` 且 lint exit `2`。
 
 ## 需求規格 *(必填)*
 
@@ -87,7 +87,7 @@ PR 上以 `Project SDD Lint` 獨立 job 顯示結果，本地使用相同 comman
 - **FR-006**：系統必須在 active governance consumers 與 active OpenSpec artifacts 阻擋 repository-local `npm test`、`npm run`、將 `/ui-ux-pro-max` 當 pipeline stage，以及非歷史內容的 `/speckit.analyze`；不得把 `pnpm` 誤判為 `npm`。
 - **FR-007**：系統必須將 goal semantic review、ordinary task file-count ambiguity、runtime Red evidence、GitHub PR state 與 ADR-034 E2E path 標為 warning-only；`--strict` 不得將明確 deferred warning 升級。
 - **FR-008**：CI 必須以獨立 `Project SDD Lint` job 執行 `scripts/check-sdd.sh`，`CLAUDE.md` 必須列出相同本地命令；job 不得包裝或取代 `openspec validate`。
-- **FR-009**：系統必須使用 resolved target root 執行 `node "$repo_root/scripts/gen-screen-inventory.mjs" --check`，不得使用 caller checkout；必須 capture 且 suppress generator raw output，並以穩定 Project SDD lint diagnostic 與 summary 映射 exit `0` 為無 inventory diagnostic、exit `1` 為 blocking `INVENTORY_FRESHNESS`、exit `2` 或其他 unexpected nonzero 為 `INVENTORY_CHECK_CONFIG` configuration error；缺少 generator 或 Node 亦必須映射為 `INVENTORY_CHECK_CONFIG` 與 lint exit `2`，且 `--strict` 不得改變 inventory severity。
+- **FR-009**：系統必須使用 resolved target root 執行 `node "$repo_root/scripts/gen-screen-inventory.mjs" --check`，不得使用 caller checkout；必須 capture 且 suppress generator raw output，並以穩定 Project SDD lint diagnostic 與 summary 映射 exit `0` 為無 inventory diagnostic。只有 child exit `1` 且伴隨 versioned generator 的 exact stale sentinel `design/system/screen-inventory.md is stale — run: node scripts/gen-screen-inventory.mjs` 時可映射為 blocking `INVENTORY_FRESHNESS`；缺少 generator、generator 無法讀取、load 或執行、缺少 Node、exit `2`、exit `1` 但無 exact stale sentinel，或任何其他 unexpected result 都必須映射為 `INVENTORY_CHECK_CONFIG` configuration error 與 lint exit `2`，且 `--strict` 不得改變 inventory severity。
 
 ## 規格相依性
 
@@ -111,7 +111,7 @@ PR 上以 `Project SDD Lint` 獨立 job 顯示結果，本地使用相同 comman
 - **SC-003**：`bash -n scripts/check-sdd.sh scripts/speckit-tests.sh` 與 `bash scripts/speckit-tests.sh` exit `0`，且 Red commit 的 expected missing-command failure 可定位。
 - **SC-004**：`scripts/check-sdd.sh` 在 macOS Bash 3.2-compatible syntax 與 Ubuntu CI 執行，不增加 package dependency。
 - **SC-005**：CI 具有獨立 `Project SDD Lint` job，且 OpenSpec schema command 仍被文件化為另一個 gate。
-- **SC-006**：fresh、stale 與 configuration inventory fixtures 必須分別驗證無 inventory diagnostic/exit 依其他 rules、`INVENTORY_FRESHNESS`/exit `1`、`INVENTORY_CHECK_CONFIG`/exit `2`，且 real repository `node scripts/gen-screen-inventory.mjs --check` 必須 exit `0` 作為 `design/system/screen-inventory.md` freshness 證據。
+- **SC-006**：fresh、exit `1` + exact stale sentinel、unrunnable/sentinel-less exit `1` 與其他 configuration inventory fixtures 必須分別驗證無 inventory diagnostic/exit 依其他 rules、`INVENTORY_FRESHNESS`/exit `1`、`INVENTORY_CHECK_CONFIG`/exit `2`，且 real repository `node scripts/gen-screen-inventory.mjs --check` 必須 exit `0` 作為 `design/system/screen-inventory.md` freshness 證據。
 - **SC-007**：Issue #375 handoff 只勾選實際交付的七個 D 子項，以及 combined acceptance `CI 或本地單一命令可偵測 STATUS drift、retired path、規格必要段落與 inventory stale。`；inventory workstream C 與其他 acceptance items 在本 workflow 中保持不變。
 
 ## 範圍外（Out of Scope）*(必填)*
