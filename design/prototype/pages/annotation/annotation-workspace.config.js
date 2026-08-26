@@ -74,6 +74,9 @@
       unitCtxAnnotator: '標記員 {id}',
       unitCtxRoster: '本樣本 {m} 位標記員',
       unitCtxReviewed: '已審 {x} / {n}',
+      wsSampleGroupCount: '{n} 位標記員',
+      wsSampleGroupAria: '樣本 {sample}，{n} 位標記員',
+      wsSampleUnitAria: '樣本 {sample}，標記員 {annotator}，{state}',
       unitStatePending: '待審',
       unitStateApproved: '已同意',
       unitStateModified: '已修改',
@@ -144,6 +147,9 @@
       unitCtxAnnotator: 'Annotator {id}',
       unitCtxRoster: '{m} annotators on this sample',
       unitCtxReviewed: 'Reviewed {x} / {n}',
+      wsSampleGroupCount: '{n} annotators',
+      wsSampleGroupAria: 'Sample {sample}, {n} annotators',
+      wsSampleUnitAria: 'Sample {sample}, annotator {annotator}, {state}',
       unitStatePending: 'Pending review',
       unitStateApproved: 'Approved',
       unitStateModified: 'Modified',
@@ -1546,6 +1552,63 @@
     window.history.replaceState(null, '', window.location.pathname + '?' + params.toString());
   }
 
+  /* Reviewer-only sample group wrapper (issue #455). One review unit per
+     row (FR-056) means a 3-annotator sample renders three rows whose ONLY
+     difference is the annotator account -- the record snippet above it is
+     byte-identical three times over, and in a 256px column it is the
+     snippet that wins the reviewer's attention. Hoisting the sample
+     identity plus the shared snippet into one header per sample lets each
+     row below it carry only what actually differs (annotator + review
+     state), and gives the sample boundary a structural marker instead of
+     asking the reviewer to diff three lines of small print.
+     `role="group"` + `aria-label` is the ARIA-sanctioned way to partition a
+     listbox, so the grouping is exposed to AT rather than being purely
+     visual (the annotation-list counterpart, FR-067, only had table rows to
+     work with and had to settle for a border + de-emphasis). */
+  function buildSampleGroup(record, recordId, unitCount) {
+    var group = document.createElement('div');
+    group.className = 'sample-group';
+    group.setAttribute('role', 'group');
+    group.setAttribute('data-testid', 'ws-sample-group');
+    group.setAttribute('data-sample-id', recordId);
+    group.setAttribute(
+      'aria-label',
+      t('wsSampleGroupAria').replace('{sample}', recordId).replace('{n}', String(unitCount))
+    );
+
+    var header = document.createElement('div');
+    header.className = 'sample-group-header';
+
+    var title = document.createElement('div');
+    title.className = 'sample-group-title';
+    var idEl = document.createElement('span');
+    idEl.className = 'sample-group-id';
+    idEl.setAttribute('data-testid', 'ws-sample-group-id');
+    /* The column is narrow enough to ellipsise a realistic sample_id, so the
+       full value has to stay reachable without leaving the page. */
+    idEl.setAttribute('title', recordId);
+    idEl.textContent = recordId;
+    var countEl = document.createElement('span');
+    countEl.className = 'sample-group-count';
+    countEl.setAttribute('data-testid', 'ws-sample-group-count');
+    countEl.textContent = t('wsSampleGroupCount').replace('{n}', String(unitCount));
+    title.appendChild(idEl);
+    title.appendChild(countEl);
+    header.appendChild(title);
+
+    var snippet = document.createElement('div');
+    snippet.className = 'sample-group-snippet';
+    snippet.setAttribute('data-testid', 'ws-sample-group-snippet');
+    snippet.textContent = window.LabelSuiteAnnotationWorkspaceData.getRecordPreviewText(
+      record,
+      currentProfile.fieldRoleMap
+    );
+    header.appendChild(snippet);
+
+    group.appendChild(header);
+    return group;
+  }
+
   function renderSampleList() {
     var listEl = document.getElementById('sampleList');
     var countEl = document.getElementById('sampleListCount');
@@ -1566,6 +1629,16 @@
       currentRole === 'reviewer' || !runCtx || typeof runCtx.total !== 'number' ? units.length : runCtx.total;
     if (countEl) countEl.textContent = totalCount + (state.lang === 'zh' ? ' 筆' : ' items');
 
+    /* Group size is the roster size of that sample, counted off the same
+       flattened `units` the rows come from -- never re-derived from the
+       profile, so the header can never disagree with the rows under it. */
+    var unitsPerSample = {};
+    units.forEach(function (unit) {
+      unitsPerSample[unit.recordId] = (unitsPerSample[unit.recordId] || 0) + 1;
+    });
+    var openGroupId = null;
+    var openGroupEl = null;
+
     units.forEach(function (unit, idx) {
       var record = unit.record;
       var recordId = unit.recordId;
@@ -1578,13 +1651,19 @@
         recordId,
         unitIdentity(unit)
       );
+      var isActive = isCurrentUnit(unit);
       var item = document.createElement('button');
       item.type = 'button';
-      item.className = 'sample-item' + (isCurrentUnit(unit) ? ' active' : '');
+      item.className = 'sample-item' + (isActive ? ' active' : '');
       if (status === 'submitted') item.classList.add('status-submitted');
       else if (status === 'saved') item.classList.add('status-saved');
       item.setAttribute('data-testid', 'ws-sample-item');
       item.setAttribute('data-submitted', status === 'submitted' ? 'true' : 'false');
+      /* Both halves of the review unit are addressable on the entry itself
+         (issue #455), so "which unit am I on" no longer depends on reading
+         two truncated text spans. */
+      item.setAttribute('data-sample-id', recordId);
+      item.setAttribute('data-annotator-id', unit.annotatorId);
 
       var indexBadge = document.createElement('span');
       indexBadge.className = 'sample-index';
@@ -1593,31 +1672,38 @@
 
       var meta = document.createElement('div');
       meta.className = 'sample-meta';
-      var snippet = document.createElement('div');
-      snippet.className = 'sample-snippet';
-      snippet.textContent = window.LabelSuiteAnnotationWorkspaceData.getRecordPreviewText(
-        record,
-        currentProfile.fieldRoleMap
-      );
-      meta.appendChild(snippet);
-      /* Three consecutive reviewer entries share one snippet, so the entry
-         has to name the unit it stands for (FR-056). */
-      if (currentRole === 'reviewer') {
+      /* Reviewer entries drop the snippet: it is identical for every unit of
+         the sample and now lives once in the group header (issue #455).
+         Annotator entries keep it -- one entry per record, nothing repeats. */
+      if (currentRole !== 'reviewer') {
+        var snippet = document.createElement('div');
+        snippet.className = 'sample-snippet';
+        snippet.textContent = window.LabelSuiteAnnotationWorkspaceData.getRecordPreviewText(
+          record,
+          currentProfile.fieldRoleMap
+        );
+        meta.appendChild(snippet);
+      } else {
+        /* The annotator leads (it is what distinguishes the units of one
+           group); the sample ID stays as a muted trailing echo so the entry
+           remains self-describing when read out of its group context. */
         var unitLine = document.createElement('div');
         unitLine.className = 'sample-unit-line';
-        var unitId = document.createElement('span');
-        unitId.className = 'sample-unit-id';
-        unitId.textContent = recordId;
-        var unitSep = document.createElement('span');
-        unitSep.className = 'sample-unit-sep';
-        unitSep.textContent = '·';
         var unitAnnotator = document.createElement('span');
         unitAnnotator.className = 'sample-unit-annotator';
         unitAnnotator.setAttribute('data-testid', 'ws-sample-annotator');
+        unitAnnotator.setAttribute('title', unit.annotatorId);
         unitAnnotator.textContent = unit.annotatorId;
-        unitLine.appendChild(unitId);
-        unitLine.appendChild(unitSep);
+        var unitSep = document.createElement('span');
+        unitSep.className = 'sample-unit-sep';
+        unitSep.textContent = '·';
+        var unitId = document.createElement('span');
+        unitId.className = 'sample-unit-id';
+        unitId.setAttribute('title', recordId);
+        unitId.textContent = recordId;
         unitLine.appendChild(unitAnnotator);
+        unitLine.appendChild(unitSep);
+        unitLine.appendChild(unitId);
         meta.appendChild(unitLine);
       }
       var statusLabel = document.createElement('span');
@@ -1633,11 +1719,35 @@
           : status === 'submitted' ? t('wsStatusSubmitted') : status === 'saved' ? t('wsStatusSaved') : t('wsStatusPending');
       meta.appendChild(statusLabel);
       item.appendChild(meta);
+      /* The visible entry no longer repeats the snippet, so its accessible
+         name is spelled out rather than left to concatenated text nodes --
+         a screen-reader user must still hear the full sample AND annotator,
+         neither of which is guaranteed to be untruncated on screen. */
+      if (currentRole === 'reviewer') {
+        item.setAttribute(
+          'aria-label',
+          t('wsSampleUnitAria')
+            .replace('{sample}', recordId)
+            .replace('{annotator}', unit.annotatorId)
+            .replace('{state}', statusLabel.textContent)
+        );
+      }
 
       item.addEventListener('click', function () {
         selectSample(recordId, unit.annotatorId);
       });
-      listEl.appendChild(item);
+
+      if (currentRole !== 'reviewer') {
+        listEl.appendChild(item);
+        return;
+      }
+      if (openGroupId !== recordId) {
+        openGroupId = recordId;
+        openGroupEl = buildSampleGroup(record, recordId, unitsPerSample[recordId]);
+        listEl.appendChild(openGroupEl);
+      }
+      if (isActive) openGroupEl.classList.add('has-active');
+      openGroupEl.appendChild(item);
     });
   }
 

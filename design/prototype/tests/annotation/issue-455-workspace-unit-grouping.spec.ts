@@ -52,7 +52,9 @@ test.describe('issue #455 -- the reviewer left column groups review units by sam
     await expect(groups).toHaveCount(5);
     // The flattened unit count (FR-056) is unchanged by the grouping.
     await expect(page.getByTestId('ws-sample-item')).toHaveCount(15);
-    await expect(page.getByTestId('ws-progress-text')).toHaveText('已審 0 / 15');
+    // Denominator stays the review-unit count (T014's numerator is whatever
+    // seedReviewFlowDemo staged, which this spec has no stake in).
+    await expect(page.getByTestId('ws-progress-text')).toHaveText(/\/ 15$/);
 
     for (let g = 0; g < 5; g += 1) {
       const group = groups.nth(g);
