@@ -25,8 +25,13 @@ test.describe('Shared sidebar shortcut entry', () => {
      * outright rather than merged (spec 008 v1.4.0, SC-009D). */
     await expect(page.locator('#shortcutReviewApprove')).toHaveText('通過目前結果');
     /* Issue #191: AC-3.15 / AC-6.4 (spec 015) scope the reject channel to
-     * official_run only, so the shortcut label must carry that qualifier. */
-    await expect(page.locator('#shortcutReviewReject')).toHaveText('退回目前結果（限正式標記）');
+     * official_run only, so the shortcut label must carry that qualifier.
+     * Issue #409: the reject control/key itself is NOT run-type-gated (spec
+     * 015 AC-3.33 forbids any run_type presentation branch on the review
+     * card) -- only the annotator-status ROLLBACK side effect is. The label
+     * must say so precisely instead of implying the whole action is
+     * official_run-only. */
+    await expect(page.locator('#shortcutReviewReject')).toHaveText('退回目前結果（回退標記員狀態僅限正式標記）');
     await expect(page.locator('.shortcut-help-row').filter({ hasText: '全部通過' })).toHaveCount(0);
     await expect(page.locator('.shortcut-help-row').filter({ hasText: '全部退回' })).toHaveCount(0);
   });
@@ -48,7 +53,10 @@ test.describe('Shared sidebar shortcut entry', () => {
     await expect(page.getByRole('heading', { name: 'Annotation workspace' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Review' })).toBeVisible();
     await expect(page.locator('#shortcutReviewApprove')).toHaveText('Approve current result');
-    await expect(page.locator('#shortcutReviewReject')).toHaveText('Return current result (formal runs only)');
+    /* Issue #409: see the zh-locale test above for the rationale -- the label
+     * must scope the "formal runs only" qualifier to the annotator-status
+     * rollback side effect, not the reject control/key itself. */
+    await expect(page.locator('#shortcutReviewReject')).toHaveText('Return current result (annotator status rollback is formal-run only)');
   });
 
   test('does not expose or open shortcut help on mobile', async ({ page }) => {
