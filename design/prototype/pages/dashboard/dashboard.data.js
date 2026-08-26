@@ -161,13 +161,17 @@
     },
     /* T014-T017: review-flow demo tasks (issue #302). Names mirror
        task-list.data.js; their review states are staged at boot by the
-       annotation-workspace.data.js localStorage seeder. */
+       annotation-workspace.data.js localStorage seeder. `demoCategory`
+       is a generic, data-driven tag (issue #404): the PL dashboard's
+       demo shortcut renders per-category, never per hardcoded task id,
+       so any future demo batch only needs to set this same field. */
     {
       id: 'T014',
       nameZh: '審核流程示範：試標',
       nameEn: 'Review Flow Demo: Dry Run',
       sourceFile: 'review-flow-dry-run.json',
       outputTypes: ['single_label'],
+      demoCategory: 'review_flow',
     },
     {
       id: 'T015',
@@ -175,6 +179,7 @@
       nameEn: 'Review Flow Demo: Official Run (Single Reviewer)',
       sourceFile: 'review-flow-official-single.json',
       outputTypes: ['single_label'],
+      demoCategory: 'review_flow',
     },
     {
       id: 'T016',
@@ -182,6 +187,7 @@
       nameEn: 'Review Flow Demo: Official Run (Three Reviewers)',
       sourceFile: 'review-flow-official-multi.json',
       outputTypes: ['single_label'],
+      demoCategory: 'review_flow',
     },
     {
       id: 'T017',
@@ -189,6 +195,19 @@
       nameEn: 'Review Flow Demo: Official Run (Two Reviewers Tie)',
       sourceFile: 'review-flow-official-tie.json',
       outputTypes: ['single_label'],
+      demoCategory: 'review_flow',
+    },
+  ];
+
+  /* Catalog of demo categories present in `tasks` (issue #404), mirrored
+     after the `outputTypes` catalog pattern above: the PL dashboard looks
+     up which categories actually occur in `tasks` and renders one shortcut
+     button per category found -- it never checks a specific task id. */
+  var demoCategories = [
+    {
+      key: 'review_flow',
+      zh: '審核流程示範',
+      en: 'Review Flow Demo',
     },
   ];
 
@@ -273,6 +292,7 @@
     outputTypes: outputTypes,
     tasks: tasks,
     roleLists: roleLists,
+    demoCategories: demoCategories,
   };
   global.LabelSuiteDashboard = dashboard;
 }(window));
