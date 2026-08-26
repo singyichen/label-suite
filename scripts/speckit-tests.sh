@@ -183,6 +183,34 @@ write_independent_sdd_lint_job() {
 YAML
 }
 
+count_top_level_sdd_lint_jobs() {
+    local ci="$1"
+
+    awk '
+        /^jobs:[[:space:]]*(#.*)?$/ {
+            in_jobs = 1
+            next
+        }
+        in_jobs && /^[^[:space:]#]/ {
+            exit
+        }
+        in_jobs && /^  sdd-lint:[[:space:]]*(#.*)?$/ {
+            count++
+        }
+        END {
+            print count + 0
+        }
+    ' "$ci"
+}
+
+ensure_independent_sdd_lint_job() {
+    local ci="$1"
+
+    if [[ "$(count_top_level_sdd_lint_jobs "$ci")" -eq 0 ]]; then
+        write_independent_sdd_lint_job "$ci"
+    fi
+}
+
 extract_top_level_sdd_lint_job() {
     local ci="$1"
 
@@ -323,21 +351,7 @@ assert_independent_sdd_lint_job() {
     local ci="$1"
     local command_count checkout_count job job_count mixed_step_count run_count step_count steps summary uses_count
 
-    job_count="$(awk '
-        /^jobs:[[:space:]]*(#.*)?$/ {
-            in_jobs = 1
-            next
-        }
-        in_jobs && /^[^[:space:]#]/ {
-            exit
-        }
-        in_jobs && /^  sdd-lint:[[:space:]]*(#.*)?$/ {
-            count++
-        }
-        END {
-            print count + 0
-        }
-    ' "$ci")"
+    job_count="$(count_top_level_sdd_lint_jobs "$ci")"
     if [[ "$job_count" -ne 1 ]]; then
         echo "Expected exactly one independent top-level sdd-lint job, found $job_count" >&2
         return 1
@@ -420,11 +434,20 @@ assert_sdd_lint_ci_contract_rejected() {
 }
 
 test_check_sdd_ci_job_is_independent() {
-    local ci duplicate_ci extra_named_run_ci install_ci needs_ci openspec_ci root_command_ci setup_ci split_ci path_filter_ci workflow_path_filter_ci workflow_path_ignore_ci
+    local ci duplicate_ci existing_ci extra_named_run_ci install_ci needs_ci openspec_ci root_command_ci setup_ci split_ci path_filter_ci workflow_path_filter_ci workflow_path_ignore_ci
     ci="$(mktemp "$TMP_ROOT/ci-sdd-lint.XXXXXX")"
     cp "$ROOT/.github/workflows/ci.yml" "$ci"
-    write_independent_sdd_lint_job "$ci"
+    ensure_independent_sdd_lint_job "$ci"
     assert_independent_sdd_lint_job "$ci"
+
+    existing_ci="$(mktemp "$TMP_ROOT/ci-sdd-lint-existing.XXXXXX")"
+    cp "$ci" "$existing_ci"
+    ensure_independent_sdd_lint_job "$existing_ci"
+    if [[ "$(count_top_level_sdd_lint_jobs "$existing_ci")" -ne 1 ]]; then
+        echo "Expected existing independent sdd-lint job fixture not to be duplicated" >&2
+        exit 1
+    fi
+    assert_independent_sdd_lint_job "$existing_ci"
 
     duplicate_ci="$(mktemp "$TMP_ROOT/ci-sdd-lint-duplicate.XXXXXX")"
     cp "$ci" "$duplicate_ci"
