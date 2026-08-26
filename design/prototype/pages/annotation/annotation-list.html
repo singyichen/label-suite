@@ -453,6 +453,14 @@
       padding: 3px 12px; font-family: monospace; min-width: 80px; text-align: center;
     }
     .annotator-row-actions { display: flex; gap: 6px; margin-left: auto; }
+    /* Issue #400: marks a FINALIZED unit's answer as the reviewer-majority-
+       converged value, not the annotator's original one. */
+    .review-overwritten-badge {
+      font-size: 11px; color: var(--color-warning);
+      background: var(--color-warning-soft-bg);
+      border: 1px solid var(--color-warning-border);
+      border-radius: var(--radius-md); padding: 1px 8px;
+    }
     .result-tag-green { color: #15803D !important; background: #DCFCE7 !important; border-color: #86EFAC !important; }
     .result-tag-blue  { color: #1D4ED8 !important; background: #EFF6FF !important; border-color: #BFDBFE !important; }
     .result-tag-red   { color: #DC2626 !important; background: #FEE2E2 !important; border-color: #FCA5A5 !important; }
@@ -703,6 +711,7 @@
       reviewUnitFinalized: '已定稿',
       reviewFreeTextStats: '自由文本任務 — 請並列比對各標記員結果',
       reviewBypassPill: '無法判定 (Bypass)',
+      reviewOverwrittenBadge: '已由審核多數決覆寫',
       reviewNoAnswer: '（無）',
       textExpandLabel: '展開全文',
       textCollapseLabel: '收合',
@@ -762,6 +771,7 @@
       reviewUnitFinalized: 'Finalized',
       reviewFreeTextStats: 'Free-text task — compare annotator answers side by side',
       reviewBypassPill: 'Bypassed (cannot determine)',
+      reviewOverwrittenBadge: 'Overwritten by reviewer majority',
       reviewNoAnswer: '(none)',
       textExpandLabel: 'Show full text',
       textCollapseLabel: 'Collapse',
@@ -1249,6 +1259,41 @@
     });
   }
 
+  /* A FINALIZED unit's dispute items may have converged (or been arbiter-
+     finalized) away from the annotator's original scalar answer (issue
+     #400): the workspace's own finalized card already shows that converged
+     value, so the list must read the same source instead of freezing on the
+     annotator's original mockRow answer. Reuses the shared dispute-
+     resolution algorithm (annotation-workspace.data.js) so the two never
+     drift. Only scalar-shaped output types (item.key === item.outKey, e.g.
+     single_label/single_dim) are covered -- composite types diff per
+     sub-part and keep showing the annotator's answer unchanged. Returns
+     null when nothing was overwritten. */
+  function getFinalizedOverwrites(profile, context, recordId, identity) {
+    var data = window.LabelSuiteAnnotationWorkspaceData;
+    var items = data.getDisputeItems(profile.id, context.runType, recordId, identity, profile.outputTypes);
+    if (!items.length) return null;
+    var reviewerCount = data.readReviewerSubmissions(profile.id, context.runType, recordId, identity).length;
+    var arbState = data.getArbitrationState(profile.id, context.runType, recordId, identity);
+    var overwrites = null;
+    items.forEach(function (item) {
+      if (item.key !== item.outKey) return;
+      var resolvedValue;
+      var convergence = data.resolveDisputeConvergence(item, reviewerCount);
+      if (convergence.converged) {
+        resolvedValue = convergence.value;
+      } else {
+        var stored = arbState[item.outKey + '::' + item.key];
+        if (stored && stored.finalized_by) resolvedValue = stored.finalized_value;
+      }
+      if (resolvedValue !== undefined) {
+        overwrites = overwrites || {};
+        overwrites[item.outKey] = resolvedValue;
+      }
+    });
+    return overwrites;
+  }
+
   function buildReviewStatsText(profile, mockRows) {
     if (mockRows.length === 0) return '-';
     var multi = profile.outputTypes.length > 1;
@@ -1296,22 +1341,40 @@
   }
 
   /* This unit's own answers, one tag per composed output type. Read-only:
-     the reviewer edits them in the workspace, never on the list. */
+     the reviewer edits them in the workspace, never on the list.
+     A FINALIZED unit's overwritten value (issue #400) gets an explanatory
+     badge -- appended as a SIBLING of the tag wrapper, not inside it, so the
+     wrapper's own data-testid text stays exactly the answer text callers
+     already assert on. */
   function buildAnswerCell(profile, item) {
+    var outer = document.createDocumentFragment();
     var wrap = document.createElement('div');
     wrap.className = 'annotator-answer';
     wrap.setAttribute('data-testid', 'list-review-answer');
+    outer.appendChild(wrap);
+    var overwrittenOutKeys = [];
     profile.outputTypes.forEach(function (outKey) {
       var tagSpan = document.createElement('span');
       var colorClass = dimColorClass(outKey, item.rowIdx, item.mockRows);
       tagSpan.className = 'annotator-result-tag' + (colorClass ? ' ' + colorClass : '');
       var bypassed = !!(item.mockRow.bypass && item.mockRow.bypass[outKey]);
-      tagSpan.textContent = bypassed
-        ? t('reviewBypassPill')
-        : formatCompactAnswer(outKey, item.mockRow.answers ? item.mockRow.answers[outKey] : undefined);
+      var overwritten = !bypassed && item.overwrites &&
+        Object.prototype.hasOwnProperty.call(item.overwrites, outKey);
+      var answer = overwritten
+        ? item.overwrites[outKey]
+        : (item.mockRow.answers ? item.mockRow.answers[outKey] : undefined);
+      tagSpan.textContent = bypassed ? t('reviewBypassPill') : formatCompactAnswer(outKey, answer);
       wrap.appendChild(tagSpan);
+      if (overwritten) overwrittenOutKeys.push(outKey);
     });
-    return wrap;
+    if (overwrittenOutKeys.length) {
+      var badge = document.createElement('span');
+      badge.className = 'review-overwritten-badge';
+      badge.setAttribute('data-testid', 'list-review-overwritten-badge');
+      badge.textContent = t('reviewOverwrittenBadge');
+      outer.appendChild(badge);
+    }
+    return outer;
   }
 
   function renderReviewerRows(pagedRows, tbodyEl, context) {
@@ -1429,7 +1492,10 @@
           status: status,
           statusLabel: reviewUnitStatusText(status),
           completedAt: submittedAt ? formatCompletedAt(submittedAt) : '-',
-          text: text
+          text: text,
+          overwrites: status === REVIEW_UNIT_STATUS.FINALIZED
+            ? getFinalizedOverwrites(profile, context, recordId, identity)
+            : null
         });
       });
     });
