@@ -23,7 +23,7 @@
 | ID | 功能 | 模組 | 狀態 | 分支 | 備註 |
 | --- | --- | --- | --- | --- | --- |
 | foundation-000 | Foundation — 工程基準與共同約束 | foundation | `done` | `feat/foundation-core-*`（9 個 stacked PR，皆已合併） | spec v1.12.4；FR-001~131；SC-001~045；plan.md v2.0.0（Foundation-Core）保留為常設架構文件（ADR-033 例外，非 OpenSpec change 產物）。**Foundation-Core 範圍**已由 OpenSpec change `implement-foundation-core`（issue #356 Phase 4 pilot）實作完成並 archive；**未封存**：本 spec 為全 repo 以路徑引用的跨模組長期基線，且 F-17 Observability（FR-091~100、SC-021~028）與 Celery 相關需求依 plan.md 延後、尚未實作，封存與否待維護者裁決 |
-| foundation-001 | Project SDD Lint | foundation | `spec-ready` | `feat/issue-375-sdd-lint` | spec v1.0.0；Issue #375 follow-up；command-line tooling，prototype／Frontend Ready Gate 不適用 |
+| foundation-001 | Project SDD Lint | foundation | `change-open` | `feat/issue-375-sdd-lint` | spec v1.0.0；OpenSpec change `implement-project-sdd-lint`；Issue #375 follow-up；command-line tooling，prototype／Frontend Ready Gate 不適用 |
 | account-001 | Login — Email / Password | account | `spec-ready` | `feat/account/001-login-email-password` | spec v1.2.4；規格狀態：Clarified；plan.md v2.0.0 於首個 OpenSpec change 作為 design.md 參考素材，之後歸檔（ADR-033） |
 | account-002 | Login — Google SSO | account | `spec-ready` | `feat/account/002-login-google-sso` | spec v1.2.3；規格狀態：Clarified |
 | account-003 | Register — Email / Password | account | `spec-ready` | `feat/account/003-register-email-password` | spec v1.2.7；規格狀態：Clarified |
@@ -55,6 +55,7 @@
 
 | 日期 | 更新內容 |
 |------|----------|
+| 2026-08-26 | `foundation-001` 完成 `/opsx:propose`，OpenSpec change `implement-project-sdd-lint` 已建立，狀態由 `spec-ready` 更新為 `change-open`；branch 維持 `feat/issue-375-sdd-lint`。 |
 | 2026-08-26 | 新增 `foundation-001` Project SDD Lint canonical spec v1.0.0，狀態設為 `spec-ready`；範圍為 ratchet baseline、task/Source-Verify/retired guidance checks 與獨立 CI gate。 |
 | 2026-08-25 | `foundation-000` 由 `spec-ready` 改標 `done`，spec 更新至 v1.12.4：OpenSpec change `implement-foundation-core`（issue #356 Phase 4 pilot）已完整跑完 propose → apply → archive，Foundation-Core 範圍（plan.md v2.0.0 的 F-01–F-10、F-13、F-16、F-18）由 9 個 stacked PR（#374、#378、#381、#379、#388、#389、#390、#391、#392）落地，收尾與 archive 回寫為 PR #412。**無 FR/SC 新增、移除或措辭變更**——為實作回寫，非需求變更；三項實作與正典文字的落差（FR-021 實作在所有環境無條件拒絕萬用字元、SC-020 第二子句延後至 account-001、SC-045 的 OpenAPI export / type generation 子句歸屬 FR-071／SC-018 未實作）依維護者裁決記錄於正典 spec 的 Changelog 而不改動需求原文。**尚未執行封存**：本 spec 為全 repo 以路徑引用的跨模組長期基線，且 F-17 Observability 與 Celery 相關需求依 plan.md 延後、尚未實作，是否移入 `specs/_archive/` 待維護者裁決。 |
 | 2026-08-25 | `foundation-000` 更新至 spec v1.12.3：SC-002 的驗證指令由 `uv run mypy app/ --strict` 校準為 `uv run mypy .`，與 `.github/workflows/ci.yml:122`、testing-constitution XII/XIII、backend-constitution 及 AGENTS.md 既有的寫法一致。原措辭範圍過窄（只檢查 `app/`，漏掉 `tests/`），在 foundation-core BE2 群組造成一次 CI 紅燈。同批同步 CLAUDE.md 驗證矩陣、`senior-backend`／`senior-code-reviewer` agent 定義與 tasks-template v1.22.5；CLAUDE.md 另補上 CI 已在跑但未列入的 `pnpm build` 與 `pnpm audit --prod --audit-level high`。新指令為原指令的嚴格超集合，驗收語意未放寬，無 FR/SC 新增或移除。 |
