@@ -32,6 +32,21 @@ Existing annotation platforms such as [Label Studio](https://labelstud.io/) are 
 
 ---
 
+## Quick Start
+
+```bash
+bash scripts/init.sh                    # one-time setup (deps + backend/.env)
+cd backend && uv run uvicorn app.main:create_app --factory --reload
+cd frontend && pnpm dev                 # http://localhost:5173
+./scripts/serve-prototype.sh            # http://localhost:8888 — the product screens
+```
+
+> **Where the screens live:** `frontend/` is currently the Foundation-Core scaffold and serves only `/health-check`. The annotation, task-configuration, and review screens are still HTML prototypes under `design/prototype/` — serve them with the last command above.
+
+Full instructions, integration tests, and seed data: **[docs/development.md](docs/development.md)**.
+
+---
+
 ## System Workflow
 
 ![Label Suite system workflow](docs/diagrams/workflow/system-workflow.png)
