@@ -493,3 +493,363 @@ git commit -m "docs: open the project SDD lint change" -m "- **Advance** foundat
 Main reports Gate 1 and Gate 2 separately, links `proposal.md`, `design.md`, `tasks.md`, and stops until the user explicitly approves `/opsx:apply`.
 
 ---
+
+### Task 8: Commit the Red fixture contract
+
+**Files:**
+- Modify: `scripts/speckit-tests.sh`
+
+**Interfaces:**
+- Consumes: FR-001–FR-007 and AC-1.1–AC-4.1.
+- Produces: committed Red contract consumed unchanged by Task 10.
+
+- [ ] **Step 1: Add hermetic fixtures**
+
+Add `make_sdd_repo`, `run_check_sdd`, `assert_command_fails_with`, and individual tests with these exact names:
+
+```bash
+test_check_sdd_passes_for_valid_repo
+test_check_sdd_uses_explicit_repo_root
+test_check_sdd_fails_for_missing_goal_heading
+test_check_sdd_fails_for_active_change_stage_drift
+test_check_sdd_fails_for_missing_source_id
+test_check_sdd_fails_for_invalid_assignee
+test_check_sdd_fails_for_incomplete_exception
+test_check_sdd_fails_for_wrong_red_owner
+test_check_sdd_fails_for_retired_command
+test_check_sdd_does_not_match_pnpm
+test_check_sdd_accepts_exact_legacy_baseline
+test_check_sdd_fails_for_new_baseline_violation
+test_check_sdd_fails_for_stale_baseline_entry
+test_check_sdd_fails_for_duplicate_or_unsorted_baseline
+test_check_sdd_strict_promotes_baseline_debt
+test_check_sdd_inventory_warning_is_non_blocking
+```
+
+`make_sdd_repo` creates only synthetic files under `$TMP_ROOT`, including agent stubs, a valid foundation-001 spec, STATUS row, active proposal/delta/tasks, and a fixture-local baseline. New tests must store captures below `$TMP_ROOT`, never fixed `/tmp/check-sdd.*` paths.
+
+- [ ] **Step 2: Verify Red**
+
+Run: `bash scripts/speckit-tests.sh`
+
+Expected: nonzero with an explicit message that `scripts/check-sdd.sh` is missing; existing speckit tests before the new check remain green.
+
+- [ ] **Step 3: Commit Red evidence**
+
+```bash
+git add scripts/speckit-tests.sh
+git commit -m "test: define the project SDD lint contract" -m "- **Add** hermetic fixtures for strict, ratcheted, task, retired-command, and warning behavior.\n- **Record** the expected missing-command Red failure before implementation."
+```
+
+Main records the commit SHA, exact command, exit code, and expected failure reason before checking OpenSpec task 1.1.
+
+---
+
+### Task 9: Add the initial legacy baseline
+
+**Files:**
+- Create: `scripts/sdd-lint-baseline.txt`
+
+**Interfaces:**
+- Consumes: current 17-spec audit.
+- Produces: exact sorted debt set consumed by Task 10.
+
+- [ ] **Step 1: Create the sorted 14-entry TSV baseline**
+
+Use one real tab between fields and these stable details:
+
+```text
+LEGACY_SPEC_HEADING\tspecs/account/001-login-email-password/spec.md\tmissing:## 功能目標
+LEGACY_SPEC_HEADING\tspecs/account/002-login-google-sso/spec.md\tmissing:## 功能目標
+LEGACY_SPEC_HEADING\tspecs/account/003-register-email-password/spec.md\tmissing:## 功能目標
+LEGACY_SPEC_HEADING\tspecs/account/004-forgot-reset-password/spec.md\tmissing:## 功能目標
+LEGACY_SPEC_HEADING\tspecs/account/005-profile-settings/spec.md\tmissing:## 功能目標
+LEGACY_SPEC_HEADING\tspecs/admin/006-user-management/spec.md\tmissing:## 功能目標
+LEGACY_SPEC_HEADING\tspecs/admin/007-role-settings/spec.md\tmissing:## 功能目標
+LEGACY_SPEC_HEADING\tspecs/annotation/015-annotation-workspace/spec.md\tmissing:## 功能目標
+LEGACY_SPEC_HEADING\tspecs/dataset/017-dataset-analysis-detail/spec.md\tmissing:## 功能目標
+LEGACY_SPEC_HEADING\tspecs/shared/008-sidebar-navbar-shared/spec.md\tmissing:## 功能目標
+LEGACY_SPEC_HEADING\tspecs/shared/018-help-button/spec.md\tmissing:## Prototype Traceability
+LEGACY_SPEC_HEADING\tspecs/shared/018-help-button/spec.md\tmissing:## 功能目標
+LEGACY_SPEC_HEADING\tspecs/shared/018-help-button/spec.md\tmissing:## 規格相依性
+LEGACY_SPEC_HEADING\tspecs/task-management/014-task-detail/spec.md\tmissing:## 功能目標
+```
+
+- [ ] **Step 2: Verify the baseline mechanically**
+
+Run:
+
+```bash
+test "$(wc -l < scripts/sdd-lint-baseline.txt | tr -d ' ')" = 14
+test -z "$(sort scripts/sdd-lint-baseline.txt | uniq -d)"
+LC_ALL=C sort -c scripts/sdd-lint-baseline.txt
+```
+
+Expected: all commands exit `0`.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add scripts/sdd-lint-baseline.txt
+git commit -m "chore: record the SDD lint legacy baseline" -m "- **Capture** the fourteen known heading and traceability violations as exact paths.\n- **Prevent** baseline globbing, duplication, and silent debt expansion."
+```
+
+---
+
+### Task 10: Implement the Project SDD lint command
+
+**Files:**
+- Create: `scripts/check-sdd.sh`
+
+**Interfaces:**
+- Consumes: `scripts/sdd-lint-baseline.txt`, `scripts/check-spec-artifacts.sh`, active repository artifacts.
+- Produces: `scripts/check-sdd.sh [--strict] [repo-root]` with exit codes 0/1/2 and stable diagnostics.
+
+- [ ] **Step 1: Create the Bash entry point**
+
+Use `set -euo pipefail`, TMPDIR `mktemp -d`, and EXIT cleanup. Implement these focused functions:
+
+```bash
+usage
+emit_error RULE PATH MESSAGE
+emit_warning RULE PATH MESSAGE
+require_layout
+collect_status_artifact_sync
+collect_spec_heading_diagnostics
+collect_active_change_diagnostics
+collect_task_diagnostics
+collect_retired_command_diagnostics
+validate_baseline
+apply_baseline_ratchet
+collect_deferred_warnings
+render_diagnostics
+```
+
+Store strict, eligible, warnings, and final diagnostics in temp files. Normalize eligible keys as tab-separated `rule/path/detail`; compare sorted actual and baseline with `comm -23` for new entries and `comm -13` for stale entries. Treat duplicate/unsorted/unknown baseline rule as exit `2` configuration error. Use `LC_ALL=C` for every sort/comm.
+
+Required parser details:
+
+- canonical specs: `find "$ROOT/specs" -mindepth 3 -maxdepth 3 -path '*/[0-9][0-9][0-9]-*/spec.md' -print`.
+- active changes: `find "$ROOT/openspec/changes" -mindepth 2 -maxdepth 2 -name proposal.md` excluding `/archive/`.
+- proposal canonical line: exact `對應 Spec: specs/.../spec.md`, exactly once.
+- STATUS allowed states: `spec-ready|change-open|in-progress|review|done|archived|deferred`.
+- active change canonical STATUS state: `change-open|in-progress|review` only.
+- exact headings: `^## 功能目標$`, `^## 規格相依性(?: \*\([^)]*\)\*)?$`, and for non-foundation modules `^## Prototype Traceability$`.
+- source IDs: portable ERE `(FR|SC|AC)-[[:alnum:]]+([.-][[:alnum:]]+)*`, exact whole-token lookup in canonical file.
+- task assignee: every `^- \[[ xX]\]` line ends with exactly one `[@...]`; agent maps to `.claude/agents/<name>.md` or `main`.
+- task exception IDs and three exact fields follow testing constitution; static ambiguous file count emits warning, not error.
+- retired `npm` regex must require a non-alphanumeric boundary so `pnpm` stays legal.
+- historical paths from the approved design are excluded.
+- always emit one `INVENTORY_FRESHNESS_UNVERIFIED` warning while no generator `--check` contract exists.
+
+- [ ] **Step 2: Make the command executable**
+
+Run: `chmod +x scripts/check-sdd.sh`
+
+- [ ] **Step 3: Verify Green without changing the Red contract**
+
+Run:
+
+```bash
+bash -n scripts/check-sdd.sh scripts/speckit-tests.sh
+bash scripts/speckit-tests.sh
+scripts/check-sdd.sh
+scripts/check-spec-artifacts.sh
+```
+
+Expected: all exit `0`; real repository output includes the inventory warning and zero errors.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add scripts/check-sdd.sh
+git commit -m "feat: add the project SDD lint command" -m "- **Enforce** active spec, status, task, source-ID, and retired-guidance contracts.\n- **Ratchet** legacy violations with stable Bash-compatible diagnostics and exit codes."
+```
+
+Main verifies Green evidence and only then checks OpenSpec tasks 2.1/2.2.
+
+---
+
+### Task 11: Commit the independent CI Red contract
+
+**Files:**
+- Modify: `scripts/speckit-tests.sh`
+
+**Interfaces:**
+- Consumes: SC-005 and the executable command from Task 10.
+- Produces: a committed failing assertion consumed unchanged by Task 12.
+
+- [ ] **Step 1: Add the CI contract test**
+
+Add `test_check_sdd_ci_job_is_independent`. It parses `.github/workflows/ci.yml` as text and asserts all of the following without installing a YAML dependency:
+
+- one top-level job ID `sdd-lint` exists;
+- its display name is `Project SDD Lint`;
+- its steps include `actions/checkout@v5` and `run: scripts/check-sdd.sh`;
+- the job has no `needs:`, dependency-install step, OpenSpec command, or path-filter coupling.
+
+The fixture must mutate a copied CI file under `$TMP_ROOT`, not the real workflow.
+
+- [ ] **Step 2: Verify CI Red**
+
+Run: `bash scripts/speckit-tests.sh`
+
+Expected: nonzero with the exact assertion explaining that the independent `sdd-lint` job is missing; all command-level SDD lint tests remain green.
+
+- [ ] **Step 3: Commit Red evidence**
+
+```bash
+git add scripts/speckit-tests.sh
+git commit -m "test: define the SDD lint CI contract" -m "- **Require** an independent Project SDD Lint job with the root-local command.\n- **Record** the expected missing-job Red failure before workflow implementation."
+```
+
+Main records the commit SHA, command, exit code, and exact expected failure before checking OpenSpec task 3.1.
+
+---
+
+### Task 12: Add the independent CI job
+
+**Files:**
+- Modify: `.github/workflows/ci.yml`
+
+**Interfaces:**
+- Consumes: executable `scripts/check-sdd.sh`.
+- Produces: top-level job ID `sdd-lint`, display name `Project SDD Lint`.
+
+- [ ] **Step 1: Add the job after validate**
+
+```yaml
+  sdd-lint:
+    name: Project SDD Lint
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - name: Check project SDD governance
+        run: scripts/check-sdd.sh
+```
+
+Do not add `needs: validate`, dependency installation, OpenSpec validation, or path filters.
+
+- [ ] **Step 2: Preserve the committed CI Red contract**
+
+Do not edit `scripts/speckit-tests.sh` in this task. If the committed Red test does not cover the required name, command, and independence constraints, stop and return to the QA owner.
+
+- [ ] **Step 3: Verify**
+
+Run:
+
+```bash
+bash scripts/speckit-tests.sh
+rg -n '^  sdd-lint:|name: Project SDD Lint|run: scripts/check-sdd.sh' .github/workflows/ci.yml
+```
+
+Expected: tests exit `0`; exactly one job/name/command match.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add .github/workflows/ci.yml
+git commit -m "ci: add the project SDD lint gate" -m "- **Expose** Project SDD Lint as an independent pull-request job.\n- **Reuse** the same dependency-free command developers run locally."
+```
+
+---
+
+### Task 13: Document the local CI-equivalent command
+
+**Files:**
+- Modify: `CLAUDE.md`
+
+**Interfaces:**
+- Consumes: CI job contract from Tasks 11–12.
+- Produces: protected-file local command documentation authorized by the user.
+
+- [ ] **Step 1: Add the command under Verification Commands**
+
+Insert before backend commands:
+
+```bash
+# Project SDD lint (run from project root)
+scripts/check-sdd.sh
+```
+
+Do not combine it with `openspec validate`, `/opsx:verify`, or other gates.
+
+- [ ] **Step 2: Verify local/CI parity and boundary wording**
+
+Run:
+
+```bash
+rg -n 'scripts/check-sdd.sh|Project SDD Lint|openspec validate --changes --no-interactive' CLAUDE.md .github/workflows/ci.yml docs/sdd-workflow.md
+```
+
+Expected: local and CI commands match; OpenSpec command remains separately named.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add CLAUDE.md
+git commit -m "docs: document the project SDD lint command" -m "- **Add** the root-local command that mirrors the independent CI job.\n- **Preserve** the documented boundary between SDD lint and OpenSpec validation."
+```
+
+---
+
+### Task 14: Verify, review, archive, and update Issue #375
+
+**Files:**
+- Modify during final archive/write-back only: `specs/foundation/001-project-sdd-lint/spec.md`
+- Modify after approved OpenSpec archive: paths produced by `openspec archive implement-project-sdd-lint --yes`
+- Modify after final merge in a follow-up state commit: `specs/STATUS.md`
+
+**Interfaces:**
+- Consumes: all prior committed tasks.
+- Produces: four-gate evidence, reviewed final branch, archived OpenSpec change, canonical write-back, honest GitHub checkboxes.
+
+- [ ] **Step 1: Run fresh verification**
+
+```bash
+bash -n scripts/check-sdd.sh scripts/speckit-tests.sh
+bash scripts/speckit-tests.sh
+scripts/check-sdd.sh
+scripts/check-spec-artifacts.sh
+openspec validate --changes --no-interactive
+git diff --check main...HEAD
+```
+
+Expected: every command exit `0`; inventory warning visible; no claim that inventory freshness passed.
+
+- [ ] **Step 2: Run Source-Verify**
+
+Extract every FR/SC/AC token in the active change and verify exact presence in `specs/foundation/001-project-sdd-lint/spec.md`. Verify proposal path, version, Changelog, rule IDs, CI command, and baseline count `14` by exact `rg`/`wc` commands. Any missing citation blocks archive.
+
+- [ ] **Step 3: Run ordered reviews with subagents**
+
+Run code review → QA Scenario acceptance → security review. Performance review is `N/A` because the command scans small repository text without runtime user traffic; record the reason. Resolve every Critical/High finding before proceeding.
+
+- [ ] **Step 4: User checkpoint before final PR flow**
+
+Report ordered review evidence and obtain explicit user confirmation before archive/PR.
+
+- [ ] **Step 5: Archive and write back**
+
+Run the repository-supported OpenSpec archive command for `implement-project-sdd-lint`. Ensure canonical v1.0.0 requirements remain intact, add implementation Changelog/version write-back as required, regenerate derived view, and confirm no `## ADDED Requirements` heading remains in derived output.
+
+- [ ] **Step 6: Push/open PR and merge only with user authorization**
+
+PR title/body are Traditional Chinese with an English Conventional Commit structural prefix. Do not mutate GitHub branch protection automatically; list `Project SDD Lint` as the check the maintainer should mark required.
+
+- [ ] **Step 7: Update STATUS and Issue #375 after merge**
+
+Set `foundation-001` to `done` and retain active path under the approved umbrella exception. Re-audit Issue #375 against merged `main`, then check only fully satisfied D/acceptance items. Keep inventory freshness and all-repository baseline-zero items unchecked until their later branches complete.
+
+---
+
+## Plan execution checkpoints
+
+1. After Tasks 1–7: report Gate 1 and manual Gate 2 evidence; stop for explicit `/opsx:apply` approval.
+2. After Task 8: report committed Red SHA and expected failure.
+3. After Tasks 9–10: report Green commands and task review.
+4. After Task 11: report committed CI Red SHA and expected failure.
+5. After Tasks 12–13: report CI/local parity and group review.
+6. Before Task 14 archive/PR: report ordered reviews and stop for explicit user confirmation.
+
+Execution method is already chosen by the user: use `superpowers:subagent-driven-development`, with fresh implementer and reviewer agents, task briefs/reports, and a whole-branch review.
