@@ -3104,7 +3104,9 @@
       note = t('unitStateFinalizedNote');
     } else if (unitStatus === workspaceData.REVIEW_UNIT_STATUS.DISPUTED) {
       note = t('unitStateDisputedNote');
-    } else if (unitStatus !== null) {
+    } else if (unitStatus !== null && unitStatus !== workspaceData.REVIEW_UNIT_STATUS.PENDING) {
+      /* 待審 already means "nobody has reviewed", so a 0 / n note adds noise
+         rather than disambiguating -- the list badge omits it too. */
       note = t('unitStateInterimNote')
         .replace('{x}', String(reviewedCount))
         .replace('{n}', String(minReviewers));

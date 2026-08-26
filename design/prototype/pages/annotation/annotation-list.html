@@ -1014,8 +1014,14 @@
   ];
   var ANNOTATOR_STATUS_ORDER = ['submitted', 'saved', 'pending'];
 
+  function reviewUnitStatusLabel(status) {
+    return t('reviewUnit' + status.charAt(0).toUpperCase() + status.slice(1));
+  }
+
+  /* Badge text only: the filter select keeps the bare state names, because a
+     qualifier like 未定稿 reads as a separate filterable state in a dropdown. */
   function reviewUnitStatusText(status) {
-    var base = t('reviewUnit' + status.charAt(0).toUpperCase() + status.slice(1));
+    var base = reviewUnitStatusLabel(status);
     if (status === REVIEW_UNIT_STATUS.FINALIZED) return base + ' · ' + t('reviewUnitFinalizedNote');
     if (status === REVIEW_UNIT_STATUS.PENDING) return base;
     return base + ' · ' + t('reviewUnitInterimNote');
@@ -1034,7 +1040,7 @@
     if (!statusFilter) return;
     var reviewer = role === 'reviewer';
     var values = reviewer ? REVIEW_UNIT_STATUS_ORDER : ANNOTATOR_STATUS_ORDER;
-    var label = reviewer ? reviewUnitStatusText : statusText;
+    var label = reviewer ? reviewUnitStatusLabel : statusText;
 
     statusFilter.setAttribute('aria-label', reviewer ? t('reviewStatusFilterAll') : t('statusFilterAll'));
     statusFilter.innerHTML = '';
