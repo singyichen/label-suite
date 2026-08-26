@@ -31,7 +31,24 @@ fi
 # Block: any git push while the current branch is main/master (AGENTS.md Rule 2).
 # Branch detection closes the 'git push origin HEAD' gap a pure regex misses.
 if printf '%s\n' "$COMMAND" | grep -qE '(^|[;&|]|\$\()[[:space:]]*git push([[:space:]]|$)'; then
-  BRANCH=$(git branch --show-current 2>/dev/null || echo "")
+  # The push actually runs in the payload's top-level "cwd" (e.g. a linked
+  # worktree Claude has cd'd into), which can differ from this hook
+  # process's own cwd — so branch detection must prefer "cwd" over a bare
+  # `git branch --show-current` (issue #471). If "cwd" yields no branch for
+  # any reason (missing, not a git repo, detached HEAD), fall back to the
+  # process's own cwd — never fall back to allowing the push.
+  if command -v jq &>/dev/null; then
+    CWD=$(printf '%s\n' "$INPUT" | jq -r '.cwd // ""' 2>/dev/null || echo "")
+  else
+    CWD=$(printf '%s\n' "$INPUT" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('cwd',''))" 2>/dev/null || echo "")
+  fi
+  BRANCH=""
+  if [ -n "$CWD" ]; then
+    BRANCH=$(git -C "$CWD" branch --show-current 2>/dev/null || echo "")
+  fi
+  if [ -z "$BRANCH" ]; then
+    BRANCH=$(git branch --show-current 2>/dev/null || echo "")
+  fi
   if [ "$BRANCH" = "main" ] || [ "$BRANCH" = "master" ]; then
     echo "❌ Blocked: current branch is '$BRANCH' — pushing from a protected branch is not allowed. Check out a feature branch first (AGENTS.md Rule 2)." >&2
     exit 2
