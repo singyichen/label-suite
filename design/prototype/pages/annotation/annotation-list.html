@@ -602,6 +602,10 @@
 
   <section class="empty hidden" id="taskNotFound" data-testid="list-task-not-found"></section>
 
+  <!-- Issue #449: shown when the reviewer arrived from the quick-review CTA
+       and no review unit on this task is actionable for them. -->
+  <section class="empty hidden" id="noActionableNotice" role="status" data-testid="list-no-actionable-notice"></section>
+
   <div class="toolbar" role="search" aria-label="標記清單搜尋與篩選" id="listToolbar">
     <div class="toolbar-left">
       <!-- Options are role-dependent (completion tri-state vs. review unit
@@ -700,6 +704,8 @@
       clearFiltersLabel: '清除篩選',
       emptyNoResults: '找不到符合條件的資料。',
       emptyNoData: '目前尚無資料。',
+      noActionableReviewTitle: '目前沒有可處理項目',
+      noActionableReviewMessage: '這個任務的審核單位都已定稿，或不在你的可處理範圍內。',
       paginationTpl: '共 {total} 筆 · 第 {page} / {totalPages} 頁',
       pageSizeTpl: '{size} / 頁',
       roleLabelAnnotator: '標記員',
@@ -762,6 +768,8 @@
       clearFiltersLabel: 'Clear filters',
       emptyNoResults: 'No matching data.',
       emptyNoData: 'No data yet.',
+      noActionableReviewTitle: 'No actionable items right now',
+      noActionableReviewMessage: 'Every review unit on this task is finalized or outside what you can act on.',
       paginationTpl: 'Total {total} · Page {page} / {totalPages}',
       pageSizeTpl: '{size} / page',
       roleLabelAnnotator: 'Annotator',
@@ -1048,7 +1056,8 @@
       identityParams: {
         annotator_id: params.get('annotator_id'),
         reviewer_id: params.get('reviewer_id')
-      }
+      },
+      notice: params.get('notice') || ''
     };
   }
 
@@ -1869,6 +1878,29 @@
     el.appendChild(linkRow);
   }
 
+  /* Issue #449: the reviewer quick-review CTA sends `notice` instead of
+     opening an arbitrary read-only unit when it finds nothing actionable.
+     Rendered from renderContext() so the language toggle re-renders it with
+     everything else. */
+  function renderNoActionableNotice(context) {
+    var el = document.getElementById('noActionableNotice');
+    if (!el) return;
+    if (context.notice !== 'no_actionable_review' || context.role !== 'reviewer') {
+      el.classList.add('hidden');
+      return;
+    }
+    el.innerHTML = '';
+    var title = document.createElement('strong');
+    title.style.display = 'block';
+    title.style.marginBottom = '4px';
+    title.textContent = t('noActionableReviewTitle');
+    var message = document.createElement('span');
+    message.textContent = t('noActionableReviewMessage');
+    el.appendChild(title);
+    el.appendChild(message);
+    el.classList.remove('hidden');
+  }
+
   function renderContext(context) {
     document.getElementById('pageTitle').textContent = t('pageTitle');
     document.getElementById('pageSubtitle').textContent =
@@ -1887,6 +1919,7 @@
 
     if (context.profile) {
       renderTaskInfo(context, context.profile);
+      renderNoActionableNotice(context);
     } else {
       renderNotFound(context.taskId);
     }

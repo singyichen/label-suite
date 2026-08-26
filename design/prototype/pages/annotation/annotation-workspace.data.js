@@ -1975,21 +1975,32 @@
    * getReviewUnitStatus(). A unit whose annotator has not submitted derives
    * null and is counted as 待審, matching the row's own `|| PENDING`
    * fallback. */
-  function listReviewUnitStatuses(taskId, runType) {
+  function listReviewUnits(taskId, runType) {
     var listEntry = findTaskListEntry(taskId);
     var detail = findTaskDetailProfile(taskId);
     if (!listEntry || !detail) return [];
     var outKeys = listEntry.outputTypes || [];
     var opts = { minReviewers: detail.minReviewers || 1 };
-    var statuses = [];
+    var units = [];
     (detail.datasetRecords || []).forEach(function (record, index) {
       var sampleId = getRecordId(record, index);
       getReviewerMockRows(taskId, sampleId).forEach(function (mockRow) {
-        statuses.push(getReviewUnitStatus(
-          taskId, runType, sampleId, { annotatorId: mockRow.annotator }, outKeys, opts));
+        units.push({
+          sampleId: sampleId,
+          annotatorId: mockRow.annotator,
+          status: getReviewUnitStatus(
+            taskId, runType, sampleId, { annotatorId: mockRow.annotator }, outKeys, opts),
+        });
       });
     });
-    return statuses;
+    return units;
+  }
+
+  /* Issue #449 keeps the enumeration in listReviewUnits() and leaves this
+     the projection the counters need, so the summary and the quick-review
+     target can never disagree about which units exist. */
+  function listReviewUnitStatuses(taskId, runType) {
+    return listReviewUnits(taskId, runType).map(function (unit) { return unit.status; });
   }
 
   /* The counting formulas, defined once:
@@ -2069,6 +2080,63 @@
       result[lang] = parts.join(' · ');
     });
     return result;
+  }
+
+  /* ---- Next actionable review unit (spec 015 v4.28.0 FR-073, issue #449) --
+   * Which unit a reviewer should be handed next, over the SAME enumeration
+   * the summary counts (listReviewUnits). The dashboard quick-review CTA
+   * used to open each task's first dataset record, so on most tasks it
+   * landed on a finalized, read-only unit and the reviewer had to go find
+   * their actual backlog.
+   *
+   * Rank 0 means "not actionable for this reviewer" and is the answer for
+   * finalized units (terminal) and for units this reviewer has already
+   * decided or may not decide. Lower rank wins; ties keep enumeration order,
+   * so the earliest unit of the strongest category is the target.
+   *
+   *   1  pending    -- nobody has reviewed it yet. A null status (annotator
+   *                    has not submitted) ranks here too, matching how
+   *                    computeReviewSummary counts it and how the list row
+   *                    renders it, so the CTA can never contradict the 待審
+   *                    count shown next to it.
+   *   2  disputed   -- only when FR-060 lets THIS reviewer arbitrate it:
+   *                    can_arbitrate plus no submission of their own on the
+   *                    unit. A reviewer who produced the dispute must never
+   *                    be routed to decide it.
+   *   3  approved / modified -- decided, but short of min_reviewers, so one
+   *                    more judgement still moves it; skipped when this
+   *                    reviewer is the one who already judged it.
+   *
+   * Nothing here reads a task id: the rule is task state plus reviewer
+   * identity only (Generalization-First). */
+  function reviewUnitActionRank(taskId, runType, unit, reviewerId) {
+    var identity = { annotatorId: unit.annotatorId, reviewerId: reviewerId };
+    if (unit.status === null || unit.status === REVIEW_UNIT_STATUS.PENDING) return 1;
+    if (unit.status === REVIEW_UNIT_STATUS.DISPUTED) {
+      return isArbiterCandidate(taskId, runType, unit.sampleId, identity) ? 2 : 0;
+    }
+    if (unit.status === REVIEW_UNIT_STATUS.APPROVED
+      || unit.status === REVIEW_UNIT_STATUS.MODIFIED) {
+      return getSubmission(taskId, 'reviewer', runType, unit.sampleId, identity) ? 0 : 3;
+    }
+    return 0;
+  }
+
+  /* Returns { sampleId, annotatorId, status } or null when this reviewer has
+     nothing left to do on the task -- the caller must then say so rather
+     than opening an arbitrary read-only unit. */
+  function findNextActionableReviewUnit(taskId, runType, reviewerId) {
+    var best = null;
+    var bestRank = 0;
+    listReviewUnits(taskId, runType).forEach(function (unit) {
+      var rank = reviewUnitActionRank(taskId, runType, unit, reviewerId);
+      if (rank === 0) return;
+      if (best === null || rank < bestRank) {
+        best = unit;
+        bestRank = rank;
+      }
+    });
+    return best;
   }
 
   /* ---- Review-flow demo seeder (Phase 2 slice C) -------------------------
@@ -2195,6 +2263,8 @@
     getReviewUnitStatus: getReviewUnitStatus,
     computeReviewSummary: computeReviewSummary,
     formatReviewSummary: formatReviewSummary,
+    listReviewUnits: listReviewUnits,
+    findNextActionableReviewUnit: findNextActionableReviewUnit,
     getDisputeItems: getDisputeItems,
     isArbiterCandidate: isArbiterCandidate,
     readReviewerSubmissions: readReviewerSubmissions,
