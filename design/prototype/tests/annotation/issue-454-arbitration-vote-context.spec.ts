@@ -109,6 +109,22 @@ test.describe('issue #454 -- arbitration card explains why the unit is disputed'
     await expect(page.getByTestId('ws-arbitration-vote-reason')).toHaveCount(0);
   });
 
+  test('a single dissenting reviewer is explained by the N < 2 rule, not by > N/2', async ({ page }) => {
+    await openAsArbiter(page, 'T015', 'ofs-02-modified-dispute');
+
+    await expect(page.getByTestId('ws-arbitration-card')).toBeVisible();
+    await expect(page.getByTestId('ws-arbitration-quorum')).toContainText('已提交審核員 1 位');
+
+    /* T015 runs min_reviewers = 1, so the lone dissenting reviewer holds 1 of
+       1 votes -- arithmetically a strict majority. FR-061 blocks convergence
+       below N = 2 anyway, so explaining this unit as "no strict majority"
+       would contradict the rule that actually kept it open. */
+    const reason = page.getByTestId('ws-arbitration-vote-reason');
+    await expect(reason).toHaveAttribute('data-reason', 'single_reviewer');
+    await expect(reason).toContainText('單一審核員不足以推翻標記員答案');
+    await expect(reason).not.toContainText('嚴格多數');
+  });
+
   test('vote context is anonymous: aggregate counts without reviewer identity', async ({ page }) => {
     await openAsArbiter(page, 'T016', 'ofm-05-all-divergent');
 
