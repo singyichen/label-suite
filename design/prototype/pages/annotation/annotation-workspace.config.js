@@ -2407,7 +2407,7 @@
     /* issue #399: reviewNote explains what approve/reject actually do, but
        was defined in I18N and never rendered anywhere -- render it so
        reviewers can actually read it before deciding.
-       issue #451 (FR-070/AC-6.11): that explanation used to promise the
+       issue #451 (FR-070/AC-3.40): that explanation used to promise the
        annotator-status rollback unconditionally, while FR-014I scopes the
        rollback to official_run (AC-3.15/AC-6.4). Since AC-3.33 forbids any
        run_type presentation branch on the review card, the note stays ONE
