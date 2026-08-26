@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -u
 readonly inventory_sentinel='design/system/screen-inventory.md is stale — run: node scripts/gen-screen-inventory.mjs'
-strict=0
+strict=0; id_pattern='FR-[0-9][0-9][0-9][[:alnum:]]*(-[[:alnum:]]+)*|SC-[0-9][0-9][0-9][[:alnum:]]*(-[[:alnum:]]+)*|AC-[0-9]+[[:alpha:]]*[.][0-9]+[[:alnum:]]*(-[[:alnum:]]+)*'
 root_arg=''; root_provided=0
 config_failed=0
 governance_failed=0
@@ -89,7 +89,7 @@ while IFS="$(printf '\t')" read -r id module status branch; do
 done <"$status_rows"
 section_is_valid() {
     awk -v heading="$2" -v mode="$3" '
-    (mode == "exact" ? $0 == heading : substr($0, 1, length(heading)) == heading) { found++; inside = 1; next }
+    (mode == "dependency" ? ($0 == heading || $0 == heading " *(本功能依賴其他規格，或被其他規格依賴時填寫)*") : $0 == heading) { found++; inside = 1; next }
     inside && /^##[[:space:]]/ { inside = 0 }
     inside && $0 !~ /^[[:space:]]*$/ && $0 !~ /^[[:space:]]*<!--/ { content = 1 }
     END { exit !(found == 1 && content == 1) }
@@ -101,9 +101,9 @@ requires_page_traceability() {
 verify_citations() {
     local artifact="$1" canonical="$2" citation
     [ -r "$artifact" ] || return
-    grep -Eo 'FR-[0-9][0-9][0-9]|SC-[0-9][0-9][0-9]|AC-[0-9]+[.][0-9]+' "$artifact" | LC_ALL=C sort -u >"$tmp_dir/citations" || true
+    grep -Eo "$id_pattern" "$artifact" | LC_ALL=C sort -u >"$tmp_dir/citations" || true; grep -Eo "$id_pattern" "$canonical" | LC_ALL=C sort -u >"$tmp_dir/canonical-citations" || true
     while IFS= read -r citation; do
-        [ -z "$citation" ] || grep -Fq "$citation" "$canonical" || add_error SOURCE_VERIFY_ID "${artifact#"$repo_root"/}" "canonical spec does not define $citation"
+        [ -z "$citation" ] || grep -Fqx "$citation" "$tmp_dir/canonical-citations" || add_error SOURCE_VERIFY_ID "${artifact#"$repo_root"/}" "canonical spec does not define $citation"
     done <"$tmp_dir/citations"
 }
 for change_dir in "$repo_root"/openspec/changes/*; do
@@ -137,7 +137,7 @@ for change_dir in "$repo_root"/openspec/changes/*; do
         if [ -n "$spec_branch" ] && [ "$spec_branch" != "$status_branch" ]; then add_error ACTIVE_CHANGE_STAGE specs/STATUS.md "branch for $id contradicts canonical frontmatter"; fi
     fi
     section_is_valid "$canonical" '## 功能目標' exact || add_error SPEC_REQUIRED_HEADING "$canonical_relative" 'required heading is missing, duplicated, or empty: ## 功能目標'
-    section_is_valid "$canonical" '## 規格相依性' prefix || add_error SPEC_REQUIRED_HEADING "$canonical_relative" 'required heading is missing, duplicated, or empty: ## 規格相依性'
+    section_is_valid "$canonical" '## 規格相依性' dependency || add_error SPEC_REQUIRED_HEADING "$canonical_relative" 'required heading is missing, duplicated, or empty: ## 規格相依性'
     missing_ids=''
     grep -Eq 'FR-[0-9][0-9][0-9]' "$canonical" || missing_ids="$missing_ids FR"
     grep -Eq 'SC-[0-9][0-9][0-9]' "$canonical" || missing_ids="$missing_ids SC"
@@ -162,12 +162,12 @@ for change_dir in "$repo_root"/openspec/changes/*; do
         [ -z "$missing_goal" ] || add_error TASK_STORY_GOAL "$task_relative" 'each numbered phase requires a story goal'
         grep '^\*\*故事目標\*\*' "$tasks" >"$tmp_dir/goals" || true
         while IFS= read -r goal; do
-            goal_ids="$(printf '%s\n' "$goal" | grep -Eo 'SC-[0-9][0-9][0-9]' || true)"
+            goal_ids="$(printf '%s\n' "$goal" | grep -Eo "$id_pattern" | grep '^SC-' || true)"
             if [ -z "$goal_ids" ]; then
                 add_error TASK_STORY_GOAL "$task_relative" 'story goal must cite a canonical SC ID'
             else
                 while IFS= read -r goal_id; do
-                    grep -Fq "$goal_id" "$canonical" || add_error TASK_STORY_GOAL "$task_relative" "story goal cites unknown $goal_id"
+                    grep -Fqx "$goal_id" "$tmp_dir/canonical-citations" || add_error TASK_STORY_GOAL "$task_relative" "story goal cites unknown $goal_id"
                 done <<EOF
 $goal_ids
 EOF
@@ -178,7 +178,7 @@ EOF
         while IFS= read -r task_line; do
             first_path="$(printf '%s\n' "$task_line" | grep -o '`[^`]*`' | sed -n '1p' | sed 's/^`//; s/`$//')"
             action_clause="$(printf '%s\n' "$task_line" | awk '{ sub(/^- \[[ xX]\] [0-9.]+[[:space:]]*/, ""); gsub(/[.][[:space:]]/, "。"); count = split($0, clauses, /[，。；;]/); for (i = 1; i <= count; i++) { clause = clauses[i]; lower = tolower(clause); if (clause ~ /(不得|禁止|不可|不應|無需)/ || lower ~ /(^|[^[:alnum:]_])((do|does|did|must|should|shall|will|would|can|could|may|might|is|are|was|were|has|have|had)[[:space:]]+not|(don.t|doesn.t|didn.t|mustn.t|shouldn.t|shan.t|won.t|wouldn.t|can.t|couldn.t|mayn.t|mightn.t|isn.t|aren.t|wasn.t|weren.t|hasn.t|haven.t|hadn.t|cannot))[[:space:]]+(modif|creat|delet|remov|writ|updat|add|edit|touch|chang|generat|implement|replac|renam)[[:alpha:]]*([^[:alnum:]_]|$)/) continue; if (clause ~ /(執行[[:space:]]*`|驗證[：:[:space:]]*`|預期)/ || lower ~ /(exception:|verification[：:[:space:]]*`|verify[[:space:]]*`|run[[:space:]]*`|expect)/) continue; if (i == 1 || clause ~ /(修改|建立|新增|刪除|移除|撰寫|補上|更新|加入[[:space:]]*`)/ || lower ~ /(modif(y|ied)|creat(e|ed)|delet(e|ed)|remov(e|ed)|writ(e|ten)|updat(e|ed)|add[[:space:]]*`)/) print clause } }')"
-            explicit_files="$(printf '%s\n' "$action_clause" | grep -Eo '`[^`[:space:]]*(/|[.])[^`[:space:]]*`' | wc -l | tr -d ' ')"
+            explicit_files="$(printf '%s\n' "$action_clause" | grep -Eo '`[^`[:space:]]*(/|[.])[^`[:space:]]*`' | wc -l | tr -d ' ')"; printf '%s\n' "$action_clause" | grep -Eo '`[^`[:space:]]*(/|[.])[^`[:space:]]*`' | sed 's/^`//; s/`$//' | LC_ALL=C sort -u >"$tmp_dir/task-files"
             task_group="$(printf '%s\n' "$task_line" | sed -n 's/^- \[[ xX]\] \([0-9][0-9]*\)[.].*/\1/p')"
             assignee_count="$(printf '%s\n' "$task_line" | grep -o '\[@[^]]*\]' | wc -l | tr -d ' ')"
             terminal="$(printf '%s\n' "$task_line" | sed -n 's/.*\(\[@[^]]*\]\)[[:space:]]*$/\1/p')"
@@ -190,15 +190,15 @@ EOF
             if [ "$assignee" != main ] && [ ! -r "$repo_root/.claude/agents/$assignee.md" ]; then add_error TASK_ASSIGNEE "$task_relative" "task references unknown assignee: $assignee"; fi
             exception=''
             if printf '%s\n' "$task_line" | grep -Fq 'Exception:'; then
-                exception="$(printf '%s\n' "$task_line" | sed -n 's/.*Exception:[[:space:]]*\([^;[:space:]]*\).*/\1/p')"
+                exception="$(printf '%s\n' "$task_line" | sed -n 's/.*Exception:[[:space:]]*\([^;[:space:]]*\).*/\1/p')"; files_value="$(printf '%s\n' "$task_line" | sed -n 's/.*;[[:space:]]*Files:[[:space:]]*\([^;]*\);[[:space:]]*Reason:.*/\1/p')"
                 case "$exception" in package-manager|scaffold|governance-propagation) ;; *) exception=invalid ;; esac
-                exception_fields="$(printf '%s\n' "$task_line" | grep -Eo 'Exception:|Files:|Reason:' | wc -l | tr -d ' ')"
-                if [ "$exception" = invalid ] || [ "$exception_fields" -ne 3 ] || printf '%s\n' "$task_line" | grep -Eq 'Files:[[:space:]]*;|Reason:[[:space:]]*(;|\[@)'; then add_error TASK_EXCEPTION "$task_relative" 'exception record is incomplete or uses a disallowed identifier'; fi
+                exception_fields="$(printf '%s\n' "$task_line" | grep -Eo 'Exception:|Files:|Reason:' | wc -l | tr -d ' ')"; printf '%s\n' "$files_value" | grep -Eo '`[^`[:space:]]+`' | sed 's/^`//; s/`$//' | LC_ALL=C sort -u >"$tmp_dir/exception-files"; exception_file_count="$(printf '%s\n' "$files_value" | grep -Eo '`[^`[:space:]]+`' | wc -l | tr -d ' ')"
+                if [ "$exception" = invalid ] || [ "$exception_fields" -ne 3 ] || printf '%s\n' "$task_line" | grep -Eq 'Reason:[[:space:]]*(;|\[@)' || ! printf '%s\n' "$files_value" | grep -Eq '^`[^`[:space:]]+`([[:space:]]*,[[:space:]]*`[^`[:space:]]+`)*$' || grep -Eq '(^/|(^|/)[.][.](/|$)|[*?[]|^[^/.]*$)' "$tmp_dir/exception-files" || [ "$exception_file_count" -ne "$(wc -l <"$tmp_dir/exception-files" | tr -d ' ')" ] || { [ "$explicit_files" -gt 0 ] && ! cmp -s "$tmp_dir/task-files" "$tmp_dir/exception-files"; }; then add_error TASK_EXCEPTION "$task_relative" 'exception record is incomplete or uses a disallowed identifier'; fi
             fi
             if [ -z "$exception" ] && ! printf '%s\n' "$task_line" | grep -Eq '^- \[[ xX]\] [0-9.]+ 執行'; then
                 if [ "$explicit_files" -gt 1 ]; then add_error TASK_EXCEPTION "$task_relative" 'task names multiple artifacts without an allowed exception'; elif [ "$explicit_files" -eq 0 ]; then add_warning TASK_FILE_COUNT_REVIEW "$task_relative" 'task file count requires human review'; fi
             fi
-            if [ "$exception" != governance-propagation ] && printf '%s\n' "$first_path" | grep -Eq '^scripts/.*-tests[.]sh$' && printf '%s\n' "$task_line" | grep -Eq '(^|[^[:alnum:]_])[Rr]ed([^[:alnum:]_]|$)'; then
+            if [ "$exception" != governance-propagation ] && grep -Eq '^(scripts/.*-tests[.]sh|backend/tests/.*[.]py|frontend/.*((__tests__|tests?)/.*|[.](test|spec))[.](js|jsx|ts|tsx)|e2e/.*|design/prototype/tests/.*)$' "$tmp_dir/task-files" && printf '%s\n' "$task_line" | grep -Eq '(^|[^[:alnum:]_])[Rr]ed([^[:alnum:]_]|$)'; then
                 [ "$assignee" = senior-qa ] || add_error TASK_RED_OWNER "$task_relative" 'Red task must be owned by senior-qa'
                 add_warning TASK_RED_EVIDENCE_REVIEW "$task_relative" 'committed Red failure evidence requires runtime review'
                 seen_red_groups="$seen_red_groups$task_group "
@@ -224,7 +224,7 @@ while IFS= read -r spec_file; do
     grep -Fqx "$relative" "$active_specs" && continue
     module="$(basename "$(dirname "$(dirname "$spec_file")")")"
     grep -Eq '^## 功能目標([[:space:]]|$)' "$spec_file" || printf 'LEGACY_SPEC_HEADING\t%s\tmissing:## 功能目標\n' "$relative" >>"$eligible"
-    grep -Eq '^## 規格相依性([[:space:]]|$)' "$spec_file" || printf 'LEGACY_SPEC_HEADING\t%s\tmissing:## 規格相依性\n' "$relative" >>"$eligible"
+    grep -Eq '^## 規格相依性( \*\(本功能依賴其他規格，或被其他規格依賴時填寫\)\*)?$' "$spec_file" || printf 'LEGACY_SPEC_HEADING\t%s\tmissing:## 規格相依性\n' "$relative" >>"$eligible"
     if requires_page_traceability "$module" "$spec_file" && ! grep -Fqx '## Prototype Traceability' "$spec_file"; then printf 'LEGACY_SPEC_HEADING\t%s\tmissing:## Prototype Traceability\n' "$relative" >>"$eligible"; fi
 done < <(find "$repo_root/specs" -mindepth 3 -maxdepth 3 -path '*/[0-9][0-9][0-9]-*/spec.md' -print | LC_ALL=C sort)
 LC_ALL=C sort -u "$eligible" -o "$eligible"
@@ -263,7 +263,7 @@ else
 fi
 consumer_files="$tmp_dir/consumers"
 : >"$consumer_files"
-for relative in AGENTS.md CLAUDE.md docs/sdd-workflow.md; do
+for relative in AGENTS.md CLAUDE.md docs/sdd-workflow.md openspec/config.yaml; do
     [ -f "$repo_root/$relative" ] && printf '%s\n' "$repo_root/$relative" >>"$consumer_files"
 done
 for dir in .claude/skills/sdd-workflow .claude/commands .claude/agents openspec/changes; do
