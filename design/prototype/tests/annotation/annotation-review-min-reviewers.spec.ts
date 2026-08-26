@@ -72,7 +72,7 @@ test.describe('minReviewers = 2: list badges honor the per-task threshold', () =
     });
     await page.reload();
 
-    await expect(firstUnitRow(page).locator('.status-badge')).toHaveText('已同意');
+    await expect(firstUnitRow(page).locator('.status-badge')).toHaveText('已同意 · 未定稿');
   });
 
   test('one changed reviewer -> 已修改, not 爭議中', async ({ page }) => {
@@ -83,7 +83,7 @@ test.describe('minReviewers = 2: list badges honor the per-task threshold', () =
     });
     await page.reload();
 
-    await expect(firstUnitRow(page).locator('.status-badge')).toHaveText('已修改');
+    await expect(firstUnitRow(page).locator('.status-badge')).toHaveText('已修改 · 未定稿');
   });
 });
 
@@ -119,6 +119,6 @@ test.describe('minReviewers default stays 1 when the profile seed is absent', ()
     });
     await page.reload();
 
-    await expect(firstUnitRow(page).locator('.status-badge')).toHaveText('已定稿');
+    await expect(firstUnitRow(page).locator('.status-badge')).toHaveText('已定稿 · 已鎖定');
   });
 });

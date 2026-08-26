@@ -736,6 +736,8 @@
       textCollapseLabel: '收合',
       notSubmittedNoteTpl: '其中 {count} 筆尚未提交，不計入審核清單：',
       notSubmittedEntryLabel: '查看 {id}',
+      reviewUnitInterimNote: '未定稿',
+      reviewUnitFinalizedNote: '已鎖定',
     },
     en: {
       pageTitle: 'Annotation List',
@@ -800,6 +802,8 @@
       textCollapseLabel: 'Collapse',
       notSubmittedNoteTpl: '{count} sample(s) not yet submitted, excluded from this review list:',
       notSubmittedEntryLabel: 'View {id}',
+      reviewUnitInterimNote: 'not finalized',
+      reviewUnitFinalizedNote: 'locked',
     }
   };
   function t(key, vars) {
@@ -994,10 +998,12 @@
     return t('statusPending');
   }
 
-  /* Review unit五態 (spec 015 v3.9.0). Both terminal states reuse the
-     submitted badge and both in-flight states reuse the saved badge — the
-     list only signals "settled / in progress / untouched", the workspace
-     carries the distinction. */
+  /* Review unit五態 (spec 015 v3.9.0). Issue #452: 已定稿 is the ONLY
+     terminal state, so it is the only one that keeps the submitted badge —
+     已同意 is short of min_reviewers and 爭議中 is unresolved, and both
+     used to borrow a settled-looking badge. The badge text carries the
+     same split in words (「已同意 · 未定稿」 vs 「已定稿 · 已鎖定」) so the
+     distinction never rests on colour alone. */
   var REVIEW_UNIT_STATUS = window.LabelSuiteAnnotationWorkspaceData.REVIEW_UNIT_STATUS;
   var REVIEW_UNIT_STATUS_ORDER = [
     REVIEW_UNIT_STATUS.PENDING,
@@ -1008,14 +1014,23 @@
   ];
   var ANNOTATOR_STATUS_ORDER = ['submitted', 'saved', 'pending'];
 
-  function reviewUnitStatusText(status) {
+  function reviewUnitStatusLabel(status) {
     return t('reviewUnit' + status.charAt(0).toUpperCase() + status.slice(1));
   }
 
+  /* Badge text only: the filter select keeps the bare state names, because a
+     qualifier like 未定稿 reads as a separate filterable state in a dropdown. */
+  function reviewUnitStatusText(status) {
+    var base = reviewUnitStatusLabel(status);
+    if (status === REVIEW_UNIT_STATUS.FINALIZED) return base + ' · ' + t('reviewUnitFinalizedNote');
+    if (status === REVIEW_UNIT_STATUS.PENDING) return base;
+    return base + ' · ' + t('reviewUnitInterimNote');
+  }
+
   function reviewUnitBadgeClass(status) {
-    if (status === REVIEW_UNIT_STATUS.APPROVED || status === REVIEW_UNIT_STATUS.FINALIZED) return 'status-submitted';
-    if (status === REVIEW_UNIT_STATUS.MODIFIED || status === REVIEW_UNIT_STATUS.DISPUTED) return 'status-saved';
-    return 'status-pending';
+    if (status === REVIEW_UNIT_STATUS.FINALIZED) return 'status-submitted';
+    if (status === REVIEW_UNIT_STATUS.PENDING) return 'status-pending';
+    return 'status-saved';
   }
 
   /* The two roles filter on different state machines, so the select is built
@@ -1025,7 +1040,7 @@
     if (!statusFilter) return;
     var reviewer = role === 'reviewer';
     var values = reviewer ? REVIEW_UNIT_STATUS_ORDER : ANNOTATOR_STATUS_ORDER;
-    var label = reviewer ? reviewUnitStatusText : statusText;
+    var label = reviewer ? reviewUnitStatusLabel : statusText;
 
     statusFilter.setAttribute('aria-label', reviewer ? t('reviewStatusFilterAll') : t('statusFilterAll'));
     statusFilter.innerHTML = '';

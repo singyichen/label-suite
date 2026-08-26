@@ -10,14 +10,14 @@
  *   - card clicks route to annotation-list with the correct run_type
  *   - reviewer summaries match the seeded review-state matrix
  *     (T014=6, T015=1, T016=0, T017=1 pending review units) using the
- *     review-coverage wording (issue #310): the share of units past 待審 is
- *     labeled 審核覆蓋率, and T016 — whose pending count is 0 while
- *     1 disputed + 2 more units are still unfinalized — must disclose
- *     未定稿 3 · 爭議 1 instead of reading as a completed task.
+ *     subject-bearing wording (issue #452): the share of units past 待審 is
+ *     labeled 任務覆蓋 x / n 個審核單位, and T016 — whose pending count is 0
+ *     while 1 disputed + 2 more units are still unfinalized — must disclose
+ *     未達定稿門檻 3 · 爭議中 1 instead of reading as a completed task.
  *
  * Issue #450: these summaries are no longer the seed's prebuilt display
  * string — computeReviewSummary() derives them from the stored review-unit
- * state, so every non-zero counter (待審 / 未定稿 / 爭議) now appears under
+ * state, so every non-zero counter (待審 / 未達定稿門檻 / 爭議中) now appears under
  * one shared rule instead of being hand-written per demo task.
  *
  * Traceability: specs/dashboard/012-dashboard/spec.md
@@ -41,29 +41,33 @@ const DEMO_TASKS = [
     id: 'T014',
     runType: 'dry_run',
     runTypeBadge: '試標',
-    reviewerSummaryZh: '待審 6 筆 · 審核覆蓋率 60% · 未定稿 8 筆 · 爭議 2 筆 · IAA 0.72',
-    reviewerSummaryEn: '6 Pending · 60% Review Coverage · 8 Unfinalized · 2 Disputed · IAA 0.72',
+    reviewerSummaryZh: '任務覆蓋 9 / 15 個審核單位 · 待審 6 個 · 未達定稿門檻 8 個 · 爭議中 2 個 · IAA 0.72',
+    reviewerSummaryEn:
+      'Task coverage 9 / 15 review units · 6 pending · 8 short of finalize threshold · 2 disputed · IAA 0.72',
   },
   {
     id: 'T015',
     runType: 'official_run',
     runTypeBadge: '正式標記',
-    reviewerSummaryZh: '待審 1 筆 · 審核覆蓋率 75% · 未定稿 2 筆 · 爭議 1 筆 · IAA 0.81',
-    reviewerSummaryEn: '1 Pending · 75% Review Coverage · 2 Unfinalized · 1 Disputed · IAA 0.81',
+    reviewerSummaryZh: '任務覆蓋 3 / 4 個審核單位 · 待審 1 個 · 未達定稿門檻 2 個 · 爭議中 1 個 · IAA 0.81',
+    reviewerSummaryEn:
+      'Task coverage 3 / 4 review units · 1 pending · 2 short of finalize threshold · 1 disputed · IAA 0.81',
   },
   {
     id: 'T016',
     runType: 'official_run',
     runTypeBadge: '正式標記',
-    reviewerSummaryZh: '審核覆蓋率 100% · 未定稿 3 筆 · 爭議 1 筆 · IAA 0.68',
-    reviewerSummaryEn: '100% Review Coverage · 3 Unfinalized · 1 Disputed · IAA 0.68',
+    reviewerSummaryZh: '任務覆蓋 5 / 5 個審核單位 · 未達定稿門檻 3 個 · 爭議中 1 個 · IAA 0.68',
+    reviewerSummaryEn:
+      'Task coverage 5 / 5 review units · 3 short of finalize threshold · 1 disputed · IAA 0.68',
   },
   {
     id: 'T017',
     runType: 'official_run',
     runTypeBadge: '正式標記',
-    reviewerSummaryZh: '待審 1 筆 · 審核覆蓋率 80% · 未定稿 4 筆 · 爭議 1 筆 · IAA 0.70',
-    reviewerSummaryEn: '1 Pending · 80% Review Coverage · 4 Unfinalized · 1 Disputed · IAA 0.70',
+    reviewerSummaryZh: '任務覆蓋 4 / 5 個審核單位 · 待審 1 個 · 未達定稿門檻 4 個 · 爭議中 1 個 · IAA 0.70',
+    reviewerSummaryEn:
+      'Task coverage 4 / 5 review units · 1 pending · 4 short of finalize threshold · 1 disputed · IAA 0.70',
   },
 ] as const;
 
