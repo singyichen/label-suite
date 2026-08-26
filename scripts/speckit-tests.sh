@@ -169,20 +169,6 @@ test_ci_uses_pnpm_for_prototype_jobs() {
     fi
 }
 
-write_independent_sdd_lint_job() {
-    local ci="$1"
-
-    cat >> "$ci" <<'YAML'
-  sdd-lint:
-    name: Project SDD Lint
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v5
-      - name: Check project SDD governance
-        run: scripts/check-sdd.sh
-YAML
-}
-
 count_top_level_sdd_lint_jobs() {
     local ci="$1"
 
@@ -203,12 +189,45 @@ count_top_level_sdd_lint_jobs() {
     ' "$ci"
 }
 
-ensure_independent_sdd_lint_job() {
+insert_independent_sdd_lint_job_after_validate() {
+    local ci="$1"
+    if ! grep -Eq '^  backend-ruff:[[:space:]]*(#.*)?$' "$ci"; then
+        echo "Expected copied CI workflow to contain backend-ruff after validate" >&2
+        exit 1
+    fi
+
+    sed -i.bak '/^  backend-ruff:$/i\
+  sdd-lint:\
+    name: Project SDD Lint\
+    runs-on: ubuntu-24.04\
+    steps:\
+      - uses: actions/checkout@v5\
+      - name: Check project SDD governance\
+        run: scripts/check-sdd.sh
+' "$ci"
+}
+
+ensure_independent_sdd_lint_job_after_validate() {
     local ci="$1"
 
     if [[ "$(count_top_level_sdd_lint_jobs "$ci")" -eq 0 ]]; then
-        write_independent_sdd_lint_job "$ci"
+        insert_independent_sdd_lint_job_after_validate "$ci"
     fi
+}
+
+insert_sdd_lint_text_after_command() {
+    local ci="$1"
+    local text="$2"
+    local fragment
+
+    if [[ "$(grep -Ec '^        run: scripts/check-sdd\.sh$' "$ci")" -ne 1 ]]; then
+        echo "Expected copied CI workflow to contain one sdd-lint command step" >&2
+        exit 1
+    fi
+
+    fragment="$(mktemp "$TMP_ROOT/sdd-lint-fragment.XXXXXX")"
+    printf '%s\n' "$text" > "$fragment"
+    sed -i.bak "/^        run: scripts\\/check-sdd\\.sh$/r $fragment" "$ci"
 }
 
 extract_top_level_sdd_lint_job() {
@@ -433,16 +452,16 @@ assert_sdd_lint_ci_contract_rejected() {
     assert_contains "$output" "$expected"
 }
 
-test_check_sdd_ci_job_is_independent() {
+test_check_sdd_ci_job_is_independent_for_after_validate_job() {
     local ci duplicate_ci existing_ci extra_named_run_ci install_ci needs_ci openspec_ci root_command_ci setup_ci split_ci path_filter_ci workflow_path_filter_ci workflow_path_ignore_ci
     ci="$(mktemp "$TMP_ROOT/ci-sdd-lint.XXXXXX")"
     cp "$ROOT/.github/workflows/ci.yml" "$ci"
-    ensure_independent_sdd_lint_job "$ci"
+    ensure_independent_sdd_lint_job_after_validate "$ci"
     assert_independent_sdd_lint_job "$ci"
 
     existing_ci="$(mktemp "$TMP_ROOT/ci-sdd-lint-existing.XXXXXX")"
     cp "$ci" "$existing_ci"
-    ensure_independent_sdd_lint_job "$existing_ci"
+    ensure_independent_sdd_lint_job_after_validate "$existing_ci"
     if [[ "$(count_top_level_sdd_lint_jobs "$existing_ci")" -ne 1 ]]; then
         echo "Expected existing independent sdd-lint job fixture not to be duplicated" >&2
         exit 1
@@ -463,20 +482,17 @@ test_check_sdd_ci_job_is_independent() {
 
     install_ci="$(mktemp "$TMP_ROOT/ci-sdd-lint-install.XXXXXX")"
     cp "$ci" "$install_ci"
-    cat >> "$install_ci" <<'YAML'
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-YAML
+    insert_sdd_lint_text_after_command "$install_ci" $'      - name: Install dependencies\n        run: pnpm install --frozen-lockfile'
     assert_sdd_lint_ci_contract_rejected "$install_ci" "Independent sdd-lint job must not install dependencies"
 
     openspec_ci="$(mktemp "$TMP_ROOT/ci-sdd-lint-openspec.XXXXXX")"
     cp "$ci" "$openspec_ci"
-    printf '      - run: openspec validate --changes --no-interactive\n' >> "$openspec_ci"
+    insert_sdd_lint_text_after_command "$openspec_ci" '      - run: openspec validate --changes --no-interactive'
     assert_sdd_lint_ci_contract_rejected "$openspec_ci" "Independent sdd-lint job must not run OpenSpec commands"
 
     path_filter_ci="$(mktemp "$TMP_ROOT/ci-sdd-lint-path-filter.XXXXXX")"
     cp "$ci" "$path_filter_ci"
-    printf '      - uses: dorny/paths-filter@v3\n' >> "$path_filter_ci"
+    insert_sdd_lint_text_after_command "$path_filter_ci" '      - uses: dorny/paths-filter@v3'
     assert_sdd_lint_ci_contract_rejected "$path_filter_ci" "Independent sdd-lint job must not couple to path filtering"
 
     workflow_path_filter_ci="$(mktemp "$TMP_ROOT/ci-sdd-lint-workflow-path-filter.XXXXXX")"
@@ -497,24 +513,17 @@ YAML
 
     root_command_ci="$(mktemp "$TMP_ROOT/ci-sdd-lint-root-command.XXXXXX")"
     cp "$ci" "$root_command_ci"
-    cat >> "$root_command_ci" <<'YAML'
-    defaults:
-      run:
-        working-directory: backend
-YAML
+    insert_sdd_lint_text_after_command "$root_command_ci" $'    defaults:\n      run:\n        working-directory: backend'
     assert_sdd_lint_ci_contract_rejected "$root_command_ci" "Independent sdd-lint job must run scripts/check-sdd.sh from the repository root"
 
     setup_ci="$(mktemp "$TMP_ROOT/ci-sdd-lint-setup.XXXXXX")"
     cp "$ci" "$setup_ci"
-    printf '      - uses: actions/setup-node@v5\n' >> "$setup_ci"
+    insert_sdd_lint_text_after_command "$setup_ci" '      - uses: actions/setup-node@v5'
     assert_sdd_lint_ci_contract_rejected "$setup_ci" "Independent sdd-lint job must use exactly one actions/checkout@v5 step"
 
     extra_named_run_ci="$(mktemp "$TMP_ROOT/ci-sdd-lint-extra-named-run.XXXXXX")"
     cp "$ci" "$extra_named_run_ci"
-    cat >> "$extra_named_run_ci" <<'YAML'
-      - name: Prepare environment
-        run: echo extra setup
-YAML
+    insert_sdd_lint_text_after_command "$extra_named_run_ci" $'      - name: Prepare environment\n        run: echo extra setup'
     assert_sdd_lint_ci_contract_rejected "$extra_named_run_ci" "Independent sdd-lint job must only run scripts/check-sdd.sh"
 
     split_ci="$(mktemp "$TMP_ROOT/ci-sdd-lint-split.XXXXXX")"
@@ -527,6 +536,13 @@ YAML
       - run: scripts/check-sdd.sh
 YAML
     assert_sdd_lint_ci_contract_rejected "$split_ci" "Expected independent sdd-lint job to run scripts/check-sdd.sh from the repository root"
+
+}
+
+test_check_sdd_ci_job_is_independent() {
+    local ci
+
+    test_check_sdd_ci_job_is_independent_for_after_validate_job
 
     ci="$(mktemp "$TMP_ROOT/ci-sdd-lint-missing.XXXXXX")"
     cp "$ROOT/.github/workflows/ci.yml" "$ci"
