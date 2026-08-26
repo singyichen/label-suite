@@ -2,7 +2,7 @@
 set -u
 readonly inventory_sentinel='design/system/screen-inventory.md is stale — run: node scripts/gen-screen-inventory.mjs'
 strict=0
-root_arg=''
+root_arg=''; root_provided=0
 config_failed=0
 governance_failed=0
 tmp_dir="$(mktemp -d "${TMPDIR:-/tmp}/label-suite-sdd.XXXXXX")" || exit 2
@@ -37,13 +37,14 @@ for arg in "$@"; do
             ;;
         -*) add_config_error CLI_USAGE . "unknown option: $arg" ;;
         *)
-            [ -z "$root_arg" ] || add_config_error CLI_USAGE . 'only one repository root may be provided'
-            [ -n "$root_arg" ] || root_arg="$arg"
+            [ "$root_provided" -eq 0 ] || add_config_error CLI_USAGE . 'only one repository root may be provided'
+            [ "$root_provided" -ne 0 ] || { root_arg="$arg"; root_provided=1; }
             ;;
     esac
 done
+[ "$root_provided" -eq 0 ] || [ -n "$root_arg" ] || add_config_error SCANNER_CONFIG . 'repository root is invalid or unreadable'
 if [ "$config_failed" -ne 0 ]; then finish; fi
-if [ -z "$root_arg" ]; then
+if [ "$root_provided" -eq 0 ]; then
     repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)"
 else
     repo_root="$(cd "$root_arg" 2>/dev/null && pwd)"
