@@ -13,7 +13,11 @@
 #   Constitution Principle X ("Change Scope Discipline"): tests, lockfiles,
 #   generated files, tool/project config files, empty or re-export-only
 #   __init__.py/index.ts, and specs/**|openspec/** artifacts don't count
-#   toward either threshold.
+#   toward either threshold. "Generated files" only counts a file whose
+#   generated-view marker appears in its HEADER (see GENERATED_HEADER_WINDOW
+#   and is_generated_blob, below) — generators must place the marker near
+#   the top of the file to opt in; mentioning it elsewhere in prose or body
+#   text does not exclude the file.
 #
 # Scope note:
 #   This guard applies to a single commit. Constitution Principle X's
@@ -67,14 +71,21 @@ is_empty_or_reexport_barrel() {
 }
 
 # Content-based: true (0) if $1's staged blob carries the generated-view
-# marker used by design/system/screen-inventory.md:5 ("generated view").
-# Content-based rather than filename-based so the check can't be fooled by
-# (or miss) a file that doesn't match an assumed naming convention. Fails
+# marker IN ITS HEADER, mirroring design/system/screen-inventory.md:5
+# ("本檔為 generated view——請勿手動編輯"). Content-based rather than
+# filename-based so the check can't be fooled by (or miss) a file that
+# doesn't match an assumed naming convention. Header-scoped (only the first
+# GENERATED_HEADER_WINDOW lines) and marker-specific (the full Chinese
+# phrase, not the bare English words "generated view") so ordinary prose
+# that happens to mention "generated view" elsewhere in a file — or deep in
+# its body — is never mistaken for a real generated-file marker. Fails
 # safe (not excluded) for deletions.
+GENERATED_HEADER_WINDOW=10
+GENERATED_MARKER='本檔為 generated view——請勿手動編輯'
 is_generated_blob() {
-  local path="$1" content
-  content="$(git show ":$path" 2>/dev/null)" || return 1
-  [[ "$content" == *'generated view'* ]]
+  local path="$1" header
+  header="$(git show ":$path" 2>/dev/null | head -n "$GENERATED_HEADER_WINDOW")" || return 1
+  [[ "$header" == *"$GENERATED_MARKER"* ]]
 }
 
 # True (0) if $1 should be excluded from both the file-count and line-count
