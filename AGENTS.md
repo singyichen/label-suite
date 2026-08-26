@@ -28,7 +28,7 @@ design/prototype/pages/[module]/   ← HTML prototypes
 
 ## Required Behaviors
 
-- All Python commands via `uv run` (`uv run pytest`, `uv run uvicorn app.main:app --reload`, etc.)
+- All Python commands via `uv run` (`uv run pytest`, `uv run uvicorn app.main:create_app --factory --reload`, etc.)
 - All frontend commands via `pnpm` from `frontend/`
 - Write a failing test before writing implementation — no exceptions (TDD)
 - Complete the four distinct gates at their applicable stages: OpenSpec schema validation (`openspec validate` for schema/delta/scenario structure); Project SDD lint (project headings, goal/status/ownership/retired-path rules); code/test gates (affected implementation verification); and Source-Verify + write-back/archive (archive-time canonical ID/version/Changelog integrity, plus a post-archive `grep` check that every canonical citation in the derived view is locatable — `openspec archive` copies propose-time delta text verbatim and no CLI check catches a wrong or omitted citation; see `docs/sdd-workflow.md` §6.2). `/opsx:verify` may coordinate workflow-specific checks but does not replace these gates.
@@ -122,7 +122,7 @@ pnpm lint
 pnpm playwright test
 
 # Backend (run from backend/)
-uv run uvicorn app.main:app --reload
+uv run uvicorn app.main:create_app --factory --reload
 uv run pytest
 uv run ruff check . && uv run ruff format .
 uv run mypy .

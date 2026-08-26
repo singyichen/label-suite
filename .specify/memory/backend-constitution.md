@@ -153,7 +153,7 @@ All backend Python commands must run through `uv` from `backend/`.
 
 ```bash
 uv sync --dev
-uv run uvicorn app.main:app --reload
+uv run uvicorn app.main:create_app --factory --reload
 uv run pytest
 uv run pytest -m security
 uv run ruff check .
