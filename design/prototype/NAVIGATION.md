@@ -43,7 +43,6 @@
 
 | 主頁 | 片段目錄 | 用途 |
 |------|----------|------|
-| `annotation/annotation-workspace` | `annotation/annotation-workspace.panels/` | 依任務類型載入分類、VA 評分、序列標記、關係抽取、句子配對等標記面板 |
 | `task-management/task-detail` | `task-management/task-detail.panels/` | 任務概覽、成員管理、標記進度、標記結果、工時紀錄 tab |
 | `dataset/dataset-analysis-detail` | `dataset/dataset-analysis-detail.partials/` | 依任務類型與 `tab=stats/quality` 載入統計與品質監控內容 |
 
@@ -337,7 +336,7 @@ Living styleguide（issue #183）：即時列舉 `assets/tokens.css` 全部 toke
 
 ### `/annotation/annotation-workspace` ✅
 
-此頁依 `task_type` 動態載入 `annotation-workspace.panels/` 中的標記面板。
+此頁的標記面板由 `annotation-workspace.config.js` 依任務 `outputs[]` 的輸出類型於執行期產生（registry-driven，見 ADR-029），無獨立片段目錄。
 
 | 方向 | 觸發條件 | 目標 |
 |------|---------|------|
