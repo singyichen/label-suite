@@ -35,18 +35,16 @@ type Summary = {
   derivable: boolean;
 };
 
-declare global {
-  interface Window {
-    LabelSuiteAnnotationWorkspaceData: {
-      computeReviewSummary: (taskId: string, runType: string) => Summary;
-    };
-  }
-}
+type WorkspaceData = {
+  computeReviewSummary: (taskId: string, runType: string) => Summary;
+};
 
 function readSummary(page: Page, taskId: string, runType: string): Promise<Summary> {
   return page.evaluate(
-    ([id, run]) => window.LabelSuiteAnnotationWorkspaceData.computeReviewSummary(id, run),
-    [taskId, runType] as const,
+    (a) =>
+      (window as unknown as { LabelSuiteAnnotationWorkspaceData: WorkspaceData })
+        .LabelSuiteAnnotationWorkspaceData.computeReviewSummary(a.taskId, a.runType),
+    { taskId, runType },
   );
 }
 

@@ -12,7 +12,8 @@
     progress,
     runType,
     status,
-    reviewerId
+    reviewerId,
+    iaa
   ) {
     return {
       latestUnfinishedSampleId: sampleId,
@@ -21,6 +22,10 @@
       runType: runType,
       status: status,
       reviewerId: reviewerId || '',
+      /* issue #450: IAA is a structured seed value, not a slice of a
+         prebuilt display string -- the derived reviewer summary composes
+         its own text and appends this number. Reviewer entries only. */
+      iaa: iaa === undefined ? null : iaa,
     };
   }
 
@@ -54,7 +59,9 @@
         '7 Pending · 34% Progress · IAA 0.80',
         34,
         'official_run',
-        'pending_review'
+        'pending_review',
+        '',
+        0.80
       ),
     },
     {
@@ -74,7 +81,9 @@
         '6 Pending · 48% Progress · IAA 0.76',
         48,
         'dry_run',
-        'pending_review'
+        'pending_review',
+        '',
+        0.76
       ),
     },
     {
@@ -94,7 +103,9 @@
         '12 Pending · 18% Progress · IAA 0.81',
         18,
         'official_run',
-        'pending_review'
+        'pending_review',
+        '',
+        0.81
       ),
     },
     {
@@ -114,7 +125,9 @@
         '5 Pending · 61% Progress · IAA 0.84',
         61,
         'dry_run',
-        'in_progress'
+        'in_progress',
+        '',
+        0.84
       ),
     },
     {
@@ -134,7 +147,9 @@
         '8 Pending · 76% Progress · IAA 0.78',
         76,
         'dry_run',
-        'in_progress'
+        'in_progress',
+        '',
+        0.78
       ),
     },
     {
@@ -154,7 +169,9 @@
         '10 Pending · 71% Progress · IAA 0.79',
         71,
         'official_run',
-        'pending_review'
+        'pending_review',
+        '',
+        0.79
       ),
     },
     {
@@ -174,7 +191,9 @@
         '15 Pending · 64% Progress · IAA 0.83',
         64,
         'official_run',
-        'pending_review'
+        'pending_review',
+        '',
+        0.83
       ),
     },
     {
@@ -194,7 +213,9 @@
         '13 Pending · 45% Progress · IAA 0.77',
         45,
         'official_run',
-        'pending_review'
+        'pending_review',
+        '',
+        0.77
       ),
     },
     {
@@ -214,7 +235,9 @@
         '4 Pending · 37% Progress · IAA 0.74',
         37,
         'dry_run',
-        'in_progress'
+        'in_progress',
+        '',
+        0.74
       ),
     },
     {
@@ -234,7 +257,9 @@
         '9 Pending · 53% Progress · IAA 0.79',
         53,
         'official_run',
-        'in_progress'
+        'in_progress',
+        '',
+        0.79
       ),
     },
     {
@@ -254,7 +279,9 @@
         '11 Pending · 82% Progress · IAA 0.82',
         82,
         'dry_run',
-        'pending_review'
+        'pending_review',
+        '',
+        0.82
       ),
     },
     {
@@ -274,7 +301,9 @@
         '5 Pending · 29% Progress · IAA 0.75',
         29,
         'official_run',
-        'pending_review'
+        'pending_review',
+        '',
+        0.75
       ),
     },
     {
@@ -294,7 +323,9 @@
         '8 Pending · 58% Progress · IAA 0.80',
         58,
         'official_run',
-        'pending_review'
+        'pending_review',
+        '',
+        0.80
       ),
     },
     /* T014-T017: review-flow demo tasks (issue #302). Numbers follow the
@@ -331,7 +362,8 @@
         60,
         'dry_run',
         'pending_review',
-        'reviewer_chen'
+        'reviewer_chen',
+        0.72
       ),
     },
     {
@@ -352,7 +384,8 @@
         75,
         'official_run',
         'pending_review',
-        'reviewer_chen'
+        'reviewer_chen',
+        0.81
       ),
     },
     {
@@ -373,7 +406,8 @@
         100,
         'official_run',
         'in_progress',
-        'reviewer_chen'
+        'reviewer_chen',
+        0.68
       ),
     },
     {
@@ -394,7 +428,8 @@
         80,
         'official_run',
         'pending_review',
-        'reviewer_chen'
+        'reviewer_chen',
+        0.70
       ),
     },
   ];
@@ -419,6 +454,7 @@
       runType: work.runType,
       status: work.status,
       reviewerId: work.reviewerId,
+      iaa: work.iaa,
     };
   }
 

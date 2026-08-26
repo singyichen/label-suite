@@ -318,12 +318,34 @@
     );
   }
 
+  /* Issue #450: a reviewer card's summary and progress bar are DERIVED from
+     the live review-unit state (annotation-workspace.data.js
+     computeReviewSummary -- the single formula source shared with
+     annotation-list), so finishing a review updates the card instead of
+     leaving the seed's prebuilt string contradicting the unit rows. Tasks
+     with no stored review-unit state have nothing to derive and keep their
+     seeded illustrative summary. Applied before sortEntries() so the
+     progress sort orders by the same number the card shows. */
+  function deriveReviewerEntry(entry) {
+    var workspaceData = global.LabelSuiteAnnotationWorkspaceData;
+    if (!workspaceData || !workspaceData.computeReviewSummary) return entry;
+    var summary = workspaceData.computeReviewSummary(entry.exampleTaskId, entry.runType);
+    if (!summary.derivable) return entry;
+    var derived = {};
+    Object.keys(entry).forEach(function (key) { derived[key] = entry[key]; });
+    derived.detail = workspaceData.formatReviewSummary(summary, entry.iaa);
+    derived.progress = summary.coveragePct;
+    return derived;
+  }
+
   function renderTaskList(containerId, listKey, role, sortKey) {
     var container = document.getElementById(containerId);
     if (!container) return;
     var taskMap = buildMap(data.tasks, 'id');
     var outputTypeMap = buildMap(data.outputTypes, 'key');
-    var entries = sortEntries(data.roleLists[listKey] || [], sortKey);
+    var sourceEntries = data.roleLists[listKey] || [];
+    if (role === 'reviewer') sourceEntries = sourceEntries.map(deriveReviewerEntry);
+    var entries = sortEntries(sourceEntries, sortKey);
     var markup = entries.map(function (entry, index) {
       var task = taskMap[entry.exampleTaskId];
       if (!task || !Array.isArray(task.outputTypes)) return '';

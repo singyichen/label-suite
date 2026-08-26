@@ -1751,9 +1751,26 @@
     document.getElementById('taskInfoTitle').textContent =
       (isEn && profile.nameEn) ? profile.nameEn : profile.nameZh;
 
+    /* Issue #450: a reviewer's summary, progress bar and completion badge
+       are DERIVED from the live review-unit state via the shared
+       computeReviewSummary() formula, so they can never contradict the
+       review-unit rows below. Null for annotators, and for reviewer tasks
+       with no stored review-unit state to derive from. */
+    var reviewSummary = null;
+    if (context.role === 'reviewer') {
+      var derivedSummary = window.LabelSuiteAnnotationWorkspaceData.computeReviewSummary(
+        profile.id, context.runType);
+      if (derivedSummary.derivable) reviewSummary = derivedSummary;
+    }
+
     var completionMap = readCompletionStateMap();
     var completionState = completionMap[completionStateKey(context.role, profile.id, context.runType)];
-    var isCompleted = Boolean(completionState && completionState.allSubmitted);
+    /* 審核覆蓋率 100% is not "done": a covered unit may still be awaiting
+       quorum, modified or disputed, so only a fully finalized task counts
+       as completed for a reviewer (issue #310/#450). */
+    var isCompleted = reviewSummary
+      ? reviewSummary.unfinalized === 0
+      : Boolean(completionState && completionState.allSubmitted);
 
     /* Count follows the materialized run context when the profile declares
        one for this run_type (spec 015: list items are materialized by
@@ -1764,11 +1781,17 @@
       : profile.datasetRecords.length;
     /* Progress summary reuses the dashboard assignment seeds so the card
        shows the exact stats/progress of the matching dashboard row
-       (FR-007C/FR-007D: same progress contract as the dashboard list). */
+       (FR-007C/FR-007D: same progress contract as the dashboard list).
+       Reviewers override that seed with the derived summary above -- both
+       pages compose it from the same formula, so they still agree. */
     var stats = findAssignmentStats(profile.id, context.role);
+    var summaryText = reviewSummary
+      ? window.LabelSuiteAnnotationWorkspaceData.formatReviewSummary(
+          reviewSummary, stats ? stats.iaa : null)
+      : (stats ? stats.detail : null);
     var detailParts = [];
-    if (stats && stats.detail) {
-      detailParts.push(isEn ? stats.detail.en : stats.detail.zh);
+    if (summaryText) {
+      detailParts.push(isEn ? summaryText.en : summaryText.zh);
     }
     if (context.runType === 'dry_run') {
       var round = runCtx && runCtx.round != null ? runCtx.round : 1;
@@ -1798,9 +1821,11 @@
     statusEl.textContent = isCompleted ? t('taskStatusCompleted') : t('taskStatusInProgress');
     statusEl.className = 'badge ' + (isCompleted ? 'badge-success' : 'badge-info');
 
-    var progressPct = isCompleted
-      ? 100
-      : (stats && typeof stats.progress === 'number' ? stats.progress : 0);
+    var progressPct = reviewSummary
+      ? reviewSummary.coveragePct
+      : (isCompleted
+        ? 100
+        : (stats && typeof stats.progress === 'number' ? stats.progress : 0));
     document.getElementById('taskInfoProgressBar').style.width = progressPct + '%';
 
     var quickBtn = document.getElementById('taskQuickContinueBtn');

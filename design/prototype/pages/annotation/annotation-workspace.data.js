@@ -1961,6 +1961,116 @@
     return winner ? { converged: true, value: values[winner] } : { converged: false };
   }
 
+  /* ---- Reviewer task summary (spec 015 v4.27.0 FR-072, issue #450) ------
+   * SINGLE SOURCE OF TRUTH for the reviewer counters shown on the dashboard
+   * task card and the annotation-list task info card. Both used to print a
+   * prebuilt display string from dashboard.assignments.js while the review
+   * unit rows on the same screen derived their state from storage, so a
+   * finished review flipped the row to 已定稿 while the summary above it
+   * still promised 待審 1 筆.
+   *
+   * Review units are enumerated exactly the way annotation-list's
+   * buildReviewUnitRows() enumerates its rows -- one unit per
+   * datasetRecord x mock annotator row -- and each one's state comes from
+   * getReviewUnitStatus(). A unit whose annotator has not submitted derives
+   * null and is counted as 待審, matching the row's own `|| PENDING`
+   * fallback. */
+  function listReviewUnitStatuses(taskId, runType) {
+    var listEntry = findTaskListEntry(taskId);
+    var detail = findTaskDetailProfile(taskId);
+    if (!listEntry || !detail) return [];
+    var outKeys = listEntry.outputTypes || [];
+    var opts = { minReviewers: detail.minReviewers || 1 };
+    var statuses = [];
+    (detail.datasetRecords || []).forEach(function (record, index) {
+      var sampleId = getRecordId(record, index);
+      getReviewerMockRows(taskId, sampleId).forEach(function (mockRow) {
+        statuses.push(getReviewUnitStatus(
+          taskId, runType, sampleId, { annotatorId: mockRow.annotator }, outKeys, opts));
+      });
+    });
+    return statuses;
+  }
+
+  /* The counting formulas, defined once:
+   *   total       = review units
+   *   pending     = units nobody has reviewed yet
+   *   disputed    = units sitting in the dispute pool
+   *   unfinalized = total - finalized (pending units included: not final)
+   *   coveragePct = round((total - pending) / total * 100), 0 when total = 0
+   * 審核覆蓋率 is the share of units past 待審, NOT a completion rate
+   * (issue #310): a unit past MY review can still be approved-but-short-of-
+   * quorum, modified or disputed, so 100% coverage must never be rendered
+   * as a finished task -- read `unfinalized`/`disputed` for that.
+   *
+   * `derivable` is false when NO unit has stored review-unit state at all;
+   * the task then has nothing to derive and its consumer keeps the seeded
+   * illustrative summary. The condition is the presence of data, never a
+   * task id (Generalization-First). */
+  function computeReviewSummary(taskId, runType) {
+    var statuses = listReviewUnitStatuses(taskId, runType);
+    var counts = { pending: 0, approved: 0, modified: 0, disputed: 0, finalized: 0 };
+    var derivable = false;
+    statuses.forEach(function (status) {
+      if (status === null) { counts.pending += 1; return; }
+      derivable = true;
+      if (counts[status] !== undefined) counts[status] += 1;
+    });
+    var total = statuses.length;
+    return {
+      total: total,
+      pending: counts.pending,
+      approved: counts.approved,
+      modified: counts.modified,
+      disputed: counts.disputed,
+      finalized: counts.finalized,
+      unfinalized: total - counts.finalized,
+      coveragePct: total === 0 ? 0 : Math.round(((total - counts.pending) / total) * 100),
+      derivable: derivable,
+    };
+  }
+
+  /* Renders a computeReviewSummary() result as the localized summary text
+   * both consumers display. One rule, no per-task branches: coverage is
+   * always shown, every other counter appears only when non-zero, so a
+   * vacuous "待審 0 筆" never crowds out the 未定稿/爭議 breakdown that
+   * actually needs the reviewer's attention. `iaa` is the seed's structured
+   * inter-annotator agreement value (not derivable from review units) and is
+   * omitted when absent. */
+  var REVIEW_SUMMARY_LABELS = {
+    zh: {
+      pending: '待審 {n} 筆',
+      coverage: '審核覆蓋率 {n}%',
+      unfinalized: '未定稿 {n} 筆',
+      disputed: '爭議 {n} 筆',
+      iaa: 'IAA {n}',
+    },
+    en: {
+      pending: '{n} Pending',
+      coverage: '{n}% Review Coverage',
+      unfinalized: '{n} Unfinalized',
+      disputed: '{n} Disputed',
+      iaa: 'IAA {n}',
+    },
+  };
+
+  function formatReviewSummary(summary, iaa) {
+    var result = {};
+    Object.keys(REVIEW_SUMMARY_LABELS).forEach(function (lang) {
+      var labels = REVIEW_SUMMARY_LABELS[lang];
+      var parts = [];
+      function push(key, value) { parts.push(labels[key].replace('{n}', String(value))); }
+      if (summary.pending > 0) push('pending', summary.pending);
+      push('coverage', summary.coveragePct);
+      if (summary.unfinalized > 0) push('unfinalized', summary.unfinalized);
+      if (summary.disputed > 0) push('disputed', summary.disputed);
+      /* IAA keeps the 2-decimal presentation used everywhere else. */
+      if (iaa !== undefined && iaa !== null) push('iaa', Number(iaa).toFixed(2));
+      result[lang] = parts.join(' · ');
+    });
+    return result;
+  }
+
   /* ---- Review-flow demo seeder (Phase 2 slice C) -------------------------
    * Stages the T014-T017 demo review states at boot so every review-flow
    * scenario (five unit states, quorum thresholds, majority convergence,
@@ -2083,6 +2193,8 @@
     REVIEW_UNIT_STATUS: REVIEW_UNIT_STATUS,
     compareOutputAnswer: compareOutputAnswer,
     getReviewUnitStatus: getReviewUnitStatus,
+    computeReviewSummary: computeReviewSummary,
+    formatReviewSummary: formatReviewSummary,
     getDisputeItems: getDisputeItems,
     isArbiterCandidate: isArbiterCandidate,
     readReviewerSubmissions: readReviewerSubmissions,
