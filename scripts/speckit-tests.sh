@@ -526,6 +526,26 @@ test_check_sdd_uses_explicit_repo_root() {
     assert_not_contains "$output" "SPEC_REQUIRED_HEADING"
 }
 
+test_check_sdd_rejects_empty_explicit_repo_root() {
+    local outside output status
+    outside="$(mktemp -d "$TMP_ROOT/check-sdd-outside.XXXXXX")"
+    output="$(mktemp "$TMP_ROOT/check-sdd-empty-root.XXXXXX")"
+
+    if (cd "$outside" && "$ROOT/scripts/check-sdd.sh" "") >"$output" 2>&1; then
+        status=0
+    else
+        status=$?
+    fi
+    if [[ "$status" -ne 2 ]]; then
+        echo "Expected empty explicit repository root to exit 2, got: $status" >&2
+        cat "$output" >&2
+        exit 1
+    fi
+    assert_contains "$output" "ERROR [SCANNER_CONFIG] .:"
+    assert_not_contains "$output" "Project SDD lint: 0 error(s)"
+    assert_not_contains "$output" "WARNING ["
+}
+
 test_check_sdd_fails_for_missing_goal_heading() {
     local repo
     repo="$(make_sdd_repo)"
@@ -885,6 +905,7 @@ test_check_spec_artifacts_fails_for_untracked_spec
 test_ci_uses_pnpm_for_prototype_jobs
 test_check_sdd_passes_for_valid_repo
 test_check_sdd_uses_explicit_repo_root
+test_check_sdd_rejects_empty_explicit_repo_root
 test_check_sdd_fails_for_missing_goal_heading
 test_check_sdd_fails_for_active_change_stage_drift
 test_check_sdd_fails_for_missing_source_id
