@@ -1,0 +1,341 @@
+{
+  "_comment": "Single generation source for design/system/screen-inventory.md. Hand-maintained; run `node scripts/gen-screen-inventory.mjs` after editing. Fields the generator derives (FR/SC ids, data-testid counts, component occurrence counts, Storybook scope, prototype source commit) must NOT be duplicated here.",
+  "componentRegistry": {
+    "language-toggle": "Language Toggle 語言切換",
+    "button": "Button（CTA / Primary / Secondary / Ghost / Danger / OAuth / Icon-only）",
+    "sidebar": "Navbar / Sidebar（共用側欄）",
+    "card": "Card 卡片",
+    "table": "Table 表格",
+    "input": "Input 輸入框",
+    "modal": "Modal 對話框",
+    "mini-button": "Mini Button 列內小按鈕",
+    "status-badge": "Status Badge 狀態徽章",
+    "pagination": "Pagination 分頁",
+    "link": "Link（Inline / Action）",
+    "chip": "Chip（VA / 分類 / Cause…）",
+    "task-type-badge": "Task Type / Run Mode Badge",
+    "toolbar": "Toolbar（搜尋＋篩選＋清除）",
+    "content-tabs": "Desktop Content Tabs 內容頁籤",
+    "color-dot": "Color Dot 色點",
+    "divider": "Divider 分隔線",
+    "state-panel": "State Panel 狀態面板",
+    "breadcrumb": "Breadcrumb 麵包屑",
+    "avatar": "Avatar 頭像",
+    "skeleton": "Skeleton 載入佔位",
+    "status-pill": "Status Pill（無框軟底）",
+    "alert-banner": "Alert Banner 警示橫幅",
+    "toast": "Toast 浮動提示",
+    "activity-list": "Activity List 活動清單",
+    "step-indicator": "Step Indicator 步驟指示",
+    "upload-zone": "Upload Zone 上傳區",
+    "tag-input": "Tag Input / Pill 標籤輸入",
+    "toggle-switch": "Toggle Switch 開關",
+    "code-editor": "Code Editor（Schema）",
+    "accordion": "Accordion 手風琴",
+    "state-switcher": "State Switcher ⚠ prototype-only"
+  },
+  "entry": {
+    "page": "index.html",
+    "title": "入口導向頁",
+    "views": [
+      { "id": "V00", "name": "入口導向頁", "params": "（無）", "note": "Meta refresh 自動導向 `pages/account/login.html`" }
+    ]
+  },
+  "excludedPages": {
+    "components-showcase.html": "活體 styleguide，非產品畫面；元件正典是 MASTER.md"
+  },
+  "screens": [
+    {
+      "id": "01",
+      "title": "登入",
+      "module": "account",
+      "page": "pages/account/login.html",
+      "specs": ["specs/account/001-login-email-password", "specs/account/002-login-google-sso"],
+      "design": "design/system/pages/login.md",
+      "tests": ["design/prototype/tests/account/login.spec.ts", "design/prototype/tests/account/auth-*.spec.ts"],
+      "routeKey": null,
+      "roles": ["未登入訪客"],
+      "states": ["default", "驗證錯誤", "送出中", "登入失敗（Alert Banner）"],
+      "reactOwnership": "features/account",
+      "components": ["card", "language-toggle", "input", "button", "alert-banner", "divider", "link"],
+      "note": "另有 Logo + Wordmark、Eye Toggle、Inline Field Error（auth family 專用，未進共用元件庫）"
+    },
+    {
+      "id": "02",
+      "title": "註冊",
+      "module": "account",
+      "page": "pages/account/register.html",
+      "specs": ["specs/account/003-register-email-password"],
+      "design": "design/system/pages/register.md",
+      "tests": ["design/prototype/tests/account/register.spec.ts"],
+      "routeKey": null,
+      "roles": ["未登入訪客"],
+      "states": ["default", "欄位提示", "驗證錯誤", "送出中"],
+      "reactOwnership": "features/account",
+      "components": ["card", "language-toggle", "input", "button", "link"],
+      "note": "另有 Field Hint、Required Indicator、Eye Toggle（auth family 專用）"
+    },
+    {
+      "id": "03",
+      "title": "忘記密碼",
+      "module": "account",
+      "page": "pages/account/forgot-password.html",
+      "specs": ["specs/account/004-forgot-reset-password"],
+      "design": "design/system/pages/forgot-password.md",
+      "tests": ["design/prototype/tests/account/forgot-password.spec.ts"],
+      "routeKey": null,
+      "roles": ["未登入訪客"],
+      "states": ["default", "驗證錯誤", "送出中", "寄送成功（State Panel）"],
+      "reactOwnership": "features/account",
+      "components": ["card", "language-toggle", "input", "button", "state-panel", "link"],
+      "note": "Loading Status 以 `aria-live` 播報"
+    },
+    {
+      "id": "04",
+      "title": "重設密碼",
+      "module": "account",
+      "page": "pages/account/reset-password.html",
+      "specs": ["specs/account/004-forgot-reset-password"],
+      "design": "design/system/pages/reset-password.md",
+      "tests": ["design/prototype/tests/account/reset-password.spec.ts"],
+      "routeKey": null,
+      "roles": ["未登入訪客（持 reset token）"],
+      "states": ["default", "驗證錯誤", "重設成功（State Panel）", "Token 失效（State Panel）"],
+      "reactOwnership": "features/account",
+      "components": ["card", "language-toggle", "input", "button", "state-panel", "link"],
+      "note": "State Panel 同時承載 Success 與 Token Error 兩種結果"
+    },
+    {
+      "id": "05",
+      "title": "個人資料",
+      "module": "account",
+      "page": "pages/account/profile.html",
+      "specs": ["specs/account/005-profile-settings", "specs/shared/008-sidebar-navbar-shared"],
+      "design": "design/system/pages/profile.md",
+      "tests": ["design/prototype/tests/account/profile-*.spec.ts"],
+      "routeKey": null,
+      "roles": ["全部已登入角色"],
+      "states": ["default", "載入中（Skeleton）", "儲存成功（Toast）", "儲存失敗（Toast）", "唯讀欄位"],
+      "reactOwnership": "features/account",
+      "components": ["sidebar", "card", "divider", "avatar", "status-badge", "input", "toast", "skeleton", "language-toggle", "button"],
+      "note": "Avatar 為 Large（可上傳）變體；Role Badge 由 Status Badge 家族提供"
+    },
+    {
+      "id": "06",
+      "title": "儀表板",
+      "module": "dashboard",
+      "page": "pages/dashboard/dashboard.html",
+      "specs": ["specs/dashboard/012-dashboard", "specs/shared/008-sidebar-navbar-shared"],
+      "design": "design/system/pages/dashboard.md",
+      "tests": ["design/prototype/tests/dashboard/*.spec.ts"],
+      "routeKey": null,
+      "roles": ["super_admin", "project_leader", "annotator", "reviewer"],
+      "states": ["default", "空狀態 CTA", "載入中（Skeleton）"],
+      "reactOwnership": "features/dashboard",
+      "components": ["sidebar", "card", "table", "activity-list", "status-badge", "avatar", "modal", "state-switcher", "divider", "link", "language-toggle", "button"],
+      "note": "Summary Card 為 KPI 變體；另有 Mobile Bottom Tab Bar；Scenario Switcher 僅 prototype 使用"
+    },
+    {
+      "id": "07",
+      "title": "任務列表",
+      "module": "task-management",
+      "page": "pages/task-management/task-list.html",
+      "specs": ["specs/task-management/010-task-list", "specs/shared/008-sidebar-navbar-shared"],
+      "design": "design/system/pages/task-list.md",
+      "tests": ["design/prototype/tests/task-management/task-list-*.spec.ts", "design/prototype/tests/task-management/issue-194-status-sync.spec.ts"],
+      "routeKey": null,
+      "roles": ["project_leader", "annotator", "reviewer"],
+      "states": ["default", "空狀態", "載入失敗（`?view=error`）"],
+      "reactOwnership": "features/task-management",
+      "components": ["sidebar", "toolbar", "table", "status-badge", "task-type-badge", "pagination", "modal", "mini-button", "language-toggle", "button"],
+      "note": "Badge 同時承載 Task Status、Task Type 與 Run Mode 三組語意"
+    },
+    {
+      "id": "08",
+      "title": "建立任務",
+      "module": "task-management",
+      "page": "pages/task-management/task-new.html",
+      "specs": ["specs/task-management/013-task-new", "specs/shared/008-sidebar-navbar-shared"],
+      "design": "design/system/pages/task-new.md",
+      "tests": ["design/prototype/tests/task-management/task-new-*.spec.ts"],
+      "routeKey": null,
+      "roles": ["project_leader"],
+      "states": ["Step 1 / Step 2 / Step 3", "草稿警告", "驗證錯誤"],
+      "reactOwnership": "features/task-management",
+      "components": ["sidebar", "step-indicator", "upload-zone", "tag-input", "toggle-switch", "code-editor", "chip", "accordion", "color-dot", "input", "language-toggle", "button"],
+      "note": "Chip 兼作輸出型態選取與 Bypass 互斥開關；Step 1/2 設定與 task-detail 共用 task-config.* 引擎"
+    },
+    {
+      "id": "09",
+      "title": "任務詳情",
+      "module": "task-management",
+      "page": "pages/task-management/task-detail.html",
+      "specs": ["specs/task-management/014-task-detail", "specs/shared/008-sidebar-navbar-shared"],
+      "design": "design/system/pages/task-detail.md",
+      "tests": ["design/prototype/tests/task-management/task-detail-*.spec.ts"],
+      "routeKey": null,
+      "roles": ["project_leader", "reviewer"],
+      "states": ["default", "載入中（Skeleton）", "找不到任務（TASK_NOT_FOUND）", "唯讀（reviewer）"],
+      "reactOwnership": "features/task-management",
+      "components": ["sidebar", "breadcrumb", "content-tabs", "table", "pagination", "chip", "task-type-badge", "color-dot", "skeleton", "modal", "mini-button", "card", "status-badge", "language-toggle", "button"],
+      "note": "5 個 fetch partials（task-detail.panels/）；Table 具 expandable rows"
+    },
+    {
+      "id": "10",
+      "title": "標記任務列表",
+      "module": "annotation",
+      "page": "pages/annotation/annotation-list.html",
+      "specs": ["specs/shared/008-sidebar-navbar-shared"],
+      "design": "design/system/pages/annotation-list.md",
+      "tests": ["design/prototype/tests/annotation/annotation-list-*.spec.ts"],
+      "routeKey": null,
+      "roles": ["annotator", "reviewer"],
+      "states": ["default", "空佇列", "未提交樣本"],
+      "reactOwnership": "features/annotation",
+      "components": ["sidebar", "toolbar", "table", "status-pill", "pagination", "mini-button", "language-toggle", "button"],
+      "note": "⚠ 尚無專屬正典 spec；行為目前只由 page design 與 prototype 測試定義（issue #375 追蹤）"
+    },
+    {
+      "id": "11",
+      "title": "標記工作區",
+      "module": "annotation",
+      "page": "pages/annotation/annotation-workspace.html",
+      "specs": ["specs/annotation/015-annotation-workspace", "specs/shared/008-sidebar-navbar-shared"],
+      "design": "design/system/pages/annotation-workspace.md",
+      "tests": ["design/prototype/tests/annotation/annotation-workspace-*.spec.ts"],
+      "routeKey": null,
+      "roles": ["annotator", "reviewer"],
+      "states": ["default", "唯讀（已定稿）", "提交驗證錯誤", "空審核單元"],
+      "reactOwnership": "features/annotation",
+      "components": ["sidebar", "chip", "mini-button", "modal", "language-toggle", "button"],
+      "note": "閱讀面板使用 Atkinson Hyperlegible；標記面板為 config-driven，涵蓋 8 種 output type（ADR-029）"
+    },
+    {
+      "id": "12",
+      "title": "使用者管理",
+      "module": "admin",
+      "page": "pages/admin/user-management.html",
+      "specs": ["specs/admin/006-user-management", "specs/shared/008-sidebar-navbar-shared"],
+      "design": "design/system/pages/user-management.md",
+      "tests": ["design/prototype/tests/admin/user-management.spec.ts"],
+      "routeKey": null,
+      "roles": ["super_admin"],
+      "states": ["default", "空狀態"],
+      "reactOwnership": "features/admin",
+      "components": ["sidebar", "content-tabs", "table", "status-badge", "pagination", "mini-button", "modal", "language-toggle", "button"],
+      "note": "Mini Button 具 primary 與 danger 兩種列內變體"
+    },
+    {
+      "id": "13",
+      "title": "角色設定",
+      "module": "admin",
+      "page": "pages/admin/role-settings.html",
+      "specs": ["specs/admin/007-role-settings", "specs/shared/008-sidebar-navbar-shared"],
+      "design": "design/system/pages/role-settings.md",
+      "tests": ["design/prototype/tests/admin/role-settings.spec.ts"],
+      "routeKey": null,
+      "roles": ["super_admin"],
+      "states": ["default", "刪除確認（alertdialog）"],
+      "reactOwnership": "features/admin",
+      "components": ["sidebar", "content-tabs", "table", "modal", "language-toggle", "button"],
+      "note": "刪除走 Modal/Destructive（`role=\"alertdialog\"`）＋ Button/Danger"
+    },
+    {
+      "id": "14",
+      "title": "資料集分析列表",
+      "module": "dataset",
+      "page": "pages/dataset/dataset-analysis-list.html",
+      "specs": ["specs/dataset/016-dataset-analysis-list", "specs/shared/008-sidebar-navbar-shared"],
+      "design": "design/system/pages/dataset-analysis-list.md",
+      "tests": ["design/prototype/tests/dataset/dataset-analysis-list-*.spec.ts"],
+      "routeKey": null,
+      "roles": ["project_leader", "super_admin"],
+      "states": ["default", "空狀態", "Toast 提示"],
+      "reactOwnership": "features/dataset",
+      "components": ["sidebar", "toolbar", "table", "task-type-badge", "pagination", "language-toggle", "button"],
+      "note": "Toast 為 5 秒自動關閉（已知 e2e 競態，見 issue #180 finding register）"
+    },
+    {
+      "id": "15",
+      "title": "資料集分析詳情",
+      "module": "dataset",
+      "page": "pages/dataset/dataset-analysis-detail.html",
+      "specs": ["specs/dataset/017-dataset-analysis-detail", "specs/shared/008-sidebar-navbar-shared"],
+      "design": "design/system/pages/dataset-analysis-detail.md",
+      "tests": ["design/prototype/tests/dataset/dataset-analysis-detail-*.spec.ts"],
+      "routeKey": null,
+      "roles": ["project_leader", "super_admin"],
+      "states": ["default", "空狀態（`?s_state=empty`）", "IAA 未達標"],
+      "reactOwnership": "features/dataset",
+      "components": ["sidebar", "breadcrumb", "color-dot", "chip", "table", "card", "language-toggle", "button"],
+      "note": "Stats / Quality partials 共 8 型態 × 2；Status Dot 由 Color Dot 家族提供；Cause Tag 由 Chip 家族提供"
+    }
+  ],
+  "screenViews": {
+    "06": {
+      "heading": "儀表板 `dashboard/dashboard.html`（4 角色視角，⚠ 切換器 prototype-only）",
+      "views": [
+        { "id": "V01", "name": "系統管理員", "params": "`?scenario=super_admin_data`", "note": "平台總覽 KPI、使用者管理捷徑" },
+        { "id": "V02", "name": "專案負責人", "params": "`?scenario=project_leader`", "note": "空狀態 CTA「建立第一個任務」" },
+        { "id": "V03", "name": "標記員", "params": "`?scenario=annotator`", "note": "待辦標記清單" },
+        { "id": "V04", "name": "審核員", "params": "`?scenario=reviewer`", "note": "審查佇列" }
+      ]
+    },
+    "07": {
+      "heading": "任務列表 `task-management/task-list.html`",
+      "views": [
+        { "id": "V05", "name": "專案負責人視角", "params": "`?task_role=project_leader`", "note": "建立任務 CTA、run materialization" },
+        { "id": "V06", "name": "標記員視角", "params": "`?task_role=annotator`", "note": "唯讀列表" },
+        { "id": "V07", "name": "審核員視角", "params": "`?task_role=reviewer`", "note": "審查導向列操作" },
+        { "id": "V08", "name": "載入失敗", "params": "`?view=error`", "note": "Alert Banner + 重試" }
+      ]
+    },
+    "09": {
+      "heading": "任務詳情 `task-management/task-detail.html`（5 tabs + 角色）",
+      "views": [
+        { "id": "V09", "name": "標記進度", "params": "`?tab=annotation-progress`", "note": "進度表格 + Pagination" },
+        { "id": "V10", "name": "標記結果", "params": "`?tab=annotation-results`", "note": "Expandable rows、VA scoring chips" },
+        { "id": "V11", "name": "成員管理", "params": "`?tab=member-management`", "note": "md-chip、密集列操作" },
+        { "id": "V12", "name": "工時紀錄", "params": "`?tab=work-log`", "note": "工時表格 + Pagination" },
+        { "id": "V13", "name": "審核員角色", "params": "`?task_role=reviewer`", "note": "成員管理 tab 隱藏" }
+      ]
+    },
+    "10": {
+      "heading": "標記清單 `annotation/annotation-list.html`",
+      "views": [
+        { "id": "V14", "name": "審核員佇列", "params": "`?role=reviewer`", "note": "審查單元（sample × annotator × run_type）、unit 狀態 pill" }
+      ]
+    },
+    "11": {
+      "heading": "標記工作區 `annotation/annotation-workspace.html`（8 種輸出型態 + 組合 + 審查，ADR-029）",
+      "views": [
+        { "id": "V15", "name": "single_label", "params": "`?task_id=T001&…&task_type=single_label`", "note": "分類 chips（radio）" },
+        { "id": "V16", "name": "multi_label", "params": "`?task_id=T002&…&task_type=multi_label`", "note": "多選 chips（checkbox）" },
+        { "id": "V17", "name": "single_dim", "params": "`?task_id=T004&…&task_type=single_dim`", "note": "評分滑桿" },
+        { "id": "V18", "name": "multi_dim", "params": "`?task_id=T005&…&task_type=multi_dim`", "note": "多維度滑桿" },
+        { "id": "V19", "name": "sequence_tagging", "params": "`?task_id=T006&…&task_type=sequence_tagging`", "note": "Token 級標記（BIO）、Color Dot" },
+        { "id": "V20", "name": "entity_recognition", "params": "`?task_id=T007&…&task_type=entity_recognition`", "note": "Span 選取高亮" },
+        { "id": "V21", "name": "relation_identification", "params": "`?task_id=T008&…&task_type=relation_identification`", "note": "實體對關係連結" },
+        { "id": "V22", "name": "free_text", "params": "`?task_id=T009&…&task_type=free_text`", "note": "Textarea 生成式輸入" },
+        { "id": "V23", "name": "組合輸出 ABSA", "params": "`?task_id=T013&sample_id=absa-001&…`", "note": "ER + RI + multi_dim 整合面板" },
+        { "id": "V24", "name": "審查模式", "params": "`?task_id=T001&role=reviewer&…`", "note": "Approve/Reject、答案 diff" }
+      ]
+    },
+    "15": {
+      "heading": "資料集分析詳情 `dataset/dataset-analysis-detail.html`（型態 × tab）",
+      "views": [
+        { "id": "V25", "name": "single_label 統計", "params": "`?task_id=T001&tab=stats`", "note": "標籤分佈" },
+        { "id": "V26", "name": "multi_label 統計", "params": "`?task_id=T002&tab=stats`", "note": "共現統計" },
+        { "id": "V27", "name": "single_dim 統計", "params": "`?task_id=T004&tab=stats`", "note": "分數分佈直方" },
+        { "id": "V28", "name": "multi_dim 統計", "params": "`?task_id=T005&tab=stats`", "note": "各維度分佈" },
+        { "id": "V29", "name": "sequence_tagging 統計", "params": "`?task_id=T006&tab=stats`", "note": "Tag/token 統計" },
+        { "id": "V30", "name": "entity_recognition 統計", "params": "`?task_id=T007&tab=stats`", "note": "Entity 型別統計" },
+        { "id": "V31", "name": "relation_identification 統計", "params": "`?task_id=T008&tab=stats`", "note": "IAA fail：Status Dot（紅）" },
+        { "id": "V32", "name": "free_text 統計", "params": "`?task_id=T009&tab=stats`", "note": "長度分佈" },
+        { "id": "V33", "name": "品質監控（single_label）", "params": "`?task_id=T001&tab=quality`", "note": "IAA 門檻、Cause Tag" },
+        { "id": "V34", "name": "品質監控（組合輸出）", "params": "`?task_id=T013&tab=quality`", "note": "三輸出品質分區" },
+        { "id": "V35", "name": "空狀態", "params": "`?task_id=T001&tab=stats&s_state=empty`", "note": "Empty state CTA" }
+      ]
+    }
+  }
+}
