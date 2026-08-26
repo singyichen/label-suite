@@ -1,7 +1,7 @@
 ---
 功能分支: docs/208-official-gold-fr
 建立日期: 2026-04-23
-版本: 4.21.3
+版本: 4.22.0
 狀態: Draft
 ---
 
@@ -143,6 +143,7 @@ Annotator / Reviewer 進入標記模組時，支援兩種入口：dashboard 任�
 17. **AC-1.17（v4.2.0 新增，對應 FR-055）**：**Given** `role = reviewer` 清單含標記分布統計欄，**When** 同一樣本展開為多個審核單位列，**Then** 各列統計欄顯示相同的跨標記員分布數值（統計單位仍為樣本，非審核單位），且與工作區統計取自同一實作來源；**And** 該欄純為唯讀比對脈絡，不承載任何決策語意。
 18. **AC-1.18（v4.7.0 新增，對應 FR-060）**：**Given** 一個 `official_run` 審核單位因標記員與某審核員答案不一致而推導為 `爭議中`，**When** 具 `can_arbitrate` 旗標且未參與該單位審核的審核員開啟清單並選擇 `爭議中` 篩選，**Then** 恰顯示該爭議列（含 `爭議中` 徽章與標記員帳號），其列動作為 `仲裁`（`list-arbitrate-entry`），點擊後導向工作區且網址攜帶完整審核單位身分（`task_id / sample_id / annotator_id / reviewer_id`）；**And** 提交差異決策的當事審核員與未具旗標的審核員於同一爭議列維持 `編輯`；**And** 非 `disputed` 之列對任何審核員皆不出現 `仲裁`。
 19. **AC-1.19（v4.15.0 新增，對應 FR-007I，issue #188）**：**Given** 清單中某列的文本摘要長度超過截斷行數（如長文本任務 QA／摘要／多輪對話種子 T009／T012／T013），**When** 清單渲染完成，**Then** 該列文本摘要預設以固定行數 CSS line-clamp 截斷、列高不因原文長度撐高，且該列渲染「展開全文」toggle（`list-text-toggle`）；**And** 點擊 toggle 後該列全文展開顯示、按鈕文字切換為「收合」，再次點擊恢復截斷狀態；**And** toggle 點擊不得觸發該列既有的導頁至 `annotation-workspace` 行為（`stopPropagation`，Annotator／Reviewer 視圖皆適用）；**And** 文本摘要未超過截斷行數的資料列（如 `single_label` 短句）不渲染 toggle。
+20. **AC-1.20（v4.22.0 新增，對應 FR-067，issue #402）**：**Given** `role = reviewer` 且任務中存在至少一個因無標記員提交而無審核單位的樣本，**When** 清單渲染完成，**Then** 任務資訊卡下方顯示說明列，文字包含該樣本數（如 `其中 1 筆尚未提交，不計入審核清單`），且每個此類樣本各渲染一個入口按鈕、按鈕文字包含樣本 ID；**And** 點擊入口按鈕導向 `annotation-workspace` 並帶入 `task_id/sample_id/run_type/role`，該工作區頁面顯示既有的空審核單位狀態（`ws-review-empty-unit`）；**And** 清單資料列與分頁總筆數不因本條而改變（`ws-sample-item` 計數維持既有審核單位數，FR-055）；**And** 任務中所有樣本皆有審核單位時，說明列不渲染；**And** annotator 視圖任何情況下皆不渲染此說明列。
 
 **介面定義（需與 IA 導覽語意一致）**：
 
@@ -710,6 +711,7 @@ Reviewer 在 `run_type = official_run` 的工作區中，針對「目前標記�
   4. **指引版本更新後須重新確認**（新增契約）：`guidelineFiles` 內容於任務發布後被異動時，該任務既有的確認紀錄必須失效——下一次進入必須視為未確認並重新顯示 modal。`TaskProfile` 須攜帶一個指引版本標記（遞增版本號或內容雜湊，具體形狀留待後端接上時定義），確認紀錄之比對須同時比對 `task_id` 與該版本標記，而非僅比對 `task_id`。**設計決策**：預設為需要重新確認——指引內容異動（如新增作答限制、修正標註規則）若不強制重新確認，標記員/審核員可能沿用已過時的規則作答，與標記品質一致性要求相悖。
 
   本條第 1 ~ 3 點為既有原型行為之正式化，第 4 點為**新增契約**——原型尚未實作版本追蹤（現況僅逐 `task_id` 記錄、無版本連動，見 issue #287），其原型化屬本 FR 之後續 PR 範圍。
+- **FR-067**（v4.22.0 新增，對應 AC-1.20，issue #402）：`annotation-list` reviewer 視圖中，若某樣本因無任何標記員提交而不產生任何審核單位（`buildReviewUnitRows`／FR-055 之空集合，如零筆 mock 提交），該樣本必須完全不出現於清單資料列，且不計入分頁總筆數（沿用 FR-055 既有行為，不改變）。惟清單必須額外於任務資訊卡（FR-007C）下方渲染一則說明列（testid `list-not-submitted-note`），列出「尚未提交、不計入審核清單」之樣本數，並為每個此類樣本提供一個直接入口按鈕（testid `list-not-submitted-entry`），點擊導向 `annotation-workspace` 並帶入該樣本之 `task_id/sample_id/run_type/role`（不含 `annotator_id`，因該樣本無任何標記員可指定），使審核員得以抵達該樣本既有的「無審核單位」空狀態（`ws-review-empty-unit`，issue #307／FR-053）。annotator 視圖不受影響，不渲染此說明列。理由：FR-007C 的 `共 {total} 筆資料` 為資料集樣本數（非審核單位數），此數值刻意維持不變（多標記員任務本就有更多列，屬既有可接受行為）；但完全無審核單位的樣本此前既不現身清單、也無筆數落差以外的任何提示，審核員無從得知該樣本存在、更遑論抵達其空狀態，構成清單層級的死角。
 - **FR-016**: 系統必須記錄每筆資料的標記歷程（操作者、時間、修改內容、對應輸出類型）。
 - **FR-016A**: Reviewer 在 Dry Run 與 Official Run 執行修正/刪除時，系統必須強制填寫審計理由並記錄。
 - **FR-016B**: 標記歷程必須於右欄 `歷程` 頁籤呈現，annotator 與 reviewer 視角皆可查看；同一樣本的 annotator 與 reviewer 事件（儲存/提交/決策）合併為單一時序清單，每筆事件包含操作者角色、時間、動作與對應輸出類型作答摘要，最新事件在前；尚無紀錄時顯示空狀態文案。**v4.9.0 修訂**：合併清單納入 reviewer 事件時受 FR-062 盲審隔離約束——僅納入已提交之審核事件與檢視者本人的草稿事件，其他審核員未提交的事件不得納入。
@@ -921,6 +923,7 @@ flowchart LR
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 4.22.0 | 2026-08-26 | **清單層級補上「未提交樣本」的說明與入口**（issue #402）：T015 的 `ofs-05-not-submitted` 樣本因零筆標記員提交，`buildReviewUnitRows()`（FR-055）不產生任何列，該樣本完全不現身清單、也無任何抵達路徑——僅有的線索是任務資訊卡「共 5 筆資料」（FR-007C，資料集樣本數）與表格／分頁「共 4 筆」（審核單位數）之間的落差，但兩者本就分屬不同計數基準（多標記員任務清單列數本就大於樣本數，如 T001／T014），並非可直接「統一來源」的缺陷。改為保留兩處既有計數語意不變，另於任務資訊卡下方新增說明列（`list-not-submitted-note`）列出未提交樣本數，並為每個此類樣本提供入口按鈕（`list-not-submitted-entry`），導向該樣本既有的工作區空審核單位狀態（`ws-review-empty-unit`，issue #307）。新增 **FR-067**、**AC-1.20**。原型：`annotation-list.html` 新增 `renderNotSubmittedNote()`，於 `renderTaskInfo()` 內呼叫；新增 4 個 Playwright 測試（T015 說明列與入口導頁、T001 全樣本皆有審核單位時說明列隱藏、annotator 視圖不渲染、英文在地化）。 |
 | 4.21.3 | 2026-08-26 | **修正：`getSampleHistory` 未過濾未提交審核員草稿事件**（issue #410）：v4.9.0 changelog 已將此列為「Implementation mismatch，其修正屬原型層後續 PR」——`getSampleHistory`（`annotation-workspace.data.js`）合併全部 reviewer bucket 歷程時未檢查 `entryStatus`，若某審核員儲存草稿（`saved`）尚未提交，其事件理論上會外溢至其他審核員的歷程頁籤，違反 FR-062 盲審隔離。目前無任何現行 UI 路徑會對 reviewer bucket 寫入 `saved` 事件（審核員逐列決策草稿改走獨立的 `saveReviewRowDecisionDraft` 儲存區，見 v4.19.0），故此為防禦性補強、非現行使用者可觸發之缺陷。修法為合併迴圈中對非本人 annotator bucket 的每筆 entry 追加 `entryStatus(entry) !== 'submitted'` 判斷即跳過，annotator 自身 bucket 依 FR-062 既有豁免不受影響。**規格條文未變**（FR-062、AC-4.25、SC-004U 早已定義此行為為必要規則）。新增回歸測試 `issue-410-history-blind-review-hardening.spec.ts`（直接呼叫 `markSampleSaved`/`markSampleSubmitted` 資料層函式模擬三方事件，斷言未提交審核員事件不外溢、annotator 與已提交審核員事件維持可見）。**編號依存**：本版原編為 `4.21.2`，因 PR #438（issue #401）自同一 `4.21.1` 基準亦取 `4.21.2` 而改編為 `4.21.3`；本 PR 須在 #438 之後合併，若合併順序顛倒需改回 `4.21.2`。 |
 | 4.21.2 | 2026-08-26 | **修復送出審核後畫面未重繪**（issue #401，RV-06）：`handleReviewSubmit()` 送出成功後只寫入提交資料、更新樣本清單/導覽/歷程面板，從未重繪 FR-064 審核單位脈絡橫幅或 FR-053 已定稿鎖定卡——`min_reviewers=1` 的單位在此次送出即定稿時，畫面停留在送出前的「待審」互動版面，使用者需手動整頁重新整理才看得到已定稿鎖定狀態；此時再次點擊「送出審核」會命中既有的 FINALIZED 守衛而無任何提示。修法：`handleReviewSubmit()` 送出成功分支追加呼叫既有的 `renderReviewerWorkspace()`（與仲裁送出既有的重繪呼叫相同模式），使橫幅與卡片立即反映定稿鎖定；送出按鈕隨之被隱藏，第二次點擊的死路徑一併消除。**規格條文未變**（FR-051/FR-053/FR-064 既有行為的落實修復，非新增契約）。新增 `issue-401-review-submit-rerender.spec.ts`：T015 `ofs-04-pending-review`（min=1）核准＋送出後，不重新整理即斷言橫幅狀態 pill 為「已定稿」、鎖定卡可見、決策按鈕與送出按鈕皆已消失/隱藏。 |
 | 4.21.1 | 2026-08-25 | **修復 PDF 預覽 modal 實際顯示為下載對話框**（issue #376）：v4.21.0 的 FR-020C 內嵌預覽在原型上未真正生效——modal 正常開啟、iframe `src` 亦正確，但原型靜態伺服器 `design/prototype/tests/serve.mjs` 的 MIME 對照表未隨 v4.21.0 新增的 `assets/guidelines/annotation-guideline-sample.pdf` 一併補上 `.pdf`，回應落入 fallback 的 `application/octet-stream`，瀏覽器遂以附件下載取代內嵌渲染。修法為 MIME 表新增 `'.pdf': 'application/pdf'`。既有回歸測試僅斷言 iframe `src` 屬性因而漏接此缺陷，本版於 `annotation-guideline-pdf-preview.spec.ts` 增加一條直接斷言該資源回應標頭為 `application/pdf` 的測試。規格條文（FR-020、FR-020B、FR-020C、AC-5.3、AC-5.4、SC-005C）未變。**併釐清 v4.21.0「下載不在本版範圍」的措辭**：內嵌渲染生效後，瀏覽器內建 PDF 檢視器會自帶其工具列（縮放、換頁、下載），使用者因而仍可下載該 PDF。經維護者裁定接受此行為——該能力由瀏覽器提供而非本專案實作，且本平台為研究用標註工具，指引檔外流風險低、標記員離線查閱指引的需求高。v4.21.0 所述「不在本版範圍」應理解為本專案不自行實作下載／換頁／縮放控制項，而非必須抑制瀏覽器原生能力。 |

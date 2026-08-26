@@ -569,6 +569,7 @@
         <div class="task-item-summary">
           <span class="list-item-title" id="taskInfoTitle">-</span>
           <span class="list-item-detail" id="taskInfoDetail">-</span>
+          <span class="list-item-detail hidden" id="taskInfoNotSubmittedNote" data-testid="list-not-submitted-note"></span>
         </div>
         <div class="task-item-meta">
           <div class="task-item-badges" id="taskInfoOutputTypes"></div>
@@ -715,6 +716,8 @@
       reviewNoAnswer: '（無）',
       textExpandLabel: '展開全文',
       textCollapseLabel: '收合',
+      notSubmittedNoteTpl: '其中 {count} 筆尚未提交，不計入審核清單：',
+      notSubmittedEntryLabel: '查看 {id}',
     },
     en: {
       pageTitle: 'Annotation List',
@@ -775,6 +778,8 @@
       reviewNoAnswer: '(none)',
       textExpandLabel: 'Show full text',
       textCollapseLabel: 'Collapse',
+      notSubmittedNoteTpl: '{count} sample(s) not yet submitted, excluded from this review list:',
+      notSubmittedEntryLabel: 'View {id}',
     }
   };
   function t(key, vars) {
@@ -1658,6 +1663,55 @@
     }
   }
 
+  /* Issue #402 (RV-07): the "共 N 筆資料" banner count keeps its existing
+     dataset-sample-count meaning (a multi-annotator task like T001/T014
+     legitimately has MORE review-unit rows than that count -- that is not
+     a bug). The actual gap is samples with ZERO review units at all
+     (nobody submitted, so buildReviewUnitRows() skips them entirely and
+     the list gives no way to reach them). This note makes that specific
+     gap explicit and links straight into each such sample's workspace,
+     which already renders the correct empty state (issue #307). */
+  function renderNotSubmittedNote(context, profile) {
+    var noteEl = document.getElementById('taskInfoNotSubmittedNote');
+    if (!noteEl) return;
+    noteEl.innerHTML = '';
+
+    if (context.role !== 'reviewer') {
+      noteEl.classList.add('hidden');
+      return;
+    }
+
+    var recordIdsWithUnits = {};
+    buildReviewUnitRows(context).forEach(function (unit) {
+      recordIdsWithUnits[unit.recordId] = true;
+    });
+    var notSubmittedIds = profile.datasetRecords
+      .map(function (record, index) { return getRecordId(record, index); })
+      .filter(function (recordId) { return !recordIdsWithUnits[recordId]; });
+
+    if (notSubmittedIds.length === 0) {
+      noteEl.classList.add('hidden');
+      return;
+    }
+
+    noteEl.classList.remove('hidden');
+    var textSpan = document.createElement('span');
+    textSpan.textContent = t('notSubmittedNoteTpl', { count: notSubmittedIds.length });
+    noteEl.appendChild(textSpan);
+
+    notSubmittedIds.forEach(function (recordId) {
+      var entryBtn = document.createElement('button');
+      entryBtn.type = 'button';
+      entryBtn.className = 'mini-btn';
+      entryBtn.setAttribute('data-testid', 'list-not-submitted-entry');
+      entryBtn.textContent = t('notSubmittedEntryLabel', { id: recordId });
+      entryBtn.addEventListener('click', function () {
+        window.location.href = buildWorkspaceUrl(profile.id, recordId, context);
+      });
+      noteEl.appendChild(entryBtn);
+    });
+  }
+
   function renderTaskInfo(context, profile) {
     document.getElementById('taskInfoCard').classList.remove('hidden');
     document.getElementById('listToolbar').classList.remove('hidden');
@@ -1695,6 +1749,7 @@
       detailParts.push(t('sampleCountTpl', { total: totalCount }));
     }
     document.getElementById('taskInfoDetail').textContent = detailParts.join(' · ');
+    renderNotSubmittedNote(context, profile);
 
     var outputTypesEl = document.getElementById('taskInfoOutputTypes');
     outputTypesEl.innerHTML = '';
