@@ -17,8 +17,8 @@
 #   change set that models one guard scenario (ordinary change, oversized
 #   batch, merge in progress, excluded file types, etc.), runs the real
 #   scripts/git-hooks/pre-commit script against it, and asserts the exit code
-#   (0 = allowed, 1 = blocked). All nine cases run even if earlier ones fail;
-#   a per-case pass/fail summary is printed at the end.
+#   (0 = allowed, 1 = blocked). All twelve cases run even if earlier ones
+#   fail; a per-case pass/fail summary is printed at the end.
 
 set -euo pipefail
 
@@ -199,6 +199,66 @@ test_file_count_excludes_empty_and_reexport_barrels() {
     record "empty __init__.py + re-export-only index.ts excluded from file count" 0 "$rc"
 }
 
+# RED (issue #462 adversarial follow-up): the generated-file detector must key
+# off a HEADER marker, not a bare substring anywhere in the blob. A
+# hand-written ~900-line file that merely mentions "generated view" in
+# ordinary prose is not generated and must still be counted — and, at 900
+# lines on its own, must trip the line-count guard.
+test_loose_generated_view_phrase_in_prose_still_blocked() {
+    local repo rc
+    repo="$(make_repo)"
+    mkdir -p "$repo/backend/app"
+    {
+        echo '"""Admin permissions helpers.'
+        echo ""
+        echo "This module renders a generated view of user permissions for the"
+        echo "admin dashboard. It is hand-written and maintained manually here;"
+        echo "nothing in this file is produced by a code generator."
+        echo '"""'
+        echo ""
+        seq 1 895
+    } >"$repo/backend/app/admin_permissions.py"
+    git -C "$repo" add .
+    rc="$(hook_exit_code "$repo")"
+    record "hand-written ~900-line file with loose 'generated view' prose still blocked" 1 "$rc"
+}
+
+# RED (issue #462 adversarial follow-up): the real marker placed deep in the
+# file body (around line 400 of an ~800-line file) rather than in the header
+# must NOT satisfy "header marker" — the file must still be counted and, at
+# 800 lines, must trip the line-count guard.
+test_generated_marker_deep_in_body_not_header_still_blocked() {
+    local repo rc
+    repo="$(make_repo)"
+    mkdir -p "$repo/backend/app"
+    {
+        seq 1 399
+        echo "> ${GENERATED_MARKER} 唯一生成來源是 inventory-manifest.json；請勿手動編輯。"
+        seq 400 800
+    } >"$repo/backend/app/deep_marker.py"
+    git -C "$repo" add .
+    rc="$(hook_exit_code "$repo")"
+    record "real marker deep in body (not header, ~800 lines) still blocked" 1 "$rc"
+}
+
+# Regression guard (issue #462 adversarial follow-up): the real
+# design/system/screen-inventory.md, read from this repo at runtime and
+# padded past the 600-line threshold, must still be excluded via its real
+# header marker — pins that tightening the detector to "header marker" does
+# not also break the repo's actual generated-view convention.
+test_real_screen_inventory_header_marker_still_excluded() {
+    local repo rc real_file
+    repo="$(make_repo)"
+    real_file="$ROOT/design/system/screen-inventory.md"
+    mkdir -p "$repo/design/system"
+    cp "$real_file" "$repo/design/system/screen-inventory.md"
+    seq 1 500 >>"$repo/design/system/screen-inventory.md"
+    gen_lines "$repo" "backend/app/small_change.py" 10
+    git -C "$repo" add .
+    rc="$(hook_exit_code "$repo")"
+    record "real screen-inventory.md (header marker, padded >600 lines) still excluded" 0 "$rc"
+}
+
 test_small_ordinary_change_allowed
 test_file_count_guard_still_blocks
 test_line_count_guard_still_blocks
@@ -208,6 +268,9 @@ test_file_count_excludes_lockfiles_config_and_specs
 test_line_count_excludes_lockfiles_and_specs
 test_line_count_excludes_generated_files
 test_file_count_excludes_empty_and_reexport_barrels
+test_loose_generated_view_phrase_in_prose_still_blocked
+test_generated_marker_deep_in_body_not_header_still_blocked
+test_real_screen_inventory_header_marker_still_excluded
 
 echo ""
 echo "=== pre-commit guard test summary ==="
