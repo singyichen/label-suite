@@ -1012,7 +1012,11 @@
        docs/product/example-data/review-flow-*.json. `minReviewers` seeds
        the per-task min_reviewers threshold consumed by
        getReviewUnitStatus(); profiles without the field default to 1
-       (MIN_REVIEWERS_DEFAULT). */
+       (MIN_REVIEWERS_DEFAULT). None of these profiles set
+       `forceShowGuideline` (issue #395) -- they keep the shared false
+       default on both task-detail.html's overview and
+       annotation-workspace.data.js's resolveTaskProfile(), same as every
+       other profile in this file. */
     T014: {
       taskCategories: ['classification'],
       taskInputTypes: ['single_item'],

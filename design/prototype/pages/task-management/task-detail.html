@@ -3326,7 +3326,7 @@
     guidelineFiles: [
       { name: 'VA_emj.png', type: 'png' }
     ],
-    forceGuideline: true,
+    forceGuideline: false,
     status: 'draft',
     samplingMode: 'by_count',
     samplingValue: 10,
@@ -4339,6 +4339,12 @@ function interpolate(template, payload) {
       TASK_DATA.datasetRecords = cloneData(profile.datasetRecords || []);
       TASK_DATA.datasetTotal = TASK_DATA.datasetRecords.length;
       if (profile.minReviewers !== undefined) TASK_DATA.minReviewers = profile.minReviewers;
+      /* issue #395: read the same per-task field annotation-workspace.data.js's
+         resolveTaskProfile() already reads (detail.forceShowGuideline ||
+         false) instead of DEFAULT_TASK_DATA's hardcoded forceGuideline:
+         true, so the PL overview and the workspace's guideline gate can
+         never disagree about a task that never set the field. */
+      TASK_DATA.forceGuideline = Boolean(profile.forceShowGuideline);
       /* DEFAULT_TASK_DATA.samplingValue targets its legacy 3200-record
          dataset; re-derive from this profile's actual record count. */
       TASK_DATA.samplingValue = null;
