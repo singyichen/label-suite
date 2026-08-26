@@ -178,7 +178,8 @@ write_independent_sdd_lint_job() {
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
-      - run: scripts/check-sdd.sh
+      - name: Check project SDD governance
+        run: scripts/check-sdd.sh
 YAML
 }
 
@@ -206,9 +207,121 @@ extract_top_level_sdd_lint_job() {
     ' "$ci"
 }
 
+extract_sdd_lint_steps() {
+    local job="$1"
+
+    printf '%s\n' "$job" | awk '
+        /^    steps:[[:space:]]*(#.*)?$/ {
+            in_steps = 1
+            next
+        }
+        in_steps && /^    [^[:space:]#][^:]*:[[:space:]]*(#.*)?$/ {
+            exit
+        }
+        in_steps {
+            print
+        }
+    '
+}
+
+summarize_sdd_lint_steps() {
+    local steps="$1"
+
+    printf '%s\n' "$steps" | awk '
+        function clean_value(value) {
+            sub(/[[:space:]]+#.*$/, "", value)
+            return value
+        }
+        function record_uses(value) {
+            uses_count++
+            step_uses++
+            if (value == "actions/checkout@v5") {
+                checkout_count++
+            }
+        }
+        function record_run(value) {
+            run_count++
+            step_runs++
+            if (value == "scripts/check-sdd.sh") {
+                command_count++
+            }
+        }
+        function finish_step() {
+            if (step_count > 0 && step_uses > 0 && step_runs > 0) {
+                mixed_step_count++
+            }
+        }
+        /^      - / {
+            finish_step()
+            step_count++
+            step_uses = 0
+            step_runs = 0
+            if ($0 ~ /^      - uses:[[:space:]]*/) {
+                value = $0
+                sub(/^      - uses:[[:space:]]*/, "", value)
+                record_uses(clean_value(value))
+            } else if ($0 ~ /^      - run:[[:space:]]*/) {
+                value = $0
+                sub(/^      - run:[[:space:]]*/, "", value)
+                record_run(clean_value(value))
+            }
+            next
+        }
+        step_count > 0 && /^        uses:[[:space:]]*/ {
+            value = $0
+            sub(/^        uses:[[:space:]]*/, "", value)
+            record_uses(clean_value(value))
+            next
+        }
+        step_count > 0 && /^        run:[[:space:]]*/ {
+            value = $0
+            sub(/^        run:[[:space:]]*/, "", value)
+            record_run(clean_value(value))
+            next
+        }
+        END {
+            finish_step()
+            print step_count + 0 "|" checkout_count + 0 "|" command_count + 0 "|" uses_count + 0 "|" run_count + 0 "|" mixed_step_count + 0
+        }
+    '
+}
+
+workflow_has_path_filtered_push_or_pull_request() {
+    local ci="$1"
+
+    awk '
+        /^on:[[:space:]]*(#.*)?$/ {
+            in_on = 1
+            next
+        }
+        in_on && /^[^[:space:]#]/ {
+            exit
+        }
+        in_on && /^  (push|pull_request):/ {
+            in_trigger = 1
+            if ($0 ~ /paths(-ignore)?/) {
+                found = 1
+                exit
+            }
+            next
+        }
+        in_on && /^  [^[:space:]#][^:]*:[[:space:]]*(#.*)?$/ {
+            in_trigger = 0
+            next
+        }
+        in_on && in_trigger && /^    paths(-ignore)?:/ {
+            found = 1
+            exit
+        }
+        END {
+            exit(found ? 0 : 1)
+        }
+    ' "$ci"
+}
+
 assert_independent_sdd_lint_job() {
     local ci="$1"
-    local job job_count
+    local command_count checkout_count job job_count mixed_step_count run_count step_count steps summary uses_count
 
     job_count="$(awk '
         /^jobs:[[:space:]]*(#.*)?$/ {
@@ -231,16 +344,12 @@ assert_independent_sdd_lint_job() {
     fi
 
     job="$(extract_top_level_sdd_lint_job "$ci")"
+    if workflow_has_path_filtered_push_or_pull_request "$ci"; then
+        echo "Project SDD Lint workflow must not filter push or pull_request by paths" >&2
+        return 1
+    fi
     if ! printf '%s\n' "$job" | grep -Eq '^    name: Project SDD Lint[[:space:]]*(#.*)?$'; then
         echo "Expected independent sdd-lint job to have display name: Project SDD Lint" >&2
-        return 1
-    fi
-    if ! printf '%s\n' "$job" | grep -Eq '^      - uses: actions/checkout@v5[[:space:]]*(#.*)?$'; then
-        echo "Expected independent sdd-lint job to checkout with actions/checkout@v5" >&2
-        return 1
-    fi
-    if ! printf '%s\n' "$job" | grep -Eq '^      - run: scripts/check-sdd\.sh[[:space:]]*(#.*)?$'; then
-        echo "Expected independent sdd-lint job to run scripts/check-sdd.sh from the repository root" >&2
         return 1
     fi
     if printf '%s\n' "$job" | grep -Eq '^[[:space:]]+working-directory:'; then
@@ -263,12 +372,29 @@ assert_independent_sdd_lint_job() {
         echo "Independent sdd-lint job must not couple to path filtering" >&2
         return 1
     fi
-    if printf '%s\n' "$job" | grep -E '^      - uses:' | grep -Ev '^      - uses: actions/checkout@v5[[:space:]]*(#.*)?$' >/dev/null; then
-        echo "Independent sdd-lint job must only use actions/checkout@v5" >&2
+
+    steps="$(extract_sdd_lint_steps "$job")"
+    summary="$(summarize_sdd_lint_steps "$steps")"
+    IFS='|' read -r step_count checkout_count command_count uses_count run_count mixed_step_count <<< "$summary"
+
+    if [[ "$uses_count" -ne 1 || "$checkout_count" -ne 1 ]]; then
+        echo "Independent sdd-lint job must use exactly one actions/checkout@v5 step" >&2
         return 1
     fi
-    if printf '%s\n' "$job" | grep -E '^      - run:' | grep -Ev '^      - run: scripts/check-sdd\.sh[[:space:]]*(#.*)?$' >/dev/null; then
+    if [[ "$command_count" -ne 1 ]]; then
+        echo "Expected independent sdd-lint job to run scripts/check-sdd.sh from the repository root" >&2
+        return 1
+    fi
+    if [[ "$run_count" -ne 1 ]]; then
         echo "Independent sdd-lint job must only run scripts/check-sdd.sh" >&2
+        return 1
+    fi
+    if [[ "$mixed_step_count" -ne 0 ]]; then
+        echo "Independent sdd-lint job must keep checkout and lint command in separate steps" >&2
+        return 1
+    fi
+    if [[ "$step_count" -ne 2 ]]; then
+        echo "Independent sdd-lint job must have exactly two steps: checkout and lint" >&2
         return 1
     fi
 }
@@ -294,7 +420,7 @@ assert_sdd_lint_ci_contract_rejected() {
 }
 
 test_check_sdd_ci_job_is_independent() {
-    local ci duplicate_ci install_ci needs_ci openspec_ci root_command_ci setup_ci split_ci path_filter_ci
+    local ci duplicate_ci extra_named_run_ci install_ci needs_ci openspec_ci root_command_ci setup_ci split_ci path_filter_ci workflow_path_filter_ci workflow_path_ignore_ci
     ci="$(mktemp "$TMP_ROOT/ci-sdd-lint.XXXXXX")"
     cp "$ROOT/.github/workflows/ci.yml" "$ci"
     write_independent_sdd_lint_job "$ci"
@@ -330,6 +456,22 @@ YAML
     printf '      - uses: dorny/paths-filter@v3\n' >> "$path_filter_ci"
     assert_sdd_lint_ci_contract_rejected "$path_filter_ci" "Independent sdd-lint job must not couple to path filtering"
 
+    workflow_path_filter_ci="$(mktemp "$TMP_ROOT/ci-sdd-lint-workflow-path-filter.XXXXXX")"
+    cp "$ci" "$workflow_path_filter_ci"
+    sed -i.bak '/^  pull_request:$/a\
+    paths:\
+      - scripts/**
+' "$workflow_path_filter_ci"
+    assert_sdd_lint_ci_contract_rejected "$workflow_path_filter_ci" "Project SDD Lint workflow must not filter push or pull_request by paths"
+
+    workflow_path_ignore_ci="$(mktemp "$TMP_ROOT/ci-sdd-lint-workflow-path-ignore.XXXXXX")"
+    cp "$ci" "$workflow_path_ignore_ci"
+    sed -i.bak '/^  push:$/a\
+    paths-ignore:\
+      - docs/**
+' "$workflow_path_ignore_ci"
+    assert_sdd_lint_ci_contract_rejected "$workflow_path_ignore_ci" "Project SDD Lint workflow must not filter push or pull_request by paths"
+
     root_command_ci="$(mktemp "$TMP_ROOT/ci-sdd-lint-root-command.XXXXXX")"
     cp "$ci" "$root_command_ci"
     cat >> "$root_command_ci" <<'YAML'
@@ -342,11 +484,19 @@ YAML
     setup_ci="$(mktemp "$TMP_ROOT/ci-sdd-lint-setup.XXXXXX")"
     cp "$ci" "$setup_ci"
     printf '      - uses: actions/setup-node@v5\n' >> "$setup_ci"
-    assert_sdd_lint_ci_contract_rejected "$setup_ci" "Independent sdd-lint job must only use actions/checkout@v5"
+    assert_sdd_lint_ci_contract_rejected "$setup_ci" "Independent sdd-lint job must use exactly one actions/checkout@v5 step"
+
+    extra_named_run_ci="$(mktemp "$TMP_ROOT/ci-sdd-lint-extra-named-run.XXXXXX")"
+    cp "$ci" "$extra_named_run_ci"
+    cat >> "$extra_named_run_ci" <<'YAML'
+      - name: Prepare environment
+        run: echo extra setup
+YAML
+    assert_sdd_lint_ci_contract_rejected "$extra_named_run_ci" "Independent sdd-lint job must only run scripts/check-sdd.sh"
 
     split_ci="$(mktemp "$TMP_ROOT/ci-sdd-lint-split.XXXXXX")"
     cp "$ci" "$split_ci"
-    sed -i.bak '/^      - run: scripts\/check-sdd\.sh$/d' "$split_ci"
+    sed -i.bak '/^        run: scripts\/check-sdd\.sh$/d' "$split_ci"
     cat >> "$split_ci" <<'YAML'
   unrelated:
     runs-on: ubuntu-24.04
