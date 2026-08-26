@@ -292,7 +292,7 @@ archive 回寫 ──→ specs/[module]/NNN-feature/spec.md（版本升級 + Cha
 - **派工機制**：`[@agent-name]` 標籤、`[@main]` 保留字、序列預設、parallel 標記、worktree 時機——規範全文在 `openspec/config.yaml`（`rules.tasks` + `operations.apply.guidance`）。
 - **語言硬規**：OpenSpec 產出的所有文件除專業用語外一律繁體中文（CLAUDE.md § Communication）。
 - **TDD**：失敗測試先行，無例外——全文與不接受的藉口清單見 SKILL.md § TDD Rule。
-- **PR 範圍**：單一目的、≤ 5 檔／≤ 300 行（測試除外）——`.claude/rules/git-workflow.md`。
+- **PR 範圍**：單一目的、≤ 5 檔／≤ 300 行；兩個門檻皆只計算手寫生產程式碼，排除測試、lockfile、產生檔、工具／專案設定檔、空或僅 re-export 的 `__init__.py`/`index.ts`，以及 `specs/**`／`openspec/**` ——`.claude/rules/git-workflow.md`。
 - **驗證指令**：CLAUDE.md § Verification Commands 為唯一清單；每個 CI job 有對應本機指令。
 - **回寫硬閘**：archive 必須回寫正典 spec（版本升級 + Changelog），否則 PR 不得 merge——ADR-033 Rule 1。
 - **憲章**：`specs/_governance/constitution.md` 的所有適用原則；Generalization-First 與 Data Fairness 為 NON-NEGOTIABLE。

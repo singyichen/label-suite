@@ -38,6 +38,8 @@ Commits within a PR must each serve a single change purpose (enforced by pre-com
 
 Inherited from Constitution Principle X:
 
-- A single PR must not touch more than 5 files or exceed 300 lines of diff (excluding tests)
-- PRs exceeding either threshold must be split before opening
+- A single PR must not touch more than 5 files or exceed 300 lines of diff
+- Both thresholds count hand-written production changes only. Excluded from the file count **and** the line count: tests, lockfiles (`uv.lock`, `pnpm-lock.yaml`), generated files, tool/project configuration files (`pyproject.toml`, `tsconfig.json`, `eslint.config.js`, `vite.config.ts`, `.gitignore`, and equivalents), empty or re-export-only `__init__.py` / `index.ts`, and `specs/**` / `openspec/**` artifacts
+- Excluded files still belong in the PR that needs them — exclusion applies to threshold arithmetic only, never to the single-purpose rule
+- PRs exceeding either threshold after exclusions must be split before opening
 - Governance PRs propagating a constitution amendment are exempt from the file count limit

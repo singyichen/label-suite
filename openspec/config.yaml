@@ -97,8 +97,11 @@ rules:
       unavoidable>. A PR may contain multiple one-file tasks; command-only
       verification tasks must list exact commands and expected results.
     - >-
-      Task granularity must keep each PR within ≤ 5 files / ≤ 300 diff lines
-      (tests excluded), or state the split plan explicitly.
+      Task granularity must keep each PR within ≤ 5 files / ≤ 300 diff lines,
+      or state the split plan explicitly. Both counts measure hand-written
+      production changes only and exclude tests, lockfiles, generated files,
+      tool/project configuration files, empty or re-export-only __init__.py /
+      index.ts, and specs/** / openspec/** artifacts.
     - >-
       HARD RULE: task descriptions MUST be Traditional Chinese; commands,
       file paths, and code identifiers stay in English (see context).
