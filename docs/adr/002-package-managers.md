@@ -37,7 +37,7 @@ Key requirements: fast installs, strict dependency resolution (no phantom depend
 ```bash
 # Backend — all Python commands run via uv
 uv sync --dev
-uv run uvicorn app.main:app --reload
+uv run uvicorn app.main:create_app --factory --reload
 uv run pytest
 uv add <package>          # install production dependency
 uv add --dev <package>    # install dev dependency
