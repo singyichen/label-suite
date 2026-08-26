@@ -165,7 +165,7 @@ pnpm audit --prod --audit-level high
 pnpm typecheck
 pnpm playwright test
 
-# Bootstrap contract (run from project root — SC-045; see docs/bootstrap.md)
+# Bootstrap contract (run from project root — SC-045; see docs/development.md)
 bash scripts/verify-bootstrap.sh
 ```
 

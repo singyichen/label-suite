@@ -32,6 +32,21 @@
 
 ---
 
+## 快速開始
+
+```bash
+bash scripts/init.sh                    # 一次性設定（相依套件 + backend/.env）
+cd backend && uv run uvicorn app.main:create_app --factory --reload
+cd frontend && pnpm dev                 # http://localhost:5173
+./scripts/serve-prototype.sh            # http://localhost:8888 — 產品畫面
+```
+
+> **產品畫面在哪裡：** `frontend/` 目前是 Foundation-Core 骨架，只提供 `/health-check`。標註、任務設定與審核等畫面仍是 `design/prototype/` 底下的 HTML prototype，請用上面最後一行指令啟動瀏覽。
+
+完整說明、整合測試與 seed 資料見 **[docs/development.md](docs/development.md)**。
+
+---
+
 ## 網站地圖
 
 ![Label Suite 網站地圖](docs/site-map/site-map.zh-TW.png)

@@ -1,7 +1,10 @@
-# 本機 Bootstrap 指令清單
+# 本機開發指南
 
-本文件是 foundation spec FR-130 要求的「可重現本機 bootstrap 契約」的指令面，
-搭配 `scripts/verify-bootstrap.sh`（SC-045 的 one-command verification）使用。
+把 Label Suite 在本機跑起來所需要的一切：環境需求、一次性設定、日常開發指令、
+整合測試與 seed 資料。
+
+> 本文件同時是 foundation spec FR-130「可重現本機 bootstrap 契約」的指令面，
+> 見〈[Bootstrap 契約驗證](#bootstrap-契約驗證fr-130sc-045)〉一節。
 
 ## 前置需求
 
@@ -25,7 +28,43 @@ pnpm、在 `backend/` 跑 `uv sync`、在 `frontend/` 跑 `pnpm install`。
 > 是相對於行程工作目錄解析的（`backend/app/core/config.py`），而所有後端指令都
 > 從 `backend/` 執行。放在根目錄不會被任何程式讀到。
 
-## 驗證
+## 日常開發指令
+
+```bash
+# 後端 dev server（app/main.py 只導出 create_app factory，故必須加 --factory）
+cd backend && uv run uvicorn app.main:create_app --factory --reload
+
+# 前端 dev server
+cd frontend && pnpm dev
+
+# Prototype 靜態站（產品畫面）
+./scripts/serve-prototype.sh          # 預設 http://localhost:8888
+./scripts/serve-prototype.sh 9000     # 自訂 port
+```
+
+| 服務 | 網址 |
+|------|------|
+| 後端 API | `http://127.0.0.1:8000/api/v1` |
+| 後端 API 文件 | `http://127.0.0.1:8000/docs` |
+| 前端 | `http://localhost:5173` |
+| Prototype | `http://localhost:8888` |
+
+前端 health check 頁面位於 `/health-check`，會呼叫真實後端 API（`api-client.ts`
+直接打 `http://localhost:8000/api/v1`，沒有 Vite proxy，所以後端必須同時起著，
+且 `ALLOWED_ORIGINS` 要包含前端來源）。
+
+> **產品畫面在 prototype，不在 `frontend/`。** `frontend/` 目前是 Foundation-Core
+> 交付的骨架，只有 `/health-check` 一條路由；任務清單、task-new、標註工作區、
+> 審核員面板等畫面都還在 `design/prototype/`，尚未移植。要瀏覽產品畫面請起
+> prototype 站，入口是 `index.html`（導覽頁）與 `components-showcase.html`
+> （設計系統 living styleguide）。
+>
+> 請用 `scripts/serve-prototype.sh`，不要用 `python3 -m http.server`——後者的
+> per-connection threading 在平行負載下會間歇性掉 socket，害不相關的測試 flake
+> （`design/prototype/README.md`）。該腳本轉呼叫 `design/prototype/tests/serve.mjs`，
+> 與 Playwright 測試用的是同一支 server，預覽與測試不會漂移。
+
+## Bootstrap 契約驗證（FR-130／SC-045）
 
 ```bash
 bash scripts/verify-bootstrap.sh
@@ -38,18 +77,6 @@ bash scripts/verify-bootstrap.sh
 
 可用環境變數覆寫：`VERIFY_BOOTSTRAP_PORT`（預設 `8765`）、
 `VERIFY_BOOTSTRAP_TIMEOUT`（預設 `30` 秒）。
-
-## 日常開發指令
-
-```bash
-# 後端 dev server（app/main.py 只導出 create_app factory，故必須加 --factory）
-cd backend && uv run uvicorn app.main:create_app --factory --reload
-
-# 前端 dev server
-cd frontend && pnpm dev
-```
-
-前端 health check 頁面位於 `/health-check`，會呼叫真實後端 API。
 
 ## PostgreSQL（整合測試用）
 
