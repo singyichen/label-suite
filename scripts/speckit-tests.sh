@@ -169,6 +169,197 @@ test_ci_uses_pnpm_for_prototype_jobs() {
     fi
 }
 
+write_independent_sdd_lint_job() {
+    local ci="$1"
+
+    cat >> "$ci" <<'YAML'
+  sdd-lint:
+    name: Project SDD Lint
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - run: scripts/check-sdd.sh
+YAML
+}
+
+extract_top_level_sdd_lint_job() {
+    local ci="$1"
+
+    awk '
+        /^jobs:[[:space:]]*(#.*)?$/ {
+            in_jobs = 1
+            next
+        }
+        in_jobs && /^[^[:space:]#]/ {
+            exit
+        }
+        in_jobs && /^  sdd-lint:[[:space:]]*(#.*)?$/ {
+            in_sdd_lint = 1
+            next
+        }
+        in_sdd_lint && /^  [^[:space:]#][^:]*:[[:space:]]*(#.*)?$/ {
+            exit
+        }
+        in_sdd_lint {
+            print
+        }
+    ' "$ci"
+}
+
+assert_independent_sdd_lint_job() {
+    local ci="$1"
+    local job job_count
+
+    job_count="$(awk '
+        /^jobs:[[:space:]]*(#.*)?$/ {
+            in_jobs = 1
+            next
+        }
+        in_jobs && /^[^[:space:]#]/ {
+            exit
+        }
+        in_jobs && /^  sdd-lint:[[:space:]]*(#.*)?$/ {
+            count++
+        }
+        END {
+            print count + 0
+        }
+    ' "$ci")"
+    if [[ "$job_count" -ne 1 ]]; then
+        echo "Expected exactly one independent top-level sdd-lint job, found $job_count" >&2
+        return 1
+    fi
+
+    job="$(extract_top_level_sdd_lint_job "$ci")"
+    if ! printf '%s\n' "$job" | grep -Eq '^    name: Project SDD Lint[[:space:]]*(#.*)?$'; then
+        echo "Expected independent sdd-lint job to have display name: Project SDD Lint" >&2
+        return 1
+    fi
+    if ! printf '%s\n' "$job" | grep -Eq '^      - uses: actions/checkout@v5[[:space:]]*(#.*)?$'; then
+        echo "Expected independent sdd-lint job to checkout with actions/checkout@v5" >&2
+        return 1
+    fi
+    if ! printf '%s\n' "$job" | grep -Eq '^      - run: scripts/check-sdd\.sh[[:space:]]*(#.*)?$'; then
+        echo "Expected independent sdd-lint job to run scripts/check-sdd.sh from the repository root" >&2
+        return 1
+    fi
+    if printf '%s\n' "$job" | grep -Eq '^[[:space:]]+working-directory:'; then
+        echo "Independent sdd-lint job must run scripts/check-sdd.sh from the repository root" >&2
+        return 1
+    fi
+    if printf '%s\n' "$job" | grep -Eq '^    needs:'; then
+        echo "Independent sdd-lint job must not declare needs" >&2
+        return 1
+    fi
+    if printf '%s\n' "$job" | grep -Eqi '(^|[[:space:]])(npm|pnpm|yarn|bun|uv|pip|poetry)[[:space:]]+(ci|install|sync)([[:space:]]|$)'; then
+        echo "Independent sdd-lint job must not install dependencies" >&2
+        return 1
+    fi
+    if printf '%s\n' "$job" | grep -Eqi '(^|[[:space:]])openspec([[:space:]]|$)'; then
+        echo "Independent sdd-lint job must not run OpenSpec commands" >&2
+        return 1
+    fi
+    if printf '%s\n' "$job" | grep -Eqi 'dorny/paths-filter|paths-filter|^[[:space:]]+paths(-ignore)?:|^[[:space:]]+if:.*(path|change)'; then
+        echo "Independent sdd-lint job must not couple to path filtering" >&2
+        return 1
+    fi
+    if printf '%s\n' "$job" | grep -E '^      - uses:' | grep -Ev '^      - uses: actions/checkout@v5[[:space:]]*(#.*)?$' >/dev/null; then
+        echo "Independent sdd-lint job must only use actions/checkout@v5" >&2
+        return 1
+    fi
+    if printf '%s\n' "$job" | grep -E '^      - run:' | grep -Ev '^      - run: scripts/check-sdd\.sh[[:space:]]*(#.*)?$' >/dev/null; then
+        echo "Independent sdd-lint job must only run scripts/check-sdd.sh" >&2
+        return 1
+    fi
+}
+
+assert_sdd_lint_ci_contract_rejected() {
+    local ci="$1"
+    local expected="$2"
+    local output status
+    output="$(mktemp "$TMP_ROOT/sdd-lint-ci.XXXXXX")"
+
+    if assert_independent_sdd_lint_job "$ci" >"$output" 2>&1; then
+        echo "Expected malformed sdd-lint CI job to be rejected" >&2
+        exit 1
+    else
+        status=$?
+    fi
+    if [[ "$status" -ne 1 ]]; then
+        echo "Expected malformed sdd-lint CI job to exit 1, got: $status" >&2
+        cat "$output" >&2
+        exit 1
+    fi
+    assert_contains "$output" "$expected"
+}
+
+test_check_sdd_ci_job_is_independent() {
+    local ci duplicate_ci install_ci needs_ci openspec_ci root_command_ci setup_ci split_ci path_filter_ci
+    ci="$(mktemp "$TMP_ROOT/ci-sdd-lint.XXXXXX")"
+    cp "$ROOT/.github/workflows/ci.yml" "$ci"
+    write_independent_sdd_lint_job "$ci"
+    assert_independent_sdd_lint_job "$ci"
+
+    duplicate_ci="$(mktemp "$TMP_ROOT/ci-sdd-lint-duplicate.XXXXXX")"
+    cp "$ci" "$duplicate_ci"
+    printf '\n  sdd-lint:\n    name: Duplicate Project SDD Lint\n' >> "$duplicate_ci"
+    assert_sdd_lint_ci_contract_rejected "$duplicate_ci" "Expected exactly one independent top-level sdd-lint job, found 2"
+
+    needs_ci="$(mktemp "$TMP_ROOT/ci-sdd-lint-needs.XXXXXX")"
+    cp "$ci" "$needs_ci"
+    sed -i.bak '/^  sdd-lint:$/a\
+    needs: validate
+' "$needs_ci"
+    assert_sdd_lint_ci_contract_rejected "$needs_ci" "Independent sdd-lint job must not declare needs"
+
+    install_ci="$(mktemp "$TMP_ROOT/ci-sdd-lint-install.XXXXXX")"
+    cp "$ci" "$install_ci"
+    cat >> "$install_ci" <<'YAML'
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+YAML
+    assert_sdd_lint_ci_contract_rejected "$install_ci" "Independent sdd-lint job must not install dependencies"
+
+    openspec_ci="$(mktemp "$TMP_ROOT/ci-sdd-lint-openspec.XXXXXX")"
+    cp "$ci" "$openspec_ci"
+    printf '      - run: openspec validate --changes --no-interactive\n' >> "$openspec_ci"
+    assert_sdd_lint_ci_contract_rejected "$openspec_ci" "Independent sdd-lint job must not run OpenSpec commands"
+
+    path_filter_ci="$(mktemp "$TMP_ROOT/ci-sdd-lint-path-filter.XXXXXX")"
+    cp "$ci" "$path_filter_ci"
+    printf '      - uses: dorny/paths-filter@v3\n' >> "$path_filter_ci"
+    assert_sdd_lint_ci_contract_rejected "$path_filter_ci" "Independent sdd-lint job must not couple to path filtering"
+
+    root_command_ci="$(mktemp "$TMP_ROOT/ci-sdd-lint-root-command.XXXXXX")"
+    cp "$ci" "$root_command_ci"
+    cat >> "$root_command_ci" <<'YAML'
+    defaults:
+      run:
+        working-directory: backend
+YAML
+    assert_sdd_lint_ci_contract_rejected "$root_command_ci" "Independent sdd-lint job must run scripts/check-sdd.sh from the repository root"
+
+    setup_ci="$(mktemp "$TMP_ROOT/ci-sdd-lint-setup.XXXXXX")"
+    cp "$ci" "$setup_ci"
+    printf '      - uses: actions/setup-node@v5\n' >> "$setup_ci"
+    assert_sdd_lint_ci_contract_rejected "$setup_ci" "Independent sdd-lint job must only use actions/checkout@v5"
+
+    split_ci="$(mktemp "$TMP_ROOT/ci-sdd-lint-split.XXXXXX")"
+    cp "$ci" "$split_ci"
+    sed -i.bak '/^      - run: scripts\/check-sdd\.sh$/d' "$split_ci"
+    cat >> "$split_ci" <<'YAML'
+  unrelated:
+    runs-on: ubuntu-24.04
+    steps:
+      - run: scripts/check-sdd.sh
+YAML
+    assert_sdd_lint_ci_contract_rejected "$split_ci" "Expected independent sdd-lint job to run scripts/check-sdd.sh from the repository root"
+
+    ci="$(mktemp "$TMP_ROOT/ci-sdd-lint-missing.XXXXXX")"
+    cp "$ROOT/.github/workflows/ci.yml" "$ci"
+    assert_independent_sdd_lint_job "$ci"
+}
+
 INVENTORY_SENTINEL='design/system/screen-inventory.md is stale — run: node scripts/gen-screen-inventory.mjs'
 
 write_inventory_generator_double() {
@@ -1095,5 +1286,6 @@ test_check_sdd_accepts_complete_exception_with_root_extensionless_path
 test_check_sdd_ignores_backticked_identifier_in_exception_outputs
 test_check_sdd_rejects_non_shell_red_task_with_non_qa_owner
 test_check_sdd_accepts_non_shell_red_task_with_qa_owner
+test_check_sdd_ci_job_is_independent
 
 echo "speckit script tests passed"
