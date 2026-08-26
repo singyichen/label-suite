@@ -977,7 +977,9 @@ test_check_sdd_excludes_deprecated_task_template_retired_wording() {
     repo="$(make_sdd_repo)"
     mkdir -p "$repo/.specify/templates"
     cat > "$repo/.specify/templates/tasks-template.md" <<'TEMPLATE'
-> Deprecated historical example: npm test
+> Deprecated historical, non-normative task template.
+
+Run npm test before verification.
 TEMPLATE
 
     assert_command_succeeds "$repo" --not-rule RETIRED_COMMAND
