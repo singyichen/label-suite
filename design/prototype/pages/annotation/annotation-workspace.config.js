@@ -77,6 +77,11 @@
       historyActionGoldReopened: '重新開放標準答案',
       unitCtxRunDry: '試標',
       unitCtxRunOfficial: '正式標記',
+      crumbWorkAreaReviewer: '審核作業',
+      crumbWorkAreaAnnotator: '標記作業',
+      crumbTaskTpl: '{name}（{run}）',
+      crumbUnitTpl: '審核單位 {sample} · {annotator}',
+      crumbSamplePosTpl: '樣本 {i} / {n}',
       unitCtxThreshold: '定稿門檻 {x} / {n} 位審核員',
       unitCtxAnnotator: '標記員 {id}',
       unitCtxRoster: '本樣本 {m} 位標記員',
@@ -96,6 +101,8 @@
       finalizedVoteSelf: '你',
       unitStateInterimNote: '未達定稿門檻 {x} / {n}',
       unitStateDisputedNote: '未定稿，待仲裁',
+      trackAria: '審核單位狀態',
+      trackMarker: '目前：',
       unitStateFinalizedNote: '已鎖定',
       unitStateAria: '{state}，已有 {x} 位審核員／共需 {n} 位',
       unitStateAriaFinalized: '{state}，已達 {n} 位審核員門檻，內容已鎖定',
@@ -174,6 +181,11 @@
       historyActionGoldReopened: 'Gold reopened',
       unitCtxRunDry: 'Dry Run',
       unitCtxRunOfficial: 'Official Run',
+      crumbWorkAreaReviewer: 'Review',
+      crumbWorkAreaAnnotator: 'Annotate',
+      crumbTaskTpl: '{name} ({run})',
+      crumbUnitTpl: 'Review unit {sample} · {annotator}',
+      crumbSamplePosTpl: 'Sample {i} of {n}',
       unitCtxThreshold: 'Finalize threshold {x} / {n} reviewers',
       unitCtxAnnotator: 'Annotator {id}',
       unitCtxRoster: '{m} annotators on this sample',
@@ -193,6 +205,8 @@
       finalizedVoteSelf: 'you',
       unitStateInterimNote: '{x} / {n} toward finalize threshold',
       unitStateDisputedNote: 'not finalized, awaiting arbitration',
+      trackAria: 'Review unit status',
+      trackMarker: 'Now:',
       unitStateFinalizedNote: 'locked',
       unitStateAria: '{state}, {x} of {n} required reviewers',
       unitStateAriaFinalized: '{state}, met the {n}-reviewer threshold, locked',
@@ -1326,7 +1340,95 @@
     });
   }
 
+  /*
+   * Entry breadcrumb (issue #456, FR-080). The workspace shell carries no
+   * page header, so without this nothing on screen names the task or the
+   * run: FR-064's context banner is scoped to one review unit and never
+   * carries the task name, leaving two deep-linked demo tasks visually
+   * identical. Every level is derived from the URL context, so a cold deep
+   * link renders the same trail as an in-app navigation (FR-080 AC-4.31).
+   *
+   * Level 1 links to the dashboard rather than to a task-less
+   * annotation-list.html, because that URL is a not-found state whose own
+   * recovery CTA already points at the dashboard.
+   */
+  function renderEntryBreadcrumb() {
+    var nav = document.getElementById('entryBreadcrumb');
+    if (!nav) return;
+    nav.innerHTML = '';
+
+    var listParams = new URLSearchParams();
+    listParams.set('task_id', currentProfile.id);
+    listParams.set('role', currentRole);
+    listParams.set('run_type', currentRunType);
+    /* FR-081 (issue #456 AC-4): annotation-list.html's UXC-11 view state
+       rides in on the URL and has to ride back out, or this crumb drops the
+       user on an unfiltered page 1 -- the one link most likely to be used
+       after finishing a unit. The other two return paths (the sidebar's
+       標記作業 link and boot()'s unknown-task_id redirect) forward
+       window.location.search verbatim and inherit it for free; only this
+       one rebuilds its query from scratch. */
+    var incoming = new URLSearchParams(window.location.search);
+    ['status', 'q', 'limit', 'offset'].forEach(function (key) {
+      var value = incoming.get(key);
+      if (value) listParams.set(key, value);
+    });
+
+    appendCrumbLink(nav, '../dashboard/dashboard.html',
+      t(currentRole === 'reviewer' ? 'crumbWorkAreaReviewer' : 'crumbWorkAreaAnnotator'));
+    appendCrumbSep(nav);
+    appendCrumbLink(nav, 'annotation-list.html?' + listParams.toString(),
+      t('crumbTaskTpl')
+        .replace('{name}', (state.lang === 'en' && currentProfile.nameEn)
+          ? currentProfile.nameEn : currentProfile.nameZh)
+        .replace('{run}', t(currentRunType === 'official_run' ? 'unitCtxRunOfficial' : 'unitCtxRunDry')));
+    appendCrumbSep(nav);
+
+    /* An annotator IS the annotator, so naming them back at themselves adds
+       a level that carries no information. They also get a QUEUE POSITION
+       rather than the raw record id: on seeds like T011/T012 the id field is
+       unassigned metadata (`ID`, `article_id`), and Data Fairness forbids
+       unassigned fields from reaching annotator-facing DOM (FR-023/FR-024M).
+       A reviewer addresses a named unit and is not under that restriction. */
+    var current = document.createElement('span');
+    current.setAttribute('aria-current', 'page');
+    if (currentRole === 'reviewer') {
+      current.textContent = t('crumbUnitTpl')
+        .replace('{sample}', currentSampleId)
+        .replace('{annotator}', currentAnnotatorId());
+    } else {
+      var records = currentProfile.datasetRecords || [];
+      var idx = 0;
+      for (var i = 0; i < records.length; i += 1) {
+        if (window.LabelSuiteAnnotationWorkspaceData.getRecordId(records[i], i) === currentSampleId) {
+          idx = i;
+          break;
+        }
+      }
+      current.textContent = t('crumbSamplePosTpl')
+        .replace('{i}', String(idx + 1))
+        .replace('{n}', String(records.length));
+    }
+    nav.appendChild(current);
+  }
+
+  function appendCrumbLink(nav, href, text) {
+    var link = document.createElement('a');
+    link.href = href;
+    link.textContent = text;
+    nav.appendChild(link);
+  }
+
+  function appendCrumbSep(nav) {
+    var sep = document.createElement('span');
+    sep.className = 'breadcrumb-sep';
+    sep.setAttribute('aria-hidden', 'true');
+    sep.textContent = '\u203A';
+    nav.appendChild(sep);
+  }
+
   function renderWorkspace() {
+    renderEntryBreadcrumb();
     if (currentRole === 'reviewer') {
       renderReviewerWorkspace();
     } else {
@@ -3334,6 +3436,102 @@
      way a reviewer can tell one review model from another inside the
      workspace. Rendered above the card in every reviewer path, including
      the arbitration branch. */
+  /* FR-051's five states as a route, per lane. FINALIZED is reachable from
+     BOTH lanes, which is exactly why the track needs getReviewUnitLane() and
+     not just the status. */
+  var REVIEW_TRACK_ROUTES = {
+    same: ['pending', 'approved', 'finalized'],
+    differing: ['pending', 'modified', 'disputed', 'finalized'],
+  };
+
+  var TRACK_BORDER = 'var(--color-border)';
+  var TRACK_TAKEN = 'var(--color-cta)';
+
+  function trackFork(paths) {
+    var span = document.createElement('span');
+    span.className = 'review-track-fork';
+    span.setAttribute('aria-hidden', 'true');
+    span.innerHTML =
+      '<svg width="28" height="68" viewBox="0 0 28 68" fill="none">' +
+      paths.map(function (p) {
+        return '<path d="' + p.d + '" stroke="' + p.stroke + '" stroke-width="2"/>';
+      }).join('') +
+      '</svg>';
+    return span;
+  }
+
+  /* Builds the §Review Status Track for one unit. `lane` is null until a
+     reviewer submits, in which case only 待審 is on the route.
+
+     `done` means "this node is on the unit's route, before its current
+     position". It is a ROUTE, not an event log: the prototype derives
+     REVIEW_UNIT_STATUS on every render and stores no history, so a unit whose
+     reviewers all submitted at once can reach 已定稿 without ever having been
+     rendered as 已同意. Marking the lane's interim node keeps the branch
+     legible; claiming a timestamped visit would be a claim the data cannot
+     support. */
+  function buildReviewStatusTrack(unitStatus, lane) {
+    var route = REVIEW_TRACK_ROUTES[lane] || ['pending'];
+    var position = route.indexOf(unitStatus);
+
+    function nodeClass(status) {
+      if (status === unitStatus) return 'review-track-node current';
+      var at = route.indexOf(status);
+      return 'review-track-node' + (at !== -1 && position !== -1 && at < position ? ' done' : '');
+    }
+
+    var track = document.createElement('div');
+    track.className = 'review-track';
+    track.setAttribute('role', 'list');
+    track.setAttribute('aria-label', t('trackAria'));
+
+    function addNode(status, gridStyle) {
+      var node = document.createElement('span');
+      node.className = nodeClass(status);
+      node.setAttribute('role', 'listitem');
+      node.setAttribute('style', gridStyle);
+      if (status === unitStatus) {
+        node.setAttribute('aria-current', 'step');
+        var marker = document.createElement('span');
+        marker.className = 'review-track-marker';
+        marker.textContent = t('trackMarker');
+        node.appendChild(marker);
+      }
+      node.appendChild(document.createTextNode(t(REVIEW_STATE_I18N_KEYS[status])));
+      track.appendChild(node);
+    }
+
+    function addRail(gridStyle, taken) {
+      var rail = document.createElement('span');
+      rail.className = 'review-track-rail' + (taken ? ' done' : '');
+      rail.setAttribute('style', gridStyle);
+      track.appendChild(rail);
+    }
+
+    function addFork(fork, gridStyle) {
+      fork.setAttribute('style', gridStyle);
+      track.appendChild(fork);
+    }
+
+    var finalized = unitStatus === 'finalized';
+    addNode('pending', 'grid-column:1;grid-row:1/3');
+    addFork(trackFork([
+      { d: 'M0 34 H12 V17 H28', stroke: lane === 'same' ? TRACK_TAKEN : TRACK_BORDER },
+      { d: 'M0 34 H12 V51 H28', stroke: lane === 'differing' ? TRACK_TAKEN : TRACK_BORDER },
+    ]), 'grid-column:2;grid-row:1/3');
+    addNode('approved', 'grid-column:3;grid-row:1');
+    addNode('modified', 'grid-column:3;grid-row:2');
+    addRail('grid-column:4/6;grid-row:1', lane === 'same' && finalized);
+    addRail('grid-column:4;grid-row:2', lane === 'differing' && unitStatus !== 'modified');
+    addNode('disputed', 'grid-column:5;grid-row:2');
+    addFork(trackFork([
+      { d: 'M0 17 H16 V34 H28', stroke: lane === 'same' && finalized ? TRACK_TAKEN : TRACK_BORDER },
+      { d: 'M0 51 H16 V34 H28', stroke: lane === 'differing' && finalized ? TRACK_TAKEN : TRACK_BORDER },
+    ]), 'grid-column:6;grid-row:1/3');
+    addNode('finalized', 'grid-column:7;grid-row:1/3');
+    return track;
+  }
+
   function buildReviewUnitContext(unitStatus) {
     var workspaceData = window.LabelSuiteAnnotationWorkspaceData;
     var minReviewers = currentProfile.minReviewers || 1;
@@ -3407,6 +3605,23 @@
       );
     }
     banner.appendChild(statePill);
+
+    /* The pill answers "what state"; the track answers "by which route, and
+       what is left". Both stay: the pill carries the terminal/interim note
+       and the aria-label the track has no place for. A null status has no
+       unit yet, so there is no route to draw. */
+    if (unitStatus !== null) {
+      var trackWrap = document.createElement('div');
+      trackWrap.className = 'rv-unit-track';
+      trackWrap.appendChild(buildReviewStatusTrack(
+        unitStatus,
+        workspaceData.getReviewUnitLane(
+          currentProfile.id, currentRunType, currentSampleId, currentIdentity,
+          state.selectedOutputTypes
+        )
+      ));
+      banner.appendChild(trackWrap);
+    }
     return banner;
   }
 

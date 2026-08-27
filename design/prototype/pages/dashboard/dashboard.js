@@ -398,53 +398,6 @@
     bindRoleTaskEvents(container, role, entries);
   }
 
-  /* Issue #404: the demo-flow tasks (T014-T017) had no discoverable entry
-     point from the PL dashboard. This renders one shortcut button per
-     `demoCategories` entry that actually occurs on a task's `demoCategory`
-     field -- it never checks a specific task id, so future demo batches
-     only need to set that same field to gain a shortcut here. */
-  function renderDemoShortcuts() {
-    var taskList = document.getElementById('plTaskList');
-    if (!taskList || !taskList.parentElement) return;
-    var categories = Array.isArray(data.demoCategories) ? data.demoCategories : [];
-    var categoryMap = buildMap(categories, 'key');
-    var present = {};
-    (data.tasks || []).forEach(function (task) {
-      if (task.demoCategory) present[task.demoCategory] = true;
-    });
-    var container = document.getElementById('plDemoShortcuts');
-    if (!container) {
-      container = document.createElement('div');
-      container.id = 'plDemoShortcuts';
-      container.className = 'btn-row';
-      taskList.parentElement.insertBefore(container, taskList);
-    }
-    container.innerHTML = categories
-      .filter(function (category) { return present[category.key]; })
-      .map(function (category) {
-        return '<button type="button" class="btn btn-secondary slim demo-shortcut-btn"'
-          + ' data-demo-category="' + escapeHtml(category.key) + '">'
-          + escapeHtml(localizedText(category))
-          + '</button>';
-      }).join('');
-    Array.prototype.forEach.call(
-      container.querySelectorAll('.demo-shortcut-btn'),
-      function (button) {
-        button.addEventListener('click', function () {
-          var category = categoryMap[button.dataset.demoCategory];
-          var keyword = category ? localizedText(category) : '';
-          global.LabelSuiteAnalytics.track('prototype_cta_clicked', {
-            cta: 'pl_demo_shortcut_clicked',
-            demo_category: button.dataset.demoCategory,
-            lang: lang,
-            scenario: scenario,
-          });
-          openTaskList('project_leader', null, keyword);
-        });
-      }
-    );
-  }
-
   function renderTaskLists() {
     renderTaskList('adminTaskList', 'admin', 'super_admin');
     renderTaskList(
@@ -452,7 +405,6 @@
       'projectLeader',
       'project_leader'
     );
-    renderDemoShortcuts();
     renderTaskList(
       'annotatorTaskList',
       'annotator',

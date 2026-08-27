@@ -43,6 +43,23 @@
       min-width: 0;
     }
 
+    /* design/system/MASTER.md §Breadcrumb (compact form, as in task-detail.html).
+       The workspace shell has no page header, so the trail gets its own slim
+       bar above the three columns; margin-bottom is dropped because the bar's
+       padding already sets the rhythm. */
+    .breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--color-text-soft)}
+    .breadcrumb a{color:var(--color-primary)}
+    .breadcrumb a:hover{text-decoration:underline}
+    .breadcrumb-sep{color:var(--color-ink-muted);font-size:11px}
+    .workspace-crumb-bar {
+      flex: 0 0 auto;
+      padding: 10px var(--space-md);
+      border-bottom: 1px solid var(--color-border);
+      background: var(--color-white);
+      overflow-x: auto;
+    }
+    .workspace-crumb-bar .breadcrumb { flex-wrap: nowrap; white-space: nowrap; }
+
     /* ── Workspace Body (3-column) ──────────────────────────── */
     .workspace-body {
       flex: 1;
@@ -351,6 +368,18 @@
       padding: 10px 12px;
       margin-bottom: 10px;
     }
+    /* design/system/MASTER.md §Review Status Track -- CSS verbatim. The
+       track is a 2-row grid, so it takes a full-width row of its own under
+       the banner's chip line rather than sitting in the flex flow. */
+    .rv-unit-track { flex: 1 0 100%; overflow-x: auto; }
+    .review-track { display: grid; grid-template-columns: auto 28px auto minmax(16px, 1fr) auto 28px auto; grid-template-rows: 34px 34px; align-items: center; justify-items: start; }
+    .review-track-node { display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-full); background: var(--color-white); color: var(--color-ink-muted); font-size: 13px; font-weight: 500; white-space: nowrap; }
+    .review-track-node.done { border-color: var(--color-cta); background: var(--color-success-bg); color: var(--color-cta); }
+    .review-track-node.current { border-color: var(--color-primary); background: var(--color-primary-soft-bg); color: var(--color-primary); font-weight: 600; }
+    .review-track-marker { font-size: 11px; font-weight: 600; }
+    .review-track-rail { width: 100%; height: 2px; background: var(--color-border); }
+    .review-track-rail.done { background: var(--color-cta); }
+    .review-track-fork { display: block; line-height: 0; }
     .rv-unit-chip {
       font-size: 12px;
       color: var(--color-ink-muted);
@@ -916,6 +945,9 @@
 </div>
 
 <div class="workspace-root" id="wsRoot" data-testid="ws-root" tabindex="-1">
+  <div class="workspace-crumb-bar">
+    <nav class="breadcrumb" aria-label="breadcrumb" id="entryBreadcrumb" data-testid="entry-breadcrumb"></nav>
+  </div>
   <div class="workspace-body" id="workspaceBody">
     <button class="guideline-collapse-btn" type="button" id="wsGuidelineCollapseBtn" data-testid="ws-guideline-collapse-btn" aria-label="收合說明區" aria-expanded="true">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
