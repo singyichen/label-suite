@@ -1,7 +1,7 @@
 ---
 功能分支: docs/211-disabled-annotator-rule
 建立日期: 2026-04-20
-版本: 2.11.0
+版本: 2.11.1
 狀態: Draft
 ---
 
@@ -757,6 +757,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.11.1 | 2026-08-27 | **修正：補做 FR-010t 發布前成員人數阻擋（issue #505）**：`design/prototype/pages/task-management/task-detail.html` 的 `publishDryRun()`／`publishOfficialRun()` 原僅透過 `validateSampling()` 驗證抽樣設定合法性，從未依 FR-010t 檢查實際啟用成員人數，使 FR-013「阻擋樣式比照 FR-010t」缺乏可對齊的原型基準。新增 `getMembershipGapMessages()`：比對 `TASK_MEMBERS` 中 `membership_status = active` 且 `task_role = annotator`／`reviewer` 的實際人數與 `min_annotators`／`min_reviewers`，任一角色不足時 `canPublish()` 阻擋發布並逐角色顯示「還差 N 位」缺口訊息（不得靜默忽略點擊）。同步將 T001 種子資料第三位標記員（Jason Huang）由 `disabled` 改為 `active`，使預設示範任務的啟用標記員人數（3 位）與其 `minAnnotators = 3` 一致，避免既有發布流程回歸測試被本次新增的阻擋誤擋。**規格條文未變**（FR-010t、SC-038 已於 v2.8.0 定義，本次僅補齊原型落地）。新增回歸測試 `issue-505-publish-member-gate.spec.ts`（涵蓋標記員缺口單獨阻擋新增試標回合、審核員缺口單獨阻擋開始正式標記、兩角色同時缺口時逐角色顯示三種情境）。 |
 | 2.11.0 | 2026-08-27 | **試標品質迴圈：修訂紀錄必填、指引版本綁定、IAA 顧問化、sampling_value 據實記錄（issue #488 T1／#489／#491／#492 A4-A5，minor）**：新增 **TrialRound** 實體（`task_id`、`round`、`sampling_value`、`guideline_version` FK、`prior_round_findings`、`guideline_change_summary`、`no_change_reason?`、`created_by`、`created_at`），紀錄每一試標回合的抽樣、指引版本與修訂脈絡；`TaskGuidelineConfig` 新增 `guideline_version` 欄位，遞增觸發條件為 `OVERVIEW_EDITABLE_FIELDS` 中指引內容欄位被實際修改並儲存，`force_guideline` 變動不觸發遞增（FR-017a，對應 annotation-015 FR-066 第 4 點）。新增 **FR-017**：`R{n}`（`n >= 2`）建立前必須填寫 `prior_round_findings` 與 `guideline_change_summary`，或勾選 `no_change` 並填 `no_change_reason`；`R1` 因無前一輪可回顧而豁免；未通過時依 FR-013 阻擋建立（阻擋樣式比照 FR-010t）。**IAA 語意去阻擋化**（issue #488 T1）：新增 **FR-010o-3**，明定 `waiting_iaa_confirmation`、達標條件 pills 之 IAA 項、試標回合歷程判定標題皆為顧問性警示，不阻擋 `dry_run_in_progress → waiting_iaa_confirmation` 轉換（該轉換條件仍為 `DRY_RUN_COMPLETION_RULE`／FR-008a，與 IAA 無關）、不停用「開始正式標記」；IAA 計算方式與門檻正典移交 `dataset-017` **FR-039**，本規格不得另行定義，新增上游依賴列。**sampling_value 據實修正**（issue #491／#489，實測 T014 曾顯示 `1` 而非實際 `5` 筆）：`FR-010f-2` 修訂為回合建立完成後 `TrialRound.sampling_value` 恆等於當輪實際建立之 `AnnotationListMaterialization.item_count`，畫面不得顯示以百分比或資料集總數換算、脫離實際筆數的衍生值；`FR-010o` 同步補充顯示規則。新增 FR-017、FR-017a、FR-010o-3、SC-041、SC-042、TrialRound 實體、Clarifications Session 2026-08-27、使用者故事 3 驗收情境 12、邊界情況一則；修訂 FR-010f-2、FR-010o、FR-013、SC-019、Overview 區塊 5 文案、上游依賴表（新增 017 列）、下游依賴表（015 列補充 guideline_version 綁定說明）。 |
 | 2.10.5 | 2026-08-26 | **修正：T014–T017 提供給審核員的指引內容從缺（issue #405）**：`task-detail.data.js` 的 T014–T017 profile 原未設定任何 `reviewerGuidelineText`，Overview「提供給審核員」卡片因此對四個審核流程示範任務全數落回共用空狀態（`未上傳`／`尚無說明內容`），即使四者各自示範不同審核情境（dry_run 共識仲裁／單一審核員核可／三審核員多數決收斂／兩審核員平手）。比照 issue #395 `forceShowGuideline` 的既有機制，`resetTaskData()` 新增一行泛用讀取（`if (profile.reviewerGuidelineText) ...`，不含任何 task_id 分支），並為 T014–T017 各自 seed 對應審核情境的指引文字（含共用的 single_label 情感三分類判準與與標記員不一致時的處理原則）。**規格條文未變**（FR-014f-1 雙角色結構本已涵蓋，僅補齊 seed 資料）。新增回歸測試 `issue-405-reviewer-guideline-t014-t017.spec.ts`（逐任務斷言審核員指引狀態轉為已上傳且內容含對應審核情境關鍵字）。 |
 | 2.10.4 | 2026-08-24 | Issue #261：新增 Prototype Traceability，明確對應 task-detail 主頁 shell、五個 tab partial、頁面資料層、與 013 共用的 `OUTPUT_TYPE_REGISTRY` 設定引擎、設計層參考的責任邊界；規格條文未變。 |
