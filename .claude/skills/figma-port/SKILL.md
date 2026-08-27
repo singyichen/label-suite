@@ -21,7 +21,7 @@ description: Use when porting a Label Suite diagram (docs/diagrams/**, design/pr
 | URL | editorType | 走本文件哪一節 |
 |---|---|---|
 | `figma.com/board/<key>` | `figjam` | §3（已實證） |
-| `figma.com/design/<key>` | `figma` | §4（已實證） |
+| `figma.com/design/<key>` | `figma` | §4（已實證）；來源是 UI 頁面而非流程圖時另加 §4.5 |
 
 ```js
 return { editorType: figma.editorType, pageId: figma.currentPage.id };
@@ -42,7 +42,7 @@ return { editorType: figma.editorType, pageId: figma.currentPage.id };
 ```
 
 - `x/y/w/h` 一律寫 **SVG 原始座標**，換算交給 §1.2，避免手算錯誤散落各處
-- `sub` 可省略；有值時走 §3 的單一 shape 雙字階寫法
+- `sub` 可省略；有值時走 §3 的單一 shape 雙字階寫法。第三行用 `sub2`（更淡的 `--color-ink-muted`）——來源圖確實有三行節點，別假設最多兩行
 - `shape` 省略時預設 `ROUNDED_RECTANGLE`；判斷節點用 `DIAMOND`
 
 **連線清單**
@@ -82,12 +82,19 @@ grep 會同時吐出 light 與 dark 兩組值——**取 `:root` 的 light 組**
 ### 1.2 SVG → Figma 座標換算
 
 ```
-local = 2 · svg + 標題區偏移
+local = k · svg + 標題區偏移
 ```
 
-- 比例固定 **2×**：SVG 的 12px 標題在 Figma 縮到 100% 時太小，2× 後對應 24px／副行 16px
 - `標題區偏移` 是每個 Section 頂部標題帶的高度，一個 Section 設一次常數，不要逐節點微調
-- **⚠ 純 2× 會撞到尺寸下限**：SVG 常見的 152×48 節點 ×2 只有 304×96，低於 §3.4 的 520×128。作法是**先把所有節點鉗到下限，再等比拉開節點間距**，不要只放大節點而不放大間距——那會讓相鄰節點黏死
+- **`k` 不是固定值，要由 §3.4 的下限反推**（2026-08-27 修正，原文寫「固定 2×」是錯的）。步驟：
+
+```
+節點 pitch = 下限寬 + 分支標籤間距          # FigJam: 520 + 140 = 660
+k = 節點 pitch ÷ 來源相鄰節點 pitch          # 660 ÷ 192 = 3.44  → 取整成 3.5
+```
+
+- 只放大節點而不同步放大間距，相鄰節點會黏死；只放大間距而不鉗到下限，文字會被內距裁切。**兩者必須用同一個 `k`。**
+- **三個約束彼此不相容，要先知道會犧牲哪一個**：§1.2 的固定比例、24／16px 的固定字級、§3.4 的 520×128 下限，對 152×48 的來源節點無法同時成立。實際取捨是**幾何放到 3.5×、字級留在 24／16px**，代價是文字相對框體比原 SVG 小。要保持原比例就得改字級，不能改 `k`
 
 ## 2. 驗收節奏（強制）
 
@@ -98,11 +105,13 @@ local = 2 · svg + 標題區偏移
 3. 標註（連線標籤、泳道標籤、編輯性引文）
 4. 圖例與底部對照表
 
+移植 UI 頁面時四層改成：骨架（外框／導覽列／卡片空殼）→ 內容（文字與欄位）→ icon → 數值比對。**且最後一層不是看截圖，是量數字**，理由見 §4.5。
+
 截圖驗收無法消除——那是這件事的本質。前置好尺寸下限與座標規則後，預期可把 8 輪壓到 3–4 輪。每輪成本是 `get_screenshot` → `curl` → 讀圖三次呼叫且都是高 token 影像讀取，所以**寧可一次多建一整層，也不要一個節點驗一次**。
 
 ## 3. FigJam 模式（已實證）
 
-證據來源：board `ngCyaOirtKoU2XiFrO6NaC`，三個 Section（`11:2` / `17:62` / `21:110`），2026-08-26 建成。
+證據來源：board `ngCyaOirtKoU2XiFrO6NaC`，三個 Section（`11:2` / `17:62` / `21:110`），2026-08-26 建成；2026-08-27 在 board `X9FrC1vXYbdNQU6agmGYsF` Section `7:14` 用 `docs/diagrams/workflow/review-flow-overview.html` 全圖覆驗（10 節點／13 連線／4 泳道／對照表／圖例），四層一次過、零重試。
 
 ### 3.1 覆寫上游文件錯誤
 
@@ -148,11 +157,13 @@ const abs = (sec, x, y) => ({ x: sec.x + x, y: sec.y + y });
 
 低於下限文字會被內距裁切，且截圖上看起來只是「有點擠」，很容易漏掉。**寧可超過下限。**
 
+**`ROUNDED_RECTANGLE` 的圓角不可設定**（2026-08-27 實測）。`ShapeWithText` 沒有 `cornerRadius`，圓角固定是膠囊狀；來源 SVG 用的 `rx="6"` 無法重現。這是 FigJam 模式的永久保真度偏差，不是做錯了——**不要花時間找設定方式**。需要精確圓角時只能走 §4 的 Design 模式（`FrameNode` 有 `cornerRadius`）。
+
 ### 3.5 Helper 函式庫
 
 `use_figma` 呼叫間**不共享狀態**，每次呼叫都要整段重貼——這砍不掉。以下是可整段複製的原文：
 
-> **狀態：已逐行回歸（2026-08-26，board `X9FrC1vXYbdNQU6agmGYsF`）。** `mkNode` × 3（`SYSTEM` 雙字階／`DIAMOND` 雙字階／`TERMINAL` 無副行）＋ `link` × 2（`MAIN`／`ACCENT`，皆帶標籤）五步全通、零錯誤。以 `getStyledTextSegments` 驗回雙字階實際落地為兩段——`24px Semi Bold #1E1B4B` ＋ `16px Regular #64748B`，與 §1.1 的 token 逐位元相符；兩條 connector 的 `characters` 與 `ELBOWED` 皆正確且 `parent` 確實是 Section。
+> **狀態：已逐行回歸（2026-08-26），並於 2026-08-27 以整張 `review-flow-overview` 覆驗（board `X9FrC1vXYbdNQU6agmGYsF` Section `7:14`）——`mkNode`／`link`／`text`／`rect`／`pill` 全數如述運作，唯一補丁是 `mkNode` 的第三字階 `sub2`。** `mkNode` × 3（`SYSTEM` 雙字階／`DIAMOND` 雙字階／`TERMINAL` 無副行）＋ `link` × 2（`MAIN`／`ACCENT`，皆帶標籤）五步全通、零錯誤。以 `getStyledTextSegments` 驗回雙字階實際落地為兩段——`24px Semi Bold #1E1B4B` ＋ `16px Regular #64748B`，與 §1.1 的 token 逐位元相符；兩條 connector 的 `characters` 與 `ELBOWED` 皆正確且 `parent` 確實是 Section。
 
 ```js
 // ── 常數：hex 讀自 tokens.css，見 §1.1 ──────────────────────
@@ -204,15 +215,24 @@ function mkNode(sec, o) {
   if (r.dashed) s.dashPattern = [8, 6];
 
   s.text.fontName = FONT_T;                            // 設 characters 前先指定
-  s.text.characters = o.sub ? `${o.title}\n${o.sub}` : o.title;
+  const lines = [o.title];
+  if (o.sub) lines.push(o.sub);
+  if (o.sub2) lines.push(o.sub2);                      // 三行節點，見 §1 IR
+  s.text.characters = lines.join("\n");
   const n = o.title.length, end = s.text.characters.length;
   s.text.setRangeFontName(0, n, FONT_T);
   s.text.setRangeFontSize(0, n, 24);
   s.text.setRangeFills(0, n, solid(INK));
   if (o.sub) {
-    s.text.setRangeFontName(n + 1, end, FONT_S);
-    s.text.setRangeFontSize(n + 1, end, 16);
-    s.text.setRangeFills(n + 1, end, solid(SOFT));
+    const subEnd = o.sub2 ? n + 1 + o.sub.length : end;
+    s.text.setRangeFontName(n + 1, subEnd, FONT_S);
+    s.text.setRangeFontSize(n + 1, subEnd, 16);
+    s.text.setRangeFills(n + 1, subEnd, solid(SOFT));
+    if (o.sub2) {                                      // 第三字階，見下方註記
+      s.text.setRangeFontName(subEnd + 1, end, FONT_S);
+      s.text.setRangeFontSize(subEnd + 1, end, 16);
+      s.text.setRangeFills(subEnd + 1, end, solid(MUTED));
+    }
   }
   return s;
 }
@@ -276,7 +296,7 @@ function pill(sec, x, y, str, o = {}) {
 
 ## 4. Design 模式（已實證）
 
-證據來源：Design file `xWvoreTTZhY5KSgBCyEVwc`，與 §3 同一份三節點 IR，2026-08-26 建成並截圖比對。
+證據來源：Design file `xWvoreTTZhY5KSgBCyEVwc`。2026-08-26 用與 §3 同一份三節點 IR 建成並截圖比對；2026-08-27 再用 `design/prototype/pages/account/login.html` 移植整頁 UI（frame `9:2`），逐元件數值比對通過——後者的規則獨立成 §4.5。
 
 ### 4.1 能力探測
 
@@ -393,14 +413,62 @@ H = 2·paddingY + titleH + (sub ? itemSpacing + subH : 0)
 
 **菱形另計。** 菱形的可用內接矩形只有外框的一半，所以 `W ≥ 2 × 文字寬`、`H ≥ 2 × 文字高`，再留邊距。實測 **360 × 200** 承載 116 × 56 的文字堆疊（`票數判定` ＋ `是否達 N/2 門檻`）視覺寬鬆、無裁切。
 
-## 5. 字型現況（實測，2026-08-26）
+### 4.5 移植 UI 頁面（非流程圖）
 
-| 字型 | 限制 | 後果 |
+**§1 的 IR 是節點／連線清單，描述不了 UI 頁面。** 來源若是 `design/prototype/pages/**` 的頁面（如登入頁），跳過 §1，直接照 DOM 結構鏡射成巢狀 auto-layout：一個 CSS flex 容器對一個 `createAutoLayout`，`gap` 對 `itemSpacing`，`padding` 對 `padding*`。§4.2.1／§4.3／§4.4 仍然適用。
+
+證據來源：`login.html` → frame `9:2`，2026-08-27。四條實測規則：
+
+**① inline SVG 直接匯入，不要手刻 vector network。** `figma.createNodeFromSvg()` 在 Design mode 可用（實測 7/7 成功，含多路徑多填色的 Google G icon）。§4.2 那套 `setVectorNetworkAsync()` 只用在**沒有現成 SVG** 的連線箭頭上。
+
+```js
+const n = figma.createNodeFromSvg(svgString);   // 回傳 FrameNode，尺寸 = viewBox
+n.rescale(target / 24);                          // 先縮放，rescale 會一併縮 strokeWeight
+host.appendChild(n);
+n.x = (host.width - n.width) / 2;                // 再置中
+n.y = (host.height - n.height) / 2;
+```
+
+`stroke="currentColor"` 在 Figma 解析不出來——**送進去之前先把顏色寫死在 SVG 字串裡**。作法是預留一個透明的 placeholder frame（尺寸就是 icon 尺寸）當 auto-layout 的子項，最後一層再把 SVG 塞進去，版面不會因為 icon 晚到而位移。
+
+**② CSS 的 border 佔空間，Figma 的 INSIDE stroke 不佔。** 專案全域設了 `box-sizing: border-box`，`1px` 邊框讓容器高度多 2px；Figma 的 `strokeAlign = "INSIDE"` 完全不影響 `height`。結果是**每個有邊框的容器都矮 2px**，而且截圖上看不出來。
+
+> 移植時把 border 寬度加進 padding：CSS `padding: 11px 16px` ＋ `border: 1px` → Figma `padding 12 / 17`。
+
+**③ 不要靠 Figma 的文字自動高度。** Figma 的 auto height ≈ `1.21 × fontSize`；CSS `line-height: normal` 在**含中文的行**會觸發 fallback 字型的較高行框，實測 ≈ `fontSize + 6`（13→19、14→20、15→21），純拉丁文才是 ≈ 1.21×。同一頁面兩種行框並存，靠猜必錯。
+
+> 從來源頁 `getComputedStyle(el).lineHeight` 取實際值，逐一顯式設 `t.lineHeight = { unit: "PIXELS", value: v }`。
+
+**④ auto-layout 沒有 margin。** CSS 的 `margin-top: 4px` 無處可放——`itemSpacing` 是 gap，對所有子項一視同仁。作法是把該子項包進一個單子節點的 auto-layout wrapper，用 `paddingTop` 表達那個 margin。多一層節點是必要成本，不是髒作法。
+
+**⑤ 只移植預設狀態。** `display: none` 的錯誤橫幅、`:hover` / `:focus` / `.error` / loading spinner、`prefers-color-scheme` 深色覆寫——一律不建。§4.3 已把 Design 模式定位為靜態高保真交付，把互動狀態畫進同一張圖只會讓交付稿自相矛盾。要交付狀態集就另建 frame 並在名稱上標明。
+
+**驗收改用數值，不要只看截圖。** 肉眼比對抓不到「每個容器矮 2px」這種累積誤差——它在單一元件上看不出來，累積到卡片層級才變成 546 vs 574。作法是兩邊都量同一組容器再逐列對：
+
+```js
+// 來源：瀏覽器
+const r = document.querySelector(".card").getBoundingClientRect();
+// Figma：同名節點
+root.query("[name=card]").first().height
+```
+
+修正後實測 `form` 245／245、`input-wrapper` 37／37、`sso-btn` 44／44、`register-row` 23／23 逐項相等，卡片 576 vs 574（差 1–2px 是 `line-height: 26.4px` 的次像素捨入，不必再追）。
+
+## 5. 字型現況（實測，2026-08-27 覆驗）
+
+| 字型 | 實測 style | 後果 |
 |---|---|---|
-| `Noto Serif TC` | **無 Italic** | 原圖的編輯性引文（`Crimson Pro` italic + 中文）在 Figma 只能退回 Regular |
-| `JetBrains Mono` | **無中文字** | 中文副行／標籤不能用 mono，會掉字；改用 `Inter` + `Noto Sans TC` |
+| `Noto Serif TC` | Black／Bold／ExtraLight／Light／Medium／Regular／SemiBold——**無 Italic** | 原圖的編輯性引文（`Crimson Pro` italic + 中文）在 Figma 只能退回 Regular |
+| `Noto Sans TC` | Black／Bold／DemiLight／Light／Medium／Regular／Thin——**無 Italic**，且有非標準的 `DemiLight` | 中文不能斜體；style 字串不可用猜的 |
+| `Crimson Pro` | 16 種，**含 Italic 與各種 `<Weight> Italic`** | 拉丁文的編輯性引文可以是斜體；掉斜體的只有中文那半 |
+| `JetBrains Mono` | 中文**會顯示，不會掉字** | 見下方修正 |
 
-這兩處是 2026-08-26 那版與原 SVG 唯一的視覺偏差來源。移植時**先確認目標字型有沒有你要的 style**，不要等截圖才發現。
+**2026-08-27 修正兩處**：
+
+1. 原文「`JetBrains Mono` 無中文字 → 會掉字」**不成立**。實測在 FigJam 建一個 `JetBrains Mono` 的中英混排節點，中文字正常顯示（Figma 自動 fallback），沒有豆腐字也沒有掉字。真正的問題是**中文那段不是 mono、字重與拉丁段不一致**，屬於視覺不搭而非功能失效。要中英一致的等寬感就得換字型，但不必為了「怕掉字」而換。
+2. `listAvailableFontsAsync()` **只能回答有沒有這個 style，回答不了字符涵蓋範圍**。要驗某字型能不能顯示中文，唯一辦法是建一個探針節點打上中文再截圖看——驗完記得刪掉探針，別留在交付圖上。
+
+移植時**先確認目標字型有沒有你要的 style**，不要等截圖才發現。`Inter` 的 style 字串有空格（`Semi Bold`／`Extra Bold`），`Crimson Pro` 沒有（`SemiBold`／`ExtraBold`）——同一份腳本裡兩種寫法並存是正常的，不是筆誤。
 
 ## 6. 驗收清單
 
@@ -410,7 +478,11 @@ H = 2·paddingY + titleH + (sub ? itemSpacing + subH : 0)
 - [ ] 腳本用 `return` 輸出，沒有靠 `console.log`
 - [ ] Design 模式已設 `figma.currentPage.backgrounds`（預設深色，見 §4.2.1）
 - [ ] 每建完一層截一次圖（節點 → 連線 → 標註 → 圖例）
+- [ ] 座標比例 `k` 由 §3.4 下限反推而得，不是直接套 2×
 - [ ] FigJam 節點尺寸 ≥ §3.4 下限；Design 節點交給 auto-layout hug（§4.4）；無文字裁切
+- [ ] 來源是 UI 頁面時：border 已加進 padding、`lineHeight` 已顯式設定、margin 已用 wrapper 表達（§4.5）
+- [ ] 移植 UI 頁面時已用 `getBoundingClientRect()` 對同名節點逐元件數值比對，不是只看截圖
+- [ ] 字型 style 字串已用 `listAvailableFontsAsync()` 驗過；字符涵蓋範圍另用探針節點驗，驗完刪除
 - [ ] 無節點重疊；分支標籤兩側水平間距 ≥ 140px
 - [ ] 連線走向正確，且都已 `appendChild` 進 Section
 - [ ] 同一份 IR 在 FigJam 與 Design 各產一張，截圖比對無裁切／無重疊／走向一致
