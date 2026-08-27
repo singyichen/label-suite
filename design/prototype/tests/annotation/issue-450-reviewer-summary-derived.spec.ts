@@ -109,7 +109,7 @@ test.describe('issue #450 -- annotation-list task info card', () => {
     await page.goto(buildListUrl({ task_id: 'T016', role: 'reviewer', run_type: 'official_run' }));
 
     await expect(page.locator('#taskInfoDetail')).toContainText(
-      '任務覆蓋 5 / 5 個審核單位 · 未達定稿門檻 3 個 · 爭議中 1 個 · IAA 0.68',
+      '任務覆蓋 5 / 5 個審核單位 · 未達定稿門檻 3 個 · 爭議中 1 個 · IAA 無法計算',
     );
     await expect(page.locator('#taskInfoStatus')).not.toHaveText('已完成');
   });
@@ -129,12 +129,12 @@ test.describe('issue #450 -- annotation-list task info card', () => {
     await page.goto(T015_LIST_URL);
     const detail = page.locator('#taskInfoDetail');
     await expect(detail).not.toContainText('待審');
-    await expect(detail).toContainText('任務覆蓋 4 / 4 個審核單位 · 未達定稿門檻 1 個 · 爭議中 1 個 · IAA 0.81');
+    await expect(detail).toContainText('任務覆蓋 4 / 4 個審核單位 · 未達定稿門檻 1 個 · 爭議中 1 個 · IAA 無法計算');
 
     // Reload: the derived numbers must be stable, not a one-shot render.
     await page.reload();
     await expect(page.locator('#taskInfoDetail'))
-      .toContainText('任務覆蓋 4 / 4 個審核單位 · 未達定稿門檻 1 個 · 爭議中 1 個 · IAA 0.81');
+      .toContainText('任務覆蓋 4 / 4 個審核單位 · 未達定稿門檻 1 個 · 爭議中 1 個 · IAA 無法計算');
   });
 });
 
@@ -161,7 +161,7 @@ test.describe('issue #450 -- dashboard reviewer card', () => {
     await openReviewerDashboard(page);
     await expect(page.locator(T015_CARD)).not.toContainText('待審');
     await expect(page.locator(T015_CARD))
-      .toContainText('任務覆蓋 4 / 4 個審核單位 · 未達定稿門檻 1 個 · 爭議中 1 個 · IAA 0.81');
+      .toContainText('任務覆蓋 4 / 4 個審核單位 · 未達定稿門檻 1 個 · 爭議中 1 個 · IAA 無法計算');
   });
 
   /* Non-derivable tasks keep their seeded illustrative summary, so the

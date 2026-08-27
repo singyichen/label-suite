@@ -2143,6 +2143,7 @@
       unfinalized: '未達定稿門檻 {n} 個',
       disputed: '爭議中 {n} 個',
       iaa: 'IAA {n}',
+      iaaNotComputable: 'IAA 無法計算',
     },
     en: {
       coverage: 'Task coverage {n} / {total} review units',
@@ -2150,6 +2151,7 @@
       unfinalized: '{n} short of finalize threshold',
       disputed: '{n} disputed',
       iaa: 'IAA {n}',
+      iaaNotComputable: 'IAA Not computable',
     },
   };
 
@@ -2166,8 +2168,13 @@
       if (summary.pending > 0) push('pending', summary.pending);
       if (summary.unfinalized > 0) push('unfinalized', summary.unfinalized);
       if (summary.disputed > 0) push('disputed', summary.disputed);
-      /* IAA keeps the 2-decimal presentation used everywhere else. */
-      if (iaa !== undefined && iaa !== null) push('iaa', Number(iaa).toFixed(2));
+      /* IAA is tri-state (dataset-017 FR-039.4): a number renders at the
+         2-decimal precision used everywhere else; `null` means the caller
+         ran the derivation and it came back not computable, which must be
+         stated rather than silently dropped; `undefined` means this task
+         carries no IAA in its summary at all, so nothing is appended. */
+      if (iaa === null) push('iaaNotComputable', '');
+      else if (iaa !== undefined) push('iaa', Number(iaa).toFixed(2));
       result[lang] = parts.join(' · ');
     });
     return result;

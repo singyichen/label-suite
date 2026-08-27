@@ -41,33 +41,39 @@ const DEMO_TASKS = [
     id: 'T014',
     runType: 'dry_run',
     runTypeBadge: '試標',
-    reviewerSummaryZh: '任務覆蓋 9 / 15 個審核單位 · 待審 6 個 · 未達定稿門檻 8 個 · 爭議中 2 個 · IAA 0.72',
+    /* issue #489: IAA is now derived by computeIaaAlpha() from the T014
+       dry_run seed matrix (5 samples x 3 annotators, single_label) instead
+       of a hardcoded figure -- 0.59 is that derivation's alpha (0.588235),
+       rounded to 2 decimals by formatReviewSummary's toFixed(2). See
+       tests/annotation/issue-489-iaa-single-derivation.spec.ts for the
+       independently-verified Do/De/alpha values. */
+    reviewerSummaryZh: '任務覆蓋 9 / 15 個審核單位 · 待審 6 個 · 未達定稿門檻 8 個 · 爭議中 2 個 · IAA 0.59',
     reviewerSummaryEn:
-      'Task coverage 9 / 15 review units · 6 pending · 8 short of finalize threshold · 2 disputed · IAA 0.72',
+      'Task coverage 9 / 15 review units · 6 pending · 8 short of finalize threshold · 2 disputed · IAA 0.59',
   },
   {
     id: 'T015',
     runType: 'official_run',
     runTypeBadge: '正式標記',
-    reviewerSummaryZh: '任務覆蓋 3 / 4 個審核單位 · 待審 1 個 · 未達定稿門檻 2 個 · 爭議中 1 個 · IAA 0.81',
+    reviewerSummaryZh: '任務覆蓋 3 / 4 個審核單位 · 待審 1 個 · 未達定稿門檻 2 個 · 爭議中 1 個 · IAA 無法計算',
     reviewerSummaryEn:
-      'Task coverage 3 / 4 review units · 1 pending · 2 short of finalize threshold · 1 disputed · IAA 0.81',
+      'Task coverage 3 / 4 review units · 1 pending · 2 short of finalize threshold · 1 disputed · IAA Not computable',
   },
   {
     id: 'T016',
     runType: 'official_run',
     runTypeBadge: '正式標記',
-    reviewerSummaryZh: '任務覆蓋 5 / 5 個審核單位 · 未達定稿門檻 3 個 · 爭議中 1 個 · IAA 0.68',
+    reviewerSummaryZh: '任務覆蓋 5 / 5 個審核單位 · 未達定稿門檻 3 個 · 爭議中 1 個 · IAA 無法計算',
     reviewerSummaryEn:
-      'Task coverage 5 / 5 review units · 3 short of finalize threshold · 1 disputed · IAA 0.68',
+      'Task coverage 5 / 5 review units · 3 short of finalize threshold · 1 disputed · IAA Not computable',
   },
   {
     id: 'T017',
     runType: 'official_run',
     runTypeBadge: '正式標記',
-    reviewerSummaryZh: '任務覆蓋 4 / 5 個審核單位 · 待審 1 個 · 未達定稿門檻 4 個 · 爭議中 1 個 · IAA 0.70',
+    reviewerSummaryZh: '任務覆蓋 4 / 5 個審核單位 · 待審 1 個 · 未達定稿門檻 4 個 · 爭議中 1 個 · IAA 無法計算',
     reviewerSummaryEn:
-      'Task coverage 4 / 5 review units · 1 pending · 4 short of finalize threshold · 1 disputed · IAA 0.70',
+      'Task coverage 4 / 5 review units · 1 pending · 4 short of finalize threshold · 1 disputed · IAA Not computable',
   },
 ] as const;
 
