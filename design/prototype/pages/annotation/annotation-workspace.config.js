@@ -51,7 +51,7 @@
       reviewRejectLabel: '退回',
       wsReviewSubmitSuccess: '審核已送出',
       reviewNoAnswer: '（無）',
-      reviewNote: '通過：採用此筆標記。退回：記錄審核決策與修正差異，與回退標記員狀態是不同層級的效果——正式標記退回後該樣本回到待標記，產生標記員重標待辦；試標退回不改變標記員狀態，品質問題由 IAA 閘門與下一輪試標處理。',
+      reviewNote: '通過：採用此筆標記為本輸出類型的審核結果。退回：記錄審核決策與修正差異；是否回退標記員狀態依試標／正式標記而異，實際影響見下方「送出前確認」。',
       reviewCorrectionTitle: '直接修正（Reviewer 修正後答案）',
       toastSelectDecision: '請完成每位標記員的審核決策',
       toastReviewCorrectionReset: '偵測到直接修正的內容因重新整理而遺失，對應的通過／退回決策已重置，請重新確認後再送出',
@@ -157,7 +157,7 @@
       reviewRejectLabel: 'Reject',
       wsReviewSubmitSuccess: 'Review submitted',
       reviewNoAnswer: '(none)',
-      reviewNote: 'Approve: accept this annotation. Reject: records the review decision and any correction, which is a different level of effect from rolling back the annotator status -- in an official run a reject returns the sample to pending and creates a re-annotation task for the annotator; in a dry run a reject leaves the annotator status unchanged, and quality issues are handled by the IAA gate and the next dry run.',
+      reviewNote: 'Approve: accept this annotation as the review result for this output type. Reject: records the review decision and any correction; whether the annotator status is rolled back differs between a dry run and an official run -- the actual effect is stated under “Confirm before submitting” below.',
       reviewCorrectionTitle: "Direct correction (reviewer's corrected answer)",
       toastSelectDecision: 'Please decide on every annotator before submitting',
       toastReviewCorrectionReset: 'The direct correction was lost on reload, so the matching approve/reject decision was reset -- please re-confirm before submitting',
@@ -2772,9 +2772,16 @@
        annotator-status rollback unconditionally, while FR-014I scopes the
        rollback to official_run (AC-3.15/AC-6.4). Since AC-3.33 forbids any
        run_type presentation branch on the review card, the note stays ONE
-       run-type-invariant string that names both outcomes and separates the
-       review decision from the annotator-status rollback -- same shape as
-       the run-type-qualified sidebar shortcut label (issue #409). */
+       run-type-invariant string -- same shape as the run-type-qualified
+       sidebar shortcut label (issue #409).
+       issue #515 (FR-070/AC-3.40): it used to spell out BOTH run_type
+       consequences in full, duplicating the pre-submit confirmation area
+       (ws-review-summary-effect, FR-077/AC-3.42) almost verbatim -- and,
+       because this runs once per outKey, three times over on a
+       three-output-type task. The card now keeps only the
+       run-type-invariant decision-level semantics and defers the
+       consequence to the confirmation area, which sits outside the card
+       and may legally branch on run_type. */
     var note = document.createElement('p');
     note.className = 'rv-review-note';
     note.setAttribute('data-testid', 'ws-review-note');
