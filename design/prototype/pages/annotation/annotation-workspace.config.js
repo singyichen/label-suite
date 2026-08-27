@@ -49,13 +49,6 @@
       reviewApproveLabel: '通過',
       reviewRejectLabel: '退回',
       wsReviewSubmitSuccess: '審核已送出',
-      postSubmitTitle: '這個審核單位已完成',
-      postSubmitNoteSubmitted: '你的審核決策已記錄。接下來要做什麼？',
-      postSubmitNoteFinalized: '此單位已達定稿門檻並鎖定，不會再變更。接下來要做什麼？',
-      postSubmitNextUnit: '下一個可處理單位',
-      postSubmitNextUnitNone: '此任務已沒有待你處理的單位',
-      postSubmitList: '返回審核清單',
-      postSubmitDashboard: '返回 Dashboard',
       reviewNoAnswer: '（無）',
       reviewNote: '通過：採用此筆標記。退回：記錄審核決策與修正差異，與回退標記員狀態是不同層級的效果——正式標記退回後該樣本回到待標記，產生標記員重標待辦；試標退回不改變標記員狀態，品質問題由 IAA 閘門與下一輪試標處理。',
       reviewCorrectionTitle: '直接修正（Reviewer 修正後答案）',
@@ -158,13 +151,6 @@
       reviewApproveLabel: 'Approve',
       reviewRejectLabel: 'Reject',
       wsReviewSubmitSuccess: 'Review submitted',
-      postSubmitTitle: 'This review unit is done',
-      postSubmitNoteSubmitted: 'Your review decision is recorded. What next?',
-      postSubmitNoteFinalized: 'This unit met the finalize threshold and is locked. What next?',
-      postSubmitNextUnit: 'Next unit you can work on',
-      postSubmitNextUnitNone: 'No units left for you on this task',
-      postSubmitList: 'Back to review list',
-      postSubmitDashboard: 'Back to dashboard',
       reviewNoAnswer: '(none)',
       reviewNote: 'Approve: accept this annotation. Reject: records the review decision and any correction, which is a different level of effect from rolling back the annotator status -- in an official run a reject returns the sample to pending and creates a re-annotation task for the annotator; in a dry run a reject leaves the annotator status unchanged, and quality issues are handled by the IAA gate and the next dry run.',
       reviewCorrectionTitle: "Direct correction (reviewer's corrected answer)",
@@ -1512,113 +1498,6 @@
         { minReviewers: currentProfile.minReviewers || 1 }
       ) || 'pending'
     );
-  }
-
-  /* ── FR-082 / AC-4.34 (issue #456 AC-5): the ways out of a finished unit ──
-     Whether the exits belong on screen is a question about STORED STATE --
-     "have I already reviewed this unit, or is it finalized?" -- not about
-     an event that just fired. Deriving it that way is what makes the card
-     survive a reload and appear on a finished unit the reviewer merely
-     revisits; a submit-time flag would do neither, and would also have to
-     be cleared on every sample switch to avoid lying. */
-  function isUnitDoneForViewer(unit) {
-    if (!unit) return false;
-    var submitted = window.LabelSuiteAnnotationWorkspaceData.isSampleSubmitted(
-      currentProfile.id, 'reviewer', currentRunType, unit.recordId, unitIdentity(unit)
-    );
-    return submitted || reviewUnitState(unit) === 'finalized';
-  }
-
-  /* 下一個可處理單位 is deliberately NOT units[i + 1]: on a multi-annotator
-     sample the neighbouring unit is often one this reviewer already finished
-     (or one that finalized without them), and handing someone a locked page
-     is worse than offering no link at all. Wraps once so a reviewer who
-     entered mid-list still reaches the units before their entry point. */
-  function findNextActionableUnit() {
-    var units = buildUnits();
-    if (!units.length) return null;
-    var start = currentUnitIndex(units);
-    for (var step = 1; step <= units.length; step += 1) {
-      var unit = units[(start + step) % units.length];
-      if (!isUnitDoneForViewer(unit)) return unit;
-    }
-    return null;
-  }
-
-  function renderPostSubmitCta() {
-    var mount = document.getElementById('wsPostSubmitMount');
-    if (!mount) return;
-    mount.innerHTML = '';
-    if (currentRole !== 'reviewer') return;
-    var units = buildUnits();
-    var unit = units[currentUnitIndex(units)];
-    if (!unit || !isCurrentUnit(unit) || !isUnitDoneForViewer(unit)) return;
-
-    var card = document.createElement('div');
-    card.className = 'content-card rv-exits';
-    card.setAttribute('data-testid', 'ws-post-submit-cta');
-
-    var title = document.createElement('div');
-    title.className = 'rv-exits-title';
-    title.id = 'wsPostSubmitCtaTitle';
-    title.setAttribute('data-testid', 'ws-post-submit-cta-title');
-    title.textContent = t('postSubmitTitle');
-    card.appendChild(title);
-
-    /* AC-7: the situation is stated in words. The two wordings are not
-       cosmetic -- "my review is in" and "this unit is locked for everyone"
-       are different facts, and only the second one is terminal. */
-    var note = document.createElement('p');
-    note.className = 'rv-exits-note';
-    note.textContent = t(reviewUnitState(unit) === 'finalized'
-      ? 'postSubmitNoteFinalized' : 'postSubmitNoteSubmitted');
-    card.appendChild(note);
-
-    var nav = document.createElement('nav');
-    nav.className = 'rv-exits-actions';
-    nav.setAttribute('aria-labelledby', 'wsPostSubmitCtaTitle');
-
-    var next = findNextActionableUnit();
-    if (next) {
-      var nextBtn = document.createElement('button');
-      nextBtn.type = 'button';
-      nextBtn.className = 'btn btn-cta';
-      nextBtn.setAttribute('data-testid', 'ws-post-submit-next-unit');
-      nextBtn.setAttribute('data-record-id', next.recordId);
-      nextBtn.setAttribute('data-annotator-id', next.annotatorId);
-      nextBtn.textContent = t('postSubmitNextUnit');
-      nextBtn.addEventListener('click', function () {
-        selectSample(next.recordId, next.annotatorId);
-      });
-      nav.appendChild(nextBtn);
-    } else {
-      /* No link is offered rather than a disabled one: there is nothing to
-         go to, and saying so is more useful than a dead control. */
-      var none = document.createElement('span');
-      none.className = 'rv-exits-none';
-      none.setAttribute('data-testid', 'ws-post-submit-next-none');
-      none.textContent = t('postSubmitNextUnitNone');
-      nav.appendChild(none);
-    }
-
-    var listLink = document.createElement('a');
-    listLink.className = 'btn btn-outline';
-    listLink.setAttribute('data-testid', 'ws-post-submit-list');
-    listLink.href = buildListReturnUrl();
-    listLink.textContent = t('postSubmitList');
-    nav.appendChild(listLink);
-
-    /* The dashboard is a different destination, not a filtered list, so it
-       deliberately does not carry the list view state. */
-    var dashLink = document.createElement('a');
-    dashLink.className = 'btn btn-outline';
-    dashLink.setAttribute('data-testid', 'ws-post-submit-dashboard');
-    dashLink.href = '../dashboard/dashboard.html';
-    dashLink.textContent = t('postSubmitDashboard');
-    nav.appendChild(dashLink);
-
-    card.appendChild(nav);
-    mount.appendChild(card);
   }
 
   function isCurrentUnit(unit) {
@@ -3761,11 +3640,6 @@
        empty unit) is a path with nothing to summarize, so hide first and
        let the interactive path re-render it at the end. */
     hideReviewSubmitSummary();
-    /* Hooked here rather than in renderWorkspace() so all three reviewer
-       render paths -- initial load, an arbitration submit and a review
-       submit -- refresh the exits together with everything else they
-       already re-render. */
-    renderPostSubmitCta();
     /* issue #196 (CONT-03): restore any in-progress decisions persisted by
        persistReviewDraft() before this render -- a reload must not silently
        undecide rows the reviewer already chose.
