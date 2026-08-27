@@ -3425,13 +3425,14 @@
     { name: 'Rachel Wu', email: 'rachel.wu@labelsuite.io', taskRole: 'reviewer', status: 'active', joinedAt: '2026-04-20 10:14', lastActive: '2026-04-21 08:47' },
     { name: 'Alex Wang', email: 'alex.wang@labelsuite.io', taskRole: 'annotator', status: 'active', joinedAt: '2026-04-20 10:15', lastActive: '2026-04-21 09:12' },
     { name: 'Olivia Lin', email: 'olivia.lin@labelsuite.io', taskRole: 'annotator', status: 'active', joinedAt: '2026-04-20 10:16', lastActive: '2026-04-21 08:58' },
-    /* issue #505: kept active so the default 3-annotator seed satisfies
-       DEFAULT_TASK_DATA.minAnnotators=3 out of the box -- the FR-010t
-       publish gate (getMembershipGapMessages()) counts active members, and
-       every regression test that publishes a trial round assumes T001 is
-       already publish-ready. Member management can still disable this row
-       through the normal UI to exercise the gate itself. */
-    { name: 'Jason Huang', email: 'jason.h@labelsuite.io', taskRole: 'annotator', status: 'active', joinedAt: '2026-04-20 10:18', lastActive: '2026-04-20 16:11' },
+    { name: 'Jason Huang', email: 'jason.h@labelsuite.io', taskRole: 'annotator', status: 'disabled', joinedAt: '2026-04-20 10:18', lastActive: '2026-04-20 16:11' },
+    /* issue #505: 4th active annotator so the default seed has 3 *active*
+       annotators (Alex, Olivia, Derek) against DEFAULT_TASK_DATA.minAnnotators=3
+       -- the FR-010t publish gate (getMembershipGapMessages()) counts active
+       members. Jason Huang stays disabled: DEFAULT_UNASSIGNED_ANNOTATION_ASSIGNMENTS
+       seeds a "member removed mid-run" backstory attributed to him, and the
+       member table keeps one disabled-status demo row. */
+    { name: 'Derek Yeh', email: 'derek.yeh@labelsuite.io', taskRole: 'annotator', status: 'active', joinedAt: '2026-04-20 10:19', lastActive: '2026-04-21 09:05' },
   ];
 
   /* Review workload seed (issue #148). `已指派` is always derived as

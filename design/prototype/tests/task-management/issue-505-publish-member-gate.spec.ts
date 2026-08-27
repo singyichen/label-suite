@@ -32,7 +32,8 @@ test.describe('Publish member-count gate (FR-010t, SC-038)', () => {
     await page.goto(TASK_DETAIL_URL + '?task_id=T001');
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
 
-    // Default T001 seed has exactly 3 active annotators against min_annotators=3;
+    // Default T001 seed has exactly 3 active annotators (Alex Wang, Olivia
+    // Lin, Derek Yeh -- Jason Huang stays disabled) against min_annotators=3;
     // disabling one (Alex Wang) drops the active count to 2, opening a gap of 1.
     await disableMember(page, 'Alex Wang');
 
