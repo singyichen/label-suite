@@ -100,3 +100,52 @@ test('escapes raw HTML in Markdown source (no script injection)', async ({ page 
   expect(result.anchorCount).toBe(0);
   expect(result.headingText).toContain('<img src=x onerror="alert(1)">');
 });
+
+/* Issue #527 decision record (maintainer, 2026-08-27): the minimal renderer
+ * also covers fenced code blocks, tables and images; image src goes through
+ * the same protocol allowlist as link href.
+ */
+const renderDom = (page: import('@playwright/test').Page, source: string) =>
+  page.evaluate((src) => {
+    const tpl = document.createElement('template');
+    tpl.innerHTML = (window as any).renderMarkdown(src);
+    const q = (sel: string) => Array.from(tpl.content.querySelectorAll(sel));
+    return {
+      pre: q('pre > code').map((el) => el.textContent),
+      b: q('b').length,
+      th: q('th').map((el) => el.textContent),
+      td: q('td').map((el) => el.textContent),
+      img: q('img').map((el) => ({ src: el.getAttribute('src'), alt: el.getAttribute('alt') })),
+    };
+  }, source);
+
+test('renders fenced code blocks with escaped content', async ({ page }) => {
+  await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001' }));
+  await dismissGuidelineModal(page);
+
+  const r = await renderDom(page, '```json\n{"label": "<b>x</b>"}\n**not bold**\n```');
+  expect(r.pre).toEqual(['{"label": "<b>x</b>"}\n**not bold**']);
+  expect(r.b).toBe(0);
+});
+
+test('renders pipe tables with a header row', async ({ page }) => {
+  await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001' }));
+  await dismissGuidelineModal(page);
+
+  const r = await renderDom(page, '| 標籤 | 說明 |\n|---|---|\n| positive | **正面** |\n| negative | 負面 |');
+  expect(r.th).toEqual(['標籤', '說明']);
+  expect(r.td).toEqual(['positive', '正面', 'negative', '負面']);
+});
+
+test('renders images and drops unsafe image sources', async ({ page }) => {
+  await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001' }));
+  await dismissGuidelineModal(page);
+
+  const r = await renderDom(
+    page,
+    '![範例圖](../../assets/images/task-management/generic-guideline-example.svg)\n\n![bad](javascript:alert(1))'
+  );
+  expect(r.img).toEqual([
+    { src: '../../assets/images/task-management/generic-guideline-example.svg', alt: '範例圖' },
+  ]);
+});
