@@ -1678,6 +1678,65 @@ test_check_sdd_rejects_suffixed_source_verify_id() {
     assert_command_fails_with "$repo" 1 "SOURCE_VERIFY_ID" "openspec/changes/project-sdd-lint/design.md" --not-rule SPEC_REQUIRED_IDS
 }
 
+test_check_sdd_requires_exact_multisegment_source_verify_ids() {
+    local repo
+
+    repo="$(make_sdd_repo)"
+    printf '\n### AC-1.1.9\n' >> "$repo/specs/foundation/001-project-sdd-lint/spec.md"
+    printf '\nAC-1.1.9\n' >> "$repo/openspec/changes/project-sdd-lint/design.md"
+
+    assert_command_succeeds "$repo"
+
+    repo="$(make_sdd_repo)"
+    printf '\nAC-1.1.9\n' >> "$repo/openspec/changes/project-sdd-lint/design.md"
+
+    assert_command_fails_with "$repo" 1 "SOURCE_VERIFY_ID" "openspec/changes/project-sdd-lint/design.md"
+}
+
+test_check_sdd_requires_one_unconsumed_red_per_green() {
+    local repo
+
+    repo="$(make_sdd_repo)"
+    printf '\n- [ ] 1.3 Red contract in `scripts/second-tests.sh`. [@senior-qa]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+    printf -- '- [ ] 1.4 Green command in `scripts/second.sh`. [@senior-devops]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+
+    assert_command_succeeds "$repo"
+
+    repo="$(make_sdd_repo)"
+    printf '\n- [ ] 1.3 Green command in `scripts/second.sh`. [@senior-devops]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+
+    assert_command_fails_with "$repo" 1 "TASK_RED_OWNER" "openspec/changes/project-sdd-lint/tasks.md"
+}
+
+test_check_sdd_rejects_prescriptive_example_retired_command() {
+    local repo
+
+    repo="$(make_sdd_repo)"
+    printf '\nHistorical retired example，例如 do not run npm test before review.\n' >> "$repo/AGENTS.md"
+
+    assert_command_succeeds "$repo" --not-rule RETIRED_COMMAND
+
+    repo="$(make_sdd_repo)"
+    printf '\nFor active checks，例如 run npm test before review.\n' >> "$repo/AGENTS.md"
+
+    assert_command_fails_with "$repo" 1 "RETIRED_COMMAND" "AGENTS.md"
+}
+
+test_check_sdd_scans_symlinked_active_change_consumers() {
+    local change_target repo
+
+    repo="$(make_sdd_repo)"
+    change_target="$repo/openspec/project-sdd-lint-target"
+    mv "$repo/openspec/changes/project-sdd-lint" "$change_target"
+    ln -s ../project-sdd-lint-target "$repo/openspec/changes/project-sdd-lint"
+
+    assert_command_succeeds "$repo"
+
+    printf '\nRun npm run lint before applying.\n' >> "$change_target/design.md"
+
+    assert_command_fails_with "$repo" 1 "RETIRED_COMMAND" "openspec/changes/project-sdd-lint/design.md"
+}
+
 test_check_sdd_rejects_retired_command_in_active_openspec_config() {
     local repo
     repo="$(make_sdd_repo)"
@@ -1807,6 +1866,10 @@ test_check_sdd_fails_for_spec_ready_near_match_goal_heading_without_ids
 test_check_sdd_rejects_arbitrary_dependency_heading_suffix
 test_check_sdd_accepts_approved_dependency_heading_suffix
 test_check_sdd_rejects_suffixed_source_verify_id
+test_check_sdd_requires_exact_multisegment_source_verify_ids
+test_check_sdd_requires_one_unconsumed_red_per_green
+test_check_sdd_rejects_prescriptive_example_retired_command
+test_check_sdd_scans_symlinked_active_change_consumers
 test_check_sdd_rejects_retired_command_in_active_openspec_config
 test_check_sdd_excludes_deprecated_task_template_retired_wording
 test_check_sdd_rejects_nonpath_exception_files_value
