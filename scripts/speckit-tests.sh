@@ -1755,6 +1755,85 @@ test_check_sdd_rejects_nonhistorical_active_retired_command() {
     assert_command_fails_with "$repo" 1 "RETIRED_COMMAND" "AGENTS.md"
 }
 
+test_check_sdd_requires_explicit_retired_command_context() {
+    local repo
+
+    repo="$(make_sdd_repo)"
+    printf '\nThis command is retired; do not run npm test before review.\n' >> "$repo/AGENTS.md"
+
+    assert_command_succeeds "$repo" --not-rule RETIRED_COMMAND
+
+    repo="$(make_sdd_repo)"
+    printf '\nThis command is not retired: run npm test before review.\n' >> "$repo/AGENTS.md"
+
+    assert_command_fails_with "$repo" 1 "RETIRED_COMMAND" "AGENTS.md"
+
+    repo="$(make_sdd_repo)"
+    printf '\nFor changelog validation, run npm test before review.\n' >> "$repo/AGENTS.md"
+
+    assert_command_fails_with "$repo" 1 "RETIRED_COMMAND" "AGENTS.md"
+}
+
+test_check_sdd_scans_symlinked_agents_consumers() {
+    local agents_target repo
+
+    repo="$(make_sdd_repo)"
+    agents_target="$repo/.claude/agents-target"
+    mv "$repo/.claude/agents" "$agents_target"
+    ln -s agents-target "$repo/.claude/agents"
+
+    assert_command_succeeds "$repo"
+
+    printf '\nRun npm test before review.\n' >> "$agents_target/senior-qa.md"
+
+    assert_command_fails_with "$repo" 1 "RETIRED_COMMAND" ".claude/agents/senior-qa.md"
+}
+
+test_check_sdd_rejects_control_character_descendant_in_symlinked_agents_root() {
+    local agents_target repo unsafe_path
+
+    repo="$(make_sdd_repo)"
+    agents_target="$repo/.claude/agents-target"
+    mv "$repo/.claude/agents" "$agents_target"
+    ln -s agents-target "$repo/.claude/agents"
+    unsafe_path="$agents_target/CONTROL_SYMLINKED_AGENTS_NEWLINE_MARKER"$'\n'"guidance.md"
+    printf '# Unsafe linked guidance\n\nRun npm test before review.\n' > "$unsafe_path"
+
+    assert_command_fails_with "$repo" 2 "SCANNER_CONFIG" "."
+}
+
+test_check_sdd_uses_parsed_action_artifacts_for_task_ownership() {
+    local repo
+
+    repo="$(make_sdd_repo)"
+    printf '\n- [ ] 1.3 Modify `scripts/owned.sh`. [@main]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+
+    assert_command_fails_with "$repo" 1 "TASK_FILE_OWNER" "openspec/changes/project-sdd-lint/tasks.md"
+
+    repo="$(make_sdd_repo)"
+    printf '\n- [ ] 1.3 Run `bash -n`; modify `scripts/owned.sh`. [@main]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+
+    assert_command_fails_with "$repo" 1 "TASK_FILE_OWNER" "openspec/changes/project-sdd-lint/tasks.md"
+}
+
+test_check_sdd_requires_all_red_tasks_paired_before_eof() {
+    local repo
+
+    repo="$(make_sdd_repo)"
+    assert_command_succeeds "$repo"
+
+    repo="$(make_sdd_repo)"
+    printf '\n- [ ] 1.3 Red contract in `scripts/second-tests.sh`. [@senior-qa]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+    printf -- '- [ ] 1.4 Green command in `scripts/second.sh`. [@senior-devops]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+
+    assert_command_succeeds "$repo"
+
+    repo="$(make_sdd_repo)"
+    printf '\n- [ ] 1.3 Red contract in `scripts/unpaired-tests.sh`. [@senior-qa]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+
+    assert_command_fails_with "$repo" 1 "TASK_RED_OWNER" "openspec/changes/project-sdd-lint/tasks.md"
+}
+
 test_check_sdd_rejects_retired_command_in_active_openspec_config() {
     local repo
     repo="$(make_sdd_repo)"
@@ -1839,6 +1918,7 @@ test_check_sdd_accepts_non_shell_red_task_with_qa_owner() {
     local repo
     repo="$(make_sdd_repo)"
     printf '\n- [ ] 1.3 Red backend regression in `backend/tests/test_sdd_lint.py`. [@senior-qa]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+    printf -- '- [ ] 1.4 Green backend implementation in `backend/app/sdd_lint.py`. [@main]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
 
     assert_command_succeeds "$repo"
 }
@@ -1890,6 +1970,11 @@ test_check_sdd_rejects_prescriptive_example_retired_command
 test_check_sdd_scans_symlinked_active_change_consumers
 test_check_sdd_does_not_consume_red_mentioning_paired_green
 test_check_sdd_rejects_nonhistorical_active_retired_command
+test_check_sdd_requires_explicit_retired_command_context
+test_check_sdd_scans_symlinked_agents_consumers
+test_check_sdd_rejects_control_character_descendant_in_symlinked_agents_root
+test_check_sdd_uses_parsed_action_artifacts_for_task_ownership
+test_check_sdd_requires_all_red_tasks_paired_before_eof
 test_check_sdd_rejects_retired_command_in_active_openspec_config
 test_check_sdd_excludes_deprecated_task_template_retired_wording
 test_check_sdd_rejects_nonpath_exception_files_value
