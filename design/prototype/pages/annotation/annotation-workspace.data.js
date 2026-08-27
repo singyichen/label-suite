@@ -2317,6 +2317,132 @@
   }
 
   migrateLegacySubmissionStore();
+  /* ── IAA (Krippendorff's Alpha, nominal) ─────────────────────────
+   *
+   * THE single derivation of inter-annotator agreement in the prototype.
+   * Before issue #489 the same T014 dry run reported 0.72 / 0.00 / 0.68 /
+   * 0.85 in four places, none of them derived from the marks; every
+   * consumer now reads this function instead of carrying its own constant.
+   * dataset-017 FR-039 is the spec-side canon for the semantics below.
+   *
+   * Inputs are ANNOTATOR submissions only -- a reviewer is not a rater
+   * (issue #488 decision D2), so their corrections never enter the sum.
+   *
+   *   Do = Σ_units  Σ_{c≠k} n_uc·n_uk / (m_u − 1)
+   *   De = Σ_{c≠k} n_c·n_k / (n − 1)
+   *   α  = 1 − Do/De
+   *
+   * Units rated by fewer than two annotators contribute nothing to Do and
+   * are excluded from n as well -- a single mark cannot disagree with
+   * itself, and counting it would inflate De against an empty Do.
+   *
+   * α is UNDEFINED when De = 0 (fewer than two effective units, or every
+   * annotator picked the same category). We return computable:false rather
+   * than a number, because 0.00 reads as "total disagreement" when it
+   * actually means "not enough data" -- that conflation is issue #491.
+   * Callers must render the reason, never coerce to a value.
+   *
+   * Nominal α only fits nominal categories, so single_label is the only
+   * output type derived here; every other type reports
+   * 'unsupported_output_type' instead of a fabricated figure. */
+  var IAA_NOMINAL_OUTPUT_TYPES = ['single_label'];
+
+  function iaaCategory(outKey, submission) {
+    if (!submission) return null;
+    /* Bypassed outputs are missing values, not answers -- but CompactAnswer
+       does not carry the bypass flag yet (dataset-017 FR-040 records this
+       as a separate data-layer item), so today only an absent selection is
+       detectable. */
+    var state = (submission.previewState && submission.previewState[outKey]) || {};
+    var selected = state.selected;
+    return (typeof selected === 'string' && selected) ? selected : null;
+  }
+
+  function computeIaaAlpha(taskId, runType, outKey) {
+    if (IAA_NOMINAL_OUTPUT_TYPES.indexOf(outKey) === -1) {
+      return { computable: false, reason: 'unsupported_output_type', outKey: outKey };
+    }
+    var detail = findTaskDetailProfile(taskId);
+    if (!detail) return { computable: false, reason: 'unknown_task', outKey: outKey };
+
+    var perUnit = [];
+    (detail.datasetRecords || []).forEach(function (record, index) {
+      var sampleId = getRecordId(record, index);
+      var counts = {};
+      var raters = 0;
+      getReviewerMockRows(taskId, sampleId).forEach(function (mockRow) {
+        var category = iaaCategory(
+          outKey,
+          getSubmission(taskId, 'annotator', runType, sampleId, { annotatorId: mockRow.annotator }));
+        if (category === null) return;
+        counts[category] = (counts[category] || 0) + 1;
+        raters += 1;
+      });
+      if (raters >= 2) perUnit.push({ counts: counts, raters: raters });
+    });
+
+    var observed = 0;
+    var totals = {};
+    var valueCount = 0;
+    perUnit.forEach(function (unit) {
+      observed += pairwiseDisagreement(unit.counts) / (unit.raters - 1);
+      Object.keys(unit.counts).forEach(function (category) {
+        totals[category] = (totals[category] || 0) + unit.counts[category];
+      });
+      valueCount += unit.raters;
+    });
+
+    if (valueCount < 2) {
+      return {
+        computable: false, reason: 'insufficient_samples', outKey: outKey,
+        units: perUnit.length, values: valueCount,
+      };
+    }
+    var expected = pairwiseDisagreement(totals) / (valueCount - 1);
+    if (expected === 0) {
+      return {
+        computable: false, reason: 'no_variance', outKey: outKey,
+        units: perUnit.length, values: valueCount,
+      };
+    }
+    return {
+      computable: true, outKey: outKey,
+      alpha: 1 - observed / expected,
+      observed: observed, expected: expected,
+      units: perUnit.length, values: valueCount,
+      raters: Object.keys(totals).length ? countDistinctRaters(taskId, runType, detail, outKey) : 0,
+    };
+  }
+
+  /* Σ_{c≠k} n_c·n_k over a category-count map. */
+  function pairwiseDisagreement(counts) {
+    var categories = Object.keys(counts);
+    var sum = 0;
+    categories.forEach(function (a) {
+      categories.forEach(function (b) {
+        if (a !== b) sum += counts[a] * counts[b];
+      });
+    });
+    return sum;
+  }
+
+  /* How many distinct annotators contributed at least one mark -- shown
+     next to α ("N 位標記員"), which is why it counts people rather than
+     marks. */
+  function countDistinctRaters(taskId, runType, detail, outKey) {
+    var seen = {};
+    (detail.datasetRecords || []).forEach(function (record, index) {
+      var sampleId = getRecordId(record, index);
+      getReviewerMockRows(taskId, sampleId).forEach(function (mockRow) {
+        if (iaaCategory(outKey, getSubmission(
+          taskId, 'annotator', runType, sampleId, { annotatorId: mockRow.annotator })) !== null) {
+          seen[mockRow.annotator] = true;
+        }
+      });
+    });
+    return Object.keys(seen).length;
+  }
+
   migrateLegacyArbitrationStore();
   seedReviewFlowDemo();
 
@@ -2364,5 +2490,7 @@
     submitArbitration: submitArbitration,
     resolveDisputeConvergence: resolveDisputeConvergence,
     describeDisputeVotes: describeDisputeVotes,
+    computeIaaAlpha: computeIaaAlpha,
+    IAA_NOMINAL_OUTPUT_TYPES: IAA_NOMINAL_OUTPUT_TYPES,
   };
 })(window);
