@@ -53,9 +53,9 @@
     <h1>試標審核詳細流程</h1>
     <p class="standfirst">試標的同一份樣本由多位標記員各自提交，因此拆成多個獨立審核單位。「爭議中」不是終點——逐項裁定完成後仍會推導為已定稿。試標的退回也不會把樣本退回標記員重標，只寫下審核決策。</p>
 
-    <svg viewBox="0 0 1200 980" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="rvdry-title rvdry-desc">
+    <svg viewBox="0 0 1200 1160" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="rvdry-title rvdry-desc">
       <title id="rvdry-title">試標審核詳細流程</title>
-      <desc id="rvdry-desc">流程圖：試標提交後拆成樣本乘標記員的審核單位，審核員逐單位審核。先判斷已審人數是否達門檻，未達則停在已同意或已修改的過渡狀態等待下一位審核員；達門檻後判斷審核員是否改動答案，無人改動即定稿唯讀，有改動則進入逐項嚴格多數決。退回同樣是一筆審核提交，一樣計入已審人數並往下推導，因此退回而未改動答案的單位仍會定稿。計票時，已提交審核但該項未改動的審核員其票計給標記員原答案，尚未提交者不計入分母；全員都改動時原答案不列為候選；未達已提交人數一半即不收斂；收斂即定稿，平手或全分歧才落入爭議池，由具仲裁資格的審核員逐項裁定後定稿。退回在試標只記錄審核決策，不改變標記員狀態。右欄標註示範任務 T014 因只需一位審核員而簡化掉的兩個節點。底部為任務層級流程：全體標記員提交完成後任務轉為待 IAA 確認，經 IAA 檢核給出顧問性警示；未達標僅顯示警示，不阻擋開放正式標記，是否再跑一輪由人工決定。</desc>
+      <desc id="rvdry-desc">流程圖：試標提交後拆成樣本乘標記員的審核單位，審核員逐單位審核。先判斷已審人數是否達門檻，未達則停在已同意或已修改的過渡狀態等待下一位審核員；達門檻後判斷審核員是否改動答案，無人改動即定稿唯讀，有改動則進入逐項嚴格多數決。退回同樣是一筆審核提交，一樣計入已審人數並往下推導，因此退回而未改動答案的單位仍會定稿。計票時，已提交審核但該項未改動的審核員其票計給標記員原答案，尚未提交者不計入分母；全員都改動時原答案不列為候選；未達已提交人數一半即不收斂；收斂即定稿，平手或全分歧才落入爭議池，由具仲裁資格的審核員逐項裁定後定稿。退回在試標只記錄審核決策，不改變標記員狀態。右欄標註示範任務 T014 因只需一位審核員而簡化掉的兩個節點。底部為任務層級流程：全體標記員提交完成後任務轉為待 IAA 確認，該轉態只看標記提交、不看審核進度。此後有兩條各自獨立的品質輸入——標記員的原始答案彙總為標記一致性（IAA），審核員的審核決策彙總為標記員被修改率；兩項指標都不阻擋開放正式標記，由專案主持人判讀後決定要開放正式標記，或修訂指引後再跑一輪試標（修訂紀錄必填）。</desc>
 
       <defs>
         <marker id="arw" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#64748B"/></marker>
@@ -225,50 +225,78 @@
       <text x="40" y="796" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" letter-spacing="0.18em">任務層級（以上皆為單一審核單位層級）</text>
 
       <path d="M 256 838 H 312" fill="none" stroke="#94A3B8" stroke-width="1.2" marker-end="url(#arw-sf)"/>
-      <path d="M 504 838 H 560" fill="none" stroke="#94A3B8" stroke-width="1.2" marker-end="url(#arw-sf)"/>
-      <path d="M 792 838 H 848" fill="none" stroke="#94A3B8" stroke-width="1.2" marker-end="url(#arw-sf)"/>
 
       <rect x="64" y="812" width="192" height="52" rx="6" fill="#1E1B4B08" stroke="#94A3B8" stroke-width="1" stroke-dasharray="4,3"/>
       <text x="160" y="835" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">全體標記員提交完成</text>
-      <text x="160" y="850" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">無未指派試標作業 · 與審核進度無關</text>
+      <text x="160" y="850" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">無未指派試標作業 · 轉態不看審核進度</text>
 
       <rect x="312" y="812" width="192" height="52" rx="6" fill="#1E1B4B08" stroke="#94A3B8" stroke-width="1" stroke-dasharray="4,3"/>
       <text x="408" y="835" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">任務轉為「待 IAA 確認」</text>
       <text x="408" y="850" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">試標階段結束</text>
 
-      <rect x="560" y="812" width="232" height="52" rx="6" fill="#1E1B4B08" stroke="#94A3B8" stroke-width="1" stroke-dasharray="4,3"/>
-      <text x="676" y="835" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">標記一致性檢核（顧問性）</text>
-      <text x="676" y="850" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">門檻由輸出類型 registry 決定</text>
+      <!-- 兩條品質輸入：標記員原始答案 → IAA；審核決策 → 被修改率 -->
+      <path d="M 408 864 V 884 H 48 V 932 H 64" fill="none" stroke="#94A3B8" stroke-width="1.2" marker-end="url(#arw-sf)"/>
+      <path d="M 48 932 V 1004 H 64" fill="none" stroke="#94A3B8" stroke-width="1.2" marker-end="url(#arw-sf)"/>
+      <path d="M 280 932 H 336" fill="none" stroke="#94A3B8" stroke-width="1.2" marker-end="url(#arw-sf)"/>
+      <path d="M 280 1004 H 336" fill="none" stroke="#94A3B8" stroke-width="1.2" marker-end="url(#arw-sf)"/>
+      <path d="M 592 1004 H 624 V 968" fill="none" stroke="#94A3B8" stroke-width="1.2"/>
+      <path d="M 592 932 H 624 V 968 H 656" fill="none" stroke="#94A3B8" stroke-width="1.2" marker-end="url(#arw-sf)"/>
+      <path d="M 848 968 H 880 V 932 H 904" fill="none" stroke="#94A3B8" stroke-width="1.2" marker-end="url(#arw-sf)"/>
+      <path d="M 848 968 H 880 V 1004 H 904" fill="none" stroke="#94A3B8" stroke-width="1.2" marker-end="url(#arw-sf)"/>
 
-      <rect x="848" y="812" width="216" height="52" rx="6" fill="#1E1B4B08" stroke="#94A3B8" stroke-width="1" stroke-dasharray="4,3"/>
-      <text x="956" y="835" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">達標/未達標皆可開放</text>
-      <text x="956" y="850" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">未達標僅顯示警示，不阻擋</text>
+      <rect x="64" y="906" width="216" height="52" rx="6" fill="#1E1B4B08" stroke="#94A3B8" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="172" y="929" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">標記員原始答案</text>
+      <text x="172" y="944" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">未經審核員修正</text>
 
-      <text x="64" y="890" fill="#64748B" font-size="14" font-style="italic" font-family="'Crimson Pro','Noto Serif TC',serif">一致性算的是標記員各自的原始答案，不是審核或仲裁的定案值——試標的已定稿單位不產生審核 gold。</text>
+      <rect x="64" y="978" width="216" height="52" rx="6" fill="#1E1B4B08" stroke="#94A3B8" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="172" y="1001" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">審核員審核決策</text>
+      <text x="172" y="1016" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">同意 · 修改 · 退回</text>
+
+      <rect x="336" y="906" width="256" height="52" rx="6" fill="#1E1B4B08" stroke="#94A3B8" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="464" y="929" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">標記一致性（IAA）</text>
+      <text x="464" y="944" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">門檻由輸出類型 registry 決定</text>
+
+      <rect x="336" y="978" width="256" height="52" rx="6" fill="#1E1B4B08" stroke="#94A3B8" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="464" y="1001" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">標記員被修改率</text>
+      <text x="464" y="1016" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">分母排除未審單位 · 8 型全納</text>
+
+      <rect x="656" y="906" width="192" height="124" rx="6" fill="#1E1B4B08" stroke="#94A3B8" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="752" y="963" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">由專案主持人判讀</text>
+      <text x="752" y="978" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">兩項指標皆不阻擋</text>
+
+      <rect x="904" y="906" width="248" height="52" rx="6" fill="#1E1B4B08" stroke="#94A3B8" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="1028" y="929" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">開放正式標記</text>
+      <text x="1028" y="944" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">達標／未達標皆可開放</text>
+
+      <rect x="904" y="978" width="248" height="52" rx="6" fill="#1E1B4B08" stroke="#94A3B8" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="1028" y="1001" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">修訂指引後再跑 R{n}</text>
+      <text x="1028" y="1016" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">修訂紀錄必填</text>
+
+      <text x="64" y="1058" fill="#64748B" font-size="14" font-style="italic" font-family="'Crimson Pro','Noto Serif TC',serif">一致性算的是標記員各自的原始答案，被修改率算的是審核員的決策——兩者衡量不同的事，皆不阻擋流程；試標的已定稿單位不產生審核 gold。</text>
 
       <!-- ══ Legend：五態（沿用產品 status pill 配色） ══ -->
-      <line x1="40" y1="912" x2="1160" y2="912" stroke="rgba(30,27,75,0.10)" stroke-width="0.8"/>
-      <text x="40" y="928" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" letter-spacing="0.18em">審核單位五態</text>
+      <line x1="40" y1="1080" x2="1160" y2="1080" stroke="rgba(30,27,75,0.10)" stroke-width="0.8"/>
+      <text x="40" y="1096" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" letter-spacing="0.18em">審核單位五態</text>
 
-      <rect x="40" y="940" width="52" height="16" rx="4" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
-      <text x="66" y="951" fill="#64748B" font-size="9" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">待審</text>
-      <text x="100" y="951" fill="#94A3B8" font-size="8" font-family="'JetBrains Mono', monospace">尚未有人審核</text>
+      <rect x="40" y="1108" width="52" height="16" rx="4" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
+      <text x="66" y="1119" fill="#64748B" font-size="9" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">待審</text>
+      <text x="100" y="1119" fill="#94A3B8" font-size="8" font-family="'JetBrains Mono', monospace">尚未有人審核</text>
 
-      <rect x="244" y="940" width="52" height="16" rx="4" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="1"/>
-      <text x="270" y="951" fill="#1D4ED8" font-size="9" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">已同意</text>
-      <text x="304" y="951" fill="#94A3B8" font-size="8" font-family="'JetBrains Mono', monospace">一致但人數未達 · 未定稿</text>
+      <rect x="244" y="1108" width="52" height="16" rx="4" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="1"/>
+      <text x="270" y="1119" fill="#1D4ED8" font-size="9" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">已同意</text>
+      <text x="304" y="1119" fill="#94A3B8" font-size="8" font-family="'JetBrains Mono', monospace">一致但人數未達 · 未定稿</text>
 
-      <rect x="448" y="940" width="52" height="16" rx="4" fill="#FEFCE8" stroke="#FEF08A" stroke-width="1"/>
-      <text x="474" y="951" fill="#A16207" font-size="9" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">已修改</text>
-      <text x="508" y="951" fill="#94A3B8" font-size="8" font-family="'JetBrains Mono', monospace">有改動但人數未達 · 未定稿</text>
+      <rect x="448" y="1108" width="52" height="16" rx="4" fill="#FEFCE8" stroke="#FEF08A" stroke-width="1"/>
+      <text x="474" y="1119" fill="#A16207" font-size="9" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">已修改</text>
+      <text x="508" y="1119" fill="#94A3B8" font-size="8" font-family="'JetBrains Mono', monospace">有改動但人數未達 · 未定稿</text>
 
-      <rect x="652" y="940" width="52" height="16" rx="4" fill="#FEF2F2" stroke="#FECACA" stroke-width="1"/>
-      <text x="678" y="951" fill="#B91C1C" font-size="9" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">爭議中</text>
-      <text x="712" y="951" fill="#94A3B8" font-size="8" font-family="'JetBrains Mono', monospace">未收斂 · 未定稿 · 待仲裁</text>
+      <rect x="652" y="1108" width="52" height="16" rx="4" fill="#FEF2F2" stroke="#FECACA" stroke-width="1"/>
+      <text x="678" y="1119" fill="#B91C1C" font-size="9" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">爭議中</text>
+      <text x="712" y="1119" fill="#94A3B8" font-size="8" font-family="'JetBrains Mono', monospace">未收斂 · 未定稿 · 待仲裁</text>
 
-      <rect x="872" y="940" width="52" height="16" rx="4" fill="#F0FDF4" stroke="#BBF7D0" stroke-width="1"/>
-      <text x="898" y="951" fill="#15803D" font-size="9" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">已定稿</text>
-      <text x="932" y="951" fill="#94A3B8" font-size="8" font-family="'JetBrains Mono', monospace">全員無異議、收斂或仲裁完成（終態）</text>
+      <rect x="872" y="1108" width="52" height="16" rx="4" fill="#F0FDF4" stroke="#BBF7D0" stroke-width="1"/>
+      <text x="898" y="1119" fill="#15803D" font-size="9" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">已定稿</text>
+      <text x="932" y="1119" fill="#94A3B8" font-size="8" font-family="'JetBrains Mono', monospace">全員無異議、收斂或仲裁完成（終態）</text>
     </svg>
   </div>
 </body>
