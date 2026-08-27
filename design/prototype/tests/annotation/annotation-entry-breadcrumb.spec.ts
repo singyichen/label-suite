@@ -10,7 +10,10 @@
  *
  * These tests pin the breadcrumb that closes that gap on all three entry
  * paths that exist before submission (dashboard quick-review CTA, list row,
- * direct URL). The post-submission path is AC-5's and lands with the CTAs.
+ * direct URL), plus the fourth path — the same unit after a submit. That
+ * last one arrived with issue #456's post-submit exit card and outlived it:
+ * issue #517 retired the card (FR-082 / AC-4.34), and the breadcrumb is now
+ * the only thing carrying the list view state back off a finished unit.
  *
  * Component contract: design/system/MASTER.md §Breadcrumb (three levels are
  * allowed on the reviewer path only).
@@ -189,5 +192,31 @@ test.describe('Entry breadcrumb — entry paths (AC-8)', () => {
     const nav = crumb(page);
     await expect(nav.locator('a')).toHaveCount(2);
     await expect(nav.locator('a').nth(1)).toContainText(T016_NAME);
+  });
+});
+
+test.describe('Entry breadcrumb — after a submit (AC-8 fourth path)', () => {
+  /* T001 defaults to min_reviewers = 1, so one submitted review finishes the
+     unit — the state in which the reviewer most needs a way back out. */
+  test('breadcrumb survives a submit and still carries the list view state', async ({ page }) => {
+    await skipGuidelineModal(page);
+    await page.goto(
+      buildWorkspaceUrl({
+        task_id: 'T001',
+        sample_id: 'sent-001',
+        role: 'reviewer',
+        run_type: 'official_run',
+      }) + '&status=pending&limit=50',
+    );
+    await page.getByTestId('ws-review-row-approve').click();
+    await page.getByTestId('ws-review-submit-btn').click();
+    await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
+
+    const nav = crumb(page);
+    await expect(nav.locator('a')).toHaveCount(2);
+    const listHref = await nav.locator('a').nth(1).getAttribute('href');
+    expect(listHref).toContain('status=pending');
+    expect(listHref).toContain('limit=50');
+    await expect(nav.locator('[aria-current="page"]')).toContainText('sent-001');
   });
 });

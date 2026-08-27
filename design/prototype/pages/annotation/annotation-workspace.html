@@ -882,13 +882,6 @@
     .rv-summary-note { font-size: 12px; color: var(--color-ink-muted); }
     .rv-summary-pending { margin: 0; font-size: 12px; color: var(--color-warning); }
     .rv-summary-effect { margin: 0; font-size: 12px; color: var(--color-ink-muted); }
-
-    /* ── Reviewer mode: exits from a finished unit (FR-082, issue #456) ── */
-    .rv-exits { display: flex; flex-direction: column; gap: 8px; }
-    .rv-exits-title { font-size: 13px; font-weight: 700; color: var(--color-ink); }
-    .rv-exits-note { margin: 0; font-size: 12px; color: var(--color-ink-muted); }
-    .rv-exits-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 4px; }
-    .rv-exits-none { font-size: 12px; color: var(--color-ink-muted); }
   </style>
 </head>
 <body>
@@ -1005,12 +998,6 @@
              here rather than on the review card so its run-type-dependent
              consequence line does not breach AC-3.33. -->
         <div class="content-card rv-submit-summary hidden" id="wsReviewSubmitSummary" data-testid="ws-review-submit-summary"></div>
-
-        <!-- Reviewer mode only: the ways out of a unit that is done with
-             (FR-082 / AC-4.34). Rendered into rather than shown/hidden --
-             the card exists exactly when the unit's stored state says the
-             unit is finished, so there is never a stale one in the DOM. -->
-        <div id="wsPostSubmitMount"></div>
       </div>
 
       <div class="action-bar">
