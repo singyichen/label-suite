@@ -1356,9 +1356,9 @@ check_control_path_rejection() {
         record_control_path_mismatch "$mismatches" "$label" \
             'retired-guidance collector consumed the unsafe pathname before rejection'
     fi
-    if [[ "$summary" != 'Project SDD lint: 1 error(s),'* ]]; then
+    if [[ "$summary" != 'Project SDD lint: 1 error(s), 0 warning(s)' ]]; then
         record_control_path_mismatch "$mismatches" "$label" \
-            "summary did not report one scanner-configuration error: ${summary:-missing}"
+            "summary did not prove rejection before downstream collectors: ${summary:-missing}"
     fi
 }
 
