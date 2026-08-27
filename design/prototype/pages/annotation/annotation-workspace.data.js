@@ -1697,6 +1697,39 @@
       .filter(function (submission) { return submission !== null; });
   }
 
+  /* True when ANY reviewer's answer differs from the annotator's on ANY of
+   * the task's output keys. This single predicate picks the lane in FR-051:
+   * false -> approved/finalized, true -> modified/disputed/finalized. */
+  function anyReviewerChanged(annotatorSubmission, reviewerSubmissions, keys) {
+    return reviewerSubmissions.some(function (reviewerSubmission) {
+      return keys.some(function (outKey) {
+        return !compareOutputAnswer(
+          outKey,
+          convertSubmissionAnswer(outKey, annotatorSubmission),
+          convertSubmissionAnswer(outKey, reviewerSubmission.answers)
+        ).equal;
+      });
+    });
+  }
+
+  /* Which of FR-051's two lanes the unit is on: 'same' when every reviewer
+   * agreed with the annotator, 'differing' when at least one did not, null
+   * while no reviewer has submitted (the lane is not decided yet).
+   *
+   * getReviewUnitStatus alone cannot answer this, because FINALIZED is
+   * reachable from BOTH lanes -- unanimous agreement past the quorum, and a
+   * resolved dispute. Anything drawing the unit's route needs the lane too.
+   */
+  function getReviewUnitLane(taskId, runType, sampleId, identity, outKeys) {
+    var annotatorSubmission = getSubmission(taskId, 'annotator', runType, sampleId, identity);
+    if (!annotatorSubmission) return null;
+    var reviewerSubmissions = readReviewerSubmissions(taskId, runType, sampleId, identity);
+    if (!reviewerSubmissions.length) return null;
+    return anyReviewerChanged(
+      annotatorSubmission, reviewerSubmissions, Array.isArray(outKeys) ? outKeys : []
+    ) ? 'differing' : 'same';
+  }
+
   /* Derives the review unit's state from the annotator's submission plus
    * every reviewer submission on it. `outKeys` is the task's composed output
    * type list; `opts.minReviewers` defaults to 1. Returns null when the
@@ -1709,15 +1742,7 @@
     if (!reviewerSubmissions.length) return REVIEW_UNIT_STATUS.PENDING;
 
     var keys = Array.isArray(outKeys) ? outKeys : [];
-    var changed = reviewerSubmissions.some(function (reviewerSubmission) {
-      return keys.some(function (outKey) {
-        return !compareOutputAnswer(
-          outKey,
-          convertSubmissionAnswer(outKey, annotatorSubmission),
-          convertSubmissionAnswer(outKey, reviewerSubmission.answers)
-        ).equal;
-      });
-    });
+    var changed = anyReviewerChanged(annotatorSubmission, reviewerSubmissions, keys);
     var enoughReviewers = reviewerSubmissions.length >= ((opts && opts.minReviewers) || 1);
 
     if (changed) {
@@ -2486,6 +2511,7 @@
     REVIEW_UNIT_STATUS: REVIEW_UNIT_STATUS,
     compareOutputAnswer: compareOutputAnswer,
     getReviewUnitStatus: getReviewUnitStatus,
+    getReviewUnitLane: getReviewUnitLane,
     computeReviewSummary: computeReviewSummary,
     formatReviewSummary: formatReviewSummary,
     listReviewUnits: listReviewUnits,
