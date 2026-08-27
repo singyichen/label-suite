@@ -1290,6 +1290,166 @@ GENERATOR
     assert_contains "$output" "Project SDD lint: 1 error(s), 3 warning(s)"
 }
 
+record_control_path_mismatch() {
+    local mismatches="$1"
+    local label="$2"
+    local message="$3"
+
+    printf 'RED [%s]: %s\n' "$label" "$message" >> "$mismatches"
+}
+
+check_control_path_rejection() {
+    local label="$1"
+    local repo="$2"
+    local marker="$3"
+    local unsafe_control="$4"
+    local results="$5"
+    local mismatches="$6"
+    local diagnostic='ERROR [SCANNER_CONFIG] .: repository paths containing control characters are unsupported'
+    local control_echo='not-applicable' diagnostic_seen='no' error_count marker_echo='no' output status summary
+
+    output="$(mktemp "$TMP_ROOT/check-sdd-control-path.XXXXXX")"
+    if run_check_sdd "$repo" >"$output" 2>&1; then
+        status=0
+    else
+        status=$?
+    fi
+
+    if grep -Fq "$diagnostic" "$output"; then
+        diagnostic_seen='yes'
+    fi
+    if grep -Fq "$marker" "$output"; then
+        marker_echo='yes'
+    fi
+    if [[ -n "$unsafe_control" ]]; then
+        control_echo='no'
+        if grep -Fq "$unsafe_control" "$output"; then
+            control_echo='yes'
+        fi
+    fi
+    error_count="$(grep -Fc 'ERROR [' "$output" || true)"
+    summary="$(grep -F 'Project SDD lint:' "$output" | tail -n 1 || true)"
+    printf 'Control-path row %s: status=%s diagnostic=%s marker_echo=%s control_echo=%s summary=%s\n' \
+        "$label" "$status" "$diagnostic_seen" "$marker_echo" "$control_echo" "${summary:-missing}" >> "$results"
+
+    if [[ "$status" -ne 2 ]]; then
+        record_control_path_mismatch "$mismatches" "$label" \
+            "expected exit 2, observed $status (control-character preflight absent or bypassed)"
+    fi
+    if [[ "$diagnostic_seen" != 'yes' ]]; then
+        record_control_path_mismatch "$mismatches" "$label" \
+            'missing exact SCANNER_CONFIG diagnostic at safe path .'
+    fi
+    if [[ "$marker_echo" != 'no' ]]; then
+        record_control_path_mismatch "$mismatches" "$label" \
+            "unsafe pathname marker was rendered: $marker"
+    fi
+    if [[ "$control_echo" == 'yes' ]]; then
+        record_control_path_mismatch "$mismatches" "$label" \
+            'raw filename control character was rendered'
+    fi
+    if [[ "$error_count" -ne 1 ]]; then
+        record_control_path_mismatch "$mismatches" "$label" \
+            "expected one scanner-configuration error, observed $error_count error diagnostics"
+    fi
+    if grep -Fq 'ERROR [RETIRED_COMMAND]' "$output"; then
+        record_control_path_mismatch "$mismatches" "$label" \
+            'retired-guidance collector consumed the unsafe pathname before rejection'
+    fi
+    if [[ "$summary" != 'Project SDD lint: 1 error(s),'* ]]; then
+        record_control_path_mismatch "$mismatches" "$label" \
+            "summary did not report one scanner-configuration error: ${summary:-missing}"
+    fi
+}
+
+check_normal_space_path_control() {
+    local repo="$1"
+    local results="$2"
+    local mismatches="$3"
+    local output status summary
+
+    output="$(mktemp "$TMP_ROOT/check-sdd-space-path.XXXXXX")"
+    if run_check_sdd "$repo" >"$output" 2>&1; then
+        status=0
+    else
+        status=$?
+    fi
+    summary="$(grep -F 'Project SDD lint:' "$output" | tail -n 1 || true)"
+    printf 'Control-path row ordinary-space: status=%s diagnostic=%s summary=%s\n' \
+        "$status" "$(grep -Fq 'SCANNER_CONFIG' "$output" && printf yes || printf no)" "${summary:-missing}" >> "$results"
+
+    if [[ "$status" -ne 0 ]]; then
+        record_control_path_mismatch "$mismatches" ordinary-space \
+            "expected exit 0 for an ordinary-space pathname, observed $status"
+    fi
+    if grep -Fq 'SCANNER_CONFIG' "$output"; then
+        record_control_path_mismatch "$mismatches" ordinary-space \
+            'ordinary-space pathname was rejected as scanner configuration'
+    fi
+    if [[ "$summary" != 'Project SDD lint: 0 error(s), 3 warning(s)' ]]; then
+        record_control_path_mismatch "$mismatches" ordinary-space \
+            "ordinary Project SDD lint summary changed: ${summary:-missing}"
+    fi
+}
+
+test_check_sdd_rejects_control_character_paths_before_scanning() {
+    local change_dir mismatches normal_path repo results spec_dir unsafe_path
+    results="$(mktemp "$TMP_ROOT/control-path-results.XXXXXX")"
+    mismatches="$(mktemp "$TMP_ROOT/control-path-mismatches.XXXXXX")"
+
+    repo="$(make_sdd_repo)"
+    unsafe_path="$repo/.claude/agents/CONTROL_CONSUMER_NEWLINE_MARKER"$'\n'"guidance.md"
+    printf '# Unsafe consumer\n\nRun npm test before review.\n' > "$unsafe_path"
+    check_control_path_rejection consumer-newline "$repo" CONTROL_CONSUMER_NEWLINE_MARKER '' "$results" "$mismatches"
+
+    repo="$(make_sdd_repo)"
+    unsafe_path="$repo/.claude/agents/CONTROL_CONSUMER_TAB_MARKER"$'\t'"guidance.md"
+    printf '# Unsafe consumer\n\nRun npm test before review.\n' > "$unsafe_path"
+    check_control_path_rejection consumer-tab "$repo" CONTROL_CONSUMER_TAB_MARKER $'\t' "$results" "$mismatches"
+
+    repo="$(make_sdd_repo)"
+    unsafe_path="$repo/.claude/agents/CONTROL_CONSUMER_CR_MARKER"$'\r'"guidance.md"
+    printf '# Unsafe consumer\n\nRun npm test before review.\n' > "$unsafe_path"
+    check_control_path_rejection consumer-carriage-return "$repo" CONTROL_CONSUMER_CR_MARKER $'\r' "$results" "$mismatches"
+
+    repo="$(make_sdd_repo)"
+    spec_dir="002-CONTROL_SPEC_NEWLINE_MARKER"$'\n'"feature"
+    mkdir -p "$repo/specs/dataset/$spec_dir"
+    cat > "$repo/specs/dataset/$spec_dir/spec.md" <<'SPEC'
+# Unsafe canonical spec path fixture
+
+## 功能目標
+
+Exercise canonical spec discovery.
+
+## 規格相依性
+
+None.
+
+### FR-001
+### SC-001
+### AC-1.1
+SPEC
+    printf '| dataset-002 | Unsafe path fixture | dataset | `spec-ready` | `feat/dataset/002-path-fixture` | fixture |\n' >> "$repo/specs/STATUS.md"
+    check_control_path_rejection canonical-spec-newline "$repo" CONTROL_SPEC_NEWLINE_MARKER '' "$results" "$mismatches"
+
+    repo="$(make_sdd_repo)"
+    change_dir="CONTROL_CHANGE_NEWLINE_MARKER"$'\n'"change"
+    cp -R "$repo/openspec/changes/project-sdd-lint" "$repo/openspec/changes/$change_dir"
+    check_control_path_rejection active-change-newline "$repo" CONTROL_CHANGE_NEWLINE_MARKER '' "$results" "$mismatches"
+
+    repo="$(make_sdd_repo)"
+    normal_path="$repo/.claude/agents/ordinary space guidance.md"
+    printf '# Ordinary consumer\n\nUse pnpm test for checks.\n' > "$normal_path"
+    check_normal_space_path_control "$repo" "$results" "$mismatches"
+
+    cat "$results" >&2
+    if [[ -s "$mismatches" ]]; then
+        cat "$mismatches" >&2
+        return 1
+    fi
+}
+
 test_check_sdd_fails_for_near_match_goal_heading() {
     local repo
     repo="$(make_sdd_repo)"
@@ -1648,5 +1808,6 @@ test_check_sdd_rejects_non_shell_red_task_with_non_qa_owner
 test_check_sdd_accepts_non_shell_red_task_with_qa_owner
 test_check_sdd_ci_job_is_independent
 test_check_sdd_rejects_foreign_root_generator_without_side_effects
+test_check_sdd_rejects_control_character_paths_before_scanning
 
 echo "speckit script tests passed"
