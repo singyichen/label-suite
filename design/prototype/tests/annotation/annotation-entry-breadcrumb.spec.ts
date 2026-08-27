@@ -56,7 +56,7 @@ test.describe('Entry breadcrumb — workspace', () => {
     await expect(current).toContainText('kioleemg12');
   });
 
-  test('breadcrumb links carry the same task/role/run context back to the list', async ({ page }) => {
+  test('each level links to a distinct destination, carrying its context', async ({ page }) => {
     await page.goto(
       buildWorkspaceUrl({
         task_id: 'T016',
@@ -68,14 +68,19 @@ test.describe('Entry breadcrumb — workspace', () => {
     );
 
     await expect(crumb(page).locator('a')).toHaveCount(2);
-    for (const href of await crumb(page).locator('a').evaluateAll((els) =>
+    const hrefs = await crumb(page).locator('a').evaluateAll((els) =>
       els.map((el) => (el as HTMLAnchorElement).getAttribute('href') ?? ''),
-    )) {
-      expect(href).toContain('annotation-list.html');
-      expect(href).toContain('task_id=T016');
-      expect(href).toContain('role=reviewer');
-      expect(href).toContain('run_type=official_run');
-    }
+    );
+    // Level 1 is the work area. annotation-list.html without a task_id is an
+    // error state whose own recovery CTA points at the dashboard, so that is
+    // where the work-area level goes too.
+    expect(hrefs[0]).toContain('dashboard.html');
+    // Level 2 is this task's list, and must replay the caller's context so
+    // going back cannot silently drop the run or the role.
+    expect(hrefs[1]).toContain('annotation-list.html');
+    expect(hrefs[1]).toContain('task_id=T016');
+    expect(hrefs[1]).toContain('role=reviewer');
+    expect(hrefs[1]).toContain('run_type=official_run');
   });
 
   test('annotator path names its own work area and omits the annotator level', async ({ page }) => {
