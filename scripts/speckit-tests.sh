@@ -1737,6 +1737,24 @@ test_check_sdd_scans_symlinked_active_change_consumers() {
     assert_command_fails_with "$repo" 1 "RETIRED_COMMAND" "openspec/changes/project-sdd-lint/design.md"
 }
 
+test_check_sdd_does_not_consume_red_mentioning_paired_green() {
+    local repo
+
+    repo="$(make_sdd_repo)"
+    sed -i.bak 's/Red contract in `scripts\/speckit-tests.sh`/Red contract before paired Green in `scripts\/speckit-tests.sh`/' "$repo/openspec/changes/project-sdd-lint/tasks.md"
+
+    assert_command_succeeds "$repo" --not-rule TASK_RED_OWNER
+}
+
+test_check_sdd_rejects_nonhistorical_active_retired_command() {
+    local repo
+
+    repo="$(make_sdd_repo)"
+    printf '\nThis is non-historical active guidance: run npm test before review.\n' >> "$repo/AGENTS.md"
+
+    assert_command_fails_with "$repo" 1 "RETIRED_COMMAND" "AGENTS.md"
+}
+
 test_check_sdd_rejects_retired_command_in_active_openspec_config() {
     local repo
     repo="$(make_sdd_repo)"
@@ -1870,6 +1888,8 @@ test_check_sdd_requires_exact_multisegment_source_verify_ids
 test_check_sdd_requires_one_unconsumed_red_per_green
 test_check_sdd_rejects_prescriptive_example_retired_command
 test_check_sdd_scans_symlinked_active_change_consumers
+test_check_sdd_does_not_consume_red_mentioning_paired_green
+test_check_sdd_rejects_nonhistorical_active_retired_command
 test_check_sdd_rejects_retired_command_in_active_openspec_config
 test_check_sdd_excludes_deprecated_task_template_retired_wording
 test_check_sdd_rejects_nonpath_exception_files_value
