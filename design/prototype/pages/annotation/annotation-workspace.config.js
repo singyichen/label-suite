@@ -108,6 +108,9 @@
       reviewOriginalAnswerLabel: '標記員原答案：',
       reviewCorrectedAnswerLabel: 'Reviewer 修正後答案：',
       summaryTitle: '送出前確認',
+      summaryToggleEffectPart: '送出後影響',
+      summaryToggleCounts: '{n} 個輸出類型 · {approve} 通過 · {reject} 退回',
+      summaryTogglePending: '{pending} 尚未決策',
       summaryNoteApproveUnchanged: '通過且未修改：將保存與標記員原答案相同的 reviewer answer。',
       summaryNoteApproveChanged: '通過的是您修正後的答案（非標記員原答案）：將保存修正後的 reviewer answer，並記錄為差異，納入爭議推導。',
       summaryNoteRejectUnchanged: '退回但未修改答案：將保存與標記員原答案相同的 reviewer answer，並記錄退回決策。',
@@ -211,6 +214,9 @@
       reviewOriginalAnswerLabel: "Annotator's original answer: ",
       reviewCorrectedAnswerLabel: "Reviewer's corrected answer: ",
       summaryTitle: 'Confirm before submitting',
+      summaryToggleEffectPart: 'after-submit impact',
+      summaryToggleCounts: '{n} output types · {approve} approved · {reject} rejected',
+      summaryTogglePending: '{pending} undecided',
       summaryNoteApproveUnchanged: 'Approved with no edit: the stored reviewer answer will be identical to the annotator’s original answer.',
       summaryNoteApproveChanged: 'What you approve is your corrected answer, not the annotator’s original: the corrected reviewer answer is stored and recorded as a difference feeding dispute derivation.',
       summaryNoteRejectUnchanged: 'Rejected with no edit: the stored reviewer answer will be identical to the annotator’s original answer, alongside the reject decision.',
@@ -3002,6 +3008,74 @@
     panel.classList.add('hidden');
   }
 
+  /* Static constant only -- never a data-derived string (see the
+     GUIDELINE_FILE_ICON_SVG innerHTML note below for the same rule). */
+  var SUMMARY_CARET_SVG =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" ' +
+    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<polyline points="6 9 12 15 18 9"></polyline></svg>';
+
+  /* issue #515 (2-b): the summary is a wall of text that is only ever
+     load-bearing while some output type is still undecided -- that is the
+     one moment the reviewer cannot act without reading it, and it is
+     exactly when the submit gate is closed. So it force-expands then and
+     collapses otherwise, and the collapsed header carries the decision
+     counts so the collapsed state is itself a signal rather than a blank
+     title. The state is re-derived from the decisions on every render and
+     never persisted: a stored flag would be a second source of truth
+     beside the FR-014S / AC-6.10 draft-restore contract, for no gain the
+     reviewer would notice. */
+  function buildSummaryToggle(body, pendingCount, approveCount, rejectCount) {
+    var forced = pendingCount > 0;
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'rv-summary-toggle';
+    btn.setAttribute('data-testid', 'ws-review-summary-toggle');
+    btn.setAttribute('aria-controls', body.id);
+
+    var caret = document.createElement('span');
+    caret.className = 'rv-summary-caret';
+    caret.setAttribute('aria-hidden', 'true');
+    caret.innerHTML = SUMMARY_CARET_SVG;
+    btn.appendChild(caret);
+
+    /* Both halves are named: collapsed, this header is the only thing left
+       on screen, and "送出前確認" alone would hide that the run-type
+       consequence lives in here too. */
+    var label = document.createElement('span');
+    label.textContent = t('summaryTitle') + ' · ' + t('summaryToggleEffectPart');
+    btn.appendChild(label);
+
+    var countsText = t('summaryToggleCounts')
+      .replace('{n}', String(approveCount + rejectCount + pendingCount))
+      .replace('{approve}', String(approveCount))
+      .replace('{reject}', String(rejectCount));
+    if (forced) {
+      countsText += ' · ' + t('summaryTogglePending').replace('{pending}', String(pendingCount));
+    }
+    var counts = document.createElement('span');
+    counts.className = 'rv-summary-toggle-counts';
+    counts.textContent = '· ' + countsText;
+    btn.appendChild(counts);
+
+    function setExpanded(expanded) {
+      btn.setAttribute('aria-expanded', String(expanded));
+      body.classList.toggle('hidden', !expanded);
+    }
+    setExpanded(forced);
+    if (forced) {
+      /* Collapsing away the only place that names the blocking outputs is
+         not on offer while they block the submit. aria-disabled rather
+         than disabled keeps the counts reachable from the keyboard. */
+      btn.setAttribute('aria-disabled', 'true');
+    } else {
+      btn.addEventListener('click', function () {
+        setExpanded(btn.getAttribute('aria-expanded') !== 'true');
+      });
+    }
+    return btn;
+  }
+
   function renderReviewSubmitSummary() {
     var panel = document.getElementById('wsReviewSubmitSummary');
     if (!panel) return;
@@ -3009,15 +3083,19 @@
     if (!isReviewUnitInteractive() || !state.selectedOutputTypes.length) return;
     var rowName = currentAnnotatorId();
 
-    var title = document.createElement('div');
-    title.className = 'rv-summary-title';
-    title.textContent = t('summaryTitle');
-    panel.appendChild(title);
+    var body = document.createElement('div');
+    body.className = 'rv-summary-body';
+    body.id = 'wsReviewSubmitSummaryBody';
 
     var pendingKeys = [];
+    var approveCount = 0;
+    var rejectCount = 0;
     state.selectedOutputTypes.forEach(function (outKey) {
-      if (!reviewRowDecisions[decisionKey(outKey, rowName)]) pendingKeys.push(outKey);
-      panel.appendChild(buildSummaryRow(outKey, rowName));
+      var decision = reviewRowDecisions[decisionKey(outKey, rowName)];
+      if (!decision) pendingKeys.push(outKey);
+      else if (decision === 'approve') approveCount += 1;
+      else rejectCount += 1;
+      body.appendChild(buildSummaryRow(outKey, rowName));
     });
 
     var pending = document.createElement('p');
@@ -3027,7 +3105,7 @@
     pending.textContent = pendingKeys.length
       ? t('summaryPending').replace('{list}', pendingKeys.join('、'))
       : t('summaryPendingNone');
-    panel.appendChild(pending);
+    body.appendChild(pending);
 
     var effect = document.createElement('p');
     effect.className = 'rv-summary-effect';
@@ -3036,8 +3114,10 @@
     effect.textContent = t(
       currentRunType === 'official_run' ? 'summaryEffectOfficial' : 'summaryEffectDry'
     );
-    panel.appendChild(effect);
+    body.appendChild(effect);
 
+    panel.appendChild(buildSummaryToggle(body, pendingKeys.length, approveCount, rejectCount));
+    panel.appendChild(body);
     panel.classList.remove('hidden');
   }
 
