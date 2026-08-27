@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -u
 readonly inventory_sentinel='design/system/screen-inventory.md is stale — run: node scripts/gen-screen-inventory.mjs'
-strict=0; id_pattern='(FR|SC|AC)-[[:alnum:]]+([.-][[:alnum:]]+)*'
+strict=0; id_pattern='(FR|SC|AC)-[[:alnum:]]+([.-][[:alnum:]]+)*'; retired_command_pattern='(^|[^[:alnum:]_])npm[[:space:]]+(test|run)([[:space:]]|;|；|，|。|$)|/ui-ux-pro-max|/speckit[.]analyze'
 root_arg=''; root_provided=0; config_failed=0; governance_failed=0
 tmp_dir="$(mktemp -d "${TMPDIR:-/tmp}/label-suite-sdd.XXXXXX")" || exit 2
 trap 'rm -rf "$tmp_dir"' EXIT
@@ -313,13 +313,22 @@ LC_ALL=C sort -u "$consumer_files" -o "$consumer_files"
 while IFS= read -r consumer; do
     case "$consumer" in */.claude/commands/speckit.analyze.md) continue ;; esac
     relative="${consumer#"$repo_root"/}"
-    grep -En '(^|[^[:alnum:]_])npm[[:space:]]+(test|run)([[:space:]]|$)|/ui-ux-pro-max|/speckit[.]analyze' "$consumer" 2>/dev/null >"$tmp_dir/retired" || true
+    grep -En "$retired_command_pattern" "$consumer" 2>/dev/null >"$tmp_dir/retired" || true
     while IFS= read -r match; do
         text="${match#*:}"
-        if printf '%s\n' "$text" | grep -Eq '不得|禁止|阻擋|廢止|退役|歷史|取代|移除' || printf '%s\n' "$text" | grep -Eqi '(^|[^[:alnum:]_])((do|does|did|must|should|shall|will|would|can|could|may|might|is|are|was|were|has|have|had)[[:space:]]+not|(don.t|doesn.t|didn.t|mustn.t|shouldn.t|shan.t|won.t|wouldn.t|can.t|couldn.t|mayn.t|mightn.t|isn.t|aren.t|wasn.t|weren.t|hasn.t|haven.t|hadn.t|cannot|never|avoid))[[:space:]]+(run|use|execut|invok|call)[[:alpha:]]*([^[:alnum:]_]|$)'; then
-            continue
-        fi
-        add_error RETIRED_COMMAND "$relative" 'active guidance contains a retired repository command or pipeline stage'
+        retired_clauses="${text//;/$'\n'}"
+        retired_clauses="${retired_clauses//；/$'\n'}"
+        retired_clauses="${retired_clauses//，/$'\n'}"
+        retired_clauses="${retired_clauses//。/$'\n'}"
+        retired_command_active=0
+        while IFS= read -r clause; do
+            printf '%s\n' "$clause" | grep -Eq "$retired_command_pattern" || continue
+            if printf '%s\n' "$clause" | grep -Eq '不得|禁止|不可|不應|無需|請勿' || printf '%s\n' "$clause" | grep -Eqi '(^|[^[:alnum:]_])((do|does|did|must|should|shall|will|would|can|could|may|might|is|are|was|were|has|have|had)[[:space:]]+not|(don.t|doesn.t|didn.t|mustn.t|shouldn.t|shan.t|won.t|wouldn.t|can.t|couldn.t|mayn.t|mightn.t|isn.t|aren.t|wasn.t|weren.t|hasn.t|haven.t|hadn.t|cannot|never|avoid))[[:space:]]+(run|use|execut|invok|call)[[:alpha:]]*([^[:alnum:]_]|$)'; then
+                continue
+            fi
+            retired_command_active=1
+        done < <(printf '%s\n' "$retired_clauses")
+        [ "$retired_command_active" -eq 0 ] || add_error RETIRED_COMMAND "$relative" 'active guidance contains a retired repository command or pipeline stage'
     done <"$tmp_dir/retired"
 done <"$consumer_files"
 generator="$repo_root/scripts/gen-screen-inventory.mjs"
