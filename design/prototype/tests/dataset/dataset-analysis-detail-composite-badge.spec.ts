@@ -34,10 +34,12 @@ test.describe('Dataset analysis detail composite IAA badge math (outputs[] itera
       '標記一致性偏離分析',
     ]);
 
-    // single_label (secondary, pass) renders as an IAA-only card with a type label subtitle.
+    // single_label (secondary) renders as an IAA-only card with a type label subtitle.
+    // T107 has no seeded review-flow data (computeIaaAlpha -> unknown_task), so the derived
+    // score is "not computable" rather than the old hardcoded 0.85 (issue #490).
     const singleLabelCard = page.locator('section[data-output-type="single_label"]');
     await expect(singleLabelCard.locator('.iaa-type-label')).toHaveText('單選標籤');
-    await expect(singleLabelCard.locator('.iaa-card-value')).toHaveText('0.85');
+    await expect(singleLabelCard.locator('.iaa-card-value')).toHaveText('無法計算');
 
     // free_text (secondary, gate-excluded) renders its not-applicable note, not a score card.
     const freeTextCard = page.locator('section[data-output-type="free_text"]');
