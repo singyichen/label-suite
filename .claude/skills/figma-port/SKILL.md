@@ -58,7 +58,7 @@ return { editorType: figma.editorType, pageId: figma.currentPage.id };
 - `sub` 可省略；有值時走 §6.3 的單一 shape 多字階寫法
 - `shape` 省略時預設 **`SQUARE`**。選型看 §6.3——不要反射性選 `ROUNDED_RECTANGLE`
 - `style` ∈ `MAIN`（實線）／`COND`（虛線，循環或條件分支）／`ACCENT`（強調路徑）
-- `label` 有值時一律加底色遮罩 pill（見 §6.4 `pill()`），否則會壓在分隔線上
+- `label` 一律交給 §6.6 `link()` 寫進 connector 原生標籤，**不要另外畫底色遮罩**（理由見 §6.5）
 
 ### 1.3 樣式角色表
 
@@ -209,7 +209,7 @@ CSS 的 `font-family` 是字型棧，第一個通常是拉丁字型、中文靠�
 
 `figma-use-figjam` 宣告下列 API 為 design-mode only，**實測在 FigJam 全部可用**（十種 create API 探測 10/10 `OK`）：
 
-- `figma.createRectangle()` — 分隔線底襯、圖例色塊、標籤遮罩都靠它
+- `figma.createRectangle()` — 分隔線底襯、圖例色塊都靠它
 - `figma.createLine()` — 分隔線
 - `figma.createFrame()`／`figma.createVector()`／巢狀 `Section`
 
@@ -262,7 +262,18 @@ c.connectorEnd   = { position: abs(sec, lx2, ly2) };
 
 需要箭頭就用 `Connector`——即使是一條直線示意，也設 `connectorLineType = "STRAIGHT"` 走 Connector。`createLine()` 只留給真正無箭頭的分隔線。
 
-### 6.5 Helper 函式庫
+### 6.5 連線標籤用 connector 原生 text，不要自己疊遮罩
+
+`c.text.characters` 寫進去就好，**不要另外畫一個矩形墊在底下**。兩個理由：
+
+- FigJam 的 connector 會**自動在標籤處把線斷開**留出缺口，標籤本來就不會壓在線上
+- 新建 connector 的 `textBackground.fills` 預設是 `[]`（透明），不需要清
+
+自己疊的矩形反而會多出一塊來源沒有的色塊，而且因為它「看起來像有意設計的 pill」，截圖驗收時很容易被當成正常樣式放過——這是另一種安靜失敗。**判準：標籤掛在連線上 → connector 原生 text；標籤是獨立標註（泳道名、引文、圖例）→ 才用 `text()`。**
+
+只有兩種情況需要遮罩：Design renderer（沒有原生 connector，見 §7.2），或標籤確實壓到泳道分隔線那類**非連線**的圖元。
+
+### 6.6 Helper 函式庫
 
 `use_figma` 呼叫間**不共享狀態**，每次呼叫都要整段重貼——這砍不掉。以下可整段複製，**只需把頂端的 `K` 換成 §2 決定的比例**。
 
@@ -383,7 +394,7 @@ function rect(sec, x, y, w, hh, o = {}) {
   return r;
 }
 
-// ── pill(): 連線標籤的底色遮罩（避免壓在分隔線上）──────────
+// ── pill(): 遮罩式標籤。FigJam 連線標籤不要用它，見 §6.5 ───
 function pill(sec, x, y, str, o = {}) {
   const t = text(sec, x + 4, y + 2, str, { size: o.size || SIZE.label, color: o.color || SOFT });
   const bg = rect(sec, x, y, 0, 0, { fill: o.bg || "#F5F3FF", radius: 2 });
@@ -432,7 +443,7 @@ return { editorType: figma.editorType, probe };
 |---|---|---|
 | 節點 | `ShapeWithText` | `figma.createAutoLayout("VERTICAL")` + padding，內含標題／副行兩個 Text 子節點 |
 | 連線 | `Connector`（原生磁吸） | `createVector()` + `setVectorNetworkAsync()`，端點自行計算 |
-| 連線標籤 | `connector.text` | 獨立 Text + `rect()` 遮罩（同 `pill()`） |
+| 連線標籤 | `connector.text`（原生，自動挖缺口，見 §6.5） | 獨立 Text + `rect()` 遮罩（`pill()`）——**Design 沒有原生 connector，這裡才需要遮罩** |
 | 判斷節點 | `DIAMOND` shapeType | `createVector()` 菱形路徑 + 另一個置中的文字 frame |
 
 - **用 `figma.createAutoLayout("VERTICAL")`，不要 `createFrame()` + 手設 `layoutMode`。** 前者建出來就是兩軸 hug，省掉 `primaryAxisSizingMode` / `counterAxisSizingMode` 的設定順序雷（官方規則 12b：`layoutSizing*` 與 `*AxisSizingMode` 是兩組不同的 enum，交叉使用會丟錯）。
@@ -533,6 +544,7 @@ Design file 沒有原生 Connector，**連線不會跟隨節點移動**。要維
 - [ ] 含中文的文字用 CJK 家族，字重照 §4 對映表落地
 - [ ] 行高顯式設定，沒有依賴 auto（§3）
 - [ ] 有箭頭的線用 `Connector`，不是 `createLine()`（§6.4）
+- [ ] 連線標籤是 connector 原生 text，底下沒有自己疊的遮罩矩形（§6.5）
 - [ ] Design 模式已設 `figma.currentPage.backgrounds`（§7.3）
 - [ ] 每建完一層截一次圖；探針節點已刪乾淨
 - [ ] **最後一輪與來源並排比對**：無裁切、無重疊、走向一致，且字級／線寬比例看起來與來源相同
