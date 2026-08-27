@@ -769,6 +769,7 @@ BASELINE
     cat > "$repo/design/system/screen-inventory.md" <<'INVENTORY'
 # Synthetic screen inventory
 INVENTORY
+    cp "$ROOT/scripts/check-sdd.sh" "$repo/scripts/check-sdd.sh"
     write_inventory_generator_double "$repo"
 
     echo "$repo"
@@ -778,7 +779,7 @@ run_check_sdd_from() {
     local caller="$1"
     local repo="$2"
     shift 2
-    local command="$ROOT/scripts/check-sdd.sh"
+    local command="$repo/scripts/check-sdd.sh"
 
     if [[ ! -x "$command" ]]; then
         echo "Expected Project SDD lint command is missing: scripts/check-sdd.sh" >&2
@@ -792,6 +793,22 @@ run_check_sdd_from() {
 }
 
 run_check_sdd() {
+    local repo="$1"
+    shift
+    local command="$repo/scripts/check-sdd.sh"
+
+    if [[ ! -x "$command" ]]; then
+        echo "Expected Project SDD lint command is missing: scripts/check-sdd.sh" >&2
+        return 127
+    fi
+
+    (
+        cd "$TMP_ROOT"
+        "$command" "$@"
+    )
+}
+
+run_check_sdd_explicit() {
     local repo="$1"
     shift
 
@@ -870,24 +887,26 @@ assert_not_contains() {
 assert_inventory_success() {
     local repo="$1"
     shift
-    local output status
-    output="$(mktemp "$TMP_ROOT/check-sdd-inventory.XXXXXX")"
+    local output runner status
 
-    if run_check_sdd "$repo" "$@" >"$output" 2>&1; then
-        status=0
-    else
-        status=$?
-    fi
-    if [[ "$status" -ne 0 ]]; then
-        echo "Expected fresh inventory lint to exit 0, got: $status" >&2
-        cat "$output" >&2
-        exit 1
-    fi
-    assert_contains "$output" "Project SDD lint: 0 error(s)"
-    assert_not_contains "$output" "INVENTORY_FRESHNESS]"
-    assert_not_contains "$output" "INVENTORY_CHECK_CONFIG"
-    assert_not_contains "$output" "INVENTORY_FRESHNESS_UNVERIFIED"
-    assert_not_contains "$output" "RAW_FRESH_CHILD_OUTPUT"
+    for runner in run_check_sdd run_check_sdd_explicit; do
+        output="$(mktemp "$TMP_ROOT/check-sdd-inventory.XXXXXX")"
+        if "$runner" "$repo" "$@" >"$output" 2>&1; then
+            status=0
+        else
+            status=$?
+        fi
+        if [[ "$status" -ne 0 ]]; then
+            echo "Expected fresh inventory lint to exit 0, got: $status" >&2
+            cat "$output" >&2
+            exit 1
+        fi
+        assert_contains "$output" "Project SDD lint: 0 error(s)"
+        assert_not_contains "$output" "INVENTORY_FRESHNESS]"
+        assert_not_contains "$output" "INVENTORY_CHECK_CONFIG"
+        assert_not_contains "$output" "INVENTORY_FRESHNESS_UNVERIFIED"
+        assert_not_contains "$output" "RAW_FRESH_CHILD_OUTPUT"
+    done
 }
 
 assert_inventory_failure() {
@@ -897,31 +916,33 @@ assert_inventory_failure() {
     local path="$4"
     local raw_child_text="$5"
     shift 5
-    local output status
-    output="$(mktemp "$TMP_ROOT/check-sdd-inventory.XXXXXX")"
+    local output runner status
 
-    if run_check_sdd "$repo" "$@" >"$output" 2>&1; then
-        status=0
-    else
-        status=$?
-    fi
-    if [[ "$status" -ne "$expected_status" ]]; then
-        echo "Expected inventory lint to exit $expected_status, got: $status" >&2
-        cat "$output" >&2
-        exit 1
-    fi
-    assert_contains "$output" "ERROR [$rule] $path:"
-    case "$rule" in
-        INVENTORY_FRESHNESS)
-            assert_not_contains "$output" "INVENTORY_CHECK_CONFIG"
-            ;;
-        INVENTORY_CHECK_CONFIG)
-            assert_not_contains "$output" "[INVENTORY_FRESHNESS]"
-            ;;
-    esac
-    assert_not_contains "$output" "$raw_child_text"
-    assert_not_contains "$output" "$INVENTORY_SENTINEL"
-    assert_not_contains "$output" "INVENTORY_FRESHNESS_UNVERIFIED"
+    for runner in run_check_sdd run_check_sdd_explicit; do
+        output="$(mktemp "$TMP_ROOT/check-sdd-inventory.XXXXXX")"
+        if "$runner" "$repo" "$@" >"$output" 2>&1; then
+            status=0
+        else
+            status=$?
+        fi
+        if [[ "$status" -ne "$expected_status" ]]; then
+            echo "Expected inventory lint to exit $expected_status, got: $status" >&2
+            cat "$output" >&2
+            exit 1
+        fi
+        assert_contains "$output" "ERROR [$rule] $path:"
+        case "$rule" in
+            INVENTORY_FRESHNESS)
+                assert_not_contains "$output" "INVENTORY_CHECK_CONFIG"
+                ;;
+            INVENTORY_CHECK_CONFIG)
+                assert_not_contains "$output" "[INVENTORY_FRESHNESS]"
+                ;;
+        esac
+        assert_not_contains "$output" "$raw_child_text"
+        assert_not_contains "$output" "$INVENTORY_SENTINEL"
+        assert_not_contains "$output" "INVENTORY_FRESHNESS_UNVERIFIED"
+    done
 }
 
 test_check_sdd_passes_for_valid_repo() {
@@ -1226,6 +1247,47 @@ test_check_sdd_inventory_uses_target_root_generator() {
     assert_not_contains "$output" "INVENTORY_FRESHNESS_UNVERIFIED"
     assert_not_contains "$output" "RAW_CALLER_GENERATOR_USED"
     assert_not_contains "$output" "RAW_FRESH_CHILD_OUTPUT"
+}
+
+test_check_sdd_rejects_foreign_root_generator_without_side_effects() {
+    local marker output repo status
+    repo="$(make_sdd_repo)"
+    marker="$TMP_ROOT/foreign-root-generator.marker"
+    output="$(mktemp "$TMP_ROOT/check-sdd-foreign-root.XXXXXX")"
+
+    cat > "$repo/scripts/gen-screen-inventory.mjs" <<'GENERATOR'
+import fs from 'node:fs';
+
+const marker = process.env.SDD_FOREIGN_ROOT_MARKER;
+if (!marker) {
+  process.stderr.write('RAW_HOSTILE_FOREIGN_GENERATOR_MISSING_MARKER\n');
+  process.exit(9);
+}
+
+fs.writeFileSync(marker, 'foreign generator executed\n');
+process.stdout.write('RAW_HOSTILE_FOREIGN_GENERATOR_OUTPUT\n');
+process.exit(0);
+GENERATOR
+
+    if SDD_FOREIGN_ROOT_MARKER="$marker" "$ROOT/scripts/check-sdd.sh" "$repo" >"$output" 2>&1; then
+        status=0
+    else
+        status=$?
+    fi
+    if [[ -e "$marker" ]]; then
+        echo "Expected foreign-root inventory generator not to create a marker" >&2
+        cat "$output" >&2
+        exit 1
+    fi
+    if [[ "$status" -ne 2 ]]; then
+        echo "Expected foreign-root inventory lint to exit 2, got: $status" >&2
+        cat "$output" >&2
+        exit 1
+    fi
+    assert_contains "$output" "ERROR [INVENTORY_CHECK_CONFIG] scripts/gen-screen-inventory.mjs:"
+    assert_not_contains "$output" "RAW_HOSTILE_FOREIGN_GENERATOR_OUTPUT"
+    assert_not_contains "$output" "RAW_HOSTILE_FOREIGN_GENERATOR_MISSING_MARKER"
+    assert_contains "$output" "Project SDD lint: 1 error(s), 3 warning(s)"
 }
 
 test_check_sdd_fails_for_near_match_goal_heading() {
@@ -1585,5 +1647,6 @@ test_check_sdd_ignores_backticked_identifier_in_exception_outputs
 test_check_sdd_rejects_non_shell_red_task_with_non_qa_owner
 test_check_sdd_accepts_non_shell_red_task_with_qa_owner
 test_check_sdd_ci_job_is_independent
+test_check_sdd_rejects_foreign_root_generator_without_side_effects
 
 echo "speckit script tests passed"
