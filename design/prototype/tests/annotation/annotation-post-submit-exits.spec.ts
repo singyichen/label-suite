@@ -1,4 +1,4 @@
-/* spec 015 FR-082 / AC-3.43 (issue #456 AC-5 + AC-8 fourth path) -- once a
+/* spec 015 FR-082 / AC-4.34 (issue #456 AC-5 + AC-8 fourth path) -- once a
  * review unit is done with, the workspace names the ways out.
  *
  * The reviewer's submit already worked: the decision persists, the banner
