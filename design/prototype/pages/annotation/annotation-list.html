@@ -975,13 +975,25 @@
     }).join('');
   }
 
+  /* FR-081 (issue #456 AC-4): the workspace ignores params it does not know,
+     so carrying the list's view state through it costs nothing there and
+     lets every return path -- breadcrumb, sidebar, not-found redirect --
+     put the user back on the page they left instead of an unfiltered page 1.
+     Same keys applyListStateFromUrl() reads back, so the trip needs no
+     translation in either direction. */
+  function listStateQuery() {
+    var query = writeListStateParams(new URLSearchParams()).toString();
+    return query ? '&' + query : '';
+  }
+
   function buildWorkspaceUrl(taskId, sampleId, context, annotatorId) {
     return '../annotation/annotation-workspace.html' +
       '?task_id=' + encodeURIComponent(taskId) +
       '&sample_id=' + encodeURIComponent(sampleId) +
       '&role=' + encodeURIComponent(context.role) +
       '&run_type=' + encodeURIComponent(context.runType) +
-      identityQuery(context, annotatorId);
+      identityQuery(context, annotatorId) +
+      listStateQuery();
   }
 
   function getSampleStatus(profile, context, record, index) {
@@ -1120,13 +1132,23 @@
     }
   }
 
-  function syncUrlToListState() {
-    var params = new URLSearchParams(window.location.search);
+  /* Writes the current view state onto whatever URLSearchParams the caller
+     is assembling. Two callers share it -- syncUrlToListState() below, which
+     writes the list back onto its own URL, and buildWorkspaceUrl(), which
+     hands the same state to the workspace so it can hand it back (FR-081).
+     One writer means the two URLs can never disagree. Defaults are deleted
+     rather than written, so a clean URL stays clean. */
+  function writeListStateParams(params) {
     if (FILTER_STATE.status) params.set('status', FILTER_STATE.status); else params.delete('status');
     if (FILTER_STATE.query) params.set('q', FILTER_STATE.query); else params.delete('q');
     if (PAGINATION_STATE.pageSize !== 20) params.set('limit', String(PAGINATION_STATE.pageSize)); else params.delete('limit');
     var offset = (PAGINATION_STATE.page - 1) * PAGINATION_STATE.pageSize;
     if (offset > 0) params.set('offset', String(offset)); else params.delete('offset');
+    return params;
+  }
+
+  function syncUrlToListState() {
+    var params = writeListStateParams(new URLSearchParams(window.location.search));
     window.history.replaceState(null, '', window.location.pathname + '?' + params.toString());
   }
 
