@@ -114,6 +114,18 @@ k = max(2, 內容所需最小寬 ÷ 來源最窄節點寬, 內容所需最小高
 
 然後**整份 IR 全部重乘一次新的 k**，不要只放大裝不下的那幾個節點。
 
+### 平移偏移之外，文字還要補基線差
+
+**SVG `<text>` 的 `y` 是基線，Figma `TextNode.y` 是行框頂。** 直接把 SVG 的 `y` 乘 k 當成 Figma 的 `y`，每一行文字都會往下掉約一個字高——版面看起來只是「整體偏鬆」，不會壞，所以截圖驗收會放過它。
+
+`lineHeight = 1.15 · size` 時，基線落在行框頂下方約 `0.955 · size`：
+
+```js
+const top = (baseline, size) => k(baseline) + OFFSET_Y - 0.955 * size;   // size 是已乘 k 的值
+```
+
+**只有獨立 Text 節點需要這個轉換。** 形狀內建文字（`ShapeWithText.text`）由形狀自己垂直置中，不吃這條。
+
 ### 局部鉗制是例外，不是常態
 
 若只有少數節點裝不下，寧可**只把那幾個節點鉗到下限並以中心點展開**（版面不位移），也不要為了它們拉高全域 k。鉗制過的節點要在交付說明裡列出來——那是刻意的偏差，不是精確 k。
@@ -135,7 +147,29 @@ s.text.setRangeLineHeight(n + 1, end, { unit: "PIXELS", value: Math.round(18 * 1
 
 1. 顯式設 `lineHeight`（1.0–1.2×）
 2. 換 `shapeType`（`ROUNDED_RECTANGLE` 內距明顯大於 `SQUARE`，見 §6.3）
-3. 才考慮鉗制尺寸（§2 例外條款）
+3. **形狀留空、文字另疊**（見下節）——形狀本身不能換時的正解
+4. 才考慮鉗制尺寸（§2 例外條款）
+
+### 形狀內距吃不下時：空文字 ＋ 疊一個置中 Text
+
+有些形狀的內距**不隨尺寸縮小**，`lineHeight` 與 `shapeType` 兩招都用不上：
+
+| 形狀 | 症狀 | 何時必然發生 |
+|---|---|---|
+| `DIAMOND` | 可用內接矩形只有外框的 **½ × ½** | 標題字寬 > w/2 時（幾乎所有 8 字以上的判斷節點） |
+| `ROUNDED_RECTANGLE` | 圓角把左右內距吃掉 | 來源是扁膠囊（`rx ≈ h/2`）時 |
+
+**不要為此放大形狀**——那正是 §2 說的破壞比例守恆。正解是把形狀當成純圖形、文字獨立畫：
+
+```js
+s.text.characters = "";                       // 形狀留空，magnet 照樣吸得住
+stack(lines, k(o.w) + (o.pad || 0),           // pad：菱形給額外寬度讓字橫向溢出
+      s.x + s.width / 2, s.y + s.height / 2); // 依形狀中心置中
+```
+
+`stack()` 見 §6.6。這麼做並不是繞路——**來源 SVG 本來就是這個結構**（`<polygon>`／`<rect>` 之外另有一個 `<text>`），照抄反而更貼近原圖。連線端點用 `endpointNodeId` 磁吸到那個空文字形狀，行為完全不受影響。
+
+判斷規則：`DIAMOND` 一律用疊字；`ROUNDED_RECTANGLE` 在來源是扁膠囊時用疊字。其餘走 §6.6 `shape()` 的內建雙字階路徑。
 
 ### 裁切驗不到，只能看
 
@@ -330,6 +364,12 @@ function mkNode(sec, o) {
 
   s.text.fontName = FONT_T;                          // 設 characters 前先指定
   const lines = [o.title, o.sub, o.sub2].filter(Boolean);
+  if (o.overlay) {                                   // §3：內距吃字 → 形狀留空，另疊 stack()
+    s.text.characters = "";
+    stack(sec, lines, k(o.w) + k(o.pad || 0),
+          s.x + s.width / 2, s.y + s.height / 2);
+    return s;
+  }
   s.text.characters = lines.join("\n");
   const n = o.title.length, end = s.text.characters.length;
   const ts = k(SIZE.title), ss = k(SIZE.sub);
@@ -366,17 +406,41 @@ function link(sec, a, b, o = {}) {
   return c;
 }
 
-// ── text(): 泳道標籤、引文、對照表欄位。x/y/size 皆來源值 ───
-function text(sec, x, y, str, o = {}) {
+// ── text(): 泳道標籤、引文、對照表欄位。x/size 皆來源值 ─────
+//    y 傳來源 <text> 的「基線」，函式自己換算成行框頂，見 §2 ───
+function text(sec, x, baseline, str, o = {}) {
+  const size = k(o.size || SIZE.sub);
   const t = figma.createText();
   t.fontName = o.font || FONT_S;
   t.characters = str;
-  t.fontSize = k(o.size || SIZE.sub);
+  t.fontSize = size;
+  t.lineHeight = { unit: "PIXELS", value: Math.round(size * LH) };
   t.fills = solid(o.color || SOFT);
-  if (o.spacing) t.letterSpacing = { unit: "PIXELS", value: k(o.size) * o.spacing };
-  if (o.lh) t.lineHeight = { unit: "PIXELS", value: Math.round(k(o.size) * o.lh) };
+  if (o.spacing) t.letterSpacing = { unit: "PIXELS", value: size * o.spacing };
   sec.appendChild(t);
-  t.x = k(x); t.y = k(y);
+  t.x = k(x); t.y = k(baseline) - 0.955 * size;      // 基線 → 行框頂
+  return t;
+}
+
+// ── stack(): 多字階文字塊，依中心點置中。搭配 mkNode 的 overlay ──
+function stack(sec, lines, w, cx, cy) {
+  const t = figma.createText();
+  t.fontName = FONT_T;
+  t.characters = lines.map((l) => l.s).join("\n");
+  t.textAutoResize = "HEIGHT";
+  t.resize(w, t.height);                             // 先定寬才能置中對齊
+  t.textAlignHorizontal = "CENTER";
+  let i = 0;
+  for (const l of lines) {
+    const n = l.s.length, sz = k(l.size);
+    t.setRangeFontName(i, i + n, l.font || FONT_S);
+    t.setRangeFontSize(i, i + n, sz);
+    t.setRangeFills(i, i + n, solid(l.color || SOFT));
+    t.setRangeLineHeight(i, i + n, { unit: "PIXELS", value: Math.round(sz * LH) });
+    i += n + 1;
+  }
+  sec.appendChild(t);
+  t.x = cx - w / 2; t.y = cy - t.height / 2;         // 依形狀中心置中，不是靠左上角
   return t;
 }
 
@@ -543,6 +607,8 @@ Design file 沒有原生 Connector，**連線不會跟隨節點移動**。要維
 - [ ] 局部鉗到下限的節點已逐一列出，不是靜悄悄放大
 - [ ] 含中文的文字用 CJK 家族，字重照 §4 對映表落地
 - [ ] 行高顯式設定，沒有依賴 auto（§3）
+- [ ] `DIAMOND` 與扁膠囊改用「空文字 ＋ 疊 `stack()`」，沒有為了塞字放大形狀（§3）
+- [ ] 獨立 Text 節點的 `y` 已從來源基線換算成行框頂（§2）
 - [ ] 有箭頭的線用 `Connector`，不是 `createLine()`（§6.4）
 - [ ] 連線標籤是 connector 原生 text，底下沒有自己疊的遮罩矩形（§6.5）
 - [ ] Design 模式已設 `figma.currentPage.backgrounds`（§7.3）
@@ -554,3 +620,4 @@ Design file 沒有原生 Connector，**連線不會跟隨節點移動**。要維
 - **放專案內而非全域**：樣式角色引用 Label Suite 的 design token 與 `label-suite` diagram profile，引用鏈只在本 repo 成立。
 - **不併進 `diagram-design`**：該 skill 產出 HTML/SVG，觸發情境不同；合併會讓做網頁圖時白白載入大量 Plugin API 細節。
 - 相關：issue #475（本 skill）、#465（`diagram-design` 導入）；上游 `figma-use` / `figma-use-figjam`（Figma plugin 2.2.96）。
+- 規則來源：`docs/diagrams/workflow/review-flow-{overview,dry-run,official-run}.html` 三張圖以 `k = 2` 移植進同一個 FigJam board 的過程；每一條規則都是那三次移植裡實際踩過並修掉的。
