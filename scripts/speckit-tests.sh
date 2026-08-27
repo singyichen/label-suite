@@ -2107,6 +2107,117 @@ test_check_sdd_rejects_positive_actions_around_negative_clause() {
     [[ "$failures" -eq 0 ]]
 }
 
+test_check_sdd_rejects_remaining_retired_punctuation_boundaries() {
+    local failures repo
+    failures=0
+
+    repo="$(make_sdd_repo)"
+    printf '\nRun npm test:\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_failure "retired-colon" "$repo" "RETIRED_COMMAND" "AGENTS.md"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nRun (npm test) before review.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_failure "retired-parenthesis" "$repo" "RETIRED_COMMAND" "AGENTS.md"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nDo not run npm test! Run npm test locally.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_failure "retired-exclamation-clause" "$repo" "RETIRED_COMMAND" "AGENTS.md"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nDo not run npm test, run npm test locally.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_failure "retired-comma-clause" "$repo" "RETIRED_COMMAND" "AGENTS.md"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nDo not run npm test!\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_success "retired-exclamation-negative-control" "$repo" "RETIRED_COMMAND"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nDo not run npm test! Do not run npm test locally.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_success "retired-two-prohibitions-control" "$repo" "RETIRED_COMMAND"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nRun pnpm test: before review.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_success "retired-pnpm-punctuation-control" "$repo" "RETIRED_COMMAND"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nRun npm testing: before review.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_success "retired-token-boundary-control" "$repo" "RETIRED_COMMAND"; then failures=$((failures + 1)); fi
+
+    [[ "$failures" -eq 0 ]]
+}
+
+test_check_sdd_respects_commonmark_fence_indentation() {
+    local closer_indent failures repo
+    failures=0
+
+    repo="$(make_sdd_repo)"
+    sed -i.bak '/^## 功能目標$/,/^## 規格相依性$/ {
+        /^## 規格相依性$/!d
+    }' "$repo/specs/foundation/001-project-sdd-lint/spec.md"
+    cat >> "$repo/specs/foundation/001-project-sdd-lint/spec.md" <<'BACKTICK_FALSE_CLOSER'
+
+```markdown
+    ```
+## 功能目標
+
+This heading remains inside the valid CommonMark fence.
+```
+BACKTICK_FALSE_CLOSER
+    if ! record_expected_lint_failure "commonmark-backtick-false-closer" "$repo" "SPEC_REQUIRED_HEADING" "specs/foundation/001-project-sdd-lint/spec.md"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    sed -i.bak '/^## 功能目標$/,/^## 規格相依性$/ {
+        /^## 規格相依性$/!d
+    }' "$repo/specs/foundation/001-project-sdd-lint/spec.md"
+    cat >> "$repo/specs/foundation/001-project-sdd-lint/spec.md" <<'TILDE_FALSE_CLOSER'
+
+~~~markdown
+    ~~~
+## 功能目標
+
+This heading remains inside the valid CommonMark fence.
+~~~
+TILDE_FALSE_CLOSER
+    if ! record_expected_lint_failure "commonmark-tilde-false-closer" "$repo" "SPEC_REQUIRED_HEADING" "specs/foundation/001-project-sdd-lint/spec.md"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    sed -i.bak '/^| foundation-001 |/d' "$repo/specs/STATUS.md"
+    cat >> "$repo/specs/STATUS.md" <<'STATUS_FALSE_CLOSER'
+
+```markdown
+    ```
+| foundation-001 | Project SDD lint | foundation | `in-progress` | `feat/project-sdd-lint` | fenced spoof |
+```
+STATUS_FALSE_CLOSER
+    if ! record_expected_lint_failure "commonmark-status-false-closer" "$repo" "STATUS_ARTIFACT_SYNC" "specs/foundation/001-project-sdd-lint/spec.md"; then failures=$((failures + 1)); fi
+
+    for closer_indent in '' ' ' '  ' '   '; do
+        repo="$(make_sdd_repo)"
+        sed -i.bak '/^## 功能目標$/,/^## 規格相依性$/ {
+            /^## 規格相依性$/!d
+        }' "$repo/specs/foundation/001-project-sdd-lint/spec.md"
+        printf '\n```markdown\nExample content.\n%s```\n## 功能目標\n\nThis is the real canonical goal.\n' "$closer_indent" >> "$repo/specs/foundation/001-project-sdd-lint/spec.md"
+        if ! record_expected_lint_success "commonmark-valid-backtick-closer-${#closer_indent}" "$repo" "SPEC_REQUIRED_HEADING"; then failures=$((failures + 1)); fi
+    done
+
+    repo="$(make_sdd_repo)"
+    sed -i.bak '/^| foundation-001 |/d' "$repo/specs/STATUS.md"
+    cat >> "$repo/specs/STATUS.md" <<'STATUS_VALID_CLOSER'
+
+~~~markdown
+Example content.
+  ~~~
+| foundation-001 | Project SDD lint | foundation | `in-progress` | `feat/project-sdd-lint` | real row |
+STATUS_VALID_CLOSER
+    if ! record_expected_lint_success "commonmark-valid-status-closer" "$repo" "STATUS_ARTIFACT_SYNC"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nOrdinary prose may mention ``` without opening a fenced block.\n' >> "$repo/specs/foundation/001-project-sdd-lint/spec.md"
+    if ! record_expected_lint_success "commonmark-inline-marker-control" "$repo" "SPEC_REQUIRED_HEADING"; then failures=$((failures + 1)); fi
+
+    [[ "$failures" -eq 0 ]]
+}
+
 test_check_sdd_collects_final_review_high_regressions() {
     local failures family output status
     failures=0
@@ -2115,7 +2226,9 @@ test_check_sdd_collects_final_review_high_regressions() {
         test_check_sdd_ci_checkout_fetches_full_history \
         test_check_sdd_rejects_punctuated_retired_commands \
         test_check_sdd_ignores_fenced_governance_spoofs \
-        test_check_sdd_rejects_positive_actions_around_negative_clause
+        test_check_sdd_rejects_positive_actions_around_negative_clause \
+        test_check_sdd_rejects_remaining_retired_punctuation_boundaries \
+        test_check_sdd_respects_commonmark_fence_indentation
     do
         output="$(mktemp "$TMP_ROOT/final-review-high-family.XXXXXX")"
         if "$family" >"$output" 2>&1; then
