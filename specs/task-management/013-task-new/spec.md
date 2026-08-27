@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-list-output-types
 建立日期: 2026-04-20
-版本: 6.9.4
+版本: 6.9.5
 狀態: Draft
 ---
 
@@ -665,7 +665,7 @@ flowchart LR
 - **TaskConfig**：提交時的完整設定，含 `input_type` + `outputs[]`（供 annotation/dataset 模組使用）。
 - **TaskMembership**：建立者自動加入的任務角色關係（`project_leader`）。
 - **RunInitConfig**：首次啟動設定。欄位：`sampling_value`（筆數，`>= 1` 且 `< dataset_total`）、`isolation_enabled`。
-- **TaskGuidelineConfig**：任務說明設定。欄位：`annotator_guideline_text`、`annotator_guideline_assets[]`、`reviewer_guideline_text`、`reviewer_guideline_assets[]`、`force_guideline`。
+- **TaskGuidelineConfig**：任務說明設定。欄位：`annotator_guideline_text`、`annotator_guideline_assets[]`、`reviewer_guideline_text`、`reviewer_guideline_assets[]`、`force_guideline`、`guideline_version`（指引內容版本標記；任務建立時系統自動初始化，形狀為遞增版本號或內容雜湊，具體形狀留待後端接上時定義；後續遞增規則與消費關係見 `014-task-detail` FR-017a）。
 
 ---
 
@@ -779,6 +779,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 6.9.5 | 2026-08-27 | **`TaskGuidelineConfig` 新增 `guideline_version`（patch，issue #492 A4/A5）**：新增欄位 `guideline_version`（指引內容版本標記），任務建立時由系統自動初始化，具體形狀留待後端接上時定義；後續遞增規則、觸發條件與消費方（試標回合 FK 綁定、`annotation-015` FR-066 第 4 點）之權威定義在 `014-task-detail` FR-017a，本規格僅新增欄位本身，不新增 FR/SC、不定義遞增邏輯。 |
 | 6.9.4 | 2026-08-24 | Issue #261：新增 Prototype Traceability，明確對應 task-new 原型頁面、與 014 共用的 `OUTPUT_TYPE_REGISTRY` 設定引擎、設計層參考的責任邊界；規格條文未變。 |
 | 6.9.3 | 2026-08-24 | **issue #197 追蹤 — 精靈離頁保護回歸測試補齊（patch，無條文變更）**：issue #197（w6-resilience-a11y CONT-05）回報精靈重新整理即遺失進度、無離頁提示，經查該行為已由 v3.3.1（session storage 精靈狀態持久化）與既有 FR-007a（未儲存變更離頁前確認視窗）於 2026-07-09 落地，findings 早於本次 issue 建立（審計快照落後於實作），非回歸。本版僅新增 Prototype Playwright 回歸測試（`task-new-wizard-draft-warning.spec.ts`：dirty 時 `beforeunload` 觸發、clean 時不觸發、reload 後草稿還原），FR-007a 與 v3.3.1 條文不變；評估精靈草稿改採 `localStorage`（跨分頁持久化）之成本效益後維持現行 `sessionStorage` 方案（沿用 v3.3.1 決策）：`sessionStorage` 天然以分頁為界，避免多分頁同時編輯精靈互相覆寫，亦避免草稿（含資料集預覽片段）於共用實驗室電腦上無限期殘留；`beforeunload` 已涵蓋關閉分頁情境的離頁提示，`localStorage` 額外可承受的僅為瀏覽器崩潰情境，成本（跨分頁衝突與資料殘留風險）大於效益，故不採用。 |
 | 6.9.2 | 2026-08-24 | **修正 prototype 送出未落地（patch，issue #285）**：`task-new.html` 的 `submitTask()` 先前只產生 `task_id` 並導頁，未寫入任何 prototype 資料層，導致 FR-006a／SC-002 描述的「建立成功即有 membership／任務清單資料」在 prototype 端無法示範（新任務清單看不到、task-detail 落 not-found）。修正後 `submitTask()` 將精靈已收集的欄位（名稱、taxonomy 選擇、`outputs[]`、`fieldRoleMap`、2 筆資料集預覽列）寫入 `labelsuite.createdTasks` localStorage bucket；`task-list.data.js`／`task-detail.data.js` 於載入時合併該 bucket 進 `window.LabelSuiteTaskListData.tasks`／`window.LabelSuiteTaskDetailData.profiles`，使建立的任務以 `draft` 狀態出現在任務清單並可從 task-detail 開啟。FR-006a／FR-008a／SC-002／SC-005 描述的「正式後端」行為不變，本次僅修正 prototype 端過去從未真正示範到的落地缺口；不影響 011（列表）/014（詳情）既有 seed 資料契約。 |
