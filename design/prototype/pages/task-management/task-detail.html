@@ -2545,6 +2545,10 @@
       toastPublishedOfficial: '已啟動正式標記',
       toastPublishedComplete: '任務已標記完成',
       toastPublishBlocked: '抽樣設定不合法，無法發布。',
+      toastPublishBlockedMembers: '啟用中成員人數不足，無法發布：',
+      memberGapAnnotatorTpl: '標記員還差 {count} 位',
+      memberGapReviewerTpl: '審核員還差 {count} 位',
+      memberGapJoiner: '、',
       yes: '是',
       no: '否',
       guidelineUploaded: '已上傳',
@@ -3030,6 +3034,10 @@
       toastPublishedOfficial: 'Official run started',
       toastPublishedComplete: 'Task marked as completed',
       toastPublishBlocked: 'Cannot publish due to invalid sampling setting.',
+      toastPublishBlockedMembers: 'Not enough active members to publish: ',
+      memberGapAnnotatorTpl: 'annotators need {count} more',
+      memberGapReviewerTpl: 'reviewers need {count} more',
+      memberGapJoiner: '; ',
       yes: 'Yes',
       no: 'No',
       guidelineUploaded: 'Uploaded',
@@ -3417,7 +3425,13 @@
     { name: 'Rachel Wu', email: 'rachel.wu@labelsuite.io', taskRole: 'reviewer', status: 'active', joinedAt: '2026-04-20 10:14', lastActive: '2026-04-21 08:47' },
     { name: 'Alex Wang', email: 'alex.wang@labelsuite.io', taskRole: 'annotator', status: 'active', joinedAt: '2026-04-20 10:15', lastActive: '2026-04-21 09:12' },
     { name: 'Olivia Lin', email: 'olivia.lin@labelsuite.io', taskRole: 'annotator', status: 'active', joinedAt: '2026-04-20 10:16', lastActive: '2026-04-21 08:58' },
-    { name: 'Jason Huang', email: 'jason.h@labelsuite.io', taskRole: 'annotator', status: 'disabled', joinedAt: '2026-04-20 10:18', lastActive: '2026-04-20 16:11' },
+    /* issue #505: kept active so the default 3-annotator seed satisfies
+       DEFAULT_TASK_DATA.minAnnotators=3 out of the box -- the FR-010t
+       publish gate (getMembershipGapMessages()) counts active members, and
+       every regression test that publishes a trial round assumes T001 is
+       already publish-ready. Member management can still disable this row
+       through the normal UI to exercise the gate itself. */
+    { name: 'Jason Huang', email: 'jason.h@labelsuite.io', taskRole: 'annotator', status: 'active', joinedAt: '2026-04-20 10:18', lastActive: '2026-04-20 16:11' },
   ];
 
   /* Review workload seed (issue #148). `已指派` is always derived as
@@ -7280,6 +7294,25 @@ function getTaskTypeLabel() {
     });
   }
 
+  /* FR-010t / SC-038 (issue #189 decision D3, issue #505): publishing a
+     trial round or the official run must be blocked per-role whenever the
+     count of membership_status=active members falls below min_annotators /
+     min_reviewers -- checked against the live TASK_MEMBERS roster, not just
+     the setting value itself. Returns one interpolated "還差 N 位" message
+     per short-handed role so canPublish() can surface every gap at once. */
+  function getMembershipGapMessages() {
+    var messages = [];
+    var annotatorGap = Number(TASK_DATA.minAnnotators) - getActiveAnnotatorMembers().length;
+    if (annotatorGap > 0) {
+      messages.push(interpolate(t('memberGapAnnotatorTpl'), { count: annotatorGap }));
+    }
+    var reviewerGap = Number(TASK_DATA.minReviewers) - getActiveReviewerMembers().length;
+    if (reviewerGap > 0) {
+      messages.push(interpolate(t('memberGapReviewerTpl'), { count: reviewerGap }));
+    }
+    return messages;
+  }
+
   function getAssignmentCount(records, roundId) {
     return records
       .filter(function(item) { return !roundId || item.roundId === roundId; })
@@ -9230,6 +9263,12 @@ function getTaskTypeLabel() {
       showToast(t('toastPublishBlocked'), true);
       trackEvent('prototype_publish_failed', { reason: result.message });
       renderSamplingState();
+      return false;
+    }
+    var gapMessages = getMembershipGapMessages();
+    if (gapMessages.length) {
+      showToast(t('toastPublishBlockedMembers') + gapMessages.join(t('memberGapJoiner')), true);
+      trackEvent('prototype_publish_failed', { reason: 'member_gap: ' + gapMessages.join(', ') });
       return false;
     }
     return true;
