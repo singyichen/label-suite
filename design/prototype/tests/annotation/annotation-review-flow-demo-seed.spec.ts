@@ -13,13 +13,16 @@ import { buildListUrl, buildWorkspaceUrl, skipGuidelineModal } from './_workspac
  * Expected status matrix (derived, not stored -- see getReviewUnitStatus):
  *   T014 dry_run  (min=1): dry-01 finalized x3 · dry-02 finalized/disputed/
  *     pending · dry-03 pending/disputed/pending · dry-04 finalized x3 (B via
- *     chen's arbitration) · dry-05 pending x3
+ *     chen's arbitration) · dry-05 finalized (A, rejected by wang -- issue
+ *     #502)/pending/pending
  *   T015 official (min=1): finalized · disputed · finalized (arbitrated) ·
  *     pending · (ofs-05 absent)
  *   T016 official (min=3): finalized · approved · modified · finalized
  *     (majority convergence, no arbitration) · disputed (1/1/1 stalemate)
  *   T017 official (min=2): disputed (1:1 tie) · approved · modified ·
- *     finalized · pending
+ *     finalized · pending (oft-05: rejected by wang, official_run rolls the
+ *     annotator back to pending -- issue #502 -- so this reads exactly like
+ *     a never-reviewed unit from the reviewer side)
  *
  * Traceability: specs/annotation/015-annotation-workspace/spec.md
  *   FR-051, FR-059, FR-060, FR-061
@@ -57,8 +60,9 @@ test.describe('T014 dry_run staged states', () => {
       '待審', '爭議中', '待審',
       // dry-04-dispute-resolved: B's dispute finalized by chen's arbitration
       '已定稿', '已定稿', '已定稿',
-      // dry-05-pending-review: submitted, nobody reviewed yet
-      '待審', '待審', '待審',
+      // dry-05-pending-review: A rejected by wang (issue #502, agree value
+      // -- dry_run reject still finalizes normally), B/C nobody reviewed yet
+      '已定稿', '待審', '待審',
     ]);
   });
 
