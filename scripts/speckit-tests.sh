@@ -432,6 +432,36 @@ assert_independent_sdd_lint_job() {
     fi
 }
 
+sdd_lint_checkout_has_full_history() {
+    local job="$1"
+
+    printf '%s\n' "$job" | awk '
+        /^      - / {
+            in_step = 1
+            checkout_step = 0
+            in_with = 0
+            if ($0 ~ /^      - uses:[[:space:]]*actions\/checkout@v5([[:space:]]*(#.*)?)?$/) {
+                checkout_step = 1
+            }
+            next
+        }
+        in_step && /^        uses:[[:space:]]*actions\/checkout@v5([[:space:]]*(#.*)?)?$/ {
+            checkout_step = 1
+            next
+        }
+        checkout_step && /^        with:[[:space:]]*(#.*)?$/ {
+            in_with = 1
+            next
+        }
+        checkout_step && in_with && /^          fetch-depth:[[:space:]]*(0|"0"|'\''0'\'')([[:space:]]*(#.*)?)?$/ {
+            full_history++
+        }
+        END {
+            exit !(full_history == 1)
+        }
+    '
+}
+
 assert_sdd_lint_ci_contract_rejected() {
     local ci="$1"
     local expected="$2"
@@ -881,6 +911,45 @@ assert_not_contains() {
         echo "Expected $path not to contain: $text" >&2
         cat "$path" >&2
         exit 1
+    fi
+}
+
+record_expected_lint_failure() {
+    local label="$1"
+    local repo="$2"
+    local rule="$3"
+    local path="$4"
+    local output status
+    output="$(mktemp "$TMP_ROOT/check-sdd-final-high.XXXXXX")"
+
+    if run_check_sdd "$repo" >"$output" 2>&1; then
+        status=0
+    else
+        status=$?
+    fi
+    if [[ "$status" -ne 1 ]] || ! grep -Fq "ERROR [$rule] $path:" "$output"; then
+        echo "RED_MISS [$label] expected $rule on $path with exit 1, got exit $status" >&2
+        cat "$output" >&2
+        return 1
+    fi
+}
+
+record_expected_lint_success() {
+    local label="$1"
+    local repo="$2"
+    local excluded_rule="$3"
+    local output status
+    output="$(mktemp "$TMP_ROOT/check-sdd-final-control.XXXXXX")"
+
+    if run_check_sdd "$repo" >"$output" 2>&1; then
+        status=0
+    else
+        status=$?
+    fi
+    if [[ "$status" -ne 0 ]] || ! grep -Fq "Project SDD lint: 0 error(s)" "$output" || grep -Fq "ERROR [$excluded_rule]" "$output"; then
+        echo "CONTROL_FAILURE [$label] expected exit 0 without $excluded_rule, got exit $status" >&2
+        cat "$output" >&2
+        return 1
     fi
 }
 
@@ -1947,6 +2016,126 @@ test_check_sdd_accepts_non_shell_red_task_with_qa_owner() {
     assert_command_succeeds "$repo"
 }
 
+test_check_sdd_ci_checkout_fetches_full_history() {
+    local ci failures job
+    failures=0
+    ci="$ROOT/.github/workflows/ci.yml"
+
+    if ! assert_independent_sdd_lint_job "$ci"; then
+        echo "CONTROL_FAILURE [ci-full-history] sdd-lint must remain an independent checkout-and-lint job" >&2
+        failures=$((failures + 1))
+    fi
+    job="$(extract_top_level_sdd_lint_job "$ci")"
+    if ! sdd_lint_checkout_has_full_history "$job"; then
+        echo "RED_MISS [ci-full-history] actions/checkout@v5 must set fetch-depth: 0 on its checkout step" >&2
+        failures=$((failures + 1))
+    fi
+
+    [[ "$failures" -eq 0 ]]
+}
+
+test_check_sdd_rejects_punctuated_retired_commands() {
+    local failures repo
+    failures=0
+
+    repo="$(make_sdd_repo)"
+    printf '\nRun npm test.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_failure "retired-period" "$repo" "RETIRED_COMMAND" "AGENTS.md"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nRun `npm test`.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_failure "retired-backtick" "$repo" "RETIRED_COMMAND" "AGENTS.md"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nDo not run npm test before review. Run npm test locally.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_failure "retired-mixed-sentence" "$repo" "RETIRED_COMMAND" "AGENTS.md"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nDo not run npm test.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_success "retired-negative-control" "$repo" "RETIRED_COMMAND"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nRun pnpm test.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_success "retired-pnpm-control" "$repo" "RETIRED_COMMAND"; then failures=$((failures + 1)); fi
+
+    [[ "$failures" -eq 0 ]]
+}
+
+test_check_sdd_ignores_fenced_governance_spoofs() {
+    local failures repo
+    failures=0
+
+    repo="$(make_sdd_repo)"
+    sed -i.bak '/^## 功能目標$/,/^## 規格相依性$/ {
+        /^## 規格相依性$/!d
+    }' "$repo/specs/foundation/001-project-sdd-lint/spec.md"
+    cat >> "$repo/specs/foundation/001-project-sdd-lint/spec.md" <<'SPEC_FENCE'
+
+```markdown
+## 功能目標
+
+This fenced example is not a canonical section.
+```
+SPEC_FENCE
+    if ! record_expected_lint_failure "fenced-required-heading" "$repo" "SPEC_REQUIRED_HEADING" "specs/foundation/001-project-sdd-lint/spec.md"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    sed -i.bak '/^| foundation-001 |/d' "$repo/specs/STATUS.md"
+    cat >> "$repo/specs/STATUS.md" <<'STATUS_FENCE'
+
+```markdown
+| foundation-001 | Project SDD lint | foundation | `in-progress` | `feat/project-sdd-lint` | fenced spoof |
+```
+STATUS_FENCE
+    if ! record_expected_lint_failure "fenced-status-row" "$repo" "STATUS_ARTIFACT_SYNC" "specs/foundation/001-project-sdd-lint/spec.md"; then failures=$((failures + 1)); fi
+
+    [[ "$failures" -eq 0 ]]
+}
+
+test_check_sdd_rejects_positive_actions_around_negative_clause() {
+    local failures repo
+    failures=0
+
+    repo="$(make_sdd_repo)"
+    printf '\n- [ ] 1.3 Modify `scripts/a.sh`, do not modify `scripts/b.sh`; modify `scripts/c.sh`. [@senior-devops]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+    if ! record_expected_lint_failure "mixed-task-action" "$repo" "TASK_EXCEPTION" "openspec/changes/project-sdd-lint/tasks.md"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\n- [ ] 1.3 Do not modify `scripts/b.sh`. [@senior-devops]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+    if ! record_expected_lint_success "negative-task-action-control" "$repo" "TASK_EXCEPTION"; then failures=$((failures + 1)); fi
+
+    [[ "$failures" -eq 0 ]]
+}
+
+test_check_sdd_collects_final_review_high_regressions() {
+    local failures family output status
+    failures=0
+
+    for family in \
+        test_check_sdd_ci_checkout_fetches_full_history \
+        test_check_sdd_rejects_punctuated_retired_commands \
+        test_check_sdd_ignores_fenced_governance_spoofs \
+        test_check_sdd_rejects_positive_actions_around_negative_clause
+    do
+        output="$(mktemp "$TMP_ROOT/final-review-high-family.XXXXXX")"
+        if "$family" >"$output" 2>&1; then
+            status=0
+        else
+            status=$?
+        fi
+        if [[ "$status" -ne 0 ]]; then
+            echo "FINAL_REVIEW_HIGH_FAMILY_MISS [$family]" >&2
+            cat "$output" >&2
+            failures=$((failures + 1))
+        fi
+    done
+
+    if [[ "$failures" -ne 0 ]]; then
+        echo "Expected all final-review High regressions to pass; observed $failures family miss(es)" >&2
+        return 1
+    fi
+}
+
 test_prerequisites_resolve_module_feature_paths
 test_create_feature_creates_module_branch_spec_and_status
 test_setup_plan_and_status_update
@@ -2012,5 +2201,6 @@ test_check_sdd_accepts_non_shell_red_task_with_qa_owner
 test_check_sdd_ci_job_is_independent
 test_check_sdd_rejects_foreign_root_generator_without_side_effects
 test_check_sdd_rejects_control_character_paths_before_scanning
+test_check_sdd_collects_final_review_high_regressions
 
 echo "speckit script tests passed"
