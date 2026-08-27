@@ -32,7 +32,11 @@ preflight_scanned_paths() {
         esac
     done < <(
         find "$repo_root/specs" -mindepth 3 -maxdepth 3 -path '*/[0-9][0-9][0-9]-*/spec.md' -print0 2>/dev/null
-        find "$repo_root/openspec/changes" -mindepth 1 -path "$repo_root/openspec/changes/archive" -prune -o -print0 2>/dev/null
+        for scan_root in "$repo_root"/openspec/changes/*; do
+            [ -d "$scan_root" ] || continue
+            [ "$scan_root" != "$repo_root/openspec/changes/archive" ] || continue
+            find -H "$scan_root" -print0 2>/dev/null
+        done
         for scan_root in .claude/agents .claude/commands .claude/skills/sdd-workflow; do
             [ ! -d "$repo_root/$scan_root" ] || find "$repo_root/$scan_root" -mindepth 1 -print0 2>/dev/null
         done
