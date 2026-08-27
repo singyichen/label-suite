@@ -219,8 +219,7 @@ EOF
                 [ "$assignee" = senior-qa ] || add_error TASK_RED_OWNER "$task_relative" 'Red task must be owned by senior-qa'
                 add_warning TASK_RED_EVIDENCE_REVIEW "$task_relative" 'committed Red failure evidence requires runtime review'
                 printf '%s\n' "$task_group" >>"$pending_red_groups"
-            fi
-            if printf '%s\n' "$task_line" | grep -Eq '(^|[^[:alnum:]_])Green([^[:alnum:]_]|$)'; then
+            elif printf '%s\n' "$task_line" | grep -Eq '(^|[^[:alnum:]_])Green([^[:alnum:]_]|$)'; then
                 if grep -Fqx "$task_group" "$pending_red_groups"; then
                     awk -v group="$task_group" '
                         !consumed && $0 == group { consumed = 1; next }
@@ -315,7 +314,7 @@ while IFS= read -r consumer; do
     grep -En '(^|[^[:alnum:]_])npm[[:space:]]+(test|run)([[:space:]]|$)|/ui-ux-pro-max|/speckit[.]analyze' "$consumer" 2>/dev/null >"$tmp_dir/retired" || true
     while IFS= read -r match; do
         text="${match#*:}"
-        if printf '%s\n' "$text" | grep -Eqi 'retired|deprecated|changelog|negative|non-historical|不得|禁止|阻擋|廢止|退役|歷史|取代|移除'; then
+        if printf '%s\n' "$text" | grep -Eqi 'retired|deprecated|changelog|negative|不得|禁止|阻擋|廢止|退役|歷史|取代|移除'; then
             continue
         fi
         add_error RETIRED_COMMAND "$relative" 'active guidance contains a retired repository command or pipeline stage'
