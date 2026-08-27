@@ -38,7 +38,7 @@ preflight_scanned_paths() {
             find -H "$scan_root" -print0 2>/dev/null
         done
         for scan_root in .claude/agents .claude/commands .claude/skills/sdd-workflow; do
-            [ ! -d "$repo_root/$scan_root" ] || find "$repo_root/$scan_root" -mindepth 1 -print0 2>/dev/null
+            [ ! -d "$repo_root/$scan_root" ] || find -H "$repo_root/$scan_root" -mindepth 1 -print0 2>/dev/null
         done
     )
     return 0
@@ -193,7 +193,6 @@ EOF
         pending_red_groups="$tmp_dir/pending-red-groups"
         : >"$pending_red_groups"
         while IFS= read -r task_line; do
-            first_path="$(printf '%s\n' "$task_line" | grep -o '`[^`]*`' | sed -n '1p' | sed 's/^`//; s/`$//')"
             action_clause="$(printf '%s\n' "$task_line" | awk '{ sub(/^- \[[ xX]\] [0-9.]+[[:space:]]*/, ""); gsub(/[.][[:space:]]/, "。"); count = split($0, clauses, /[，。；;]/); for (i = 1; i <= count; i++) { clause = clauses[i]; lower = tolower(clause); if (clause ~ /(不得|禁止|不可|不應|無需)/ || lower ~ /(^|[^[:alnum:]_])((do|does|did|must|should|shall|will|would|can|could|may|might|is|are|was|were|has|have|had)[[:space:]]+not|(don.t|doesn.t|didn.t|mustn.t|shouldn.t|shan.t|won.t|wouldn.t|can.t|couldn.t|mayn.t|mightn.t|isn.t|aren.t|wasn.t|weren.t|hasn.t|haven.t|hadn.t|cannot))[[:space:]]+(modif|creat|delet|remov|writ|updat|add|edit|touch|chang|generat|implement|replac|renam)[[:alpha:]]*([^[:alnum:]_]|$)/) continue; if (clause ~ /(執行[[:space:]]*`|驗證[：:[:space:]]*`|預期)/ || lower ~ /(exception:|verification[：:[:space:]]*`|verify[[:space:]]*`|run[[:space:]]*`|expect)/) continue; if (i == 1 || clause ~ /(修改|建立|新增|刪除|移除|撰寫|補上|更新|加入[[:space:]]*`)/ || lower ~ /(modif(y|ied)|creat(e|ed)|delet(e|ed)|remov(e|ed)|writ(e|ten)|updat(e|ed)|add[[:space:]]*`)/) print clause } }')"
             explicit_files="$(printf '%s\n' "$action_clause" | grep -Eo '`[^`[:space:]]*(/|[.])[^`[:space:]]*`' | wc -l | tr -d ' ')"; printf '%s\n' "$action_clause" | grep -Eo '`[^`[:space:]]*(/|[.])[^`[:space:]]*`' | sed 's/^`//; s/`$//' | LC_ALL=C sort -u >"$tmp_dir/task-files"
             task_group="$(printf '%s\n' "$task_line" | sed -n 's/^- \[[ xX]\] \([0-9][0-9]*\)[.].*/\1/p')"
@@ -231,10 +230,13 @@ EOF
                 fi
             fi
             if [ "$exception" != governance-propagation ] && ! printf '%s\n' "$task_line" | grep -Eq '^- \[[ xX]\] [0-9.]+ 執行'; then
-                if printf '%s\n' "$first_path" | grep -Eq '^scripts/.*-tests[.]sh$' && [ "$assignee" != senior-qa ]; then add_error TASK_FILE_OWNER "$task_relative" 'scripts/*-tests.sh is owned by senior-qa'; fi
-                if printf '%s\n' "$first_path" | grep -Eq '^scripts/' && ! printf '%s\n' "$first_path" | grep -Eq -- '-tests[.]sh$' && [ "$assignee" != senior-devops ]; then add_error TASK_FILE_OWNER "$task_relative" 'production scripts are owned by senior-devops'; fi
+                if grep -Eq '^scripts/.*-tests[.]sh$' "$tmp_dir/task-files" && [ "$assignee" != senior-qa ]; then add_error TASK_FILE_OWNER "$task_relative" 'scripts/*-tests.sh is owned by senior-qa'; fi
+                if awk '/^scripts\// && $0 !~ /-tests[.]sh$/ { found = 1 } END { exit !found }' "$tmp_dir/task-files" && [ "$assignee" != senior-devops ]; then add_error TASK_FILE_OWNER "$task_relative" 'production scripts are owned by senior-devops'; fi
             fi
         done <"$tmp_dir/task-lines"
+        while IFS= read -r pending_red_group; do
+            [ -z "$pending_red_group" ] || add_error TASK_RED_OWNER "$task_relative" 'paired Green task must follow its Red task'
+        done < <(LC_ALL=C sort -u "$pending_red_groups")
     fi
     add_warning GOAL_SEMANTIC_REVIEW "$relative_proposal" 'goal semantics require human review'
     if grep -Eq 'ADR-034|frontend/tests/|root `e2e/' "$change_dir/design.md" 2>/dev/null; then add_warning E2E_PATH_DECISION "${change_dir#"$repo_root"/}/design.md" 'ADR-034 E2E path decision remains deferred'; fi
@@ -300,7 +302,7 @@ for relative in AGENTS.md CLAUDE.md docs/sdd-workflow.md openspec/config.yaml; d
 done
 for dir in .claude/skills/sdd-workflow .claude/commands .claude/agents; do
     [ -d "$repo_root/$dir" ] || continue
-    find "$repo_root/$dir" -type f -not -path '*/archive/*' -print >>"$consumer_files"
+    find -H "$repo_root/$dir" -type f -not -path '*/archive/*' -print >>"$consumer_files"
 done
 for change_dir in "$repo_root"/openspec/changes/*; do
     [ -d "$change_dir" ] || continue
@@ -314,7 +316,7 @@ while IFS= read -r consumer; do
     grep -En '(^|[^[:alnum:]_])npm[[:space:]]+(test|run)([[:space:]]|$)|/ui-ux-pro-max|/speckit[.]analyze' "$consumer" 2>/dev/null >"$tmp_dir/retired" || true
     while IFS= read -r match; do
         text="${match#*:}"
-        if printf '%s\n' "$text" | grep -Eqi 'retired|deprecated|changelog|negative|不得|禁止|阻擋|廢止|退役|歷史|取代|移除'; then
+        if printf '%s\n' "$text" | grep -Eq '不得|禁止|阻擋|廢止|退役|歷史|取代|移除' || printf '%s\n' "$text" | grep -Eqi '(^|[^[:alnum:]_])((do|does|did|must|should|shall|will|would|can|could|may|might|is|are|was|were|has|have|had)[[:space:]]+not|(don.t|doesn.t|didn.t|mustn.t|shouldn.t|shan.t|won.t|wouldn.t|can.t|couldn.t|mayn.t|mightn.t|isn.t|aren.t|wasn.t|weren.t|hasn.t|haven.t|hadn.t|cannot|never|avoid))[[:space:]]+(run|use|execut|invok|call)[[:alpha:]]*([^[:alnum:]_]|$)'; then
             continue
         fi
         add_error RETIRED_COMMAND "$relative" 'active guidance contains a retired repository command or pipeline stage'
