@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -u
 readonly inventory_sentinel='design/system/screen-inventory.md is stale — run: node scripts/gen-screen-inventory.mjs'
-strict=0; id_pattern='FR-[0-9][0-9][0-9][[:alnum:]]*(-[[:alnum:]]+)*|SC-[0-9][0-9][0-9][[:alnum:]]*(-[[:alnum:]]+)*|AC-[0-9]+[[:alpha:]]*[.][0-9]+[[:alnum:]]*(-[[:alnum:]]+)*'
+strict=0; id_pattern='(FR|SC|AC)-[[:alnum:]]+([.-][[:alnum:]]+)*'
 root_arg=''; root_provided=0; config_failed=0; governance_failed=0
 tmp_dir="$(mktemp -d "${TMPDIR:-/tmp}/label-suite-sdd.XXXXXX")" || exit 2
 trap 'rm -rf "$tmp_dir"' EXIT
@@ -190,7 +190,8 @@ EOF
             fi
         done <"$tmp_dir/goals"
         grep -E '^- \[[ xX]\]' "$tasks" >"$tmp_dir/task-lines" || true
-        seen_red_groups=' '
+        pending_red_groups="$tmp_dir/pending-red-groups"
+        : >"$pending_red_groups"
         while IFS= read -r task_line; do
             first_path="$(printf '%s\n' "$task_line" | grep -o '`[^`]*`' | sed -n '1p' | sed 's/^`//; s/`$//')"
             action_clause="$(printf '%s\n' "$task_line" | awk '{ sub(/^- \[[ xX]\] [0-9.]+[[:space:]]*/, ""); gsub(/[.][[:space:]]/, "。"); count = split($0, clauses, /[，。；;]/); for (i = 1; i <= count; i++) { clause = clauses[i]; lower = tolower(clause); if (clause ~ /(不得|禁止|不可|不應|無需)/ || lower ~ /(^|[^[:alnum:]_])((do|does|did|must|should|shall|will|would|can|could|may|might|is|are|was|were|has|have|had)[[:space:]]+not|(don.t|doesn.t|didn.t|mustn.t|shouldn.t|shan.t|won.t|wouldn.t|can.t|couldn.t|mayn.t|mightn.t|isn.t|aren.t|wasn.t|weren.t|hasn.t|haven.t|hadn.t|cannot))[[:space:]]+(modif|creat|delet|remov|writ|updat|add|edit|touch|chang|generat|implement|replac|renam)[[:alpha:]]*([^[:alnum:]_]|$)/) continue; if (clause ~ /(執行[[:space:]]*`|驗證[：:[:space:]]*`|預期)/ || lower ~ /(exception:|verification[：:[:space:]]*`|verify[[:space:]]*`|run[[:space:]]*`|expect)/) continue; if (i == 1 || clause ~ /(修改|建立|新增|刪除|移除|撰寫|補上|更新|加入[[:space:]]*`)/ || lower ~ /(modif(y|ied)|creat(e|ed)|delet(e|ed)|remov(e|ed)|writ(e|ten)|updat(e|ed)|add[[:space:]]*`)/) print clause } }')"
@@ -217,13 +218,18 @@ EOF
             if [ "$exception" != governance-propagation ] && grep -Eq '^(scripts/.*-tests[.]sh|backend/tests/.*[.]py|frontend/.*((__tests__|tests?)/.*|[.](test|spec))[.](js|jsx|ts|tsx)|e2e/.*|design/prototype/tests/.*)$' "$tmp_dir/task-files" && printf '%s\n' "$task_line" | grep -Eq '(^|[^[:alnum:]_])[Rr]ed([^[:alnum:]_]|$)'; then
                 [ "$assignee" = senior-qa ] || add_error TASK_RED_OWNER "$task_relative" 'Red task must be owned by senior-qa'
                 add_warning TASK_RED_EVIDENCE_REVIEW "$task_relative" 'committed Red failure evidence requires runtime review'
-                seen_red_groups="$seen_red_groups$task_group "
+                printf '%s\n' "$task_group" >>"$pending_red_groups"
             fi
             if printf '%s\n' "$task_line" | grep -Eq '(^|[^[:alnum:]_])Green([^[:alnum:]_]|$)'; then
-                case "$seen_red_groups" in
-                    *" $task_group "*) ;;
-                    *) add_error TASK_RED_OWNER "$task_relative" 'paired Green task must follow its Red task' ;;
-                esac
+                if grep -Fqx "$task_group" "$pending_red_groups"; then
+                    awk -v group="$task_group" '
+                        !consumed && $0 == group { consumed = 1; next }
+                        { print }
+                    ' "$pending_red_groups" >"$pending_red_groups.next"
+                    mv "$pending_red_groups.next" "$pending_red_groups"
+                else
+                    add_error TASK_RED_OWNER "$task_relative" 'paired Green task must follow its Red task'
+                fi
             fi
             if [ "$exception" != governance-propagation ] && ! printf '%s\n' "$task_line" | grep -Eq '^- \[[ xX]\] [0-9.]+ 執行'; then
                 if printf '%s\n' "$first_path" | grep -Eq '^scripts/.*-tests[.]sh$' && [ "$assignee" != senior-qa ]; then add_error TASK_FILE_OWNER "$task_relative" 'scripts/*-tests.sh is owned by senior-qa'; fi
@@ -293,9 +299,14 @@ consumer_files="$tmp_dir/consumers"
 for relative in AGENTS.md CLAUDE.md docs/sdd-workflow.md openspec/config.yaml; do
     [ -f "$repo_root/$relative" ] && printf '%s\n' "$repo_root/$relative" >>"$consumer_files"
 done
-for dir in .claude/skills/sdd-workflow .claude/commands .claude/agents openspec/changes; do
+for dir in .claude/skills/sdd-workflow .claude/commands .claude/agents; do
     [ -d "$repo_root/$dir" ] || continue
     find "$repo_root/$dir" -type f -not -path '*/archive/*' -print >>"$consumer_files"
+done
+for change_dir in "$repo_root"/openspec/changes/*; do
+    [ -d "$change_dir" ] || continue
+    [ "$change_dir" != "$repo_root/openspec/changes/archive" ] || continue
+    find -H "$change_dir" -type f -not -path '*/archive/*' -print >>"$consumer_files"
 done
 LC_ALL=C sort -u "$consumer_files" -o "$consumer_files"
 while IFS= read -r consumer; do
@@ -304,7 +315,7 @@ while IFS= read -r consumer; do
     grep -En '(^|[^[:alnum:]_])npm[[:space:]]+(test|run)([[:space:]]|$)|/ui-ux-pro-max|/speckit[.]analyze' "$consumer" 2>/dev/null >"$tmp_dir/retired" || true
     while IFS= read -r match; do
         text="${match#*:}"
-        if printf '%s\n' "$text" | grep -Eqi 'retired|deprecated|changelog|negative|non-historical|不得|禁止|阻擋|廢止|退役|歷史|取代|移除|例如'; then
+        if printf '%s\n' "$text" | grep -Eqi 'retired|deprecated|changelog|negative|non-historical|不得|禁止|阻擋|廢止|退役|歷史|取代|移除'; then
             continue
         fi
         add_error RETIRED_COMMAND "$relative" 'active guidance contains a retired repository command or pipeline stage'
