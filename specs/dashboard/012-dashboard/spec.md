@@ -1,7 +1,7 @@
 ---
 功能分支: feat/dashboard-output-types
 建立日期: 2026-04-05
-版本: 2.9.0
+版本: 2.10.0
 狀態: In Progress
 ---
 
@@ -545,6 +545,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.10.0 | 2026-08-27 | **FR-020 回退分支種子摘要停止沿用虛構數字（issue #501）**：T001–T013 的 reviewer 種子摘要（`待審 N 個審核單位 · 任務覆蓋率 N% · IAA N.NN`）三項數字皆非從任何 seed 標記資料推導，v2.8.0 僅統一其措辭格式、未處理數字本身的來源問題。逐一追查後確認 T001–T013（不同於有 `seedReviewFlowDemo()` 的 T014–T017）沒有任何機制把 `REVIEWER_MOCK_ROWS` 的標記答案寫入送出紀錄，`computeReviewSummary()` 對這 13 筆任務恆為 `derivable: false`、`computeIaaAlpha()` 恆為不可計算（11 筆為 `unsupported_output_type`，僅 T001／T011 的 `single_label` 型別在架構上可能計算，但同樣因無送出紀錄而 `insufficient_samples`）。原型 `dashboard.assignments.js` 新增 `demoReviewerSummary()`，實際呼叫 `computeReviewSummary()`／`computeIaaAlpha()` 取值，推導不出時依 dataset-017 FR-039.4 顯示「審核單位狀態無法推導 · IAA 無法計算」，`progress` 欄位同步改為 `0`（不再沿用虛構覆蓋率）；若未來這些任務真的取得可推導的審核單位狀態，同一段程式碼會自動改顯示即時推導結果，不需任何任務 ID 白名單。**與既有條文的落差（本版未修訂 FR 本文，記錄於此待後續 OpenSpec 變更處理）**：FR-020 現行文字「無可推導狀態之任務列回退既有種子摘要與進度值，**行為不變**」與 FR-022 現行文字「無可推導審核單位狀態之任務列（FR-020 回退分支）其種子摘要亦須採同一具主體措辭」，兩者的既有語意都是「保留原有的示例性數字，只統一措辭」——這與本次「回退分支不再顯示任何示例性數字，改顯示明確的不可推導狀態」是不同的行為決策，屬於實質行為變更而非純澄清，超出本檔 lightweight path 的適用範圍。本條僅記錄「原型已這樣做、理由為何」，FR-020／FR-022 回退分支子句的正式文字修訂留待後續 `MODIFIED Requirements` OpenSpec 變更處理，避免在未經該流程審閱下逕自覆寫 FR 本文。驗證：`dashboard.spec.ts`（reviewer view 斷言更新為 13 筆一致文案、舊虛構百分比不再出現）、`issue-450-reviewer-summary-derived.spec.ts`、`annotation-list-task-info.spec.ts`（T001 reviewer 卡與進度條同步更新）；`tests/dashboard/` 73/73、`tsc --noEmit` 乾淨。 |
 | 2.9.0 | 2026-08-27 | **撤銷 FR-009E／SC-027：移除 PL Dashboard 的示範任務快捷分類按鈕**（issue #510）：v2.5.0 依 issue #404 於 PL 任務列表區塊上方新增資料驅動的「審核流程示範」快捷分類按鈕，其立論為「T014–T017 無法自儀表板**或其『查看全部』入口**自然發現」。本次複查確認該前提僅前半成立——`查看全部`（`plViewAllBtn`）呼叫 `openTaskList('project_leader')` 時**不帶 `keyword`**，導向的任務清單為未篩選全量（預設 `limit: 20` > 種子 17 筆，同頁可見），T014–T017 本就完整列於其中；該按鈕的實際效果為「省去一次關鍵字輸入」，而非「使不可達者可達」。維護者裁定此邊際價值不足以支撐它在任務列表上方形成視覺孤立的按鈕，故移除。**移除範圍**：FR-009E、SC-027、「使用者故事 3 — Project Leader 儀表板」驗收情境第 3 項，以及原型 `renderDemoShortcuts()`、T014–T017 的 `demoCategory` 欄位與 `demoCategories` 目錄、`dashboard-pl-review-flow-demo-entry.spec.ts`。**刻意不變**：T014–T017 任務本身與其餘欄位全數保留，仍為 FR-011D／FR-011E／FR-020／FR-021／FR-022 的資料基礎；`SC-027` 為已撤銷編號，不重用亦不重編後續 SC 編號（穩定 ID 慣例）。**驗證**：新增 `issue-510-demo-shortcut-removed.spec.ts`——除斷言按鈕、容器與 class 皆不存在外，另將本次移除所依據的前提本身釘為迴歸守衛（`查看全部` 導向未篩選清單、`共 17 筆`、四筆示範任務逐筆可見），使該入口日後若被加上篩選會立即失敗而非無聲失效；`tests/dashboard/` 73/73 通過、`tsc --noEmit` 無錯。 |
 | 2.8.2 | 2026-08-26 | **Reviewer 措辭統一為「審核」（issue #458）**：`design/prototype/pages` 內 `審核` 對 `審查` 用字比例達 256:5，`審查` 為離群舊詞。本檔「今日已審」與 `reviewerPanelSubtitle` 的舊副標「我的審查進度與待處理項目」為兩處僅存的離群引文，同步改為 `今日已審核`（US-5 驗收情境第 1 項、介面定義指標卡、**FR-011A**）與 `我的審核進度與待處理項目`（介面定義副標），與已改字的 `dashboard.html`／`dashboard.i18n.js` 一致。`待審總數` 標籤與 `pending_review` 狀態值本檔未逐字引用，故無需同步異動。**需求文字未改**，僅修正引文用字。 |
 | 2.8.1 | 2026-08-26 | **FR 編號整理（issue #472）**：`FR-0170` 與 `FR-0170A` 兩則需求脫離本檔 `FR-017` 子序列的字母命名（`FR-017`、`FR-017A`–`FR-017K`）——尾碼使用阿拉伯數字 `0`，與字母 `O` 在編號中易混淆，且兩行位置夾在 `FR-017` 與 `FR-017A` 之間，未依序排在 `FR-017K` 之後。改名為 `FR-017L`／`FR-017M` 並搬移至 `FR-017K` 之後，使 `FR-017`／`FR-017A`–`FR-017M` 全序列連續遞增。**需求文字逐字未改**，僅異動編號與行位置。改號前已全庫搜尋（排除 `.git`／`node_modules`）確認舊編號除該兩處定義外無任何下游引用，本檔「規格相依性」下游清單（010／013／015）亦未提及此二 ID，故不涉及其他檔案異動。維護者裁定採「接續 A–K 下一個空號」而非字母 `O` 讀法，以徹底避開 `O`／`0` 混淆。 |
