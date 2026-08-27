@@ -67,7 +67,7 @@ test('dry_run: rejecting a row and submitting never moves the sample back to pen
 
   await page.getByTestId('ws-review-row-reject').click();
   await page.getByTestId('ws-review-submit-btn').click();
-  await expect(page.locator('#toastMsg')).toHaveText('審查已提交');
+  await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
 
   expect(await readStatus(page, 'dry_run')).toBe('submitted');
   assertNoPageErrors(errors);
@@ -82,7 +82,7 @@ test('official_run: rejecting a row and submitting still reopens the sample for 
 
   await page.getByTestId('ws-review-row-reject').click();
   await page.getByTestId('ws-review-submit-btn').click();
-  await expect(page.locator('#toastMsg')).toHaveText('審查已提交');
+  await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
 
   expect(await readStatus(page, 'official_run')).toBe('pending');
 });

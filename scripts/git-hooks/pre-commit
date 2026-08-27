@@ -7,8 +7,17 @@
 #
 # Rule (CLAUDE.md → Commit Convention):
 #   Every commit must serve exactly one change purpose. As a mechanical proxy,
-#   staged changes exceeding 10 files OR 600 non-test lines (added+deleted,
-#   per `git diff --cached --numstat`) are blocked.
+#   staged changes exceeding 10 files OR 600 non-excluded lines (added+deleted,
+#   per `git diff --cached --numstat`) are blocked. Both counters are derived
+#   from the same exclusion list (is_excluded, below), which mirrors
+#   Constitution Principle X ("Change Scope Discipline"): tests, lockfiles,
+#   generated files, tool/project config files, empty or re-export-only
+#   __init__.py/index.ts, and specs/**|openspec/** artifacts don't count
+#   toward either threshold. "Generated files" only counts a file whose
+#   generated-view marker appears in its HEADER (see GENERATED_HEADER_WINDOW
+#   and is_generated_blob, below) — generators must place the marker near
+#   the top of the file to opt in; mentioning it elsewhere in prose or body
+#   text does not exclude the file.
 #
 # Scope note:
 #   This guard applies to a single commit. Constitution Principle X's
@@ -33,21 +42,83 @@ fi
 MAX_FILES=10
 MAX_LINES=600
 
-FILE_COUNT=$(git diff --cached --name-only | wc -l | tr -d ' ')
+# Path-based half of the Constitution Principle X exclusion list: tests,
+# lockfiles, tool/project config files, and specs/openspec artifacts.
+# Matched against the full staged path with bash's POSIX ERE.
+PATH_EXCLUDE_REGEX='(^|/)(tests?|__tests__|e2e|fixtures|testdata)/|\.(test|spec)\.|_test\.|(^|/)(uv\.lock|pnpm-lock\.yaml|pyproject\.toml|tsconfig(\.[A-Za-z0-9_-]+)?\.json|eslint\.config\.(js|mjs|ts|cjs)|vite\.config\.(js|ts)|\.gitignore)$|^(specs|openspec)/'
 
-# Sum added+deleted lines, excluding test files/dirs (numstat: "added<TAB>deleted<TAB>path";
-# binary files report "-" which awk coerces to 0). Filtering inside awk keeps the tab
-# as \t instead of a literal character that editors could silently expand to spaces.
-LINE_COUNT=$(git diff --cached --numstat | awk '
-  $0 !~ /(^|\/|\t)(tests?|__tests__|e2e|fixtures|testdata)\/|\.(test|spec)\.|_test\./ {
-    a += $1
-    d += $2
-  }
-  END { print a + d + 0 }
-')
+# Content-based half: true (0) if $1 is a staged, empty-or-barrel
+# __init__.py/index.ts — nothing but blank lines, comments, and re-export
+# statements. Reads the staged blob (git show ":path"), not the worktree
+# file, since those can differ. Fails safe (not excluded) for deletions,
+# where there is no staged blob to inspect.
+is_empty_or_reexport_barrel() {
+  local path="$1" base content line
+  base="$(basename -- "$path")"
+  [ "$base" = "__init__.py" ] || [ "$base" = "index.ts" ] || return 1
+
+  content="$(git show ":$path" 2>/dev/null)" || return 1
+
+  while read -r line; do
+    [ -z "$line" ] && continue
+    case "$line" in
+      '#'*|'//'*) continue ;;
+      export*from*) continue ;;
+      *) return 1 ;;
+    esac
+  done <<<"$content"
+  return 0
+}
+
+# Content-based: true (0) if $1's staged blob carries the generated-view
+# marker IN ITS HEADER, mirroring design/system/screen-inventory.md:5
+# ("本檔為 generated view——請勿手動編輯"). Content-based rather than
+# filename-based so the check can't be fooled by (or miss) a file that
+# doesn't match an assumed naming convention. Header-scoped (only the first
+# GENERATED_HEADER_WINDOW lines) and marker-specific (the full Chinese
+# phrase, not the bare English words "generated view") so ordinary prose
+# that happens to mention "generated view" elsewhere in a file — or deep in
+# its body — is never mistaken for a real generated-file marker. Fails
+# safe (not excluded) for deletions.
+GENERATED_HEADER_WINDOW=10
+GENERATED_MARKER='本檔為 generated view——請勿手動編輯'
+is_generated_blob() {
+  local path="$1" header
+  header="$(git show ":$path" 2>/dev/null | head -n "$GENERATED_HEADER_WINDOW")" || return 1
+  [[ "$header" == *"$GENERATED_MARKER"* ]]
+}
+
+# True (0) if $1 should be excluded from both the file-count and line-count
+# thresholds per Constitution Principle X.
+is_excluded() {
+  local path="$1"
+  [[ "$path" =~ $PATH_EXCLUDE_REGEX ]] && return 0
+  is_empty_or_reexport_barrel "$path" && return 0
+  is_generated_blob "$path" && return 0
+  return 1
+}
+
+FILE_COUNT=0
+INCLUDED_PATHS=()
+while IFS= read -r path; do
+  [ -z "$path" ] && continue
+  is_excluded "$path" && continue
+  FILE_COUNT=$((FILE_COUNT + 1))
+  INCLUDED_PATHS+=("$path")
+done < <(git diff --cached --name-only)
+
+# Sum added+deleted lines for non-excluded paths only (numstat: "added<TAB>
+# deleted<TAB>path"; binary files report "-" which awk coerces to 0).
+LINE_COUNT=0
+if [ "${#INCLUDED_PATHS[@]}" -gt 0 ]; then
+  LINE_COUNT=$(git diff --cached --numstat -- "${INCLUDED_PATHS[@]}" | awk '
+    { a += ($1 == "-" ? 0 : $1); d += ($2 == "-" ? 0 : $2) }
+    END { print a + d + 0 }
+  ')
+fi
 
 if [ "$FILE_COUNT" -gt "$MAX_FILES" ] || [ "$LINE_COUNT" -gt "$MAX_LINES" ]; then
-  echo "❌ Blocked: batch commit — ${FILE_COUNT} staged files, ${LINE_COUNT} non-test lines (limits: ${MAX_FILES} files / ${MAX_LINES} lines)." >&2
+  echo "❌ Blocked: batch commit — ${FILE_COUNT} staged files, ${LINE_COUNT} non-excluded lines (limits: ${MAX_FILES} files / ${MAX_LINES} lines)." >&2
   echo "   One purpose per commit: unstage with 'git restore --staged <file>' and split into smaller commits." >&2
   echo "   Bypass only with explicit user approval: ALLOW_BATCH_COMMIT=1 git commit ..." >&2
   exit 1

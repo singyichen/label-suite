@@ -25,8 +25,9 @@
       wsNextBtnLabel: '下一筆',
       wsProgressText: '{done} / {total} 已提交',
       wsProgressTextReview: '我的審核提交 {done} / {total} 個審核單位',
-      wsAutosaveSaved: '草稿已自動儲存',
-      wsAutosaveSaving: '儲存中…',
+      wsAutosaveInitial: '尚未儲存',
+      wsAutosaveDirty: '尚未儲存的變更',
+      wsAutosaveSavedAt: '上次儲存於 {time}',
       wsTabGuideline: '說明與檔案',
       wsTabHistory: '歷程',
       wsStatusSubmitted: '已提交',
@@ -47,7 +48,7 @@
       reviewSubmitLabel: '送出審核',
       reviewApproveLabel: '通過',
       reviewRejectLabel: '退回',
-      wsReviewSubmitSuccess: '審查已提交',
+      wsReviewSubmitSuccess: '審核已送出',
       reviewNoAnswer: '（無）',
       reviewNote: '通過：採用此筆標記。退回：記錄審核決策與修正差異，與回退標記員狀態是不同層級的效果——正式標記退回後該樣本回到待標記，產生標記員重標待辦；試標退回不改變標記員狀態，品質問題由 IAA 閘門與下一輪試標處理。',
       reviewCorrectionTitle: '直接修正（Reviewer 修正後答案）',
@@ -121,8 +122,9 @@
       wsNextBtnLabel: 'Next',
       wsProgressText: '{done} / {total} submitted',
       wsProgressTextReview: 'My review submissions {done} / {total} review units',
-      wsAutosaveSaved: 'Draft auto-saved',
-      wsAutosaveSaving: 'Saving…',
+      wsAutosaveInitial: 'Not saved yet',
+      wsAutosaveDirty: 'Unsaved changes',
+      wsAutosaveSavedAt: 'Last saved at {time}',
       wsTabGuideline: 'Guidelines & Files',
       wsTabHistory: 'History',
       wsStatusSubmitted: 'Submitted',
@@ -1335,6 +1337,7 @@
     renderSampleList();
     renderSampleNav();
     renderHistoryPanel();
+    renderAutosaveStatus();
   }
 
   /* The unit the left column, the nav and the review card all address
@@ -1446,30 +1449,64 @@
     if (nextBtn) nextBtn.disabled = idx >= total - 1;
   }
 
-  /* Bottom-bar autosave indicator (AC-2.6 / SC-007): a transient 儲存中…
-     flash that settles back to 草稿已自動儲存. Purely visual in the
-     prototype -- actual draft persistence stays on 儲存草稿 (handleSave). */
-  var autosaveTimer = null;
-  function triggerAutosave() {
+  /* Bottom-bar autosave indicator (issue #470): three honest, per-sample
+     states -- INITIAL (never saved/submitted, no edit since load), DIRTY
+     (edited since load, not yet persisted) and SAVED (the time of an
+     actual persisted write, read back via getSampleSavedAt -- never a
+     fabricated flash). currentSampleDirty tracks only the CURRENTLY
+     DISPLAYED sample so a sample switch cannot carry over another
+     sample's dirty state or timestamp; the tab-scoped hasUnsavedChanges
+     flag below keeps its own separate UXC-03 navigation-guard meaning.
+     Hidden entirely for role=reviewer, who has no 儲存草稿 button and
+     persists through persistReviewDraft() instead. */
+  var currentSampleDirty = false;
+  function renderAutosaveStatus() {
+    var statusEl = document.querySelector('.autosave-status');
+    if (currentRole === 'reviewer') {
+      if (statusEl) statusEl.classList.add('hidden');
+      return;
+    }
+    if (statusEl) statusEl.classList.remove('hidden');
     var dot = document.getElementById('wsAutosaveDot');
     if (!dot) return;
-    dot.className = 'autosave-dot saving';
-    setText('wsAutosaveLabel', t('wsAutosaveSaving'));
-    clearTimeout(autosaveTimer);
-    autosaveTimer = setTimeout(function () {
+    if (currentSampleDirty) {
+      dot.className = 'autosave-dot dirty';
+      setText('wsAutosaveLabel', t('wsAutosaveDirty'));
+      return;
+    }
+    var savedAt = window.LabelSuiteAnnotationWorkspaceData.getSampleSavedAt(
+      currentProfile.id,
+      currentRole,
+      currentRunType,
+      currentSampleId,
+      currentIdentity
+    );
+    if (savedAt) {
       dot.className = 'autosave-dot saved';
-      setText('wsAutosaveLabel', t('wsAutosaveSaved'));
-    }, 700);
+      setText('wsAutosaveLabel', t('wsAutosaveSavedAt').replace('{time}', formatHistoryTime(savedAt)));
+    } else {
+      dot.className = 'autosave-dot initial';
+      setText('wsAutosaveLabel', t('wsAutosaveInitial'));
+    }
   }
 
   /* UXC-03: browser-navigation guard while the work column holds edits
-     that 儲存草稿/提交 has not persisted (the autosave indicator is
-     visual-only in the prototype — see triggerAutosave). Any interaction
-     inside .col-content counts as an edit signal; the three persistence
-     paths clear it. */
+     that 儲存草稿/提交 has not persisted (see renderAutosaveStatus for the
+     honest, per-sample visible indicator this flag no longer doubles as).
+     Any interaction inside .col-content counts as an edit signal; the
+     three persistence paths clear it. */
   var hasUnsavedChanges = false;
-  function markUnsaved() { hasUnsavedChanges = true; }
-  function clearUnsaved() { hasUnsavedChanges = false; }
+  function markUnsaved() {
+    hasUnsavedChanges = true;
+    /* issue #470: the visible indicator must flip to DIRTY on the same
+       interaction that arms the navigation guard, not lag behind it. */
+    currentSampleDirty = true;
+    renderAutosaveStatus();
+  }
+  function clearUnsaved() {
+    hasUnsavedChanges = false;
+    currentSampleDirty = false;
+  }
   var workColumn = document.querySelector('.col-content');
   if (workColumn) {
     workColumn.addEventListener('input', markUnsaved, true);
@@ -1560,11 +1597,13 @@
     var record = findRecordById(sampleId) || currentProfile.datasetRecords[0];
     if (!record) return;
     var recordIdx = currentProfile.datasetRecords.indexOf(record);
-    /* SC-007: sample switch is an autosave trigger; skip the very first
-       (boot) call so the page doesn't open on a 儲存中… flash. */
-    if (currentSampleId) triggerAutosave();
     snapshotCurrentSample();
     currentSampleId = window.LabelSuiteAnnotationWorkspaceData.getRecordId(record, recordIdx);
+    /* issue #470: the autosave indicator is derived PER SAMPLE -- a fresh
+       selection starts undirtied regardless of the outgoing sample's
+       state; renderWorkspace() below recomputes INITIAL/SAVED for the
+       newly loaded sample from persisted data. */
+    currentSampleDirty = false;
     if (annotatorId && currentRole === 'reviewer') currentIdentity.annotatorId = annotatorId;
     reviewRowSeeded = {};
     state.datasetRawFirstRow = buildAnnotatorRecord(record, currentProfile);
@@ -1892,7 +1931,7 @@
       currentIdentity
     );
     clearUnsaved();
-    triggerAutosave();
+    renderAutosaveStatus();
     renderSampleList();
     renderHistoryPanel();
     showToast(t('wsSaveSuccess'));
@@ -1939,6 +1978,10 @@
     renderSampleList();
     renderSampleNav();
     renderHistoryPanel();
+    /* issue #470: a submit is a real persisted write too (getSampleSavedAt
+       falls back to submittedAt), so the indicator must reflect it even
+       when the annotator submits without ever clicking 儲存草稿 first. */
+    renderAutosaveStatus();
     showToast(t('wsSubmitSuccess'));
     state.submitBusy = false;
     if (submitBtnEl) submitBtnEl.disabled = false;
@@ -3922,7 +3965,6 @@
     }
     setText('wsPrevBtnLabel', t('wsPrevBtnLabel'));
     setText('wsNextBtnLabel', t('wsNextBtnLabel'));
-    setText('wsAutosaveLabel', t('wsAutosaveSaved'));
     setText('wsTabGuidelineLabel', t('wsTabGuideline'));
     setText('wsTabHistoryLabel', t('wsTabHistory'));
     setText('wsGuidelineModalTitleText', t('guidelineModalTitle'));
@@ -4022,9 +4064,6 @@
     setupMobileDrawer();
     setupGuidelineModal();
     setupLangToggle();
-    /* SC-007 15s autosave heartbeat (visual, matches the pre-outputs[]
-       design's cadence). */
-    setInterval(triggerAutosave, 15000);
   }
 
   if (document.readyState === 'loading') {

@@ -246,6 +246,6 @@ test.describe('A decision never survives an edit to the value it judged (issue #
     // Re-deciding against the new value lets the submit through.
     await page.getByTestId('ws-review-row-reject').click();
     await page.getByTestId('ws-review-submit-btn').click();
-    await expect(page.locator('#toastMsg')).toHaveText('審查已提交');
+    await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
   });
 });

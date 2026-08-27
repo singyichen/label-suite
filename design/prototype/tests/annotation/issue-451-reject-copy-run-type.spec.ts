@@ -70,7 +70,7 @@ function readAnnotatorStatus(page: Page, runType: RunType) {
 async function rejectAndSubmitReview(page: Page) {
   await page.getByTestId('ws-review-row-reject').click();
   await page.getByTestId('ws-review-submit-btn').click();
-  await expect(page.locator('#toastMsg')).toHaveText('審查已提交');
+  await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
 }
 
 test.beforeEach(async ({ page }) => {

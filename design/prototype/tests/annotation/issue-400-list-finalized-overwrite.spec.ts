@@ -36,7 +36,7 @@ async function fileConvergingReview(page: import('@playwright/test').Page, revie
   await row.getByTestId('ws-review-correct-single_label').getByTestId('ws-single-label-chip-positive').click();
   await row.getByTestId('ws-review-row-approve').click();
   await page.getByTestId('ws-review-submit-btn').click();
-  await expect(page.locator('#toastMsg')).toHaveText('審查已提交');
+  await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
 }
 
 test('issue #400: a finalized unit\'s list row shows the reviewer-majority-converged answer, not the annotator\'s original one', async ({ page }) => {

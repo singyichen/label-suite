@@ -118,16 +118,22 @@ test.describe('Bottom action bar: autosave status + save draft', () => {
   test('shows the autosave status and a 儲存草稿 button', async ({ page }) => {
     await gotoT001(page);
 
-    await expect(page.getByTestId('ws-autosave-status')).toContainText('草稿已自動儲存');
+    // Issue #470: a fresh, never-saved sample must read honestly as
+    // 尚未儲存, not the old always-on 草稿已自動儲存 claim that lied about
+    // triggerAutosave() actually having persisted anything.
+    await expect(page.getByTestId('ws-autosave-status')).toHaveText('尚未儲存');
     await expect(page.getByTestId('ws-save-btn')).toContainText('儲存草稿');
   });
 
-  test('switching samples flashes the saving state before settling back to saved', async ({ page }) => {
+  test("switching samples updates the status to the new sample's own state", async ({ page }) => {
     await gotoT001(page);
 
     await page.getByTestId('ws-next-btn').click();
-    // The transient 儲存中… state settles back to 草稿已自動儲存.
-    await expect(page.getByTestId('ws-autosave-status')).toContainText('草稿已自動儲存');
+    // Issue #470: switching samples must not carry over the outgoing
+    // sample's state or fake a persisted save that never happened (the old
+    // 儲存中… -> 草稿已自動儲存 flash) -- the newly displayed sample, never
+    // saved, reads its own honest 尚未儲存 state.
+    await expect(page.getByTestId('ws-autosave-status')).toHaveText('尚未儲存');
   });
 });
 

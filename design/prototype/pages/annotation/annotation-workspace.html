@@ -548,12 +548,11 @@
       color: var(--color-text-soft);
     }
     .autosave-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    /* issue #470: colour is a supplementary cue only -- #wsAutosaveLabel's
+       text is what actually states the INITIAL/DIRTY/SAVED state. */
+    .autosave-dot.initial { background: var(--color-border); }
+    .autosave-dot.dirty { background: var(--color-warning); }
     .autosave-dot.saved { background: var(--color-cta); }
-    .autosave-dot.saving { background: var(--color-warning); animation: pulse-dot 1s ease-in-out infinite; }
-    @keyframes pulse-dot {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.35; }
-    }
     .action-bar-right { display: flex; align-items: center; gap: var(--space-sm); }
 
     /* ── Right: Guideline ────────────────────────────────────── */
@@ -971,7 +970,7 @@
 
       <div class="action-bar">
         <div class="autosave-status" data-testid="ws-autosave-status">
-          <div class="autosave-dot saved" id="wsAutosaveDot"></div>
+          <div class="autosave-dot initial" id="wsAutosaveDot"></div>
           <span id="wsAutosaveLabel"></span>
         </div>
         <div class="action-bar-right">
