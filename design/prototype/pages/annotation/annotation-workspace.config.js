@@ -77,6 +77,11 @@
       historyActionGoldReopened: '重新開放標準答案',
       unitCtxRunDry: '試標',
       unitCtxRunOfficial: '正式標記',
+      crumbWorkAreaReviewer: '審核作業',
+      crumbWorkAreaAnnotator: '標記作業',
+      crumbTaskTpl: '{name}（{run}）',
+      crumbUnitTpl: '審核單位 {sample} · {annotator}',
+      crumbSamplePosTpl: '樣本 {i} / {n}',
       unitCtxThreshold: '定稿門檻 {x} / {n} 位審核員',
       unitCtxAnnotator: '標記員 {id}',
       unitCtxRoster: '本樣本 {m} 位標記員',
@@ -174,6 +179,11 @@
       historyActionGoldReopened: 'Gold reopened',
       unitCtxRunDry: 'Dry Run',
       unitCtxRunOfficial: 'Official Run',
+      crumbWorkAreaReviewer: 'Review',
+      crumbWorkAreaAnnotator: 'Annotate',
+      crumbTaskTpl: '{name} ({run})',
+      crumbUnitTpl: 'Review unit {sample} · {annotator}',
+      crumbSamplePosTpl: 'Sample {i} of {n}',
       unitCtxThreshold: 'Finalize threshold {x} / {n} reviewers',
       unitCtxAnnotator: 'Annotator {id}',
       unitCtxRoster: '{m} annotators on this sample',
@@ -1326,7 +1336,83 @@
     });
   }
 
+  /*
+   * Entry breadcrumb (issue #456, FR-080). The workspace shell carries no
+   * page header, so without this nothing on screen names the task or the
+   * run: FR-064's context banner is scoped to one review unit and never
+   * carries the task name, leaving two deep-linked demo tasks visually
+   * identical. Every level is derived from the URL context, so a cold deep
+   * link renders the same trail as an in-app navigation (FR-080 AC-4.31).
+   *
+   * Level 1 links to the dashboard rather than to a task-less
+   * annotation-list.html, because that URL is a not-found state whose own
+   * recovery CTA already points at the dashboard.
+   */
+  function renderEntryBreadcrumb() {
+    var nav = document.getElementById('entryBreadcrumb');
+    if (!nav) return;
+    nav.innerHTML = '';
+
+    var listParams = new URLSearchParams();
+    listParams.set('task_id', currentProfile.id);
+    listParams.set('role', currentRole);
+    listParams.set('run_type', currentRunType);
+
+    appendCrumbLink(nav, '../dashboard/dashboard.html',
+      t(currentRole === 'reviewer' ? 'crumbWorkAreaReviewer' : 'crumbWorkAreaAnnotator'));
+    appendCrumbSep(nav);
+    appendCrumbLink(nav, 'annotation-list.html?' + listParams.toString(),
+      t('crumbTaskTpl')
+        .replace('{name}', (state.lang === 'en' && currentProfile.nameEn)
+          ? currentProfile.nameEn : currentProfile.nameZh)
+        .replace('{run}', t(currentRunType === 'official_run' ? 'unitCtxRunOfficial' : 'unitCtxRunDry')));
+    appendCrumbSep(nav);
+
+    /* An annotator IS the annotator, so naming them back at themselves adds
+       a level that carries no information. They also get a QUEUE POSITION
+       rather than the raw record id: on seeds like T011/T012 the id field is
+       unassigned metadata (`ID`, `article_id`), and Data Fairness forbids
+       unassigned fields from reaching annotator-facing DOM (FR-023/FR-024M).
+       A reviewer addresses a named unit and is not under that restriction. */
+    var current = document.createElement('span');
+    current.setAttribute('aria-current', 'page');
+    if (currentRole === 'reviewer') {
+      current.textContent = t('crumbUnitTpl')
+        .replace('{sample}', currentSampleId)
+        .replace('{annotator}', currentAnnotatorId());
+    } else {
+      var records = currentProfile.datasetRecords || [];
+      var idx = 0;
+      for (var i = 0; i < records.length; i += 1) {
+        if (window.LabelSuiteAnnotationWorkspaceData.getRecordId(records[i], i) === currentSampleId) {
+          idx = i;
+          break;
+        }
+      }
+      current.textContent = t('crumbSamplePosTpl')
+        .replace('{i}', String(idx + 1))
+        .replace('{n}', String(records.length));
+    }
+    nav.appendChild(current);
+  }
+
+  function appendCrumbLink(nav, href, text) {
+    var link = document.createElement('a');
+    link.href = href;
+    link.textContent = text;
+    nav.appendChild(link);
+  }
+
+  function appendCrumbSep(nav) {
+    var sep = document.createElement('span');
+    sep.className = 'breadcrumb-sep';
+    sep.setAttribute('aria-hidden', 'true');
+    sep.textContent = '\u203A';
+    nav.appendChild(sep);
+  }
+
   function renderWorkspace() {
+    renderEntryBreadcrumb();
     if (currentRole === 'reviewer') {
       renderReviewerWorkspace();
     } else {

@@ -83,17 +83,29 @@ test.describe('Entry breadcrumb — workspace', () => {
     expect(hrefs[1]).toContain('run_type=official_run');
   });
 
-  test('annotator path names its own work area and omits the annotator level', async ({ page }) => {
+  test('annotator path names its own work area and shows a queue position', async ({ page }) => {
     await page.goto(
-      buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'annotator' }),
+      buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-002', role: 'annotator' }),
     );
 
     const nav = crumb(page);
     await expect(nav.locator('a').first()).toHaveText('標記作業');
     const current = nav.locator('[aria-current="page"]');
-    await expect(current).toContainText('sent-001');
+    // A position, not the record id: on seeds like T011/T012 the id field is
+    // unassigned metadata, and Data Fairness forbids unassigned fields from
+    // reaching annotator-facing DOM. See annotation-workspace-data-fairness.
+    await expect(current).toHaveText(/^樣本 2 \/ \d+$/);
     // The annotator IS the annotator — naming them back at themselves is noise.
     await expect(current).not.toContainText('kioleemg12');
+  });
+
+  test('the annotator breadcrumb never carries an unassigned record id', async ({ page }) => {
+    // T012 keys its records by `article_id`, which field_role_map leaves
+    // unassigned; the breadcrumb must not become a new leak surface.
+    await page.goto(
+      buildWorkspaceUrl({ task_id: 'T012', sample_id: 'eac8d013', role: 'annotator' }),
+    );
+    await expect(crumb(page)).not.toContainText('eac8d013');
   });
 
   test('uses semantic navigation markup with hidden separators', async ({ page }) => {
