@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -u
 readonly inventory_sentinel='design/system/screen-inventory.md is stale — run: node scripts/gen-screen-inventory.mjs'
-strict=0; id_pattern='(FR|SC|AC)-[[:alnum:]]+([.-][[:alnum:]]+)*'; retired_command_pattern='(^|[^[:alnum:]_])npm[[:space:]]+(test|run)([[:space:]]|;|；|，|。|$)|/ui-ux-pro-max|/speckit[.]analyze'
+strict=0; id_pattern='(FR|SC|AC)-[[:alnum:]]+([.-][[:alnum:]]+)*'; retired_command_pattern='(^|[^[:alnum:]_])npm[[:space:]]+(test|run)([[:space:]`.,!?;]|；|，|。|$)|/ui-ux-pro-max|/speckit[.]analyze'
 root_arg=''; root_provided=0; config_failed=0; governance_failed=0
 tmp_dir="$(mktemp -d "${TMPDIR:-/tmp}/label-suite-sdd.XXXXXX")" || exit 2
 trap 'rm -rf "$tmp_dir"' EXIT
@@ -43,6 +43,31 @@ preflight_scanned_paths() {
     )
     return 0
 }
+strip_markdown_fences() {
+    awk '
+    {
+        candidate = $0
+        sub(/^[[:space:]]*/, "", candidate)
+        marker = substr(candidate, 1, 1)
+        marker_length = 0
+        if (marker == "`" || marker == "~") {
+            while (substr(candidate, marker_length + 1, 1) == marker) marker_length++
+        }
+        if (marker_length >= 3) {
+            remainder = substr(candidate, marker_length + 1)
+            if (!in_fence) {
+                in_fence = 1; fence_marker = marker; fence_length = marker_length
+                next
+            }
+            if (marker == fence_marker && marker_length >= fence_length && remainder ~ /^[[:space:]]*$/) {
+                in_fence = 0; fence_marker = ""; fence_length = 0
+                next
+            }
+        }
+        if (!in_fence) print
+    }
+    ' "$1"
+}
 for arg in "$@"; do
     case "$arg" in
         --strict)
@@ -67,7 +92,7 @@ if ! preflight_scanned_paths; then
     add_config_error SCANNER_CONFIG . 'repository paths containing control characters are unsupported'
     finish
 fi
-awk -F '|' '
+strip_markdown_fences "$repo_root/specs/STATUS.md" | awk -F '|' '
 function trim(value) {
     gsub(/^[[:space:]]+|[[:space:]]+$/, "", value)
     gsub(/`/, "", value)
@@ -78,7 +103,7 @@ function trim(value) {
     if (id ~ /^[a-z-]+-[0-9][0-9][0-9]$/) {
         print id "\t" trim($4) "\t" trim($5) "\t" trim($6)
     }
-}' "$repo_root/specs/STATUS.md" >"$status_rows"
+}' >"$status_rows"
 while IFS= read -r spec_file; do
     relative="${spec_file#"$repo_root"/}"
     spec_dir="$(basename "$(dirname "$spec_file")")"
@@ -103,14 +128,14 @@ while IFS="$(printf '\t')" read -r id module status branch; do
     [ "$status" != review ] || add_warning STATUS_EXTERNAL_STATE specs/STATUS.md "external PR state for $id requires maintainer review"
 done <"$status_rows"
 section_is_valid() {
-    awk -v heading="$2" -v mode="$3" '
+    strip_markdown_fences "$1" | awk -v heading="$2" -v mode="$3" '
     (mode == "dependency" ? ($0 == heading || $0 == heading " *(本功能依賴其他規格，或被其他規格依賴時填寫)*") : $0 == heading) { found++; inside = 1; next }
     inside && /^##[[:space:]]/ { inside = 0 }
     inside && $0 !~ /^[[:space:]]*$/ && $0 !~ /^[[:space:]]*<!--/ { content = 1 }
     END { exit !(found == 1 && content == 1) }
-    ' "$1"
+    '
 }
-requires_page_traceability() { [ "$1" != foundation ] && grep -Eq 'Prototype|design/prototype|產品 UI|頁面' "$2"; }
+requires_page_traceability() { [ "$1" != foundation ] && strip_markdown_fences "$2" | grep -Eq 'Prototype|design/prototype|產品 UI|頁面'; }
 verify_citations() {
     local artifact="$1" canonical="$2" citation
     [ -r "$artifact" ] || return
@@ -159,7 +184,7 @@ for change_dir in "$repo_root"/openspec/changes/*; do
     section_is_valid "$canonical" '## 功能目標' exact || add_error SPEC_REQUIRED_HEADING "$canonical_relative" 'required heading is missing, duplicated, or empty: ## 功能目標'
     section_is_valid "$canonical" '## 規格相依性' dependency || add_error SPEC_REQUIRED_HEADING "$canonical_relative" 'required heading is missing, duplicated, or empty: ## 規格相依性'
     verify_required_ids "$canonical" "$canonical_relative"
-    if requires_page_traceability "$module" "$canonical" && ! grep -Eq '^## Prototype Traceability|Frontend Ready Gate.*不適用|prototype.*不適用' "$canonical"; then add_error SPEC_REQUIRED_IDS "$canonical_relative" 'page traceability or an explicit non-page exception is required'; fi
+    if requires_page_traceability "$module" "$canonical" && ! strip_markdown_fences "$canonical" | grep -Eq '^## Prototype Traceability|Frontend Ready Gate.*不適用|prototype.*不適用'; then add_error SPEC_REQUIRED_IDS "$canonical_relative" 'page traceability or an explicit non-page exception is required'; fi
     for artifact in "$proposal" "$change_dir/design.md" "$change_dir/tasks.md"; do
         verify_citations "$artifact" "$canonical"
     done
@@ -193,7 +218,7 @@ EOF
         pending_red_groups="$tmp_dir/pending-red-groups"
         : >"$pending_red_groups"
         while IFS= read -r task_line; do
-            action_clause="$(printf '%s\n' "$task_line" | awk '{ sub(/^- \[[ xX]\] [0-9.]+[[:space:]]*/, ""); gsub(/[.][[:space:]]/, "。"); count = split($0, clauses, /[，。；;]/); for (i = 1; i <= count; i++) { clause = clauses[i]; lower = tolower(clause); if (clause ~ /(不得|禁止|不可|不應|無需)/ || lower ~ /(^|[^[:alnum:]_])((do|does|did|must|should|shall|will|would|can|could|may|might|is|are|was|were|has|have|had)[[:space:]]+not|(don.t|doesn.t|didn.t|mustn.t|shouldn.t|shan.t|won.t|wouldn.t|can.t|couldn.t|mayn.t|mightn.t|isn.t|aren.t|wasn.t|weren.t|hasn.t|haven.t|hadn.t|cannot))[[:space:]]+(modif|creat|delet|remov|writ|updat|add|edit|touch|chang|generat|implement|replac|renam)[[:alpha:]]*([^[:alnum:]_]|$)/) continue; if (clause ~ /(執行[[:space:]]*`|驗證[：:[:space:]]*`|預期)/ || lower ~ /(exception:|verification[：:[:space:]]*`|verify[[:space:]]*`|run[[:space:]]*`|expect)/) continue; if (i == 1 || clause ~ /(修改|建立|新增|刪除|移除|撰寫|補上|更新|加入[[:space:]]*`)/ || lower ~ /(modif(y|ied)|creat(e|ed)|delet(e|ed)|remov(e|ed)|writ(e|ten)|updat(e|ed)|add[[:space:]]*`)/) print clause } }')"
+            action_clause="$(printf '%s\n' "$task_line" | awk '{ sub(/^- \[[ xX]\] [0-9.]+[[:space:]]*/, ""); gsub(/[.][[:space:]]/, "。"); count = split($0, clauses, /[,，。；;]/); for (i = 1; i <= count; i++) { clause = clauses[i]; lower = tolower(clause); if (clause ~ /(不得|禁止|不可|不應|無需)/ || lower ~ /(^|[^[:alnum:]_])((do|does|did|must|should|shall|will|would|can|could|may|might|is|are|was|were|has|have|had)[[:space:]]+not|(don.t|doesn.t|didn.t|mustn.t|shouldn.t|shan.t|won.t|wouldn.t|can.t|couldn.t|mayn.t|mightn.t|isn.t|aren.t|wasn.t|weren.t|hasn.t|haven.t|hadn.t|cannot))[[:space:]]+(modif|creat|delet|remov|writ|updat|add|edit|touch|chang|generat|implement|replac|renam)[[:alpha:]]*([^[:alnum:]_]|$)/) continue; if (clause ~ /(執行[[:space:]]*`|驗證[：:[:space:]]*`|預期)/ || lower ~ /(exception:|verification[：:[:space:]]*`|verify[[:space:]]*`|run[[:space:]]*`|expect)/) continue; if (i == 1 || clause ~ /(修改|建立|新增|刪除|移除|撰寫|補上|更新|加入[[:space:]]*`)/ || lower ~ /(modif(y|ied)|creat(e|ed)|delet(e|ed)|remov(e|ed)|writ(e|ten)|updat(e|ed)|add[[:space:]]*`)/) print clause } }')"
             explicit_files="$(printf '%s\n' "$action_clause" | grep -Eo '`[^`[:space:]]*(/|[.])[^`[:space:]]*`' | wc -l | tr -d ' ')"; printf '%s\n' "$action_clause" | grep -Eo '`[^`[:space:]]*(/|[.])[^`[:space:]]*`' | sed 's/^`//; s/`$//' | LC_ALL=C sort -u >"$tmp_dir/task-files"
             task_group="$(printf '%s\n' "$task_line" | sed -n 's/^- \[[ xX]\] \([0-9][0-9]*\)[.].*/\1/p')"
             assignee_count="$(printf '%s\n' "$task_line" | grep -o '\[@[^]]*\]' | wc -l | tr -d ' ')"
@@ -245,6 +270,8 @@ LC_ALL=C sort -u "$active_specs" -o "$active_specs"
 while IFS= read -r spec_file; do
     relative="${spec_file#"$repo_root"/}"
     grep -Fqx "$relative" "$active_specs" && continue
+    unfenced_spec="$tmp_dir/spec-unfenced"
+    strip_markdown_fences "$spec_file" >"$unfenced_spec"
     spec_dir="$(basename "$(dirname "$spec_file")")"; number="${spec_dir%%-*}"
     case "$relative" in
         specs/_archive/*) module="$(awk -F '\t' -v number="$number" '$1 ~ ("-" number "$") && $3 == "archived" { print $2; exit }' "$status_rows")"; status=archived ;;
@@ -257,9 +284,9 @@ while IFS= read -r spec_file; do
         [ "$dependency_valid" -eq 1 ] || grep -Fqx "$(printf 'LEGACY_SPEC_HEADING\t%s\tmissing:## 規格相依性' "$relative")" "$repo_root/scripts/sdd-lint-baseline.txt" || add_error SPEC_REQUIRED_HEADING "$relative" 'required heading is missing, duplicated, or empty: ## 規格相依性'
         if [ "$goal_valid" -eq 1 ] && [ "$dependency_valid" -eq 1 ]; then verify_required_ids "$spec_file" "$relative"; fi
     fi
-    grep -Fqx '## 功能目標' "$spec_file" || printf 'LEGACY_SPEC_HEADING\t%s\tmissing:## 功能目標\n' "$relative" >>"$eligible"
-    grep -Eq '^## 規格相依性( \*\(本功能依賴其他規格，或被其他規格依賴時填寫\)\*)?$' "$spec_file" || printf 'LEGACY_SPEC_HEADING\t%s\tmissing:## 規格相依性\n' "$relative" >>"$eligible"
-    if requires_page_traceability "$module" "$spec_file" && ! grep -Fqx '## Prototype Traceability' "$spec_file"; then printf 'LEGACY_SPEC_HEADING\t%s\tmissing:## Prototype Traceability\n' "$relative" >>"$eligible"; fi
+    grep -Fqx '## 功能目標' "$unfenced_spec" || printf 'LEGACY_SPEC_HEADING\t%s\tmissing:## 功能目標\n' "$relative" >>"$eligible"
+    grep -Eq '^## 規格相依性( \*\(本功能依賴其他規格，或被其他規格依賴時填寫\)\*)?$' "$unfenced_spec" || printf 'LEGACY_SPEC_HEADING\t%s\tmissing:## 規格相依性\n' "$relative" >>"$eligible"
+    if requires_page_traceability "$module" "$spec_file" && ! grep -Fqx '## Prototype Traceability' "$unfenced_spec"; then printf 'LEGACY_SPEC_HEADING\t%s\tmissing:## Prototype Traceability\n' "$relative" >>"$eligible"; fi
 done < <(find "$repo_root/specs" -mindepth 3 -maxdepth 3 -path '*/[0-9][0-9][0-9]-*/spec.md' -print | LC_ALL=C sort)
 LC_ALL=C sort -u "$eligible" -o "$eligible"
 baseline="$repo_root/scripts/sdd-lint-baseline.txt"
@@ -320,6 +347,7 @@ while IFS= read -r consumer; do
         retired_clauses="${retired_clauses//；/$'\n'}"
         retired_clauses="${retired_clauses//，/$'\n'}"
         retired_clauses="${retired_clauses//。/$'\n'}"
+        retired_clauses="${retired_clauses//. /$'\n'}"
         retired_command_active=0
         while IFS= read -r clause; do
             printf '%s\n' "$clause" | grep -Eq "$retired_command_pattern" || continue
