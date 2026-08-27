@@ -2952,6 +2952,49 @@
     return row;
   }
 
+  /* issue #515 (2-a): AC-3.42 has always scoped the pre-submit summary to
+     an INTERACTIVE review unit, but renderReviewerWorkspace() was the only
+     place that knew what that meant -- it hid the panel ahead of its three
+     early returns (arbitration / finalized / empty). The two paths that
+     re-render the summary on their own -- the capture-phase edit watcher on
+     #annotationPreview and the a / r decision shortcut -- only checked the
+     role, so a single click on a read-only unit brought the whole panel
+     back and nagged for a decision the page has no submit button to accept.
+     These three functions are the single source: the render path branches
+     on the SAME reason string the guard reads, so there is no second copy
+     of the conditions left to drift. */
+  var REVIEW_UNIT_BLOCK = {
+    ARBITRATION: 'arbitration',
+    FINALIZED: 'finalized',
+    EMPTY: 'empty',
+  };
+
+  function currentReviewUnitStatus() {
+    return window.LabelSuiteAnnotationWorkspaceData.getReviewUnitStatus(
+      currentProfile.id, currentRunType, currentSampleId, currentIdentity, state.selectedOutputTypes,
+      { minReviewers: currentProfile.minReviewers || 1 }
+    );
+  }
+
+  /* Returns null when the unit IS interactive. */
+  function reviewUnitBlockReason(unitStatus) {
+    var workspaceData = window.LabelSuiteAnnotationWorkspaceData;
+    if (
+      unitStatus === workspaceData.REVIEW_UNIT_STATUS.DISPUTED &&
+      workspaceData.isArbiterCandidate(currentProfile.id, currentRunType, currentSampleId, currentIdentity)
+    ) {
+      return REVIEW_UNIT_BLOCK.ARBITRATION;
+    }
+    if (unitStatus === workspaceData.REVIEW_UNIT_STATUS.FINALIZED) return REVIEW_UNIT_BLOCK.FINALIZED;
+    if (unitStatus === null && !demoAnnotatorRow()) return REVIEW_UNIT_BLOCK.EMPTY;
+    return null;
+  }
+
+  function isReviewUnitInteractive() {
+    if (currentRole !== 'reviewer' || !currentProfile) return false;
+    return reviewUnitBlockReason(currentReviewUnitStatus()) === null;
+  }
+
   function hideReviewSubmitSummary() {
     var panel = document.getElementById('wsReviewSubmitSummary');
     if (!panel) return;
@@ -2963,7 +3006,7 @@
     var panel = document.getElementById('wsReviewSubmitSummary');
     if (!panel) return;
     hideReviewSubmitSummary();
-    if (currentRole !== 'reviewer' || !state.selectedOutputTypes.length) return;
+    if (!isReviewUnitInteractive() || !state.selectedOutputTypes.length) return;
     var rowName = currentAnnotatorId();
 
     var title = document.createElement('div');
@@ -3674,17 +3717,14 @@
     var submission = getAnnotatorSubmission();
     var rawRecord = findRecordById(currentSampleId) || {};
 
-    var workspaceData = window.LabelSuiteAnnotationWorkspaceData;
     var reviewSubmitBtn = document.getElementById('wsReviewSubmitBtn');
-    var unitStatus = workspaceData.getReviewUnitStatus(
-      currentProfile.id, currentRunType, currentSampleId, currentIdentity, state.selectedOutputTypes,
-      { minReviewers: currentProfile.minReviewers || 1 }
-    );
+    var unitStatus = currentReviewUnitStatus();
     preview.appendChild(buildReviewUnitContext(unitStatus));
-    if (
-      unitStatus === workspaceData.REVIEW_UNIT_STATUS.DISPUTED &&
-      workspaceData.isArbiterCandidate(currentProfile.id, currentRunType, currentSampleId, currentIdentity)
-    ) {
+    /* issue #515: the three early returns below and the summary's own guard
+       read one and the same answer, so they cannot disagree about whether
+       this unit is interactive. */
+    var blockReason = reviewUnitBlockReason(unitStatus);
+    if (blockReason === REVIEW_UNIT_BLOCK.ARBITRATION) {
       /* The fixed footer submit drives handleReviewSubmit(); arbitration has
          its own in-card submit instead. */
       if (reviewSubmitBtn) reviewSubmitBtn.classList.add('hidden');
@@ -3706,7 +3746,7 @@
        shortcut (setupActionShortcuts skips hidden buttons). Mutually
        exclusive with the arbitration branch above (disputed ≠ finalized)
        and the empty gate below (finalized requires a submission). */
-    if (unitStatus === workspaceData.REVIEW_UNIT_STATUS.FINALIZED) {
+    if (blockReason === REVIEW_UNIT_BLOCK.FINALIZED) {
       if (reviewSubmitBtn) reviewSubmitBtn.classList.add('hidden');
       var lockedInputCard = document.createElement('div');
       lockedInputCard.className = 'content-card';
@@ -3726,7 +3766,7 @@
        an empty review could be filed against nothing. Keeping the footer
        submit hidden also blocks the FR-058 Ctrl/Cmd+Enter path
        (setupActionShortcuts skips hidden buttons). */
-    if (unitStatus === null && !demoAnnotatorRow()) {
+    if (blockReason === REVIEW_UNIT_BLOCK.EMPTY) {
       if (reviewSubmitBtn) reviewSubmitBtn.classList.add('hidden');
       var emptyCard = document.createElement('div');
       emptyCard.className = 'content-card';
