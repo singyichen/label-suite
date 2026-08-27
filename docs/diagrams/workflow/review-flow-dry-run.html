@@ -55,7 +55,7 @@
 
     <svg viewBox="0 0 1200 980" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="rvdry-title rvdry-desc">
       <title id="rvdry-title">試標審核詳細流程</title>
-      <desc id="rvdry-desc">流程圖：試標提交後拆成樣本乘標記員的審核單位，審核員逐單位審核。先判斷已審人數是否達門檻，未達則停在已同意或已修改的過渡狀態等待下一位審核員；達門檻後判斷審核員是否改動答案，無人改動即定稿唯讀，有改動則進入逐項嚴格多數決。退回同樣是一筆審核提交，一樣計入已審人數並往下推導，因此退回而未改動答案的單位仍會定稿。計票時，已提交審核但該項未改動的審核員其票計給標記員原答案，尚未提交者不計入分母；全員都改動時原答案不列為候選；未達已提交人數一半即不收斂；收斂即定稿，平手或全分歧才落入爭議池，由具仲裁資格的審核員逐項裁定後定稿。退回在試標只記錄審核決策，不改變標記員狀態。右欄標註示範任務 T014 因只需一位審核員而簡化掉的兩個節點。底部為任務層級流程：全體標記員提交完成後任務轉為待 IAA 確認，經 IAA 閘門判定是否開放正式標記。</desc>
+      <desc id="rvdry-desc">流程圖：試標提交後拆成樣本乘標記員的審核單位，審核員逐單位審核。先判斷已審人數是否達門檻，未達則停在已同意或已修改的過渡狀態等待下一位審核員；達門檻後判斷審核員是否改動答案，無人改動即定稿唯讀，有改動則進入逐項嚴格多數決。退回同樣是一筆審核提交，一樣計入已審人數並往下推導，因此退回而未改動答案的單位仍會定稿。計票時，已提交審核但該項未改動的審核員其票計給標記員原答案，尚未提交者不計入分母；全員都改動時原答案不列為候選；未達已提交人數一半即不收斂；收斂即定稿，平手或全分歧才落入爭議池，由具仲裁資格的審核員逐項裁定後定稿。退回在試標只記錄審核決策，不改變標記員狀態。右欄標註示範任務 T014 因只需一位審核員而簡化掉的兩個節點。底部為任務層級流程：全體標記員提交完成後任務轉為待 IAA 確認，經 IAA 檢核給出顧問性警示；未達標僅顯示警示，不阻擋開放正式標記，是否再跑一輪由人工決定。</desc>
 
       <defs>
         <marker id="arw" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#64748B"/></marker>
@@ -237,12 +237,12 @@
       <text x="408" y="850" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">試標階段結束</text>
 
       <rect x="560" y="812" width="232" height="52" rx="6" fill="#1E1B4B08" stroke="#94A3B8" stroke-width="1" stroke-dasharray="4,3"/>
-      <text x="676" y="835" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">標記一致性閘門</text>
+      <text x="676" y="835" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">標記一致性檢核（顧問性）</text>
       <text x="676" y="850" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">門檻由輸出類型 registry 決定</text>
 
       <rect x="848" y="812" width="216" height="52" rx="6" fill="#1E1B4B08" stroke="#94A3B8" stroke-width="1" stroke-dasharray="4,3"/>
-      <text x="956" y="835" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">達標 → 開放正式標記</text>
-      <text x="956" y="850" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">未達標 → 再跑一輪試標</text>
+      <text x="956" y="835" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">達標/未達標皆可開放</text>
+      <text x="956" y="850" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">未達標僅顯示警示，不阻擋</text>
 
       <text x="64" y="890" fill="#64748B" font-size="14" font-style="italic" font-family="'Crimson Pro','Noto Serif TC',serif">一致性算的是標記員各自的原始答案，不是審核或仲裁的定案值——試標的已定稿單位不產生 gold。</text>
 
