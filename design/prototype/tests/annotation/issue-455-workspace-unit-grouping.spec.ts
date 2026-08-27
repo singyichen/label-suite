@@ -207,7 +207,7 @@ test.describe('issue #455 -- the reviewer left column groups review units by sam
     });
   }
 
-  test('at 375px the left column stays collapsed and the context banner carries the identity', async ({
+  test('at 375px the left column stays collapsed and the breadcrumb carries the identity', async ({
     page,
   }) => {
     await skipGuidelineModal(page);
@@ -217,10 +217,15 @@ test.describe('issue #455 -- the reviewer left column groups review units by sam
     );
 
     // AC-5.2: the sample column is deliberately hidden below 768px, so the
-    // grouping can never obscure identity info there -- the FR-064 context
-    // banner is what names the unit at this width.
+    // grouping can never obscure identity info there. issue #515 removed the
+    // FR-064 banner's identity chip, so at this width the breadcrumb is the
+    // carrier -- the account sits at its tail and needs a horizontal scroll
+    // of the crumb bar to be read, an explicitly accepted trade-off (AC-4.29).
     await expect(page.locator('.col-samples')).toBeHidden();
-    await expect(page.getByTestId('ws-review-unit-context')).toContainText(T014_ANNOTATORS[1]);
+    await expect(page.getByTestId('ws-review-unit-context')).not.toContainText(T014_ANNOTATORS[1]);
+    const crumbBar = page.locator('.workspace-crumb-bar');
+    await expect(crumbBar).toBeVisible();
+    await expect(crumbBar.locator('nav.breadcrumb')).toContainText(T014_ANNOTATORS[1]);
   });
 });
 
