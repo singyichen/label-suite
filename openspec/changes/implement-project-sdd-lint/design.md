@@ -338,12 +338,12 @@ final archive PR。
    算術排除於 file-count 與 line-count，但 scope 不一致仍須在 commit 前停止於
    maintainer checkpoint。final merge 後才另行處理 umbrella `done` transition 與
    active-path retention，不得將該獨立 umbrella exception 提前納入 archive。依
-   SC-007，post-merge Issue #375 handoff 只可勾選六個 delivered D items：canonical
-   headings、STATUS/stage、Source-Verify、task one-file/exceptions、assignee/file
-   ownership 與 design inventory freshness。compound retired-path/command D checkbox
-   與 combined acceptance 保持 unchecked/deferred，直到另案取得 ADR-034/path
-   authority，並完成 named filesystem paths 的 QA Red 與 production Green；本
-   workflow 不接受 ADR-034，亦不修改 runtime code。
+   SC-007，合併後 Issue #375 交接只可勾選六個已交付 D 項目：正典標題、
+   STATUS/stage、Source-Verify、task 單檔／例外、assignee／file ownership 與
+   design inventory freshness。複合 retired-path/command D checkbox 與 combined
+   acceptance 維持未勾選並延期，直到另案取得 ADR-034/path authority，並完成
+   named filesystem paths 的 QA Red 與 production Green；本工作流不接受
+   ADR-034，亦不修改執行期程式碼。
 6. 若 CI rollout 必須回復，先由 maintainer 移除或停用外部 required-check
    expectation，避免 PR 因不存在的 check 卡住；再回復 intermediate CI integration
    的 workflow 與 `CLAUDE.md` local parity。此 rollback 不宣稱 scanner 成功或

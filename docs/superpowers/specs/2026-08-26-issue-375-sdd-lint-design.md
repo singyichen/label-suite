@@ -314,7 +314,7 @@ OpenSpec validation 與 `scripts/check-sdd.sh` 必須以兩個獨立結果報告
 
 ## Issue #375 checkbox impact
 
-依 SC-007，final merge 後只更新 Issue #375 中已實際交付的六個 D items：
+依 SC-007，最終合併後只更新 Issue #375 中已實際交付的六個 D 項目：
 
 1. `驗證 canonical spec 必要章節與精確標題。`
 2. `驗證 STATUS、active change、branch、stage 一致性。`
@@ -323,8 +323,8 @@ OpenSpec validation 與 `scripts/check-sdd.sh` 必須以兩個獨立結果報告
 5. `驗證 assignee 與 file ownership。`
 6. `驗證 design inventory freshness。`
 
-compound D checkbox `阻擋 retired path/command，例如 npm、舊 frontend/tests/ E2E 路徑與不存在的 panels directory。` 與 combined acceptance
-`CI 或本地單一命令可偵測 STATUS drift、retired path、規格必要段落與 inventory stale。` 保持 unchecked/deferred。兩者需要獨立的 ADR-034/path authority，以及所列 filesystem paths 的 QA Red 與 production Green；本 workflow 不接受 ADR-034，亦不修改 runtime code。
+複合 D checkbox `阻擋 retired path/command，例如 npm、舊 frontend/tests/ E2E 路徑與不存在的 panels directory。` 與 combined acceptance
+`CI 或本地單一命令可偵測 STATUS drift、retired path、規格必要段落與 inventory stale。` 維持未勾選並延期。兩者需要獨立的 ADR-034/path authority，以及所列 filesystem paths 的 QA Red 與 production Green；本工作流不接受 ADR-034，亦不修改執行期程式碼。
 
 上述六個 checkbox 以外，inventory generator workstream C、baseline-zero cleanup 與其他
 acceptance／inventory items 全部保持原狀。Generated freshness 的完成證據限於既有

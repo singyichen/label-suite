@@ -30,7 +30,7 @@ Project SDD lint 的 derived capability；正典為 `specs/foundation/001-projec
 
 ### Requirement: Task 與來源治理
 
-本需求依正典 `specs/foundation/001-project-sdd-lint/spec.md` 的 FR-003、FR-005、FR-006、AC-2.1、AC-2.2、AC-2.3 與 SC-007。系統 MUST 驗證 active OpenSpec change 的正典來源、task ownership 與 retired guidance，並阻擋不符合治理契約的 active artifact；Issue #375 handoff 只得勾選實際交付的六個 D 子項（canonical headings、STATUS/stage、Source-Verify、task one-file/exceptions、assignee/file ownership、design inventory freshness）。compound retired-path/command D checkbox 與 combined acceptance 保持 unchecked/deferred，直到取得 ADR-034/path authority 並完成 named filesystem paths 的 QA Red 與 production Green；本變更不接受 ADR-034，亦不修改 runtime code；inventory workstream C、baseline-zero cleanup 與其他 acceptance items 保持不變。
+本需求依正典 `specs/foundation/001-project-sdd-lint/spec.md` 的 FR-003、FR-005、FR-006、AC-2.1、AC-2.2、AC-2.3 與 SC-007。系統 MUST 驗證 active OpenSpec change 的正典來源、task ownership 與 retired guidance，並阻擋不符合治理契約的 active artifact；Issue #375 交接只得勾選實際交付的六個 D 子項（正典標題、STATUS/stage、Source-Verify、task 單檔／例外、assignee／file ownership、design inventory freshness）。複合 retired-path/command D checkbox 與 combined acceptance 維持未勾選並延期，直到取得 ADR-034/path authority 並完成 named filesystem paths 的 QA Red 與 production Green；本變更不接受 ADR-034，亦不修改執行期程式碼；inventory workstream C、baseline-zero cleanup 與其他 acceptance items 保持不變。
 
 #### Scenario: AC-2.1 assignee 無效
 - **GIVEN** task 沒有恰好一個結尾 assignee，或 assignee 指向不存在的 agent

@@ -158,7 +158,7 @@ PR 上以 `Project SDD Lint` 獨立 job 顯示結果，本地使用相同 comman
 - **SC-004**：`scripts/check-sdd.sh` 在 macOS Bash 3.2-compatible syntax 與 Ubuntu CI 執行，不增加 package dependency。
 - **SC-005**：CI 具有獨立 `Project SDD Lint` job，且 OpenSpec schema command 仍被文件化為另一個 gate。
 - **SC-006**：fresh、exit `1` + exact stale sentinel、unrunnable／sentinel-less exit `1` 與其他 configuration inventory fixtures 分別驗證無 inventory diagnostic、`INVENTORY_FRESHNESS`／exit `1`、`INVENTORY_CHECK_CONFIG`／exit `2`；real repository `node scripts/gen-screen-inventory.mjs --check` 必須 exit `0`。
-- **SC-007**：Issue #375 handoff 只勾選實際交付的六個 D 子項：canonical headings、STATUS/stage、Source-Verify、task one-file/exceptions、assignee/file ownership 與 design inventory freshness；inventory workstream C、baseline-zero cleanup 與其他 acceptance items 保持不變。compound D checkbox `阻擋 retired path/command，例如 npm、舊 frontend/tests/ E2E 路徑與不存在的 panels directory。` 與 combined acceptance `CI 或本地單一命令可偵測 STATUS drift、retired path、規格必要段落與 inventory stale。` 必須保持 unchecked/deferred，直到取得 ADR-034/path authority，並完成所列 filesystem paths 的 QA Red 與 production Green；本 workflow 不接受 ADR-034，亦不修改 runtime code。
+- **SC-007**：Issue #375 交接只勾選實際交付的六個 D 子項：正典標題、STATUS/stage、Source-Verify、task 單檔／例外、assignee／file ownership 與 design inventory freshness；inventory workstream C、baseline-zero cleanup 與其他 acceptance items 保持不變。複合 D checkbox `阻擋 retired path/command，例如 npm、舊 frontend/tests/ E2E 路徑與不存在的 panels directory。` 與 combined acceptance `CI 或本地單一命令可偵測 STATUS drift、retired path、規格必要段落與 inventory stale。` 必須維持未勾選並延期，直到取得 ADR-034/path authority，並完成所列 filesystem paths 的 QA Red 與 production Green；本工作流不接受 ADR-034，亦不修改執行期程式碼。
 
 ## 範圍外（Out of Scope）*(必填)*
 
@@ -171,7 +171,7 @@ PR 上以 `Project SDD Lint` 獨立 job 顯示結果，本地使用相同 comman
 
 | 版本 | 日期 | 變更摘要 |
 |---|---|---|
-| 1.1.1 | 2026-08-27 | Stage 2 truthful-handoff correction：SC-007 僅宣告六個已交付 D items；compound retired-path/command D item 與 combined acceptance 保持 deferred，待 ADR-034/path authority、QA Red 與 named filesystem-path production Green 的獨立實作 |
+| 1.1.1 | 2026-08-27 | Stage 2 誠實交接修正：SC-007 僅宣告六個已交付 D 項目；複合 retired-path/command D 項目與 combined acceptance 維持延期，待 ADR-034/path authority、QA Red 與 named filesystem-path production Green 的獨立實作 |
 | 1.1.0 | 2026-08-26 | 將 generated `design/system/screen-inventory.md` freshness 納入 blocking Project SDD lint，定義 fresh、stale 與 configuration exit/diagnostic 契約 |
 | 1.0.0 | 2026-08-26 | 建立 Project SDD lint command、ratchet baseline、task/Source-Verify/retired guidance rules與獨立 CI gate 的 canonical contract |
 ```
@@ -815,7 +815,7 @@ git commit -m "docs: document the project SDD lint command" -m "- **Add** the ro
 
 **Interfaces:**
 - Consumes: all prior committed tasks.
-- Produces: four-gate evidence、reviewed final branch、v1.1.1 canonical write-back、archived OpenSpec change，以及 SC-007 定義的六個 delivered D items、compound retired-path/command D item 與 combined acceptance 的 deferred truth。
+- 產出：四個 gate 的證據、已審查的 final branch、v1.1.1 正典回寫、已 archive 的 OpenSpec change，以及 SC-007 定義的六個已交付 D 項目、複合 retired-path/command D 項目與 combined acceptance 的延期事實。
 
 - [ ] **Step 1: Run fresh verification**
 
@@ -856,7 +856,7 @@ PR title/body are Traditional Chinese with an English Conventional Commit struct
 
 - [ ] **Step 7: Update STATUS and Issue #375 after merge**
 
-Set `foundation-001` to `done` and retain active path under the approved Issue #375 umbrella exception. Re-read the latest Issue #375 body from merged `main`, then update exactly these six delivered D items to checked：
+將 `foundation-001` 設為 `done`，並依核准的 Issue #375 umbrella 例外保留 active path。重新讀取已合併 `main` 的最新 Issue #375 內容後，只將下列六個已交付 D 項目更新為 checked：
 
 1. `驗證 canonical spec 必要章節與精確標題。`
 2. `驗證 STATUS、active change、branch、stage 一致性。`
@@ -865,7 +865,7 @@ Set `foundation-001` to `done` and retain active path under the approved Issue #
 5. `驗證 assignee 與 file ownership。`
 6. `驗證 design inventory freshness。`
 
-compound D checkbox `阻擋 retired path/command，例如 npm、舊 frontend/tests/ E2E 路徑與不存在的 panels directory。` 與 combined acceptance `CI 或本地單一命令可偵測 STATUS drift、retired path、規格必要段落與 inventory stale。` 必須保持 unchecked/deferred。兩者需要另案的 ADR-034/path authority，以及所列 filesystem paths 的 QA Red 與 production Green；本 workflow 不接受 ADR-034，亦不修改 runtime code。更新前後逐項比對，inventory generator workstream C、baseline-zero cleanup 與所有其他 acceptance／inventory checkbox 必須保持原狀。
+複合 D checkbox `阻擋 retired path/command，例如 npm、舊 frontend/tests/ E2E 路徑與不存在的 panels directory。` 與 combined acceptance `CI 或本地單一命令可偵測 STATUS drift、retired path、規格必要段落與 inventory stale。` 必須維持未勾選並延期。兩者需要另案的 ADR-034/path authority，以及所列 filesystem paths 的 QA Red 與 production Green；本工作流不接受 ADR-034，亦不修改執行期程式碼。更新前後逐項比對，inventory generator workstream C、baseline-zero cleanup 與所有其他 acceptance／inventory checkbox 必須保持原狀。
 
 ---
 
