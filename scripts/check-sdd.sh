@@ -21,6 +21,24 @@ finish() {
     [ "$config_failed" -eq 0 ] || exit 2; [ "$governance_failed" -eq 0 ] || exit 1
     exit 0
 }
+preflight_scanned_paths() {
+    local LC_ALL=C scanned_path relative_path scan_root
+    export LC_ALL
+    # Keep NUL boundaries and loop state so unsafe names never reach text collectors.
+    while IFS= read -r -d '' scanned_path; do
+        relative_path="${scanned_path#"$repo_root"/}"
+        case "$relative_path" in
+            *[[:cntrl:]]*) return 1 ;;
+        esac
+    done < <(
+        find "$repo_root/specs" -mindepth 3 -maxdepth 3 -path '*/[0-9][0-9][0-9]-*/spec.md' -print0 2>/dev/null
+        find "$repo_root/openspec/changes" -mindepth 1 -path "$repo_root/openspec/changes/archive" -prune -o -print0 2>/dev/null
+        for scan_root in .claude/agents .claude/commands .claude/skills/sdd-workflow; do
+            [ ! -d "$repo_root/$scan_root" ] || find "$repo_root/$scan_root" -mindepth 1 -print0 2>/dev/null
+        done
+    )
+    return 0
+}
 for arg in "$@"; do
     case "$arg" in
         --strict)
@@ -41,6 +59,10 @@ if [ "$root_provided" -eq 0 ]; then repo_root="$checker_root"; else repo_root="$
 if [ -z "${repo_root:-}" ] || [ ! -d "$repo_root" ]; then add_config_error SCANNER_CONFIG . 'repository root is invalid or unreadable'; finish; fi
 for required in specs/STATUS.md scripts/sdd-lint-baseline.txt openspec/changes .claude/agents; do [ -r "$repo_root/$required" ] || add_config_error SCANNER_CONFIG "$required" 'required scanner input is missing or unreadable'; done
 if [ "$config_failed" -ne 0 ]; then finish; fi
+if ! preflight_scanned_paths; then
+    add_config_error SCANNER_CONFIG . 'repository paths containing control characters are unsupported'
+    finish
+fi
 awk -F '|' '
 function trim(value) {
     gsub(/^[[:space:]]+|[[:space:]]+$/, "", value)
