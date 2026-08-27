@@ -20,6 +20,7 @@ flowchart LR
   B1  --> A1[Annotators Annotate<br/>標記員進行標記]
   A1  --> A2[Annotation Logs<br/>標記行為紀錄]
   A1  --> A3[Annotated Results<br/>標記結果]
+  A3  --> RD[Review Decisions<br/>審核決策]
 
   %% =========================
   %% Metrics & Quality Evaluation
@@ -28,41 +29,41 @@ flowchart LR
   A3 --> M2[Label Distribution Metrics<br/>標籤分佈指標]
   A3 --> M3[IAA Metrics<br/>IAA 指標]
   A3 --> M4[Data Quality Metrics<br/>資料品質指標]
+  RD --> M5[Annotator Modification Rate<br/>標記員被修改率]
 
   M1 --> QE[Quality Evaluation Engine<br/>品質評估引擎]
   M2 --> QE
   M3 --> QE
   M4 --> QE
+  M5 --> QE
 
   QE --> D1[Quality Dashboard<br/>品質儀表板]
   QE --> AD[Anomaly Detection<br/>異常偵測]
   QE --> RISK[Annotator Risk Scoring<br/>標記員風險評估]
 
-  AD   --> QD{Quality Sufficient?<br/>品質是否達標}
+  AD   --> QD{Quality Sufficient?<br/>品質是否達標（顧問性）}
   RISK --> QD
   D1   --> QD
 
   %% =========================
   %% Pass
   %% =========================
-  QD -- Yes --> AJ[Adjudication<br/>仲裁]
-  AJ   --> GOLD[Gold Standard Dataset<br/>黃金標準資料集]
+  QD -- Yes / 達標 --> AJ[Adjudication<br/>仲裁]
+  AJ   --> GOLD[Review Gold Dataset<br/>審核 gold 資料集]
   GOLD --> EXPORT[Export Dataset / Benchmark<br/>匯出資料集與評測基準]
   EXPORT --> End((End))
 
   %% =========================
   %% Fail Feedback Loop
   %% =========================
-  QD -- No --> FB[Root Cause Analysis<br/>問題歸因分析]
+  QD -- No / 未達標（不阻擋，人工決定是否再跑一輪） --> FB[Root Cause Analysis<br/>問題歸因分析]
   FB --> F1[Update Annotation Schema<br/>修正標記設定]
-  FB --> F2[Clarify Guidelines<br/>補充標記說明]
-  FB --> F3[Retrain Annotators<br/>重新訓練標記員]
+  FB --> F2[Revise Guidelines<br/>修訂標記說明（修訂紀錄必填）]
   FB --> F4[Re-sample Dataset<br/>重新抽樣資料]
   FB --> F5[Adjust Assignment<br/>調整標記員分派]
 
   F1 --> PM3
   F2 --> PM4
-  F3 --> PM6
   F4 --> PM5
   F5 --> PM6
 
@@ -80,6 +81,7 @@ flowchart LR
   PO -. configures  .-> PM1
   PO -. reviews     .-> QE
   AN -. works on    .-> A1
+  RV -. reviews     .-> RD
   RV -. adjudicates .-> AJ
 
   %% =========================
@@ -95,10 +97,10 @@ flowchart LR
   classDef decision   fill:#FFF8E1,stroke:#F9A825,stroke-width:2px,color:#5D4037;
 
   class PM1,PM2,PM3,PM4,PM5,PM6,B1 planning;
-  class A1,A2,A3 annotation;
-  class M1,M2,M3,M4 metrics;
+  class A1,A2,A3,RD annotation;
+  class M1,M2,M3,M4,M5 metrics;
   class QE,D1 quality;
-  class AD,RISK,FB,F1,F2,F3,F4,F5 alert;
+  class AD,RISK,FB,F1,F2,F4,F5 alert;
   class AJ,GOLD,EXPORT output;
   class SA,PO,AN,RV role;
   class QD decision;
