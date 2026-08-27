@@ -383,6 +383,10 @@
 
 <script src="../../assets/theme.js"></script>
 <script src="../../assets/analytics.js"></script>
+<script src="../task-management/task-list.data.js"></script>
+<script src="../task-management/task-detail.data.js"></script>
+<script src="../task-management/task-config.data.js"></script>
+<script src="../annotation/annotation-workspace.data.js"></script>
 <script>
 /* ── i18n ──────────────────────────────────────────────────────────── */
 var I18N = {
@@ -473,7 +477,7 @@ var I18N = {
     iaaSummaryPass: '整體通過', iaaSummaryFail: '整體未達標', iaaSummaryWarn: '部分通過',
     iaaCompositeBadgeFmt: '{x}/{y} 達標', iaaExcludedSuffixFmt: ' · {N} 型排除',
     iaaPendingBadgeFmt: '—/{y} 待完成 Dry Run', iaaNotApplicableBadge: '不適用',
-    iaaSmallSampleBadge: '小樣本估計',
+    iaaSmallSampleBadge: '小樣本估計', iaaNotComputable: '無法計算',
     compositeBadgeTitle: 'IAA 綜合結果',
     iaaMethodName: {
       multi_dim: 'ICC（Intraclass Correlation Coefficient）',
@@ -669,6 +673,9 @@ var I18N = {
       metricLabel: "Krippendorff's Alpha（nominal）",
       calcDesc: '整體 alpha（單選標籤）',
       threshold: '門檻 0.80 — <strong class="t-pass">通過</strong>',
+      thresholdFmt: '門檻 {threshold} — {result}',
+      passLabel: '通過',
+      failLabel: '未達',
       altToggle: '替代指標',
       altHeaderMetric: '指標',
       altHeaderVal: '數值',
@@ -821,7 +828,7 @@ var I18N = {
     iaaSummaryPass: 'Overall Pass', iaaSummaryFail: 'Overall Fail', iaaSummaryWarn: 'Partial Pass',
     iaaCompositeBadgeFmt: '{x}/{y} Passed', iaaExcludedSuffixFmt: ' · {N} type(s) excluded',
     iaaPendingBadgeFmt: '—/{y} Pending Dry Run', iaaNotApplicableBadge: 'Not applicable',
-    iaaSmallSampleBadge: 'Small-sample estimate',
+    iaaSmallSampleBadge: 'Small-sample estimate', iaaNotComputable: 'Cannot compute',
     compositeBadgeTitle: 'IAA Composite Result',
     iaaMethodName: {
       multi_dim: 'ICC (Intraclass Correlation Coefficient)',
@@ -1017,6 +1024,9 @@ var I18N = {
       metricLabel: "Krippendorff's Alpha (nominal)",
       calcDesc: 'Overall alpha (single-select label)',
       threshold: 'Threshold 0.80 — <strong class="t-pass">Pass</strong>',
+      thresholdFmt: 'Threshold {threshold} — {result}',
+      passLabel: 'Pass',
+      failLabel: 'Fail',
       altToggle: 'Alternative metrics',
       altHeaderMetric: 'Metric',
       altHeaderVal: 'Value',
@@ -1124,7 +1134,10 @@ var OUTPUT_TYPE_LABELS = {
  * iaaStatus) so navigating from the list never contradicts the list row.
  * T101–T109 are spec-scenario fixtures (FR-024A/B/C composite badge,
  * small-sample flags, …) that have no host among the 13 registry tasks;
- * they are reachable only by direct URL and are exercised by tests. */
+ * they are reachable only by direct URL and are exercised by tests.
+ * T014–T017 are the review-flow demo tasks (task-list.data.js, issue #302);
+ * like T101–T109 they have no host row in the list's 13-task registry and
+ * are reachable only by direct task_id URL (issue #490). */
 var TASK_META = {
   T001: {
     outputs: ['single_label'],
@@ -1206,6 +1219,30 @@ var TASK_META = {
       multi_dim: { pass: true, n: 14 },
     },
     title: { zh: 'ABSA + 情緒回歸（YouTube 留言）', en: 'ABSA + Emotion Regression (YouTube Comments)' },
+    membershipRole: 'project_leader',
+  },
+  T014: {
+    outputs: ['single_label'],
+    iaaData: { single_label: { pass: false, n: 15 } },
+    title: { zh: '審核流程示範：試標', en: 'Review Flow Demo: Dry Run' },
+    membershipRole: 'project_leader',
+  },
+  T015: {
+    outputs: ['single_label'],
+    iaaData: {},
+    title: { zh: '審核流程示範：正式標記（單一審核員）', en: 'Review Flow Demo: Official Run (Single Reviewer)' },
+    membershipRole: 'project_leader',
+  },
+  T016: {
+    outputs: ['single_label'],
+    iaaData: {},
+    title: { zh: '審核流程示範：正式標記（三審核員多數決）', en: 'Review Flow Demo: Official Run (Three Reviewers)' },
+    membershipRole: 'project_leader',
+  },
+  T017: {
+    outputs: ['single_label'],
+    iaaData: {},
+    title: { zh: '審核流程示範：正式標記（雙審核員平手）', en: 'Review Flow Demo: Official Run (Two Reviewers Tie)' },
     membershipRole: 'project_leader',
   },
   T101: {
@@ -1574,6 +1611,50 @@ function applySmallSampleBadge() {
   });
 }
 
+/* ── single_label IAA score card (issue #490) ─────────────────────
+ * The single_label partial's score card used to hardcode 0.85/pass; this
+ * derives the real value from computeIaaAlpha() (annotation-workspace.data.js
+ * — the sole source of truth for the alpha formula, see IAA_NOMINAL_OUTPUT_TYPES)
+ * and OUTPUT_TYPE_IAA_REGISTRY (task-config.data.js — the sole source of truth
+ * for the pass threshold). IAA is advisory only: when not computable this
+ * renders "not computable", never 0.00/undefined/NaN, and nothing here gates
+ * any workflow. */
+function applySingleLabelIaaCard() {
+  var mount = document.getElementById('qualityPanelMount');
+  if (!mount || !window.LabelSuiteAnnotationWorkspaceData) return;
+  var taskMeta = TASK_META[S_ROUTE.taskId] || TASK_META[DEFAULT_TASK_ID];
+  var outputs = (taskMeta && taskMeta.outputs && taskMeta.outputs.length) ? taskMeta.outputs : [S.type];
+  var index = outputs.indexOf('single_label');
+  if (index === -1) return;
+  var scope = index === 0
+    ? mount.querySelector('section[aria-labelledby="iaaTitle"]')
+    : mount.querySelector('section[data-output-type="single_label"]');
+  if (!scope) return;
+  var valueEl = scope.querySelector('.iaa-card-value');
+  var barEl = scope.querySelector('.iaa-bar-fill');
+  var dotEl = scope.querySelector('.t-dot');
+  var thrTextEl = scope.querySelector('.iaa-threshold-item span:last-child');
+  if (!valueEl || !barEl || !dotEl || !thrTextEl) return;
+
+  var listTask = ((window.LabelSuiteTaskListData && window.LabelSuiteTaskListData.tasks) || [])
+    .filter(function(task) { return task.id === S_ROUTE.taskId; })[0];
+  var runType = (listTask && listTask.runType === 'official_run') ? 'official_run' : 'dry_run';
+  var result = window.LabelSuiteAnnotationWorkspaceData.computeIaaAlpha(S_ROUTE.taskId, runType, 'single_label');
+  var threshold = OUTPUT_TYPE_IAA_REGISTRY.single_label.defaultThreshold;
+
+  var state = !result.computable ? 'warn' : (result.alpha >= threshold ? 'pass' : 'fail');
+  valueEl.className = 'iaa-card-value ' + state;
+  valueEl.textContent = result.computable ? result.alpha.toFixed(2) : t('iaaNotComputable');
+  barEl.className = 'iaa-bar-fill ' + state;
+  barEl.style.width = (result.computable ? Math.max(0, Math.min(1, result.alpha)) * 100 : 0) + '%';
+  dotEl.className = 't-dot t-dot-' + state;
+  var resultText = result.computable
+    ? tPath('singleLabelQuality.' + (state === 'pass' ? 'passLabel' : 'failLabel'))
+    : t('iaaNotComputable');
+  thrTextEl.innerHTML = fmt(tPath('singleLabelQuality.thresholdFmt'), { threshold: threshold.toFixed(2) })
+    + ' — <strong class="t-' + state + '">' + resultText + '</strong>';
+}
+
 /* ── IAA method name (primary output type only) ───────────────────── */
 function updateMethodName() {
   var methodTarget = document.getElementById('iaaMethodName');
@@ -1721,6 +1802,7 @@ function loadQualityPanel() {
     updateMethodName();
     updateSummaryBadge();
     applySmallSampleBadge();
+    applySingleLabelIaaCard();
     syncRoleUi();
     wireQualityPanelInteractions();
   };
