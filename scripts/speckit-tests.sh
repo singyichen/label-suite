@@ -1393,7 +1393,7 @@ check_normal_space_path_control() {
 }
 
 test_check_sdd_rejects_control_character_paths_before_scanning() {
-    local change_dir mismatches normal_path repo results spec_dir unsafe_path
+    local change_dir mismatches normal_path repo results spec_dir symlink_target unsafe_path
     results="$(mktemp "$TMP_ROOT/control-path-results.XXXXXX")"
     mismatches="$(mktemp "$TMP_ROOT/control-path-mismatches.XXXXXX")"
 
@@ -1437,6 +1437,16 @@ SPEC
     change_dir="CONTROL_CHANGE_NEWLINE_MARKER"$'\n'"change"
     cp -R "$repo/openspec/changes/project-sdd-lint" "$repo/openspec/changes/$change_dir"
     check_control_path_rejection active-change-newline "$repo" CONTROL_CHANGE_NEWLINE_MARKER '' "$results" "$mismatches"
+
+    repo="$(make_sdd_repo)"
+    symlink_target="$repo/symlink-targets/active-change"
+    mkdir -p "$repo/symlink-targets"
+    cp -R "$repo/openspec/changes/project-sdd-lint" "$symlink_target"
+    spec_dir="CONTROL_SYMLINK_DESCENDANT_MARKER"$'\n'"view"
+    mkdir -p "$symlink_target/specs/foundation/$spec_dir"
+    printf 'FR-999\n' > "$symlink_target/specs/foundation/$spec_dir/spec.md"
+    ln -s ../../symlink-targets/active-change "$repo/openspec/changes/safe-symlink-change"
+    check_control_path_rejection active-change-symlink-newline-descendant "$repo" CONTROL_SYMLINK_DESCENDANT_MARKER '' "$results" "$mismatches"
 
     repo="$(make_sdd_repo)"
     normal_path="$repo/.claude/agents/ordinary space guidance.md"
