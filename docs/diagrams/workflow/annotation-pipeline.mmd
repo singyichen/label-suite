@@ -21,6 +21,7 @@ flowchart LR
   A1  --> A2[Annotation Logs<br/>標記行為紀錄]
   A1  --> A3[Annotated Results<br/>標記結果]
   A3  --> RD[Review Decisions<br/>審核決策]
+  RD  --> AJ[Adjudication<br/>審核仲裁與定稿]
 
   %% =========================
   %% Metrics & Quality Evaluation
@@ -41,22 +42,23 @@ flowchart LR
   QE --> AD[Anomaly Detection<br/>異常偵測]
   QE --> RISK[Annotator Risk Scoring<br/>標記員風險評估]
 
-  AD   --> QD{Quality Sufficient?<br/>品質是否達標（顧問性）}
+  AD   --> QD{Run Another Trial Round?<br/>是否再跑一輪試標（顧問性判讀）}
   RISK --> QD
   D1   --> QD
 
   %% =========================
   %% Pass
   %% =========================
-  QD -- Yes / 達標 --> AJ[Adjudication<br/>仲裁]
-  AJ   --> GOLD[Review Gold Dataset<br/>審核 gold 資料集]
+  QD -- No / 不再跑，開放正式標記 --> OFF[Open Official Annotation<br/>開放正式標記]
+  OFF  --> A1
+  AJ   -- official_run --> GOLD[Review Gold Dataset<br/>審核 gold 資料集]
   GOLD --> EXPORT[Export Dataset / Benchmark<br/>匯出資料集與評測基準]
   EXPORT --> End((End))
 
   %% =========================
   %% Fail Feedback Loop
   %% =========================
-  QD -- No / 未達標（不阻擋，人工決定是否再跑一輪） --> FB[Root Cause Analysis<br/>問題歸因分析]
+  QD -- Yes / 再跑一輪試標 --> FB[Root Cause Analysis<br/>問題歸因分析]
   FB --> F1[Update Annotation Schema<br/>修正標記設定]
   FB --> F2[Revise Guidelines<br/>修訂標記說明（修訂紀錄必填）]
   FB --> F4[Re-sample Dataset<br/>重新抽樣資料]
@@ -102,5 +104,6 @@ flowchart LR
   class QE,D1 quality;
   class AD,RISK,FB,F1,F2,F4,F5 alert;
   class AJ,GOLD,EXPORT output;
+  class OFF planning;
   class SA,PO,AN,RV role;
   class QD decision;
