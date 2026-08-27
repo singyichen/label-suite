@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { buildWorkspaceUrl, dismissGuidelineModal } from './_workspace-helpers';
+import { buildWorkspaceUrl, dismissGuidelineModal, patchDataFile } from './_workspace-helpers';
 
 /* Traceability: specs/annotation/015-annotation-workspace/spec.md
  *   FR-020, FR-020D, AC-5.3, SC-005D
@@ -64,6 +64,12 @@ test('closes via close button, backdrop and Esc', async ({ page }) => {
 });
 
 test('first-visit guideline gate renders the same Markdown to HTML', async ({ page }) => {
+  // No seed sets forceShowGuideline; stub it at runtime like issue-184 does.
+  await patchDataFile(
+    page,
+    'task-detail.data.js',
+    `window.LabelSuiteTaskDetailData.profiles.T001.forceShowGuideline = true;`
+  );
   await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001' }));
 
   const body = page.getByTestId('ws-guideline-modal-body');
@@ -75,13 +81,22 @@ test('escapes raw HTML in Markdown source (no script injection)', async ({ page 
   await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001' }));
   await dismissGuidelineModal(page);
 
-  const html = await page.evaluate(() =>
-    (window as any).renderMarkdown(
+  // Parse the renderer output into a detached element and inspect the DOM:
+  // the injected <img> must survive only as escaped text, never as a node,
+  // and the javascript: link must not become an anchor.
+  const result = await page.evaluate(() => {
+    const html = (window as any).renderMarkdown(
       '# T <img src=x onerror="alert(1)">\n\n[x](javascript:alert(1))'
-    )
-  );
-  expect(html).not.toContain('<img');
-  expect(html).not.toContain('onerror');
-  expect(html).not.toContain('javascript:');
-  expect(html).toContain('&lt;img');
+    );
+    const tpl = document.createElement('template');
+    tpl.innerHTML = html;
+    return {
+      imgCount: tpl.content.querySelectorAll('img').length,
+      anchorCount: tpl.content.querySelectorAll('a').length,
+      headingText: tpl.content.querySelector('h1')?.textContent ?? '',
+    };
+  });
+  expect(result.imgCount).toBe(0);
+  expect(result.anchorCount).toBe(0);
+  expect(result.headingText).toContain('<img src=x onerror="alert(1)">');
 });

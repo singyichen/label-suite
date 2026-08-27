@@ -726,16 +726,31 @@
     html[data-theme="dark"] .guideline-file-icon.md { background: var(--color-primary-soft-bg); color: #A78BFA; }
     .guideline-file-name { font-size: 13px; font-weight: 500; color: var(--color-ink); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .guideline-file-action { font-size: 11px; color: var(--color-ink-muted); flex-shrink: 0; }
+    /* Rendered Markdown body shared by the first-visit gate modal and the
+       Markdown preview modal (issue #527). */
     .guideline-md-preview {
       margin-top: var(--space-md);
       padding: var(--space-md);
       border: 1px solid var(--color-border);
       border-radius: var(--radius-md);
       background: var(--color-surface);
-      font-size: 12px;
+      font-size: 13px;
       line-height: 1.7;
-      white-space: pre-wrap;
+      color: var(--color-ink);
     }
+    .guideline-md-preview > :first-child { margin-top: 0; }
+    .guideline-md-preview > :last-child { margin-bottom: 0; }
+    .guideline-md-preview h1, .guideline-md-preview h2, .guideline-md-preview h3 { font-weight: 600; margin: var(--space-md) 0 var(--space-sm); line-height: 1.4; }
+    .guideline-md-preview h1 { font-size: 16px; }
+    .guideline-md-preview h2 { font-size: 15px; }
+    .guideline-md-preview h3 { font-size: 14px; }
+    .guideline-md-preview p { margin: 0 0 var(--space-sm); }
+    .guideline-md-preview ul, .guideline-md-preview ol { margin: 0 0 var(--space-sm); padding-left: 20px; }
+    .guideline-md-preview li { margin-bottom: 4px; }
+    .guideline-md-preview code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; padding: 1px 4px; border-radius: 4px; background: var(--color-surface-muted, rgba(0,0,0,0.05)); }
+    .guideline-md-preview a { color: var(--color-primary); text-decoration: underline; }
+    .md-modal { max-width: 720px; width: 92vw; }
+    .md-modal .guideline-md-preview { max-height: 70vh; overflow: auto; }
     .image-modal { max-width: 720px; }
     .image-modal-header { display: flex; align-items: center; justify-content: space-between; }
     .image-modal-close {
@@ -944,6 +959,22 @@
   </div>
 </div>
 
+<!-- Guideline Markdown preview modal (spec 015 AC-5.3 / SC-005D, issue #527):
+     same closing paths as the PDF modal -- close button, backdrop click,
+     Esc key (Esc via the LabelSuiteModalFocus trap). Body receives the
+     output of renderMarkdown() (config.js), never raw file content. -->
+<div class="modal-overlay hidden" id="wsGuidelineMdModal" role="dialog" aria-modal="true" aria-labelledby="wsGuidelineMdModalTitleText" data-testid="ws-guideline-md-modal">
+  <div class="modal image-modal md-modal">
+    <div class="image-modal-header">
+      <h2 class="modal-title" id="wsGuidelineMdModalTitleText"></h2>
+      <button class="image-modal-close" type="button" id="wsGuidelineMdModalClose" data-testid="ws-guideline-md-modal-close" aria-label="關閉 Markdown 預覽">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <div class="guideline-md-preview" id="wsGuidelineMdModalBody" data-testid="ws-guideline-md-modal-body"></div>
+  </div>
+</div>
+
 <div class="workspace-root" id="wsRoot" data-testid="ws-root" tabindex="-1">
   <div class="workspace-crumb-bar">
     <nav class="breadcrumb" aria-label="breadcrumb" id="entryBreadcrumb" data-testid="entry-breadcrumb"></nav>
@@ -1035,7 +1066,6 @@
           <p class="guideline-summary-text" id="guidelineSummaryText"></p>
         </div>
         <div class="guideline-file-list" id="wsGuidelineFileList"></div>
-        <div class="guideline-md-preview hidden" id="wsGuidelineMdPreview"></div>
       </div>
       <div class="guideline-panel hidden" id="wsHistoryPanel" data-testid="ws-history-panel">
         <div id="wsHistoryContainer"></div>
