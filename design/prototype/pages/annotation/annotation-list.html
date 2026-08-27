@@ -45,6 +45,13 @@
       margin: 0 0 4px;
     }
     .page-subtitle { font-size: 14px; line-height: 1.8; color: var(--color-text-soft); margin: 0; }
+    /* design/system/MASTER.md §Breadcrumb (compact form). Placed BELOW the
+       heading block exactly as task-detail.html does: shared spec 008 FR-017
+       pins every page's h1 to the Dashboard's y, so nothing may precede it. */
+    .breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--color-text-soft);margin:-12px 0 16px}
+    .breadcrumb a{color:var(--color-primary)}
+    .breadcrumb a:hover{text-decoration:underline}
+    .breadcrumb-sep{color:var(--color-ink-muted);font-size:11px}
     .list {
       display: grid;
       gap: var(--space-sm);
@@ -575,6 +582,8 @@
     </div>
   </section>
 
+  <nav class="breadcrumb" aria-label="breadcrumb" id="entryBreadcrumb" data-testid="entry-breadcrumb"></nav>
+
   <section class="list hidden" id="taskInfoCard" aria-label="任務資訊" data-testid="list-task-info-card">
     <article class="list-item">
       <div class="task-item-header">
@@ -694,6 +703,9 @@
       thActions: '操作',
       runTypeLabelOfficial: '正式標記',
       runTypeLabelDry: '試標',
+      crumbWorkAreaReviewer: '審核作業',
+      crumbWorkAreaAnnotator: '標記作業',
+      crumbTaskTpl: '{name}（{run}）',
       statusSubmitted: '已提交',
       statusSaved: '已儲存',
       statusPending: '待處理',
@@ -760,6 +772,9 @@
       thActions: 'Actions',
       runTypeLabelOfficial: 'Official',
       runTypeLabelDry: 'Trial',
+      crumbWorkAreaReviewer: 'Review',
+      crumbWorkAreaAnnotator: 'Annotate',
+      crumbTaskTpl: '{name} ({run})',
       statusSubmitted: 'Submitted',
       statusSaved: 'Saved',
       statusPending: 'Pending',
@@ -1920,7 +1935,51 @@
     el.classList.remove('hidden');
   }
 
+  /*
+   * Entry breadcrumb (issue #456, FR-080). Every level is derived from the
+   * URL context so a cold deep link renders the same trail as an in-app
+   * navigation. Level 1 links to the dashboard rather than to a task-less
+   * annotation-list.html, because that URL is a not-found state whose own
+   * recovery CTA already points at the dashboard.
+   */
+  function renderEntryBreadcrumb(context) {
+    var nav = document.getElementById('entryBreadcrumb');
+    if (!nav) return;
+    nav.innerHTML = '';
+    var workArea = t(context.role === 'reviewer' ? 'crumbWorkAreaReviewer' : 'crumbWorkAreaAnnotator');
+
+    if (!context.profile) {
+      nav.appendChild(breadcrumbCurrent(workArea));
+      return;
+    }
+
+    var root = document.createElement('a');
+    root.href = '../dashboard/dashboard.html';
+    root.textContent = workArea;
+    nav.appendChild(root);
+
+    var sep = document.createElement('span');
+    sep.className = 'breadcrumb-sep';
+    sep.setAttribute('aria-hidden', 'true');
+    sep.textContent = '\u203A';
+    nav.appendChild(sep);
+
+    var isEn = CURRENT_LANG === 'en';
+    nav.appendChild(breadcrumbCurrent(t('crumbTaskTpl', {
+      name: (isEn && context.profile.nameEn) ? context.profile.nameEn : context.profile.nameZh,
+      run: runTypeLabel(context.runType)
+    })));
+  }
+
+  function breadcrumbCurrent(text) {
+    var span = document.createElement('span');
+    span.setAttribute('aria-current', 'page');
+    span.textContent = text;
+    return span;
+  }
+
   function renderContext(context) {
+    renderEntryBreadcrumb(context);
     document.getElementById('pageTitle').textContent = t('pageTitle');
     document.getElementById('pageSubtitle').textContent =
       context.role === 'reviewer' ? t('pageSubtitleReviewer') : t('pageSubtitleAnnotator');

@@ -43,6 +43,23 @@
       min-width: 0;
     }
 
+    /* design/system/MASTER.md §Breadcrumb (compact form, as in task-detail.html).
+       The workspace shell has no page header, so the trail gets its own slim
+       bar above the three columns; margin-bottom is dropped because the bar's
+       padding already sets the rhythm. */
+    .breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--color-text-soft)}
+    .breadcrumb a{color:var(--color-primary)}
+    .breadcrumb a:hover{text-decoration:underline}
+    .breadcrumb-sep{color:var(--color-ink-muted);font-size:11px}
+    .workspace-crumb-bar {
+      flex: 0 0 auto;
+      padding: 10px var(--space-md);
+      border-bottom: 1px solid var(--color-border);
+      background: var(--color-white);
+      overflow-x: auto;
+    }
+    .workspace-crumb-bar .breadcrumb { flex-wrap: nowrap; white-space: nowrap; }
+
     /* ── Workspace Body (3-column) ──────────────────────────── */
     .workspace-body {
       flex: 1;
@@ -916,6 +933,9 @@
 </div>
 
 <div class="workspace-root" id="wsRoot" data-testid="ws-root" tabindex="-1">
+  <div class="workspace-crumb-bar">
+    <nav class="breadcrumb" aria-label="breadcrumb" id="entryBreadcrumb" data-testid="entry-breadcrumb"></nav>
+  </div>
   <div class="workspace-body" id="workspaceBody">
     <button class="guideline-collapse-btn" type="button" id="wsGuidelineCollapseBtn" data-testid="ws-guideline-collapse-btn" aria-label="收合說明區" aria-expanded="true">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
