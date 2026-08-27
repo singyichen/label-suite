@@ -24,15 +24,26 @@
 
 ## 3. PR-SDD-LINT-FINAL-ARCHIVE — Final verification and write-back readiness
 
-> **相依與平行性**：本群組嚴格序列執行，不使用 parallel markers；前置任務：2.4 且 `PR-SDD-LINT-CI` 已合併；本群組順序：3.1；後續 apply 任務：無。3.1 是最後一個 command-only apply task，觸及零檔案；完成後所有 apply checkboxes 必須已完成，才可進入下方 apply 外的 pre-merge finalization，使本 final PR 以已驗證的 write-back 結束。
+> **相依與平行性**：本群組嚴格序列執行，不使用 parallel markers；前置任務：2.4 且 `PR-SDD-LINT-CI` 已合併；本群組順序：3.1；後續 apply 任務：4.1。3.1 是 command-only complete verification，觸及零檔案；它完成後進入 Stage 3 security remediation 的 Red/Green sequence，不得進入 pre-merge finalization。
 
-**故事目標**：以 SC-001–SC-007 的 fresh evidence、inventory freshness 與 Source-Verify preconditions 完成所有 apply tasks，為獨立 final PR 的 pre-merge write-back 及 truthful Issue handoff 建立可驗證前提。
+**故事目標**：以 SC-001–SC-007 的 fresh evidence、inventory freshness 與 Source-Verify preconditions 完成 Stage 3 前的 command-only verification，為後續 security remediation、獨立 final PR 的 pre-merge write-back 及 truthful Issue handoff 建立可驗證前提。
 
 - [x] 3.1 執行 fresh command-only complete verification：`bash -n scripts/check-sdd.sh scripts/speckit-tests.sh`、`bash scripts/speckit-tests.sh`、`lint_output="$(scripts/check-sdd.sh)"; lint_status=$?; printf '%s\n' "$lint_output"; test "$lint_status" -eq 0; ! printf '%s\n' "$lint_output" | grep -F 'INVENTORY_FRESHNESS_UNVERIFIED'`、`node scripts/gen-screen-inventory.mjs --check`、`scripts/check-spec-artifacts.sh`、`openspec validate --changes --no-interactive`、`rg -o --no-filename 'FR-[0-9]{3}|SC-[0-9]{3}|AC-[0-9]+\.[0-9]+' openspec/changes/implement-project-sdd-lint/proposal.md openspec/changes/implement-project-sdd-lint/design.md openspec/changes/implement-project-sdd-lint/tasks.md openspec/changes/implement-project-sdd-lint/specs/foundation/001-project-sdd-lint/spec.md | sort -u | while IFS= read -r citation; do grep -F "$citation" specs/foundation/001-project-sdd-lint/spec.md >/dev/null || exit 1; done`、`git diff --check`；逐一記錄八個 commands 均 exit `0`，證明 Project SDD lint 與 real-repository generator freshness 均通過、lint output 不含 retired `INVENTORY_FRESHNESS_UNVERIFIED`，且每個 FR/SC/AC citation 可在 canonical spec 定位。 [@main]
 
+## 4. PR-SDD-LINT-SECURITY — Same-trust inventory and pathname preflight
+
+> **相依與平行性**：本群組嚴格序列執行，不使用 parallel markers；前置任務：3.1；本群組順序：4.1 → 4.2 → 4.3 → 4.4；後續 apply 任務：無。4.1 與 4.3 的 committed Red evidence 必須分別先於 paired Green；4.4 完成且全部十三個 apply tasks 均完成前，不得進入 pre-merge finalization。
+
+**故事目標**：落實 SC-008，以 committed adversarial Red/Green evidence 證明 foreign generator marker 被拒絕、control-character scanned paths fail closed，且 default／same-root inventory 與 ordinary-space pathname 維持 green。
+
+- [ ] 4.1 修改僅 `scripts/speckit-tests.sh`。將 ordinary SDD fixtures 改為執行 checker-local staged copy，保留所有既有 assertions，並新增 foreign-root hostile generator 企圖寫入 marker；新測試必須期待 `INVENTORY_CHECK_CONFIG`／exit `2`、無 marker 與無 raw output。以獨立 QA Red commit 提交並執行 harness；expected Red 只可為 current production 執行 hostile generator／建立 marker，而非拒絕。 [@senior-qa]
+- [ ] 4.2 修改僅 `scripts/check-sdd.sh`。在不改動 Red test、generator、CI 或 dependencies 下，實作最小 canonical same-trust-root refusal；驗證 full harness、default real lint 與 explicit same-root real lint。 [@senior-devops]
+- [ ] 4.3 修改僅 `scripts/speckit-tests.sh`。加入隔離的 newline、tab、CR scanned filename fixtures 與 normal-space control；期待穩定 `SCANNER_CONFIG`／`.`／exit `2`、不含 raw unsafe path 或 control character，並驗證 normal-space acceptance。涵蓋至少 consumer、canonical-spec 與 active-change discovery routes。以獨立 QA Red commit 提交並執行 harness；expected Red 只可為 absent pathname preflight／bypass 或 unsafe rendering。 [@senior-qa]
+- [ ] 4.4 修改僅 `scripts/check-sdd.sh`。在既有 newline／TSV flows 前加入最小 NUL-safe preflight；不得修改 Red test、baseline、generator 或 `check-spec-artifacts.sh`。驗證 shell syntax、full harness、real lint、inventory check/tests、deterministic/no-write behavior，且不出現 retired `INVENTORY_FRESHNESS_UNVERIFIED`。 [@senior-devops]
+
 ## Pre-merge finalization (outside /opsx:apply) — NON-CHECKBOX
 
-本段不屬於 `/opsx:apply`，不得轉成 apply task。Main session 先執行 `openspec instructions apply --change implement-project-sdd-lint --json | jq -e '.progress.remaining == 0'` 並確認 exit `0`，再執行 `/opsx:archive implement-project-sdd-lint`：回寫 `specs/foundation/001-project-sdd-lint/spec.md` 的 version/Changelog、產生 `openspec/specs/foundation/001-project-sdd-lint/spec.md`，並將 proposal、design、tasks、delta 四個 active artifacts 移到 `openspec/changes/archive/2026-08-26-implement-project-sdd-lint/`。此 procedure 明確排除 `specs/STATUS.md`。
+本段不屬於 `/opsx:apply`，不得轉成 apply task。Main session 先執行 `openspec instructions apply --change implement-project-sdd-lint --json | jq -e '.progress.total == 13 and .progress.complete == 13 and .progress.remaining == 0'` 並確認 exit `0`，再執行 `/opsx:archive implement-project-sdd-lint`：回寫 `specs/foundation/001-project-sdd-lint/spec.md` 的 version/Changelog、產生 `openspec/specs/foundation/001-project-sdd-lint/spec.md`，並將 proposal、design、tasks、delta 四個 active artifacts 移到 `openspec/changes/archive/2026-08-26-implement-project-sdd-lint/`。此 procedure 明確排除 `specs/STATUS.md`。
 
 依 Principle X v1.33.0，以下恰好六個 logical non-test artifacts 全部位於 `specs/**` 或 `openspec/**`，因此都不納入 PR file-count 或 line-count threshold arithmetic。這是一般 threshold arithmetic；每個 source→destination pair 視為一個 logical rename，single-purpose rule 與下方 exact scope-drift checkpoint 仍完整適用：
 
@@ -71,3 +82,7 @@ Files:
 8. `specs/STATUS.md`
 
 Reason: SC-007、已核准的設計、執行計畫、OpenSpec 來源與 STATUS 必須以原子方式描述相同的合併後 Issue 交接。局部修改會指示未來 agent 聲稱 Stage 2 已證明未交付的項目。
+
+## Stage 3 security remediation 註記（在 /opsx:apply 外）— NON-CHECKBOX
+
+2026-08-27 maintainer 已核准 Stage 3 High findings 的最小修正：foreign explicit root 不得執行 hostile inventory generator，且動態 scanned pathname 在進入 text／TSV flow 前必須拒絕 control character。此處只傳播 FR-001、FR-002、FR-009、AC-1.5、AC-4.1–AC-4.4 與 SC-008 的治理 contract；不修改 generator／manifest、sandbox、timeout、byte provenance、generator `--root` flag、CI 或 Stage 2 truthful six-item Issue handoff。

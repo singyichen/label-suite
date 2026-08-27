@@ -1,7 +1,7 @@
 ---
 功能分支: feat/issue-375-sdd-lint
 建立日期: 2026-08-26
-版本: 1.1.1
+版本: 1.1.2
 狀態: Draft
 ---
 
@@ -35,6 +35,7 @@
 2. **AC-1.2**：**Given** active change 引用的 canonical spec 缺少 `## 功能目標`，**When** 執行 lint，**Then** exit `1` 並輸出 `SPEC_REQUIRED_HEADING` 與相對路徑。
 3. **AC-1.3**：**Given** active change 存在但 STATUS 仍為 `spec-ready`，**When** 執行 lint，**Then** exit `1` 並輸出 `ACTIVE_CHANGE_STAGE`。
 4. **AC-1.4**：**Given** active change 引用不存在於 canonical spec 的 FR/SC/AC ID，**When** 執行 lint，**Then** exit `1` 並輸出 `SOURCE_VERIFY_ID`。
+5. **AC-1.5**：**Given** 任一動態掃描 subtree 的 repository-relative path 含 ASCII／locale-independent control character（包含 newline、tab 或 carriage return），**When** 執行 lint，**Then** 在該 pathname 進入任何 newline/text/TSV flow 前 fail closed，以 `ERROR [SCANNER_CONFIG] .: repository paths containing control characters are unsupported` 輸出並 exit `2`；不得輸出原始 hostile pathname。
 
 ### 使用者故事 2 — 驗證 task ownership 與例外（優先級：P1）
 
@@ -71,23 +72,24 @@ PR 上以 `Project SDD Lint` 獨立 job 顯示結果，本地使用相同 comman
 
 **驗收情境**：
 
-1. **AC-4.1**：**Given** resolved target root 的 `node scripts/gen-screen-inventory.mjs --check` exit `0`，**When** Project SDD lint 執行 inventory freshness rule，**Then** 不輸出 inventory diagnostic，且 lint outcome 依其他 rules 決定。
-2. **AC-4.2**：**Given** resolved target root 的 generator `--check` exit `1` 且伴隨 versioned generator 的 exact stale sentinel `design/system/screen-inventory.md is stale — run: node scripts/gen-screen-inventory.mjs`，**When** Project SDD lint 執行 inventory freshness rule，**Then** 輸出 `ERROR [INVENTORY_FRESHNESS] design/system/screen-inventory.md: ...`，且 lint exit `1`，除非其他 scanner configuration error 要求 exit `2`。
-3. **AC-4.3**：**Given** resolved target root 缺少 generator、generator 無法讀取、load 或執行、執行環境缺少 Node、generator exit `2`、generator exit `1` 但未伴隨 exact stale sentinel，或回傳任何其他 unexpected result，**When** Project SDD lint 執行 inventory freshness rule，**Then** 輸出 `ERROR [INVENTORY_CHECK_CONFIG] scripts/gen-screen-inventory.mjs: ...` 且 lint exit `2`。
+1. **AC-4.1**：**Given** resolved target root 與 resolved checker root 為同一 trust root，且該 root 的 `node scripts/gen-screen-inventory.mjs --check` exit `0`，**When** Project SDD lint 執行 inventory freshness rule，**Then** 不輸出 inventory diagnostic，且 lint outcome 依其他 rules 決定。
+2. **AC-4.2**：**Given** resolved target root 與 resolved checker root 為同一 trust root，且 generator `--check` exit `1` 並伴隨 versioned generator 的 exact stale sentinel `design/system/screen-inventory.md is stale — run: node scripts/gen-screen-inventory.mjs`，**When** Project SDD lint 執行 inventory freshness rule，**Then** 輸出 `ERROR [INVENTORY_FRESHNESS] design/system/screen-inventory.md: ...`，且 lint exit `1`，除非其他 scanner configuration error 要求 exit `2`。
+3. **AC-4.3**：**Given** resolved target root 與 resolved checker root 為同一 trust root，且 target root 缺少 generator、generator 無法讀取、load 或執行、執行環境缺少 Node、generator exit `2`、generator exit `1` 但未伴隨 exact stale sentinel，或回傳任何其他 unexpected result，**When** Project SDD lint 執行 inventory freshness rule，**Then** 輸出 `ERROR [INVENTORY_CHECK_CONFIG] scripts/gen-screen-inventory.mjs: ...` 且 lint exit `2`。
+4. **AC-4.4**：**Given** explicit target root 在 canonical resolution 後不同於 checker root，**When** Project SDD lint 執行 inventory freshness rule，**Then** 拒絕執行 foreign root 的 `scripts/gen-screen-inventory.mjs`，輸出 `ERROR [INVENTORY_CHECK_CONFIG] scripts/gen-screen-inventory.mjs: ...` 並 exit `2`；不得有 generator marker side effect、raw child output 或 hostile child output。
 
 ## 需求規格 *(必填)*
 
 ### 功能需求
 
-- **FR-001**：系統必須提供 `scripts/check-sdd.sh [--strict] [repo-root]`；未指定 root 時從 script path 解析 repository，指定 root 時不得掃描 caller checkout。
-- **FR-002**：系統必須輸出 `ERROR|WARNING [RULE_ID] relative/path: message` 格式的排序診斷與固定 summary；exit `0` 表示無 blocking error、exit `1` 表示 governance violation、exit `2` 表示 usage 或 scanner configuration error。
+- **FR-001**：系統必須提供 `scripts/check-sdd.sh [--strict] [repo-root]`；未指定 root 時從 script path 解析 checker root 與 target root，指定 root 時 target root 不得掃描 caller checkout。inventory generator 僅可在 canonical resolved target root 與 canonical resolved checker root 相同時執行；default invocation、explicit same-root path 與解析為同一 root 的 symlink 保持支援，不宣稱任意 foreign-root generator scanning 受支援。
+- **FR-002**：系統必須輸出 `ERROR|WARNING [RULE_ID] relative/path: message` 格式的排序診斷與固定 summary；exit `0` 表示無 blocking error、exit `1` 表示 governance violation、exit `2` 表示 usage、scanner configuration 或 unsafe pathname configuration error。
 - **FR-003**：系統必須 strict 驗證 active OpenSpec change 的 canonical path、STATUS stage、必要 headings、FR/SC/AC Source-Verify 與新/變更 canonical spec。
 - **FR-004**：系統必須以排序、唯一、無 glob 的 `scripts/sdd-lint-baseline.txt` ratchet legacy spec/status debt；new、stale、duplicate、unsorted 或不允許 rule 都必須失敗。
 - **FR-005**：系統必須驗證 tasks 的結尾 assignee、agent existence、User Story `**故事目標**` + SC ID、Red owner、允許的 one-file exceptions 與可明確判斷的 file ownership。
 - **FR-006**：系統必須在 active governance consumers 與 active OpenSpec artifacts 阻擋 repository-local `npm test`、`npm run`、將 `/ui-ux-pro-max` 當 pipeline stage，以及非歷史內容的 `/speckit.analyze`；不得把 `pnpm` 誤判為 `npm`。
 - **FR-007**：系統必須將 goal semantic review、ordinary task file-count ambiguity、runtime Red evidence、GitHub PR state 與 ADR-034 E2E path 標為 warning-only；`--strict` 不得將明確 deferred warning 升級。
 - **FR-008**：CI 必須以獨立 `Project SDD Lint` job 執行 `scripts/check-sdd.sh`，`CLAUDE.md` 必須列出相同本地命令；job 不得包裝或取代 `openspec validate`。
-- **FR-009**：系統必須使用 resolved target root 執行 `node "$repo_root/scripts/gen-screen-inventory.mjs" --check`，不得使用 caller checkout；必須 capture 且 suppress generator raw output，並以穩定 Project SDD lint diagnostic 與 summary 映射 exit `0` 為無 inventory diagnostic。只有 child exit `1` 且伴隨 versioned generator 的 exact stale sentinel `design/system/screen-inventory.md is stale — run: node scripts/gen-screen-inventory.mjs` 時可映射為 blocking `INVENTORY_FRESHNESS`；缺少 generator、generator 無法讀取、load 或執行、缺少 Node、exit `2`、exit `1` 但無 exact stale sentinel，或任何其他 unexpected result 都必須映射為 `INVENTORY_CHECK_CONFIG` configuration error 與 lint exit `2`，且 `--strict` 不得改變 inventory severity。
+- **FR-009**：系統必須僅在 canonical resolved target root 與 canonical resolved checker root 相同時，使用該 target root 執行 `node "$repo_root/scripts/gen-screen-inventory.mjs" --check`，不得使用 caller checkout 或 foreign root generator；必須 capture 且 suppress generator raw output，並以穩定 Project SDD lint diagnostic 與 summary 映射 exit `0` 為無 inventory diagnostic。只有 child exit `1` 且伴隨 versioned generator 的 exact stale sentinel `design/system/screen-inventory.md is stale — run: node scripts/gen-screen-inventory.mjs` 時可映射為 blocking `INVENTORY_FRESHNESS`；foreign target root、缺少 generator、generator 無法讀取、load 或執行、缺少 Node、exit `2`、exit `1` 但無 exact stale sentinel，或任何其他 unexpected result 都必須映射為 `INVENTORY_CHECK_CONFIG` configuration error 與 lint exit `2`，且 `--strict` 不得改變 inventory severity。
 
 ## 規格相依性
 
@@ -113,6 +115,7 @@ PR 上以 `Project SDD Lint` 獨立 job 顯示結果，本地使用相同 comman
 - **SC-005**：CI 具有獨立 `Project SDD Lint` job，且 OpenSpec schema command 仍被文件化為另一個 gate。
 - **SC-006**：fresh、exit `1` + exact stale sentinel、unrunnable/sentinel-less exit `1` 與其他 configuration inventory fixtures 必須分別驗證無 inventory diagnostic/exit 依其他 rules、`INVENTORY_FRESHNESS`/exit `1`、`INVENTORY_CHECK_CONFIG`/exit `2`，且 real repository `node scripts/gen-screen-inventory.mjs --check` 必須 exit `0` 作為 `design/system/screen-inventory.md` freshness 證據。
 - **SC-007**：Issue #375 交接只勾選實際交付的六個 D 子項：正典標題、STATUS/stage、Source-Verify、task 單檔／例外、assignee／file ownership 與 design inventory freshness；inventory workstream C、baseline-zero cleanup 與其他 acceptance items 在本工作流中保持不變。複合 D checkbox `阻擋 retired path/command，例如 npm、舊 frontend/tests/ E2E 路徑與不存在的 panels directory。` 與 combined acceptance `CI 或本地單一命令可偵測 STATUS drift、retired path、規格必要段落與 inventory stale。` 必須維持未勾選並延期，直到取得 ADR-034/path authority，並完成所列 filesystem paths 的 QA Red 與 production Green；本工作流不接受 ADR-034，亦不修改執行期程式碼。
+- **SC-008**：必須保留 committed adversarial Red/Green evidence：foreign generator 不得寫入 marker，並對 newline、tab、carriage return scanned paths 以 `SCANNER_CONFIG`／安全 path `.`／exit `2` 拒絕且不回顯 hostile pathname；default 與 explicit same-root inventory mappings，以及 ordinary-space paths，必須在 macOS Bash 3.2 與 Ubuntu 維持 green。
 
 ## 範圍外（Out of Scope）*(必填)*
 
@@ -125,6 +128,7 @@ PR 上以 `Project SDD Lint` 獨立 job 顯示結果，本地使用相同 comman
 
 | 版本 | 日期 | 變更摘要 |
 |---|---|---|
+| 1.1.2 | 2026-08-27 | Stage 3 security remediation：inventory generator 限於 same-trust resolved checker／target root，foreign root 穩定拒絕且不執行 hostile generator；動態掃描 pathname 在進入文字／TSV flow 前拒絕 control character，避免診斷注入 |
 | 1.1.1 | 2026-08-27 | Stage 2 誠實交接修正：SC-007 僅宣告六個已交付 D 項目；複合 retired-path/command D 項目與 combined acceptance 維持延期，待 ADR-034/path authority、QA Red 與 named filesystem-path production Green 的獨立實作 |
 | 1.1.0 | 2026-08-26 | 將 generated `design/system/screen-inventory.md` freshness 納入 blocking Project SDD lint，定義 fresh、stale 與 configuration exit/diagnostic 契約 |
 | 1.0.0 | 2026-08-26 | 建立 Project SDD lint command、ratchet baseline、task/Source-Verify/retired guidance rules與獨立 CI gate 的 canonical contract |

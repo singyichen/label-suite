@@ -29,7 +29,7 @@ Project SDD lint 必須同時滿足兩個看似衝突的需求：
 ## 非目標
 
 - 不在此工作流批次修正 17 份 canonical specs。
-- 不建立或修改 inventory manifest、generator、source set 或其他 inventory view 的生成契約。合併 upstream source additions 後，本 integration branch 只以既有 generator 刷新 generated `design/system/screen-inventory.md`，使 `--check` 維持 current；不宣稱 hand-maintained `design/system/inventory.md` 或 `design-inventory.dc.html` 已生成或驗證 freshness／coverage。
+- 不建立或修改 inventory manifest、generator、source set 或其他 inventory view 的生成契約；不新增 sandbox、timeout、byte-provenance mechanism、generator `--root` flag 或 dependency。合併 upstream source additions 後，本 integration branch 只以既有 generator 刷新 generated `design/system/screen-inventory.md`，使 `--check` 維持 current；不宣稱 hand-maintained `design/system/inventory.md` 或 `design-inventory.dc.html` 已生成或驗證 freshness／coverage。
 - 不接受 ADR-034，也不裁決 `frontend/tests/` 與 root `e2e/[module]/` 的正式遷移。
 - 不以字串相似度判斷需求語意是否一致。
 - 不查詢 GitHub API 來判定 PR 是否 open/merged；本地 lint 必須離線可執行。
@@ -76,8 +76,8 @@ implement-project-sdd-lint
 scripts/check-sdd.sh [--strict] [repo-root]
 ```
 
-- 沒有 `repo-root` 時，從 script 所在位置解析 repository root。
-- 指定 `repo-root` 時，只掃描該 root，不依賴 caller 的 current directory。
+- 沒有 `repo-root` 時，從 script 所在位置解析 checker root 與 target root。
+- 指定 `repo-root` 時，target root 不依賴 caller 的 current directory；inventory generator 僅可在 canonical resolved target root 與 checker root 相同時執行。default、explicit same-root 與解析為同一 root 的 symlink 保持支援。
 - 預設模式使用 ratchet baseline。
 - `--strict` 將 baseline-eligible warning 視為 error，供 cleanup 工作流與最終 baseline 歸零驗證使用。
 - command 不修改任何 repository file。
@@ -88,21 +88,27 @@ scripts/check-sdd.sh [--strict] [repo-root]
 |---:|---|
 | `0` | 沒有 blocking violation；warning 已清楚輸出 |
 | `1` | 至少一個 blocking violation、new baseline violation 或 stale baseline entry |
-| `2` | CLI usage、必要檔案或 baseline 格式錯誤，無法可靠完成掃描 |
+| `2` | CLI usage、必要檔案、baseline 格式或 unsafe pathname／inventory scanner configuration 錯誤，無法可靠完成掃描 |
 
-Inventory freshness 在 default／`--strict` 使用相同 severity。Lint 從 resolved target
-root 執行 `node "$repo_root/scripts/gen-screen-inventory.mjs" --check`，capture 且
-suppress combined child output，並依 canonical v1.1.1 固定映射：
+Inventory freshness 在 default／`--strict` 使用相同 severity。Lint 只在 canonical
+resolved target root 與 checker root 相同時執行 `node "$repo_root/scripts/gen-screen-inventory.mjs" --check`，capture 且
+suppress combined child output，並依 canonical v1.1.2 固定映射：
 
 | Generator result | Project SDD lint result |
 |---|---|
 | exit `0` | 不輸出 inventory diagnostic；lint outcome 依其他 rules 決定。 |
 | exit `1`，且 command substitution 移除 trailing newlines 後的 whole output 恰等於 `design/system/screen-inventory.md is stale — run: node scripts/gen-screen-inventory.mjs` | 輸出 `ERROR [INVENTORY_FRESHNESS] design/system/screen-inventory.md: ...`，lint exit 至少為 `1`。 |
-| generator／Node 缺少、generator 無法讀取／load／執行、exit `2`、sentinel-less exit `1`、exit `1` + prefix／suffix／額外 nonblank line，或任何其他 unexpected result | 輸出 `ERROR [INVENTORY_CHECK_CONFIG] scripts/gen-screen-inventory.mjs: ...`，lint exit `2`。 |
+| foreign explicit target root，或 same-trust generator／Node 缺少、generator 無法讀取／load／執行、exit `2`、sentinel-less exit `1`、exit `1` + prefix／suffix／額外 nonblank line，或任何其他 unexpected result | 輸出 `ERROR [INVENTORY_CHECK_CONFIG] scripts/gen-screen-inventory.mjs: ...`，lint exit `2`；foreign root 不得執行 generator、不得產生 marker side effect，亦不得輸出 raw child output。 |
 
 只有 child exit `1` 加上 normalized whole-output equality 可表示 stale；不得使用
 substring 或逐行 match。Configuration exit `2` 優先於其他 governance exit `1`，
 但 scanner 仍輸出已安全收集的 stable diagnostics，且永不洩漏 child raw output。
+
+在任何動態 scanned subtree 的 pathname 進入 newline/text/TSV flow 前，scanner 必須
+以 `find ... -print0` 與 Bash 3.2-compatible NUL read preflight 檢查 control character。
+若 repository-relative path 含 ASCII／locale-independent control character（包含 newline、tab、
+carriage return），固定輸出 `ERROR [SCANNER_CONFIG] .: repository paths containing control characters are unsupported`
+並 exit `2`，不回顯 hostile pathname；ordinary-space path 維持合法，且不新增 baseline entry。
 
 ### Diagnostic format
 
@@ -142,7 +148,7 @@ RULE_ID<TAB>relative/path<TAB>stable-detail
 - 掃描結果出現 baseline 未列出的 eligible violation 時，視為 new violation 並 exit `1`。
 - baseline entry 已不再對應實際 violation 時，視為 stale entry 並 exit `1`；修復者必須同時刪除該 entry。
 - active change、assignee、exception record、retired command 與 Source-Verify 等 strict rules 不得加入 baseline。
-- Inventory freshness 不進 baseline：它依 canonical v1.1.1 組合既有 generator 的 exact-sentinel blocking contract，stale 為 exit `1`，無法可信執行或判讀則 fail closed 為 exit `2`。
+- Inventory freshness 不進 baseline：它依 canonical v1.1.2 僅在 same-trust root 組合既有 generator 的 exact-sentinel blocking contract，foreign root 或無法可信執行／判讀皆 fail closed 為 exit `2`。
 
 ## Rule matrix
 
@@ -163,13 +169,14 @@ RULE_ID<TAB>relative/path<TAB>stable-detail
 | `TASK_FILE_OWNER` | 當 task 宣告的 file path 唯一且 ownership map 明確時，必須符合 backend/frontend/i18n/DB/devops/QA ownership。 |
 | `RETIRED_COMMAND` | active governance consumers、OpenSpec change artifacts 與 task templates 禁止 repository-local `npm test`、`npm run ...`、將 `/ui-ux-pro-max` 當 pipeline stage，以及非歷史內容的 `/speckit.analyze`。Pattern 不得把 `pnpm` 誤判為 `npm`。 |
 | `BASELINE_FORMAT` | baseline 必須排序、唯一、path 存在且 rule baseline-eligible；new/stale entry 均失敗。 |
-| `INVENTORY_FRESHNESS` | resolved target root generator exit `1`，且 normalized combined output 整體恰等於 versioned exact stale sentinel；path 固定為 generated `design/system/screen-inventory.md`，blocking exit 為 `1`，除非 configuration error 要求 exit `2`。 |
+| `INVENTORY_FRESHNESS` | canonical resolved target root 與 checker root 相同時，generator exit `1` 且 normalized combined output 整體恰等於 versioned exact stale sentinel；path 固定為 generated `design/system/screen-inventory.md`，blocking exit 為 `1`，除非 configuration error 要求 exit `2`。 |
 
 ### Scanner configuration rule
 
 | Rule ID | 檢查內容 |
 |---|---|
-| `INVENTORY_CHECK_CONFIG` | generator／Node 缺少、generator 不可讀／load／執行、exit `2`、sentinel-less exit `1`、prefix／suffix／額外 nonblank line 或其他 unexpected result；path 固定為 `scripts/gen-screen-inventory.mjs`，suppress child raw output 並 exit `2`。 |
+| `INVENTORY_CHECK_CONFIG` | foreign target root，或 same-trust generator／Node 缺少、generator 不可讀／load／執行、exit `2`、sentinel-less exit `1`、prefix／suffix／額外 nonblank line 或其他 unexpected result；path 固定為 `scripts/gen-screen-inventory.mjs`，foreign root 不啟動 child，suppress child raw output 並 exit `2`。 |
+| `SCANNER_CONFIG` | 動態 scanned repository-relative pathname 含 ASCII／locale-independent control character；在 text／TSV flow 前以安全 path `.` 輸出 stable diagnostic 並 exit `2`，不得回顯 hostile pathname。 |
 
 ### Baseline-eligible rules
 
@@ -208,7 +215,7 @@ RULE_ID<TAB>relative/path<TAB>stable-detail
 - `docs/adr/` 的歷史內容與 changelog
 - `docs/superpowers/` 中記錄方案比較或 retired wording 的設計/計畫
 - `.worktrees/`、`.superpowers/` 與其他 ignored scratch space
-- generated inventory views 的直接文字掃描；inventory rule 唯一透過 resolved target root 的既有 generator `--check` 判定 generated `design/system/screen-inventory.md` byte freshness
+- generated inventory views 的直接文字掃描；inventory rule 唯一透過 same-trust resolved target root 的既有 generator `--check` 判定 generated `design/system/screen-inventory.md` byte freshness
 
 Retired scanner 只在 active inputs 執行，避免把「此命令已退役」的歷史說明誤判為 active guidance。
 
@@ -239,7 +246,7 @@ Retired scanner 只在 active inputs 執行，避免把「此命令已退役」�
 - retired command，並含 `pnpm` negative control。
 - baseline new/stale/duplicate/unsorted cases。
 - 從 fixture root 外執行仍只掃描指定 root。
-- inventory fresh exit `0` 無 diagnostic、whole-output exact-sentinel stale 為 `INVENTORY_FRESHNESS`／exit `1`，unavailable／unreadable／unloadable／unrunnable／sentinel-less／unexpected result 為 `INVENTORY_CHECK_CONFIG`／exit `2`，且 child raw output 必須被 suppress。
+- inventory fresh exit `0` 無 diagnostic、whole-output exact-sentinel stale 為 `INVENTORY_FRESHNESS`／exit `1`，foreign-root refusal 與 unavailable／unreadable／unloadable／unrunnable／sentinel-less／unexpected result 為 `INVENTORY_CHECK_CONFIG`／exit `2`，且 child raw output 必須被 suppress；另以 committed adversarial Red/Green 覆蓋 marker denial、newline/tab/CR pathname rejection 與 ordinary-space control。
 
 Red task 只修改 test file，先提交並確認因 `scripts/check-sdd.sh` 尚不存在而以預期原因失敗。Green task 才新增 production script/baseline，不得修改 Red contract 來取得通過。
 
@@ -273,7 +280,12 @@ scripts/check-sdd.sh
 3. **Propose group**：建立 `implement-project-sdd-lint` 的 proposal/delta/design/tasks，更新 STATUS → `change-open`，分別通過 OpenSpec schema gate 與當時仍為 manual 的 Project SDD lint evidence。
 4. **Red/Green group**：先提交 `scripts/speckit-tests.sh` Red，再由 Green task新增 `scripts/check-sdd.sh` 與 baseline；本組完成 lint engine。
 5. **CI integration group**：以 committed CI Red/Green 新增獨立 CI job 與 `CLAUDE.md` local command；不攜帶 archive/write-back scope。
-6. **Final archive group**：所有 `/opsx:apply` tasks 完成且 ordered reviews 無 blocking finding，經 user checkpoint 後才執行 command-only verification、Source-Verify 與 apply 外的 OpenSpec archive/write-back，再走 final PR flow。
+6. **Stage 3 security group**：在 3.1 後，先後以 QA Red／DevOps Green 實作 same-trust generator refusal與 NUL-safe pathname preflight；維持 generator、manifest、CI 與 six-item Issue handoff 不變。
+7. **Final archive group**：所有十三個 `/opsx:apply` tasks 完成且 ordered reviews 無 blocking finding，經 user checkpoint 後才執行 command-only verification、Source-Verify 與 apply 外的 OpenSpec archive/write-back，再走 final PR flow。
+
+## Stage 3 security remediation approval
+
+2026-08-27，maintainer 核准 Stage 3 的 High findings：foreign explicit root 可誘導 checker 執行 hostile generator，且 control-character pathname 可進入 newline/text/TSV flows。修正限定為 canonical same-trust-root refusal 與 NUL-safe preflight；不以 sandbox、timeout、byte provenance 或 generator 介面擴張範圍。
 
 Lint final PR merge 後，`foundation-001` 依本設計的 umbrella archive exception 更新為 `done` 並留在 active path；直到 Issue #375 最後一個子工作流合併後才搬移與標記 `archived`。
 

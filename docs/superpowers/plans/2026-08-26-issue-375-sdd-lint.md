@@ -20,7 +20,7 @@
 - Red test ownership is `[@senior-qa]`; Green script/CI ownership is `[@senior-devops]`; only main updates OpenSpec task checkboxes.
 - Artifact-producing tasks touch exactly one file unless they declare an allowed exception with exact `Exception:`, `Files:`, and `Reason:` fields.
 - `scripts/check-sdd.sh` must run on macOS Bash 3.2 and Ubuntu Bash; do not use associative arrays, `mapfile`, `readarray`, `grep -P`, `sed -r`, GNU-only flags, Python, Bats, Node-based scanner logic, or new dependencies。唯一 Node boundary 是呼叫 resolved target root 的既有 `scripts/gen-screen-inventory.mjs --check`。
-- Default mode uses the ratchet baseline; `--strict` promotes baseline-eligible violations only. E2E path decision, semantic goal review, and external PR state remain warning-only；inventory freshness 則依 canonical v1.1.1 的 exact-sentinel contract 在 default／`--strict` 皆保持 blocking。
+- Default mode uses the ratchet baseline; `--strict` promotes baseline-eligible violations only. E2E path decision, semantic goal review, and external PR state remain warning-only；inventory freshness 則依 canonical v1.1.2 的 same-trust exact-sentinel contract 在 default／`--strict` 皆保持 blocking，unsafe pathname 為 exit `2` configuration error。
 - `scripts/check-sdd.sh`, `openspec validate --changes --no-interactive`, and affected code/test commands are never presented as equivalents.
 - The user explicitly authorized this workstream to modify protected `CLAUDE.md` on 2026-08-26.
 - ADR-034 remains Proposed; no root E2E path migration occurs here.
@@ -47,7 +47,7 @@ Create the file with this exact contract and no placeholder text:
 ---
 功能分支: feat/issue-375-sdd-lint
 建立日期: 2026-08-26
-版本: 1.1.1
+版本: 1.1.2
 狀態: Draft
 ---
 
@@ -81,6 +81,7 @@ Create the file with this exact contract and no placeholder text:
 2. **AC-1.2**：**Given** active change 引用的 canonical spec 缺少 `## 功能目標`，**When** 執行 lint，**Then** exit `1` 並輸出 `SPEC_REQUIRED_HEADING` 與相對路徑。
 3. **AC-1.3**：**Given** active change 存在但 STATUS 仍為 `spec-ready`，**When** 執行 lint，**Then** exit `1` 並輸出 `ACTIVE_CHANGE_STAGE`。
 4. **AC-1.4**：**Given** active change 引用不存在於 canonical spec 的 FR/SC/AC ID，**When** 執行 lint，**Then** exit `1` 並輸出 `SOURCE_VERIFY_ID`。
+5. **AC-1.5**：**Given** 動態 scanned subtree 的 repository-relative pathname 含 ASCII／locale-independent control character，**When** 執行 lint，**Then** 在 newline/text/TSV flow 前以 `ERROR [SCANNER_CONFIG] .: repository paths containing control characters are unsupported` 與 exit `2` fail closed，且不回顯 hostile pathname。
 
 ### 使用者故事 2 — 驗證 task ownership 與例外（優先級：P1）
 
@@ -117,23 +118,24 @@ PR 上以 `Project SDD Lint` 獨立 job 顯示結果，本地使用相同 comman
 
 **驗收情境**：
 
-1. **AC-4.1**：**Given** resolved target root 的 `node scripts/gen-screen-inventory.mjs --check` exit `0`，**When** Project SDD lint 執行 inventory freshness rule，**Then** 不輸出 inventory diagnostic，且 lint outcome 依其他 rules 決定。
-2. **AC-4.2**：**Given** generator `--check` exit `1`，且 captured combined output 在 command substitution 移除 trailing newlines 後整體恰好等於 sentinel `design/system/screen-inventory.md is stale — run: node scripts/gen-screen-inventory.mjs`，**When** lint 執行，**Then** 輸出 `ERROR [INVENTORY_FRESHNESS] design/system/screen-inventory.md: ...` 並以 exit `1` 阻擋，除非其他 scanner configuration error 要求 exit `2`。
-3. **AC-4.3**：**Given** generator 或 Node 缺少、generator 無法讀取／load／執行、exit `2`、exit `1` 但未伴隨 exact sentinel，或任何其他 unexpected result，**When** lint 執行，**Then** suppress child raw output、輸出 `ERROR [INVENTORY_CHECK_CONFIG] scripts/gen-screen-inventory.mjs: ...` 並以 exit `2` 結束。
+1. **AC-4.1**：**Given** canonical resolved target root 與 checker root 相同，且 `node scripts/gen-screen-inventory.mjs --check` exit `0`，**When** Project SDD lint 執行 inventory freshness rule，**Then** 不輸出 inventory diagnostic，且 lint outcome 依其他 rules 決定。
+2. **AC-4.2**：**Given** same-trust generator `--check` exit `1`，且 captured combined output 在 command substitution 移除 trailing newlines 後整體恰好等於 sentinel `design/system/screen-inventory.md is stale — run: node scripts/gen-screen-inventory.mjs`，**When** lint 執行，**Then** 輸出 `ERROR [INVENTORY_FRESHNESS] design/system/screen-inventory.md: ...` 並以 exit `1` 阻擋，除非其他 scanner configuration error 要求 exit `2`。
+3. **AC-4.3**：**Given** same-trust generator 或 Node 缺少、generator 無法讀取／load／執行、exit `2`、exit `1` 但未伴隨 exact sentinel，或任何其他 unexpected result，**When** lint 執行，**Then** suppress child raw output、輸出 `ERROR [INVENTORY_CHECK_CONFIG] scripts/gen-screen-inventory.mjs: ...` 並以 exit `2` 結束。
+4. **AC-4.4**：**Given** explicit target root 在 canonical resolution 後不同於 checker root，**When** lint 執行，**Then** 拒絕執行 foreign generator，輸出 `INVENTORY_CHECK_CONFIG`／exit `2`，且無 marker side effect 或 raw child output。
 
 ## 需求規格 *(必填)*
 
 ### 功能需求
 
-- **FR-001**：系統必須提供 `scripts/check-sdd.sh [--strict] [repo-root]`；未指定 root 時從 script path 解析 repository，指定 root 時不得掃描 caller checkout。
-- **FR-002**：系統必須輸出 `ERROR|WARNING [RULE_ID] relative/path: message` 格式的排序診斷與固定 summary；exit `0` 表示無 blocking error、exit `1` 表示 governance violation、exit `2` 表示 usage 或 scanner configuration error。
+- **FR-001**：系統必須提供 `scripts/check-sdd.sh [--strict] [repo-root]`；從 script path 解析 checker root，從 optional argument 解析 target root；inventory generator 僅可在 canonical resolved roots 相同時執行，指定 root 時不得掃描 caller checkout。
+- **FR-002**：系統必須輸出 `ERROR|WARNING [RULE_ID] relative/path: message` 格式的排序診斷與固定 summary；exit `0` 表示無 blocking error、exit `1` 表示 governance violation、exit `2` 表示 usage、unsafe pathname 或 scanner configuration error。
 - **FR-003**：系統必須 strict 驗證 active OpenSpec change 的 canonical path、STATUS stage、必要 headings、FR/SC/AC Source-Verify 與新/變更 canonical spec。
 - **FR-004**：系統必須以排序、唯一、無 glob 的 `scripts/sdd-lint-baseline.txt` ratchet legacy spec/status debt；new、stale、duplicate、unsorted 或不允許 rule 都必須失敗。
 - **FR-005**：系統必須驗證 tasks 的結尾 assignee、agent existence、User Story `**故事目標**` + SC ID、Red owner、允許的 one-file exceptions 與可明確判斷的 file ownership。
 - **FR-006**：系統必須在 active governance consumers 與 active OpenSpec artifacts 阻擋 repository-local `npm test`、`npm run`、將 `/ui-ux-pro-max` 當 pipeline stage，以及非歷史內容的 `/speckit.analyze`；不得把 `pnpm` 誤判為 `npm`。
 - **FR-007**：系統必須將 goal semantic review、ordinary task file-count ambiguity、runtime Red evidence、GitHub PR state 與 ADR-034 E2E path 標為 warning-only；`--strict` 不得將明確 deferred warning 升級。
 - **FR-008**：CI 必須以獨立 `Project SDD Lint` job 執行 `scripts/check-sdd.sh`，`CLAUDE.md` 必須列出相同本地命令；job 不得包裝或取代 `openspec validate`。
-- **FR-009**：系統必須從 resolved target root 執行 `node "$repo_root/scripts/gen-screen-inventory.mjs" --check`，capture 且 suppress child raw output；只將 exit `1` 加上 whole-output exact sentinel 映射為 blocking `INVENTORY_FRESHNESS`／exit `1`，其餘缺少、不可執行、sentinel-less 或 unexpected result 一律映射為 `INVENTORY_CHECK_CONFIG`／exit `2`，且 `--strict` 不改變 inventory severity。
+- **FR-009**：系統必須僅在 canonical resolved target root 與 checker root 相同時執行 `node "$repo_root/scripts/gen-screen-inventory.mjs" --check`，capture 且 suppress child raw output；foreign root 與其餘缺少、不可執行、sentinel-less 或 unexpected result 一律映射為 `INVENTORY_CHECK_CONFIG`／exit `2`，不得執行 foreign generator；只有 same-trust child exit `1` 加上 whole-output exact sentinel 映射為 blocking `INVENTORY_FRESHNESS`／exit `1`，且 `--strict` 不改變 inventory severity。
 
 ## 規格相依性
 
@@ -159,6 +161,7 @@ PR 上以 `Project SDD Lint` 獨立 job 顯示結果，本地使用相同 comman
 - **SC-005**：CI 具有獨立 `Project SDD Lint` job，且 OpenSpec schema command 仍被文件化為另一個 gate。
 - **SC-006**：fresh、exit `1` + exact stale sentinel、unrunnable／sentinel-less exit `1` 與其他 configuration inventory fixtures 分別驗證無 inventory diagnostic、`INVENTORY_FRESHNESS`／exit `1`、`INVENTORY_CHECK_CONFIG`／exit `2`；real repository `node scripts/gen-screen-inventory.mjs --check` 必須 exit `0`。
 - **SC-007**：Issue #375 交接只勾選實際交付的六個 D 子項：正典標題、STATUS/stage、Source-Verify、task 單檔／例外、assignee／file ownership 與 design inventory freshness；inventory workstream C、baseline-zero cleanup 與其他 acceptance items 保持不變。複合 D checkbox `阻擋 retired path/command，例如 npm、舊 frontend/tests/ E2E 路徑與不存在的 panels directory。` 與 combined acceptance `CI 或本地單一命令可偵測 STATUS drift、retired path、規格必要段落與 inventory stale。` 必須維持未勾選並延期，直到取得 ADR-034/path authority，並完成所列 filesystem paths 的 QA Red 與 production Green；本工作流不接受 ADR-034，亦不修改執行期程式碼。
+- **SC-008**：必須有 committed adversarial Red/Green evidence 證明 foreign-generator marker denial、newline/tab/CR pathname rejection；default／same-root inventory mappings 與 ordinary-space pathname 在 Bash 3.2 與 Ubuntu 保持 green。
 
 ## 範圍外（Out of Scope）*(必填)*
 
@@ -171,6 +174,7 @@ PR 上以 `Project SDD Lint` 獨立 job 顯示結果，本地使用相同 comman
 
 | 版本 | 日期 | 變更摘要 |
 |---|---|---|
+| 1.1.2 | 2026-08-27 | Stage 3 security remediation：same-trust generator boundary 與 control-character pathname preflight |
 | 1.1.1 | 2026-08-27 | Stage 2 誠實交接修正：SC-007 僅宣告六個已交付 D 項目；複合 retired-path/command D 項目與 combined acceptance 維持延期，待 ADR-034/path authority、QA Red 與 named filesystem-path production Green 的獨立實作 |
 | 1.1.0 | 2026-08-26 | 將 generated `design/system/screen-inventory.md` freshness 納入 blocking Project SDD lint，定義 fresh、stale 與 configuration exit/diagnostic 契約 |
 | 1.0.0 | 2026-08-26 | 建立 Project SDD lint command、ratchet baseline、task/Source-Verify/retired guidance rules與獨立 CI gate 的 canonical contract |
@@ -209,7 +213,7 @@ git commit -m "docs: specify the project SDD lint contract" -m "- **Define** sta
 Immediately after `foundation-000`, add:
 
 ```markdown
-| foundation-001 | Project SDD Lint | foundation | `spec-ready` | `feat/issue-375-sdd-lint` | spec v1.1.1；Issue #375 follow-up；command-line tooling，prototype／Frontend Ready Gate 不適用 |
+| foundation-001 | Project SDD Lint | foundation | `spec-ready` | `feat/issue-375-sdd-lint` | spec v1.1.2；Issue #375 follow-up；command-line tooling，prototype／Frontend Ready Gate 不適用 |
 ```
 
 Add the newest changelog row:
@@ -239,7 +243,7 @@ git commit -m "docs: register the project SDD lint spec" -m "- **Track** foundat
 - Create: `openspec/changes/implement-project-sdd-lint/proposal.md`
 
 **Interfaces:**
-- Consumes: `specs/foundation/001-project-sdd-lint/spec.md` FR-001–FR-009 and SC-001–SC-007.
+- Consumes: `specs/foundation/001-project-sdd-lint/spec.md` FR-001–FR-009 and SC-001–SC-008.
 - Produces: exact canonical path and single-purpose change scope.
 
 - [ ] **Step 1: Write proposal.md in Traditional Chinese**
@@ -286,7 +290,7 @@ git commit -m "docs: propose the project SDD lint change" -m "- **Link** the imp
 - Create: `openspec/changes/implement-project-sdd-lint/specs/foundation/001-project-sdd-lint/spec.md`
 
 **Interfaces:**
-- Consumes: canonical FR-001–FR-009, AC-1.1–AC-4.3, SC-001–SC-007.
+- Consumes: canonical FR-001–FR-009, AC-1.1–AC-4.4, SC-001–SC-008.
 - Produces: OpenSpec scenarios used by QA acceptance.
 
 - [ ] **Step 1: Write the delta**
@@ -296,17 +300,17 @@ Start with:
 ```markdown
 ## Purpose
 
-Project SDD lint 的 derived capability；正典為 `specs/foundation/001-project-sdd-lint/spec.md` v1.1.1。本變更實作既有 FR-001–FR-009、AC-1.1–AC-4.3 與 SC-001–SC-007，不發明新 ID。
+Project SDD lint 的 derived capability；正典為 `specs/foundation/001-project-sdd-lint/spec.md` v1.1.2。本變更實作既有 FR-001–FR-009、AC-1.1–AC-4.4 與 SC-001–SC-008，不發明新 ID。
 
 ## ADDED Requirements
 ```
 
 Add four `### Requirement:` blocks:
 
-1. deterministic command and diagnostics — FR-001/FR-002; scenarios AC-1.1–AC-1.4.
+1. deterministic command and diagnostics — FR-001/FR-002; scenarios AC-1.1–AC-1.5.
 2. task and source governance — FR-003/FR-005/FR-006; scenarios AC-2.1–AC-2.3.
 3. ratchet baseline — FR-004/FR-007; scenarios AC-3.1–AC-3.3.
-4. independent CI gate and generated screen inventory freshness — FR-008/FR-009; scenarios AC-4.1–AC-4.3.
+4. independent CI gate and generated screen inventory freshness — FR-008/FR-009; scenarios AC-4.1–AC-4.4.
 
 Each scenario uses exact OpenSpec `#### Scenario:` plus `- **WHEN**` and `- **THEN**` syntax and cites its canonical IDs in the requirement paragraph.
 
@@ -427,13 +431,13 @@ Use these PR groups and one-file tasks:
 
 ## 4. Final verification and archive
 
-**故事目標**：以 SC-001–SC-007 完成四個 gate 的獨立 evidence、write-back 與誠實的 Issue #375 checkbox 更新。
+**故事目標**：以 SC-001–SC-008 完成四個 gate 的獨立 evidence、write-back 與誠實的 Issue #375 checkbox 更新。
 
 - [ ] 4.1 執行 `bash -n scripts/check-sdd.sh scripts/speckit-tests.sh`、`bash scripts/speckit-tests.sh`、`scripts/check-sdd.sh`、`node scripts/gen-screen-inventory.mjs --check`、`scripts/check-spec-artifacts.sh`、`openspec validate --changes --no-interactive`、Source-Verify 與 `git diff --check`，並逐命令記錄 exit `0`；lint output 不得含 retired `INVENTORY_FRESHNESS_UNVERIFIED`。 `[@main]`
 - [ ] 4.2 執行 Source-Verify 與 `/opsx:archive` write-back；更新 canonical spec version/Changelog 與 derived view。`foundation-001` 依核准的 umbrella exception 保留 active path、STATUS 在 final merge 後設 `done`，直到 Issue #375 全部子工作流完成才移動。 `[@main]`
 ```
 
-Add dependency notes: 1.1 → 2.1 → 2.2 → 3.1 → 3.2 → 3.3 → 4.1 → 4.2. No implementation tasks are parallel because they consume the same committed Red/baseline contract.
+Add dependency notes: 1.1 → 2.1 → 2.2 → 3.1 → 3.2 → 3.3 → 4.1 → security 4.1 → 4.2 → 4.3 → 4.4 → archive. No implementation tasks are parallel because they consume the same committed Red/baseline contract.
 
 - [ ] **Step 2: Verify task grammar manually**
 
@@ -508,7 +512,7 @@ Main reports Gate 1 and Gate 2 separately, links `proposal.md`, `design.md`, `ta
 - Modify: `scripts/speckit-tests.sh`
 
 **Interfaces:**
-- Consumes: FR-001–FR-009 and AC-1.1–AC-4.3.
+- Consumes: FR-001–FR-009 and AC-1.1–AC-4.4.
 - Produces: committed Red contract consumed unchanged by Task 10.
 
 - [ ] **Step 1: Add hermetic fixtures**
@@ -652,7 +656,8 @@ Required parser details:
 - task exception IDs and three exact fields follow testing constitution; static ambiguous file count emits warning, not error.
 - retired `npm` regex must require a non-alphanumeric boundary so `pnpm` stays legal.
 - historical paths from the approved design are excluded.
-- run resolved target root 的 `node "$ROOT/scripts/gen-screen-inventory.mjs" --check`，capture/suppress combined output；只有 exit `1` 且 normalized whole output 恰等於 `design/system/screen-inventory.md is stale — run: node scripts/gen-screen-inventory.mjs` 時輸出 blocking `INVENTORY_FRESHNESS`，所有 unavailable、unreadable、unloadable、unrunnable、sentinel-less 或 unexpected result 都輸出 `INVENTORY_CHECK_CONFIG` 並 exit `2`。
+- 先 canonical-resolve checker root 與 target root；只有 same-trust root 才執行 `node "$ROOT/scripts/gen-screen-inventory.mjs" --check`，capture/suppress combined output。foreign explicit root 固定輸出 `INVENTORY_CHECK_CONFIG`、exit `2`，不得啟動 hostile generator、產生 marker 或輸出 raw child output；same-trust 時只有 exit `1` 且 normalized whole output 恰等於 `design/system/screen-inventory.md is stale — run: node scripts/gen-screen-inventory.mjs` 才輸出 blocking `INVENTORY_FRESHNESS`，所有 unavailable、unreadable、unloadable、unrunnable、sentinel-less 或 unexpected result 都輸出 `INVENTORY_CHECK_CONFIG` 並 exit `2`。
+- 每個動態 scanned subtree 必須先以 `find ... -print0` 與 Bash 3.2-compatible NUL read preflight；repository-relative pathname 含 ASCII／locale-independent control character 時，在進入任何 newline/text/TSV flow 前輸出 `ERROR [SCANNER_CONFIG] .: repository paths containing control characters are unsupported` 並 exit `2`，不回顯 hostile pathname。ordinary-space path 保持合法；不修改 baseline 或 `check-spec-artifacts.sh`。
 
 - [ ] **Step 2: Make the command executable**
 
@@ -806,6 +811,29 @@ git commit -m "docs: document the project SDD lint command" -m "- **Add** the ro
 
 ---
 
+### Stage 3 security remediation — after completed apply task 3.1
+
+2026-08-27 maintainer 核准 Stage 3 High findings 的最小修正。此群組在 archive 前嚴格依序
+執行，並新增四個 active apply tasks，使 live progress 為 `total=13`、`complete=9`、
+`remaining=4`：
+
+1. `4.1` 由 `[@senior-qa]` 僅修改 `scripts/speckit-tests.sh`，將 ordinary fixtures 改為
+   checker-local staged copy，並以 hostile foreign generator marker 建立 committed Red；預期現行
+   production 錯誤地執行 child／建立 marker。
+2. `4.2` 由 `[@senior-devops]` 僅修改 `scripts/check-sdd.sh`，比較 canonical resolved
+   checker／target roots；foreign root 以 `INVENTORY_CHECK_CONFIG`／exit `2` 拒絕，無 child output
+   或 marker，default／explicit same-root（含同根 symlink）維持 green。
+3. `4.3` 由 `[@senior-qa]` 僅修改 `scripts/speckit-tests.sh`，以 newline、tab、CR pathname
+   fixtures 與 ordinary-space control 建立 committed Red，至少涵蓋 consumer、canonical-spec 與
+   active-change discovery routes。
+4. `4.4` 由 `[@senior-devops]` 僅修改 `scripts/check-sdd.sh`，在所有 newline/text/TSV flow 前
+   以 Bash 3.2-compatible `find ... -print0`／NUL read 實作最小 preflight，固定 `SCANNER_CONFIG`、
+   path `.`、exit `2`，不改 generator、baseline、CI、`check-spec-artifacts.sh` 或 Red contract。
+
+此安全 remediation 不新增 sandbox、timeout、byte provenance、generator `--root` flag 或 dependency。
+它保留 Stage 2 truthful six-item Issue handoff 與 final archive 的六個 logical artifacts；checkout
+persisted credentials 的 Stage 3 Medium 為 non-blocking，`.github/workflows/ci.yml` 不在範圍。
+
 ### Task 14: Verify, review, archive, and update Issue #375
 
 **Files:**
@@ -815,7 +843,7 @@ git commit -m "docs: document the project SDD lint command" -m "- **Add** the ro
 
 **Interfaces:**
 - Consumes: all prior committed tasks.
-- 產出：四個 gate 的證據、已審查的 final branch、v1.1.1 正典回寫、已 archive 的 OpenSpec change，以及 SC-007 定義的六個已交付 D 項目、複合 retired-path/command D 項目與 combined acceptance 的延期事實。
+- 產出：四個 gate 的證據、已審查的 final branch、v1.1.2 正典回寫、已 archive 的 OpenSpec change，以及 SC-007 定義的六個已交付 D 項目、複合 retired-path/command D 項目與 combined acceptance 的延期事實。
 
 - [ ] **Step 1: Run fresh verification**
 
@@ -834,7 +862,7 @@ Expected: every command exit `0`；real repository generator freshness current�
 
 - [ ] **Step 2: Run Source-Verify**
 
-Extract every FR/SC/AC token in proposal、design、tasks 與 delta，verify exact presence in `specs/foundation/001-project-sdd-lint/spec.md` v1.1.1。另以 exact `rg`／`wc` 驗證 proposal path、Changelog、FR-009、AC-4.1–AC-4.3、SC-006–SC-007、`INVENTORY_FRESHNESS`／`INVENTORY_CHECK_CONFIG`、CI command 與 baseline count `14`；任何 missing citation 或 stale v1.0 instruction 都阻擋 archive。
+Extract every FR/SC/AC token in proposal、design、tasks 與 delta，verify exact presence in `specs/foundation/001-project-sdd-lint/spec.md` v1.1.2。另以 exact `rg`／`wc` 驗證 proposal path、Changelog、FR-001／FR-002／FR-009、AC-1.5、AC-4.1–AC-4.4、SC-006–SC-008、`INVENTORY_FRESHNESS`／`INVENTORY_CHECK_CONFIG`／`SCANNER_CONFIG`、CI command 與 baseline count `14`；任何 missing citation 或 stale v1.0 instruction 都阻擋 archive。
 
 - [ ] **Step 3: Run ordered reviews with subagents**
 
@@ -846,9 +874,9 @@ Report ordered review evidence and obtain explicit user confirmation before arch
 
 - [ ] **Step 5: Archive and write back**
 
-先執行 `openspec instructions apply --change implement-project-sdd-lint --json | jq -e '.progress.remaining == 0'`，再執行 repository-supported archive command。Archive 只可產生以下六個 logical artifacts：canonical v1.1.1 write-back、derived spec，以及 proposal／design／tasks／delta 四個 active-to-archive renames；不得包含 CI、`CLAUDE.md`、`specs/STATUS.md`、scripts 或其他 path。若實際 scope 不同，commit 前停在 maintainer scope-drift checkpoint。
+先執行 `openspec instructions apply --change implement-project-sdd-lint --json | jq -e '.progress.total == 13 and .progress.complete == 13 and .progress.remaining == 0'`，再執行 repository-supported archive command。Archive 只可產生以下六個 logical artifacts：canonical v1.1.2 write-back、derived spec，以及 proposal／design／tasks／delta 四個 active-to-archive renames；不得包含 CI、`CLAUDE.md`、`specs/STATUS.md`、scripts 或其他 path。若實際 scope 不同，commit 前停在 maintainer scope-drift checkpoint。
 
-Archive 後驗證 canonical version/Changelog、derived canonical path、逐一 FR/SC/AC citation，並確認 derived view 不含 `## ADDED Requirements`。Archive 不得把 FR-009、AC-4.1–AC-4.3、SC-006–SC-007 或 exact-sentinel blocking contract 降回 v1.0 warning-only 語意。
+Archive 後驗證 canonical version/Changelog、derived canonical path、逐一 FR/SC/AC citation，並確認 derived view 不含 `## ADDED Requirements`。Archive 不得把 FR-001、FR-002、FR-009、AC-1.5、AC-4.1–AC-4.4、SC-006–SC-008、same-trust／pathname fail-closed 或 exact-sentinel blocking contract 降回較弱語意。
 
 - [ ] **Step 6: Push/open PR and merge only with user authorization**
 
@@ -876,6 +904,7 @@ PR title/body are Traditional Chinese with an English Conventional Commit struct
 3. After Tasks 9–10: report Green commands and task review.
 4. After Task 11: report committed CI Red SHA and expected failure.
 5. After Tasks 12–13: report CI/local parity and group review.
-6. Before Task 14 archive/PR: report ordered reviews and stop for explicit user confirmation.
+6. After security tasks 4.1–4.4: report committed Red/Green evidence、same-root real lint、ordinary-space control 與 full harness result.
+7. Before Task 14 archive/PR: report ordered reviews and stop for explicit user confirmation.
 
 Execution method is already chosen by the user: use `superpowers:subagent-driven-development`, with fresh implementer and reviewer agents, task briefs/reports, and a whole-branch review.
