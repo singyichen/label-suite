@@ -92,7 +92,7 @@ scripts/check-sdd.sh [--strict] [repo-root]
 
 Inventory freshness 在 default／`--strict` 使用相同 severity。Lint 從 resolved target
 root 執行 `node "$repo_root/scripts/gen-screen-inventory.mjs" --check`，capture 且
-suppress combined child output，並依 canonical v1.1.0 固定映射：
+suppress combined child output，並依 canonical v1.1.1 固定映射：
 
 | Generator result | Project SDD lint result |
 |---|---|
@@ -142,7 +142,7 @@ RULE_ID<TAB>relative/path<TAB>stable-detail
 - 掃描結果出現 baseline 未列出的 eligible violation 時，視為 new violation 並 exit `1`。
 - baseline entry 已不再對應實際 violation 時，視為 stale entry 並 exit `1`；修復者必須同時刪除該 entry。
 - active change、assignee、exception record、retired command 與 Source-Verify 等 strict rules 不得加入 baseline。
-- Inventory freshness 不進 baseline：它依 canonical v1.1.0 組合既有 generator 的 exact-sentinel blocking contract，stale 為 exit `1`，無法可信執行或判讀則 fail closed 為 exit `2`。
+- Inventory freshness 不進 baseline：它依 canonical v1.1.1 組合既有 generator 的 exact-sentinel blocking contract，stale 為 exit `1`，無法可信執行或判讀則 fail closed 為 exit `2`。
 
 ## Rule matrix
 
@@ -314,20 +314,19 @@ OpenSpec validation 與 `scripts/check-sdd.sh` 必須以兩個獨立結果報告
 
 ## Issue #375 checkbox impact
 
-依 SC-007，final merge 後只更新 Issue #375 中已實際交付的七個 D items：
+依 SC-007，final merge 後只更新 Issue #375 中已實際交付的六個 D items：
 
 1. `驗證 canonical spec 必要章節與精確標題。`
 2. `驗證 STATUS、active change、branch、stage 一致性。`
 3. `驗證 FR/SC/AC Source-Verify。`
 4. `驗證 task one-file rule 與例外。`
 5. `驗證 assignee 與 file ownership。`
-6. `阻擋 retired path/command，例如 npm、舊 frontend/tests/ E2E 路徑與不存在的 panels directory。`
-7. `驗證 design inventory freshness。`
+6. `驗證 design inventory freshness。`
 
-另只更新 combined acceptance：
-`CI 或本地單一命令可偵測 STATUS drift、retired path、規格必要段落與 inventory stale。`
+compound D checkbox `阻擋 retired path/command，例如 npm、舊 frontend/tests/ E2E 路徑與不存在的 panels directory。` 與 combined acceptance
+`CI 或本地單一命令可偵測 STATUS drift、retired path、規格必要段落與 inventory stale。` 保持 unchecked/deferred。兩者需要獨立的 ADR-034/path authority，以及所列 filesystem paths 的 QA Red 與 production Green；本 workflow 不接受 ADR-034，亦不修改 runtime code。
 
-這八個 checkbox 以外，inventory generator workstream C、baseline-zero cleanup 與其他
+上述六個 checkbox 以外，inventory generator workstream C、baseline-zero cleanup 與其他
 acceptance／inventory items 全部保持原狀。Generated freshness 的完成證據限於既有
 generator `--check` 對 `design/system/screen-inventory.md` 的 exact-sentinel contract；
 不擴張為 hand-maintained views 或其他 coverage 的完成宣稱。

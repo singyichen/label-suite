@@ -1,7 +1,7 @@
 ---
 功能分支: feat/issue-375-sdd-lint
 建立日期: 2026-08-26
-版本: 1.1.0
+版本: 1.1.1
 狀態: Draft
 ---
 
@@ -112,7 +112,7 @@ PR 上以 `Project SDD Lint` 獨立 job 顯示結果，本地使用相同 comman
 - **SC-004**：`scripts/check-sdd.sh` 在 macOS Bash 3.2-compatible syntax 與 Ubuntu CI 執行，不增加 package dependency。
 - **SC-005**：CI 具有獨立 `Project SDD Lint` job，且 OpenSpec schema command 仍被文件化為另一個 gate。
 - **SC-006**：fresh、exit `1` + exact stale sentinel、unrunnable/sentinel-less exit `1` 與其他 configuration inventory fixtures 必須分別驗證無 inventory diagnostic/exit 依其他 rules、`INVENTORY_FRESHNESS`/exit `1`、`INVENTORY_CHECK_CONFIG`/exit `2`，且 real repository `node scripts/gen-screen-inventory.mjs --check` 必須 exit `0` 作為 `design/system/screen-inventory.md` freshness 證據。
-- **SC-007**：Issue #375 handoff 只勾選實際交付的七個 D 子項，以及 combined acceptance `CI 或本地單一命令可偵測 STATUS drift、retired path、規格必要段落與 inventory stale。`；inventory workstream C 與其他 acceptance items 在本 workflow 中保持不變。
+- **SC-007**：Issue #375 handoff 只勾選實際交付的六個 D 子項：canonical headings、STATUS/stage、Source-Verify、task one-file/exceptions、assignee/file ownership 與 design inventory freshness；inventory workstream C、baseline-zero cleanup 與其他 acceptance items 在本 workflow 中保持不變。compound D checkbox `阻擋 retired path/command，例如 npm、舊 frontend/tests/ E2E 路徑與不存在的 panels directory。` 與 combined acceptance `CI 或本地單一命令可偵測 STATUS drift、retired path、規格必要段落與 inventory stale。` 必須保持 unchecked/deferred，直到取得 ADR-034/path authority，並完成所列 filesystem paths 的 QA Red 與 production Green；本 workflow 不接受 ADR-034，亦不修改 runtime code。
 
 ## 範圍外（Out of Scope）*(必填)*
 
@@ -125,5 +125,6 @@ PR 上以 `Project SDD Lint` 獨立 job 顯示結果，本地使用相同 comman
 
 | 版本 | 日期 | 變更摘要 |
 |---|---|---|
+| 1.1.1 | 2026-08-27 | Stage 2 truthful-handoff correction：SC-007 僅宣告六個已交付 D items；compound retired-path/command D item 與 combined acceptance 保持 deferred，待 ADR-034/path authority、QA Red 與 named filesystem-path production Green 的獨立實作 |
 | 1.1.0 | 2026-08-26 | 將 generated `design/system/screen-inventory.md` freshness 納入 blocking Project SDD lint，定義 fresh、stale 與 configuration exit/diagnostic 契約 |
 | 1.0.0 | 2026-08-26 | 建立 Project SDD lint command、ratchet baseline、task/Source-Verify/retired guidance rules與獨立 CI gate 的 canonical contract |

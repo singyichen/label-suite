@@ -3,7 +3,7 @@
 ## Context（脈絡）
 
 本設計實作 [proposal.md](proposal.md) 的 Project SDD lint，服務
-`specs/foundation/001-project-sdd-lint/spec.md` v1.1.0 定義的 FR-001–FR-009、
+`specs/foundation/001-project-sdd-lint/spec.md` v1.1.1 定義的 FR-001–FR-009、
 AC-1.1–AC-4.3 與 SC-001–SC-007。目標是把可離線、可機械判斷的文件治理
 規則變成單一 command，並組合已交付的 generated screen inventory freshness
 contract，而不是重述或取代既有治理內容。
@@ -67,7 +67,7 @@ write-back/archive 仍各自報告。
    versioned sentinel，映射 `INVENTORY_FRESHNESS` 或 `INVENTORY_CHECK_CONFIG`。這讓
    generator 保持 manifest、
    source set、validation 與 rendering 的唯一 authority；相較之下，保留 retired
-   inventory warning 會與 canonical v1.1.0 衝突，以 mtime、日期或 Bash 重作
+   inventory warning 會與 canonical v1.1.1 衝突，以 mtime、日期或 Bash 重作
    freshness 也無法提供相同的 byte-current 契約。
 5. **在 Red 前先對齊 shell test-harness ownership。** 以
    `governance-propagation` 同步 `.claude/agents/senior-qa.md` 與
@@ -337,11 +337,17 @@ final archive PR。
    spec 與四個 OpenSpec artifact renames；這六個 artifacts 依 v1.33.0 的一般門檻
    算術排除於 file-count 與 line-count，但 scope 不一致仍須在 commit 前停止於
    maintainer checkpoint。final merge 後才另行處理 umbrella `done` transition 與
-   active-path retention，不得將該獨立 umbrella exception 提前納入 archive。
+   active-path retention，不得將該獨立 umbrella exception 提前納入 archive。依
+   SC-007，post-merge Issue #375 handoff 只可勾選六個 delivered D items：canonical
+   headings、STATUS/stage、Source-Verify、task one-file/exceptions、assignee/file
+   ownership 與 design inventory freshness。compound retired-path/command D checkbox
+   與 combined acceptance 保持 unchecked/deferred，直到另案取得 ADR-034/path
+   authority，並完成 named filesystem paths 的 QA Red 與 production Green；本
+   workflow 不接受 ADR-034，亦不修改 runtime code。
 6. 若 CI rollout 必須回復，先由 maintainer 移除或停用外部 required-check
    expectation，避免 PR 因不存在的 check 卡住；再回復 intermediate CI integration
    的 workflow 與 `CLAUDE.md` local parity。此 rollback 不宣稱 scanner 成功或
-   inventory freshness 已驗證，也不得以 retired warning 取代 canonical v1.1.0
+   inventory freshness 已驗證，也不得以 retired warning 取代 canonical v1.1.1
    的 blocking contract；若需撤回該 contract，必須先走正典 spec 變更而非只改
    scanner。
 7. 若 final archive 在 merge 前需要回復，撤回只含上述六個 logical artifacts 的

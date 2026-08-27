@@ -51,6 +51,23 @@ Scope 完全一致時，執行 `test "$(rg -c '^版本: [0-9]+\.[0-9]+\.[0-9]+$|
 
 本段不屬於 `/opsx:apply`，不得轉成 apply checkbox。Final PR merge 後，main session 更新 `specs/STATUS.md`：將 `foundation-001` 設為 `done`，依核准的 Issue #375 umbrella exception 保留 active canonical path，並在備註記錄 exception；執行 `rg -n '^\| foundation-001 \|.*\| \x60done\x60 \|.*Issue #375.*umbrella' specs/STATUS.md` 驗證 resulting row。
 
-STATUS 更新後，main session 先執行 `gh issue view 375 --json body --jq .body` 重新讀取並保存最新 Issue #375 body，再只將下列七個已交付的 D items 更新為 checked：`驗證 canonical spec 必要章節與精確標題。`、`驗證 STATUS、active change、branch、stage 一致性。`、`驗證 FR/SC/AC Source-Verify。`、`驗證 task one-file rule 與例外。`、`驗證 assignee 與 file ownership。`、`阻擋 retired path/command，例如 npm、舊 frontend/tests/ E2E 路徑與不存在的 panels directory。`、`驗證 design inventory freshness。`；並將指定 combined acceptance `CI 或本地單一命令可偵測 STATUS drift、retired path、規格必要段落與 inventory stale。` 更新為 checked，合計恰好八個 checkbox。
+STATUS 更新後，main session 先執行 `gh issue view 375 --json body --jq .body` 重新讀取並保存最新 Issue #375 body，再只將下列六個已交付的 D items 更新為 checked：`驗證 canonical spec 必要章節與精確標題。`、`驗證 STATUS、active change、branch、stage 一致性。`、`驗證 FR/SC/AC Source-Verify。`、`驗證 task one-file rule 與例外。`、`驗證 assignee 與 file ownership。`、`驗證 design inventory freshness。`。compound D checkbox `阻擋 retired path/command，例如 npm、舊 frontend/tests/ E2E 路徑與不存在的 panels directory。` 與 combined acceptance `CI 或本地單一命令可偵測 STATUS drift、retired path、規格必要段落與 inventory stale。` 必須保持 unchecked/deferred；兩者須先以獨立工作取得 ADR-034/path authority，並完成所列 filesystem paths 的 QA Red 與 production Green。本 workflow 不接受 ADR-034，亦不修改 runtime code。
 
-Inventory generator workstream C 與其他 acceptance／cleanup／inventory items 必須保持原狀，任何其他 Issue checkbox 都不得改動。更新後再次執行 `gh issue view 375 --json body --jq .body`，以更新前保存的 body 逐項比對，驗證上述七個 D items 與一個 combined acceptance 為 checked，且其餘 issue checkbox 完全未變。
+Inventory generator workstream C、baseline-zero cleanup 與其他 acceptance／cleanup／inventory items 必須保持原狀，任何其他 Issue checkbox 都不得改動。更新後再次執行 `gh issue view 375 --json body --jq .body`，以更新前保存的 body 逐項比對，驗證上述六個 D items 為 checked、compound D item 與 combined acceptance 仍為 unchecked/deferred，且其餘 Issue checkbox 完全未變。
+
+## Stage 2 review-fix note (outside /opsx:apply) — NON-CHECKBOX
+
+Exception: governance-propagation
+
+Files:
+
+1. `specs/foundation/001-project-sdd-lint/spec.md`
+2. `docs/superpowers/specs/2026-08-26-issue-375-sdd-lint-design.md`
+3. `docs/superpowers/plans/2026-08-26-issue-375-sdd-lint.md`
+4. `openspec/changes/implement-project-sdd-lint/proposal.md`
+5. `openspec/changes/implement-project-sdd-lint/design.md`
+6. `openspec/changes/implement-project-sdd-lint/tasks.md`
+7. `openspec/changes/implement-project-sdd-lint/specs/foundation/001-project-sdd-lint/spec.md`
+8. `specs/STATUS.md`
+
+Reason: SC-007, the approved design, the execution plan, OpenSpec sources, and STATUS must describe the same post-merge Issue handoff atomically. A partial edit would instruct a future agent to claim delivery that Stage 2 disproved.

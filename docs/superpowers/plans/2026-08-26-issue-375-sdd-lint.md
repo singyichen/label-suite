@@ -20,7 +20,7 @@
 - Red test ownership is `[@senior-qa]`; Green script/CI ownership is `[@senior-devops]`; only main updates OpenSpec task checkboxes.
 - Artifact-producing tasks touch exactly one file unless they declare an allowed exception with exact `Exception:`, `Files:`, and `Reason:` fields.
 - `scripts/check-sdd.sh` must run on macOS Bash 3.2 and Ubuntu Bash; do not use associative arrays, `mapfile`, `readarray`, `grep -P`, `sed -r`, GNU-only flags, Python, Bats, Node-based scanner logic, or new dependencies。唯一 Node boundary 是呼叫 resolved target root 的既有 `scripts/gen-screen-inventory.mjs --check`。
-- Default mode uses the ratchet baseline; `--strict` promotes baseline-eligible violations only. E2E path decision, semantic goal review, and external PR state remain warning-only；inventory freshness 則依 canonical v1.1.0 的 exact-sentinel contract 在 default／`--strict` 皆保持 blocking。
+- Default mode uses the ratchet baseline; `--strict` promotes baseline-eligible violations only. E2E path decision, semantic goal review, and external PR state remain warning-only；inventory freshness 則依 canonical v1.1.1 的 exact-sentinel contract 在 default／`--strict` 皆保持 blocking。
 - `scripts/check-sdd.sh`, `openspec validate --changes --no-interactive`, and affected code/test commands are never presented as equivalents.
 - The user explicitly authorized this workstream to modify protected `CLAUDE.md` on 2026-08-26.
 - ADR-034 remains Proposed; no root E2E path migration occurs here.
@@ -47,7 +47,7 @@ Create the file with this exact contract and no placeholder text:
 ---
 功能分支: feat/issue-375-sdd-lint
 建立日期: 2026-08-26
-版本: 1.1.0
+版本: 1.1.1
 狀態: Draft
 ---
 
@@ -158,7 +158,7 @@ PR 上以 `Project SDD Lint` 獨立 job 顯示結果，本地使用相同 comman
 - **SC-004**：`scripts/check-sdd.sh` 在 macOS Bash 3.2-compatible syntax 與 Ubuntu CI 執行，不增加 package dependency。
 - **SC-005**：CI 具有獨立 `Project SDD Lint` job，且 OpenSpec schema command 仍被文件化為另一個 gate。
 - **SC-006**：fresh、exit `1` + exact stale sentinel、unrunnable／sentinel-less exit `1` 與其他 configuration inventory fixtures 分別驗證無 inventory diagnostic、`INVENTORY_FRESHNESS`／exit `1`、`INVENTORY_CHECK_CONFIG`／exit `2`；real repository `node scripts/gen-screen-inventory.mjs --check` 必須 exit `0`。
-- **SC-007**：Issue #375 handoff 只勾選實際交付的七個 D 子項，以及 combined acceptance `CI 或本地單一命令可偵測 STATUS drift、retired path、規格必要段落與 inventory stale。`；inventory workstream C 與其他 acceptance items 保持不變。
+- **SC-007**：Issue #375 handoff 只勾選實際交付的六個 D 子項：canonical headings、STATUS/stage、Source-Verify、task one-file/exceptions、assignee/file ownership 與 design inventory freshness；inventory workstream C、baseline-zero cleanup 與其他 acceptance items 保持不變。compound D checkbox `阻擋 retired path/command，例如 npm、舊 frontend/tests/ E2E 路徑與不存在的 panels directory。` 與 combined acceptance `CI 或本地單一命令可偵測 STATUS drift、retired path、規格必要段落與 inventory stale。` 必須保持 unchecked/deferred，直到取得 ADR-034/path authority，並完成所列 filesystem paths 的 QA Red 與 production Green；本 workflow 不接受 ADR-034，亦不修改 runtime code。
 
 ## 範圍外（Out of Scope）*(必填)*
 
@@ -171,6 +171,7 @@ PR 上以 `Project SDD Lint` 獨立 job 顯示結果，本地使用相同 comman
 
 | 版本 | 日期 | 變更摘要 |
 |---|---|---|
+| 1.1.1 | 2026-08-27 | Stage 2 truthful-handoff correction：SC-007 僅宣告六個已交付 D items；compound retired-path/command D item 與 combined acceptance 保持 deferred，待 ADR-034/path authority、QA Red 與 named filesystem-path production Green 的獨立實作 |
 | 1.1.0 | 2026-08-26 | 將 generated `design/system/screen-inventory.md` freshness 納入 blocking Project SDD lint，定義 fresh、stale 與 configuration exit/diagnostic 契約 |
 | 1.0.0 | 2026-08-26 | 建立 Project SDD lint command、ratchet baseline、task/Source-Verify/retired guidance rules與獨立 CI gate 的 canonical contract |
 ```
@@ -208,7 +209,7 @@ git commit -m "docs: specify the project SDD lint contract" -m "- **Define** sta
 Immediately after `foundation-000`, add:
 
 ```markdown
-| foundation-001 | Project SDD Lint | foundation | `spec-ready` | `feat/issue-375-sdd-lint` | spec v1.1.0；Issue #375 follow-up；command-line tooling，prototype／Frontend Ready Gate 不適用 |
+| foundation-001 | Project SDD Lint | foundation | `spec-ready` | `feat/issue-375-sdd-lint` | spec v1.1.1；Issue #375 follow-up；command-line tooling，prototype／Frontend Ready Gate 不適用 |
 ```
 
 Add the newest changelog row:
@@ -295,7 +296,7 @@ Start with:
 ```markdown
 ## Purpose
 
-Project SDD lint 的 derived capability；正典為 `specs/foundation/001-project-sdd-lint/spec.md` v1.1.0。本變更實作既有 FR-001–FR-009、AC-1.1–AC-4.3 與 SC-001–SC-007，不發明新 ID。
+Project SDD lint 的 derived capability；正典為 `specs/foundation/001-project-sdd-lint/spec.md` v1.1.1。本變更實作既有 FR-001–FR-009、AC-1.1–AC-4.3 與 SC-001–SC-007，不發明新 ID。
 
 ## ADDED Requirements
 ```
@@ -814,7 +815,7 @@ git commit -m "docs: document the project SDD lint command" -m "- **Add** the ro
 
 **Interfaces:**
 - Consumes: all prior committed tasks.
-- Produces: four-gate evidence、reviewed final branch、v1.1.0 canonical write-back、archived OpenSpec change，以及 SC-007 定義的七個 D items + 一個 combined acceptance truth。
+- Produces: four-gate evidence、reviewed final branch、v1.1.1 canonical write-back、archived OpenSpec change，以及 SC-007 定義的六個 delivered D items、compound retired-path/command D item 與 combined acceptance 的 deferred truth。
 
 - [ ] **Step 1: Run fresh verification**
 
@@ -833,7 +834,7 @@ Expected: every command exit `0`；real repository generator freshness current�
 
 - [ ] **Step 2: Run Source-Verify**
 
-Extract every FR/SC/AC token in proposal、design、tasks 與 delta，verify exact presence in `specs/foundation/001-project-sdd-lint/spec.md` v1.1.0。另以 exact `rg`／`wc` 驗證 proposal path、Changelog、FR-009、AC-4.1–AC-4.3、SC-006–SC-007、`INVENTORY_FRESHNESS`／`INVENTORY_CHECK_CONFIG`、CI command 與 baseline count `14`；任何 missing citation 或 stale v1.0 instruction 都阻擋 archive。
+Extract every FR/SC/AC token in proposal、design、tasks 與 delta，verify exact presence in `specs/foundation/001-project-sdd-lint/spec.md` v1.1.1。另以 exact `rg`／`wc` 驗證 proposal path、Changelog、FR-009、AC-4.1–AC-4.3、SC-006–SC-007、`INVENTORY_FRESHNESS`／`INVENTORY_CHECK_CONFIG`、CI command 與 baseline count `14`；任何 missing citation 或 stale v1.0 instruction 都阻擋 archive。
 
 - [ ] **Step 3: Run ordered reviews with subagents**
 
@@ -845,7 +846,7 @@ Report ordered review evidence and obtain explicit user confirmation before arch
 
 - [ ] **Step 5: Archive and write back**
 
-先執行 `openspec instructions apply --change implement-project-sdd-lint --json | jq -e '.progress.remaining == 0'`，再執行 repository-supported archive command。Archive 只可產生以下六個 logical artifacts：canonical v1.1.0 write-back、derived spec，以及 proposal／design／tasks／delta 四個 active-to-archive renames；不得包含 CI、`CLAUDE.md`、`specs/STATUS.md`、scripts 或其他 path。若實際 scope 不同，commit 前停在 maintainer scope-drift checkpoint。
+先執行 `openspec instructions apply --change implement-project-sdd-lint --json | jq -e '.progress.remaining == 0'`，再執行 repository-supported archive command。Archive 只可產生以下六個 logical artifacts：canonical v1.1.1 write-back、derived spec，以及 proposal／design／tasks／delta 四個 active-to-archive renames；不得包含 CI、`CLAUDE.md`、`specs/STATUS.md`、scripts 或其他 path。若實際 scope 不同，commit 前停在 maintainer scope-drift checkpoint。
 
 Archive 後驗證 canonical version/Changelog、derived canonical path、逐一 FR/SC/AC citation，並確認 derived view 不含 `## ADDED Requirements`。Archive 不得把 FR-009、AC-4.1–AC-4.3、SC-006–SC-007 或 exact-sentinel blocking contract 降回 v1.0 warning-only 語意。
 
@@ -855,17 +856,16 @@ PR title/body are Traditional Chinese with an English Conventional Commit struct
 
 - [ ] **Step 7: Update STATUS and Issue #375 after merge**
 
-Set `foundation-001` to `done` and retain active path under the approved Issue #375 umbrella exception. Re-read the latest Issue #375 body from merged `main`, then update exactly these seven delivered D items to checked：
+Set `foundation-001` to `done` and retain active path under the approved Issue #375 umbrella exception. Re-read the latest Issue #375 body from merged `main`, then update exactly these six delivered D items to checked：
 
 1. `驗證 canonical spec 必要章節與精確標題。`
 2. `驗證 STATUS、active change、branch、stage 一致性。`
 3. `驗證 FR/SC/AC Source-Verify。`
 4. `驗證 task one-file rule 與例外。`
 5. `驗證 assignee 與 file ownership。`
-6. `阻擋 retired path/command，例如 npm、舊 frontend/tests/ E2E 路徑與不存在的 panels directory。`
-7. `驗證 design inventory freshness。`
+6. `驗證 design inventory freshness。`
 
-另外只將 combined acceptance `CI 或本地單一命令可偵測 STATUS drift、retired path、規格必要段落與 inventory stale。` 更新為 checked。更新前後逐項比對，inventory generator workstream C、baseline-zero cleanup 與所有其他 acceptance／inventory checkbox 必須保持原狀；合計恰好八個 checkbox 由本 handoff 改變。
+compound D checkbox `阻擋 retired path/command，例如 npm、舊 frontend/tests/ E2E 路徑與不存在的 panels directory。` 與 combined acceptance `CI 或本地單一命令可偵測 STATUS drift、retired path、規格必要段落與 inventory stale。` 必須保持 unchecked/deferred。兩者需要另案的 ADR-034/path authority，以及所列 filesystem paths 的 QA Red 與 production Green；本 workflow 不接受 ADR-034，亦不修改 runtime code。更新前後逐項比對，inventory generator workstream C、baseline-zero cleanup 與所有其他 acceptance／inventory checkbox 必須保持原狀。
 
 ---
 
