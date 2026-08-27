@@ -55,7 +55,7 @@
 
     <svg viewBox="0 0 1400 790" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="rvov-title rvov-desc">
       <title id="rvov-title">Label Suite 審核流程總覽</title>
-      <desc id="rvov-desc">四泳道流程圖：標記員提交標記後交給審核員逐單位審核；系統依序判斷審核人數是否達門檻、審核員是否改動答案、逐項嚴格多數決是否收斂。計票時，已提交審核但該項未改動的審核員其票計給標記員原答案，尚未提交者不計入分母；全員都改動時原答案不列為候選；未達已提交人數一半即不收斂；收斂則定稿唯讀，平手或全分歧則落入爭議池由具仲裁資格的審核員逐項裁定後定稿。底部對照表列出試標與正式標記的三處差異：一筆樣本產生幾個審核單位、退回是否回退標記員狀態、以及定稿是否產生 gold。</desc>
+      <desc id="rvov-desc">四泳道流程圖：標記員提交標記後交給審核員逐單位審核；系統依序判斷審核人數是否達門檻、審核員是否改動答案、逐項嚴格多數決是否收斂。計票時，已提交審核但該項未改動的審核員其票計給標記員原答案，尚未提交者不計入分母；全員都改動時原答案不列為候選；未達已提交人數一半即不收斂；收斂則定稿唯讀，平手或全分歧則落入爭議池由具仲裁資格的審核員逐項裁定後定稿。底部對照表列出試標與正式標記的三處差異：一筆樣本產生幾個審核單位、退回是否回退標記員狀態、以及定稿是否產生審核 gold（審核流程定案產出的答案，與資料集自帶的 gold_label 欄位無關）。試標不產生審核 gold，其品質改由兩條獨立輸入呈現：標記員原始答案彙總為標記一致性，審核員的審核決策彙總為標記員被修改率。</desc>
 
       <defs>
         <marker id="arw" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#64748B"/></marker>
@@ -216,8 +216,8 @@
       <line x1="40" y1="660" x2="1360" y2="660" stroke="rgba(30,27,75,0.06)" stroke-width="0.8"/>
 
       <text x="40" y="680" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">定稿的產物</text>
-      <text x="340" y="680" fill="#1E1B4B" font-size="9" font-family="'JetBrains Mono', monospace">不產生 gold，品質改由一致性指標顧問性提示</text>
-      <text x="820" y="680" fill="#1E1B4B" font-size="9" font-family="'JetBrains Mono', monospace">定稿判斷成為 gold，可追溯至來源單位</text>
+      <text x="340" y="680" fill="#1E1B4B" font-size="9" font-family="'JetBrains Mono', monospace">不產生審核 gold；標記員原始答案彙總為一致性，審核決策彙總為被修改率</text>
+      <text x="820" y="680" fill="#1E1B4B" font-size="9" font-family="'JetBrains Mono', monospace">定稿判斷產生審核 gold，可追溯至來源單位</text>
       <line x1="40" y1="690" x2="1360" y2="690" stroke="rgba(30,27,75,0.06)" stroke-width="0.8"/>
 
       <text x="40" y="710" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">一筆樣本的審核單位數</text>

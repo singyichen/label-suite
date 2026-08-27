@@ -1833,6 +1833,82 @@ Used in multi-step forms (e.g. task creation wizard). Shows progress through dis
 
 ---
 
+### Review Status Track
+
+Reviewer wayfinding component for a single review unit. Shows where the unit
+currently sits in `REVIEW_UNIT_STATUS` **and which of the two lanes it is on**.
+
+**Why this is not a Step Indicator:** `annotation-015` FR-051 determines the
+status through two mutually exclusive lanes — all reviewer answers identical to
+the annotator's (`approved` → `finalized`) versus any answer differing
+(`modified` → `disputed` → `finalized`). A linear Step Indicator would render
+`approved → disputed` as a step still to come, a transition the state machine
+does not have. Use §Step Indicator for wizards (author-controlled linear steps);
+use this track for state machines that branch.
+
+**Layout:** a 7-column × 2-row grid. Row 1 is the same-answer lane, row 2 the
+differing-answer lane; `pending` and `finalized` span both rows. The two fork
+connectors are inline SVG and are decoration only.
+
+**Specs:**
+
+| Element | Value |
+|---------|-------|
+| Container | `display: grid`, `grid-template-columns: auto 28px auto minmax(16px, 1fr) auto 28px auto`, `grid-template-rows: 34px 34px` |
+| Node | pill: `padding: 4px 12px`, `border: 1px solid var(--color-border)`, `border-radius: var(--radius-full)`, `font-size: 13px` |
+| Node — visited | `border-color: var(--color-cta)`, `color: var(--color-cta)`, `background: var(--color-success-bg)` |
+| Node — current | `border-color: var(--color-primary)`, `color: var(--color-primary)`, `background: var(--color-primary-soft-bg)`, `font-weight: 600` |
+| Node — not reached | `color: var(--color-ink-muted)`, `background: var(--color-white)` |
+| Rail / fork stroke | `2px`, `var(--color-border)`; traversed segments `var(--color-cta)` |
+| Current marker | `目前：` text prefix, `font-size: 11px`, inherits the node colour |
+
+**CSS:**
+```css
+.review-track { display: grid; grid-template-columns: auto 28px auto minmax(16px, 1fr) auto 28px auto; grid-template-rows: 34px 34px; align-items: center; justify-items: start; }
+.review-track-node { display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-full); background: var(--color-white); color: var(--color-ink-muted); font-size: 13px; font-weight: 500; white-space: nowrap; }
+.review-track-node.done { border-color: var(--color-cta); background: var(--color-success-bg); color: var(--color-cta); }
+.review-track-node.current { border-color: var(--color-primary); background: var(--color-primary-soft-bg); color: var(--color-primary); font-weight: 600; }
+.review-track-marker { font-size: 11px; font-weight: 600; }
+.review-track-rail { width: 100%; height: 2px; background: var(--color-border); }
+.review-track-rail.done { background: var(--color-cta); }
+.review-track-fork { display: block; line-height: 0; }
+```
+
+**HTML structure** (unit on the differing-answer lane, currently `disputed`):
+```html
+<div class="review-track" role="list" aria-label="審核單位狀態">
+  <span class="review-track-node done" role="listitem" style="grid-column:1;grid-row:1/3">待審</span>
+  <span class="review-track-fork" aria-hidden="true" style="grid-column:2;grid-row:1/3"><!-- split svg --></span>
+  <span class="review-track-node" role="listitem" style="grid-column:3;grid-row:1">已同意</span>
+  <span class="review-track-node done" role="listitem" style="grid-column:3;grid-row:2">已修改</span>
+  <span class="review-track-rail" style="grid-column:4/6;grid-row:1"></span>
+  <span class="review-track-rail done" style="grid-column:4;grid-row:2"></span>
+  <span class="review-track-node current" role="listitem" aria-current="step" style="grid-column:5;grid-row:2">
+    <span class="review-track-marker">目前：</span>爭議中
+  </span>
+  <span class="review-track-fork" aria-hidden="true" style="grid-column:6;grid-row:1/3"><!-- merge svg --></span>
+  <span class="review-track-node" role="listitem" style="grid-column:7;grid-row:1/3">已定稿</span>
+</div>
+```
+
+**Accessibility:**
+
+- `role="list"` + `role="listitem"`; forks and rails are `aria-hidden` decoration.
+- Current node: `aria-current="step"` **and** the `目前：` text prefix — the
+  position must not rely on colour alone (issue #456 AC-7). The prefix is added
+  to the current node only; adding it to every node doubles the track width.
+- Known gap: visited (`--color-cta`) versus not-reached (`--color-border`) nodes
+  differ by colour only. AC-7 covers the current position, so closing this is
+  deferred; revisit if the track is reused where lane history carries meaning.
+- The track is status output, not a control — nothing inside it is focusable.
+
+**When NOT to use:**
+
+- ❌ Linear author-driven wizards → §Step Indicator
+- ❌ A single status with no path context → §Status Pill
+
+---
+
 ### Upload Zone
 
 Drag-and-drop file upload area used in task creation (dataset upload).
@@ -2453,7 +2529,7 @@ Horizontal path navigation showing the current page's position in the hierarchy.
 | Link color | `var(--color-primary)` |
 | Current page color | `var(--color-text-soft)` |
 | Spacing | `gap: 6px`, `margin-bottom: 12px` |
-| Max depth | 2 levels (parent → current) in current prototype |
+| Max depth | 2 levels (parent → current); 3 levels allowed on the reviewer path only — 審核作業 › 任務 › 審核單位 — because the review unit is genuinely two levels below the list and the task name is what disambiguates a deep link (issue #456 AC-1/AC-3) |
 
 **Accessibility:**
 
@@ -2463,7 +2539,7 @@ Horizontal path navigation showing the current page's position in the hierarchy.
 
 **When NOT to use:**
 
-- ❌ Deep navigation trees (3+ levels) → consider simplifying the IA instead
+- ❌ Deep navigation trees (4+ levels) → consider simplifying the IA instead
 - ❌ Pages accessible from multiple paths → breadcrumb should show the canonical path
 
 ---
@@ -2741,4 +2817,5 @@ Before delivering any UI code, verify:
 | v1.10 | 2026-08-19 | **Task-management page specs (issue #183)** — Dark Rule 8 rewritten with shipped light-value table for `ar-va-chip-*` / `ar-classif-chip` and gains the previously undocumented `md-chip` (light + dark); run-badge naming note updated after the `badge-run-*` alias rename in task-list (task-detail's drifted legacy pair remains flagged); dark badge reference row drops the removed `badge-run-dry` alias; added `design/system/pages/task-new.md`, `task-detail.md`, `task-list.md` |
 | v1.11 | 2026-08-19 | **Dataset page specs (issue #183)** — Pagination `.page-btn.active` color corrected from literal `white` to `var(--color-white)` (dashboard and dataset shipped the token form so it flips with the dark palette); added `design/system/pages/dataset-analysis-list.md`, `dataset-analysis-detail.md` |
 | v1.12 | 2026-08-20 | **Admin page specs + sidebar arbitration (issue #183)** — Notification item-icon row updated to the shipped Lucide-SVG-on-semantic-tokens form (success / primary families); the v1.9 "known deviations" note replaced by the arbitration record: `.notif-badge` `#EF4444`/white sanctioned as constant across themes, fragment z-index values (600/700/300/320) sanctioned as a shared-fragment exception; added `design/system/pages/role-settings.md`, `user-management.md` |
+| v1.14 | 2026-08-27 | **Reviewer wayfinding (issue #456)** — 新增 §Review Status Track：以雙軌分岔呈現 `REVIEW_UNIT_STATUS`，並說明為何不能沿用線性 §Step Indicator（`annotation-015` FR-051 的 `approved` 永不經過 `disputed`）；當前節點以 `目前：` 文字前綴作為非顏色訊號（AC-7），並記錄 visited/not-reached 僅靠顏色區分的已知缺口；§Breadcrumb 深度上限自 2 層放寬為「審核路徑得用 3 層」，When NOT to use 同步改為 4+ 層 |
 | v1.13 | 2026-08-20 | **Auth page specs (issue #183)** — Dark Rule 9 migration note removed: shipped auth pages now use the canonical local token names, so the template is the shipped state; added `design/system/pages/login.md` (hosts the shared auth-chrome arbitrations: shadow-elevated card vs Login Card, `.lang-toggle`/`.sso-btn` indigo hover vs `btn-language`/`btn-oauth`, auth navbar variant, `.eye-toggle`), `register.md` (`.banner` error/success family, `.field-hint`), `forgot-password.md` (shipped State Panel / Success), `reset-password.md` (shipped State Panel / Token Error, `proto-toggle-bar` deferral) |
