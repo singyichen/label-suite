@@ -36,7 +36,8 @@ for arg in "$@"; do
 done
 [ "$root_provided" -eq 0 ] || [ -n "$root_arg" ] || add_config_error SCANNER_CONFIG . 'repository root is invalid or unreadable'
 if [ "$config_failed" -ne 0 ]; then finish; fi
-if [ "$root_provided" -eq 0 ]; then repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)"; else repo_root="$(cd "$root_arg" 2>/dev/null && pwd)"; fi
+checker_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd -P)"
+if [ "$root_provided" -eq 0 ]; then repo_root="$checker_root"; else repo_root="$(cd "$root_arg" 2>/dev/null && pwd -P)"; fi
 if [ -z "${repo_root:-}" ] || [ ! -d "$repo_root" ]; then add_config_error SCANNER_CONFIG . 'repository root is invalid or unreadable'; finish; fi
 for required in specs/STATUS.md scripts/sdd-lint-baseline.txt openspec/changes .claude/agents; do [ -r "$repo_root/$required" ] || add_config_error SCANNER_CONFIG "$required" 'required scanner input is missing or unreadable'; done
 if [ "$config_failed" -ne 0 ]; then finish; fi
@@ -284,7 +285,9 @@ while IFS= read -r consumer; do
     done <"$tmp_dir/retired"
 done <"$consumer_files"
 generator="$repo_root/scripts/gen-screen-inventory.mjs"
-if [ ! -f "$generator" ] || [ ! -r "$generator" ] || ! command -v node >/dev/null 2>&1; then
+if [ "$repo_root" != "$checker_root" ]; then
+    add_config_error INVENTORY_CHECK_CONFIG scripts/gen-screen-inventory.mjs 'inventory checker must run from the checker trust root'
+elif [ ! -f "$generator" ] || [ ! -r "$generator" ] || ! command -v node >/dev/null 2>&1; then
     add_config_error INVENTORY_CHECK_CONFIG scripts/gen-screen-inventory.mjs 'inventory checker is missing, unreadable, or unavailable'
 else
     inventory_output=''
