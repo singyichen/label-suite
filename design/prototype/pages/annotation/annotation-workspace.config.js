@@ -90,8 +90,6 @@
       crumbUnitTpl: '審核單位 {sample} · {annotator}',
       crumbSamplePosTpl: '樣本 {i} / {n}',
       unitCtxThreshold: '定稿門檻 {x} / {n} 位審核員',
-      unitCtxAnnotator: '標記員 {id}',
-      unitCtxRoster: '本樣本 {m} 位標記員',
       wsSampleGroupCount: '{n} 位標記員',
       wsSampleGroupAria: '樣本 {sample}，{n} 位標記員',
       wsSampleUnitAria: '樣本 {sample}，標記員 {annotator}，{state}',
@@ -201,8 +199,6 @@
       crumbUnitTpl: 'Review unit {sample} · {annotator}',
       crumbSamplePosTpl: 'Sample {i} of {n}',
       unitCtxThreshold: 'Finalize threshold {x} / {n} reviewers',
-      unitCtxAnnotator: 'Annotator {id}',
-      unitCtxRoster: '{m} annotators on this sample',
       wsSampleGroupCount: '{n} annotators',
       wsSampleGroupAria: 'Sample {sample}, {n} annotators',
       wsSampleUnitAria: 'Sample {sample}, annotator {annotator}, {state}',
@@ -3666,7 +3662,6 @@
     var reviewedCount = workspaceData.readReviewerSubmissions(
       currentProfile.id, currentRunType, currentSampleId, currentIdentity
     ).length;
-    var rosterSize = (workspaceData.getReviewerMockRows(currentProfile.id, currentSampleId) || []).length;
 
     var banner = document.createElement('div');
     banner.className = 'rv-unit-context';
@@ -3694,10 +3689,11 @@
         .replace('{n}', String(minReviewers)),
       'rv-unit-threshold'
     );
-    chip(
-      t('unitCtxAnnotator').replace('{id}', currentAnnotatorId()) +
-        (rosterSize > 1 ? ' · ' + t('unitCtxRoster').replace('{m}', String(rosterSize)) : '')
-    );
+    /* issue #515: no identity chip here. "Who am I reviewing" is already
+       answered twice -- breadcrumb level 3 (審核單位 {sample} · {annotator},
+       FR-080) and the left column's group header ({n} 位標記員, FR-071) --
+       and this banner's subject is the review MODEL: run type, finalize
+       threshold, state, state track. A third copy only raised the density. */
 
     var statePill = document.createElement('span');
     statePill.className =

@@ -41,9 +41,16 @@ test.describe('Reviewer workspace — review-unit context banner (T014-T017)', (
     await expect(banner).toBeVisible();
     await expect(banner).toContainText('試標');
     await expect(banner).toContainText('定稿門檻 1 / 1 位審核員');
-    await expect(banner).toContainText('標記員 kioleemg12');
-    await expect(banner).toContainText('本樣本 3 位標記員');
     await expect(banner.locator('.rv-unit-state')).toHaveText('已定稿 · 已鎖定');
+
+    /* issue #515: the banner stopped repeating the identity the breadcrumb
+       and the left column already carry. Same two facts, retargeted at the
+       elements that now own them -- who is being reviewed, and how many
+       annotators this sample has. */
+    await expect(page.locator('nav.breadcrumb[data-testid="entry-breadcrumb"]')).toContainText(
+      'kioleemg12'
+    );
+    await expect(page.getByTestId('ws-sample-group-count').first()).toHaveText('3 位標記員');
   });
 
   test('T015 ofs-01: official badge, finalize threshold 1/1, finalized', async ({ page }) => {
