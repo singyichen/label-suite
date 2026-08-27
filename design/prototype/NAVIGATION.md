@@ -140,7 +140,7 @@ flowchart LR
 
 ### `/components-showcase.html`（Design System Showcase）
 
-Living styleguide（issue #183）：即時列舉 `assets/tokens.css` 全部 token，並以 MASTER.md 正典 CSS 呈現元件卡（Buttons / Inputs / Toggle / Badges / Banner / Toast / Skeleton / Chip / Pagination / Breadcrumb / Color Dot / Divider / Accordion / Progress / KPI / State Panel / Avatar）。開發與設計參考頁，不在產品導航流程內，無 Incoming / Outgoing 連結。
+Living styleguide（issue #183）：即時列舉 `assets/tokens.css` 全部 token，並以 MASTER.md 正典 CSS 呈現元件卡（Buttons / Inputs / Toggle / Badges / Banner / Toast / Skeleton / Chip / Pagination / Breadcrumb / Review Status Track / Color Dot / Divider / Accordion / Progress / KPI / State Panel / Avatar）。開發與設計參考頁，不在產品導航流程內，無 Incoming / Outgoing 連結。
 
 ---
 
@@ -420,5 +420,6 @@ Living styleguide（issue #183）：即時列舉 `assets/tokens.css` 全部 toke
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 1.1.1 | 2026-08-27 | `/components-showcase.html` 元件清單新增 Review Status Track（issue #456 審核導覽元件）。 |
 | 1.1.0 | 2026-08-20 | 新增 `/components-showcase.html`（Design System Showcase）條目：living styleguide 參考頁，不在產品導航流程內。 |
 | 1.0.0 | 2026-05-20 | 依照最新 prototype 頁面同步導航地圖，包含標記清單、任務管理、資料集分析列表與詳情、動態 panels/partials，以及 shared sidebar 路由。 |
