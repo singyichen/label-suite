@@ -1361,6 +1361,18 @@
     listParams.set('task_id', currentProfile.id);
     listParams.set('role', currentRole);
     listParams.set('run_type', currentRunType);
+    /* FR-081 (issue #456 AC-4): annotation-list.html's UXC-11 view state
+       rides in on the URL and has to ride back out, or this crumb drops the
+       user on an unfiltered page 1 -- the one link most likely to be used
+       after finishing a unit. The other two return paths (the sidebar's
+       標記作業 link and boot()'s unknown-task_id redirect) forward
+       window.location.search verbatim and inherit it for free; only this
+       one rebuilds its query from scratch. */
+    var incoming = new URLSearchParams(window.location.search);
+    ['status', 'q', 'limit', 'offset'].forEach(function (key) {
+      var value = incoming.get(key);
+      if (value) listParams.set(key, value);
+    });
 
     appendCrumbLink(nav, '../dashboard/dashboard.html',
       t(currentRole === 'reviewer' ? 'crumbWorkAreaReviewer' : 'crumbWorkAreaAnnotator'));
