@@ -1354,9 +1354,8 @@
      way to this unit does not want. The other two return paths (the sidebar's
      標記作業 link and boot()'s unknown-task_id redirect) forward
      window.location.search verbatim and inherit it for free; the paths that
-     rebuild their query from scratch all come through here, so the
-     breadcrumb and the FR-082 exits card cannot disagree about where
-     "back to the list" goes. */
+     rebuild their query from scratch all come through here, so every
+     "back to the list" on screen resolves to the same place. */
   var LIST_VIEW_STATE_KEYS = ['status', 'q', 'limit', 'offset'];
 
   function buildListReturnUrl() {
