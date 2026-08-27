@@ -3933,9 +3933,10 @@
      files preview in an in-page modal (same contract as the PDF modal) with
      the source rendered to HTML. Minimal renderer -- headings, paragraphs,
      unordered/ordered lists, bold/italic, inline code, links -- with every
-     text run HTML-escaped first and link hrefs restricted to http(s)/
+     fenced code blocks, tables, images -- with every text run
+     HTML-escaped first and link href / image src restricted to http(s)/
      mailto/relative paths, so raw HTML or javascript: URLs in the source
-     can never reach innerHTML unescaped. */
+     can never reach innerHTML unescaped (issue #527 decision record). */
   function escapeHtml(text) {
     return String(text)
       .replace(/&/g, '&amp;')
@@ -3943,14 +3944,19 @@
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;');
   }
+  function isSafeMarkdownUrl(url) {
+    return /^(https?:\/\/|mailto:|\.{0,2}\/|#)/i.test(url);
+  }
   function renderMarkdownInline(text) {
     var out = escapeHtml(text);
     out = out.replace(/`([^`]+)`/g, '<code>$1</code>');
+    out = out.replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, function (_m, alt, src) {
+      return isSafeMarkdownUrl(src) ? '<img src="' + src + '" alt="' + alt + '">' : alt;
+    });
     out = out.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
     out = out.replace(/(^|[^*])\*([^*]+)\*/g, '$1<em>$2</em>');
     out = out.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, function (_m, label, href) {
-      var safe = /^(https?:\/\/|mailto:|\.{0,2}\/|#)/i.test(href);
-      return safe ? '<a href="' + href + '" target="_blank" rel="noopener noreferrer">' + label + '</a>' : label;
+      return isSafeMarkdownUrl(href) ? '<a href="' + href + '" target="_blank" rel="noopener noreferrer">' + label + '</a>' : label;
     });
     return out;
   }
@@ -3967,7 +3973,54 @@
       if (list) html += '</' + list + '>';
       list = null;
     }
-    lines.forEach(function (line) {
+    var fence = null;
+    var table = null;
+    function flushTable() {
+      if (table) html += '</tbody></table>';
+      table = null;
+    }
+    function splitTableRow(line) {
+      return line.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(function (cell) {
+        return cell.trim();
+      });
+    }
+    lines.forEach(function (line, index) {
+      if (fence) {
+        if (/^\s*```/.test(line)) {
+          html += '<pre><code>' + escapeHtml(fence.join('\n')) + '</code></pre>';
+          fence = null;
+        } else {
+          fence.push(line);
+        }
+        return;
+      }
+      if (/^\s*```/.test(line)) {
+        flushPara(); flushList(); flushTable();
+        fence = [];
+        return;
+      }
+      var isTableRow = /^\s*\|.*\|\s*$/.test(line);
+      if (isTableRow) {
+        flushPara(); flushList();
+        if (!table) {
+          /* A table starts only with a header row followed by a |---| rule. */
+          if (!/^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)*\|?\s*$/.test(lines[index + 1] || '')) {
+            para.push(line.trim());
+            return;
+          }
+          table = { headerDone: false };
+          html += '<table><thead><tr>' + splitTableRow(line).map(function (cell) {
+            return '<th>' + renderMarkdownInline(cell) + '</th>';
+          }).join('') + '</tr></thead><tbody>';
+          return;
+        }
+        if (!table.headerDone) { table.headerDone = true; return; }
+        html += '<tr>' + splitTableRow(line).map(function (cell) {
+          return '<td>' + renderMarkdownInline(cell) + '</td>';
+        }).join('') + '</tr>';
+        return;
+      }
+      flushTable();
       var heading = /^(#{1,3})\s+(.+)$/.exec(line);
       var bullet = /^\s*[-*]\s+(.+)$/.exec(line);
       var ordered = /^\s*\d+\.\s+(.+)$/.exec(line);
@@ -3986,7 +4039,8 @@
         para.push(line.trim());
       }
     });
-    flushPara(); flushList();
+    if (fence) html += '<pre><code>' + escapeHtml(fence.join('\n')) + '</code></pre>';
+    flushPara(); flushList(); flushTable();
     return html;
   }
   function openGuidelineMdModal(content, name, triggerEl) {
