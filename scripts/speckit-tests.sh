@@ -1774,6 +1774,30 @@ test_check_sdd_requires_explicit_retired_command_context() {
     assert_command_fails_with "$repo" 1 "RETIRED_COMMAND" "AGENTS.md"
 }
 
+test_check_sdd_classifies_retired_commands_per_clause() {
+    local repo
+
+    repo="$(make_sdd_repo)"
+    printf '\nDo not run npm test before review.\n' >> "$repo/AGENTS.md"
+
+    assert_command_succeeds "$repo" --not-rule RETIRED_COMMAND
+
+    repo="$(make_sdd_repo)"
+    printf '\n禁止執行 npm test。\n' >> "$repo/AGENTS.md"
+
+    assert_command_succeeds "$repo" --not-rule RETIRED_COMMAND
+
+    repo="$(make_sdd_repo)"
+    printf '\nDo not run npm test in CI; run npm test locally.\n' >> "$repo/AGENTS.md"
+
+    assert_command_fails_with "$repo" 1 "RETIRED_COMMAND" "AGENTS.md"
+
+    repo="$(make_sdd_repo)"
+    printf '\n這不是歷史範例，請執行 npm test。\n' >> "$repo/AGENTS.md"
+
+    assert_command_fails_with "$repo" 1 "RETIRED_COMMAND" "AGENTS.md"
+}
+
 test_check_sdd_scans_symlinked_agents_consumers() {
     local agents_target repo
 
@@ -1971,6 +1995,7 @@ test_check_sdd_scans_symlinked_active_change_consumers
 test_check_sdd_does_not_consume_red_mentioning_paired_green
 test_check_sdd_rejects_nonhistorical_active_retired_command
 test_check_sdd_requires_explicit_retired_command_context
+test_check_sdd_classifies_retired_commands_per_clause
 test_check_sdd_scans_symlinked_agents_consumers
 test_check_sdd_rejects_control_character_descendant_in_symlinked_agents_root
 test_check_sdd_uses_parsed_action_artifacts_for_task_ownership
