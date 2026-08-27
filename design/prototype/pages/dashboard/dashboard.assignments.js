@@ -62,6 +62,49 @@
     };
   }
 
+  /* issue #501 perf follow-up: deriving one of these summaries enumerates
+     the task's review units and reads localStorage per unit, so doing all
+     thirteen at module load charged that cost to every page that merely
+     loads this file. annotation-list.html is the expensive case -- it has no
+     LabelSuiteDashboard and bails at the guard below, yet its
+     findAssignmentStats() looks up exactly ONE task. Each entry now derives
+     on first read of its own detail/progress/iaa and memoizes, so a page
+     pays only for the tasks it actually renders.
+
+     Getters rather than a lazily-built array: the array itself is cheap, and
+     making the whole array lazy does not help -- findAssignmentStats() runs
+     during annotation-list's own load, so an array-level getter fires there
+     anyway and derives all thirteen (measured). The cost is per entry, so
+     the laziness has to be per entry too. */
+  function lazyReviewerWorkItem(sampleId, taskId, runType, outKey, status, reviewerId) {
+    var memo = null;
+    function summary() {
+      if (!memo) memo = demoReviewerSummary(taskId, runType, outKey);
+      return memo;
+    }
+    var item = {
+      latestUnfinishedSampleId: sampleId,
+      runType: runType,
+      status: status,
+      reviewerId: reviewerId || '',
+    };
+    /* enumerable so anything iterating an entry still sees these three;
+       createRoleEntry() reads them by name and triggers the derivation. */
+    Object.defineProperty(item, 'detail', {
+      enumerable: true,
+      get: function () { return summary().label; },
+    });
+    Object.defineProperty(item, 'progress', {
+      enumerable: true,
+      get: function () { return summary().progress; },
+    });
+    Object.defineProperty(item, 'iaa', {
+      enumerable: true,
+      get: function () { return summary().value; },
+    });
+    return item;
+  }
+
   /* issue #501: T001-T013's reviewer summary previously carried three
    * independent hardcoded numbers (待審 N 個審核單位 / 任務覆蓋率 N% / IAA
    * N.NN), none derived from any seed data. Unlike T014-T017 (issue #489),
@@ -99,19 +142,6 @@
     };
   }
 
-  var t001ReviewerSummary = demoReviewerSummary('T001', 'official_run', 'single_label');
-  var t002ReviewerSummary = demoReviewerSummary('T002', 'dry_run', 'multi_label');
-  var t003ReviewerSummary = demoReviewerSummary('T003', 'official_run', 'multi_label');
-  var t004ReviewerSummary = demoReviewerSummary('T004', 'dry_run', 'single_dim');
-  var t005ReviewerSummary = demoReviewerSummary('T005', 'dry_run', 'multi_dim');
-  var t006ReviewerSummary = demoReviewerSummary('T006', 'official_run', 'sequence_tagging');
-  var t007ReviewerSummary = demoReviewerSummary('T007', 'official_run', 'entity_recognition');
-  var t008ReviewerSummary = demoReviewerSummary('T008', 'official_run', 'relation_identification');
-  var t009ReviewerSummary = demoReviewerSummary('T009', 'dry_run', 'free_text');
-  var t010ReviewerSummary = demoReviewerSummary('T010', 'official_run', 'entity_recognition');
-  var t011ReviewerSummary = demoReviewerSummary('T011', 'dry_run', 'single_label');
-  var t012ReviewerSummary = demoReviewerSummary('T012', 'official_run', 'free_text');
-  var t013ReviewerSummary = demoReviewerSummary('T013', 'official_run', 'entity_recognition');
 
   var t014ReviewerIaa = demoIaaSummary('T014', 'dry_run', 'single_label');
 
@@ -148,15 +178,13 @@
         'official_run',
         'continue'
       ),
-      reviewer: workItem(
+      reviewer: lazyReviewerWorkItem(
         'sent-001',
-        t001ReviewerSummary.label.zh,
-        t001ReviewerSummary.label.en,
-        t001ReviewerSummary.progress,
+        'T001',
         'official_run',
+        'single_label',
         'pending_review',
-        '',
-        t001ReviewerSummary.value
+        ''
       ),
     },
     {
@@ -170,15 +198,13 @@
         'dry_run',
         'resume'
       ),
-      reviewer: workItem(
+      reviewer: lazyReviewerWorkItem(
         'emo-001',
-        t002ReviewerSummary.label.zh,
-        t002ReviewerSummary.label.en,
-        t002ReviewerSummary.progress,
+        'T002',
         'dry_run',
+        'multi_label',
         'pending_review',
-        '',
-        t002ReviewerSummary.value
+        ''
       ),
     },
     {
@@ -192,15 +218,13 @@
         'official_run',
         'continue'
       ),
-      reviewer: workItem(
+      reviewer: lazyReviewerWorkItem(
         'taxonomy-001',
-        t003ReviewerSummary.label.zh,
-        t003ReviewerSummary.label.en,
-        t003ReviewerSummary.progress,
+        'T003',
         'official_run',
+        'multi_label',
         'pending_review',
-        '',
-        t003ReviewerSummary.value
+        ''
       ),
     },
     {
@@ -214,15 +238,13 @@
         'dry_run',
         'resume'
       ),
-      reviewer: workItem(
+      reviewer: lazyReviewerWorkItem(
         'read-001',
-        t004ReviewerSummary.label.zh,
-        t004ReviewerSummary.label.en,
-        t004ReviewerSummary.progress,
+        'T004',
         'dry_run',
+        'single_dim',
         'in_progress',
-        '',
-        t004ReviewerSummary.value
+        ''
       ),
     },
     {
@@ -236,15 +258,13 @@
         'dry_run',
         'resume'
       ),
-      reviewer: workItem(
+      reviewer: lazyReviewerWorkItem(
         'mt-001',
-        t005ReviewerSummary.label.zh,
-        t005ReviewerSummary.label.en,
-        t005ReviewerSummary.progress,
+        'T005',
         'dry_run',
+        'multi_dim',
         'in_progress',
-        '',
-        t005ReviewerSummary.value
+        ''
       ),
     },
     {
@@ -258,15 +278,13 @@
         'official_run',
         'in_progress'
       ),
-      reviewer: workItem(
+      reviewer: lazyReviewerWorkItem(
         'sequence-tagging-001',
-        t006ReviewerSummary.label.zh,
-        t006ReviewerSummary.label.en,
-        t006ReviewerSummary.progress,
+        'T006',
         'official_run',
+        'sequence_tagging',
         'pending_review',
-        '',
-        t006ReviewerSummary.value
+        ''
       ),
     },
     {
@@ -280,15 +298,13 @@
         'official_run',
         'in_progress'
       ),
-      reviewer: workItem(
+      reviewer: lazyReviewerWorkItem(
         'entity-recognition-001',
-        t007ReviewerSummary.label.zh,
-        t007ReviewerSummary.label.en,
-        t007ReviewerSummary.progress,
+        'T007',
         'official_run',
+        'entity_recognition',
         'pending_review',
-        '',
-        t007ReviewerSummary.value
+        ''
       ),
     },
     {
@@ -302,15 +318,13 @@
         'official_run',
         'resume'
       ),
-      reviewer: workItem(
+      reviewer: lazyReviewerWorkItem(
         'rel-001',
-        t008ReviewerSummary.label.zh,
-        t008ReviewerSummary.label.en,
-        t008ReviewerSummary.progress,
+        'T008',
         'official_run',
+        'relation_identification',
         'pending_review',
-        '',
-        t008ReviewerSummary.value
+        ''
       ),
     },
     {
@@ -324,15 +338,13 @@
         'dry_run',
         'in_progress'
       ),
-      reviewer: workItem(
+      reviewer: lazyReviewerWorkItem(
         'sum-001',
-        t009ReviewerSummary.label.zh,
-        t009ReviewerSummary.label.en,
-        t009ReviewerSummary.progress,
+        'T009',
         'dry_run',
+        'free_text',
         'in_progress',
-        '',
-        t009ReviewerSummary.value
+        ''
       ),
     },
     {
@@ -346,15 +358,13 @@
         'official_run',
         'resume'
       ),
-      reviewer: workItem(
+      reviewer: lazyReviewerWorkItem(
         'med-001',
-        t010ReviewerSummary.label.zh,
-        t010ReviewerSummary.label.en,
-        t010ReviewerSummary.progress,
+        'T010',
         'official_run',
+        'entity_recognition',
         'in_progress',
-        '',
-        t010ReviewerSummary.value
+        ''
       ),
     },
     {
@@ -368,15 +378,13 @@
         'dry_run',
         'in_progress'
       ),
-      reviewer: workItem(
+      reviewer: lazyReviewerWorkItem(
         '00183',
-        t011ReviewerSummary.label.zh,
-        t011ReviewerSummary.label.en,
-        t011ReviewerSummary.progress,
+        'T011',
         'dry_run',
+        'single_label',
         'pending_review',
-        '',
-        t011ReviewerSummary.value
+        ''
       ),
     },
     {
@@ -390,15 +398,13 @@
         'official_run',
         'continue'
       ),
-      reviewer: workItem(
+      reviewer: lazyReviewerWorkItem(
         'eac8d013',
-        t012ReviewerSummary.label.zh,
-        t012ReviewerSummary.label.en,
-        t012ReviewerSummary.progress,
+        'T012',
         'official_run',
+        'free_text',
         'pending_review',
-        '',
-        t012ReviewerSummary.value
+        ''
       ),
     },
     {
@@ -412,15 +418,13 @@
         'official_run',
         'resume'
       ),
-      reviewer: workItem(
+      reviewer: lazyReviewerWorkItem(
         'absa-001',
-        t013ReviewerSummary.label.zh,
-        t013ReviewerSummary.label.en,
-        t013ReviewerSummary.progress,
+        'T013',
         'official_run',
+        'entity_recognition',
         'pending_review',
-        '',
-        t013ReviewerSummary.value
+        ''
       ),
     },
     /* T014-T017: review-flow demo tasks (issue #302). Numbers follow the
