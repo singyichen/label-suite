@@ -2289,6 +2289,9 @@
     /* One row per review unit: annotator `a` answered `v`; `rev` maps each
        reviewer to their decision (same value = agree, different = changed);
        `arb` is chen's arbitration picking that reviewer value (choice B).
+       `rejectBy` names the one entry in `rev` whose decision was `reject`
+       (issue #502) rather than approve/modify -- reject is a decision, not
+       a value, so the reviewer's `rev` value can still equal `v` (agree).
        Annotator values MUST match REVIEWER_MOCK_ROWS above -- the list's
        answer column and the derived unit status describe the same
        submission. Derived states are noted per sample. */
@@ -2306,7 +2309,10 @@
       { t: 'T014', r: 'dry_run', s: 'dry-04-dispute-resolved', a: A, v: 'negative', rev: { reviewer_wang: 'negative' } }, // finalized
       { t: 'T014', r: 'dry_run', s: 'dry-04-dispute-resolved', a: B, v: 'neutral', rev: { reviewer_wang: 'negative' }, arb: 'negative' }, // finalized by arbitration
       { t: 'T014', r: 'dry_run', s: 'dry-04-dispute-resolved', a: C, v: 'negative', rev: { reviewer_wang: 'negative' } }, // finalized
-      { t: 'T014', r: 'dry_run', s: 'dry-05-pending-review', a: A, v: 'positive' }, // pending
+      /* issue #502: reject on dry_run has no rollback channel -- the
+         annotator stays 'submitted' and the unit finalizes normally
+         (agree value), only the reviewer's own history records "reject". */
+      { t: 'T014', r: 'dry_run', s: 'dry-05-pending-review', a: A, v: 'positive', rev: { reviewer_wang: 'positive' }, rejectBy: 'reviewer_wang' }, // finalized (reject, no rework backlog)
       { t: 'T014', r: 'dry_run', s: 'dry-05-pending-review', a: B, v: 'positive' }, // pending
       { t: 'T014', r: 'dry_run', s: 'dry-05-pending-review', a: C, v: 'positive' }, // pending
       /* T015 official_run, min_reviewers = 1 (ofs-05 stays unsubmitted) */
@@ -2325,7 +2331,16 @@
       { t: 'T017', r: 'official_run', s: 'oft-02-approved-interim', a: A, v: 'positive', rev: { reviewer_wang: 'positive' } }, // approved (1 < 2)
       { t: 'T017', r: 'official_run', s: 'oft-03-modified-interim', a: A, v: 'neutral', rev: { reviewer_wang: 'positive' } }, // modified (1 < 2)
       { t: 'T017', r: 'official_run', s: 'oft-04-unanimous-gold', a: A, v: 'positive', rev: { reviewer_wang: 'positive', reviewer_li: 'positive' } }, // finalized
-      { t: 'T017', r: 'official_run', s: 'oft-05-pending-review', a: A, v: 'positive' }, // pending
+      /* issue #502: reject on official_run rolls the annotator's sample
+         back to 'pending' (existing answers kept), opening a rework
+         backlog -- getReviewUnitStatus then has no submission to derive
+         from, so the reviewer list falls back to the same PENDING it
+         shows for a never-reviewed unit (buildReviewUnitRows in
+         annotation-list.html). Stops here rather than seeding a
+         resubmission + new review cycle: the rework backlog itself is
+         this row's whole demo point, and simulating the annotator's next
+         action is what the live workspace is for. */
+      { t: 'T017', r: 'official_run', s: 'oft-05-pending-review', a: A, v: 'positive', rev: { reviewer_wang: 'positive' }, rejectBy: 'reviewer_wang' }, // rolled back to pending (reject, rework backlog)
     ];
 
     function labelPayload(value) {
@@ -2335,10 +2350,23 @@
     scripts.forEach(function (row) {
       markSampleSubmitted(row.t, 'annotator', row.r, row.s, labelPayload(row.v), '', { annotatorId: row.a });
       Object.keys(row.rev || {}).forEach(function (reviewerId) {
-        markSampleSubmitted(row.t, 'reviewer', row.r, row.s, labelPayload(row.rev[reviewerId]), '', {
+        var isReject = row.rejectBy === reviewerId;
+        /* issue #502: mirrors handleReviewSubmit's per-row decision line
+           (annotation-workspace.config.js's decisionLines, ~L3780) so a
+           seeded reject reads the same way a live one would. */
+        var reviewSummary = isReject ? 'single_label · ' + row.a + ': reject' : '';
+        markSampleSubmitted(row.t, 'reviewer', row.r, row.s, labelPayload(row.rev[reviewerId]), reviewSummary, {
           annotatorId: row.a,
           reviewerId: reviewerId,
         });
+        /* issue #502: mirrors handleReviewSubmit's post-submit rollback
+           (annotation-workspace.config.js ~L3864). markSampleRejected() is
+           itself official_run-gated (this file, ~L467), so calling it here
+           for a dry_run row is a deliberate no-op: only official_run rolls
+           the annotator's sample back to pending. */
+        if (isReject) {
+          markSampleRejected(row.t, 'annotator', row.r, row.s, reviewSummary, { annotatorId: row.a });
+        }
       });
       if (row.arb) {
         submitArbitration(row.t, row.r, row.s, { annotatorId: row.a, reviewerId: 'reviewer_chen' }, [

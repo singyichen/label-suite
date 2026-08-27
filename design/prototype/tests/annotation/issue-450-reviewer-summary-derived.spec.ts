@@ -55,7 +55,10 @@ function readSummary(page: Page, taskId: string, runType: string): Promise<Summa
 const MATRIX = [
   {
     taskId: 'T014', runType: 'dry_run',
-    expected: { total: 15, pending: 6, approved: 0, modified: 0, disputed: 2, finalized: 7, unfinalized: 8, coveragePct: 60, derivable: true },
+    // dry-05 x kioleemg12 moved from pending to finalized: it is now a
+    // rejected-but-agreeing review, which still counts as reviewed
+    // (issue #502).
+    expected: { total: 15, pending: 5, approved: 0, modified: 0, disputed: 2, finalized: 8, unfinalized: 7, coveragePct: 67, derivable: true },
   },
   {
     taskId: 'T015', runType: 'official_run',
