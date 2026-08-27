@@ -1,7 +1,7 @@
 ---
 功能分支: feat/dashboard-output-types
 建立日期: 2026-04-05
-版本: 2.8.2
+版本: 2.9.0
 狀態: In Progress
 ---
 
@@ -212,7 +212,6 @@ Super Admin 登入後看到平台層級總覽，用於掌握整體人員、任�
 
 1. **Given** `role = user` 且有 `project_leader` 任務，**When** 進入 `/dashboard`，**Then** 顯示任務概況（總任務、進行中、等待 IAA 確認、速度異常）。
 2. **Given** 同上，**When** 檢視任務列表，**Then** 每列包含任務名稱、摘要、依 `outputs[].type` 順序呈現的一至多個輸出類型 tag、Annotation Stage badge、狀態 badge 與進度條。
-3. **Given** 任務資料中存在至少一筆帶有 `demoCategory` 標記的任務，**When** 進入 PL 任務列表區塊，**Then** 顯示對應類別的快捷分類按鈕；點擊後導向 `/task-list?task_role=project_leader&keyword=<類別標籤>`，並可篩選出該類別下的任務。
 
 **專案負責人介面定義（需與原型一致）**：
 
@@ -373,7 +372,6 @@ Super Admin 登入後看到平台層級總覽，用於掌握整體人員、任�
 - **FR-009B**：Project Leader Dashboard 的「任務列表」必須顯示「查看全部」按鈕，且按鈕文字可 i18n 切換。
 - **FR-009C**：Project Leader Dashboard 的「任務列表」每列必須包含任務名稱、任務摘要、一至多個輸出類型 tag、Annotation Stage／Status badge 與 progress bar。
 - **FR-009D**：Project Leader Dashboard 點擊「查看全部」時，系統必須導向 `/task-list`，並沿用登入者 `user` 身分只顯示其具 `task_membership` 的任務。
-- **FR-009E**（v2.5.0 新增，issue #404）：Project Leader Dashboard 的「任務列表」區塊必須依任務資料的 `demoCategory` 標記動態渲染「示範任務快捷分類」按鈕：當且僅當 `dashboard.data.js` 中存在至少一筆任務帶有相同 `demoCategory` 值時，才顯示對應類別的按鈕；按鈕文字取自該類別的 i18n 標籤（zh/en），點擊時導向 `/task-list?task_role=project_leader&keyword=<類別標籤>`，套用既有關鍵字搜尋機制篩選出該類別任務。渲染邏輯不得以任務 ID 白名單（如列舉特定 `task_id`）作為顯示條件。
 - **FR-010**：Annotator Dashboard 必須包含：標記概況、任務列表、快速繼續按鈕。
 - **FR-010A**：Annotator Dashboard 的「標記概況」必須包含 3 張指標卡：待標記（筆）、今日完成（筆）、平均速度（分/筆）；各卡標籤顯示於數值上方。
 - **FR-010B**：Annotator Dashboard 的任務列表每列必須包含進度摘要、`快速繼續` 按鈕、一至多個輸出類型 tag、Annotation Stage／Status badge 與 progress bar。
@@ -542,12 +540,12 @@ flowchart LR
 - **SC-024**：Prototype 的 Annotator 與 Reviewer 場景各有 17 個快速操作；T001–T017 每筆具有獨立 `task_id`、非空 `sample_id` 與明確 compatibility route，並能以 `role=annotator`／`role=reviewer` 成功載入標記／審核介面。
 - **SC-025**：Super Admin／Project Leader Dashboard 的「等待 IAA 確認」指標卡可點擊且鍵盤可操作，導向套用 `status=waiting_iaa_confirmation` 篩選的 `/task-list`；該指標卡數字須與 `/task-list` 篩選後的實際筆數一致（prototype 基線：兩者皆為 1，即唯一的 dry_run 待 IAA 種子 T002；T014 雖為 dry_run 但 seed 狀態非 `waiting_iaa_confirmation`，不計入），不得出現數字與可導頁任務筆數對不上帳的情形。
 - **SC-026**（issue #187）：Annotator／Reviewer 任務列表提供排序下拉控制，選擇「進度：高到低」／「進度：低到高」後清單順序須正確反映所選鍵值，並可切回「預設順序」還原原始清單順序；排序後任務卡既有欄位、CTA 與導頁行為（FR-010B1／FR-010C／FR-011B1／FR-011C 等）不受影響；語言切換時排序控制標籤與選項文案即時更新。
-- **SC-027**（issue #404）：PL Dashboard 的任務列表區塊必須提供資料驅動的「示範任務快捷分類」入口——當任務資料含 `demoCategory` 標記時渲染對應快捷按鈕，點擊後導向套用 `keyword` 篩選的 `/task-list`，且該篩選結果須完整涵蓋所有帶相同 `demoCategory` 的任務（prototype 基線：`review_flow` 類別涵蓋 T014–T017 四筆）；若移除所有任務的 `demoCategory` 標記，快捷按鈕不得顯示，證明其為資料驅動而非硬編碼任務 ID 清單。
 
 ## Changelog
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.9.0 | 2026-08-27 | **撤銷 FR-009E／SC-027：移除 PL Dashboard 的示範任務快捷分類按鈕**（issue #510）：v2.5.0 依 issue #404 於 PL 任務列表區塊上方新增資料驅動的「審核流程示範」快捷分類按鈕，其立論為「T014–T017 無法自儀表板**或其『查看全部』入口**自然發現」。本次複查確認該前提僅前半成立——`查看全部`（`plViewAllBtn`）呼叫 `openTaskList('project_leader')` 時**不帶 `keyword`**，導向的任務清單為未篩選全量（預設 `limit: 20` > 種子 17 筆，同頁可見），T014–T017 本就完整列於其中；該按鈕的實際效果為「省去一次關鍵字輸入」，而非「使不可達者可達」。維護者裁定此邊際價值不足以支撐它在任務列表上方形成視覺孤立的按鈕，故移除。**移除範圍**：FR-009E、SC-027、「使用者故事 3 — Project Leader 儀表板」驗收情境第 3 項，以及原型 `renderDemoShortcuts()`、T014–T017 的 `demoCategory` 欄位與 `demoCategories` 目錄、`dashboard-pl-review-flow-demo-entry.spec.ts`。**刻意不變**：T014–T017 任務本身與其餘欄位全數保留，仍為 FR-011D／FR-011E／FR-020／FR-021／FR-022 的資料基礎；`SC-027` 為已撤銷編號，不重用亦不重編後續 SC 編號（穩定 ID 慣例）。**驗證**：新增 `issue-510-demo-shortcut-removed.spec.ts`——除斷言按鈕、容器與 class 皆不存在外，另將本次移除所依據的前提本身釘為迴歸守衛（`查看全部` 導向未篩選清單、`共 17 筆`、四筆示範任務逐筆可見），使該入口日後若被加上篩選會立即失敗而非無聲失效；`tests/dashboard/` 73/73 通過、`tsc --noEmit` 無錯。 |
 | 2.8.2 | 2026-08-26 | **Reviewer 措辭統一為「審核」（issue #458）**：`design/prototype/pages` 內 `審核` 對 `審查` 用字比例達 256:5，`審查` 為離群舊詞。本檔「今日已審」與 `reviewerPanelSubtitle` 的舊副標「我的審查進度與待處理項目」為兩處僅存的離群引文，同步改為 `今日已審核`（US-5 驗收情境第 1 項、介面定義指標卡、**FR-011A**）與 `我的審核進度與待處理項目`（介面定義副標），與已改字的 `dashboard.html`／`dashboard.i18n.js` 一致。`待審總數` 標籤與 `pending_review` 狀態值本檔未逐字引用，故無需同步異動。**需求文字未改**，僅修正引文用字。 |
 | 2.8.1 | 2026-08-26 | **FR 編號整理（issue #472）**：`FR-0170` 與 `FR-0170A` 兩則需求脫離本檔 `FR-017` 子序列的字母命名（`FR-017`、`FR-017A`–`FR-017K`）——尾碼使用阿拉伯數字 `0`，與字母 `O` 在編號中易混淆，且兩行位置夾在 `FR-017` 與 `FR-017A` 之間，未依序排在 `FR-017K` 之後。改名為 `FR-017L`／`FR-017M` 並搬移至 `FR-017K` 之後，使 `FR-017`／`FR-017A`–`FR-017M` 全序列連續遞增。**需求文字逐字未改**，僅異動編號與行位置。改號前已全庫搜尋（排除 `.git`／`node_modules`）確認舊編號除該兩處定義外無任何下游引用，本檔「規格相依性」下游清單（010／013／015）亦未提及此二 ID，故不涉及其他檔案異動。維護者裁定採「接續 A–K 下一個空號」而非字母 `O` 讀法，以徹底避開 `O`／`0` 混淆。 |
 | 2.8.0 | 2026-08-26 | **Reviewer 任務列審查摘要改為寫出計數主體與分母**（issue #452）：`審核覆蓋率 100%`（v2.6.0）與 17 筆種子摘要的 `進度 {p}%` 都只給百分比、不給分母，審核員因此無從得知該數字數的是整個任務的審核單位、還是自己已提交的審核——同一畫面往下走到工作區頂部與脈絡橫幅，還有另外兩個措辭幾乎相同、分母卻不同的數字（見 015 FR-076）。新增 **FR-022**：摘要文字改為 `任務覆蓋 {x} / {n} 個審核單位 · 待審 {n} 個 · 未達定稿門檻 {n} 個 · 爭議中 {n} 個`（後接 IAA），文案定義以 annotation-015 FR-076 為唯一來源，dashboard 不自行維護第二套措辭；FR-020 回退分支的種子摘要同步改為 `待審 {n} 個審核單位 · 任務覆蓋率 {p}% · IAA {x}`，使推導值與種子值在版面上無法互相誤讀。**刻意不變**：`coveragePct` 公式、進度條寬度與 FR-011F 排序所用的 `progress` 數值欄位皆維持原樣，本版僅改顯示文字。本檔沿用既有慣例，驗收情境為不編號清單，故未指派 `AC-N.M` 穩定 ID。原型：`dashboard.assignments.js` 之 17 筆 reviewer 種子摘要（T001–T013 legacy 13 筆 + T014–T017 示範任務 4 筆，後者為 FR-020 覆寫後的死字串，一併保持一致）；顯示字串本身由 `annotation-workspace.data.js` 的 `formatReviewSummary()` 產出，`dashboard.js` 未變更。驗證：`issue-452-review-progress-subjects.spec.ts`（dashboard T016 具主體摘要、T001 種子回退不再出現「進度」）、`dashboard-review-flow-demo.spec.ts`（T014–T017 zh／en 摘要）、`dashboard.spec.ts` 與 `issue-450-reviewer-summary-derived.spec.ts` 之種子摘要斷言。**編號依存**：本版號 `2.8.0` 與對應之 015 版號 `4.31.0`／`FR-076`／`AC-1.24` 須與本檔同 PR 合併，且本 PR 須先於 issue #453 的 PR（015 `4.32.0`／`FR-077`／`AC-3.42`）合併；若合併順序改變則版號與 FR 編號須重新調整，不可逕行套用。 |
