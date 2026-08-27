@@ -43,12 +43,14 @@ test.describe('Annotation list task info card: progress summary', () => {
   });
 
   test('reviewer stats use the reviewer assignment entry', async ({ page }) => {
+    // T001 has no staged review-unit state (issue #501), so the reviewer
+    // summary says so explicitly instead of showing a fabricated number.
     await page.goto(buildListUrl({ task_id: 'T001', role: 'reviewer', run_type: 'official_run' }));
 
     await expect(page.locator('#taskInfoDetail')).toHaveText(
-      '待審 7 個審核單位 · 任務覆蓋率 34% · IAA 0.80 · 共 5 筆資料'
+      '審核單位狀態無法推導 · IAA 無法計算 · 共 5 筆資料'
     );
-    expect(await progressBarWidth(page)).toBe('34%');
+    expect(await progressBarWidth(page)).toBe('0%');
   });
 
   test('missing assignment seeds fall back to the count-only summary with an empty bar', async ({ page }) => {

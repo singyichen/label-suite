@@ -62,6 +62,57 @@
     };
   }
 
+  /* issue #501: T001-T013's reviewer summary previously carried three
+   * independent hardcoded numbers (待審 N 個審核單位 / 任務覆蓋率 N% / IAA
+   * N.NN), none derived from any seed data. Unlike T014-T017 (issue #489),
+   * these thirteen tasks have no staged review-unit state -- no equivalent
+   * of seedReviewFlowDemo() ever writes their REVIEWER_MOCK_ROWS answers
+   * into a submission bucket -- so computeReviewSummary() is never
+   * derivable for them and computeIaaAlpha() never has marks to read.
+   * dataset-017 FR-039.4 requires an explicit "not computable" state
+   * instead of a fabricated fallback number, so both derivations run for
+   * real here and the wording only changes based on what they return.
+   * The condition is data presence (summary.derivable), never a task id
+   * (Generalization-First): if a future seed stages real review-unit state
+   * for one of these tasks, this same helper renders the live
+   * computeReviewSummary()/formatReviewSummary() text automatically. */
+  function demoReviewerSummary(taskId, runType, outKey) {
+    var workspaceData = global.LabelSuiteAnnotationWorkspaceData;
+    var iaaSummary = demoIaaSummary(taskId, runType, outKey);
+    var reviewSummary = workspaceData && workspaceData.computeReviewSummary
+      ? workspaceData.computeReviewSummary(taskId, runType)
+      : null;
+    if (reviewSummary && reviewSummary.derivable && workspaceData.formatReviewSummary) {
+      return {
+        value: iaaSummary.value,
+        progress: reviewSummary.coveragePct,
+        label: workspaceData.formatReviewSummary(reviewSummary, iaaSummary.value),
+      };
+    }
+    return {
+      value: iaaSummary.value,
+      progress: 0,
+      label: {
+        zh: '審核單位狀態無法推導 · ' + iaaSummary.label.zh,
+        en: 'Review unit status not derivable · ' + iaaSummary.label.en,
+      },
+    };
+  }
+
+  var t001ReviewerSummary = demoReviewerSummary('T001', 'official_run', 'single_label');
+  var t002ReviewerSummary = demoReviewerSummary('T002', 'dry_run', 'multi_label');
+  var t003ReviewerSummary = demoReviewerSummary('T003', 'official_run', 'multi_label');
+  var t004ReviewerSummary = demoReviewerSummary('T004', 'dry_run', 'single_dim');
+  var t005ReviewerSummary = demoReviewerSummary('T005', 'dry_run', 'multi_dim');
+  var t006ReviewerSummary = demoReviewerSummary('T006', 'official_run', 'sequence_tagging');
+  var t007ReviewerSummary = demoReviewerSummary('T007', 'official_run', 'entity_recognition');
+  var t008ReviewerSummary = demoReviewerSummary('T008', 'official_run', 'relation_identification');
+  var t009ReviewerSummary = demoReviewerSummary('T009', 'dry_run', 'free_text');
+  var t010ReviewerSummary = demoReviewerSummary('T010', 'official_run', 'entity_recognition');
+  var t011ReviewerSummary = demoReviewerSummary('T011', 'dry_run', 'single_label');
+  var t012ReviewerSummary = demoReviewerSummary('T012', 'official_run', 'free_text');
+  var t013ReviewerSummary = demoReviewerSummary('T013', 'official_run', 'entity_recognition');
+
   var t014ReviewerIaa = demoIaaSummary('T014', 'dry_run', 'single_label');
 
   /* T015-T017 are official_run: exactly one annotator per sample, so there
@@ -99,13 +150,13 @@
       ),
       reviewer: workItem(
         'sent-001',
-        '待審 7 個審核單位 · 任務覆蓋率 34% · IAA 0.80',
-        '7 review units pending · 34% task coverage · IAA 0.80',
-        34,
+        t001ReviewerSummary.label.zh,
+        t001ReviewerSummary.label.en,
+        t001ReviewerSummary.progress,
         'official_run',
         'pending_review',
         '',
-        0.80
+        t001ReviewerSummary.value
       ),
     },
     {
@@ -121,13 +172,13 @@
       ),
       reviewer: workItem(
         'emo-001',
-        '待審 6 個審核單位 · 任務覆蓋率 48% · IAA 0.76',
-        '6 review units pending · 48% task coverage · IAA 0.76',
-        48,
+        t002ReviewerSummary.label.zh,
+        t002ReviewerSummary.label.en,
+        t002ReviewerSummary.progress,
         'dry_run',
         'pending_review',
         '',
-        0.76
+        t002ReviewerSummary.value
       ),
     },
     {
@@ -143,13 +194,13 @@
       ),
       reviewer: workItem(
         'taxonomy-001',
-        '待審 12 個審核單位 · 任務覆蓋率 18% · IAA 0.81',
-        '12 review units pending · 18% task coverage · IAA 0.81',
-        18,
+        t003ReviewerSummary.label.zh,
+        t003ReviewerSummary.label.en,
+        t003ReviewerSummary.progress,
         'official_run',
         'pending_review',
         '',
-        0.81
+        t003ReviewerSummary.value
       ),
     },
     {
@@ -165,13 +216,13 @@
       ),
       reviewer: workItem(
         'read-001',
-        '待審 5 個審核單位 · 任務覆蓋率 61% · IAA 0.84',
-        '5 review units pending · 61% task coverage · IAA 0.84',
-        61,
+        t004ReviewerSummary.label.zh,
+        t004ReviewerSummary.label.en,
+        t004ReviewerSummary.progress,
         'dry_run',
         'in_progress',
         '',
-        0.84
+        t004ReviewerSummary.value
       ),
     },
     {
@@ -187,13 +238,13 @@
       ),
       reviewer: workItem(
         'mt-001',
-        '待審 8 個審核單位 · 任務覆蓋率 76% · IAA 0.78',
-        '8 review units pending · 76% task coverage · IAA 0.78',
-        76,
+        t005ReviewerSummary.label.zh,
+        t005ReviewerSummary.label.en,
+        t005ReviewerSummary.progress,
         'dry_run',
         'in_progress',
         '',
-        0.78
+        t005ReviewerSummary.value
       ),
     },
     {
@@ -209,13 +260,13 @@
       ),
       reviewer: workItem(
         'sequence-tagging-001',
-        '待審 10 個審核單位 · 任務覆蓋率 71% · IAA 0.79',
-        '10 review units pending · 71% task coverage · IAA 0.79',
-        71,
+        t006ReviewerSummary.label.zh,
+        t006ReviewerSummary.label.en,
+        t006ReviewerSummary.progress,
         'official_run',
         'pending_review',
         '',
-        0.79
+        t006ReviewerSummary.value
       ),
     },
     {
@@ -231,13 +282,13 @@
       ),
       reviewer: workItem(
         'entity-recognition-001',
-        '待審 15 個審核單位 · 任務覆蓋率 64% · IAA 0.83',
-        '15 review units pending · 64% task coverage · IAA 0.83',
-        64,
+        t007ReviewerSummary.label.zh,
+        t007ReviewerSummary.label.en,
+        t007ReviewerSummary.progress,
         'official_run',
         'pending_review',
         '',
-        0.83
+        t007ReviewerSummary.value
       ),
     },
     {
@@ -253,13 +304,13 @@
       ),
       reviewer: workItem(
         'rel-001',
-        '待審 13 個審核單位 · 任務覆蓋率 45% · IAA 0.77',
-        '13 review units pending · 45% task coverage · IAA 0.77',
-        45,
+        t008ReviewerSummary.label.zh,
+        t008ReviewerSummary.label.en,
+        t008ReviewerSummary.progress,
         'official_run',
         'pending_review',
         '',
-        0.77
+        t008ReviewerSummary.value
       ),
     },
     {
@@ -275,13 +326,13 @@
       ),
       reviewer: workItem(
         'sum-001',
-        '待審 4 個審核單位 · 任務覆蓋率 37% · IAA 0.74',
-        '4 review units pending · 37% task coverage · IAA 0.74',
-        37,
+        t009ReviewerSummary.label.zh,
+        t009ReviewerSummary.label.en,
+        t009ReviewerSummary.progress,
         'dry_run',
         'in_progress',
         '',
-        0.74
+        t009ReviewerSummary.value
       ),
     },
     {
@@ -297,13 +348,13 @@
       ),
       reviewer: workItem(
         'med-001',
-        '待審 9 個審核單位 · 任務覆蓋率 53% · IAA 0.79',
-        '9 review units pending · 53% task coverage · IAA 0.79',
-        53,
+        t010ReviewerSummary.label.zh,
+        t010ReviewerSummary.label.en,
+        t010ReviewerSummary.progress,
         'official_run',
         'in_progress',
         '',
-        0.79
+        t010ReviewerSummary.value
       ),
     },
     {
@@ -319,13 +370,13 @@
       ),
       reviewer: workItem(
         '00183',
-        '待審 11 個審核單位 · 任務覆蓋率 82% · IAA 0.82',
-        '11 review units pending · 82% task coverage · IAA 0.82',
-        82,
+        t011ReviewerSummary.label.zh,
+        t011ReviewerSummary.label.en,
+        t011ReviewerSummary.progress,
         'dry_run',
         'pending_review',
         '',
-        0.82
+        t011ReviewerSummary.value
       ),
     },
     {
@@ -341,13 +392,13 @@
       ),
       reviewer: workItem(
         'eac8d013',
-        '待審 5 個審核單位 · 任務覆蓋率 29% · IAA 0.75',
-        '5 review units pending · 29% task coverage · IAA 0.75',
-        29,
+        t012ReviewerSummary.label.zh,
+        t012ReviewerSummary.label.en,
+        t012ReviewerSummary.progress,
         'official_run',
         'pending_review',
         '',
-        0.75
+        t012ReviewerSummary.value
       ),
     },
     {
@@ -363,13 +414,13 @@
       ),
       reviewer: workItem(
         'absa-001',
-        '待審 8 個審核單位 · 任務覆蓋率 58% · IAA 0.80',
-        '8 review units pending · 58% task coverage · IAA 0.80',
-        58,
+        t013ReviewerSummary.label.zh,
+        t013ReviewerSummary.label.en,
+        t013ReviewerSummary.progress,
         'official_run',
         'pending_review',
         '',
-        0.80
+        t013ReviewerSummary.value
       ),
     },
     /* T014-T017: review-flow demo tasks (issue #302). Numbers follow the

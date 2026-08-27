@@ -17,9 +17,11 @@
  *     read it.
  *   - coverage is share-of-units-past-待審, NOT a completion rate: T016
  *     sits at 5 / 5 coverage while still disclosing 未達定稿門檻 3 · 爭議中 1.
- *   - a task with no stored annotator submissions has nothing to derive and
- *     keeps its seeded illustrative summary (`derivable: false`) -- the
- *     condition is the presence of review-unit data, never a task id.
+ *   - a task with no stored annotator submissions has nothing to derive
+ *     (`derivable: false`) -- the condition is the presence of review-unit
+ *     data, never a task id. Issue #501: such a task's seed now states the
+ *     summary cannot be derived instead of falling back to a fabricated
+ *     number.
  */
 import { test, expect, type Page } from '@playwright/test';
 import { buildListUrl, buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
@@ -164,13 +166,14 @@ test.describe('issue #450 -- dashboard reviewer card', () => {
       .toContainText('任務覆蓋 4 / 4 個審核單位 · 未達定稿門檻 1 個 · 爭議中 1 個 · IAA 無法計算');
   });
 
-  /* Non-derivable tasks keep their seeded illustrative summary, so the
-     13 legacy demo rows are untouched by this change. */
-  test('a task without derivable review-unit state keeps its seeded summary', async ({ page }) => {
+  /* Non-derivable tasks say so explicitly instead of falling back to a
+     fabricated seed number (issue #501, dataset-017 FR-039.4); the 13
+     legacy demo rows have no staged review-unit state to derive from. */
+  test('a task without derivable review-unit state states it cannot be derived', async ({ page }) => {
     await openReviewerDashboard(page);
 
     await expect(
       page.locator('#reviewerTaskList [data-example-task-id="T001"] .list-item-detail'),
-    ).toHaveText('待審 7 個審核單位 · 任務覆蓋率 34% · IAA 0.80');
+    ).toHaveText('審核單位狀態無法推導 · IAA 無法計算');
   });
 });

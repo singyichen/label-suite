@@ -79,14 +79,19 @@ test.describe('issue #452 — task-level coverage names the review-unit denomina
     await expect(card).toContainText('未達定稿門檻 3 個');
   });
 
-  test('a task with no derivable review state still names its denominator', async ({ page }) => {
+  /* issue #501: a task with no derivable review state (T001) used to keep
+     a fabricated but subject-bearing seed number ("N 個審核單位"). It now
+     states explicitly that the summary cannot be derived instead of
+     showing any count, fabricated or otherwise. */
+  test('a task with no derivable review state states it cannot be derived, not a fabricated count', async ({ page }) => {
     await page.goto(DASHBOARD_URL);
     const trigger = page.locator('.scenario-pill[data-scenario="reviewer"]');
     await expect(trigger).toBeVisible();
     await trigger.click();
 
     const card = page.locator('.role-task-card[data-role="reviewer"][data-example-task-id="T001"]').first();
-    await expect(card).toContainText('個審核單位');
+    await expect(card).toContainText('審核單位狀態無法推導');
+    await expect(card).not.toContainText('個審核單位');
     await expect(card).not.toContainText('進度');
   });
 });
