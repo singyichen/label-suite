@@ -146,8 +146,18 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(reviewerView.locator('.metric strong').nth(2)).toContainText('0.81');
     await expect(reviewerView.getByText('病患情緒與照護情境階層分類')).toBeVisible();
     await expect(reviewerView.getByText('醫療翻譯品質多維度評分')).toBeVisible();
-    await expect(reviewerView.getByText(/待審 12 個審核單位 · 任務覆蓋率 18% · IAA 0.81/)).toBeVisible();
-    await expect(reviewerView.getByText(/待審 8 個審核單位 · 任務覆蓋率 76% · IAA 0.78/)).toBeVisible();
+    /* issue #501: the per-task summary is derived from live review-unit
+       state, so these two cards read the formula's output rather than the
+       seeded narrative they used to carry. Both tasks have 15 units and
+       nothing reviewed, hence identical text -- addressed by task id so the
+       assertion still says which card it is about. */
+    const derived = '任務覆蓋 0 / 15 個審核單位 · 待審 15 個 · 未達定稿門檻 15 個';
+    await expect(
+      reviewerView.locator('.list-item[data-example-task-id="T003"] .list-item-detail')
+    ).toHaveText(derived);
+    await expect(
+      reviewerView.locator('.list-item[data-example-task-id="T005"] .list-item-detail')
+    ).toHaveText(derived);
     await expect(reviewerView.getByRole('button', { name: /快速審核|Quick Review/ })).toHaveCount(17);
   });
 

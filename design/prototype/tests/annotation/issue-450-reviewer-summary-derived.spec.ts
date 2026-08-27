@@ -17,9 +17,12 @@
  *     read it.
  *   - coverage is share-of-units-past-待審, NOT a completion rate: T016
  *     sits at 5 / 5 coverage while still disclosing 未達定稿門檻 3 · 爭議中 1.
- *   - a task with no stored annotator submissions has nothing to derive and
- *     keeps its seeded illustrative summary (`derivable: false`) -- the
- *     condition is the presence of review-unit data, never a task id.
+ *   - `derivable: false` reports "no unit has been reviewed yet" and is
+ *     keyed on the presence of review-unit data, never on a task id.
+ *     (Issue #501 later removed the consumer fallback it used to gate: a
+ *     task nobody has reviewed has a summary the formula states truthfully,
+ *     so the seeds stopped carrying a competing one. The flag itself still
+ *     describes the state accurately and is pinned below.)
  */
 import { test, expect, type Page } from '@playwright/test';
 import { buildListUrl, buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
@@ -85,9 +88,9 @@ test.describe('issue #450 -- the reviewer summary formula', () => {
     }
   });
 
-  /* Generalization-First: the fallback is keyed on "no derivable review-unit
-     state", not on a task id list. T001 ships mock rows but no stored
-     annotator submissions, so nothing can be derived for it. */
+  /* Generalization-First: the flag is keyed on "no unit reviewed yet", not
+     on a task id list. T001 ships mock rows but no stored annotator
+     submissions, so no unit of it has been reviewed. */
   test('a task without stored review-unit state reports derivable: false', async ({ page }) => {
     await page.goto(T015_LIST_URL);
 
@@ -167,13 +170,26 @@ test.describe('issue #450 -- dashboard reviewer card', () => {
       .toContainText('任務覆蓋 4 / 4 個審核單位 · 未達定稿門檻 1 個 · 爭議中 1 個 · IAA 無法計算');
   });
 
-  /* Non-derivable tasks keep their seeded illustrative summary, so the
-     13 legacy demo rows are untouched by this change. */
-  test('a task without derivable review-unit state keeps its seeded summary', async ({ page }) => {
+  /* Issue #501 closed the other half of this contract at the source: a
+     reviewer seed no longer carries a `detail` string at all, so no second
+     copy of the counters can drift back in behind the formula. Asserted on
+     the seed rather than on rendered text, because rendered text is what a
+     reintroduced seed would silently replace. */
+  test('reviewer seeds carry no summary text for the formula to compete with', async ({ page }) => {
     await openReviewerDashboard(page);
 
-    await expect(
-      page.locator('#reviewerTaskList [data-example-task-id="T001"] .list-item-detail'),
-    ).toHaveText('待審 7 個審核單位 · 任務覆蓋率 34% · IAA 0.80');
+    const detailFields = await page.evaluate(() => {
+      const seeds = (window as unknown as {
+        LabelSuiteAssignmentSeeds: { reviewer: { detail?: unknown }; annotator: { detail?: unknown } }[];
+      }).LabelSuiteAssignmentSeeds;
+      return {
+        reviewer: seeds.map((seed) => typeof seed.reviewer.detail),
+        annotator: seeds.map((seed) => typeof seed.annotator.detail),
+      };
+    });
+
+    expect(new Set(detailFields.reviewer)).toEqual(new Set(['undefined']));
+    // Annotator seeds are untouched: their stats have no formula behind them.
+    expect(new Set(detailFields.annotator)).toEqual(new Set(['object']));
   });
 });

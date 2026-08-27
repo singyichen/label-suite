@@ -360,15 +360,20 @@
      the live review-unit state (annotation-workspace.data.js
      computeReviewSummary -- the single formula source shared with
      annotation-list), so finishing a review updates the card instead of
-     leaving the seed's prebuilt string contradicting the unit rows. Tasks
-     with no stored review-unit state have nothing to derive and keep their
-     seeded illustrative summary. Applied before sortEntries() so the
-     progress sort orders by the same number the card shows. */
+     leaving the seed's prebuilt string contradicting the unit rows. Applied
+     before sortEntries() so the progress sort orders by the same number the
+     card shows.
+
+     Issue #501 dropped the `derivable` gate that used to hand a task with no
+     stored review state back to its seeded string. Nothing was being
+     protected: a task nobody has reviewed has a perfectly derivable summary
+     -- every unit 待審, 0% covered -- and the thirteen tasks that took the
+     fallback were the thirteen whose seeded numbers described no state that
+     existed anywhere. 0% is the honest answer; an invented 34% is not. */
   function deriveReviewerEntry(entry) {
     var workspaceData = global.LabelSuiteAnnotationWorkspaceData;
     if (!workspaceData || !workspaceData.computeReviewSummary) return entry;
     var summary = workspaceData.computeReviewSummary(entry.exampleTaskId, entry.runType);
-    if (!summary.derivable) return entry;
     var derived = {};
     Object.keys(entry).forEach(function (key) { derived[key] = entry[key]; });
     derived.detail = workspaceData.formatReviewSummary(summary, entry.iaa);
