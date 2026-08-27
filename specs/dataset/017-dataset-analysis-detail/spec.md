@@ -1,7 +1,7 @@
 ---
 功能分支: feat/dataset/017-dataset-analysis-detail
 建立日期: 2026-04-24
-版本: 2.1.2
+版本: 2.2.0
 狀態: Draft
 ---
 
@@ -103,7 +103,7 @@
     - `single_dim` / `multi_dim`：逐樣本標記值離散度（樣本內各標記員給值的標準差；`multi_dim` 取各維度離散度平均）
     - `entity_recognition` / `relation_identification`：該樣本的 pairwise F1（沿用 `OUTPUT_TYPE_IAA_REGISTRY` 對應主指標定義，逐樣本計算而非整體平均）
     - `sequence_tagging`：該樣本非 `O` token 分歧率（樣本內非 `O` token 中標記不一致者所佔比例）
-  - 本清單與 `annotation-015`（v3.0.0）dry_run 仲裁流程中的「divergent」分歧項為同源概念，可作為 reviewer 仲裁優先順序參考；本規格僅提供品質監控唯讀清單，不重複定義或修改仲裁規則，仲裁規則以 `annotation-015` 為準。
+  - **（v2.2.0 修正）** 本清單原引用 `annotation-015` v3.0.0 dry_run 共識仲裁流程中的「divergent」分歧項作為同源概念；該流程已於 `annotation-015` v4.0.0（見其「使用者故事 3」的「⚠️ v4.0.0 適用範圍再次收斂（BREAKING）」段落）整批廢止，不復存在。本清單為 017 品質監控獨立提供的唯讀觀測清單，分歧度計算單位（見下方逐型定義）由本規格自行定義，不外推、不依賴任何審核流程的仲裁結果；亦不與 `annotation-015` 現行審核單位（`ReviewUnit`，`sample_id × annotator_id × run_type`，FR-051）狀態機或爭議池混淆或互相驅動——兩者分屬品質監控與審核工作流的獨立機制，僅概念上皆處理「分歧」，資料來源與計算方式互不相依。
 - 逐型標記員品質排名（Annotator Quality Ranking 泛化版）：
   - `ANNOTATOR_QUALITY_RANKING_SCOPE = single_label | multi_label | single_dim | multi_dim | entity_recognition | relation_identification | sequence_tagging`（7 型；`free_text` 不參與排名）
   - 逐型一致率計算方式：
@@ -116,6 +116,9 @@
   - `BOUNDARY_DISAGREEMENT_SCOPE = entity_recognition | sequence_tagging`
   - `BOUNDARY_ERROR_TYPES = span_too_long | span_too_short | wrong_boundary`（部分重疊但邊界不一致的分類）
   - 定義：任兩位標記員對同一片段有重疊（partial overlap）但起訖位置不完全一致，即計入 partial-overlap 計算但不計入 strict 計算的案例；`BOUNDARY_DISAGREEMENT_SCOPE` 以外的輸出類型不適用。
+- 標記員被修改率（Annotator Modification Rate，v2.2.0 新增；獨立區塊，不併入 `ANNOTATOR_QUALITY_RANKING_SCOPE`／`AnnotatorQualityRankingEntry`——完整定義見 FR-040）：
+  - `ANNOTATOR_MODIFICATION_RATE_SCOPE = single_label | multi_label | single_dim | multi_dim | entity_recognition | relation_identification | sequence_tagging | free_text`（8 型全納，含 `free_text`；`ANNOTATOR_QUALITY_RANKING_SCOPE` 排除 `free_text` 是因其依賴多數決／合併聚合等跨標記員比對，被修改率的分子分母皆來自逐一審核單位的差異比對，`free_text` 可比照其餘 7 型計算，且是 `free_text` 唯一可能擁有的品質指標）
+  - 分子分母、排除規則與 run_type 範圍定義見 FR-040；本規格常數僅定義計算範圍。
 
 ## 流程圖
 
@@ -278,6 +281,8 @@ sequenceDiagram
 13. **Given** `outputs[]` 含 `LOW_CONSISTENCY_SAMPLE_SCOPE` 中任一型別（`single_label` / `multi_label` / `single_dim` / `multi_dim` / `entity_recognition` / `relation_identification` / `sequence_tagging`），**When** 進入品質監控，**Then** 該型別子區塊顯示「一致性最低樣本清單」，依 `DISAGREEMENT_SAMPLE_SORT` 由高到低排序，並依型別使用對應分歧度計算單位；`outputs[]` 含 `free_text` 時，該型別不顯示此清單。
 14. **Given** `outputs[]` 含 `ANNOTATOR_QUALITY_RANKING_SCOPE` 中任一型別，**When** 進入品質監控，**Then** 該型別子區塊顯示「標記員品質排名」，依型別對應一致率計算方式排序，且完成樣本數 `< IAA_SMALL_SAMPLE_THRESHOLD` 的標記員顯示小樣本估計警示但不被剔除；`outputs[]` 含 `free_text` 時，該型別不參與排名。
 15. **Given** `outputs[]` 含 `entity_recognition` 或 `sequence_tagging`，**When** 進入品質監控，**Then** 該型別子區塊顯示「邊界分歧分析」，統計部分重疊但邊界不一致的案例數與範例；其他輸出類型不顯示邊界分歧分析區塊。
+16. **Given** 任一輸出類型的有效樣本數 `< 2` 或有效標記員數 `< 2`（`De = 0`），**When** 檢視該型別的主要 IAA 指標，**Then** 顯示明確的「無法計算」狀態並附說明原因，不得顯示 `0.00` 或任何回退數值，且不阻擋使用者進入正式標記（FR-039）。
+17. **Given** 任一標記員名下、`annotation-015` 定義之審核單位（sample × annotator）中已有至少一位審核員提交決策，**When** 檢視「標記員被修改率」表格，**Then** 該標記員在對應 `output_type` 欄位顯示 `modified_units / reviewed_units` 之比率，其中 `pending`（無審核員提交）審核單位不計入分母，且分子不得以 `REVIEW_UNIT_STATUS.MODIFIED` 狀態值計數（FR-040）；表格為任務層級（列 = 標記員），置於逐輸出類型子區塊迴圈之外。
 
 **介面定義（需與 IA 導覽語意一致）**：
 
@@ -287,11 +292,14 @@ sequenceDiagram
   - `free_text` 子區塊改顯示「不適用—由審核員評估」狀態卡，不顯示指標數值
 - 區塊 A-1：`任務層級 x/y 達標徽章`（依 `IAA_COMPOSITE_BADGE_FORMAT` 與 `IAA_COMPOSITE_GATE_RULE`）
 - 區塊 A-2：`逐型一致性最低樣本清單`（`LOW_CONSISTENCY_SAMPLE_SCOPE` 7 型各自子區塊；`free_text` 不顯示）
-  - 必要元素：清單標題（含型別名稱）、依 `DISAGREEMENT_SAMPLE_SORT` 排序的樣本列（樣本識別、分歧度數值、文本摘要）、與 `annotation-015` dry_run 仲裁「divergent」同源概念的說明文字
+  - 必要元素：清單標題（含型別名稱）、依 `DISAGREEMENT_SAMPLE_SORT` 排序的樣本列（樣本識別、分歧度數值、文本摘要）、說明文字（標註本清單為 017 獨立定義的品質監控觀測清單，分歧度計算不依賴或修改 `annotation-015` 審核流程；**v2.2.0 修正**：原文字引用 `annotation-015` v3.0.0 已廢止的 dry_run 仲裁「divergent」概念，予以移除）
 - 區塊 A-3：`逐型標記員品質排名`（`ANNOTATOR_QUALITY_RANKING_SCOPE` 7 型各自子區塊；`free_text` 不顯示）
   - 必要元素：排名表（標記員、一致率數值、名次）、小樣本估計警示標示
 - 區塊 A-4：`邊界分歧分析`（僅 `entity_recognition`、`sequence_tagging` 顯示）
   - 必要元素：`BOUNDARY_ERROR_TYPES` 分類案例計數、案例範例列表
+- 區塊 A-5：`標記員被修改率`（v2.2.0 新增，`ANNOTATOR_MODIFICATION_RATE_SCOPE` 8 型全納；任務層級表格，見 FR-040）
+  - 必要元素：任務層級表格（列 = 標記員，欄 = 各 `output_type` 之 `modification_rate` + 總計）、小樣本估計警示標示
+  - 本區塊置於逐輸出類型子區塊迴圈**之外**，不逐型另建子區塊
 - 區塊 B：`共用品質監控功能區`
   - 必要元素依顯示順序為：異常偵測（速度異常 / 離群值）、標記員風險評估（個別速度 / 個別 IAA vs 群體平均）、`標記一致性偏離分析`（可比較單位數、`離群值(1.5xSTD)筆數`、`離群值(1.5xSTD)比例`、`離群值(2xSTD)筆數`、`離群值(2xSTD)比例`）
 - 區塊 C：`Quality 空狀態`
@@ -305,8 +313,10 @@ sequenceDiagram
 - 每個輸出類型子區塊在 ready state 下需固定依序呈現：主要／輔助 IAA 指標 → 一致性最低樣本清單（`LOW_CONSISTENCY_SAMPLE_SCOPE` 範圍內）→ 標記員品質排名（`ANNOTATOR_QUALITY_RANKING_SCOPE` 範圍內）→ 邊界分歧分析（`BOUNDARY_DISAGREEMENT_SCOPE` 範圍內）；`free_text` 子區塊僅顯示「不適用」狀態卡。
 - 共用品質監控區塊在 ready state 下需固定依序呈現：異常偵測 → 標記員風險評估 → `標記一致性偏離分析`。
 - `標記一致性偏離分析` 為觀測型區塊，不可直接覆寫 `AnnotatorRiskAssessment.risk_level`；若需影響風險等級，必須另行明確定義規則。
-- 「一致性最低樣本清單」為唯讀觀測清單，不可直接觸發或修改 `annotation-015` 的 dry_run 仲裁狀態；僅供 reviewer 判讀優先順序參考。
+- 「一致性最低樣本清單」為唯讀觀測清單，不可直接觸發或修改 `annotation-015` 現行審核單位（`ReviewUnit`）狀態機（FR-051：`pending | approved | modified | disputed | finalized`）或爭議池仲裁結果；僅供 reviewer 判讀優先順序參考，兩者資料來源與計算方式互不相依（**v2.2.0 修正**：原文字引用 `annotation-015` v3.0.0 已於其 v4.0.0 廢止的 dry_run 共識仲裁流程，予以更正）。
 - 「標記員品質排名」與「標記一致性偏離分析」為互補但不同的觀測面向：前者為與共識/gold 的一致率排名，後者為標準差偏離統計；兩者不得互相覆寫或合併顯示為單一分數。
+- 「標記員品質排名」（`ANNOTATOR_QUALITY_RANKING_SCOPE`）與「標記員被修改率」（`ANNOTATOR_MODIFICATION_RATE_SCOPE`）為互補但不同的觀測面向：前者為與多數決/合併聚合參考值的一致率排名（7 型，`free_text` 除外），後者為與審核員決策的差異比率（8 型全納，含 `free_text`）；兩者為分屬不同區塊（A-3 與 A-5）的獨立資料，不得互相覆寫或合併顯示為單一分數（FR-040）。
+- 任一輸出類型的主要 IAA 指標於有效樣本數 `< 2` 或有效標記員數 `< 2` 時，必須顯示「無法計算」狀態並附說明原因，不得回退顯示 `0.00`，且不得阻擋使用者進入正式標記（FR-039）。
 - quality tab 需同時輸出可供列表頁使用的 `IAA_SUMMARY_STATES` 摘要狀態，且該狀態必須依 `IAA_COMPOSITE_GATE_RULE` 由逐型結果推導，不得由單一輸出類型結果直接代表整體。
 - 完成標記員數 `n < IAA_SMALL_SAMPLE_THRESHOLD` 時顯示小樣本估計警示徽章，且不影響達標判定與點估計顯示。
 
@@ -417,10 +427,27 @@ sequenceDiagram
 - **FR-030**: `multi_dim` 任務的標記員風險等級必須以 `DIMENSION_RISK_AGGREGATION` 規則（取各維度中較高等級）決定；各維度的原因分類需分開標示，不合併顯示。
 - **FR-034**: 當任一輸出類型完成標記員數 `n < IAA_SMALL_SAMPLE_THRESHOLD` 時，quality tab 必須在該指標旁顯示中性「小樣本估計」警示徽章；此徽章不得阻擋 `IAA_COMPOSITE_GATE_RULE` 判定，且點估計仍須正常顯示。
 - **FR-035**: 系統必須為 `LOW_CONSISTENCY_SAMPLE_SCOPE`（`single_label` / `multi_label` / `single_dim` / `multi_dim` / `entity_recognition` / `relation_identification` / `sequence_tagging` 共 7 型；`free_text` 除外）逐型提供「一致性最低樣本清單」，依 `DISAGREEMENT_SAMPLE_SORT` 由高到低排序，且分歧度計算單位須依輸出類型分別採用投票分裂度（`single_label`/`multi_label`）、標記值離散度（`single_dim`/`multi_dim`）、逐樣本 pairwise F1（`entity_recognition`/`relation_identification`）或非 `O` token 分歧率（`sequence_tagging`）。
-- **FR-035A**: 「一致性最低樣本清單」必須標註其與 `annotation-015`（v3.0.0）dry_run 仲裁流程中的「divergent」分歧項為同源概念，可作為 reviewer 仲裁優先順序參考；本規格不得重複定義或修改 `annotation-015` 的仲裁規則，仲裁行為以 `annotation-015` 為準。
+- **FR-035A**：「一致性最低樣本清單」為 017 自行定義的品質監控唯讀觀測清單，分歧度計算單位（見規格常數區逐型定義）由本規格獨立擁有，不得外推或依賴任何審核流程的仲裁結果；亦不得直接觸發或修改 `annotation-015` 現行審核單位狀態機（FR-051）或爭議池仲裁狀態。（**v2.2.0 修正**：原條文引用 `annotation-015` v3.0.0 dry_run 共識仲裁流程中的「divergent」分歧項作為同源概念——該流程已於 `annotation-015` v4.0.0〔見其「使用者故事 3」的「⚠️ v4.0.0 適用範圍再次收斂（BREAKING）」段落〕整批廢止，繼續援引將形成 017 ↔ 015 的循環授權；本條文修正為 017 自行定義，不再外推。）
 - **FR-036**: 系統必須為 `ANNOTATOR_QUALITY_RANKING_SCOPE`（同 7 型；`free_text` 不參與）逐型提供標記員品質排名：`single_label`/`multi_label` 依與多數決一致率排序、`single_dim`/`multi_dim` 依與平均值的平均絕對偏差（MAD）由低到高排序、`entity_recognition`/`relation_identification` 依與合併聚合參考值的 F1 排序、`sequence_tagging` 依與多數決 token 標記一致率排序；排名須套用 `IAA_SMALL_SAMPLE_THRESHOLD` 小樣本警示規則，完成樣本數不足者顯示警示但不得從排名中剔除。
 - **FR-037**: 系統必須為 `BOUNDARY_DISAGREEMENT_SCOPE`（僅 `entity_recognition`、`sequence_tagging` 兩型）提供「邊界分歧分析」，統計 `BOUNDARY_ERROR_TYPES` 分類下部分重疊但邊界不一致的案例數與範例；`BOUNDARY_DISAGREEMENT_SCOPE` 以外的輸出類型不得顯示邊界分歧分析內容。
 - **FR-038**: 標記員風險表的建議行動按鈕必須可導頁（僅 `RISK_ACTION_ALLOWED_ROLE` 可觸發，見 FR-029）：「審核標記」導向 `/annotation-list?task_id={task_id}&role=reviewer&run_type=dry_run`（品質分析以 dry run 完成為前提，見 `QUALITY_EMPTY_STATE_TRIGGER`）；「調整參與狀態」導向 `/task-detail/{task_id}?tab=member-management`。
+- **FR-039**（v2.2.0 新增，IAA 閘門語意跨模組唯一權威來源）：本規格為 IAA（Inter-Annotator Agreement）閘門語意的唯一權威來源（SSoT）；`task-management-014`、`annotation-015` 及其他模組對 IAA 閘門行為的呈現須以本條為準，不得另行定義或推導出不同語意。核心語意如下：
+  1. **顧問性、非阻擋**：IAA 為顧問性指標，`waiting_iaa_confirmation`（或等義）狀態語意為「軟性警告 + 需人工確認」，非硬性閘門；α 未達 `OUTPUT_TYPE_IAA_REGISTRY` 門檻時系統必須顯示明顯警示，但不得阻擋使用者進入正式標記（承接並升格 FR-034 之既有語意為跨模組正典）。
+  2. **輸入僅限標記員原始標記**：α 計算的輸入僅為標記員（`annotator`）於 `outputs[]` 各輸出類型的原始作答；審核員（`reviewer`）並非一位 rater，其審核修正值（`annotation-015` FR-051／FR-052 定義之審核單位差異）不得併入 α 計算。
+  3. **逐回合計算**：α 以單一試標回合（`trial_round`）為計算單位，不得跨回合累積計算。
+  4. **樣本或標記員數不足時必須顯示「無法計算」**：Krippendorff nominal α 於 `De = 0`（有效樣本 `< 2` 或有效標記員 `< 2`）時數學上未定義；此情境系統必須顯示明確的「無法計算」狀態並說明原因，不得回退顯示 `0.00` 等任何數值，亦不得阻擋流程。
+  5. **排除與停用成員**：被 `task-management-014` FR-005h 明確排除之標記作業（`ExcludedAnnotationAssignment`）不計入 α；已停用成員之既有標記仍計入 α（沿用 `task-management-014` FR-005l 既有語意）；本規格不重新定義前述兩條排除規則，僅引用其結果。
+  6. **Bypass 視為缺值**：標記員於某輸出類型 bypass 時，該筆作答於該 outKey 上視為缺值（missing value），不計入 α 之分母，不得視為一個與其他標記員實際答案比對的「空白答案」。
+- **FR-040**（v2.2.0 新增，標記員被修改率；獨立區塊，見 `ANNOTATOR_MODIFICATION_RATE_SCOPE`）：系統必須為每位標記員逐輸出類型計算並顯示「被修改率」（`AnnotatorModificationRateEntry`，見關鍵實體），定義如下：
+  - **分子**：該標記員名下、`annotation-015` FR-051 定義之審核單位中，經審核員實際更動答案者之數量，判定依據為 FR-052 定義之逐輸出類型差異比對結果（「是否相同」為 `false` 之審核單位）。**不得**以 `REVIEW_UNIT_STATUS.MODIFIED`（FR-051）狀態值計數——該狀態語意為「有改動且已審人數 `< min_reviewers`」，達法定人數之改動單位會落至 `disputed` 或 `finalized`，若以 `modified` 計數將系統性漏計所有已達法定人數的改動單位。
+  - **分母**：該標記員名下、已有至少一位審核員提交決策之審核單位數（即排除 `pending` 狀態）。未審 ≠ 未修改；若含 `pending` 將使審核覆蓋率低的任務被系統性低估被修改率。標記員本人未提交者不成立審核單位，自然排除於分子與分母。
+  - **排除規則一（Bypass）**：標記員 bypass 之輸出類型不計入該筆差異比對之分子與分母。**資料層缺口**：本版原型的 `convertSubmissionAnswer()`（`design/prototype/pages/annotation/annotation-workspace.data.js`）產出之 CompactAnswer 不攜帶 `annotation-015` `OutputAnswer.bypass` 旗標（關鍵實體），比對函式因此無法區分「bypass」與「空白未作答」；本規格明文列為獨立實作項——需將 `bypass` 旗標帶入 CompactAnswer，原型現況不落實此排除規則。
+  - **排除規則二（已排除作業）**：`task-management-014` FR-005h 之 `ExcludedAnnotationAssignment` 不計入分子與分母。**原型不落實**：原型的排除清單為 task-detail 頁面之區域記憶體變數、不持久化，標記工作區對其零知悉；本規則待後端共用儲存接上後方可驗證。
+  - **不得以退回／通過決策定義被修改率**：原型送出審核時 approve／reject 僅寫入自由文字歷程摘要，無結構化 decision 欄位；且「退回但未修改答案」與「退回並修改答案」為規格明文承認之兩種獨立組合。若日後需「被退回率」指標，需先新增結構化 decision 儲存，屬另一項變更，本條不涵蓋。
+  - **小樣本規則**：沿用 `IAA_SMALL_SAMPLE_THRESHOLD`（現有常數，值 5）；樣本數不足者顯示小樣本估計警示，不得從清單中剔除。
+  - **run_type 範圍**：指標定義本身與 `run_type` 無關，`dry_run` 與 `official_run` 皆適用——`official_run` 每筆樣本恰指派一位標記員（`task-management-014` FR-010f-4），標記員間無重疊、α 無法計算，被修改率為 `official_run` 下唯一可能的逐標記員品質訊號；且 `annotation-015` FR-051／FR-052 明文禁止依 `run_type` 分流呈現。**但本版呈現僅落地 `dry_run` 區塊**：quality tab 現行整體綁定 `dry_run`（`QUALITY_EMPTY_STATE_TRIGGER`、`QUALITY_TAB_STATES`、FR-017、FR-024C、FR-038 皆硬寫 `run_type=dry_run`），本版不擴充 quality tab 的 `run_type` 範圍，`official_run` 的呈現位置待後續變更定案。
+  - **呈現形狀**：`AnnotatorModificationRateEntry` 於品質監控 tab 以任務層級表格呈現（列 = 標記員，欄 = 各 `output_type` 之被修改率 + 總計），置於逐輸出類型迴圈**之外**，不逐型另建子區塊——分母以審核單位（sample × annotator）為準，本質是逐標記員一個數字，逐型拆分將使每個型別各自產生資訊密度極低的三列小表。
+  - 系統必須依 `ANNOTATOR_MODIFICATION_RATE_SCOPE`（8 型全納，含 `free_text`）逐型計算被修改率；`free_text` 雖被 `IAA_GATE_EXCLUDED_TYPES` 排除於自動 IAA，被修改率不受此排除，為 `free_text` 唯一可能擁有的品質指標。
 
 ### 使用者流程與導頁 *(必填)*
 
@@ -476,11 +503,12 @@ flowchart LR
 - **SampleDivergenceFlag**: 樣本層級高分歧旗標，包含 `sample_id`、`divergence_score`、`outlier_annotator_ids`（非一致標記員清單）；與 `AnnotatorRiskAssessment` 分離儲存與顯示。
 - **SmallSampleFlag**: 小樣本估計旗標，包含 `output_type`、`completed_annotator_count`、`is_small_sample`（`completed_annotator_count < IAA_SMALL_SAMPLE_THRESHOLD`）。
 - **LowConsistencySampleEntry**: 一致性最低樣本清單單筆項目，包含 `output_type`、`sample_id`、`divergence_score`、`divergence_metric_name`（依型別而異：`vote_split` / `value_dispersion` / `pairwise_f1` / `non_o_token_disagreement_rate`）、`text_summary`。
-- **LowConsistencySampleList**: 單一輸出類型的一致性最低樣本清單，包含 `output_type`、`entries[]`（`LowConsistencySampleEntry`，依 `DISAGREEMENT_SAMPLE_SORT` 排序，上限 `LOW_CONSISTENCY_SAMPLE_LIST_SIZE`）；僅 `LOW_CONSISTENCY_SAMPLE_SCOPE` 範圍內型別產生本清單，與 `annotation-015` dry_run 仲裁「divergent」概念同源但不共用資料寫入路徑。
+- **LowConsistencySampleList**: 單一輸出類型的一致性最低樣本清單，包含 `output_type`、`entries[]`（`LowConsistencySampleEntry`，依 `DISAGREEMENT_SAMPLE_SORT` 排序，上限 `LOW_CONSISTENCY_SAMPLE_LIST_SIZE`）；僅 `LOW_CONSISTENCY_SAMPLE_SCOPE` 範圍內型別產生本清單；分歧度計算與資料寫入路徑皆由 017 獨立擁有，不與 `annotation-015` 現行審核單位（`ReviewUnit`）狀態機或爭議池共用資料或互相驅動（**v2.2.0 修正**：移除已廢止之 v3.0.0 dry_run 仲裁「divergent」同源概念引用）。
 - **AnnotatorQualityRankingEntry**: 標記員品質排名單筆項目，包含 `output_type`、`annotator_id`、`consistency_score`、`metric_name`（依型別而異：`majority_agreement_rate` / `mad_to_mean` / `f1_to_merged_reference` / `token_majority_agreement_rate`）、`rank`、`small_sample_flag`。
 - **BoundaryDisagreementSummary**: 單一輸出類型（僅 `entity_recognition`、`sequence_tagging`）的邊界分歧統計，包含 `output_type`、`error_type_counts`（依 `BOUNDARY_ERROR_TYPES` 分類的案例數）、`examples[]`（`BoundaryDisagreementExample`）。
 - **BoundaryDisagreementExample**: 單一邊界分歧案例，包含 `sample_id`、`error_type`（`BOUNDARY_ERROR_TYPES`）、`annotator_spans[]`（各標記員標記的邊界範圍，供比對顯示）。
-- **QualityTabState**: quality tab 狀態，包含 `view_state`（`loading | dry_run_in_progress | report_pending | report_generating | ready | error`）、`output_type_iaa_reports[]`（依 `outputs[]` 順序）、`iaa_composite_summary`、`low_consistency_sample_lists[]`（`LOW_CONSISTENCY_SAMPLE_SCOPE` 範圍內型別）、`annotator_quality_rankings[]`（`ANNOTATOR_QUALITY_RANKING_SCOPE` 範圍內型別）、`boundary_disagreement_summaries[]`（`BOUNDARY_DISAGREEMENT_SCOPE` 範圍內型別）、`anomaly_detection`、`annotator_consistency_deviation`、`annotator_profiles`、`empty_state`、`loading_state`。
+- **AnnotatorModificationRateEntry**（v2.2.0 新增，見 FR-040）：標記員被修改率單筆項目，包含 `task_id`、`run_type`、`trial_round?`、`annotator_id`、`output_type`（`ANNOTATOR_MODIFICATION_RATE_SCOPE`，8 型全納）、`modified_units`（分子：經審核員實際更動答案之審核單位數，依 `annotation-015` FR-052 差異比對，非 `REVIEW_UNIT_STATUS.MODIFIED` 狀態計數）、`reviewed_units`（分母：已有至少一位審核員提交決策之審核單位數，排除 `pending`）、`modification_rate`（`modified_units / reviewed_units`）、`small_sample_flag`（沿用 `IAA_SMALL_SAMPLE_THRESHOLD`）。與 `AnnotatorQualityRankingEntry` 為分屬不同區塊的獨立實體，不共用資料結構或呈現位置（理由見規格常數區「標記員被修改率」）。
+- **QualityTabState**: quality tab 狀態，包含 `view_state`（`loading | dry_run_in_progress | report_pending | report_generating | ready | error`）、`output_type_iaa_reports[]`（依 `outputs[]` 順序）、`iaa_composite_summary`、`low_consistency_sample_lists[]`（`LOW_CONSISTENCY_SAMPLE_SCOPE` 範圍內型別）、`annotator_quality_rankings[]`（`ANNOTATOR_QUALITY_RANKING_SCOPE` 範圍內型別）、`boundary_disagreement_summaries[]`（`BOUNDARY_DISAGREEMENT_SCOPE` 範圍內型別）、`annotator_modification_rates[]`（`AnnotatorModificationRateEntry`，任務層級表格，`ANNOTATOR_MODIFICATION_RATE_SCOPE` 範圍內型別，v2.2.0 新增）、`anomaly_detection`、`annotator_consistency_deviation`、`annotator_profiles`、`empty_state`、`loading_state`。
 
 ---
 
@@ -503,8 +531,8 @@ flowchart LR
 |--------|---------|------------------------------|
 | shared-008 | Shared Sidebar Navbar | 登入後共用導覽結構與 active 規則（資料集分析 L0 項） |
 | task-management-013 | New Task | `OUTPUT_TYPE_REGISTRY`、8 個 `OUTPUT_TYPE_KEYS`、`outputs[]` producer contract 與 `item_pair_labels` 欄位命名 |
-| task-management-014 | Task Detail | `task_id`、`outputs[]`；Dry Run / Official Run 狀態；空狀態按鈕導回目標 |
-| annotation-015 | Annotation Workspace | 已提交標記結果（依 `outputs[]` 結構）作為統計資料與 IAA 計算輸入來源；v3.0.0 dry_run 仲裁流程「divergent」分歧項概念為「一致性最低樣本清單」的同源參照（本規格不重複定義仲裁規則） |
+| task-management-014 | Task Detail | `task_id`、`outputs[]`；Dry Run / Official Run 狀態；空狀態按鈕導回目標；`ExcludedAnnotationAssignment`（FR-005h，排除作業不計入 α 與被修改率）與停用成員既有標記語意（FR-005l，既有標記仍計入） |
+| annotation-015 | Annotation Workspace | 已提交標記結果（依 `outputs[]` 結構）作為統計資料與 FR-039 逐型 IAA 計算輸入來源（僅計入標記員原始標記，不含審核員修正）；現行審核單位狀態機 `ReviewUnit`／`REVIEW_UNIT_STATUS`（FR-051）與逐輸出類型差異比對（FR-052）作為 FR-040 被修改率計算依據；`OutputAnswer.bypass` 契約（關鍵實體）為 FR-040 排除規則一所需之資料層變更基礎（**v2.2.0 修正**：移除原「一致性最低樣本清單」與 `annotation-015` v3.0.0 dry_run 仲裁「divergent」分歧項同源參照——該流程已於 `annotation-015` v4.0.0〔見其「使用者故事 3」的「⚠️ v4.0.0 適用範圍再次收斂（BREAKING）」段落〕廢止，017 現為 IAA 語意 SSoT，不再對已死流程外推權威） |
 | dataset-016 | Dataset Analysis List | 模組入口任務列表、task card 導向 detail 頁規格、`IAA_BADGE_STATES` |
 | dashboard-012 | Dashboard | IAA 待確認 badge deep link 規格與通知機制 |
 
@@ -543,9 +571,13 @@ flowchart LR
 - **SC-023**: 完成標記員數 `n < IAA_SMALL_SAMPLE_THRESHOLD` 時，指標旁正確顯示小樣本估計警示徽章，且不影響達標判定與點估計顯示。
 - **SC-024**: `sequence_tagging` 的 Token-level Alpha 計算正確遮罩全體標記員皆標為 `O` 的 token，不因 `O` 佔多數造成指標虛高。
 - **SC-025**: `multi_label` 巨集平均計算正確排除正例出現次數 `< IAA_LABEL_MIN_POSITIVE` 的稀有標籤，並顯示排除清單。
-- **SC-026**: `LOW_CONSISTENCY_SAMPLE_SCOPE`（7 型）皆能正確顯示依 `DISAGREEMENT_SAMPLE_SORT` 排序、依型別採對應分歧度計算單位的一致性最低樣本清單；`free_text` 不顯示本清單；清單旁正確顯示與 `annotation-015` dry_run「divergent」同源概念的說明文字。
+- **SC-026**: `LOW_CONSISTENCY_SAMPLE_SCOPE`（7 型）皆能正確顯示依 `DISAGREEMENT_SAMPLE_SORT` 排序、依型別採對應分歧度計算單位的一致性最低樣本清單；`free_text` 不顯示本清單；清單旁正確顯示 017 自行定義（不外推 `annotation-015` 仲裁規則）的說明文字。
 - **SC-027**: `ANNOTATOR_QUALITY_RANKING_SCOPE`（7 型）皆能正確顯示依型別對應一致率計算方式排序的標記員品質排名；`free_text` 不參與排名；完成樣本數不足 `IAA_SMALL_SAMPLE_THRESHOLD` 的標記員正確顯示小樣本估計警示且未被剔除。
 - **SC-028**: `entity_recognition`、`sequence_tagging` 正確顯示邊界分歧分析（案例數與範例）；其餘輸出類型不顯示該區塊內容。
+- **SC-029**（v2.2.0 新增，FR-039）：有效樣本數 `< 2` 或有效標記員數 `< 2` 時，任一輸出類型的主要 IAA 指標正確顯示「無法計算」狀態並附說明原因，不顯示 `0.00`，且不阻擋使用者進入正式標記。
+- **SC-030**（v2.2.0 新增，FR-039）：α 計算輸入正確排除審核員修正值、`task-management-014` FR-005h 排除作業與 bypass 缺值；已停用成員之既有標記正確仍計入。
+- **SC-031**（v2.2.0 新增，FR-040）：「標記員被修改率」表格中，`modified_units` 計數正確以 `annotation-015` FR-052 差異比對結果為準（而非 `REVIEW_UNIT_STATUS.MODIFIED` 狀態值），`reviewed_units` 正確排除 `pending` 審核單位。
+- **SC-032**（v2.2.0 新增，FR-040）：`ANNOTATOR_MODIFICATION_RATE_SCOPE`（8 型全納，含 `free_text`）皆能正確顯示於任務層級表格；表格位置在逐輸出類型子區塊迴圈之外，不逐型另建子區塊。
 
 ---
 
@@ -553,6 +585,7 @@ flowchart LR
 
 | Version | Date | Change Summary |
 | --- | --- | --- |
+| 2.2.0 | 2026-08-27 | **017 成為 IAA 閘門語意與標記員被修改率之跨模組唯一權威來源（SSoT，minor）**：六張 issue（#488/#489/#490/#491/#492/#456）收斂到同一根因——試標品質數值缺乏 SSoT，經維護者裁決 017 承接此角色。新增 **FR-039**（IAA 閘門語意 SSoT）：定案並升格為跨模組正典（1）IAA 為顧問性指標、`waiting_iaa_confirmation` 為軟性警告不阻擋流程（承接並升格既有 FR-034 語意）；（2）α 輸入僅限標記員原始標記，審核員修正值不計入；（3）α 以單一 `trial_round` 為計算單位、不跨回合累積；（4）`De = 0`（有效樣本 `< 2` 或有效標記員 `< 2`）時必須顯示「無法計算」，不得回退顯示 `0.00` 或阻擋流程；（5）排除規則明文引用 `task-management-014` FR-005h（排除作業不計入）與 FR-005l（停用成員既有標記仍計入），不重新定義；（6）Bypass 視為缺值，不計入分母、不得比對為空白答案。新增 **FR-040**（標記員被修改率，另立區塊）：新規格常數 `ANNOTATOR_MODIFICATION_RATE_SCOPE`（8 型全納，含 `free_text`——與 `ANNOTATOR_QUALITY_RANKING_SCOPE` 排除 `free_text` 之 7 型範圍刻意不同，理由是被修改率不依賴跨標記員比對，且是 `free_text` 唯一可能擁有的品質指標，故未併入既有 FR-036／`AnnotatorQualityRankingEntry`）；新實體 `AnnotatorModificationRateEntry`；分子明文禁止以 `annotation-015` `REVIEW_UNIT_STATUS.MODIFIED`（FR-051）狀態值計數（該狀態語意為「有改動且未達 `min_reviewers` 門檻」，會漏計所有已達門檻的改動單位），須改以 FR-052 逐輸出類型差異比對結果為準；分母排除 `pending`（未審 ≠ 未修改）；呈現形狀為任務層級表格（列 = 標記員），置於逐輸出類型迴圈之外，區塊 A-5。**run_type 範圍限縮**：指標定義本身與 `run_type` 無關（`official_run` 每筆樣本恰一位標記員、α 無法計算，被修改率為其唯一逐標記員品質訊號），但本版呈現僅落地 `dry_run` 區塊，因 quality tab 現行整體綁定 `dry_run`（`QUALITY_EMPTY_STATE_TRIGGER` 等）；`official_run` 呈現位置留待後續變更。**兩項規格可寫但原型不落實，明文記載**：(1) 排除規則一（Bypass）需要 `annotation-015` `OutputAnswer.bypass` 旗標帶入原型 `convertSubmissionAnswer()` 的 CompactAnswer 輸出（現況不帶）；(2) 排除規則二（`ExcludedAnnotationAssignment`）需要後端共用儲存，原型排除清單現為 task-detail 頁面區域記憶體變數、標記工作區零知悉。新增使用者故事 3 驗收情境 16、17 與 SC-029 ~ SC-032。**修正反向懸空引用**：規格常數區「逐型一致性最低樣本清單」段落、FR-035A、行為規則段落、`LowConsistencySampleList` 實體、規格相依性表 `annotation-015` 列、SC-026 共 6 處原引用 `annotation-015`（v3.0.0）dry_run 共識仲裁流程中的「divergent」分歧項為同源概念、並宣告「仲裁行為以 `annotation-015` 為準」——該流程已於 `annotation-015` v4.0.0（見其「使用者故事 3」的「⚠️ v4.0.0 適用範圍再次收斂（BREAKING）」段落）整批廢止，繼續援引將形成 017 ↔ 015 循環授權（017 已為 IAA SSoT，卻將仲裁權威外推回已死流程）；修正為 017 自行定義一致性最低樣本清單，不再外推仲裁規則，並改引用 `annotation-015` 現行審核單位狀態機（`ReviewUnit`／`REVIEW_UNIT_STATUS`，FR-051）與爭議池作為對照說明。規格相依性表同步更新 `task-management-014`／`annotation-015` 兩列，明確列出 FR-005h／FR-005l／FR-051／FR-052／`OutputAnswer.bypass` 為本版新增之上游引用。 |
 | 2.1.2 | 2026-08-24 | Issue #261 drift 修正（FR-002 / `INVALID_TASK_TRIGGER`）：`dataset-analysis-detail.html` 的 `applyRouteTask()` 先前對未知或缺漏的 `task_id` 靜默回退至 `DEFAULT_TASK_ID`（T001），與本規格 FR-002／邊界情況「`task_id` 不存在或無成員資格時導回 `/dataset-analysis` 並顯示錯誤提示」不符——規格條文原本正確，僅原型未落實。修正為 init 階段先驗證 `task_id` 是否存在於 `TASK_META`，不存在則導向 `dataset-analysis-list.html?invalid_task=1`，列表頁讀取該參數並顯示錯誤 toast（新增 i18n 鍵 `toastInvalidTask`，zh／en 皆定義），顯示後即由既有 `syncUrl()` 清除該查詢參數。回歸測試：`dataset-analysis-detail-registry-mirror.spec.ts` 原本鎖定「未知 ID 仍回退預設任務」的測試改為斷言正確的導回行為，並新增「缺漏 `task_id`」情境；連帶修正兩個原本依賴回退行為省略 `task_id` 查詢字串的既有測試（`dataset-analysis-detail-panel-behavior.spec.ts`、`tests/shared/page-heading-baseline.spec.ts`）改為明確帶入有效 `task_id`。規格條文未變。 |
 | 2.1.1 | 2026-08-24 | Issue #261：新增 Prototype Traceability，明確對應 dataset-analysis-detail 主頁 shell、Stats／Quality 兩組共 16 個 partial 與設計層參考的責任邊界；規格條文未變。 |
 | 2.1.0 | 2026-08-18 | Fix issue #153: 定義標記員風險表建議行動按鈕的導頁行為（新增 FR-038）——「審核標記」導向 `/annotation-list?task_id=…&role=reviewer&run_type=dry_run`（品質分析以 dry run 為資料前提）、「調整參與狀態」導向 `/task-detail/:task_id?tab=member-management`；同步更新使用者流程圖與導頁表。原型以事件委派實作，行為僅 `project_leader` 可觸發（沿用 FR-029）。標記員篩選預填**未納入**：風險表顯示 display name 而 annotation-list 標記員為帳號 ID，兩側 roster 未對齊前預填會空篩，留待後續處理。 |

@@ -24,10 +24,54 @@
       reviewerId: reviewerId || '',
       /* issue #450: IAA is a structured seed value, not a slice of a
          prebuilt display string -- the derived reviewer summary composes
-         its own text and appends this number. Reviewer entries only. */
-      iaa: iaa === undefined ? null : iaa,
+         its own text and appends this number. Reviewer entries only.
+         issue #491: the three states stay distinct all the way to
+         formatReviewSummary -- a number, `null` for "derived, not
+         computable", and `undefined` for "this task has no IAA line".
+         Collapsing undefined into null here would make every task without
+         an IAA seed claim its agreement could not be computed. */
+      iaa: iaa,
     };
   }
+
+  /* issue #489/#491: T014's reviewer summary must show the IAA that
+   * computeIaaAlpha() derives from the marked submissions instead of an
+   * independent hardcoded figure -- the seed text, the seed's English
+   * text, and the workItem() `iaa` argument all read the same value.
+   * When alpha is not computable the label says so explicitly: 0.00 would
+   * misread as "total disagreement" when it actually means "not enough
+   * data" (issue #491), so a missing/undefined value never reaches the
+   * numeric slot either. computeIaaAlpha lives in
+   * annotation-workspace.data.js, loaded before this script on every page
+   * that includes both (dashboard.html, annotation-list.html); the guard
+   * below only protects against that script being absent entirely. */
+  function deriveDemoIaaAlpha(taskId, runType, outKey) {
+    var workspaceData = global.LabelSuiteAnnotationWorkspaceData;
+    if (!workspaceData || !workspaceData.computeIaaAlpha) return null;
+    var result = workspaceData.computeIaaAlpha(taskId, runType, outKey);
+    return result.computable ? result.alpha : null;
+  }
+
+  function demoIaaSummary(taskId, runType, outKey) {
+    var alpha = deriveDemoIaaAlpha(taskId, runType, outKey);
+    return {
+      value: alpha,
+      label: alpha === null
+        ? text('IAA 無法計算', 'IAA Not computable')
+        : text('IAA ' + alpha.toFixed(2), 'IAA ' + alpha.toFixed(2)),
+    };
+  }
+
+  var t014ReviewerIaa = demoIaaSummary('T014', 'dry_run', 'single_label');
+
+  /* T015-T017 are official_run: exactly one annotator per sample, so there
+   * is no second rater to disagree with -- alpha is undefined, not low.
+   * These seeds previously carried 0.81 / 0.68 / 0.70, fabricated precision
+   * for a measurement that cannot exist for this run type. Routed through
+   * the same helper so they say "not computable" instead of inventing one. */
+  var t015ReviewerIaa = demoIaaSummary('T015', 'official_run', 'single_label');
+  var t016ReviewerIaa = demoIaaSummary('T016', 'official_run', 'single_label');
+  var t017ReviewerIaa = demoIaaSummary('T017', 'official_run', 'single_label');
 
   /*
    * exampleTaskId is the real task id from task-list.data.js /
@@ -359,13 +403,13 @@
       ),
       reviewer: workItem(
         'dry-01-all-agree',
-        '任務覆蓋 9 / 15 個審核單位 · 待審 6 個 · IAA 0.72',
-        'Task coverage 9 / 15 review units · 6 pending · IAA 0.72',
+        '任務覆蓋 9 / 15 個審核單位 · 待審 6 個 · ' + t014ReviewerIaa.label.zh,
+        'Task coverage 9 / 15 review units · 6 pending · ' + t014ReviewerIaa.label.en,
         60,
         'dry_run',
         'pending_review',
         'reviewer_chen',
-        0.72
+        t014ReviewerIaa.value
       ),
     },
     {
@@ -381,13 +425,13 @@
       ),
       reviewer: workItem(
         'ofs-01-agree-gold',
-        '任務覆蓋 3 / 4 個審核單位 · 待審 1 個 · IAA 0.81',
-        'Task coverage 3 / 4 review units · 1 pending · IAA 0.81',
+        '任務覆蓋 3 / 4 個審核單位 · 待審 1 個 · ' + t015ReviewerIaa.label.zh,
+        'Task coverage 3 / 4 review units · 1 pending · ' + t015ReviewerIaa.label.en,
         75,
         'official_run',
         'pending_review',
         'reviewer_chen',
-        0.81
+        t015ReviewerIaa.value
       ),
     },
     {
@@ -403,13 +447,13 @@
       ),
       reviewer: workItem(
         'ofm-01-unanimous-gold',
-        '任務覆蓋 5 / 5 個審核單位 · 未達定稿門檻 3 個 · 爭議中 1 個 · IAA 0.68',
-        'Task coverage 5 / 5 review units · 3 short of finalize threshold · 1 disputed · IAA 0.68',
+        '任務覆蓋 5 / 5 個審核單位 · 未達定稿門檻 3 個 · 爭議中 1 個 · ' + t016ReviewerIaa.label.zh,
+        'Task coverage 5 / 5 review units · 3 short of finalize threshold · 1 disputed · ' + t016ReviewerIaa.label.en,
         100,
         'official_run',
         'in_progress',
         'reviewer_chen',
-        0.68
+        t016ReviewerIaa.value
       ),
     },
     {
@@ -425,13 +469,13 @@
       ),
       reviewer: workItem(
         'oft-01-even-tie',
-        '任務覆蓋 4 / 5 個審核單位 · 待審 1 個 · IAA 0.70',
-        'Task coverage 4 / 5 review units · 1 pending · IAA 0.70',
+        '任務覆蓋 4 / 5 個審核單位 · 待審 1 個 · ' + t017ReviewerIaa.label.zh,
+        'Task coverage 4 / 5 review units · 1 pending · ' + t017ReviewerIaa.label.en,
         80,
         'official_run',
         'pending_review',
         'reviewer_chen',
-        0.70
+        t017ReviewerIaa.value
       ),
     },
   ];
