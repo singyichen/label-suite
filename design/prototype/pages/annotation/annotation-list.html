@@ -667,8 +667,12 @@
 <script src="../../assets/analytics.js"></script>
 <script src="../task-management/task-list.data.js"></script>
 <script src="../task-management/task-detail.data.js"></script>
-<script src="../dashboard/dashboard.assignments.js"></script>
+<!-- issue #489: dashboard.assignments.js derives T014's reviewer IAA via
+     LabelSuiteAnnotationWorkspaceData.computeIaaAlpha() at load time, so
+     annotation-workspace.data.js must load first (dashboard.html already
+     orders them this way). -->
 <script src="annotation-workspace.data.js"></script>
+<script src="../dashboard/dashboard.assignments.js"></script>
 <script>
   /* ── i18n ─────────────────────────────────────────────────────── */
   var CURRENT_LANG = 'zh';
@@ -1811,7 +1815,7 @@
     var stats = findAssignmentStats(profile.id, context.role);
     var summaryText = reviewSummary
       ? window.LabelSuiteAnnotationWorkspaceData.formatReviewSummary(
-          reviewSummary, stats ? stats.iaa : null)
+          reviewSummary, stats ? stats.iaa : undefined)
       : (stats ? stats.detail : null);
     var detailParts = [];
     if (summaryText) {

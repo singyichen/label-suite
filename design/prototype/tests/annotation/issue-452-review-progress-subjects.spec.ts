@@ -55,7 +55,7 @@ test.describe('issue #452 — task-level coverage names the review-unit denomina
 
     const detail = page.locator('#taskInfoDetail');
     await expect(detail).toContainText(
-      '任務覆蓋 4 / 5 個審核單位 · 待審 1 個 · 未達定稿門檻 4 個 · 爭議中 1 個 · IAA 0.70',
+      '任務覆蓋 4 / 5 個審核單位 · 待審 1 個 · 未達定稿門檻 4 個 · 爭議中 1 個 · IAA 無法計算',
     );
     await expect(detail).not.toContainText('審核覆蓋率');
   });
@@ -64,7 +64,7 @@ test.describe('issue #452 — task-level coverage names the review-unit denomina
     await page.goto(buildListUrl({ task_id: 'T016', role: 'reviewer', run_type: 'official_run' }));
 
     await expect(page.locator('#taskInfoDetail')).toContainText(
-      '任務覆蓋 5 / 5 個審核單位 · 未達定稿門檻 3 個 · 爭議中 1 個 · IAA 0.68',
+      '任務覆蓋 5 / 5 個審核單位 · 未達定稿門檻 3 個 · 爭議中 1 個 · IAA 無法計算',
     );
   });
 
