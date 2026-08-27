@@ -45,8 +45,10 @@
       margin: 0 0 4px;
     }
     .page-subtitle { font-size: 14px; line-height: 1.8; color: var(--color-text-soft); margin: 0; }
-    /* design/system/MASTER.md §Breadcrumb (compact form, as in task-detail.html) */
-    .breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--color-text-soft);margin-bottom:12px}
+    /* design/system/MASTER.md §Breadcrumb (compact form). Placed BELOW the
+       heading block exactly as task-detail.html does: shared spec 008 FR-017
+       pins every page's h1 to the Dashboard's y, so nothing may precede it. */
+    .breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--color-text-soft);margin:-12px 0 16px}
     .breadcrumb a{color:var(--color-primary)}
     .breadcrumb a:hover{text-decoration:underline}
     .breadcrumb-sep{color:var(--color-ink-muted);font-size:11px}
@@ -575,11 +577,12 @@
 <main class="layout" data-testid="annotation-list-shell">
   <section class="page-header">
     <div>
-      <nav class="breadcrumb" aria-label="breadcrumb" id="entryBreadcrumb" data-testid="entry-breadcrumb"></nav>
       <h1 class="page-title" id="pageTitle">標記清單</h1>
       <p class="page-subtitle" id="pageSubtitle">請先選擇要處理的資料筆次，再進入標記作業頁。</p>
     </div>
   </section>
+
+  <nav class="breadcrumb" aria-label="breadcrumb" id="entryBreadcrumb" data-testid="entry-breadcrumb"></nav>
 
   <section class="list hidden" id="taskInfoCard" aria-label="任務資訊" data-testid="list-task-info-card">
     <article class="list-item">
