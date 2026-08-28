@@ -17,36 +17,23 @@ import {
  * multi_dim) renders two cards -- the FR-014N merged span card plus the
  * multi_dim card -- so the paragraph appears twice on one review unit.
  *
- * Measured before this change (page-level counts, official_run):
- *   T013 -> 2 review cards, 2 notes; T010 -> 1 card, 1 note;
- *   T001 -> 1 card, 1 note.
- * (The issue text predicted three notes on T013 by counting one per outKey;
- * FR-014N's merged span card already collapses two of the three.)
+ * This spec pins the STRUCTURAL half of that fix, which issue #550 left
+ * untouched: the note (now a tooltip, see issue-550-review-note-tooltip.
+ * spec.ts for its content and accessibility contract) is rendered exactly
+ * ONCE per review unit, above the card stack whose decision pairs it
+ * explains -- everything else the note is NOT allowed to disturb stays put:
+ * the decision buttons and their accessible names (issue #399), and the
+ * per-output-type original answers and correction titles.
  *
- * Issue #515 ③ / spec 015 v4.46.0 shortened the sentence but explicitly left
- * the repetition in place. This spec pins the remaining half: the note is
- * rendered exactly ONCE per review unit, above the card stack whose decision
- * pairs it explains, and everything the note is NOT allowed to disturb stays
- * put -- the decision buttons and their accessible names (issue #399), the
- * per-output-type original answers and correction titles, and the
- * run-type-branching consequence line (`ws-review-summary-effect`).
- *
- * The one deliberate copy change: the sentence used to say 本輸出類型 /
- * "for this output type", a deictic that resolved to the card the note sat
- * in. At unit level that referent no longer exists, so it becomes the
- * generic 該輸出類型 / "that output type" -- still accurate, because each
- * approve/reject pair is per outKey (FR-014P). The rest is verbatim.
+ * What issue #550 changed and is therefore NOT pinned here anymore: the note
+ * used to be one run-type-invariant string (AC-3.33-forbidden-branch
+ * reasoning) and deferred the submit consequence to a separate confirmation
+ * area. Both are gone -- the tooltip now legally branches on `run_type` and
+ * carries the consequence itself (see issue-550-review-note-tooltip.spec.ts).
  *
  * Traceability: specs/annotation/015-annotation-workspace/spec.md FR-070,
- * AC-3.40, AC-3.45; related FR-014N, FR-014P, FR-077, AC-3.33, AC-3.42,
- * AC-3.43.
+ * AC-3.40, AC-3.45 (revised v4.55.0, issue #550).
  */
-
-const NOTE_ZH =
-  '通過：採用標記員在該輸出類型的作答為審核結果。退回：記錄審核決策與修正差異；是否回退標記員狀態依試標／正式標記而異，實際影響見下方「送出前確認」。';
-
-const NOTE_EN =
-  'Approve: accept the annotator’s answer for that output type as the review result. Reject: records the review decision and any correction; whether the annotator status is rolled back differs between a dry run and an official run -- the actual effect is stated under “Confirm before submitting” below.';
 
 /* taskId / sampleId / how many review cards the task's outputs[] produce. */
 const CASES: Array<{ taskId: string; sampleId: string; cards: number; decisions: number; label: string }> = [
@@ -110,33 +97,10 @@ test.describe('the review decision note is rendered once per review unit (issue 
     expect(notePrecedesFirstCard).toBe(true);
   });
 
-  test('the unit-level copy is pinned verbatim in zh', async ({ page }) => {
-    await openReviewer(page, 'T013', 'absa-001', 'official_run');
-    await expect(page.getByTestId('ws-review-note')).toHaveText(NOTE_ZH);
-  });
-
-  test('the unit-level copy is pinned verbatim in en', async ({ page }) => {
-    await page.addInitScript(() => {
-      window.localStorage.setItem('labelsuite.lang', 'en');
-    });
-    await openReviewer(page, 'T013', 'absa-001', 'official_run');
-    await expect(page.getByTestId('ws-review-note')).toHaveText(NOTE_EN);
-  });
-
-  test('the note stays identical across run types (AC-3.33)', async ({ page }) => {
-    await openReviewer(page, 'T013', 'absa-001', 'dry_run');
-    const dryText = await page.getByTestId('ws-review-note').textContent();
-
-    await openReviewer(page, 'T013', 'absa-001', 'official_run');
-    const officialText = await page.getByTestId('ws-review-note').textContent();
-
-    expect(dryText).toBe(officialText);
-  });
-
   test('per-output-type card content is untouched — originals, correction titles, panels', async ({ page }) => {
     await openReviewer(page, 'T013', 'absa-001', 'official_run');
 
-    // AC-3.42: the annotator's original answer is still named once per
+    // AC-3.45: the annotator's original answer is still named once per
     // output type (the merged span card names both of its types).
     await expect(page.getByTestId('ws-review-original-answer')).toHaveCount(3);
     // One 直接修正 title and one correction panel per CARD, as before.
@@ -150,14 +114,5 @@ test.describe('the review decision note is rendered once per review unit (issue 
 
     await expect(page.getByRole('button', { name: '通過', exact: true })).toHaveCount(3);
     await expect(page.getByRole('button', { name: '退回', exact: true })).toHaveCount(3);
-  });
-
-  test('the run-type consequence still lives in the confirmation area (FR-077/AC-3.42)', async ({ page }) => {
-    for (const runType of ['dry_run', 'official_run'] as RunType[]) {
-      await openReviewer(page, 'T013', 'absa-001', runType);
-      const effect = page.getByTestId('ws-review-summary-effect');
-      await expect(effect).toHaveAttribute('data-run-type', runType);
-      await expect(effect).toContainText('送出後影響');
-    }
   });
 });
