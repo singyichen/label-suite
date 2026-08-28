@@ -76,11 +76,11 @@ test.describe('issue #525 PR-A — the trigger in the FR-064 banner', () => {
     );
   });
 
-  test('is appended after the existing banner content, whose order is unchanged', async ({ page }) => {
-    // PR-A adds one child and reorders nothing: run chip -> threshold chip ->
-    // state pill -> trigger. (issue #525 §Accessibility writes the reading
-    // order as run type -> state -> threshold; merging/reordering the pill is
-    // PR-B's banner simplification, so PR-A must leave the order it found.)
+  test('is appended after the existing banner content, as its last child', async ({ page }) => {
+    // The trigger is the way OUT of the banner, so it reads last whatever
+    // precedes it. PR-B has since reordered what precedes it into issue
+    // #525 §Accessibility's run type -> state -> threshold; the trigger's
+    // own position -- last -- is what this test owns and it did not move.
     await openUnit(page, APPROVED_UNIT);
 
     const classes = await banner(page).evaluate((el) =>
@@ -88,8 +88,8 @@ test.describe('issue #525 PR-A — the trigger in the FR-064 banner', () => {
     );
     expect(classes).toEqual([
       'rv-unit-chip rv-unit-run',
-      'rv-unit-chip rv-unit-threshold',
       'rv-unit-state rv-unit-state-approved',
+      'rv-unit-chip rv-unit-threshold',
       'rv-flow-trigger',
     ]);
   });
