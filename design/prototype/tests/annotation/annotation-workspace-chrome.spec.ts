@@ -158,6 +158,13 @@ test.describe('Right column: 說明與檔案 / 歷程 tabs', () => {
     await page.getByTestId('ws-single-label-chip-positive').click();
     await page.getByTestId('ws-submit-btn').click();
 
+    /* issue #514: a submit now advances to the next pending sample
+       (FR-022A), and the 歷程 panel is scoped to the DISPLAYED sample --
+       so the submitted sample has to be reopened before its own history can
+       be read. The assertions below are unchanged; only the sample the
+       panel is showing is pinned back to the one that was submitted. */
+    await page.getByTestId('ws-sample-item').first().click();
+
     await page.getByTestId('ws-guideline-tab-history').click();
     const panel = page.getByTestId('ws-history-panel');
     await expect(panel).toContainText('標記員');

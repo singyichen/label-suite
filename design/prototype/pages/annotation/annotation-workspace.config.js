@@ -2050,6 +2050,27 @@
     showToast(t('wsSaveSuccess'));
   }
 
+  /* FR-022A / SUBMIT_DEFAULT_ACTION = go-to-next-sample: the sample to land
+     on after a submit is deliberately NOT units[i+1]. An annotator who
+     works out of order (or resumes a half-finished task) has submitted
+     neighbours, and stepping onto one drops them on a finished sample with
+     nothing to do -- the same reasoning issue #456 recorded for the
+     reviewer side. The scan therefore walks forward past submitted units
+     and wraps around once; `null` means every unit is submitted, which is
+     FR-022C's redirect condition. The current unit is reached last and is
+     already submitted by the time this runs, so it never self-selects. */
+  function findNextPendingUnit(units) {
+    var data = window.LabelSuiteAnnotationWorkspaceData;
+    var start = currentUnitIndex(units);
+    for (var step = 1; step <= units.length; step += 1) {
+      var unit = units[(start + step) % units.length];
+      if (!data.isSampleSubmitted(currentProfile.id, currentRole, currentRunType, unit.recordId, unitIdentity(unit))) {
+        return unit;
+      }
+    }
+    return null;
+  }
+
   function handleSubmit() {
     /* Double-click guard (issue #201 / w6 DUP-01): a busy flag plus a
        temporary native disable so a rapid second click is inert instead of
@@ -2098,6 +2119,20 @@
     showToast(t('wsSubmitSuccess'));
     state.submitBusy = false;
     if (submitBtnEl) submitBtnEl.disabled = false;
+
+    /* issue #514: the submit had no follow-through at all until now. Both
+       destinations are spec constants (SUBMIT_DEFAULT_ACTION /
+       SUBMIT_ALL_DONE_ACTION), and the busy flag is released above first so
+       the next sample loads with a live submit button.
+       buildListReturnUrl() is the single writer FR-081's breadcrumb already
+       goes through, so the all-done return lands on the same filtered list
+       page the annotator came from rather than an unfiltered page 1. */
+    var nextUnit = findNextPendingUnit(buildUnits());
+    if (nextUnit) {
+      selectSample(nextUnit.recordId);
+    } else {
+      window.location.href = buildListReturnUrl();
+    }
   }
 
   /* ── reviewer mode (Phase 3, FR-024L / FR-024L-1 / FR-014A-C) ────────
