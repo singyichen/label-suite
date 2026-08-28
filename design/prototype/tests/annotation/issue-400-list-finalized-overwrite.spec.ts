@@ -50,7 +50,7 @@ test('issue #400: a finalized unit\'s list row shows the reviewer-majority-conve
   // issue describes before asserting on the list.
   await skipGuidelineModal(page);
   await page.goto(reviewerWorkspaceUrl('reviewer_wang'));
-  await expect(page.locator('[data-testid="ws-review-unit-context"] .rv-unit-state')).toHaveText('已定稿 · 已鎖定');
+  await expect(page.locator('[data-testid="ws-review-unit-context"] .rv-unit-state')).toHaveText('目前：已定稿 · 已鎖定');
   await expect(page.getByTestId('ws-finalized-resolved')).toContainText('positive');
 
   await page.goto(buildListUrl({

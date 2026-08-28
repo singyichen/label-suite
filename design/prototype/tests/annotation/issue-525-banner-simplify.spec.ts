@@ -93,8 +93,8 @@ test.describe('issue #525 PR-B — banner DOM order is run type -> state -> thre
 });
 
 test.describe('issue #525 PR-B — the dry-run chip names its round', () => {
-  test('T001 has a materialized dry run R2, so the chip says 試標 R2', async ({ page }) => {
-    await openUnit(page, { task_id: 'T001', sample_id: 'sent-001', run_type: 'dry_run' });
+  test('T004 has a materialized dry run R2, so the chip says 試標 R2', async ({ page }) => {
+    await openUnit(page, { task_id: 'T004', sample_id: 'read-001', run_type: 'dry_run', annotator_id: 'kioleemg12' });
 
     await expect(banner(page).locator('.rv-unit-run')).toHaveText('試標 R2');
   });
@@ -108,7 +108,7 @@ test.describe('issue #525 PR-B — the dry-run chip names its round', () => {
   });
 
   test('the round survives the language toggle', async ({ page }) => {
-    await openUnit(page, { task_id: 'T001', sample_id: 'sent-001', run_type: 'dry_run' });
+    await openUnit(page, { task_id: 'T004', sample_id: 'read-001', run_type: 'dry_run', annotator_id: 'kioleemg12' });
     await page.getByTestId('lang-toggle').click();
 
     await expect(banner(page).locator('.rv-unit-run')).toHaveText('Dry Run R2');
@@ -125,7 +125,7 @@ test.describe('issue #525 PR-B — the dry-run chip names its round', () => {
   test('the breadcrumb run label is NOT numbered', async ({ page }) => {
     // crumbTaskTpl consumes the same unitCtxRunDry key by substitution, so a
     // round token added to that key would leak an unreplaced {round} here.
-    await openUnit(page, { task_id: 'T001', sample_id: 'sent-001', run_type: 'dry_run' });
+    await openUnit(page, { task_id: 'T004', sample_id: 'read-001', run_type: 'dry_run', annotator_id: 'kioleemg12' });
 
     const crumb = page.locator('nav.breadcrumb[data-testid="entry-breadcrumb"]');
     await expect(crumb).toContainText('（試標）');

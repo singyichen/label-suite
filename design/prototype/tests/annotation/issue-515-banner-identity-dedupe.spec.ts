@@ -60,6 +60,10 @@ test.describe('脈絡橫幅不再重複身分資訊 (issue #515 ①)', () => {
     await page.goto(T014_UNIT);
     await dismissGuidelineModal(page);
 
+    /* issue #525 PR-B re-anchor: the two chips are unchanged, but the state
+       element now reads BETWEEN them, so the run chip is still chip 0 while
+       the threshold chip is now the LAST child of the banner rather than
+       `.rv-unit-chip` index 1. Same two assertions, same two subjects. */
     const chips = banner(page).locator('.rv-unit-chip');
     await expect(chips).toHaveCount(2);
     await expect(chips.nth(0)).toHaveClass(/rv-unit-run/);

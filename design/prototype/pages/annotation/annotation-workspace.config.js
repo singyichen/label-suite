@@ -77,6 +77,7 @@
       historyActionGoldConfirmed: '已確認標準答案',
       historyActionGoldReopened: '重新開放標準答案',
       unitCtxRunDry: '試標',
+      unitCtxRunDryRound: '試標 R{round}',
       unitCtxRunOfficial: '正式標記',
       crumbWorkAreaReviewer: '審核作業',
       crumbWorkAreaAnnotator: '標記作業',
@@ -106,6 +107,7 @@
       flowDrawerTitle: '審核流程',
       flowDrawerCloseAria: '關閉審核流程',
       unitStateFinalizedNote: '已鎖定',
+      unitStateNowTpl: '目前：{state}',
       unitStateAria: '{state}，已有 {x} 位審核員／共需 {n} 位',
       unitStateAriaFinalized: '{state}，已達 {n} 位審核員門檻，內容已鎖定',
       reviewOriginalAnswerLabel: '標記員原答案：',
@@ -188,6 +190,7 @@
       historyActionGoldConfirmed: 'Gold confirmed',
       historyActionGoldReopened: 'Gold reopened',
       unitCtxRunDry: 'Dry Run',
+      unitCtxRunDryRound: 'Dry Run R{round}',
       unitCtxRunOfficial: 'Official Run',
       crumbWorkAreaReviewer: 'Review',
       crumbWorkAreaAnnotator: 'Annotate',
@@ -217,6 +220,7 @@
       flowDrawerTitle: 'Review flow',
       flowDrawerCloseAria: 'Close the review flow',
       unitStateFinalizedNote: 'locked',
+      unitStateNowTpl: 'Now: {state}',
       unitStateAria: '{state}, {x} of {n} required reviewers',
       unitStateAriaFinalized: '{state}, met the {n}-reviewer threshold, locked',
       reviewOriginalAnswerLabel: "Annotator's original answer: ",
@@ -3771,21 +3775,24 @@
       banner.appendChild(node);
     }
 
-    chip(
-      t(currentRunType === 'official_run' ? 'unitCtxRunOfficial' : 'unitCtxRunDry'),
-      'rv-unit-run'
-    );
-    /* issue #452: quorum and reviewed-so-far used to be two chips whose
-       numbers were the SAME pair (reviewedCount, minReviewers) under two
-       different labels -- one reading 「審核門檻 3 位審核員」, the other
-       「已審 1 / 3」, which a reviewer read as a second progress bar. One
-       chip, one subject: this unit's distance from its finalize threshold. */
-    chip(
-      t('unitCtxThreshold')
-        .replace('{x}', String(reviewedCount))
-        .replace('{n}', String(minReviewers)),
-      'rv-unit-threshold'
-    );
+    /* issue #525 PR-B: an official run is the only one of its kind, but a
+       dry run is one of SEVERAL rounds -- an unnumbered 試標 chip leaves a
+       reviewer comparing R1 and R2 results with no way to tell from the
+       workspace which round is on screen. The round and its fallback come
+       from the same expression annotation-list.html:1866 already uses, so
+       the list and the workspace can never name different rounds. The
+       breadcrumb keeps the unnumbered `unitCtxRunDry`: crumbTaskTpl
+       substitutes that string into `{run}` and would carry a `{round}`
+       token past every replace() into the DOM. */
+    var runLabel;
+    if (currentRunType === 'official_run') {
+      runLabel = t('unitCtxRunOfficial');
+    } else {
+      var dryRunCtx = currentProfile.materializedRuns && currentProfile.materializedRuns.dry_run;
+      var dryRunRound = dryRunCtx && dryRunCtx.round != null ? dryRunCtx.round : 1;
+      runLabel = t('unitCtxRunDryRound').replace('{round}', String(dryRunRound));
+    }
+    chip(runLabel, 'rv-unit-run');
     /* issue #515: no identity chip here. "Who am I reviewing" is already
        answered twice -- breadcrumb level 3 (審核單位 {sample} · {annotator},
        FR-080) and the left column's group header ({n} 位標記員, FR-071) --
@@ -3814,7 +3821,16 @@
         .replace('{x}', String(reviewedCount))
         .replace('{n}', String(minReviewers));
     }
-    statePill.textContent = note ? stateText + ' · ' + note : stateText;
+    /* issue #525 PR-B: a bare 「已修改」 reads as an action offered to the
+       reviewer; 「目前：已修改」 can only be read as where the unit already
+       is. The prefix is visual only -- the aria-label below stays the
+       state alone, because the drawer's track marker already speaks the
+       same word and a screen reader would otherwise hear it twice. A null
+       status has no current state to name, so it stays unprefixed. */
+    var pillText = note ? stateText + ' · ' + note : stateText;
+    statePill.textContent = unitStatus === null
+      ? pillText
+      : t('unitStateNowTpl').replace('{state}', pillText);
     if (unitStatus !== null) {
       statePill.setAttribute('data-terminal', terminal ? 'true' : 'false');
       statePill.setAttribute(
@@ -3826,6 +3842,23 @@
       );
     }
     banner.appendChild(statePill);
+
+    /* issue #452: quorum and reviewed-so-far used to be two chips whose
+       numbers were the SAME pair (reviewedCount, minReviewers) under two
+       different labels -- one reading 「審核門檻 3 位審核員」, the other
+       「已審 1 / 3」, which a reviewer read as a second progress bar. One
+       chip, one subject: this unit's distance from its finalize threshold.
+       issue #525 PR-B: it now trails the state instead of leading it. The
+       reviewer's first question is where the unit IS; how far that is from
+       the threshold only qualifies the answer, so it reads second -- and
+       because the banner wraps rather than scrolls, DOM order IS the
+       narrow-viewport reading order (issue #525 §Accessibility). */
+    chip(
+      t('unitCtxThreshold')
+        .replace('{x}', String(reviewedCount))
+        .replace('{n}', String(minReviewers)),
+      'rv-unit-threshold'
+    );
 
     /* The pill answers "what state"; the track answers "by which route, and
        what is left". Both stay: the pill carries the terminal/interim note

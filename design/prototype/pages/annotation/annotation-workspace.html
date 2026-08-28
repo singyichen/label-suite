@@ -407,12 +407,15 @@
       border-color: var(--color-primary-border);
       font-weight: 700;
     }
+    /* issue #525 PR-B: no `margin-left: auto`. It used to pin the state to
+       the far right, which only made sense while the state was the LAST
+       chip; now that it reads second, an auto margin would blow a gap
+       between the run chip and everything after it. */
     .rv-unit-state {
       font-size: 12px;
       font-weight: 700;
       border-radius: var(--radius-full);
       padding: 2px 10px;
-      margin-left: auto;
       white-space: nowrap;
       color: var(--color-ink-muted);
       background: var(--color-white);
