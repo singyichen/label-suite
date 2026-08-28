@@ -368,10 +368,22 @@
       padding: 10px 12px;
       margin-bottom: 10px;
     }
-    /* design/system/MASTER.md §Review Status Track -- CSS verbatim. The
-       track is a 2-row grid, so it takes a full-width row of its own under
-       the banner's chip line rather than sitting in the flex flow. */
-    .rv-unit-track { flex: 1 0 100%; overflow-x: auto; }
+    /* issue #525 PR-A: the way into the review-flow drawer. Sized and
+       shaped like the `.rv-unit-chip` siblings it sits beside so the banner
+       still reads as one row of chips, but primary-coloured because it is
+       the only thing in that row a reviewer can act on. */
+    .rv-flow-trigger {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-primary);
+      background: var(--color-white);
+      border: 1px solid var(--color-primary-border);
+      border-radius: var(--radius-full);
+      padding: 2px 10px;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    /* design/system/MASTER.md §Review Status Track -- CSS verbatim. */
     .review-track { display: grid; grid-template-columns: auto 28px auto minmax(16px, 1fr) auto 28px auto; grid-template-rows: 34px 34px; align-items: center; justify-items: start; }
     .review-track-node { display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-full); background: var(--color-white); color: var(--color-ink-muted); font-size: 13px; font-weight: 500; white-space: nowrap; }
     .review-track-node.done { border-color: var(--color-cta); background: var(--color-success-bg); color: var(--color-cta); }
@@ -839,6 +851,18 @@
       gap: var(--space-md);
     }
     .modal-title { font-family: var(--font-serif-display); font-size: 22px; font-weight: 700; color: var(--color-ink); }
+    /* Review-flow drawer (issue #525 PR-A): a right-edge sheet on desktop,
+       a full-width modal below 768px. It inherits `position: fixed` from
+       `.modal-overlay`, which is what keeps the review card's
+       getBoundingClientRect().top identical across open and close. */
+    .rv-flow-overlay { align-items: stretch; justify-content: flex-end; padding: 0; }
+    .rv-flow-drawer { max-width: 420px; height: 100%; border-radius: var(--radius-xl) 0 0 var(--radius-xl); overflow-y: auto; }
+    /* The track is a 2-row grid wider than the drawer, so it keeps the
+       horizontal scroll it had when it was a full-width banner row. */
+    .rv-flow-track { overflow-x: auto; }
+    @media (max-width: 767px) {
+      .rv-flow-drawer { max-width: none; border-radius: 0; }
+    }
     .modal-actions { display: flex; justify-content: flex-end; gap: var(--space-sm); }
 
     /* ── Toast (top-center, UXC-07 / MASTER §Toast) ──────────── */
@@ -1001,6 +1025,27 @@
       </button>
     </div>
     <div class="guideline-md-preview" id="wsGuidelineMdModalBody" data-testid="ws-guideline-md-modal-body"></div>
+  </div>
+</div>
+
+<!-- Review-flow drawer (issue #525 PR-A, spec 015 FR-064 / AC-4.36): the
+     five-state review track used to sit inline in the FR-064 banner, where
+     `pending` -- every unreviewed unit's default and the state with the least
+     to say -- paid the most vertical space for it. The track moved here
+     verbatim; nothing about it was reduced. Reuses `.modal-overlay` so the
+     backdrop, `--z-modal` and the `.hidden` (display:none) removal from the
+     accessibility tree stay one implementation; `.rv-flow-overlay` only
+     re-anchors the panel to the right edge. Esc / focus trap / focus return
+     come from the LabelSuiteModalFocus trap, same as the guideline modals. -->
+<div class="modal-overlay rv-flow-overlay hidden" id="wsReviewFlowDrawer" role="dialog" aria-modal="true" aria-labelledby="wsReviewFlowDrawerTitle" data-testid="ws-review-flow-drawer">
+  <div class="modal rv-flow-drawer">
+    <div class="image-modal-header">
+      <h2 class="modal-title" id="wsReviewFlowDrawerTitle"></h2>
+      <button class="image-modal-close" type="button" id="wsReviewFlowDrawerClose" data-testid="ws-review-flow-drawer-close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <div class="rv-flow-track" id="wsReviewFlowDrawerBody" data-testid="ws-review-flow-drawer-body"></div>
   </div>
 </div>
 
