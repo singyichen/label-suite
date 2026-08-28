@@ -1,7 +1,7 @@
 ---
 功能分支: docs/208-official-gold-fr
 建立日期: 2026-04-23
-版本: 4.41.0
+版本: 4.41.1
 狀態: Draft
 ---
 
@@ -109,6 +109,12 @@ sequenceDiagram
 | 7 | 使用者 | 中途操作 | 由 sample 切換、儲存、heartbeat 觸發自動儲存提示 |
 
 > **v3.0.0 起**：Step 5 的 reviewer 呈現依 `run_type` 分流（`REVIEW_MODEL_BY_RUN_TYPE`）——`dry_run` 採共識合併 + gold 仲裁模型，`official_run` 採單標記員通過/退回模型；兩者不再共用同一套「逐標記員通過/退回 + 批次全通過/全退回」介面。詳見使用者故事 3（dry_run 共識仲裁）與使用者故事 6（official_run 單標記員審核）。
+
+審核流程另有三張以 `diagram-design` skill 產出的示意圖（自包含 HTML + inline SVG），對應本節 FR-051 五態機與 FR-060／FR-061 仲裁收斂：
+
+- [審核流程總覽](./diagrams/review-flow-overview.html)
+- [試標審核詳細流程](./diagrams/review-flow-dry-run.html)
+- [正式標記審核詳細流程](./diagrams/review-flow-official-run.html)
 
 ---
 
@@ -1050,6 +1056,7 @@ flowchart LR
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 4.41.1 | 2026-08-27 | **審核流程三張示意圖移入本 spec 資料夾**（issue #528，維護者裁定 Q1/Q3）：`docs/diagrams/workflow/review-flow-{overview,dry-run,official-run}.html` 搬至 `specs/annotation/015-annotation-workspace/diagrams/`，本節（流程圖）新增三張圖的相對路徑連結（維護者裁定 Q4：僅連結，不附 PNG）。歸檔時三張圖隨 spec 一起進 `specs/_archive/`（維護者裁定 Q3）。`docs/diagrams/workflow/` 之產出位置慣例同步改寫（見 `docs/diagrams/README.md`），跨模組總覽圖（`system-workflow.png`、`annotation-pipeline.mmd`/`.png`）依維護者裁定例外保留原處不搬。走 Lightweight Path，未涉 FR/AC 增減。 |
 | 4.41.0 | 2026-08-27 | **Markdown 說明檔由面板內純文字改為 modal 渲染預覽**（issue #527）：此前點擊 `.md` 檔僅以 `textContent` 將原始內容寫入右欄面板底部的 `#wsGuidelineMdPreview`，`#`、`**`、`-` 等記號原樣顯示且與 PDF／圖片的 modal 體驗不一致。本版新增 `#wsGuidelineMdModal`（比照 `#wsGuidelinePdfModal`：標題為檔名、三種關閉路徑、重用 `LabelSuiteModalFocus`），內文改由 `renderMarkdown()` 輸出 HTML（標題／段落／清單／粗斜體／行內程式碼／連結／程式碼區塊／表格／圖片；文字一律跳脫、連結與圖片來源協定白名單、連結開新分頁——渲染器自製不引入第三方套件、語法範圍與連結行為為 issue #527 決議紀錄所定），並移除面板內 inline 區塊；首次強制閱讀 modal `#wsGuidelineModal` 內文同步改用同一渲染器。修訂 AC-5.3、FR-020，新增 FR-020D、SC-005D。新增 Playwright 回歸測試 `annotation-guideline-md-preview.spec.ts`（modal 開啟與標題、HTML 渲染、三種關閉路徑、閘門 modal 渲染、HTML／`javascript:` 注入跳脫、程式碼區塊／表格／圖片渲染）。走 Lightweight Path（2 個 prototype 檔），未建立 OpenSpec change。 |
 | 4.40.0 | 2026-08-27 | **撤銷 FR-082／AC-4.34：移除審核單位完成後的後續出口卡**（issue #517；本次不經 OpenSpec，經維護者授權直接編修）。**撤銷理由**：v4.38.0（issue #456 PR-E，PR #513）於審核單位對檢視中的審核員已無事可做時，在主欄位底部渲染一張出口卡，提供「下一個可處理單位」「返回審核清單」「返回 Dashboard」三個出口。維護者於介面走查判定三個出口在同一畫面上**皆已有既有路徑**——「返回審核清單」與「返回 Dashboard」正是 FR-080／FR-081 麵包屑的第 1、2 層，「下一個可處理單位」與左欄樣本清單（FR-071）及 `上一筆`／`下一筆`（FR-056）重疊。該卡片因此未新增任何能力，只是在唯讀畫面下方再堆一層重複導覽並佔用垂直空間，與 `.claude/rules/general.md` Simplicity First 相悖，故整體移除而非調整。**移除範圍**：FR-082、AC-4.34，以及原型 `renderPostSubmitCta()`／`isUnitDoneForViewer()`／`findNextActionableUnit()`、`renderReviewerWorkspace()` 之呼叫點、`annotation-workspace.html` 之 `#wsPostSubmitMount` 掛載點與 `.rv-exits*` 五條樣式規則、zh／en 各 7 組 `postSubmit*` 文案鍵、測試檔 `annotation-post-submit-exits.spec.ts`。**刻意不移除**：`buildListReturnUrl()`——FR-081 麵包屑與本出口卡共用此單一返回網址建構器，麵包屑仍依賴它，v4.38.0 為其寫下的 DRY 收斂因此仍然成立（該函式上方註解原引用出口卡，已一併改寫為不繫於特定消費端的敘述）。**issue #456 驗收條件之反轉（誠實記載）**：issue #456 驗收條件第 5 條「已定稿／送出成功後提供『下一個可處理單位』與『返回清單』」自本版起**不再成立**；#456 已關閉，此處明文記載以免日後被誤讀為需求遺漏。`FR-082` 與 `AC-4.34` 為已撤銷編號，**不重用亦不重編後續編號**（穩定 ID 慣例，比照 issue #510 對 FR-009E／SC-027 之處理）——`AC-4.35` 之序號因此在條列上留下可見缺口，屬預期。**測試**：新增 `issue-517-post-submit-cta-removed.spec.ts` 5 個 Playwright 測試（Red 4 紅 1 綠）——4 紅涵蓋出口卡曾出現的三種狀態（送出後、該單位重新整理後、直接開啟已定稿單位）與未送出之可互動單位，每例皆錨定一個仍會渲染的元素（送出成功 toast、`ws-progress-text` 之本人提交計數、五態 pill、送出按鈕），以免因頁面載入失敗而空泛通過；1 綠為 `buildListReturnUrl()` 未被連帶移除之守門測試。**既有測試處置**：舊檔 11 個測試中 10 個直接驗證出口卡（含「未送出時不得存在」之反向守門，該條在本版後恆真）隨功能刪除；第 11 個驗證 issue #456 AC-8 第四路徑「送出後麵包屑仍完整且第 2 層仍帶得回清單檢視狀態」，其斷言主體為 FR-080／FR-081 而非出口卡，故**保留並搬移**至 `annotation-entry-breadcrumb.spec.ts`（新增 `Entry breadcrumb — after a submit (AC-8 fourth path)` 區塊，該檔檔頭同步改寫——原文稱第四路徑「歸 AC-5 與出口卡所有」，該敘述已隨本版失效）。**驗證**：`tests/annotation/` 542/542 通過、`pnpm typecheck` 無錯。**編號依存**：本版基於 4.39.0（issue #515 ①，PR #516）。**此舉改變了 issue #515 body 之預先配號**——該 issue 原將 ② ③ 兩項配為 `4.40.0`（`AC-3.44`）與 `4.41.0`，本版取用 `4.40.0` 後，② ③ 須順延為 `4.41.0`／`4.42.0`，已於 issue #515 留言更正。 |
 | 4.39.0 | 2026-08-27 | **修訂 FR-064、AC-4.27、AC-4.29 並新增 AC-4.35：脈絡橫幅移除重複的身分資訊**（issue #515 ①；本次不經 OpenSpec，經維護者授權直接編修）。**問題根因**：審核員視圖的資訊密度過高，根因不是元素數量而是**同一份資訊被多個層級各講一遍**——「你在審誰」同時出現在 FR-080 麵包屑第 3 層（`審核單位 {sample} · {annotator}`）、FR-071 左欄群組表頭（`{n} 位標記員`）與 FR-064 脈絡橫幅第（3）個 chip（`標記員 {id} · 本樣本 {m} 位標記員`）三處，第三者未攜帶前兩者所無之任何資訊。**變更內容**：（1）FR-064 刪除第（3）項並將原第（4）項五態 pill 重編為第（3）項（v4.36.0 加入之狀態軌隨之由第（5）項重編為第（4）項；狀態軌自身的 1.–3. 子編號自成一層，不受影響）；（2）**確立本橫幅的主題判準為「審核模型」**——`run_type`、定稿門檻、狀態、狀態軌——身分不屬之，後續若要再往橫幅加欄位須先通過此判準；（3）AC-4.27 移除該項斷言並改為釘住「`.rv-unit-chip` 恰為 2 個」；（4）新增 AC-4.35，同時涵蓋名冊 > 1 與名冊 = 1 兩個分支、中英文兩種語言，**並反向斷言兩個仍存在的承載者**——去重的正確性取決於原本的承載者仍然存在，只斷言「橫幅裡沒有帳號」無法區分「去重成功」與「身分整個消失」。**AC-4.29 之 375px 取捨（誠實記載）**：該條原文為「375px 下左欄整欄收合、審核單位身分由 FR-064 脈絡橫幅承載」，橫幅 chip 移除後改由 FR-080 麵包屑承載；`.workspace-crumb-bar` 在該寬度未被隱藏（`overflow-x: auto`、`white-space: nowrap`），但標記員帳號位於麵包屑尾端，**需橫向捲動該列方可讀取**——此為本次明示接受之取捨，條文與測試皆逐字記載，以免日後被誤讀為未察覺之迴歸。**原型**：`annotation-workspace.config.js` 移除 `buildReviewUnitContext()` 之第三個 `chip()` 呼叫、隨之孤兒化的 `rosterSize` 區域變數，以及 zh／en 的 `unitCtxAnnotator`／`unitCtxRoster` 兩組 i18n key。**測試**：新增 `issue-515-banner-identity-dedupe.spec.ts` 7 個 Playwright 測試（Red 4 紅 3 綠；3 綠為「橫幅其餘內容不受影響」與兩個承載者仍在的守門測試）。**既有測試 retarget（保留原意，非弱化）**：`annotation-review-flow-demo-workspace.spec.ts` 之兩則身分斷言改錨定麵包屑與群組表頭（同樣兩個事實，換成現在擁有它們的元素）；`issue-455-workspace-unit-grouping.spec.ts` 之 375px 測試改斷言「橫幅**不**含帳號 ＋ 麵包屑含帳號」，並在測試內註記橫向捲動之取捨。**條文傳播（兩處孿生句，由 peer session 於交叉檢查中指出）**：AC-4.29 的 375px 條款在本檔另有兩個複述點，若不同步修改會使同一份 spec 自相矛盾——（a）**FR-071 第 8 點**（響應式）為 AC-4.29 的 FR 側孿生句，原同樣宣稱「該寬度下審核單位身分改由 FR-064 脈絡橫幅承載」，已一併改為 FR-080 麵包屑；（b）**SC-004W** 將「標記員帳號」列為橫幅必須渲染之元素並要求與資料層推導值 100% 一致，已移除該元素，否則此成功指標於本版之後永遠不成立。**教訓**：修改一條 AC 的響應式條款時，必須同時 `grep` 其 FR 側條文與 SC 成功指標——本檔的響應式行為在 FR／AC／SC 三層各有一份敘述，只改其一即製造矛盾。**編號依存**：本版基於 4.38.0（issue #456 PR-E，PR #513）；本次**不新增 FR**；`AC-4.35` 接續 `AC-4.34`。issue #515 之 ② ③ 兩項分別預先配號 `4.40.0`（`AC-3.44`）與 `4.41.0`（無新增 AC），須依序合併於本版之後，順序改變則須重新配號。 |
