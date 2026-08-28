@@ -387,6 +387,12 @@
       line-height: 1.2;
     }
 
+    /* Spacing only -- muted colour and type scale come from .controls-hint,
+       whose 2px top margin is too tight under a metrics grid. */
+    .metrics-demo-note {
+      margin-top: var(--space-sm);
+    }
+
     /* ── List Items ────────────────────────────────────────────– */
     .list {
       display: grid;
