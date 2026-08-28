@@ -43,6 +43,7 @@
       mobileDrawerTitle: '說明與檔案',
       guidelineImageModalCloseAria: '關閉圖片預覽',
       guidelinePdfModalCloseAria: '關閉 PDF 預覽',
+      guidelineMdModalCloseAria: '關閉 Markdown 預覽',
       wsSubmitIncomplete: '請完成所有標記項目後再提交',
       wsSubmitSuccess: '已提交',
       reviewSubmitLabel: '送出審核',
@@ -83,8 +84,6 @@
       crumbUnitTpl: '審核單位 {sample} · {annotator}',
       crumbSamplePosTpl: '樣本 {i} / {n}',
       unitCtxThreshold: '定稿門檻 {x} / {n} 位審核員',
-      unitCtxAnnotator: '標記員 {id}',
-      unitCtxRoster: '本樣本 {m} 位標記員',
       wsSampleGroupCount: '{n} 位標記員',
       wsSampleGroupAria: '樣本 {sample}，{n} 位標記員',
       wsSampleUnitAria: '樣本 {sample}，標記員 {annotator}，{state}',
@@ -147,6 +146,7 @@
       mobileDrawerTitle: 'Guidelines & Files',
       guidelineImageModalCloseAria: 'Close image preview',
       guidelinePdfModalCloseAria: 'Close PDF preview',
+      guidelineMdModalCloseAria: 'Close Markdown preview',
       wsSubmitIncomplete: 'Please answer every output before submitting',
       wsSubmitSuccess: 'Submitted',
       reviewSubmitLabel: 'Submit review',
@@ -187,8 +187,6 @@
       crumbUnitTpl: 'Review unit {sample} · {annotator}',
       crumbSamplePosTpl: 'Sample {i} of {n}',
       unitCtxThreshold: 'Finalize threshold {x} / {n} reviewers',
-      unitCtxAnnotator: 'Annotator {id}',
-      unitCtxRoster: '{m} annotators on this sample',
       wsSampleGroupCount: '{n} annotators',
       wsSampleGroupAria: 'Sample {sample}, {n} annotators',
       wsSampleUnitAria: 'Sample {sample}, annotator {annotator}, {state}',
@@ -324,6 +322,7 @@
   window.revalidateCurrentStep = revalidateCurrentStep;
   window.showFieldError = showFieldError;
   window.showToast = showToast;
+  window.renderMarkdown = renderMarkdown;
   window.track = track;
   window.onChipSelectionChange = onChipSelectionChange;
   window.showTaxonomyDeleteModal = showTaxonomyDeleteModal;
@@ -1352,32 +1351,38 @@
    * annotation-list.html, because that URL is a not-found state whose own
    * recovery CTA already points at the dashboard.
    */
+  /* FR-081 (issue #456 AC-4): annotation-list.html's UXC-11 view state rides
+     in on the URL and has to ride back out, or a return link drops the user
+     on an unfiltered page 1 -- exactly the page someone who filtered their
+     way to this unit does not want. The other two return paths (the sidebar's
+     標記作業 link and boot()'s unknown-task_id redirect) forward
+     window.location.search verbatim and inherit it for free; the paths that
+     rebuild their query from scratch all come through here, so every
+     "back to the list" on screen resolves to the same place. */
+  var LIST_VIEW_STATE_KEYS = ['status', 'q', 'limit', 'offset'];
+
+  function buildListReturnUrl() {
+    var listParams = new URLSearchParams();
+    listParams.set('task_id', currentProfile.id);
+    listParams.set('role', currentRole);
+    listParams.set('run_type', currentRunType);
+    var incoming = new URLSearchParams(window.location.search);
+    LIST_VIEW_STATE_KEYS.forEach(function (key) {
+      var value = incoming.get(key);
+      if (value) listParams.set(key, value);
+    });
+    return 'annotation-list.html?' + listParams.toString();
+  }
+
   function renderEntryBreadcrumb() {
     var nav = document.getElementById('entryBreadcrumb');
     if (!nav) return;
     nav.innerHTML = '';
 
-    var listParams = new URLSearchParams();
-    listParams.set('task_id', currentProfile.id);
-    listParams.set('role', currentRole);
-    listParams.set('run_type', currentRunType);
-    /* FR-081 (issue #456 AC-4): annotation-list.html's UXC-11 view state
-       rides in on the URL and has to ride back out, or this crumb drops the
-       user on an unfiltered page 1 -- the one link most likely to be used
-       after finishing a unit. The other two return paths (the sidebar's
-       標記作業 link and boot()'s unknown-task_id redirect) forward
-       window.location.search verbatim and inherit it for free; only this
-       one rebuilds its query from scratch. */
-    var incoming = new URLSearchParams(window.location.search);
-    ['status', 'q', 'limit', 'offset'].forEach(function (key) {
-      var value = incoming.get(key);
-      if (value) listParams.set(key, value);
-    });
-
     appendCrumbLink(nav, '../dashboard/dashboard.html',
       t(currentRole === 'reviewer' ? 'crumbWorkAreaReviewer' : 'crumbWorkAreaAnnotator'));
     appendCrumbSep(nav);
-    appendCrumbLink(nav, 'annotation-list.html?' + listParams.toString(),
+    appendCrumbLink(nav, buildListReturnUrl(),
       t('crumbTaskTpl')
         .replace('{name}', (state.lang === 'en' && currentProfile.nameEn)
           ? currentProfile.nameEn : currentProfile.nameZh)
@@ -3538,7 +3543,6 @@
     var reviewedCount = workspaceData.readReviewerSubmissions(
       currentProfile.id, currentRunType, currentSampleId, currentIdentity
     ).length;
-    var rosterSize = (workspaceData.getReviewerMockRows(currentProfile.id, currentSampleId) || []).length;
 
     var banner = document.createElement('div');
     banner.className = 'rv-unit-context';
@@ -3566,10 +3570,11 @@
         .replace('{n}', String(minReviewers)),
       'rv-unit-threshold'
     );
-    chip(
-      t('unitCtxAnnotator').replace('{id}', currentAnnotatorId()) +
-        (rosterSize > 1 ? ' · ' + t('unitCtxRoster').replace('{m}', String(rosterSize)) : '')
-    );
+    /* issue #515: no identity chip here. "Who am I reviewing" is already
+       answered twice -- breadcrumb level 3 (審核單位 {sample} · {annotator},
+       FR-080) and the left column's group header ({n} 位標記員, FR-071) --
+       and this banner's subject is the review MODEL: run type, finalize
+       threshold, state, state track. A third copy only raised the density. */
 
     var statePill = document.createElement('span');
     statePill.className =
@@ -3924,11 +3929,140 @@
     if (modal) modal.classList.add('hidden');
     if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(modal);
   }
-  function showGuidelineMarkdownPreview(content) {
-    var preview = document.getElementById('wsGuidelineMdPreview');
-    if (!preview) return;
-    preview.textContent = content || '';
-    preview.classList.remove('hidden');
+  /* issue #527 (spec 015 AC-5.3 / FR-020D / SC-005D): Markdown guideline
+     files preview in an in-page modal (same contract as the PDF modal) with
+     the source rendered to HTML. Minimal renderer -- headings, paragraphs,
+     unordered/ordered lists, bold/italic, inline code, links -- with every
+     fenced code blocks, tables, images -- with every text run
+     HTML-escaped first and link href / image src restricted to http(s)/
+     mailto/relative paths, so raw HTML or javascript: URLs in the source
+     can never reach innerHTML unescaped (issue #527 decision record). */
+  function escapeHtml(text) {
+    return String(text)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+  function isSafeMarkdownUrl(url) {
+    return /^(https?:\/\/|mailto:|\.{0,2}\/|#)/i.test(url);
+  }
+  function renderMarkdownInline(text) {
+    var out = escapeHtml(text);
+    out = out.replace(/`([^`]+)`/g, '<code>$1</code>');
+    out = out.replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, function (_m, alt, src) {
+      return isSafeMarkdownUrl(src) ? '<img src="' + src + '" alt="' + alt + '">' : alt;
+    });
+    out = out.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    out = out.replace(/(^|[^*])\*([^*]+)\*/g, '$1<em>$2</em>');
+    out = out.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, function (_m, label, href) {
+      return isSafeMarkdownUrl(href) ? '<a href="' + href + '" target="_blank" rel="noopener noreferrer">' + label + '</a>' : label;
+    });
+    return out;
+  }
+  function renderMarkdown(source) {
+    var lines = String(source || '').replace(/\r\n?/g, '\n').split('\n');
+    var html = '';
+    var list = null;
+    var para = [];
+    function flushPara() {
+      if (para.length) html += '<p>' + renderMarkdownInline(para.join(' ')) + '</p>';
+      para = [];
+    }
+    function flushList() {
+      if (list) html += '</' + list + '>';
+      list = null;
+    }
+    var fence = null;
+    var table = null;
+    function flushTable() {
+      if (table) html += '</tbody></table>';
+      table = null;
+    }
+    function splitTableRow(line) {
+      return line.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(function (cell) {
+        return cell.trim();
+      });
+    }
+    lines.forEach(function (line, index) {
+      if (fence) {
+        if (/^\s*```/.test(line)) {
+          html += '<pre><code>' + escapeHtml(fence.join('\n')) + '</code></pre>';
+          fence = null;
+        } else {
+          fence.push(line);
+        }
+        return;
+      }
+      if (/^\s*```/.test(line)) {
+        flushPara(); flushList(); flushTable();
+        fence = [];
+        return;
+      }
+      var isTableRow = /^\s*\|.*\|\s*$/.test(line);
+      if (isTableRow) {
+        flushPara(); flushList();
+        if (!table) {
+          /* A table starts only with a header row followed by a |---| rule. */
+          if (!/^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)*\|?\s*$/.test(lines[index + 1] || '')) {
+            para.push(line.trim());
+            return;
+          }
+          table = { headerDone: false };
+          html += '<table><thead><tr>' + splitTableRow(line).map(function (cell) {
+            return '<th>' + renderMarkdownInline(cell) + '</th>';
+          }).join('') + '</tr></thead><tbody>';
+          return;
+        }
+        if (!table.headerDone) { table.headerDone = true; return; }
+        html += '<tr>' + splitTableRow(line).map(function (cell) {
+          return '<td>' + renderMarkdownInline(cell) + '</td>';
+        }).join('') + '</tr>';
+        return;
+      }
+      flushTable();
+      var heading = /^(#{1,3})\s+(.+)$/.exec(line);
+      var bullet = /^\s*[-*]\s+(.+)$/.exec(line);
+      var ordered = /^\s*\d+\.\s+(.+)$/.exec(line);
+      if (heading) {
+        flushPara(); flushList();
+        html += '<h' + heading[1].length + '>' + renderMarkdownInline(heading[2]) + '</h' + heading[1].length + '>';
+      } else if (bullet || ordered) {
+        flushPara();
+        var tag = bullet ? 'ul' : 'ol';
+        if (list !== tag) { flushList(); list = tag; html += '<' + tag + '>'; }
+        html += '<li>' + renderMarkdownInline((bullet || ordered)[1]) + '</li>';
+      } else if (!line.trim()) {
+        flushPara(); flushList();
+      } else {
+        flushList();
+        para.push(line.trim());
+      }
+    });
+    if (fence) html += '<pre><code>' + escapeHtml(fence.join('\n')) + '</code></pre>';
+    flushPara(); flushList(); flushTable();
+    return html;
+  }
+  function openGuidelineMdModal(content, name, triggerEl) {
+    var modal = document.getElementById('wsGuidelineMdModal');
+    var body = document.getElementById('wsGuidelineMdModalBody');
+    if (!modal || !body) return;
+    /* innerHTML only ever receives renderMarkdown() output, whose text
+       runs are escaped and whose only tags are the fixed allowlist above. */
+    body.innerHTML = renderMarkdown(content);
+    setText('wsGuidelineMdModalTitleText', name || '');
+    modal.classList.remove('hidden');
+    if (window.LabelSuiteModalFocus) {
+      window.LabelSuiteModalFocus.open(modal, {
+        trigger: triggerEl || document.activeElement,
+        onClose: closeGuidelineMdModal
+      });
+    }
+  }
+  function closeGuidelineMdModal() {
+    var modal = document.getElementById('wsGuidelineMdModal');
+    if (modal) modal.classList.add('hidden');
+    if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(modal);
   }
   var GUIDELINE_FILE_ICON_SVG = {
     pdf: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
@@ -3968,7 +4102,7 @@
         } else if (file.type === 'image') {
           openGuidelineImageModal(file.url, file.name, item);
         } else if (file.type === 'markdown') {
-          showGuidelineMarkdownPreview(file.content);
+          openGuidelineMdModal(file.content, file.name, item);
         }
       });
       container.appendChild(item);
@@ -4002,6 +4136,18 @@
     }
     /* Escape-to-close comes from the LabelSuiteModalFocus trap registered
        in openGuidelinePdfModal(), same as the image modal. */
+  }
+  function setupGuidelineMdModal() {
+    var modal = document.getElementById('wsGuidelineMdModal');
+    var closeBtn = document.getElementById('wsGuidelineMdModalClose');
+    if (closeBtn) closeBtn.addEventListener('click', closeGuidelineMdModal);
+    if (modal) {
+      modal.addEventListener('click', function (e) {
+        if (e.target === modal) closeGuidelineMdModal();
+      });
+    }
+    /* Escape-to-close comes from the LabelSuiteModalFocus trap registered
+       in openGuidelineMdModal(), same as the PDF modal. */
   }
   function setupGuidelineCollapse() {
     var btn = document.getElementById('wsGuidelineCollapseBtn');
@@ -4100,13 +4246,16 @@
       var mdFile = files.filter(function (file) {
         return file.type === 'markdown';
       })[0];
-      body.textContent = mdFile
-        ? mdFile.content
-        : files
-            .map(function (file) {
-              return file.name;
-            })
-            .join('\n');
+      if (mdFile) {
+        /* innerHTML only receives renderMarkdown() output (issue #527). */
+        body.innerHTML = renderMarkdown(mdFile.content);
+      } else {
+        body.textContent = files
+          .map(function (file) {
+            return file.name;
+          })
+          .join('\n');
+      }
     }
     var storageKey = guidelineModalStorageKey(currentProfile.id);
     var seen = null;
@@ -4191,6 +4340,8 @@
     if (closeBtn) closeBtn.setAttribute('aria-label', t('guidelineImageModalCloseAria'));
     var pdfCloseBtn = document.getElementById('wsGuidelinePdfModalClose');
     if (pdfCloseBtn) pdfCloseBtn.setAttribute('aria-label', t('guidelinePdfModalCloseAria'));
+    var mdCloseBtn = document.getElementById('wsGuidelineMdModalClose');
+    if (mdCloseBtn) mdCloseBtn.setAttribute('aria-label', t('guidelineMdModalCloseAria'));
     /* issue #309: the shared sidebar mounts with its 一般使用者 default;
        reviewers must read as 審核員 (same role noun the history trail uses).
        Annotator view keeps the shared default untouched. Runs at boot and on
@@ -4273,6 +4424,7 @@
     renderGuidelinePanel();
     setupGuidelineImageModal();
     setupGuidelinePdfModal();
+    setupGuidelineMdModal();
     setupGuidelineCollapse();
     setupGuidelineTabs();
     setupSampleNav();

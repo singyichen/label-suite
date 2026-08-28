@@ -6,6 +6,14 @@ import {
   skipGuidelineModal,
 } from './_workspace-helpers';
 
+/* issue #524: a fixed virtual epoch so the heartbeat window arithmetic
+   below is exact instead of "boot plus however long navigation took".
+   CLOCK_PAUSE sits a virtual minute ahead of CLOCK_BASE purely so the
+   pauseAt jump is unambiguously forwards; nothing is scheduled in that
+   gap because the page has not been navigated to yet. */
+const CLOCK_BASE = Date.UTC(2026, 0, 1);
+const CLOCK_PAUSE = CLOCK_BASE + 60_000;
+
 /* Issue #470: the bottom-bar autosave indicator claimed 草稿已自動儲存
  * regardless of whether anything was ever actually persisted --
  * triggerAutosave() (annotation-workspace.config.js:1453) is purely
@@ -138,13 +146,20 @@ test.describe('Autosave indicator honesty (issue #470)', () => {
     // `setInterval(triggerAutosave, 15000)` (annotation-workspace.config.js:4027)
     // -- if it still exists -- runs on virtual time under our control,
     // instead of the suite needing a real 15s+ sleep.
-    await page.clock.install();
+    await page.clock.install({ time: CLOCK_BASE });
+    // Pause BEFORE navigating, not after. Pausing after boot used to read
+    // `pauseAt(Date.now())`, which races: Date.now() is evaluated in the
+    // test process while the page's fake clock keeps ticking, so a slow
+    // enough round-trip left the clock already past that timestamp and
+    // pauseAt threw `Cannot fast-forward to the past` (issue #524).
+    // Pausing first freezes virtual time across the whole navigation, so
+    // boot() registers its timers at exactly CLOCK_PAUSE and the
+    // fast-forward below covers a known distance from boot rather than
+    // "boot plus however long navigation happened to take".
+    // The jump to CLOCK_PAUSE is always forwards: only milliseconds of real
+    // time elapse between install() and pauseAt(), never the full minute.
+    await page.clock.pauseAt(CLOCK_PAUSE);
     await gotoSample(page, 'sent-001');
-    // Freeze virtual time right after boot so the fast-forward below moves
-    // a deterministic distance from "just booted", independent of how long
-    // navigation/modal-dismissal actually took in wall-clock time (the
-    // fake clock otherwise keeps ticking in step with real time).
-    await page.clock.pauseAt(Date.now());
 
     const status = autosaveStatus(page);
     const initialText = await status.textContent();

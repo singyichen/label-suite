@@ -9,7 +9,7 @@
  *   - the demo tasks appear in the annotator/reviewer task lists
  *   - card clicks route to annotation-list with the correct run_type
  *   - reviewer summaries match the seeded review-state matrix
- *     (T014=6, T015=1, T016=0, T017=1 pending review units) using the
+ *     (T014=5, T015=1, T016=0, T017=1 pending review units) using the
  *     subject-bearing wording (issue #452): the share of units past 待審 is
  *     labeled 任務覆蓋 x / n 個審核單位, and T016 — whose pending count is 0
  *     while 1 disputed + 2 more units are still unfinalized — must disclose
@@ -47,9 +47,12 @@ const DEMO_TASKS = [
        rounded to 2 decimals by formatReviewSummary's toFixed(2). See
        tests/annotation/issue-489-iaa-single-derivation.spec.ts for the
        independently-verified Do/De/alpha values. */
-    reviewerSummaryZh: '任務覆蓋 9 / 15 個審核單位 · 待審 6 個 · 未達定稿門檻 8 個 · 爭議中 2 個 · IAA 0.59',
+    // dry-05 x kioleemg12 moved from pending to finalized (issue #502: a
+    // dry_run reject still counts as reviewed). IAA is derived from
+    // annotator values only (computeIaaAlpha), untouched by this change.
+    reviewerSummaryZh: '任務覆蓋 10 / 15 個審核單位 · 待審 5 個 · 未達定稿門檻 7 個 · 爭議中 2 個 · IAA 0.59',
     reviewerSummaryEn:
-      'Task coverage 9 / 15 review units · 6 pending · 8 short of finalize threshold · 2 disputed · IAA 0.59',
+      'Task coverage 10 / 15 review units · 5 pending · 7 short of finalize threshold · 2 disputed · IAA 0.59',
   },
   {
     id: 'T015',

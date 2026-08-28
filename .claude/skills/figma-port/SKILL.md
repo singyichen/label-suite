@@ -640,4 +640,4 @@ Design file 沒有原生 Connector，**連線不會跟隨節點移動**。要維
 - **放專案內而非全域**：樣式角色引用 Label Suite 的 design token 與 `label-suite` diagram profile，引用鏈只在本 repo 成立。
 - **不併進 `diagram-design`**：該 skill 產出 HTML/SVG，觸發情境不同；合併會讓做網頁圖時白白載入大量 Plugin API 細節。
 - 相關：issue #475（本 skill）、#465（`diagram-design` 導入）；上游 `figma-use` / `figma-use-figjam`（Figma plugin 2.2.96）。
-- 規則來源：`docs/diagrams/workflow/review-flow-{overview,dry-run,official-run}.html` 三張圖以 `k = 2` 移植進同一個 FigJam board 的過程；每一條規則都是那三次移植裡實際踩過並修掉的。
+- 規則來源：`specs/annotation/015-annotation-workspace/diagrams/review-flow-{overview,dry-run,official-run}.html` 三張圖以 `k = 2` 移植進同一個 FigJam board 的過程；每一條規則都是那三次移植裡實際踩過並修掉的。
