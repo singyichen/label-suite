@@ -134,15 +134,29 @@ test.describe('Annotator all-done return (issue #514, FR-022C / AC-2.5)', () => 
       window.LabelSuiteTaskDetailData.profiles.T001.datasetRecords =
         window.LabelSuiteTaskDetailData.profiles.T001.datasetRecords.slice(0, 1);
     `);
-    await gotoSample(page, 'sent-001', '&status=pending&q=%E6%89%8B%E8%A1%93&limit=10&offset=0');
+    await gotoSample(page, 'sent-001', '&status=pending&q=%E6%89%8B%E8%A1%93&limit=50&offset=0');
 
+    /* Assert on the URL the RETURN NAVIGATION requested, not on page.url()
+       after landing: annotation-list.html re-normalises its own address on
+       boot (applyListStateFromUrl + syncUrlToListState), and UXC-11 has it
+       drop defaults -- `offset=0` always, and `limit` whenever it is not
+       one of the accepted page sizes [20, 50, 100]. Reading page.url()
+       therefore measures the destination's normalisation, not what
+       buildListReturnUrl() emitted, and races that replaceState. */
+    const returnRequest = page.waitForRequest((req) => req.url().includes('annotation-list.html'));
     await page.getByTestId('ws-submit-btn').click();
 
-    await expect(page).toHaveURL(/annotation-list\.html\?/);
-    const url = new URL(page.url());
+    const url = new URL((await returnRequest).url());
     expect(url.searchParams.get('status')).toBe('pending');
     expect(url.searchParams.get('q')).toBe('手術');
-    expect(url.searchParams.get('limit')).toBe('10');
+    expect(url.searchParams.get('limit')).toBe('50');
     expect(url.searchParams.get('offset')).toBe('0');
+
+    /* And the state actually takes effect on the list it lands on: status
+       and q survive normalisation because they are not defaults. */
+    await expect(page).toHaveURL(/annotation-list\.html\?/);
+    const landed = new URL(page.url());
+    expect(landed.searchParams.get('status')).toBe('pending');
+    expect(landed.searchParams.get('q')).toBe('手術');
   });
 });
