@@ -55,7 +55,7 @@
 
     <svg viewBox="0 0 1200 1160" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="rvdry-title rvdry-desc">
       <title id="rvdry-title">試標審核詳細流程</title>
-      <desc id="rvdry-desc">流程圖：試標提交後拆成樣本乘標記員的審核單位，審核員逐單位審核。先判斷已審人數是否達門檻，未達則停在已同意或已修改的過渡狀態等待下一位審核員；達門檻後判斷審核員是否改動答案，無人改動即定稿唯讀，有改動則進入逐項嚴格多數決。退回同樣是一筆審核提交，一樣計入已審人數並往下推導，因此退回而未改動答案的單位仍會定稿。計票時，已提交審核但該項未改動的審核員其票計給標記員原答案，尚未提交者不計入分母；全員都改動時原答案不列為候選；未達已提交人數一半即不收斂；收斂即定稿，平手或全分歧才落入爭議池，由具仲裁資格的審核員逐項裁定後定稿。退回在試標只記錄審核決策，不改變標記員狀態。右欄標註示範任務 T014 因只需一位審核員而簡化掉的兩個節點。底部為任務層級流程：全體標記員提交完成後任務轉為待 IAA 確認，該轉態只看標記提交、不看審核進度。此後有兩條各自獨立的品質輸入——標記員的原始答案彙總為標記一致性（IAA），審核員的審核決策彙總為標記員被修改率；兩項指標都不阻擋開放正式標記，由專案主持人判讀後決定要開放正式標記，或修訂指引後再跑一輪試標（修訂紀錄必填）。</desc>
+      <desc id="rvdry-desc">流程圖：試標提交後拆成樣本乘標記員的審核單位，審核員逐單位審核。先判斷已審人數是否達門檻，未達則停在已同意或已修改的過渡狀態等待下一位審核員；達門檻後判斷審核員是否改動答案或純退回（退回且未改動答案），兩者皆無即定稿唯讀，任一發生則進入逐項嚴格多數決。退回同樣是一筆審核提交，一樣計入已審人數；但純退回不計為對標記員原答案的同意票，而是阻擋定稿、直接列為爭議項（issue #551）。計票時，已提交審核但該項未改動且非純退回的審核員其票計給標記員原答案，尚未提交者不計入分母；全員都改動或純退回時原答案不列為候選；門檻為 1（如 T014）時唯一審核員之修正逕行收斂於該值，純退回則例外恆不收斂；門檻 ≥ 2 時未達已提交人數一半即不收斂；收斂即定稿，平手、全分歧或含純退回才落入爭議池，由具仲裁資格的審核員逐項裁定——純退回之爭議項於仲裁卡呈現「無替代值」，仲裁者選其對應選項即維持退回。退回在試標只記錄審核決策，不改變標記員狀態（純退回亦然）。右欄標註示範任務 T014 因只需一位審核員而簡化掉的節點與純退回情境。底部為任務層級流程：全體標記員提交完成後任務轉為待 IAA 確認，該轉態只看標記提交、不看審核進度。此後有兩條各自獨立的品質輸入——標記員的原始答案彙總為標記一致性（IAA），審核員的審核決策彙總為標記員被修改率；兩項指標都不阻擋開放正式標記，由專案主持人判讀後決定要開放正式標記，或修訂指引後再跑一輪試標（修訂紀錄必填）。</desc>
 
       <defs>
         <marker id="arw" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#64748B"/></marker>
@@ -94,8 +94,8 @@
       <path d="M 640 716 H 496" fill="none" stroke="#64748B" stroke-width="1.2" marker-end="url(#arw)"/>
 
       <!-- ══ Connector labels ══ -->
-      <rect x="512" y="256" width="112" height="12" rx="2" fill="#F5F3FF"/>
-      <text x="568" y="265" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="0.06em">退回也計入已審人數</text>
+      <rect x="500" y="256" width="136" height="12" rx="2" fill="#F5F3FF"/>
+      <text x="568" y="265" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="0.06em">計入人數，非同意票</text>
 
       <rect x="238" y="256" width="72" height="12" rx="2" fill="#F5F3FF"/>
       <text x="274" y="265" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="0.06em">否 · 未達門檻</text>
@@ -191,11 +191,11 @@
       <text x="900" y="240" fill="#6366F1" font-size="8" font-family="'JetBrains Mono', monospace" letter-spacing="0.18em">T014 · 審核流程示範：試標</text>
       <text x="900" y="260" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">需 1 位審核員 · 標記項目：單選標籤</text>
 
-      <text x="900" y="292" fill="#1E1B4B" font-size="11" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif">① 這個設定簡化掉哪兩個節點</text>
+      <text x="900" y="292" fill="#1E1B4B" font-size="11" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif">① 這個設定簡化掉哪些節點</text>
       <text x="900" y="310" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">門檻＝1，第一位送出即達門檻</text>
       <text x="900" y="326" fill="#94A3B8" font-size="9" font-family="'JetBrains Mono', monospace">→「過渡狀態」永遠不會出現</text>
-      <text x="900" y="348" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">單一審核員構不成嚴格多數</text>
-      <text x="900" y="364" fill="#94A3B8" font-size="9" font-family="'JetBrains Mono', monospace">→ 有任何改動就直接進爭議池</text>
+      <text x="900" y="348" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">唯一審核員即為法定全額（issue #551）</text>
+      <text x="900" y="364" fill="#94A3B8" font-size="9" font-family="'JetBrains Mono', monospace">→ 有修正逕行收斂，僅純退回進爭議池</text>
 
       <text x="900" y="396" fill="#1E1B4B" font-size="11" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif">② dry-02-one-divergent 的三個單位</text>
 
@@ -203,9 +203,9 @@
       <text x="926" y="419" fill="#15803D" font-size="9" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">已定稿</text>
       <text x="962" y="419" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">kioleemg12 neutral · wang 同意</text>
 
-      <rect x="900" y="432" width="52" height="16" rx="4" fill="#FEF2F2" stroke="#FECACA" stroke-width="1"/>
-      <text x="926" y="443" fill="#B91C1C" font-size="9" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">爭議中</text>
-      <text x="962" y="443" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">113450022 neutral · wang 改 positive</text>
+      <rect x="900" y="432" width="52" height="16" rx="4" fill="#F0FDF4" stroke="#BBF7D0" stroke-width="1"/>
+      <text x="926" y="443" fill="#15803D" font-size="9" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">已定稿</text>
+      <text x="962" y="443" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">113450022 neutral → positive（wang 修正，issue #551 起 N=1 逕行收斂）</text>
 
       <rect x="900" y="456" width="52" height="16" rx="4" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
       <text x="926" y="467" fill="#64748B" font-size="9" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">待審</text>
