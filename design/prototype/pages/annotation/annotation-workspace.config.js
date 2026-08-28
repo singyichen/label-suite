@@ -51,7 +51,7 @@
       reviewRejectLabel: '退回',
       wsReviewSubmitSuccess: '審核已送出',
       reviewNoAnswer: '（無）',
-      reviewNote: '通過：採用此筆標記為本輸出類型的審核結果。退回：記錄審核決策與修正差異；是否回退標記員狀態依試標／正式標記而異，實際影響見下方「送出前確認」。',
+      reviewNote: '通過：採用標記員在該輸出類型的作答為審核結果。退回：記錄審核決策與修正差異；是否回退標記員狀態依試標／正式標記而異，實際影響見下方「送出前確認」。',
       reviewCorrectionTitle: '直接修正（Reviewer 修正後答案）',
       toastSelectDecision: '請完成每位標記員的審核決策',
       toastReviewCorrectionReset: '偵測到直接修正的內容因重新整理而遺失，對應的通過／退回決策已重置，請重新確認後再送出',
@@ -168,7 +168,7 @@
       reviewRejectLabel: 'Reject',
       wsReviewSubmitSuccess: 'Review submitted',
       reviewNoAnswer: '(none)',
-      reviewNote: 'Approve: accept this annotation as the review result for this output type. Reject: records the review decision and any correction; whether the annotator status is rolled back differs between a dry run and an official run -- the actual effect is stated under “Confirm before submitting” below.',
+      reviewNote: 'Approve: accept the annotator’s answer for that output type as the review result. Reject: records the review decision and any correction; whether the annotator status is rolled back differs between a dry run and an official run -- the actual effect is stated under “Confirm before submitting” below.',
       reviewCorrectionTitle: "Direct correction (reviewer's corrected answer)",
       toastSelectDecision: 'Please decide on every annotator before submitting',
       toastReviewCorrectionReset: 'The direct correction was lost on reload, so the matching approve/reject decision was reset -- please re-confirm before submitting',
@@ -2859,7 +2859,13 @@
      first card keeps the original reading order -- explanation first, then
      the decisions it explains. Deliberately called only on the interactive
      path: the arbitration, finalized and empty-unit branches render no
-     decision pair, and never carried the note before this change either. */
+     decision pair, and never carried the note before this change either.
+     The copy moved with it: 本輸出類型 / "for this output type" was a
+     deictic pointing at the containing card, which no longer exists at this
+     level, so it is now the generic 該輸出類型 / "that output type" -- still
+     accurate, since each approve/reject pair remains per outKey (FR-014P).
+     Both strings are pinned in issue-520-review-note-once.spec.ts and
+     issue-451-reject-copy-run-type.spec.ts. */
   function appendReviewDecisionNote(host) {
     var note = document.createElement('p');
     note.className = 'rv-review-note';
