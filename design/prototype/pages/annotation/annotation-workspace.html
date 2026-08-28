@@ -449,7 +449,27 @@
     /* issue #520: `flex: 1` was inert while the note lived inside the block
        .content-card review row; as a direct child of the flex-column
        #annotationPreview it would grow the paragraph, so it goes. */
-    .rv-review-note { font-size: 12px; color: var(--color-ink-muted); }
+    /* issue #550: the decision-note tooltip trigger sits in the banner
+       row after .rv-flow-trigger; inline-flex keeps it on the chip line and
+       lets the banner's flex-wrap carry it at 375px. */
+    .rv-review-note { display: inline-flex; align-items: center; font-size: 12px; color: var(--color-ink-muted); }
+    /* The shared .tooltip-bubble anchors above its trigger and hangs off
+       its left edge -- right for a form label at the left margin, wrong for
+       a trigger that flex-wrap may park anywhere along a 375px banner row.
+       Anchor the bubble to the BANNER instead (its .tooltip-wrap goes
+       static, the banner is the positioned ancestor) and open it below the
+       row at the banner's own width, so it can never run past either edge. */
+    .rv-unit-context { position: relative; }
+    .rv-review-note .tooltip-wrap { position: static; }
+    .rv-review-note .tooltip-bubble {
+      top: calc(100% + 6px);
+      bottom: auto;
+      left: 0;
+      right: 0;
+      width: auto;
+      max-width: none;
+    }
+    .rv-review-note .tooltip-bubble::after { display: none; }
     .rv-bulk-actions { display: flex; gap: 8px; flex-shrink: 0; }
 
     .rv-annotator-list { display: flex; flex-direction: column; gap: 8px; }

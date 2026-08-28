@@ -193,8 +193,21 @@ test.describe('the tooltip mounts once per review unit, above the card stack (is
   });
 
   test('the tooltip lives in the unit-context banner, right after the review-flow trigger', async ({ page }) => {
-    await openReviewer(page, 'official_run');
+    // T016 ofm-02 has a derived unit status, so the FR-064 banner renders
+    // its 了解審核流程 trigger; the note must be the trigger's next sibling.
+    await page.goto(
+      buildWorkspaceUrl({
+        task_id: 'T016',
+        sample_id: 'ofm-02-approved-interim',
+        role: 'reviewer',
+        run_type: 'official_run',
+        annotator_id: 'kioleemg12',
+        reviewer_id: 'reviewer_chen',
+      })
+    );
+    await dismissGuidelineModal(page);
     const banner = page.getByTestId('ws-review-unit-context');
+    await expect(banner.getByTestId('ws-review-flow-trigger')).toHaveCount(1);
     await expect(banner.getByTestId('ws-review-note')).toHaveCount(1);
     await expect(banner.getByTestId('ws-review-note-trigger')).toHaveCount(1);
     const followsFlowTrigger = await page.evaluate(() => {
@@ -203,6 +216,19 @@ test.describe('the tooltip mounts once per review unit, above the card stack (is
       return !!flow && !!note && flow.nextElementSibling === note;
     });
     expect(followsFlowTrigger).toBe(true);
+  });
+
+  test('a unit with no derived status has no flow trigger, so the tooltip is simply the banner\'s last child', async ({ page }) => {
+    await openReviewer(page, 'official_run');
+    const banner = page.getByTestId('ws-review-unit-context');
+    await expect(banner.getByTestId('ws-review-flow-trigger')).toHaveCount(0);
+    await expect(banner.getByTestId('ws-review-note')).toHaveCount(1);
+    const isLastChild = await page.evaluate(() => {
+      const banner = document.querySelector('[data-testid="ws-review-unit-context"]');
+      const note = document.querySelector('[data-testid="ws-review-note"]');
+      return !!banner && !!note && banner.lastElementChild === note;
+    });
+    expect(isLastChild).toBe(true);
   });
 });
 

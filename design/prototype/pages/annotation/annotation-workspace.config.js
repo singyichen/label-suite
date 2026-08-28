@@ -2835,9 +2835,12 @@
      would be noisier than a hover/focus disclosure. A real <button>
      triggers it (never the native title attribute, MASTER.md:1482) with an
      aria-describedby-linked role="tooltip" bubble, so hover and keyboard
-     focus both work. Mount point, once-per-unit count and DOM order
-     (before the first card) are unchanged from issue #520 -- only the
-     element and its copy differ. */
+     focus both work. Once-per-unit count and DOM order (before the first
+     card) are unchanged from issue #520; the mount point moved on the
+     maintainer's review of #550: it sits in the FR-064 unit-context banner
+     right after the 了解審核流程 trigger, so the two "what does this unit
+     mean" entry points share one row instead of one floating between the
+     banner and the card stack. */
   function appendReviewNoteTooltip(host) {
     var wrap = document.createElement('div');
     wrap.className = 'rv-review-note';
@@ -3934,10 +3937,16 @@
        below could not. A card reviewing ONE annotator has no union to show --
        that panel already renders exactly this annotator's spans, so the card
        would be a pixel-identical second copy of the sample text. */
-    /* issue #520: one decision note for the whole unit, immediately above
-       the card stack whose 通過/退回 pairs it explains; issue #550 turned it
-       into a run_type-branched tooltip (still mounted here, still once). */
-    appendReviewNoteTooltip(preview);
+    /* issue #520: one decision note for the whole unit, above the card
+       stack whose 通過/退回 pairs it explains; issue #550 turned it into a
+       run_type-branched tooltip and docked it in the unit-context banner
+       beside the review-flow trigger (still once, still before the first
+       card). The banner is built above, before the non-interactive early
+       returns, so the note only lands on units that actually show
+       decisions. */
+    appendReviewNoteTooltip(
+      preview.querySelector('[data-testid="ws-review-unit-context"]') || preview
+    );
 
     var spanKeys = mergedSpanKeys();
     var spanRowRendered = false;
