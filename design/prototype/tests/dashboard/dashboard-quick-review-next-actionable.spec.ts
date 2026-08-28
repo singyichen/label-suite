@@ -71,8 +71,11 @@ function quickReviewButton(page: Page, taskId: string) {
 test.describe('Dashboard — quick review opens the next actionable unit', () => {
   /* T014's first record (dry-01-all-agree) is finalized for all three
      annotators; the first unit anybody still has to review is
-     dry-02-one-divergent x tony0950127. The disputed dry-02 x 113450022 unit
-     sorts EARLIER in the enumeration, so this also pins pending > disputed. */
+     dry-02-one-divergent x tony0950127. dry-02 x 113450022 sorts EARLIER in
+     the enumeration but is not actionable either way -- it is finalized
+     (issue #551: its sole reviewer's correction converges at N=1), so this
+     test still pins pending as the top priority, just no longer against a
+     disputed sibling. */
   test('routes to the first pending unit, not the first dataset record', async ({ page }) => {
     await openReviewerScenario(page);
     await quickReviewButton(page, 'T014').click();
@@ -129,9 +132,12 @@ test.describe('Dashboard — quick review opens the next actionable unit', () =>
 
   /* Once every T015 unit is finalized there is nothing to open: the CTA must
      fall back to the review list with a stated empty state instead of
-     silently opening a read-only unit. T015's remaining actionable units are
-     one pending (agree -> finalized at min_reviewers = 1) and one dispute
-     (arbitrated by chen -> finalized). */
+     silently opening a read-only unit. T015's remaining actionable unit was
+     one pending (agree -> finalized at min_reviewers = 1); ofs-02 is already
+     finalized on its own by the time this test runs (issue #551: its sole
+     reviewer's correction converges at N=1), so the submitArbitration()
+     call below is redundant but harmless -- kept to also cover an arbiter
+     resolving an already-converged item as a no-op. */
   test('falls back to the review list with an empty state when nothing is actionable', async ({ page }) => {
     await openReviewerScenario(page);
 

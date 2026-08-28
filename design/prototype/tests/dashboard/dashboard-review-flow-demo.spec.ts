@@ -47,20 +47,24 @@ const DEMO_TASKS = [
        rounded to 2 decimals by formatReviewSummary's toFixed(2). See
        tests/annotation/issue-489-iaa-single-derivation.spec.ts for the
        independently-verified Do/De/alpha values. */
-    // dry-05 x kioleemg12 moved from pending to finalized (issue #502: a
-    // dry_run reject still counts as reviewed). IAA is derived from
-    // annotator values only (computeIaaAlpha), untouched by this change.
-    reviewerSummaryZh: '任務覆蓋 10 / 15 個審核單位 · 待審 5 個 · 未達定稿門檻 7 個 · 爭議中 2 個 · IAA 0.59',
+    /* issue #551 (v4.54.0): min_reviewers = 1 now converges a sole
+       reviewer's correction on submit (dry-02/dry-03's "B" rows moved from
+       disputed to finalized, +2), while dry-05's pure reject now blocks
+       finalization instead of reading as agreement (-1 finalized). IAA is
+       derived from annotator values only (computeIaaAlpha), untouched. */
+    reviewerSummaryZh: '任務覆蓋 10 / 15 個審核單位 · 待審 5 個 · 未達定稿門檻 6 個 · 爭議中 1 個 · IAA 0.59',
     reviewerSummaryEn:
-      'Task coverage 10 / 15 review units · 5 pending · 7 short of finalize threshold · 2 disputed · IAA 0.59',
+      'Task coverage 10 / 15 review units · 5 pending · 6 short of finalize threshold · 1 disputed · IAA 0.59',
   },
   {
     id: 'T015',
     runType: 'official_run',
     runTypeBadge: '正式標記',
-    reviewerSummaryZh: '任務覆蓋 3 / 4 個審核單位 · 待審 1 個 · 未達定稿門檻 2 個 · 爭議中 1 個 · IAA 無法計算',
+    // issue #551: ofs-02's sole reviewer correction now converges at N=1
+    // (was disputed).
+    reviewerSummaryZh: '任務覆蓋 3 / 4 個審核單位 · 待審 1 個 · 未達定稿門檻 1 個 · IAA 無法計算',
     reviewerSummaryEn:
-      'Task coverage 3 / 4 review units · 1 pending · 2 short of finalize threshold · 1 disputed · IAA Not computable',
+      'Task coverage 3 / 4 review units · 1 pending · 1 short of finalize threshold · IAA Not computable',
   },
   {
     id: 'T016',

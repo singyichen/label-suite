@@ -69,10 +69,11 @@
       arbitrationVoteTally: '{value}：{count} 票（{pct}%）',
       arbitrationVoteAnnotator: '標記員原答案',
       arbitrationVoteDistSep: '：',
+      arbitrationPureRejectLabel: '審核員退回（無替代值）',
       arbitrationVoteReasonEvenTie: '未收斂原因：{dist} 平手，沒有值取得嚴格多數（需 > {th} 票）',
       arbitrationVoteReasonAllDivergent: '未收斂原因：{dist} 全數分歧，沒有值取得嚴格多數（需 > {th} 票）',
       arbitrationVoteReasonNoMajority: '未收斂原因：票數分布 {dist}，沒有值取得嚴格多數（需 > {th} 票）',
-      arbitrationVoteReasonSingleReviewer: '未收斂原因：僅 1 位審核員提出異議，單一審核員不足以推翻標記員答案',
+      arbitrationVoteReasonPureReject: '未收斂原因：至少一位審核員退回且未提出替代值，無法計入多數決，須由仲裁者裁定',
       historyActionOverridden: '已覆寫',
       historyActionGoldConfirmed: '已確認標準答案',
       historyActionGoldReopened: '重新開放標準答案',
@@ -186,10 +187,11 @@
       arbitrationVoteTally: '{value}: {count} votes ({pct}%)',
       arbitrationVoteAnnotator: "annotator's original answer",
       arbitrationVoteDistSep: ' : ',
+      arbitrationPureRejectLabel: 'Reviewer rejected (no replacement value)',
       arbitrationVoteReasonEvenTie: 'Not converged: {dist} tie, no value reached a strict majority (needs > {th} votes)',
       arbitrationVoteReasonAllDivergent: 'Not converged: {dist} all divergent, no value reached a strict majority (needs > {th} votes)',
       arbitrationVoteReasonNoMajority: 'Not converged: vote split {dist}, no value reached a strict majority (needs > {th} votes)',
-      arbitrationVoteReasonSingleReviewer: 'Not converged: only one reviewer dissented, and a single reviewer cannot outvote the annotator',
+      arbitrationVoteReasonPureReject: 'Not converged: at least one reviewer rejected with no replacement value, which cannot be tallied into a majority and requires an arbiter',
       historyActionOverridden: 'Overridden',
       historyActionGoldConfirmed: 'Gold confirmed',
       historyActionGoldReopened: 'Gold reopened',
@@ -3360,6 +3362,12 @@
   var arbitrationChoices = {};
 
   function formatDisputeValue(value) {
+    /* issue #551: a naked reject carries the PURE_REJECT_VALUE sentinel
+       instead of a real answer -- render it as what it is (a rejection with
+       no proposed replacement), not as the raw marker string. */
+    if (value === window.LabelSuiteAnnotationWorkspaceData.PURE_REJECT_VALUE) {
+      return t('arbitrationPureRejectLabel');
+    }
     if (value == null || value === '') return t('reviewNoAnswer');
     return typeof value === 'string' ? value : JSON.stringify(value);
   }
@@ -3390,7 +3398,7 @@
     even_tie: 'arbitrationVoteReasonEvenTie',
     all_divergent: 'arbitrationVoteReasonAllDivergent',
     no_majority: 'arbitrationVoteReasonNoMajority',
-    single_reviewer: 'arbitrationVoteReasonSingleReviewer',
+    pure_reject: 'arbitrationVoteReasonPureReject',
   };
 
   function buildArbitrationVotesBlock(votes) {
@@ -4257,12 +4265,21 @@
     appendReviewHistoryEntry(history, decisionLines.concat(correctionLines).join('\n'));
 
     var summary = buildHistorySummary() + '\n' + decisionLines.join('\n');
+    /* issue #551: the ✕/✓ decision itself must survive into storage, not
+       just its free-text history line -- getReviewUnitStatus()/
+       getDisputeItems() need to tell a reject with no correction apart
+       from an approve, and a same-value answer alone cannot say which. */
+    var submitPayload = collectAnswerPayload();
+    submitPayload.decisions = {};
+    state.selectedOutputTypes.forEach(function (outKey) {
+      submitPayload.decisions[outKey] = reviewRowDecisions[decisionKey(outKey, annotatorId)];
+    });
     window.LabelSuiteAnnotationWorkspaceData.markSampleSubmitted(
       currentProfile.id,
       currentRole,
       currentRunType,
       currentSampleId,
-      collectAnswerPayload(),
+      submitPayload,
       summary,
       currentIdentity
     );

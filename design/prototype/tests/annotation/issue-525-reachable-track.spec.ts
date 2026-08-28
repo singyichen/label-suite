@@ -19,13 +19,69 @@
  *
  * Fixtures (annotation-workspace.data.js ~L2299):
  *   T015 official_run, min_reviewers 1 -- ofs-01 finalized (same lane),
- *        ofs-02 disputed, ofs-03 finalized by arbitration, ofs-04 pending.
- *   T014 dry_run,      min_reviewers 1 -- dry-03 / annotator B disputed.
+ *        ofs-03 finalized by arbitration, ofs-04 pending.
+ *   T014 dry_run,      min_reviewers 1 -- dry-05 / annotator A disputed
+ *        (pure reject, issue #551).
  *   T016 official_run, min_reviewers 3 -- all five states.
  *   T017 official_run, min_reviewers 2 -- oft-02 approved (1 < 2).
+ *
+ * issue #551 (v4.54.0): min_reviewers = 1 now converges a SOLE reviewer's
+ * CORRECTION on submit instead of unconditionally requiring arbitration, so
+ * T015's ofs-02-modified-dispute and T014's dry-03-dispute-open (both plain
+ * corrections) no longer stay disputed at this threshold -- the only way a
+ * min_reviewers = 1 unit still reaches 爭議中 is a pure reject (no
+ * correction). T014 already has one (dry-05-pending-review); T015 has none,
+ * so the official_run "still disputed" tests below seed one directly on
+ * T001 instead of adding a fixture to the shared T014-T017 seed matrix.
  */
 import { test, expect, type Page } from '@playwright/test';
 import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
+
+const REJECT_TASK = 'T001';
+const REJECT_SAMPLE = 'sent-001';
+const REJECT_ANNOTATOR = 'kioleemg12';
+const REJECT_REVIEWER = 'reviewer_wang';
+
+/* Reject with no correction (issue #551): the only min_reviewers = 1 path
+ * that still reaches 爭議中 -- see the file header. */
+async function seedPureRejectUnit(page: Page): Promise<void> {
+  await page.evaluate((a) => {
+    const data = (window as unknown as {
+      LabelSuiteAnnotationWorkspaceData: {
+        markSampleSubmitted: (
+          taskId: string, role: string, runType: string, sampleId: string,
+          payload: unknown, historySummary: string,
+          identity: { annotatorId?: string; reviewerId?: string }
+        ) => void;
+      };
+    }).LabelSuiteAnnotationWorkspaceData;
+    data.markSampleSubmitted(
+      a.task, 'annotator', 'official_run', a.sample,
+      { previewState: { single_label: { selected: 'positive' } } }, '',
+      { annotatorId: a.annotator }
+    );
+    data.markSampleSubmitted(
+      a.task, 'reviewer', 'official_run', a.sample,
+      {
+        previewState: { single_label: { selected: 'positive' } },
+        decisions: { single_label: 'reject' },
+      },
+      '',
+      { annotatorId: a.annotator, reviewerId: a.reviewer }
+    );
+  }, { task: REJECT_TASK, sample: REJECT_SAMPLE, annotator: REJECT_ANNOTATOR, reviewer: REJECT_REVIEWER });
+}
+
+async function openPureRejectUnit(page: Page): Promise<void> {
+  await page.goto(buildWorkspaceUrl({
+    task_id: REJECT_TASK, sample_id: REJECT_SAMPLE, role: 'reviewer', run_type: 'official_run',
+    annotator_id: REJECT_ANNOTATOR, reviewer_id: REJECT_REVIEWER,
+  }));
+  await seedPureRejectUnit(page);
+  await page.reload();
+  await page.getByTestId('ws-review-flow-trigger').click();
+  await expect(page.getByTestId('ws-review-flow-drawer')).toBeVisible();
+}
 
 function track(page: Page) {
   return page.locator('[data-testid="ws-review-flow-drawer"] .review-track');
@@ -63,7 +119,7 @@ test.describe('issue #525 PR-C — min_reviewers = 1 renders only the reachable 
   });
 
   test('a disputed unit shows 待審 / 爭議中 / 已定稿 and nothing else', async ({ page }) => {
-    await openUnit(page, { task_id: 'T015', sample_id: 'ofs-02-modified-dispute' });
+    await openPureRejectUnit(page);
 
     await expect(track(page)).toBeVisible();
     await expect(track(page).locator('[role="listitem"]')).toHaveCount(3);
@@ -103,11 +159,14 @@ test.describe('issue #525 PR-C — min_reviewers = 1 renders only the reachable 
   });
 
   test('applies to dry_run at the same threshold', async ({ page }) => {
+    // dry-05-pending-review / annotator A: a pure reject (issue #551) --
+    // the only min_reviewers = 1 path still reachable at 爭議中 (see the
+    // file header; dry-03's plain correction now converges on submit).
     await openUnit(page, {
       task_id: 'T014',
-      sample_id: 'dry-03-dispute-open',
+      sample_id: 'dry-05-pending-review',
       run_type: 'dry_run',
-      annotator_id: '113450022',
+      annotator_id: 'kioleemg12',
     });
 
     await expect(track(page).locator('[role="listitem"]')).toHaveCount(3);
@@ -115,7 +174,7 @@ test.describe('issue #525 PR-C — min_reviewers = 1 renders only the reachable 
   });
 
   test('keeps the whole aria contract of the five-node track', async ({ page }) => {
-    await openUnit(page, { task_id: 'T015', sample_id: 'ofs-02-modified-dispute' });
+    await openPureRejectUnit(page);
 
     await expect(track(page)).toHaveAttribute('role', 'list');
     await expect(track(page)).toHaveAttribute('aria-label', '審核單位狀態');

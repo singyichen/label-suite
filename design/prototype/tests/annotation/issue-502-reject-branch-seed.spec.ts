@@ -15,14 +15,25 @@ import { buildListUrl } from './_workspace-helpers';
  * existed as unreviewed "pending" rows before this issue):
  *   - T014 dry-05-pending-review x kioleemg12: reviewer_wang's decision is
  *     now `reject`, but dry_run has no rollback channel -- the annotator
- *     stays 'submitted' and the unit still finalizes normally (agree value).
+ *     stays 'submitted'.
  *   - T017 oft-05-pending-review x kioleemg12: reviewer_wang's decision is
  *     `reject` on official_run -- markSampleRejected() rolls the annotator
  *     back to 'pending' (existing answers kept), opening a rework backlog,
  *     while the reviewer's own decision still counts as a real review.
  *
+ * issue #551 (v4.54.0) revised what dry-05's reject-with-no-correction does
+ * to the unit's derived status: a reject that carries no value change used
+ * to read as an implicit AGREEMENT vote (compareOutputAnswer sees no diff),
+ * so the unit finalized on the annotator's original answer even though the
+ * reviewer explicitly objected to it. It now blocks finalization instead --
+ * the unit stays disputed until an arbiter resolves it (or a later reviewer
+ * submits a correction) -- so the two dry-05 assertions below that used to
+ * read 已定稿/`finalized` now read 爭議中/`disputed`. oft-05 is unaffected:
+ * its annotator submission is wiped by the official_run rollback before
+ * getReviewUnitStatus() ever runs, so there is nothing to derive either way.
+ *
  * Traceability: specs/annotation/015-annotation-workspace/spec.md
- *   FR-014I, AC-3.15, AC-6.4
+ *   FR-014I, FR-051, FR-061, AC-3.15, AC-6.4
  */
 
 interface Identity {
@@ -143,19 +154,20 @@ test.describe('issue #502 -- dry_run reject: decision recorded, no rework backlo
     );
     const knownValues = await knownReviewUnitStatusValues(page);
     expect([...knownValues, null]).toContain(status);
-    // Agree-valued reject with 1/1 reviewers reached: finalizes like any
-    // other agreeing review -- reject is a decision, not a value change.
-    expect(status).toBe('finalized');
+    // issue #551: a reject with no correction no longer reads as an
+    // agreement vote -- it blocks finalization, so the unit stays disputed
+    // (this was 'finalized' before v4.54.0; see the file header).
+    expect(status).toBe('disputed');
   });
 
-  test('the reviewer list badge for dry-05 x kioleemg12 reads 已定稿, same as a non-reject finalize', async ({ page }) => {
+  test('the reviewer list badge for dry-05 x kioleemg12 reads 爭議中, not a silent finalize (issue #551)', async ({ page }) => {
     await page.goto(buildListUrl({ task_id: 'T014', role: 'reviewer', run_type: 'dry_run' }));
 
     const target = page.getByTestId('ws-sample-item')
       .filter({ hasText: 'dry-05-pending-review' })
       .filter({ hasText: 'kioleemg12' });
     await expect(target).toHaveCount(1);
-    await expect(target.locator('.status-badge')).toHaveText('已定稿 · 已鎖定');
+    await expect(target.locator('.status-badge')).toHaveText('爭議中 · 未定稿');
   });
 });
 

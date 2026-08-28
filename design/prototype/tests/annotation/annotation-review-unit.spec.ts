@@ -256,7 +256,12 @@ test.describe('review unit: five-state machine', () => {
     expect(await statusOf(page, { runType: 'official_run', minReviewers: 2 })).toBe('approved');
   });
 
-  test('a reviewer who changed the answer disputes the unit', async ({ page }) => {
+  /* issue #551 (v4.54.0): min_reviewers = 1 makes N = 1 the FULL quorum, not
+     an incomplete one -- the sole reviewer's correction is authoritative and
+     converges immediately instead of requiring arbitration. This used to
+     read 'disputed' unconditionally below N = 2; see the two-reviewer test
+     below for the case that still stays disputed. */
+  test("a lone reviewer's correction converges the unit at min_reviewers = 1", async ({ page }) => {
     await seed(page, {
       role: 'annotator',
       runType: 'official_run',
@@ -268,6 +273,31 @@ test.describe('review unit: five-state machine', () => {
       runType: 'official_run',
       payload: labelPayload('fear'),
       identity: { annotatorId: ANNOTATOR, reviewerId: REVIEWER_A },
+    });
+    expect(await statusOf(page, { runType: 'official_run' })).toBe('finalized');
+  });
+
+  test('two disagreeing reviewers with no strict majority still dispute the unit', async ({ page }) => {
+    await seed(page, {
+      role: 'annotator',
+      runType: 'official_run',
+      payload: labelPayload('sad'),
+      identity: { annotatorId: ANNOTATOR },
+    });
+    await seed(page, {
+      role: 'reviewer',
+      runType: 'official_run',
+      payload: labelPayload('fear'),
+      identity: { annotatorId: ANNOTATOR, reviewerId: REVIEWER_A },
+    });
+    // A second reviewer agreeing with the annotator makes this a genuine
+    // 1:1 tie (implicit 'sad' vote vs REVIEWER_A's 'fear') at N=2 -- no
+    // value reaches a strict majority, so the unit stays disputed.
+    await seed(page, {
+      role: 'reviewer',
+      runType: 'official_run',
+      payload: labelPayload('sad'),
+      identity: { annotatorId: ANNOTATOR, reviewerId: REVIEWER_B },
     });
     expect(await statusOf(page, { runType: 'official_run' })).toBe('disputed');
   });
