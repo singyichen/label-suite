@@ -358,6 +358,7 @@ while IFS= read -r consumer; do
         retired_clauses="${retired_clauses//,/$'\n'}"
         retired_clauses="${retired_clauses//&&/$'\n'}"
         retired_clauses="${retired_clauses//||/$'\n'}"
+        retired_clauses="$(printf '%s\n' "$retired_clauses" | awk '{ gsub(/npm[[:space:]]+test[.]/, "npm test\n"); gsub(/npm[[:space:]]+run[.]/, "npm run\n"); print }')"
         retired_command_active=0
         while IFS= read -r clause; do
             printf '%s\n' "$clause" | grep -Eq "$retired_command_pattern" || continue
