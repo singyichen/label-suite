@@ -66,6 +66,9 @@ test.describe('issue #525 PR-B — banner DOM order is run type -> state -> thre
       'rv-unit-state rv-unit-state-approved',
       'rv-unit-chip rv-unit-threshold',
       'rv-flow-trigger',
+      // issue #550: the decision-note tooltip trails the flow trigger on
+      // interactive units; it is the last thing in the banner, not a chip.
+      'rv-review-note',
     ]);
   });
 

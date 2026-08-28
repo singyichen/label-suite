@@ -51,9 +51,11 @@
       reviewRejectLabel: '退回',
       wsReviewSubmitSuccess: '審核已送出',
       reviewNoAnswer: '（無）',
-      reviewNote: '通過：採用標記員在該輸出類型的作答為審核結果。退回：記錄審核決策與修正差異；是否回退標記員狀態依試標／正式標記而異，實際影響見下方「送出前確認」。',
+      reviewNoteDry: '通過：採用該輸出類型目前顯示的作答（含您的修正）為審核結果。退回：記錄不採用的決策與修正差異。送出後——試標：不回退標記員狀態，品質問題由任務層級 IAA 閘門與下一輪試標處理。',
+      reviewNoteOfficial: '通過：採用該輸出類型目前顯示的作答（含您的修正）為審核結果。退回：記錄不採用的決策與修正差異。送出後——正式標記：任一輸出類型退回會使此單位回到待標記，並產生標記員 {annotator} 的重標待辦；全部通過則標記員狀態不變。',
+      reviewNoteTriggerLabel: '審核決策說明',
       reviewCorrectionTitle: '直接修正（Reviewer 修正後答案）',
-      toastSelectDecision: '請完成每位標記員的審核決策',
+      toastSelectDecision: '請完成以下輸出類型的審核決策：{list}',
       toastReviewCorrectionReset: '偵測到直接修正的內容因重新整理而遺失，對應的通過／退回決策已重置，請重新確認後再送出',
       toastResolveDivergent: '請先裁定所有分歧項目',
       arbitrationTitle: '爭議仲裁',
@@ -117,21 +119,6 @@
       unitStateAriaFinalized: '{state}，已達 {n} 位審核員門檻，內容已鎖定',
       reviewOriginalAnswerLabel: '標記員原答案：',
       reviewCorrectedAnswerLabel: 'Reviewer 修正後答案：',
-      summaryTitle: '送出前確認',
-      summaryToggleEffectPart: '送出後影響',
-      summaryToggleCounts: '{n} 個輸出類型 · {approve} 通過 · {reject} 退回',
-      summaryTogglePending: '{pending} 尚未決策',
-      summaryBadgeChanged: '已修改',
-      summaryBadgeUnchanged: '未修改',
-      summaryNoteApproveUnchanged: '通過且未修改：將保存與標記員原答案相同的 reviewer answer。',
-      summaryNoteApproveChanged: '通過的是您修正後的答案（非標記員原答案）：將保存修正後的 reviewer answer，並記錄為差異，納入爭議推導。',
-      summaryNoteRejectUnchanged: '退回但未修改答案：將保存與標記員原答案相同的 reviewer answer，並記錄退回決策。',
-      summaryNoteRejectChanged: '退回並修改答案：將保存您修正後的 reviewer answer，並記錄退回決策與差異，納入爭議推導。',
-      summaryNoteUndecided: '尚未決策：此輸出類型必須完成通過／退回才能送出。',
-      summaryPending: '尚未完成決策：{list}',
-      summaryPendingNone: '所有輸出類型皆已完成決策。',
-      summaryEffectOfficial: '送出後影響：任一輸出類型判定退回時，此正式標記單位會回到待標記並產生標記員重標待辦（指派給 {annotator}）；全部通過則標記員狀態不變。',
-      summaryEffectDry: '送出後影響：試標退回不會個別回退標記員狀態，僅記錄審核決策與修正差異，品質問題由任務層級 IAA 閘門與下一輪試標處理。',
       toastReviewDecisionResetOnEdit: '直接修正的值已變更，對應的通過／退回決策已重置，請重新確認後再送出',
     },
     en: {
@@ -169,9 +156,11 @@
       reviewRejectLabel: 'Reject',
       wsReviewSubmitSuccess: 'Review submitted',
       reviewNoAnswer: '(none)',
-      reviewNote: 'Approve: accept the annotator’s answer for that output type as the review result. Reject: records the review decision and any correction; whether the annotator status is rolled back differs between a dry run and an official run -- the actual effect is stated under “Confirm before submitting” below.',
+      reviewNoteDry: 'Approve: the answer currently shown for that output type (including your correction) becomes the review result. Reject: records the decision not to accept it, plus any correction. After submitting — dry run: the annotator status is not rolled back; quality issues are handled by the task-level IAA gate and the next dry run.',
+      reviewNoteOfficial: 'Approve: the answer currently shown for that output type (including your correction) becomes the review result. Reject: records the decision not to accept it, plus any correction. After submitting — official run: rejecting any output type returns this unit to pending and creates a re-annotation task for {annotator}; if everything is approved the annotator status is unchanged.',
+      reviewNoteTriggerLabel: 'Review decision guidance',
       reviewCorrectionTitle: "Direct correction (reviewer's corrected answer)",
-      toastSelectDecision: 'Please decide on every annotator before submitting',
+      toastSelectDecision: 'Please decide on the following output types before submitting: {list}',
       toastReviewCorrectionReset: 'The direct correction was lost on reload, so the matching approve/reject decision was reset -- please re-confirm before submitting',
       toastResolveDivergent: 'Please resolve every divergent item first',
       arbitrationTitle: 'Dispute arbitration',
@@ -235,21 +224,6 @@
       unitStateAriaFinalized: '{state}, met the {n}-reviewer threshold, locked',
       reviewOriginalAnswerLabel: "Annotator's original answer: ",
       reviewCorrectedAnswerLabel: "Reviewer's corrected answer: ",
-      summaryTitle: 'Confirm before submitting',
-      summaryToggleEffectPart: 'after-submit impact',
-      summaryToggleCounts: '{n} output types · {approve} approved · {reject} rejected',
-      summaryTogglePending: '{pending} undecided',
-      summaryBadgeChanged: 'Changed',
-      summaryBadgeUnchanged: 'Unchanged',
-      summaryNoteApproveUnchanged: 'Approved with no edit: the stored reviewer answer will be identical to the annotator’s original answer.',
-      summaryNoteApproveChanged: 'What you approve is your corrected answer, not the annotator’s original: the corrected reviewer answer is stored and recorded as a difference feeding dispute derivation.',
-      summaryNoteRejectUnchanged: 'Rejected with no edit: the stored reviewer answer will be identical to the annotator’s original answer, alongside the reject decision.',
-      summaryNoteRejectChanged: 'Rejected with an edit: your corrected reviewer answer is stored alongside the reject decision and recorded as a difference feeding dispute derivation.',
-      summaryNoteUndecided: 'Not decided yet: this output type needs an approve/reject before you can submit.',
-      summaryPending: 'Still undecided: {list}',
-      summaryPendingNone: 'Every output type has been decided.',
-      summaryEffectOfficial: 'After submitting: if any output type is rejected, this official-run unit returns to pending and creates a re-annotation task for the annotator (assigned to {annotator}); if everything is approved the annotator status is unchanged.',
-      summaryEffectDry: 'After submitting: a dry-run reject does not roll back the annotator status individually; it only records the review decision and any correction, and quality issues are handled by the task-level IAA gate and the next dry run.',
       toastReviewDecisionResetOnEdit: 'The direct correction changed, so the matching approve/reject decision was reset -- please re-confirm before submitting',
     },
   };
@@ -2650,7 +2624,6 @@
       refresh();
     });
     persistReviewDraft();
-    renderReviewSubmitSummary();
   }
 
   /* free_text corrections are typed, so `a` and `r` are ordinary input the
@@ -2841,47 +2814,64 @@
     return correction;
   }
 
-  /* issue #399: reviewNote explains what approve/reject actually do, but
-     was defined in I18N and never rendered anywhere -- render it so
-     reviewers can actually read it before deciding.
-     issue #451 (FR-070/AC-3.40): that explanation used to promise the
-     annotator-status rollback unconditionally, while FR-014I scopes the
-     rollback to official_run (AC-3.15/AC-6.4). Since AC-3.33 forbids any
-     run_type presentation branch on the review card, the note stays ONE
-     run-type-invariant string -- same shape as the run-type-qualified
-     sidebar shortcut label (issue #409).
-     issue #515 (FR-070/AC-3.40): it used to spell out BOTH run_type
-     consequences in full, duplicating the pre-submit confirmation area
-     (ws-review-summary-effect, FR-077/AC-3.42) almost verbatim. The note
-     now keeps only the run-type-invariant decision-level semantics and
-     defers the consequence to the confirmation area, which sits outside
-     the card and may legally branch on run_type.
-     issue #520 (FR-070/AC-3.40/AC-3.45): it used to be appended by
-     appendCorrectionControl(), i.e. once per review CARD -- and a task
-     whose outputs[] yields more than one card (T013: the FR-014N merged
-     span card plus multi_dim) repeated the identical sentence on each of
-     them. It is mounted here instead, once per review unit and above the
-     whole card stack, for two reasons: the sentence is run-type- AND
-     output-type-invariant, so it has nothing card-specific to say; and
-     every 通過/退回 pair in the unit is docked inside a card's Bypass row
-     (dockDecisionsOnBypassRow), which leaves the row stack's own container
-     as the only node that dominates all of them. Placing it before the
-     first card keeps the original reading order -- explanation first, then
-     the decisions it explains. Deliberately called only on the interactive
-     path: the arbitration, finalized and empty-unit branches render no
-     decision pair, and never carried the note before this change either.
-     The copy moved with it: 本輸出類型 / "for this output type" was a
-     deictic pointing at the containing card, which no longer exists at this
-     level, so it is now the generic 該輸出類型 / "that output type" -- still
-     accurate, since each approve/reject pair remains per outKey (FR-014P).
-     Both strings are pinned in issue-520-review-note-once.spec.ts and
-     issue-451-reject-copy-run-type.spec.ts. */
-  function appendReviewDecisionNote(host) {
-    var note = document.createElement('p');
-    note.className = 'rv-review-note';
-    note.setAttribute('data-testid', 'ws-review-note');
-    note.textContent = t('reviewNote');
-    host.appendChild(note);
+  /* issue #399: this explains what approve/reject actually do, but was
+     defined in I18N and never rendered anywhere -- render it so reviewers
+     can actually read it before deciding. issue #451/#515/#520 kept it as
+     ONE run-type-invariant sentence deferring the submit consequence to a
+     separate pre-submit confirmation area, mounted once per review unit
+     above the whole card stack (not inside any ws-review-row) so AC-3.33's
+     ban on a run_type branch INSIDE a review card never applied to it.
+     issue #550 (FR-070 points 2/3 revoked, FR-077/AC-3.42/AC-3.44 revoked;
+     spec 015 v4.55.0) folds that confirmation area's run-type-branched
+     consequence into THIS element instead of a second element below the
+     cards -- the two used to say the same thing twice, and this element was
+     already outside AC-3.33's boundary, so nothing stops it branching on
+     run_type now that the single-invariant-string constraint (FR-070 point
+     3) is gone. It renders as a MASTER.md Tooltip (design/system/
+     MASTER.md:1423-1482) reusing task-config.css's .tooltip-wrap /
+     .field-help-tooltip / .tooltip-bubble -- this page already links that
+     stylesheet for the shared task-config engine, and the two run_type
+     texts are long enough that showing both (or reflowing between them)
+     would be noisier than a hover/focus disclosure. A real <button>
+     triggers it (never the native title attribute, MASTER.md:1482) with an
+     aria-describedby-linked role="tooltip" bubble, so hover and keyboard
+     focus both work. Once-per-unit count and DOM order (before the first
+     card) are unchanged from issue #520; the mount point moved on the
+     maintainer's review of #550: it sits in the FR-064 unit-context banner
+     right after the 了解審核流程 trigger, so the two "what does this unit
+     mean" entry points share one row instead of one floating between the
+     banner and the card stack. */
+  function appendReviewNoteTooltip(host) {
+    var wrap = document.createElement('div');
+    wrap.className = 'rv-review-note';
+    wrap.setAttribute('data-testid', 'ws-review-note');
+
+    var tooltipWrap = document.createElement('span');
+    tooltipWrap.className = 'tooltip-wrap';
+
+    var trigger = document.createElement('button');
+    trigger.type = 'button';
+    trigger.className = 'field-help-tooltip';
+    trigger.textContent = '?';
+    trigger.setAttribute('data-testid', 'ws-review-note-trigger');
+    trigger.setAttribute('aria-label', t('reviewNoteTriggerLabel'));
+    trigger.setAttribute('aria-describedby', 'wsReviewNoteBubble');
+
+    var bubble = document.createElement('p');
+    bubble.className = 'tooltip-bubble';
+    bubble.id = 'wsReviewNoteBubble';
+    bubble.setAttribute('role', 'tooltip');
+    bubble.setAttribute('data-testid', 'ws-review-note-bubble');
+    bubble.setAttribute('data-run-type', currentRunType);
+    bubble.textContent =
+      currentRunType === 'official_run'
+        ? t('reviewNoteOfficial').replace('{annotator}', currentAnnotatorId())
+        : t('reviewNoteDry');
+
+    tooltipWrap.appendChild(trigger);
+    tooltipWrap.appendChild(bubble);
+    wrap.appendChild(tooltipWrap);
+    host.appendChild(wrap);
   }
 
   /* FR-014P: a review card must end with exactly ONE decision line,
@@ -2955,25 +2945,15 @@
     return row;
   }
 
-  /* ── Pre-submit review summary (spec 015 v4.32.0, FR-077/AC-3.42,
-     issue #453) ──────────────────────────────────────────────────────
-     The direct correction (engine state) and the approve/reject decision
-     (reviewRowDecisions) are two independent stores that read as ONE
-     action on screen, so nothing told a reviewer whether 通過 accepts the
-     annotator's answer or the edited one, what a 退回 with no edit stores,
-     or what submitting does to the annotator's status. Two halves close
-     that gap:
-       (1) every decision records the answer it was made against, so a
-           later edit of that answer invalidates it instead of silently
-           riding along -- the live-edit twin of issue #398's reload path
-           (which stays as-is: FR-014S/AC-6.10 still excludes the
-           correction's own value from draft persistence);
-       (2) the submit area restates, per output type, the original answer,
-           the corrected answer, the decision and the submit consequence.
-     Placement is deliberate: the consequence line is run-type dependent,
-     and AC-3.33 forbids a run_type presentation branch on the REVIEW CARD.
-     Rendering it in the submit area keeps that contract intact -- the same
-     reason FR-064's run-type-aware context banner sits outside the card. */
+  /* spec 015 FR-077/AC-3.42 (issue #453) used to pair this with a pre-submit
+     summary that restated, per output type, the original answer, the
+     corrected answer, the decision and the submit consequence -- issue #550
+     revoked that summary (see the v4.55.0 Changelog entry). What survives:
+     every decision records the answer it was made against, so a later edit
+     of that answer invalidates it instead of silently riding along -- the
+     live-edit twin of issue #398's reload path (which stays as-is:
+     FR-014S/AC-6.10 still excludes the correction's own value from draft
+     persistence). */
   var reviewDecisionAnswers = {};
 
   /* AC-3.42: a decision must never outlive the value it judged. A restored
@@ -3004,101 +2984,11 @@
     showToast(t('toastReviewDecisionResetOnEdit'), 'warning');
   }
 
-  function buildSummaryAnswer(testid, labelKey, value) {
-    var span = document.createElement('span');
-    span.className = 'rv-summary-answer';
-    span.setAttribute('data-testid', testid);
-    span.setAttribute('data-answer', value);
-    /* The arrow carries the direction visually, so the labels move off the
-       screen rather than disappearing -- a screen reader still hears which
-       half it is on. */
-    span.setAttribute('aria-label', t(labelKey) + (value || t('reviewNoAnswer')));
-    span.textContent = value || t('reviewNoAnswer');
-    return span;
-  }
-
-  /* issue #519: the two answers used to occupy a stacked line each, which
-     restated the pair a reviewer had already read on the review card and
-     still left "did this actually change?" to be worked out by comparing
-     two strings by eye. One diff line answers it by shape, and the badge
-     makes `data-changed` readable rather than a colour-only signal. */
-  function appendSummaryDiff(row, original, corrected, changed) {
-    var diff = document.createElement('div');
-    diff.className = 'rv-summary-diff';
-    diff.setAttribute('data-testid', 'ws-review-summary-diff');
-
-    diff.appendChild(
-      buildSummaryAnswer('ws-review-summary-original', 'reviewOriginalAnswerLabel', original)
-    );
-
-    var arrow = document.createElement('span');
-    arrow.className = 'rv-summary-arrow';
-    arrow.setAttribute('aria-hidden', 'true');
-    arrow.textContent = '→';
-    diff.appendChild(arrow);
-
-    diff.appendChild(
-      buildSummaryAnswer('ws-review-summary-corrected', 'reviewCorrectedAnswerLabel', corrected)
-    );
-
-    var badge = document.createElement('span');
-    badge.className = 'rv-summary-badge';
-    badge.setAttribute('data-testid', 'ws-review-summary-changed-badge');
-    badge.textContent = t(changed ? 'summaryBadgeChanged' : 'summaryBadgeUnchanged');
-    diff.appendChild(badge);
-
-    row.appendChild(diff);
-  }
-
-  var SUMMARY_NOTE_KEYS = {
-    'approve-unchanged': 'summaryNoteApproveUnchanged',
-    'approve-changed': 'summaryNoteApproveChanged',
-    'reject-unchanged': 'summaryNoteRejectUnchanged',
-    'reject-changed': 'summaryNoteRejectChanged',
-    undecided: 'summaryNoteUndecided',
-  };
-
-  function buildSummaryRow(outKey, rowName) {
-    var decision = reviewRowDecisions[decisionKey(outKey, rowName)] || null;
-    var original = reviewRowOriginals[outKey] || '';
-    var corrected = currentRowAnswer(outKey);
-    var changed = corrected !== original;
-
-    var row = document.createElement('div');
-    row.className = 'rv-summary-row';
-    row.setAttribute('data-testid', 'ws-review-summary-row');
-    row.setAttribute('data-outkey', outKey);
-    row.setAttribute('data-decision', decision || 'none');
-    row.setAttribute('data-changed', changed ? 'true' : 'false');
-
-    var head = document.createElement('div');
-    head.className = 'rv-summary-head';
-    head.textContent = outKey;
-    row.appendChild(head);
-
-    appendSummaryDiff(row, original, corrected, changed);
-
-    var kind = decision ? decision + '-' + (changed ? 'changed' : 'unchanged') : 'undecided';
-    var note = document.createElement('div');
-    note.className = 'rv-summary-note';
-    note.setAttribute('data-testid', 'ws-review-summary-note');
-    note.setAttribute('data-kind', kind);
-    note.textContent = t(SUMMARY_NOTE_KEYS[kind]);
-    row.appendChild(note);
-    return row;
-  }
-
-  /* issue #515 (2-a): AC-3.42 has always scoped the pre-submit summary to
-     an INTERACTIVE review unit, but renderReviewerWorkspace() was the only
-     place that knew what that meant -- it hid the panel ahead of its three
-     early returns (arbitration / finalized / empty). The two paths that
-     re-render the summary on their own -- the capture-phase edit watcher on
-     #annotationPreview and the a / r decision shortcut -- only checked the
-     role, so a single click on a read-only unit brought the whole panel
-     back and nagged for a decision the page has no submit button to accept.
-     These three functions are the single source: the render path branches
-     on the SAME reason string the guard reads, so there is no second copy
-     of the conditions left to drift. */
+  /* issue #515 (2-a) established these three functions as the single source
+     for "is this review unit interactive" (not arbitration, not finalized,
+     not empty); renderReviewerWorkspace()'s three early returns are the
+     sole consumer since issue #550 removed the summary's own duplicate
+     interactivity re-renders (see the v4.55.0 Changelog entry). */
   var REVIEW_UNIT_BLOCK = {
     ARBITRATION: 'arbitration',
     FINALIZED: 'finalized',
@@ -3126,141 +3016,12 @@
     return null;
   }
 
-  function isReviewUnitInteractive() {
-    if (currentRole !== 'reviewer' || !currentProfile) return false;
-    return reviewUnitBlockReason(currentReviewUnitStatus()) === null;
-  }
-
-  function hideReviewSubmitSummary() {
-    var panel = document.getElementById('wsReviewSubmitSummary');
-    if (!panel) return;
-    while (panel.firstChild) panel.removeChild(panel.firstChild);
-    panel.classList.add('hidden');
-  }
-
-  /* Static constant only -- never a data-derived string (see the
-     GUIDELINE_FILE_ICON_SVG innerHTML note below for the same rule). */
-  var SUMMARY_CARET_SVG =
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" ' +
-    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-    '<polyline points="6 9 12 15 18 9"></polyline></svg>';
-
-  /* issue #515 (2-b): the summary is a wall of text that is only ever
-     load-bearing while some output type is still undecided -- that is the
-     one moment the reviewer cannot act without reading it, and it is
-     exactly when the submit gate is closed. So it force-expands then and
-     collapses otherwise, and the collapsed header carries the decision
-     counts so the collapsed state is itself a signal rather than a blank
-     title. The state is re-derived from the decisions on every render and
-     never persisted: a stored flag would be a second source of truth
-     beside the FR-014S / AC-6.10 draft-restore contract, for no gain the
-     reviewer would notice. */
-  function buildSummaryToggle(body, pendingCount, approveCount, rejectCount) {
-    var forced = pendingCount > 0;
-    var btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'rv-summary-toggle';
-    btn.setAttribute('data-testid', 'ws-review-summary-toggle');
-    btn.setAttribute('aria-controls', body.id);
-
-    var caret = document.createElement('span');
-    caret.className = 'rv-summary-caret';
-    caret.setAttribute('aria-hidden', 'true');
-    caret.innerHTML = SUMMARY_CARET_SVG;
-    btn.appendChild(caret);
-
-    /* Both halves are named: collapsed, this header is the only thing left
-       on screen, and "送出前確認" alone would hide that the run-type
-       consequence lives in here too. */
-    var label = document.createElement('span');
-    label.textContent = t('summaryTitle') + ' · ' + t('summaryToggleEffectPart');
-    btn.appendChild(label);
-
-    var countsText = t('summaryToggleCounts')
-      .replace('{n}', String(approveCount + rejectCount + pendingCount))
-      .replace('{approve}', String(approveCount))
-      .replace('{reject}', String(rejectCount));
-    if (forced) {
-      countsText += ' · ' + t('summaryTogglePending').replace('{pending}', String(pendingCount));
-    }
-    var counts = document.createElement('span');
-    counts.className = 'rv-summary-toggle-counts';
-    counts.textContent = '· ' + countsText;
-    btn.appendChild(counts);
-
-    function setExpanded(expanded) {
-      btn.setAttribute('aria-expanded', String(expanded));
-      body.classList.toggle('hidden', !expanded);
-    }
-    setExpanded(forced);
-    if (forced) {
-      /* Collapsing away the only place that names the blocking outputs is
-         not on offer while they block the submit. aria-disabled rather
-         than disabled keeps the counts reachable from the keyboard. */
-      btn.setAttribute('aria-disabled', 'true');
-    } else {
-      btn.addEventListener('click', function () {
-        setExpanded(btn.getAttribute('aria-expanded') !== 'true');
-      });
-    }
-    return btn;
-  }
-
-  function renderReviewSubmitSummary() {
-    var panel = document.getElementById('wsReviewSubmitSummary');
-    if (!panel) return;
-    hideReviewSubmitSummary();
-    if (!isReviewUnitInteractive() || !state.selectedOutputTypes.length) return;
-    var rowName = currentAnnotatorId();
-
-    var body = document.createElement('div');
-    body.className = 'rv-summary-body';
-    body.id = 'wsReviewSubmitSummaryBody';
-
-    var pendingKeys = [];
-    var approveCount = 0;
-    var rejectCount = 0;
-    state.selectedOutputTypes.forEach(function (outKey) {
-      var decision = reviewRowDecisions[decisionKey(outKey, rowName)];
-      if (!decision) pendingKeys.push(outKey);
-      else if (decision === 'approve') approveCount += 1;
-      else rejectCount += 1;
-      body.appendChild(buildSummaryRow(outKey, rowName));
-    });
-
-    var pending = document.createElement('p');
-    pending.className = 'rv-summary-pending';
-    pending.setAttribute('data-testid', 'ws-review-summary-pending');
-    pending.setAttribute('data-count', String(pendingKeys.length));
-    pending.textContent = pendingKeys.length
-      ? t('summaryPending').replace('{list}', pendingKeys.join('、'))
-      : t('summaryPendingNone');
-    body.appendChild(pending);
-
-    var effect = document.createElement('p');
-    effect.className = 'rv-summary-effect';
-    effect.setAttribute('data-testid', 'ws-review-summary-effect');
-    effect.setAttribute('data-run-type', currentRunType);
-    /* issue #519: official_run is the branch that actually rolls somebody
-       back, and this screen reviews exactly one named annotator -- so the
-       re-annotation todo says whose. dry_run stays unnamed on purpose: it
-       rolls nobody back, and a name there would imply otherwise. */
-    effect.textContent =
-      currentRunType === 'official_run'
-        ? t('summaryEffectOfficial').replace('{annotator}', rowName)
-        : t('summaryEffectDry');
-    body.appendChild(effect);
-
-    panel.appendChild(buildSummaryToggle(body, pendingKeys.length, approveCount, rejectCount));
-    panel.appendChild(body);
-    panel.classList.remove('hidden');
-  }
-
   /* The shared engine owns every correction control and exposes no change
      hook, so mirror markUnsaved()'s delegated-capture approach on the
      preview root and re-derive on the next tick, after the engine's own
-     handler has written the new value into state. Decision clicks land here
-     too, which is what keeps the summary in step with them. */
+     handler has written the new value into state -- decision clicks land
+     here too, which is what keeps a decision from outliving the answer it
+     judged (syncDecisionsWithCorrections(), AC-3.42 point 2). */
   (function watchReviewEdits() {
     var previewRoot = document.getElementById('annotationPreview');
     if (!previewRoot) return;
@@ -3271,7 +3032,6 @@
       setTimeout(function () {
         queued = false;
         syncDecisionsWithCorrections();
-        renderReviewSubmitSummary();
       }, 0);
     }
     ['input', 'change', 'click'].forEach(function (eventName) {
@@ -4059,10 +3819,6 @@
     reviewRowOriginals = {};
     reviewDecisionRefreshers = [];
     reviewDecisionAnswers = {};
-    /* issue #453: every early return below (arbitration / finalized /
-       empty unit) is a path with nothing to summarize, so hide first and
-       let the interactive path re-render it at the end. */
-    hideReviewSubmitSummary();
     /* issue #196 (CONT-03): restore any in-progress decisions persisted by
        persistReviewDraft() before this render -- a reload must not silently
        undecide rows the reviewer already chose.
@@ -4181,9 +3937,16 @@
        below could not. A card reviewing ONE annotator has no union to show --
        that panel already renders exactly this annotator's spans, so the card
        would be a pixel-identical second copy of the sample text. */
-    /* issue #520: one decision note for the whole unit, immediately above
-       the card stack whose 通過/退回 pairs it explains. */
-    appendReviewDecisionNote(preview);
+    /* issue #520: one decision note for the whole unit, above the card
+       stack whose 通過/退回 pairs it explains; issue #550 turned it into a
+       run_type-branched tooltip and docked it in the unit-context banner
+       beside the review-flow trigger (still once, still before the first
+       card). The banner is built above, before the non-interactive early
+       returns, so the note only lands on units that actually show
+       decisions. */
+    appendReviewNoteTooltip(
+      preview.querySelector('[data-testid="ws-review-unit-context"]') || preview
+    );
 
     var spanKeys = mergedSpanKeys();
     var spanRowRendered = false;
@@ -4196,7 +3959,6 @@
       }
       preview.appendChild(buildReviewRow(outKey, submission));
     });
-    renderReviewSubmitSummary();
   }
 
   function appendReviewHistoryEntry(history, text) {
@@ -4210,6 +3972,20 @@
   /* FR-044/AC-6.3: one decision per outKey, for both run types --
      getReviewerRows() narrows to exactly one row, the reviewed annotator's
      (v4.0.0: the review unit is sample × annotator). */
+  /* issue #550 (FR-070 new point, spec 015 v4.55.0): with the pre-submit
+     confirmation area's summaryPending list gone (FR-077 revoked), nothing
+     on screen named WHICH output type was still blocking submit on a
+     multi-output task -- only the generic toastSelectDecision. This is the
+     sole surviving "still undecided" derivation in the file; the submit
+     guard below is its only caller. */
+  function pendingReviewOutputKeys(rowName) {
+    var pendingKeys = [];
+    state.selectedOutputTypes.forEach(function (outKey) {
+      if (!reviewRowDecisions[decisionKey(outKey, rowName)]) pendingKeys.push(outKey);
+    });
+    return pendingKeys;
+  }
+
   function handleReviewSubmit() {
     var history = document.getElementById('wsReviewHistory');
     if (!history) return;
@@ -4229,7 +4005,6 @@
     );
     if (lockedStatus === window.LabelSuiteAnnotationWorkspaceData.REVIEW_UNIT_STATUS.FINALIZED) return;
     var rowsByOutKey = {};
-    var allDecided = true;
     var annotatorId = currentAnnotatorId();
     var currentRejectedSomewhere = false;
     state.selectedOutputTypes.forEach(function (outKey) {
@@ -4237,12 +4012,12 @@
       rowsByOutKey[outKey] = rows;
       rows.forEach(function (row) {
         var decision = reviewRowDecisions[decisionKey(outKey, row.name)];
-        if (!decision) allDecided = false;
         if (row.name === annotatorId && decision === 'reject') currentRejectedSomewhere = true;
       });
     });
-    if (!allDecided) {
-      showToast(t('toastSelectDecision'), 'warning');
+    var pendingOutputKeys = pendingReviewOutputKeys(annotatorId);
+    if (pendingOutputKeys.length) {
+      showToast(t('toastSelectDecision').replace('{list}', pendingOutputKeys.join('、')), 'warning');
       return;
     }
 
