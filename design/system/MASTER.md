@@ -1846,45 +1846,90 @@ the annotator's (`approved` → `finalized`) versus any answer differing
 does not have. Use §Step Indicator for wizards (author-controlled linear steps);
 use this track for state machines that branch.
 
-**Layout:** a 7-column × 2-row grid. Row 1 is the same-answer lane, row 2 the
-differing-answer lane; `pending` and `finalized` span both rows. The two fork
-connectors are inline SVG and are decoration only.
+**Layout:** two grid variants, keyed by `min_reviewers`. At `min_reviewers >= 2`
+the track is a 9-column × 2-row grid: node / fork / branch caption / node /
+rail / node / rail / fork / node — the extra columns over the single-reviewer
+variant carry the same-vs-differing branch caption after the first fork and an
+inline caption (`未收斂` / `仲裁後`) on the rail leading out of the interim
+node. At `min_reviewers = 1` (`.review-track-single`) there is no interim node
+to reach quorum — `approved`/`modified` never occur, so the same-answer lane
+runs straight from the fork to `finalized` and the differing lane straight to
+`disputed`, leaving a 7-column × 2-row grid. In both variants row 1 is the
+same-answer lane, row 2 the differing-answer lane; `pending` and `finalized`
+span both rows. The two fork connectors are inline SVG and are decoration
+only.
 
 **Specs:**
 
 | Element | Value |
 |---------|-------|
-| Container | `display: grid`, `grid-template-columns: auto 28px auto minmax(16px, 1fr) auto 28px auto`, `grid-template-rows: 34px 34px` |
+| Container (`min_reviewers >= 2`) | `display: grid`, `grid-template-columns: auto 28px auto auto 1fr auto 1fr 28px auto`, `grid-template-rows: 34px 34px` |
+| Container (`min_reviewers = 1`, `.review-track-single`) | `grid-template-columns: auto 28px auto auto 1fr 28px auto` |
 | Node | pill: `padding: 4px 12px`, `border: 1px solid var(--color-border)`, `border-radius: var(--radius-full)`, `font-size: 13px` |
-| Node — visited | `border-color: var(--color-cta)`, `color: var(--color-cta)`, `background: var(--color-success-bg)` |
+| Node — visited | `border-color: var(--color-cta)`, `color: var(--color-cta)`, `background: var(--color-success-bg)`, `font-weight: 600` |
 | Node — current | `border-color: var(--color-primary)`, `color: var(--color-primary)`, `background: var(--color-primary-soft-bg)`, `font-weight: 600` |
-| Node — not reached | `color: var(--color-ink-muted)`, `background: var(--color-white)` |
-| Rail / fork stroke | `2px`, `var(--color-border)`; traversed segments `var(--color-cta)` |
+| Node — not reached | `color: var(--color-ink-muted)`, `background: var(--color-white)`, `font-weight: 500` |
+| Branch caption (`.review-track-branch[data-branch]`) | `font-size: 11px`, `font-weight: 500`, `color: var(--color-ink-muted)`; traversed lane adds `.done`: `color: var(--color-cta)`, `font-weight: 600`. Four keys: `same` / `differing` / `unconverged` / `arbitrated` |
+| Rail | `height: 2px`, `background: var(--color-border)`; traversed (`.done`) thickens to `height: 3px`, `background: var(--color-cta)` |
+| Fork stroke | `stroke-width: 2`, `var(--color-border)`; traversed path thickens to `stroke-width: 3`, `var(--color-cta)` |
 | Current marker | `目前：` text prefix, `font-size: 11px`, inherits the node colour |
 
 **CSS:**
 ```css
-.review-track { display: grid; grid-template-columns: auto 28px auto minmax(16px, 1fr) auto 28px auto; grid-template-rows: 34px 34px; align-items: center; justify-items: start; }
+.review-track { display: grid; grid-template-columns: auto 28px auto auto 1fr auto 1fr 28px auto; grid-template-rows: 34px 34px; align-items: center; justify-items: start; }
+.review-track-single { grid-template-columns: auto 28px auto auto 1fr 28px auto; }
 .review-track-node { display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-full); background: var(--color-white); color: var(--color-ink-muted); font-size: 13px; font-weight: 500; white-space: nowrap; }
-.review-track-node.done { border-color: var(--color-cta); background: var(--color-success-bg); color: var(--color-cta); }
+.review-track-node.done { border-color: var(--color-cta); background: var(--color-success-bg); color: var(--color-cta); font-weight: 600; }
 .review-track-node.current { border-color: var(--color-primary); background: var(--color-primary-soft-bg); color: var(--color-primary); font-weight: 600; }
 .review-track-marker { font-size: 11px; font-weight: 600; }
-.review-track-rail { width: 100%; height: 2px; background: var(--color-border); }
-.review-track-rail.done { background: var(--color-cta); }
+.review-track-rail { position: relative; width: 100%; display: flex; align-items: center; justify-content: center; }
+.review-track-rail::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); height: 2px; background: var(--color-border); }
+.review-track-rail.done::before { height: 3px; background: var(--color-cta); }
+.review-track-branch { position: relative; justify-self: stretch; text-align: center; padding: 0 4px; background: var(--color-white); color: var(--color-ink-muted); font-size: 11px; font-weight: 500; white-space: nowrap; }
+.review-track-branch.done { color: var(--color-cta); font-weight: 600; }
 .review-track-fork { display: block; line-height: 0; }
 ```
 
-**HTML structure** (unit on the differing-answer lane, currently `disputed`):
+**HTML structure, `min_reviewers >= 2`** (unit on the differing-answer lane,
+currently `disputed`):
 ```html
 <div class="review-track" role="list" aria-label="審核單位狀態">
   <span class="review-track-node done" role="listitem" style="grid-column:1;grid-row:1/3">待審</span>
   <span class="review-track-fork" aria-hidden="true" style="grid-column:2;grid-row:1/3"><!-- split svg --></span>
-  <span class="review-track-node" role="listitem" style="grid-column:3;grid-row:1">已同意</span>
-  <span class="review-track-node done" role="listitem" style="grid-column:3;grid-row:2">已修改</span>
-  <span class="review-track-rail" style="grid-column:4/6;grid-row:1"></span>
-  <span class="review-track-rail done" style="grid-column:4;grid-row:2"></span>
-  <span class="review-track-node current" role="listitem" aria-current="step" style="grid-column:5;grid-row:2">
+  <span class="review-track-branch" data-branch="same" style="grid-column:3;grid-row:1">答案未修改</span>
+  <span class="review-track-branch done" data-branch="differing" style="grid-column:3;grid-row:2">答案有修改</span>
+  <span class="review-track-node" role="listitem" style="grid-column:4;grid-row:1">已同意</span>
+  <span class="review-track-node done" role="listitem" style="grid-column:4;grid-row:2">已修改</span>
+  <span class="review-track-rail" style="grid-column:5/8;grid-row:1"></span>
+  <span class="review-track-rail done" style="grid-column:5;grid-row:2">
+    <span class="review-track-branch done" data-branch="unconverged">未收斂</span>
+  </span>
+  <span class="review-track-node current" role="listitem" aria-current="step" style="grid-column:6;grid-row:2">
     <span class="review-track-marker">目前：</span>爭議中
+  </span>
+  <span class="review-track-rail" style="grid-column:7;grid-row:2">
+    <span class="review-track-branch" data-branch="arbitrated">仲裁後</span>
+  </span>
+  <span class="review-track-fork" aria-hidden="true" style="grid-column:8;grid-row:1/3"><!-- merge svg --></span>
+  <span class="review-track-node" role="listitem" style="grid-column:9;grid-row:1/3">已定稿</span>
+</div>
+```
+
+**HTML structure, `min_reviewers = 1`** (`.review-track-single`; no
+`approved`/`modified` interim node — same unit shape, differing lane,
+currently `disputed`):
+```html
+<div class="review-track review-track-single" role="list" aria-label="審核單位狀態">
+  <span class="review-track-node done" role="listitem" style="grid-column:1;grid-row:1/3">待審</span>
+  <span class="review-track-fork" aria-hidden="true" style="grid-column:2;grid-row:1/3"><!-- split svg --></span>
+  <span class="review-track-branch" data-branch="same" style="grid-column:3;grid-row:1">答案未修改</span>
+  <span class="review-track-branch done" data-branch="differing" style="grid-column:3;grid-row:2">答案有修改</span>
+  <span class="review-track-rail" style="grid-column:4/6;grid-row:1"></span>
+  <span class="review-track-node current" role="listitem" aria-current="step" style="grid-column:4;grid-row:2">
+    <span class="review-track-marker">目前：</span>爭議中
+  </span>
+  <span class="review-track-rail" style="grid-column:5;grid-row:2">
+    <span class="review-track-branch" data-branch="arbitrated">仲裁後</span>
   </span>
   <span class="review-track-fork" aria-hidden="true" style="grid-column:6;grid-row:1/3"><!-- merge svg --></span>
   <span class="review-track-node" role="listitem" style="grid-column:7;grid-row:1/3">已定稿</span>
@@ -1893,13 +1938,19 @@ connectors are inline SVG and are decoration only.
 
 **Accessibility:**
 
-- `role="list"` + `role="listitem"`; forks and rails are `aria-hidden` decoration.
+- `role="list"` + `role="listitem"`; forks, rails, and branch captions are
+  decoration relative to the node list — forks carry `aria-hidden="true"`;
+  branch captions carry no `role` at all, so they stay in the accessibility
+  tree as plain text without joining the `listitem` collection.
 - Current node: `aria-current="step"` **and** the `目前：` text prefix — the
   position must not rely on colour alone (issue #456 AC-7). The prefix is added
   to the current node only; adding it to every node doubles the track width.
-- Known gap: visited (`--color-cta`) versus not-reached (`--color-border`) nodes
-  differ by colour only. AC-7 covers the current position, so closing this is
-  deferred; revisit if the track is reused where lane history carries meaning.
+- Visited (`--color-cta`) versus not-reached (`--color-border`) previously
+  differed by colour only (recorded as a known gap in v1.14). Issue #525 PR-C
+  closed it: `done` nodes and traversed branch captions render
+  `font-weight: 600` against `font-weight: 500` for everything else, and
+  traversed rails/fork strokes thicken from `2px`/`stroke-width: 2` to
+  `3px`/`stroke-width: 3`. No colour-only distinction remains.
 - The track is status output, not a control — nothing inside it is focusable.
 
 **When NOT to use:**
@@ -2819,3 +2870,4 @@ Before delivering any UI code, verify:
 | v1.12 | 2026-08-20 | **Admin page specs + sidebar arbitration (issue #183)** — Notification item-icon row updated to the shipped Lucide-SVG-on-semantic-tokens form (success / primary families); the v1.9 "known deviations" note replaced by the arbitration record: `.notif-badge` `#EF4444`/white sanctioned as constant across themes, fragment z-index values (600/700/300/320) sanctioned as a shared-fragment exception; added `design/system/pages/role-settings.md`, `user-management.md` |
 | v1.14 | 2026-08-27 | **Reviewer wayfinding (issue #456)** — 新增 §Review Status Track：以雙軌分岔呈現 `REVIEW_UNIT_STATUS`，並說明為何不能沿用線性 §Step Indicator（`annotation-015` FR-051 的 `approved` 永不經過 `disputed`）；當前節點以 `目前：` 文字前綴作為非顏色訊號（AC-7），並記錄 visited/not-reached 僅靠顏色區分的已知缺口；§Breadcrumb 深度上限自 2 層放寬為「審核路徑得用 3 層」，When NOT to use 同步改為 4+ 層 |
 | v1.13 | 2026-08-20 | **Auth page specs (issue #183)** — Dark Rule 9 migration note removed: shipped auth pages now use the canonical local token names, so the template is the shipped state; added `design/system/pages/login.md` (hosts the shared auth-chrome arbitrations: shadow-elevated card vs Login Card, `.lang-toggle`/`.sso-btn` indigo hover vs `btn-language`/`btn-oauth`, auth navbar variant, `.eye-toggle`), `register.md` (`.banner` error/success family, `.field-hint`), `forgot-password.md` (shipped State Panel / Success), `reset-password.md` (shipped State Panel / Token Error, `proto-toggle-bar` deferral) |
+| v1.15 | 2026-08-28 | **Review Status Track re-sync (issue #547)** — canon and the components-showcase.html static copy were behind the shipped `annotation-workspace.html` since issue #525 PR-C; both are brought back in line: at `min_reviewers >= 2` the grid gains two columns (9 total) for `.review-track-branch[data-branch]` captions (`same` / `differing` / `unconverged` / `arbitrated`); added the 7-column `.review-track-single` variant for `min_reviewers = 1`, which has no `approved`/`modified` interim node; done rails thicken `2px` → `3px` and traversed fork strokes `stroke-width: 2` → `3`; the v1.14 "visited vs not-reached is colour-only" known gap is retired — PR-C's `font-weight: 600` on `done` nodes/captions closed it |

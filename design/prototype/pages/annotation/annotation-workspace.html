@@ -383,12 +383,7 @@
       white-space: nowrap;
       cursor: pointer;
     }
-    /* design/system/MASTER.md §Review Status Track. NO LONGER VERBATIM as
-       of issue #525 PR-C: the canon still documents the 7-column layout
-       and the 2px rail, and components-showcase.html keeps its own static
-       copy of both. Neither is wrong-but-broken, so no test catches the
-       drift -- it is recorded in spec 015 v4.51.0 and tracked separately.
-       Copy FROM here, not from the canon, until that sync lands. */
+    /* design/system/MASTER.md §Review Status Track -- CSS verbatim. */
     /* 9 columns: node / fork / branch caption / node / rail / node / rail /
        fork / node. `.review-track-single` (min_reviewers = 1, issue #525
        PR-C) drops the two unreachable interim nodes and their trailing rail,
