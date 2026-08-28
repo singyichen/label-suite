@@ -891,7 +891,21 @@
     .rv-btn-text { line-height: 1; }
     .rv-answer-origin { font-size: 12px; color: var(--color-ink-muted); margin-top: 12px; }
     .rv-submit-summary { display: flex; flex-direction: column; gap: 10px; }
-    .rv-summary-title { font-size: 13px; font-weight: 700; color: var(--color-ink); }
+    /* issue #515: the summary collapses to its header once every output
+       type is decided, so the header itself has to carry the counts. */
+    .rv-summary-toggle {
+      display: flex; align-items: center; gap: 6px; width: 100%;
+      padding: 0; border: 0; background: none; text-align: left; cursor: pointer;
+      font-family: inherit; font-size: 13px; font-weight: 700; color: var(--color-ink);
+    }
+    .rv-summary-toggle[aria-disabled="true"] { cursor: default; }
+    .rv-summary-caret { display: inline-flex; color: var(--color-ink-muted); }
+    .rv-summary-caret svg { width: 14px; height: 14px; transition: transform var(--dur-normal) var(--ease-standard); }
+    .rv-summary-toggle[aria-expanded="true"] .rv-summary-caret svg { transform: rotate(180deg); }
+    /* Forced open (something is still undecided): no collapse to offer. */
+    .rv-summary-toggle[aria-disabled="true"] .rv-summary-caret { display: none; }
+    .rv-summary-toggle-counts { font-size: 12px; font-weight: 400; color: var(--color-ink-muted); }
+    .rv-summary-body { display: flex; flex-direction: column; gap: 10px; }
     .rv-summary-row {
       display: flex; flex-direction: column; gap: 2px;
       padding: 8px 10px; border: 1px solid var(--color-border); border-radius: var(--radius-md);
