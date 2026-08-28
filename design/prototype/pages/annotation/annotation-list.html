@@ -1819,13 +1819,17 @@
     /* Issue #450: a reviewer's summary, progress bar and completion badge
        are DERIVED from the live review-unit state via the shared
        computeReviewSummary() formula, so they can never contradict the
-       review-unit rows below. Null for annotators, and for reviewer tasks
-       with no stored review-unit state to derive from. */
+       review-unit rows below. Null for annotators only -- issue #501 removed
+       the second condition (`derivable`, i.e. some unit already reviewed),
+       because a task nobody has reviewed still has a summary the formula can
+       state truthfully, and the seeded strings it fell back to on those
+       tasks described no state that existed. Dropped here in the same change
+       as in dashboard.js: the two pages promise the same numbers, so gating
+       them differently is how they would start disagreeing. */
     var reviewSummary = null;
     if (context.role === 'reviewer') {
-      var derivedSummary = window.LabelSuiteAnnotationWorkspaceData.computeReviewSummary(
+      reviewSummary = window.LabelSuiteAnnotationWorkspaceData.computeReviewSummary(
         profile.id, context.runType);
-      if (derivedSummary.derivable) reviewSummary = derivedSummary;
     }
 
     var completionMap = readCompletionStateMap();
