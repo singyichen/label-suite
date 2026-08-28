@@ -51,7 +51,7 @@
       reviewRejectLabel: '退回',
       wsReviewSubmitSuccess: '審核已送出',
       reviewNoAnswer: '（無）',
-      reviewNote: '通過：採用此筆標記。退回：記錄審核決策與修正差異，與回退標記員狀態是不同層級的效果——正式標記退回後該樣本回到待標記，產生標記員重標待辦；試標退回不改變標記員狀態，品質問題由 IAA 閘門與下一輪試標處理。',
+      reviewNote: '通過：採用此筆標記為本輸出類型的審核結果。退回：記錄審核決策與修正差異；是否回退標記員狀態依試標／正式標記而異，實際影響見下方「送出前確認」。',
       reviewCorrectionTitle: '直接修正（Reviewer 修正後答案）',
       toastSelectDecision: '請完成每位標記員的審核決策',
       toastReviewCorrectionReset: '偵測到直接修正的內容因重新整理而遺失，對應的通過／退回決策已重置，請重新確認後再送出',
@@ -108,6 +108,9 @@
       reviewOriginalAnswerLabel: '標記員原答案：',
       reviewCorrectedAnswerLabel: 'Reviewer 修正後答案：',
       summaryTitle: '送出前確認',
+      summaryToggleEffectPart: '送出後影響',
+      summaryToggleCounts: '{n} 個輸出類型 · {approve} 通過 · {reject} 退回',
+      summaryTogglePending: '{pending} 尚未決策',
       summaryNoteApproveUnchanged: '通過且未修改：將保存與標記員原答案相同的 reviewer answer。',
       summaryNoteApproveChanged: '通過的是您修正後的答案（非標記員原答案）：將保存修正後的 reviewer answer，並記錄為差異，納入爭議推導。',
       summaryNoteRejectUnchanged: '退回但未修改答案：將保存與標記員原答案相同的 reviewer answer，並記錄退回決策。',
@@ -154,7 +157,7 @@
       reviewRejectLabel: 'Reject',
       wsReviewSubmitSuccess: 'Review submitted',
       reviewNoAnswer: '(none)',
-      reviewNote: 'Approve: accept this annotation. Reject: records the review decision and any correction, which is a different level of effect from rolling back the annotator status -- in an official run a reject returns the sample to pending and creates a re-annotation task for the annotator; in a dry run a reject leaves the annotator status unchanged, and quality issues are handled by the IAA gate and the next dry run.',
+      reviewNote: 'Approve: accept this annotation as the review result for this output type. Reject: records the review decision and any correction; whether the annotator status is rolled back differs between a dry run and an official run -- the actual effect is stated under “Confirm before submitting” below.',
       reviewCorrectionTitle: "Direct correction (reviewer's corrected answer)",
       toastSelectDecision: 'Please decide on every annotator before submitting',
       toastReviewCorrectionReset: 'The direct correction was lost on reload, so the matching approve/reject decision was reset -- please re-confirm before submitting',
@@ -211,6 +214,9 @@
       reviewOriginalAnswerLabel: "Annotator's original answer: ",
       reviewCorrectedAnswerLabel: "Reviewer's corrected answer: ",
       summaryTitle: 'Confirm before submitting',
+      summaryToggleEffectPart: 'after-submit impact',
+      summaryToggleCounts: '{n} output types · {approve} approved · {reject} rejected',
+      summaryTogglePending: '{pending} undecided',
       summaryNoteApproveUnchanged: 'Approved with no edit: the stored reviewer answer will be identical to the annotator’s original answer.',
       summaryNoteApproveChanged: 'What you approve is your corrected answer, not the annotator’s original: the corrected reviewer answer is stored and recorded as a difference feeding dispute derivation.',
       summaryNoteRejectUnchanged: 'Rejected with no edit: the stored reviewer answer will be identical to the annotator’s original answer, alongside the reject decision.',
@@ -2766,9 +2772,16 @@
        annotator-status rollback unconditionally, while FR-014I scopes the
        rollback to official_run (AC-3.15/AC-6.4). Since AC-3.33 forbids any
        run_type presentation branch on the review card, the note stays ONE
-       run-type-invariant string that names both outcomes and separates the
-       review decision from the annotator-status rollback -- same shape as
-       the run-type-qualified sidebar shortcut label (issue #409). */
+       run-type-invariant string -- same shape as the run-type-qualified
+       sidebar shortcut label (issue #409).
+       issue #515 (FR-070/AC-3.40): it used to spell out BOTH run_type
+       consequences in full, duplicating the pre-submit confirmation area
+       (ws-review-summary-effect, FR-077/AC-3.42) almost verbatim -- and,
+       because this runs once per outKey, three times over on a
+       three-output-type task. The card now keeps only the
+       run-type-invariant decision-level semantics and defers the
+       consequence to the confirmation area, which sits outside the card
+       and may legally branch on run_type. */
     var note = document.createElement('p');
     note.className = 'rv-review-note';
     note.setAttribute('data-testid', 'ws-review-note');
@@ -2952,6 +2965,49 @@
     return row;
   }
 
+  /* issue #515 (2-a): AC-3.42 has always scoped the pre-submit summary to
+     an INTERACTIVE review unit, but renderReviewerWorkspace() was the only
+     place that knew what that meant -- it hid the panel ahead of its three
+     early returns (arbitration / finalized / empty). The two paths that
+     re-render the summary on their own -- the capture-phase edit watcher on
+     #annotationPreview and the a / r decision shortcut -- only checked the
+     role, so a single click on a read-only unit brought the whole panel
+     back and nagged for a decision the page has no submit button to accept.
+     These three functions are the single source: the render path branches
+     on the SAME reason string the guard reads, so there is no second copy
+     of the conditions left to drift. */
+  var REVIEW_UNIT_BLOCK = {
+    ARBITRATION: 'arbitration',
+    FINALIZED: 'finalized',
+    EMPTY: 'empty',
+  };
+
+  function currentReviewUnitStatus() {
+    return window.LabelSuiteAnnotationWorkspaceData.getReviewUnitStatus(
+      currentProfile.id, currentRunType, currentSampleId, currentIdentity, state.selectedOutputTypes,
+      { minReviewers: currentProfile.minReviewers || 1 }
+    );
+  }
+
+  /* Returns null when the unit IS interactive. */
+  function reviewUnitBlockReason(unitStatus) {
+    var workspaceData = window.LabelSuiteAnnotationWorkspaceData;
+    if (
+      unitStatus === workspaceData.REVIEW_UNIT_STATUS.DISPUTED &&
+      workspaceData.isArbiterCandidate(currentProfile.id, currentRunType, currentSampleId, currentIdentity)
+    ) {
+      return REVIEW_UNIT_BLOCK.ARBITRATION;
+    }
+    if (unitStatus === workspaceData.REVIEW_UNIT_STATUS.FINALIZED) return REVIEW_UNIT_BLOCK.FINALIZED;
+    if (unitStatus === null && !demoAnnotatorRow()) return REVIEW_UNIT_BLOCK.EMPTY;
+    return null;
+  }
+
+  function isReviewUnitInteractive() {
+    if (currentRole !== 'reviewer' || !currentProfile) return false;
+    return reviewUnitBlockReason(currentReviewUnitStatus()) === null;
+  }
+
   function hideReviewSubmitSummary() {
     var panel = document.getElementById('wsReviewSubmitSummary');
     if (!panel) return;
@@ -2959,22 +3015,94 @@
     panel.classList.add('hidden');
   }
 
+  /* Static constant only -- never a data-derived string (see the
+     GUIDELINE_FILE_ICON_SVG innerHTML note below for the same rule). */
+  var SUMMARY_CARET_SVG =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" ' +
+    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<polyline points="6 9 12 15 18 9"></polyline></svg>';
+
+  /* issue #515 (2-b): the summary is a wall of text that is only ever
+     load-bearing while some output type is still undecided -- that is the
+     one moment the reviewer cannot act without reading it, and it is
+     exactly when the submit gate is closed. So it force-expands then and
+     collapses otherwise, and the collapsed header carries the decision
+     counts so the collapsed state is itself a signal rather than a blank
+     title. The state is re-derived from the decisions on every render and
+     never persisted: a stored flag would be a second source of truth
+     beside the FR-014S / AC-6.10 draft-restore contract, for no gain the
+     reviewer would notice. */
+  function buildSummaryToggle(body, pendingCount, approveCount, rejectCount) {
+    var forced = pendingCount > 0;
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'rv-summary-toggle';
+    btn.setAttribute('data-testid', 'ws-review-summary-toggle');
+    btn.setAttribute('aria-controls', body.id);
+
+    var caret = document.createElement('span');
+    caret.className = 'rv-summary-caret';
+    caret.setAttribute('aria-hidden', 'true');
+    caret.innerHTML = SUMMARY_CARET_SVG;
+    btn.appendChild(caret);
+
+    /* Both halves are named: collapsed, this header is the only thing left
+       on screen, and "送出前確認" alone would hide that the run-type
+       consequence lives in here too. */
+    var label = document.createElement('span');
+    label.textContent = t('summaryTitle') + ' · ' + t('summaryToggleEffectPart');
+    btn.appendChild(label);
+
+    var countsText = t('summaryToggleCounts')
+      .replace('{n}', String(approveCount + rejectCount + pendingCount))
+      .replace('{approve}', String(approveCount))
+      .replace('{reject}', String(rejectCount));
+    if (forced) {
+      countsText += ' · ' + t('summaryTogglePending').replace('{pending}', String(pendingCount));
+    }
+    var counts = document.createElement('span');
+    counts.className = 'rv-summary-toggle-counts';
+    counts.textContent = '· ' + countsText;
+    btn.appendChild(counts);
+
+    function setExpanded(expanded) {
+      btn.setAttribute('aria-expanded', String(expanded));
+      body.classList.toggle('hidden', !expanded);
+    }
+    setExpanded(forced);
+    if (forced) {
+      /* Collapsing away the only place that names the blocking outputs is
+         not on offer while they block the submit. aria-disabled rather
+         than disabled keeps the counts reachable from the keyboard. */
+      btn.setAttribute('aria-disabled', 'true');
+    } else {
+      btn.addEventListener('click', function () {
+        setExpanded(btn.getAttribute('aria-expanded') !== 'true');
+      });
+    }
+    return btn;
+  }
+
   function renderReviewSubmitSummary() {
     var panel = document.getElementById('wsReviewSubmitSummary');
     if (!panel) return;
     hideReviewSubmitSummary();
-    if (currentRole !== 'reviewer' || !state.selectedOutputTypes.length) return;
+    if (!isReviewUnitInteractive() || !state.selectedOutputTypes.length) return;
     var rowName = currentAnnotatorId();
 
-    var title = document.createElement('div');
-    title.className = 'rv-summary-title';
-    title.textContent = t('summaryTitle');
-    panel.appendChild(title);
+    var body = document.createElement('div');
+    body.className = 'rv-summary-body';
+    body.id = 'wsReviewSubmitSummaryBody';
 
     var pendingKeys = [];
+    var approveCount = 0;
+    var rejectCount = 0;
     state.selectedOutputTypes.forEach(function (outKey) {
-      if (!reviewRowDecisions[decisionKey(outKey, rowName)]) pendingKeys.push(outKey);
-      panel.appendChild(buildSummaryRow(outKey, rowName));
+      var decision = reviewRowDecisions[decisionKey(outKey, rowName)];
+      if (!decision) pendingKeys.push(outKey);
+      else if (decision === 'approve') approveCount += 1;
+      else rejectCount += 1;
+      body.appendChild(buildSummaryRow(outKey, rowName));
     });
 
     var pending = document.createElement('p');
@@ -2984,7 +3112,7 @@
     pending.textContent = pendingKeys.length
       ? t('summaryPending').replace('{list}', pendingKeys.join('、'))
       : t('summaryPendingNone');
-    panel.appendChild(pending);
+    body.appendChild(pending);
 
     var effect = document.createElement('p');
     effect.className = 'rv-summary-effect';
@@ -2993,8 +3121,10 @@
     effect.textContent = t(
       currentRunType === 'official_run' ? 'summaryEffectOfficial' : 'summaryEffectDry'
     );
-    panel.appendChild(effect);
+    body.appendChild(effect);
 
+    panel.appendChild(buildSummaryToggle(body, pendingKeys.length, approveCount, rejectCount));
+    panel.appendChild(body);
     panel.classList.remove('hidden');
   }
 
@@ -3674,17 +3804,14 @@
     var submission = getAnnotatorSubmission();
     var rawRecord = findRecordById(currentSampleId) || {};
 
-    var workspaceData = window.LabelSuiteAnnotationWorkspaceData;
     var reviewSubmitBtn = document.getElementById('wsReviewSubmitBtn');
-    var unitStatus = workspaceData.getReviewUnitStatus(
-      currentProfile.id, currentRunType, currentSampleId, currentIdentity, state.selectedOutputTypes,
-      { minReviewers: currentProfile.minReviewers || 1 }
-    );
+    var unitStatus = currentReviewUnitStatus();
     preview.appendChild(buildReviewUnitContext(unitStatus));
-    if (
-      unitStatus === workspaceData.REVIEW_UNIT_STATUS.DISPUTED &&
-      workspaceData.isArbiterCandidate(currentProfile.id, currentRunType, currentSampleId, currentIdentity)
-    ) {
+    /* issue #515: the three early returns below and the summary's own guard
+       read one and the same answer, so they cannot disagree about whether
+       this unit is interactive. */
+    var blockReason = reviewUnitBlockReason(unitStatus);
+    if (blockReason === REVIEW_UNIT_BLOCK.ARBITRATION) {
       /* The fixed footer submit drives handleReviewSubmit(); arbitration has
          its own in-card submit instead. */
       if (reviewSubmitBtn) reviewSubmitBtn.classList.add('hidden');
@@ -3706,7 +3833,7 @@
        shortcut (setupActionShortcuts skips hidden buttons). Mutually
        exclusive with the arbitration branch above (disputed ≠ finalized)
        and the empty gate below (finalized requires a submission). */
-    if (unitStatus === workspaceData.REVIEW_UNIT_STATUS.FINALIZED) {
+    if (blockReason === REVIEW_UNIT_BLOCK.FINALIZED) {
       if (reviewSubmitBtn) reviewSubmitBtn.classList.add('hidden');
       var lockedInputCard = document.createElement('div');
       lockedInputCard.className = 'content-card';
@@ -3726,7 +3853,7 @@
        an empty review could be filed against nothing. Keeping the footer
        submit hidden also blocks the FR-058 Ctrl/Cmd+Enter path
        (setupActionShortcuts skips hidden buttons). */
-    if (unitStatus === null && !demoAnnotatorRow()) {
+    if (blockReason === REVIEW_UNIT_BLOCK.EMPTY) {
       if (reviewSubmitBtn) reviewSubmitBtn.classList.add('hidden');
       var emptyCard = document.createElement('div');
       emptyCard.className = 'content-card';

@@ -60,6 +60,17 @@ function summaryRow(page: Page, outKey: string) {
   return page.locator(`[data-testid="ws-review-summary-row"][data-outkey="${outKey}"]`);
 }
 
+/* issue #515: the summary collapses once every output type is decided, so
+ * the single-output cases below have to open it before reading its rows.
+ * The assertions themselves are unchanged -- this only makes explicit that
+ * they are being made against content the reviewer can actually see. */
+async function expandSummary(page: Page) {
+  const toggle = page.getByTestId('ws-review-summary-toggle');
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+}
+
 /* Flips the single_label correction away from whatever the annotator
  * submitted, so the row genuinely counts as corrected. Returns the value
  * the correction now holds. */
@@ -112,6 +123,7 @@ test.describe('Pre-submit summary covers all four decision × correction combina
     await dismissGuidelineModal(page);
 
     await page.getByTestId('ws-review-row-approve').click();
+    await expandSummary(page);
 
     const row = summaryRow(page, 'single_label');
     await expect(row).toHaveCount(1);
@@ -130,6 +142,7 @@ test.describe('Pre-submit summary covers all four decision × correction combina
 
     const newValue = await flipSingleLabel(page);
     await page.getByTestId('ws-review-row-approve').click();
+    await expandSummary(page);
 
     const row = summaryRow(page, 'single_label');
     await expect(row).toHaveAttribute('data-decision', 'approve');
@@ -145,6 +158,7 @@ test.describe('Pre-submit summary covers all four decision × correction combina
     await dismissGuidelineModal(page);
 
     await page.getByTestId('ws-review-row-reject').click();
+    await expandSummary(page);
 
     const row = summaryRow(page, 'single_label');
     await expect(row).toHaveAttribute('data-decision', 'reject');
@@ -162,6 +176,7 @@ test.describe('Pre-submit summary covers all four decision × correction combina
 
     const newValue = await flipSingleLabel(page);
     await page.getByTestId('ws-review-row-reject').click();
+    await expandSummary(page);
 
     const row = summaryRow(page, 'single_label');
     await expect(row).toHaveAttribute('data-decision', 'reject');
