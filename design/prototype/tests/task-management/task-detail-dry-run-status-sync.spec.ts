@@ -17,7 +17,16 @@ test('moves task status to waiting IAA confirmation after all 5 dry-run samples 
       buildWorkspaceUrl({ task_id: 'T001', sample_id: SAMPLE_IDS[i], role: 'annotator', run_type: 'dry_run' })
     );
     await page.getByTestId('ws-submit-btn').click();
-    await expect(page.getByTestId('ws-sample-item').nth(i)).toHaveAttribute('data-submitted', 'true');
+    if (i < SAMPLE_IDS.length - 1) {
+      await expect(page.getByTestId('ws-sample-item').nth(i)).toHaveAttribute('data-submitted', 'true');
+    } else {
+      /* issue #514: the fifth submit leaves nothing pending, so the workspace
+         now returns to annotation-list (FR-022C) instead of staying put --
+         the list row's 已提交 badge is where that last submission is
+         readable from, and it is the same evidence AC-2.5 asks for. */
+      await expect(page).toHaveURL(/annotation-list\.html\?/);
+      await expect(page.getByTestId('ws-sample-item').nth(i).locator('.status-badge')).toHaveText('已提交');
+    }
   }
 
   await page.goto('/pages/task-management/task-detail.html?task_id=T001&status=dry_run_in_progress');

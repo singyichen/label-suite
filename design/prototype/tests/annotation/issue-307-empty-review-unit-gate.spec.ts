@@ -85,7 +85,14 @@ test.describe('issue #307 -- truly empty review unit renders no review controls'
     }));
     await expect(page.getByTestId('ws-single-label-chip-positive')).toHaveAttribute('aria-pressed', 'true');
     await page.getByTestId('ws-submit-btn').click();
-    await expect(page.locator('#toastMsg')).toHaveText('已提交');
+    /* issue #514: ofs-05 is this annotator's last pending T015 sample, so
+       the submit now returns to annotation-list (FR-022C) rather than
+       leaving the toast on the workspace. The row's 已提交 badge carries
+       the same "the submission really landed" evidence the toast did. */
+    await expect(page).toHaveURL(/annotation-list\.html\?/);
+    await expect(
+      page.getByTestId('ws-sample-item').filter({ hasText: 'ofs-05-not-submitted' }).locator('.status-badge')
+    ).toHaveText('已提交');
 
     // Reviewer reload: the gate releases and the unit derives 待審.
     await page.goto(reviewerUrl('ofs-05-not-submitted'));
