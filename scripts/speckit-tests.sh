@@ -291,6 +291,10 @@ GUIDANCE
 GUIDANCE
     cat > "$repo/openspec/config.yaml" <<'CONFIG'
 schema: specification
+rules:
+  tasks:
+    - >-
+      Use pnpm test for active task guidance.
 CONFIG
     cat > "$repo/specs/foundation/001-project-sdd-lint/spec.md" <<'SPEC'
 # Project SDD lint
@@ -420,7 +424,12 @@ assert_command_fails_with() {
     local rule="$3"
     local path="$4"
     shift 4
-    local output status
+    local excluded_rule='' output status
+
+    if [[ "${1:-}" == "--not-rule" ]]; then
+        excluded_rule="$2"
+        shift 2
+    fi
     output="$(mktemp "$TMP_ROOT/check-sdd.XXXXXX")"
 
     if run_check_sdd "$repo" "$@" >"$output" 2>&1; then
@@ -434,8 +443,37 @@ assert_command_fails_with() {
         cat "$output" >&2
         exit 1
     fi
-    assert_contains "$output" "$rule"
-    assert_contains "$output" "$path"
+    assert_contains "$output" "ERROR [$rule] $path:"
+    if [[ -n "$excluded_rule" ]]; then
+        assert_not_contains "$output" "ERROR [$excluded_rule]"
+    fi
+}
+
+assert_command_succeeds() {
+    local repo="$1"
+    shift
+    local excluded_rule='' output status
+
+    if [[ "${1:-}" == "--not-rule" ]]; then
+        excluded_rule="$2"
+        shift 2
+    fi
+    output="$(mktemp "$TMP_ROOT/check-sdd.XXXXXX")"
+
+    if run_check_sdd "$repo" "$@" >"$output" 2>&1; then
+        status=0
+    else
+        status=$?
+    fi
+    if [[ "$status" -ne 0 ]]; then
+        echo "Expected check-sdd.sh to exit 0, got: $status" >&2
+        cat "$output" >&2
+        exit 1
+    fi
+    assert_contains "$output" "Project SDD lint: 0 error(s)"
+    if [[ -n "$excluded_rule" ]]; then
+        assert_not_contains "$output" "ERROR [$excluded_rule]"
+    fi
 }
 
 assert_not_contains() {
@@ -525,6 +563,26 @@ test_check_sdd_uses_explicit_repo_root() {
     run_check_sdd_from "$caller" "$repo" >"$output" 2>&1
     assert_contains "$output" "Project SDD lint: 0 error(s)"
     assert_not_contains "$output" "SPEC_REQUIRED_HEADING"
+}
+
+test_check_sdd_rejects_empty_explicit_repo_root() {
+    local outside output status
+    outside="$(mktemp -d "$TMP_ROOT/check-sdd-outside.XXXXXX")"
+    output="$(mktemp "$TMP_ROOT/check-sdd-empty-root.XXXXXX")"
+
+    if (cd "$outside" && "$ROOT/scripts/check-sdd.sh" "") >"$output" 2>&1; then
+        status=0
+    else
+        status=$?
+    fi
+    if [[ "$status" -ne 2 ]]; then
+        echo "Expected empty explicit repository root to exit 2, got: $status" >&2
+        cat "$output" >&2
+        exit 1
+    fi
+    assert_contains "$output" "ERROR [SCANNER_CONFIG] .:"
+    assert_not_contains "$output" "Project SDD lint: 0 error(s)"
+    assert_not_contains "$output" "WARNING ["
 }
 
 test_check_sdd_fails_for_missing_goal_heading() {
@@ -790,6 +848,207 @@ test_check_sdd_inventory_uses_target_root_generator() {
     assert_not_contains "$output" "RAW_FRESH_CHILD_OUTPUT"
 }
 
+test_check_sdd_fails_for_near_match_goal_heading() {
+    local repo
+    repo="$(make_sdd_repo)"
+    sed -i.bak 's/^## 功能目標$/## 功能目標（錯誤）/' "$repo/specs/foundation/001-project-sdd-lint/spec.md"
+
+    assert_command_fails_with "$repo" 1 "SPEC_REQUIRED_HEADING" "specs/foundation/001-project-sdd-lint/spec.md"
+}
+
+test_check_sdd_fails_for_malformed_baseline_rows() {
+    local baseline_content repo
+
+    repo="$(make_sdd_repo)"
+    baseline_content="$(cat "$repo/scripts/sdd-lint-baseline.txt")"
+    printf '\n%s\n' "$baseline_content" > "$repo/scripts/sdd-lint-baseline.txt"
+    assert_command_fails_with "$repo" 2 "BASELINE_FORMAT" "scripts/sdd-lint-baseline.txt"
+
+    repo="$(make_sdd_repo)"
+    printf 'LEGACY_SPEC_HEADING\tspecs/dataset/001-legacy/spec.md\tmissing:## 功能目標\t\n' > "$repo/scripts/sdd-lint-baseline.txt"
+    assert_command_fails_with "$repo" 2 "BASELINE_FORMAT" "scripts/sdd-lint-baseline.txt"
+}
+
+test_check_sdd_fails_for_explicit_multi_file_task() {
+    local repo
+    repo="$(make_sdd_repo)"
+    printf '\n- [ ] 1.3 Modify `scripts/a.sh` and `scripts/b.sh`. [@senior-devops]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+
+    assert_command_fails_with "$repo" 1 "TASK_EXCEPTION" "openspec/changes/project-sdd-lint/tasks.md"
+
+    repo="$(make_sdd_repo)"
+    printf '\n- [ ] 1.3 Modify `scripts/a.sh`，then modify `scripts/b.sh`. [@senior-devops]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+
+    assert_command_fails_with "$repo" 1 "TASK_EXCEPTION" "openspec/changes/project-sdd-lint/tasks.md"
+}
+
+test_check_sdd_accepts_english_negative_task_clauses() {
+    local output repo status
+
+    repo="$(make_sdd_repo)"
+    output="$(mktemp "$TMP_ROOT/check-sdd-negative-task.XXXXXX")"
+    printf '\n- [ ] 1.3 Modify `scripts/a.sh`，do not modify `scripts/b.sh`. [@senior-devops]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+
+    if run_check_sdd "$repo" >"$output" 2>&1; then
+        status=0
+    else
+        status=$?
+    fi
+    if [[ "$status" -ne 0 ]]; then
+        echo "Expected do-not-modify task lint to exit 0, got: $status" >&2
+        cat "$output" >&2
+        exit 1
+    fi
+    assert_contains "$output" "Project SDD lint: 0 error(s), 3 warning(s)"
+    assert_not_contains "$output" "TASK_EXCEPTION"
+
+    repo="$(make_sdd_repo)"
+    output="$(mktemp "$TMP_ROOT/check-sdd-negative-task.XXXXXX")"
+    printf '\n- [ ] 1.3 Modify `scripts/a.sh`；must not modify `scripts/b.sh`. [@senior-devops]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+
+    if run_check_sdd "$repo" >"$output" 2>&1; then
+        status=0
+    else
+        status=$?
+    fi
+    if [[ "$status" -ne 0 ]]; then
+        echo "Expected must-not-modify task lint to exit 0, got: $status" >&2
+        cat "$output" >&2
+        exit 1
+    fi
+    assert_contains "$output" "Project SDD lint: 0 error(s), 3 warning(s)"
+    assert_not_contains "$output" "TASK_EXCEPTION"
+}
+
+test_check_sdd_fails_without_exact_spec_declaration() {
+    local repo
+    repo="$(make_sdd_repo)"
+    sed -i.bak 's/^對應 Spec:/Canonical mention:/' "$repo/openspec/changes/project-sdd-lint/proposal.md"
+
+    assert_command_fails_with "$repo" 1 "ACTIVE_CHANGE_SPEC" "openspec/changes/project-sdd-lint/proposal.md"
+}
+
+test_check_sdd_fails_for_status_module_mismatch() {
+    local repo
+    repo="$(make_sdd_repo)"
+    sed -i.bak 's/| foundation-001 | Project SDD lint | foundation |/| foundation-001 | Project SDD lint | dataset |/' "$repo/specs/STATUS.md"
+
+    assert_command_fails_with "$repo" 1 "STATUS_ARTIFACT_SYNC" "specs/STATUS.md"
+}
+
+test_check_sdd_rejects_arbitrary_dependency_heading_suffix() {
+    local repo
+    repo="$(make_sdd_repo)"
+    sed -i.bak 's/^## 規格相依性$/## 規格相依性 BAD/' "$repo/specs/foundation/001-project-sdd-lint/spec.md"
+
+    assert_command_fails_with "$repo" 1 "SPEC_REQUIRED_HEADING" "specs/foundation/001-project-sdd-lint/spec.md" --not-rule SPEC_REQUIRED_IDS
+}
+
+test_check_sdd_accepts_approved_dependency_heading_suffix() {
+    local repo
+    repo="$(make_sdd_repo)"
+    sed -i.bak 's/^## 規格相依性$/## 規格相依性 *(本功能依賴其他規格，或被其他規格依賴時填寫)*/' "$repo/specs/foundation/001-project-sdd-lint/spec.md"
+
+    assert_command_succeeds "$repo"
+}
+
+test_check_sdd_rejects_suffixed_source_verify_id() {
+    local repo
+    repo="$(make_sdd_repo)"
+    printf '\n### FR-013A\n' >> "$repo/specs/foundation/001-project-sdd-lint/spec.md"
+    printf '\nFR-013B\n' >> "$repo/openspec/changes/project-sdd-lint/design.md"
+
+    assert_command_fails_with "$repo" 1 "SOURCE_VERIFY_ID" "openspec/changes/project-sdd-lint/design.md" --not-rule SPEC_REQUIRED_IDS
+}
+
+test_check_sdd_rejects_retired_command_in_active_openspec_config() {
+    local repo
+    repo="$(make_sdd_repo)"
+    cat >> "$repo/openspec/config.yaml" <<'CONFIG'
+    - >-
+      Run npm run lint before applying active task guidance.
+CONFIG
+
+    assert_command_fails_with "$repo" 1 "RETIRED_COMMAND" "openspec/config.yaml"
+}
+
+test_check_sdd_excludes_deprecated_task_template_retired_wording() {
+    local repo
+    repo="$(make_sdd_repo)"
+    mkdir -p "$repo/.specify/templates"
+    cat > "$repo/.specify/templates/tasks-template.md" <<'TEMPLATE'
+> Deprecated historical, non-normative task template.
+
+Run npm test before verification.
+TEMPLATE
+
+    assert_command_succeeds "$repo" --not-rule RETIRED_COMMAND
+}
+
+test_check_sdd_rejects_nonpath_exception_files_value() {
+    local repo
+    repo="$(make_sdd_repo)"
+    printf '\n- [ ] 1.3 Scaffold outputs. Exception: scaffold; Files: not-a-path; Reason: Bootstrap requires both files. [@senior-devops]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+
+    assert_command_fails_with "$repo" 1 "TASK_EXCEPTION" "openspec/changes/project-sdd-lint/tasks.md" --not-rule TASK_FILE_OWNER
+}
+
+test_check_sdd_rejects_partial_exception_files_list() {
+    local repo
+    repo="$(make_sdd_repo)"
+    printf '\n- [ ] 1.3 Scaffold `scripts/a.sh` and `scripts/b.sh`. Exception: scaffold; Files: `scripts/a.sh`; Reason: Bootstrap requires both files. [@senior-devops]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+
+    assert_command_fails_with "$repo" 1 "TASK_EXCEPTION" "openspec/changes/project-sdd-lint/tasks.md" --not-rule TASK_FILE_OWNER
+}
+
+test_check_sdd_accepts_complete_exception_files_list() {
+    local repo
+    repo="$(make_sdd_repo)"
+    printf '\n- [ ] 1.3 Scaffold `scripts/a.sh` and `scripts/b.sh`. Exception: scaffold; Files: `scripts/a.sh`, `scripts/b.sh`; Reason: Bootstrap requires both files. [@senior-devops]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+
+    assert_command_succeeds "$repo"
+}
+
+test_check_sdd_accepts_complete_exception_with_root_extensionless_path() {
+    local repo
+    repo="$(make_sdd_repo)"
+    printf 'Synthetic license fixture.\n' > "$repo/LICENSE"
+    printf '#!/bin/sh\n' > "$repo/scripts/a.sh"
+    git -C "$repo" init -q
+    git -C "$repo" add LICENSE scripts/a.sh
+    printf '\n- [ ] 1.3 Scaffold `LICENSE` and `scripts/a.sh`. Exception: scaffold; Files: `LICENSE`, `scripts/a.sh`; Reason: Bootstrap requires both files. [@senior-devops]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+
+    assert_command_succeeds "$repo" --not-rule TASK_EXCEPTION
+}
+
+test_check_sdd_ignores_backticked_identifier_in_exception_outputs() {
+    local repo
+    repo="$(make_sdd_repo)"
+    printf 'Synthetic license fixture.\n' > "$repo/LICENSE"
+    printf '#!/bin/sh\n' > "$repo/scripts/a.sh"
+    git -C "$repo" init -q
+    git -C "$repo" add LICENSE scripts/a.sh
+    printf '\n- [ ] 1.4 Scaffold output `LICENSE` with identifier `MIT` and output `scripts/a.sh`. Exception: scaffold; Files: `LICENSE`, `scripts/a.sh`; Reason: Bootstrap requires both artifacts. [@senior-devops]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+
+    assert_command_succeeds "$repo" --not-rule TASK_EXCEPTION
+}
+
+test_check_sdd_rejects_non_shell_red_task_with_non_qa_owner() {
+    local repo
+    repo="$(make_sdd_repo)"
+    printf '\n- [ ] 1.3 Red backend regression in `backend/tests/test_sdd_lint.py`. [@senior-devops]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+
+    assert_command_fails_with "$repo" 1 "TASK_RED_OWNER" "openspec/changes/project-sdd-lint/tasks.md" --not-rule TASK_FILE_OWNER
+}
+
+test_check_sdd_accepts_non_shell_red_task_with_qa_owner() {
+    local repo
+    repo="$(make_sdd_repo)"
+    printf '\n- [ ] 1.3 Red backend regression in `backend/tests/test_sdd_lint.py`. [@senior-qa]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+
+    assert_command_succeeds "$repo"
+}
+
 test_prerequisites_resolve_module_feature_paths
 test_create_feature_creates_module_branch_spec_and_status
 test_setup_plan_and_status_update
@@ -798,6 +1057,7 @@ test_check_spec_artifacts_fails_for_untracked_spec
 test_ci_uses_pnpm_for_prototype_jobs
 test_check_sdd_passes_for_valid_repo
 test_check_sdd_uses_explicit_repo_root
+test_check_sdd_rejects_empty_explicit_repo_root
 test_check_sdd_fails_for_missing_goal_heading
 test_check_sdd_fails_for_active_change_stage_drift
 test_check_sdd_fails_for_missing_source_id
@@ -817,5 +1077,23 @@ test_check_sdd_inventory_rejects_near_sentinels
 test_check_sdd_inventory_configuration_failures
 test_check_sdd_inventory_strict_config_mapping_is_invariant
 test_check_sdd_inventory_uses_target_root_generator
+test_check_sdd_fails_for_near_match_goal_heading
+test_check_sdd_fails_for_malformed_baseline_rows
+test_check_sdd_fails_for_explicit_multi_file_task
+test_check_sdd_accepts_english_negative_task_clauses
+test_check_sdd_fails_without_exact_spec_declaration
+test_check_sdd_fails_for_status_module_mismatch
+test_check_sdd_rejects_arbitrary_dependency_heading_suffix
+test_check_sdd_accepts_approved_dependency_heading_suffix
+test_check_sdd_rejects_suffixed_source_verify_id
+test_check_sdd_rejects_retired_command_in_active_openspec_config
+test_check_sdd_excludes_deprecated_task_template_retired_wording
+test_check_sdd_rejects_nonpath_exception_files_value
+test_check_sdd_rejects_partial_exception_files_list
+test_check_sdd_accepts_complete_exception_files_list
+test_check_sdd_accepts_complete_exception_with_root_extensionless_path
+test_check_sdd_ignores_backticked_identifier_in_exception_outputs
+test_check_sdd_rejects_non_shell_red_task_with_non_qa_owner
+test_check_sdd_accepts_non_shell_red_task_with_qa_owner
 
 echo "speckit script tests passed"
