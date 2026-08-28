@@ -111,6 +111,8 @@
       summaryToggleEffectPart: '送出後影響',
       summaryToggleCounts: '{n} 個輸出類型 · {approve} 通過 · {reject} 退回',
       summaryTogglePending: '{pending} 尚未決策',
+      summaryBadgeChanged: '已修改',
+      summaryBadgeUnchanged: '未修改',
       summaryNoteApproveUnchanged: '通過且未修改：將保存與標記員原答案相同的 reviewer answer。',
       summaryNoteApproveChanged: '通過的是您修正後的答案（非標記員原答案）：將保存修正後的 reviewer answer，並記錄為差異，納入爭議推導。',
       summaryNoteRejectUnchanged: '退回但未修改答案：將保存與標記員原答案相同的 reviewer answer，並記錄退回決策。',
@@ -118,7 +120,7 @@
       summaryNoteUndecided: '尚未決策：此輸出類型必須完成通過／退回才能送出。',
       summaryPending: '尚未完成決策：{list}',
       summaryPendingNone: '所有輸出類型皆已完成決策。',
-      summaryEffectOfficial: '送出後影響：任一輸出類型判定退回時，此正式標記單位會回到待標記並產生標記員重標待辦；全部通過則標記員狀態不變。',
+      summaryEffectOfficial: '送出後影響：任一輸出類型判定退回時，此正式標記單位會回到待標記並產生標記員重標待辦（指派給 {annotator}）；全部通過則標記員狀態不變。',
       summaryEffectDry: '送出後影響：試標退回不會個別回退標記員狀態，僅記錄審核決策與修正差異，品質問題由任務層級 IAA 閘門與下一輪試標處理。',
       toastReviewDecisionResetOnEdit: '直接修正的值已變更，對應的通過／退回決策已重置，請重新確認後再送出',
     },
@@ -217,6 +219,8 @@
       summaryToggleEffectPart: 'after-submit impact',
       summaryToggleCounts: '{n} output types · {approve} approved · {reject} rejected',
       summaryTogglePending: '{pending} undecided',
+      summaryBadgeChanged: 'Changed',
+      summaryBadgeUnchanged: 'Unchanged',
       summaryNoteApproveUnchanged: 'Approved with no edit: the stored reviewer answer will be identical to the annotator’s original answer.',
       summaryNoteApproveChanged: 'What you approve is your corrected answer, not the annotator’s original: the corrected reviewer answer is stored and recorded as a difference feeding dispute derivation.',
       summaryNoteRejectUnchanged: 'Rejected with no edit: the stored reviewer answer will be identical to the annotator’s original answer, alongside the reject decision.',
@@ -224,7 +228,7 @@
       summaryNoteUndecided: 'Not decided yet: this output type needs an approve/reject before you can submit.',
       summaryPending: 'Still undecided: {list}',
       summaryPendingNone: 'Every output type has been decided.',
-      summaryEffectOfficial: 'After submitting: if any output type is rejected, this official-run unit returns to pending and creates a re-annotation task for the annotator; if everything is approved the annotator status is unchanged.',
+      summaryEffectOfficial: 'After submitting: if any output type is rejected, this official-run unit returns to pending and creates a re-annotation task for the annotator (assigned to {annotator}); if everything is approved the annotator status is unchanged.',
       summaryEffectDry: 'After submitting: a dry-run reject does not roll back the annotator status individually; it only records the review decision and any correction, and quality issues are handled by the task-level IAA gate and the next dry run.',
       toastReviewDecisionResetOnEdit: 'The direct correction changed, so the matching approve/reject decision was reset -- please re-confirm before submitting',
     },
@@ -2952,13 +2956,50 @@
     showToast(t('toastReviewDecisionResetOnEdit'), 'warning');
   }
 
-  function appendSummaryLine(parent, testid, label, value) {
-    var line = document.createElement('div');
-    line.className = 'rv-summary-line';
-    line.setAttribute('data-testid', testid);
-    line.setAttribute('data-answer', value);
-    line.textContent = label + (value || t('reviewNoAnswer'));
-    parent.appendChild(line);
+  function buildSummaryAnswer(testid, labelKey, value) {
+    var span = document.createElement('span');
+    span.className = 'rv-summary-answer';
+    span.setAttribute('data-testid', testid);
+    span.setAttribute('data-answer', value);
+    /* The arrow carries the direction visually, so the labels move off the
+       screen rather than disappearing -- a screen reader still hears which
+       half it is on. */
+    span.setAttribute('aria-label', t(labelKey) + (value || t('reviewNoAnswer')));
+    span.textContent = value || t('reviewNoAnswer');
+    return span;
+  }
+
+  /* issue #519: the two answers used to occupy a stacked line each, which
+     restated the pair a reviewer had already read on the review card and
+     still left "did this actually change?" to be worked out by comparing
+     two strings by eye. One diff line answers it by shape, and the badge
+     makes `data-changed` readable rather than a colour-only signal. */
+  function appendSummaryDiff(row, original, corrected, changed) {
+    var diff = document.createElement('div');
+    diff.className = 'rv-summary-diff';
+    diff.setAttribute('data-testid', 'ws-review-summary-diff');
+
+    diff.appendChild(
+      buildSummaryAnswer('ws-review-summary-original', 'reviewOriginalAnswerLabel', original)
+    );
+
+    var arrow = document.createElement('span');
+    arrow.className = 'rv-summary-arrow';
+    arrow.setAttribute('aria-hidden', 'true');
+    arrow.textContent = '→';
+    diff.appendChild(arrow);
+
+    diff.appendChild(
+      buildSummaryAnswer('ws-review-summary-corrected', 'reviewCorrectedAnswerLabel', corrected)
+    );
+
+    var badge = document.createElement('span');
+    badge.className = 'rv-summary-badge';
+    badge.setAttribute('data-testid', 'ws-review-summary-changed-badge');
+    badge.textContent = t(changed ? 'summaryBadgeChanged' : 'summaryBadgeUnchanged');
+    diff.appendChild(badge);
+
+    row.appendChild(diff);
   }
 
   var SUMMARY_NOTE_KEYS = {
@@ -2987,8 +3028,7 @@
     head.textContent = outKey;
     row.appendChild(head);
 
-    appendSummaryLine(row, 'ws-review-summary-original', t('reviewOriginalAnswerLabel'), original);
-    appendSummaryLine(row, 'ws-review-summary-corrected', t('reviewCorrectedAnswerLabel'), corrected);
+    appendSummaryDiff(row, original, corrected, changed);
 
     var kind = decision ? decision + '-' + (changed ? 'changed' : 'unchanged') : 'undecided';
     var note = document.createElement('div');
@@ -3153,9 +3193,14 @@
     effect.className = 'rv-summary-effect';
     effect.setAttribute('data-testid', 'ws-review-summary-effect');
     effect.setAttribute('data-run-type', currentRunType);
-    effect.textContent = t(
-      currentRunType === 'official_run' ? 'summaryEffectOfficial' : 'summaryEffectDry'
-    );
+    /* issue #519: official_run is the branch that actually rolls somebody
+       back, and this screen reviews exactly one named annotator -- so the
+       re-annotation todo says whose. dry_run stays unnamed on purpose: it
+       rolls nobody back, and a name there would imply otherwise. */
+    effect.textContent =
+      currentRunType === 'official_run'
+        ? t('summaryEffectOfficial').replace('{annotator}', rowName)
+        : t('summaryEffectDry');
     body.appendChild(effect);
 
     panel.appendChild(buildSummaryToggle(body, pendingKeys.length, approveCount, rejectCount));
