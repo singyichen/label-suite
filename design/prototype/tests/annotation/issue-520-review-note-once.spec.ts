@@ -27,9 +27,15 @@ import {
  * the repetition in place. This spec pins the remaining half: the note is
  * rendered exactly ONCE per review unit, above the card stack whose decision
  * pairs it explains, and everything the note is NOT allowed to disturb stays
- * put -- the copy itself, the decision buttons and their accessible names
- * (issue #399), the per-output-type original answers and correction titles,
- * and the run-type-branching consequence line (`ws-review-summary-effect`).
+ * put -- the decision buttons and their accessible names (issue #399), the
+ * per-output-type original answers and correction titles, and the
+ * run-type-branching consequence line (`ws-review-summary-effect`).
+ *
+ * The one deliberate copy change: the sentence used to say 本輸出類型 /
+ * "for this output type", a deictic that resolved to the card the note sat
+ * in. At unit level that referent no longer exists, so it becomes the
+ * generic 該輸出類型 / "that output type" -- still accurate, because each
+ * approve/reject pair is per outKey (FR-014P). The rest is verbatim.
  *
  * Traceability: specs/annotation/015-annotation-workspace/spec.md FR-070,
  * AC-3.40, AC-3.45; related FR-014N, FR-014P, FR-077, AC-3.33, AC-3.42,
@@ -37,10 +43,10 @@ import {
  */
 
 const NOTE_ZH =
-  '通過：採用此筆標記為本輸出類型的審核結果。退回：記錄審核決策與修正差異；是否回退標記員狀態依試標／正式標記而異，實際影響見下方「送出前確認」。';
+  '通過：採用標記員在該輸出類型的作答為審核結果。退回：記錄審核決策與修正差異；是否回退標記員狀態依試標／正式標記而異，實際影響見下方「送出前確認」。';
 
 const NOTE_EN =
-  'Approve: accept this annotation as the review result for this output type. Reject: records the review decision and any correction; whether the annotator status is rolled back differs between a dry run and an official run -- the actual effect is stated under “Confirm before submitting” below.';
+  'Approve: accept the annotator’s answer for that output type as the review result. Reject: records the review decision and any correction; whether the annotator status is rolled back differs between a dry run and an official run -- the actual effect is stated under “Confirm before submitting” below.';
 
 /* taskId / sampleId / how many review cards the task's outputs[] produce. */
 const CASES: Array<{ taskId: string; sampleId: string; cards: number; decisions: number; label: string }> = [
@@ -104,12 +110,12 @@ test.describe('the review decision note is rendered once per review unit (issue 
     expect(notePrecedesFirstCard).toBe(true);
   });
 
-  test('the copy is unchanged verbatim in zh', async ({ page }) => {
+  test('the unit-level copy is pinned verbatim in zh', async ({ page }) => {
     await openReviewer(page, 'T013', 'absa-001', 'official_run');
     await expect(page.getByTestId('ws-review-note')).toHaveText(NOTE_ZH);
   });
 
-  test('the copy is unchanged verbatim in en', async ({ page }) => {
+  test('the unit-level copy is pinned verbatim in en', async ({ page }) => {
     await page.addInitScript(() => {
       window.localStorage.setItem('labelsuite.lang', 'en');
     });
