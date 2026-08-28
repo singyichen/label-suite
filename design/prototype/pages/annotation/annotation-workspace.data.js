@@ -1697,17 +1697,40 @@
       .filter(function (submission) { return submission !== null; });
   }
 
+  /* issue #551: a reviewer's per-outKey approve/reject decision, persisted
+   * alongside the answers payload (collectAnswerPayload adds `decisions`
+   * for the reviewer role only). Absent on every pre-#551 submission and on
+   * every annotator submission -- both read as undefined, which every call
+   * site below treats as "not a reject". */
+  function reviewerOutKeyDecision(reviewerSubmission, outKey) {
+    var decisions = reviewerSubmission.answers && reviewerSubmission.answers.decisions;
+    return decisions && decisions[outKey];
+  }
+
+  /* issue #551: sentinel dispute-item value for a reject decision that
+   * carries no correction ("純退回"). Deliberately NOT the annotator's own
+   * value or null -- both would let the item read as agreement or as "no
+   * answer", when the actual fact is "this reviewer objected and proposed
+   * nothing to replace it with". A dedicated marker keeps that fact
+   * distinguishable through tallying, rendering and arbitration. */
+  var PURE_REJECT_VALUE = ' __PURE_REJECT__';
+
   /* True when ANY reviewer's answer differs from the annotator's on ANY of
-   * the task's output keys. This single predicate picks the lane in FR-051:
-   * false -> approved/finalized, true -> modified/disputed/finalized. */
+   * the task's output keys, OR any reviewer rejected an outKey without
+   * changing its value (issue #551: a naked reject must not read as
+   * agreement just because compareOutputAnswer() sees no diff). This single
+   * predicate picks the lane in FR-051: false -> approved/finalized,
+   * true -> modified/disputed/finalized. */
   function anyReviewerChanged(annotatorSubmission, reviewerSubmissions, keys) {
     return reviewerSubmissions.some(function (reviewerSubmission) {
       return keys.some(function (outKey) {
-        return !compareOutputAnswer(
+        var equal = compareOutputAnswer(
           outKey,
           convertSubmissionAnswer(outKey, annotatorSubmission),
           convertSubmissionAnswer(outKey, reviewerSubmission.answers)
         ).equal;
+        if (!equal) return true;
+        return reviewerOutKeyDecision(reviewerSubmission, outKey) === 'reject';
       });
     });
   }
@@ -1798,6 +1821,15 @@
           annotatorAnswer,
           convertSubmissionAnswer(outKey, submission.answers)
         ).diffs;
+        /* issue #551: a reject with no correction produces no FR-052 diff
+           (the value is unchanged), so compareOutputAnswer() has nothing to
+           report -- synthesize one whole-outKey diff so the reject still
+           becomes a dispute item instead of silently vanishing. Granularity
+           is the outKey itself (there is no differing sub-key to point at),
+           matching the single_label/free_text "no merge key" shape. */
+        if (!diffs.length && reviewerOutKeyDecision(submission, outKey) === 'reject') {
+          diffs = [{ key: outKey, annotator: annotatorAnswer, reviewer: PURE_REJECT_VALUE }];
+        }
         diffs.forEach(function (diff) {
           var id = outKey + '::' + diff.key;
           if (!byId[id]) {
@@ -1942,6 +1974,7 @@
   function submitArbitration(taskId, runType, sampleId, identity, decisions) {
     var bucketKey = arbitrationBucketKey(taskId, runType, identity);
     var arbiterId = (identity && identity.reviewerId) || DEFAULT_REVIEWER_ID;
+    var upheldRejectItemIds = [];
     (decisions || []).forEach(function (decision) {
       var itemKey = arbitrationItemKey(bucketKey, sampleId, decision.itemId);
       var item = readArbitrationItem(itemKey) || { votes: [] };
@@ -1958,7 +1991,18 @@
       item.finalized_value = decision.value;
       item.finalized_by = arbiterId;
       writeArbitrationItem(itemKey, item);
+      if (decision.value === PURE_REJECT_VALUE) upheldRejectItemIds.push(decision.itemId);
     });
+    /* issue #551 point 2: choosing B on a pure-reject item means "maintain
+       the reject" -- the same official_run rework rollback a live reviewer
+       reject already triggers (markSampleRejected), still no third answer
+       written. dry_run has no such channel and only keeps the vote. */
+    if (upheldRejectItemIds.length && runType === 'official_run') {
+      markSampleRejected(
+        taskId, 'annotator', runType, sampleId,
+        'arbitration upheld reject: ' + upheldRejectItemIds.join(', '), identity
+      );
+    }
   }
 
   /* Per-item majority convergence (issue #147 ⑥③): decides whether one
@@ -2012,10 +2056,26 @@
       });
   }
 
+  /* issue #551: true when at least one reviewer's side of this item is a
+     naked reject (PURE_REJECT_VALUE) rather than a proposed value. */
+  function hasPureReject(item) {
+    return Object.keys(item.reviewerValues).some(function (reviewerId) {
+      return item.reviewerValues[reviewerId] === PURE_REJECT_VALUE;
+    });
+  }
+
   function resolveDisputeConvergence(item, reviewerCount) {
-    /* A single reviewer's dissent can never outvote the annotator, even
-       though 1 > 1/2 is technically a strict majority. */
-    if (reviewerCount < 2) return { converged: false };
+    /* issue #551 point 1: a naked reject proposes no replacement value, so
+       it can never be out-voted into an agreement tally -- it blocks
+       finalization outright and always needs an arbiter, however the rest
+       of the vote falls. */
+    if (hasPureReject(item)) return { converged: false };
+    /* issue #551 point 3: min_reviewers = 1 makes N = 1 the FULL quorum,
+       not an incomplete one -- the sole reviewer's correction is
+       authoritative and converges immediately (1 vote > 1/2 threshold).
+       This used to be hard-blocked unconditionally below N = 2, which sent
+       every min_reviewers = 1 correction into the dispute pool with no
+       second reviewer able to out-vote it. */
     var winner = tallyDisputeVotes(item, reviewerCount).filter(function (candidate) {
       return candidate.count > reviewerCount / 2;
     })[0];
@@ -2028,9 +2088,9 @@
    * and an unmet quorum looked identical. This exposes the same numbers
    * resolveDisputeConvergence() decides on -- candidate tallies, the strict
    * majority threshold (> N/2) and which non-convergence shape applies:
-   *   single_reviewer N < 2 -- one dissenting reviewer cannot outvote the
-   *                   annotator even though 1 > 1/2 holds arithmetically,
-   *                   so this case must NOT be explained as "> N/2 unmet"
+   *   pure_reject   at least one reviewer rejected with no replacement
+   *                   value (issue #551) -- no vote count can resolve this,
+   *                   so it must NOT be explained as a failed "> N/2" count
    *   even_tie      exactly two candidate values share the lead (1:1, 2:2)
    *   all_divergent three or more candidates with one vote each (1/1/1)
    *   no_majority   anything else short of a strict majority
@@ -2051,7 +2111,7 @@
     var leaders = candidates.filter(function (candidate) { return candidate.count === leadCount; });
     var reason = null;
     if (!converged) {
-      if (reviewerCount < 2) reason = 'single_reviewer';
+      if (hasPureReject(item)) reason = 'pure_reject';
       else if (candidates.length === 2 && leaders.length === 2) reason = 'even_tie';
       else if (candidates.length >= 3 && leaders.length === candidates.length) reason = 'all_divergent';
       else reason = 'no_majority';
@@ -2291,34 +2351,61 @@
        `arb` is chen's arbitration picking that reviewer value (choice B).
        `rejectBy` names the one entry in `rev` whose decision was `reject`
        (issue #502) rather than approve/modify -- reject is a decision, not
-       a value, so the reviewer's `rev` value can still equal `v` (agree).
+       a value, so the reviewer's `rev` value can still equal `v` (agree,
+       i.e. a "pure reject": issue #551 makes this block finalization
+       instead of reading as an agreement vote).
        Annotator values MUST match REVIEWER_MOCK_ROWS above -- the list's
        answer column and the derived unit status describe the same
-       submission. Derived states are noted per sample. */
+       submission. Derived states are noted per sample.
+
+       issue #551 changed two derivation rules used throughout this table:
+       (1) min_reviewers = 1 (T014, T015 here) now converges a SOLE
+           reviewer's correction immediately -- what used to require
+           arbitration at N = 1 now finalizes on submit, so several rows
+           below moved from `disputed`/`arbitrated` to `finalized`; and
+       (2) a pure reject (no correction) now blocks finalization instead of
+           reading as agreement, so dry-05's A row moved the other way,
+           from `finalized` to `disputed`. */
     var scripts = [
       /* T014 dry_run, min_reviewers = 1 */
       { t: 'T014', r: 'dry_run', s: 'dry-01-all-agree', a: A, v: 'positive', rev: { reviewer_wang: 'positive' } }, // finalized
       { t: 'T014', r: 'dry_run', s: 'dry-01-all-agree', a: B, v: 'positive', rev: { reviewer_wang: 'positive' } }, // finalized
       { t: 'T014', r: 'dry_run', s: 'dry-01-all-agree', a: C, v: 'positive', rev: { reviewer_wang: 'positive' } }, // finalized
       { t: 'T014', r: 'dry_run', s: 'dry-02-one-divergent', a: A, v: 'neutral', rev: { reviewer_wang: 'neutral' } }, // finalized
-      { t: 'T014', r: 'dry_run', s: 'dry-02-one-divergent', a: B, v: 'neutral', rev: { reviewer_wang: 'positive' } }, // disputed
+      // issue #551: N = 1 correction now converges on submit -- was disputed.
+      { t: 'T014', r: 'dry_run', s: 'dry-02-one-divergent', a: B, v: 'neutral', rev: { reviewer_wang: 'positive' } }, // finalized (N=1 quorum converges)
       { t: 'T014', r: 'dry_run', s: 'dry-02-one-divergent', a: C, v: 'positive' }, // pending
       { t: 'T014', r: 'dry_run', s: 'dry-03-dispute-open', a: A, v: 'neutral' }, // pending
-      { t: 'T014', r: 'dry_run', s: 'dry-03-dispute-open', a: B, v: 'neutral', rev: { reviewer_wang: 'negative' } }, // disputed
+      // issue #551: N = 1 correction now converges on submit -- was disputed.
+      { t: 'T014', r: 'dry_run', s: 'dry-03-dispute-open', a: B, v: 'neutral', rev: { reviewer_wang: 'negative' } }, // finalized (N=1 quorum converges)
       { t: 'T014', r: 'dry_run', s: 'dry-03-dispute-open', a: C, v: 'neutral' }, // pending
       { t: 'T014', r: 'dry_run', s: 'dry-04-dispute-resolved', a: A, v: 'negative', rev: { reviewer_wang: 'negative' } }, // finalized
-      { t: 'T014', r: 'dry_run', s: 'dry-04-dispute-resolved', a: B, v: 'neutral', rev: { reviewer_wang: 'negative' }, arb: 'negative' }, // finalized by arbitration
+      /* issue #551: N = 1 already converges this item on 'negative' before
+         chen's seeded arbitration vote is even applied -- the arb call
+         below is now redundant (it writes the same value the majority rule
+         already resolved) but harmless, and kept so the arbitration record
+         (finalized_by = reviewer_chen) this row's test still reads stays
+         populated. */
+      { t: 'T014', r: 'dry_run', s: 'dry-04-dispute-resolved', a: B, v: 'neutral', rev: { reviewer_wang: 'negative' }, arb: 'negative' }, // finalized (N=1 quorum converges; arbitration record redundant)
       { t: 'T014', r: 'dry_run', s: 'dry-04-dispute-resolved', a: C, v: 'negative', rev: { reviewer_wang: 'negative' } }, // finalized
       /* issue #502: reject on dry_run has no rollback channel -- the
-         annotator stays 'submitted' and the unit finalizes normally
-         (agree value), only the reviewer's own history records "reject". */
-      { t: 'T014', r: 'dry_run', s: 'dry-05-pending-review', a: A, v: 'positive', rev: { reviewer_wang: 'positive' }, rejectBy: 'reviewer_wang' }, // finalized (reject, no rework backlog)
+         annotator stays 'submitted'. issue #551: a pure reject (no
+         correction) now blocks finalization instead of reading as
+         agreement, so this unit is disputed, not finalized -- only an
+         arbiter (or a later correction) can resolve it. */
+      { t: 'T014', r: 'dry_run', s: 'dry-05-pending-review', a: A, v: 'positive', rev: { reviewer_wang: 'positive' }, rejectBy: 'reviewer_wang' }, // disputed (pure reject blocks finalization)
       { t: 'T014', r: 'dry_run', s: 'dry-05-pending-review', a: B, v: 'positive' }, // pending
       { t: 'T014', r: 'dry_run', s: 'dry-05-pending-review', a: C, v: 'positive' }, // pending
       /* T015 official_run, min_reviewers = 1 (ofs-05 stays unsubmitted) */
       { t: 'T015', r: 'official_run', s: 'ofs-01-agree-gold', a: A, v: 'negative', rev: { reviewer_wang: 'negative' } }, // finalized
-      { t: 'T015', r: 'official_run', s: 'ofs-02-modified-dispute', a: A, v: 'neutral', rev: { reviewer_wang: 'positive' } }, // disputed
-      { t: 'T015', r: 'official_run', s: 'ofs-03-arbitrated-gold', a: A, v: 'positive', rev: { reviewer_wang: 'neutral' }, arb: 'neutral' }, // finalized by arbitration
+      // issue #551: N = 1 correction now converges on submit -- was disputed.
+      { t: 'T015', r: 'official_run', s: 'ofs-02-modified-dispute', a: A, v: 'neutral', rev: { reviewer_wang: 'positive' } }, // finalized (N=1 quorum converges)
+      /* issue #551: a second, AGREEING reviewer (li) keeps this a genuine
+         N = 2 tie (wang's 'neutral' vs the implicit agree vote for
+         'positive') so the row still needs chen's arbitration to finalize,
+         same as before -- without li this would now converge at N = 1 like
+         ofs-02 above and stop demoing an arbitration-resolved finalize. */
+      { t: 'T015', r: 'official_run', s: 'ofs-03-arbitrated-gold', a: A, v: 'positive', rev: { reviewer_wang: 'neutral', reviewer_li: 'positive' }, arb: 'neutral' }, // finalized by arbitration
       { t: 'T015', r: 'official_run', s: 'ofs-04-pending-review', a: A, v: 'positive' }, // pending
       /* T016 official_run, min_reviewers = 3 */
       { t: 'T016', r: 'official_run', s: 'ofm-01-unanimous-gold', a: A, v: 'positive', rev: { reviewer_wang: 'positive', reviewer_li: 'positive', reviewer_lin: 'positive' } }, // finalized
@@ -2343,8 +2430,15 @@
       { t: 'T017', r: 'official_run', s: 'oft-05-pending-review', a: A, v: 'positive', rev: { reviewer_wang: 'positive' }, rejectBy: 'reviewer_wang' }, // rolled back to pending (reject, rework backlog)
     ];
 
-    function labelPayload(value) {
-      return { previewState: { single_label: { selected: value } } };
+    function labelPayload(value, decision) {
+      /* issue #551: `decision` mirrors handleReviewSubmit's persisted
+         `decisions` map (per outKey approve/reject) -- without it, a seeded
+         pure reject (rejectBy, same value as `v`) is indistinguishable from
+         a seeded approve, and getReviewUnitStatus()/getDisputeItems() would
+         read it as agreement instead of a blocking reject. */
+      var payload = { previewState: { single_label: { selected: value } } };
+      if (decision) payload.decisions = { single_label: decision };
+      return payload;
     }
 
     scripts.forEach(function (row) {
@@ -2355,10 +2449,12 @@
            (annotation-workspace.config.js's decisionLines, ~L3780) so a
            seeded reject reads the same way a live one would. */
         var reviewSummary = isReject ? 'single_label · ' + row.a + ': reject' : '';
-        markSampleSubmitted(row.t, 'reviewer', row.r, row.s, labelPayload(row.rev[reviewerId]), reviewSummary, {
-          annotatorId: row.a,
-          reviewerId: reviewerId,
-        });
+        markSampleSubmitted(
+          row.t, 'reviewer', row.r, row.s,
+          labelPayload(row.rev[reviewerId], isReject ? 'reject' : 'approve'),
+          reviewSummary,
+          { annotatorId: row.a, reviewerId: reviewerId }
+        );
         /* issue #502: mirrors handleReviewSubmit's post-submit rollback
            (annotation-workspace.config.js ~L3864). markSampleRejected() is
            itself official_run-gated (this file, ~L467), so calling it here
@@ -2551,6 +2647,7 @@
     submitArbitration: submitArbitration,
     resolveDisputeConvergence: resolveDisputeConvergence,
     describeDisputeVotes: describeDisputeVotes,
+    PURE_REJECT_VALUE: PURE_REJECT_VALUE,
     computeIaaAlpha: computeIaaAlpha,
     IAA_NOMINAL_OUTPUT_TYPES: IAA_NOMINAL_OUTPUT_TYPES,
   };

@@ -57,10 +57,19 @@ test.describe('T014 dry_run: 3 annotators per sample', () => {
   test('dry-02-one-divergent carries one divergent annotator answer', async ({ page }) => {
     await page.goto(buildListUrl({ task_id: 'T014', role: 'reviewer', run_type: 'dry_run' }));
 
-    // dry-02 rows sit at indexes 3-5: neutral / neutral / positive.
+    // dry-02 rows sit at indexes 3-5: neutral / neutral (overwritten, see
+    // below) / positive.
     const rows = page.getByTestId('ws-sample-item');
     await expect(rows.nth(3).getByTestId('list-review-answer')).toHaveText('neutral');
-    await expect(rows.nth(4).getByTestId('list-review-answer')).toHaveText('neutral');
+    /* issue #551: the middle row's reviewer correction ('positive') now
+       converges at N=1 (min_reviewers = 1) and finalizes the unit on
+       submit, instead of staying disputed. getFinalizedOverwrites()
+       (annotation-list.html) already overwrites a FINALIZED row's answer
+       column with the converged value for any unit finalized this way --
+       this row simply never reached that branch before, since it used to
+       stay disputed. It therefore now reads the reviewer's converged
+       value, not the annotator's original 'neutral'. */
+    await expect(rows.nth(4).getByTestId('list-review-answer')).toHaveText('positive');
     await expect(rows.nth(5).getByTestId('list-review-answer')).toHaveText('positive');
   });
 });

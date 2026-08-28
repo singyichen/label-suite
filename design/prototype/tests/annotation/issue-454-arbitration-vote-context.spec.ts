@@ -109,20 +109,43 @@ test.describe('issue #454 -- arbitration card explains why the unit is disputed'
     await expect(page.getByTestId('ws-arbitration-vote-reason')).toHaveCount(0);
   });
 
-  test('a single dissenting reviewer is explained by the N < 2 rule, not by > N/2', async ({ page }) => {
-    await openAsArbiter(page, 'T015', 'ofs-02-modified-dispute');
+  /* issue #551 (v4.54.0) retired this scenario's premise: T015/ofs-02 was
+     the file's one min_reviewers = 1 example, seeded with a single
+     DISSENTING reviewer (a real correction, not a reject). FR-061 used to
+     hard-block convergence below N = 2 unconditionally, so that lone
+     correction always stayed disputed and needed an arbiter -- explained by
+     the (now removed) 'single_reviewer' reason. issue #551 makes N = 1 the
+     full quorum instead: a sole reviewer's correction converges immediately
+     on submit, so ofs-02 now finalizes without ever reaching this card (see
+     annotation-review-flow-demo-seed.spec.ts). The only way a min_reviewers
+     = 1 unit still needs arbitration is a PURE reject (no correction) --
+     T014/dry-05-pending-review x kioleemg12 (wang rejected without changing
+     the value) -- which is exactly what the new 'pure_reject' reason below
+     explains. */
+  test('a pure reject (no replacement value) is explained by the pure_reject reason, not by > N/2', async ({ page }) => {
+    await page.goto(
+      `${WORKSPACE_URL}?task_id=T014&sample_id=dry-05-pending-review&annotator_id=kioleemg12` +
+        `&role=reviewer&run_type=dry_run&reviewer_id=${ARBITER}`,
+    );
 
     await expect(page.getByTestId('ws-arbitration-card')).toBeVisible();
     await expect(page.getByTestId('ws-arbitration-quorum')).toContainText('已提交審核員 1 位');
 
-    /* T015 runs min_reviewers = 1, so the lone dissenting reviewer holds 1 of
-       1 votes -- arithmetically a strict majority. FR-061 blocks convergence
-       below N = 2 anyway, so explaining this unit as "no strict majority"
-       would contradict the rule that actually kept it open. */
+    /* wang's reject carries no correction (PURE_REJECT_VALUE), so it can
+       never be tallied into a majority for or against any value -- it
+       blocks finalization outright, which is a different failure mode from
+       "no value reached > N/2". */
     const reason = page.getByTestId('ws-arbitration-vote-reason');
-    await expect(reason).toHaveAttribute('data-reason', 'single_reviewer');
-    await expect(reason).toContainText('單一審核員不足以推翻標記員答案');
+    await expect(reason).toHaveAttribute('data-reason', 'pure_reject');
+    await expect(reason).toContainText('無法計入多數決');
     await expect(reason).not.toContainText('嚴格多數');
+
+    // The B side has no replacement value to offer -- rendered as such,
+    // not as a duplicate of the annotator's own answer.
+    const bBtn = page.getByTestId('ws-arbitration-choose-b');
+    await expect(bBtn).toHaveCount(1);
+    await expect(bBtn).toContainText('無替代值');
+    await expect(bBtn).not.toContainText('positive');
   });
 
   test('vote context is anonymous: aggregate counts without reviewer identity', async ({ page }) => {

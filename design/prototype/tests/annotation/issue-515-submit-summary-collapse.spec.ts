@@ -123,9 +123,13 @@ test.describe('Non-interactive review units never render the pre-submit summary 
     await page.goto(url);
     await dismissGuidelineModal(page);
 
-    /* annotator says sad, reviewer_wang says fear -> DISPUTED under
-     * min_reviewers = 1, and reviewer_chen (can_arbitrate, not a
-     * participant) gets the arbitration layout. */
+    /* annotator says sad, reviewer_wang says fear, reviewer_lin silently
+     * agrees (sad) -> a genuine 1:1 tie at N=2 derives DISPUTED, and
+     * reviewer_chen (can_arbitrate, not a participant) gets the arbitration
+     * layout. issue #551: min_reviewers = 1 (T001's default) now converges
+     * a SOLE reviewer's correction on submit instead of unconditionally
+     * requiring arbitration, so reviewer_lin's silent agree keeps this
+     * reachable at N=2. */
     await page.evaluate(() => {
       const data = (window as unknown as {
         LabelSuiteAnnotationWorkspaceData: {
@@ -145,6 +149,11 @@ test.describe('Non-interactive review units never render the pre-submit summary 
         'T001', 'reviewer', 'official_run', 'sent-001',
         { previewState: { single_label: { selected: 'fear' } } }, '',
         { annotatorId: 'kioleemg12', reviewerId: 'reviewer_wang' }
+      );
+      data.markSampleSubmitted(
+        'T001', 'reviewer', 'official_run', 'sent-001',
+        { previewState: { single_label: { selected: 'sad' } } }, '',
+        { annotatorId: 'kioleemg12', reviewerId: 'reviewer_lin' }
       );
     });
     await page.reload();

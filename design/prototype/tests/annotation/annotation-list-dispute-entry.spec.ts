@@ -27,6 +27,7 @@ const ANNOTATOR = 'kioleemg12';
 const PARTICIPANT = 'reviewer_wang'; // submitted the differing decision
 const BYSTANDER = 'reviewer_li'; // no submission, but no can_arbitrate flag
 const ARBITER = 'reviewer_chen'; // can_arbitrate: true, not a participant
+const FILLER = 'reviewer_lin'; // issue #551 -- silent agree, keeps N=2 (no can_arbitrate)
 
 function seed(page: Page, args: SeedArgs): Promise<void> {
   return page.evaluate((a) => {
@@ -46,14 +47,25 @@ function seed(page: Page, args: SeedArgs): Promise<void> {
 
 const labelPayload = (selected: string) => ({ previewState: { single_label: { selected } } });
 
-/* Annotator says sad, reviewer_wang says fear -> with min_reviewers = 1 the
- * unit derives straight to disputed (FR-051). */
+/* Annotator says sad, reviewer_wang says fear, reviewer_lin silently agrees
+ * (sad) -> a genuine 1:1 tie at N=2 derives straight to disputed (FR-051).
+ * issue #551 (v4.54.0): min_reviewers = 1 (T001's default) now converges a
+ * SOLE reviewer's correction on submit instead of unconditionally requiring
+ * arbitration, so a single dissenting reviewer alone no longer reaches
+ * 爭議中 -- FILLER keeps this the same disputed unit every test here
+ * already assumed. BYSTANDER (li) is deliberately left untouched so it
+ * keeps meaning "never reviewed this unit". */
 async function seedDisputedUnit(page: Page): Promise<void> {
   await seed(page, { role: 'annotator', payload: labelPayload('sad'), identity: { annotatorId: ANNOTATOR } });
   await seed(page, {
     role: 'reviewer',
     payload: labelPayload('fear'),
     identity: { annotatorId: ANNOTATOR, reviewerId: PARTICIPANT },
+  });
+  await seed(page, {
+    role: 'reviewer',
+    payload: labelPayload('sad'),
+    identity: { annotatorId: ANNOTATOR, reviewerId: FILLER },
   });
 }
 

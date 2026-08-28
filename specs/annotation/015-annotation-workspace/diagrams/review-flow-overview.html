@@ -55,7 +55,7 @@
 
     <svg viewBox="0 0 1400 790" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="rvov-title rvov-desc">
       <title id="rvov-title">Label Suite 審核流程總覽</title>
-      <desc id="rvov-desc">四泳道流程圖：標記員提交標記後交給審核員逐單位審核；系統依序判斷審核人數是否達門檻、審核員是否改動答案、逐項嚴格多數決是否收斂。計票時，已提交審核但該項未改動的審核員其票計給標記員原答案，尚未提交者不計入分母；全員都改動時原答案不列為候選；未達已提交人數一半即不收斂；收斂則定稿唯讀，平手或全分歧則落入爭議池由具仲裁資格的審核員逐項裁定後定稿。底部對照表列出試標與正式標記的三處差異：一筆樣本產生幾個審核單位、退回是否回退標記員狀態、以及定稿是否產生審核 gold（審核流程定案產出的答案，與資料集自帶的 gold_label 欄位無關）。試標不產生審核 gold，其品質改由兩條獨立輸入呈現：標記員原始答案彙總為標記一致性，審核員的審核決策彙總為標記員被修改率。</desc>
+      <desc id="rvov-desc">四泳道流程圖：標記員提交標記後交給審核員逐單位審核；系統依序判斷審核人數是否達門檻、審核員是否改動答案或純退回（退回且未改動答案）、逐項嚴格多數決是否收斂。計票時，已提交審核但該項未改動且非純退回的審核員其票計給標記員原答案，尚未提交者不計入分母；全員都改動或純退回時原答案不列為候選；純退回不計為對原答案的同意票，恆不收斂；門檻為 1 時唯一審核員之修正逕行收斂於該值，未達已提交人數一半（門檻 ≥ 2 時）亦不收斂；收斂則定稿唯讀，平手、全分歧或含純退回則落入爭議池由具仲裁資格的審核員逐項裁定後定稿——純退回之爭議項無替代值，裁定維持退回即維持原判斷不寫入新值。底部對照表列出試標與正式標記的三處差異：一筆樣本產生幾個審核單位、退回是否回退標記員狀態、以及定稿是否產生審核 gold（審核流程定案產出的答案，與資料集自帶的 gold_label 欄位無關）。試標不產生審核 gold，其品質改由兩條獨立輸入呈現：標記員原始答案彙總為標記一致性，審核員的審核決策彙總為標記員被修改率。</desc>
 
       <defs>
         <marker id="arw" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#64748B"/></marker>
@@ -162,9 +162,9 @@
       <text x="500" y="271" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">樣本 × 標記員 × 執行類型</text>
       <text x="500" y="282" fill="#94A3B8" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">讀取時列舉 · 提交前即存在</text>
 
-      <!-- L2 · 通過 / 修正 / 退回 -->
+      <!-- L2 · 通過 / 退回（可附修正） -->
       <rect x="616" y="240" width="160" height="48" rx="6" fill="#FFFFFF" stroke="#1E1B4B" stroke-width="1"/>
-      <text x="696" y="262" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">通過 / 修正 / 退回</text>
+      <text x="696" y="262" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">通過 / 退回（可附修正）</text>
       <text x="696" y="276" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">逐項決策 · 可直接改答案</text>
 
       <!-- L3 · 彙總 · 審核人數門檻 -->

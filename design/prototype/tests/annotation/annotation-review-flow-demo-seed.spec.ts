@@ -10,13 +10,22 @@ import { buildListUrl, buildWorkspaceUrl, skipGuidelineModal } from './_workspac
  * ONLY, guarded by the marker key `labelsuite.reviewFlowDemoSeed.v1` so a
  * reload never duplicates history events or refreshes timestamps.
  *
- * Expected status matrix (derived, not stored -- see getReviewUnitStatus):
- *   T014 dry_run  (min=1): dry-01 finalized x3 · dry-02 finalized/disputed/
- *     pending · dry-03 pending/disputed/pending · dry-04 finalized x3 (B via
- *     chen's arbitration) · dry-05 finalized (A, rejected by wang -- issue
- *     #502)/pending/pending
- *   T015 official (min=1): finalized · disputed · finalized (arbitrated) ·
- *     pending · (ofs-05 absent)
+ * Expected status matrix (derived, not stored -- see getReviewUnitStatus).
+ * issue #551 (v4.54.0) changed two derivation rules this matrix depends on:
+ * a min_reviewers = 1 unit now converges a SOLE reviewer's correction on
+ * submit instead of always requiring arbitration, and a pure reject (no
+ * correction) now blocks finalization instead of reading as agreement --
+ * see annotation-workspace.data.js's seedReviewFlowDemo() for the per-row
+ * rationale (dry-02/dry-03/dry-04's B rows and ofs-02 moved to finalized;
+ * dry-05's A row moved to disputed):
+ *   T014 dry_run  (min=1): dry-01 finalized x3 · dry-02 finalized x2/
+ *     pending · dry-03 pending/finalized/pending · dry-04 finalized x3
+ *     (already converges at N=1; chen's seeded arbitration record is now
+ *     redundant but still present) · dry-05 disputed (A, pure reject by
+ *     wang -- issue #551)/pending/pending
+ *   T015 official (min=1): finalized · finalized (N=1 quorum converges,
+ *     issue #551) · finalized (arbitrated -- li's silent agreement keeps
+ *     this a genuine N=2 tie) · pending · (ofs-05 absent)
  *   T016 official (min=3): finalized · approved · modified · finalized
  *     (majority convergence, no arbitration) · disputed (1/1/1 stalemate)
  *   T017 official (min=2): disputed (1:1 tie) · approved · modified ·
@@ -25,7 +34,7 @@ import { buildListUrl, buildWorkspaceUrl, skipGuidelineModal } from './_workspac
  *     a never-reviewed unit from the reviewer side)
  *
  * Traceability: specs/annotation/015-annotation-workspace/spec.md
- *   FR-051, FR-059, FR-060, FR-061
+ *   FR-051, FR-059, FR-060, FR-061 (v4.54.0, issue #551)
  */
 
 const SEED_MARKER = 'labelsuite.reviewFlowDemoSeed.v1';
@@ -54,21 +63,31 @@ test.describe('T014 dry_run staged states', () => {
     await expectBadges(page, [
       // dry-01-all-agree: wang agreed with all three annotators
       '已定稿', '已定稿', '已定稿',
-      // dry-02-one-divergent: A agreed, B changed by wang, C unreviewed
-      '已定稿', '爭議中', '待審',
-      // dry-03-dispute-open: only B reviewed (changed)
-      '待審', '爭議中', '待審',
-      // dry-04-dispute-resolved: B's dispute finalized by chen's arbitration
+      // dry-02-one-divergent: A agreed; B changed by wang, N=1 converges on
+      // submit (issue #551, was 爭議中); C unreviewed
+      '已定稿', '已定稿', '待審',
+      // dry-03-dispute-open: only B reviewed -- changed, N=1 converges on
+      // submit (issue #551, was 爭議中)
+      '待審', '已定稿', '待審',
+      // dry-04-dispute-resolved: B already converges at N=1 on submit;
+      // chen's seeded arbitration record is redundant but still present
       '已定稿', '已定稿', '已定稿',
-      // dry-05-pending-review: A rejected by wang (issue #502, agree value
-      // -- dry_run reject still finalizes normally), B/C nobody reviewed yet
-      '已定稿', '待審', '待審',
+      // dry-05-pending-review: A is a PURE reject by wang (no correction --
+      // issue #551 blocks finalization instead of reading it as agreement),
+      // B/C nobody reviewed yet
+      '爭議中', '待審', '待審',
     ]);
   });
 
-  test("dry-04's middle unit is finalized by arbitration, not by agreement", async ({ page }) => {
+  test("dry-04's middle unit already converges at N=1; chen's seeded arbitration record is redundant but still present", async ({ page }) => {
     await page.goto(buildListUrl({ task_id: 'T014', role: 'reviewer', run_type: 'dry_run' }));
 
+    // issue #551: min_reviewers = 1 now converges wang's sole correction
+    // ('negative') on submit -- getReviewUnitStatus() checks convergence
+    // BEFORE consulting the arbitration store, so this unit finalizes
+    // without needing chen's vote at all. The seed still calls
+    // submitArbitration() (matching the majority value), so the
+    // arbitration record itself remains readable and unchanged.
     const arb = await page.evaluate(() => {
       const data = (window as unknown as {
         LabelSuiteAnnotationWorkspaceData: {
@@ -86,10 +105,14 @@ test.describe('T014 dry_run staged states', () => {
 });
 
 test.describe('T015 official_run single-reviewer staged states', () => {
-  test('the four submitted samples derive finalized/disputed/finalized/pending', async ({ page }) => {
+  test('the four submitted samples derive finalized/finalized/finalized/pending (issue #551)', async ({ page }) => {
     await page.goto(buildListUrl({ task_id: 'T015', role: 'reviewer', run_type: 'official_run' }));
 
-    await expectBadges(page, ['已定稿', '爭議中', '已定稿', '待審']);
+    // ofs-02 used to read 爭議中: min_reviewers = 1 hard-blocked convergence
+    // below N = 2, so the sole reviewer's correction always fell into the
+    // dispute pool. issue #551 makes N = 1 the full quorum instead, so it
+    // now converges on submit like ofs-01.
+    await expectBadges(page, ['已定稿', '已定稿', '已定稿', '待審']);
   });
 });
 
