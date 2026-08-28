@@ -2143,6 +2143,30 @@ test_check_sdd_rejects_remaining_retired_punctuation_boundaries() {
     printf '\nRun npm testing: before review.\n' >> "$repo/AGENTS.md"
     if ! record_expected_lint_success "retired-token-boundary-control" "$repo" "RETIRED_COMMAND"; then failures=$((failures + 1)); fi
 
+    repo="$(make_sdd_repo)"
+    printf '\nRun npm test;echo done.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_failure "retired-semicolon-no-space" "$repo" "RETIRED_COMMAND" "AGENTS.md"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nRun npm test&&echo done.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_failure "retired-shell-and-no-space" "$repo" "RETIRED_COMMAND" "AGENTS.md"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nRun (npm test)before review.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_failure "retired-parenthesis-no-space" "$repo" "RETIRED_COMMAND" "AGENTS.md"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nDo not run npm test,run npm test locally.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_failure "retired-comma-clause-no-space" "$repo" "RETIRED_COMMAND" "AGENTS.md"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nRun pnpm test;echo done.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_success "retired-pnpm-no-space-control" "$repo" "RETIRED_COMMAND"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nDo not run npm test,do not run npm test locally.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_success "retired-two-prohibitions-no-space-control" "$repo" "RETIRED_COMMAND"; then failures=$((failures + 1)); fi
+
     [[ "$failures" -eq 0 ]]
 }
 
