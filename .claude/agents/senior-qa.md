@@ -40,7 +40,7 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 - Do not write migrations — belongs to senior-dba
 
 **File Ownership:**
-- Owns: `backend/tests/`, `frontend/src/**/__tests__/`, `frontend/src/**/*.test.ts(x)`, `e2e/`
+- Owns: `backend/tests/`, `frontend/src/**/__tests__/`, `frontend/src/**/*.test.ts(x)`, `e2e/`, `scripts/*-tests.sh`
 - Must Not Touch: `backend/app/`, `frontend/src/` (non-test files), `backend/alembic/`
 
 **Role Differentiation:**
