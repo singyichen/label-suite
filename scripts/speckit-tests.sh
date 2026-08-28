@@ -2187,6 +2187,22 @@ test_check_sdd_rejects_remaining_retired_punctuation_boundaries() {
     printf '\nDo not run /speckit.analyze.\n' >> "$repo/AGENTS.md"
     if ! record_expected_lint_success "retired-speckit-negative-control" "$repo" "RETIRED_COMMAND"; then failures=$((failures + 1)); fi
 
+    repo="$(make_sdd_repo)"
+    printf '\nDo not run /speckit.analyze.Run /speckit.analyze now.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_failure "retired-speckit-mixed-no-space" "$repo" "RETIRED_COMMAND" "AGENTS.md"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nDo not run /ui-ux-pro-max.Run /ui-ux-pro-max now.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_failure "retired-uiux-mixed-no-space" "$repo" "RETIRED_COMMAND" "AGENTS.md"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nRun /ui-ux-pro-max now.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_failure "retired-uiux-active-control" "$repo" "RETIRED_COMMAND" "AGENTS.md"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nDo not run /ui-ux-pro-max.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_success "retired-uiux-negative-control" "$repo" "RETIRED_COMMAND"; then failures=$((failures + 1)); fi
+
     [[ "$failures" -eq 0 ]]
 }
 
