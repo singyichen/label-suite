@@ -103,6 +103,10 @@
       unitStateDisputedNote: '未定稿，待仲裁',
       trackAria: '審核單位狀態',
       trackMarker: '目前：',
+      trackBranchSame: '答案未修改',
+      trackBranchDiffering: '答案有修改',
+      trackBranchUnconverged: '未收斂',
+      trackBranchArbitrated: '仲裁後',
       flowDrawerOpen: '了解審核流程',
       flowDrawerTitle: '審核流程',
       flowDrawerCloseAria: '關閉審核流程',
@@ -216,6 +220,10 @@
       unitStateDisputedNote: 'not finalized, awaiting arbitration',
       trackAria: 'Review unit status',
       trackMarker: 'Now:',
+      trackBranchSame: 'Answers unchanged',
+      trackBranchDiffering: 'Answers changed',
+      trackBranchUnconverged: 'No convergence',
+      trackBranchArbitrated: 'After arbitration',
       flowDrawerOpen: 'Review flow',
       flowDrawerTitle: 'Review flow',
       flowDrawerCloseAria: 'Close the review flow',
@@ -3661,17 +3669,42 @@
      way a reviewer can tell one review model from another inside the
      workspace. Rendered above the card in every reviewer path, including
      the arbitration branch. */
-  /* FR-051's five states as a route, per lane. FINALIZED is reachable from
-     BOTH lanes, which is exactly why the track needs getReviewUnitLane() and
-     not just the status. */
+  /* FR-051's five states as a route, per lane AND per finalize threshold.
+     FINALIZED is reachable from BOTH lanes, which is exactly why the track
+     needs getReviewUnitLane() and not just the status.
+
+     issue #525 PR-C: `approved` and `modified` are the two states that mean
+     "a reviewer answered, but the quorum is not reached yet". At
+     min_reviewers = 1 that moment does not exist -- getReviewUnitStatus()
+     only evaluates `enoughReviewers` once at least one reviewer submitted,
+     so a threshold of 1 makes the flag always true and the unit derives
+     `finalized` (no diff) or `disputed` (any diff) directly. Drawing those
+     two nodes anyway told a single-reviewer task's reviewer about states
+     their task can never produce, so the `single` column drops them. */
   var REVIEW_TRACK_ROUTES = {
-    same: ['pending', 'approved', 'finalized'],
-    differing: ['pending', 'modified', 'disputed', 'finalized'],
+    quorum: {
+      same: ['pending', 'approved', 'finalized'],
+      differing: ['pending', 'modified', 'disputed', 'finalized'],
+    },
+    single: {
+      same: ['pending', 'finalized'],
+      differing: ['pending', 'disputed', 'finalized'],
+    },
+  };
+
+  var TRACK_BRANCH_I18N_KEYS = {
+    same: 'trackBranchSame',
+    differing: 'trackBranchDiffering',
+    unconverged: 'trackBranchUnconverged',
+    arbitrated: 'trackBranchArbitrated',
   };
 
   var TRACK_BORDER = 'var(--color-border)';
   var TRACK_TAKEN = 'var(--color-cta)';
 
+  /* `taken` widens the stroke as well as recolouring it: the route a unit
+     actually walked must not be a colour-only signal (AC-7's reasoning,
+     applied to the connectors rather than only to the current node). */
   function trackFork(paths) {
     var span = document.createElement('span');
     span.className = 'review-track-fork';
@@ -3679,7 +3712,8 @@
     span.innerHTML =
       '<svg width="28" height="68" viewBox="0 0 28 68" fill="none">' +
       paths.map(function (p) {
-        return '<path d="' + p.d + '" stroke="' + p.stroke + '" stroke-width="2"/>';
+        return '<path d="' + p.d + '" stroke="' + (p.taken ? TRACK_TAKEN : TRACK_BORDER) +
+          '" stroke-width="' + (p.taken ? 3 : 2) + '"/>';
       }).join('') +
       '</svg>';
     return span;
@@ -3687,6 +3721,7 @@
 
   /* Builds the §Review Status Track for one unit. `lane` is null until a
      reviewer submits, in which case only 待審 is on the route.
+     `minReviewers` picks the column of REVIEW_TRACK_ROUTES above.
 
      `done` means "this node is on the unit's route, before its current
      position". It is a ROUTE, not an event log: the prototype derives
@@ -3695,8 +3730,9 @@
      rendered as 已同意. Marking the lane's interim node keeps the branch
      legible; claiming a timestamped visit would be a claim the data cannot
      support. */
-  function buildReviewStatusTrack(unitStatus, lane) {
-    var route = REVIEW_TRACK_ROUTES[lane] || ['pending'];
+  function buildReviewStatusTrack(unitStatus, lane, minReviewers) {
+    var quorum = minReviewers >= 2;
+    var route = REVIEW_TRACK_ROUTES[quorum ? 'quorum' : 'single'][lane] || ['pending'];
     var position = route.indexOf(unitStatus);
 
     function nodeClass(status) {
@@ -3706,7 +3742,7 @@
     }
 
     var track = document.createElement('div');
-    track.className = 'review-track';
+    track.className = 'review-track' + (quorum ? '' : ' review-track-single');
     track.setAttribute('role', 'list');
     track.setAttribute('aria-label', t('trackAria'));
 
@@ -3726,10 +3762,29 @@
       track.appendChild(node);
     }
 
-    function addRail(gridStyle, taken) {
+    /* The branch condition used to live only in the fork's geometry, and the
+       fork is aria-hidden -- so it reached assistive tech through nothing at
+       all. These captions are therefore NOT hidden. They carry no `listitem`
+       role, so the node list the track exposes is unchanged. */
+    function branchLabel(branchKey, taken) {
+      var label = document.createElement('span');
+      label.className = 'review-track-branch' + (taken ? ' done' : '');
+      label.setAttribute('data-branch', branchKey);
+      label.textContent = t(TRACK_BRANCH_I18N_KEYS[branchKey]);
+      return label;
+    }
+
+    function addBranch(branchKey, taken, gridStyle) {
+      var label = branchLabel(branchKey, taken);
+      label.setAttribute('style', gridStyle);
+      track.appendChild(label);
+    }
+
+    function addRail(gridStyle, taken, branchKey) {
       var rail = document.createElement('span');
       rail.className = 'review-track-rail' + (taken ? ' done' : '');
       rail.setAttribute('style', gridStyle);
+      if (branchKey) rail.appendChild(branchLabel(branchKey, taken));
       track.appendChild(rail);
     }
 
@@ -3741,19 +3796,31 @@
     var finalized = unitStatus === 'finalized';
     addNode('pending', 'grid-column:1;grid-row:1/3');
     addFork(trackFork([
-      { d: 'M0 34 H12 V17 H28', stroke: lane === 'same' ? TRACK_TAKEN : TRACK_BORDER },
-      { d: 'M0 34 H12 V51 H28', stroke: lane === 'differing' ? TRACK_TAKEN : TRACK_BORDER },
+      { d: 'M0 34 H12 V17 H28', taken: lane === 'same' },
+      { d: 'M0 34 H12 V51 H28', taken: lane === 'differing' },
     ]), 'grid-column:2;grid-row:1/3');
-    addNode('approved', 'grid-column:3;grid-row:1');
-    addNode('modified', 'grid-column:3;grid-row:2');
-    addRail('grid-column:4/6;grid-row:1', lane === 'same' && finalized);
-    addRail('grid-column:4;grid-row:2', lane === 'differing' && unitStatus !== 'modified');
-    addNode('disputed', 'grid-column:5;grid-row:2');
+    addBranch('same', lane === 'same', 'grid-column:3;grid-row:1');
+    addBranch('differing', lane === 'differing', 'grid-column:3;grid-row:2');
+    if (quorum) {
+      addNode('approved', 'grid-column:4;grid-row:1');
+      addNode('modified', 'grid-column:4;grid-row:2');
+      addRail('grid-column:5/8;grid-row:1', lane === 'same' && finalized);
+      addRail('grid-column:5;grid-row:2', lane === 'differing' && unitStatus !== 'modified', 'unconverged');
+      addNode('disputed', 'grid-column:6;grid-row:2');
+      addRail('grid-column:7;grid-row:2', lane === 'differing' && finalized, 'arbitrated');
+    } else {
+      /* No interim node to pass through: the same-answer lane runs straight
+         from the fork to 已定稿, and the differing lane straight to 爭議中. */
+      addRail('grid-column:4/6;grid-row:1', lane === 'same' && finalized);
+      addNode('disputed', 'grid-column:4;grid-row:2');
+      addRail('grid-column:5;grid-row:2', lane === 'differing' && finalized, 'arbitrated');
+    }
+    var joinColumn = quorum ? 8 : 6;
     addFork(trackFork([
-      { d: 'M0 17 H16 V34 H28', stroke: lane === 'same' && finalized ? TRACK_TAKEN : TRACK_BORDER },
-      { d: 'M0 51 H16 V34 H28', stroke: lane === 'differing' && finalized ? TRACK_TAKEN : TRACK_BORDER },
-    ]), 'grid-column:6;grid-row:1/3');
-    addNode('finalized', 'grid-column:7;grid-row:1/3');
+      { d: 'M0 17 H16 V34 H28', taken: lane === 'same' && finalized },
+      { d: 'M0 51 H16 V34 H28', taken: lane === 'differing' && finalized },
+    ]), 'grid-column:' + joinColumn + ';grid-row:1/3');
+    addNode('finalized', 'grid-column:' + (joinColumn + 1) + ';grid-row:1/3');
     return track;
   }
 
@@ -3930,7 +3997,8 @@
       window.LabelSuiteAnnotationWorkspaceData.getReviewUnitLane(
         currentProfile.id, currentRunType, currentSampleId, currentIdentity,
         state.selectedOutputTypes
-      )
+      ),
+      currentProfile.minReviewers || 1
     ));
   }
 
