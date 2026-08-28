@@ -99,6 +99,13 @@ test.describe('Return URL carries identity (issue #545, FR-049 / FR-081)', () =>
 
     const url = new URL((await returnRequest).url());
     expect(url.searchParams.get('annotator_id')).toBe(OTHER_ANNOTATOR);
+
+    /* Let the navigation land before the test ends: tearing the page down
+       mid-flight kills the patchDataFile route handler while the list is
+       still fetching through it, which surfaces as a route.fetch error
+       rather than as anything about the assertion above. */
+    await expect(page).toHaveURL(/annotation-list\.html\?/);
+    await page.unrouteAll({ behavior: 'ignoreErrors' });
   });
 
   /* The consequence the two hops above only imply: the identity has to still

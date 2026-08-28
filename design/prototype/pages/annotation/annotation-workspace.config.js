@@ -1388,6 +1388,14 @@
      rebuild their query from scratch all come through here, so every
      "back to the list" on screen resolves to the same place. */
   var LIST_VIEW_STATE_KEYS = ['status', 'q', 'limit', 'offset'];
+  /* FR-049 (issue #545): the identity pair is what decides WHICH SUBMISSION
+     BUCKET each page reads, so it has to make the return trip for the same
+     reason the view state above does -- a visitor who is not the default
+     roster identity would otherwise land on a list computing someone else's
+     progress under their own name. Forwarded, never stamped: FR-049 gives an
+     absent param the meaning "fall back to the default identity", and the
+     two pages only agree on that while the absence is preserved. */
+  var LIST_IDENTITY_KEYS = ['annotator_id', 'reviewer_id'];
 
   function buildListReturnUrl() {
     var listParams = new URLSearchParams();
@@ -1395,7 +1403,7 @@
     listParams.set('role', currentRole);
     listParams.set('run_type', currentRunType);
     var incoming = new URLSearchParams(window.location.search);
-    LIST_VIEW_STATE_KEYS.forEach(function (key) {
+    LIST_VIEW_STATE_KEYS.concat(LIST_IDENTITY_KEYS).forEach(function (key) {
       var value = incoming.get(key);
       if (value) listParams.set(key, value);
     });
