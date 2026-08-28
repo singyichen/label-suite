@@ -36,10 +36,10 @@ import {
  */
 
 const NOTE_ZH =
-  '通過：採用此筆標記為本輸出類型的審核結果。退回：記錄審核決策與修正差異；是否回退標記員狀態依試標／正式標記而異，實際影響見下方「送出前確認」。';
+  '通過：採用標記員在該輸出類型的作答為審核結果。退回：記錄審核決策與修正差異；是否回退標記員狀態依試標／正式標記而異，實際影響見下方「送出前確認」。';
 
 const NOTE_EN =
-  'Approve: accept this annotation as the review result for this output type. Reject: records the review decision and any correction; whether the annotator status is rolled back differs between a dry run and an official run -- the actual effect is stated under “Confirm before submitting” below.';
+  'Approve: accept the annotator’s answer for that output type as the review result. Reject: records the review decision and any correction; whether the annotator status is rolled back differs between a dry run and an official run -- the actual effect is stated under “Confirm before submitting” below.';
 
 /* The exact string issue #451 removed. Pinned verbatim so a future edit that
  * reinstates the false promise fails here rather than silently regressing. */
