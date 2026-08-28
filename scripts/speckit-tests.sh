@@ -2167,6 +2167,26 @@ test_check_sdd_rejects_remaining_retired_punctuation_boundaries() {
     printf '\nDo not run npm test,do not run npm test locally.\n' >> "$repo/AGENTS.md"
     if ! record_expected_lint_success "retired-two-prohibitions-no-space-control" "$repo" "RETIRED_COMMAND"; then failures=$((failures + 1)); fi
 
+    repo="$(make_sdd_repo)"
+    printf '\nDo not run npm test.Run npm test locally.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_failure "retired-period-clause-no-space" "$repo" "RETIRED_COMMAND" "AGENTS.md"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nDo not run npm test.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_success "retired-period-negative-control" "$repo" "RETIRED_COMMAND"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nRun npm test locally.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_failure "retired-standalone-active-control" "$repo" "RETIRED_COMMAND" "AGENTS.md"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nRun /speckit.analyze now.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_failure "retired-speckit-dotted-control" "$repo" "RETIRED_COMMAND" "AGENTS.md"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nDo not run /speckit.analyze.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_success "retired-speckit-negative-control" "$repo" "RETIRED_COMMAND"; then failures=$((failures + 1)); fi
+
     [[ "$failures" -eq 0 ]]
 }
 
