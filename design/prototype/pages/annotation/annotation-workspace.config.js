@@ -102,6 +102,9 @@
       unitStateDisputedNote: '未定稿，待仲裁',
       trackAria: '審核單位狀態',
       trackMarker: '目前：',
+      flowDrawerOpen: '了解審核流程',
+      flowDrawerTitle: '審核流程',
+      flowDrawerCloseAria: '關閉審核流程',
       unitStateFinalizedNote: '已鎖定',
       unitStateAria: '{state}，已有 {x} 位審核員／共需 {n} 位',
       unitStateAriaFinalized: '{state}，已達 {n} 位審核員門檻，內容已鎖定',
@@ -210,6 +213,9 @@
       unitStateDisputedNote: 'not finalized, awaiting arbitration',
       trackAria: 'Review unit status',
       trackMarker: 'Now:',
+      flowDrawerOpen: 'Review flow',
+      flowDrawerTitle: 'Review flow',
+      flowDrawerCloseAria: 'Close the review flow',
       unitStateFinalizedNote: 'locked',
       unitStateAria: '{state}, {x} of {n} required reviewers',
       unitStateAriaFinalized: '{state}, met the {n}-reviewer threshold, locked',
@@ -3823,21 +3829,89 @@
 
     /* The pill answers "what state"; the track answers "by which route, and
        what is left". Both stay: the pill carries the terminal/interim note
-       and the aria-label the track has no place for. A null status has no
-       unit yet, so there is no route to draw. */
-    if (unitStatus !== null) {
-      var trackWrap = document.createElement('div');
-      trackWrap.className = 'rv-unit-track';
-      trackWrap.appendChild(buildReviewStatusTrack(
-        unitStatus,
-        workspaceData.getReviewUnitLane(
-          currentProfile.id, currentRunType, currentSampleId, currentIdentity,
-          state.selectedOutputTypes
-        )
-      ));
-      banner.appendChild(trackWrap);
-    }
+       and the aria-label the track has no place for.
+       issue #525 PR-A: the track no longer sits in the banner. Only the
+       question "what state" is worth permanent space -- "by which route" is
+       asked once, so it moved into an on-demand drawer and the banner keeps
+       only the way in. A null status has no unit yet, so there is no route
+       to draw and no reason to offer the trigger either. */
+    syncReviewFlowDrawer(unitStatus);
+    if (unitStatus !== null) banner.appendChild(buildReviewFlowTrigger());
     return banner;
+  }
+
+  /* ── Review-flow drawer (issue #525 PR-A) ──────────────────────────
+     The panel itself is static markup in annotation-workspace.html; this
+     block owns its content and its open/close state. Focus trap, Esc and
+     focus return come from LabelSuiteModalFocus, the same shared helper the
+     guideline modals use -- a second focus implementation would be a second
+     thing to keep correct. */
+  var FLOW_DRAWER_ID = 'wsReviewFlowDrawer';
+
+  function buildReviewFlowTrigger() {
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'rv-flow-trigger';
+    btn.setAttribute('data-testid', 'ws-review-flow-trigger');
+    btn.setAttribute('aria-expanded', 'false');
+    btn.setAttribute('aria-controls', FLOW_DRAWER_ID);
+    btn.textContent = t('flowDrawerOpen');
+    btn.addEventListener('click', function () { openReviewFlowDrawer(btn); });
+    return btn;
+  }
+
+  function openReviewFlowDrawer(trigger) {
+    var drawer = document.getElementById(FLOW_DRAWER_ID);
+    if (!drawer) return;
+    drawer.classList.remove('hidden');
+    trigger.setAttribute('aria-expanded', 'true');
+    if (window.LabelSuiteModalFocus) {
+      window.LabelSuiteModalFocus.open(drawer, {
+        trigger: trigger,
+        onClose: closeReviewFlowDrawer,
+      });
+    }
+  }
+
+  function closeReviewFlowDrawer() {
+    var drawer = document.getElementById(FLOW_DRAWER_ID);
+    if (!drawer || drawer.classList.contains('hidden')) return;
+    drawer.classList.add('hidden');
+    var trigger = document.querySelector('[data-testid="ws-review-flow-trigger"]');
+    if (trigger) trigger.setAttribute('aria-expanded', 'false');
+    if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(drawer);
+  }
+
+  /* Refills the drawer from the unit the banner is describing. Closing first
+     is not cosmetic: every render replaces the banner, so the trigger that an
+     open drawer would return focus to is a detached node by the time the
+     reviewer presses Esc. */
+  function syncReviewFlowDrawer(unitStatus) {
+    closeReviewFlowDrawer();
+    var body = document.getElementById('wsReviewFlowDrawerBody');
+    if (!body) return;
+    while (body.firstChild) body.removeChild(body.firstChild);
+    if (unitStatus === null) return;
+    body.appendChild(buildReviewStatusTrack(
+      unitStatus,
+      window.LabelSuiteAnnotationWorkspaceData.getReviewUnitLane(
+        currentProfile.id, currentRunType, currentSampleId, currentIdentity,
+        state.selectedOutputTypes
+      )
+    ));
+  }
+
+  function setupReviewFlowDrawer() {
+    var drawer = document.getElementById(FLOW_DRAWER_ID);
+    var closeBtn = document.getElementById('wsReviewFlowDrawerClose');
+    if (closeBtn) closeBtn.addEventListener('click', closeReviewFlowDrawer);
+    if (drawer) {
+      drawer.addEventListener('click', function (e) {
+        if (e.target === drawer) closeReviewFlowDrawer();
+      });
+    }
+    /* Escape-to-close comes from the LabelSuiteModalFocus trap registered in
+       openReviewFlowDrawer(), same as the guideline modals. */
   }
 
   function renderReviewerWorkspace() {
@@ -4549,6 +4623,9 @@
     if (pdfCloseBtn) pdfCloseBtn.setAttribute('aria-label', t('guidelinePdfModalCloseAria'));
     var mdCloseBtn = document.getElementById('wsGuidelineMdModalClose');
     if (mdCloseBtn) mdCloseBtn.setAttribute('aria-label', t('guidelineMdModalCloseAria'));
+    setText('wsReviewFlowDrawerTitle', t('flowDrawerTitle'));
+    var flowCloseBtn = document.getElementById('wsReviewFlowDrawerClose');
+    if (flowCloseBtn) flowCloseBtn.setAttribute('aria-label', t('flowDrawerCloseAria'));
     /* issue #309: the shared sidebar mounts with its 一般使用者 default;
        reviewers must read as 審核員 (same role noun the history trail uses).
        Annotator view keeps the shared default untouched. Runs at boot and on
@@ -4632,6 +4709,7 @@
     setupGuidelineImageModal();
     setupGuidelinePdfModal();
     setupGuidelineMdModal();
+    setupReviewFlowDrawer();
     setupGuidelineCollapse();
     setupGuidelineTabs();
     setupSampleNav();

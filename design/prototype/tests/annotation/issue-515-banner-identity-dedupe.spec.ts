@@ -101,7 +101,11 @@ test.describe('橫幅其餘內容不受影響 (issue #515 ①)', () => {
     await expect(banner(page).locator('.rv-unit-run')).toContainText('試標');
     await expect(banner(page).locator('.rv-unit-threshold')).toContainText('定稿門檻');
     await expect(banner(page).locator('.rv-unit-state')).toHaveCount(1);
-    await expect(banner(page).locator('.review-track')).toHaveCount(1);
+    /* issue #525 PR-A re-anchor: the state track moved out of the banner into
+       the on-demand review-flow drawer. The original assertion is kept
+       verbatim, re-rooted at the element that now carries the track. */
+    await page.getByTestId('ws-review-flow-trigger').click();
+    await expect(page.getByTestId('ws-review-flow-drawer').locator('.review-track')).toHaveCount(1);
   });
 });
 
