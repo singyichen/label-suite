@@ -2822,29 +2822,6 @@
     correctionTitle.textContent = t('reviewCorrectionTitle');
     row.appendChild(correctionTitle);
 
-    /* issue #399: reviewNote explains what approve/reject actually do, but
-       was defined in I18N and never rendered anywhere -- render it so
-       reviewers can actually read it before deciding.
-       issue #451 (FR-070/AC-3.40): that explanation used to promise the
-       annotator-status rollback unconditionally, while FR-014I scopes the
-       rollback to official_run (AC-3.15/AC-6.4). Since AC-3.33 forbids any
-       run_type presentation branch on the review card, the note stays ONE
-       run-type-invariant string -- same shape as the run-type-qualified
-       sidebar shortcut label (issue #409).
-       issue #515 (FR-070/AC-3.40): it used to spell out BOTH run_type
-       consequences in full, duplicating the pre-submit confirmation area
-       (ws-review-summary-effect, FR-077/AC-3.42) almost verbatim -- and,
-       because this runs once per outKey, three times over on a
-       three-output-type task. The card now keeps only the
-       run-type-invariant decision-level semantics and defers the
-       consequence to the confirmation area, which sits outside the card
-       and may legally branch on run_type. */
-    var note = document.createElement('p');
-    note.className = 'rv-review-note';
-    note.setAttribute('data-testid', 'ws-review-note');
-    note.textContent = t('reviewNote');
-    row.appendChild(note);
-
     var correction = document.createElement('div');
     correction.setAttribute('data-testid', 'ws-review-correct-' + (testidSuffix || outKey));
     var panelMount = document.createElement('div');
@@ -2852,6 +2829,43 @@
     renderOutputPreview(panelMount, outKey);
     row.appendChild(correction);
     return correction;
+  }
+
+  /* issue #399: reviewNote explains what approve/reject actually do, but
+     was defined in I18N and never rendered anywhere -- render it so
+     reviewers can actually read it before deciding.
+     issue #451 (FR-070/AC-3.40): that explanation used to promise the
+     annotator-status rollback unconditionally, while FR-014I scopes the
+     rollback to official_run (AC-3.15/AC-6.4). Since AC-3.33 forbids any
+     run_type presentation branch on the review card, the note stays ONE
+     run-type-invariant string -- same shape as the run-type-qualified
+     sidebar shortcut label (issue #409).
+     issue #515 (FR-070/AC-3.40): it used to spell out BOTH run_type
+     consequences in full, duplicating the pre-submit confirmation area
+     (ws-review-summary-effect, FR-077/AC-3.42) almost verbatim. The note
+     now keeps only the run-type-invariant decision-level semantics and
+     defers the consequence to the confirmation area, which sits outside
+     the card and may legally branch on run_type.
+     issue #520 (FR-070/AC-3.40/AC-3.45): it used to be appended by
+     appendCorrectionControl(), i.e. once per review CARD -- and a task
+     whose outputs[] yields more than one card (T013: the FR-014N merged
+     span card plus multi_dim) repeated the identical sentence on each of
+     them. It is mounted here instead, once per review unit and above the
+     whole card stack, for two reasons: the sentence is run-type- AND
+     output-type-invariant, so it has nothing card-specific to say; and
+     every 通過/退回 pair in the unit is docked inside a card's Bypass row
+     (dockDecisionsOnBypassRow), which leaves the row stack's own container
+     as the only node that dominates all of them. Placing it before the
+     first card keeps the original reading order -- explanation first, then
+     the decisions it explains. Deliberately called only on the interactive
+     path: the arbitration, finalized and empty-unit branches render no
+     decision pair, and never carried the note before this change either. */
+  function appendReviewDecisionNote(host) {
+    var note = document.createElement('p');
+    note.className = 'rv-review-note';
+    note.setAttribute('data-testid', 'ws-review-note');
+    note.textContent = t('reviewNote');
+    host.appendChild(note);
   }
 
   /* FR-014P: a review card must end with exactly ONE decision line,
@@ -4145,6 +4159,10 @@
        below could not. A card reviewing ONE annotator has no union to show --
        that panel already renders exactly this annotator's spans, so the card
        would be a pixel-identical second copy of the sample text. */
+    /* issue #520: one decision note for the whole unit, immediately above
+       the card stack whose 通過/退回 pairs it explains. */
+    appendReviewDecisionNote(preview);
+
     var spanKeys = mergedSpanKeys();
     var spanRowRendered = false;
     state.selectedOutputTypes.forEach(function (outKey) {
