@@ -1,7 +1,7 @@
 ---
 功能分支: docs/211-disabled-annotator-rule
 建立日期: 2026-04-20
-版本: 2.10.5
+版本: 2.11.1
 狀態: Draft
 ---
 
@@ -24,6 +24,12 @@
 - Q: Dry Run 中存在「未指派作業」時，是否允許自動轉為 `waiting_iaa_confirmation`？ → A: 不允許；需先重新指派並完成或由 PL 明確排除
 - Q: 被 PL 明確排除的 Dry Run 作業，後續應如何出現在統計與匯出中？ → A: 不計入完成率與 IAA；匯出只保留排除紀錄 metadata
 - Q: 未指派作業是否只限 Dry Run？ → A: 否；應為未指派標記作業，Dry Run 與 Official Run 都可重新指派
+
+### Session 2026-08-27
+
+- Q: IAA 未達門檻時，`waiting_iaa_confirmation` 狀態轉換與「開始正式標記」按鈕是否應被阻擋（issue #488 T1）？ → A: 不阻擋；IAA 語意為顧問性警示，計算方式與門檻正典移至 `dataset-017` FR-039，`014` 僅顯示唯讀指標與使用者可覆寫門檻，不得另行定義計算規則。
+- Q: 第 2 輪（含）以後的試標回合是否需強制記錄修訂內容（issue #492 A4/A5）？ → A: 是；`R{n}`（`n >= 2`）建立前必須填寫 `prior_round_findings` 與 `guideline_change_summary`，或勾選 `no_change` 並填寫 `no_change_reason`；`R1` 因無「前一輪」可回顧而豁免。
+- Q: 指引版本（`guideline_version`）應以內容快照或版本參照方式與試標回合綁定？ → A: 採 FK 參照（`TrialRound.guideline_version` → `TaskGuidelineConfig.guideline_version`），不複製指引內容快照；版本遞增觸發條件為 `OVERVIEW_EDITABLE_FIELDS` 中指引內容欄位被實際修改並儲存。
 
 ## 規格常數
 
@@ -183,7 +189,7 @@ Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、�
     - 必填欄位樣式：`每回合抽樣筆數` 為必填，在顯示模式與編輯模式需顯示紅色 `*`（沿用 `required` 樣式）
     - 輔助說明：`每回合抽樣筆數` 的驗證規則（`筆數需 >= 1 且 < 資料集總筆數`）需改由欄位標籤旁的 info tooltip 顯示，不在輸入框下方常駐顯示 hint 文字
   - 區塊 5：`任務狀態與執行控制`
-    - 顯示狀態：任務層級狀態 stepper（`draft` / `trial stage` / `official_run_in_progress` / `completed`）、單一執行判定 banner（僅保留最近回合或正式標記的判定標題與下一步說明；不得再顯示額外的「目前任務階段」標題/描述）、試標回合摘要卡（目前回合 / 已完成試標回合 / 最新回合 IAA / 正式標記池）、樣本池分配摘要（總筆數 / 已用試標 / 可進正式）、達標條件 pills（IAA、標準差、最少標記者）、試標回合歷程；不得另設獨立「正式標記判定」卡，避免同一狀態在兩個區塊重複呈現。
+    - 顯示狀態：任務層級狀態 stepper（`draft` / `trial stage` / `official_run_in_progress` / `completed`）、單一執行判定 banner（僅保留最近回合或正式標記的判定標題與下一步說明；不得再顯示額外的「目前任務階段」標題/描述）、試標回合摘要卡（目前回合 / 已完成試標回合 / 最新回合 IAA / 正式標記池）、樣本池分配摘要（總筆數 / 已用試標 / 可進正式）、達標條件 pills（IAA、標準差、最少標記者；IAA 項為顧問性警示，非阻擋條件，見 FR-010o-3）、試標回合歷程；不得另設獨立「正式標記判定」卡，避免同一狀態在兩個區塊重複呈現。
     - 執行按鈕位置：主操作按鈕必須與 `達標條件` pills 位於同一橫列，desktop 為右對齊，mobile 可換行到下一列但仍屬同一區塊
     - 狀態資訊精簡：不額外顯示 `草稿` / `已隔離` badge，也不顯示 `已用 {n} 個回合`、`正式池 {count} 筆` 等 stage banner meta pills；任務階段語意由 stepper 承載，banner 僅承載判定與下一步，摘要卡與試標回合歷程提供判定依據
     - 樣本池分配：進度條需依回合動態切分；每個試標回合皆使用不同顏色區隔，正式標記池保留獨立顏色；圖例需對應顯示如 `R1 10 筆`、`R2 10 筆`、`正式 3180 筆` 等分段資訊；`draft` 狀態僅顯示總筆數，不預先佔用任何試標區段
@@ -421,6 +427,7 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 9. **Given** 任務為 `official_run_in_progress` 且仍有未定案 review unit 或未解決爭議，**When** `project_leader` 嘗試標記完成，**Then** 系統阻擋轉換為 `completed` 並逐項列出未滿足的前置條件（FR-008b）。
 10. **Given** 抽樣設定 `min_annotators = 3` 且任務僅有 2 位 `membership_status = active` 的標記員，**When** `project_leader` 嘗試發布試標回合，**Then** 系統阻擋發布並顯示標記員「還差 1 位」的缺口訊息（FR-010t）。
 11. **Given** 任務有 3 位 `membership_status = active` 的標記員且扣除試標後剩餘 5 筆正式標記樣本，**When** `project_leader` 開始正式標記，**Then** 系統依輪流分派建立 assignment，每筆樣本恰指派一位標記員，且任兩位標記員的分派筆數差距不超過 1（FR-010f-4）。
+12. **Given** 任務已完成 R1 試標且處於 `dry_run_in_progress`，**When** `project_leader` 點擊 `新增試標回合 R2` 但未填寫 `prior_round_findings` 與 `guideline_change_summary`、也未勾選 `no_change`，**Then** 系統阻擋建立並逐欄提示缺項；補齊必填欄位（或勾選 `no_change` 並填寫 `no_change_reason`）後方可成功建立 R2，且新建立的 `TrialRound.sampling_value` 等於本輪實際建立之試標清單筆數（FR-017、FR-010f-2）。
 
 **行為規則**：
 
@@ -501,6 +508,7 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 - `task_type = sentence_pairs` 且 `pair_mode = entailment` 但 `response_format = scoring`：Overview 編輯儲存需阻擋，並提示蘊含任務僅支援分類型。
 - `task_type = sentence_pairs` 且 `response_format = classification` 但 `label_options` 為空：Overview 編輯儲存需阻擋。
 - `task_type = sentence_pairs` 且 `response_format = scoring` 時，若 `score_min >= score_max` 或 `score_step <= 0`：Overview 編輯儲存需阻擋。
+- 新增試標回合 `R{n}`（`n >= 2`）缺少本輪修訂紀錄（`prior_round_findings`、`guideline_change_summary`）或選擇 `no_change` 卻未填 `no_change_reason`：系統阻擋建立並逐欄提示缺項；`R1` 不受此檢查限制（FR-017）。
 
 ---
 
@@ -543,20 +551,21 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 - **FR-010e**：系統必須保證 Official Run 至少保留 1 筆資料（即 `sampling_value < dataset_total`）。
 - **FR-010f**：系統必須在發布 Dry Run 時建立不可變 `sample_snapshot_id`，並凍結 Dry/Official 對應資料 id 清單。
 - **FR-010f-1**：任務建立時不得預先建立標記清單資料；系統必須只在 `ANNOTATION_LIST_MATERIALIZATION_EVENTS` 發生時建立對應 `AnnotationListItem` / assignment。
-- **FR-010f-2**：每次 `新增試標回合 R{n}` 成功時，系統必須建立該回合獨立的試標清單，筆數等於 `sampling_value`，且不得重用前一回合已建立的清單資料。
+- **FR-010f-2**：每次 `新增試標回合 R{n}` 成功時，系統必須建立該回合獨立的試標清單，筆數等於 `sampling_value`，且不得重用前一回合已建立的清單資料；系統必須同時建立對應 `TrialRound` 紀錄並寫入建立當下的 `TaskGuidelineConfig.guideline_version`。`n >= 2` 時，建立前必須先通過 FR-017 之修訂紀錄必填檢查（`prior_round_findings`、`guideline_change_summary`，含 `no_change` 選項與其必填 `no_change_reason`）；`n = 1` 兩欄皆非必填。清單建立完成後，`TrialRound.sampling_value` 必須等於本回合實際建立的 `AnnotationListMaterialization.item_count`——`sampling_value` 之百分比或既有預設值換算僅作為建立前輸入框的預填建議，一經建立即以實際建立筆數為準，系統不得於畫面回退顯示與實際清單筆數脫節的衍生值（issue #491／#489）。
 - **FR-010f-3**：`開始正式標記` 成功時，系統必須以扣除所有已建立試標回合後的剩餘樣本建立正式標記清單，筆數等於 `dataset_total - sum(trial_round.sampling_value)`。
 - **FR-010f-4**：`開始正式標記` 建立正式標記清單時，系統必須同時以輪流分派（round-robin）建立樣本-標記員 assignment：每筆正式標記樣本恰指派給一位 `membership_status = active` 且 `task_role = annotator` 的標記員，依成員清單固定順序輪流分配直到全部樣本指派完畢；樣本數不可整除時，任兩位標記員的分派筆數差距不得超過 1。`min_annotators` 僅約束試標回合的重疊標記人數與 FR-010t 的發布前人數檢查，不改變正式標記「每筆單一標記員」的分派語意；發布後的成員異動不得自動重算既有 assignment，其處置依成員管理規則（FR-005f 系列）。
 - **FR-010h**：Overview 必須顯示資料隔離狀態（`已隔離`/`未隔離`）與最後變更資訊。
 - **FR-010i**：匯出結果檔 metadata 必須包含 `run_stage`、`isolation_enabled`、`sampling_value`、`applied_iaa_metrics`（逐輸出類型指標名稱與生效門檻）、`sample_snapshot_id`，以及該匯出範圍內被排除標記作業的摘要紀錄（若有）。
 - **FR-010i-1**：所有匯出結果檔 metadata 必須額外包含 `export_format`、`exported_at`、`exported_by`、`schema_version` 與 `applied_filters`，以支援審計與下游解析。
 - **FR-010i-2**：匯出記錄表中的每筆紀錄必須保存 `re-download` 所需的條件快照；重新下載時必須以該快照為唯一依據重建匯出結果，不得讀取使用者當前頁面 filter state。條件快照至少包含 `export_format`、`run_stage`、`submission_status`、`annotator_scope`、`scope_label`、`export_type`，以及任何會改變結果集合的版本/快照識別資訊。
-- **FR-010o**：Overview「抽樣設定」必須提供 `sampling_value`、逐輸出類型 IAA 指標唯讀清單（來源 `OUTPUT_TYPE_IAA_REGISTRY`，依 `outputs[]` 順序列出各輸出類型名稱、自動選定指標、目標門檻）、`target_agreement_overrides`、`min_annotators` 的檢視與編輯能力，並在非編輯摘要顯示唯讀 `trial_round`；其中 `sampling_value` 文案必須明確為「每回合抽樣筆數」。
+- **FR-010o**：Overview「抽樣設定」必須提供 `sampling_value`、逐輸出類型 IAA 指標唯讀清單（來源 `OUTPUT_TYPE_IAA_REGISTRY`，依 `outputs[]` 順序列出各輸出類型名稱、自動選定指標、目標門檻）、`target_agreement_overrides`、`min_annotators` 的檢視與編輯能力，並在非編輯摘要顯示唯讀 `trial_round`；其中 `sampling_value` 文案必須明確為「每回合抽樣筆數」。已建立回合的 `sampling_value` 顯示值必須讀取該回合 `TrialRound.sampling_value`（等於實際建立之 `AnnotationListMaterialization.item_count`），不得另以百分比或資料集總筆數即時衍生計算；百分比換算僅用於尚未建立回合時的輸入框預填建議（issue #491／#489）。
 - **FR-010o-1**：Overview「抽樣設定」不得提供 IAA 計算方式的可選下拉選單；每個 `outputs[].type` 的計算方式必須由 `OUTPUT_TYPE_IAA_REGISTRY` 自動選定並唯讀顯示。使用者僅能於 `target_agreement_overrides` 針對個別輸出類型輸入覆寫門檻；未覆寫時顯示 registry 的 `default_threshold` 作為 placeholder 建議值。
 - **FR-010o-2**（v2.10.2 新增，issue #207）：Overview「抽樣設定」唯讀摘要區塊，當該任務生效的 `sampling_value`（每回合抽樣筆數）小於 `IAA_SMALL_SAMPLE_THRESHOLD` 時，必須於摘要區塊緊鄰 `sampling_value` 顯示一則小樣本忠告文案：
   - zh：「樣本數過小時，IAA 指標僅為描述性估計，不具統計推論意義。」
   - en：`When the sample size is too small, IAA metrics are descriptive estimates only and do not support statistical inference.`
 
   本文案顯示門檻沿用 `dataset-017` `IAA_SMALL_SAMPLE_THRESHOLD`（現行值 5）之數值，避免兩處各自定義而漂移；惟該規格常數原始定義對象為「完成標記員數」（見 `dataset-017` FR-034），本條套用對象為 `sampling_value`（試標抽樣筆數）——兩者皆為 IAA 統計信度不足的成因、但屬不同維度，本條僅取其數值以維持使用者體感一致，非宣稱兩者為同一計算輸入。本文案為**唯讀提示、不阻擋任何操作**（比照 `dataset-017` FR-034「不阻擋閘門」之既有原則）；`sampling_value` 的合法值下限維持 FR-010d／FR-010q 既有規則（`>= 1`）不變，本條純屬措辭層級新增，不改變任何驗證、發布或 IAA 計算邏輯。本規格文案為 spec-first 定義；prototype 端呈現屬後續獨立實作 PR 範圍。
+- **FR-010o-3**（v2.11.0 新增，issue #488 T1）：`waiting_iaa_confirmation` 狀態、Overview「任務狀態與執行控制」達標條件 pills 中的 IAA 項，以及試標回合歷程中的判定標題（例如「R1 未通過」／「R2 通過」）皆為**顧問性警示**：IAA 未達 `target_agreement_overrides` 或 `OUTPUT_TYPE_IAA_REGISTRY` 預設門檻時，系統僅顯示明顯警示樣式，不得阻擋 `dry_run_in_progress → waiting_iaa_confirmation` 之自動轉換、不得停用「開始正式標記」按鈕、亦不得阻擋 `project_leader` 於檢視警示後自行決定進入正式標記；此狀態轉換本身之條件仍以 `DRY_RUN_COMPLETION_RULE`（FR-008a）為準，與 IAA 達標與否無關。IAA 之計算方式、逐輸出類型達標判定規則與門檻語意，以 `dataset-017` **FR-039** 為正典（single source of truth）；本規格不得另行定義、複製或裁決其計算規則，僅負責顯示 `OUTPUT_TYPE_IAA_REGISTRY` 唯讀指標名稱與使用者可覆寫之 `target_agreement_overrides` 目標門檻。
 - **FR-010p**：Overview「任務狀態與執行控制」必須顯示 `總筆數 / 已用試標 / 可進正式` 的樣本池分配摘要，並與當前回合歷程即時同步；每個試標回合必須有獨立色塊與圖例，正式標記池使用另一組獨立顏色，且任一回合的配色不得與正式標記池混淆。
 - **FR-010p-1**：Overview「試標回合歷程」中的每筆回合 item 之間不得使用垂直連接線；日期必須維持單行顯示，不得因欄寬不足換成兩行。
 - **FR-010q**：抽樣欄位驗證規則必須明確：`sampling_value >= 1 且 < dataset_total`、`target_agreement_overrides` 中任一已填寫值範圍為 `0..1`、`min_annotators >= 2`；不符時阻擋儲存並顯示可修正錯誤訊息。
@@ -568,7 +577,7 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 - **FR-011**：頁面必須支援 `RWD_VIEWPORTS`，在 `<= MOBILE_BP` 仍可完成核心查看與操作。
 - **FR-011a**：在 `375px`、`768px`、`1440px` 三個 viewport，必須可完成：進入詳情、tab 切換、run 發布權限顯示、`project_leader` 成員管理、`work-log` 篩選、匯出操作，且不得資訊重疊。
 - **FR-012**：Prototype 必須提供三類畫面狀態：`loading`、`empty`、`error`，且各 tab 至少有一組可展示案例。
-- **FR-013**：Run 控制按鈕顯示邏輯需與任務狀態一一對應，且按鈕必須與 `達標條件` 位於同一操作列；`draft` 狀態顯示 `新增試標回合 R1`，`dry_run_in_progress` 狀態顯示 `新增試標回合 R{n}`，`waiting_iaa_confirmation` 狀態顯示 `開始正式標記`，`official_run_in_progress` 狀態顯示 `標記完成`；不得同時顯示語意衝突的操作。
+- **FR-013**：Run 控制按鈕顯示邏輯需與任務狀態一一對應，且按鈕必須與 `達標條件` 位於同一操作列；`draft` 狀態顯示 `新增試標回合 R1`，`dry_run_in_progress` 狀態顯示 `新增試標回合 R{n}`，`waiting_iaa_confirmation` 狀態顯示 `開始正式標記`，`official_run_in_progress` 狀態顯示 `標記完成`；不得同時顯示語意衝突的操作。點擊 `新增試標回合 R{n}`（`n >= 2`）時，若未通過 FR-017 之修訂紀錄必填檢查，系統必須阻擋建立並逐欄列出缺項提示，阻擋樣式比照 FR-010t（逐項顯示未滿足條件，不得靜默忽略點擊）。
 - **FR-014**：Overview 必須支援 `OVERVIEW_EDITABLE_FIELDS` 的編輯能力，且僅 `project_leader` 在 `draft` 狀態可儲存變更。
 - **FR-014a**：Overview 編輯需提供各區塊 `編輯 / 儲存 / 取消` 的明確互動流程；取消後需還原未儲存內容。
 - **FR-014b**：系統必須支援重新上傳資料集與重設標記設定檔，並在儲存前揭露影響範圍。
@@ -608,6 +617,8 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 - **FR-015e-1**：`匯出記錄表` 底部必須提供與 `task-list` 一致的 footer pagination，至少包含總筆數 / 目前頁數、每頁筆數切換與上一頁 / 下一頁 / 頁碼按鈕；其 `page` / `pageSize` 狀態必須與 `標記結果表` 分頁狀態完全獨立，兩表換頁不得互相干擾。
 - **FR-016a**：`annotation-progress` tab 的 `成員進度表` 每列末尾必須顯示「查看細項」按鈕；點擊後在成員進度表下方呈現該成員的標記細項區塊（`memberDetailSection`），包含樣本 ID、文本摘要、標記結果、提交時間、審核狀態。
 - **FR-016b**：`成員標記細項` 區塊底部必須提供與 `task-list` 一致的 footer pagination，至少含總筆數 / 目前頁數、每頁筆數切換（20 / 50 / 100）、上一頁 / 下一頁 / 頁碼按鈕；分頁狀態（`mdPage` / `mdPageSize`）必須完全獨立，不得與其他 tab 分頁狀態共用；切換至不同成員時 `mdPage` 必須重設為 `1`。
+- **FR-017**：新增試標回合（`新增試標回合 R{n}`，`n >= 2`）時，系統必須要求填寫本輪修訂紀錄，包含 `prior_round_findings`（前一輪發現摘要）與 `guideline_change_summary`（指引異動摘要），兩者皆不得為空；使用者亦可勾選 `no_change`（本輪未變更指引），但選擇 `no_change` 時 `no_change_reason` 為必填，不得同時留空 `guideline_change_summary` 與 `no_change_reason`。R1（首輪、`draft → dry_run_in_progress`）建立時豁免本檢查，因無「前一輪」可回顧。未通過檢查時依 FR-013 阻擋建立動作。
+- **FR-017a**：`TaskGuidelineConfig.guideline_version` 於任務建立時由系統初始化，其遞增觸發條件為 `OVERVIEW_EDITABLE_FIELDS` 中 4 個指引內容欄位（`guideline`、`positive_example`、`negative_example`、`taxonomy_notes` 等指引正文相關欄位，實際欄位集合以 `OVERVIEW_EDITABLE_FIELDS` 常數定義為準）任一被實際修改並儲存；`force_guideline` 開關本身變動不觸發遞增。每次新增試標回合時，系統須將當下 `guideline_version` 寫入該 `TrialRound.guideline_version`，作為該輪判讀所依據指引版本的唯一依據；版本綁定的下游消費關係另見 `annotation-015` FR-066 第 4 點。
 - **FR-015e**：`annotation-results` tab 必須提供匯出功能（格式至少含 `EXPORT_FORMATS`），需指定標記階段（Dry Run / Official Run）；`<= EXPORT_SYNC_MAX_ROWS` 同步回應，超過門檻採背景工作並通知下載連結；匯出 metadata 規格對齊 FR-010i。
 - **FR-015f**：`annotation-results` tab 空狀態（尚無任何標記提交）必須顯示引導文案，不得顯示空表格。
 - **FR-015g**：`JSON` 匯出必須採 `EXPORT_JSON_SHAPE`，頂層包含 `manifest` 與 `items[]`；每個 `item` 至少包含 `sample_id`、`source_data`、`annotations[]`、`reviews[]` 與當前 sample 聚合狀態，不得退化為純扁平列。
@@ -653,7 +664,7 @@ flowchart LR
 
 - **TaskDetail**：任務詳情聚合。欄位：`task_id`、`task_name`、`task_type`、`status`、`run_stage`、`settings`、`sampling_value`（每回合抽樣筆數）、`trial_round`（唯讀 round 狀態資訊）、`target_agreement_overrides`（逐輸出類型目標 IAA 覆寫；未覆寫時回退至 `OUTPUT_TYPE_IAA_REGISTRY` 預設門檻）、`min_annotators`、`isolation_enabled`、`min_reviewers`（預設 `1`）、`review_assignment_mode`（`REVIEW_ASSIGNMENT_MODES`，預設 `auto`）、`agreement_auto_finalize`（預設 `true`）、`arbitration_enabled`（預設 `true`）、`arbiter_ids[]`（預設空）、`sample_snapshot_id`。
 - **TaskConfig**：schema 驗證後的任務設定內容，來源與 `013-task-new` 相同（ADR-029 組合模型）。結構為 `{ categories[], input_types[], outputs[] }`；每個 output 為 `{ type ∈ OUTPUT_TYPE_KEYS, config }`，config 欄位由 `OUTPUT_TYPE_REGISTRY` 對應輸出類型的欄位定義決定摘要、編輯欄位、預覽與驗證規則。另含 `field_role_map`（資料集欄位 → 角色對應）與 `dataset_file_name`。
-- **TaskGuidelineConfig**：任務說明設定。欄位：`annotator_guideline_text`、`annotator_guideline_assets[]`、`reviewer_guideline_text`、`reviewer_guideline_assets[]`、`force_guideline`。
+- **TaskGuidelineConfig**：任務說明設定。欄位：`annotator_guideline_text`、`annotator_guideline_assets[]`、`reviewer_guideline_text`、`reviewer_guideline_assets[]`、`force_guideline`、`guideline_version`（指引內容版本標記；`OVERVIEW_EDITABLE_FIELDS` 中前四個內容欄位——`annotator_guideline_text`／`annotator_guideline_assets`／`reviewer_guideline_text`／`reviewer_guideline_assets`——任一異動並成功儲存時遞增，`force_guideline` 為顯示策略旗標、其異動不觸發遞增；形狀為遞增版本號或內容雜湊，具體形狀留待後端接上時定義，遞增規則見 FR-017a。供 `TrialRound.guideline_version`（FK，見關鍵實體）與 `annotation-015` FR-066 第 4 點指引閘門確認紀錄比對使用）。
 - **OutputConfig**：單一輸出類型的設定內容（`TaskConfig.outputs[].config`）。欄位由 `OUTPUT_TYPE_REGISTRY` 中該輸出類型的 fields 定義驅動（含共通欄位 `allow_bypass`）；不得為特定輸出類型在 task-detail 硬編第二份欄位定義（憲法：Generalization-First）。
 - **TaskMembership**：任務成員。欄位：`task_id`、`user_id`、`task_role`、`membership_status`。成員清單「審核負荷」欄顯示值由 `ReviewAssignment` 聚合推導，不儲存於 membership；仲裁身分來自 `TaskDetail.arbiter_ids`，非新的 `task_role`。
 - **ReviewAssignment**：審核指派，連結審核員與審核單位。欄位：`task_id`、`reviewer_id`、`review_unit_id`、`assigned_at`、`assigned_by`、`source`（`auto_rotation | manual | dispute_dispatch`）、`review_status`（`pending | done`）。審核負荷統計（`assigned = pending + done`）由本實體聚合推導。
@@ -661,6 +672,7 @@ flowchart LR
 - **WorkLogEntry**：工時紀錄。欄位：`user_id`、`task_role`、`date`、`login_at`、`logout_at`、`online_duration`、`duration`、`annotated_count`、`reviewed_count`、`arbitrated_count`（角色不適用的筆數欄位為 `null`）、`avg_speed`、`run_stage`。
 - **SampleSnapshot**：run 抽樣快照。欄位：`sample_snapshot_id`、`task_id`、`sampling_value`、`trial_round`、`target_agreement_overrides`、`min_annotators`、`locked_at`、`locked_by`、`selection_manifest_ref`（指向分片或外部清單，不直接內嵌大量 ids）。
 - **AnnotationListMaterialization**：標記清單建立事件。欄位：`task_id`、`run_stage`（`dry_run` / `official_run`）、`trial_round?`、`sample_snapshot_id`、`source_sample_ids_ref`、`item_count`、`created_by`、`created_at`。`dry_run` 的 `item_count = sampling_value`；`official_run` 的 `item_count = dataset_total - 已用試標總筆數`。
+- **TrialRound**：試標回合紀錄（issue #492 A4/A5）。欄位：`task_id`、`round`、`sampling_value`（該回合實際抽樣筆數；建立完成後恆等於對應 `AnnotationListMaterialization.item_count`，見 FR-010f-2）、`guideline_version`（FK → `TaskGuidelineConfig.guideline_version`；建立當下寫入，不隨後續指引異動回填）、`prior_round_findings`（上一輪觀察到的問題；`round = 1` 為 `null`，`round >= 2` 必填，見 FR-017）、`guideline_change_summary`（本輪指引調整內容；`round = 1` 非必填，`round >= 2` 必填，允許值含 `no_change`，見 FR-017）、`no_change_reason?`（`guideline_change_summary = no_change` 時必填）、`created_by`、`created_at`。
 - **ExcludedAnnotationAssignment**：被明確排除的標記作業紀錄。欄位：`task_id`、`run_stage`（`dry_run` / `official_run`）、`trial_round?`、`assignment_id`、`sample_id`、`excluded_by`、`excluded_at`、`reason`。排除紀錄僅供完成條件解除、metadata 與審計追溯使用，不計入完成率、標記分布統計或一般匯出結果列；`run_stage = dry_run` 時亦不計入 IAA。
 - **IsolationAuditLog**：資料隔離設定審計。欄位：`task_id`、`from_isolation_enabled`、`to_isolation_enabled`、`changed_by`、`changed_at`、`reason`。
 
@@ -675,12 +687,13 @@ flowchart LR
 | 010 | Task List | 任務入口與 task_id 導入 |
 | 013 | New Task | 任務初始設定、建立者 membership、自動導頁、task_type registry/schema、`sequence_labeling.subtype = aspect_list` 與 `sentence_pairs` 的 config 欄位、預設值、預覽與驗證規則 |
 | 012 | Dashboard | 待處理提醒顯示與導覽語意 |
+| 017 | Dataset Analysis Detail | IAA 計算方式、逐輸出類型達標判定規則與門檻語意之正典定義（FR-039）；本規格僅顯示 `OUTPUT_TYPE_IAA_REGISTRY` 唯讀指標與使用者可覆寫門檻，不重新定義計算規則 |
 
 ### 下游（依賴本規格的規格）
 
 | 規格編號 | 功能 | 依賴本規格的內容 |
 |---------|------|----------------|
-| 015 | Annotation Workspace | run 階段控制、說明設定、成員角色授權；Aspect List reviewer 直接修正與 diff 追溯；Sentence Pairs 工作區需依凍結 config 顯示雙句內容、標籤或分數控制項 |
+| 015 | Annotation Workspace | run 階段控制、說明設定、成員角色授權；Aspect List reviewer 直接修正與 diff 追溯；Sentence Pairs 工作區需依凍結 config 顯示雙句內容、標籤或分數控制項；`TaskGuidelineConfig.guideline_version` 與 `TrialRound.guideline_version` 之版本綁定（FR-017a，對應 annotation-015 FR-066 第 4 點） |
 | 016 | Dataset Stats | 任務階段與產出統計來源 |
 | 017 | Dataset Quality | IAA 與品質分析所依賴的 run 階段與資料隔離；Sentence Pairs 需依 `pair_mode / response_format` 分流 |
 
@@ -709,7 +722,7 @@ flowchart LR
 - **SC-016**：Overview 顯示模式下，使用者可透過紅色 `*` 立即辨識各區塊中的必填欄位（包含基本資料與標記設定動態欄位）。
 - **SC-017**：Overview「抽樣設定」中的 `每回合抽樣筆數` 在顯示模式與編輯模式皆顯示紅色 `*`，並與其他必填欄位樣式一致；編輯模式的抽樣筆數驗證規則需由欄位標籤旁的 info tooltip 顯示，不在輸入框下方常駐顯示。
 - **SC-018**：Overview「抽樣設定」可正確顯示逐輸出類型 IAA 指標唯讀清單（來源 `OUTPUT_TYPE_IAA_REGISTRY`，不提供計算方式下拉選單），並可正確顯示與編輯 `sampling_value`、`target_agreement_overrides`（逐輸出類型覆寫，未覆寫時顯示 registry 預設門檻）、`min_annotators`，且違反驗證規則時會阻擋儲存並提供可修正提示；數字欄位採直接鍵入方式，不使用 spinner。
-- **SC-019**：Overview「任務狀態與執行控制」可顯示試標回合、樣本池分配摘要與 IAA/標準差達標條件；任務層級 stage flow 維持 `draft → 試標階段 → 正式標記中 → 已完成`，且目前階段只由 stepper 的 current step 呈現；單一執行判定 banner 僅顯示最近回合或正式標記的判定標題與下一步說明，不得再顯示額外的「目前任務階段」標題/描述，也不得再顯示獨立「正式標記判定」卡；`試標階段` 內需逐步呈現例如 `R1 未通過 → R2 通過 → 開始正式標記` 的回合歷程；樣本池分配需隨回合動態調整，且不同回合需以不同顏色區隔；執行控制區不顯示額外狀態 badge 或 stage meta pills，trial history 日期維持單行且無垂直連接線。
+- **SC-019**：Overview「任務狀態與執行控制」可顯示試標回合、樣本池分配摘要與 IAA/標準差達標條件；任務層級 stage flow 維持 `draft → 試標階段 → 正式標記中 → 已完成`，且目前階段只由 stepper 的 current step 呈現；單一執行判定 banner 僅顯示最近回合或正式標記的判定標題與下一步說明，不得再顯示額外的「目前任務階段」標題/描述，也不得再顯示獨立「正式標記判定」卡；`試標階段` 內需逐步呈現例如 `R1 未通過 → R2 通過 → 開始正式標記` 的回合歷程（判定標題為顧問性警示標籤，不代表狀態轉換被阻擋，見 FR-010o-3）；樣本池分配需隨回合動態調整，且不同回合需以不同顏色區隔；執行控制區不顯示額外狀態 badge 或 stage meta pills，trial history 日期維持單行且無垂直連接線。
 - **SC-020**：`project_leader` 在 `draft` 任務開啟「基本資料」編輯後，可見與 `013-task-new` Step 1 同構的資料集檔案列、`欄位預覽・指定欄位角色` 表與任務類型 chips，且三者皆正確反映該任務已儲存的組合；調整後儲存，摘要顯示與推導的 legacy 呈現分流同步更新。
 - **SC-021**：開啟「標記設定」編輯後，`schemaFields` 內 accordion 數量等於該任務 outputs[] 數量，各 accordion 欄位與 `013-task-new` Step 2 完全同源；多輸出任務（如 `entity_recognition + relation_identification + multi_dim`）逐一呈現各自的設定 accordion 與摘要列。
 - **SC-022**：「標記設定」編輯模式的 code 區可在 YAML / JSON 間切換；code 草稿修改未儲存時格式切換被鎖定；貼入格式非法的 code 並儲存時，錯誤顯示於 code 錯誤列且停留在編輯模式。
@@ -735,6 +748,8 @@ flowchart LR
 - **SC-038**：實際啟用成員人數不足（active 標記員 `< min_annotators` 或 active 審核員 `< min_reviewers`）時，試標回合與正式標記發布皆被阻擋，且介面逐角色顯示「還差 N 位」缺口訊息；補足人數後方可發布。
 - **SC-039**：`開始正式標記` 成功後，每筆正式標記樣本恰有一位啟用中標記員的 assignment，不存在未指派或重複指派的樣本，且任兩位標記員的分派筆數差距不超過 1。
 - **SC-040**：停用標記員後，其未提交標記作業全數退回未指派池且該成員無法再提交任何標記，已提交作業與歷史統計完整保留；重新啟用後僅恢復可被指派資格，先前退回的作業不自動歸還。
+- **SC-041**：任一試標回合建立完成後，其 `TrialRound.sampling_value` 必須與該回合實際建立之 `AnnotationListMaterialization.item_count` 完全一致；畫面（包含試標回合摘要卡、試標回合歷程）不得顯示以百分比或資料集總數換算、與實際建立筆數脫節的衍生值（issue #491／#489）。
+- **SC-042**：`R{n}`（`n >= 2`）之新增試標回合流程，未填寫 `prior_round_findings`／`guideline_change_summary`（或勾選 `no_change` 卻未填 `no_change_reason`）時必被阻擋；`R1` 不受此限制；每次成功建立回合皆同步寫入建立當下的 `guideline_version`（issue #492 A4/A5）。
 
 ---
 
@@ -742,6 +757,8 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.11.1 | 2026-08-27 | **修正：補做 FR-010t 發布前成員人數阻擋（issue #505）**：`design/prototype/pages/task-management/task-detail.html` 的 `publishDryRun()`／`publishOfficialRun()` 原僅透過 `validateSampling()` 驗證抽樣設定合法性，從未依 FR-010t 檢查實際啟用成員人數，使 FR-013「阻擋樣式比照 FR-010t」缺乏可對齊的原型基準。新增 `getMembershipGapMessages()`：比對 `TASK_MEMBERS` 中 `membership_status = active` 且 `task_role = annotator`／`reviewer` 的實際人數與 `min_annotators`／`min_reviewers`，任一角色不足時 `canPublish()` 阻擋發布並逐角色顯示「還差 N 位」缺口訊息（不得靜默忽略點擊）。同步為 T001 種子資料新增第 4 位標記員（Derek Yeh，`status: 'active'`），使預設示範任務的啟用標記員人數（Alex Wang、Olivia Lin、Derek Yeh 共 3 位）與其 `minAnnotators = 3` 一致，避免既有發布流程回歸測試被本次新增的阻擋誤擋；既有的 Jason Huang 維持 `disabled`，以保留 `DEFAULT_UNASSIGNED_ANNOTATION_ASSIGNMENTS`「成員移除後未指派」敘事的一致性，以及成員管理畫面唯一的停用狀態展示列。**規格條文未變**（FR-010t、SC-038 已於 v2.8.0 定義，本次僅補齊原型落地）。新增回歸測試 `issue-505-publish-member-gate.spec.ts`（涵蓋標記員缺口單獨阻擋新增試標回合、審核員缺口單獨阻擋開始正式標記、兩角色同時缺口時逐角色顯示三種情境）。 |
+| 2.11.0 | 2026-08-27 | **試標品質迴圈：修訂紀錄必填、指引版本綁定、IAA 顧問化、sampling_value 據實記錄（issue #488 T1／#489／#491／#492 A4-A5，minor）**：新增 **TrialRound** 實體（`task_id`、`round`、`sampling_value`、`guideline_version` FK、`prior_round_findings`、`guideline_change_summary`、`no_change_reason?`、`created_by`、`created_at`），紀錄每一試標回合的抽樣、指引版本與修訂脈絡；`TaskGuidelineConfig` 新增 `guideline_version` 欄位，遞增觸發條件為 `OVERVIEW_EDITABLE_FIELDS` 中指引內容欄位被實際修改並儲存，`force_guideline` 變動不觸發遞增（FR-017a，對應 annotation-015 FR-066 第 4 點）。新增 **FR-017**：`R{n}`（`n >= 2`）建立前必須填寫 `prior_round_findings` 與 `guideline_change_summary`，或勾選 `no_change` 並填 `no_change_reason`；`R1` 因無前一輪可回顧而豁免；未通過時依 FR-013 阻擋建立（阻擋樣式比照 FR-010t）。**IAA 語意去阻擋化**（issue #488 T1）：新增 **FR-010o-3**，明定 `waiting_iaa_confirmation`、達標條件 pills 之 IAA 項、試標回合歷程判定標題皆為顧問性警示，不阻擋 `dry_run_in_progress → waiting_iaa_confirmation` 轉換（該轉換條件仍為 `DRY_RUN_COMPLETION_RULE`／FR-008a，與 IAA 無關）、不停用「開始正式標記」；IAA 計算方式與門檻正典移交 `dataset-017` **FR-039**，本規格不得另行定義，新增上游依賴列。**sampling_value 據實修正**（issue #491／#489，實測 T014 曾顯示 `1` 而非實際 `5` 筆）：`FR-010f-2` 修訂為回合建立完成後 `TrialRound.sampling_value` 恆等於當輪實際建立之 `AnnotationListMaterialization.item_count`，畫面不得顯示以百分比或資料集總數換算、脫離實際筆數的衍生值；`FR-010o` 同步補充顯示規則。新增 FR-017、FR-017a、FR-010o-3、SC-041、SC-042、TrialRound 實體、Clarifications Session 2026-08-27、使用者故事 3 驗收情境 12、邊界情況一則；修訂 FR-010f-2、FR-010o、FR-013、SC-019、Overview 區塊 5 文案、上游依賴表（新增 017 列）、下游依賴表（015 列補充 guideline_version 綁定說明）。 |
 | 2.10.5 | 2026-08-26 | **修正：T014–T017 提供給審核員的指引內容從缺（issue #405）**：`task-detail.data.js` 的 T014–T017 profile 原未設定任何 `reviewerGuidelineText`，Overview「提供給審核員」卡片因此對四個審核流程示範任務全數落回共用空狀態（`未上傳`／`尚無說明內容`），即使四者各自示範不同審核情境（dry_run 共識仲裁／單一審核員核可／三審核員多數決收斂／兩審核員平手）。比照 issue #395 `forceShowGuideline` 的既有機制，`resetTaskData()` 新增一行泛用讀取（`if (profile.reviewerGuidelineText) ...`，不含任何 task_id 分支），並為 T014–T017 各自 seed 對應審核情境的指引文字（含共用的 single_label 情感三分類判準與與標記員不一致時的處理原則）。**規格條文未變**（FR-014f-1 雙角色結構本已涵蓋，僅補齊 seed 資料）。新增回歸測試 `issue-405-reviewer-guideline-t014-t017.spec.ts`（逐任務斷言審核員指引狀態轉為已上傳且內容含對應審核情境關鍵字）。 |
 | 2.10.4 | 2026-08-24 | Issue #261：新增 Prototype Traceability，明確對應 task-detail 主頁 shell、五個 tab partial、頁面資料層、與 013 共用的 `OUTPUT_TYPE_REGISTRY` 設定引擎、設計層參考的責任邊界；規格條文未變。 |
 | 2.10.3 | 2026-08-24 | **修正：13 個示範任務共用同一組誤導性指引附件（issue #185，issue-180 finding F-02）**：`DEFAULT_GUIDELINE_FILES`（`task-detail.data.js`）原對所有 17 個 seed profile 附加同一張 VA 情緒量表示意圖（`VA_emj.png`）＋一份指向不存在目錄的 PDF（`assets/guidelines/annotation-guideline.pdf`），對 NER／摘要／QA 等非 VA 任務的標記員造成誤導，且 PDF 於「強制閱讀」流程中為死連結。改為：(1) 圖片項目換成明確標示「通用範例圖」的占位圖（新增 `assets/images/task-management/generic-guideline-example.svg`），維持所有任務共用同一份 config-driven 檔案清單（不逐任務類型硬編，符合 Generalization-First 與 annotation-015 `TaskProfile.guidelineFiles` 條文）；(2) 移除死連結 PDF 項目（不虛構假檔案）。規格條文未變（`guidelineFiles` 資料形狀不變）。新增回歸測試：逐 profile 檔案存在性 assertion（每個 `guidelineFiles[].url` 皆需 200 回應）＋非 VA 任務範例圖標示斷言。 |

@@ -45,6 +45,13 @@
       margin: 0 0 4px;
     }
     .page-subtitle { font-size: 14px; line-height: 1.8; color: var(--color-text-soft); margin: 0; }
+    /* design/system/MASTER.md §Breadcrumb (compact form). Placed BELOW the
+       heading block exactly as task-detail.html does: shared spec 008 FR-017
+       pins every page's h1 to the Dashboard's y, so nothing may precede it. */
+    .breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--color-text-soft);margin:-12px 0 16px}
+    .breadcrumb a{color:var(--color-primary)}
+    .breadcrumb a:hover{text-decoration:underline}
+    .breadcrumb-sep{color:var(--color-ink-muted);font-size:11px}
     .list {
       display: grid;
       gap: var(--space-sm);
@@ -575,6 +582,8 @@
     </div>
   </section>
 
+  <nav class="breadcrumb" aria-label="breadcrumb" id="entryBreadcrumb" data-testid="entry-breadcrumb"></nav>
+
   <section class="list hidden" id="taskInfoCard" aria-label="任務資訊" data-testid="list-task-info-card">
     <article class="list-item">
       <div class="task-item-header">
@@ -601,6 +610,10 @@
   </section>
 
   <section class="empty hidden" id="taskNotFound" data-testid="list-task-not-found"></section>
+
+  <!-- Issue #449: shown when the reviewer arrived from the quick-review CTA
+       and no review unit on this task is actionable for them. -->
+  <section class="empty hidden" id="noActionableNotice" role="status" data-testid="list-no-actionable-notice"></section>
 
   <div class="toolbar" role="search" aria-label="標記清單搜尋與篩選" id="listToolbar">
     <div class="toolbar-left">
@@ -663,8 +676,12 @@
 <script src="../../assets/analytics.js"></script>
 <script src="../task-management/task-list.data.js"></script>
 <script src="../task-management/task-detail.data.js"></script>
-<script src="../dashboard/dashboard.assignments.js"></script>
+<!-- issue #489: dashboard.assignments.js derives T014's reviewer IAA via
+     LabelSuiteAnnotationWorkspaceData.computeIaaAlpha() at load time, so
+     annotation-workspace.data.js must load first (dashboard.html already
+     orders them this way). -->
 <script src="annotation-workspace.data.js"></script>
+<script src="../dashboard/dashboard.assignments.js"></script>
 <script>
   /* ── i18n ─────────────────────────────────────────────────────── */
   var CURRENT_LANG = 'zh';
@@ -686,6 +703,9 @@
       thActions: '操作',
       runTypeLabelOfficial: '正式標記',
       runTypeLabelDry: '試標',
+      crumbWorkAreaReviewer: '審核作業',
+      crumbWorkAreaAnnotator: '標記作業',
+      crumbTaskTpl: '{name}（{run}）',
       statusSubmitted: '已提交',
       statusSaved: '已儲存',
       statusPending: '待處理',
@@ -700,6 +720,8 @@
       clearFiltersLabel: '清除篩選',
       emptyNoResults: '找不到符合條件的資料。',
       emptyNoData: '目前尚無資料。',
+      noActionableReviewTitle: '目前沒有可處理項目',
+      noActionableReviewMessage: '這個任務的審核單位都已定稿，或不在你的可處理範圍內。',
       paginationTpl: '共 {total} 筆 · 第 {page} / {totalPages} 頁',
       pageSizeTpl: '{size} / 頁',
       roleLabelAnnotator: '標記員',
@@ -730,6 +752,8 @@
       textCollapseLabel: '收合',
       notSubmittedNoteTpl: '其中 {count} 筆尚未提交，不計入審核清單：',
       notSubmittedEntryLabel: '查看 {id}',
+      reviewUnitInterimNote: '未定稿',
+      reviewUnitFinalizedNote: '已鎖定',
     },
     en: {
       pageTitle: 'Annotation List',
@@ -748,6 +772,9 @@
       thActions: 'Actions',
       runTypeLabelOfficial: 'Official',
       runTypeLabelDry: 'Trial',
+      crumbWorkAreaReviewer: 'Review',
+      crumbWorkAreaAnnotator: 'Annotate',
+      crumbTaskTpl: '{name} ({run})',
       statusSubmitted: 'Submitted',
       statusSaved: 'Saved',
       statusPending: 'Pending',
@@ -762,6 +789,8 @@
       clearFiltersLabel: 'Clear filters',
       emptyNoResults: 'No matching data.',
       emptyNoData: 'No data yet.',
+      noActionableReviewTitle: 'No actionable items right now',
+      noActionableReviewMessage: 'Every review unit on this task is finalized or outside what you can act on.',
       paginationTpl: 'Total {total} · Page {page} / {totalPages}',
       pageSizeTpl: '{size} / page',
       roleLabelAnnotator: 'Annotator',
@@ -792,6 +821,8 @@
       textCollapseLabel: 'Collapse',
       notSubmittedNoteTpl: '{count} sample(s) not yet submitted, excluded from this review list:',
       notSubmittedEntryLabel: 'View {id}',
+      reviewUnitInterimNote: 'not finalized',
+      reviewUnitFinalizedNote: 'locked',
     }
   };
   function t(key, vars) {
@@ -944,13 +975,25 @@
     }).join('');
   }
 
+  /* FR-081 (issue #456 AC-4): the workspace ignores params it does not know,
+     so carrying the list's view state through it costs nothing there and
+     lets every return path -- breadcrumb, sidebar, not-found redirect --
+     put the user back on the page they left instead of an unfiltered page 1.
+     Same keys applyListStateFromUrl() reads back, so the trip needs no
+     translation in either direction. */
+  function listStateQuery() {
+    var query = writeListStateParams(new URLSearchParams()).toString();
+    return query ? '&' + query : '';
+  }
+
   function buildWorkspaceUrl(taskId, sampleId, context, annotatorId) {
     return '../annotation/annotation-workspace.html' +
       '?task_id=' + encodeURIComponent(taskId) +
       '&sample_id=' + encodeURIComponent(sampleId) +
       '&role=' + encodeURIComponent(context.role) +
       '&run_type=' + encodeURIComponent(context.runType) +
-      identityQuery(context, annotatorId);
+      identityQuery(context, annotatorId) +
+      listStateQuery();
   }
 
   function getSampleStatus(profile, context, record, index) {
@@ -986,10 +1029,12 @@
     return t('statusPending');
   }
 
-  /* Review unit五態 (spec 015 v3.9.0). Both terminal states reuse the
-     submitted badge and both in-flight states reuse the saved badge — the
-     list only signals "settled / in progress / untouched", the workspace
-     carries the distinction. */
+  /* Review unit五態 (spec 015 v3.9.0). Issue #452: 已定稿 is the ONLY
+     terminal state, so it is the only one that keeps the submitted badge —
+     已同意 is short of min_reviewers and 爭議中 is unresolved, and both
+     used to borrow a settled-looking badge. The badge text carries the
+     same split in words (「已同意 · 未定稿」 vs 「已定稿 · 已鎖定」) so the
+     distinction never rests on colour alone. */
   var REVIEW_UNIT_STATUS = window.LabelSuiteAnnotationWorkspaceData.REVIEW_UNIT_STATUS;
   var REVIEW_UNIT_STATUS_ORDER = [
     REVIEW_UNIT_STATUS.PENDING,
@@ -1000,14 +1045,23 @@
   ];
   var ANNOTATOR_STATUS_ORDER = ['submitted', 'saved', 'pending'];
 
-  function reviewUnitStatusText(status) {
+  function reviewUnitStatusLabel(status) {
     return t('reviewUnit' + status.charAt(0).toUpperCase() + status.slice(1));
   }
 
+  /* Badge text only: the filter select keeps the bare state names, because a
+     qualifier like 未定稿 reads as a separate filterable state in a dropdown. */
+  function reviewUnitStatusText(status) {
+    var base = reviewUnitStatusLabel(status);
+    if (status === REVIEW_UNIT_STATUS.FINALIZED) return base + ' · ' + t('reviewUnitFinalizedNote');
+    if (status === REVIEW_UNIT_STATUS.PENDING) return base;
+    return base + ' · ' + t('reviewUnitInterimNote');
+  }
+
   function reviewUnitBadgeClass(status) {
-    if (status === REVIEW_UNIT_STATUS.APPROVED || status === REVIEW_UNIT_STATUS.FINALIZED) return 'status-submitted';
-    if (status === REVIEW_UNIT_STATUS.MODIFIED || status === REVIEW_UNIT_STATUS.DISPUTED) return 'status-saved';
-    return 'status-pending';
+    if (status === REVIEW_UNIT_STATUS.FINALIZED) return 'status-submitted';
+    if (status === REVIEW_UNIT_STATUS.PENDING) return 'status-pending';
+    return 'status-saved';
   }
 
   /* The two roles filter on different state machines, so the select is built
@@ -1017,7 +1071,7 @@
     if (!statusFilter) return;
     var reviewer = role === 'reviewer';
     var values = reviewer ? REVIEW_UNIT_STATUS_ORDER : ANNOTATOR_STATUS_ORDER;
-    var label = reviewer ? reviewUnitStatusText : statusText;
+    var label = reviewer ? reviewUnitStatusLabel : statusText;
 
     statusFilter.setAttribute('aria-label', reviewer ? t('reviewStatusFilterAll') : t('statusFilterAll'));
     statusFilter.innerHTML = '';
@@ -1048,7 +1102,8 @@
       identityParams: {
         annotator_id: params.get('annotator_id'),
         reviewer_id: params.get('reviewer_id')
-      }
+      },
+      notice: params.get('notice') || ''
     };
   }
 
@@ -1077,13 +1132,23 @@
     }
   }
 
-  function syncUrlToListState() {
-    var params = new URLSearchParams(window.location.search);
+  /* Writes the current view state onto whatever URLSearchParams the caller
+     is assembling. Two callers share it -- syncUrlToListState() below, which
+     writes the list back onto its own URL, and buildWorkspaceUrl(), which
+     hands the same state to the workspace so it can hand it back (FR-081).
+     One writer means the two URLs can never disagree. Defaults are deleted
+     rather than written, so a clean URL stays clean. */
+  function writeListStateParams(params) {
     if (FILTER_STATE.status) params.set('status', FILTER_STATE.status); else params.delete('status');
     if (FILTER_STATE.query) params.set('q', FILTER_STATE.query); else params.delete('q');
     if (PAGINATION_STATE.pageSize !== 20) params.set('limit', String(PAGINATION_STATE.pageSize)); else params.delete('limit');
     var offset = (PAGINATION_STATE.page - 1) * PAGINATION_STATE.pageSize;
     if (offset > 0) params.set('offset', String(offset)); else params.delete('offset');
+    return params;
+  }
+
+  function syncUrlToListState() {
+    var params = writeListStateParams(new URLSearchParams(window.location.search));
     window.history.replaceState(null, '', window.location.pathname + '?' + params.toString());
   }
 
@@ -1751,9 +1816,30 @@
     document.getElementById('taskInfoTitle').textContent =
       (isEn && profile.nameEn) ? profile.nameEn : profile.nameZh;
 
+    /* Issue #450: a reviewer's summary, progress bar and completion badge
+       are DERIVED from the live review-unit state via the shared
+       computeReviewSummary() formula, so they can never contradict the
+       review-unit rows below. Null for annotators only -- issue #501 removed
+       the second condition (`derivable`, i.e. some unit already reviewed),
+       because a task nobody has reviewed still has a summary the formula can
+       state truthfully, and the seeded strings it fell back to on those
+       tasks described no state that existed. Dropped here in the same change
+       as in dashboard.js: the two pages promise the same numbers, so gating
+       them differently is how they would start disagreeing. */
+    var reviewSummary = null;
+    if (context.role === 'reviewer') {
+      reviewSummary = window.LabelSuiteAnnotationWorkspaceData.computeReviewSummary(
+        profile.id, context.runType);
+    }
+
     var completionMap = readCompletionStateMap();
     var completionState = completionMap[completionStateKey(context.role, profile.id, context.runType)];
-    var isCompleted = Boolean(completionState && completionState.allSubmitted);
+    /* 審核覆蓋率 100% is not "done": a covered unit may still be awaiting
+       quorum, modified or disputed, so only a fully finalized task counts
+       as completed for a reviewer (issue #310/#450). */
+    var isCompleted = reviewSummary
+      ? reviewSummary.unfinalized === 0
+      : Boolean(completionState && completionState.allSubmitted);
 
     /* Count follows the materialized run context when the profile declares
        one for this run_type (spec 015: list items are materialized by
@@ -1764,11 +1850,17 @@
       : profile.datasetRecords.length;
     /* Progress summary reuses the dashboard assignment seeds so the card
        shows the exact stats/progress of the matching dashboard row
-       (FR-007C/FR-007D: same progress contract as the dashboard list). */
+       (FR-007C/FR-007D: same progress contract as the dashboard list).
+       Reviewers override that seed with the derived summary above -- both
+       pages compose it from the same formula, so they still agree. */
     var stats = findAssignmentStats(profile.id, context.role);
+    var summaryText = reviewSummary
+      ? window.LabelSuiteAnnotationWorkspaceData.formatReviewSummary(
+          reviewSummary, stats ? stats.iaa : undefined)
+      : (stats ? stats.detail : null);
     var detailParts = [];
-    if (stats && stats.detail) {
-      detailParts.push(isEn ? stats.detail.en : stats.detail.zh);
+    if (summaryText) {
+      detailParts.push(isEn ? summaryText.en : summaryText.zh);
     }
     if (context.runType === 'dry_run') {
       var round = runCtx && runCtx.round != null ? runCtx.round : 1;
@@ -1798,9 +1890,11 @@
     statusEl.textContent = isCompleted ? t('taskStatusCompleted') : t('taskStatusInProgress');
     statusEl.className = 'badge ' + (isCompleted ? 'badge-success' : 'badge-info');
 
-    var progressPct = isCompleted
-      ? 100
-      : (stats && typeof stats.progress === 'number' ? stats.progress : 0);
+    var progressPct = reviewSummary
+      ? reviewSummary.coveragePct
+      : (isCompleted
+        ? 100
+        : (stats && typeof stats.progress === 'number' ? stats.progress : 0));
     document.getElementById('taskInfoProgressBar').style.width = progressPct + '%';
 
     var quickBtn = document.getElementById('taskQuickContinueBtn');
@@ -1844,7 +1938,74 @@
     el.appendChild(linkRow);
   }
 
+  /* Issue #449: the reviewer quick-review CTA sends `notice` instead of
+     opening an arbitrary read-only unit when it finds nothing actionable.
+     Rendered from renderContext() so the language toggle re-renders it with
+     everything else. */
+  function renderNoActionableNotice(context) {
+    var el = document.getElementById('noActionableNotice');
+    if (!el) return;
+    if (context.notice !== 'no_actionable_review' || context.role !== 'reviewer') {
+      el.classList.add('hidden');
+      return;
+    }
+    el.innerHTML = '';
+    var title = document.createElement('strong');
+    title.style.display = 'block';
+    title.style.marginBottom = '4px';
+    title.textContent = t('noActionableReviewTitle');
+    var message = document.createElement('span');
+    message.textContent = t('noActionableReviewMessage');
+    el.appendChild(title);
+    el.appendChild(message);
+    el.classList.remove('hidden');
+  }
+
+  /*
+   * Entry breadcrumb (issue #456, FR-080). Every level is derived from the
+   * URL context so a cold deep link renders the same trail as an in-app
+   * navigation. Level 1 links to the dashboard rather than to a task-less
+   * annotation-list.html, because that URL is a not-found state whose own
+   * recovery CTA already points at the dashboard.
+   */
+  function renderEntryBreadcrumb(context) {
+    var nav = document.getElementById('entryBreadcrumb');
+    if (!nav) return;
+    nav.innerHTML = '';
+    var workArea = t(context.role === 'reviewer' ? 'crumbWorkAreaReviewer' : 'crumbWorkAreaAnnotator');
+
+    if (!context.profile) {
+      nav.appendChild(breadcrumbCurrent(workArea));
+      return;
+    }
+
+    var root = document.createElement('a');
+    root.href = '../dashboard/dashboard.html';
+    root.textContent = workArea;
+    nav.appendChild(root);
+
+    var sep = document.createElement('span');
+    sep.className = 'breadcrumb-sep';
+    sep.setAttribute('aria-hidden', 'true');
+    sep.textContent = '\u203A';
+    nav.appendChild(sep);
+
+    var isEn = CURRENT_LANG === 'en';
+    nav.appendChild(breadcrumbCurrent(t('crumbTaskTpl', {
+      name: (isEn && context.profile.nameEn) ? context.profile.nameEn : context.profile.nameZh,
+      run: runTypeLabel(context.runType)
+    })));
+  }
+
+  function breadcrumbCurrent(text) {
+    var span = document.createElement('span');
+    span.setAttribute('aria-current', 'page');
+    span.textContent = text;
+    return span;
+  }
+
   function renderContext(context) {
+    renderEntryBreadcrumb(context);
     document.getElementById('pageTitle').textContent = t('pageTitle');
     document.getElementById('pageSubtitle').textContent =
       context.role === 'reviewer' ? t('pageSubtitleReviewer') : t('pageSubtitleAnnotator');
@@ -1862,6 +2023,7 @@
 
     if (context.profile) {
       renderTaskInfo(context, context.profile);
+      renderNoActionableNotice(context);
     } else {
       renderNotFound(context.taskId);
     }

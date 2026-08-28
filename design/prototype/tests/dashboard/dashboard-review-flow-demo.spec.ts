@@ -9,11 +9,16 @@
  *   - the demo tasks appear in the annotator/reviewer task lists
  *   - card clicks route to annotation-list with the correct run_type
  *   - reviewer summaries match the seeded review-state matrix
- *     (T014=6, T015=1, T016=0, T017=1 pending review units) using the
- *     review-coverage wording (issue #310): the share of units past 待審 is
- *     labeled 審核覆蓋率, and T016 — whose pending count is 0 while
- *     1 disputed + 2 more units are still unfinalized — must disclose
- *     未定稿 3 · 爭議 1 instead of reading as a completed task.
+ *     (T014=5, T015=1, T016=0, T017=1 pending review units) using the
+ *     subject-bearing wording (issue #452): the share of units past 待審 is
+ *     labeled 任務覆蓋 x / n 個審核單位, and T016 — whose pending count is 0
+ *     while 1 disputed + 2 more units are still unfinalized — must disclose
+ *     未達定稿門檻 3 · 爭議中 1 instead of reading as a completed task.
+ *
+ * Issue #450: these summaries are no longer the seed's prebuilt display
+ * string — computeReviewSummary() derives them from the stored review-unit
+ * state, so every non-zero counter (待審 / 未達定稿門檻 / 爭議中) now appears under
+ * one shared rule instead of being hand-written per demo task.
  *
  * Traceability: specs/dashboard/012-dashboard/spec.md
  *   FR-010B, FR-011B1, FR-011D, FR-011E, SC-016
@@ -36,29 +41,42 @@ const DEMO_TASKS = [
     id: 'T014',
     runType: 'dry_run',
     runTypeBadge: '試標',
-    reviewerSummaryZh: '待審 6 筆 · 審核覆蓋率 60% · IAA 0.72',
-    reviewerSummaryEn: '6 Pending · 60% Review Coverage · IAA 0.72',
+    /* issue #489: IAA is now derived by computeIaaAlpha() from the T014
+       dry_run seed matrix (5 samples x 3 annotators, single_label) instead
+       of a hardcoded figure -- 0.59 is that derivation's alpha (0.588235),
+       rounded to 2 decimals by formatReviewSummary's toFixed(2). See
+       tests/annotation/issue-489-iaa-single-derivation.spec.ts for the
+       independently-verified Do/De/alpha values. */
+    // dry-05 x kioleemg12 moved from pending to finalized (issue #502: a
+    // dry_run reject still counts as reviewed). IAA is derived from
+    // annotator values only (computeIaaAlpha), untouched by this change.
+    reviewerSummaryZh: '任務覆蓋 10 / 15 個審核單位 · 待審 5 個 · 未達定稿門檻 7 個 · 爭議中 2 個 · IAA 0.59',
+    reviewerSummaryEn:
+      'Task coverage 10 / 15 review units · 5 pending · 7 short of finalize threshold · 2 disputed · IAA 0.59',
   },
   {
     id: 'T015',
     runType: 'official_run',
     runTypeBadge: '正式標記',
-    reviewerSummaryZh: '待審 1 筆 · 審核覆蓋率 75% · IAA 0.81',
-    reviewerSummaryEn: '1 Pending · 75% Review Coverage · IAA 0.81',
+    reviewerSummaryZh: '任務覆蓋 3 / 4 個審核單位 · 待審 1 個 · 未達定稿門檻 2 個 · 爭議中 1 個 · IAA 無法計算',
+    reviewerSummaryEn:
+      'Task coverage 3 / 4 review units · 1 pending · 2 short of finalize threshold · 1 disputed · IAA Not computable',
   },
   {
     id: 'T016',
     runType: 'official_run',
     runTypeBadge: '正式標記',
-    reviewerSummaryZh: '審核覆蓋率 100% · 未定稿 3 筆 · 爭議 1 筆 · IAA 0.68',
-    reviewerSummaryEn: '100% Review Coverage · 3 Unfinalized · 1 Disputed · IAA 0.68',
+    reviewerSummaryZh: '任務覆蓋 5 / 5 個審核單位 · 未達定稿門檻 3 個 · 爭議中 1 個 · IAA 無法計算',
+    reviewerSummaryEn:
+      'Task coverage 5 / 5 review units · 3 short of finalize threshold · 1 disputed · IAA Not computable',
   },
   {
     id: 'T017',
     runType: 'official_run',
     runTypeBadge: '正式標記',
-    reviewerSummaryZh: '待審 1 筆 · 審核覆蓋率 80% · IAA 0.70',
-    reviewerSummaryEn: '1 Pending · 80% Review Coverage · IAA 0.70',
+    reviewerSummaryZh: '任務覆蓋 4 / 5 個審核單位 · 待審 1 個 · 未達定稿門檻 4 個 · 爭議中 1 個 · IAA 無法計算',
+    reviewerSummaryEn:
+      'Task coverage 4 / 5 review units · 1 pending · 4 short of finalize threshold · 1 disputed · IAA Not computable',
   },
 ] as const;
 
@@ -156,11 +174,13 @@ test.describe('Dashboard — review-flow demo tasks (T014-T017)', () => {
     await expect(page).not.toHaveURL(/sample_id=/);
   });
 
-  /* The quick-review action must land on each demo task's FIRST dataset
-     record as the can_arbitrate reviewer, so the workspace opens on the
-     initial reviewer screen (and disputed units render the arbitration
-     entry screen instead of hiding it behind the default identity). */
-  test('reviewer quick-review opens the workspace on the first record as reviewer_chen', async ({ page }) => {
+  /* Issue #449: the quick-review action lands on the next unit the
+     can_arbitrate reviewer can actually act on, not the task's first dataset
+     record -- T014's first record is finalized for every annotator, so the
+     first actionable unit is the pending dry-02 x tony0950127 one. The
+     per-priority rule itself is pinned by
+     dashboard-quick-review-next-actionable.spec.ts. */
+  test('reviewer quick-review opens the workspace on the next actionable unit as reviewer_chen', async ({ page }) => {
     await openScenario(page, 'reviewer');
 
     const row = page.locator('#reviewerTaskList [data-example-task-id="T014"]');
@@ -168,7 +188,8 @@ test.describe('Dashboard — review-flow demo tasks (T014-T017)', () => {
 
     await expect(page).toHaveURL(/\/pages\/annotation\/annotation-workspace\.html\?/);
     await expect(page).toHaveURL(/task_id=T014/);
-    await expect(page).toHaveURL(/sample_id=dry-01-all-agree/);
+    await expect(page).toHaveURL(/sample_id=dry-02-one-divergent/);
+    await expect(page).toHaveURL(/annotator_id=tony0950127/);
     await expect(page).toHaveURL(/role=reviewer/);
     await expect(page).toHaveURL(/run_type=dry_run/);
     await expect(page).toHaveURL(/reviewer_id=reviewer_chen/);

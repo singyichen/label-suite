@@ -36,7 +36,7 @@ async function fileConvergingReview(page: import('@playwright/test').Page, revie
   await row.getByTestId('ws-review-correct-single_label').getByTestId('ws-single-label-chip-positive').click();
   await row.getByTestId('ws-review-row-approve').click();
   await page.getByTestId('ws-review-submit-btn').click();
-  await expect(page.locator('#toastMsg')).toHaveText('審查已提交');
+  await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
 }
 
 test('issue #400: a finalized unit\'s list row shows the reviewer-majority-converged answer, not the annotator\'s original one', async ({ page }) => {
@@ -50,7 +50,7 @@ test('issue #400: a finalized unit\'s list row shows the reviewer-majority-conve
   // issue describes before asserting on the list.
   await skipGuidelineModal(page);
   await page.goto(reviewerWorkspaceUrl('reviewer_wang'));
-  await expect(page.locator('[data-testid="ws-review-unit-context"] .rv-unit-state')).toHaveText('已定稿');
+  await expect(page.locator('[data-testid="ws-review-unit-context"] .rv-unit-state')).toHaveText('已定稿 · 已鎖定');
   await expect(page.getByTestId('ws-finalized-resolved')).toContainText('positive');
 
   await page.goto(buildListUrl({
@@ -58,6 +58,6 @@ test('issue #400: a finalized unit\'s list row shows the reviewer-majority-conve
   }));
 
   const row = page.getByTestId('ws-sample-item').filter({ hasText: 'ofm-02-approved-interim' });
-  await expect(row.locator('.status-badge')).toHaveText('已定稿');
+  await expect(row.locator('.status-badge')).toHaveText('已定稿 · 已鎖定');
   await expect(row.getByTestId('list-review-answer')).toHaveText('positive');
 });

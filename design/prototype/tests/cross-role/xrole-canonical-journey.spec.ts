@@ -599,7 +599,7 @@ async function submitApproval(page: Page, sampleId: string, annotatorId: string,
   await gotoReview(page, sampleId, annotatorId, reviewerId);
   await page.getByTestId('ws-review-row-approve').click();
   await page.getByTestId('ws-review-submit-btn').click();
-  await expect(page.locator('#toastMsg')).toHaveText('審查已提交');
+  await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
 }
 
 /* Real-UI correction: pick a different label in the correction panel (it is
@@ -615,7 +615,7 @@ async function submitCorrection(page: Page, sampleId: string, annotatorId: strin
   await page.getByTestId('ws-review-correct-single_label').getByTestId(`ws-single-label-chip-${correctedLabel}`).click();
   await page.getByTestId('ws-review-row-reject').click();
   await page.getByTestId('ws-review-submit-btn').click();
-  await expect(page.locator('#toastMsg')).toHaveText('審查已提交');
+  await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
 }
 
 /* FR-014I second half: the rolled-back annotator reopens the sample (the
@@ -716,7 +716,7 @@ test('XROLE-13: dry_run reject never rolls the annotator sample back to pending 
   await gotoReview(r01Page, DRY_RUN_RECORD_IDS[0], 'A01', REVIEWER_R01, 'dry_run');
   await r01Page.getByTestId('ws-review-row-reject').click();
   await r01Page.getByTestId('ws-review-submit-btn').click();
-  await expect(r01Page.locator('#toastMsg')).toHaveText('審查已提交');
+  await expect(r01Page.locator('#toastMsg')).toHaveText('審核已送出');
 
   expect(await readSampleStatus(r01Page, 'dry_run', DRY_RUN_RECORD_IDS[0], 'A01')).toBe('submitted');
 });
@@ -784,12 +784,12 @@ test('XROLE-17: the arbitrate entry is offered only to the eligible non-particip
   // row only; the two finalized rows keep the plain edit entry.
   await r03Page.goto(buildListUrl({ task_id: fixtureTaskId, role: 'reviewer', run_type: 'official_run', reviewer_id: ARBITER_R03 }));
   const disputedRow = r03Page.getByTestId('ws-sample-item').filter({ hasText: FORCED_DIVERGENCE_RECORD_ID });
-  await expect(disputedRow.locator('.status-badge')).toHaveText('爭議中');
+  await expect(disputedRow.locator('.status-badge')).toHaveText('爭議中 · 未定稿');
   await expect(disputedRow.getByTestId('list-review-annotator')).toHaveText(divergenceAnnotator);
   await expect(disputedRow.getByTestId('list-arbitrate-entry')).toHaveText('仲裁');
   for (const finalizedId of ['xr-off-001', 'xr-off-003']) {
     const row = r03Page.getByTestId('ws-sample-item').filter({ hasText: finalizedId });
-    await expect(row.locator('.status-badge')).toHaveText('已定稿');
+    await expect(row.locator('.status-badge')).toHaveText('已定稿 · 已鎖定');
     await expect(row.getByTestId('list-arbitrate-entry')).toHaveCount(0);
   }
 
@@ -843,7 +843,7 @@ test('XROLE-19: checkpoint E -- the arbitrated unit reads as finalized across pa
   await r01Page.goto(buildListUrl({ task_id: fixtureTaskId, role: 'reviewer', run_type: 'official_run', reviewer_id: REVIEWER_R01 }));
   await expect(
     r01Page.getByTestId('ws-sample-item').filter({ hasText: FORCED_DIVERGENCE_RECORD_ID }).locator('.status-badge')
-  ).toHaveText('已定稿');
+  ).toHaveText('已定稿 · 已鎖定');
 
   /* PL-side annotation-results panel: the journey's live arbitration
    * outcome still cannot reach this panel (the remaining prototype gap,

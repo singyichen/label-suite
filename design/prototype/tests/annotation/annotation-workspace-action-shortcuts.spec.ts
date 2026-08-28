@@ -19,6 +19,18 @@ const ANNOTATOR_URL = buildWorkspaceUrl({
   run_type: 'dry_run',
 });
 
+/* T009 sum-001 is the free_text seed: the only annotator sample that renders
+ * a real, persisted text-entry control. The two "shortcut still fires while a
+ * text field has focus" cases below used the workspace's 備註 textarea until
+ * issue #457 removed it as dead UI; they moved here so they keep exercising a
+ * genuine text field rather than a control that stored nothing. */
+const FREE_TEXT_URL = buildWorkspaceUrl({
+  task_id: 'T009',
+  sample_id: 'sum-001',
+  role: 'annotator',
+  run_type: 'official_run',
+});
+
 function reviewerUrl(annotatorId: string): string {
   return buildWorkspaceUrl({
     task_id: 'T001',
@@ -77,17 +89,17 @@ test.describe('Alt+Arrow steps between review units', () => {
     expect(sampleIdOf(page.url())).toBe('sent-001');
   });
 
-  test('Alt+ArrowRight still steps while a note field has focus', async ({ page }) => {
+  test('Alt+ArrowRight still steps while a text field has focus', async ({ page }) => {
     await skipGuidelineModal(page);
-    await page.goto(ANNOTATOR_URL);
+    await page.goto(FREE_TEXT_URL);
 
     // Unlike the bare `a`/`r` review keys, a modifier combo produces no text,
     // so suppressing it inside inputs would only cost the annotator the
     // shortcut exactly where they spend most of their time.
-    await page.getByTestId('ws-note-input').click();
+    await page.getByTestId('ws-free-text-input').click();
     await page.keyboard.press('Alt+ArrowRight');
 
-    expect(sampleIdOf(page.url())).toBe('sent-002');
+    expect(sampleIdOf(page.url())).toBe('sum-002');
   });
 
   test('the browser Back navigation is suppressed', async ({ page }) => {
@@ -131,11 +143,11 @@ test.describe('Ctrl/Cmd+S saves the draft', () => {
     await expect(page.getByTestId('ws-sample-item').nth(0)).toContainText('已儲存');
   });
 
-  test('the shortcut works while typing in the note field', async ({ page }) => {
+  test('the shortcut works while typing in a text field', async ({ page }) => {
     await skipGuidelineModal(page);
-    await page.goto(ANNOTATOR_URL);
+    await page.goto(FREE_TEXT_URL);
 
-    await page.getByTestId('ws-note-input').fill('半途想存檔');
+    await page.getByTestId('ws-free-text-input').fill('半途想存檔');
     await page.keyboard.press('Control+s');
 
     await expect(page.locator('#toastMsg')).toHaveText('已儲存');

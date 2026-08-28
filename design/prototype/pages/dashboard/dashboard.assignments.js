@@ -5,23 +5,79 @@
     return { zh: zh, en: en };
   }
 
-  function workItem(
-    sampleId,
-    detailZh,
-    detailEn,
-    progress,
-    runType,
-    status,
-    reviewerId
-  ) {
+  /* Annotator work items only: a reviewer's summary and progress are
+     derived at render time, so its seed carries neither (reviewWorkItem). */
+  function workItem(sampleId, detailZh, detailEn, progress, runType, status) {
     return {
       latestUnfinishedSampleId: sampleId,
       detail: text(detailZh, detailEn),
       progress: progress,
       runType: runType,
       status: status,
+    };
+  }
+
+  /* issue #501: a reviewer work item declares only what cannot be derived --
+     which unit to open, which run it belongs to, its status badge, and which
+     reviewer identity enters the workspace. The summary line and the progress
+     bar come from the live review-unit state at render time (dashboard.js
+     deriveReviewerEntry / annotation-list.html, both over
+     computeReviewSummary), and `iaa` is filled in below.
+
+     These seeds used to hand-write the summary too. On T014-T017 that text
+     merely duplicated what the formula produced; on T001-T013 it matched
+     nothing at all -- '待審 7 個審核單位 · 任務覆蓋率 34%' sat above fifteen
+     unit rows that were all 待審. A second, unbound source of truth for
+     numbers a formula already owns can only drift. */
+  function reviewWorkItem(sampleId, runType, status, reviewerId) {
+    return {
+      latestUnfinishedSampleId: sampleId,
+      runType: runType,
+      status: status,
       reviewerId: reviewerId || '',
     };
+  }
+
+  /* issue #489/#491/#501: a reviewer summary's IAA is DERIVED
+   * (computeIaaAlpha in annotation-workspace.data.js), never a figure typed
+   * next to the prose that reports it. The three states stay distinct all
+   * the way to formatReviewSummary:
+   *
+   *   number     -- alpha came out; rendered at 2 decimals
+   *   null       -- alpha is defined for this task and could not be derived
+   *                 from its data; 「IAA 無法計算」 says so rather than
+   *                 letting 0.00 be misread as total disagreement (#491)
+   *   undefined  -- nominal alpha is not defined for ANY of this task's
+   *                 output types, so the summary says nothing about IAA.
+   *                 Claiming it "could not be computed" would assert a
+   *                 measurement was attempted (dataset-017 FR-039.4).
+   *
+   * Which output type to measure over is read from the task's own outputs[]
+   * rather than seeded per task: computeIaaAlpha answers
+   * `unsupported_output_type` for the ones it does not cover, so the
+   * whitelist stays in the data layer and this never needs a per-task
+   * branch (Generalization-First). Both scripts load before this one on
+   * every page that includes it (dashboard.html, annotation-list.html); the
+   * guards below only protect against one being absent entirely. */
+  function demoIaaValue(taskId, runType) {
+    var workspaceData = global.LabelSuiteAnnotationWorkspaceData;
+    var taskData = global.LabelSuiteTaskListData;
+    if (!workspaceData || !workspaceData.computeIaaAlpha || !taskData) return undefined;
+    var task = null;
+    (taskData.tasks || []).forEach(function (candidate) {
+      if (candidate.id === taskId) task = candidate;
+    });
+    if (!task || !Array.isArray(task.outputTypes)) return undefined;
+
+    var defined = task.outputTypes
+      .map(function (outKey) { return workspaceData.computeIaaAlpha(taskId, runType, outKey); })
+      .filter(function (result) { return result.reason !== 'unsupported_output_type'; });
+    if (!defined.length) return undefined;
+    var computed = null;
+    defined.forEach(function (result) {
+      if (computed === null && result.computable) computed = result;
+    });
+    return computed ? computed.alpha : null;
   }
 
   /*
@@ -48,14 +104,7 @@
         'official_run',
         'continue'
       ),
-      reviewer: workItem(
-        'sent-001',
-        '待審 7 筆 · 進度 34% · IAA 0.80',
-        '7 Pending · 34% Progress · IAA 0.80',
-        34,
-        'official_run',
-        'pending_review'
-      ),
+      reviewer: reviewWorkItem('sent-001', 'official_run', 'pending_review', ''),
     },
     {
       exampleTaskId: 'T002',
@@ -68,14 +117,7 @@
         'dry_run',
         'resume'
       ),
-      reviewer: workItem(
-        'emo-001',
-        '待審 6 筆 · 進度 48% · IAA 0.76',
-        '6 Pending · 48% Progress · IAA 0.76',
-        48,
-        'dry_run',
-        'pending_review'
-      ),
+      reviewer: reviewWorkItem('emo-001', 'dry_run', 'pending_review', ''),
     },
     {
       exampleTaskId: 'T003',
@@ -88,14 +130,7 @@
         'official_run',
         'continue'
       ),
-      reviewer: workItem(
-        'taxonomy-001',
-        '待審 12 筆 · 進度 18% · IAA 0.81',
-        '12 Pending · 18% Progress · IAA 0.81',
-        18,
-        'official_run',
-        'pending_review'
-      ),
+      reviewer: reviewWorkItem('taxonomy-001', 'official_run', 'pending_review', ''),
     },
     {
       exampleTaskId: 'T004',
@@ -108,14 +143,7 @@
         'dry_run',
         'resume'
       ),
-      reviewer: workItem(
-        'read-001',
-        '待審 5 筆 · 進度 61% · IAA 0.84',
-        '5 Pending · 61% Progress · IAA 0.84',
-        61,
-        'dry_run',
-        'in_progress'
-      ),
+      reviewer: reviewWorkItem('read-001', 'dry_run', 'in_progress', ''),
     },
     {
       exampleTaskId: 'T005',
@@ -128,14 +156,7 @@
         'dry_run',
         'resume'
       ),
-      reviewer: workItem(
-        'mt-001',
-        '待審 8 筆 · 進度 76% · IAA 0.78',
-        '8 Pending · 76% Progress · IAA 0.78',
-        76,
-        'dry_run',
-        'in_progress'
-      ),
+      reviewer: reviewWorkItem('mt-001', 'dry_run', 'in_progress', ''),
     },
     {
       exampleTaskId: 'T006',
@@ -148,14 +169,7 @@
         'official_run',
         'in_progress'
       ),
-      reviewer: workItem(
-        'sequence-tagging-001',
-        '待審 10 筆 · 進度 71% · IAA 0.79',
-        '10 Pending · 71% Progress · IAA 0.79',
-        71,
-        'official_run',
-        'pending_review'
-      ),
+      reviewer: reviewWorkItem('sequence-tagging-001', 'official_run', 'pending_review', ''),
     },
     {
       exampleTaskId: 'T007',
@@ -168,14 +182,7 @@
         'official_run',
         'in_progress'
       ),
-      reviewer: workItem(
-        'entity-recognition-001',
-        '待審 15 筆 · 進度 64% · IAA 0.83',
-        '15 Pending · 64% Progress · IAA 0.83',
-        64,
-        'official_run',
-        'pending_review'
-      ),
+      reviewer: reviewWorkItem('entity-recognition-001', 'official_run', 'pending_review', ''),
     },
     {
       exampleTaskId: 'T008',
@@ -188,14 +195,7 @@
         'official_run',
         'resume'
       ),
-      reviewer: workItem(
-        'rel-001',
-        '待審 13 筆 · 進度 45% · IAA 0.77',
-        '13 Pending · 45% Progress · IAA 0.77',
-        45,
-        'official_run',
-        'pending_review'
-      ),
+      reviewer: reviewWorkItem('rel-001', 'official_run', 'pending_review', ''),
     },
     {
       exampleTaskId: 'T009',
@@ -208,14 +208,7 @@
         'dry_run',
         'in_progress'
       ),
-      reviewer: workItem(
-        'sum-001',
-        '待審 4 筆 · 進度 37% · IAA 0.74',
-        '4 Pending · 37% Progress · IAA 0.74',
-        37,
-        'dry_run',
-        'in_progress'
-      ),
+      reviewer: reviewWorkItem('sum-001', 'dry_run', 'in_progress', ''),
     },
     {
       exampleTaskId: 'T010',
@@ -228,14 +221,7 @@
         'official_run',
         'resume'
       ),
-      reviewer: workItem(
-        'med-001',
-        '待審 9 筆 · 進度 53% · IAA 0.79',
-        '9 Pending · 53% Progress · IAA 0.79',
-        53,
-        'official_run',
-        'in_progress'
-      ),
+      reviewer: reviewWorkItem('med-001', 'official_run', 'in_progress', ''),
     },
     {
       exampleTaskId: 'T011',
@@ -248,14 +234,7 @@
         'dry_run',
         'in_progress'
       ),
-      reviewer: workItem(
-        '00183',
-        '待審 11 筆 · 進度 82% · IAA 0.82',
-        '11 Pending · 82% Progress · IAA 0.82',
-        82,
-        'dry_run',
-        'pending_review'
-      ),
+      reviewer: reviewWorkItem('00183', 'dry_run', 'pending_review', ''),
     },
     {
       exampleTaskId: 'T012',
@@ -268,14 +247,7 @@
         'official_run',
         'continue'
       ),
-      reviewer: workItem(
-        'eac8d013',
-        '待審 5 筆 · 進度 29% · IAA 0.75',
-        '5 Pending · 29% Progress · IAA 0.75',
-        29,
-        'official_run',
-        'pending_review'
-      ),
+      reviewer: reviewWorkItem('eac8d013', 'official_run', 'pending_review', ''),
     },
     {
       exampleTaskId: 'T013',
@@ -288,25 +260,20 @@
         'official_run',
         'resume'
       ),
-      reviewer: workItem(
-        'absa-001',
-        '待審 8 筆 · 進度 58% · IAA 0.80',
-        '8 Pending · 58% Progress · IAA 0.80',
-        58,
-        'official_run',
-        'pending_review'
-      ),
+      reviewer: reviewWorkItem('absa-001', 'official_run', 'pending_review', ''),
     },
     /* T014-T017: review-flow demo tasks (issue #302). Numbers follow the
        seeded review-state matrix staged at boot by
        annotation-workspace.data.js: pending counts are the review units
        still 待審 (T014=6 of 15, T015=1 of 4, T016=0 of 5, T017=1 of 5)
-       and the percentage is the share of units past 待審 — labeled
-       審核覆蓋率 (review coverage), not 進度, because a unit past MY review
-       is not necessarily finalized (issue #310): T016 sits at coverage
-       100% with 3 units still unfinalized (1 approved + 1 modified +
-       1 disputed awaiting arbitration), so its summary swaps the vacuous
-       待審 0 for the 未定稿 3 · 爭議 1 breakdown. Reviewer
+       and 任務覆蓋 counts the units past 待審 over the review-unit total
+       — a coverage count, not a completion count, because a unit past MY
+       review is not necessarily finalized (issue #310): T016 sits at
+       5 / 5 coverage with 3 units still short of their finalize threshold
+       (1 approved + 1 modified + 1 disputed awaiting arbitration), so its
+       summary swaps the vacuous 待審 0 for the 未達定稿門檻 3 · 爭議中 1
+       breakdown. Every seeded summary here names its subject and its
+       denominator unit (issue #452). Reviewer
        sample ids point at each task's first dataset record so the
        quick-review entry lands on the initial reviewer screen, and every
        demo reviewer entry enters as reviewer_chen -- the only
@@ -324,15 +291,7 @@
         'dry_run',
         'in_progress'
       ),
-      reviewer: workItem(
-        'dry-01-all-agree',
-        '待審 6 筆 · 審核覆蓋率 60% · IAA 0.72',
-        '6 Pending · 60% Review Coverage · IAA 0.72',
-        60,
-        'dry_run',
-        'pending_review',
-        'reviewer_chen'
-      ),
+      reviewer: reviewWorkItem('dry-01-all-agree', 'dry_run', 'pending_review', 'reviewer_chen'),
     },
     {
       exampleTaskId: 'T015',
@@ -345,14 +304,8 @@
         'official_run',
         'continue'
       ),
-      reviewer: workItem(
-        'ofs-01-agree-gold',
-        '待審 1 筆 · 審核覆蓋率 75% · IAA 0.81',
-        '1 Pending · 75% Review Coverage · IAA 0.81',
-        75,
-        'official_run',
-        'pending_review',
-        'reviewer_chen'
+      reviewer: reviewWorkItem(
+        'ofs-01-agree-gold', 'official_run', 'pending_review', 'reviewer_chen'
       ),
     },
     {
@@ -366,14 +319,8 @@
         'official_run',
         'in_progress'
       ),
-      reviewer: workItem(
-        'ofm-01-unanimous-gold',
-        '審核覆蓋率 100% · 未定稿 3 筆 · 爭議 1 筆 · IAA 0.68',
-        '100% Review Coverage · 3 Unfinalized · 1 Disputed · IAA 0.68',
-        100,
-        'official_run',
-        'in_progress',
-        'reviewer_chen'
+      reviewer: reviewWorkItem(
+        'ofm-01-unanimous-gold', 'official_run', 'in_progress', 'reviewer_chen'
       ),
     },
     {
@@ -387,22 +334,27 @@
         'official_run',
         'in_progress'
       ),
-      reviewer: workItem(
-        'oft-01-even-tie',
-        '待審 1 筆 · 審核覆蓋率 80% · IAA 0.70',
-        '1 Pending · 80% Review Coverage · IAA 0.70',
-        80,
-        'official_run',
-        'pending_review',
-        'reviewer_chen'
+      reviewer: reviewWorkItem(
+        'oft-01-even-tie', 'official_run', 'pending_review', 'reviewer_chen'
       ),
     },
   ];
 
+  /* issue #501: the reviewer seeds' one derived field, applied here rather
+     than passed into reviewWorkItem() so the rule is stated once instead of
+     repeating each task's own id seventeen times. Read at load time, like
+     every other seed on this page. */
+  assignments.forEach(function (assignment) {
+    assignment.reviewer.iaa = demoIaaValue(assignment.exampleTaskId, assignment.reviewer.runType);
+  });
+
   /* Shared export: annotation-list.html reads the same seeds so its task
-     info card shows the exact stats/progress the dashboard row shows
-     (spec 015 FR-007C/FR-007D). Published before the dashboard guard so
-     pages without LabelSuiteDashboard can still consume it. */
+     info card and the dashboard row agree (spec 015 FR-007C/FR-007D). For a
+     reviewer that agreement now rests on both pages running the same
+     formula over the same review-unit state rather than on both reading one
+     hand-written string; what the seed still supplies is the `iaa` value
+     that formula takes as an argument. Published before the dashboard guard
+     so pages without LabelSuiteDashboard can still consume it. */
   global.LabelSuiteAssignmentSeeds = assignments;
 
   var dashboard = global.LabelSuiteDashboard;
@@ -419,6 +371,7 @@
       runType: work.runType,
       status: work.status,
       reviewerId: work.reviewerId,
+      iaa: work.iaa,
     };
   }
 

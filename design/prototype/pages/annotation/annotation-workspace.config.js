@@ -18,17 +18,16 @@
   var I18N = {
     zh: {
       sampleListTitle: '標記清單',
-      noteLabel: '備註（選填）',
-      notePlaceholder: '若有特殊情況可在此說明…',
       submitLabel: '提交',
       saveLabel: '儲存草稿',
       wsSaveSuccess: '已儲存',
       wsPrevBtnLabel: '上一筆',
       wsNextBtnLabel: '下一筆',
       wsProgressText: '{done} / {total} 已提交',
-      wsProgressTextReview: '已審 {done} / {total}',
-      wsAutosaveSaved: '草稿已自動儲存',
-      wsAutosaveSaving: '儲存中…',
+      wsProgressTextReview: '我的審核提交 {done} / {total} 個審核單位',
+      wsAutosaveInitial: '尚未儲存',
+      wsAutosaveDirty: '尚未儲存的變更',
+      wsAutosaveSavedAt: '上次儲存於 {time}',
       wsTabGuideline: '說明與檔案',
       wsTabHistory: '歷程',
       wsStatusSubmitted: '已提交',
@@ -44,15 +43,16 @@
       mobileDrawerTitle: '說明與檔案',
       guidelineImageModalCloseAria: '關閉圖片預覽',
       guidelinePdfModalCloseAria: '關閉 PDF 預覽',
+      guidelineMdModalCloseAria: '關閉 Markdown 預覽',
       wsSubmitIncomplete: '請完成所有標記項目後再提交',
       wsSubmitSuccess: '已提交',
       reviewSubmitLabel: '送出審核',
       reviewApproveLabel: '通過',
       reviewRejectLabel: '退回',
-      wsReviewSubmitSuccess: '審查已提交',
+      wsReviewSubmitSuccess: '審核已送出',
       reviewNoAnswer: '（無）',
-      reviewNote: '通過：此筆標記有效。退回：該標記狀態會回到未標記，標記員需要重新標記。',
-      reviewCorrectionTitle: '直接修正',
+      reviewNote: '通過：採用此筆標記。退回：記錄審核決策與修正差異，與回退標記員狀態是不同層級的效果——正式標記退回後該樣本回到待標記，產生標記員重標待辦；試標退回不改變標記員狀態，品質問題由 IAA 閘門與下一輪試標處理。',
+      reviewCorrectionTitle: '直接修正（Reviewer 修正後答案）',
       toastSelectDecision: '請完成每位標記員的審核決策',
       toastReviewCorrectionReset: '偵測到直接修正的內容因重新整理而遺失，對應的通過／退回決策已重置，請重新確認後再送出',
       toastResolveDivergent: '請先裁定所有分歧項目',
@@ -65,15 +65,28 @@
       wsArbitrationSubmitSuccess: '仲裁已提交',
       arbitrationChoiceA: 'A・標記員',
       arbitrationChoiceB: 'B・審核員',
+      arbitrationQuorum: '已提交審核員 {x} 位 · 定稿門檻 {n} 位 · 嚴格多數需 > {th} 票',
+      arbitrationVoteTally: '{value}：{count} 票（{pct}%）',
+      arbitrationVoteAnnotator: '標記員原答案',
+      arbitrationVoteDistSep: '：',
+      arbitrationVoteReasonEvenTie: '未收斂原因：{dist} 平手，沒有值取得嚴格多數（需 > {th} 票）',
+      arbitrationVoteReasonAllDivergent: '未收斂原因：{dist} 全數分歧，沒有值取得嚴格多數（需 > {th} 票）',
+      arbitrationVoteReasonNoMajority: '未收斂原因：票數分布 {dist}，沒有值取得嚴格多數（需 > {th} 票）',
+      arbitrationVoteReasonSingleReviewer: '未收斂原因：僅 1 位審核員提出異議，單一審核員不足以推翻標記員答案',
       historyActionOverridden: '已覆寫',
       historyActionGoldConfirmed: '已確認標準答案',
       historyActionGoldReopened: '重新開放標準答案',
       unitCtxRunDry: '試標',
       unitCtxRunOfficial: '正式標記',
-      unitCtxThreshold: '審核門檻 {n} 位審核員',
-      unitCtxAnnotator: '標記員 {id}',
-      unitCtxRoster: '本樣本 {m} 位標記員',
-      unitCtxReviewed: '已審 {x} / {n}',
+      crumbWorkAreaReviewer: '審核作業',
+      crumbWorkAreaAnnotator: '標記作業',
+      crumbTaskTpl: '{name}（{run}）',
+      crumbUnitTpl: '審核單位 {sample} · {annotator}',
+      crumbSamplePosTpl: '樣本 {i} / {n}',
+      unitCtxThreshold: '定稿門檻 {x} / {n} 位審核員',
+      wsSampleGroupCount: '{n} 位標記員',
+      wsSampleGroupAria: '樣本 {sample}，{n} 位標記員',
+      wsSampleUnitAria: '樣本 {sample}，標記員 {annotator}，{state}',
       unitStatePending: '待審',
       unitStateApproved: '已同意',
       unitStateModified: '已修改',
@@ -85,20 +98,39 @@
       reviewFinalizedNote: '此審核單位已達定稿門檻，結果為唯讀。',
       finalizedVoteReviewer: '審核員',
       finalizedVoteSelf: '你',
+      unitStateInterimNote: '未達定稿門檻 {x} / {n}',
+      unitStateDisputedNote: '未定稿，待仲裁',
+      trackAria: '審核單位狀態',
+      trackMarker: '目前：',
+      unitStateFinalizedNote: '已鎖定',
+      unitStateAria: '{state}，已有 {x} 位審核員／共需 {n} 位',
+      unitStateAriaFinalized: '{state}，已達 {n} 位審核員門檻，內容已鎖定',
+      reviewOriginalAnswerLabel: '標記員原答案：',
+      reviewCorrectedAnswerLabel: 'Reviewer 修正後答案：',
+      summaryTitle: '送出前確認',
+      summaryNoteApproveUnchanged: '通過且未修改：將保存與標記員原答案相同的 reviewer answer。',
+      summaryNoteApproveChanged: '通過的是您修正後的答案（非標記員原答案）：將保存修正後的 reviewer answer，並記錄為差異，納入爭議推導。',
+      summaryNoteRejectUnchanged: '退回但未修改答案：將保存與標記員原答案相同的 reviewer answer，並記錄退回決策。',
+      summaryNoteRejectChanged: '退回並修改答案：將保存您修正後的 reviewer answer，並記錄退回決策與差異，納入爭議推導。',
+      summaryNoteUndecided: '尚未決策：此輸出類型必須完成通過／退回才能送出。',
+      summaryPending: '尚未完成決策：{list}',
+      summaryPendingNone: '所有輸出類型皆已完成決策。',
+      summaryEffectOfficial: '送出後影響：任一輸出類型判定退回時，此正式標記單位會回到待標記並產生標記員重標待辦；全部通過則標記員狀態不變。',
+      summaryEffectDry: '送出後影響：試標退回不會個別回退標記員狀態，僅記錄審核決策與修正差異，品質問題由任務層級 IAA 閘門與下一輪試標處理。',
+      toastReviewDecisionResetOnEdit: '直接修正的值已變更，對應的通過／退回決策已重置，請重新確認後再送出',
     },
     en: {
       sampleListTitle: 'Samples',
-      noteLabel: 'Notes (optional)',
-      notePlaceholder: 'Describe special cases here...',
       submitLabel: 'Submit',
       saveLabel: 'Save draft',
       wsSaveSuccess: 'Saved',
       wsPrevBtnLabel: 'Previous',
       wsNextBtnLabel: 'Next',
       wsProgressText: '{done} / {total} submitted',
-      wsProgressTextReview: 'Reviewed {done} / {total}',
-      wsAutosaveSaved: 'Draft auto-saved',
-      wsAutosaveSaving: 'Saving…',
+      wsProgressTextReview: 'My review submissions {done} / {total} review units',
+      wsAutosaveInitial: 'Not saved yet',
+      wsAutosaveDirty: 'Unsaved changes',
+      wsAutosaveSavedAt: 'Last saved at {time}',
       wsTabGuideline: 'Guidelines & Files',
       wsTabHistory: 'History',
       wsStatusSubmitted: 'Submitted',
@@ -114,6 +146,7 @@
       mobileDrawerTitle: 'Guidelines & Files',
       guidelineImageModalCloseAria: 'Close image preview',
       guidelinePdfModalCloseAria: 'Close PDF preview',
+      guidelineMdModalCloseAria: 'Close Markdown preview',
       wsSubmitIncomplete: 'Please answer every output before submitting',
       wsSubmitSuccess: 'Submitted',
       reviewSubmitLabel: 'Submit review',
@@ -121,8 +154,8 @@
       reviewRejectLabel: 'Reject',
       wsReviewSubmitSuccess: 'Review submitted',
       reviewNoAnswer: '(none)',
-      reviewNote: 'Approve: this annotation is valid. Reject: the sample returns to pending and the annotator must redo it.',
-      reviewCorrectionTitle: 'Direct correction',
+      reviewNote: 'Approve: accept this annotation. Reject: records the review decision and any correction, which is a different level of effect from rolling back the annotator status -- in an official run a reject returns the sample to pending and creates a re-annotation task for the annotator; in a dry run a reject leaves the annotator status unchanged, and quality issues are handled by the IAA gate and the next dry run.',
+      reviewCorrectionTitle: "Direct correction (reviewer's corrected answer)",
       toastSelectDecision: 'Please decide on every annotator before submitting',
       toastReviewCorrectionReset: 'The direct correction was lost on reload, so the matching approve/reject decision was reset -- please re-confirm before submitting',
       toastResolveDivergent: 'Please resolve every divergent item first',
@@ -135,15 +168,28 @@
       wsArbitrationSubmitSuccess: 'Arbitration submitted',
       arbitrationChoiceA: 'A · Annotator',
       arbitrationChoiceB: 'B · Reviewer',
+      arbitrationQuorum: 'Submitted reviewers {x} · finalization threshold {n} · strict majority needs > {th} votes',
+      arbitrationVoteTally: '{value}: {count} votes ({pct}%)',
+      arbitrationVoteAnnotator: "annotator's original answer",
+      arbitrationVoteDistSep: ' : ',
+      arbitrationVoteReasonEvenTie: 'Not converged: {dist} tie, no value reached a strict majority (needs > {th} votes)',
+      arbitrationVoteReasonAllDivergent: 'Not converged: {dist} all divergent, no value reached a strict majority (needs > {th} votes)',
+      arbitrationVoteReasonNoMajority: 'Not converged: vote split {dist}, no value reached a strict majority (needs > {th} votes)',
+      arbitrationVoteReasonSingleReviewer: 'Not converged: only one reviewer dissented, and a single reviewer cannot outvote the annotator',
       historyActionOverridden: 'Overridden',
       historyActionGoldConfirmed: 'Gold confirmed',
       historyActionGoldReopened: 'Gold reopened',
       unitCtxRunDry: 'Dry Run',
       unitCtxRunOfficial: 'Official Run',
-      unitCtxThreshold: 'Review quorum: {n} reviewer(s)',
-      unitCtxAnnotator: 'Annotator {id}',
-      unitCtxRoster: '{m} annotators on this sample',
-      unitCtxReviewed: 'Reviewed {x} / {n}',
+      crumbWorkAreaReviewer: 'Review',
+      crumbWorkAreaAnnotator: 'Annotate',
+      crumbTaskTpl: '{name} ({run})',
+      crumbUnitTpl: 'Review unit {sample} · {annotator}',
+      crumbSamplePosTpl: 'Sample {i} of {n}',
+      unitCtxThreshold: 'Finalize threshold {x} / {n} reviewers',
+      wsSampleGroupCount: '{n} annotators',
+      wsSampleGroupAria: 'Sample {sample}, {n} annotators',
+      wsSampleUnitAria: 'Sample {sample}, annotator {annotator}, {state}',
       unitStatePending: 'Pending review',
       unitStateApproved: 'Approved',
       unitStateModified: 'Modified',
@@ -155,6 +201,26 @@
       reviewFinalizedNote: 'This review unit has met its finalization threshold; results are read-only.',
       finalizedVoteReviewer: 'Reviewer',
       finalizedVoteSelf: 'you',
+      unitStateInterimNote: '{x} / {n} toward finalize threshold',
+      unitStateDisputedNote: 'not finalized, awaiting arbitration',
+      trackAria: 'Review unit status',
+      trackMarker: 'Now:',
+      unitStateFinalizedNote: 'locked',
+      unitStateAria: '{state}, {x} of {n} required reviewers',
+      unitStateAriaFinalized: '{state}, met the {n}-reviewer threshold, locked',
+      reviewOriginalAnswerLabel: "Annotator's original answer: ",
+      reviewCorrectedAnswerLabel: "Reviewer's corrected answer: ",
+      summaryTitle: 'Confirm before submitting',
+      summaryNoteApproveUnchanged: 'Approved with no edit: the stored reviewer answer will be identical to the annotator’s original answer.',
+      summaryNoteApproveChanged: 'What you approve is your corrected answer, not the annotator’s original: the corrected reviewer answer is stored and recorded as a difference feeding dispute derivation.',
+      summaryNoteRejectUnchanged: 'Rejected with no edit: the stored reviewer answer will be identical to the annotator’s original answer, alongside the reject decision.',
+      summaryNoteRejectChanged: 'Rejected with an edit: your corrected reviewer answer is stored alongside the reject decision and recorded as a difference feeding dispute derivation.',
+      summaryNoteUndecided: 'Not decided yet: this output type needs an approve/reject before you can submit.',
+      summaryPending: 'Still undecided: {list}',
+      summaryPendingNone: 'Every output type has been decided.',
+      summaryEffectOfficial: 'After submitting: if any output type is rejected, this official-run unit returns to pending and creates a re-annotation task for the annotator; if everything is approved the annotator status is unchanged.',
+      summaryEffectDry: 'After submitting: a dry-run reject does not roll back the annotator status individually; it only records the review decision and any correction, and quality issues are handled by the task-level IAA gate and the next dry run.',
+      toastReviewDecisionResetOnEdit: 'The direct correction changed, so the matching approve/reject decision was reset -- please re-confirm before submitting',
     },
   };
   if (window.TASK_CONFIG_I18N) {
@@ -256,6 +322,7 @@
   window.revalidateCurrentStep = revalidateCurrentStep;
   window.showFieldError = showFieldError;
   window.showToast = showToast;
+  window.renderMarkdown = renderMarkdown;
   window.track = track;
   window.onChipSelectionChange = onChipSelectionChange;
   window.showTaxonomyDeleteModal = showTaxonomyDeleteModal;
@@ -1272,7 +1339,101 @@
     });
   }
 
+  /*
+   * Entry breadcrumb (issue #456, FR-080). The workspace shell carries no
+   * page header, so without this nothing on screen names the task or the
+   * run: FR-064's context banner is scoped to one review unit and never
+   * carries the task name, leaving two deep-linked demo tasks visually
+   * identical. Every level is derived from the URL context, so a cold deep
+   * link renders the same trail as an in-app navigation (FR-080 AC-4.31).
+   *
+   * Level 1 links to the dashboard rather than to a task-less
+   * annotation-list.html, because that URL is a not-found state whose own
+   * recovery CTA already points at the dashboard.
+   */
+  /* FR-081 (issue #456 AC-4): annotation-list.html's UXC-11 view state rides
+     in on the URL and has to ride back out, or a return link drops the user
+     on an unfiltered page 1 -- exactly the page someone who filtered their
+     way to this unit does not want. The other two return paths (the sidebar's
+     標記作業 link and boot()'s unknown-task_id redirect) forward
+     window.location.search verbatim and inherit it for free; the paths that
+     rebuild their query from scratch all come through here, so every
+     "back to the list" on screen resolves to the same place. */
+  var LIST_VIEW_STATE_KEYS = ['status', 'q', 'limit', 'offset'];
+
+  function buildListReturnUrl() {
+    var listParams = new URLSearchParams();
+    listParams.set('task_id', currentProfile.id);
+    listParams.set('role', currentRole);
+    listParams.set('run_type', currentRunType);
+    var incoming = new URLSearchParams(window.location.search);
+    LIST_VIEW_STATE_KEYS.forEach(function (key) {
+      var value = incoming.get(key);
+      if (value) listParams.set(key, value);
+    });
+    return 'annotation-list.html?' + listParams.toString();
+  }
+
+  function renderEntryBreadcrumb() {
+    var nav = document.getElementById('entryBreadcrumb');
+    if (!nav) return;
+    nav.innerHTML = '';
+
+    appendCrumbLink(nav, '../dashboard/dashboard.html',
+      t(currentRole === 'reviewer' ? 'crumbWorkAreaReviewer' : 'crumbWorkAreaAnnotator'));
+    appendCrumbSep(nav);
+    appendCrumbLink(nav, buildListReturnUrl(),
+      t('crumbTaskTpl')
+        .replace('{name}', (state.lang === 'en' && currentProfile.nameEn)
+          ? currentProfile.nameEn : currentProfile.nameZh)
+        .replace('{run}', t(currentRunType === 'official_run' ? 'unitCtxRunOfficial' : 'unitCtxRunDry')));
+    appendCrumbSep(nav);
+
+    /* An annotator IS the annotator, so naming them back at themselves adds
+       a level that carries no information. They also get a QUEUE POSITION
+       rather than the raw record id: on seeds like T011/T012 the id field is
+       unassigned metadata (`ID`, `article_id`), and Data Fairness forbids
+       unassigned fields from reaching annotator-facing DOM (FR-023/FR-024M).
+       A reviewer addresses a named unit and is not under that restriction. */
+    var current = document.createElement('span');
+    current.setAttribute('aria-current', 'page');
+    if (currentRole === 'reviewer') {
+      current.textContent = t('crumbUnitTpl')
+        .replace('{sample}', currentSampleId)
+        .replace('{annotator}', currentAnnotatorId());
+    } else {
+      var records = currentProfile.datasetRecords || [];
+      var idx = 0;
+      for (var i = 0; i < records.length; i += 1) {
+        if (window.LabelSuiteAnnotationWorkspaceData.getRecordId(records[i], i) === currentSampleId) {
+          idx = i;
+          break;
+        }
+      }
+      current.textContent = t('crumbSamplePosTpl')
+        .replace('{i}', String(idx + 1))
+        .replace('{n}', String(records.length));
+    }
+    nav.appendChild(current);
+  }
+
+  function appendCrumbLink(nav, href, text) {
+    var link = document.createElement('a');
+    link.href = href;
+    link.textContent = text;
+    nav.appendChild(link);
+  }
+
+  function appendCrumbSep(nav) {
+    var sep = document.createElement('span');
+    sep.className = 'breadcrumb-sep';
+    sep.setAttribute('aria-hidden', 'true');
+    sep.textContent = '\u203A';
+    nav.appendChild(sep);
+  }
+
   function renderWorkspace() {
+    renderEntryBreadcrumb();
     if (currentRole === 'reviewer') {
       renderReviewerWorkspace();
     } else {
@@ -1283,6 +1444,7 @@
     renderSampleList();
     renderSampleNav();
     renderHistoryPanel();
+    renderAutosaveStatus();
   }
 
   /* The unit the left column, the nav and the review card all address
@@ -1394,30 +1556,64 @@
     if (nextBtn) nextBtn.disabled = idx >= total - 1;
   }
 
-  /* Bottom-bar autosave indicator (AC-2.6 / SC-007): a transient 儲存中…
-     flash that settles back to 草稿已自動儲存. Purely visual in the
-     prototype -- actual draft persistence stays on 儲存草稿 (handleSave). */
-  var autosaveTimer = null;
-  function triggerAutosave() {
+  /* Bottom-bar autosave indicator (issue #470): three honest, per-sample
+     states -- INITIAL (never saved/submitted, no edit since load), DIRTY
+     (edited since load, not yet persisted) and SAVED (the time of an
+     actual persisted write, read back via getSampleSavedAt -- never a
+     fabricated flash). currentSampleDirty tracks only the CURRENTLY
+     DISPLAYED sample so a sample switch cannot carry over another
+     sample's dirty state or timestamp; the tab-scoped hasUnsavedChanges
+     flag below keeps its own separate UXC-03 navigation-guard meaning.
+     Hidden entirely for role=reviewer, who has no 儲存草稿 button and
+     persists through persistReviewDraft() instead. */
+  var currentSampleDirty = false;
+  function renderAutosaveStatus() {
+    var statusEl = document.querySelector('.autosave-status');
+    if (currentRole === 'reviewer') {
+      if (statusEl) statusEl.classList.add('hidden');
+      return;
+    }
+    if (statusEl) statusEl.classList.remove('hidden');
     var dot = document.getElementById('wsAutosaveDot');
     if (!dot) return;
-    dot.className = 'autosave-dot saving';
-    setText('wsAutosaveLabel', t('wsAutosaveSaving'));
-    clearTimeout(autosaveTimer);
-    autosaveTimer = setTimeout(function () {
+    if (currentSampleDirty) {
+      dot.className = 'autosave-dot dirty';
+      setText('wsAutosaveLabel', t('wsAutosaveDirty'));
+      return;
+    }
+    var savedAt = window.LabelSuiteAnnotationWorkspaceData.getSampleSavedAt(
+      currentProfile.id,
+      currentRole,
+      currentRunType,
+      currentSampleId,
+      currentIdentity
+    );
+    if (savedAt) {
       dot.className = 'autosave-dot saved';
-      setText('wsAutosaveLabel', t('wsAutosaveSaved'));
-    }, 700);
+      setText('wsAutosaveLabel', t('wsAutosaveSavedAt').replace('{time}', formatHistoryTime(savedAt)));
+    } else {
+      dot.className = 'autosave-dot initial';
+      setText('wsAutosaveLabel', t('wsAutosaveInitial'));
+    }
   }
 
   /* UXC-03: browser-navigation guard while the work column holds edits
-     that 儲存草稿/提交 has not persisted (the autosave indicator is
-     visual-only in the prototype — see triggerAutosave). Any interaction
-     inside .col-content counts as an edit signal; the three persistence
-     paths clear it. */
+     that 儲存草稿/提交 has not persisted (see renderAutosaveStatus for the
+     honest, per-sample visible indicator this flag no longer doubles as).
+     Any interaction inside .col-content counts as an edit signal; the
+     three persistence paths clear it. */
   var hasUnsavedChanges = false;
-  function markUnsaved() { hasUnsavedChanges = true; }
-  function clearUnsaved() { hasUnsavedChanges = false; }
+  function markUnsaved() {
+    hasUnsavedChanges = true;
+    /* issue #470: the visible indicator must flip to DIRTY on the same
+       interaction that arms the navigation guard, not lag behind it. */
+    currentSampleDirty = true;
+    renderAutosaveStatus();
+  }
+  function clearUnsaved() {
+    hasUnsavedChanges = false;
+    currentSampleDirty = false;
+  }
   var workColumn = document.querySelector('.col-content');
   if (workColumn) {
     workColumn.addEventListener('input', markUnsaved, true);
@@ -1508,11 +1704,13 @@
     var record = findRecordById(sampleId) || currentProfile.datasetRecords[0];
     if (!record) return;
     var recordIdx = currentProfile.datasetRecords.indexOf(record);
-    /* SC-007: sample switch is an autosave trigger; skip the very first
-       (boot) call so the page doesn't open on a 儲存中… flash. */
-    if (currentSampleId) triggerAutosave();
     snapshotCurrentSample();
     currentSampleId = window.LabelSuiteAnnotationWorkspaceData.getRecordId(record, recordIdx);
+    /* issue #470: the autosave indicator is derived PER SAMPLE -- a fresh
+       selection starts undirtied regardless of the outgoing sample's
+       state; renderWorkspace() below recomputes INITIAL/SAVED for the
+       newly loaded sample from persisted data. */
+    currentSampleDirty = false;
     if (annotatorId && currentRole === 'reviewer') currentIdentity.annotatorId = annotatorId;
     reviewRowSeeded = {};
     state.datasetRawFirstRow = buildAnnotatorRecord(record, currentProfile);
@@ -1546,6 +1744,63 @@
     window.history.replaceState(null, '', window.location.pathname + '?' + params.toString());
   }
 
+  /* Reviewer-only sample group wrapper (issue #455). One review unit per
+     row (FR-056) means a 3-annotator sample renders three rows whose ONLY
+     difference is the annotator account -- the record snippet above it is
+     byte-identical three times over, and in a 256px column it is the
+     snippet that wins the reviewer's attention. Hoisting the sample
+     identity plus the shared snippet into one header per sample lets each
+     row below it carry only what actually differs (annotator + review
+     state), and gives the sample boundary a structural marker instead of
+     asking the reviewer to diff three lines of small print.
+     `role="group"` + `aria-label` is the ARIA-sanctioned way to partition a
+     listbox, so the grouping is exposed to AT rather than being purely
+     visual (the annotation-list counterpart, FR-067, only had table rows to
+     work with and had to settle for a border + de-emphasis). */
+  function buildSampleGroup(record, recordId, unitCount) {
+    var group = document.createElement('div');
+    group.className = 'sample-group';
+    group.setAttribute('role', 'group');
+    group.setAttribute('data-testid', 'ws-sample-group');
+    group.setAttribute('data-sample-id', recordId);
+    group.setAttribute(
+      'aria-label',
+      t('wsSampleGroupAria').replace('{sample}', recordId).replace('{n}', String(unitCount))
+    );
+
+    var header = document.createElement('div');
+    header.className = 'sample-group-header';
+
+    var title = document.createElement('div');
+    title.className = 'sample-group-title';
+    var idEl = document.createElement('span');
+    idEl.className = 'sample-group-id';
+    idEl.setAttribute('data-testid', 'ws-sample-group-id');
+    /* The column is narrow enough to ellipsise a realistic sample_id, so the
+       full value has to stay reachable without leaving the page. */
+    idEl.setAttribute('title', recordId);
+    idEl.textContent = recordId;
+    var countEl = document.createElement('span');
+    countEl.className = 'sample-group-count';
+    countEl.setAttribute('data-testid', 'ws-sample-group-count');
+    countEl.textContent = t('wsSampleGroupCount').replace('{n}', String(unitCount));
+    title.appendChild(idEl);
+    title.appendChild(countEl);
+    header.appendChild(title);
+
+    var snippet = document.createElement('div');
+    snippet.className = 'sample-group-snippet';
+    snippet.setAttribute('data-testid', 'ws-sample-group-snippet');
+    snippet.textContent = window.LabelSuiteAnnotationWorkspaceData.getRecordPreviewText(
+      record,
+      currentProfile.fieldRoleMap
+    );
+    header.appendChild(snippet);
+
+    group.appendChild(header);
+    return group;
+  }
+
   function renderSampleList() {
     var listEl = document.getElementById('sampleList');
     var countEl = document.getElementById('sampleListCount');
@@ -1566,6 +1821,16 @@
       currentRole === 'reviewer' || !runCtx || typeof runCtx.total !== 'number' ? units.length : runCtx.total;
     if (countEl) countEl.textContent = totalCount + (state.lang === 'zh' ? ' 筆' : ' items');
 
+    /* Group size is the roster size of that sample, counted off the same
+       flattened `units` the rows come from -- never re-derived from the
+       profile, so the header can never disagree with the rows under it. */
+    var unitsPerSample = {};
+    units.forEach(function (unit) {
+      unitsPerSample[unit.recordId] = (unitsPerSample[unit.recordId] || 0) + 1;
+    });
+    var openGroupId = null;
+    var openGroupEl = null;
+
     units.forEach(function (unit, idx) {
       var record = unit.record;
       var recordId = unit.recordId;
@@ -1578,13 +1843,19 @@
         recordId,
         unitIdentity(unit)
       );
+      var isActive = isCurrentUnit(unit);
       var item = document.createElement('button');
       item.type = 'button';
-      item.className = 'sample-item' + (isCurrentUnit(unit) ? ' active' : '');
+      item.className = 'sample-item' + (isActive ? ' active' : '');
       if (status === 'submitted') item.classList.add('status-submitted');
       else if (status === 'saved') item.classList.add('status-saved');
       item.setAttribute('data-testid', 'ws-sample-item');
       item.setAttribute('data-submitted', status === 'submitted' ? 'true' : 'false');
+      /* Both halves of the review unit are addressable on the entry itself
+         (issue #455), so "which unit am I on" no longer depends on reading
+         two truncated text spans. */
+      item.setAttribute('data-sample-id', recordId);
+      item.setAttribute('data-annotator-id', unit.annotatorId);
 
       var indexBadge = document.createElement('span');
       indexBadge.className = 'sample-index';
@@ -1593,31 +1864,38 @@
 
       var meta = document.createElement('div');
       meta.className = 'sample-meta';
-      var snippet = document.createElement('div');
-      snippet.className = 'sample-snippet';
-      snippet.textContent = window.LabelSuiteAnnotationWorkspaceData.getRecordPreviewText(
-        record,
-        currentProfile.fieldRoleMap
-      );
-      meta.appendChild(snippet);
-      /* Three consecutive reviewer entries share one snippet, so the entry
-         has to name the unit it stands for (FR-056). */
-      if (currentRole === 'reviewer') {
+      /* Reviewer entries drop the snippet: it is identical for every unit of
+         the sample and now lives once in the group header (issue #455).
+         Annotator entries keep it -- one entry per record, nothing repeats. */
+      if (currentRole !== 'reviewer') {
+        var snippet = document.createElement('div');
+        snippet.className = 'sample-snippet';
+        snippet.textContent = window.LabelSuiteAnnotationWorkspaceData.getRecordPreviewText(
+          record,
+          currentProfile.fieldRoleMap
+        );
+        meta.appendChild(snippet);
+      } else {
+        /* The annotator leads (it is what distinguishes the units of one
+           group); the sample ID stays as a muted trailing echo so the entry
+           remains self-describing when read out of its group context. */
         var unitLine = document.createElement('div');
         unitLine.className = 'sample-unit-line';
-        var unitId = document.createElement('span');
-        unitId.className = 'sample-unit-id';
-        unitId.textContent = recordId;
-        var unitSep = document.createElement('span');
-        unitSep.className = 'sample-unit-sep';
-        unitSep.textContent = '·';
         var unitAnnotator = document.createElement('span');
         unitAnnotator.className = 'sample-unit-annotator';
         unitAnnotator.setAttribute('data-testid', 'ws-sample-annotator');
+        unitAnnotator.setAttribute('title', unit.annotatorId);
         unitAnnotator.textContent = unit.annotatorId;
-        unitLine.appendChild(unitId);
-        unitLine.appendChild(unitSep);
+        var unitSep = document.createElement('span');
+        unitSep.className = 'sample-unit-sep';
+        unitSep.textContent = '·';
+        var unitId = document.createElement('span');
+        unitId.className = 'sample-unit-id';
+        unitId.setAttribute('title', recordId);
+        unitId.textContent = recordId;
         unitLine.appendChild(unitAnnotator);
+        unitLine.appendChild(unitSep);
+        unitLine.appendChild(unitId);
         meta.appendChild(unitLine);
       }
       var statusLabel = document.createElement('span');
@@ -1633,11 +1911,35 @@
           : status === 'submitted' ? t('wsStatusSubmitted') : status === 'saved' ? t('wsStatusSaved') : t('wsStatusPending');
       meta.appendChild(statusLabel);
       item.appendChild(meta);
+      /* The visible entry no longer repeats the snippet, so its accessible
+         name is spelled out rather than left to concatenated text nodes --
+         a screen-reader user must still hear the full sample AND annotator,
+         neither of which is guaranteed to be untruncated on screen. */
+      if (currentRole === 'reviewer') {
+        item.setAttribute(
+          'aria-label',
+          t('wsSampleUnitAria')
+            .replace('{sample}', recordId)
+            .replace('{annotator}', unit.annotatorId)
+            .replace('{state}', statusLabel.textContent)
+        );
+      }
 
       item.addEventListener('click', function () {
         selectSample(recordId, unit.annotatorId);
       });
-      listEl.appendChild(item);
+
+      if (currentRole !== 'reviewer') {
+        listEl.appendChild(item);
+        return;
+      }
+      if (openGroupId !== recordId) {
+        openGroupId = recordId;
+        openGroupEl = buildSampleGroup(record, recordId, unitsPerSample[recordId]);
+        listEl.appendChild(openGroupEl);
+      }
+      if (isActive) openGroupEl.classList.add('has-active');
+      openGroupEl.appendChild(item);
     });
   }
 
@@ -1736,7 +2038,7 @@
       currentIdentity
     );
     clearUnsaved();
-    triggerAutosave();
+    renderAutosaveStatus();
     renderSampleList();
     renderHistoryPanel();
     showToast(t('wsSaveSuccess'));
@@ -1783,6 +2085,10 @@
     renderSampleList();
     renderSampleNav();
     renderHistoryPanel();
+    /* issue #470: a submit is a real persisted write too (getSampleSavedAt
+       falls back to submittedAt), so the indicator must reflect it even
+       when the annotator submits without ever clicking 儲存草稿 first. */
+    renderAutosaveStatus();
     showToast(t('wsSubmitSuccess'));
     state.submitBusy = false;
     if (submitBtnEl) submitBtnEl.disabled = false;
@@ -2130,6 +2436,29 @@
     return span;
   }
 
+  /* issue #453 (AC-3.42): issue #399 gave the decision buttons an
+     aria-label, which fixed the screen-reader path only -- for a sighted
+     reviewer the meaning still rode entirely on a '✕' / '✓' glyph. The
+     visible label is the same string as the accessible name, so aria-label
+     keeps winning the accessible-name computation and issue #399's
+     getByRole('button', { name }) contract is unchanged. */
+  function buildLabelSpan(text) {
+    var span = document.createElement('span');
+    span.className = 'rv-btn-text';
+    span.textContent = text;
+    return span;
+  }
+
+  /* The reviewer's live answer for outKey, read off the same engine state
+     the correction control writes to. */
+  function currentRowAnswer(outKey) {
+    return describeOutputAnswer(outKey, {
+      previewState: state.previewState,
+      previewEntities: state.previewEntities,
+      previewTriples: state.previewTriples,
+    });
+  }
+
   /* issue #398: whether outKey's current correction control value differs
      from the reviewed annotator's original answer. FR-014S deliberately
      does NOT persist the correction's own value across a reload -- it
@@ -2137,12 +2466,7 @@
      recorded while this is true cannot be trusted to still match what is
      on screen after a reload; see restoreReviewDraft() below. */
   function isRowCorrected(outKey) {
-    var corrected = describeOutputAnswer(outKey, {
-      previewState: state.previewState,
-      previewEntities: state.previewEntities,
-      previewTriples: state.previewTriples,
-    });
-    return corrected !== (reviewRowOriginals[outKey] || '');
+    return currentRowAnswer(outKey) !== (reviewRowOriginals[outKey] || '');
   }
 
   /* Reviewer draft persistence (issue #196, CONT-03 / role symmetry with the
@@ -2181,6 +2505,7 @@
        button with no accessible name at all -- give it one. */
     rejectBtn.setAttribute('aria-label', t('reviewRejectLabel'));
     rejectBtn.appendChild(buildIconSpan('✕'));
+    rejectBtn.appendChild(buildLabelSpan(t('reviewRejectLabel')));
 
     var approveBtn = document.createElement('button');
     approveBtn.type = 'button';
@@ -2188,6 +2513,7 @@
     approveBtn.setAttribute('data-testid', 'ws-review-row-approve');
     approveBtn.setAttribute('aria-label', t('reviewApproveLabel'));
     approveBtn.appendChild(buildIconSpan('✓'));
+    approveBtn.appendChild(buildLabelSpan(t('reviewApproveLabel')));
 
     function refresh() {
       var decision = reviewRowDecisions[decisionKey(outKey, rowName)];
@@ -2196,9 +2522,13 @@
       rejectBtn.setAttribute('aria-pressed', decision === 'reject' ? 'true' : 'false');
       rejectBtn.classList.toggle('mini-btn-active-reject', decision === 'reject');
     }
+    /* issue #453 (AC-3.42): snapshot the answer the decision was made
+       against, so syncDecisionsWithCorrections() can tell a later edit of
+       that answer apart from an untouched one. */
     approveBtn.addEventListener('click', function () {
       var key = decisionKey(outKey, rowName);
       reviewRowDecisions[key] = reviewRowDecisions[key] === 'approve' ? null : 'approve';
+      reviewDecisionAnswers[key] = currentRowAnswer(outKey);
       refresh();
       persistReviewDraft();
       if (onChange) onChange();
@@ -2206,6 +2536,7 @@
     rejectBtn.addEventListener('click', function () {
       var key = decisionKey(outKey, rowName);
       reviewRowDecisions[key] = reviewRowDecisions[key] === 'reject' ? null : 'reject';
+      reviewDecisionAnswers[key] = currentRowAnswer(outKey);
       refresh();
       persistReviewDraft();
       if (onChange) onChange();
@@ -2235,13 +2566,18 @@
     var cancels = keys.every(function (key) {
       return reviewRowDecisions[key] === decision;
     });
-    keys.forEach(function (key) {
+    state.selectedOutputTypes.forEach(function (outKey) {
+      var key = decisionKey(outKey, rowName);
       reviewRowDecisions[key] = cancels ? null : decision;
+      /* Same AC-3.42 snapshot the click handlers take -- the shortcut is
+         the other way to reach the exact same decision. */
+      reviewDecisionAnswers[key] = currentRowAnswer(outKey);
     });
     reviewDecisionRefreshers.forEach(function (refresh) {
       refresh();
     });
     persistReviewDraft();
+    renderReviewSubmitSummary();
   }
 
   /* free_text corrections are typed, so `a` and `r` are ordinary input the
@@ -2398,16 +2734,41 @@
 
   /* testidSuffix defaults to outKey; the merged span card passes 'span'
      because its single panel stands in for both of its output types. */
-  function appendCorrectionControl(row, outKey, testidSuffix) {
+  function appendCorrectionControl(row, outKey, testidSuffix, originKeys) {
+    /* issue #453 (AC-3.42): the correction control is display AND editor in
+       one, so the moment a reviewer edits it the annotator's original
+       answer is nowhere on screen and "what am I approving?" has no answer.
+       Name the original next to the editor, and name the editor as the
+       reviewer's corrected answer. originKeys covers the FR-014N merged
+       span card, where one panel stands in for two output types. */
+    (originKeys || [outKey]).forEach(function (originKey) {
+      var origin = document.createElement('div');
+      origin.className = 'rv-answer-origin';
+      origin.setAttribute('data-testid', 'ws-review-original-answer');
+      origin.setAttribute('data-outkey', originKey);
+      var originalAnswer = reviewRowOriginals[originKey] || '';
+      origin.setAttribute('data-answer', originalAnswer);
+      origin.textContent =
+        t('reviewOriginalAnswerLabel') + (originalAnswer || t('reviewNoAnswer'));
+      row.appendChild(origin);
+    });
+
     var correctionTitle = document.createElement('div');
     correctionTitle.className = 'rv-correction-title';
+    correctionTitle.setAttribute('data-testid', 'ws-review-corrected-answer-title');
     correctionTitle.textContent = t('reviewCorrectionTitle');
     row.appendChild(correctionTitle);
 
-    /* issue #399: reviewNote explains what approve/reject actually do (a
-       reject rolls the sample back to pending for the annotator to redo),
-       but was defined in I18N and never rendered anywhere -- render it so
-       reviewers can actually read it before deciding. */
+    /* issue #399: reviewNote explains what approve/reject actually do, but
+       was defined in I18N and never rendered anywhere -- render it so
+       reviewers can actually read it before deciding.
+       issue #451 (FR-070/AC-3.40): that explanation used to promise the
+       annotator-status rollback unconditionally, while FR-014I scopes the
+       rollback to official_run (AC-3.15/AC-6.4). Since AC-3.33 forbids any
+       run_type presentation branch on the review card, the note stays ONE
+       run-type-invariant string that names both outcomes and separates the
+       review decision from the annotator-status rollback -- same shape as
+       the run-type-qualified sidebar shortcut label (issue #409). */
     var note = document.createElement('p');
     note.className = 'rv-review-note';
     note.setAttribute('data-testid', 'ws-review-note');
@@ -2494,6 +2855,172 @@
     return row;
   }
 
+  /* ── Pre-submit review summary (spec 015 v4.32.0, FR-077/AC-3.42,
+     issue #453) ──────────────────────────────────────────────────────
+     The direct correction (engine state) and the approve/reject decision
+     (reviewRowDecisions) are two independent stores that read as ONE
+     action on screen, so nothing told a reviewer whether 通過 accepts the
+     annotator's answer or the edited one, what a 退回 with no edit stores,
+     or what submitting does to the annotator's status. Two halves close
+     that gap:
+       (1) every decision records the answer it was made against, so a
+           later edit of that answer invalidates it instead of silently
+           riding along -- the live-edit twin of issue #398's reload path
+           (which stays as-is: FR-014S/AC-6.10 still excludes the
+           correction's own value from draft persistence);
+       (2) the submit area restates, per output type, the original answer,
+           the corrected answer, the decision and the submit consequence.
+     Placement is deliberate: the consequence line is run-type dependent,
+     and AC-3.33 forbids a run_type presentation branch on the REVIEW CARD.
+     Rendering it in the submit area keeps that contract intact -- the same
+     reason FR-064's run-type-aware context banner sits outside the card. */
+  var reviewDecisionAnswers = {};
+
+  /* AC-3.42: a decision must never outlive the value it judged. A restored
+     FR-014S draft (AC-6.10) carries no snapshot, and is only ever restored
+     when its correction was untouched -- so the freshly seeded answer IS
+     the value it was made against; adopt it rather than resetting it. */
+  function syncDecisionsWithCorrections() {
+    var rowName = currentAnnotatorId();
+    var reset = false;
+    state.selectedOutputTypes.forEach(function (outKey) {
+      var key = decisionKey(outKey, rowName);
+      if (!reviewRowDecisions[key]) return;
+      var answer = currentRowAnswer(outKey);
+      if (!(key in reviewDecisionAnswers)) {
+        reviewDecisionAnswers[key] = answer;
+        return;
+      }
+      if (reviewDecisionAnswers[key] === answer) return;
+      reviewRowDecisions[key] = null;
+      delete reviewDecisionAnswers[key];
+      reset = true;
+    });
+    if (!reset) return;
+    reviewDecisionRefreshers.forEach(function (refresh) {
+      refresh();
+    });
+    persistReviewDraft();
+    showToast(t('toastReviewDecisionResetOnEdit'), 'warning');
+  }
+
+  function appendSummaryLine(parent, testid, label, value) {
+    var line = document.createElement('div');
+    line.className = 'rv-summary-line';
+    line.setAttribute('data-testid', testid);
+    line.setAttribute('data-answer', value);
+    line.textContent = label + (value || t('reviewNoAnswer'));
+    parent.appendChild(line);
+  }
+
+  var SUMMARY_NOTE_KEYS = {
+    'approve-unchanged': 'summaryNoteApproveUnchanged',
+    'approve-changed': 'summaryNoteApproveChanged',
+    'reject-unchanged': 'summaryNoteRejectUnchanged',
+    'reject-changed': 'summaryNoteRejectChanged',
+    undecided: 'summaryNoteUndecided',
+  };
+
+  function buildSummaryRow(outKey, rowName) {
+    var decision = reviewRowDecisions[decisionKey(outKey, rowName)] || null;
+    var original = reviewRowOriginals[outKey] || '';
+    var corrected = currentRowAnswer(outKey);
+    var changed = corrected !== original;
+
+    var row = document.createElement('div');
+    row.className = 'rv-summary-row';
+    row.setAttribute('data-testid', 'ws-review-summary-row');
+    row.setAttribute('data-outkey', outKey);
+    row.setAttribute('data-decision', decision || 'none');
+    row.setAttribute('data-changed', changed ? 'true' : 'false');
+
+    var head = document.createElement('div');
+    head.className = 'rv-summary-head';
+    head.textContent = outKey;
+    row.appendChild(head);
+
+    appendSummaryLine(row, 'ws-review-summary-original', t('reviewOriginalAnswerLabel'), original);
+    appendSummaryLine(row, 'ws-review-summary-corrected', t('reviewCorrectedAnswerLabel'), corrected);
+
+    var kind = decision ? decision + '-' + (changed ? 'changed' : 'unchanged') : 'undecided';
+    var note = document.createElement('div');
+    note.className = 'rv-summary-note';
+    note.setAttribute('data-testid', 'ws-review-summary-note');
+    note.setAttribute('data-kind', kind);
+    note.textContent = t(SUMMARY_NOTE_KEYS[kind]);
+    row.appendChild(note);
+    return row;
+  }
+
+  function hideReviewSubmitSummary() {
+    var panel = document.getElementById('wsReviewSubmitSummary');
+    if (!panel) return;
+    while (panel.firstChild) panel.removeChild(panel.firstChild);
+    panel.classList.add('hidden');
+  }
+
+  function renderReviewSubmitSummary() {
+    var panel = document.getElementById('wsReviewSubmitSummary');
+    if (!panel) return;
+    hideReviewSubmitSummary();
+    if (currentRole !== 'reviewer' || !state.selectedOutputTypes.length) return;
+    var rowName = currentAnnotatorId();
+
+    var title = document.createElement('div');
+    title.className = 'rv-summary-title';
+    title.textContent = t('summaryTitle');
+    panel.appendChild(title);
+
+    var pendingKeys = [];
+    state.selectedOutputTypes.forEach(function (outKey) {
+      if (!reviewRowDecisions[decisionKey(outKey, rowName)]) pendingKeys.push(outKey);
+      panel.appendChild(buildSummaryRow(outKey, rowName));
+    });
+
+    var pending = document.createElement('p');
+    pending.className = 'rv-summary-pending';
+    pending.setAttribute('data-testid', 'ws-review-summary-pending');
+    pending.setAttribute('data-count', String(pendingKeys.length));
+    pending.textContent = pendingKeys.length
+      ? t('summaryPending').replace('{list}', pendingKeys.join('、'))
+      : t('summaryPendingNone');
+    panel.appendChild(pending);
+
+    var effect = document.createElement('p');
+    effect.className = 'rv-summary-effect';
+    effect.setAttribute('data-testid', 'ws-review-summary-effect');
+    effect.setAttribute('data-run-type', currentRunType);
+    effect.textContent = t(
+      currentRunType === 'official_run' ? 'summaryEffectOfficial' : 'summaryEffectDry'
+    );
+    panel.appendChild(effect);
+
+    panel.classList.remove('hidden');
+  }
+
+  /* The shared engine owns every correction control and exposes no change
+     hook, so mirror markUnsaved()'s delegated-capture approach on the
+     preview root and re-derive on the next tick, after the engine's own
+     handler has written the new value into state. Decision clicks land here
+     too, which is what keeps the summary in step with them. */
+  (function watchReviewEdits() {
+    var previewRoot = document.getElementById('annotationPreview');
+    if (!previewRoot) return;
+    var queued = false;
+    function schedule() {
+      if (currentRole !== 'reviewer' || queued) return;
+      queued = true;
+      setTimeout(function () {
+        queued = false;
+        syncDecisionsWithCorrections();
+        renderReviewSubmitSummary();
+      }, 0);
+    }
+    ['input', 'change', 'click'].forEach(function (eventName) {
+      previewRoot.addEventListener(eventName, schedule, true);
+    });
+  })();
+
   /* FR-014N: entity_recognition and relation_identification are two stages
      of ONE annotation action (mark the spans, then link them), and the
      engine already models them that way -- the relation panel it mounts is
@@ -2540,7 +3067,7 @@
       seedReviewRow(outKey, submission);
     });
 
-    var correction = appendCorrectionControl(row, 'relation_identification', 'span');
+    var correction = appendCorrectionControl(row, 'relation_identification', 'span', outKeys);
     dockDecisionsOnBypassRow(correction, decisionEls);
     return row;
   }
@@ -2595,6 +3122,54 @@
     return item.key === item.outKey ? item.outKey : item.outKey + ' · ' + item.key;
   }
 
+  /* Pre-decision dispute context (issue #454, FR-074): the A/B buttons alone
+     never said WHY the item is unresolved, so a 1:1 tie and a not-yet-met
+     quorum looked identical. Renders the aggregate tally and the failed
+     strict-majority condition derived by describeDisputeVotes() -- the same
+     derivation resolveDisputeConvergence() decides on, so the explanation
+     can never contradict the verdict. Aggregate only: no reviewer id or name
+     is ever attributed to a value, so the block is safe under blind review
+     (FR-062), and only submitted answers feed it (Data Fairness). */
+  var ARBITRATION_REASON_I18N_KEYS = {
+    even_tie: 'arbitrationVoteReasonEvenTie',
+    all_divergent: 'arbitrationVoteReasonAllDivergent',
+    no_majority: 'arbitrationVoteReasonNoMajority',
+    single_reviewer: 'arbitrationVoteReasonSingleReviewer',
+  };
+
+  function buildArbitrationVotesBlock(votes) {
+    var block = document.createElement('div');
+    block.setAttribute('data-testid', 'ws-arbitration-votes');
+    block.style.cssText = 'font-size:12px;color:var(--color-text-soft);margin-bottom:6px;';
+    votes.candidates.forEach(function (candidate) {
+      var label = formatDisputeValue(candidate.value);
+      var row = document.createElement('div');
+      row.setAttribute('data-testid', 'ws-arbitration-vote-tally');
+      row.setAttribute('data-value', label);
+      row.setAttribute('data-count', String(candidate.count));
+      if (candidate.isAnnotatorValue) row.setAttribute('data-annotator', 'true');
+      row.textContent = t('arbitrationVoteTally')
+        .replace('{value}', label)
+        .replace('{count}', String(candidate.count))
+        .replace('{pct}', String(votes.reviewerCount
+          ? Math.round((candidate.count / votes.reviewerCount) * 100)
+          : 0))
+        + (candidate.isAnnotatorValue ? ' · ' + t('arbitrationVoteAnnotator') : '');
+      block.appendChild(row);
+    });
+    var reason = document.createElement('div');
+    reason.setAttribute('data-testid', 'ws-arbitration-vote-reason');
+    reason.setAttribute('data-reason', votes.reason);
+    reason.style.cssText = 'margin-top:4px;';
+    reason.textContent = t(ARBITRATION_REASON_I18N_KEYS[votes.reason])
+      .replace('{dist}', votes.candidates.map(function (candidate) {
+        return String(candidate.count);
+      }).join(t('arbitrationVoteDistSep')))
+      .replace('{th}', String(votes.majorityThreshold));
+    block.appendChild(reason);
+    return block;
+  }
+
   function buildArbitrationChoiceButton(testid, label, value, onSelect) {
     var btn = document.createElement('button');
     btn.type = 'button';
@@ -2606,7 +3181,7 @@
     return btn;
   }
 
-  function buildArbitrationItemRow(item) {
+  function buildArbitrationItemRow(item, votes) {
     var itemId = disputeItemId(item);
     var row = document.createElement('div');
     row.setAttribute('data-testid', 'ws-arbitration-item');
@@ -2616,6 +3191,7 @@
     label.style.cssText = 'font-size:12px;font-weight:600;margin-bottom:6px;';
     label.textContent = disputeItemLabel(item);
     row.appendChild(label);
+    row.appendChild(buildArbitrationVotesBlock(votes));
 
     var group = document.createElement('div');
     group.className = 'rv-choice-group';
@@ -2712,6 +3288,23 @@
     note.textContent = t('arbitrationNote');
     card.appendChild(note);
 
+    var reviewerCount = data.readReviewerSubmissions(
+      currentProfile.id, currentRunType, currentSampleId, currentIdentity
+    ).length;
+
+    /* Submitted reviewers against the finalization threshold (issue #454):
+       without it "2 reviewers disagreed" and "the quorum is not met yet"
+       render identically, and the arbiter cannot tell which one they are
+       resolving. */
+    var quorum = document.createElement('div');
+    quorum.setAttribute('data-testid', 'ws-arbitration-quorum');
+    quorum.style.cssText = 'font-size:12px;color:var(--color-text-soft);margin:0 0 10px;';
+    quorum.textContent = t('arbitrationQuorum')
+      .replace('{x}', String(reviewerCount))
+      .replace('{n}', String(currentProfile.minReviewers || 1))
+      .replace('{th}', String(reviewerCount / 2));
+    card.appendChild(quorum);
+
     /* Read-only context: the annotator's full answers, so the arbiter sees
        the agreed parts around each disputed value. */
     var agreedTitle = document.createElement('div');
@@ -2729,9 +3322,6 @@
     var items = data.getDisputeItems(
       currentProfile.id, currentRunType, currentSampleId, currentIdentity, state.selectedOutputTypes
     );
-    var reviewerCount = data.readReviewerSubmissions(
-      currentProfile.id, currentRunType, currentSampleId, currentIdentity
-    ).length;
     var arbState = data.getArbitrationState(currentProfile.id, currentRunType, currentSampleId, currentIdentity);
     var openItemIds = [];
     items.forEach(function (item) {
@@ -2750,7 +3340,7 @@
         return;
       }
       openItemIds.push(disputeItemId(item));
-      card.appendChild(buildArbitrationItemRow(item));
+      card.appendChild(buildArbitrationItemRow(item, data.describeDisputeVotes(item, reviewerCount)));
     });
 
     if (openItemIds.length) {
@@ -2851,13 +3441,108 @@
      way a reviewer can tell one review model from another inside the
      workspace. Rendered above the card in every reviewer path, including
      the arbitration branch. */
+  /* FR-051's five states as a route, per lane. FINALIZED is reachable from
+     BOTH lanes, which is exactly why the track needs getReviewUnitLane() and
+     not just the status. */
+  var REVIEW_TRACK_ROUTES = {
+    same: ['pending', 'approved', 'finalized'],
+    differing: ['pending', 'modified', 'disputed', 'finalized'],
+  };
+
+  var TRACK_BORDER = 'var(--color-border)';
+  var TRACK_TAKEN = 'var(--color-cta)';
+
+  function trackFork(paths) {
+    var span = document.createElement('span');
+    span.className = 'review-track-fork';
+    span.setAttribute('aria-hidden', 'true');
+    span.innerHTML =
+      '<svg width="28" height="68" viewBox="0 0 28 68" fill="none">' +
+      paths.map(function (p) {
+        return '<path d="' + p.d + '" stroke="' + p.stroke + '" stroke-width="2"/>';
+      }).join('') +
+      '</svg>';
+    return span;
+  }
+
+  /* Builds the §Review Status Track for one unit. `lane` is null until a
+     reviewer submits, in which case only 待審 is on the route.
+
+     `done` means "this node is on the unit's route, before its current
+     position". It is a ROUTE, not an event log: the prototype derives
+     REVIEW_UNIT_STATUS on every render and stores no history, so a unit whose
+     reviewers all submitted at once can reach 已定稿 without ever having been
+     rendered as 已同意. Marking the lane's interim node keeps the branch
+     legible; claiming a timestamped visit would be a claim the data cannot
+     support. */
+  function buildReviewStatusTrack(unitStatus, lane) {
+    var route = REVIEW_TRACK_ROUTES[lane] || ['pending'];
+    var position = route.indexOf(unitStatus);
+
+    function nodeClass(status) {
+      if (status === unitStatus) return 'review-track-node current';
+      var at = route.indexOf(status);
+      return 'review-track-node' + (at !== -1 && position !== -1 && at < position ? ' done' : '');
+    }
+
+    var track = document.createElement('div');
+    track.className = 'review-track';
+    track.setAttribute('role', 'list');
+    track.setAttribute('aria-label', t('trackAria'));
+
+    function addNode(status, gridStyle) {
+      var node = document.createElement('span');
+      node.className = nodeClass(status);
+      node.setAttribute('role', 'listitem');
+      node.setAttribute('style', gridStyle);
+      if (status === unitStatus) {
+        node.setAttribute('aria-current', 'step');
+        var marker = document.createElement('span');
+        marker.className = 'review-track-marker';
+        marker.textContent = t('trackMarker');
+        node.appendChild(marker);
+      }
+      node.appendChild(document.createTextNode(t(REVIEW_STATE_I18N_KEYS[status])));
+      track.appendChild(node);
+    }
+
+    function addRail(gridStyle, taken) {
+      var rail = document.createElement('span');
+      rail.className = 'review-track-rail' + (taken ? ' done' : '');
+      rail.setAttribute('style', gridStyle);
+      track.appendChild(rail);
+    }
+
+    function addFork(fork, gridStyle) {
+      fork.setAttribute('style', gridStyle);
+      track.appendChild(fork);
+    }
+
+    var finalized = unitStatus === 'finalized';
+    addNode('pending', 'grid-column:1;grid-row:1/3');
+    addFork(trackFork([
+      { d: 'M0 34 H12 V17 H28', stroke: lane === 'same' ? TRACK_TAKEN : TRACK_BORDER },
+      { d: 'M0 34 H12 V51 H28', stroke: lane === 'differing' ? TRACK_TAKEN : TRACK_BORDER },
+    ]), 'grid-column:2;grid-row:1/3');
+    addNode('approved', 'grid-column:3;grid-row:1');
+    addNode('modified', 'grid-column:3;grid-row:2');
+    addRail('grid-column:4/6;grid-row:1', lane === 'same' && finalized);
+    addRail('grid-column:4;grid-row:2', lane === 'differing' && unitStatus !== 'modified');
+    addNode('disputed', 'grid-column:5;grid-row:2');
+    addFork(trackFork([
+      { d: 'M0 17 H16 V34 H28', stroke: lane === 'same' && finalized ? TRACK_TAKEN : TRACK_BORDER },
+      { d: 'M0 51 H16 V34 H28', stroke: lane === 'differing' && finalized ? TRACK_TAKEN : TRACK_BORDER },
+    ]), 'grid-column:6;grid-row:1/3');
+    addNode('finalized', 'grid-column:7;grid-row:1/3');
+    return track;
+  }
+
   function buildReviewUnitContext(unitStatus) {
     var workspaceData = window.LabelSuiteAnnotationWorkspaceData;
     var minReviewers = currentProfile.minReviewers || 1;
     var reviewedCount = workspaceData.readReviewerSubmissions(
       currentProfile.id, currentRunType, currentSampleId, currentIdentity
     ).length;
-    var rosterSize = (workspaceData.getReviewerMockRows(currentProfile.id, currentSampleId) || []).length;
 
     var banner = document.createElement('div');
     banner.className = 'rv-unit-context';
@@ -2874,24 +3559,74 @@
       t(currentRunType === 'official_run' ? 'unitCtxRunOfficial' : 'unitCtxRunDry'),
       'rv-unit-run'
     );
-    chip(t('unitCtxThreshold').replace('{n}', String(minReviewers)));
+    /* issue #452: quorum and reviewed-so-far used to be two chips whose
+       numbers were the SAME pair (reviewedCount, minReviewers) under two
+       different labels -- one reading 「審核門檻 3 位審核員」, the other
+       「已審 1 / 3」, which a reviewer read as a second progress bar. One
+       chip, one subject: this unit's distance from its finalize threshold. */
     chip(
-      t('unitCtxAnnotator').replace('{id}', currentAnnotatorId()) +
-        (rosterSize > 1 ? ' · ' + t('unitCtxRoster').replace('{m}', String(rosterSize)) : '')
+      t('unitCtxThreshold')
+        .replace('{x}', String(reviewedCount))
+        .replace('{n}', String(minReviewers)),
+      'rv-unit-threshold'
     );
-    if (unitStatus !== null) {
-      chip(
-        t('unitCtxReviewed')
-          .replace('{x}', String(reviewedCount))
-          .replace('{n}', String(minReviewers))
-      );
-    }
+    /* issue #515: no identity chip here. "Who am I reviewing" is already
+       answered twice -- breadcrumb level 3 (審核單位 {sample} · {annotator},
+       FR-080) and the left column's group header ({n} 位標記員, FR-071) --
+       and this banner's subject is the review MODEL: run type, finalize
+       threshold, state, state track. A third copy only raised the density. */
 
     var statePill = document.createElement('span');
     statePill.className =
       'rv-unit-state' + (unitStatus ? ' rv-unit-state-' + unitStatus : '');
-    statePill.textContent = t(REVIEW_STATE_I18N_KEYS[unitStatus] || 'unitStateNone');
+    var stateText = t(REVIEW_STATE_I18N_KEYS[unitStatus] || 'unitStateNone');
+    /* FINALIZED is the ONLY terminal state (issue #452): approved/modified
+       are short of the threshold and disputed is past it but unresolved, so
+       every non-terminal pill carries a note saying so in words. Colour
+       alone must not be the difference -- `data-terminal` exposes the same
+       split to assistive tech and tests. */
+    var terminal = unitStatus === workspaceData.REVIEW_UNIT_STATUS.FINALIZED;
+    var note = '';
+    if (terminal) {
+      note = t('unitStateFinalizedNote');
+    } else if (unitStatus === workspaceData.REVIEW_UNIT_STATUS.DISPUTED) {
+      note = t('unitStateDisputedNote');
+    } else if (unitStatus !== null && unitStatus !== workspaceData.REVIEW_UNIT_STATUS.PENDING) {
+      /* 待審 already means "nobody has reviewed", so a 0 / n note adds noise
+         rather than disambiguating -- the list badge omits it too. */
+      note = t('unitStateInterimNote')
+        .replace('{x}', String(reviewedCount))
+        .replace('{n}', String(minReviewers));
+    }
+    statePill.textContent = note ? stateText + ' · ' + note : stateText;
+    if (unitStatus !== null) {
+      statePill.setAttribute('data-terminal', terminal ? 'true' : 'false');
+      statePill.setAttribute(
+        'aria-label',
+        t(terminal ? 'unitStateAriaFinalized' : 'unitStateAria')
+          .replace('{state}', stateText)
+          .replace('{x}', String(reviewedCount))
+          .replace('{n}', String(minReviewers))
+      );
+    }
     banner.appendChild(statePill);
+
+    /* The pill answers "what state"; the track answers "by which route, and
+       what is left". Both stay: the pill carries the terminal/interim note
+       and the aria-label the track has no place for. A null status has no
+       unit yet, so there is no route to draw. */
+    if (unitStatus !== null) {
+      var trackWrap = document.createElement('div');
+      trackWrap.className = 'rv-unit-track';
+      trackWrap.appendChild(buildReviewStatusTrack(
+        unitStatus,
+        workspaceData.getReviewUnitLane(
+          currentProfile.id, currentRunType, currentSampleId, currentIdentity,
+          state.selectedOutputTypes
+        )
+      ));
+      banner.appendChild(trackWrap);
+    }
     return banner;
   }
 
@@ -2902,6 +3637,11 @@
     reviewRowDecisions = {};
     reviewRowOriginals = {};
     reviewDecisionRefreshers = [];
+    reviewDecisionAnswers = {};
+    /* issue #453: every early return below (arbitration / finalized /
+       empty unit) is a path with nothing to summarize, so hide first and
+       let the interactive path re-render it at the end. */
+    hideReviewSubmitSummary();
     /* issue #196 (CONT-03): restore any in-progress decisions persisted by
        persistReviewDraft() before this render -- a reload must not silently
        undecide rows the reviewer already chose.
@@ -3034,6 +3774,7 @@
       }
       preview.appendChild(buildReviewRow(outKey, submission));
     });
+    renderReviewSubmitSummary();
   }
 
   function appendReviewHistoryEntry(history, text) {
@@ -3188,11 +3929,140 @@
     if (modal) modal.classList.add('hidden');
     if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(modal);
   }
-  function showGuidelineMarkdownPreview(content) {
-    var preview = document.getElementById('wsGuidelineMdPreview');
-    if (!preview) return;
-    preview.textContent = content || '';
-    preview.classList.remove('hidden');
+  /* issue #527 (spec 015 AC-5.3 / FR-020D / SC-005D): Markdown guideline
+     files preview in an in-page modal (same contract as the PDF modal) with
+     the source rendered to HTML. Minimal renderer -- headings, paragraphs,
+     unordered/ordered lists, bold/italic, inline code, links -- with every
+     fenced code blocks, tables, images -- with every text run
+     HTML-escaped first and link href / image src restricted to http(s)/
+     mailto/relative paths, so raw HTML or javascript: URLs in the source
+     can never reach innerHTML unescaped (issue #527 decision record). */
+  function escapeHtml(text) {
+    return String(text)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+  function isSafeMarkdownUrl(url) {
+    return /^(https?:\/\/|mailto:|\.{0,2}\/|#)/i.test(url);
+  }
+  function renderMarkdownInline(text) {
+    var out = escapeHtml(text);
+    out = out.replace(/`([^`]+)`/g, '<code>$1</code>');
+    out = out.replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, function (_m, alt, src) {
+      return isSafeMarkdownUrl(src) ? '<img src="' + src + '" alt="' + alt + '">' : alt;
+    });
+    out = out.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    out = out.replace(/(^|[^*])\*([^*]+)\*/g, '$1<em>$2</em>');
+    out = out.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, function (_m, label, href) {
+      return isSafeMarkdownUrl(href) ? '<a href="' + href + '" target="_blank" rel="noopener noreferrer">' + label + '</a>' : label;
+    });
+    return out;
+  }
+  function renderMarkdown(source) {
+    var lines = String(source || '').replace(/\r\n?/g, '\n').split('\n');
+    var html = '';
+    var list = null;
+    var para = [];
+    function flushPara() {
+      if (para.length) html += '<p>' + renderMarkdownInline(para.join(' ')) + '</p>';
+      para = [];
+    }
+    function flushList() {
+      if (list) html += '</' + list + '>';
+      list = null;
+    }
+    var fence = null;
+    var table = null;
+    function flushTable() {
+      if (table) html += '</tbody></table>';
+      table = null;
+    }
+    function splitTableRow(line) {
+      return line.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(function (cell) {
+        return cell.trim();
+      });
+    }
+    lines.forEach(function (line, index) {
+      if (fence) {
+        if (/^\s*```/.test(line)) {
+          html += '<pre><code>' + escapeHtml(fence.join('\n')) + '</code></pre>';
+          fence = null;
+        } else {
+          fence.push(line);
+        }
+        return;
+      }
+      if (/^\s*```/.test(line)) {
+        flushPara(); flushList(); flushTable();
+        fence = [];
+        return;
+      }
+      var isTableRow = /^\s*\|.*\|\s*$/.test(line);
+      if (isTableRow) {
+        flushPara(); flushList();
+        if (!table) {
+          /* A table starts only with a header row followed by a |---| rule. */
+          if (!/^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)*\|?\s*$/.test(lines[index + 1] || '')) {
+            para.push(line.trim());
+            return;
+          }
+          table = { headerDone: false };
+          html += '<table><thead><tr>' + splitTableRow(line).map(function (cell) {
+            return '<th>' + renderMarkdownInline(cell) + '</th>';
+          }).join('') + '</tr></thead><tbody>';
+          return;
+        }
+        if (!table.headerDone) { table.headerDone = true; return; }
+        html += '<tr>' + splitTableRow(line).map(function (cell) {
+          return '<td>' + renderMarkdownInline(cell) + '</td>';
+        }).join('') + '</tr>';
+        return;
+      }
+      flushTable();
+      var heading = /^(#{1,3})\s+(.+)$/.exec(line);
+      var bullet = /^\s*[-*]\s+(.+)$/.exec(line);
+      var ordered = /^\s*\d+\.\s+(.+)$/.exec(line);
+      if (heading) {
+        flushPara(); flushList();
+        html += '<h' + heading[1].length + '>' + renderMarkdownInline(heading[2]) + '</h' + heading[1].length + '>';
+      } else if (bullet || ordered) {
+        flushPara();
+        var tag = bullet ? 'ul' : 'ol';
+        if (list !== tag) { flushList(); list = tag; html += '<' + tag + '>'; }
+        html += '<li>' + renderMarkdownInline((bullet || ordered)[1]) + '</li>';
+      } else if (!line.trim()) {
+        flushPara(); flushList();
+      } else {
+        flushList();
+        para.push(line.trim());
+      }
+    });
+    if (fence) html += '<pre><code>' + escapeHtml(fence.join('\n')) + '</code></pre>';
+    flushPara(); flushList(); flushTable();
+    return html;
+  }
+  function openGuidelineMdModal(content, name, triggerEl) {
+    var modal = document.getElementById('wsGuidelineMdModal');
+    var body = document.getElementById('wsGuidelineMdModalBody');
+    if (!modal || !body) return;
+    /* innerHTML only ever receives renderMarkdown() output, whose text
+       runs are escaped and whose only tags are the fixed allowlist above. */
+    body.innerHTML = renderMarkdown(content);
+    setText('wsGuidelineMdModalTitleText', name || '');
+    modal.classList.remove('hidden');
+    if (window.LabelSuiteModalFocus) {
+      window.LabelSuiteModalFocus.open(modal, {
+        trigger: triggerEl || document.activeElement,
+        onClose: closeGuidelineMdModal
+      });
+    }
+  }
+  function closeGuidelineMdModal() {
+    var modal = document.getElementById('wsGuidelineMdModal');
+    if (modal) modal.classList.add('hidden');
+    if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(modal);
   }
   var GUIDELINE_FILE_ICON_SVG = {
     pdf: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
@@ -3232,7 +4102,7 @@
         } else if (file.type === 'image') {
           openGuidelineImageModal(file.url, file.name, item);
         } else if (file.type === 'markdown') {
-          showGuidelineMarkdownPreview(file.content);
+          openGuidelineMdModal(file.content, file.name, item);
         }
       });
       container.appendChild(item);
@@ -3266,6 +4136,18 @@
     }
     /* Escape-to-close comes from the LabelSuiteModalFocus trap registered
        in openGuidelinePdfModal(), same as the image modal. */
+  }
+  function setupGuidelineMdModal() {
+    var modal = document.getElementById('wsGuidelineMdModal');
+    var closeBtn = document.getElementById('wsGuidelineMdModalClose');
+    if (closeBtn) closeBtn.addEventListener('click', closeGuidelineMdModal);
+    if (modal) {
+      modal.addEventListener('click', function (e) {
+        if (e.target === modal) closeGuidelineMdModal();
+      });
+    }
+    /* Escape-to-close comes from the LabelSuiteModalFocus trap registered
+       in openGuidelineMdModal(), same as the PDF modal. */
   }
   function setupGuidelineCollapse() {
     var btn = document.getElementById('wsGuidelineCollapseBtn');
@@ -3364,13 +4246,16 @@
       var mdFile = files.filter(function (file) {
         return file.type === 'markdown';
       })[0];
-      body.textContent = mdFile
-        ? mdFile.content
-        : files
-            .map(function (file) {
-              return file.name;
-            })
-            .join('\n');
+      if (mdFile) {
+        /* innerHTML only receives renderMarkdown() output (issue #527). */
+        body.innerHTML = renderMarkdown(mdFile.content);
+      } else {
+        body.textContent = files
+          .map(function (file) {
+            return file.name;
+          })
+          .join('\n');
+      }
     }
     var storageKey = guidelineModalStorageKey(currentProfile.id);
     var seen = null;
@@ -3444,13 +4329,8 @@
     }
     setText('wsPrevBtnLabel', t('wsPrevBtnLabel'));
     setText('wsNextBtnLabel', t('wsNextBtnLabel'));
-    setText('wsAutosaveLabel', t('wsAutosaveSaved'));
     setText('wsTabGuidelineLabel', t('wsTabGuideline'));
     setText('wsTabHistoryLabel', t('wsTabHistory'));
-    var noteLabel = document.getElementById('wsNoteLabel');
-    if (noteLabel) noteLabel.textContent = t('noteLabel');
-    var noteInput = document.getElementById('wsNoteInput');
-    if (noteInput) noteInput.placeholder = t('notePlaceholder');
     setText('wsGuidelineModalTitleText', t('guidelineModalTitle'));
     setText('wsGuidelineModalConfirm', t('guidelineModalConfirm'));
     setText('guidelineSummaryTitle', t('guidelineSummaryTitle'));
@@ -3460,6 +4340,8 @@
     if (closeBtn) closeBtn.setAttribute('aria-label', t('guidelineImageModalCloseAria'));
     var pdfCloseBtn = document.getElementById('wsGuidelinePdfModalClose');
     if (pdfCloseBtn) pdfCloseBtn.setAttribute('aria-label', t('guidelinePdfModalCloseAria'));
+    var mdCloseBtn = document.getElementById('wsGuidelineMdModalClose');
+    if (mdCloseBtn) mdCloseBtn.setAttribute('aria-label', t('guidelineMdModalCloseAria'));
     /* issue #309: the shared sidebar mounts with its 一般使用者 default;
        reviewers must read as 審核員 (same role noun the history trail uses).
        Annotator view keeps the shared default untouched. Runs at boot and on
@@ -3542,15 +4424,13 @@
     renderGuidelinePanel();
     setupGuidelineImageModal();
     setupGuidelinePdfModal();
+    setupGuidelineMdModal();
     setupGuidelineCollapse();
     setupGuidelineTabs();
     setupSampleNav();
     setupMobileDrawer();
     setupGuidelineModal();
     setupLangToggle();
-    /* SC-007 15s autosave heartbeat (visual, matches the pre-outputs[]
-       design's cadence). */
-    setInterval(triggerAutosave, 15000);
   }
 
   if (document.readyState === 'loading') {

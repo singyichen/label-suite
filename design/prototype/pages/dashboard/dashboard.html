@@ -429,7 +429,7 @@
             <div class="panel-header">
               <div>
                 <h2 id="reviewerPanelTitle" class="panel-title">審核概況</h2>
-                <span id="reviewerPanelSubtitle" class="panel-subtitle">我的審查進度與待處理項目</span>
+                <span id="reviewerPanelSubtitle" class="panel-subtitle">我的審核進度與待處理項目</span>
               </div>
             </div>
             <div class="metrics">
@@ -438,7 +438,7 @@
                 <strong id="reviewerPendingValue">12 筆</strong>
               </div>
               <div class="metric">
-                <span id="reviewerTodayReviewedLabel">今日已審</span>
+                <span id="reviewerTodayReviewedLabel">今日已審核</span>
                 <strong id="reviewerTodayReviewedValue">18 筆</strong>
               </div>
               <div class="metric">
@@ -475,6 +475,12 @@
   <!-- ═══════════════════════════════════════════════════════════ -->
   <script src="../../assets/theme.js"></script>
   <script src="../../assets/analytics.js"></script>
+  <!-- Issue #450: the reviewer cards derive their summary from live
+       review-unit state, so the dashboard needs the same seeds and
+       derivation helpers annotation-list uses. -->
+  <script src="../task-management/task-list.data.js"></script>
+  <script src="../task-management/task-detail.data.js"></script>
+  <script src="../annotation/annotation-workspace.data.js"></script>
   <script src="./dashboard.data.js"></script>
   <script src="./dashboard.assignments.js"></script>
   <script src="./dashboard.i18n.js"></script>

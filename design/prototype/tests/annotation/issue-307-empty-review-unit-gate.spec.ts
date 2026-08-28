@@ -51,7 +51,7 @@ test.describe('issue #307 -- truly empty review unit renders no review controls'
 
     // FR-058 shortcut path is blocked by the same hidden class.
     await page.keyboard.press('ControlOrMeta+Enter');
-    await expect(page.locator('#toastMsg')).not.toHaveText('審查已提交');
+    await expect(page.locator('#toastMsg')).not.toHaveText('審核已送出');
   });
 
   test('T015 ofs-04: seeded submission keeps the full review card (gate must not overfire)', async ({ page }) => {
@@ -97,9 +97,9 @@ test.describe('issue #307 -- truly empty review unit renders no review controls'
     // And the unit can be finalized (min_reviewers = 1).
     await page.getByTestId('ws-review-row-approve').click();
     await page.getByTestId('ws-review-submit-btn').click();
-    await expect(page.locator('#toastMsg')).toHaveText('審查已提交');
+    await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
     await page.reload();
     await expect(page.locator('[data-testid="ws-review-unit-context"] .rv-unit-state'))
-      .toHaveText('已定稿');
+      .toHaveText('已定稿 · 已鎖定');
   });
 });

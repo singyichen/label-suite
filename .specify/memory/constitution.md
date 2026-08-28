@@ -335,7 +335,7 @@ Proposed ADRs do not supersede current rules. `specs/STATUS.md` is the delivery-
 - code/test gates = affected implementation verification
 - Source-Verify + write-back = archive-time canonical ID/version/Changelog integrity
 
-**Version**: 1.32.1 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-08-25
+**Version**: 1.33.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-08-26
 
 ## Changelog
 

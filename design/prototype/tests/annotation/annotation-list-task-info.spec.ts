@@ -42,13 +42,19 @@ test.describe('Annotation list task info card: progress summary', () => {
     expect(await progressBarWidth(page)).toBe('37%');
   });
 
-  test('reviewer stats use the reviewer assignment entry', async ({ page }) => {
+  test('reviewer stats are derived from review-unit state, not the seed', async ({ page }) => {
     await page.goto(buildListUrl({ task_id: 'T001', role: 'reviewer', run_type: 'official_run' }));
 
+    /* issue #501: the seed no longer carries a reviewer summary; this line
+       is computeReviewSummary() over T001's 15 review units (5 records x 3
+       annotators), none of them reviewed. The two denominators are not in
+       conflict -- 個審核單位 counts units, 筆資料 counts records. IAA is
+       stated as not computable because T001 IS single_label, so alpha is
+       defined for it; there are simply no submissions to derive it from. */
     await expect(page.locator('#taskInfoDetail')).toHaveText(
-      '待審 7 筆 · 進度 34% · IAA 0.80 · 共 5 筆資料'
+      '任務覆蓋 0 / 15 個審核單位 · 待審 15 個 · 未達定稿門檻 15 個 · IAA 無法計算 · 共 5 筆資料'
     );
-    expect(await progressBarWidth(page)).toBe('34%');
+    expect(await progressBarWidth(page)).toBe('0%');
   });
 
   test('missing assignment seeds fall back to the count-only summary with an empty bar', async ({ page }) => {

@@ -1898,6 +1898,15 @@
       color: var(--color-success);
       background: var(--color-success-bg);
     }
+    /* issue #491: a third, distinct state for "not enough marked data to
+       compute IAA yet" -- must never look like the default (which already
+       reads as "not met") or like .passed, or a viewer would misread
+       "cannot compute" as one of those two states. */
+    .stop-pill.not-computable {
+      border-color: var(--color-warning-border);
+      color: var(--color-warning);
+      background: var(--color-warning-bg);
+    }
     .round-history-panel {
       border: 1px solid var(--color-border);
       border-radius: var(--radius-lg);
@@ -2329,6 +2338,12 @@
 <script src="../../assets/analytics.js"></script>
 <script src="task-list.data.js"></script>
 <script src="task-detail.data.js"></script>
+<!-- issue #489/#491: computeIaaAlpha() is the single IAA derivation for the
+     whole prototype; this page reads it instead of carrying its own
+     hardcoded agreement figures. Depends on task-list.data.js and
+     task-detail.data.js above (annotation-workspace.data.js's own header
+     comment documents that load order). -->
+<script src="../annotation/annotation-workspace.data.js"></script>
 <script src="task-config.data.js"></script>
 <script src="task-config.yaml.js"></script>
 <script src="task-config.dataset.js"></script>
@@ -2479,6 +2494,7 @@
       samplingValueHint: '筆數需 >= 1 且 < 資料集總筆數',
       iaaMetricInputLabel: 'IAA 指標（自動選定）',
       iaaNotApplicable: '不適用',
+      iaaNotComputableShort: '無法計算',
       iaaSummaryValueTpl: '{metric}（目標 IAA {target}）',
       targetAgreementInputLabel: '目標 IAA',
       minAnnotatorsInputLabel: '最少標記者數',
@@ -2529,6 +2545,10 @@
       toastPublishedOfficial: '已啟動正式標記',
       toastPublishedComplete: '任務已標記完成',
       toastPublishBlocked: '抽樣設定不合法，無法發布。',
+      toastPublishBlockedMembers: '啟用中成員人數不足，無法發布：',
+      memberGapAnnotatorTpl: '標記員還差 {count} 位',
+      memberGapReviewerTpl: '審核員還差 {count} 位',
+      memberGapJoiner: '、',
       yes: '是',
       no: '否',
       guidelineUploaded: '已上傳',
@@ -2547,6 +2567,8 @@
       roundDecisionTitleFailedTpl: 'R{round} 未達標，建議新增下一個試標回合',
       roundDecisionDescPassedTpl: '系統將以尚未進入試標的剩餘 {count} 筆樣本建立正式標記池，避免與前面回合混用。',
       roundDecisionDescFailedTpl: '目前僅使用了 {used} 筆試標樣本，仍可從未使用資料中抽新樣本進行下一回合。',
+      roundDecisionTitleInProgressTpl: 'R{round} 尚無法判定是否達標',
+      roundDecisionDescInProgressTpl: '目前沒有足夠的標記資料可計算一致性，待標記員完成後即可判定是否達標。',
       roundDecisionTitleOfficialTpl: '正式標記進行中，共 {count} 筆',
       roundDecisionDescOfficialTpl: '正式標記池已從未參與試標的剩餘樣本建立，持續完成後即可結束任務。',
       roundDecisionTitleCompletedTpl: '正式標記已完成，共 {count} 筆',
@@ -2961,6 +2983,7 @@
       samplingValueHint: 'Count must be >= 1 and < total dataset size',
       iaaMetricInputLabel: 'IAA metric (auto-selected)',
       iaaNotApplicable: 'Not applicable',
+      iaaNotComputableShort: 'Not computable',
       iaaSummaryValueTpl: '{metric} (target IAA {target})',
       targetAgreementInputLabel: 'Target IAA',
       minAnnotatorsInputLabel: 'Minimum annotators',
@@ -3011,6 +3034,10 @@
       toastPublishedOfficial: 'Official run started',
       toastPublishedComplete: 'Task marked as completed',
       toastPublishBlocked: 'Cannot publish due to invalid sampling setting.',
+      toastPublishBlockedMembers: 'Not enough active members to publish: ',
+      memberGapAnnotatorTpl: 'annotators need {count} more',
+      memberGapReviewerTpl: 'reviewers need {count} more',
+      memberGapJoiner: '; ',
       yes: 'Yes',
       no: 'No',
       guidelineUploaded: 'Uploaded',
@@ -3029,6 +3056,8 @@
       roundDecisionTitleFailedTpl: 'R{round} did not pass. Add the next trial round',
       roundDecisionDescPassedTpl: 'The system will build the official pool from the remaining {count} unused items to avoid mixing with previous rounds.',
       roundDecisionDescFailedTpl: 'Only {used} items have been consumed by trials so far. You can still draw the next round from unused data.',
+      roundDecisionTitleInProgressTpl: 'R{round} outcome not yet determined',
+      roundDecisionDescInProgressTpl: 'There is not enough marked data yet to compute agreement. The outcome will be clear once annotators finish.',
       roundDecisionTitleOfficialTpl: 'Official run in progress with {count} items',
       roundDecisionDescOfficialTpl: 'The official pool was created from the remaining items that never entered a trial round.',
       roundDecisionTitleCompletedTpl: 'Official run completed with {count} items',
@@ -3397,6 +3426,13 @@
     { name: 'Alex Wang', email: 'alex.wang@labelsuite.io', taskRole: 'annotator', status: 'active', joinedAt: '2026-04-20 10:15', lastActive: '2026-04-21 09:12' },
     { name: 'Olivia Lin', email: 'olivia.lin@labelsuite.io', taskRole: 'annotator', status: 'active', joinedAt: '2026-04-20 10:16', lastActive: '2026-04-21 08:58' },
     { name: 'Jason Huang', email: 'jason.h@labelsuite.io', taskRole: 'annotator', status: 'disabled', joinedAt: '2026-04-20 10:18', lastActive: '2026-04-20 16:11' },
+    /* issue #505: 4th active annotator so the default seed has 3 *active*
+       annotators (Alex, Olivia, Derek) against DEFAULT_TASK_DATA.minAnnotators=3
+       -- the FR-010t publish gate (getMembershipGapMessages()) counts active
+       members. Jason Huang stays disabled: DEFAULT_UNASSIGNED_ANNOTATION_ASSIGNMENTS
+       seeds a "member removed mid-run" backstory attributed to him, and the
+       member table keeps one disabled-status demo row. */
+    { name: 'Derek Yeh', email: 'derek.yeh@labelsuite.io', taskRole: 'annotator', status: 'active', joinedAt: '2026-04-20 10:19', lastActive: '2026-04-21 09:05' },
   ];
 
   /* Review workload seed (issue #148). `已指派` is always derived as
@@ -4536,9 +4572,16 @@ function interpolate(template, payload) {
 
   function resetRunProgressData() {
     TASK_DATA.trialRound = 0;
-    TASK_DATA.currentAgreement = 0;
-    TASK_DATA.currentAnnotators = 0;
-    TASK_DATA.currentStd = 0;
+    /* issue #491: null, not 0. 0 previously masqueraded as "IAA computed as
+       zero (total disagreement)" instead of "no trial round exists yet" --
+       exactly the coercion the issue flagged. Consumers (getTrialRounds()'s
+       fallback round, the currentAgreementValue/round-timeline renderers,
+       and the stopAgreementPill) must treat null as "no data yet" and
+       prefer getPrimaryIaaResult()'s live computeIaaAlpha() reading when
+       one is computable. */
+    TASK_DATA.currentAgreement = null;
+    TASK_DATA.currentAnnotators = null;
+    TASK_DATA.currentStd = null;
     TASK_DATA.trialRounds = [];
   }
 
@@ -5074,6 +5117,43 @@ function interpolate(template, payload) {
     return getSampleCountFromData(TASK_DATA);
   }
 
+  /* issue #489/#491: first output type computeIaaAlpha() can actually
+     derive an alpha for (currently 'single_label' only -- see
+     IAA_NOMINAL_OUTPUT_TYPES in annotation-workspace.data.js). Same "first
+     applicable output type" precedent as getPrimaryTargetAgreement() below,
+     but filtered to what the single IAA derivation supports instead of
+     what has a configured threshold -- passing an unsupported type through
+     would just bounce back computable:false/unsupported_output_type. */
+  function getPrimaryIaaOutKey() {
+    var outputs = TASK_DATA.outputs || [];
+    var nominal = (window.LabelSuiteAnnotationWorkspaceData && window.LabelSuiteAnnotationWorkspaceData.IAA_NOMINAL_OUTPUT_TYPES) || [];
+    for (var i = 0; i < outputs.length; i++) {
+      if (nominal.indexOf(outputs[i].type) !== -1) return outputs[i].type;
+    }
+    return outputs.length ? outputs[0].type : null;
+  }
+
+  /* Single call site every trial-round consumer below reads through --
+     never re-implements the alpha formula itself (that lives only in
+     computeIaaAlpha()). Trial rounds are always the dry_run stage, so
+     runType is hardcoded here rather than threaded through as a param. */
+  function getPrimaryIaaResult() {
+    var outKey = getPrimaryIaaOutKey();
+    if (!outKey || !window.LabelSuiteAnnotationWorkspaceData) {
+      return { computable: false, reason: 'unknown_task', outKey: outKey };
+    }
+    return window.LabelSuiteAnnotationWorkspaceData.computeIaaAlpha(TASK_DATA.taskId, 'dry_run', outKey);
+  }
+
+  /* issue #491: renders "N/A" instead of coercing a not-yet-computable
+     alpha to 0.00, which reads as "total disagreement" rather than "not
+     enough marked data yet". */
+  function formatIaaValue(agreement) {
+    return (agreement === null || agreement === undefined)
+      ? t('iaaNotComputableShort')
+      : Number(agreement).toFixed(2);
+  }
+
   function getTrialRounds() {
     if (Array.isArray(TASK_DATA.trialRounds) && TASK_DATA.trialRounds.length) {
       return TASK_DATA.trialRounds.slice();
@@ -5081,17 +5161,36 @@ function interpolate(template, payload) {
     if (TASK_DATA.status === 'draft') {
       return [];
     }
+    /* issue #489/#491: this is the fallback synthetic round for every task
+       that never got a hand-authored TASK_DATA.trialRounds seed (every
+       task except the T001 fixture -- see resetTaskData()'s comment).
+       agreement/annotators now come from computeIaaAlpha() -- the single
+       IAA derivation -- instead of TASK_DATA.currentAgreement/
+       currentAnnotators, which resetRunProgressData() always nulls before
+       this runs. result is a real alpha-vs-threshold comparison rather
+       than a guess from TASK_DATA.status: the old status-only mapping
+       could show "in progress" for a round that had already failed, or
+       "failed" for a task where alpha simply isn't computable yet. */
+    var iaa = getPrimaryIaaResult();
+    var target = Number(getPrimaryTargetAgreement());
+    var result = iaa.computable
+      ? (iaa.alpha >= target ? 'passed' : 'failed')
+      : 'in_progress';
     return [{
       round: Number(TASK_DATA.trialRound) || 1,
       sampleCount: Number(TASK_DATA.samplingValue) || 0,
-      agreement: Number(TASK_DATA.currentAgreement) || 0,
-      annotators: Number(TASK_DATA.currentAnnotators) || 0,
+      agreement: iaa.computable ? iaa.alpha : null,
+      annotators: iaa.computable ? iaa.raters : 0,
       std: Number(TASK_DATA.currentStd) || 0,
-      result: TASK_DATA.status === 'waiting_iaa_confirmation' ? 'passed' : (TASK_DATA.status === 'dry_run_in_progress' ? 'in_progress' : 'failed'),
+      result: result,
       usedSamples: Number(TASK_DATA.samplingValue) || 0,
       date: TASK_DATA.updatedAt ? String(TASK_DATA.updatedAt).slice(0, 10) : '',
-      noteZh: '此回合資料為 prototype 自動推導。',
-      noteEn: 'This round is auto-derived for the prototype.'
+      noteZh: iaa.computable
+        ? '此回合一致性由 computeIaaAlpha() 依實際標記結果即時推導。'
+        : '目前尚無足夠標記資料可計算一致性。',
+      noteEn: iaa.computable
+        ? 'This round\'s agreement is derived live from computeIaaAlpha() using the actual marks.'
+        : 'Not enough marked data yet to compute agreement.'
     }];
   }
 
@@ -5133,6 +5232,17 @@ function interpolate(template, payload) {
     return 'in_progress';
   }
 
+  /* issue #489/#491: "publish trial round" simulator for the demo Publish
+     button. The narrative scaffolding (date / noteZh / noteEn) has no
+     computeIaaAlpha() equivalent and stays useful demo copy describing a
+     specific story beat, so it is kept verbatim. Only the NUMBERS
+     (agreement, result) are replaced -- and only when computeIaaAlpha()
+     actually has real annotator data for this task (T014-T017; every other
+     seed task has no seeded dry_run submissions, so computeIaaAlpha()
+     returns computable:false and this function is an exact passthrough of
+     the old scripted table). std has no computeIaaAlpha() equivalent
+     (Krippendorff's alpha carries no standard deviation) so it always
+     stays scripted. */
   function getTrialRoundScenario(roundNumber) {
     var scenarios = [
       {
@@ -5152,7 +5262,7 @@ function interpolate(template, payload) {
         noteEn: 'Round 2 passed after guideline refinement and unlocks the remaining pool for official work.'
       }
     ];
-    return scenarios[roundNumber - 1] || {
+    var scenario = scenarios[roundNumber - 1] || {
       agreement: Number(getPrimaryTargetAgreement() || 0.8),
       std: 0.08,
       result: 'passed',
@@ -5160,6 +5270,14 @@ function interpolate(template, payload) {
       noteZh: '此回合已達標，可直接沿用剩餘樣本進入正式標記。',
       noteEn: 'This round passed and the remaining sample pool is ready for official work.'
     };
+    var iaa = getPrimaryIaaResult();
+    if (iaa.computable) {
+      scenario = Object.assign({}, scenario, {
+        agreement: iaa.alpha,
+        result: iaa.alpha >= Number(getPrimaryTargetAgreement()) ? 'passed' : 'failed'
+      });
+    }
+    return scenario;
   }
 
   function getRoundColor(roundNumber) {
@@ -5249,7 +5367,7 @@ function interpolate(template, payload) {
       metrics.className = 'round-timeline-metrics';
       [
         interpolate(t('roundMetricSampleTpl'), { count: round.sampleCount }),
-        interpolate(t('roundMetricIaaTpl'), { value: Number(round.agreement || 0).toFixed(2) }),
+        interpolate(t('roundMetricIaaTpl'), { value: formatIaaValue(round.agreement) }),
         interpolate(t('roundMetricAnnotatorsTpl'), { count: round.annotators }),
         interpolate(t('roundMetricStdTpl'), { value: Number(round.std || 0).toFixed(2) })
       ].forEach(function(text) {
@@ -5406,7 +5524,9 @@ function interpolate(template, payload) {
     setText('trialRoundValue', currentRound ? 'R' + currentRound.round : '-');
     setText('trialRoundsUsedValue', String(roundCount));
     setText('targetAgreementValue', Number(getPrimaryTargetAgreement()).toFixed(2));
-    setText('currentAgreementValue', currentRound ? Number(currentRound.agreement || 0).toFixed(2) : Number(TASK_DATA.currentAgreement).toFixed(2));
+    /* issue #491: formatIaaValue() renders "cannot compute" instead of
+       coercing null/undefined to 0 -- the exact bug this issue reports. */
+    setText('currentAgreementValue', currentRound ? formatIaaValue(currentRound.agreement) : formatIaaValue(TASK_DATA.currentAgreement));
     setText('officialPoolValue', String(reserveCount));
     setText('roundHistoryTitle', t('roundHistoryTitle'));
     setText('roundHistoryHint', t('roundHistoryHint'));
@@ -5420,6 +5540,13 @@ function interpolate(template, payload) {
     } else if (currentRound && currentRound.result === 'passed') {
       setText('trialDecisionTitle', interpolate(t('roundDecisionTitlePassedTpl'), { round: currentRound.round }));
       setText('trialDecisionDesc', interpolate(t('roundDecisionDescPassedTpl'), { count: reserveCount }));
+    } else if (currentRound && currentRound.result === 'in_progress') {
+      /* Newly discovered defect (not part of issue #489/#491): this banner only
+         special-cased 'passed' and treated everything else -- including a round
+         still waiting on marked data -- as 'failed'. That is wrong; a round with
+         no computable IAA yet has not failed, it just is not decided yet. */
+      setText('trialDecisionTitle', interpolate(t('roundDecisionTitleInProgressTpl'), { round: currentRound.round }));
+      setText('trialDecisionDesc', t('roundDecisionDescInProgressTpl'));
     } else if (currentRound) {
       setText('trialDecisionTitle', interpolate(t('roundDecisionTitleFailedTpl'), { round: currentRound.round }));
       setText('trialDecisionDesc', interpolate(t('roundDecisionDescFailedTpl'), { used: usedTrialCount }));
@@ -5436,7 +5563,18 @@ function interpolate(template, payload) {
     var stopAgreementPill = document.getElementById('stopAgreementPill');
     var stopStdPill = document.getElementById('stopStdPill');
     var stopAnnotatorPill = document.getElementById('stopAnnotatorPill');
-    if (stopAgreementPill) stopAgreementPill.classList.toggle('passed', Number(TASK_DATA.currentAgreement) >= Number(getPrimaryTargetAgreement()));
+    /* issue #491: 3-state pill. Number(null) === 0 previously made
+       "cannot compute yet" render as "not met", which reads as a stronger
+       (and wrong) claim than "we don't have an answer yet". */
+    if (stopAgreementPill) {
+      var primaryIaaForPill = getPrimaryIaaResult();
+      stopAgreementPill.classList.remove('passed', 'not-computable');
+      if (!primaryIaaForPill.computable) {
+        stopAgreementPill.classList.add('not-computable');
+      } else if (primaryIaaForPill.alpha >= Number(getPrimaryTargetAgreement())) {
+        stopAgreementPill.classList.add('passed');
+      }
+    }
     if (stopStdPill) stopStdPill.classList.add('hidden');
     if (stopAnnotatorPill) stopAnnotatorPill.classList.toggle('passed', Number(TASK_DATA.currentAnnotators) >= Number(TASK_DATA.minAnnotators));
     renderSplitVisualization(
@@ -7155,6 +7293,25 @@ function getTaskTypeLabel() {
     return TASK_MEMBERS.filter(function(member) {
       return member.taskRole === 'annotator' && member.status === 'active';
     });
+  }
+
+  /* FR-010t / SC-038 (issue #189 decision D3, issue #505): publishing a
+     trial round or the official run must be blocked per-role whenever the
+     count of membership_status=active members falls below min_annotators /
+     min_reviewers -- checked against the live TASK_MEMBERS roster, not just
+     the setting value itself. Returns one interpolated "還差 N 位" message
+     per short-handed role so canPublish() can surface every gap at once. */
+  function getMembershipGapMessages() {
+    var messages = [];
+    var annotatorGap = Number(TASK_DATA.minAnnotators) - getActiveAnnotatorMembers().length;
+    if (annotatorGap > 0) {
+      messages.push(interpolate(t('memberGapAnnotatorTpl'), { count: annotatorGap }));
+    }
+    var reviewerGap = Number(TASK_DATA.minReviewers) - getActiveReviewerMembers().length;
+    if (reviewerGap > 0) {
+      messages.push(interpolate(t('memberGapReviewerTpl'), { count: reviewerGap }));
+    }
+    return messages;
   }
 
   function getAssignmentCount(records, roundId) {
@@ -9107,6 +9264,12 @@ function getTaskTypeLabel() {
       showToast(t('toastPublishBlocked'), true);
       trackEvent('prototype_publish_failed', { reason: result.message });
       renderSamplingState();
+      return false;
+    }
+    var gapMessages = getMembershipGapMessages();
+    if (gapMessages.length) {
+      showToast(t('toastPublishBlockedMembers') + gapMessages.join(t('memberGapJoiner')), true);
+      trackEvent('prototype_publish_failed', { reason: 'member_gap: ' + gapMessages.join(', ') });
       return false;
     }
     return true;

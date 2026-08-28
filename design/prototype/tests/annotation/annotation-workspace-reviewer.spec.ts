@@ -103,11 +103,11 @@ test.describe('reviewer direct correction — deep example (single_label, T001)'
     await dismissGuidelineModal(page);
 
     await page.getByTestId('ws-review-submit-btn').click();
-    await expect(page.locator('#toastMsg')).not.toHaveText('審查已提交');
+    await expect(page.locator('#toastMsg')).not.toHaveText('審核已送出');
 
     await approveAllRows(page);
     await page.getByTestId('ws-review-submit-btn').click();
-    await expect(page.locator('#toastMsg')).toHaveText('審查已提交');
+    await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
   });
 
   test('rejecting the row reopens the annotator sample', async ({ page }) => {
@@ -121,7 +121,7 @@ test.describe('reviewer direct correction — deep example (single_label, T001)'
     const row = page.getByTestId('ws-review-row').first();
     await row.getByTestId('ws-review-row-reject').click();
     await page.getByTestId('ws-review-submit-btn').click();
-    await expect(page.locator('#toastMsg')).toHaveText('審查已提交');
+    await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
 
     await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'annotator' }));
     await dismissGuidelineModal(page);
@@ -303,11 +303,11 @@ test.describe('official_run review card chrome', () => {
     await dismissGuidelineModal(page);
 
     await page.getByTestId('ws-review-submit-btn').click();
-    await expect(page.locator('#toastMsg')).not.toHaveText('審查已提交');
+    await expect(page.locator('#toastMsg')).not.toHaveText('審核已送出');
 
     await page.locator('.preview-bypass-row').getByTestId('ws-review-row-approve').click();
     await page.getByTestId('ws-review-submit-btn').click();
-    await expect(page.locator('#toastMsg')).toHaveText('審查已提交');
+    await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
   });
 
   test('dry_run drops the type title too (v4.0.0)', async ({ page }) => {

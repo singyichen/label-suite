@@ -231,13 +231,33 @@
      enter as the can_arbitrate reviewer, FR-060); annotation-list forwards
      it into every workspace link (FR-049). Absent -> param stays absent and
      both pages fall back to the same default roster identity. */
+  /* Issue #449: the reviewer quick-review target is DERIVED from the live
+     review-unit state for the signed-in reviewer instead of the
+     dashboard.assignments.js `latestUnfinishedSampleId` seed, which always
+     pointed at the task's first dataset record -- already finalized on most
+     tasks, so the CTA opened a read-only card. Priority and eligibility live
+     in annotation-workspace.data.js (the same enumeration the card summary
+     counts); this only forwards the signed-in reviewer. */
+  function nextActionableUnit(entry) {
+    var workspaceData = global.LabelSuiteAnnotationWorkspaceData;
+    if (!workspaceData || !workspaceData.findNextActionableReviewUnit) return null;
+    return workspaceData.findNextActionableReviewUnit(
+      entry.exampleTaskId,
+      entry.runType,
+      entry.reviewerId || workspaceData.DEFAULT_REVIEWER_ID
+    );
+  }
+
   function identityQuery(role, entry) {
     return role === 'reviewer' && entry.reviewerId
       ? '&reviewer_id=' + encodeURIComponent(entry.reviewerId)
       : '';
   }
 
-  function openAnnotationList(role, entry) {
+  /* `notice` surfaces WHY the list was opened when the caller wanted the
+     workspace but had nothing to open (issue #449); annotation-list renders
+     the matching empty state. Absent for a plain list click. */
+  function openAnnotationList(role, entry, notice) {
     global.LabelSuiteAnalytics.track('prototype_cta_clicked', {
       cta: role === 'annotator'
         ? 'annotator_task_list_open'
@@ -256,7 +276,8 @@
       + '&role=' + encodeURIComponent(role)
       + '&run_type=' + encodeURIComponent(entry.runType || '')
       + '&task_type=' + encodeURIComponent(entry.annotationTaskType || '')
-      + identityQuery(role, entry);
+      + identityQuery(role, entry)
+      + (notice ? '&notice=' + encodeURIComponent(notice) : '');
     global.location.href = listUrl;
   }
 
@@ -271,6 +292,19 @@
       scenario: scenario,
     });
     var sampleId = entry.latestUnfinishedSampleId || '';
+    var annotatorId = '';
+    if (role === 'reviewer') {
+      var unit = nextActionableUnit(entry);
+      /* Nothing this reviewer may act on: the list states that outright.
+         Falling back to the seed's first record would reopen the very
+         read-only unit this CTA exists to skip past (issue #449). */
+      if (!unit) {
+        openAnnotationList(role, entry, 'no_actionable_review');
+        return;
+      }
+      sampleId = unit.sampleId;
+      annotatorId = unit.annotatorId;
+    }
     if (!sampleId) {
       openAnnotationList(role, entry);
       return;
@@ -280,7 +314,11 @@
       + '&sample_id=' + encodeURIComponent(sampleId)
       + '&role=' + encodeURIComponent(role)
       + '&run_type=' + encodeURIComponent(entry.runType || '')
-      + identityQuery(role, entry);
+      + identityQuery(role, entry)
+      /* A review unit is sample x annotator, so the annotator the target
+         unit belongs to has to travel with it -- without it the workspace
+         resolves the default annotator and opens a different unit. */
+      + (annotatorId ? '&annotator_id=' + encodeURIComponent(annotatorId) : '');
     global.location.href = workspaceUrl;
   }
 
@@ -318,12 +356,39 @@
     );
   }
 
+  /* Issue #450: a reviewer card's summary and progress bar are DERIVED from
+     the live review-unit state (annotation-workspace.data.js
+     computeReviewSummary -- the single formula source shared with
+     annotation-list), so finishing a review updates the card instead of
+     leaving the seed's prebuilt string contradicting the unit rows. Applied
+     before sortEntries() so the progress sort orders by the same number the
+     card shows.
+
+     Issue #501 dropped the `derivable` gate that used to hand a task with no
+     stored review state back to its seeded string. Nothing was being
+     protected: a task nobody has reviewed has a perfectly derivable summary
+     -- every unit 待審, 0% covered -- and the thirteen tasks that took the
+     fallback were the thirteen whose seeded numbers described no state that
+     existed anywhere. 0% is the honest answer; an invented 34% is not. */
+  function deriveReviewerEntry(entry) {
+    var workspaceData = global.LabelSuiteAnnotationWorkspaceData;
+    if (!workspaceData || !workspaceData.computeReviewSummary) return entry;
+    var summary = workspaceData.computeReviewSummary(entry.exampleTaskId, entry.runType);
+    var derived = {};
+    Object.keys(entry).forEach(function (key) { derived[key] = entry[key]; });
+    derived.detail = workspaceData.formatReviewSummary(summary, entry.iaa);
+    derived.progress = summary.coveragePct;
+    return derived;
+  }
+
   function renderTaskList(containerId, listKey, role, sortKey) {
     var container = document.getElementById(containerId);
     if (!container) return;
     var taskMap = buildMap(data.tasks, 'id');
     var outputTypeMap = buildMap(data.outputTypes, 'key');
-    var entries = sortEntries(data.roleLists[listKey] || [], sortKey);
+    var sourceEntries = data.roleLists[listKey] || [];
+    if (role === 'reviewer') sourceEntries = sourceEntries.map(deriveReviewerEntry);
+    var entries = sortEntries(sourceEntries, sortKey);
     var markup = entries.map(function (entry, index) {
       var task = taskMap[entry.exampleTaskId];
       if (!task || !Array.isArray(task.outputTypes)) return '';
@@ -338,53 +403,6 @@
     bindRoleTaskEvents(container, role, entries);
   }
 
-  /* Issue #404: the demo-flow tasks (T014-T017) had no discoverable entry
-     point from the PL dashboard. This renders one shortcut button per
-     `demoCategories` entry that actually occurs on a task's `demoCategory`
-     field -- it never checks a specific task id, so future demo batches
-     only need to set that same field to gain a shortcut here. */
-  function renderDemoShortcuts() {
-    var taskList = document.getElementById('plTaskList');
-    if (!taskList || !taskList.parentElement) return;
-    var categories = Array.isArray(data.demoCategories) ? data.demoCategories : [];
-    var categoryMap = buildMap(categories, 'key');
-    var present = {};
-    (data.tasks || []).forEach(function (task) {
-      if (task.demoCategory) present[task.demoCategory] = true;
-    });
-    var container = document.getElementById('plDemoShortcuts');
-    if (!container) {
-      container = document.createElement('div');
-      container.id = 'plDemoShortcuts';
-      container.className = 'btn-row';
-      taskList.parentElement.insertBefore(container, taskList);
-    }
-    container.innerHTML = categories
-      .filter(function (category) { return present[category.key]; })
-      .map(function (category) {
-        return '<button type="button" class="btn btn-secondary slim demo-shortcut-btn"'
-          + ' data-demo-category="' + escapeHtml(category.key) + '">'
-          + escapeHtml(localizedText(category))
-          + '</button>';
-      }).join('');
-    Array.prototype.forEach.call(
-      container.querySelectorAll('.demo-shortcut-btn'),
-      function (button) {
-        button.addEventListener('click', function () {
-          var category = categoryMap[button.dataset.demoCategory];
-          var keyword = category ? localizedText(category) : '';
-          global.LabelSuiteAnalytics.track('prototype_cta_clicked', {
-            cta: 'pl_demo_shortcut_clicked',
-            demo_category: button.dataset.demoCategory,
-            lang: lang,
-            scenario: scenario,
-          });
-          openTaskList('project_leader', null, keyword);
-        });
-      }
-    );
-  }
-
   function renderTaskLists() {
     renderTaskList('adminTaskList', 'admin', 'super_admin');
     renderTaskList(
@@ -392,7 +410,6 @@
       'projectLeader',
       'project_leader'
     );
-    renderDemoShortcuts();
     renderTaskList(
       'annotatorTaskList',
       'annotator',

@@ -43,14 +43,14 @@ test.describe('issue #308 -- finalized review units are fully read-only', () => 
     await page.goto(reviewerUrl('T015', 'ofs-01-agree-gold'));
 
     await expect(page.locator('[data-testid="ws-review-unit-context"] .rv-unit-state'))
-      .toHaveText('已定稿');
+      .toHaveText('已定稿 · 已鎖定');
     await expectLockedCard(page);
     // The card still shows the reviewed result, read-only.
     await expect(page.getByTestId('ws-review-finalized-card')).toContainText('negative');
 
     // FR-058 shortcut path is blocked by the same hidden submit button.
     await page.keyboard.press('ControlOrMeta+Enter');
-    await expect(page.locator('#toastMsg')).not.toHaveText('審查已提交');
+    await expect(page.locator('#toastMsg')).not.toHaveText('審核已送出');
   });
 
   test('T017 oft-04 (2/2 quorum): read-only card on a multi-reviewer finalize', async ({ page }) => {
@@ -58,7 +58,7 @@ test.describe('issue #308 -- finalized review units are fully read-only', () => 
     await page.goto(reviewerUrl('T017', 'oft-04-unanimous-gold'));
 
     await expect(page.locator('[data-testid="ws-review-unit-context"] .rv-unit-state'))
-      .toHaveText('已定稿');
+      .toHaveText('已定稿 · 已鎖定');
     await expectLockedCard(page);
   });
 
@@ -88,7 +88,7 @@ test.describe('issue #308 -- finalized review units are fully read-only', () => 
     await expect(page.getByTestId('ws-arbitration-card')).toHaveCount(0);
     await expect(page.getByTestId('ws-finalized-resolved')).toContainText('positive');
     await expect(page.locator('[data-testid="ws-review-unit-context"] .rv-unit-state'))
-      .toHaveText('已定稿');
+      .toHaveText('已定稿 · 已鎖定');
   });
 
   test('regression: T017 oft-02 stays interactive at 1/2 and the second reviewer can finalize', async ({ page }) => {
@@ -103,11 +103,11 @@ test.describe('issue #308 -- finalized review units are fully read-only', () => 
     // reviewer_chen files the second agreeing review -> unit finalizes.
     await page.getByTestId('ws-review-row-approve').click();
     await page.getByTestId('ws-review-submit-btn').click();
-    await expect(page.locator('#toastMsg')).toHaveText('審查已提交');
+    await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
 
     await page.reload();
     await expect(page.locator('[data-testid="ws-review-unit-context"] .rv-unit-state'))
-      .toHaveText('已定稿');
+      .toHaveText('已定稿 · 已鎖定');
     await expectLockedCard(page);
   });
 });

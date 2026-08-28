@@ -8,8 +8,10 @@
  * without a context banner a reviewer cannot tell the tasks apart inside
  * the workspace. These tests pin the banner that surfaces each task's
  * review model on the FIRST record the dashboard quick-review entry lands
- * on: run_type, review quorum, annotator identity/roster size, reviewed
- * progress, and the unit's five-state pill.
+ * on: run_type, the finalize threshold (reviewers so far / required),
+ * annotator identity/roster size, and the unit's five-state pill. Issue
+ * #452 merged the old quorum + 已審 chips into one 定稿門檻 x / n chip so
+ * the number states which population it counts.
  */
 import { test, expect, type Page } from '@playwright/test';
 
@@ -38,41 +40,45 @@ test.describe('Reviewer workspace — review-unit context banner (T014-T017)', (
     const banner = contextBanner(page);
     await expect(banner).toBeVisible();
     await expect(banner).toContainText('試標');
-    await expect(banner).toContainText('審核門檻 1 位審核員');
-    await expect(banner).toContainText('標記員 kioleemg12');
-    await expect(banner).toContainText('本樣本 3 位標記員');
-    await expect(banner.locator('.rv-unit-state')).toHaveText('已定稿');
+    await expect(banner).toContainText('定稿門檻 1 / 1 位審核員');
+    await expect(banner.locator('.rv-unit-state')).toHaveText('已定稿 · 已鎖定');
+
+    /* issue #515: the banner stopped repeating the identity the breadcrumb
+       and the left column already carry. Same two facts, retargeted at the
+       elements that now own them -- who is being reviewed, and how many
+       annotators this sample has. */
+    await expect(page.locator('nav.breadcrumb[data-testid="entry-breadcrumb"]')).toContainText(
+      'kioleemg12'
+    );
+    await expect(page.getByTestId('ws-sample-group-count').first()).toHaveText('3 位標記員');
   });
 
-  test('T015 ofs-01: official badge, quorum 1, reviewed 1/1, finalized', async ({ page }) => {
+  test('T015 ofs-01: official badge, finalize threshold 1/1, finalized', async ({ page }) => {
     await openReviewerWorkspace(page, 'T015', 'ofs-01-agree-gold', 'official_run');
 
     const banner = contextBanner(page);
     await expect(banner).toBeVisible();
     await expect(banner).toContainText('正式標記');
-    await expect(banner).toContainText('審核門檻 1 位審核員');
-    await expect(banner).toContainText('已審 1 / 1');
-    await expect(banner.locator('.rv-unit-state')).toHaveText('已定稿');
+    await expect(banner).toContainText('定稿門檻 1 / 1 位審核員');
+    await expect(banner.locator('.rv-unit-state')).toHaveText('已定稿 · 已鎖定');
   });
 
-  test('T016 ofm-01: quorum 3, reviewed 3/3, finalized', async ({ page }) => {
+  test('T016 ofm-01: finalize threshold 3/3, finalized', async ({ page }) => {
     await openReviewerWorkspace(page, 'T016', 'ofm-01-unanimous-gold', 'official_run');
 
     const banner = contextBanner(page);
     await expect(banner).toBeVisible();
-    await expect(banner).toContainText('審核門檻 3 位審核員');
-    await expect(banner).toContainText('已審 3 / 3');
-    await expect(banner.locator('.rv-unit-state')).toHaveText('已定稿');
+    await expect(banner).toContainText('定稿門檻 3 / 3 位審核員');
+    await expect(banner.locator('.rv-unit-state')).toHaveText('已定稿 · 已鎖定');
   });
 
-  test('T017 oft-01: quorum 2, disputed, banner coexists with the arbitration card', async ({ page }) => {
+  test('T017 oft-01: finalize threshold 2/2, disputed, banner coexists with the arbitration card', async ({ page }) => {
     await openReviewerWorkspace(page, 'T017', 'oft-01-even-tie', 'official_run');
 
     const banner = contextBanner(page);
     await expect(banner).toBeVisible();
-    await expect(banner).toContainText('審核門檻 2 位審核員');
-    await expect(banner).toContainText('已審 2 / 2');
-    await expect(banner.locator('.rv-unit-state')).toHaveText('爭議中');
+    await expect(banner).toContainText('定稿門檻 2 / 2 位審核員');
+    await expect(banner.locator('.rv-unit-state')).toHaveText('爭議中 · 未定稿，待仲裁');
     await expect(
       page.locator('[data-testid="ws-arbitration-card"]'),
     ).toBeVisible();
