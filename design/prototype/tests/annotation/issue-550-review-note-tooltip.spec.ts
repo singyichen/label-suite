@@ -15,8 +15,10 @@ import {
  * that stated the run-type-dependent submit consequence. Both are gone as
  * separate things; this spec pins the replacement:
  *
- *   - ONE tooltip, mounted at the same unit-level position `ws-review-note`
- *     always held (above the card stack, not inside any `ws-review-row`),
+ *   - ONE tooltip per unit, mounted INSIDE the unit-context banner
+ *     (`ws-review-unit-context`) immediately after the 了解審核流程 trigger
+ *     (`ws-review-flow-trigger`) -- still above the card stack and outside
+ *     every `ws-review-row`, but now beside the other unit-level controls,
  *     built per design/system/MASTER.md's Tooltip spec (a real <button>
  *     trigger, a role="tooltip" bubble linked by aria-describedby -- never
  *     the native title attribute).
@@ -188,6 +190,19 @@ test.describe('the tooltip mounts once per review unit, above the card stack (is
       return (note.compareDocumentPosition(firstRow) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
     });
     expect(precedesFirstCard).toBe(true);
+  });
+
+  test('the tooltip lives in the unit-context banner, right after the review-flow trigger', async ({ page }) => {
+    await openReviewer(page, 'official_run');
+    const banner = page.getByTestId('ws-review-unit-context');
+    await expect(banner.getByTestId('ws-review-note')).toHaveCount(1);
+    await expect(banner.getByTestId('ws-review-note-trigger')).toHaveCount(1);
+    const followsFlowTrigger = await page.evaluate(() => {
+      const flow = document.querySelector('[data-testid="ws-review-flow-trigger"]');
+      const note = document.querySelector('[data-testid="ws-review-note"]');
+      return !!flow && !!note && flow.nextElementSibling === note;
+    });
+    expect(followsFlowTrigger).toBe(true);
   });
 });
 

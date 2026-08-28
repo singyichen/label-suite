@@ -76,7 +76,7 @@ test.describe('issue #525 PR-A — the trigger in the FR-064 banner', () => {
     );
   });
 
-  test('is appended after the existing banner content, as its last child', async ({ page }) => {
+  test('is appended after the existing banner content, trailed only by the issue #550 note tooltip', async ({ page }) => {
     // The trigger is the way OUT of the banner, so it reads last whatever
     // precedes it. PR-B has since reordered what precedes it into issue
     // #525 §Accessibility's run type -> state -> threshold; the trigger's
@@ -91,6 +91,7 @@ test.describe('issue #525 PR-A — the trigger in the FR-064 banner', () => {
       'rv-unit-state rv-unit-state-approved',
       'rv-unit-chip rv-unit-threshold',
       'rv-flow-trigger',
+      'rv-review-note',
     ]);
   });
 
