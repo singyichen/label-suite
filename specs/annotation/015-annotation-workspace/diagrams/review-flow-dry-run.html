@@ -55,7 +55,7 @@
 
     <svg viewBox="0 0 1200 1160" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="rvdry-title rvdry-desc">
       <title id="rvdry-title">試標審核詳細流程</title>
-      <desc id="rvdry-desc">流程圖：試標提交後拆成樣本乘標記員的審核單位，審核員逐單位審核。先判斷已審人數是否達門檻，未達則停在已同意或已修改的過渡狀態等待下一位審核員；達門檻後判斷審核員是否改動答案或純退回（退回且未改動答案），兩者皆無即定稿唯讀，任一發生則進入逐項嚴格多數決。退回同樣是一筆審核提交，一樣計入已審人數；但純退回不計為對標記員原答案的同意票，而是阻擋定稿、直接列為爭議項（issue #551）。計票時，已提交審核但該項未改動且非純退回的審核員其票計給標記員原答案，尚未提交者不計入分母；全員都改動或純退回時原答案不列為候選；門檻為 1（如 T014）時唯一審核員之修正逕行收斂於該值，純退回則例外恆不收斂；門檻 ≥ 2 時未達已提交人數一半即不收斂；收斂即定稿，平手、全分歧或含純退回才落入爭議池，由具仲裁資格的審核員逐項裁定——純退回之爭議項於仲裁卡呈現「無替代值」，仲裁者選其對應選項即維持退回。退回在試標只記錄審核決策，不改變標記員狀態（純退回亦然）。右欄標註示範任務 T014 因只需一位審核員而簡化掉的節點與純退回情境。底部為任務層級流程：全體標記員提交完成後任務轉為待 IAA 確認，該轉態只看標記提交、不看審核進度。此後有兩條各自獨立的品質輸入——標記員的原始答案彙總為標記一致性（IAA），審核員的審核決策彙總為標記員被修改率；兩項指標都不阻擋開放正式標記，由專案主持人判讀後決定要開放正式標記，或修訂指引後再跑一輪試標（修訂紀錄必填）。</desc>
+      <desc id="rvdry-desc">流程圖：試標提交後拆成樣本乘標記員的審核單位，審核員逐單位審核；通過與退回在送出審核前只是草稿，按下送出審核才寫入決策，退回必須填寫理由。先判斷已審人數是否達門檻，未達則停在已同意或已修改的過渡狀態等待下一位審核員；達門檻後判斷審核員是否改動答案或純退回（退回且未改動答案），兩者皆無即定稿唯讀，任一發生則進入逐項嚴格多數決。退回同樣是一筆審核提交，一樣計入已審人數；但純退回不計為對標記員原答案的同意票，而是阻擋定稿、直接列為爭議項（issue #551）。計票時，已提交審核但該項未改動且非純退回的審核員其票計給標記員原答案，尚未提交者不計入分母；全員都改動或純退回時原答案不列為候選；門檻為 1（如 T014）時唯一審核員之修正逕行收斂於該值，純退回則例外恆不收斂；門檻 ≥ 2 時未達已提交人數一半即不收斂；收斂即定稿，平手、全分歧或含純退回才落入爭議池，由具仲裁資格的審核員逐項裁定——純退回之爭議項於仲裁卡呈現「無替代值」，仲裁者選其對應選項即維持退回。退回在試標只記錄審核決策，不改變標記員狀態（純退回亦然）。右欄標註示範任務 T014 因只需一位審核員而簡化掉的節點與純退回情境。底部為任務層級流程：全體標記員提交完成後任務轉為待 IAA 確認，該轉態只看標記提交、不看審核進度。此後有兩條各自獨立的品質輸入——標記員的原始答案彙總為標記一致性（IAA），審核員的審核決策彙總為標記員被修改率；兩項指標都不阻擋開放正式標記，由專案主持人判讀後決定要開放正式標記，或修訂指引後再跑一輪試標（修訂紀錄必填）。</desc>
 
       <defs>
         <marker id="arw" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#64748B"/></marker>
@@ -136,11 +136,15 @@
       <!-- 2 · 審核員逐單位審核 -->
       <rect x="304" y="140" width="192" height="52" rx="6" fill="#FFFFFF" stroke="#1E1B4B" stroke-width="1"/>
       <text x="400" y="163" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">審核員逐單位審核</text>
-      <text x="400" y="178" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">通過 / 直接改答案 / 退回</text>
+      <text x="400" y="178" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">通過 / 直接改答案 / 退回（草稿）</text>
+
+      <!-- 2b · 送出審核（issue #552）：通過／退回在此之前只是草稿，送出才寫入 -->
+      <rect x="340" y="200" width="120" height="24" rx="12" fill="#EEF2FF" stroke="#6366F1" stroke-width="1"/>
+      <text x="400" y="215" fill="#1E1B4B" font-size="9" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">送出審核 · 寫入決策</text>
 
       <!-- 3 · 退回註記（optional / dashed） -->
       <rect x="560" y="140" width="280" height="64" rx="6" fill="#1E1B4B08" stroke="#94A3B8" stroke-width="1" stroke-dasharray="4,3"/>
-      <text x="700" y="161" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">退回：只寫入審核決策</text>
+      <text x="700" y="161" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">退回：只寫入審核決策（理由必填）</text>
       <text x="700" y="176" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">標記員狀態不變 · 無重標待辦</text>
       <text x="700" y="191" fill="#1E1B4B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">但仍是一筆審核提交，照樣計入門檻</text>
 

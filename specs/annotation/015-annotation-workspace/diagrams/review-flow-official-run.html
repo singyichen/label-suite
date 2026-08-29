@@ -55,7 +55,7 @@
 
     <svg viewBox="0 0 1200 1080" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="rvoff-title rvoff-desc">
       <title id="rvoff-title">正式標記、多數決與仲裁詳細流程</title>
-      <desc id="rvoff-desc">流程圖：正式標記提交後由審核員逐單位審核，退回會把樣本狀態退回待標記並產生重標待辦。先判斷已審人數是否達門檻，未達則停在已同意或已修改的過渡狀態；達門檻後判斷審核員是否改動答案，無人改動即定稿，有改動則進入逐項嚴格多數決，票數需嚴格大於人數的一半才算收斂並定稿，平手或全分歧則落入爭議池，由具仲裁資格且未參與該單位審核的審核員逐項裁定 A 標記員或 B 審核員後定稿。正式標記的定稿判斷會產生審核 gold（審核流程定案產出的答案，與資料集自帶的 gold_label 欄位無關），且每筆樣本恰指派一位標記員因此只產生一個審核單位。右欄標註 T017 oft-01-even-tie 一比一平手案例的推導，含仲裁資格為名冊屬性的說明。底部為任務層級的完成 gate 與匯出，完成 gate 共五項前置條件。</desc>
+      <desc id="rvoff-desc">流程圖：正式標記提交後由審核員逐單位審核；通過與退回在送出審核前只是草稿，按下送出審核才寫入決策。退回必須填寫理由，理由會顯示給標記員，並把樣本狀態退回待標記、產生重標待辦。先判斷已審人數是否達門檻，未達則停在已同意或已修改的過渡狀態；達門檻後判斷審核員是否改動答案，無人改動即定稿，有改動則進入逐項嚴格多數決，票數需嚴格大於人數的一半才算收斂並定稿，平手或全分歧則落入爭議池，由具仲裁資格且未參與該單位審核的審核員逐項裁定 A 標記員或 B 審核員後定稿。正式標記的定稿判斷會產生審核 gold（審核流程定案產出的答案，與資料集自帶的 gold_label 欄位無關），且每筆樣本恰指派一位標記員因此只產生一個審核單位。右欄標註 T017 oft-01-even-tie 一比一平手案例的推導，含仲裁資格為名冊屬性的說明。底部為任務層級的完成 gate 與匯出，完成 gate 共五項前置條件。</desc>
 
       <defs>
         <marker id="arw" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#64748B"/></marker>
@@ -96,8 +96,8 @@
       <path d="M 400 744 V 792" fill="none" stroke="#6366F1" stroke-width="1.4" marker-end="url(#arw-ac)"/>
 
       <!-- ══ Connector labels ══ -->
-      <rect x="508" y="146" width="40" height="12" rx="2" fill="#F5F3FF"/>
-      <text x="528" y="155" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="0.06em">退回</text>
+      <rect x="490" y="146" width="80" height="12" rx="2" fill="#F5F3FF"/>
+      <text x="530" y="155" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="0.06em">退回 · 理由必填</text>
 
       <rect x="706" y="100" width="112" height="12" rx="2" fill="#F5F3FF"/>
       <text x="710" y="109" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" letter-spacing="0.06em">重新標記後再提交</text>
@@ -139,11 +139,15 @@
 
       <rect x="304" y="140" width="192" height="52" rx="6" fill="#FFFFFF" stroke="#1E1B4B" stroke-width="1"/>
       <text x="400" y="163" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">審核員逐單位審核</text>
-      <text x="400" y="178" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">通過 / 直接改答案 / 退回</text>
+      <text x="400" y="178" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">通過 / 直接改答案 / 退回（草稿）</text>
+
+      <!-- 送出審核（issue #552）：通過／退回在此之前只是草稿，送出才寫入 -->
+      <rect x="340" y="200" width="120" height="24" rx="12" fill="#EEF2FF" stroke="#6366F1" stroke-width="1"/>
+      <text x="400" y="215" fill="#1E1B4B" font-size="9" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">送出審核 · 寫入決策</text>
 
       <rect x="560" y="140" width="280" height="52" rx="6" fill="#FFFFFF" stroke="#1E1B4B" stroke-width="1"/>
       <text x="700" y="163" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">標記員重標待辦</text>
-      <text x="700" y="178" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">只有正式標記的退回會回退標記員狀態</text>
+      <text x="700" y="178" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">退回理由顯示給標記員 · 僅正式標記回退狀態</text>
 
       <polygon points="400,232 496,276 400,320 304,276" fill="#FFFFFF" stroke="#1E1B4B" stroke-width="1"/>
       <text x="400" y="269" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">已審人數達門檻？</text>
