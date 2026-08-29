@@ -62,7 +62,6 @@ async function expectNoExitCard(page: Page) {
      banner (issue #526) is retired too -- nothing may grow back there. */
   await expect(page.getByTestId('ws-review-action-hint')).toHaveCount(0);
 }
-}
 
 test.beforeEach(async ({ page }) => {
   await skipGuidelineModal(page);
