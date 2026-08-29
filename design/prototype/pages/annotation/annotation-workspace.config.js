@@ -57,6 +57,8 @@
       reviewRejectReasonLabel: '退回理由（必填）',
       reviewRejectReasonPlaceholder: '請說明退回原因',
       toastRejectReasonRequired: '請填寫以下輸出類型的退回理由：{list}',
+      reworkReasonsTitle: '此樣本已被退回，請依下列理由重新標記',
+      reworkReasonMissing: '（未填寫理由）',
       reviewCorrectionTitle: '直接修正（Reviewer 修正後答案）',
       toastSelectDecision: '請完成以下輸出類型的審核決策：{list}',
       toastReviewCorrectionReset: '偵測到直接修正的內容因重新整理而遺失，對應的通過／退回決策已重置，請重新確認後再送出',
@@ -172,6 +174,8 @@
       reviewRejectReasonLabel: 'Reject reason (required)',
       reviewRejectReasonPlaceholder: 'Explain why this is rejected',
       toastRejectReasonRequired: 'Please give a reject reason for the following output types: {list}',
+      reworkReasonsTitle: 'This sample was rejected. Re-annotate it following the reasons below',
+      reworkReasonMissing: '(no reason given)',
       reviewCorrectionTitle: "Direct correction (reviewer's corrected answer)",
       toastSelectDecision: 'Please decide on the following output types before submitting: {list}',
       toastReviewCorrectionReset: 'The direct correction was lost on reload, so the matching approve/reject decision was reset -- please re-confirm before submitting',
@@ -386,8 +390,61 @@
     renderEvidenceReferenceCard();
     patchItemPairLayout();
     wrapAnnotatorCards();
+    renderReworkReasonsBanner();
   }
   updateAnnotationPreview = patchedUpdateAnnotationPreview;
+
+  /* issue #552 (FR-084 / AC-2.14): an official_run reject sends the sample
+     back to the annotator (FR-014I), who until now saw one red `rejected`
+     badge in the history panel and nothing about WHY. Render the reviewers'
+     per-outKey reasons at the top of the workspace and mark the rejected
+     panels. getReworkReasons() owns the "is this a rework todo" test and
+     yields nothing for dry_run, so this stays a no-op everywhere else. The
+     engine empties #annotationPreview on every rebuild, so no de-dupe. */
+  function renderReworkReasonsBanner() {
+    var preview = document.getElementById('annotationPreview');
+    if (!preview) return;
+    var rows = window.LabelSuiteAnnotationWorkspaceData.getReworkReasons(
+      currentProfile.id, currentRunType, currentSampleId, currentIdentity
+    );
+    if (!rows.length) return;
+
+    var banner = document.createElement('div');
+    banner.className = 'rv-rework-reasons';
+    banner.setAttribute('data-testid', 'ws-rework-reasons');
+    banner.setAttribute('role', 'status');
+
+    var title = document.createElement('div');
+    title.className = 'rv-rework-title';
+    title.textContent = t('reworkReasonsTitle');
+    banner.appendChild(title);
+
+    rows.forEach(function (row) {
+      var item = document.createElement('div');
+      item.className = 'rv-rework-row';
+      item.setAttribute('data-testid', 'ws-rework-reason-row');
+      item.setAttribute('data-outkey', row.outKey);
+
+      var meta = document.createElement('div');
+      meta.className = 'rv-rework-meta';
+      meta.textContent =
+        row.outKey + ' · ' + t('wsHistoryRoleReviewer') + ' ' + row.reviewerId +
+        (row.at ? ' · ' + formatHistoryTime(row.at) : '');
+      var reason = document.createElement('div');
+      reason.className = 'rv-rework-reason';
+      reason.textContent = row.reason || t('reworkReasonMissing');
+      item.appendChild(meta);
+      item.appendChild(reason);
+      banner.appendChild(item);
+
+      var panel = preview.querySelector('[data-testid="ws-output-panel-' + row.outKey + '"]');
+      if (panel) {
+        panel.setAttribute('data-rework-rejected', 'true');
+        panel.classList.add('rv-rework-rejected');
+      }
+    });
+    preview.insertBefore(banner, preview.firstChild);
+  }
 
   /* Regroup the engine's flat sibling output into two content-cards: the
      question block (evidence + input text) and the annotation block (all

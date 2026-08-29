@@ -1692,9 +1692,34 @@
       .map(function (key) {
         var entry = readSubmissionBucket(key)[sampleId];
         if (!entry || entryStatus(entry) !== 'submitted') return null;
-        return { reviewerId: key.slice(prefix.length), answers: entry.answers };
+        return { reviewerId: key.slice(prefix.length), answers: entry.answers, submittedAt: entry.submittedAt || null };
       })
       .filter(function (submission) { return submission !== null; });
+  }
+
+  /* issue #552 (FR-084): what the official_run annotator sees on a rework
+   * todo -- every reviewer reject on this sample, with the reason that
+   * reviewer typed (handleReviewSubmit persists `reasons` beside
+   * `decisions`, issue #551). "Rework todo" is read off the annotator's own
+   * entry the same way entryStatus()/markSampleRejected() wrote it: status
+   * 'pending' with a 'rejected' event as its latest history item. dry_run
+   * has no rollback channel (FR-014I), so it never yields anything. */
+  function getReworkReasons(taskId, runType, sampleId, identity) {
+    if (runType !== 'official_run') return [];
+    var entry = readSampleEntry(taskId, 'annotator', runType, sampleId, identity);
+    if (!entry || entryStatus(entry) !== 'pending' || !Array.isArray(entry.history)) return [];
+    var last = entry.history[entry.history.length - 1];
+    if (!last || last.action !== 'rejected') return [];
+    var rows = [];
+    readReviewerSubmissions(taskId, runType, sampleId, identity).forEach(function (submission) {
+      var decisions = (submission.answers && submission.answers.decisions) || {};
+      var reasons = (submission.answers && submission.answers.reasons) || {};
+      Object.keys(decisions).forEach(function (outKey) {
+        if (decisions[outKey] !== 'reject') return;
+        rows.push({ outKey: outKey, reason: reasons[outKey] || '', reviewerId: submission.reviewerId, at: submission.submittedAt });
+      });
+    });
+    return rows;
   }
 
   /* issue #551: a reviewer's per-outKey approve/reject decision, persisted
@@ -2427,17 +2452,20 @@
          resubmission + new review cycle: the rework backlog itself is
          this row's whole demo point, and simulating the annotator's next
          action is what the live workspace is for. */
-      { t: 'T017', r: 'official_run', s: 'oft-05-pending-review', a: A, v: 'positive', rev: { reviewer_wang: 'positive' }, rejectBy: 'reviewer_wang' }, // rolled back to pending (reject, rework backlog)
+      { t: 'T017', r: 'official_run', s: 'oft-05-pending-review', a: A, v: 'positive', rev: { reviewer_wang: 'positive' }, rejectBy: 'reviewer_wang', reason: '語氣偏中性，請重新判讀第二句的轉折' }, // rolled back to pending (reject, rework backlog)
     ];
 
-    function labelPayload(value, decision) {
+    function labelPayload(value, decision, reason) {
       /* issue #551: `decision` mirrors handleReviewSubmit's persisted
          `decisions` map (per outKey approve/reject) -- without it, a seeded
          pure reject (rejectBy, same value as `v`) is indistinguishable from
          a seeded approve, and getReviewUnitStatus()/getDisputeItems() would
-         read it as agreement instead of a blocking reject. */
+         read it as agreement instead of a blocking reject.
+         issue #552: `reason` mirrors the persisted `reasons` map the
+         annotator's rework banner (FR-084) reads. */
       var payload = { previewState: { single_label: { selected: value } } };
       if (decision) payload.decisions = { single_label: decision };
+      if (reason) payload.reasons = { single_label: reason };
       return payload;
     }
 
@@ -2448,10 +2476,10 @@
         /* issue #502: mirrors handleReviewSubmit's per-row decision line
            (annotation-workspace.config.js's decisionLines, ~L3780) so a
            seeded reject reads the same way a live one would. */
-        var reviewSummary = isReject ? 'single_label · ' + row.a + ': reject' : '';
+        var reviewSummary = isReject ? 'single_label · ' + row.a + ': reject — ' + (row.reason || '') : '';
         markSampleSubmitted(
           row.t, 'reviewer', row.r, row.s,
-          labelPayload(row.rev[reviewerId], isReject ? 'reject' : 'approve'),
+          labelPayload(row.rev[reviewerId], isReject ? 'reject' : 'approve', isReject ? row.reason : null),
           reviewSummary,
           { annotatorId: row.a, reviewerId: reviewerId }
         );
@@ -2643,6 +2671,7 @@
     getDisputeItems: getDisputeItems,
     isArbiterCandidate: isArbiterCandidate,
     readReviewerSubmissions: readReviewerSubmissions,
+    getReworkReasons: getReworkReasons,
     getArbitrationState: getArbitrationState,
     submitArbitration: submitArbitration,
     resolveDisputeConvergence: resolveDisputeConvergence,

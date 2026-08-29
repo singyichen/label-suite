@@ -957,6 +957,22 @@
     .rv-btn-text { line-height: 1; }
     .rv-answer-origin { font-size: 12px; color: var(--color-ink-muted); margin-top: 12px; }
 
+    /* ── Annotator mode: rework reasons banner (issue #552, FR-084) ─────── */
+    .rv-rework-reasons {
+      background: var(--color-error-bg);
+      border: 1px solid var(--color-error-border);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .rv-rework-title { font-size: 13px; font-weight: 700; color: var(--color-error); }
+    .rv-rework-row { display: flex; flex-direction: column; gap: 2px; }
+    .rv-rework-meta { font-size: 11px; color: var(--color-ink-muted); font-family: var(--font-mono, ui-monospace, monospace); }
+    .rv-rework-reason { font-size: 13px; color: var(--color-ink); white-space: pre-line; }
+    .rv-rework-rejected { outline: 2px solid var(--color-error-border); outline-offset: 4px; border-radius: var(--radius-sm); }
+
     /* ── Reviewer mode: reject reason (issue #552, FR-016A) ─────────────── */
     .rv-reject-reason { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; }
     /* Blocked look while a reject still lacks its reason; the click stays
