@@ -172,22 +172,14 @@
     }
     .sample-group.has-active .sample-group-id { color: var(--color-primary); }
 
-    /* Reviewer-only: names the review unit (sample × annotator) the entry
-       stands for. The annotator leads (it is what separates the units of one
-       group); the sample ID trails, muted, so the entry stays self-describing. */
+    /* Reviewer-only: names the review unit the entry stands for by its
+       annotator alone -- the sample ID lives once in the group header
+       (issue #557 removed the muted per-row echo). */
     .sample-unit-line {
       display: flex;
       align-items: center;
-      gap: 4px;
       font-size: 11px;
       min-width: 0;
-    }
-    .sample-unit-sep { color: var(--color-ink-muted); flex-shrink: 0; }
-    .sample-unit-id {
-      color: var(--color-ink-muted);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
     }
     .sample-unit-annotator {
       font-weight: 600;
@@ -195,8 +187,6 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      flex-shrink: 0;
-      max-width: 60%;
     }
     .sample-status-label {
       display: block;
