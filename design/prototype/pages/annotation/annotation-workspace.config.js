@@ -52,8 +52,13 @@
       wsReviewSubmitSuccess: '審核已送出',
       reviewNoAnswer: '（無）',
       reviewNoteDry: '通過：採用該輸出類型目前顯示的作答（含您的修正）為審核結果。退回：記錄不採用的決策與修正差異。送出後——試標：不回退標記員狀態，品質問題由任務層級 IAA 閘門與下一輪試標處理。',
-      reviewNoteOfficial: '通過：採用該輸出類型目前顯示的作答（含您的修正）為審核結果。退回：記錄不採用的決策與修正差異。送出後——正式標記：任一輸出類型退回會使此單位回到待標記，並產生標記員 {annotator} 的重標待辦；全部通過則標記員狀態不變。',
+      reviewNoteOfficial: '通過：採用該輸出類型目前顯示的作答（含您的修正）為審核結果。退回：記錄不採用的決策與修正差異。送出後——正式標記：任一輸出類型退回會使此單位回到待標記，並產生標記員 {annotator} 的重標待辦；全部通過則標記員狀態不變。退回理由會顯示給標記員。',
       reviewNoteTriggerLabel: '審核決策說明',
+      reviewRejectReasonLabel: '退回理由（必填）',
+      reviewRejectReasonPlaceholder: '請說明退回原因',
+      toastRejectReasonRequired: '請填寫以下輸出類型的退回理由：{list}',
+      reworkReasonsTitle: '此樣本已被退回，請依下列理由重新標記',
+      reworkReasonMissing: '（未填寫理由）',
       reviewCorrectionTitle: '直接修正（Reviewer 修正後答案）',
       toastSelectDecision: '請完成以下輸出類型的審核決策：{list}',
       toastReviewCorrectionReset: '偵測到直接修正的內容因重新整理而遺失，對應的通過／退回決策已重置，請重新確認後再送出',
@@ -164,8 +169,13 @@
       wsReviewSubmitSuccess: 'Review submitted',
       reviewNoAnswer: '(none)',
       reviewNoteDry: 'Approve: the answer currently shown for that output type (including your correction) becomes the review result. Reject: records the decision not to accept it, plus any correction. After submitting — dry run: the annotator status is not rolled back; quality issues are handled by the task-level IAA gate and the next dry run.',
-      reviewNoteOfficial: 'Approve: the answer currently shown for that output type (including your correction) becomes the review result. Reject: records the decision not to accept it, plus any correction. After submitting — official run: rejecting any output type returns this unit to pending and creates a re-annotation task for {annotator}; if everything is approved the annotator status is unchanged.',
+      reviewNoteOfficial: 'Approve: the answer currently shown for that output type (including your correction) becomes the review result. Reject: records the decision not to accept it, plus any correction. After submitting — official run: rejecting any output type returns this unit to pending and creates a re-annotation task for {annotator}; if everything is approved the annotator status is unchanged. The reject reason is shown to the annotator.',
       reviewNoteTriggerLabel: 'Review decision guidance',
+      reviewRejectReasonLabel: 'Reject reason (required)',
+      reviewRejectReasonPlaceholder: 'Explain why this is rejected',
+      toastRejectReasonRequired: 'Please give a reject reason for the following output types: {list}',
+      reworkReasonsTitle: 'This sample was rejected. Re-annotate it following the reasons below',
+      reworkReasonMissing: '(no reason given)',
       reviewCorrectionTitle: "Direct correction (reviewer's corrected answer)",
       toastSelectDecision: 'Please decide on the following output types before submitting: {list}',
       toastReviewCorrectionReset: 'The direct correction was lost on reload, so the matching approve/reject decision was reset -- please re-confirm before submitting',
@@ -380,8 +390,61 @@
     renderEvidenceReferenceCard();
     patchItemPairLayout();
     wrapAnnotatorCards();
+    renderReworkReasonsBanner();
   }
   updateAnnotationPreview = patchedUpdateAnnotationPreview;
+
+  /* issue #552 (FR-085 / AC-2.14): an official_run reject sends the sample
+     back to the annotator (FR-014I), who until now saw one red `rejected`
+     badge in the history panel and nothing about WHY. Render the reviewers'
+     per-outKey reasons at the top of the workspace and mark the rejected
+     panels. getReworkReasons() owns the "is this a rework todo" test and
+     yields nothing for dry_run, so this stays a no-op everywhere else. The
+     engine empties #annotationPreview on every rebuild, so no de-dupe. */
+  function renderReworkReasonsBanner() {
+    var preview = document.getElementById('annotationPreview');
+    if (!preview) return;
+    var rows = window.LabelSuiteAnnotationWorkspaceData.getReworkReasons(
+      currentProfile.id, currentRunType, currentSampleId, currentIdentity
+    );
+    if (!rows.length) return;
+
+    var banner = document.createElement('div');
+    banner.className = 'rv-rework-reasons';
+    banner.setAttribute('data-testid', 'ws-rework-reasons');
+    banner.setAttribute('role', 'status');
+
+    var title = document.createElement('div');
+    title.className = 'rv-rework-title';
+    title.textContent = t('reworkReasonsTitle');
+    banner.appendChild(title);
+
+    rows.forEach(function (row) {
+      var item = document.createElement('div');
+      item.className = 'rv-rework-row';
+      item.setAttribute('data-testid', 'ws-rework-reason-row');
+      item.setAttribute('data-outkey', row.outKey);
+
+      var meta = document.createElement('div');
+      meta.className = 'rv-rework-meta';
+      meta.textContent =
+        row.outKey + ' · ' + t('wsHistoryRoleReviewer') + ' ' + row.reviewerId +
+        (row.at ? ' · ' + formatHistoryTime(row.at) : '');
+      var reason = document.createElement('div');
+      reason.className = 'rv-rework-reason';
+      reason.textContent = row.reason || t('reworkReasonMissing');
+      item.appendChild(meta);
+      item.appendChild(reason);
+      banner.appendChild(item);
+
+      var panel = preview.querySelector('[data-testid="ws-output-panel-' + row.outKey + '"]');
+      if (panel) {
+        panel.setAttribute('data-rework-rejected', 'true');
+        panel.classList.add('rv-rework-rejected');
+      }
+    });
+    preview.insertBefore(banner, preview.firstChild);
+  }
 
   /* Regroup the engine's flat sibling output into two content-cards: the
      question block (evidence + input text) and the annotation block (all
@@ -2536,8 +2599,13 @@
     var annotatorId = currentAnnotatorId();
     var decisions = {};
     state.selectedOutputTypes.forEach(function (outKey) {
-      var decision = reviewRowDecisions[decisionKey(outKey, annotatorId)];
-      if (decision) decisions[outKey] = { decision: decision, corrected: isRowCorrected(outKey) };
+      var key = decisionKey(outKey, annotatorId);
+      var decision = reviewRowDecisions[key];
+      if (!decision) return;
+      decisions[outKey] = { decision: decision, corrected: isRowCorrected(outKey) };
+      /* issue #552 (FR-016A): the reject reason is part of the decision it
+         explains, so it rides the same draft entry. */
+      if (decision === 'reject' && reviewRowReasons[key]) decisions[outKey].reason = reviewRowReasons[key];
     });
     window.LabelSuiteAnnotationWorkspaceData.saveReviewRowDecisionDraft(
       currentProfile.id, currentRunType, currentSampleId, decisions, currentIdentity
@@ -2579,11 +2647,14 @@
     /* issue #453 (AC-3.42): snapshot the answer the decision was made
        against, so syncDecisionsWithCorrections() can tell a later edit of
        that answer apart from an untouched one. */
+    /* issue #552: run EVERY refresher, not just this pair's -- the row's
+       reject-reason field (buildRejectReasonField) follows the same decision
+       and lives in the same list. */
     approveBtn.addEventListener('click', function () {
       var key = decisionKey(outKey, rowName);
       reviewRowDecisions[key] = reviewRowDecisions[key] === 'approve' ? null : 'approve';
       reviewDecisionAnswers[key] = currentRowAnswer(outKey);
-      refresh();
+      reviewDecisionRefreshers.forEach(function (refreshRow) { refreshRow(); });
       persistReviewDraft();
       if (onChange) onChange();
     });
@@ -2591,7 +2662,7 @@
       var key = decisionKey(outKey, rowName);
       reviewRowDecisions[key] = reviewRowDecisions[key] === 'reject' ? null : 'reject';
       reviewDecisionAnswers[key] = currentRowAnswer(outKey);
-      refresh();
+      reviewDecisionRefreshers.forEach(function (refreshRow) { refreshRow(); });
       persistReviewDraft();
       if (onChange) onChange();
     });
@@ -2943,12 +3014,86 @@
     }
   }
 
+  /* issue #552 (FR-016A / AC-3.48): a reject must say why. The field is a
+     direct child of the review card, AFTER the correction panel rather than
+     inside its Bypass row: the shared engine rebuilds that panel wholesale
+     (FR-014P point 3), and anything docked inside it has to be re-attached
+     by dockDecisionsOnBypassRow()'s observer -- outside it, the field just
+     stays. Visibility follows the row's decision through the same refresher
+     list the decision buttons use, so shortcuts (FR-054) and draft restores
+     drive it too. */
+  var reviewRowReasons = {};
+
+  function reviewRowReason(outKey, rowName) {
+    return (reviewRowReasons[decisionKey(outKey, rowName)] || '').trim();
+  }
+
+  /* A reject may still lack its reason -- surface that on the footer button
+     as a blocked look (data attribute + CSS), never `disabled` or
+     `aria-disabled`: FR-083 needs the click to reach handleReviewSubmit()
+     so the toast can name the outKeys, and both of those would stop it. */
+  function refreshReviewSubmitState() {
+    var reviewSubmitBtn = document.getElementById('wsReviewSubmitBtn');
+    if (!reviewSubmitBtn) return;
+    var rowName = currentAnnotatorId();
+    var missing = state.selectedOutputTypes.some(function (outKey) {
+      return reviewRowBlocker(outKey, rowName) === 'reason';
+    });
+    if (missing) reviewSubmitBtn.setAttribute('data-submit-blocked', 'reason');
+    else reviewSubmitBtn.removeAttribute('data-submit-blocked');
+  }
+
+  function buildRejectReasonField(outKey, rowName) {
+    var key = decisionKey(outKey, rowName);
+    var wrap = document.createElement('div');
+    wrap.className = 'rv-reject-reason hidden';
+
+    var label = document.createElement('label');
+    label.className = 'rv-reject-reason-label';
+    label.textContent = t('reviewRejectReasonLabel');
+    var inputId = 'wsRejectReason-' + outKey;
+    label.setAttribute('for', inputId);
+
+    var input = document.createElement('textarea');
+    input.id = inputId;
+    input.rows = 2;
+    input.required = true;
+    input.setAttribute('data-testid', 'ws-review-reject-reason');
+    input.setAttribute('data-outkey', outKey);
+    input.setAttribute('placeholder', t('reviewRejectReasonPlaceholder'));
+    input.addEventListener('input', function () {
+      reviewRowReasons[key] = input.value;
+      refreshReviewSubmitState();
+      persistReviewDraft();
+    });
+
+    /* Mounted only while the row is rejected (AC-3.48: 通過時不出現); the
+       typed text lives in reviewRowReasons, so a re-mount restores it. */
+    function refresh() {
+      var rejected = reviewRowDecisions[key] === 'reject';
+      wrap.classList.toggle('hidden', !rejected);
+      if (rejected && input.parentNode !== wrap) {
+        input.value = reviewRowReasons[key] || '';
+        wrap.appendChild(label);
+        wrap.appendChild(input);
+      } else if (!rejected && input.parentNode === wrap) {
+        wrap.removeChild(label);
+        wrap.removeChild(input);
+      }
+      refreshReviewSubmitState();
+    }
+    refresh();
+    reviewDecisionRefreshers.push(refresh);
+    return wrap;
+  }
+
   function buildReviewRow(outKey, submission) {
     var row = buildReviewRowShell(null);
 
     seedReviewRow(outKey, submission);
     var correction = appendCorrectionControl(row, outKey);
     dockDecisionsOnBypassRow(correction, [buildRowDecisionButtons(outKey, currentAnnotatorId(), null).el]);
+    row.appendChild(buildRejectReasonField(outKey, currentAnnotatorId()));
     return row;
   }
 
@@ -3094,6 +3239,9 @@
 
     var correction = appendCorrectionControl(row, 'relation_identification', 'span', outKeys);
     dockDecisionsOnBypassRow(correction, decisionEls);
+    outKeys.forEach(function (outKey) {
+      row.appendChild(buildRejectReasonField(outKey, currentAnnotatorId()));
+    });
     return row;
   }
 
@@ -3872,6 +4020,7 @@
     reviewRowOriginals = {};
     reviewDecisionRefreshers = [];
     reviewDecisionAnswers = {};
+    reviewRowReasons = {};
     /* issue #196 (CONT-03): restore any in-progress decisions persisted by
        persistReviewDraft() before this render -- a reload must not silently
        undecide rows the reviewer already chose.
@@ -3895,6 +4044,7 @@
           return;
         }
         reviewRowDecisions[decisionKey(outKey, annotatorId)] = entry.decision;
+        if (entry.reason) reviewRowReasons[decisionKey(outKey, annotatorId)] = entry.reason;
       });
       if (correctionLost) showToast(t('toastReviewCorrectionReset'), 'warning');
     })();
@@ -4039,10 +4189,22 @@
      multi-output task -- only the generic toastSelectDecision. This is the
      sole surviving "still undecided" derivation in the file; the submit
      guard below is its only caller. */
+  /* issue #552 (FR-016A / FR-083): the ONE per-outKey answer to "does this
+     row block submit, and why" -- null, 'undecided', or 'reason' (rejected
+     without a reason). pendingReviewOutputKeys(), the footer button's
+     aria-disabled state and the blocking toast all read it; nothing else
+     recomputes it. */
+  function reviewRowBlocker(outKey, rowName) {
+    var decision = reviewRowDecisions[decisionKey(outKey, rowName)];
+    if (!decision) return 'undecided';
+    if (decision === 'reject' && !reviewRowReason(outKey, rowName)) return 'reason';
+    return null;
+  }
+
   function pendingReviewOutputKeys(rowName) {
     var pendingKeys = [];
     state.selectedOutputTypes.forEach(function (outKey) {
-      if (!reviewRowDecisions[decisionKey(outKey, rowName)]) pendingKeys.push(outKey);
+      if (reviewRowBlocker(outKey, rowName)) pendingKeys.push(outKey);
     });
     return pendingKeys;
   }
@@ -4078,15 +4240,29 @@
     });
     var pendingOutputKeys = pendingReviewOutputKeys(annotatorId);
     if (pendingOutputKeys.length) {
-      showToast(t('toastSelectDecision').replace('{list}', pendingOutputKeys.join('、')), 'warning');
+      /* issue #552: same list either way; the wording only switches to the
+         reason-specific copy once every blocker is a reason-less reject. */
+      var onlyReasons = pendingOutputKeys.every(function (outKey) {
+        return reviewRowBlocker(outKey, annotatorId) === 'reason';
+      });
+      var toastKey = onlyReasons ? 'toastRejectReasonRequired' : 'toastSelectDecision';
+      showToast(t(toastKey).replace('{list}', pendingOutputKeys.join('、')), 'warning');
       return;
     }
 
     var decisionLines = [];
+    var reasons = {};
     state.selectedOutputTypes.forEach(function (outKey) {
       rowsByOutKey[outKey].forEach(function (row) {
         var decision = reviewRowDecisions[decisionKey(outKey, row.name)];
-        decisionLines.push(outKey + ' · ' + row.name + ': ' + decision);
+        var line = outKey + ' · ' + row.name + ': ' + decision;
+        /* issue #552 (FR-016A): the reason rides the history line, so the
+           FR-014I rejected event's summary carries it as well. */
+        if (decision === 'reject' && row.name === annotatorId) {
+          reasons[outKey] = reviewRowReason(outKey, annotatorId);
+          line += ' — ' + reasons[outKey];
+        }
+        decisionLines.push(line);
       });
     });
     var correctionLines = state.selectedOutputTypes.map(function (outKey) {
@@ -4110,6 +4286,10 @@
     state.selectedOutputTypes.forEach(function (outKey) {
       submitPayload.decisions[outKey] = reviewRowDecisions[decisionKey(outKey, annotatorId)];
     });
+    /* issue #552 (FR-016A / FR-085): the reject reasons persist next to the
+       decisions they explain -- the annotator's rework banner reads them
+       from here, nowhere else. */
+    submitPayload.reasons = reasons;
     window.LabelSuiteAnnotationWorkspaceData.markSampleSubmitted(
       currentProfile.id,
       currentRole,

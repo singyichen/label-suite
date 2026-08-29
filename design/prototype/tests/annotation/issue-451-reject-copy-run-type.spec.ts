@@ -100,6 +100,8 @@ test.describe('the displayed copy matches the actual submit-time state effect (i
     await openReviewer(page, 'dry_run');
     await expect(page.getByTestId('ws-review-note-bubble')).toContainText('不回退標記員狀態');
     await page.getByTestId('ws-review-row-reject').click();
+    // issue #552 (FR-016A): a reject needs a reason before submit goes through.
+    await page.getByTestId('ws-review-reject-reason').fill('理由');
     await page.getByTestId('ws-review-submit-btn').click();
     await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
 
@@ -118,6 +120,8 @@ test.describe('the displayed copy matches the actual submit-time state effect (i
     await openReviewer(page, 'official_run');
     await expect(page.getByTestId('ws-review-note-bubble')).toContainText('重標待辦');
     await page.getByTestId('ws-review-row-reject').click();
+    // issue #552 (FR-016A): a reject needs a reason before submit goes through.
+    await page.getByTestId('ws-review-reject-reason').fill('理由');
     await page.getByTestId('ws-review-submit-btn').click();
     await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
 

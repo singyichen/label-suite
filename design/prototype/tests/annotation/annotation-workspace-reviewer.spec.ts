@@ -120,6 +120,8 @@ test.describe('reviewer direct correction — deep example (single_label, T001)'
 
     const row = page.getByTestId('ws-review-row').first();
     await row.getByTestId('ws-review-row-reject').click();
+    // issue #552 (FR-016A): a reject needs a reason before submit goes through.
+    await row.getByTestId('ws-review-reject-reason').fill('理由');
     await page.getByTestId('ws-review-submit-btn').click();
     await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
 
