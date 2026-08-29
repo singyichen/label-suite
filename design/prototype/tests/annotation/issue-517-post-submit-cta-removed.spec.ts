@@ -58,19 +58,10 @@ async function expectNoExitCard(page: Page) {
   await expect(page.locator('#wsPostSubmitMount')).toHaveCount(0);
   await expect(page.locator('.rv-exits, .rv-exits-title, .rv-exits-note, .rv-exits-actions, .rv-exits-none')).toHaveCount(0);
 
-  /* issue #526 reverse guard: the role-dependent status note (FR-084) that
-     now sits under the banner must not quietly grow back into the retired
-     post-submit exit card -- no control, no destination links, and on a
-     unit the reviewer is done with, nothing that claims to need action. */
-  const hint = page.getByTestId('ws-review-action-hint');
-  if (await hint.count()) {
-    expect(await hint.evaluate((el) => el.tagName)).not.toMatch(/^(BUTTON|A)$/);
-    await expect(hint.locator('button, a')).toHaveCount(0);
-    await expect(hint).not.toHaveAttribute('data-needs-action', 'true');
-    for (const retiredCopy of ['下一個可處理單位', '返回審核清單', '返回 Dashboard', '下一步']) {
-      await expect(hint).not.toContainText(retiredCopy);
-    }
-  }
+  /* issue #562: the role-dependent status note that once sat under the
+     banner (issue #526) is retired too -- nothing may grow back there. */
+  await expect(page.getByTestId('ws-review-action-hint')).toHaveCount(0);
+}
 }
 
 test.beforeEach(async ({ page }) => {
