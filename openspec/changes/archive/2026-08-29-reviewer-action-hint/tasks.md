@@ -12,7 +12,7 @@
 - [x] 1.4 執行 Red 證據：自 design/prototype 執行 pnpm playwright test --config playwright.local.config.ts tests/annotation/issue-517-post-submit-cta-removed.spec.ts，記錄結果（此檔既有斷言於 Red 階段預期維持綠，反向斷言在提示不存在時亦為綠）。 [@senior-qa]
 - [x] 1.5 修改 `design/prototype/pages/annotation/annotation-workspace.config.js`：新增 `buildReviewActionHint(unitStatus)`（由 `renderReviewer()` 於 `buildReviewUnitContext()` 之後掛於橫幅下一個兄弟位置），推導只讀 `readReviewerSubmissions()`（同一次讀取同時決定「已提交」與 `remaining`）、任務生效之 `minReviewers`、`isArbiterCandidate()`；新增 zh／en `actionHint*` i18n 鍵；不得修改 Red contract；以獨立 Green commit 提交。 [@senior-frontend]
 - [x] 1.6 修改 `design/prototype/pages/annotation/annotation-workspace.html`：新增 rv-action-hint 一般文字層級樣式與 `[data-needs-action="true"]` 強調樣式（不使用 CSS order、不呈現按鈕外觀）；以獨立 Green commit 提交。 [@senior-frontend]
-- [ ] 1.7 執行 command-only 完整驗證：自 design/prototype 執行 pnpm typecheck 與 pnpm playwright test --config playwright.local.config.ts（全套）；自專案根執行 scripts/check-sdd.sh 與 git diff --check；逐一記錄 exit code 與 Playwright 總數。 [@main]
+- [x] 1.7 執行 command-only 完整驗證：自 design/prototype 執行 pnpm typecheck 與 pnpm playwright test --config playwright.local.config.ts（全套）；自專案根執行 scripts/check-sdd.sh 與 git diff --check；逐一記錄 exit code 與 Playwright 總數。 [@main]
 
 ## Pre-merge finalization (outside /opsx:apply) — NON-CHECKBOX
 
