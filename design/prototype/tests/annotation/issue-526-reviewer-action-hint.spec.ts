@@ -114,8 +114,9 @@ test.describe('AC-4.47 — approved / modified split on whether I already submit
     await page.getByTestId('lang-toggle').click();
     await expect(hint(page)).toHaveText('Your review is needed');
 
+    // The language choice persists across navigations, so the next unit
+    // opens in English without a second toggle (which would flip back).
     await openUnit(page, { task_id: 'T016', sample_id: 'ofm-02-approved-interim', reviewer_id: 'reviewer_wang' });
-    await page.getByTestId('lang-toggle').click();
     await expect(hint(page)).toHaveText('Your review is recorded; waiting for 2 more reviewer(s)');
   });
 });
@@ -156,27 +157,31 @@ test.describe('AC-4.48 — disputed splits arbiter candidate / participant / no 
     await page.getByTestId('lang-toggle').click();
     await expect(hint(page)).toHaveText('Your arbitration is needed');
 
+    // Language persists across navigations; no second toggle.
     await openUnit(page, { task_id: 'T017', sample_id: 'oft-01-even-tie', reviewer_id: 'reviewer_wang' });
-    await page.getByTestId('lang-toggle').click();
     await expect(hint(page)).toHaveText('You have reviewed this unit; waiting for an eligible reviewer to resolve it');
 
     await openUnit(page, { task_id: 'T017', sample_id: 'oft-01-even-tie', reviewer_id: 'reviewer_lin' });
-    await page.getByTestId('lang-toggle').click();
     await expect(hint(page)).toHaveText('Waiting for a reviewer with arbitration rights');
   });
 });
 
 test.describe('AC-4.49 — pending has no hint; finalized / null are plain notes; needs-action only twice', () => {
-  test('T017 oft-05 pending: no hint at all, the controls below are the instruction', async ({ page }) => {
-    await openUnit(page, { task_id: 'T017', sample_id: 'oft-05-pending-review' });
+  test('T015 ofs-04 pending: no hint at all, the controls below are the instruction', async ({ page }) => {
+    await openUnit(page, { task_id: 'T015', sample_id: 'ofs-04-pending-review' });
+    await expect(banner(page).locator('.rv-unit-state')).toHaveText('目前：待審');
     await expect(page.getByTestId('ws-review-submit-btn')).toBeVisible();
     await expect(hint(page)).toHaveCount(0);
     await expect(page.locator('[data-needs-action]')).toHaveCount(0);
   });
 
-  test('T015 ofs-04 pending (min 1): still no hint', async ({ page }) => {
-    await openUnit(page, { task_id: 'T015', sample_id: 'ofs-04-pending-review' });
-    await expect(hint(page)).toHaveCount(0);
+  test('T017 oft-05 was rolled back by a reject, so it is a null unit, not a pending one', async ({ page }) => {
+    // The seed rejects oft-05 under official_run, which rolls the annotator
+    // back to pending (FR-014I): from the reviewer side there is no
+    // submission, the pill says 尚無標記提交 and the hint follows the pill.
+    await openUnit(page, { task_id: 'T017', sample_id: 'oft-05-pending-review' });
+    await expect(banner(page).locator('.rv-unit-state')).toHaveText('尚無標記提交');
+    await expectStatusNote(page, '等待標記員提交');
   });
 
   test('T016 ofm-01 finalized: read-only note without CTA', async ({ page }) => {
@@ -198,8 +203,8 @@ test.describe('AC-4.49 — pending has no hint; finalized / null are plain notes
     await page.getByTestId('lang-toggle').click();
     await expect(hint(page)).toHaveText('Finalized; this unit is read-only');
 
+    // Language persists across navigations; no second toggle.
     await openUnit(page, { task_id: 'T015', sample_id: 'ofs-05-not-submitted' });
-    await page.getByTestId('lang-toggle').click();
     await expect(hint(page)).toHaveText('Waiting for the annotator to submit');
   });
 
