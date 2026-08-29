@@ -956,6 +956,24 @@
     /* ── Reviewer mode: original-answer label (AC-3.45) ───────────────── */
     .rv-btn-text { line-height: 1; }
     .rv-answer-origin { font-size: 12px; color: var(--color-ink-muted); margin-top: 12px; }
+
+    /* ── Reviewer mode: reject reason (issue #552, FR-016A) ─────────────── */
+    .rv-reject-reason { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; }
+    /* Blocked look while a reject still lacks its reason; the click stays
+       live so the FR-083 toast can name the output types. */
+    #wsReviewSubmitBtn[data-submit-blocked] { opacity: 0.55; cursor: not-allowed; }
+    .rv-reject-reason-label { font-size: 12px; font-weight: 600; color: var(--color-error); }
+    .rv-reject-reason textarea {
+      width: 100%;
+      font: inherit;
+      font-size: 13px;
+      padding: 6px 8px;
+      border: 1px solid var(--color-error-border);
+      border-radius: var(--radius-sm);
+      background: var(--color-surface);
+      color: var(--color-ink);
+      resize: vertical;
+    }
   </style>
 </head>
 <body>
