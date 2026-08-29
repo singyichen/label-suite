@@ -33,12 +33,12 @@ Reviewer 在 `dry_run` 與 `official_run` 執行修正／刪除**或判定退回
 
 ### Requirement: FR-083 送出阻擋同時指名缺理由之退回
 
-送出驗證 MUST 為「每個 outKey 一筆決策，且退回者皆有非空理由」。阻擋 toast MUST 指名全部阻擋之 outKey（多筆以「、」串接）：存在尚未決策者時沿用 `toastSelectDecision`；全部阻擋皆為缺理由時使用 `toastRejectReasonRequired`。兩類 outKey 之推導 MUST 與送出驗證共用同一份逐 outKey 判定，不得另建第二份計算。存在缺理由之退回時「送出審核」按鈕 MUST 帶 `aria-disabled="true"`。
+送出驗證 MUST 為「每個 outKey 一筆決策，且退回者皆有非空理由」。阻擋 toast MUST 指名全部阻擋之 outKey（多筆以「、」串接）：存在尚未決策者時沿用 `toastSelectDecision`；全部阻擋皆為缺理由時使用 `toastRejectReasonRequired`。兩類 outKey 之推導 MUST 與送出驗證共用同一份逐 outKey 判定，不得另建第二份計算。存在缺理由之退回時「送出審核」按鈕 MUST 帶 `data-submit-blocked="reason"` 以呈現停用外觀，且 MUST NOT 使用 `disabled` 或 `aria-disabled`（兩者皆會攔下點擊，使 toast 無法指名 outKey）。
 
 #### Scenario: AC-3.47 缺理由阻擋送出並指名 outKey
 - **GIVEN** `role=reviewer` 對 `single_label` 點「退回」但未填理由
 - **WHEN** 點擊「送出審核」
-- **THEN** 送出中止，toast 顯示「請填寫以下輸出類型的退回理由：single_label」，且 `ws-review-submit-btn` 之 `aria-disabled` 為 `true`；填入理由後再送出成功，`aria-disabled` 為 `false`
+- **THEN** 送出中止，toast 顯示「請填寫以下輸出類型的退回理由：single_label」，且 `ws-review-submit-btn` 帶 `data-submit-blocked="reason"`；填入理由後該屬性移除，再送出成功
 
 ## ADDED Requirements
 
@@ -49,7 +49,7 @@ Reviewer 在 `dry_run` 與 `official_run` 執行修正／刪除**或判定退回
 #### Scenario: AC-2.14 official_run 重標待辦顯示退回理由
 - **GIVEN** `official_run` reviewer 對 `single_label` 退回並填理由「情緒判讀有誤」後送出
 - **WHEN** 該標記員開啟同一樣本
-- **THEN** `ws-rework-reasons` 恰一個，含 `ws-rework-reason-row[data-outkey=single_label]` 且文字含「情緒判讀有誤」與審核員帳號；`ws-output-panel-single_label` 帶 `data-rework-rejected="true"`
+- **THEN** `ws-rework-reasons` 恰一個，含 `ws-rework-reason-row[data-outkey=single_label]` 且文字含「情緒判讀有誤」與審核員帳號；`ws-output-panel-{outKey}`（此例為 `single_label`）帶 `data-rework-rejected="true"`
 
 #### Scenario: dry_run 不渲染橫幅
 - **GIVEN** `dry_run` reviewer 退回並填理由後送出

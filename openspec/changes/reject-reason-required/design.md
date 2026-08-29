@@ -20,7 +20,7 @@
 
 1. **理由欄掛載位置**：以 `row`（`ws-review-row` 內容卡）的直接子元素掛在直接修正控件之後，而非 Bypass 列內——共用引擎會整體重繪作答面板（FR-014P 第 3 點），Bypass 列內的元素需靠 MutationObserver 重新掛回；理由欄放在面板外即不受重繪影響。span 合併列（FR-014N）每個 outKey 各一欄，依 `outKeys` 順序接在同一張卡之後。
 2. **單一阻擋判定**：新增 `reviewRowBlocker(outKey, rowName)` 回傳 `null | 'undecided' | 'reason'`；`pendingReviewOutputKeys()` 改由它推導（仍回傳 outKey 陣列）。toast 文案：只要有任一 `undecided` 即用既有 `toastSelectDecision`；全部為 `reason` 時用新鍵 `toastRejectReasonRequired`（`請填寫以下輸出類型的退回理由：{list}`）。這樣 FR-083「與送出驗證共用來源」的契約自然延伸到理由。
-3. **停用呈現**：「送出審核」以 `aria-disabled` 而非 `disabled` 屬性標示——FR-083／AC-3.47 要求點擊時 toast 指名 outKey，原生 `disabled` 會吞掉 click 事件使 toast 無法觸發。
+3. **停用呈現**：「送出審核」以 `data-submit-blocked="reason"` 屬性＋CSS 呈現停用外觀，不用 `disabled` 也不用 `aria-disabled`——FR-083／AC-3.47 要求點擊時 toast 指名 outKey，原生 `disabled` 會吞掉 click 事件，而 `aria-disabled` 亦會被 Playwright actionability（及輔助技術）視為不可操作（Red 階段實測）。
 4. **持久化**：
    - 草稿：`persistReviewDraft()` 的每筆 `{decision, corrected}` 增加 `reason`；`restoreReviewDraft()` 還原。
    - 送出：`submitPayload.reasons = { [outKey]: reason }`（僅退回者）；`decisionLines` 附理由（`outKey · annotator: reject — 理由`），因此 `markSampleRejected()` 的歷程摘要自然帶理由（FR-016B 歷程面板不另改）。
