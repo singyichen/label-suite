@@ -42,13 +42,13 @@ const NOTE_DRY_ZH =
   '通過：採用該輸出類型目前顯示的作答（含您的修正）為審核結果。退回：記錄不採用的決策與修正差異。送出後——試標：不回退標記員狀態，品質問題由任務層級 IAA 閘門與下一輪試標處理。';
 
 const NOTE_OFFICIAL_ZH = (annotator: string) =>
-  `通過：採用該輸出類型目前顯示的作答（含您的修正）為審核結果。退回：記錄不採用的決策與修正差異。送出後——正式標記：任一輸出類型退回會使此單位回到待標記，並產生標記員 ${annotator} 的重標待辦；全部通過則標記員狀態不變。`;
+  `通過：採用該輸出類型目前顯示的作答（含您的修正）為審核結果。退回：記錄不採用的決策與修正差異。送出後——正式標記：任一輸出類型退回會使此單位回到待標記，並產生標記員 ${annotator} 的重標待辦；全部通過則標記員狀態不變。退回理由會顯示給標記員。`;
 
 const NOTE_DRY_EN =
   'Approve: the answer currently shown for that output type (including your correction) becomes the review result. Reject: records the decision not to accept it, plus any correction. After submitting — dry run: the annotator status is not rolled back; quality issues are handled by the task-level IAA gate and the next dry run.';
 
 const NOTE_OFFICIAL_EN = (annotator: string) =>
-  `Approve: the answer currently shown for that output type (including your correction) becomes the review result. Reject: records the decision not to accept it, plus any correction. After submitting — official run: rejecting any output type returns this unit to pending and creates a re-annotation task for ${annotator}; if everything is approved the annotator status is unchanged.`;
+  `Approve: the answer currently shown for that output type (including your correction) becomes the review result. Reject: records the decision not to accept it, plus any correction. After submitting — official run: rejecting any output type returns this unit to pending and creates a re-annotation task for ${annotator}; if everything is approved the annotator status is unchanged. The reject reason is shown to the annotator.`;
 
 async function openReviewer(page: Page, runType: RunType, annotatorId = ANNOTATOR): Promise<void> {
   await page.goto(

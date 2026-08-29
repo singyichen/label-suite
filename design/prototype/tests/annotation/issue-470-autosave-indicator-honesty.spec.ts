@@ -213,6 +213,8 @@ test.describe('Autosave indicator honesty (issue #470)', () => {
     await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer' }));
     await dismissGuidelineModal(page);
     await page.getByTestId('ws-review-row-reject').click();
+    // issue #552 (FR-016A): a reject needs a reason before submit goes through.
+    await page.getByTestId('ws-review-reject-reason').fill('理由');
     await page.getByTestId('ws-review-submit-btn').click();
     await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
 

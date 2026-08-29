@@ -188,6 +188,8 @@ test.describe('Regression guard: no page errors on the reviewer flow', () => {
     await page.getByTestId('ws-review-correct-single_label')
       .getByTestId('ws-single-label-chip-neutral').click();
     await page.getByTestId('ws-review-row-reject').click();
+    // issue #552 (FR-016A): a reject needs a reason before submit goes through.
+    await page.getByTestId('ws-review-reject-reason').fill('理由');
     await page.getByTestId('ws-review-submit-btn').click();
     await expect(page.locator('#toast')).toBeVisible();
 

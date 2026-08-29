@@ -122,19 +122,22 @@ test.describe('reject expands a required reason field on the row (FR-016A / AC-3
 });
 
 test.describe('submit requires a reason on every reject and the toast names the outKeys (FR-083 / AC-3.47)', () => {
-  test('a reject with an empty reason blocks submit and marks the button aria-disabled', async ({ page }) => {
+  test('a reject with an empty reason blocks submit and marks the button as blocked', async ({ page }) => {
     await submitAsAnnotator(page, 'official_run');
     await openReviewer(page, 'official_run');
 
     const submit = page.getByTestId('ws-review-submit-btn');
     await page.getByTestId('ws-review-row-reject').click();
-    await expect(submit).toHaveAttribute('aria-disabled', 'true');
+    // Not `disabled` / `aria-disabled`: the click must still reach the
+    // FR-083 toast so it can name the outKeys.
+    await expect(submit).toHaveAttribute('data-submit-blocked', 'reason');
+    await expect(submit).toBeEnabled();
 
     await submit.click();
     await expect(page.locator('#toastMsg')).toHaveText('請填寫以下輸出類型的退回理由：single_label');
 
     await page.getByTestId('ws-review-reject-reason').fill(REASON);
-    await expect(submit).toHaveAttribute('aria-disabled', 'false');
+    await expect(submit).not.toHaveAttribute('data-submit-blocked', 'reason');
     await submit.click();
     await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
   });

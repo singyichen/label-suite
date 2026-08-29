@@ -632,6 +632,8 @@ async function submitCorrection(page: Page, sampleId: string, annotatorId: strin
   await gotoReview(page, sampleId, annotatorId, reviewerId);
   await page.getByTestId('ws-review-correct-single_label').getByTestId(`ws-single-label-chip-${correctedLabel}`).click();
   await page.getByTestId('ws-review-row-reject').click();
+  // issue #552 (FR-016A): a reject needs a reason before submit goes through.
+  await page.getByTestId('ws-review-reject-reason').fill('理由');
   await page.getByTestId('ws-review-submit-btn').click();
   await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
 }
@@ -733,6 +735,8 @@ test('XROLE-13: dry_run reject never rolls the annotator sample back to pending 
 
   await gotoReview(r01Page, DRY_RUN_RECORD_IDS[0], 'A01', REVIEWER_R01, 'dry_run');
   await r01Page.getByTestId('ws-review-row-reject').click();
+  // issue #552 (FR-016A): a reject needs a reason before submit goes through.
+  await r01Page.getByTestId('ws-review-reject-reason').fill('理由');
   await r01Page.getByTestId('ws-review-submit-btn').click();
   await expect(r01Page.locator('#toastMsg')).toHaveText('審核已送出');
 
