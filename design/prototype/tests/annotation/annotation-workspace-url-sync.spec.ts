@@ -92,7 +92,7 @@ test.describe('Reviewers sync both halves of the review unit', () => {
     await page.reload();
 
     const active = page.locator('.sample-item.active');
-    await expect(active).toContainText('sent-001');
+    await expect(active).toHaveAttribute('data-sample-id', 'sent-001');
     await expect(active.getByTestId('ws-sample-annotator')).toHaveText('tony0950127');
     // tony0950127 answered positive on sent-001; the seeded panel proves the
     // reload restored the unit rather than merely the sample.
