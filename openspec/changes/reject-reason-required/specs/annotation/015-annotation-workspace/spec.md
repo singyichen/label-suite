@@ -1,6 +1,6 @@
 ## Purpose
 
-正典：`specs/annotation/015-annotation-workspace/spec.md`（v4.55.0 → 4.58.0）。本變更（issue #552）修訂 FR-016A、FR-014I、FR-070 第 6 點、FR-083、AC-3.40、AC-3.47，新增 FR-084、AC-2.14、AC-3.48。
+正典：`specs/annotation/015-annotation-workspace/spec.md`（v4.55.0 → 4.58.0）。本變更（issue #552）修訂 FR-016A、FR-014I、FR-070 第 6 點、FR-083、AC-3.40、AC-3.47，新增 FR-085、AC-2.14、AC-3.48。
 
 ## MODIFIED Requirements
 
@@ -15,7 +15,7 @@ Reviewer 在 `dry_run` 與 `official_run` 執行修正／刪除**或判定退回
 
 ### Requirement: FR-014I 退回回退狀態並攜帶理由
 
-`official_run` 下「目前標記員」列任一 outKey 於送出審核時被判定為 `退回`，系統 MUST 將樣本狀態回退為 `待標記` 並新增 `{action:'rejected', role:'reviewer'}` 歷程事件（既有機制不變）；該事件摘要 MUST 含逐 outKey 退回理由。退回理由的標記員側呈現依 FR-084。
+`official_run` 下「目前標記員」列任一 outKey 於送出審核時被判定為 `退回`，系統 MUST 將樣本狀態回退為 `待標記` 並新增 `{action:'rejected', role:'reviewer'}` 歷程事件（既有機制不變）；該事件摘要 MUST 含逐 outKey 退回理由。退回理由的標記員側呈現依 FR-085。
 
 #### Scenario: 退回歷程事件含理由
 - **GIVEN** `run_type=official_run` reviewer 對 `single_label` 退回並填理由「情緒判讀有誤」後送出
@@ -42,7 +42,7 @@ Reviewer 在 `dry_run` 與 `official_run` 執行修正／刪除**或判定退回
 
 ## ADDED Requirements
 
-### Requirement: FR-084 標記員重標理由橫幅
+### Requirement: FR-085 標記員重標理由橫幅
 
 `run_type=official_run` 之 annotator 開啟帶有重標待辦的樣本（樣本狀態為 `pending` 且最新歷程事件為 `rejected`）時，工作區 MUST 於 `#annotationPreview` 頂部渲染 `ws-rework-reasons` 橫幅，逐被退回 outKey 一列 `ws-rework-reason-row`（帶 `data-outkey`）列出理由、審核員帳號與時間（`formatHistoryTime()` 格式），並於被退回 outKey 之作答面板 `ws-output-panel-{outKey}` 加 `data-rework-rejected="true"`。理由來源 MUST 為 reviewer submission 之 `decisions`／`reasons`（`getReworkReasons()`），不得另存第二份。`dry_run` MUST NOT 渲染本橫幅；無重標待辦之樣本亦不渲染。歷程面板（FR-016B）不變。
 

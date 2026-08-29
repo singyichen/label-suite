@@ -21,5 +21,5 @@
 
 > **相依與平行性**：嚴格序列；前置任務：2.3。
 
-- [ ] 3.1 回寫正典 `specs/annotation/015-annotation-workspace/spec.md`：版本 4.55.0 → 4.58.0、修訂 FR-016A／FR-014I／FR-070／FR-083／AC-3.40／AC-3.47、新增 FR-084／AC-2.14／AC-3.48、testid 表新增 `ws-review-reject-reason`／`ws-rework-reasons`、Changelog 首列。 [@main]
+- [ ] 3.1 回寫正典 `specs/annotation/015-annotation-workspace/spec.md`：版本 4.55.0 → 4.58.0、修訂 FR-016A／FR-014I／FR-070／FR-083／AC-3.40／AC-3.47、新增 FR-085／AC-2.14／AC-3.48、testid 表新增 `ws-review-reject-reason`／`ws-rework-reasons`、Changelog 首列。 [@main]
 - [ ] 3.2 Source-Verify：以 `grep -i` 逐一確認 proposal／design／delta 引用之 FR/AC ID、testid、路徑、issue 編號皆可於正典定位；執行 `pnpm typecheck` 與 `pnpm playwright test --config playwright.local.config.ts` 全套，記錄總數與 exit 0。 [@main]

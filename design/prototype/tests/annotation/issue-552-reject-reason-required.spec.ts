@@ -27,7 +27,7 @@ import {
  *     the annotator (FR-070 point 6, AC-3.40); dry_run does not.
  *   - the reason persists with the reviewer submission and is rendered to
  *     the official_run annotator as a `ws-rework-reasons` banner on the
- *     rework todo (FR-084, AC-2.14); dry_run never renders it.
+ *     rework todo (FR-085, AC-2.14); dry_run never renders it.
  */
 
 const ANNOTATOR = 'kioleemg12';
@@ -196,7 +196,7 @@ test.describe('the official_run tooltip says the reason is shown to the annotato
   });
 });
 
-test.describe('the annotator sees the reject reasons on the rework todo (FR-084 / AC-2.14)', () => {
+test.describe('the annotator sees the reject reasons on the rework todo (FR-085 / AC-2.14)', () => {
   test('official_run: reason, reviewer and time per outKey, rejected panel marked', async ({ page }) => {
     const errors = trackPageErrors(page);
     await submitAsAnnotator(page, 'official_run');

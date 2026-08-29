@@ -394,7 +394,7 @@
   }
   updateAnnotationPreview = patchedUpdateAnnotationPreview;
 
-  /* issue #552 (FR-084 / AC-2.14): an official_run reject sends the sample
+  /* issue #552 (FR-085 / AC-2.14): an official_run reject sends the sample
      back to the annotator (FR-014I), who until now saw one red `rejected`
      badge in the history panel and nothing about WHY. Render the reviewers'
      per-outKey reasons at the top of the workspace and mark the rejected
@@ -4286,7 +4286,7 @@
     state.selectedOutputTypes.forEach(function (outKey) {
       submitPayload.decisions[outKey] = reviewRowDecisions[decisionKey(outKey, annotatorId)];
     });
-    /* issue #552 (FR-016A / FR-084): the reject reasons persist next to the
+    /* issue #552 (FR-016A / FR-085): the reject reasons persist next to the
        decisions they explain -- the annotator's rework banner reads them
        from here, nowhere else. */
     submitPayload.reasons = reasons;
