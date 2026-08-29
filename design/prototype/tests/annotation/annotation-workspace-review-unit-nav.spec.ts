@@ -90,7 +90,7 @@ test.describe('Prev / next move between annotators of the same sample', () => {
 
     const active = page.locator('.sample-item.active');
     await expect(active.getByTestId('ws-sample-annotator')).toHaveText('tony0950127');
-    await expect(active).toContainText('sent-001');
+    await expect(active).toHaveAttribute('data-sample-id', 'sent-001');
   });
 
   test('下一筆 stays enabled on the last sample until its last annotator', async ({ page }) => {

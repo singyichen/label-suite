@@ -1888,9 +1888,11 @@
         );
         meta.appendChild(snippet);
       } else {
-        /* The annotator leads (it is what distinguishes the units of one
-           group); the sample ID stays as a muted trailing echo so the entry
-           remains self-describing when read out of its group context. */
+        /* Only the annotator: it is the one dimension that varies inside a
+           group. The sample ID already sits once in the group header, and
+           the entry's data-sample-id / aria-label keep it addressable and
+           readable out of context (issue #557 dropped the muted echo that
+           repeated it on every row). */
         var unitLine = document.createElement('div');
         unitLine.className = 'sample-unit-line';
         var unitAnnotator = document.createElement('span');
@@ -1898,16 +1900,7 @@
         unitAnnotator.setAttribute('data-testid', 'ws-sample-annotator');
         unitAnnotator.setAttribute('title', unit.annotatorId);
         unitAnnotator.textContent = unit.annotatorId;
-        var unitSep = document.createElement('span');
-        unitSep.className = 'sample-unit-sep';
-        unitSep.textContent = '·';
-        var unitId = document.createElement('span');
-        unitId.className = 'sample-unit-id';
-        unitId.setAttribute('title', recordId);
-        unitId.textContent = recordId;
         unitLine.appendChild(unitAnnotator);
-        unitLine.appendChild(unitSep);
-        unitLine.appendChild(unitId);
         meta.appendChild(unitLine);
       }
       var statusLabel = document.createElement('span');

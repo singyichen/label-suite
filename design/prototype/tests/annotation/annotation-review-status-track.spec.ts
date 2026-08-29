@@ -226,7 +226,7 @@ test.describe('Review status track — structure, regression and language', () =
 
     await closeFlowDrawer(page);
     await page
-      .locator('[data-testid="ws-sample-item"]', { hasText: UNITS.disputed })
+      .locator('[data-testid="ws-sample-item"][data-sample-id="' + UNITS.disputed + '"]')
       .first()
       .click();
     await openFlowDrawer(page);
