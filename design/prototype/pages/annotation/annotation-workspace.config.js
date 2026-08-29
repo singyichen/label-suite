@@ -3526,7 +3526,8 @@
       var submitBtn = document.createElement('button');
       submitBtn.type = 'button';
       submitBtn.className = 'btn btn-cta';
-      submitBtn.style.cssText = 'margin-top:12px;';
+      /* issue #563: right-align like the action bar's submit button. */
+      submitBtn.style.cssText = 'margin-top:12px;margin-left:auto;display:flex;width:fit-content;';
       submitBtn.setAttribute('data-testid', 'ws-arbitration-submit');
       submitBtn.textContent = t('arbitrationSubmitLabel');
       submitBtn.addEventListener('click', function () {

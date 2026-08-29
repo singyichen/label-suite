@@ -16,20 +16,6 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { buildWorkspaceUrl, dismissGuidelineModal, skipGuidelineModal } from './_workspace-helpers';
 
-type WorkspaceData = {
-  markSampleSubmitted: (
-    taskId: string, role: string, runType: string, sampleId: string,
-    payload: unknown, historySummary: string,
-    identity: { annotatorId?: string; reviewerId?: string }
-  ) => void;
-};
-
-declare global {
-  interface Window {
-    LabelSuiteAnnotationWorkspaceData: WorkspaceData;
-  }
-}
-
 /* Widest gap the right padding of either container may leave between the
    button and the container edge (action-bar uses --space-lg = 24px). */
 const RIGHT_PADDING_TOLERANCE = 32;
@@ -99,9 +85,12 @@ async function seedDisputedUnit(page: Page) {
   ];
   for (const s of seeds) {
     await page.evaluate((a) => {
-      window.LabelSuiteAnnotationWorkspaceData.markSampleSubmitted(
-        'T001', a.role, 'official_run', 'sent-001', a.payload, '', a.identity
-      );
+      /* Cast locally instead of augmenting Window: the arbitration spec
+         already declares the global with its own WorkspaceData shape. */
+      const data = (window as unknown as {
+        LabelSuiteAnnotationWorkspaceData: { markSampleSubmitted: (...args: unknown[]) => void };
+      }).LabelSuiteAnnotationWorkspaceData;
+      data.markSampleSubmitted('T001', a.role, 'official_run', 'sent-001', a.payload, '', a.identity);
     }, s);
   }
 }
