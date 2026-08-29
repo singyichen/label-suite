@@ -443,6 +443,20 @@
        row after .rv-flow-trigger; inline-flex keeps it on the chip line and
        lets the banner's flex-wrap carry it at 375px. */
     .rv-review-note { display: inline-flex; align-items: center; font-size: 12px; color: var(--color-ink-muted); }
+    /* issue #526 (FR-084): the role-dependent hint under the banner. A plain
+       line of text, never a chip or a button -- only the two "needs you"
+       rows get emphasis, and the words carry that meaning before the colour
+       does. No `order`: DOM order is the reading order at every width. */
+    .rv-action-hint {
+      margin: -2px 0 10px;
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--color-ink-muted);
+    }
+    .rv-action-hint[data-needs-action="true"] {
+      color: var(--color-primary);
+      font-weight: 600;
+    }
     /* The shared .tooltip-bubble anchors above its trigger and hangs off
        its left edge -- right for a form label at the left margin, wrong for
        a trigger that flex-wrap may park anywhere along a 375px banner row.
