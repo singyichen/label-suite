@@ -122,13 +122,6 @@
       unitStateNowTpl: '目前：{state}',
       unitStateAria: '{state}，已有 {x} 位審核員／共需 {n} 位',
       unitStateAriaFinalized: '{state}，已達 {n} 位審核員門檻，內容已鎖定',
-      actionHintReview: '需要你的審核',
-      actionHintRecorded: '你的審核已記錄，等待另外 {remaining} 位審核員',
-      actionHintArbitrate: '需要你的仲裁',
-      actionHintParticipated: '你已參與此單位，等待其他具資格審核員處理',
-      actionHintAwaitArbiter: '等待具仲裁資格的審核員處理',
-      actionHintFinalized: '已定稿，此單位為唯讀',
-      actionHintAwaitAnnotator: '等待標記員提交',
       reviewOriginalAnswerLabel: '標記員原答案：',
       reviewCorrectedAnswerLabel: 'Reviewer 修正後答案：',
       toastReviewDecisionResetOnEdit: '直接修正的值已變更，對應的通過／退回決策已重置，請重新確認後再送出',
@@ -239,13 +232,6 @@
       unitStateNowTpl: 'Now: {state}',
       unitStateAria: '{state}, {x} of {n} required reviewers',
       unitStateAriaFinalized: '{state}, met the {n}-reviewer threshold, locked',
-      actionHintReview: 'Your review is needed',
-      actionHintRecorded: 'Your review is recorded; waiting for {remaining} more reviewer(s)',
-      actionHintArbitrate: 'Your arbitration is needed',
-      actionHintParticipated: 'You have reviewed this unit; waiting for an eligible reviewer to resolve it',
-      actionHintAwaitArbiter: 'Waiting for a reviewer with arbitration rights',
-      actionHintFinalized: 'Finalized; this unit is read-only',
-      actionHintAwaitAnnotator: 'Waiting for the annotator to submit',
       reviewOriginalAnswerLabel: "Annotator's original answer: ",
       reviewCorrectedAnswerLabel: "Reviewer's corrected answer: ",
       toastReviewDecisionResetOnEdit: 'The direct correction changed, so the matching approve/reject decision was reset -- please re-confirm before submitting',
@@ -3777,9 +3763,7 @@
   }
 
   /* `reviewerSubmissions` is the unit's readReviewerSubmissions() result,
-     read once by renderReviewer() and shared with buildReviewActionHint()
-     (issue #526): the threshold chip's x and the hint's "remaining" are the
-     same number seen from two sides, so they come from one read. */
+     read once by renderReviewer(). */
   function buildReviewUnitContext(unitStatus, reviewerSubmissions) {
     var workspaceData = window.LabelSuiteAnnotationWorkspaceData;
     var minReviewers = currentProfile.minReviewers || 1;
@@ -3892,50 +3876,6 @@
     syncReviewFlowDrawer(unitStatus);
     if (unitStatus !== null) banner.appendChild(buildReviewFlowTrigger());
     return banner;
-  }
-
-  /* ── Role-dependent action hint (issue #526, FR-084) ───────────────
-     The same approved / modified / disputed pill means "review it" to one
-     reviewer, "wait" to a second and "arbitrate" to a third. One sentence
-     under the banner, derived from status x (did I submit) x
-     isArbiterCandidate(), answers "is this waiting on me". Only the two
-     rows that need the CURRENT reviewer carry data-needs-action; the rest
-     are plain notes, never a control. pending renders nothing -- the
-     decision controls right below are the instruction. Both run_types
-     share this table, and no row describes a submit consequence: that is
-     the review-note tooltip's job (FR-070). */
-  var ACTION_HINT_NEEDS_ACTION = { actionHintReview: true, actionHintArbitrate: true };
-
-  function reviewActionHintKey(unitStatus, reviewerSubmissions) {
-    var workspaceData = window.LabelSuiteAnnotationWorkspaceData;
-    var STATUS = workspaceData.REVIEW_UNIT_STATUS;
-    if (unitStatus === null) return 'actionHintAwaitAnnotator';
-    if (unitStatus === STATUS.PENDING) return null;
-    if (unitStatus === STATUS.FINALIZED) return 'actionHintFinalized';
-    var submitted = reviewerSubmissions.some(function (submission) {
-      return submission.reviewerId === currentIdentity.reviewerId;
-    });
-    if (unitStatus === STATUS.DISPUTED) {
-      if (workspaceData.isArbiterCandidate(currentProfile.id, currentRunType, currentSampleId, currentIdentity)) {
-        return 'actionHintArbitrate';
-      }
-      return submitted ? 'actionHintParticipated' : 'actionHintAwaitArbiter';
-    }
-    return submitted ? 'actionHintRecorded' : 'actionHintReview';
-  }
-
-  /* Returns null when there is nothing to say (pending). */
-  function buildReviewActionHint(unitStatus, reviewerSubmissions) {
-    var key = reviewActionHintKey(unitStatus, reviewerSubmissions);
-    if (!key) return null;
-    var hint = document.createElement('p');
-    hint.className = 'rv-action-hint';
-    hint.setAttribute('data-testid', 'ws-review-action-hint');
-    hint.setAttribute('data-hint', key);
-    if (ACTION_HINT_NEEDS_ACTION[key]) hint.setAttribute('data-needs-action', 'true');
-    var remaining = (currentProfile.minReviewers || 1) - reviewerSubmissions.length;
-    hint.textContent = t(key).replace('{remaining}', String(remaining));
-    return hint;
   }
 
   /* ── Review-flow drawer (issue #525 PR-A) ──────────────────────────
@@ -4061,11 +4001,6 @@
       currentProfile.id, currentRunType, currentSampleId, currentIdentity
     );
     preview.appendChild(buildReviewUnitContext(unitStatus, reviewerSubmissions));
-    /* issue #526: the banner says where the unit is; this line says whether
-       it is waiting on THIS reviewer. It follows the banner as a sibling so
-       the reading order stays run type -> state -> threshold -> hint. */
-    var actionHint = buildReviewActionHint(unitStatus, reviewerSubmissions);
-    if (actionHint) preview.appendChild(actionHint);
     /* issue #515: the three early returns below and the summary's own guard
        read one and the same answer, so they cannot disagree about whether
        this unit is interactive. */
