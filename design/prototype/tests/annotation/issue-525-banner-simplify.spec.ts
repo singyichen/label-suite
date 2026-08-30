@@ -13,7 +13,7 @@
  * Two other banner facts land with the reorder: a dry run is one of
  * several rounds, so its chip must say WHICH (試標 R{round}, falling back
  * to R1 exactly as annotation-list.html:1866 already does), and the state
- * element names itself as the CURRENT state (目前：/ Now:) so it cannot be
+ * element carried a 目前：/ Now: prefix (retired by issue #572) so it cannot be
  * misread as a decision the reviewer is being asked to make.
  *
  * Out of PR-B's scope, deliberately not asserted here: rendering only the
@@ -136,27 +136,27 @@ test.describe('issue #525 PR-B — the dry-run chip names its round', () => {
   });
 });
 
-test.describe('issue #525 PR-B — the state element says it is the CURRENT state', () => {
-  test('T014 dry-01: 目前： prefixes the finalized state and its note', async ({ page }) => {
+test.describe('issue #525 PR-B — the state element text (issue #572: no 目前： prefix)', () => {
+  test('T014 dry-01: finalized state and its note, unprefixed', async ({ page }) => {
     await openUnit(page, { task_id: 'T014', sample_id: 'dry-01-all-agree', run_type: 'dry_run', annotator_id: 'kioleemg12' });
 
-    await expect(statePill(page)).toHaveText('目前：已定稿 · 已鎖定');
+    await expect(statePill(page)).toHaveText('已定稿 · 已鎖定');
   });
 
-  test('T017 oft-01: 目前： prefixes the disputed state and its note', async ({ page }) => {
+  test('T017 oft-01: disputed state and its note, unprefixed', async ({ page }) => {
     await openUnit(page, { task_id: 'T017', sample_id: 'oft-01-even-tie' });
 
-    await expect(statePill(page)).toHaveText('目前：爭議中 · 未定稿，待仲裁');
+    await expect(statePill(page)).toHaveText('爭議中 · 未定稿，待仲裁');
   });
 
-  test('English uses Now:', async ({ page }) => {
+  test('English is unprefixed too', async ({ page }) => {
     await openUnit(page, { task_id: 'T017', sample_id: 'oft-01-even-tie' });
     await page.getByTestId('lang-toggle').click();
 
-    await expect(statePill(page)).toHaveText('Now: Disputed · not finalized, awaiting arbitration');
+    await expect(statePill(page)).toHaveText('Disputed · not finalized, awaiting arbitration');
   });
 
-  test('a null status is NOT prefixed: there is no current state to name', async ({ page }) => {
+  test('a null status shows the empty-unit text', async ({ page }) => {
     await openUnit(page, { task_id: 'T015', sample_id: 'ofs-05-not-submitted' });
 
     await expect(statePill(page)).toHaveText('尚無標記提交');
@@ -164,12 +164,10 @@ test.describe('issue #525 PR-B — the state element says it is the CURRENT stat
     await expect(page.getByTestId('ws-review-flow-trigger')).toHaveCount(0);
   });
 
-  test('the prefix stays out of the aria-label and data-terminal contract', async ({ page }) => {
+  test('the aria-label and data-terminal contract', async ({ page }) => {
     await openUnit(page, { task_id: 'T014', sample_id: 'dry-01-all-agree', run_type: 'dry_run', annotator_id: 'kioleemg12' });
 
-    // AC-4.35: the accessible name is the state plus its threshold reading,
-    // never the visual 目前： label -- a screen reader would otherwise hear
-    // the word twice, once from the pill and once from the track marker.
+    // AC-4.35: the accessible name is the state plus its threshold reading.
     await expect(statePill(page)).toHaveAttribute(
       'aria-label',
       '已定稿，已達 1 位審核員門檻，內容已鎖定',
@@ -177,7 +175,7 @@ test.describe('issue #525 PR-B — the state element says it is the CURRENT stat
     await expect(statePill(page)).toHaveAttribute('data-terminal', 'true');
   });
 
-  test('a non-terminal state keeps data-terminal false and an unprefixed aria-label', async ({ page }) => {
+  test('a non-terminal state keeps data-terminal false and a bare aria-label', async ({ page }) => {
     await openUnit(page, { task_id: 'T017', sample_id: 'oft-01-even-tie' });
 
     await expect(statePill(page)).toHaveAttribute('data-terminal', 'false');

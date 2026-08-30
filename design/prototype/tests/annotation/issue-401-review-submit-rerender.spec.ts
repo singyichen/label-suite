@@ -38,7 +38,7 @@ test.describe('issue #401 -- reviewer submit re-renders the finalized lock immed
 
     // No reload: the render must reflect FINALIZED immediately.
     await expect(page.locator('[data-testid="ws-review-unit-context"] .rv-unit-state'))
-      .toHaveText('目前：已定稿 · 已鎖定');
+      .toHaveText('已定稿 · 已鎖定');
     await expect(page.getByTestId('ws-review-finalized-card')).toBeVisible();
     await expect(page.getByTestId('ws-review-row-approve')).toHaveCount(0);
     await expect(page.getByTestId('ws-review-submit-btn')).toBeHidden();

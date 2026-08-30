@@ -109,7 +109,7 @@ test.describe('issue #452 — the unit banner states the finalize threshold', ()
     await expect(contextBanner(page)).toContainText('定稿門檻 1 / 1 位審核員');
     await expect(contextBanner(page)).not.toContainText('已審 ');
     const pill = statePill(page);
-    await expect(pill).toHaveText('目前：已定稿 · 已鎖定');
+    await expect(pill).toHaveText('已定稿 · 已鎖定');
     await expect(pill).toHaveAttribute('data-terminal', 'true');
     await expect(pill).toHaveAttribute(
       'aria-label',
@@ -122,7 +122,7 @@ test.describe('issue #452 — the unit banner states the finalize threshold', ()
 
     await expect(contextBanner(page)).toContainText('定稿門檻 1 / 3 位審核員');
     const pill = statePill(page);
-    await expect(pill).toHaveText('目前：已同意 · 未達定稿門檻 1 / 3');
+    await expect(pill).toHaveText('已同意 · 未達定稿門檻 1 / 3');
     await expect(pill).toHaveAttribute('data-terminal', 'false');
     await expect(pill).toHaveAttribute(
       'aria-label',
@@ -134,7 +134,7 @@ test.describe('issue #452 — the unit banner states the finalize threshold', ()
     await openReviewerWorkspace(page, 'T016', 'ofm-03-modified-interim');
 
     const pill = statePill(page);
-    await expect(pill).toHaveText('目前：已修改 · 未達定稿門檻 1 / 3');
+    await expect(pill).toHaveText('已修改 · 未達定稿門檻 1 / 3');
     await expect(pill).toHaveAttribute('data-terminal', 'false');
   });
 
@@ -142,7 +142,7 @@ test.describe('issue #452 — the unit banner states the finalize threshold', ()
     await openReviewerWorkspace(page, 'T017', 'oft-02-approved-interim');
 
     await expect(contextBanner(page)).toContainText('定稿門檻 1 / 2 位審核員');
-    await expect(statePill(page)).toHaveText('目前：已同意 · 未達定稿門檻 1 / 2');
+    await expect(statePill(page)).toHaveText('已同意 · 未達定稿門檻 1 / 2');
   });
 
   test('T017 (threshold 2) a met threshold that is still disputed says so in words', async ({ page }) => {
@@ -150,7 +150,7 @@ test.describe('issue #452 — the unit banner states the finalize threshold', ()
 
     await expect(contextBanner(page)).toContainText('定稿門檻 2 / 2 位審核員');
     const pill = statePill(page);
-    await expect(pill).toHaveText('目前：爭議中 · 未定稿，待仲裁');
+    await expect(pill).toHaveText('爭議中 · 未定稿，待仲裁');
     await expect(pill).toHaveAttribute('data-terminal', 'false');
   });
 });

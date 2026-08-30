@@ -41,7 +41,7 @@ test.describe('Reviewer workspace — review-unit context banner (T014-T017)', (
     await expect(banner).toBeVisible();
     await expect(banner).toContainText('試標');
     await expect(banner).toContainText('定稿門檻 1 / 1 位審核員');
-    await expect(banner.locator('.rv-unit-state')).toHaveText('目前：已定稿 · 已鎖定');
+    await expect(banner.locator('.rv-unit-state')).toHaveText('已定稿 · 已鎖定');
 
     /* issue #515: the banner stopped repeating the identity the breadcrumb
        and the left column already carry. Same two facts, retargeted at the
@@ -60,7 +60,7 @@ test.describe('Reviewer workspace — review-unit context banner (T014-T017)', (
     await expect(banner).toBeVisible();
     await expect(banner).toContainText('正式標記');
     await expect(banner).toContainText('定稿門檻 1 / 1 位審核員');
-    await expect(banner.locator('.rv-unit-state')).toHaveText('目前：已定稿 · 已鎖定');
+    await expect(banner.locator('.rv-unit-state')).toHaveText('已定稿 · 已鎖定');
   });
 
   test('T016 ofm-01: finalize threshold 3/3, finalized', async ({ page }) => {
@@ -69,7 +69,7 @@ test.describe('Reviewer workspace — review-unit context banner (T014-T017)', (
     const banner = contextBanner(page);
     await expect(banner).toBeVisible();
     await expect(banner).toContainText('定稿門檻 3 / 3 位審核員');
-    await expect(banner.locator('.rv-unit-state')).toHaveText('目前：已定稿 · 已鎖定');
+    await expect(banner.locator('.rv-unit-state')).toHaveText('已定稿 · 已鎖定');
   });
 
   test('T017 oft-01: finalize threshold 2/2, disputed, banner coexists with the arbitration card', async ({ page }) => {
@@ -78,7 +78,7 @@ test.describe('Reviewer workspace — review-unit context banner (T014-T017)', (
     const banner = contextBanner(page);
     await expect(banner).toBeVisible();
     await expect(banner).toContainText('定稿門檻 2 / 2 位審核員');
-    await expect(banner.locator('.rv-unit-state')).toHaveText('目前：爭議中 · 未定稿，待仲裁');
+    await expect(banner.locator('.rv-unit-state')).toHaveText('爭議中 · 未定稿，待仲裁');
     await expect(
       page.locator('[data-testid="ws-arbitration-card"]'),
     ).toBeVisible();
