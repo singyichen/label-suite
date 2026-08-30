@@ -119,7 +119,6 @@
       flowDrawerTitle: '審核流程',
       flowDrawerCloseAria: '關閉審核流程',
       unitStateFinalizedNote: '已鎖定',
-      unitStateNowTpl: '目前：{state}',
       unitStateAria: '{state}，已有 {x} 位審核員／共需 {n} 位',
       unitStateAriaFinalized: '{state}，已達 {n} 位審核員門檻，內容已鎖定',
       reviewOriginalAnswerLabel: '標記員原答案：',
@@ -229,7 +228,6 @@
       flowDrawerTitle: 'Review flow',
       flowDrawerCloseAria: 'Close the review flow',
       unitStateFinalizedNote: 'locked',
-      unitStateNowTpl: 'Now: {state}',
       unitStateAria: '{state}, {x} of {n} required reviewers',
       unitStateAriaFinalized: '{state}, met the {n}-reviewer threshold, locked',
       reviewOriginalAnswerLabel: "Annotator's original answer: ",
@@ -3826,16 +3824,10 @@
         .replace('{x}', String(reviewedCount))
         .replace('{n}', String(minReviewers));
     }
-    /* issue #525 PR-B: a bare 「已修改」 reads as an action offered to the
-       reviewer; 「目前：已修改」 can only be read as where the unit already
-       is. The prefix is visual only -- the aria-label below stays the
-       state alone, because the drawer's track marker already speaks the
-       same word and a screen reader would otherwise hear it twice. A null
-       status has no current state to name, so it stays unprefixed. */
-    var pillText = note ? stateText + ' · ' + note : stateText;
-    statePill.textContent = unitStatus === null
-      ? pillText
-      : t('unitStateNowTpl').replace('{state}', pillText);
+    /* issue #572: the 目前： prefix from issue #525 PR-B is gone -- the
+       pill sits between the run-type badge and the quorum chip, so it
+       already reads as the unit's state, not as an action. */
+    statePill.textContent = note ? stateText + ' · ' + note : stateText;
     if (unitStatus !== null) {
       statePill.setAttribute('data-terminal', terminal ? 'true' : 'false');
       statePill.setAttribute(

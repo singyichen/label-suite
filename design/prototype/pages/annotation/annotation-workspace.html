@@ -346,16 +346,14 @@
        One strip above the review card naming the task's review model:
        run type, quorum, annotator, reviewed progress, five-state pill.
        FR-051 makes the review card identical for every model, so this
-       banner is what tells the four demo review models apart. */
+       banner is what tells the four demo review models apart.
+       issue #572: no surface, border or padding of its own -- the chips
+       sit bare above the review card, which already carries the frame. */
     .rv-unit-context {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       gap: 8px;
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      padding: 10px 12px;
       margin-bottom: 10px;
     }
     /* issue #525 PR-A: the way into the review-flow drawer. Sized and
