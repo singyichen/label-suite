@@ -99,7 +99,7 @@ test.describe('Reviewer workspace — post-submit exit card removed (issue #517)
     await dismissGuidelineModal(page);
 
     await expect(page.locator('[data-testid="ws-review-unit-context"] .rv-unit-state'))
-      .toHaveText('目前：已定稿 · 已鎖定');
+      .toHaveText('已定稿 · 已鎖定');
     await expectNoExitCard(page);
   });
 

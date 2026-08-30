@@ -183,7 +183,7 @@ test.describe('Review status track — structure, regression and language', () =
 
     await expect(
       page.locator('[data-testid="ws-review-unit-context"] .rv-unit-state'),
-    ).toHaveText('目前：爭議中 · 未定稿，待仲裁');
+    ).toHaveText('爭議中 · 未定稿，待仲裁');
   });
 
   test('a unit with no annotator submission gets no track at all', async ({ page }) => {

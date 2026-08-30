@@ -99,7 +99,7 @@ test.describe('issue #307 -- truly empty review unit renders no review controls'
     await expect(page.getByTestId('ws-review-empty-unit')).toHaveCount(0);
     await expectFullReviewCard(page);
     await expect(page.locator('[data-testid="ws-review-unit-context"] .rv-unit-state'))
-      .toHaveText('目前：待審');
+      .toHaveText('待審');
 
     // And the unit can be finalized (min_reviewers = 1).
     await page.getByTestId('ws-review-row-approve').click();
@@ -107,6 +107,6 @@ test.describe('issue #307 -- truly empty review unit renders no review controls'
     await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
     await page.reload();
     await expect(page.locator('[data-testid="ws-review-unit-context"] .rv-unit-state'))
-      .toHaveText('目前：已定稿 · 已鎖定');
+      .toHaveText('已定稿 · 已鎖定');
   });
 });
