@@ -55,7 +55,7 @@
 
     <svg viewBox="0 0 1400 808" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="rvov-title rvov-desc">
       <title id="rvov-title">Label Suite 審核流程總覽</title>
-      <desc id="rvov-desc">四泳道流程圖：標記員提交標記後交給審核員逐單位審核；通過與退回在送出審核前只是草稿，按下送出審核才寫入決策，退回必須填寫理由；系統依序判斷審核人數是否達門檻、審核員是否改動答案或純退回（退回且未改動答案）、逐項嚴格多數決是否收斂。計票時，已提交審核但該項未改動且非純退回的審核員其票計給標記員原答案，尚未提交者不計入分母；全員都改動或純退回時原答案不列為候選；純退回不計為對原答案的同意票，恆不收斂；門檻為 1 時唯一審核員之修正逕行收斂於該值，未達已提交人數一半（門檻 ≥ 2 時）亦不收斂；收斂則定稿唯讀，平手、全分歧或含純退回則落入爭議池由具仲裁資格的審核員逐項裁定後定稿——純退回之爭議項無替代值，裁定維持退回即維持原判斷不寫入新值。底部對照表列出試標與正式標記的三處差異：一筆樣本產生幾個審核單位、退回是否回退標記員狀態、以及定稿是否產生審核 gold（審核流程定案產出的答案，與資料集自帶的 gold_label 欄位無關）。試標不產生審核 gold，其品質改由兩條獨立輸入呈現：標記員原始答案彙總為標記一致性，審核員的審核決策彙總為標記員被修改率。</desc>
+      <desc id="rvov-desc">四泳道流程圖：標記員提交標記後交給審核員逐單位審核；通過與退回在送出審核前只是草稿，按下送出審核才寫入決策，退回必須填寫理由；系統依序判斷審核人數是否達門檻、審核員是否改動答案或純退回（退回且未改動答案）、逐項嚴格多數決是否收斂。計票時，已提交審核但該項未改動且非純退回的審核員其票計給標記員原答案，尚未提交者不計入分母；全員都改動或純退回時原答案不列為候選；純退回不計為對原答案的同意票，恆不收斂；門檻為 1 時唯一審核員之修正逕行收斂於該值，未達已提交人數一半（門檻 ≥ 2 時）亦不收斂；收斂則定稿唯讀，平手、全分歧或含純退回則落入爭議池由具仲裁資格的審核員逐項裁定後定稿——純退回之爭議項無替代值，裁定維持退回即維持原判斷不寫入新值。底部對照表列出試標與正式標記的三處差異：一筆樣本產生幾個審核單位、退回是否回退標記員狀態、以及定稿是否產生定案答案（審核流程定案產出的答案，與資料集自帶的標準答案欄位無關）。試標不產生定案答案，其品質改由兩條獨立輸入呈現：標記員原始答案彙總為標記一致性，審核員的審核決策彙總為標記員被修改率。</desc>
 
       <defs>
         <marker id="arw" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#64748B"/></marker>
@@ -116,7 +116,7 @@
       <text x="798" y="365" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="0.06em">已達門檻</text>
 
       <rect x="344" y="326" width="260" height="12" rx="2" fill="#F5F3FF"/>
-      <text x="600" y="335" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" text-anchor="end" letter-spacing="0.06em">未達門檻 · 停在已同意／已修改 · 未達定稿門檻 x / n</text>
+      <text x="600" y="335" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" text-anchor="end" letter-spacing="0.06em">未達門檻 · 停在已同意／已修改 · 未達定稿門檻 已審 / 應審</text>
 
       <rect x="960" y="356" width="52" height="12" rx="2" fill="#F5F3FF"/>
       <text x="986" y="365" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="0.06em">有差異</text>
@@ -128,7 +128,7 @@
       <text x="1178" y="365" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="0.06em">收斂</text>
 
       <rect x="1090" y="420" width="112" height="12" rx="2" fill="#F5F3FF"/>
-      <text x="1094" y="429" fill="#6366F1" font-size="8" font-family="'JetBrains Mono', monospace" letter-spacing="0.06em">未達 &gt; N/2 票</text>
+      <text x="1094" y="429" fill="#6366F1" font-size="8" font-family="'JetBrains Mono', monospace" letter-spacing="0.06em">票數未過半</text>
 
       <rect x="1148" y="468" width="64" height="12" rx="2" fill="#F5F3FF"/>
       <text x="1180" y="477" fill="#6366F1" font-size="8" font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="0.06em">仲裁資格</text>
@@ -217,8 +217,8 @@
       <line x1="40" y1="660" x2="1360" y2="660" stroke="rgba(30,27,75,0.06)" stroke-width="0.8"/>
 
       <text x="40" y="680" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">定稿的產物</text>
-      <text x="340" y="680" fill="#1E1B4B" font-size="9" font-family="'JetBrains Mono', monospace">不產生審核 gold；標記員原始答案彙總為一致性，審核決策彙總為被修改率</text>
-      <text x="820" y="680" fill="#1E1B4B" font-size="9" font-family="'JetBrains Mono', monospace">定稿判斷產生審核 gold，可追溯至來源單位</text>
+      <text x="340" y="680" fill="#1E1B4B" font-size="9" font-family="'JetBrains Mono', monospace">不產生定案答案；標記員原始答案彙總為一致性，審核決策彙總為被修改率</text>
+      <text x="820" y="680" fill="#1E1B4B" font-size="9" font-family="'JetBrains Mono', monospace">定稿判斷產生定案答案，可追溯至來源單位</text>
       <line x1="40" y1="690" x2="1360" y2="690" stroke="rgba(30,27,75,0.06)" stroke-width="0.8"/>
 
       <text x="40" y="710" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">一筆樣本的審核單位數</text>
@@ -252,7 +252,7 @@
 
       <text x="1240" y="776" fill="#94A3B8" font-size="8.5" font-family="'Inter','Noto Sans TC',sans-serif">泳道＝誰處理 · 填色＝狀態怎麼產生</text>
       <!-- 橫幅 pill 全文（FR-076 第 3 點附註；v4.60.0 起無「目前：」前綴，issue #572；issue #576） -->
-      <text x="40" y="794" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" letter-spacing="0.06em">工作區橫幅 pill 全文：待審 · 已同意／已修改 · 未達定稿門檻 x / n · 爭議中 · 未定稿，待仲裁 · 已定稿 · 已鎖定 · 標記員未提交 → 尚無標記提交（審核單位不成立）</text>
+      <text x="40" y="794" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" letter-spacing="0.06em">工作區橫幅狀態標籤全文：待審 · 已同意／已修改 · 未達定稿門檻 已審 / 應審 · 爭議中 · 未定稿，待仲裁 · 已定稿 · 已鎖定 · 標記員未提交 → 尚無標記提交（審核單位不成立）</text>
     </svg>
   </div>
 </body>
