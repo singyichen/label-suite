@@ -57,7 +57,7 @@ test.describe('Submit buttons are right-aligned (issue #563)', () => {
     await expectRightAligned(page.getByTestId('ws-submit-btn'), page.locator('.action-bar'));
   });
 
-  test('arbiter：送出仲裁靠仲裁卡右側', async ({ page }) => {
+  test('arbiter：送出仲裁靠操作列右側', async ({ page }) => {
     /* Same seed as annotation-workspace-arbitration.spec.ts: annotator sad,
        reviewer_wang fear, reviewer_lin sad -> 1:1 tie at N=2, one open item
        for reviewer_chen (can_arbitrate) to decide. */
@@ -70,9 +70,9 @@ test.describe('Submit buttons are right-aligned (issue #563)', () => {
     await page.reload();
     await dismissGuidelineModal(page);
 
-    const card = page.getByTestId('ws-arbitration-card');
-    await expect(card).toBeVisible();
-    await expectRightAligned(page.getByTestId('ws-arbitration-submit'), card);
+    await expect(page.getByTestId('ws-arbitration-card')).toBeVisible();
+    /* issue #568: the arbitration submit moved into the fixed action bar. */
+    await expectRightAligned(page.getByTestId('ws-arbitration-submit'), page.locator('.action-bar'));
   });
 });
 
