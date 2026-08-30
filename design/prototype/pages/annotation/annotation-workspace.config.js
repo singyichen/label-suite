@@ -3259,6 +3259,9 @@
      the ✕/✓ row decisions never render — an arbiter picks a side, they do
      not re-annotate. */
   var arbitrationChoices = {};
+  /* issue #568: dispute item ids still open on the rendered unit, read by
+     the action-bar submit (handleArbitrationSubmit). */
+  var arbitrationOpenItemIds = [];
 
   function formatDisputeValue(value) {
     /* issue #551: a naked reject carries the PURE_REJECT_VALUE sentinel
@@ -3506,32 +3509,31 @@
       card.appendChild(buildArbitrationItemRow(item, data.describeDisputeVotes(item, reviewerCount)));
     });
 
-    if (openItemIds.length) {
-      var submitBtn = document.createElement('button');
-      submitBtn.type = 'button';
-      submitBtn.className = 'btn btn-cta';
-      /* issue #563: right-align like the action bar's submit button. */
-      submitBtn.style.cssText = 'margin-top:12px;margin-left:auto;display:flex;width:fit-content;';
-      submitBtn.setAttribute('data-testid', 'ws-arbitration-submit');
-      submitBtn.textContent = t('arbitrationSubmitLabel');
-      submitBtn.addEventListener('click', function () {
-        var decisions = openItemIds.map(function (id) { return arbitrationChoices[id]; });
-        if (decisions.some(function (decision) { return !decision; })) {
-          showToast(t('toastArbitrationIncomplete'), 'warning');
-          return;
-        }
-        data.submitArbitration(
-          currentProfile.id, currentRunType, currentSampleId, currentIdentity, decisions
-        );
-        clearUnsaved();
-        showToast(t('wsArbitrationSubmitSuccess'));
-        renderSampleList();
-        renderReviewerWorkspace();
-      });
-      card.appendChild(submitBtn);
-    }
+    /* issue #568: the submit lives in the fixed action bar
+       (#wsArbitrationSubmitBtn, bound once in init to handleArbitrationSubmit)
+       so it sits where 送出審核 sits instead of scrolling with the card.
+       renderReviewer() hides it before branching; only an open item shows it. */
+    arbitrationOpenItemIds = openItemIds;
+    var arbitrationSubmitBtn = document.getElementById('wsArbitrationSubmitBtn');
+    if (arbitrationSubmitBtn && openItemIds.length) arbitrationSubmitBtn.classList.remove('hidden');
 
     preview.appendChild(card);
+  }
+
+  function handleArbitrationSubmit() {
+    var decisions = arbitrationOpenItemIds.map(function (id) { return arbitrationChoices[id]; });
+    if (!decisions.length) return;
+    if (decisions.some(function (decision) { return !decision; })) {
+      showToast(t('toastArbitrationIncomplete'), 'warning');
+      return;
+    }
+    window.LabelSuiteAnnotationWorkspaceData.submitArbitration(
+      currentProfile.id, currentRunType, currentSampleId, currentIdentity, decisions
+    );
+    clearUnsaved();
+    showToast(t('wsArbitrationSubmitSuccess'));
+    renderSampleList();
+    renderReviewerWorkspace();
   }
 
   /* Finalized unit lock (issue #308): a FINALIZED unit renders this
@@ -3988,6 +3990,11 @@
     var rawRecord = findRecordById(currentSampleId) || {};
 
     var reviewSubmitBtn = document.getElementById('wsReviewSubmitBtn');
+    /* issue #568: hidden by default; renderArbitrationCard() reveals it only
+       while this unit still has an open dispute item. */
+    var arbitrationSubmitBtn = document.getElementById('wsArbitrationSubmitBtn');
+    if (arbitrationSubmitBtn) arbitrationSubmitBtn.classList.add('hidden');
+    arbitrationOpenItemIds = [];
     var unitStatus = currentReviewUnitStatus();
     var reviewerSubmissions = window.LabelSuiteAnnotationWorkspaceData.readReviewerSubmissions(
       currentProfile.id, currentRunType, currentSampleId, currentIdentity
@@ -4698,6 +4705,7 @@
     var reviewSubmitBtn = document.getElementById('wsReviewSubmitBtn');
     if (currentRole === 'reviewer') {
       if (reviewSubmitBtn) setText('wsReviewSubmitLabel', t('reviewSubmitLabel'));
+      setText('wsArbitrationSubmitLabel', t('arbitrationSubmitLabel'));
     } else if (submitBtn) {
       setText('wsSubmitLabel', t('submitLabel'));
       setText('wsSaveLabel', t('saveLabel'));
@@ -4786,6 +4794,8 @@
         reviewSubmitBtn.classList.remove('hidden');
         reviewSubmitBtn.addEventListener('click', handleReviewSubmit);
       }
+      var arbitrationSubmitBtn = document.getElementById('wsArbitrationSubmitBtn');
+      if (arbitrationSubmitBtn) arbitrationSubmitBtn.addEventListener('click', handleArbitrationSubmit);
       setupReviewShortcuts();
     } else {
       if (submitBtn) submitBtn.addEventListener('click', handleSubmit);
