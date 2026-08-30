@@ -623,7 +623,10 @@
     .autosave-dot.initial { background: var(--color-border); }
     .autosave-dot.dirty { background: var(--color-warning); }
     .autosave-dot.saved { background: var(--color-cta); }
-    .action-bar-right { display: flex; align-items: center; gap: var(--space-sm); }
+    /* issue #563: margin-left:auto keeps the buttons on the right even when
+       renderAutosaveStatus() hides .autosave-status for reviewers -- with a
+       single flex child, space-between alone would pin them to the left. */
+    .action-bar-right { display: flex; align-items: center; gap: var(--space-sm); margin-left: auto; }
 
     /* ── Right: Guideline ────────────────────────────────────── */
     .col-guideline {
