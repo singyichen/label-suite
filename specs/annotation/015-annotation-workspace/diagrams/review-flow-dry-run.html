@@ -53,7 +53,7 @@
     <h1>試標審核詳細流程</h1>
     <p class="standfirst">試標的同一份樣本由多位標記員各自提交，因此拆成多個獨立審核單位。「爭議中」不是終點——逐項裁定完成後仍會推導為已定稿。試標的退回也不會把樣本退回標記員重標，只寫下審核決策。</p>
 
-    <svg viewBox="0 0 1200 1160" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="rvdry-title rvdry-desc">
+    <svg viewBox="0 0 1200 1180" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="rvdry-title rvdry-desc">
       <title id="rvdry-title">試標審核詳細流程</title>
       <desc id="rvdry-desc">流程圖：試標提交後拆成樣本乘標記員的審核單位，審核員逐單位審核；通過與退回在送出審核前只是草稿，按下送出審核才寫入決策，退回必須填寫理由。先判斷已審人數是否達門檻，未達則停在已同意或已修改的過渡狀態等待下一位審核員；達門檻後判斷審核員是否改動答案或純退回（退回且未改動答案），兩者皆無即定稿唯讀，任一發生則進入逐項嚴格多數決。退回同樣是一筆審核提交，一樣計入已審人數；但純退回不計為對標記員原答案的同意票，而是阻擋定稿、直接列為爭議項（issue #551）。計票時，已提交審核但該項未改動且非純退回的審核員其票計給標記員原答案，尚未提交者不計入分母；全員都改動或純退回時原答案不列為候選；門檻為 1（如 T014）時唯一審核員之修正逕行收斂於該值，純退回則例外恆不收斂；門檻 ≥ 2 時未達已提交人數一半即不收斂；收斂即定稿，平手、全分歧或含純退回才落入爭議池，由具仲裁資格的審核員逐項裁定——純退回之爭議項於仲裁卡呈現「無替代值」，仲裁者選其對應選項即維持退回。退回在試標只記錄審核決策，不改變標記員狀態（純退回亦然）。右欄標註示範任務 T014 因只需一位審核員而簡化掉的節點與純退回情境。底部為任務層級流程：全體標記員提交完成後任務轉為待 IAA 確認，該轉態只看標記提交、不看審核進度。此後有兩條各自獨立的品質輸入——標記員的原始答案彙總為標記一致性（IAA），審核員的審核決策彙總為標記員被修改率；兩項指標都不阻擋開放正式標記，由專案主持人判讀後決定要開放正式標記，或修訂指引後再跑一輪試標（修訂紀錄必填）。</desc>
 
@@ -155,8 +155,9 @@
 
       <!-- 5 · 過渡狀態 -->
       <rect x="64" y="248" width="176" height="56" rx="6" fill="#1E1B4B0D" stroke="#64748B" stroke-width="1"/>
-      <text x="152" y="271" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">過渡狀態</text>
-      <text x="152" y="288" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">已同意 / 已修改 · 未定稿</text>
+      <text x="152" y="263" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">過渡狀態 · 未定稿</text>
+      <text x="152" y="280" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">pill 附 未達定稿門檻 x / n</text>
+      <text x="152" y="295" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle"><tspan fill="#1D4ED8">無差異 → 已同意</tspan> · <tspan fill="#A16207">有差異 → 已修改</tspan></text>
 
       <!-- 6 · diamond 改動 -->
       <polygon points="400,384 496,428 400,472 304,428" fill="#FFFFFF" stroke="#1E1B4B" stroke-width="1"/>
@@ -178,7 +179,7 @@
       <!-- 8 · 爭議池（系統推導狀態，配色比照過渡狀態） -->
       <rect x="640" y="552" width="176" height="56" rx="6" fill="#1E1B4B0D" stroke="#64748B" stroke-width="1"/>
       <text x="728" y="575" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">爭議池</text>
-      <text x="728" y="592" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">爭議中 · 逐項列管 · 未定稿</text>
+      <text x="728" y="592" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">爭議中 · 未定稿，待仲裁 · 逐項列管</text>
 
       <!-- 9 · 仲裁 -->
       <rect x="640" y="688" width="176" height="56" rx="6" fill="#FFFFFF" stroke="#1E1B4B" stroke-width="1"/>
@@ -188,7 +189,7 @@
       <!-- 10 · 已定稿 (FOCAL) -->
       <rect x="304" y="688" width="192" height="56" rx="6" fill="#EEF2FF" stroke="#6366F1" stroke-width="1"/>
       <text x="400" y="711" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">已定稿 · 唯讀</text>
-      <text x="400" y="728" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">終態 · 沒有解鎖入口</text>
+      <text x="400" y="728" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">已鎖定 · 終態 · 沒有解鎖入口</text>
 
       <!-- ══ T014 推導標註（annotation，非節點） ══ -->
       <line x1="880" y1="232" x2="880" y2="744" stroke="#6366F1" stroke-width="1.2"/>
@@ -301,6 +302,13 @@
       <rect x="872" y="1108" width="52" height="16" rx="4" fill="#F0FDF4" stroke="#BBF7D0" stroke-width="1"/>
       <text x="898" y="1119" fill="#15803D" font-size="9" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">已定稿</text>
       <text x="932" y="1119" fill="#94A3B8" font-size="8" font-family="'JetBrains Mono', monospace">全員無異議、收斂或仲裁完成（終態）</text>
+      <!-- 橫幅 pill 全文（FR-064 第 7 點「目前：」前綴 · FR-076 第 3 點附註；issue #576） -->
+      <text x="40" y="1135" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace">目前：待審</text>
+      <text x="244" y="1135" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace">目前：已同意 · 未達定稿門檻 x / n</text>
+      <text x="448" y="1135" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace">目前：已修改 · 未達定稿門檻 x / n</text>
+      <text x="652" y="1135" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace">目前：爭議中 · 未定稿，待仲裁</text>
+      <text x="872" y="1135" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace">目前：已定稿 · 已鎖定</text>
+      <text x="40" y="1151" fill="#94A3B8" font-size="8" font-family="'JetBrains Mono', monospace">第二列為工作區脈絡橫幅 pill 全文 · 標記員未提交時審核單位不成立，pill 為「尚無標記提交」且不加「目前：」前綴</text>
     </svg>
   </div>
 </body>

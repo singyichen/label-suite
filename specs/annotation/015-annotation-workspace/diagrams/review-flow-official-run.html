@@ -53,7 +53,7 @@
     <h1>正式標記、多數決與仲裁詳細流程</h1>
     <p class="standfirst">判斷路徑與試標完全相同——差別有三處：正式標記每筆樣本恰指派一位標記員（試標則由多位重疊標記，一筆樣本因此拆成多個審核單位）、正式標記的退回會把樣本退回標記員重標，而正式標記的定稿判斷會產生審核 gold——指審核流程定案產出的答案，與資料集自帶的 gold_label 欄位是兩回事。嚴格多數決要求票數嚴格大於人數的一半，已提交審核但該項未改動的審核員，其票算給標記員的原標（尚未提交者不計入分母），因此平手、三方全分歧或任何未過半的分佈都無法收斂。右欄是 T017 平手案例的實際推導。</p>
 
-    <svg viewBox="0 0 1200 1080" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="rvoff-title rvoff-desc">
+    <svg viewBox="0 0 1200 1100" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="rvoff-title rvoff-desc">
       <title id="rvoff-title">正式標記、多數決與仲裁詳細流程</title>
       <desc id="rvoff-desc">流程圖：正式標記提交後由審核員逐單位審核；通過與退回在送出審核前只是草稿，按下送出審核才寫入決策。退回必須填寫理由，理由會顯示給標記員，並把樣本狀態退回待標記、產生重標待辦。先判斷已審人數是否達門檻，未達則停在已同意或已修改的過渡狀態；達門檻後判斷審核員是否改動答案，無人改動即定稿，有改動則進入逐項嚴格多數決，票數需嚴格大於人數的一半才算收斂並定稿，平手或全分歧則落入爭議池，由具仲裁資格且未參與該單位審核的審核員逐項裁定 A 標記員或 B 審核員後定稿。正式標記的定稿判斷會產生審核 gold（審核流程定案產出的答案，與資料集自帶的 gold_label 欄位無關），且每筆樣本恰指派一位標記員因此只產生一個審核單位。右欄標註 T017 oft-01-even-tie 一比一平手案例的推導，含仲裁資格為名冊屬性的說明。底部為任務層級的完成 gate 與匯出，完成 gate 共五項前置條件。</desc>
 
@@ -154,8 +154,9 @@
       <text x="400" y="283" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">需幾位審核員才開始計票</text>
 
       <rect x="64" y="248" width="176" height="56" rx="6" fill="#1E1B4B0D" stroke="#64748B" stroke-width="1"/>
-      <text x="152" y="271" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">過渡狀態</text>
-      <text x="152" y="288" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">已同意 / 已修改 · 未定稿</text>
+      <text x="152" y="263" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">過渡狀態 · 未定稿</text>
+      <text x="152" y="280" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">pill 附 未達定稿門檻 x / n</text>
+      <text x="152" y="295" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle"><tspan fill="#1D4ED8">無差異 → 已同意</tspan> · <tspan fill="#A16207">有差異 → 已修改</tspan></text>
 
       <polygon points="400,384 496,428 400,472 304,428" fill="#FFFFFF" stroke="#1E1B4B" stroke-width="1"/>
       <text x="400" y="421" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">審核員改動答案？</text>
@@ -175,7 +176,7 @@
       <!-- 爭議池（系統推導狀態，配色比照過渡狀態） -->
       <rect x="640" y="552" width="176" height="56" rx="6" fill="#1E1B4B0D" stroke="#64748B" stroke-width="1"/>
       <text x="728" y="575" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">爭議池</text>
-      <text x="728" y="592" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">爭議中 · 逐項列管 · 未定稿</text>
+      <text x="728" y="592" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">爭議中 · 未定稿，待仲裁 · 逐項列管</text>
 
       <rect x="640" y="688" width="176" height="56" rx="6" fill="#FFFFFF" stroke="#1E1B4B" stroke-width="1"/>
       <text x="728" y="711" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">仲裁者逐項裁定</text>
@@ -183,7 +184,7 @@
 
       <rect x="304" y="688" width="192" height="56" rx="6" fill="#EEF2FF" stroke="#6366F1" stroke-width="1"/>
       <text x="400" y="711" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">已定稿 · 唯讀</text>
-      <text x="400" y="728" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">終態 · 沒有解鎖入口</text>
+      <text x="400" y="728" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">已鎖定 · 終態 · 沒有解鎖入口</text>
 
       <rect x="280" y="792" width="240" height="56" rx="6" fill="#FFFFFF" stroke="#6366F1" stroke-width="1"/>
       <text x="400" y="815" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">定稿判斷產生審核 gold</text>
@@ -275,6 +276,13 @@
       <rect x="872" y="1040" width="52" height="16" rx="4" fill="#F0FDF4" stroke="#BBF7D0" stroke-width="1"/>
       <text x="898" y="1051" fill="#15803D" font-size="9" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">已定稿</text>
       <text x="932" y="1051" fill="#94A3B8" font-size="8" font-family="'JetBrains Mono', monospace">全員無異議、收斂或仲裁完成（終態）</text>
+      <!-- 橫幅 pill 全文（FR-064 第 7 點「目前：」前綴 · FR-076 第 3 點附註；issue #576） -->
+      <text x="40" y="1067" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace">目前：待審</text>
+      <text x="244" y="1067" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace">目前：已同意 · 未達定稿門檻 x / n</text>
+      <text x="448" y="1067" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace">目前：已修改 · 未達定稿門檻 x / n</text>
+      <text x="652" y="1067" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace">目前：爭議中 · 未定稿，待仲裁</text>
+      <text x="872" y="1067" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace">目前：已定稿 · 已鎖定</text>
+      <text x="40" y="1083" fill="#94A3B8" font-size="8" font-family="'JetBrains Mono', monospace">第二列為工作區脈絡橫幅 pill 全文 · 標記員未提交時審核單位不成立，pill 為「尚無標記提交」且不加「目前：」前綴</text>
     </svg>
   </div>
 </body>
