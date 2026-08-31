@@ -1,6 +1,6 @@
 ## Purpose
 
-正典：`specs/annotation/015-annotation-workspace/spec.md`（v4.60.0 → 4.61.0）。本變更（issue #578）修訂 FR-016B 與關鍵實體 `AnnotationHistoryItem`，新增 FR-086 ~ FR-091、AC-1.25、AC-2.15 ~ AC-2.20、AC-3.49 ~ AC-3.50、AC-4.51。
+正典：`specs/annotation/015-annotation-workspace/spec.md`（v4.60.0 → 4.61.0）。本變更（issue #578）修訂 FR-016B 與關鍵實體 `AnnotationHistoryItem`，新增 FR-086 ~ FR-091、AC-1.25、AC-2.15 ~ AC-2.21、AC-3.49 ~ AC-3.50、AC-4.51。
 
 ## MODIFIED Requirements
 
@@ -26,6 +26,8 @@ v4.61.0 以前寫入、不具上述新欄位之事件 MUST 原樣顯示且不得
 
 各值語意：`draft_saved`（標記員或審核員儲存草稿）、`submitted`（標記員提交）、`skipped`（標記員跳過）、`modified`（審核員直接修正答案）、`accepted`（審核員通過）、`rejected`（審核員退回）、`adjudicated`（仲裁者定案）。
 
+`HISTORY_ACTIONS` 之每個值 MUST 有對應的產生點——審核員送出「通過」MUST 寫入 `accepted` 事件，送出「修正」MUST 寫入 `modified` 事件。其通過／修正之判定沿用 FR-051 既有的 per-outKey 決策，本條 MUST NOT 改變該判定邏輯，僅要求該決策落為一筆歷程事件。
+
 既有事件中出現於 `HISTORY_ACTIONS` 之外的動作值 MUST 以中性徽章呈現且不得中斷渲染。
 
 #### Scenario: AC-2.16 七種動作各有對應徽章
@@ -33,6 +35,12 @@ v4.61.0 以前寫入、不具上述新欄位之事件 MUST 原樣顯示且不得
 - **WHEN** 檢視 `歷程` 頁籤
 - **THEN** 七筆事件各自呈現一個徽章，且七個徽章的語意色兩兩不同
 - **AND** 一筆 `action` 為集合外舊值之事件以中性徽章呈現，清單其餘事件正常渲染
+
+#### Scenario: AC-2.21 審核通過與修正皆產生歷程事件
+- **GIVEN** 審核員對某樣本一個 `outKey` 送出「通過」、對另一個 `outKey` 送出「修正」
+- **WHEN** 檢視該樣本 `歷程` 頁籤
+- **THEN** 清單分別出現一筆 `accepted` 事件與一筆 `modified` 事件，兩者之 `actor_id` 皆為該審核員
+- **AND** 該次送出未因此產生重複事件（沿用 FR-016B append-only 與既有重複送出防護）
 
 ### Requirement: FR-087 結果快照與差異呈現
 
@@ -96,7 +104,7 @@ v4.61.0 以前寫入、不具上述新欄位之事件 MUST 原樣顯示且不得
 
 歷程事件之呈現 MUST 分兩層：事件列（操作者角色與 `actor_id`、時間、`action`）對所有可檢視該樣本者可見；`result_snapshot` 與 `reason` MUST 依檢視者角色遮蔽——
 
-1. `role=annotator`：僅可見自己 `actor_id` 之事件的快照與理由；其他標記員之事件僅呈現事件列，快照與理由 MUST 被遮蔽並以明確文案說明遮蔽原因。
+1. `role=annotator`：可見自己 `actor_id` 之事件的快照與理由；其他標記員之事件 MUST NOT 進入該檢視者的歷程輸出——**含事件列**。理由是事件列依 FR-016B 承載「對應輸出類型作答摘要」，該摘要即答案內容，僅遮蔽 `result_snapshot` 與 `reason` 仍會經摘要外洩，與 FR-062 及既有跨標記員隔離（他人狀態僅可讀狀態列舉，不得讀作答內容）相衝突。
 2. `role=reviewer`：可見自身審核單位範圍內（同一 `sample_id × annotator_id × run_type`）全部事件之快照與理由。
 3. 具 `can_arbitrate` 之審核員於爭議單位：可見該樣本全部標記員之快照與理由。
 
@@ -105,8 +113,8 @@ v4.61.0 以前寫入、不具上述新欄位之事件 MUST 原樣顯示且不得
 #### Scenario: AC-4.51 標記員不得經歷程取得他人答案
 - **GIVEN** `run_type=dry_run` 之某樣本已有標記員 A 與標記員 B 各自提交
 - **WHEN** 標記員 A 檢視該樣本 `歷程` 頁籤
-- **THEN** 標記員 B 之事件僅呈現事件列，其 `result_snapshot` 與 `reason` 不出現於 A 可取得的任何呈現輸出中，並顯示遮蔽說明文案
-- **AND** 同一樣本由 reviewer 檢視時，A 與 B 兩人之快照與理由皆可見
+- **THEN** 標記員 B 之事件完全不出現於 A 可取得的任何呈現輸出中——事件列、`result_snapshot` 與 `reason` 皆然
+- **AND** reviewer 於 A 與 B 各自的審核單位檢視同一樣本時，兩人之快照與理由皆可見
 - **AND** 一筆其他審核員尚未提交之審核草稿事件，即使檢視者為具 `can_arbitrate` 之審核員，仍依 FR-062 完全不納入清單
 
 ### Requirement: FR-091 標記清單處理狀況彙總

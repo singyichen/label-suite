@@ -81,10 +81,13 @@ async function lastPersistedSaveTime(page: Page, sampleId: string): Promise<stri
         };
       }
     ).LabelSuiteAnnotationWorkspaceData;
-    const saved = data.getSampleHistory('T001', 'official_run', sid, {}).filter((e) => e.action === 'saved');
+    /* renamed by issue #578 / FR-086: the draft-save action is `draft_saved` */
+    const saved = data
+      .getSampleHistory('T001', 'official_run', sid, {})
+      .filter((e) => e.action === 'draft_saved');
     return saved.length ? saved[saved.length - 1].at : null;
   }, sampleId);
-  if (!iso) throw new Error(`no persisted 'saved' history event for sample ${sampleId}`);
+  if (!iso) throw new Error(`no persisted 'draft_saved' history event for sample ${sampleId}`);
   return formatMmDdHhMm(iso);
 }
 
