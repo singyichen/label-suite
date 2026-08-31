@@ -37,6 +37,7 @@
       wsHistoryRoleAnnotator: '標記員',
       wsHistoryRoleReviewer: '審核員',
       wsHistoryReasonLabel: '理由：',
+      wsHistoryLeadTimeLabel: '耗時：',
       wsHistoryDiffAdded: '新增',
       wsHistoryDiffRemoved: '刪除',
       wsHistoryDiffBoundary: '邊界變更',
@@ -150,6 +151,7 @@
       wsHistoryRoleAnnotator: 'Annotator',
       wsHistoryRoleReviewer: 'Reviewer',
       wsHistoryReasonLabel: 'Reason: ',
+      wsHistoryLeadTimeLabel: 'Time spent: ',
       wsHistoryDiffAdded: 'Added',
       wsHistoryDiffRemoved: 'Removed',
       wsHistoryDiffBoundary: 'Boundary',
@@ -1829,6 +1831,15 @@
     return block;
   }
 
+  /* Whole seconds under a minute, m:ss above it -- the panel answers "was
+     this quick or slow", and a millisecond figure only adds noise there. */
+  function formatLeadTime(ms) {
+    var totalSeconds = Math.max(0, Math.round(ms / 1000));
+    if (totalSeconds < 60) return totalSeconds + 's';
+    var seconds = totalSeconds % 60;
+    return Math.floor(totalSeconds / 60) + 'm ' + (seconds < 10 ? '0' : '') + seconds + 's';
+  }
+
   function renderHistoryPanel() {
     var container = document.getElementById('wsHistoryContainer');
     if (!container) return;
@@ -1894,6 +1905,17 @@
         card.appendChild(summary);
       }
       if (answer) card.appendChild(answer);
+      /* FR-088 visibility: the annotator must never see a duration. Seeing
+         a running score changes how people answer, and this number is meant
+         to measure sample difficulty, not to be optimised against. The
+         reviewer and the task-level statistics are where it belongs. */
+      if (currentRole !== 'annotator' && typeof event.lead_time === 'number') {
+        var leadTime = document.createElement('div');
+        leadTime.className = 'history-lead-time';
+        leadTime.setAttribute('data-testid', 'ws-history-lead-time');
+        leadTime.textContent = t('wsHistoryLeadTimeLabel') + formatLeadTime(event.lead_time);
+        card.appendChild(leadTime);
+      }
       /* FR-089: the reason the actor typed, on the event it justifies. */
       if (event.reason) {
         var reason = document.createElement('div');
@@ -1904,6 +1926,55 @@
       list.appendChild(card);
     });
     container.appendChild(list);
+  }
+
+  /* FR-088: `lead_time` is accumulated page-visible time, never the
+     wall-clock gap between `started_at` and `at`. The number exists to feed
+     difficulty analysis, and a sample left open in a background tab would
+     otherwise read as the hardest sample in the set. Both signals are
+     observed because they answer different questions: `visibilitychange`
+     covers a tab switch, `blur`/`focus` covers the window losing focus
+     while the tab stays visible.
+
+     `since` is null exactly when the clock is paused, so pause and resume
+     are both idempotent -- the two signals commonly fire together. */
+  var leadTimer = { startedAt: null, accumulated: 0, since: null };
+
+  function startLeadTimer() {
+    leadTimer = {
+      startedAt: new Date().toISOString(),
+      accumulated: 0,
+      since: document.visibilityState === 'hidden' ? null : Date.now(),
+    };
+  }
+
+  function pauseLeadTimer() {
+    if (leadTimer.since == null) return;
+    leadTimer.accumulated += Date.now() - leadTimer.since;
+    leadTimer.since = null;
+  }
+
+  function resumeLeadTimer() {
+    if (leadTimer.startedAt && leadTimer.since == null) leadTimer.since = Date.now();
+  }
+
+  /* Reads the accumulator without stopping it: a save is a checkpoint in the
+     middle of the sample, not the end of it. Returns null before any sample
+     has been opened, so the caller writes no timing fields at all rather
+     than a zero that would read as "answered instantly". */
+  function readLeadTiming() {
+    if (!leadTimer.startedAt) return null;
+    var elapsed = leadTimer.accumulated + (leadTimer.since == null ? 0 : Date.now() - leadTimer.since);
+    return { startedAt: leadTimer.startedAt, leadTime: elapsed };
+  }
+
+  function bindLeadTimerSignals() {
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'hidden') pauseLeadTimer();
+      else resumeLeadTimer();
+    });
+    window.addEventListener('blur', pauseLeadTimer);
+    window.addEventListener('focus', resumeLeadTimer);
   }
 
   function findRecordById(sampleId) {
@@ -1922,6 +1993,9 @@
     var recordIdx = currentProfile.datasetRecords.indexOf(record);
     snapshotCurrentSample();
     currentSampleId = window.LabelSuiteAnnotationWorkspaceData.getRecordId(record, recordIdx);
+    /* FR-088: the timer is per sample -- moving to the next sample starts a
+       fresh measurement rather than carrying the previous one forward. */
+    startLeadTimer();
     /* issue #470: the autosave indicator is derived PER SAMPLE -- a fresh
        selection starts undirtied regardless of the outgoing sample's
        state; renderWorkspace() below recomputes INITIAL/SAVED for the
@@ -2217,6 +2291,10 @@
       previewEntities: deepClone(state.previewEntities),
       previewTriples: deepClone(state.previewTriples),
       previewBypass: deepClone(state.previewBypass),
+      /* FR-088: how long this answer took, travelling with the answer it
+         describes. The data layer lifts it onto the history event; the
+         result snapshot's whitelist deliberately does not pick it up. */
+      timing: readLeadTiming(),
     };
   }
 
@@ -4389,7 +4467,7 @@
        rollback only applies to official_run -- dry_run has no "退回個人重標"
        channel, so a dry_run reject decision must not roll the sample back. */
     if (currentRejectedSomewhere && currentRunType === 'official_run') {
-      window.LabelSuiteAnnotationWorkspaceData.markSampleRejected(currentProfile.id, 'annotator', currentRunType, currentSampleId, summary, currentIdentity);
+      window.LabelSuiteAnnotationWorkspaceData.markSampleRejected(currentProfile.id, 'annotator', currentRunType, currentSampleId, summary, currentIdentity, submitPayload.timing);
     }
 
     renderSampleList();
@@ -4926,6 +5004,9 @@
     state.lang = readStoredLang();
     applyDocumentLang();
     applyStaticI18nText();
+    /* Bound once for the page's lifetime; selectSample() below only resets
+       the accumulator, it does not rebind. */
+    bindLeadTimerSignals();
 
     var submitBtn = document.getElementById('wsSubmitBtn');
     var saveBtn = document.getElementById('wsSaveBtn');
