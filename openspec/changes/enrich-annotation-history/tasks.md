@@ -58,11 +58,11 @@
 > **實測修正（跳過動作與 `adjudicated` 事件皆為新建，範圍擴大）**：本群組原訂前提為「跳過動作與 `adjudicated` 事件皆已存在，只需替它們補上理由必填」，經實測不成立——（a）原型完全沒有任何跳過 UI，`design/prototype/` 全域查無 `markSampleSkipped` 之類的寫入函式，`shared/annotation-history.js` 的 `SKIPPED: 'skipped'` 是群組 A 新增的常數、至今無任何產生點；（b）正典 `specs/annotation/015-annotation-workspace/spec.md` 全文查無 `skipped`；（c）`annotation-workspace.data.js#submitArbitration()` 只寫仲裁票與定案值（必要時再呼叫 `markSampleRejected()`），不呼叫 `appendHistoryEvent()`，`adjudicated` 同樣無產生點——`appendHistoryEvent()` 現有呼叫點只有 `submitted`／`modified`／`accepted`／`draft_saved`／`rejected`。範圍因此擴充為一次做完：**新建標記員跳過動作、補寫 `adjudicated` 歷程事件、兩者自始即以理由必填為契約**（2026-08-31 使用者裁示）。兩個新事件的寫入都落在寫入側，故加入 `annotation-workspace.data.js`，產品檔案由 2 檔增為 3 檔，仍在 Principle X 的 5 檔門檻內。
 > 因跳過動作在本版以前並不存在，本群組於標記員互動面屬**新增能力**而非既有行為的 **BREAKING** 變更；delta 之 FR-089 已同步改寫（見該條「新增能力」段落）。
 
-- [ ] 5.1 撰寫 Red 測試 `design/prototype/tests/annotation/issue-578-reason-required.spec.ts`：斷言 AC-2.20（標記員跳過入口存在；未填理由時送出被阻擋且不產生 `skipped` 事件、填理由後產生一筆 `skipped` 事件且其 `reason` 等於所填值）與 AC-3.50（仲裁未填理由被阻擋並指名缺理由項目、填後產生一筆 `adjudicated` 事件且帶 `reason`——本版以前仲裁送出不寫任何歷程事件，故此事件之存在本身即為斷言標的）；提交並執行，記錄預期失敗原因 [@senior-qa]
-- [ ] 5.2 修改 `design/prototype/pages/annotation/annotation-workspace.html`：新增標記員「跳過」動作入口與其理由輸入，以及仲裁理由輸入的必填欄位版型；驗證方式為 `corepack pnpm typecheck` exit 0 且理由欄位於未觸發跳過／仲裁時計數為 0 [@senior-frontend]
-- [ ] 5.3 修改 `design/prototype/pages/annotation/annotation-workspace.data.js`：新增跳過之寫入函式，寫入一筆 `skipped` 歷程事件；並於 `submitArbitration()` 補寫一筆 `adjudicated` 歷程事件（本版以前該函式不寫任何歷程事件）。兩者之 `reason` 皆為必要參數，並沿用群組 B／D 既有的 `result_snapshot`（FR-087）與耗時（FR-088）欄位建構路徑，不另寫第二套；驗證方式為 5.1 中「事件產生」相關斷言轉綠 [@senior-frontend]
-- [ ] 5.4 修改 `design/prototype/pages/annotation/annotation-workspace.config.js`：接上 5.2 的跳過入口與 5.3 的寫入函式，跳過與仲裁送出前驗證理由並阻擋、理由寫入事件 `reason`，審核側沿用 FR-016A 既有 `reasons` 來源不另存第二份；驗證方式為 5.1 的 Red 測試全數轉綠 [@senior-frontend]
-- [ ] 5.5 執行 `cd design/prototype && corepack pnpm typecheck && corepack pnpm playwright test`，預期兩者皆 exit 0 且既有 FR-016A／FR-083／FR-085 退回理由測試未退化；核對 Red／Green 證據後勾選本群組 [@main]
+- [x] 5.1 撰寫 Red 測試 `design/prototype/tests/annotation/issue-578-reason-required.spec.ts`：斷言 AC-2.20（標記員跳過入口存在；未填理由時送出被阻擋且不產生 `skipped` 事件、填理由後產生一筆 `skipped` 事件且其 `reason` 等於所填值）與 AC-3.50（仲裁未填理由被阻擋並指名缺理由項目、填後產生一筆 `adjudicated` 事件且帶 `reason`——本版以前仲裁送出不寫任何歷程事件，故此事件之存在本身即為斷言標的）；提交並執行，記錄預期失敗原因 [@senior-qa]
+- [x] 5.2 修改 `design/prototype/pages/annotation/annotation-workspace.html`：新增標記員「跳過」動作入口與其理由輸入，以及仲裁理由輸入的必填欄位版型；驗證方式為 `corepack pnpm typecheck` exit 0 且理由欄位於未觸發跳過／仲裁時計數為 0 [@senior-frontend]
+- [x] 5.3 修改 `design/prototype/pages/annotation/annotation-workspace.data.js`：新增跳過之寫入函式，寫入一筆 `skipped` 歷程事件；並於 `submitArbitration()` 補寫一筆 `adjudicated` 歷程事件（本版以前該函式不寫任何歷程事件）。兩者之 `reason` 皆為必要參數，並沿用群組 B／D 既有的 `result_snapshot`（FR-087）與耗時（FR-088）欄位建構路徑，不另寫第二套；驗證方式為 5.1 中「事件產生」相關斷言轉綠 [@senior-frontend]
+- [x] 5.4 修改 `design/prototype/pages/annotation/annotation-workspace.config.js`：接上 5.2 的跳過入口與 5.3 的寫入函式，跳過與仲裁送出前驗證理由並阻擋、理由寫入事件 `reason`，審核側沿用 FR-016A 既有 `reasons` 來源不另存第二份；驗證方式為 5.1 的 Red 測試全數轉綠 [@senior-frontend]
+- [x] 5.5 執行 `cd design/prototype && corepack pnpm typecheck && corepack pnpm playwright test`，預期兩者皆 exit 0 且既有 FR-016A／FR-083／FR-085 退回理由測試未退化；核對 Red／Green 證據後勾選本群組 [@main]
 
 ## 6. PR 群組 F — 標記清單處理狀況彙總（FR-091）
 

@@ -7,7 +7,7 @@
  * behaviour (incomplete -> warning toast; complete -> finalized) is kept.
  */
 import { expect, test, type Page } from '@playwright/test';
-import { buildWorkspaceUrl, dismissGuidelineModal } from './_workspace-helpers';
+import { buildWorkspaceUrl, dismissGuidelineModal, fillArbitrationReasons } from './_workspace-helpers';
 
 const ARBITER_URL = buildWorkspaceUrl({
   task_id: 'T001', sample_id: 'sent-001', role: 'reviewer', run_type: 'official_run',
@@ -36,6 +36,7 @@ test.describe('issue #568 arbitration submit lives in the action bar', () => {
     await submit.click();
     await expect(page.locator('#toastMsg')).toHaveText('請完成所有爭議項目的裁定');
     await page.getByTestId('ws-arbitration-choose-a').click();
+    await fillArbitrationReasons(page);
     await submit.click();
     await expect(page.getByTestId('ws-review-finalized-card')).toBeVisible();
     await expect(submit).toBeHidden();
