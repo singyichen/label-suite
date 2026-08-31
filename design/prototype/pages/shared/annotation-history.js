@@ -118,6 +118,18 @@
     });
   }
 
+  /* FR-088 duration formatting. Whole seconds under a minute, m:ss above
+     it -- both consumers answer "was this quick or slow", and a millisecond
+     figure only adds noise there. It lives here rather than in either page
+     because the workspace history panel and the annotation-list summary
+     must never disagree about what 90000ms reads as. */
+  function formatLeadTime(ms) {
+    var totalSeconds = Math.max(0, Math.round(ms / 1000));
+    if (totalSeconds < 60) return totalSeconds + 's';
+    var seconds = totalSeconds % 60;
+    return Math.floor(totalSeconds / 60) + 'm ' + (seconds < 10 ? '0' : '') + seconds + 's';
+  }
+
   global.LabelSuiteAnnotationHistory = {
     ACTIONS: ACTIONS,
     ACTION_VALUES: ACTION_VALUES,
@@ -125,5 +137,6 @@
     badgeClassFor: badgeClassFor,
     isPositionalOutput: isPositionalOutput,
     diffPositional: diffPositional,
+    formatLeadTime: formatLeadTime,
   };
 })(window);

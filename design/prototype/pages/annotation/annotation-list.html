@@ -462,6 +462,16 @@
       width: 280px;
     }
     .reviewer-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    /* FR-091 processing summary: three stacked lines rather than one run-on
+       string, so a reader can find the same field at the same height on
+       every row. Fixed width keeps the two-line annotator variant and the
+       three-line reviewer variant from shifting the actions column. */
+    .list-summary {
+      display: flex; flex-direction: column; gap: 2px;
+      min-width: 150px; font-size: 12px; color: var(--color-text-soft);
+      line-height: 1.6;
+    }
+    .list-summary-line { font-family: monospace; }
     /* One review unit's answers: one tag per composed output type, wrapping
        rather than widening the cell on multi-output tasks. */
     .annotator-answer { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
@@ -680,6 +690,7 @@
      LabelSuiteAnnotationWorkspaceData.computeIaaAlpha() at load time, so
      annotation-workspace.data.js must load first (dashboard.html already
      orders them this way). -->
+<script src="../shared/annotation-history.js"></script>
 <script src="annotation-workspace.data.js"></script>
 <script src="../dashboard/dashboard.assignments.js"></script>
 <script>
@@ -699,6 +710,7 @@
       navProfile: '個人設定',
       thStatus: '完成狀態',
       thCompletedAt: '完成時間',
+      thProcessingSummary: '處理狀況',
       thTextSummary: '文本摘要',
       thActions: '操作',
       runTypeLabelOfficial: '正式標記',
@@ -768,6 +780,7 @@
       navProfile: 'Profile',
       thStatus: 'Status',
       thCompletedAt: 'Completed At',
+      thProcessingSummary: 'Processing',
       thTextSummary: 'Text Summary',
       thActions: 'Actions',
       runTypeLabelOfficial: 'Official',
@@ -1309,12 +1322,14 @@
       theadRow.appendChild(makeTh(t('thTextSummary')));
       theadRow.appendChild(makeTh(t('thAnswer')));
       theadRow.appendChild(makeTh(t('thLabelStats'), '280px'));
+      theadRow.appendChild(makeTh(t('thProcessingSummary')));
       theadRow.appendChild(makeTh(t('thActions')));
     } else {
       theadRow.appendChild(makeTh('ID'));
       theadRow.appendChild(makeTh(t('thStatus')));
       theadRow.appendChild(makeTh(t('thCompletedAt')));
       theadRow.appendChild(makeTh(t('thTextSummary')));
+      theadRow.appendChild(makeTh(t('thProcessingSummary')));
       theadRow.appendChild(makeTh(t('thActions')));
     }
   }
@@ -1534,6 +1549,9 @@
       tr.appendChild(textTd);
       tr.appendChild(makeTd(buildAnswerCell(profile, item)));
       tr.appendChild(makeTd(statsEl, 'reviewer-stats-cell'));
+      tr.appendChild(makeTd(buildSummaryCell(
+        context, item.recordId,
+        { annotatorId: item.annotator, reviewerId: context.identity.reviewerId })));
       tr.appendChild(makeTd(actionsDiv));
 
       tbodyEl.appendChild(tr);
@@ -1601,6 +1619,83 @@
     return units;
   }
 
+  /* FR-091: the per-sample processing summary. All three values are derived
+     from that sample's history events on every render -- FR-091 forbids a
+     second stored copy, and a cached one would go stale the moment a
+     reviewer acts. `at` is already sorted ascending by getSampleHistory, so
+     the last element is the newest event.
+
+     Returns null when the sample has no events at all; the caller renders
+     the empty state from that, because a zero total and a 1970 date would
+     each be a false statement about a sample nobody has touched. */
+  function buildSampleSummary(context, recordId, identity) {
+    var events = window.LabelSuiteAnnotationWorkspaceData.getSampleHistory(
+      context.profile.id, context.runType, recordId, identity,
+      { role: context.role, actorId: viewerActorId(context, identity) });
+    if (!events.length) return null;
+    var latest = events[events.length - 1];
+    var totalLeadMs = events.reduce(function (sum, event) {
+      return sum + (typeof event.lead_time === 'number' ? event.lead_time : 0);
+    }, 0);
+    return { action: latest.action, at: latest.at, totalLeadMs: totalLeadMs };
+  }
+
+  /* The viewer identity the FR-090 masking runs against: an annotator is
+     their own actor, a reviewer is the reviewer on this context. */
+  function viewerActorId(context, identity) {
+    return context.role === 'reviewer'
+      ? (context.identity && context.identity.reviewerId) || null
+      : (identity && identity.annotatorId) || null;
+  }
+
+  /* Minute precision, unlike the 完成時間 column's date-only rendering --
+     "last activity" is read to judge how recently someone touched the
+     sample, which a bare date cannot answer. */
+  function formatActivityAt(timestamp) {
+    var date = new Date(timestamp);
+    if (isNaN(date.getTime())) return '-';
+    var pad = function (value) { return String(value).padStart(2, '0'); };
+    return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate()) +
+      ' ' + pad(date.getHours()) + ':' + pad(date.getMinutes());
+  }
+
+  function buildSummaryCell(context, recordId, identity) {
+    var summary = buildSampleSummary(context, recordId, identity);
+    var wrap = document.createElement('div');
+    wrap.className = 'list-summary';
+
+    /* `read` is only called when there is a summary, so each line states its
+       value once instead of guarding the empty case a second time. */
+    function line(testId, attrName, read) {
+      var el = document.createElement('span');
+      el.className = 'list-summary-line';
+      el.setAttribute('data-testid', testId);
+      if (summary) {
+        var value = read(summary);
+        el.textContent = value[0];
+        el.setAttribute(attrName, value[1]);
+      } else {
+        el.textContent = '-';
+        el.setAttribute('data-empty', 'true');
+      }
+      wrap.appendChild(el);
+    }
+
+    /* The raw action value, exactly as the workspace 歷程 badge shows it
+       (FR-086 made it a closed set), so the two surfaces cannot drift into
+       naming the same event differently. */
+    line('list-summary-last-action', 'data-action', function (s) { return [s.action, s.action]; });
+    line('list-summary-last-activity', 'data-at', function (s) { return [formatActivityAt(s.at), s.at]; });
+    /* FR-088 visibility: no annotator-facing path may carry a duration, so
+       the annotator view omits the element rather than blanking it. */
+    if (context.role === 'reviewer') {
+      line('list-summary-lead-time', 'data-lead-time-ms', function (s) {
+        return [window.LabelSuiteAnnotationHistory.formatLeadTime(s.totalLeadMs), String(s.totalLeadMs)];
+      });
+    }
+    return wrap;
+  }
+
   function renderRows(context) {
     var tbodyEl = document.getElementById('sampleRows');
     var emptyEl = document.getElementById('emptyState');
@@ -1659,6 +1754,7 @@
       tr.appendChild(makeTd(statusSpan));
       tr.appendChild(makeTd(item.completedAt));
       tr.appendChild(textTd);
+      tr.appendChild(makeTd(buildSummaryCell(context, item.recordId, context.identity)));
       tr.appendChild(makeTd(editBtn));
 
       tr.addEventListener('click', openWorkspace);
