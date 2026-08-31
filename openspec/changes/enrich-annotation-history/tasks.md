@@ -1,21 +1,25 @@
 ## 1. PR 群組 A — 事件模型與 action 常數化（FR-016B、FR-086）
 
-> 本群組為後續所有群組的地基，必須最先合併。組內 1.1 → 1.2 → 1.3 → 1.4 嚴格序列；與其他群組無並行空間。
-> 產品檔案：`design/prototype/pages/shared/annotation-history.js`（新增）、`annotation-workspace.config.js`（共 2 檔）。
+> 本群組為後續所有群組的地基，必須最先合併。組內 1.1 → 1.2 → 1.3 → 1.4 → 1.5 嚴格序列；與其他群組無並行空間。
+> 產品檔案：`design/prototype/pages/shared/annotation-history.js`（新增）、`annotation-workspace.html`、`annotation-workspace.config.js`（共 3 檔）。
+> 本群組只換渲染層。資料層仍寫入舊值 `saved`，因此既有草稿事件在本群組合併後暫時以中性徽章呈現（符合 FR-086 對集合外值的規定）；寫入端更名於群組 B 的 2.2 完成。
 
-- [ ] 1.1 撰寫 Red 測試 `design/prototype/tests/annotation/issue-578-history-actions.spec.ts`：斷言 AC-2.16（七種 `HISTORY_ACTIONS` 各自呈現一個徽章且七色兩兩不同；集合外舊值以中性徽章呈現且清單其餘事件正常渲染）與 AC-2.15 第二個 **AND**（缺新欄位之舊事件原樣顯示、不擲錯）；提交並執行，記錄預期失敗原因 [@senior-qa]
-- [ ] 1.2 新增 `design/prototype/pages/shared/annotation-history.js`：定義 `HISTORY_ACTIONS` 常數、`action` → 徽章語意色的單一對應表與事件建構函式；驗證方式為 `corepack pnpm typecheck`（於 `design/prototype/`）exit 0 [@senior-frontend]
-- [ ] 1.3 修改 `design/prototype/pages/annotation/annotation-workspace.config.js`：`renderHistoryPanel()` 改由 1.2 的對應表推導徽章，移除三值硬編分支，集合外值走中性徽章；驗證方式為 1.1 的 Red 測試轉綠 [@senior-frontend]
-- [ ] 1.4 執行 `cd design/prototype && corepack pnpm typecheck && corepack pnpm playwright test`，預期兩者皆 exit 0 且 1.1 新增案例全綠；核對 Red／Green 證據後勾選本群組 [@main]
+- [x] 1.1 撰寫 Red 測試 `design/prototype/tests/annotation/issue-578-history-actions.spec.ts`：斷言 AC-2.16（七種 `HISTORY_ACTIONS` 各自呈現一個徽章且七色兩兩不同；集合外舊值以中性徽章呈現且清單其餘事件正常渲染）與 AC-2.15 第二個 **AND**（缺新欄位之舊事件原樣顯示、不擲錯）；提交並執行，記錄預期失敗原因 [@senior-qa]
+- [x] 1.2 新增 `design/prototype/pages/shared/annotation-history.js`：定義 `HISTORY_ACTIONS` 常數、`action` → 徽章語意色的單一對應表與事件建構函式；驗證方式為 `corepack pnpm typecheck`（於 `design/prototype/`）exit 0 [@senior-frontend]
+- [x] 1.3 修改 `design/prototype/pages/annotation/annotation-workspace.html`：載入 1.2 的共用模組，並為七個 action 各定義一組語意色徽章樣式（既有 `.saved` 規則由 `.draft-saved` 取代，`.adjudicated` 由死碼轉為 FR-086 用途）；驗證方式為 `corepack pnpm typecheck` exit 0 [@senior-frontend]
+- [x] 1.4 修改 `design/prototype/pages/annotation/annotation-workspace.config.js`：`renderHistoryPanel()` 改由 1.2 的對應表推導徽章，移除三值硬編分支，集合外值走中性徽章；驗證方式為 1.1 的 Red 測試轉綠 [@senior-frontend]
+- [x] 1.5 執行 `cd design/prototype && corepack pnpm typecheck && corepack pnpm playwright test`，預期兩者皆 exit 0 且 1.1 新增案例全綠；核對 Red／Green 證據後勾選本群組 [@main]
 
 ## 2. PR 群組 B — 結果快照與分層遮蔽（FR-087 純值部分、FR-090）
 
 > 依賴群組 A 合併。組內 2.1 → 2.2 → 2.3 → 2.4 → 2.5 嚴格序列。
-> 產品檔案：`annotation-workspace.data.js`、`annotation-workspace.config.js`、`annotation-workspace.html`（共 3 檔）。
+> 產品檔案：`annotation-workspace.data.js`、`annotation-workspace.config.js`、`annotation-workspace.html`、`annotation-list.html`、`task-detail.html`（共 5 檔；後兩者只加一行共用模組 `<script>`，因為它們同樣載入 `annotation-workspace.data.js`）。
+> **實測修正**：`wsSubmissions` 早已於 issue #283 由整包 blob 改為 per-bucket key（`labelsuite.wsSubmissions.<bucketKey>`），design.md D6 所述的「整包 read-modify-write」現況不成立。同一 bucket 內仍是 read-modify-write，快照放大體積後仍值得改為事件層級追加，但風險等級低於 propose 時的判斷。
 > 本群組含 Data Fairness NON-NEGOTIABLE 的遮蔽契約，測試必須斷言「被遮蔽內容不存在於檢視者可取得的輸出中」，不得只斷言畫面不可見。
 
 - [ ] 2.1 撰寫 Red 測試 `design/prototype/tests/annotation/issue-578-history-snapshot-masking.spec.ts`：斷言 AC-2.17（純值前後差異、首次提交呈現為全新內容）與 AC-4.51（標記員取不到他人快照與理由、reviewer 兩人皆可見、仲裁者仍看不到他人未提交草稿）；提交並執行，記錄預期失敗原因 [@senior-qa]
-- [ ] 2.2 修改 `design/prototype/pages/annotation/annotation-workspace.data.js`：事件寫入 `result_snapshot`（精簡 `outputs[]`，排除原始文本與資料集欄位），`getSampleHistory()` 改為接受檢視者脈絡並依序套用 FR-062、FR-090 回傳已遮蔽事件，同時將 `wsSubmissions` 整包 read-modify-write 改為事件層級追加寫入（CONC-03）；驗證方式為 2.1 中 AC-4.51 三個斷言轉綠 [@senior-frontend]
+- [ ] 2.2 修改 `design/prototype/pages/annotation/annotation-workspace.data.js`：`appendHistoryEvent()` 改用共用模組的 `createEvent()` 與 `ACTIONS` 常數（草稿事件由 `saved` 更名為 `draft_saved`），事件寫入 `result_snapshot`（精簡 `outputs[]`，排除原始文本與資料集欄位），`getSampleHistory()` 改為接受檢視者脈絡並依序套用 FR-062、FR-090 回傳已遮蔽事件，同一 bucket 內改為事件層級追加寫入；驗證方式為 2.1 中 AC-4.51 三個斷言轉綠，且既有 `issue-470-autosave-indicator-honesty.spec.ts` 的 `action === 'saved'` 斷言同步更名後仍綠 [@senior-frontend]
+- [ ] 2.2b 修改 `design/prototype/pages/annotation/annotation-list.html` 與 `design/prototype/pages/task-management/task-detail.html`：各加一行 `<script src="../shared/annotation-history.js">`（相對路徑依各頁位置），使 `annotation-workspace.data.js` 在三個載入端都能取得共用模組；驗證方式為三頁載入後 `window.LabelSuiteAnnotationHistory` 皆存在且無 console error。Exception: scaffold; Files: annotation-list.html, task-detail.html; Reason: 同一個共用模組的載入接線，分成兩個任務只會讓依賴半接上 [@senior-frontend]
 - [ ] 2.3 修改 `design/prototype/pages/annotation/annotation-workspace.html`：歷程卡片新增差異區塊與理由區塊的版型容器；驗證方式為 `corepack pnpm typecheck` exit 0 且卡片於既有事件下不產生空白區塊 [@senior-frontend]
 - [ ] 2.4 修改 `design/prototype/pages/annotation/annotation-workspace.config.js`：渲染純值輸出類型的前後差異與理由，缺欄位不渲染；驗證方式為 2.1 中 AC-2.17 斷言轉綠 [@senior-frontend]
 - [ ] 2.5 執行 `cd design/prototype && corepack pnpm typecheck && corepack pnpm playwright test`，預期兩者皆 exit 0 且既有盲審隔離測試（FR-062 相關）未退化；核對 Red／Green 證據後勾選本群組 [@main]
