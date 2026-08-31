@@ -104,7 +104,7 @@ v4.61.0 以前寫入、不具上述新欄位之事件 MUST 原樣顯示且不得
 
 歷程事件之呈現 MUST 分兩層：事件列（操作者角色與 `actor_id`、時間、`action`）對所有可檢視該樣本者可見；`result_snapshot` 與 `reason` MUST 依檢視者角色遮蔽——
 
-1. `role=annotator`：僅可見自己 `actor_id` 之事件的快照與理由；其他標記員之事件僅呈現事件列，快照與理由 MUST 被遮蔽並以明確文案說明遮蔽原因。
+1. `role=annotator`：可見自己 `actor_id` 之事件的快照與理由；其他標記員之事件 MUST NOT 進入該檢視者的歷程輸出——**含事件列**。理由是事件列依 FR-016B 承載「對應輸出類型作答摘要」，該摘要即答案內容，僅遮蔽 `result_snapshot` 與 `reason` 仍會經摘要外洩，與 FR-062 及既有跨標記員隔離（他人狀態僅可讀狀態列舉，不得讀作答內容）相衝突。
 2. `role=reviewer`：可見自身審核單位範圍內（同一 `sample_id × annotator_id × run_type`）全部事件之快照與理由。
 3. 具 `can_arbitrate` 之審核員於爭議單位：可見該樣本全部標記員之快照與理由。
 
@@ -113,8 +113,8 @@ v4.61.0 以前寫入、不具上述新欄位之事件 MUST 原樣顯示且不得
 #### Scenario: AC-4.51 標記員不得經歷程取得他人答案
 - **GIVEN** `run_type=dry_run` 之某樣本已有標記員 A 與標記員 B 各自提交
 - **WHEN** 標記員 A 檢視該樣本 `歷程` 頁籤
-- **THEN** 標記員 B 之事件僅呈現事件列，其 `result_snapshot` 與 `reason` 不出現於 A 可取得的任何呈現輸出中，並顯示遮蔽說明文案
-- **AND** 同一樣本由 reviewer 檢視時，A 與 B 兩人之快照與理由皆可見
+- **THEN** 標記員 B 之事件完全不出現於 A 可取得的任何呈現輸出中——事件列、`result_snapshot` 與 `reason` 皆然
+- **AND** reviewer 於 A 與 B 各自的審核單位檢視同一樣本時，兩人之快照與理由皆可見
 - **AND** 一筆其他審核員尚未提交之審核草稿事件，即使檢視者為具 `can_arbitrate` 之審核員，仍依 FR-062 完全不納入清單
 
 ### Requirement: FR-091 標記清單處理狀況彙總
