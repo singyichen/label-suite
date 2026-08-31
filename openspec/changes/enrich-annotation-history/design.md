@@ -38,6 +38,8 @@
 - **理由**：目前三套歷程各自為政正是本次要收斂的結構問題；若把新模型再寫進 `annotation-workspace.config.js`，014 的時間軸仍需第二份實作。
 - **替代方案**：留在 workspace 內、014 之後自行對接 — 否決，會複製一份 `action` 常數與遮蔽規則，違反 DRY，且遮蔽規則複製一份即等於多一個洩漏面。
 
+> **實測修正（2026-08-31，群組 B 實作時）**：本決策的目標（單一擁有者、014 可共用）成立，但「共用模組」的落點選錯了。`annotation-workspace.data.js` 於 module boot 就呼叫 `seedReviewFlowDemo()` 寫入歷程事件，而載入它的頁面有六個；讓它反向依賴 `design/prototype/pages/shared/annotation-history.js` 需在六頁各補一行 `<script>`，使群組 B 達 9 個產品檔案並違反 Principle X。改採職責切分：`shared/annotation-history.js` 只承載**渲染側**的 `action` → 徽章對應（僅需畫歷程的頁載入），事件建構、`result_snapshot` 與 FR-090 遮蔽等**寫入側**模型改由 `annotation-workspace.data.js` 承載——它本身即是六頁共用的資料層模組，014 的時間軸同樣載入它，因此 D1 的反 DRY 目標未被犧牲，只是共用點由 `shared/` 換成資料層。
+
 ### D2：差異於呈現時計算，不儲存
 
 `result_snapshot` 只存當下完整結果，差異由相鄰兩筆快照即時計算。
@@ -75,6 +77,8 @@
 `result_snapshot` 只存 `outputs[]` 的作答結果，排除原始文本與資料集欄位；同時把 `wsSubmissions` 的整包 read-modify-write 改為以事件為單位的追加寫入。
 
 - **理由**：原始文本可由 `sample_id` 取回，複製進每一筆事件是純粹的體積浪費；整包 RMW 在快照放大體積後，寫入視窗變長，lost-update 風險（CONC-03）隨之升高。
+> **實測修正（2026-08-31，群組 B 實作時）**：D6 後半的「整包 read-modify-write 改為事件層級追加寫入」已撤除。`wsSubmissions` 早於 issue #283 改為 per-bucket key（`labelsuite.wsSubmissions.<bucketKey>`），本決策賴以成立的整包 RMW 現況並不存在；單一 bucket 的寫入視窗遠小於整包 blob，CONC-03 的風險不足以讓本變更附帶一次儲存層格式變更。前半的快照精簡維持不變。
+
 - **開放邊界**：本變更不引入配額回收機制（超額時裁切最舊事件）——原型資料量為示範規模，尚不需要；此判斷記於 Open Questions。
 
 ### Constitution Check
@@ -89,7 +93,7 @@
 - **[快照成為新的答案洩漏面]** → 遮蔽在資料供給層完成（D5），並以 AC-4.51 斷言「被遮蔽內容不存在於該檢視者可取得的輸出中」，而非只斷言畫面看不到。
 - **[FR-062 與 FR-090 疊加順序寫錯，導致草稿快照外洩]** → 兩條規則的測試分別覆蓋且交叉一例（AC-4.51 第三個 **AND**：仲裁者仍看不到他人未提交草稿）。
 - **[`localStorage` 體積成長觸及配額]** → D6 精簡快照；體積監測與回收策略列為 Open Question，不預先發明。
-- **[整包 RMW 的 lost-update（CONC-03）在快照放大後更易觸發]** → 於「快照＋遮蔽」PR 群組中一併改為事件層級追加寫入。
+- **[整包 RMW 的 lost-update（CONC-03）在快照放大後更易觸發]** → **實測修正後不再成立**：per-bucket key 已將寫入視窗縮到單一 bucket，本變更不附帶儲存層格式變更（見 D6 實測修正）。
 - **[耗時計時器測試受真時鐘污染]** → 全程假時鐘，並沿用本頁 autosave 既有競態的處置方式；不以真實等待驗證累計值。
 - **[跳過改為必填理由降低標記流暢度]** → 這是刻意取捨：跳過理由的集合正是指出標記指引該修哪裡的直接證據（試標品質迴圈）；風險是標記員亂填，屬資料品質層面，由審核端觀察而非以規格阻擋。
 

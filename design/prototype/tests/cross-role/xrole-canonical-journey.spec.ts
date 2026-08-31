@@ -721,9 +721,11 @@ test('XROLE-12: blind review -- reviewer events are invisible to peers until the
   await submitApproval(r01Page, FORCED_DIVERGENCE_RECORD_ID, divergenceAnnotator, REVIEWER_R01);
 
   const trail = await readReviewerTrail(r02Page, 'official_run', FORCED_DIVERGENCE_RECORD_ID, divergenceAnnotator);
-  expect(trail).toHaveLength(1);
-  expect(trail[0].action).toBe('submitted');
-  expect(trail[0].actorId).toBe(REVIEWER_R01);
+  /* issue #578 (FR-086): an approval writes the wrapper `submitted` plus one
+     `accepted` per output key. What this test pins is visibility -- before
+     R01 submitted, the trail was empty; after, both events are R01's. */
+  expect(trail.map((e) => e.action)).toEqual(['submitted', 'accepted']);
+  expect(trail.every((e) => e.actorId === REVIEWER_R01)).toBe(true);
 });
 
 test('XROLE-13: dry_run reject never rolls the annotator sample back to pending (issue #192 regression, cross-role)', async () => {

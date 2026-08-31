@@ -7,6 +7,12 @@
  * parts live, following the same window.LabelSuite* pattern as sidebar.js
  * and modal-focus.js, so a second consumer never has to restate them.
  *
+ * Scope is the RENDER side only. Event construction, result_snapshot and
+ * FR-090 masking belong to annotation-workspace.data.js: that module writes
+ * history at load time (seedReviewFlowDemo) on all six pages that include
+ * it, so a dependency in this direction would have to be wired into every
+ * one of them, while it is already the data layer they all share.
+ *
  * FR-086: `action` is a closed set. Every value owns exactly one badge
  * modifier class, and that mapping is data, not a render-site branch -- the
  * three-way ternary it replaces silently rendered `skipped` as `submitted`.
@@ -51,23 +57,10 @@
     return isKnownAction(action) ? BADGE_CLASS[action] : '';
   }
 
-  /* The one place a history event is shaped. `at` is stamped here so every
-     writer agrees on the timestamp format the merge sort depends on. */
-  function createEvent(action, role, actorId, summary) {
-    return {
-      action: action,
-      role: role,
-      actorId: actorId || null,
-      at: new Date().toISOString(),
-      summary: summary || '',
-    };
-  }
-
   global.LabelSuiteAnnotationHistory = {
     ACTIONS: ACTIONS,
     ACTION_VALUES: ACTION_VALUES,
     isKnownAction: isKnownAction,
     badgeClassFor: badgeClassFor,
-    createEvent: createEvent,
   };
 })(window);

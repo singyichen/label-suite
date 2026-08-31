@@ -728,6 +728,40 @@
       color: var(--color-text-soft);
       white-space: pre-line;
     }
+    /* FR-087 (issue #578): the answer an event recorded. A first snapshot
+       reads as whole content; every later one reads as before → after, one
+       row per output type that actually changed. Both blocks are only
+       emitted when they have content, so a card without a snapshot keeps
+       its pre-v4.61.0 layout. */
+    .history-snapshot {
+      margin-top: 6px;
+      padding: 8px 10px;
+      border-radius: var(--radius-md);
+      background: var(--color-surface);
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--color-ink);
+      white-space: pre-line;
+    }
+    .history-diff { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+    .history-diff-item {
+      padding: 6px 10px;
+      border-left: 2px solid var(--color-info);
+      border-radius: var(--radius-sm);
+      background: var(--color-info-bg);
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--color-ink);
+    }
+    /* FR-089: the reason the actor typed for a skip, correction or
+       arbitration -- carried on the event, not on the sample. */
+    .history-reason {
+      margin-top: 6px;
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--color-text-soft);
+      white-space: pre-line;
+    }
     .guideline-summary {
       border: 1px solid rgba(99,102,241,0.2);
       border-radius: var(--radius-lg);

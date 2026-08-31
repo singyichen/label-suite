@@ -308,7 +308,7 @@
      `role` alone answers "a reviewer did this", not "which reviewer".
      `summary` is the host-provided per-output description (對應輸出類型 +
      修改內容). */
-  function appendHistoryEvent(entry, action, role, summary, actorId) {
+  function appendHistoryEvent(entry, action, role, summary, actorId, extra) {
     if (!Array.isArray(entry.history)) entry.history = [];
     var normalizedActorId = actorId || null;
     var last = entry.history[entry.history.length - 1];
@@ -321,13 +321,46 @@
     if (action === 'submitted' && last && last.action === 'submitted' && last.role === role && last.actorId === normalizedActorId) {
       return;
     }
-    entry.history.push({
+    var event = {
       action: action,
       role: role,
       actorId: normalizedActorId,
       at: new Date().toISOString(),
       summary: summary || '',
+    };
+    /* v4.61.0 (FR-087/FR-089): result-bearing events carry the answer as it
+       stood at that moment, and reason-bearing ones carry the typed reason.
+       Absent keys stay absent rather than becoming null, so a pre-v4.61.0
+       event and a new event without a snapshot read identically. */
+    if (extra) {
+      Object.keys(extra).forEach(function (field) {
+        if (extra[field] != null) event[field] = extra[field];
+      });
+    }
+    entry.history.push(event);
+  }
+
+  /* The answer as stored on a history event (FR-087). Deliberately a
+     whitelist of the three answer collections: it must never carry the
+     source text or dataset row fields, and it must not pick up the
+     reviewer-internal `decisions` / `reasons` keys that travel in the same
+     payload. Cloned so a later in-place edit of live state cannot rewrite
+     an event that already happened. */
+  function buildResultSnapshot(payload) {
+    if (!payload) return null;
+    var snapshot = {};
+    ['previewState', 'previewEntities', 'previewTriples'].forEach(function (field) {
+      if (payload[field] != null) snapshot[field] = JSON.parse(JSON.stringify(payload[field]));
     });
+    return Object.keys(snapshot).length ? snapshot : null;
+  }
+
+  /* One output type's answer, for the FR-086 accepted/modified decision.
+     Plain-value types live under previewState[outKey]; position-type
+     comparison is registry-driven and lands with FR-087's position half. */
+  function outputSlice(payload, outKey) {
+    var state = (payload && payload.previewState) || {};
+    return JSON.stringify(state[outKey] != null ? state[outKey] : null);
   }
 
   function markSampleSubmitted(taskId, role, runType, sampleId, payload, historySummary, identity) {
@@ -336,9 +369,37 @@
     var existing = bucket[sampleId];
     var entry = { status: 'submitted', submittedAt: new Date().toISOString(), answers: payload || {} };
     if (existing && Array.isArray(existing.history)) entry.history = existing.history;
-    appendHistoryEvent(entry, 'submitted', role, historySummary, actorIdFor(role, identity));
+    var actorId = actorIdFor(role, identity);
+    var decisions = role === 'reviewer' ? (payload && payload.decisions) || null : null;
+    /* When per-outKey decision events follow (FR-086), the answer lives on
+       those -- repeating it on the wrapper `submitted` event would show the
+       same result twice, a millisecond apart, in the same trail. */
+    appendHistoryEvent(entry, 'submitted', role, historySummary, actorId, {
+      result_snapshot: decisions ? null : buildResultSnapshot(payload),
+    });
+    if (decisions) {
+      appendReviewDecisionEvents(entry, taskId, runType, sampleId, payload, historySummary, actorId, identity, decisions);
+    }
     bucket[sampleId] = entry;
     writeSubmissionBucket(key, bucket);
+  }
+
+  /* FR-086 emission points for `accepted` / `modified`. A reviewer submit
+     carries one decision per output type (FR-051); an approve whose value
+     matches the annotator's is an acceptance, an approve whose value
+     differs is a correction. `reject` is not emitted here -- that path
+     already writes `rejected` through markSampleRejected. */
+  function appendReviewDecisionEvents(entry, taskId, runType, sampleId, payload, summary, actorId, identity, decisions) {
+    var reviewed = getSubmission(taskId, 'annotator', runType, sampleId, identity);
+    var reasons = (payload && payload.reasons) || {};
+    Object.keys(decisions).forEach(function (outKey) {
+      if (decisions[outKey] !== 'approve') return;
+      var changed = outputSlice(payload, outKey) !== outputSlice(reviewed, outKey);
+      appendHistoryEvent(entry, changed ? 'modified' : 'accepted', 'reviewer', summary, actorId, {
+        result_snapshot: buildResultSnapshot(payload),
+        reason: reasons[outKey] || null,
+      });
+    });
   }
 
   /* Draft save (AC-2.3 / FR-013). Saving never downgrades an
@@ -353,11 +414,15 @@
     if (existing && entryStatus(existing) === 'submitted') {
       existing.answers = payload || {};
       existing.savedAt = new Date().toISOString();
-      appendHistoryEvent(existing, 'saved', role, historySummary, actorId);
+      appendHistoryEvent(existing, 'draft_saved', role, historySummary, actorId, {
+        result_snapshot: buildResultSnapshot(payload),
+      });
     } else {
       var entry = { status: 'saved', savedAt: new Date().toISOString(), answers: payload || {} };
       if (existing && Array.isArray(existing.history)) entry.history = existing.history;
-      appendHistoryEvent(entry, 'saved', role, historySummary, actorId);
+      appendHistoryEvent(entry, 'draft_saved', role, historySummary, actorId, {
+        result_snapshot: buildResultSnapshot(payload),
+      });
       bucket[sampleId] = entry;
     }
     writeSubmissionBucket(key, bucket);
@@ -393,7 +458,23 @@
     return taskId + '::reviewer::' + runType + '::' + annotatorId + '::';
   }
 
-  function getSampleHistory(taskId, runType, sampleId, identity) {
+  /* FR-090 layered masking, applied AFTER FR-062 has already decided which
+     events exist at all. Rule 1: an annotator viewer never obtains a peer
+     annotator's event -- not a masked version of it, the whole event. The
+     event row carries the per-output answer summary (FR-016B), so masking
+     only `result_snapshot` would still hand the peer's answer over, which
+     is the Data Fairness leak XROLE-11 exists to prevent. Reviewer viewers
+     see every event FR-062 admitted for the review unit they are on.
+     `viewer` is optional: callers that predate it get the unmasked merge,
+     matching the behavior they were written against. */
+  function maskHistoryForViewer(events, viewer) {
+    if (!viewer || viewer.role !== 'annotator') return events;
+    return events.filter(function (event) {
+      return event.role !== 'annotator' || event.actorId === viewer.actorId;
+    });
+  }
+
+  function getSampleHistory(taskId, runType, sampleId, identity, viewer) {
     var annotatorKey = submissionBucketKey(taskId, 'annotator', runType, identity);
     var reviewerPrefix = reviewerBucketPrefix(taskId, runType, identity);
     var merged = [];
@@ -413,7 +494,7 @@
     merged.sort(function (a, b) {
       return String(a.at).localeCompare(String(b.at));
     });
-    return merged;
+    return maskHistoryForViewer(merged, viewer);
   }
 
   function getSubmittedSampleCount(taskId, role, runType, identity) {
