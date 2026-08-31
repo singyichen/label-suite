@@ -575,6 +575,47 @@
     writeSubmissionBucket(key, bucket);
   }
 
+  /* FR-089: record something that happened TO a sample without moving where
+   * that sample stands. Both callers write into the ANNOTATOR bucket, for
+   * two different reasons that happen to point the same way:
+   *   - skip is the annotator's own timeline to begin with;
+   *   - adjudication is a reviewer act, but getSampleHistory drops any
+   *     non-annotator bucket whose entry is not `submitted` (FR-062), and an
+   *     arbiter normally has no submitted reviewer submission of their own --
+   *     an `adjudicated` event left in the arbiter's bucket would be
+   *     invisible to every viewer, forever. Same resolution markSampleRejected
+   *     already uses: annotator bucket, reviewer role on the event.
+   *
+   * Status is deliberately untouched. `skipped` and `adjudicated` are events,
+   * not sample states, so entryStatus() keeps its three-value contract and
+   * "I set this one aside" cannot overwrite "how far I got on it".
+   *
+   * `reason` is required by FR-089 rather than merely expected: without the
+   * guard, appendHistoryEvent's null-key drop would quietly emit a
+   * reason-less event, which is the exact outcome FR-089 forbids. Silent
+   * return follows markSampleRejected's run_type guard. */
+  function appendSampleTimelineEvent(taskId, runType, sampleId, action, role, reason, historySummary, identity, timing) {
+    if (!reason) return;
+    var key = submissionBucketKey(taskId, 'annotator', runType, identity);
+    var bucket = readSubmissionBucket(key);
+    var entry = bucket[sampleId];
+    if (!entry) {
+      entry = { status: 'pending', answers: {} };
+      bucket[sampleId] = entry;
+    }
+    appendHistoryEvent(entry, action, role, historySummary, actorIdFor(role, identity), Object.assign(
+      { reason: reason },
+      timingFields(timing)
+    ));
+    writeSubmissionBucket(key, bucket);
+  }
+
+  /* FR-089 / AC-2.20: the annotator sets a sample aside, saying why. New in
+     v4.61.0 -- there was no skip action before this version. */
+  function markSampleSkipped(taskId, runType, sampleId, reason, historySummary, identity, timing) {
+    appendSampleTimelineEvent(taskId, runType, sampleId, 'skipped', 'annotator', reason, historySummary, identity, timing);
+  }
+
   /* Reviewer per-row decision drafts (issue #196, CONT-03): approve/reject
    * choices made before 送出審核 have no home in the submission bucket --
    * that bucket represents a FINAL saved/submitted answer, and every entry
@@ -2111,6 +2152,15 @@
       item.finalized_value = decision.value;
       item.finalized_by = arbiterId;
       writeArbitrationItem(itemKey, item);
+      /* FR-089 / AC-3.50 (new in v4.61.0): before this version arbitration
+         was the only terminal action in the workspace that left no trace in
+         history at all -- votes and finalized_value were written, and the
+         歷程 tab showed nothing. One event per finalized item, because the
+         reason is asked per item. */
+      appendSampleTimelineEvent(
+        taskId, runType, sampleId, 'adjudicated', 'reviewer',
+        decision.reason, 'arbitration finalized: ' + decision.itemId, identity
+      );
       if (decision.value === PURE_REJECT_VALUE) upheldRejectItemIds.push(decision.itemId);
     });
     /* issue #551 point 2: choosing B on a pure-reject item means "maintain
@@ -2736,6 +2786,7 @@
     getSampleSavedAt: getSampleSavedAt,
     markSampleSubmitted: markSampleSubmitted,
     markSampleSaved: markSampleSaved,
+    markSampleSkipped: markSampleSkipped,
     markSampleRejected: markSampleRejected,
     saveReviewRowDecisionDraft: saveReviewRowDecisionDraft,
     getReviewRowDecisionDraft: getReviewRowDecisionDraft,

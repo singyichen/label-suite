@@ -1008,6 +1008,25 @@
        live so the FR-083 toast can name the output types. */
     #wsReviewSubmitBtn[data-submit-blocked] { opacity: 0.55; cursor: not-allowed; }
     .rv-reject-reason-label { font-size: 12px; font-weight: 600; color: var(--color-error); }
+
+    /* ── Annotator mode: skip + its required reason (issue #578, FR-089) ── */
+    /* The reason sits beside the button rather than behind a confirm dialog:
+       FR-089 makes it required, and a field you can see is a field you can
+       answer before you commit to the action. */
+    .ws-skip-group { display: flex; align-items: center; gap: 6px; }
+    .ws-skip-group input {
+      width: 180px;
+      font: inherit;
+      font-size: 13px;
+      padding: 5px 8px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      background: var(--color-surface);
+      color: var(--color-ink);
+    }
+    /* Same blocked look as the reviewer submit (issue #552): dimmed, but the
+       click still lands so the toast can say what is missing. */
+    #wsSkipBtn[data-submit-blocked] { opacity: 0.55; cursor: not-allowed; }
     .rv-reject-reason textarea {
       width: 100%;
       font: inherit;
@@ -1174,6 +1193,12 @@
           <span id="wsAutosaveLabel"></span>
         </div>
         <div class="action-bar-right">
+          <div class="ws-skip-group" id="wsSkipGroup">
+            <input type="text" id="wsSkipReason" data-testid="ws-skip-reason" required />
+            <button class="btn btn-outline" type="button" id="wsSkipBtn" data-testid="ws-skip-btn" data-submit-blocked="reason">
+              <span id="wsSkipLabel"></span>
+            </button>
+          </div>
           <button class="btn btn-outline" type="button" id="wsSaveBtn" data-testid="ws-save-btn">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
             <span id="wsSaveLabel"></span>
