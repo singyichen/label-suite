@@ -37,6 +37,9 @@
       wsHistoryRoleAnnotator: '標記員',
       wsHistoryRoleReviewer: '審核員',
       wsHistoryReasonLabel: '理由：',
+      wsHistoryDiffAdded: '新增',
+      wsHistoryDiffRemoved: '刪除',
+      wsHistoryDiffBoundary: '邊界變更',
       guidelineModalTitle: '請先閱讀任務說明',
       guidelineModalConfirm: '我已閱讀，開始標記',
       guidelineSummaryTitle: '任務說明',
@@ -147,6 +150,9 @@
       wsHistoryRoleAnnotator: 'Annotator',
       wsHistoryRoleReviewer: 'Reviewer',
       wsHistoryReasonLabel: 'Reason: ',
+      wsHistoryDiffAdded: 'Added',
+      wsHistoryDiffRemoved: 'Removed',
+      wsHistoryDiffBoundary: 'Boundary',
       guidelineModalTitle: 'Please read the task guideline first',
       guidelineModalConfirm: "I've read it, start annotating",
       guidelineSummaryTitle: 'Task Guideline',
@@ -1758,22 +1764,66 @@
     return block;
   }
 
+  var DIFF_KIND_LABELS = {
+    added: 'wsHistoryDiffAdded',
+    removed: 'wsHistoryDiffRemoved',
+    boundary: 'wsHistoryDiffBoundary',
+  };
+
+  function spanRange(span) {
+    return '[' + span.start + ',' + span.end + ']';
+  }
+
+  /* `kind` is null for plain-value diffs: those read as one before/after
+     line and have no add/delete/boundary distinction to name. */
+  function diffItem(kind, text) {
+    var item = document.createElement('div');
+    item.className = 'history-diff-item';
+    if (kind) {
+      var marker = document.createElement('span');
+      marker.className = 'history-diff-kind';
+      marker.setAttribute('data-diff-kind', kind);
+      marker.textContent = t(DIFF_KIND_LABELS[kind]) + ' ';
+      item.appendChild(marker);
+    }
+    var body = document.createElement('span');
+    body.textContent = text;
+    item.appendChild(body);
+    return item;
+  }
+
+  /* FR-087: position-bearing types list one row per entity, so a boundary
+     that moved is visible even when the entity count did not change. The
+     comparator itself lives in the shared history module -- this only
+     decides how a change reads. */
+  function positionalDiffItems(outKey, before, after) {
+    return window.LabelSuiteAnnotationHistory.diffPositional(outKey, before, after).map(function (change) {
+      var label = outKey + ': ' + change.span.label + ' ' + change.span.text + ' ';
+      return diffItem(
+        change.kind,
+        change.kind === 'boundary'
+          ? label + spanRange(change.from) + ' → ' + spanRange(change.span)
+          : label + spanRange(change.span)
+      );
+    });
+  }
+
   function buildHistoryDiff(before, after) {
-    var changed = historyOutputKeys(before, after)
-      .map(function (outKey) {
-        var from = describeOutputAnswer(outKey, before);
-        var to = describeOutputAnswer(outKey, after);
-        return from === to ? null : { outKey: outKey, from: from, to: to };
-      })
-      .filter(Boolean);
-    if (!changed.length) return null;
+    var items = [];
+    historyOutputKeys(before, after).forEach(function (outKey) {
+      if (window.LabelSuiteAnnotationHistory.isPositionalOutput(outKey)) {
+        items = items.concat(positionalDiffItems(outKey, before, after));
+        return;
+      }
+      var from = describeOutputAnswer(outKey, before);
+      var to = describeOutputAnswer(outKey, after);
+      if (from === to) return;
+      items.push(diffItem(null, outKey + ': ' + (from || t('reviewNoAnswer')) + ' → ' + (to || t('reviewNoAnswer'))));
+    });
+    if (!items.length) return null;
     var block = document.createElement('div');
     block.className = 'history-diff';
-    changed.forEach(function (entry) {
-      var item = document.createElement('div');
-      item.className = 'history-diff-item';
-      item.textContent =
-        entry.outKey + ': ' + (entry.from || t('reviewNoAnswer')) + ' → ' + (entry.to || t('reviewNoAnswer'));
+    items.forEach(function (item) {
       block.appendChild(item);
     });
     return block;

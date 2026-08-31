@@ -28,11 +28,13 @@
 ## 3. PR 群組 C — 位置型輸出差異（FR-087 位置型部分）
 
 > 依賴群組 B 合併。組內 3.1 → 3.2 → 3.3 嚴格序列。
-> 產品檔案：`design/prototype/pages/shared/annotation-history.js`（共 1 檔）。
+> 產品檔案：`design/prototype/pages/shared/annotation-history.js`、`annotation-workspace.config.js`（共 2 檔）。
+> **實測修正（產品檔案數）**：原列 1 檔。比對器本身確實只落在 `shared/annotation-history.js`，但 AC-2.18 斷言的是「檢視後一筆事件之差異區塊」，而差異區塊由群組 B 落在 `annotation-workspace.config.js` 的 `buildHistoryDiff()` 產生；比對器若無人呼叫則 AC 無從觀察，故本群組必須含該處接線，共 2 檔（仍在 Principle X 的 5 檔以內）。
+> **實測修正（位置型涵蓋範圍）**：FR-087 列出三種位置型（`entity_recognition`、`relation_identification`、`sequence_tagging`）。實測快照結構中，前兩者的位置資料狀況不同：`previewEntities` 具 `start`／`end`（`entity_recognition`），`previewState.sequence_tagging.tokens` 以陣列索引即為位置（每個非 `O` 標記為一單位 span），兩者皆已註冊 span 對齊比對器；`previewTriples`（`relation_identification`）僅有 `subj`／`rel`／`obj`，全碼庫未存任何位移，無 span 可對齊，故本群組維持其既有純值比對路徑。此落差記錄於本區塊，待 `relation_identification` 具備位移資料後另開 issue 補齊。
 
-- [ ] 3.1 撰寫 Red 測試 `design/prototype/tests/annotation/issue-578-entity-diff.spec.ts`：斷言 AC-2.18（3→4 實體且一個 span 由 `[0,4]` 改為 `[0,6]` 時列出 1 筆新增與 1 筆邊界變更；實體數量相同但邊界不同時差異區塊不得為空；起點相同而標籤不同時列為一刪一增）；提交並執行，記錄預期失敗原因 [@senior-qa]
-- [ ] 3.2 修改 `design/prototype/pages/shared/annotation-history.js`：新增依 `OUTPUT_TYPE_REGISTRY` 註冊的 span 對齊比對器（起點＋標籤配對，比對 `end` 判定邊界變更），不得逐 task 硬編；驗證方式為 3.1 的 Red 測試轉綠 [@senior-frontend]
-- [ ] 3.3 執行 `cd design/prototype && corepack pnpm typecheck && corepack pnpm playwright test`，預期兩者皆 exit 0；核對 Red／Green 證據後勾選本群組 [@main]
+- [x] 3.1 撰寫 Red 測試 `design/prototype/tests/annotation/issue-578-entity-diff.spec.ts`：斷言 AC-2.18（3→4 實體且一個 span 由 `[0,4]` 改為 `[0,6]` 時列出 1 筆新增與 1 筆邊界變更；實體數量相同但邊界不同時差異區塊不得為空；起點相同而標籤不同時列為一刪一增）；提交並執行，記錄預期失敗原因 [@senior-qa]
+- [x] 3.2 修改 `design/prototype/pages/shared/annotation-history.js`：新增依 `OUTPUT_TYPE_REGISTRY` 註冊的 span 對齊比對器（起點＋標籤配對，比對 `end` 判定邊界變更），不得逐 task 硬編；驗證方式為 3.1 的 Red 測試轉綠 [@senior-frontend]
+- [x] 3.3 執行 `cd design/prototype && corepack pnpm typecheck && corepack pnpm playwright test`，預期兩者皆 exit 0；核對 Red／Green 證據後勾選本群組 [@main]
 
 ## 4. PR 群組 D — 標記耗時（FR-088）
 
