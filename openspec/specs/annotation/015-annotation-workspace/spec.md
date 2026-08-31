@@ -60,6 +60,24 @@ Annotation List + Workspace（標記清單與標記作業，Annotator／Reviewer
 
 正典：`specs/annotation/015-annotation-workspace/spec.md`（v4.55.0 → 4.58.0）。本變更（issue #552）修訂 FR-016A、FR-014I、FR-070 第 6 點、FR-083、AC-3.40、AC-3.47，新增 FR-085、AC-2.14、AC-3.48。
 
+### Requirement: FR-016B 標記歷程呈現
+
+標記歷程 MUST 於右欄 `歷程` 頁籤呈現，annotator 與 reviewer 視角皆可查看；同一樣本的 annotator 與 reviewer 事件合併為單一時序清單，最新事件在前；尚無紀錄時顯示空狀態文案。合併清單納入 reviewer 事件時受 FR-062 盲審隔離約束——僅納入已提交之審核事件與檢視者本人的草稿事件（v4.9.0 既有規則，不變）。
+
+每筆事件 MUST 包含操作者角色與 `actor_id`（FR-050）、時間、`action`（取值範圍見 FR-086）與對應輸出類型作答摘要；自 v4.61.0 起，事件另 MUST 承載 `result_snapshot`（FR-087）、`started_at` 與 `lead_time`（FR-088）、`reason`（FR-089），其呈現受 FR-090 分層遮蔽約束。事件維持 append-only：既有事件不得被覆寫或刪除。
+
+v4.61.0 以前寫入、不具上述新欄位之事件 MUST 原樣顯示且不得因此報錯——缺哪一個欄位就不渲染對應區塊，系統 MUST NOT 為舊事件補寫推估的快照、耗時或理由（沿用 FR-050 對缺 `actor_id` 舊事件的既有處置原則）。
+
+#### Scenario: 歷程合併呈現且受盲審隔離
+- **GIVEN** 某樣本已有標記員提交事件與一位審核員之已提交審核事件，另一位審核員尚有未提交之草稿事件
+- **WHEN** 檢視右欄 `歷程` 頁籤
+- **THEN** 清單以最新事件在前合併呈現標記員與已提交之審核事件，另一位審核員之未提交草稿事件不出現
+
+#### Scenario: AC-2.15 歷程卡片呈現擴充欄位
+- **GIVEN** 標記員於 `run_type=official_run` 對某樣本提交，且該事件具備新欄位
+- **WHEN** 切換至右欄 `歷程` 頁籤
+- **THEN** 該筆事件卡片顯示操作者（角色 + `actor_id`）、時間、`action` 徽章與作答摘要；並依 FR-090 可見性顯示 `result_snapshot` 差異區塊與 `reason`
+- **AND** 同一清單中一筆 v4.61.0 以前寫入的舊事件僅顯示既有五欄位，不渲染差異區塊、耗時或理由，且不擲出錯誤
 
 ### Requirement: FR-016A 審計理由擴及所有退回
 
@@ -97,7 +115,6 @@ Reviewer 在 `dry_run` 與 `official_run` 執行修正／刪除**或判定退回
 - **WHEN** 點擊「送出審核」
 - **THEN** 送出中止，toast 顯示「請填寫以下輸出類型的退回理由：single_label」，且 `ws-review-submit-btn` 帶 `data-submit-blocked="reason"`；填入理由後該屬性移除，再送出成功
 
-
 ### Requirement: FR-085 標記員重標理由橫幅
 
 `run_type=official_run` 之 annotator 開啟帶有重標待辦的樣本（樣本狀態為 `pending` 且最新歷程事件為 `rejected`）時，工作區 MUST 於 `#annotationPreview` 頂部渲染 `ws-rework-reasons` 橫幅，逐被退回 outKey 一列 `ws-rework-reason-row`（帶 `data-outkey`）列出理由、審核員帳號與時間（`formatHistoryTime()` 格式），並於被退回 outKey 之作答面板 `ws-output-panel-{outKey}` 加 `data-rework-rejected="true"`。理由來源 MUST 為 reviewer submission 之 `decisions`／`reasons`（`getReworkReasons()`），不得另存第二份。`dry_run` MUST NOT 渲染本橫幅；無重標待辦之樣本亦不渲染。歷程面板（FR-016B）不變。
@@ -111,3 +128,121 @@ Reviewer 在 `dry_run` 與 `official_run` 執行修正／刪除**或判定退回
 - **GIVEN** `dry_run` reviewer 退回並填理由後送出
 - **WHEN** 該標記員開啟同一樣本
 - **THEN** `ws-rework-reasons` 計數為 0
+
+### Requirement: FR-086 歷程動作常數化
+
+歷程事件之 `action` MUST 取自常數集合 `HISTORY_ACTIONS = draft_saved | submitted | skipped | modified | accepted | rejected | adjudicated`，不得為自由字串。每個值 MUST 對應唯一的徽章語意色，且該對應 MUST 為單一資料來源驅動，不得於渲染端逐值硬編分支。
+
+各值語意：`draft_saved`（標記員或審核員儲存草稿）、`submitted`（標記員提交）、`skipped`（標記員跳過）、`modified`（審核員直接修正答案）、`accepted`（審核員通過）、`rejected`（審核員退回）、`adjudicated`（仲裁者定案）。
+
+`HISTORY_ACTIONS` 之每個值 MUST 有對應的產生點。v4.61.0 以前的實作只發出 `submitted`、`draft_saved`（舊值 `saved`）與 `rejected` 三種，其餘四種皆無產生點，本版逐一補齊：審核員送出「通過」MUST 寫入 `accepted` 事件，送出「修正」MUST 寫入 `modified` 事件——其通過／修正之判定沿用既有的逐 outKey 機制——逐筆通過／退回按鈕之 active/inactive 語意見 FR-014B，「每個 outKey 皆須有決策」之送出驗證見 FR-044，「該 outKey 之答案是否被更動」之比對見 FR-052——本條 MUST NOT 改變該判定邏輯，僅要求該決策落為一筆歷程事件；`skipped` 與 `adjudicated` 之產生點見 FR-089——前者為本版新增之標記員動作，後者則因爭議仲裁送出於本版以前只寫入仲裁票與定案值、不寫任何歷程事件。
+
+既有事件中出現於 `HISTORY_ACTIONS` 之外的動作值 MUST 以中性徽章呈現且不得中斷渲染。
+
+本條一併修訂關鍵實體 `AnnotationHistoryItem`（正典「關鍵實體」章節）：其 `action` 可能值 MUST 改列 `HISTORY_ACTIONS` 七值並改引本條，MUST NOT 續引 FR-043——FR-030 ~ FR-043 已於 v4.0.0 隨審核單位收斂整體廢止（見正典使用者故事 3 之 v4.0.0 適用範圍收斂），實體卻仍指向該已廢止條文。原清單中的 `approved` 於本版正名為 `accepted`：v4.61.0 以前的實作從未產生 `approved` 事件（產生點僅 `submitted`／`saved`／`rejected`），故此為文件層的更名而非行為變更；`overridden`／`gold_confirmed`／`gold_reopened` 隨 FR-030 ~ FR-043 之廢止一併自實體移除。實體欄位另 MUST 新增 `result_snapshot`（FR-087）、`started_at` 與 `lead_time`（FR-088）、`reason`（FR-089），四者對 v4.61.0 以前寫入之事件皆為選填（沿用 `actor_id` 對舊事件的既有容忍原則，FR-050）。
+
+#### Scenario: AC-2.16 七種動作各有對應徽章
+- **GIVEN** 某樣本歷程依序包含 `HISTORY_ACTIONS` 全部七種動作各一筆
+- **WHEN** 檢視 `歷程` 頁籤
+- **THEN** 七筆事件各自呈現一個徽章，且七個徽章的語意色兩兩不同
+- **AND** 一筆 `action` 為集合外舊值之事件以中性徽章呈現，清單其餘事件正常渲染
+
+#### Scenario: AC-2.21 審核通過與修正皆產生歷程事件
+- **GIVEN** 審核員對某樣本一個 `outKey` 送出「通過」、對另一個 `outKey` 送出「修正」
+- **WHEN** 檢視該樣本 `歷程` 頁籤
+- **THEN** 清單分別出現一筆 `accepted` 事件與一筆 `modified` 事件，兩者之 `actor_id` 皆為該審核員
+- **AND** 該次送出未因此產生重複事件（沿用 FR-016B append-only 與既有重複送出防護）
+
+### Requirement: FR-087 結果快照與差異呈現
+
+每筆會改變答案內容的事件（`submitted`、`modified`、`adjudicated`）MUST 保存當下的 `result_snapshot`——該樣本完整的 `outputs[]` 作答結果，且 MUST 排除原始文本與資料集欄位（快照的用途是回答「答案改了什麼」，不是複製受標記資料）。
+
+歷程面板呈現的差異 MUST 由同一操作者維度下相鄰兩筆事件的 `result_snapshot` 於呈現時計算，系統 MUST NOT 另存一份差異結果。差異呈現方式 MUST 由 `OUTPUT_TYPE_REGISTRY` 之輸出類型驅動，不得逐 task 硬編：純值類型（`single_label`、`multi_label`、`single_dim`、`multi_dim`、`free_text`）比對值本身；具位置資訊之類型（`entity_recognition`、`relation_identification`、`sequence_tagging`）MUST 逐實體列出新增、刪除與邊界變更三類差異，僅實體數量相同而邊界不同時亦 MUST 被列出。
+
+**已知落差**：`relation_identification` 雖屬本條所稱「具位置資訊之類型」，但其作答結構於原型階段不攜帶可對齊的 span 起訖，逐實體差異目前僅 `entity_recognition` 與 `sequence_tagging` 兩型別有實作；`relation_identification` 暫以純值比對遞補，位置維度待答案結構補上起訖後統一，追蹤於 issue #590（處置方式沿用 FR-052 之「已知落差」先例）。
+
+同一操作者維度下無前一筆事件時（首次提交），該事件 MUST 呈現為全新內容而非差異。
+
+#### Scenario: AC-2.17 純值類型呈現前後值差異
+- **GIVEN** 標記員先提交 `single_label = neutral`，其後審核員修正為 `positive`
+- **WHEN** 檢視 `歷程` 頁籤之 `modified` 事件
+- **THEN** 該事件顯示 `single_label` 由 `neutral` 變更為 `positive`
+- **AND** 標記員該筆首次 `submitted` 事件呈現為全新內容，不顯示差異箭頭
+
+#### Scenario: AC-2.18 位置型類型逐實體列出差異
+- **GIVEN** 某樣本 `entity_recognition` 之前一筆快照有 3 個實體，後一筆有 4 個實體且其中一個實體的 span 邊界由 `[0,4]` 改為 `[0,6]`
+- **WHEN** 檢視後一筆事件之差異區塊
+- **THEN** 差異逐實體列出，包含 1 筆新增與 1 筆邊界變更（列出變更前後 span）
+- **AND** 另一組實體數量相同但有一個 span 邊界不同的前後快照，其差異區塊 MUST NOT 為空
+
+### Requirement: FR-088 標記耗時記錄與可見性
+
+每筆事件 MUST 承載 `started_at`（該次作業起算時間）與 `lead_time`（該次作業耗時）。`lead_time` 之口徑 MUST 為頁面可見時間累計：分頁切離背景或視窗失焦時 MUST 暫停計時，回到前景時 MUST 續計，不得以「事件時間相減」的掛鐘時間充當耗時。
+
+可見性：`lead_time` MUST NOT 於 annotator 視角之任何呈現路徑出現（避免標記員因看見秒數而改變作答行為，污染以耗時分析標記難度的研究資料）；reviewer 視角與任務層級統計（`task-detail` 之 `annotation-results` 分頁「標記結果表」）MUST 可見。本條僅規定該處「可見」，MUST NOT 改動 014 既有的 `work-log` 匯總（`總工時`／`每筆平均耗時`，見 014 FR-007b）——該匯總源自 `WorkLogEntry` 之工時紀錄，與本版歷程事件之 `lead_time` 為兩套並存資料，其整併不在本次範圍。
+
+#### Scenario: AC-2.19 耗時以頁面可見時間累計
+- **GIVEN** 標記員開啟某樣本後將分頁切至背景一段時間，再切回並提交
+- **WHEN** 讀取該提交事件之 `lead_time`
+- **THEN** `lead_time` 不包含分頁位於背景的期間
+- **AND** `lead_time` 小於 `at` 與 `started_at` 之差
+
+#### Scenario: AC-3.49 耗時僅對 reviewer 呈現
+- **GIVEN** 同一筆具 `lead_time` 之標記事件
+- **WHEN** 分別以 `role=annotator` 與 `role=reviewer` 檢視該樣本 `歷程` 頁籤
+- **THEN** annotator 視角之歷程卡片不含任何耗時呈現
+- **AND** reviewer 視角之同一筆事件顯示耗時
+
+### Requirement: FR-089 動作理由必填
+
+下列四個動作於送出時 MUST 強制填寫理由，缺理由時 MUST 阻擋送出並指名缺理由的項目：審核退回（`rejected`）、審核修改（`modified`）、爭議仲裁（`adjudicated`）、標記員跳過（`skipped`）。理由 MUST 寫入該筆歷程事件之 `reason`。
+
+審核側（`rejected`、`modified`）之理由 MUST 寫入 FR-016A 既有的持久化路徑（reviewer submission `decisions` map 旁的 `reasons` map），MUST NOT 另存第二份。惟 FR-016A 之 `reasons` map 現況僅收錄**退回者**，`modified` 之理由屬本版對該既有結構的**擴充**而非既有行為之沿用：`ReviewDecision.reason` 之必填條件自 `decision = reject` 擴及修正動作；FR-083 之送出阻擋與 FR-085 之標記員側呈現維持既有行為。
+
+**新增能力**（標記員互動）：標記員「跳過」為本版**新增**的動作——v4.61.0 以前正典與原型皆無此動作、亦無 `skipped` 事件之產生點，故本條並非既有單鍵行為的變更，而是一個自始即以「理由必填」為契約的新動作；未填理由時該樣本 MUST NOT 產生 `skipped` 事件。
+
+跳過動作本身之定義（本條一併新增，避免 AC-2.20 指涉未定義之控件）：跳過入口 MUST 僅對標記員視角呈現，審核員視角 MUST NOT 呈現；其可用條件與 FR-013A 之樣本三態一致——`pending` 與 `saved` 之樣本可跳過，已 `submitted` 之樣本 MUST NOT 可跳過。跳過 MUST NOT 改變樣本狀態：`skipped` 不是第四種樣本狀態，樣本停留於原本的 `pending` 或 `saved`，跳過僅產生一筆 `skipped` 歷程事件；此為刻意設計，使「這個樣本我暫時跳過」與「這個樣本的作答進度」維持兩件互不覆寫的事實。跳過送出後之導覽 MUST 重用 FR-022A（提交後載入下一筆）與 FR-022C（全數完成後導回清單）所定義之同一套下一筆規則，MUST NOT 另立一套跳過專用導覽——此為本條之新規定，FR-022A／FR-022C 本身係為「提交後」而寫，本版並未主張其原文已涵蓋跳過。
+
+同理，`adjudicated` 事件於本版以前亦無產生點——爭議仲裁送出僅寫入仲裁票與定案值。本條 MUST 使該次定案送出一併寫入一筆 `adjudicated` 歷程事件，且該事件自始即 MUST 承載所填 `reason`。
+
+#### Scenario: AC-2.20 跳過必須填寫理由
+- **GIVEN** 標記員於某樣本點擊「跳過」
+- **WHEN** 未填寫理由即嘗試送出
+- **THEN** 送出被阻擋且提示需填寫理由，該樣本未產生 `skipped` 歷程事件
+- **AND** 填寫理由後送出，`skipped` 事件之 `reason` 等於所填理由
+
+#### Scenario: AC-3.50 仲裁定案必須填寫理由
+- **GIVEN** 具 `can_arbitrate` 之審核員對爭議單位進行仲裁
+- **WHEN** 未填寫理由即送出定案
+- **THEN** 送出被阻擋且指名缺理由之項目
+- **AND** 填寫理由後定案，`adjudicated` 事件之 `reason` 等於所填理由
+
+### Requirement: FR-090 歷程分層遮蔽
+
+歷程事件之呈現 MUST 分兩層：事件列（操作者角色與 `actor_id`、時間、`action`）對所有可檢視該樣本者可見；`result_snapshot` 與 `reason` MUST 依檢視者角色遮蔽——
+
+1. `role=annotator`：可見自己 `actor_id` 之事件的快照與理由；其他標記員之事件 MUST NOT 進入該檢視者的歷程輸出——**含事件列**。理由是事件列依 FR-016B 承載「對應輸出類型作答摘要」，該摘要即答案內容，僅遮蔽 `result_snapshot` 與 `reason` 仍會經摘要外洩，與 FR-062 相衝突。此處之「標記員不得經任何路徑讀取他人作答內容」為本條**新確立**之規則，正典 v4.60.0 以前並無同名的跨標記員隔離條文可資沿用；其依據為憲章 NON-NEGOTIABLE 之 Data Fairness，以及歷程供給層既有以 `identity.annotatorId` 分 bucket 取事件的實作事實（`getSampleHistory()`）。
+2. `role=reviewer`：可見自身審核單位範圍內（同一 `sample_id × annotator_id × run_type`）全部事件之快照與理由。
+3. 具 `can_arbitrate` 之審核員於爭議單位：可見該樣本全部標記員之快照與理由。
+
+遮蔽 MUST 於資料供給層完成，MUST NOT 僅以樣式隱藏——被遮蔽的內容不得存在於該檢視者可取得的呈現輸出中。本條與 FR-062 盲審隔離為疊加關係：一筆事件必須同時通過 FR-062（未提交之審核判斷僅本人可見）與本條，方得呈現其快照與理由。
+
+#### Scenario: AC-4.51 標記員不得經歷程取得他人答案
+- **GIVEN** `run_type=dry_run` 之某樣本已有標記員 A 與標記員 B 各自提交
+- **WHEN** 標記員 A 檢視該樣本 `歷程` 頁籤
+- **THEN** 標記員 B 之事件完全不出現於 A 可取得的任何呈現輸出中——事件列、`result_snapshot` 與 `reason` 皆然
+- **AND** reviewer 於 A 與 B 各自的審核單位檢視同一樣本時，兩人之快照與理由皆可見
+- **AND** 一筆其他審核員尚未提交之審核草稿事件，即使檢視者為具 `can_arbitrate` 之審核員，仍依 FR-062 完全不納入清單
+
+### Requirement: FR-091 標記清單處理狀況彙總
+
+`annotation-list` 每筆樣本 MUST 呈現「最後動作」「最後活動時間」「累計耗時」三項彙總，使檢視者不需逐筆開啟工作區即可掌握處理狀況。三項 MUST 由該樣本之歷程事件推導（最後動作與最後活動時間取最新一筆事件；累計耗時為該樣本全部事件 `lead_time` 之和），MUST NOT 另存第二份彙總資料。
+
+彙總之可見性沿用 FR-088 與 FR-090：「累計耗時」MUST NOT 於 annotator 視角呈現；「最後動作」與「最後活動時間」屬事件列層級，對所有可檢視者可見。無任何歷程事件之樣本，三項皆呈現空狀態而非零值。
+
+#### Scenario: AC-1.25 清單呈現處理狀況彙總
+- **GIVEN** 某樣本已有提交與審核退回兩筆事件
+- **WHEN** 以 `role=reviewer` 檢視 `annotation-list`
+- **THEN** 該筆樣本顯示最後動作為 `rejected`、最後活動時間為該退回事件時間、累計耗時為兩筆事件耗時之和
+- **AND** 以 `role=annotator` 檢視時不呈現累計耗時，最後動作與最後活動時間仍呈現
+- **AND** 無歷程事件之樣本三項皆為空狀態
