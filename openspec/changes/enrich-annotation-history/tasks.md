@@ -53,14 +53,16 @@
 
 ## 5. PR 群組 E — 動作理由必填（FR-089）
 
-> 依賴群組 B 合併（`reason` 欄位由該群組落地）。組內 5.1 → 5.2 → 5.3 → 5.4 嚴格序列。
-> 產品檔案：`annotation-workspace.html`、`annotation-workspace.config.js`（共 2 檔）。
-> 本群組含標記員互動的 **BREAKING** 變更（跳過由單鍵改為需填理由）。
+> 依賴群組 B 合併（`reason` 欄位由該群組落地）。組內 5.1 → 5.2 → 5.3 → 5.4 → 5.5 嚴格序列。
+> 產品檔案：`annotation-workspace.html`、`annotation-workspace.config.js`、`design/prototype/pages/annotation/annotation-workspace.data.js`（共 3 檔）。
+> **實測修正（跳過動作與 `adjudicated` 事件皆為新建，範圍擴大）**：本群組原訂前提為「跳過動作與 `adjudicated` 事件皆已存在，只需替它們補上理由必填」，經實測不成立——（a）原型完全沒有任何跳過 UI，`design/prototype/` 全域查無 `markSampleSkipped` 之類的寫入函式，`shared/annotation-history.js` 的 `SKIPPED: 'skipped'` 是群組 A 新增的常數、至今無任何產生點；（b）正典 `specs/annotation/015-annotation-workspace/spec.md` 全文查無 `skipped`；（c）`annotation-workspace.data.js#submitArbitration()` 只寫仲裁票與定案值（必要時再呼叫 `markSampleRejected()`），不呼叫 `appendHistoryEvent()`，`adjudicated` 同樣無產生點——`appendHistoryEvent()` 現有呼叫點只有 `submitted`／`modified`／`accepted`／`draft_saved`／`rejected`。範圍因此擴充為一次做完：**新建標記員跳過動作、補寫 `adjudicated` 歷程事件、兩者自始即以理由必填為契約**（2026-08-31 使用者裁示）。兩個新事件的寫入都落在寫入側，故加入 `annotation-workspace.data.js`，產品檔案由 2 檔增為 3 檔，仍在 Principle X 的 5 檔門檻內。
+> 因跳過動作在本版以前並不存在，本群組於標記員互動面屬**新增能力**而非既有行為的 **BREAKING** 變更；delta 之 FR-089 已同步改寫（見該條「新增能力」段落）。
 
-- [ ] 5.1 撰寫 Red 測試 `design/prototype/tests/annotation/issue-578-reason-required.spec.ts`：斷言 AC-2.20（未填理由時跳過被阻擋且不產生 `skipped` 事件、填理由後 `reason` 等於所填值）與 AC-3.50（仲裁未填理由被阻擋並指名缺理由項目、填後 `adjudicated` 事件帶 `reason`）；提交並執行，記錄預期失敗原因 [@senior-qa]
-- [ ] 5.2 修改 `design/prototype/pages/annotation/annotation-workspace.html`：新增跳過理由輸入與仲裁理由輸入的必填欄位版型；驗證方式為 `corepack pnpm typecheck` exit 0 且欄位於未觸發跳過／仲裁時計數為 0 [@senior-frontend]
-- [ ] 5.3 修改 `design/prototype/pages/annotation/annotation-workspace.config.js`：跳過與仲裁送出前驗證理由並阻擋、理由寫入事件 `reason`，審核側沿用 FR-016A 既有 `reasons` 來源不另存第二份；驗證方式為 5.1 的 Red 測試轉綠 [@senior-frontend]
-- [ ] 5.4 執行 `cd design/prototype && corepack pnpm typecheck && corepack pnpm playwright test`，預期兩者皆 exit 0 且既有 FR-016A／FR-083／FR-085 退回理由測試未退化；核對 Red／Green 證據後勾選本群組 [@main]
+- [x] 5.1 撰寫 Red 測試 `design/prototype/tests/annotation/issue-578-reason-required.spec.ts`：斷言 AC-2.20（標記員跳過入口存在；未填理由時送出被阻擋且不產生 `skipped` 事件、填理由後產生一筆 `skipped` 事件且其 `reason` 等於所填值）與 AC-3.50（仲裁未填理由被阻擋並指名缺理由項目、填後產生一筆 `adjudicated` 事件且帶 `reason`——本版以前仲裁送出不寫任何歷程事件，故此事件之存在本身即為斷言標的）；提交並執行，記錄預期失敗原因 [@senior-qa]
+- [x] 5.2 修改 `design/prototype/pages/annotation/annotation-workspace.html`：新增標記員「跳過」動作入口與其理由輸入，以及仲裁理由輸入的必填欄位版型；驗證方式為 `corepack pnpm typecheck` exit 0 且理由欄位於未觸發跳過／仲裁時計數為 0 [@senior-frontend]
+- [x] 5.3 修改 `design/prototype/pages/annotation/annotation-workspace.data.js`：新增跳過之寫入函式，寫入一筆 `skipped` 歷程事件；並於 `submitArbitration()` 補寫一筆 `adjudicated` 歷程事件（本版以前該函式不寫任何歷程事件）。兩者之 `reason` 皆為必要參數，並沿用群組 B／D 既有的 `result_snapshot`（FR-087）與耗時（FR-088）欄位建構路徑，不另寫第二套；驗證方式為 5.1 中「事件產生」相關斷言轉綠 [@senior-frontend]
+- [x] 5.4 修改 `design/prototype/pages/annotation/annotation-workspace.config.js`：接上 5.2 的跳過入口與 5.3 的寫入函式，跳過與仲裁送出前驗證理由並阻擋、理由寫入事件 `reason`，審核側沿用 FR-016A 既有 `reasons` 來源不另存第二份；驗證方式為 5.1 的 Red 測試全數轉綠 [@senior-frontend]
+- [x] 5.5 執行 `cd design/prototype && corepack pnpm typecheck && corepack pnpm playwright test`，預期兩者皆 exit 0 且既有 FR-016A／FR-083／FR-085 退回理由測試未退化；核對 Red／Green 證據後勾選本群組 [@main]
 
 ## 6. PR 群組 F — 標記清單處理狀況彙總（FR-091）
 
@@ -70,13 +72,26 @@
 
 - [x] 6.1 撰寫 Red 測試 `design/prototype/tests/annotation/issue-578-list-summary.spec.ts`：斷言 AC-1.25（reviewer 檢視顯示最後動作／最後活動時間／累計耗時；annotator 檢視不呈現累計耗時；無歷程事件之樣本三項皆為空狀態而非零值）；提交並執行，記錄預期失敗原因 [@senior-qa]
 - [x] 6.2 修改 `design/prototype/pages/annotation/annotation-list.html`：每筆樣本新增三項彙總，全部由歷程事件推導、不另存第二份；驗證方式為 6.1 的 Red 測試轉綠 [@senior-frontend]
-- [ ] 6.3 執行 `cd design/prototype && corepack pnpm typecheck && corepack pnpm playwright test`，預期兩者皆 exit 0；核對 Red／Green 證據後勾選本群組 [@main]
+- [x] 6.3 執行 `cd design/prototype && corepack pnpm typecheck && corepack pnpm playwright test`，預期兩者皆 exit 0；核對 Red／Green 證據後勾選本群組 [@main]
 
 ## 7. 最終 PR 群組 — Source-Verify 與 archive 回寫
 
 > 僅在群組 A ~ F 全數合併後執行；本群組完成第 4 道驗證閘。
 
-- [ ] 7.1 執行 `openspec validate --changes --no-interactive`，預期 `change/enrich-annotation-history` 通過（第 1 道閘：OpenSpec schema） [@main]
-- [ ] 7.2 逐條以 `grep` 驗證 delta 中每個引用的正典 ID（FR-016A、FR-016B、FR-049、FR-050、FR-062、FR-083、FR-085）皆可於 `specs/annotation/015-annotation-workspace/spec.md` 定位，記錄命中行號作為 Source-Verify 證據（第 4 道閘前置） [@main]
-- [ ] 7.3 執行 `openspec archive enrich-annotation-history`，並回寫正典 `specs/annotation/015-annotation-workspace/spec.md`：版本 4.60.0 → 4.61.0、新增 Changelog 條目、納入 FR-086 ~ FR-091 與對應 AC；驗證方式為衍生檢視不殘留任何 delta 標題且正典版號與 Changelog 已更新 [@main]
-- [ ] 7.4 最終 PR 合併後更新 `specs/STATUS.md`，並於 issue #578 附上完成摘要後關閉 [@main]
+> **Source-Verify 預跑結果（2026-08-31）**：對 58 處引用逐條 grep，48 項 PASS、10 項 FAIL／MISMATCH。`openspec archive` 會把 propose 時的 delta 文字逐字複製進衍生檢視，任何錯誤引用都會原樣進入正典且無 CLI 檢查攔得住，故 7.1／7.2 必須在 7.5 之前完成。
+
+- [ ] 7.1 修正 6 項阻斷級引用錯誤 [@main]
+      ① `proposal.md` L54 與 `design.md` L8 的「`wsSubmissions` 目前為整包 read-modify-write」已過時——正典 Changelog v4.14.1（issue #283）記載其自該版起改為 per-bucket key，base commit 實測有 3 處 `labelsuite.wsSubmissions.` per-bucket 寫入；改為「per-bucket key，同一 bucket 內仍為 read-modify-write 但寫入視窗遠小於整包 blob」，並與 `design.md` D6／Risks 既有的「實測修正」段落一致。
+      ② delta L29「沿用 FR-051 既有的 per-outKey 決策」——FR-051 全文不含 `outKey`，其定義為審核單位層級的 `REVIEW_UNIT_DIMENSIONS` 與五態推導；改引 FR-014B（逐 outKey 通過／退回按鈕）與 FR-052（逐輸出類型差異比對）。
+      ③ delta L107「既有跨標記員隔離（他人狀態僅可讀狀態列舉，不得讀作答內容）」——正典查無此條文；改寫為本變更新建之隔離規則，理據引 Constitution III Data Fairness 與現況 `getSampleHistory()` 依 `identity.annotatorId` 分桶，不得宣稱其為既有條文。
+      ④ delta L49 對 `relation_identification` 下的逐實體差異 MUST 與實作不符——`SPAN_EXTRACTORS` 只註冊 `entity_recognition` 與 `sequence_tagging`；比照 FR-052 既有慣例於條文內加註「已知落差」，說明其 CompactAnswer／`previewTriples` 不攜帶位移、暫沿用純值比對，並把 follow-up issue #590 的編號寫進條文。
+      ⑤ `proposal.md` L20 的「跳過」**BREAKING** 標記與 L29 `### New Capabilities（無）`——跳過動作在本版以前完全不存在（base commit 全 prototype 命中 0），非 BREAKING 而是新增能力；同步 delta FR-089 已於 `4f45556` 改寫的說法。跳過動作本身的定義（僅標記員視角、`pending`／`saved` 可跳過、不改變樣本狀態、導覽沿用 FR-022A／FR-022C）已於群組 E 分支補進 FR-089，本項僅需處理 `proposal.md` 的 BREAKING 標記與 New Capabilities 兩處。
+      ⑥ 關鍵實體 `AnnotationHistoryItem` 宣告要改卻無 delta 承載——delta L3 明寫「修訂 FR-016B 與關鍵實體 `AnnotationHistoryItem`」，但 delta 內無對應區塊；正典該實體的 `action` 列舉仍指向已於 v4.0.0 廢止的 FR-043，且列的是 `approved` 而非 FR-086 的 `accepted`。補上實體的 MODIFIED 區塊，並於 Changelog 明記 `approved` → `accepted` 之改名。
+- [ ] 7.2 修正 3 項非阻斷但會污染正典的引用問題 [@main]
+      ⑦ delta L69「`task-detail` 標記結果面板」——014 的正式名稱為 `標記結果表`（`annotation-results`）；併同處理兩個附帶問題：`design.md` Non-Goals 明說不修改 014，delta 卻對 014 頁面下 MUST（改為非規範性描述或補 014 delta），以及 014 既有 `work-log` 的總工時／每筆平均耗時與 FR-091「MUST NOT 另存第二份彙總」的關係須交代。
+      ⑧ delta L87 稱審核側 `rejected`、`modified` 之理由「沿用 FR-016A 既有持久化路徑」——FR-016A 原文的 `reasons` map 僅限退回者；改寫為「MUST 擴充 FR-016A 之 `reasons` map 至 `modified`」，或將 FR-016A 納入 `## MODIFIED Requirements`。
+      ⑨ `proposal.md` L12 的 Label Studio「16 欄位、9 值 action enum」在 `docs/research/tool-analysis.md`、`docs/product/ia/label-studio-functional-map.md` 皆 grep 不到——依 Source-Verify gate「找不到即移除或修正，絕不近似」，補進調研文件並標明來源路徑，或刪除括號內數字。
+- [ ] 7.3 執行 `openspec validate --changes --no-interactive`，預期 `change/enrich-annotation-history` 通過（第 1 道閘：OpenSpec schema） [@main]
+- [ ] 7.4 逐條以 `grep` 驗證 delta 中每個引用的正典 ID 皆可定位並記錄命中行號（第 4 道閘前置）：`specs/annotation/015-annotation-workspace/spec.md` 之 FR-014B、FR-016A、FR-016B、FR-044、FR-049、FR-050、FR-051、FR-052、FR-062、FR-083、FR-085，以及 `specs/task-management/014-task-detail/spec.md` 之 FR-015d-4 [@main]
+- [ ] 7.5 執行 `openspec archive enrich-annotation-history`，並回寫正典 `specs/annotation/015-annotation-workspace/spec.md`：版本 4.60.0 → 4.61.0、新增 Changelog 條目、納入 FR-086 ~ FR-091 與對應 AC，並同步改寫關鍵實體 `AnnotationHistoryItem` 的欄位清單（補 `result_snapshot`／`started_at`／`lead_time`／`reason`）與 `action` 列舉（改指 FR-086 `HISTORY_ACTIONS`、移除已廢止 FR-043 的引用）；衍生檢視現無 `### Requirement: FR-016B` 標題，delta 的 MODIFIED 合併無匹配目標，故 MUST 人工核對合併結果，不得只看 exit code [@main]
+- [ ] 7.6 最終 PR 合併後更新 `specs/STATUS.md`，並於 issue #578 附上完成摘要後關閉 [@main]

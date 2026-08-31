@@ -126,3 +126,16 @@ export function trackPageErrors(page: Page): Error[] {
 export function assertNoPageErrors(errors: Error[]) {
   expect(errors, `Unexpected page errors: ${errors.map((e) => e.message).join('; ')}`).toEqual([]);
 }
+
+/* FR-089 (spec 015 v4.61.0, issue #578): finalizing a dispute now requires a
+ * reason per open item, so the arbitration submit stays blocked until every
+ * ws-arbitration-reason field is answered. Specs whose subject is the
+ * arbitration OUTCOME rather than the reason contract itself answer them all
+ * in one call here; issue-578-reason-required.spec.ts owns the contract. */
+export async function fillArbitrationReasons(page: Page, reason = '仲裁理由（測試）') {
+  const fields = page.getByTestId('ws-arbitration-reason');
+  const count = await fields.count();
+  for (let i = 0; i < count; i += 1) {
+    await fields.nth(i).fill(reason);
+  }
+}

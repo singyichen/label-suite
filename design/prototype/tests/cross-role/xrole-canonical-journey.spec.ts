@@ -5,6 +5,7 @@ import {
   assertNoPageErrors,
   buildListUrl,
   buildWorkspaceUrl,
+  fillArbitrationReasons,
   patchDataFile,
   skipGuidelineModal,
   trackPageErrors,
@@ -847,6 +848,7 @@ test('XROLE-18: the arbiter votes B and the unit finalizes with the arbitrated v
   await expect(items.first().getByTestId('ws-arbitration-choose-b')).toContainText(DIVERGENCE_CORRECTION);
 
   await r03Page.getByTestId('ws-arbitration-choose-b').click();
+  await fillArbitrationReasons(r03Page);
   await r03Page.getByTestId('ws-arbitration-submit').click();
 
   const state = await readArbitrationState(r03Page, FORCED_DIVERGENCE_RECORD_ID, divergenceAnnotator);

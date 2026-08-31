@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
+import { buildWorkspaceUrl, fillArbitrationReasons, skipGuidelineModal } from './_workspace-helpers';
 
 /* Pure-reject vote counting and N=1 quorum convergence (issue #551).
  *
@@ -130,6 +130,7 @@ test.describe('issue #551 -- pure reject blocks finalization instead of counting
     await page.reload();
 
     await page.getByTestId('ws-arbitration-choose-b').click();
+    await fillArbitrationReasons(page);
     await page.getByTestId('ws-arbitration-submit').click();
 
     const submitted = await page.evaluate((a) =>

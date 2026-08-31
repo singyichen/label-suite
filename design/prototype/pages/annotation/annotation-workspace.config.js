@@ -21,6 +21,12 @@
       submitLabel: '提交',
       saveLabel: '儲存草稿',
       wsSaveSuccess: '已儲存',
+      skipLabel: '跳過',
+      skipReasonPlaceholder: '跳過理由（必填）',
+      skipNeedsReason: '請先填寫跳過理由，再跳過這一筆',
+      skipSuccess: '已跳過這一筆',
+      arbitrationReasonPlaceholder: '裁定理由（必填）',
+      arbitrationNeedsReason: '請先填寫裁定理由再送出，尚未填寫的項目',
       wsPrevBtnLabel: '上一筆',
       wsNextBtnLabel: '下一筆',
       wsProgressText: '{done} / {total} 已提交',
@@ -135,6 +141,12 @@
       submitLabel: 'Submit',
       saveLabel: 'Save draft',
       wsSaveSuccess: 'Saved',
+      skipLabel: 'Skip',
+      skipReasonPlaceholder: 'Reason for skipping (required)',
+      skipNeedsReason: 'Give a reason before skipping this sample',
+      skipSuccess: 'Sample skipped',
+      arbitrationReasonPlaceholder: 'Reason for this decision (required)',
+      arbitrationNeedsReason: 'Give a reason before finalizing. Still missing',
       wsPrevBtnLabel: 'Previous',
       wsNextBtnLabel: 'Next',
       wsProgressText: '{done} / {total} submitted',
@@ -2004,6 +2016,7 @@
     restoreSample(currentSampleId);
     syncUrlToUnit();
     renderWorkspace();
+    renderSkipControl();
   }
 
   /* A workspace URL addresses one REVIEW UNIT, so every switch writes the
@@ -2303,6 +2316,76 @@
         return outKey + ': ' + (described || t('reviewNoAnswer'));
       })
       .join('\n');
+  }
+
+  /* ── Annotator skip (issue #578, FR-089 / AC-2.20) ──────────────────
+     The control is detached rather than hidden when it does not apply: a
+     reviewer must not merely be unable to click it (FR-089 says their view
+     never renders it), and a submitted sample offers no skip at all --
+     FR-013A's three states decide, so `pending` and `saved` keep it and
+     `submitted` loses it. Skipping does NOT change the sample's status;
+     it appends one `skipped` history event, leaving "I set this aside"
+     and "how far I got" as two facts that never overwrite each other. */
+  var skipGroupNode = null;
+  var skipGroupParent = null;
+  var skipGroupAnchor = null;
+
+  function skipReasonText() {
+    var input = document.getElementById('wsSkipReason');
+    return input ? input.value.trim() : '';
+  }
+
+  /* Blocked-not-disabled, the same convention issue #552 set for the
+     reviewer submit: dimmed via [data-submit-blocked], but the click still
+     reaches the handler so the toast can say what is missing. */
+  function refreshSkipBlocker() {
+    var btn = document.getElementById('wsSkipBtn');
+    if (!btn) return;
+    if (skipReasonText()) btn.removeAttribute('data-submit-blocked');
+    else btn.setAttribute('data-submit-blocked', 'reason');
+  }
+
+  function renderSkipControl() {
+    if (!skipGroupNode) return;
+    var applies =
+      currentRole !== 'reviewer' &&
+      !window.LabelSuiteAnnotationWorkspaceData.isSampleSubmitted(
+        currentProfile.id, currentRole, currentRunType, currentSampleId, currentIdentity
+      );
+    if (applies) {
+      if (!skipGroupNode.parentNode) skipGroupParent.insertBefore(skipGroupNode, skipGroupAnchor);
+      refreshSkipBlocker();
+    } else if (skipGroupNode.parentNode) {
+      skipGroupNode.remove();
+    }
+  }
+
+  function handleSkip() {
+    var reason = skipReasonText();
+    if (!reason) {
+      showToast(t('skipNeedsReason'), 'warning');
+      return;
+    }
+    window.LabelSuiteAnnotationWorkspaceData.markSampleSkipped(
+      currentProfile.id,
+      currentRunType,
+      currentSampleId,
+      reason,
+      buildHistorySummary(),
+      currentIdentity
+    );
+    var input = document.getElementById('wsSkipReason');
+    if (input) input.value = '';
+    refreshSkipBlocker();
+    renderSampleList();
+    renderHistoryPanel();
+    showToast(t('skipSuccess'));
+    /* FR-089: a skip lands on the next sample by the SAME rule a submit
+       does (FR-022A, and FR-022C when nothing is left), rather than a
+       second navigation scheme of its own. */
+    var nextUnit = findNextPendingUnit(buildUnits());
+    if (nextUnit) selectSample(nextUnit.recordId);
+    else window.location.href = buildListReturnUrl();
   }
 
   function handleSave() {
@@ -3474,6 +3557,25 @@
   /* issue #568: dispute item ids still open on the rendered unit, read by
      the action-bar submit (handleArbitrationSubmit). */
   var arbitrationOpenItemIds = [];
+  /* FR-089 / AC-3.50: one reason per OPEN dispute item, keyed the same way
+     the choices are. Per item rather than per submit because a card can
+     finalize several items at once and one shared sentence would not say
+     why any single one went the way it did. */
+  var arbitrationReasons = {};
+
+  function arbitrationItemsMissingReason() {
+    return arbitrationOpenItemIds.filter(function (id) {
+      return !(arbitrationReasons[id] || '').trim();
+    });
+  }
+
+  /* Same blocked-not-disabled convention as the reviewer submit (#552). */
+  function refreshArbitrationBlocker() {
+    var btn = document.getElementById('wsArbitrationSubmitBtn');
+    if (!btn) return;
+    if (arbitrationItemsMissingReason().length) btn.setAttribute('data-submit-blocked', 'reason');
+    else btn.removeAttribute('data-submit-blocked');
+  }
 
   function formatDisputeValue(value) {
     /* issue #551: a naked reject carries the PURE_REJECT_VALUE sentinel
@@ -3571,6 +3673,26 @@
     row.appendChild(label);
     row.appendChild(buildArbitrationVotesBlock(votes));
 
+    /* Before the A/B buttons, not after: the reason is what makes the
+       choice legible later, and a field below the control you just pressed
+       reads as an afterthought. */
+    var reasonInput = document.createElement('input');
+    reasonInput.type = 'text';
+    reasonInput.required = true;
+    reasonInput.setAttribute('data-testid', 'ws-arbitration-reason');
+    reasonInput.setAttribute('data-item-id', itemId);
+    reasonInput.placeholder = t('arbitrationReasonPlaceholder');
+    reasonInput.setAttribute('aria-label', t('arbitrationReasonPlaceholder'));
+    reasonInput.style.cssText =
+      'width:100%;font:inherit;font-size:13px;padding:5px 8px;margin-bottom:6px;'
+      + 'border:1px solid var(--color-border);border-radius:var(--radius-sm);'
+      + 'background:var(--color-surface);color:var(--color-ink);';
+    reasonInput.addEventListener('input', function () {
+      arbitrationReasons[itemId] = reasonInput.value;
+      refreshArbitrationBlocker();
+    });
+    row.appendChild(reasonInput);
+
     var group = document.createElement('div');
     group.className = 'rv-choice-group';
     var buttons = [];
@@ -3651,6 +3773,7 @@
   function renderArbitrationCard(preview, submission) {
     var data = window.LabelSuiteAnnotationWorkspaceData;
     arbitrationChoices = {};
+    arbitrationReasons = {};
 
     var card = document.createElement('div');
     card.className = 'content-card';
@@ -3728,6 +3851,7 @@
     arbitrationOpenItemIds = openItemIds;
     var arbitrationSubmitBtn = document.getElementById('wsArbitrationSubmitBtn');
     if (arbitrationSubmitBtn && openItemIds.length) arbitrationSubmitBtn.classList.remove('hidden');
+    refreshArbitrationBlocker();
 
     preview.appendChild(card);
   }
@@ -3739,8 +3863,24 @@
       showToast(t('toastArbitrationIncomplete'), 'warning');
       return;
     }
+    /* FR-089: the toast NAMES the items still missing a reason -- on a card
+       finalizing several at once, "fill in the reason" alone would not say
+       which one. */
+    var missing = arbitrationItemsMissingReason();
+    if (missing.length) {
+      showToast(t('arbitrationNeedsReason') + '：' + missing.join('、'), 'warning');
+      return;
+    }
     window.LabelSuiteAnnotationWorkspaceData.submitArbitration(
-      currentProfile.id, currentRunType, currentSampleId, currentIdentity, decisions
+      currentProfile.id, currentRunType, currentSampleId, currentIdentity,
+      decisions.map(function (decision) {
+        return {
+          itemId: decision.itemId,
+          choice: decision.choice,
+          value: decision.value,
+          reason: (arbitrationReasons[decision.itemId] || '').trim(),
+        };
+      })
     );
     clearUnsaved();
     showToast(t('wsArbitrationSubmitSuccess'));
@@ -4921,6 +5061,14 @@
     } else if (submitBtn) {
       setText('wsSubmitLabel', t('submitLabel'));
       setText('wsSaveLabel', t('saveLabel'));
+      setText('wsSkipLabel', t('skipLabel'));
+      var skipReasonInput = document.getElementById('wsSkipReason');
+      if (skipReasonInput) {
+        skipReasonInput.placeholder = t('skipReasonPlaceholder');
+        /* The placeholder is the only visible wording, so it has to double
+           as the accessible name -- a placeholder alone is not one. */
+        skipReasonInput.setAttribute('aria-label', t('skipReasonPlaceholder'));
+      }
     }
     setText('wsPrevBtnLabel', t('wsPrevBtnLabel'));
     setText('wsNextBtnLabel', t('wsNextBtnLabel'));
@@ -5015,6 +5163,17 @@
     } else {
       if (submitBtn) submitBtn.addEventListener('click', handleSubmit);
       if (saveBtn) saveBtn.addEventListener('click', handleSave);
+    }
+    skipGroupNode = document.getElementById('wsSkipGroup');
+    if (skipGroupNode) {
+      skipGroupParent = skipGroupNode.parentNode;
+      skipGroupAnchor = skipGroupNode.nextSibling;
+      if (currentRole === 'reviewer') {
+        skipGroupNode.remove();
+      } else {
+        document.getElementById('wsSkipBtn').addEventListener('click', handleSkip);
+        document.getElementById('wsSkipReason').addEventListener('input', refreshSkipBlocker);
+      }
     }
     setupActionShortcuts();
 

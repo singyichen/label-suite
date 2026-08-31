@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
+import { buildWorkspaceUrl, fillArbitrationReasons, skipGuidelineModal } from './_workspace-helpers';
 
 /* Finalized review unit lock (issue #308, spec 015 v4.14.0).
  *
@@ -80,6 +80,7 @@ test.describe('issue #308 -- finalized review units are fully read-only', () => 
     await expect(page.getByTestId('ws-arbitration-card')).toBeVisible();
 
     await page.getByTestId('ws-arbitration-choose-b').click();
+    await fillArbitrationReasons(page);
     await page.getByTestId('ws-arbitration-submit').click();
 
     // The arbitration submit handler re-renders the workspace: the unit is

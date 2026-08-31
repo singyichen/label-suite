@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
+import { buildWorkspaceUrl, fillArbitrationReasons, skipGuidelineModal } from './_workspace-helpers';
 
 /* Regression test for issue #319: the arbitration store had the same
  * whole-blob read-modify-write shape issue #283 already fixed for
@@ -135,6 +135,8 @@ test('two arbiters finalizing different disputes in the same bucket never lose e
 
   await t1.getByTestId('ws-arbitration-choose-b').click();
   await t2.getByTestId('ws-arbitration-choose-b').click();
+  await fillArbitrationReasons(t1);
+  await fillArbitrationReasons(t2);
 
   // Dispatch both arbitration submits concurrently -- the exact shape of
   // #283's CONC-03: two pages racing a whole-blob RMW.

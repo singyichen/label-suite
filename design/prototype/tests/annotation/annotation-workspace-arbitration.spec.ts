@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { buildWorkspaceUrl, patchDataFile, skipGuidelineModal } from './_workspace-helpers';
+import { buildWorkspaceUrl, fillArbitrationReasons, patchDataFile, skipGuidelineModal } from './_workspace-helpers';
 
 /* Workspace arbitration layout (spec 015 v4.8.0, issue #147 P3c).
  *
@@ -179,6 +179,7 @@ test.describe('arbitration layout: negative paths keep the normal review card', 
 test.describe('A/B voting', () => {
   test('submitting a choice stores the vote and finalizes the item', async ({ page }) => {
     await page.getByTestId('ws-arbitration-choose-b').click();
+    await fillArbitrationReasons(page);
     await page.getByTestId('ws-arbitration-submit').click();
 
     const state = await page.evaluate(() =>
@@ -197,6 +198,7 @@ test.describe('A/B voting', () => {
 
   test('a fully arbitrated unit derives to finalized', async ({ page }) => {
     await page.getByTestId('ws-arbitration-choose-a').click();
+    await fillArbitrationReasons(page);
     await page.getByTestId('ws-arbitration-submit').click();
 
     const status = await page.evaluate(() =>
