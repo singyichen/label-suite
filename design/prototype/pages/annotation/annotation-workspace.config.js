@@ -1744,8 +1744,13 @@
       time.className = 'history-time';
       time.textContent = formatHistoryTime(event.at);
       var badge = document.createElement('span');
-      badge.className =
-        'history-action-badge ' + (event.action === 'saved' ? 'saved' : event.action === 'rejected' ? 'rejected' : 'submitted');
+      /* FR-086: the modifier comes from the shared action table, never from a
+         render-site branch -- the ternary this replaces mapped every value it
+         did not name onto the `submitted` badge, so a `skipped` event read as
+         a submission. An action outside the set resolves to '' and keeps the
+         neutral base badge. */
+      var badgeModifier = window.LabelSuiteAnnotationHistory.badgeClassFor(event.action);
+      badge.className = 'history-action-badge' + (badgeModifier ? ' ' + badgeModifier : '');
       badge.textContent = event.action;
       meta.appendChild(time);
       meta.appendChild(badge);

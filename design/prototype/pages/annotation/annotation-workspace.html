@@ -703,16 +703,24 @@
       background: var(--color-surface);
       color: var(--color-text-soft);
     }
+    /* FR-086 (issue #578): one badge per HISTORY_ACTIONS value, seven
+       pairwise-distinct semantic colors. The mapping action -> modifier
+       class lives in shared/annotation-history.js; only the colors are here,
+       so both themes resolve through tokens. An event whose action is
+       outside the set keeps the neutral base badge above. */
+    .history-action-badge.draft-saved { background: var(--color-warning-bg); color: var(--color-warning); }
     .history-action-badge.submitted { background: var(--color-surface); color: var(--color-cta); }
-    .history-action-badge.saved { background: var(--color-warning-bg); color: var(--color-warning); }
+    .history-action-badge.skipped { background: var(--color-surface); color: var(--color-ink-muted); }
+    .history-action-badge.modified { background: var(--color-info-bg); color: var(--color-info); }
+    .history-action-badge.accepted { background: var(--color-success-bg); color: var(--color-success); }
     .history-action-badge.rejected { background: var(--color-error-bg); color: var(--color-error); }
+    .history-action-badge.adjudicated { background: var(--color-primary-soft-bg); color: var(--color-primary); }
     /* v3.0.0 reviewer run_type split (spec 015 FR-040): dry_run
        consensus-adjudication badge (ws-review-consensus-badge), reusing
        .history-action-badge's shape. */
     .history-action-badge.consensus { background: var(--color-surface); color: var(--color-text-soft); }
     .history-action-badge.divergent { background: var(--color-error-bg); color: var(--color-error); }
-    .history-action-badge.overridden,
-    .history-action-badge.adjudicated { background: var(--color-warning-bg); color: var(--color-warning); }
+    .history-action-badge.overridden { background: var(--color-warning-bg); color: var(--color-warning); }
     .history-summary {
       margin-top: 6px;
       font-size: 12px;
@@ -983,6 +991,7 @@
 
 <div id="sharedSidebarMount"></div>
 <script src="../shared/sidebar.js"></script>
+<script src="../shared/annotation-history.js"></script>
 <script src="../shared/modal-focus.js"></script>
 <script>
   var annotationListHref = '../annotation/annotation-list.html' + window.location.search;
