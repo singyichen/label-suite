@@ -26,7 +26,7 @@ v4.61.0 以前寫入、不具上述新欄位之事件 MUST 原樣顯示且不得
 
 各值語意：`draft_saved`（標記員或審核員儲存草稿）、`submitted`（標記員提交）、`skipped`（標記員跳過）、`modified`（審核員直接修正答案）、`accepted`（審核員通過）、`rejected`（審核員退回）、`adjudicated`（仲裁者定案）。
 
-`HISTORY_ACTIONS` 之每個值 MUST 有對應的產生點——審核員送出「通過」MUST 寫入 `accepted` 事件，送出「修正」MUST 寫入 `modified` 事件。其通過／修正之判定沿用 FR-051 既有的 per-outKey 決策，本條 MUST NOT 改變該判定邏輯，僅要求該決策落為一筆歷程事件。
+`HISTORY_ACTIONS` 之每個值 MUST 有對應的產生點。v4.61.0 以前的實作只發出 `submitted`、`draft_saved`（舊值 `saved`）與 `rejected` 三種，其餘四種皆無產生點，本版逐一補齊：審核員送出「通過」MUST 寫入 `accepted` 事件，送出「修正」MUST 寫入 `modified` 事件——其通過／修正之判定沿用 FR-051 既有的 per-outKey 決策，本條 MUST NOT 改變該判定邏輯，僅要求該決策落為一筆歷程事件；`skipped` 與 `adjudicated` 之產生點見 FR-089——前者為本版新增之標記員動作，後者則因爭議仲裁送出於本版以前只寫入仲裁票與定案值、不寫任何歷程事件。
 
 既有事件中出現於 `HISTORY_ACTIONS` 之外的動作值 MUST 以中性徽章呈現且不得中斷渲染。
 
@@ -86,7 +86,9 @@ v4.61.0 以前寫入、不具上述新欄位之事件 MUST 原樣顯示且不得
 
 審核側（`rejected`、`modified`）之理由來源 MUST 沿用 FR-016A 既有持久化路徑（reviewer submission 之 `reasons`），MUST NOT 另存第二份；FR-083 之送出阻擋與 FR-085 之標記員側呈現維持既有行為。
 
-**BREAKING**（標記員互動）：標記員「跳過」自本版起由單鍵動作改為需填寫理由後方可送出；未填理由時該樣本 MUST NOT 產生 `skipped` 事件。
+**新增能力**（標記員互動）：標記員「跳過」為本版**新增**的動作——v4.61.0 以前正典與原型皆無此動作、亦無 `skipped` 事件之產生點，故本條並非既有單鍵行為的變更，而是一個自始即以「理由必填」為契約的新動作；未填理由時該樣本 MUST NOT 產生 `skipped` 事件。
+
+同理，`adjudicated` 事件於本版以前亦無產生點——爭議仲裁送出僅寫入仲裁票與定案值。本條 MUST 使該次定案送出一併寫入一筆 `adjudicated` 歷程事件，且該事件自始即 MUST 承載所填 `reason`。
 
 #### Scenario: AC-2.20 跳過必須填寫理由
 - **GIVEN** 標記員於某樣本點擊「跳過」
