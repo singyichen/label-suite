@@ -92,18 +92,24 @@ test.describe('review identity foundation', () => {
     await approveAndSubmitAsReviewer(page, REVIEWER_A);
     await approveAndSubmitAsReviewer(page, REVIEWER_B);
 
-    const reviewerEvents = (await readTrail(page, TRAIL)).filter((e) => e.role === 'reviewer');
-    expect(reviewerEvents.map((e) => e.actorId)).toEqual([REVIEWER_A, REVIEWER_B]);
+    /* issue #578 (FR-086): a reviewer submit now also writes one per-outKey
+       decision event, so the wrapper `submitted` is what counts submissions. */
+    const reviewerSubmits = (await readTrail(page, TRAIL)).filter(
+      (e) => e.role === 'reviewer' && e.action === 'submitted'
+    );
+    expect(reviewerSubmits.map((e) => e.actorId)).toEqual([REVIEWER_A, REVIEWER_B]);
   });
 
   test('a review decision records the real reviewer id and never the string current', async ({ page }) => {
     await approveAndSubmitAsReviewer(page, REVIEWER_A);
 
-    const reviewerEvents = (await readTrail(page, TRAIL)).filter((e) => e.role === 'reviewer');
-    expect(reviewerEvents).toHaveLength(1);
-    expect(reviewerEvents[0].actorId).toBe(REVIEWER_A);
-    expect(reviewerEvents[0].summary).toContain(ANNOTATOR_A);
-    expect(reviewerEvents[0].summary).not.toContain('current');
+    const reviewerSubmits = (await readTrail(page, TRAIL)).filter(
+      (e) => e.role === 'reviewer' && e.action === 'submitted'
+    );
+    expect(reviewerSubmits).toHaveLength(1);
+    expect(reviewerSubmits[0].actorId).toBe(REVIEWER_A);
+    expect(reviewerSubmits[0].summary).toContain(ANNOTATOR_A);
+    expect(reviewerSubmits[0].summary).not.toContain('current');
   });
 
   test('an official_run annotator submission is stored under the real annotator id', async ({ page }) => {
@@ -150,9 +156,12 @@ test.describe('review identity foundation', () => {
     await approveAndSubmitAsReviewer(page, REVIEWER_A);
 
     const trail = await readTrail(page, TRAIL);
-    expect(trail.map((e) => [e.role, e.actorId])).toEqual([
-      ['annotator', ANNOTATOR_A],
-      ['reviewer', REVIEWER_A],
+    /* issue #578 (FR-086): the approve decision is its own event after the
+       wrapper, so the action is pinned here rather than left implicit. */
+    expect(trail.map((e) => [e.role, e.actorId, e.action])).toEqual([
+      ['annotator', ANNOTATOR_A, 'submitted'],
+      ['reviewer', REVIEWER_A, 'submitted'],
+      ['reviewer', REVIEWER_A, 'accepted'],
     ]);
   });
 

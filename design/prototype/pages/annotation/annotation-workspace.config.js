@@ -36,6 +36,7 @@
       wsHistoryEmpty: '此筆樣本尚無歷程紀錄',
       wsHistoryRoleAnnotator: '標記員',
       wsHistoryRoleReviewer: '審核員',
+      wsHistoryReasonLabel: '理由：',
       guidelineModalTitle: '請先閱讀任務說明',
       guidelineModalConfirm: '我已閱讀，開始標記',
       guidelineSummaryTitle: '任務說明',
@@ -145,6 +146,7 @@
       wsHistoryEmpty: 'No history for this sample yet',
       wsHistoryRoleAnnotator: 'Annotator',
       wsHistoryRoleReviewer: 'Reviewer',
+      wsHistoryReasonLabel: 'Reason: ',
       guidelineModalTitle: 'Please read the task guideline first',
       guidelineModalConfirm: "I've read it, start annotating",
       guidelineSummaryTitle: 'Task Guideline',
@@ -1707,15 +1709,91 @@
     function pad(n) { return n < 10 ? '0' + n : String(n); }
     return pad(d.getMonth() + 1) + '/' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
   }
+  /* FR-087: an event's answer is shown against the one before it -- the
+     first snapshot in a trail has nothing to compare to and reads as whole
+     content, every later one reads as before → after for the output types
+     that actually changed. Built in a forward pass because the panel paints
+     newest-first, and returned by event index so the render loop stays a
+     plain map from event to block. Only plain-value output types diff here;
+     the position-type comparator is registry-driven and lands with FR-087's
+     position half. */
+  function buildHistoryAnswerBlocks(events) {
+    var blocks = [];
+    var previous = null;
+    events.forEach(function (event, idx) {
+      var snapshot = event.result_snapshot;
+      if (!snapshot) {
+        blocks[idx] = null;
+        return;
+      }
+      blocks[idx] = previous ? buildHistoryDiff(previous, snapshot) : buildHistorySnapshot(snapshot);
+      previous = snapshot;
+    });
+    return blocks;
+  }
+
+  function historyOutputKeys() {
+    var seen = {};
+    return Array.prototype.slice.call(arguments).reduce(function (keys, snapshot) {
+      Object.keys((snapshot && snapshot.previewState) || {}).forEach(function (outKey) {
+        if (seen[outKey]) return;
+        seen[outKey] = true;
+        keys.push(outKey);
+      });
+      return keys;
+    }, []);
+  }
+
+  function buildHistorySnapshot(snapshot) {
+    var lines = historyOutputKeys(snapshot)
+      .map(function (outKey) {
+        var described = describeOutputAnswer(outKey, snapshot);
+        return described ? outKey + ': ' + described : '';
+      })
+      .filter(Boolean);
+    if (!lines.length) return null;
+    var block = document.createElement('div');
+    block.className = 'history-snapshot';
+    block.textContent = lines.join('\n');
+    return block;
+  }
+
+  function buildHistoryDiff(before, after) {
+    var changed = historyOutputKeys(before, after)
+      .map(function (outKey) {
+        var from = describeOutputAnswer(outKey, before);
+        var to = describeOutputAnswer(outKey, after);
+        return from === to ? null : { outKey: outKey, from: from, to: to };
+      })
+      .filter(Boolean);
+    if (!changed.length) return null;
+    var block = document.createElement('div');
+    block.className = 'history-diff';
+    changed.forEach(function (entry) {
+      var item = document.createElement('div');
+      item.className = 'history-diff-item';
+      item.textContent =
+        entry.outKey + ': ' + (entry.from || t('reviewNoAnswer')) + ' → ' + (entry.to || t('reviewNoAnswer'));
+      block.appendChild(item);
+    });
+    return block;
+  }
+
   function renderHistoryPanel() {
     var container = document.getElementById('wsHistoryContainer');
     if (!container) return;
     while (container.firstChild) container.removeChild(container.firstChild);
+    /* FR-090: the viewer is an argument to the data supply layer, not a
+       render flag -- a masked event must never reach this function at all. */
     var events = window.LabelSuiteAnnotationWorkspaceData.getSampleHistory(
       currentProfile.id,
       currentRunType,
       currentSampleId,
-      currentIdentity
+      currentIdentity,
+      {
+        role: currentRole,
+        actorId: currentRole === 'reviewer' ? (currentIdentity && currentIdentity.reviewerId) : currentAnnotatorId(),
+      }
     );
     if (events.length === 0) {
       var empty = document.createElement('p');
@@ -1724,9 +1802,11 @@
       container.appendChild(empty);
       return;
     }
+    var answerBlocks = buildHistoryAnswerBlocks(events);
     var list = document.createElement('div');
     list.className = 'history-list';
-    events.slice().reverse().forEach(function (event) {
+    events.slice().reverse().forEach(function (event, reversedIdx) {
+      var answer = answerBlocks[events.length - 1 - reversedIdx];
       var card = document.createElement('div');
       card.className = 'history-item';
       var header = document.createElement('div');
@@ -1762,6 +1842,14 @@
         summary.className = 'history-summary';
         summary.textContent = event.summary;
         card.appendChild(summary);
+      }
+      if (answer) card.appendChild(answer);
+      /* FR-089: the reason the actor typed, on the event it justifies. */
+      if (event.reason) {
+        var reason = document.createElement('div');
+        reason.className = 'history-reason';
+        reason.textContent = t('wsHistoryReasonLabel') + event.reason;
+        card.appendChild(reason);
       }
       list.appendChild(card);
     });
