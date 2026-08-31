@@ -21,4 +21,24 @@ test.describe('playwright.config port resolution', () => {
     process.env.PW_PORT = '9321';
     expect(resolvePort()).toBe(9321);
   });
+
+  test('falls back to 8888 for a non-numeric PW_PORT', () => {
+    process.env.PW_PORT = 'not-a-number';
+    expect(resolvePort()).toBe(8888);
+  });
+
+  test('falls back to 8888 for an empty PW_PORT', () => {
+    process.env.PW_PORT = '';
+    expect(resolvePort()).toBe(8888);
+  });
+
+  test('falls back to 8888 for a negative PW_PORT instead of failing to bind', () => {
+    process.env.PW_PORT = '-1';
+    expect(resolvePort()).toBe(8888);
+  });
+
+  test('falls back to 8888 for a PW_PORT above the valid port range', () => {
+    process.env.PW_PORT = '99999';
+    expect(resolvePort()).toBe(8888);
+  });
 });
