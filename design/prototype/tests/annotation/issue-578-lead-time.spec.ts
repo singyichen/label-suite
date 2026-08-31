@@ -1,5 +1,11 @@
 import { test, expect, type Page } from '@playwright/test';
-import { buildWorkspaceUrl, skipGuidelineModal, trackPageErrors, assertNoPageErrors } from './_workspace-helpers';
+import {
+  buildWorkspaceUrl,
+  skipGuidelineModal,
+  patchDataFile,
+  trackPageErrors,
+  assertNoPageErrors,
+} from './_workspace-helpers';
 
 /* issue #578 / spec 015 v4.61.0 -- FR-088 標記耗時記錄與可見性.
  *
@@ -24,6 +30,10 @@ const ANNOTATOR = 'kioleemg12';
 const REVIEWER = 'reviewer-01';
 
 const CLOCK_BASE = new Date('2026-08-31T09:00:00.000Z');
+/* Pause a minute AFTER install, never at the same instant: pauseAt only ever
+   moves virtual time forward, and the real milliseconds spent between the two
+   calls had already carried the clock past CLOCK_BASE (issue #524). */
+const CLOCK_PAUSE = new Date('2026-08-31T09:01:00.000Z');
 
 const VISIBLE_BEFORE_MS = 10_000;
 const BACKGROUND_MS = 60_000;
@@ -61,8 +71,17 @@ async function readHistory(page: Page, role: 'annotator' | 'reviewer'): Promise<
    and submits -- the one journey AC-2.19 describes. */
 async function annotateAcrossABackgroundGap(page: Page) {
   await page.clock.install({ time: CLOCK_BASE });
-  await page.clock.pauseAt(CLOCK_BASE);
+  await page.clock.pauseAt(CLOCK_PAUSE);
   await skipGuidelineModal(page);
+  /* Same strip issue-470's spec does: T001's records ship a gold_label
+     output-role prefill, and while it is in place the answer chip does not
+     take the annotator's own click -- the submit below would then bounce on
+     請完成所有標記項目後再提交 and never write an event to measure. */
+  await patchDataFile(
+    page,
+    'task-detail.data.js',
+    `window.LabelSuiteTaskDetailData.profiles.T001.datasetRecords.forEach(function (r) { r.gold_label = null; });`
+  );
   await page.goto(buildWorkspaceUrl({ task_id: TASK, sample_id: SAMPLE, annotator_id: ANNOTATOR }));
 
   await page.clock.fastForward(VISIBLE_BEFORE_MS);
