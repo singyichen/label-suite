@@ -26,9 +26,11 @@ v4.61.0 以前寫入、不具上述新欄位之事件 MUST 原樣顯示且不得
 
 各值語意：`draft_saved`（標記員或審核員儲存草稿）、`submitted`（標記員提交）、`skipped`（標記員跳過）、`modified`（審核員直接修正答案）、`accepted`（審核員通過）、`rejected`（審核員退回）、`adjudicated`（仲裁者定案）。
 
-`HISTORY_ACTIONS` 之每個值 MUST 有對應的產生點。v4.61.0 以前的實作只發出 `submitted`、`draft_saved`（舊值 `saved`）與 `rejected` 三種，其餘四種皆無產生點，本版逐一補齊：審核員送出「通過」MUST 寫入 `accepted` 事件，送出「修正」MUST 寫入 `modified` 事件——其通過／修正之判定沿用 FR-051 既有的 per-outKey 決策，本條 MUST NOT 改變該判定邏輯，僅要求該決策落為一筆歷程事件；`skipped` 與 `adjudicated` 之產生點見 FR-089——前者為本版新增之標記員動作，後者則因爭議仲裁送出於本版以前只寫入仲裁票與定案值、不寫任何歷程事件。
+`HISTORY_ACTIONS` 之每個值 MUST 有對應的產生點。v4.61.0 以前的實作只發出 `submitted`、`draft_saved`（舊值 `saved`）與 `rejected` 三種，其餘四種皆無產生點，本版逐一補齊：審核員送出「通過」MUST 寫入 `accepted` 事件，送出「修正」MUST 寫入 `modified` 事件——其通過／修正之判定沿用既有的逐 outKey 機制——逐筆通過／退回按鈕之 active/inactive 語意見 FR-014B，「每個 outKey 皆須有決策」之送出驗證見 FR-044，「該 outKey 之答案是否被更動」之比對見 FR-052——本條 MUST NOT 改變該判定邏輯，僅要求該決策落為一筆歷程事件；`skipped` 與 `adjudicated` 之產生點見 FR-089——前者為本版新增之標記員動作，後者則因爭議仲裁送出於本版以前只寫入仲裁票與定案值、不寫任何歷程事件。
 
 既有事件中出現於 `HISTORY_ACTIONS` 之外的動作值 MUST 以中性徽章呈現且不得中斷渲染。
+
+本條一併修訂關鍵實體 `AnnotationHistoryItem`（正典「關鍵實體」章節）：其 `action` 可能值 MUST 改列 `HISTORY_ACTIONS` 七值並改引本條，MUST NOT 續引 FR-043——FR-030 ~ FR-043 已於 v4.0.0 隨審核單位收斂整體廢止（見正典使用者故事 3 之 v4.0.0 適用範圍收斂），實體卻仍指向該已廢止條文。原清單中的 `approved` 於本版正名為 `accepted`：v4.61.0 以前的實作從未產生 `approved` 事件（產生點僅 `submitted`／`saved`／`rejected`），故此為文件層的更名而非行為變更；`overridden`／`gold_confirmed`／`gold_reopened` 隨 FR-030 ~ FR-043 之廢止一併自實體移除。實體欄位另 MUST 新增 `result_snapshot`（FR-087）、`started_at` 與 `lead_time`（FR-088）、`reason`（FR-089），四者對 v4.61.0 以前寫入之事件皆為選填（沿用 `actor_id` 對舊事件的既有容忍原則，FR-050）。
 
 #### Scenario: AC-2.16 七種動作各有對應徽章
 - **GIVEN** 某樣本歷程依序包含 `HISTORY_ACTIONS` 全部七種動作各一筆
@@ -48,6 +50,8 @@ v4.61.0 以前寫入、不具上述新欄位之事件 MUST 原樣顯示且不得
 
 歷程面板呈現的差異 MUST 由同一操作者維度下相鄰兩筆事件的 `result_snapshot` 於呈現時計算，系統 MUST NOT 另存一份差異結果。差異呈現方式 MUST 由 `OUTPUT_TYPE_REGISTRY` 之輸出類型驅動，不得逐 task 硬編：純值類型（`single_label`、`multi_label`、`single_dim`、`multi_dim`、`free_text`）比對值本身；具位置資訊之類型（`entity_recognition`、`relation_identification`、`sequence_tagging`）MUST 逐實體列出新增、刪除與邊界變更三類差異，僅實體數量相同而邊界不同時亦 MUST 被列出。
 
+**已知落差**：`relation_identification` 雖屬本條所稱「具位置資訊之類型」，但其作答結構於原型階段不攜帶可對齊的 span 起訖，逐實體差異目前僅 `entity_recognition` 與 `sequence_tagging` 兩型別有實作；`relation_identification` 暫以純值比對遞補，位置維度待答案結構補上起訖後統一，追蹤於 issue #590（處置方式沿用 FR-052 之「已知落差」先例）。
+
 同一操作者維度下無前一筆事件時（首次提交），該事件 MUST 呈現為全新內容而非差異。
 
 #### Scenario: AC-2.17 純值類型呈現前後值差異
@@ -66,7 +70,7 @@ v4.61.0 以前寫入、不具上述新欄位之事件 MUST 原樣顯示且不得
 
 每筆事件 MUST 承載 `started_at`（該次作業起算時間）與 `lead_time`（該次作業耗時）。`lead_time` 之口徑 MUST 為頁面可見時間累計：分頁切離背景或視窗失焦時 MUST 暫停計時，回到前景時 MUST 續計，不得以「事件時間相減」的掛鐘時間充當耗時。
 
-可見性：`lead_time` MUST NOT 於 annotator 視角之任何呈現路徑出現（避免標記員因看見秒數而改變作答行為，污染以耗時分析標記難度的研究資料）；reviewer 視角與任務層級統計（`task-detail` 標記結果面板）MUST 可見。
+可見性：`lead_time` MUST NOT 於 annotator 視角之任何呈現路徑出現（避免標記員因看見秒數而改變作答行為，污染以耗時分析標記難度的研究資料）；reviewer 視角與任務層級統計（`task-detail` 之 `annotation-results` 分頁「標記結果表」）MUST 可見。本條僅規定該處「可見」，MUST NOT 改動 014 既有的 `work-log` 匯總（`總工時`／`每筆平均耗時`，見 014 FR-007b）——該匯總源自 `WorkLogEntry` 之工時紀錄，與本版歷程事件之 `lead_time` 為兩套並存資料，其整併不在本次範圍。
 
 #### Scenario: AC-2.19 耗時以頁面可見時間累計
 - **GIVEN** 標記員開啟某樣本後將分頁切至背景一段時間，再切回並提交
@@ -84,7 +88,7 @@ v4.61.0 以前寫入、不具上述新欄位之事件 MUST 原樣顯示且不得
 
 下列四個動作於送出時 MUST 強制填寫理由，缺理由時 MUST 阻擋送出並指名缺理由的項目：審核退回（`rejected`）、審核修改（`modified`）、爭議仲裁（`adjudicated`）、標記員跳過（`skipped`）。理由 MUST 寫入該筆歷程事件之 `reason`。
 
-審核側（`rejected`、`modified`）之理由來源 MUST 沿用 FR-016A 既有持久化路徑（reviewer submission 之 `reasons`），MUST NOT 另存第二份；FR-083 之送出阻擋與 FR-085 之標記員側呈現維持既有行為。
+審核側（`rejected`、`modified`）之理由 MUST 寫入 FR-016A 既有的持久化路徑（reviewer submission `decisions` map 旁的 `reasons` map），MUST NOT 另存第二份。惟 FR-016A 之 `reasons` map 現況僅收錄**退回者**，`modified` 之理由屬本版對該既有結構的**擴充**而非既有行為之沿用：`ReviewDecision.reason` 之必填條件自 `decision = reject` 擴及修正動作；FR-083 之送出阻擋與 FR-085 之標記員側呈現維持既有行為。
 
 **新增能力**（標記員互動）：標記員「跳過」為本版**新增**的動作——v4.61.0 以前正典與原型皆無此動作、亦無 `skipped` 事件之產生點，故本條並非既有單鍵行為的變更，而是一個自始即以「理由必填」為契約的新動作；未填理由時該樣本 MUST NOT 產生 `skipped` 事件。
 
@@ -108,7 +112,7 @@ v4.61.0 以前寫入、不具上述新欄位之事件 MUST 原樣顯示且不得
 
 歷程事件之呈現 MUST 分兩層：事件列（操作者角色與 `actor_id`、時間、`action`）對所有可檢視該樣本者可見；`result_snapshot` 與 `reason` MUST 依檢視者角色遮蔽——
 
-1. `role=annotator`：可見自己 `actor_id` 之事件的快照與理由；其他標記員之事件 MUST NOT 進入該檢視者的歷程輸出——**含事件列**。理由是事件列依 FR-016B 承載「對應輸出類型作答摘要」，該摘要即答案內容，僅遮蔽 `result_snapshot` 與 `reason` 仍會經摘要外洩，與 FR-062 及既有跨標記員隔離（他人狀態僅可讀狀態列舉，不得讀作答內容）相衝突。
+1. `role=annotator`：可見自己 `actor_id` 之事件的快照與理由；其他標記員之事件 MUST NOT 進入該檢視者的歷程輸出——**含事件列**。理由是事件列依 FR-016B 承載「對應輸出類型作答摘要」，該摘要即答案內容，僅遮蔽 `result_snapshot` 與 `reason` 仍會經摘要外洩，與 FR-062 相衝突。此處之「標記員不得經任何路徑讀取他人作答內容」為本條**新確立**之規則，正典 v4.60.0 以前並無同名的跨標記員隔離條文可資沿用；其依據為憲章 NON-NEGOTIABLE 之 Data Fairness，以及歷程供給層既有以 `identity.annotatorId` 分 bucket 取事件的實作事實（`getSampleHistory()`）。
 2. `role=reviewer`：可見自身審核單位範圍內（同一 `sample_id × annotator_id × run_type`）全部事件之快照與理由。
 3. 具 `can_arbitrate` 之審核員於爭議單位：可見該樣本全部標記員之快照與理由。
 

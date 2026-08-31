@@ -5,7 +5,7 @@
 現況：
 
 - 歷程事件目前由 `annotation-workspace.data.js` 的 `getSampleHistory()` 合併各 bucket 後回傳，渲染於 `annotation-workspace.config.js` 的 `renderHistoryPanel()`（約 1710–1762 行），僅消費 `role` / `actor_id` / `at` / `action` / `summary` 五個欄位。
-- 提交紀錄以 `SUBMISSION_BUCKET_DIMENSIONS = task_id × role × run_type × annotator_id × reviewer_id` 定址（FR-049），實際載體為 `localStorage` 的 `wsSubmissions` 單一鍵，讀寫為整包 read-modify-write。
+- 提交紀錄以 `SUBMISSION_BUCKET_DIMENSIONS = task_id × role × run_type × annotator_id × reviewer_id` 定址（FR-049），實際載體為 `localStorage` 中每個 bucket 各自一個鍵（`SUBMISSION_KEY_PREFIX` = `labelsuite.wsSubmissions.`）。**實測修正**：propose 時所述的「單一鍵、整包 read-modify-write」是 issue #283 以前的舊況，現已拆鍵；舊的整包鍵只在開機時由 `migrateLegacySubmissionStore()` 扇出一次。
 - 原型階段身分來自路由參數，不構成權限判斷（FR-049 已知落差）；後端接上後改由登入 session 提供。
 - 既有的 `saved` 事件跨審核員可見性由 FR-062 盲審隔離規範。**實測修正**：`getSampleHistory()` 已於 issue #410 補上 `entryStatus(entry) !== 'submitted'` 過濾，propose 時所述的 Implementation mismatch 已不存在；本變更只需在其之後疊加 FR-090，不需重做 FR-062。
 - **實測修正**：FR-090 規則 1 的原始寫法（他人事件僅呈現事件列）會經 FR-016B 的作答摘要外洩答案，與 FR-062 及跨標記員隔離衝突。delta 已收緊為「他人標記事件整筆不進入標記員視角」，這也正是 `getSampleHistory()` 依 `identity.annotatorId` 分桶的現況行為。
@@ -26,7 +26,7 @@
 **Non-Goals:**
 
 - 不實作留言串（Label Studio 的 `comment_id` 系列）與系統稽核層（使用者 ID／IP／request type），兩者屬後端階段。
-- 不修改 `specs/task-management/014-task-detail/spec.md`：FR-015d-4 之時間軸與本次事件同源，欄位新增為向後相容擴充，其呈現改版另案處理。
+- 不修改 `specs/task-management/014-task-detail/spec.md`：FR-015d-4 之時間軸與本次事件同源，欄位新增為向後相容擴充，其呈現改版另案處理。FR-088 對 `annotation-results` 分頁「標記結果表」的可見性規定，指的是該處讀取本版事件之 `lead_time` 時不受 annotator 遮蔽限制，並未新增 014 的呈現義務；014 既有的 `work-log` 匯總（`總工時`／`每筆平均耗時`，014 FR-007b）源自 `WorkLogEntry`，與事件 `lead_time` 為兩套並存資料，其整併不在本次範圍。
 - 不對既有事件做資料遷移（見 Migration Plan）。
 
 ## Decisions
