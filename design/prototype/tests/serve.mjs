@@ -18,9 +18,10 @@ import { extname, isAbsolute, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
-// Port comes from argv (serve-prototype.sh passes one), never the ambient
-// environment: playwright.config.ts hardcodes 8888, so an inherited PORT env
-// var would silently move the server out from under the test suite.
+// Port comes from argv (serve-prototype.sh, and playwright.config.ts's
+// webServer.command, both pass one explicitly), not process.env here --
+// PW_PORT is resolved once in playwright.config.ts and threaded through, so
+// baseURL, webServer.url and this server always agree on the same port.
 const PORT = Number(process.argv[2]) || 8888;
 
 // Only the types the prototype actually references; octet-stream otherwise.
