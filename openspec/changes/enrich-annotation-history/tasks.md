@@ -85,7 +85,7 @@
       ② delta L29「沿用 FR-051 既有的 per-outKey 決策」——FR-051 全文不含 `outKey`，其定義為審核單位層級的 `REVIEW_UNIT_DIMENSIONS` 與五態推導；改引 FR-014B（逐 outKey 通過／退回按鈕）與 FR-052（逐輸出類型差異比對）。
       ③ delta L107「既有跨標記員隔離（他人狀態僅可讀狀態列舉，不得讀作答內容）」——正典查無此條文；改寫為本變更新建之隔離規則，理據引 Constitution III Data Fairness 與現況 `getSampleHistory()` 依 `identity.annotatorId` 分桶，不得宣稱其為既有條文。
       ④ delta L49 對 `relation_identification` 下的逐實體差異 MUST 與實作不符——`SPAN_EXTRACTORS` 只註冊 `entity_recognition` 與 `sequence_tagging`；比照 FR-052 既有慣例於條文內加註「已知落差」，說明其 CompactAnswer／`previewTriples` 不攜帶位移、暫沿用純值比對，並把 follow-up issue #590 的編號寫進條文。
-      ⑤ `proposal.md` L20 的「跳過」**BREAKING** 標記與 L29 `### New Capabilities（無）`——跳過動作在本版以前完全不存在（base commit 全 prototype 命中 0），非 BREAKING 而是新增能力；同步 delta FR-089 已於 `4f45556` 改寫的說法，並補上跳過動作本身的定義（何時可用、與 FR-013A 三態及 FR-022A／FR-022C 導覽的關係），否則 AC-2.20 指涉一個規格未定義的控件。
+      ⑤ `proposal.md` L20 的「跳過」**BREAKING** 標記與 L29 `### New Capabilities（無）`——跳過動作在本版以前完全不存在（base commit 全 prototype 命中 0），非 BREAKING 而是新增能力；同步 delta FR-089 已於 `4f45556` 改寫的說法。跳過動作本身的定義（僅標記員視角、`pending`／`saved` 可跳過、不改變樣本狀態、導覽沿用 FR-022A／FR-022C）已於群組 E 分支補進 FR-089，本項僅需處理 `proposal.md` 的 BREAKING 標記與 New Capabilities 兩處。
       ⑥ 關鍵實體 `AnnotationHistoryItem` 宣告要改卻無 delta 承載——delta L3 明寫「修訂 FR-016B 與關鍵實體 `AnnotationHistoryItem`」，但 delta 內無對應區塊；正典該實體的 `action` 列舉仍指向已於 v4.0.0 廢止的 FR-043，且列的是 `approved` 而非 FR-086 的 `accepted`。補上實體的 MODIFIED 區塊，並於 Changelog 明記 `approved` → `accepted` 之改名。
 - [ ] 7.2 修正 3 項非阻斷但會污染正典的引用問題 [@main]
       ⑦ delta L69「`task-detail` 標記結果面板」——014 的正式名稱為 `標記結果表`（`annotation-results`）；併同處理兩個附帶問題：`design.md` Non-Goals 明說不修改 014，delta 卻對 014 頁面下 MUST（改為非規範性描述或補 014 delta），以及 014 既有 `work-log` 的總工時／每筆平均耗時與 FR-091「MUST NOT 另存第二份彙總」的關係須交代。
