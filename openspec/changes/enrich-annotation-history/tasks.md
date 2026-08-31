@@ -42,9 +42,13 @@
 > 產品檔案：`annotation-workspace.config.js`、`annotation-workspace.data.js`（共 2 檔）。
 > 計時器測試必須全程使用假時鐘，不得混用真實 `Date.now()`（本頁 autosave 有真／假時鐘混用競態前例）。
 
-- [ ] 4.1 撰寫 Red 測試 `design/prototype/tests/annotation/issue-578-lead-time.spec.ts`：斷言 AC-2.19（分頁切背景期間不計入、`lead_time` 小於 `at` 與 `started_at` 之差）與 AC-3.49（annotator 視角無任何耗時呈現、reviewer 視角可見）；提交並執行，記錄預期失敗原因 [@senior-qa]
-- [ ] 4.2 修改 `design/prototype/pages/annotation/annotation-workspace.config.js`：以 `visibilitychange`／`blur`／`focus` 驅動可見時間累計，並依角色決定是否渲染耗時；驗證方式為 4.1 中 AC-3.49 斷言轉綠 [@senior-frontend]
-- [ ] 4.3 修改 `design/prototype/pages/annotation/annotation-workspace.data.js`：事件寫入 `started_at` 與 `lead_time`；驗證方式為 4.1 中 AC-2.19 斷言轉綠 [@senior-frontend]
+> **實測修正（`rejected` 事件的耗時來源）**：FR-088 要求「每筆事件」承載 `started_at` 與 `lead_time`，但 `markSampleRejected()` 原簽章不收 payload，無從取得計時。已於其尾端加上選用的 `timing` 參數，由審核送出端把同一次 `submitPayload.timing` 一併傳入，使退回事件與同批 `accepted`／`modified` 事件的耗時同源；未傳入時沿用既有行為（不寫任何耗時欄位）。
+
+> **實測修正（測試夾具）**：T001 各筆資料帶有 `gold_label` 預填，該預填在位時作答 chip 不接受標記員自己的點擊，提交會被「請完成所有標記項目後再提交」擋下而寫不出事件。4.1 的測試比照 issue #470 spec 的 `beforeEach` 先行清掉該預填。另 `page.clock.pauseAt()` 必須落在 `install()` 之後的虛擬時間點（同 issue #524 競態），不得與 `install()` 同一瞬間。
+
+- [x] 4.1 撰寫 Red 測試 `design/prototype/tests/annotation/issue-578-lead-time.spec.ts`：斷言 AC-2.19（分頁切背景期間不計入、`lead_time` 小於 `at` 與 `started_at` 之差）與 AC-3.49（annotator 視角無任何耗時呈現、reviewer 視角可見）；提交並執行，記錄預期失敗原因 [@senior-qa]
+- [x] 4.2 修改 `design/prototype/pages/annotation/annotation-workspace.config.js`：以 `visibilitychange`／`blur`／`focus` 驅動可見時間累計，並依角色決定是否渲染耗時；驗證方式為 4.1 中 AC-3.49 斷言轉綠 [@senior-frontend]
+- [x] 4.3 修改 `design/prototype/pages/annotation/annotation-workspace.data.js`：事件寫入 `started_at` 與 `lead_time`；驗證方式為 4.1 中 AC-2.19 斷言轉綠 [@senior-frontend]
 - [ ] 4.4 執行 `cd design/prototype && corepack pnpm typecheck && corepack pnpm playwright test`，預期兩者皆 exit 0 且既有 autosave 測試未因新計時器退化；核對 Red／Green 證據後勾選本群組 [@main]
 
 ## 5. PR 群組 E — 動作理由必填（FR-089）

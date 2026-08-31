@@ -340,6 +340,17 @@
     entry.history.push(event);
   }
 
+  /* FR-088: `started_at` / `lead_time` as measured by the page that owns the
+     timer. Only the page can measure visible time, so the data layer lifts
+     the numbers off the payload rather than computing them -- computing them
+     here would leave only the wall clock, which is exactly the figure
+     FR-088 rules out. Absent timing yields an empty object, so a caller with
+     no timer writes no timing fields instead of a zero. */
+  function timingFields(timing) {
+    if (!timing) return {};
+    return { started_at: timing.startedAt || null, lead_time: typeof timing.leadTime === 'number' ? timing.leadTime : null };
+  }
+
   /* The answer as stored on a history event (FR-087). Deliberately a
      whitelist of the three answer collections: it must never carry the
      source text or dataset row fields, and it must not pick up the
@@ -374,9 +385,10 @@
     /* When per-outKey decision events follow (FR-086), the answer lives on
        those -- repeating it on the wrapper `submitted` event would show the
        same result twice, a millisecond apart, in the same trail. */
-    appendHistoryEvent(entry, 'submitted', role, historySummary, actorId, {
-      result_snapshot: decisions ? null : buildResultSnapshot(payload),
-    });
+    appendHistoryEvent(entry, 'submitted', role, historySummary, actorId, Object.assign(
+      { result_snapshot: decisions ? null : buildResultSnapshot(payload) },
+      timingFields(payload && payload.timing)
+    ));
     if (decisions) {
       appendReviewDecisionEvents(entry, taskId, runType, sampleId, payload, historySummary, actorId, identity, decisions);
     }
@@ -395,10 +407,10 @@
     Object.keys(decisions).forEach(function (outKey) {
       if (decisions[outKey] !== 'approve') return;
       var changed = outputSlice(payload, outKey) !== outputSlice(reviewed, outKey);
-      appendHistoryEvent(entry, changed ? 'modified' : 'accepted', 'reviewer', summary, actorId, {
-        result_snapshot: buildResultSnapshot(payload),
-        reason: reasons[outKey] || null,
-      });
+      appendHistoryEvent(entry, changed ? 'modified' : 'accepted', 'reviewer', summary, actorId, Object.assign(
+        { result_snapshot: buildResultSnapshot(payload), reason: reasons[outKey] || null },
+        timingFields(payload && payload.timing)
+      ));
     });
   }
 
@@ -414,15 +426,17 @@
     if (existing && entryStatus(existing) === 'submitted') {
       existing.answers = payload || {};
       existing.savedAt = new Date().toISOString();
-      appendHistoryEvent(existing, 'draft_saved', role, historySummary, actorId, {
-        result_snapshot: buildResultSnapshot(payload),
-      });
+      appendHistoryEvent(existing, 'draft_saved', role, historySummary, actorId, Object.assign(
+        { result_snapshot: buildResultSnapshot(payload) },
+        timingFields(payload && payload.timing)
+      ));
     } else {
       var entry = { status: 'saved', savedAt: new Date().toISOString(), answers: payload || {} };
       if (existing && Array.isArray(existing.history)) entry.history = existing.history;
-      appendHistoryEvent(entry, 'draft_saved', role, historySummary, actorId, {
-        result_snapshot: buildResultSnapshot(payload),
-      });
+      appendHistoryEvent(entry, 'draft_saved', role, historySummary, actorId, Object.assign(
+        { result_snapshot: buildResultSnapshot(payload) },
+        timingFields(payload && payload.timing)
+      ));
       bucket[sampleId] = entry;
     }
     writeSubmissionBucket(key, bucket);
@@ -544,7 +558,7 @@
    * mechanism applies only to `run_type = official_run` -- `dry_run` has no
    * "退回個人重標" channel, so a dry_run reject decision must not touch the
    * annotator's submission status. */
-  function markSampleRejected(taskId, role, runType, sampleId, historySummary, identity) {
+  function markSampleRejected(taskId, role, runType, sampleId, historySummary, identity, timing) {
     if (runType !== 'official_run') return;
     var key = submissionBucketKey(taskId, role, runType, identity);
     var bucket = readSubmissionBucket(key);
@@ -552,10 +566,10 @@
     var actorId = actorIdFor('reviewer', identity);
     if (existing) {
       existing.status = 'pending';
-      appendHistoryEvent(existing, 'rejected', 'reviewer', historySummary, actorId);
+      appendHistoryEvent(existing, 'rejected', 'reviewer', historySummary, actorId, timingFields(timing));
     } else {
       var entry = { status: 'pending', answers: {} };
-      appendHistoryEvent(entry, 'rejected', 'reviewer', historySummary, actorId);
+      appendHistoryEvent(entry, 'rejected', 'reviewer', historySummary, actorId, timingFields(timing));
       bucket[sampleId] = entry;
     }
     writeSubmissionBucket(key, bucket);
