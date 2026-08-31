@@ -1831,15 +1831,6 @@
     return block;
   }
 
-  /* Whole seconds under a minute, m:ss above it -- the panel answers "was
-     this quick or slow", and a millisecond figure only adds noise there. */
-  function formatLeadTime(ms) {
-    var totalSeconds = Math.max(0, Math.round(ms / 1000));
-    if (totalSeconds < 60) return totalSeconds + 's';
-    var seconds = totalSeconds % 60;
-    return Math.floor(totalSeconds / 60) + 'm ' + (seconds < 10 ? '0' : '') + seconds + 's';
-  }
-
   function renderHistoryPanel() {
     var container = document.getElementById('wsHistoryContainer');
     if (!container) return;
@@ -1913,7 +1904,7 @@
         var leadTime = document.createElement('div');
         leadTime.className = 'history-lead-time';
         leadTime.setAttribute('data-testid', 'ws-history-lead-time');
-        leadTime.textContent = t('wsHistoryLeadTimeLabel') + formatLeadTime(event.lead_time);
+        leadTime.textContent = t('wsHistoryLeadTimeLabel') + window.LabelSuiteAnnotationHistory.formatLeadTime(event.lead_time);
         card.appendChild(leadTime);
       }
       /* FR-089: the reason the actor typed, on the event it justifies. */

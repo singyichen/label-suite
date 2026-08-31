@@ -65,10 +65,11 @@
 ## 6. PR 群組 F — 標記清單處理狀況彙總（FR-091）
 
 > 依賴群組 A 與 D 合併（最後動作取自常數化 `action`，累計耗時取自 `lead_time`）。組內 6.1 → 6.2 → 6.3 嚴格序列。
-> 產品檔案：`design/prototype/pages/annotation/annotation-list.html`（共 1 檔）。
+> 產品檔案：`design/prototype/pages/annotation/annotation-list.html`、`design/prototype/pages/shared/annotation-history.js`、`design/prototype/pages/annotation/annotation-workspace.config.js`（共 3 檔）。
+> **實測修正**：原估 1 檔。彙總的累計耗時必須與工作區歷程面板用同一套時間格式，否則同一個 `lead_time` 在兩個畫面可能顯示成不同字串；因此把 `formatLeadTime` 從 `annotation-workspace.config.js` 搬到共用的 `annotation-history.js`（該模組本就負責 render 側），工作區改呼叫共用版本，共 3 檔。仍在 Principle X 的 5 檔內。
 
-- [ ] 6.1 撰寫 Red 測試 `design/prototype/tests/annotation/issue-578-list-summary.spec.ts`：斷言 AC-1.25（reviewer 檢視顯示最後動作／最後活動時間／累計耗時；annotator 檢視不呈現累計耗時；無歷程事件之樣本三項皆為空狀態而非零值）；提交並執行，記錄預期失敗原因 [@senior-qa]
-- [ ] 6.2 修改 `design/prototype/pages/annotation/annotation-list.html`：每筆樣本新增三項彙總，全部由歷程事件推導、不另存第二份；驗證方式為 6.1 的 Red 測試轉綠 [@senior-frontend]
+- [x] 6.1 撰寫 Red 測試 `design/prototype/tests/annotation/issue-578-list-summary.spec.ts`：斷言 AC-1.25（reviewer 檢視顯示最後動作／最後活動時間／累計耗時；annotator 檢視不呈現累計耗時；無歷程事件之樣本三項皆為空狀態而非零值）；提交並執行，記錄預期失敗原因 [@senior-qa]
+- [x] 6.2 修改 `design/prototype/pages/annotation/annotation-list.html`：每筆樣本新增三項彙總，全部由歷程事件推導、不另存第二份；驗證方式為 6.1 的 Red 測試轉綠 [@senior-frontend]
 - [ ] 6.3 執行 `cd design/prototype && corepack pnpm typecheck && corepack pnpm playwright test`，預期兩者皆 exit 0；核對 Red／Green 證據後勾選本群組 [@main]
 
 ## 7. 最終 PR 群組 — Source-Verify 與 archive 回寫
