@@ -12,7 +12,8 @@ import path from 'path';
 // server through reuseExistingServer (issue #582) -- give each worktree its
 // own PW_PORT and they can run in parallel without cross-contaminating.
 export function resolvePort(): number {
-  return Number(process.env.PW_PORT) || 8888;
+  const parsed = Number(process.env.PW_PORT);
+  return parsed > 0 && parsed <= 65535 ? parsed : 8888;
 }
 
 const PORT = resolvePort();
