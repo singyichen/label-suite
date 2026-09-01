@@ -29,12 +29,18 @@ import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
  *     reviewer's corrected raw value; source `bypass` renders the literal
  *     `審核員 Bypass（無法判定）` and no raw value -- "bypass stores no
  *     value" (design.md D2) is what makes the two sources distinguishable.
- *   - Reject exit (FR-061 point 3): reason REQUIRED; a reject submitted
+ *   - Reject exit (FR-061 points 3-4): reason REQUIRED; a reject submitted
  *     without a reason is blocked and writes nothing. A completed reject
- *     lands the item in the final exception pool, persisted under the
- *     `labelsuite.wsExceptionPool` localStorage prefix (the decided D2
- *     contract task 1.3 established for the pool shape), and the unit's
- *     derived status stays `disputed` until the pool is resolved.
+ *     persists as an ARBITRATION record -- a vote with choice `reject`
+ *     (ARBITRATION_OUTCOMES) plus its reason, and NO finalized_value /
+ *     finalized_by -- per design.md D2's arbitration shape. The exception
+ *     pool QUEUE is derived from unresolved reject records; the D2
+ *     `exceptionPool` record (resolver_id / action / resolved_at) is the
+ *     project leader's RESOLUTION, written only by task 6.2's pool flow,
+ *     never at arbitration-submit time. (An earlier revision of this file
+ *     wrongly asserted a `labelsuite.wsExceptionPool` write here --
+ *     corrected to the D2-conformant shape before any Green landed.) The
+ *     unit's derived status stays `disputed` until the pool is resolved.
  *
  * Seeding: same data-layer idiom as the sibling
  * issue-596-review-unit-status.spec.ts -- markSampleSubmitted() via
@@ -60,6 +66,9 @@ type WorkspaceData = {
     taskId: string, runType: string, sampleId: string,
     identity: Identity, outKeys: string[]
   ) => string | null;
+  getArbitrationState: (
+    taskId: string, runType: string, sampleId: string, identity: Identity
+  ) => unknown;
 };
 
 /* No `declare global` here: annotation-workspace-arbitration.spec.ts already
@@ -118,18 +127,18 @@ function unitStatus(page: Page): Promise<string | null> {
   );
 }
 
-/* The D2-decided exception pool persistence prefix (see file header). */
-function exceptionPoolRecords(page: Page): Promise<string[]> {
-  return page.evaluate(() => {
-    const hits: string[] = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i) as string;
-      if (key.indexOf('labelsuite.wsExceptionPool') === 0) {
-        hits.push(localStorage.getItem(key) || '');
-      }
-    }
-    return hits;
-  });
+/* Serialized arbitration state for the unit -- shape-agnostic on item keys
+ * so the assertions pin only what design.md D2 fixes: the choice value, the
+ * reason, and the absence of finalization. */
+function arbitrationStateJson(page: Page): Promise<string> {
+  return page.evaluate(() =>
+    JSON.stringify(
+      (window as unknown as { LabelSuiteAnnotationWorkspaceData: WorkspaceData })
+        .LabelSuiteAnnotationWorkspaceData.getArbitrationState(
+          'T001', 'official_run', 'sent-001', { annotatorId: 'kioleemg12' }
+        ) || {}
+    )
+  );
 }
 
 test.beforeEach(async ({ page }) => {
@@ -186,7 +195,7 @@ test.describe('issue #596: FR-061 three-exit arbitration layout (AC-4.54)', () =
     await expect(item.getByTestId('ws-arbitration-choose-b')).toContainText('審核員 Bypass（無法判定）');
   });
 
-  test('兩者皆非 requires a reason, then lands in the exception pool with the unit still 爭議中', async ({ page }) => {
+  test('兩者皆非 requires a reason, then records a reject vote with the unit still 爭議中', async ({ page }) => {
     await seedDisputedUnit(page, labelPayload('fear'));
     await gotoAsArbiter(page);
 
@@ -198,16 +207,21 @@ test.describe('issue #596: FR-061 three-exit arbitration layout (AC-4.54)', () =
     // FR-061 point 3: reason REQUIRED -- submitting without one is blocked
     // and writes nothing at all (point 4).
     await page.getByTestId('ws-arbitration-submit').click();
-    expect(await exceptionPoolRecords(page)).toHaveLength(0);
+    expect(await arbitrationStateJson(page)).not.toContain('"choice":"reject"');
     expect(await unitStatus(page)).toBe('disputed');
 
     await item.getByTestId('ws-arbitration-reason').fill('兩者皆非（測試理由）');
     await page.getByTestId('ws-arbitration-submit').click();
 
-    // The item lands in the final exception pool (FR-095)...
-    await expect
-      .poll(async () => (await exceptionPoolRecords(page)).join('\n'))
-      .toContain('single_label');
+    // FR-061 point 4 / design.md D2: the reject persists as an arbitration
+    // vote carrying its reason, and finalizes NOTHING -- no finalized_value,
+    // no finalized_by. (The D2 exceptionPool record is the project leader's
+    // later resolution, task 6.2 -- never written at arbitration submit.)
+    await expect.poll(() => arbitrationStateJson(page)).toContain('"choice":"reject"');
+    const state = await arbitrationStateJson(page);
+    expect(state).toContain('兩者皆非（測試理由）');
+    expect(state).not.toContain('"finalized_by"');
+    expect(state).not.toContain('"finalized_value"');
     // ...and the unit stays 爭議中 until the pool is resolved (AC-4.54).
     expect(await unitStatus(page)).toBe('disputed');
   });
