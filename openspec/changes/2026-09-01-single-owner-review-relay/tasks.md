@@ -57,7 +57,8 @@
 
 ## 2. PR 群組 2 — 015 審核卡三向決策（FR-014B／FR-016A／FR-044／FR-053 決策面／FR-054／FR-092）
 
-> **產品檔案（1）**：`design/prototype/pages/annotation/annotation-workspace.html`
+> **產品檔案（2）**：`design/prototype/pages/annotation/annotation-workspace.html`、`design/prototype/pages/annotation/annotation-workspace.config.js`
+> **（動工後修正檔案範圍，理由同任務 1.2）**：審核列決策控件、理由欄與送出阻擋的實作全數位於 page-script `annotation-workspace.config.js`（`buildRowDecisionButtons` config.js:2897、`buildRejectReasonField` config.js:3341、`persistReviewDraft` config.js:2877 一帶）；`annotation-workspace.html` 只有 `#annotationPreview`／`#wsReviewHistory` 兩個靜態掛載點，審核列於執行期動態掛入。Red 契約 `issue-596-review-three-way.spec.ts` 的註解本身即指向 config.js 行號。原宣告漏列 config.js，Green 實作面為 config.js，html 僅於掛載點需要調整時才動。
 > **最終群組**：否。
 > **相依**：群組 1（三態推導與決策常數）。
 
@@ -69,7 +70,8 @@
 
 ## 3. PR 群組 3 — 015 仲裁版面、定稿卡與脈絡橫幅（FR-053 定稿鎖定／FR-060／FR-061／FR-064／FR-070／FR-094）
 
-> **產品檔案（1）**：`design/prototype/pages/annotation/annotation-workspace.html`
+> **產品檔案（2）**：`design/prototype/pages/annotation/annotation-workspace.html`、`design/prototype/pages/annotation/annotation-workspace.config.js`
+> **（動工後修正檔案範圍）**：理由同群組 2——仲裁版面、定稿卡、脈絡橫幅與狀態軌（`REVIEW_STATE_I18N_KEYS`／`REVIEW_TRACK_ROUTES`／`buildReviewStatusTrack()`）皆實作於 `annotation-workspace.config.js`。
 > **最終群組**：否。
 > **相依**：群組 2（三向決策已可產生爭議項）。
 
@@ -98,12 +100,13 @@
 
 ## 5. PR 群組 5 — 014 審核設定與審核指派區塊（FR-005j／FR-005k／FR-010s／FR-010s-1／FR-010s-2／FR-010t）
 
-> **產品檔案（3）**：`design/prototype/pages/task-management/task-detail.data.js`、`design/prototype/pages/task-management/task-detail.panels/overview.html`、`design/prototype/pages/task-management/task-detail.panels/member-management.html`
+> **產品檔案（4）**：`design/prototype/pages/task-management/task-detail.data.js`、`design/prototype/pages/task-management/task-detail.panels/overview.html`、`design/prototype/pages/task-management/task-detail.panels/member-management.html`、`design/prototype/pages/task-management/task-detail.html`
+> **（動工後修正檔案範圍，理由同任務 1.2）**：`overview.html` 與 `member-management.html` 為純 HTML 片段、不含任何 `<script>`；`TaskDetail` 實體（`TASK_DATA`）、審核設定讀寫（`validateReviewSettings()`／`renderReviewSummary()`／`populateReviewEditForm()` task-detail.html:6070-6143）、編輯表單事件綁定（task-detail.html:9342-9512）與 i18n label 字典全數硬編於 `task-detail.html` 的單一 script。任務 5.3／5.5 的 Green 必須連動 `task-detail.html`，否則 Red 契約無從轉綠。加入後本組 4 檔，仍在原則 X 之 5 檔上限內；與群組 6 同檔改動以群組序列（5 → 6）保證不衝突。
 > **最終群組**：否。
 > **相依**：群組 1（常數改版；`AR_REVIEW_STATUS` 需與 `REVIEW_UNIT_STATUS` 同步）。
 
 - [ ] 5.1 撰寫 Red 測試覆蓋審核設定名冊化（`design/prototype/tests/task-management/issue-596-review-settings.spec.ts`）：檢視模式恰兩欄位（`審核員`／`仲裁者`）；編輯模式恰兩份勾選清單、無數值輸入框與 toggle；仲裁者候選為已勾選審核員之子集；取消勾選審核員時同步取消其仲裁者勾選；`reviewer_ids` 為空時阻擋儲存；`仲裁者` 摘要值不含 `啟用`／`停用` 前綴。驗證：執行該檔全數失敗且失敗原因為區塊仍為四欄位 [@senior-qa]
-- [ ] 5.2 於 `design/prototype/pages/task-management/task-detail.data.js` 改版規格常數與 `TaskDetail` 實體欄位：`AR_REVIEW_STATUS` 改三態、移除 `REVIEW_ASSIGNMENT_MODES`／`MIN_REVIEWERS_RULE`／`min_reviewers`／`review_assignment_mode`／`agreement_auto_finalize`／`arbitration_enabled`、`ARBITER_CANDIDATE_RULE` 加入 `can_arbitrate = true`、`OVERVIEW_EDITABLE_FIELDS` 改列 `reviewer_ids`／`arbiter_ids`、新增 `EXCEPTION_POOL_ACTIONS`。驗證：`pnpm typecheck` 通過且檔內不再出現 `min_reviewers` [@senior-frontend]
+- [x] 5.2 於 `design/prototype/pages/task-management/task-detail.data.js` 改版規格常數與 `TaskDetail` 實體欄位：`AR_REVIEW_STATUS` 改三態、移除 `REVIEW_ASSIGNMENT_MODES`／`MIN_REVIEWERS_RULE`／`min_reviewers`／`review_assignment_mode`／`agreement_auto_finalize`／`arbitration_enabled`、`ARBITER_CANDIDATE_RULE` 加入 `can_arbitrate = true`、`OVERVIEW_EDITABLE_FIELDS` 改列 `reviewer_ids`／`arbiter_ids`、新增 `EXCEPTION_POOL_ACTIONS`。驗證：`pnpm typecheck` 通過且檔內不再出現 `min_reviewers` [@senior-frontend]
 - [ ] 5.3 於 `design/prototype/pages/task-management/task-detail.panels/overview.html` 實作 FR-010s／FR-010s-1／FR-010s-2 之兩份名冊勾選設定與摘要值規則。驗證：`pnpm playwright test tests/task-management/issue-596-review-settings.spec.ts` 全綠 [@senior-frontend]
 - [ ] 5.4 撰寫 Red 測試覆蓋審核指派區塊唯讀化與發布閘門（`design/prototype/tests/task-management/issue-596-assignment-readonly.spec.ts`）：區塊內無任何指派／補齊按鈕；爭議池列與最終例外池列皆為唯讀且無分派按鈕；`reviewer_ids` 為空時發布被阻擋並顯示「還差 1 位」；`arbiter_ids` 為空時不阻擋但顯示無仲裁者警示。驗證：執行該檔全數失敗且失敗原因為區塊仍依 `review_assignment_mode` 渲染操作按鈕 [@senior-qa]
 - [ ] 5.5 於 `design/prototype/pages/task-management/task-detail.panels/member-management.html` 實作 FR-005j 唯讀化、FR-005k 雙列（待仲裁／待處置）與 FR-010t 發布閘門改版。驗證：`pnpm playwright test tests/task-management/issue-596-assignment-readonly.spec.ts` 全綠 [@senior-frontend]
