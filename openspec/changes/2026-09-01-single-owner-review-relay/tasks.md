@@ -84,11 +84,13 @@
 
 > **產品檔案（2）**：`design/prototype/pages/annotation/annotation-workspace.html`、`design/prototype/pages/annotation/annotation-workspace.config.js`
 > **（動工後修正檔案範圍）**：理由同群組 2——仲裁版面、定稿卡、脈絡橫幅與狀態軌（`REVIEW_STATE_I18N_KEYS`／`REVIEW_TRACK_ROUTES`／`buildReviewStatusTrack()`）皆實作於 `annotation-workspace.config.js`。
+> **（任務 3.2 動工後再修，檔案數 2 → 3）**：仲裁 reject 出口需要資料層配合——`design/prototype/pages/annotation/annotation-workspace.data.js` 之 `submitArbitration()` 於 choice 為 reject 時記票並保留理由、不寫 `finalized_value` 與 `finalized_by`（design.md D2 之「欄位不存在」哨兵慣例），狀態推導因此自然維持 `爭議中`。群組 6 的例外池讀寫、處置分流與排除（任務 6.2）完全未被侵入；群組相依說明本就載明群組 6 依賴本組的仲裁 reject 出口。
 > **最終群組**：否。
 > **相依**：群組 2（三向決策已可產生爭議項）。
 
-- [ ] 3.1 撰寫 Red 測試覆蓋 AC-4.54 仲裁版面（`design/prototype/tests/annotation/issue-596-arbitration.spec.ts`）：B 側依來源動態渲染（`modify` → 顯示修正值；`bypass` → 顯示「審核員 Bypass（無法判定）」）、`兩者皆非` 理由必填、送出後該項落入例外池且單位維持 `爭議中`、版面不渲染任何多數決票數元素。驗證：執行該檔全數失敗且失敗原因為仲裁版面仍為投票模型 [@senior-qa]
-- [ ] 3.2 （Green）於 `design/prototype/pages/annotation/annotation-workspace.html` 改寫仲裁版面為 FR-061 三出口（採 A／採 B／兩者皆非），移除 `ws-arbitration-quorum`／`ws-arbitration-vote-tally`／`ws-arbitration-vote-reason` 與多數決收斂，並依 FR-060 兩條件（名冊勾選 AND 非當事人）切換版面。驗證：`pnpm playwright test tests/annotation/issue-596-arbitration.spec.ts` 全綠 [@senior-frontend]
+- [x] 3.1 撰寫 Red 測試覆蓋 AC-4.54 仲裁版面（`design/prototype/tests/annotation/issue-596-arbitration.spec.ts`）：B 側依來源動態渲染（`modify` → 顯示修正值；`bypass` → 顯示「審核員 Bypass（無法判定）」）、`兩者皆非` 理由必填、送出後該項落入例外池且單位維持 `爭議中`、版面不渲染任何多數決票數元素。驗證：執行該檔全數失敗且失敗原因為仲裁版面仍為投票模型 [@senior-qa]
+  - **（動工後修正持久化斷言）**：「落入例外池」的持久化證據修正為 design.md D2 一致形狀——仲裁送出時寫入的是 arbitration 記錄（choice 為 reject＋理由、無 `finalized_value`／`finalized_by`），例外池佇列由未收尾的 reject 記錄推導；D2 的 exceptionPool 記錄（resolver、action、resolved_at）是專案負責人收尾時才寫（任務 6.2），不在仲裁送出時。契約初版誤釘 wsExceptionPool 寫入，於對應實作落地前即修正並於檔頭記錄，修正後強度相同。
+- [x] 3.2 （Green）於 `design/prototype/pages/annotation/annotation-workspace.html` 改寫仲裁版面為 FR-061 三出口（採 A／採 B／兩者皆非），移除 `ws-arbitration-quorum`／`ws-arbitration-vote-tally`／`ws-arbitration-vote-reason` 與多數決收斂，並依 FR-060 兩條件（名冊勾選 AND 非當事人）切換版面。驗證：`pnpm playwright test tests/annotation/issue-596-arbitration.spec.ts` 全綠 [@senior-frontend]
 - [ ] 3.3 撰寫 Red 測試覆蓋 AC-3.52 純文字定稿卡與 FR-094 微型衝突歷程（`design/prototype/tests/annotation/issue-596-finalized-card.spec.ts`）：已定稿單位不存在任何作答控件（含 `disabled` 者）與送出按鈕；`ws-finalized-trace` 呈現責任鏈單行文字；hover／focus 展開完整帳號且不使用原生 `title`。驗證：執行該檔全數失敗且失敗原因為定稿卡仍渲染 disabled 控件與 `ws-finalized-vote` 投票表 [@senior-qa]
 - [ ] 3.4 （Green）於 `design/prototype/pages/annotation/annotation-workspace.html` 實作 FR-094 純文字定稿卡與微型衝突歷程，移除 FR-069 之 `ws-finalized-vote` 逐位投票表（testid 保留不重用）。驗證：`pnpm playwright test tests/annotation/issue-596-finalized-card.spec.ts` 全綠 [@senior-frontend]
 - [ ] 3.5 撰寫 Red 測試覆蓋 AC-4.55 脈絡橫幅與狀態軌（`design/prototype/tests/annotation/issue-596-unit-context.spec.ts`）：橫幅不含定稿門檻元素，`.rv-unit-threshold` 不存在，狀態 pill 為三態、抽屜內狀態軌恰 3 個 `role="listitem"`、分支標籤為 `審核通過`／`修正或無法判定`／`仲裁後`；FR-070 tooltip 文案不含「退回」「重新標記」「定稿門檻」「多數決」。驗證：執行該檔全數失敗且失敗原因為橫幅仍渲染門檻 chip 與五節點狀態軌 [@senior-qa]
