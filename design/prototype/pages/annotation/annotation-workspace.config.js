@@ -2939,7 +2939,7 @@
     persistReviewDraft();
   }
 
-  /* free_text corrections are typed, so `a` and `r` are ordinary input the
+  /* free_text corrections are typed, so `a` and `b` are ordinary input the
      moment a field holds focus; a <select> consumes them as type-ahead. */
   function isTypingTarget(target) {
     var element = target && target.nodeType === 1 ? target : null;
@@ -2949,14 +2949,18 @@
     return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
   }
 
+  /* FR-054 v5.0.0 (design.md 已確認決策 #1): `R` (退回) is retired outright --
+     the rollback channel it drove no longer exists -- so only `A` (通過) and
+     `B` (無法判定) remain. 修正 stays unbound: its replacement value differs
+     per outKey, so a single key cannot express it. */
   function setupReviewShortcuts() {
     document.addEventListener('keydown', function (e) {
       if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
       if (isTypingTarget(e.target)) return;
       var key = String(e.key).toLowerCase();
-      if (key !== 'a' && key !== 'r') return;
+      if (key !== 'a' && key !== 'b') return;
       e.preventDefault();
-      setReviewUnitDecision(key === 'a' ? 'approve' : 'reject');
+      setReviewUnitDecision(key === 'a' ? 'approve' : 'bypass');
     });
   }
 
