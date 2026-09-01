@@ -18,7 +18,7 @@
 - [ ] 1.2 於 `design/prototype/pages/annotation/annotation-workspace.config.js` 將 `REVIEW_UNIT_STATUS` 改為 `pending | disputed | finalized`，新增 `REVIEW_DECISIONS`、`ARBITRATION_OUTCOMES`、`EXCEPTION_POOL_ACTIONS`、`REVIEW_ASSIGNMENT_GRANULARITY` 四組封閉常數，移除 `MIN_REVIEWERS_DEFAULT` 與 `DISPUTE_CONVERGENCE_RULE`。驗證：`pnpm typecheck` 通過，且 config 中不再出現 `approved`／`modified` 兩個狀態值 [@senior-frontend]
 - [ ] 1.3 於 `design/prototype/pages/annotation/annotation-workspace.data.js` 依 design.md D1 改寫 `getReviewUnitStatus()` 與 `getReviewUnitLane()` 為單一同源推導，並依 D2 落地 `reviewSubmission` / `arbitration` / `exceptionPool` 三組持久化形狀（`bypass` 不寫 `values[outKey]`）。驗證：`pnpm playwright test tests/annotation/issue-596-review-unit-status.spec.ts` 全綠 [@senior-frontend]
 - [ ] 1.4 撰寫 Red 測試覆蓋 FR-093 審核指派粒度（`design/prototype/tests/annotation/issue-596-review-assignment.spec.ts`）：試標同一樣本的 N 個審核單位指派給同一位審核員；正式標記平均分派且任兩位審核員筆數差 ≤ 1；審核員為該筆標記員時不被排除。驗證：執行該檔全數失敗且失敗原因為指派邏輯尚未實作 [@senior-qa]
-- [ ] 1.5 於 `design/prototype/pages/annotation/annotation-workspace.data.js` 實作 FR-093 之指派推導（依 `REVIEW_ASSIGNMENT_GRANULARITY` 分流），並依 design.md D6 讓舊五態值與多筆 `votes[]` 以「重新推導／取最新一筆」相容。驗證：`pnpm playwright test tests/annotation/issue-596-review-assignment.spec.ts` 全綠 [@senior-frontend]
+- [ ] 1.5 於 `design/prototype/pages/annotation/annotation-workspace.data.js` 實作 FR-093 之指派推導（依 `REVIEW_ASSIGNMENT_GRANULARITY` 分流），並依 design.md D6 讓舊五態值與多筆 `votes[]` 以「重新推導／取最新一筆」相容。**另需一併輸出 `getAssignedReviewUnits(runType, reviewerId, units)`**：`reviewer_ids` 名冊要到群組 5 才進資料層，而接線的群組 4 先行合併，故名冊此刻只能由本資料層的示範種子提供；把名冊查找收在資料層內、只對外露出「這位審核員該審哪些單位」，可讓清單層不必知道名冊，群組 5 落地真實名冊後也只改本檔一處。驗證：`pnpm playwright test tests/annotation/issue-596-review-assignment.spec.ts` 全綠 [@senior-frontend]
 - [ ] 1.6 執行群組 1 完整回歸：`cd design/prototype && pnpm typecheck && pnpm playwright test`，記錄既有測試中因五態移除而失效的斷言清單，於群組 2 起逐組修正。驗證：typecheck 退出碼 0，playwright 失敗項目全部可歸因於尚未改版的介面層 [@main]
 
 ## 2. PR 群組 2 — 015 審核卡三向決策（FR-014B／FR-016A／FR-044／FR-053 決策面／FR-054／FR-092）
@@ -46,17 +46,19 @@
 - [ ] 3.5 撰寫 Red 測試覆蓋 AC-4.55 脈絡橫幅與狀態軌（`design/prototype/tests/annotation/issue-596-unit-context.spec.ts`）：橫幅不含定稿門檻元素（`.rv-unit-threshold` 不存在）、狀態 pill 為三態、抽屜內狀態軌恰 3 個 `role="listitem"`、分支標籤為 `審核通過`／`修正或無法判定`／`仲裁後`；FR-070 tooltip 文案不含「退回」「重新標記」「定稿門檻」「多數決」。驗證：執行該檔全數失敗且失敗原因為橫幅仍渲染門檻 chip 與五節點狀態軌 [@senior-qa]
 - [ ] 3.6 於 `design/prototype/pages/annotation/annotation-workspace.html` 實作 FR-064 橫幅與三節點狀態軌改版，並依 FR-070 改寫審核說明 tooltip 文案。驗證：`pnpm playwright test tests/annotation/issue-596-unit-context.spec.ts` 全綠 [@senior-frontend]
 
-## 4. PR 群組 4 — 015 清單粒度與歷程加詳（FR-055／FR-062／FR-086／FR-097）
+## 4. PR 群組 4 — 015 清單粒度與歷程加詳（FR-055／FR-062／FR-086／FR-093 接線／FR-097）
 
 > **產品檔案（2）**：`design/prototype/pages/annotation/annotation-list.html`、`design/prototype/pages/shared/annotation-history.js`
 > **最終群組**：否。
-> **相依**：群組 1（三態）與群組 3（仲裁事件已可產生）。
+> **相依**：群組 1（三態推導；FR-093 接線另需其任務 1.5 之 `getAssignedReviewUnits()`）與群組 3（仲裁事件已可產生）。
 
 - [ ] 4.1 撰寫 Red 測試覆蓋 AC-1.26 清單三態篩選（`design/prototype/tests/annotation/issue-596-list-three-status.spec.ts`）：狀態篩選選項恰為 `待審`／`爭議中`／`已定稿`，且選單由常數推導而非硬編；具仲裁資格者於 `爭議中` 列看到 `仲裁`（`list-arbitrate-entry`），已對該單位提交審核者看到 `編輯`。驗證：執行該檔全數失敗且失敗原因為選單仍為五態 [@senior-qa]
 - [ ] 4.2 於 `design/prototype/pages/annotation/annotation-list.html` 實作 FR-055 三態篩選與 FR-060 之 `仲裁` 入口判定。驗證：`pnpm playwright test tests/annotation/issue-596-list-three-status.spec.ts` 全綠 [@senior-frontend]
 - [ ] 4.3 撰寫 Red 測試覆蓋 AC-2.22 歷程動作集合與 FR-097 責任鏈加詳（`design/prototype/tests/annotation/issue-596-history-chain.spec.ts`）：`HISTORY_ACTIONS` 九值各有兩兩不同的語意色徽章；舊 `rejected` 事件以中性徽章原樣呈現且不中斷渲染；卡片呈現逐 outKey 前值 → 後值、耗時、具名決策者；未提交草稿不出現（FR-062）。驗證：執行該檔全數失敗且失敗原因為集合仍含 `rejected`、缺 `bypassed`／`exception_resolved`／`excluded` [@senior-qa]
 - [ ] 4.4 於 `design/prototype/pages/shared/annotation-history.js` 實作 FR-086 之九值集合（移除 `rejected`、新增 `bypassed`／`exception_resolved`／`excluded`）與 FR-097 之逐卡責任鏈加詳，並保留集合外值的中性徽章相容路徑。**⚠️ 跨案相依（issue #600）**：該檔於 #600 已新增第三張對照表 `ACTION_LABEL`（動作 → 中文顯示標籤）。新增／移除動作值時 `BADGE_CLASS` 與 `ACTION_LABEL` **必須同步增修**——`actionLabelFor()` 的守衛 `isKnownAction()` 查的是 `BADGE_CLASS`，只加 `BADGE_CLASS` 而漏 `ACTION_LABEL` 會讓查表回傳 `undefined`，徽章直接印出 `undefined` 且不會有任何錯誤。三個新值（`bypassed`／`exception_resolved`／`excluded`）的中文標籤須一併定案。另：`rejected` 自集合移除後，既有歷程事件仍會帶該值，屆時走的是集合外相容路徑（原樣回傳英文），若要讓舊事件仍顯示「審核退回」，`ACTION_LABEL` 需保留 `rejected` 鍵而只從 `ACTIONS`／`BADGE_CLASS` 移除——此取捨於本任務決定並記錄。驗證：`pnpm playwright test tests/annotation/issue-596-history-chain.spec.ts` 全綠 [@senior-frontend]
 - [ ] 4.5 修正 `tests/annotation/issue-578-history-actions.spec.ts` 等既有歷程測試中因 `rejected` 移除而失效的斷言。驗證：`cd design/prototype && pnpm playwright test tests/annotation` 全綠 [@senior-qa]
+- [ ] 4.6 撰寫 Red 測試覆蓋 FR-093 指派結果於清單生效（`design/prototype/tests/annotation/issue-596-list-assignment.spec.ts`）：以審核員身分開啟清單時，僅出現指派給自己的審核單位；未指派給自己的單位不出現在列中（非僅停用按鈕）；同一樣本於 `dry_run` 的多個單位同進同出；`official_run` 下兩位審核員各自開啟清單所見筆數差 ≤ 1 且無交集。驗證：執行該檔全數失敗且失敗原因為清單尚未取用指派結果 [@senior-qa]
+- [ ] 4.7 於 `design/prototype/pages/annotation/annotation-list.html` 以 `data.getAssignedReviewUnits(runType, identity.reviewerId, units)` 過濾審核員檢視的列來源。**本任務存在的理由**：任務 1.5 的指派推導在群組 1–7 中原本沒有任何呼叫端，FR-093 會成為「有實作、沒生效」的需求；接線置於本組是因 `annotation-list.html` 已在本組檔案清單內，不增加觸及檔案數。標記員檢視不套用此過濾（其列來源是自己的標記，與審核指派無關）。驗證：`pnpm playwright test tests/annotation/issue-596-list-assignment.spec.ts` 全綠 [@senior-frontend]
 
 ## 5. PR 群組 5 — 014 審核設定與審核指派區塊（FR-005j／FR-005k／FR-010s／FR-010s-1／FR-010s-2／FR-010t）
 
