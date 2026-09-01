@@ -177,6 +177,22 @@ test_check_spec_artifacts_accepts_archived_spec_location() {
     fi
 }
 
+test_check_spec_artifacts_fails_for_archived_row_without_archived_spec() {
+    # The archived branch must still be a check, not a free pass: marking a row
+    # archived without moving the spec into specs/_archive/ has to fail.
+    local repo
+    repo="$(make_repo)"
+
+    sed -i.bak 's/`tasks-ready`/`archived`/' "$repo/specs/STATUS.md"
+    rm -f "$repo/specs/STATUS.md.bak"
+
+    if "$repo/scripts/check-spec-artifacts.sh" "$repo" >/tmp/check-spec-artifacts-noarchive.out 2>/tmp/check-spec-artifacts-noarchive.err; then
+        echo "Expected check-spec-artifacts.sh to fail for an archived row with no archived spec" >&2
+        exit 1
+    fi
+    assert_contains /tmp/check-spec-artifacts-noarchive.err "STATUS.md archived row has no spec under specs/_archive/: task-management-013"
+}
+
 test_ci_uses_pnpm_for_prototype_jobs() {
     local ci="$ROOT/.github/workflows/ci.yml"
 
@@ -2336,6 +2352,7 @@ test_setup_plan_and_status_update
 test_check_spec_artifacts_passes_for_synced_repo
 test_check_spec_artifacts_fails_for_untracked_spec
 test_check_spec_artifacts_accepts_archived_spec_location
+test_check_spec_artifacts_fails_for_archived_row_without_archived_spec
 test_ci_uses_pnpm_for_prototype_jobs
 test_check_sdd_passes_for_valid_repo
 test_check_sdd_uses_explicit_repo_root

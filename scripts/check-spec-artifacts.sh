@@ -143,10 +143,20 @@ while IFS= read -r spec_file; do
         echo "ERROR: Missing STATUS.md row for spec: $module/$feature_name" >&2
         errors=$((errors + 1))
     fi
-done < <(find "$ROOT/specs" -mindepth 3 -maxdepth 3 -path '*/[0-9][0-9][0-9]-*/spec.md' -print | sort)
+done < <(find "$ROOT/specs" -mindepth 3 -maxdepth 3 -path '*/[0-9][0-9][0-9]-*/spec.md' -not -path "$ROOT/specs/_archive/*" -print | sort)
 
-while IFS='|' read -r module number _status _branch; do
+while IFS='|' read -r module number status _branch; do
     [[ -n "$module" ]] || continue
+    # 封存規則 (specs/STATUS.md): an archived feature moves to
+    # specs/_archive/NNN-feature/, dropping the module directory, so it is
+    # resolved by number rather than through the module layout above.
+    if [[ "${status//\`/}" == archived ]]; then
+        if ! compgen -G "$ROOT/specs/_archive/$number-*/spec.md" >/dev/null; then
+            echo "ERROR: STATUS.md archived row has no spec under specs/_archive/: $module-$number" >&2
+            errors=$((errors + 1))
+        fi
+        continue
+    fi
     if ! grep -Fq "$module|$number" "$spec_ids"; then
         echo "ERROR: STATUS.md row has no matching spec directory: $module-$number" >&2
         errors=$((errors + 1))
