@@ -164,15 +164,22 @@ function summariseIds(list) {
   return list.length === 0 ? '—' : `×${list.length}`;
 }
 
+/**
+ * Abbreviate here rather than with %h: git's own abbreviation length tracks the
+ * local object database, so the same commit renders as 7 characters in one clone
+ * and 8 in another. The freshness gate compares this file byte-for-byte.
+ */
+const COMMIT_ABBREV_LENGTH = 12;
+
 function prototypeSource() {
   const out = execFileSync(
     'git',
-    ['log', '-1', '--format=%h|%ad', '--date=short', '--', ...PROTOTYPE_SOURCES],
+    ['log', '-1', '--format=%H|%ad', '--date=short', '--', ...PROTOTYPE_SOURCES],
     { cwd: ROOT, encoding: 'utf8' },
   ).trim();
-  const [commit, date] = out.split('|');
-  if (!commit || !date) throw new Error('cannot resolve the prototype source commit from git');
-  return { commit, date };
+  const [fullCommit, date] = out.split('|');
+  if (!fullCommit || !date) throw new Error('cannot resolve the prototype source commit from git');
+  return { commit: fullCommit.slice(0, COMMIT_ABBREV_LENGTH), date };
 }
 
 function validate(manifest) {
