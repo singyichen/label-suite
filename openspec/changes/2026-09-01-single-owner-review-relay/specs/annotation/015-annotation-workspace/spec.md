@@ -100,7 +100,7 @@ Reviewer 審查列 MUST 僅呈現**受審標記員本人**的提交，MUST NOT �
 
 工作區 reviewer 模式 MUST 實作決策快捷鍵，作用對象為**當前審核單位的全部輸出類型**：一次按鍵即完成該單位的決策，與 FR-044 的「每個 outKey 一筆決策」送出驗證對齊；介面不提供「目前聚焦輸出類型」的概念，因此 MUST NOT 只決定其中一個 outKey。重複按同一鍵取消回未決策（沿用 FR-014B 的 toggle 語意）。
 
-自 v5.0.0 起快捷鍵集合為：`A` = 通過（`approve`）、`B` = 無法判定（`bypass`）。**`R` = 退回 MUST 移除**（退回機制已不存在）。`修正`（`modify`）MUST NOT 綁定快捷鍵——修正必然伴隨值的輸入與必填理由（FR-016A），一次按鍵無法完成，綁定快捷鍵只會產生一個必定被阻擋的送出。
+自 v5.0.0 起快捷鍵集合為：`A` = 通過（`approve`）、`B` = 無法判定（`bypass`）。**`R` = 退回 MUST 移除**（退回機制已不存在）。`修正`（`modify`）MUST NOT 綁定快捷鍵——快捷鍵作用於當前單位的**全部** outKey，而修正的替代值因 outKey 而異，單一按鍵無法表達；`無法判定` 是全單位一致的決策故可綁鍵。兩者的必填理由（FR-016A）皆於決策標記後展開，MUST NOT 因快捷鍵而放寬。
 
 下列情況 MUST NOT 觸發：焦點位於 `input` / `textarea` / `select` / contenteditable、按鍵帶有 `Shift` / `Ctrl` / `Cmd` / `Alt` 修飾鍵、以及 `role = annotator`。共用側欄（spec 008）之快捷鍵總覽 MUST 同步移除 `R`、列出 `B`；批次快捷鍵 `Shift+A` / `Shift+R` 維持既有之廢止狀態。
 
