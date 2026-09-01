@@ -1692,32 +1692,47 @@
   function entityMergeKey(ent) { return (ent && ent.text) + '::' + (ent && ent.type); }
   function relationMergeKey(tr) { return (tr && tr.subj) + '::' + (tr && tr.rel) + '::' + (tr && tr.obj); }
 
-  /* ---- Review unit (spec 015 v3.9.0, issue #146) -------------------------
+  /* ---- Review unit (spec 015 v5.0.0, issue #596 design.md D1) ------------
    * A review unit is `sample_id x annotator_id x run_type`: the same sample
    * annotated by three people is three independently reviewable units, in
    * BOTH run types. This replaces the run_type-branched review model, where
    * dry_run reviewed a merged consensus and official_run reviewed a single
    * annotator.
    *
-   * The five states advance linearly on one axis. `minReviewers` (P2 always
-   * passes 1; the configurable min_reviewers arrives later) is what separates
-   * each "decided" state from its "decided, but not by enough reviewers yet"
-   * predecessor:
+   * issue #596: the single-owner relay model has NO quorum concept -- FR-093
+   * assigns exactly one reviewer per unit, so that reviewer's decision is
+   * immediately decisive. The former five-state / min_reviewers model
+   * (approved/modified as "decided but short of quorum" interim states,
+   * resolveDisputeConvergence() majority convergence) is retired:
    *
-   *   no annotator submission            -> null (not a review unit yet)
-   *   submitted, no reviewer             -> pending
-   *   every reviewer agrees, n < min     -> approved
-   *   every reviewer agrees, n >= min    -> finalized   (terminal)
-   *   some reviewer changed it, n < min  -> modified
-   *   some reviewer changed it, n >= min -> disputed    (terminal, -> P4 pool)
+   *   no annotator submission                          -> null
+   *   submitted, reviewer has not submitted             -> pending
+   *   reviewer decided `approve` on every outKey        -> finalized (terminal)
+   *   reviewer decided `modify`/`bypass` on any outKey,
+   *     dispute item(s) not fully resolved              -> disputed
+   *   every dispute item resolved via arbitration
+   *     (adopt_a/adopt_b) or the exception pool
+   *     (adopt_annotator/adopt_reviewer/custom_answer)  -> finalized (terminal)
+   *   any outKey resolved via the exception pool's
+   *     `exclude_from_dataset`                          -> stays disputed
+   *     (排除記號；MUST NOT read as finalized, FR-063 -- no gold value)
    */
   var REVIEW_UNIT_STATUS = {
     PENDING: 'pending',
-    APPROVED: 'approved',
-    MODIFIED: 'modified',
     DISPUTED: 'disputed',
     FINALIZED: 'finalized',
   };
+
+  /* issue #596 (design.md D2): three closed vocabularies the single-owner
+   * relay model renders from -- MUST NOT be hardcoded as per-value branches
+   * anywhere (Generalization-First). Declared here rather than
+   * annotation-workspace.config.js, which is a page-script IIFE with no
+   * export surface: cross-file consumers (config.js, list/detail pages) all
+   * read them off window.LabelSuiteAnnotationWorkspaceData. */
+  var REVIEW_DECISIONS = ['approve', 'modify', 'bypass'];
+  var ARBITRATION_OUTCOMES = ['adopt_a', 'adopt_b', 'reject'];
+  var EXCEPTION_POOL_ACTIONS = ['adopt_annotator', 'adopt_reviewer', 'custom_answer', 'exclude_from_dataset'];
+  var REVIEW_ASSIGNMENT_GRANULARITY = { dry_run: 'per_sample', official_run: 'per_unit' };
 
   function normalizeScalar(value) {
     return value === undefined ? null : value;
@@ -1880,8 +1895,8 @@
    * the task's output keys, OR any reviewer rejected an outKey without
    * changing its value (issue #551: a naked reject must not read as
    * agreement just because compareOutputAnswer() sees no diff). This single
-   * predicate picks the lane in FR-051: false -> approved/finalized,
-   * true -> modified/disputed/finalized. */
+   * predicate picks the lane in FR-051: false -> finalized (unanimous
+   * approve), true -> disputed until resolved (design.md D1). */
   function anyReviewerChanged(annotatorSubmission, reviewerSubmissions, keys) {
     return reviewerSubmissions.some(function (reviewerSubmission) {
       return keys.some(function (outKey) {
@@ -1914,11 +1929,27 @@
     ) ? 'differing' : 'same';
   }
 
-  /* Derives the review unit's state from the annotator's submission plus
-   * every reviewer submission on it. `outKeys` is the task's composed output
-   * type list; `opts.minReviewers` defaults to 1. Returns null when the
-   * annotator has not submitted -- there is nothing to review yet. */
-  function getReviewUnitStatus(taskId, runType, sampleId, identity, outKeys, opts) {
+  /* Derives the review unit's state from the annotator's submission plus the
+   * assigned reviewer's decision (design.md D1, issue #596). `outKeys` is
+   * the task's composed output type list. Returns null when the annotator
+   * has not submitted -- there is nothing to review yet.
+   *
+   * There is no quorum left to check (FR-093: exactly one reviewer per
+   * unit) -- a submitted reviewer decision is immediately decisive:
+   * unchanged on every outKey -> finalized; changed on any outKey
+   * (`modify`/`bypass`) -> disputed until every dispute item resolves via
+   * arbitration or the final exception pool. An `exclude_from_dataset`
+   * exception-pool marker on ANY outKey blocks finalization outright
+   * (checked first, independent of whether that outKey's values ever
+   * differed) -- FR-063 forbids a gold value for an excluded item, so the
+   * unit MUST NOT read as finalized while one is pending.
+   *
+   * The former resolveDisputeConvergence() majority-of-N convergence check
+   * is deliberately NOT consulted here -- it has no reviewer-count input
+   * left to run on. That function stays defined/exported for
+   * describeDisputeVotes()'s pre-decision explanation (still used by the
+   * not-yet-rewritten arbitration card), but no longer decides status. */
+  function getReviewUnitStatus(taskId, runType, sampleId, identity, outKeys) {
     var annotatorSubmission = getSubmission(taskId, 'annotator', runType, sampleId, identity);
     if (!annotatorSubmission) return null;
 
@@ -1926,24 +1957,107 @@
     if (!reviewerSubmissions.length) return REVIEW_UNIT_STATUS.PENDING;
 
     var keys = Array.isArray(outKeys) ? outKeys : [];
-    var changed = anyReviewerChanged(annotatorSubmission, reviewerSubmissions, keys);
-    var enoughReviewers = reviewerSubmissions.length >= ((opts && opts.minReviewers) || 1);
+    var exceptionPool = getExceptionPool(taskId, runType, sampleId, identity);
+    var hasExclusion = keys.some(function (outKey) {
+      var record = exceptionPool[outKey];
+      return !!record && record.action === 'exclude_from_dataset';
+    });
+    if (hasExclusion) return REVIEW_UNIT_STATUS.DISPUTED;
 
-    if (changed) {
-      if (!enoughReviewers) return REVIEW_UNIT_STATUS.MODIFIED;
-      /* v4.8.0: a disputed unit leaves the pool once EVERY dispute item is
-         resolved -- either the reviewers' per-item majority already converged
-         (resolveDisputeConvergence) or an arbiter finalized it by vote. */
-      var items = getDisputeItems(taskId, runType, sampleId, identity, keys);
-      var arbState = getArbitrationState(taskId, runType, sampleId, identity);
-      var allResolved = items.length > 0 && items.every(function (item) {
-        if (resolveDisputeConvergence(item, reviewerSubmissions.length).converged) return true;
-        var stored = arbState[item.outKey + '::' + item.key];
-        return !!(stored && stored.finalized_by);
-      });
-      return allResolved ? REVIEW_UNIT_STATUS.FINALIZED : REVIEW_UNIT_STATUS.DISPUTED;
+    if (!anyReviewerChanged(annotatorSubmission, reviewerSubmissions, keys)) {
+      return REVIEW_UNIT_STATUS.FINALIZED;
     }
-    return enoughReviewers ? REVIEW_UNIT_STATUS.FINALIZED : REVIEW_UNIT_STATUS.APPROVED;
+
+    var items = getDisputeItems(taskId, runType, sampleId, identity, keys);
+    var arbState = getArbitrationState(taskId, runType, sampleId, identity);
+    var allResolved = items.length > 0 && items.every(function (item) {
+      var stored = arbState[item.outKey + '::' + item.key];
+      if (stored && stored.finalized_by) return true;
+      var poolRecord = exceptionPool[item.outKey];
+      return !!poolRecord && poolRecord.action !== 'exclude_from_dataset';
+    });
+    return allResolved ? REVIEW_UNIT_STATUS.FINALIZED : REVIEW_UNIT_STATUS.DISPUTED;
+  }
+
+  /* issue #596 (FR-093): the ONLY flow difference between run_types is
+   * assignment granularity -- there is no manual-assignment mode, so this
+   * is the sole, deterministic derivation both the workspace and the
+   * list view (group 4) must agree on. Round-robins over `reviewerIds` in
+   * the order `units` is given:
+   *
+   *   official_run (per_unit): one unit = one sample, spread 1-for-1
+   *     across the roster. Any two reviewers' counts differ by at most 1
+   *     by construction (ceil vs floor of unitCount / rosterCount) --
+   *     no post-hoc balancing pass is needed.
+   *   dry_run (per_sample): round-robins over DISTINCT sample_ids
+   *     instead of units, so every unit sharing a sample_id inherits
+   *     that sample's reviewer and one reviewer sees every annotator's
+   *     answer for that sample together.
+   *
+   * `unit.annotator_id` is never consulted for eligibility: FR-093 states
+   * a reviewer is NOT excluded from assignment merely for being the
+   * unit's own annotator (that non-participant restriction applies only
+   * to arbiters, FR-060). Determinism follows from using only the input
+   * arrays' order -- no randomness, no wall-clock read -- so the same
+   * `(runType, units, reviewerIds)` always yields the same assignment. */
+  function getReviewAssignments(runType, units, reviewerIds) {
+    /* Sorted before anything else because assignment is positional -- the
+       dry_run branch keys on a sample's first appearance and official_run
+       walks the array with a fixed stride. Left in caller order, the list
+       page and the workspace would each derive their own assignment from
+       whatever order they happened to build `units` in, and a reviewer
+       would see one set of units in the list and another in the
+       workspace. Sorting here makes the assignment a property of the
+       units themselves, so every caller agrees without having to know
+       it is under an ordering obligation. */
+    var list = (Array.isArray(units) ? units : []).slice().sort(function (a, b) {
+      return a.sample_id === b.sample_id
+        ? String(a.annotator_id).localeCompare(String(b.annotator_id))
+        : String(a.sample_id).localeCompare(String(b.sample_id));
+    });
+    var roster = Array.isArray(reviewerIds) ? reviewerIds : [];
+    if (!roster.length) return [];
+    if (runType === 'dry_run') {
+      var sampleOrder = [];
+      var sampleReviewerIndex = {};
+      list.forEach(function (unit) {
+        if (!(unit.sample_id in sampleReviewerIndex)) {
+          sampleReviewerIndex[unit.sample_id] = sampleOrder.length % roster.length;
+          sampleOrder.push(unit.sample_id);
+        }
+      });
+      return list.map(function (unit) {
+        return {
+          sample_id: unit.sample_id,
+          annotator_id: unit.annotator_id,
+          reviewer_id: roster[sampleReviewerIndex[unit.sample_id]],
+        };
+      });
+    }
+    return list.map(function (unit, index) {
+      return {
+        sample_id: unit.sample_id,
+        annotator_id: unit.annotator_id,
+        reviewer_id: roster[index % roster.length],
+      };
+    });
+  }
+
+  /* issue #596: the roster that decides assignment lives HERE, not at any
+   * call site -- 014's `reviewer_ids` field is not wired up until PR
+   * group 5 (design.md D7), so today's only source is the REVIEWER_ROSTER
+   * demo seed (~line 214). Group 4's annotation-list (the only caller
+   * until group 5) only ever needs "which units is THIS reviewer
+   * assigned", never the roster itself; keeping the lookup here means
+   * group 5 swaps the roster source in exactly one place instead of
+   * every call site. */
+  function getAssignedReviewUnits(runType, reviewerId, units) {
+    var roster = REVIEWER_ROSTER.map(function (r) { return r.id; });
+    return getReviewAssignments(runType, units, roster)
+      .filter(function (assignment) { return assignment.reviewer_id === reviewerId; })
+      .map(function (assignment) {
+        return { sample_id: assignment.sample_id, annotator_id: assignment.annotator_id };
+      });
   }
 
   /* ---- Dispute items (spec 015 v4.6.0, issue #147 P3a) -------------------
@@ -2123,6 +2237,35 @@
     return result;
   }
 
+  /* ---- Final exception pool (design.md D2, issue #596) -------------------
+   * Read-only awareness for getReviewUnitStatus(): an outKey resolved via
+   * `exclude_from_dataset` must count as "handled" for the dispute pool but
+   * MUST NOT let the unit read as finalized (FR-063 -- an excluded item
+   * produces no gold value). The write path (FR-095's project-leader
+   * resolution screen) lands in group 6; this only reads whatever is
+   * already stored, addressed the same `task_id x run_type x annotator_id x
+   * sample_id` way every other review-unit bucket is (matching
+   * arbitrationBucketKey()), as ONE blob per unit keyed by outKey:
+   * `{ [outKey]: { resolver_id, action, finalized_value?, reason,
+   * resolved_at } }`. */
+  var EXCEPTION_POOL_KEY_PREFIX = 'labelsuite.wsExceptionPool.';
+
+  function exceptionPoolKey(taskId, runType, sampleId, identity) {
+    return arbitrationBucketKey(taskId, runType, identity) + '::' + sampleId;
+  }
+
+  function getExceptionPool(taskId, runType, sampleId, identity) {
+    try {
+      var raw = global.localStorage.getItem(
+        EXCEPTION_POOL_KEY_PREFIX + exceptionPoolKey(taskId, runType, sampleId, identity)
+      );
+      var parsed = raw ? JSON.parse(raw) : null;
+      return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
   /* Writes one arbiter's complete pass over a unit's open dispute items:
    * `decisions` is [{itemId, choice: 'A'|'B', value}] where `value` is the
    * concrete winning value (A -> annotatorValue, B -> the chosen reviewer
@@ -2234,6 +2377,11 @@
     });
   }
 
+  /* issue #596 (design.md D1): this majority-of-N convergence check is no
+   * longer consulted by getReviewUnitStatus() -- FR-093's single reviewer
+   * per unit leaves no quorum to compute. Kept defined/exported only for
+   * describeDisputeVotes()'s pre-decision explanation, still read by the
+   * arbitration card pending its group 3 rewrite. */
   function resolveDisputeConvergence(item, reviewerCount) {
     /* issue #551 point 1: a naked reject proposes no replacement value, so
        it can never be out-voted into an agreement tally -- it blocks
@@ -2535,7 +2683,18 @@
            below moved from `disputed`/`arbitrated` to `finalized`; and
        (2) a pure reject (no correction) now blocks finalization instead of
            reading as agreement, so dry-05's A row moved the other way,
-           from `finalized` to `disputed`. */
+           from `finalized` to `disputed`.
+
+       issue #596 (design.md D1): getReviewUnitStatus() no longer has any
+       quorum/min_reviewers concept, so the inline `// finalized (N=1 quorum
+       converges)` / `approved (1 < 3)` / `modified (1 < 3)` annotations
+       throughout the T014-T017 rows below are STALE -- read them as
+       historical (issue #551-era) commentary, not as what today's
+       derivation actually returns. The multi-reviewer-per-unit shape of
+       T016/ofm-* and T017/oft-* also no longer matches FR-093 (exactly one
+       reviewer per unit); rewriting those two tasks' seed rows for the new
+       model is tracked separately (design.md Migration Plan point 3, this
+       change's tasks.md group 7), not part of this task. */
     var scripts = [
       /* T014 dry_run, min_reviewers = 1 */
       { t: 'T014', r: 'dry_run', s: 'dry-01-all-agree', a: A, v: 'positive', rev: { reviewer_wang: 'positive' } }, // finalized
@@ -2807,9 +2966,15 @@
     meanStd: meanStd,
     convertSubmissionAnswer: convertSubmissionAnswer,
     REVIEW_UNIT_STATUS: REVIEW_UNIT_STATUS,
+    REVIEW_DECISIONS: REVIEW_DECISIONS,
+    ARBITRATION_OUTCOMES: ARBITRATION_OUTCOMES,
+    EXCEPTION_POOL_ACTIONS: EXCEPTION_POOL_ACTIONS,
+    REVIEW_ASSIGNMENT_GRANULARITY: REVIEW_ASSIGNMENT_GRANULARITY,
     compareOutputAnswer: compareOutputAnswer,
     getReviewUnitStatus: getReviewUnitStatus,
     getReviewUnitLane: getReviewUnitLane,
+    getReviewAssignments: getReviewAssignments,
+    getAssignedReviewUnits: getAssignedReviewUnits,
     computeReviewSummary: computeReviewSummary,
     formatReviewSummary: formatReviewSummary,
     listReviewUnits: listReviewUnits,
