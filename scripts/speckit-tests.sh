@@ -156,6 +156,27 @@ SPEC
     assert_contains /tmp/check-spec-artifacts.err "Missing STATUS.md row for spec: dataset/001-quality-export"
 }
 
+test_check_spec_artifacts_accepts_archived_spec_location() {
+    # A canonical spec archived per specs/STATUS.md 封存規則 lives at
+    # specs/_archive/NNN-feature/ with no module directory in between. The
+    # module-layout scan must not read `_archive` as a module name, and the
+    # STATUS reverse check must still resolve the archived row.
+    local repo
+    repo="$(make_repo)"
+
+    mkdir -p "$repo/specs/_archive"
+    mv "$repo/specs/task-management/013-task-new" "$repo/specs/_archive/013-task-new"
+    rmdir "$repo/specs/task-management"
+    sed -i.bak 's/`tasks-ready`/`archived`/' "$repo/specs/STATUS.md"
+    rm -f "$repo/specs/STATUS.md.bak"
+
+    if ! "$repo/scripts/check-spec-artifacts.sh" "$repo" >/tmp/check-spec-artifacts-archived.out 2>/tmp/check-spec-artifacts-archived.err; then
+        echo "Expected check-spec-artifacts.sh to accept an archived canonical spec" >&2
+        cat /tmp/check-spec-artifacts-archived.err >&2
+        exit 1
+    fi
+}
+
 test_ci_uses_pnpm_for_prototype_jobs() {
     local ci="$ROOT/.github/workflows/ci.yml"
 
@@ -2314,6 +2335,7 @@ test_create_feature_creates_module_branch_spec_and_status
 test_setup_plan_and_status_update
 test_check_spec_artifacts_passes_for_synced_repo
 test_check_spec_artifacts_fails_for_untracked_spec
+test_check_spec_artifacts_accepts_archived_spec_location
 test_ci_uses_pnpm_for_prototype_jobs
 test_check_sdd_passes_for_valid_repo
 test_check_sdd_uses_explicit_repo_root
