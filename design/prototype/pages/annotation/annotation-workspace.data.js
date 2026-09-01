@@ -2267,14 +2267,27 @@
   }
 
   /* Writes one arbiter's complete pass over a unit's open dispute items:
-   * `decisions` is [{itemId, choice: 'A'|'B', value}] where `value` is the
-   * concrete winning value (A -> annotatorValue, B -> the chosen reviewer
-   * value). The prototype has a single arbiter per claim, so each vote
-   * finalizes its item immediately. A resubmission by the same arbiter
-   * (issue #199: double-click / re-trigger) overwrites that arbiter's
-   * existing votes[] entry in place instead of appending a duplicate --
-   * finalized_value/finalized_by are already last-write-wins for the same
-   * item, so votes[] must stay one entry per arbiter to match. */
+   * `decisions` is [{itemId, choice: ARBITRATION_OUTCOMES, value, reason}]
+   * where `value` is the concrete winning value for adopt_a/adopt_b
+   * (adopt_a -> annotatorValue, adopt_b -> the reviewer value) and null for
+   * `reject`. The prototype has a single arbiter per claim, so each
+   * adopt_a/adopt_b vote finalizes its item immediately.
+   *
+   * issue #596 (FR-061 point 3, design.md D2): `reject` (兩者皆非) is NOT a
+   * finalization -- it records the arbiter's vote and reason like any other
+   * choice, but deliberately leaves finalized_value/finalized_by unset. An
+   * absent field is D2's chosen sentinel ("欄位不存在是天然的哨兵", the same
+   * convention `bypass` uses for `values[outKey]`), not `null`: the pool
+   * queue this feeds (task 6.2) and getReviewUnitStatus()'s allResolved
+   * check both read "no finalized_by" as "still open", which is exactly
+   * reject's status until a project leader resolves it (D2's exceptionPool
+   * record, written only by task 6.2 -- never here).
+   *
+   * A resubmission by the same arbiter (issue #199: double-click /
+   * re-trigger) overwrites that arbiter's existing votes[] entry in place
+   * instead of appending a duplicate -- finalized_value/finalized_by are
+   * already last-write-wins for the same item, so votes[] must stay one
+   * entry per arbiter to match. */
   function submitArbitration(taskId, runType, sampleId, identity, decisions) {
     var bucketKey = arbitrationBucketKey(taskId, runType, identity);
     var arbiterId = (identity && identity.reviewerId) || DEFAULT_REVIEWER_ID;
@@ -2283,6 +2296,7 @@
       var itemKey = arbitrationItemKey(bucketKey, sampleId, decision.itemId);
       var item = readArbitrationItem(itemKey) || { votes: [] };
       var vote = { arbiter_id: arbiterId, choice: decision.choice, voted_at: new Date().toISOString() };
+      if (decision.reason) vote.reason = decision.reason;
       var existingIndex = -1;
       item.votes.forEach(function (v, i) {
         if (v.arbiter_id === arbiterId) existingIndex = i;
@@ -2292,8 +2306,13 @@
       } else {
         item.votes[existingIndex] = vote;
       }
-      item.finalized_value = decision.value;
-      item.finalized_by = arbiterId;
+      if (decision.choice === 'reject') {
+        delete item.finalized_value;
+        delete item.finalized_by;
+      } else {
+        item.finalized_value = decision.value;
+        item.finalized_by = arbiterId;
+      }
       writeArbitrationItem(itemKey, item);
       /* FR-089 / AC-3.50 (new in v4.61.0): before this version arbitration
          was the only terminal action in the workspace that left no trace in

@@ -73,7 +73,7 @@
       toastReviewCorrectionReset: '偵測到直接修正的內容因重新整理而遺失，對應的審核決策已重置，請重新確認後再送出',
       toastResolveDivergent: '請先裁定所有分歧項目',
       arbitrationTitle: '爭議仲裁',
-      arbitrationNote: '此審核單位已進入爭議池。請逐項裁定採用 A（標記員）或 B（審核員）的結果；仲裁不重新標記。',
+      arbitrationNote: '此審核單位已進入爭議池。請逐項裁定採用 A（標記員）、B（審核員）或兩者皆非；仲裁不重新標記，僅逐爭議項選定定稿值。',
       arbitrationAgreedTitle: '標記內容（唯讀）',
       arbitrationConvergedNote: '已依審核員多數決收斂',
       arbitrationSubmitLabel: '送出仲裁',
@@ -81,15 +81,9 @@
       wsArbitrationSubmitSuccess: '仲裁已提交',
       arbitrationChoiceA: 'A・標記員',
       arbitrationChoiceB: 'B・審核員',
-      arbitrationQuorum: '已提交審核員 {x} 位 · 定稿門檻 {n} 位 · 嚴格多數需 > {th} 票',
-      arbitrationVoteTally: '{value}：{count} 票（{pct}%）',
-      arbitrationVoteAnnotator: '標記員原答案',
-      arbitrationVoteDistSep: '：',
+      arbitrationChoiceBBypass: 'B・審核員 Bypass（無法判定）',
+      arbitrationChoiceReject: '兩者皆非',
       arbitrationPureRejectLabel: '審核員退回（無替代值）',
-      arbitrationVoteReasonEvenTie: '未收斂原因：{dist} 平手，沒有值取得嚴格多數（需 > {th} 票）',
-      arbitrationVoteReasonAllDivergent: '未收斂原因：{dist} 全數分歧，沒有值取得嚴格多數（需 > {th} 票）',
-      arbitrationVoteReasonNoMajority: '未收斂原因：票數分布 {dist}，沒有值取得嚴格多數（需 > {th} 票）',
-      arbitrationVoteReasonPureReject: '未收斂原因：至少一位審核員退回且未提出替代值，無法計入多數決，須由仲裁者裁定',
       historyActionOverridden: '已覆寫',
       historyActionGoldConfirmed: '已確認標準答案',
       historyActionGoldReopened: '重新開放標準答案',
@@ -191,7 +185,7 @@
       toastReviewCorrectionReset: 'The direct correction was lost on reload, so the matching review decision was reset -- please re-confirm before submitting',
       toastResolveDivergent: 'Please resolve every divergent item first',
       arbitrationTitle: 'Dispute arbitration',
-      arbitrationNote: 'This review unit is in the dispute pool. Decide each item as A (annotator) or B (reviewer); arbitration does not re-annotate.',
+      arbitrationNote: 'This review unit is in the dispute pool. Decide each item as A (annotator), B (reviewer), or neither; arbitration does not re-annotate, it only settles a final value per disputed item.',
       arbitrationAgreedTitle: 'Annotation (read-only)',
       arbitrationConvergedNote: 'Converged by reviewer majority',
       arbitrationSubmitLabel: 'Submit arbitration',
@@ -199,15 +193,9 @@
       wsArbitrationSubmitSuccess: 'Arbitration submitted',
       arbitrationChoiceA: 'A · Annotator',
       arbitrationChoiceB: 'B · Reviewer',
-      arbitrationQuorum: 'Submitted reviewers {x} · finalization threshold {n} · strict majority needs > {th} votes',
-      arbitrationVoteTally: '{value}: {count} votes ({pct}%)',
-      arbitrationVoteAnnotator: "annotator's original answer",
-      arbitrationVoteDistSep: ' : ',
+      arbitrationChoiceBBypass: 'B · Reviewer Bypass (undecidable)',
+      arbitrationChoiceReject: 'Neither (reject both)',
       arbitrationPureRejectLabel: 'Reviewer rejected (no replacement value)',
-      arbitrationVoteReasonEvenTie: 'Not converged: {dist} tie, no value reached a strict majority (needs > {th} votes)',
-      arbitrationVoteReasonAllDivergent: 'Not converged: {dist} all divergent, no value reached a strict majority (needs > {th} votes)',
-      arbitrationVoteReasonNoMajority: 'Not converged: vote split {dist}, no value reached a strict majority (needs > {th} votes)',
-      arbitrationVoteReasonPureReject: 'Not converged: at least one reviewer rejected with no replacement value, which cannot be tallied into a majority and requires an arbiter',
       historyActionOverridden: 'Overridden',
       historyActionGoldConfirmed: 'Gold confirmed',
       historyActionGoldReopened: 'Gold reopened',
@@ -3513,14 +3501,18 @@
       .filter(Boolean)
       .join('\n\n');
   }
-  /* ---- Arbitration layout (spec 015 v4.8.0, issue #147 P3c) --------------
+  /* ---- Arbitration layout (spec 015 v5.0.0 FR-061, issue #596 task 3.2) --
      A DISPUTED unit opened by an arbiter candidate (FR-060) swaps the whole
      review card for this layout: the annotator's answers stay read-only for
-     context, items the reviewers' per-item majority already resolved
-     (resolveDisputeConvergence) render as converged notes, and only the
-     genuinely unresolvable items get an A/B choice. Correction controls and
-     the ✕/✓ row decisions never render — an arbiter picks a side, they do
-     not re-annotate. */
+     context, and every still-open dispute item offers the FR-061 three-exit
+     choice -- 採 A（標記員）／採 B（審核員）／兩者皆非. Correction controls
+     and the ✕/✓ row decisions never render — an arbiter picks a side (or
+     rejects both), they do not re-annotate.
+
+     v5.0.0 removal: the former per-item majority-vote convergence
+     (resolveDisputeConvergence) is gone -- FR-093 assigns exactly one
+     reviewer per unit, so there is no vote to tally and every dispute item
+     is decided by the arbiter, not auto-converged. */
   var arbitrationChoices = {};
   /* issue #568: dispute item ids still open on the rendered unit, read by
      the action-bar submit (handleArbitrationSubmit). */
@@ -3531,9 +3523,14 @@
      why any single one went the way it did. */
   var arbitrationReasons = {};
 
+  /* FR-061 point 3: reason is REQUIRED only for the 兩者皆非 exit -- 採 A／
+     採 B never re-annotate and have no correction of their own to justify.
+     An item with no choice yet, or with adopt_a/adopt_b, never counts as
+     missing a reason. */
   function arbitrationItemsMissingReason() {
     return arbitrationOpenItemIds.filter(function (id) {
-      return !(arbitrationReasons[id] || '').trim();
+      var decision = arbitrationChoices[id];
+      return !!decision && decision.choice === 'reject' && !(arbitrationReasons[id] || '').trim();
     });
   }
 
@@ -3570,66 +3567,34 @@
     return item.key === item.outKey ? item.outKey : item.outKey + ' · ' + item.key;
   }
 
-  /* Pre-decision dispute context (issue #454, FR-074): the A/B buttons alone
-     never said WHY the item is unresolved, so a 1:1 tie and a not-yet-met
-     quorum looked identical. Renders the aggregate tally and the failed
-     strict-majority condition derived by describeDisputeVotes() -- the same
-     derivation resolveDisputeConvergence() decides on, so the explanation
-     can never contradict the verdict. Aggregate only: no reviewer id or name
-     is ever attributed to a value, so the block is safe under blind review
-     (FR-062), and only submitted answers feed it (Data Fairness). */
-  var ARBITRATION_REASON_I18N_KEYS = {
-    even_tie: 'arbitrationVoteReasonEvenTie',
-    all_divergent: 'arbitrationVoteReasonAllDivergent',
-    no_majority: 'arbitrationVoteReasonNoMajority',
-    pure_reject: 'arbitrationVoteReasonPureReject',
-  };
-
-  function buildArbitrationVotesBlock(votes) {
-    var block = document.createElement('div');
-    block.setAttribute('data-testid', 'ws-arbitration-votes');
-    block.style.cssText = 'font-size:12px;color:var(--color-text-soft);margin-bottom:6px;';
-    votes.candidates.forEach(function (candidate) {
-      var label = formatDisputeValue(candidate.value);
-      var row = document.createElement('div');
-      row.setAttribute('data-testid', 'ws-arbitration-vote-tally');
-      row.setAttribute('data-value', label);
-      row.setAttribute('data-count', String(candidate.count));
-      if (candidate.isAnnotatorValue) row.setAttribute('data-annotator', 'true');
-      row.textContent = t('arbitrationVoteTally')
-        .replace('{value}', label)
-        .replace('{count}', String(candidate.count))
-        .replace('{pct}', String(votes.reviewerCount
-          ? Math.round((candidate.count / votes.reviewerCount) * 100)
-          : 0))
-        + (candidate.isAnnotatorValue ? ' · ' + t('arbitrationVoteAnnotator') : '');
-      block.appendChild(row);
-    });
-    var reason = document.createElement('div');
-    reason.setAttribute('data-testid', 'ws-arbitration-vote-reason');
-    reason.setAttribute('data-reason', votes.reason);
-    reason.style.cssText = 'margin-top:4px;';
-    reason.textContent = t(ARBITRATION_REASON_I18N_KEYS[votes.reason])
-      .replace('{dist}', votes.candidates.map(function (candidate) {
-        return String(candidate.count);
-      }).join(t('arbitrationVoteDistSep')))
-      .replace('{th}', String(votes.majorityThreshold));
-    block.appendChild(reason);
-    return block;
-  }
-
-  function buildArbitrationChoiceButton(testid, label, value, onSelect) {
+  function buildArbitrationChoiceButton(testid, text, onSelect) {
     var btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'mini-btn';
     btn.setAttribute('data-testid', testid);
     btn.setAttribute('aria-pressed', 'false');
-    btn.textContent = label + '：' + formatDisputeValue(value);
+    btn.textContent = text;
     btn.addEventListener('click', onSelect);
     return btn;
   }
 
-  function buildArbitrationItemRow(item, votes) {
+  /* FR-061 point 2: B's wording depends on the assigned reviewer's decision
+     source for this outKey. design.md D2's "bypass 不存值" rule makes the
+     stored value itself the reliable signal: a `modify` decision always
+     carries a real replacement value, a `bypass` decision never stores one
+     at all -- so item.reviewerValues reading as "no answer" (the same
+     null/'' test formatDisputeValue()'s reviewNoAnswer branch already uses)
+     IS the bypass case, not a value to render. */
+  function arbitrationBChoiceText(item, reviewerSubmission) {
+    var value = reviewerSubmission ? item.reviewerValues[reviewerSubmission.reviewerId] : undefined;
+    if (value == null || value === '') return t('arbitrationChoiceBBypass');
+    return t('arbitrationChoiceB') + '：' + formatDisputeValue(value);
+  }
+
+  /* `reviewerSubmission` is the unit's ONE assigned reviewer (FR-093) --
+     there is exactly one B value per item, never a per-reviewer list to
+     dedup (design.md D2 point 2: "MUST NOT 出現多個 B"). */
+  function buildArbitrationItemRow(item, reviewerSubmission) {
     var itemId = disputeItemId(item);
     var row = document.createElement('div');
     row.setAttribute('data-testid', 'ws-arbitration-item');
@@ -3639,14 +3604,13 @@
     label.style.cssText = 'font-size:12px;font-weight:600;margin-bottom:6px;';
     label.textContent = disputeItemLabel(item);
     row.appendChild(label);
-    row.appendChild(buildArbitrationVotesBlock(votes));
 
-    /* Before the A/B buttons, not after: the reason is what makes the
+    /* Before the choice buttons, not after: the reason is what makes the
        choice legible later, and a field below the control you just pressed
-       reads as an afterthought. */
+       reads as an afterthought. Only required for 兩者皆非 (FR-061 point 3);
+       採 A／採 B submit without one. */
     var reasonInput = document.createElement('input');
     reasonInput.type = 'text';
-    reasonInput.required = true;
     reasonInput.setAttribute('data-testid', 'ws-arbitration-reason');
     reasonInput.setAttribute('data-item-id', itemId);
     reasonInput.placeholder = t('arbitrationReasonPlaceholder');
@@ -3670,29 +3634,35 @@
         b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
         b.classList.toggle('mini-btn-active-approve', b === btn);
       });
+      refreshArbitrationBlocker();
     }
+
     var aBtn = buildArbitrationChoiceButton(
-      'ws-arbitration-choose-a', t('arbitrationChoiceA'), item.annotatorValue,
-      function () { select('A', item.annotatorValue, aBtn); }
+      'ws-arbitration-choose-a', t('arbitrationChoiceA') + '：' + formatDisputeValue(item.annotatorValue),
+      function () { select('adopt_a', item.annotatorValue, aBtn); }
     );
     buttons.push(aBtn);
     group.appendChild(aBtn);
-    /* One B button per DISTINCT reviewer value: reviewers who disagreed the
-       same way collapse into one choice, reviewers who disagreed differently
-       each offer their own. */
-    var seenValues = {};
-    Object.keys(item.reviewerValues).forEach(function (reviewerId) {
-      var value = item.reviewerValues[reviewerId];
-      var dedupKey = JSON.stringify(value === undefined ? null : value);
-      if (seenValues[dedupKey]) return;
-      seenValues[dedupKey] = true;
-      var bBtn = buildArbitrationChoiceButton(
-        'ws-arbitration-choose-b', t('arbitrationChoiceB'), value,
-        function () { select('B', value, bBtn); }
-      );
-      buttons.push(bBtn);
-      group.appendChild(bBtn);
-    });
+
+    var bValue = reviewerSubmission ? item.reviewerValues[reviewerSubmission.reviewerId] : undefined;
+    var bBtn = buildArbitrationChoiceButton(
+      'ws-arbitration-choose-b', arbitrationBChoiceText(item, reviewerSubmission),
+      function () { select('adopt_b', bValue, bBtn); }
+    );
+    buttons.push(bBtn);
+    group.appendChild(bBtn);
+
+    /* FR-061 point 3: the third exit -- neither side is adoptable. Carries
+       no finalized value of its own; a completed submission lands the item
+       in the final exception pool (FR-095) instead of the arbitration
+       store. */
+    var rejectBtn = buildArbitrationChoiceButton(
+      'ws-arbitration-choose-reject', t('arbitrationChoiceReject'),
+      function () { select('reject', null, rejectBtn); }
+    );
+    buttons.push(rejectBtn);
+    group.appendChild(rejectBtn);
+
     row.appendChild(group);
     return row;
   }
@@ -3757,23 +3727,6 @@
     note.textContent = t('arbitrationNote');
     card.appendChild(note);
 
-    var reviewerCount = data.readReviewerSubmissions(
-      currentProfile.id, currentRunType, currentSampleId, currentIdentity
-    ).length;
-
-    /* Submitted reviewers against the finalization threshold (issue #454):
-       without it "2 reviewers disagreed" and "the quorum is not met yet"
-       render identically, and the arbiter cannot tell which one they are
-       resolving. */
-    var quorum = document.createElement('div');
-    quorum.setAttribute('data-testid', 'ws-arbitration-quorum');
-    quorum.style.cssText = 'font-size:12px;color:var(--color-text-soft);margin:0 0 10px;';
-    quorum.textContent = t('arbitrationQuorum')
-      .replace('{x}', String(reviewerCount))
-      .replace('{n}', String(currentProfile.minReviewers || 1))
-      .replace('{th}', String(reviewerCount / 2));
-    card.appendChild(quorum);
-
     /* Read-only context: the annotator's full answers, so the arbiter sees
        the agreed parts around each disputed value. */
     var agreedTitle = document.createElement('div');
@@ -3788,19 +3741,19 @@
       card.appendChild(line);
     });
 
+    /* FR-093: exactly one reviewer is ever assigned to a unit -- the same
+       submission both produced the dispute items (getDisputeItems) and
+       decides how each item's B side renders (arbitrationBChoiceText). */
+    var reviewerSubmission = data.readReviewerSubmissions(
+      currentProfile.id, currentRunType, currentSampleId, currentIdentity
+    )[0] || null;
+
     var items = data.getDisputeItems(
       currentProfile.id, currentRunType, currentSampleId, currentIdentity, state.selectedOutputTypes
     );
     var arbState = data.getArbitrationState(currentProfile.id, currentRunType, currentSampleId, currentIdentity);
     var openItemIds = [];
     items.forEach(function (item) {
-      var convergence = data.resolveDisputeConvergence(item, reviewerCount);
-      if (convergence.converged) {
-        card.appendChild(buildArbitrationResolvedRow(
-          item, convergence.value, t('arbitrationConvergedNote'), 'ws-arbitration-converged'
-        ));
-        return;
-      }
       var stored = arbState[disputeItemId(item)];
       if (stored && stored.finalized_by) {
         card.appendChild(buildArbitrationResolvedRow(
@@ -3809,7 +3762,7 @@
         return;
       }
       openItemIds.push(disputeItemId(item));
-      card.appendChild(buildArbitrationItemRow(item, data.describeDisputeVotes(item, reviewerCount)));
+      card.appendChild(buildArbitrationItemRow(item, reviewerSubmission));
     });
 
     /* issue #568: the submit lives in the fixed action bar
@@ -3831,14 +3784,22 @@
       showToast(t('toastArbitrationIncomplete'), 'warning');
       return;
     }
-    /* FR-089: the toast NAMES the items still missing a reason -- on a card
-       finalizing several at once, "fill in the reason" alone would not say
-       which one. */
+    /* FR-061 point 3 / FR-089 style: the toast NAMES the items still missing
+       a reason -- on a card finalizing several at once, "fill in the
+       reason" alone would not say which one. Only 兩者皆非 items can be
+       missing (arbitrationItemsMissingReason ignores adopt_a/adopt_b). */
     var missing = arbitrationItemsMissingReason();
     if (missing.length) {
       showToast(t('arbitrationNeedsReason') + '：' + missing.join('、'), 'warning');
       return;
     }
+    /* FR-061 point 4 / design.md D2: every decision -- including 兩者皆非 --
+       is an ARBITRATION record (a vote plus its reason). submitArbitration()
+       itself withholds finalized_value/finalized_by for `reject` (D2:
+       absent field is the sentinel), so a reject vote reads as unresolved
+       via getReviewUnitStatus() without landing in the D2 exceptionPool --
+       that record is the project leader's later resolution (task 6.2),
+       never written here. */
     window.LabelSuiteAnnotationWorkspaceData.submitArbitration(
       currentProfile.id, currentRunType, currentSampleId, currentIdentity,
       decisions.map(function (decision) {
