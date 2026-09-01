@@ -51,208 +51,198 @@
   <div class="frame">
     <p class="eyebrow">泳道圖 · 審核流程</p>
     <h1>審核流程總覽</h1>
-    <p class="standfirst">審核單位 = 一份樣本 × 一位標記員 × 一種執行類型。狀態由三個系統判斷推導——人數是否達門檻、審核員有無改動答案、逐項計票是否收斂——而不是由通過／退回按鈕直接決定。試標與正式標記走同一條判斷路徑，差別只有底部那三處。</p>
+    <p class="standfirst">審核單位 = 一份樣本 × 一位標記員 × 一種執行類型。每筆資料、每個階段只交給一個人：審核員一次決策就決定定稿或進爭議池，仲裁者逐項裁定 A／B 或判兩者皆非，剩下的由專案負責人在最終例外池逐筆收尾。狀態由審核員的單一決策與仲裁裁定推導；試標與正式標記共用同一條路徑，差別只在人員怎麼搭。</p>
 
-    <svg viewBox="0 0 1400 808" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="rvov-title rvov-desc">
+    <svg viewBox="0 0 1400 1008" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="rvov-title rvov-desc">
       <title id="rvov-title">Label Suite 審核流程總覽</title>
-      <desc id="rvov-desc">四泳道流程圖：標記員提交標記後交給審核員逐單位審核；通過與退回在送出審核前只是草稿，按下送出審核才寫入決策，退回必須填寫理由；系統依序判斷審核人數是否達門檻、審核員是否改動答案或純退回（退回且未改動答案）、逐項嚴格多數決是否收斂。計票時，已提交審核但該項未改動且非純退回的審核員其票計給標記員原答案，尚未提交者不計入分母；全員都改動或純退回時原答案不列為候選；純退回不計為對原答案的同意票，恆不收斂；門檻為 1 時唯一審核員之修正逕行收斂於該值，未達已提交人數一半（門檻 ≥ 2 時）亦不收斂；收斂則定稿唯讀，平手、全分歧或含純退回則落入爭議池由具仲裁資格的審核員逐項裁定後定稿——純退回之爭議項無替代值，裁定維持退回即維持原判斷不寫入新值。底部對照表列出試標與正式標記的三處差異：一筆樣本產生幾個審核單位、退回是否回退標記員狀態、以及定稿是否產生定案答案（審核流程定案產出的答案，與資料集自帶的標準答案欄位無關）。試標不產生定案答案，其品質改由兩條獨立輸入呈現：標記員原始答案彙總為標記一致性，審核員的審核決策彙總為標記員被修改率。</desc>
+      <desc id="rvov-desc">五泳道流程圖，呈現「三層單人接力」的審核收斂路徑：標記員提交標記後成立審核單位，交給一位審核員逐單位審核；通過與修正在送出審核前只是草稿，按下送出審核才寫入決策。審核員只有三個出口——通過直接定稿；直接修正與無法判定（Bypass）都不立即生效，一律進爭議池。爭議池由未參與該單位的具仲裁資格審核員逐項裁定，只在 A（標記員原答案）與 B 之間選邊，不開放第三答案也不重標；B 依來源動態渲染，來源是修正時顯示審核員的修正值，來源是 Bypass 時顯示「審核員 Bypass（無法判定）」，採 B 即定案為無法判定。仲裁者若判「兩者皆非」則必填理由並送入最終例外池，由專案負責人逐筆收尾——採 A、採 B、以原始標記介面填寫自訂答案（定案理由必填），或自資料集排除；例外池清空是任務結案條件。定稿單位以純文字唯讀卡呈現，附一行微型衝突歷程，並集中流入標記結果與匯出。審核單位只有三態：待審、爭議中、已定稿；舊模型的審核人數門檻、已同意／已修改過渡態、逐項嚴格多數決與退回重標迴路皆已退場。底部對照表列出試標與正式標記的三處差異：一筆樣本的審核單位數（試標為標記員數 N，正式為 1）、審核指派粒度（試標以樣本為單位、同筆全部標記交同一位審核員，正式逐筆自名冊輪派）、定稿的產物（試標不產生定案答案，改彙總標記一致性與標記員被修改率；正式產生定案答案）。</desc>
 
       <defs>
         <marker id="arw" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#64748B"/></marker>
-        <marker id="arw-ac" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#6366F1"/></marker>
+        <marker id="arw-sf" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#94A3B8"/></marker>
       </defs>
 
       <rect width="100%" height="100%" fill="#F5F3FF"/>
 
       <!-- Lane dividers -->
       <line x1="40" y1="96"  x2="1360" y2="96"  stroke="rgba(30,27,75,0.22)" stroke-width="1"/>
-      <line x1="40" y1="208" x2="1360" y2="208" stroke="rgba(30,27,75,0.10)" stroke-width="1"/>
-      <line x1="40" y1="320" x2="1360" y2="320" stroke="rgba(30,27,75,0.10)" stroke-width="1"/>
-      <line x1="40" y1="432" x2="1360" y2="432" stroke="rgba(30,27,75,0.10)" stroke-width="1"/>
-      <line x1="40" y1="544" x2="1360" y2="544" stroke="rgba(30,27,75,0.22)" stroke-width="1"/>
+      <line x1="40" y1="224" x2="1360" y2="224" stroke="rgba(30,27,75,0.10)" stroke-width="1"/>
+      <line x1="40" y1="352" x2="1360" y2="352" stroke="rgba(30,27,75,0.10)" stroke-width="1"/>
+      <line x1="40" y1="480" x2="1360" y2="480" stroke="rgba(30,27,75,0.10)" stroke-width="1"/>
+      <line x1="40" y1="608" x2="1360" y2="608" stroke="rgba(30,27,75,0.10)" stroke-width="1"/>
+      <line x1="40" y1="736" x2="1360" y2="736" stroke="rgba(30,27,75,0.22)" stroke-width="1"/>
       <!-- Actor column divider -->
-      <line x1="192" y1="96" x2="192" y2="544" stroke="rgba(30,27,75,0.22)" stroke-width="1"/>
+      <line x1="192" y1="96" x2="192" y2="736" stroke="rgba(30,27,75,0.22)" stroke-width="1"/>
 
       <!-- Lane labels -->
-      <text x="56" y="156" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" letter-spacing="0.18em">標記員</text>
-      <text x="56" y="268" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" letter-spacing="0.18em">審核員</text>
-      <text x="56" y="380" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" letter-spacing="0.18em">系統</text>
-      <text x="56" y="492" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" letter-spacing="0.18em">仲裁者</text>
+      <text x="56" y="163" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" letter-spacing="0.18em">標記員</text>
+      <text x="56" y="291" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" letter-spacing="0.18em">審核員</text>
+      <text x="56" y="419" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" letter-spacing="0.18em">系統</text>
+      <text x="56" y="547" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" letter-spacing="0.18em">仲裁者</text>
+      <text x="56" y="667" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" letter-spacing="0.18em">專案負責人</text>
+      <text x="56" y="681" fill="#94A3B8" font-size="9" font-family="'JetBrains Mono', monospace" letter-spacing="0.18em">（PL）</text>
 
       <!-- ══ Connectors (drawn before nodes) ══ -->
 
       <!-- 1. 提交標記 → 審核單位 (L1→L2) -->
-      <path d="M 384 152 H 492 A 8 8 0 0 1 500 160 V 240" fill="none" stroke="#64748B" stroke-width="1.2" marker-end="url(#arw)"/>
-      <!-- 2. 審核單位 → 通過/修正/退回 (within L2) -->
-      <path d="M 576 264 H 616" fill="none" stroke="#64748B" stroke-width="1.2" marker-end="url(#arw)"/>
-      <!-- 3. 通過/修正/退回 → 彙總 (L2→L3) -->
-      <path d="M 696 288 V 352" fill="none" stroke="#64748B" stroke-width="1.2" marker-end="url(#arw)"/>
-      <!-- 4. 彙總 → 比對差異 (within L3) -->
-      <path d="M 776 376 H 816" fill="none" stroke="#64748B" stroke-width="1.2" marker-end="url(#arw)"/>
-      <!-- 5. 彙總 → 審核單位 (未達門檻 loop) -->
-      <path d="M 616 376 H 508 A 8 8 0 0 1 500 368 V 288" fill="none" stroke="#64748B" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#arw)"/>
-      <!-- 6. 比對差異 → 已定稿 (無差異，跨過計票) -->
-      <path d="M 892 352 V 336 H 1272 V 352" fill="none" stroke="#64748B" stroke-width="1.2" marker-end="url(#arw)"/>
-      <!-- 7. 比對差異 → 嚴格多數決 -->
-      <path d="M 968 376 H 1008" fill="none" stroke="#64748B" stroke-width="1.2" marker-end="url(#arw)"/>
-      <!-- 8. 嚴格多數決 → 已定稿 -->
-      <path d="M 1160 376 H 1200" fill="none" stroke="#64748B" stroke-width="1.2" marker-end="url(#arw)"/>
-      <!-- 9. 嚴格多數決 → 爭議池 (L3→L4) -->
-      <path d="M 1084 400 V 464" fill="none" stroke="#6366F1" stroke-width="1.4" marker-end="url(#arw-ac)"/>
-      <!-- 10. 爭議池 → 逐項裁定 (ACCENT) -->
-      <path d="M 1160 488 H 1200" fill="none" stroke="#6366F1" stroke-width="1.4" marker-end="url(#arw-ac)"/>
-      <!-- 11. 逐項裁定 → 已定稿 (L4→L3, ACCENT) -->
-      <path d="M 1280 464 V 400" fill="none" stroke="#6366F1" stroke-width="1.4" marker-end="url(#arw-ac)"/>
-      <!-- 12. 通過/修正/退回 → 重新標記 (僅正式標記；L2→L1) -->
-      <path d="M 740 240 V 176" fill="none" stroke="#64748B" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#arw)"/>
-      <!-- 13. 重新標記 → 提交標記 (loop back，繞行 lane 1 上緣) -->
-      <path d="M 780 128 V 120 A 8 8 0 0 0 772 112 H 316 A 8 8 0 0 0 308 120 V 128" fill="none" stroke="#64748B" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#arw)"/>
+      <path d="M 296 184 V 264" fill="none" stroke="#64748B" stroke-width="1.2" marker-end="url(#arw)"/>
+      <!-- 2. 審核單位 → 審核員單一決策 (within L2) -->
+      <path d="M 376 288 H 424" fill="none" stroke="#64748B" stroke-width="1.2" marker-end="url(#arw)"/>
+      <!-- 3. 審核員決策 → 已定稿（通過；L2→L3） -->
+      <path d="M 632 272 H 976 A 8 8 0 0 1 984 280 V 384" fill="none" stroke="#64748B" stroke-width="1.2" marker-end="url(#arw)"/>
+      <!-- 4. 審核員決策 → 爭議池（修正／Bypass；L2→L4） -->
+      <path d="M 528 320 V 512" fill="none" stroke="#64748B" stroke-width="1.2" marker-end="url(#arw)"/>
+      <!-- 5. 爭議池 → 逐項裁定 (within L4) -->
+      <path d="M 632 544 H 704" fill="none" stroke="#64748B" stroke-width="1.2" marker-end="url(#arw)"/>
+      <!-- 6. 逐項裁定 → 已定稿（採 A／採 B；L4→L3） -->
+      <path d="M 896 512 V 448" fill="none" stroke="#64748B" stroke-width="1.2" marker-end="url(#arw)"/>
+      <!-- 7. 逐項裁定 → 最終例外池（兩者皆非 Reject；L4→L5） -->
+      <path d="M 800 576 V 640" fill="none" stroke="#64748B" stroke-width="1.2" marker-end="url(#arw)"/>
+      <!-- 8. 最終例外池 → PL 收尾 (within L5) -->
+      <path d="M 912 672 H 976" fill="none" stroke="#64748B" stroke-width="1.2" marker-end="url(#arw)"/>
+      <!-- 9. PL 收尾 → 已定稿 (L5→L3) -->
+      <path d="M 1040 640 V 448" fill="none" stroke="#64748B" stroke-width="1.2" marker-end="url(#arw)"/>
+      <!-- 10. PL 收尾 → 自資料集排除（另一個終點） -->
+      <path d="M 1200 672 H 1240" fill="none" stroke="#94A3B8" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#arw-sf)"/>
+      <!-- 11. 已定稿 → 標記結果／匯出 (within L3) -->
+      <path d="M 1088 416 H 1152" fill="none" stroke="#64748B" stroke-width="1.2" marker-end="url(#arw)"/>
 
       <!-- ══ Connector labels ══ -->
-      <rect x="434" y="200" width="60" height="12" rx="2" fill="#F5F3FF"/>
-      <text x="490" y="209" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" text-anchor="end" letter-spacing="0.06em">已提交</text>
+      <rect x="304" y="212" width="56" height="12" rx="2" fill="#F5F3FF"/>
+      <text x="308" y="221" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" letter-spacing="0.06em">已提交</text>
 
-      <rect x="774" y="356" width="48" height="12" rx="2" fill="#F5F3FF"/>
-      <text x="798" y="365" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="0.06em">已達門檻</text>
+      <rect x="700" y="250" width="44" height="12" rx="2" fill="#F5F3FF"/>
+      <text x="704" y="259" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" letter-spacing="0.06em">通過</text>
 
-      <rect x="344" y="326" width="260" height="12" rx="2" fill="#F5F3FF"/>
-      <text x="600" y="335" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" text-anchor="end" letter-spacing="0.06em">未達門檻 · 停在已同意／已修改 · 未達定稿門檻 已審 / 應審</text>
+      <rect x="536" y="400" width="136" height="12" rx="2" fill="#F5F3FF"/>
+      <text x="540" y="409" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" letter-spacing="0.06em">修正 · 無法判定（Bypass）</text>
 
-      <rect x="960" y="356" width="52" height="12" rx="2" fill="#F5F3FF"/>
-      <text x="986" y="365" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="0.06em">有差異</text>
+      <rect x="640" y="522" width="64" height="12" rx="2" fill="#F5F3FF"/>
+      <text x="672" y="531" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="0.06em">逐項列管</text>
 
-      <rect x="1000" y="330" width="60" height="12" rx="2" fill="#F5F3FF"/>
-      <text x="1030" y="339" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="0.06em">無差異</text>
+      <rect x="904" y="468" width="80" height="12" rx="2" fill="#F5F3FF"/>
+      <text x="908" y="477" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" letter-spacing="0.06em">採 A／採 B</text>
 
-      <rect x="1152" y="356" width="52" height="12" rx="2" fill="#F5F3FF"/>
-      <text x="1178" y="365" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="0.06em">收斂</text>
+      <rect x="584" y="596" width="208" height="12" rx="2" fill="#F5F3FF"/>
+      <text x="792" y="605" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" text-anchor="end" letter-spacing="0.06em">兩者皆非 Reject · 理由必填</text>
 
-      <rect x="1090" y="420" width="112" height="12" rx="2" fill="#F5F3FF"/>
-      <text x="1094" y="429" fill="#6366F1" font-size="8" font-family="'JetBrains Mono', monospace" letter-spacing="0.06em">票數未過半</text>
+      <rect x="908" y="650" width="72" height="12" rx="2" fill="#F5F3FF"/>
+      <text x="944" y="659" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="0.06em">逐筆收尾</text>
 
-      <rect x="1148" y="468" width="64" height="12" rx="2" fill="#F5F3FF"/>
-      <text x="1180" y="477" fill="#6366F1" font-size="8" font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="0.06em">仲裁資格</text>
+      <rect x="1048" y="540" width="112" height="12" rx="2" fill="#F5F3FF"/>
+      <text x="1052" y="549" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" letter-spacing="0.06em">定案 → 已定稿</text>
 
-      <rect x="1286" y="420" width="76" height="12" rx="2" fill="#F5F3FF"/>
-      <text x="1290" y="429" fill="#6366F1" font-size="8" font-family="'JetBrains Mono', monospace" letter-spacing="0.06em">裁定 A 或 B</text>
+      <rect x="1092" y="394" width="56" height="12" rx="2" fill="#F5F3FF"/>
+      <text x="1120" y="403" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="0.06em">定稿集中</text>
 
-      <rect x="646" y="196" width="94" height="12" rx="2" fill="#F5F3FF"/>
-      <text x="736" y="205" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" text-anchor="end" letter-spacing="0.06em">僅正式標記退回</text>
-
-      <rect x="500" y="118" width="64" height="12" rx="2" fill="#F5F3FF"/>
-      <text x="532" y="127" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="0.06em">重新提交</text>
+      <text x="1248" y="676" fill="#94A3B8" font-size="9" font-family="'JetBrains Mono', monospace">自資料集排除</text>
 
       <!-- ══ Nodes ══ -->
       <!-- L1 · 提交標記 -->
-      <rect x="232" y="128" width="152" height="48" rx="6" fill="#FFFFFF" stroke="#1E1B4B" stroke-width="1"/>
-      <text x="308" y="150" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">提交標記</text>
-      <text x="308" y="164" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">試標 / 正式標記</text>
-
-      <!-- L1 · 重新標記 -->
-      <rect x="700" y="128" width="160" height="48" rx="6" fill="#1E1B4B0D" stroke="#94A3B8" stroke-width="1" stroke-dasharray="4,3"/>
-      <text x="780" y="150" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">重新標記</text>
-      <text x="780" y="164" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">樣本狀態回到「待標記」</text>
+      <rect x="216" y="136" width="160" height="48" rx="6" fill="#FFFFFF" stroke="#1E1B4B" stroke-width="1"/>
+      <text x="296" y="158" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">提交標記</text>
+      <text x="296" y="172" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">試標 / 正式標記</text>
 
       <!-- L2 · 審核單位（系統讀取時列舉，非審核員建立） -->
-      <rect x="424" y="240" width="152" height="48" rx="6" fill="#1E1B4B0D" stroke="#64748B" stroke-width="1"/>
-      <text x="500" y="258" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">審核單位</text>
-      <text x="500" y="271" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">樣本 × 標記員 × 執行類型</text>
-      <text x="500" y="282" fill="#94A3B8" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">讀取時列舉 · 提交前即存在</text>
+      <rect x="216" y="264" width="160" height="48" rx="6" fill="#1E1B4B0D" stroke="#64748B" stroke-width="1"/>
+      <text x="296" y="282" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">審核單位</text>
+      <text x="296" y="295" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">樣本 × 標記員 × 執行類型</text>
+      <text x="296" y="306" fill="#94A3B8" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">恰指派一位審核員</text>
 
-      <!-- L2 · 通過 / 退回（可附修正） -->
-      <rect x="616" y="240" width="160" height="48" rx="6" fill="#FFFFFF" stroke="#1E1B4B" stroke-width="1"/>
-      <text x="696" y="262" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">通過 / 退回（可附修正）</text>
-      <text x="696" y="276" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">逐項草稿 · 退回須填理由</text>
-
-      <!-- L2 · 送出審核（issue #552）：通過／退回在此之前只是草稿，送出才寫入 -->
-      <rect x="636" y="308" width="120" height="24" rx="12" fill="#EEF2FF" stroke="#6366F1" stroke-width="1"/>
-      <text x="696" y="323" fill="#1E1B4B" font-size="9" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">送出審核 · 寫入決策</text>
-
-      <!-- L3 · 彙總 · 審核人數門檻 -->
-      <rect x="616" y="352" width="160" height="48" rx="6" fill="#1E1B4B0D" stroke="#64748B" stroke-width="1"/>
-      <text x="696" y="374" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">審核人數門檻</text>
-      <text x="696" y="388" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">需幾位審核員才開始計票</text>
-
-      <!-- L3 · 比對差異 -->
-      <rect x="816" y="352" width="152" height="48" rx="6" fill="#1E1B4B0D" stroke="#64748B" stroke-width="1"/>
-      <text x="892" y="374" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">比對差異</text>
-      <text x="892" y="388" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">逐輸出欄位對照原標</text>
-
-      <!-- L3 · 嚴格多數決 -->
-      <rect x="1008" y="352" width="152" height="48" rx="6" fill="#1E1B4B0D" stroke="#64748B" stroke-width="1"/>
-      <text x="1084" y="370" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">逐項嚴格多數決</text>
-      <text x="1084" y="383" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">需 &gt; 已提交審核員半數</text>
-      <text x="1084" y="394" fill="#94A3B8" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">已提交未改動者票歸原標</text>
+      <!-- L2 · 審核員單一決策（三向出口） -->
+      <rect x="424" y="248" width="208" height="72" rx="6" fill="#FFFFFF" stroke="#1E1B4B" stroke-width="1"/>
+      <text x="528" y="270" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">審核員單一決策</text>
+      <text x="528" y="286" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">通過 · 直接修正 · 無法判定（Bypass）</text>
+      <text x="528" y="300" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">逐項草稿 · 送出審核才寫入決策</text>
+      <text x="528" y="313" fill="#94A3B8" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">沒有退回 · 兩型皆不重標</text>
 
       <!-- L3 · 已定稿（FOCAL） -->
-      <rect x="1200" y="352" width="160" height="48" rx="6" fill="#EEF2FF" stroke="#6366F1" stroke-width="1"/>
-      <text x="1280" y="374" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">已定稿 · 唯讀</text>
-      <text x="1280" y="388" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">已鎖定 · 終態 · 不可再修改</text>
+      <rect x="880" y="384" width="208" height="64" rx="6" fill="#EEF2FF" stroke="#6366F1" stroke-width="1"/>
+      <text x="984" y="408" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">已定稿 · 純文字唯讀卡</text>
+      <text x="984" y="423" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">不渲染 disabled 控件 · 終態</text>
+      <text x="984" y="437" fill="#94A3B8" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">歷程：標記 A ➔ 審核 B ➔ 仲裁 B</text>
+
+      <!-- L3 · 標記結果／匯出 -->
+      <rect x="1152" y="384" width="208" height="64" rx="6" fill="#1E1B4B0D" stroke="#64748B" stroke-width="1"/>
+      <text x="1256" y="412" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">標記結果 · 匯出</text>
+      <text x="1256" y="428" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">定稿集中流入 · 保留責任鏈</text>
 
       <!-- L4 · 爭議池（系統推導狀態） -->
-      <rect x="1008" y="464" width="152" height="48" rx="6" fill="#1E1B4B0D" stroke="#64748B" stroke-width="1"/>
-      <text x="1084" y="486" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">爭議池</text>
-      <text x="1084" y="500" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">爭議中 · 未定稿，待仲裁</text>
+      <rect x="424" y="512" width="208" height="64" rx="6" fill="#1E1B4B0D" stroke="#64748B" stroke-width="1"/>
+      <text x="528" y="540" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">爭議池</text>
+      <text x="528" y="556" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">爭議中 · 未定稿，待仲裁</text>
 
-      <!-- L4 · 逐項裁定 -->
-      <rect x="1200" y="464" width="160" height="48" rx="6" fill="#FFFFFF" stroke="#1E1B4B" stroke-width="1"/>
-      <text x="1280" y="486" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">逐項裁定 A / B</text>
-      <text x="1280" y="500" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">不重新標記</text>
+      <!-- L4 · 仲裁逐項裁定 -->
+      <rect x="704" y="512" width="224" height="64" rx="6" fill="#FFFFFF" stroke="#1E1B4B" stroke-width="1"/>
+      <text x="816" y="534" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">仲裁者逐項裁定</text>
+      <text x="816" y="549" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">僅 A／B 選邊 · 不開放第三答案 · 不重標</text>
+      <text x="816" y="563" fill="#94A3B8" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">B 依來源動態：修正值 或 Bypass（無法判定）</text>
 
-      <!-- Editorial callout (審核員 lane, 右側空白) -->
-      <text x="900" y="252" fill="#64748B" font-size="14" font-style="italic" font-family="'Crimson Pro','Noto Serif TC',serif">「爭議中」不是終點——所有爭議項</text>
-      <text x="900" y="270" fill="#64748B" font-size="14" font-style="italic" font-family="'Crimson Pro','Noto Serif TC',serif">裁定完成後，單位仍會推導為已定稿。</text>
+      <!-- L5 · 最終例外池（新概念，FOCAL） -->
+      <rect x="704" y="640" width="208" height="64" rx="6" fill="#FFFFFF" stroke="#6366F1" stroke-width="1"/>
+      <text x="808" y="666" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">最終例外池</text>
+      <text x="808" y="682" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">入口在「標記進度」tab</text>
+      <text x="808" y="695" fill="#94A3B8" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">清空＝任務結案條件</text>
+
+      <!-- L5 · PL 收尾 -->
+      <rect x="976" y="640" width="224" height="64" rx="6" fill="#FFFFFF" stroke="#1E1B4B" stroke-width="1"/>
+      <text x="1088" y="662" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">專案負責人逐筆收尾</text>
+      <text x="1088" y="677" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">採 A／採 B／自訂答案（原始標記介面）</text>
+      <text x="1088" y="691" fill="#94A3B8" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">僅限合法答案空間 · 定案理由必填</text>
+
+      <!-- Editorial callout (系統 lane 左側空白) -->
+      <text x="216" y="404" fill="#64748B" font-size="14" font-style="italic" font-family="'Crimson Pro','Noto Serif TC',serif">每筆資料、每個階段，只交給一個人。</text>
+      <text x="216" y="424" fill="#64748B" font-size="14" font-style="italic" font-family="'Crimson Pro','Noto Serif TC',serif">多審並行、定稿門檻與逐項多數決整組退場，</text>
+      <text x="216" y="444" fill="#64748B" font-size="14" font-style="italic" font-family="'Crimson Pro','Noto Serif TC',serif">狀態改由單一決策與仲裁裁定推導。</text>
 
       <!-- ══ 兩種執行類型的差異 ══ -->
-      <line x1="40" y1="576" x2="1360" y2="576" stroke="rgba(30,27,75,0.10)" stroke-width="0.8"/>
-      <text x="40" y="596" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" letter-spacing="0.18em">兩種執行類型的主要差異（判斷路徑本身完全相同）</text>
+      <line x1="40" y1="768" x2="1360" y2="768" stroke="rgba(30,27,75,0.10)" stroke-width="0.8"/>
+      <text x="40" y="788" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" letter-spacing="0.18em">兩種執行類型的主要差異（收斂路徑完全相同，差別只在人員怎麼搭）</text>
 
-      <text x="340" y="620" fill="#1E1B4B" font-size="11" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif">試標</text>
-      <text x="820" y="620" fill="#1E1B4B" font-size="11" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif">正式標記</text>
-      <line x1="40" y1="630" x2="1360" y2="630" stroke="rgba(30,27,75,0.10)" stroke-width="0.8"/>
+      <text x="340" y="812" fill="#1E1B4B" font-size="11" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif">試標</text>
+      <text x="820" y="812" fill="#1E1B4B" font-size="11" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif">正式標記</text>
+      <line x1="40" y1="820" x2="1360" y2="820" stroke="rgba(30,27,75,0.10)" stroke-width="0.8"/>
 
-      <text x="40" y="650" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">退回的效果</text>
-      <text x="340" y="650" fill="#1E1B4B" font-size="9" font-family="'JetBrains Mono', monospace">只寫入審核決策，標記員狀態不變</text>
-      <text x="820" y="650" fill="#1E1B4B" font-size="9" font-family="'JetBrains Mono', monospace">樣本回到待標記，產生重標待辦</text>
-      <line x1="40" y1="660" x2="1360" y2="660" stroke="rgba(30,27,75,0.06)" stroke-width="0.8"/>
+      <text x="40" y="840" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">一筆樣本的審核單位數</text>
+      <text x="340" y="840" fill="#1E1B4B" font-size="9" font-family="'JetBrains Mono', monospace">標記員數 N · 同筆資料由多位標記員重複標記</text>
+      <text x="820" y="840" fill="#1E1B4B" font-size="9" font-family="'JetBrains Mono', monospace">1 · 每筆樣本固定一位標記員</text>
+      <line x1="40" y1="852" x2="1360" y2="852" stroke="rgba(30,27,75,0.06)" stroke-width="0.8"/>
 
-      <text x="40" y="680" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">定稿的產物</text>
-      <text x="340" y="680" fill="#1E1B4B" font-size="9" font-family="'JetBrains Mono', monospace">不產生定案答案；標記員原始答案彙總為一致性，審核決策彙總為被修改率</text>
-      <text x="820" y="680" fill="#1E1B4B" font-size="9" font-family="'JetBrains Mono', monospace">定稿判斷產生定案答案，可追溯至來源單位</text>
-      <line x1="40" y1="690" x2="1360" y2="690" stroke="rgba(30,27,75,0.06)" stroke-width="0.8"/>
+      <text x="40" y="872" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">審核指派粒度</text>
+      <text x="340" y="872" fill="#1E1B4B" font-size="9" font-family="'JetBrains Mono', monospace">以樣本為單位 · 同筆的 N 份標記全部交同一位審核員</text>
+      <text x="820" y="872" fill="#1E1B4B" font-size="9" font-family="'JetBrains Mono', monospace">逐筆自審核員名冊輪派 · 一筆一位審核員</text>
+      <line x1="40" y1="884" x2="1360" y2="884" stroke="rgba(30,27,75,0.06)" stroke-width="0.8"/>
 
-      <text x="40" y="710" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">一筆樣本的審核單位數</text>
-      <text x="340" y="710" fill="#1E1B4B" font-size="9" font-family="'JetBrains Mono', monospace">多個 · 每位重疊標記的標記員各一個</text>
-      <text x="820" y="710" fill="#1E1B4B" font-size="9" font-family="'JetBrains Mono', monospace">一個 · 每筆樣本恰指派一位標記員</text>
+      <text x="40" y="904" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">定稿的產物</text>
+      <text x="340" y="904" fill="#1E1B4B" font-size="9" font-family="'JetBrains Mono', monospace">不產生定案答案 · 彙總 IAA 與標記員被修改率</text>
+      <text x="820" y="904" fill="#1E1B4B" font-size="9" font-family="'JetBrains Mono', monospace">產生定案答案 · 可追溯至來源單位與定案者</text>
 
       <!-- ══ Legend ══ -->
-      <line x1="40" y1="738" x2="1360" y2="738" stroke="rgba(30,27,75,0.10)" stroke-width="0.8"/>
-      <text x="40" y="754" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" letter-spacing="0.18em">圖例</text>
+      <line x1="40" y1="932" x2="1360" y2="932" stroke="rgba(30,27,75,0.10)" stroke-width="0.8"/>
+      <text x="40" y="948" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" letter-spacing="0.18em">圖例</text>
 
-      <rect x="40" y="768" width="14" height="10" rx="2" fill="#FFFFFF" stroke="#1E1B4B" stroke-width="1"/>
-      <text x="60" y="776" fill="#64748B" font-size="8.5" font-family="'Inter','Noto Sans TC',sans-serif">人為動作</text>
+      <rect x="40" y="960" width="14" height="10" rx="2" fill="#FFFFFF" stroke="#1E1B4B" stroke-width="1"/>
+      <text x="60" y="968" fill="#64748B" font-size="8.5" font-family="'Inter','Noto Sans TC',sans-serif">人為動作</text>
 
-      <rect x="152" y="768" width="14" height="10" rx="2" fill="#1E1B4B0D" stroke="#64748B" stroke-width="1"/>
-      <text x="172" y="776" fill="#64748B" font-size="8.5" font-family="'Inter','Noto Sans TC',sans-serif">系統推導</text>
+      <rect x="152" y="960" width="14" height="10" rx="2" fill="#1E1B4B0D" stroke="#64748B" stroke-width="1"/>
+      <text x="172" y="968" fill="#64748B" font-size="8.5" font-family="'Inter','Noto Sans TC',sans-serif">系統推導</text>
 
-      <rect x="264" y="768" width="14" height="10" rx="2" fill="#EEF2FF" stroke="#6366F1" stroke-width="1"/>
-      <text x="284" y="776" fill="#64748B" font-size="8.5" font-family="'Inter','Noto Sans TC',sans-serif">終態（唯讀）</text>
+      <rect x="264" y="960" width="14" height="10" rx="2" fill="#FFFFFF" stroke="#6366F1" stroke-width="1"/>
+      <text x="284" y="968" fill="#64748B" font-size="8.5" font-family="'Inter','Noto Sans TC',sans-serif">本次定案新增（最終例外池）</text>
 
-      <line x1="400" y1="773" x2="428" y2="773" stroke="#64748B" stroke-width="1.2" marker-end="url(#arw)"/>
-      <text x="436" y="776" fill="#64748B" font-size="8.5" font-family="'Inter','Noto Sans TC',sans-serif">主流程</text>
+      <rect x="480" y="960" width="14" height="10" rx="2" fill="#EEF2FF" stroke="#6366F1" stroke-width="1"/>
+      <text x="500" y="968" fill="#64748B" font-size="8.5" font-family="'Inter','Noto Sans TC',sans-serif">終態（唯讀）</text>
 
-      <line x1="528" y1="773" x2="556" y2="773" stroke="#64748B" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#arw)"/>
-      <text x="564" y="776" fill="#64748B" font-size="8.5" font-family="'Inter','Noto Sans TC',sans-serif">循環 / 條件分支</text>
+      <line x1="640" y1="965" x2="668" y2="965" stroke="#64748B" stroke-width="1.2" marker-end="url(#arw)"/>
+      <text x="676" y="968" fill="#64748B" font-size="8.5" font-family="'Inter','Noto Sans TC',sans-serif">主流程</text>
 
-      <line x1="700" y1="773" x2="728" y2="773" stroke="#6366F1" stroke-width="1.4" marker-end="url(#arw-ac)"/>
-      <text x="736" y="776" fill="#64748B" font-size="8.5" font-family="'Inter','Noto Sans TC',sans-serif">仲裁路徑（無法自動收斂時的唯一出口）</text>
+      <line x1="768" y1="965" x2="796" y2="965" stroke="#94A3B8" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#arw-sf)"/>
+      <text x="804" y="968" fill="#64748B" font-size="8.5" font-family="'Inter','Noto Sans TC',sans-serif">另一個終點（不進定稿）</text>
 
-      <rect x="1000" y="768" width="14" height="10" rx="2" fill="#1E1B4B0D" stroke="#94A3B8" stroke-width="1" stroke-dasharray="3,2"/>
-      <text x="1020" y="776" fill="#64748B" font-size="8.5" font-family="'Inter','Noto Sans TC',sans-serif">條件性節點（僅特定執行類型出現）</text>
+      <text x="1040" y="968" fill="#94A3B8" font-size="8.5" font-family="'Inter','Noto Sans TC',sans-serif">泳道＝誰處理 · 填色＝狀態怎麼產生</text>
 
-      <text x="1240" y="776" fill="#94A3B8" font-size="8.5" font-family="'Inter','Noto Sans TC',sans-serif">泳道＝誰處理 · 填色＝狀態怎麼產生</text>
-      <!-- 橫幅 pill 全文（FR-076 第 3 點附註；v4.60.0 起無「目前：」前綴，issue #572；issue #576） -->
-      <text x="40" y="794" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" letter-spacing="0.06em">工作區橫幅狀態標籤全文：待審 · 已同意／已修改 · 未達定稿門檻 已審 / 應審 · 爭議中 · 未定稿，待仲裁 · 已定稿 · 已鎖定 · 標記員未提交 → 尚無標記提交（審核單位不成立）</text>
+      <!-- 審核單位三態（舊五態的「已同意／已修改」過渡態已退場） -->
+      <text x="40" y="990" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" letter-spacing="0.06em">審核單位三態：待審 · 爭議中（未定稿，待仲裁；仲裁判兩者皆非後續留在最終例外池） · 已定稿（已鎖定）；標記員尚未提交時審核單位不成立，標籤顯示「尚無標記提交」</text>
     </svg>
   </div>
 </body>
