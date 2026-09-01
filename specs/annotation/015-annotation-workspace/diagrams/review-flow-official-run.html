@@ -51,11 +51,11 @@
   <div class="frame">
     <p class="eyebrow">流程圖 · 正式標記</p>
     <h1>正式標記審核流程</h1>
-    <p class="standfirst">正式標記時，一份樣本只由一位標記員標一次，系統再從審核員名單裡輪流指派一位審核員。往後的路和試標完全一樣：通過就定稿，直接改答案和標成無法判定都會送進爭議池，交給另一位審核員在「原答案」和「審核員的答案」之間二選一；兩邊都不能用時，交給專案負責人一筆一筆處理完。差別在於：正式標記的定稿會產生最終答案，而且從頭到尾都不會退回重標；要等所有樣本都定稿、而且最終例外池清空，任務才算完成。</p>
+    <p class="standfirst">正式標記時，一份樣本只由一位標記員標一次，系統再把資料平均分給被勾選的審核員。往後的路和試標完全一樣：通過就定稿，直接改答案和標成無法判定都會送進爭議池，交給另一位審核員在「原答案」和「審核員的答案」之間二選一；兩邊都不能用時，交給專案負責人一筆一筆處理完。差別在於：正式標記的定稿會產生最終答案，而且從頭到尾都不會退回重標；要等所有樣本都定稿、而且最終例外池清空，任務才算完成。</p>
 
     <svg viewBox="0 0 1200 1080" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="rvof-title rvof-desc">
       <title id="rvof-title">正式標記審核流程</title>
-      <desc id="rvof-desc">分成單筆流程與整批流程兩段。單筆流程：一份樣本只由一位標記員標一次，送出後成立唯一的審核單位；系統從審核員名單裡一筆一筆輪流指派，一筆一位審核員，而且不會派給標記自己的人。審核員逐項作業，通過與改答案在按下送出審核之前都只是草稿，送出後才算數。決定只有三個出口：通過就直接定稿；直接改答案和標成無法判定都不會馬上生效，一律送進爭議池。爭議池由沒有參與這份標記的審核員逐項裁決，只能在標記員的原答案和審核員的答案之間二選一，不能自己寫第三種答案，正式標記也不會退回重標；如果審核員是直接改答案，那一邊就顯示他改成什麼，如果審核員標的是無法判定，那一邊就顯示無法判定，選了就等於定案為無法判定。裁決者若認為兩邊都不能用，必須填寫理由並送進最終例外池，由專案負責人一筆一筆處理：採用原答案、採用審核員的答案、用原本的標記畫面自己填答案（只能填合法答案並寫理由），或把這筆從資料集移除。定稿的內容只顯示文字、不能再修改，並附一行處理歷程，集中產生最終答案，看得到來自哪一份標記、由誰決定。整批流程：所有審核單位都已定稿、而且最終例外池清空，任務才轉為已完成並可以匯出最終答案。審核單位只有待審、爭議中、已定稿三種狀態；以前的做法，包括要幾位審核員才開始計票、已同意與已修改兩個中間狀態、逐項比票數、以及退回重標，都已經取消。</desc>
+      <desc id="rvof-desc">分成單筆流程與整批流程兩段。單筆流程：一份樣本只由一位標記員標一次，送出後成立唯一的審核單位；系統把資料平均分給被勾選的審核員，一筆一位審核員。審核員逐項作業，通過與改答案在按下送出審核之前都只是草稿，送出後才算數。決定只有三個出口：通過就直接定稿；直接改答案和標成無法判定都不會馬上生效，一律送進爭議池。爭議池由被勾選進仲裁者名冊、且沒有參與這份標記的人逐項裁決，只能在標記員的原答案和審核員的答案之間二選一，不能自己寫第三種答案，正式標記也不會退回重標；如果審核員是直接改答案，那一邊就顯示他改成什麼，如果審核員標的是無法判定，那一邊就顯示無法判定，選了就等於定案為無法判定。裁決者若認為兩邊都不能用，必須填寫理由並送進最終例外池，由專案負責人一筆一筆處理：採用原答案、採用審核員的答案、用原本的標記畫面自己填答案（只能填合法答案並寫理由），或把這筆從資料集移除。定稿的內容只顯示文字、不能再修改，並附一行處理歷程，集中產生最終答案，看得到來自哪一份標記、由誰決定。整批流程：所有審核單位都已定稿、而且最終例外池清空，任務才轉為已完成並可以匯出最終答案。審核單位只有待審、爭議中、已定稿三種狀態；以前的做法，包括要幾位審核員才開始計票、已同意與已修改兩個中間狀態、逐項比票數、以及退回重標，都已經取消。</desc>
 
       <defs>
         <marker id="arw" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#64748B"/></marker>
@@ -121,12 +121,12 @@
 
       <rect x="64" y="140" width="216" height="64" rx="6" fill="#1E1B4B08" stroke="#94A3B8" stroke-width="1" stroke-dasharray="4,3"/>
       <text x="172" y="162" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">審核怎麼分配</text>
-      <text x="172" y="178" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">從審核員名單一筆一筆輪流指派</text>
+      <text x="172" y="178" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">系統平均分給被勾選的審核員</text>
       <text x="172" y="192" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">一筆一位審核員</text>
 
       <rect x="304" y="140" width="192" height="52" rx="6" fill="#FFFFFF" stroke="#1E1B4B" stroke-width="1"/>
       <text x="400" y="162" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">審核員審核</text>
-      <text x="400" y="179" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">逐項檢視 · 不會審到自己標的</text>
+      <text x="400" y="179" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">逐項檢視 · 每一項各自決定</text>
 
       <rect x="340" y="200" width="120" height="24" rx="12" fill="#1E1B4B0D" stroke="#64748B" stroke-width="1"/>
       <text x="400" y="216" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">按下送出審核才算數</text>
@@ -142,7 +142,7 @@
       <rect x="640" y="392" width="176" height="64" rx="6" fill="#FFFFFF" stroke="#1E1B4B" stroke-width="1"/>
       <text x="728" y="414" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">仲裁者逐項裁決</text>
       <text x="728" y="430" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">只能二選一，不能自己寫</text>
-      <text x="728" y="444" fill="#94A3B8" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">由沒參與這份的審核員擔任</text>
+      <text x="728" y="444" fill="#94A3B8" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">須勾選為仲裁者且未參與這份</text>
 
       <rect x="640" y="520" width="176" height="56" rx="6" fill="#FFFFFF" stroke="#6366F1" stroke-width="1"/>
       <text x="728" y="544" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">最終例外池</text>
@@ -168,8 +168,8 @@
 
       <text x="900" y="86" fill="#1E1B4B" font-size="11" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif">① 怎麼分配</text>
       <text x="900" y="102" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">一份樣本只由一位標記員標一次，</text>
-      <text x="900" y="115" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">系統從名單輪流指派一位審核員，</text>
-      <text x="900" y="128" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">不會派給標記的人自己。</text>
+      <text x="900" y="115" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">系統把資料平均分給被勾選的審核員，</text>
+      <text x="900" y="128" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">一份樣本固定對到一位審核員。</text>
       <text x="900" y="141" fill="#94A3B8" font-size="9" font-family="'JetBrains Mono', monospace">正式標記沒有多人重複標記，也不會有平手。</text>
 
       <text x="900" y="172" fill="#1E1B4B" font-size="11" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif">② 審核員的三種選擇</text>
@@ -231,7 +231,7 @@
 
       <rect x="40" y="1028" width="48" height="18" rx="9" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
       <text x="64" y="1040" fill="#64748B" font-size="9" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">待審</text>
-      <text x="96" y="1040" fill="#94A3B8" font-size="8.5" font-family="'Inter','Noto Sans TC',sans-serif">已經指派審核員，還沒送出審核</text>
+      <text x="96" y="1040" fill="#94A3B8" font-size="8.5" font-family="'Inter','Noto Sans TC',sans-serif">已指派審核員，還沒送出審核</text>
 
       <rect x="320" y="1028" width="56" height="18" rx="9" fill="#FEF2F2" stroke="#FECACA" stroke-width="1"/>
       <text x="348" y="1040" fill="#B91C1C" font-size="9" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">爭議中</text>

@@ -55,7 +55,7 @@
 
     <svg viewBox="0 0 1400 1008" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="rvov-title rvov-desc">
       <title id="rvov-title">審核流程總覽</title>
-      <desc id="rvov-desc">這張圖用五個橫列表示誰負責哪一段：標記員、審核員、系統、仲裁者、專案負責人。標記員送出標記後成立一個審核單位，交給一位審核員處理。審核員逐項作業，通過與修改在按下送出審核之前都只是草稿，送出後才算數。審核員只有三種選擇：通過就直接定稿；直接改答案和標成無法判定都不會馬上生效，一律送進爭議池。爭議池由沒有參與這份標記的仲裁者逐項裁決，只能在標記員的原答案和審核員的答案之間二選一，不能自己寫第三種答案，也不會退回重標。如果審核員是直接改答案，那一邊就顯示他改成什麼；如果審核員標的是無法判定，那一邊就顯示無法判定，選了就等於定案為無法判定。仲裁者若認為兩邊都不能用，必須填寫理由，這一項會落到最終例外池，由專案負責人一筆一筆處理：採用原答案、採用審核員的答案、自己填答案，或把這筆從資料集移除；例外池清空才能結案。定稿的內容只顯示文字、不能再修改，並附一行處理歷程，最後集中流入標記結果與匯出。審核單位只有三種狀態：待審、爭議中、已定稿。以前的做法，包括要幾位審核員才開始計票、已同意與已修改兩個中間狀態、逐項比票數、以及退回重標，都已經取消。圖的下方比較兩種任務的差別：一份樣本會有幾個審核單位、審核怎麼分配、定稿之後產生什麼。</desc>
+      <desc id="rvov-desc">這張圖用五個橫列表示誰負責哪一段：標記員、審核員、系統、仲裁者、專案負責人。標記員送出標記後成立一個審核單位，交給一位審核員處理。審核員逐項作業，通過與修改在按下送出審核之前都只是草稿，送出後才算數。審核員只有三種選擇：通過就直接定稿；直接改答案和標成無法判定都不會馬上生效，一律送進爭議池。爭議池由被勾選進仲裁者名冊、且沒有參與這份標記的人逐項裁決，只能在標記員的原答案和審核員的答案之間二選一，不能自己寫第三種答案，也不會退回重標。如果審核員是直接改答案，那一邊就顯示他改成什麼；如果審核員標的是無法判定，那一邊就顯示無法判定，選了就等於定案為無法判定。仲裁者若認為兩邊都不能用，必須填寫理由，這一項會落到最終例外池，由專案負責人一筆一筆處理：採用原答案、採用審核員的答案、自己填答案（自己填只有正式標記才有），或把這筆從資料集移除；例外池清空才能結案。定稿的內容只顯示文字、不能再修改，並附一行處理歷程，最後集中流入標記結果與匯出。審核單位只有三種狀態：待審、爭議中、已定稿。以前的做法，包括要幾位審核員才開始計票、已同意與已修改兩個中間狀態、逐項比票數、以及退回重標，都已經取消。圖的下方比較兩種任務的差別：一份樣本會有幾個審核單位、審核怎麼分配、定稿之後產生什麼。</desc>
 
       <defs>
         <marker id="arw" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#64748B"/></marker>
@@ -153,8 +153,8 @@
 
       <rect x="704" y="512" width="224" height="64" rx="6" fill="#FFFFFF" stroke="#1E1B4B" stroke-width="1"/>
       <text x="816" y="534" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">仲裁者逐項裁決</text>
-      <text x="816" y="549" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">只能二選一，不能自己寫答案</text>
-      <text x="816" y="563" fill="#94A3B8" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">標記員的原答案 或 審核員的答案</text>
+      <text x="816" y="549" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">由勾選為仲裁者、且未參與這份的人</text>
+      <text x="816" y="563" fill="#94A3B8" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">只能二選一：原答案 或 審核員答案</text>
 
       <rect x="704" y="640" width="208" height="64" rx="6" fill="#FFFFFF" stroke="#6366F1" stroke-width="1"/>
       <text x="808" y="666" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">最終例外池</text>
@@ -164,7 +164,7 @@
       <rect x="976" y="640" width="224" height="64" rx="6" fill="#FFFFFF" stroke="#1E1B4B" stroke-width="1"/>
       <text x="1088" y="662" fill="#1E1B4B" font-size="12" font-weight="600" font-family="'Inter','Noto Sans TC',sans-serif" text-anchor="middle">專案負責人逐筆處理</text>
       <text x="1088" y="677" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">採用原答案 · 採用審核員答案 · 自己填</text>
-      <text x="1088" y="691" fill="#94A3B8" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">自己填要用原本的標記畫面並寫理由</text>
+      <text x="1088" y="691" fill="#94A3B8" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">自己填限正式標記 · 要用標記畫面並寫理由</text>
 
       <text x="216" y="404" fill="#64748B" font-size="14" font-style="italic" font-family="'Crimson Pro','Noto Serif TC',serif">每一份樣本、每一個階段，只交給一個人。</text>
       <text x="216" y="424" fill="#64748B" font-size="14" font-style="italic" font-family="'Crimson Pro','Noto Serif TC',serif">不再有多位審核員同時審，也不再靠票數決定，</text>
@@ -185,7 +185,7 @@
 
       <text x="40" y="872" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">審核怎麼分配</text>
       <text x="340" y="872" fill="#1E1B4B" font-size="9" font-family="'JetBrains Mono', monospace">以樣本為單位 · 同一份資料的所有標記交給同一位審核員</text>
-      <text x="820" y="872" fill="#1E1B4B" font-size="9" font-family="'JetBrains Mono', monospace">一筆一筆從審核員名單輪流指派</text>
+      <text x="820" y="872" fill="#1E1B4B" font-size="9" font-family="'JetBrains Mono', monospace">系統把資料平均分給被勾選的審核員</text>
       <line x1="40" y1="884" x2="1360" y2="884" stroke="rgba(30,27,75,0.06)" stroke-width="0.8"/>
 
       <text x="40" y="904" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace">定稿之後產生什麼</text>
@@ -216,7 +216,7 @@
 
       <text x="1040" y="968" fill="#94A3B8" font-size="8.5" font-family="'Inter','Noto Sans TC',sans-serif">橫列＝誰負責 · 底色＝這個狀態怎麼來的</text>
 
-      <text x="40" y="990" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" letter-spacing="0.06em">審核單位只有三種狀態：待審（還沒送出審核） · 爭議中（審核員的修改還沒生效，等待裁決） · 已定稿（不能再改）；標記員還沒送出標記時不會有審核單位，畫面顯示「尚無標記提交」</text>
+      <text x="40" y="990" fill="#64748B" font-size="8" font-family="'JetBrains Mono', monospace" letter-spacing="0.06em">審核單位只有三種狀態：待審（已指派審核員，還沒送出審核） · 爭議中（審核員的修改還沒生效，等待裁決） · 已定稿（不能再改）；標記員還沒送出標記時不會有審核單位，畫面顯示「尚無標記提交」</text>
     </svg>
   </div>
 </body>
