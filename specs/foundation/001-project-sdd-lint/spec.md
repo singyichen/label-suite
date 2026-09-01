@@ -1,7 +1,7 @@
 ---
 功能分支: feat/issue-375-sdd-lint
 建立日期: 2026-08-26
-版本: 1.1.2
+版本: 1.1.3
 狀態: Draft
 ---
 
@@ -89,7 +89,7 @@ PR 上以 `Project SDD Lint` 獨立 job 顯示結果，本地使用相同 comman
 - **FR-006**：系統必須在 active governance consumers 與 active OpenSpec artifacts 阻擋 repository-local `npm test`、`npm run`、將 `/ui-ux-pro-max` 當 pipeline stage，以及非歷史內容的 `/speckit.analyze`；不得把 `pnpm` 誤判為 `npm`。
 - **FR-007**：系統必須將 goal semantic review、ordinary task file-count ambiguity、runtime Red evidence、GitHub PR state 與 ADR-034 E2E path 標為 warning-only；`--strict` 不得將明確 deferred warning 升級。
 - **FR-008**：CI 必須以獨立 `Project SDD Lint` job 執行 `scripts/check-sdd.sh`，`CLAUDE.md` 必須列出相同本地命令；job 不得包裝或取代 `openspec validate`。
-- **FR-009**：系統必須僅在 canonical resolved target root 與 canonical resolved checker root 相同時，使用該 target root 執行 `node "$repo_root/scripts/gen-screen-inventory.mjs" --check`，不得使用 caller checkout 或 foreign root generator；必須 capture 且 suppress generator raw output，並以穩定 Project SDD lint diagnostic 與 summary 映射 exit `0` 為無 inventory diagnostic。只有 child exit `1` 且伴隨 versioned generator 的 exact stale sentinel `design/system/screen-inventory.md is stale — run: node scripts/gen-screen-inventory.mjs` 時可映射為 blocking `INVENTORY_FRESHNESS`；foreign target root、缺少 generator、generator 無法讀取、load 或執行、缺少 Node、exit `2`、exit `1` 但無 exact stale sentinel，或任何其他 unexpected result 都必須映射為 `INVENTORY_CHECK_CONFIG` configuration error 與 lint exit `2`，且 `--strict` 不得改變 inventory severity。
+- **FR-009**：系統必須僅在 canonical resolved target root 與 canonical resolved checker root 相同時，使用該 target root 執行 `node "$repo_root/scripts/gen-screen-inventory.mjs" --check`，不得使用 caller checkout 或 foreign root generator；必須 capture 且 suppress generator raw output，並以穩定 Project SDD lint diagnostic 與 summary 映射 exit `0` 為無 inventory diagnostic。只有 child exit `1` 且伴隨 versioned generator 的 exact stale sentinel `design/system/screen-inventory.md is stale — run: node scripts/gen-screen-inventory.mjs` 時可映射為 blocking `INVENTORY_FRESHNESS`；foreign target root、缺少 generator、generator 無法讀取、load 或執行、缺少 Node、exit `2`、exit `1` 但無 exact stale sentinel，或任何其他 unexpected result 都必須映射為 `INVENTORY_CHECK_CONFIG` configuration error 與 lint exit `2`，且 `--strict` 不得改變 inventory severity。本規則依賴 generator 的 rendered output 僅取決於 prototype 歷史：generated view 內的 prototype 來源 commit 必須以固定長度呈現，不得隨本機 git 動態 abbreviation 長度變動，否則 `--check` 的 byte-for-byte 比對會因 clone 的封裝狀態而非 prototype 變更而失敗。
 
 ## 規格相依性
 
@@ -128,6 +128,7 @@ PR 上以 `Project SDD Lint` 獨立 job 顯示結果，本地使用相同 comman
 
 | 版本 | 日期 | 變更摘要 |
 |---|---|---|
+| 1.1.3 | 2026-09-01 | OpenSpec change `implement-project-sdd-lint` archive 回寫：獨立 `sdd-lint` CI job 與本機 `scripts/check-sdd.sh` 上線；澄清 FR-009 所依賴的 generator 可重現性——prototype 來源 commit 改以固定長度呈現，原 `--format=%h` 的動態 abbreviation 會使 freshness 比對隨本機 clone 封裝狀態變動 |
 | 1.1.2 | 2026-08-27 | Stage 3 security remediation：inventory generator 限於 same-trust resolved checker／target root，foreign root 穩定拒絕且不執行 hostile generator；動態掃描 pathname 在進入文字／TSV flow 前拒絕 control character，避免診斷注入 |
 | 1.1.1 | 2026-08-27 | Stage 2 誠實交接修正：SC-007 僅宣告六個已交付 D 項目；複合 retired-path/command D 項目與 combined acceptance 維持延期，待 ADR-034/path authority、QA Red 與 named filesystem-path production Green 的獨立實作 |
 | 1.1.0 | 2026-08-26 | 將 generated `design/system/screen-inventory.md` freshness 納入 blocking Project SDD lint，定義 fresh、stale 與 configuration exit/diagnostic 契約 |
