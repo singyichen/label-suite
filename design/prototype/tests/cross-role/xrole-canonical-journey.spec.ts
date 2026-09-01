@@ -5,6 +5,7 @@ import {
   assertNoPageErrors,
   buildListUrl,
   buildWorkspaceUrl,
+  fillArbitrationReasons,
   patchDataFile,
   skipGuidelineModal,
   trackPageErrors,
@@ -479,7 +480,25 @@ test('XROLE-08: three annotators submit both dry-run samples (checkpoint B: stat
       // (task-detail-dry-run-status-sync.spec.ts) rather than `.first()`,
       // which would always resolve to sample 0 regardless of which sample
       // was just submitted.
-      await expect(annotatorPage.getByTestId('ws-sample-item').nth(i)).toHaveAttribute('data-submitted', 'true');
+      if (i < DRY_RUN_RECORD_IDS.length - 1) {
+        await expect(annotatorPage.getByTestId('ws-sample-item').nth(i)).toHaveAttribute('data-submitted', 'true');
+      } else {
+        /* issue #514: this annotator's last pending dry-run sample, so the
+           submit now returns to annotation-list (FR-022C) instead of staying
+           on the workspace. buildListReturnUrl() carries task_id / role /
+           run_type plus the UXC-11 view state but NOT annotator_id, so that
+           landing page renders the default identity -- a pre-existing
+           property of the single writer the FR-081 breadcrumb also goes
+           through, untouched here. The submission is therefore re-read on
+           this annotator's own list URL, the way the rest of this fixture
+           addresses identity, so the 已提交 badge still proves the same
+           thing the sidebar attribute did. */
+        await expect(annotatorPage).toHaveURL(/annotation-list\.html\?/);
+        await annotatorPage.goto(
+          buildListUrl({ task_id: fixtureTaskId, role: 'annotator', run_type: 'dry_run', annotator_id: id })
+        );
+        await expect(annotatorPage.getByTestId('ws-sample-item').nth(i).locator('.status-badge')).toHaveText('已提交');
+      }
     }
   }
 
@@ -614,6 +633,8 @@ async function submitCorrection(page: Page, sampleId: string, annotatorId: strin
   await gotoReview(page, sampleId, annotatorId, reviewerId);
   await page.getByTestId('ws-review-correct-single_label').getByTestId(`ws-single-label-chip-${correctedLabel}`).click();
   await page.getByTestId('ws-review-row-reject').click();
+  // issue #552 (FR-016A): a reject needs a reason before submit goes through.
+  await page.getByTestId('ws-review-reject-reason').fill('理由');
   await page.getByTestId('ws-review-submit-btn').click();
   await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
 }
@@ -701,9 +722,11 @@ test('XROLE-12: blind review -- reviewer events are invisible to peers until the
   await submitApproval(r01Page, FORCED_DIVERGENCE_RECORD_ID, divergenceAnnotator, REVIEWER_R01);
 
   const trail = await readReviewerTrail(r02Page, 'official_run', FORCED_DIVERGENCE_RECORD_ID, divergenceAnnotator);
-  expect(trail).toHaveLength(1);
-  expect(trail[0].action).toBe('submitted');
-  expect(trail[0].actorId).toBe(REVIEWER_R01);
+  /* issue #578 (FR-086): an approval writes the wrapper `submitted` plus one
+     `accepted` per output key. What this test pins is visibility -- before
+     R01 submitted, the trail was empty; after, both events are R01's. */
+  expect(trail.map((e) => e.action)).toEqual(['submitted', 'accepted']);
+  expect(trail.every((e) => e.actorId === REVIEWER_R01)).toBe(true);
 });
 
 test('XROLE-13: dry_run reject never rolls the annotator sample back to pending (issue #192 regression, cross-role)', async () => {
@@ -715,6 +738,8 @@ test('XROLE-13: dry_run reject never rolls the annotator sample back to pending 
 
   await gotoReview(r01Page, DRY_RUN_RECORD_IDS[0], 'A01', REVIEWER_R01, 'dry_run');
   await r01Page.getByTestId('ws-review-row-reject').click();
+  // issue #552 (FR-016A): a reject needs a reason before submit goes through.
+  await r01Page.getByTestId('ws-review-reject-reason').fill('理由');
   await r01Page.getByTestId('ws-review-submit-btn').click();
   await expect(r01Page.locator('#toastMsg')).toHaveText('審核已送出');
 
@@ -823,6 +848,7 @@ test('XROLE-18: the arbiter votes B and the unit finalizes with the arbitrated v
   await expect(items.first().getByTestId('ws-arbitration-choose-b')).toContainText(DIVERGENCE_CORRECTION);
 
   await r03Page.getByTestId('ws-arbitration-choose-b').click();
+  await fillArbitrationReasons(r03Page);
   await r03Page.getByTestId('ws-arbitration-submit').click();
 
   const state = await readArbitrationState(r03Page, FORCED_DIVERGENCE_RECORD_ID, divergenceAnnotator);

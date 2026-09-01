@@ -17,6 +17,10 @@
  * T016 (official_run, min_reviewers = 3) seeds all five states on one task,
  * so every lane assertion below reads a real fixture rather than a patch.
  *
+ * issue #525 PR-A: the track moved out of the banner into an on-demand
+ * review-flow drawer. Every assertion below is unchanged; only its root and
+ * the openFlowDrawer() step that reveals it are new.
+ *
  * Component contract: design/system/MASTER.md §Review Status Track
  */
 import { test, expect, type Page } from '@playwright/test';
@@ -32,7 +36,20 @@ const UNITS = {
 };
 
 function track(page: Page) {
-  return page.locator('[data-testid="ws-review-unit-context"] .review-track');
+  return page.locator('[data-testid="ws-review-flow-drawer"] .review-track');
+}
+
+/* The drawer is `aria-modal` with a backdrop, so anything outside it (the
+   left column, the language toggle) is unclickable while it is open --
+   tests that interact with the page close it first. */
+async function openFlowDrawer(page: Page) {
+  await page.getByTestId('ws-review-flow-trigger').click();
+  await expect(page.getByTestId('ws-review-flow-drawer')).toBeVisible();
+}
+
+async function closeFlowDrawer(page: Page) {
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('ws-review-flow-drawer')).toBeHidden();
 }
 
 function node(page: Page, label: string) {
@@ -50,6 +67,7 @@ async function openUnit(page: Page, sampleId: string) {
       annotator_id: 'kioleemg12',
     }),
   );
+  await openFlowDrawer(page);
 }
 
 test.describe('Review status track — current position', () => {
@@ -57,7 +75,7 @@ test.describe('Review status track — current position', () => {
     await skipGuidelineModal(page);
   });
 
-  test('renders inside the FR-064 banner with five status nodes', async ({ page }) => {
+  test('renders inside the FR-064 flow drawer with five status nodes', async ({ page }) => {
     await openUnit(page, UNITS.disputed);
 
     await expect(track(page)).toBeVisible();
@@ -183,6 +201,7 @@ test.describe('Review status track — structure, regression and language', () =
       });
 
     await page.goto(t015('ofs-01-agree-gold'));
+    await openFlowDrawer(page);
     await expect(track(page)).toBeVisible();
 
     await page.goto(t015('ofs-05-not-submitted'));
@@ -194,7 +213,9 @@ test.describe('Review status track — structure, regression and language', () =
     await openUnit(page, UNITS.disputed);
     await expect(track(page).locator('[aria-current="step"]')).toContainText('爭議中');
 
+    await closeFlowDrawer(page);
     await page.getByTestId('lang-toggle').click();
+    await openFlowDrawer(page);
     await expect(track(page).locator('[aria-current="step"]')).toContainText('Disputed');
     await expect(track(page).locator('.review-track-marker')).toHaveText('Now:');
   });
@@ -203,10 +224,12 @@ test.describe('Review status track — structure, regression and language', () =
     await openUnit(page, UNITS.approved);
     await expect(track(page).locator('[aria-current="step"]')).toContainText('已同意');
 
+    await closeFlowDrawer(page);
     await page
-      .locator('[data-testid="ws-sample-item"]', { hasText: UNITS.disputed })
+      .locator('[data-testid="ws-sample-item"][data-sample-id="' + UNITS.disputed + '"]')
       .first()
       .click();
+    await openFlowDrawer(page);
     await expect(track(page).locator('[aria-current="step"]')).toContainText('爭議中');
   });
 });

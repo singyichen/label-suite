@@ -15,6 +15,7 @@ import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
 const ANNOTATOR = 'kioleemg12';
 const PARTICIPANT = 'reviewer_wang'; // dispute participant
 const ARBITER = 'reviewer_chen'; // can_arbitrate: true, non-participant
+const FILLER = 'reviewer_lin'; // issue #551 -- silent agree, keeps N=2 (no can_arbitrate)
 
 const labelPayload = (selected: string) => ({ previewState: { single_label: { selected } } });
 
@@ -36,7 +37,9 @@ test.describe('issue #408 -- arbitration/finalized item labels do not duplicate 
     // annotator says sad, reviewer_wang says fear -> one disputed
     // single_label::single_label item; reviewer_chen is the eligible
     // non-participant arbiter, so it lands directly on the arbitration
-    // layout.
+    // layout. issue #551: a second, silently agreeing reviewer (FILLER)
+    // keeps this a genuine N=2 tie -- at N=1, wang's correction alone would
+    // now converge on submit instead of reaching the arbitration card.
     await page.goto(buildWorkspaceUrl({
       task_id: 'T001', sample_id: 'sent-001', role: 'reviewer', run_type: 'official_run',
       annotator_id: ANNOTATOR, reviewer_id: ARBITER,
@@ -45,6 +48,10 @@ test.describe('issue #408 -- arbitration/finalized item labels do not duplicate 
     await seed(page, {
       role: 'reviewer', payload: labelPayload('fear'),
       identity: { annotatorId: ANNOTATOR, reviewerId: PARTICIPANT },
+    });
+    await seed(page, {
+      role: 'reviewer', payload: labelPayload('sad'),
+      identity: { annotatorId: ANNOTATOR, reviewerId: FILLER },
     });
     await page.reload();
 

@@ -57,6 +57,10 @@ async function expectNoExitCard(page: Page) {
   }
   await expect(page.locator('#wsPostSubmitMount')).toHaveCount(0);
   await expect(page.locator('.rv-exits, .rv-exits-title, .rv-exits-note, .rv-exits-actions, .rv-exits-none')).toHaveCount(0);
+
+  /* issue #562: the role-dependent status note that once sat under the
+     banner (issue #526) is retired too -- nothing may grow back there. */
+  await expect(page.getByTestId('ws-review-action-hint')).toHaveCount(0);
 }
 
 test.beforeEach(async ({ page }) => {

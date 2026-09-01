@@ -3,7 +3,7 @@
 > **用途：** 記錄所有 prototype 頁面中出現的 UI elements，對照 MASTER.md 的定義狀態，作為 design system 擴充的依據。
 >
 > **掃描範圍：** `design/prototype/` 所有頁面
-> **最後掃描：** 2026-07-10
+> **最後掃描：** 2026-07-10（⚠ 已知落後於 2026-08-25 後新增的工作區狀態，如 finalized card、review unit context、empty unit、PDF guideline modal；重新掃描待 issue #375 C 段 manifest/scanner 落地後由生成工具產生，見 [inventory-manifest.json](inventory-manifest.json)）
 > **掃描頁面：** account/login.html、account/register.html、account/forgot-password.html、account/reset-password.html、account/profile.html、dashboard/dashboard.html、admin/user-management.html、admin/role-settings.html、task-management/task-detail.html、task-management/task-list.html、task-management/task-new.html、task-management/task-detail.panels/*、annotation/annotation-list.html、annotation/annotation-workspace.html、dataset/dataset-analysis-list.html、dataset/dataset-analysis-detail.html、dataset/dataset-analysis-detail.partials/*
 > **Design Token 來源：** `design/prototype/assets/tokens.css`
 > **反向索引：** [screen-inventory.md](screen-inventory.md)（「頁面 → 元件」視角；該檔為 generated view，由 [inventory-manifest.json](inventory-manifest.json) 產生）
@@ -77,7 +77,7 @@
 - `sec_nav`, `sec_sidebar`, `sec_tab`
 - `sec_table`, `sec_list`, `sec_divider`, `sec_tooltip`, `sec_avatar`
 
-### Reusable Components（Pencil 實測，45 個）
+### Reusable Components（Pencil 實測，46 個）
 
 - **Buttons（13）**：Primary / Secondary / Ghost / Danger / OAuth / Icon Only / CTA(Default, Hover, Loading, Disabled) / Language Toggle(Default, ZH, EN)
 - **Inputs（6）**：Default / Focus / Inline(Default, Focus, Error) / Readonly

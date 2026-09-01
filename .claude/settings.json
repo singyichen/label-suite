@@ -13,7 +13,9 @@
       "Edit(*credentials.json)"
     ],
     "allow": [
-      "Bash(npx playwright *)"
+      "Bash(npx playwright *)",
+      "EnterWorktree",
+      "ExitWorktree"
     ]
   },
   "hooks": {

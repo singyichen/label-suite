@@ -21,6 +21,12 @@
       submitLabel: '提交',
       saveLabel: '儲存草稿',
       wsSaveSuccess: '已儲存',
+      skipLabel: '跳過',
+      skipReasonPlaceholder: '跳過理由（必填）',
+      skipNeedsReason: '請先填寫跳過理由，再跳過這一筆',
+      skipSuccess: '已跳過這一筆',
+      arbitrationReasonPlaceholder: '裁定理由（必填）',
+      arbitrationNeedsReason: '請先填寫裁定理由再送出，尚未填寫的項目',
       wsPrevBtnLabel: '上一筆',
       wsNextBtnLabel: '下一筆',
       wsProgressText: '{done} / {total} 已提交',
@@ -36,6 +42,11 @@
       wsHistoryEmpty: '此筆樣本尚無歷程紀錄',
       wsHistoryRoleAnnotator: '標記員',
       wsHistoryRoleReviewer: '審核員',
+      wsHistoryReasonLabel: '理由：',
+      wsHistoryLeadTimeLabel: '耗時：',
+      wsHistoryDiffAdded: '新增',
+      wsHistoryDiffRemoved: '刪除',
+      wsHistoryDiffBoundary: '邊界變更',
       guidelineModalTitle: '請先閱讀任務說明',
       guidelineModalConfirm: '我已閱讀，開始標記',
       guidelineSummaryTitle: '任務說明',
@@ -51,9 +62,16 @@
       reviewRejectLabel: '退回',
       wsReviewSubmitSuccess: '審核已送出',
       reviewNoAnswer: '（無）',
-      reviewNote: '通過：採用此筆標記。退回：記錄審核決策與修正差異，與回退標記員狀態是不同層級的效果——正式標記退回後該樣本回到待標記，產生標記員重標待辦；試標退回不改變標記員狀態，品質問題由 IAA 閘門與下一輪試標處理。',
+      reviewNoteDry: '通過：採用該輸出類型目前顯示的作答（含您的修正）為審核結果。退回：記錄不採用的決策與修正差異。送出後——試標：不回退標記員狀態，品質問題由任務層級 IAA 閘門與下一輪試標處理。',
+      reviewNoteOfficial: '通過：採用該輸出類型目前顯示的作答（含您的修正）為審核結果。退回：記錄不採用的決策與修正差異。送出後——正式標記：任一輸出類型退回會使此單位回到待標記，並產生標記員 {annotator} 的重標待辦；全部通過則標記員狀態不變。退回理由會顯示給標記員。',
+      reviewNoteTriggerLabel: '審核決策說明',
+      reviewRejectReasonLabel: '退回理由（必填）',
+      reviewRejectReasonPlaceholder: '請說明退回原因',
+      toastRejectReasonRequired: '請填寫以下輸出類型的退回理由：{list}',
+      reworkReasonsTitle: '此樣本已被退回，請依下列理由重新標記',
+      reworkReasonMissing: '（未填寫理由）',
       reviewCorrectionTitle: '直接修正（Reviewer 修正後答案）',
-      toastSelectDecision: '請完成每位標記員的審核決策',
+      toastSelectDecision: '請完成以下輸出類型的審核決策：{list}',
       toastReviewCorrectionReset: '偵測到直接修正的內容因重新整理而遺失，對應的通過／退回決策已重置，請重新確認後再送出',
       toastResolveDivergent: '請先裁定所有分歧項目',
       arbitrationTitle: '爭議仲裁',
@@ -69,14 +87,16 @@
       arbitrationVoteTally: '{value}：{count} 票（{pct}%）',
       arbitrationVoteAnnotator: '標記員原答案',
       arbitrationVoteDistSep: '：',
+      arbitrationPureRejectLabel: '審核員退回（無替代值）',
       arbitrationVoteReasonEvenTie: '未收斂原因：{dist} 平手，沒有值取得嚴格多數（需 > {th} 票）',
       arbitrationVoteReasonAllDivergent: '未收斂原因：{dist} 全數分歧，沒有值取得嚴格多數（需 > {th} 票）',
       arbitrationVoteReasonNoMajority: '未收斂原因：票數分布 {dist}，沒有值取得嚴格多數（需 > {th} 票）',
-      arbitrationVoteReasonSingleReviewer: '未收斂原因：僅 1 位審核員提出異議，單一審核員不足以推翻標記員答案',
+      arbitrationVoteReasonPureReject: '未收斂原因：至少一位審核員退回且未提出替代值，無法計入多數決，須由仲裁者裁定',
       historyActionOverridden: '已覆寫',
       historyActionGoldConfirmed: '已確認標準答案',
       historyActionGoldReopened: '重新開放標準答案',
       unitCtxRunDry: '試標',
+      unitCtxRunDryRound: '試標 R{round}',
       unitCtxRunOfficial: '正式標記',
       crumbWorkAreaReviewer: '審核作業',
       crumbWorkAreaAnnotator: '標記作業',
@@ -102,21 +122,18 @@
       unitStateDisputedNote: '未定稿，待仲裁',
       trackAria: '審核單位狀態',
       trackMarker: '目前：',
+      trackBranchSame: '答案未修改',
+      trackBranchDiffering: '答案有修改',
+      trackBranchUnconverged: '未收斂',
+      trackBranchArbitrated: '仲裁後',
+      flowDrawerOpen: '了解審核流程',
+      flowDrawerTitle: '審核流程',
+      flowDrawerCloseAria: '關閉審核流程',
       unitStateFinalizedNote: '已鎖定',
       unitStateAria: '{state}，已有 {x} 位審核員／共需 {n} 位',
       unitStateAriaFinalized: '{state}，已達 {n} 位審核員門檻，內容已鎖定',
       reviewOriginalAnswerLabel: '標記員原答案：',
       reviewCorrectedAnswerLabel: 'Reviewer 修正後答案：',
-      summaryTitle: '送出前確認',
-      summaryNoteApproveUnchanged: '通過且未修改：將保存與標記員原答案相同的 reviewer answer。',
-      summaryNoteApproveChanged: '通過的是您修正後的答案（非標記員原答案）：將保存修正後的 reviewer answer，並記錄為差異，納入爭議推導。',
-      summaryNoteRejectUnchanged: '退回但未修改答案：將保存與標記員原答案相同的 reviewer answer，並記錄退回決策。',
-      summaryNoteRejectChanged: '退回並修改答案：將保存您修正後的 reviewer answer，並記錄退回決策與差異，納入爭議推導。',
-      summaryNoteUndecided: '尚未決策：此輸出類型必須完成通過／退回才能送出。',
-      summaryPending: '尚未完成決策：{list}',
-      summaryPendingNone: '所有輸出類型皆已完成決策。',
-      summaryEffectOfficial: '送出後影響：任一輸出類型判定退回時，此正式標記單位會回到待標記並產生標記員重標待辦；全部通過則標記員狀態不變。',
-      summaryEffectDry: '送出後影響：試標退回不會個別回退標記員狀態，僅記錄審核決策與修正差異，品質問題由任務層級 IAA 閘門與下一輪試標處理。',
       toastReviewDecisionResetOnEdit: '直接修正的值已變更，對應的通過／退回決策已重置，請重新確認後再送出',
     },
     en: {
@@ -124,6 +141,12 @@
       submitLabel: 'Submit',
       saveLabel: 'Save draft',
       wsSaveSuccess: 'Saved',
+      skipLabel: 'Skip',
+      skipReasonPlaceholder: 'Reason for skipping (required)',
+      skipNeedsReason: 'Give a reason before skipping this sample',
+      skipSuccess: 'Sample skipped',
+      arbitrationReasonPlaceholder: 'Reason for this decision (required)',
+      arbitrationNeedsReason: 'Give a reason before finalizing. Still missing',
       wsPrevBtnLabel: 'Previous',
       wsNextBtnLabel: 'Next',
       wsProgressText: '{done} / {total} submitted',
@@ -139,6 +162,11 @@
       wsHistoryEmpty: 'No history for this sample yet',
       wsHistoryRoleAnnotator: 'Annotator',
       wsHistoryRoleReviewer: 'Reviewer',
+      wsHistoryReasonLabel: 'Reason: ',
+      wsHistoryLeadTimeLabel: 'Time spent: ',
+      wsHistoryDiffAdded: 'Added',
+      wsHistoryDiffRemoved: 'Removed',
+      wsHistoryDiffBoundary: 'Boundary',
       guidelineModalTitle: 'Please read the task guideline first',
       guidelineModalConfirm: "I've read it, start annotating",
       guidelineSummaryTitle: 'Task Guideline',
@@ -154,9 +182,16 @@
       reviewRejectLabel: 'Reject',
       wsReviewSubmitSuccess: 'Review submitted',
       reviewNoAnswer: '(none)',
-      reviewNote: 'Approve: accept this annotation. Reject: records the review decision and any correction, which is a different level of effect from rolling back the annotator status -- in an official run a reject returns the sample to pending and creates a re-annotation task for the annotator; in a dry run a reject leaves the annotator status unchanged, and quality issues are handled by the IAA gate and the next dry run.',
+      reviewNoteDry: 'Approve: the answer currently shown for that output type (including your correction) becomes the review result. Reject: records the decision not to accept it, plus any correction. After submitting — dry run: the annotator status is not rolled back; quality issues are handled by the task-level IAA gate and the next dry run.',
+      reviewNoteOfficial: 'Approve: the answer currently shown for that output type (including your correction) becomes the review result. Reject: records the decision not to accept it, plus any correction. After submitting — official run: rejecting any output type returns this unit to pending and creates a re-annotation task for {annotator}; if everything is approved the annotator status is unchanged. The reject reason is shown to the annotator.',
+      reviewNoteTriggerLabel: 'Review decision guidance',
+      reviewRejectReasonLabel: 'Reject reason (required)',
+      reviewRejectReasonPlaceholder: 'Explain why this is rejected',
+      toastRejectReasonRequired: 'Please give a reject reason for the following output types: {list}',
+      reworkReasonsTitle: 'This sample was rejected. Re-annotate it following the reasons below',
+      reworkReasonMissing: '(no reason given)',
       reviewCorrectionTitle: "Direct correction (reviewer's corrected answer)",
-      toastSelectDecision: 'Please decide on every annotator before submitting',
+      toastSelectDecision: 'Please decide on the following output types before submitting: {list}',
       toastReviewCorrectionReset: 'The direct correction was lost on reload, so the matching approve/reject decision was reset -- please re-confirm before submitting',
       toastResolveDivergent: 'Please resolve every divergent item first',
       arbitrationTitle: 'Dispute arbitration',
@@ -172,14 +207,16 @@
       arbitrationVoteTally: '{value}: {count} votes ({pct}%)',
       arbitrationVoteAnnotator: "annotator's original answer",
       arbitrationVoteDistSep: ' : ',
+      arbitrationPureRejectLabel: 'Reviewer rejected (no replacement value)',
       arbitrationVoteReasonEvenTie: 'Not converged: {dist} tie, no value reached a strict majority (needs > {th} votes)',
       arbitrationVoteReasonAllDivergent: 'Not converged: {dist} all divergent, no value reached a strict majority (needs > {th} votes)',
       arbitrationVoteReasonNoMajority: 'Not converged: vote split {dist}, no value reached a strict majority (needs > {th} votes)',
-      arbitrationVoteReasonSingleReviewer: 'Not converged: only one reviewer dissented, and a single reviewer cannot outvote the annotator',
+      arbitrationVoteReasonPureReject: 'Not converged: at least one reviewer rejected with no replacement value, which cannot be tallied into a majority and requires an arbiter',
       historyActionOverridden: 'Overridden',
       historyActionGoldConfirmed: 'Gold confirmed',
       historyActionGoldReopened: 'Gold reopened',
       unitCtxRunDry: 'Dry Run',
+      unitCtxRunDryRound: 'Dry Run R{round}',
       unitCtxRunOfficial: 'Official Run',
       crumbWorkAreaReviewer: 'Review',
       crumbWorkAreaAnnotator: 'Annotate',
@@ -205,21 +242,18 @@
       unitStateDisputedNote: 'not finalized, awaiting arbitration',
       trackAria: 'Review unit status',
       trackMarker: 'Now:',
+      trackBranchSame: 'Answers unchanged',
+      trackBranchDiffering: 'Answers changed',
+      trackBranchUnconverged: 'No convergence',
+      trackBranchArbitrated: 'After arbitration',
+      flowDrawerOpen: 'Review flow',
+      flowDrawerTitle: 'Review flow',
+      flowDrawerCloseAria: 'Close the review flow',
       unitStateFinalizedNote: 'locked',
       unitStateAria: '{state}, {x} of {n} required reviewers',
       unitStateAriaFinalized: '{state}, met the {n}-reviewer threshold, locked',
       reviewOriginalAnswerLabel: "Annotator's original answer: ",
       reviewCorrectedAnswerLabel: "Reviewer's corrected answer: ",
-      summaryTitle: 'Confirm before submitting',
-      summaryNoteApproveUnchanged: 'Approved with no edit: the stored reviewer answer will be identical to the annotator’s original answer.',
-      summaryNoteApproveChanged: 'What you approve is your corrected answer, not the annotator’s original: the corrected reviewer answer is stored and recorded as a difference feeding dispute derivation.',
-      summaryNoteRejectUnchanged: 'Rejected with no edit: the stored reviewer answer will be identical to the annotator’s original answer, alongside the reject decision.',
-      summaryNoteRejectChanged: 'Rejected with an edit: your corrected reviewer answer is stored alongside the reject decision and recorded as a difference feeding dispute derivation.',
-      summaryNoteUndecided: 'Not decided yet: this output type needs an approve/reject before you can submit.',
-      summaryPending: 'Still undecided: {list}',
-      summaryPendingNone: 'Every output type has been decided.',
-      summaryEffectOfficial: 'After submitting: if any output type is rejected, this official-run unit returns to pending and creates a re-annotation task for the annotator; if everything is approved the annotator status is unchanged.',
-      summaryEffectDry: 'After submitting: a dry-run reject does not roll back the annotator status individually; it only records the review decision and any correction, and quality issues are handled by the task-level IAA gate and the next dry run.',
       toastReviewDecisionResetOnEdit: 'The direct correction changed, so the matching approve/reject decision was reset -- please re-confirm before submitting',
     },
   };
@@ -362,8 +396,61 @@
     renderEvidenceReferenceCard();
     patchItemPairLayout();
     wrapAnnotatorCards();
+    renderReworkReasonsBanner();
   }
   updateAnnotationPreview = patchedUpdateAnnotationPreview;
+
+  /* issue #552 (FR-085 / AC-2.14): an official_run reject sends the sample
+     back to the annotator (FR-014I), who until now saw one red `rejected`
+     badge in the history panel and nothing about WHY. Render the reviewers'
+     per-outKey reasons at the top of the workspace and mark the rejected
+     panels. getReworkReasons() owns the "is this a rework todo" test and
+     yields nothing for dry_run, so this stays a no-op everywhere else. The
+     engine empties #annotationPreview on every rebuild, so no de-dupe. */
+  function renderReworkReasonsBanner() {
+    var preview = document.getElementById('annotationPreview');
+    if (!preview) return;
+    var rows = window.LabelSuiteAnnotationWorkspaceData.getReworkReasons(
+      currentProfile.id, currentRunType, currentSampleId, currentIdentity
+    );
+    if (!rows.length) return;
+
+    var banner = document.createElement('div');
+    banner.className = 'rv-rework-reasons';
+    banner.setAttribute('data-testid', 'ws-rework-reasons');
+    banner.setAttribute('role', 'status');
+
+    var title = document.createElement('div');
+    title.className = 'rv-rework-title';
+    title.textContent = t('reworkReasonsTitle');
+    banner.appendChild(title);
+
+    rows.forEach(function (row) {
+      var item = document.createElement('div');
+      item.className = 'rv-rework-row';
+      item.setAttribute('data-testid', 'ws-rework-reason-row');
+      item.setAttribute('data-outkey', row.outKey);
+
+      var meta = document.createElement('div');
+      meta.className = 'rv-rework-meta';
+      meta.textContent =
+        row.outKey + ' · ' + t('wsHistoryRoleReviewer') + ' ' + row.reviewerId +
+        (row.at ? ' · ' + formatHistoryTime(row.at) : '');
+      var reason = document.createElement('div');
+      reason.className = 'rv-rework-reason';
+      reason.textContent = row.reason || t('reworkReasonMissing');
+      item.appendChild(meta);
+      item.appendChild(reason);
+      banner.appendChild(item);
+
+      var panel = preview.querySelector('[data-testid="ws-output-panel-' + row.outKey + '"]');
+      if (panel) {
+        panel.setAttribute('data-rework-rejected', 'true');
+        panel.classList.add('rv-rework-rejected');
+      }
+    });
+    preview.insertBefore(banner, preview.firstChild);
+  }
 
   /* Regroup the engine's flat sibling output into two content-cards: the
      question block (evidence + input text) and the annotation block (all
@@ -1360,6 +1447,14 @@
      rebuild their query from scratch all come through here, so every
      "back to the list" on screen resolves to the same place. */
   var LIST_VIEW_STATE_KEYS = ['status', 'q', 'limit', 'offset'];
+  /* FR-049 (issue #545): the identity pair is what decides WHICH SUBMISSION
+     BUCKET each page reads, so it has to make the return trip for the same
+     reason the view state above does -- a visitor who is not the default
+     roster identity would otherwise land on a list computing someone else's
+     progress under their own name. Forwarded, never stamped: FR-049 gives an
+     absent param the meaning "fall back to the default identity", and the
+     two pages only agree on that while the absence is preserved. */
+  var LIST_IDENTITY_KEYS = ['annotator_id', 'reviewer_id'];
 
   function buildListReturnUrl() {
     var listParams = new URLSearchParams();
@@ -1367,7 +1462,7 @@
     listParams.set('role', currentRole);
     listParams.set('run_type', currentRunType);
     var incoming = new URLSearchParams(window.location.search);
-    LIST_VIEW_STATE_KEYS.forEach(function (key) {
+    LIST_VIEW_STATE_KEYS.concat(LIST_IDENTITY_KEYS).forEach(function (key) {
       var value = incoming.get(key);
       if (value) listParams.set(key, value);
     });
@@ -1634,15 +1729,135 @@
     function pad(n) { return n < 10 ? '0' + n : String(n); }
     return pad(d.getMonth() + 1) + '/' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
   }
+  /* FR-087: an event's answer is shown against the one before it -- the
+     first snapshot in a trail has nothing to compare to and reads as whole
+     content, every later one reads as before → after for the output types
+     that actually changed. Built in a forward pass because the panel paints
+     newest-first, and returned by event index so the render loop stays a
+     plain map from event to block. Only plain-value output types diff here;
+     the position-type comparator is registry-driven and lands with FR-087's
+     position half. */
+  function buildHistoryAnswerBlocks(events) {
+    var blocks = [];
+    var previous = null;
+    events.forEach(function (event, idx) {
+      var snapshot = event.result_snapshot;
+      if (!snapshot) {
+        blocks[idx] = null;
+        return;
+      }
+      blocks[idx] = previous ? buildHistoryDiff(previous, snapshot) : buildHistorySnapshot(snapshot);
+      previous = snapshot;
+    });
+    return blocks;
+  }
+
+  function historyOutputKeys() {
+    var seen = {};
+    return Array.prototype.slice.call(arguments).reduce(function (keys, snapshot) {
+      Object.keys((snapshot && snapshot.previewState) || {}).forEach(function (outKey) {
+        if (seen[outKey]) return;
+        seen[outKey] = true;
+        keys.push(outKey);
+      });
+      return keys;
+    }, []);
+  }
+
+  function buildHistorySnapshot(snapshot) {
+    var lines = historyOutputKeys(snapshot)
+      .map(function (outKey) {
+        var described = describeOutputAnswer(outKey, snapshot);
+        return described ? outKey + ': ' + described : '';
+      })
+      .filter(Boolean);
+    if (!lines.length) return null;
+    var block = document.createElement('div');
+    block.className = 'history-snapshot';
+    block.textContent = lines.join('\n');
+    return block;
+  }
+
+  var DIFF_KIND_LABELS = {
+    added: 'wsHistoryDiffAdded',
+    removed: 'wsHistoryDiffRemoved',
+    boundary: 'wsHistoryDiffBoundary',
+  };
+
+  function spanRange(span) {
+    return '[' + span.start + ',' + span.end + ']';
+  }
+
+  /* `kind` is null for plain-value diffs: those read as one before/after
+     line and have no add/delete/boundary distinction to name. */
+  function diffItem(kind, text) {
+    var item = document.createElement('div');
+    item.className = 'history-diff-item';
+    if (kind) {
+      var marker = document.createElement('span');
+      marker.className = 'history-diff-kind';
+      marker.setAttribute('data-diff-kind', kind);
+      marker.textContent = t(DIFF_KIND_LABELS[kind]) + ' ';
+      item.appendChild(marker);
+    }
+    var body = document.createElement('span');
+    body.textContent = text;
+    item.appendChild(body);
+    return item;
+  }
+
+  /* FR-087: position-bearing types list one row per entity, so a boundary
+     that moved is visible even when the entity count did not change. The
+     comparator itself lives in the shared history module -- this only
+     decides how a change reads. */
+  function positionalDiffItems(outKey, before, after) {
+    return window.LabelSuiteAnnotationHistory.diffPositional(outKey, before, after).map(function (change) {
+      var label = outKey + ': ' + change.span.label + ' ' + change.span.text + ' ';
+      return diffItem(
+        change.kind,
+        change.kind === 'boundary'
+          ? label + spanRange(change.from) + ' → ' + spanRange(change.span)
+          : label + spanRange(change.span)
+      );
+    });
+  }
+
+  function buildHistoryDiff(before, after) {
+    var items = [];
+    historyOutputKeys(before, after).forEach(function (outKey) {
+      if (window.LabelSuiteAnnotationHistory.isPositionalOutput(outKey)) {
+        items = items.concat(positionalDiffItems(outKey, before, after));
+        return;
+      }
+      var from = describeOutputAnswer(outKey, before);
+      var to = describeOutputAnswer(outKey, after);
+      if (from === to) return;
+      items.push(diffItem(null, outKey + ': ' + (from || t('reviewNoAnswer')) + ' → ' + (to || t('reviewNoAnswer'))));
+    });
+    if (!items.length) return null;
+    var block = document.createElement('div');
+    block.className = 'history-diff';
+    items.forEach(function (item) {
+      block.appendChild(item);
+    });
+    return block;
+  }
+
   function renderHistoryPanel() {
     var container = document.getElementById('wsHistoryContainer');
     if (!container) return;
     while (container.firstChild) container.removeChild(container.firstChild);
+    /* FR-090: the viewer is an argument to the data supply layer, not a
+       render flag -- a masked event must never reach this function at all. */
     var events = window.LabelSuiteAnnotationWorkspaceData.getSampleHistory(
       currentProfile.id,
       currentRunType,
       currentSampleId,
-      currentIdentity
+      currentIdentity,
+      {
+        role: currentRole,
+        actorId: currentRole === 'reviewer' ? (currentIdentity && currentIdentity.reviewerId) : currentAnnotatorId(),
+      }
     );
     if (events.length === 0) {
       var empty = document.createElement('p');
@@ -1651,9 +1866,11 @@
       container.appendChild(empty);
       return;
     }
+    var answerBlocks = buildHistoryAnswerBlocks(events);
     var list = document.createElement('div');
     list.className = 'history-list';
-    events.slice().reverse().forEach(function (event) {
+    events.slice().reverse().forEach(function (event, reversedIdx) {
+      var answer = answerBlocks[events.length - 1 - reversedIdx];
       var card = document.createElement('div');
       card.className = 'history-item';
       var header = document.createElement('div');
@@ -1671,8 +1888,13 @@
       time.className = 'history-time';
       time.textContent = formatHistoryTime(event.at);
       var badge = document.createElement('span');
-      badge.className =
-        'history-action-badge ' + (event.action === 'saved' ? 'saved' : event.action === 'rejected' ? 'rejected' : 'submitted');
+      /* FR-086: the modifier comes from the shared action table, never from a
+         render-site branch -- the ternary this replaces mapped every value it
+         did not name onto the `submitted` badge, so a `skipped` event read as
+         a submission. An action outside the set resolves to '' and keeps the
+         neutral base badge. */
+      var badgeModifier = window.LabelSuiteAnnotationHistory.badgeClassFor(event.action);
+      badge.className = 'history-action-badge' + (badgeModifier ? ' ' + badgeModifier : '');
       badge.textContent = event.action;
       meta.appendChild(time);
       meta.appendChild(badge);
@@ -1685,9 +1907,77 @@
         summary.textContent = event.summary;
         card.appendChild(summary);
       }
+      if (answer) card.appendChild(answer);
+      /* FR-088 visibility: the annotator must never see a duration. Seeing
+         a running score changes how people answer, and this number is meant
+         to measure sample difficulty, not to be optimised against. The
+         reviewer and the task-level statistics are where it belongs. */
+      if (currentRole !== 'annotator' && typeof event.lead_time === 'number') {
+        var leadTime = document.createElement('div');
+        leadTime.className = 'history-lead-time';
+        leadTime.setAttribute('data-testid', 'ws-history-lead-time');
+        leadTime.textContent = t('wsHistoryLeadTimeLabel') + window.LabelSuiteAnnotationHistory.formatLeadTime(event.lead_time);
+        card.appendChild(leadTime);
+      }
+      /* FR-089: the reason the actor typed, on the event it justifies. */
+      if (event.reason) {
+        var reason = document.createElement('div');
+        reason.className = 'history-reason';
+        reason.textContent = t('wsHistoryReasonLabel') + event.reason;
+        card.appendChild(reason);
+      }
       list.appendChild(card);
     });
     container.appendChild(list);
+  }
+
+  /* FR-088: `lead_time` is accumulated page-visible time, never the
+     wall-clock gap between `started_at` and `at`. The number exists to feed
+     difficulty analysis, and a sample left open in a background tab would
+     otherwise read as the hardest sample in the set. Both signals are
+     observed because they answer different questions: `visibilitychange`
+     covers a tab switch, `blur`/`focus` covers the window losing focus
+     while the tab stays visible.
+
+     `since` is null exactly when the clock is paused, so pause and resume
+     are both idempotent -- the two signals commonly fire together. */
+  var leadTimer = { startedAt: null, accumulated: 0, since: null };
+
+  function startLeadTimer() {
+    leadTimer = {
+      startedAt: new Date().toISOString(),
+      accumulated: 0,
+      since: document.visibilityState === 'hidden' ? null : Date.now(),
+    };
+  }
+
+  function pauseLeadTimer() {
+    if (leadTimer.since == null) return;
+    leadTimer.accumulated += Date.now() - leadTimer.since;
+    leadTimer.since = null;
+  }
+
+  function resumeLeadTimer() {
+    if (leadTimer.startedAt && leadTimer.since == null) leadTimer.since = Date.now();
+  }
+
+  /* Reads the accumulator without stopping it: a save is a checkpoint in the
+     middle of the sample, not the end of it. Returns null before any sample
+     has been opened, so the caller writes no timing fields at all rather
+     than a zero that would read as "answered instantly". */
+  function readLeadTiming() {
+    if (!leadTimer.startedAt) return null;
+    var elapsed = leadTimer.accumulated + (leadTimer.since == null ? 0 : Date.now() - leadTimer.since);
+    return { startedAt: leadTimer.startedAt, leadTime: elapsed };
+  }
+
+  function bindLeadTimerSignals() {
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'hidden') pauseLeadTimer();
+      else resumeLeadTimer();
+    });
+    window.addEventListener('blur', pauseLeadTimer);
+    window.addEventListener('focus', resumeLeadTimer);
   }
 
   function findRecordById(sampleId) {
@@ -1706,6 +1996,9 @@
     var recordIdx = currentProfile.datasetRecords.indexOf(record);
     snapshotCurrentSample();
     currentSampleId = window.LabelSuiteAnnotationWorkspaceData.getRecordId(record, recordIdx);
+    /* FR-088: the timer is per sample -- moving to the next sample starts a
+       fresh measurement rather than carrying the previous one forward. */
+    startLeadTimer();
     /* issue #470: the autosave indicator is derived PER SAMPLE -- a fresh
        selection starts undirtied regardless of the outgoing sample's
        state; renderWorkspace() below recomputes INITIAL/SAVED for the
@@ -1723,6 +2016,7 @@
     restoreSample(currentSampleId);
     syncUrlToUnit();
     renderWorkspace();
+    renderSkipControl();
   }
 
   /* A workspace URL addresses one REVIEW UNIT, so every switch writes the
@@ -1876,9 +2170,11 @@
         );
         meta.appendChild(snippet);
       } else {
-        /* The annotator leads (it is what distinguishes the units of one
-           group); the sample ID stays as a muted trailing echo so the entry
-           remains self-describing when read out of its group context. */
+        /* Only the annotator: it is the one dimension that varies inside a
+           group. The sample ID already sits once in the group header, and
+           the entry's data-sample-id / aria-label keep it addressable and
+           readable out of context (issue #557 dropped the muted echo that
+           repeated it on every row). */
         var unitLine = document.createElement('div');
         unitLine.className = 'sample-unit-line';
         var unitAnnotator = document.createElement('span');
@@ -1886,16 +2182,7 @@
         unitAnnotator.setAttribute('data-testid', 'ws-sample-annotator');
         unitAnnotator.setAttribute('title', unit.annotatorId);
         unitAnnotator.textContent = unit.annotatorId;
-        var unitSep = document.createElement('span');
-        unitSep.className = 'sample-unit-sep';
-        unitSep.textContent = '·';
-        var unitId = document.createElement('span');
-        unitId.className = 'sample-unit-id';
-        unitId.setAttribute('title', recordId);
-        unitId.textContent = recordId;
         unitLine.appendChild(unitAnnotator);
-        unitLine.appendChild(unitSep);
-        unitLine.appendChild(unitId);
         meta.appendChild(unitLine);
       }
       var statusLabel = document.createElement('span');
@@ -2008,6 +2295,10 @@
       previewEntities: deepClone(state.previewEntities),
       previewTriples: deepClone(state.previewTriples),
       previewBypass: deepClone(state.previewBypass),
+      /* FR-088: how long this answer took, travelling with the answer it
+         describes. The data layer lifts it onto the history event; the
+         result snapshot's whitelist deliberately does not pick it up. */
+      timing: readLeadTiming(),
     };
   }
 
@@ -2027,6 +2318,76 @@
       .join('\n');
   }
 
+  /* ── Annotator skip (issue #578, FR-089 / AC-2.20) ──────────────────
+     The control is detached rather than hidden when it does not apply: a
+     reviewer must not merely be unable to click it (FR-089 says their view
+     never renders it), and a submitted sample offers no skip at all --
+     FR-013A's three states decide, so `pending` and `saved` keep it and
+     `submitted` loses it. Skipping does NOT change the sample's status;
+     it appends one `skipped` history event, leaving "I set this aside"
+     and "how far I got" as two facts that never overwrite each other. */
+  var skipGroupNode = null;
+  var skipGroupParent = null;
+  var skipGroupAnchor = null;
+
+  function skipReasonText() {
+    var input = document.getElementById('wsSkipReason');
+    return input ? input.value.trim() : '';
+  }
+
+  /* Blocked-not-disabled, the same convention issue #552 set for the
+     reviewer submit: dimmed via [data-submit-blocked], but the click still
+     reaches the handler so the toast can say what is missing. */
+  function refreshSkipBlocker() {
+    var btn = document.getElementById('wsSkipBtn');
+    if (!btn) return;
+    if (skipReasonText()) btn.removeAttribute('data-submit-blocked');
+    else btn.setAttribute('data-submit-blocked', 'reason');
+  }
+
+  function renderSkipControl() {
+    if (!skipGroupNode) return;
+    var applies =
+      currentRole !== 'reviewer' &&
+      !window.LabelSuiteAnnotationWorkspaceData.isSampleSubmitted(
+        currentProfile.id, currentRole, currentRunType, currentSampleId, currentIdentity
+      );
+    if (applies) {
+      if (!skipGroupNode.parentNode) skipGroupParent.insertBefore(skipGroupNode, skipGroupAnchor);
+      refreshSkipBlocker();
+    } else if (skipGroupNode.parentNode) {
+      skipGroupNode.remove();
+    }
+  }
+
+  function handleSkip() {
+    var reason = skipReasonText();
+    if (!reason) {
+      showToast(t('skipNeedsReason'), 'warning');
+      return;
+    }
+    window.LabelSuiteAnnotationWorkspaceData.markSampleSkipped(
+      currentProfile.id,
+      currentRunType,
+      currentSampleId,
+      reason,
+      buildHistorySummary(),
+      currentIdentity
+    );
+    var input = document.getElementById('wsSkipReason');
+    if (input) input.value = '';
+    refreshSkipBlocker();
+    renderSampleList();
+    renderHistoryPanel();
+    showToast(t('skipSuccess'));
+    /* FR-089: a skip lands on the next sample by the SAME rule a submit
+       does (FR-022A, and FR-022C when nothing is left), rather than a
+       second navigation scheme of its own. */
+    var nextUnit = findNextPendingUnit(buildUnits());
+    if (nextUnit) selectSample(nextUnit.recordId);
+    else window.location.href = buildListReturnUrl();
+  }
+
   function handleSave() {
     window.LabelSuiteAnnotationWorkspaceData.markSampleSaved(
       currentProfile.id,
@@ -2042,6 +2403,27 @@
     renderSampleList();
     renderHistoryPanel();
     showToast(t('wsSaveSuccess'));
+  }
+
+  /* FR-022A / SUBMIT_DEFAULT_ACTION = go-to-next-sample: the sample to land
+     on after a submit is deliberately NOT units[i+1]. An annotator who
+     works out of order (or resumes a half-finished task) has submitted
+     neighbours, and stepping onto one drops them on a finished sample with
+     nothing to do -- the same reasoning issue #456 recorded for the
+     reviewer side. The scan therefore walks forward past submitted units
+     and wraps around once; `null` means every unit is submitted, which is
+     FR-022C's redirect condition. The current unit is reached last and is
+     already submitted by the time this runs, so it never self-selects. */
+  function findNextPendingUnit(units) {
+    var data = window.LabelSuiteAnnotationWorkspaceData;
+    var start = currentUnitIndex(units);
+    for (var step = 1; step <= units.length; step += 1) {
+      var unit = units[(start + step) % units.length];
+      if (!data.isSampleSubmitted(currentProfile.id, currentRole, currentRunType, unit.recordId, unitIdentity(unit))) {
+        return unit;
+      }
+    }
+    return null;
   }
 
   function handleSubmit() {
@@ -2092,6 +2474,20 @@
     showToast(t('wsSubmitSuccess'));
     state.submitBusy = false;
     if (submitBtnEl) submitBtnEl.disabled = false;
+
+    /* issue #514: the submit had no follow-through at all until now. Both
+       destinations are spec constants (SUBMIT_DEFAULT_ACTION /
+       SUBMIT_ALL_DONE_ACTION), and the busy flag is released above first so
+       the next sample loads with a live submit button.
+       buildListReturnUrl() is the single writer FR-081's breadcrumb already
+       goes through, so the all-done return lands on the same filtered list
+       page the annotator came from rather than an unfiltered page 1. */
+    var nextUnit = findNextPendingUnit(buildUnits());
+    if (nextUnit) {
+      selectSample(nextUnit.recordId);
+    } else {
+      window.location.href = buildListReturnUrl();
+    }
   }
 
   /* ── reviewer mode (Phase 3, FR-024L / FR-024L-1 / FR-014A-C) ────────
@@ -2482,8 +2878,13 @@
     var annotatorId = currentAnnotatorId();
     var decisions = {};
     state.selectedOutputTypes.forEach(function (outKey) {
-      var decision = reviewRowDecisions[decisionKey(outKey, annotatorId)];
-      if (decision) decisions[outKey] = { decision: decision, corrected: isRowCorrected(outKey) };
+      var key = decisionKey(outKey, annotatorId);
+      var decision = reviewRowDecisions[key];
+      if (!decision) return;
+      decisions[outKey] = { decision: decision, corrected: isRowCorrected(outKey) };
+      /* issue #552 (FR-016A): the reject reason is part of the decision it
+         explains, so it rides the same draft entry. */
+      if (decision === 'reject' && reviewRowReasons[key]) decisions[outKey].reason = reviewRowReasons[key];
     });
     window.LabelSuiteAnnotationWorkspaceData.saveReviewRowDecisionDraft(
       currentProfile.id, currentRunType, currentSampleId, decisions, currentIdentity
@@ -2525,11 +2926,14 @@
     /* issue #453 (AC-3.42): snapshot the answer the decision was made
        against, so syncDecisionsWithCorrections() can tell a later edit of
        that answer apart from an untouched one. */
+    /* issue #552: run EVERY refresher, not just this pair's -- the row's
+       reject-reason field (buildRejectReasonField) follows the same decision
+       and lives in the same list. */
     approveBtn.addEventListener('click', function () {
       var key = decisionKey(outKey, rowName);
       reviewRowDecisions[key] = reviewRowDecisions[key] === 'approve' ? null : 'approve';
       reviewDecisionAnswers[key] = currentRowAnswer(outKey);
-      refresh();
+      reviewDecisionRefreshers.forEach(function (refreshRow) { refreshRow(); });
       persistReviewDraft();
       if (onChange) onChange();
     });
@@ -2537,7 +2941,7 @@
       var key = decisionKey(outKey, rowName);
       reviewRowDecisions[key] = reviewRowDecisions[key] === 'reject' ? null : 'reject';
       reviewDecisionAnswers[key] = currentRowAnswer(outKey);
-      refresh();
+      reviewDecisionRefreshers.forEach(function (refreshRow) { refreshRow(); });
       persistReviewDraft();
       if (onChange) onChange();
     });
@@ -2577,7 +2981,6 @@
       refresh();
     });
     persistReviewDraft();
-    renderReviewSubmitSummary();
   }
 
   /* free_text corrections are typed, so `a` and `r` are ordinary input the
@@ -2759,22 +3162,6 @@
     correctionTitle.textContent = t('reviewCorrectionTitle');
     row.appendChild(correctionTitle);
 
-    /* issue #399: reviewNote explains what approve/reject actually do, but
-       was defined in I18N and never rendered anywhere -- render it so
-       reviewers can actually read it before deciding.
-       issue #451 (FR-070/AC-3.40): that explanation used to promise the
-       annotator-status rollback unconditionally, while FR-014I scopes the
-       rollback to official_run (AC-3.15/AC-6.4). Since AC-3.33 forbids any
-       run_type presentation branch on the review card, the note stays ONE
-       run-type-invariant string that names both outcomes and separates the
-       review decision from the annotator-status rollback -- same shape as
-       the run-type-qualified sidebar shortcut label (issue #409). */
-    var note = document.createElement('p');
-    note.className = 'rv-review-note';
-    note.setAttribute('data-testid', 'ws-review-note');
-    note.textContent = t('reviewNote');
-    row.appendChild(note);
-
     var correction = document.createElement('div');
     correction.setAttribute('data-testid', 'ws-review-correct-' + (testidSuffix || outKey));
     var panelMount = document.createElement('div');
@@ -2782,6 +3169,66 @@
     renderOutputPreview(panelMount, outKey);
     row.appendChild(correction);
     return correction;
+  }
+
+  /* issue #399: this explains what approve/reject actually do, but was
+     defined in I18N and never rendered anywhere -- render it so reviewers
+     can actually read it before deciding. issue #451/#515/#520 kept it as
+     ONE run-type-invariant sentence deferring the submit consequence to a
+     separate pre-submit confirmation area, mounted once per review unit
+     above the whole card stack (not inside any ws-review-row) so AC-3.33's
+     ban on a run_type branch INSIDE a review card never applied to it.
+     issue #550 (FR-070 points 2/3 revoked, FR-077/AC-3.42/AC-3.44 revoked;
+     spec 015 v4.55.0) folds that confirmation area's run-type-branched
+     consequence into THIS element instead of a second element below the
+     cards -- the two used to say the same thing twice, and this element was
+     already outside AC-3.33's boundary, so nothing stops it branching on
+     run_type now that the single-invariant-string constraint (FR-070 point
+     3) is gone. It renders as a MASTER.md Tooltip (design/system/
+     MASTER.md:1423-1482) reusing task-config.css's .tooltip-wrap /
+     .field-help-tooltip / .tooltip-bubble -- this page already links that
+     stylesheet for the shared task-config engine, and the two run_type
+     texts are long enough that showing both (or reflowing between them)
+     would be noisier than a hover/focus disclosure. A real <button>
+     triggers it (never the native title attribute, MASTER.md:1482) with an
+     aria-describedby-linked role="tooltip" bubble, so hover and keyboard
+     focus both work. Once-per-unit count and DOM order (before the first
+     card) are unchanged from issue #520; the mount point moved on the
+     maintainer's review of #550: it sits in the FR-064 unit-context banner
+     right after the 了解審核流程 trigger, so the two "what does this unit
+     mean" entry points share one row instead of one floating between the
+     banner and the card stack. */
+  function appendReviewNoteTooltip(host) {
+    var wrap = document.createElement('div');
+    wrap.className = 'rv-review-note';
+    wrap.setAttribute('data-testid', 'ws-review-note');
+
+    var tooltipWrap = document.createElement('span');
+    tooltipWrap.className = 'tooltip-wrap';
+
+    var trigger = document.createElement('button');
+    trigger.type = 'button';
+    trigger.className = 'field-help-tooltip';
+    trigger.textContent = '?';
+    trigger.setAttribute('data-testid', 'ws-review-note-trigger');
+    trigger.setAttribute('aria-label', t('reviewNoteTriggerLabel'));
+    trigger.setAttribute('aria-describedby', 'wsReviewNoteBubble');
+
+    var bubble = document.createElement('p');
+    bubble.className = 'tooltip-bubble';
+    bubble.id = 'wsReviewNoteBubble';
+    bubble.setAttribute('role', 'tooltip');
+    bubble.setAttribute('data-testid', 'ws-review-note-bubble');
+    bubble.setAttribute('data-run-type', currentRunType);
+    bubble.textContent =
+      currentRunType === 'official_run'
+        ? t('reviewNoteOfficial').replace('{annotator}', currentAnnotatorId())
+        : t('reviewNoteDry');
+
+    tooltipWrap.appendChild(trigger);
+    tooltipWrap.appendChild(bubble);
+    wrap.appendChild(tooltipWrap);
+    host.appendChild(wrap);
   }
 
   /* FR-014P: a review card must end with exactly ONE decision line,
@@ -2846,34 +3293,98 @@
     }
   }
 
+  /* issue #552 (FR-016A / AC-3.48): a reject must say why. The field is a
+     direct child of the review card, AFTER the correction panel rather than
+     inside its Bypass row: the shared engine rebuilds that panel wholesale
+     (FR-014P point 3), and anything docked inside it has to be re-attached
+     by dockDecisionsOnBypassRow()'s observer -- outside it, the field just
+     stays. Visibility follows the row's decision through the same refresher
+     list the decision buttons use, so shortcuts (FR-054) and draft restores
+     drive it too. */
+  var reviewRowReasons = {};
+
+  function reviewRowReason(outKey, rowName) {
+    return (reviewRowReasons[decisionKey(outKey, rowName)] || '').trim();
+  }
+
+  /* A reject may still lack its reason -- surface that on the footer button
+     as a blocked look (data attribute + CSS), never `disabled` or
+     `aria-disabled`: FR-083 needs the click to reach handleReviewSubmit()
+     so the toast can name the outKeys, and both of those would stop it. */
+  function refreshReviewSubmitState() {
+    var reviewSubmitBtn = document.getElementById('wsReviewSubmitBtn');
+    if (!reviewSubmitBtn) return;
+    var rowName = currentAnnotatorId();
+    var missing = state.selectedOutputTypes.some(function (outKey) {
+      return reviewRowBlocker(outKey, rowName) === 'reason';
+    });
+    if (missing) reviewSubmitBtn.setAttribute('data-submit-blocked', 'reason');
+    else reviewSubmitBtn.removeAttribute('data-submit-blocked');
+  }
+
+  function buildRejectReasonField(outKey, rowName) {
+    var key = decisionKey(outKey, rowName);
+    var wrap = document.createElement('div');
+    wrap.className = 'rv-reject-reason hidden';
+
+    var label = document.createElement('label');
+    label.className = 'rv-reject-reason-label';
+    label.textContent = t('reviewRejectReasonLabel');
+    var inputId = 'wsRejectReason-' + outKey;
+    label.setAttribute('for', inputId);
+
+    var input = document.createElement('textarea');
+    input.id = inputId;
+    input.rows = 2;
+    input.required = true;
+    input.setAttribute('data-testid', 'ws-review-reject-reason');
+    input.setAttribute('data-outkey', outKey);
+    input.setAttribute('placeholder', t('reviewRejectReasonPlaceholder'));
+    input.addEventListener('input', function () {
+      reviewRowReasons[key] = input.value;
+      refreshReviewSubmitState();
+      persistReviewDraft();
+    });
+
+    /* Mounted only while the row is rejected (AC-3.48: 通過時不出現); the
+       typed text lives in reviewRowReasons, so a re-mount restores it. */
+    function refresh() {
+      var rejected = reviewRowDecisions[key] === 'reject';
+      wrap.classList.toggle('hidden', !rejected);
+      if (rejected && input.parentNode !== wrap) {
+        input.value = reviewRowReasons[key] || '';
+        wrap.appendChild(label);
+        wrap.appendChild(input);
+      } else if (!rejected && input.parentNode === wrap) {
+        wrap.removeChild(label);
+        wrap.removeChild(input);
+      }
+      refreshReviewSubmitState();
+    }
+    refresh();
+    reviewDecisionRefreshers.push(refresh);
+    return wrap;
+  }
+
   function buildReviewRow(outKey, submission) {
     var row = buildReviewRowShell(null);
 
     seedReviewRow(outKey, submission);
     var correction = appendCorrectionControl(row, outKey);
     dockDecisionsOnBypassRow(correction, [buildRowDecisionButtons(outKey, currentAnnotatorId(), null).el]);
+    row.appendChild(buildRejectReasonField(outKey, currentAnnotatorId()));
     return row;
   }
 
-  /* ── Pre-submit review summary (spec 015 v4.32.0, FR-077/AC-3.42,
-     issue #453) ──────────────────────────────────────────────────────
-     The direct correction (engine state) and the approve/reject decision
-     (reviewRowDecisions) are two independent stores that read as ONE
-     action on screen, so nothing told a reviewer whether 通過 accepts the
-     annotator's answer or the edited one, what a 退回 with no edit stores,
-     or what submitting does to the annotator's status. Two halves close
-     that gap:
-       (1) every decision records the answer it was made against, so a
-           later edit of that answer invalidates it instead of silently
-           riding along -- the live-edit twin of issue #398's reload path
-           (which stays as-is: FR-014S/AC-6.10 still excludes the
-           correction's own value from draft persistence);
-       (2) the submit area restates, per output type, the original answer,
-           the corrected answer, the decision and the submit consequence.
-     Placement is deliberate: the consequence line is run-type dependent,
-     and AC-3.33 forbids a run_type presentation branch on the REVIEW CARD.
-     Rendering it in the submit area keeps that contract intact -- the same
-     reason FR-064's run-type-aware context banner sits outside the card. */
+  /* spec 015 FR-077/AC-3.42 (issue #453) used to pair this with a pre-submit
+     summary that restated, per output type, the original answer, the
+     corrected answer, the decision and the submit consequence -- issue #550
+     revoked that summary (see the v4.55.0 Changelog entry). What survives:
+     every decision records the answer it was made against, so a later edit
+     of that answer invalidates it instead of silently riding along -- the
+     live-edit twin of issue #398's reload path (which stays as-is:
+     FR-014S/AC-6.10 still excludes the correction's own value from draft
+     persistence). */
   var reviewDecisionAnswers = {};
 
   /* AC-3.42: a decision must never outlive the value it judged. A restored
@@ -2904,105 +3415,44 @@
     showToast(t('toastReviewDecisionResetOnEdit'), 'warning');
   }
 
-  function appendSummaryLine(parent, testid, label, value) {
-    var line = document.createElement('div');
-    line.className = 'rv-summary-line';
-    line.setAttribute('data-testid', testid);
-    line.setAttribute('data-answer', value);
-    line.textContent = label + (value || t('reviewNoAnswer'));
-    parent.appendChild(line);
-  }
-
-  var SUMMARY_NOTE_KEYS = {
-    'approve-unchanged': 'summaryNoteApproveUnchanged',
-    'approve-changed': 'summaryNoteApproveChanged',
-    'reject-unchanged': 'summaryNoteRejectUnchanged',
-    'reject-changed': 'summaryNoteRejectChanged',
-    undecided: 'summaryNoteUndecided',
+  /* issue #515 (2-a) established these three functions as the single source
+     for "is this review unit interactive" (not arbitration, not finalized,
+     not empty); renderReviewerWorkspace()'s three early returns are the
+     sole consumer since issue #550 removed the summary's own duplicate
+     interactivity re-renders (see the v4.55.0 Changelog entry). */
+  var REVIEW_UNIT_BLOCK = {
+    ARBITRATION: 'arbitration',
+    FINALIZED: 'finalized',
+    EMPTY: 'empty',
   };
 
-  function buildSummaryRow(outKey, rowName) {
-    var decision = reviewRowDecisions[decisionKey(outKey, rowName)] || null;
-    var original = reviewRowOriginals[outKey] || '';
-    var corrected = currentRowAnswer(outKey);
-    var changed = corrected !== original;
-
-    var row = document.createElement('div');
-    row.className = 'rv-summary-row';
-    row.setAttribute('data-testid', 'ws-review-summary-row');
-    row.setAttribute('data-outkey', outKey);
-    row.setAttribute('data-decision', decision || 'none');
-    row.setAttribute('data-changed', changed ? 'true' : 'false');
-
-    var head = document.createElement('div');
-    head.className = 'rv-summary-head';
-    head.textContent = outKey;
-    row.appendChild(head);
-
-    appendSummaryLine(row, 'ws-review-summary-original', t('reviewOriginalAnswerLabel'), original);
-    appendSummaryLine(row, 'ws-review-summary-corrected', t('reviewCorrectedAnswerLabel'), corrected);
-
-    var kind = decision ? decision + '-' + (changed ? 'changed' : 'unchanged') : 'undecided';
-    var note = document.createElement('div');
-    note.className = 'rv-summary-note';
-    note.setAttribute('data-testid', 'ws-review-summary-note');
-    note.setAttribute('data-kind', kind);
-    note.textContent = t(SUMMARY_NOTE_KEYS[kind]);
-    row.appendChild(note);
-    return row;
-  }
-
-  function hideReviewSubmitSummary() {
-    var panel = document.getElementById('wsReviewSubmitSummary');
-    if (!panel) return;
-    while (panel.firstChild) panel.removeChild(panel.firstChild);
-    panel.classList.add('hidden');
-  }
-
-  function renderReviewSubmitSummary() {
-    var panel = document.getElementById('wsReviewSubmitSummary');
-    if (!panel) return;
-    hideReviewSubmitSummary();
-    if (currentRole !== 'reviewer' || !state.selectedOutputTypes.length) return;
-    var rowName = currentAnnotatorId();
-
-    var title = document.createElement('div');
-    title.className = 'rv-summary-title';
-    title.textContent = t('summaryTitle');
-    panel.appendChild(title);
-
-    var pendingKeys = [];
-    state.selectedOutputTypes.forEach(function (outKey) {
-      if (!reviewRowDecisions[decisionKey(outKey, rowName)]) pendingKeys.push(outKey);
-      panel.appendChild(buildSummaryRow(outKey, rowName));
-    });
-
-    var pending = document.createElement('p');
-    pending.className = 'rv-summary-pending';
-    pending.setAttribute('data-testid', 'ws-review-summary-pending');
-    pending.setAttribute('data-count', String(pendingKeys.length));
-    pending.textContent = pendingKeys.length
-      ? t('summaryPending').replace('{list}', pendingKeys.join('、'))
-      : t('summaryPendingNone');
-    panel.appendChild(pending);
-
-    var effect = document.createElement('p');
-    effect.className = 'rv-summary-effect';
-    effect.setAttribute('data-testid', 'ws-review-summary-effect');
-    effect.setAttribute('data-run-type', currentRunType);
-    effect.textContent = t(
-      currentRunType === 'official_run' ? 'summaryEffectOfficial' : 'summaryEffectDry'
+  function currentReviewUnitStatus() {
+    return window.LabelSuiteAnnotationWorkspaceData.getReviewUnitStatus(
+      currentProfile.id, currentRunType, currentSampleId, currentIdentity, state.selectedOutputTypes,
+      { minReviewers: currentProfile.minReviewers || 1 }
     );
-    panel.appendChild(effect);
+  }
 
-    panel.classList.remove('hidden');
+  /* Returns null when the unit IS interactive. */
+  function reviewUnitBlockReason(unitStatus) {
+    var workspaceData = window.LabelSuiteAnnotationWorkspaceData;
+    if (
+      unitStatus === workspaceData.REVIEW_UNIT_STATUS.DISPUTED &&
+      workspaceData.isArbiterCandidate(currentProfile.id, currentRunType, currentSampleId, currentIdentity)
+    ) {
+      return REVIEW_UNIT_BLOCK.ARBITRATION;
+    }
+    if (unitStatus === workspaceData.REVIEW_UNIT_STATUS.FINALIZED) return REVIEW_UNIT_BLOCK.FINALIZED;
+    if (unitStatus === null && !demoAnnotatorRow()) return REVIEW_UNIT_BLOCK.EMPTY;
+    return null;
   }
 
   /* The shared engine owns every correction control and exposes no change
      hook, so mirror markUnsaved()'s delegated-capture approach on the
      preview root and re-derive on the next tick, after the engine's own
-     handler has written the new value into state. Decision clicks land here
-     too, which is what keeps the summary in step with them. */
+     handler has written the new value into state -- decision clicks land
+     here too, which is what keeps a decision from outliving the answer it
+     judged (syncDecisionsWithCorrections(), AC-3.42 point 2). */
   (function watchReviewEdits() {
     var previewRoot = document.getElementById('annotationPreview');
     if (!previewRoot) return;
@@ -3013,7 +3463,6 @@
       setTimeout(function () {
         queued = false;
         syncDecisionsWithCorrections();
-        renderReviewSubmitSummary();
       }, 0);
     }
     ['input', 'change', 'click'].forEach(function (eventName) {
@@ -3069,6 +3518,9 @@
 
     var correction = appendCorrectionControl(row, 'relation_identification', 'span', outKeys);
     dockDecisionsOnBypassRow(correction, decisionEls);
+    outKeys.forEach(function (outKey) {
+      row.appendChild(buildRejectReasonField(outKey, currentAnnotatorId()));
+    });
     return row;
   }
 
@@ -3102,8 +3554,36 @@
      the ✕/✓ row decisions never render — an arbiter picks a side, they do
      not re-annotate. */
   var arbitrationChoices = {};
+  /* issue #568: dispute item ids still open on the rendered unit, read by
+     the action-bar submit (handleArbitrationSubmit). */
+  var arbitrationOpenItemIds = [];
+  /* FR-089 / AC-3.50: one reason per OPEN dispute item, keyed the same way
+     the choices are. Per item rather than per submit because a card can
+     finalize several items at once and one shared sentence would not say
+     why any single one went the way it did. */
+  var arbitrationReasons = {};
+
+  function arbitrationItemsMissingReason() {
+    return arbitrationOpenItemIds.filter(function (id) {
+      return !(arbitrationReasons[id] || '').trim();
+    });
+  }
+
+  /* Same blocked-not-disabled convention as the reviewer submit (#552). */
+  function refreshArbitrationBlocker() {
+    var btn = document.getElementById('wsArbitrationSubmitBtn');
+    if (!btn) return;
+    if (arbitrationItemsMissingReason().length) btn.setAttribute('data-submit-blocked', 'reason');
+    else btn.removeAttribute('data-submit-blocked');
+  }
 
   function formatDisputeValue(value) {
+    /* issue #551: a naked reject carries the PURE_REJECT_VALUE sentinel
+       instead of a real answer -- render it as what it is (a rejection with
+       no proposed replacement), not as the raw marker string. */
+    if (value === window.LabelSuiteAnnotationWorkspaceData.PURE_REJECT_VALUE) {
+      return t('arbitrationPureRejectLabel');
+    }
     if (value == null || value === '') return t('reviewNoAnswer');
     return typeof value === 'string' ? value : JSON.stringify(value);
   }
@@ -3134,7 +3614,7 @@
     even_tie: 'arbitrationVoteReasonEvenTie',
     all_divergent: 'arbitrationVoteReasonAllDivergent',
     no_majority: 'arbitrationVoteReasonNoMajority',
-    single_reviewer: 'arbitrationVoteReasonSingleReviewer',
+    pure_reject: 'arbitrationVoteReasonPureReject',
   };
 
   function buildArbitrationVotesBlock(votes) {
@@ -3192,6 +3672,26 @@
     label.textContent = disputeItemLabel(item);
     row.appendChild(label);
     row.appendChild(buildArbitrationVotesBlock(votes));
+
+    /* Before the A/B buttons, not after: the reason is what makes the
+       choice legible later, and a field below the control you just pressed
+       reads as an afterthought. */
+    var reasonInput = document.createElement('input');
+    reasonInput.type = 'text';
+    reasonInput.required = true;
+    reasonInput.setAttribute('data-testid', 'ws-arbitration-reason');
+    reasonInput.setAttribute('data-item-id', itemId);
+    reasonInput.placeholder = t('arbitrationReasonPlaceholder');
+    reasonInput.setAttribute('aria-label', t('arbitrationReasonPlaceholder'));
+    reasonInput.style.cssText =
+      'width:100%;font:inherit;font-size:13px;padding:5px 8px;margin-bottom:6px;'
+      + 'border:1px solid var(--color-border);border-radius:var(--radius-sm);'
+      + 'background:var(--color-surface);color:var(--color-ink);';
+    reasonInput.addEventListener('input', function () {
+      arbitrationReasons[itemId] = reasonInput.value;
+      refreshArbitrationBlocker();
+    });
+    row.appendChild(reasonInput);
 
     var group = document.createElement('div');
     group.className = 'rv-choice-group';
@@ -3273,6 +3773,7 @@
   function renderArbitrationCard(preview, submission) {
     var data = window.LabelSuiteAnnotationWorkspaceData;
     arbitrationChoices = {};
+    arbitrationReasons = {};
 
     var card = document.createElement('div');
     card.className = 'content-card';
@@ -3343,31 +3844,48 @@
       card.appendChild(buildArbitrationItemRow(item, data.describeDisputeVotes(item, reviewerCount)));
     });
 
-    if (openItemIds.length) {
-      var submitBtn = document.createElement('button');
-      submitBtn.type = 'button';
-      submitBtn.className = 'btn btn-cta';
-      submitBtn.style.cssText = 'margin-top:12px;';
-      submitBtn.setAttribute('data-testid', 'ws-arbitration-submit');
-      submitBtn.textContent = t('arbitrationSubmitLabel');
-      submitBtn.addEventListener('click', function () {
-        var decisions = openItemIds.map(function (id) { return arbitrationChoices[id]; });
-        if (decisions.some(function (decision) { return !decision; })) {
-          showToast(t('toastArbitrationIncomplete'), 'warning');
-          return;
-        }
-        data.submitArbitration(
-          currentProfile.id, currentRunType, currentSampleId, currentIdentity, decisions
-        );
-        clearUnsaved();
-        showToast(t('wsArbitrationSubmitSuccess'));
-        renderSampleList();
-        renderReviewerWorkspace();
-      });
-      card.appendChild(submitBtn);
-    }
+    /* issue #568: the submit lives in the fixed action bar
+       (#wsArbitrationSubmitBtn, bound once in init to handleArbitrationSubmit)
+       so it sits where 送出審核 sits instead of scrolling with the card.
+       renderReviewer() hides it before branching; only an open item shows it. */
+    arbitrationOpenItemIds = openItemIds;
+    var arbitrationSubmitBtn = document.getElementById('wsArbitrationSubmitBtn');
+    if (arbitrationSubmitBtn && openItemIds.length) arbitrationSubmitBtn.classList.remove('hidden');
+    refreshArbitrationBlocker();
 
     preview.appendChild(card);
+  }
+
+  function handleArbitrationSubmit() {
+    var decisions = arbitrationOpenItemIds.map(function (id) { return arbitrationChoices[id]; });
+    if (!decisions.length) return;
+    if (decisions.some(function (decision) { return !decision; })) {
+      showToast(t('toastArbitrationIncomplete'), 'warning');
+      return;
+    }
+    /* FR-089: the toast NAMES the items still missing a reason -- on a card
+       finalizing several at once, "fill in the reason" alone would not say
+       which one. */
+    var missing = arbitrationItemsMissingReason();
+    if (missing.length) {
+      showToast(t('arbitrationNeedsReason') + '：' + missing.join('、'), 'warning');
+      return;
+    }
+    window.LabelSuiteAnnotationWorkspaceData.submitArbitration(
+      currentProfile.id, currentRunType, currentSampleId, currentIdentity,
+      decisions.map(function (decision) {
+        return {
+          itemId: decision.itemId,
+          choice: decision.choice,
+          value: decision.value,
+          reason: (arbitrationReasons[decision.itemId] || '').trim(),
+        };
+      })
+    );
+    clearUnsaved();
+    showToast(t('wsArbitrationSubmitSuccess'));
+    renderSampleList();
+    renderReviewerWorkspace();
   }
 
   /* Finalized unit lock (issue #308): a FINALIZED unit renders this
@@ -3441,17 +3959,42 @@
      way a reviewer can tell one review model from another inside the
      workspace. Rendered above the card in every reviewer path, including
      the arbitration branch. */
-  /* FR-051's five states as a route, per lane. FINALIZED is reachable from
-     BOTH lanes, which is exactly why the track needs getReviewUnitLane() and
-     not just the status. */
+  /* FR-051's five states as a route, per lane AND per finalize threshold.
+     FINALIZED is reachable from BOTH lanes, which is exactly why the track
+     needs getReviewUnitLane() and not just the status.
+
+     issue #525 PR-C: `approved` and `modified` are the two states that mean
+     "a reviewer answered, but the quorum is not reached yet". At
+     min_reviewers = 1 that moment does not exist -- getReviewUnitStatus()
+     only evaluates `enoughReviewers` once at least one reviewer submitted,
+     so a threshold of 1 makes the flag always true and the unit derives
+     `finalized` (no diff) or `disputed` (any diff) directly. Drawing those
+     two nodes anyway told a single-reviewer task's reviewer about states
+     their task can never produce, so the `single` column drops them. */
   var REVIEW_TRACK_ROUTES = {
-    same: ['pending', 'approved', 'finalized'],
-    differing: ['pending', 'modified', 'disputed', 'finalized'],
+    quorum: {
+      same: ['pending', 'approved', 'finalized'],
+      differing: ['pending', 'modified', 'disputed', 'finalized'],
+    },
+    single: {
+      same: ['pending', 'finalized'],
+      differing: ['pending', 'disputed', 'finalized'],
+    },
+  };
+
+  var TRACK_BRANCH_I18N_KEYS = {
+    same: 'trackBranchSame',
+    differing: 'trackBranchDiffering',
+    unconverged: 'trackBranchUnconverged',
+    arbitrated: 'trackBranchArbitrated',
   };
 
   var TRACK_BORDER = 'var(--color-border)';
   var TRACK_TAKEN = 'var(--color-cta)';
 
+  /* `taken` widens the stroke as well as recolouring it: the route a unit
+     actually walked must not be a colour-only signal (AC-7's reasoning,
+     applied to the connectors rather than only to the current node). */
   function trackFork(paths) {
     var span = document.createElement('span');
     span.className = 'review-track-fork';
@@ -3459,7 +4002,8 @@
     span.innerHTML =
       '<svg width="28" height="68" viewBox="0 0 28 68" fill="none">' +
       paths.map(function (p) {
-        return '<path d="' + p.d + '" stroke="' + p.stroke + '" stroke-width="2"/>';
+        return '<path d="' + p.d + '" stroke="' + (p.taken ? TRACK_TAKEN : TRACK_BORDER) +
+          '" stroke-width="' + (p.taken ? 3 : 2) + '"/>';
       }).join('') +
       '</svg>';
     return span;
@@ -3467,6 +4011,7 @@
 
   /* Builds the §Review Status Track for one unit. `lane` is null until a
      reviewer submits, in which case only 待審 is on the route.
+     `minReviewers` picks the column of REVIEW_TRACK_ROUTES above.
 
      `done` means "this node is on the unit's route, before its current
      position". It is a ROUTE, not an event log: the prototype derives
@@ -3475,8 +4020,9 @@
      rendered as 已同意. Marking the lane's interim node keeps the branch
      legible; claiming a timestamped visit would be a claim the data cannot
      support. */
-  function buildReviewStatusTrack(unitStatus, lane) {
-    var route = REVIEW_TRACK_ROUTES[lane] || ['pending'];
+  function buildReviewStatusTrack(unitStatus, lane, minReviewers) {
+    var quorum = minReviewers >= 2;
+    var route = REVIEW_TRACK_ROUTES[quorum ? 'quorum' : 'single'][lane] || ['pending'];
     var position = route.indexOf(unitStatus);
 
     function nodeClass(status) {
@@ -3486,7 +4032,7 @@
     }
 
     var track = document.createElement('div');
-    track.className = 'review-track';
+    track.className = 'review-track' + (quorum ? '' : ' review-track-single');
     track.setAttribute('role', 'list');
     track.setAttribute('aria-label', t('trackAria'));
 
@@ -3506,10 +4052,29 @@
       track.appendChild(node);
     }
 
-    function addRail(gridStyle, taken) {
+    /* The branch condition used to live only in the fork's geometry, and the
+       fork is aria-hidden -- so it reached assistive tech through nothing at
+       all. These captions are therefore NOT hidden. They carry no `listitem`
+       role, so the node list the track exposes is unchanged. */
+    function branchLabel(branchKey, taken) {
+      var label = document.createElement('span');
+      label.className = 'review-track-branch' + (taken ? ' done' : '');
+      label.setAttribute('data-branch', branchKey);
+      label.textContent = t(TRACK_BRANCH_I18N_KEYS[branchKey]);
+      return label;
+    }
+
+    function addBranch(branchKey, taken, gridStyle) {
+      var label = branchLabel(branchKey, taken);
+      label.setAttribute('style', gridStyle);
+      track.appendChild(label);
+    }
+
+    function addRail(gridStyle, taken, branchKey) {
       var rail = document.createElement('span');
       rail.className = 'review-track-rail' + (taken ? ' done' : '');
       rail.setAttribute('style', gridStyle);
+      if (branchKey) rail.appendChild(branchLabel(branchKey, taken));
       track.appendChild(rail);
     }
 
@@ -3521,28 +4086,40 @@
     var finalized = unitStatus === 'finalized';
     addNode('pending', 'grid-column:1;grid-row:1/3');
     addFork(trackFork([
-      { d: 'M0 34 H12 V17 H28', stroke: lane === 'same' ? TRACK_TAKEN : TRACK_BORDER },
-      { d: 'M0 34 H12 V51 H28', stroke: lane === 'differing' ? TRACK_TAKEN : TRACK_BORDER },
+      { d: 'M0 34 H12 V17 H28', taken: lane === 'same' },
+      { d: 'M0 34 H12 V51 H28', taken: lane === 'differing' },
     ]), 'grid-column:2;grid-row:1/3');
-    addNode('approved', 'grid-column:3;grid-row:1');
-    addNode('modified', 'grid-column:3;grid-row:2');
-    addRail('grid-column:4/6;grid-row:1', lane === 'same' && finalized);
-    addRail('grid-column:4;grid-row:2', lane === 'differing' && unitStatus !== 'modified');
-    addNode('disputed', 'grid-column:5;grid-row:2');
+    addBranch('same', lane === 'same', 'grid-column:3;grid-row:1');
+    addBranch('differing', lane === 'differing', 'grid-column:3;grid-row:2');
+    if (quorum) {
+      addNode('approved', 'grid-column:4;grid-row:1');
+      addNode('modified', 'grid-column:4;grid-row:2');
+      addRail('grid-column:5/8;grid-row:1', lane === 'same' && finalized);
+      addRail('grid-column:5;grid-row:2', lane === 'differing' && unitStatus !== 'modified', 'unconverged');
+      addNode('disputed', 'grid-column:6;grid-row:2');
+      addRail('grid-column:7;grid-row:2', lane === 'differing' && finalized, 'arbitrated');
+    } else {
+      /* No interim node to pass through: the same-answer lane runs straight
+         from the fork to 已定稿, and the differing lane straight to 爭議中. */
+      addRail('grid-column:4/6;grid-row:1', lane === 'same' && finalized);
+      addNode('disputed', 'grid-column:4;grid-row:2');
+      addRail('grid-column:5;grid-row:2', lane === 'differing' && finalized, 'arbitrated');
+    }
+    var joinColumn = quorum ? 8 : 6;
     addFork(trackFork([
-      { d: 'M0 17 H16 V34 H28', stroke: lane === 'same' && finalized ? TRACK_TAKEN : TRACK_BORDER },
-      { d: 'M0 51 H16 V34 H28', stroke: lane === 'differing' && finalized ? TRACK_TAKEN : TRACK_BORDER },
-    ]), 'grid-column:6;grid-row:1/3');
-    addNode('finalized', 'grid-column:7;grid-row:1/3');
+      { d: 'M0 17 H16 V34 H28', taken: lane === 'same' && finalized },
+      { d: 'M0 51 H16 V34 H28', taken: lane === 'differing' && finalized },
+    ]), 'grid-column:' + joinColumn + ';grid-row:1/3');
+    addNode('finalized', 'grid-column:' + (joinColumn + 1) + ';grid-row:1/3');
     return track;
   }
 
-  function buildReviewUnitContext(unitStatus) {
+  /* `reviewerSubmissions` is the unit's readReviewerSubmissions() result,
+     read once by renderReviewer(). */
+  function buildReviewUnitContext(unitStatus, reviewerSubmissions) {
     var workspaceData = window.LabelSuiteAnnotationWorkspaceData;
     var minReviewers = currentProfile.minReviewers || 1;
-    var reviewedCount = workspaceData.readReviewerSubmissions(
-      currentProfile.id, currentRunType, currentSampleId, currentIdentity
-    ).length;
+    var reviewedCount = reviewerSubmissions.length;
 
     var banner = document.createElement('div');
     banner.className = 'rv-unit-context';
@@ -3555,21 +4132,24 @@
       banner.appendChild(node);
     }
 
-    chip(
-      t(currentRunType === 'official_run' ? 'unitCtxRunOfficial' : 'unitCtxRunDry'),
-      'rv-unit-run'
-    );
-    /* issue #452: quorum and reviewed-so-far used to be two chips whose
-       numbers were the SAME pair (reviewedCount, minReviewers) under two
-       different labels -- one reading 「審核門檻 3 位審核員」, the other
-       「已審 1 / 3」, which a reviewer read as a second progress bar. One
-       chip, one subject: this unit's distance from its finalize threshold. */
-    chip(
-      t('unitCtxThreshold')
-        .replace('{x}', String(reviewedCount))
-        .replace('{n}', String(minReviewers)),
-      'rv-unit-threshold'
-    );
+    /* issue #525 PR-B: an official run is the only one of its kind, but a
+       dry run is one of SEVERAL rounds -- an unnumbered 試標 chip leaves a
+       reviewer comparing R1 and R2 results with no way to tell from the
+       workspace which round is on screen. The round and its fallback come
+       from the same expression annotation-list.html:1866 already uses, so
+       the list and the workspace can never name different rounds. The
+       breadcrumb keeps the unnumbered `unitCtxRunDry`: crumbTaskTpl
+       substitutes that string into `{run}` and would carry a `{round}`
+       token past every replace() into the DOM. */
+    var runLabel;
+    if (currentRunType === 'official_run') {
+      runLabel = t('unitCtxRunOfficial');
+    } else {
+      var dryRunCtx = currentProfile.materializedRuns && currentProfile.materializedRuns.dry_run;
+      var dryRunRound = dryRunCtx && dryRunCtx.round != null ? dryRunCtx.round : 1;
+      runLabel = t('unitCtxRunDryRound').replace('{round}', String(dryRunRound));
+    }
+    chip(runLabel, 'rv-unit-run');
     /* issue #515: no identity chip here. "Who am I reviewing" is already
        answered twice -- breadcrumb level 3 (審核單位 {sample} · {annotator},
        FR-080) and the left column's group header ({n} 位標記員, FR-071) --
@@ -3598,6 +4178,9 @@
         .replace('{x}', String(reviewedCount))
         .replace('{n}', String(minReviewers));
     }
+    /* issue #572: the 目前： prefix from issue #525 PR-B is gone -- the
+       pill sits between the run-type badge and the quorum chip, so it
+       already reads as the unit's state, not as an action. */
     statePill.textContent = note ? stateText + ' · ' + note : stateText;
     if (unitStatus !== null) {
       statePill.setAttribute('data-terminal', terminal ? 'true' : 'false');
@@ -3611,23 +4194,109 @@
     }
     banner.appendChild(statePill);
 
+    /* issue #452: quorum and reviewed-so-far used to be two chips whose
+       numbers were the SAME pair (reviewedCount, minReviewers) under two
+       different labels -- one reading 「審核門檻 3 位審核員」, the other
+       「已審 1 / 3」, which a reviewer read as a second progress bar. One
+       chip, one subject: this unit's distance from its finalize threshold.
+       issue #525 PR-B: it now trails the state instead of leading it. The
+       reviewer's first question is where the unit IS; how far that is from
+       the threshold only qualifies the answer, so it reads second -- and
+       because the banner wraps rather than scrolls, DOM order IS the
+       narrow-viewport reading order (issue #525 §Accessibility). */
+    chip(
+      t('unitCtxThreshold')
+        .replace('{x}', String(reviewedCount))
+        .replace('{n}', String(minReviewers)),
+      'rv-unit-threshold'
+    );
+
     /* The pill answers "what state"; the track answers "by which route, and
        what is left". Both stay: the pill carries the terminal/interim note
-       and the aria-label the track has no place for. A null status has no
-       unit yet, so there is no route to draw. */
-    if (unitStatus !== null) {
-      var trackWrap = document.createElement('div');
-      trackWrap.className = 'rv-unit-track';
-      trackWrap.appendChild(buildReviewStatusTrack(
-        unitStatus,
-        workspaceData.getReviewUnitLane(
-          currentProfile.id, currentRunType, currentSampleId, currentIdentity,
-          state.selectedOutputTypes
-        )
-      ));
-      banner.appendChild(trackWrap);
-    }
+       and the aria-label the track has no place for.
+       issue #525 PR-A: the track no longer sits in the banner. Only the
+       question "what state" is worth permanent space -- "by which route" is
+       asked once, so it moved into an on-demand drawer and the banner keeps
+       only the way in. A null status has no unit yet, so there is no route
+       to draw and no reason to offer the trigger either. */
+    syncReviewFlowDrawer(unitStatus);
+    if (unitStatus !== null) banner.appendChild(buildReviewFlowTrigger());
     return banner;
+  }
+
+  /* ── Review-flow drawer (issue #525 PR-A) ──────────────────────────
+     The panel itself is static markup in annotation-workspace.html; this
+     block owns its content and its open/close state. Focus trap, Esc and
+     focus return come from LabelSuiteModalFocus, the same shared helper the
+     guideline modals use -- a second focus implementation would be a second
+     thing to keep correct. */
+  var FLOW_DRAWER_ID = 'wsReviewFlowDrawer';
+
+  function buildReviewFlowTrigger() {
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'rv-flow-trigger';
+    btn.setAttribute('data-testid', 'ws-review-flow-trigger');
+    btn.setAttribute('aria-expanded', 'false');
+    btn.setAttribute('aria-controls', FLOW_DRAWER_ID);
+    btn.textContent = t('flowDrawerOpen');
+    btn.addEventListener('click', function () { openReviewFlowDrawer(btn); });
+    return btn;
+  }
+
+  function openReviewFlowDrawer(trigger) {
+    var drawer = document.getElementById(FLOW_DRAWER_ID);
+    if (!drawer) return;
+    drawer.classList.remove('hidden');
+    trigger.setAttribute('aria-expanded', 'true');
+    if (window.LabelSuiteModalFocus) {
+      window.LabelSuiteModalFocus.open(drawer, {
+        trigger: trigger,
+        onClose: closeReviewFlowDrawer,
+      });
+    }
+  }
+
+  function closeReviewFlowDrawer() {
+    var drawer = document.getElementById(FLOW_DRAWER_ID);
+    if (!drawer || drawer.classList.contains('hidden')) return;
+    drawer.classList.add('hidden');
+    var trigger = document.querySelector('[data-testid="ws-review-flow-trigger"]');
+    if (trigger) trigger.setAttribute('aria-expanded', 'false');
+    if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(drawer);
+  }
+
+  /* Refills the drawer from the unit the banner is describing. Closing first
+     is not cosmetic: every render replaces the banner, so the trigger that an
+     open drawer would return focus to is a detached node by the time the
+     reviewer presses Esc. */
+  function syncReviewFlowDrawer(unitStatus) {
+    closeReviewFlowDrawer();
+    var body = document.getElementById('wsReviewFlowDrawerBody');
+    if (!body) return;
+    while (body.firstChild) body.removeChild(body.firstChild);
+    if (unitStatus === null) return;
+    body.appendChild(buildReviewStatusTrack(
+      unitStatus,
+      window.LabelSuiteAnnotationWorkspaceData.getReviewUnitLane(
+        currentProfile.id, currentRunType, currentSampleId, currentIdentity,
+        state.selectedOutputTypes
+      ),
+      currentProfile.minReviewers || 1
+    ));
+  }
+
+  function setupReviewFlowDrawer() {
+    var drawer = document.getElementById(FLOW_DRAWER_ID);
+    var closeBtn = document.getElementById('wsReviewFlowDrawerClose');
+    if (closeBtn) closeBtn.addEventListener('click', closeReviewFlowDrawer);
+    if (drawer) {
+      drawer.addEventListener('click', function (e) {
+        if (e.target === drawer) closeReviewFlowDrawer();
+      });
+    }
+    /* Escape-to-close comes from the LabelSuiteModalFocus trap registered in
+       openReviewFlowDrawer(), same as the guideline modals. */
   }
 
   function renderReviewerWorkspace() {
@@ -3638,10 +4307,7 @@
     reviewRowOriginals = {};
     reviewDecisionRefreshers = [];
     reviewDecisionAnswers = {};
-    /* issue #453: every early return below (arbitration / finalized /
-       empty unit) is a path with nothing to summarize, so hide first and
-       let the interactive path re-render it at the end. */
-    hideReviewSubmitSummary();
+    reviewRowReasons = {};
     /* issue #196 (CONT-03): restore any in-progress decisions persisted by
        persistReviewDraft() before this render -- a reload must not silently
        undecide rows the reviewer already chose.
@@ -3665,6 +4331,7 @@
           return;
         }
         reviewRowDecisions[decisionKey(outKey, annotatorId)] = entry.decision;
+        if (entry.reason) reviewRowReasons[decisionKey(outKey, annotatorId)] = entry.reason;
       });
       if (correctionLost) showToast(t('toastReviewCorrectionReset'), 'warning');
     })();
@@ -3674,17 +4341,22 @@
     var submission = getAnnotatorSubmission();
     var rawRecord = findRecordById(currentSampleId) || {};
 
-    var workspaceData = window.LabelSuiteAnnotationWorkspaceData;
     var reviewSubmitBtn = document.getElementById('wsReviewSubmitBtn');
-    var unitStatus = workspaceData.getReviewUnitStatus(
-      currentProfile.id, currentRunType, currentSampleId, currentIdentity, state.selectedOutputTypes,
-      { minReviewers: currentProfile.minReviewers || 1 }
+    /* issue #568: hidden by default; renderArbitrationCard() reveals it only
+       while this unit still has an open dispute item. */
+    var arbitrationSubmitBtn = document.getElementById('wsArbitrationSubmitBtn');
+    if (arbitrationSubmitBtn) arbitrationSubmitBtn.classList.add('hidden');
+    arbitrationOpenItemIds = [];
+    var unitStatus = currentReviewUnitStatus();
+    var reviewerSubmissions = window.LabelSuiteAnnotationWorkspaceData.readReviewerSubmissions(
+      currentProfile.id, currentRunType, currentSampleId, currentIdentity
     );
-    preview.appendChild(buildReviewUnitContext(unitStatus));
-    if (
-      unitStatus === workspaceData.REVIEW_UNIT_STATUS.DISPUTED &&
-      workspaceData.isArbiterCandidate(currentProfile.id, currentRunType, currentSampleId, currentIdentity)
-    ) {
+    preview.appendChild(buildReviewUnitContext(unitStatus, reviewerSubmissions));
+    /* issue #515: the three early returns below and the summary's own guard
+       read one and the same answer, so they cannot disagree about whether
+       this unit is interactive. */
+    var blockReason = reviewUnitBlockReason(unitStatus);
+    if (blockReason === REVIEW_UNIT_BLOCK.ARBITRATION) {
       /* The fixed footer submit drives handleReviewSubmit(); arbitration has
          its own in-card submit instead. */
       if (reviewSubmitBtn) reviewSubmitBtn.classList.add('hidden');
@@ -3706,7 +4378,7 @@
        shortcut (setupActionShortcuts skips hidden buttons). Mutually
        exclusive with the arbitration branch above (disputed ≠ finalized)
        and the empty gate below (finalized requires a submission). */
-    if (unitStatus === workspaceData.REVIEW_UNIT_STATUS.FINALIZED) {
+    if (blockReason === REVIEW_UNIT_BLOCK.FINALIZED) {
       if (reviewSubmitBtn) reviewSubmitBtn.classList.add('hidden');
       var lockedInputCard = document.createElement('div');
       lockedInputCard.className = 'content-card';
@@ -3726,7 +4398,7 @@
        an empty review could be filed against nothing. Keeping the footer
        submit hidden also blocks the FR-058 Ctrl/Cmd+Enter path
        (setupActionShortcuts skips hidden buttons). */
-    if (unitStatus === null && !demoAnnotatorRow()) {
+    if (blockReason === REVIEW_UNIT_BLOCK.EMPTY) {
       if (reviewSubmitBtn) reviewSubmitBtn.classList.add('hidden');
       var emptyCard = document.createElement('div');
       emptyCard.className = 'content-card';
@@ -3763,6 +4435,17 @@
        below could not. A card reviewing ONE annotator has no union to show --
        that panel already renders exactly this annotator's spans, so the card
        would be a pixel-identical second copy of the sample text. */
+    /* issue #520: one decision note for the whole unit, above the card
+       stack whose 通過/退回 pairs it explains; issue #550 turned it into a
+       run_type-branched tooltip and docked it in the unit-context banner
+       beside the review-flow trigger (still once, still before the first
+       card). The banner is built above, before the non-interactive early
+       returns, so the note only lands on units that actually show
+       decisions. */
+    appendReviewNoteTooltip(
+      preview.querySelector('[data-testid="ws-review-unit-context"]') || preview
+    );
+
     var spanKeys = mergedSpanKeys();
     var spanRowRendered = false;
     state.selectedOutputTypes.forEach(function (outKey) {
@@ -3774,7 +4457,6 @@
       }
       preview.appendChild(buildReviewRow(outKey, submission));
     });
-    renderReviewSubmitSummary();
   }
 
   function appendReviewHistoryEntry(history, text) {
@@ -3788,6 +4470,32 @@
   /* FR-044/AC-6.3: one decision per outKey, for both run types --
      getReviewerRows() narrows to exactly one row, the reviewed annotator's
      (v4.0.0: the review unit is sample × annotator). */
+  /* issue #550 (FR-070 new point, spec 015 v4.55.0): with the pre-submit
+     confirmation area's summaryPending list gone (FR-077 revoked), nothing
+     on screen named WHICH output type was still blocking submit on a
+     multi-output task -- only the generic toastSelectDecision. This is the
+     sole surviving "still undecided" derivation in the file; the submit
+     guard below is its only caller. */
+  /* issue #552 (FR-016A / FR-083): the ONE per-outKey answer to "does this
+     row block submit, and why" -- null, 'undecided', or 'reason' (rejected
+     without a reason). pendingReviewOutputKeys(), the footer button's
+     aria-disabled state and the blocking toast all read it; nothing else
+     recomputes it. */
+  function reviewRowBlocker(outKey, rowName) {
+    var decision = reviewRowDecisions[decisionKey(outKey, rowName)];
+    if (!decision) return 'undecided';
+    if (decision === 'reject' && !reviewRowReason(outKey, rowName)) return 'reason';
+    return null;
+  }
+
+  function pendingReviewOutputKeys(rowName) {
+    var pendingKeys = [];
+    state.selectedOutputTypes.forEach(function (outKey) {
+      if (reviewRowBlocker(outKey, rowName)) pendingKeys.push(outKey);
+    });
+    return pendingKeys;
+  }
+
   function handleReviewSubmit() {
     var history = document.getElementById('wsReviewHistory');
     if (!history) return;
@@ -3807,7 +4515,6 @@
     );
     if (lockedStatus === window.LabelSuiteAnnotationWorkspaceData.REVIEW_UNIT_STATUS.FINALIZED) return;
     var rowsByOutKey = {};
-    var allDecided = true;
     var annotatorId = currentAnnotatorId();
     var currentRejectedSomewhere = false;
     state.selectedOutputTypes.forEach(function (outKey) {
@@ -3815,20 +4522,34 @@
       rowsByOutKey[outKey] = rows;
       rows.forEach(function (row) {
         var decision = reviewRowDecisions[decisionKey(outKey, row.name)];
-        if (!decision) allDecided = false;
         if (row.name === annotatorId && decision === 'reject') currentRejectedSomewhere = true;
       });
     });
-    if (!allDecided) {
-      showToast(t('toastSelectDecision'), 'warning');
+    var pendingOutputKeys = pendingReviewOutputKeys(annotatorId);
+    if (pendingOutputKeys.length) {
+      /* issue #552: same list either way; the wording only switches to the
+         reason-specific copy once every blocker is a reason-less reject. */
+      var onlyReasons = pendingOutputKeys.every(function (outKey) {
+        return reviewRowBlocker(outKey, annotatorId) === 'reason';
+      });
+      var toastKey = onlyReasons ? 'toastRejectReasonRequired' : 'toastSelectDecision';
+      showToast(t(toastKey).replace('{list}', pendingOutputKeys.join('、')), 'warning');
       return;
     }
 
     var decisionLines = [];
+    var reasons = {};
     state.selectedOutputTypes.forEach(function (outKey) {
       rowsByOutKey[outKey].forEach(function (row) {
         var decision = reviewRowDecisions[decisionKey(outKey, row.name)];
-        decisionLines.push(outKey + ' · ' + row.name + ': ' + decision);
+        var line = outKey + ' · ' + row.name + ': ' + decision;
+        /* issue #552 (FR-016A): the reason rides the history line, so the
+           FR-014I rejected event's summary carries it as well. */
+        if (decision === 'reject' && row.name === annotatorId) {
+          reasons[outKey] = reviewRowReason(outKey, annotatorId);
+          line += ' — ' + reasons[outKey];
+        }
+        decisionLines.push(line);
       });
     });
     var correctionLines = state.selectedOutputTypes.map(function (outKey) {
@@ -3843,12 +4564,25 @@
     appendReviewHistoryEntry(history, decisionLines.concat(correctionLines).join('\n'));
 
     var summary = buildHistorySummary() + '\n' + decisionLines.join('\n');
+    /* issue #551: the ✕/✓ decision itself must survive into storage, not
+       just its free-text history line -- getReviewUnitStatus()/
+       getDisputeItems() need to tell a reject with no correction apart
+       from an approve, and a same-value answer alone cannot say which. */
+    var submitPayload = collectAnswerPayload();
+    submitPayload.decisions = {};
+    state.selectedOutputTypes.forEach(function (outKey) {
+      submitPayload.decisions[outKey] = reviewRowDecisions[decisionKey(outKey, annotatorId)];
+    });
+    /* issue #552 (FR-016A / FR-085): the reject reasons persist next to the
+       decisions they explain -- the annotator's rework banner reads them
+       from here, nowhere else. */
+    submitPayload.reasons = reasons;
     window.LabelSuiteAnnotationWorkspaceData.markSampleSubmitted(
       currentProfile.id,
       currentRole,
       currentRunType,
       currentSampleId,
-      collectAnswerPayload(),
+      submitPayload,
       summary,
       currentIdentity
     );
@@ -3864,7 +4598,7 @@
        rollback only applies to official_run -- dry_run has no "退回個人重標"
        channel, so a dry_run reject decision must not roll the sample back. */
     if (currentRejectedSomewhere && currentRunType === 'official_run') {
-      window.LabelSuiteAnnotationWorkspaceData.markSampleRejected(currentProfile.id, 'annotator', currentRunType, currentSampleId, summary, currentIdentity);
+      window.LabelSuiteAnnotationWorkspaceData.markSampleRejected(currentProfile.id, 'annotator', currentRunType, currentSampleId, summary, currentIdentity, submitPayload.timing);
     }
 
     renderSampleList();
@@ -4323,9 +5057,18 @@
     var reviewSubmitBtn = document.getElementById('wsReviewSubmitBtn');
     if (currentRole === 'reviewer') {
       if (reviewSubmitBtn) setText('wsReviewSubmitLabel', t('reviewSubmitLabel'));
+      setText('wsArbitrationSubmitLabel', t('arbitrationSubmitLabel'));
     } else if (submitBtn) {
       setText('wsSubmitLabel', t('submitLabel'));
       setText('wsSaveLabel', t('saveLabel'));
+      setText('wsSkipLabel', t('skipLabel'));
+      var skipReasonInput = document.getElementById('wsSkipReason');
+      if (skipReasonInput) {
+        skipReasonInput.placeholder = t('skipReasonPlaceholder');
+        /* The placeholder is the only visible wording, so it has to double
+           as the accessible name -- a placeholder alone is not one. */
+        skipReasonInput.setAttribute('aria-label', t('skipReasonPlaceholder'));
+      }
     }
     setText('wsPrevBtnLabel', t('wsPrevBtnLabel'));
     setText('wsNextBtnLabel', t('wsNextBtnLabel'));
@@ -4342,6 +5085,9 @@
     if (pdfCloseBtn) pdfCloseBtn.setAttribute('aria-label', t('guidelinePdfModalCloseAria'));
     var mdCloseBtn = document.getElementById('wsGuidelineMdModalClose');
     if (mdCloseBtn) mdCloseBtn.setAttribute('aria-label', t('guidelineMdModalCloseAria'));
+    setText('wsReviewFlowDrawerTitle', t('flowDrawerTitle'));
+    var flowCloseBtn = document.getElementById('wsReviewFlowDrawerClose');
+    if (flowCloseBtn) flowCloseBtn.setAttribute('aria-label', t('flowDrawerCloseAria'));
     /* issue #309: the shared sidebar mounts with its 一般使用者 default;
        reviewers must read as 審核員 (same role noun the history trail uses).
        Annotator view keeps the shared default untouched. Runs at boot and on
@@ -4397,6 +5143,9 @@
     state.lang = readStoredLang();
     applyDocumentLang();
     applyStaticI18nText();
+    /* Bound once for the page's lifetime; selectSample() below only resets
+       the accumulator, it does not rebind. */
+    bindLeadTimerSignals();
 
     var submitBtn = document.getElementById('wsSubmitBtn');
     var saveBtn = document.getElementById('wsSaveBtn');
@@ -4408,10 +5157,23 @@
         reviewSubmitBtn.classList.remove('hidden');
         reviewSubmitBtn.addEventListener('click', handleReviewSubmit);
       }
+      var arbitrationSubmitBtn = document.getElementById('wsArbitrationSubmitBtn');
+      if (arbitrationSubmitBtn) arbitrationSubmitBtn.addEventListener('click', handleArbitrationSubmit);
       setupReviewShortcuts();
     } else {
       if (submitBtn) submitBtn.addEventListener('click', handleSubmit);
       if (saveBtn) saveBtn.addEventListener('click', handleSave);
+    }
+    skipGroupNode = document.getElementById('wsSkipGroup');
+    if (skipGroupNode) {
+      skipGroupParent = skipGroupNode.parentNode;
+      skipGroupAnchor = skipGroupNode.nextSibling;
+      if (currentRole === 'reviewer') {
+        skipGroupNode.remove();
+      } else {
+        document.getElementById('wsSkipBtn').addEventListener('click', handleSkip);
+        document.getElementById('wsSkipReason').addEventListener('input', refreshSkipBlocker);
+      }
     }
     setupActionShortcuts();
 
@@ -4425,6 +5187,7 @@
     setupGuidelineImageModal();
     setupGuidelinePdfModal();
     setupGuidelineMdModal();
+    setupReviewFlowDrawer();
     setupGuidelineCollapse();
     setupGuidelineTabs();
     setupSampleNav();

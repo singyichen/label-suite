@@ -81,10 +81,13 @@ async function lastPersistedSaveTime(page: Page, sampleId: string): Promise<stri
         };
       }
     ).LabelSuiteAnnotationWorkspaceData;
-    const saved = data.getSampleHistory('T001', 'official_run', sid, {}).filter((e) => e.action === 'saved');
+    /* renamed by issue #578 / FR-086: the draft-save action is `draft_saved` */
+    const saved = data
+      .getSampleHistory('T001', 'official_run', sid, {})
+      .filter((e) => e.action === 'draft_saved');
     return saved.length ? saved[saved.length - 1].at : null;
   }, sampleId);
-  if (!iso) throw new Error(`no persisted 'saved' history event for sample ${sampleId}`);
+  if (!iso) throw new Error(`no persisted 'draft_saved' history event for sample ${sampleId}`);
   return formatMmDdHhMm(iso);
 }
 
@@ -213,6 +216,8 @@ test.describe('Autosave indicator honesty (issue #470)', () => {
     await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer' }));
     await dismissGuidelineModal(page);
     await page.getByTestId('ws-review-row-reject').click();
+    // issue #552 (FR-016A): a reject needs a reason before submit goes through.
+    await page.getByTestId('ws-review-reject-reason').fill('理由');
     await page.getByTestId('ws-review-submit-btn').click();
     await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
 

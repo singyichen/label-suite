@@ -172,22 +172,14 @@
     }
     .sample-group.has-active .sample-group-id { color: var(--color-primary); }
 
-    /* Reviewer-only: names the review unit (sample × annotator) the entry
-       stands for. The annotator leads (it is what separates the units of one
-       group); the sample ID trails, muted, so the entry stays self-describing. */
+    /* Reviewer-only: names the review unit the entry stands for by its
+       annotator alone -- the sample ID lives once in the group header
+       (issue #557 removed the muted per-row echo). */
     .sample-unit-line {
       display: flex;
       align-items: center;
-      gap: 4px;
       font-size: 11px;
       min-width: 0;
-    }
-    .sample-unit-sep { color: var(--color-ink-muted); flex-shrink: 0; }
-    .sample-unit-id {
-      color: var(--color-ink-muted);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
     }
     .sample-unit-annotator {
       font-weight: 600;
@@ -195,8 +187,6 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      flex-shrink: 0;
-      max-width: 60%;
     }
     .sample-status-label {
       display: block;
@@ -356,29 +346,52 @@
        One strip above the review card naming the task's review model:
        run type, quorum, annotator, reviewed progress, five-state pill.
        FR-051 makes the review card identical for every model, so this
-       banner is what tells the four demo review models apart. */
+       banner is what tells the four demo review models apart.
+       issue #572: no surface, border or padding of its own -- the chips
+       sit bare above the review card, which already carries the frame. */
     .rv-unit-context {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       gap: 8px;
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      padding: 10px 12px;
       margin-bottom: 10px;
     }
-    /* design/system/MASTER.md §Review Status Track -- CSS verbatim. The
-       track is a 2-row grid, so it takes a full-width row of its own under
-       the banner's chip line rather than sitting in the flex flow. */
-    .rv-unit-track { flex: 1 0 100%; overflow-x: auto; }
-    .review-track { display: grid; grid-template-columns: auto 28px auto minmax(16px, 1fr) auto 28px auto; grid-template-rows: 34px 34px; align-items: center; justify-items: start; }
+    /* issue #525 PR-A: the way into the review-flow drawer. Sized and
+       shaped like the `.rv-unit-chip` siblings it sits beside so the banner
+       still reads as one row of chips, but primary-coloured because it is
+       the only thing in that row a reviewer can act on. */
+    .rv-flow-trigger {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-primary);
+      background: var(--color-white);
+      border: 1px solid var(--color-primary-border);
+      border-radius: var(--radius-full);
+      padding: 2px 10px;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    /* design/system/MASTER.md §Review Status Track -- CSS verbatim. */
+    /* 9 columns: node / fork / branch caption / node / rail / node / rail /
+       fork / node. `.review-track-single` (min_reviewers = 1, issue #525
+       PR-C) drops the two unreachable interim nodes and their trailing rail,
+       leaving 7. Rail columns are bare `1fr` rather than `minmax(16px, 1fr)`
+       so a rail carrying a branch caption can never be squeezed below the
+       caption's own width; `.rv-flow-track` already scrolls horizontally
+       when the whole grid outgrows the drawer. */
+    .review-track { display: grid; grid-template-columns: auto 28px auto auto 1fr auto 1fr 28px auto; grid-template-rows: 34px 34px; align-items: center; justify-items: start; }
+    .review-track-single { grid-template-columns: auto 28px auto auto 1fr 28px auto; }
     .review-track-node { display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-full); background: var(--color-white); color: var(--color-ink-muted); font-size: 13px; font-weight: 500; white-space: nowrap; }
-    .review-track-node.done { border-color: var(--color-cta); background: var(--color-success-bg); color: var(--color-cta); }
+    .review-track-node.done { border-color: var(--color-cta); background: var(--color-success-bg); color: var(--color-cta); font-weight: 600; }
     .review-track-node.current { border-color: var(--color-primary); background: var(--color-primary-soft-bg); color: var(--color-primary); font-weight: 600; }
     .review-track-marker { font-size: 11px; font-weight: 600; }
-    .review-track-rail { width: 100%; height: 2px; background: var(--color-border); }
-    .review-track-rail.done { background: var(--color-cta); }
+    /* The line is the ::before, so a caption sitting on the rail neither
+       thickens it nor breaks the done/not-done thickness contrast. */
+    .review-track-rail { position: relative; width: 100%; display: flex; align-items: center; justify-content: center; }
+    .review-track-rail::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); height: 2px; background: var(--color-border); }
+    .review-track-rail.done::before { height: 3px; background: var(--color-cta); }
+    .review-track-branch { position: relative; justify-self: stretch; text-align: center; padding: 0 4px; background: var(--color-white); color: var(--color-ink-muted); font-size: 11px; font-weight: 500; white-space: nowrap; }
+    .review-track-branch.done { color: var(--color-cta); font-weight: 600; }
     .review-track-fork { display: block; line-height: 0; }
     .rv-unit-chip {
       font-size: 12px;
@@ -395,12 +408,15 @@
       border-color: var(--color-primary-border);
       font-weight: 700;
     }
+    /* issue #525 PR-B: no `margin-left: auto`. It used to pin the state to
+       the far right, which only made sense while the state was the LAST
+       chip; now that it reads second, an auto margin would blow a gap
+       between the run chip and everything after it. */
     .rv-unit-state {
       font-size: 12px;
       font-weight: 700;
       border-radius: var(--radius-full);
       padding: 2px 10px;
-      margin-left: auto;
       white-space: nowrap;
       color: var(--color-ink-muted);
       background: var(--color-white);
@@ -418,7 +434,30 @@
       gap: 12px;
       margin: 10px 0;
     }
-    .rv-review-note { font-size: 12px; color: var(--color-ink-muted); flex: 1; }
+    /* issue #520: `flex: 1` was inert while the note lived inside the block
+       .content-card review row; as a direct child of the flex-column
+       #annotationPreview it would grow the paragraph, so it goes. */
+    /* issue #550: the decision-note tooltip trigger sits in the banner
+       row after .rv-flow-trigger; inline-flex keeps it on the chip line and
+       lets the banner's flex-wrap carry it at 375px. */
+    .rv-review-note { display: inline-flex; align-items: center; font-size: 12px; color: var(--color-ink-muted); }
+    /* The shared .tooltip-bubble anchors above its trigger and hangs off
+       its left edge -- right for a form label at the left margin, wrong for
+       a trigger that flex-wrap may park anywhere along a 375px banner row.
+       Anchor the bubble to the BANNER instead (its .tooltip-wrap goes
+       static, the banner is the positioned ancestor) and open it below the
+       row at the banner's own width, so it can never run past either edge. */
+    .rv-unit-context { position: relative; }
+    .rv-review-note .tooltip-wrap { position: static; }
+    .rv-review-note .tooltip-bubble {
+      top: calc(100% + 6px);
+      bottom: auto;
+      left: 0;
+      right: 0;
+      width: auto;
+      max-width: none;
+    }
+    .rv-review-note .tooltip-bubble::after { display: none; }
     .rv-bulk-actions { display: flex; gap: 8px; flex-shrink: 0; }
 
     .rv-annotator-list { display: flex; flex-direction: column; gap: 8px; }
@@ -582,7 +621,10 @@
     .autosave-dot.initial { background: var(--color-border); }
     .autosave-dot.dirty { background: var(--color-warning); }
     .autosave-dot.saved { background: var(--color-cta); }
-    .action-bar-right { display: flex; align-items: center; gap: var(--space-sm); }
+    /* issue #563: margin-left:auto keeps the buttons on the right even when
+       renderAutosaveStatus() hides .autosave-status for reviewers -- with a
+       single flex child, space-between alone would pin them to the left. */
+    .action-bar-right { display: flex; align-items: center; gap: var(--space-sm); margin-left: auto; }
 
     /* ── Right: Guideline ────────────────────────────────────── */
     .col-guideline {
@@ -661,17 +703,59 @@
       background: var(--color-surface);
       color: var(--color-text-soft);
     }
+    /* FR-086 (issue #578): one badge per HISTORY_ACTIONS value, seven
+       pairwise-distinct semantic colors. The mapping action -> modifier
+       class lives in shared/annotation-history.js; only the colors are here,
+       so both themes resolve through tokens. An event whose action is
+       outside the set keeps the neutral base badge above. */
+    .history-action-badge.draft-saved { background: var(--color-warning-bg); color: var(--color-warning); }
     .history-action-badge.submitted { background: var(--color-surface); color: var(--color-cta); }
-    .history-action-badge.saved { background: var(--color-warning-bg); color: var(--color-warning); }
+    .history-action-badge.skipped { background: var(--color-surface); color: var(--color-ink-muted); }
+    .history-action-badge.modified { background: var(--color-info-bg); color: var(--color-info); }
+    .history-action-badge.accepted { background: var(--color-success-bg); color: var(--color-success); }
     .history-action-badge.rejected { background: var(--color-error-bg); color: var(--color-error); }
+    .history-action-badge.adjudicated { background: var(--color-primary-soft-bg); color: var(--color-primary); }
     /* v3.0.0 reviewer run_type split (spec 015 FR-040): dry_run
        consensus-adjudication badge (ws-review-consensus-badge), reusing
        .history-action-badge's shape. */
     .history-action-badge.consensus { background: var(--color-surface); color: var(--color-text-soft); }
     .history-action-badge.divergent { background: var(--color-error-bg); color: var(--color-error); }
-    .history-action-badge.overridden,
-    .history-action-badge.adjudicated { background: var(--color-warning-bg); color: var(--color-warning); }
+    .history-action-badge.overridden { background: var(--color-warning-bg); color: var(--color-warning); }
     .history-summary {
+      margin-top: 6px;
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--color-text-soft);
+      white-space: pre-line;
+    }
+    /* FR-087 (issue #578): the answer an event recorded. A first snapshot
+       reads as whole content; every later one reads as before → after, one
+       row per output type that actually changed. Both blocks are only
+       emitted when they have content, so a card without a snapshot keeps
+       its pre-v4.61.0 layout. */
+    .history-snapshot {
+      margin-top: 6px;
+      padding: 8px 10px;
+      border-radius: var(--radius-md);
+      background: var(--color-surface);
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--color-ink);
+      white-space: pre-line;
+    }
+    .history-diff { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+    .history-diff-item {
+      padding: 6px 10px;
+      border-left: 2px solid var(--color-info);
+      border-radius: var(--radius-sm);
+      background: var(--color-info-bg);
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--color-ink);
+    }
+    /* FR-089: the reason the actor typed for a skip, correction or
+       arbitration -- carried on the event, not on the sample. */
+    .history-reason {
       margin-top: 6px;
       font-size: 12px;
       line-height: 1.6;
@@ -839,6 +923,18 @@
       gap: var(--space-md);
     }
     .modal-title { font-family: var(--font-serif-display); font-size: 22px; font-weight: 700; color: var(--color-ink); }
+    /* Review-flow drawer (issue #525 PR-A): a right-edge sheet on desktop,
+       a full-width modal below 768px. It inherits `position: fixed` from
+       `.modal-overlay`, which is what keeps the review card's
+       getBoundingClientRect().top identical across open and close. */
+    .rv-flow-overlay { align-items: stretch; justify-content: flex-end; padding: 0; }
+    .rv-flow-drawer { max-width: 420px; height: 100%; border-radius: var(--radius-xl) 0 0 var(--radius-xl); overflow-y: auto; }
+    /* The track is a 2-row grid wider than the drawer, so it keeps the
+       horizontal scroll it had when it was a full-width banner row. */
+    .rv-flow-track { overflow-x: auto; }
+    @media (max-width: 767px) {
+      .rv-flow-drawer { max-width: none; border-radius: 0; }
+    }
     .modal-actions { display: flex; justify-content: flex-end; gap: var(--space-sm); }
 
     /* ── Toast (top-center, UXC-07 / MASTER §Toast) ──────────── */
@@ -886,29 +982,69 @@
     }
     .toast-close:hover { opacity: 1; }
 
-    /* ── Reviewer mode: original-answer label + pre-submit summary
-         (FR-077 / AC-3.42, issue #453) ─────────────────────────────── */
+    /* ── Reviewer mode: original-answer label (AC-3.45) ───────────────── */
     .rv-btn-text { line-height: 1; }
     .rv-answer-origin { font-size: 12px; color: var(--color-ink-muted); margin-top: 12px; }
-    .rv-submit-summary { display: flex; flex-direction: column; gap: 10px; }
-    .rv-summary-title { font-size: 13px; font-weight: 700; color: var(--color-ink); }
-    .rv-summary-row {
-      display: flex; flex-direction: column; gap: 2px;
-      padding: 8px 10px; border: 1px solid var(--color-border); border-radius: var(--radius-md);
+
+    /* ── Annotator mode: rework reasons banner (issue #552, FR-085) ─────── */
+    .rv-rework-reasons {
+      background: var(--color-error-bg);
+      border: 1px solid var(--color-error-border);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
-    .rv-summary-row[data-decision="approve"] { border-color: var(--color-success-border); }
-    .rv-summary-row[data-decision="reject"] { border-color: var(--color-error-border); }
-    .rv-summary-head { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; color: var(--color-ink-muted); }
-    .rv-summary-line { font-size: 12px; color: var(--color-ink); word-break: break-word; }
-    .rv-summary-note { font-size: 12px; color: var(--color-ink-muted); }
-    .rv-summary-pending { margin: 0; font-size: 12px; color: var(--color-warning); }
-    .rv-summary-effect { margin: 0; font-size: 12px; color: var(--color-ink-muted); }
+    .rv-rework-title { font-size: 13px; font-weight: 700; color: var(--color-error); }
+    .rv-rework-row { display: flex; flex-direction: column; gap: 2px; }
+    .rv-rework-meta { font-size: 11px; color: var(--color-ink-muted); font-family: var(--font-mono, ui-monospace, monospace); }
+    .rv-rework-reason { font-size: 13px; color: var(--color-ink); white-space: pre-line; }
+    .rv-rework-rejected { outline: 2px solid var(--color-error-border); outline-offset: 4px; border-radius: var(--radius-sm); }
+
+    /* ── Reviewer mode: reject reason (issue #552, FR-016A) ─────────────── */
+    .rv-reject-reason { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; }
+    /* Blocked look while a reject still lacks its reason; the click stays
+       live so the FR-083 toast can name the output types. */
+    #wsReviewSubmitBtn[data-submit-blocked] { opacity: 0.55; cursor: not-allowed; }
+    .rv-reject-reason-label { font-size: 12px; font-weight: 600; color: var(--color-error); }
+
+    /* ── Annotator mode: skip + its required reason (issue #578, FR-089) ── */
+    /* The reason sits beside the button rather than behind a confirm dialog:
+       FR-089 makes it required, and a field you can see is a field you can
+       answer before you commit to the action. */
+    .ws-skip-group { display: flex; align-items: center; gap: 6px; }
+    .ws-skip-group input {
+      width: 180px;
+      font: inherit;
+      font-size: 13px;
+      padding: 5px 8px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      background: var(--color-surface);
+      color: var(--color-ink);
+    }
+    /* Same blocked look as the reviewer submit (issue #552): dimmed, but the
+       click still lands so the toast can say what is missing. */
+    #wsSkipBtn[data-submit-blocked] { opacity: 0.55; cursor: not-allowed; }
+    .rv-reject-reason textarea {
+      width: 100%;
+      font: inherit;
+      font-size: 13px;
+      padding: 6px 8px;
+      border: 1px solid var(--color-error-border);
+      border-radius: var(--radius-sm);
+      background: var(--color-surface);
+      color: var(--color-ink);
+      resize: vertical;
+    }
   </style>
 </head>
 <body>
 
 <div id="sharedSidebarMount"></div>
 <script src="../shared/sidebar.js"></script>
+<script src="../shared/annotation-history.js"></script>
 <script src="../shared/modal-focus.js"></script>
 <script>
   var annotationListHref = '../annotation/annotation-list.html' + window.location.search;
@@ -981,6 +1117,27 @@
   </div>
 </div>
 
+<!-- Review-flow drawer (issue #525 PR-A, spec 015 FR-064 / AC-4.36): the
+     five-state review track used to sit inline in the FR-064 banner, where
+     `pending` -- every unreviewed unit's default and the state with the least
+     to say -- paid the most vertical space for it. The track moved here
+     verbatim; nothing about it was reduced. Reuses `.modal-overlay` so the
+     backdrop, `--z-modal` and the `.hidden` (display:none) removal from the
+     accessibility tree stay one implementation; `.rv-flow-overlay` only
+     re-anchors the panel to the right edge. Esc / focus trap / focus return
+     come from the LabelSuiteModalFocus trap, same as the guideline modals. -->
+<div class="modal-overlay rv-flow-overlay hidden" id="wsReviewFlowDrawer" role="dialog" aria-modal="true" aria-labelledby="wsReviewFlowDrawerTitle" data-testid="ws-review-flow-drawer">
+  <div class="modal rv-flow-drawer">
+    <div class="image-modal-header">
+      <h2 class="modal-title" id="wsReviewFlowDrawerTitle"></h2>
+      <button class="image-modal-close" type="button" id="wsReviewFlowDrawerClose" data-testid="ws-review-flow-drawer-close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <div class="rv-flow-track" id="wsReviewFlowDrawerBody" data-testid="ws-review-flow-drawer-body"></div>
+  </div>
+</div>
+
 <div class="workspace-root" id="wsRoot" data-testid="ws-root" tabindex="-1">
   <div class="workspace-crumb-bar">
     <nav class="breadcrumb" aria-label="breadcrumb" id="entryBreadcrumb" data-testid="entry-breadcrumb"></nav>
@@ -1028,13 +1185,6 @@
         <!-- Reviewer mode only: original vs. corrected answer history,
              populated after ws-review-submit-btn is clicked (FR-024L-1) -->
         <div class="content-card hidden" id="wsReviewHistory" data-testid="ws-review-history"></div>
-
-        <!-- Reviewer mode only: pre-submit summary of the annotator's
-             original answer, the reviewer's corrected answer, the per-output
-             decision and the submit consequence (FR-077 / AC-3.42). Lives
-             here rather than on the review card so its run-type-dependent
-             consequence line does not breach AC-3.33. -->
-        <div class="content-card rv-submit-summary hidden" id="wsReviewSubmitSummary" data-testid="ws-review-submit-summary"></div>
       </div>
 
       <div class="action-bar">
@@ -1043,6 +1193,12 @@
           <span id="wsAutosaveLabel"></span>
         </div>
         <div class="action-bar-right">
+          <div class="ws-skip-group" id="wsSkipGroup">
+            <input type="text" id="wsSkipReason" data-testid="ws-skip-reason" required />
+            <button class="btn btn-outline" type="button" id="wsSkipBtn" data-testid="ws-skip-btn" data-submit-blocked="reason">
+              <span id="wsSkipLabel"></span>
+            </button>
+          </div>
           <button class="btn btn-outline" type="button" id="wsSaveBtn" data-testid="ws-save-btn">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
             <span id="wsSaveLabel"></span>
@@ -1052,6 +1208,11 @@
           </button>
           <button class="btn btn-cta hidden" type="button" id="wsReviewSubmitBtn" data-testid="ws-review-submit-btn">
             <span id="wsReviewSubmitLabel"></span>
+          </button>
+          <!-- issue #568: the arbitration submit shares the fixed action bar
+               with the review submit instead of trailing the arbitration card -->
+          <button class="btn btn-cta hidden" type="button" id="wsArbitrationSubmitBtn" data-testid="ws-arbitration-submit">
+            <span id="wsArbitrationSubmitLabel"></span>
           </button>
         </div>
       </div>

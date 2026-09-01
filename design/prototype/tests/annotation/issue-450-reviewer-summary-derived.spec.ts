@@ -54,18 +54,21 @@ function readSummary(page: Page, taskId: string, runType: string): Promise<Summa
 
 /* The seeded review-state matrix (annotation-workspace.data.js
    seedReviewFlowDemo) expressed as counters. Every number here is
-   reproducible from the per-row status comments in that seeder. */
+   reproducible from the per-row status comments in that seeder.
+   issue #551 (v4.54.0) moved several T014/T015 rows between finalized and
+   disputed (see seedReviewFlowDemo's per-row comments): T014's dry-02 and
+   dry-03 "B" rows now converge at N=1 (finalized, +2 vs before), and
+   dry-05's pure reject now blocks finalization instead of reading as
+   agreement (disputed, -1 vs before) -- net +1 finalized / -1 disputed;
+   T015's ofs-02 now converges at N=1 too (finalized, was disputed). */
 const MATRIX = [
   {
     taskId: 'T014', runType: 'dry_run',
-    // dry-05 x kioleemg12 moved from pending to finalized: it is now a
-    // rejected-but-agreeing review, which still counts as reviewed
-    // (issue #502).
-    expected: { total: 15, pending: 5, approved: 0, modified: 0, disputed: 2, finalized: 8, unfinalized: 7, coveragePct: 67, derivable: true },
+    expected: { total: 15, pending: 5, approved: 0, modified: 0, disputed: 1, finalized: 9, unfinalized: 6, coveragePct: 67, derivable: true },
   },
   {
     taskId: 'T015', runType: 'official_run',
-    expected: { total: 4, pending: 1, approved: 0, modified: 0, disputed: 1, finalized: 2, unfinalized: 2, coveragePct: 75, derivable: true },
+    expected: { total: 4, pending: 1, approved: 0, modified: 0, disputed: 0, finalized: 3, unfinalized: 1, coveragePct: 75, derivable: true },
   },
   {
     taskId: 'T016', runType: 'official_run',
@@ -135,12 +138,20 @@ test.describe('issue #450 -- annotation-list task info card', () => {
     await page.goto(T015_LIST_URL);
     const detail = page.locator('#taskInfoDetail');
     await expect(detail).not.toContainText('待審');
-    await expect(detail).toContainText('任務覆蓋 4 / 4 個審核單位 · 未達定稿門檻 1 個 · 爭議中 1 個 · IAA 無法計算');
+    /* issue #551: this agreeing review both finalizes ofs-04 (N=1) AND, by
+       the time this test runs, ofs-02 has already converged at N=1 too (see
+       annotation-review-flow-demo-seed.spec.ts) -- so all 4 units are now
+       finalized and neither 未達定稿門檻 nor 爭議中 has anything to report
+       (formatReviewSummary only appends a clause when its count is > 0).
+       This used to read '未達定稿門檻 1 個 · 爭議中 1 個' back when ofs-02
+       stayed disputed at N=1. */
+    await expect(detail).toContainText('任務覆蓋 4 / 4 個審核單位 · IAA 無法計算');
+    await expect(detail).not.toContainText('未達定稿門檻');
+    await expect(detail).not.toContainText('爭議中');
 
     // Reload: the derived numbers must be stable, not a one-shot render.
     await page.reload();
-    await expect(page.locator('#taskInfoDetail'))
-      .toContainText('任務覆蓋 4 / 4 個審核單位 · 未達定稿門檻 1 個 · 爭議中 1 個 · IAA 無法計算');
+    await expect(page.locator('#taskInfoDetail')).toContainText('任務覆蓋 4 / 4 個審核單位 · IAA 無法計算');
   });
 });
 
@@ -166,8 +177,13 @@ test.describe('issue #450 -- dashboard reviewer card', () => {
 
     await openReviewerDashboard(page);
     await expect(page.locator(T015_CARD)).not.toContainText('待審');
-    await expect(page.locator(T015_CARD))
-      .toContainText('任務覆蓋 4 / 4 個審核單位 · 未達定稿門檻 1 個 · 爭議中 1 個 · IAA 無法計算');
+    /* issue #551: ofs-02 has already converged at N=1 by the time this
+       test runs (see annotation-review-flow-demo-seed.spec.ts), so all 4
+       units are finalized and neither clause has anything to report --
+       this used to read '未達定稿門檻 1 個 · 爭議中 1 個'. */
+    await expect(page.locator(T015_CARD)).toContainText('任務覆蓋 4 / 4 個審核單位 · IAA 無法計算');
+    await expect(page.locator(T015_CARD)).not.toContainText('未達定稿門檻');
+    await expect(page.locator(T015_CARD)).not.toContainText('爭議中');
   });
 
   /* Issue #501 closed the other half of this contract at the source: a

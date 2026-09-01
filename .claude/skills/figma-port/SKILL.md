@@ -1,8 +1,15 @@
+---
+name: figma-port
+description: Port an already-designed source (SVG flowchart, HTML page, or prototype) into a Figma file as native editable nodes via the Figma MCP use_figma tool. Covers both a first-time build and incremental in-place sync of a board that was ported before. Use when the destination is a figma.com/board or figma.com/design URL — e.g. 「畫到 figma」「搬到 figma」「同步到 figma」「update the figma board」. Not for producing standalone HTML/SVG/PNG diagrams (use the diagram-design skill instead).
+---
+
 # figma-port
 
 用 Figma MCP（`use_figma`）把「已經設計好的東西」搬進 Figma 的在地規範。**先讀完再開第一次 `use_figma`**——本 skill 的價值在於免去重新推導踩雷規則。
 
 來源可以是 SVG 流程圖、HTML 頁面、或任何有明確幾何與樣式的規格。目標可以是 FigJam board 或 Design file。
+
+**輸入、產出，以及「從零新建」與「就地增量更新」兩條執行路徑，見 §0.5。**
 
 ## 何時使用
 
@@ -26,6 +33,85 @@ return { editorType: figma.editorType, pageId: figma.currentPage.id };
 ```
 
 **必須用 `return`，不能用 `console.log`。** `use_figma` 只把 `return` 的值交給 agent（官方 `figma-use` 規則 4）——照著印會得到空結果然後對著空手除錯。本文件所有腳本都遵守這條。
+
+## 0.5 輸入與執行路徑
+
+### 需要什麼、產出什麼
+
+| | 內容 |
+|---|---|
+| 輸入 1 | **來源路徑**——一個或多個 HTML／SVG 檔，或含這些檔的目錄 |
+| 輸入 2 | **目標 Figma URL**——決定走 §6 還是 §7（見 §0） |
+| 輸入 3（選填） | 目標 Section／Page 名稱。多張圖共用同一個檔案時必填，否則判斷不出該更新哪一塊 |
+| 產出 | Figma 原生節點（可編輯，非貼圖）＋ 每次 `use_figma` 回傳的節點 ID 清單 |
+
+**來源不會被自動解析。** §1 的 IR 是人工抄寫的——`use_figma` 只收 plugin API 腳本，沒有「餵一份 HTML 就畫出來」的入口。所以「給來源路徑與目標 URL 就能執行」成立，但中間那段抄寫是這件事的主要成本，不是可以跳過的步驟。
+
+### 兩條路徑，先分流再動手
+
+```js
+// 目標 Section 已有子節點 → 路徑 B；空的或不存在 → 路徑 A
+const sec = figma.currentPage.findOne((n) => n.type === "SECTION" && n.name === NAME);
+return { exists: !!sec, childCount: sec ? sec.children.length : 0 };
+```
+
+| | 路徑 A：從零新建 | 路徑 B：就地增量更新 |
+|---|---|---|
+| 何時 | 目標不存在，或是空 Section | 目標已有一版，要同步到來源最新狀態 |
+| k 怎麼來 | 自己決定（§2，預設 2） | **反推既有版本的 k，不得另訂** |
+| 動到誰 | 全部自建 | 只有內容變了的節點 |
+| 驗收 | §5 逐層截圖 | §5「增量模式的驗收」 |
+
+路徑 A 的步驟就是本文件的章節順序：§0 → §1 抄 IR → §2 定 k → §6／§7 逐層建 → §5 逐層驗 → §8 收尾。
+
+### 路徑 B：就地增量更新
+
+四步，順序不可換。
+
+**① 反推變換式。** 既有版本的 k 與位移必須從檔案本身量出來，不能沿用記憶或猜測——猜錯時新增的節點會整批偏移，而既有節點看起來完全正常，截圖非常難發現。
+
+```js
+const n = await figma.getNodeByIdAsync("57:155");
+return { x: n.x, y: n.y, w: n.width, h: n.height };
+// 來源 (304, 140, 192, 52) → Figma (688, 664, 384, 104)
+//   k        = 384 / 192      = 2
+//   OFFSET_X = 688 - 2 * 304  = 80
+//   OFFSET_Y = 664 - 2 * 140  = 384
+```
+
+**至少用兩個相距夠遠的節點各驗一次，兩軸都要。** 單一節點解出來的式子恆成立（兩個未知數配兩條方程式），驗不出任何錯。
+
+`node.x` / `node.y` 讀回來的是 section-local 座標（§6.2），推出來的位移因此也是 section-local——寫回去時維持同一套座標系，不要中途換算成絕對座標。
+
+**② dump 現況清單。** 讀出目標 Section 全部子節點的 ID、型別、座標與文字：
+
+```js
+const out = [];
+for (const n of sec.children) {
+  let s = null;
+  if (n.type === "TEXT") s = n.characters;
+  else if (n.type === "SHAPE_WITH_TEXT" || n.type === "CONNECTOR") {
+    try { s = n.text.characters; } catch (e) {}
+  }
+  out.push({ id: n.id, type: n.type, x: Math.round(n.x), y: Math.round(n.y), s });
+}
+return out;
+```
+
+**`.text` 必須包型別守衛。** `RECTANGLE`、`VECTOR`、`LINE` 沒有這個 property，直接讀會丟 `TypeError: node.text: no such property 'text' on RECTANGLE node`；而 `use_figma` 是原子的，整支腳本失敗＝一個節點都沒讀到。
+
+**③ 工單來自當前來源檔，不是 `git diff`。**
+
+`git diff <上次同步的 commit> -- <來源路徑>` 看起來像現成的工單，但它會在兩種情況下騙你：
+
+- 來源檔案改過路徑（搬移或更名）→ diff 把整份報成 new file，等於沒有工單
+- 上次同步後另有 commit 動過同一份檔案 → 只 diff 到某一個 commit 會漏掉後續變更
+
+**唯一可信的比對基準是當前來源檔的實際內容。** 拿它逐條對上 ② 的 dump，列出三類：新增、字串改了、來源已刪。
+
+**④ 只改動到的節點。** 未列在工單上的節點一律不碰——不重設 `characters`、不重設 fills、不重排座標。這條是路徑 B 的全部價值：使用者在 Figma 上的手動微調不會被整批蓋掉。
+
+改文字時注意：**設 `characters` 會清掉該節點全部的 range styling**，所以每改一個節點，就要把它每一字階的 `fontName` / `fontSize` / `lineHeight` / `letterSpacing` / `fills` 全部重設一次。
 
 ## 1. 先抄成 IR，再寫 plugin code
 
@@ -236,6 +322,30 @@ CSS 的 `font-family` 是字型棧，第一個通常是拉丁字型、中文靠�
 截圖驗收無法消除——那是這件事的本質。每輪成本是 `get_screenshot` → `curl` → 讀圖三次呼叫且都是高 token 影像讀取，所以**寧可一次多建一整層，也不要一個節點驗一次**。
 
 **最後一輪要跟來源並排比。** 只看 Figma 那張只能回答「有沒有壞」，回答不了「像不像」——§2 的失敗模式就藏在這個縫裡。
+
+### 增量模式的驗收
+
+路徑 B 不必逐層截圖——只有動到的那幾個節點需要看。但多兩件事要驗：
+
+- **變換式已用第二個節點獨立複驗**（§0.5 ①）。這是新增節點會不會整批偏移的唯一防線
+- **未列在工單上的節點沒有被觸碰**：改動前後各 dump 一次，比對 `id` 集合與未動節點的 `x` / `y`
+
+### 文字覆蓋率可以程式化驗，不必肉眼數
+
+本節開頭說截圖無法消除，那是針對「像不像」與裁切。但「有沒有漏搬、有沒有留下舊字串」純粹是字串比對，可以自動化：
+
+```bash
+# 來源側：先剝掉 <tspan> 再抽 <text> 內容
+sed -e 's/<tspan[^>]*>//g' -e 's|</tspan>||g' <source>.html \
+  | grep -o '<text[^>]*>[^<]*</text>' | sed 's/<[^>]*>//g'
+```
+
+對上 §0.5 ② dump 出來的 `s` 欄位做集合差：
+
+- 只在來源 → 漏搬
+- 只在 Figma → 上一版留下的舊字串（**增量更新最容易出的錯**，而且截圖只會看到一段合理的文字，不會看到它已經過期）
+
+**已知的合法差集，先扣掉再看結果**：頁面層的 eyebrow／h1／standfirst 不在 SVG 的 `<text>` 裡（§1.1），會落在「只在 Figma」那側；來源用 `<tspan>` 拆行的字串在來源側是分段的，在 Figma 側是同一個節點的多行 `characters`。
 
 ## 6. FigJam renderer
 
@@ -635,9 +745,18 @@ Design file 沒有原生 Connector，**連線不會跟隨節點移動**。要維
 - [ ] 每建完一層截一次圖；探針節點已刪乾淨
 - [ ] **最後一輪與來源並排比對**：無裁切、無重疊、走向一致，且字級／線寬比例看起來與來源相同
 
+增量模式（路徑 B）另外加驗：
+
+- [ ] 既有版本的 k 與位移是量出來的，且已用第二個節點獨立複驗（§0.5 ①）
+- [ ] dump 的 `.text` 有型別守衛，沒有對 `RECTANGLE` 直接讀（§0.5 ②）
+- [ ] 工單來自當前來源檔內容，不是 `git diff <上次同步 commit>`（§0.5 ③）
+- [ ] 未列在工單上的節點沒有被觸碰（§5）
+- [ ] 改過 `characters` 的節點已重設全部字階樣式（§0.5 ④）
+- [ ] 來源文字字串已與 dump 做過集合差，無漏搬、無殘留舊字串（§5）
+
 ## 附註
 
 - **放專案內而非全域**：樣式角色引用 Label Suite 的 design token 與 `label-suite` diagram profile，引用鏈只在本 repo 成立。
 - **不併進 `diagram-design`**：該 skill 產出 HTML/SVG，觸發情境不同；合併會讓做網頁圖時白白載入大量 Plugin API 細節。
-- 相關：issue #475（本 skill）、#465（`diagram-design` 導入）；上游 `figma-use` / `figma-use-figjam`（Figma plugin 2.2.96）。
-- 規則來源：`specs/annotation/015-annotation-workspace/diagrams/review-flow-{overview,dry-run,official-run}.html` 三張圖以 `k = 2` 移植進同一個 FigJam board 的過程；每一條規則都是那三次移植裡實際踩過並修掉的。
+- 相關：issue #475（本 skill）、#579（frontmatter 與本節輸入/路徑）、#465（`diagram-design` 導入）；上游 `figma-use` / `figma-use-figjam`（Figma plugin 2.2.96）。
+- 規則來源：`specs/annotation/015-annotation-workspace/diagrams/review-flow-{overview,dry-run,official-run}.html` 三張圖以 `k = 2` 移植進同一個 FigJam board 的過程；每一條規則都是那三次移植裡實際踩過並修掉的。§0.5 的路徑 B 則來自同一個 board 之後的兩輪就地增量同步（2026-08-27、2026-08-31）。

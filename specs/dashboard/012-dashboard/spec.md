@@ -1,7 +1,7 @@
 ---
 功能分支: feat/dashboard-output-types
 建立日期: 2026-04-05
-版本: 2.10.0
+版本: 2.11.0
 狀態: In Progress
 ---
 
@@ -301,16 +301,18 @@ Super Admin 登入後看到平台層級總覽，用於掌握整體人員、任�
 5. **Given** 位於審核員任務列表，**When** 選擇排序控制的「進度：高到低」或「進度：低到高」，**Then** 清單依 `progress` 值（一般任務列為進度、示範任務列依 FR-011E 為審核覆蓋率，共用同一數值欄位）重新排序；選擇「預設順序」則恢復原始清單順序，且不影響任何任務卡的欄位或導頁行為。
 6. **Given** `role = user` 且某審核任務存在可推導的審核單位狀態，**When** 進入 `/dashboard` 檢視該任務列，**Then** 審查摘要的待審筆數、未定稿筆數、爭議筆數與審核覆蓋率皆由 annotation-015 FR-072 `computeReviewSummary()` 即時推導（非預先組好的種子字串），且與 `annotation-list` 同任務摘要完全一致；**And** 審核員於工作區改變該任務任一審核單位狀態後返回 `/dashboard`，摘要數值與進度條即時反映新狀態，reload 後維持一致；**And** 覆蓋率達 100% 但仍有未定稿單位時，摘要必須同時揭露未定稿與爭議筆數；**And** 無任何已儲存審核單位狀態的任務維持既有種子摘要與進度值不變。
 7. **Given** `role = user` 且位於審核員任務列表，**When** 點擊某任務 `快速審核`，**Then** 系統依 FR-021 以登入審核員身分與審核單位狀態選出下一個可處理單位並導向 `annotation-workspace`，網址同時攜帶 `task_id`、`sample_id`、`annotator_id`、`reviewer_id`、`run_type`；**And** 該任務對該審核員無任何可處理單位時，改導向 `annotation-list`（不帶 `sample_id`）並顯示「目前沒有可處理項目」空狀態，不得開啟任何已定稿唯讀單位。
+8. **Given** `role = user` 且有 `reviewer` 任務，**When** 進入 `/dashboard` 檢視「審核概況」區塊，**Then** 三張總覽指標卡旁必須有畫面可見的示範靜態值標示，說明其不由審核單位狀態推導、不隨審核動作更新；**And** 該標示於 zh-TW／en 皆有對應文案並隨語言切換即時更新；**And** 切換至其他角色視圖時該標示不出現（不得誤標 Super Admin／Project Leader 的指標卡）；**And** 三張卡的標籤與數值字串本身不因本條而改變（FR-024）。
 
 **審核員介面定義（需與原型一致）**：
 
 - 指標卡版面規則：標籤（小字、全大寫、muted）顯示於上方，數值（大字加粗）顯示於下方。
 - 區塊 A：`審核概況`
   - 副標：`我的審核進度與待處理項目`（**issue #458 修訂**：原為 `我的審查進度與待處理項目`）
-  - 指標卡（3 張）：
+  - 指標卡（3 張，**v2.11.0 起為明示之示範用靜態值**，見 FR-024）：
     - `待審總數`（單位：筆）
     - `今日已審核`（單位：筆）
     - `IAA 摘要`（無單位，為 0–1 係數）
+  - 指標卡下方標示（v2.11.0 新增）：`示範用靜態值：這三張指標卡不由審核單位狀態推導，不會隨審核動作更新。`（en：`Demo static values: these three metric cards are not derived from review-unit state and do not update as you review.`）
 - 區塊 B：`任務列表`
   - 副標：`我的待審任務`
   - 任務列項欄位：
@@ -418,6 +420,7 @@ Super Admin 登入後看到平台層級總覽，用於掌握整體人員、任�
 - **FR-021**（v2.7.0 新增，issue #449）：Reviewer 任務列 `快速審核` 的導頁目標必須是該審核員的下一個**可處理**審核單位，不得取用任務種子中預先指定的固定樣本（`latestUnfinishedSampleId`）。選擇規則與優先序以 annotation-015 FR-073 `findNextActionableReviewUnit(task_id, run_type, reviewer_id)` 為唯一來源（`REVIEW_UNIT_ACTION_PRIORITY`：`pending` → 該審核員具仲裁資格之 `disputed` → 未達定稿門檻且該審核員尚未提交之 `approved`／`modified`），dashboard 不得自行重算或維護第二套規則；候選列舉與 FR-020 摘要計數共用同一份審核單位列舉。導頁網址必須完整攜帶 `task_id`、`sample_id`、`annotator_id`、`reviewer_id`、`run_type`（`annotator_id` 為必要項，審核單位維度含標記員）。推導結果為空時必須導向 `annotation-list`（不帶 `sample_id`）並顯示明確空狀態，不得回退為開啟任務第一筆或任何已定稿唯讀單位。適用於全部 Reviewer 任務列，不得以任務 ID 白名單分流（Generalization-First）。
 - **FR-022**（v2.8.0 新增，issue #452）：Reviewer 任務列的審查摘要必須寫出其計數主體與分母，文案以 annotation-015 FR-076 為唯一來源。摘要文字為 `任務覆蓋 {已離開待審的單位數} / {總單位數} 個審核單位`，其後依序附加 `待審 {n} 個`、`未達定稿門檻 {n} 個`、`爭議中 {n} 個`（各僅於大於 0 時顯示）與 IAA；不得再以不帶分母的 `審核覆蓋率 {p}%` 或無主體的 `進度 {p}%` 呈現——百分比隱藏分母，是「100% 看起來像任務已完成」的成因（FR-020 已定義覆蓋率不等於完成率）。dashboard 任務卡與 `annotation-list` 任務資訊卡必須顯示同一字串，因兩者共用同一 formatter；**進度條與排序仍取 FR-020 推導之 `coveragePct` 數值，公式不變**，本條僅規範顯示文字。（v2.10.0：FR-020 回退分支取消後種子已無摘要字串，原「回退分支種子摘要亦須採同一具主體措辭」之規定隨之失效。）適用於全部 Reviewer 任務列，不得以任務 ID 白名單分流（Generalization-First）。
 - **FR-023**（v2.10.0 新增，issue #501）：Reviewer 任務列審查摘要中的 IAA 必須由 annotation-015 `computeIaaAlpha(task_id, run_type, output_key)` 推導，不得由任務種子直接填入數值；量測所依據的 `output_key` 取自該任務自身的 `outputs[]`，不得為每筆任務個別指定（Generalization-First）。顯示須區分三種狀態，不得互相取代：(1) 推導出係數 → 依 dataset-017 FR-039.4 以兩位小數呈現；(2) 該任務的輸出類型在 `computeIaaAlpha` 的 nominal alpha 定義域內、但其資料無法產出係數（如尚無提交）→ 呈現「IAA 無法計算」，不得以 `0.00` 代替，因 `0.00` 在 Krippendorff alpha 中意指「一致程度等同隨機」而非「無法量測」；(3) 該任務全部輸出類型皆不在 nominal alpha 定義域內 → 摘要完全不提及 IAA，不得呈現「無法計算」，因該措辭斷言曾嘗試量測，而此類任務本就不存在該項量測。
+- **FR-024**（v2.11.0 新增，issue #533）：Reviewer 視圖「審核概況」區塊的三張總覽指標卡（`待審總數`／`今日已審核`／`IAA 摘要`）為**示範用靜態值**，**不**由審核單位狀態推導，且必須在畫面上以可見文字明示此性質；該標示須與指標卡群組同區塊呈現，並具穩定測試錨點（`data-testid="reviewer-metrics-demo-note"`）。標示僅以 `title`／`aria-label` 等輔助技術屬性提供者不符本條——本條要解決的誤讀發生在一般視覺讀者身上。標示文案須隨語言切換於 zh-TW／en 之間即時切換（沿用既有 i18n 機制）。**與 FR-020 的關係**：同一畫面下方的 Reviewer 任務列摘要一律推導（FR-020），總覽卡不推導——兩者的差異是**刻意的**，非遺漏；總覽卡屬跨任務彙總指標，其推導所需語意（`待審總數` 的分母定義、`今日` 缺乏時間戳記依據、IAA 跨任務彙總的合成方式）目前皆未定義，本條刻意將其留待後續設計，僅要求現況必須被誠實標示。**適用範圍限於 Reviewer 的這三張總覽指標卡**：Super Admin 與 Project Leader 的指標卡不在本條範圍，其資料來源另行處理；本條亦不改動三張卡的標籤與數值字串本身。
 
 ### 使用者流程與導頁
 
@@ -542,10 +545,13 @@ flowchart LR
 - **SC-025**：Super Admin／Project Leader Dashboard 的「等待 IAA 確認」指標卡可點擊且鍵盤可操作，導向套用 `status=waiting_iaa_confirmation` 篩選的 `/task-list`；該指標卡數字須與 `/task-list` 篩選後的實際筆數一致（prototype 基線：兩者皆為 1，即唯一的 dry_run 待 IAA 種子 T002；T014 雖為 dry_run 但 seed 狀態非 `waiting_iaa_confirmation`，不計入），不得出現數字與可導頁任務筆數對不上帳的情形。
 - **SC-026**（issue #187）：Annotator／Reviewer 任務列表提供排序下拉控制，選擇「進度：高到低」／「進度：低到高」後清單順序須正確反映所選鍵值，並可切回「預設順序」還原原始清單順序；排序後任務卡既有欄位、CTA 與導頁行為（FR-010B1／FR-010C／FR-011B1／FR-011C 等）不受影響；語言切換時排序控制標籤與選項文案即時更新。
 
+- **SC-028**（issue #533）：Reviewer Dashboard「審核概況」的三張總覽指標卡必須伴隨畫面可見的示範靜態值標示，該標示於 zh-TW／en 皆有文案且隨語言切換更新，僅出現於 Reviewer 視圖，且三張卡的標籤與數值字串維持不變。
+
 ## Changelog
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.11.0 | 2026-08-28 | **Reviewer 總覽三張指標卡明示為示範用靜態值**（issue #533）：v2.10.0（issue #501）把 Reviewer **任務列**的審查摘要與進度條全面改為由 `computeReviewSummary()` 推導、取消種子回退分支，但同一畫面**上方**的「審核概況」三張總覽指標卡不在該次範圍，仍是 `dashboard.i18n.js` 的寫死字串（`待審總數 12 筆`／`今日已審核 18 筆`／`IAA 摘要 0.81`）。問題不在數字本身錯誤，而在**同一視圖裡兩種來源沒有標示差異**：下方每個數字都隨審核動作即時更新，上方三個永遠不動，讀者無從分辨。**新增 FR-024**：三張總覽指標卡定性為示範用靜態值，必須以**畫面可見文字**明示其不由審核單位狀態推導（僅提供 `title`／`aria-label` 不符本條——誤讀發生在一般視覺讀者身上），標示須具穩定測試錨點並隨語言切換；並明文記載此與 FR-020 的差異是**刻意的**、非遺漏。同步新增使用者故事 5 驗收情境第 8 項、介面定義指標卡條目與標示文案、**SC-028**。**刻意不變／刻意留待後續**：三張卡的標籤與數值字串逐字未改；跨任務彙總推導所需語意——`待審總數` 的分母定義、`今日` 缺乏可依據的時間戳記、IAA 跨任務彙總的合成方式——**仍未定義，本版刻意留待後續**，本次僅明示現況。**範圍界線**：僅限 Reviewer 的這三張總覽卡；Super Admin／Project Leader 的指標卡與已完成推導的任務列摘要（FR-020）皆不在本次範圍。本檔沿用既有慣例，驗收情境為不編號清單，故未指派 `AC-N.M` 穩定 ID；`SC-027` 為 v2.9.0 已撤銷編號，不重用，故新編號自 `SC-028` 起。**流程例外**：本次變更經維護者授權**不經 OpenSpec 變更容器**，直接編修正典 spec（範圍為 2 個原型檔＋1 個樣式檔，無 API 契約異動）。**原型**：`dashboard.html` 於 Reviewer 指標卡群組下方新增 `#reviewerMetricsDemoNote`；`dashboard.i18n.js` 新增 `reviewerMetricsDemoNote` zh／en 文案（由 `applyLang()` 既有 id 比對迴圈套用，`dashboard.js` 未變更）；`dashboard.layout.css` 新增 `.metrics-demo-note`（僅間距，muted 色與字級沿用既有 `.controls-hint`，未引入新色票或新元件）。**驗證**：新增 `issue-533-reviewer-demo-metrics.spec.ts`（6 案：zh／en 文案、標示只出現一次且落在 Reviewer 指標卡面板內、其他角色視圖不出現、三張卡數值 zh／en 未變動）；`tests/dashboard/` 86/86 通過、`tests/cross-role/issue-458-reviewer-vocabulary-guard.spec.ts` 2/2 通過、`tsc --noEmit` 無錯。 |
 | 2.10.0 | 2026-08-27 | **Reviewer 任務列審查摘要全面改為推導，取消種子回退分支**（issue #501）：v2.6.0 的 FR-020 以「該任務是否存在可推導的審核單位狀態」作為適用判定，實際效果是十七筆 reviewer 種子中有十三筆（T001–T013）永遠走回退分支——這些任務沒有任何審核單位被審核過，`derivable` 為 `false`，因此顯示的是手寫敘事字串。該字串描述的狀態不存在於任何地方：T003 任務卡寫「待審 7 個審核單位 · 任務覆蓋率 34%」，其下十五筆審核單位列全為待審。本版取消回退分支：「尚無任何審核單位被審核過」是公式描述得最清楚的狀態（全部待審、覆蓋 0%），而非公式無法描述的狀態。**修訂 FR-020**（取消回退分支、種子不得再攜帶摘要顯示字串、兩處消費端須同一變更移除判定）、**FR-011E**（適用範圍擴為全部 Reviewer 任務列）、**FR-022**（回退分支措辭規定隨之失效）與介面定義審查摘要條目。**新增 FR-023**：IAA 改由 `computeIaaAlpha()` 推導，`output_key` 取自任務自身 `outputs[]`，並區分「數值／無法計算／不提及」三態——`unsupported_output_type` 歸「不提及」而非「無法計算」，因後者斷言曾嘗試量測。**兩處消費端同步**：`dashboard.js` `deriveReviewerEntry()` 與 `annotation-list.html` 任務資訊卡執行的是同一段 `derivable` 判定，僅改其一會使同一任務在兩畫面分別顯示 0% 與 34%，故同一 commit 移除。本檔沿用既有慣例，驗收情境為不編號清單，故未指派 `AC-N.M` 穩定 ID。**刻意不變**：`formatReviewSummary()` 的三態 IAA 契約與「每個非零計數皆顯示」規則未動，故從未被審核的任務會同時出現「待審 15 個」與「未達定稿門檻 15 個」，兩者皆為真；`computeReviewSummary()` 的 `derivable` 欄位保留（仍為公式輸出的正確一環，僅不再有生產端消費者）；Reviewer 總覽指標卡的 `待審總數 12`／`今日已審核 18`／`IAA 摘要 0.81` 為靜態 i18n 字串，屬跨任務彙總指標、需另行設計推導來源，本版未動並另開 issue 追蹤。**驗證**：新增 `issue-501-derived-reviewer-summary.spec.ts`（7 案）；`dashboard.spec.ts`、`issue-450-reviewer-summary-derived.spec.ts`、`annotation-list-task-info.spec.ts` 三處原斷言舊回退契約者改指向新契約（非刪除、非弱化）。 |
 | 2.9.0 | 2026-08-27 | **撤銷 FR-009E／SC-027：移除 PL Dashboard 的示範任務快捷分類按鈕**（issue #510）：v2.5.0 依 issue #404 於 PL 任務列表區塊上方新增資料驅動的「審核流程示範」快捷分類按鈕，其立論為「T014–T017 無法自儀表板**或其『查看全部』入口**自然發現」。本次複查確認該前提僅前半成立——`查看全部`（`plViewAllBtn`）呼叫 `openTaskList('project_leader')` 時**不帶 `keyword`**，導向的任務清單為未篩選全量（預設 `limit: 20` > 種子 17 筆，同頁可見），T014–T017 本就完整列於其中；該按鈕的實際效果為「省去一次關鍵字輸入」，而非「使不可達者可達」。維護者裁定此邊際價值不足以支撐它在任務列表上方形成視覺孤立的按鈕，故移除。**移除範圍**：FR-009E、SC-027、「使用者故事 3 — Project Leader 儀表板」驗收情境第 3 項，以及原型 `renderDemoShortcuts()`、T014–T017 的 `demoCategory` 欄位與 `demoCategories` 目錄、`dashboard-pl-review-flow-demo-entry.spec.ts`。**刻意不變**：T014–T017 任務本身與其餘欄位全數保留，仍為 FR-011D／FR-011E／FR-020／FR-021／FR-022 的資料基礎；`SC-027` 為已撤銷編號，不重用亦不重編後續 SC 編號（穩定 ID 慣例）。**驗證**：新增 `issue-510-demo-shortcut-removed.spec.ts`——除斷言按鈕、容器與 class 皆不存在外，另將本次移除所依據的前提本身釘為迴歸守衛（`查看全部` 導向未篩選清單、`共 17 筆`、四筆示範任務逐筆可見），使該入口日後若被加上篩選會立即失敗而非無聲失效；`tests/dashboard/` 73/73 通過、`tsc --noEmit` 無錯。 |
 | 2.8.2 | 2026-08-26 | **Reviewer 措辭統一為「審核」（issue #458）**：`design/prototype/pages` 內 `審核` 對 `審查` 用字比例達 256:5，`審查` 為離群舊詞。本檔「今日已審」與 `reviewerPanelSubtitle` 的舊副標「我的審查進度與待處理項目」為兩處僅存的離群引文，同步改為 `今日已審核`（US-5 驗收情境第 1 項、介面定義指標卡、**FR-011A**）與 `我的審核進度與待處理項目`（介面定義副標），與已改字的 `dashboard.html`／`dashboard.i18n.js` 一致。`待審總數` 標籤與 `pending_review` 狀態值本檔未逐字引用，故無需同步異動。**需求文字未改**，僅修正引文用字。 |

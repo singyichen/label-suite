@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
+import { buildWorkspaceUrl, fillArbitrationReasons, skipGuidelineModal } from './_workspace-helpers';
 
 /* Regression test for issue #319: the arbitration store had the same
  * whole-blob read-modify-write shape issue #283 already fixed for
@@ -23,6 +23,7 @@ const TASK = 'T001';
 const ANNOTATOR = 'kioleemg12';
 const PARTICIPANT = 'reviewer_wang';
 const ARBITER = 'reviewer_chen'; // can_arbitrate: true
+const FILLER = 'reviewer_lin'; // issue #551 -- silent agree, keeps N=2 (no can_arbitrate)
 const ITEM_ID = 'single_label::single_label';
 
 type WorkspaceData = {
@@ -43,6 +44,12 @@ type WorkspaceData = {
 
 const labelPayload = (selected: string) => ({ previewState: { single_label: { selected } } });
 
+/* issue #551 (v4.54.0): min_reviewers = 1 (T001's default) now converges a
+ * SOLE reviewer's correction on submit instead of unconditionally requiring
+ * arbitration, so a third, silently agreeing reviewer (FILLER) is seeded
+ * alongside the dissenting PARTICIPANT to keep each unit a genuine 1:1 tie
+ * at N=2 -- otherwise wang's correction alone would already finalize both
+ * samples before either arbiter's concurrent submit races the store. */
 async function seedDisputedUnit(page: Page, sampleId: string, annotatorValue: string, reviewerValue: string) {
   await page.evaluate((a) => {
     (window as unknown as { LabelSuiteAnnotationWorkspaceData: WorkspaceData })
@@ -54,8 +61,13 @@ async function seedDisputedUnit(page: Page, sampleId: string, annotatorValue: st
         a.task, 'reviewer', 'official_run', a.sampleId, a.reviewerPayload, '',
         { annotatorId: a.annotator, reviewerId: a.participant }
       );
+    (window as unknown as { LabelSuiteAnnotationWorkspaceData: WorkspaceData })
+      .LabelSuiteAnnotationWorkspaceData.markSampleSubmitted(
+        a.task, 'reviewer', 'official_run', a.sampleId, a.annotatorPayload, '',
+        { annotatorId: a.annotator, reviewerId: a.filler }
+      );
   }, {
-    task: TASK, sampleId, annotator: ANNOTATOR, participant: PARTICIPANT,
+    task: TASK, sampleId, annotator: ANNOTATOR, participant: PARTICIPANT, filler: FILLER,
     annotatorPayload: labelPayload(annotatorValue), reviewerPayload: labelPayload(reviewerValue),
   });
 }
@@ -123,6 +135,8 @@ test('two arbiters finalizing different disputes in the same bucket never lose e
 
   await t1.getByTestId('ws-arbitration-choose-b').click();
   await t2.getByTestId('ws-arbitration-choose-b').click();
+  await fillArbitrationReasons(t1);
+  await fillArbitrationReasons(t2);
 
   // Dispatch both arbitration submits concurrently -- the exact shape of
   // #283's CONC-03: two pages racing a whole-blob RMW.

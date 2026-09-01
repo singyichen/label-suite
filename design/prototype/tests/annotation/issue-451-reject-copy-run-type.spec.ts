@@ -15,25 +15,20 @@ import {
  * that a dry_run reject leaves the annotator submission at `submitted`. The
  * copy therefore promised a state transition that never happens in dry_run.
  *
- * The fix must NOT branch the copy on run_type: AC-3.33 forbids any
- * run_type-based presentation branch on the review card (which is also why
- * issue #409 phrased the sidebar shortcut as a single run-type-qualified
- * string). So one unified note has to (a) separate the *review decision*
- * from the *annotator-status rollback*, (b) state the official_run
- * re-annotation todo, and (c) state that dry_run does not move the
- * annotator's status.
+ * Issue #550 (spec 015 v4.55.0) replaced the run-type-invariant note (and
+ * the separate pre-submit confirmation area that used to carry the real
+ * per-run_type consequence) with a single tooltip that branches on
+ * `run_type` directly -- see issue-550-review-note-tooltip.spec.ts for its
+ * content-pinning and mutual-exclusivity contract. What THIS spec still
+ * owns: the historical false-rollback-claim string must never resurface
+ * (regression guard), and the displayed copy must match the REAL
+ * submit-time state effect end to end.
  *
  * Traceability: specs/annotation/015-annotation-workspace/spec.md FR-070,
- * AC-3.40; related FR-014I, AC-3.15, AC-3.33, AC-6.4.
+ * AC-3.40; related FR-014I, AC-3.15, AC-6.4.
  */
 
-const NOTE_ZH =
-  '通過：採用此筆標記。退回：記錄審核決策與修正差異，與回退標記員狀態是不同層級的效果——正式標記退回後該樣本回到待標記，產生標記員重標待辦；試標退回不改變標記員狀態，品質問題由 IAA 閘門與下一輪試標處理。';
-
-const NOTE_EN =
-  'Approve: accept this annotation. Reject: records the review decision and any correction, which is a different level of effect from rolling back the annotator status -- in an official run a reject returns the sample to pending and creates a re-annotation task for the annotator; in a dry run a reject leaves the annotator status unchanged, and quality issues are handled by the IAA gate and the next dry run.';
-
-/* The exact string this issue removes. Pinned verbatim so a future edit that
+/* The exact string issue #451 removed. Pinned verbatim so a future edit that
  * reinstates the false promise fails here rather than silently regressing. */
 const FALSE_ROLLBACK_CLAIM = '該標記狀態會回到未標記，標記員需要重新標記';
 
@@ -67,92 +62,68 @@ function readAnnotatorStatus(page: Page, runType: RunType) {
   );
 }
 
-async function rejectAndSubmitReview(page: Page) {
-  await page.getByTestId('ws-review-row-reject').click();
-  await page.getByTestId('ws-review-submit-btn').click();
-  await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
-}
-
 test.beforeEach(async ({ page }) => {
   await skipGuidelineModal(page);
 });
 
-test.describe('reviewer reject copy matches the real per-run_type effect (issue #451)', () => {
-  test('dry_run: the note never claims the annotator status rolls back to pending', async ({ page }) => {
+test.describe('the false unconditional rollback claim never resurfaces (issue #451 regression guard)', () => {
+  test('dry_run: the tooltip never claims the annotator status rolls back to pending', async ({ page }) => {
     await openReviewer(page, 'dry_run');
-
-    const note = page.getByTestId('ws-review-note').first();
-    await expect(note).toBeVisible();
-    await expect(note).toHaveText(NOTE_ZH);
-    await expect(note).not.toContainText(FALSE_ROLLBACK_CLAIM);
-    // The dry_run consequence must be stated positively, not merely omitted.
-    await expect(note).toContainText('試標退回不改變標記員狀態');
+    await expect(page.getByTestId('ws-review-note-bubble')).not.toContainText(FALSE_ROLLBACK_CLAIM);
   });
 
-  test('official_run: the note states the reject creates a re-annotation todo', async ({ page }) => {
+  test('official_run: the tooltip states the rollback only as an official_run consequence, not unconditionally', async ({
+    page,
+  }) => {
     await openReviewer(page, 'official_run');
-
-    const note = page.getByTestId('ws-review-note').first();
-    await expect(note).toBeVisible();
-    await expect(note).toHaveText(NOTE_ZH);
-    await expect(note).toContainText('產生標記員重標待辦');
+    await expect(page.getByTestId('ws-review-note-bubble')).not.toContainText(FALSE_ROLLBACK_CLAIM);
   });
 
-  test('the note separates the review decision from the annotator-status rollback', async ({ page }) => {
-    await openReviewer(page, 'official_run');
-
-    const note = page.getByTestId('ws-review-note').first();
-    await expect(note).toContainText('記錄審核決策與修正差異');
-    await expect(note).toContainText('與回退標記員狀態是不同層級的效果');
-  });
-
-  test('the note is identical across run types (AC-3.33 forbids a run_type presentation branch)', async ({ page }) => {
-    await openReviewer(page, 'dry_run');
-    const dryText = await page.getByTestId('ws-review-note').first().textContent();
-
-    await openReviewer(page, 'official_run');
-    const officialText = await page.getByTestId('ws-review-note').first().textContent();
-
-    expect(dryText).toBe(officialText);
-  });
-
-  test('the English note is synchronised with the Traditional Chinese note', async ({ page }) => {
-    await page.addInitScript(() => {
-      window.localStorage.setItem('labelsuite.lang', 'en');
-    });
-    await openReviewer(page, 'dry_run');
-
-    const note = page.getByTestId('ws-review-note').first();
-    await expect(note).toHaveText(NOTE_EN);
-    await expect(note).not.toContainText('the sample returns to pending and the annotator must redo it');
-    await expect(note).toContainText('in a dry run a reject leaves the annotator status unchanged');
+  test('both decision buttons stay rendered in both run types (AC-3.40 unchanged)', async ({ page }) => {
+    for (const runType of ['dry_run', 'official_run'] as RunType[]) {
+      await openReviewer(page, runType);
+      await expect(page.getByTestId('ws-review-row-approve').first()).toBeVisible();
+      await expect(page.getByTestId('ws-review-row-reject').first()).toBeVisible();
+    }
   });
 });
 
 test.describe('the displayed copy matches the actual submit-time state effect (issue #451)', () => {
-  test('dry_run: what the note promises (no rollback) is what submitting a reject does', async ({ page }) => {
+  test('dry_run: what the tooltip promises (no rollback) is what submitting a reject does', async ({
+    page,
+  }) => {
     const errors = trackPageErrors(page);
 
     await submitAsAnnotator(page, 'dry_run');
     expect(await readAnnotatorStatus(page, 'dry_run')).toBe('submitted');
 
     await openReviewer(page, 'dry_run');
-    await expect(page.getByTestId('ws-review-note').first()).toContainText('試標退回不改變標記員狀態');
-    await rejectAndSubmitReview(page);
+    await expect(page.getByTestId('ws-review-note-bubble')).toContainText('不回退標記員狀態');
+    await page.getByTestId('ws-review-row-reject').click();
+    // issue #552 (FR-016A): a reject needs a reason before submit goes through.
+    await page.getByTestId('ws-review-reject-reason').fill('理由');
+    await page.getByTestId('ws-review-submit-btn').click();
+    await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
 
     expect(await readAnnotatorStatus(page, 'dry_run')).toBe('submitted');
     assertNoPageErrors(errors);
   });
 
-  test('official_run: what the note promises (re-annotation todo) is what submitting a reject does', async ({ page }) => {
+  test('official_run: what the tooltip promises (re-annotation todo) is what submitting a reject does', async ({
+    page,
+  }) => {
     const errors = trackPageErrors(page);
 
     await submitAsAnnotator(page, 'official_run');
     expect(await readAnnotatorStatus(page, 'official_run')).toBe('submitted');
 
     await openReviewer(page, 'official_run');
-    await expect(page.getByTestId('ws-review-note').first()).toContainText('產生標記員重標待辦');
-    await rejectAndSubmitReview(page);
+    await expect(page.getByTestId('ws-review-note-bubble')).toContainText('重標待辦');
+    await page.getByTestId('ws-review-row-reject').click();
+    // issue #552 (FR-016A): a reject needs a reason before submit goes through.
+    await page.getByTestId('ws-review-reject-reason').fill('理由');
+    await page.getByTestId('ws-review-submit-btn').click();
+    await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
 
     expect(await readAnnotatorStatus(page, 'official_run')).toBe('pending');
     assertNoPageErrors(errors);

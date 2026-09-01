@@ -308,7 +308,7 @@
      `role` alone answers "a reviewer did this", not "which reviewer".
      `summary` is the host-provided per-output description (對應輸出類型 +
      修改內容). */
-  function appendHistoryEvent(entry, action, role, summary, actorId) {
+  function appendHistoryEvent(entry, action, role, summary, actorId, extra) {
     if (!Array.isArray(entry.history)) entry.history = [];
     var normalizedActorId = actorId || null;
     var last = entry.history[entry.history.length - 1];
@@ -321,13 +321,57 @@
     if (action === 'submitted' && last && last.action === 'submitted' && last.role === role && last.actorId === normalizedActorId) {
       return;
     }
-    entry.history.push({
+    var event = {
       action: action,
       role: role,
       actorId: normalizedActorId,
       at: new Date().toISOString(),
       summary: summary || '',
+    };
+    /* v4.61.0 (FR-087/FR-089): result-bearing events carry the answer as it
+       stood at that moment, and reason-bearing ones carry the typed reason.
+       Absent keys stay absent rather than becoming null, so a pre-v4.61.0
+       event and a new event without a snapshot read identically. */
+    if (extra) {
+      Object.keys(extra).forEach(function (field) {
+        if (extra[field] != null) event[field] = extra[field];
+      });
+    }
+    entry.history.push(event);
+  }
+
+  /* FR-088: `started_at` / `lead_time` as measured by the page that owns the
+     timer. Only the page can measure visible time, so the data layer lifts
+     the numbers off the payload rather than computing them -- computing them
+     here would leave only the wall clock, which is exactly the figure
+     FR-088 rules out. Absent timing yields an empty object, so a caller with
+     no timer writes no timing fields instead of a zero. */
+  function timingFields(timing) {
+    if (!timing) return {};
+    return { started_at: timing.startedAt || null, lead_time: typeof timing.leadTime === 'number' ? timing.leadTime : null };
+  }
+
+  /* The answer as stored on a history event (FR-087). Deliberately a
+     whitelist of the three answer collections: it must never carry the
+     source text or dataset row fields, and it must not pick up the
+     reviewer-internal `decisions` / `reasons` keys that travel in the same
+     payload. Cloned so a later in-place edit of live state cannot rewrite
+     an event that already happened. */
+  function buildResultSnapshot(payload) {
+    if (!payload) return null;
+    var snapshot = {};
+    ['previewState', 'previewEntities', 'previewTriples'].forEach(function (field) {
+      if (payload[field] != null) snapshot[field] = JSON.parse(JSON.stringify(payload[field]));
     });
+    return Object.keys(snapshot).length ? snapshot : null;
+  }
+
+  /* One output type's answer, for the FR-086 accepted/modified decision.
+     Plain-value types live under previewState[outKey]; position-type
+     comparison is registry-driven and lands with FR-087's position half. */
+  function outputSlice(payload, outKey) {
+    var state = (payload && payload.previewState) || {};
+    return JSON.stringify(state[outKey] != null ? state[outKey] : null);
   }
 
   function markSampleSubmitted(taskId, role, runType, sampleId, payload, historySummary, identity) {
@@ -336,9 +380,38 @@
     var existing = bucket[sampleId];
     var entry = { status: 'submitted', submittedAt: new Date().toISOString(), answers: payload || {} };
     if (existing && Array.isArray(existing.history)) entry.history = existing.history;
-    appendHistoryEvent(entry, 'submitted', role, historySummary, actorIdFor(role, identity));
+    var actorId = actorIdFor(role, identity);
+    var decisions = role === 'reviewer' ? (payload && payload.decisions) || null : null;
+    /* When per-outKey decision events follow (FR-086), the answer lives on
+       those -- repeating it on the wrapper `submitted` event would show the
+       same result twice, a millisecond apart, in the same trail. */
+    appendHistoryEvent(entry, 'submitted', role, historySummary, actorId, Object.assign(
+      { result_snapshot: decisions ? null : buildResultSnapshot(payload) },
+      timingFields(payload && payload.timing)
+    ));
+    if (decisions) {
+      appendReviewDecisionEvents(entry, taskId, runType, sampleId, payload, historySummary, actorId, identity, decisions);
+    }
     bucket[sampleId] = entry;
     writeSubmissionBucket(key, bucket);
+  }
+
+  /* FR-086 emission points for `accepted` / `modified`. A reviewer submit
+     carries one decision per output type (FR-051); an approve whose value
+     matches the annotator's is an acceptance, an approve whose value
+     differs is a correction. `reject` is not emitted here -- that path
+     already writes `rejected` through markSampleRejected. */
+  function appendReviewDecisionEvents(entry, taskId, runType, sampleId, payload, summary, actorId, identity, decisions) {
+    var reviewed = getSubmission(taskId, 'annotator', runType, sampleId, identity);
+    var reasons = (payload && payload.reasons) || {};
+    Object.keys(decisions).forEach(function (outKey) {
+      if (decisions[outKey] !== 'approve') return;
+      var changed = outputSlice(payload, outKey) !== outputSlice(reviewed, outKey);
+      appendHistoryEvent(entry, changed ? 'modified' : 'accepted', 'reviewer', summary, actorId, Object.assign(
+        { result_snapshot: buildResultSnapshot(payload), reason: reasons[outKey] || null },
+        timingFields(payload && payload.timing)
+      ));
+    });
   }
 
   /* Draft save (AC-2.3 / FR-013). Saving never downgrades an
@@ -353,11 +426,17 @@
     if (existing && entryStatus(existing) === 'submitted') {
       existing.answers = payload || {};
       existing.savedAt = new Date().toISOString();
-      appendHistoryEvent(existing, 'saved', role, historySummary, actorId);
+      appendHistoryEvent(existing, 'draft_saved', role, historySummary, actorId, Object.assign(
+        { result_snapshot: buildResultSnapshot(payload) },
+        timingFields(payload && payload.timing)
+      ));
     } else {
       var entry = { status: 'saved', savedAt: new Date().toISOString(), answers: payload || {} };
       if (existing && Array.isArray(existing.history)) entry.history = existing.history;
-      appendHistoryEvent(entry, 'saved', role, historySummary, actorId);
+      appendHistoryEvent(entry, 'draft_saved', role, historySummary, actorId, Object.assign(
+        { result_snapshot: buildResultSnapshot(payload) },
+        timingFields(payload && payload.timing)
+      ));
       bucket[sampleId] = entry;
     }
     writeSubmissionBucket(key, bucket);
@@ -393,7 +472,23 @@
     return taskId + '::reviewer::' + runType + '::' + annotatorId + '::';
   }
 
-  function getSampleHistory(taskId, runType, sampleId, identity) {
+  /* FR-090 layered masking, applied AFTER FR-062 has already decided which
+     events exist at all. Rule 1: an annotator viewer never obtains a peer
+     annotator's event -- not a masked version of it, the whole event. The
+     event row carries the per-output answer summary (FR-016B), so masking
+     only `result_snapshot` would still hand the peer's answer over, which
+     is the Data Fairness leak XROLE-11 exists to prevent. Reviewer viewers
+     see every event FR-062 admitted for the review unit they are on.
+     `viewer` is optional: callers that predate it get the unmasked merge,
+     matching the behavior they were written against. */
+  function maskHistoryForViewer(events, viewer) {
+    if (!viewer || viewer.role !== 'annotator') return events;
+    return events.filter(function (event) {
+      return event.role !== 'annotator' || event.actorId === viewer.actorId;
+    });
+  }
+
+  function getSampleHistory(taskId, runType, sampleId, identity, viewer) {
     var annotatorKey = submissionBucketKey(taskId, 'annotator', runType, identity);
     var reviewerPrefix = reviewerBucketPrefix(taskId, runType, identity);
     var merged = [];
@@ -413,7 +508,7 @@
     merged.sort(function (a, b) {
       return String(a.at).localeCompare(String(b.at));
     });
-    return merged;
+    return maskHistoryForViewer(merged, viewer);
   }
 
   function getSubmittedSampleCount(taskId, role, runType, identity) {
@@ -463,7 +558,7 @@
    * mechanism applies only to `run_type = official_run` -- `dry_run` has no
    * "退回個人重標" channel, so a dry_run reject decision must not touch the
    * annotator's submission status. */
-  function markSampleRejected(taskId, role, runType, sampleId, historySummary, identity) {
+  function markSampleRejected(taskId, role, runType, sampleId, historySummary, identity, timing) {
     if (runType !== 'official_run') return;
     var key = submissionBucketKey(taskId, role, runType, identity);
     var bucket = readSubmissionBucket(key);
@@ -471,13 +566,54 @@
     var actorId = actorIdFor('reviewer', identity);
     if (existing) {
       existing.status = 'pending';
-      appendHistoryEvent(existing, 'rejected', 'reviewer', historySummary, actorId);
+      appendHistoryEvent(existing, 'rejected', 'reviewer', historySummary, actorId, timingFields(timing));
     } else {
       var entry = { status: 'pending', answers: {} };
-      appendHistoryEvent(entry, 'rejected', 'reviewer', historySummary, actorId);
+      appendHistoryEvent(entry, 'rejected', 'reviewer', historySummary, actorId, timingFields(timing));
       bucket[sampleId] = entry;
     }
     writeSubmissionBucket(key, bucket);
+  }
+
+  /* FR-089: record something that happened TO a sample without moving where
+   * that sample stands. Both callers write into the ANNOTATOR bucket, for
+   * two different reasons that happen to point the same way:
+   *   - skip is the annotator's own timeline to begin with;
+   *   - adjudication is a reviewer act, but getSampleHistory drops any
+   *     non-annotator bucket whose entry is not `submitted` (FR-062), and an
+   *     arbiter normally has no submitted reviewer submission of their own --
+   *     an `adjudicated` event left in the arbiter's bucket would be
+   *     invisible to every viewer, forever. Same resolution markSampleRejected
+   *     already uses: annotator bucket, reviewer role on the event.
+   *
+   * Status is deliberately untouched. `skipped` and `adjudicated` are events,
+   * not sample states, so entryStatus() keeps its three-value contract and
+   * "I set this one aside" cannot overwrite "how far I got on it".
+   *
+   * `reason` is required by FR-089 rather than merely expected: without the
+   * guard, appendHistoryEvent's null-key drop would quietly emit a
+   * reason-less event, which is the exact outcome FR-089 forbids. Silent
+   * return follows markSampleRejected's run_type guard. */
+  function appendSampleTimelineEvent(taskId, runType, sampleId, action, role, reason, historySummary, identity, timing) {
+    if (!reason) return;
+    var key = submissionBucketKey(taskId, 'annotator', runType, identity);
+    var bucket = readSubmissionBucket(key);
+    var entry = bucket[sampleId];
+    if (!entry) {
+      entry = { status: 'pending', answers: {} };
+      bucket[sampleId] = entry;
+    }
+    appendHistoryEvent(entry, action, role, historySummary, actorIdFor(role, identity), Object.assign(
+      { reason: reason },
+      timingFields(timing)
+    ));
+    writeSubmissionBucket(key, bucket);
+  }
+
+  /* FR-089 / AC-2.20: the annotator sets a sample aside, saying why. New in
+     v4.61.0 -- there was no skip action before this version. */
+  function markSampleSkipped(taskId, runType, sampleId, reason, historySummary, identity, timing) {
+    appendSampleTimelineEvent(taskId, runType, sampleId, 'skipped', 'annotator', reason, historySummary, identity, timing);
   }
 
   /* Reviewer per-row decision drafts (issue #196, CONT-03): approve/reject
@@ -1692,22 +1828,70 @@
       .map(function (key) {
         var entry = readSubmissionBucket(key)[sampleId];
         if (!entry || entryStatus(entry) !== 'submitted') return null;
-        return { reviewerId: key.slice(prefix.length), answers: entry.answers };
+        return { reviewerId: key.slice(prefix.length), answers: entry.answers, submittedAt: entry.submittedAt || null };
       })
       .filter(function (submission) { return submission !== null; });
   }
 
+  /* issue #552 (FR-084): what the official_run annotator sees on a rework
+   * todo -- every reviewer reject on this sample, with the reason that
+   * reviewer typed (handleReviewSubmit persists `reasons` beside
+   * `decisions`, issue #551). "Rework todo" is read off the annotator's own
+   * entry the same way entryStatus()/markSampleRejected() wrote it: status
+   * 'pending' with a 'rejected' event as its latest history item. dry_run
+   * has no rollback channel (FR-014I), so it never yields anything. */
+  function getReworkReasons(taskId, runType, sampleId, identity) {
+    if (runType !== 'official_run') return [];
+    var entry = readSampleEntry(taskId, 'annotator', runType, sampleId, identity);
+    if (!entry || entryStatus(entry) !== 'pending' || !Array.isArray(entry.history)) return [];
+    var last = entry.history[entry.history.length - 1];
+    if (!last || last.action !== 'rejected') return [];
+    var rows = [];
+    readReviewerSubmissions(taskId, runType, sampleId, identity).forEach(function (submission) {
+      var decisions = (submission.answers && submission.answers.decisions) || {};
+      var reasons = (submission.answers && submission.answers.reasons) || {};
+      Object.keys(decisions).forEach(function (outKey) {
+        if (decisions[outKey] !== 'reject') return;
+        rows.push({ outKey: outKey, reason: reasons[outKey] || '', reviewerId: submission.reviewerId, at: submission.submittedAt });
+      });
+    });
+    return rows;
+  }
+
+  /* issue #551: a reviewer's per-outKey approve/reject decision, persisted
+   * alongside the answers payload (collectAnswerPayload adds `decisions`
+   * for the reviewer role only). Absent on every pre-#551 submission and on
+   * every annotator submission -- both read as undefined, which every call
+   * site below treats as "not a reject". */
+  function reviewerOutKeyDecision(reviewerSubmission, outKey) {
+    var decisions = reviewerSubmission.answers && reviewerSubmission.answers.decisions;
+    return decisions && decisions[outKey];
+  }
+
+  /* issue #551: sentinel dispute-item value for a reject decision that
+   * carries no correction ("純退回"). Deliberately NOT the annotator's own
+   * value or null -- both would let the item read as agreement or as "no
+   * answer", when the actual fact is "this reviewer objected and proposed
+   * nothing to replace it with". A dedicated marker keeps that fact
+   * distinguishable through tallying, rendering and arbitration. */
+  var PURE_REJECT_VALUE = ' __PURE_REJECT__';
+
   /* True when ANY reviewer's answer differs from the annotator's on ANY of
-   * the task's output keys. This single predicate picks the lane in FR-051:
-   * false -> approved/finalized, true -> modified/disputed/finalized. */
+   * the task's output keys, OR any reviewer rejected an outKey without
+   * changing its value (issue #551: a naked reject must not read as
+   * agreement just because compareOutputAnswer() sees no diff). This single
+   * predicate picks the lane in FR-051: false -> approved/finalized,
+   * true -> modified/disputed/finalized. */
   function anyReviewerChanged(annotatorSubmission, reviewerSubmissions, keys) {
     return reviewerSubmissions.some(function (reviewerSubmission) {
       return keys.some(function (outKey) {
-        return !compareOutputAnswer(
+        var equal = compareOutputAnswer(
           outKey,
           convertSubmissionAnswer(outKey, annotatorSubmission),
           convertSubmissionAnswer(outKey, reviewerSubmission.answers)
         ).equal;
+        if (!equal) return true;
+        return reviewerOutKeyDecision(reviewerSubmission, outKey) === 'reject';
       });
     });
   }
@@ -1798,6 +1982,15 @@
           annotatorAnswer,
           convertSubmissionAnswer(outKey, submission.answers)
         ).diffs;
+        /* issue #551: a reject with no correction produces no FR-052 diff
+           (the value is unchanged), so compareOutputAnswer() has nothing to
+           report -- synthesize one whole-outKey diff so the reject still
+           becomes a dispute item instead of silently vanishing. Granularity
+           is the outKey itself (there is no differing sub-key to point at),
+           matching the single_label/free_text "no merge key" shape. */
+        if (!diffs.length && reviewerOutKeyDecision(submission, outKey) === 'reject') {
+          diffs = [{ key: outKey, annotator: annotatorAnswer, reviewer: PURE_REJECT_VALUE }];
+        }
         diffs.forEach(function (diff) {
           var id = outKey + '::' + diff.key;
           if (!byId[id]) {
@@ -1942,6 +2135,7 @@
   function submitArbitration(taskId, runType, sampleId, identity, decisions) {
     var bucketKey = arbitrationBucketKey(taskId, runType, identity);
     var arbiterId = (identity && identity.reviewerId) || DEFAULT_REVIEWER_ID;
+    var upheldRejectItemIds = [];
     (decisions || []).forEach(function (decision) {
       var itemKey = arbitrationItemKey(bucketKey, sampleId, decision.itemId);
       var item = readArbitrationItem(itemKey) || { votes: [] };
@@ -1958,7 +2152,27 @@
       item.finalized_value = decision.value;
       item.finalized_by = arbiterId;
       writeArbitrationItem(itemKey, item);
+      /* FR-089 / AC-3.50 (new in v4.61.0): before this version arbitration
+         was the only terminal action in the workspace that left no trace in
+         history at all -- votes and finalized_value were written, and the
+         歷程 tab showed nothing. One event per finalized item, because the
+         reason is asked per item. */
+      appendSampleTimelineEvent(
+        taskId, runType, sampleId, 'adjudicated', 'reviewer',
+        decision.reason, 'arbitration finalized: ' + decision.itemId, identity
+      );
+      if (decision.value === PURE_REJECT_VALUE) upheldRejectItemIds.push(decision.itemId);
     });
+    /* issue #551 point 2: choosing B on a pure-reject item means "maintain
+       the reject" -- the same official_run rework rollback a live reviewer
+       reject already triggers (markSampleRejected), still no third answer
+       written. dry_run has no such channel and only keeps the vote. */
+    if (upheldRejectItemIds.length && runType === 'official_run') {
+      markSampleRejected(
+        taskId, 'annotator', runType, sampleId,
+        'arbitration upheld reject: ' + upheldRejectItemIds.join(', '), identity
+      );
+    }
   }
 
   /* Per-item majority convergence (issue #147 ⑥③): decides whether one
@@ -2012,10 +2226,26 @@
       });
   }
 
+  /* issue #551: true when at least one reviewer's side of this item is a
+     naked reject (PURE_REJECT_VALUE) rather than a proposed value. */
+  function hasPureReject(item) {
+    return Object.keys(item.reviewerValues).some(function (reviewerId) {
+      return item.reviewerValues[reviewerId] === PURE_REJECT_VALUE;
+    });
+  }
+
   function resolveDisputeConvergence(item, reviewerCount) {
-    /* A single reviewer's dissent can never outvote the annotator, even
-       though 1 > 1/2 is technically a strict majority. */
-    if (reviewerCount < 2) return { converged: false };
+    /* issue #551 point 1: a naked reject proposes no replacement value, so
+       it can never be out-voted into an agreement tally -- it blocks
+       finalization outright and always needs an arbiter, however the rest
+       of the vote falls. */
+    if (hasPureReject(item)) return { converged: false };
+    /* issue #551 point 3: min_reviewers = 1 makes N = 1 the FULL quorum,
+       not an incomplete one -- the sole reviewer's correction is
+       authoritative and converges immediately (1 vote > 1/2 threshold).
+       This used to be hard-blocked unconditionally below N = 2, which sent
+       every min_reviewers = 1 correction into the dispute pool with no
+       second reviewer able to out-vote it. */
     var winner = tallyDisputeVotes(item, reviewerCount).filter(function (candidate) {
       return candidate.count > reviewerCount / 2;
     })[0];
@@ -2028,9 +2258,9 @@
    * and an unmet quorum looked identical. This exposes the same numbers
    * resolveDisputeConvergence() decides on -- candidate tallies, the strict
    * majority threshold (> N/2) and which non-convergence shape applies:
-   *   single_reviewer N < 2 -- one dissenting reviewer cannot outvote the
-   *                   annotator even though 1 > 1/2 holds arithmetically,
-   *                   so this case must NOT be explained as "> N/2 unmet"
+   *   pure_reject   at least one reviewer rejected with no replacement
+   *                   value (issue #551) -- no vote count can resolve this,
+   *                   so it must NOT be explained as a failed "> N/2" count
    *   even_tie      exactly two candidate values share the lead (1:1, 2:2)
    *   all_divergent three or more candidates with one vote each (1/1/1)
    *   no_majority   anything else short of a strict majority
@@ -2051,7 +2281,7 @@
     var leaders = candidates.filter(function (candidate) { return candidate.count === leadCount; });
     var reason = null;
     if (!converged) {
-      if (reviewerCount < 2) reason = 'single_reviewer';
+      if (hasPureReject(item)) reason = 'pure_reject';
       else if (candidates.length === 2 && leaders.length === 2) reason = 'even_tie';
       else if (candidates.length >= 3 && leaders.length === candidates.length) reason = 'all_divergent';
       else reason = 'no_majority';
@@ -2291,34 +2521,61 @@
        `arb` is chen's arbitration picking that reviewer value (choice B).
        `rejectBy` names the one entry in `rev` whose decision was `reject`
        (issue #502) rather than approve/modify -- reject is a decision, not
-       a value, so the reviewer's `rev` value can still equal `v` (agree).
+       a value, so the reviewer's `rev` value can still equal `v` (agree,
+       i.e. a "pure reject": issue #551 makes this block finalization
+       instead of reading as an agreement vote).
        Annotator values MUST match REVIEWER_MOCK_ROWS above -- the list's
        answer column and the derived unit status describe the same
-       submission. Derived states are noted per sample. */
+       submission. Derived states are noted per sample.
+
+       issue #551 changed two derivation rules used throughout this table:
+       (1) min_reviewers = 1 (T014, T015 here) now converges a SOLE
+           reviewer's correction immediately -- what used to require
+           arbitration at N = 1 now finalizes on submit, so several rows
+           below moved from `disputed`/`arbitrated` to `finalized`; and
+       (2) a pure reject (no correction) now blocks finalization instead of
+           reading as agreement, so dry-05's A row moved the other way,
+           from `finalized` to `disputed`. */
     var scripts = [
       /* T014 dry_run, min_reviewers = 1 */
       { t: 'T014', r: 'dry_run', s: 'dry-01-all-agree', a: A, v: 'positive', rev: { reviewer_wang: 'positive' } }, // finalized
       { t: 'T014', r: 'dry_run', s: 'dry-01-all-agree', a: B, v: 'positive', rev: { reviewer_wang: 'positive' } }, // finalized
       { t: 'T014', r: 'dry_run', s: 'dry-01-all-agree', a: C, v: 'positive', rev: { reviewer_wang: 'positive' } }, // finalized
       { t: 'T014', r: 'dry_run', s: 'dry-02-one-divergent', a: A, v: 'neutral', rev: { reviewer_wang: 'neutral' } }, // finalized
-      { t: 'T014', r: 'dry_run', s: 'dry-02-one-divergent', a: B, v: 'neutral', rev: { reviewer_wang: 'positive' } }, // disputed
+      // issue #551: N = 1 correction now converges on submit -- was disputed.
+      { t: 'T014', r: 'dry_run', s: 'dry-02-one-divergent', a: B, v: 'neutral', rev: { reviewer_wang: 'positive' } }, // finalized (N=1 quorum converges)
       { t: 'T014', r: 'dry_run', s: 'dry-02-one-divergent', a: C, v: 'positive' }, // pending
       { t: 'T014', r: 'dry_run', s: 'dry-03-dispute-open', a: A, v: 'neutral' }, // pending
-      { t: 'T014', r: 'dry_run', s: 'dry-03-dispute-open', a: B, v: 'neutral', rev: { reviewer_wang: 'negative' } }, // disputed
+      // issue #551: N = 1 correction now converges on submit -- was disputed.
+      { t: 'T014', r: 'dry_run', s: 'dry-03-dispute-open', a: B, v: 'neutral', rev: { reviewer_wang: 'negative' } }, // finalized (N=1 quorum converges)
       { t: 'T014', r: 'dry_run', s: 'dry-03-dispute-open', a: C, v: 'neutral' }, // pending
       { t: 'T014', r: 'dry_run', s: 'dry-04-dispute-resolved', a: A, v: 'negative', rev: { reviewer_wang: 'negative' } }, // finalized
-      { t: 'T014', r: 'dry_run', s: 'dry-04-dispute-resolved', a: B, v: 'neutral', rev: { reviewer_wang: 'negative' }, arb: 'negative' }, // finalized by arbitration
+      /* issue #551: N = 1 already converges this item on 'negative' before
+         chen's seeded arbitration vote is even applied -- the arb call
+         below is now redundant (it writes the same value the majority rule
+         already resolved) but harmless, and kept so the arbitration record
+         (finalized_by = reviewer_chen) this row's test still reads stays
+         populated. */
+      { t: 'T014', r: 'dry_run', s: 'dry-04-dispute-resolved', a: B, v: 'neutral', rev: { reviewer_wang: 'negative' }, arb: 'negative' }, // finalized (N=1 quorum converges; arbitration record redundant)
       { t: 'T014', r: 'dry_run', s: 'dry-04-dispute-resolved', a: C, v: 'negative', rev: { reviewer_wang: 'negative' } }, // finalized
       /* issue #502: reject on dry_run has no rollback channel -- the
-         annotator stays 'submitted' and the unit finalizes normally
-         (agree value), only the reviewer's own history records "reject". */
-      { t: 'T014', r: 'dry_run', s: 'dry-05-pending-review', a: A, v: 'positive', rev: { reviewer_wang: 'positive' }, rejectBy: 'reviewer_wang' }, // finalized (reject, no rework backlog)
+         annotator stays 'submitted'. issue #551: a pure reject (no
+         correction) now blocks finalization instead of reading as
+         agreement, so this unit is disputed, not finalized -- only an
+         arbiter (or a later correction) can resolve it. */
+      { t: 'T014', r: 'dry_run', s: 'dry-05-pending-review', a: A, v: 'positive', rev: { reviewer_wang: 'positive' }, rejectBy: 'reviewer_wang' }, // disputed (pure reject blocks finalization)
       { t: 'T014', r: 'dry_run', s: 'dry-05-pending-review', a: B, v: 'positive' }, // pending
       { t: 'T014', r: 'dry_run', s: 'dry-05-pending-review', a: C, v: 'positive' }, // pending
       /* T015 official_run, min_reviewers = 1 (ofs-05 stays unsubmitted) */
       { t: 'T015', r: 'official_run', s: 'ofs-01-agree-gold', a: A, v: 'negative', rev: { reviewer_wang: 'negative' } }, // finalized
-      { t: 'T015', r: 'official_run', s: 'ofs-02-modified-dispute', a: A, v: 'neutral', rev: { reviewer_wang: 'positive' } }, // disputed
-      { t: 'T015', r: 'official_run', s: 'ofs-03-arbitrated-gold', a: A, v: 'positive', rev: { reviewer_wang: 'neutral' }, arb: 'neutral' }, // finalized by arbitration
+      // issue #551: N = 1 correction now converges on submit -- was disputed.
+      { t: 'T015', r: 'official_run', s: 'ofs-02-modified-dispute', a: A, v: 'neutral', rev: { reviewer_wang: 'positive' } }, // finalized (N=1 quorum converges)
+      /* issue #551: a second, AGREEING reviewer (li) keeps this a genuine
+         N = 2 tie (wang's 'neutral' vs the implicit agree vote for
+         'positive') so the row still needs chen's arbitration to finalize,
+         same as before -- without li this would now converge at N = 1 like
+         ofs-02 above and stop demoing an arbitration-resolved finalize. */
+      { t: 'T015', r: 'official_run', s: 'ofs-03-arbitrated-gold', a: A, v: 'positive', rev: { reviewer_wang: 'neutral', reviewer_li: 'positive' }, arb: 'neutral' }, // finalized by arbitration
       { t: 'T015', r: 'official_run', s: 'ofs-04-pending-review', a: A, v: 'positive' }, // pending
       /* T016 official_run, min_reviewers = 3 */
       { t: 'T016', r: 'official_run', s: 'ofm-01-unanimous-gold', a: A, v: 'positive', rev: { reviewer_wang: 'positive', reviewer_li: 'positive', reviewer_lin: 'positive' } }, // finalized
@@ -2340,11 +2597,21 @@
          resubmission + new review cycle: the rework backlog itself is
          this row's whole demo point, and simulating the annotator's next
          action is what the live workspace is for. */
-      { t: 'T017', r: 'official_run', s: 'oft-05-pending-review', a: A, v: 'positive', rev: { reviewer_wang: 'positive' }, rejectBy: 'reviewer_wang' }, // rolled back to pending (reject, rework backlog)
+      { t: 'T017', r: 'official_run', s: 'oft-05-pending-review', a: A, v: 'positive', rev: { reviewer_wang: 'positive' }, rejectBy: 'reviewer_wang', reason: '語氣偏中性，請重新判讀第二句的轉折' }, // rolled back to pending (reject, rework backlog)
     ];
 
-    function labelPayload(value) {
-      return { previewState: { single_label: { selected: value } } };
+    function labelPayload(value, decision, reason) {
+      /* issue #551: `decision` mirrors handleReviewSubmit's persisted
+         `decisions` map (per outKey approve/reject) -- without it, a seeded
+         pure reject (rejectBy, same value as `v`) is indistinguishable from
+         a seeded approve, and getReviewUnitStatus()/getDisputeItems() would
+         read it as agreement instead of a blocking reject.
+         issue #552: `reason` mirrors the persisted `reasons` map the
+         annotator's rework banner (FR-084) reads. */
+      var payload = { previewState: { single_label: { selected: value } } };
+      if (decision) payload.decisions = { single_label: decision };
+      if (reason) payload.reasons = { single_label: reason };
+      return payload;
     }
 
     scripts.forEach(function (row) {
@@ -2354,11 +2621,13 @@
         /* issue #502: mirrors handleReviewSubmit's per-row decision line
            (annotation-workspace.config.js's decisionLines, ~L3780) so a
            seeded reject reads the same way a live one would. */
-        var reviewSummary = isReject ? 'single_label · ' + row.a + ': reject' : '';
-        markSampleSubmitted(row.t, 'reviewer', row.r, row.s, labelPayload(row.rev[reviewerId]), reviewSummary, {
-          annotatorId: row.a,
-          reviewerId: reviewerId,
-        });
+        var reviewSummary = isReject ? 'single_label · ' + row.a + ': reject — ' + (row.reason || '') : '';
+        markSampleSubmitted(
+          row.t, 'reviewer', row.r, row.s,
+          labelPayload(row.rev[reviewerId], isReject ? 'reject' : 'approve', isReject ? row.reason : null),
+          reviewSummary,
+          { annotatorId: row.a, reviewerId: reviewerId }
+        );
         /* issue #502: mirrors handleReviewSubmit's post-submit rollback
            (annotation-workspace.config.js ~L3864). markSampleRejected() is
            itself official_run-gated (this file, ~L467), so calling it here
@@ -2517,6 +2786,7 @@
     getSampleSavedAt: getSampleSavedAt,
     markSampleSubmitted: markSampleSubmitted,
     markSampleSaved: markSampleSaved,
+    markSampleSkipped: markSampleSkipped,
     markSampleRejected: markSampleRejected,
     saveReviewRowDecisionDraft: saveReviewRowDecisionDraft,
     getReviewRowDecisionDraft: getReviewRowDecisionDraft,
@@ -2547,10 +2817,12 @@
     getDisputeItems: getDisputeItems,
     isArbiterCandidate: isArbiterCandidate,
     readReviewerSubmissions: readReviewerSubmissions,
+    getReworkReasons: getReworkReasons,
     getArbitrationState: getArbitrationState,
     submitArbitration: submitArbitration,
     resolveDisputeConvergence: resolveDisputeConvergence,
     describeDisputeVotes: describeDisputeVotes,
+    PURE_REJECT_VALUE: PURE_REJECT_VALUE,
     computeIaaAlpha: computeIaaAlpha,
     IAA_NOMINAL_OUTPUT_TYPES: IAA_NOMINAL_OUTPUT_TYPES,
   };

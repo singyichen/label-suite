@@ -60,6 +60,10 @@ test.describe('脈絡橫幅不再重複身分資訊 (issue #515 ①)', () => {
     await page.goto(T014_UNIT);
     await dismissGuidelineModal(page);
 
+    /* issue #525 PR-B re-anchor: the two chips are unchanged, but the state
+       element now reads BETWEEN them, so the run chip is still chip 0 while
+       the threshold chip is now the LAST child of the banner rather than
+       `.rv-unit-chip` index 1. Same two assertions, same two subjects. */
     const chips = banner(page).locator('.rv-unit-chip');
     await expect(chips).toHaveCount(2);
     await expect(chips.nth(0)).toHaveClass(/rv-unit-run/);
@@ -101,7 +105,11 @@ test.describe('橫幅其餘內容不受影響 (issue #515 ①)', () => {
     await expect(banner(page).locator('.rv-unit-run')).toContainText('試標');
     await expect(banner(page).locator('.rv-unit-threshold')).toContainText('定稿門檻');
     await expect(banner(page).locator('.rv-unit-state')).toHaveCount(1);
-    await expect(banner(page).locator('.review-track')).toHaveCount(1);
+    /* issue #525 PR-A re-anchor: the state track moved out of the banner into
+       the on-demand review-flow drawer. The original assertion is kept
+       verbatim, re-rooted at the element that now carries the track. */
+    await page.getByTestId('ws-review-flow-trigger').click();
+    await expect(page.getByTestId('ws-review-flow-drawer').locator('.review-track')).toHaveCount(1);
   });
 });
 
