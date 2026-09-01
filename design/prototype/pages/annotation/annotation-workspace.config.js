@@ -59,20 +59,18 @@
       wsSubmitSuccess: '已提交',
       reviewSubmitLabel: '送出審核',
       reviewApproveLabel: '通過',
-      reviewRejectLabel: '退回',
+      reviewModifyLabel: '修正',
+      reviewBypassLabel: '無法判定',
       wsReviewSubmitSuccess: '審核已送出',
       reviewNoAnswer: '（無）',
-      reviewNoteDry: '通過：採用該輸出類型目前顯示的作答（含您的修正）為審核結果。退回：記錄不採用的決策與修正差異。送出後——試標：不回退標記員狀態，品質問題由任務層級 IAA 閘門與下一輪試標處理。',
-      reviewNoteOfficial: '通過：採用該輸出類型目前顯示的作答（含您的修正）為審核結果。退回：記錄不採用的決策與修正差異。送出後——正式標記：任一輸出類型退回會使此單位回到待標記，並產生標記員 {annotator} 的重標待辦；全部通過則標記員狀態不變。退回理由會顯示給標記員。',
+      reviewNote: '通過：採用該輸出類型目前顯示的作答（含您的修正）為審核結果。修正：先修改作答，再填寫理由，記錄修正後的結果。無法判定：不採用任何值，僅記錄理由。',
       reviewNoteTriggerLabel: '審核決策說明',
-      reviewRejectReasonLabel: '退回理由（必填）',
-      reviewRejectReasonPlaceholder: '請說明退回原因',
-      toastRejectReasonRequired: '請填寫以下輸出類型的退回理由：{list}',
-      reworkReasonsTitle: '此樣本已被退回，請依下列理由重新標記',
-      reworkReasonMissing: '（未填寫理由）',
+      reviewReasonLabel: '理由（必填）',
+      reviewReasonPlaceholder: '請說明理由',
+      toastReasonRequired: '請填寫以下輸出類型的理由：{list}',
       reviewCorrectionTitle: '直接修正（Reviewer 修正後答案）',
       toastSelectDecision: '請完成以下輸出類型的審核決策：{list}',
-      toastReviewCorrectionReset: '偵測到直接修正的內容因重新整理而遺失，對應的通過／退回決策已重置，請重新確認後再送出',
+      toastReviewCorrectionReset: '偵測到直接修正的內容因重新整理而遺失，對應的審核決策已重置，請重新確認後再送出',
       toastResolveDivergent: '請先裁定所有分歧項目',
       arbitrationTitle: '爭議仲裁',
       arbitrationNote: '此審核單位已進入爭議池。請逐項裁定採用 A（標記員）或 B（審核員）的結果；仲裁不重新標記。',
@@ -134,7 +132,7 @@
       unitStateAriaFinalized: '{state}，已達 {n} 位審核員門檻，內容已鎖定',
       reviewOriginalAnswerLabel: '標記員原答案：',
       reviewCorrectedAnswerLabel: 'Reviewer 修正後答案：',
-      toastReviewDecisionResetOnEdit: '直接修正的值已變更，對應的通過／退回決策已重置，請重新確認後再送出',
+      toastReviewDecisionResetOnEdit: '直接修正的值已變更，對應的審核決策已重置，請重新確認後再送出',
     },
     en: {
       sampleListTitle: 'Samples',
@@ -179,20 +177,18 @@
       wsSubmitSuccess: 'Submitted',
       reviewSubmitLabel: 'Submit review',
       reviewApproveLabel: 'Approve',
-      reviewRejectLabel: 'Reject',
+      reviewModifyLabel: 'Modify',
+      reviewBypassLabel: 'Cannot determine',
       wsReviewSubmitSuccess: 'Review submitted',
       reviewNoAnswer: '(none)',
-      reviewNoteDry: 'Approve: the answer currently shown for that output type (including your correction) becomes the review result. Reject: records the decision not to accept it, plus any correction. After submitting — dry run: the annotator status is not rolled back; quality issues are handled by the task-level IAA gate and the next dry run.',
-      reviewNoteOfficial: 'Approve: the answer currently shown for that output type (including your correction) becomes the review result. Reject: records the decision not to accept it, plus any correction. After submitting — official run: rejecting any output type returns this unit to pending and creates a re-annotation task for {annotator}; if everything is approved the annotator status is unchanged. The reject reason is shown to the annotator.',
+      reviewNote: 'Approve: the answer currently shown for that output type (including your correction) becomes the review result. Modify: correct the answer first, then give a reason to record the corrected result. Cannot determine: no value is recorded, only the reason.',
       reviewNoteTriggerLabel: 'Review decision guidance',
-      reviewRejectReasonLabel: 'Reject reason (required)',
-      reviewRejectReasonPlaceholder: 'Explain why this is rejected',
-      toastRejectReasonRequired: 'Please give a reject reason for the following output types: {list}',
-      reworkReasonsTitle: 'This sample was rejected. Re-annotate it following the reasons below',
-      reworkReasonMissing: '(no reason given)',
+      reviewReasonLabel: 'Reason (required)',
+      reviewReasonPlaceholder: 'Explain the reason',
+      toastReasonRequired: 'Please give a reason for the following output types: {list}',
       reviewCorrectionTitle: "Direct correction (reviewer's corrected answer)",
       toastSelectDecision: 'Please decide on the following output types before submitting: {list}',
-      toastReviewCorrectionReset: 'The direct correction was lost on reload, so the matching approve/reject decision was reset -- please re-confirm before submitting',
+      toastReviewCorrectionReset: 'The direct correction was lost on reload, so the matching review decision was reset -- please re-confirm before submitting',
       toastResolveDivergent: 'Please resolve every divergent item first',
       arbitrationTitle: 'Dispute arbitration',
       arbitrationNote: 'This review unit is in the dispute pool. Decide each item as A (annotator) or B (reviewer); arbitration does not re-annotate.',
@@ -254,7 +250,7 @@
       unitStateAriaFinalized: '{state}, met the {n}-reviewer threshold, locked',
       reviewOriginalAnswerLabel: "Annotator's original answer: ",
       reviewCorrectedAnswerLabel: "Reviewer's corrected answer: ",
-      toastReviewDecisionResetOnEdit: 'The direct correction changed, so the matching approve/reject decision was reset -- please re-confirm before submitting',
+      toastReviewDecisionResetOnEdit: 'The direct correction changed, so the matching review decision was reset -- please re-confirm before submitting',
     },
   };
   if (window.TASK_CONFIG_I18N) {
@@ -396,61 +392,8 @@
     renderEvidenceReferenceCard();
     patchItemPairLayout();
     wrapAnnotatorCards();
-    renderReworkReasonsBanner();
   }
   updateAnnotationPreview = patchedUpdateAnnotationPreview;
-
-  /* issue #552 (FR-085 / AC-2.14): an official_run reject sends the sample
-     back to the annotator (FR-014I), who until now saw one red `rejected`
-     badge in the history panel and nothing about WHY. Render the reviewers'
-     per-outKey reasons at the top of the workspace and mark the rejected
-     panels. getReworkReasons() owns the "is this a rework todo" test and
-     yields nothing for dry_run, so this stays a no-op everywhere else. The
-     engine empties #annotationPreview on every rebuild, so no de-dupe. */
-  function renderReworkReasonsBanner() {
-    var preview = document.getElementById('annotationPreview');
-    if (!preview) return;
-    var rows = window.LabelSuiteAnnotationWorkspaceData.getReworkReasons(
-      currentProfile.id, currentRunType, currentSampleId, currentIdentity
-    );
-    if (!rows.length) return;
-
-    var banner = document.createElement('div');
-    banner.className = 'rv-rework-reasons';
-    banner.setAttribute('data-testid', 'ws-rework-reasons');
-    banner.setAttribute('role', 'status');
-
-    var title = document.createElement('div');
-    title.className = 'rv-rework-title';
-    title.textContent = t('reworkReasonsTitle');
-    banner.appendChild(title);
-
-    rows.forEach(function (row) {
-      var item = document.createElement('div');
-      item.className = 'rv-rework-row';
-      item.setAttribute('data-testid', 'ws-rework-reason-row');
-      item.setAttribute('data-outkey', row.outKey);
-
-      var meta = document.createElement('div');
-      meta.className = 'rv-rework-meta';
-      meta.textContent =
-        row.outKey + ' · ' + t('wsHistoryRoleReviewer') + ' ' + row.reviewerId +
-        (row.at ? ' · ' + formatHistoryTime(row.at) : '');
-      var reason = document.createElement('div');
-      reason.className = 'rv-rework-reason';
-      reason.textContent = row.reason || t('reworkReasonMissing');
-      item.appendChild(meta);
-      item.appendChild(reason);
-      banner.appendChild(item);
-
-      var panel = preview.querySelector('[data-testid="ws-output-panel-' + row.outKey + '"]');
-      if (panel) {
-        panel.setAttribute('data-rework-rejected', 'true');
-        panel.classList.add('rv-rework-rejected');
-      }
-    });
-    preview.insertBefore(banner, preview.firstChild);
-  }
 
   /* Regroup the engine's flat sibling output into two content-cards: the
      question block (evidence + input text) and the annotation block (all
@@ -2874,6 +2817,19 @@
      Each entry also records whether the correction was edited at the time
      of the decision (issue #398) -- not the correction's value itself,
      which stays outside FR-014S's persistence scope. */
+  /* issue #596 (design.md D2): REVIEW_DECISIONS = approve | modify | bypass,
+     a closed vocabulary this file MUST render from, never hardcode as a
+     per-value branch set (Generalization-First). `approve` is the sole
+     decision FR-016A does not require a reason for -- deriving the
+     reason-required subset by excluding it (rather than listing
+     modify/bypass by hand) keeps that single rule as the only literal. */
+  var REVIEW_REASON_REQUIRED_DECISIONS = window.LabelSuiteAnnotationWorkspaceData.REVIEW_DECISIONS.filter(
+    function (decision) { return decision !== 'approve'; }
+  );
+  function reviewDecisionRequiresReason(decision) {
+    return REVIEW_REASON_REQUIRED_DECISIONS.indexOf(decision) >= 0;
+  }
+
   function persistReviewDraft() {
     var annotatorId = currentAnnotatorId();
     var decisions = {};
@@ -2882,74 +2838,74 @@
       var decision = reviewRowDecisions[key];
       if (!decision) return;
       decisions[outKey] = { decision: decision, corrected: isRowCorrected(outKey) };
-      /* issue #552 (FR-016A): the reject reason is part of the decision it
-         explains, so it rides the same draft entry. */
-      if (decision === 'reject' && reviewRowReasons[key]) decisions[outKey].reason = reviewRowReasons[key];
+      /* issue #552 (FR-016A, issue #596 D2): the modify/bypass reason is part
+         of the decision it explains, so it rides the same draft entry. */
+      if (reviewDecisionRequiresReason(decision) && reviewRowReasons[key]) decisions[outKey].reason = reviewRowReasons[key];
     });
     window.LabelSuiteAnnotationWorkspaceData.saveReviewRowDecisionDraft(
       currentProfile.id, currentRunType, currentSampleId, decisions, currentIdentity
     );
   }
 
-  /* FR-014B: pass/reject toggle -- clicking the already-active decision
-     cancels it back to undecided. Returns {el, refresh} so the bulk bar
-     can force every row's buttons to redraw after a bulk decision. */
+  /* issue #596 (FR-014B/FR-092, design.md D2): three-way toggle -- clicking
+     the already-active decision cancels it back to undecided. One button per
+     REVIEW_DECISIONS entry, in that constant's order; there is no `退回`
+     control (FR-014B: MUST NOT render). Returns {el, refresh} so the bulk
+     bar can force every row's buttons to redraw after a bulk decision. */
+  var REVIEW_DECISION_LABEL_KEYS = {
+    approve: 'reviewApproveLabel',
+    modify: 'reviewModifyLabel',
+    bypass: 'reviewBypassLabel',
+  };
+  var REVIEW_DECISION_ICONS = {
+    approve: '✓',
+    modify: '✎',
+    bypass: '—',
+  };
   function buildRowDecisionButtons(outKey, rowName, onChange) {
     var wrap = document.createElement('div');
     wrap.className = 'rv-choice-group';
 
-    var rejectBtn = document.createElement('button');
-    rejectBtn.type = 'button';
-    rejectBtn.className = 'mini-btn mini-btn-reject';
-    rejectBtn.setAttribute('data-testid', 'ws-review-row-reject');
-    /* issue #399 (WCAG 2.1 SC 4.1.2): the icon-only '✕' span left the
-       button with no accessible name at all -- give it one. */
-    rejectBtn.setAttribute('aria-label', t('reviewRejectLabel'));
-    rejectBtn.appendChild(buildIconSpan('✕'));
-    rejectBtn.appendChild(buildLabelSpan(t('reviewRejectLabel')));
-
-    var approveBtn = document.createElement('button');
-    approveBtn.type = 'button';
-    approveBtn.className = 'mini-btn mini-btn-approve';
-    approveBtn.setAttribute('data-testid', 'ws-review-row-approve');
-    approveBtn.setAttribute('aria-label', t('reviewApproveLabel'));
-    approveBtn.appendChild(buildIconSpan('✓'));
-    approveBtn.appendChild(buildLabelSpan(t('reviewApproveLabel')));
+    var buttons = window.LabelSuiteAnnotationWorkspaceData.REVIEW_DECISIONS.map(function (decision) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'mini-btn mini-btn-' + decision;
+      btn.setAttribute('data-testid', 'ws-review-row-' + decision);
+      /* issue #399 (WCAG 2.1 SC 4.1.2): the icon-only glyph left the button
+         with no accessible name at all -- give it one. */
+      var label = t(REVIEW_DECISION_LABEL_KEYS[decision]);
+      btn.setAttribute('aria-label', label);
+      btn.appendChild(buildIconSpan(REVIEW_DECISION_ICONS[decision]));
+      btn.appendChild(buildLabelSpan(label));
+      /* issue #453 (AC-3.42): snapshot the answer the decision was made
+         against, so syncDecisionsWithCorrections() can tell a later edit of
+         that answer apart from an untouched one. */
+      /* issue #552/#596: run EVERY refresher, not just this group's -- the
+         row's reason field (buildReviewReasonField) follows the same
+         decision and lives in the same list. */
+      btn.addEventListener('click', function () {
+        var key = decisionKey(outKey, rowName);
+        reviewRowDecisions[key] = reviewRowDecisions[key] === decision ? null : decision;
+        reviewDecisionAnswers[key] = currentRowAnswer(outKey);
+        reviewDecisionRefreshers.forEach(function (refreshRow) { refreshRow(); });
+        persistReviewDraft();
+        if (onChange) onChange();
+      });
+      return { decision: decision, el: btn };
+    });
 
     function refresh() {
       var decision = reviewRowDecisions[decisionKey(outKey, rowName)];
-      approveBtn.setAttribute('aria-pressed', decision === 'approve' ? 'true' : 'false');
-      approveBtn.classList.toggle('mini-btn-active-approve', decision === 'approve');
-      rejectBtn.setAttribute('aria-pressed', decision === 'reject' ? 'true' : 'false');
-      rejectBtn.classList.toggle('mini-btn-active-reject', decision === 'reject');
+      buttons.forEach(function (entry) {
+        var active = entry.decision === decision;
+        entry.el.setAttribute('aria-pressed', active ? 'true' : 'false');
+        entry.el.classList.toggle('mini-btn-active-' + entry.decision, active);
+      });
     }
-    /* issue #453 (AC-3.42): snapshot the answer the decision was made
-       against, so syncDecisionsWithCorrections() can tell a later edit of
-       that answer apart from an untouched one. */
-    /* issue #552: run EVERY refresher, not just this pair's -- the row's
-       reject-reason field (buildRejectReasonField) follows the same decision
-       and lives in the same list. */
-    approveBtn.addEventListener('click', function () {
-      var key = decisionKey(outKey, rowName);
-      reviewRowDecisions[key] = reviewRowDecisions[key] === 'approve' ? null : 'approve';
-      reviewDecisionAnswers[key] = currentRowAnswer(outKey);
-      reviewDecisionRefreshers.forEach(function (refreshRow) { refreshRow(); });
-      persistReviewDraft();
-      if (onChange) onChange();
-    });
-    rejectBtn.addEventListener('click', function () {
-      var key = decisionKey(outKey, rowName);
-      reviewRowDecisions[key] = reviewRowDecisions[key] === 'reject' ? null : 'reject';
-      reviewDecisionAnswers[key] = currentRowAnswer(outKey);
-      reviewDecisionRefreshers.forEach(function (refreshRow) { refreshRow(); });
-      persistReviewDraft();
-      if (onChange) onChange();
-    });
     refresh();
     reviewDecisionRefreshers.push(refresh);
 
-    wrap.appendChild(rejectBtn);
-    wrap.appendChild(approveBtn);
+    buttons.forEach(function (entry) { wrap.appendChild(entry.el); });
     return { el: wrap, refresh: refresh };
   }
 
@@ -3171,29 +3127,28 @@
     return correction;
   }
 
-  /* issue #399: this explains what approve/reject actually do, but was
-     defined in I18N and never rendered anywhere -- render it so reviewers
-     can actually read it before deciding. issue #451/#515/#520 kept it as
-     ONE run-type-invariant sentence deferring the submit consequence to a
+  /* issue #399: this explains what the three-way decision (issue #596,
+     design.md D2: approve/modify/bypass) actually does, but was defined in
+     I18N and never rendered anywhere -- render it so reviewers can actually
+     read it before deciding. issue #451/#515/#520 kept it as ONE
+     run-type-invariant sentence deferring the submit consequence to a
      separate pre-submit confirmation area, mounted once per review unit
      above the whole card stack (not inside any ws-review-row) so AC-3.33's
      ban on a run_type branch INSIDE a review card never applied to it.
      issue #550 (FR-070 points 2/3 revoked, FR-077/AC-3.42/AC-3.44 revoked;
-     spec 015 v4.55.0) folds that confirmation area's run-type-branched
-     consequence into THIS element instead of a second element below the
-     cards -- the two used to say the same thing twice, and this element was
-     already outside AC-3.33's boundary, so nothing stops it branching on
-     run_type now that the single-invariant-string constraint (FR-070 point
-     3) is gone. It renders as a MASTER.md Tooltip (design/system/
-     MASTER.md:1423-1482) reusing task-config.css's .tooltip-wrap /
-     .field-help-tooltip / .tooltip-bubble -- this page already links that
-     stylesheet for the shared task-config engine, and the two run_type
-     texts are long enough that showing both (or reflowing between them)
-     would be noisier than a hover/focus disclosure. A real <button>
-     triggers it (never the native title attribute, MASTER.md:1482) with an
-     aria-describedby-linked role="tooltip" bubble, so hover and keyboard
-     focus both work. Once-per-unit count and DOM order (before the first
-     card) are unchanged from issue #520; the mount point moved on the
+     spec 015 v4.55.0) folded that confirmation area's consequence into THIS
+     element instead of a second element below the cards. issue #596 then
+     retired FR-014I's official_run-only rollback entirely, so the text is
+     back to being ONE run-type-invariant string (`reviewNote`) again --
+     `data-run-type` stays on the bubble as a stable hook even though the
+     text itself no longer branches on it. It renders as a MASTER.md Tooltip
+     (design/system/MASTER.md:1423-1482) reusing task-config.css's
+     .tooltip-wrap / .field-help-tooltip / .tooltip-bubble -- this page
+     already links that stylesheet for the shared task-config engine. A real
+     <button> triggers it (never the native title attribute, MASTER.md:1482)
+     with an aria-describedby-linked role="tooltip" bubble, so hover and
+     keyboard focus both work. Once-per-unit count and DOM order (before the
+     first card) are unchanged from issue #520; the mount point moved on the
      maintainer's review of #550: it sits in the FR-064 unit-context banner
      right after the 了解審核流程 trigger, so the two "what does this unit
      mean" entry points share one row instead of one floating between the
@@ -3220,10 +3175,7 @@
     bubble.setAttribute('role', 'tooltip');
     bubble.setAttribute('data-testid', 'ws-review-note-bubble');
     bubble.setAttribute('data-run-type', currentRunType);
-    bubble.textContent =
-      currentRunType === 'official_run'
-        ? t('reviewNoteOfficial').replace('{annotator}', currentAnnotatorId())
-        : t('reviewNoteDry');
+    bubble.textContent = t('reviewNote');
 
     tooltipWrap.appendChild(trigger);
     tooltipWrap.appendChild(bubble);
@@ -3293,24 +3245,25 @@
     }
   }
 
-  /* issue #552 (FR-016A / AC-3.48): a reject must say why. The field is a
-     direct child of the review card, AFTER the correction panel rather than
-     inside its Bypass row: the shared engine rebuilds that panel wholesale
-     (FR-014P point 3), and anything docked inside it has to be re-attached
-     by dockDecisionsOnBypassRow()'s observer -- outside it, the field just
-     stays. Visibility follows the row's decision through the same refresher
-     list the decision buttons use, so shortcuts (FR-054) and draft restores
-     drive it too. */
+  /* issue #552/#596 (FR-016A, design.md D2): `modify`/`bypass` must say why
+     -- `approve` never does. The field is a direct child of the review card,
+     AFTER the correction panel rather than inside its Bypass row: the shared
+     engine rebuilds that panel wholesale (FR-014P point 3), and anything
+     docked inside it has to be re-attached by dockDecisionsOnBypassRow()'s
+     observer -- outside it, the field just stays. Visibility follows the
+     row's decision through the same refresher list the decision buttons
+     use, so shortcuts (FR-054) and draft restores drive it too. */
   var reviewRowReasons = {};
 
   function reviewRowReason(outKey, rowName) {
     return (reviewRowReasons[decisionKey(outKey, rowName)] || '').trim();
   }
 
-  /* A reject may still lack its reason -- surface that on the footer button
-     as a blocked look (data attribute + CSS), never `disabled` or
-     `aria-disabled`: FR-083 needs the click to reach handleReviewSubmit()
-     so the toast can name the outKeys, and both of those would stop it. */
+  /* A modify/bypass decision may still lack its reason -- surface that on
+     the footer button as a blocked look (data attribute + CSS), never
+     `disabled` or `aria-disabled`: FR-083 needs the click to reach
+     handleReviewSubmit() so the toast can name the outKeys, and both of
+     those would stop it. */
   function refreshReviewSubmitState() {
     var reviewSubmitBtn = document.getElementById('wsReviewSubmitBtn');
     if (!reviewSubmitBtn) return;
@@ -3322,40 +3275,41 @@
     else reviewSubmitBtn.removeAttribute('data-submit-blocked');
   }
 
-  function buildRejectReasonField(outKey, rowName) {
+  function buildReviewReasonField(outKey, rowName) {
     var key = decisionKey(outKey, rowName);
     var wrap = document.createElement('div');
-    wrap.className = 'rv-reject-reason hidden';
+    wrap.className = 'rv-review-reason hidden';
 
     var label = document.createElement('label');
-    label.className = 'rv-reject-reason-label';
-    label.textContent = t('reviewRejectReasonLabel');
-    var inputId = 'wsRejectReason-' + outKey;
+    label.className = 'rv-review-reason-label';
+    label.textContent = t('reviewReasonLabel');
+    var inputId = 'wsReviewReason-' + outKey;
     label.setAttribute('for', inputId);
 
     var input = document.createElement('textarea');
     input.id = inputId;
     input.rows = 2;
     input.required = true;
-    input.setAttribute('data-testid', 'ws-review-reject-reason');
+    input.setAttribute('data-testid', 'ws-review-reason');
     input.setAttribute('data-outkey', outKey);
-    input.setAttribute('placeholder', t('reviewRejectReasonPlaceholder'));
+    input.setAttribute('placeholder', t('reviewReasonPlaceholder'));
     input.addEventListener('input', function () {
       reviewRowReasons[key] = input.value;
       refreshReviewSubmitState();
       persistReviewDraft();
     });
 
-    /* Mounted only while the row is rejected (AC-3.48: 通過時不出現); the
-       typed text lives in reviewRowReasons, so a re-mount restores it. */
+    /* Mounted only while the row's decision requires a reason (FR-016A:
+       通過時不出現); the typed text lives in reviewRowReasons, so a re-mount
+       restores it. */
     function refresh() {
-      var rejected = reviewRowDecisions[key] === 'reject';
-      wrap.classList.toggle('hidden', !rejected);
-      if (rejected && input.parentNode !== wrap) {
+      var needsReason = reviewDecisionRequiresReason(reviewRowDecisions[key]);
+      wrap.classList.toggle('hidden', !needsReason);
+      if (needsReason && input.parentNode !== wrap) {
         input.value = reviewRowReasons[key] || '';
         wrap.appendChild(label);
         wrap.appendChild(input);
-      } else if (!rejected && input.parentNode === wrap) {
+      } else if (!needsReason && input.parentNode === wrap) {
         wrap.removeChild(label);
         wrap.removeChild(input);
       }
@@ -3372,7 +3326,7 @@
     seedReviewRow(outKey, submission);
     var correction = appendCorrectionControl(row, outKey);
     dockDecisionsOnBypassRow(correction, [buildRowDecisionButtons(outKey, currentAnnotatorId(), null).el]);
-    row.appendChild(buildRejectReasonField(outKey, currentAnnotatorId()));
+    row.appendChild(buildReviewReasonField(outKey, currentAnnotatorId()));
     return row;
   }
 
@@ -3519,7 +3473,7 @@
     var correction = appendCorrectionControl(row, 'relation_identification', 'span', outKeys);
     dockDecisionsOnBypassRow(correction, decisionEls);
     outKeys.forEach(function (outKey) {
-      row.appendChild(buildRejectReasonField(outKey, currentAnnotatorId()));
+      row.appendChild(buildReviewReasonField(outKey, currentAnnotatorId()));
     });
     return row;
   }
@@ -4436,9 +4390,9 @@
        that panel already renders exactly this annotator's spans, so the card
        would be a pixel-identical second copy of the sample text. */
     /* issue #520: one decision note for the whole unit, above the card
-       stack whose 通過/退回 pairs it explains; issue #550 turned it into a
-       run_type-branched tooltip and docked it in the unit-context banner
-       beside the review-flow trigger (still once, still before the first
+       stack whose 通過/修正/無法判定 decisions it explains (issue #596); issue
+       #550 docked it as a tooltip in the unit-context banner beside the
+       review-flow trigger (still once, still before the first
        card). The banner is built above, before the non-interactive early
        returns, so the note only lands on units that actually show
        decisions. */
@@ -4476,15 +4430,15 @@
      multi-output task -- only the generic toastSelectDecision. This is the
      sole surviving "still undecided" derivation in the file; the submit
      guard below is its only caller. */
-  /* issue #552 (FR-016A / FR-083): the ONE per-outKey answer to "does this
-     row block submit, and why" -- null, 'undecided', or 'reason' (rejected
-     without a reason). pendingReviewOutputKeys(), the footer button's
-     aria-disabled state and the blocking toast all read it; nothing else
-     recomputes it. */
+  /* issue #552/#596 (FR-016A / FR-083): the ONE per-outKey answer to "does
+     this row block submit, and why" -- null, 'undecided', or 'reason'
+     (modify/bypass without a reason). pendingReviewOutputKeys(), the footer
+     button's aria-disabled state and the blocking toast all read it;
+     nothing else recomputes it. */
   function reviewRowBlocker(outKey, rowName) {
     var decision = reviewRowDecisions[decisionKey(outKey, rowName)];
     if (!decision) return 'undecided';
-    if (decision === 'reject' && !reviewRowReason(outKey, rowName)) return 'reason';
+    if (reviewDecisionRequiresReason(decision) && !reviewRowReason(outKey, rowName)) return 'reason';
     return null;
   }
 
@@ -4516,38 +4470,40 @@
     if (lockedStatus === window.LabelSuiteAnnotationWorkspaceData.REVIEW_UNIT_STATUS.FINALIZED) return;
     var rowsByOutKey = {};
     var annotatorId = currentAnnotatorId();
-    var currentRejectedSomewhere = false;
     state.selectedOutputTypes.forEach(function (outKey) {
-      var rows = getReviewerRows(outKey);
-      rowsByOutKey[outKey] = rows;
-      rows.forEach(function (row) {
-        var decision = reviewRowDecisions[decisionKey(outKey, row.name)];
-        if (row.name === annotatorId && decision === 'reject') currentRejectedSomewhere = true;
-      });
+      rowsByOutKey[outKey] = getReviewerRows(outKey);
     });
     var pendingOutputKeys = pendingReviewOutputKeys(annotatorId);
     if (pendingOutputKeys.length) {
-      /* issue #552: same list either way; the wording only switches to the
-         reason-specific copy once every blocker is a reason-less reject. */
+      /* issue #552/#596: same list either way; the wording only switches to
+         the reason-specific copy once every blocker is a reason-less
+         modify/bypass. */
       var onlyReasons = pendingOutputKeys.every(function (outKey) {
         return reviewRowBlocker(outKey, annotatorId) === 'reason';
       });
-      var toastKey = onlyReasons ? 'toastRejectReasonRequired' : 'toastSelectDecision';
+      var toastKey = onlyReasons ? 'toastReasonRequired' : 'toastSelectDecision';
       showToast(t(toastKey).replace('{list}', pendingOutputKeys.join('、')), 'warning');
       return;
     }
 
     var decisionLines = [];
     var reasons = {};
+    var values = {};
     state.selectedOutputTypes.forEach(function (outKey) {
       rowsByOutKey[outKey].forEach(function (row) {
         var decision = reviewRowDecisions[decisionKey(outKey, row.name)];
         var line = outKey + ' · ' + row.name + ': ' + decision;
-        /* issue #552 (FR-016A): the reason rides the history line, so the
-           FR-014I rejected event's summary carries it as well. */
-        if (decision === 'reject' && row.name === annotatorId) {
-          reasons[outKey] = reviewRowReason(outKey, annotatorId);
-          line += ' — ' + reasons[outKey];
+        if (row.name === annotatorId) {
+          /* issue #596 (design.md D2): `values[outKey]` only exists for a
+             `modify` decision -- `bypass` deliberately stores no value
+             ("bypass 不存值"). */
+          if (decision === 'modify') values[outKey] = currentRowAnswer(outKey);
+          /* issue #552 (FR-016A): the reason rides the history line so the
+             decision's summary carries it as well. */
+          if (reviewDecisionRequiresReason(decision)) {
+            reasons[outKey] = reviewRowReason(outKey, annotatorId);
+            line += ' — ' + reasons[outKey];
+          }
         }
         decisionLines.push(line);
       });
@@ -4564,19 +4520,19 @@
     appendReviewHistoryEntry(history, decisionLines.concat(correctionLines).join('\n'));
 
     var summary = buildHistorySummary() + '\n' + decisionLines.join('\n');
-    /* issue #551: the ✕/✓ decision itself must survive into storage, not
+    /* issue #551/#596: the decision itself must survive into storage, not
        just its free-text history line -- getReviewUnitStatus()/
-       getDisputeItems() need to tell a reject with no correction apart
-       from an approve, and a same-value answer alone cannot say which. */
+       getDisputeItems() need it, and a same-value answer alone cannot say
+       which decision produced it. */
     var submitPayload = collectAnswerPayload();
     submitPayload.decisions = {};
     state.selectedOutputTypes.forEach(function (outKey) {
       submitPayload.decisions[outKey] = reviewRowDecisions[decisionKey(outKey, annotatorId)];
     });
-    /* issue #552 (FR-016A / FR-085): the reject reasons persist next to the
-       decisions they explain -- the annotator's rework banner reads them
-       from here, nowhere else. */
+    /* issue #552/#596 (FR-016A / design.md D2): modify/bypass reasons and
+       modify's corrected value persist next to the decisions they explain. */
     submitPayload.reasons = reasons;
+    submitPayload.values = values;
     window.LabelSuiteAnnotationWorkspaceData.markSampleSubmitted(
       currentProfile.id,
       currentRole,
@@ -4594,12 +4550,10 @@
     window.LabelSuiteAnnotationWorkspaceData.clearReviewRowDecisionDraft(
       currentProfile.id, currentRunType, currentSampleId, currentIdentity
     );
-    /* spec 015 AC-3.15/AC-6.4/FR-014I (issue #192): the reject -> pending
-       rollback only applies to official_run -- dry_run has no "退回個人重標"
-       channel, so a dry_run reject decision must not roll the sample back. */
-    if (currentRejectedSomewhere && currentRunType === 'official_run') {
-      window.LabelSuiteAnnotationWorkspaceData.markSampleRejected(currentProfile.id, 'annotator', currentRunType, currentSampleId, summary, currentIdentity, submitPayload.timing);
-    }
+    /* issue #596: FR-014I's reject -> pending rollback is retired -- the
+       single-owner relay model has no "退回個人重標" channel in either
+       run_type any more (design.md D1/D2); a disputed unit now routes to
+       arbitration/the exception pool instead of back to the annotator. */
 
     renderSampleList();
     renderSampleNav();
