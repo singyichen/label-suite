@@ -10,17 +10,19 @@
 
 ## 1. PR 群組 1 — 015 資料層與常數（FR-051／FR-092 資料面／FR-093）
 
+**故事目標**：同一樣本多位標記員可解析為狀態互不影響的審核單位，三態推導於兩種 `run_type` 完全同源，為其餘群組的介面層提供已綠的資料層基礎（SC-004K）。
+
 > **產品檔案（2）**：`design/prototype/pages/annotation/annotation-workspace.config.js`、`design/prototype/pages/annotation/annotation-workspace.data.js`
 > **最終群組**：否。本組不執行 archive。
 > **相依**：無前置群組。
 
 - [x] 1.1 撰寫 Red 測試覆蓋 `REVIEW_UNIT_STATUS` 三態推導（`design/prototype/tests/annotation/issue-596-review-unit-status.spec.ts`）：標記員未提交 → `null`；審核員未送出 → `pending`；全部 `approve` → `finalized`；任一 `modify`／`bypass` → `disputed`；爭議全數裁定後 → `finalized`；`exclude_from_dataset` → 非 `finalized`。驗證：執行 `pnpm playwright test tests/annotation/issue-596-review-unit-status.spec.ts` 全數失敗且失敗原因為推導函式尚未支援三態 [@senior-qa]
-- [x] 1.2 **（動工後修正檔案位置）** 於 `design/prototype/pages/annotation/annotation-workspace.data.js` 將 `REVIEW_UNIT_STATUS` 改為 `pending | disputed | finalized`，新增 `REVIEW_DECISIONS`、`ARBITRATION_OUTCOMES`、`EXCEPTION_POOL_ACTIONS`、`REVIEW_ASSIGNMENT_GRANULARITY` 四組封閉常數，並於 `window.LabelSuiteAnnotationWorkspaceData` 一併匯出。
+- [x] 1.2 **（動工後修正檔案位置）** 於 `design/prototype/pages/annotation/annotation-workspace.data.js` 將 `REVIEW_UNIT_STATUS` 改為 `pending | disputed | finalized`，新增 `REVIEW_DECISIONS`、`ARBITRATION_OUTCOMES`、`EXCEPTION_POOL_ACTIONS`、`REVIEW_ASSIGNMENT_GRANULARITY` 四組封閉常數，並於 `window.LabelSuiteAnnotationWorkspaceData` 一併匯出。 [@senior-frontend]
   - **原任務文字寫 `config.js`，與實際架構不符**：`config.js` 是 page-script IIFE，沒有任何出口面（`REVIEW_UNIT_BLOCK` 之類常數為檔內私有），跨檔共用常數一律住在 `data.js` 並經 `window.LabelSuiteAnnotationWorkspaceData` 匯出；`REVIEW_UNIT_STATUS` 本身也定義在 `data.js`，`config.js` 只是呼叫端。放在 `config.js` 的常數是宣告了沒人讀得到的死碼，而 Red 1.1／1.4 打的正是 `window.LabelSuiteAnnotationWorkspaceData.*`。
   - **`MIN_REVIEWERS_DEFAULT` 與 `DISPUTE_CONVERGENCE_RULE` 並不存在具名常數**（全樹只在 `data.js` 註解中以英文字面出現）。真正要移除的是其**行為**——`resolveDisputeConvergence()` 與 `min_reviewers` 種子，兩者都在 `data.js`，屬任務 1.3 範圍。
   - **因檔案位置修正，本任務與 1.3 落在同一檔同一匯出區塊，故合併為一次實作**（分開派工等於兩個 agent 同時改 `data.js`）。
   - 驗證：`node --check` 語法正確，且 `window.LabelSuiteAnnotationWorkspaceData.REVIEW_UNIT_STATUS` 不再含 `approved`／`modified` 兩個狀態值。註：`design/prototype/tsconfig.json` 的 `include` 只涵蓋 `playwright.config.ts` 與 `tests/**/*.ts`，不編譯 prototype 的 `.js` 頁面檔，故 `pnpm typecheck` 對本任務恆為 no-op，不可當作證據。
-  - `config.js` 內 `REVIEW_STATE_I18N_KEYS`／`REVIEW_TRACK_ROUTES`／`buildReviewStatusTrack()` 殘留的 `approved`／`modified` 屬 FR-064 五節點狀態軌渲染，由任務 3.6 處理，不在本組。 [@senior-frontend]
+  - `config.js` 內 `REVIEW_STATE_I18N_KEYS`／`REVIEW_TRACK_ROUTES`／`buildReviewStatusTrack()` 殘留的 `approved`／`modified` 屬 FR-064 五節點狀態軌渲染，由任務 3.6 處理，不在本組。
 - [x] 1.3 於 `design/prototype/pages/annotation/annotation-workspace.data.js` 依 design.md D1 改寫 `getReviewUnitStatus()` 與 `getReviewUnitLane()` 為單一同源推導，並依 D2 落地 `reviewSubmission` / `arbitration` / `exceptionPool` 三組持久化形狀（`bypass` 不寫 `values[outKey]`）。驗證：`pnpm playwright test tests/annotation/issue-596-review-unit-status.spec.ts` 全綠 [@senior-frontend]
 - [x] 1.4 撰寫 Red 測試覆蓋 FR-093 審核指派粒度（`design/prototype/tests/annotation/issue-596-review-assignment.spec.ts`）：試標同一樣本的 N 個審核單位指派給同一位審核員；正式標記平均分派且任兩位審核員筆數差 ≤ 1；審核員為該筆標記員時不被排除。驗證：執行該檔全數失敗且失敗原因為指派邏輯尚未實作 [@senior-qa]
 - [x] 1.5 於 `design/prototype/pages/annotation/annotation-workspace.data.js` 實作 FR-093 之指派推導（依 `REVIEW_ASSIGNMENT_GRANULARITY` 分流），並依 design.md D6 讓舊五態值與多筆 `votes[]` 以「重新推導／取最新一筆」相容。**另需一併輸出 `getAssignedReviewUnits(runType, reviewerId, units)`**：`reviewer_ids` 名冊要到群組 5 才進資料層，而接線的群組 4 先行合併，故名冊此刻只能由本資料層的示範種子提供；把名冊查找收在資料層內、只對外露出「這位審核員該審哪些單位」，可讓清單層不必知道名冊，群組 5 落地真實名冊後也只改本檔一處。驗證：`pnpm playwright test tests/annotation/issue-596-review-assignment.spec.ts` 全綠 [@senior-frontend]
@@ -57,6 +59,8 @@
 
 ## 2. PR 群組 2 — 015 審核卡三向決策（FR-014B／FR-016A／FR-044／FR-053 決策面／FR-054／FR-092）
 
+**故事目標**：審核員以三向決策一次完成整個審核單位的判斷，快捷鍵與送出驗證維持全 outKey 覆蓋且不誤觸（SC-004M）。
+
 > **產品檔案（1）**：`design/prototype/pages/annotation/annotation-workspace.html`
 > **最終群組**：否。
 > **相依**：群組 1（三態推導與決策常數）。
@@ -68,6 +72,8 @@
 - [ ] 2.5 修正群組 1.6 清單中因兩向決策移除而失效的既有測試斷言，並執行 `cd design/prototype && pnpm playwright test tests/annotation`。驗證：`tests/annotation` 全綠 [@senior-qa]
 
 ## 3. PR 群組 3 — 015 仲裁版面、定稿卡與脈絡橫幅（FR-053 定稿鎖定／FR-060／FR-061／FR-064／FR-070／FR-094）
+
+**故事目標**：仲裁版面切換嚴格符合「爭議中 AND 仲裁資格」，仲裁者逐項裁定後單位可推導定稿，定稿後全面唯讀並以責任鏈呈現（SC-004T）。
 
 > **產品檔案（1）**：`design/prototype/pages/annotation/annotation-workspace.html`
 > **最終群組**：否。
@@ -82,45 +88,40 @@
 
 ## 4. PR 群組 4 — 015 清單粒度與歷程加詳（FR-055／FR-062／FR-086／FR-093 接線／FR-097）
 
+**故事目標**：審核員清單以審核單位為粒度、三態篩選與指派過濾生效，歷程逐卡呈現可究責的責任鏈（SC-004N）。
+
 > **產品檔案（2）**：`design/prototype/pages/annotation/annotation-list.html`、`design/prototype/pages/shared/annotation-history.js`
 > **最終群組**：否。
 > **相依**：群組 1（三態推導；FR-093 接線另需其任務 1.5 之 `getAssignedReviewUnits()`）與群組 3（仲裁事件已可產生）。
 
 - [ ] 4.1 撰寫 Red 測試覆蓋 AC-1.26 清單三態篩選（`design/prototype/tests/annotation/issue-596-list-three-status.spec.ts`）：狀態篩選選項恰為 `待審`／`爭議中`／`已定稿`，且選單由常數推導而非硬編；具仲裁資格者於 `爭議中` 列看到 `仲裁`（`list-arbitrate-entry`），已對該單位提交審核者看到 `編輯`。驗證：執行該檔全數失敗且失敗原因為選單仍為五態 [@senior-qa]
 - [ ] 4.2 於 `design/prototype/pages/annotation/annotation-list.html` 實作 FR-055 三態篩選與 FR-060 之 `仲裁` 入口判定。驗證：`pnpm playwright test tests/annotation/issue-596-list-three-status.spec.ts` 全綠 [@senior-frontend]
-- [ ] 4.3 撰寫 Red 測試覆蓋 AC-2.22 歷程動作集合與 FR-097 責任鏈加詳（`design/prototype/tests/annotation/issue-596-history-chain.spec.ts`）：`HISTORY_ACTIONS` 九值各有兩兩不同的語意色徽章；舊 `rejected` 事件以中性徽章原樣呈現且不中斷渲染；卡片呈現逐 outKey 前值 → 後值、耗時、具名決策者；未提交草稿不出現（FR-062）。驗證：執行該檔全數失敗且失敗原因為集合仍含 `rejected`、缺 `bypassed`／`exception_resolved`／`excluded` [@senior-qa]
+- [ ] 4.3 撰寫 Red 測試覆蓋 AC-2.16 歷程動作集合與 FR-097 責任鏈加詳（`design/prototype/tests/annotation/issue-596-history-chain.spec.ts`）：`HISTORY_ACTIONS` 九值各有兩兩不同的語意色徽章；舊 `rejected` 事件以中性徽章原樣呈現且不中斷渲染；卡片呈現逐 outKey 前值 → 後值、耗時、具名決策者；未提交草稿不出現（FR-062）。驗證：執行該檔全數失敗且失敗原因為集合仍含 `rejected`、缺 `bypassed`／`exception_resolved`／`excluded` [@senior-qa]
 - [ ] 4.4 於 `design/prototype/pages/shared/annotation-history.js` 實作 FR-086 之九值集合（移除 `rejected`、新增 `bypassed`／`exception_resolved`／`excluded`）與 FR-097 之逐卡責任鏈加詳，並保留集合外值的中性徽章相容路徑。**⚠️ 跨案相依（issue #600）**：該檔於 #600 已新增第三張對照表 `ACTION_LABEL`（動作 → 中文顯示標籤）。新增／移除動作值時 `BADGE_CLASS` 與 `ACTION_LABEL` **必須同步增修**——`actionLabelFor()` 的守衛 `isKnownAction()` 查的是 `BADGE_CLASS`，只加 `BADGE_CLASS` 而漏 `ACTION_LABEL` 會讓查表回傳 `undefined`，徽章直接印出 `undefined` 且不會有任何錯誤。三個新值（`bypassed`／`exception_resolved`／`excluded`）的中文標籤須一併定案。另：`rejected` 自集合移除後，既有歷程事件仍會帶該值，屆時走的是集合外相容路徑（原樣回傳英文），若要讓舊事件仍顯示「審核退回」，`ACTION_LABEL` 需保留 `rejected` 鍵而只從 `ACTIONS`／`BADGE_CLASS` 移除——此取捨於本任務決定並記錄。驗證：`pnpm playwright test tests/annotation/issue-596-history-chain.spec.ts` 全綠 [@senior-frontend]
 - [ ] 4.5 修正 `tests/annotation/issue-578-history-actions.spec.ts` 等既有歷程測試中因 `rejected` 移除而失效的斷言。驗證：`cd design/prototype && pnpm playwright test tests/annotation` 全綠 [@senior-qa]
 - [ ] 4.6 撰寫 Red 測試覆蓋 FR-093 指派結果於清單生效（`design/prototype/tests/annotation/issue-596-list-assignment.spec.ts`）：以審核員身分開啟清單時，僅出現指派給自己的審核單位；未指派給自己的單位不出現在列中（非僅停用按鈕）；同一樣本於 `dry_run` 的多個單位同進同出；`official_run` 下兩位審核員各自開啟清單所見筆數差 ≤ 1 且無交集。驗證：執行該檔全數失敗且失敗原因為清單尚未取用指派結果 [@senior-qa]
 - [ ] 4.7 於 `design/prototype/pages/annotation/annotation-list.html` 以 `data.getAssignedReviewUnits(runType, identity.reviewerId, units)` 過濾審核員檢視的列來源。**本任務存在的理由**：任務 1.5 的指派推導在群組 1–7 中原本沒有任何呼叫端，FR-093 會成為「有實作、沒生效」的需求；接線置於本組是因 `annotation-list.html` 已在本組檔案清單內，不增加觸及檔案數。標記員檢視不套用此過濾（其列來源是自己的標記，與審核指派無關）。驗證：`pnpm playwright test tests/annotation/issue-596-list-assignment.spec.ts` 全綠 [@senior-frontend]
 
-## 5. PR 群組 5 — 014 審核設定與審核指派區塊（FR-005j／FR-005k／FR-010s／FR-010s-1／FR-010s-2／FR-010t）
+### 原群組 5 — 014 審核設定與審核指派區塊（已延後至 companion change）
 
-> **產品檔案（3）**：`design/prototype/pages/task-management/task-detail.data.js`、`design/prototype/pages/task-management/task-detail.panels/overview.html`、`design/prototype/pages/task-management/task-detail.panels/member-management.html`
+> **2026-09-01 範圍收斂**：Project SDD lint 限制一個 active change 恰對應一個 canonical spec，014 側任務（原 5.1–5.5、6.4–6.7、8.3）整批移至 [deferred/014-tasks.md](deferred/014-tasks.md) 暫存，待 015 主體完成後以獨立 companion change 提案，屆時重新編號並補齊 canonical 014 的 lint 合規。原群組間相依中的「群組 5」依此改讀為該 companion change。
+
+## 6. PR 群組 6 — 最終例外池收尾畫面（FR-063／FR-095）
+
+**故事目標**：`official_run` 的每一筆定案答案皆可回溯至來源審核單位與定案者，仲裁無法解決的爭議由專案負責人於例外池逐筆收尾，gold 產出邊界維持僅 `official_run` 定稿時產生（SC-004V）。
+
+> **產品檔案（2）**：`design/prototype/pages/annotation/annotation-workspace.html`、`design/prototype/pages/annotation/annotation-workspace.data.js`
 > **最終群組**：否。
-> **相依**：群組 1（常數改版；`AR_REVIEW_STATUS` 需與 `REVIEW_UNIT_STATUS` 同步）。
-
-- [ ] 5.1 撰寫 Red 測試覆蓋審核設定名冊化（`design/prototype/tests/task-management/issue-596-review-settings.spec.ts`）：檢視模式恰兩欄位（`審核員`／`仲裁者`）；編輯模式恰兩份勾選清單、無數值輸入框與 toggle；仲裁者候選為已勾選審核員之子集；取消勾選審核員時同步取消其仲裁者勾選；`reviewer_ids` 為空時阻擋儲存；`仲裁者` 摘要值不含 `啟用`／`停用` 前綴。驗證：執行該檔全數失敗且失敗原因為區塊仍為四欄位 [@senior-qa]
-- [ ] 5.2 於 `design/prototype/pages/task-management/task-detail.data.js` 改版規格常數與 `TaskDetail` 實體欄位：`AR_REVIEW_STATUS` 改三態、移除 `REVIEW_ASSIGNMENT_MODES`／`MIN_REVIEWERS_RULE`／`min_reviewers`／`review_assignment_mode`／`agreement_auto_finalize`／`arbitration_enabled`、`ARBITER_CANDIDATE_RULE` 加入 `can_arbitrate = true`、`OVERVIEW_EDITABLE_FIELDS` 改列 `reviewer_ids`／`arbiter_ids`、新增 `EXCEPTION_POOL_ACTIONS`。驗證：`pnpm typecheck` 通過且檔內不再出現 `min_reviewers` [@senior-frontend]
-- [ ] 5.3 於 `design/prototype/pages/task-management/task-detail.panels/overview.html` 實作 FR-010s／FR-010s-1／FR-010s-2 之兩份名冊勾選設定與摘要值規則。驗證：`pnpm playwright test tests/task-management/issue-596-review-settings.spec.ts` 全綠 [@senior-frontend]
-- [ ] 5.4 撰寫 Red 測試覆蓋審核指派區塊唯讀化與發布閘門（`design/prototype/tests/task-management/issue-596-assignment-readonly.spec.ts`）：區塊內無任何指派／補齊按鈕；爭議池列與最終例外池列皆為唯讀且無分派按鈕；`reviewer_ids` 為空時發布被阻擋並顯示「還差 1 位」；`arbiter_ids` 為空時不阻擋但顯示無仲裁者警示。驗證：執行該檔全數失敗且失敗原因為區塊仍依 `review_assignment_mode` 渲染操作按鈕 [@senior-qa]
-- [ ] 5.5 於 `design/prototype/pages/task-management/task-detail.panels/member-management.html` 實作 FR-005j 唯讀化、FR-005k 雙列（待仲裁／待處置）與 FR-010t 發布閘門改版。驗證：`pnpm playwright test tests/task-management/issue-596-assignment-readonly.spec.ts` 全綠 [@senior-frontend]
-
-## 6. PR 群組 6 — 最終例外池與結案閘門（FR-008b／FR-018／FR-063／FR-095）
-
-> **產品檔案（5）**：`design/prototype/pages/task-management/task-detail.panels/annotation-progress.html`、`design/prototype/pages/task-management/task-detail.data.js`、`design/prototype/pages/task-management/task-detail.html`、`design/prototype/pages/annotation/annotation-workspace.html`、`design/prototype/pages/annotation/annotation-workspace.data.js`
-> **最終群組**：否。本組達 5 檔上限，任何額外檔案必須另開 PR。
-> **相依**：群組 3（仲裁 `兩者皆非` 出口）與群組 5（名冊設定與 `EXCEPTION_POOL_ACTIONS` 常數）。
+> **相依**：群組 3（仲裁 `兩者皆非` 出口）；014 側入口區塊與 `EXCEPTION_POOL_ACTIONS` 於 014 常數表之同步（原群組 5／6.4–6.7）延後至 companion change，本組以 015 資料層之常數與示範種子先行。
 
 - [ ] 6.1 撰寫 Red 測試覆蓋 AC-4.56／AC-4.57 例外池收尾（`design/prototype/tests/annotation/issue-596-exception-pool.spec.ts`）：`official_run` 提供採 A／採 B／自訂答案／自資料集排除四動作；自訂答案展開該輸出類型的原始作答控件且僅接受合法值；理由未填時阻擋定案；`dry_run` 僅三動作且不存在自訂答案入口與任何作答控件。驗證：執行該檔全數失敗且失敗原因為例外池收尾畫面尚未存在 [@senior-qa]
 - [ ] 6.2 於 `design/prototype/pages/annotation/annotation-workspace.data.js` 實作 FR-095 之例外池資料層（`exceptionPool` 讀寫、`EXCEPTION_POOL_ACTIONS` 分流、`exclude_from_dataset` 不進定稿集合）與 FR-063 之定稿值來源記錄。驗證：`pnpm typecheck` 通過且排除項目不出現於定稿集合的單元斷言全綠 [@senior-frontend]
 - [ ] 6.3 於 `design/prototype/pages/annotation/annotation-workspace.html` 實作 FR-095 之專案負責人逐筆收尾畫面，自訂答案重用 `OUTPUT_TYPE_REGISTRY` 驅動的作答控件（design.md D4）。驗證：`pnpm playwright test tests/annotation/issue-596-exception-pool.spec.ts` 全綠 [@senior-frontend]
-- [ ] 6.4 撰寫 Red 測試覆蓋驗收情境 43／44（`design/prototype/tests/task-management/issue-596-exception-pool-entry.spec.ts`）：`annotation-progress` 之「最終例外池」區塊顯示待處置數與逐列欄位、點列導頁攜帶完整審核單位身分、`0` 項時渲染空狀態而非隱藏區塊、`reviewer` 看不到該區塊、例外池未清空時 `標記完成` 被阻擋並列出具體原因。驗證：執行該檔全數失敗且失敗原因為區塊尚未存在 [@senior-qa]
-- [ ] 6.5 於 `design/prototype/pages/task-management/task-detail.panels/annotation-progress.html` 實作 FR-018 之最終例外池區塊、清單欄位、`run_type` 篩選與逐筆導頁。驗證：`pnpm playwright test tests/task-management/issue-596-exception-pool-entry.spec.ts` 中屬區塊呈現的案例全綠 [@senior-frontend]
-- [ ] 6.6 於 `design/prototype/pages/task-management/task-detail.data.js` 實作 FR-008b 五項結案前置條件（含例外池清空，僅計 `official_run`）。驗證：`pnpm playwright test tests/task-management/issue-596-exception-pool-entry.spec.ts` 全綠 [@senior-frontend]
-- [ ] 6.7 於 `design/prototype/pages/task-management/task-detail.html` 接上例外池區塊之權限守衛（僅 `project_leader` 可見，直連比照 FR-006 導回）。驗證：`pnpm playwright test tests/task-management` 全綠 [@senior-frontend]
+> 原 6.4–6.7（014 側之例外池入口區塊、結案前置條件與權限守衛）已移至 [deferred/014-tasks.md](deferred/014-tasks.md)。
 
 ## 7. PR 群組 7 — 試標歷史回饋與示範任務改寫（FR-096／T016／T017）
+
+**故事目標**：標記員在不退回重標的前提下取得自我對齊回饋，示範任務可端到端走完新模型的完整路徑且關鍵操作皆有歷程可追溯（SC-006）。
 
 > **產品檔案（3）**：`design/prototype/pages/annotation/annotation-list.html`、`design/prototype/pages/annotation/annotation-workspace.data.js`、`design/prototype/pages/task-management/task-detail.data.js`
 > **最終群組**：否。
@@ -134,13 +135,14 @@
 
 ## 8. 最終 PR 群組 — Source-Verify 與 archive 回寫
 
+**故事目標**：規格與實作收斂一致——衍生視圖與正典逐條可 `grep` 定位，主要流程的規格證據端到端完備（SC-006）。
+
 > **產品檔案（0）**：本組僅動 `specs/**` 與 `openspec/**`，不計入原則 X 門檻。
 > **最終群組**：**是**。本組執行 `/opsx:archive` 與正典回寫，完成第四道驗證閘門。
 > **相依**：群組 1–7 全數合併。
 
-- [ ] 8.1 逐條核對本 change 全部 delta 所引用的 FR/AC/SC ID 與檔案路徑，皆可於正典 `specs/task-management/014-task-detail/spec.md` 與 `specs/annotation/015-annotation-workspace/spec.md` 以 `grep -i` 定位；找不到者修正或移除，不得近似。驗證：逐 ID 的 `grep` 輸出留存於 PR 說明 [@main]
+- [ ] 8.1 逐條核對本 change 全部 delta 所引用的 FR/AC/SC ID 與檔案路徑，皆可於正典 `specs/annotation/015-annotation-workspace/spec.md` 以 `grep -i` 定位；找不到者修正或移除，不得近似。驗證：逐 ID 的 `grep` 輸出留存於 PR 說明 [@main]
 - [ ] 8.2 執行 `openspec validate --changes --no-interactive` 並確認通過。驗證：指令退出碼 0，輸出貼於 PR 說明 [@main]
-- [ ] 8.3 執行 `/opsx:archive`，將 delta 併入衍生視圖 `openspec/specs/`，並回寫正典 `specs/task-management/014-task-detail/spec.md`（版本 v2.11.1 → v3.0.0，新增 Changelog 條目）。驗證：正典檔內 FR-018 可 grep 到，Changelog 首列為 3.0.0 [@main]
-- [ ] 8.4 回寫正典 `specs/annotation/015-annotation-workspace/spec.md`（版本 v4.61.0 → v5.0.0，新增 Changelog 條目），並確認 FR-014I／FR-069／FR-074／FR-085 已自需求清單移除、FR-092 ~ FR-097 已加入。驗證：正典檔內 `grep -c "FR-014I"` 為 0，`grep "FR-097"` 有結果，Changelog 首列為 5.0.0 [@main]
+- [ ] 8.4 執行 `/opsx:archive`，將 delta 併入衍生視圖 `openspec/specs/`，並回寫正典 `specs/annotation/015-annotation-workspace/spec.md`（版本 → v5.0.0，新增 Changelog 條目），並確認 FR-014I／FR-069／FR-074／FR-085 已自需求清單移除、FR-092 ~ FR-097 之完整條文已取代 propose 期的預告條目。驗證：正典檔內 `grep -c "FR-014I"` 為 0，`grep "FR-097"` 有結果，Changelog 首列為 5.0.0（原 8.3 之 014 回寫移至 companion change，見 deferred/014-tasks.md） [@main]
 - [ ] 8.5 archive 後逐條 Source-Verify 衍生視圖中的正典引用（FR/AC ID、章節、檔案路徑、ADR/issue/PR 編號），確認每一項皆可個別 `grep` 定位。驗證：逐項 grep 結果留存 [@main]
-- [ ] 8.6 最終 PR 合併後更新 `specs/STATUS.md`，將 014 與 015 標記為對應狀態。驗證：`specs/STATUS.md` 內兩列狀態已更新 [@main]
+- [ ] 8.6 最終 PR 合併後更新 `specs/STATUS.md`，將 015 標記為對應狀態。驗證：`specs/STATUS.md` 內該列狀態已更新 [@main]

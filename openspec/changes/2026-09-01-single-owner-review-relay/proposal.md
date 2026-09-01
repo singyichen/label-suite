@@ -1,10 +1,11 @@
 ---
-對應 Spec: specs/task-management/014-task-detail/spec.md
 對應 Spec: specs/annotation/015-annotation-workspace/spec.md
 對應 Issue: #596
-基準版本: 014 v2.11.1 / 015 v4.61.0
-目標版本: 014 v3.0.0 / 015 v5.0.0
+基準版本: 015 v4.63.0
+目標版本: 015 v5.0.0
 ---
+
+> **2026-09-01 範圍收斂(維護者決議)**:Project SDD lint 限制一個 active change 恰對應一個 canonical spec,本變更原並載的 `task-management/014-task-detail` 側工作(delta 與任務)整批移至 [deferred/](deferred/README.md) 暫存,待 015 主體完成後以獨立 companion change 提案。下文對 014 行為的描述維持原敘述以保留完整決策脈絡,但其正典修改與實作任務**不在本 change 範圍內**。
 
 ## Why
 
@@ -33,7 +34,7 @@
 
 ### New Capabilities
 
-- `task-management/014-task-detail`：**最終例外池**（FR-018）——`annotation-progress` 分頁的區塊入口、待處置清單與逐筆導頁；收尾畫面本身由 `015` FR-095 承接。此概念在本版以前完全不存在，仲裁無法解決的爭議在舊模型中永遠停留於 `disputed`。
+- `task-management/014-task-detail`（**已延後至 companion change**，見 deferred/）：**最終例外池入口**——`annotation-progress` 分頁的區塊入口、待處置清單與逐筆導頁；收尾畫面本身由 `015` FR-095 承接。此概念在本版以前完全不存在，仲裁無法解決的爭議在舊模型中永遠停留於 `disputed`。
 - `annotation/015-annotation-workspace`：**試標歷史回饋列表**（FR-096）——標記員視角的「我被改了哪幾項、最後由誰定案、為什麼」列表。本版以前試標的品質回饋只有任務層級的 IAA 與被修改率，個別標記員沒有任何自我對齊入口。
 - `annotation/015-annotation-workspace`：**審核員三向決策**（FR-092）——本版以前審核員只有通過／退回兩個出口，沒有「我判斷不了、交給下一關」的 Bypass 表達方式，也沒有「修正不立即生效、一律進爭議池」的語意。
 - `annotation/015-annotation-workspace`：**審核指派粒度**（FR-093）——試標以樣本為單位、正式標記平均分派，本版以前散落於 `014` 的 `review_assignment_mode` 而未在工作區規格中定義。
@@ -43,16 +44,16 @@
 
 ### Modified Capabilities
 
-- `task-management/014-task-detail`：審核設定改名冊勾選（FR-010s／FR-010s-1／FR-010s-2）、審核指派區塊改為系統自動平均分派下的唯讀呈現（FR-005j／FR-005k）、發布前成員人數檢查改單審核員模型（FR-010t）、`completed` 前置條件改為含例外池清空（FR-008b）、規格常數與 `TaskDetail` 實體欄位改版。
+- `task-management/014-task-detail`（**已延後至 companion change**，見 deferred/）：審核設定改名冊勾選、審核指派區塊改為系統自動平均分派下的唯讀呈現、發布前成員人數檢查改單審核員模型、`completed` 前置條件改為含例外池清空、規格常數與 `TaskDetail` 實體欄位改版——涉及之 014 需求條目編號詳見 `deferred/014-task-detail-delta.md`。
 - `annotation/015-annotation-workspace`：審核決策控件三向化（FR-014B）、修正與 Bypass 的必填理由（FR-016A）、審核列控制項改版（FR-044）、審核單位狀態機三態化（FR-051）、審核卡三向決策與純文字定稿卡（FR-053）、決策快捷鍵改版（FR-054）、清單狀態篩選三態（FR-055）、仲裁資格措辭對齊名冊勾選（FR-060）、仲裁版面三出口與多數決退場（FR-061）、盲審隔離理由改寫（FR-062）、`official_run` gold 產出納入例外池路徑（FR-063）、脈絡橫幅移除定稿門檻與狀態軌三節點（FR-064）、審核說明 tooltip 文案對齊三向決策（FR-070）、送出阻擋文案改對應三向決策（FR-083）、歷程動作集合改版與加詳（FR-086）；移除 FR-014I（退回回退機制）、FR-069（逐位投票明細）、FR-074（仲裁前票數脈絡）與 FR-085（標記員重標理由橫幅）。
 
 ## Impact
 
 **規格**
 
-- 正典：`specs/task-management/014-task-detail/spec.md`（v2.11.1 → v3.0.0，**MAJOR**：`REVIEW_ASSIGNMENT_MODES`、`MIN_REVIEWERS_RULE` 等常數與四個設定欄位移除）
-- 正典：`specs/annotation/015-annotation-workspace/spec.md`（v4.61.0 → v5.0.0，**MAJOR**：`REVIEW_UNIT_STATUS` 五態改三態、FR-069／FR-074 移除、退回機制移除）
-- 衍生檢視：`openspec/specs/task-management/014-task-detail/spec.md`（新建）、`openspec/specs/annotation/015-annotation-workspace/spec.md`（archive 時自動合併）
+- 正典：`specs/annotation/015-annotation-workspace/spec.md`（v4.63.0 → v5.0.0，**MAJOR**：`REVIEW_UNIT_STATUS` 五態改三態、FR-069／FR-074 移除、退回機制移除）
+- 正典（**延後至 companion change**）：`specs/task-management/014-task-detail/spec.md`（v2.11.1 → v3.0.0，**MAJOR**：`REVIEW_ASSIGNMENT_MODES`、`MIN_REVIEWERS_RULE` 等常數與四個設定欄位移除）——delta 暫存於 `deferred/014-task-detail-delta.md`
+- 衍生檢視：`openspec/specs/annotation/015-annotation-workspace/spec.md`（archive 時自動合併）
 - 上游（本次不修改，僅確認相容）：`specs/dataset/017-dataset-analysis-detail` 之 IAA 計算正典不受影響——試標仍以標記員原始答案計算 IAA，本變更只改審核路徑不改標記路徑。
 - 下游（本次不修改，僅確認相容）：`specs/dashboard/*` 的「快速審核」入口沿用既有網址參數；`specs/account/008-*` 共用側欄快捷鍵總覽需隨 FR-054 調整，屬 008 的下游同步，本變更於 Impact 記錄不於 delta 修改。
 
