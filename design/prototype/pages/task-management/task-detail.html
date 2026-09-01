@@ -874,6 +874,15 @@
       font-size: 13px;
       color: var(--color-ink);
     }
+    .exception-pool-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-top: 8px;
+      font-size: 13px;
+      color: var(--color-ink);
+    }
     .mini-btn {
       border: 1px solid var(--color-border);
       border-radius: var(--radius-md);
@@ -2625,22 +2634,16 @@
       errPermissionDenied: '您沒有執行此操作的權限',
       reviewLoadTpl: '{assigned} 筆 · {pending} 待審',
       reviewAssignmentTitle: '審核指派',
-      reviewAssignmentHintAuto: '指派方式為「自動輪派」，系統輪派湊滿每筆所需審核員數；此區塊唯讀，僅呈現結果。',
-      reviewAssignmentHintManual: '指派方式為「手動指派」，請在此將未指派審核單位分派給審核員。',
+      reviewAssignmentHintReadonly: '審核指派一律由系統自動執行：試標以樣本為單位、正式標記平均分派給被勾選的審核員；此區塊僅呈現結果，不提供手動操作。',
       reviewUnassignedTpl: '未指派 {count} 筆',
-      reviewAutoFillBtn: '自動補齊',
       thAssignReviewer: '審核員',
       thAssignAssigned: '已指派',
       thAssignPending: '待審',
       thAssignDone: '已完成',
-      thAssignActions: '操作',
-      assignOneBtn: '指派…',
       arbiterTagLabel: '仲裁',
       disputePoolTpl: '爭議池 {count} 項待仲裁',
-      disputeAssignBtn: '分派給仲裁者',
-      toastReviewAutoFilled: '未指派審核單位已補齊',
-      toastReviewAssignedOne: '已指派 1 筆給 {name}',
-      toastDisputeAssigned: '爭議項已分派給仲裁者',
+      exceptionPoolTpl: '例外池 {count} 項待處置',
+      publishArbiterWarningText: '未指定仲裁者將導致無法結案：爭議項目將無人可仲裁，並持續堆積在爭議池中。',
       progressSummaryTitle: '整體進度摘要',
       progressStageDry: '試標',
       progressStageOfficial: '正式標記',
@@ -3103,22 +3106,16 @@
       errPermissionDenied: 'You do not have permission to perform this action',
       reviewLoadTpl: '{assigned} items · {pending} pending',
       reviewAssignmentTitle: 'Review Assignment',
-      reviewAssignmentHintAuto: 'Assignment mode is "Auto rotation" — the system rotates reviewers to fill each item; this section is read-only.',
-      reviewAssignmentHintManual: 'Assignment mode is "Manual" — dispatch unassigned review units to reviewers here.',
+      reviewAssignmentHintReadonly: 'Review assignment is always system-automatic — trial rounds dispatch by sample, official runs distribute evenly across checked reviewers; this section only reports the result and offers no manual actions.',
       reviewUnassignedTpl: '{count} unassigned',
-      reviewAutoFillBtn: 'Auto-fill',
       thAssignReviewer: 'Reviewer',
       thAssignAssigned: 'Assigned',
       thAssignPending: 'Pending',
       thAssignDone: 'Completed',
-      thAssignActions: 'Actions',
-      assignOneBtn: 'Assign…',
       arbiterTagLabel: 'Arbiter',
       disputePoolTpl: 'Dispute pool · {count} awaiting arbitration',
-      disputeAssignBtn: 'Assign to arbiters',
-      toastReviewAutoFilled: 'Unassigned review units distributed',
-      toastReviewAssignedOne: 'Assigned 1 unit to {name}',
-      toastDisputeAssigned: 'Disputes dispatched to arbiters',
+      exceptionPoolTpl: 'Exception pool · {count} awaiting resolution',
+      publishArbiterWarningText: 'Not designating an arbiter roster will block task completion: disputed items will have no one to arbitrate and will keep piling up in the dispute pool.',
       progressSummaryTitle: 'Progress summary',
       progressStageDry: 'Dry Run',
       progressStageOfficial: 'Official Run',
@@ -5680,9 +5677,29 @@ function interpolate(template, payload) {
     });
   }
 
+  /* FR-010t: arbiter_ids empty never blocks publish, but once a trial round
+     or the official run has started, a persistent (non-auto-dismissing)
+     warning must stay visible -- unlike the reviewer_ids hard gate, this is
+     not a toast because the toast auto-dismisses after 2.4s. */
+  function renderPublishArbiterWarning() {
+    var actionRow = document.getElementById('publishActionRow');
+    if (!actionRow) return;
+    var warning = document.getElementById('publishArbiterWarning');
+    if (!warning) {
+      warning = document.createElement('p');
+      warning.id = 'publishArbiterWarning';
+      warning.className = 'risk-warning hidden';
+      actionRow.parentNode.appendChild(warning);
+    }
+    warning.textContent = t('publishArbiterWarningText');
+    var shouldShow = TASK_DATA.status !== 'draft' && getEffectiveArbiterIds(TASK_DATA.arbiterIds).length === 0;
+    warning.classList.toggle('hidden', !shouldShow);
+  }
+
   function renderPublishActions() {
     var actionRow = document.getElementById('publishActionRow');
     if (!actionRow) return;
+    renderPublishArbiterWarning();
     var nextRound = getTrialRounds().length + 1;
 
     if (state.taskRole === 'reviewer') {
@@ -7139,38 +7156,24 @@ function getTaskTypeLabel() {
     load.pending = 0;
   }
 
-  function isReviewAssignmentActionable() {
-    return TASK_DATA.reviewAssignmentMode === 'manual' && state.taskRole === 'project_leader';
-  }
-
+  /* FR-005j / FR-005k: review_assignment_mode and arbitration_enabled are
+     retired -- assignment is always system-automatic and both pool rows are
+     always read-only info rows, so this block no longer branches on an
+     "actionable" mode. */
   function renderReviewAssignment() {
     var body = document.getElementById('reviewAssignmentBody');
     if (!body) return;
-    var actionable = isReviewAssignmentActionable();
     var arbiters = getEffectiveArbiterIds(TASK_DATA.arbiterIds);
 
     setText('reviewAssignmentTitle', t('reviewAssignmentTitle'));
-    setText('reviewAssignmentHint', t(TASK_DATA.reviewAssignmentMode === 'auto' ? 'reviewAssignmentHintAuto' : 'reviewAssignmentHintManual'));
+    setText('reviewAssignmentHint', t('reviewAssignmentHintReadonly'));
     setText('reviewUnassignedCount', interpolate(t('reviewUnassignedTpl'), { count: REVIEW_WORKLOAD.unassignedCount }));
     setText('thAssignReviewer', t('thAssignReviewer'));
     setText('thAssignAssigned', t('thAssignAssigned'));
     setText('thAssignPending', t('thAssignPending'));
     setText('thAssignDone', t('thAssignDone'));
-    setText('thAssignActions', t('thAssignActions'));
     setText('disputePoolText', interpolate(t('disputePoolTpl'), { count: REVIEW_WORKLOAD.disputeCount }));
-
-    var autoFillBtn = document.getElementById('reviewAutoFillBtn');
-    if (autoFillBtn) {
-      autoFillBtn.textContent = t('reviewAutoFillBtn');
-      autoFillBtn.classList.toggle('hidden', !actionable);
-      autoFillBtn.disabled = !actionable || REVIEW_WORKLOAD.unassignedCount === 0;
-    }
-    var disputeBtn = document.getElementById('disputeAssignBtn');
-    if (disputeBtn) {
-      disputeBtn.textContent = t('disputeAssignBtn');
-      disputeBtn.classList.toggle('hidden', !actionable);
-      disputeBtn.disabled = !actionable || !TASK_DATA.arbitrationEnabled || !arbiters.length || REVIEW_WORKLOAD.disputeCount === 0;
-    }
+    setText('exceptionPoolText', interpolate(t('exceptionPoolTpl'), { count: REVIEW_WORKLOAD.exceptionCount || 0 }));
 
     while (body.firstChild) body.removeChild(body.firstChild);
     getActiveReviewerMembers().forEach(function(member) {
@@ -7194,60 +7197,8 @@ function getTaskTypeLabel() {
         tr.appendChild(td);
       });
 
-      var tdActions = document.createElement('td');
-      if (actionable) {
-        var assignBtn = document.createElement('button');
-        assignBtn.className = 'mini-btn';
-        assignBtn.type = 'button';
-        assignBtn.textContent = t('assignOneBtn');
-        assignBtn.disabled = REVIEW_WORKLOAD.unassignedCount === 0;
-        assignBtn.addEventListener('click', function() {
-          assignOneReviewUnit(member);
-        });
-        tdActions.appendChild(assignBtn);
-      }
-      tr.appendChild(tdActions);
       body.appendChild(tr);
     });
-  }
-
-  function assignOneReviewUnit(member) {
-    if (!isReviewAssignmentActionable() || REVIEW_WORKLOAD.unassignedCount <= 0) return;
-    REVIEW_WORKLOAD.unassignedCount -= 1;
-    getReviewWorkload(member.email).pending += 1;
-    showToast(interpolate(t('toastReviewAssignedOne'), { name: member.name }));
-    trackEvent('prototype_review_assignment_assign_one', { reviewer_email: member.email });
-    renderMemberManagement();
-  }
-
-  function autoFillReviewAssignments() {
-    if (!isReviewAssignmentActionable()) return;
-    var reviewers = getActiveReviewerMembers();
-    if (!reviewers.length || REVIEW_WORKLOAD.unassignedCount <= 0) return;
-    var index = 0;
-    while (REVIEW_WORKLOAD.unassignedCount > 0) {
-      getReviewWorkload(reviewers[index % reviewers.length].email).pending += 1;
-      REVIEW_WORKLOAD.unassignedCount -= 1;
-      index += 1;
-    }
-    showToast(t('toastReviewAutoFilled'));
-    trackEvent('prototype_review_assignment_auto_filled');
-    renderMemberManagement();
-  }
-
-  function assignDisputesToArbiters() {
-    if (!isReviewAssignmentActionable()) return;
-    var arbiters = getEffectiveArbiterIds(TASK_DATA.arbiterIds);
-    if (!arbiters.length || REVIEW_WORKLOAD.disputeCount <= 0) return;
-    var index = 0;
-    while (REVIEW_WORKLOAD.disputeCount > 0) {
-      getReviewWorkload(arbiters[index % arbiters.length]).pending += 1;
-      REVIEW_WORKLOAD.disputeCount -= 1;
-      index += 1;
-    }
-    showToast(t('toastDisputeAssigned'));
-    trackEvent('prototype_review_assignment_disputes_dispatched');
-    renderMemberManagement();
   }
 
   function renderMemberManagement() {
@@ -7275,19 +7226,21 @@ function getTaskTypeLabel() {
     });
   }
 
-  /* FR-010t / SC-038 (issue #189 decision D3, issue #505): publishing a
-     trial round or the official run must be blocked per-role whenever the
-     count of membership_status=active members falls below min_annotators /
-     min_reviewers -- checked against the live TASK_MEMBERS roster, not just
-     the setting value itself. Returns one interpolated "還差 N 位" message
-     per short-handed role so canPublish() can surface every gap at once. */
+  /* FR-010t / SC-038 (issue #189 decision D3, issue #505; roster model per
+     issue #596): publishing a trial round or the official run must be
+     blocked per-role whenever the count of active members falls short --
+     annotators are checked against min_annotators, reviewers are checked
+     against the fixed threshold of 1 active member inside reviewer_ids
+     (min_reviewers is retired: a review unit always has exactly one
+     reviewer). Returns one interpolated "還差 N 位" message per short-handed
+     role so canPublish() can surface every gap at once. */
   function getMembershipGapMessages() {
     var messages = [];
     var annotatorGap = Number(TASK_DATA.minAnnotators) - getActiveAnnotatorMembers().length;
     if (annotatorGap > 0) {
       messages.push(interpolate(t('memberGapAnnotatorTpl'), { count: annotatorGap }));
     }
-    var reviewerGap = Number(TASK_DATA.minReviewers) - getActiveReviewerMembers().length;
+    var reviewerGap = 1 - getEffectiveReviewerIds(TASK_DATA.reviewerIds).length;
     if (reviewerGap > 0) {
       messages.push(interpolate(t('memberGapReviewerTpl'), { count: reviewerGap }));
     }
@@ -9713,15 +9666,6 @@ function getTaskTypeLabel() {
         state.memberPage = 1;
         renderMemberManagement();
       });
-    }
-
-    var reviewAutoFillBtn = document.getElementById('reviewAutoFillBtn');
-    if (reviewAutoFillBtn) {
-      reviewAutoFillBtn.addEventListener('click', autoFillReviewAssignments);
-    }
-    var disputeAssignBtn = document.getElementById('disputeAssignBtn');
-    if (disputeAssignBtn) {
-      disputeAssignBtn.addEventListener('click', assignDisputesToArbiters);
     }
 
 document.getElementById('memberProgressSort').addEventListener('change', function(e) {
