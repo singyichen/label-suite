@@ -23,6 +23,16 @@
  *     task nobody has reviewed has a summary the formula states truthfully,
  *     so the seeds stopped carrying a competing one. The flag itself still
  *     describes the state accurately and is pinned below.)
+ *
+ * issue #596 fixup: the single-owner relay model retires the `approved` /
+ * `modified` interim counters (no quorum > 1 left to be short of) and
+ * requires a `modify`/`bypass` reviewer decision to land in the dispute
+ * pool instead of auto-converging at min_reviewers = 1 (issue #551's N = 1
+ * convergence is superseded). computeReviewSummary()'s `approved` and
+ * `modified` fields still exist on the returned object but always read 0
+ * now; every count that used to land there now lands in `disputed`. The
+ * MATRIX and per-task numbers below are updated to the resulting counts --
+ * this is the product's finished behavior, not a terminology-only rename.
  */
 import { test, expect, type Page } from '@playwright/test';
 import { buildListUrl, buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
@@ -64,19 +74,19 @@ function readSummary(page: Page, taskId: string, runType: string): Promise<Summa
 const MATRIX = [
   {
     taskId: 'T014', runType: 'dry_run',
-    expected: { total: 15, pending: 5, approved: 0, modified: 0, disputed: 1, finalized: 9, unfinalized: 6, coveragePct: 67, derivable: true },
+    expected: { total: 15, pending: 5, approved: 0, modified: 0, disputed: 3, finalized: 7, unfinalized: 8, coveragePct: 67, derivable: true },
   },
   {
     taskId: 'T015', runType: 'official_run',
-    expected: { total: 4, pending: 1, approved: 0, modified: 0, disputed: 0, finalized: 3, unfinalized: 1, coveragePct: 75, derivable: true },
+    expected: { total: 4, pending: 1, approved: 0, modified: 0, disputed: 1, finalized: 2, unfinalized: 2, coveragePct: 75, derivable: true },
   },
   {
     taskId: 'T016', runType: 'official_run',
-    expected: { total: 5, pending: 0, approved: 1, modified: 1, disputed: 1, finalized: 2, unfinalized: 3, coveragePct: 100, derivable: true },
+    expected: { total: 5, pending: 0, approved: 0, modified: 0, disputed: 3, finalized: 2, unfinalized: 3, coveragePct: 100, derivable: true },
   },
   {
     taskId: 'T017', runType: 'official_run',
-    expected: { total: 5, pending: 1, approved: 1, modified: 1, disputed: 1, finalized: 1, unfinalized: 4, coveragePct: 80, derivable: true },
+    expected: { total: 5, pending: 1, approved: 0, modified: 0, disputed: 2, finalized: 2, unfinalized: 3, coveragePct: 80, derivable: true },
   },
 ] as const;
 
@@ -118,7 +128,7 @@ test.describe('issue #450 -- annotation-list task info card', () => {
     await page.goto(buildListUrl({ task_id: 'T016', role: 'reviewer', run_type: 'official_run' }));
 
     await expect(page.locator('#taskInfoDetail')).toContainText(
-      '任務覆蓋 5 / 5 個審核單位 · 未達定稿門檻 3 個 · 爭議中 1 個 · IAA 無法計算',
+      '任務覆蓋 5 / 5 個審核單位 · 未達定稿門檻 3 個 · 爭議中 3 個 · IAA 無法計算',
     );
     await expect(page.locator('#taskInfoStatus')).not.toHaveText('已完成');
   });
@@ -138,20 +148,22 @@ test.describe('issue #450 -- annotation-list task info card', () => {
     await page.goto(T015_LIST_URL);
     const detail = page.locator('#taskInfoDetail');
     await expect(detail).not.toContainText('待審');
-    /* issue #551: this agreeing review both finalizes ofs-04 (N=1) AND, by
-       the time this test runs, ofs-02 has already converged at N=1 too (see
-       annotation-review-flow-demo-seed.spec.ts) -- so all 4 units are now
-       finalized and neither 未達定稿門檻 nor 爭議中 has anything to report
-       (formatReviewSummary only appends a clause when its count is > 0).
-       This used to read '未達定稿門檻 1 個 · 爭議中 1 個' back when ofs-02
-       stayed disputed at N=1. */
-    await expect(detail).toContainText('任務覆蓋 4 / 4 個審核單位 · IAA 無法計算');
-    await expect(detail).not.toContainText('未達定稿門檻');
-    await expect(detail).not.toContainText('爭議中');
+    /* issue #596: min_reviewers = 1 auto-convergence (issue #551) is
+       retired -- ofs-02's reviewer correction now stays in the dispute pool
+       instead of converging, so it is disputed (not finalized) by the time
+       this test runs (see annotation-review-flow-demo-seed.spec.ts). This
+       agreeing review still finalizes ofs-04, but ofs-02 keeps the task at
+       未達定稿門檻/爭議中 rather than clearing both clauses the way N = 1
+       convergence used to. */
+    await expect(detail).toContainText(
+      '任務覆蓋 4 / 4 個審核單位 · 未達定稿門檻 1 個 · 爭議中 1 個 · IAA 無法計算',
+    );
 
     // Reload: the derived numbers must be stable, not a one-shot render.
     await page.reload();
-    await expect(page.locator('#taskInfoDetail')).toContainText('任務覆蓋 4 / 4 個審核單位 · IAA 無法計算');
+    await expect(page.locator('#taskInfoDetail')).toContainText(
+      '任務覆蓋 4 / 4 個審核單位 · 未達定稿門檻 1 個 · 爭議中 1 個 · IAA 無法計算',
+    );
   });
 });
 
@@ -177,13 +189,13 @@ test.describe('issue #450 -- dashboard reviewer card', () => {
 
     await openReviewerDashboard(page);
     await expect(page.locator(T015_CARD)).not.toContainText('待審');
-    /* issue #551: ofs-02 has already converged at N=1 by the time this
-       test runs (see annotation-review-flow-demo-seed.spec.ts), so all 4
-       units are finalized and neither clause has anything to report --
-       this used to read '未達定稿門檻 1 個 · 爭議中 1 個'. */
-    await expect(page.locator(T015_CARD)).toContainText('任務覆蓋 4 / 4 個審核單位 · IAA 無法計算');
-    await expect(page.locator(T015_CARD)).not.toContainText('未達定稿門檻');
-    await expect(page.locator(T015_CARD)).not.toContainText('爭議中');
+    /* issue #596: min_reviewers = 1 auto-convergence (issue #551) is
+       retired -- ofs-02's reviewer correction stays disputed instead of
+       converging at N = 1 (see annotation-review-flow-demo-seed.spec.ts),
+       so the card keeps disclosing 未達定稿門檻/爭議中 after this submit. */
+    await expect(page.locator(T015_CARD)).toContainText(
+      '任務覆蓋 4 / 4 個審核單位 · 未達定稿門檻 1 個 · 爭議中 1 個 · IAA 無法計算',
+    );
   });
 
   /* Issue #501 closed the other half of this contract at the source: a

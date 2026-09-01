@@ -22,6 +22,20 @@
  *
  * Traceability: specs/annotation/015-annotation-workspace/spec.md FR-076,
  *   AC-1.24; specs/dashboard/012-dashboard/spec.md FR-022
+ *
+ * issue #596 fixup: the single-owner relay model retires min_reviewers and
+ * the two quorum-interim states (`已同意` / `已修改`) these tests used to
+ * pin -- FR-093 assigns exactly one reviewer per unit, so a lone reviewer's
+ * decision is immediately decisive (unchanged -> finalized, changed ->
+ * disputed). Two cases whose entire premise was "decided but short of a
+ * per-task threshold > 1" are deleted below (T016/T017 no longer seed a
+ * varying threshold; every profile's minReviewers now defaults to 1, so
+ * those samples finalize on first submit instead of staying interim). The
+ * "modified, short of threshold" case is converted rather than deleted: the
+ * underlying scenario (reviewer submits a differing answer) still occurs,
+ * it now routes straight to `disputed` instead of an interim `已修改`
+ * state. Task/coverage counts below are also updated to match: units that
+ * used to land in the `已同意`/`已修改` buckets now land in `爭議中`.
  */
 import { test, expect, type Page } from '@playwright/test';
 import { buildListUrl } from './_workspace-helpers';
@@ -55,7 +69,7 @@ test.describe('issue #452 — task-level coverage names the review-unit denomina
 
     const detail = page.locator('#taskInfoDetail');
     await expect(detail).toContainText(
-      '任務覆蓋 4 / 5 個審核單位 · 待審 1 個 · 未達定稿門檻 4 個 · 爭議中 1 個 · IAA 無法計算',
+      '任務覆蓋 4 / 5 個審核單位 · 待審 1 個 · 未達定稿門檻 3 個 · 爭議中 2 個 · IAA 無法計算',
     );
     await expect(detail).not.toContainText('審核覆蓋率');
   });
@@ -64,7 +78,7 @@ test.describe('issue #452 — task-level coverage names the review-unit denomina
     await page.goto(buildListUrl({ task_id: 'T016', role: 'reviewer', run_type: 'official_run' }));
 
     await expect(page.locator('#taskInfoDetail')).toContainText(
-      '任務覆蓋 5 / 5 個審核單位 · 未達定稿門檻 3 個 · 爭議中 1 個 · IAA 無法計算',
+      '任務覆蓋 5 / 5 個審核單位 · 未達定稿門檻 3 個 · 爭議中 3 個 · IAA 無法計算',
     );
   });
 
@@ -102,7 +116,8 @@ test.describe('issue #452 — the workspace top progress is MY submissions', () 
 });
 
 test.describe('issue #452 — the unit banner states the finalize threshold', () => {
-  /* AC-8: threshold 1 (T015), 3 (T016), 2 (T017). */
+  /* AC-8: every profile now has minReviewers = 1 (issue #596 retires
+     per-task thresholds > 1), so "threshold" here is always 1 / 1. */
   test('T015 (threshold 1) finalized unit is the only state that reads as locked', async ({ page }) => {
     await openReviewerWorkspace(page, 'T015', 'ofs-01-agree-gold');
 
@@ -117,56 +132,51 @@ test.describe('issue #452 — the unit banner states the finalize threshold', ()
     );
   });
 
-  test('T016 (threshold 3) approved unit is flagged short of the threshold', async ({ page }) => {
-    await openReviewerWorkspace(page, 'T016', 'ofm-02-approved-interim');
-
-    await expect(contextBanner(page)).toContainText('定稿門檻 1 / 3 位審核員');
-    const pill = statePill(page);
-    await expect(pill).toHaveText('已同意 · 未達定稿門檻 1 / 3');
-    await expect(pill).toHaveAttribute('data-terminal', 'false');
-    await expect(pill).toHaveAttribute(
-      'aria-label',
-      '已同意，已有 1 位審核員／共需 3 位',
-    );
-  });
-
-  test('T016 (threshold 3) modified unit is flagged short of the threshold', async ({ page }) => {
+  /* issue #596: min_reviewers is retired -- every profile (T016 included)
+     now defaults to minReviewers = 1, so ofm-02-approved-interim's sole
+     reviewer's unchanged decision finalizes on first submit. The "approved
+     but short of a threshold > 1" state this case existed to pin can no
+     longer be produced by any seed; deleted rather than converted. Same
+     reasoning retires the T017 oft-02-approved-interim case that used to
+     follow it ("approved unit reports 1 / 2"). */
+  test('T016 a `modify` decision disputes the unit instead of an interim 已修改 state', async ({ page }) => {
     await openReviewerWorkspace(page, 'T016', 'ofm-03-modified-interim');
 
+    await expect(contextBanner(page)).toContainText('定稿門檻 1 / 1 位審核員');
     const pill = statePill(page);
-    await expect(pill).toHaveText('已修改 · 未達定稿門檻 1 / 3');
+    await expect(pill).toHaveText('爭議中 · 未定稿，待仲裁');
     await expect(pill).toHaveAttribute('data-terminal', 'false');
   });
 
-  test('T017 (threshold 2) approved unit reports 1 / 2', async ({ page }) => {
-    await openReviewerWorkspace(page, 'T017', 'oft-02-approved-interim');
-
-    await expect(contextBanner(page)).toContainText('定稿門檻 1 / 2 位審核員');
-    await expect(statePill(page)).toHaveText('已同意 · 未達定稿門檻 1 / 2');
-  });
-
-  test('T017 (threshold 2) a met threshold that is still disputed says so in words', async ({ page }) => {
+  test('T017 a met threshold that is still disputed says so in words', async ({ page }) => {
     await openReviewerWorkspace(page, 'T017', 'oft-01-even-tie');
 
-    await expect(contextBanner(page)).toContainText('定稿門檻 2 / 2 位審核員');
+    await expect(contextBanner(page)).toContainText('定稿門檻 2 / 1 位審核員');
     const pill = statePill(page);
     await expect(pill).toHaveText('爭議中 · 未定稿，待仲裁');
     await expect(pill).toHaveAttribute('data-terminal', 'false');
   });
 });
 
-test.describe('issue #452 — annotation-list badges separate interim from terminal', () => {
+test.describe('issue #452 — annotation-list badges separate non-terminal from terminal', () => {
+  /* issue #596: the 已同意/已修改 interim rows this test used to pin no
+     longer exist -- T016's ofm-02 (unchanged decision) now finalizes on
+     first submit and ofm-03/ofm-04/ofm-05 (any changed decision) now go
+     straight to 爭議中. Converted to the three states that remain: only
+     已定稿 keeps the terminal badge colour, and 爭議中 rows carry that
+     distinction in words rather than colour alone (AC-5). */
   test('T016 rows spell out 未定稿 / 已鎖定 instead of relying on badge colour', async ({ page }) => {
     await page.goto(buildListUrl({ task_id: 'T016', role: 'reviewer', run_type: 'official_run' }));
 
     const rows = page.getByTestId('ws-sample-item');
     await expect(rows.nth(0).locator('.status-badge')).toHaveText('已定稿 · 已鎖定');
-    await expect(rows.nth(1).locator('.status-badge')).toHaveText('已同意 · 未定稿');
-    await expect(rows.nth(2).locator('.status-badge')).toHaveText('已修改 · 未定稿');
+    await expect(rows.nth(1).locator('.status-badge')).toHaveText('已定稿 · 已鎖定');
+    await expect(rows.nth(2).locator('.status-badge')).toHaveText('爭議中 · 未定稿');
+    await expect(rows.nth(3).locator('.status-badge')).toHaveText('爭議中 · 未定稿');
     await expect(rows.nth(4).locator('.status-badge')).toHaveText('爭議中 · 未定稿');
 
-    /* AC-5: the interim states must not reuse the terminal badge colour. */
+    /* AC-5: the non-terminal state must not reuse the terminal badge colour. */
     await expect(rows.nth(0).locator('.status-badge')).toHaveClass(/status-submitted/);
-    await expect(rows.nth(1).locator('.status-badge')).not.toHaveClass(/status-submitted/);
+    await expect(rows.nth(2).locator('.status-badge')).not.toHaveClass(/status-submitted/);
   });
 });

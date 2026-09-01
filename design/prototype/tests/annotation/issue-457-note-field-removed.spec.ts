@@ -18,6 +18,15 @@ import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
  *
  * The guard is state- and role-exhaustive on purpose: an accidental
  * re-introduction would most plausibly land in one render branch only.
+ *
+ * issue #596 fixup: the "reviewer, pending unit" case used to anchor on
+ * T017 oft-02-approved-interim, which was short of min_reviewers and thus
+ * still awaiting the reviewer's decision. The single-owner relay model
+ * retired min_reviewers -- a lone reviewer's unchanged decision now
+ * finalizes the unit immediately, so that sample id is finalized before
+ * this test ever loads it and its submit button is gone. Swapped to T017
+ * oft-05-pending-review, a unit whose annotator has submitted but whose
+ * (sole) reviewer has not -- genuinely pre-finalize under the new model.
  */
 
 async function expectNoNoteField(page: Page) {
@@ -60,7 +69,7 @@ test.describe('issue #457 -- the workspace ships no unpersisted free-text note f
   test('reviewer, pending unit: no note field', async ({ page }) => {
     await page.goto(
       buildWorkspaceUrl({
-        task_id: 'T017', sample_id: 'oft-02-approved-interim',
+        task_id: 'T017', sample_id: 'oft-05-pending-review',
         role: 'reviewer', run_type: 'official_run', reviewer_id: 'reviewer_chen',
       })
     );
