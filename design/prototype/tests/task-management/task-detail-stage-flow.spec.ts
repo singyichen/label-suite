@@ -42,6 +42,11 @@ test('keeps the 4-stage stepper while showing a complete trial-to-official flow'
   await expect(page.locator('#splitLegendDynamic')).toContainText('R1 1筆');
   await expect(page.locator('#splitLegendDynamic')).toContainText('正式 4筆');
 
+  // Outlast the 200ms double-click debounce on the publish buttons (#198):
+  // the roster-model overview (issue #596) renders fast enough that the
+  // assertions above finish inside the debounce window, so an immediate
+  // second click would be swallowed as an accidental double-click.
+  await page.waitForTimeout(250);
   await page.locator('#publishDryRunBtn').click();
 
   await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(2);
