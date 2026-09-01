@@ -14,17 +14,46 @@
 > **最終群組**：否。本組不執行 archive。
 > **相依**：無前置群組。
 
-- [ ] 1.1 撰寫 Red 測試覆蓋 `REVIEW_UNIT_STATUS` 三態推導（`design/prototype/tests/annotation/issue-596-review-unit-status.spec.ts`）：標記員未提交 → `null`；審核員未送出 → `pending`；全部 `approve` → `finalized`；任一 `modify`／`bypass` → `disputed`；爭議全數裁定後 → `finalized`；`exclude_from_dataset` → 非 `finalized`。驗證：執行 `pnpm playwright test tests/annotation/issue-596-review-unit-status.spec.ts` 全數失敗且失敗原因為推導函式尚未支援三態 [@senior-qa]
-- [ ] 1.2 **（動工後修正檔案位置）** 於 `design/prototype/pages/annotation/annotation-workspace.data.js` 將 `REVIEW_UNIT_STATUS` 改為 `pending | disputed | finalized`，新增 `REVIEW_DECISIONS`、`ARBITRATION_OUTCOMES`、`EXCEPTION_POOL_ACTIONS`、`REVIEW_ASSIGNMENT_GRANULARITY` 四組封閉常數，並於 `window.LabelSuiteAnnotationWorkspaceData` 一併匯出。
+- [x] 1.1 撰寫 Red 測試覆蓋 `REVIEW_UNIT_STATUS` 三態推導（`design/prototype/tests/annotation/issue-596-review-unit-status.spec.ts`）：標記員未提交 → `null`；審核員未送出 → `pending`；全部 `approve` → `finalized`；任一 `modify`／`bypass` → `disputed`；爭議全數裁定後 → `finalized`；`exclude_from_dataset` → 非 `finalized`。驗證：執行 `pnpm playwright test tests/annotation/issue-596-review-unit-status.spec.ts` 全數失敗且失敗原因為推導函式尚未支援三態 [@senior-qa]
+- [x] 1.2 **（動工後修正檔案位置）** 於 `design/prototype/pages/annotation/annotation-workspace.data.js` 將 `REVIEW_UNIT_STATUS` 改為 `pending | disputed | finalized`，新增 `REVIEW_DECISIONS`、`ARBITRATION_OUTCOMES`、`EXCEPTION_POOL_ACTIONS`、`REVIEW_ASSIGNMENT_GRANULARITY` 四組封閉常數，並於 `window.LabelSuiteAnnotationWorkspaceData` 一併匯出。
   - **原任務文字寫 `config.js`，與實際架構不符**：`config.js` 是 page-script IIFE，沒有任何出口面（`REVIEW_UNIT_BLOCK` 之類常數為檔內私有），跨檔共用常數一律住在 `data.js` 並經 `window.LabelSuiteAnnotationWorkspaceData` 匯出；`REVIEW_UNIT_STATUS` 本身也定義在 `data.js`，`config.js` 只是呼叫端。放在 `config.js` 的常數是宣告了沒人讀得到的死碼，而 Red 1.1／1.4 打的正是 `window.LabelSuiteAnnotationWorkspaceData.*`。
   - **`MIN_REVIEWERS_DEFAULT` 與 `DISPUTE_CONVERGENCE_RULE` 並不存在具名常數**（全樹只在 `data.js` 註解中以英文字面出現）。真正要移除的是其**行為**——`resolveDisputeConvergence()` 與 `min_reviewers` 種子，兩者都在 `data.js`，屬任務 1.3 範圍。
   - **因檔案位置修正，本任務與 1.3 落在同一檔同一匯出區塊，故合併為一次實作**（分開派工等於兩個 agent 同時改 `data.js`）。
   - 驗證：`node --check` 語法正確，且 `window.LabelSuiteAnnotationWorkspaceData.REVIEW_UNIT_STATUS` 不再含 `approved`／`modified` 兩個狀態值。註：`design/prototype/tsconfig.json` 的 `include` 只涵蓋 `playwright.config.ts` 與 `tests/**/*.ts`，不編譯 prototype 的 `.js` 頁面檔，故 `pnpm typecheck` 對本任務恆為 no-op，不可當作證據。
   - `config.js` 內 `REVIEW_STATE_I18N_KEYS`／`REVIEW_TRACK_ROUTES`／`buildReviewStatusTrack()` 殘留的 `approved`／`modified` 屬 FR-064 五節點狀態軌渲染，由任務 3.6 處理，不在本組。 [@senior-frontend]
-- [ ] 1.3 於 `design/prototype/pages/annotation/annotation-workspace.data.js` 依 design.md D1 改寫 `getReviewUnitStatus()` 與 `getReviewUnitLane()` 為單一同源推導，並依 D2 落地 `reviewSubmission` / `arbitration` / `exceptionPool` 三組持久化形狀（`bypass` 不寫 `values[outKey]`）。驗證：`pnpm playwright test tests/annotation/issue-596-review-unit-status.spec.ts` 全綠 [@senior-frontend]
-- [ ] 1.4 撰寫 Red 測試覆蓋 FR-093 審核指派粒度（`design/prototype/tests/annotation/issue-596-review-assignment.spec.ts`）：試標同一樣本的 N 個審核單位指派給同一位審核員；正式標記平均分派且任兩位審核員筆數差 ≤ 1；審核員為該筆標記員時不被排除。驗證：執行該檔全數失敗且失敗原因為指派邏輯尚未實作 [@senior-qa]
-- [ ] 1.5 於 `design/prototype/pages/annotation/annotation-workspace.data.js` 實作 FR-093 之指派推導（依 `REVIEW_ASSIGNMENT_GRANULARITY` 分流），並依 design.md D6 讓舊五態值與多筆 `votes[]` 以「重新推導／取最新一筆」相容。**另需一併輸出 `getAssignedReviewUnits(runType, reviewerId, units)`**：`reviewer_ids` 名冊要到群組 5 才進資料層，而接線的群組 4 先行合併，故名冊此刻只能由本資料層的示範種子提供；把名冊查找收在資料層內、只對外露出「這位審核員該審哪些單位」，可讓清單層不必知道名冊，群組 5 落地真實名冊後也只改本檔一處。驗證：`pnpm playwright test tests/annotation/issue-596-review-assignment.spec.ts` 全綠 [@senior-frontend]
-- [ ] 1.6 執行群組 1 完整回歸：`cd design/prototype && pnpm typecheck && pnpm playwright test`，記錄既有測試中因五態移除而失效的斷言清單，於群組 2 起逐組修正。驗證：typecheck 退出碼 0，playwright 失敗項目全部可歸因於尚未改版的介面層 [@main]
+- [x] 1.3 於 `design/prototype/pages/annotation/annotation-workspace.data.js` 依 design.md D1 改寫 `getReviewUnitStatus()` 與 `getReviewUnitLane()` 為單一同源推導，並依 D2 落地 `reviewSubmission` / `arbitration` / `exceptionPool` 三組持久化形狀（`bypass` 不寫 `values[outKey]`）。驗證：`pnpm playwright test tests/annotation/issue-596-review-unit-status.spec.ts` 全綠 [@senior-frontend]
+- [x] 1.4 撰寫 Red 測試覆蓋 FR-093 審核指派粒度（`design/prototype/tests/annotation/issue-596-review-assignment.spec.ts`）：試標同一樣本的 N 個審核單位指派給同一位審核員；正式標記平均分派且任兩位審核員筆數差 ≤ 1；審核員為該筆標記員時不被排除。驗證：執行該檔全數失敗且失敗原因為指派邏輯尚未實作 [@senior-qa]
+- [x] 1.5 於 `design/prototype/pages/annotation/annotation-workspace.data.js` 實作 FR-093 之指派推導（依 `REVIEW_ASSIGNMENT_GRANULARITY` 分流），並依 design.md D6 讓舊五態值與多筆 `votes[]` 以「重新推導／取最新一筆」相容。**另需一併輸出 `getAssignedReviewUnits(runType, reviewerId, units)`**：`reviewer_ids` 名冊要到群組 5 才進資料層，而接線的群組 4 先行合併，故名冊此刻只能由本資料層的示範種子提供；把名冊查找收在資料層內、只對外露出「這位審核員該審哪些單位」，可讓清單層不必知道名冊，群組 5 落地真實名冊後也只改本檔一處。驗證：`pnpm playwright test tests/annotation/issue-596-review-assignment.spec.ts` 全綠 [@senior-frontend]
+- [x] 1.6 執行群組 1 完整回歸：`cd design/prototype && pnpm typecheck && pnpm playwright test`，記錄既有測試中因五態移除而失效的斷言清單，於群組 2 起逐組修正。驗證：typecheck 退出碼 0，playwright 失敗項目全部可歸因於尚未改版的介面層 [@main]
+  - **`pnpm typecheck` 對本組為 no-op**（理由同任務 1.2），故僅以 playwright 為證據。
+  - **實測結果（PW_PORT=8981、`--workers=2`、11.5m）：`tests/annotation` 666 passed / 52 failed**。52 筆中 7 筆為尚未 Green 的 Red 2.1（`issue-596-review-three-way.spec.ts`），其餘 **45 筆為五態移除造成的既有斷言失效**，全部落在審核／仲裁／狀態軌／示範種子相關檔，無一筆屬資料層自身錯誤。
+  - **失效清單（檔案 → 筆數 → 修正歸屬群組）**：
+
+    | 檔案（`design/prototype/tests/annotation/`） | 筆數 | 歸屬 |
+    |---|---|---|
+    | `issue-452-review-progress-subjects.spec.ts` | 6 | 群組 2 |
+    | `annotation-review-flow-demo-seed.spec.ts` | 6 | 群組 7（示範任務改寫） |
+    | `issue-450-reviewer-summary-derived.spec.ts` | 4 | 群組 2 |
+    | `annotation-review-unit.spec.ts` | 4 | 群組 2 |
+    | `annotation-review-status-track.spec.ts` | 4 | 群組 3（FR-064 三節點狀態軌） |
+    | `annotation-review-min-reviewers.spec.ts` | 3 | 群組 5（`min_reviewers` 整體移除後應整檔刪除） |
+    | `issue-551-reject-vote.spec.ts` | 2 | 群組 2（`退回` 控件移除後應整檔刪除） |
+    | `issue-525-review-flow-drawer.spec.ts` | 2 | 群組 3 |
+    | `issue-403-finalized-vote-breakdown.spec.ts` | 2 | 群組 3（FR-069 投票表移除後應整檔刪除） |
+    | `annotation-list-reviewer.spec.ts` | 2 | 群組 4 |
+    | `issue-562-review-action-hint-removed.spec.ts` | 1 | 群組 3 |
+    | `issue-550-review-note-tooltip.spec.ts` | 1 | 群組 3（FR-070 文案改寫） |
+    | `issue-525-reachable-track.spec.ts` | 1 | 群組 3 |
+    | `issue-525-banner-simplify.spec.ts` | 1 | 群組 3 |
+    | `issue-457-note-field-removed.spec.ts` | 1 | 群組 2 |
+    | `issue-454-arbitration-vote-context.spec.ts` | 1 | 群組 3 |
+    | `issue-400-list-finalized-overwrite.spec.ts` | 1 | 群組 4 |
+    | `issue-308-finalized-unit-lock.spec.ts` | 1 | 群組 3 |
+    | `annotation-workspace-arbitration.spec.ts` | 1 | 群組 3 |
+    | `annotation-review-flow-demo-rows.spec.ts` | 1 | 群組 7 |
+
+  - **因此群組 1 的 PR 在 `tests/annotation` 是紅的**，這是本變更拆組的必然結果（資料層先落地、介面層分七組跟上），非缺陷；群組 2／3／4／5／7 各自的收尾任務（2.5／4.5／7.5）負責歸零。合併群組 1 前需向維護者說明此點。
+  - **注意四個「應整檔刪除」的檔案**：`issue-551-reject-vote`、`issue-403-finalized-vote-breakdown`、`annotation-review-min-reviewers` 三檔測的是本變更明確廢除的行為（退回、逐位投票表、`min_reviewers`），不應「修好斷言」而應連同其 testid 一併刪除；若只改斷言會把已廢除的模型重新釘回契約。
 
 ## 2. PR 群組 2 — 015 審核卡三向決策（FR-014B／FR-016A／FR-044／FR-053 決策面／FR-054／FR-092）
 
