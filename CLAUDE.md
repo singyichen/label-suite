@@ -147,6 +147,9 @@ NON-NEGOTIABLEs: **Generalization-First** (config-driven, no hardcoded task logi
 Run after every change. Task is NOT complete until all pass.
 
 ```bash
+# Project SDD lint (run from project root)
+scripts/check-sdd.sh
+
 # Backend (run from backend/)
 uv run pytest tests/ -q
 uv run pytest --cov=app --cov-report=term-missing --cov-fail-under=80

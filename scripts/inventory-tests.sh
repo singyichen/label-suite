@@ -95,6 +95,20 @@ fi
 rm -f "$STRAY"; STRAY=""
 pass "coverage check detects an unlisted screen file"
 
+# 6. The prototype source commit must not move with git's dynamic abbreviation.
+# `--format=%h` shortens to whatever length is currently unambiguous, which grows
+# as the object database grows (a repack alone flipped this repo from 7 to 8
+# characters). The freshness gate compares the committed file byte-for-byte, so a
+# length that tracks the local repo turns the gate red for reasons unrelated to
+# the prototype.
+node "$GEN" --stdout > "$TMP_ROOT/abbrev-default.md"
+GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.abbrev GIT_CONFIG_VALUE_0=12 \
+    node "$GEN" --stdout > "$TMP_ROOT/abbrev-long.md"
+if ! diff -q "$TMP_ROOT/abbrev-default.md" "$TMP_ROOT/abbrev-long.md" >/dev/null; then
+    fail "prototype source commit changes with core.abbrev — the freshness gate is not reproducible"
+fi
+pass "prototype source commit is independent of git's abbreviation length"
+
 # 5. Broken manifest references must fail.
 expect_manifest_failure "missing page file is rejected" \
     "$(node -e '

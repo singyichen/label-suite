@@ -96,6 +96,16 @@ jobs:
             echo "✓ Project structure validation complete. Additional CI jobs will now run and may pass or fail independently."
           fi
 
+  sdd-lint:
+    name: Project SDD Lint
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Check project SDD governance
+        run: scripts/check-sdd.sh
+
   backend-ruff:
     name: Backend — Ruff (Lint + Format)
     runs-on: ubuntu-24.04

@@ -156,6 +156,43 @@ SPEC
     assert_contains /tmp/check-spec-artifacts.err "Missing STATUS.md row for spec: dataset/001-quality-export"
 }
 
+test_check_spec_artifacts_accepts_archived_spec_location() {
+    # A canonical spec archived per specs/STATUS.md 封存規則 lives at
+    # specs/_archive/NNN-feature/ with no module directory in between. The
+    # module-layout scan must not read `_archive` as a module name, and the
+    # STATUS reverse check must still resolve the archived row.
+    local repo
+    repo="$(make_repo)"
+
+    mkdir -p "$repo/specs/_archive"
+    mv "$repo/specs/task-management/013-task-new" "$repo/specs/_archive/013-task-new"
+    rmdir "$repo/specs/task-management"
+    sed -i.bak 's/`tasks-ready`/`archived`/' "$repo/specs/STATUS.md"
+    rm -f "$repo/specs/STATUS.md.bak"
+
+    if ! "$repo/scripts/check-spec-artifacts.sh" "$repo" >/tmp/check-spec-artifacts-archived.out 2>/tmp/check-spec-artifacts-archived.err; then
+        echo "Expected check-spec-artifacts.sh to accept an archived canonical spec" >&2
+        cat /tmp/check-spec-artifacts-archived.err >&2
+        exit 1
+    fi
+}
+
+test_check_spec_artifacts_fails_for_archived_row_without_archived_spec() {
+    # The archived branch must still be a check, not a free pass: marking a row
+    # archived without moving the spec into specs/_archive/ has to fail.
+    local repo
+    repo="$(make_repo)"
+
+    sed -i.bak 's/`tasks-ready`/`archived`/' "$repo/specs/STATUS.md"
+    rm -f "$repo/specs/STATUS.md.bak"
+
+    if "$repo/scripts/check-spec-artifacts.sh" "$repo" >/tmp/check-spec-artifacts-noarchive.out 2>/tmp/check-spec-artifacts-noarchive.err; then
+        echo "Expected check-spec-artifacts.sh to fail for an archived row with no archived spec" >&2
+        exit 1
+    fi
+    assert_contains /tmp/check-spec-artifacts-noarchive.err "STATUS.md archived row has no spec under specs/_archive/: task-management-013"
+}
+
 test_ci_uses_pnpm_for_prototype_jobs() {
     local ci="$ROOT/.github/workflows/ci.yml"
 
@@ -167,6 +204,416 @@ test_ci_uses_pnpm_for_prototype_jobs() {
         echo "Prototype CI must use pnpm, not npm" >&2
         exit 1
     fi
+}
+
+count_top_level_sdd_lint_jobs() {
+    local ci="$1"
+
+    awk '
+        /^jobs:[[:space:]]*(#.*)?$/ {
+            in_jobs = 1
+            next
+        }
+        in_jobs && /^[^[:space:]#]/ {
+            exit
+        }
+        in_jobs && /^  sdd-lint:[[:space:]]*(#.*)?$/ {
+            count++
+        }
+        END {
+            print count + 0
+        }
+    ' "$ci"
+}
+
+insert_independent_sdd_lint_job_after_validate() {
+    local ci="$1"
+    if ! grep -Eq '^  backend-ruff:[[:space:]]*(#.*)?$' "$ci"; then
+        echo "Expected copied CI workflow to contain backend-ruff after validate" >&2
+        exit 1
+    fi
+
+    sed -i.bak '/^  backend-ruff:$/i\
+  sdd-lint:\
+    name: Project SDD Lint\
+    runs-on: ubuntu-24.04\
+    steps:\
+      - uses: actions/checkout@v5\
+      - name: Check project SDD governance\
+        run: scripts/check-sdd.sh
+' "$ci"
+}
+
+ensure_independent_sdd_lint_job_after_validate() {
+    local ci="$1"
+
+    if [[ "$(count_top_level_sdd_lint_jobs "$ci")" -eq 0 ]]; then
+        insert_independent_sdd_lint_job_after_validate "$ci"
+    fi
+}
+
+insert_sdd_lint_text_after_command() {
+    local ci="$1"
+    local text="$2"
+    local fragment
+
+    if [[ "$(grep -Ec '^        run: scripts/check-sdd\.sh$' "$ci")" -ne 1 ]]; then
+        echo "Expected copied CI workflow to contain one sdd-lint command step" >&2
+        exit 1
+    fi
+
+    fragment="$(mktemp "$TMP_ROOT/sdd-lint-fragment.XXXXXX")"
+    printf '%s\n' "$text" > "$fragment"
+    sed -i.bak "/^        run: scripts\\/check-sdd\\.sh$/r $fragment" "$ci"
+}
+
+extract_top_level_sdd_lint_job() {
+    local ci="$1"
+
+    awk '
+        /^jobs:[[:space:]]*(#.*)?$/ {
+            in_jobs = 1
+            next
+        }
+        in_jobs && /^[^[:space:]#]/ {
+            exit
+        }
+        in_jobs && /^  sdd-lint:[[:space:]]*(#.*)?$/ {
+            in_sdd_lint = 1
+            next
+        }
+        in_sdd_lint && /^  [^[:space:]#][^:]*:[[:space:]]*(#.*)?$/ {
+            exit
+        }
+        in_sdd_lint {
+            print
+        }
+    ' "$ci"
+}
+
+extract_sdd_lint_steps() {
+    local job="$1"
+
+    printf '%s\n' "$job" | awk '
+        /^    steps:[[:space:]]*(#.*)?$/ {
+            in_steps = 1
+            next
+        }
+        in_steps && /^    [^[:space:]#][^:]*:[[:space:]]*(#.*)?$/ {
+            exit
+        }
+        in_steps {
+            print
+        }
+    '
+}
+
+summarize_sdd_lint_steps() {
+    local steps="$1"
+
+    printf '%s\n' "$steps" | awk '
+        function clean_value(value) {
+            sub(/[[:space:]]+#.*$/, "", value)
+            return value
+        }
+        function record_uses(value) {
+            uses_count++
+            step_uses++
+            if (value == "actions/checkout@v5") {
+                checkout_count++
+            }
+        }
+        function record_run(value) {
+            run_count++
+            step_runs++
+            if (value == "scripts/check-sdd.sh") {
+                command_count++
+            }
+        }
+        function finish_step() {
+            if (step_count > 0 && step_uses > 0 && step_runs > 0) {
+                mixed_step_count++
+            }
+        }
+        /^      - / {
+            finish_step()
+            step_count++
+            step_uses = 0
+            step_runs = 0
+            if ($0 ~ /^      - uses:[[:space:]]*/) {
+                value = $0
+                sub(/^      - uses:[[:space:]]*/, "", value)
+                record_uses(clean_value(value))
+            } else if ($0 ~ /^      - run:[[:space:]]*/) {
+                value = $0
+                sub(/^      - run:[[:space:]]*/, "", value)
+                record_run(clean_value(value))
+            }
+            next
+        }
+        step_count > 0 && /^        uses:[[:space:]]*/ {
+            value = $0
+            sub(/^        uses:[[:space:]]*/, "", value)
+            record_uses(clean_value(value))
+            next
+        }
+        step_count > 0 && /^        run:[[:space:]]*/ {
+            value = $0
+            sub(/^        run:[[:space:]]*/, "", value)
+            record_run(clean_value(value))
+            next
+        }
+        END {
+            finish_step()
+            print step_count + 0 "|" checkout_count + 0 "|" command_count + 0 "|" uses_count + 0 "|" run_count + 0 "|" mixed_step_count + 0
+        }
+    '
+}
+
+workflow_has_path_filtered_push_or_pull_request() {
+    local ci="$1"
+
+    awk '
+        /^on:[[:space:]]*(#.*)?$/ {
+            in_on = 1
+            next
+        }
+        in_on && /^[^[:space:]#]/ {
+            exit
+        }
+        in_on && /^  (push|pull_request):/ {
+            in_trigger = 1
+            if ($0 ~ /paths(-ignore)?/) {
+                found = 1
+                exit
+            }
+            next
+        }
+        in_on && /^  [^[:space:]#][^:]*:[[:space:]]*(#.*)?$/ {
+            in_trigger = 0
+            next
+        }
+        in_on && in_trigger && /^    paths(-ignore)?:/ {
+            found = 1
+            exit
+        }
+        END {
+            exit(found ? 0 : 1)
+        }
+    ' "$ci"
+}
+
+assert_independent_sdd_lint_job() {
+    local ci="$1"
+    local command_count checkout_count job job_count mixed_step_count run_count step_count steps summary uses_count
+
+    job_count="$(count_top_level_sdd_lint_jobs "$ci")"
+    if [[ "$job_count" -ne 1 ]]; then
+        echo "Expected exactly one independent top-level sdd-lint job, found $job_count" >&2
+        return 1
+    fi
+
+    job="$(extract_top_level_sdd_lint_job "$ci")"
+    if workflow_has_path_filtered_push_or_pull_request "$ci"; then
+        echo "Project SDD Lint workflow must not filter push or pull_request by paths" >&2
+        return 1
+    fi
+    if ! printf '%s\n' "$job" | grep -Eq '^    name: Project SDD Lint[[:space:]]*(#.*)?$'; then
+        echo "Expected independent sdd-lint job to have display name: Project SDD Lint" >&2
+        return 1
+    fi
+    if printf '%s\n' "$job" | grep -Eq '^[[:space:]]+working-directory:'; then
+        echo "Independent sdd-lint job must run scripts/check-sdd.sh from the repository root" >&2
+        return 1
+    fi
+    if printf '%s\n' "$job" | grep -Eq '^    needs:'; then
+        echo "Independent sdd-lint job must not declare needs" >&2
+        return 1
+    fi
+    if printf '%s\n' "$job" | grep -Eqi '(^|[[:space:]])(npm|pnpm|yarn|bun|uv|pip|poetry)[[:space:]]+(ci|install|sync)([[:space:]]|$)'; then
+        echo "Independent sdd-lint job must not install dependencies" >&2
+        return 1
+    fi
+    if printf '%s\n' "$job" | grep -Eqi '(^|[[:space:]])openspec([[:space:]]|$)'; then
+        echo "Independent sdd-lint job must not run OpenSpec commands" >&2
+        return 1
+    fi
+    if printf '%s\n' "$job" | grep -Eqi 'dorny/paths-filter|paths-filter|^[[:space:]]+paths(-ignore)?:|^[[:space:]]+if:.*(path|change)'; then
+        echo "Independent sdd-lint job must not couple to path filtering" >&2
+        return 1
+    fi
+
+    steps="$(extract_sdd_lint_steps "$job")"
+    summary="$(summarize_sdd_lint_steps "$steps")"
+    IFS='|' read -r step_count checkout_count command_count uses_count run_count mixed_step_count <<< "$summary"
+
+    if [[ "$uses_count" -ne 1 || "$checkout_count" -ne 1 ]]; then
+        echo "Independent sdd-lint job must use exactly one actions/checkout@v5 step" >&2
+        return 1
+    fi
+    if [[ "$command_count" -ne 1 ]]; then
+        echo "Expected independent sdd-lint job to run scripts/check-sdd.sh from the repository root" >&2
+        return 1
+    fi
+    if [[ "$run_count" -ne 1 ]]; then
+        echo "Independent sdd-lint job must only run scripts/check-sdd.sh" >&2
+        return 1
+    fi
+    if [[ "$mixed_step_count" -ne 0 ]]; then
+        echo "Independent sdd-lint job must keep checkout and lint command in separate steps" >&2
+        return 1
+    fi
+    if [[ "$step_count" -ne 2 ]]; then
+        echo "Independent sdd-lint job must have exactly two steps: checkout and lint" >&2
+        return 1
+    fi
+}
+
+sdd_lint_checkout_has_full_history() {
+    local job="$1"
+
+    printf '%s\n' "$job" | awk '
+        /^      - / {
+            in_step = 1
+            checkout_step = 0
+            in_with = 0
+            if ($0 ~ /^      - uses:[[:space:]]*actions\/checkout@v5([[:space:]]*(#.*)?)?$/) {
+                checkout_step = 1
+            }
+            next
+        }
+        in_step && /^        uses:[[:space:]]*actions\/checkout@v5([[:space:]]*(#.*)?)?$/ {
+            checkout_step = 1
+            next
+        }
+        checkout_step && /^        with:[[:space:]]*(#.*)?$/ {
+            in_with = 1
+            next
+        }
+        checkout_step && in_with && /^          fetch-depth:[[:space:]]*(0|"0"|'\''0'\'')([[:space:]]*(#.*)?)?$/ {
+            full_history++
+        }
+        END {
+            exit !(full_history == 1)
+        }
+    '
+}
+
+assert_sdd_lint_ci_contract_rejected() {
+    local ci="$1"
+    local expected="$2"
+    local output status
+    output="$(mktemp "$TMP_ROOT/sdd-lint-ci.XXXXXX")"
+
+    if assert_independent_sdd_lint_job "$ci" >"$output" 2>&1; then
+        echo "Expected malformed sdd-lint CI job to be rejected" >&2
+        exit 1
+    else
+        status=$?
+    fi
+    if [[ "$status" -ne 1 ]]; then
+        echo "Expected malformed sdd-lint CI job to exit 1, got: $status" >&2
+        cat "$output" >&2
+        exit 1
+    fi
+    assert_contains "$output" "$expected"
+}
+
+test_check_sdd_ci_job_is_independent_for_after_validate_job() {
+    local ci duplicate_ci existing_ci extra_named_run_ci install_ci needs_ci openspec_ci root_command_ci setup_ci split_ci path_filter_ci workflow_path_filter_ci workflow_path_ignore_ci
+    ci="$(mktemp "$TMP_ROOT/ci-sdd-lint.XXXXXX")"
+    cp "$ROOT/.github/workflows/ci.yml" "$ci"
+    ensure_independent_sdd_lint_job_after_validate "$ci"
+    assert_independent_sdd_lint_job "$ci"
+
+    existing_ci="$(mktemp "$TMP_ROOT/ci-sdd-lint-existing.XXXXXX")"
+    cp "$ci" "$existing_ci"
+    ensure_independent_sdd_lint_job_after_validate "$existing_ci"
+    if [[ "$(count_top_level_sdd_lint_jobs "$existing_ci")" -ne 1 ]]; then
+        echo "Expected existing independent sdd-lint job fixture not to be duplicated" >&2
+        exit 1
+    fi
+    assert_independent_sdd_lint_job "$existing_ci"
+
+    duplicate_ci="$(mktemp "$TMP_ROOT/ci-sdd-lint-duplicate.XXXXXX")"
+    cp "$ci" "$duplicate_ci"
+    printf '\n  sdd-lint:\n    name: Duplicate Project SDD Lint\n' >> "$duplicate_ci"
+    assert_sdd_lint_ci_contract_rejected "$duplicate_ci" "Expected exactly one independent top-level sdd-lint job, found 2"
+
+    needs_ci="$(mktemp "$TMP_ROOT/ci-sdd-lint-needs.XXXXXX")"
+    cp "$ci" "$needs_ci"
+    sed -i.bak '/^  sdd-lint:$/a\
+    needs: validate
+' "$needs_ci"
+    assert_sdd_lint_ci_contract_rejected "$needs_ci" "Independent sdd-lint job must not declare needs"
+
+    install_ci="$(mktemp "$TMP_ROOT/ci-sdd-lint-install.XXXXXX")"
+    cp "$ci" "$install_ci"
+    insert_sdd_lint_text_after_command "$install_ci" $'      - name: Install dependencies\n        run: pnpm install --frozen-lockfile'
+    assert_sdd_lint_ci_contract_rejected "$install_ci" "Independent sdd-lint job must not install dependencies"
+
+    openspec_ci="$(mktemp "$TMP_ROOT/ci-sdd-lint-openspec.XXXXXX")"
+    cp "$ci" "$openspec_ci"
+    insert_sdd_lint_text_after_command "$openspec_ci" '      - run: openspec validate --changes --no-interactive'
+    assert_sdd_lint_ci_contract_rejected "$openspec_ci" "Independent sdd-lint job must not run OpenSpec commands"
+
+    path_filter_ci="$(mktemp "$TMP_ROOT/ci-sdd-lint-path-filter.XXXXXX")"
+    cp "$ci" "$path_filter_ci"
+    insert_sdd_lint_text_after_command "$path_filter_ci" '      - uses: dorny/paths-filter@v3'
+    assert_sdd_lint_ci_contract_rejected "$path_filter_ci" "Independent sdd-lint job must not couple to path filtering"
+
+    workflow_path_filter_ci="$(mktemp "$TMP_ROOT/ci-sdd-lint-workflow-path-filter.XXXXXX")"
+    cp "$ci" "$workflow_path_filter_ci"
+    sed -i.bak '/^  pull_request:$/a\
+    paths:\
+      - scripts/**
+' "$workflow_path_filter_ci"
+    assert_sdd_lint_ci_contract_rejected "$workflow_path_filter_ci" "Project SDD Lint workflow must not filter push or pull_request by paths"
+
+    workflow_path_ignore_ci="$(mktemp "$TMP_ROOT/ci-sdd-lint-workflow-path-ignore.XXXXXX")"
+    cp "$ci" "$workflow_path_ignore_ci"
+    sed -i.bak '/^  push:$/a\
+    paths-ignore:\
+      - docs/**
+' "$workflow_path_ignore_ci"
+    assert_sdd_lint_ci_contract_rejected "$workflow_path_ignore_ci" "Project SDD Lint workflow must not filter push or pull_request by paths"
+
+    root_command_ci="$(mktemp "$TMP_ROOT/ci-sdd-lint-root-command.XXXXXX")"
+    cp "$ci" "$root_command_ci"
+    insert_sdd_lint_text_after_command "$root_command_ci" $'    defaults:\n      run:\n        working-directory: backend'
+    assert_sdd_lint_ci_contract_rejected "$root_command_ci" "Independent sdd-lint job must run scripts/check-sdd.sh from the repository root"
+
+    setup_ci="$(mktemp "$TMP_ROOT/ci-sdd-lint-setup.XXXXXX")"
+    cp "$ci" "$setup_ci"
+    insert_sdd_lint_text_after_command "$setup_ci" '      - uses: actions/setup-node@v5'
+    assert_sdd_lint_ci_contract_rejected "$setup_ci" "Independent sdd-lint job must use exactly one actions/checkout@v5 step"
+
+    extra_named_run_ci="$(mktemp "$TMP_ROOT/ci-sdd-lint-extra-named-run.XXXXXX")"
+    cp "$ci" "$extra_named_run_ci"
+    insert_sdd_lint_text_after_command "$extra_named_run_ci" $'      - name: Prepare environment\n        run: echo extra setup'
+    assert_sdd_lint_ci_contract_rejected "$extra_named_run_ci" "Independent sdd-lint job must only run scripts/check-sdd.sh"
+
+    split_ci="$(mktemp "$TMP_ROOT/ci-sdd-lint-split.XXXXXX")"
+    cp "$ci" "$split_ci"
+    sed -i.bak '/^        run: scripts\/check-sdd\.sh$/d' "$split_ci"
+    cat >> "$split_ci" <<'YAML'
+  unrelated:
+    runs-on: ubuntu-24.04
+    steps:
+      - run: scripts/check-sdd.sh
+YAML
+    assert_sdd_lint_ci_contract_rejected "$split_ci" "Expected independent sdd-lint job to run scripts/check-sdd.sh from the repository root"
+
+}
+
+test_check_sdd_ci_job_is_independent() {
+    local ci
+
+    test_check_sdd_ci_job_is_independent_for_after_validate_job
+
+    ci="$(mktemp "$TMP_ROOT/ci-sdd-lint-missing.XXXXXX")"
+    cp "$ROOT/.github/workflows/ci.yml" "$ci"
+    assert_independent_sdd_lint_job "$ci"
 }
 
 INVENTORY_SENTINEL='design/system/screen-inventory.md is stale — run: node scripts/gen-screen-inventory.mjs'
@@ -389,6 +836,7 @@ BASELINE
     cat > "$repo/design/system/screen-inventory.md" <<'INVENTORY'
 # Synthetic screen inventory
 INVENTORY
+    cp "$ROOT/scripts/check-sdd.sh" "$repo/scripts/check-sdd.sh"
     write_inventory_generator_double "$repo"
 
     echo "$repo"
@@ -398,7 +846,7 @@ run_check_sdd_from() {
     local caller="$1"
     local repo="$2"
     shift 2
-    local command="$ROOT/scripts/check-sdd.sh"
+    local command="$repo/scripts/check-sdd.sh"
 
     if [[ ! -x "$command" ]]; then
         echo "Expected Project SDD lint command is missing: scripts/check-sdd.sh" >&2
@@ -412,6 +860,22 @@ run_check_sdd_from() {
 }
 
 run_check_sdd() {
+    local repo="$1"
+    shift
+    local command="$repo/scripts/check-sdd.sh"
+
+    if [[ ! -x "$command" ]]; then
+        echo "Expected Project SDD lint command is missing: scripts/check-sdd.sh" >&2
+        return 127
+    fi
+
+    (
+        cd "$TMP_ROOT"
+        "$command" "$@"
+    )
+}
+
+run_check_sdd_explicit() {
     local repo="$1"
     shift
 
@@ -487,27 +951,68 @@ assert_not_contains() {
     fi
 }
 
-assert_inventory_success() {
-    local repo="$1"
-    shift
+record_expected_lint_failure() {
+    local label="$1"
+    local repo="$2"
+    local rule="$3"
+    local path="$4"
     local output status
-    output="$(mktemp "$TMP_ROOT/check-sdd-inventory.XXXXXX")"
+    output="$(mktemp "$TMP_ROOT/check-sdd-final-high.XXXXXX")"
 
-    if run_check_sdd "$repo" "$@" >"$output" 2>&1; then
+    if run_check_sdd "$repo" >"$output" 2>&1; then
         status=0
     else
         status=$?
     fi
-    if [[ "$status" -ne 0 ]]; then
-        echo "Expected fresh inventory lint to exit 0, got: $status" >&2
+    if [[ "$status" -ne 1 ]] || ! grep -Fq "ERROR [$rule] $path:" "$output"; then
+        echo "RED_MISS [$label] expected $rule on $path with exit 1, got exit $status" >&2
         cat "$output" >&2
-        exit 1
+        return 1
     fi
-    assert_contains "$output" "Project SDD lint: 0 error(s)"
-    assert_not_contains "$output" "INVENTORY_FRESHNESS]"
-    assert_not_contains "$output" "INVENTORY_CHECK_CONFIG"
-    assert_not_contains "$output" "INVENTORY_FRESHNESS_UNVERIFIED"
-    assert_not_contains "$output" "RAW_FRESH_CHILD_OUTPUT"
+}
+
+record_expected_lint_success() {
+    local label="$1"
+    local repo="$2"
+    local excluded_rule="$3"
+    local output status
+    output="$(mktemp "$TMP_ROOT/check-sdd-final-control.XXXXXX")"
+
+    if run_check_sdd "$repo" >"$output" 2>&1; then
+        status=0
+    else
+        status=$?
+    fi
+    if [[ "$status" -ne 0 ]] || ! grep -Fq "Project SDD lint: 0 error(s)" "$output" || grep -Fq "ERROR [$excluded_rule]" "$output"; then
+        echo "CONTROL_FAILURE [$label] expected exit 0 without $excluded_rule, got exit $status" >&2
+        cat "$output" >&2
+        return 1
+    fi
+}
+
+assert_inventory_success() {
+    local repo="$1"
+    shift
+    local output runner status
+
+    for runner in run_check_sdd run_check_sdd_explicit; do
+        output="$(mktemp "$TMP_ROOT/check-sdd-inventory.XXXXXX")"
+        if "$runner" "$repo" "$@" >"$output" 2>&1; then
+            status=0
+        else
+            status=$?
+        fi
+        if [[ "$status" -ne 0 ]]; then
+            echo "Expected fresh inventory lint to exit 0, got: $status" >&2
+            cat "$output" >&2
+            exit 1
+        fi
+        assert_contains "$output" "Project SDD lint: 0 error(s)"
+        assert_not_contains "$output" "INVENTORY_FRESHNESS]"
+        assert_not_contains "$output" "INVENTORY_CHECK_CONFIG"
+        assert_not_contains "$output" "INVENTORY_FRESHNESS_UNVERIFIED"
+        assert_not_contains "$output" "RAW_FRESH_CHILD_OUTPUT"
+    done
 }
 
 assert_inventory_failure() {
@@ -517,31 +1022,33 @@ assert_inventory_failure() {
     local path="$4"
     local raw_child_text="$5"
     shift 5
-    local output status
-    output="$(mktemp "$TMP_ROOT/check-sdd-inventory.XXXXXX")"
+    local output runner status
 
-    if run_check_sdd "$repo" "$@" >"$output" 2>&1; then
-        status=0
-    else
-        status=$?
-    fi
-    if [[ "$status" -ne "$expected_status" ]]; then
-        echo "Expected inventory lint to exit $expected_status, got: $status" >&2
-        cat "$output" >&2
-        exit 1
-    fi
-    assert_contains "$output" "ERROR [$rule] $path:"
-    case "$rule" in
-        INVENTORY_FRESHNESS)
-            assert_not_contains "$output" "INVENTORY_CHECK_CONFIG"
-            ;;
-        INVENTORY_CHECK_CONFIG)
-            assert_not_contains "$output" "[INVENTORY_FRESHNESS]"
-            ;;
-    esac
-    assert_not_contains "$output" "$raw_child_text"
-    assert_not_contains "$output" "$INVENTORY_SENTINEL"
-    assert_not_contains "$output" "INVENTORY_FRESHNESS_UNVERIFIED"
+    for runner in run_check_sdd run_check_sdd_explicit; do
+        output="$(mktemp "$TMP_ROOT/check-sdd-inventory.XXXXXX")"
+        if "$runner" "$repo" "$@" >"$output" 2>&1; then
+            status=0
+        else
+            status=$?
+        fi
+        if [[ "$status" -ne "$expected_status" ]]; then
+            echo "Expected inventory lint to exit $expected_status, got: $status" >&2
+            cat "$output" >&2
+            exit 1
+        fi
+        assert_contains "$output" "ERROR [$rule] $path:"
+        case "$rule" in
+            INVENTORY_FRESHNESS)
+                assert_not_contains "$output" "INVENTORY_CHECK_CONFIG"
+                ;;
+            INVENTORY_CHECK_CONFIG)
+                assert_not_contains "$output" "[INVENTORY_FRESHNESS]"
+                ;;
+        esac
+        assert_not_contains "$output" "$raw_child_text"
+        assert_not_contains "$output" "$INVENTORY_SENTINEL"
+        assert_not_contains "$output" "INVENTORY_FRESHNESS_UNVERIFIED"
+    done
 }
 
 test_check_sdd_passes_for_valid_repo() {
@@ -848,6 +1355,217 @@ test_check_sdd_inventory_uses_target_root_generator() {
     assert_not_contains "$output" "RAW_FRESH_CHILD_OUTPUT"
 }
 
+test_check_sdd_rejects_foreign_root_generator_without_side_effects() {
+    local marker output repo status
+    repo="$(make_sdd_repo)"
+    marker="$TMP_ROOT/foreign-root-generator.marker"
+    output="$(mktemp "$TMP_ROOT/check-sdd-foreign-root.XXXXXX")"
+
+    cat > "$repo/scripts/gen-screen-inventory.mjs" <<'GENERATOR'
+import fs from 'node:fs';
+
+const marker = process.env.SDD_FOREIGN_ROOT_MARKER;
+if (!marker) {
+  process.stderr.write('RAW_HOSTILE_FOREIGN_GENERATOR_MISSING_MARKER\n');
+  process.exit(9);
+}
+
+fs.writeFileSync(marker, 'foreign generator executed\n');
+process.stdout.write('RAW_HOSTILE_FOREIGN_GENERATOR_OUTPUT\n');
+process.exit(0);
+GENERATOR
+
+    if SDD_FOREIGN_ROOT_MARKER="$marker" "$ROOT/scripts/check-sdd.sh" "$repo" >"$output" 2>&1; then
+        status=0
+    else
+        status=$?
+    fi
+    if [[ -e "$marker" ]]; then
+        echo "Expected foreign-root inventory generator not to create a marker" >&2
+        cat "$output" >&2
+        exit 1
+    fi
+    if [[ "$status" -ne 2 ]]; then
+        echo "Expected foreign-root inventory lint to exit 2, got: $status" >&2
+        cat "$output" >&2
+        exit 1
+    fi
+    assert_contains "$output" "ERROR [INVENTORY_CHECK_CONFIG] scripts/gen-screen-inventory.mjs:"
+    assert_not_contains "$output" "RAW_HOSTILE_FOREIGN_GENERATOR_OUTPUT"
+    assert_not_contains "$output" "RAW_HOSTILE_FOREIGN_GENERATOR_MISSING_MARKER"
+    assert_contains "$output" "Project SDD lint: 1 error(s), 3 warning(s)"
+}
+
+record_control_path_mismatch() {
+    local mismatches="$1"
+    local label="$2"
+    local message="$3"
+
+    printf 'RED [%s]: %s\n' "$label" "$message" >> "$mismatches"
+}
+
+check_control_path_rejection() {
+    local label="$1"
+    local repo="$2"
+    local marker="$3"
+    local unsafe_control="$4"
+    local results="$5"
+    local mismatches="$6"
+    local diagnostic='ERROR [SCANNER_CONFIG] .: repository paths containing control characters are unsupported'
+    local control_echo='not-applicable' diagnostic_seen='no' error_count marker_echo='no' output status summary
+
+    output="$(mktemp "$TMP_ROOT/check-sdd-control-path.XXXXXX")"
+    if run_check_sdd "$repo" >"$output" 2>&1; then
+        status=0
+    else
+        status=$?
+    fi
+
+    if grep -Fq "$diagnostic" "$output"; then
+        diagnostic_seen='yes'
+    fi
+    if grep -Fq "$marker" "$output"; then
+        marker_echo='yes'
+    fi
+    if [[ -n "$unsafe_control" ]]; then
+        control_echo='no'
+        if grep -Fq "$unsafe_control" "$output"; then
+            control_echo='yes'
+        fi
+    fi
+    error_count="$(grep -Fc 'ERROR [' "$output" || true)"
+    summary="$(grep -F 'Project SDD lint:' "$output" | tail -n 1 || true)"
+    printf 'Control-path row %s: status=%s diagnostic=%s marker_echo=%s control_echo=%s summary=%s\n' \
+        "$label" "$status" "$diagnostic_seen" "$marker_echo" "$control_echo" "${summary:-missing}" >> "$results"
+
+    if [[ "$status" -ne 2 ]]; then
+        record_control_path_mismatch "$mismatches" "$label" \
+            "expected exit 2, observed $status (control-character preflight absent or bypassed)"
+    fi
+    if [[ "$diagnostic_seen" != 'yes' ]]; then
+        record_control_path_mismatch "$mismatches" "$label" \
+            'missing exact SCANNER_CONFIG diagnostic at safe path .'
+    fi
+    if [[ "$marker_echo" != 'no' ]]; then
+        record_control_path_mismatch "$mismatches" "$label" \
+            "unsafe pathname marker was rendered: $marker"
+    fi
+    if [[ "$control_echo" == 'yes' ]]; then
+        record_control_path_mismatch "$mismatches" "$label" \
+            'raw filename control character was rendered'
+    fi
+    if [[ "$error_count" -ne 1 ]]; then
+        record_control_path_mismatch "$mismatches" "$label" \
+            "expected one scanner-configuration error, observed $error_count error diagnostics"
+    fi
+    if grep -Fq 'ERROR [RETIRED_COMMAND]' "$output"; then
+        record_control_path_mismatch "$mismatches" "$label" \
+            'retired-guidance collector consumed the unsafe pathname before rejection'
+    fi
+    if [[ "$summary" != 'Project SDD lint: 1 error(s), 0 warning(s)' ]]; then
+        record_control_path_mismatch "$mismatches" "$label" \
+            "summary did not prove rejection before downstream collectors: ${summary:-missing}"
+    fi
+}
+
+check_normal_space_path_control() {
+    local repo="$1"
+    local results="$2"
+    local mismatches="$3"
+    local output status summary
+
+    output="$(mktemp "$TMP_ROOT/check-sdd-space-path.XXXXXX")"
+    if run_check_sdd "$repo" >"$output" 2>&1; then
+        status=0
+    else
+        status=$?
+    fi
+    summary="$(grep -F 'Project SDD lint:' "$output" | tail -n 1 || true)"
+    printf 'Control-path row ordinary-space: status=%s diagnostic=%s summary=%s\n' \
+        "$status" "$(grep -Fq 'SCANNER_CONFIG' "$output" && printf yes || printf no)" "${summary:-missing}" >> "$results"
+
+    if [[ "$status" -ne 0 ]]; then
+        record_control_path_mismatch "$mismatches" ordinary-space \
+            "expected exit 0 for an ordinary-space pathname, observed $status"
+    fi
+    if grep -Fq 'SCANNER_CONFIG' "$output"; then
+        record_control_path_mismatch "$mismatches" ordinary-space \
+            'ordinary-space pathname was rejected as scanner configuration'
+    fi
+    if [[ "$summary" != 'Project SDD lint: 0 error(s), 3 warning(s)' ]]; then
+        record_control_path_mismatch "$mismatches" ordinary-space \
+            "ordinary Project SDD lint summary changed: ${summary:-missing}"
+    fi
+}
+
+test_check_sdd_rejects_control_character_paths_before_scanning() {
+    local change_dir mismatches normal_path repo results spec_dir symlink_target unsafe_path
+    results="$(mktemp "$TMP_ROOT/control-path-results.XXXXXX")"
+    mismatches="$(mktemp "$TMP_ROOT/control-path-mismatches.XXXXXX")"
+
+    repo="$(make_sdd_repo)"
+    unsafe_path="$repo/.claude/agents/CONTROL_CONSUMER_NEWLINE_MARKER"$'\n'"guidance.md"
+    printf '# Unsafe consumer\n\nRun npm test before review.\n' > "$unsafe_path"
+    check_control_path_rejection consumer-newline "$repo" CONTROL_CONSUMER_NEWLINE_MARKER '' "$results" "$mismatches"
+
+    repo="$(make_sdd_repo)"
+    unsafe_path="$repo/.claude/agents/CONTROL_CONSUMER_TAB_MARKER"$'\t'"guidance.md"
+    printf '# Unsafe consumer\n\nRun npm test before review.\n' > "$unsafe_path"
+    check_control_path_rejection consumer-tab "$repo" CONTROL_CONSUMER_TAB_MARKER $'\t' "$results" "$mismatches"
+
+    repo="$(make_sdd_repo)"
+    unsafe_path="$repo/.claude/agents/CONTROL_CONSUMER_CR_MARKER"$'\r'"guidance.md"
+    printf '# Unsafe consumer\n\nRun npm test before review.\n' > "$unsafe_path"
+    check_control_path_rejection consumer-carriage-return "$repo" CONTROL_CONSUMER_CR_MARKER $'\r' "$results" "$mismatches"
+
+    repo="$(make_sdd_repo)"
+    spec_dir="002-CONTROL_SPEC_NEWLINE_MARKER"$'\n'"feature"
+    mkdir -p "$repo/specs/dataset/$spec_dir"
+    cat > "$repo/specs/dataset/$spec_dir/spec.md" <<'SPEC'
+# Unsafe canonical spec path fixture
+
+## 功能目標
+
+Exercise canonical spec discovery.
+
+## 規格相依性
+
+None.
+
+### FR-001
+### SC-001
+### AC-1.1
+SPEC
+    printf '| dataset-002 | Unsafe path fixture | dataset | `spec-ready` | `feat/dataset/002-path-fixture` | fixture |\n' >> "$repo/specs/STATUS.md"
+    check_control_path_rejection canonical-spec-newline "$repo" CONTROL_SPEC_NEWLINE_MARKER '' "$results" "$mismatches"
+
+    repo="$(make_sdd_repo)"
+    change_dir="CONTROL_CHANGE_NEWLINE_MARKER"$'\n'"change"
+    cp -R "$repo/openspec/changes/project-sdd-lint" "$repo/openspec/changes/$change_dir"
+    check_control_path_rejection active-change-newline "$repo" CONTROL_CHANGE_NEWLINE_MARKER '' "$results" "$mismatches"
+
+    repo="$(make_sdd_repo)"
+    symlink_target="$repo/symlink-targets/active-change"
+    mkdir -p "$repo/symlink-targets"
+    cp -R "$repo/openspec/changes/project-sdd-lint" "$symlink_target"
+    spec_dir="CONTROL_SYMLINK_DESCENDANT_MARKER"$'\n'"view"
+    mkdir -p "$symlink_target/specs/foundation/$spec_dir"
+    printf 'FR-999\n' > "$symlink_target/specs/foundation/$spec_dir/spec.md"
+    ln -s ../../symlink-targets/active-change "$repo/openspec/changes/safe-symlink-change"
+    check_control_path_rejection active-change-symlink-newline-descendant "$repo" CONTROL_SYMLINK_DESCENDANT_MARKER '' "$results" "$mismatches"
+
+    repo="$(make_sdd_repo)"
+    normal_path="$repo/.claude/agents/ordinary space guidance.md"
+    printf '# Ordinary consumer\n\nUse pnpm test for checks.\n' > "$normal_path"
+    check_normal_space_path_control "$repo" "$results" "$mismatches"
+
+    cat "$results" >&2
+    if [[ -s "$mismatches" ]]; then
+        cat "$mismatches" >&2
+        return 1
+    fi
+}
+
 test_check_sdd_fails_for_near_match_goal_heading() {
     local repo
     repo="$(make_sdd_repo)"
@@ -936,6 +1654,111 @@ test_check_sdd_fails_for_status_module_mismatch() {
     assert_command_fails_with "$repo" 1 "STATUS_ARTIFACT_SYNC" "specs/STATUS.md"
 }
 
+test_check_sdd_accepts_archived_canonical_spec_location() {
+    local repo
+    repo="$(make_sdd_repo)"
+    mkdir -p "$repo/specs/_archive/002-finished"
+    cat > "$repo/specs/_archive/002-finished/spec.md" <<'SPEC'
+# Archived dataset fixture
+
+## 功能目標
+
+Preserve a completed dataset feature contract.
+
+## 規格相依性
+
+None.
+
+### FR-001
+### SC-001
+### AC-1.1
+SPEC
+    printf '| dataset-002 | Finished dataset feature | dataset | `archived` | `main` | fixture |\n' >> "$repo/specs/STATUS.md"
+
+    assert_command_succeeds "$repo" --not-rule STATUS_ARTIFACT_SYNC
+}
+
+test_check_sdd_fails_when_archived_status_has_active_canonical_duplicate() {
+    local repo
+    repo="$(make_sdd_repo)"
+    mkdir -p \
+        "$repo/specs/_archive/002-finished" \
+        "$repo/specs/dataset/002-active-copy"
+    cat > "$repo/specs/_archive/002-finished/spec.md" <<'SPEC'
+# Archived dataset fixture
+
+## 功能目標
+
+Preserve the completed dataset feature contract.
+
+## 規格相依性
+
+None.
+
+### FR-001
+### SC-001
+### AC-1.1
+SPEC
+    cat > "$repo/specs/dataset/002-active-copy/spec.md" <<'SPEC'
+# Stale active dataset copy
+
+## 功能目標
+
+Expose a stale active copy of an archived feature.
+
+## 規格相依性
+
+None.
+
+### FR-001
+### SC-001
+### AC-1.1
+SPEC
+    printf '| dataset-002 | Finished dataset feature | dataset | `archived` | `main` | fixture |\n' >> "$repo/specs/STATUS.md"
+
+    assert_command_fails_with "$repo" 1 "STATUS_ARTIFACT_SYNC" "specs/dataset/002-active-copy/spec.md"
+}
+
+test_check_sdd_fails_for_spec_ready_spec_without_required_ids() {
+    local repo
+    repo="$(make_sdd_repo)"
+    mkdir -p "$repo/specs/dataset/002-new-feature"
+    cat > "$repo/specs/dataset/002-new-feature/spec.md" <<'SPEC'
+# New dataset feature
+
+## 功能目標
+
+Define a new dataset behavior before proposal.
+
+## 規格相依性
+
+None.
+SPEC
+    printf '| dataset-002 | New dataset feature | dataset | `spec-ready` | `feat/dataset/002-new-feature` | fixture |\n' >> "$repo/specs/STATUS.md"
+
+    assert_command_fails_with "$repo" 1 "SPEC_REQUIRED_IDS" "specs/dataset/002-new-feature/spec.md"
+}
+
+test_check_sdd_fails_for_spec_ready_near_match_goal_heading_without_ids() {
+    local repo
+    repo="$(make_sdd_repo)"
+    mkdir -p "$repo/specs/dataset/002-near-match-heading"
+    cat > "$repo/specs/dataset/002-near-match-heading/spec.md" <<'SPEC'
+# New dataset feature with a near-match heading
+
+## 功能目標 BAD
+
+Define a new dataset behavior before proposal.
+
+## 規格相依性
+
+None.
+SPEC
+    printf '| dataset-002 | Near-match dataset feature | dataset | `spec-ready` | `feat/dataset/002-near-match-heading` | fixture |\n' >> "$repo/specs/STATUS.md"
+
+    assert_command_fails_with "$repo" 1 "SPEC_REQUIRED_HEADING" "specs/dataset/002-near-match-heading/spec.md"
+}
+
 test_check_sdd_rejects_arbitrary_dependency_heading_suffix() {
     local repo
     repo="$(make_sdd_repo)"
@@ -959,6 +1782,186 @@ test_check_sdd_rejects_suffixed_source_verify_id() {
     printf '\nFR-013B\n' >> "$repo/openspec/changes/project-sdd-lint/design.md"
 
     assert_command_fails_with "$repo" 1 "SOURCE_VERIFY_ID" "openspec/changes/project-sdd-lint/design.md" --not-rule SPEC_REQUIRED_IDS
+}
+
+test_check_sdd_requires_exact_multisegment_source_verify_ids() {
+    local repo
+
+    repo="$(make_sdd_repo)"
+    printf '\n### AC-1.1.9\n' >> "$repo/specs/foundation/001-project-sdd-lint/spec.md"
+    printf '\nAC-1.1.9\n' >> "$repo/openspec/changes/project-sdd-lint/design.md"
+
+    assert_command_succeeds "$repo"
+
+    repo="$(make_sdd_repo)"
+    printf '\nAC-1.1.9\n' >> "$repo/openspec/changes/project-sdd-lint/design.md"
+
+    assert_command_fails_with "$repo" 1 "SOURCE_VERIFY_ID" "openspec/changes/project-sdd-lint/design.md"
+}
+
+test_check_sdd_requires_one_unconsumed_red_per_green() {
+    local repo
+
+    repo="$(make_sdd_repo)"
+    printf '\n- [ ] 1.3 Red contract in `scripts/second-tests.sh`. [@senior-qa]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+    printf -- '- [ ] 1.4 Green command in `scripts/second.sh`. [@senior-devops]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+
+    assert_command_succeeds "$repo"
+
+    repo="$(make_sdd_repo)"
+    printf '\n- [ ] 1.3 Green command in `scripts/second.sh`. [@senior-devops]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+
+    assert_command_fails_with "$repo" 1 "TASK_RED_OWNER" "openspec/changes/project-sdd-lint/tasks.md"
+}
+
+test_check_sdd_rejects_prescriptive_example_retired_command() {
+    local repo
+
+    repo="$(make_sdd_repo)"
+    printf '\nHistorical retired example，例如 do not run npm test before review.\n' >> "$repo/AGENTS.md"
+
+    assert_command_succeeds "$repo" --not-rule RETIRED_COMMAND
+
+    repo="$(make_sdd_repo)"
+    printf '\nFor active checks，例如 run npm test before review.\n' >> "$repo/AGENTS.md"
+
+    assert_command_fails_with "$repo" 1 "RETIRED_COMMAND" "AGENTS.md"
+}
+
+test_check_sdd_scans_symlinked_active_change_consumers() {
+    local change_target repo
+
+    repo="$(make_sdd_repo)"
+    change_target="$repo/openspec/project-sdd-lint-target"
+    mv "$repo/openspec/changes/project-sdd-lint" "$change_target"
+    ln -s ../project-sdd-lint-target "$repo/openspec/changes/project-sdd-lint"
+
+    assert_command_succeeds "$repo"
+
+    printf '\nRun npm run lint before applying.\n' >> "$change_target/design.md"
+
+    assert_command_fails_with "$repo" 1 "RETIRED_COMMAND" "openspec/changes/project-sdd-lint/design.md"
+}
+
+test_check_sdd_does_not_consume_red_mentioning_paired_green() {
+    local repo
+
+    repo="$(make_sdd_repo)"
+    sed -i.bak 's/Red contract in `scripts\/speckit-tests.sh`/Red contract before paired Green in `scripts\/speckit-tests.sh`/' "$repo/openspec/changes/project-sdd-lint/tasks.md"
+
+    assert_command_succeeds "$repo" --not-rule TASK_RED_OWNER
+}
+
+test_check_sdd_rejects_nonhistorical_active_retired_command() {
+    local repo
+
+    repo="$(make_sdd_repo)"
+    printf '\nThis is non-historical active guidance: run npm test before review.\n' >> "$repo/AGENTS.md"
+
+    assert_command_fails_with "$repo" 1 "RETIRED_COMMAND" "AGENTS.md"
+}
+
+test_check_sdd_requires_explicit_retired_command_context() {
+    local repo
+
+    repo="$(make_sdd_repo)"
+    printf '\nThis command is retired; do not run npm test before review.\n' >> "$repo/AGENTS.md"
+
+    assert_command_succeeds "$repo" --not-rule RETIRED_COMMAND
+
+    repo="$(make_sdd_repo)"
+    printf '\nThis command is not retired: run npm test before review.\n' >> "$repo/AGENTS.md"
+
+    assert_command_fails_with "$repo" 1 "RETIRED_COMMAND" "AGENTS.md"
+
+    repo="$(make_sdd_repo)"
+    printf '\nFor changelog validation, run npm test before review.\n' >> "$repo/AGENTS.md"
+
+    assert_command_fails_with "$repo" 1 "RETIRED_COMMAND" "AGENTS.md"
+}
+
+test_check_sdd_classifies_retired_commands_per_clause() {
+    local repo
+
+    repo="$(make_sdd_repo)"
+    printf '\nDo not run npm test before review.\n' >> "$repo/AGENTS.md"
+
+    assert_command_succeeds "$repo" --not-rule RETIRED_COMMAND
+
+    repo="$(make_sdd_repo)"
+    printf '\n禁止執行 npm test。\n' >> "$repo/AGENTS.md"
+
+    assert_command_succeeds "$repo" --not-rule RETIRED_COMMAND
+
+    repo="$(make_sdd_repo)"
+    printf '\nDo not run npm test in CI; run npm test locally.\n' >> "$repo/AGENTS.md"
+
+    assert_command_fails_with "$repo" 1 "RETIRED_COMMAND" "AGENTS.md"
+
+    repo="$(make_sdd_repo)"
+    printf '\n這不是歷史範例，請執行 npm test。\n' >> "$repo/AGENTS.md"
+
+    assert_command_fails_with "$repo" 1 "RETIRED_COMMAND" "AGENTS.md"
+}
+
+test_check_sdd_scans_symlinked_agents_consumers() {
+    local agents_target repo
+
+    repo="$(make_sdd_repo)"
+    agents_target="$repo/.claude/agents-target"
+    mv "$repo/.claude/agents" "$agents_target"
+    ln -s agents-target "$repo/.claude/agents"
+
+    assert_command_succeeds "$repo"
+
+    printf '\nRun npm test before review.\n' >> "$agents_target/senior-qa.md"
+
+    assert_command_fails_with "$repo" 1 "RETIRED_COMMAND" ".claude/agents/senior-qa.md"
+}
+
+test_check_sdd_rejects_control_character_descendant_in_symlinked_agents_root() {
+    local agents_target repo unsafe_path
+
+    repo="$(make_sdd_repo)"
+    agents_target="$repo/.claude/agents-target"
+    mv "$repo/.claude/agents" "$agents_target"
+    ln -s agents-target "$repo/.claude/agents"
+    unsafe_path="$agents_target/CONTROL_SYMLINKED_AGENTS_NEWLINE_MARKER"$'\n'"guidance.md"
+    printf '# Unsafe linked guidance\n\nRun npm test before review.\n' > "$unsafe_path"
+
+    assert_command_fails_with "$repo" 2 "SCANNER_CONFIG" "."
+}
+
+test_check_sdd_uses_parsed_action_artifacts_for_task_ownership() {
+    local repo
+
+    repo="$(make_sdd_repo)"
+    printf '\n- [ ] 1.3 Modify `scripts/owned.sh`. [@main]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+
+    assert_command_fails_with "$repo" 1 "TASK_FILE_OWNER" "openspec/changes/project-sdd-lint/tasks.md"
+
+    repo="$(make_sdd_repo)"
+    printf '\n- [ ] 1.3 Run `bash -n`; modify `scripts/owned.sh`. [@main]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+
+    assert_command_fails_with "$repo" 1 "TASK_FILE_OWNER" "openspec/changes/project-sdd-lint/tasks.md"
+}
+
+test_check_sdd_requires_all_red_tasks_paired_before_eof() {
+    local repo
+
+    repo="$(make_sdd_repo)"
+    assert_command_succeeds "$repo"
+
+    repo="$(make_sdd_repo)"
+    printf '\n- [ ] 1.3 Red contract in `scripts/second-tests.sh`. [@senior-qa]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+    printf -- '- [ ] 1.4 Green command in `scripts/second.sh`. [@senior-devops]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+
+    assert_command_succeeds "$repo"
+
+    repo="$(make_sdd_repo)"
+    printf '\n- [ ] 1.3 Red contract in `scripts/unpaired-tests.sh`. [@senior-qa]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+
+    assert_command_fails_with "$repo" 1 "TASK_RED_OWNER" "openspec/changes/project-sdd-lint/tasks.md"
 }
 
 test_check_sdd_rejects_retired_command_in_active_openspec_config() {
@@ -1045,8 +2048,302 @@ test_check_sdd_accepts_non_shell_red_task_with_qa_owner() {
     local repo
     repo="$(make_sdd_repo)"
     printf '\n- [ ] 1.3 Red backend regression in `backend/tests/test_sdd_lint.py`. [@senior-qa]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+    printf -- '- [ ] 1.4 Green backend implementation in `backend/app/sdd_lint.py`. [@main]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
 
     assert_command_succeeds "$repo"
+}
+
+test_check_sdd_ci_checkout_fetches_full_history() {
+    local ci failures job
+    failures=0
+    ci="$ROOT/.github/workflows/ci.yml"
+
+    if ! assert_independent_sdd_lint_job "$ci"; then
+        echo "CONTROL_FAILURE [ci-full-history] sdd-lint must remain an independent checkout-and-lint job" >&2
+        failures=$((failures + 1))
+    fi
+    job="$(extract_top_level_sdd_lint_job "$ci")"
+    if ! sdd_lint_checkout_has_full_history "$job"; then
+        echo "RED_MISS [ci-full-history] actions/checkout@v5 must set fetch-depth: 0 on its checkout step" >&2
+        failures=$((failures + 1))
+    fi
+
+    [[ "$failures" -eq 0 ]]
+}
+
+test_check_sdd_rejects_punctuated_retired_commands() {
+    local failures repo
+    failures=0
+
+    repo="$(make_sdd_repo)"
+    printf '\nRun npm test.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_failure "retired-period" "$repo" "RETIRED_COMMAND" "AGENTS.md"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nRun `npm test`.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_failure "retired-backtick" "$repo" "RETIRED_COMMAND" "AGENTS.md"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nDo not run npm test before review. Run npm test locally.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_failure "retired-mixed-sentence" "$repo" "RETIRED_COMMAND" "AGENTS.md"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nDo not run npm test.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_success "retired-negative-control" "$repo" "RETIRED_COMMAND"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nRun pnpm test.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_success "retired-pnpm-control" "$repo" "RETIRED_COMMAND"; then failures=$((failures + 1)); fi
+
+    [[ "$failures" -eq 0 ]]
+}
+
+test_check_sdd_ignores_fenced_governance_spoofs() {
+    local failures repo
+    failures=0
+
+    repo="$(make_sdd_repo)"
+    sed -i.bak '/^## 功能目標$/,/^## 規格相依性$/ {
+        /^## 規格相依性$/!d
+    }' "$repo/specs/foundation/001-project-sdd-lint/spec.md"
+    cat >> "$repo/specs/foundation/001-project-sdd-lint/spec.md" <<'SPEC_FENCE'
+
+```markdown
+## 功能目標
+
+This fenced example is not a canonical section.
+```
+SPEC_FENCE
+    if ! record_expected_lint_failure "fenced-required-heading" "$repo" "SPEC_REQUIRED_HEADING" "specs/foundation/001-project-sdd-lint/spec.md"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    sed -i.bak '/^| foundation-001 |/d' "$repo/specs/STATUS.md"
+    cat >> "$repo/specs/STATUS.md" <<'STATUS_FENCE'
+
+```markdown
+| foundation-001 | Project SDD lint | foundation | `in-progress` | `feat/project-sdd-lint` | fenced spoof |
+```
+STATUS_FENCE
+    if ! record_expected_lint_failure "fenced-status-row" "$repo" "STATUS_ARTIFACT_SYNC" "specs/foundation/001-project-sdd-lint/spec.md"; then failures=$((failures + 1)); fi
+
+    [[ "$failures" -eq 0 ]]
+}
+
+test_check_sdd_rejects_positive_actions_around_negative_clause() {
+    local failures repo
+    failures=0
+
+    repo="$(make_sdd_repo)"
+    printf '\n- [ ] 1.3 Modify `scripts/a.sh`, do not modify `scripts/b.sh`; modify `scripts/c.sh`. [@senior-devops]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+    if ! record_expected_lint_failure "mixed-task-action" "$repo" "TASK_EXCEPTION" "openspec/changes/project-sdd-lint/tasks.md"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\n- [ ] 1.3 Do not modify `scripts/b.sh`. [@senior-devops]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+    if ! record_expected_lint_success "negative-task-action-control" "$repo" "TASK_EXCEPTION"; then failures=$((failures + 1)); fi
+
+    [[ "$failures" -eq 0 ]]
+}
+
+test_check_sdd_rejects_remaining_retired_punctuation_boundaries() {
+    local failures repo
+    failures=0
+
+    repo="$(make_sdd_repo)"
+    printf '\nRun npm test:\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_failure "retired-colon" "$repo" "RETIRED_COMMAND" "AGENTS.md"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nRun (npm test) before review.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_failure "retired-parenthesis" "$repo" "RETIRED_COMMAND" "AGENTS.md"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nDo not run npm test! Run npm test locally.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_failure "retired-exclamation-clause" "$repo" "RETIRED_COMMAND" "AGENTS.md"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nDo not run npm test, run npm test locally.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_failure "retired-comma-clause" "$repo" "RETIRED_COMMAND" "AGENTS.md"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nDo not run npm test!\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_success "retired-exclamation-negative-control" "$repo" "RETIRED_COMMAND"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nDo not run npm test! Do not run npm test locally.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_success "retired-two-prohibitions-control" "$repo" "RETIRED_COMMAND"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nRun pnpm test: before review.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_success "retired-pnpm-punctuation-control" "$repo" "RETIRED_COMMAND"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nRun npm testing: before review.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_success "retired-token-boundary-control" "$repo" "RETIRED_COMMAND"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nRun npm test;echo done.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_failure "retired-semicolon-no-space" "$repo" "RETIRED_COMMAND" "AGENTS.md"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nRun npm test&&echo done.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_failure "retired-shell-and-no-space" "$repo" "RETIRED_COMMAND" "AGENTS.md"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nRun (npm test)before review.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_failure "retired-parenthesis-no-space" "$repo" "RETIRED_COMMAND" "AGENTS.md"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nDo not run npm test,run npm test locally.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_failure "retired-comma-clause-no-space" "$repo" "RETIRED_COMMAND" "AGENTS.md"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nRun pnpm test;echo done.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_success "retired-pnpm-no-space-control" "$repo" "RETIRED_COMMAND"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nDo not run npm test,do not run npm test locally.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_success "retired-two-prohibitions-no-space-control" "$repo" "RETIRED_COMMAND"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nDo not run npm test.Run npm test locally.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_failure "retired-period-clause-no-space" "$repo" "RETIRED_COMMAND" "AGENTS.md"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nDo not run npm test.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_success "retired-period-negative-control" "$repo" "RETIRED_COMMAND"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nRun npm test locally.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_failure "retired-standalone-active-control" "$repo" "RETIRED_COMMAND" "AGENTS.md"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nRun /speckit.analyze now.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_failure "retired-speckit-dotted-control" "$repo" "RETIRED_COMMAND" "AGENTS.md"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nDo not run /speckit.analyze.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_success "retired-speckit-negative-control" "$repo" "RETIRED_COMMAND"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nDo not run /speckit.analyze.Run /speckit.analyze now.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_failure "retired-speckit-mixed-no-space" "$repo" "RETIRED_COMMAND" "AGENTS.md"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nDo not run /ui-ux-pro-max.Run /ui-ux-pro-max now.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_failure "retired-uiux-mixed-no-space" "$repo" "RETIRED_COMMAND" "AGENTS.md"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nRun /ui-ux-pro-max now.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_failure "retired-uiux-active-control" "$repo" "RETIRED_COMMAND" "AGENTS.md"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nDo not run /ui-ux-pro-max.\n' >> "$repo/AGENTS.md"
+    if ! record_expected_lint_success "retired-uiux-negative-control" "$repo" "RETIRED_COMMAND"; then failures=$((failures + 1)); fi
+
+    [[ "$failures" -eq 0 ]]
+}
+
+test_check_sdd_respects_commonmark_fence_indentation() {
+    local closer_indent failures repo
+    failures=0
+
+    repo="$(make_sdd_repo)"
+    sed -i.bak '/^## 功能目標$/,/^## 規格相依性$/ {
+        /^## 規格相依性$/!d
+    }' "$repo/specs/foundation/001-project-sdd-lint/spec.md"
+    cat >> "$repo/specs/foundation/001-project-sdd-lint/spec.md" <<'BACKTICK_FALSE_CLOSER'
+
+```markdown
+    ```
+## 功能目標
+
+This heading remains inside the valid CommonMark fence.
+```
+BACKTICK_FALSE_CLOSER
+    if ! record_expected_lint_failure "commonmark-backtick-false-closer" "$repo" "SPEC_REQUIRED_HEADING" "specs/foundation/001-project-sdd-lint/spec.md"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    sed -i.bak '/^## 功能目標$/,/^## 規格相依性$/ {
+        /^## 規格相依性$/!d
+    }' "$repo/specs/foundation/001-project-sdd-lint/spec.md"
+    cat >> "$repo/specs/foundation/001-project-sdd-lint/spec.md" <<'TILDE_FALSE_CLOSER'
+
+~~~markdown
+    ~~~
+## 功能目標
+
+This heading remains inside the valid CommonMark fence.
+~~~
+TILDE_FALSE_CLOSER
+    if ! record_expected_lint_failure "commonmark-tilde-false-closer" "$repo" "SPEC_REQUIRED_HEADING" "specs/foundation/001-project-sdd-lint/spec.md"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    sed -i.bak '/^| foundation-001 |/d' "$repo/specs/STATUS.md"
+    cat >> "$repo/specs/STATUS.md" <<'STATUS_FALSE_CLOSER'
+
+```markdown
+    ```
+| foundation-001 | Project SDD lint | foundation | `in-progress` | `feat/project-sdd-lint` | fenced spoof |
+```
+STATUS_FALSE_CLOSER
+    if ! record_expected_lint_failure "commonmark-status-false-closer" "$repo" "STATUS_ARTIFACT_SYNC" "specs/foundation/001-project-sdd-lint/spec.md"; then failures=$((failures + 1)); fi
+
+    for closer_indent in '' ' ' '  ' '   '; do
+        repo="$(make_sdd_repo)"
+        sed -i.bak '/^## 功能目標$/,/^## 規格相依性$/ {
+            /^## 規格相依性$/!d
+        }' "$repo/specs/foundation/001-project-sdd-lint/spec.md"
+        printf '\n```markdown\nExample content.\n%s```\n## 功能目標\n\nThis is the real canonical goal.\n' "$closer_indent" >> "$repo/specs/foundation/001-project-sdd-lint/spec.md"
+        if ! record_expected_lint_success "commonmark-valid-backtick-closer-${#closer_indent}" "$repo" "SPEC_REQUIRED_HEADING"; then failures=$((failures + 1)); fi
+    done
+
+    repo="$(make_sdd_repo)"
+    sed -i.bak '/^| foundation-001 |/d' "$repo/specs/STATUS.md"
+    cat >> "$repo/specs/STATUS.md" <<'STATUS_VALID_CLOSER'
+
+~~~markdown
+Example content.
+  ~~~
+| foundation-001 | Project SDD lint | foundation | `in-progress` | `feat/project-sdd-lint` | real row |
+STATUS_VALID_CLOSER
+    if ! record_expected_lint_success "commonmark-valid-status-closer" "$repo" "STATUS_ARTIFACT_SYNC"; then failures=$((failures + 1)); fi
+
+    repo="$(make_sdd_repo)"
+    printf '\nOrdinary prose may mention ``` without opening a fenced block.\n' >> "$repo/specs/foundation/001-project-sdd-lint/spec.md"
+    if ! record_expected_lint_success "commonmark-inline-marker-control" "$repo" "SPEC_REQUIRED_HEADING"; then failures=$((failures + 1)); fi
+
+    [[ "$failures" -eq 0 ]]
+}
+
+test_check_sdd_collects_final_review_high_regressions() {
+    local failures family output status
+    failures=0
+
+    for family in \
+        test_check_sdd_ci_checkout_fetches_full_history \
+        test_check_sdd_rejects_punctuated_retired_commands \
+        test_check_sdd_ignores_fenced_governance_spoofs \
+        test_check_sdd_rejects_positive_actions_around_negative_clause \
+        test_check_sdd_rejects_remaining_retired_punctuation_boundaries \
+        test_check_sdd_respects_commonmark_fence_indentation
+    do
+        output="$(mktemp "$TMP_ROOT/final-review-high-family.XXXXXX")"
+        if "$family" >"$output" 2>&1; then
+            status=0
+        else
+            status=$?
+        fi
+        if [[ "$status" -ne 0 ]]; then
+            echo "FINAL_REVIEW_HIGH_FAMILY_MISS [$family]" >&2
+            cat "$output" >&2
+            failures=$((failures + 1))
+        fi
+    done
+
+    if [[ "$failures" -ne 0 ]]; then
+        echo "Expected all final-review High regressions to pass; observed $failures family miss(es)" >&2
+        return 1
+    fi
 }
 
 test_prerequisites_resolve_module_feature_paths
@@ -1054,6 +2351,8 @@ test_create_feature_creates_module_branch_spec_and_status
 test_setup_plan_and_status_update
 test_check_spec_artifacts_passes_for_synced_repo
 test_check_spec_artifacts_fails_for_untracked_spec
+test_check_spec_artifacts_accepts_archived_spec_location
+test_check_spec_artifacts_fails_for_archived_row_without_archived_spec
 test_ci_uses_pnpm_for_prototype_jobs
 test_check_sdd_passes_for_valid_repo
 test_check_sdd_uses_explicit_repo_root
@@ -1083,9 +2382,25 @@ test_check_sdd_fails_for_explicit_multi_file_task
 test_check_sdd_accepts_english_negative_task_clauses
 test_check_sdd_fails_without_exact_spec_declaration
 test_check_sdd_fails_for_status_module_mismatch
+test_check_sdd_accepts_archived_canonical_spec_location
+test_check_sdd_fails_for_spec_ready_spec_without_required_ids
+test_check_sdd_fails_when_archived_status_has_active_canonical_duplicate
+test_check_sdd_fails_for_spec_ready_near_match_goal_heading_without_ids
 test_check_sdd_rejects_arbitrary_dependency_heading_suffix
 test_check_sdd_accepts_approved_dependency_heading_suffix
 test_check_sdd_rejects_suffixed_source_verify_id
+test_check_sdd_requires_exact_multisegment_source_verify_ids
+test_check_sdd_requires_one_unconsumed_red_per_green
+test_check_sdd_rejects_prescriptive_example_retired_command
+test_check_sdd_scans_symlinked_active_change_consumers
+test_check_sdd_does_not_consume_red_mentioning_paired_green
+test_check_sdd_rejects_nonhistorical_active_retired_command
+test_check_sdd_requires_explicit_retired_command_context
+test_check_sdd_classifies_retired_commands_per_clause
+test_check_sdd_scans_symlinked_agents_consumers
+test_check_sdd_rejects_control_character_descendant_in_symlinked_agents_root
+test_check_sdd_uses_parsed_action_artifacts_for_task_ownership
+test_check_sdd_requires_all_red_tasks_paired_before_eof
 test_check_sdd_rejects_retired_command_in_active_openspec_config
 test_check_sdd_excludes_deprecated_task_template_retired_wording
 test_check_sdd_rejects_nonpath_exception_files_value
@@ -1095,5 +2410,9 @@ test_check_sdd_accepts_complete_exception_with_root_extensionless_path
 test_check_sdd_ignores_backticked_identifier_in_exception_outputs
 test_check_sdd_rejects_non_shell_red_task_with_non_qa_owner
 test_check_sdd_accepts_non_shell_red_task_with_qa_owner
+test_check_sdd_ci_job_is_independent
+test_check_sdd_rejects_foreign_root_generator_without_side_effects
+test_check_sdd_rejects_control_character_paths_before_scanning
+test_check_sdd_collects_final_review_high_regressions
 
 echo "speckit script tests passed"
