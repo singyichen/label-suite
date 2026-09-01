@@ -64,8 +64,8 @@
 
 - [ ] 2.1 撰寫 Red 測試覆蓋三向決策控件（`design/prototype/tests/annotation/issue-596-review-three-way.spec.ts`）：AC-3.51（通過／修正／無法判定三選一、無任何 `退回` 控件、再次點擊取消）、AC-3.53（`修正` 與 `無法判定` 理由必填，`通過` 不出理由欄，缺理由時送出被阻擋）。驗證：執行該檔全數失敗且失敗原因為介面仍為兩向決策 [@senior-qa]
 - [x] 2.2 於 `design/prototype/pages/annotation/annotation-workspace.html` 將審核列決策控件改為 `REVIEW_DECISIONS` 三向渲染（由常數推導，不硬編選項），移除全部 `退回` 控件與 FR-014I 之重標路徑，並依 FR-016A 於 `修正`／`無法判定` 展開必填理由欄。驗證：`pnpm playwright test tests/annotation/issue-596-review-three-way.spec.ts` 全綠 [@senior-frontend]
-- [ ] 2.3 撰寫 Red 測試覆蓋 AC-3.54 快捷鍵（`design/prototype/tests/annotation/issue-596-review-shortcuts.spec.ts`）：`A` 將全部 outKey 標為通過、`B` 標為無法判定、`R` 無任何作用；焦點在輸入控件或帶修飾鍵時不觸發；`role = annotator` 不觸發。驗證：執行該檔全數失敗且失敗原因為 `B` 未綁定、`R` 仍生效 [@senior-qa]
-- [ ] 2.4 於 `design/prototype/pages/annotation/annotation-workspace.html` 實作 FR-054 快捷鍵改版（`A` = 通過、`B` = 無法判定、移除 `R`；`修正` 不綁快捷鍵）。驗證：`pnpm playwright test tests/annotation/issue-596-review-shortcuts.spec.ts` 全綠 [@senior-frontend]
+- [x] 2.3 撰寫 Red 測試覆蓋 AC-3.54 快捷鍵（`design/prototype/tests/annotation/issue-596-review-shortcuts.spec.ts`）：`A` 將全部 outKey 標為通過、`B` 標為無法判定、`R` 無任何作用；焦點在輸入控件或帶修飾鍵時不觸發；`role = annotator` 不觸發。驗證：執行該檔全數失敗且失敗原因為 `B` 未綁定、`R` 仍生效 [@senior-qa]
+- [x] 2.4 於 `design/prototype/pages/annotation/annotation-workspace.html` 實作 FR-054 快捷鍵改版（`A` = 通過、`B` = 無法判定、移除 `R`；`修正` 不綁快捷鍵）。驗證：`pnpm playwright test tests/annotation/issue-596-review-shortcuts.spec.ts` 全綠 [@senior-frontend]
 - [ ] 2.5 修正群組 1.6 清單中因兩向決策移除而失效的既有測試斷言，並執行 `cd design/prototype && pnpm playwright test tests/annotation`。驗證：`tests/annotation` 全綠 [@senior-qa]
 
 ## 3. PR 群組 3 — 015 仲裁版面、定稿卡與脈絡橫幅（FR-053 定稿鎖定／FR-060／FR-061／FR-064／FR-070／FR-094）
@@ -109,7 +109,8 @@
 - [x] 5.2 於 `design/prototype/pages/task-management/task-detail.data.js` 改版規格常數與 `TaskDetail` 實體欄位：`AR_REVIEW_STATUS` 改三態、移除 `REVIEW_ASSIGNMENT_MODES`／`MIN_REVIEWERS_RULE`／`min_reviewers`／`review_assignment_mode`／`agreement_auto_finalize`／`arbitration_enabled`、`ARBITER_CANDIDATE_RULE` 加入 `can_arbitrate = true`、`OVERVIEW_EDITABLE_FIELDS` 改列 `reviewer_ids`／`arbiter_ids`、新增 `EXCEPTION_POOL_ACTIONS`。驗證：`pnpm typecheck` 通過且檔內不再出現 `min_reviewers` [@senior-frontend]
 - [x] 5.3 於 `design/prototype/pages/task-management/task-detail.panels/overview.html` 實作 FR-010s／FR-010s-1／FR-010s-2 之兩份名冊勾選設定與摘要值規則。驗證：`pnpm playwright test tests/task-management/issue-596-review-settings.spec.ts` 全綠 [@senior-frontend]
 - [x] 5.4 撰寫 Red 測試覆蓋審核指派區塊唯讀化與發布閘門（`design/prototype/tests/task-management/issue-596-assignment-readonly.spec.ts`）：區塊內無任何指派／補齊按鈕；爭議池列與最終例外池列皆為唯讀且無分派按鈕；`reviewer_ids` 為空時發布被阻擋並顯示「還差 1 位」；`arbiter_ids` 為空時不阻擋但顯示無仲裁者警示。驗證：執行該檔全數失敗且失敗原因為區塊仍依 `review_assignment_mode` 渲染操作按鈕 [@senior-qa]
-- [ ] 5.5 於 `design/prototype/pages/task-management/task-detail.panels/member-management.html` 實作 FR-005j 唯讀化、FR-005k 雙列（待仲裁／待處置）與 FR-010t 發布閘門改版。驗證：`pnpm playwright test tests/task-management/issue-596-assignment-readonly.spec.ts` 全綠 [@senior-frontend]
+- [x] 5.5 於 `design/prototype/pages/task-management/task-detail.panels/member-management.html` 實作 FR-005j 唯讀化、FR-005k 雙列（待仲裁／待處置）與 FR-010t 發布閘門改版。驗證：`pnpm playwright test tests/task-management/issue-596-assignment-readonly.spec.ts` 全綠 [@senior-frontend]
+- [ ] 5.6 **（動工後新增收尾任務）** 修正/刪除因群組 5 廢除 `min_reviewers`／指派模式／舊四欄位而失效的既有測試。依據：任務 1.6 基準線（`annotation-review-min-reviewers.spec.ts` 明定整檔刪除）與 design.md Risks 第 1 點「每組結束跑完整測試、不允許帶紅進下一組」；群組 2／4／7 各有收尾任務（2.5／4.5／7.5），群組 5 原漏列。範圍：`annotation-review-min-reviewers.spec.ts` 整檔刪除（含 testid，勿修斷言）；`task-detail-review-settings.spec.ts`／`task-detail-review-assignment.spec.ts`（舊契約，分別被 `issue-596-review-settings`／`issue-596-assignment-readonly` 取代）刪除或改寫；`issue-394-review-settings-min-reviewers`／`issue-505-publish-member-gate`／`task-detail-mobile-layout` 依名冊模型改寫、廢除行為的 case 刪除。驗證：`pnpm playwright test tests/task-management` 全綠 [@senior-qa]
 
 ## 6. PR 群組 6 — 最終例外池與結案閘門（FR-008b／FR-018／FR-063／FR-095）
 
