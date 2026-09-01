@@ -1979,6 +1979,87 @@
     return allResolved ? REVIEW_UNIT_STATUS.FINALIZED : REVIEW_UNIT_STATUS.DISPUTED;
   }
 
+  /* issue #596 (FR-093): the ONLY flow difference between run_types is
+   * assignment granularity -- there is no manual-assignment mode, so this
+   * is the sole, deterministic derivation both the workspace and the
+   * list view (group 4) must agree on. Round-robins over `reviewerIds` in
+   * the order `units` is given:
+   *
+   *   official_run (per_unit): one unit = one sample, spread 1-for-1
+   *     across the roster. Any two reviewers' counts differ by at most 1
+   *     by construction (ceil vs floor of unitCount / rosterCount) --
+   *     no post-hoc balancing pass is needed.
+   *   dry_run (per_sample): round-robins over DISTINCT sample_ids
+   *     instead of units, so every unit sharing a sample_id inherits
+   *     that sample's reviewer and one reviewer sees every annotator's
+   *     answer for that sample together.
+   *
+   * `unit.annotator_id` is never consulted for eligibility: FR-093 states
+   * a reviewer is NOT excluded from assignment merely for being the
+   * unit's own annotator (that non-participant restriction applies only
+   * to arbiters, FR-060). Determinism follows from using only the input
+   * arrays' order -- no randomness, no wall-clock read -- so the same
+   * `(runType, units, reviewerIds)` always yields the same assignment. */
+  function getReviewAssignments(runType, units, reviewerIds) {
+    /* Sorted before anything else because assignment is positional -- the
+       dry_run branch keys on a sample's first appearance and official_run
+       walks the array with a fixed stride. Left in caller order, the list
+       page and the workspace would each derive their own assignment from
+       whatever order they happened to build `units` in, and a reviewer
+       would see one set of units in the list and another in the
+       workspace. Sorting here makes the assignment a property of the
+       units themselves, so every caller agrees without having to know
+       it is under an ordering obligation. */
+    var list = (Array.isArray(units) ? units : []).slice().sort(function (a, b) {
+      return a.sample_id === b.sample_id
+        ? String(a.annotator_id).localeCompare(String(b.annotator_id))
+        : String(a.sample_id).localeCompare(String(b.sample_id));
+    });
+    var roster = Array.isArray(reviewerIds) ? reviewerIds : [];
+    if (!roster.length) return [];
+    if (runType === 'dry_run') {
+      var sampleOrder = [];
+      var sampleReviewerIndex = {};
+      list.forEach(function (unit) {
+        if (!(unit.sample_id in sampleReviewerIndex)) {
+          sampleReviewerIndex[unit.sample_id] = sampleOrder.length % roster.length;
+          sampleOrder.push(unit.sample_id);
+        }
+      });
+      return list.map(function (unit) {
+        return {
+          sample_id: unit.sample_id,
+          annotator_id: unit.annotator_id,
+          reviewer_id: roster[sampleReviewerIndex[unit.sample_id]],
+        };
+      });
+    }
+    return list.map(function (unit, index) {
+      return {
+        sample_id: unit.sample_id,
+        annotator_id: unit.annotator_id,
+        reviewer_id: roster[index % roster.length],
+      };
+    });
+  }
+
+  /* issue #596: the roster that decides assignment lives HERE, not at any
+   * call site -- 014's `reviewer_ids` field is not wired up until PR
+   * group 5 (design.md D7), so today's only source is the REVIEWER_ROSTER
+   * demo seed (~line 214). Group 4's annotation-list (the only caller
+   * until group 5) only ever needs "which units is THIS reviewer
+   * assigned", never the roster itself; keeping the lookup here means
+   * group 5 swaps the roster source in exactly one place instead of
+   * every call site. */
+  function getAssignedReviewUnits(runType, reviewerId, units) {
+    var roster = REVIEWER_ROSTER.map(function (r) { return r.id; });
+    return getReviewAssignments(runType, units, roster)
+      .filter(function (assignment) { return assignment.reviewer_id === reviewerId; })
+      .map(function (assignment) {
+        return { sample_id: assignment.sample_id, annotator_id: assignment.annotator_id };
+      });
+  }
+
   /* ---- Dispute items (spec 015 v4.6.0, issue #147 P3a) -------------------
    * A DisputeItem is ONE disagreed label/span/token inside a review unit,
    * not the whole unit: parts both sides agree on never enter the pool.
@@ -2892,6 +2973,8 @@
     compareOutputAnswer: compareOutputAnswer,
     getReviewUnitStatus: getReviewUnitStatus,
     getReviewUnitLane: getReviewUnitLane,
+    getReviewAssignments: getReviewAssignments,
+    getAssignedReviewUnits: getAssignedReviewUnits,
     computeReviewSummary: computeReviewSummary,
     formatReviewSummary: formatReviewSummary,
     listReviewUnits: listReviewUnits,
