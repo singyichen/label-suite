@@ -86,7 +86,8 @@ test.describe('issue #578 -- FR-086 歷程動作常數化', () => {
       nodes.map((node) => {
         const style = window.getComputedStyle(node);
         return {
-          action: (node.textContent || '').trim(),
+          action: node.getAttribute('data-action'),
+          label: (node.textContent || '').trim(),
           classes: Array.from(node.classList),
           swatch: `${style.color}|${style.backgroundColor}`,
         };
@@ -131,7 +132,8 @@ test.describe('issue #578 -- FR-086 歷程動作常數化', () => {
     await expect(card).toHaveCount(1);
     await expect(card.locator('.history-actor')).toHaveText(`標記員 · ${ANNOTATOR}`);
     await expect(card.locator('.history-time')).not.toHaveText('');
-    await expect(card.locator('.history-action-badge')).toHaveText('submitted');
+    await expect(card.locator('.history-action-badge')).toHaveAttribute('data-action', 'submitted');
+    await expect(card.locator('.history-action-badge')).toHaveText('已提交');
     await expect(card.locator('.history-summary')).toHaveText('舊事件摘要');
 
     expect(pageErrors, pageErrors.map((e) => e.message).join('; ')).toEqual([]);

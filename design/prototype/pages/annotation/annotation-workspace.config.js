@@ -1895,7 +1895,8 @@
          neutral base badge. */
       var badgeModifier = window.LabelSuiteAnnotationHistory.badgeClassFor(event.action);
       badge.className = 'history-action-badge' + (badgeModifier ? ' ' + badgeModifier : '');
-      badge.textContent = event.action;
+      badge.setAttribute('data-action', event.action);
+      badge.textContent = window.LabelSuiteAnnotationHistory.actionLabelFor(event.action);
       meta.appendChild(time);
       meta.appendChild(badge);
       header.appendChild(actor);

@@ -57,6 +57,25 @@
     return isKnownAction(action) ? BADGE_CLASS[action] : '';
   }
 
+  /* action -> localized display label (issue #600). The seven values
+     themselves stay English (FR-086 data contract, already written to
+     localStorage), so translation lives here rather than on the constant. */
+  var ACTION_LABEL = {
+    draft_saved: '已存草稿',
+    submitted: '已提交',
+    skipped: '已跳過',
+    modified: '審核修正',
+    accepted: '審核通過',
+    rejected: '審核退回',
+    adjudicated: '仲裁定案',
+  };
+
+  /* the action itself for anything outside the set, so an older-build event
+     still shows something meaningful instead of a blank label. */
+  function actionLabelFor(action) {
+    return isKnownAction(action) ? ACTION_LABEL[action] : action;
+  }
+
   /* FR-087 (position-bearing half): a span-aligned comparator, registered
      per OUTPUT_TYPE_REGISTRY output-type key rather than per task. The
      plain-value path compares one stringified answer per key, which for a
@@ -135,6 +154,8 @@
     ACTION_VALUES: ACTION_VALUES,
     isKnownAction: isKnownAction,
     badgeClassFor: badgeClassFor,
+    ACTION_LABEL: ACTION_LABEL,
+    actionLabelFor: actionLabelFor,
     isPositionalOutput: isPositionalOutput,
     diffPositional: diffPositional,
     formatLeadTime: formatLeadTime,

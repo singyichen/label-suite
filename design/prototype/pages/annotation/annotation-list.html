@@ -1681,10 +1681,13 @@
       wrap.appendChild(el);
     }
 
-    /* The raw action value, exactly as the workspace 歷程 badge shows it
-       (FR-086 made it a closed set), so the two surfaces cannot drift into
-       naming the same event differently. */
-    line('list-summary-last-action', 'data-action', function (s) { return [s.action, s.action]; });
+    /* The localized label, same lookup the workspace 歷程 badge uses
+       (issue #600), so the two surfaces cannot drift into naming the same
+       event differently. data-action stays the raw value (FR-086's closed
+       set) for stable, language-independent selectors. */
+    line('list-summary-last-action', 'data-action', function (s) {
+      return [window.LabelSuiteAnnotationHistory.actionLabelFor(s.action), s.action];
+    });
     line('list-summary-last-activity', 'data-at', function (s) { return [formatActivityAt(s.at), s.at]; });
     /* FR-088 visibility: no annotator-facing path may carry a duration, so
        the annotator view omits the element rather than blanking it. */

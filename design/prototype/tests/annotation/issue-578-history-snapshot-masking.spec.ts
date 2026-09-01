@@ -156,7 +156,7 @@ test.describe('issue #578 -- history snapshots, diffs and layered masking', () =
     await page.getByTestId('ws-guideline-tab-history').click();
 
     const modifiedCard = page.locator('.history-item', {
-      has: page.locator('.history-action-badge', { hasText: 'modified' }),
+      has: page.locator('.history-action-badge[data-action="modified"]'),
     });
     const diff = modifiedCard.locator('.history-diff-item');
     await expect(diff).toHaveCount(1);
@@ -165,7 +165,7 @@ test.describe('issue #578 -- history snapshots, diffs and layered masking', () =
 
     /* First submission on that actor dimension: whole answer, no arrow. */
     const firstSubmit = page.locator('.history-item', {
-      has: page.locator('.history-action-badge', { hasText: 'submitted' }),
+      has: page.locator('.history-action-badge[data-action="submitted"]'),
     });
     await expect(firstSubmit.locator('.history-diff-item')).toHaveCount(0);
     await expect(firstSubmit.locator('.history-snapshot')).toContainText('neutral');
