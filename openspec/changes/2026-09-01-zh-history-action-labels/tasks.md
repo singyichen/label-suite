@@ -14,6 +14,8 @@
 
 - [ ] 1.4 確認 `design/prototype/tests/annotation/issue-552-reject-reason-required.spec.ts` 第 234 行 `await expect(page.locator('.history-action-badge.rejected')).toHaveCount(1)` 不受本次變動影響——執行 `grep -n "history-action-badge" design/prototype/tests/annotation/issue-552-reject-reason-required.spec.ts` 確認該行為 CSS class selector（`.rejected`），不涉及 `textContent`／`hasText`，故不需修改；於 PR 說明中記錄此項確認結果，回應 issue #600 「須確認是否連帶斷言文字」之項目。 [@senior-qa]
 
+- [ ] 1.5 **（Green 階段回頭補列）** 修改 `design/prototype/tests/annotation/annotation-workspace-chrome.spec.ts`：第 171 行 `await expect(panel).toContainText('submitted')` 改為兩則斷言——`await expect(panel.locator('.history-action-badge')).toHaveAttribute('data-action', 'submitted')` 與 `await expect(panel).toContainText('已提交')`。**列入原因**：§1.1～1.3 盤點時只掃了 `issue-578-*` 三檔，漏掉這個 2026-08-28 既有測試（commit `2b070747`）——它是全 `design/prototype/tests/` 中最後一處以可見文字比對動作值的斷言，於 §2 實作完成後才由全套回歸跑出來。**Red 證據取得方式**：本任務的斷言在 Green 之前的樹（commit `a79bd5f3`）上必然失敗、在 Green 之後（§2 完成）通過，須以 `git stash` 於兩個樹各跑一次並記錄兩份輸出，作為契約確實鎖住新行為（而非被實作牽著走）的證明。 [@senior-qa]
+
 ## 2. Green — 顯示標籤層與兩個顯示點實作（[@senior-frontend]）
 
 > 依賴 §1 全部 Red 任務先完成並有預期失敗證據。以下三個任務各自只動一個生產檔，依既有程式的呼叫關係序列進行：先在共用模組新增顯示標籤層，再改動兩個消費它的顯示點。不得為讓測試通過而弱化或改寫 §1 已提交的斷言。
