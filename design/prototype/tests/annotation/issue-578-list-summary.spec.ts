@@ -79,6 +79,7 @@ test.describe('FR-091 標記清單處理狀況彙總 (issue #578)', () => {
     const action = row.getByTestId('list-summary-last-action');
     await expect(action).toHaveAttribute('data-action', 'rejected');
     await expect(action).not.toBeEmpty();
+    await expect(action).toHaveText('審核退回');
 
     const activity = row.getByTestId('list-summary-last-activity');
     /* The exact instant is asserted through the attribute; the visible text

@@ -57,6 +57,67 @@
     return isKnownAction(action) ? BADGE_CLASS[action] : '';
   }
 
+  /* action -> localized display label (issue #600). The seven values
+     themselves stay English (FR-086 data contract, already written to
+     localStorage), so translation lives here rather than on the constant. */
+  var ACTION_LABEL = {
+    draft_saved: '已存草稿',
+    submitted: '已提交',
+    skipped: '已跳過',
+    modified: '審核修正',
+    accepted: '審核通過',
+    rejected: '審核退回',
+    adjudicated: '仲裁定案',
+  };
+
+  /* the action itself for anything outside the set, so an older-build event
+     still shows something meaningful instead of a blank label. */
+  function actionLabelFor(action) {
+    return isKnownAction(action) ? ACTION_LABEL[action] : action;
+  }
+
+  /* issue #601: markSampleSubmitted() is shared by both roles, so a reviewer
+     submit writes an envelope `submitted` event and then one decision event
+     per approved outKey. The envelope deliberately carries no answer -- the
+     data layer omits its snapshot because the decision events already hold
+     it -- so beside them it reads as a bare duplicate, and #596 adds two
+     more reviewer actions to the same trail.
+
+     Folded away here rather than at the write site: the events already in
+     localStorage would otherwise keep their duplicate card until someone
+     cleared their browser, and the envelope still carries FR-088 timing and
+     the audit fact that a submit happened.
+
+     Dropped only when that same reviewer's next act was a decision. A
+     reviewer whose every outKey was rejected emits none (the rejection is
+     written to the annotator's bucket), leaving the envelope as their only
+     trace in the reviewer bucket. The annotator's `submitted` is never
+     dropped -- it is the one event carrying their answer. */
+  var REVIEW_DECISION_ACTIONS = { accepted: true, modified: true };
+
+  function isReviewDecision(action) {
+    return Object.prototype.hasOwnProperty.call(REVIEW_DECISION_ACTIONS, action);
+  }
+
+  /* The next event by this same actor, skipping anyone else's -- events from
+     several buckets merge by timestamp, so "what this reviewer did next" is
+     not always the adjacent element. */
+  function nextActionByActor(events, fromIdx, actorId) {
+    for (var i = fromIdx + 1; i < events.length; i += 1) {
+      if (events[i].actorId === actorId) return events[i].action;
+    }
+    return null;
+  }
+
+  /* Takes the merged trail in ascending time order (as getSampleHistory
+     returns it) and returns the events that earn a card. */
+  function collapseHistory(events) {
+    return events.filter(function (event, idx) {
+      if (event.action !== ACTIONS.SUBMITTED || event.role !== 'reviewer') return true;
+      return !isReviewDecision(nextActionByActor(events, idx, event.actorId));
+    });
+  }
+
   /* FR-087 (position-bearing half): a span-aligned comparator, registered
      per OUTPUT_TYPE_REGISTRY output-type key rather than per task. The
      plain-value path compares one stringified answer per key, which for a
@@ -135,6 +196,9 @@
     ACTION_VALUES: ACTION_VALUES,
     isKnownAction: isKnownAction,
     badgeClassFor: badgeClassFor,
+    ACTION_LABEL: ACTION_LABEL,
+    actionLabelFor: actionLabelFor,
+    collapseHistory: collapseHistory,
     isPositionalOutput: isPositionalOutput,
     diffPositional: diffPositional,
     formatLeadTime: formatLeadTime,

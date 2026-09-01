@@ -1792,15 +1792,24 @@
     while (container.firstChild) container.removeChild(container.firstChild);
     /* FR-090: the viewer is an argument to the data supply layer, not a
        render flag -- a masked event must never reach this function at all. */
-    var events = window.LabelSuiteAnnotationWorkspaceData.getSampleHistory(
-      currentProfile.id,
-      currentRunType,
-      currentSampleId,
-      currentIdentity,
-      {
-        role: currentRole,
-        actorId: currentRole === 'reviewer' ? (currentIdentity && currentIdentity.reviewerId) : currentAnnotatorId(),
-      }
+    /* issue #601: the reviewer's envelope `submitted` event is folded away
+       when their own next act was a decision, so the trail reads as one card
+       per thing that happened rather than a bare 提交 beside the decision
+       that carries the result. Applied before the answer blocks are built:
+       those are indexed by event, and the folded event carries no snapshot
+       (the data layer omits it precisely because the decision events hold
+       it), so no diff chain is affected. */
+    var events = window.LabelSuiteAnnotationHistory.collapseHistory(
+      window.LabelSuiteAnnotationWorkspaceData.getSampleHistory(
+        currentProfile.id,
+        currentRunType,
+        currentSampleId,
+        currentIdentity,
+        {
+          role: currentRole,
+          actorId: currentRole === 'reviewer' ? (currentIdentity && currentIdentity.reviewerId) : currentAnnotatorId(),
+        }
+      )
     );
     if (events.length === 0) {
       var empty = document.createElement('p');
@@ -1838,7 +1847,8 @@
          neutral base badge. */
       var badgeModifier = window.LabelSuiteAnnotationHistory.badgeClassFor(event.action);
       badge.className = 'history-action-badge' + (badgeModifier ? ' ' + badgeModifier : '');
-      badge.textContent = event.action;
+      badge.setAttribute('data-action', event.action);
+      badge.textContent = window.LabelSuiteAnnotationHistory.actionLabelFor(event.action);
       meta.appendChild(time);
       meta.appendChild(badge);
       header.appendChild(actor);

@@ -168,7 +168,8 @@ test.describe('Right column: 說明與檔案 / 歷程 tabs', () => {
     await page.getByTestId('ws-guideline-tab-history').click();
     const panel = page.getByTestId('ws-history-panel');
     await expect(panel).toContainText('標記員');
-    await expect(panel).toContainText('submitted');
+    await expect(panel.locator('.history-action-badge')).toHaveAttribute('data-action', 'submitted');
+    await expect(panel).toContainText('已提交');
     await expect(panel).toContainText('single_label');
   });
 
