@@ -1,13 +1,13 @@
 # foundation/001-project-sdd-lint Specification
 
 ## Purpose
-Project SDD lint 的 derived capability；正典為 `specs/foundation/001-project-sdd-lint/spec.md` v1.1.2。本變更實作正典 FR-001–FR-009、AC-1.1–AC-4.4 與 SC-001–SC-008，包含 Stage 3 的 same-trust-root generator boundary 與 control-character pathname preflight。
+Project SDD lint 的 derived capability；正典為 `specs/_archive/001-project-sdd-lint/spec.md` v1.1.3。本變更實作正典 FR-001–FR-009、AC-1.1–AC-4.4 與 SC-001–SC-008，包含 Stage 3 的 same-trust-root generator boundary 與 control-character pathname preflight。
 
 ## Requirements
 
 ### Requirement: 可重複執行的命令與診斷
 
-本需求依正典 `specs/foundation/001-project-sdd-lint/spec.md` 的 FR-001、FR-002、AC-1.1、AC-1.2、AC-1.3、AC-1.4、AC-1.5、SC-001、SC-003、SC-004 與 SC-008。系統 MUST 提供可從任意 current directory 執行的離線 lint command，並以排序診斷、固定 summary 與穩定 exit code 回報結果；動態 scanned pathname 含 control character 時必須先以安全 path `.` fail closed。
+本需求依正典 `specs/_archive/001-project-sdd-lint/spec.md` 的 FR-001、FR-002、AC-1.1、AC-1.2、AC-1.3、AC-1.4、AC-1.5、SC-001、SC-003、SC-004 與 SC-008。系統 MUST 提供可從任意 current directory 執行的離線 lint command，並以排序診斷、固定 summary 與穩定 exit code 回報結果；動態 scanned pathname 含 control character 時必須先以安全 path `.` fail closed。
 
 #### Scenario: AC-1.1 合法 fixture 通過
 - **GIVEN** fixture 的 canonical spec、STATUS、active change、tasks 與 consumers 全部合法
@@ -36,7 +36,7 @@ Project SDD lint 的 derived capability；正典為 `specs/foundation/001-projec
 
 ### Requirement: Task 與來源治理
 
-本需求依正典 `specs/foundation/001-project-sdd-lint/spec.md` 的 FR-003、FR-005、FR-006、AC-2.1、AC-2.2、AC-2.3 與 SC-007。系統 MUST 驗證 active OpenSpec change 的正典來源、task ownership 與 retired guidance，並阻擋不符合治理契約的 active artifact；Issue #375 交接只得勾選實際交付的六個 D 子項（正典標題、STATUS/stage、Source-Verify、task 單檔／例外、assignee／file ownership、design inventory freshness）。複合 retired-path/command D checkbox 與 combined acceptance 維持未勾選並延期，直到取得 ADR-034/path authority 並完成 named filesystem paths 的 QA Red 與 production Green；本變更不接受 ADR-034，亦不修改執行期程式碼；inventory workstream C、baseline-zero cleanup 與其他 acceptance items 保持不變。
+本需求依正典 `specs/_archive/001-project-sdd-lint/spec.md` 的 FR-003、FR-005、FR-006、AC-2.1、AC-2.2、AC-2.3 與 SC-007。系統 MUST 驗證 active OpenSpec change 的正典來源、task ownership 與 retired guidance，並阻擋不符合治理契約的 active artifact；Issue #375 交接只得勾選實際交付的六個 D 子項（正典標題、STATUS/stage、Source-Verify、task 單檔／例外、assignee／file ownership、design inventory freshness）。複合 retired-path/command D checkbox 與 combined acceptance 維持未勾選並延期，直到取得 ADR-034/path authority 並完成 named filesystem paths 的 QA Red 與 production Green；本變更不接受 ADR-034，亦不修改執行期程式碼；inventory workstream C、baseline-zero cleanup 與其他 acceptance items 保持不變。
 
 #### Scenario: AC-2.1 assignee 無效
 - **GIVEN** task 沒有恰好一個結尾 assignee，或 assignee 指向不存在的 agent
@@ -55,7 +55,7 @@ Project SDD lint 的 derived capability；正典為 `specs/foundation/001-projec
 
 ### Requirement: Ratchet baseline
 
-本需求依正典 `specs/foundation/001-project-sdd-lint/spec.md` 的 FR-004、FR-007、AC-3.1、AC-3.2、AC-3.3 與 SC-002。系統 MUST 以排序、唯一且無 glob 的 baseline 隔離既有 legacy debt，阻擋新增或 stale debt，並維持明確 deferred 規則為 warning-only。
+本需求依正典 `specs/_archive/001-project-sdd-lint/spec.md` 的 FR-004、FR-007、AC-3.1、AC-3.2、AC-3.3 與 SC-002。系統 MUST 以排序、唯一且無 glob 的 baseline 隔離既有 legacy debt，阻擋新增或 stale debt，並維持明確 deferred 規則為 warning-only。
 
 #### Scenario: AC-3.1 baseline 中的 legacy debt 只產生 warning
 - **GIVEN** legacy violation 與排序 baseline 完全一致
@@ -74,7 +74,7 @@ Project SDD lint 的 derived capability；正典為 `specs/foundation/001-projec
 
 ### Requirement: 獨立 CI gate 與 generated screen inventory freshness
 
-本需求依正典 `specs/foundation/001-project-sdd-lint/spec.md` 的 FR-008、FR-009、AC-4.1、AC-4.2、AC-4.3、AC-4.4、SC-005、SC-006 與 SC-008。CI MUST 以獨立 `Project SDD Lint` job 執行與本地相同的 lint command，且不得包裝或取代 `openspec validate`。lint MUST 僅在 canonical resolved target root 與 checker root 相同時執行 `node "$repo_root/scripts/gen-screen-inventory.mjs" --check`，capture 並 suppress generator raw output；foreign root 必須在 child execution 前以 `INVENTORY_CHECK_CONFIG` 拒絕。此 freshness claim 僅涵蓋 generated `design/system/screen-inventory.md`，不涵蓋 hand-maintained `design/system/inventory.md` 或 `design-inventory.dc.html`。`--strict` 不得改變 inventory severity。
+本需求依正典 `specs/_archive/001-project-sdd-lint/spec.md` 的 FR-008、FR-009、AC-4.1、AC-4.2、AC-4.3、AC-4.4、SC-005、SC-006 與 SC-008。CI MUST 以獨立 `Project SDD Lint` job 執行與本地相同的 lint command，且不得包裝或取代 `openspec validate`。lint MUST 僅在 canonical resolved target root 與 checker root 相同時執行 `node "$repo_root/scripts/gen-screen-inventory.mjs" --check`，capture 並 suppress generator raw output；foreign root 必須在 child execution 前以 `INVENTORY_CHECK_CONFIG` 拒絕。此 freshness claim 僅涵蓋 generated `design/system/screen-inventory.md`，不涵蓋 hand-maintained `design/system/inventory.md` 或 `design-inventory.dc.html`。`--strict` 不得改變 inventory severity。
 
 #### Scenario: AC-4.1 fresh inventory 不產生診斷
 - **GIVEN** resolved target root 與 checker root 相同，且 `node scripts/gen-screen-inventory.mjs --check` exit `0`
