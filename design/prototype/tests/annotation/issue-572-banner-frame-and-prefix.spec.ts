@@ -55,7 +55,10 @@ test.describe('issue #572 -- banner frame removed', () => {
   test('the chips still render in the same order above the review card', async ({ page }) => {
     await openUnit(page, { task_id: 'T017', sample_id: 'oft-01-even-tie' });
 
-    await expect(banner(page).locator('.rv-unit-chip')).toHaveCount(2);
+    /* issue #596 (AC-4.37): one chip left -- the finalize-threshold chip
+       went with the reviewer quorum it counted against. The subject here is
+       the ORDER above the review card, which is unchanged. */
+    await expect(banner(page).locator('.rv-unit-chip')).toHaveCount(1);
     await expect(page.getByTestId('ws-review-flow-trigger')).toBeVisible();
   });
 });
@@ -80,7 +83,9 @@ test.describe('issue #572 -- state pill has no 目前： prefix', () => {
     await openUnit(page, { task_id: 'T014', sample_id: 'dry-01-all-agree', run_type: 'dry_run', annotator_id: 'kioleemg12' });
 
     await expect(statePill(page)).toHaveText('已定稿 · 已鎖定');
-    await expect(statePill(page)).toHaveAttribute('aria-label', '已定稿，已達 1 位審核員門檻，內容已鎖定');
+    /* issue #596: the aria-label no longer counts reviewers against a
+       threshold, but it still names the state and the locked-ness. */
+    await expect(statePill(page)).toHaveAttribute('aria-label', '審核單位狀態：已定稿，內容已鎖定');
     await expect(statePill(page)).toHaveAttribute('data-terminal', 'true');
   });
 

@@ -8,35 +8,51 @@
  * finalized. The track adds that route.
  *
  * It is deliberately NOT a linear Step Indicator: FR-051 branches after
- * `pending` into two mutually exclusive lanes -- every reviewer answer equal
- * to the annotator's (`approved` -> `finalized`) versus any answer differing
- * (`modified` -> `disputed` -> `finalized`). `approved` never passes through
- * `disputed`, so a linear track would draw a transition the state machine
- * does not have.
+ * `pending` into two mutually exclusive lanes -- a reviewer who approves
+ * every outKey (`pending` -> `finalized`) versus one who modifies or bypasses
+ * any of them (`pending` -> `disputed` -> `finalized`). The same lane never
+ * passes through `disputed`, so a linear track would draw a transition the
+ * state machine does not have.
  *
- * T016 (official_run, min_reviewers = 3) seeds all five states on one task,
- * so every lane assertion below reads a real fixture rather than a patch.
+ * issue #596 (OpenSpec change 2026-09-01-single-owner-review-relay, task
+ * 3.7): FR-093 gives each unit exactly ONE reviewer, so the two interim
+ * states this file used to assert -- 已同意 and 已修改, which only existed
+ * while a quorum of reviewers was still being collected -- are gone. The
+ * track is now three nodes (待審 / 爭議中 / 已定稿) and the branch condition
+ * that used to be implied by which interim node you landed on is spelled out
+ * by the `.review-track-branch` captions instead.
  *
- * issue #525 PR-A: the track moved out of the banner into an on-demand
- * review-flow drawer. Every assertion below is unchanged; only its root and
- * the openFlowDrawer() step that reveals it are new.
+ * issue #525 PR-A: the track lives in an on-demand review-flow drawer rather
+ * than in the banner itself; openFlowDrawer() is what reveals it.
  *
  * Component contract: design/system/MASTER.md §Review Status Track
  */
 import { test, expect, type Page } from '@playwright/test';
 import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
 
-/** T016 seeds, annotator kioleemg12, quorum 3 (annotation-workspace.data.js:2293). */
+/* T016 seeds, annotator kioleemg12 (annotation-workspace.data.js:2758).
+   Under the issue #596 derivation these read: ofm-01's reviewers all match
+   the annotator -> same lane, finalized; ofm-05's reviewers differ -> the
+   differing lane, still disputed. ofm-02 is a second same-lane finalized
+   unit, used only to prove the track re-renders on unit switch. */
 const UNITS = {
   finalizedSame: 'ofm-01-unanimous-gold',
-  approved: 'ofm-02-approved-interim',
-  modified: 'ofm-03-modified-interim',
-  finalizedDiffering: 'ofm-04-majority-converged',
+  finalizedSameOther: 'ofm-02-approved-interim',
   disputed: 'ofm-05-all-divergent',
 };
 
+/* The one seeded unit that reaches 已定稿 through the differing lane: the
+   reviewer changed the answer AND an arbitration record closed the dispute
+   (annotation-workspace.data.js:2755, `arb: 'neutral'`). It lives on T015,
+   not T016 -- no T016 row carries an arbitration record. */
+const ARBITRATED = { taskId: 'T015', sampleId: 'ofs-03-arbitrated-gold' };
+
 function track(page: Page) {
   return page.locator('[data-testid="ws-review-flow-drawer"] .review-track');
+}
+
+function branch(page: Page, key: string) {
+  return track(page).locator('.review-track-branch[data-branch="' + key + '"]');
 }
 
 /* The drawer is `aria-modal` with a backdrop, so anything outside it (the
@@ -56,17 +72,19 @@ function node(page: Page, label: string) {
   return track(page).locator('.review-track-node', { hasText: label });
 }
 
-async function openUnit(page: Page, sampleId: string) {
-  await page.goto(
-    buildWorkspaceUrl({
-      task_id: 'T016',
-      sample_id: sampleId,
-      role: 'reviewer',
-      run_type: 'official_run',
-      reviewer_id: 'reviewer_wang',
-      annotator_id: 'kioleemg12',
-    }),
-  );
+function unitUrl(taskId: string, sampleId: string) {
+  return buildWorkspaceUrl({
+    task_id: taskId,
+    sample_id: sampleId,
+    role: 'reviewer',
+    run_type: 'official_run',
+    reviewer_id: 'reviewer_wang',
+    annotator_id: 'kioleemg12',
+  });
+}
+
+async function openUnit(page: Page, sampleId: string, taskId = 'T016') {
+  await page.goto(unitUrl(taskId, sampleId));
   await openFlowDrawer(page);
 }
 
@@ -75,16 +93,14 @@ test.describe('Review status track — current position', () => {
     await skipGuidelineModal(page);
   });
 
-  test('renders inside the FR-064 flow drawer with five status nodes', async ({ page }) => {
+  test('renders inside the FR-064 flow drawer with three status nodes', async ({ page }) => {
     await openUnit(page, UNITS.disputed);
 
     await expect(track(page)).toBeVisible();
     await expect(track(page)).toHaveAttribute('role', 'list');
-    await expect(track(page).locator('[role="listitem"]')).toHaveCount(5);
+    await expect(track(page).locator('[role="listitem"]')).toHaveCount(3);
     await expect(track(page).locator('[role="listitem"]')).toHaveText([
       /待審/,
-      /已同意/,
-      /已修改/,
       /爭議中/,
       /已定稿/,
     ]);
@@ -99,34 +115,18 @@ test.describe('Review status track — current position', () => {
     await expect(current.locator('.review-track-marker')).toHaveText('目前：');
   });
 
-  test('an approved unit sits on the same-answer lane', async ({ page }) => {
-    await openUnit(page, UNITS.approved);
-
-    await expect(track(page).locator('[aria-current="step"]')).toContainText('已同意');
-    // Route so far: pending is genuinely behind it -- the unit existed between
-    // the annotator's submission and the first reviewer's.
-    await expect(node(page, '待審')).toHaveClass(/\bdone\b/);
-    // The differing-answer lane is not this unit's route.
-    await expect(node(page, '已修改')).not.toHaveClass(/\bdone\b/);
-    await expect(node(page, '爭議中')).not.toHaveClass(/\bdone\b/);
-    await expect(node(page, '已定稿')).not.toHaveClass(/\bdone\b/);
-  });
-
-  test('a modified unit sits on the differing-answer lane', async ({ page }) => {
-    await openUnit(page, UNITS.modified);
-
-    await expect(track(page).locator('[aria-current="step"]')).toContainText('已修改');
-    await expect(node(page, '待審')).toHaveClass(/\bdone\b/);
-    await expect(node(page, '已同意')).not.toHaveClass(/\bdone\b/);
-  });
-
   test('a disputed unit shows the differing lane behind it', async ({ page }) => {
     await openUnit(page, UNITS.disputed);
 
+    await expect(track(page).locator('[aria-current="step"]')).toContainText('爭議中');
+    // Route so far: pending is genuinely behind it -- the unit existed between
+    // the annotator's submission and the reviewer's.
     await expect(node(page, '待審')).toHaveClass(/\bdone\b/);
-    await expect(node(page, '已修改')).toHaveClass(/\bdone\b/);
-    await expect(node(page, '已同意')).not.toHaveClass(/\bdone\b/);
     await expect(node(page, '已定稿')).not.toHaveClass(/\bdone\b/);
+    // The branch caption is the only thing naming which lane was taken now
+    // that the interim nodes are gone.
+    await expect(branch(page, 'differing')).toHaveClass(/\bdone\b/);
+    await expect(branch(page, 'same')).not.toHaveClass(/\bdone\b/);
   });
 });
 
@@ -135,23 +135,29 @@ test.describe('Review status track — finalized reaches the same node by two ro
     await skipGuidelineModal(page);
   });
 
-  test('unanimous agreement finalizes through 已同意, never 爭議中', async ({ page }) => {
+  test('an approved unit finalizes through 審核通過, never 爭議中', async ({ page }) => {
     await openUnit(page, UNITS.finalizedSame);
 
     await expect(track(page).locator('[aria-current="step"]')).toContainText('已定稿');
-    await expect(node(page, '已同意')).toHaveClass(/\bdone\b/);
+    await expect(node(page, '待審')).toHaveClass(/\bdone\b/);
+    await expect(branch(page, 'same')).toHaveClass(/\bdone\b/);
     // The whole point of the branch: this unit's route never touched dispute.
-    await expect(node(page, '已修改')).not.toHaveClass(/\bdone\b/);
     await expect(node(page, '爭議中')).not.toHaveClass(/\bdone\b/);
+    await expect(branch(page, 'differing')).not.toHaveClass(/\bdone\b/);
+    await expect(branch(page, 'arbitrated')).not.toHaveClass(/\bdone\b/);
   });
 
-  test('majority convergence finalizes through 爭議中, never 已同意', async ({ page }) => {
-    await openUnit(page, UNITS.finalizedDiffering);
+  test('an arbitrated unit finalizes through 爭議中, never 審核通過', async ({ page }) => {
+    await openUnit(page, ARBITRATED.sampleId, ARBITRATED.taskId);
 
     await expect(track(page).locator('[aria-current="step"]')).toContainText('已定稿');
-    await expect(node(page, '已修改')).toHaveClass(/\bdone\b/);
     await expect(node(page, '爭議中')).toHaveClass(/\bdone\b/);
-    await expect(node(page, '已同意')).not.toHaveClass(/\bdone\b/);
+    await expect(branch(page, 'differing')).toHaveClass(/\bdone\b/);
+    // 仲裁後 is the only caption on the rail leaving 爭議中, so a differing
+    // lane that reached 已定稿 must have it marked -- otherwise the track
+    // would show a unit arriving at 已定稿 by no route at all.
+    await expect(branch(page, 'arbitrated')).toHaveClass(/\bdone\b/);
+    await expect(branch(page, 'same')).not.toHaveClass(/\bdone\b/);
   });
 });
 
@@ -164,10 +170,11 @@ test.describe('Review status track — structure, regression and language', () =
     await openUnit(page, UNITS.disputed);
 
     const tops = await track(page)
-      .locator('[role="listitem"]')
+      .locator('.review-track-branch[data-branch="same"], .review-track-branch[data-branch="differing"]')
       .evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().top)));
-    // 已同意 (index 1) and 已修改 (index 2) are alternatives, not a sequence.
-    expect(tops[1]).not.toBe(tops[2]);
+    // 審核通過 and 修正或無法判定 are alternatives, not a sequence.
+    expect(tops).toHaveLength(2);
+    expect(tops[0]).not.toBe(tops[1]);
 
     const forks = track(page).locator('.review-track-fork');
     await expect(forks).toHaveCount(2);
@@ -177,8 +184,8 @@ test.describe('Review status track — structure, regression and language', () =
   });
 
   test('the FR-064 state pill is unchanged alongside the track', async ({ page }) => {
-    // The pill still carries the terminal/interim note and the aria-label the
-    // track does not; adding the route must not quietly replace it.
+    // The pill still carries the terminal note and the aria-label the track
+    // does not; adding the route must not quietly replace it.
     await openUnit(page, UNITS.disputed);
 
     await expect(
@@ -191,20 +198,11 @@ test.describe('Review status track — structure, regression and language', () =
     // no route to draw and the pill's 尚無標記提交 is the whole answer.
     // Visit a real unit on the same task first: without that, toHaveCount(0)
     // would pass simply because no track exists anywhere.
-    const t015 = (sampleId: string) =>
-      buildWorkspaceUrl({
-        task_id: 'T015',
-        sample_id: sampleId,
-        role: 'reviewer',
-        run_type: 'official_run',
-        reviewer_id: 'reviewer_wang',
-      });
-
-    await page.goto(t015('ofs-01-agree-gold'));
+    await page.goto(unitUrl('T015', 'ofs-01-agree-gold'));
     await openFlowDrawer(page);
     await expect(track(page)).toBeVisible();
 
-    await page.goto(t015('ofs-05-not-submitted'));
+    await page.goto(unitUrl('T015', 'ofs-05-not-submitted'));
     await expect(page.getByTestId('ws-review-unit-context')).toBeVisible();
     await expect(track(page)).toHaveCount(0);
   });
@@ -212,17 +210,19 @@ test.describe('Review status track — structure, regression and language', () =
   test('follows the language toggle', async ({ page }) => {
     await openUnit(page, UNITS.disputed);
     await expect(track(page).locator('[aria-current="step"]')).toContainText('爭議中');
+    await expect(branch(page, 'differing')).toHaveText('修正或無法判定');
 
     await closeFlowDrawer(page);
     await page.getByTestId('lang-toggle').click();
     await openFlowDrawer(page);
     await expect(track(page).locator('[aria-current="step"]')).toContainText('Disputed');
     await expect(track(page).locator('.review-track-marker')).toHaveText('Now:');
+    await expect(branch(page, 'differing')).toHaveText('Modified or undecidable');
   });
 
   test('re-renders when the reviewer switches unit', async ({ page }) => {
-    await openUnit(page, UNITS.approved);
-    await expect(track(page).locator('[aria-current="step"]')).toContainText('已同意');
+    await openUnit(page, UNITS.finalizedSameOther);
+    await expect(track(page).locator('[aria-current="step"]')).toContainText('已定稿');
 
     await closeFlowDrawer(page);
     await page

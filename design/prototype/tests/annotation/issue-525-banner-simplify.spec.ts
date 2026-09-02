@@ -3,12 +3,15 @@
  * Source spec: specs/annotation/015-annotation-workspace/spec.md FR-064,
  * AC-4.27 / AC-4.32 / AC-4.35 / AC-4.37 / AC-4.38 / AC-4.39.
  *
- * PR-A moved the five-state track out of the banner into an on-demand
- * drawer but deliberately left the surviving children in the order it
- * found them (run -> threshold -> state). issue #525 ♿ writes the reading
- * order the other way round -- run type -> state -> threshold -- because
- * the question a reviewer opens a unit with is "where is this unit now",
- * and the threshold only qualifies that answer.
+ * PR-A moved the state track out of the banner into an on-demand drawer but
+ * deliberately left the surviving children in the order it found them
+ * (run -> threshold -> state). issue #525 ♿ writes the reading order the
+ * other way round -- run type -> state -> threshold -- because the question
+ * a reviewer opens a unit with is "where is this unit now", and the
+ * threshold only qualifies that answer. issue #596 (AC-4.37) then deleted
+ * the threshold chip outright: one reviewer owns a unit, so there is no
+ * quorum left to qualify anything. The order this spec pins is therefore
+ * run type -> state -> trigger -> note.
  *
  * Two other banner facts land with the reorder: a dry run is one of
  * several rounds, so its chip must say WHICH (試標 R{round}, falling back
@@ -58,17 +61,18 @@ test.beforeEach(async ({ page }) => {
 });
 
 test.describe('issue #525 PR-B — banner DOM order is run type -> state -> threshold', () => {
-  test('T016 ofm-02: the state element sits between the run chip and the threshold chip', async ({ page }) => {
+  test('T016 ofm-02: the state element sits right after the run chip', async ({ page }) => {
     await openUnit(page, { task_id: 'T016', sample_id: 'ofm-02-approved-interim', annotator_id: 'kioleemg12' });
 
     expect(await childClasses(page)).toEqual([
       'rv-unit-chip rv-unit-run',
-      'rv-unit-state rv-unit-state-approved',
-      'rv-unit-chip rv-unit-threshold',
+      'rv-unit-state rv-unit-state-finalized',
+      // issue #550's decision-note tooltip trails the flow trigger, but only
+      // on units that still show decisions. issue #596 finalizes this unit
+      // (the reviewer's approve closes it outright, with no quorum left to
+      // wait for), so the note is out and the trigger is last. Its position
+      // on an interactive unit is pinned in issue-596-unit-context.spec.ts.
       'rv-flow-trigger',
-      // issue #550: the decision-note tooltip trails the flow trigger on
-      // interactive units; it is the last thing in the banner, not a chip.
-      'rv-review-note',
     ]);
   });
 
@@ -79,7 +83,6 @@ test.describe('issue #525 PR-B — banner DOM order is run type -> state -> thre
     expect(await childClasses(page)).toEqual([
       'rv-unit-chip rv-unit-run',
       'rv-unit-state rv-unit-state-disputed',
-      'rv-unit-chip rv-unit-threshold',
       'rv-flow-trigger',
     ]);
   });
@@ -90,7 +93,6 @@ test.describe('issue #525 PR-B — banner DOM order is run type -> state -> thre
     expect(await childClasses(page)).toEqual([
       'rv-unit-chip rv-unit-run',
       'rv-unit-state',
-      'rv-unit-chip rv-unit-threshold',
     ]);
   });
 });
@@ -160,17 +162,21 @@ test.describe('issue #525 PR-B — the state element text (issue #572: no 目前
     await openUnit(page, { task_id: 'T015', sample_id: 'ofs-05-not-submitted' });
 
     await expect(statePill(page)).toHaveText('尚無標記提交');
-    await expect(banner(page)).toContainText('定稿門檻 0 / 1 位審核員');
+    /* issue #596: the 定稿門檻 0 / 1 reading went with the chip -- there is
+       no quorum to be 0 of. The banner must not say it under any state. */
+    await expect(banner(page)).not.toContainText('定稿門檻');
     await expect(page.getByTestId('ws-review-flow-trigger')).toHaveCount(0);
   });
 
   test('the aria-label and data-terminal contract', async ({ page }) => {
     await openUnit(page, { task_id: 'T014', sample_id: 'dry-01-all-agree', run_type: 'dry_run', annotator_id: 'kioleemg12' });
 
-    // AC-4.35: the accessible name is the state plus its threshold reading.
+    // AC-4.35: the accessible name is the state plus, when terminal, the
+    // fact that the unit is locked. issue #596 dropped the threshold
+    // reading it used to carry.
     await expect(statePill(page)).toHaveAttribute(
       'aria-label',
-      '已定稿，已達 1 位審核員門檻，內容已鎖定',
+      '審核單位狀態：已定稿，內容已鎖定',
     );
     await expect(statePill(page)).toHaveAttribute('data-terminal', 'true');
   });
@@ -181,7 +187,7 @@ test.describe('issue #525 PR-B — the state element text (issue #572: no 目前
     await expect(statePill(page)).toHaveAttribute('data-terminal', 'false');
     await expect(statePill(page)).toHaveAttribute(
       'aria-label',
-      '爭議中，已有 2 位審核員／共需 2 位',
+      '審核單位狀態：爭議中',
     );
   });
 });
