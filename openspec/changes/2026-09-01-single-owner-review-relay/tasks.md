@@ -86,6 +86,11 @@
     - **量測方法警告**：`playwright.config.ts` 的 `reuseExistingServer: !process.env.CI` 會讓不同 worktree 共用同一個 dev server，兩支 agent 同時跑會互相污染（群組 4 曾多出 13 筆，隔離重跑證實為 `page.goto` 30s timeout 的負載 flake，非回歸）。之後任何基準線量測都必須指定獨立 `PW_PORT` 並確認沒有其他 Playwright 在跑。
     - 總測試數 711（585+126）→ 719 的差額為期間新增的 `issue-596-arbitration.spec.ts`（4）與 `issue-601-collapse-reviewer-submit.spec.ts`（4）
 
+  - **波次 2 合併後實測（群組 3 ＋ 群組 4 同時在場，PW_PORT=8995、`--workers=2`、10.1m）：`tests/annotation` 708 passed / 12 failed**，12 筆全數歸屬群組 7（`annotation-review-flow-demo-{seed,workspace,rows}`）。CI 全套為 17 failed / 1435 passed，其餘 5 筆歸屬如下：
+    - **4 筆為 main 既有債，與本 change 無關**（`xrole-canonical-journey` 1、`dashboard-quick-review-next-actionable` 2、`dashboard-review-flow-demo` 1）。佐證：main `fcbcd892` 基準線 141 failed 中逐檔數字完全相同。
+    - **1 筆 `cross-role/xrole-fixture-smoke` 為 FR-093 指派過濾新造成，歸屬「名冊來源接線」待辦（issue 另開）**。根因：`getAssignedReviewUnits()` 仍以寫死的 `REVIEWER_ROSTER` demo 名冊輪派（`annotation-workspace.data.js:2053`），而 XROLE fixture 的合成任務只把 `R03` 附加在 4 位 demo 審核員之後；official_run 的 3 個單位輪派後落在前三位 demo 審核員，XROLE 自己的審核員恆得 0 個指派，測試用的 `R01` 更是完全不在名冊內。`annotation-workspace.data.js:2046` 的註解已過期——它宣告名冊來源「由群組 5 換掉」，但群組 5 隨 PR #609 落地時只做了 014 側（`task-detail.data.js` 的 `reviewer_ids`），015 側從未接線。
+    - **只在合併後才出現的交互作用（已於本波修掉）**：`issue-400-list-finalized-overwrite` 在 #616 與 #615 各自的樹上皆綠，兩組合併後才紅——群組 3 改寫該檔用語、群組 4 加入 `filterToAssignedUnits`，相乘才刪掉待讀的列。修法為對齊指派模型（由擁有者 `reviewer_lin` 送出異議、`reviewer_chen` 仲裁、以擁有者讀清單），斷言未動。**教訓：堆疊 PR 的 CI 各自只跑在「自己 ＋ 舊 main」上，沒有任何一次跑在兩組都在場的樹上；合併前必須在本機把 main 合進來重跑全套。**
+
 ## 3. PR 群組 3 — 015 仲裁版面、定稿卡與脈絡橫幅（FR-053 定稿鎖定／FR-060／FR-061／FR-064／FR-070／FR-094）
 
 **故事目標**：仲裁版面切換嚴格符合「爭議中 AND 仲裁資格」，仲裁者逐項裁定後單位可推導定稿，定稿後全面唯讀並以責任鏈呈現（SC-004T）。
