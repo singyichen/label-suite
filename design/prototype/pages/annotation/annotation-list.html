@@ -1615,7 +1615,43 @@
         });
       });
     });
-    return units;
+    return filterToAssignedUnits(context, units);
+  }
+
+  /* FR-093: a reviewer's list carries the units the system assigned to THEM,
+     not every unit in the task. The derivation itself lives in the data
+     layer (it owns the roster), so this only supplies the units and reads
+     the answer back.
+
+     Filtered out, not disabled: a greyed row for someone else's unit still
+     shows this reviewer the sample text and the annotator's answer, which is
+     work they were not given and context they do not need.
+
+     The `arbiterEntry` disjunct is not a convenience. FR-060 gives the 仲裁
+     entry to a reviewer who is flagged can_arbitrate AND holds no submission
+     on the unit -- and the unit's own assigned reviewer is exactly the
+     person who does hold one, so an eligible arbiter is never the assignee.
+     Filtering to assigned units alone would therefore delete every row on
+     which 仲裁 could appear and leave FR-060 unreachable. It stays narrow:
+     `arbiterEntry` is already `爭議中 AND isArbiterCandidate`, so a reviewer
+     without the flag gains nothing when a unit turns disputed. */
+  function filterToAssignedUnits(context, units) {
+    var reviewerId = context.identity && context.identity.reviewerId;
+    if (!reviewerId) return units;
+    var assigned = window.LabelSuiteAnnotationWorkspaceData.getAssignedReviewUnits(
+      context.runType, reviewerId,
+      units.map(function (unit) {
+        return { sample_id: unit.recordId, annotator_id: unit.annotator };
+      }));
+    /* NUL-joined: no sample or annotator id can contain one, so two
+       different units can never collide onto the same key. */
+    var mine = {};
+    assigned.forEach(function (unit) {
+      mine[unit.sample_id + '\u0000' + unit.annotator_id] = true;
+    });
+    return units.filter(function (unit) {
+      return mine[unit.recordId + '\u0000' + unit.annotator] === true || unit.arbiterEntry;
+    });
   }
 
   /* FR-091: the per-sample processing summary. All three values are derived
