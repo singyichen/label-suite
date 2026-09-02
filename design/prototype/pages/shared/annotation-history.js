@@ -214,6 +214,50 @@
      figure only adds noise there. It lives here rather than in either page
      because the workspace history panel and the annotation-list summary
      must never disagree about what 90000ms reads as. */
+  /* FR-088 total across a set of events (issue #606).
+
+     A plain sum is wrong because lead_time is not per-event: it is the
+     running page-visible accumulator for one OPEN SESSION, stamped with the
+     started_at of that opening and copied verbatim onto every event a single
+     submit writes -- the envelope plus one decision per outKey. Summing the
+     column therefore multiplies a reviewer's time by their output count.
+
+     So group by session and sum the groups. The session is (actorId,
+     started_at): started_at alone would merge two people who happened to
+     open the sample at the same instant, and actorId alone would merge the
+     two openings of one reviewer who came back to the sample later -- which
+     is real additional work and must still add up.
+
+     Within a group take the largest value, not the first or the last. The
+     accumulator only grows while the session is open, so the largest is the
+     session's final duration regardless of what order the events merged in.
+     This is deliberately NOT a global maximum: that would collapse the two
+     sessions the grouping just kept apart.
+
+     Events with no started_at each count on their own. They predate FR-088
+     and carry no session identity, so there is nothing to group them by, and
+     assuming they share one would silently shrink historical totals. */
+  function totalLeadTime(events) {
+    var sessions = {};
+    var total = 0;
+    (events || []).forEach(function (event) {
+      var lead = event && typeof event.lead_time === 'number' ? event.lead_time : 0;
+      if (!lead) return;
+      if (!event.started_at) {
+        total += lead;
+        return;
+      }
+      /* NUL-joined: neither an actor id nor a timestamp can contain one, so
+         two different pairs can never collide into one key. */
+      var key = (event.actorId || '') + '\u0000' + event.started_at;
+      if (!Object.prototype.hasOwnProperty.call(sessions, key) || sessions[key] < lead) {
+        sessions[key] = lead;
+      }
+    });
+    Object.keys(sessions).forEach(function (key) { total += sessions[key]; });
+    return total;
+  }
+
   function formatLeadTime(ms) {
     var totalSeconds = Math.max(0, Math.round(ms / 1000));
     if (totalSeconds < 60) return totalSeconds + 's';
@@ -231,6 +275,7 @@
     collapseHistory: collapseHistory,
     isPositionalOutput: isPositionalOutput,
     diffPositional: diffPositional,
+    totalLeadTime: totalLeadTime,
     formatLeadTime: formatLeadTime,
   };
 })(window);

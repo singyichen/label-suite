@@ -1633,9 +1633,11 @@
       { role: context.role, actorId: viewerActorId(context, identity) });
     if (!events.length) return null;
     var latest = events[events.length - 1];
-    var totalLeadMs = events.reduce(function (sum, event) {
-      return sum + (typeof event.lead_time === 'number' ? event.lead_time : 0);
-    }, 0);
+    /* Per open session, not per event (issue #606): one submit writes the
+       envelope plus one decision per outKey and copies the same timing onto
+       all of them, so the reduce this replaces reported a three-output
+       review as four times the reviewer's real time. */
+    var totalLeadMs = window.LabelSuiteAnnotationHistory.totalLeadTime(events);
     return { action: latest.action, at: latest.at, totalLeadMs: totalLeadMs };
   }
 
