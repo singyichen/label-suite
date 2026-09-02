@@ -9,9 +9,11 @@ const DASHBOARD_URL = '/pages/dashboard/dashboard.html';
  *
  * Exact-match assertions pin the NEW copy in BOTH languages at once; either
  * language silently keeping the old 退回-only wording (the F-08a defect) now
- * fails the corresponding exact match. The shortcut-help R row is rendered
- * by the shared sidebar into the (initially hidden) help modal; toHaveText
- * resolves textContent, so the modal does not need to be opened.
+ * fails the corresponding exact match. The shortcut-help row (now B / Cannot
+ * determine, issue #621 -- 退回 and its R shortcut were abolished by issue
+ * #596) is rendered by the shared sidebar into the (initially hidden) help
+ * modal; toHaveText resolves textContent, so the modal does not need to be
+ * opened.
  *
  * Traceability: specs/dashboard/012-dashboard/spec.md
  *   FR-007A, FR-007F */
@@ -21,11 +23,14 @@ test('the Chinese reviewer copy reflects the correct-or-arbitrate model (I18N-03
 
   await expect(page.locator('#roleReviewerSubtitle')).toHaveText('逐標記員獨立審核，直接修正結果，歧異交付仲裁。');
   await expect(page.locator('#stepReviewer2Title')).toHaveText('修正或仲裁');
-  await expect(page.locator('#stepReviewer2Desc')).toHaveText('直接修正結果；退回僅限正式標記');
-  /* issue #409: the qualifier now attaches to the annotator-status rollback
-   * side effect specifically, not the reject action/key as a whole (spec
-   * 015 AC-3.33 keeps the reject control itself run-type-agnostic). */
-  await expect(page.locator('#shortcutReviewReject')).toHaveText('退回目前結果（回退標記員狀態僅限正式標記）');
+  /* issue #621: issue #596 abolished the review "退回" (reject) flow and its
+   * `R` shortcut (FR-014I removed, FR-054 revised to A=通過/B=無法判定); this
+   * step description carried the retired wording outside that change's own
+   * file scope, tracked separately here. */
+  await expect(page.locator('#stepReviewer2Desc')).toHaveText('通過、修正或無法判定；歧異交付仲裁與例外池');
+  /* issue #596 (design.md 已確認決策 #1): `R`（退回）已隨審核退回流程廢除一併
+   * 移除，`B`（無法判定）取而代之。此列改為說明 B 快捷鍵（issue #621）。 */
+  await expect(page.locator('#shortcutReviewBypass')).toHaveText('無法判定目前結果');
 });
 
 test('the English reviewer copy carries the same semantics (I18N-03)', async ({ page }) => {
@@ -37,8 +42,8 @@ test('the English reviewer copy carries the same semantics (I18N-03)', async ({ 
 
   await expect(page.locator('#roleReviewerSubtitle')).toHaveText('Review each annotator independently, correct results directly, and arbitrate disputes.');
   await expect(page.locator('#stepReviewer2Title')).toHaveText('Correct or Arbitrate');
-  await expect(page.locator('#stepReviewer2Desc')).toHaveText('Correct directly; return applies to formal runs only');
-  await expect(page.locator('#shortcutReviewReject')).toHaveText('Return current result (annotator status rollback is formal-run only)');
+  await expect(page.locator('#stepReviewer2Desc')).toHaveText('Approve, modify, or mark unable to determine; disputes go to arbitration and the exception pool');
+  await expect(page.locator('#shortcutReviewBypass')).toHaveText('Mark current result as unable to determine');
 });
 
 /* Issue #458: 審核 is the canonical zh-TW term for the reviewer flow
