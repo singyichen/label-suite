@@ -63,7 +63,8 @@
       reviewBypassLabel: '無法判定',
       wsReviewSubmitSuccess: '審核已送出',
       reviewNoAnswer: '（無）',
-      reviewNote: '通過：採用該輸出類型目前顯示的作答（含您的修正）為審核結果。修正：先修改作答，再填寫理由，記錄修正後的結果。無法判定：不採用任何值，僅記錄理由。',
+      reviewNote: '通過：該項直接定稿，正式標記中即成為最終答案。修正：您的修正不會立即生效，該項進入爭議池待仲裁。無法判定：同樣進入爭議池，仲裁者採用審核員側即定案為無法判定。試標與正式標記皆不會將樣本送回給標記員重做。',
+      reviewNoteDryRunExtra: '試標的定稿只彙總一致性與被修改率，不產生最終答案。',
       reviewNoteTriggerLabel: '審核決策說明',
       reviewReasonLabel: '理由（必填）',
       reviewReasonPlaceholder: '請說明理由',
@@ -94,13 +95,10 @@
       crumbTaskTpl: '{name}（{run}）',
       crumbUnitTpl: '審核單位 {sample} · {annotator}',
       crumbSamplePosTpl: '樣本 {i} / {n}',
-      unitCtxThreshold: '定稿門檻 {x} / {n} 位審核員',
       wsSampleGroupCount: '{n} 位標記員',
       wsSampleGroupAria: '樣本 {sample}，{n} 位標記員',
       wsSampleUnitAria: '樣本 {sample}，標記員 {annotator}，{state}',
       unitStatePending: '待審',
-      unitStateApproved: '已同意',
-      unitStateModified: '已修改',
       unitStateDisputed: '爭議中',
       unitStateFinalized: '已定稿',
       unitStateNone: '尚無標記提交',
@@ -117,20 +115,18 @@
       exceptionActionAdoptReviewer: '採用審核員答案',
       exceptionActionCustomAnswer: '自訂答案',
       exceptionActionExcludeFromDataset: '排除於資料集',
-      unitStateInterimNote: '未達定稿門檻 {x} / {n}',
       unitStateDisputedNote: '未定稿，待仲裁',
       trackAria: '審核單位狀態',
       trackMarker: '目前：',
-      trackBranchSame: '答案未修改',
-      trackBranchDiffering: '答案有修改',
-      trackBranchUnconverged: '未收斂',
+      trackBranchSame: '審核通過',
+      trackBranchDiffering: '修正或無法判定',
       trackBranchArbitrated: '仲裁後',
       flowDrawerOpen: '了解審核流程',
       flowDrawerTitle: '審核流程',
       flowDrawerCloseAria: '關閉審核流程',
       unitStateFinalizedNote: '已鎖定',
-      unitStateAria: '{state}，已有 {x} 位審核員／共需 {n} 位',
-      unitStateAriaFinalized: '{state}，已達 {n} 位審核員門檻，內容已鎖定',
+      unitStateAria: '審核單位狀態：{state}',
+      unitStateAriaFinalized: '審核單位狀態：{state}，內容已鎖定',
       reviewOriginalAnswerLabel: '標記員原答案：',
       reviewCorrectedAnswerLabel: 'Reviewer 修正後答案：',
       toastReviewDecisionResetOnEdit: '直接修正的值已變更，對應的審核決策已重置，請重新確認後再送出',
@@ -182,7 +178,8 @@
       reviewBypassLabel: 'Cannot determine',
       wsReviewSubmitSuccess: 'Review submitted',
       reviewNoAnswer: '(none)',
-      reviewNote: 'Approve: the answer currently shown for that output type (including your correction) becomes the review result. Modify: correct the answer first, then give a reason to record the corrected result. Cannot determine: no value is recorded, only the reason.',
+      reviewNote: 'Approve: the item is finalized as it stands, and in an official run that value becomes the final answer. Modify: your correction does not take effect immediately; the item enters the dispute pool for arbitration. Cannot determine: the item also enters the dispute pool, and an arbiter adopting the reviewer side settles it as undecidable. Neither a dry run nor an official run sends the sample back to the annotator to redo it.',
+      reviewNoteDryRunExtra: ' A dry-run finalization produces no final answer; it only aggregates agreement and the modification rate.',
       reviewNoteTriggerLabel: 'Review decision guidance',
       reviewReasonLabel: 'Reason (required)',
       reviewReasonPlaceholder: 'Explain the reason',
@@ -213,13 +210,10 @@
       crumbTaskTpl: '{name} ({run})',
       crumbUnitTpl: 'Review unit {sample} · {annotator}',
       crumbSamplePosTpl: 'Sample {i} of {n}',
-      unitCtxThreshold: 'Finalize threshold {x} / {n} reviewers',
       wsSampleGroupCount: '{n} annotators',
       wsSampleGroupAria: 'Sample {sample}, {n} annotators',
       wsSampleUnitAria: 'Sample {sample}, annotator {annotator}, {state}',
       unitStatePending: 'Pending review',
-      unitStateApproved: 'Approved',
-      unitStateModified: 'Modified',
       unitStateDisputed: 'Disputed',
       unitStateFinalized: 'Finalized',
       unitStateNone: 'No submission yet',
@@ -236,20 +230,18 @@
       exceptionActionAdoptReviewer: 'Adopt reviewer answer',
       exceptionActionCustomAnswer: 'Custom answer',
       exceptionActionExcludeFromDataset: 'Exclude from dataset',
-      unitStateInterimNote: '{x} / {n} toward finalize threshold',
       unitStateDisputedNote: 'not finalized, awaiting arbitration',
       trackAria: 'Review unit status',
       trackMarker: 'Now:',
-      trackBranchSame: 'Answers unchanged',
-      trackBranchDiffering: 'Answers changed',
-      trackBranchUnconverged: 'No convergence',
+      trackBranchSame: 'Review approved',
+      trackBranchDiffering: 'Modified or undecidable',
       trackBranchArbitrated: 'After arbitration',
       flowDrawerOpen: 'Review flow',
       flowDrawerTitle: 'Review flow',
       flowDrawerCloseAria: 'Close the review flow',
       unitStateFinalizedNote: 'locked',
-      unitStateAria: '{state}, {x} of {n} required reviewers',
-      unitStateAriaFinalized: '{state}, met the {n}-reviewer threshold, locked',
+      unitStateAria: 'Review unit status: {state}',
+      unitStateAriaFinalized: 'Review unit status: {state}, locked',
       reviewOriginalAnswerLabel: "Annotator's original answer: ",
       reviewCorrectedAnswerLabel: "Reviewer's corrected answer: ",
       toastReviewDecisionResetOnEdit: 'The direct correction changed, so the matching review decision was reset -- please re-confirm before submitting',
@@ -1516,11 +1508,12 @@
 
   /* REVIEW_UNIT_STATUS -> i18n key, shared by the context banner (FR-064)
      and the reviewer left column (issue #309): both must speak the same
-     five-state vocabulary annotation-list settled on in AC-1.15. */
+     vocabulary annotation-list settled on. issue #596 narrowed that
+     vocabulary to THREE states -- 已同意／已修改 only ever described a unit
+     waiting for more reviewers to reach a quorum, and FR-093 gives every
+     unit exactly one reviewer, so there is nothing left for them to name. */
   var REVIEW_STATE_I18N_KEYS = {
     pending: 'unitStatePending',
-    approved: 'unitStateApproved',
-    modified: 'unitStateModified',
     disputed: 'unitStateDisputed',
     finalized: 'unitStateFinalized',
   };
@@ -3153,11 +3146,12 @@
      ban on a run_type branch INSIDE a review card never applied to it.
      issue #550 (FR-070 points 2/3 revoked, FR-077/AC-3.42/AC-3.44 revoked;
      spec 015 v4.55.0) folded that confirmation area's consequence into THIS
-     element instead of a second element below the cards. issue #596 then
-     retired FR-014I's official_run-only rollback entirely, so the text is
-     back to being ONE run-type-invariant string (`reviewNote`) again --
-     `data-run-type` stays on the bubble as a stable hook even though the
-     text itself no longer branches on it. It renders as a MASTER.md Tooltip
+     element instead of a second element below the cards. issue #596 retired
+     FR-014I's official_run-only rollback and rewrote the copy around the
+     three-way decision: the shared `reviewNote` explains what 通過／修正／
+     無法判定 do, and a dry run appends one sentence saying its finalization
+     produces no final answer (AC-3.40) -- so the bubble is run-type-aware
+     again and `data-run-type` labels which copy is on screen. It renders as a MASTER.md Tooltip
      (design/system/MASTER.md:1423-1482) reusing task-config.css's
      .tooltip-wrap / .field-help-tooltip / .tooltip-bubble -- this page
      already links that stylesheet for the shared task-config engine. A real
@@ -3169,6 +3163,8 @@
      right after the 了解審核流程 trigger, so the two "what does this unit
      mean" entry points share one row instead of one floating between the
      banner and the card stack. */
+  var REVIEW_NOTE_RUN_SUFFIX_I18N_KEYS = { dry_run: 'reviewNoteDryRunExtra' };
+
   function appendReviewNoteTooltip(host) {
     var wrap = document.createElement('div');
     wrap.className = 'rv-review-note';
@@ -3191,7 +3187,13 @@
     bubble.setAttribute('role', 'tooltip');
     bubble.setAttribute('data-testid', 'ws-review-note-bubble');
     bubble.setAttribute('data-run-type', currentRunType);
-    bubble.textContent = t('reviewNote');
+    /* AC-3.40: both run types read the SAME explanation of the three-way
+       decision; a dry run appends ONE sentence about what its finalization
+       does NOT produce. Expressed as a lookup rather than an if, so the
+       shared sentence can never drift between the two copies and adding a
+       run type is a data change (Generalization-First). */
+    var suffixKey = REVIEW_NOTE_RUN_SUFFIX_I18N_KEYS[currentRunType];
+    bubble.textContent = t('reviewNote') + (suffixKey ? t(suffixKey) : '');
 
     tooltipWrap.appendChild(trigger);
     tooltipWrap.appendChild(bubble);
@@ -4026,38 +4028,33 @@
   }
 
   /* Review-unit context banner (issue #302): FR-051 renders the SAME
-     review card for every review model, so run type, quorum, annotator
-     roster, reviewed progress, and the unit's five-state pill are the only
-     way a reviewer can tell one review model from another inside the
-     workspace. Rendered above the card in every reviewer path, including
-     the arbitration branch. */
-  /* FR-051's five states as a route, per lane AND per finalize threshold.
-     FINALIZED is reachable from BOTH lanes, which is exactly why the track
-     needs getReviewUnitLane() and not just the status.
+     review card for every review model, so run type and the unit's state
+     pill are the only way a reviewer can tell one review model from another
+     inside the workspace. Rendered above the card in every reviewer path,
+     including the arbitration branch. issue #596 removed the quorum chip
+     and the reviewed-progress reading with the threshold they counted
+     against (AC-4.37). */
+  /* FR-051's three states as a route, per lane. FINALIZED is reachable from
+     BOTH lanes, which is exactly why the track needs getReviewUnitLane() and
+     not just the status.
 
-     issue #525 PR-C: `approved` and `modified` are the two states that mean
-     "a reviewer answered, but the quorum is not reached yet". At
-     min_reviewers = 1 that moment does not exist -- getReviewUnitStatus()
-     only evaluates `enoughReviewers` once at least one reviewer submitted,
-     so a threshold of 1 makes the flag always true and the unit derives
-     `finalized` (no diff) or `disputed` (any diff) directly. Drawing those
-     two nodes anyway told a single-reviewer task's reviewer about states
-     their task can never produce, so the `single` column drops them. */
+     issue #596: there is no longer a per-lane quorum column. Every unit has
+     exactly ONE reviewer (FR-093), so the two interim states that meant "a
+     reviewer answered, but the quorum is not reached yet" cannot occur under
+     ANY task configuration -- including a task whose stored profile still
+     carries the retired reviewer-count field. Keying the route off that
+     field would let retired data resurrect retired states, so the field is
+     no longer read here at all. */
   var REVIEW_TRACK_ROUTES = {
-    quorum: {
-      same: ['pending', 'approved', 'finalized'],
-      differing: ['pending', 'modified', 'disputed', 'finalized'],
-    },
-    single: {
-      same: ['pending', 'finalized'],
-      differing: ['pending', 'disputed', 'finalized'],
-    },
+    same: ['pending', 'finalized'],
+    differing: ['pending', 'disputed', 'finalized'],
   };
 
+  /* `unconverged` went with the quorum column: the rail it labelled sat
+     between 已修改 and 爭議中, and neither end exists any more. */
   var TRACK_BRANCH_I18N_KEYS = {
     same: 'trackBranchSame',
     differing: 'trackBranchDiffering',
-    unconverged: 'trackBranchUnconverged',
     arbitrated: 'trackBranchArbitrated',
   };
 
@@ -4081,20 +4078,17 @@
     return span;
   }
 
-  /* Builds the §Review Status Track for one unit. `lane` is null until a
+  /* Builds the §Review Status Track for one unit. `lane` is null until the
      reviewer submits, in which case only 待審 is on the route.
-     `minReviewers` picks the column of REVIEW_TRACK_ROUTES above.
 
      `done` means "this node is on the unit's route, before its current
      position". It is a ROUTE, not an event log: the prototype derives
-     REVIEW_UNIT_STATUS on every render and stores no history, so a unit whose
-     reviewers all submitted at once can reach 已定稿 without ever having been
-     rendered as 已同意. Marking the lane's interim node keeps the branch
-     legible; claiming a timestamped visit would be a claim the data cannot
-     support. */
-  function buildReviewStatusTrack(unitStatus, lane, minReviewers) {
-    var quorum = minReviewers >= 2;
-    var route = REVIEW_TRACK_ROUTES[quorum ? 'quorum' : 'single'][lane] || ['pending'];
+     REVIEW_UNIT_STATUS on every render and stores no history, so a unit can
+     reach 已定稿 without ever having been rendered as 爭議中. Marking the
+     lane keeps the branch legible; claiming a timestamped visit would be a
+     claim the data cannot support. */
+  function buildReviewStatusTrack(unitStatus, lane) {
+    var route = REVIEW_TRACK_ROUTES[lane] || ['pending'];
     var position = route.indexOf(unitStatus);
 
     function nodeClass(status) {
@@ -4104,7 +4098,7 @@
     }
 
     var track = document.createElement('div');
-    track.className = 'review-track' + (quorum ? '' : ' review-track-single');
+    track.className = 'review-track';
     track.setAttribute('role', 'list');
     track.setAttribute('aria-label', t('trackAria'));
 
@@ -4163,21 +4157,12 @@
     ]), 'grid-column:2;grid-row:1/3');
     addBranch('same', lane === 'same', 'grid-column:3;grid-row:1');
     addBranch('differing', lane === 'differing', 'grid-column:3;grid-row:2');
-    if (quorum) {
-      addNode('approved', 'grid-column:4;grid-row:1');
-      addNode('modified', 'grid-column:4;grid-row:2');
-      addRail('grid-column:5/8;grid-row:1', lane === 'same' && finalized);
-      addRail('grid-column:5;grid-row:2', lane === 'differing' && unitStatus !== 'modified', 'unconverged');
-      addNode('disputed', 'grid-column:6;grid-row:2');
-      addRail('grid-column:7;grid-row:2', lane === 'differing' && finalized, 'arbitrated');
-    } else {
-      /* No interim node to pass through: the same-answer lane runs straight
-         from the fork to 已定稿, and the differing lane straight to 爭議中. */
-      addRail('grid-column:4/6;grid-row:1', lane === 'same' && finalized);
-      addNode('disputed', 'grid-column:4;grid-row:2');
-      addRail('grid-column:5;grid-row:2', lane === 'differing' && finalized, 'arbitrated');
-    }
-    var joinColumn = quorum ? 8 : 6;
+    /* No interim node to pass through: the approved lane runs straight from
+       the fork to 已定稿, and the differing lane straight to 爭議中. */
+    addRail('grid-column:4/6;grid-row:1', lane === 'same' && finalized);
+    addNode('disputed', 'grid-column:4;grid-row:2');
+    addRail('grid-column:5;grid-row:2', lane === 'differing' && finalized, 'arbitrated');
+    var joinColumn = 6;
     addFork(trackFork([
       { d: 'M0 17 H16 V34 H28', taken: lane === 'same' && finalized },
       { d: 'M0 51 H16 V34 H28', taken: lane === 'differing' && finalized },
@@ -4186,12 +4171,8 @@
     return track;
   }
 
-  /* `reviewerSubmissions` is the unit's readReviewerSubmissions() result,
-     read once by renderReviewer(). */
-  function buildReviewUnitContext(unitStatus, reviewerSubmissions) {
+  function buildReviewUnitContext(unitStatus) {
     var workspaceData = window.LabelSuiteAnnotationWorkspaceData;
-    var minReviewers = currentProfile.minReviewers || 1;
-    var reviewedCount = reviewerSubmissions.length;
 
     var banner = document.createElement('div');
     banner.className = 'rv-unit-context';
@@ -4232,23 +4213,19 @@
     statePill.className =
       'rv-unit-state' + (unitStatus ? ' rv-unit-state-' + unitStatus : '');
     var stateText = t(REVIEW_STATE_I18N_KEYS[unitStatus] || 'unitStateNone');
-    /* FINALIZED is the ONLY terminal state (issue #452): approved/modified
-       are short of the threshold and disputed is past it but unresolved, so
-       every non-terminal pill carries a note saying so in words. Colour
-       alone must not be the difference -- `data-terminal` exposes the same
-       split to assistive tech and tests. */
+    /* FINALIZED is the ONLY terminal state (issue #452): disputed is decided
+       but unresolved, so the non-terminal pill carries a note saying so in
+       words. Colour alone must not be the difference -- `data-terminal`
+       exposes the same split to assistive tech and tests. issue #596: the
+       third branch went with the interim states -- 待審 means "the reviewer
+       has not answered", which needs no progress note, and there is no
+       state left between it and a decided unit. */
     var terminal = unitStatus === workspaceData.REVIEW_UNIT_STATUS.FINALIZED;
     var note = '';
     if (terminal) {
       note = t('unitStateFinalizedNote');
     } else if (unitStatus === workspaceData.REVIEW_UNIT_STATUS.DISPUTED) {
       note = t('unitStateDisputedNote');
-    } else if (unitStatus !== null && unitStatus !== workspaceData.REVIEW_UNIT_STATUS.PENDING) {
-      /* 待審 already means "nobody has reviewed", so a 0 / n note adds noise
-         rather than disambiguating -- the list badge omits it too. */
-      note = t('unitStateInterimNote')
-        .replace('{x}', String(reviewedCount))
-        .replace('{n}', String(minReviewers));
     }
     /* issue #572: the 目前： prefix from issue #525 PR-B is gone -- the
        pill sits between the run-type badge and the quorum chip, so it
@@ -4260,28 +4237,15 @@
         'aria-label',
         t(terminal ? 'unitStateAriaFinalized' : 'unitStateAria')
           .replace('{state}', stateText)
-          .replace('{x}', String(reviewedCount))
-          .replace('{n}', String(minReviewers))
       );
     }
     banner.appendChild(statePill);
 
-    /* issue #452: quorum and reviewed-so-far used to be two chips whose
-       numbers were the SAME pair (reviewedCount, minReviewers) under two
-       different labels -- one reading 「審核門檻 3 位審核員」, the other
-       「已審 1 / 3」, which a reviewer read as a second progress bar. One
-       chip, one subject: this unit's distance from its finalize threshold.
-       issue #525 PR-B: it now trails the state instead of leading it. The
-       reviewer's first question is where the unit IS; how far that is from
-       the threshold only qualifies the answer, so it reads second -- and
-       because the banner wraps rather than scrolls, DOM order IS the
-       narrow-viewport reading order (issue #525 §Accessibility). */
-    chip(
-      t('unitCtxThreshold')
-        .replace('{x}', String(reviewedCount))
-        .replace('{n}', String(minReviewers)),
-      'rv-unit-threshold'
-    );
+    /* issue #596 (AC-4.37): the finalize-threshold chip is gone. It read
+       「定稿門檻 {x} / {n} 位審核員」 against a threshold that no longer
+       exists -- one reviewer owns the unit and their decision closes it or
+       sends it to arbitration, so there is no count to make progress
+       against and nothing the chip could truthfully say. */
 
     /* The pill answers "what state"; the track answers "by which route, and
        what is left". Both stay: the pill carries the terminal/interim note
@@ -4353,8 +4317,7 @@
       window.LabelSuiteAnnotationWorkspaceData.getReviewUnitLane(
         currentProfile.id, currentRunType, currentSampleId, currentIdentity,
         state.selectedOutputTypes
-      ),
-      currentProfile.minReviewers || 1
+      )
     ));
   }
 
@@ -4420,10 +4383,7 @@
     if (arbitrationSubmitBtn) arbitrationSubmitBtn.classList.add('hidden');
     arbitrationOpenItemIds = [];
     var unitStatus = currentReviewUnitStatus();
-    var reviewerSubmissions = window.LabelSuiteAnnotationWorkspaceData.readReviewerSubmissions(
-      currentProfile.id, currentRunType, currentSampleId, currentIdentity
-    );
-    preview.appendChild(buildReviewUnitContext(unitStatus, reviewerSubmissions));
+    preview.appendChild(buildReviewUnitContext(unitStatus));
     /* issue #515: the three early returns below and the summary's own guard
        read one and the same answer, so they cannot disagree about whether
        this unit is interactive. */
