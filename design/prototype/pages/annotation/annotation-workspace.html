@@ -458,6 +458,39 @@
       max-width: none;
     }
     .rv-review-note .tooltip-bubble::after { display: none; }
+
+    /* issue #596 FR-094: the finalized card's micro conflict trace. Each
+       account bubble is a SIBLING of the trace line, never a descendant --
+       the line must read as the trace and nothing else -- so §Tooltip's
+       adjacent-sibling reveal cannot apply and config.js toggles .is-open
+       instead. The bubble spans the host for the same reason the review
+       note's does: an inline trigger anywhere along a 375px line cannot
+       carry a bubble hanging off its own left edge. */
+    .rv-trace-host { position: relative; margin-top: 10px; }
+    .rv-finalized-trace { font-size: 12px; line-height: 1.9; color: var(--color-text-soft); }
+    .rv-trace-actor-wrap { position: static; }
+    .rv-trace-actor {
+      border: none;
+      background: none;
+      padding: 0 1px;
+      font: inherit;
+      color: var(--color-ink);
+      font-weight: 700;
+      text-decoration: underline dotted;
+      text-underline-offset: 3px;
+      cursor: help;
+    }
+    .rv-trace-actor:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+    .rv-trace-bubble {
+      top: calc(100% + 6px);
+      bottom: auto;
+      left: 0;
+      right: 0;
+      width: auto;
+      max-width: none;
+    }
+    .rv-trace-bubble::after { display: none; }
+    .rv-trace-bubble.is-open { visibility: visible; opacity: 1; }
     .rv-bulk-actions { display: flex; gap: 8px; flex-shrink: 0; }
 
     .rv-annotator-list { display: flex; flex-direction: column; gap: 8px; }

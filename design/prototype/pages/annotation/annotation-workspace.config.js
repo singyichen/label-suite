@@ -75,7 +75,6 @@
       arbitrationTitle: '爭議仲裁',
       arbitrationNote: '此審核單位已進入爭議池。請逐項裁定採用 A（標記員）、B（審核員）或兩者皆非；仲裁不重新標記，僅逐爭議項選定定稿值。',
       arbitrationAgreedTitle: '標記內容（唯讀）',
-      arbitrationConvergedNote: '已依審核員多數決收斂',
       arbitrationSubmitLabel: '送出仲裁',
       toastArbitrationIncomplete: '請完成所有爭議項目的裁定',
       wsArbitrationSubmitSuccess: '仲裁已提交',
@@ -107,9 +106,17 @@
       unitStateNone: '尚無標記提交',
       reviewEmptyUnitNote: '此標記員尚未提交此樣本，暫無可審核的內容。',
       reviewFinalizedTitle: '審核已定稿',
-      reviewFinalizedNote: '此審核單位已達定稿門檻，結果為唯讀。',
-      finalizedVoteReviewer: '審核員',
-      finalizedVoteSelf: '你',
+      reviewFinalizedNote: '此審核單位已定稿，結果為唯讀。',
+      traceLabel: '歷程：',
+      traceAnnotator: '標記',
+      traceReviewer: '審核',
+      traceArbitration: '仲裁',
+      traceExceptionPool: '例外池',
+      traceDecisionTpl: '（{decision}）',
+      exceptionActionAdoptAnnotator: '採用標記員答案',
+      exceptionActionAdoptReviewer: '採用審核員答案',
+      exceptionActionCustomAnswer: '自訂答案',
+      exceptionActionExcludeFromDataset: '排除於資料集',
       unitStateInterimNote: '未達定稿門檻 {x} / {n}',
       unitStateDisputedNote: '未定稿，待仲裁',
       trackAria: '審核單位狀態',
@@ -187,7 +194,6 @@
       arbitrationTitle: 'Dispute arbitration',
       arbitrationNote: 'This review unit is in the dispute pool. Decide each item as A (annotator), B (reviewer), or neither; arbitration does not re-annotate, it only settles a final value per disputed item.',
       arbitrationAgreedTitle: 'Annotation (read-only)',
-      arbitrationConvergedNote: 'Converged by reviewer majority',
       arbitrationSubmitLabel: 'Submit arbitration',
       toastArbitrationIncomplete: 'Please decide every dispute item first',
       wsArbitrationSubmitSuccess: 'Arbitration submitted',
@@ -219,9 +225,17 @@
       unitStateNone: 'No submission yet',
       reviewEmptyUnitNote: 'This annotator has not submitted this sample yet; there is nothing to review.',
       reviewFinalizedTitle: 'Review finalized',
-      reviewFinalizedNote: 'This review unit has met its finalization threshold; results are read-only.',
-      finalizedVoteReviewer: 'Reviewer',
-      finalizedVoteSelf: 'you',
+      reviewFinalizedNote: 'This review unit is finalized; results are read-only.',
+      traceLabel: 'Trace: ',
+      traceAnnotator: 'Annotated',
+      traceReviewer: 'Reviewed',
+      traceArbitration: 'Arbitrated',
+      traceExceptionPool: 'Exception pool',
+      traceDecisionTpl: ' ({decision})',
+      exceptionActionAdoptAnnotator: 'Adopt annotator answer',
+      exceptionActionAdoptReviewer: 'Adopt reviewer answer',
+      exceptionActionCustomAnswer: 'Custom answer',
+      exceptionActionExcludeFromDataset: 'Exclude from dataset',
       unitStateInterimNote: '{x} / {n} toward finalize threshold',
       unitStateDisputedNote: 'not finalized, awaiting arbitration',
       trackAria: 'Review unit status',
@@ -3675,37 +3689,170 @@
     return row;
   }
 
-  /* Per-reviewer vote breakdown for a resolved dispute item (issue #403):
-   * the resolved row above only shows the converged/arbitrated VALUE, never
-   * which reviewer voted for what, so a minority-side reviewer has no way to
-   * see they were outvoted other than comparing the resolved value against
-   * their own memory. Reuses the arbitration card's label：value pattern
-   * (A・標記員 / B・審核員) with the real reviewer id in place of the A/B
-   * letter, and derives each reviewer's vote the SAME way
-   * resolveDisputeConvergence() tallies them: a reviewer present in
-   * item.reviewerValues dissented to that value, every other reviewer of the
-   * unit implicitly agreed with item.annotatorValue. Fully config-driven --
-   * no task_id or reviewer id is ever hardcoded. */
-  function buildFinalizedVoteRow(reviewerId, value, isSelf) {
-    var row = document.createElement('div');
-    row.setAttribute('data-testid', 'ws-finalized-vote');
-    row.setAttribute('data-reviewer-id', reviewerId);
-    if (isSelf) row.setAttribute('data-self', 'true');
-    row.style.cssText = 'padding:6px 0 6px 12px;font-size:12px;color:var(--color-text-soft);';
-    row.textContent = reviewerId + '・' + t('finalizedVoteReviewer') + '：' + formatDisputeValue(value)
-      + (isSelf ? '（' + t('finalizedVoteSelf') + '）' : '');
-    return row;
+  /* FR-094 point 2/3 (issue #596): the micro conflict trace that REPLACES
+   * the removed FR-069 per-reviewer vote breakdown. One reviewer owns a
+   * unit (FR-093), so "who voted what" no longer exists; what a reader of a
+   * finalized unit needs is the responsibility chain that closed it.
+   *
+   * A and B are FR-061's POSITIONAL letters (A・標記員 / B・審核員), never
+   * truncated accounts -- the account behind a letter is exactly what the
+   * tooltip expands, so printing it in the line too would make the tooltip
+   * pointless. Every segment is derived from the same three stores the
+   * status derivation reads (the reviewer submission's decisions, the
+   * arbitration items, the exception pool): no second copy of the chain is
+   * persisted, and no task id or account is ever branched on. */
+  var TRACE_SIDE_LETTERS = { adopt_a: 'A', adopt_b: 'B' };
+  var TRACE_ANNOTATOR_LETTER = TRACE_SIDE_LETTERS.adopt_a;
+  var TRACE_REVIEWER_LETTER = TRACE_SIDE_LETTERS.adopt_b;
+  var TRACE_SEPARATOR = ' ➔ ';
+  /* A unit with several dispute items can close on different sides (or with
+   * different pool actions). Naming every distinct one keeps the single
+   * line honest instead of silently reporting whichever item happened to be
+   * read last. */
+  var TRACE_MULTI_JOIN = '／';
+  var TRACE_DECISION_I18N_KEYS = {
+    approve: 'reviewApproveLabel',
+    modify: 'reviewModifyLabel',
+    bypass: 'reviewBypassLabel',
+  };
+  var EXCEPTION_ACTION_I18N_KEYS = {
+    adopt_annotator: 'exceptionActionAdoptAnnotator',
+    adopt_reviewer: 'exceptionActionAdoptReviewer',
+    custom_answer: 'exceptionActionCustomAnswer',
+    exclude_from_dataset: 'exceptionActionExcludeFromDataset',
+  };
+  /* Most escalated first: one line describes the WHOLE unit, and the
+   * decision that pushed it down the differing lane is the one worth
+   * naming. Order is data, not a branch chain. */
+  var TRACE_DECISION_PRECEDENCE = ['bypass', 'modify', 'approve'];
+
+  function unitReviewDecision(reviewerSubmission) {
+    var decisions = (reviewerSubmission && reviewerSubmission.answers
+      && reviewerSubmission.answers.decisions) || {};
+    var winner = null;
+    TRACE_DECISION_PRECEDENCE.forEach(function (decision) {
+      if (winner) return;
+      var hit = state.selectedOutputTypes.some(function (outKey) {
+        return decisions[outKey] === decision;
+      });
+      if (hit) winner = decision;
+    });
+    return winner;
   }
 
-  function buildFinalizedVoteRows(item, reviewerSubmissions) {
-    return reviewerSubmissions.map(function (submission) {
-      var reviewerId = submission.reviewerId;
-      var value = Object.prototype.hasOwnProperty.call(item.reviewerValues, reviewerId)
-        ? item.reviewerValues[reviewerId]
-        : item.annotatorValue;
-      var isSelf = !!currentIdentity && currentIdentity.reviewerId === reviewerId;
-      return buildFinalizedVoteRow(reviewerId, value, isSelf);
+  var traceAccountSeq = 0;
+
+  /* Appends one account-bearing segment: the visible token goes in `line`,
+   * its full-account bubble goes in `host` -- deliberately OUTSIDE the
+   * trace line, so the line's text content is the trace and nothing else.
+   * That separation is also why the reveal is two listeners instead of
+   * §Tooltip's adjacent-sibling CSS rule, which cannot reach across it.
+   * MUST NOT fall back to the native `title` attribute (FR-094 point 2). */
+  function appendTraceActor(line, host, role, token, account) {
+    var wrap = document.createElement('span');
+    wrap.className = 'tooltip-wrap rv-trace-actor-wrap';
+    var trigger = document.createElement('button');
+    trigger.type = 'button';
+    trigger.className = 'rv-trace-actor';
+    trigger.setAttribute('data-testid', 'ws-trace-actor');
+    trigger.setAttribute('data-actor-role', role);
+    trigger.textContent = token;
+    traceAccountSeq += 1;
+    var bubbleId = 'wsTraceAccount' + traceAccountSeq;
+    trigger.setAttribute('aria-describedby', bubbleId);
+    wrap.appendChild(trigger);
+    line.appendChild(wrap);
+
+    var bubble = document.createElement('span');
+    bubble.className = 'tooltip-bubble rv-trace-bubble';
+    bubble.id = bubbleId;
+    bubble.setAttribute('role', 'tooltip');
+    bubble.setAttribute('data-testid', 'ws-trace-account');
+    bubble.textContent = account;
+    host.appendChild(bubble);
+
+    var toggle = function (open) {
+      return function () { bubble.classList.toggle('is-open', open); };
+    };
+    trigger.addEventListener('mouseenter', toggle(true));
+    trigger.addEventListener('mouseleave', toggle(false));
+    trigger.addEventListener('focus', toggle(true));
+    trigger.addEventListener('blur', toggle(false));
+  }
+
+  function buildFinalizedTrace(reviewerSubmission, arbState, exceptionPool) {
+    var host = document.createElement('div');
+    host.className = 'rv-trace-host';
+    var line = document.createElement('div');
+    line.className = 'rv-finalized-trace';
+    line.setAttribute('data-testid', 'ws-finalized-trace');
+    host.appendChild(line);
+    var text = function (value) { line.appendChild(document.createTextNode(value)); };
+    /* FR-094's example reads 「（修正）➔ 仲裁 B」: a full-width closer already
+       carries its own trailing whitespace, so the separator drops its
+       leading space right after one. Latin locales, whose decision template
+       closes with an ASCII ')', keep it. */
+    var separate = function () {
+      var rendered = line.textContent;
+      var keepSpace = rendered.charAt(rendered.length - 1) !== '）';
+      text(keepSpace ? TRACE_SEPARATOR : TRACE_SEPARATOR.slice(1));
+    };
+
+    text(t('traceLabel') + t('traceAnnotator') + ' ');
+    appendTraceActor(line, host, 'annotator', TRACE_ANNOTATOR_LETTER,
+      (currentIdentity && currentIdentity.annotatorId) || '');
+
+    var decision = unitReviewDecision(reviewerSubmission);
+    if (decision) {
+      separate();
+      text(t('traceReviewer') + ' ');
+      appendTraceActor(line, host, 'reviewer', TRACE_REVIEWER_LETTER,
+        (reviewerSubmission && reviewerSubmission.reviewerId) || '');
+      text(t('traceDecisionTpl').replace('{decision}', t(TRACE_DECISION_I18N_KEYS[decision])));
+    }
+
+    /* An arbitration item finalizes on the side its arbiter voted for, so
+       the adopted letter is read off that arbiter's own vote rather than
+       re-derived from the stored value. */
+    var sides = [];
+    var arbiterId = null;
+    Object.keys(arbState).forEach(function (itemId) {
+      var stored = arbState[itemId];
+      if (!stored || !stored.finalized_by) return;
+      var vote = null;
+      (stored.votes || []).forEach(function (candidate) {
+        if (candidate.arbiter_id === stored.finalized_by) vote = candidate;
+      });
+      var letter = vote && TRACE_SIDE_LETTERS[vote.choice];
+      if (!letter) return;
+      if (sides.indexOf(letter) === -1) sides.push(letter);
+      if (!arbiterId) arbiterId = stored.finalized_by;
     });
+    if (sides.length) {
+      separate();
+      text(t('traceArbitration') + ' ');
+      appendTraceActor(line, host, 'arbiter', sides.sort().join(TRACE_MULTI_JOIN), arbiterId);
+    }
+
+    /* The pool is always the tail: it only ever runs on what arbitration
+       could not close (FR-095). */
+    var actions = [];
+    var resolverId = null;
+    Object.keys(exceptionPool).forEach(function (outKey) {
+      var record = exceptionPool[outKey];
+      var key = record && EXCEPTION_ACTION_I18N_KEYS[record.action];
+      if (!key) return;
+      var label = t(key);
+      if (actions.indexOf(label) === -1) actions.push(label);
+      if (!resolverId) resolverId = record.resolver_id;
+    });
+    if (actions.length) {
+      separate();
+      text(t('traceExceptionPool') + ' ');
+      appendTraceActor(line, host, 'exception_pool', actions.join(TRACE_MULTI_JOIN), resolverId);
+    }
+
+    return host;
   }
 
   function renderArbitrationCard(preview, submission) {
@@ -3821,8 +3968,8 @@
      read-only results card instead of the interactive review card -- no
      ✕/✓ rows, no correction controls, no submit path. Mirrors the
      arbitration card's read-only layout: the annotator's answers per
-     outKey, plus one resolved row per dispute item showing how it closed
-     (majority convergence or an arbiter's finalized value). The FR-016A
+     outKey, one resolved row per arbitrated dispute item, and FR-094's
+     single-line responsibility trace. The FR-016A
      reopen-with-audit-reason flow is deferred to the backend phase, so the
      notice deliberately offers no way out of the lock. `submission` is
      never null here: getReviewUnitStatus() cannot return FINALIZED without
@@ -3852,32 +3999,28 @@
       card.appendChild(line);
     });
 
-    var items = data.getDisputeItems(
+    var arbState = data.getArbitrationState(currentProfile.id, currentRunType, currentSampleId, currentIdentity);
+    /* Majority convergence went with FR-069: one reviewer per unit (FR-093)
+       means an item is either untouched or settled by a named arbiter, so
+       the only resolved row left is the arbitrated one. */
+    data.getDisputeItems(
       currentProfile.id, currentRunType, currentSampleId, currentIdentity, state.selectedOutputTypes
-    );
-    if (items.length) {
-      var reviewerSubmissions = data.readReviewerSubmissions(
+    ).forEach(function (item) {
+      var stored = arbState[disputeItemId(item)];
+      if (!stored || !stored.finalized_by) return;
+      card.appendChild(buildArbitrationResolvedRow(
+        item, stored.finalized_value, stored.finalized_by, 'ws-finalized-resolved'
+      ));
+    });
+
+    /* FR-093: exactly one reviewer ever owns the unit. */
+    card.appendChild(buildFinalizedTrace(
+      data.readReviewerSubmissions(
         currentProfile.id, currentRunType, currentSampleId, currentIdentity
-      );
-      var arbState = data.getArbitrationState(currentProfile.id, currentRunType, currentSampleId, currentIdentity);
-      items.forEach(function (item) {
-        var convergence = data.resolveDisputeConvergence(item, reviewerSubmissions.length);
-        if (convergence.converged) {
-          card.appendChild(buildArbitrationResolvedRow(
-            item, convergence.value, t('arbitrationConvergedNote'), 'ws-finalized-resolved'
-          ));
-          buildFinalizedVoteRows(item, reviewerSubmissions).forEach(function (row) { card.appendChild(row); });
-          return;
-        }
-        var stored = arbState[disputeItemId(item)];
-        if (stored && stored.finalized_by) {
-          card.appendChild(buildArbitrationResolvedRow(
-            item, stored.finalized_value, stored.finalized_by, 'ws-finalized-resolved'
-          ));
-          buildFinalizedVoteRows(item, reviewerSubmissions).forEach(function (row) { card.appendChild(row); });
-        }
-      });
-    }
+      )[0] || null,
+      arbState,
+      data.getExceptionPool(currentProfile.id, currentRunType, currentSampleId, currentIdentity)
+    ));
 
     preview.appendChild(card);
   }
