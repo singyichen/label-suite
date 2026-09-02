@@ -37,6 +37,15 @@ const SAMPLE = 'ofs-04-pending-review';
 // reviewer, so only the reviewer's dissenting answer has to be seeded here.
 const ANNOTATOR_ANSWER = 'positive';
 const REVIEWER_ANSWER = 'negative';
+/* FR-093 derives the owner of each unit positionally from the roster, so the
+   dissent has to be filed by whoever actually owns this unit -- reviewer_lin
+   for ofs-04 -- and the list has to be read back as that same reviewer. Any
+   other identity is filtered off the row entirely (filterToAssignedUnits),
+   which is why this file's fixture names the assignee explicitly instead of
+   picking an arbitrary reviewer. reviewer_chen stays the arbiter: they carry
+   can_arbitrate and hold no submission on this unit (FR-060). */
+const ASSIGNED_REVIEWER = 'reviewer_lin';
+const ARBITER = 'reviewer_chen';
 
 function reviewerWorkspaceUrl(reviewerId: string): string {
   return buildWorkspaceUrl({
@@ -50,19 +59,19 @@ test('issue #400: a finalized unit\'s list row shows the arbitrated answer, not 
 
   // The data-layer global only exists once the app script has loaded, so
   // navigate first, seed, then reload to pick the seeded bucket up.
-  await page.goto(reviewerWorkspaceUrl('reviewer_chen'));
-  await page.evaluate(({ task, sample, reviewerAnswer }) => {
+  await page.goto(reviewerWorkspaceUrl(ARBITER));
+  await page.evaluate(({ task, sample, reviewerAnswer, assignedReviewer }) => {
     const data = (window as unknown as { LabelSuiteAnnotationWorkspaceData: WorkspaceData })
       .LabelSuiteAnnotationWorkspaceData;
     data.markSampleSubmitted(
       task, 'reviewer', 'official_run', sample,
       { previewState: { single_label: { selected: reviewerAnswer } } }, '',
-      { reviewerId: 'reviewer_wang' }
+      { reviewerId: assignedReviewer }
     );
-  }, { task: TASK, sample: SAMPLE, reviewerAnswer: REVIEWER_ANSWER });
+  }, { task: TASK, sample: SAMPLE, reviewerAnswer: REVIEWER_ANSWER, assignedReviewer: ASSIGNED_REVIEWER });
   await page.reload();
 
-  // reviewer_chen filed no review of their own, so they are the arbiter
+  // The arbiter filed no review of their own, so they are the arbiter
   // candidate (isArbiterCandidate) for this now-disputed unit.
   await expect(page.getByTestId('ws-arbitration-card')).toBeVisible();
   await page.getByTestId('ws-arbitration-choose-b').click();
@@ -77,7 +86,7 @@ test('issue #400: a finalized unit\'s list row shows the arbitrated answer, not 
   await expect(page.getByTestId('ws-finalized-resolved')).toContainText(REVIEWER_ANSWER);
 
   await page.goto(buildListUrl({
-    task_id: TASK, role: 'reviewer', run_type: 'official_run', reviewer_id: 'reviewer_chen',
+    task_id: TASK, role: 'reviewer', run_type: 'official_run', reviewer_id: ASSIGNED_REVIEWER,
   }));
 
   const row = page.getByTestId('ws-sample-item').filter({ hasText: SAMPLE });
