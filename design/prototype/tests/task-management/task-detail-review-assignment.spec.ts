@@ -12,10 +12,22 @@ async function openMemberTab(page: Page) {
   await expect(page.locator('#memberManagementPanel')).not.toHaveClass(/hidden/);
 }
 
-async function saveReviewSettings(page: Page, { manual = false, arbiter = false } = {}) {
+/*
+ * Issue #596 retired review_assignment_mode entirely: assignment is always
+ * system-automatic now (FR-005j), so the manual-mode / auto-fill / per-row
+ * assign / dispute-dispatch cases this file used to cover are gone -- that
+ * "must render no button at all" contract lives in
+ * issue-596-assignment-readonly.spec.ts. This file keeps only the still-live
+ * read-only rendering behaviors: the review-load column, the seeded
+ * workload/dispute-pool numbers, the arbiter tag, disable-driven pool
+ * release, and the i18n toggle.
+ */
+async function checkArbiter(page: Page, name: string) {
   await page.locator('#reviewEditBtn').click();
-  if (manual) await page.locator('#assignmentModeManual').check();
-  if (arbiter) await page.locator('#arbiterOptions .arbiter-option input').first().check();
+  await page
+    .locator('#arbiterOptionList .arbiter-option', { hasText: name })
+    .locator('input')
+    .check();
   await page.locator('#reviewSaveBtn').click();
   await expect(page.locator('#reviewEditForm')).toHaveClass(/hidden/);
 }
@@ -64,78 +76,20 @@ test.describe('Task detail review assignment', () => {
     await expect(page.locator('#disputePoolText')).toHaveText('爭議池 7 項待仲裁');
   });
 
-  test('auto assignment mode keeps the section read-only', async ({ page }) => {
-    await page.goto(TASK_DETAIL_URL);
-    await openMemberTab(page);
-
-    await expect(page.locator('#reviewAssignmentHint')).toContainText('自動輪派');
-    await expect(page.locator('#reviewAutoFillBtn')).toBeHidden();
-    await expect(page.locator('#reviewAssignmentBody button')).toHaveCount(0);
-    await expect(page.locator('#disputeAssignBtn')).toBeHidden();
-  });
-
-  test('manual mode enables actions and auto-fill drains the unassigned pool', async ({ page }) => {
+  test('designated arbiters get a tag in the review assignment table', async ({ page }) => {
     await page.goto(TASK_DETAIL_URL);
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
-    await saveReviewSettings(page, { manual: true });
-    await page.locator('#tabMemberManagement').click();
-
-    await expect(page.locator('#reviewAssignmentHint')).toContainText('手動指派');
-    await expect(page.locator('#reviewAutoFillBtn')).toBeVisible();
-    await expect(page.locator('#reviewAssignmentBody button:has-text("指派…")')).toHaveCount(3);
-    // No arbiter is designated in the seed, so dispute dispatch stays disabled.
-    await expect(page.locator('#disputeAssignBtn')).toBeVisible();
-    await expect(page.locator('#disputeAssignBtn')).toBeDisabled();
-
-    await page.locator('#reviewAutoFillBtn').click();
-
-    await expect(page.locator('#reviewUnassignedCount')).toHaveText('未指派 0 筆');
-    const mandyRow = page.locator('#reviewAssignmentBody tr').filter({ hasText: 'Mandy Chen' });
-    await expect(mandyRow.locator('td').nth(1)).toHaveText('46');
-    await expect(mandyRow.locator('td').nth(2)).toHaveText('18');
-    await expect(page.locator('#reviewAutoFillBtn')).toBeDisabled();
-  });
-
-  test('assigning a single unit moves one item from the pool to that reviewer', async ({ page }) => {
-    await page.goto(TASK_DETAIL_URL);
-    await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
-    await saveReviewSettings(page, { manual: true });
-    await page.locator('#tabMemberManagement').click();
-
-    const rachelRow = page.locator('#reviewAssignmentBody tr').filter({ hasText: 'Rachel Wu' });
-    await rachelRow.locator('button:has-text("指派…")').click();
-
-    await expect(rachelRow.locator('td').nth(1)).toHaveText('19');
-    await expect(rachelRow.locator('td').nth(2)).toHaveText('6');
-    await expect(page.locator('#reviewUnassignedCount')).toHaveText('未指派 17 筆');
-
-    const reviewerRow = page.locator('#memberTableBody tr').filter({ hasText: 'Rachel Wu' });
-    await expect(reviewerRow.locator('td').nth(3)).toHaveText('19 筆 · 6 待審');
-  });
-
-  test('designated arbiters get a tag and can receive the dispute pool', async ({ page }) => {
-    await page.goto(TASK_DETAIL_URL);
-    await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
-    await saveReviewSettings(page, { manual: true, arbiter: true });
+    await checkArbiter(page, 'Mandy Chen');
     await page.locator('#tabMemberManagement').click();
 
     const mandyRow = page.locator('#reviewAssignmentBody tr').filter({ hasText: 'Mandy Chen' });
     await expect(mandyRow.locator('.arbiter-tag')).toHaveText('仲裁');
-
-    await expect(page.locator('#disputeAssignBtn')).toBeEnabled();
-    await page.locator('#disputeAssignBtn').click();
-
-    await expect(page.locator('#disputePoolText')).toHaveText('爭議池 0 項待仲裁');
-    await expect(mandyRow.locator('td').nth(1)).toHaveText('47');
-    await expect(mandyRow.locator('td').nth(2)).toHaveText('19');
-    await expect(page.locator('#disputeAssignBtn')).toBeDisabled();
   });
 
   test('disabling a reviewer returns their pending load to the unassigned pool', async ({ page }) => {
     await page.goto(TASK_DETAIL_URL);
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
-    await saveReviewSettings(page, { manual: true });
-    await page.locator('#tabMemberManagement').click();
+    await openMemberTab(page);
 
     await page
       .locator('#memberTableBody tr')

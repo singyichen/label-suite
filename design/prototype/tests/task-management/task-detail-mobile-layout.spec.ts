@@ -100,19 +100,21 @@ test.describe('Member management and review settings at mobile width (RESP-03)',
 
     await page.locator('#reviewEditBtn').click();
 
-    const minReviewers = page.locator('#minReviewersInput');
-    await minReviewers.click();
-    await expect(minReviewers).toBeFocused();
-    await minReviewers.fill('2');
-
-    // The visually-hidden checkbox is toggled through its label wrapper
-    // (same pattern as task-detail-review-settings.spec.ts) -- the tap
-    // target must work at mobile width too.
-    await page.locator('label[for="arbitrationToggle"]').click();
-    await expect(page.locator('#arbitrationToggle')).not.toBeChecked();
+    // Roster model (issue #596): the 審核員 / 仲裁者 checklists replace the
+    // old numeric input and behavior toggles -- each option is a plain,
+    // visible checkbox (no label-wrapper click hack needed), but the tap
+    // target must still work at mobile width. No focus assertion here: the
+    // change handler re-renders the checklist (subset rule stays live), so
+    // the clicked input node is rebuilt and focus is dropped by design --
+    // the unchecked state carried into the fresh node proves the tap landed.
+    const kevinCheckbox = page
+      .locator('#reviewerOptionList .reviewer-option', { hasText: 'Kevin Liu' })
+      .locator('input');
+    await kevinCheckbox.scrollIntoViewIfNeeded();
+    await kevinCheckbox.click();
+    await expect(kevinCheckbox).not.toBeChecked();
 
     await page.locator('#reviewSaveBtn').click();
-    await expect(page.locator('#valueMinReviewersControl')).toHaveText('2');
-    await expect(page.locator('#valueArbitrationControl')).toHaveText('停用');
+    await expect(page.locator('#valueReviewerIdsControl')).toHaveText('已勾選 2 人');
   });
 });

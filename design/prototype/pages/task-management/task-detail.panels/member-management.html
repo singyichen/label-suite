@@ -99,7 +99,6 @@
       </div>
       <div class="review-assignment-actions">
         <span class="review-unassigned-count" id="reviewUnassignedCount"></span>
-        <button class="mini-btn mini-btn-primary hidden" id="reviewAutoFillBtn" type="button">自動補齊</button>
       </div>
     </div>
     <div class="table-wrap">
@@ -111,7 +110,6 @@
               <th id="thAssignAssigned">已指派</th>
               <th id="thAssignPending">待審</th>
               <th id="thAssignDone">已完成</th>
-              <th id="thAssignActions">操作</th>
             </tr>
           </thead>
           <tbody id="reviewAssignmentBody"></tbody>
@@ -120,7 +118,9 @@
     </div>
     <div class="dispute-pool-row">
       <span id="disputePoolText"></span>
-      <button class="mini-btn hidden" id="disputeAssignBtn" type="button">分派給仲裁者</button>
+    </div>
+    <div class="exception-pool-row">
+      <span id="exceptionPoolText"></span>
     </div>
   </section>
 </div>

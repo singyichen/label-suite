@@ -1022,10 +1022,14 @@
        schema (docs/product/task-configs/review-flow-*.json) with label
        colors mapped to the prototype palette exactly as T001 maps
        single-label.json; records copied verbatim from
-       docs/product/example-data/review-flow-*.json. `minReviewers` seeds
-       the per-task min_reviewers threshold consumed by
-       getReviewUnitStatus(); profiles without the field default to 1
-       (MIN_REVIEWERS_DEFAULT). None of these profiles set
+       docs/product/example-data/review-flow-*.json. issue #596: the
+       single-owner relay model has no quorum concept, so the retired
+       per-task reviewer-count-threshold field (formerly `minReviewers`) is
+       gone from every profile below. `reviewerIds` / `arbiterIds` seed the
+       014 TaskDetail entity's roster fields (`reviewer_ids` / `arbiter_ids`,
+       ARBITER_CANDIDATE_RULE below) for the review-flow demo tasks; every
+       reviewer listed also appears in TASK_MEMBERS (task-detail.html) with
+       `taskRole: 'reviewer'`. None of these profiles set
        `forceShowGuideline` (issue #395) -- they keep the shared false
        default on both task-detail.html's overview and
        annotation-workspace.data.js's resolveTaskProfile(), same as every
@@ -1038,7 +1042,8 @@
     T014: {
       taskCategories: ['classification'],
       taskInputTypes: ['single_item'],
-      minReviewers: 1,
+      reviewerIds: ['mandy@labelsuite.io', 'kevin.liu@labelsuite.io', 'rachel.wu@labelsuite.io'],
+      arbiterIds: ['mandy@labelsuite.io'],
       outputs: [
         {
           type: 'single_label',
@@ -1090,7 +1095,8 @@
     T015: {
       taskCategories: ['classification'],
       taskInputTypes: ['single_item'],
-      minReviewers: 1,
+      reviewerIds: ['mandy@labelsuite.io', 'kevin.liu@labelsuite.io', 'rachel.wu@labelsuite.io'],
+      arbiterIds: ['mandy@labelsuite.io'],
       outputs: [
         {
           type: 'single_label',
@@ -1142,7 +1148,8 @@
     T016: {
       taskCategories: ['classification'],
       taskInputTypes: ['single_item'],
-      minReviewers: 3,
+      reviewerIds: ['mandy@labelsuite.io', 'kevin.liu@labelsuite.io', 'rachel.wu@labelsuite.io'],
+      arbiterIds: ['mandy@labelsuite.io'],
       outputs: [
         {
           type: 'single_label',
@@ -1194,7 +1201,8 @@
     T017: {
       taskCategories: ['classification'],
       taskInputTypes: ['single_item'],
-      minReviewers: 2,
+      reviewerIds: ['mandy@labelsuite.io', 'kevin.liu@labelsuite.io', 'rachel.wu@labelsuite.io'],
+      arbiterIds: ['mandy@labelsuite.io'],
       outputs: [
         {
           type: 'single_label',
@@ -1314,7 +1322,66 @@
     };
   });
 
+  /* 014 規格常數（issue #596, single-owner review relay, spec v3.0.0）。
+   * 與 015 `annotation-workspace.data.js` 的同名/同源常數保持同值，避免
+   * 014／015 兩端各自硬編一份不同步的清單（Generalization-First）。
+   */
+
+  /* AR_REVIEW_STATUS -- 三態，與 015 REVIEW_UNIT_STATUS 同值同形狀
+   * （annotation-workspace.data.js `var REVIEW_UNIT_STATUS = { PENDING,
+   * DISPUTED, FINALIZED }`）。舊五態（pending/approved/modified/disputed/
+   * finalized）已隨審核員數門檻一併移除；approved/modified 兩個「已審但
+   * 未達門檻」的中繼態在恆一位審核員的模型下不可能推導出來。 */
+  var AR_REVIEW_STATUS = {
+    PENDING: 'pending',
+    DISPUTED: 'disputed',
+    FINALIZED: 'finalized'
+  };
+
+  /* ARBITER_CANDIDATE_RULE -- 仲裁者候選規則。issue #596 新增 canArbitrate
+   * 條件：候選集合 = task_role=reviewer AND membership_status=active AND
+   * can_arbitrate=true（`can_arbitrate` 之值來自 TaskDetail.arbiter_ids 是
+   * 否含該審核員，即 FR-010s-1 的「仲裁者」勾選結果）；另受 015 FR-060 之
+   * 非當事人條件約束（未於此重複定義）。 */
+  var ARBITER_CANDIDATE_RULE = {
+    taskRole: 'reviewer',
+    membershipStatus: 'active',
+    canArbitrate: true
+  };
+
+  /* OVERVIEW_EDITABLE_FIELDS -- Overview 可編輯欄位集合。v3.0.0 移除審核員
+   * 數門檻、指派方式、一致即定案開關、第三人仲裁開關四個舊欄位，改列
+   * reviewer_ids（新增）；arbiter_ids 沿用既有欄位。 */
+  var OVERVIEW_EDITABLE_FIELDS = [
+    'task_name',
+    'task_type',
+    'dataset',
+    'field_role_map',
+    'outputs[].config',
+    'sampling_value',
+    'target_agreement_overrides',
+    'min_annotators',
+    'isolation_enabled',
+    'reviewer_ids',
+    'arbiter_ids',
+    'annotator_guideline_text',
+    'annotator_guideline_assets',
+    'reviewer_guideline_text',
+    'reviewer_guideline_assets',
+    'force_guideline'
+  ];
+
+  /* EXCEPTION_POOL_ACTIONS -- 與 015 annotation-workspace.data.js 之
+   * `EXCEPTION_POOL_ACTIONS` 同值（custom_answer 僅 official_run 提供，見
+   * 015 FR-095；本檔不重複該分流邏輯，僅同步集合本身供 014 端的最終例外
+   * 池清單／結案閘門判定使用，見 FR-018／FR-008b）。 */
+  var EXCEPTION_POOL_ACTIONS = ['adopt_annotator', 'adopt_reviewer', 'custom_answer', 'exclude_from_dataset'];
+
   global.LabelSuiteTaskDetailData = {
-    profiles: profiles
+    profiles: profiles,
+    AR_REVIEW_STATUS: AR_REVIEW_STATUS,
+    ARBITER_CANDIDATE_RULE: ARBITER_CANDIDATE_RULE,
+    OVERVIEW_EDITABLE_FIELDS: OVERVIEW_EDITABLE_FIELDS,
+    EXCEPTION_POOL_ACTIONS: EXCEPTION_POOL_ACTIONS
   };
 }(window));

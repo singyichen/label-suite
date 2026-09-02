@@ -16,6 +16,20 @@ import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
  *
  * Traceability: specs/annotation/015-annotation-workspace/spec.md
  *   FR-051, FR-052, AC-4.9, AC-4.10, AC-4.11, SC-004K
+ *
+ * issue #596 fixup: the single-owner relay model (FR-093: exactly one
+ * reviewer per unit) retires min_reviewers and the five-state machine's two
+ * quorum-interim states (`approved` / `modified`) -- getReviewUnitStatus()
+ * no longer accepts an `opts.minReviewers` argument at all, and the state
+ * space collapses to three (`pending` | `disputed` | `finalized`, design.md
+ * D1). The two cases below that existed ONLY to exercise "decided but short
+ * of a >1 min_reviewers threshold" (`approved` / `modified`) are deleted:
+ * there is no quorum left to be short of. "A lone reviewer's correction
+ * converges the unit at min_reviewers = 1" is converted rather than
+ * deleted -- the scenario itself (one reviewer submits a differing answer)
+ * still occurs, it now MUST stay disputed instead of auto-finalizing (see
+ * the sibling issue-596-review-unit-status.spec.ts, which pins this same
+ * behavior as new-model RED/GREEN evidence).
  */
 
 type Diff = { key: string; annotator: unknown; reviewer: unknown };
@@ -206,7 +220,7 @@ test.describe('review unit: annotator vs reviewer comparison', () => {
   });
 });
 
-test.describe('review unit: five-state machine', () => {
+test.describe('review unit: three-state machine', () => {
   test('no annotator submission means there is no review unit yet', async ({ page }) => {
     expect(await statusOf(page, { runType: 'official_run' })).toBeNull();
   });
@@ -237,31 +251,14 @@ test.describe('review unit: five-state machine', () => {
     expect(await statusOf(page, { runType: 'official_run' })).toBe('finalized');
   });
 
-  /* approved is the "agreed, still short of the required reviewer count"
-     state -- reachable today by asking for two reviewers, and the state
-     min_reviewers > 1 will make routine. */
-  test('an agreeing reviewer short of min_reviewers leaves the unit approved', async ({ page }) => {
-    await seed(page, {
-      role: 'annotator',
-      runType: 'official_run',
-      payload: labelPayload('sad'),
-      identity: { annotatorId: ANNOTATOR },
-    });
-    await seed(page, {
-      role: 'reviewer',
-      runType: 'official_run',
-      payload: labelPayload('sad'),
-      identity: { annotatorId: ANNOTATOR, reviewerId: REVIEWER_A },
-    });
-    expect(await statusOf(page, { runType: 'official_run', minReviewers: 2 })).toBe('approved');
-  });
-
-  /* issue #551 (v4.54.0): min_reviewers = 1 makes N = 1 the FULL quorum, not
-     an incomplete one -- the sole reviewer's correction is authoritative and
-     converges immediately instead of requiring arbitration. This used to
-     read 'disputed' unconditionally below N = 2; see the two-reviewer test
-     below for the case that still stays disputed. */
-  test("a lone reviewer's correction converges the unit at min_reviewers = 1", async ({ page }) => {
+  /* issue #596: FR-093 assigns exactly one reviewer per unit, so a lone
+     reviewer's decision is immediately decisive -- there is no longer a
+     "decided, still short of the required reviewer count" resting state to
+     land in. A `modify` decision (the reviewer submits a differing answer)
+     now sends the outKey straight to the dispute pool and MUST stay
+     disputed until arbitrated, instead of auto-converging the way N = 1
+     quorum used to (issue #551, superseded). */
+  test("a lone reviewer's correction stays disputed, not finalized", async ({ page }) => {
     await seed(page, {
       role: 'annotator',
       runType: 'official_run',
@@ -274,7 +271,7 @@ test.describe('review unit: five-state machine', () => {
       payload: labelPayload('fear'),
       identity: { annotatorId: ANNOTATOR, reviewerId: REVIEWER_A },
     });
-    expect(await statusOf(page, { runType: 'official_run' })).toBe('finalized');
+    expect(await statusOf(page, { runType: 'official_run' })).toBe('disputed');
   });
 
   test('two disagreeing reviewers with no strict majority still dispute the unit', async ({ page }) => {
@@ -300,22 +297,6 @@ test.describe('review unit: five-state machine', () => {
       identity: { annotatorId: ANNOTATOR, reviewerId: REVIEWER_B },
     });
     expect(await statusOf(page, { runType: 'official_run' })).toBe('disputed');
-  });
-
-  test('a disagreement short of min_reviewers leaves the unit modified', async ({ page }) => {
-    await seed(page, {
-      role: 'annotator',
-      runType: 'official_run',
-      payload: labelPayload('sad'),
-      identity: { annotatorId: ANNOTATOR },
-    });
-    await seed(page, {
-      role: 'reviewer',
-      runType: 'official_run',
-      payload: labelPayload('fear'),
-      identity: { annotatorId: ANNOTATOR, reviewerId: REVIEWER_A },
-    });
-    expect(await statusOf(page, { runType: 'official_run', minReviewers: 2 })).toBe('modified');
   });
 
   /* One dissenting reviewer is enough to dispute the unit even when the
@@ -372,19 +353,13 @@ test.describe('review unit: five-state machine', () => {
     expect(await statusOf(page, { runType: 'dry_run' })).toBeNull();
   });
 
-  test('REVIEW_UNIT_STATUS exposes all five states', async ({ page }) => {
+  test('REVIEW_UNIT_STATUS exposes all three states', async ({ page }) => {
     const statuses = await page.evaluate(
       () =>
         (window as unknown as { LabelSuiteAnnotationWorkspaceData: WorkspaceData })
           .LabelSuiteAnnotationWorkspaceData.REVIEW_UNIT_STATUS
     );
-    expect(Object.values(statuses).sort()).toEqual([
-      'approved',
-      'disputed',
-      'finalized',
-      'modified',
-      'pending',
-    ]);
+    expect(Object.values(statuses).sort()).toEqual(['disputed', 'finalized', 'pending']);
   });
 });
 

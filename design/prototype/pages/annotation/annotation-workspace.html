@@ -504,7 +504,8 @@
     }
     .mini-btn:hover { opacity: 0.8; }
     .mini-btn-active-approve { background: var(--color-success-bg); color: var(--color-success); border-color: var(--color-success-border); }
-    .mini-btn-active-reject { background: var(--color-error-bg); color: var(--color-error); border-color: var(--color-error-border); }
+    .mini-btn-active-modify { background: var(--color-warning-bg); color: var(--color-warning); border-color: var(--color-warning-border); }
+    .mini-btn-active-bypass { background: var(--color-error-bg); color: var(--color-error); border-color: var(--color-error-border); }
     .rv-btn-icon { line-height: 1; }
 
     .rv-answer-cell { flex: 1; min-width: 0; }
@@ -986,28 +987,12 @@
     .rv-btn-text { line-height: 1; }
     .rv-answer-origin { font-size: 12px; color: var(--color-ink-muted); margin-top: 12px; }
 
-    /* ── Annotator mode: rework reasons banner (issue #552, FR-085) ─────── */
-    .rv-rework-reasons {
-      background: var(--color-error-bg);
-      border: 1px solid var(--color-error-border);
-      border-radius: var(--radius-md);
-      padding: 10px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .rv-rework-title { font-size: 13px; font-weight: 700; color: var(--color-error); }
-    .rv-rework-row { display: flex; flex-direction: column; gap: 2px; }
-    .rv-rework-meta { font-size: 11px; color: var(--color-ink-muted); font-family: var(--font-mono, ui-monospace, monospace); }
-    .rv-rework-reason { font-size: 13px; color: var(--color-ink); white-space: pre-line; }
-    .rv-rework-rejected { outline: 2px solid var(--color-error-border); outline-offset: 4px; border-radius: var(--radius-sm); }
-
-    /* ── Reviewer mode: reject reason (issue #552, FR-016A) ─────────────── */
-    .rv-reject-reason { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; }
-    /* Blocked look while a reject still lacks its reason; the click stays
-       live so the FR-083 toast can name the output types. */
+    /* ── Reviewer mode: review reason (issue #552/#596, FR-016A) ────────── */
+    .rv-review-reason { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; }
+    /* Blocked look while a modify/bypass decision still lacks its reason;
+       the click stays live so the FR-083 toast can name the output types. */
     #wsReviewSubmitBtn[data-submit-blocked] { opacity: 0.55; cursor: not-allowed; }
-    .rv-reject-reason-label { font-size: 12px; font-weight: 600; color: var(--color-error); }
+    .rv-review-reason-label { font-size: 12px; font-weight: 600; color: var(--color-error); }
 
     /* ── Annotator mode: skip + its required reason (issue #578, FR-089) ── */
     /* The reason sits beside the button rather than behind a confirm dialog:
@@ -1027,7 +1012,7 @@
     /* Same blocked look as the reviewer submit (issue #552): dimmed, but the
        click still lands so the toast can say what is missing. */
     #wsSkipBtn[data-submit-blocked] { opacity: 0.55; cursor: not-allowed; }
-    .rv-reject-reason textarea {
+    .rv-review-reason textarea {
       width: 100%;
       font: inherit;
       font-size: 13px;
