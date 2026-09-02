@@ -15,7 +15,9 @@ import {
  *   1. header
  *   2. the FR-024L direct-correction control, seeded from the reviewed
  *      annotator's own answer
- *   3. one `ws-review-row-approve` / `ws-review-row-reject` pair
+ *   3. one three-way decision toggle: `ws-review-row-approve` /
+ *      `ws-review-row-modify` / `ws-review-row-bypass` (issue #596 FR-014B --
+ *      the retired `ws-review-row-reject` no longer renders)
  * No distribution stats, no consensus badge, no apply-majority button, no
  * multi-annotator list, and no sample-level `ws-review-gold-status` card
  * (removed in v3.1.0 as redundant with the sample list and history panel).
@@ -107,9 +109,11 @@ for (const { taskId, sampleId, outKeys } of TASK_COVERAGE) {
         // Exactly one correction panel per card...
         await expect(row.getByTestId(correctionTestId(unit))).toHaveCount(1);
         await expect(row.getByTestId(correctionTestId(unit))).toBeVisible();
-        // ...but one decision pair per output type inside it.
+        // ...but one decision toggle per output type inside it.
         await expect(row.getByTestId('ws-review-row-approve')).toHaveCount(unit.length);
-        await expect(row.getByTestId('ws-review-row-reject')).toHaveCount(unit.length);
+        await expect(row.getByTestId('ws-review-row-modify')).toHaveCount(unit.length);
+        await expect(row.getByTestId('ws-review-row-bypass')).toHaveCount(unit.length);
+        await expect(row.getByTestId('ws-review-row-reject')).toHaveCount(0);
       }
 
       assertNoPageErrors(errors);
@@ -187,9 +191,9 @@ test.describe('Regression guard: no page errors on the reviewer flow', () => {
     await gotoT001Reviewer(page);
     await page.getByTestId('ws-review-correct-single_label')
       .getByTestId('ws-single-label-chip-neutral').click();
-    await page.getByTestId('ws-review-row-reject').click();
-    // issue #552 (FR-016A): a reject needs a reason before submit goes through.
-    await page.getByTestId('ws-review-reject-reason').fill('理由');
+    await page.getByTestId('ws-review-row-modify').click();
+    // FR-016A: a modify decision needs a reason before submit goes through.
+    await page.getByTestId('ws-review-reason').fill('理由');
     await page.getByTestId('ws-review-submit-btn').click();
     await expect(page.locator('#toast')).toBeVisible();
 
@@ -206,7 +210,7 @@ test.describe('Regression guard: no page errors on the reviewer flow', () => {
  * no consensus badge, no apply-majority, no multi-annotator list. Both run
  * types render the SAME single-annotator card the official_run path already
  * shipped -- the reviewed annotator's own answer seeded into the correction
- * panel, closing on one approve/reject pair.
+ * panel, closing on one three-way decision toggle.
  */
 test.describe('Review card converged across run types (v4.0.0)', () => {
   const CONSENSUS_TESTIDS = [
@@ -225,11 +229,13 @@ test.describe('Review card converged across run types (v4.0.0)', () => {
     }
   });
 
-  test('dry_run closes the card on one approve/reject pair, like official_run', async ({ page }) => {
+  test('dry_run closes the card on one three-way toggle, like official_run', async ({ page }) => {
     await gotoT001Reviewer(page);
 
     await expect(page.getByTestId('ws-review-row-approve')).toHaveCount(1);
-    await expect(page.getByTestId('ws-review-row-reject')).toHaveCount(1);
+    await expect(page.getByTestId('ws-review-row-modify')).toHaveCount(1);
+    await expect(page.getByTestId('ws-review-row-bypass')).toHaveCount(1);
+    await expect(page.getByTestId('ws-review-row-reject')).toHaveCount(0);
   });
 
   /* The discriminator: on sent-001 the majority pick is `positive` (2/3) but
@@ -275,13 +281,14 @@ test.describe('Review card converged across run types (v4.0.0)', () => {
     await expect(page.locator('.absa-preview-text')).toHaveCount(1);
   });
 
-  test('merged span card carries one decision pair per output type in dry_run', async ({ page }) => {
+  test('merged span card carries one decision toggle per output type in dry_run', async ({ page }) => {
     await page.goto(buildWorkspaceUrl({ task_id: 'T010', sample_id: 'med-001', role: 'reviewer', run_type: 'dry_run' }));
     await dismissGuidelineModal(page);
 
     await expect(page.getByTestId('ws-review-row')).toHaveCount(1);
     await expect(page.getByTestId('ws-review-row-approve')).toHaveCount(2);
-    await expect(page.getByTestId('ws-review-row-reject')).toHaveCount(2);
+    await expect(page.getByTestId('ws-review-row-modify')).toHaveCount(2);
+    await expect(page.getByTestId('ws-review-row-bypass')).toHaveCount(2);
     await expect(page.getByTestId('ws-review-correct-span')).toHaveCount(1);
   });
 });
