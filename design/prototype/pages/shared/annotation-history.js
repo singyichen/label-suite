@@ -1,4 +1,4 @@
-/* Shared annotation-history event model (spec 015 v4.61.0, issue #578).
+/* Shared annotation-history event model (spec 015 v5.0.0, issues #578/#596).
  *
  * The prototype grew three unconnected history mechanisms -- the workspace
  * 歷程 panel (spec 015 FR-016B), task-detail's per-annotator review timeline
@@ -22,14 +22,23 @@
 (function (global) {
   'use strict';
 
+  /* spec 015 v5.0.0 (issue #596): the single-owner relay retires REJECTED and
+     adds three values. There is no rework loop for a reviewer to send an
+     annotation back into, so a `rejected` event can no longer be produced;
+     in its place a reviewer who cannot decide records BYPASSED, an arbiter
+     closing an exception records EXCEPTION_RESOLVED, and a unit dropped from
+     the run records EXCLUDED. Declaration order is the relay's own order and
+     is what the render side reads. */
   var ACTIONS = {
     DRAFT_SAVED: 'draft_saved',
     SUBMITTED: 'submitted',
     SKIPPED: 'skipped',
     MODIFIED: 'modified',
     ACCEPTED: 'accepted',
-    REJECTED: 'rejected',
+    BYPASSED: 'bypassed',
     ADJUDICATED: 'adjudicated',
+    EXCEPTION_RESOLVED: 'exception_resolved',
+    EXCLUDED: 'excluded',
   };
 
   /* action -> badge modifier class. The colors themselves live in the page's
@@ -41,8 +50,10 @@
     skipped: 'skipped',
     modified: 'modified',
     accepted: 'accepted',
-    rejected: 'rejected',
+    bypassed: 'bypassed',
     adjudicated: 'adjudicated',
+    exception_resolved: 'exception-resolved',
+    excluded: 'excluded',
   };
 
   var ACTION_VALUES = Object.keys(BADGE_CLASS);
@@ -57,23 +68,35 @@
     return isKnownAction(action) ? BADGE_CLASS[action] : '';
   }
 
-  /* action -> localized display label (issue #600). The seven values
-     themselves stay English (FR-086 data contract, already written to
-     localStorage), so translation lives here rather than on the constant. */
+  /* action -> localized display label (issue #600). The values themselves
+     stay English (FR-086 data contract, already written to localStorage), so
+     translation lives here rather than on the constant.
+
+     Deliberately wider than ACTIONS: `rejected` left the set in v5.0.0 but
+     events carrying it are already in people's localStorage, and a label is
+     the one thing they can still be given. They keep the neutral badge --
+     BADGE_CLASS is the set's real gate -- which is what marks them as
+     pre-relay, while the words stay readable instead of regressing to a bare
+     English identifier. */
   var ACTION_LABEL = {
     draft_saved: '已存草稿',
     submitted: '已提交',
     skipped: '已跳過',
     modified: '審核修正',
     accepted: '審核通過',
-    rejected: '審核退回',
+    bypassed: '無法判定',
     adjudicated: '仲裁定案',
+    exception_resolved: '例外收尾',
+    excluded: '已排除',
+    rejected: '審核退回',
   };
 
-  /* the action itself for anything outside the set, so an older-build event
-     still shows something meaningful instead of a blank label. */
+  /* the action itself for anything outside the label table, so an event from
+     an older build still shows something meaningful instead of a blank
+     label. Keyed on ACTION_LABEL, not isKnownAction(), so a retired value
+     that kept its label keeps it. */
   function actionLabelFor(action) {
-    return isKnownAction(action) ? ACTION_LABEL[action] : action;
+    return Object.prototype.hasOwnProperty.call(ACTION_LABEL, action) ? ACTION_LABEL[action] : action;
   }
 
   /* issue #601: markSampleSubmitted() is shared by both roles, so a reviewer
@@ -89,11 +112,18 @@
      the audit fact that a submit happened.
 
      Dropped only when that same reviewer's next act was a decision. A
-     reviewer whose every outKey was rejected emits none (the rejection is
-     written to the annotator's bucket), leaving the envelope as their only
-     trace in the reviewer bucket. The annotator's `submitted` is never
-     dropped -- it is the one event carrying their answer. */
-  var REVIEW_DECISION_ACTIONS = { accepted: true, modified: true };
+     reviewer who recorded no decision at all emits none, leaving the
+     envelope as their only trace in the reviewer bucket. The annotator's
+     `submitted` is never dropped -- it is the one event carrying their
+     answer.
+
+     `bypassed` counts as a decision (issue #596): it is written per outKey
+     exactly like the other two, so leaving it out would resurrect the
+     duplicate envelope for every reviewer who could not decide. The other
+     new values do not -- `adjudicated`, `exception_resolved` and `excluded`
+     close a unit rather than answer one of its outputs, and none is written
+     behind a submit envelope. */
+  var REVIEW_DECISION_ACTIONS = { accepted: true, modified: true, bypassed: true };
 
   function isReviewDecision(action) {
     return Object.prototype.hasOwnProperty.call(REVIEW_DECISION_ACTIONS, action);
@@ -184,6 +214,50 @@
      figure only adds noise there. It lives here rather than in either page
      because the workspace history panel and the annotation-list summary
      must never disagree about what 90000ms reads as. */
+  /* FR-088 total across a set of events (issue #606).
+
+     A plain sum is wrong because lead_time is not per-event: it is the
+     running page-visible accumulator for one OPEN SESSION, stamped with the
+     started_at of that opening and copied verbatim onto every event a single
+     submit writes -- the envelope plus one decision per outKey. Summing the
+     column therefore multiplies a reviewer's time by their output count.
+
+     So group by session and sum the groups. The session is (actorId,
+     started_at): started_at alone would merge two people who happened to
+     open the sample at the same instant, and actorId alone would merge the
+     two openings of one reviewer who came back to the sample later -- which
+     is real additional work and must still add up.
+
+     Within a group take the largest value, not the first or the last. The
+     accumulator only grows while the session is open, so the largest is the
+     session's final duration regardless of what order the events merged in.
+     This is deliberately NOT a global maximum: that would collapse the two
+     sessions the grouping just kept apart.
+
+     Events with no started_at each count on their own. They predate FR-088
+     and carry no session identity, so there is nothing to group them by, and
+     assuming they share one would silently shrink historical totals. */
+  function totalLeadTime(events) {
+    var sessions = {};
+    var total = 0;
+    (events || []).forEach(function (event) {
+      var lead = event && typeof event.lead_time === 'number' ? event.lead_time : 0;
+      if (!lead) return;
+      if (!event.started_at) {
+        total += lead;
+        return;
+      }
+      /* NUL-joined: neither an actor id nor a timestamp can contain one, so
+         two different pairs can never collide into one key. */
+      var key = (event.actorId || '') + '\u0000' + event.started_at;
+      if (!Object.prototype.hasOwnProperty.call(sessions, key) || sessions[key] < lead) {
+        sessions[key] = lead;
+      }
+    });
+    Object.keys(sessions).forEach(function (key) { total += sessions[key]; });
+    return total;
+  }
+
   function formatLeadTime(ms) {
     var totalSeconds = Math.max(0, Math.round(ms / 1000));
     if (totalSeconds < 60) return totalSeconds + 's';
@@ -201,6 +275,7 @@
     collapseHistory: collapseHistory,
     isPositionalOutput: isPositionalOutput,
     diffPositional: diffPositional,
+    totalLeadTime: totalLeadTime,
     formatLeadTime: formatLeadTime,
   };
 })(window);

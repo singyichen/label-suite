@@ -22,11 +22,14 @@ test.describe('issue #407 -- review-unit rows are visually grouped by sample', (
   test('T014 dry_run: group boundaries land exactly at each 3-annotator sample', async ({ page }) => {
     await page.goto(buildListUrl({ task_id: 'T014', role: 'reviewer', run_type: 'dry_run' }));
 
+    /* issue #596 (FR-093): dry_run assigns whole samples round-robin, so
+       reviewer_wang's list is dry-01 and dry-05 -- two intact 3-annotator
+       groups, which is exactly the boundary this test is about. */
     const rows = page.getByTestId('ws-sample-item');
-    await expect(rows).toHaveCount(15);
+    await expect(rows).toHaveCount(6);
 
-    const groupStartIndexes = [0, 3, 6, 9, 12];
-    for (let i = 0; i < 15; i += 1) {
+    const groupStartIndexes = [0, 3];
+    for (let i = 0; i < 6; i += 1) {
       await expect(rows.nth(i)).toHaveAttribute(
         'data-group-start',
         groupStartIndexes.includes(i) ? 'true' : 'false'
@@ -54,15 +57,20 @@ test.describe('issue #407 -- review-unit rows are visually grouped by sample', (
     await expect(rows.nth(3).getByTestId('list-review-id')).not.toHaveClass(/list-review-id-muted/);
   });
 
-  test('T015 official_run: single-annotator-per-sample groups are all group-starts, never muted', async ({
+  test('T016 official_run: single-annotator-per-sample groups are all group-starts, never muted', async ({
     page,
   }) => {
-    await page.goto(buildListUrl({ task_id: 'T015', role: 'reviewer', run_type: 'official_run' }));
+    /* issue #596 (FR-093): official_run spreads unit-by-unit, so no reviewer
+       ever holds two units of one sample -- every row is its own group. T016
+       (5 units over the 4-strong roster) leaves reviewer_wang two rows, which
+       is the smallest list that can still show a boundary between groups.
+       T015 would give exactly one row and prove nothing about grouping. */
+    await page.goto(buildListUrl({ task_id: 'T016', role: 'reviewer', run_type: 'official_run' }));
 
     const rows = page.getByTestId('ws-sample-item');
-    await expect(rows).toHaveCount(4);
+    await expect(rows).toHaveCount(2);
 
-    for (let i = 0; i < 4; i += 1) {
+    for (let i = 0; i < 2; i += 1) {
       await expect(rows.nth(i)).toHaveAttribute('data-group-start', 'true');
       await expect(rows.nth(i).getByTestId('list-review-id')).not.toHaveClass(/list-review-id-muted/);
     }

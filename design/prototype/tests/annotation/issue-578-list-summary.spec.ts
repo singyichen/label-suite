@@ -70,7 +70,12 @@ function rowFor(page: Page, sampleId: string) {
 test.describe('FR-091 標記清單處理狀況彙總 (issue #578)', () => {
   test('AC-1.25: the reviewer view shows last action, last activity and summed lead time', async ({ page }) => {
     await seedHistory(page);
-    await page.goto(buildListUrl({ task_id: 'T001', role: 'reviewer', run_type: 'official_run' }));
+    /* issue #596 (FR-093): sent-001's kioleemg12 unit -- the one seeded above
+       -- belongs to reviewer_li, so any other reviewer's list no longer
+       carries the row this case reads. */
+    await page.goto(buildListUrl({
+      task_id: 'T001', role: 'reviewer', run_type: 'official_run', reviewer_id: 'reviewer_li',
+    }));
 
     const row = rowFor(page, 'sent-001');
 

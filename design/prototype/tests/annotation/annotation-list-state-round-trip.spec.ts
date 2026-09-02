@@ -109,7 +109,12 @@ test.describe('清單檢視狀態的來回往返 (AC-4)', () => {
   });
 
   test('審核員清單的狀態同樣往返', async ({ page }) => {
-    const reviewerList = buildListUrl({ task_id: 'T014', role: 'reviewer', run_type: 'dry_run' });
+    /* issue #596 (FR-093): dry-03/dry-04 -- the two samples the 'dispute'
+     * search matches -- are assigned to reviewer_chen and reviewer_lin, so the
+     * default reviewer's list comes back empty and there is no row to click. */
+    const reviewerList = buildListUrl({
+      task_id: 'T014', role: 'reviewer', run_type: 'dry_run', reviewer_id: 'reviewer_chen',
+    });
     await page.goto(reviewerList);
     await page.locator('#searchInput').fill('dispute');
     await expect(page.locator('[data-testid="ws-sample-item"]').first()).toBeVisible();
