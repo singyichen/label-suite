@@ -103,7 +103,7 @@
 - [x] 3.4 （Green）於 `design/prototype/pages/annotation/annotation-workspace.html` 實作 FR-094 純文字定稿卡與微型衝突歷程，移除 FR-069 之 `ws-finalized-vote` 逐位投票表（testid 保留不重用）。驗證：`pnpm playwright test tests/annotation/issue-596-finalized-card.spec.ts` 全綠 [@senior-frontend]
 - [x] 3.5 撰寫 Red 測試覆蓋 AC-4.55 脈絡橫幅與狀態軌（`design/prototype/tests/annotation/issue-596-unit-context.spec.ts`）：橫幅不含定稿門檻元素，`.rv-unit-threshold` 不存在，狀態 pill 為三態、抽屜內狀態軌恰 3 個 `role="listitem"`、分支標籤為 `審核通過`／`修正或無法判定`／`仲裁後`；FR-070 tooltip 文案不含「退回」「重新標記」「定稿門檻」「多數決」。驗證：執行該檔全數失敗且失敗原因為橫幅仍渲染門檻 chip 與五節點狀態軌 [@senior-qa]
 - [x] 3.6 （Green）於 `design/prototype/pages/annotation/annotation-workspace.html` 實作 FR-064 橫幅與三節點狀態軌改版，並依 FR-070 改寫審核說明 tooltip 文案。驗證：`pnpm playwright test tests/annotation/issue-596-unit-context.spec.ts` 全綠 [@senior-frontend]
-- [ ] 3.7 **（波次 1 後新增收尾任務，依據同 5.6）** 修正/刪除任務 2.5 附錄清單中歸屬群組 3 與「群組 2 轉綠後直接造成」兩節的失效測試：測已廢除行為者（`issue-552`／`issue-451`／`issue-192`／`issue-403` 等退回流程與投票表）比照 issue-551 整檔刪除、勿修斷言；其餘依三向決策／三態／新版面改寫斷言。驗證：`cd design/prototype && pnpm playwright test tests/annotation` 失敗清單僅剩群組 4／7 歸屬檔案 [@senior-qa]
+- [x] 3.7 **（波次 1 後新增收尾任務，依據同 5.6）** 修正/刪除任務 2.5 附錄清單中歸屬群組 3 與「群組 2 轉綠後直接造成」兩節的失效測試：測已廢除行為者（`issue-552`／`issue-451`／`issue-192`／`issue-403` 等退回流程與投票表）比照 issue-551 整檔刪除、勿修斷言；其餘依三向決策／三態／新版面改寫斷言。驗證：`cd design/prototype && pnpm playwright test tests/annotation` 失敗清單僅剩群組 4／7 歸屬檔案 [@senior-qa]
 
 ## 4. PR 群組 4 — 015 清單粒度與歷程加詳（FR-055／FR-062／FR-086／FR-093 接線／FR-097）
 
