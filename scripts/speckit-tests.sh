@@ -1638,6 +1638,31 @@ test_check_sdd_accepts_english_negative_task_clauses() {
     assert_not_contains "$output" "TASK_EXCEPTION"
 }
 
+test_check_sdd_extracts_chinese_task_clauses_in_byte_locale() {
+    local output repo status
+
+    repo="$(make_sdd_repo)"
+    output="$(mktemp "$TMP_ROOT/check-sdd-byte-locale.XXXXXX")"
+    printf '\n- [ ] 1.3 撰寫 Red 測試覆蓋推導（`scripts/extra-tests.sh`）：三態尚未支援。驗證：預期全數失敗 [@senior-qa]\n- [ ] 1.4 （Green）修改 `scripts/extra-tests.sh` 使測試轉綠 [@senior-qa]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
+
+    # LC_ALL=C is the only locale guaranteed on both macOS and Ubuntu, and it is
+    # the byte-oriented worst case: clause extraction must not depend on the awk
+    # implementation resolving full-width separators as single characters.
+    if (export LC_ALL=C; run_check_sdd "$repo") >"$output" 2>&1; then
+        status=0
+    else
+        status=$?
+    fi
+    if [[ "$status" -ne 0 ]]; then
+        echo "Expected Chinese task clause lint under LC_ALL=C to exit 0, got: $status" >&2
+        cat "$output" >&2
+        exit 1
+    fi
+    assert_contains "$output" "Project SDD lint: 0 error(s)"
+    assert_not_contains "$output" "ERROR [TASK_RED_OWNER]"
+    assert_not_contains "$output" "WARNING [TASK_FILE_COUNT_REVIEW]"
+}
+
 test_check_sdd_fails_without_exact_spec_declaration() {
     local repo
     repo="$(make_sdd_repo)"
@@ -2380,6 +2405,7 @@ test_check_sdd_fails_for_near_match_goal_heading
 test_check_sdd_fails_for_malformed_baseline_rows
 test_check_sdd_fails_for_explicit_multi_file_task
 test_check_sdd_accepts_english_negative_task_clauses
+test_check_sdd_extracts_chinese_task_clauses_in_byte_locale
 test_check_sdd_fails_without_exact_spec_declaration
 test_check_sdd_fails_for_status_module_mismatch
 test_check_sdd_accepts_archived_canonical_spec_location

@@ -7,7 +7,7 @@ import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
  * submission AND the roster has no REVIEWER_MOCK_ROWS stand-in for the
  * group -- the exact determination that makes the FR-064 context banner
  * show 尚無標記提交. T015's ofs-05-not-submitted is the one seeded demo
- * point: before this fix the reviewer still got ✕/✓-less but SUBMITTABLE
+ * point: before this fix the reviewer still got decision-less but SUBMITTABLE
  * chrome (getReviewerRows() returns [], so handleReviewSubmit's
  * all-decided loop passed vacuously) and could file an empty review
  * against nothing.
@@ -27,8 +27,9 @@ function reviewerUrl(sampleId: string): string {
 }
 
 async function expectFullReviewCard(page: Page) {
-  await expect(page.getByTestId('ws-review-row-approve')).toHaveCount(1);
-  await expect(page.getByTestId('ws-review-row-reject')).toHaveCount(1);
+  for (const decision of ['approve', 'modify', 'bypass']) {
+    await expect(page.getByTestId('ws-review-row-' + decision)).toHaveCount(1);
+  }
   await expect(page.getByTestId('ws-review-correct-single_label')).toHaveCount(1);
   await expect(page.getByTestId('ws-review-submit-btn')).toBeVisible();
   await expect(page.getByTestId('ws-review-empty-unit')).toHaveCount(0);
@@ -44,8 +45,9 @@ test.describe('issue #307 -- truly empty review unit renders no review controls'
       .toHaveText('尚無標記提交');
     // ... but the card area is an explicit empty state, not review chrome.
     await expect(page.getByTestId('ws-review-empty-unit')).toBeVisible();
-    await expect(page.getByTestId('ws-review-row-approve')).toHaveCount(0);
-    await expect(page.getByTestId('ws-review-row-reject')).toHaveCount(0);
+    for (const decision of ['approve', 'modify', 'bypass']) {
+      await expect(page.getByTestId('ws-review-row-' + decision)).toHaveCount(0);
+    }
     await expect(page.getByTestId('ws-review-correct-single_label')).toHaveCount(0);
     await expect(page.getByTestId('ws-review-submit-btn')).toBeHidden();
 
@@ -101,7 +103,8 @@ test.describe('issue #307 -- truly empty review unit renders no review controls'
     await expect(page.locator('[data-testid="ws-review-unit-context"] .rv-unit-state'))
       .toHaveText('待審');
 
-    // And the unit can be finalized (min_reviewers = 1).
+    // And the unit can be finalized -- FR-093 gives it exactly one reviewer,
+    // so this approve is immediately decisive.
     await page.getByTestId('ws-review-row-approve').click();
     await page.getByTestId('ws-review-submit-btn').click();
     await expect(page.locator('#toastMsg')).toHaveText('審核已送出');

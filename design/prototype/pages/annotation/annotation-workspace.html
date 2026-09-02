@@ -372,15 +372,15 @@
       cursor: pointer;
     }
     /* design/system/MASTER.md §Review Status Track -- CSS verbatim. */
-    /* 9 columns: node / fork / branch caption / node / rail / node / rail /
-       fork / node. `.review-track-single` (min_reviewers = 1, issue #525
-       PR-C) drops the two unreachable interim nodes and their trailing rail,
-       leaving 7. Rail columns are bare `1fr` rather than `minmax(16px, 1fr)`
-       so a rail carrying a branch caption can never be squeezed below the
-       caption's own width; `.rv-flow-track` already scrolls horizontally
-       when the whole grid outgrows the drawer. */
-    .review-track { display: grid; grid-template-columns: auto 28px auto auto 1fr auto 1fr 28px auto; grid-template-rows: 34px 34px; align-items: center; justify-items: start; }
-    .review-track-single { grid-template-columns: auto 28px auto auto 1fr 28px auto; }
+    /* 7 columns: node / fork / branch caption / rail-or-node / rail / fork /
+       node. issue #596 folded the former `.review-track-single` grid in as
+       the only grid: with one reviewer per unit (FR-093) the two interim
+       quorum nodes and their trailing rail cannot occur, so the 9-column
+       variant had no route left to draw. Rail columns are bare `1fr` rather
+       than `minmax(16px, 1fr)` so a rail carrying a branch caption can never
+       be squeezed below the caption's own width; `.rv-flow-track` already
+       scrolls horizontally when the whole grid outgrows the drawer. */
+    .review-track { display: grid; grid-template-columns: auto 28px auto auto 1fr 28px auto; grid-template-rows: 34px 34px; align-items: center; justify-items: start; }
     .review-track-node { display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-full); background: var(--color-white); color: var(--color-ink-muted); font-size: 13px; font-weight: 500; white-space: nowrap; }
     .review-track-node.done { border-color: var(--color-cta); background: var(--color-success-bg); color: var(--color-cta); font-weight: 600; }
     .review-track-node.current { border-color: var(--color-primary); background: var(--color-primary-soft-bg); color: var(--color-primary); font-weight: 600; }
@@ -458,6 +458,39 @@
       max-width: none;
     }
     .rv-review-note .tooltip-bubble::after { display: none; }
+
+    /* issue #596 FR-094: the finalized card's micro conflict trace. Each
+       account bubble is a SIBLING of the trace line, never a descendant --
+       the line must read as the trace and nothing else -- so §Tooltip's
+       adjacent-sibling reveal cannot apply and config.js toggles .is-open
+       instead. The bubble spans the host for the same reason the review
+       note's does: an inline trigger anywhere along a 375px line cannot
+       carry a bubble hanging off its own left edge. */
+    .rv-trace-host { position: relative; margin-top: 10px; }
+    .rv-finalized-trace { font-size: 12px; line-height: 1.9; color: var(--color-text-soft); }
+    .rv-trace-actor-wrap { position: static; }
+    .rv-trace-actor {
+      border: none;
+      background: none;
+      padding: 0 1px;
+      font: inherit;
+      color: var(--color-ink);
+      font-weight: 700;
+      text-decoration: underline dotted;
+      text-underline-offset: 3px;
+      cursor: help;
+    }
+    .rv-trace-actor:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+    .rv-trace-bubble {
+      top: calc(100% + 6px);
+      bottom: auto;
+      left: 0;
+      right: 0;
+      width: auto;
+      max-width: none;
+    }
+    .rv-trace-bubble::after { display: none; }
+    .rv-trace-bubble.is-open { visibility: visible; opacity: 1; }
     .rv-bulk-actions { display: flex; gap: 8px; flex-shrink: 0; }
 
     .rv-annotator-list { display: flex; flex-direction: column; gap: 8px; }

@@ -3,48 +3,41 @@
  * Source spec: specs/annotation/015-annotation-workspace/spec.md FR-064
  * 第 8 點, AC-4.40 / AC-4.41 / AC-4.42.
  *
- * FR-051 derives the unit state from `reviewerSubmissions.length >=
- * min_reviewers`. When `min_reviewers = 1` that predicate is true the moment
- * the first reviewer submits, so getReviewUnitStatus() jumps straight to
- * `finalized` (no diff) or `disputed` (any diff): `approved` and `modified`
- * are the "quorum not reached yet" states and have no moment in which to
- * exist (annotation-workspace.data.js getReviewUnitStatus, the
- * `enoughReviewers ? FINALIZED : APPROVED` / `!enoughReviewers -> MODIFIED`
- * lines). Drawing them anyway told every single-reviewer task's reviewer
- * about two states their task can never produce.
+ * PR-C's rule is that the track draws only the states the task can actually
+ * reach. It was written when `min_reviewers` made that task-dependent: a
+ * quorum of 1 skipped the two "quorum not reached yet" states (已同意 /
+ * 已修改), a quorum of 3 passed through them.
  *
- * The min_reviewers >= 2 track keeps all five nodes -- AC-4.32's T016
- * assertions stay literally true; the reachable-only rule only removes what
- * the threshold makes unreachable.
+ * issue #596 (OpenSpec change 2026-09-01-single-owner-review-relay, task
+ * 3.7): FR-093 gives every unit exactly one reviewer, so `min_reviewers` and
+ * both interim states are gone and the reachable set is the SAME three
+ * states (待審 / 爭議中 / 已定稿) for every task. The rule survives; the
+ * threshold comparison it used to be demonstrated by does not, so the
+ * `min_reviewers >= 2 keeps all five states` block below was deleted rather
+ * than rewritten -- it asserted a branch of the state machine that no longer
+ * exists. What is left is the part PR-C uniquely owns and nothing else
+ * covers: the branch captions' place in the accessibility tree and the
+ * non-colour (stroke/border weight) cue that marks the taken route.
  *
- * Fixtures (annotation-workspace.data.js ~L2299):
- *   T015 official_run, min_reviewers 1 -- ofs-01 finalized (same lane),
- *        ofs-03 finalized by arbitration, ofs-04 pending.
- *   T014 dry_run,      min_reviewers 1 -- dry-05 / annotator A disputed
- *        (pure reject, issue #551).
- *   T016 official_run, min_reviewers 3 -- all five states.
- *   T017 official_run, min_reviewers 2 -- oft-02 approved (1 < 2).
- *
- * issue #551 (v4.54.0): min_reviewers = 1 now converges a SOLE reviewer's
- * CORRECTION on submit instead of unconditionally requiring arbitration, so
- * T015's ofs-02-modified-dispute and T014's dry-03-dispute-open (both plain
- * corrections) no longer stay disputed at this threshold -- the only way a
- * min_reviewers = 1 unit still reaches 爭議中 is a pure reject (no
- * correction). T014 already has one (dry-05-pending-review); T015 has none,
- * so the official_run "still disputed" tests below seed one directly on
- * T001 instead of adding a fixture to the shared T014-T017 seed matrix.
+ * Fixtures (annotation-workspace.data.js ~L2745):
+ *   T015 official_run -- ofs-01 finalized on the same lane, ofs-03
+ *        finalized through arbitration on the differing lane.
+ *   T014 dry_run      -- dry-05 / annotator A disputed.
  */
 import { test, expect, type Page } from '@playwright/test';
 import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
 
-const REJECT_TASK = 'T001';
-const REJECT_SAMPLE = 'sent-001';
-const REJECT_ANNOTATOR = 'kioleemg12';
-const REJECT_REVIEWER = 'reviewer_wang';
+const BYPASS_TASK = 'T001';
+const BYPASS_SAMPLE = 'sent-001';
+const BYPASS_ANNOTATOR = 'kioleemg12';
+const BYPASS_REVIEWER = 'reviewer_wang';
 
-/* Reject with no correction (issue #551): the only min_reviewers = 1 path
- * that still reaches 爭議中 -- see the file header. */
-async function seedPureRejectUnit(page: Page): Promise<void> {
+/* `bypass` (issue #596 FR-092): the reviewer cannot judge the item, so the
+ * payload carries NO values[outKey] at all (design.md D3) and the unit goes
+ * to 爭議中 without the reviewer proposing an answer. T001 has no seeded
+ * review unit, so this is written directly rather than added to the shared
+ * T014-T017 seed matrix. */
+async function seedBypassUnit(page: Page): Promise<void> {
   await page.evaluate((a) => {
     const data = (window as unknown as {
       LabelSuiteAnnotationWorkspaceData: {
@@ -63,21 +56,23 @@ async function seedPureRejectUnit(page: Page): Promise<void> {
     data.markSampleSubmitted(
       a.task, 'reviewer', 'official_run', a.sample,
       {
-        previewState: { single_label: { selected: 'positive' } },
-        decisions: { single_label: 'reject' },
+        previewState: {},
+        decisions: { single_label: 'bypass' },
+        reasons: { single_label: 'ambiguous sample' },
+        values: {},
       },
       '',
       { annotatorId: a.annotator, reviewerId: a.reviewer }
     );
-  }, { task: REJECT_TASK, sample: REJECT_SAMPLE, annotator: REJECT_ANNOTATOR, reviewer: REJECT_REVIEWER });
+  }, { task: BYPASS_TASK, sample: BYPASS_SAMPLE, annotator: BYPASS_ANNOTATOR, reviewer: BYPASS_REVIEWER });
 }
 
-async function openPureRejectUnit(page: Page): Promise<void> {
+async function openBypassUnit(page: Page): Promise<void> {
   await page.goto(buildWorkspaceUrl({
-    task_id: REJECT_TASK, sample_id: REJECT_SAMPLE, role: 'reviewer', run_type: 'official_run',
-    annotator_id: REJECT_ANNOTATOR, reviewer_id: REJECT_REVIEWER,
+    task_id: BYPASS_TASK, sample_id: BYPASS_SAMPLE, role: 'reviewer', run_type: 'official_run',
+    annotator_id: BYPASS_ANNOTATOR, reviewer_id: BYPASS_REVIEWER,
   }));
-  await seedPureRejectUnit(page);
+  await seedBypassUnit(page);
   await page.reload();
   await page.getByTestId('ws-review-flow-trigger').click();
   await expect(page.getByTestId('ws-review-flow-drawer')).toBeVisible();
@@ -113,13 +108,13 @@ async function openUnit(
   await expect(page.getByTestId('ws-review-flow-drawer')).toBeVisible();
 }
 
-test.describe('issue #525 PR-C — min_reviewers = 1 renders only the reachable states', () => {
+test.describe('issue #525 PR-C — the track renders only the reachable states', () => {
   test.beforeEach(async ({ page }) => {
     await skipGuidelineModal(page);
   });
 
   test('a disputed unit shows 待審 / 爭議中 / 已定稿 and nothing else', async ({ page }) => {
-    await openPureRejectUnit(page);
+    await openBypassUnit(page);
 
     await expect(track(page)).toBeVisible();
     await expect(track(page).locator('[role="listitem"]')).toHaveCount(3);
@@ -128,7 +123,7 @@ test.describe('issue #525 PR-C — min_reviewers = 1 renders only the reachable 
       /爭議中/,
       /已定稿/,
     ]);
-    // The two quorum-interim states cannot occur at this threshold.
+    // The two quorum-interim states no longer exist at all (FR-093).
     await expect(node(page, '已同意')).toHaveCount(0);
     await expect(node(page, '已修改')).toHaveCount(0);
   });
@@ -151,17 +146,19 @@ test.describe('issue #525 PR-C — min_reviewers = 1 renders only the reachable 
   test('names the branch conditions in text, minus the unreachable one', async ({ page }) => {
     await openUnit(page, { task_id: 'T015', sample_id: 'ofs-03-arbitrated-gold' });
 
-    await expect(branch(page, 'same')).toHaveText('答案未修改');
-    await expect(branch(page, 'differing')).toHaveText('答案有修改');
+    // issue #596: the captions name the reviewer's DECISION, not whether the
+    // answer text happened to change -- 修正 and 無法判定 share the lane.
+    await expect(branch(page, 'same')).toHaveText('審核通過');
+    await expect(branch(page, 'differing')).toHaveText('修正或無法判定');
     await expect(branch(page, 'arbitrated')).toHaveText('仲裁後');
-    // 未收斂 labels 已修改 -> 爭議中, a transition this threshold never has.
+    // 未收斂 labelled 已修改 -> 爭議中, a transition the state machine lost.
     await expect(branch(page, 'unconverged')).toHaveCount(0);
   });
 
-  test('applies to dry_run at the same threshold', async ({ page }) => {
-    // dry-05-pending-review / annotator A: a pure reject (issue #551) --
-    // the only min_reviewers = 1 path still reachable at 爭議中 (see the
-    // file header; dry-03's plain correction now converges on submit).
+  test('applies to dry_run as well', async ({ page }) => {
+    // dry-05-pending-review / annotator A: the reviewer's decision differs
+    // from the annotator's answer, so the unit sits at 爭議中 -- the same
+    // three-node track the official_run cases above assert.
     await openUnit(page, {
       task_id: 'T014',
       sample_id: 'dry-05-pending-review',
@@ -173,8 +170,8 @@ test.describe('issue #525 PR-C — min_reviewers = 1 renders only the reachable 
     await expect(track(page).locator('[aria-current="step"]')).toContainText('爭議中');
   });
 
-  test('keeps the whole aria contract of the five-node track', async ({ page }) => {
-    await openPureRejectUnit(page);
+  test('keeps the whole aria contract of the track', async ({ page }) => {
+    await openBypassUnit(page);
 
     await expect(track(page)).toHaveAttribute('role', 'list');
     await expect(track(page)).toHaveAttribute('aria-label', '審核單位狀態');
@@ -195,7 +192,7 @@ test.describe('issue #525 PR-C — min_reviewers = 1 renders only the reachable 
     // The fork SVG is aria-hidden, so before this change the branch condition
     // reached AT through nothing at all. Hiding the new text too would keep
     // that gap; the captions are therefore exposed, and they carry no
-    // `listitem` role so the five-node listitem contract is untouched.
+    // `listitem` role so the three-node listitem contract is untouched.
     await openUnit(page, { task_id: 'T015', sample_id: 'ofs-03-arbitrated-gold' });
 
     const captions = track(page).locator('.review-track-branch');
@@ -212,43 +209,9 @@ test.describe('issue #525 PR-C — min_reviewers = 1 renders only the reachable 
     await page.getByTestId('lang-toggle').click();
     await page.getByTestId('ws-review-flow-trigger').click();
 
-    await expect(branch(page, 'same')).toHaveText('Answers unchanged');
-    await expect(branch(page, 'differing')).toHaveText('Answers changed');
+    await expect(branch(page, 'same')).toHaveText('Review approved');
+    await expect(branch(page, 'differing')).toHaveText('Modified or undecidable');
     await expect(branch(page, 'arbitrated')).toHaveText('After arbitration');
-  });
-});
-
-test.describe('issue #525 PR-C — min_reviewers >= 2 keeps all five states', () => {
-  test.beforeEach(async ({ page }) => {
-    await skipGuidelineModal(page);
-  });
-
-  test('T016 (min_reviewers = 3) is unchanged, five nodes and four branches', async ({ page }) => {
-    await openUnit(page, {
-      task_id: 'T016',
-      sample_id: 'ofm-05-all-divergent',
-      annotator_id: 'kioleemg12',
-    });
-
-    await expect(track(page).locator('[role="listitem"]')).toHaveText([
-      /待審/,
-      /已同意/,
-      /已修改/,
-      /爭議中/,
-      /已定稿/,
-    ]);
-    await expect(branch(page, 'same')).toHaveText('答案未修改');
-    await expect(branch(page, 'differing')).toHaveText('答案有修改');
-    await expect(branch(page, 'unconverged')).toHaveText('未收斂');
-    await expect(branch(page, 'arbitrated')).toHaveText('仲裁後');
-  });
-
-  test('T017 (min_reviewers = 2) is the lower boundary of the five-node track', async ({ page }) => {
-    await openUnit(page, { task_id: 'T017', sample_id: 'oft-02-approved-interim' });
-
-    await expect(track(page).locator('[role="listitem"]')).toHaveCount(5);
-    await expect(track(page).locator('[aria-current="step"]')).toContainText('已同意');
-    await expect(branch(page, 'unconverged')).toHaveCount(1);
   });
 });
 

@@ -3003,6 +3003,7 @@
     readReviewerSubmissions: readReviewerSubmissions,
     getReworkReasons: getReworkReasons,
     getArbitrationState: getArbitrationState,
+    getExceptionPool: getExceptionPool,
     submitArbitration: submitArbitration,
     resolveDisputeConvergence: resolveDisputeConvergence,
     describeDisputeVotes: describeDisputeVotes,

@@ -8,9 +8,12 @@
  * progress track already said. It is gone for every status and every
  * reviewer identity; the banner is followed directly by the card.
  *
- * Fixtures (annotation-review-flow-demo-seed.spec.ts status matrix):
- *   T017 (min 2) oft-01 disputed [wang, li]  oft-03 modified [wang]
- *   T016 (min 3) ofm-01 finalized            ofm-02 approved [wang]
+ * Fixtures (annotation-review-flow-demo-seed.spec.ts status matrix). The
+ * per-task min_reviewers annotations are historical: issue #596 (FR-093)
+ * retired the setting, so a unit is disputed or finalized on its one
+ * reviewer's decision, not on a quorum.
+ *   T017 oft-01 disputed [wang, li]   T015 ofs-04 pending (no reviewer yet)
+ *   T016 ofm-01 finalized             T016 ofm-02 reviewed [wang]
  *   T015 ofs-05 no annotator submission (null)
  *   T014 dry_run dry-05 x kioleemg12 disputed [wang, pure reject]
  */
@@ -56,8 +59,14 @@ test.beforeEach(async ({ page }) => {
 });
 
 test.describe('issue #562 — no action hint under the review-unit banner', () => {
-  test('modified unit, reviewer has not submitted (was 需要你的審核)', async ({ page }) => {
-    await openUnit(page, { task_id: 'T017', sample_id: 'oft-03-modified-interim' });
+  /* Re-pointed for issue #596: T017 oft-03-modified-interim used to be the
+     "unit needs your review" fixture because a second reviewer could still
+     act on a unit another reviewer had already modified. FR-093 gives a unit
+     exactly one reviewer, so oft-03 no longer renders a review card for
+     anyone but its owner. T015 ofs-04-pending-review is the unit that now
+     carries this case: annotator submitted, no reviewer decision yet. */
+  test('pending unit, its reviewer has not submitted (was 需要你的審核)', async ({ page }) => {
+    await openUnit(page, { task_id: 'T015', sample_id: 'ofs-04-pending-review' });
     await expectNoHint(page);
     await expect(page.getByTestId('ws-review-submit-btn')).toBeVisible();
   });
