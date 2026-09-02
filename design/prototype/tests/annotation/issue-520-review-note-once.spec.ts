@@ -13,7 +13,7 @@ import {
  * buildMergedSpanReviewRow() each call once per card. A task whose outputs[]
  * produces more than one card therefore repeats the very same decision-level
  * sentence on every card, even though a reviewer only has to understand once
- * what 通過 / 退回 mean. T013 (entity_recognition + relation_identification +
+ * what each decision means. T013 (entity_recognition + relation_identification +
  * multi_dim) renders two cards -- the FR-014N merged span card plus the
  * multi_dim card -- so the paragraph appears twice on one review unit.
  *
@@ -31,8 +31,16 @@ import {
  * area. Both are gone -- the tooltip now legally branches on `run_type` and
  * carries the consequence itself (see issue-550-review-note-tooltip.spec.ts).
  *
+ * issue #596 (OpenSpec change 2026-09-01-single-owner-review-relay, task
+ * 3.7): FR-014B replaced the 通過／退回 pair with the three-way
+ * 通過／修正／無法判定, so every "one decision pair per output type" count
+ * below is now one decision TRIO per output type. The structural claim this
+ * file owns -- one note per unit, however many cards and decisions the unit
+ * has -- is unchanged, and the trio counts are what keep it honest.
+ *
  * Traceability: specs/annotation/015-annotation-workspace/spec.md FR-070,
- * AC-3.40, AC-3.45 (revised v4.55.0, issue #550).
+ * AC-3.40, AC-3.45 (revised v4.55.0, issue #550); FR-014B / FR-092
+ * (issue #596).
  */
 
 /* taskId / sampleId / how many review cards the task's outputs[] produce. */
@@ -69,9 +77,10 @@ test.describe('the review decision note is rendered once per review unit (issue 
         await expect(page.getByTestId('ws-review-note')).toHaveCount(1);
         await expect(page.getByTestId('ws-review-note')).toBeVisible();
         await expect(page.getByTestId('ws-review-note')).not.toBeEmpty();
-        // One decision pair per output type is untouched (FR-014P/FR-014N).
+        // One decision trio per output type is untouched (FR-014P/FR-014N).
         await expect(page.getByTestId('ws-review-row-approve')).toHaveCount(decisions);
-        await expect(page.getByTestId('ws-review-row-reject')).toHaveCount(decisions);
+        await expect(page.getByTestId('ws-review-row-modify')).toHaveCount(decisions);
+        await expect(page.getByTestId('ws-review-row-bypass')).toHaveCount(decisions);
 
         assertNoPageErrors(errors);
       });
@@ -113,6 +122,7 @@ test.describe('the review decision note is rendered once per review unit (issue 
     await openReviewer(page, 'T013', 'absa-001', 'official_run');
 
     await expect(page.getByRole('button', { name: '通過', exact: true })).toHaveCount(3);
-    await expect(page.getByRole('button', { name: '退回', exact: true })).toHaveCount(3);
+    await expect(page.getByRole('button', { name: '修正', exact: true })).toHaveCount(3);
+    await expect(page.getByRole('button', { name: '無法判定', exact: true })).toHaveCount(3);
   });
 });
