@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+# commit-msg — Block Chinese (CJK) characters in commit messages.
+#
+# Trigger:
+#   Native git commit-msg hook. Activated via `git config core.hooksPath scripts/git-hooks`,
+#   which .claude/hooks/session-init.sh sets automatically at session start.
+#   Receives the path to the pending commit message file as $1.
+#
+# Rule (CLAUDE.md → Prohibitions, "Chinese text in commit messages"):
+#   Commit messages are English-only. Conventional Commit tooling, `git log`
+#   readability, and hook/CI parsing all depend on it. Issue bodies and PR
+#   descriptions are explicitly NOT covered (issue #380) — they are reviewed
+#   by the maintainer in Traditional Chinese — and neither is reachable from
+#   this hook, so no carve-out is needed for them here.
+#
+# Scope note:
+#   Detection covers the whole CJK-ish plane, not just Han ideographs:
+#     U+3000–U+9FFF  CJK punctuation (、。「」), kana, Bopomofo, Hangul compat,
+#                    CJK compatibility symbols, Unified Ideographs + Extension A
+#     U+F900–U+FAFF  CJK Compatibility Ideographs
+#     U+FF00–U+FFEF  Fullwidth/halfwidth forms (，：；（）)
+#   Fullwidth punctuation alone still breaks the English-only contract, so a
+#   Han-only range such as [一-龥] under-catches. Emoji (U+1F300+) and curly
+#   quotes are deliberately NOT matched: they are not Chinese text, and the
+#   repo's own tooling output uses emoji.
+#
+# Exemptions:
+#   - Merge commits (MERGE_HEAD present) pass through, matching pre-commit.
+#     `git merge` does run this hook, and a merged branch's message is not
+#     something this commit can rewrite.
+#   - Comment lines (core.commentChar, default '#') and everything after the
+#     scissors line are stripped before scanning. git runs commit-msg BEFORE
+#     cleanup, so the editor template, the staged-file list (paths may be
+#     Chinese), and `git commit --verbose` diff hunks would otherwise produce
+#     false positives on text that never reaches the stored message.
+#   - `Co-authored-by:` / `Signed-off-by:` trailers are skipped: they carry
+#     human identities (this repo's own git user name is Chinese), and a name
+#     is not prose that can be rewritten into English.
+#   - No bypass environment variable. Unlike pre-commit's ALLOW_BATCH_COMMIT,
+#     this prohibition has no approved-exception path in CLAUDE.md — the fix
+#     is always to rewrite the message (`git commit --amend`), which re-runs
+#     this hook and verifies the fix.
+set -uo pipefail
+
+MSG_FILE="$1"
+
+GIT_DIR=$(git rev-parse --git-dir)
+[ -f "$GIT_DIR/MERGE_HEAD" ] && exit 0
+
+COMMENT_CHAR=$(git config core.commentChar 2>/dev/null || true)
+case "$COMMENT_CHAR" in
+  ""|auto) COMMENT_CHAR='#' ;;
+esac
+
+# Emit "<line number>\t<offending characters with codepoints>\t<line text>" for
+# every scanned line that contains a CJK character. -CSD makes perl decode the
+# message file as UTF-8 so the ranges below match characters, not bytes.
+OFFENDERS=$(COMMENT_CHAR="$COMMENT_CHAR" perl -CSD -ne '
+  BEGIN { $cc = quotemeta($ENV{COMMENT_CHAR}); }
+  last if /^$cc\s*-+\s*>8\s*-+/;          # scissors: nothing below is kept
+  next if /^$cc/;                          # comment line
+  next if /^(?:Co-authored-by|Signed-off-by):/i;
+  chomp;
+  my @bad = /([\x{3000}-\x{9FFF}\x{F900}-\x{FAFF}\x{FF00}-\x{FFEF}])/g;
+  next unless @bad;
+  my (%seen, @uniq);
+  for my $c (@bad) { push @uniq, $c unless $seen{$c}++; }
+  printf "%d\t%s\t%s\n", $., join(" ", map { sprintf "%s (U+%04X)", $_, ord } @uniq), $_;
+' "$MSG_FILE")
+
+if [ -n "$OFFENDERS" ]; then
+  echo "❌ Blocked: Chinese characters in commit message — commit messages are English-only (CLAUDE.md → Prohibitions)." >&2
+  while IFS=$'\t' read -r lineno chars text; do
+    echo "   line ${lineno}: ${text}" >&2
+    echo "     └─ offending: ${chars}" >&2
+  done <<<"$OFFENDERS"
+  echo "   Rewrite the message in English and commit again ('git commit --amend' after a failed amend)." >&2
+  echo "   No bypass: this prohibition has no approved exception — Chinese belongs in the issue/PR body, not in git history." >&2
+  exit 1
+fi
+
+exit 0
