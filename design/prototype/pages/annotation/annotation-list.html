@@ -751,8 +751,6 @@
       thReviewStatus: '審核狀態',
       reviewStatusFilterAll: '全部審核狀態',
       reviewUnitPending: '待審',
-      reviewUnitApproved: '已同意',
-      reviewUnitModified: '已修改',
       reviewUnitDisputed: '爭議中',
       arbitrateBtnLabel: '仲裁',
       reviewUnitFinalized: '已定稿',
@@ -821,8 +819,6 @@
       thReviewStatus: 'Review Status',
       reviewStatusFilterAll: 'All review statuses',
       reviewUnitPending: 'Pending review',
-      reviewUnitApproved: 'Approved',
-      reviewUnitModified: 'Modified',
       reviewUnitDisputed: 'Disputed',
       arbitrateBtnLabel: 'Arbitrate',
       reviewUnitFinalized: 'Finalized',
@@ -1042,20 +1038,23 @@
     return t('statusPending');
   }
 
-  /* Review unit五態 (spec 015 v3.9.0). Issue #452: 已定稿 is the ONLY
-     terminal state, so it is the only one that keeps the submitted badge —
-     已同意 is short of min_reviewers and 爭議中 is unresolved, and both
-     used to borrow a settled-looking badge. The badge text carries the
-     same split in words (「已同意 · 未定稿」 vs 「已定稿 · 已鎖定」) so the
-     distinction never rests on colour alone. */
+  /* Review unit 三態 (spec 015 v5.0.0, FR-055). Issue #452: 已定稿 is the
+     ONLY terminal state, so it is the only one that keeps the submitted
+     badge — 爭議中 is unresolved and used to borrow a settled-looking one.
+     The badge text carries the same split in words (「爭議中 · 未定稿」 vs
+     「已定稿 · 已鎖定」) so the distinction never rests on colour alone. */
   var REVIEW_UNIT_STATUS = window.LabelSuiteAnnotationWorkspaceData.REVIEW_UNIT_STATUS;
-  var REVIEW_UNIT_STATUS_ORDER = [
-    REVIEW_UNIT_STATUS.PENDING,
-    REVIEW_UNIT_STATUS.APPROVED,
-    REVIEW_UNIT_STATUS.MODIFIED,
-    REVIEW_UNIT_STATUS.DISPUTED,
-    REVIEW_UNIT_STATUS.FINALIZED
-  ];
+  /* Derived, never enumerated (FR-055: 「MUST NOT 於選單硬編狀態清單」). The
+     five-state literal this replaces outlived two of its own entries when
+     issue #596 collapsed the constant: APPROVED and MODIFIED became
+     undefined and reached the select as options labelled 全部審核狀態,
+     because the label lookup treats a falsy value as the all-statuses row.
+     Reading the constant's own key order means a state added or removed in
+     the data layer can never leave a stale option behind, and declaration
+     order there is already the lifecycle order this list wants. */
+  var REVIEW_UNIT_STATUS_ORDER = Object.keys(REVIEW_UNIT_STATUS).map(function (key) {
+    return REVIEW_UNIT_STATUS[key];
+  });
   var ANNOTATOR_STATUS_ORDER = ['submitted', 'saved', 'pending'];
 
   function reviewUnitStatusLabel(status) {
