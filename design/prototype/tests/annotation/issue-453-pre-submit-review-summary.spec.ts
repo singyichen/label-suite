@@ -78,15 +78,18 @@ test.describe('Answer edit area names both the original and the corrected answer
 });
 
 test.describe('Decision buttons carry visible text, not only a glyph (issue #453)', () => {
-  test('approve and reject each render their label as text', async ({ page }) => {
+  test('all three decisions render their label as text', async ({ page }) => {
     await page.goto(T001_OFFICIAL);
     await dismissGuidelineModal(page);
 
-    await expect(page.getByTestId('ws-review-row-approve')).toContainText('通過');
-    await expect(page.getByTestId('ws-review-row-reject')).toContainText('退回');
-    // The accessible name contract from issue #399 must survive.
-    await expect(page.getByRole('button', { name: '通過', exact: true })).toHaveCount(1);
-    await expect(page.getByRole('button', { name: '退回', exact: true })).toHaveCount(1);
+    const LABELS: Record<string, string> = {
+      approve: '通過', modify: '修正', bypass: '無法判定',
+    };
+    for (const [decision, label] of Object.entries(LABELS)) {
+      await expect(page.getByTestId('ws-review-row-' + decision)).toContainText(label);
+      // The accessible name contract from issue #399 must survive.
+      await expect(page.getByRole('button', { name: label, exact: true })).toHaveCount(1);
+    }
   });
 });
 
@@ -135,16 +138,16 @@ test.describe('A decision never survives an edit to the value it judged (issue #
     await page.goto(T001_OFFICIAL);
     await dismissGuidelineModal(page);
 
-    await page.getByTestId('ws-review-row-reject').click();
+    await page.getByTestId('ws-review-row-modify').click();
     await flipSingleLabel(page);
 
     await page.getByTestId('ws-review-submit-btn').click();
     await expect(page.locator('#toastMsg')).toHaveText('請完成以下輸出類型的審核決策：single_label');
 
     // Re-deciding against the new value lets the submit through.
-    await page.getByTestId('ws-review-row-reject').click();
-    // issue #552 (FR-016A): a reject needs a reason before submit goes through.
-    await page.getByTestId('ws-review-reject-reason').fill('理由');
+    await page.getByTestId('ws-review-row-modify').click();
+    // FR-016A: a modify decision needs a reason before submit goes through.
+    await page.getByTestId('ws-review-reason').fill('理由');
     await page.getByTestId('ws-review-submit-btn').click();
     await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
   });
