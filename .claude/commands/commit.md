@@ -55,7 +55,7 @@ Co-Authored-By: <model full name> <noreply@anthropic.com>
 
 ### Rules
 
-- **Language**: English only — no Chinese anywhere in commit messages (project prohibition)
+- **Language**: English only — no Chinese anywhere in commit messages (project prohibition; enforced by `scripts/git-hooks/commit-msg`, which has no bypass)
 - **Subject line**: imperative mood ("add", "fix", "remove", not "added", "fixes", "removing"), ≤ 72 characters
 - **Body required**: always — every commit must include at least one body bullet explaining the *why*, regardless of type or size. No subject-only commits.
 - **Body bullets**: each bullet starts with a **bold action word**, then describes what was done and why. Common actions: **Add** / **Fix** / **Remove** / **Update** / **Refactor** / **Move** / **Extract** / **Replace**. Keep technical terms in English (e.g. `Hook`, `PR`, `middleware`).

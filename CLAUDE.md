@@ -188,6 +188,7 @@ Each rule traces to a specific incident (Ratchet Principle — Mitchell Hashimot
   - Exception: global tool installs (e.g. `pnpm add -g openspec`) don't write to a repo lockfile, so they aren't covered by this prohibition (ADR-033 Open Questions #2)
 - ❌ Chinese text in commit messages
   - Reason: 2026-04 — PR description contained Chinese; breaks English-only contract
+  - Enforcement: `scripts/git-hooks/commit-msg` blocks CJK characters in the commit message (issue #607) — no bypass; merge commits, comment lines, and identity trailers are exempt
   - Scope narrowed 2026-08-25 (issue #380): issue bodies and PR descriptions are human-collaboration documents the maintainer reviews in Traditional Chinese, so they now follow the Communication section. Commit messages stay English-only — Conventional Commit tooling, `git log` readability, and hook/CI parsing depend on it.
 - ❌ `allow_origins=["*"]` in CORS config
   - Reason: security boundary; explicitly list allowed origins
