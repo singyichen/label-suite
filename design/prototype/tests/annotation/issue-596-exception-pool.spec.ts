@@ -36,9 +36,13 @@ import { buildWorkspaceUrl, skipGuidelineModal, fillArbitrationReasons, type Run
  *     asserted data-driven off the exported constant, never a hardcoded
  *     4-item or 3-item list), `ws-exception-pool-custom-answer` (the panel
  *     that expands under the item when `custom_answer` is chosen),
- *     `ws-exception-pool-reason` (its required reason field), and
- *     `ws-exception-pool-custom-answer-confirm` (confirms the custom-answer
- *     resolution; blocked while the reason is empty).
+ *     `ws-exception-pool-reason` (a single per-item required reason field,
+ *     shared by both `custom_answer` and `exclude_from_dataset` -- see the
+ *     reason-gating bullet below), `ws-exception-pool-custom-answer-confirm`
+ *     (confirms the custom-answer resolution; blocked while the reason is
+ *     empty), and `ws-exception-pool-exclude-confirm` (confirms the
+ *     exclude_from_dataset resolution; also blocked while the reason is
+ *     empty).
  *   - design.md D4: `custom_answer`'s expanded control MUST be the SAME
  *     config-driven control the annotator/reviewer workspaces already use
  *     (task-config.engine.js `renderOutputPreview()` -> for `single_label`,
@@ -47,21 +51,28 @@ import { buildWorkspaceUrl, skipGuidelineModal, fillArbitrationReasons, type Run
  *     option's `name`). This file asserts those buttons by role/name inside
  *     the panel -- an exception-pool-only free-text box would NOT satisfy
  *     this and must fail the assertion.
- *   - Reason gating: FR-095 point 3 requires a reason ONLY for
- *     `custom_answer`, and this file tests that gate exactly there (empty
- *     reason blocks finalize; a legal value + a reason resolves it).
- *     `adopt_annotator` / `adopt_reviewer` / `exclude_from_dataset` are
- *     tested as pure one-click actions per FR-095 points 1/2/4's literal
- *     "一鍵完成" wording -- this file does NOT assert a reason field exists
- *     (or doesn't) for those three, and clicks the action testid exactly
- *     once before reading the persisted result. NOTE for the Green
- *     implementer: design.md D2's `exceptionPool` shape lists `reason` as
- *     non-optional for every action, which is in tension with "one click, no
- *     reason field" -- if Green needs a reason for those three too, that
- *     reason must come from a fixed default string written automatically by
- *     the one click, not from an interactive prompt this test does not fill.
- *     Flagging this ambiguity explicitly rather than silently picking a side
- *     the spec text doesn't fully settle.
+ *   - Reason gating (team-lead ruling, Source-Verify against spec.md): FR-095
+ *     point 3's "一鍵完成" appears ONLY at line 355 (`adopt_annotator`) and
+ *     line 356 (`adopt_reviewer`) -- point 4 (`exclude_from_dataset`, line
+ *     358) does NOT carry that wording. `adopt_annotator` / `adopt_reviewer`
+ *     are tested as pure one-click actions per that literal wording -- this
+ *     file does NOT assert a reason field exists for those two, and clicks
+ *     the action testid exactly once before reading the persisted result.
+ *     `custom_answer` (FR-095 point 3) and `exclude_from_dataset` (FR-095
+ *     point 4, line 358) instead share the SAME reason-required gating
+ *     shape: both `MUST 保留排除紀錄（處置者、理由、時間）`-equivalent lines
+ *     (FR-063 line 190 and FR-095 point 4 line 358) name 理由 as part of the
+ *     persisted record, and that reason is the audit trail for WHY a sample
+ *     was dropped from the exported dataset -- a canned constant would
+ *     satisfy the MUST on paper while carrying zero information, so this
+ *     file requires an interactive, user-entered reason for both, gated
+ *     identically: clicking the action expands a reason field + confirm
+ *     control rather than resolving immediately, and confirming with an
+ *     empty reason blocks the disposition. This resolves the tension
+ *     design.md D2's non-optional `reason` field created for
+ *     `exclude_from_dataset`; it never applied to `adopt_annotator` /
+ *     `adopt_reviewer`, whose explicit "一鍵完成" wording overrides D2's
+ *     shape for those two specifically.
  *   - FR-063 / FR-051: `adopt_annotator` / `adopt_reviewer` / `custom_answer`
  *     resolve the item and the unit derives `finalized` once every dispute
  *     item is resolved (verified via the pre-existing, unmodified
@@ -346,15 +357,40 @@ test.describe('issue #596: FR-095 final exception pool disposition screen', () =
     expect(history.some((e) => e.action === 'exception_resolved')).toBe(true);
   });
 
-  test('FR-063/FR-086: exclude_from_dataset resolves the item but the unit MUST NOT read as finalized', async ({ page }) => {
+  test('FR-063/FR-095 point 4/FR-086: exclude_from_dataset collects a reason, blocks while empty, resolves the item but the unit MUST NOT read as finalized', async ({ page }) => {
     await seedRejectedDisputeUnit(page, { runType: 'official_run', annotatorValue: 'positive', reviewerValue: 'negative' });
     await page.goto(buildProjectLeaderUrl('official_run'));
 
     const item = page.getByTestId('ws-exception-pool-item').first();
     await item.getByTestId('ws-exception-pool-action-exclude_from_dataset').click();
 
+    // FR-063 / FR-095 point 4 (both "MUST 保留排除紀錄（處置者、理由、時間）"):
+    // the exclusion record's reason is user-entered audit rationale, not a
+    // canned constant -- same reason-required gating shape as
+    // custom_answer, reusing the item's single ws-exception-pool-reason
+    // field (one item shows at most one expanded action panel at a time, so
+    // no distinct testid is needed for the field itself; the confirm
+    // control is its own testid since it is a different action from
+    // custom_answer's confirm).
+    const reasonField = item.getByTestId('ws-exception-pool-reason');
+    const confirm = item.getByTestId('ws-exception-pool-exclude-confirm');
+    await expect(reasonField).toHaveCount(1);
+    await expect(confirm).toHaveCount(1);
+
+    await confirm.click();
+
+    // Empty reason blocks the disposition -- nothing persisted yet.
+    expect((await readExceptionPool(page, 'official_run'))[OUT_KEY]).toBeUndefined();
+    expect(await unitStatus(page, 'official_run')).toBe('disputed');
+
+    await reasonField.fill('病歷內容與標註任務無關，排除本樣本');
+    await confirm.click();
+
     const pool = await readExceptionPool(page, 'official_run');
-    expect(pool[OUT_KEY]).toMatchObject({ action: 'exclude_from_dataset' });
+    expect(pool[OUT_KEY]).toMatchObject({
+      action: 'exclude_from_dataset',
+      reason: '病歷內容與標註任務無關，排除本樣本',
+    });
     expect(pool[OUT_KEY].resolver_id).toBeTruthy();
     expect(pool[OUT_KEY].resolved_at).toBeTruthy();
     // FR-063: an excluded item produces no gold value -- the unit MUST NOT
@@ -362,6 +398,8 @@ test.describe('issue #596: FR-095 final exception pool disposition screen', () =
     expect(await unitStatus(page, 'official_run')).toBe('disputed');
 
     const history = await sampleHistory(page, 'official_run');
-    expect(history.some((e) => e.action === 'excluded')).toBe(true);
+    expect(
+      history.some((e) => e.action === 'excluded' && e.reason === '病歷內容與標註任務無關，排除本樣本')
+    ).toBe(true);
   });
 });
