@@ -7,15 +7,18 @@ import {
   trackPageErrors,
 } from './_workspace-helpers';
 
-/* Reviewer A/R decision shortcuts (spec 015 v4.1.0, FR-054).
+/* Reviewer decision shortcuts (spec 015, FR-054).
  *
  * The shared sidebar has advertised four review shortcuts since spec 008, but
  * none were ever wired up. v4.0.0 made the review unit `sample × annotator`,
- * which retired the two batch rows (Shift+A / Shift+R) -- a unit is one
- * annotator, so there is nothing left to batch over. The two that survive
- * apply to the WHOLE current review unit: a task may ship several output
- * types, `handleReviewSubmit()` requires every one of them decided, and there
- * is no notion of a focused output type, so `A` decides all of them at once.
+ * which retired the two batch rows -- a unit is one annotator, so there is
+ * nothing left to batch over. Issue #596 then retired `R` (退回) with the
+ * rollback channel it drove, so the surviving pair is `A` (通過) and `B`
+ * (無法判定); 修正 stays unbound because its replacement value differs per
+ * output type and one keystroke cannot express it. Both apply to the WHOLE
+ * current review unit: a task may ship several output types,
+ * `handleReviewSubmit()` requires every one of them decided, and there is no
+ * notion of a focused output type, so `A` decides all of them at once.
  */
 
 test.beforeEach(async ({ page }) => {
@@ -32,30 +35,43 @@ test.describe('A / R decide the current review unit', () => {
   test('A approves, a second A cancels back to undecided', async ({ page }) => {
     await gotoReviewer(page, 'T001', 'sent-001');
     const approve = page.getByTestId('ws-review-row-approve');
-    const reject = page.getByTestId('ws-review-row-reject');
+    const bypass = page.getByTestId('ws-review-row-bypass');
 
     await expect(approve).toHaveAttribute('aria-pressed', 'false');
 
     await page.keyboard.press('a');
     await expect(approve).toHaveAttribute('aria-pressed', 'true');
-    await expect(reject).toHaveAttribute('aria-pressed', 'false');
+    await expect(bypass).toHaveAttribute('aria-pressed', 'false');
 
     await page.keyboard.press('a');
     await expect(approve).toHaveAttribute('aria-pressed', 'false');
   });
 
-  test('R rejects, and A afterwards flips the unit to approved', async ({ page }) => {
+  test('B marks the unit undecidable, and A afterwards flips it to approved', async ({ page }) => {
     await gotoReviewer(page, 'T001', 'sent-001');
     const approve = page.getByTestId('ws-review-row-approve');
-    const reject = page.getByTestId('ws-review-row-reject');
+    const bypass = page.getByTestId('ws-review-row-bypass');
 
-    await page.keyboard.press('r');
-    await expect(reject).toHaveAttribute('aria-pressed', 'true');
+    await page.keyboard.press('b');
+    await expect(bypass).toHaveAttribute('aria-pressed', 'true');
     await expect(approve).toHaveAttribute('aria-pressed', 'false');
 
     await page.keyboard.press('a');
     await expect(approve).toHaveAttribute('aria-pressed', 'true');
-    await expect(reject).toHaveAttribute('aria-pressed', 'false');
+    await expect(bypass).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  /* 修正 has no keystroke, so the retired `R` must not fall through to it --
+   * or to any other decision. */
+  test('R decides nothing now that 退回 is gone', async ({ page }) => {
+    await gotoReviewer(page, 'T001', 'sent-001');
+
+    await page.keyboard.press('r');
+
+    for (const decision of ['approve', 'modify', 'bypass']) {
+      await expect(page.getByTestId('ws-review-row-' + decision))
+        .toHaveAttribute('aria-pressed', 'false');
+    }
   });
 
   /* T013 ships entity_recognition + relation_identification + multi_dim, so
@@ -78,18 +94,18 @@ test.describe('A / R decide the current review unit', () => {
 });
 
 test.describe('Keystrokes that must not decide', () => {
-  /* Shift+A / Shift+R were the retired batch shortcuts. They are no longer
+  /* Shift+A / Shift+B are the retired batch shortcuts. They are no longer
    * advertised and must not silently fall through to the single-unit path. */
-  test('Shift+A and Shift+R leave the unit undecided', async ({ page }) => {
+  test('Shift+A and Shift+B leave the unit undecided', async ({ page }) => {
     await gotoReviewer(page, 'T001', 'sent-001');
     const approve = page.getByTestId('ws-review-row-approve');
-    const reject = page.getByTestId('ws-review-row-reject');
+    const bypass = page.getByTestId('ws-review-row-bypass');
 
     await page.keyboard.press('Shift+A');
-    await page.keyboard.press('Shift+R');
+    await page.keyboard.press('Shift+B');
 
     await expect(approve).toHaveAttribute('aria-pressed', 'false');
-    await expect(reject).toHaveAttribute('aria-pressed', 'false');
+    await expect(bypass).toHaveAttribute('aria-pressed', 'false');
   });
 
   test('Control+A and Meta+A leave the unit undecided', async ({ page }) => {
@@ -102,28 +118,28 @@ test.describe('Keystrokes that must not decide', () => {
     await expect(approve).toHaveAttribute('aria-pressed', 'false');
   });
 
-  /* free_text corrections are typed, so the letters `a` and `r` are ordinary
+  /* free_text corrections are typed, so the letters `a` and `b` are ordinary
    * input the moment a field has focus. */
-  test('typing a and r into the free_text correction field only types', async ({ page }) => {
+  test('typing a and b into the free_text correction field only types', async ({ page }) => {
     await gotoReviewer(page, 'T009', 'sum-001');
     const approve = page.getByTestId('ws-review-row-approve');
 
     const field = page.getByTestId('ws-review-row').locator('textarea, input[type="text"]').first();
     await field.click();
     await field.fill('');
-    await page.keyboard.type('arar');
+    await page.keyboard.type('abab');
 
-    await expect(field).toHaveValue('arar');
+    await expect(field).toHaveValue('abab');
     await expect(approve).toHaveAttribute('aria-pressed', 'false');
   });
 
-  test('the annotator workspace ignores a and r', async ({ page }) => {
+  test('the annotator workspace ignores a and b', async ({ page }) => {
     const errors = trackPageErrors(page);
     await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'annotator' }));
     await dismissGuidelineModal(page);
 
     await page.keyboard.press('a');
-    await page.keyboard.press('r');
+    await page.keyboard.press('b');
 
     await expect(page.getByTestId('ws-review-row-approve')).toHaveCount(0);
     assertNoPageErrors(errors);
@@ -135,13 +151,12 @@ test.describe('Keystrokes that must not decide', () => {
  * alongside -- not replacing -- the testid lookups used everywhere else in
  * this file.
  *
- * Known gap, recorded as a deviation in the PR report: the per-row ✓/✕
- * decision buttons themselves (ws-review-row-approve / ws-review-row-reject,
- * built by buildRowDecisionButtons in annotation-workspace.config.js) are
- * icon-only with no aria-label, hence NO accessible name -- they cannot be
- * located by role+name. Fixing that is a production change out of scope for
- * this test-only PR, so the decision below is made via the keyboard
- * shortcut and only the text-bearing 送出審核 control is located by role. */
+ * The per-row decision buttons themselves (ws-review-row-approve / -modify
+ * / -bypass, built by buildRowDecisionButtons) grew their own accessible
+ * names in issue #399; issue-399-review-decision-a11y covers that. Here
+ * the decision is still made via the keyboard shortcut, because this file's
+ * subject IS the shortcut -- only the text-bearing 送出審核 control is
+ * located by role. */
 test.describe('Review submit is reachable by role and accessible name (A11Y-05)', () => {
   test('送出審核 resolves via getByRole and submits the decided unit', async ({ page }) => {
     await gotoReviewer(page, 'T001', 'sent-001');

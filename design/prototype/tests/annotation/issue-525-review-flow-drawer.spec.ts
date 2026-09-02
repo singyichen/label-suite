@@ -3,7 +3,7 @@
  * Source spec: specs/annotation/015-annotation-workspace/spec.md FR-064,
  * AC-4.27 / AC-4.32 / AC-4.35 / AC-4.36.
  *
- * The FR-064 banner used to carry the whole five-state track inline. `pending`
+ * The FR-064 banner used to carry the whole status track inline. `pending`
  * is every unreviewed unit's default state and the state with the least to
  * say, yet the track took the most vertical space exactly there. PR-A moves
  * the SAME track into an on-demand right-edge Drawer (full-width Modal below
@@ -12,14 +12,24 @@
  * .spec.ts still pins every one of them, now through this Drawer.
  *
  * Out of PR-A's scope, deliberately not asserted here: the banner/pill merge
- * and 試標 R{round} (PR-B), and rendering only the min_reviewers-reachable
- * nodes (PR-C). The Drawer shows exactly what the banner showed today.
+ * and 試標 R{round} (PR-B), and which nodes are reachable at all (PR-C). The
+ * Drawer shows exactly what the banner showed today.
+ *
+ * issue #596 (OpenSpec change 2026-09-01-single-owner-review-relay, task
+ * 3.7): FR-093's single owner collapsed the track to three nodes and retired
+ * the finalize-threshold chip, and a finalized unit now renders FR-094's
+ * pure-text card with no `ws-review-row` and no decision-note tooltip. PR-A's
+ * own contract -- where the trigger sits, what the Drawer is, that opening it
+ * moves nothing -- is unchanged; only the node list and the fixtures the
+ * banner/card assertions read had to follow.
  */
 import { test, expect, type Page } from '@playwright/test';
 import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
 
-/** T016: official_run, min_reviewers 3, annotator kioleemg12. */
-const APPROVED_UNIT = 'ofm-02-approved-interim';
+/** T016: official_run, annotator kioleemg12. issue #596: ofm-02's sole
+ *  reviewer agreed, so it derives `finalized`; ofm-05's differs, so it stays
+ *  `disputed` and is the only one of the two still showing review rows. */
+const FINALIZED_UNIT = 'ofm-02-approved-interim';
 const DISPUTED_UNIT = 'ofm-05-all-divergent';
 
 const DRAWER_ID = 'wsReviewFlowDrawer';
@@ -60,7 +70,7 @@ test.describe('issue #525 PR-A — the trigger in the FR-064 banner', () => {
   });
 
   test('is a real button carrying aria-expanded and a stable aria-controls', async ({ page }) => {
-    await openUnit(page, APPROVED_UNIT);
+    await openUnit(page, FINALIZED_UNIT);
 
     const btn = trigger(page);
     await expect(btn).toBeVisible();
@@ -79,24 +89,26 @@ test.describe('issue #525 PR-A — the trigger in the FR-064 banner', () => {
   test('is appended after the existing banner content, trailed only by the issue #550 note tooltip', async ({ page }) => {
     // The trigger is the way OUT of the banner, so it reads last whatever
     // precedes it. PR-B has since reordered what precedes it into issue
-    // #525 §Accessibility's run type -> state -> threshold; the trigger's
-    // own position -- last -- is what this test owns and it did not move.
-    await openUnit(page, APPROVED_UNIT);
+    // #525 §Accessibility's run type -> state; the trigger's own position --
+    // last but for the decision-note tooltip -- is what this test owns and
+    // it did not move. issue #596 removed the threshold chip between them,
+    // and the note tooltip only exists while the unit is still decidable, so
+    // this reads the disputed fixture rather than the finalized one.
+    await openUnit(page, DISPUTED_UNIT);
 
     const classes = await banner(page).evaluate((el) =>
       Array.from(el.children).map((c) => c.className),
     );
     expect(classes).toEqual([
       'rv-unit-chip rv-unit-run',
-      'rv-unit-state rv-unit-state-approved',
-      'rv-unit-chip rv-unit-threshold',
+      'rv-unit-state rv-unit-state-disputed',
       'rv-flow-trigger',
       'rv-review-note',
     ]);
   });
 
   test('follows the language toggle', async ({ page }) => {
-    await openUnit(page, APPROVED_UNIT);
+    await openUnit(page, FINALIZED_UNIT);
     await page.getByTestId('lang-toggle').click();
 
     await expect(trigger(page)).toHaveText('Review flow');
@@ -130,7 +142,7 @@ test.describe('issue #525 PR-A — the flow track lives in the Drawer, not the b
     await expect(page.getByRole('list', { name: '審核單位狀態' })).toHaveCount(0);
   });
 
-  test('opening reveals the same five-node track, inside the dialog', async ({ page }) => {
+  test('opening reveals the same three-node track, inside the dialog', async ({ page }) => {
     await openUnit(page, DISPUTED_UNIT);
     await trigger(page).click();
 
@@ -148,8 +160,6 @@ test.describe('issue #525 PR-A — the flow track lives in the Drawer, not the b
     await expect(track).toHaveAttribute('aria-label', '審核單位狀態');
     await expect(track.locator('[role="listitem"]')).toHaveText([
       /待審/,
-      /已同意/,
-      /已修改/,
       /爭議中/,
       /已定稿/,
     ]);
@@ -164,14 +174,14 @@ test.describe('issue #525 PR-A — Drawer focus contract', () => {
   });
 
   test('focus moves to the close button on open', async ({ page }) => {
-    await openUnit(page, APPROVED_UNIT);
+    await openUnit(page, FINALIZED_UNIT);
     await trigger(page).click();
 
     await expect(closeBtn(page)).toBeFocused();
   });
 
   test('Tab and Shift+Tab wrap inside the Drawer instead of escaping it', async ({ page }) => {
-    await openUnit(page, APPROVED_UNIT);
+    await openUnit(page, FINALIZED_UNIT);
     await trigger(page).click();
 
     // The Drawer holds exactly one focusable node, so "last -> first" and
@@ -184,7 +194,7 @@ test.describe('issue #525 PR-A — Drawer focus contract', () => {
   });
 
   test('Esc closes the Drawer and returns focus to the trigger', async ({ page }) => {
-    await openUnit(page, APPROVED_UNIT);
+    await openUnit(page, FINALIZED_UNIT);
     await trigger(page).click();
     await expect(drawer(page)).toBeVisible();
 
@@ -196,7 +206,7 @@ test.describe('issue #525 PR-A — Drawer focus contract', () => {
   });
 
   test('the close button closes the Drawer and returns focus to the trigger', async ({ page }) => {
-    await openUnit(page, APPROVED_UNIT);
+    await openUnit(page, FINALIZED_UNIT);
     await trigger(page).click();
 
     await closeBtn(page).click();
@@ -212,7 +222,8 @@ test.describe('issue #525 PR-A — the Drawer is out of the workspace document f
   });
 
   test('opening and closing does not move the review card', async ({ page }) => {
-    await openUnit(page, APPROVED_UNIT);
+    // A decidable unit: FR-094's finalized card has no `ws-review-row`.
+    await openUnit(page, DISPUTED_UNIT);
     const card = page.getByTestId('ws-review-row').first();
     await expect(card).toBeVisible();
 
@@ -230,7 +241,7 @@ test.describe('issue #525 PR-A — the Drawer is out of the workspace document f
 
   test('at 375px the Drawer is a full-width Modal with no horizontal overflow', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 720 });
-    await openUnit(page, APPROVED_UNIT);
+    await openUnit(page, FINALIZED_UNIT);
     await trigger(page).click();
 
     const panel = drawer(page).locator('.rv-flow-drawer');

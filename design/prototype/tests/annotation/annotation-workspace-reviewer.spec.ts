@@ -18,8 +18,9 @@ import {
  * workspace's `summarizeReviewerAspectCorrections` ReferenceError on review
  * submit (annotation-workspace.html:5029) recurring in the rewrite.
  *
- * Each output-type row carries exactly one approve/reject decision pair
- * (ws-review-row-approve/ws-review-row-reject, via buildRowDecisionButtons),
+ * Each output-type row carries exactly one three-way decision toggle
+ * (ws-review-row-approve/-modify/-bypass, via buildRowDecisionButtons; issue
+ * #596 FR-014B retired the reject button and the rework path it drove),
  * docked on the correction panel's Bypass row (FR-014P) -- ws-review-submit-btn
  * requires every row to carry a decision before it will submit.
  *
@@ -109,26 +110,6 @@ test.describe('reviewer direct correction — deep example (single_label, T001)'
     await page.getByTestId('ws-review-submit-btn').click();
     await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
   });
-
-  test('rejecting the row reopens the annotator sample', async ({ page }) => {
-    await submitAsAnnotator(page, 'T001', 'sent-001', async () => {
-      await page.getByTestId('ws-single-label-chip-negative').click();
-    });
-
-    await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer' }));
-    await dismissGuidelineModal(page);
-
-    const row = page.getByTestId('ws-review-row').first();
-    await row.getByTestId('ws-review-row-reject').click();
-    // issue #552 (FR-016A): a reject needs a reason before submit goes through.
-    await row.getByTestId('ws-review-reject-reason').fill('理由');
-    await page.getByTestId('ws-review-submit-btn').click();
-    await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
-
-    await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'annotator' }));
-    await dismissGuidelineModal(page);
-    await expect(page.getByTestId('ws-single-label-chip-negative')).toHaveAttribute('aria-pressed', 'true');
-  });
 });
 
 const REGISTRY_CASES: Array<{
@@ -214,7 +195,8 @@ for (const { outKey, taskId, sampleId, answer } of REGISTRY_CASES) {
     const row = page.getByTestId('ws-review-row').first();
     await expect(row.getByTestId(`ws-review-correct-${outKey}`)).toBeVisible();
     await expect(row.getByTestId('ws-review-row-approve')).toBeVisible();
-    await expect(row.getByTestId('ws-review-row-reject')).toBeVisible();
+    await expect(row.getByTestId('ws-review-row-modify')).toBeVisible();
+    await expect(row.getByTestId('ws-review-row-bypass')).toBeVisible();
 
     // Every output type in this loop has exactly one row -- approve it so
     // submit validation passes.
@@ -241,9 +223,9 @@ test.describe('official_run reviewer with no prior annotator submission', () => 
 
 /* official_run card chrome (spec 015 v3.4.0, FR-014P): the output-type title
  * row is gone -- the correction panel below it already shows what is being
- * reviewed -- and the approve/reject pair moved down onto the panel's own
- * Bypass row, so every card ends with one decision line
- * (無法判定 … ✕ ✓) regardless of output type. Covers all 8 registry types
+ * reviewed -- and the decision toggle moved down onto the panel's own
+ * Bypass row, so every card ends with one decision line regardless of output
+ * type (issue #596 FR-014B made that line three-way: 通過 / 修正 / 無法判定). Covers all 8 registry types
  * plus both merged span tasks. */
 const CHROME_CASES: Array<{ taskId: string; sampleId: string; outKeys: string[] }> = [
   { taskId: 'T001', sampleId: 'sent-001', outKeys: ['single_label'] },
@@ -271,13 +253,14 @@ test.describe('official_run review card chrome', () => {
       await expect(rows.first()).toBeVisible();
       await expect(rows.locator('.content-card-title')).toHaveCount(0);
 
-      // One decision pair per output type, every one of them sitting on a
+      // One decision toggle per output type, every one of them sitting on a
       // Bypass row rather than floating in a header.
       await expect(page.getByTestId('ws-review-row-approve')).toHaveCount(outKeys.length);
-      await expect(page.locator('.preview-bypass-row').getByTestId('ws-review-row-approve'))
-        .toHaveCount(outKeys.length);
-      await expect(page.locator('.preview-bypass-row').getByTestId('ws-review-row-reject'))
-        .toHaveCount(outKeys.length);
+      for (const decision of ['approve', 'modify', 'bypass']) {
+        await expect(page.locator('.preview-bypass-row').getByTestId('ws-review-row-' + decision))
+          .toHaveCount(outKeys.length);
+      }
+      await expect(page.getByTestId('ws-review-row-reject')).toHaveCount(0);
     });
   }
 

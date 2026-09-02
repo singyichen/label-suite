@@ -4,14 +4,14 @@ import { buildWorkspaceUrl, dismissGuidelineModal, skipGuidelineModal } from './
 /* Reviewer decision / direct-correction desync after reload (issue #398).
  *
  * FR-014S (spec 015 v4.19.0, AC-6.10) persists the reviewer's per-row
- * approve/reject decision across a reload, but explicitly EXCLUDES the
+ * three-way decision (FR-014B: 通過／修正／無法判定) across a reload, but explicitly EXCLUDES the
  * direct-correction control's in-progress value from that persistence --
  * a correction always reseeds from the reviewed annotator's original
  * submitted answer on a fresh render (seedReviewRow() in
  * annotation-workspace.config.js).
  *
  * Before this fix that left a silent, potentially data-integrity-breaking
- * gap: if a reviewer edited the correction value AND THEN approved/rejected
+ * gap: if a reviewer edited the correction value AND THEN decided
  * before reloading, the kept decision (aria-pressed="true") rode along with
  * a correction value that had silently reverted to the annotator's
  * ORIGINAL answer -- not the value the reviewer actually decided on. A
@@ -70,7 +70,9 @@ test.describe('A decision kept alongside a lost correction is reset, not silentl
 
     // And the reviewer must be told why, instead of the reset being silent.
     await expect(page.locator('#toastMsg')).toHaveText(
-      '偵測到直接修正的內容因重新整理而遺失，對應的通過／退回決策已重置，請重新確認後再送出'
+      // issue #596 FR-014B: the copy names 審核決策 generically now that the
+      // decision is three-way (通過／修正／無法判定), not the retired 通過／退回 pair.
+      '偵測到直接修正的內容因重新整理而遺失，對應的審核決策已重置，請重新確認後再送出'
     );
   });
 });

@@ -1,27 +1,23 @@
 import { test, expect, type Page } from '@playwright/test';
-import { buildWorkspaceUrl, fillArbitrationReasons, patchDataFile, skipGuidelineModal } from './_workspace-helpers';
+import { buildWorkspaceUrl, fillArbitrationReasons, skipGuidelineModal } from './_workspace-helpers';
 
-/* Workspace arbitration layout (spec 015 v4.8.0, issue #147 P3c).
+/* Workspace arbitration layout (spec 015, issue #147 P3c; issue #596
+ * FR-060/FR-061/FR-093).
  *
  * When an arbitration-eligible reviewer (can_arbitrate AND not a dispute
  * participant, FR-060) opens a DISPUTED unit, the whole review card switches
  * to an arbitration layout: the arbiter picks per dispute item between the
  * annotator's value (A) and the reviewer side's value (B) — they never
- * re-annotate, so correction controls and the ✕/✓ row decisions must not
- * render at all. Items whose reviewer votes already converge to a per-item
- * majority (resolveDisputeConvergence) skip the pool and auto-finalize;
- * only genuinely unresolvable items get an A/B row.
+ * re-annotate, so correction controls and the row decisions must not render
+ * at all.
  *
- * issue #551 (v4.54.0): min_reviewers = 1 (T001's default) now converges a
- * SOLE reviewer's correction on submit instead of unconditionally requiring
- * arbitration below N = 2. seedDisputedUnit() below therefore seeds a
- * SECOND, silently agreeing reviewer (FILLER = reviewer_lin, no
- * can_arbitrate) alongside PARTICIPANT's dissenting 'fear' -- an implicit
- * 'sad' vote vs one 'fear' vote is a genuine 1:1 tie at N = 2, the same
- * disputed unit (one B candidate: 'fear') every test in this file already
- * assumed, just no longer reachable with a single reviewer. BYSTANDER (li)
- * is deliberately left untouched so it keeps meaning "never reviewed this
- * unit" wherever it is used below.
+ * issue #596 (FR-093): exactly ONE reviewer owns a unit, so there is no
+ * quorum and no majority convergence left to skip the pool with — every
+ * dispute item reaches the arbiter. seedDisputedUnit() therefore seeds that
+ * single reviewer only; the second silently-agreeing reviewer the old
+ * min_reviewers = 2 tie needed is gone, and with it the reason the card had
+ * to pick a B value out of a per-reviewer list (design.md D2: MUST NOT
+ * 出現多個 B). BYSTANDER (li) still means "never reviewed this unit".
  */
 
 type WorkspaceData = {
@@ -34,7 +30,7 @@ type WorkspaceData = {
     taskId: string, runType: string, sampleId: string,
     identity: { annotatorId?: string }
   ) => Record<string, {
-    votes: Array<{ arbiter_id: string; choice: 'A' | 'B'; voted_at: string }>;
+    votes: Array<{ arbiter_id: string; choice: 'adopt_a' | 'adopt_b' | 'reject'; voted_at: string }>;
     finalized_value?: unknown;
     finalized_by?: string;
   }>;
@@ -61,8 +57,6 @@ const ANNOTATOR = 'kioleemg12';
 const PARTICIPANT = 'reviewer_wang';
 const BYSTANDER = 'reviewer_li'; // no can_arbitrate flag
 const ARBITER = 'reviewer_chen'; // can_arbitrate: true
-const FILLER = 'reviewer_lin'; // no can_arbitrate flag; issue #551 -- silent agree, keeps N=2
-
 const labelPayload = (selected: string) => ({ previewState: { single_label: { selected } } });
 
 function seed(
@@ -79,29 +73,15 @@ function seed(
   }, args);
 }
 
-const dimsPayload = (dims: Record<string, number>) => ({
-  previewState: {
-    multi_dim: {
-      dims: Object.fromEntries(Object.entries(dims).map(([name, value]) => [name, { value }])),
-    },
-  },
-});
-
-/* Annotator says sad, reviewer_wang says fear, reviewer_lin silently agrees
- * (sad) -> disputed with one dispute item (single_label::selected): a
- * genuine 1:1 tie at N=2, not reachable at N=1 since issue #551 (see the
- * file header). */
+/* Annotator says sad, the unit's ONE assigned reviewer (reviewer_wang) says
+ * fear -> disputed with one dispute item (single_label::single_label), whose
+ * single B candidate is 'fear'. */
 async function seedDisputedUnit(page: Page): Promise<void> {
   await seed(page, { role: 'annotator', payload: labelPayload('sad'), identity: { annotatorId: ANNOTATOR } });
   await seed(page, {
     role: 'reviewer',
     payload: labelPayload('fear'),
     identity: { annotatorId: ANNOTATOR, reviewerId: PARTICIPANT },
-  });
-  await seed(page, {
-    role: 'reviewer',
-    payload: labelPayload('sad'),
-    identity: { annotatorId: ANNOTATOR, reviewerId: FILLER },
   });
 }
 
@@ -131,8 +111,9 @@ test.describe('arbitration layout: eligible arbiter on a disputed unit', () => {
 
   test('correction controls and row decisions do not render', async ({ page }) => {
     await expect(page.getByTestId('ws-arbitration-card')).toBeVisible();
-    await expect(page.getByTestId('ws-review-row-approve')).toHaveCount(0);
-    await expect(page.getByTestId('ws-review-row-reject')).toHaveCount(0);
+    for (const decision of ['approve', 'modify', 'bypass']) {
+      await expect(page.getByTestId('ws-review-row-' + decision)).toHaveCount(0);
+    }
     /* The single_label correction chips belong to the reviewer's re-annotate
        flow; an arbiter only chooses A or B. */
     await expect(page.getByTestId('ws-single-label-chip-sad')).toHaveCount(0);
@@ -152,25 +133,23 @@ test.describe('arbitration layout: negative paths keep the normal review card', 
     await expect(page.getByTestId('ws-review-row-approve').first()).toBeVisible();
   });
 
+  /* PENDING, not "agreeing reviewer": with one reviewer per unit (FR-093)
+     an agreeing review derives straight to FINALIZED, which issue #308
+     locks into the read-only card -- a different branch than the
+     interactive one under test. A unit whose reviewer has not submitted yet
+     is the only non-disputed state that still keeps the normal card, so
+     seed a second sample the arbiter has yet to review. */
   test('an arbiter on a non-disputed unit reviews normally', async ({ page }) => {
-    /* Overwrite the participant's decision with an agreeing one so there
-       is nothing to arbitrate. FILLER (from seedDisputedUnit) already
-       contributes one agreeing 'sad' vote, so this makes it TWO agreeing
-       reviewers of two submitted; under T001's default minReviewers = 1 (or
-       the old test's minReviewers = 2) that would already derive FINALIZED
-       (which issue #308 locks into the read-only card, a different branch
-       than the one under test). issue #551 raises the threshold to 3
-       instead: two agreeing reviews of three required derives APPROVED, the
-       interim state that keeps the normal card. */
+    const PENDING_SAMPLE = 'sent-002';
     await seed(page, {
-      role: 'reviewer',
-      payload: labelPayload('sad'),
-      identity: { annotatorId: ANNOTATOR, reviewerId: PARTICIPANT },
+      sample: PENDING_SAMPLE, role: 'annotator',
+      payload: labelPayload('sad'), identity: { annotatorId: ANNOTATOR },
     });
-    await patchDataFile(page, 'task-detail.data.js', `
-      window.LabelSuiteTaskDetailData.profiles.${TASK}.minReviewers = 3;
-    `);
-    await page.reload();
+    await page.goto(buildWorkspaceUrl({
+      task_id: TASK, sample_id: PENDING_SAMPLE, role: 'reviewer', run_type: 'official_run',
+      annotator_id: ANNOTATOR, reviewer_id: ARBITER,
+    }));
+
     await expect(page.getByTestId('ws-arbitration-card')).toHaveCount(0);
     await expect(page.getByTestId('ws-review-row-approve').first()).toBeVisible();
   });
@@ -191,7 +170,9 @@ test.describe('A/B voting', () => {
     expect(item).toBeTruthy();
     expect(item.votes).toHaveLength(1);
     expect(item.votes[0].arbiter_id).toBe(ARBITER);
-    expect(item.votes[0].choice).toBe('B');
+    // issue #596 FR-061: the stored outcome is one of ARBITRATION_OUTCOMES,
+    // not the positional letter the button shows.
+    expect(item.votes[0].choice).toBe('adopt_b');
     expect(item.finalized_value).toBe('fear');
     expect(item.finalized_by).toBe(ARBITER);
   });
@@ -221,6 +202,11 @@ test.describe('A/B voting', () => {
   });
 });
 
+/* issue #596 (FR-093) retired majority convergence from BOTH the unit-status
+ * derivation and the arbitration card, so the card no longer renders a
+ * `ws-arbitration-converged` row and the auto-finalize case that asserted one
+ * is gone. resolveDisputeConvergence() itself survives as a data-level export
+ * that annotation-list.html still calls, so its contract stays pinned here. */
 test.describe('per-item majority convergence (resolveDisputeConvergence)', () => {
   /* Data-level contract of the convergence rules (issue #147 ⑥③):
    * among N reviewers, reviewers absent from reviewerValues implicitly
@@ -284,39 +270,5 @@ test.describe('per-item majority convergence (resolveDisputeConvergence)', () =>
   test('N=3 all divergent: no value reaches a majority, pool', async ({ page }) => {
     const r = await resolve(page, { reviewer_wang: 'fear', reviewer_li: 'joy' }, 3);
     expect(r.converged).toBe(false);
-  });
-
-  test('a converged item auto-finalizes: no A/B row for it', async ({ page }) => {
-    /* T005 (multi_dim, N=2): both reviewers score fluency 1 against the
-       annotator's 3 — 2/2 votes converge, no arbitration needed. Only li
-       touches adequacy (5 vs 3): wang's implicit agreement makes it a 1-1
-       tie, so adequacy alone gets an A/B row. */
-    const t005 = { task: 'T005', sample: 'mt-001' };
-    await seed(page, {
-      ...t005, role: 'annotator',
-      payload: dimsPayload({ fluency: 3, adequacy: 3, coherence: 3 }),
-      identity: { annotatorId: ANNOTATOR },
-    });
-    await seed(page, {
-      ...t005, role: 'reviewer',
-      payload: dimsPayload({ fluency: 1, adequacy: 3, coherence: 3 }),
-      identity: { annotatorId: ANNOTATOR, reviewerId: PARTICIPANT },
-    });
-    await seed(page, {
-      ...t005, role: 'reviewer',
-      payload: dimsPayload({ fluency: 1, adequacy: 5, coherence: 3 }),
-      identity: { annotatorId: ANNOTATOR, reviewerId: BYSTANDER },
-    });
-    await page.goto(buildWorkspaceUrl({
-      task_id: 'T005', sample_id: 'mt-001', role: 'reviewer', run_type: 'official_run',
-      annotator_id: ANNOTATOR, reviewer_id: ARBITER,
-    }));
-
-    await expect(page.getByTestId('ws-arbitration-card')).toBeVisible();
-    await expect(page.getByTestId('ws-arbitration-converged')).toHaveCount(1);
-    await expect(page.getByTestId('ws-arbitration-converged')).toContainText('fluency');
-    const items = page.getByTestId('ws-arbitration-item');
-    await expect(items).toHaveCount(1);
-    await expect(items.first()).toContainText('adequacy');
   });
 });

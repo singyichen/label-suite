@@ -265,7 +265,13 @@ test.describe('AC-2.20: annotator skip requires a reason', () => {
   });
 });
 
-test.describe('AC-3.50: arbitration final decision requires a reason', () => {
+/* issue #596 FR-061 point 3 narrowed AC-3.50/FR-089: only the third exit
+   (兩者皆非 / reject) requires a reason now -- 採 A and 採 B finalize on an
+   answer already on the record. Canonical FR-089 still reads
+   "爭議仲裁（adjudicated）理由必填" unconditionally and the change carries no
+   MODIFIED delta for it; flagged for the archive group's write-back. These
+   tests follow FR-061, which is what the implementation does. */
+test.describe('AC-3.50: the 兩者皆非 arbitration exit requires a reason', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto(buildWorkspaceUrl({
       task_id: TASK, sample_id: SAMPLE, role: 'reviewer', run_type: 'official_run',
@@ -277,19 +283,31 @@ test.describe('AC-3.50: arbitration final decision requires a reason', () => {
     await expect(page.getByTestId('ws-arbitration-card')).toBeVisible();
   });
 
-  test('the open dispute item renders a required, per-item reason field', async ({ page }) => {
+  test('the open dispute item renders a per-item reason field', async ({ page }) => {
     const reasonField = page.getByTestId('ws-arbitration-reason');
     await expect(reasonField).toHaveCount(1);
     await expect(reasonField).toHaveAttribute('data-item-id', ITEM_ID);
-    await expect(reasonField).toHaveAttribute('required', '');
+  });
+
+  test('adopting A or B submits without a reason (FR-061 point 3 scoping)', async ({ page }) => {
+    const submitBtn = page.getByTestId('ws-arbitration-submit');
+
+    // issue #596 FR-061 point 3 narrowed the reason to the third exit only:
+    // 採 A / 採 B pick an answer that is already on the card and on the
+    // record, so there is nothing left to justify. Only 兩者皆非 introduces
+    // a value nobody proposed, and that is the one the blocker guards.
+    await page.getByTestId('ws-arbitration-choose-a').click();
+    await expect(submitBtn).not.toHaveAttribute('data-submit-blocked', 'reason');
+    await page.getByTestId('ws-arbitration-choose-b').click();
+    await expect(submitBtn).not.toHaveAttribute('data-submit-blocked', 'reason');
   });
 
   test('finalizing without a reason is blocked, names the item, and writes no adjudicated event', async ({ page }) => {
-    await page.getByTestId('ws-arbitration-choose-b').click();
+    await page.getByTestId('ws-arbitration-choose-reject').click();
 
     const submitBtn = page.getByTestId('ws-arbitration-submit');
-    // Choosing A/B alone must already surface the reason blocker, same live
-    // refresh-on-decision convention as the reviewer reject-reason field.
+    // Choosing 兩者皆非 must already surface the reason blocker, same live
+    // refresh-on-decision convention as the reviewer reason field.
     await expect(submitBtn).toHaveAttribute('data-submit-blocked', 'reason');
 
     await submitBtn.click();
@@ -304,7 +322,7 @@ test.describe('AC-3.50: arbitration final decision requires a reason', () => {
 
   test('finalizing with a reason writes exactly one adjudicated event carrying it', async ({ page }) => {
     const errors = trackPageErrors(page);
-    await page.getByTestId('ws-arbitration-choose-b').click();
+    await page.getByTestId('ws-arbitration-choose-reject').click();
     await page.getByTestId('ws-arbitration-reason').fill(ADJUDICATE_REASON);
 
     const submitBtn = page.getByTestId('ws-arbitration-submit');

@@ -8,7 +8,7 @@ import {
   type RunType,
 } from './_workspace-helpers';
 
-/* Issue #550: the reviewer workspace used to explain approve/reject with TWO
+/* Issue #550: the reviewer workspace used to explain the review decisions with TWO
  * elements that said overlapping things -- a run-type-invariant paragraph
  * above the card stack (`ws-review-note`, issue #520) and a pre-submit
  * confirmation area below it (`ws-review-summary-effect`, FR-077/AC-3.42)
@@ -22,33 +22,51 @@ import {
  *     built per design/system/MASTER.md's Tooltip spec (a real <button>
  *     trigger, a role="tooltip" bubble linked by aria-describedby -- never
  *     the native title attribute).
- *   - its content now legally branches on `run_type` (AC-3.33 only forbids
- *     the branch INSIDE a review card; this element sits outside every
- *     card), so it absorbs the submit consequence that used to live in the
- *     confirmation area.
- *   - the two `run_type` texts are mutually exclusive: `dry_run` never
- *     claims a rollback or names an annotator; `official_run` names the
- *     annotator under review.
+ *   - its content may legally branch on `run_type` (AC-3.33 only forbids the
+ *     branch INSIDE a review card; this element sits outside every card).
  *   - the review card DOM itself is unaffected (AC-3.33 still holds).
  *
+ * issue #596 (OpenSpec change 2026-09-01-single-owner-review-relay, task
+ * 3.7): FR-070 was rewritten to state the THREE decisions' real effects, and
+ * what it may say shrank in two ways this file has to follow.
+ *   - No rework path exists any anymore, so nothing in the copy is about the
+ *     annotator and the annotator's id is no longer interpolated. The old
+ *     "names the annotator under review" pair of cases therefore became one
+ *     case asserting the opposite: the copy is annotator-invariant. Dropping
+ *     them outright would have left nothing pinning that the interpolation
+ *     really went away.
+ *   - AC-3.40 narrows the run_type branch to exactly ONE sentence -- dry_run
+ *     adds 「試標的定稿只彙總一致性與被修改率」 and the two texts are
+ *     otherwise identical -- so the copy constants below are composed from a
+ *     shared base rather than written out twice, which is what makes an
+ *     accidental second divergence fail here.
+ *
  * Traceability: specs/annotation/015-annotation-workspace/spec.md FR-070,
- * AC-3.40, AC-3.45 (revised v4.55.0); FR-077/AC-3.42/AC-3.44 (revoked).
+ * AC-3.40, AC-3.45 (revised v4.55.0); FR-077/AC-3.42/AC-3.44 (revoked);
+ * FR-070 / AC-3.40 as modified by issue #596.
  */
 
 const ANNOTATOR = 'kioleemg12';
 const OTHER_ANNOTATOR = '113450022';
 
-const NOTE_DRY_ZH =
-  '通過：採用該輸出類型目前顯示的作答（含您的修正）為審核結果。退回：記錄不採用的決策與修正差異。送出後——試標：不回退標記員狀態，品質問題由任務層級 IAA 閘門與下一輪試標處理。';
+/* AC-3.40: `official_run` IS the shared base, and `dry_run` is the base plus
+ * one sentence. Writing them as base + suffix is deliberate -- a copy change
+ * that diverged the two texts anywhere else would have to edit the base and
+ * would fail both run types at once, instead of silently passing one. */
+const NOTE_OFFICIAL_ZH =
+  '通過：該項直接定稿，正式標記中即成為最終答案。修正：您的修正不會立即生效，該項進入爭議池待仲裁。無法判定：同樣進入爭議池，仲裁者採用審核員側即定案為無法判定。試標與正式標記皆不會將樣本送回給標記員重做。';
 
-const NOTE_OFFICIAL_ZH = (annotator: string) =>
-  `通過：採用該輸出類型目前顯示的作答（含您的修正）為審核結果。退回：記錄不採用的決策與修正差異。送出後——正式標記：任一輸出類型退回會使此單位回到待標記，並產生標記員 ${annotator} 的重標待辦；全部通過則標記員狀態不變。退回理由會顯示給標記員。`;
+const DRY_SUFFIX_ZH = '試標的定稿只彙總一致性與被修改率，不產生最終答案。';
 
-const NOTE_DRY_EN =
-  'Approve: the answer currently shown for that output type (including your correction) becomes the review result. Reject: records the decision not to accept it, plus any correction. After submitting — dry run: the annotator status is not rolled back; quality issues are handled by the task-level IAA gate and the next dry run.';
+const NOTE_DRY_ZH = NOTE_OFFICIAL_ZH + DRY_SUFFIX_ZH;
 
-const NOTE_OFFICIAL_EN = (annotator: string) =>
-  `Approve: the answer currently shown for that output type (including your correction) becomes the review result. Reject: records the decision not to accept it, plus any correction. After submitting — official run: rejecting any output type returns this unit to pending and creates a re-annotation task for ${annotator}; if everything is approved the annotator status is unchanged. The reject reason is shown to the annotator.`;
+const NOTE_OFFICIAL_EN =
+  'Approve: the item is finalized as it stands, and in an official run that value becomes the final answer. Modify: your correction does not take effect immediately; the item enters the dispute pool for arbitration. Cannot determine: the item also enters the dispute pool, and an arbiter adopting the reviewer side settles it as undecidable. Neither a dry run nor an official run sends the sample back to the annotator to redo it.';
+
+const DRY_SUFFIX_EN =
+  ' A dry-run finalization produces no final answer; it only aggregates agreement and the modification rate.';
+
+const NOTE_DRY_EN = NOTE_OFFICIAL_EN + DRY_SUFFIX_EN;
 
 async function openReviewer(page: Page, runType: RunType, annotatorId = ANNOTATOR): Promise<void> {
   await page.goto(
@@ -116,9 +134,9 @@ test.describe('the tooltip content branches on run_type and each branch stays ex
     await expect(page.getByTestId('ws-review-note-bubble')).toHaveAttribute('data-run-type', 'dry_run');
   });
 
-  test('official_run: zh copy is pinned verbatim and names the reviewed annotator', async ({ page }) => {
+  test('official_run: zh copy is pinned verbatim', async ({ page }) => {
     await openReviewer(page, 'official_run');
-    await expect(page.getByTestId('ws-review-note-bubble')).toHaveText(NOTE_OFFICIAL_ZH(ANNOTATOR));
+    await expect(page.getByTestId('ws-review-note-bubble')).toHaveText(NOTE_OFFICIAL_ZH);
     await expect(page.getByTestId('ws-review-note-bubble')).toHaveAttribute('data-run-type', 'official_run');
   });
 
@@ -130,12 +148,12 @@ test.describe('the tooltip content branches on run_type and each branch stays ex
     await expect(page.getByTestId('ws-review-note-bubble')).toHaveText(NOTE_DRY_EN);
   });
 
-  test('official_run: en copy is pinned verbatim and names the reviewed annotator', async ({ page }) => {
+  test('official_run: en copy is pinned verbatim', async ({ page }) => {
     await page.addInitScript(() => {
       window.localStorage.setItem('labelsuite.lang', 'en');
     });
     await openReviewer(page, 'official_run');
-    await expect(page.getByTestId('ws-review-note-bubble')).toHaveText(NOTE_OFFICIAL_EN(ANNOTATOR));
+    await expect(page.getByTestId('ws-review-note-bubble')).toHaveText(NOTE_OFFICIAL_EN);
   });
 
   test('dry_run never claims a rollback and never names an annotator', async ({ page }) => {
@@ -146,18 +164,28 @@ test.describe('the tooltip content branches on run_type and each branch stays ex
     await expect(bubble).not.toContainText(ANNOTATOR);
   });
 
-  test('official_run never claims the dry_run IAA-gate consequence', async ({ page }) => {
+  test('official_run never claims the dry_run-only consequence', async ({ page }) => {
     await openReviewer(page, 'official_run');
     const bubble = page.getByTestId('ws-review-note-bubble');
+    await expect(bubble).not.toContainText(DRY_SUFFIX_ZH);
     await expect(bubble).not.toContainText('IAA');
     await expect(bubble).not.toContainText('下一輪試標');
   });
 
-  test('the named annotator tracks the annotator actually under review, not a constant', async ({ page }) => {
-    await openReviewer(page, 'official_run', OTHER_ANNOTATOR);
-    const bubble = page.getByTestId('ws-review-note-bubble');
-    await expect(bubble).toContainText(OTHER_ANNOTATOR);
-    await expect(bubble).not.toContainText(ANNOTATOR);
+  test('FR-070: neither run type names the annotator or any removed mechanism', async ({ page }) => {
+    // The copy used to interpolate the annotator id because rejecting sent
+    // the sample back to that person. No rework path exists any more, so the
+    // id must be gone -- read with a NON-default annotator so a hardcoded
+    // kioleemg12 could not pass this by coincidence.
+    for (const runType of ['dry_run', 'official_run'] as RunType[]) {
+      await openReviewer(page, runType, OTHER_ANNOTATOR);
+      const bubble = page.getByTestId('ws-review-note-bubble');
+      await expect(bubble).not.toContainText(OTHER_ANNOTATOR);
+      await expect(bubble).not.toContainText(ANNOTATOR);
+      for (const banned of ['退回', '重新標記', '定稿門檻', '多數決']) {
+        await expect(bubble).not.toContainText(banned);
+      }
+    }
   });
 });
 
@@ -193,16 +221,19 @@ test.describe('the tooltip mounts once per review unit, above the card stack (is
   });
 
   test('the tooltip lives in the unit-context banner, right after the review-flow trigger', async ({ page }) => {
-    // T016 ofm-02 has a derived unit status, so the FR-064 banner renders
+    // T016 ofm-05 has a derived unit status, so the FR-064 banner renders
     // its 了解審核流程 trigger; the note must be the trigger's next sibling.
+    // issue #596: ofm-02 no longer works here -- its sole reviewer agreed, so
+    // it derives `finalized`, and FR-070's note is only rendered while the
+    // unit is still decidable.
     await page.goto(
       buildWorkspaceUrl({
         task_id: 'T016',
-        sample_id: 'ofm-02-approved-interim',
+        sample_id: 'ofm-05-all-divergent',
         role: 'reviewer',
         run_type: 'official_run',
         annotator_id: 'kioleemg12',
-        reviewer_id: 'reviewer_chen',
+        reviewer_id: 'reviewer_wang',
       })
     );
     await dismissGuidelineModal(page);
@@ -247,7 +278,8 @@ test.describe('the review card is unaffected by the tooltip (AC-3.33 still holds
   test('decision buttons keep their accessible names regardless of the tooltip', async ({ page }) => {
     await openReviewer(page, 'official_run');
     await expect(page.getByRole('button', { name: '通過', exact: true })).toHaveCount(1);
-    await expect(page.getByRole('button', { name: '退回', exact: true })).toHaveCount(1);
+    await expect(page.getByRole('button', { name: '修正', exact: true })).toHaveCount(1);
+    await expect(page.getByRole('button', { name: '無法判定', exact: true })).toHaveCount(1);
   });
 });
 
@@ -264,8 +296,8 @@ test.describe('accessibility: keyboard focus and small viewports (issue #550)', 
 
   test('the bubble does not cause horizontal overflow at 375px', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 800 });
-    // official_run carries the longer of the two copies (88 zh characters).
-    await openReviewer(page, 'official_run');
+    // dry_run carries the longer of the two copies (base + suffix).
+    await openReviewer(page, 'dry_run');
 
     await page.getByTestId('ws-review-note-trigger').focus();
     const bubble = page.getByTestId('ws-review-note-bubble');

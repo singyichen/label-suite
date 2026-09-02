@@ -13,7 +13,7 @@
  * These tests pin the disambiguated vocabulary:
  *   - task level      「任務覆蓋 4 / 5 個審核單位」
  *   - reviewer level  「我的審核提交 0 / 5 個審核單位」
- *   - unit level      「定稿門檻 1 / 3 位審核員」
+ *   - unit level      「定稿門檻 1 / 3 位審核員」（issue #596 已移除，見檔尾說明）
  *   - interim pills carry a 「未達定稿門檻 x / n」 note, finalized carries
  *     「已鎖定」, and the distinction is exposed as text + data-terminal,
  *     never colour alone.
@@ -115,20 +115,23 @@ test.describe('issue #452 — the workspace top progress is MY submissions', () 
   });
 });
 
-test.describe('issue #452 — the unit banner states the finalize threshold', () => {
-  /* AC-8: every profile now has minReviewers = 1 (issue #596 retires
-     per-task thresholds > 1), so "threshold" here is always 1 / 1. */
-  test('T015 (threshold 1) finalized unit is the only state that reads as locked', async ({ page }) => {
+test.describe('issue #452 — the unit banner states which state the unit is in', () => {
+  /* issue #596 (AC-4.37) removed the 定稿門檻 chip along with the quorum it
+     counted against, so the banner's remaining progress claim is the state
+     itself. The subject-bearing contract this file exists for is unchanged:
+     the pill must still say IN WORDS whether the unit is terminal, and must
+     never fall back to the unsubjected 「已審 x / n」 wording. */
+  test('a finalized unit is the only state that reads as locked', async ({ page }) => {
     await openReviewerWorkspace(page, 'T015', 'ofs-01-agree-gold');
 
-    await expect(contextBanner(page)).toContainText('定稿門檻 1 / 1 位審核員');
+    await expect(contextBanner(page)).not.toContainText('定稿門檻');
     await expect(contextBanner(page)).not.toContainText('已審 ');
     const pill = statePill(page);
     await expect(pill).toHaveText('已定稿 · 已鎖定');
     await expect(pill).toHaveAttribute('data-terminal', 'true');
     await expect(pill).toHaveAttribute(
       'aria-label',
-      '已定稿，已達 1 位審核員門檻，內容已鎖定',
+      '審核單位狀態：已定稿，內容已鎖定',
     );
   });
 
@@ -142,16 +145,16 @@ test.describe('issue #452 — the unit banner states the finalize threshold', ()
   test('T016 a `modify` decision disputes the unit instead of an interim 已修改 state', async ({ page }) => {
     await openReviewerWorkspace(page, 'T016', 'ofm-03-modified-interim');
 
-    await expect(contextBanner(page)).toContainText('定稿門檻 1 / 1 位審核員');
+    await expect(contextBanner(page)).not.toContainText('定稿門檻');
     const pill = statePill(page);
     await expect(pill).toHaveText('爭議中 · 未定稿，待仲裁');
     await expect(pill).toHaveAttribute('data-terminal', 'false');
   });
 
-  test('T017 a met threshold that is still disputed says so in words', async ({ page }) => {
+  test('T017 a disputed unit says so in words', async ({ page }) => {
     await openReviewerWorkspace(page, 'T017', 'oft-01-even-tie');
 
-    await expect(contextBanner(page)).toContainText('定稿門檻 2 / 1 位審核員');
+    await expect(contextBanner(page)).not.toContainText('定稿門檻');
     const pill = statePill(page);
     await expect(pill).toHaveText('爭議中 · 未定稿，待仲裁');
     await expect(pill).toHaveAttribute('data-terminal', 'false');

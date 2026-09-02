@@ -23,7 +23,6 @@ const TASK = 'T001';
 const ANNOTATOR = 'kioleemg12';
 const PARTICIPANT = 'reviewer_wang';
 const ARBITER = 'reviewer_chen'; // can_arbitrate: true
-const FILLER = 'reviewer_lin'; // issue #551 -- silent agree, keeps N=2 (no can_arbitrate)
 const ITEM_ID = 'single_label::single_label';
 
 type WorkspaceData = {
@@ -36,7 +35,7 @@ type WorkspaceData = {
     taskId: string, runType: string, sampleId: string,
     identity: { annotatorId?: string }
   ) => Record<string, {
-    votes: Array<{ arbiter_id: string; choice: 'A' | 'B'; voted_at: string }>;
+    votes: Array<{ arbiter_id: string; choice: 'adopt_a' | 'adopt_b' | 'reject'; voted_at: string }>;
     finalized_value?: unknown;
     finalized_by?: string;
   }>;
@@ -44,12 +43,11 @@ type WorkspaceData = {
 
 const labelPayload = (selected: string) => ({ previewState: { single_label: { selected } } });
 
-/* issue #551 (v4.54.0): min_reviewers = 1 (T001's default) now converges a
- * SOLE reviewer's correction on submit instead of unconditionally requiring
- * arbitration, so a third, silently agreeing reviewer (FILLER) is seeded
- * alongside the dissenting PARTICIPANT to keep each unit a genuine 1:1 tie
- * at N=2 -- otherwise wang's correction alone would already finalize both
- * samples before either arbiter's concurrent submit races the store. */
+/* issue #596 (FR-093): one reviewer owns a unit, so the dissenting
+ * PARTICIPANT alone makes it disputed -- there is no quorum for a second,
+ * silently agreeing reviewer to complete, and seeding one would give the
+ * card a second B candidate the single-owner arbitration layout has no slot
+ * for (design.md D2). */
 async function seedDisputedUnit(page: Page, sampleId: string, annotatorValue: string, reviewerValue: string) {
   await page.evaluate((a) => {
     (window as unknown as { LabelSuiteAnnotationWorkspaceData: WorkspaceData })
@@ -61,13 +59,8 @@ async function seedDisputedUnit(page: Page, sampleId: string, annotatorValue: st
         a.task, 'reviewer', 'official_run', a.sampleId, a.reviewerPayload, '',
         { annotatorId: a.annotator, reviewerId: a.participant }
       );
-    (window as unknown as { LabelSuiteAnnotationWorkspaceData: WorkspaceData })
-      .LabelSuiteAnnotationWorkspaceData.markSampleSubmitted(
-        a.task, 'reviewer', 'official_run', a.sampleId, a.annotatorPayload, '',
-        { annotatorId: a.annotator, reviewerId: a.filler }
-      );
   }, {
-    task: TASK, sampleId, annotator: ANNOTATOR, participant: PARTICIPANT, filler: FILLER,
+    task: TASK, sampleId, annotator: ANNOTATOR, participant: PARTICIPANT,
     annotatorPayload: labelPayload(annotatorValue), reviewerPayload: labelPayload(reviewerValue),
   });
 }

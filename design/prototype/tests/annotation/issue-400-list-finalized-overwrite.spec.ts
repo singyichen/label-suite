@@ -1,63 +1,90 @@
 import { test, expect } from '@playwright/test';
-import { buildListUrl, buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
+import { buildListUrl, buildWorkspaceUrl, fillArbitrationReasons, skipGuidelineModal } from './_workspace-helpers';
 
-/* Issue #400: the annotation list's 標記結果 (and 標記分布統計) columns kept
- * showing the annotator's ORIGINAL answer for a finalized review unit even
- * after the reviewers' majority vote converged it to a different value --
- * the workspace already shows the converged value
- * ("已依審核員多數決收斂"), but the list, used as a scan-only entry point,
- * silently disagreed with it.
+type WorkspaceData = {
+  markSampleSubmitted: (
+    taskId: string, role: string, runType: string, sampleId: string,
+    payload: unknown, historySummary: string,
+    identity: { annotatorId?: string; reviewerId?: string }
+  ) => void;
+};
+
+/* Issue #400: the annotation list's 標記結果 column kept showing the
+ * annotator's ORIGINAL answer for a finalized review unit even after the
+ * unit resolved to a different value -- the workspace's finalized card
+ * already showed the resolved value, but the list, used as a scan-only
+ * entry point, silently disagreed with it.
  *
- * Repro (from the issue): T016 ofm-02-approved-interim ships the annotator
- * answer `negative` and is seeded with one agreeing review
- * (reviewer_wang: negative), so it starts APPROVED (1 < minReviewers=3). This
- * test files the two remaining reviews (reviewer_li, reviewer_lin: both
- * `positive`) to reach the 3-reviewer quorum, which the majority-convergence
- * algorithm (annotation-workspace.data.js resolveDisputeConvergence) resolves
- * to `positive` (2 positive > 3/2) and finalizes the unit -- then asserts the
- * list reflects that converged value instead of the stale `negative`.
+ * issue #596 (FR-093) replaced the mechanism that used to produce that
+ * divergence. There is no reviewer quorum and no per-item majority
+ * convergence any more: exactly one reviewer owns a unit, and a unit whose
+ * reviewer disagrees with the annotator goes to arbitration, where the
+ * arbiter's 採 A／採 B writes the finalized value (FR-061). The list bug this
+ * file guards is unchanged -- only the way a unit reaches a finalized value
+ * that differs from the annotator's is. So the fixture is now the
+ * arbitration path: the reviewer's dissent is seeded in-test on top of
+ * T015's PENDING sample rather than relying on a demo seed whose reviewer
+ * roster group 7 rewrites (task 7.4).
+ *
+ * Traceability: FR-061 (arbitration finalizes), FR-093 (single owner),
+ * getFinalizedOverwrites() in annotation-list.html.
  */
+
+const TASK = 'T015';
+const SAMPLE = 'ofs-04-pending-review';
+// The demo seed already files the annotator's `positive` for this sample
+// (annotation-workspace.data.js seed matrix) and leaves it PENDING with no
+// reviewer, so only the reviewer's dissenting answer has to be seeded here.
+const ANNOTATOR_ANSWER = 'positive';
+const REVIEWER_ANSWER = 'negative';
 
 function reviewerWorkspaceUrl(reviewerId: string): string {
   return buildWorkspaceUrl({
-    task_id: 'T016',
-    sample_id: 'ofm-02-approved-interim',
-    role: 'reviewer',
-    run_type: 'official_run',
-    reviewer_id: reviewerId,
+    task_id: TASK, sample_id: SAMPLE, role: 'reviewer',
+    run_type: 'official_run', reviewer_id: reviewerId,
   });
 }
 
-async function fileConvergingReview(page: import('@playwright/test').Page, reviewerId: string) {
+test('issue #400: a finalized unit\'s list row shows the arbitrated answer, not the annotator\'s original one', async ({ page }) => {
   await skipGuidelineModal(page);
-  await page.goto(reviewerWorkspaceUrl(reviewerId));
 
-  const row = page.getByTestId('ws-review-row').first();
-  await row.getByTestId('ws-review-correct-single_label').getByTestId('ws-single-label-chip-positive').click();
-  await row.getByTestId('ws-review-row-approve').click();
-  await page.getByTestId('ws-review-submit-btn').click();
-  await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
-}
+  // The data-layer global only exists once the app script has loaded, so
+  // navigate first, seed, then reload to pick the seeded bucket up.
+  await page.goto(reviewerWorkspaceUrl('reviewer_chen'));
+  await page.evaluate(({ task, sample, reviewerAnswer }) => {
+    const data = (window as unknown as { LabelSuiteAnnotationWorkspaceData: WorkspaceData })
+      .LabelSuiteAnnotationWorkspaceData;
+    data.markSampleSubmitted(
+      task, 'reviewer', 'official_run', sample,
+      { previewState: { single_label: { selected: reviewerAnswer } } }, '',
+      { reviewerId: 'reviewer_wang' }
+    );
+  }, { task: TASK, sample: SAMPLE, reviewerAnswer: REVIEWER_ANSWER });
+  await page.reload();
 
-test('issue #400: a finalized unit\'s list row shows the reviewer-majority-converged answer, not the annotator\'s original one', async ({ page }) => {
-  // Two more reviewers (beyond the already-seeded reviewer_wang) both pick
-  // `positive`, converging the unit away from the annotator's `negative`.
-  await fileConvergingReview(page, 'reviewer_li');
-  await fileConvergingReview(page, 'reviewer_lin');
+  // reviewer_chen filed no review of their own, so they are the arbiter
+  // candidate (isArbiterCandidate) for this now-disputed unit.
+  await expect(page.getByTestId('ws-arbitration-card')).toBeVisible();
+  await page.getByTestId('ws-arbitration-choose-b').click();
+  await fillArbitrationReasons(page);
+  await page.getByTestId('ws-arbitration-submit').click();
 
-  // Sanity check: the workspace itself now reports the unit as finalized
-  // with the converged value, confirming the fixture reached the state the
-  // issue describes before asserting on the list.
-  await skipGuidelineModal(page);
-  await page.goto(reviewerWorkspaceUrl('reviewer_wang'));
-  await expect(page.locator('[data-testid="ws-review-unit-context"] .rv-unit-state')).toHaveText('已定稿 · 已鎖定');
-  await expect(page.getByTestId('ws-finalized-resolved')).toContainText('positive');
+  // Sanity check: the workspace itself now reports the unit as finalized on
+  // the reviewer's value, confirming the fixture reached the state the issue
+  // describes before asserting on the list.
+  await expect(page.locator('[data-testid="ws-review-unit-context"] .rv-unit-state'))
+    .toHaveText('已定稿 · 已鎖定');
+  await expect(page.getByTestId('ws-finalized-resolved')).toContainText(REVIEWER_ANSWER);
 
   await page.goto(buildListUrl({
-    task_id: 'T016', role: 'reviewer', run_type: 'official_run', reviewer_id: 'reviewer_wang',
+    task_id: TASK, role: 'reviewer', run_type: 'official_run', reviewer_id: 'reviewer_chen',
   }));
 
-  const row = page.getByTestId('ws-sample-item').filter({ hasText: 'ofm-02-approved-interim' });
+  const row = page.getByTestId('ws-sample-item').filter({ hasText: SAMPLE });
   await expect(row.locator('.status-badge')).toHaveText('已定稿 · 已鎖定');
-  await expect(row.getByTestId('list-review-answer')).toHaveText('positive');
+  // The regression this file exists for: the cell must follow the finalized
+  // value, not freeze on the annotator's original mockRow answer.
+  await expect(row.getByTestId('list-review-answer')).toHaveText(REVIEWER_ANSWER);
+  await expect(row.getByTestId('list-review-answer')).not.toHaveText(ANNOTATOR_ANSWER);
+  await expect(row.getByTestId('list-review-overwritten-badge')).toBeVisible();
 });
