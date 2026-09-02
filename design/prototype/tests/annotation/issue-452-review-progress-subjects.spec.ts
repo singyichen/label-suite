@@ -168,15 +168,18 @@ test.describe('issue #452 — annotation-list badges separate non-terminal from 
   test('T016 rows spell out 未定稿 / 已鎖定 instead of relying on badge colour', async ({ page }) => {
     await page.goto(buildListUrl({ task_id: 'T016', role: 'reviewer', run_type: 'official_run' }));
 
+    /* issue #596 (FR-093): T016's 5 units spread 1-for-1 over the 4-strong
+       roster, so reviewer_wang holds ofm-01 (finalized) and ofm-05
+       (disputed) -- one row of each badge kind, which is all this test
+       needs. The other three units are somebody else's work and are no
+       longer on this reviewer's list at all. */
     const rows = page.getByTestId('ws-sample-item');
+    await expect(rows).toHaveCount(2);
     await expect(rows.nth(0).locator('.status-badge')).toHaveText('已定稿 · 已鎖定');
-    await expect(rows.nth(1).locator('.status-badge')).toHaveText('已定稿 · 已鎖定');
-    await expect(rows.nth(2).locator('.status-badge')).toHaveText('爭議中 · 未定稿');
-    await expect(rows.nth(3).locator('.status-badge')).toHaveText('爭議中 · 未定稿');
-    await expect(rows.nth(4).locator('.status-badge')).toHaveText('爭議中 · 未定稿');
+    await expect(rows.nth(1).locator('.status-badge')).toHaveText('爭議中 · 未定稿');
 
     /* AC-5: the non-terminal state must not reuse the terminal badge colour. */
     await expect(rows.nth(0).locator('.status-badge')).toHaveClass(/status-submitted/);
-    await expect(rows.nth(2).locator('.status-badge')).not.toHaveClass(/status-submitted/);
+    await expect(rows.nth(1).locator('.status-badge')).not.toHaveClass(/status-submitted/);
   });
 });

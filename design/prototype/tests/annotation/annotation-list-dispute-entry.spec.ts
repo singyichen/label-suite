@@ -47,6 +47,21 @@ function seed(page: Page, args: SeedArgs): Promise<void> {
 
 const labelPayload = (selected: string) => ({ previewState: { single_label: { selected } } });
 
+/* issue #596 (FR-093): sent-001 now carries one review unit per annotator and
+ * each unit belongs to exactly ONE reviewer, so a reviewer's list shows a
+ * disputed row only when that reviewer is the unit's owner or an eligible
+ * arbiter for it. The seeded T001 official_run assignment puts
+ * sent-001/kioleemg12 on reviewer_li and sent-001/tony0950127 on
+ * reviewer_chen, which is what picks the annotator used by each case below. */
+const ARBITER_OWNED_ANNOTATOR = 'tony0950127';
+
+function disputedRowFor(page: Page, annotator: string) {
+  return page
+    .getByTestId('ws-sample-item')
+    .filter({ has: page.getByTestId('list-review-annotator').getByText(annotator) })
+    .filter({ hasText: '爭議中' });
+}
+
 /* Annotator says sad, reviewer_wang says fear, reviewer_lin silently agrees
  * (sad) -> a genuine 1:1 tie at N=2 derives straight to disputed (FR-051).
  * issue #551 (v4.54.0): min_reviewers = 1 (T001's default) now converges a
@@ -76,10 +91,7 @@ function gotoList(page: Page, reviewerId: string) {
 }
 
 function disputedRow(page: Page) {
-  return page
-    .getByTestId('ws-sample-item')
-    .filter({ has: page.getByTestId('list-review-annotator').getByText(ANNOTATOR) })
-    .filter({ hasText: '爭議中' });
+  return disputedRowFor(page, ANNOTATOR);
 }
 
 test.beforeEach(async ({ page }) => {
@@ -113,10 +125,31 @@ test.describe('arbitration entry on disputed rows', () => {
     expect(url.searchParams.get('reviewer_id')).toBe(ARBITER);
   });
 
-  test('a dispute participant keeps the plain 編輯 entry', async ({ page }) => {
-    await gotoList(page, PARTICIPANT);
+  /* The participant exclusion is now demonstrated on the ARBITER, whose
+   * can_arbitrate flag is the only thing standing between 編輯 and 仲裁: a
+   * reviewer who is merely a participant no longer sees a stranger's unit at
+   * all under FR-093, so a plain participant could not distinguish the
+   * exclusion from the assignment filter. Seeded on the unit the arbiter
+   * OWNS, so visibility is guaranteed and the sole variable is participation. */
+  test('a dispute participant keeps the plain 編輯 entry, even holding can_arbitrate', async ({ page }) => {
+    await seed(page, {
+      role: 'annotator',
+      payload: labelPayload('sad'),
+      identity: { annotatorId: ARBITER_OWNED_ANNOTATOR },
+    });
+    await seed(page, {
+      role: 'reviewer',
+      payload: labelPayload('fear'),
+      identity: { annotatorId: ARBITER_OWNED_ANNOTATOR, reviewerId: ARBITER },
+    });
+    await seed(page, {
+      role: 'reviewer',
+      payload: labelPayload('sad'),
+      identity: { annotatorId: ARBITER_OWNED_ANNOTATOR, reviewerId: FILLER },
+    });
+    await gotoList(page, ARBITER);
 
-    const row = disputedRow(page);
+    const row = disputedRowFor(page, ARBITER_OWNED_ANNOTATOR);
     await expect(row.getByTestId('list-arbitrate-entry')).toHaveCount(0);
     await expect(row.locator('.mini-btn-primary')).toHaveText('編輯');
   });

@@ -24,8 +24,13 @@ test.describe('issue #402 -- not-submitted samples get an explanation and an ent
   test('T015 reviewer banner explains the excluded sample and links to it', async ({ page }) => {
     await page.goto(buildListUrl({ task_id: 'T015', role: 'reviewer', run_type: 'official_run' }));
 
-    // Table/pagination stay at 4 -- this fix does not change row counting.
-    await expect(page.getByTestId('ws-sample-item')).toHaveCount(4);
+    /* issue #596 FR-093: the table now carries only the units assigned to
+       this reviewer (T015's 4 units spread 1-for-1 over the 4-strong roster,
+       so reviewer_wang holds exactly one). The note below is deliberately
+       NOT reviewer-scoped -- "nobody submitted" is a property of the sample,
+       not of an assignment -- so it must still read 1, from all 5 dataset
+       records against all 4 review units in the task. */
+    await expect(page.getByTestId('ws-sample-item')).toHaveCount(1);
 
     const note = page.getByTestId('list-not-submitted-note');
     await expect(note).toBeVisible();

@@ -1582,7 +1582,7 @@
      both run types. getReviewUnitStatus returns null while the annotator
      has no stored submission — the mock row IS that annotator's answer, so
      an un-stored unit is still awaiting review, not absent. */
-  function buildReviewUnitRows(context) {
+  function buildAllReviewUnitRows(context) {
     var profile = context.profile;
     var data = window.LabelSuiteAnnotationWorkspaceData;
     var units = [];
@@ -1615,7 +1615,16 @@
         });
       });
     });
-    return filterToAssignedUnits(context, units);
+    return units;
+  }
+
+  /* Split from buildAllReviewUnitRows so the issue #402 not-submitted note
+     keeps counting samples nobody submitted, task-wide. Reading the filtered
+     rows there would report every unit assigned to a COLLEAGUE as "not yet
+     submitted" -- a false statement about other people's work, and one that
+     would also offer this reviewer an entry into it. */
+  function buildReviewUnitRows(context) {
+    return filterToAssignedUnits(context, buildAllReviewUnitRows(context));
   }
 
   /* FR-093: a reviewer's list carries the units the system assigned to THEM,
@@ -1912,7 +1921,7 @@
     }
 
     var recordIdsWithUnits = {};
-    buildReviewUnitRows(context).forEach(function (unit) {
+    buildAllReviewUnitRows(context).forEach(function (unit) {
       recordIdsWithUnits[unit.recordId] = true;
     });
     var notSubmittedIds = profile.datasetRecords
