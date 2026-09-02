@@ -2266,6 +2266,67 @@
     }
   }
 
+  /* Demo identity for the one role this prototype never lets the visitor
+   * pick via query params (task 6.2 does not extend resolveIdentity() --
+   * no test or UI need names a second project leader): mirrors
+   * task-detail.html's ROLE_SELF_EMAIL.project_leader convention so a
+   * `resolver_id` reads as the same demo account across pages. */
+  var DEFAULT_PROJECT_LEADER_ID = 'mandy@labelsuite.io';
+
+  /* Final exception pool WRITE path (FR-095, issue #596, task 6.2). The read
+   * side above (getExceptionPool) and getReviewUnitStatus() already existed
+   * and are untouched -- this is the only function that ever writes a
+   * poolRecord, one per outKey, merged into the same blob getExceptionPool
+   * reads. Shape matches design.md D2 exactly: `finalized_value` is the
+   * absent-field sentinel for `exclude_from_dataset` (FR-063 -- an excluded
+   * item produces no gold value), never `null`.
+   *
+   * Also appends ONE history event (FR-086/FR-095 closing line) into the
+   * ANNOTATOR's bucket -- same resolution markSampleRejected/
+   * appendSampleTimelineEvent use for a reviewer/arbiter act on someone
+   * else's unit (comment at markSampleSkipped above), and the same reason
+   * getSampleHistory's FR-062 masking only admits a `submitted` reviewer
+   * bucket. Unlike appendSampleTimelineEvent, `reason` is NOT required here:
+   * FR-095's `adopt_annotator`/`adopt_reviewer` are one-click actions with no
+   * reason field in the UI (design.md/Red test contract), so gating the
+   * event on a non-empty reason would silently drop it for those two. */
+  function resolveExceptionPoolItem(taskId, runType, sampleId, identity, outKey, action, value, reason) {
+    var pool = getExceptionPool(taskId, runType, sampleId, identity);
+    var record = {
+      resolver_id: DEFAULT_PROJECT_LEADER_ID,
+      action: action,
+      reason: reason || '',
+      resolved_at: new Date().toISOString(),
+    };
+    if (action !== 'exclude_from_dataset') record.finalized_value = value;
+    pool[outKey] = record;
+    try {
+      global.localStorage.setItem(
+        EXCEPTION_POOL_KEY_PREFIX + exceptionPoolKey(taskId, runType, sampleId, identity),
+        JSON.stringify(pool)
+      );
+    } catch (e) {
+      /* storage unavailable: same silent-tolerant stance as writeArbitrationItem */
+    }
+
+    var bucketKey = submissionBucketKey(taskId, 'annotator', runType, identity);
+    var bucket = readSubmissionBucket(bucketKey);
+    var entry = bucket[sampleId];
+    if (!entry) {
+      entry = { status: 'pending', answers: {} };
+      bucket[sampleId] = entry;
+    }
+    appendHistoryEvent(
+      entry,
+      action === 'exclude_from_dataset' ? 'excluded' : 'exception_resolved',
+      'project_leader',
+      'exception pool resolved: ' + outKey,
+      DEFAULT_PROJECT_LEADER_ID,
+      { reason: reason || null }
+    );
+    writeSubmissionBucket(bucketKey, bucket);
+  }
+
   /* Writes one arbiter's complete pass over a unit's open dispute items:
    * `decisions` is [{itemId, choice: ARBITRATION_OUTCOMES, value, reason}]
    * where `value` is the concrete winning value for adopt_a/adopt_b
@@ -3004,6 +3065,8 @@
     getReworkReasons: getReworkReasons,
     getArbitrationState: getArbitrationState,
     getExceptionPool: getExceptionPool,
+    resolveExceptionPoolItem: resolveExceptionPoolItem,
+    DEFAULT_PROJECT_LEADER_ID: DEFAULT_PROJECT_LEADER_ID,
     submitArbitration: submitArbitration,
     resolveDisputeConvergence: resolveDisputeConvergence,
     describeDisputeVotes: describeDisputeVotes,

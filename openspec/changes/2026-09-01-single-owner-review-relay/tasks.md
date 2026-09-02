@@ -140,9 +140,11 @@
 > **最終群組**：否。
 > **相依**：群組 3（仲裁 `兩者皆非` 出口）與原群組 5 的名冊設定（已於 PR #609 實作完成）；014 側入口區塊（原 6.4–6.7）延後至 companion change，本組以 015 資料層之常數與示範種子先行。
 
-- [ ] 6.1 撰寫 Red 測試覆蓋 AC-4.56／AC-4.57 例外池收尾（`design/prototype/tests/annotation/issue-596-exception-pool.spec.ts`）：`official_run` 提供採 A／採 B／自訂答案／自資料集排除四動作；自訂答案展開該輸出類型的原始作答控件且僅接受合法值；理由未填時阻擋定案；`dry_run` 僅三動作且不存在自訂答案入口與任何作答控件。驗證：執行該檔全數失敗且失敗原因為例外池收尾畫面尚未存在 [@senior-qa]
-- [ ] 6.2 於 `design/prototype/pages/annotation/annotation-workspace.data.js` 實作 FR-095 之例外池資料層（`exceptionPool` 讀寫、`EXCEPTION_POOL_ACTIONS` 分流、`exclude_from_dataset` 不進定稿集合）與 FR-063 之定稿值來源記錄。驗證：`pnpm typecheck` 通過且排除項目不出現於定稿集合的單元斷言全綠 [@senior-frontend]
-- [ ] 6.3 於 `design/prototype/pages/annotation/annotation-workspace.html` 實作 FR-095 之專案負責人逐筆收尾畫面，自訂答案重用 `OUTPUT_TYPE_REGISTRY` 驅動的作答控件（design.md D4）。驗證：`pnpm playwright test tests/annotation/issue-596-exception-pool.spec.ts` 全綠 [@senior-frontend]
+- [x] 6.1 撰寫 Red 測試覆蓋 AC-4.56／AC-4.57 例外池收尾（`design/prototype/tests/annotation/issue-596-exception-pool.spec.ts`）：`official_run` 提供採 A／採 B／自訂答案／自資料集排除四動作；自訂答案展開該輸出類型的原始作答控件且僅接受合法值；理由未填時阻擋定案；`dry_run` 僅三動作且不存在自訂答案入口與任何作答控件。驗證：執行該檔全數失敗且失敗原因為例外池收尾畫面尚未存在 [@senior-qa]
+- [x] 6.2 於 `design/prototype/pages/annotation/annotation-workspace.data.js` 實作 FR-095 之例外池資料層（`exceptionPool` 讀寫、`EXCEPTION_POOL_ACTIONS` 分流、`exclude_from_dataset` 不進定稿集合）與 FR-063 之定稿值來源記錄。驗證：`pnpm typecheck` 通過且排除項目不出現於定稿集合的單元斷言全綠 [@senior-frontend]
+- [x] 6.3 於 `design/prototype/pages/annotation/annotation-workspace.html` 實作 FR-095 之專案負責人逐筆收尾畫面，自訂答案重用 `OUTPUT_TYPE_REGISTRY` 驅動的作答控件（design.md D4）。驗證：`pnpm playwright test tests/annotation/issue-596-exception-pool.spec.ts` 全綠 [@senior-frontend]
+> **（6.3 動工後修正落點檔案）**：例外池收尾畫面實作於 `design/prototype/pages/annotation/annotation-workspace.config.js`（`renderExceptionPoolScreen()` 等），而非任務文字所寫的 `annotation-workspace.html`。原因：該頁的畫面渲染全部集中在 config.js 的 `renderWorkspace()` 分支，html 僅提供 `#annotationPreview` 掛載點，無需改動。產品檔案實際為 2 個（config.js、data.js），與群組標頭的檔案數一致。
+> **（進入方式）**：本組僅辨識網址參數 `role=project_leader`，不新增任何暫時性導覽入口；正式入口與權限守衛留給 deferred 014 任務 6.7，避免本 PR 產生註定要刪除的程式碼。
 > 原 6.4–6.7（014 側之例外池入口區塊、結案前置條件與權限守衛）已移至 [deferred/014-tasks.md](deferred/014-tasks.md)，隨 companion change 實作。
 
 ## 7. PR 群組 7 — 試標歷史回饋與示範任務改寫（FR-096／T016／T017）
