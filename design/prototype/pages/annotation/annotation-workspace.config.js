@@ -115,6 +115,14 @@
       exceptionActionAdoptReviewer: '採用審核員答案',
       exceptionActionCustomAnswer: '自訂答案',
       exceptionActionExcludeFromDataset: '排除於資料集',
+      wsExceptionPoolTitle: '例外池收尾',
+      wsExceptionPoolNote: '仲裁判定兩者皆非的爭議項，由專案負責人逐項決定最終處置。',
+      exceptionPoolContextTpl: '標記員：{a} · 審核員：{b}',
+      exceptionPoolReasonPlaceholder: '處置理由（必填）',
+      exceptionPoolReasonRequired: '請先填寫理由再確認',
+      exceptionPoolConfirmLabel: '確認',
+      wsExceptionPoolResolveSuccess: '已完成處置',
+      wsHistoryRoleProjectLeader: '專案負責人',
       unitStateDisputedNote: '未定稿，待仲裁',
       trackAria: '審核單位狀態',
       trackMarker: '目前：',
@@ -230,6 +238,14 @@
       exceptionActionAdoptReviewer: 'Adopt reviewer answer',
       exceptionActionCustomAnswer: 'Custom answer',
       exceptionActionExcludeFromDataset: 'Exclude from dataset',
+      wsExceptionPoolTitle: 'Exception pool disposition',
+      wsExceptionPoolNote: 'Dispute items arbitration marked neither side adoptable, decided one at a time by a project leader.',
+      exceptionPoolContextTpl: 'Annotator: {a} · Reviewer: {b}',
+      exceptionPoolReasonPlaceholder: 'Reason for this disposition (required)',
+      exceptionPoolReasonRequired: 'Give a reason before confirming',
+      exceptionPoolConfirmLabel: 'Confirm',
+      wsExceptionPoolResolveSuccess: 'Disposition recorded',
+      wsHistoryRoleProjectLeader: 'Project leader',
       unitStateDisputedNote: 'not finalized, awaiting arbitration',
       trackAria: 'Review unit status',
       trackMarker: 'Now:',
@@ -1468,6 +1484,8 @@
     renderEntryBreadcrumb();
     if (currentRole === 'reviewer') {
       renderReviewerWorkspace();
+    } else if (currentRole === 'project_leader') {
+      renderExceptionPoolScreen();
     } else {
       /* patched: original render + testid patches + question/annotation
          card regrouping (patchedUpdateAnnotationPreview above) */
@@ -1827,7 +1845,12 @@
       /* FR-050: the role alone never answered "who did this" -- an official_run
          trail read 標記員 / 審核員 with no way to tell two reviewers apart.
          Events written before v3.8.0 carry no actorId, so the role stands alone. */
-      var roleLabel = event.role === 'reviewer' ? t('wsHistoryRoleReviewer') : t('wsHistoryRoleAnnotator');
+      var roleLabel =
+        event.role === 'reviewer'
+          ? t('wsHistoryRoleReviewer')
+          : event.role === 'project_leader'
+            ? t('wsHistoryRoleProjectLeader')
+            : t('wsHistoryRoleAnnotator');
       actor.textContent = event.actorId ? roleLabel + ' · ' + event.actorId : roleLabel;
       var meta = document.createElement('div');
       meta.className = 'history-meta';
@@ -2296,7 +2319,7 @@
   function renderSkipControl() {
     if (!skipGroupNode) return;
     var applies =
-      currentRole !== 'reviewer' &&
+      currentRole === 'annotator' &&
       !window.LabelSuiteAnnotationWorkspaceData.isSampleSubmitted(
         currentProfile.id, currentRole, currentRunType, currentSampleId, currentIdentity
       );
@@ -3966,6 +3989,190 @@
     renderReviewerWorkspace();
   }
 
+  /* FR-095 final exception pool disposition screen (issue #596, task 6.3).
+     Queue = dispute items an arbiter voted 兩者皆非 (`reject`) on -- present
+     in getArbitrationState() with no finalized_by (design.md D2's sentinel
+     for a reject vote) -- that have no exceptionPool record yet. Mirrors
+     renderArbitrationCard()'s open-item filter, one step later in the
+     pipeline: arbitration hands off exactly what it could not close. */
+  function exceptionPoolQueue() {
+    var data = window.LabelSuiteAnnotationWorkspaceData;
+    var pool = data.getExceptionPool(currentProfile.id, currentRunType, currentSampleId, currentIdentity);
+    var arbState = data.getArbitrationState(currentProfile.id, currentRunType, currentSampleId, currentIdentity);
+    var items = data.getDisputeItems(
+      currentProfile.id, currentRunType, currentSampleId, currentIdentity, state.selectedOutputTypes
+    );
+    return items.filter(function (item) {
+      var stored = arbState[disputeItemId(item)];
+      return !!(stored && !stored.finalized_by) && !pool[item.outKey];
+    });
+  }
+
+  /* `custom_answer` MUST reuse the exact config-driven answer control every
+     other role already goes through (renderOutputPreview -> e.g.
+     renderSingleLabelPreview) -- design.md D4 / Generalization-First forbids
+     a second, bespoke answer UI for this screen. clearOutputPreviewState()
+     resets the shared previewState slot to a blank, already-`_seeded` shape
+     first so the panel never opens pre-selected on whatever the dataset's
+     output column happens to hold (renderSingleLabelPreview's own
+     ground-truth auto-seed only fires when `_seeded` is still falsy) -- the
+     project leader picks an answer explicitly, the same as every other
+     action on this screen requiring one. */
+  function expandExceptionPoolAction(item, host, action, resolveFn) {
+    while (host.firstChild) host.removeChild(host.firstChild);
+
+    if (action === 'custom_answer') {
+      var panel = document.createElement('div');
+      panel.setAttribute('data-testid', 'ws-exception-pool-custom-answer');
+      var panelMount = document.createElement('div');
+      panel.appendChild(panelMount);
+      clearOutputPreviewState(item.outKey);
+      renderOutputPreview(panelMount, item.outKey);
+      host.appendChild(panel);
+    }
+
+    /* FR-063 / FR-095 point 4: both custom_answer and exclude_from_dataset
+       require an audit reason before they resolve -- the same shared
+       testid/blocked-not-disabled convention arbitration's reject reason
+       uses (refreshArbitrationBlocker), simplified to a single always-open
+       panel since only one exception-pool item ever expands at a time. */
+    var reasonInput = document.createElement('input');
+    reasonInput.type = 'text';
+    reasonInput.setAttribute('data-testid', 'ws-exception-pool-reason');
+    reasonInput.placeholder = t('exceptionPoolReasonPlaceholder');
+    reasonInput.setAttribute('aria-label', t('exceptionPoolReasonPlaceholder'));
+    reasonInput.style.cssText =
+      'width:100%;font:inherit;font-size:13px;padding:5px 8px;margin:8px 0;'
+      + 'border:1px solid var(--color-border);border-radius:var(--radius-sm);'
+      + 'background:var(--color-surface);color:var(--color-ink);';
+    host.appendChild(reasonInput);
+
+    var confirmBtn = document.createElement('button');
+    confirmBtn.type = 'button';
+    confirmBtn.className = 'mini-btn';
+    confirmBtn.setAttribute(
+      'data-testid',
+      action === 'custom_answer' ? 'ws-exception-pool-custom-answer-confirm' : 'ws-exception-pool-exclude-confirm'
+    );
+    confirmBtn.textContent = t('exceptionPoolConfirmLabel');
+    confirmBtn.addEventListener('click', function () {
+      var reason = reasonInput.value.trim();
+      if (!reason) {
+        showToast(t('exceptionPoolReasonRequired'), 'warning');
+        return;
+      }
+      var value = action === 'custom_answer'
+        ? window.LabelSuiteAnnotationWorkspaceData.convertSubmissionAnswer(item.outKey, { previewState: state.previewState })
+        : undefined;
+      resolveFn(item, action, value, reason);
+    });
+    host.appendChild(confirmBtn);
+  }
+
+  /* adopt_annotator/adopt_reviewer resolve in one click with the diffed
+     CompactAnswer value already on the dispute item (no reason field, same
+     as arbitration's 採 A／採 B); custom_answer/exclude_from_dataset expand
+     their reason + confirm panel via expandExceptionPoolAction. dry_run
+     never offers custom_answer (AC-4.57 -- no free re-annotation channel
+     outside official_run). */
+  function buildExceptionPoolItemRow(item, runType, resolveFn) {
+    var data = window.LabelSuiteAnnotationWorkspaceData;
+    var row = document.createElement('div');
+    row.setAttribute('data-testid', 'ws-exception-pool-item');
+    row.style.cssText = 'padding:10px 0;border-top:1px solid var(--color-border);';
+
+    var label = document.createElement('div');
+    label.style.cssText = 'font-size:12px;font-weight:600;margin-bottom:6px;';
+    label.textContent = disputeItemLabel(item);
+    row.appendChild(label);
+
+    /* FR-093: exactly one reviewer per unit -- same single-B assumption
+       buildArbitrationItemRow's arbitrationBChoiceText relies on. */
+    var reviewerSubmission = data.readReviewerSubmissions(
+      currentProfile.id, currentRunType, currentSampleId, currentIdentity
+    )[0] || null;
+    var reviewerValue = reviewerSubmission ? item.reviewerValues[reviewerSubmission.reviewerId] : undefined;
+
+    var context = document.createElement('div');
+    context.style.cssText = 'font-size:12px;color:var(--color-text-soft);margin-bottom:8px;';
+    context.textContent = t('exceptionPoolContextTpl')
+      .replace('{a}', formatDisputeValue(item.annotatorValue))
+      .replace('{b}', formatDisputeValue(reviewerValue));
+    row.appendChild(context);
+
+    var expandHost = document.createElement('div');
+
+    var actionsWrap = document.createElement('div');
+    actionsWrap.className = 'rv-choice-group';
+    data.EXCEPTION_POOL_ACTIONS
+      .filter(function (action) { return action !== 'custom_answer' || runType === 'official_run'; })
+      .forEach(function (action) {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'mini-btn';
+        btn.setAttribute('data-testid', 'ws-exception-pool-action-' + action);
+        btn.textContent = t(EXCEPTION_ACTION_I18N_KEYS[action]);
+        btn.addEventListener('click', function () {
+          if (action === 'adopt_annotator') {
+            resolveFn(item, action, item.annotatorValue, '');
+          } else if (action === 'adopt_reviewer') {
+            resolveFn(item, action, reviewerValue, '');
+          } else {
+            expandExceptionPoolAction(item, expandHost, action, resolveFn);
+          }
+        });
+        actionsWrap.appendChild(btn);
+      });
+    row.appendChild(actionsWrap);
+    row.appendChild(expandHost);
+    return row;
+  }
+
+  /* Renders only when the queue is non-empty (design.md: no navigation entry
+     point, no redirect/error for a project leader with nothing to do here --
+     the screen is simply absent, same as any other role-gated render being a
+     no-op). renderWorkspace() re-invokes this on every resolve, so the
+     screen naturally clears once the last item resolves. */
+  function renderExceptionPoolScreen() {
+    var preview = document.getElementById('annotationPreview');
+    if (!preview) return;
+    while (preview.firstChild) preview.removeChild(preview.firstChild);
+
+    var queue = exceptionPoolQueue();
+    if (!queue.length) return;
+
+    var card = document.createElement('div');
+    card.className = 'content-card';
+    card.setAttribute('data-testid', 'ws-exception-pool');
+
+    var title = document.createElement('h3');
+    title.style.cssText = 'font-size:14px;margin:0 0 4px;';
+    title.textContent = t('wsExceptionPoolTitle');
+    card.appendChild(title);
+
+    var note = document.createElement('p');
+    note.style.cssText = 'font-size:12px;color:var(--color-text-soft);margin:0 0 10px;';
+    note.textContent = t('wsExceptionPoolNote');
+    card.appendChild(note);
+
+    function resolve(item, action, value, reason) {
+      window.LabelSuiteAnnotationWorkspaceData.resolveExceptionPoolItem(
+        currentProfile.id, currentRunType, currentSampleId, currentIdentity,
+        item.outKey, action, value, reason
+      );
+      clearUnsaved();
+      showToast(t('wsExceptionPoolResolveSuccess'));
+      renderSampleList();
+      renderWorkspace();
+    }
+
+    queue.forEach(function (item) {
+      card.appendChild(buildExceptionPoolItemRow(item, currentRunType, resolve));
+    });
+
+    preview.appendChild(card);
+  }
+
   /* Finalized unit lock (issue #308): a FINALIZED unit renders this
      read-only results card instead of the interactive review card -- no
      ✕/✓ rows, no correction controls, no submit path. Mirrors the
@@ -5124,9 +5331,11 @@
        reviewers must read as 審核員 (same role noun the history trail uses).
        Annotator view keeps the shared default untouched. Runs at boot and on
        every language toggle, so it survives both. */
-    if (currentRole === 'reviewer') {
-      var roleIndicatorEl = document.getElementById('roleIndicator');
-      if (roleIndicatorEl) roleIndicatorEl.textContent = t('wsHistoryRoleReviewer');
+    var roleIndicatorEl = document.getElementById('roleIndicator');
+    if (currentRole === 'reviewer' && roleIndicatorEl) {
+      roleIndicatorEl.textContent = t('wsHistoryRoleReviewer');
+    } else if (currentRole === 'project_leader' && roleIndicatorEl) {
+      roleIndicatorEl.textContent = t('wsHistoryRoleProjectLeader');
     }
     var taskName = currentProfile ? (state.lang === 'zh' ? currentProfile.nameZh : currentProfile.nameEn) : '';
     setText('guidelineSummaryText', taskName);
@@ -5162,7 +5371,12 @@
     /* FR-006: missing/unsupported role or run_type fall back to the
        defaults (annotator / dry_run) -- same normalization annotation-list's
        parseContext() applies, so both pages resolve an identical context. */
-    currentRole = params.get('role') === 'reviewer' ? 'reviewer' : 'annotator';
+    currentRole =
+      params.get('role') === 'reviewer'
+        ? 'reviewer'
+        : params.get('role') === 'project_leader'
+          ? 'project_leader'
+          : 'annotator';
     currentRunType = params.get('run_type') === 'official_run' ? 'official_run' : 'dry_run';
     currentIdentity = window.LabelSuiteAnnotationWorkspaceData.resolveIdentity(params);
 
@@ -5192,6 +5406,12 @@
       var arbitrationSubmitBtn = document.getElementById('wsArbitrationSubmitBtn');
       if (arbitrationSubmitBtn) arbitrationSubmitBtn.addEventListener('click', handleArbitrationSubmit);
       setupReviewShortcuts();
+    } else if (currentRole === 'project_leader') {
+      /* The exception pool screen resolves items via its own in-card
+         confirm controls (see renderExceptionPoolScreen); the shared
+         submit/save buttons have no role here. */
+      if (submitBtn) submitBtn.classList.add('hidden');
+      if (saveBtn) saveBtn.classList.add('hidden');
     } else {
       if (submitBtn) submitBtn.addEventListener('click', handleSubmit);
       if (saveBtn) saveBtn.addEventListener('click', handleSave);
@@ -5200,11 +5420,11 @@
     if (skipGroupNode) {
       skipGroupParent = skipGroupNode.parentNode;
       skipGroupAnchor = skipGroupNode.nextSibling;
-      if (currentRole === 'reviewer') {
-        skipGroupNode.remove();
-      } else {
+      if (currentRole === 'annotator') {
         document.getElementById('wsSkipBtn').addEventListener('click', handleSkip);
         document.getElementById('wsSkipReason').addEventListener('input', refreshSkipBlocker);
+      } else {
+        skipGroupNode.remove();
       }
     }
     setupActionShortcuts();
