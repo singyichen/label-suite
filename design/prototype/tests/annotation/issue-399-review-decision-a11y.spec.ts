@@ -15,13 +15,14 @@ import { buildWorkspaceUrl, dismissGuidelineModal, skipGuidelineModal } from './
  * the note's testid rather than duplicating the copy verbatim.
  *
  * This spec pins two behaviors:
- *   1. ws-review-row-approve / ws-review-row-reject each expose a real
- *      accessible name (not just an aria-label attribute -- the computed
- *      accessible name Playwright's getByRole() resolves against).
+ *   1. every ws-review-row-<decision> button exposes a real accessible name
+ *      (not just an aria-label attribute -- the computed accessible name
+ *      Playwright's getByRole() resolves against).
  *   2. reviewNote's text is actually rendered and visible on the page.
  *
- * Traceability: specs/annotation/015-annotation-workspace/spec.md FR-014P
- * (one decision pair per review row); WCAG 2.1 SC 4.1.2.
+ * Traceability: specs/annotation/015-annotation-workspace/spec.md FR-014B
+ * (three-way decision per review row, issue #596; the retired 退回 button
+ * this spec once covered is gone); WCAG 2.1 SC 4.1.2.
  */
 
 const REVIEWER_URL = buildWorkspaceUrl({
@@ -36,26 +37,31 @@ test.beforeEach(async ({ page }) => {
 });
 
 test.describe('Review decision buttons have accessible names and the review note is rendered (issue #399)', () => {
-  test('the approve button has a real accessible name, not just its icon glyph', async ({ page }) => {
+  const DECISION_LABELS: Array<[string, string]> = [
+    ['approve', '通過'],
+    ['modify', '修正'],
+    ['bypass', '無法判定'],
+  ];
+
+  for (const [decision, label] of DECISION_LABELS) {
+    test(`the ${decision} button has a real accessible name, not just its icon glyph`, async ({ page }) => {
+      await page.goto(REVIEWER_URL);
+      await dismissGuidelineModal(page);
+
+      await expect(page.getByTestId('ws-review-row-' + decision)).toBeVisible();
+      // Accessible name must resolve to the localized action label, not the
+      // icon glyph -- getByRole with `name` matches on the COMPUTED
+      // accessible name (aria-label wins over text content).
+      await expect(page.getByRole('button', { name: label, exact: true })).toHaveCount(1);
+    });
+  }
+
+  test('the retired 退回 button is gone entirely (issue #596 FR-014B)', async ({ page }) => {
     await page.goto(REVIEWER_URL);
     await dismissGuidelineModal(page);
 
-    const approveBtn = page.getByTestId('ws-review-row-approve');
-    await expect(approveBtn).toBeVisible();
-    // Accessible name must resolve to the localized action label, not the
-    // '✓' glyph -- getByRole with `name` matches on the COMPUTED accessible
-    // name (aria-label wins over text content), so this fails today because
-    // the button carries no aria-label at all.
-    await expect(page.getByRole('button', { name: '通過', exact: true })).toHaveCount(1);
-  });
-
-  test('the reject button has a real accessible name, not just its icon glyph', async ({ page }) => {
-    await page.goto(REVIEWER_URL);
-    await dismissGuidelineModal(page);
-
-    const rejectBtn = page.getByTestId('ws-review-row-reject');
-    await expect(rejectBtn).toBeVisible();
-    await expect(page.getByRole('button', { name: '退回', exact: true })).toHaveCount(1);
+    await expect(page.getByTestId('ws-review-row-reject')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: '退回', exact: true })).toHaveCount(0);
   });
 
   test('reviewNote text is actually rendered on screen near the decision buttons', async ({ page }) => {
