@@ -1,7 +1,7 @@
 ---
 功能分支: feat/issue-375-sdd-lint
 建立日期: 2026-08-26
-版本: 1.1.3
+版本: 1.1.4
 狀態: Draft
 ---
 
@@ -128,6 +128,7 @@ PR 上以 `Project SDD Lint` 獨立 job 顯示結果，本地使用相同 comman
 
 | 版本 | 日期 | 變更摘要 |
 |---|---|---|
+| 1.1.4 | 2026-09-02 | SC-008 跨平台承諾的缺陷修正（issue #610）：tasks.md 子句抽取原以 `[,，。；;]` bracket expression 切割，該寫法只在 UTF-8 locale 下才逐字元生效；macOS 預設 `C` locale 且無 `C.UTF-8`，awk 遂逐位元組切碎中文任務行。改為先以 `gsub` 將全形分隔符正規化為 ASCII `;` 再切割，使結果與 awk 實作及 locale 無關 |
 | 1.1.3 | 2026-09-01 | OpenSpec change `implement-project-sdd-lint` archive 回寫：獨立 `sdd-lint` CI job 與本機 `scripts/check-sdd.sh` 上線；澄清 FR-009 所依賴的 generator 可重現性——prototype 來源 commit 改以固定長度呈現，原 `--format=%h` 的動態 abbreviation 會使 freshness 比對隨本機 clone 封裝狀態變動 |
 | 1.1.2 | 2026-08-27 | Stage 3 security remediation：inventory generator 限於 same-trust resolved checker／target root，foreign root 穩定拒絕且不執行 hostile generator；動態掃描 pathname 在進入文字／TSV flow 前拒絕 control character，避免診斷注入 |
 | 1.1.1 | 2026-08-27 | Stage 2 誠實交接修正：SC-007 僅宣告六個已交付 D 項目；複合 retired-path/command D 項目與 combined acceptance 維持延期，待 ADR-034/path authority、QA Red 與 named filesystem-path production Green 的獨立實作 |
