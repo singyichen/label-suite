@@ -1415,7 +1415,7 @@
     },
 
     T016: {
-      'ofm-01-unanimous-gold': [
+      'ofm-01-reviewer-corrects-b': [
         { annotator: 'kioleemg12', answers: { single_label: 'positive' } }
       ],
       'ofm-02-approved-interim': [
@@ -1433,7 +1433,7 @@
     },
 
     T017: {
-      'oft-01-even-tie': [
+      'oft-01-final-exception': [
         { annotator: 'kioleemg12', answers: { single_label: 'neutral' } }
       ],
       'oft-02-approved-interim': [
@@ -1869,6 +1869,74 @@
         if (decisions[outKey] !== 'reject') return;
         rows.push({ outKey: outKey, reason: reasons[outKey] || '', reviewerId: submission.reviewerId, at: submission.submittedAt });
       });
+    });
+    return rows;
+  }
+
+  /* FR-096 / AC-1.27 (design.md D5, Data Fairness NON-NEGOTIABLE): source
+   * actions on the merged trail that count as "this sample's dry-run review
+   * is settled" -- the same closed set annotation-history.js's
+   * ACTION_LABEL/BADGE_CLASS render, minus the ones that never conclude a
+   * unit (submitted/draft_saved/skipped/bypassed/rejected). Reused as-is
+   * rather than re-deriving it, so a new terminal action added there is not
+   * silently invisible here. */
+  var DRY_RUN_FEEDBACK_SOURCE_ACTIONS = {
+    accepted: true,
+    modified: true,
+    adjudicated: true,
+    exception_resolved: true,
+    excluded: true,
+  };
+
+  /* One feedback row per FR-096 point 2-4: my answer, the finalized result,
+   * the settling action/decider, and the reason (if any) that action
+   * carried. `null` when the sample's merged trail has no settling action
+   * yet (round genuinely not concluded for this sample, e.g. a straggler
+   * still in dispute past IAA confirmation) -- callers drop those instead
+   * of rendering a half row. */
+  function buildDryRunFeedbackRow(taskId, runType, sampleId, entry, identity) {
+    var decisive = getSampleHistory(taskId, runType, sampleId, identity).filter(function (event) {
+      return DRY_RUN_FEEDBACK_SOURCE_ACTIONS[event.action];
+    });
+    if (!decisive.length) return null;
+    var last = decisive[decisive.length - 1];
+    return {
+      sampleId: sampleId,
+      myAnswer: entry.answers || {},
+      finalizedAnswer: last.result_snapshot || entry.answers || {},
+      /* Unchanged only when every settling action on this sample was a
+       * plain approve -- a task with several output keys can carry one
+       * 'accepted' and one 'modified' event for the same sample, and that
+       * sample is still a "被修改" row for FR-096 point 1's count. */
+      modified: decisive.some(function (event) { return event.action !== 'accepted'; }),
+      action: last.action,
+      actorId: last.actorId,
+      reason: last.reason || null,
+    };
+  }
+
+  /* FR-096 試標歷史回饋 (design.md D5, Data Fairness NON-NEGOTIABLE): the
+   * annotator's own dry-run round feedback, gated on task status IN THE
+   * DATA LAYER -- while the round is still in progress this MUST return an
+   * empty collection, not a full result the UI merely hides (D5's whole
+   * point: data that reaches the browser has already leaked). Includes
+   * every one of the annotator's submitted samples in the round, not only
+   * the modified ones, so the caller can compute FR-096 point 1's ratio
+   * over the true denominator. Scoped to one annotatorId by construction
+   * (the bucket key and getSampleHistory's reviewer-bucket prefix both key
+   * off it), so another annotator's answers never enter the result. */
+  function getDryRunFeedback(taskId, runType, identity) {
+    if (runType !== 'dry_run') return [];
+    var listEntry = findTaskListEntry(taskId);
+    if (!listEntry || listEntry.status !== 'waiting_iaa_confirmation') return [];
+    var scopedIdentity = { annotatorId: (identity && identity.annotatorId) || DEFAULT_ANNOTATOR_ID };
+    var bucket = readSubmissionBucket(submissionBucketKey(taskId, 'annotator', runType, scopedIdentity));
+    var rows = [];
+    Object.keys(bucket).forEach(function (sampleId) {
+      var entry = bucket[sampleId];
+      if (entryStatus(entry) !== 'submitted') return;
+      var row = buildDryRunFeedbackRow(taskId, runType, sampleId, entry, scopedIdentity);
+      if (row) rows.push(row);
     });
     return rows;
   }
@@ -2746,12 +2814,21 @@
     var C = 'tony0950127';
     /* One row per review unit: annotator `a` answered `v`; `rev` maps each
        reviewer to their decision (same value = agree, different = changed);
-       `arb` is chen's arbitration picking that reviewer value (choice B).
-       `rejectBy` names the one entry in `rev` whose decision was `reject`
-       (issue #502) rather than approve/modify -- reject is a decision, not
-       a value, so the reviewer's `rev` value can still equal `v` (agree,
-       i.e. a "pure reject": issue #551 makes this block finalization
-       instead of reading as an agreement vote).
+       `arb` is chen's arbitration adopting that reviewer value (choice
+       adopt_b). `rejectBy` names the one entry in `rev` whose decision was
+       `reject` (issue #502) rather than approve/modify -- reject is a
+       decision, not a value, so the reviewer's `rev` value can still equal
+       `v` (agree, i.e. a "pure reject": issue #551 makes this block
+       finalization instead of reading as an agreement vote). `modifyBy`
+       (issue #596, FR-094) names the one entry in `rev` whose decision was
+       `modify` -- without it a value change would still derive `disputed`
+       via anyReviewerChanged(), but the FR-094 micro-trace's `（修正）`
+       segment reads unitReviewDecision()'s stored `decisions` map, which
+       only a `modify` decision (not the default `approve`) populates.
+       `arbReject` marks a row whose arbitration vote is FR-061 point 3's
+       `reject` (兩者皆非) rather than an adopt_a/adopt_b pick -- it
+       deliberately carries no `arb` value, matching design.md D2's
+       absent-field sentinel.
        Annotator values MUST match REVIEWER_MOCK_ROWS above -- the list's
        answer column and the derived unit status describe the same
        submission. Derived states are noted per sample.
@@ -2772,9 +2849,12 @@
        historical (issue #551-era) commentary, not as what today's
        derivation actually returns. The multi-reviewer-per-unit shape of
        T016/ofm-* and T017/oft-* also no longer matches FR-093 (exactly one
-       reviewer per unit); rewriting those two tasks' seed rows for the new
-       model is tracked separately (design.md Migration Plan point 3, this
-       change's tasks.md group 7), not part of this task. */
+       reviewer per unit) -- EXCEPT the two canonical rows below
+       (ofm-01-reviewer-corrects-b, oft-01-final-exception), rewritten to a
+       single assigned reviewer (this change's tasks.md group 7, design.md
+       Migration Plan point 3). The remaining ofm-* / oft-* rows keep their
+       pre-existing multi-reviewer shape untouched -- they exercise
+       unaffected, non-canonical derivation paths, not the FR-093 model. */
     var scripts = [
       /* T014 dry_run, min_reviewers = 1 */
       { t: 'T014', r: 'dry_run', s: 'dry-01-all-agree', a: A, v: 'positive', rev: { reviewer_wang: 'positive' } }, // finalized
@@ -2817,13 +2897,23 @@
       { t: 'T015', r: 'official_run', s: 'ofs-03-arbitrated-gold', a: A, v: 'positive', rev: { reviewer_wang: 'neutral', reviewer_li: 'positive' }, arb: 'neutral' }, // finalized by arbitration
       { t: 'T015', r: 'official_run', s: 'ofs-04-pending-review', a: A, v: 'positive' }, // pending
       /* T016 official_run, min_reviewers = 3 */
-      { t: 'T016', r: 'official_run', s: 'ofm-01-unanimous-gold', a: A, v: 'positive', rev: { reviewer_wang: 'positive', reviewer_li: 'positive', reviewer_lin: 'positive' } }, // finalized
+      /* issue #596 (FR-093/FR-060/FR-061/FR-094): the canonical single-owner
+         relay path -- reviewer_wang (round robin index 0) corrects the
+         annotator's value, reviewer_chen (the roster's only can_arbitrate
+         reviewer who is not a participant, FR-060) adopts wang's corrected
+         value, and the unit finalizes on that value. */
+      { t: 'T016', r: 'official_run', s: 'ofm-01-reviewer-corrects-b', a: A, v: 'positive', rev: { reviewer_wang: 'negative' }, modifyBy: 'reviewer_wang', reason: '第二句語氣轉折應判讀為負面，而非正面', arb: 'negative' }, // finalized (reviewer modifies, arbitration adopts B)
       { t: 'T016', r: 'official_run', s: 'ofm-02-approved-interim', a: A, v: 'negative', rev: { reviewer_wang: 'negative' } }, // approved (1 < 3)
       { t: 'T016', r: 'official_run', s: 'ofm-03-modified-interim', a: A, v: 'neutral', rev: { reviewer_wang: 'negative' } }, // modified (1 < 3)
       { t: 'T016', r: 'official_run', s: 'ofm-04-majority-converged', a: A, v: 'positive', rev: { reviewer_wang: 'neutral', reviewer_li: 'neutral', reviewer_lin: 'positive' } }, // finalized (neutral 2 > 3/2)
       { t: 'T016', r: 'official_run', s: 'ofm-05-all-divergent', a: A, v: 'neutral', rev: { reviewer_wang: 'positive', reviewer_li: 'negative', reviewer_lin: 'neutral' } }, // disputed (1/1/1)
       /* T017 official_run, min_reviewers = 2 */
-      { t: 'T017', r: 'official_run', s: 'oft-01-even-tie', a: A, v: 'neutral', rev: { reviewer_wang: 'positive', reviewer_li: 'neutral' } }, // disputed (1:1 tie)
+      /* issue #596 (FR-093/FR-061 point 3/FR-095): the canonical exception
+         path -- reviewer_wang corrects the annotator's value, but
+         reviewer_chen's arbitration rejects BOTH sides (兩者皆非), so the
+         unit stays disputed and the item queues in the final exception pool
+         until a project_leader visit resolves it. */
+      { t: 'T017', r: 'official_run', s: 'oft-01-final-exception', a: A, v: 'neutral', rev: { reviewer_wang: 'positive' }, modifyBy: 'reviewer_wang', reason: '語境不足以判斷情緒傾向，正面與中性難以取捨', arbReject: true }, // disputed (reviewer modifies, arbitration rejects both sides -> final exception pool)
       { t: 'T017', r: 'official_run', s: 'oft-02-approved-interim', a: A, v: 'positive', rev: { reviewer_wang: 'positive' } }, // approved (1 < 2)
       { t: 'T017', r: 'official_run', s: 'oft-03-modified-interim', a: A, v: 'neutral', rev: { reviewer_wang: 'positive' } }, // modified (1 < 2)
       { t: 'T017', r: 'official_run', s: 'oft-04-unanimous-gold', a: A, v: 'positive', rev: { reviewer_wang: 'positive', reviewer_li: 'positive' } }, // finalized
@@ -2857,13 +2947,17 @@
       markSampleSubmitted(row.t, 'annotator', row.r, row.s, labelPayload(row.v), '', { annotatorId: row.a });
       Object.keys(row.rev || {}).forEach(function (reviewerId) {
         var isReject = row.rejectBy === reviewerId;
-        /* issue #502: mirrors handleReviewSubmit's per-row decision line
-           (annotation-workspace.config.js's decisionLines, ~L3780) so a
-           seeded reject reads the same way a live one would. */
-        var reviewSummary = isReject ? 'single_label · ' + row.a + ': reject — ' + (row.reason || '') : '';
+        var isModify = row.modifyBy === reviewerId;
+        var decision = isReject ? 'reject' : (isModify ? 'modify' : 'approve');
+        /* issue #502/#596: mirrors handleReviewSubmit's per-row decision
+           line (annotation-workspace.config.js's decisionLines, ~L4780) so
+           a seeded reject/modify reads the same way a live one would. */
+        var reviewSummary = (isReject || isModify)
+          ? 'single_label · ' + row.a + ': ' + decision + ' — ' + (row.reason || '')
+          : '';
         markSampleSubmitted(
           row.t, 'reviewer', row.r, row.s,
-          labelPayload(row.rev[reviewerId], isReject ? 'reject' : 'approve', isReject ? row.reason : null),
+          labelPayload(row.rev[reviewerId], decision, (isReject || isModify) ? row.reason : null),
           reviewSummary,
           { annotatorId: row.a, reviewerId: reviewerId }
         );
@@ -2878,7 +2972,15 @@
       });
       if (row.arb) {
         submitArbitration(row.t, row.r, row.s, { annotatorId: row.a, reviewerId: 'reviewer_chen' }, [
-          { itemId: 'single_label::single_label', choice: 'B', value: row.arb },
+          { itemId: 'single_label::single_label', choice: 'adopt_b', value: row.arb },
+        ]);
+      } else if (row.arbReject) {
+        /* issue #596 (FR-061 point 3, design.md D2): a reject vote carries
+           no `value` -- submitArbitration() deletes finalized_value/
+           finalized_by for this choice by design (the absent-field
+           sentinel), so passing one here would be misleading dead data. */
+        submitArbitration(row.t, row.r, row.s, { annotatorId: row.a, reviewerId: 'reviewer_chen' }, [
+          { itemId: 'single_label::single_label', choice: 'reject' },
         ]);
       }
     });
@@ -3063,6 +3165,7 @@
     isArbiterCandidate: isArbiterCandidate,
     readReviewerSubmissions: readReviewerSubmissions,
     getReworkReasons: getReworkReasons,
+    getDryRunFeedback: getDryRunFeedback,
     getArbitrationState: getArbitrationState,
     getExceptionPool: getExceptionPool,
     resolveExceptionPoolItem: resolveExceptionPoolItem,

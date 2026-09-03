@@ -11,30 +11,53 @@ import { buildListUrl, buildWorkspaceUrl, skipGuidelineModal } from './_workspac
  * reload never duplicates history events or refreshes timestamps.
  *
  * Expected status matrix (derived, not stored -- see getReviewUnitStatus).
- * issue #551 (v4.54.0) changed two derivation rules this matrix depends on:
- * a min_reviewers = 1 unit now converges a SOLE reviewer's correction on
- * submit instead of always requiring arbitration, and a pure reject (no
- * correction) now blocks finalization instead of reading as agreement --
- * see annotation-workspace.data.js's seedReviewFlowDemo() for the per-row
- * rationale (dry-02/dry-03/dry-04's B rows and ofs-02 moved to finalized;
- * dry-05's A row moved to disputed):
- *   T014 dry_run  (min=1): dry-01 finalized x3 · dry-02 finalized x2/
- *     pending · dry-03 pending/finalized/pending · dry-04 finalized x3
- *     (already converges at N=1; chen's seeded arbitration record is now
- *     redundant but still present) · dry-05 disputed (A, pure reject by
- *     wang -- issue #551)/pending/pending
- *   T015 official (min=1): finalized · finalized (N=1 quorum converges,
- *     issue #551) · finalized (arbitrated -- li's silent agreement keeps
- *     this a genuine N=2 tie) · pending · (ofs-05 absent)
- *   T016 official (min=3): finalized · approved · modified · finalized
- *     (majority convergence, no arbitration) · disputed (1/1/1 stalemate)
- *   T017 official (min=2): disputed (1:1 tie) · approved · modified ·
- *     finalized · pending (oft-05: rejected by wang, official_run rolls the
- *     annotator back to pending -- issue #502 -- so this reads exactly like
- *     a never-reviewed unit from the reviewer side)
+ * issue #596 (OpenSpec change 2026-09-01-single-owner-review-relay, FR-093)
+ * changed the assignment model this matrix depends on: a review unit now
+ * belongs to exactly ONE assigned reviewer, spread across the 4-member
+ * roster by round robin (index % 4 over [wang, li, chen, lin], sorted by
+ * sample_id). That reassignment changed WHO reviewed which annotator-unit
+ * within each sample, which in turn changed some of issue #551's original
+ * per-row outcomes -- the matrix below is read directly off today's
+ * production seeder via a live-page probe (per-reviewer list, `.status-badge`
+ * per row), not derived from the pre-#596 narrative:
+ *   T014 dry_run: dry-01 finalized x3 · dry-02 finalized/disputed/pending ·
+ *     dry-03 pending/disputed/pending · dry-04 finalized x3 (chen's seeded
+ *     arbitration record is redundant but still present, see the second
+ *     test below) · dry-05 disputed/pending/pending
+ *   T015 official_run: ofs-01 finalized · ofs-02 disputed · ofs-03 finalized
+ *     (arbitrated) · ofs-04 pending · (ofs-05 absent, no mock row)
+ *
+ * No single reviewer's list shows a whole task's unit set any more, and
+ * FR-060 additionally puts a disputed unit on BOTH its assigned reviewer's
+ * list and the eligible arbiter's (chen's) list -- so the T014/T015 tests
+ * below merge all 4 reviewer views into one map keyed by
+ * `${sampleId}::${annotator}`, asserting duplicate views agree rather than
+ * assuming disjoint per-reviewer buckets. See
+ * annotation-review-flow-demo-rows.spec.ts's `reviewUnitsAcrossRoster()` for
+ * the same merge pattern applied to row COUNTS.
+ *
+ * T016 and T017's old min_reviewers/quorum seed rows (已同意/已修改 interim
+ * states, majority convergence, N-way ties) are unsatisfiable under FR-093 --
+ * one reviewer has nothing to converge or tie against. design.md's Migration
+ * Plan retargets both at a single canonical relay path each (task 7.4a/7.4b):
+ *   T016 (`ofm-01-reviewer-corrects-b`, index 0 -> reviewer_wang): annotator
+ *     submits, wang MODIFIES the value, arbiter reviewer_chen (the roster's
+ *     only can_arbitrate reviewer, not a participant -- FR-060) adopts B ->
+ *     unit finalizes on wang's corrected value, decided by chen.
+ *   T017 (`oft-01-final-exception`, index 0 -> reviewer_wang): same dispute
+ *     shape, but chen's arbitration REJECTS both sides (兩者皆非, FR-061
+ *     point 3) -> the item queues in the final exception pool (FR-095),
+ *     unit stays disputed until a role=project_leader visit resolves it.
+ * The other 4 samples per task are intentionally NOT pinned here (task
+ * 7.4a's Red contract only mandates these two canonical paths); their COUNT
+ * (5 per task) stays guarded by annotation-review-flow-demo-rows.spec.ts's
+ * unmodified `reviewUnitsAcrossRoster` assertions.
  *
  * Traceability: specs/annotation/015-annotation-workspace/spec.md
- *   FR-051, FR-059, FR-060, FR-061 (v4.54.0, issue #551)
+ *   FR-051, FR-059, FR-060, FR-061 (v4.54.0, issue #551);
+ *   openspec/changes/2026-09-01-single-owner-review-relay/
+ *   specs/annotation/015-annotation-workspace/spec.md
+ *   FR-093, FR-060, FR-061 (v5.0.0), FR-094, FR-095
  */
 
 const SEED_MARKER = 'labelsuite.reviewFlowDemoSeed.v1';
@@ -56,27 +79,64 @@ async function expectBadges(page: Page, expected: string[]) {
   }
 }
 
-test.describe('T014 dry_run staged states', () => {
-  test('the 15 review units derive the scripted five-state spread', async ({ page }) => {
-    await page.goto(buildListUrl({ task_id: 'T014', role: 'reviewer', run_type: 'dry_run' }));
+const ROSTER = ['reviewer_wang', 'reviewer_li', 'reviewer_chen', 'reviewer_lin'] as const;
 
-    await expectBadges(page, [
-      // dry-01-all-agree: wang agreed with all three annotators
-      '已定稿', '已定稿', '已定稿',
-      // dry-02-one-divergent: A agreed; B changed by wang, N=1 converges on
-      // submit (issue #551, was 爭議中); C unreviewed
-      '已定稿', '已定稿', '待審',
-      // dry-03-dispute-open: only B reviewed -- changed, N=1 converges on
-      // submit (issue #551, was 爭議中)
-      '待審', '已定稿', '待審',
-      // dry-04-dispute-resolved: B already converges at N=1 on submit;
-      // chen's seeded arbitration record is redundant but still present
-      '已定稿', '已定稿', '已定稿',
-      // dry-05-pending-review: A is a PURE reject by wang (no correction --
-      // issue #551 blocks finalization instead of reading it as agreement),
-      // B/C nobody reviewed yet
-      '爭議中', '待審', '待審',
-    ]);
+/* issue #596 (FR-093): a review unit belongs to exactly one assigned
+   reviewer, so no single reviewer page shows a whole task's unit set --
+   and FR-060 additionally puts a disputed unit on BOTH its assigned
+   reviewer's list and the eligible arbiter's (chen's) list. This merges
+   all 4 reviewer views into one map keyed by `${sampleId}::${annotator}`,
+   asserting duplicate sightings agree instead of assuming disjoint
+   per-reviewer buckets. */
+async function collectStatusMap(
+  page: Page,
+  taskId: string,
+  runType: 'dry_run' | 'official_run',
+): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+  for (const reviewerId of ROSTER) {
+    await page.goto(buildListUrl({ task_id: taskId, role: 'reviewer', run_type: runType, reviewer_id: reviewerId }));
+    const rows = page.getByTestId('ws-sample-item');
+    const count = await rows.count();
+    for (let i = 0; i < count; i += 1) {
+      const sampleId = (await rows.nth(i).getByTestId('list-review-id').innerText()).trim();
+      const annotator = (await rows.nth(i).getByTestId('list-review-annotator').innerText()).trim();
+      const badge = (await rows.nth(i).locator('.status-badge').innerText()).trim();
+      const key = `${sampleId}::${annotator}`;
+      if (map.has(key)) {
+        expect(badge, `${key} disagreed between two reviewer views`).toBe(map.get(key));
+      } else {
+        map.set(key, badge);
+      }
+    }
+  }
+  return map;
+}
+
+test.describe('T014 dry_run staged states', () => {
+  test('the 15 review units derive the scripted five-state spread, split across the round-robin roster (issue #596, FR-093)', async ({ page }) => {
+    const map = await collectStatusMap(page, 'T014', 'dry_run');
+    expect(map.size).toBe(15);
+    const expected: Record<string, string> = {
+      'dry-01-all-agree::kioleemg12': '已定稿',
+      'dry-01-all-agree::113450022': '已定稿',
+      'dry-01-all-agree::tony0950127': '已定稿',
+      'dry-02-one-divergent::kioleemg12': '已定稿',
+      'dry-02-one-divergent::113450022': '爭議中',
+      'dry-02-one-divergent::tony0950127': '待審',
+      'dry-03-dispute-open::kioleemg12': '待審',
+      'dry-03-dispute-open::113450022': '爭議中',
+      'dry-03-dispute-open::tony0950127': '待審',
+      'dry-04-dispute-resolved::kioleemg12': '已定稿',
+      'dry-04-dispute-resolved::113450022': '已定稿',
+      'dry-04-dispute-resolved::tony0950127': '已定稿',
+      'dry-05-pending-review::kioleemg12': '爭議中',
+      'dry-05-pending-review::113450022': '待審',
+      'dry-05-pending-review::tony0950127': '待審',
+    };
+    for (const [key, state] of Object.entries(expected)) {
+      expect(map.get(key), key).toBe(badgeText(state));
+    }
   });
 
   test("dry-04's middle unit already converges at N=1; chen's seeded arbitration record is redundant but still present", async ({ page }) => {
@@ -105,112 +165,241 @@ test.describe('T014 dry_run staged states', () => {
 });
 
 test.describe('T015 official_run single-reviewer staged states', () => {
-  test('the four submitted samples derive finalized/finalized/finalized/pending (issue #551)', async ({ page }) => {
-    await page.goto(buildListUrl({ task_id: 'T015', role: 'reviewer', run_type: 'official_run' }));
-
-    // ofs-02 used to read 爭議中: min_reviewers = 1 hard-blocked convergence
-    // below N = 2, so the sole reviewer's correction always fell into the
-    // dispute pool. issue #551 makes N = 1 the full quorum instead, so it
-    // now converges on submit like ofs-01.
-    await expectBadges(page, ['已定稿', '已定稿', '已定稿', '待審']);
+  test('the four submitted samples derive finalized/disputed/finalized/pending, one per round-robin reviewer (issue #596 FR-093)', async ({ page }) => {
+    // ofs-05-not-submitted ships no mock row (rows.spec.ts), so only 4
+    // units exist to distribute across index 0-3 -> wang/li/chen/lin.
+    const map = await collectStatusMap(page, 'T015', 'official_run');
+    expect(map.size).toBe(4);
+    const expected: Record<string, string> = {
+      'ofs-01-agree-gold::kioleemg12': '已定稿',
+      'ofs-02-modified-dispute::kioleemg12': '爭議中',
+      'ofs-03-arbitrated-gold::kioleemg12': '已定稿',
+      'ofs-04-pending-review::kioleemg12': '待審',
+    };
+    for (const [key, state] of Object.entries(expected)) {
+      expect(map.get(key), key).toBe(badgeText(state));
+    }
   });
 });
 
-test.describe('T016 official_run min_reviewers=3 staged states', () => {
-  test('quorum thresholds and majority convergence derive the scripted spread', async ({ page }) => {
-    await page.goto(buildListUrl({ task_id: 'T016', role: 'reviewer', run_type: 'official_run' }));
-
-    await expectBadges(page, ['已定稿', '已同意', '已修改', '已定稿', '爭議中']);
+test.describe('T016 official_run: reviewer corrects, arbitration adopts B, unit finalizes (issue #596 FR-093/FR-061/FR-094)', () => {
+  test("ofm-01-reviewer-corrects-b: wang's list shows the unit finalized", async ({ page }) => {
+    await page.goto(
+      buildListUrl({ task_id: 'T016', role: 'reviewer', run_type: 'official_run', reviewer_id: 'reviewer_wang' })
+    );
+    const row = page.getByTestId('ws-sample-item').filter({ hasText: 'ofm-01-reviewer-corrects-b' });
+    await expect(row).toHaveCount(1);
+    await expect(row.locator('.status-badge')).toHaveText(badgeText('已定稿'));
   });
 
-  test('ofm-04 resolves by reviewer majority, without any arbitration record', async ({ page }) => {
-    await page.goto(buildListUrl({ task_id: 'T016', role: 'reviewer', run_type: 'official_run' }));
+  test('ofm-01-reviewer-corrects-b resolves via arbitration adopt_b, decided by reviewer_chen', async ({ page }) => {
+    await page.goto(
+      buildListUrl({ task_id: 'T016', role: 'reviewer', run_type: 'official_run', reviewer_id: 'reviewer_wang' })
+    );
 
     const probe = await page.evaluate(() => {
       const data = (window as unknown as {
         LabelSuiteAnnotationWorkspaceData: {
-          getDisputeItems: (
+          getReviewUnitStatus: (
             taskId: string, runType: string, sampleId: string,
             identity: { annotatorId: string }, outKeys: string[]
-          ) => Array<{ annotatorValue: unknown; reviewerValues: Record<string, unknown> }>;
-          resolveDisputeConvergence: (
-            item: { annotatorValue: unknown; reviewerValues: Record<string, unknown> },
-            reviewerCount: number
-          ) => { converged: boolean; value?: unknown };
+          ) => string | null;
           getArbitrationState: (
+            taskId: string, runType: string, sampleId: string,
+            identity: { annotatorId: string }
+          ) => Record<string, { choice?: string; finalized_value?: unknown; finalized_by?: string }>;
+        };
+      }).LabelSuiteAnnotationWorkspaceData;
+      const identity = { annotatorId: 'kioleemg12' };
+      return {
+        status: data.getReviewUnitStatus('T016', 'official_run', 'ofm-01-reviewer-corrects-b', identity, ['single_label']),
+        arbitration: data.getArbitrationState('T016', 'official_run', 'ofm-01-reviewer-corrects-b', identity),
+      };
+    });
+    expect(probe.status).toBe('finalized');
+    const item = probe.arbitration['single_label::single_label'];
+    expect(item?.finalized_by).toBe('reviewer_chen');
+    expect(item?.finalized_value).toBeTruthy();
+    // FR-060: the assigned reviewer (wang) is the dispute's only
+    // participant -- distinct from the arbiter who decided it.
+    expect(item?.finalized_by).not.toBe('reviewer_wang');
+  });
+
+  test("ofm-01-reviewer-corrects-b's finalized card carries the FR-094 micro-trace: 標記 A ➔ 審核 B（修正）➔ 仲裁 B", async ({ page }) => {
+    await skipGuidelineModal(page);
+    await page.goto(buildWorkspaceUrl({
+      task_id: 'T016', sample_id: 'ofm-01-reviewer-corrects-b', role: 'reviewer', run_type: 'official_run',
+      annotator_id: 'kioleemg12', reviewer_id: 'reviewer_wang',
+    }));
+
+    await expect(page.getByTestId('ws-review-finalized-card')).toBeVisible();
+    await expect(page.getByTestId('ws-finalized-trace')).toHaveText(
+      '歷程：標記 A ➔ 審核 B（修正）➔ 仲裁 B'
+    );
+  });
+
+  /* The other 4 samples per task are NOT part of 7.4a's canonical rewrite
+     (design.md Migration Plan #3 and tasks.md 7.4a/7.4b only prescribe the
+     two demo paths -- the canonical T016/T017 sample). They ARE, however,
+     derivable today: FR-093's round-robin already reads a single assigned
+     reviewer's decision per unit (confirmed live -- annotation-workspace.
+     data.js's seedReviewFlowDemo() still stores each row's legacy
+     multi-reviewer `rev` bag, but the current derivation engine only
+     consults the assigned reviewer's key). Excluded by the `ofm-01` prefix
+     so this stays correct whether the canonical slot is still named
+     ofm-01-unanimous-gold or has been rewritten to
+     ofm-01-reviewer-corrects-b. */
+  test('the four non-canonical ofm samples keep deriving under FR-093 round robin, unaffected by the canonical rewrite', async ({ page }) => {
+    const map = await collectStatusMap(page, 'T016', 'official_run');
+    const nonCanonical = new Map([...map].filter(([key]) => !key.startsWith('ofm-01')));
+    expect(nonCanonical.size).toBe(4);
+    const expected: Record<string, string> = {
+      'ofm-02-approved-interim::kioleemg12': '已定稿',
+      'ofm-03-modified-interim::kioleemg12': '爭議中',
+      'ofm-04-majority-converged::kioleemg12': '爭議中',
+      'ofm-05-all-divergent::kioleemg12': '爭議中',
+    };
+    for (const [key, state] of Object.entries(expected)) {
+      expect(nonCanonical.get(key), key).toBe(badgeText(state));
+    }
+  });
+
+  /* Restores the old "arbitration entries on the staged disputes" block's
+     breadth for T016's 3 disputed non-canonical samples (ofm-03/04/05,
+     the modified/majority/divergent rows -- see the test above), enumerated
+     per sample rather than summarized. ofm-01 and ofm-02 are excluded: the
+     canonical slot is covered by its own describe block above and finalizes
+     (no arbitrate entry), and ofm-02 finalizes too (see the map above). */
+  test('reviewer_chen gets a 仲裁 entry on each of ofm-03/04/05 (the disputed non-canonical samples)', async ({ page }) => {
+    await page.goto(
+      buildListUrl({ task_id: 'T016', role: 'reviewer', run_type: 'official_run', reviewer_id: 'reviewer_chen' })
+    );
+    for (const sampleId of ['ofm-03-modified-interim', 'ofm-04-majority-converged', 'ofm-05-all-divergent']) {
+      const row = page.getByTestId('ws-sample-item').filter({ hasText: sampleId });
+      await expect(row, sampleId).toHaveCount(1);
+      await expect(row.getByTestId('list-arbitrate-entry'), sampleId).toHaveText('仲裁');
+    }
+  });
+});
+
+test.describe('T017 official_run: arbitration rejects both sides, final exception pool, project leader resolves (issue #596 FR-061/FR-095)', () => {
+  test('oft-01-final-exception stays 爭議中 -- rejected by arbitration, not yet resolved', async ({ page }) => {
+    await page.goto(
+      buildListUrl({ task_id: 'T017', role: 'reviewer', run_type: 'official_run', reviewer_id: 'reviewer_wang' })
+    );
+    const row = page.getByTestId('ws-sample-item').filter({ hasText: 'oft-01-final-exception' });
+    await expect(row).toHaveCount(1);
+    await expect(row.locator('.status-badge')).toHaveText(badgeText('爭議中'));
+  });
+
+  test('oft-01-final-exception: arbitration recorded a reject with no finalized value, and the exception pool has not resolved it yet', async ({ page }) => {
+    await page.goto(
+      buildListUrl({ task_id: 'T017', role: 'reviewer', run_type: 'official_run', reviewer_id: 'reviewer_wang' })
+    );
+
+    const probe = await page.evaluate(() => {
+      const data = (window as unknown as {
+        LabelSuiteAnnotationWorkspaceData: {
+          getReviewUnitStatus: (
+            taskId: string, runType: string, sampleId: string,
+            identity: { annotatorId: string }, outKeys: string[]
+          ) => string | null;
+          getArbitrationState: (
+            taskId: string, runType: string, sampleId: string,
+            identity: { annotatorId: string }
+          ) => Record<
+            string,
+            { votes?: Array<{ arbiter_id?: string; choice?: string }>; finalized_value?: unknown; finalized_by?: string }
+          >;
+          getExceptionPool: (
             taskId: string, runType: string, sampleId: string,
             identity: { annotatorId: string }
           ) => Record<string, unknown>;
         };
       }).LabelSuiteAnnotationWorkspaceData;
       const identity = { annotatorId: 'kioleemg12' };
-      const items = data.getDisputeItems('T016', 'official_run', 'ofm-04-majority-converged', identity, ['single_label']);
       return {
-        convergence: items.length === 1 ? data.resolveDisputeConvergence(items[0], 3) : null,
-        arbitration: data.getArbitrationState('T016', 'official_run', 'ofm-04-majority-converged', identity),
+        status: data.getReviewUnitStatus('T017', 'official_run', 'oft-01-final-exception', identity, ['single_label']),
+        arbitration: data.getArbitrationState('T017', 'official_run', 'oft-01-final-exception', identity),
+        pool: data.getExceptionPool('T017', 'official_run', 'oft-01-final-exception', identity),
       };
     });
-    expect(probe.convergence).toEqual({ converged: true, value: 'neutral' });
-    expect(probe.arbitration).toEqual({});
-  });
-});
-
-test.describe('T017 official_run min_reviewers=2 staged states', () => {
-  test('the even tie stays disputed while full agreement finalizes', async ({ page }) => {
-    await page.goto(buildListUrl({ task_id: 'T017', role: 'reviewer', run_type: 'official_run' }));
-
-    await expectBadges(page, ['爭議中', '已同意', '已修改', '已定稿', '待審']);
-  });
-});
-
-test.describe('arbitration entries on the staged disputes', () => {
-  test('reviewer_chen gets exactly one 仲裁 entry on T017 (the tie)', async ({ page }) => {
-    await page.goto(buildListUrl({
-      task_id: 'T017', role: 'reviewer', run_type: 'official_run', reviewer_id: 'reviewer_chen',
-    }));
-
-    const entry = page.getByTestId('list-arbitrate-entry');
-    await expect(entry).toHaveCount(1);
-    await expect(entry).toHaveText('仲裁');
+    expect(probe.status).toBe('disputed');
+    const item = probe.arbitration['single_label::single_label'];
+    // A completed reject persists as a VOTE (D2: submitArbitration()
+    // withholds finalized_value/finalized_by for `reject` by design -- the
+    // absent field is the sentinel that keeps this unresolved, not a sign
+    // arbitration never ran).
+    expect(item?.votes?.some((v) => v.arbiter_id === 'reviewer_chen' && v.choice === 'reject')).toBe(true);
+    expect(item?.finalized_by).toBeUndefined();
+    expect(item?.finalized_value).toBeUndefined();
+    expect(probe.pool['single_label']).toBeUndefined();
   });
 
-  test('reviewer_wang, a dispute participant, never sees 仲裁 on T017', async ({ page }) => {
-    await page.goto(buildListUrl({
-      task_id: 'T017', role: 'reviewer', run_type: 'official_run', reviewer_id: 'reviewer_wang',
-    }));
-
-    await expect(page.getByTestId('ws-sample-item').first()).toBeVisible();
-    await expect(page.getByTestId('list-arbitrate-entry')).toHaveCount(0);
-  });
-
-  test("reviewer_chen can arbitrate T016's stalemate (wang/li/lin all participated)", async ({ page }) => {
-    await page.goto(buildListUrl({
-      task_id: 'T016', role: 'reviewer', run_type: 'official_run', reviewer_id: 'reviewer_chen',
-    }));
-
-    await expect(page.getByTestId('list-arbitrate-entry')).toHaveCount(1);
-  });
-});
-
-test.describe('workspace arbitration card on the T017 tie', () => {
-  test('chen sees the A/B card with the tied values; wang keeps the plain review card', async ({ page }) => {
+  test('oft-01-final-exception surfaces on the project leader exception-pool screen, ready to resolve', async ({ page }) => {
     await skipGuidelineModal(page);
-    await page.goto(buildWorkspaceUrl({
-      task_id: 'T017', sample_id: 'oft-01-even-tie', role: 'reviewer', run_type: 'official_run',
-      annotator_id: 'kioleemg12', reviewer_id: 'reviewer_chen',
-    }));
+    await page.goto(
+      `/pages/annotation/annotation-workspace.html?task_id=T017&sample_id=oft-01-final-exception` +
+        `&role=project_leader&run_type=official_run&annotator_id=kioleemg12`
+    );
 
-    await expect(page.getByTestId('ws-arbitration-card')).toBeVisible();
-    const item = page.getByTestId('ws-arbitration-item');
-    await expect(item).toHaveCount(1);
-    await expect(item.getByTestId('ws-arbitration-choose-a')).toContainText('neutral');
-    await expect(item.getByTestId('ws-arbitration-choose-b')).toContainText('positive');
+    await expect(page.getByTestId('ws-exception-pool')).toBeVisible();
+    await expect(page.getByTestId('ws-exception-pool-item')).toHaveCount(1);
+  });
 
-    await page.goto(buildWorkspaceUrl({
-      task_id: 'T017', sample_id: 'oft-01-even-tie', role: 'reviewer', run_type: 'official_run',
-      annotator_id: 'kioleemg12', reviewer_id: 'reviewer_wang',
-    }));
-    await expect(page.getByTestId('ws-arbitration-card')).toHaveCount(0);
+  /* FR-060: arbiterEntry is `爭議中 AND isArbiterCandidate` (annotation-list.
+     html), neither of which depends on whether chen already cast her reject
+     vote -- isArbiterCandidate only checks can_arbitrate + no REVIEWER
+     submission of her own, and the unit stays 爭議中 until the pool
+     resolves it. So the list row keeps offering chen the 仲裁 entry. */
+  test("reviewer_chen still gets a 仲裁 entry on oft-01-final-exception's list row; wang (the participant) never does", async ({ page }) => {
+    await page.goto(
+      buildListUrl({ task_id: 'T017', role: 'reviewer', run_type: 'official_run', reviewer_id: 'reviewer_chen' })
+    );
+    const chenRow = page.getByTestId('ws-sample-item').filter({ hasText: 'oft-01-final-exception' });
+    await expect(chenRow).toHaveCount(1);
+    await expect(chenRow.getByTestId('list-arbitrate-entry')).toHaveText('仲裁');
+
+    await page.goto(
+      buildListUrl({ task_id: 'T017', role: 'reviewer', run_type: 'official_run', reviewer_id: 'reviewer_wang' })
+    );
+    const wangRow = page.getByTestId('ws-sample-item').filter({ hasText: 'oft-01-final-exception' });
+    await expect(wangRow).toHaveCount(1);
+    await expect(wangRow.getByTestId('list-arbitrate-entry')).toHaveCount(0);
+  });
+
+  /* Same rationale as T016's non-canonical test above: the other 4 oft-*
+     samples aren't part of 7.4a's canonical rewrite, but they ARE derivable
+     today under FR-093 round robin. Excluded by the `oft-01` prefix so this
+     stays correct whether the canonical slot keeps its current name or has
+     been rewritten to oft-01-final-exception. */
+  test('the four non-canonical oft samples keep deriving under FR-093 round robin, unaffected by the canonical rewrite', async ({ page }) => {
+    const map = await collectStatusMap(page, 'T017', 'official_run');
+    const nonCanonical = new Map([...map].filter(([key]) => !key.startsWith('oft-01')));
+    expect(nonCanonical.size).toBe(4);
+    const expected: Record<string, string> = {
+      'oft-02-approved-interim::kioleemg12': '已定稿',
+      'oft-03-modified-interim::kioleemg12': '爭議中',
+      'oft-04-unanimous-gold::kioleemg12': '已定稿',
+      'oft-05-pending-review::kioleemg12': '待審',
+    };
+    for (const [key, state] of Object.entries(expected)) {
+      expect(nonCanonical.get(key), key).toBe(badgeText(state));
+    }
+  });
+
+  /* Restores the old "arbitration entries on the staged disputes" block's
+     breadth for T017's disputed non-canonical sample. Only oft-03-modified-
+     interim is disputed among the 4 non-canonical samples (see the map
+     above) -- oft-02 and oft-04 finalize, oft-05 is still pending, so this
+     is a one-sample enumeration, not a retirement. */
+  test('reviewer_chen gets a 仲裁 entry on oft-03-modified-interim (the disputed non-canonical sample)', async ({ page }) => {
+    await page.goto(
+      buildListUrl({ task_id: 'T017', role: 'reviewer', run_type: 'official_run', reviewer_id: 'reviewer_chen' })
+    );
+    const row = page.getByTestId('ws-sample-item').filter({ hasText: 'oft-03-modified-interim' });
+    await expect(row).toHaveCount(1);
+    await expect(row.getByTestId('list-arbitrate-entry')).toHaveText('仲裁');
   });
 });
 

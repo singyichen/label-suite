@@ -47,7 +47,7 @@ test.describe('Task detail annotation results for T014-T017 (issue #393)', () =>
     await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
     await expect(page.locator('.ar-expand-btn')).toHaveCount(5);
 
-    const tieRow = page.locator('#arResultTableBody tr.ar-summary-row').filter({ hasText: 'oft-01-even-tie' });
+    const tieRow = page.locator('#arResultTableBody tr.ar-summary-row').filter({ hasText: 'oft-01-final-exception' });
     await tieRow.locator('.ar-expand-btn').click();
     await expect(page.locator('.annotator-detail-row .badge-ar-disputed')).toBeVisible();
   });

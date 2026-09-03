@@ -7,14 +7,21 @@ import { buildListUrl } from './_workspace-helpers';
  * T014-T017 landed in the task-list/task-detail seeds in Phase 1, but
  * REVIEWER_MOCK_ROWS still stops at T013, so their reviewer lists render
  * zero review units. This file pins the demo roster expansion (a 4th
- * reviewer, reviewer_lin, WITHOUT can_arbitrate, so T016's three reviewers
- * wang/li/lin leave chen eligible to arbitrate) and the per-task mock row
+ * reviewer, reviewer_lin, WITHOUT can_arbitrate) and the per-task mock row
  * shape: T014 keeps the 3-annotator dry_run convention, T015-T017 are
  * official_run single-annotator tasks -- and T015's ofs-05-not-submitted
  * sample deliberately ships NO mock row (no submission -> no review unit).
  *
+ * issue #596 (FR-093): under the single-owner relay model, a review unit
+ * has exactly ONE assigned reviewer (round-robin over the 4-member roster),
+ * not all four at once. reviewer_chen stays the roster's only
+ * can_arbitrate:true reviewer (FR-060), so she stays free to arbitrate any
+ * OTHER reviewer's disputed unit -- e.g. T016/T017's canonical samples,
+ * both index 0 -> assigned to reviewer_wang (see
+ * annotation-review-flow-demo-seed.spec.ts for the full T016/T017 paths).
+ *
  * Traceability: specs/annotation/015-annotation-workspace/spec.md
- *   FR-055, FR-060, SC-004N
+ *   FR-055, FR-060, FR-093, SC-004N
  */
 
 type RosterEntry = { id: string; name: string; can_arbitrate?: boolean };

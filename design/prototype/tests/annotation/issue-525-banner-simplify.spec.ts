@@ -78,7 +78,7 @@ test.describe('issue #525 PR-B — banner DOM order is run type -> state -> thre
 
   test('375px keeps the same reading order (issue #525 ♿ last clause)', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 780 });
-    await openUnit(page, { task_id: 'T017', sample_id: 'oft-01-even-tie' });
+    await openUnit(page, { task_id: 'T017', sample_id: 'oft-01-final-exception' });
 
     expect(await childClasses(page)).toEqual([
       'rv-unit-chip rv-unit-run',
@@ -146,13 +146,13 @@ test.describe('issue #525 PR-B — the state element text (issue #572: no 目前
   });
 
   test('T017 oft-01: disputed state and its note, unprefixed', async ({ page }) => {
-    await openUnit(page, { task_id: 'T017', sample_id: 'oft-01-even-tie' });
+    await openUnit(page, { task_id: 'T017', sample_id: 'oft-01-final-exception' });
 
     await expect(statePill(page)).toHaveText('爭議中 · 未定稿，待仲裁');
   });
 
   test('English is unprefixed too', async ({ page }) => {
-    await openUnit(page, { task_id: 'T017', sample_id: 'oft-01-even-tie' });
+    await openUnit(page, { task_id: 'T017', sample_id: 'oft-01-final-exception' });
     await page.getByTestId('lang-toggle').click();
 
     await expect(statePill(page)).toHaveText('Disputed · not finalized, awaiting arbitration');
@@ -182,7 +182,7 @@ test.describe('issue #525 PR-B — the state element text (issue #572: no 目前
   });
 
   test('a non-terminal state keeps data-terminal false and a bare aria-label', async ({ page }) => {
-    await openUnit(page, { task_id: 'T017', sample_id: 'oft-01-even-tie' });
+    await openUnit(page, { task_id: 'T017', sample_id: 'oft-01-final-exception' });
 
     await expect(statePill(page)).toHaveAttribute('data-terminal', 'false');
     await expect(statePill(page)).toHaveAttribute(
@@ -194,7 +194,7 @@ test.describe('issue #525 PR-B — the state element text (issue #572: no 目前
 
 test.describe('issue #525 PR-B — the state appears exactly once in the banner', () => {
   test('one state element, no track, no repeated state word', async ({ page }) => {
-    await openUnit(page, { task_id: 'T017', sample_id: 'oft-01-even-tie' });
+    await openUnit(page, { task_id: 'T017', sample_id: 'oft-01-final-exception' });
 
     await expect(statePill(page)).toHaveCount(1);
     await expect(banner(page).locator('.review-track')).toHaveCount(0);

@@ -490,6 +490,19 @@
       border: 1px solid var(--color-warning-border);
       border-radius: var(--radius-md); padding: 1px 8px;
     }
+    /* FR-096 試標歷史回饋 (issue #596): kept visually close to
+       .annotator-answer's tag styling so "my answer -> finalized result"
+       reads as the same kind of value the review table already shows. */
+    .dry-run-feedback-row {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+      padding: 10px 0; border-top: 1px solid var(--color-border);
+      font-size: 13px;
+    }
+    .dry-run-feedback-arrow { color: var(--color-text-soft); }
+    .dry-run-feedback-source { font-size: 12px; color: var(--color-text-soft); }
+    .dry-run-feedback-reason {
+      flex-basis: 100%; font-size: 12px; color: var(--color-text-soft);
+    }
     .result-tag-green { color: #15803D !important; background: #DCFCE7 !important; border-color: #86EFAC !important; }
     .result-tag-blue  { color: #1D4ED8 !important; background: #EFF6FF !important; border-color: #BFDBFE !important; }
     .result-tag-red   { color: #DC2626 !important; background: #FEE2E2 !important; border-color: #FCA5A5 !important; }
@@ -618,6 +631,11 @@
       </div>
     </article>
   </section>
+
+  <!-- FR-096 試標歷史回饋 (issue #596): annotator-only, dry_run-only. Filled
+       entirely by renderDryRunFeedback() -- content is data-driven, so no
+       static markup lives here. -->
+  <section class="list hidden" id="dryRunFeedbackCard" aria-label="試標歷史回饋" data-testid="ws-dry-run-feedback-card"></section>
 
   <section class="empty hidden" id="taskNotFound" data-testid="list-task-not-found"></section>
 
@@ -764,6 +782,11 @@
       notSubmittedEntryLabel: '查看 {id}',
       reviewUnitInterimNote: '未定稿',
       reviewUnitFinalizedNote: '已鎖定',
+      dryRunFeedbackTitle: '試標歷史回饋',
+      dryRunFeedbackPending: '本回合尚在進行中，回合結束後才會開放試標歷史回饋。',
+      dryRunFeedbackSummaryTpl: '共 {total} 筆，其中 {modified} 筆經審核修正（{pct}%）',
+      dryRunFeedbackSourceTpl: '{action}・{actor}',
+      dryRunFeedbackGuidelineLink: '查看指南段落',
     },
     en: {
       pageTitle: 'Annotation List',
@@ -832,6 +855,11 @@
       notSubmittedEntryLabel: 'View {id}',
       reviewUnitInterimNote: 'not finalized',
       reviewUnitFinalizedNote: 'locked',
+      dryRunFeedbackTitle: 'Trial History Feedback',
+      dryRunFeedbackPending: 'This round is still in progress. Trial history feedback opens once it concludes.',
+      dryRunFeedbackSummaryTpl: '{total} total, {modified} modified by review ({pct}%)',
+      dryRunFeedbackSourceTpl: '{action}・{actor}',
+      dryRunFeedbackGuidelineLink: 'View guideline section',
     }
   };
   function t(key, vars) {
@@ -891,6 +919,7 @@
       id: taskId,
       nameZh: listEntry.nameZh,
       nameEn: listEntry.nameEn,
+      status: listEntry.status,
       outputTypes: listEntry.outputTypes || [],
       fieldRoleMap: detailProfile.fieldRoleMap || {},
       datasetRecords: detailProfile.datasetRecords || [],
@@ -2051,6 +2080,118 @@
     };
   }
 
+  /* My answer -> finalized result, one tag per composed output type.
+     Reuses convertSubmissionAnswer (previewState -> plain answer, per
+     OUTPUT_TYPE_REGISTRY key) and formatCompactAnswer -- the same pair
+     buildAnswerCell() already uses for the review table -- so a row's
+     values are formatted identically whether an annotator or a reviewer
+     is looking at them. */
+  function buildDryRunFeedbackAnswerTags(profile, submission) {
+    var frag = document.createDocumentFragment();
+    profile.outputTypes.forEach(function (outKey) {
+      var answer = window.LabelSuiteAnnotationWorkspaceData.convertSubmissionAnswer(outKey, submission);
+      var tag = document.createElement('span');
+      tag.className = 'annotator-result-tag';
+      tag.textContent = formatCompactAnswer(outKey, answer);
+      frag.appendChild(tag);
+    });
+    return frag;
+  }
+
+  /* One FR-096 row. `row.modified === false` (审核員通過, unchanged) renders
+     the source line only -- no diff, matching the maintainer's ruling that
+     an approved-unchanged sample carries nothing to compare. The guideline
+     jump link (FR-096 point 4) opens the sample's workspace, the closest
+     the current data model gets to "jump to the referenced section": no
+     guideline file exposes per-heading anchors, so linking the whole
+     document open in the workspace context is what the data can support
+     without inventing a second, task-specific reference scheme. */
+  function buildDryRunFeedbackRowEl(context, profile, row) {
+    var history = window.LabelSuiteAnnotationHistory;
+    var rowEl = document.createElement('div');
+    rowEl.className = 'dry-run-feedback-row';
+    rowEl.setAttribute('data-testid', 'ws-dry-run-feedback-row');
+
+    if (row.modified) {
+      rowEl.appendChild(buildDryRunFeedbackAnswerTags(profile, row.myAnswer));
+      var arrow = document.createElement('span');
+      arrow.className = 'dry-run-feedback-arrow';
+      arrow.textContent = '→';
+      rowEl.appendChild(arrow);
+      rowEl.appendChild(buildDryRunFeedbackAnswerTags(profile, row.finalizedAnswer));
+    }
+
+    var sourceEl = document.createElement('span');
+    sourceEl.className = 'dry-run-feedback-source';
+    sourceEl.setAttribute('data-testid', 'ws-dry-run-feedback-source');
+    sourceEl.textContent = t('dryRunFeedbackSourceTpl', {
+      action: history ? history.actionLabelFor(row.action) : row.action,
+      actor: row.actorId
+    });
+    rowEl.appendChild(sourceEl);
+
+    if (row.reason) {
+      var reasonEl = document.createElement('span');
+      reasonEl.className = 'dry-run-feedback-reason';
+      reasonEl.setAttribute('data-testid', 'ws-dry-run-feedback-reason');
+      reasonEl.textContent = row.reason;
+      rowEl.appendChild(reasonEl);
+
+      var link = document.createElement('a');
+      link.setAttribute('data-testid', 'ws-dry-run-feedback-guideline-link');
+      link.textContent = t('dryRunFeedbackGuidelineLink');
+      link.target = '_blank';
+      link.rel = 'noopener';
+      link.href = buildWorkspaceUrl(profile.id, row.sampleId, context);
+      rowEl.appendChild(link);
+    }
+
+    return rowEl;
+  }
+
+  /* FR-096 試標歷史回饋 (design.md D5): the UI half of the disclosure gate.
+     While the round is in progress, the section renders ONLY the pending
+     explanation and never calls getDryRunFeedback -- the data-layer gate in
+     annotation-workspace.data.js already returns [] in that state, but not
+     even attempting the call keeps the two gates from silently drifting
+     apart. Annotator + dry_run only (design.md's confirmed 已確認決策 #4:
+     falls on annotation-list.html, no separate screen). */
+  function renderDryRunFeedback(context, profile) {
+    var card = document.getElementById('dryRunFeedbackCard');
+    if (!card) return;
+    card.innerHTML = '';
+    card.classList.add('hidden');
+    if (context.role !== 'annotator' || context.runType !== 'dry_run') return;
+
+    card.classList.remove('hidden');
+    var title = document.createElement('h2');
+    title.className = 'list-item-title';
+    title.textContent = t('dryRunFeedbackTitle');
+    card.appendChild(title);
+
+    if (profile.status !== 'waiting_iaa_confirmation') {
+      var pending = document.createElement('p');
+      pending.setAttribute('data-testid', 'ws-dry-run-feedback-pending');
+      pending.textContent = t('dryRunFeedbackPending');
+      card.appendChild(pending);
+      return;
+    }
+
+    var rows = window.LabelSuiteAnnotationWorkspaceData.getDryRunFeedback(
+      profile.id, context.runType, context.identity);
+    var modifiedCount = rows.filter(function (row) { return row.modified; }).length;
+    var pct = rows.length ? Math.round((modifiedCount / rows.length) * 1000) / 10 : 0;
+
+    var summary = document.createElement('p');
+    summary.setAttribute('data-testid', 'ws-dry-run-feedback-summary');
+    summary.textContent = t('dryRunFeedbackSummaryTpl', { total: rows.length, modified: modifiedCount, pct: pct });
+    card.appendChild(summary);
+
+    rows.forEach(function (row) {
+      card.appendChild(buildDryRunFeedbackRowEl(context, profile, row));
+    });
+  }
+
   function renderNotFound(taskId) {
     document.getElementById('taskInfoCard').classList.add('hidden');
     document.getElementById('listToolbar').classList.add('hidden');
@@ -2168,6 +2309,7 @@
 
     if (context.profile) {
       renderTaskInfo(context, context.profile);
+      renderDryRunFeedback(context, context.profile);
       renderNoActionableNotice(context);
     } else {
       renderNotFound(context.taskId);

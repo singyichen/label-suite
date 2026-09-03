@@ -30,21 +30,30 @@
 import { test, expect, type Page } from '@playwright/test';
 import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
 
-/* T016 seeds, annotator kioleemg12 (annotation-workspace.data.js:2758).
-   Under the issue #596 derivation these read: ofm-01's reviewers all match
-   the annotator -> same lane, finalized; ofm-05's reviewers differ -> the
-   differing lane, still disputed. ofm-02 is a second same-lane finalized
-   unit, used only to prove the track re-renders on unit switch. */
+/* T016 seeds (annotation-workspace.data.js's seedReviewFlowDemo() scripts).
+   issue #596 (task 7.4b, the single-owner relay rewrite): ofm-01 is now the
+   canonical differing-lane, arbitration-finalized sample (reviewer_wang
+   corrects the annotator's value, reviewer_chen's arbitration adopts it),
+   so it can no longer stand in for the same-lane case. ofm-02's assigned
+   reviewer agrees with the annotator -> same lane, finalized -- reused for
+   BOTH the same-lane assertion and the unit-switch re-render check, since
+   it is the only same-lane finalized T016 sample left after the rewrite
+   (see annotation-review-flow-demo-seed.spec.ts's non-canonical-samples
+   test for the other three staying disputed). ofm-05's reviewer differs
+   with no arbitration record -> the differing lane, still disputed. */
 const UNITS = {
-  finalizedSame: 'ofm-01-unanimous-gold',
+  finalizedSame: 'ofm-02-approved-interim',
   finalizedSameOther: 'ofm-02-approved-interim',
   disputed: 'ofm-05-all-divergent',
 };
 
 /* The one seeded unit that reaches 已定稿 through the differing lane: the
    reviewer changed the answer AND an arbitration record closed the dispute
-   (annotation-workspace.data.js:2755, `arb: 'neutral'`). It lives on T015,
-   not T016 -- no T016 row carries an arbitration record. */
+   (annotation-workspace.data.js's ofs-03-arbitrated-gold row, `arb:
+   'neutral'`). Stays on T015 rather than switching to T016's own
+   arbitrated sample (ofm-01, since the rewrite above) -- this row and its
+   `arb` value were untouched by that rewrite, so it stays the
+   lowest-risk fixture for a check unrelated to ofm-01's shape. */
 const ARBITRATED = { taskId: 'T015', sampleId: 'ofs-03-arbitrated-gold' };
 
 function track(page: Page) {

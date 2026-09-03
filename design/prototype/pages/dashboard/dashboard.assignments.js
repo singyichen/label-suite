@@ -312,7 +312,7 @@
       exampleTaskId: 'T016',
       annotationTaskType: 'single_sentence_classification',
       annotator: workItem(
-        'ofm-01-unanimous-gold',
+        'ofm-01-reviewer-corrects-b',
         '已完成 100% · 今日 15 筆 · 平均速度 2.9',
         '100% Completed · 15 Today · Avg Speed 2.9',
         100,
@@ -320,14 +320,14 @@
         'in_progress'
       ),
       reviewer: reviewWorkItem(
-        'ofm-01-unanimous-gold', 'official_run', 'in_progress', 'reviewer_chen'
+        'ofm-01-reviewer-corrects-b', 'official_run', 'in_progress', 'reviewer_chen'
       ),
     },
     {
       exampleTaskId: 'T017',
       annotationTaskType: 'single_sentence_classification',
       annotator: workItem(
-        'oft-01-even-tie',
+        'oft-01-final-exception',
         '已完成 100% · 今日 10 筆 · 平均速度 3.2',
         '100% Completed · 10 Today · Avg Speed 3.2',
         100,
@@ -335,7 +335,7 @@
         'in_progress'
       ),
       reviewer: reviewWorkItem(
-        'oft-01-even-tie', 'official_run', 'pending_review', 'reviewer_chen'
+        'oft-01-final-exception', 'official_run', 'pending_review', 'reviewer_chen'
       ),
     },
   ];
