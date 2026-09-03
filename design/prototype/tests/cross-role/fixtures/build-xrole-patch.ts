@@ -44,11 +44,14 @@
  *    roster id `reviewer_chen` as its ARBITER constant for exactly this
  *    reason. `REVIEWER_ROSTER` is exported by reference
  *    (`global.LabelSuiteAnnotationWorkspaceData = { ..., REVIEWER_ROSTER:
- *    REVIEWER_ROSTER, ... }`, :1692), so pushing an entry onto
- *    `window.LabelSuiteAnnotationWorkspaceData.REVIEWER_ROSTER` mutates the
- *    same array `isArbiterCandidate` reads. This patch grants the fixture's
- *    R03 identity arbitration eligibility that way, instead of assuming a
- *    URL param exists.
+ *    REVIEWER_ROSTER, ... }`, :1692), so splicing
+ *    `window.LabelSuiteAnnotationWorkspaceData.REVIEWER_ROSTER` in place
+ *    mutates the same array `isArbiterCandidate` reads. This patch grants
+ *    the fixture's R03 identity arbitration eligibility that way, instead of
+ *    assuming a URL param exists. issue #596 (FR-093): the same array also
+ *    drives getReviewAssignments()'s round-robin, so the patch replaces the
+ *    roster's contents outright rather than appending -- see the roster
+ *    block below for why.
  *
  * 3. Bucket key shape (verified against current source, w5 §2.2 cited
  *    `annotation-workspace.data.js:162-167`; the function now sits at
@@ -136,15 +139,10 @@ function buildReviewerMockRows(): Record<string, { annotator: string; answers: {
  * requires the identity NOT already hold a reviewer submission on the unit. */
 const ARBITER_REVIEWER_ID = 'R03';
 
-/* Review quorum for the seeded profile (w4's "n=2=min" review model). The
- * profile originally carried no review settings, so minReviewers defaulted
- * to 1 and units finalized after the FIRST agreeing review; issue #308 then
- * locked finalized units read-only, which would break the journey's
- * two-reviewer flow (XROLE-14's correction and XROLE-15's second approval
- * both land on a unit the first review would have finalized). Pinning 2
- * restores w4's intended model. Exported so readUnitStatus() in the journey
- * spec derives with the same threshold the workspace UI uses. */
-export const FIXTURE_MIN_REVIEWERS = 2;
+/* The two ordinary reviewer identities the journey drives. Registered on the
+ * roster alongside the arbiter -- see the REVIEWER_ROSTER block below. */
+const R01_REVIEWER_ID = 'R01';
+const R02_REVIEWER_ID = 'R02';
 
 /** Builds a patch script for `patchDataFile(page, 'annotation-workspace.data.js', ...)`
  * that seeds a `taskId`-scoped XROLE task profile: a task-list entry, a
@@ -156,6 +154,8 @@ export function buildXRoleSeedPatch(taskId: string): string {
   const dryIds = JSON.stringify(DRY_RUN_RECORD_IDS);
   const mockRows = JSON.stringify(buildReviewerMockRows());
   const arbiterId = JSON.stringify(ARBITER_REVIEWER_ID);
+  const r01Id = JSON.stringify(R01_REVIEWER_ID);
+  const r02Id = JSON.stringify(R02_REVIEWER_ID);
 
   return `
     var xroleAllRecords = ${records};
@@ -206,8 +206,7 @@ export function buildXRoleSeedPatch(taskId: string): string {
         datasetRecords: xroleRecords,
         /* w5 §1.2: 2 dry_run + 3 official_run records; totals match the
          * run-scoped datasetRecords above. */
-        materializedRuns: { dry_run: { round: 1, total: 2 }, official_run: { round: 1, total: 3 } },
-        minReviewers: ${FIXTURE_MIN_REVIEWERS}
+        materializedRuns: { dry_run: { round: 1, total: 2 }, official_run: { round: 1, total: 3 } }
       };
     }
 
@@ -217,9 +216,37 @@ export function buildXRoleSeedPatch(taskId: string): string {
 
     if (window.LabelSuiteAnnotationWorkspaceData && Array.isArray(window.LabelSuiteAnnotationWorkspaceData.REVIEWER_ROSTER)) {
       var xroleRoster = window.LabelSuiteAnnotationWorkspaceData.REVIEWER_ROSTER;
-      if (!xroleRoster.some(function (r) { return r.id === ${arbiterId}; })) {
-        xroleRoster.push({ id: ${arbiterId}, name: 'XROLE Arbiter', can_arbitrate: true });
-      }
+      /* issue #596 (FR-093): getReviewAssignments()/getAssignedReviewUnits()
+       * (annotation-workspace.data.js:2071-2124) round-robin POSITIONALLY
+       * over the FULL REVIEWER_ROSTER array, so appending R01/R02/R03 onto
+       * the pre-existing 4-person demo roster (wang/li/chen/lin) doesn't
+       * just add unrelated names -- it changes the divisor the round-robin
+       * walks. A 7-entry roster spreads this fixture's 3 official_run units
+       * across indices 0-2 (wang/li/chen), leaving R01 at index 4 with
+       * nothing assigned -- exactly why xrole-fixture-smoke.spec.ts saw 0
+       * rows for R01 before this fix. The xrole fixture needs its own closed
+       * reviewer world, so this REPLACES the roster's contents in place --
+       * splice, not push -- rather than appending.
+       *
+       * The in-place splice (not a plain reassignment) matters too:
+       * REVIEWER_ROSTER is exported by reference (REVIEWER_ROSTER:
+       * REVIEWER_ROSTER, :1692), so window.LabelSuiteAnnotationWorkspace
+       * Data.REVIEWER_ROSTER and the closure variable every reader in this
+       * module (getAssignedReviewUnits, isArbiterCandidate, ...) reads are
+       * literally the same array object. Reassigning the property with '='
+       * would only rebind this local alias and leave those readers looking
+       * at the untouched original array; splicing the shared array mutates
+       * the object every reader already holds.
+       *
+       * Every count this suite asserts against getAssignedReviewUnits()/
+       * getReviewAssignments() output (xrole-fixture-smoke.spec.ts,
+       * XROLE-15/16/17/19) is derived against exactly this 3-entry roster
+       * and insertion order -- changing it invalidates those numbers. */
+      xroleRoster.splice(0, xroleRoster.length,
+        { id: ${r01Id}, name: 'XROLE Reviewer 1', can_arbitrate: false },
+        { id: ${r02Id}, name: 'XROLE Reviewer 2', can_arbitrate: false },
+        { id: ${arbiterId}, name: 'XROLE Arbiter', can_arbitrate: true }
+      );
     }
   `;
 }

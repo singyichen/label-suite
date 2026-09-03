@@ -13,7 +13,6 @@ import {
 import {
   buildXRoleSeedPatch,
   DRY_RUN_RECORD_IDS,
-  FIXTURE_MIN_REVIEWERS,
   FORCED_DIVERGENCE_RECORD_ID,
   OFFICIAL_RUN_ASSIGNMENTS,
   OFFICIAL_RUN_RECORD_IDS,
@@ -98,12 +97,17 @@ import {
  *   drops back to pending and the annotator must resubmit before the
  *   review unit derives again. XROLE-14/16 assert that loop instead of
  *   papering over it with data-layer seeding.
- * - The seeded profile pins minReviewers = 2 (FIXTURE_MIN_REVIEWERS),
- *   matching w4's "n=2=min" wording: units finalize only at the second
- *   agreeing review. (The profile originally carried no review settings and
- *   defaulted to 1; issue #308's finalized-unit lock made that untenable --
- *   the first approval would have locked the unit before XROLE-14/15's
- *   second-reviewer interactions.)
+ * - issue #596 (FR-093): there is no review quorum left in the model --
+ *   REVIEW_UNIT_STATUS has no 'approved' interim state, a single reviewer's
+ *   `approve` finalizes immediately, and any `modify`/`bypass` decision
+ *   always routes to the dispute pool even when a second reviewer later
+ *   agrees with the first (getReviewUnitStatus doc comment,
+ *   annotation-workspace.data.js:2020-2048). The profile previously pinned
+ *   minReviewers = 2 to support the retired majority-of-N convergence path;
+ *   that field and the export it came from (FIXTURE_MIN_REVIEWERS) are gone
+ *   as dead weight -- getReviewUnitStatus's 6th arg is no longer consulted.
+ *   XROLE-15/16 pin the new single-decision-is-decisive and
+ *   agreement-does-not-converge behavior respectively.
  * - The annotation-results panel and its export never read localStorage
  *   submissions: since issue #284, getAnnotationResultsData()
  *   (task-detail.html) returns an empty set for any task id without an
@@ -129,12 +133,16 @@ const ACTIVE_ANNOTATOR_COUNT = '1'; // TASK_MEMBERS (task-detail.html:3388-3395)
 // (the same "happy path, not the D3 gap" intent as before) without
 // asserting a headcount that no longer holds by this point in the journey.
 
-/* PR-B2 role/value constants. R03 mirrors the fixture's internal
- * ARBITER_REVIEWER_ID (fixtures/build-xrole-patch.ts:137, not exported):
- * the patch pushes it onto REVIEWER_ROSTER with can_arbitrate: true. R01 and
- * R02 are plain reviewer identities -- isArbiterCandidate() only needs the
- * ARBITER id on the roster; ordinary reviewers are identified purely by the
- * reviewer_id in the bucket key. */
+/* PR-B2 role/value constants. R01/R02/R03 mirror the fixture's internal
+ * R01_REVIEWER_ID/R02_REVIEWER_ID/ARBITER_REVIEWER_ID
+ * (fixtures/build-xrole-patch.ts:141-142,137, not exported): the patch
+ * splices all three onto REVIEWER_ROSTER as a full 3-entry replacement (R03
+ * alone with can_arbitrate: true). issue #596 (FR-093): unlike the
+ * pre-#596 model, all three now need roster registration, not just the
+ * arbiter -- getReviewAssignments()/getAssignedReviewUnits()
+ * (annotation-workspace.data.js:2071-2124) derive each unit's single owner
+ * positionally from the FULL roster, so a reviewer_id absent from it is
+ * assigned nothing and never appears in that reviewer's own list. */
 const REVIEWER_R01 = 'R01';
 const REVIEWER_R02 = 'R02';
 const ARBITER_R03 = 'R03';
@@ -543,7 +551,11 @@ type XRoleTrailEvent = { action: string; role: string; actorId: string | null; a
 type XRoleDisputeItem = { outKey: string; key: string; annotatorValue: unknown; reviewerValues: Record<string, unknown> };
 type XRoleArbitrationState = Record<
   string,
-  { votes: Array<{ arbiter_id: string; choice: 'A' | 'B'; voted_at: string }>; finalized_value?: unknown; finalized_by?: string }
+  {
+    votes: Array<{ arbiter_id: string; choice: 'adopt_a' | 'adopt_b' | 'reject'; voted_at: string }>;
+    finalized_value?: unknown;
+    finalized_by?: string;
+  }
 >;
 
 function readSampleStatus(page: Page, runType: string, sampleId: string, annotatorId: string): Promise<string> {
@@ -569,13 +581,15 @@ function readReviewerTrail(page: Page, runType: string, sampleId: string, annota
   );
 }
 
+/* issue #596 (FR-093): getReviewUnitStatus() no longer takes/consults a
+ * quorum -- the retired 6th `{ minReviewers }` arg is dropped here along
+ * with FIXTURE_MIN_REVIEWERS. */
 function readUnitStatus(page: Page, sampleId: string, annotatorId: string): Promise<string | null> {
   return page.evaluate(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (a) => (window as any).LabelSuiteAnnotationWorkspaceData.getReviewUnitStatus(
-      a.taskId, 'official_run', a.sampleId, { annotatorId: a.annotatorId }, ['single_label'],
-      { minReviewers: a.minReviewers }),
-    { taskId: fixtureTaskId, sampleId, annotatorId, minReviewers: FIXTURE_MIN_REVIEWERS }
+      a.taskId, 'official_run', a.sampleId, { annotatorId: a.annotatorId }, ['single_label']),
+    { taskId: fixtureTaskId, sampleId, annotatorId }
   );
 }
 
@@ -614,40 +628,39 @@ function gotoReview(page: Page, sampleId: string, annotatorId: string, reviewerI
 /* One review card row per (outKey, reviewed annotator) -- official_run
  * narrows to exactly one row (annotation-workspace.config.js:2646-2648),
  * so the single approve/reject button is unambiguous. */
-async function submitApproval(page: Page, sampleId: string, annotatorId: string, reviewerId: string) {
-  await gotoReview(page, sampleId, annotatorId, reviewerId);
+async function submitApproval(
+  page: Page,
+  sampleId: string,
+  annotatorId: string,
+  reviewerId: string,
+  runType: 'dry_run' | 'official_run' = 'official_run'
+) {
+  await gotoReview(page, sampleId, annotatorId, reviewerId, runType);
   await page.getByTestId('ws-review-row-approve').click();
   await page.getByTestId('ws-review-submit-btn').click();
   await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
 }
 
 /* Real-UI correction: pick a different label in the correction panel (it is
- * seeded with the reviewed annotator's own answer), mark the row rejected
- * (✕ is the prototype's "修正" decision), submit. handleReviewSubmit()
- * stores collectAnswerPayload() -- the corrected value -- as the reviewer's
- * submission, then (official_run only) markSampleRejected() rolls the
- * ANNOTATOR's sample back to pending (FR-014I,
- * annotation-workspace.config.js:2690-2705). The review unit derives to
- * null until the annotator resubmits -- see resubmitAfterRollback(). */
+ * seeded with the reviewed annotator's own answer), mark the row 修正
+ * (the prototype's "modify" decision), submit. handleReviewSubmit() stores
+ * collectAnswerPayload() -- the corrected value -- as the reviewer's
+ * submission directly against the review unit.
+ *
+ * issue #596: FR-014I's reject -> pending rollback is retired
+ * (annotation-workspace.config.js:4838-4841 -- "the single-owner relay
+ * model has no 退回個人重標 channel in either run_type any more"): the
+ * ANNOTATOR's sample status never changes here, and the unit derives its
+ * new (disputed) status immediately from this one submission -- no
+ * resubmission step exists any more. */
 async function submitCorrection(page: Page, sampleId: string, annotatorId: string, reviewerId: string, correctedLabel: string) {
   await gotoReview(page, sampleId, annotatorId, reviewerId);
   await page.getByTestId('ws-review-correct-single_label').getByTestId(`ws-single-label-chip-${correctedLabel}`).click();
-  await page.getByTestId('ws-review-row-reject').click();
+  await page.getByTestId('ws-review-row-modify').click();
   // issue #552 (FR-016A): a reject needs a reason before submit goes through.
-  await page.getByTestId('ws-review-reject-reason').fill('理由');
+  await page.getByTestId('ws-review-reason').fill('理由');
   await page.getByTestId('ws-review-submit-btn').click();
   await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
-}
-
-/* FR-014I second half: the rolled-back annotator reopens the sample (the
- * kept answers / gold prefill both restore the original label -- for this
- * fixture they are the same value) and resubmits it unchanged, restoring
- * the submission the review unit derives from. */
-async function resubmitAfterRollback(page: Page, sampleId: string, annotatorId: string) {
-  await page.goto(annotatorOfficialUrl(sampleId, annotatorId));
-  await expect(page.getByTestId(`ws-single-label-chip-${OFFICIAL_GOLD[sampleId]}`)).toHaveAttribute('aria-pressed', 'true');
-  await page.getByTestId('ws-submit-btn').click();
-  await expect.poll(() => readSampleStatus(page, 'official_run', sampleId, annotatorId)).toBe('submitted');
 }
 
 test('XROLE-10: project leader publishes the official run and the assigned annotators submit (checkpoint C)', async () => {
@@ -711,17 +724,32 @@ test('XROLE-11: cross-annotator isolation -- peers read a bare status enum, neve
 });
 
 test('XROLE-12: blind review -- reviewer events are invisible to peers until the first reviewer submits', async () => {
-  const divergenceAnnotator = OFFICIAL_RUN_ASSIGNMENTS[FORCED_DIVERGENCE_RECORD_ID];
+  /* issue #596 (FR-093/FR-092): under the single-owner relay model,
+   * getReviewUnitStatus() (annotation-workspace.data.js:2020-2048) finalizes
+   * a unit on ANY submitted, value-unchanged reviewer decision -- it has no
+   * roster/identity check, so this is a genuine "first decisive action"
+   * probe, not a roster-assignment check. That means this test cannot reuse
+   * an official_run record: all three (xr-off-001/002/003) are each already
+   * claimed by a later dedicated test that needs to be the FIRST reviewer
+   * action on that exact unit (XROLE-15, XROLE-14/17/19, XROLE-16/17). Using
+   * any of them here would finalize the unit early and collapse those tests'
+   * correction panels into renderFinalizedCard's read-only view
+   * (annotation-workspace.config.js:4176-4235) before they run. xr-dry-002/A02
+   * is unclaimed by any other test (only xr-dry-001/A01 is used, by
+   * XROLE-13), and A02 has a genuine dry_run submission on it from XROLE-08's
+   * three-annotator submission sweep, so it is a safe target for this
+   * visibility probe. */
+  const dryDivergenceSample = DRY_RUN_RECORD_IDS[1];
+  const dryDivergenceAnnotator = 'A02';
 
   // r02Page's first navigation (list) also loads the data API for evaluates.
-  await r02Page.goto(buildListUrl({ task_id: fixtureTaskId, role: 'reviewer', run_type: 'official_run', reviewer_id: REVIEWER_R02 }));
-  expect(await readReviewerTrail(r02Page, 'official_run', FORCED_DIVERGENCE_RECORD_ID, divergenceAnnotator)).toEqual([]);
+  await r02Page.goto(buildListUrl({ task_id: fixtureTaskId, role: 'reviewer', run_type: 'dry_run', reviewer_id: REVIEWER_R02 }));
+  expect(await readReviewerTrail(r02Page, 'dry_run', dryDivergenceSample, dryDivergenceAnnotator)).toEqual([]);
 
-  // R01 approves A02's answer on the forced-divergence record (this is also
-  // the first half of XROLE-14's divergence construction).
-  await submitApproval(r01Page, FORCED_DIVERGENCE_RECORD_ID, divergenceAnnotator, REVIEWER_R01);
+  // R01 approves A02's dry_run answer on this record.
+  await submitApproval(r01Page, dryDivergenceSample, dryDivergenceAnnotator, REVIEWER_R01, 'dry_run');
 
-  const trail = await readReviewerTrail(r02Page, 'official_run', FORCED_DIVERGENCE_RECORD_ID, divergenceAnnotator);
+  const trail = await readReviewerTrail(r02Page, 'dry_run', dryDivergenceSample, dryDivergenceAnnotator);
   /* issue #578 (FR-086): an approval writes the wrapper `submitted` plus one
      `accepted` per output key. What this test pins is visibility -- before
      R01 submitted, the trail was empty; after, both events are R01's. */
@@ -737,91 +765,128 @@ test('XROLE-13: dry_run reject never rolls the annotator sample back to pending 
   expect(await readSampleStatus(r01Page, 'dry_run', DRY_RUN_RECORD_IDS[0], 'A01')).toBe('submitted');
 
   await gotoReview(r01Page, DRY_RUN_RECORD_IDS[0], 'A01', REVIEWER_R01, 'dry_run');
-  await r01Page.getByTestId('ws-review-row-reject').click();
+  await r01Page.getByTestId('ws-review-row-modify').click();
   // issue #552 (FR-016A): a reject needs a reason before submit goes through.
-  await r01Page.getByTestId('ws-review-reject-reason').fill('理由');
+  await r01Page.getByTestId('ws-review-reason').fill('理由');
   await r01Page.getByTestId('ws-review-submit-btn').click();
   await expect(r01Page.locator('#toastMsg')).toHaveText('審核已送出');
 
   expect(await readSampleStatus(r01Page, 'dry_run', DRY_RUN_RECORD_IDS[0], 'A01')).toBe('submitted');
 });
 
-test('XROLE-14: a reviewer correction produces a disputed unit with one dispute item (via the FR-014I rollback loop)', async () => {
+test('XROLE-14: a reviewer correction produces a disputed unit with one dispute item (FR-093/FR-092)', async () => {
   const divergenceAnnotator = OFFICIAL_RUN_ASSIGNMENTS[FORCED_DIVERGENCE_RECORD_ID];
 
   // R02 corrects A02's 'positive' to 'negative' through the real UI.
   await submitCorrection(r02Page, FORCED_DIVERGENCE_RECORD_ID, divergenceAnnotator, REVIEWER_R02, DIVERGENCE_CORRECTION);
 
-  // FR-014I: the official_run reject decision rolled A02's sample back.
-  expect(await readSampleStatus(r02Page, 'official_run', FORCED_DIVERGENCE_RECORD_ID, divergenceAnnotator)).toBe('pending');
+  /* issue #596: FR-014I's reject -> pending rollback is retired
+   * (annotation-workspace.config.js:4838-4841) -- the single-owner relay
+   * model has no "退回個人重標" channel in any run_type any more, so A02's
+   * sample stays 'submitted' through the correction. */
+  expect(await readSampleStatus(r02Page, 'official_run', FORCED_DIVERGENCE_RECORD_ID, divergenceAnnotator)).toBe('submitted');
 
-  // A02 resubmits the same answer; only now does the unit derive again.
-  await resubmitAfterRollback(a02Page, FORCED_DIVERGENCE_RECORD_ID, divergenceAnnotator);
-
-  /* Derivation (annotation-workspace.data.js:1483-1519): R02's stored value
-   * differs -> changed; 2 reviewer submissions >= min(2) -> enough; the one
-   * dispute item is a 1-1 tie under N=2 (R01's approval is an implicit vote
-   * for the annotator's value) -> resolveDisputeConvergence finds no strict
-   * majority -> DISPUTED. */
+  /* Derivation (getReviewUnitStatus, annotation-workspace.data.js:2020-2048,
+   * issue #596): FR-093 leaves no quorum to check -- R02 is this unit's sole
+   * assigned reviewer (getReviewAssignments()), and a submitted decision
+   * that changes the annotator's value on any outKey is immediately decisive
+   * (anyReviewerChanged()). R02's correction alone flips the unit to
+   * DISPUTED, with no interim/rollback state in between. */
   expect(await readUnitStatus(r02Page, FORCED_DIVERGENCE_RECORD_ID, divergenceAnnotator)).toBe('disputed');
 
-  // Exactly one dispute item; R01 (agreeing) contributes no B value.
+  // Exactly one dispute item, carrying R02's corrected value.
   const items = await readDisputeItems(r02Page, FORCED_DIVERGENCE_RECORD_ID, divergenceAnnotator);
   expect(items).toHaveLength(1);
   expect(items[0].annotatorValue).toBe(OFFICIAL_GOLD[FORCED_DIVERGENCE_RECORD_ID]);
   expect(items[0].reviewerValues).toEqual({ [REVIEWER_R02]: DIVERGENCE_CORRECTION });
 });
 
-test('XROLE-15: unanimous approvals finalize the unit', async () => {
-  /* w4's "n=2=min" model, now backed by the fixture's minReviewers = 2:
-   * R01's approval alone is an interim APPROVED (1 < min 2, still
-   * interactive per issue #308's lock boundary); R02's second agreeing
-   * review reaches the quorum and finalizes the unit. */
+test('XROLE-15: a single reviewer approval finalizes the unit immediately', async () => {
+  /* issue #596 (FR-093/FR-092): the pre-#596 "n=2=min" model this test used
+   * to pin -- a first approval landing on an interim 'approved' status,
+   * still open for a second reviewer to reach a finalizing quorum -- is
+   * retired. REVIEW_UNIT_STATUS has no 'approved' key left
+   * (annotation-workspace.data.js:1700-1706): a single assigned reviewer's
+   * `approve` decision finalizes the unit immediately (getReviewUnitStatus
+   * doc comment, :2020-2048), so there is no second review to submit and no
+   * interim value for readUnitStatus() to ever observe. R01 is xr-off-001's
+   * sole assigned reviewer under this fixture's 3-entry roster
+   * (getReviewAssignments(), build-xrole-patch.ts). */
   await submitApproval(r01Page, 'xr-off-001', 'A01', REVIEWER_R01);
-  expect(await readUnitStatus(r01Page, 'xr-off-001', 'A01')).toBe('approved');
-
-  await submitApproval(r02Page, 'xr-off-001', 'A01', REVIEWER_R02);
-  expect(await readUnitStatus(r02Page, 'xr-off-001', 'A01')).toBe('finalized');
+  expect(await readUnitStatus(r01Page, 'xr-off-001', 'A01')).toBe('finalized');
 });
 
-test('XROLE-16: both reviewers correcting to the same value converges to finalized without arbitration', async () => {
-  // R01 corrects A03's 'negative' to 'positive' -> rollback -> A03 resubmits.
+test('XROLE-16: a second reviewer agreeing with the first does not auto-converge a disputed unit (FR-092 regression guard)', async () => {
+  /* issue #596: this test used to prove the OPPOSITE of what it asserts
+   * below -- that 2 reviewers voting the same non-annotator value was a
+   * strict majority under N=2, so resolveDisputeConvergence() converged the
+   * dispute item and finalized the unit WITHOUT arbitration. FR-092
+   * explicitly forbids that shortcut now ("沒有「單一審核員修正即收斂」的例外",
+   * and the same holds for any N-reviewer agreement): a `modify`/`bypass`
+   * decision always routes to the dispute pool, and getReviewUnitStatus()
+   * no longer consults resolveDisputeConvergence() for status at all (doc
+   * comment, annotation-workspace.data.js:2020-2048) -- only an arbiter's
+   * explicit vote (FR-060) or the exception pool can close a dispute. This
+   * is now a regression guard against that retired shortcut reappearing. */
+  /* issue #596: FR-014I's reject -> pending rollback is retired
+   * (annotation-workspace.config.js:4838-4841), so A03's sample stays
+   * 'submitted' through both corrections below -- there is no rollback or
+   * resubmission step for the unit's status to wait on. */
+  // R01 corrects A03's 'negative' to 'positive'.
   await submitCorrection(r01Page, 'xr-off-003', 'A03', REVIEWER_R01, CONVERGENCE_CORRECTION);
-  await resubmitAfterRollback(a03Page, 'xr-off-003', 'A03');
+  expect(await readUnitStatus(r01Page, 'xr-off-003', 'A03')).toBe('disputed');
 
-  // R02 makes the same correction -> second rollback -> A03 resubmits again.
+  // R02 makes the SAME correction on the still-disputed unit.
   await submitCorrection(r02Page, 'xr-off-003', 'A03', REVIEWER_R02, CONVERGENCE_CORRECTION);
-  await resubmitAfterRollback(a03Page, 'xr-off-003', 'A03');
 
-  /* Both reviewers voted 'positive' against the annotator's 'negative':
-   * 2/2 is a strict majority under N=2, so resolveDisputeConvergence
-   * converges the only dispute item and the unit finalizes WITHOUT entering
-   * the arbitration pool (annotation-workspace.data.js:1502-1512). */
-  expect(await readUnitStatus(r02Page, 'xr-off-003', 'A03')).toBe('finalized');
-  // Convergence, not arbitration: no vote was ever stored for this unit.
+  // Agreement between R01 and R02 is not a convergence path: the unit stays
+  // disputed, both values merge into ONE item (getDisputeItems() merges by
+  // outKey::diffKey, annotation-workspace.data.js:2152-2187), and no
+  // arbitration vote was ever stored.
+  expect(await readUnitStatus(r02Page, 'xr-off-003', 'A03')).toBe('disputed');
+  const items = await readDisputeItems(r02Page, 'xr-off-003', 'A03');
+  expect(items).toHaveLength(1);
+  expect(items[0].reviewerValues).toEqual({
+    [REVIEWER_R01]: CONVERGENCE_CORRECTION,
+    [REVIEWER_R02]: CONVERGENCE_CORRECTION,
+  });
   expect(await readArbitrationState(r02Page, 'xr-off-003', 'A03')).toEqual({});
 });
 
 test('XROLE-17: the arbitrate entry is offered only to the eligible non-participant arbiter on the disputed row', async () => {
   const divergenceAnnotator = OFFICIAL_RUN_ASSIGNMENTS[FORCED_DIVERGENCE_RECORD_ID];
 
-  // R03 (can_arbitrate, no submission on the unit) sees 仲裁 on the disputed
-  // row only; the two finalized rows keep the plain edit entry.
+  // R03 (can_arbitrate, no submission on this unit) sees 仲裁 on the
+  // disputed row it is eligible to claim.
   await r03Page.goto(buildListUrl({ task_id: fixtureTaskId, role: 'reviewer', run_type: 'official_run', reviewer_id: ARBITER_R03 }));
   const disputedRow = r03Page.getByTestId('ws-sample-item').filter({ hasText: FORCED_DIVERGENCE_RECORD_ID });
   await expect(disputedRow.locator('.status-badge')).toHaveText('爭議中 · 未定稿');
   await expect(disputedRow.getByTestId('list-review-annotator')).toHaveText(divergenceAnnotator);
   await expect(disputedRow.getByTestId('list-arbitrate-entry')).toHaveText('仲裁');
-  for (const finalizedId of ['xr-off-001', 'xr-off-003']) {
-    const row = r03Page.getByTestId('ws-sample-item').filter({ hasText: finalizedId });
-    await expect(row.locator('.status-badge')).toHaveText('已定稿 · 已鎖定');
-    await expect(row.getByTestId('list-arbitrate-entry')).toHaveCount(0);
-  }
 
-  // R01 is a dispute participant (and holds no can_arbitrate flag): the same
-  // disputed row keeps the ordinary 編輯 entry (FR-060).
+  /* issue #596 (FR-093): the reviewer list is now filtered to each
+   * reviewer's OWN assigned units plus any disputed unit they are an
+   * eligible arbiter for (annotation-list.html filterToAssignedUnits()) --
+   * it is no longer the task-wide row set every reviewer identity used to
+   * see. R03's round-robin assignment (getReviewAssignments() over this
+   * fixture's 3-entry roster) is xr-off-003 alone, and xr-off-003 is left
+   * disputed (not finalized) by XROLE-16's regression guard above, so R03
+   * never sees a FINALIZED row to check here at all -- that assertion moves
+   * to R01 below, the identity actually assigned xr-off-001. */
   await r01Page.goto(buildListUrl({ task_id: fixtureTaskId, role: 'reviewer', run_type: 'official_run', reviewer_id: REVIEWER_R01 }));
-  const participantRow = r01Page.getByTestId('ws-sample-item').filter({ hasText: FORCED_DIVERGENCE_RECORD_ID });
+  const ownFinalizedRow = r01Page.getByTestId('ws-sample-item').filter({ hasText: 'xr-off-001' });
+  await expect(ownFinalizedRow.locator('.status-badge')).toHaveText('已定稿 · 已鎖定');
+  await expect(ownFinalizedRow.getByTestId('list-arbitrate-entry')).toHaveCount(0);
+
+  /* R02 is xr-off-002's assigned reviewer (getReviewAssignments()) AND the
+   * dispute participant who submitted the correction (holds no
+   * can_arbitrate flag): the same disputed row keeps the ordinary 編輯 entry
+   * (FR-060), not 仲裁. R01 cannot stand in for this check -- R01 only
+   * approved xr-off-001 and was never assigned or a participant on
+   * xr-off-002, so filterToAssignedUnits() would drop this row from R01's
+   * list entirely. */
+  await r02Page.goto(buildListUrl({ task_id: fixtureTaskId, role: 'reviewer', run_type: 'official_run', reviewer_id: REVIEWER_R02 }));
+  const participantRow = r02Page.getByTestId('ws-sample-item').filter({ hasText: FORCED_DIVERGENCE_RECORD_ID });
   await expect(participantRow.getByTestId('list-arbitrate-entry')).toHaveCount(0);
   await expect(participantRow.locator('.mini-btn-primary')).toHaveText('編輯');
 });
@@ -856,7 +921,9 @@ test('XROLE-18: the arbiter votes B and the unit finalizes with the arbitrated v
   expect(item).toBeTruthy();
   expect(item.votes).toHaveLength(1);
   expect(item.votes[0].arbiter_id).toBe(ARBITER_R03);
-  expect(item.votes[0].choice).toBe('B');
+  // issue #596: ARBITRATION_OUTCOMES retired the 'A'/'B' shorthand in favor
+  // of 'adopt_a'/'adopt_b'/'reject' (annotation-workspace.data.js:1733).
+  expect(item.votes[0].choice).toBe('adopt_b');
   expect(item.finalized_value).toBe(DIVERGENCE_CORRECTION);
   expect(item.finalized_by).toBe(ARBITER_R03);
 
@@ -864,11 +931,16 @@ test('XROLE-18: the arbiter votes B and the unit finalizes with the arbitrated v
 });
 
 test('XROLE-19: checkpoint E -- the arbitrated unit reads as finalized across pages', async () => {
-  // Real cross-page sync: a participant reviewer's list re-derives the same
-  // unit as 已定稿 purely from the shared localStorage buckets.
-  await r01Page.goto(buildListUrl({ task_id: fixtureTaskId, role: 'reviewer', run_type: 'official_run', reviewer_id: REVIEWER_R01 }));
+  /* Real cross-page sync: R02's list re-derives the same unit as 已定稿
+   * purely from the shared localStorage buckets. issue #596 (FR-093): R02,
+   * not R01, because filterToAssignedUnits() keeps a reviewer's OWN
+   * assigned unit visible regardless of status, and R02 -- not R01 -- is
+   * xr-off-002's assigned reviewer (getReviewAssignments()); R01 was never
+   * assigned or arbiter-eligible on this unit at any point in the journey,
+   * so it would never have appeared on R01's list even while disputed. */
+  await r02Page.goto(buildListUrl({ task_id: fixtureTaskId, role: 'reviewer', run_type: 'official_run', reviewer_id: REVIEWER_R02 }));
   await expect(
-    r01Page.getByTestId('ws-sample-item').filter({ hasText: FORCED_DIVERGENCE_RECORD_ID }).locator('.status-badge')
+    r02Page.getByTestId('ws-sample-item').filter({ hasText: FORCED_DIVERGENCE_RECORD_ID }).locator('.status-badge')
   ).toHaveText('已定稿 · 已鎖定');
 
   /* PL-side annotation-results panel: the journey's live arbitration
