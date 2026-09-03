@@ -77,13 +77,13 @@ test.describe('issue #562 — no action hint under the review-unit banner', () =
   });
 
   test('disputed unit, arbiter candidate (was 需要你的仲裁)', async ({ page }) => {
-    await openUnit(page, { task_id: 'T017', sample_id: 'oft-01-even-tie' });
+    await openUnit(page, { task_id: 'T017', sample_id: 'oft-01-final-exception' });
     await expectNoHint(page);
     await expect(page.getByTestId('ws-arbitration-card')).toHaveCount(1);
   });
 
   test('disputed unit, participant without arbitration rights', async ({ page }) => {
-    await openUnit(page, { task_id: 'T017', sample_id: 'oft-01-even-tie', reviewer_id: 'reviewer_wang' });
+    await openUnit(page, { task_id: 'T017', sample_id: 'oft-01-final-exception', reviewer_id: 'reviewer_wang' });
     await expectNoHint(page);
   });
 
@@ -93,7 +93,7 @@ test.describe('issue #562 — no action hint under the review-unit banner', () =
   });
 
   test('finalized unit', async ({ page }) => {
-    await openUnit(page, { task_id: 'T016', sample_id: 'ofm-01-unanimous-gold' });
+    await openUnit(page, { task_id: 'T016', sample_id: 'ofm-01-reviewer-corrects-b' });
     await expectNoHint(page);
   });
 

@@ -107,7 +107,7 @@ test.describe('issue #452 — task-level coverage names the review-unit denomina
 
 test.describe('issue #452 — the workspace top progress is MY submissions', () => {
   test('T016 reviewer progress names the reviewer as its subject', async ({ page }) => {
-    await openReviewerWorkspace(page, 'T016', 'ofm-01-unanimous-gold');
+    await openReviewerWorkspace(page, 'T016', 'ofm-01-reviewer-corrects-b');
 
     await expect(page.getByTestId('ws-progress-text')).toHaveText(
       /^我的審核提交 \d+ \/ 5 個審核單位$/,
@@ -152,7 +152,7 @@ test.describe('issue #452 — the unit banner states which state the unit is in'
   });
 
   test('T017 a disputed unit says so in words', async ({ page }) => {
-    await openReviewerWorkspace(page, 'T017', 'oft-01-even-tie');
+    await openReviewerWorkspace(page, 'T017', 'oft-01-final-exception');
 
     await expect(contextBanner(page)).not.toContainText('定稿門檻');
     const pill = statePill(page);
