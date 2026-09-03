@@ -83,20 +83,32 @@ test.describe('XROLE fixture: buildXRoleSeedPatch + patchDataFile', () => {
     await expect(page.getByTestId('ws-sample-item')).toHaveCount(DRY_RUN_RECORD_IDS.length);
   });
 
-  test('the reviewer list surfaces one review unit per seeded annotator row', async ({ page }, testInfo) => {
+  test('the reviewer list surfaces only the review units assigned to that reviewer', async ({ page }, testInfo) => {
     const taskId = xroleTaskId(testInfo.workerIndex);
     await patchDataFile(page, 'annotation-workspace.data.js', buildXRoleSeedPatch(taskId));
 
-    // official_run: each of the 3 records is assigned to exactly one
-    // annotator (OFFICIAL_RUN_ASSIGNMENTS) -> 3 review-unit rows.
+    /* issue #596 (FR-093): annotation-list.html's filterToAssignedUnits()
+     * narrows every reviewer's row set to getAssignedReviewUnits() -- the
+     * round-robin assignment over this fixture's 3-entry reviewer roster
+     * (build-xrole-patch.ts), not the task-wide review-unit set. This is no
+     * longer "one review unit per seeded annotator row" (that described the
+     * pre-#596 task-wide list); it is one row per unit THIS REVIEWER is
+     * assigned.
+     *
+     * official_run (per_unit): 3 records, 1 unit each, round-robin 1-for-1
+     * across the 3-entry roster -- R01 (roster index 0) is assigned exactly
+     * the first sorted sample_id's unit (xr-off-001) -> 1 row. */
     await page.goto(buildListUrl({ task_id: taskId, role: 'reviewer', run_type: 'official_run', reviewer_id: 'R01' }));
-    await expect(page.getByTestId('ws-sample-item')).toHaveCount(OFFICIAL_RUN_RECORD_IDS.length);
+    await expect(page.getByTestId('ws-sample-item')).toHaveCount(1);
     await expect(page.getByTestId('list-review-annotator').first()).toBeVisible();
 
-    // dry_run: all 3 annotators mark both common samples -> 2 × 3 rows.
+    /* dry_run (per_sample): round-robin walks DISTINCT sample_ids instead of
+     * units, so every unit sharing a sample_id inherits that sample's one
+     * assigned reviewer -- R01 (roster index 0) is assigned the first
+     * sorted sample_id's ENTIRE annotator group, all
+     * DRY_RUN_ANNOTATOR_IDS.length units, not every sample x annotator
+     * combination in the fixture. */
     await page.goto(buildListUrl({ task_id: taskId, role: 'reviewer', run_type: 'dry_run', reviewer_id: 'R01' }));
-    await expect(page.getByTestId('ws-sample-item')).toHaveCount(
-      DRY_RUN_RECORD_IDS.length * DRY_RUN_ANNOTATOR_IDS.length
-    );
+    await expect(page.getByTestId('ws-sample-item')).toHaveCount(DRY_RUN_ANNOTATOR_IDS.length);
   });
 });

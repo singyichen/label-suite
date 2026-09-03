@@ -100,19 +100,23 @@ test.describe('T014 dry_run: 3 annotators per sample', () => {
       buildListUrl({ task_id: 'T014', role: 'reviewer', run_type: 'dry_run', reviewer_id: 'reviewer_li' })
     );
 
-    // dry-02 rows sit at indexes 0-2: neutral / neutral (overwritten, see
-    // below) / positive.
+    // dry-02 rows sit at indexes 0-2: neutral / neutral / positive -- exactly
+    // one divergent annotator answer, which is what the sample is named for.
     const rows = page.getByTestId('ws-sample-item');
     await expect(rows.nth(0).getByTestId('list-review-answer')).toHaveText('neutral');
-    /* issue #551: the middle row's reviewer correction ('positive') now
-       converges at N=1 (min_reviewers = 1) and finalizes the unit on
-       submit, instead of staying disputed. getFinalizedOverwrites()
-       (annotation-list.html) already overwrites a FINALIZED row's answer
-       column with the converged value for any unit finalized this way --
-       this row simply never reached that branch before, since it used to
-       stay disputed. It therefore now reads the reviewer's converged
-       value, not the annotator's original 'neutral'. */
-    await expect(rows.nth(1).getByTestId('list-review-answer')).toHaveText('positive');
+    /* issue #596 (FR-092 point 2, "修正不立即生效而進入爭議池"): the middle
+       row's reviewer correction ('positive') no longer converges. issue
+       #551 had made a min_reviewers = 1 correction authoritative on submit,
+       so the row finalized and getFinalizedOverwrites() (annotation-list.html)
+       replaced the answer column with the reviewer's value. FR-092 retired
+       that carve-out -- a `modify` ALWAYS disputes the unit and its
+       finalized value "尚未產生", so the DISPUTED status never reaches the
+       overwrite branch (annotation-list.html:1641-1643 gates it on
+       FINALIZED). The column therefore reads the annotator's own answer.
+       This is the product being right, not a rendering defect: issue #619
+       filed it as one before the expectation was traced back to the
+       retired N=1 shortcut. */
+    await expect(rows.nth(1).getByTestId('list-review-answer')).toHaveText('neutral');
     await expect(rows.nth(2).getByTestId('list-review-answer')).toHaveText('positive');
   });
 });

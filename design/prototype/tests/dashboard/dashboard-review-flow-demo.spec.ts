@@ -12,8 +12,14 @@
  *     (T014=5, T015=1, T016=0, T017=1 pending review units) using the
  *     subject-bearing wording (issue #452): the share of units past 待審 is
  *     labeled 任務覆蓋 x / n 個審核單位, and T016 — whose pending count is 0
- *     while 1 disputed + 2 more units are still unfinalized — must disclose
- *     未達定稿門檻 3 · 爭議中 1 instead of reading as a completed task.
+ *     while 3 units sit unresolved in the dispute pool — must disclose
+ *     未達定稿門檻 3 · 爭議中 3 instead of reading as a completed task.
+ *
+ * Issue #596: FR-093 gives each unit exactly one reviewer, so the interim
+ * states a quorum used to produce (已同意 / 已修改) no longer exist and
+ * 未達定稿門檻 is now always 待審 + 爭議中. The counter is kept because the
+ * issue #310 misreading it guards against — 100% coverage reading as done —
+ * is exactly T016's shape.
  *
  * Issue #450: these summaries are no longer the seed's prebuilt display
  * string — computeReviewSummary() derives them from the stored review-unit
@@ -47,40 +53,44 @@ const DEMO_TASKS = [
        rounded to 2 decimals by formatReviewSummary's toFixed(2). See
        tests/annotation/issue-489-iaa-single-derivation.spec.ts for the
        independently-verified Do/De/alpha values. */
-    /* issue #551 (v4.54.0): min_reviewers = 1 now converges a sole
-       reviewer's correction on submit (dry-02/dry-03's "B" rows moved from
-       disputed to finalized, +2), while dry-05's pure reject now blocks
-       finalization instead of reading as agreement (-1 finalized). IAA is
-       derived from annotator values only (computeIaaAlpha), untouched. */
-    reviewerSummaryZh: '任務覆蓋 10 / 15 個審核單位 · 待審 5 個 · 未達定稿門檻 6 個 · 爭議中 1 個 · IAA 0.59',
+    /* issue #596 (FR-092/FR-093): the issue #551 "min_reviewers = 1
+       converges a sole reviewer's correction" rule is gone -- there is no
+       reviewer count left to converge over. dry-02/dry-03's "B" rows and
+       dry-05's pure reject are all a single owner's modify/bypass, so all
+       three now sit in the dispute pool (爭議中 1 -> 3, 未達定稿門檻 6 -> 8).
+       IAA is derived from annotator values only (computeIaaAlpha), untouched. */
+    reviewerSummaryZh: '任務覆蓋 10 / 15 個審核單位 · 待審 5 個 · 未達定稿門檻 8 個 · 爭議中 3 個 · IAA 0.59',
     reviewerSummaryEn:
-      'Task coverage 10 / 15 review units · 5 pending · 6 short of finalize threshold · 1 disputed · IAA 0.59',
+      'Task coverage 10 / 15 review units · 5 pending · 8 short of finalize threshold · 3 disputed · IAA 0.59',
   },
   {
     id: 'T015',
     runType: 'official_run',
     runTypeBadge: '正式標記',
-    // issue #551: ofs-02's sole reviewer correction now converges at N=1
-    // (was disputed).
-    reviewerSummaryZh: '任務覆蓋 3 / 4 個審核單位 · 待審 1 個 · 未達定稿門檻 1 個 · IAA 無法計算',
+    // issue #596: ofs-02's sole reviewer correction no longer converges --
+    // FR-092 sends every modify to the dispute pool, so it is disputed again.
+    reviewerSummaryZh: '任務覆蓋 3 / 4 個審核單位 · 待審 1 個 · 未達定稿門檻 2 個 · 爭議中 1 個 · IAA 無法計算',
     reviewerSummaryEn:
-      'Task coverage 3 / 4 review units · 1 pending · 1 short of finalize threshold · IAA Not computable',
+      'Task coverage 3 / 4 review units · 1 pending · 2 short of finalize threshold · 1 disputed · IAA Not computable',
   },
   {
     id: 'T016',
     runType: 'official_run',
     runTypeBadge: '正式標記',
-    reviewerSummaryZh: '任務覆蓋 5 / 5 個審核單位 · 未達定稿門檻 3 個 · 爭議中 1 個 · IAA 無法計算',
+    /* issue #596: ofm-03/ofm-04 used to read as interim (short of the
+       retired min_reviewers = 3 quorum); with one owner per unit their
+       reviewer's modify lands them in the dispute pool alongside ofm-05. */
+    reviewerSummaryZh: '任務覆蓋 5 / 5 個審核單位 · 未達定稿門檻 3 個 · 爭議中 3 個 · IAA 無法計算',
     reviewerSummaryEn:
-      'Task coverage 5 / 5 review units · 3 short of finalize threshold · 1 disputed · IAA Not computable',
+      'Task coverage 5 / 5 review units · 3 short of finalize threshold · 3 disputed · IAA Not computable',
   },
   {
     id: 'T017',
     runType: 'official_run',
     runTypeBadge: '正式標記',
-    reviewerSummaryZh: '任務覆蓋 4 / 5 個審核單位 · 待審 1 個 · 未達定稿門檻 4 個 · 爭議中 1 個 · IAA 無法計算',
+    reviewerSummaryZh: '任務覆蓋 4 / 5 個審核單位 · 待審 1 個 · 未達定稿門檻 3 個 · 爭議中 2 個 · IAA 無法計算',
     reviewerSummaryEn:
-      'Task coverage 4 / 5 review units · 1 pending · 4 short of finalize threshold · 1 disputed · IAA Not computable',
+      'Task coverage 4 / 5 review units · 1 pending · 3 short of finalize threshold · 2 disputed · IAA Not computable',
   },
 ] as const;
 
