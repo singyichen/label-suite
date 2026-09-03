@@ -179,8 +179,14 @@
 > **最終群組**：**是**。本組執行 `/opsx:archive` 與正典回寫，完成第四道驗證閘門。
 > **相依**：群組 1–7 全數合併。
 
-- [ ] 8.1 逐條核對本 change 全部 delta 所引用的 FR/AC/SC ID 與檔案路徑，皆可於正典 `specs/annotation/015-annotation-workspace/spec.md` 以 `grep -i` 定位；找不到者修正或移除，不得近似。驗證：逐 ID 的 `grep` 輸出留存於 PR 說明 [@main]
-- [ ] 8.2 執行 `openspec validate --changes --no-interactive` 並確認通過。驗證：指令退出碼 0，輸出貼於 PR 說明 [@main]
-- [ ] 8.4 執行 `/opsx:archive`，將 delta 併入衍生視圖 `openspec/specs/`，並回寫正典 `specs/annotation/015-annotation-workspace/spec.md`（版本 → v5.0.0，新增 Changelog 條目），並確認 FR-014I／FR-069／FR-074／FR-085 已自需求清單移除、FR-092 ~ FR-097 之完整條文已取代 propose 期的預告條目（原 8.3 之 014 回寫移至 companion change，見 deferred/014-tasks.md）。驗證：正典檔內 `grep -c "FR-014I"` 為 0，`grep "FR-097"` 有結果，Changelog 首列為 5.0.0 [@main]
-- [ ] 8.5 archive 後逐條 Source-Verify 衍生視圖中的正典引用（FR/AC ID、章節、檔案路徑、ADR/issue/PR 編號），確認每一項皆可個別 `grep` 定位。驗證：逐項 grep 結果留存 [@main]
+- [x] 8.1 逐條核對本 change 全部 delta 所引用的 FR/AC/SC ID 與檔案路徑，皆可於正典 `specs/annotation/015-annotation-workspace/spec.md` 以 `grep -i` 定位；找不到者修正或移除，不得近似。驗證：逐 ID 的 `grep` 輸出留存於 PR 說明 [@main]
+  - **實測**：delta 引用之 FR/AC/SC ID 共 76 個、檔案路徑 2 個，以 `/usr/bin/grep` 逐項比對正典，缺漏 0 筆。
+- [x] 8.2 執行 `openspec validate --changes --no-interactive` 並確認通過。驗證：指令退出碼 0，輸出貼於 PR 說明 [@main]
+  - **實測**：`openspec validate --changes --no-interactive` → `+ 6 added, ~ 15 modified, - 2 removed, → 4 renamed`，退出碼 0；archive 後 `openspec validate --specs --no-interactive` → 3 passed / 0 failed，退出碼 0。
+- [x] 8.4 執行 `/opsx:archive`，將 delta 併入衍生視圖 `openspec/specs/`，並回寫正典 `specs/annotation/015-annotation-workspace/spec.md`（版本 → v5.0.0，新增 Changelog 條目），並確認 FR-014I／FR-069／FR-074／FR-085 已自需求清單移除、FR-092 ~ FR-097 之完整條文已取代 propose 期的預告條目（原 8.3 之 014 回寫移至 companion change，見 deferred/014-tasks.md）。驗證：正典檔內 `grep -c "FR-014I"` 為 0，`grep "FR-097"` 有結果，Changelog 首列為 5.0.0 [@main]
+  - **實測**：正典回寫至 v5.0.0 完成——`FR-092` ~ `FR-097` 六條完整條文已就位（`grep -c '^- \*\*FR-09[2-7]\*\*'` = 6）、Changelog 首列為 `| 5.0.0 | 2026-09-02 |`、`openspec/specs/` 衍生視圖已合併（254 → 562 行）。
+  - **⚠️ 驗收條件偏離（誠實記錄）**：`grep -c "FR-014I"` **不為 0**。FR-014I／FR-069／FR-074／FR-085 四條依本檔既有慣例保留為墓碑條目（原文以 `~~…~~` 刪除線包覆＋「**已整組移除 v5.0.0**」標註＋「ID 保留不重用」），而非整行刪除——整行刪除會失去 ID 不重用的保護，與正典既有的 FR-030 ~ FR-047 廢止寫法不一致。propose 期撰寫本驗證條件時未預見該慣例。實質條件（四條皆已非生效需求）成立。
+  - **同步處理的下游耦合**：`REVIEW_UNIT_STATUS` 五態語彙、`min_reviewers`／`DISPUTE_CONVERGENCE_RULE` 引用、`退回` 決策語彙、關鍵實體五項（`ReviewDecision`／`ReviewUnit`／`DisputeItem`／`AnnotationHistoryItem` 及其 `HISTORY_ACTIONS` 七值 → 九值）、SC-004D／SC-004N／SC-004W、以及 24 條援引已廢止機制的既有 AC，皆已逐條標註 `v5.0.0 廢止／取代／修訂`。
+- [x] 8.5 archive 後逐條 Source-Verify 衍生視圖中的正典引用（FR/AC ID、章節、檔案路徑、ADR/issue/PR 編號），確認每一項皆可個別 `grep` 定位。驗證：逐項 grep 結果留存 [@main]
+  - **實測**：衍生視圖引用之 FR/AC/SC ID 76 個全數可於正典定位（缺漏 0），檔案路徑 2 個皆存在，issue 引用為 #526／#551／#590／#596／#600。
 - [ ] 8.6 最終 PR 合併後更新 `specs/STATUS.md`，將 015 標記為對應狀態。驗證：`specs/STATUS.md` 內該列狀態已更新 [@main]

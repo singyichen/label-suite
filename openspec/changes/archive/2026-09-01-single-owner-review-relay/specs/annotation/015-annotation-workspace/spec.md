@@ -6,7 +6,7 @@
 - FROM: `### Requirement: FR-064 審核單位脈絡橫幅——第 7 點第 6 項範圍註記`
 - TO: `### Requirement: FR-064 審核單位脈絡橫幅`
 
-- FROM: `### Requirement: FR-070 第 6 點 \`official_run\` 文案說明理由可見性`
+- FROM: `### Requirement: FR-070 第 6 點 `official_run` 文案說明理由可見性`
 - TO: `### Requirement: FR-070 審核決策說明必須與真實效果一致`
 
 - FROM: `### Requirement: FR-083 送出阻擋同時指名缺理由之退回`
