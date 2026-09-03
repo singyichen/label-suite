@@ -1171,7 +1171,7 @@
       datasetFileName: 'review-flow-official-multi.json',
       datasetRecords: [
         {
-          id: 'ofm-01-unanimous-gold',
+          id: 'ofm-01-reviewer-corrects-b',
           text: '從前菜到甜點每一道都很用心，擺盤精緻、味道也無可挑剔，值得專程前往。',
           gold_label: 'positive'
         },
@@ -1219,12 +1219,12 @@
       reviewerGuidelineText:
         REVIEWER_GUIDELINE_SENTIMENT_BOUNDARY_ZH +
         '（T017）本任務為正式標記兩審核員情境，審核門檻為 2 位審核員；' +
-        '兩位審核員意見不一致時（如 oft-01-even-tie）屬平手情況，依 ' +
+        '兩位審核員意見不一致時（如 oft-01-final-exception）屬平手情況，依 ' +
         'per-item-strict-majority 規則不會自動收斂，須轉交仲裁員決定最終結果。',
       datasetFileName: 'review-flow-official-tie.json',
       datasetRecords: [
         {
-          id: 'oft-01-even-tie',
+          id: 'oft-01-final-exception',
           text: '餐廳景觀一流，可以看到整片河岸夜景，但餐點的表現撐不起這個價位。',
           gold_label: 'neutral'
         },

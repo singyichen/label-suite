@@ -1415,7 +1415,7 @@
     },
 
     T016: {
-      'ofm-01-unanimous-gold': [
+      'ofm-01-reviewer-corrects-b': [
         { annotator: 'kioleemg12', answers: { single_label: 'positive' } }
       ],
       'ofm-02-approved-interim': [
@@ -1433,7 +1433,7 @@
     },
 
     T017: {
-      'oft-01-even-tie': [
+      'oft-01-final-exception': [
         { annotator: 'kioleemg12', answers: { single_label: 'neutral' } }
       ],
       'oft-02-approved-interim': [
@@ -2746,12 +2746,21 @@
     var C = 'tony0950127';
     /* One row per review unit: annotator `a` answered `v`; `rev` maps each
        reviewer to their decision (same value = agree, different = changed);
-       `arb` is chen's arbitration picking that reviewer value (choice B).
-       `rejectBy` names the one entry in `rev` whose decision was `reject`
-       (issue #502) rather than approve/modify -- reject is a decision, not
-       a value, so the reviewer's `rev` value can still equal `v` (agree,
-       i.e. a "pure reject": issue #551 makes this block finalization
-       instead of reading as an agreement vote).
+       `arb` is chen's arbitration adopting that reviewer value (choice
+       adopt_b). `rejectBy` names the one entry in `rev` whose decision was
+       `reject` (issue #502) rather than approve/modify -- reject is a
+       decision, not a value, so the reviewer's `rev` value can still equal
+       `v` (agree, i.e. a "pure reject": issue #551 makes this block
+       finalization instead of reading as an agreement vote). `modifyBy`
+       (issue #596, FR-094) names the one entry in `rev` whose decision was
+       `modify` -- without it a value change would still derive `disputed`
+       via anyReviewerChanged(), but the FR-094 micro-trace's `（修正）`
+       segment reads unitReviewDecision()'s stored `decisions` map, which
+       only a `modify` decision (not the default `approve`) populates.
+       `arbReject` marks a row whose arbitration vote is FR-061 point 3's
+       `reject` (兩者皆非) rather than an adopt_a/adopt_b pick -- it
+       deliberately carries no `arb` value, matching design.md D2's
+       absent-field sentinel.
        Annotator values MUST match REVIEWER_MOCK_ROWS above -- the list's
        answer column and the derived unit status describe the same
        submission. Derived states are noted per sample.
@@ -2772,9 +2781,12 @@
        historical (issue #551-era) commentary, not as what today's
        derivation actually returns. The multi-reviewer-per-unit shape of
        T016/ofm-* and T017/oft-* also no longer matches FR-093 (exactly one
-       reviewer per unit); rewriting those two tasks' seed rows for the new
-       model is tracked separately (design.md Migration Plan point 3, this
-       change's tasks.md group 7), not part of this task. */
+       reviewer per unit) -- EXCEPT the two canonical rows below
+       (ofm-01-reviewer-corrects-b, oft-01-final-exception), rewritten to a
+       single assigned reviewer (this change's tasks.md group 7, design.md
+       Migration Plan point 3). The remaining ofm-* / oft-* rows keep their
+       pre-existing multi-reviewer shape untouched -- they exercise
+       unaffected, non-canonical derivation paths, not the FR-093 model. */
     var scripts = [
       /* T014 dry_run, min_reviewers = 1 */
       { t: 'T014', r: 'dry_run', s: 'dry-01-all-agree', a: A, v: 'positive', rev: { reviewer_wang: 'positive' } }, // finalized
@@ -2817,13 +2829,23 @@
       { t: 'T015', r: 'official_run', s: 'ofs-03-arbitrated-gold', a: A, v: 'positive', rev: { reviewer_wang: 'neutral', reviewer_li: 'positive' }, arb: 'neutral' }, // finalized by arbitration
       { t: 'T015', r: 'official_run', s: 'ofs-04-pending-review', a: A, v: 'positive' }, // pending
       /* T016 official_run, min_reviewers = 3 */
-      { t: 'T016', r: 'official_run', s: 'ofm-01-unanimous-gold', a: A, v: 'positive', rev: { reviewer_wang: 'positive', reviewer_li: 'positive', reviewer_lin: 'positive' } }, // finalized
+      /* issue #596 (FR-093/FR-060/FR-061/FR-094): the canonical single-owner
+         relay path -- reviewer_wang (round robin index 0) corrects the
+         annotator's value, reviewer_chen (the roster's only can_arbitrate
+         reviewer who is not a participant, FR-060) adopts wang's corrected
+         value, and the unit finalizes on that value. */
+      { t: 'T016', r: 'official_run', s: 'ofm-01-reviewer-corrects-b', a: A, v: 'positive', rev: { reviewer_wang: 'negative' }, modifyBy: 'reviewer_wang', reason: '第二句語氣轉折應判讀為負面，而非正面', arb: 'negative' }, // finalized (reviewer modifies, arbitration adopts B)
       { t: 'T016', r: 'official_run', s: 'ofm-02-approved-interim', a: A, v: 'negative', rev: { reviewer_wang: 'negative' } }, // approved (1 < 3)
       { t: 'T016', r: 'official_run', s: 'ofm-03-modified-interim', a: A, v: 'neutral', rev: { reviewer_wang: 'negative' } }, // modified (1 < 3)
       { t: 'T016', r: 'official_run', s: 'ofm-04-majority-converged', a: A, v: 'positive', rev: { reviewer_wang: 'neutral', reviewer_li: 'neutral', reviewer_lin: 'positive' } }, // finalized (neutral 2 > 3/2)
       { t: 'T016', r: 'official_run', s: 'ofm-05-all-divergent', a: A, v: 'neutral', rev: { reviewer_wang: 'positive', reviewer_li: 'negative', reviewer_lin: 'neutral' } }, // disputed (1/1/1)
       /* T017 official_run, min_reviewers = 2 */
-      { t: 'T017', r: 'official_run', s: 'oft-01-even-tie', a: A, v: 'neutral', rev: { reviewer_wang: 'positive', reviewer_li: 'neutral' } }, // disputed (1:1 tie)
+      /* issue #596 (FR-093/FR-061 point 3/FR-095): the canonical exception
+         path -- reviewer_wang corrects the annotator's value, but
+         reviewer_chen's arbitration rejects BOTH sides (兩者皆非), so the
+         unit stays disputed and the item queues in the final exception pool
+         until a project_leader visit resolves it. */
+      { t: 'T017', r: 'official_run', s: 'oft-01-final-exception', a: A, v: 'neutral', rev: { reviewer_wang: 'positive' }, modifyBy: 'reviewer_wang', reason: '語境不足以判斷情緒傾向，正面與中性難以取捨', arbReject: true }, // disputed (reviewer modifies, arbitration rejects both sides -> final exception pool)
       { t: 'T017', r: 'official_run', s: 'oft-02-approved-interim', a: A, v: 'positive', rev: { reviewer_wang: 'positive' } }, // approved (1 < 2)
       { t: 'T017', r: 'official_run', s: 'oft-03-modified-interim', a: A, v: 'neutral', rev: { reviewer_wang: 'positive' } }, // modified (1 < 2)
       { t: 'T017', r: 'official_run', s: 'oft-04-unanimous-gold', a: A, v: 'positive', rev: { reviewer_wang: 'positive', reviewer_li: 'positive' } }, // finalized
@@ -2857,13 +2879,17 @@
       markSampleSubmitted(row.t, 'annotator', row.r, row.s, labelPayload(row.v), '', { annotatorId: row.a });
       Object.keys(row.rev || {}).forEach(function (reviewerId) {
         var isReject = row.rejectBy === reviewerId;
-        /* issue #502: mirrors handleReviewSubmit's per-row decision line
-           (annotation-workspace.config.js's decisionLines, ~L3780) so a
-           seeded reject reads the same way a live one would. */
-        var reviewSummary = isReject ? 'single_label · ' + row.a + ': reject — ' + (row.reason || '') : '';
+        var isModify = row.modifyBy === reviewerId;
+        var decision = isReject ? 'reject' : (isModify ? 'modify' : 'approve');
+        /* issue #502/#596: mirrors handleReviewSubmit's per-row decision
+           line (annotation-workspace.config.js's decisionLines, ~L4780) so
+           a seeded reject/modify reads the same way a live one would. */
+        var reviewSummary = (isReject || isModify)
+          ? 'single_label · ' + row.a + ': ' + decision + ' — ' + (row.reason || '')
+          : '';
         markSampleSubmitted(
           row.t, 'reviewer', row.r, row.s,
-          labelPayload(row.rev[reviewerId], isReject ? 'reject' : 'approve', isReject ? row.reason : null),
+          labelPayload(row.rev[reviewerId], decision, (isReject || isModify) ? row.reason : null),
           reviewSummary,
           { annotatorId: row.a, reviewerId: reviewerId }
         );
@@ -2878,7 +2904,15 @@
       });
       if (row.arb) {
         submitArbitration(row.t, row.r, row.s, { annotatorId: row.a, reviewerId: 'reviewer_chen' }, [
-          { itemId: 'single_label::single_label', choice: 'B', value: row.arb },
+          { itemId: 'single_label::single_label', choice: 'adopt_b', value: row.arb },
+        ]);
+      } else if (row.arbReject) {
+        /* issue #596 (FR-061 point 3, design.md D2): a reject vote carries
+           no `value` -- submitArbitration() deletes finalized_value/
+           finalized_by for this choice by design (the absent-field
+           sentinel), so passing one here would be misleading dead data. */
+        submitArbitration(row.t, row.r, row.s, { annotatorId: row.a, reviewerId: 'reviewer_chen' }, [
+          { itemId: 'single_label::single_label', choice: 'reject' },
         ]);
       }
     });
