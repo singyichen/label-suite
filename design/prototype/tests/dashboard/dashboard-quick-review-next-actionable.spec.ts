@@ -13,8 +13,7 @@
  * signed-in reviewer's identity, with a fixed priority:
  *   1. pending (nobody has reviewed the unit yet)
  *   2. disputed units THIS reviewer is eligible to arbitrate (FR-060)
- *   3. approved/modified units short of quorum this reviewer has not judged
- *   4. nothing actionable -> the review list plus an explicit empty state
+ *   3. nothing actionable -> the review list plus an explicit empty state
  *
  * The rule reads task state and reviewer identity only -- no T014-T017
  * branch anywhere (Generalization-First).

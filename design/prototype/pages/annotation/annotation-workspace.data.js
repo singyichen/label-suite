@@ -2752,9 +2752,8 @@
    *                    can_arbitrate plus no submission of their own on the
    *                    unit. A reviewer who produced the dispute must never
    *                    be routed to decide it.
-   *   3  approved / modified -- decided, but short of min_reviewers, so one
-   *                    more judgement still moves it; skipped when this
-   *                    reviewer is the one who already judged it.
+   *
+   * Any other status (finalized) ranks 0 -- there is nothing left to do.
    *
    * Nothing here reads a task id: the rule is task state plus reviewer
    * identity only (Generalization-First). */
@@ -2763,10 +2762,6 @@
     if (unit.status === null || unit.status === REVIEW_UNIT_STATUS.PENDING) return 1;
     if (unit.status === REVIEW_UNIT_STATUS.DISPUTED) {
       return isArbiterCandidate(taskId, runType, unit.sampleId, identity) ? 2 : 0;
-    }
-    if (unit.status === REVIEW_UNIT_STATUS.APPROVED
-      || unit.status === REVIEW_UNIT_STATUS.MODIFIED) {
-      return getSubmission(taskId, 'reviewer', runType, unit.sampleId, identity) ? 0 : 3;
     }
     return 0;
   }
