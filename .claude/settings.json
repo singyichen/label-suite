@@ -83,6 +83,15 @@
           }
         ],
         "matcher": "Edit|Write|MultiEdit|NotebookEdit|Bash"
+      },
+      {
+        "matcher": "Edit|Write|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/prototype-diagram-diff-reminder.sh"
+          }
+        ]
       }
     ],
     "PreCompact": [
