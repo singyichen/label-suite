@@ -7,6 +7,15 @@ import {
   skipGuidelineModal,
 } from './_workspace-helpers';
 
+/* Same retry guard the sibling workspace specs carry (issue #628): parallel
+   workers hammering the static server occasionally drop a <script src>, and
+   the page then never renders -- all four T005 cases below time out at once
+   while the same file passes on its own. Kept as bare `retries` rather than
+   `mode: 'serial'`, matching issue-455-workspace-unit-grouping.spec.ts:
+   every case here does its own page.goto() and shares no state, so
+   serializing them would only let one failure mask the rest. */
+test.describe.configure({ retries: 2 });
+
 /* multi_dim annotator interaction (spec 015 v2.0.0). T005: fluency /
  * adequacy / coherence, 5 real records — used for the general interaction
  * and cross-sample-switch coverage. T013: entity_recognition +
