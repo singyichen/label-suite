@@ -1873,6 +1873,74 @@
     return rows;
   }
 
+  /* FR-096 / AC-1.27 (design.md D5, Data Fairness NON-NEGOTIABLE): source
+   * actions on the merged trail that count as "this sample's dry-run review
+   * is settled" -- the same closed set annotation-history.js's
+   * ACTION_LABEL/BADGE_CLASS render, minus the ones that never conclude a
+   * unit (submitted/draft_saved/skipped/bypassed/rejected). Reused as-is
+   * rather than re-deriving it, so a new terminal action added there is not
+   * silently invisible here. */
+  var DRY_RUN_FEEDBACK_SOURCE_ACTIONS = {
+    accepted: true,
+    modified: true,
+    adjudicated: true,
+    exception_resolved: true,
+    excluded: true,
+  };
+
+  /* One feedback row per FR-096 point 2-4: my answer, the finalized result,
+   * the settling action/decider, and the reason (if any) that action
+   * carried. `null` when the sample's merged trail has no settling action
+   * yet (round genuinely not concluded for this sample, e.g. a straggler
+   * still in dispute past IAA confirmation) -- callers drop those instead
+   * of rendering a half row. */
+  function buildDryRunFeedbackRow(taskId, runType, sampleId, entry, identity) {
+    var decisive = getSampleHistory(taskId, runType, sampleId, identity).filter(function (event) {
+      return DRY_RUN_FEEDBACK_SOURCE_ACTIONS[event.action];
+    });
+    if (!decisive.length) return null;
+    var last = decisive[decisive.length - 1];
+    return {
+      sampleId: sampleId,
+      myAnswer: entry.answers || {},
+      finalizedAnswer: last.result_snapshot || entry.answers || {},
+      /* Unchanged only when every settling action on this sample was a
+       * plain approve -- a task with several output keys can carry one
+       * 'accepted' and one 'modified' event for the same sample, and that
+       * sample is still a "被修改" row for FR-096 point 1's count. */
+      modified: decisive.some(function (event) { return event.action !== 'accepted'; }),
+      action: last.action,
+      actorId: last.actorId,
+      reason: last.reason || null,
+    };
+  }
+
+  /* FR-096 試標歷史回饋 (design.md D5, Data Fairness NON-NEGOTIABLE): the
+   * annotator's own dry-run round feedback, gated on task status IN THE
+   * DATA LAYER -- while the round is still in progress this MUST return an
+   * empty collection, not a full result the UI merely hides (D5's whole
+   * point: data that reaches the browser has already leaked). Includes
+   * every one of the annotator's submitted samples in the round, not only
+   * the modified ones, so the caller can compute FR-096 point 1's ratio
+   * over the true denominator. Scoped to one annotatorId by construction
+   * (the bucket key and getSampleHistory's reviewer-bucket prefix both key
+   * off it), so another annotator's answers never enter the result. */
+  function getDryRunFeedback(taskId, runType, identity) {
+    if (runType !== 'dry_run') return [];
+    var listEntry = findTaskListEntry(taskId);
+    if (!listEntry || listEntry.status !== 'waiting_iaa_confirmation') return [];
+    var scopedIdentity = { annotatorId: (identity && identity.annotatorId) || DEFAULT_ANNOTATOR_ID };
+    var bucket = readSubmissionBucket(submissionBucketKey(taskId, 'annotator', runType, scopedIdentity));
+    var rows = [];
+    Object.keys(bucket).forEach(function (sampleId) {
+      var entry = bucket[sampleId];
+      if (entryStatus(entry) !== 'submitted') return;
+      var row = buildDryRunFeedbackRow(taskId, runType, sampleId, entry, scopedIdentity);
+      if (row) rows.push(row);
+    });
+    return rows;
+  }
+
   /* issue #551: a reviewer's per-outKey approve/reject decision, persisted
    * alongside the answers payload (collectAnswerPayload adds `decisions`
    * for the reviewer role only). Absent on every pre-#551 submission and on
@@ -3097,6 +3165,7 @@
     isArbiterCandidate: isArbiterCandidate,
     readReviewerSubmissions: readReviewerSubmissions,
     getReworkReasons: getReworkReasons,
+    getDryRunFeedback: getDryRunFeedback,
     getArbitrationState: getArbitrationState,
     getExceptionPool: getExceptionPool,
     resolveExceptionPoolItem: resolveExceptionPoolItem,
