@@ -155,9 +155,10 @@
 > **最終群組**：否。
 > **相依**：群組 6（例外池已可產生收尾結果，示範資料才能演到最後一關）。
 
-- [ ] 7.1 撰寫 Red 測試覆蓋 AC-1.27 試標歷史回饋揭露閘門（`design/prototype/tests/annotation/issue-596-dry-run-feedback.spec.ts`）：任務為 `dry_run_in_progress` 時資料層回傳空集合且畫面說明需待回合結束；轉入 `waiting_iaa_confirmation` 後呈現被修改筆數與占比、逐筆「我的答案 → 定案結果」、定案來源與具名決策者、理由原文與可跳轉的指南段落引用；任何情況下皆不呈現其他標記員答案。驗證：執行該檔全數失敗且失敗原因為回饋列表尚未存在 [@senior-qa]
-- [ ] 7.2 於 `design/prototype/pages/annotation/annotation-workspace.data.js` 實作 FR-096 之資料層揭露閘門（design.md D5：閘門在資料層，回合進行中回傳空集合，不得回傳資料後於 UI 遮蔽）。驗證：`pnpm playwright test tests/annotation/issue-596-dry-run-feedback.spec.ts` 中屬閘門的案例全綠 [@senior-frontend]
-- [ ] 7.3 （Green）於 `design/prototype/pages/annotation/annotation-list.html` 實作 FR-096 之標記員試標歷史回饋列表與指南段落跳轉。驗證：`pnpm playwright test tests/annotation/issue-596-dry-run-feedback.spec.ts` 全綠 [@senior-frontend]
+- [x] 7.1 撰寫 Red 測試覆蓋 AC-1.27 試標歷史回饋揭露閘門（`design/prototype/tests/annotation/issue-596-dry-run-feedback.spec.ts`）：任務為 `dry_run_in_progress` 時資料層回傳空集合且畫面說明需待回合結束；轉入 `waiting_iaa_confirmation` 後呈現被修改筆數與占比、逐筆「我的答案 → 定案結果」、定案來源與具名決策者、理由原文與可跳轉的指南段落引用；任何情況下皆不呈現其他標記員答案。驗證：執行該檔全數失敗且失敗原因為回饋列表尚未存在 [@senior-qa]
+- [x] 7.2 於 `design/prototype/pages/annotation/annotation-workspace.data.js` 實作 FR-096 之資料層揭露閘門（design.md D5：閘門在資料層，回合進行中回傳空集合，不得回傳資料後於 UI 遮蔽）。驗證：`pnpm playwright test tests/annotation/issue-596-dry-run-feedback.spec.ts` 中屬閘門的案例全綠 [@senior-frontend]
+- [x] 7.3 （Green）於 `design/prototype/pages/annotation/annotation-list.html` 實作 FR-096 之標記員試標歷史回饋列表與指南段落跳轉。驗證：`pnpm playwright test tests/annotation/issue-596-dry-run-feedback.spec.ts` 全綠 [@senior-frontend]
+> **（7.3 動工後發現：指南跳轉僅部分達成）**：FR-096 第 4 點要求「理由中引用之標註指南段落 MUST 可點擊跳轉至該段落」，但標註指南目前是 `design/prototype/pages/task-management/task-detail.data.js:20` 的單一換行分隔字串常數 `REVIEWER_GUIDELINE_SENTIMENT_BOUNDARY_ZH`，無標題、無 section id，全 codebase 查無錨點資料模型——沒有可跳轉的目標存在。本任務的連結改為開啟該樣本工作區，屬部分達成。段落錨點資料模型另開 issue #620 追蹤；群組 8 archive 時 FR-096 第 4 點須誠實標註為部分達成並連結 #620，不得聲稱完整達成。
 - [ ] 7.4 於 `design/prototype/pages/task-management/task-detail.data.js` 改寫 T016（原三人多數決）與 T017（原雙人平手）示範任務為新模型情境：T016 = 審核員修正 → 仲裁採 B → 定稿；T017 = 仲裁 `兩者皆非` → 最終例外池 → 專案負責人收尾。驗證：`cd design/prototype && pnpm playwright test` 全綠，且以 T016／T017 進入工作區可完整走完該條路徑 [@senior-frontend]
 - [ ] 7.5 執行跨群組完整回歸：`cd design/prototype && pnpm typecheck && pnpm playwright test`。驗證：兩道指令皆退出碼 0，且既有測試中不再存在對 `已同意`／`已修改`／退回／票數表的任何斷言 [@senior-qa]
 
