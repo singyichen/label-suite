@@ -89,27 +89,34 @@ test.describe('Dashboard — quick review opens the next actionable unit', () =>
     await expect(page).toHaveURL(/run_type=dry_run/);
   });
 
-  /* T016 has zero pending units (審核覆蓋率 100%), one disputed unit and two
-     interim units short of its min_reviewers = 3 quorum. reviewer_chen is the
-     only can_arbitrate reviewer and took no part in the review, so the
-     disputed unit outranks the interim ones. */
+  /* T016 has zero pending units (審核覆蓋率 100%). issue #596 (FR-092): the
+     two units that used to sit interim below a min_reviewers = 3 quorum are
+     now disputed like ofm-05, because a single owner's modify always enters
+     the pool. reviewer_chen is the only can_arbitrate reviewer and took no
+     part, so all three are actionable for them and the enumeration order
+     (listReviewUnits sorts by sample_id) decides which one opens --
+     ofm-03, not ofm-05. */
   test('routes to a disputed unit this reviewer may arbitrate when nothing is pending', async ({ page }) => {
     await openReviewerScenario(page);
     await quickReviewButton(page, 'T016').click();
 
     await expect(page).toHaveURL(/\/pages\/annotation\/annotation-workspace\.html\?/);
     await expect(page).toHaveURL(/task_id=T016/);
-    await expect(page).toHaveURL(/sample_id=ofm-05-all-divergent/);
+    await expect(page).toHaveURL(/sample_id=ofm-03-modified-interim/);
     await expect(page).toHaveURL(/annotator_id=kioleemg12/);
     await expect(page).toHaveURL(/reviewer_id=reviewer_chen/);
     await expect(page).toHaveURL(/run_type=official_run/);
   });
 
-  /* Eligibility is per reviewer, not per unit: reviewer_wang judged every
-     T016 unit that is not finalized and cannot arbitrate, so nothing is
+  /* Eligibility is per reviewer, not per unit. reviewer_wang judged the
+     T016 units that are not finalized and cannot arbitrate, so nothing is
      actionable for them -- they must never be handed the dispute they
-     themselves produced. reviewer_li skipped the two interim units, so the
-     first of those is their next actionable target (priority 3). */
+     themselves produced. reviewer_li is null for a different reason:
+     issue #596 (FR-093) leaves every unfinalized T016 unit disputed, and a
+     disputed unit is offered only to an eligible arbiter (FR-060). li has
+     no can_arbitrate flag, so there is nothing for them either -- the
+     interim `approved` unit this used to return no longer exists as a
+     status at all (REVIEW_UNIT_STATUS has only pending/disputed/finalized). */
   test('a reviewer who took part is not routed to their own dispute', async ({ page }) => {
     await openReviewerScenario(page);
 
@@ -123,11 +130,7 @@ test.describe('Dashboard — quick review opens the next actionable unit', () =>
     });
 
     expect(targets.wang).toBeNull();
-    expect(targets.li).toEqual({
-      sampleId: 'ofm-02-approved-interim',
-      annotatorId: 'kioleemg12',
-      status: 'approved',
-    });
+    expect(targets.li).toBeNull();
   });
 
   /* Once every T015 unit is finalized there is nothing to open: the CTA must
