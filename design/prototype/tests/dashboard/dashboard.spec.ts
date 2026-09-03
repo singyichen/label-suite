@@ -302,7 +302,9 @@ test.describe('Dashboard page — language toggle', () => {
 
     await expect(page.locator('#roleReviewerSubtitle')).toHaveText('逐標記員獨立審核，直接修正結果，歧異交付仲裁。');
     await expect(page.locator('#stepReviewer2Title')).toHaveText('修正或仲裁');
-    await expect(page.locator('#stepReviewer2Desc')).toHaveText('直接修正結果；退回僅限正式標記');
+    /* issue #621: issue #596 abolished the review "退回" (reject) flow, so
+     * this step description no longer names it. */
+    await expect(page.locator('#stepReviewer2Desc')).toHaveText('通過、修正或無法判定；歧異交付仲裁與例外池');
 
     await page.getByTestId('lang-toggle').click();
 
@@ -310,7 +312,7 @@ test.describe('Dashboard page — language toggle', () => {
       'Review each annotator independently, correct results directly, and arbitrate disputes.'
     );
     await expect(page.locator('#stepReviewer2Title')).toHaveText('Correct or Arbitrate');
-    await expect(page.locator('#stepReviewer2Desc')).toHaveText('Correct directly; return applies to formal runs only');
+    await expect(page.locator('#stepReviewer2Desc')).toHaveText('Approve, modify, or mark unable to determine; disputes go to arbitration and the exception pool');
   });
 
   test('translates metric value units between zh-TW and en', async ({ page }) => {
