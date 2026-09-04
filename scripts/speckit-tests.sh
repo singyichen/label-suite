@@ -2134,6 +2134,7 @@ test_check_sdd_accepts_complete_exception_with_root_extensionless_path() {
     repo="$(make_sdd_repo)"
     printf 'Synthetic license fixture.\n' > "$repo/LICENSE"
     printf '#!/bin/sh\n' > "$repo/scripts/a.sh"
+    printf 'none\tscaffold fixture; not a gate\ta.sh\n' >> "$repo/scripts/ci-jobs.tsv"
     git -C "$repo" init -q
     git -C "$repo" add LICENSE scripts/a.sh
     printf '\n- [ ] 1.3 Scaffold `LICENSE` and `scripts/a.sh`. Exception: scaffold; Files: `LICENSE`, `scripts/a.sh`; Reason: Bootstrap requires both files. [@senior-devops]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
@@ -2146,6 +2147,7 @@ test_check_sdd_ignores_backticked_identifier_in_exception_outputs() {
     repo="$(make_sdd_repo)"
     printf 'Synthetic license fixture.\n' > "$repo/LICENSE"
     printf '#!/bin/sh\n' > "$repo/scripts/a.sh"
+    printf 'none\tscaffold fixture; not a gate\ta.sh\n' >> "$repo/scripts/ci-jobs.tsv"
     git -C "$repo" init -q
     git -C "$repo" add LICENSE scripts/a.sh
     printf '\n- [ ] 1.4 Scaffold output `LICENSE` with identifier `MIT` and output `scripts/a.sh`. Exception: scaffold; Files: `LICENSE`, `scripts/a.sh`; Reason: Bootstrap requires both artifacts. [@senior-devops]\n' >> "$repo/openspec/changes/project-sdd-lint/tasks.md"
