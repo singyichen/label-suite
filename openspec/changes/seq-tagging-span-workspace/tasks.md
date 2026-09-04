@@ -51,7 +51,7 @@
 - [x] 2.7 移除 `design/prototype/pages/task-management/task-config.engine.js` 中 change ① 群組 2 為避免工作區即刻崩潰而刻意保留的兩個 token 切分輔助函式（`getSequencePreviewTokens` 與 `tokenizeSequenceText`）；其最後的呼叫端是本組改寫的答案序列化層（`getSequenceTokenTexts`），故本任務排在任務 2.6 之後而非群組 1；回歸覆蓋由任務 2.9 的全套回歸提供。驗證：`/usr/bin/grep -rn "getSequencePreviewTokens\|tokenizeSequenceText" design/prototype/pages` 無輸出。實際證據：`getSequencePreviewTokens`（engine.js）與 `tokenizeSequenceText`（dataset.js）已刪除，連同僅由後者呼叫、因本次刪除而成孤兒的 `tokenizeSequenceWords` 與 `tokenizeSequenceCharacters`；驗證指令無輸出。`getSequenceBaseLabel`／`inferSequenceScheme`／`convertSequenceTags` 屬 change ① 既有死碼，依「不刪既有死碼」規則保留並回報 [@senior-frontend]
 - [x] 2.8 確認 6 個繼承自 change ① 的跳過標記全數解除。驗證：`/usr/bin/grep -rn "seq-tagging-span-config group 2" design/prototype/tests` 無輸出。實際證據：驗證指令無輸出 [@main]
 - [x] 2.9 執行全套原型回歸。驗證：`cd design/prototype && corepack pnpm typecheck && PW_PORT=8922 corepack pnpm playwright test` — typecheck 退出碼 0、playwright 0 failed 且無新增 skipped。實際證據：typecheck 退出碼 0（`tsc --noEmit` 無輸出）；`PW_PORT=8922 corepack pnpm playwright test` **1511 passed**、0 failed、無新增 skipped（其中 XROLE-20／XROLE-21 為既有 `test.fail()` 標註的 D2 缺口紀錄案例，屬預期失敗不計入 failed） [@main]
-- [ ] 2.10 執行螢幕清單重新產生。驗證：`node scripts/gen-screen-inventory.mjs` 後 `scripts/check-sdd.sh` 不回報 INVENTORY_FRESHNESS [@main]
+- [x] 2.10 執行螢幕清單重新產生。驗證：`node scripts/gen-screen-inventory.mjs` 後 `scripts/check-sdd.sh` 不回報 INVENTORY_FRESHNESS。實際證據：重新產生後 `scripts/check-sdd.sh` 由 1 error 降為 **0 error(s), 30 warning(s)**，INVENTORY_FRESHNESS 已消失；產生器記錄的 prototype 來源 commit 更新為本組最後一次 `design/prototype/pages` 變更 [@main]
 
 ## 3. 群組 3 — Source-Verify、archive 與正典回寫（最終群組）
 
