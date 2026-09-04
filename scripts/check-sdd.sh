@@ -141,12 +141,40 @@ section_is_valid() {
     '
 }
 requires_page_traceability() { [ "$1" != foundation ] && strip_markdown_fences "$2" | grep -Eq 'Prototype|design/prototype|產品 UI|頁面'; }
+collect_added_ids() {
+    local change_dir="$1" target="$2" delta
+    : >"$target"
+    while IFS= read -r delta; do
+        strip_markdown_fences "$delta" | awk '
+            /^##[[:space:]]/ { inside = ($0 == "## ADDED Requirements"); next }
+            inside && /^#/ { print }
+        ' | grep -Eo "$id_pattern" >>"$target" || true
+    done < <(find "$change_dir/specs" -type f -name spec.md -print 2>/dev/null | LC_ALL=C sort)
+    LC_ALL=C sort -u "$target" -o "$target"
+}
+spec_defines_id() { [ -r "$1" ] && grep -Eo "$id_pattern" "$1" | grep -Fqx "$2"; }
+citation_names_defining_spec() {
+    local artifact="$1" citation="$2" line reference module number candidate
+    while IFS= read -r line; do
+        while IFS= read -r reference; do
+            [ -n "$reference" ] || continue
+            reference="${reference#specs/}"; module="${reference%%/*}"; number="${reference#*/}"; number="${number:0:3}"
+            while IFS= read -r candidate; do
+                spec_defines_id "$candidate" "$citation" && return 0
+            done < <(find "$repo_root/specs/$module" "$repo_root/specs/_archive" -mindepth 2 -maxdepth 2 -path "*/$number-*/spec.md" -print 2>/dev/null)
+        done < <(printf '%s\n' "$line" | grep -Eo '(specs/)?[[:alnum:]_-]+/[0-9][0-9][0-9][[:alnum:]._-]*' || true)
+    done < <(grep -F "$citation" "$artifact" 2>/dev/null || true)
+    return 1
+}
 verify_citations() {
-    local artifact="$1" canonical="$2" citation
+    local artifact="$1" allowed="$2" citation
     [ -r "$artifact" ] || return
-    grep -Eo "$id_pattern" "$artifact" | LC_ALL=C sort -u >"$tmp_dir/citations" || true; grep -Eo "$id_pattern" "$canonical" | LC_ALL=C sort -u >"$tmp_dir/canonical-citations" || true
+    grep -Eo "$id_pattern" "$artifact" | LC_ALL=C sort -u >"$tmp_dir/citations" || true
     while IFS= read -r citation; do
-        [ -z "$citation" ] || grep -Fqx "$citation" "$tmp_dir/canonical-citations" || add_error SOURCE_VERIFY_ID "${artifact#"$repo_root"/}" "canonical spec does not define $citation"
+        [ -n "$citation" ] || continue
+        grep -Fqx "$citation" "$allowed" && continue
+        citation_names_defining_spec "$artifact" "$citation" && continue
+        add_error SOURCE_VERIFY_ID "${artifact#"$repo_root"/}" "canonical spec does not define $citation; declare it under ## ADDED Requirements or name the source spec on the citing line"
     done <"$tmp_dir/citations"
 }
 verify_required_ids() {
@@ -190,11 +218,15 @@ for change_dir in "$repo_root"/openspec/changes/*; do
     section_is_valid "$canonical" '## 規格相依性' dependency || add_error SPEC_REQUIRED_HEADING "$canonical_relative" 'required heading is missing, duplicated, or empty: ## 規格相依性'
     verify_required_ids "$canonical" "$canonical_relative"
     if requires_page_traceability "$module" "$canonical" && ! strip_markdown_fences "$canonical" | grep -Eq '^## Prototype Traceability|Frontend Ready Gate.*不適用|prototype.*不適用'; then add_error SPEC_REQUIRED_IDS "$canonical_relative" 'page traceability or an explicit non-page exception is required'; fi
+    allowed_ids="$tmp_dir/allowed-ids"
+    collect_added_ids "$change_dir" "$tmp_dir/added-ids"
+    grep -Eo "$id_pattern" "$canonical" | LC_ALL=C sort -u >"$tmp_dir/canonical-citations" || true
+    LC_ALL=C sort -u "$tmp_dir/canonical-citations" "$tmp_dir/added-ids" >"$allowed_ids"
     for artifact in "$proposal" "$change_dir/design.md" "$change_dir/tasks.md"; do
-        verify_citations "$artifact" "$canonical"
+        verify_citations "$artifact" "$allowed_ids"
     done
     while IFS= read -r artifact; do
-        verify_citations "$artifact" "$canonical"
+        verify_citations "$artifact" "$allowed_ids"
     done < <(find "$change_dir/specs" -type f -name spec.md -print 2>/dev/null | LC_ALL=C sort)
     tasks="$change_dir/tasks.md"
     if [ -r "$tasks" ]; then
@@ -213,7 +245,7 @@ for change_dir in "$repo_root"/openspec/changes/*; do
                 add_error TASK_STORY_GOAL "$task_relative" 'story goal must cite a canonical SC ID'
             else
                 while IFS= read -r goal_id; do
-                    grep -Fqx "$goal_id" "$tmp_dir/canonical-citations" || add_error TASK_STORY_GOAL "$task_relative" "story goal cites unknown $goal_id"
+                    grep -Fqx "$goal_id" "$allowed_ids" || add_error TASK_STORY_GOAL "$task_relative" "story goal cites unknown $goal_id"
                 done <<EOF
 $goal_ids
 EOF
