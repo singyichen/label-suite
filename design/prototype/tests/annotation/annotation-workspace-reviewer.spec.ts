@@ -1,8 +1,10 @@
 import { test, expect, type Page } from '@playwright/test';
 import {
   assertNoPageErrors,
+  buildListUrl,
   buildWorkspaceUrl,
   dismissGuidelineModal,
+  selectWorkspaceText,
   setRangeValue,
   skipGuidelineModal,
   trackPageErrors,
@@ -153,9 +155,11 @@ const REGISTRY_CASES: Array<{
     outKey: 'sequence_tagging',
     taskId: 'T006',
     sampleId: 'sequence-tagging-001',
+    // issue #581: the answer is a dragged stretch of the source text plus a
+    // label type -- there is no token grid and no BIO tag button left.
     answer: async (page) => {
-      await page.getByTestId('ws-seq-tag-btn-PER').click();
-      await page.getByTestId('ws-seq-token').nth(6).click();
+      await selectWorkspaceText(page, 'ws-input-content', '國際半導體');
+      await page.getByTestId('ws-seq-label-btn-ORG').click();
     },
   },
   {
@@ -185,11 +189,6 @@ const REGISTRY_CASES: Array<{
 
 for (const { outKey, taskId, sampleId, answer } of REGISTRY_CASES) {
   test(`reviewer direct correction is available for ${outKey} and review submit throws no page error`, async ({ page }) => {
-    /* issue #581 / OpenSpec change seq-tagging-span-config group 2 retired the
-       token grid this case's answer() drives; the annotation/015 change
-       restores the case against span drag-select. */
-    test.skip(outKey === 'sequence_tagging', 'awaiting the annotation/015 workspace span rewrite');
-
     const errors = trackPageErrors(page);
 
     await submitAsAnnotator(page, taskId, sampleId, () => answer(page));
@@ -371,4 +370,16 @@ test.describe('reviewer demo annotator submission', () => {
     await expect(page.getByTestId('ws-single-label-chip-negative')).toHaveAttribute('aria-pressed', 'true');
     await expect(page.getByTestId('ws-single-label-chip-positive')).toHaveAttribute('aria-pressed', 'false');
   });
+});
+
+/* issue #581: the reviewer list's single-row answer summary reads the same
+   CompactAnswer the review card does, so each entry must render as the
+   marked text under the label type the annotator chose -- not under the
+   BIO tag the retired per-token shape carried. */
+test('the reviewer list summarizes a sequence_tagging answer as text/label', async ({ page }) => {
+  await page.goto(buildListUrl({ task_id: 'T006', role: 'reviewer', run_type: 'official_run' }));
+
+  await expect(page.getByTestId('list-review-answer').first()).toHaveText(
+    '台積電/ORG 魏哲家/PER 今天/TIME 台北/LOC'
+  );
 });
