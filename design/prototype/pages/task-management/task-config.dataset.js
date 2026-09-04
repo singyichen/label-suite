@@ -1,50 +1,11 @@
 /* task-config.dataset.js
  * Dataset ingestion pipeline for the shared task-config engine: JSON/JSONL
  * parsing, record-source detection, per-column field profiling, cell
- * type/label formatting, and sequence tagging-scheme helpers.
+ * type/label formatting.
  * No DOM access.
  * Depends on: state, t (from task-config.data.js / host page). Loaded after
  * task-config.data.js and task-config.yaml.js.
  */
-
-function getSequenceBaseLabel(tag, labels) {
-  if (!tag || tag === 'O') return null;
-  for (var i = 0; i < labels.length; i++) {
-    var name = labels[i].name;
-    if (tag === name || tag.slice(-(name.length + 1)) === '-' + name) return name;
-  }
-  return null;
-}
-
-function inferSequenceScheme(tags) {
-  if (tags.some(function(tag) { return /^[ES]-/.test(tag); })) return 'BIOES';
-  if (tags.some(function(tag) { return /^[BI]-/.test(tag); })) return 'BIO';
-  return 'SINGLE';
-}
-
-function convertSequenceTags(tags, fromScheme, toScheme, labels) {
-  var assignments = tags.map(function(tag, index) {
-    var label = getSequenceBaseLabel(tag, labels);
-    if (!label) return { label: null, starts: false };
-    var previousLabel = index > 0 ? getSequenceBaseLabel(tags[index - 1], labels) : null;
-    var starts = index === 0 || previousLabel !== label;
-    if (fromScheme !== 'SINGLE' && /^[BS]-/.test(tag)) starts = true;
-    return { label: label, starts: starts };
-  });
-
-  return assignments.map(function(assignment, index) {
-    if (!assignment.label) return 'O';
-    if (toScheme === 'SINGLE') return assignment.label;
-    var prefix = assignment.starts ? 'B' : 'I';
-    if (toScheme === 'BIOES') {
-      var next = assignments[index + 1];
-      var ends = !next || next.label !== assignment.label || next.starts;
-      if (assignment.starts && ends) prefix = 'S';
-      else if (ends) prefix = 'E';
-    }
-    return prefix + '-' + assignment.label;
-  });
-}
 
 /* ── Dataset upload ──────────────────────────────────────────── */
 function formatBytes(bytes) {
