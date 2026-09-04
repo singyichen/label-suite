@@ -81,9 +81,11 @@ test('the submitted payload carries spans and snap_unit, not tokens, tags, schem
   expect(Object.keys(answer)).not.toContain('tokenKey');
 
   /* The bypass half of FR-024A-3's key list lives one level up, beside the
-     answer rather than inside it, and must still be present for the type. */
+     answer rather than inside it, and the prototype records a type only
+     once its flag is set -- so an ordinary answer carries a falsy flag,
+     and the set case is pinned by the bypass round-trip below. */
   const bypass = (payload as Record<string, Record<string, unknown>>).previewBypass;
-  expect(Object.keys(bypass)).toContain('sequence_tagging');
+  expect(bypass.sequence_tagging).toBeFalsy();
 
   /* No BIO prefix may survive anywhere in the payload. */
   expect(JSON.stringify(payload)).not.toMatch(/"[BIES]-/);
@@ -131,4 +133,21 @@ test('a repeated span text is restored to its own offset, not to the first match
     ])
   );
   expect(spans).toHaveLength(2);
+});
+
+test('bypassing the type records the flag beside an emptied span list', async ({ page }) => {
+  await page.goto(buildWorkspaceUrl({ task_id: 'T006', sample_id: 'sequence-tagging-001' }));
+  await dismissGuidelineModal(page);
+
+  await page.getByTestId('ws-bypass-sequence_tagging').check();
+  await page.getByTestId('ws-submit-btn').click();
+  await expect(page.getByTestId('ws-sample-item').first()).toHaveAttribute('data-submitted', 'true');
+
+  const payload = await readT006Payload(page);
+  const bypass = (payload as Record<string, Record<string, unknown>>).previewBypass;
+  expect(bypass.sequence_tagging).toBe(true);
+
+  const answer = (payload as Record<string, Record<string, Record<string, unknown>>>).previewState
+    .sequence_tagging;
+  expect(answer.spans).toEqual([]);
 });
