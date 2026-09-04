@@ -1,7 +1,8 @@
 # ADR-031: Sequence Tagging Tokenization — Versioned Annotation Contract
 
-**Status**: Accepted
+**Status**: Superseded
 **Date**: 2026-07-28
+**Superseded by**: issue #581 and OpenSpec change `seq-tagging-span-config` (2026-09-04) — `sequence_tagging` no longer stores tags index-aligned to a token sequence. Annotations are half-open character-offset spans (`{ start, end, label }`), so there is no stored coordinate system to freeze and Decisions 1–4 have nothing left to govern; Decision 5's default survives only as the `snap_unit` default (`character` = no snapping), and Decision 6's deferred server-side word-segmentation engine is replaced by the frontend's `Intl.Segmenter`, which is now a *selection-time* convenience rather than a data-defining tokenizer — a different `snap_unit` changes where a drag lands, never what an existing span means. The row "Character-offset spans instead of token-aligned tags" in *Alternatives Rejected* is the option that was ultimately adopted; its stated reason (token-level `token_f1` metrics) is superseded by the span-level metrics in specs/dataset/017. Decisions 1–6 and the tables below are kept verbatim so the original reasoning stays traceable.
 
 ## Context
 
