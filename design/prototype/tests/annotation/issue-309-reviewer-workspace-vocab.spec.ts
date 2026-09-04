@@ -7,7 +7,7 @@ import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
  *   1. 待標記 as the per-entry status in the left column — annotator
  *      tri-state wording on rows that are review units, while
  *      annotation-list (AC-1.15) and the context banner (FR-064) already
- *      speak the REVIEW_UNIT_STATUS five-state vocabulary;
+ *      speak the REVIEW_UNIT_STATUS vocabulary;
  *   2. `0 / N 已提交` in the top progress summary — the reviewer's count
  *      is reviewed units, not their own submissions;
  *   3. 一般使用者 as the sidebar role indicator — annotation-list already
@@ -16,9 +16,17 @@ import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
  * All three strings are shared with the annotator view, so the fix must
  * branch on role: the annotator assertions at the bottom pin the existing
  * wording unchanged.
+ *
+ * issue #596 narrowed REVIEW_UNIT_STATUS from five states to three (已同意／
+ * 已修改 only ever named a unit waiting for more reviewers to reach a
+ * quorum, and FR-093 gives every unit exactly one reviewer). issue #626
+ * found the whitelist below still listed all five: `expect(FIVE_STATES_ZH)
+ * .toContain(text)` would keep passing even if a regression brought back
+ * 已同意／已修改, because a whitelist can only reject values outside the
+ * set it names, and the retired two were still in it.
  */
 
-const FIVE_STATES_ZH = ['待審', '已同意', '已修改', '爭議中', '已定稿'];
+const REVIEW_STATES_ZH = ['待審', '爭議中', '已定稿'];
 
 /* Same guard the other workspace suites carry: the static server can drop
  * a keep-alive socket under parallel load, which presents as an unrendered
@@ -36,7 +44,7 @@ test.describe('Reviewer view speaks review vocabulary (zh)', () => {
     await expect(statuses.first()).toHaveText('待審');
     const texts = await statuses.allTextContents();
     for (const text of texts) {
-      expect(FIVE_STATES_ZH).toContain(text);
+      expect(REVIEW_STATES_ZH).toContain(text);
     }
   });
 
@@ -55,8 +63,9 @@ test.describe('Reviewer view speaks review vocabulary (zh)', () => {
   });
 
   /* T014–T017 seeded demo units (the walkthrough that surfaced #309) must
-   * surface the seeded five-state mix, never the annotator tri-state. */
-  test('seeded demo task T016 lists five-state labels only', async ({ page }) => {
+   * surface the seeded review-state mix, never the annotator tri-state nor
+   * the retired 已同意／已修改 wording (issue #626). */
+  test('seeded demo task T016 lists review-state labels only, never the retired 已同意／已修改', async ({ page }) => {
     await skipGuidelineModal(page);
     await page.goto(
       buildWorkspaceUrl({
@@ -70,7 +79,9 @@ test.describe('Reviewer view speaks review vocabulary (zh)', () => {
     const texts = await statuses.allTextContents();
     expect(texts.length).toBeGreaterThan(0);
     for (const text of texts) {
-      expect(FIVE_STATES_ZH).toContain(text);
+      expect(text).not.toBe('已同意');
+      expect(text).not.toBe('已修改');
+      expect(REVIEW_STATES_ZH).toContain(text);
     }
   });
 });
