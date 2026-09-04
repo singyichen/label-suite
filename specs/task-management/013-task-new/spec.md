@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-list-output-types
 建立日期: 2026-04-20
-版本: 6.9.6
+版本: 7.0.0
 狀態: Draft
 ---
 
@@ -65,10 +65,8 @@
 
 - `OUTPUT_TYPE_DEPENDENCIES`：`relation_identification` 可獨立使用；僅在與 `entity_recognition` 同時被選取時，以 `entity_recognition` 作為可編輯實體來源，預覽與 config 合併為整合模式。此關聯不得自動加入或移除 output type
 - `OUTPUT_TYPE_FIELD_TYPES = entity-list | taxonomy-tree | tag-list | select | number | text | boolean | va-dimensions`
-- `SEQUENCE_TAGGING_SCHEMES = BIO | BIOES | IOB2 | SINGLE`
-- `SEQUENCE_TOKEN_UNITS = character | word`
-- `SEQUENCE_TOKENIZATION_VERSION = 2`
-- `SEQUENCE_TOKENIZATION_MODE = unit_based`
+- `SPAN_SNAP_UNITS = character | word`（v7.0.0 由 `SEQUENCE_TOKEN_UNITS` 更名；同時服務 `sequence_tagging` 與 `entity_recognition`）
+- `SPAN_OVERLAP_POLICY_BY_OUTPUT_TYPE = sequence_tagging: forbidden | entity_recognition: configurable`
 - `TAXONOMY_MAX_DEPTH = 8`
 - `TAXONOMY_MAX_NODES = 500`
 - `TAXONOMY_NODE_ID_MAX_LENGTH = 100`
@@ -291,8 +289,8 @@ Step 2 必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型在 registry 
 7. **AC-2.7**：**Given** 任一輸出類型的 `allow_bypass` 為開啟（預設），**When** 在該輸出類型的預覽勾選「無法判定 (Bypass)」，**Then** 該輸出類型的其他預覽互動控制項被清空並停用，且不影響輸入文字與其他輸出類型的預覽；取消勾選後恢復可操作並重新初始化。
 8. **AC-2.8**：**Given** 在 schema 設定面板將某輸出類型的 `allow_bypass` 關閉，**When** 預覽刷新，**Then** 該輸出類型的預覽不顯示 Bypass 勾選項，且既有的勾選狀態被清除；code 區同步輸出 `allow_bypass: false`。
 9. **AC-2.9**：**Given** 已選輸出類型中至少一項於 registry 宣告 `rendersInputPreview: true`，**When** Step 2 標記預覽載入，**Then** 不顯示額外的通用輸入文字區塊，輸入內容改由該輸出類型的專屬或整合預覽完整呈現。
-10. **AC-2.10**：**Given** 選擇 `sequence_tagging`，**When** Step 2 標記預覽載入，**Then** 不顯示重複的通用輸入文字區塊，輸入內容改由專屬 Token 網格完整呈現；設定區依序顯示「標記單位」、「標籤類型」與「標記方案」，預覽不顯示輸出卡片的「序列標註」標題，於 Token 網格上方顯示帶「原始文本」標題（英文 Text）、未經字／詞切分的原始輸入文本。
-11. **AC-2.11**：**Given** `sequence_tagging` 的標記單位為「字」，**When** 預覽載入中文或英文輸入，**Then** 每個非空白可見字元各自成為 Token，標點獨立；切換為「詞」後，中文依語言感知詞界、英文依單字重新分組，標點仍獨立，Token 網格於 100ms 內同步更新，預覽顯示的原始輸入文本維持原文不變。
+10. **AC-2.10**：**Given** 選擇 `sequence_tagging`，**When** Step 2 標記預覽載入，**Then** 不顯示重複的通用輸入文字區塊，輸入內容改由帶「原始文本」標題（英文 Text）、未經任何切分的單一呈現面完整承載；設定區依序顯示「標籤類型」、「選取吸附」與「允許無法判定」，畫面上不存在「標記方案」欄位、不存在 Token 網格、不存在任何 `B-`／`I-`／`E-`／`S-` 前綴的 tag 按鈕，預覽不顯示輸出卡片的「序列標註」標題。
+11. **AC-2.11**：**Given** `sequence_tagging` 的選取吸附為「字元」，**When** 使用者拖曳圈出一段文字後點選標籤類型，**Then** 新增一筆 `{ start, end, label }`（`end` 不含端點）且反白範圍與拖曳範圍一致；切換為「詞」後，既有 span 的 `start`／`end` 與顯示位置皆維持不變、畫面不出現任何數量不一致錯誤、亦不阻擋進入 Step 3，其後的拖曳於放開時把起訖點各自吸附至最近詞界，預覽顯示的原始文本於兩種設定皆維持原文不變。
 12. **AC-2.12**：**Given** 僅選擇 `relation_identification` 且資料集提供既有實體，**When** Step 2 標記預覽載入，**Then** 僅顯示既有實體的唯讀高亮、關係建構器與三元組列表，不顯示實體類型、實體列表或任何建立／刪除 Span 的控制項，且 config 不輸出 `source_output`。
 13. **AC-2.13**：**Given** 同時選擇 `entity_recognition + relation_identification`，**When** Step 2 標記預覽載入，**Then** 顯示整合預覽並允許先建立／修改實體再建立關係，且 `relation_identification.config.source_output` 自動輸出為 `entity_recognition`。
 14. **AC-2.14**：**Given** 使用者在任一語系進入 Step 1 或 Step 2，**When** taxonomy 與 registry 載入，**Then** `entity_relation`、`boundary`、`span`、`relation_triple`、`token_class` 均不存在，且 `entity_recognition`、`relation_identification`、`sequence_tagging` 分別顯示 Entity Recognition／實體辨識、Relation Identification／關係識別、Sequence Tagging／序列標註。
@@ -331,7 +329,7 @@ Step 2 必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型在 registry 
 
     | 輸出類型 | 預覽互動方式 |
     |----------|-------------|
-    | `sequence_tagging` | 依 `tokenization.unit` 動態重建的字／詞 Token 網格 + 依方案產生的完整 tag 按鈕列 + Token 規則／方案顯示 + 數量錯誤提示 |
+    | `sequence_tagging` | 未切分的原始文本單一呈現面 + 拖曳圈選後點選標籤類型 + 已標記 span 列表（含類型徽章、文字、字元位置與刪除）+ 相交落點的即時拒絕回饋 |
     | `entity_recognition` | 圈選文字建立實體 + 實體類型按鈕列 + 實體列表（含位置與刪除）；單一或與其他輸出類型組合時皆支援先選類型再圈選，以及先圈選再選類型 |
     | `relation_identification` | 純模式：既有實體唯讀高亮 + 循序關係建構器（E1/Arg1 → Relation → E2/Arg2 → 新增）+ 三元組列表，不顯示 Span 編輯控制項或重複的「關係識別預覽」內層標題；與 `entity_recognition` 組合時：整合預覽允許先建立／修改實體，再建立關係。兩種模式僅在 config `relation_types` 非空時顯示「類型」選單供事後指定語意類型 |
     | `single_label` | 文字顯示 + radio 風格可點選標籤 chip（單選） |
@@ -359,9 +357,9 @@ Step 2 必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型在 registry 
     | 輸出類型 | 欄位 | 類型 | 必填 |
     |----------|------|------|------|
     | `sequence_tagging` | `entities`（標籤類型） | `entity-list` | 是 |
-    | `sequence_tagging` | `tokenization.unit`（標記單位） | `select`（character/word） | 是 |
-    | `sequence_tagging` | `tagging_scheme`（標記方案） | `select`（BIO/BIOES/IOB2/SINGLE） | 是 |
+    | `sequence_tagging` | `snap_unit`（選取吸附） | `select`（character/word） | 是 |
     | `entity_recognition` | `entities`（實體類型） | `entity-list` | 是 |
+    | `entity_recognition` | `snap_unit`（選取吸附） | `select`（character/word） | 是 |
     | `entity_recognition` | `allow_overlapping`（允許重疊標記） | `boolean` | 否 |
     | `relation_identification` | `relation_types`（語意類型標籤，如 `bodyLocation`、`causes`） | `tag-list` | 否 |
     | `single_label` | `label_options`（標籤選項） | `entity-list` | 是 |
@@ -512,12 +510,12 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 - 純 `relation_identification` 載入含既有實體的資料集：實體僅以唯讀高亮作為 E1/E2 候選，不顯示實體類型、實體列表、建立實體或刪除實體控制項；切換為 `entity_recognition + relation_identification` 後才顯示完整 Span 編輯介面。
 - 由 `entity_recognition + relation_identification` 取消 `entity_recognition`：保留 `relation_identification`，預覽切換為純關係模式並移除 config 的 `source_output`；不得連帶取消關係三元組。
 - 已選輸出類型包含 `entity_recognition` 或 `relation_identification`：不得在專屬或整合預覽之外重複顯示通用輸入文字區塊；專屬或整合預覽仍須完整顯示資料集實際輸入內容。
-- 已選輸出類型為 `sequence_tagging`：不得重複顯示通用輸入文字區塊；專屬 Token 網格須完整承載輸入。字模式將中文與英文依可見字元切分；詞模式將中文依語言感知詞界、英文依單字切分；兩者皆不為空白建立 Token，標點獨立。
-- `sequence_tagging` 切換字／詞後：預覽須依 Input 原文重建 Token，清除無法安全對應新邊界的暫存 tag，並依新 Token 數重新驗證可見預標記；不得沿用相同索引而把舊 tag 錯套到不同文字。
-- `sequence_tagging` 的可見預標記陣列與 Token 數量不一致：顯示含兩側數量的可定位錯誤並阻擋進入 Step 3；不得靜默捨棄預標記或全數重設為 `O`。若預標記數量與另一個標記單位產生的 Token 數一致，錯誤訊息須點名該單位並提供「切回該單位」或「改用符合目前單位的預標記」兩條出路；否則維持「請修正資料欄位」的一般指引。
-- `sequence_tagging` 標記單位切換後又切回、預標記數量與 Token 數重新一致：可見預標記自資料重新初始化並解除阻擋，不得留在全 `O` 的誤導狀態；Bypass 明確清空的預覽狀態不受重新初始化影響。
-- `sequence_tagging` 使用 `IOB2` 且相鄰兩個實體類型相同：第二個實體仍可明確套用 `B-X` 重新開始；不得只依前一 Token 自動推斷為 `I-X`。
-- `sequence_tagging` 使用 `BIOES`：單 Token 實體使用 `S-X`；多 Token 實體可分別套用 `B-X / I-X / E-X`。切換至 `SINGLE` 時 Token 只顯示類型或 `O`，不含位置前綴。
+- 已選輸出類型為 `sequence_tagging`：不得重複顯示通用輸入文字區塊；未切分的原始文本呈現面須完整承載輸入。
+- `sequence_tagging` 切換選取吸附後：既有 span 的 `start`／`end` 與顯示位置維持不變，不得重建、清除或重新驗證任何既有標記；吸附只影響其後新拖曳的落點。
+- `sequence_tagging` 的預標記 span 超出原始文本長度或 `start >= end`：該筆被拒絕並列於預覽的錯誤清單，其餘 span 正常載入且不阻擋進入 Step 3；不得對 span 筆數施加任何一致性檢查。
+- 執行環境缺少 `Intl.Segmenter` 而選取吸附設為「詞」：退回不吸附行為，不得因此改寫任務設定值。
+- `sequence_tagging` 新圈選範圍與既有 span 相交：色條轉為錯誤色且不建立該 span；相鄰但不相交（前一 span 的 `end` 等於新 span 的 `start`）必須被允許。
+- Code 模式貼上帶 `allow_overlapping: true` 的 `sequence_tagging` config：顯示可定位的驗證錯誤並阻擋進入 Step 3；不得靜默改寫為 `false` 後接受。
 - 單一或混合 `entity_recognition` 尚未選擇實體類型時圈選文字：圈選範圍持續反白且不顯示提示；再次圈選時以新範圍取代舊範圍，點擊任一實體類型後才新增一筆實體並清除暫存範圍。混合預覽若先點擊關係建構器步驟，則反白範圍由關係草稿消費，不建立實體。
 - `single_dim` 或 `multi_dim` 設定 `min >= max` 或 `step <= 0`：阻擋進入 Step 3 並顯示修正提示。
 - `single_item` 輸入類型且欄位預覽中 Input 欄位數 ≠ 1，或 `item_pair` 輸入類型且 Input 欄位數 ≠ 2：阻擋進入 Step 2 並顯示修正提示（需指出正確數量）。
@@ -556,8 +554,8 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 - **FR-003b**：schema 設定區與 code 區必須同步同一份 config，並在提交前通過所有輸出類型的 schema 驗證。
 - **FR-003c**：新增 output type 應可透過 registry 擴充，不修改核心流程（Step 1–4）。
 - **FR-003d**：`OUTPUT_TYPE_REGISTRY` 必須包含 8 種輸出類型：`sequence_tagging`、`entity_recognition`、`relation_identification`、`single_label`、`multi_label`、`single_dim`、`multi_dim`、`free_text`。每種輸出類型需定義 `fields`（欄位清單）、`defaultConfig`（預設值）與 zh/en 顯示名稱；其中 `sequence_tagging` 顯示 Sequence Tagging／序列標註，`entity_recognition` 顯示 Entity Recognition／實體辨識，`relation_identification` 顯示 Relation Identification／關係識別。`entity_relation`、`boundary`、`span`、`relation_triple` 與 `token_class` 不得存在於 registry，亦不得作為相容別名接受。
-- **FR-003d-1**：`sequence_tagging` 必須支援 `entities`（`{ name, color }[]`）、`tokenization`（`{ unit: character | word, mode: unit_based, punctuation: separate, version: 2 }`）與 `tagging_scheme`（`BIO | BIOES | IOB2 | SINGLE`）。`tokenization.unit` 與 `tagging_scheme` 為兩個獨立可組合維度；設定面板依序顯示必要的「標記單位」、「標籤類型」與「標記方案」，不得把 `character-BIO` 等組合寫死為單一 enum。字模式以 Unicode grapheme 為單位，中文漢字與英文字母皆逐字切分；詞模式以語言感知詞界切分，中文可形成多字詞、英文與拉丁字母／數字連續詞（例如 `the`、`COVID-19`）保持一個 Token。兩種模式皆略過空白並讓標點獨立。`sequence_tagging` 宣告 `hidePreviewTitle: true`，專屬預覽不顯示輸出卡片的「序列標註」標題；預覽於 Token 網格上方顯示「原始文本」標題（英文 Text）與未經切分的 Input 原始文本，並以 Input 原文依目前單位重建 Token；切換單位後須清除無法安全對應新邊界的暫存 tag，於 100ms 內更新 Token 網格，原始文本顯示不隨單位改變。預覽須依方案產生完整可套用 tag：BIO=`B/I/O`、BIOES=`B/I/O/E/S`、IOB2=`B/I/O` 且每個實體起點一律使用 `B`、SINGLE=直接類型標籤或 `O`。使用者先選完整 tag 再點擊 Token，系統不得只依前一 Token 猜測前綴。可見預標記只在標記數量與目前單位產生的 Token 數量一致時初始化；Token 邊界變更（切換單位或更換資料列）後數量重新一致時須自資料重新初始化，Bypass 明確清空的預覽狀態除外。切換單位造成不一致時顯示兩側數量、阻擋進入 Step 3，且不得靜默保留或錯套舊 tag；預標記數量與另一單位的 Token 數對齊時，錯誤訊息須點名該單位並提供「切回該單位」或「改用符合目前單位的預標記」兩條出路。驗證：`entities` 不得為空且不得含空白項目；`tokenization.unit` 必須為列舉值。
-- **FR-003d-3**：`entity_recognition` 必須支援 `entities`（`{ name, color }[]`）與 `allow_overlapping`（boolean）。設定：`allow_overlapping` 的設定卡與前一個 `entity-list` 結尾保留 12px，並與後方 `allow_bypass` 的群組間距一致。預覽：文本區域可圈選文字建立實體 + 實體類型按鈕列 + 已標記實體列表（含類型 badge、文字、字元位置、刪除按鈕），已標記實體以對應顏色底線顯示。單一或混合 `entity_recognition` 模式都必須支援兩種順序：（1）先選擇實體類型再圈選文字，圈選後立即新增；（2）先圈選文字再選擇實體類型，圈選範圍持續反白但不顯示提示，點擊類型後才新增並保留該類型為作用中。未分類期間若重新圈選，以最新範圍取代前一範圍。驗證：`entities` 不得為空且不得含空白項目。
+- **FR-003d-1**：`sequence_tagging` 必須支援 `entities`（`{ name, color }[]`）、`snap_unit`（`SPAN_SNAP_UNITS = character | word`，預設 `character`）與 `allow_bypass`（boolean）三個設定欄位；設定面板依序顯示「標籤類型」、「選取吸附」、「允許無法判定」共三欄。**`snap_unit` 只影響選取落點，不影響儲存值**：`character` 表示不吸附、拖曳到哪裡就是哪裡，`word` 表示放開滑鼠時把起訖點各自吸附至最近的詞界；兩種設定產出的資料結構完全相同，切換 `snap_unit` 不得使任何既有標記失效、錯位或被清除——這是本版與 v6.3.0 `tokenization.unit` 的根本差異。詞界判定必須使用前端 `Intl.Segmenter`（`granularity: 'word'`），不得依賴後端 tokenizer、不得於任務建立時凍結任何 engine 或 version；執行環境缺少 `Intl.Segmenter` 時必須退回「不吸附」行為且不得因此改寫任務設定值（標註者端的降級提示由 `annotation/015-annotation-workspace` 承接）。Step 2 專屬預覽必須以拖曳圈選呈現：以「原始文本」標題（英文 Text）與未經任何切分的 Input 原始文本為單一呈現面，使用者拖曳圈出一段文字後點選標籤類型完成新增，產出 `spans[]`（`{ start, end, label }`，`start`／`end` 為相對於原始文本的字元 offset，`end` 不含端點）；`sequence_tagging` 宣告 `hidePreviewTitle: true`，預覽不得顯示輸出卡片的「序列標註」標題；已標記 span 必須以對應 `entities` 顏色底線呈現，並提供含類型徽章、文字、字元位置與刪除按鈕的已標記清單。**下列 v6.2.0–v6.4.0 建立的機制隨 token 座標系一併移除**，不得於任何路徑保留：Token 網格；`tokenization`（`{ unit, mode, punctuation, version }`）設定契約；`tagging_scheme`（`BIO | BIOES | IOB2 | SINGLE`）設定欄位；依方案產生完整 tag 按鈕列（`B-X`／`I-X`／`E-X`／`S-X`／`O`）與「先選完整 tag 再點擊 Token」互動；「可見預標記數量必須等於 Token 數量、否則阻擋進入 Step 3」硬約束；切換單位後清除暫存 tag、依新 Token 數重新驗證、數量重新一致時自資料重新初始化三條防護；數量與另一單位對齊時「切回該單位／改用符合目前單位的預標記」兩條出路的錯誤訊息分支。BIO 序列改由匯出層自 `spans[]` 決定性推導，其契約由 `dataset/017-dataset-analysis-detail` 定義，013 不得再產出任何標記方案設定欄位。預標記載入：資料中的 span 以字元 offset 直接落位，不得施加任何數量一致性檢查；`start`／`end` 超出原始文本長度或 `start >= end` 的 span 必須被拒絕並在預覽中列出，其餘 span 正常載入——此為本版唯一的預標記錯誤情境。**span 重疊政策為型別級不變式**：`sequence_tagging` 與 `entity_recognition` 自 v7.0.0 起共用同一套拖曳圈選介面與同一組 span 儲存結構，兩者的區分必須由規格常數 `SPAN_OVERLAP_POLICY_BY_OUTPUT_TYPE` 明訂，不得僅以顯示名稱或匯出預設值區分；`sequence_tagging` 的 `allow_overlapping` 必須鎖死為 `false`——它是型別不變式而非可設定欄位，因此不得出現於 Step 2 設定面板、不得出現於序列化後的 config、不得可經 Code 模式覆寫，Code 模式載入的 config 若帶 `allow_overlapping: true` 必須視為驗證錯誤並阻擋前進，不得靜默改寫為 `false`。此約束的理由是可驗證的數學事實：扁平 BIO 序列無法表達重疊與巢狀，鎖死 `false` 保證任何 `sequence_tagging` 標記在任何時候都能無損壓成 BIO 序列（匯出契約見 `dataset/017-dataset-analysis-detail`）。Step 2 預覽必須在 `sequence_tagging` 下對相交落點給出即時可見的拒絕回饋：新圈選範圍與任一既有 span 相交時，色條必須轉為錯誤色且不得建立該 span；相鄰但不相交（前一 span 的 `end` 等於新 span 的 `start`）必須被允許。驗證：`entities` 不得為空且不得含空白項目；`snap_unit` 必須為 `SPAN_SNAP_UNITS` 列舉值。
+- **FR-003d-3**：`entity_recognition` 必須支援 `entities`（`{ name, color }[]`）、`snap_unit`（`SPAN_SNAP_UNITS`，預設 `character`）、`allow_overlapping`（boolean）與 `allow_bypass`（boolean）四個設定欄位；設定面板依序顯示「實體類型」、「選取吸附」、「允許重疊標記」、「允許無法判定」共四欄。設定：`allow_overlapping` 的設定卡與前一個非 boolean 欄位（新版為 `snap_unit`）結尾保留 12px，並與後方 `allow_bypass` 的群組間距一致——該 12px 標示 boolean 切換群組的起點，不得綁定於前一欄位為 `entity-list`。`snap_unit` 的語意、`Intl.Segmenter` 依賴與降級行為與 FR-003d-1 完全一致，必須由同一套共用元件提供，不得於本型別另立第二套詞界判定邏輯；自 v7.0.0 起 `entity_recognition` 與 `sequence_tagging` 共用同一套拖曳圈選預覽元件，兩者的唯一設定差異為 `allow_overlapping` 是否可設定（政策常數見 FR-003d-1）。預覽：文本區域可圈選文字建立實體 + 實體類型按鈕列 + 已標記實體列表（含類型 badge、文字、字元位置、刪除按鈕），已標記實體以對應顏色底線顯示。單一或混合 `entity_recognition` 模式都必須支援兩種順序：（1）先選擇實體類型再圈選文字，圈選後立即新增；（2）先圈選文字再選擇實體類型，圈選範圍持續反白但不顯示提示，點擊類型後才新增並保留該類型為作用中。未分類期間若重新圈選，以最新範圍取代前一範圍。驗證：`entities` 不得為空且不得含空白項目；`snap_unit` 必須為 `SPAN_SNAP_UNITS` 列舉值。
 - **FR-003d-4**：`relation_identification` 必須支援選填的 `relation_types`（string[]，語意類型標籤，預設 `[]`），且可單獨使用或與 `entity_recognition` 組合。預覽採循序關係建構器：使用者在文本中反白選取後，依序操作 `E1/Arg1 → Relation → E2/Arg2 → Undo → Add`；E1/E2 必須對應既有實體，Relation 為文本中的任意關係觸發詞區間。純 `relation_identification` 的既有實體由資料集提供並僅以唯讀高亮呈現，介面不得顯示實體類型選擇器、實體列表、建立或刪除實體控制項，亦不得顯示重複的「關係識別預覽」內層標題；若選取非既有實體，需提示改選已高亮實體。與 `entity_recognition` 組合時，E1/E2 改由同一整合預覽中可建立／修改的 Span 實體提供。反白選取須持續以藍色背景高亮，直到被按鈕消費或被新選取取代；選取已標記實體時以 outline 疊加於實體色塊。三元組三個元素皆儲存與顯示「文字 + 字元位置 `(start,end)`」；`relation_types` 至少有一個非空白項目時，每筆三元組才顯示 `type` 選單與已指定類型徽章，選項僅來自目前 `relation_types`，不得覆寫觸發詞；`relation_types = []` 時不得顯示類型徽章或選單，且不得使用寫死 fallback。預覽初始化需支援 `gold_triples`、`gold_triplets`、`triples` 與 `{subj, rel, obj}`、`{entity1, relation, entity2}` 格式及選填 `relation_type`。驗證：空陣列合法；若有項目則不得包含空白字串。
 - **FR-003d-5**：`single_label` 必須支援 `label_options`（`{ name, color }[]`）。預覽：文字區塊 + radio 風格 chip 按鈕（互斥單選，點擊切換）。驗證：`label_options` 不得為空且不得含空白項目。
 - **FR-003d-6**：`multi_label` 必須支援 `label_options: LabelOptionNode[]` 與 `max_selections`（number，0 = 不限）。每個 node 包含全樹唯一且穩定的 `id`、顯示用 `name`、leaf 選填 `color` 及遞迴 `children`；branch 不可設定 color，但每個 node 都可獨立選取；「所有層級皆可選 — 父、子標籤可分別勾選，系統會保留其分類位置。」提示以 tooltip 呈現（registry 宣告 `hintAsTooltip: true`）：「標籤選項」欄位標題旁顯示實心圓形「?」按鈕，hover 或鍵盤 focus 時顯示說明泡泡（`role="tooltip"`），taxonomy 樹編輯器內不得再顯示固定提示框。設定介面使用 `taxonomy-tree` 新增 root／child／sibling、編輯、同層排序、展開／收合與刪除 subtree；刪除含子節點的 branch 必須以頁內確認 modal 攔截（遵循 UXC-10：標題點名動作、內文載明將一併刪除的子節點數量與不可復原後果、危險紅主按鈕「刪除」、次要「取消」，Escape 取消、開啟時焦點置於確認鈕使 Enter 確認），不得使用瀏覽器原生 `confirm`；無子節點的 leaf 刪除不需確認；預覽使用可搜尋階層多選器：清單攤平顯示全部層級並以縮排表達階層（不提供 branch 展開／收合），每個節點顯示 checkbox 且不顯示完整路徑文字（完整路徑保留於可存取名稱），選取後選擇器保持開啟直到使用者以 Escape、關閉按鈕、trigger 或點擊外部關閉。已選 chip 只顯示被選節點名稱，完整 root-to-selected-node ID path 仍作選項身分與資料儲存。驗證：至少一個 root、非空 ID/name、全樹 ID 唯一、`children` 存在時為非空陣列、深度／節點數／字串長度不超過 taxonomy 常數；`max_selections >= 0` 且以 selected node path 數量計算。
@@ -574,7 +572,7 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 - **FR-003g-2**：Step 2 標記預覽區預設不得為 `evidence` 角色欄位顯示獨立卡片或區塊；只有已選輸出類型於 registry 宣告 `rendersEvidencePreview: true` 時例外顯示，目前 `free_text` 的該 metadata 為 `true`。例外情況下 Evidence 必須位於 Input 與輸出互動控制項之前；未指定 Evidence 時不得顯示空的背景區塊。Evidence 角色指定保留於 `field_role_map`（傳統 `sentence_pairs` 設定另將欄位記錄於 config 的 `evidence_fields`）。
 - **FR-003g-3**：Step 2 標記預覽區的通用輸入文字須依輸入類型呈現：`single_item` 顯示「原始文本」標題（英文 Text）與單一文字區塊，不再顯示 Input 欄位名稱標籤；`item_pair` 於配對區塊上方顯示一次「原始文本」標題，並保留兩個帶項目對名稱小標的文字區塊，小標顯示 FR-003k 的項目對名稱生效值（預設為 Input 欄位名稱）。當所有已選輸出類型的 registry item 均未宣告 `rendersInputPreview: true` 時，通用輸入文字位於輸出類型預覽之前；任一已選輸出類型宣告 `rendersInputPreview: true` 時，系統不得顯示通用輸入文字區塊，輸入內容改由該輸出類型的專屬或整合預覽完整呈現。`sequence_tagging`、`entity_recognition`、`relation_identification`、`free_text` 的該 metadata 均為 `true`。複合任務須依已選輸出類型 metadata 自動套用，不得以任務名稱硬編。
 - **FR-003g-4**：各輸出類型的預覽互動（如點擊標籤 chip）僅刷新該輸出類型的預覽區塊，不影響輸入文字與其他輸出類型的預覽。
-- **FR-003g-5**：當 `field_role_map` 中存在 `output` 角色欄位時，Step 2 各輸出類型的預覽互動控制項必須以該欄位的實際資料值初始化預覽狀態：`single_label` 預選匹配的標籤；`multi_label` 將 flat `string[]` 正規化為單段 paths，或直接使用 hierarchical `string[][]` 完整 paths，且只以第一筆資料的合法 paths 初始化；`single_dim` 滑桿設於實際分數值；`multi_dim` 各維度滑桿設於對應維度值；`sequence_tagging` 以符合目前方案且與 Token 等長的可見預標記初始化；`free_text` 預填實際答案文字；`entity_recognition` 以實際實體列表初始化；`relation_identification` 以實際三元組初始化。無 output 欄位時其他輸出類型維持各自預設值，`free_text` textarea 則必須為空字串。當存在多個 `output` 角色欄位時，系統必須依各欄位值的資料形狀推斷欄位與輸出類型的對應；`string[][]` 優先識別為 hierarchical `multi_label` path，含位置前綴的 sequence tag 陣列可直接辨識，`SINGLE` 字串陣列則須同時依已選 output type 與 Token 數量對齊判定，不得一律誤判為 `multi_label`。Output 角色資料是建立者明確指定的 annotator-visible preannotation；隱藏 test-set ground truth 仍不得透過 API、前端 state 或 preview 下發給標記者。
+- **FR-003g-5**：當 `field_role_map` 中存在 `output` 角色欄位時，Step 2 各輸出類型的預覽互動控制項必須以該欄位的實際資料值初始化預覽狀態：`single_label` 預選匹配的標籤；`multi_label` 將 flat `string[]` 正規化為單段 paths，或直接使用 hierarchical `string[][]` 完整 paths，且只以第一筆資料的合法 paths 初始化；`single_dim` 滑桿設於實際分數值；`multi_dim` 各維度滑桿設於對應維度值；`sequence_tagging` 以 output 欄位提供的 `spans[]`（`{ start, end, label }`，半開區間）依字元位置直接落位，不做任何數量對齊檢查（v7.0.0，見 FR-003d-1）；`free_text` 預填實際答案文字；`entity_recognition` 以實際實體列表初始化；`relation_identification` 以實際三元組初始化。無 output 欄位時其他輸出類型維持各自預設值，`free_text` textarea 則必須為空字串。當存在多個 `output` 角色欄位時，系統必須依各欄位值的資料形狀推斷欄位與輸出類型的對應；`string[][]` 優先識別為 hierarchical `multi_label` path，帶 `start`／`end`／`label` 的 span 物件陣列可直接辨識為 `sequence_tagging`（v7.0.0 起不再有帶位置前綴的 tag 陣列），其餘扁平字串陣列則須依已選 output type 判定，不得一律誤判為 `multi_label`。Output 角色資料是建立者明確指定的 annotator-visible preannotation；隱藏 test-set ground truth 仍不得透過 API、前端 state 或 preview 下發給標記者。
 - **FR-003g-6**：`single_label` 的 `label_options` 仍由 scalar unique values 自動帶入 `{ name, color }`。`multi_label` 的自動帶入必須 shape-aware：flat `string[]` 建立一層 leaf taxonomy，舊值同時作 `id` 與 `name`；hierarchical `string[][]` 的 segment 是全樹唯一 node ID，依全部 records 合併共同 prefix 建立 union tree，並先以該 ID 作初始 `name`。若需跨分支同名顯示，使用者在 Visual 將不同 ID 節點的 `name` 改為相同文字。節點與 sibling 的順序依資料首次出現順序，已帶入後不重複執行；混合 shape、ID 出現在不同 parent、其他無效 segment 或超過 taxonomy 資源限制時不得建立部分樹。
 - **FR-003g-7**：當 `output` 角色欄位的首筆資料為 JSON object（非 array）時，`multi_dim` 的 `dimensions` 必須自動從該 object 的 keys 建立維度列表（每個 key 對應一筆 `{ name, min, max, step }`），免除使用者手動新增；已自動帶入後不重複執行。各維度的 `min`／`max`／`step` 必須依該維度實際資料值範圍推斷（如值域介於 0–1 時採 0～1 範圍與小數步進、含負值時對稱擴展範圍、值較大時依最大值放大範圍上限），不得一律套用固定預設範圍。
 - **FR-003g-8**：當預標記三元組資料存在且元素帶有語意類型欄位（`relation_type` 字串，或 record 層級的 `relation_types` 陣列）時，`relation_identification` 的 `relation_types` 必須自動從資料中出現過的語意類型（依出現順序去重）帶入，使設定面板的語意類型欄位與三元組列的 `type` 選單皆反映實際資料、不出現寫死預設值；已自動帶入後不重複執行。收集優先順序：(1) 各三元組的 `relation_type` 欄位；(2) record 層級的 `relation_types` 陣列；(3) `{subj, rel, obj}` 格式中 `rel` 本身為語意標籤時直接採用。若三元組不含可辨識的語意類型（如 ABSA 的 `target_text`／`aspect_text`／`opinion_text` 形式），則維持預設空陣列並依 FR-003d-4 隱藏類型徽章與選單。
@@ -655,7 +653,7 @@ flowchart LR
 
 - **TaskDraftInput**：建立任務輸入草稿。欄位：`task_name`、`dataset`、`input_type`（`TASK_INPUT_TYPES`）、`selected_categories[]`（`TASK_CATEGORIES`）、`selectedOutputTypes[]`（`OUTPUT_TYPE_KEYS`）、`outputs[]`（`OutputConfig[]`，每項含 `type` + `config`）、`field_role_map: Record<string, FieldRole>`、`run_init`、`annotator_guideline_text`、`annotator_guideline_assets[]`、`reviewer_guideline_text`、`reviewer_guideline_assets[]`、`force_guideline`。`selectedOutputTypes[]` 是 Step 1 UI 選擇狀態；進入設定與提交時，一對一對應 `outputs[].type`。
 - **OutputConfig**：單一輸出類型設定。欄位：`type`（`OUTPUT_TYPE_KEYS` 之一）、`config`（由該 output type 的 registry fields 定義的 key-value 物件；一律包含共通欄位 `allow_bypass: boolean`，預設 `true`）。
-- **SequenceTaggingConfig**：`sequence_tagging` 的 config。欄位：`entities: { name, color }[]`、`tokenization: { unit: character | word, mode: unit_based, punctuation: separate, version: 2 }`、`tagging_scheme: BIO | BIOES | IOB2 | SINGLE`、`allow_bypass: boolean`。
+- **SequenceTaggingConfig**：`sequence_tagging` 的 config。欄位：`entities: { name, color }[]`、`snap_unit: character | word`（`SPAN_SNAP_UNITS`，預設 `character`）、`allow_bypass: boolean`。不含 `allow_overlapping`——重疊禁止為型別不變式（`SPAN_OVERLAP_POLICY_BY_OUTPUT_TYPE`），不得序列化為設定欄位。
 - **FreeTextConfig**：`free_text` 的 config。欄位：`input_instruction: string`、`output_instruction: string`（皆為必要、trim 後非空且最多 100 字）、`max_length: number`（`> 0`）、`allow_bypass: boolean`；不包含已退役的 `show_reference`。
 - **LabelOptionNode**：`multi_label.label_options` 的遞迴節點。欄位：`id: string`（全樹唯一、穩定）、`name: string`（顯示文字）、`color?: string`（僅 leaf）、`children?: LabelOptionNode[]`（存在時必須非空）。
 - **LabelPath**：Task New 資料解析與預覽選取使用的 `string[]`，依序記錄 root 到 selected node 的 node IDs；路徑可以結束於 branch 或 leaf。本規格不先定義 015 的持久化 submission envelope。
@@ -721,9 +719,11 @@ flowchart LR
 >
 > **v6.4.3 Dashboard consumer 同步**：012 Dashboard 已直接逐項顯示 `outputs[].type`，並沿用 8 個 `OUTPUT_TYPE_KEYS`、複合 tag、13 筆非上限示例與第 14 筆 config-driven 泛化契約。014 Task Detail、015 Annotation Workspace 與 017 Dataset Analysis Detail 的 consumer 延後範圍不變；Dashboard 保留的 legacy `task_type` 只是獨立 routing compatibility 欄位，不得由 `outputs[]` 推導。
 >
+> **v7.0.0 下游影響檢查**：本次將 `sequence_tagging` 由 Token＋BIO 契約破壞性改為字元 offset `spans[]`，並讓 `entity_recognition` 共用同一套 `snap_unit` 與圈選元件。015 Annotation Workspace 已於同一 issue（#581）的 `seq-tagging-span-workspace` change 同步；`dataset/017` 的 span-level 指標與匯出層 BIO 推導留待該 issue 的第三個 change；010／012／014／016 只逐項顯示 `outputs[].type`，不觸及 `sequence_tagging` 的內部 config，僅需移除文案中的 `tagging_scheme`／`tokenization` 字樣（Lightweight Path 同步）。v6.2.0／v6.3.0 兩則延後註記所指向的 tokenization 契約與凍結義務隨 ADR-031 一併退場：ADR-031 已標記 Superseded，013 與 015 都不再有 production tokenizer 的凍結義務。
+>
 > **未來版本候選（非 013 承諾範圍，2026-07-28 對照 Label Studio／Scale 評估後記錄）**：
 >
-> 1. **拖曳選取多 Token 實體**：015 Annotation Workspace 的正式標記介面應支援拖曳選取連續 Token 後自動展開 `B-X / I-X` 前綴（參考 Label Studio／Prodigy），取代逐 Token 點選；013 Step 2 預覽維持點選即可。
+> 1. ~~**拖曳選取多 Token 實體**~~（**已於 v7.0.0 交付，形式與原記錄不同**）：issue #581 直接以字元 offset 的 `spans[]` 取代 Token 與 BIO 前綴，因此 013 Step 2 預覽與 015 正式標記介面都改為拖曳圈選，並無「自動展開 `B-X / I-X` 前綴」這一步——BIO 只在 `dataset/017` 的匯出層由 span 推導。
 > 2. **標籤說明欄位**：`label_options` 增加選填 `description`，於標記介面顯示給標注者以提升標注一致性（參考 Scale 的 label taxonomy alias + description）。
 > 3. **標籤過濾與快捷鍵**：標籤類型數量大時（如 10+），標記介面提供標籤搜尋過濾與 hotkey 綁定（參考 Label Studio `<Filter>`）。
 
@@ -761,7 +761,11 @@ flowchart LR
 - **SC-003u**：`taxonomy-tree` 與 preview selector 可由鍵盤完整操作並暴露正確 tree ARIA 狀態；375px 使用全寬 dialog／bottom sheet 且 Escape 還原焦點，375px／768px／1440px 的 `document.scrollWidth` 不超過 viewport width。
 - **SC-003v**：`free_text` 在指定 Evidence、Input、Output 時，Step 2 可驗證 DOM 與視覺順序為「背景參考 (Evidence) → Input → 回答框」，回答區顯示可設定的 `output_instruction`（不再顯示「回答」或 Output 欄位名稱），回答框值等於首筆 Output；未指定 Output 時值為空字串。schema 與產生的 YAML/JSON 均不含 `show_reference` 或 `show_reference_to_annotator`。
 - **SC-003w**：`free_text` 設定面板顯示必要的「輸入區說明」與「作答區說明」，zh 預設值分別為「請閱讀以下內容」與「請輸入回答」，en 預設值分別為 `Read the following content` 與 `Enter your response`；修改後 100ms 內同步至專屬預覽與 Code。任一值 trim 後為空或超過 100 字時阻擋進入 Step 3 並顯示可定位錯誤；Bypass 只停用作答區，輸入內容持續可讀；舊 config 缺少 instruction 時須補預設並可繼續。
-- **SC-003x**：`sequence_tagging` 預設字模式下，中文「台積電」顯示為「台／積／電」，英文 `the` 顯示為 `t／h／e`；切換詞模式後，中文範例中的「董事長／今天／出席」可形成多字 Token，英文 `the` 保持一個 Token，標點在兩種模式皆獨立。設定值與 Token 網格於 100ms 內同步，預覽的原始輸入文本於兩種模式皆維持原文；切換單位時不沿用錯位暫存 tag，並依新 Token 數重新顯示可見預標記對齊錯誤。方案選單仍包含 BIO／BIOES／IOB2／單一標籤，完整 tag 可精確套用，IOB2 可建立相鄰 `B-X, B-X`，BIOES 可建立 `S-X`。
+- **SC-003x**：`sequence_tagging` 的 Step 2 設定區依序顯示「標籤類型」、「選取吸附」、「允許無法判定」三欄，畫面上不存在「標記方案」欄位、Token 網格與任何 `B-`／`I-`／`E-`／`S-` 前綴的 tag 按鈕；預覽以帶「原始文本」標題的未切分文本呈現。字元吸附下於「台積電董事長今天出席」自「積」拖曳至「電」後點選標籤類型，新增 `{ start: 1, end: 3, label }` 且反白範圍與拖曳範圍一致；切換為詞吸附時既有 span 的 `start`／`end` 與顯示位置不變、不出現數量不一致錯誤、不阻擋進入 Step 3，且自「事」拖曳至「長」放開時吸附至詞界產生涵蓋「董事長」的 `{ start: 3, end: 6 }`。
+- **SC-003y**：output 欄位提供 3 筆 span 預標記且原始文本 20 字元時，三筆依字元 offset 直接落位、不顯示任何「標記數量與 Token 數不一致」錯誤且「下一步」可用；其中 `{ start: 18, end: 25 }` 這類 `end` 超出文本長度者被拒絕並列於預覽錯誤清單，其餘 2 筆正常載入且不阻擋進入 Step 3。
+- **SC-003z**：`sequence_tagging` 已存在 `{ start: 0, end: 3 }` 時，圈出相交的 `{ start: 2, end: 5 }` 並點選標籤類型會轉為錯誤色且不建立，清單維持 1 筆；改圈相鄰不相交的 `{ start: 3, end: 5 }` 則正常建立為第 2 筆。設定面板不存在「允許重疊與巢狀」欄位，序列化後的 `sequence_tagging` config 不含 `allow_overlapping` 鍵。
+- **SC-003aa**：於 Code 模式套用一份 `sequence_tagging` 帶 `allow_overlapping: true` 的 config 時，顯示可定位的驗證錯誤並阻擋進入 Step 3，系統不得靜默改寫為 `false` 後接受。
+- **SC-003ab**：`entity_recognition` 設定面板依序顯示「實體類型」、「選取吸附」、「允許重疊標記」、「允許無法判定」四欄，其「選取吸附」選項與 `sequence_tagging` 完全相同（`character`／`word`）；同一任務同時選取兩型別時，兩個手風琴面板各自顯示自己的「選取吸附」，可設為不同值且互不影響。
 - **SC-004**：新增 output type 到 registry 後，可直接在流程中使用，不需改核心流程程式碼。
 - **SC-004a**：研究生現行任務情境（情感分類、多標籤、多維度評分、實體辨識、關係識別、自由文字）可在 `task-new` 透過輸出類型組合完成設定。
 - **SC-004b**：在 code 區編輯 YAML/JSON 後，點擊 `儲存` 可立即回填並反映於 schema 欄位；格式錯誤時不覆蓋既有設定。
@@ -779,6 +783,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 7.0.0 | 2026-09-04 | **序列標註改為字元 offset span（破壞性，issue #581，OpenSpec change `seq-tagging-span-config`）**：`sequence_tagging` 的設定契約由「Token 網格＋`tagging_scheme`」改為 `entities`／`snap_unit`／`allow_bypass` 三欄，標記值改為半開區間 `spans[]`（`{ start, end, label }`）。破壞性移除 v6.2.0～v6.4.0 建立的 `tagging_scheme`（BIO／BIOES／IOB2／SINGLE）、`tokenization` 物件與其 unit-based v2 契約、Token 網格與完整 tag 按鈕、language-aware token metadata、「標記數量與 Token 數不一致」阻擋與切換單位時的重新驗證流程；BIO 改由 `dataset/017` 的匯出層自 span 推導。`snap_unit`（`SPAN_SNAP_UNITS = character | word`）只影響拖曳選取的落點吸附，不改變已存的 `start`／`end`，由前端 `Intl.Segmenter` 提供詞界，環境缺該 API 時降級為不吸附。新增型別層不變式 `SPAN_OVERLAP_POLICY_BY_OUTPUT_TYPE`：`sequence_tagging` 禁止相交（相鄰允許）且不提供 `allow_overlapping` 欄位、Code 模式帶入 `allow_overlapping: true` 須明確報錯；`entity_recognition` 維持可設定，並改為共用同一套 `snap_unit` 與圈選預覽元件。預標記改以字元 offset 落位、不做數量檢查，超出文本或 `start >= end` 者逐筆拒絕且不阻擋流程。同步改寫 FR-003d-1／FR-003d-3、AC-2.10／AC-2.11、`sequence_tagging` 六條邊界情境、`SequenceTaggingConfig` 關鍵實體與規格常數區（移除 `SEQUENCE_TAGGING_SCHEMES`／`SEQUENCE_TOKENIZATION_VERSION`／`SEQUENCE_TOKENIZATION_MODE`，`SEQUENCE_TOKEN_UNITS` 更名為 `SPAN_SNAP_UNITS`），改寫 SC-003x 並新增 SC-003y／SC-003z／SC-003aa／SC-003ab。連帶傳播：FR-003g-5 的 `sequence_tagging` 初始化子句與多 output 欄位形狀推斷子句一併改為 span 語意（本 change 的 delta 未含 FR-003g-5，此處為 FR-003d-1 的一致性傳播）；「未來版本候選」第 1 項「拖曳選取多 Token 實體」標記為已交付但形式不同；ADR-031 已轉為 Superseded，013 與 015 均不再有 production tokenizer 凍結義務。 |
 | 6.9.6 | 2026-09-04 | **驗收情境配發 AC-N.N 穩定 ID（patch，無條文變更）**：本規格建立於 AC 穩定 ID 標準（spec-template v1.5.0）之前，四組使用者故事的 40 條驗收情境長期僅以流水號指稱，導致下游 OpenSpec change 與測試無法穩定引用；本版依既有標準為每條情境補上 `AC-<故事編號>.<情境序號>` 前綴（AC-1.1~1.3、AC-2.1~2.32、AC-3.1~3.3、AC-4.1~4.2），情境文字、FR/SC 條文與編號順序皆未更動。 |
 | 6.9.5 | 2026-08-27 | **`TaskGuidelineConfig` 新增 `guideline_version`（patch，issue #492 A4/A5）**：新增欄位 `guideline_version`（指引內容版本標記），任務建立時由系統自動初始化，具體形狀留待後端接上時定義；後續遞增規則、觸發條件與消費方（試標回合 FK 綁定、`annotation-015` FR-066 第 4 點）之權威定義在 `014-task-detail` FR-017a，本規格僅新增欄位本身，不新增 FR/SC、不定義遞增邏輯。 |
 | 6.9.4 | 2026-08-24 | Issue #261：新增 Prototype Traceability，明確對應 task-new 原型頁面、與 014 共用的 `OUTPUT_TYPE_REGISTRY` 設定引擎、設計層參考的責任邊界；規格條文未變。 |
