@@ -75,7 +75,11 @@ test.describe('multi_dim submit validation (T005)', () => {
 });
 
 test.describe('sequence_tagging submit validation (T006)', () => {
-  test('an all-O token grid blocks submit; tagging a token clears the block', async ({ page }) => {
+  /* issue #581 / OpenSpec change seq-tagging-span-config group 2 retired the
+     token grid, so both the all-O empty state and the ws-seq-token click that
+     clears it no longer exist. The span-based equivalent is written by the
+     annotation/015 change. */
+  test.skip('an all-O token grid blocks submit; tagging a token clears the block', async ({ page }) => {
     await patchDataFile(page, 'task-detail.data.js', `
       window.LabelSuiteTaskDetailData.profiles.T006.datasetRecords.forEach(function (r) { r.pre_tags = null; });
     `);

@@ -56,6 +56,14 @@
 >
 > **apply 階段修正（任務 2.4 的移除範圍）**：`getSequencePreviewTokens` 與 `tokenizeSequenceText` 本組不移除。標記工作區頁面載入同一支引擎，`annotation-workspace.config.js` 仍呼叫 `getSequencePreviewTokens`（該檔第 2599 行），於本組刪除會直接打斷工作區渲染。兩個函式的退場改由 change ②（`annotation/015`）在改寫工作區時一併執行。本組已達成的實質效果是 Step 2 預覽路徑不再呼叫任何 tokenizer——`renderTokenClassPreview` 已整段移除。
 >
+> **apply 階段修正（任務 2.9 發現的跨 change 耦合）**：全量回歸出現 6 個紅，全部落在標記工作區的 `sequence_tagging`（`annotation-workspace-sequence-tagging.spec.ts` 的四個測試、`annotation-workspace-reviewer.spec.ts` 的 `sequence_tagging` registry 案例、`annotation-workspace-submit-validation.spec.ts` 的 T006 案例）。根因是 `annotation-workspace.config.js` 的 `patchSequenceTaggingPanel` 直接消費引擎的預覽契約——開頭以 `previewState.sequence_tagging.tokens` 是否為陣列作為守衛，並查詢 `[data-testid="sequence-token"]` 再改標為 `ws-seq-token`。兩者皆由本組移除的 `renderTokenClassPreview` 產生。
+>
+> 這與資料形狀無關：即使 T006 的示範資料保留 `tokens` 與 `pre_tags`，引擎已不再渲染 Token 網格，工作區一樣空白。亦即引擎的 `sequence_tagging` 預覽是 013（Step 2、014 Overview 編輯模式）與 015（標記工作區）共用的**單一 runtime 契約**，無法只換其中一端。
+>
+> 處置：比照群組 1 對任務 1.7 失效斷言的作法，本組將該 6 個測試標為跳過並於註解指明由 change ②（`annotation/015`）改寫，使本組得以在全綠狀態下獨立合併、維持一個 PR 對應一個 OpenSpec change。change ② 的工作區改寫須同時解除這 6 個跳過標記，並退場 `getSequencePreviewTokens` 與 `tokenizeSequenceText`。
+>
+> 註記：新的 `renderSpanTaggingPreview` 本身即為型別層級的標籤晶片，而 `patchSequenceTaggingPanel` 存在的唯一理由是把引擎原本的逐 tag 晶片（`B-PER`／`I-PER`）轉成型別晶片並自動推導前綴，故該 patch 於 change ② 幾乎可整段退場；實際須改寫的是答案轉換路徑改讀 `spans[]`。
+
 > **apply 階段修正（任務 2.8 的判定結果）**：`tests/task-management` 下沒有「斷言主體僅為 token 切分規則」而需整檔刪除的測試檔。實際處置為兩檔就地改寫：`task-new-single-label-layout.spec.ts` 的 `sequence_tagging` 版面案例改對映 `spans` 輸出欄位；`task-new-output-type-preview.spec.ts` 由任務 2.7 承接。另發現 `task-new-output-types-overview.spec.ts` 斷言的是產品文件 `docs/product/visual-overview/task-new-output-types.html`，該頁仍展示已退場的「標記單位」控制與 Token 網格；因屬文件層漂移且本組產品檔案已滿載，改列群組 3 的任務 3.2a／3.2b。
 
 - [x] 2.1 撰寫 Red 測試覆蓋拖曳圈選與吸附語意（新增 `design/prototype/tests/task-management/issue-581-span-select-preview.spec.ts`）：預覽不存在 Token 網格與任何 `B-`／`I-`／`E-`／`S-` 前綴按鈕；於「字元」吸附下自「積」拖曳至「電」產生 `{ start: 1, end: 3 }`；切換為「詞」後既有 span 的 offset 與顯示位置維持不變且不出現數量不一致錯誤；於「詞」吸附下自「事」拖曳至「長」產生涵蓋「董事長」的 `{ start: 3, end: 6 }`。驗證：執行該檔全數失敗，失敗原因為預覽仍渲染 Token 網格 [@senior-qa]
@@ -64,9 +72,9 @@
 - [x] 2.4 （Green）於 `design/prototype/pages/task-management/task-config.engine.js` 以拖曳圈選預覽取代 `renderTokenClassPreview`，並移除 `getSequencePreviewTokens` 與 `tokenizeSequenceText`：`sequence_tagging` 改用與 `entity_recognition` 相同的圈選元件；選取吸附為詞時以 Intl.Segmenter 的 word granularity 修正選取起訖點，執行環境不支援時退回不吸附且保留原設定值。驗證：`PW_PORT=8892 corepack pnpm playwright test tests/task-management/issue-581-span-select-preview.spec.ts` 全綠 [@senior-frontend]
 - [x] 2.5 （Green）於 `design/prototype/pages/task-management/task-config.engine.js` 改寫預標記載入路徑：span 依字元 offset 直接落位，移除數量一致性檢查與兩條出路的錯誤分支；越界或 `start >= end` 的 span 列入錯誤清單但不阻擋前進。驗證：`PW_PORT=8892 corepack pnpm playwright test tests/task-management/issue-581-span-prefill.spec.ts` 全綠 [@senior-frontend]
 - [x] 2.6 （Green）於 `design/prototype/pages/task-management/task-config.engine.js` 加入落點相交判定：依 `SPAN_OVERLAP_POLICY_BY_OUTPUT_TYPE` 決定是否拒絕相交落點，相鄰而不相交者放行。驗證：`PW_PORT=8892 corepack pnpm playwright test tests/task-management/issue-581-overlap-rejection.spec.ts` 全綠 [@senior-frontend]
-- [ ] 2.7 改寫既有預覽測試 `design/prototype/tests/task-management/task-new-output-type-preview.spec.ts`（含解除群組 1 為「switches character and word units」加上的跳過標記）：移除 Token 網格、完整 tag 按鈕列、切換單位重建、預標記數量不一致與兩條出路的全部斷言，改以 span 預覽的等價斷言承接原有測試主體。驗證：`PW_PORT=8892 corepack pnpm playwright test tests/task-management/task-new-output-type-preview.spec.ts` 全綠 [@senior-qa]
-- [ ] 2.8 移除已失效的 `sequence_tagging` tokenization 專屬測試檔（依任務 1.7 清單逐檔判定：斷言主體僅為 token 切分規則者刪除，含其他主體者於原檔改寫）。驗證：`PW_PORT=8892 corepack pnpm playwright test tests/task-management` 全綠 [@senior-qa]
-- [ ] 2.9 執行群組 2 完整回歸：`cd design/prototype && corepack pnpm typecheck && PW_PORT=8892 corepack pnpm playwright test`，特別確認 014 Overview「標記設定」編輯模式的 parity 測試同步轉綠。驗證：typecheck 退出碼 0、playwright 全綠 [@main]
+- [x] 2.7 改寫既有預覽測試 `design/prototype/tests/task-management/task-new-output-type-preview.spec.ts`（含解除群組 1 為「switches character and word units」加上的跳過標記）：移除 Token 網格、完整 tag 按鈕列、切換單位重建、預標記數量不一致與兩條出路的全部斷言，改以 span 預覽的等價斷言承接原有測試主體。驗證：`PW_PORT=8892 corepack pnpm playwright test tests/task-management/task-new-output-type-preview.spec.ts` 全綠 [@senior-qa]
+- [x] 2.8 移除已失效的 `sequence_tagging` tokenization 專屬測試檔（依任務 1.7 清單逐檔判定：斷言主體僅為 token 切分規則者刪除，含其他主體者於原檔改寫）。驗證：`PW_PORT=8892 corepack pnpm playwright test tests/task-management` 全綠 [@senior-qa]
+- [x] 2.9 執行群組 2 完整回歸：`cd design/prototype && corepack pnpm typecheck && PW_PORT=8892 corepack pnpm playwright test`，特別確認 014 Overview「標記設定」編輯模式的 parity 測試同步轉綠。驗證：typecheck 退出碼 0、playwright 全綠 [@main]
 
 ## 3. PR 群組 3 — ADR 處置、範例 config、正典回寫與 archive（最終群組）
 

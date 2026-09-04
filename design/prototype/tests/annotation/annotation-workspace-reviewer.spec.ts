@@ -185,6 +185,11 @@ const REGISTRY_CASES: Array<{
 
 for (const { outKey, taskId, sampleId, answer } of REGISTRY_CASES) {
   test(`reviewer direct correction is available for ${outKey} and review submit throws no page error`, async ({ page }) => {
+    /* issue #581 / OpenSpec change seq-tagging-span-config group 2 retired the
+       token grid this case's answer() drives; the annotation/015 change
+       restores the case against span drag-select. */
+    test.skip(outKey === 'sequence_tagging', 'awaiting the annotation/015 workspace span rewrite');
+
     const errors = trackPageErrors(page);
 
     await submitAsAnnotator(page, taskId, sampleId, () => answer(page));

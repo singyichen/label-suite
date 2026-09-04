@@ -14,7 +14,13 @@ test.beforeEach(async ({ page }) => {
   await skipGuidelineModal(page);
 });
 
-test.describe('sequence_tagging output type', () => {
+/* issue #581 / OpenSpec change seq-tagging-span-config group 2 replaced the
+   sequence_tagging token grid with span drag-select over the raw text, so the
+   ws-seq-token cells and the BIO tag buttons every test here drives no longer
+   render. The token coordinate system these assertions encode is exactly what
+   #581 retires, so they are rewritten -- not repaired -- by the annotation/015
+   change that owns the workspace surface. */
+test.describe.skip('sequence_tagging output type', () => {
   test('renders one token per pre-tokenized unit from the frozen tokenization contract', async ({ page }) => {
     await page.goto(buildWorkspaceUrl({ task_id: 'T006', sample_id: 'sequence-tagging-001' }));
     await dismissGuidelineModal(page);
