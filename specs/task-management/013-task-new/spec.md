@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-list-output-types
 建立日期: 2026-04-20
-版本: 6.9.5
+版本: 6.9.6
 狀態: Draft
 ---
 
@@ -162,9 +162,9 @@ sequenceDiagram
 
 **驗收情境**：
 
-1. **Given** 已登入且可使用任務管理模組，**When** 完成 Step 1~4 並提交，**Then** 成功建立任務且導向 `/task-detail?task_id=...`。
-2. **Given** 建立成功，**When** 檢查任務成員資料，**Then** 建立者自動有一筆 `project_leader` 的 `task_membership`。
-3. **Given** 正在建立流程中，**When** 點擊取消，**Then** 導回 `/task-list` 且不建立任務。
+1. **AC-1.1**：**Given** 已登入且可使用任務管理模組，**When** 完成 Step 1~4 並提交，**Then** 成功建立任務且導向 `/task-detail?task_id=...`。
+2. **AC-1.2**：**Given** 建立成功，**When** 檢查任務成員資料，**Then** 建立者自動有一筆 `project_leader` 的 `task_membership`。
+3. **AC-1.3**：**Given** 正在建立流程中，**When** 點擊取消，**Then** 導回 `/task-list` 且不建立任務。
 
 **介面定義（需與 IA 導覽語意一致）**：
 
@@ -282,38 +282,38 @@ Step 2 必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型在 registry 
 
 **驗收情境**：
 
-1. **Given** 在 Step 2 且已選擇一個或多個輸出類型，**When** 載入頁面，**Then** 每個輸出類型以手風琴面板呈現各自的 schema 設定欄位。
-2. **Given** 在 Step 2，**When** 調整任一輸出類型的 schema 欄位，**Then** 下方 Code 區需即時呈現等價 `outputs[]` 格式的 YAML/JSON config。
-3. **Given** 在下方 Code 區手動修改設定，**When** 點擊 `儲存`，**Then** schema 欄位需同步更新；無效設定需顯示錯誤。
-4. **Given** 平台新增一種 output type 到 registry，**When** 使用者進入 Step 1/Step 2，**Then** 可選到該輸出類型並看到對應設定，無需變更核心流程。
-5. **Given** 使用者在 Step 2 上傳 `.yaml/.yml/.json` 設定檔，**When** 讀取成功，**Then** code 區應載入檔案內容、切換對應格式並要求使用者按儲存套用。
-6. **Given** 使用者切換語言（zh/en），**When** 當前 labels 仍為預設模板值，**Then** Step 2 預覽、schema 標籤與 code labels 應同步切換為對應語系文案。
-7. **Given** 任一輸出類型的 `allow_bypass` 為開啟（預設），**When** 在該輸出類型的預覽勾選「無法判定 (Bypass)」，**Then** 該輸出類型的其他預覽互動控制項被清空並停用，且不影響輸入文字與其他輸出類型的預覽；取消勾選後恢復可操作並重新初始化。
-8. **Given** 在 schema 設定面板將某輸出類型的 `allow_bypass` 關閉，**When** 預覽刷新，**Then** 該輸出類型的預覽不顯示 Bypass 勾選項，且既有的勾選狀態被清除；code 區同步輸出 `allow_bypass: false`。
-9. **Given** 已選輸出類型中至少一項於 registry 宣告 `rendersInputPreview: true`，**When** Step 2 標記預覽載入，**Then** 不顯示額外的通用輸入文字區塊，輸入內容改由該輸出類型的專屬或整合預覽完整呈現。
-10. **Given** 選擇 `sequence_tagging`，**When** Step 2 標記預覽載入，**Then** 不顯示重複的通用輸入文字區塊，輸入內容改由專屬 Token 網格完整呈現；設定區依序顯示「標記單位」、「標籤類型」與「標記方案」，預覽不顯示輸出卡片的「序列標註」標題，於 Token 網格上方顯示帶「原始文本」標題（英文 Text）、未經字／詞切分的原始輸入文本。
-11. **Given** `sequence_tagging` 的標記單位為「字」，**When** 預覽載入中文或英文輸入，**Then** 每個非空白可見字元各自成為 Token，標點獨立；切換為「詞」後，中文依語言感知詞界、英文依單字重新分組，標點仍獨立，Token 網格於 100ms 內同步更新，預覽顯示的原始輸入文本維持原文不變。
-12. **Given** 僅選擇 `relation_identification` 且資料集提供既有實體，**When** Step 2 標記預覽載入，**Then** 僅顯示既有實體的唯讀高亮、關係建構器與三元組列表，不顯示實體類型、實體列表或任何建立／刪除 Span 的控制項，且 config 不輸出 `source_output`。
-13. **Given** 同時選擇 `entity_recognition + relation_identification`，**When** Step 2 標記預覽載入，**Then** 顯示整合預覽並允許先建立／修改實體再建立關係，且 `relation_identification.config.source_output` 自動輸出為 `entity_recognition`。
-14. **Given** 使用者在任一語系進入 Step 1 或 Step 2，**When** taxonomy 與 registry 載入，**Then** `entity_relation`、`boundary`、`span`、`relation_triple`、`token_class` 均不存在，且 `entity_recognition`、`relation_identification`、`sequence_tagging` 分別顯示 Entity Recognition／實體辨識、Relation Identification／關係識別、Sequence Tagging／序列標註。
-15. **Given** 已選擇任一單一輸出類型或多輸出組合，**When** 使用者在寬度大於 1100px 的桌面進入 Step 2，**Then** schema 設定置左、標記預覽置右，範本／上傳與 Code 於下方共用單一外框；**When** 寬度不超過 1100px，**Then** schema 設定改置於標記預覽上方，且所有已選輸出類型仍在設定欄依序以手風琴面板呈現。
-16. **Given** 任一輸出類型或多輸出組合的 Step 2 schema 與預覽完成渲染，**When** 檢視主工作區，**Then** 左右小標分別顯示「標記設定」與「標記預覽」，桌面版頂端位置差不得超過 2px；**Given** `allow_bypass` 前方存在其他 schema 欄位，**Then** 每個輸出類型的 Bypass toggle 與前一欄位之間必須保留 12px 垂直間距。
-17. **Given** 使用者分別選擇 `single_dim` 或 `multi_dim`，**When** 進入 Step 2 標記設定，**Then** 維度名稱、最小值、最大值與間距皆以同一種維度卡片結構呈現；`single_dim` 固定一張且無新增／刪除控制，`multi_dim` 依維度數量重複卡片並提供新增／刪除控制，且卡片清單上方不顯示「維度設定 *」重複標題。
-18. **Given** 使用者選擇純 `relation_identification` 或任一包含它的複合任務，**When** `relation_types` 為空陣列，**Then** 「語意類型標籤」不顯示必填標記、Step 2 仍可通過驗證，且三元組列不顯示類型徽章或「類型」選單；**When** 使用者新增至少一個語意類型標籤，**Then** 三元組列立即顯示「類型」選單且選項只來自目前 `relation_types`。純 `relation_identification` 的預覽不得再顯示重複的「關係識別預覽」內層標題。
-19. **Given** 使用者選擇 `multi_label`，**When** 在 Step 2 建立 root、child 與 sibling，**Then** 可完成至少三層的 label taxonomy，且 Code 區同步保留每個節點的穩定 `id`、`name`、選填的 leaf `color` 與遞迴 `children`。
-20. **Given** label taxonomy 同時含 branch 與 leaf，**When** 操作標記預覽，**Then** 每個節點皆顯示獨立 checkbox，清單攤平顯示全部層級並以縮排表達階層（無展開／收合控制）；選取 parent 不連動 children，選取後選擇器保持開啟，已選 chip 只顯示被選節點名稱，但內部選取值保留完整 root-to-selected-node ID path。
-21. **Given** 不同分支各有一個同名 leaf，**When** 分別選取，**Then** 兩者以完整 ID path 維持獨立選取，不得因顯示名稱相同而互相覆蓋。
-22. **Given** 使用者在 Visual 建立至少三層 taxonomy，**When** 依序以 JSON 與 YAML 儲存再回填 Visual，**Then** 樹結構、節點順序、ID、名稱、leaf color 與 `max_selections` deep-equal。
-23. **Given** 使用既有 `multi-label.json` 的 flat `string[]` output，**When** Step 2 自動帶入，**Then** 系統建立一層 leaf taxonomy 並將值正規化為單段 preview paths；原 fixture 不需改寫。
-24. **Given** 使用階層式 `string[][]` output，**When** Step 2 自動帶入，**Then** 系統依所有 records 首次出現順序合併共同 prefix 建立 union tree，並只以第一筆資料初始化預覽選取。
-25. **Given** taxonomy 超過深度、節點數或字串長度上限，或含空值／重複 ID／無效 children，**When** 從 Visual、Code 或資料自動帶入任一入口套用，**Then** 三個入口以相同規則阻擋並保留最後一份有效 config。
-26. **Given** 選擇 `free_text` 並在 Step 1 分別指定 Evidence、Input 與 Output 欄位，**When** Step 2 標記預覽載入，**Then** 依「背景參考 (Evidence) → Input → 回答框」順序顯示第一筆實際資料，且回答框以 Output 欄位值預填；預覽不得顯示輸出卡片的「自由文字」標題，也不得於 Evidence 區塊後或作答區前顯示分隔線，回答區顯示可設定的 `output_instruction`，不得再顯示 Output 欄位名稱。
-27. **Given** 選擇 `free_text` 並指定 Input、選填 Evidence 但未指定 Output，**When** Step 2 標記預覽載入，**Then** 回答框值為空字串且回答框上方不得顯示「回答」／「Answer」；標記設定與 Code 區均不得顯示或序列化 `show_reference` 或 `show_reference_to_annotator`。
-28. **Given** 使用者將欄位指定為 Evidence 且全部紀錄皆有值，**When** 檢查欄位預覽，**Then** 該欄位下方顯示綠色「全部 N 筆有值」，且不阻擋進入 Step 2。
-29. **Given** 已指定的 Evidence 欄位有任一紀錄缺值，**When** 檢查欄位預覽，**Then** 該欄位下方顯示紅色缺值數與問題紀錄識別，頁面停用「下一步」；將角色改回「不使用」後錯誤立即清除。
-30. **Given** 使用者建立 `free_text` 任務，**When** 在 Step 2 編輯「輸入區說明」與「作答區說明」，**Then** 右側預覽立即以兩段說明取代 Input／Output 原始 JSON key 作為主要標題，且 Code 與 `outputs[].config` 同步保存 `input_instruction`／`output_instruction`。
-31. **Given** 使用者開啟 `free_text` 設定或載入含舊 `show_reference` 的 config，**When** Step 2 完成正規化，**Then** 設定面板不顯示「顯示參考答案給標記者」，Code 與 `outputs[].config` 亦不保留 `show_reference`；若舊 config 缺少 instruction，依當前語系補入預設值且不阻擋下一步。
-32. **Given** 輸入類型為 `item_pair` 且 Step 1 已指定兩個 Input 欄位，**When** 進入 Step 2，**Then** 手風琴清單上方顯示「項目對名稱」設定卡，兩欄位預設值為兩個 Input 欄位的原始欄位名稱，且預覽配對區塊小標與之一致；**When** 編輯任一名稱，**Then** 對應預覽小標即時更新且 Code 區 `item_pair_labels` 同步序列化生效值；**When** 將欄位清空，**Then** 該側小標回退顯示原始欄位名稱。`single_item` 任務不顯示此設定卡。
+1. **AC-2.1**：**Given** 在 Step 2 且已選擇一個或多個輸出類型，**When** 載入頁面，**Then** 每個輸出類型以手風琴面板呈現各自的 schema 設定欄位。
+2. **AC-2.2**：**Given** 在 Step 2，**When** 調整任一輸出類型的 schema 欄位，**Then** 下方 Code 區需即時呈現等價 `outputs[]` 格式的 YAML/JSON config。
+3. **AC-2.3**：**Given** 在下方 Code 區手動修改設定，**When** 點擊 `儲存`，**Then** schema 欄位需同步更新；無效設定需顯示錯誤。
+4. **AC-2.4**：**Given** 平台新增一種 output type 到 registry，**When** 使用者進入 Step 1/Step 2，**Then** 可選到該輸出類型並看到對應設定，無需變更核心流程。
+5. **AC-2.5**：**Given** 使用者在 Step 2 上傳 `.yaml/.yml/.json` 設定檔，**When** 讀取成功，**Then** code 區應載入檔案內容、切換對應格式並要求使用者按儲存套用。
+6. **AC-2.6**：**Given** 使用者切換語言（zh/en），**When** 當前 labels 仍為預設模板值，**Then** Step 2 預覽、schema 標籤與 code labels 應同步切換為對應語系文案。
+7. **AC-2.7**：**Given** 任一輸出類型的 `allow_bypass` 為開啟（預設），**When** 在該輸出類型的預覽勾選「無法判定 (Bypass)」，**Then** 該輸出類型的其他預覽互動控制項被清空並停用，且不影響輸入文字與其他輸出類型的預覽；取消勾選後恢復可操作並重新初始化。
+8. **AC-2.8**：**Given** 在 schema 設定面板將某輸出類型的 `allow_bypass` 關閉，**When** 預覽刷新，**Then** 該輸出類型的預覽不顯示 Bypass 勾選項，且既有的勾選狀態被清除；code 區同步輸出 `allow_bypass: false`。
+9. **AC-2.9**：**Given** 已選輸出類型中至少一項於 registry 宣告 `rendersInputPreview: true`，**When** Step 2 標記預覽載入，**Then** 不顯示額外的通用輸入文字區塊，輸入內容改由該輸出類型的專屬或整合預覽完整呈現。
+10. **AC-2.10**：**Given** 選擇 `sequence_tagging`，**When** Step 2 標記預覽載入，**Then** 不顯示重複的通用輸入文字區塊，輸入內容改由專屬 Token 網格完整呈現；設定區依序顯示「標記單位」、「標籤類型」與「標記方案」，預覽不顯示輸出卡片的「序列標註」標題，於 Token 網格上方顯示帶「原始文本」標題（英文 Text）、未經字／詞切分的原始輸入文本。
+11. **AC-2.11**：**Given** `sequence_tagging` 的標記單位為「字」，**When** 預覽載入中文或英文輸入，**Then** 每個非空白可見字元各自成為 Token，標點獨立；切換為「詞」後，中文依語言感知詞界、英文依單字重新分組，標點仍獨立，Token 網格於 100ms 內同步更新，預覽顯示的原始輸入文本維持原文不變。
+12. **AC-2.12**：**Given** 僅選擇 `relation_identification` 且資料集提供既有實體，**When** Step 2 標記預覽載入，**Then** 僅顯示既有實體的唯讀高亮、關係建構器與三元組列表，不顯示實體類型、實體列表或任何建立／刪除 Span 的控制項，且 config 不輸出 `source_output`。
+13. **AC-2.13**：**Given** 同時選擇 `entity_recognition + relation_identification`，**When** Step 2 標記預覽載入，**Then** 顯示整合預覽並允許先建立／修改實體再建立關係，且 `relation_identification.config.source_output` 自動輸出為 `entity_recognition`。
+14. **AC-2.14**：**Given** 使用者在任一語系進入 Step 1 或 Step 2，**When** taxonomy 與 registry 載入，**Then** `entity_relation`、`boundary`、`span`、`relation_triple`、`token_class` 均不存在，且 `entity_recognition`、`relation_identification`、`sequence_tagging` 分別顯示 Entity Recognition／實體辨識、Relation Identification／關係識別、Sequence Tagging／序列標註。
+15. **AC-2.15**：**Given** 已選擇任一單一輸出類型或多輸出組合，**When** 使用者在寬度大於 1100px 的桌面進入 Step 2，**Then** schema 設定置左、標記預覽置右，範本／上傳與 Code 於下方共用單一外框；**When** 寬度不超過 1100px，**Then** schema 設定改置於標記預覽上方，且所有已選輸出類型仍在設定欄依序以手風琴面板呈現。
+16. **AC-2.16**：**Given** 任一輸出類型或多輸出組合的 Step 2 schema 與預覽完成渲染，**When** 檢視主工作區，**Then** 左右小標分別顯示「標記設定」與「標記預覽」，桌面版頂端位置差不得超過 2px；**Given** `allow_bypass` 前方存在其他 schema 欄位，**Then** 每個輸出類型的 Bypass toggle 與前一欄位之間必須保留 12px 垂直間距。
+17. **AC-2.17**：**Given** 使用者分別選擇 `single_dim` 或 `multi_dim`，**When** 進入 Step 2 標記設定，**Then** 維度名稱、最小值、最大值與間距皆以同一種維度卡片結構呈現；`single_dim` 固定一張且無新增／刪除控制，`multi_dim` 依維度數量重複卡片並提供新增／刪除控制，且卡片清單上方不顯示「維度設定 *」重複標題。
+18. **AC-2.18**：**Given** 使用者選擇純 `relation_identification` 或任一包含它的複合任務，**When** `relation_types` 為空陣列，**Then** 「語意類型標籤」不顯示必填標記、Step 2 仍可通過驗證，且三元組列不顯示類型徽章或「類型」選單；**When** 使用者新增至少一個語意類型標籤，**Then** 三元組列立即顯示「類型」選單且選項只來自目前 `relation_types`。純 `relation_identification` 的預覽不得再顯示重複的「關係識別預覽」內層標題。
+19. **AC-2.19**：**Given** 使用者選擇 `multi_label`，**When** 在 Step 2 建立 root、child 與 sibling，**Then** 可完成至少三層的 label taxonomy，且 Code 區同步保留每個節點的穩定 `id`、`name`、選填的 leaf `color` 與遞迴 `children`。
+20. **AC-2.20**：**Given** label taxonomy 同時含 branch 與 leaf，**When** 操作標記預覽，**Then** 每個節點皆顯示獨立 checkbox，清單攤平顯示全部層級並以縮排表達階層（無展開／收合控制）；選取 parent 不連動 children，選取後選擇器保持開啟，已選 chip 只顯示被選節點名稱，但內部選取值保留完整 root-to-selected-node ID path。
+21. **AC-2.21**：**Given** 不同分支各有一個同名 leaf，**When** 分別選取，**Then** 兩者以完整 ID path 維持獨立選取，不得因顯示名稱相同而互相覆蓋。
+22. **AC-2.22**：**Given** 使用者在 Visual 建立至少三層 taxonomy，**When** 依序以 JSON 與 YAML 儲存再回填 Visual，**Then** 樹結構、節點順序、ID、名稱、leaf color 與 `max_selections` deep-equal。
+23. **AC-2.23**：**Given** 使用既有 `multi-label.json` 的 flat `string[]` output，**When** Step 2 自動帶入，**Then** 系統建立一層 leaf taxonomy 並將值正規化為單段 preview paths；原 fixture 不需改寫。
+24. **AC-2.24**：**Given** 使用階層式 `string[][]` output，**When** Step 2 自動帶入，**Then** 系統依所有 records 首次出現順序合併共同 prefix 建立 union tree，並只以第一筆資料初始化預覽選取。
+25. **AC-2.25**：**Given** taxonomy 超過深度、節點數或字串長度上限，或含空值／重複 ID／無效 children，**When** 從 Visual、Code 或資料自動帶入任一入口套用，**Then** 三個入口以相同規則阻擋並保留最後一份有效 config。
+26. **AC-2.26**：**Given** 選擇 `free_text` 並在 Step 1 分別指定 Evidence、Input 與 Output 欄位，**When** Step 2 標記預覽載入，**Then** 依「背景參考 (Evidence) → Input → 回答框」順序顯示第一筆實際資料，且回答框以 Output 欄位值預填；預覽不得顯示輸出卡片的「自由文字」標題，也不得於 Evidence 區塊後或作答區前顯示分隔線，回答區顯示可設定的 `output_instruction`，不得再顯示 Output 欄位名稱。
+27. **AC-2.27**：**Given** 選擇 `free_text` 並指定 Input、選填 Evidence 但未指定 Output，**When** Step 2 標記預覽載入，**Then** 回答框值為空字串且回答框上方不得顯示「回答」／「Answer」；標記設定與 Code 區均不得顯示或序列化 `show_reference` 或 `show_reference_to_annotator`。
+28. **AC-2.28**：**Given** 使用者將欄位指定為 Evidence 且全部紀錄皆有值，**When** 檢查欄位預覽，**Then** 該欄位下方顯示綠色「全部 N 筆有值」，且不阻擋進入 Step 2。
+29. **AC-2.29**：**Given** 已指定的 Evidence 欄位有任一紀錄缺值，**When** 檢查欄位預覽，**Then** 該欄位下方顯示紅色缺值數與問題紀錄識別，頁面停用「下一步」；將角色改回「不使用」後錯誤立即清除。
+30. **AC-2.30**：**Given** 使用者建立 `free_text` 任務，**When** 在 Step 2 編輯「輸入區說明」與「作答區說明」，**Then** 右側預覽立即以兩段說明取代 Input／Output 原始 JSON key 作為主要標題，且 Code 與 `outputs[].config` 同步保存 `input_instruction`／`output_instruction`。
+31. **AC-2.31**：**Given** 使用者開啟 `free_text` 設定或載入含舊 `show_reference` 的 config，**When** Step 2 完成正規化，**Then** 設定面板不顯示「顯示參考答案給標記者」，Code 與 `outputs[].config` 亦不保留 `show_reference`；若舊 config 缺少 instruction，依當前語系補入預設值且不阻擋下一步。
+32. **AC-2.32**：**Given** 輸入類型為 `item_pair` 且 Step 1 已指定兩個 Input 欄位，**When** 進入 Step 2，**Then** 手風琴清單上方顯示「項目對名稱」設定卡，兩欄位預設值為兩個 Input 欄位的原始欄位名稱，且預覽配對區塊小標與之一致；**When** 編輯任一名稱，**Then** 對應預覽小標即時更新且 Code 區 `item_pair_labels` 同步序列化生效值；**When** 將欄位清空，**Then** 該側小標回退顯示原始欄位名稱。`single_item` 任務不顯示此設定卡。
 
 **介面定義**：
 
@@ -434,9 +434,9 @@ Project Leader 在建立任務時必須先完成啟動設定中的抽樣與資�
 
 **驗收情境**：
 
-1. **Given** 位於 Step 3，**When** 設定每回合抽樣筆數與資料隔離，**Then** 建立後可在 task-detail overview 看到一致的抽樣設定。
-2. **Given** 位於 Step 3，**When** 抽樣設定無效，**Then** 不可進入 Step 4 並顯示可修正錯誤訊息。
-3. **Given** 位於 Step 3，**When** 使用者查看啟動設定提示，**Then** 系統需明確說明成員邀請將在任務建立後於 task-detail 執行。
+1. **AC-3.1**：**Given** 位於 Step 3，**When** 設定每回合抽樣筆數與資料隔離，**Then** 建立後可在 task-detail overview 看到一致的抽樣設定。
+2. **AC-3.2**：**Given** 位於 Step 3，**When** 抽樣設定無效，**Then** 不可進入 Step 4 並顯示可修正錯誤訊息。
+3. **AC-3.3**：**Given** 位於 Step 3，**When** 使用者查看啟動設定提示，**Then** 系統需明確說明成員邀請將在任務建立後於 task-detail 執行。
 
 **行為規則**：
 
@@ -460,8 +460,8 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 
 **驗收情境**：
 
-1. **Given** 位於 Step 4，**When** 分別填寫標記員或審核員說明並完成建立，**Then** 任務保存對應角色的說明內容與附件。
-2. **Given** 位於 Step 4，**When** 啟用 `開始標記前強制顯示`，**Then** 任務設定需紀錄此旗標供 annotation-workspace 讀取。
+1. **AC-4.1**：**Given** 位於 Step 4，**When** 分別填寫標記員或審核員說明並完成建立，**Then** 任務保存對應角色的說明內容與附件。
+2. **AC-4.2**：**Given** 位於 Step 4，**When** 啟用 `開始標記前強制顯示`，**Then** 任務設定需紀錄此旗標供 annotation-workspace 讀取。
 
 **行為規則**：
 
@@ -779,6 +779,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 6.9.6 | 2026-09-04 | **驗收情境配發 AC-N.N 穩定 ID（patch，無條文變更）**：本規格建立於 AC 穩定 ID 標準（spec-template v1.5.0）之前，四組使用者故事的 40 條驗收情境長期僅以流水號指稱，導致下游 OpenSpec change 與測試無法穩定引用；本版依既有標準為每條情境補上 `AC-<故事編號>.<情境序號>` 前綴（AC-1.1~1.3、AC-2.1~2.32、AC-3.1~3.3、AC-4.1~4.2），情境文字、FR/SC 條文與編號順序皆未更動。 |
 | 6.9.5 | 2026-08-27 | **`TaskGuidelineConfig` 新增 `guideline_version`（patch，issue #492 A4/A5）**：新增欄位 `guideline_version`（指引內容版本標記），任務建立時由系統自動初始化，具體形狀留待後端接上時定義；後續遞增規則、觸發條件與消費方（試標回合 FK 綁定、`annotation-015` FR-066 第 4 點）之權威定義在 `014-task-detail` FR-017a，本規格僅新增欄位本身，不新增 FR/SC、不定義遞增邏輯。 |
 | 6.9.4 | 2026-08-24 | Issue #261：新增 Prototype Traceability，明確對應 task-new 原型頁面、與 014 共用的 `OUTPUT_TYPE_REGISTRY` 設定引擎、設計層參考的責任邊界；規格條文未變。 |
 | 6.9.3 | 2026-08-24 | **issue #197 追蹤 — 精靈離頁保護回歸測試補齊（patch，無條文變更）**：issue #197（w6-resilience-a11y CONT-05）回報精靈重新整理即遺失進度、無離頁提示，經查該行為已由 v3.3.1（session storage 精靈狀態持久化）與既有 FR-007a（未儲存變更離頁前確認視窗）於 2026-07-09 落地，findings 早於本次 issue 建立（審計快照落後於實作），非回歸。本版僅新增 Prototype Playwright 回歸測試（`task-new-wizard-draft-warning.spec.ts`：dirty 時 `beforeunload` 觸發、clean 時不觸發、reload 後草稿還原），FR-007a 與 v3.3.1 條文不變；評估精靈草稿改採 `localStorage`（跨分頁持久化）之成本效益後維持現行 `sessionStorage` 方案（沿用 v3.3.1 決策）：`sessionStorage` 天然以分頁為界，避免多分頁同時編輯精靈互相覆寫，亦避免草稿（含資料集預覽片段）於共用實驗室電腦上無限期殘留；`beforeunload` 已涵蓋關閉分頁情境的離頁提示，`localStorage` 額外可承受的僅為瀏覽器崩潰情境，成本（跨分頁衝突與資料殘留風險）大於效益，故不採用。 |
