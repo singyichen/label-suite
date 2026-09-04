@@ -4787,6 +4787,15 @@ function saveCodeToVisual(showSuccessToast) {
         unifiedError = state.lang === 'en' ? 'Every output needs a config object.' : '每個 output 都必須包含 config 物件。';
         return;
       }
+      /* Registry-declared config invariants (FR-003d-1). Checked on the raw
+         payload so a rejected key cannot be normalized away first. */
+      var outConfigError = typeof OUTPUT_TYPE_REGISTRY[output.type].validateConfig === 'function'
+        ? OUTPUT_TYPE_REGISTRY[output.type].validateConfig(output.config, state.lang)
+        : '';
+      if (outConfigError) {
+        unifiedError = outConfigError;
+        return;
+      }
       imported[output.type] = normalizeOutputConfig(output.type, output.config, state.lang);
     });
     state.selectedOutputTypes.forEach(function(type) {

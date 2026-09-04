@@ -199,6 +199,12 @@ var OUTPUT_TYPE_REGISTRY = {
         : config.snap_unit;
       return config;
     },
+    validateConfig: function(config, lang) {
+      if (!Object.prototype.hasOwnProperty.call(config, 'allow_overlapping')) return '';
+      return lang === 'en'
+        ? 'sequence_tagging does not accept allow_overlapping: overlapping spans cannot be expressed as a BIO sequence. Remove the key.'
+        : 'sequence_tagging 不接受 allow_overlapping：重疊標記無法表示為 BIO 序列，請移除該鍵。';
+    },
   },
   entity_recognition: {
     zh: '實體辨識', en: 'Entity Recognition',
