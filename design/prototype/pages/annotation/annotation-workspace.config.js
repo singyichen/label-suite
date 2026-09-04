@@ -2577,18 +2577,10 @@
   }
 
   /* Shared with annotation-list.html's official_run single-row rendering
-     (annotation-workspace.data.js). The data layer still hands the
-     sequence_tagging callback the retired `previewState[outKey].tokens`;
-     the spans it must actually read sit on the same submission, so bind
-     them from the submission here rather than trusting the argument. Task
-     2.4 of this change removes the indirection from the data layer. */
+     (annotation-workspace.data.js), which slices each span's text out of
+     the source text the answer carries -- so this is a plain delegation. */
   function convertSubmissionAnswer(outKey, submission) {
-    return window.LabelSuiteAnnotationWorkspaceData.convertSubmissionAnswer(outKey, submission, {
-      sequenceTagsToPairs: function () {
-        var ps = (submission && submission.previewState && submission.previewState.sequence_tagging) || {};
-        return buildSequencePairsFromSpans(ps.spans);
-      },
-    });
+    return window.LabelSuiteAnnotationWorkspaceData.convertSubmissionAnswer(outKey, submission);
   }
 
   /* A review reads the annotator's own submission, which only ever exists in

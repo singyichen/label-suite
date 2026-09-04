@@ -661,7 +661,7 @@
    *   multi_label             -> string[] (leaf label names)
    *   single_dim               -> number
    *   multi_dim                -> { [dimName]: number }
-   *   sequence_tagging          -> Array<{text, tag}> (non-O tokens only)
+   *   sequence_tagging          -> Array<{text, label, start, end}> (one per span)
    *   entity_recognition        -> Array<{text, type}>
    *   relation_identification   -> Array<{subj, rel, obj}>
    *   free_text                 -> string
@@ -817,10 +817,8 @@
           annotator: 'kioleemg12',
           answers: {
             sequence_tagging: [
-              { text: '台', tag: 'B-ORG' }, { text: '積', tag: 'I-ORG' }, { text: '電', tag: 'I-ORG' },
-              { text: '魏', tag: 'B-PER' }, { text: '哲', tag: 'I-PER' }, { text: '家', tag: 'I-PER' },
-              { text: '今', tag: 'B-TIME' }, { text: '天', tag: 'I-TIME' },
-              { text: '台', tag: 'B-LOC' }, { text: '北', tag: 'I-LOC' }
+              { text: '台積電', label: 'ORG', start: 0, end: 3 }, { text: '魏哲家', label: 'PER', start: 6, end: 9 },
+              { text: '今天', label: 'TIME', start: 9, end: 11 }, { text: '台北', label: 'LOC', start: 13, end: 15 }
             ]
           }
         },
@@ -828,10 +826,8 @@
           annotator: '113450022',
           answers: {
             sequence_tagging: [
-              { text: '台', tag: 'B-ORG' }, { text: '積', tag: 'I-ORG' }, { text: '電', tag: 'I-ORG' },
-              { text: '魏', tag: 'B-PER' }, { text: '哲', tag: 'I-PER' }, { text: '家', tag: 'I-PER' },
-              { text: '今', tag: 'B-TIME' }, { text: '天', tag: 'I-TIME' },
-              { text: '台', tag: 'B-LOC' }, { text: '北', tag: 'I-LOC' }
+              { text: '台積電', label: 'ORG', start: 0, end: 3 }, { text: '魏哲家', label: 'PER', start: 6, end: 9 },
+              { text: '今天', label: 'TIME', start: 9, end: 11 }, { text: '台北', label: 'LOC', start: 13, end: 15 }
             ]
           }
         },
@@ -839,10 +835,8 @@
           annotator: 'tony0950127',
           answers: {
             sequence_tagging: [
-              { text: '台', tag: 'B-ORG' }, { text: '積', tag: 'I-ORG' }, { text: '電', tag: 'I-ORG' },
-              { text: '魏', tag: 'B-PER' }, { text: '哲', tag: 'I-PER' }, { text: '家', tag: 'I-PER' },
-              { text: '今', tag: 'B-TIME' }, { text: '天', tag: 'I-TIME' },
-              { text: '台', tag: 'B-LOC' }, { text: '北', tag: 'I-LOC' }
+              { text: '台積電', label: 'ORG', start: 0, end: 3 }, { text: '魏哲家', label: 'PER', start: 6, end: 9 },
+              { text: '今天', label: 'TIME', start: 9, end: 11 }, { text: '台北', label: 'LOC', start: 13, end: 15 }
             ]
           }
         }
@@ -852,10 +846,8 @@
           annotator: 'kioleemg12',
           answers: {
             sequence_tagging: [
-              { text: '衛', tag: 'B-ORG' }, { text: '福', tag: 'I-ORG' }, { text: '部', tag: 'I-ORG' },
-              { text: '薛', tag: 'B-PER' }, { text: '瑞', tag: 'I-PER' }, { text: '元', tag: 'I-PER' },
-              { text: '三', tag: 'B-TIME' }, { text: '月', tag: 'I-TIME' }, { text: '十', tag: 'I-TIME' },
-              { text: '五', tag: 'I-TIME' }, { text: '日', tag: 'I-TIME' }
+              { text: '衛福部', label: 'ORG', start: 0, end: 3 }, { text: '薛瑞元', label: 'PER', start: 5, end: 8 },
+              { text: '三月十五日', label: 'TIME', start: 9, end: 14 }
             ]
           }
         },
@@ -863,22 +855,18 @@
           annotator: '113450022',
           answers: {
             sequence_tagging: [
-              { text: '衛', tag: 'B-ORG' }, { text: '福', tag: 'I-ORG' }, { text: '部', tag: 'I-ORG' },
-              { text: '薛', tag: 'B-PER' }, { text: '瑞', tag: 'I-PER' }, { text: '元', tag: 'I-PER' },
-              { text: '三', tag: 'B-TIME' }, { text: '月', tag: 'I-TIME' }, { text: '十', tag: 'I-TIME' },
-              { text: '五', tag: 'I-TIME' }, { text: '日', tag: 'I-TIME' }
+              { text: '衛福部', label: 'ORG', start: 0, end: 3 }, { text: '薛瑞元', label: 'PER', start: 5, end: 8 },
+              { text: '三月十五日', label: 'TIME', start: 9, end: 14 }
             ]
           }
         },
         {
           annotator: 'tony0950127',
           answers: {
-            /* Disagreement: drops the trailing '日' token of the TIME span. */
+            /* Disagreement: ends the TIME span one character early. */
             sequence_tagging: [
-              { text: '衛', tag: 'B-ORG' }, { text: '福', tag: 'I-ORG' }, { text: '部', tag: 'I-ORG' },
-              { text: '薛', tag: 'B-PER' }, { text: '瑞', tag: 'I-PER' }, { text: '元', tag: 'I-PER' },
-              { text: '三', tag: 'B-TIME' }, { text: '月', tag: 'I-TIME' }, { text: '十', tag: 'I-TIME' },
-              { text: '五', tag: 'I-TIME' }
+              { text: '衛福部', label: 'ORG', start: 0, end: 3 }, { text: '薛瑞元', label: 'PER', start: 5, end: 8 },
+              { text: '三月十五', label: 'TIME', start: 9, end: 13 }
             ]
           }
         }
@@ -888,9 +876,8 @@
           annotator: 'kioleemg12',
           answers: {
             sequence_tagging: [
-              { text: '長', tag: 'B-ORG' }, { text: '庚', tag: 'I-ORG' }, { text: '醫', tag: 'I-ORG' }, { text: '院', tag: 'I-ORG' },
-              { text: '陳', tag: 'B-PER' }, { text: '日', tag: 'I-PER' }, { text: '昌', tag: 'I-PER' },
-              { text: '桃', tag: 'B-LOC' }, { text: '園', tag: 'I-LOC' }
+              { text: '長庚醫院', label: 'ORG', start: 0, end: 4 }, { text: '陳日昌', label: 'PER', start: 11, end: 14 },
+              { text: '桃園', label: 'LOC', start: 16, end: 18 }
             ]
           }
         },
@@ -898,9 +885,8 @@
           annotator: '113450022',
           answers: {
             sequence_tagging: [
-              { text: '長', tag: 'B-ORG' }, { text: '庚', tag: 'I-ORG' }, { text: '醫', tag: 'I-ORG' }, { text: '院', tag: 'I-ORG' },
-              { text: '陳', tag: 'B-PER' }, { text: '日', tag: 'I-PER' }, { text: '昌', tag: 'I-PER' },
-              { text: '桃', tag: 'B-LOC' }, { text: '園', tag: 'I-LOC' }
+              { text: '長庚醫院', label: 'ORG', start: 0, end: 4 }, { text: '陳日昌', label: 'PER', start: 11, end: 14 },
+              { text: '桃園', label: 'LOC', start: 16, end: 18 }
             ]
           }
         },
@@ -908,9 +894,8 @@
           annotator: 'tony0950127',
           answers: {
             sequence_tagging: [
-              { text: '長', tag: 'B-ORG' }, { text: '庚', tag: 'I-ORG' }, { text: '醫', tag: 'I-ORG' }, { text: '院', tag: 'I-ORG' },
-              { text: '陳', tag: 'B-PER' }, { text: '日', tag: 'I-PER' }, { text: '昌', tag: 'I-PER' },
-              { text: '桃', tag: 'B-LOC' }, { text: '園', tag: 'I-LOC' }
+              { text: '長庚醫院', label: 'ORG', start: 0, end: 4 }, { text: '陳日昌', label: 'PER', start: 11, end: 14 },
+              { text: '桃園', label: 'LOC', start: 16, end: 18 }
             ]
           }
         }
@@ -920,10 +905,8 @@
           annotator: 'kioleemg12',
           answers: {
             sequence_tagging: [
-              { text: 'T', tag: 'B-ORG' }, { text: 'S', tag: 'I-ORG' }, { text: 'M', tag: 'I-ORG' }, { text: 'C', tag: 'I-ORG' },
-              { text: 'T', tag: 'B-LOC' }, { text: 'a', tag: 'I-LOC' }, { text: 'i', tag: 'I-LOC' }, { text: 'p', tag: 'I-LOC' },
-              { text: 'e', tag: 'I-LOC' }, { text: 'i', tag: 'I-LOC' },
-              { text: 't', tag: 'B-TIME' }, { text: 'o', tag: 'I-TIME' }, { text: 'd', tag: 'I-TIME' }, { text: 'a', tag: 'I-TIME' }, { text: 'y', tag: 'I-TIME' }
+              { text: 'TSMC', label: 'ORG', start: 16, end: 20 }, { text: 'Taipei', label: 'LOC', start: 43, end: 49 },
+              { text: 'today', label: 'TIME', start: 50, end: 55 }
             ]
           }
         },
@@ -931,10 +914,8 @@
           annotator: '113450022',
           answers: {
             sequence_tagging: [
-              { text: 'T', tag: 'B-ORG' }, { text: 'S', tag: 'I-ORG' }, { text: 'M', tag: 'I-ORG' }, { text: 'C', tag: 'I-ORG' },
-              { text: 'T', tag: 'B-LOC' }, { text: 'a', tag: 'I-LOC' }, { text: 'i', tag: 'I-LOC' }, { text: 'p', tag: 'I-LOC' },
-              { text: 'e', tag: 'I-LOC' }, { text: 'i', tag: 'I-LOC' },
-              { text: 't', tag: 'B-TIME' }, { text: 'o', tag: 'I-TIME' }, { text: 'd', tag: 'I-TIME' }, { text: 'a', tag: 'I-TIME' }, { text: 'y', tag: 'I-TIME' }
+              { text: 'TSMC', label: 'ORG', start: 16, end: 20 }, { text: 'Taipei', label: 'LOC', start: 43, end: 49 },
+              { text: 'today', label: 'TIME', start: 50, end: 55 }
             ]
           }
         },
@@ -942,10 +923,8 @@
           annotator: 'tony0950127',
           answers: {
             sequence_tagging: [
-              { text: 'T', tag: 'B-ORG' }, { text: 'S', tag: 'I-ORG' }, { text: 'M', tag: 'I-ORG' }, { text: 'C', tag: 'I-ORG' },
-              { text: 'T', tag: 'B-LOC' }, { text: 'a', tag: 'I-LOC' }, { text: 'i', tag: 'I-LOC' }, { text: 'p', tag: 'I-LOC' },
-              { text: 'e', tag: 'I-LOC' }, { text: 'i', tag: 'I-LOC' },
-              { text: 't', tag: 'B-TIME' }, { text: 'o', tag: 'I-TIME' }, { text: 'd', tag: 'I-TIME' }, { text: 'a', tag: 'I-TIME' }, { text: 'y', tag: 'I-TIME' }
+              { text: 'TSMC', label: 'ORG', start: 16, end: 20 }, { text: 'Taipei', label: 'LOC', start: 43, end: 49 },
+              { text: 'today', label: 'TIME', start: 50, end: 55 }
             ]
           }
         }
@@ -1519,7 +1498,7 @@
       case 'multi_label':
         return Array.isArray(answer) ? answer : [];
       case 'sequence_tagging':
-        return (Array.isArray(answer) ? answer : []).map(function (pair) { return pair.tag; });
+        return (Array.isArray(answer) ? answer : []).map(function (span) { return span.label; });
       case 'entity_recognition':
         return (Array.isArray(answer) ? answer : []).map(function (ent) { return ent.type; });
       case 'relation_identification':
@@ -1650,13 +1629,8 @@
    * previewTriples shape) into the SAME CompactAnswer shape
    * REVIEWER_MOCK_ROWS ships, shared by both the workspace's live
    * signed-in-annotator row and the official_run list's single
-   * real-annotator row (FR-047; the row was keyed 'current' before v3.8.0).
-   * sequence_tagging token text can only be reconstructed with the dataset's
-   * real tokenization (only available inside the workspace's engine state);
-   * callers without it may pass opts.sequenceTagsToPairs(tags) to supply the
-   * real text, otherwise positional placeholders ('#'+index) are used. */
-  function convertSubmissionAnswer(outKey, submission, opts) {
-    opts = opts || {};
+   * real-annotator row (FR-047; the row was keyed 'current' before v3.8.0). */
+  function convertSubmissionAnswer(outKey, submission) {
     var ps = (submission.previewState && submission.previewState[outKey]) || {};
     switch (outKey) {
       case 'single_label':
@@ -1672,12 +1646,22 @@
         Object.keys(ps.dims || {}).forEach(function (name) { dims[name] = ps.dims[name].value; });
         return dims;
       }
-      case 'sequence_tagging':
-        if (typeof opts.sequenceTagsToPairs === 'function') return opts.sequenceTagsToPairs(ps.tokens);
-        return (Array.isArray(ps.tokens) ? ps.tokens : [])
-          .map(function (tag, idx) { return { tag: tag, idx: idx }; })
-          .filter(function (item) { return item.tag && item.tag !== 'O'; })
-          .map(function (item) { return { text: '#' + item.idx, tag: item.tag }; });
+      /* FR-052: `(start, end)` is authoritative and `text` is the
+         denormalized slice at those offsets, carried because the review list
+         and review card render it directly. The source text travels with the
+         answer as `textKey` (stamped by the engine when the panel renders),
+         so no caller has to supply a tokenization of its own any more. */
+      case 'sequence_tagging': {
+        var sourceText = typeof ps.textKey === 'string' ? ps.textKey : '';
+        return (Array.isArray(ps.spans) ? ps.spans : []).map(function (span) {
+          return {
+            text: sourceText.substring(span.start, span.end),
+            label: span.label,
+            start: span.start,
+            end: span.end,
+          };
+        });
+      }
       case 'entity_recognition':
         return (submission.previewEntities || []).map(function (e) { return { text: e.text, type: e.type }; });
       case 'relation_identification':
@@ -1691,6 +1675,7 @@
 
   function entityMergeKey(ent) { return (ent && ent.text) + '::' + (ent && ent.type); }
   function relationMergeKey(tr) { return (tr && tr.subj) + '::' + (tr && tr.rel) + '::' + (tr && tr.obj); }
+  function spanMergeKey(sp) { return (sp && sp.start) + '::' + (sp && sp.end) + '::' + (sp && sp.label); }
 
   /* ---- Review unit (spec 015 v5.0.0, issue #596 design.md D1) ------------
    * A review unit is `sample_id x annotator_id x run_type`: the same sample
@@ -1799,25 +1784,13 @@
           .filter(function (entry) { return entry.annotator !== entry.reviewer; });
         break;
       }
-      /* Positional over the CompactAnswer pair list (which already drops 'O'
-         tokens), so a retag reads as one diff rather than an add plus a
-         delete -- the merge-key treatment the set types get. */
-      case 'sequence_tagging': {
-        var annotatorPairs = Array.isArray(annotatorAnswer) ? annotatorAnswer : [];
-        var reviewerPairs = Array.isArray(reviewerAnswer) ? reviewerAnswer : [];
-        diffs = [];
-        for (var i = 0; i < Math.max(annotatorPairs.length, reviewerPairs.length); i++) {
-          var annotatorTag = annotatorPairs[i] ? annotatorPairs[i].tag : null;
-          var reviewerTag = reviewerPairs[i] ? reviewerPairs[i].tag : null;
-          var sameText =
-            (annotatorPairs[i] ? annotatorPairs[i].text : null) ===
-            (reviewerPairs[i] ? reviewerPairs[i].text : null);
-          if (annotatorTag !== reviewerTag || !sameText) {
-            diffs.push({ key: String(i), annotator: annotatorTag, reviewer: reviewerTag });
-          }
-        }
+      /* FR-052: spans are a set keyed by `(start, end, label)`, so array
+         order carries no meaning and a retag reads as one removal plus one
+         addition -- 2 items whatever the span's length, where the retired
+         positional walk over per-token pairs produced one per character. */
+      case 'sequence_tagging':
+        diffs = diffItemSets(annotatorAnswer, reviewerAnswer, spanMergeKey);
         break;
-      }
       default: {
         var annotatorValue = normalizeScalar(annotatorAnswer);
         var reviewerValue = normalizeScalar(reviewerAnswer);

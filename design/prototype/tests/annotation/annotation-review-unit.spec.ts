@@ -195,23 +195,21 @@ test.describe('review unit: annotator vs reviewer comparison', () => {
     ]);
   });
 
-  test('sequence_tagging compares token by token', async ({ page }) => {
-    const same = await compare(
-      page,
-      'sequence_tagging',
-      [{ text: '台', tag: 'B-LOC' }],
-      [{ text: '台', tag: 'B-LOC' }]
-    );
+  /* issue #581: the CompactAnswer is a span list keyed by (start, end,
+     label), so it compares as a set like the other span-shaped types. The
+     n-character retag count and the reordering case are pinned in
+     issue-581-span-diff-and-stats.spec.ts. */
+  test('sequence_tagging compares as a set of spans', async ({ page }) => {
+    const span = { text: '台北', label: 'LOC', start: 13, end: 15 };
+    const same = await compare(page, 'sequence_tagging', [span], [span]);
     expect(same.equal).toBe(true);
 
-    const retagged = await compare(
-      page,
-      'sequence_tagging',
-      [{ text: '台', tag: 'B-LOC' }],
-      [{ text: '台', tag: 'B-ORG' }]
-    );
+    const retagged = await compare(page, 'sequence_tagging', [span], [{ ...span, label: 'ORG' }]);
     expect(retagged.equal).toBe(false);
-    expect(retagged.diffs).toEqual([{ key: '0', annotator: 'B-LOC', reviewer: 'B-ORG' }]);
+    expect(retagged.diffs).toEqual([
+      { key: '13::15::LOC', annotator: span, reviewer: null },
+      { key: '13::15::ORG', annotator: null, reviewer: { ...span, label: 'ORG' } },
+    ]);
   });
 
   test('free_text compares verbatim', async ({ page }) => {
