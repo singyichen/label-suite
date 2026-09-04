@@ -578,30 +578,12 @@ function rebuildColumnOutputTypeMap() {
       if (Array.isArray(first)) {
         types = ['multi_label'];
       } else if (typeof first === 'string') {
-        if (/^(O|[BIES]-.+)$/.test(first)) {
-          types = ['sequence_tagging'];
-        } else {
-          types = ['multi_label'];
-          var inputCols = getFieldsByRole('input');
-          var inputValue = inputCols.length > 0 ? rawRow[inputCols[0]] : '';
-          var sequenceConfig = state.outputConfigs.sequence_tagging || {};
-          var sequenceTokenization = sequenceConfig.tokenization && typeof sequenceConfig.tokenization === 'object'
-            ? sequenceConfig.tokenization
-            : {};
-          var sequenceTokens = getSequencePreviewTokens(
-            Array.isArray(inputValue) ? inputValue.join(' ') : String(inputValue || ''),
-            rawRow,
-            sequenceTokenization.unit === 'word' ? 'word' : 'character'
-          );
-          if (
-            state.selectedOutputTypes.indexOf('sequence_tagging') >= 0
-            && sequenceTokens.length === v.length
-          ) {
-            types.unshift('sequence_tagging');
-          }
-        }
+        /* FR-003d-2: a per-token tag array no longer seeds sequence_tagging --
+           its pre-annotations are offset spans, detected in the object branch */
+        types = ['multi_label'];
       } else if (first && typeof first === 'object') {
         if (first.entity1 || first.subj || first.target_text || first.aspect_text || first.opinion_text) types = ['relation_identification'];
+        else if (first.label != null && first.start != null) types = ['sequence_tagging'];
         else if (first.text != null) types = ['entity_recognition'];
       }
     } else if (v && typeof v === 'object') {
@@ -2419,7 +2401,7 @@ function clearOutputPreviewState(outKey) {
       break;
     }
     case 'sequence_tagging':
-      state.previewState[outKey] = { activeTag: 'O', tokens: null, scheme: (state.outputConfigs[outKey] || {}).tagging_scheme || 'BIO', tokenKey: null, _seeded: true }; break;
+      state.previewState[outKey] = { spans: [], pendingSelection: null, prefillErrors: [], textKey: null, _seeded: true }; break;
     case 'entity_recognition':
       /* clearing entities invalidates triples that reference them */
       state.previewEntities = []; state.previewTriples = []; state.activeEntityType = null;
@@ -2897,71 +2879,78 @@ function getSequencePreviewTokens(text, rawRow, unit) {
   if (!explicitTokens) return [];
   return tokenizeSequenceText(explicitTokens.join(unit === 'word' ? ' ' : ''), unit);
 }
-function renderTokenClassPreview(container, outKey) {
+/* FR-003d-1: word snapping widens a drag selection to the Intl.Segmenter word
+   boundaries that contain it. A runtime without Segmenter lands the selection
+   unsnapped -- snapping is a task property, so the configured value is never
+   rewritten locally. */
+function snapSelectionToWordBoundaries(text, start, end) {
+  if (typeof Intl === 'undefined' || typeof Intl.Segmenter !== 'function') return { start: start, end: end };
+  var segments;
+  try {
+    segments = Array.from(new Intl.Segmenter(state.lang === 'en' ? 'en' : 'zh', { granularity: 'word' }).segment(text));
+  } catch (e) {
+    return { start: start, end: end };
+  }
+  var snappedStart = start, snappedEnd = end;
+  segments.forEach(function(segment) {
+    var segmentEnd = segment.index + segment.segment.length;
+    if (segment.index < start && segmentEnd > start) snappedStart = segment.index;
+    if (segment.index < end && segmentEnd > end) snappedEnd = segmentEnd;
+  });
+  return { start: snappedStart, end: snappedEnd };
+}
+
+/* FR-003d-3: intersection is refused for output types whose policy is
+   `forbidden`; `configurable` defers to the type's allow_overlapping setting. */
+function spansMayIntersect(outKey) {
+  var policy = SPAN_OVERLAP_POLICY_BY_OUTPUT_TYPE[outKey];
+  if (policy === 'forbidden') return false;
+  return (state.outputConfigs[outKey] || {}).allow_overlapping !== false;
+}
+
+/* FR-003d-2: pre-annotations are character offsets, so they land directly with
+   no count check. A span outside the text or with start >= end is listed as an
+   error and skipped -- the remaining spans still load and Step 2 stays passable. */
+function seedSpanTaggingPreview(ps, outKey, text) {
+  var textChanged = ps.textKey !== null && ps.textKey !== text;
+  ps.textKey = text;
+  if (state.previewBypass[outKey] || (ps._seeded && !textChanged)) return;
+  ps.spans = [];
+  ps.prefillErrors = [];
+  ps.pendingSelection = null;
+  ps._seeded = true;
+
+  var outputVal = getOutputFieldValue(outKey);
+  if (!outputVal) return;
+  var parsed;
+  try { parsed = JSON.parse(outputVal); } catch (e) { return; }
+  if (!Array.isArray(parsed)) return;
+  parsed.forEach(function(raw) {
+    if (!raw || typeof raw !== 'object') return;
+    var span = { start: Number(raw.start), end: Number(raw.end), label: String(raw.label == null ? '' : raw.label) };
+    var inRange = isFinite(span.start) && isFinite(span.end)
+      && span.start >= 0 && span.end <= text.length && span.start < span.end;
+    if (inRange) ps.spans.push(span);
+    else ps.prefillErrors.push(span);
+  });
+  ps.spans.sort(function(a, b) { return a.start - b.start; });
+}
+
+/* FR-003d-1: sequence_tagging annotates by dragging over the untokenized text
+   and storing half-open character offsets. It keeps its own preview state
+   rather than reusing entity_recognition's previewEntities, whose `end` is
+   inclusive and whose spans may overlap. */
+function renderSpanTaggingPreview(container, outKey) {
   var cfg = state.outputConfigs[outKey] || {};
   var labels = Array.isArray(cfg.entities) ? cfg.entities.filter(function(e) { return e && e.name; }) : [];
-  var scheme = cfg.tagging_scheme || 'BIO';
-  var tokenization = cfg.tokenization && typeof cfg.tokenization === 'object' ? cfg.tokenization : {};
-  var tokenUnit = tokenization.unit === 'word' ? 'word' : 'character';
-  var ps = ensurePreviewState(outKey, { activeTag: 'O', tokens: null, scheme: scheme, tokenKey: null, _seeded: false });
-
+  var snapUnit = cfg.snap_unit === 'word' ? 'word' : 'character';
+  var ps = ensurePreviewState(outKey, { spans: [], pendingSelection: null, prefillErrors: [], textKey: null, _seeded: false });
   var realText = getDatasetPreviewText();
   var text = realText || (state.lang === 'zh' ? '台積電董事長魏哲家今天出席台北產業論壇' : 'The chairman of TSMC attended the forum in Taipei today.');
-  var rawRow = state.datasetRawFirstRow || {};
-  var tokens = getSequencePreviewTokens(text, rawRow, tokenUnit);
-  var tokenKey = tokenUnit + '\u241F' + tokens.join('\u241E');
-  var outputVal = getOutputFieldValue(outKey);
-  var outputTags = [];
-  if (outputVal) {
-    try {
-      var parsedTags = JSON.parse(outputVal);
-      if (Array.isArray(parsedTags)) outputTags = parsedTags.map(String);
-    } catch(e) {
-      outputTags = outputVal.split(/\s+/).filter(Boolean);
-    }
-  }
+  seedSpanTaggingPreview(ps, outKey, text);
 
-  cfg._tokenAlignmentError = '';
-  if (outputTags.length > 0 && outputTags.length !== tokens.length) {
-    var altUnit = tokenUnit === 'word' ? 'character' : 'word';
-    var altUnitAligned = outputTags.length === getSequencePreviewTokens(text, rawRow, altUnit).length;
-    var unitNames = state.lang === 'zh'
-      ? { character: { full: '字（Character）', short: '字' }, word: { full: '詞（Word）', short: '詞' } }
-      : { character: { full: 'Character', short: 'Character' }, word: { full: 'Word', short: 'Word' } };
-    var countClause = state.lang === 'zh'
-      ? '預標記數量（' + outputTags.length + '）與 Token 數量（' + tokens.length + '）不一致'
-      : 'The pre-annotation count (' + outputTags.length + ') does not match the token count (' + tokens.length + ').';
-    if (altUnitAligned) {
-      cfg._tokenAlignmentError = state.lang === 'zh'
-        ? countClause + '；預標記與「' + unitNames[altUnit].full + '」單位對齊，請將標記單位切回「' + unitNames[altUnit].short + '」，或改用符合「' + unitNames[tokenUnit].short + '」單位的預標記。'
-        : countClause + ' The pre-annotations align with the ' + unitNames[altUnit].full + ' unit — switch the unit back to ' + unitNames[altUnit].short + ', or provide ' + unitNames[tokenUnit].short + '-level pre-annotations.';
-    } else {
-      cfg._tokenAlignmentError = state.lang === 'zh'
-        ? countClause + '，請修正資料欄位。'
-        : countClause + ' Fix the dataset field.';
-    }
-  }
-
-  if (!ps.tokens || ps.tokenKey !== tokenKey) {
-    /* a non-null previous tokenKey means the token boundaries themselves changed
-       (unit switch or new row) — re-seed then; while Bypass is active the cleared
-       state must stay seed-proof even across boundary changes (unchecking Bypass
-       resets the state, which re-enables seeding) */
-    var boundaryChanged = !!ps.tokenKey && ps.tokenKey !== tokenKey;
-    if (!cfg._tokenAlignmentError && outputTags.length === tokens.length && !state.previewBypass[outKey] && (!ps._seeded || boundaryChanged)) {
-      ps.tokens = convertSequenceTags(outputTags, inferSequenceScheme(outputTags), scheme, labels);
-      ps._seeded = true;
-    } else {
-      ps.tokens = tokens.map(function() { return 'O'; });
-    }
-    ps.scheme = scheme;
-    ps.tokenKey = tokenKey;
-    ps.activeTag = 'O';
-  } else if (ps.scheme !== scheme) {
-    ps.tokens = convertSequenceTags(ps.tokens, ps.scheme || inferSequenceScheme(ps.tokens), scheme, labels);
-    ps.scheme = scheme;
-    ps.activeTag = 'O';
-  }
+  var labelColor = {};
+  labels.forEach(function(label, i) { labelColor[label.name] = safeCssColor(label.color, ENTITY_COLORS[i % ENTITY_COLORS.length]); });
 
   var sourceTextLabel = document.createElement('div');
   sourceTextLabel.className = 'annotation-preview-task-title';
@@ -2970,122 +2959,114 @@ function renderTokenClassPreview(container, outKey) {
   sourceTextLabel.textContent = t('previewSourceTextTitle');
   container.appendChild(sourceTextLabel);
 
-  var sourceTextNote = document.createElement('div');
-  sourceTextNote.setAttribute('data-testid', 'sequence-source-text');
-  sourceTextNote.className = 'annotation-preview-sample';
-  sourceTextNote.style.marginBottom = '12px';
-  sourceTextNote.textContent = text;
-  container.appendChild(sourceTextNote);
-
-  if (cfg._tokenAlignmentError) {
-    var alignmentError = document.createElement('div');
-    alignmentError.setAttribute('role', 'alert');
-    alignmentError.setAttribute('data-testid', 'sequence-token-alignment-error');
-    alignmentError.style.cssText = 'margin-bottom:12px;padding:8px 10px;border:1px solid var(--color-danger);border-radius:var(--radius-md);background:var(--color-danger-bg);color:var(--color-danger);font-size:0.78rem;line-height:1.5;';
-    alignmentError.textContent = cfg._tokenAlignmentError;
-    container.appendChild(alignmentError);
+  /* One element per run of characters sharing the same span (and the same
+     pending-selection membership), so a refused selection can be shown in
+     error colour without splitting the span it collides with. */
+  var textEl = document.createElement('div');
+  textEl.className = 'absa-preview-text';
+  textEl.setAttribute('data-testid', 'sequence-source-text');
+  textEl.style.cssText = 'margin-bottom:12px;cursor:text;user-select:text;';
+  var pending = ps.pendingSelection;
+  var spanAt = new Array(text.length);
+  ps.spans.forEach(function(span, spanIndex) {
+    for (var i = span.start; i < span.end && i < text.length; i++) spanAt[i] = spanIndex;
+  });
+  var runStart = 0;
+  function keyAt(i) {
+    var inPending = !!pending && i >= pending.start && i < pending.end && spanAt[i] === undefined;
+    return (spanAt[i] === undefined ? '-' : spanAt[i]) + (inPending ? 'P' : '');
   }
+  function flushRun(from, to) {
+    if (to <= from) return;
+    var chunk = text.substring(from, to);
+    var spanIndex = spanAt[from];
+    var inPending = !!pending && from >= pending.start && from < pending.end && spanIndex === undefined;
+    if (spanIndex === undefined && !inPending) { textEl.appendChild(document.createTextNode(chunk)); return; }
+    var el = document.createElement('span');
+    if (spanIndex !== undefined) {
+      var span = ps.spans[spanIndex];
+      var color = labelColor[span.label] || '#6366F1';
+      el.className = 'absa-span-highlight';
+      el.setAttribute('data-testid', 'sequence-span');
+      el.setAttribute('data-start', String(span.start));
+      el.setAttribute('data-end', String(span.end));
+      el.setAttribute('data-label', span.label);
+      el.style.cssText = 'background:' + color + '33;border-bottom:2px solid ' + color + ';color:' + color + ';';
+      el.title = span.label;
+    } else if (pending.invalid) {
+      el.className = 'rel-sel-highlight';
+      el.setAttribute('data-testid', 'sequence-span-selection-error');
+      el.style.cssText = 'background:var(--color-danger-bg);border-bottom:2px solid var(--color-danger);color:var(--color-danger);';
+    } else {
+      el.className = 'rel-sel-highlight';
+      el.setAttribute('data-testid', 'sequence-span-pending');
+    }
+    el.textContent = chunk;
+    textEl.appendChild(el);
+  }
+  for (var ci = 1; ci <= text.length; ci++) {
+    if (ci === text.length || keyAt(ci) !== keyAt(runStart)) { flushRun(runStart, ci); runStart = ci; }
+  }
+  textEl.addEventListener('mouseup', function() {
+    var sel = window.getSelection();
+    if (!sel || sel.isCollapsed || !sel.toString().trim()) return;
+    var selText = sel.toString().trim();
+    var idx = resolveSelectionOffset(sel, selText, textEl, text);
+    if (idx < 0) idx = text.indexOf(selText);
+    if (idx < 0) return;
+    var bounds = { start: idx, end: idx + selText.length };
+    if (snapUnit === 'word') bounds = snapSelectionToWordBoundaries(text, bounds.start, bounds.end);
+    ps.pendingSelection = {
+      start: bounds.start,
+      end: bounds.end,
+      invalid: !spansMayIntersect(outKey) && ps.spans.some(function(s) {
+        return s.start < bounds.end && bounds.start < s.end;
+      }),
+    };
+    sel.removeAllRanges();
+    refreshOutputPreview(container, outKey);
+  });
+  container.appendChild(textEl);
+
+  ps.prefillErrors.forEach(function(span) {
+    var errorEl = document.createElement('div');
+    errorEl.setAttribute('role', 'alert');
+    errorEl.setAttribute('data-testid', 'sequence-span-prefill-error');
+    errorEl.style.cssText = 'margin-bottom:8px;padding:8px 10px;border:1px solid var(--color-danger);border-radius:var(--radius-md);background:var(--color-danger-bg);color:var(--color-danger);font-size:0.78rem;line-height:1.5;';
+    errorEl.textContent = state.lang === 'zh'
+      ? '預標記 offset (' + span.start + ', ' + span.end + ') 超出文本範圍，已略過該筆。'
+      : 'Pre-annotation offset (' + span.start + ', ' + span.end + ') falls outside the text and was skipped.';
+    container.appendChild(errorEl);
+  });
 
   var typeTitle = document.createElement('div');
   typeTitle.className = 'annotation-preview-task-title';
   typeTitle.style.marginBottom = '6px';
-  typeTitle.textContent = state.lang === 'zh' ? '可套用標記' : 'Available tags';
+  typeTitle.textContent = state.lang === 'zh' ? '標籤類型' : 'Label types';
   container.appendChild(typeTitle);
 
   var chipWrap = document.createElement('div');
   chipWrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;';
-  var tagOptions = [{ tag: 'O', color: '#64748B' }];
   labels.forEach(function(label) {
-    var prefixes = scheme === 'SINGLE'
-      ? ['']
-      : (scheme === 'BIOES' ? ['B', 'I', 'E', 'S'] : ['B', 'I']);
-    prefixes.forEach(function(prefix) {
-      tagOptions.push({
-        tag: prefix ? prefix + '-' + label.name : label.name,
-        color: safeCssColor(label.color, '#6366F1'),
-      });
-    });
-  });
-  tagOptions.forEach(function(option) {
+    var color = labelColor[label.name] || '#6366F1';
     var chip = document.createElement('button');
     chip.type = 'button';
-    chip.setAttribute('data-testid', 'sequence-tag-option');
-    var isActive = ps.activeTag === option.tag;
-    chip.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-    chip.style.cssText = 'padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid ' + option.color + ';color:' + (isActive ? '#fff' : option.color) + ';background:' + (isActive ? option.color : 'transparent') + ';';
-    chip.textContent = option.tag;
+    chip.setAttribute('data-testid', 'sequence-label-option');
+    chip.style.cssText = 'padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid ' + color + ';color:' + color + ';background:transparent;';
+    chip.textContent = label.name;
     chip.addEventListener('click', function() {
-      ps.activeTag = option.tag;
+      var selected = ps.pendingSelection;
+      ps.pendingSelection = null;
+      /* A refused selection is discarded, never banked under a later label */
+      if (selected && !selected.invalid) {
+        ps.spans.push({ start: selected.start, end: selected.end, label: label.name });
+        ps.spans.sort(function(a, b) { return a.start - b.start; });
+      }
       refreshOutputPreview(container, outKey);
     });
     chipWrap.appendChild(chip);
   });
   container.appendChild(chipWrap);
-
-  var tokenWrap = document.createElement('div');
-  tokenWrap.setAttribute('role', 'group');
-  tokenWrap.setAttribute('aria-label', state.lang === 'zh' ? 'Token 標記網格' : 'Token tagging grid');
-  tokenWrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;';
-  tokens.forEach(function(tok, i) {
-    var tokEl = document.createElement('button');
-    tokEl.type = 'button';
-    tokEl.setAttribute('data-testid', 'sequence-token');
-    var tag = ps.tokens[i];
-    var matchedLabel = labels.find(function(label) { return getSequenceBaseLabel(tag, [label]) === label.name; });
-    var matchedColor = matchedLabel ? safeCssColor(matchedLabel.color, '#6366F1') : null;
-    var bgColor = matchedColor ? matchedColor + '33' : 'var(--color-border-muted)';
-    var borderColor = matchedColor || 'var(--color-border)';
-    var textColor = matchedColor || 'var(--color-ink)';
-    tokEl.setAttribute(
-      'aria-label',
-      state.lang === 'zh'
-        ? ('第 ' + (i + 1) + ' 個 Token「' + tok + '」，目前 ' + tag + '，套用 ' + (ps.activeTag || 'O'))
-        : ('Token ' + (i + 1) + ' "' + tok + '", currently ' + tag + ', apply ' + (ps.activeTag || 'O'))
-    );
-    tokEl.style.cssText = 'min-width:44px;min-height:44px;padding:6px 10px;border-radius:6px;font-size:0.85rem;cursor:pointer;border:1.5px solid ' + borderColor + ';background:' + bgColor + ';color:' + textColor + ';display:flex;flex-direction:column;align-items:center;gap:2px;';
-    var tokText = document.createElement('span');
-    tokText.setAttribute('data-testid', 'sequence-token-text');
-    tokText.textContent = tok;
-    tokEl.appendChild(tokText);
-    var tagText = document.createElement('span');
-    tagText.setAttribute('data-testid', 'sequence-token-tag');
-    tagText.style.cssText = 'font-size:0.65rem;font-weight:700;';
-    tagText.textContent = tag;
-    tokEl.appendChild(tagText);
-    (function(idx) {
-      tokEl.addEventListener('click', function() {
-        ps.tokens[idx] = ps.activeTag || 'O';
-        refreshOutputPreview(container, outKey);
-      });
-    }(i));
-    tokenWrap.appendChild(tokEl);
-  });
-  container.appendChild(tokenWrap);
-
-  var schemeInfo = document.createElement('div');
-  schemeInfo.style.cssText = 'font-size:0.75rem;color:var(--color-text-soft);';
-  schemeInfo.textContent = (state.lang === 'zh' ? '標記方案：' : 'Scheme: ') + scheme;
-  container.appendChild(schemeInfo);
-
-  var schemeHelp = document.createElement('div');
-  schemeHelp.setAttribute('data-testid', 'sequence-scheme-help');
-  schemeHelp.style.cssText = 'margin-top:4px;font-size:0.75rem;color:var(--color-text-soft);line-height:1.5;';
-  var schemeHelpText = {
-    zh: {
-      BIO: 'BIO 使用 B／I／O 表示實體開頭、內部與非實體。',
-      BIOES: 'BIOES 增加 E（結尾）與 S（單一 Token 實體），邊界更明確。',
-      IOB2: 'IOB2 強制每個實體以 B 開始；相鄰同類實體也要重新標記 B。',
-      SINGLE: '單一標籤直接套用類型或 O，不含位置前綴與實體邊界。',
-    },
-    en: {
-      BIO: 'BIO uses B, I, and O for entity beginnings, interiors, and outside tokens.',
-      BIOES: 'BIOES adds E for endings and S for single-token entities.',
-      IOB2: 'IOB2 requires every entity to begin with B, including adjacent entities of the same type.',
-      SINGLE: 'Single label applies the type or O directly, without positional prefixes or entity boundaries.',
-    },
-  };
-  schemeHelp.textContent = schemeHelpText[state.lang][scheme] || '';
-  container.appendChild(schemeHelp);
 }
 
 function renderSpanOnlyPreview(container, outKey) {
@@ -3301,7 +3282,7 @@ function renderOutputPreview(container, outKey) {
     case 'multi_label': renderMultiLabelPreview(container, outKey); break;
     case 'single_dim': renderSingleDimPreview(container, outKey); break;
     case 'multi_dim': renderMultiDimPreview(container, state.outputConfigs['multi_dim'] || {}, outKey); break;
-    case 'sequence_tagging': renderTokenClassPreview(container, outKey); break;
+    case 'sequence_tagging': renderSpanTaggingPreview(container, outKey); break;
     case 'entity_recognition': renderSpanOnlyPreview(container, outKey); break;
     case 'relation_identification': renderRelationTripleOnlyPreview(container, outKey); break;
     case 'free_text': renderFreeTextPreview(container, outKey); break;
