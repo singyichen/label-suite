@@ -60,7 +60,7 @@ Step 2 預覽 MUST 在 `sequence_tagging` 下對相交落點給出即時可見�
 
 ### Requirement: FR-003d-3 entity_recognition 的設定契約與 Step 2 專屬預覽
 
-`entity_recognition` MUST 支援 `entities`（`{ name, color }[]`）、`snap_unit`（`SPAN_SNAP_UNITS`，預設 `character`）、`allow_overlapping`（boolean）與 `allow_bypass`（boolean）四個設定欄位。設定面板依序顯示「標籤類型」、「選取吸附」、「允許重疊與巢狀」、「允許無法判定」共四欄；`allow_overlapping` 的設定卡與前一個 `entity-list` 結尾保留 12px，並與後方 `allow_bypass` 的群組間距一致。
+`entity_recognition` MUST 支援 `entities`（`{ name, color }[]`）、`snap_unit`（`SPAN_SNAP_UNITS`，預設 `character`）、`allow_overlapping`（boolean）與 `allow_bypass`（boolean）四個設定欄位。設定面板依序顯示「實體類型」、「選取吸附」、「允許重疊標記」、「允許無法判定」共四欄（前後兩欄沿用既有標籤文案，本 change 不改動）；`allow_overlapping` 的設定卡與前一個 `entity-list` 結尾保留 12px，並與後方 `allow_bypass` 的群組間距一致。
 
 `snap_unit` 的語意、`Intl.Segmenter` 依賴與降級行為與 FR-003d-1 完全一致，MUST 由同一套共用元件提供，MUST NOT 於本型別另立第二套詞界判定邏輯。
 
@@ -71,7 +71,7 @@ Step 2 預覽 MUST 在 `sequence_tagging` 下對相交落點給出即時可見�
 #### Scenario: entity_recognition 四欄設定與共用圈選元件
 - **GIVEN** 使用者於 Step 1 選擇 `entity_recognition` 並進入 Step 2
 - **WHEN** 設定面板載入
-- **THEN** 依序顯示「標籤類型」、「選取吸附」、「允許重疊與巢狀」、「允許無法判定」四欄
+- **THEN** 依序顯示「實體類型」、「選取吸附」、「允許重疊標記」、「允許無法判定」四欄
 - **AND** 其「選取吸附」欄位的選項與 `sequence_tagging` 完全相同（`character`／`word`）
 - **WHEN** 同一份任務同時選取 `sequence_tagging` 與 `entity_recognition`
 - **THEN** 兩個手風琴面板各自顯示自己的「選取吸附」設定，兩者可設為不同值且互不影響
