@@ -6,7 +6,7 @@
 
 `sequence_tagging` 的 span MUST NOT 相交（型別不變式，見 `task-management/013-task-new` 的 `SPAN_OVERLAP_POLICY_BY_OUTPUT_TYPE`）；相交落點 MUST 給出即時可見的拒絕回饋且不建立該 span，相鄰但不相交（前一 span 的 `end` 等於新 span 的 `start`）MUST 被允許。
 
-**下列 v6.4.0 以前的機制隨 token 座標系一併移除**，MUST NOT 於工作區任何路徑保留：Token 網格；「先依 `tagging_scheme` 選定完整 tag 再點擊 Token」互動；依方案產生的完整 tag 按鈕列（`B-X`／`I-X`／`E-X`／`S-X`／`O`）；依前一 Token 標籤自動推導 `B-`／`I-` 前綴的邏輯。`tagging_scheme` 自 013 設定契約移除後，工作區 MUST NOT 再讀取或呈現該欄位；BIO 序列改由匯出層自 `spans[]` 決定性推導。
+**下列 v5.0.0 以前的機制隨 token 座標系一併移除**，MUST NOT 於工作區任何路徑保留：Token 網格；「先依 `tagging_scheme` 選定完整 tag 再點擊 Token」互動；依方案產生的完整 tag 按鈕列（`B-X`／`I-X`／`E-X`／`S-X`／`O`）；依前一 Token 標籤自動推導 `B-`／`I-` 前綴的邏輯。`tagging_scheme` 自 013 設定契約移除後，工作區 MUST NOT 再讀取或呈現該欄位；BIO 序列改由匯出層自 `spans[]` 決定性推導。
 
 `allow_bypass` 的行為不變：Bypass 仍為整張輸出卡片層級的「無法判定」宣告，與 span 標記互斥。
 
@@ -26,11 +26,11 @@
 
 詞界判定 MUST 使用前端 `Intl.Segmenter`（`granularity: 'word'`），MUST NOT 依賴後端 tokenizer、MUST NOT 於任務建立時凍結任何 engine 或 version。
 
-**v6.4.0 以前的「後端權威 Token 邊界」契約整組作廢**（原 ADR-031：tokenization 為 annotation 資料契約的一部分、engine/version 依任務凍結、workspace 不得自行重新切分）。span 的儲存值是使用者實際圈選的字元 offset，不存在需要由單一權威來源裁定的切分結果，因此 MUST NOT 於任何路徑保留凍結 engine／version 的欄位或校驗。
+**v5.0.0 以前的「後端權威 Token 邊界」契約整組作廢**（原 ADR-031：tokenization 為 annotation 資料契約的一部分、engine/version 依任務凍結、workspace 不得自行重新切分）。span 的儲存值是使用者實際圈選的字元 offset，不存在需要由單一權威來源裁定的切分結果，因此 MUST NOT 於任何路徑保留凍結 engine／version 的欄位或校驗。
 
 執行環境缺少 `Intl.Segmenter` 時，該標註者端 MUST 退回「不吸附」行為並於標記卡顯示一行提示，MUST NOT 因此改寫任務設定值。
 
-**吸附能力差異不影響資料可比性（本版新增規則）。** 同一任務的不同標註者可能在吸附能力不同的執行環境作業，這在 v6.4.0 以前不可能發生——當時 token 邊界由後端統一供給。因吸附只影響滑鼠落點、不進入資料，降級標註者產出的 `spans[]` 與其他標註者完全相容：系統 MUST 照常將其答案納入 IAA、共識與差異比對計算，MUST NOT 因其吸附能力而標記為可疑、降權或排除，MUST NOT 於事後對其 span 邊界做任何「對齊詞界」的修正。標記卡的降級提示 MUST 定位為操作手感說明，MUST NOT 呈現為資料品質警告。
+**吸附能力差異不影響資料可比性（本版新增規則）。** 同一任務的不同標註者可能在吸附能力不同的執行環境作業，這在 v5.0.0 以前不可能發生——當時 token 邊界由後端統一供給。因吸附只影響滑鼠落點、不進入資料，降級標註者產出的 `spans[]` 與其他標註者完全相容：系統 MUST 照常將其答案納入 IAA、共識與差異比對計算，MUST NOT 因其吸附能力而標記為可疑、降權或排除，MUST NOT 於事後對其 span 邊界做任何「對齊詞界」的修正。標記卡的降級提示 MUST 定位為操作手感說明，MUST NOT 呈現為資料品質警告。
 
 #### Scenario: 吸附只影響落點，降級標註者的答案照常參與計算
 - **GIVEN** 任務 config 的 `snap_unit` 為 `word`，樣本文本為「台積電董事長今天出席」
@@ -47,7 +47,7 @@
 
 `sequence_tagging` 提交前 MUST 驗證每筆 span 的合法性：`start >= end`、`start < 0`、或 `end` 超出原始文本長度者為錯誤，MUST 阻擋提交並顯示可定位的錯誤。
 
-**v6.4.0 的「標記 tag 數量必須等於正式 Token 數量、否則阻擋提交」硬約束移除**——span 模型下不存在需要對齊的 Token 陣列，該驗證已無對象。同理，「可見預標記數量與正式 Token 數量不一致時阻擋提交」的邊界情境一併移除；預標記 span 依字元 offset 直接落位，超出範圍者被拒絕並列出，其餘正常載入。
+**v5.0.0 的「標記 tag 數量必須等於正式 Token 數量、否則阻擋提交」硬約束移除**——span 模型下不存在需要對齊的 Token 陣列，該驗證已無對象。同理，「可見預標記數量與正式 Token 數量不一致時阻擋提交」的邊界情境一併移除；預標記 span 依字元 offset 直接落位，超出範圍者被拒絕並列出，其餘正常載入。
 
 未標記任何 span 且未宣告 Bypass 時 MUST 阻擋提交（沿用既有的空答案阻擋語意），建立任一 span 後該阻擋 MUST 解除。
 
