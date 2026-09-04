@@ -3,6 +3,7 @@ import {
   buildWorkspaceUrl,
   dismissGuidelineModal,
   patchDataFile,
+  selectWorkspaceText,
   setRangeValue,
   skipGuidelineModal,
 } from './_workspace-helpers';
@@ -75,13 +76,9 @@ test.describe('multi_dim submit validation (T005)', () => {
 });
 
 test.describe('sequence_tagging submit validation (T006)', () => {
-  /* issue #581 / OpenSpec change seq-tagging-span-config group 2 retired the
-     token grid, so both the all-O empty state and the ws-seq-token click that
-     clears it no longer exist. The span-based equivalent is written by the
-     annotation/015 change. */
-  test.skip('an all-O token grid blocks submit; tagging a token clears the block', async ({ page }) => {
+  test('an empty span list blocks submit; marking one span clears the block', async ({ page }) => {
     await patchDataFile(page, 'task-detail.data.js', `
-      window.LabelSuiteTaskDetailData.profiles.T006.datasetRecords.forEach(function (r) { r.pre_tags = null; });
+      window.LabelSuiteTaskDetailData.profiles.T006.datasetRecords.forEach(function (r) { r.spans = []; });
     `);
     await page.goto(buildWorkspaceUrl({ task_id: 'T006', sample_id: 'sequence-tagging-001' }));
     await dismissGuidelineModal(page);
@@ -89,8 +86,29 @@ test.describe('sequence_tagging submit validation (T006)', () => {
     await page.getByTestId('ws-submit-btn').click();
     await expect(page.getByTestId('ws-output-panel-sequence_tagging')).toHaveAttribute('data-error', 'true');
 
-    await page.getByTestId('ws-seq-tag-btn-PER').click();
-    await page.getByTestId('ws-seq-token').nth(6).click();
+    await selectWorkspaceText(page, 'ws-input-content', '魏哲家');
+    await page.getByTestId('ws-seq-label-btn-PER').click();
+    await page.getByTestId('ws-submit-btn').click();
+    await expect(page.getByTestId('ws-sample-item').first()).toHaveAttribute('data-submitted', 'true');
+  });
+
+  /* A pre-annotation whose offsets fall outside the text is the one case the
+     annotator cannot fix by dragging, so it must be visible rather than
+     silently dropped -- and it must not take the well-formed spans of the
+     same record down with it. */
+  test('an out-of-range pre-annotation is reported without losing the valid ones', async ({ page }) => {
+    await patchDataFile(page, 'task-detail.data.js', `
+      window.LabelSuiteTaskDetailData.profiles.T006.datasetRecords[0].spans = [
+        { start: 0, end: 3, label: 'ORG' },
+        { start: 900, end: 904, label: 'LOC' }
+      ];
+    `);
+    await page.goto(buildWorkspaceUrl({ task_id: 'T006', sample_id: 'sequence-tagging-001' }));
+    await dismissGuidelineModal(page);
+
+    await expect(page.getByTestId('sequence-span-prefill-error')).toHaveCount(1);
+    await expect(page.getByTestId('ws-seq-span-item')).toHaveCount(1);
+
     await page.getByTestId('ws-submit-btn').click();
     await expect(page.getByTestId('ws-sample-item').first()).toHaveAttribute('data-submitted', 'true');
   });
