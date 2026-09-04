@@ -348,32 +348,28 @@
           }
         }
       ],
-      fieldRoleMap: { text: 'input', tokens: 'input', pre_tags: 'output' },
+      fieldRoleMap: { text: 'input', spans: 'output' },
       datasetFileName: 'sequence-tagging.json',
       datasetRecords: [
         {
           id: 'sequence-tagging-001',
           text: '台積電董事長魏哲家今天出席台北國際半導體論壇並發表主題演講',
-          tokens: ['台', '積', '電', '董', '事', '長', '魏', '哲', '家', '今', '天', '出', '席', '台', '北', '國', '際', '半', '導', '體', '論', '壇', '並', '發', '表', '主', '題', '演', '講'],
-          pre_tags: ['B-ORG', 'I-ORG', 'I-ORG', 'O', 'O', 'O', 'B-PER', 'I-PER', 'I-PER', 'B-TIME', 'I-TIME', 'O', 'O', 'B-LOC', 'I-LOC', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O']
+          spans: [{ start: 0, end: 3, label: 'ORG' }, { start: 6, end: 9, label: 'PER' }, { start: 9, end: 11, label: 'TIME' }, { start: 13, end: 15, label: 'LOC' }]
         },
         {
           id: 'sequence-tagging-002',
           text: '衛福部部長薛瑞元於三月十五日宣布全國COVID-19疫苗第四劑接種計畫',
-          tokens: ['衛', '福', '部', '部', '長', '薛', '瑞', '元', '於', '三', '月', '十', '五', '日', '宣', '布', '全', '國', 'C', 'O', 'V', 'I', 'D', '-', '1', '9', '疫', '苗', '第', '四', '劑', '接', '種', '計', '畫'],
-          pre_tags: ['B-ORG', 'I-ORG', 'I-ORG', 'O', 'O', 'B-PER', 'I-PER', 'I-PER', 'O', 'B-TIME', 'I-TIME', 'I-TIME', 'I-TIME', 'I-TIME', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O']
+          spans: [{ start: 0, end: 3, label: 'ORG' }, { start: 5, end: 8, label: 'PER' }, { start: 9, end: 14, label: 'TIME' }]
         },
         {
           id: 'sequence-tagging-003',
           text: '長庚醫院急診醫學部主任陳日昌指出桃園地區流感病患持續增加',
-          tokens: ['長', '庚', '醫', '院', '急', '診', '醫', '學', '部', '主', '任', '陳', '日', '昌', '指', '出', '桃', '園', '地', '區', '流', '感', '病', '患', '持', '續', '增', '加'],
-          pre_tags: ['B-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'B-PER', 'I-PER', 'I-PER', 'O', 'O', 'B-LOC', 'I-LOC', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O']
+          spans: [{ start: 0, end: 4, label: 'ORG' }, { start: 11, end: 14, label: 'PER' }, { start: 16, end: 18, label: 'LOC' }]
         },
         {
           id: 'sequence-tagging-004',
           text: 'The chairman of TSMC attended the forum in Taipei today.',
-          tokens: ['T', 'h', 'e', 'c', 'h', 'a', 'i', 'r', 'm', 'a', 'n', 'o', 'f', 'T', 'S', 'M', 'C', 'a', 't', 't', 'e', 'n', 'd', 'e', 'd', 't', 'h', 'e', 'f', 'o', 'r', 'u', 'm', 'i', 'n', 'T', 'a', 'i', 'p', 'e', 'i', 't', 'o', 'd', 'a', 'y', '.'],
-          pre_tags: ['O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'B-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'B-LOC', 'I-LOC', 'I-LOC', 'I-LOC', 'I-LOC', 'I-LOC', 'B-TIME', 'I-TIME', 'I-TIME', 'I-TIME', 'I-TIME', 'O']
+          spans: [{ start: 16, end: 20, label: 'ORG' }, { start: 43, end: 49, label: 'LOC' }, { start: 50, end: 55, label: 'TIME' }]
         }
       ]
     },
