@@ -149,6 +149,7 @@ Run after every change. Task is NOT complete until all pass.
 ```bash
 # Project SDD lint (run from project root)
 scripts/check-sdd.sh
+scripts/speckit-tests.sh
 
 # Backend (run from backend/)
 uv run pytest tests/ -q
