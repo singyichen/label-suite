@@ -218,7 +218,24 @@ jobs:
         # pip-audit is installed into an ephemeral overlay rather than added as
         # a dependency, so the audited environment stays exactly the production
         # dependency set that `uv sync --no-dev` just installed.
-        run: uv run --no-dev --with pip-audit pip-audit --desc
+        # Retried on top of pip-audit's own request handling (issue #644):
+        # an advisory-service timeout is a transient network flake, not a
+        # verdict on the dependency set, so a failed attempt is retried with
+        # backoff (max 3 attempts) before the job is allowed to go red. A
+        # real vulnerability finding fails identically on every attempt, so
+        # this cannot mask one -- it only spends extra time before the same
+        # red result.
+        run: |
+          attempt=1
+          max_attempts=3
+          until uv run --no-dev --with pip-audit pip-audit --desc; do
+            if [ "$attempt" -ge "$max_attempts" ]; then
+              exit 1
+            fi
+            echo "pip-audit attempt $attempt/$max_attempts failed; retrying in $((attempt * 30))s..."
+            sleep $((attempt * 30))
+            attempt=$((attempt + 1))
+          done
 
   backend-test:
     name: Backend — Tests (pytest)
@@ -348,7 +365,26 @@ jobs:
       # pnpm audit checks the lockfile against the advisory DB; no install needed.
       # Severity threshold and --prod scoping are defined in ADR-028.
       - name: Security audit with pnpm audit
-        run: pnpm audit --prod --audit-level high
+        # Retried on top of pnpm's own built-in request retries (issue #644):
+        # registry.npmjs.org's advisory API times out intermittently within
+        # a single `pnpm audit` invocation (observed even after it had
+        # already reported 0 vulnerabilities earlier in the same run), which
+        # is a transient network flake, not a verdict on the dependency set.
+        # A failed attempt is retried here with backoff (max 3 attempts)
+        # before the job is allowed to go red. A real vulnerability finding
+        # fails identically on every attempt, so this cannot mask one -- it
+        # only spends extra time before the same red result.
+        run: |
+          attempt=1
+          max_attempts=3
+          until pnpm audit --prod --audit-level high; do
+            if [ "$attempt" -ge "$max_attempts" ]; then
+              exit 1
+            fi
+            echo "pnpm audit attempt $attempt/$max_attempts failed; retrying in $((attempt * 30))s..."
+            sleep $((attempt * 30))
+            attempt=$((attempt + 1))
+          done
 
   # TODO: Playwright E2E tests will be added once frontend development begins
 
