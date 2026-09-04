@@ -700,7 +700,11 @@ test.describe('Step 2 preview: all 8 output types with example data', () => {
     await expectGenericInputPreview(page, 'hidden');
   });
 
-  test('Sequence Tagging — switches character and word units and updates the token preview', async ({
+  /* issue #581 / OpenSpec change seq-tagging-span-config group 1 retired the
+     `sequence_tagging` token coordinate system, so the 標記單位 / 標記方案
+     settings this asserts on no longer exist. The drag-select replacement and
+     this test's rewrite are owned by the same change's group 2 task 2.7. */
+  test.skip('Sequence Tagging — switches character and word units and updates the token preview', async ({
     page,
   }) => {
     await setupAndGoToStep2(page, {
@@ -783,7 +787,9 @@ test.describe('Step 2 preview: all 8 output types with example data', () => {
     await expect(tokens.nth(2).getByTestId('sequence-token-text')).toHaveText('e');
   });
 
-  test('Sequence Tagging — restores visible pre-annotations after switching the unit away and back', async ({
+  /* Same retirement as above: asserts the 標記單位 / 標記方案 settings and the
+     token grid that group 1 removed. Rewritten in group 2 task 2.7. */
+  test.skip('Sequence Tagging — restores visible pre-annotations after switching the unit away and back', async ({
     page,
   }) => {
     await setupAndGoToStep2(page, {
@@ -815,7 +821,9 @@ test.describe('Step 2 preview: all 8 output types with example data', () => {
     await expect(page.locator('#nextBtn')).toBeEnabled();
   });
 
-  test('Sequence Tagging — Bypass-cleared tags stay cleared across a unit round-trip', async ({
+  /* Same retirement as above: asserts the 標記單位 / 標記方案 settings and the
+     token grid that group 1 removed. Rewritten in group 2 task 2.7. */
+  test.skip('Sequence Tagging — Bypass-cleared tags stay cleared across a unit round-trip', async ({
     page,
   }) => {
     await setupAndGoToStep2(page, {
@@ -847,7 +855,9 @@ test.describe('Step 2 preview: all 8 output types with example data', () => {
     await expect(tokens.nth(2).getByTestId('sequence-token-tag')).toHaveText('O');
   });
 
-  test('Sequence Tagging — mismatch error names the aligned unit and offers both remedies', async ({
+  /* Same retirement as above: asserts the 標記單位 / 標記方案 settings and the
+     token grid that group 1 removed. Rewritten in group 2 task 2.7. */
+  test.skip('Sequence Tagging — mismatch error names the aligned unit and offers both remedies', async ({
     page,
   }) => {
     await setupAndGoToStep2(page, {
@@ -868,7 +878,9 @@ test.describe('Step 2 preview: all 8 output types with example data', () => {
     await expect(alignmentError).toContainText('符合「詞」單位的預標記');
   });
 
-  test('Sequence Tagging — supports BIO, BIOES, IOB2, and single-label schemes', async ({
+  /* Same retirement as above: asserts the 標記單位 / 標記方案 settings and the
+     token grid that group 1 removed. Rewritten in group 2 task 2.7. */
+  test.skip('Sequence Tagging — supports BIO, BIOES, IOB2, and single-label schemes', async ({
     page,
   }) => {
     await setupAndGoToStep2(page, {
