@@ -61,6 +61,11 @@ test('the degraded browser leaves the task-level snap_unit untouched', async ({ 
 
   await tagPartialWord(page);
 
-  const snapUnit = await page.evaluate(() => window.state.outputConfigs.sequence_tagging.snap_unit);
+  const snapUnit = await page.evaluate(() => {
+    const configs = window.state?.outputConfigs as
+      | Record<string, { snap_unit?: string }>
+      | undefined;
+    return configs?.sequence_tagging?.snap_unit;
+  });
   expect(snapUnit).toBe('word');
 });
