@@ -83,9 +83,21 @@ is_empty_or_reexport_barrel() {
 GENERATED_HEADER_WINDOW=10
 GENERATED_MARKER='本檔為 generated view——請勿手動編輯'
 is_generated_blob() {
-  local path="$1" header
-  header="$(git show ":$path" 2>/dev/null | head -n "$GENERATED_HEADER_WINDOW")" || return 1
-  [[ "$header" == *"$GENERATED_MARKER"* ]]
+  local path="$1" content line n=0
+  content="$(git show ":$path" 2>/dev/null)" || return 1
+
+  # Scan the header in-shell rather than through `git show | head`: `head`
+  # closes the pipe as soon as it has its lines, so on a blob large enough
+  # that git is still writing, git dies of SIGPIPE and `set -o pipefail`
+  # reports 141 for a file that read back perfectly. Whether that races is
+  # a property of blob size and OS pipe buffer, not of the file's content
+  # (issue #648).
+  while IFS= read -r line; do
+    n=$((n + 1))
+    [ "$n" -gt "$GENERATED_HEADER_WINDOW" ] && break
+    [[ "$line" == *"$GENERATED_MARKER"* ]] && return 0
+  done <<<"$content"
+  return 1
 }
 
 # True (0) if $1 should be excluded from both the file-count and line-count
