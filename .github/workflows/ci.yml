@@ -26,10 +26,18 @@ jobs:
   validate:
     name: Validate Project Structure
     runs-on: ubuntu-24.04
+    # dorny/paths-filter reads the PR's changed-file list from the API.
+    permissions:
+      contents: read
+      pull-requests: read
     outputs:
       backend-exists: ${{ steps.check.outputs.backend-exists }}
       frontend-exists: ${{ steps.check.outputs.frontend-exists }}
       prototype-exists: ${{ steps.check.outputs.prototype-exists }}
+      # 'true' on every non-PR event: a push to main always runs the prototype
+      # jobs, so main keeps unconditional coverage even if the filter below is
+      # ever wrong or incomplete.
+      prototype-changed: ${{ github.event_name != 'pull_request' || steps.prototype-filter.outputs.prototype == 'true' }}
     steps:
       - uses: actions/checkout@v5
       - name: Check spec artifact sync
@@ -95,6 +103,31 @@ jobs:
           else
             echo "✓ Project structure validation complete. Additional CI jobs will now run and may pass or fail independently."
           fi
+
+      # Path gate for the two prototype jobs. Playwright alone is ~19 min and
+      # dominates the whole run's wall-clock, so a docs-only or openspec-only PR
+      # used to wait 20 minutes for a suite that could not have been affected.
+      # This is a job-level `if:` gate rather than a workflow-level `paths:`
+      # filter on purpose: `paths:` would gate the entire workflow (backend and
+      # frontend jobs included), and a workflow filtered out that way never
+      # creates its checks at all, so a PR would hang forever on a pending
+      # required check if branch protection is ever enabled.
+      - name: Detect prototype-affecting changes
+        id: prototype-filter
+        if: github.event_name == 'pull_request'
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            prototype:
+              - 'design/prototype/**'
+              # Not every input of the suite lives under design/prototype.
+              # tests/serve.mjs roots the HTTP server there, but several specs
+              # also read these two paths straight off disk -- to see which,
+              # grep -rn '\.\./\.\./\.\./\.\./docs' design/prototype/tests. A change
+              # here is a prototype change even though it sits under docs/.
+              - 'docs/product/example-data/**'
+              - 'docs/product/visual-overview/**'
+              - '.github/workflows/ci.yml'
 
   sdd-lint:
     name: Project SDD Lint
@@ -326,7 +359,7 @@ jobs:
     name: Prototype — Type Check (tsc)
     runs-on: ubuntu-24.04
     needs: validate
-    if: needs.validate.outputs.prototype-exists == 'true'
+    if: needs.validate.outputs.prototype-exists == 'true' && needs.validate.outputs.prototype-changed == 'true'
     defaults:
       run:
         working-directory: design/prototype
@@ -350,7 +383,7 @@ jobs:
     name: Prototype — Playwright Tests
     runs-on: ubuntu-24.04
     needs: validate
-    if: needs.validate.outputs.prototype-exists == 'true'
+    if: needs.validate.outputs.prototype-exists == 'true' && needs.validate.outputs.prototype-changed == 'true'
     defaults:
       run:
         working-directory: design/prototype
