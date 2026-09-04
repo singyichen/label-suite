@@ -697,6 +697,7 @@ make_sdd_repo() {
 
     mkdir -p \
         "$repo/.claude/agents" \
+        "$repo/.github/workflows" \
         "$repo/design/system" \
         "$repo/docs" \
         "$repo/openspec/changes/project-sdd-lint/specs/foundation/001-project-sdd-lint" \
@@ -732,6 +733,16 @@ GUIDANCE
 # Fixture guidance
 
 Use pnpm run lint for frontend checks.
+
+## Verification Commands
+
+```bash
+scripts/check-sdd.sh
+```
+
+## Prohibitions
+
+None.
 GUIDANCE
     cat > "$repo/docs/sdd-workflow.md" <<'GUIDANCE'
 # Fixture SDD workflow
@@ -836,6 +847,19 @@ BASELINE
     cat > "$repo/design/system/screen-inventory.md" <<'INVENTORY'
 # Synthetic screen inventory
 INVENTORY
+    cat > "$repo/.github/workflows/ci.yml" <<'WORKFLOW'
+name: Fixture CI
+on:
+  push:
+jobs:
+  sdd-lint:
+    name: Project SDD Lint
+    runs-on: ubuntu-24.04
+    steps:
+      - run: scripts/check-sdd.sh
+WORKFLOW
+    printf 'sdd-lint\tscripts/check-sdd.sh\tcheck-sdd.sh\n' > "$repo/scripts/ci-jobs.tsv"
+    printf 'sdd-lint\tscripts/check-sdd.sh\tgen-screen-inventory.mjs\n' >> "$repo/scripts/ci-jobs.tsv"
     cp "$ROOT/scripts/check-sdd.sh" "$repo/scripts/check-sdd.sh"
     write_inventory_generator_double "$repo"
 
@@ -2442,6 +2466,70 @@ test_check_sdd_collects_final_review_high_regressions() {
 test_prerequisites_resolve_module_feature_paths
 test_create_feature_creates_module_branch_spec_and_status
 test_setup_plan_and_status_update
+# --- issue #648: two-way parity between local verification suites and CI jobs ---
+# CLAUDE.md states the contract in prose; scripts/ci-jobs.tsv is the machine-readable
+# declaration both directions are checked against. Every script under scripts/ must be
+# declared (with a CI job, or as an explicitly reasoned exemption), and every job in
+# ci.yml must name a local command that CLAUDE.md actually lists.
+
+test_check_sdd_fails_for_verification_suite_without_ci_job() {
+    local repo
+
+    repo="$(make_sdd_repo)"
+    printf '#!/usr/bin/env bash\nexit 0\n' > "$repo/scripts/orphan-tests.sh"
+    assert_command_fails_with "$repo" 1 "CI_JOB_PARITY" "scripts/orphan-tests.sh"
+}
+
+test_check_sdd_fails_for_ci_job_without_local_command() {
+    local repo
+
+    repo="$(make_sdd_repo)"
+    cat >> "$repo/.github/workflows/ci.yml" <<'JOB'
+  orphan-job:
+    name: Orphan
+    runs-on: ubuntu-24.04
+    steps:
+      - run: scripts/nowhere.sh
+JOB
+    assert_command_fails_with "$repo" 1 "CI_JOB_PARITY" ".github/workflows/ci.yml"
+}
+
+test_check_sdd_fails_for_registry_job_absent_from_ci() {
+    local repo
+
+    repo="$(make_sdd_repo)"
+    printf 'ghost-job\tscripts/check-sdd.sh\t-\n' >> "$repo/scripts/ci-jobs.tsv"
+    assert_command_fails_with "$repo" 1 "CI_JOB_PARITY" "scripts/ci-jobs.tsv"
+}
+
+test_check_sdd_fails_for_local_command_absent_from_claude_md() {
+    local repo
+
+    repo="$(make_sdd_repo)"
+    printf 'sdd-lint\tscripts/unlisted.sh\tcheck-sdd.sh\n' > "$repo/scripts/ci-jobs.tsv"
+    printf 'sdd-lint\tscripts/unlisted.sh\tgen-screen-inventory.mjs\n' >> "$repo/scripts/ci-jobs.tsv"
+    assert_command_fails_with "$repo" 1 "CI_JOB_PARITY" "scripts/ci-jobs.tsv"
+}
+
+test_check_sdd_fails_for_exempt_row_without_reason() {
+    local repo
+
+    repo="$(make_sdd_repo)"
+    printf '#!/usr/bin/env bash\nexit 0\n' > "$repo/scripts/oneoff.sh"
+    printf 'none\t\toneoff.sh\n' >> "$repo/scripts/ci-jobs.tsv"
+    assert_command_fails_with "$repo" 1 "CI_JOB_PARITY" "scripts/ci-jobs.tsv"
+}
+
+test_check_sdd_accepts_reasoned_ci_job_exemption() {
+    local repo
+
+    repo="$(make_sdd_repo)"
+    printf '#!/usr/bin/env bash\nexit 0\n' > "$repo/scripts/oneoff.sh"
+    printf 'none\tone-off fixture helper; not a gate\toneoff.sh\n' >> "$repo/scripts/ci-jobs.tsv"
+    assert_command_succeeds "$repo" --not-rule "CI_JOB_PARITY"
+}
+
+
 test_check_spec_artifacts_passes_for_synced_repo
 test_check_spec_artifacts_fails_for_untracked_spec
 test_check_spec_artifacts_accepts_archived_spec_location
@@ -2512,5 +2600,11 @@ test_check_sdd_ci_job_is_independent
 test_check_sdd_rejects_foreign_root_generator_without_side_effects
 test_check_sdd_rejects_control_character_paths_before_scanning
 test_check_sdd_collects_final_review_high_regressions
+test_check_sdd_fails_for_verification_suite_without_ci_job
+test_check_sdd_fails_for_ci_job_without_local_command
+test_check_sdd_fails_for_registry_job_absent_from_ci
+test_check_sdd_fails_for_local_command_absent_from_claude_md
+test_check_sdd_fails_for_exempt_row_without_reason
+test_check_sdd_accepts_reasoned_ci_job_exemption
 
 echo "speckit script tests passed"
