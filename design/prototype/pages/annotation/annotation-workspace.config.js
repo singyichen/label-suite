@@ -2199,11 +2199,10 @@
         return !!(prefill && typeof prefill === 'object');
       }
       case 'sequence_tagging':
-        /* Engine seeds ps.tokens all-'O' for pending samples; any non-O
-           tag (annotator's own or FR-024M prefill) counts as answered. */
-        return !!(ps && Array.isArray(ps.tokens) && ps.tokens.some(function (tag) {
-          return tag && tag !== 'O';
-        }));
+        /* Any marked span (the annotator's own or a well-formed prefill)
+           counts as answered; an out-of-range prefill is not one, since the
+           engine routes it to prefillErrors rather than into spans[]. */
+        return !!(ps && Array.isArray(ps.spans) && ps.spans.length > 0);
       case 'entity_recognition':
         return state.previewEntities.length > 0;
       case 'relation_identification':
