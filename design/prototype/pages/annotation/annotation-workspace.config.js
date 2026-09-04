@@ -745,6 +745,24 @@
       var del = row.querySelector('[data-testid="sequence-span-item-delete"]');
       if (del) del.setAttribute('data-testid', 'ws-seq-span-delete');
     });
+
+    /* FR-024A-1: word snapping is a landing-point aid the browser may not be
+       able to provide. snapSelectionToWordBoundaries() already falls back to
+       the raw offsets, which is silent -- say it out loud instead, so an
+       annotator on such a browser reads the unsnapped result as expected
+       behaviour. The task's snap_unit is reported, never rewritten. */
+    var snapUnit = (state.outputConfigs.sequence_tagging || {}).snap_unit;
+    var segmenterMissing = typeof Intl === 'undefined' || typeof Intl.Segmenter !== 'function';
+    if (snapUnit === 'word' && segmenterMissing) {
+      var notice = document.createElement('div');
+      notice.setAttribute('data-testid', 'ws-seq-snap-degraded');
+      notice.setAttribute('role', 'note');
+      notice.style.cssText = 'margin-top:8px;font-size:0.78rem;line-height:1.5;color:var(--color-text-soft);';
+      notice.textContent = state.lang === 'zh'
+        ? '此瀏覽器不支援詞界判定，圈選會停在放開滑鼠的位置，請自行對齊詞的起訖。'
+        : 'This browser cannot detect word boundaries, so a selection stops where you release it -- align it to the word yourself.';
+      container.appendChild(notice);
+    }
   }
 
   /* entity_recognition (registry: rendersInputPreview:true, task-config.data.js)
