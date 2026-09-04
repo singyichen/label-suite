@@ -183,6 +183,31 @@ test_line_count_excludes_generated_files() {
     record "generated file (marker header, ~800 lines) excluded from line count" 0 "$rc"
 }
 
+# RED: the header probe must not hinge on the exit status of the
+# `git show | head` pipeline. Once `head` has its ten lines it closes the
+# read end, and `git show` dies of SIGPIPE with any blob still unwritten —
+# under `set -o pipefail` that reports 141 for a perfectly readable
+# generated file. Blob size decides whether git finishes writing first, so
+# this case pads well past any pipe buffer instead of depending on a
+# platform where the real inventory happens to be large enough: the same
+# suite passes on macOS and fails on ubuntu-24.04 (issue #648).
+test_large_generated_file_still_excluded() {
+    local repo rc
+    repo="$(make_repo)"
+    mkdir -p "$repo/design/system"
+    {
+        echo "# Fake Large Generated Inventory"
+        echo ""
+        echo "> ${GENERATED_MARKER} 唯一生成來源是 inventory-manifest.json；請勿手動編輯。"
+        echo ""
+        seq 1 200000
+    } >"$repo/design/system/fake-large-generated.md"
+    gen_lines "$repo" "backend/app/small_change.py" 10
+    git -C "$repo" add .
+    rc="$(hook_exit_code "$repo")"
+    record "large generated file (marker header, >1MB blob) excluded from line count" 0 "$rc"
+}
+
 # RED: empty __init__.py and re-export-only index.ts barrel files must not
 # count toward the file threshold.
 test_file_count_excludes_empty_and_reexport_barrels() {
@@ -267,6 +292,7 @@ test_allow_batch_commit_env_allowed
 test_file_count_excludes_lockfiles_config_and_specs
 test_line_count_excludes_lockfiles_and_specs
 test_line_count_excludes_generated_files
+test_large_generated_file_still_excluded
 test_file_count_excludes_empty_and_reexport_barrels
 test_loose_generated_view_phrase_in_prose_still_blocked
 test_generated_marker_deep_in_body_not_header_still_blocked
