@@ -1,5 +1,5 @@
 ---
-功能分支: feat/issue-375-sdd-lint
+功能分支: feat/issue-648-verification-suite-lint
 建立日期: 2026-08-26
 版本: 1.1.4
 狀態: Draft
