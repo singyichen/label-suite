@@ -32,14 +32,13 @@
 - [x] 1.4 （Green）修改 `design/prototype/pages/annotation/annotation-workspace.config.js`：依任務設定的 `snap_unit` 決定放開滑鼠時的落點吸附，詞界判定使用前端 `Intl.Segmenter`；該 API 缺席時退回不吸附並於標記卡顯示一行操作說明提示。驗證：`PW_PORT=8921 corepack pnpm playwright test tests/annotation/issue-581-workspace-snap-degrade.spec.ts` 全綠 [@senior-frontend]
 - [x] 1.5 撰寫 Red 契約覆蓋提交驗證：解除 `design/prototype/tests/annotation/annotation-workspace-submit-validation.spec.ts` 的單一跳過標記，並將全 O 網格案例改寫為 span 版本——無 span 且未 Bypass 時提交被阻擋，建立任一 span 後阻擋解除，越界預標記列為錯誤而其餘正常落位。驗證：`PW_PORT=8921 corepack pnpm playwright test tests/annotation/annotation-workspace-submit-validation.spec.ts` 全數失敗，失敗原因為提交驗證仍比對 tag 與 Token 數量 [@senior-qa]
 - [x] 1.6 （Green）修改 `design/prototype/pages/annotation/annotation-workspace.config.js`：提交前驗證由「tag 數量等於 Token 數量」改為 span 合法性驗證（起點不小於終點、起點為負、終點超出文本長度三者為錯誤），保留「未建立任何 span 且未 Bypass 時阻擋提交」語意。驗證：`PW_PORT=8921 corepack pnpm playwright test tests/annotation/annotation-workspace-submit-validation.spec.ts` 全綠 [@senior-frontend]
-- [ ] 1.7 移除 `design/prototype/pages/task-management/task-config.engine.js` 中 change ① 群組 2 為避免工作區即刻崩潰而刻意保留的兩個 token 切分輔助函式（`getSequencePreviewTokens` 與 `tokenizeSequenceText`）；其行為已無任何呼叫端，回歸覆蓋由任務 1.1 的規格檔提供。驗證：`/usr/bin/grep -rn "getSequencePreviewTokens\|tokenizeSequenceText" design/prototype/pages` 無輸出 [@senior-frontend]
-- [ ] 1.8 執行群組 1 回歸並記錄失效斷言清單供群組 2 處理。驗證：`cd design/prototype && corepack pnpm typecheck && PW_PORT=8921 corepack pnpm playwright test tests/annotation` — typecheck 退出碼 0，playwright 剩餘失敗項目全部可歸因於尚未改版的答案序列化層 [@main]
+- [ ] 1.7 執行群組 1 回歸並記錄失效斷言清單供群組 2 處理。驗證：`cd design/prototype && corepack pnpm typecheck && PW_PORT=8921 corepack pnpm playwright test tests/annotation` — typecheck 退出碼 0，playwright 剩餘失敗項目全部可歸因於尚未改版的答案序列化層 [@main]
 
 ## 2. 群組 2 — CompactAnswer 形狀與審核呈現改 span-level（FR-024A-3／FR-052／FR-024L）
 
 **故事目標**（SC-004R／SC-004H）：提交 payload 為 `spans[]` 形狀；CompactAnswer 改為帶 offset 的四鍵形狀使審核回填改為精確定位；差異比對以起訖點與標籤為合併鍵做集合比對；統計盒以不帶前綴的標籤類型計數。
 
-> **產品檔案（2）**：`design/prototype/pages/annotation/annotation-workspace.data.js`、`design/prototype/pages/annotation/annotation-list.html`
+> **產品檔案（4）**：`design/prototype/pages/annotation/annotation-workspace.config.js`、`design/prototype/pages/annotation/annotation-workspace.data.js`、`design/prototype/pages/annotation/annotation-list.html`、`design/prototype/pages/task-management/task-config.engine.js`
 > **最終群組**：否。本組不執行 archive。
 > **相依**：群組 1 全數落地後開始（本組序列化的來源是群組 1 建立的 `spans[]`）。
 
@@ -49,9 +48,10 @@
 - [ ] 2.4 （Green）修改 `design/prototype/pages/annotation/annotation-workspace.data.js`：審核員模擬資料列的 `sequence_tagging` 答案改為帶 offset 的四鍵形狀，答案轉換函式的該型別分支與差異比對合併鍵改用起訖點加標籤。驗證：`PW_PORT=8922 corepack pnpm playwright test tests/annotation/issue-581-span-diff-and-stats.spec.ts` 全綠 [@senior-frontend]
 - [ ] 2.5 撰寫 Red 契約覆蓋審核員操作與列表呈現：解除 `design/prototype/tests/annotation/annotation-workspace-reviewer.spec.ts` registry 迴圈中 `sequence_tagging` 案例的跳過標記並將其作答動作由點擊 Token 改為拖曳圈選，同時補上列表頁單列答案摘要顯示標記文字的斷言。驗證：`PW_PORT=8922 corepack pnpm playwright test tests/annotation/annotation-workspace-reviewer.spec.ts` 全數失敗，失敗原因為審核員直接修正路徑仍走 Token 網格 [@senior-qa]
 - [ ] 2.6 （Green）修改 `design/prototype/pages/annotation/annotation-list.html`：正式標記回合單列答案摘要的 `sequence_tagging` 分支改讀標籤鍵，並保持既有以文字鍵呈現標記內容的路徑不變。驗證：`PW_PORT=8922 corepack pnpm playwright test tests/annotation/annotation-workspace-reviewer.spec.ts` 全綠 [@senior-frontend]
-- [ ] 2.7 確認 6 個繼承自 change ① 的跳過標記全數解除。驗證：`/usr/bin/grep -rn "seq-tagging-span-config group 2" design/prototype/tests` 無輸出 [@main]
-- [ ] 2.8 執行全套原型回歸。驗證：`cd design/prototype && corepack pnpm typecheck && PW_PORT=8922 corepack pnpm playwright test` — typecheck 退出碼 0、playwright 0 failed 且無新增 skipped [@main]
-- [ ] 2.9 執行螢幕清單重新產生。驗證：`node scripts/gen-screen-inventory.mjs` 後 `scripts/check-sdd.sh` 不回報 INVENTORY_FRESHNESS [@main]
+- [ ] 2.7 移除 `design/prototype/pages/task-management/task-config.engine.js` 中 change ① 群組 2 為避免工作區即刻崩潰而刻意保留的兩個 token 切分輔助函式（`getSequencePreviewTokens` 與 `tokenizeSequenceText`）；其最後的呼叫端是本組改寫的答案序列化層（`getSequenceTokenTexts`），故本任務排在任務 2.6 之後而非群組 1；回歸覆蓋由任務 2.9 的全套回歸提供。驗證：`/usr/bin/grep -rn "getSequencePreviewTokens\|tokenizeSequenceText" design/prototype/pages` 無輸出 [@senior-frontend]
+- [ ] 2.8 確認 6 個繼承自 change ① 的跳過標記全數解除。驗證：`/usr/bin/grep -rn "seq-tagging-span-config group 2" design/prototype/tests` 無輸出 [@main]
+- [ ] 2.9 執行全套原型回歸。驗證：`cd design/prototype && corepack pnpm typecheck && PW_PORT=8922 corepack pnpm playwright test` — typecheck 退出碼 0、playwright 0 failed 且無新增 skipped [@main]
+- [ ] 2.10 執行螢幕清單重新產生。驗證：`node scripts/gen-screen-inventory.mjs` 後 `scripts/check-sdd.sh` 不回報 INVENTORY_FRESHNESS [@main]
 
 ## 3. 群組 3 — Source-Verify、archive 與正典回寫（最終群組）
 
