@@ -7,9 +7,21 @@
  *
  * The track is deliberately NOT a linear Step Indicator: annotation-015 FR-051
  * determines REVIEW_UNIT_STATUS through two mutually exclusive lanes
- * (all-reviewers-agree → approved/finalized, any-difference → modified/disputed),
- * so `approved` never passes through `disputed`. A linear track would render a
- * transition the state machine does not have. These tests pin that branch down.
+ * (reviewer keeps the annotator's answer → finalized, reviewer differs →
+ * disputed → finalized), so the same-answer lane never passes through
+ * `disputed`. A linear track would render a transition the state machine does
+ * not have. These tests pin that branch down.
+ *
+ * issue #596 (single-owner review relay) / issue #626: FR-093 gives each review
+ * unit exactly ONE reviewer, so `已同意` and `已修改` — the two interim nodes
+ * that only existed while a quorum of reviewers was still being collected — can
+ * no longer occur, and with them the `min_reviewers >= 2` 9-column variant and
+ * its `unconverged` rail caption. The track is now a single 7-column grid with
+ * three nodes (待審 / 爭議中 / 已定稿); the lane a unit walked is named by the
+ * `.review-track-branch[data-branch]` captions instead of by which interim node
+ * it landed on. Shipped reference: annotation-workspace.html's
+ * buildReviewStatusTrack(), pinned by
+ * design/prototype/tests/annotation/annotation-review-status-track.spec.ts.
  *
  * This file verifies a design-system contract rather than a feature-spec FR
  * (spec 008 Prototype Traceability lists the showcase as reference-only).
@@ -72,26 +84,46 @@ test.describe('Components showcase — wayfinding batch', () => {
     await expect(links.nth(1)).toBeFocused();
   });
 
-  test('track exposes list semantics with five status nodes', async ({ page }) => {
+  test('track exposes list semantics with three status nodes', async ({ page }) => {
     const track = page.locator(`${CARD} .review-track[role="list"]`);
     await expect(track).toHaveAttribute('aria-label', /審核單位狀態/);
-    await expect(track.locator('[role="listitem"]')).toHaveCount(5);
+    await expect(track.locator('[role="listitem"]')).toHaveCount(3);
     await expect(track.locator('[role="listitem"]')).toHaveText([
       /待審/,
-      /已同意/,
-      /已修改/,
       /爭議中/,
       /已定稿/,
     ]);
   });
 
+  test('the retired quorum interim nodes are gone from the showcase', async ({ page }) => {
+    // FR-093: one reviewer per unit, so `已同意` / `已修改` (answered but below
+    // quorum) are unreachable, and so is the `unconverged` rail caption that
+    // sat between `已修改` and `爭議中`. The `min_reviewers >= 2` demo card and
+    // the `.review-track-single` variant class went with them.
+    const track = page.locator(`${CARD} .review-track`);
+    await expect(track).not.toHaveClass(/review-track-single/);
+    await expect(track).not.toContainText('已同意');
+    await expect(track).not.toContainText('已修改');
+    await expect(track.locator('[data-branch="unconverged"]')).toHaveCount(0);
+    await expect(page.locator('#comp-review-track-single')).toHaveCount(0);
+  });
+
   test('the two lanes are drawn on separate rows, not as one line', async ({ page }) => {
-    // FR-051 branches after `pending`: `已同意` (same-answer lane) and `已修改`
-    // (differing-answer lane) are alternatives, so they must not share a row.
+    // FR-051 branches after `pending`: the same-answer lane runs straight to
+    // `已定稿` on row 1 while the differing lane drops to `爭議中` on row 2, so
+    // the middle node must not share a row with the two that span both rows.
     const rows = await page.locator(`${CARD} .review-track [role="listitem"]`).evaluateAll(
       (els) => els.map((el) => Math.round(el.getBoundingClientRect().top)),
     );
+    expect(rows[1]).not.toBe(rows[0]);
     expect(rows[1]).not.toBe(rows[2]);
+    expect(rows[0]).toBe(rows[2]);
+    // With the interim nodes gone the captions are the only thing naming which
+    // lane the unit walked, so they must survive and stay distinguishable.
+    await expect(page.locator(`${CARD} .review-track-branch[data-branch="differing"]`))
+      .toHaveClass(/\bdone\b/);
+    await expect(page.locator(`${CARD} .review-track-branch[data-branch="same"]`))
+      .not.toHaveClass(/\bdone\b/);
     // The fork connectors are decoration only.
     for (const fork of await page.locator(`${CARD} .review-track-fork`).all()) {
       await expect(fork).toHaveAttribute('aria-hidden', 'true');

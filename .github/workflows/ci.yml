@@ -26,10 +26,18 @@ jobs:
   validate:
     name: Validate Project Structure
     runs-on: ubuntu-24.04
+    # dorny/paths-filter reads the PR's changed-file list from the API.
+    permissions:
+      contents: read
+      pull-requests: read
     outputs:
       backend-exists: ${{ steps.check.outputs.backend-exists }}
       frontend-exists: ${{ steps.check.outputs.frontend-exists }}
       prototype-exists: ${{ steps.check.outputs.prototype-exists }}
+      # 'true' on every non-PR event: a push to main always runs the prototype
+      # jobs, so main keeps unconditional coverage even if the filter below is
+      # ever wrong or incomplete.
+      prototype-changed: ${{ github.event_name != 'pull_request' || steps.prototype-filter.outputs.prototype == 'true' }}
     steps:
       - uses: actions/checkout@v5
       - name: Check spec artifact sync
@@ -95,6 +103,31 @@ jobs:
           else
             echo "✓ Project structure validation complete. Additional CI jobs will now run and may pass or fail independently."
           fi
+
+      # Path gate for the two prototype jobs. Playwright alone is ~19 min and
+      # dominates the whole run's wall-clock, so a docs-only or openspec-only PR
+      # used to wait 20 minutes for a suite that could not have been affected.
+      # This is a job-level `if:` gate rather than a workflow-level `paths:`
+      # filter on purpose: `paths:` would gate the entire workflow (backend and
+      # frontend jobs included), and a workflow filtered out that way never
+      # creates its checks at all, so a PR would hang forever on a pending
+      # required check if branch protection is ever enabled.
+      - name: Detect prototype-affecting changes
+        id: prototype-filter
+        if: github.event_name == 'pull_request'
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            prototype:
+              - 'design/prototype/**'
+              # Not every input of the suite lives under design/prototype.
+              # tests/serve.mjs roots the HTTP server there, but several specs
+              # also read these two paths straight off disk -- to see which,
+              # grep -rn '\.\./\.\./\.\./\.\./docs' design/prototype/tests. A change
+              # here is a prototype change even though it sits under docs/.
+              - 'docs/product/example-data/**'
+              - 'docs/product/visual-overview/**'
+              - '.github/workflows/ci.yml'
 
   sdd-lint:
     name: Project SDD Lint
@@ -185,7 +218,24 @@ jobs:
         # pip-audit is installed into an ephemeral overlay rather than added as
         # a dependency, so the audited environment stays exactly the production
         # dependency set that `uv sync --no-dev` just installed.
-        run: uv run --no-dev --with pip-audit pip-audit --desc
+        # Retried on top of pip-audit's own request handling (issue #644):
+        # an advisory-service timeout is a transient network flake, not a
+        # verdict on the dependency set, so a failed attempt is retried with
+        # backoff (max 3 attempts) before the job is allowed to go red. A
+        # real vulnerability finding fails identically on every attempt, so
+        # this cannot mask one -- it only spends extra time before the same
+        # red result.
+        run: |
+          attempt=1
+          max_attempts=3
+          until uv run --no-dev --with pip-audit pip-audit --desc; do
+            if [ "$attempt" -ge "$max_attempts" ]; then
+              exit 1
+            fi
+            echo "pip-audit attempt $attempt/$max_attempts failed; retrying in $((attempt * 30))s..."
+            sleep $((attempt * 30))
+            attempt=$((attempt + 1))
+          done
 
   backend-test:
     name: Backend — Tests (pytest)
@@ -315,7 +365,26 @@ jobs:
       # pnpm audit checks the lockfile against the advisory DB; no install needed.
       # Severity threshold and --prod scoping are defined in ADR-028.
       - name: Security audit with pnpm audit
-        run: pnpm audit --prod --audit-level high
+        # Retried on top of pnpm's own built-in request retries (issue #644):
+        # registry.npmjs.org's advisory API times out intermittently within
+        # a single `pnpm audit` invocation (observed even after it had
+        # already reported 0 vulnerabilities earlier in the same run), which
+        # is a transient network flake, not a verdict on the dependency set.
+        # A failed attempt is retried here with backoff (max 3 attempts)
+        # before the job is allowed to go red. A real vulnerability finding
+        # fails identically on every attempt, so this cannot mask one -- it
+        # only spends extra time before the same red result.
+        run: |
+          attempt=1
+          max_attempts=3
+          until pnpm audit --prod --audit-level high; do
+            if [ "$attempt" -ge "$max_attempts" ]; then
+              exit 1
+            fi
+            echo "pnpm audit attempt $attempt/$max_attempts failed; retrying in $((attempt * 30))s..."
+            sleep $((attempt * 30))
+            attempt=$((attempt + 1))
+          done
 
   # TODO: Playwright E2E tests will be added once frontend development begins
 
@@ -326,7 +395,7 @@ jobs:
     name: Prototype — Type Check (tsc)
     runs-on: ubuntu-24.04
     needs: validate
-    if: needs.validate.outputs.prototype-exists == 'true'
+    if: needs.validate.outputs.prototype-exists == 'true' && needs.validate.outputs.prototype-changed == 'true'
     defaults:
       run:
         working-directory: design/prototype
@@ -350,7 +419,7 @@ jobs:
     name: Prototype — Playwright Tests
     runs-on: ubuntu-24.04
     needs: validate
-    if: needs.validate.outputs.prototype-exists == 'true'
+    if: needs.validate.outputs.prototype-exists == 'true' && needs.validate.outputs.prototype-changed == 'true'
     defaults:
       run:
         working-directory: design/prototype

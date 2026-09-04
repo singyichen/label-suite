@@ -1116,6 +1116,70 @@ test_check_sdd_fails_for_missing_source_id() {
     assert_command_fails_with "$repo" 1 "SOURCE_VERIFY_ID" "openspec/changes/project-sdd-lint/proposal.md"
 }
 
+append_added_requirements_delta() {
+    local repo="$1"
+    cat >> "$repo/openspec/changes/project-sdd-lint/specs/foundation/001-project-sdd-lint/spec.md" <<'DELTA'
+
+## ADDED Requirements
+
+### Requirement: FR-101 New governance rule
+
+The checker reports the new rule.
+
+#### Scenario: SC-101 AC-9.1 New rule is enforced
+- **THEN** the checker reports the new rule
+DELTA
+}
+
+test_check_sdd_accepts_ids_defined_by_added_requirements() {
+    local repo
+    repo="$(make_sdd_repo)"
+    append_added_requirements_delta "$repo"
+    printf '\nFR-101 AC-9.1\n' >> "$repo/openspec/changes/project-sdd-lint/proposal.md"
+    cat >> "$repo/openspec/changes/project-sdd-lint/tasks.md" <<'TASKS'
+
+## 2. New rule
+
+**故事目標**：SC-101
+
+- [ ] 2.1 Document the new rule in `docs/sdd-workflow.md`. [@main]
+TASKS
+
+    assert_command_succeeds "$repo"
+}
+
+test_check_sdd_fails_for_id_only_mentioned_in_added_body() {
+    local repo
+    repo="$(make_sdd_repo)"
+    append_added_requirements_delta "$repo"
+    printf '\nFR-102\n' >> "$repo/openspec/changes/project-sdd-lint/specs/foundation/001-project-sdd-lint/spec.md"
+
+    assert_command_fails_with "$repo" 1 "SOURCE_VERIFY_ID" "openspec/changes/project-sdd-lint/specs/foundation/001-project-sdd-lint/spec.md"
+}
+
+test_check_sdd_accepts_cross_spec_citation_naming_the_source_spec() {
+    local repo
+    repo="$(make_sdd_repo)"
+    printf '\n### FR-201\n' >> "$repo/specs/dataset/001-legacy/spec.md"
+    printf '\nCross-spec contract: `dataset/001` FR-201.\n' >> "$repo/openspec/changes/project-sdd-lint/design.md"
+
+    assert_command_succeeds "$repo"
+}
+
+test_check_sdd_fails_for_cross_spec_citation_absent_from_the_named_spec() {
+    local repo
+
+    repo="$(make_sdd_repo)"
+    printf '\n### FR-201\n' >> "$repo/specs/dataset/001-legacy/spec.md"
+    printf '\nCross-spec contract: `dataset/001` FR-202.\n' >> "$repo/openspec/changes/project-sdd-lint/design.md"
+    assert_command_fails_with "$repo" 1 "SOURCE_VERIFY_ID" "openspec/changes/project-sdd-lint/design.md"
+
+    repo="$(make_sdd_repo)"
+    printf '\n### FR-201\n' >> "$repo/specs/dataset/001-legacy/spec.md"
+    printf '\nCross-spec contract: FR-201.\n' >> "$repo/openspec/changes/project-sdd-lint/design.md"
+    assert_command_fails_with "$repo" 1 "SOURCE_VERIFY_ID" "openspec/changes/project-sdd-lint/design.md"
+}
+
 test_check_sdd_fails_for_invalid_assignee() {
     local repo
 
@@ -2389,6 +2453,10 @@ test_check_sdd_rejects_empty_explicit_repo_root
 test_check_sdd_fails_for_missing_goal_heading
 test_check_sdd_fails_for_active_change_stage_drift
 test_check_sdd_fails_for_missing_source_id
+test_check_sdd_accepts_ids_defined_by_added_requirements
+test_check_sdd_fails_for_id_only_mentioned_in_added_body
+test_check_sdd_accepts_cross_spec_citation_naming_the_source_spec
+test_check_sdd_fails_for_cross_spec_citation_absent_from_the_named_spec
 test_check_sdd_fails_for_invalid_assignee
 test_check_sdd_fails_for_incomplete_exception
 test_check_sdd_fails_for_wrong_red_owner

@@ -271,6 +271,28 @@ archive 回寫 ──→ specs/[module]/NNN-feature/spec.md（版本升級 + Cha
 | 3. Code/test gates | 受影響實作的 Red/Green evidence、type、unit、integration、E2E、security 與 lint，以及每個 PR 群組依序完成 Code Review、QA Scenario、安全、適用效能審查與使用者確認 | `uv run ...`、`pnpm ...`、prototype Playwright、CI 對應指令與 PR-group review evidence |
 | 4. Source-Verify + write-back/archive gate | archive-time 正典 ID、version 與 Changelog 完整性，**以及 derived view 每一條正典引用的可定位性** | 第 1–3 層與 Source-Verify evidence 是 `/opsx:archive` 的前提；archive 後須逐條 grep 驗證 derived view 的正典引用（見 §6.2）；final PR group 成功 write-back 才完成本層 |
 
+### 6.1.1 propose 階段如何宣告新需求 ID（第 2 層規則）
+
+新需求的 FR／SC／AC ID 依定義還不在正典（要到 archive 回寫才寫入），因此第 2 層對 change 內 ID 引用的判定分三種來源（issue #640）：
+
+1. **正典已定義的 ID** — 直接引用，維持原本的 Source-Verify 規則。
+2. **本 change 新增的 ID** — 必須在 delta 的 `## ADDED Requirements` 區塊內、以 `### Requirement:` 或 `#### Scenario:` 標題行**宣告該 ID**，例如 `### Requirement: FR-101 <中文標題>`、`#### Scenario: AC-9.1 <中文標題>`。宣告後，該 ID 在同一個 change 的 `proposal.md`／`design.md`／`tasks.md`／delta 全部可自由引用（`tasks.md` 的 `**故事目標**` 亦可引用本 change 新增的 SC ID）。**只有標題行算宣告處**：只出現在條文內文、卻沒有任何標題宣告的新 ID 仍會被判為引用錯誤，這是防止 delta 憑空發明 ID 的最後一道防線。
+3. **跨 spec 引用的 ID** — 允許，但**引用該 ID 的那一行必須指名來源 spec**（`specs/<module>/NNN-feature/spec.md`、`<module>/NNN-feature` 或 `<module>/NNN` 皆可），且該來源 spec 必須真的定義了這個 ID，例如：「本改動的 annotator 端契約由 `annotation/015` FR-024A 承接」。未指名來源、或來源 spec 並未定義該 ID，一律判為錯誤。
+
+`scripts/sdd-lint-baseline.txt` 只收 `LEGACY_SPEC_HEADING` 與 `LEGACY_STATUS_DRIFT` 兩條規則，**不能**用來豁免 ID 類錯誤。
+
+### 6.1.2 delta 檔案佈局與 openspec CLI 版本下限（第 1 層規則）
+
+change 的 spec delta **必須**鏡射正典路徑放在 `openspec/changes/<change>/specs/<module>/<NNN-feature>/spec.md`（例如 `specs/annotation/015-annotation-workspace/spec.md`），與正典 `specs/[module]/NNN-feature/spec.md` 一一對應。這也是 `openspec archive` 決定要合併進哪一份 derived view 的依據。
+
+執行第 1 層閘門前先確認 **`openspec --version` ≥ 1.6.0**：v1.5.0 以前的 CLI 只在 `specs/<capability>/spec.md`（單層）探測 delta，鏡射佈局會被**靜默略過**並回報
+
+```
+✗ [ERROR] file: Change must have at least one delta. No deltas found.
+```
+
+這是環境版本問題，**不是佈局問題**（issue #639）。看到此訊息時先查 CLI 版本，**不要**把 delta 壓平成單層——壓平會失去與正典路徑的對應。第 2 層的 `scripts/check-sdd.sh` 以 `find … -name spec.md` 掃描，不受目錄深度影響。
+
 ## 6.2 archive 後的引用驗證（第 4 層必做步驟）
 
 `openspec archive` 產出的 derived view 會**逐字沿用 propose 當時寫的 delta 文字**，包含當時就寫錯的引用與漏述；`openspec validate` 只檢查 schema，這類錯誤 CLI 完全不檢查（issue #356 pilot 發現 ③：derived view 引用了根本不存在的 `plan.md §Phase 1.3`，另有一條 SC 的子句被靜默省略，兩者都只靠人工 code review 才抓到）。

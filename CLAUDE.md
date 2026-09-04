@@ -173,8 +173,12 @@ pnpm playwright test
 bash scripts/verify-bootstrap.sh
 ```
 
-Every CI job must have a matching local command above — when adding a CI job, add its command here in the same PR.
-Exception: `.github/workflows/claude.yml` is an agent trigger (summons Claude Code on `@claude` comments), not a verification gate — it has no local equivalent and never blocks a merge.
+Local commands and CI jobs are a two-way contract — whichever side a PR adds, it adds the other in the same PR:
+
+- New CI job → add its matching local command above.
+- New local verification or test suite → list it above **and** wire it to a matching CI job. A local-only suite stops gating the moment someone changes the code it covers without running it — `scripts/speckit-tests.sh` guarded `check-sdd.sh` locally for months while CI stayed green (issue #613).
+
+Exceptions, one per direction. `.github/workflows/claude.yml` is an agent trigger (summons Claude Code on `@claude` comments), not a verification gate — it has no local equivalent and never blocks a merge. In the other direction, one-off scripts — seeding, scaffolding, migration, throwaway debugging (`scripts/seed.sh`, `scripts/migrate-labels.sh`) — are not verification suites and need no CI job. The test: can this script fail in a way that should block a change? Only then does it owe CI a job.
 
 Definition of Done: the applicable four verification gates have evidence. Intermediate PR groups require gates 1–3 plus their Red/Green and group-review evidence; the final PR group additionally requires Source-Verify evidence and successful archive/write-back for gate 4. Canonical spec movement occurs only after final merge.
 
