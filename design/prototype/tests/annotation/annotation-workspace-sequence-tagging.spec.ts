@@ -1,65 +1,73 @@
 import { test, expect } from '@playwright/test';
-import { buildWorkspaceUrl, dismissGuidelineModal, skipGuidelineModal } from './_workspace-helpers';
+import {
+  buildWorkspaceUrl,
+  dismissGuidelineModal,
+  selectWorkspaceText,
+  skipGuidelineModal,
+} from './_workspace-helpers';
 
-/* sequence_tagging annotator interaction (spec 015 v2.0.0, ADR-031). T006:
- * PER/ORG/LOC/TIME entities, BIO scheme, character-unit tokenization
- * (frozen contract — tokens[] come from the fixture, not client-side
- * re-tokenization), allow_bypass=true configured natively.
+/* sequence_tagging annotator interaction (issue #581, OpenSpec change
+ * seq-tagging-span-workspace). The token grid and the BIO tag buttons are
+ * retired: the annotator drags over the untokenized source text and picks a
+ * label type, and the answer is a list of half-open character offsets.
+ *
+ * The sample round-trip case that used to live here moves to this change's
+ * group 2, where the CompactAnswer shape it depends on is migrated.
  *
  * Traceability: specs/annotation/015-annotation-workspace/spec.md
  *   FR-024A, FR-024A-1, FR-024J
  */
 
+/* sequence-tagging-001 (task-detail.data.js) — 台積電董事長魏哲家今天出席台北國際半導體論壇並發表主題演講
+ * with 4 pre-annotated spans: ORG [0,3) · PER [6,9) · TIME [9,11) · LOC [13,15).
+ * 國際半導體 is the [15,20) stretch, the longest run no pre-annotation claims. */
+const NEW_SPAN_TEXT = '國際半導體';
+
 test.beforeEach(async ({ page }) => {
   await skipGuidelineModal(page);
 });
 
-/* issue #581 / OpenSpec change seq-tagging-span-config group 2 replaced the
-   sequence_tagging token grid with span drag-select over the raw text, so the
-   ws-seq-token cells and the BIO tag buttons every test here drives no longer
-   render. The token coordinate system these assertions encode is exactly what
-   #581 retires, so they are rewritten -- not repaired -- by the annotation/015
-   change that owns the workspace surface. */
-test.describe.skip('sequence_tagging output type', () => {
-  test('renders one token per pre-tokenized unit from the frozen tokenization contract', async ({ page }) => {
+test.describe('sequence_tagging output type', () => {
+  test('renders the source text with its pre-annotated spans and no token grid', async ({ page }) => {
     await page.goto(buildWorkspaceUrl({ task_id: 'T006', sample_id: 'sequence-tagging-001' }));
     await dismissGuidelineModal(page);
 
-    // sequence-tagging-001 has 29 character-unit tokens (task-detail.data.js).
-    await expect(page.getByTestId('ws-seq-token')).toHaveCount(29);
-    await expect(page.getByTestId('ws-seq-token').first()).toHaveText('台');
+    await expect(page.getByTestId('ws-input-content')).toBeVisible();
+    await expect(page.getByTestId('ws-seq-span-item')).toHaveCount(4);
+    await expect(page.getByTestId('ws-seq-token')).toHaveCount(0);
+    await expect(page.getByTestId('ws-seq-tag-btn-PER')).toHaveCount(0);
   });
 
-  test('selecting a tag type then a token span applies a BIO tag to the answer', async ({ page }) => {
+  test('dragging a stretch of text then choosing a label adds a span', async ({ page }) => {
     await page.goto(buildWorkspaceUrl({ task_id: 'T006', sample_id: 'sequence-tagging-001' }));
     await dismissGuidelineModal(page);
 
-    await page.getByTestId('ws-seq-tag-btn-PER').click();
-    await page.getByTestId('ws-seq-token').nth(6).click();
-    await expect(page.getByTestId('ws-seq-token').nth(6)).toHaveAttribute('data-tag', 'B-PER');
+    await selectWorkspaceText(page, 'ws-input-content', NEW_SPAN_TEXT);
+    await page.getByTestId('ws-seq-label-btn-ORG').click();
+
+    await expect(page.getByTestId('ws-seq-span-item')).toHaveCount(5);
+    const added = page.getByTestId('ws-input-content').locator('[data-start="15"]');
+    await expect(added).toHaveAttribute('data-end', '20');
+    await expect(added).toHaveAttribute('data-label', 'ORG');
   });
 
-  test('tags survive switching away to another sample and back', async ({ page }) => {
+  test('deleting a span from the marked-span list removes its highlight', async ({ page }) => {
     await page.goto(buildWorkspaceUrl({ task_id: 'T006', sample_id: 'sequence-tagging-001' }));
     await dismissGuidelineModal(page);
 
-    await page.getByTestId('ws-seq-tag-btn-PER').click();
-    await page.getByTestId('ws-seq-token').nth(6).click();
+    await page.getByTestId('ws-seq-span-delete').first().click();
 
-    await page.getByTestId('ws-sample-item').nth(1).click();
-    await page.getByTestId('ws-sample-item').nth(0).click();
-    await expect(page.getByTestId('ws-seq-token').nth(6)).toHaveAttribute('data-tag', 'B-PER');
+    await expect(page.getByTestId('ws-seq-span-item')).toHaveCount(3);
+    await expect(page.getByTestId('ws-input-content').locator('[data-start="0"]')).toHaveCount(0);
   });
 
-  test('bypass checkbox clears and disables tagging', async ({ page }) => {
+  test('bypass locks the label chips and the marked-span list', async ({ page }) => {
     await page.goto(buildWorkspaceUrl({ task_id: 'T006', sample_id: 'sequence-tagging-001' }));
     await dismissGuidelineModal(page);
-
-    await page.getByTestId('ws-seq-tag-btn-PER').click();
-    await page.getByTestId('ws-seq-token').nth(6).click();
 
     await page.getByTestId('ws-bypass-sequence_tagging').check();
-    await expect(page.getByTestId('ws-seq-token').nth(6)).toHaveAttribute('data-tag', 'O');
-    await expect(page.getByTestId('ws-seq-tag-btn-PER')).toBeDisabled();
+
+    await expect(page.getByTestId('ws-seq-label-btn-PER')).toBeDisabled();
+    await expect(page.getByTestId('ws-seq-span-delete').first()).toBeDisabled();
   });
 });
