@@ -1232,7 +1232,11 @@ function renderOutputTypeFields(container, outKey) {
     for (var prevIdx = fieldIndex - 1; prevIdx >= 0; prevIdx--) {
       if (dimensionFieldKeys.indexOf(outReg.fields[prevIdx].key) < 0) { previousField = outReg.fields[prevIdx]; break; }
     }
-    if (field.type === 'boolean' && previousField && previousField.type === 'entity-list') {
+    /* The 12px separator marks where the boolean toggle group begins, so it
+       belongs to the first boolean after any non-boolean field -- not only
+       after an entity-list, which stopped being the predecessor once
+       sequence_tagging and entity_recognition gained snap_unit (FR-003d-3). */
+    if (field.type === 'boolean' && previousField && previousField.type !== 'boolean') {
       wrap.classList.add('schema-group-start-field');
     }
     if (field.type !== 'boolean') {

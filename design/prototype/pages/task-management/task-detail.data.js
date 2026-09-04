@@ -343,13 +343,7 @@
               { name: 'LOC', color: '#10B981' },
               { name: 'TIME', color: '#F59E0B' }
             ],
-            tagging_scheme: 'BIO',
-            tokenization: {
-              unit: 'character',
-              mode: 'unit_based',
-              punctuation: 'separate',
-              version: 2
-            },
+            snap_unit: 'character',
             allow_bypass: true
           }
         }

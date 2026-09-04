@@ -14,22 +14,23 @@
 
 **故事目標**：`specs/STATUS.md` 如實反映 013 已有一個開啟中的 OpenSpec change，使後續 SC-003x 的改版有正確的流程狀態基準。
 
-- [ ] 0.1 於 `specs/STATUS.md` 將 `task-management-013` 的狀態由 `in-progress` 更新為 `change-open`，填入本 change 名稱，並把 branch 欄位校正為正典 frontmatter 所載的 `feat/task-list-output-types`（先前誤填 v6.9.3 的暫時測試分支）。驗證：`scripts/check-sdd.sh` 不再回報 `ACTIVE_CHANGE_STAGE` [@main]
+- [x] 0.1 於 `specs/STATUS.md` 將 `task-management-013` 的狀態由 `in-progress` 更新為 `change-open`，填入本 change 名稱，並把 branch 欄位校正為正典 frontmatter 所載的 `feat/task-list-output-types`（先前誤填 v6.9.3 的暫時測試分支）。驗證：`scripts/check-sdd.sh` 不再回報 `ACTIVE_CHANGE_STAGE` [@main]
 
 ## 1. PR 群組 1 — Step 2 設定欄位契約（FR-003d-1 設定面／FR-003d-3 設定面）
 
 **故事目標**（SC-003x／SC-003o）：建立任務時，`sequence_tagging` 的設定面板只剩三欄且不再出現「標記方案」，`entity_recognition` 為四欄且兩者共用同一個「選取吸附」欄位；`sequence_tagging` 的 `allow_overlapping` 在 UI 與序列化 config 兩處皆不可及。
 
-> **產品檔案（2）**：`design/prototype/pages/task-management/task-config.data.js`、`design/prototype/pages/task-management/task-new.html`
+> **產品檔案（2）**：`design/prototype/pages/task-management/task-config.data.js`、`design/prototype/pages/task-management/task-config.engine.js`
+> **apply 階段修正**：`task-new.html` 實際無需改動——Step 2 面板全由 registry 渲染，該頁本身不含任何 tokenization 標記或文案（任務 1.4 已以 `grep` 確認）。改以 `task-config.engine.js` 承接任務 1.6 的驗證掛勾：registry 的 `validateConfig` 宣告不變式，Code 模式儲存路徑泛型呼叫之，引擎不特判型別。
 > **最終群組**：否。本組不執行 archive。
 > **相依**：任務 0.1。
 
-- [ ] 1.1 撰寫 Red 測試覆蓋 `sequence_tagging` 三欄設定與 `tagging_scheme` 退場（新增 `design/prototype/tests/task-management/issue-581-seq-tagging-config-fields.spec.ts`）：Step 2 依序顯示「標籤類型」「選取吸附」「允許無法判定」；畫面不存在「標記方案」欄位與任何 `BIO`／`BIOES`／`IOB2`／`SINGLE` 選項；序列化 config 不含 `tagging_scheme`、`tokenization` 與 `allow_overlapping` 三個鍵。驗證：`PW_PORT=8891 corepack pnpm playwright test tests/task-management/issue-581-seq-tagging-config-fields.spec.ts` 全數失敗，失敗原因為現行面板仍渲染「標記方案」與 `tokenization` 契約 [@senior-qa]
-- [ ] 1.2 撰寫 Red 測試覆蓋 `entity_recognition` 四欄設定與共用吸附欄位（新增 `design/prototype/tests/task-management/issue-581-entity-recognition-snap.spec.ts`）：Step 2 依序顯示「標籤類型」「選取吸附」「允許重疊與巢狀」「允許無法判定」；其「選取吸附」選項與 `sequence_tagging` 完全相同；同時選取兩型別時兩個手風琴面板各自持有可獨立設定的吸附值。驗證：執行該檔全數失敗，失敗原因為 `entity_recognition` 尚無 `snap_unit` 欄位 [@senior-qa]
-- [ ] 1.3 （Green）於 `design/prototype/pages/task-management/task-config.data.js` 改寫兩型別的 registry 與預設 config：`sequence_tagging` 的 `fields` 移除 `tagging_scheme` 與 `tokenization`、新增 `snap_unit`（`select`，`character`／`word`，預設 `character`）；`entity_recognition` 的 `fields` 新增同一個 `snap_unit`；新增匯出常數 `SPAN_SNAP_UNITS` 與 `SPAN_OVERLAP_POLICY_BY_OUTPUT_TYPE`，並移除 `SEQUENCE_TAGGING_SCHEMES`、`SEQUENCE_TOKENIZATION_VERSION`、`SEQUENCE_TOKENIZATION_MODE`；示範資料的 `sequence_tagging` 預標記由 `tags[]` 改為 `spans[]`。驗證：`node --check design/prototype/pages/task-management/task-config.data.js` 退出碼 0，且該檔不再出現 `tagging_scheme` 字串 [@senior-frontend]
-- [ ] 1.4 （Green）於 `design/prototype/pages/task-management/task-new.html` 調整 Step 2 設定面板：依 registry 渲染新的欄位集合，移除「標記方案」欄位的頁內樣式與文案（zh／en 皆須移除），並使 `sequence_tagging` 面板不渲染「允許重疊與巢狀」。驗證：`PW_PORT=8891 corepack pnpm playwright test tests/task-management/issue-581-seq-tagging-config-fields.spec.ts tests/task-management/issue-581-entity-recognition-snap.spec.ts` 全綠 [@senior-frontend]
-- [ ] 1.5 撰寫 Red 測試覆蓋 Code 模式的重疊政策防線（新增 `design/prototype/tests/task-management/issue-581-overlap-policy-code-mode.spec.ts`）：於 Code 模式貼上帶 `allow_overlapping: true` 的 `sequence_tagging` config 並套用時，顯示可定位驗證錯誤且阻擋進入 Step 3，且該值不得被靜默改寫為 `false`。驗證：執行該檔全數失敗，失敗原因為驗證器尚未認識該規則 [@senior-qa]
-- [ ] 1.6 （Green）於 `design/prototype/pages/task-management/task-config.data.js` 的 config 驗證路徑加入 `SPAN_OVERLAP_POLICY_BY_OUTPUT_TYPE` 檢查：`sequence_tagging` 帶 `allow_overlapping` 鍵即為驗證錯誤。驗證：`PW_PORT=8891 corepack pnpm playwright test tests/task-management/issue-581-overlap-policy-code-mode.spec.ts` 全綠 [@senior-frontend]
+- [x] 1.1 撰寫 Red 測試覆蓋 `sequence_tagging` 三欄設定與 `tagging_scheme` 退場（新增 `design/prototype/tests/task-management/issue-581-seq-tagging-config-fields.spec.ts`）：Step 2 依序顯示「標籤類型」「選取吸附」「允許無法判定」；畫面不存在「標記方案」欄位與任何 `BIO`／`BIOES`／`IOB2`／`SINGLE` 選項；序列化 config 不含 `tagging_scheme`、`tokenization` 與 `allow_overlapping` 三個鍵。驗證：`PW_PORT=8891 corepack pnpm playwright test tests/task-management/issue-581-seq-tagging-config-fields.spec.ts` 全數失敗，失敗原因為現行面板仍渲染「標記方案」與 `tokenization` 契約 [@senior-qa]
+- [x] 1.2 撰寫 Red 測試覆蓋 `entity_recognition` 四欄設定與共用吸附欄位（新增 `design/prototype/tests/task-management/issue-581-entity-recognition-snap.spec.ts`）：Step 2 依序顯示「標籤類型」「選取吸附」「允許重疊與巢狀」「允許無法判定」；其「選取吸附」選項與 `sequence_tagging` 完全相同；同時選取兩型別時兩個手風琴面板各自持有可獨立設定的吸附值。驗證：執行該檔全數失敗，失敗原因為 `entity_recognition` 尚無 `snap_unit` 欄位 [@senior-qa]
+- [x] 1.3 （Green）於 `design/prototype/pages/task-management/task-config.data.js` 改寫兩型別的 registry 與預設 config：`sequence_tagging` 的 `fields` 移除 `tagging_scheme` 與 `tokenization`、新增 `snap_unit`（`select`，`character`／`word`，預設 `character`）；`entity_recognition` 的 `fields` 新增同一個 `snap_unit`；新增匯出常數 `SPAN_SNAP_UNITS` 與 `SPAN_OVERLAP_POLICY_BY_OUTPUT_TYPE`，並移除 `SEQUENCE_TAGGING_SCHEMES`、`SEQUENCE_TOKENIZATION_VERSION`、`SEQUENCE_TOKENIZATION_MODE`；示範資料的 `sequence_tagging` 預標記由 `tags[]` 改為 `spans[]`。驗證：`node --check design/prototype/pages/task-management/task-config.data.js` 退出碼 0，且該檔不再出現 `tagging_scheme` 字串 [@senior-frontend]
+- [x] 1.4 （Green）於 `design/prototype/pages/task-management/task-new.html` 調整 Step 2 設定面板：依 registry 渲染新的欄位集合，移除「標記方案」欄位的頁內樣式與文案（zh／en 皆須移除），並使 `sequence_tagging` 面板不渲染「允許重疊與巢狀」。驗證：`PW_PORT=8891 corepack pnpm playwright test tests/task-management/issue-581-seq-tagging-config-fields.spec.ts tests/task-management/issue-581-entity-recognition-snap.spec.ts` 全綠 [@senior-frontend]
+- [x] 1.5 撰寫 Red 測試覆蓋 Code 模式的重疊政策防線（新增 `design/prototype/tests/task-management/issue-581-overlap-policy-code-mode.spec.ts`）：於 Code 模式貼上帶 `allow_overlapping: true` 的 `sequence_tagging` config 並套用時，顯示可定位驗證錯誤且阻擋進入 Step 3，且該值不得被靜默改寫為 `false`。驗證：執行該檔全數失敗，失敗原因為驗證器尚未認識該規則 [@senior-qa]
+- [x] 1.6 （Green）於 `design/prototype/pages/task-management/task-config.data.js` 的 `sequence_tagging` registry 加入 `validateConfig`（帶 `allow_overlapping` 鍵即為驗證錯誤），並於 `design/prototype/pages/task-management/task-config.engine.js` 的 Code 模式儲存路徑泛型呼叫該掛勾；檢查對象為未正規化的原始 payload，否則正規化會先移除該鍵而使拒絕退化為靜默改寫。驗證：`PW_PORT=8891 corepack pnpm playwright test tests/task-management/issue-581-overlap-policy-code-mode.spec.ts` 全綠 [@senior-frontend]
 - [ ] 1.7 執行群組 1 回歸：`cd design/prototype && corepack pnpm typecheck && PW_PORT=8891 corepack pnpm playwright test tests/task-management`，記錄既有測試中因 `tagging_scheme`／`tokenization` 移除而失效的斷言清單，於群組 2 修正。驗證：typecheck 退出碼 0，playwright 失敗項目全部可歸因於尚未改版的預覽渲染層 [@main]
 
 ## 2. PR 群組 2 — Step 2 標記預覽改拖曳圈選（FR-003d-1 預覽面與落點拒絕）
@@ -39,6 +40,8 @@
 > **產品檔案（1）**：`design/prototype/pages/task-management/task-config.engine.js`
 > **最終群組**：否。本組不執行 archive。
 > **相依**：群組 1 全數合併後開始（本組讀取群組 1 建立的 `snap_unit` 與 `SPAN_OVERLAP_POLICY_BY_OUTPUT_TYPE`）。
+>
+> **apply 階段修正（來自任務 1.7）**：任務 1.3 所述「示範資料的預標記由 `tags[]` 改為 `spans[]`」不在 `task-config.data.js` 內——BIO 預標記樣本實際位於 `docs/product/example-data/sequence-tagging.json`（`tokens` ＋ `pre_tags`）與 `design/prototype/pages/task-management/task-detail.data.js`。兩者屬預標記載入路徑，改由群組 2 的任務 2.5 一併改為 `spans[]`，本組不動。群組 2 產品檔案因而為 3 個（仍在 5 檔上限內）。
 >
 > **共用引擎連帶影響**：`task-config.engine.js` 由 `task-new` 與 `task-detail`（014 Overview「標記設定」編輯模式）共用，本組改寫會同步改變 014 的 parity surface。這是既有共用設計（013 v6.5.0／v6.6.0／v6.8.0 皆同此路徑），非本 change 引入。任務 2.9 負責確認 014 parity 測試同步轉綠。
 
