@@ -281,6 +281,18 @@ archive 回寫 ──→ specs/[module]/NNN-feature/spec.md（版本升級 + Cha
 
 `scripts/sdd-lint-baseline.txt` 只收 `LEGACY_SPEC_HEADING` 與 `LEGACY_STATUS_DRIFT` 兩條規則，**不能**用來豁免 ID 類錯誤。
 
+### 6.1.2 delta 檔案佈局與 openspec CLI 版本下限（第 1 層規則）
+
+change 的 spec delta **必須**鏡射正典路徑放在 `openspec/changes/<change>/specs/<module>/<NNN-feature>/spec.md`（例如 `specs/annotation/015-annotation-workspace/spec.md`），與正典 `specs/[module]/NNN-feature/spec.md` 一一對應。這也是 `openspec archive` 決定要合併進哪一份 derived view 的依據。
+
+執行第 1 層閘門前先確認 **`openspec --version` ≥ 1.6.0**：v1.5.0 以前的 CLI 只在 `specs/<capability>/spec.md`（單層）探測 delta，鏡射佈局會被**靜默略過**並回報
+
+```
+✗ [ERROR] file: Change must have at least one delta. No deltas found.
+```
+
+這是環境版本問題，**不是佈局問題**（issue #639）。看到此訊息時先查 CLI 版本，**不要**把 delta 壓平成單層——壓平會失去與正典路徑的對應。第 2 層的 `scripts/check-sdd.sh` 以 `find … -name spec.md` 掃描，不受目錄深度影響。
+
 ## 6.2 archive 後的引用驗證（第 4 層必做步驟）
 
 `openspec archive` 產出的 derived view 會**逐字沿用 propose 當時寫的 delta 文字**，包含當時就寫錯的引用與漏述；`openspec validate` 只檢查 schema，這類錯誤 CLI 完全不檢查（issue #356 pilot 發現 ③：derived view 引用了根本不存在的 `plan.md §Phase 1.3`，另有一條 SC 的子句被靜默省略，兩者都只靠人工 code review 才抓到）。
