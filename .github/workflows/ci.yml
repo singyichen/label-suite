@@ -233,8 +233,8 @@ jobs:
               exit 1
             fi
             echo "pip-audit attempt $attempt/$max_attempts failed; retrying in $((attempt * 30))s..."
-            attempt=$((attempt + 1))
             sleep $((attempt * 30))
+            attempt=$((attempt + 1))
           done
 
   backend-test:
@@ -382,8 +382,8 @@ jobs:
               exit 1
             fi
             echo "pnpm audit attempt $attempt/$max_attempts failed; retrying in $((attempt * 30))s..."
-            attempt=$((attempt + 1))
             sleep $((attempt * 30))
+            attempt=$((attempt + 1))
           done
 
   # TODO: Playwright E2E tests will be added once frontend development begins
