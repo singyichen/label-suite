@@ -106,6 +106,16 @@ jobs:
       - name: Check project SDD governance
         run: scripts/check-sdd.sh
 
+  speckit-tests:
+    name: Speckit Helper Scripts — Regression Tests
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Run speckit helper script regression tests
+        run: scripts/speckit-tests.sh
+
   backend-ruff:
     name: Backend — Ruff (Lint + Format)
     runs-on: ubuntu-24.04
