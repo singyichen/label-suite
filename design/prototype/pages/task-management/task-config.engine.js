@@ -2862,24 +2862,6 @@ function renderSingleDimPreview(container, outKey) {
     onInput: function(value) { ps.value = +value; }
   }));
 }
-function getSequencePreviewTokens(text, rawRow, unit) {
-  var source = String(text || '');
-  if (source.trim()) return tokenizeSequenceText(source, unit);
-
-  var explicitTokens = Array.isArray(rawRow.tokens) ? rawRow.tokens : null;
-  if (!explicitTokens) {
-    var inCols = getFieldsByRole('input');
-    for (var i = 0; i < inCols.length; i++) {
-      var value = rawRow[inCols[i]];
-      if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'string') {
-        explicitTokens = value;
-        break;
-      }
-    }
-  }
-  if (!explicitTokens) return [];
-  return tokenizeSequenceText(explicitTokens.join(unit === 'word' ? ' ' : ''), unit);
-}
 /* FR-003d-1: word snapping widens a drag selection to the Intl.Segmenter word
    boundaries that contain it. A runtime without Segmenter lands the selection
    unsnapped -- snapping is a task property, so the configured value is never

@@ -1334,8 +1334,7 @@
        excluded from that join -- this is a generic guard (any non-scalar
        input-role column, not just `tokens`), and it only affects
        getFieldsByRole('input')/preview-text joining; datasetRawFirstRow and
-       datasetParsedColumns are unaffected, so getSequencePreviewTokens()'s
-       rawRow.tokens fallback still works untouched. */
+       datasetParsedColumns are unaffected. */
     var firstRawRow = state.datasetRawFirstRow || {};
     Object.keys(state.fieldRoleMap).forEach(function (col) {
       if (state.fieldRoleMap[col] !== 'input') return;
