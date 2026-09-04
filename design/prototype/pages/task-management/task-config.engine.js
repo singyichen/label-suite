@@ -2020,7 +2020,7 @@ function getRelationTypeOptions(relationTypes) {
 function buildEntityListRow(ent, color, opts) {
   var lang = (opts && opts.lang) || 'zh';
   var row = document.createElement('div');
-  row.setAttribute('data-testid', 'entity-list-row');
+  row.setAttribute('data-testid', (opts && opts.testid) || 'entity-list-row');
   row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 10px;margin-bottom:4px;background:var(--color-slate-50);border-radius:6px;font-size:0.85rem;';
   var badge = document.createElement('span');
   badge.style.cssText = 'display:inline-block;padding:1px 6px;border-radius:4px;font-size:0.7rem;font-weight:700;color:#fff;background:' + (color || '#6366F1') + ';flex-shrink:0;';
@@ -2041,6 +2041,7 @@ function buildEntityListRow(ent, color, opts) {
     delBtn.type = 'button';
     delBtn.style.cssText = 'border:1.5px solid var(--color-error);background:transparent;color:var(--color-error);border-radius:4px;padding:2px 6px;cursor:pointer;font-size:0.7rem;font-weight:700;flex-shrink:0;';
     delBtn.textContent = lang === 'zh' ? '刪除' : 'Del';
+    if (opts.deleteTestid) delBtn.setAttribute('data-testid', opts.deleteTestid);
     delBtn.addEventListener('click', function() { opts.onDelete(); });
     row.appendChild(delBtn);
   }
@@ -3067,6 +3068,35 @@ function renderSpanTaggingPreview(container, outKey) {
     chipWrap.appendChild(chip);
   });
   container.appendChild(chipWrap);
+
+  /* Marked-span list: the only way to undo a mis-drag, and the surface
+     FR-003d-1's row-count acceptance clauses refer to. Rows go through the
+     same builder entity_recognition uses so the two span-based output types
+     can never drift apart visually; `end` is half-open here and inclusive
+     there, which the row only ever prints, never interprets. */
+  if (ps.spans.length > 0) {
+    var listTitle = document.createElement('div');
+    listTitle.className = 'annotation-preview-task-title';
+    listTitle.style.marginBottom = '6px';
+    listTitle.textContent = state.lang === 'zh' ? '已標記清單' : 'Marked spans';
+    container.appendChild(listTitle);
+    var listWrap = document.createElement('div');
+    listWrap.style.cssText = 'max-height:160px;overflow-y:auto;';
+    ps.spans.forEach(function(span, i) {
+      var row = buildEntityListRow(
+        { type: span.label, text: text.substring(span.start, span.end), start: span.start, end: span.end },
+        labelColor[span.label] || '#6366F1',
+        {
+          lang: state.lang,
+          testid: 'sequence-span-item',
+          deleteTestid: 'sequence-span-item-delete',
+          onDelete: function() { ps.spans.splice(i, 1); refreshOutputPreview(container, outKey); },
+        }
+      );
+      listWrap.appendChild(row);
+    });
+    container.appendChild(listWrap);
+  }
 }
 
 function renderSpanOnlyPreview(container, outKey) {
