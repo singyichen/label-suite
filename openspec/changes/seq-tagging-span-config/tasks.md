@@ -50,9 +50,11 @@
 >
 > **apply 階段修正（來自任務 1.7）**：任務 1.3 所述「示範資料的預標記由 `tags[]` 改為 `spans[]`」不在 `task-config.data.js` 內——BIO 預標記樣本實際位於 `docs/product/example-data/sequence-tagging.json`（`tokens` ＋ `pre_tags`）與 `design/prototype/pages/task-management/task-detail.data.js`。兩者屬預標記載入路徑，改由群組 2 的任務 2.5 一併改為 `spans[]`，本組不動。群組 2 產品檔案因而為 3 個（仍在 5 檔上限內）。
 >
+> **apply 階段修正（詞界示例）**：propose 時以「台積電」作為詞吸附示例，實測 Chromium 與 Node 的 Intl.Segmenter（zh、granularity word）皆把該串切為「台／積／電」——ICU 的中文詞典不含這類專有名詞。需求本身（以 Intl.Segmenter 判定詞界）不變，僅示例改為詞典確實合併的「董事長」（offset 3–6），delta 的 SC-003x 情境同步更正。
+>
 > **共用引擎連帶影響**：`task-config.engine.js` 由 `task-new` 與 `task-detail`（014 Overview「標記設定」編輯模式）共用，本組改寫會同步改變 014 的 parity surface。這是既有共用設計（013 v6.5.0／v6.6.0／v6.8.0 皆同此路徑），非本 change 引入。任務 2.9 負責確認 014 parity 測試同步轉綠。
 
-- [ ] 2.1 撰寫 Red 測試覆蓋拖曳圈選與吸附語意（新增 `design/prototype/tests/task-management/issue-581-span-select-preview.spec.ts`）：預覽不存在 Token 網格與任何 `B-`／`I-`／`E-`／`S-` 前綴按鈕；於「字元」吸附下自「積」拖曳至「電」產生 `{ start: 1, end: 3 }`；切換為「詞」後既有 span 的 offset 與顯示位置維持不變且不出現數量不一致錯誤；於「詞」吸附下同一拖曳產生涵蓋「台積電」的 `{ start: 0, end: 3 }`。驗證：執行該檔全數失敗，失敗原因為預覽仍渲染 Token 網格 [@senior-qa]
+- [ ] 2.1 撰寫 Red 測試覆蓋拖曳圈選與吸附語意（新增 `design/prototype/tests/task-management/issue-581-span-select-preview.spec.ts`）：預覽不存在 Token 網格與任何 `B-`／`I-`／`E-`／`S-` 前綴按鈕；於「字元」吸附下自「積」拖曳至「電」產生 `{ start: 1, end: 3 }`；切換為「詞」後既有 span 的 offset 與顯示位置維持不變且不出現數量不一致錯誤；於「詞」吸附下自「事」拖曳至「長」產生涵蓋「董事長」的 `{ start: 3, end: 6 }`。驗證：執行該檔全數失敗，失敗原因為預覽仍渲染 Token 網格 [@senior-qa]
 - [ ] 2.2 撰寫 Red 測試覆蓋預標記以 offset 落位且無數量檢查（新增 `design/prototype/tests/task-management/issue-581-span-prefill.spec.ts`）：3 筆 span 對 20 字元文本正常落位且「下一步」可用；`{ start: 18, end: 25 }` 之越界 span 被拒絕並列於錯誤清單，其餘正常載入且不阻擋前進。驗證：執行該檔全數失敗，失敗原因為現行預標記路徑仍執行數量一致性檢查 [@senior-qa]
 - [ ] 2.3 撰寫 Red 測試覆蓋 `sequence_tagging` 拒絕相交 span（新增 `design/prototype/tests/task-management/issue-581-overlap-rejection.spec.ts`）：既有 `{0,3}` 時圈選 `{2,5}` 色條轉錯誤色且不建立、清單維持 1 筆；圈選相鄰的 `{3,5}` 正常建立、清單為 2 筆。驗證：執行該檔全數失敗，失敗原因為預覽尚無 span 相交判定 [@senior-qa]
 - [ ] 2.4 （Green）於 `design/prototype/pages/task-management/task-config.engine.js` 以拖曳圈選預覽取代 `renderTokenClassPreview`，並移除 `getSequencePreviewTokens` 與 `tokenizeSequenceText`：`sequence_tagging` 改用與 `entity_recognition` 相同的圈選元件；選取吸附為詞時以 Intl.Segmenter 的 word granularity 修正選取起訖點，執行環境不支援時退回不吸附且保留原設定值。驗證：`PW_PORT=8892 corepack pnpm playwright test tests/task-management/issue-581-span-select-preview.spec.ts` 全綠 [@senior-frontend]
