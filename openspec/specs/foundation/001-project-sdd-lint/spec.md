@@ -1,7 +1,7 @@
 # foundation/001-project-sdd-lint Specification
 
 ## Purpose
-Project SDD lint 的 derived capability；正典為 `specs/_archive/001-project-sdd-lint/spec.md` v1.1.3。本變更實作正典 FR-001–FR-009、AC-1.1–AC-4.4 與 SC-001–SC-008，包含 Stage 3 的 same-trust-root generator boundary 與 control-character pathname preflight。
+Project SDD lint 的 derived capability；正典為 `specs/_archive/001-project-sdd-lint/spec.md` v1.2.0。本變更實作正典 FR-001–FR-010、AC-1.1–AC-5.6 與 SC-001–SC-009，包含 Stage 3 的 same-trust-root generator boundary 與 control-character pathname preflight。
 
 ## Requirements
 
