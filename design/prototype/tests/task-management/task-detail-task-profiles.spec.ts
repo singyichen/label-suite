@@ -83,7 +83,7 @@ const TASK_PROFILES: TaskProfile[] = [
     type: '序列標註',
     datasetSummary: '4 筆',
     outputCount: 1,
-    settings: ['cfg-t006-v1.0.0', 'PER, ORG, LOC, TIME', 'BIO'],
+    settings: ['cfg-t006-v1.0.0', 'PER, ORG, LOC, TIME', 'character'],
   },
   {
     id: 'T007',

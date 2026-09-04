@@ -1232,7 +1232,11 @@ function renderOutputTypeFields(container, outKey) {
     for (var prevIdx = fieldIndex - 1; prevIdx >= 0; prevIdx--) {
       if (dimensionFieldKeys.indexOf(outReg.fields[prevIdx].key) < 0) { previousField = outReg.fields[prevIdx]; break; }
     }
-    if (field.type === 'boolean' && previousField && previousField.type === 'entity-list') {
+    /* The 12px separator marks where the boolean toggle group begins, so it
+       belongs to the first boolean after any non-boolean field -- not only
+       after an entity-list, which stopped being the predecessor once
+       sequence_tagging and entity_recognition gained snap_unit (FR-003d-3). */
+    if (field.type === 'boolean' && previousField && previousField.type !== 'boolean') {
       wrap.classList.add('schema-group-start-field');
     }
     if (field.type !== 'boolean') {
@@ -4785,6 +4789,15 @@ function saveCodeToVisual(showSuccessToast) {
       }
       if (!output.config || typeof output.config !== 'object' || Array.isArray(output.config)) {
         unifiedError = state.lang === 'en' ? 'Every output needs a config object.' : '每個 output 都必須包含 config 物件。';
+        return;
+      }
+      /* Registry-declared config invariants (FR-003d-1). Checked on the raw
+         payload so a rejected key cannot be normalized away first. */
+      var outConfigError = typeof OUTPUT_TYPE_REGISTRY[output.type].validateConfig === 'function'
+        ? OUTPUT_TYPE_REGISTRY[output.type].validateConfig(output.config, state.lang)
+        : '';
+      if (outConfigError) {
+        unifiedError = outConfigError;
         return;
       }
       imported[output.type] = normalizeOutputConfig(output.type, output.config, state.lang);
