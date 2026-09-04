@@ -173,6 +173,69 @@ test_fallback_blocks_push_when_cwd_resolves_to_no_branch() {
     echo "PASS: unresolvable 'cwd' branch falls back to protective blocking (exit 2)"
 }
 
+test_red_git_dash_c_push_from_main_is_blocked() {
+    local main_repo feature_repo
+    main_repo="$(make_repo main)"
+    feature_repo="$(make_repo feat/example)"
+    local payload
+    payload="$(payload_with_cwd "git -C $main_repo push -u origin HEAD" "$feature_repo")"
+
+    # The guard anchors on the literal token pair `git push`, so any git
+    # global option placed between them (-C, -c, --git-dir, --no-pager)
+    # slips past it entirely. Here the payload cwd sits on a feature branch
+    # -- so cwd-based detection says "allow" -- while -C aims the push at a
+    # repo checked out on main. The directory the push actually acts on is
+    # the one named by -C, so that is the branch the guard must read.
+    run_hook "$feature_repo" "$payload"
+    assert_exit_code 2 "guard: 'git -C <main-repo> push' must be blocked even when the payload cwd sits on a feature branch"
+    echo "PASS: guard blocks push aimed at a main-branch repo via -C (exit 2)"
+}
+
+test_red_git_dash_c_explicit_main_refspec_is_blocked() {
+    local repo
+    repo="$(make_repo feat/example)"
+    local payload
+    payload="$(payload_with_cwd "git -C $repo push origin main" "$repo")"
+
+    # Same anchor defect in the refspec check: the bare form is blocked,
+    # the same push behind a global option is not.
+    run_hook "$repo" "$payload"
+    assert_exit_code 2 "guard: an explicit main refspec must be blocked regardless of git global options before the subcommand"
+    echo "PASS: guard blocks explicit main refspec behind a global option (exit 2)"
+}
+
+test_red_git_dash_c_force_push_is_blocked() {
+    local repo
+    repo="$(make_repo feat/example)"
+    local payload
+    payload="$(payload_with_cwd "git -C $repo push --force origin HEAD" "$repo")"
+
+    # Same anchor defect in the force-push check.
+    run_hook "$repo" "$payload"
+    assert_exit_code 2 "guard: force push must be blocked regardless of git global options before the subcommand"
+    echo "PASS: guard blocks force push behind a global option (exit 2)"
+}
+
+test_red_cd_into_feature_worktree_then_push_is_allowed() {
+    local main_repo worktree_path feature_branch="feat/cd-example"
+    main_repo="$(make_repo main)"
+    worktree_path="$(mktemp -d "$TMP_ROOT/cd-worktree.XXXXXX")"
+    rmdir "$worktree_path"
+    git -C "$main_repo" worktree add -q -b "$feature_branch" "$worktree_path"
+
+    local payload
+    payload="$(payload_with_cwd "cd $worktree_path && git push -u origin HEAD" "$main_repo")"
+
+    # The false positive that motivates the bypass: a subagent's payload cwd
+    # is pinned to the repo root (main) no matter where it cd's, so a
+    # legitimate push from a feature-branch worktree is blocked. When the
+    # command cd's into a directory before pushing, that directory -- not
+    # the payload cwd -- is where the push runs.
+    run_hook "$main_repo" "$payload"
+    assert_exit_code 0 "guard: cd into a feature-branch worktree before pushing must not be blocked just because the payload cwd sits on main"
+    echo "PASS: push after cd into a feature-branch worktree is allowed (exit 0)"
+}
+
 assert_file "$HOOK"
 
 TESTS=(
@@ -182,6 +245,10 @@ TESTS=(
     test_guard_blocks_explicit_push_to_main_from_feature_branch
     test_fallback_blocks_push_when_cwd_field_missing
     test_fallback_blocks_push_when_cwd_resolves_to_no_branch
+    test_red_git_dash_c_push_from_main_is_blocked
+    test_red_git_dash_c_explicit_main_refspec_is_blocked
+    test_red_git_dash_c_force_push_is_blocked
+    test_red_cd_into_feature_worktree_then_push_is_allowed
 )
 
 FAILED=0
