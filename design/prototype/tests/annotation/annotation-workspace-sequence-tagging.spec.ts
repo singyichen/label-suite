@@ -61,13 +61,16 @@ test.describe('sequence_tagging output type', () => {
     await expect(page.getByTestId('ws-input-content').locator('[data-start="0"]')).toHaveCount(0);
   });
 
-  test('bypass locks the label chips and the marked-span list', async ({ page }) => {
+  test('bypass clears the marked spans and disables the label chips', async ({ page }) => {
     await page.goto(buildWorkspaceUrl({ task_id: 'T006', sample_id: 'sequence-tagging-001' }));
     await dismissGuidelineModal(page);
 
     await page.getByTestId('ws-bypass-sequence_tagging').check();
 
+    // clearOutputAnswer() resets previewState to an empty spans[], so the
+    // highlights and the list they feed both go with the answer.
+    await expect(page.getByTestId('ws-seq-span-item')).toHaveCount(0);
+    await expect(page.getByTestId('ws-input-content').locator('[data-testid="sequence-span"]')).toHaveCount(0);
     await expect(page.getByTestId('ws-seq-label-btn-PER')).toBeDisabled();
-    await expect(page.getByTestId('ws-seq-span-delete').first()).toBeDisabled();
   });
 });

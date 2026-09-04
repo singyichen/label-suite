@@ -716,87 +716,34 @@
     });
   }
 
-  /* renderTokenClassPreview() (engine.js ~2858-3021) always requires the
-     annotator to pick an already-fully-prefixed tag chip (e.g. "B-PER" vs
-     "I-PER") before clicking a token. Spec 015 AC-2A.5 instead wants the
-     annotator to pick just the entity TYPE, with the B-/I- continuation
-     prefix computed automatically from whether the immediately-preceding
-     token already carries the same type (BIO/IOB2/BIOES) -- SINGLE has no
-     prefix at all, the bare type name IS the tag. This is genuinely
-     different interaction semantics from the engine's literal per-tag
-     chip bar (not a testid-only relabel), so this host builds its own
-     type-level selector and re-binds token clicks; getSequenceBaseLabel()
-     is an existing shared global (task-config.dataset.js), reused
-     read-only here, not modified. */
+  /* renderSpanTaggingPreview() (engine.js) already implements the whole
+     span interaction the workspace needs -- drag over the untokenized text,
+     pick a label type, undo from the marked-span list -- so this host only
+     relabels its anchors, exactly as patchSpanOnlyPanel does for
+     entity_recognition. Nothing here re-binds a listener: cloning a node to
+     strip one (what the retired token-grid patch did) would also strip the
+     engine's own span handlers. */
   function patchSequenceTaggingPanel(container) {
     /* sequence_tagging (registry: rendersInputPreview:true, same as
-       entity_recognition) also suppresses updateAnnotationPreview()'s
-       generic top-level input block -- but renderTokenClassPreview()
-       (engine.js, distinct from renderSpanOnlyPreview used by
-       entity_recognition) already tags its own raw-text element with
-       data-testid="sequence-source-text" (unlike renderSpanOnlyPreview,
-       whose equivalent element patchSpanOnlyPanel relabels positionally).
-       Relabel that existing testid'd element instead of guessing position. */
+       entity_recognition) suppresses updateAnnotationPreview()'s generic
+       top-level input block, but renderSpanTaggingPreview() tags its own raw
+       text element with data-testid="sequence-source-text" (unlike
+       renderSpanOnlyPreview, whose equivalent element patchSpanOnlyPanel
+       relabels positionally). Relabel that testid'd element in place --
+       setAttribute keeps the mouseup handler the drag depends on. */
     var textEl = container.querySelector('[data-testid="sequence-source-text"]');
     if (textEl) textEl.setAttribute('data-testid', 'ws-input-content');
 
-    var cfg = state.outputConfigs.sequence_tagging || {};
-    var labels = Array.isArray(cfg.entities) ? cfg.entities.filter(function (e) { return e && e.name; }) : [];
-    var scheme = cfg.tagging_scheme || 'BIO';
-    var ps = state.previewState.sequence_tagging;
-    if (!ps || !Array.isArray(ps.tokens)) return;
-
-    var engineChipOption = container.querySelector('[data-testid="sequence-tag-option"]');
-    var engineChipBar = engineChipOption ? engineChipOption.parentElement : null;
-    if (engineChipBar) engineChipBar.style.display = 'none';
-
-    var typeBar = document.createElement('div');
-    typeBar.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;';
-    labels.forEach(function (label) {
-      var btn = document.createElement('button');
-      btn.type = 'button';
-      btn.setAttribute('data-testid', 'ws-seq-tag-btn-' + label.name);
-      var isActive = ps.activeEntityType === label.name;
-      btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-      var color = label.color || 'var(--color-primary)';
-      btn.style.cssText = 'padding:4px 10px;border-radius:var(--radius-md);font-size:12px;font-weight:700;cursor:pointer;border:2px solid ' + color + ';color:' + (isActive ? 'var(--color-white)' : color) + ';background:' + (isActive ? color : 'transparent') + ';';
-      btn.textContent = label.name;
-      btn.addEventListener('click', function () {
-        ps.activeEntityType = label.name;
-        refreshOutputPreview(container, 'sequence_tagging');
-      });
-      typeBar.appendChild(btn);
+    var chips = container.querySelectorAll('[data-testid="sequence-label-option"]');
+    Array.prototype.forEach.call(chips, function (chip) {
+      chip.setAttribute('data-testid', 'ws-seq-label-btn-' + chip.textContent.trim());
     });
-    if (engineChipBar && engineChipBar.parentNode) {
-      engineChipBar.parentNode.insertBefore(typeBar, engineChipBar);
-    } else {
-      container.appendChild(typeBar);
-    }
 
-    var tokenButtons = container.querySelectorAll('[data-testid="sequence-token"]');
-    Array.prototype.forEach.call(tokenButtons, function (tokEl, idx) {
-      /* Strip the engine's own click listener (bound to its own
-         ps.activeTag chip-selection model, which this host UI doesn't
-         use) by cloning -- cloneNode never copies listeners. */
-      var fresh = tokEl.cloneNode(true);
-      tokEl.parentNode.replaceChild(fresh, tokEl);
-      var textSpan = fresh.querySelector('[data-testid="sequence-token-text"]');
-      if (textSpan) {
-        textSpan.setAttribute('data-testid', 'ws-seq-token');
-        textSpan.setAttribute('data-tag', ps.tokens[idx] || 'O');
-      }
-      fresh.addEventListener('click', function () {
-        if (!ps.activeEntityType) return;
-        var tag;
-        if (scheme === 'SINGLE') {
-          tag = ps.activeEntityType;
-        } else {
-          var prevBase = idx > 0 ? getSequenceBaseLabel(ps.tokens[idx - 1], labels) : null;
-          tag = (prevBase === ps.activeEntityType ? 'I-' : 'B-') + ps.activeEntityType;
-        }
-        ps.tokens[idx] = tag;
-        refreshOutputPreview(container, 'sequence_tagging');
-      });
+    var rows = container.querySelectorAll('[data-testid="sequence-span-item"]');
+    Array.prototype.forEach.call(rows, function (row) {
+      row.setAttribute('data-testid', 'ws-seq-span-item');
+      var del = row.querySelector('[data-testid="sequence-span-item-delete"]');
+      if (del) del.setAttribute('data-testid', 'ws-seq-span-delete');
     });
   }
 
