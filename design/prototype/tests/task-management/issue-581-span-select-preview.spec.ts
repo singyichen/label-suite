@@ -170,3 +170,48 @@ test('word snapping expands the selection to the segmenter word boundary', async
 
   expect(await getSpans(page)).toEqual([{ start: 3, end: 6, label: 'PER' }]);
 });
+
+/* FR-003d-1 承諾「含類型徽章、文字、字元位置與刪除按鈕的已標記清單」，與
+   entity_recognition 的 ws-er-entity-item / ws-er-entity-delete 對稱：沒有這份
+   清單，標註者拖錯就無從撤銷，delta 的「已標記清單筆數」驗收語句也無 DOM 可依附。 */
+test('the marked-span list shows each span with its label, text and offsets', async ({
+  page,
+}) => {
+  await goToStep2WithSequenceTagging(page);
+
+  await dragSelect(page, '積電');
+  await page
+    .locator('#annotationPreview')
+    .getByRole('button', { name: 'ORG', exact: true })
+    .click();
+
+  const items = page.locator('#annotationPreview').getByTestId('sequence-span-item');
+  await expect(items).toHaveCount(1);
+  await expect(items.first()).toContainText('ORG');
+  await expect(items.first()).toContainText('積電');
+  await expect(items.first()).toContainText('1');
+  await expect(items.first()).toContainText('3');
+});
+
+test('deleting a marked-span row removes it from the answer', async ({ page }) => {
+  await goToStep2WithSequenceTagging(page);
+
+  await dragSelect(page, '積電');
+  await page
+    .locator('#annotationPreview')
+    .getByRole('button', { name: 'ORG', exact: true })
+    .click();
+  await dragSelect(page, '魏哲家');
+  await page
+    .locator('#annotationPreview')
+    .getByRole('button', { name: 'PER', exact: true })
+    .click();
+
+  const preview = page.locator('#annotationPreview');
+  await expect(preview.getByTestId('sequence-span-item')).toHaveCount(2);
+
+  await preview.getByTestId('sequence-span-item-delete').first().click();
+
+  await expect(preview.getByTestId('sequence-span-item')).toHaveCount(1);
+  expect(await getSpans(page)).toEqual([{ start: 6, end: 9, label: 'PER' }]);
+});
