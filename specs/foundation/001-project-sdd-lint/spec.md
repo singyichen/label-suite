@@ -1,7 +1,7 @@
 ---
 功能分支: feat/issue-648-verification-suite-lint
 建立日期: 2026-08-26
-版本: 1.1.4
+版本: 1.2.0
 狀態: Draft
 ---
 
@@ -77,6 +77,22 @@ PR 上以 `Project SDD Lint` 獨立 job 顯示結果，本地使用相同 comman
 3. **AC-4.3**：**Given** resolved target root 與 resolved checker root 為同一 trust root，且 target root 缺少 generator、generator 無法讀取、load 或執行、執行環境缺少 Node、generator exit `2`、generator exit `1` 但未伴隨 exact stale sentinel，或回傳任何其他 unexpected result，**When** Project SDD lint 執行 inventory freshness rule，**Then** 輸出 `ERROR [INVENTORY_CHECK_CONFIG] scripts/gen-screen-inventory.mjs: ...` 且 lint exit `2`。
 4. **AC-4.4**：**Given** explicit target root 在 canonical resolution 後不同於 checker root，**When** Project SDD lint 執行 inventory freshness rule，**Then** 拒絕執行 foreign root 的 `scripts/gen-screen-inventory.mjs`，輸出 `ERROR [INVENTORY_CHECK_CONFIG] scripts/gen-screen-inventory.mjs: ...` 並 exit `2`；不得有 generator marker side effect、raw child output 或 hostile child output。
 
+### 使用者故事 5 — 驗證套件與 CI job 的雙向對照（優先級：P2）
+
+維護者新增一支驗證腳本或一個 CI job 時，lint 會強制兩者對上：腳本必須接上 CI job 或明確豁免，CI job 必須有列在 `CLAUDE.md` 的對等本機命令。
+
+**此優先級原因**：`CLAUDE.md` 早已承諾「每個 CI job 都必須有對應的本機命令」，但此承諾只靠人工複核，已導致三支驗證套件長期不在任何 gate 上（issue #648）。
+**獨立測試方式**：以 fixture repo 分別注入未登記腳本、未登記 job、指向不存在 job 的登錄列、未列於 `CLAUDE.md` 的本機命令、無理由豁免列與有理由豁免列，驗證 exit code 與 rule ID。
+
+**驗收情境**：
+
+1. **AC-5.1**：**Given** `scripts/` 下存在一支未於 `scripts/ci-jobs.tsv` 宣告的 `.sh` 或 `.mjs`，**When** 執行 Project SDD lint，**Then** 輸出 `ERROR [CI_JOB_PARITY] scripts/<script>: ...` 且 exit `1`。
+2. **AC-5.2**：**Given** `.github/workflows/ci.yml` 的 `jobs:` 下存在一個未於登錄表宣告的 job，**When** 執行 Project SDD lint，**Then** 輸出 `ERROR [CI_JOB_PARITY] .github/workflows/ci.yml: ...` 且 exit `1`。
+3. **AC-5.3**：**Given** 登錄表宣告了一個 workflow 中不存在的 job 名稱，**When** 執行 Project SDD lint，**Then** 輸出 `ERROR [CI_JOB_PARITY] scripts/ci-jobs.tsv: ...` 且 exit `1`。
+4. **AC-5.4**：**Given** 登錄表某列宣告的本機命令未出現在 `CLAUDE.md` 的 Verification Commands 區塊，**When** 執行 Project SDD lint，**Then** 輸出 `ERROR [CI_JOB_PARITY] scripts/ci-jobs.tsv: ...` 且 exit `1`。
+5. **AC-5.5**：**Given** 登錄表某列以 `none` 豁免但理由欄為空，**When** 執行 Project SDD lint，**Then** 輸出 `ERROR [CI_JOB_PARITY] scripts/ci-jobs.tsv: ...` 且 exit `1`。
+6. **AC-5.6**：**Given** 登錄表某列以 `none` 豁免且理由欄非空，其餘 fixture 全部合法，**When** 執行 Project SDD lint，**Then** 不輸出 `CI_JOB_PARITY` 診斷，且 lint outcome 依其他 rules 決定。
+
 ## 需求規格 *(必填)*
 
 ### 功能需求
@@ -90,6 +106,7 @@ PR 上以 `Project SDD Lint` 獨立 job 顯示結果，本地使用相同 comman
 - **FR-007**：系統必須將 goal semantic review、ordinary task file-count ambiguity、runtime Red evidence、GitHub PR state 與 ADR-034 E2E path 標為 warning-only；`--strict` 不得將明確 deferred warning 升級。
 - **FR-008**：CI 必須以獨立 `Project SDD Lint` job 執行 `scripts/check-sdd.sh`，`CLAUDE.md` 必須列出相同本地命令；job 不得包裝或取代 `openspec validate`。
 - **FR-009**：系統必須僅在 canonical resolved target root 與 canonical resolved checker root 相同時，使用該 target root 執行 `node "$repo_root/scripts/gen-screen-inventory.mjs" --check`，不得使用 caller checkout 或 foreign root generator；必須 capture 且 suppress generator raw output，並以穩定 Project SDD lint diagnostic 與 summary 映射 exit `0` 為無 inventory diagnostic。只有 child exit `1` 且伴隨 versioned generator 的 exact stale sentinel `design/system/screen-inventory.md is stale — run: node scripts/gen-screen-inventory.mjs` 時可映射為 blocking `INVENTORY_FRESHNESS`；foreign target root、缺少 generator、generator 無法讀取、load 或執行、缺少 Node、exit `2`、exit `1` 但無 exact stale sentinel，或任何其他 unexpected result 都必須映射為 `INVENTORY_CHECK_CONFIG` configuration error 與 lint exit `2`，且 `--strict` 不得改變 inventory severity。本規則依賴 generator 的 rendered output 僅取決於 prototype 歷史：generated view 內的 prototype 來源 commit 必須以固定長度呈現，不得隨本機 git 動態 abbreviation 長度變動，否則 `--check` 的 byte-for-byte 比對會因 clone 的封裝狀態而非 prototype 變更而失敗。
+- **FR-010**：系統必須以 `scripts/ci-jobs.tsv` 作為 CI job、本機命令與 repo 腳本的單一對照登錄表，每列為三個非空的 tab 分隔欄位（CI job 名稱或 `none`、本機命令或豁免理由、腳本檔名或 `-`），並以 `CI_JOB_PARITY` 規則同時驗證兩個方向：`.github/workflows/ci.yml` 的每個 job 必須在登錄表中宣告，且該列的本機命令必須出現在 `CLAUDE.md` 的 Verification Commands 區塊；`scripts/` 下每支 `.sh` 或 `.mjs` 必須在登錄表中恰好出現一次，且僅得接上實際存在於 workflow 的 CI job，或以 `none` 加上非空理由明確豁免。`scripts/ci-jobs.tsv` 與 `.github/workflows/ci.yml` 必須列入 scanner 必要輸入 preflight，缺漏時以 `SCANNER_CONFIG` 處理。本規則不得改變任何既有 rule 的判定邏輯或 severity，亦不得包裝或取代 `openspec validate`；FR-008 對 `Project SDD Lint` job 的既有承諾維持不變，並成為本登錄表涵蓋的其中一列。
 
 ## 規格相依性
 
@@ -116,6 +133,7 @@ PR 上以 `Project SDD Lint` 獨立 job 顯示結果，本地使用相同 comman
 - **SC-006**：fresh、exit `1` + exact stale sentinel、unrunnable/sentinel-less exit `1` 與其他 configuration inventory fixtures 必須分別驗證無 inventory diagnostic/exit 依其他 rules、`INVENTORY_FRESHNESS`/exit `1`、`INVENTORY_CHECK_CONFIG`/exit `2`，且 real repository `node scripts/gen-screen-inventory.mjs --check` 必須 exit `0` 作為 `design/system/screen-inventory.md` freshness 證據。
 - **SC-007**：Issue #375 交接只勾選實際交付的六個 D 子項：正典標題、STATUS/stage、Source-Verify、task 單檔／例外、assignee／file ownership 與 design inventory freshness；inventory workstream C、baseline-zero cleanup 與其他 acceptance items 在本工作流中保持不變。複合 D checkbox `阻擋 retired path/command，例如 npm、舊 frontend/tests/ E2E 路徑與不存在的 panels directory。` 與 combined acceptance `CI 或本地單一命令可偵測 STATUS drift、retired path、規格必要段落與 inventory stale。` 必須維持未勾選並延期，直到取得 ADR-034/path authority，並完成所列 filesystem paths 的 QA Red 與 production Green；本工作流不接受 ADR-034，亦不修改執行期程式碼。
 - **SC-008**：必須保留 committed adversarial Red/Green evidence：foreign generator 不得寫入 marker，並對 newline、tab、carriage return scanned paths 以 `SCANNER_CONFIG`／安全 path `.`／exit `2` 拒絕且不回顯 hostile pathname；default 與 explicit same-root inventory mappings，以及 ordinary-space paths，必須在 macOS Bash 3.2 與 Ubuntu 維持 green。
+- **SC-009**：`scripts/inventory-tests.sh`、`scripts/pre-commit-tests.sh` 與 `scripts/pre-tool-use-tests.sh` 三支既有未接 CI 的驗證套件各有一個獨立 CI job 與對等的 `CLAUDE.md` 本機命令；`scripts/` 下所有 `.sh`／`.mjs` 皆已在登錄表登記，且 `CI_JOB_PARITY` 在真實 repository 上輸出零個診斷。
 
 ## 範圍外（Out of Scope）*(必填)*
 
@@ -128,6 +146,7 @@ PR 上以 `Project SDD Lint` 獨立 job 顯示結果，本地使用相同 comman
 
 | 版本 | 日期 | 變更摘要 |
 |---|---|---|
+| 1.2.0 | 2026-09-04 | OpenSpec change `enforce-ci-job-parity` archive 回寫（issue #648）：新增 FR-010、SC-009 與 AC-5.1–AC-5.6，把 FR-008 綁在單一 `Project SDD Lint` job 的 local/CI parity 承諾，推廣為以 `scripts/ci-jobs.tsv` 登錄表驅動的全 repo 雙向對照規則；同時清償三支既有未接 CI 的驗證套件 |
 | 1.1.4 | 2026-09-02 | SC-008 跨平台承諾的缺陷修正（issue #610）：tasks.md 子句抽取原以 `[,，。；;]` bracket expression 切割，該寫法只在 UTF-8 locale 下才逐字元生效；macOS 預設 `C` locale 且無 `C.UTF-8`，awk 遂逐位元組切碎中文任務行。改為先以 `gsub` 將全形分隔符正規化為 ASCII `;` 再切割，使結果與 awk 實作及 locale 無關 |
 | 1.1.3 | 2026-09-01 | OpenSpec change `implement-project-sdd-lint` archive 回寫：獨立 `sdd-lint` CI job 與本機 `scripts/check-sdd.sh` 上線；澄清 FR-009 所依賴的 generator 可重現性——prototype 來源 commit 改以固定長度呈現，原 `--format=%h` 的動態 abbreviation 會使 freshness 比對隨本機 clone 封裝狀態變動 |
 | 1.1.2 | 2026-08-27 | Stage 3 security remediation：inventory generator 限於 same-trust resolved checker／target root，foreign root 穩定拒絕且不執行 hostile generator；動態掃描 pathname 在進入文字／TSV flow 前拒絕 control character，避免診斷注入 |
