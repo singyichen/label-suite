@@ -32,7 +32,7 @@
 - [x] 1.4 （Green）修改 `design/prototype/pages/annotation/annotation-workspace.config.js`：依任務設定的 `snap_unit` 決定放開滑鼠時的落點吸附，詞界判定使用前端 `Intl.Segmenter`；該 API 缺席時退回不吸附並於標記卡顯示一行操作說明提示。驗證：`PW_PORT=8921 corepack pnpm playwright test tests/annotation/issue-581-workspace-snap-degrade.spec.ts` 全綠 [@senior-frontend]
 - [x] 1.5 撰寫 Red 契約覆蓋提交驗證：解除 `design/prototype/tests/annotation/annotation-workspace-submit-validation.spec.ts` 的單一跳過標記，並將全 O 網格案例改寫為 span 版本——無 span 且未 Bypass 時提交被阻擋，建立任一 span 後阻擋解除，越界預標記列為錯誤而其餘正常落位。驗證：`PW_PORT=8921 corepack pnpm playwright test tests/annotation/annotation-workspace-submit-validation.spec.ts` 全數失敗，失敗原因為提交驗證仍比對 tag 與 Token 數量 [@senior-qa]
 - [x] 1.6 （Green）修改 `design/prototype/pages/annotation/annotation-workspace.config.js`：提交前驗證由「tag 數量等於 Token 數量」改為 span 合法性驗證（起點不小於終點、起點為負、終點超出文本長度三者為錯誤），保留「未建立任何 span 且未 Bypass 時阻擋提交」語意。驗證：`PW_PORT=8921 corepack pnpm playwright test tests/annotation/annotation-workspace-submit-validation.spec.ts` 全綠 [@senior-frontend]
-- [ ] 1.7 執行群組 1 回歸並記錄失效斷言清單供群組 2 處理。驗證：`cd design/prototype && corepack pnpm typecheck && PW_PORT=8921 corepack pnpm playwright test tests/annotation` — typecheck 退出碼 0，playwright 剩餘失敗項目全部可歸因於尚未改版的答案序列化層 [@main]
+- [x] 1.7 執行群組 1 回歸。驗證：`cd design/prototype && corepack pnpm typecheck && PW_PORT=8931 corepack pnpm playwright test tests/annotation` — typecheck 退出碼 0、playwright 736 passed / 0 failed / 1 skipped；唯一的 skip 是任務 2.5 要解除的審核員 registry `sequence_tagging` 案例，故本組未留下任何待群組 2 修復的失效斷言 [@main]
 
 ## 2. 群組 2 — CompactAnswer 形狀與審核呈現改 span-level（FR-024A-3／FR-052／FR-024L）
 
