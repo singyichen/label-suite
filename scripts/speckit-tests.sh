@@ -1287,7 +1287,11 @@ test_check_sdd_inventory_configuration_failures() {
 
     repo="$(make_sdd_repo)"
     chmod 000 "$repo/scripts/gen-screen-inventory.mjs"
-    assert_inventory_failure "$repo" 2 "INVENTORY_CHECK_CONFIG" "scripts/gen-screen-inventory.mjs" "EACCES"
+    if [ "$(id -u)" -eq 0 ]; then
+        echo "SKIP: EACCES inventory-checker case cannot be exercised while running as root (root ignores chmod 000 read denial)." >&2
+    else
+        assert_inventory_failure "$repo" 2 "INVENTORY_CHECK_CONFIG" "scripts/gen-screen-inventory.mjs" "EACCES"
+    fi
 
     repo="$(make_sdd_repo)"
     cat > "$repo/scripts/gen-screen-inventory.mjs" <<'GENERATOR'
