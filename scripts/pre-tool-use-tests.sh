@@ -236,6 +236,51 @@ test_red_cd_into_feature_worktree_then_push_is_allowed() {
     echo "PASS: push after cd into a feature-branch worktree is allowed (exit 0)"
 }
 
+test_force_with_lease_is_allowed() {
+    local repo
+    repo="$(make_repo feat/example)"
+    local payload
+    payload="$(payload_with_cwd "git push --force-with-lease origin HEAD" "$repo")"
+
+    # Characterization: --force-with-lease is the sanctioned way to rewrite a
+    # pushed feature branch and must stay allowed. The force check excludes
+    # it by requiring whitespace or end-of-string right after --force, so this
+    # locks in the boundary the check's own regex draws.
+    run_hook "$repo" "$payload"
+    assert_exit_code 0 "guard: --force-with-lease is the safe form and must stay allowed"
+    echo "PASS: --force-with-lease push is allowed (exit 0)"
+}
+
+test_prose_mentioning_a_push_is_not_a_push() {
+    local repo
+    repo="$(make_repo main)"
+    local payload
+    payload="$(payload_with_cwd "echo 'run git push --force if stuck'" "$repo")"
+
+    # Regression: text that merely names a push -- a commit message, a PR
+    # reply, this file's own fixtures -- is not a push. The unanchored force
+    # check read any string containing both words as a force push, and
+    # blocked the very commit that added these fixtures. Verified failing
+    # (exit 2) against the pre-fix hook.
+    run_hook "$repo" "$payload"
+    assert_exit_code 0 "guard: prose that merely mentions a push must not be read as one"
+    echo "PASS: prose mentioning a push is not blocked (exit 0)"
+}
+
+test_other_git_subcommands_are_not_pushes() {
+    local repo
+    repo="$(make_repo main)"
+    local payload
+    payload="$(payload_with_cwd "git log --grep push --oneline" "$repo")"
+
+    # Characterization: the guard matches `git <global opts>* push` with the
+    # options whitelisted, not `git <anything> push`. The permissive form
+    # would fire here, on a read-only command run from main.
+    run_hook "$repo" "$payload"
+    assert_exit_code 0 "guard: a non-push git subcommand whose arguments contain the word push must be allowed"
+    echo "PASS: 'git log --grep push' is not treated as a push (exit 0)"
+}
+
 assert_file "$HOOK"
 
 TESTS=(
@@ -249,6 +294,9 @@ TESTS=(
     test_red_git_dash_c_explicit_main_refspec_is_blocked
     test_red_git_dash_c_force_push_is_blocked
     test_red_cd_into_feature_worktree_then_push_is_allowed
+    test_force_with_lease_is_allowed
+    test_prose_mentioning_a_push_is_not_a_push
+    test_other_git_subcommands_are_not_pushes
 )
 
 FAILED=0
