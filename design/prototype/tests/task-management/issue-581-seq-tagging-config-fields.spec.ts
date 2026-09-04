@@ -58,8 +58,8 @@ test('sequence_tagging settings panel shows exactly the three surviving columns'
     '.output-accordion[data-output-key="sequence_tagging"]',
   );
   await expect(panel.locator('.field-label, .schema-toggle-label')).toHaveText([
-    '標籤類型',
-    '選取吸附',
+    '標籤類型*',
+    '選取吸附*',
     '允許無法判定 (Bypass)',
   ]);
 });

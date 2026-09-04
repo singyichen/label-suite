@@ -60,8 +60,8 @@ test('entity_recognition settings panel shows the four columns in order', async 
     '.output-accordion[data-output-key="entity_recognition"]',
   );
   await expect(panel.locator('.field-label, .schema-toggle-label')).toHaveText([
-    '實體類型',
-    '選取吸附',
+    '實體類型*',
+    '選取吸附*',
     '允許重疊標記',
     '允許無法判定 (Bypass)',
   ]);
@@ -92,7 +92,6 @@ test('snap unit is held per output type and the two panels do not interfere', as
   const entityPanel = page.locator(
     '.output-accordion[data-output-key="entity_recognition"]',
   );
-  await entityPanel.locator('.accordion-header, button').first().click();
   await entityPanel.getByTestId('entity-snap-unit-select').selectOption('word');
 
   const configs = await page.evaluate(() => {

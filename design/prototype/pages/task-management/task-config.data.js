@@ -138,6 +138,23 @@ var REGISTRY = {
 };
 /* ── Output-type registry (ADR-029 composition model) ─────────── */
 /* Each entry maps an output_type key to its config schema fields  */
+/* FR-003d-1: selection snapping replaces the retired tokenization contract.
+   It moves where a drag selection lands, never what is stored, so the two
+   values produce identical `spans[]` and switching between them can never
+   invalidate, shift or clear an existing span. */
+var SPAN_SNAP_UNITS = ['character', 'word'];
+
+/* FR-003d-1: sequence_tagging and entity_recognition share one drag-select
+   component and one span storage shape. The only thing that separates them is
+   whether spans may intersect, and that is a property of the output type, not
+   a user setting: a flat BIO sequence cannot express overlap or nesting, so
+   forbidding it is what guarantees any sequence_tagging annotation compresses
+   to BIO without loss. */
+var SPAN_OVERLAP_POLICY_BY_OUTPUT_TYPE = {
+  sequence_tagging: 'forbidden',
+  entity_recognition: 'configurable',
+};
+
 var OUTPUT_TYPE_REGISTRY = {
   /* ── Sequence ── */
   sequence_tagging: {
@@ -146,34 +163,22 @@ var OUTPUT_TYPE_REGISTRY = {
     rendersInputPreview: true,
     hidePreviewTitle: true,
     fields: [
+      { key: 'entities', type: 'entity-list', zh: '標籤類型', en: 'Label types', required: true, addLabel_zh: '新增標籤類型', addLabel_en: 'Add label type' },
       {
-        key: 'tokenization',
-        valueKey: 'unit',
+        key: 'snap_unit',
         type: 'select',
-        zh: '標記單位',
-        en: 'Token unit',
-        testId: 'sequence-token-unit-select',
+        zh: '選取吸附',
+        en: 'Selection snapping',
+        testId: 'sequence-snap-unit-select',
         required: true,
         options: ['character', 'word'],
         optionLabels: {
-          zh: { character: '字（Character）', word: '詞（Word）' },
+          zh: { character: '字元（Character）', word: '詞（Word）' },
           en: { character: 'Character', word: 'Word' },
         },
-      },
-      { key: 'entities', type: 'entity-list', zh: '標籤類型', en: 'Label types', required: true, addLabel_zh: '新增標籤類型', addLabel_en: 'Add label type' },
-      {
-        key: 'tagging_scheme',
-        type: 'select',
-        zh: '標記方案',
-        en: 'Tagging scheme',
-        testId: 'sequence-tagging-scheme-select',
-        required: true,
-        options: ['BIO', 'BIOES', 'IOB2', 'SINGLE'],
-        optionLabels: {
-          zh: { BIO: 'BIO', BIOES: 'BIOES', IOB2: 'IOB2', SINGLE: '單一標籤' },
-          en: { BIO: 'BIO', BIOES: 'BIOES', IOB2: 'IOB2', SINGLE: 'Single label' },
-        },
-        defaultValue: 'BIO',
+        defaultValue: 'character',
+        hint_zh: '只影響拖曳圈選的落點，不影響儲存的字元 offset；切換不會使既有標記失效。',
+        hint_en: 'Affects only where a drag selection lands, never the stored character offsets; switching never invalidates existing spans.',
       },
     ],
     defaultConfig: {
@@ -182,24 +187,16 @@ var OUTPUT_TYPE_REGISTRY = {
         { name: 'ORG', color: '#14B8A6' },
         { name: 'LOC', color: '#0EA5E9' },
       ],
-      tagging_scheme: 'BIO',
-      tokenization: {
-        unit: 'character',
-        mode: 'unit_based',
-        punctuation: 'separate',
-        version: 2,
-      },
+      snap_unit: 'character',
     },
+    /* FR-003d-1: `allow_overlapping` is a type-level invariant for
+       sequence_tagging, not a setting. It never reaches the panel and never
+       survives serialization, so a config that carries it is rejected rather
+       than silently rewritten to false (see validateOutputConfig). */
     normalizeConfig: function(config) {
-      var tokenization = config.tokenization && typeof config.tokenization === 'object' && !Array.isArray(config.tokenization)
-        ? config.tokenization
-        : {};
-      config.tokenization = {
-        unit: tokenization.unit === 'word' ? 'word' : 'character',
-        mode: 'unit_based',
-        punctuation: 'separate',
-        version: 2,
-      };
+      config.snap_unit = SPAN_SNAP_UNITS.indexOf(config.snap_unit) === -1
+        ? 'character'
+        : config.snap_unit;
       return config;
     },
   },
@@ -209,6 +206,22 @@ var OUTPUT_TYPE_REGISTRY = {
     rendersInputPreview: true,
     fields: [
       { key: 'entities', type: 'entity-list', zh: '實體類型', en: 'Entity types', required: true, addLabel_zh: '新增實體類型', addLabel_en: 'Add entity type' },
+      {
+        key: 'snap_unit',
+        type: 'select',
+        zh: '選取吸附',
+        en: 'Selection snapping',
+        testId: 'entity-snap-unit-select',
+        required: true,
+        options: ['character', 'word'],
+        optionLabels: {
+          zh: { character: '字元（Character）', word: '詞（Word）' },
+          en: { character: 'Character', word: 'Word' },
+        },
+        defaultValue: 'character',
+        hint_zh: '只影響拖曳圈選的落點，不影響儲存的字元 offset；切換不會使既有標記失效。',
+        hint_en: 'Affects only where a drag selection lands, never the stored character offsets; switching never invalidates existing spans.',
+      },
       { key: 'allow_overlapping', type: 'boolean', zh: '允許重疊標記', en: 'Allow overlapping spans', required: false, defaultValue: false },
     ],
     defaultConfig: {
@@ -217,7 +230,14 @@ var OUTPUT_TYPE_REGISTRY = {
         { name: 'aspect', color: '#14B8A6' },
         { name: 'opinion', color: '#0EA5E9' },
       ],
+      snap_unit: 'character',
       allow_overlapping: true,
+    },
+    normalizeConfig: function(config) {
+      config.snap_unit = SPAN_SNAP_UNITS.indexOf(config.snap_unit) === -1
+        ? 'character'
+        : config.snap_unit;
+      return config;
     },
   },
   relation_identification: {
