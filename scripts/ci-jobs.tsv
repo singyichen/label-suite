@@ -1,0 +1,22 @@
+backend-ruff	uv run ruff check . && uv run ruff format --check .	-
+backend-security	uv run --no-dev --with pip-audit pip-audit --desc	-
+backend-test	uv run pytest --cov=app --cov-report=term-missing --cov-fail-under=80	-
+backend-type-check	uv run mypy .	-
+frontend-lint	pnpm lint	-
+frontend-security	pnpm audit --prod --audit-level high	-
+inventory-tests	scripts/inventory-tests.sh	inventory-tests.sh
+inventory-tests	scripts/inventory-tests.sh	gen-screen-inventory.mjs
+none	one-off repository bootstrap; cannot fail a change	init.sh
+none	one-off label migration; cannot fail a change	migrate-labels.sh
+none	one-off demo data seeding; cannot fail a change	seed.sh
+none	Pencil editor save helper; cannot fail a change	pencil-save.sh
+none	local static server for prototype runs; cannot fail a change	serve-prototype.sh
+none	worktree scaffolding helper; cannot fail a change	worktree-init.sh
+pre-commit-tests	scripts/pre-commit-tests.sh	pre-commit-tests.sh
+pre-tool-use-tests	scripts/pre-tool-use-tests.sh	pre-tool-use-tests.sh
+prototype-playwright	pnpm playwright test	-
+prototype-typecheck	pnpm typecheck	-
+sdd-lint	scripts/check-sdd.sh	check-sdd.sh
+speckit-tests	scripts/speckit-tests.sh	speckit-tests.sh
+validate	bash scripts/verify-bootstrap.sh	verify-bootstrap.sh
+validate	scripts/check-spec-artifacts.sh	check-spec-artifacts.sh

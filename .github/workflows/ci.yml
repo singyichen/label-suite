@@ -149,6 +149,36 @@ jobs:
       - name: Run speckit helper script regression tests
         run: scripts/speckit-tests.sh
 
+  inventory-tests:
+    name: Screen Inventory Generator — Regression Tests
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Run screen inventory generator regression tests
+        run: scripts/inventory-tests.sh
+
+  pre-commit-tests:
+    name: Pre-commit Hook — Regression Tests
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Run pre-commit hook regression tests
+        run: scripts/pre-commit-tests.sh
+
+  pre-tool-use-tests:
+    name: Pre-tool-use Hook — Regression Tests
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Run pre-tool-use hook regression tests
+        run: scripts/pre-tool-use-tests.sh
+
   backend-ruff:
     name: Backend — Ruff (Lint + Format)
     runs-on: ubuntu-24.04

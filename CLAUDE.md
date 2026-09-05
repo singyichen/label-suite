@@ -151,6 +151,12 @@ Run after every change. Task is NOT complete until all pass.
 scripts/check-sdd.sh
 scripts/speckit-tests.sh
 
+# Repository scripts and git hooks (run from project root)
+scripts/check-spec-artifacts.sh
+scripts/inventory-tests.sh
+scripts/pre-commit-tests.sh
+scripts/pre-tool-use-tests.sh
+
 # Backend (run from backend/)
 uv run pytest tests/ -q
 uv run pytest --cov=app --cov-report=term-missing --cov-fail-under=80
@@ -177,6 +183,8 @@ Local commands and CI jobs are a two-way contract — whichever side a PR adds, 
 
 - New CI job → add its matching local command above.
 - New local verification or test suite → list it above **and** wire it to a matching CI job. A local-only suite stops gating the moment someone changes the code it covers without running it — `scripts/speckit-tests.sh` guarded `check-sdd.sh` locally for months while CI stayed green (issue #613).
+
+The contract is machine-checked, not just documented: `scripts/ci-jobs.tsv` declares, for every script under `scripts/` and every job in `.github/workflows/ci.yml`, which CI job covers it and which local command above runs it — or, with `none` plus a reason, why it is not a gate. `scripts/check-sdd.sh` reports `CI_JOB_PARITY` when either side is missing, so a script that never declares itself cannot slip through unnoticed (issue #648).
 
 Exceptions, one per direction. `.github/workflows/claude.yml` is an agent trigger (summons Claude Code on `@claude` comments), not a verification gate — it has no local equivalent and never blocks a merge. In the other direction, one-off scripts — seeding, scaffolding, migration, throwaway debugging (`scripts/seed.sh`, `scripts/migrate-labels.sh`) — are not verification suites and need no CI job. The test: can this script fail in a way that should block a change? Only then does it owe CI a job.
 

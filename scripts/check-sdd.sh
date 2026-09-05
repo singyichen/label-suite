@@ -91,7 +91,7 @@ if [ "$config_failed" -ne 0 ]; then finish; fi
 checker_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd -P)"
 if [ "$root_provided" -eq 0 ]; then repo_root="$checker_root"; else repo_root="$(cd "$root_arg" 2>/dev/null && pwd -P)"; fi
 if [ -z "${repo_root:-}" ] || [ ! -d "$repo_root" ]; then add_config_error SCANNER_CONFIG . 'repository root is invalid or unreadable'; finish; fi
-for required in specs/STATUS.md scripts/sdd-lint-baseline.txt openspec/changes .claude/agents; do [ -r "$repo_root/$required" ] || add_config_error SCANNER_CONFIG "$required" 'required scanner input is missing or unreadable'; done
+for required in specs/STATUS.md scripts/sdd-lint-baseline.txt scripts/ci-jobs.tsv .github/workflows/ci.yml CLAUDE.md openspec/changes .claude/agents; do [ -r "$repo_root/$required" ] || add_config_error SCANNER_CONFIG "$required" 'required scanner input is missing or unreadable'; done
 if [ "$config_failed" -ne 0 ]; then finish; fi
 if ! preflight_scanned_paths; then
     add_config_error SCANNER_CONFIG . 'repository paths containing control characters are unsupported'
@@ -417,5 +417,44 @@ else
     else
         add_config_error INVENTORY_CHECK_CONFIG scripts/gen-screen-inventory.mjs 'inventory checker returned an unexpected result'
     fi
+fi
+# Local verification suites and CI jobs are a two-way contract (CLAUDE.md
+# §Verification Commands). scripts/ci-jobs.tsv is the single declaration both
+# directions are checked against: one row per script under scripts/, plus one
+# row per CI job that no script implements. A row whose job column reads
+# "none" is an explicit exemption and must carry a reason in the command
+# column, so a one-off helper is declared rather than silently skipped —
+# an undeclared script is exactly how issue #613 went unnoticed for months.
+ci_workflow='.github/workflows/ci.yml'
+ci_registry='scripts/ci-jobs.tsv'
+ci_rows="$tmp_dir/ci-rows"; ci_jobs="$tmp_dir/ci-jobs"; ci_declared="$tmp_dir/ci-declared"; ci_covered="$tmp_dir/ci-covered"
+grep -v -e '^[[:space:]]*#' -e '^[[:space:]]*$' "$repo_root/$ci_registry" >"$ci_rows" || :
+# Job keys sit at exactly two spaces under the top-level "jobs:" mapping; every
+# key nested deeper (steps:, strategy:, ...) or carrying a value is not a job.
+awk '/^jobs:[[:space:]]*$/ { inside = 1; next } inside && /^[^[:space:]#]/ { inside = 0 } inside && /^  [A-Za-z0-9_-]+:[[:space:]]*$/ { sub(/:[[:space:]]*$/, ""); gsub(/^[[:space:]]+/, ""); print }' "$repo_root/$ci_workflow" | LC_ALL=C sort -u >"$ci_jobs"
+: >"$ci_declared"; : >"$ci_covered"
+if ! awk -F '\t' 'NF != 3 || $1 == "" || $2 == "" || $3 == "" { invalid = 1 } END { exit invalid }' "$ci_rows"; then
+    add_error CI_JOB_PARITY "$ci_registry" 'every row must be three non-empty tab-separated columns: CI job (or none), local command (or exemption reason), script (or -)'
+else
+    ci_section="$tmp_dir/ci-claude-commands"
+    awk '/^## Verification Commands[[:space:]]*$/ { inside = 1; next } inside && /^## / { inside = 0 } inside { print }' "$repo_root/CLAUDE.md" >"$ci_section"
+    while IFS="$(printf '\t')" read -r job command script; do
+        if [ "$job" != none ]; then
+            grep -Fxq "$job" "$ci_jobs" || add_error CI_JOB_PARITY "$ci_registry" "declared job $job does not exist in $ci_workflow"
+            grep -Fq "$command" "$ci_section" || add_error CI_JOB_PARITY "$ci_registry" "local command for job $job is absent from the CLAUDE.md Verification Commands block"
+            printf '%s\n' "$job" >>"$ci_declared"
+        fi
+        [ "$script" = - ] && continue
+        ! grep -Fxq "$script" "$ci_covered" || add_error CI_JOB_PARITY "$ci_registry" "script $script is declared more than once"
+        printf '%s\n' "$script" >>"$ci_covered"
+    done <"$ci_rows"
+    while IFS= read -r job; do
+        [ -n "$job" ] || continue
+        grep -Fxq "$job" "$ci_declared" || add_error CI_JOB_PARITY "$ci_workflow" "CI job $job has no local command declared in $ci_registry"
+    done <"$ci_jobs"
+    while IFS= read -r suite; do
+        [ -n "$suite" ] || continue
+        grep -Fxq "$suite" "$ci_covered" || add_error CI_JOB_PARITY "scripts/$suite" "script is not declared in $ci_registry; add its CI job, or an exemption row stating why it is not a gate"
+    done < <(ls -1 "$repo_root/scripts" 2>/dev/null | grep -E '[.](sh|mjs)$' | LC_ALL=C sort)
 fi
 finish
