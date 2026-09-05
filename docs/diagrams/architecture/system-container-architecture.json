@@ -1,0 +1,221 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Label Suite 系統／容器架構",
+    "output": "docs/diagrams/architecture/system-container-architecture.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/singyichen/label-suite",
+      "revision": "88d598c1f70d62ffe0abd737f77b957ed569be58"
+    },
+    "viewBox": [1280, 550]
+  },
+  "components": [
+    {
+      "id": "users",
+      "type": "external",
+      "label": "使用者",
+      "sublabel": "瀏覽器",
+      "pos": [10, 220],
+      "size": [110, 64],
+      "sources": [
+        { "path": "docs/adr/004-frontend-framework-react-vite.md", "line": 6, "label": "Frontend 使用情境" }
+      ]
+    },
+    {
+      "id": "cloudflare",
+      "type": "cloud",
+      "label": "Cloudflare",
+      "sublabel": "DNS · CDN · public TLS",
+      "pos": [170, 220],
+      "size": [130, 64],
+      "sources": [
+        { "path": "docs/adr/023-cicd-docker-compose-nginx-deployment.md", "line": 91, "label": "Cloudflare TLS policy" }
+      ]
+    },
+    {
+      "id": "host_nginx",
+      "type": "security",
+      "label": "Host-level Nginx",
+      "sublabel": ":80 / :443 · reverse proxy",
+      "tag": "dell-7820",
+      "pos": [380, 218],
+      "size": [150, 68],
+      "sources": [
+        { "path": "docs/adr/023-cicd-docker-compose-nginx-deployment.md", "line": 192, "label": "主機層入口" },
+        { "path": "deploy/nginx/label-suite-staging", "line": 6, "label": "Staging vhost" }
+      ]
+    },
+    {
+      "id": "frontend_edge",
+      "type": "frontend",
+      "label": "Frontend Edge",
+      "sublabel": "Nginx · React 18 · Vite SPA",
+      "tag": "Compose",
+      "pos": [600, 100],
+      "size": [180, 72],
+      "sources": [
+        { "path": "docs/adr/004-frontend-framework-react-vite.md", "line": 34, "label": "React + Vite 決策" },
+        { "path": "docs/adr/008-containerization-docker-compose.md", "line": 42, "label": "Frontend container" }
+      ]
+    },
+    {
+      "id": "fastapi",
+      "type": "backend",
+      "label": "FastAPI Backend",
+      "sublabel": "REST API · Pydantic · Uvicorn",
+      "tag": "Compose",
+      "pos": [600, 218],
+      "size": [180, 72],
+      "sources": [
+        { "path": "docs/adr/003-backend-framework-fastapi.md", "line": 31, "label": "FastAPI 決策" },
+        { "path": "docs/adr/023-cicd-docker-compose-nginx-deployment.md", "line": 61, "label": "Backend service" }
+      ]
+    },
+    {
+      "id": "redis",
+      "type": "messagebus",
+      "label": "Redis 7",
+      "sublabel": "DB0 broker · DB1 result · DB2 cache",
+      "tag": "Compose",
+      "pos": [590, 340],
+      "size": [200, 72],
+      "sources": [
+        { "path": "docs/adr/006-caching-queue-redis.md", "line": 37, "label": "Redis 決策" },
+        { "path": "deploy/develop/docker-compose.yml", "line": 29, "label": "Redis service" }
+      ]
+    },
+    {
+      "id": "celery",
+      "type": "backend",
+      "label": "Celery Worker",
+      "sublabel": "scoring · retry · background jobs",
+      "tag": "Compose",
+      "pos": [850, 340],
+      "size": [180, 72],
+      "sources": [
+        { "path": "docs/adr/007-async-tasks-celery.md", "line": 40, "label": "Celery 決策" },
+        { "path": "docs/adr/008-containerization-docker-compose.md", "line": 44, "label": "Worker container" }
+      ]
+    },
+    {
+      "id": "postgres",
+      "type": "database",
+      "label": "PostgreSQL 16",
+      "sublabel": "ACID · JSONB · persistent state",
+      "tag": "Compose / managed",
+      "pos": [850, 218],
+      "size": [180, 72],
+      "sources": [
+        { "path": "docs/adr/005-database-postgresql.md", "line": 32, "label": "PostgreSQL 決策" },
+        { "path": "docs/adr/024-database-quickstart-sqlite-tiered.md", "line": 24, "label": "環境分層" },
+        { "path": "deploy/develop/docker-compose.yml", "line": 14, "label": "Postgres service" }
+      ]
+    },
+    {
+      "id": "resend",
+      "type": "external",
+      "label": "Resend",
+      "sublabel": "transactional email API",
+      "pos": [790, 10],
+      "size": [180, 68],
+      "sources": [
+        { "path": "docs/adr/013-email-service-resend.md", "line": 32, "label": "Resend 決策" }
+      ]
+    },
+    {
+      "id": "sentry",
+      "type": "external",
+      "label": "Hosted Sentry",
+      "sublabel": "React · FastAPI · Celery errors",
+      "pos": [1040, 10],
+      "size": [190, 68],
+      "sources": [
+        { "path": "docs/adr/020-application-error-tracking-sentry.md", "label": "Sentry 決策" }
+      ]
+    },
+    {
+      "id": "prometheus",
+      "type": "backend",
+      "label": "Prometheus",
+      "sublabel": "API · worker · PG/Redis exporters",
+      "tag": "Compose",
+      "pos": [1070, 340],
+      "size": [180, 72],
+      "sources": [
+        { "path": "docs/adr/018-observability-prometheus-grafana.md", "label": "Metrics 決策" },
+        { "path": "deploy/develop/prometheus.yml", "line": 4, "label": "Scrape config" }
+      ]
+    },
+    {
+      "id": "grafana",
+      "type": "frontend",
+      "label": "Grafana",
+      "sublabel": "operational dashboards",
+      "tag": "Compose",
+      "pos": [1075, 450],
+      "size": [170, 72],
+      "sources": [
+        { "path": "docs/adr/018-observability-prometheus-grafana.md", "label": "Dashboard 決策" },
+        { "path": "deploy/nginx/grafana", "line": 2, "label": "Grafana vhost" }
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "dell-7820 · university on-premises host",
+      "wraps": ["host_nginx", "frontend_edge", "fastapi", "redis", "celery", "postgres", "prometheus", "grafana"],
+      "pad": 20
+    },
+    {
+      "kind": "security-group",
+      "label": "Docker Compose · private runtime network",
+      "wraps": ["frontend_edge", "fastapi", "redis", "celery", "postgres", "prometheus", "grafana"],
+      "pad": 12
+    }
+  ],
+  "connections": [
+    { "id": "user_https", "from": "users", "to": "cloudflare", "label": "HTTPS", "variant": "emphasis" },
+    { "id": "edge_tls", "from": "cloudflare", "to": "host_nginx", "label": "Full (strict)", "variant": "security", "labelAt": [340, 204] },
+    { "id": "static_route", "from": "host_nginx", "to": "frontend_edge", "label": "/ · static SPA", "variant": "emphasis", "fromSide": "top", "toSide": "left", "via": [[455, 136]], "labelAt": [545, 126] },
+    { "id": "api_route", "from": "host_nginx", "to": "fastapi", "label": "/api/", "variant": "emphasis", "labelAt": [565, 204] },
+    { "id": "api_redis", "from": "fastapi", "to": "redis", "label": "DB2 cache · DB0 enqueue", "labelAt": [690, 316] },
+    { "id": "redis_worker", "from": "redis", "to": "celery", "label": "jobs" },
+    { "id": "api_db", "from": "fastapi", "to": "postgres", "label": "async SQL", "labelAt": [815, 310] },
+    { "id": "worker_db", "from": "celery", "to": "postgres", "label": "scores · job state", "labelAt": [940, 316] },
+    { "id": "email_api", "from": "fastapi", "to": "resend", "label": "password reset", "variant": "dashed", "fromSide": "top", "toSide": "bottom", "via": [[690, 190], [880, 190]], "labelAt": [790, 180] },
+    { "id": "application_errors", "from": "fastapi", "to": "sentry", "label": "React · API · Worker events", "variant": "dashed", "fromSide": "right", "toSide": "bottom", "via": [[820, 254], [820, 200], [1135, 200]], "labelAt": [1010, 190] },
+    { "id": "dashboard_query", "from": "grafana", "to": "prometheus", "label": "PromQL", "labelAt": [1160, 440] }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "執行與部署",
+      "items": [
+        "Cloudflare 與 Host-level Nginx 形成唯一公開入口；應用與資料服務不直接暴露於 Internet",
+        "Frontend、Backend、Worker、資料層與監控棧由 Docker Compose 編排",
+        "快速體驗可依 ADR-024 使用 SQLite；正式多人環境以 PostgreSQL 為準"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "非同步與資料邊界",
+      "items": [
+        "FastAPI 將耗時計分工作送入 Redis broker，Celery Worker 非同步處理",
+        "Redis DB0 / DB1 / DB2 分別承擔 broker、result backend 與 application cache",
+        "隱藏測試答案僅由 Worker 取用，不進入 annotator-facing API response"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "外部服務與可觀測性",
+      "items": [
+        "Resend 僅由 Backend 呼叫，用於 transactional email",
+        "Sentry 接收已清理的 Frontend、Backend 與 Worker 錯誤事件",
+        "Prometheus 經應用 metrics 與 exporters 採集，Grafana 以 PromQL 呈現 dashboard"
+      ]
+    }
+  ]
+}
