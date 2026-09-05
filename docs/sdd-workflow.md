@@ -144,6 +144,7 @@ Page-scoped feature 在進入 `/opsx:propose` 前必須逐項通過下列檢查�
 6. API/OpenAPI、enum 與 request/response shape 足以支援畫面。
 7. RWD、WCAG 2.1 AA 與 zh-TW/en i18n 要求已列出。
 8. feature/shared ownership 與 Storybook scope 已決定。
+9. 本畫面每個主要目標皆有已定義的完成後去向（終點頁面或明確下一步）；若 `design/system/user-path-map.html` 已涵蓋此畫面，對應目標須無 F3／F4 命中，或已附命中後的修正 issue 編號。
 
 **超小型調整**（≤ 2 個生產檔、不動 API 契約、只釐清不增刪 FR/AC）走 Lightweight Path：TDD → 實作 → spec 一致性檢查 → `/pr-flow`，跳過 OpenSpec change 容器——完整觸發條件見 SKILL.md § Lightweight Path。
 
@@ -214,7 +215,7 @@ Page-scoped feature 在進入 `/opsx:propose` 前必須逐項通過下列檢查�
 | [2] specify | 🗣️ | 主 agent | `specs/[module]/NNN-feature/spec.md` | Process/User Flow 齊備；FR/AC 有穩定 ID；STATUS.md → spec-ready |
 | [3] prototype | 🗣️ | 主 agent + `senior-qa` Red／實作 agent Green（+ senior-uiux 選用） | static shell + Red/Green Playwright 證據 + page design | shell 後先有已提交的預期 Red；Green 全綠；data-testid 契約建立；MASTER.md 遵循 |
 | [4] clarify（選用） | 🗣️ | 主 agent | 釐清問答 + spec 回修 | prototype/page design 暴露模糊點時回寫正典 spec，並重走受影響的 Gate |
-| [3d] Frontend Ready Gate | ⚙️ | 主 agent | page readiness evidence | [4] clarify 已完成或不適用後，八項 page-scoped 檢查均通過，或明示 N/A 與理由 |
+| [3d] Frontend Ready Gate | ⚙️ | 主 agent | page readiness evidence | [4] clarify 已完成或不適用後，九項 page-scoped 檢查均通過，或明示 N/A 與理由 |
 | [5] propose | 🗣️ | 主 agent | change 四件套（繁中） | OpenSpec schema validation 與 Project SDD lint 分別通過；派工標籤齊備；憲章檢查段落存在 |
 | [6] apply | 🗣️ | 主 agent 派工 + 實作/品質 subagents | 分離的 Red/Green task、程式、測試與 `[x]` | Red 預期失敗與 Green 驗證均有證據；每 PR 群組過 ③a–e 審查並取得使用者明確確認 |
 | [7] archive | 🗣️ | 主 agent（final PR group） | derived view + 正典回寫 | 第 1–3 層與 Source-Verify evidence 先完成；僅 final PR 內成功 write-back 後才完成第 4 層 |
