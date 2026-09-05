@@ -144,6 +144,7 @@ Page-scoped feature 在進入 `/opsx:propose` 前必須逐項通過下列檢查�
 6. API/OpenAPI、enum 與 request/response shape 足以支援畫面。
 7. RWD、WCAG 2.1 AA 與 zh-TW/en i18n 要求已列出。
 8. feature/shared ownership 與 Storybook scope 已決定。
+9. 本畫面每個主要目標皆有已定義的完成後去向（終點頁面或明確下一步）；若 `design/system/user-path-map.html` 已涵蓋此畫面，對應目標須無 F3／F4 命中，或已附命中後的修正 issue 編號。
 
 **超小型調整**（≤ 2 個生產檔、不動 API 契約、只釐清不增刪 FR/AC）走 Lightweight Path：TDD → 實作 → spec 一致性檢查 → `/pr-flow`，跳過 OpenSpec change 容器——完整觸發條件見 SKILL.md § Lightweight Path。
 
