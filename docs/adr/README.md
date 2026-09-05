@@ -49,7 +49,7 @@ Each ADR follows this structure:
 | [028](028-ci-security-scanning.md) | CI Security Scanning Strategy — SCA + Deferred SAST | Accepted | 2026-06-11 |
 | [029](029-output-type-composition.md) | Output-Type Composition Model | Accepted | 2026-06-29 |
 | [030](030-icon-library-lucide.md) | Icon Library — Lucide | Accepted | 2026-07-02 |
-| [031](031-sequence-tagging-tokenization-contract.md) | Sequence Tagging Tokenization — Versioned Annotation Contract | Accepted | 2026-07-28 |
+| [031](031-sequence-tagging-tokenization-contract.md) | Sequence Tagging Tokenization — Versioned Annotation Contract | Superseded | 2026-07-28 |
 | [032](032-user-action-audit-trail.md) | User-Action Audit Trail | Proposed | 2026-08-19 |
 | [033](033-openspec-change-workflow.md) | OpenSpec as the Change Workflow Layer (`specs/` Remains Canon) | Proposed | 2026-08-24 |
 | [034](034-formal-e2e-directory-location.md) | Formal E2E Test Directory — Root `e2e/[module]/` | Proposed | 2026-08-24 |

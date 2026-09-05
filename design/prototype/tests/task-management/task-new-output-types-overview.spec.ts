@@ -29,15 +29,28 @@ test.describe('Task new output types visual overview', () => {
     await expect(
       page.getByTestId('sequence-source-text'),
     ).toContainText('台積電在台北');
+    /* issue #581: the card advertises span selection, not a token grid --
+       the control snaps where a drag lands (FR-003d-1) and the preview shows
+       the two labelled stretches of the source text, so a token cell or a
+       BIO tagging-scheme line on this card would misdescribe the product. */
     await expect(
-      page.getByTestId('sequence-token-unit-control'),
+      page.getByTestId('sequence-snap-unit-control'),
+    ).toContainText('選取吸附');
+    await expect(
+      page.getByTestId('sequence-snap-unit-control'),
     ).toContainText('字（Character）');
     await expect(
-      page.getByTestId('sequence-token-unit-control'),
+      page.getByTestId('sequence-snap-unit-control'),
     ).toContainText('詞（Word）');
     await expect(
+      page.getByTestId('sequence-tagging-overview-card').getByTestId('sequence-span'),
+    ).toHaveCount(2);
+    await expect(
       page.getByTestId('sequence-tagging-overview-card').getByTestId('sequence-token'),
-    ).toHaveCount(6);
+    ).toHaveCount(0);
+    await expect(page.getByTestId('sequence-tagging-overview-card')).not.toContainText(
+      '標記方案',
+    );
   });
 
   test('relation cards separate trigger spans from semantic relation types', async ({

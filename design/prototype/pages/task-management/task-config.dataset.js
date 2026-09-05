@@ -1,88 +1,11 @@
 /* task-config.dataset.js
  * Dataset ingestion pipeline for the shared task-config engine: JSON/JSONL
  * parsing, record-source detection, per-column field profiling, cell
- * type/label formatting, and sequence tokenization/tagging-scheme helpers.
+ * type/label formatting.
  * No DOM access.
  * Depends on: state, t (from task-config.data.js / host page). Loaded after
  * task-config.data.js and task-config.yaml.js.
  */
-
-function tokenizeSequenceCharacters(text) {
-  var source = String(text || '');
-  if (typeof Intl !== 'undefined' && typeof Intl.Segmenter === 'function') {
-    return Array.from(
-      new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(source),
-      function(entry) { return entry.segment; }
-    ).filter(function(segment) { return /\S/u.test(segment); });
-  }
-  return Array.from(source).filter(function(segment) { return /\S/u.test(segment); });
-}
-
-function tokenizeSequenceWords(text) {
-  var source = String(text || '');
-  var coarseSegments = source.match(/[\p{Script=Latin}\p{Number}]+(?:[.'’_-][\p{Script=Latin}\p{Number}]+)*|[\p{Script=Han}]+|[^\s]/gu) || [];
-  return coarseSegments.reduce(function(result, segment) {
-    if (!/^[\p{Script=Han}]+$/u.test(segment)) {
-      result.push(segment);
-      return result;
-    }
-    if (typeof Intl !== 'undefined' && typeof Intl.Segmenter === 'function') {
-      Array.from(
-        new Intl.Segmenter('zh-TW', { granularity: 'word' }).segment(segment),
-        function(entry) { return entry.segment; }
-      ).filter(function(word) { return /\S/u.test(word); })
-        .forEach(function(word) { result.push(word); });
-      return result;
-    }
-    result.push(segment);
-    return result;
-  }, []);
-}
-
-function tokenizeSequenceText(text, unit) {
-  return unit === 'word'
-    ? tokenizeSequenceWords(text)
-    : tokenizeSequenceCharacters(text);
-}
-
-function getSequenceBaseLabel(tag, labels) {
-  if (!tag || tag === 'O') return null;
-  for (var i = 0; i < labels.length; i++) {
-    var name = labels[i].name;
-    if (tag === name || tag.slice(-(name.length + 1)) === '-' + name) return name;
-  }
-  return null;
-}
-
-function inferSequenceScheme(tags) {
-  if (tags.some(function(tag) { return /^[ES]-/.test(tag); })) return 'BIOES';
-  if (tags.some(function(tag) { return /^[BI]-/.test(tag); })) return 'BIO';
-  return 'SINGLE';
-}
-
-function convertSequenceTags(tags, fromScheme, toScheme, labels) {
-  var assignments = tags.map(function(tag, index) {
-    var label = getSequenceBaseLabel(tag, labels);
-    if (!label) return { label: null, starts: false };
-    var previousLabel = index > 0 ? getSequenceBaseLabel(tags[index - 1], labels) : null;
-    var starts = index === 0 || previousLabel !== label;
-    if (fromScheme !== 'SINGLE' && /^[BS]-/.test(tag)) starts = true;
-    return { label: label, starts: starts };
-  });
-
-  return assignments.map(function(assignment, index) {
-    if (!assignment.label) return 'O';
-    if (toScheme === 'SINGLE') return assignment.label;
-    var prefix = assignment.starts ? 'B' : 'I';
-    if (toScheme === 'BIOES') {
-      var next = assignments[index + 1];
-      var ends = !next || next.label !== assignment.label || next.starts;
-      if (assignment.starts && ends) prefix = 'S';
-      else if (ends) prefix = 'E';
-    }
-    return prefix + '-' + assignment.label;
-  });
-}
 
 /* ── Dataset upload ──────────────────────────────────────────── */
 function formatBytes(bytes) {

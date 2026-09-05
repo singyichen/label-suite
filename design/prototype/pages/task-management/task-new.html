@@ -1033,10 +1033,6 @@ function validateStep2(showErrors) {
       var outReg = OUTPUT_TYPE_REGISTRY[outKey];
       if (!outReg) return;
       var cfg = state.outputConfigs[outKey] || {};
-      if (outKey === 'sequence_tagging' && cfg._tokenAlignmentError) {
-        ok = false;
-        if (!schemaErrMsg) schemaErrMsg = cfg._tokenAlignmentError;
-      }
       outReg.fields.forEach(function(f) {
         if (!f.required) return;
         var val = getOutputConfigFieldValue(cfg, f);

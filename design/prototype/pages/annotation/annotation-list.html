@@ -1444,7 +1444,7 @@
         text = '[' + Object.keys(answer).map(function (k) { return answer[k]; }).join(', ') + ']';
         break;
       case 'sequence_tagging':
-        text = answer.map(function (pair) { return pair.text + '/' + pair.tag; }).join(' ');
+        text = answer.map(function (span) { return span.text + '/' + span.label; }).join(' ');
         break;
       case 'entity_recognition':
         text = answer.map(function (ent) { return ent.text + '(' + ent.type + ')'; }).join(', ');

@@ -716,88 +716,53 @@
     });
   }
 
-  /* renderTokenClassPreview() (engine.js ~2858-3021) always requires the
-     annotator to pick an already-fully-prefixed tag chip (e.g. "B-PER" vs
-     "I-PER") before clicking a token. Spec 015 AC-2A.5 instead wants the
-     annotator to pick just the entity TYPE, with the B-/I- continuation
-     prefix computed automatically from whether the immediately-preceding
-     token already carries the same type (BIO/IOB2/BIOES) -- SINGLE has no
-     prefix at all, the bare type name IS the tag. This is genuinely
-     different interaction semantics from the engine's literal per-tag
-     chip bar (not a testid-only relabel), so this host builds its own
-     type-level selector and re-binds token clicks; getSequenceBaseLabel()
-     is an existing shared global (task-config.dataset.js), reused
-     read-only here, not modified. */
+  /* renderSpanTaggingPreview() (engine.js) already implements the whole
+     span interaction the workspace needs -- drag over the untokenized text,
+     pick a label type, undo from the marked-span list -- so this host only
+     relabels its anchors, exactly as patchSpanOnlyPanel does for
+     entity_recognition. Nothing here re-binds a listener: cloning a node to
+     strip one (what the retired token-grid patch did) would also strip the
+     engine's own span handlers. */
   function patchSequenceTaggingPanel(container) {
     /* sequence_tagging (registry: rendersInputPreview:true, same as
-       entity_recognition) also suppresses updateAnnotationPreview()'s
-       generic top-level input block -- but renderTokenClassPreview()
-       (engine.js, distinct from renderSpanOnlyPreview used by
-       entity_recognition) already tags its own raw-text element with
-       data-testid="sequence-source-text" (unlike renderSpanOnlyPreview,
-       whose equivalent element patchSpanOnlyPanel relabels positionally).
-       Relabel that existing testid'd element instead of guessing position. */
+       entity_recognition) suppresses updateAnnotationPreview()'s generic
+       top-level input block, but renderSpanTaggingPreview() tags its own raw
+       text element with data-testid="sequence-source-text" (unlike
+       renderSpanOnlyPreview, whose equivalent element patchSpanOnlyPanel
+       relabels positionally). Relabel that testid'd element in place --
+       setAttribute keeps the mouseup handler the drag depends on. */
     var textEl = container.querySelector('[data-testid="sequence-source-text"]');
     if (textEl) textEl.setAttribute('data-testid', 'ws-input-content');
 
-    var cfg = state.outputConfigs.sequence_tagging || {};
-    var labels = Array.isArray(cfg.entities) ? cfg.entities.filter(function (e) { return e && e.name; }) : [];
-    var scheme = cfg.tagging_scheme || 'BIO';
-    var ps = state.previewState.sequence_tagging;
-    if (!ps || !Array.isArray(ps.tokens)) return;
-
-    var engineChipOption = container.querySelector('[data-testid="sequence-tag-option"]');
-    var engineChipBar = engineChipOption ? engineChipOption.parentElement : null;
-    if (engineChipBar) engineChipBar.style.display = 'none';
-
-    var typeBar = document.createElement('div');
-    typeBar.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;';
-    labels.forEach(function (label) {
-      var btn = document.createElement('button');
-      btn.type = 'button';
-      btn.setAttribute('data-testid', 'ws-seq-tag-btn-' + label.name);
-      var isActive = ps.activeEntityType === label.name;
-      btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-      var color = label.color || 'var(--color-primary)';
-      btn.style.cssText = 'padding:4px 10px;border-radius:var(--radius-md);font-size:12px;font-weight:700;cursor:pointer;border:2px solid ' + color + ';color:' + (isActive ? 'var(--color-white)' : color) + ';background:' + (isActive ? color : 'transparent') + ';';
-      btn.textContent = label.name;
-      btn.addEventListener('click', function () {
-        ps.activeEntityType = label.name;
-        refreshOutputPreview(container, 'sequence_tagging');
-      });
-      typeBar.appendChild(btn);
+    var chips = container.querySelectorAll('[data-testid="sequence-label-option"]');
+    Array.prototype.forEach.call(chips, function (chip) {
+      chip.setAttribute('data-testid', 'ws-seq-label-btn-' + chip.textContent.trim());
     });
-    if (engineChipBar && engineChipBar.parentNode) {
-      engineChipBar.parentNode.insertBefore(typeBar, engineChipBar);
-    } else {
-      container.appendChild(typeBar);
+
+    var rows = container.querySelectorAll('[data-testid="sequence-span-item"]');
+    Array.prototype.forEach.call(rows, function (row) {
+      row.setAttribute('data-testid', 'ws-seq-span-item');
+      var del = row.querySelector('[data-testid="sequence-span-item-delete"]');
+      if (del) del.setAttribute('data-testid', 'ws-seq-span-delete');
+    });
+
+    /* FR-024A-1: word snapping is a landing-point aid the browser may not be
+       able to provide. snapSelectionToWordBoundaries() already falls back to
+       the raw offsets, which is silent -- say it out loud instead, so an
+       annotator on such a browser reads the unsnapped result as expected
+       behaviour. The task's snap_unit is reported, never rewritten. */
+    var snapUnit = (state.outputConfigs.sequence_tagging || {}).snap_unit;
+    var segmenterMissing = typeof Intl === 'undefined' || typeof Intl.Segmenter !== 'function';
+    if (snapUnit === 'word' && segmenterMissing) {
+      var notice = document.createElement('div');
+      notice.setAttribute('data-testid', 'ws-seq-snap-degraded');
+      notice.setAttribute('role', 'note');
+      notice.style.cssText = 'margin-top:8px;font-size:0.78rem;line-height:1.5;color:var(--color-text-soft);';
+      notice.textContent = state.lang === 'zh'
+        ? '此瀏覽器不支援詞界判定，圈選會停在放開滑鼠的位置，請自行對齊詞的起訖。'
+        : 'This browser cannot detect word boundaries, so a selection stops where you release it -- align it to the word yourself.';
+      container.appendChild(notice);
     }
-
-    var tokenButtons = container.querySelectorAll('[data-testid="sequence-token"]');
-    Array.prototype.forEach.call(tokenButtons, function (tokEl, idx) {
-      /* Strip the engine's own click listener (bound to its own
-         ps.activeTag chip-selection model, which this host UI doesn't
-         use) by cloning -- cloneNode never copies listeners. */
-      var fresh = tokEl.cloneNode(true);
-      tokEl.parentNode.replaceChild(fresh, tokEl);
-      var textSpan = fresh.querySelector('[data-testid="sequence-token-text"]');
-      if (textSpan) {
-        textSpan.setAttribute('data-testid', 'ws-seq-token');
-        textSpan.setAttribute('data-tag', ps.tokens[idx] || 'O');
-      }
-      fresh.addEventListener('click', function () {
-        if (!ps.activeEntityType) return;
-        var tag;
-        if (scheme === 'SINGLE') {
-          tag = ps.activeEntityType;
-        } else {
-          var prevBase = idx > 0 ? getSequenceBaseLabel(ps.tokens[idx - 1], labels) : null;
-          tag = (prevBase === ps.activeEntityType ? 'I-' : 'B-') + ps.activeEntityType;
-        }
-        ps.tokens[idx] = tag;
-        refreshOutputPreview(container, 'sequence_tagging');
-      });
-    });
   }
 
   /* entity_recognition (registry: rendersInputPreview:true, task-config.data.js)
@@ -1369,8 +1334,7 @@
        excluded from that join -- this is a generic guard (any non-scalar
        input-role column, not just `tokens`), and it only affects
        getFieldsByRole('input')/preview-text joining; datasetRawFirstRow and
-       datasetParsedColumns are unaffected, so getSequencePreviewTokens()'s
-       rawRow.tokens fallback still works untouched. */
+       datasetParsedColumns are unaffected. */
     var firstRawRow = state.datasetRawFirstRow || {};
     Object.keys(state.fieldRoleMap).forEach(function (col) {
       if (state.fieldRoleMap[col] !== 'input') return;
@@ -2234,11 +2198,10 @@
         return !!(prefill && typeof prefill === 'object');
       }
       case 'sequence_tagging':
-        /* Engine seeds ps.tokens all-'O' for pending samples; any non-O
-           tag (annotator's own or FR-024M prefill) counts as answered. */
-        return !!(ps && Array.isArray(ps.tokens) && ps.tokens.some(function (tag) {
-          return tag && tag !== 'O';
-        }));
+        /* Any marked span (the annotator's own or a well-formed prefill)
+           counts as answered; an out-of-range prefill is not one, since the
+           engine routes it to prefillErrors rather than into spans[]. */
+        return !!(ps && Array.isArray(ps.spans) && ps.spans.length > 0);
       case 'entity_recognition':
         return state.previewEntities.length > 0;
       case 'relation_identification':
@@ -2261,8 +2224,18 @@
      save (AC-2.3), and the reviewer decision write, and the same fields
      snapshotCurrentSample()/restoreSample() round-trip in memory. */
   function collectAnswerPayload() {
+    var previewState = deepClone(state.previewState);
+    /* FR-024A-3: snap_unit travels inside the sequence_tagging answer
+       instead of being read back from the task config, so a stored payload
+       still says which landing rule produced its offsets after the task is
+       reconfigured. The engine owns the rest of the entry; only this one
+       field is a property of the submission rather than of the preview. */
+    if (previewState.sequence_tagging) {
+      previewState.sequence_tagging.snap_unit =
+        (state.outputConfigs.sequence_tagging || {}).snap_unit === 'word' ? 'word' : 'character';
+    }
     return {
-      previewState: deepClone(state.previewState),
+      previewState: previewState,
       previewEntities: deepClone(state.previewEntities),
       previewTriples: deepClone(state.previewTriples),
       previewBypass: deepClone(state.previewBypass),
@@ -2506,7 +2479,9 @@
           })
           .join(', ');
       case 'sequence_tagging':
-        return Array.isArray(ps.tokens) ? ps.tokens.join(' ') : '';
+        return buildSequencePairsFromSpans(ps.spans)
+          .map(function (span) { return span.text + '/' + span.label; })
+          .join(' ');
       case 'entity_recognition':
         return (src.previewEntities || []).map(function (e) { return e.text; }).join(', ');
       case 'relation_identification':
@@ -2534,7 +2509,7 @@
       case 'multi_dim':
         return Object.keys(answer || {}).map(function (name) { return name + '=' + answer[name]; }).join(', ');
       case 'sequence_tagging':
-        return (Array.isArray(answer) ? answer : []).map(function (p) { return p.text + '/' + p.tag; }).join(' ');
+        return (Array.isArray(answer) ? answer : []).map(function (p) { return p.text + '/' + p.label; }).join(' ');
       case 'entity_recognition':
         return (Array.isArray(answer) ? answer : []).map(function (e) { return e.text; }).join(', ');
       case 'relation_identification':
@@ -2580,69 +2555,31 @@
     return outKey + '::' + rowName;
   }
 
-  /* Shared token-list reconstruction for sequence_tagging's compact-answer
-     conversion (both directions). getDatasetPreviewText() (task-config.
-     engine.js) always returns null in this workspace -- it reads
-     state.datasetParsedColumns, which is only ever populated by the
-     task-builder's CSV-upload flow, never by annotation-workspace.config.js.
-     Mirror engine.js's own renderTokenClassPreview() fallback sentence here
-     (line ~2867) so this reconstructed token list stays aligned with the
-     token positions the correction control right below is already showing. */
-  function getSequenceTokenTexts() {
-    var cfg = state.outputConfigs.sequence_tagging || {};
-    var tokenization = cfg.tokenization && typeof cfg.tokenization === 'object' ? cfg.tokenization : {};
-    var unit = tokenization.unit === 'word' ? 'word' : 'character';
-    var rawRow = findRecordById(currentSampleId) || {};
-    var realText = getDatasetPreviewText();
-    var fallbackText =
-      state.lang === 'zh' ? '台積電董事長魏哲家今天出席台北產業論壇' : 'The chairman of TSMC attended the forum in Taipei today.';
-    return getSequencePreviewTokens(realText || fallbackText, rawRow, unit);
-  }
-
   /* Converts the live annotator's engine-shape submission (previewState /
      previewEntities / previewTriples) into the SAME CompactAnswer shape
      annotation-workspace.data.js's REVIEWER_MOCK_ROWS ships, so the mock
-     rows and the prepended "current" row can share one answer renderer. */
-  function buildSequencePairsFromTags(tags) {
-    if (!Array.isArray(tags)) return [];
-    var tokenTexts = getSequenceTokenTexts();
-    var pairs = [];
-    for (var i = 0; i < tags.length && i < tokenTexts.length; i++) {
-      if (tags[i] && tags[i] !== 'O') pairs.push({ text: tokenTexts[i], tag: tags[i] });
-    }
-    return pairs;
+     rows and the prepended "current" row can share one answer renderer.
+     FR-052: `(start, end)` is the authoritative pair and `text` is the
+     denormalized slice of the source text at those offsets -- carried only
+     because the review list and review card read it directly and their rows
+     do not always travel with the source text. */
+  function buildSequencePairsFromSpans(spans) {
+    var text = getDatasetPreviewText() || '';
+    return (Array.isArray(spans) ? spans : []).map(function (span) {
+      return {
+        text: text.substring(span.start, span.end),
+        label: span.label,
+        start: span.start,
+        end: span.end,
+      };
+    });
   }
 
-  /* Reverse of buildSequencePairsFromTags (FR-035): converts a CompactAnswer
-     pairs array (non-O tokens only, in positional order) back into a full
-     per-token tags array aligned to the current token list, so a merge's
-     unanimous per-token majority can prefill the live Token grid state.
-     pairs is a genuine positional subsequence of the token list (each pair
-     was produced by walking the tokens left-to-right and keeping the
-     non-'O' ones), so a single left-to-right consume-in-order pass -- the
-     same "consume spans in order" approach already used for duplicate
-     entity spans elsewhere in this file -- reconstructs the original
-     alignment even when a token text repeats (e.g. '台' at both index 0 and
-     13 of T006's fallback sentence). */
-  function buildSequenceTagsFromPairs(pairs) {
-    var tokenTexts = getSequenceTokenTexts();
-    var tags = tokenTexts.map(function () { return 'O'; });
-    var cursor = 0;
-    for (var i = 0; i < tokenTexts.length && cursor < pairs.length; i++) {
-      if (tokenTexts[i] === pairs[cursor].text) {
-        tags[i] = pairs[cursor].tag;
-        cursor++;
-      }
-    }
-    return tags;
-  }
   /* Shared with annotation-list.html's official_run single-row rendering
-     (annotation-workspace.data.js); sequence_tagging token text needs the
-     workspace's own dataset-derived token reconstruction. */
+     (annotation-workspace.data.js), which slices each span's text out of
+     the source text the answer carries -- so this is a plain delegation. */
   function convertSubmissionAnswer(outKey, submission) {
-    return window.LabelSuiteAnnotationWorkspaceData.convertSubmissionAnswer(outKey, submission, {
-      sequenceTagsToPairs: buildSequencePairsFromTags,
-    });
+    return window.LabelSuiteAnnotationWorkspaceData.convertSubmissionAnswer(outKey, submission);
   }
 
   /* A review reads the annotator's own submission, which only ever exists in
@@ -2777,18 +2714,25 @@
         state.previewTriples = (mergedValue || []).map(function (tr) { return { subj: tr.subj, rel: tr.rel, obj: tr.obj }; });
         state.previewInited = true;
         break;
-      case 'sequence_tagging': {
-        var cfg = state.outputConfigs.sequence_tagging || {};
-        var tokenization = cfg.tokenization && typeof cfg.tokenization === 'object' ? cfg.tokenization : {};
-        var unit = tokenization.unit === 'word' ? 'word' : 'character';
-        var tokenTexts = getSequenceTokenTexts();
-        state.previewState[outKey] = state.previewState[outKey] || {};
-        state.previewState[outKey].tokens = buildSequenceTagsFromPairs(mergedValue || []);
-        state.previewState[outKey].tokenKey = unit + '␟' + tokenTexts.join('␞');
-        state.previewState[outKey].scheme = cfg.tagging_scheme || 'BIO';
-        state.previewState[outKey]._seeded = true;
+      /* FR-052: offsets are authoritative, so each span is restored to the
+         `(start, end)` it carries. The retired reconstruction walked the
+         token list consuming pairs by text left to right, which silently
+         moved a span whenever its text repeated in the sentence. */
+      case 'sequence_tagging':
+        /* Written as a whole slice, with `textKey` left at the engine's own
+           null default: seedSpanTaggingPreview() reads any other value as a
+           text change and re-seeds from the dataset column, which would drop
+           the answer restored here before the panel ever renders it. */
+        state.previewState[outKey] = {
+          spans: (mergedValue || []).map(function (span) {
+            return { start: span.start, end: span.end, label: span.label };
+          }),
+          pendingSelection: null,
+          prefillErrors: [],
+          textKey: null,
+          _seeded: true,
+        };
         break;
-      }
       default:
         break;
     }

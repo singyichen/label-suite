@@ -1,4 +1,9 @@
-## MODIFIED Requirements
+# task-management/013-task-new Specification
+
+## Purpose
+New Task（新增任務精靈與設定建構器，Project Leader）的 derived view。正典為 `specs/task-management/013-task-new/spec.md`（v7.0.0）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR/AC ID，不改動其正典措辭。目前收錄：change `2026-09-04-seq-tagging-span-config`（issue #581）之 FR-003d-1／FR-003d-3（修訂）。本檔於該 change archive 前以正典 v6.9.6 的兩條原文建立基線，使 MODIFIED 有可比對的前值，archive 後基線內容已被完整取代。
+
+## Requirements
 
 ### Requirement: FR-003d-1 sequence_tagging 的設定契約與 Step 2 專屬預覽
 
@@ -35,7 +40,7 @@ Step 2 預覽 MUST 在 `sequence_tagging` 下對相交落點給出即時可見�
 - **THEN** 新增一筆 `{ start: 1, end: 3, label: <類型> }`，反白範圍與拖曳範圍一致
 - **WHEN** 將選取吸附切換為「詞」
 - **THEN** 既有 span 的 `start`／`end` 與顯示位置皆維持不變，畫面不出現任何數量不一致錯誤，亦不阻擋進入 Step 3
-- **AND** 於「詞」模式下自「積」拖曳至「電」放開時，起訖點吸附至詞界而產生涵蓋「台積電」的 `{ start: 0, end: 3 }`
+- **AND** 於「詞」模式下自「事」拖曳至「長」放開時，起訖點吸附至詞界而產生涵蓋「董事長」的 `{ start: 3, end: 6 }`（`Intl.Segmenter` 的中文詞典不含「台積電」這類專有名詞，故吸附示例採用詞典確實合併的「董事長」）
 
 #### Scenario: 預標記以字元 offset 落位且不做數量檢查
 - **GIVEN** 資料集某筆紀錄的 output 欄位提供 3 筆 span 預標記，而原始文本共 20 個字元

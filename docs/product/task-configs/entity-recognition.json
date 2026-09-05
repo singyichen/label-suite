@@ -11,6 +11,7 @@
           { "name": "aspect", "color": "#2ECC71" },
           { "name": "opinion", "color": "#E74C3C" }
         ],
+        "snap_unit": "character",
         "allow_overlapping": false
       }
     }
