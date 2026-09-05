@@ -127,6 +127,34 @@ test('an intersecting selection is refused and leaves the span list untouched', 
   await expect(preview.getByTestId('sequence-span')).toHaveCount(1);
 });
 
+test('a selection fully covered by an existing span is refused with visible feedback that survives a label click', async ({
+  page,
+}) => {
+  /* issue #659: a selection with no character exposed outside the existing
+     span (spanAt[i] is defined for every position) previously produced no
+     `sequence-span-selection-error` run and no other feedback at all. */
+  await goToStep2WithSequenceTagging(page);
+  const preview = page.locator('#annotationPreview');
+
+  await dragSelect(page, '台積電');
+  await preview.getByRole('button', { name: 'ORG', exact: true }).click();
+  expect(await getSpans(page)).toEqual([{ start: 0, end: 3, label: 'ORG' }]);
+
+  await dragSelect(page, '積電');
+  await expect(preview.getByTestId('sequence-span-selection-error')).toHaveCount(0);
+  await expect(preview.getByTestId('sequence-span-overlap-error')).toBeVisible();
+  await expect(
+    preview.locator('[data-testid="sequence-span"][data-overlap-blocked="true"]'),
+  ).toHaveCount(1);
+
+  /* Clicking a label type must not clear the rejection: it stays visible and
+     must not be banked as a new span, until the next selection replaces it. */
+  await preview.getByRole('button', { name: 'PER', exact: true }).click();
+  await expect(preview.getByTestId('sequence-span-overlap-error')).toBeVisible();
+  expect(await getSpans(page)).toEqual([{ start: 0, end: 3, label: 'ORG' }]);
+  await expect(preview.getByTestId('sequence-span')).toHaveCount(1);
+});
+
 test('an adjacent selection sharing only an endpoint is accepted', async ({ page }) => {
   await goToStep2WithSequenceTagging(page);
   const preview = page.locator('#annotationPreview');
