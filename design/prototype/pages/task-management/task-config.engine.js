@@ -2919,6 +2919,15 @@ function seedSpanTaggingPreview(ps, outKey, text) {
   ps.spans.sort(function(a, b) { return a.start - b.start; });
 }
 
+function buildSequenceSpanAlertRow(testid, message) {
+  var el = document.createElement('div');
+  el.setAttribute('role', 'alert');
+  el.setAttribute('data-testid', testid);
+  el.style.cssText = 'margin-bottom:8px;padding:8px 10px;border:1px solid var(--color-danger);border-radius:var(--radius-md);background:var(--color-danger-bg);color:var(--color-danger);font-size:0.78rem;line-height:1.5;';
+  el.textContent = message;
+  return el;
+}
+
 /* FR-003d-1: sequence_tagging annotates by dragging over the untokenized text
    and storing half-open character offsets. It keeps its own preview state
    rather than reusing entity_recognition's previewEntities, whose `end` is
@@ -2954,6 +2963,16 @@ function renderSpanTaggingPreview(container, outKey) {
   ps.spans.forEach(function(span, spanIndex) {
     for (var i = span.start; i < span.end && i < text.length; i++) spanAt[i] = spanIndex;
   });
+  /* A rejected selection that lands fully inside an existing span has no
+     character of its own to paint in error colour (every position already
+     belongs to that span), so the existing span is marked instead — this is
+     the only feedback for a fully-covered rejection (issue #659). */
+  var blockingSpanIndexes = {};
+  if (pending && pending.invalid) {
+    ps.spans.forEach(function(s, i) {
+      if (s.start < pending.end && pending.start < s.end) blockingSpanIndexes[i] = true;
+    });
+  }
   var runStart = 0;
   function keyAt(i) {
     var inPending = !!pending && i >= pending.start && i < pending.end && spanAt[i] === undefined;
@@ -2976,6 +2995,11 @@ function renderSpanTaggingPreview(container, outKey) {
       el.setAttribute('data-label', span.label);
       el.style.cssText = 'background:' + color + '33;border-bottom:2px solid ' + color + ';color:' + color + ';';
       el.title = span.label;
+      if (blockingSpanIndexes[spanIndex]) {
+        el.setAttribute('data-overlap-blocked', 'true');
+        el.style.outline = '2px dashed var(--color-danger)';
+        el.style.outlineOffset = '2px';
+      }
     } else if (pending.invalid) {
       el.className = 'rel-sel-highlight';
       el.setAttribute('data-testid', 'sequence-span-selection-error');
@@ -3011,15 +3035,19 @@ function renderSpanTaggingPreview(container, outKey) {
   });
   container.appendChild(textEl);
 
+  if (pending && pending.invalid) {
+    var blockingLabels = ps.spans
+      .filter(function(s, i) { return blockingSpanIndexes[i]; })
+      .map(function(s) { return s.label + '「' + text.substring(s.start, s.end) + '」'; });
+    container.appendChild(buildSequenceSpanAlertRow('sequence-span-overlap-error', state.lang === 'zh'
+      ? '新圈選範圍與既有標記重疊：' + blockingLabels.join('、') + '，請重新選取。'
+      : 'The new selection overlaps existing mark(s): ' + blockingLabels.join(', ') + '. Please reselect.'));
+  }
+
   ps.prefillErrors.forEach(function(span) {
-    var errorEl = document.createElement('div');
-    errorEl.setAttribute('role', 'alert');
-    errorEl.setAttribute('data-testid', 'sequence-span-prefill-error');
-    errorEl.style.cssText = 'margin-bottom:8px;padding:8px 10px;border:1px solid var(--color-danger);border-radius:var(--radius-md);background:var(--color-danger-bg);color:var(--color-danger);font-size:0.78rem;line-height:1.5;';
-    errorEl.textContent = state.lang === 'zh'
+    container.appendChild(buildSequenceSpanAlertRow('sequence-span-prefill-error', state.lang === 'zh'
       ? '預標記 offset (' + span.start + ', ' + span.end + ') 超出文本範圍，已略過該筆。'
-      : 'Pre-annotation offset (' + span.start + ', ' + span.end + ') falls outside the text and was skipped.';
-    container.appendChild(errorEl);
+      : 'Pre-annotation offset (' + span.start + ', ' + span.end + ') falls outside the text and was skipped.'));
   });
 
   var typeTitle = document.createElement('div');
@@ -3039,9 +3067,13 @@ function renderSpanTaggingPreview(container, outKey) {
     chip.textContent = label.name;
     chip.addEventListener('click', function() {
       var selected = ps.pendingSelection;
+      /* A refused selection is kept pending, not discarded here: the error
+         highlight and message must survive a label click until the next
+         selection replaces it (issue #659), so labeling is a no-op while
+         invalid rather than a way to dismiss the rejection. */
+      if (selected && selected.invalid) return;
       ps.pendingSelection = null;
-      /* A refused selection is discarded, never banked under a later label */
-      if (selected && !selected.invalid) {
+      if (selected) {
         ps.spans.push({ start: selected.start, end: selected.end, label: label.name });
         ps.spans.sort(function(a, b) { return a.start - b.start; });
       }
