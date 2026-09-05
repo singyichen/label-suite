@@ -1,13 +1,17 @@
 ---
 功能分支: feat/dataset/017-dataset-analysis-detail
 建立日期: 2026-04-24
-版本: 2.2.0
+版本: 2.2.1
 狀態: Draft
 ---
 
 # 功能規格：Dataset Analysis Detail — 統計總覽 + 品質監控雙 Tab# 功能規格：Dataset Analysis Detail — 統計總覽 + 品質監控雙 Tab
 
 **需求來源**: IA v1.3.2（2026-04-24）資料集分析模組規範（雙 Tab 架構）；task-management-013 `OUTPUT_TYPE_REGISTRY`（ADR-029 outputs[] 組合模型）；IAA 策略 v2（2026-08-12，8-key 輸出類型逐型指標）
+
+## 功能目標
+
+讓 `project_leader` 與 `reviewer` 在同一份 Detail 頁面中，依任務 `outputs[]`（ADR-029 組合模型）逐型並列檢視「統計總覽」與「品質監控」雙 Tab：前者呈現共用進度指標與各輸出類型特定統計，後者呈現 Dry Run 後的逐型 IAA 報告、異常偵測與標記員品質分析，全程以 registry 驅動、不依賴任務類型硬編邏輯。
 
 ## 已釐清事項
 
@@ -171,10 +175,10 @@ sequenceDiagram
 
 **驗收情境**：
 
-1. **Given** 使用者從 `dataset-analysis-list` 點擊任務卡片，**When** 進入詳情頁，**Then** 導向 `/dataset-analysis-detail/:task_id?tab=stats`，並渲染 detail shell 與統計總覽 active tab。
-2. **Given** 使用者從 Dashboard「IAA 待確認」badge 進入，**When** 開啟詳情頁，**Then** 導向 `/dataset-analysis-detail/:task_id?tab=quality`，並渲染 detail shell 與品質監控 active tab。
-3. **Given** `task_id` 無效或使用者無成員資格（`INVALID_TASK_TRIGGER`），**When** 嘗試進入詳情頁，**Then** 導回 `/dataset-analysis` 並顯示錯誤提示。
-4. **Given** 使用者對該任務不存在 `TASK_ROLES_ALLOWED` membership，**When** 嘗試進入詳情頁，**Then** 視為 `INVALID_TASK_TRIGGER`，導回 `/dataset-analysis` 並顯示錯誤提示。
+1. **AC-1.1**：**Given** 使用者從 `dataset-analysis-list` 點擊任務卡片，**When** 進入詳情頁，**Then** 導向 `/dataset-analysis-detail/:task_id?tab=stats`，並渲染 detail shell 與統計總覽 active tab。
+2. **AC-1.2**：**Given** 使用者從 Dashboard「IAA 待確認」badge 進入，**When** 開啟詳情頁，**Then** 導向 `/dataset-analysis-detail/:task_id?tab=quality`，並渲染 detail shell 與品質監控 active tab。
+3. **AC-1.3**：**Given** `task_id` 無效或使用者無成員資格（`INVALID_TASK_TRIGGER`），**When** 嘗試進入詳情頁，**Then** 導回 `/dataset-analysis` 並顯示錯誤提示。
+4. **AC-1.4**：**Given** 使用者對該任務不存在 `TASK_ROLES_ALLOWED` membership，**When** 嘗試進入詳情頁，**Then** 視為 `INVALID_TASK_TRIGGER`，導回 `/dataset-analysis` 並顯示錯誤提示。
 
 **介面定義（需與 IA 導覽語意一致）**：
 
@@ -206,16 +210,16 @@ sequenceDiagram
 
 **驗收情境**：
 
-1. **Given** 任務 `outputs[]` 含 `single_label`，**When** 進入統計總覽 tab，**Then** 顯示 `SHARED_METRICS` 與該輸出類型的標籤次數 / 比例長條圖。
-2. **Given** 任務 `outputs[]` 含 `multi_label`，**When** 進入統計總覽 tab，**Then** 顯示標籤次數 / 比例長條圖與多標籤共現矩陣。
-3. **Given** 任務 `outputs[]` 含 `single_dim`，**When** 進入統計總覽 tab，**Then** 顯示該維度分佈直方圖與平均值 / 標準差 / 中位數統計摘要。
-4. **Given** 任務 `outputs[]` 含 `multi_dim`，**When** 進入統計總覽 tab，**Then** 依維度數量顯示逐維度分佈直方圖與統計摘要，並提供維度間分佈視覺化（2 維為 scatter plot，3 維以上為逐對散佈或平行座標）。
-5. **Given** 任務 `outputs[]` 含 `entity_recognition`，**When** 進入統計總覽 tab，**Then** 顯示實體類型分佈、每句平均實體數、Entity span 長度分佈。
-6. **Given** 任務 `outputs[]` 含 `relation_identification`，**When** 進入統計總覽 tab，**Then** 顯示關係類型分佈與 Triple 數量統計；若同任務 `outputs[]` 亦含 `entity_recognition`，實體類型分佈僅顯示於 `entity_recognition` 區塊，不重複呈現。
-7. **Given** 任務 `outputs[]` 含 `sequence_tagging`，**When** 進入統計總覽 tab，**Then** 顯示標記類型（tag）分佈、每句平均標記片段數、標記片段長度分佈。
-8. **Given** 任務 `outputs[]` 含 `free_text`，**When** 進入統計總覽 tab，**Then** 顯示已提交回答數與平均回答字數，不提供標籤 / 分數類圖表。
-9. **Given** 任務 `outputs[]` 含多個輸出類型，**When** 進入統計總覽 tab，**Then** 依 `outputs[]` 原順序逐型並列顯示各自的特定統計區塊。
-10. **Given** 尚無已提交標記資料（`STATS_EMPTY_STATE_TRIGGER`），**When** 進入統計總覽 tab，**Then** 顯示「尚無標記資料，請先發布 Dry Run」與「前往任務詳情」次要按鈕。
+1. **AC-2.1**：**Given** 任務 `outputs[]` 含 `single_label`，**When** 進入統計總覽 tab，**Then** 顯示 `SHARED_METRICS` 與該輸出類型的標籤次數 / 比例長條圖。
+2. **AC-2.2**：**Given** 任務 `outputs[]` 含 `multi_label`，**When** 進入統計總覽 tab，**Then** 顯示標籤次數 / 比例長條圖與多標籤共現矩陣。
+3. **AC-2.3**：**Given** 任務 `outputs[]` 含 `single_dim`，**When** 進入統計總覽 tab，**Then** 顯示該維度分佈直方圖與平均值 / 標準差 / 中位數統計摘要。
+4. **AC-2.4**：**Given** 任務 `outputs[]` 含 `multi_dim`，**When** 進入統計總覽 tab，**Then** 依維度數量顯示逐維度分佈直方圖與統計摘要，並提供維度間分佈視覺化（2 維為 scatter plot，3 維以上為逐對散佈或平行座標）。
+5. **AC-2.5**：**Given** 任務 `outputs[]` 含 `entity_recognition`，**When** 進入統計總覽 tab，**Then** 顯示實體類型分佈、每句平均實體數、Entity span 長度分佈。
+6. **AC-2.6**：**Given** 任務 `outputs[]` 含 `relation_identification`，**When** 進入統計總覽 tab，**Then** 顯示關係類型分佈與 Triple 數量統計；若同任務 `outputs[]` 亦含 `entity_recognition`，實體類型分佈僅顯示於 `entity_recognition` 區塊，不重複呈現。
+7. **AC-2.7**：**Given** 任務 `outputs[]` 含 `sequence_tagging`，**When** 進入統計總覽 tab，**Then** 顯示標記類型（tag）分佈、每句平均標記片段數、標記片段長度分佈。
+8. **AC-2.8**：**Given** 任務 `outputs[]` 含 `free_text`，**When** 進入統計總覽 tab，**Then** 顯示已提交回答數與平均回答字數，不提供標籤 / 分數類圖表。
+9. **AC-2.9**：**Given** 任務 `outputs[]` 含多個輸出類型，**When** 進入統計總覽 tab，**Then** 依 `outputs[]` 原順序逐型並列顯示各自的特定統計區塊。
+10. **AC-2.10**：**Given** 尚無已提交標記資料（`STATS_EMPTY_STATE_TRIGGER`），**When** 進入統計總覽 tab，**Then** 顯示「尚無標記資料，請先發布 Dry Run」與「前往任務詳情」次要按鈕。
 
 **介面定義（需與 IA 導覽語意一致）**：
 
@@ -266,23 +270,23 @@ sequenceDiagram
 
 **驗收情境**：
 
-1. **Given** `outputs[]` 含 `single_label`，**When** 進入品質監控，**Then** 顯示 Krippendorff's Alpha（nominal）⭐️ 為主要指標，輔助指標區（Cohen's Kappa / Fleiss' Kappa）可展開顯示，並標示 `IAA_THRESHOLD_SINGLE_LABEL`。
-2. **Given** `outputs[]` 含 `multi_label`，**When** 進入品質監控，**Then** 顯示逐標籤 Alpha → 巨集平均 ⭐️ 為主要指標，正例出現次數 `< IAA_LABEL_MIN_POSITIVE` 的標籤排除於巨集平均並標示排除清單，並標示 `IAA_THRESHOLD_MULTI_LABEL`。
-3. **Given** `outputs[]` 含 `single_dim`，**When** 進入品質監控，**Then** 顯示 ICC ⭐️ 為主要指標，並標示 `IAA_THRESHOLD_SINGLE_DIM_RECOMMENDED` 與 `IAA_THRESHOLD_SINGLE_DIM_STRICT`。
-4. **Given** `outputs[]` 含 `multi_dim`，**When** 進入品質監控，**Then** 顯示逐維度 ICC → 巨集平均 ⭐️ 為主要指標，並標示 `IAA_THRESHOLD_MULTI_DIM_RECOMMENDED` 與 `IAA_THRESHOLD_MULTI_DIM_STRICT`。
-5. **Given** `outputs[]` 含 `entity_recognition`，**When** 進入品質監控，**Then** 顯示 Pairwise Span F1 strict ⭐️ 為主要指標，partial-overlap F1 僅供顯示切換且不影響達標判定，並標示 `IAA_THRESHOLD_ENTITY_RECOGNITION_STRICT`。
-6. **Given** `outputs[]` 含 `relation_identification`，**When** 進入品質監控，**Then** 顯示 Pairwise Triple-level F1 ⭐️ 為主要指標，entity-level F1 以輔助指標顯示，並標示 `IAA_THRESHOLD_RELATION_IDENTIFICATION`（`IAA_THRESHOLD_RELATION_IDENTIFICATION_HIGH_DISPLAY` 僅為「高品質」顯示帶）。
-7. **Given** `outputs[]` 含 `sequence_tagging`，**When** 進入品質監控，**Then** 顯示 Token-level Alpha ⭐️ 為主要指標，計算前遮罩全體標記員皆標為 `O` 的 token，並標示 `IAA_THRESHOLD_TOKEN`。
-8. **Given** `outputs[]` 含 `free_text`，**When** 進入品質監控，**Then** 該輸出類型子區塊顯示「不適用—由審核員評估」狀態，不計入自動 IAA，且不得顯示空白或 0。
-9. **Given** `outputs[]` 含多個輸出類型，**When** 進入品質監控，**Then** 依原順序逐型並列顯示各自 IAA 報告，並顯示任務層級 `x/y` 達標徽章（依 `IAA_COMPOSITE_BADGE_FORMAT`）。
-10. **Given** 任務 `outputs[]` 僅含 `free_text`（`y = 0`），**When** 進入品質監控，**Then** 任務層級摘要狀態為 `IAA_SUMMARY_STATES = not_applicable`，不顯示任何 pass / fail 判定。
-11. **Given** 完成標記員數 `n < IAA_SMALL_SAMPLE_THRESHOLD`，**When** 檢視任一輸出類型的 IAA 指標，**Then** 指標旁顯示中性「小樣本估計」警示徽章，不阻擋閘門且點估計照常顯示。
-12. **Given** Dry Run 尚未完成（`QUALITY_EMPTY_STATE_TRIGGER`），**When** 進入品質監控，**Then** 顯示「IAA 報告將在 Dry Run 完成後產生」與「前往任務詳情」次要按鈕；若可由 `outputs[]` 靜態算出 `y`，另以 `IAA_PENDING_BADGE_FORMAT` 顯示待完成徽章。
-13. **Given** `outputs[]` 含 `LOW_CONSISTENCY_SAMPLE_SCOPE` 中任一型別（`single_label` / `multi_label` / `single_dim` / `multi_dim` / `entity_recognition` / `relation_identification` / `sequence_tagging`），**When** 進入品質監控，**Then** 該型別子區塊顯示「一致性最低樣本清單」，依 `DISAGREEMENT_SAMPLE_SORT` 由高到低排序，並依型別使用對應分歧度計算單位；`outputs[]` 含 `free_text` 時，該型別不顯示此清單。
-14. **Given** `outputs[]` 含 `ANNOTATOR_QUALITY_RANKING_SCOPE` 中任一型別，**When** 進入品質監控，**Then** 該型別子區塊顯示「標記員品質排名」，依型別對應一致率計算方式排序，且完成樣本數 `< IAA_SMALL_SAMPLE_THRESHOLD` 的標記員顯示小樣本估計警示但不被剔除；`outputs[]` 含 `free_text` 時，該型別不參與排名。
-15. **Given** `outputs[]` 含 `entity_recognition` 或 `sequence_tagging`，**When** 進入品質監控，**Then** 該型別子區塊顯示「邊界分歧分析」，統計部分重疊但邊界不一致的案例數與範例；其他輸出類型不顯示邊界分歧分析區塊。
-16. **Given** 任一輸出類型的有效樣本數 `< 2` 或有效標記員數 `< 2`（`De = 0`），**When** 檢視該型別的主要 IAA 指標，**Then** 顯示明確的「無法計算」狀態並附說明原因，不得顯示 `0.00` 或任何回退數值，且不阻擋使用者進入正式標記（FR-039）。
-17. **Given** 任一標記員名下、`annotation-015` 定義之審核單位（sample × annotator）中已有至少一位審核員提交決策，**When** 檢視「標記員被修改率」表格，**Then** 該標記員在對應 `output_type` 欄位顯示 `modified_units / reviewed_units` 之比率，其中 `pending`（無審核員提交）審核單位不計入分母，且分子不得以 `REVIEW_UNIT_STATUS.MODIFIED` 狀態值計數（FR-040）；表格為任務層級（列 = 標記員），置於逐輸出類型子區塊迴圈之外。
+1. **AC-3.1**：**Given** `outputs[]` 含 `single_label`，**When** 進入品質監控，**Then** 顯示 Krippendorff's Alpha（nominal）⭐️ 為主要指標，輔助指標區（Cohen's Kappa / Fleiss' Kappa）可展開顯示，並標示 `IAA_THRESHOLD_SINGLE_LABEL`。
+2. **AC-3.2**：**Given** `outputs[]` 含 `multi_label`，**When** 進入品質監控，**Then** 顯示逐標籤 Alpha → 巨集平均 ⭐️ 為主要指標，正例出現次數 `< IAA_LABEL_MIN_POSITIVE` 的標籤排除於巨集平均並標示排除清單，並標示 `IAA_THRESHOLD_MULTI_LABEL`。
+3. **AC-3.3**：**Given** `outputs[]` 含 `single_dim`，**When** 進入品質監控，**Then** 顯示 ICC ⭐️ 為主要指標，並標示 `IAA_THRESHOLD_SINGLE_DIM_RECOMMENDED` 與 `IAA_THRESHOLD_SINGLE_DIM_STRICT`。
+4. **AC-3.4**：**Given** `outputs[]` 含 `multi_dim`，**When** 進入品質監控，**Then** 顯示逐維度 ICC → 巨集平均 ⭐️ 為主要指標，並標示 `IAA_THRESHOLD_MULTI_DIM_RECOMMENDED` 與 `IAA_THRESHOLD_MULTI_DIM_STRICT`。
+5. **AC-3.5**：**Given** `outputs[]` 含 `entity_recognition`，**When** 進入品質監控，**Then** 顯示 Pairwise Span F1 strict ⭐️ 為主要指標，partial-overlap F1 僅供顯示切換且不影響達標判定，並標示 `IAA_THRESHOLD_ENTITY_RECOGNITION_STRICT`。
+6. **AC-3.6**：**Given** `outputs[]` 含 `relation_identification`，**When** 進入品質監控，**Then** 顯示 Pairwise Triple-level F1 ⭐️ 為主要指標，entity-level F1 以輔助指標顯示，並標示 `IAA_THRESHOLD_RELATION_IDENTIFICATION`（`IAA_THRESHOLD_RELATION_IDENTIFICATION_HIGH_DISPLAY` 僅為「高品質」顯示帶）。
+7. **AC-3.7**：**Given** `outputs[]` 含 `sequence_tagging`，**When** 進入品質監控，**Then** 顯示 Token-level Alpha ⭐️ 為主要指標，計算前遮罩全體標記員皆標為 `O` 的 token，並標示 `IAA_THRESHOLD_TOKEN`。
+8. **AC-3.8**：**Given** `outputs[]` 含 `free_text`，**When** 進入品質監控，**Then** 該輸出類型子區塊顯示「不適用—由審核員評估」狀態，不計入自動 IAA，且不得顯示空白或 0。
+9. **AC-3.9**：**Given** `outputs[]` 含多個輸出類型，**When** 進入品質監控，**Then** 依原順序逐型並列顯示各自 IAA 報告，並顯示任務層級 `x/y` 達標徽章（依 `IAA_COMPOSITE_BADGE_FORMAT`）。
+10. **AC-3.10**：**Given** 任務 `outputs[]` 僅含 `free_text`（`y = 0`），**When** 進入品質監控，**Then** 任務層級摘要狀態為 `IAA_SUMMARY_STATES = not_applicable`，不顯示任何 pass / fail 判定。
+11. **AC-3.11**：**Given** 完成標記員數 `n < IAA_SMALL_SAMPLE_THRESHOLD`，**When** 檢視任一輸出類型的 IAA 指標，**Then** 指標旁顯示中性「小樣本估計」警示徽章，不阻擋閘門且點估計照常顯示。
+12. **AC-3.12**：**Given** Dry Run 尚未完成（`QUALITY_EMPTY_STATE_TRIGGER`），**When** 進入品質監控，**Then** 顯示「IAA 報告將在 Dry Run 完成後產生」與「前往任務詳情」次要按鈕；若可由 `outputs[]` 靜態算出 `y`，另以 `IAA_PENDING_BADGE_FORMAT` 顯示待完成徽章。
+13. **AC-3.13**：**Given** `outputs[]` 含 `LOW_CONSISTENCY_SAMPLE_SCOPE` 中任一型別（`single_label` / `multi_label` / `single_dim` / `multi_dim` / `entity_recognition` / `relation_identification` / `sequence_tagging`），**When** 進入品質監控，**Then** 該型別子區塊顯示「一致性最低樣本清單」，依 `DISAGREEMENT_SAMPLE_SORT` 由高到低排序，並依型別使用對應分歧度計算單位；`outputs[]` 含 `free_text` 時，該型別不顯示此清單。
+14. **AC-3.14**：**Given** `outputs[]` 含 `ANNOTATOR_QUALITY_RANKING_SCOPE` 中任一型別，**When** 進入品質監控，**Then** 該型別子區塊顯示「標記員品質排名」，依型別對應一致率計算方式排序，且完成樣本數 `< IAA_SMALL_SAMPLE_THRESHOLD` 的標記員顯示小樣本估計警示但不被剔除；`outputs[]` 含 `free_text` 時，該型別不參與排名。
+15. **AC-3.15**：**Given** `outputs[]` 含 `entity_recognition` 或 `sequence_tagging`，**When** 進入品質監控，**Then** 該型別子區塊顯示「邊界分歧分析」，統計部分重疊但邊界不一致的案例數與範例；其他輸出類型不顯示邊界分歧分析區塊。
+16. **AC-3.16**：**Given** 任一輸出類型的有效樣本數 `< 2` 或有效標記員數 `< 2`（`De = 0`），**When** 檢視該型別的主要 IAA 指標，**Then** 顯示明確的「無法計算」狀態並附說明原因，不得顯示 `0.00` 或任何回退數值，且不阻擋使用者進入正式標記（FR-039）。
+17. **AC-3.17**：**Given** 任一標記員名下、`annotation-015` 定義之審核單位（sample × annotator）中已有至少一位審核員提交決策，**When** 檢視「標記員被修改率」表格，**Then** 該標記員在對應 `output_type` 欄位顯示 `modified_units / reviewed_units` 之比率，其中 `pending`（無審核員提交）審核單位不計入分母，且分子不得以 `REVIEW_UNIT_STATUS.MODIFIED` 狀態值計數（FR-040）；表格為任務層級（列 = 標記員），置於逐輸出類型子區塊迴圈之外。
 
 **介面定義（需與 IA 導覽語意一致）**：
 
@@ -344,9 +348,9 @@ sequenceDiagram
 
 **驗收情境**：
 
-1. **Given** 使用者位於 `/dataset-analysis-detail/:task_id?tab=stats`，**When** 點擊「品質監控」tab，**Then** 更新 `?tab=quality`，頁內切換且任務上下文不變。
-2. **Given** 使用者位於 `/dataset-analysis-detail/:task_id?tab=quality`，**When** 點擊「統計總覽」tab，**Then** 更新 `?tab=stats`，頁內切換且任務上下文不變。
-3. **Given** 使用者已於任一 tab 捲動內容，**When** 切換到另一 tab 再切回，**Then** 各 tab 捲動位置彼此獨立且不被重置。
+1. **AC-4.1**：**Given** 使用者位於 `/dataset-analysis-detail/:task_id?tab=stats`，**When** 點擊「品質監控」tab，**Then** 更新 `?tab=quality`，頁內切換且任務上下文不變。
+2. **AC-4.2**：**Given** 使用者位於 `/dataset-analysis-detail/:task_id?tab=quality`，**When** 點擊「統計總覽」tab，**Then** 更新 `?tab=stats`，頁內切換且任務上下文不變。
+3. **AC-4.3**：**Given** 使用者已於任一 tab 捲動內容，**When** 切換到另一 tab 再切回，**Then** 各 tab 捲動位置彼此獨立且不被重置。
 
 **行為規則**：
 
@@ -585,6 +589,7 @@ flowchart LR
 
 | Version | Date | Change Summary |
 | --- | --- | --- |
+| 2.2.1 | 2026-09-05 | **補上 `## 功能目標` 章節與驗收情境 AC-N.N 穩定 ID（patch，無條文變更）**：本規格建立於 AC 穩定 ID 標準（spec-template v1.5.0）之前，且缺少 `## 功能目標` 章節，導致 `scripts/check-sdd.sh` 的 `SPEC_REQUIRED_HEADING`／`SPEC_REQUIRED_IDS` 規則將本檔標記為結構不完整，後續 OpenSpec change 亦無穩定情境編號可引用。本版純為結構補完：新增 `## 功能目標` 章節摘要本規格目的；依既有標準為四組使用者故事共 34 條驗收情境補上 `AC-<故事編號>.<情境序號>` 前綴（AC-1.1~1.4、AC-2.1~2.10、AC-3.1~3.17、AC-4.1~4.3）。情境文字、FR/SC 條文與編號順序皆未更動，不新增或刪除任何 FR/AC。 |
 | 2.2.0 | 2026-08-27 | **017 成為 IAA 閘門語意與標記員被修改率之跨模組唯一權威來源（SSoT，minor）**：六張 issue（#488/#489/#490/#491/#492/#456）收斂到同一根因——試標品質數值缺乏 SSoT，經維護者裁決 017 承接此角色。新增 **FR-039**（IAA 閘門語意 SSoT）：定案並升格為跨模組正典（1）IAA 為顧問性指標、`waiting_iaa_confirmation` 為軟性警告不阻擋流程（承接並升格既有 FR-034 語意）；（2）α 輸入僅限標記員原始標記，審核員修正值不計入；（3）α 以單一 `trial_round` 為計算單位、不跨回合累積；（4）`De = 0`（有效樣本 `< 2` 或有效標記員 `< 2`）時必須顯示「無法計算」，不得回退顯示 `0.00` 或阻擋流程；（5）排除規則明文引用 `task-management-014` FR-005h（排除作業不計入）與 FR-005l（停用成員既有標記仍計入），不重新定義；（6）Bypass 視為缺值，不計入分母、不得比對為空白答案。新增 **FR-040**（標記員被修改率，另立區塊）：新規格常數 `ANNOTATOR_MODIFICATION_RATE_SCOPE`（8 型全納，含 `free_text`——與 `ANNOTATOR_QUALITY_RANKING_SCOPE` 排除 `free_text` 之 7 型範圍刻意不同，理由是被修改率不依賴跨標記員比對，且是 `free_text` 唯一可能擁有的品質指標，故未併入既有 FR-036／`AnnotatorQualityRankingEntry`）；新實體 `AnnotatorModificationRateEntry`；分子明文禁止以 `annotation-015` `REVIEW_UNIT_STATUS.MODIFIED`（FR-051）狀態值計數（該狀態語意為「有改動且未達 `min_reviewers` 門檻」，會漏計所有已達門檻的改動單位），須改以 FR-052 逐輸出類型差異比對結果為準；分母排除 `pending`（未審 ≠ 未修改）；呈現形狀為任務層級表格（列 = 標記員），置於逐輸出類型迴圈之外，區塊 A-5。**run_type 範圍限縮**：指標定義本身與 `run_type` 無關（`official_run` 每筆樣本恰一位標記員、α 無法計算，被修改率為其唯一逐標記員品質訊號），但本版呈現僅落地 `dry_run` 區塊，因 quality tab 現行整體綁定 `dry_run`（`QUALITY_EMPTY_STATE_TRIGGER` 等）；`official_run` 呈現位置留待後續變更。**兩項規格可寫但原型不落實，明文記載**：(1) 排除規則一（Bypass）需要 `annotation-015` `OutputAnswer.bypass` 旗標帶入原型 `convertSubmissionAnswer()` 的 CompactAnswer 輸出（現況不帶）；(2) 排除規則二（`ExcludedAnnotationAssignment`）需要後端共用儲存，原型排除清單現為 task-detail 頁面區域記憶體變數、標記工作區零知悉。新增使用者故事 3 驗收情境 16、17 與 SC-029 ~ SC-032。**修正反向懸空引用**：規格常數區「逐型一致性最低樣本清單」段落、FR-035A、行為規則段落、`LowConsistencySampleList` 實體、規格相依性表 `annotation-015` 列、SC-026 共 6 處原引用 `annotation-015`（v3.0.0）dry_run 共識仲裁流程中的「divergent」分歧項為同源概念、並宣告「仲裁行為以 `annotation-015` 為準」——該流程已於 `annotation-015` v4.0.0（見其「使用者故事 3」的「⚠️ v4.0.0 適用範圍再次收斂（BREAKING）」段落）整批廢止，繼續援引將形成 017 ↔ 015 循環授權（017 已為 IAA SSoT，卻將仲裁權威外推回已死流程）；修正為 017 自行定義一致性最低樣本清單，不再外推仲裁規則，並改引用 `annotation-015` 現行審核單位狀態機（`ReviewUnit`／`REVIEW_UNIT_STATUS`，FR-051）與爭議池作為對照說明。規格相依性表同步更新 `task-management-014`／`annotation-015` 兩列，明確列出 FR-005h／FR-005l／FR-051／FR-052／`OutputAnswer.bypass` 為本版新增之上游引用。 |
 | 2.1.2 | 2026-08-24 | Issue #261 drift 修正（FR-002 / `INVALID_TASK_TRIGGER`）：`dataset-analysis-detail.html` 的 `applyRouteTask()` 先前對未知或缺漏的 `task_id` 靜默回退至 `DEFAULT_TASK_ID`（T001），與本規格 FR-002／邊界情況「`task_id` 不存在或無成員資格時導回 `/dataset-analysis` 並顯示錯誤提示」不符——規格條文原本正確，僅原型未落實。修正為 init 階段先驗證 `task_id` 是否存在於 `TASK_META`，不存在則導向 `dataset-analysis-list.html?invalid_task=1`，列表頁讀取該參數並顯示錯誤 toast（新增 i18n 鍵 `toastInvalidTask`，zh／en 皆定義），顯示後即由既有 `syncUrl()` 清除該查詢參數。回歸測試：`dataset-analysis-detail-registry-mirror.spec.ts` 原本鎖定「未知 ID 仍回退預設任務」的測試改為斷言正確的導回行為，並新增「缺漏 `task_id`」情境；連帶修正兩個原本依賴回退行為省略 `task_id` 查詢字串的既有測試（`dataset-analysis-detail-panel-behavior.spec.ts`、`tests/shared/page-heading-baseline.spec.ts`）改為明確帶入有效 `task_id`。規格條文未變。 |
 | 2.1.1 | 2026-08-24 | Issue #261：新增 Prototype Traceability，明確對應 dataset-analysis-detail 主頁 shell、Stats／Quality 兩組共 16 個 partial 與設計層參考的責任邊界；規格條文未變。 |
