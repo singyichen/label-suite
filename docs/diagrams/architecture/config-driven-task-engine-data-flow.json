@@ -1,0 +1,228 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Config-Driven 任務引擎資料流",
+    "output": "docs/diagrams/architecture/config-driven-task-engine-data-flow.html",
+    "viewBox": [1280, 600],
+    "animation": "none",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "config-to-ui",
+        "label": "設定到標記介面",
+        "focus": ["task-config", "fragment-validation", "composition-validation", "workspace-dispatch", "annotation-workspace"],
+        "note": "追蹤 outputs[] 如何經逐型驗證、組合驗證與 source_output 排序後驅動標記面板。"
+      },
+      {
+        "id": "config-to-quality",
+        "label": "設定到 IAA",
+        "focus": ["task-config", "composition-validation", "iaa-registry", "iaa-calculation", "dataset-export"],
+        "note": "每個 output type 各自查找指標與門檻；free_text 明確標為不適用。"
+      },
+      {
+        "id": "all-consumers",
+        "label": "四個下游消費者",
+        "focus": ["output-type-registry", "workspace-dispatch", "iaa-registry", "export-contract", "task-new", "annotation-workspace", "iaa-calculation", "dataset-export"],
+        "note": "同一份 input_type + outputs[] 契約供建立、標記、品質與匯出流程使用。"
+      }
+    ]
+  },
+  "stages": [
+    { "label": "統一設定" },
+    { "label": "逐型驗證" },
+    { "label": "組合驗證" },
+    { "label": "Registry 分派" },
+    { "label": "下游消費者" }
+  ],
+  "nodes": [
+    {
+      "id": "task-config",
+      "type": "external",
+      "label": "TaskConfig",
+      "stage": 0,
+      "row": 2,
+      "width": 150
+    },
+    {
+      "id": "fragment-validation",
+      "type": "security",
+      "label": "Fragment validation",
+      "stage": 1,
+      "row": 2,
+      "width": 150
+    },
+    {
+      "id": "composition-validation",
+      "type": "security",
+      "label": "Composition validation",
+      "stage": 2,
+      "row": 2,
+      "width": 150
+    },
+    {
+      "id": "output-type-registry",
+      "type": "backend",
+      "label": "OUTPUT_TYPE_REGISTRY",
+      "stage": 3,
+      "row": 0,
+      "width": 150
+    },
+    {
+      "id": "workspace-dispatch",
+      "type": "messagebus",
+      "label": "Workspace dispatch",
+      "stage": 3,
+      "row": 1,
+      "width": 150
+    },
+    {
+      "id": "iaa-registry",
+      "type": "database",
+      "label": "OUTPUT_TYPE_IAA_REGISTRY",
+      "stage": 3,
+      "row": 2,
+      "width": 150
+    },
+    {
+      "id": "export-contract",
+      "type": "cloud",
+      "label": "Export contract",
+      "stage": 3,
+      "row": 3,
+      "yOffset": -10,
+      "width": 150
+    },
+    {
+      "id": "task-new",
+      "type": "frontend",
+      "label": "Task New 設定生成",
+      "stage": 4,
+      "row": 0,
+      "width": 150
+    },
+    {
+      "id": "annotation-workspace",
+      "type": "frontend",
+      "label": "Annotation Workspace",
+      "stage": 4,
+      "row": 1,
+      "width": 150
+    },
+    {
+      "id": "iaa-calculation",
+      "type": "backend",
+      "label": "逐型 IAA 計算／呈現",
+      "stage": 4,
+      "row": 2,
+      "width": 150
+    },
+    {
+      "id": "dataset-export",
+      "type": "cloud",
+      "label": "Dataset Export",
+      "stage": 4,
+      "row": 3,
+      "yOffset": -10,
+      "width": 150
+    }
+  ],
+  "flows": [
+    {
+      "id": "config-fragments",
+      "from": "task-config",
+      "to": "fragment-validation",
+      "label": "fragments",
+      "variant": "emphasis",
+      "labelAt": [208, 428]
+    },
+    {
+      "id": "fragments-compose",
+      "from": "fragment-validation",
+      "to": "composition-validation",
+      "label": "validated",
+      "variant": "emphasis",
+      "labelAt": [423, 428]
+    },
+    {
+      "id": "compose-config-ui",
+      "from": "composition-validation",
+      "to": "output-type-registry",
+      "label": "fields",
+      "variant": "emphasis",
+      "labelAt": [638, 210]
+    },
+    {
+      "id": "compose-workspace",
+      "from": "composition-validation",
+      "to": "workspace-dispatch",
+      "label": "source_output",
+      "variant": "security",
+      "labelAt": [560, 324]
+    },
+    {
+      "id": "compose-iaa",
+      "from": "composition-validation",
+      "to": "iaa-registry",
+      "label": "IAA registry",
+      "variant": "default",
+      "labelAt": [560, 428]
+    },
+    {
+      "id": "compose-export",
+      "from": "composition-validation",
+      "to": "export-contract",
+      "label": "export schema",
+      "variant": "dashed",
+      "labelAt": [638, 532]
+    },
+    {
+      "id": "registry-task-new",
+      "from": "output-type-registry",
+      "to": "task-new",
+      "label": "generate",
+      "variant": "emphasis",
+      "labelAt": [853, 200]
+    },
+    {
+      "id": "dispatch-workspace",
+      "from": "workspace-dispatch",
+      "to": "annotation-workspace",
+      "label": "render",
+      "variant": "security",
+      "labelAt": [853, 314]
+    },
+    {
+      "id": "iaa-consumer",
+      "from": "iaa-registry",
+      "to": "iaa-calculation",
+      "label": "calculate",
+      "variant": "emphasis",
+      "labelAt": [853, 428]
+    },
+    {
+      "id": "export-consumer",
+      "from": "export-contract",
+      "to": "dataset-export",
+      "label": "serialize",
+      "variant": "dashed",
+      "labelAt": [853, 532]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "violet",
+      "title": "Generalization-First、依據與實作邊界",
+      "items": [
+        "TaskConfig = { input_type, outputs[], field_role_map }；OUTPUT_TYPE_REGISTRY 提供 fields、defaultConfig、renderer metadata；OUTPUT_TYPE_IAA_REGISTRY 提供 metric、defaultThreshold、notApplicable",
+        "核心流程不得以 if task_type == ... 分支；Fragment validation 與 composition validation 分階段",
+        "source_output 必須引用同任務既有 output、不得成環；來源先完成，無相依 outputs 可任意順序",
+        "ADR：docs/adr/010-config-driven-architecture.md · docs/adr/029-output-type-composition.md",
+        "Specs：specs/task-management/013-task-new/spec.md · specs/annotation/015-annotation-workspace/spec.md · specs/dataset/017-dataset-analysis-detail/spec.md",
+        "Registry prototype：design/prototype/pages/task-management/task-config.data.js · design/prototype/pages/task-management/task-config.engine.js",
+        "Consumer prototypes：design/prototype/pages/annotation/annotation-workspace.config.js · design/prototype/pages/dataset/dataset-analysis-detail.html · design/prototype/pages/task-management/task-detail.html",
+        "ADR-029 明載 backend 尚未實作；虛線 Dataset Export 表示契約，不宣稱既有 backend runtime"
+      ]
+    }
+  ]
+}
