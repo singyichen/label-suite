@@ -14,6 +14,15 @@ design/prototype/pages/[module]/   ← HTML prototypes
 
 **Feature modules**: `account` · `dashboard` · `task-management` · `annotation` · `dataset` · `admin`
 
+**Architecture diagrams** — read the one covering your module before changing cross-module wiring. Each is a standalone HTML file (open it directly in a browser); the paired `.json` is the editable source, so change the `.json` and regenerate, never hand-edit the HTML.
+
+| Diagram | Covers |
+|---------|--------|
+| [`docs/diagrams/architecture/system-container-architecture.html`](docs/diagrams/architecture/system-container-architecture.html) | System/container boundaries — which container owns which responsibility and how they talk (issue #667) |
+| [`docs/diagrams/architecture/config-driven-task-engine-data-flow.html`](docs/diagrams/architecture/config-driven-task-engine-data-flow.html) | Config-driven task engine data flow — task config → validation → workspace dispatch (issue #668) |
+
+Tool choice and output-location conventions for new diagrams: [`docs/diagrams/README.md`](docs/diagrams/README.md).
+
 ## Hard Rules
 
 1. **No cross-feature imports** — `features/A/` must not import from `features/B/`. Use `shared/` only when 2+ features need it.
