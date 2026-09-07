@@ -1,6 +1,6 @@
 # 圖表工具鏈分工
 
-`docs/diagrams/` 底下存在兩套圖表工具鏈。它們各自解決不同問題，不互相取代。本文說明何時用哪一套、產出放哪裡。
+`docs/diagrams/` 底下存在三套圖表工具鏈。它們各自解決不同問題，不互相取代。本文說明何時用哪一套、產出放哪裡。
 
 ## 分工表
 
@@ -8,6 +8,7 @@
 |------|---------|---------|---------|
 | **`flowchart` skill** | `.claude/skills/flowchart/` | Mermaid（`.mmd`）+ `.png` | 開發者導向的系統流程、狀態機、時序圖 |
 | **`diagram-design` skill** | 全域 `~/.claude/skills/diagram-design/`（見下） | 自包含 `.html` + inline SVG | 給非工程受眾看的流程圖，需套用 Label Suite 品牌樣式 |
+| **`archify` skill** | `.claude/skills/archify/` | 成對的 `.json`（IR 原始檔）+ 自包含 `.html` | 跨模組的系統架構、資料流、時序、狀態機圖，需與實際程式碼結構對得上 |
 
 ## 怎麼選
 
@@ -15,12 +16,24 @@
 
 - **受眾是工程師或 code reviewer** → `flowchart` skill。Mermaid 純文字、diff 友善、GitHub 原生渲染，改一行就看得出改了什麼。缺點是版面與配色不可控。
 - **受眾是產品使用者（標記員、審核員）、教授或 Demo Paper 讀者** → `diagram-design`。它是唯一能套用專案 design token 的一套，圖面顏色會跟實際產品畫面一致；且輸出為單一 HTML 檔，直接用瀏覽器開就能看，不需要任何 renderer。
+- **受眾是要理解系統結構的工程師，且圖必須反映真實程式碼** → `archify`。它把圖表拆成「JSON 原始檔（IR）＋算繪後 HTML」兩份成對檔案：JSON 是純文字、可逐行 diff、可被 schema 驗證，HTML 是可直接開啟的互動成品。這是三套裡唯一同時滿足「diff 友善」與「不需 renderer 即可閱讀」的一套，代價是 HTML 檔約 700 KB。
 
-**再問要不要進版控做逐行比對。** 需要 → Mermaid（原始碼是純文字）。不需要、重點是視覺成品 → `diagram-design`。
+**再問要不要進版控做逐行比對。** 需要 → Mermaid（原始碼是純文字）或 `archify`（JSON IR 是純文字）。不需要、重點是視覺成品 → `diagram-design`。
+
+**最後確認目標圖型是否被支援。** `archify` 只有五種圖型 schema：`architecture`、`dataflow`、`lifecycle`、`sequence`、`workflow`（另有 `common.schema.json`，只是共用 `$defs` 片段，不是可選圖型）。**`archify` 沒有 ER／資料模型（data model）圖型**——需要畫資料庫實體關聯時請改用 `diagram-design`（它支援 ER/data model），不要為了遷就工具把 ER 硬塞進 `architecture` schema。
 
 ## 產出位置慣例
 
 隸屬單一 spec 的圖放該 spec 的 `diagrams/` 資料夾（例如 `specs/annotation/015-annotation-workspace/diagrams/`），歸檔時隨 spec 一起進 `specs/_archive/`。跨模組、無單一歸屬 spec 的總覽圖例外保留在 `docs/diagrams/workflow/`（目前為 `system-workflow.png`、`annotation-pipeline.mmd`/`.png`，被根目錄 `README.md` 引用）。
+
+**跨模組架構圖放 `docs/diagrams/architecture/`。** 這類圖描述的是整個系統的容器邊界或跨模組資料流，不隸屬任何單一 spec，因此不進 `specs/`、也不隨任何 spec 歸檔。目前有兩張，皆由 `archify` 產出：
+
+| 檔案 | `diagram_type` | 內容 |
+|------|---------------|------|
+| [`architecture/system-container-architecture.html`](./architecture/system-container-architecture.html) | `architecture` | 系統／容器架構（issue #667） |
+| [`architecture/config-driven-task-engine-data-flow.html`](./architecture/config-driven-task-engine-data-flow.html) | `dataflow` | Config-Driven 任務引擎資料流（issue #668） |
+
+`archify` 要**同時提交 `.json` 與 `.html`**：`.json` 是唯一可 diff、可驗證的原始檔，`.html` 是唯一不需工具鏈即可閱讀的成品，缺任一邊都會讓圖變成不可維護的黑盒。改圖時改 `.json` 再重跑 `deliver` 重生 `.html`，不要手改 `.html`。
 
 Mermaid 要**同時提交 `.mmd` 原始檔與算繪後的 `.png`**，否則沒有 renderer 的讀者看不到內容。`diagram-design` 的 HTML 本身即成品，不需要另附圖檔；spec.md 內以相對路徑連結 HTML 即可，不另出 PNG（issue #528 決議 Q4）。
 
