@@ -2084,16 +2084,15 @@
     });
   }
 
-  /* issue #596: the roster that decides assignment lives HERE, not at any
-   * call site -- 014's `reviewer_ids` field is not wired up until PR
-   * group 5 (design.md D7), so today's only source is the REVIEWER_ROSTER
-   * demo seed (~line 214). Group 4's annotation-list (the only caller
-   * until group 5) only ever needs "which units is THIS reviewer
-   * assigned", never the roster itself; keeping the lookup here means
-   * group 5 swaps the roster source in exactly one place instead of
-   * every call site. */
-  function getAssignedReviewUnits(runType, reviewerId, units) {
-    var roster = REVIEWER_ROSTER.map(function (r) { return r.id; });
+  /* issue #617: the roster that decides assignment lives HERE, not at any
+   * call site. `taskReviewerIds` is 014's `TaskDetail.reviewer_ids` for the
+   * task being viewed; the REVIEWER_ROSTER demo seed (~line 214) is only a
+   * fallback for tasks that have not set their own roster, so a caller
+   * needs to pass just the one field instead of the roster lookup itself. */
+  function getAssignedReviewUnits(runType, reviewerId, units, taskReviewerIds) {
+    var roster = Array.isArray(taskReviewerIds) && taskReviewerIds.length
+      ? taskReviewerIds
+      : REVIEWER_ROSTER.map(function (r) { return r.id; });
     return getReviewAssignments(runType, units, roster)
       .filter(function (assignment) { return assignment.reviewer_id === reviewerId; })
       .map(function (assignment) {

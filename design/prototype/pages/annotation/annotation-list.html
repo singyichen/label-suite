@@ -924,7 +924,8 @@
       fieldRoleMap: detailProfile.fieldRoleMap || {},
       datasetRecords: detailProfile.datasetRecords || [],
       materializedRuns: detailProfile.materializedRuns || null,
-      minReviewers: detailProfile.minReviewers || 1
+      minReviewers: detailProfile.minReviewers || 1,
+      reviewerIds: detailProfile.reviewerIds || null
     };
   }
 
@@ -1680,7 +1681,8 @@
       context.runType, reviewerId,
       units.map(function (unit) {
         return { sample_id: unit.recordId, annotator_id: unit.annotator };
-      }));
+      }),
+      context.profile && context.profile.reviewerIds);
     /* NUL-joined: no sample or annotator id can contain one, so two
        different units can never collide onto the same key. */
     var mine = {};
