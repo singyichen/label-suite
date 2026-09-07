@@ -165,14 +165,18 @@
         return { start: entity.start, end: entity.end, label: entity.type, text: entity.text };
       });
     },
-    /* Tags live one per token index, so the index IS the position; every
-       non-O token is a one-unit span and a retag reads as delete + add. */
+    /* Spans carry their own character offsets since issue #581 moved this
+       type off per-token BIO tags, so the token index is no longer the
+       position and a span can be longer than one unit. The retired `.tokens`
+       read that stood here survived that migration and returned an empty
+       list for every snapshot, which the panel rendered as "no change" with
+       no error to notice -- issue #684. `text` falls back to the label
+       because the restore path keeps only `(start, end, label)`. */
     sequence_tagging: function (snapshot) {
-      var tags = ((snapshot.previewState || {}).sequence_tagging || {}).tokens;
-      return (Array.isArray(tags) ? tags : []).reduce(function (spans, tag, idx) {
-        if (tag && tag !== 'O') spans.push({ start: idx, end: idx, label: tag, text: tag });
-        return spans;
-      }, []);
+      var spans = ((snapshot.previewState || {}).sequence_tagging || {}).spans;
+      return (Array.isArray(spans) ? spans : []).map(function (span) {
+        return { start: span.start, end: span.end, label: span.label, text: span.text || span.label };
+      });
     },
   };
 
