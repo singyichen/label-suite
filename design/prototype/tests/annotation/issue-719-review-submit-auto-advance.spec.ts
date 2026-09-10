@@ -63,6 +63,20 @@ const RUN_TYPE = 'official_run';
 const PARTICIPANT = 'reviewer_wang';
 const ARBITER = 'reviewer_chen';
 
+/* FR-093 hands out units POSITIONALLY across the whole roster
+ * (getReviewAssignments(): official_run walks the sorted unit list with
+ * `roster[index % roster.length]`), and FR-073 rank 1 offers a pending unit
+ * only to the reviewer it was assigned to. Against the four-member demo
+ * roster a scenario that pins two or three units can never have them all
+ * land on one reviewer, so each advance scenario ALSO pins the roster to the
+ * single reviewer it is about. That is this file's way of stating the
+ * scenario's assignment premise -- it does not relax any assertion, and it
+ * is what makes "did NOT advance to the other pending unit" mean something
+ * in the finalization-exemption cases below (an unassigned unit would not
+ * have been a candidate in the first place). */
+const SOLO_PARTICIPANT = [{ id: PARTICIPANT, name: '王小明' }];
+const SOLO_ARBITER = [{ id: ARBITER, name: '陳美玲', can_arbitrate: true }];
+
 const labelPayload = (selected: string) => ({ previewState: { single_label: { selected } } });
 
 function activeSampleItem(page: Page) {
@@ -97,9 +111,20 @@ function seedSubmission(
  * findNextActionableReviewUnit() makes inside the submit handlers under
  * test. Must be called before the first page.goto() in a test so the route
  * is registered before the script is first requested. */
-function pinReviewUnits(page: Page, rows: Record<string, Array<{ annotator: string; answers: unknown }>>) {
+function pinReviewUnits(
+  page: Page,
+  rows: Record<string, Array<{ annotator: string; answers: unknown }>>,
+  roster?: Array<{ id: string; name: string; can_arbitrate?: boolean }>
+) {
   return patchDataFile(page, 'annotation-workspace.data.js', `
     window.LabelSuiteAnnotationWorkspaceData.REVIEWER_MOCK_ROWS.${TASK} = ${JSON.stringify(rows)};
+    ${roster ? `
+    /* Spliced IN PLACE, never reassigned: getAssignedReviewUnits() (FR-093)
+       and isArbiterCandidate() (FR-060) both read the module-closure
+       binding, and the export is the SAME array object -- overwriting the
+       property would leave both of them looking at the original roster. */
+    var roster = window.LabelSuiteAnnotationWorkspaceData.REVIEWER_ROSTER;
+    roster.splice.apply(roster, [0, roster.length].concat(${JSON.stringify(roster)}));` : ''}
   `);
 }
 
@@ -134,7 +159,7 @@ test.describe('AC-3.55 clauses 1-2: successful review submit advances in-place',
     await pinReviewUnits(page, {
       'sent-001': [{ annotator: 'kioleemg12', answers: { single_label: 'positive' } }],
       'sent-002': [{ annotator: '113450022', answers: { single_label: 'negative' } }],
-    });
+    }, SOLO_PARTICIPANT);
     await page.goto(workspaceUrl({ sampleId: 'sent-001', role: 'reviewer', annotatorId: 'kioleemg12', reviewerId: PARTICIPANT }));
     await seedSubmission(page, 'annotator', 'sent-001', 'sad', { annotatorId: 'kioleemg12' });
     await seedSubmission(page, 'annotator', 'sent-002', 'joy', { annotatorId: '113450022' });
@@ -181,7 +206,7 @@ test.describe('AC-3.55 clause 3: a pending unit wins over a disputed unit enumer
       'sent-002': [{ annotator: '113450022', answers: { single_label: 'positive' } }],
       // the unit reviewer_chen is actually about to submit on
       'sent-003': [{ annotator: 'tony0950127', answers: { single_label: 'neutral' } }],
-    });
+    }, SOLO_ARBITER);
     await page.goto(workspaceUrl({ sampleId: 'sent-003', role: 'reviewer', annotatorId: 'tony0950127', reviewerId: ARBITER }));
     await seedSubmission(page, 'annotator', 'sent-001', 'sad', { annotatorId: 'kioleemg12' });
     await seedSubmission(page, 'reviewer', 'sent-001', 'fear', { annotatorId: 'kioleemg12', reviewerId: PARTICIPANT });
@@ -292,7 +317,7 @@ test.describe('AC-3.56 clause 6: a successful arbitration submit advances the sa
     await pinReviewUnits(page, {
       'sent-001': [{ annotator: 'kioleemg12', answers: { single_label: 'sad' } }],
       'sent-002': [{ annotator: '113450022', answers: { single_label: 'positive' } }],
-    });
+    }, SOLO_ARBITER);
     await page.goto(workspaceUrl({ sampleId: 'sent-001', role: 'reviewer', annotatorId: 'kioleemg12', reviewerId: ARBITER }));
     await seedSubmission(page, 'annotator', 'sent-001', 'sad', { annotatorId: 'kioleemg12' });
     await seedSubmission(page, 'reviewer', 'sent-001', 'fear', { annotatorId: 'kioleemg12', reviewerId: PARTICIPANT });
@@ -389,7 +414,7 @@ test.describe('FR-099 clause 7 (finalization exemption): a review submit that fi
     await pinReviewUnits(page, {
       'sent-001': [{ annotator: 'kioleemg12', answers: { single_label: 'positive' } }],
       'sent-002': [{ annotator: '113450022', answers: { single_label: 'negative' } }],
-    });
+    }, SOLO_PARTICIPANT);
     await page.goto(workspaceUrl({ sampleId: 'sent-001', role: 'reviewer', annotatorId: 'kioleemg12', reviewerId: PARTICIPANT }));
     await seedSubmission(page, 'annotator', 'sent-001', 'sad', { annotatorId: 'kioleemg12' });
     await seedSubmission(page, 'annotator', 'sent-002', 'joy', { annotatorId: '113450022' });
@@ -414,7 +439,7 @@ test.describe('FR-099 clause 7 (finalization exemption): an arbitration submit t
     await pinReviewUnits(page, {
       'sent-001': [{ annotator: 'kioleemg12', answers: { single_label: 'sad' } }],
       'sent-002': [{ annotator: '113450022', answers: { single_label: 'positive' } }],
-    });
+    }, SOLO_ARBITER);
     await page.goto(workspaceUrl({ sampleId: 'sent-001', role: 'reviewer', annotatorId: 'kioleemg12', reviewerId: ARBITER }));
     await seedSubmission(page, 'annotator', 'sent-001', 'sad', { annotatorId: 'kioleemg12' });
     await seedSubmission(page, 'reviewer', 'sent-001', 'fear', { annotatorId: 'kioleemg12', reviewerId: PARTICIPANT });
