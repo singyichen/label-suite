@@ -308,6 +308,9 @@
           <label class="field-label">
             <span id="labelTaskType">任務類型</span><span class="required">*</span>
           </label>
+          <!-- One-click common-combo presets (issue #724); does not replace the three-group selector below -->
+          <div class="task-type-presets-label" id="taskTypePresetsLabel">常用組合・一鍵套用</div>
+          <div class="task-type-presets" id="taskTypePresets" role="group" aria-label="常用組合"></div>
           <div class="task-type-selector" id="taskTypeSelector" role="group" aria-labelledby="labelTaskType">
             <!-- Group A: Task category (multi-select chips) -->
             <div class="task-type-group">
@@ -604,6 +607,7 @@ var I18N = {
     s4CardTitle: '標記說明',
     labelTaskName: '任務名稱',
     labelTaskType: '任務類型',
+    taskTypePresetsLabel: '常用組合・一鍵套用',
     labelDataset: '資料集',
     taskNamePlaceholder: '例：新聞標題情感分類',
     optTaskTypeDefault: '請選擇任務類型',
@@ -688,6 +692,7 @@ var I18N = {
     s4CardTitle: 'Annotation guidelines',
     labelTaskName: 'Task name',
     labelTaskType: 'Task type',
+    taskTypePresetsLabel: 'Common combos · one-click apply',
     labelDataset: 'Dataset',
     taskNamePlaceholder: 'Example: News headline sentiment classification',
     optTaskTypeDefault: 'Select task type',
@@ -1499,7 +1504,7 @@ function applyLang(l) {
     'samplingHint','isolationToggleLabel','isolationToggleDesc',
     'settingsPanelLabel','annotationPreviewLabel','saveCodeBtnLabel','cancelBtnLabel','prevBtnLabel','leaveModalTitle','leaveModalDesc',
     'inlinePreviewTitle','inlinePreviewHint',
-    'taskCategoryGroupLabel','taskInputTypeGroupLabel','taskOutputTypeGroupLabel',
+    'taskCategoryGroupLabel','taskInputTypeGroupLabel','taskOutputTypeGroupLabel','taskTypePresetsLabel',
   ];
   ids.forEach(function(id) { setText(id, t(id)); });
   setText('sl1', t('s1Label')); setText('sl2', t('s2Label')); setText('sl3', t('s3Label')); setText('sl4', t('s4Label'));
@@ -1519,6 +1524,7 @@ function applyLang(l) {
   updateChipLabels('taskCategoryChips',   items.categories);
   updateChipLabels('taskInputTypeChips',  items.inputTypes);
   rebuildOutputChips();
+  renderTaskTypePresets();
   el('taskCategoryChips').setAttribute('aria-label', t('taskCategoryGroupLabel'));
   el('taskInputTypeChips').setAttribute('aria-label', t('taskInputTypeGroupLabel'));
   el('taskOutputTypeChips').setAttribute('aria-label', t('taskOutputTypeGroupLabel'));
