@@ -121,4 +121,13 @@ test.describe('Issue #724 — Step 1 task type one-click preset', () => {
     await expect(page.locator('#taskOutputTypeChips [data-key="single_label"]')).toHaveAttribute('aria-checked', 'true');
     await expect(page.locator('#taskCategoryChips [data-key="sequence"]')).toHaveAttribute('aria-checked', 'true');
   });
+
+  test('preset group accessible name localizes to English (issue #756 review)', async ({ page }) => {
+    await page.addInitScript(() => {
+      window.localStorage.setItem('labelsuite.lang', 'en');
+    });
+    await page.goto(TASK_NEW_URL);
+
+    await expect(page.getByRole('group', { name: 'Common combos · one-click apply' })).toBeVisible();
+  });
 });
