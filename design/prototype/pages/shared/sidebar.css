@@ -130,24 +130,29 @@
   flex-direction: column;
 }
 
+/* Lucide "chevron-down" (https://lucide.dev/icons/chevron-down), reused
+   as-is from the existing filter-select caret markup in this codebase. */
 .nav-caret {
   width: 12px;
   height: 12px;
   margin-left: auto;
   flex-shrink: 0;
-  transition: transform var(--dur-fast, 150ms);
+  color: var(--color-ink-muted);
+  transition: color var(--dur-fast) var(--ease-standard);
 }
 
+/* Expanded state is communicated by color only -- rotation is not an
+   approved animated transform in this design system. */
 .nav-link[aria-expanded="true"] .nav-caret {
-  transform: rotate(180deg);
+  color: var(--color-primary);
 }
 
 .nav-submenu {
   display: none;
   flex-direction: column;
-  gap: 2px;
-  padding-left: 30px;
-  margin-top: 2px;
+  gap: var(--space-xs);
+  padding-left: var(--space-xl);
+  margin-top: var(--space-xs);
 }
 
 .nav-submenu.open {
@@ -155,22 +160,32 @@
 }
 
 .nav-sublink {
-  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--space-md);
   border-radius: var(--radius-md);
   font-size: 12px;
   font-weight: 500;
   color: var(--color-ink-muted);
-  transition: color var(--dur-fast, 150ms), background var(--dur-fast, 150ms);
+  transition: color var(--dur-fast) var(--ease-standard), background var(--dur-fast) var(--ease-standard);
 }
 
 .nav-sublink:hover {
   color: var(--color-ink);
-  background: var(--color-slate-50, #f8fafc);
+  background: var(--color-slate-50);
 }
 
 .nav-sublink.current {
   color: var(--color-primary);
   font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-caret,
+  .nav-sublink {
+    transition-duration: 0.01ms;
+  }
 }
 
 .nav-actions {
