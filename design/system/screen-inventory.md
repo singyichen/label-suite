@@ -4,7 +4,7 @@
 >
 > **本檔為 generated view——請勿手動編輯。** 唯一生成來源是 [inventory-manifest.json](inventory-manifest.json)；改完 manifest 後執行 `node scripts/gen-screen-inventory.mjs` 重新產生，並以 `bash scripts/inventory-tests.sh` 驗證。元件規格唯一正典是 [MASTER.md](MASTER.md)；行為規格在 `specs/<module>/`；token 實作在 `design/prototype/assets/tokens.css`。
 >
-> **Prototype 來源 commit：** `e6acadc85067`（2026-09-10）——`design/prototype/pages` · `design/prototype/index.html` 的最後一次變更。
+> **Prototype 來源 commit：** `6a35288d0a2d`（2026-09-13）——`design/prototype/pages` · `design/prototype/index.html` 的最後一次變更。
 > 本檔若落後於該 commit，`node scripts/gen-screen-inventory.mjs --check` 會失敗。
 
 ---
@@ -115,7 +115,7 @@
 
 > Route 欄全數為「⚠ 未定義」代表 `frontend/src/routes/paths.ts` 目前只有 foundation 的 `healthCheck`；每個畫面的路由在該 feature 落地時回填 manifest `routeKey`，生成器會驗證該鍵確實存在。
 >
-> `data-testid` 欄只計該畫面自有原始檔（頁面 HTML、`<畫面>.*` 同名資產、`.partials/`／`.panels/`）；另有 5 個 testid 位於不屬於單一畫面的共用檔（`pages/shared/`、`task-config.*`）。計為 0 的畫面代表其 prototype 測試目前以 id／role 選取，尚未具備穩定 `data-testid`——依 Frontend Ready Gate 應在該 feature 實作前補齊。
+> `data-testid` 欄只計該畫面自有原始檔（頁面 HTML、`<畫面>.*` 同名資產、`.partials/`／`.panels/`）；另有 9 個 testid 位於不屬於單一畫面的共用檔（`pages/shared/`、`task-config.*`）。計為 0 的畫面代表其 prototype 測試目前以 id／role 選取，尚未具備穩定 `data-testid`——依 Frontend Ready Gate 應在該 feature 實作前補齊。
 
 ## 同頁多重視圖（36 視圖）
 
