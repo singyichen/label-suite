@@ -112,7 +112,9 @@ Visual walkthrough of the same pipeline — the four gates, the TDD role split, 
 **Archive and delivery timing**: intermediate stacked PR groups complete Red, Green, task verification, and group review, then merge while the OpenSpec change stays open. Only the final PR group may collect Source-Verify evidence and run `/opsx:archive`; its archive/write-back belongs in that final PR and completes gate 4 only after successful canonical write-back. Archiving must write back to the canonical `specs/[module]/NNN-feature/spec.md` with a version bump and Changelog entry. After the final PR merges, update `specs/STATUS.md` to archived and move the canonical spec to `specs/_archive/`.
 
 **Module names** (align with `features/` and `specs/[module]/`):
-`account` · `dashboard` · `task-management` · `annotation` · `dataset` · `admin`
+`account` · `dashboard` · `task-management` · `annotation` · `dataset` · `admin` · `shared`
+
+`shared` holds canonical specs consumed by multiple other modules (e.g. `specs/shared/008-sidebar-navbar-shared/`, `specs/shared/018-help-button/`) — this list was missing it even though `specs/shared/` has existed since `shared-001` (2026-04-16) and `shared-008` has been through 20+ merged revisions.
 
 **Design artifact paths:**
 
