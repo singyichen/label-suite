@@ -1,13 +1,17 @@
 ---
 功能分支: feat/shared/008-sidebar-navbar-shared
 建立日期: 2026-04-16
-版本: 1.4.3
+版本: 1.4.4
 狀態: Clarified
 ---
 
 # 功能規格：Shared Sidebar Navbar（共用側欄導覽）
 
 **需求來源**: 資訊架構 [docs/product/ia/information-architecture.md](../../../docs/product/ia/information-architecture.md) §2.1 Sidebar Navbar（跨模組共用）
+
+## 功能目標
+
+提供全站登入後頁面共用的 Sidebar／Navbar 導覽契約——L0 模組導覽（依 `system_role` 條件顯示）、語言與外觀切換、通知鈴鐺、快捷鍵總覽入口，以及 Desktop／Mobile 的 RWD 與 Desktop Mini/Icon-only 收合行為——確保 `dashboard`／`task-management`／`annotation`／`dataset`／`admin`／`account` 六大模組頁在同一份共用元件（`design/prototype/pages/shared/sidebar.js`／`sidebar.css`）下呈現一致的導覽骨架、active 映射與可存取語意。
 
 ## 輸入與生成規則
 
@@ -517,6 +521,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.4.4 | 2026-09-13 | 結構補齊：新增缺漏的 `## 功能目標` 標題（Project SDD lint `SPEC_REQUIRED_HEADING` ratchet——OpenSpec change `admin-role-settings-nav-shortcut`（issue #725）首次以本流程觸碰本規格，觸發既有 legacy heading debt 的強制補齊）。規格條文未變，純結構 patch；`scripts/sdd-lint-baseline.txt` 同步移除本檔對應的 `LEGACY_SPEC_HEADING` 豁免項。 |
 | 1.4.3 | 2026-08-26 | **修正快捷鍵總覽 `R` 列標籤誤導性文案**（issue #409）：v1.4.1 加上的「（限正式標記）」註記，字面上讀起來像整個退回動作／`R` 快捷鍵都被限制在 `official_run`，但實際上 reject 控件與 `R` 鍵在 `dry_run` 一樣可用且必須維持一致呈現（annotation-015 **AC-3.33** 禁止審核卡上任何依 `run_type` 分流的呈現分支）——僅有「退回時把標記員狀態回退為待標記」這個副作用（annotation-015 FR-014I／AC-3.15／AC-6.4）才是 `official_run` 專屬。修法：標籤字面由「退回目前結果（限正式標記）」改為「退回目前結果（回退標記員狀態僅限正式標記）」（en：「Return current result (formal runs only)」改為「Return current result (annotator status rollback is formal-run only)」），將限定範圍精確掛在「回退標記員狀態」上。規格條文未變（FR-016G／SC-009D 既有行為的標籤字面精確化，非新增契約）；同步修訂 AC 6 例示、FR-016G 與 SC-009D 的標籤字面。 |
 | 1.4.2 | 2026-08-24 | Issue #261：新增 Prototype Traceability，明確對應共用 `sidebar.js`／`sidebar.css`（14 個消費頁面）與 living styleguide 參考頁的責任邊界；規格條文未變。 |
 | 1.4.1 | 2026-08-19 | 快捷鍵總覽 `R` 列標籤改為「退回目前結果（限正式標記）」（zh）／「Return current result (formal runs only)」（en）：annotation-015 AC-3.15／AC-6.4 將退回通道收斂為 official_run 專屬，標籤補上適用範圍註記（issue #191）；`A` 列標籤不變。同步修訂 AC 6 例示、FR-016G 與 SC-009D 的標籤字面。 |
