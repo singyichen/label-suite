@@ -36,7 +36,7 @@ Issue #725 指出 `super_admin` 調整角色權限的路徑比預期長：`角�
 
 **規格**
 
-- 正典：`specs/shared/008-sidebar-navbar-shared/spec.md`（v1.4.3 → v1.5.0，**MINOR**：新增能力，不移除或破壞既有 FR/SC）
+- 正典：`specs/shared/008-sidebar-navbar-shared/spec.md`（v1.4.4 → v1.5.0，**MINOR**：新增能力，不移除或破壞既有 FR/SC）
 - 衍生檢視：`openspec/specs/shared/008-sidebar-navbar-shared/spec.md`（archive 時自動合併）
 - 確認相容、不修改：`specs/admin/006-user-management/spec.md`（FR-010 既有 admin-tabs 導覽）、`specs/admin/007-role-settings/spec.md`（FR-006 既有 admin-tabs 導覽）——兩者既有導覽契約不受影響，本次只在 `008` 新增額外側欄入口。
 
@@ -53,4 +53,4 @@ Issue #725 指出 `super_admin` 調整角色權限的路徑比預期長：`角�
 - **III. Data Fairness（NON-NEGOTIABLE）**：純導覽 UI 變更，不涉及任何標記答案或 ground-truth 資料。
 - **IV. Test-First**：先提交 Red 測試（次選單觸發前不存在、次選單開關、直達導頁、目前子項標示、Mobile／收合 fallback、既有 admin-tabs 入口保留、L0 計數不變），再由 Green 實作。
 - **X. Change Scope Discipline**：手寫生產變更僅 `sidebar.js` 與 `sidebar.css` 兩檔，單一目的、單一 PR 群組（final group）。
-- **XX. Source of Truth**：正典為 `specs/shared/008-sidebar-navbar-shared/spec.md` v1.4.3；本 proposal 引用之 FR-002、FR-003A、FR-006、FR-007、SC-003 於 archive 回寫後皆可 grep 定位；新增 FR-019 群、SC-012 群同步可定位。
+- **XX. Source of Truth**：正典為 `specs/shared/008-sidebar-navbar-shared/spec.md` v1.4.4；本 proposal 引用之 FR-002、FR-003A、FR-006、FR-007、SC-003 於 archive 回寫後皆可 grep 定位；新增 FR-019 群、SC-012 群同步可定位。
