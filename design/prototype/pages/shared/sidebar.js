@@ -314,32 +314,36 @@
     return systemRole !== 'super_admin';
   }
 
-  /* Admin submenu (issue #725): "系統管理" stays a single L0 item (spec 008
-   * FR-002/FR-003A/SC-003 unchanged); on Desktop with the sidebar expanded
-   * it additionally exposes a two-link submenu so super_admin can reach
-   * role-settings without first landing on user-management. Mobile and
-   * Desktop collapsed keep the prior single-link behavior (FR-019D). */
+  /* Admin submenu (issue #725): the "System Administration" L0 item stays a
+   * single item (spec 008 FR-002/FR-003A/SC-003 unchanged); on Desktop with
+   * the sidebar expanded it additionally exposes a two-link submenu so
+   * super_admin can reach role-settings without first landing on
+   * user-management. Mobile and Desktop collapsed keep the prior
+   * single-link behavior (FR-019D). */
+  var ADMIN_USER_MANAGEMENT_FILE = 'user-management.html';
+  var ADMIN_ROLE_SETTINGS_FILE = 'role-settings.html';
+
   var adminSubmenuI18n = {
     zh: { users: '使用者管理', roles: '角色設定' },
     en: { users: 'User Management', roles: 'Role Settings' }
   };
 
   function getRoleSettingsHref(adminHref) {
-    if (!adminHref || adminHref.indexOf('user-management.html') === -1) return adminHref;
-    return adminHref.replace('user-management.html', 'role-settings.html');
+    if (!adminHref || adminHref.indexOf(ADMIN_USER_MANAGEMENT_FILE) === -1) return adminHref;
+    return adminHref.replace(ADMIN_USER_MANAGEMENT_FILE, ADMIN_ROLE_SETTINGS_FILE);
   }
 
   function getCurrentAdminSubKey() {
     var path = window.location.pathname;
-    if (path.indexOf('role-settings.html') !== -1) return 'role-settings';
-    if (path.indexOf('user-management.html') !== -1) return 'user-management';
+    if (path.indexOf(ADMIN_ROLE_SETTINGS_FILE) !== -1) return 'role-settings';
+    if (path.indexOf(ADMIN_USER_MANAGEMENT_FILE) !== -1) return 'user-management';
     return null;
   }
 
   function updateAdminSubmenuLanguage(lang) {
-    var t = adminSubmenuI18n[normalizeLang(lang)];
-    setTextById('navAdminSubUsersLabel', t.users);
-    setTextById('navAdminSubRolesLabel', t.roles);
+    var translations = adminSubmenuI18n[normalizeLang(lang)];
+    setTextById('navAdminSubUsersLabel', translations.users);
+    setTextById('navAdminSubRolesLabel', translations.roles);
   }
 
   function isAdminSubmenuAvailable() {
@@ -399,13 +403,14 @@
           'title="' + config.defaultLabel + '" aria-label="' + config.defaultLabel + '">' +
           config.icon +
           '<span id="' + config.labelId + '">' + config.defaultLabel + '</span>' +
+          /* Lucide "chevron-down" (https://lucide.dev/icons/chevron-down) */
           '<svg class="nav-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>' +
         '</button>' +
         '<div class="nav-submenu" id="navAdminSubmenu" data-testid="admin-nav-submenu" role="menu" aria-hidden="true" data-no-sidebar-toggle="true">' +
-          '<a class="nav-sublink' + usersCurrentClass + '" id="navAdminSubUsers" data-testid="admin-nav-sublink-user-management" role="menuitem" href="' + config.href + '"' + usersCurrentAttr + '>' +
+          '<a class="nav-sublink' + usersCurrentClass + '" id="navAdminSubUsers" data-testid="admin-nav-user-management-link" role="menuitem" href="' + config.href + '"' + usersCurrentAttr + '>' +
             '<span id="navAdminSubUsersLabel">使用者管理</span>' +
           '</a>' +
-          '<a class="nav-sublink' + rolesCurrentClass + '" id="navAdminSubRoles" data-testid="admin-nav-sublink-role-settings" role="menuitem" href="' + config.roleSettingsHref + '"' + rolesCurrentAttr + '>' +
+          '<a class="nav-sublink' + rolesCurrentClass + '" id="navAdminSubRoles" data-testid="admin-nav-role-settings-link" role="menuitem" href="' + config.roleSettingsHref + '"' + rolesCurrentAttr + '>' +
             '<span id="navAdminSubRolesLabel">角色設定</span>' +
           '</a>' +
         '</div>' +

@@ -29,9 +29,9 @@ test.describe('Admin submenu direct shortcut to role-settings (issue #725)', () 
     const submenu = page.getByTestId('admin-nav-submenu');
     await expect(submenu).toBeVisible();
 
-    const roleSettingsLink = page.getByTestId('admin-nav-sublink-role-settings');
+    const roleSettingsLink = page.getByTestId('admin-nav-role-settings-link');
     await expect(roleSettingsLink).toHaveAttribute('href', /role-settings\.html$/);
-    const userMgmtLink = page.getByTestId('admin-nav-sublink-user-management');
+    const userMgmtLink = page.getByTestId('admin-nav-user-management-link');
     await expect(userMgmtLink).toHaveAttribute('href', /user-management\.html$/);
 
     // Submenu sub-links are not counted as L0 items (FR-002/FR-003A/SC-003 unchanged).
@@ -43,7 +43,7 @@ test.describe('Admin submenu direct shortcut to role-settings (issue #725)', () 
     await page.goto('/pages/dashboard/dashboard.html?scenario=super_admin_data');
 
     await page.getByTestId('admin-nav-trigger').click();
-    await page.getByTestId('admin-nav-sublink-role-settings').click();
+    await page.getByTestId('admin-nav-role-settings-link').click();
 
     await expect(page).toHaveURL(/role-settings\.html$/);
   });
@@ -53,13 +53,13 @@ test.describe('Admin submenu direct shortcut to role-settings (issue #725)', () 
 
     await page.goto('/pages/admin/role-settings.html');
     await page.getByTestId('admin-nav-trigger').click();
-    await expect(page.getByTestId('admin-nav-sublink-role-settings')).toHaveAttribute('aria-current', 'page');
-    await expect(page.getByTestId('admin-nav-sublink-user-management')).not.toHaveAttribute('aria-current', 'page');
+    await expect(page.getByTestId('admin-nav-role-settings-link')).toHaveAttribute('aria-current', 'page');
+    await expect(page.getByTestId('admin-nav-user-management-link')).not.toHaveAttribute('aria-current', 'page');
 
     await page.goto('/pages/admin/user-management.html');
     await page.getByTestId('admin-nav-trigger').click();
-    await expect(page.getByTestId('admin-nav-sublink-user-management')).toHaveAttribute('aria-current', 'page');
-    await expect(page.getByTestId('admin-nav-sublink-role-settings')).not.toHaveAttribute('aria-current', 'page');
+    await expect(page.getByTestId('admin-nav-user-management-link')).toHaveAttribute('aria-current', 'page');
+    await expect(page.getByTestId('admin-nav-role-settings-link')).not.toHaveAttribute('aria-current', 'page');
   });
 
   test('clicking outside or pressing Escape closes the submenu', async ({ page }) => {
