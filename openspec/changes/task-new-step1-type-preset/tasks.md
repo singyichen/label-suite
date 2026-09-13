@@ -59,9 +59,9 @@
 
 **故事目標**（SC-002g）：以完整回歸、自我審查與 Source-Verify 證據，確認一鍵預設落地且未影響既有三段式選擇器行為，並完成正典回寫。
 
-- [ ] 4.1 執行本 change 全部回歸並保存證據。驗證：`cd design/prototype && corepack pnpm typecheck` 與 `PW_PORT=8899 corepack pnpm playwright test tests/task-management` 皆 exit 0；`git diff <commit 1.1> HEAD -- design/prototype/tests/issue-724-task-new-step1-preset.spec.ts` 除 2.1／3.1 明訂之新增斷言外，既有已轉綠斷言不得被弱化或刪除。 [@main]
-- [ ] 4.2 Code Review（自我審查，無其他可用 Agent）：檢查 `TASK_TYPE_PRESETS` 未硬編任務邏輯（Generalization-First）、`applyTaskTypePreset()` 只讀 preset 物件欄位、未新增或修改任何提交 payload 欄位或 ground-truth 可見性（Data Fairness）、diff 規模於 Principle X 門檻內（4 個手寫產品檔案、預估遠低於 300 行）。 [@main]
-- [ ] 4.3 QA Scenario 驗收：逐條核對 AC-1.4／AC-1.5／SC-002g 與 issue-724-task-new-step1-preset 測試斷言一致，確認既有三段式選擇器測試（task-new-taxonomy-cascade 等）全數仍綠、未被本次改動影響。 [@main]
-- [ ] 4.4 Security Review（自我審查）：確認本次改動不引入使用者輸入注入面、不擴大 CORS、不新增任何後端呼叫或秘密處理；純前端 DOM 操作與既有 state 寫入。 [@main]
-- [ ] 4.5 Source-Verify：`grep` 確認正典 `specs/task-management/013-task-new/spec.md` 內已逐字可定位 FR-002f、AC-1.4、AC-1.5、SC-002g 與新增之邊界情況、介面定義段落；確認版本號 7.0.2 → 7.1.0 與 Changelog 新增列已寫入。 [@main]
+- [x] 4.1 執行本 change 全部回歸並保存證據。驗證：`cd design/prototype && corepack pnpm typecheck` 與 `PW_PORT=8899 corepack pnpm playwright test tests/task-management` 皆 exit 0；`git diff <commit 1.1> HEAD -- design/prototype/tests/issue-724-task-new-step1-preset.spec.ts` 除 2.1／3.1 明訂之新增斷言外，既有已轉綠斷言不得被弱化或刪除。 [@main]
+- [x] 4.2 Code Review（自我審查，無其他可用 Agent）：檢查 `TASK_TYPE_PRESETS` 未硬編任務邏輯（Generalization-First）、`applyTaskTypePreset()` 只讀 preset 物件欄位、未新增或修改任何提交 payload 欄位或 ground-truth 可見性（Data Fairness）、diff 規模於 Principle X 門檻內（4 個手寫產品檔案、預估遠低於 300 行）。 [@main]
+- [x] 4.3 QA Scenario 驗收：逐條核對 AC-1.4／AC-1.5／SC-002g 與 issue-724-task-new-step1-preset 測試斷言一致，確認既有三段式選擇器測試（task-new-taxonomy-cascade 等）全數仍綠、未被本次改動影響。 [@main]
+- [x] 4.4 Security Review（自我審查）：確認本次改動不引入使用者輸入注入面、不擴大 CORS、不新增任何後端呼叫或秘密處理；純前端 DOM 操作與既有 state 寫入。 [@main]
+- [x] 4.5 Source-Verify：`grep` 確認正典 `specs/task-management/013-task-new/spec.md` 內已逐字可定位 FR-002f、AC-1.4、AC-1.5、SC-002g 與新增之邊界情況、介面定義段落；確認版本號 7.0.2 → 7.1.0 與 Changelog 新增列已寫入。 [@main]
 - [ ] 4.6 執行 `/opsx:archive` 等價流程：將本 change 的 delta 併入 `openspec/specs/task-management/013-task-new/spec.md`（derived view）、移動本 change 至 `openspec/changes/archive/`。PR 合併後另行更新 `specs/STATUS.md` 之 `task-management-013` 列為 `done`（依 CLAUDE.md，`in-progress`／`change-open` → `done` 發生於合併後，`archived` 發生於封存正典時）。 [@main]
