@@ -5634,6 +5634,35 @@ function initTaskTypeChips() {
   buildChips('taskCategoryChips',   items.categories,  'taskCategories');
   buildChips('taskInputTypeChips',  items.inputTypes,  'taskInputTypes', true);
   rebuildOutputChips();
+  renderTaskTypePresets();
+}
+
+/* ── Step 1 common-combo one-click presets (issue #724) ──────── */
+/* Batches an existing, valid (category, inputType, outputTypes) selection
+   into a single click; reads only the preset object's own fields, so the
+   three-group chip selector remains the sole source of selection logic. */
+function renderTaskTypePresets() {
+  var container = el('taskTypePresets');
+  if (!container) return;
+  while (container.firstChild) container.removeChild(container.firstChild);
+  TASK_TYPE_PRESETS.forEach(function(preset) {
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'task-type-preset-btn';
+    btn.setAttribute('data-testid', 'task-type-preset-' + preset.key);
+    btn.textContent = preset[state.lang] || preset.zh;
+    btn.addEventListener('click', function() { applyTaskTypePreset(preset); });
+    container.appendChild(btn);
+  });
+}
+
+function applyTaskTypePreset(preset) {
+  state.taskCategories = [preset.category];
+  state.taskInputTypes = [preset.inputType];
+  state.taskOutputTypes = preset.outputTypes.slice();
+  syncChipsFromState();
+  onChipSelectionChange();
+  track('prototype_task_new_preset_applied', { preset: preset.key });
 }
 
 var _lastOutputCatsKey = undefined;
