@@ -530,7 +530,7 @@
     /* ── Task type common-combo one-click presets (issue #724) ── */
     .task-type-presets-label { font-size: 11px; font-weight: 700; color: var(--color-text-soft); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
     .task-type-presets { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
-    .task-type-preset-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 6px 14px; border: 1.5px solid var(--color-primary); border-radius: var(--radius-md); font-size: 13px; font-weight: 600; color: var(--color-primary); background: var(--color-primary-soft-bg); cursor: pointer; transition: background var(--dur-fast); }
+    .task-type-preset-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 6px 14px; border: 1.5px solid var(--color-primary); border-radius: var(--radius-md); font-size: 13px; font-weight: 600; color: var(--color-primary); background: var(--color-primary-soft-bg); cursor: pointer; transition: background var(--dur-fast) var(--ease-standard); }
     .task-type-preset-btn:hover { background: var(--color-primary); color: var(--color-white); }
     /* ── Task type flat selector ── */
     .task-type-selector { display: flex; flex-direction: column; gap: 14px; }
