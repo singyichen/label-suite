@@ -124,6 +124,55 @@
   color: var(--color-primary);
 }
 
+/* Admin submenu (issue #725) */
+.nav-link-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-caret {
+  width: 12px;
+  height: 12px;
+  margin-left: auto;
+  flex-shrink: 0;
+  transition: transform var(--dur-fast, 150ms);
+}
+
+.nav-link[aria-expanded="true"] .nav-caret {
+  transform: rotate(180deg);
+}
+
+.nav-submenu {
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  padding-left: 30px;
+  margin-top: 2px;
+}
+
+.nav-submenu.open {
+  display: flex;
+}
+
+.nav-sublink {
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-ink-muted);
+  transition: color var(--dur-fast, 150ms), background var(--dur-fast, 150ms);
+}
+
+.nav-sublink:hover {
+  color: var(--color-ink);
+  background: var(--color-slate-50, #f8fafc);
+}
+
+.nav-sublink.current {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
 .nav-actions {
   display: flex;
   flex-direction: column;
@@ -545,6 +594,13 @@ body.sidebar-collapsed .nav-actions {
   padding-top: var(--space-md);
 }
 
+/* Admin submenu unavailable while collapsed (spec 008 FR-019D); defense-in-depth
+   alongside the JS isAdminSubmenuAvailable() guard. */
+body.sidebar-collapsed .nav-submenu,
+body.sidebar-collapsed .nav-caret {
+  display: none !important;
+}
+
 body.sidebar-collapsed .sidebar-utility-row {
   justify-content: center;
 }
@@ -863,6 +919,13 @@ body.sidebar-collapsed .notif-dropdown { left: 88px; }
 
   .navbar-center .nav-link span {
     white-space: nowrap;
+  }
+
+  /* Admin submenu unavailable on Mobile bottom nav (spec 008 FR-019D);
+     defense-in-depth alongside the JS isAdminSubmenuAvailable() guard. */
+  .nav-submenu,
+  .nav-caret {
+    display: none !important;
   }
 
   .nav-actions {
