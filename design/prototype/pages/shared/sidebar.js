@@ -236,6 +236,7 @@
     }
 
     updateShortcutHelpLanguage(normalizedLang);
+    updateAdminSubmenuLanguage(normalizedLang);
 
     if (typeof opts.roleLabel === 'string') {
       var roleEl = document.getElementById('roleIndicator');
@@ -313,6 +314,45 @@
     return systemRole !== 'super_admin';
   }
 
+  /* Admin submenu (issue #725): "系統管理" stays a single L0 item (spec 008
+   * FR-002/FR-003A/SC-003 unchanged); on Desktop with the sidebar expanded
+   * it additionally exposes a two-link submenu so super_admin can reach
+   * role-settings without first landing on user-management. Mobile and
+   * Desktop collapsed keep the prior single-link behavior (FR-019D). */
+  var adminSubmenuI18n = {
+    zh: { users: '使用者管理', roles: '角色設定' },
+    en: { users: 'User Management', roles: 'Role Settings' }
+  };
+
+  function getRoleSettingsHref(adminHref) {
+    if (!adminHref || adminHref.indexOf('user-management.html') === -1) return adminHref;
+    return adminHref.replace('user-management.html', 'role-settings.html');
+  }
+
+  function getCurrentAdminSubKey() {
+    var path = window.location.pathname;
+    if (path.indexOf('role-settings.html') !== -1) return 'role-settings';
+    if (path.indexOf('user-management.html') !== -1) return 'user-management';
+    return null;
+  }
+
+  function updateAdminSubmenuLanguage(lang) {
+    var t = adminSubmenuI18n[normalizeLang(lang)];
+    setTextById('navAdminSubUsersLabel', t.users);
+    setTextById('navAdminSubRolesLabel', t.roles);
+  }
+
+  function isAdminSubmenuAvailable() {
+    return isDesktopViewport() && !document.body.classList.contains('sidebar-collapsed');
+  }
+
+  function setAdminSubmenuExpanded(trigger, submenu, expanded) {
+    if (!trigger || !submenu) return;
+    trigger.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+    submenu.classList.toggle('open', expanded);
+    submenu.setAttribute('aria-hidden', expanded ? 'false' : 'true');
+  }
+
   function applySystemRole(systemRole) {
     var normalizedRole = normalizeSystemRole(systemRole);
     var adminItem = document.getElementById('navAdminItem');
@@ -336,6 +376,36 @@
       '</a>';
   }
 
+  function adminNavGroup(config, activeNav) {
+    var isActive = config.key === activeNav;
+    var hiddenClass = config.hidden ? ' hidden' : '';
+    var currentSub = getCurrentAdminSubKey();
+    var usersCurrentAttr = currentSub === 'user-management' ? ' aria-current="page"' : '';
+    var usersCurrentClass = currentSub === 'user-management' ? ' current' : '';
+    var rolesCurrentAttr = currentSub === 'role-settings' ? ' aria-current="page"' : '';
+    var rolesCurrentClass = currentSub === 'role-settings' ? ' current' : '';
+
+    return '' +
+      '<div class="nav-link-group' + hiddenClass + '" id="' + config.itemId + '">' +
+        '<button type="button" class="nav-link' + (isActive ? ' active' : '') + '" id="navAdminTrigger" ' +
+          'data-testid="admin-nav-trigger" data-admin-href="' + config.href + '" ' +
+          'aria-haspopup="true" aria-expanded="false"' + (isActive ? ' aria-current="page"' : '') + ' ' +
+          'title="' + config.defaultLabel + '" aria-label="' + config.defaultLabel + '">' +
+          config.icon +
+          '<span id="' + config.labelId + '">' + config.defaultLabel + '</span>' +
+          '<svg class="nav-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>' +
+        '</button>' +
+        '<div class="nav-submenu" id="navAdminSubmenu" data-testid="admin-nav-submenu" role="menu" aria-hidden="true" data-no-sidebar-toggle="true">' +
+          '<a class="nav-sublink' + usersCurrentClass + '" id="navAdminSubUsers" data-testid="admin-nav-sublink-user-management" role="menuitem" href="' + config.href + '"' + usersCurrentAttr + '>' +
+            '<span id="navAdminSubUsersLabel">使用者管理</span>' +
+          '</a>' +
+          '<a class="nav-sublink' + rolesCurrentClass + '" id="navAdminSubRoles" data-testid="admin-nav-sublink-role-settings" role="menuitem" href="' + config.roleSettingsHref + '"' + rolesCurrentAttr + '>' +
+            '<span id="navAdminSubRolesLabel">角色設定</span>' +
+          '</a>' +
+        '</div>' +
+      '</div>';
+  }
+
   function renderSidebar(options) {
     var opts = options || {};
     var activeNav = opts.activeNav || 'dashboard';
@@ -353,6 +423,7 @@
     }
     var datasetHref = opts.datasetHref || '../dataset/dataset-analysis-list.html';
     var adminHref = opts.adminHref || '#';
+    var roleSettingsHref = getRoleSettingsHref(adminHref);
     var brandHref = opts.brandHref || dashboardHref;
     var userName = opts.userName || 'Mandy Chen';
     var roleIndicator = opts.roleIndicator || '一般使用者';
@@ -393,6 +464,7 @@
         defaultLabel: '系統管理',
         itemId: 'navAdminItem',
         hidden: shouldHideAdminByRole(systemRole),
+        roleSettingsHref: roleSettingsHref,
         icon: '<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>'
       },
       {
@@ -443,7 +515,9 @@
         '</div>' +
 
         '<nav class="navbar-center" aria-label="Main navigation">' +
-          navItems.map(function (item) { return navItem(item, activeNav); }).join('') +
+          navItems.map(function (item) {
+            return item.key === 'admin' ? adminNavGroup(item, activeNav) : navItem(item, activeNav);
+          }).join('') +
         '</nav>' +
 
         '<div class="nav-actions">' +
@@ -532,6 +606,7 @@
       : readStoredSidebarCollapsed();
     applySidebarCollapsed(initialCollapsed);
     updateShortcutHelpLanguage(readStoredLang());
+    updateAdminSubmenuLanguage(readStoredLang());
     syncSidebarThemeToggle();
 
     var loginHref = opts.loginHref || '../account/login.html';
@@ -573,6 +648,26 @@
         setThemeChoice(btn.dataset.nextTheme === 'light' ? 'light' : 'dark');
       });
     });
+    // ── Admin submenu (issue #725) ─────────────────────────────────
+    var adminGroup = document.getElementById('navAdminItem');
+    var adminTrigger = document.getElementById('navAdminTrigger');
+    var adminSubmenu = document.getElementById('navAdminSubmenu');
+    if (adminTrigger && adminSubmenu) {
+      adminTrigger.addEventListener('click', function () {
+        if (!isAdminSubmenuAvailable()) {
+          window.location.href = adminTrigger.getAttribute('data-admin-href') || '#';
+          return;
+        }
+        var willOpen = adminTrigger.getAttribute('aria-expanded') !== 'true';
+        setAdminSubmenuExpanded(adminTrigger, adminSubmenu, willOpen);
+      });
+      document.addEventListener('click', function (event) {
+        if (adminTrigger.getAttribute('aria-expanded') !== 'true') return;
+        if (adminGroup && adminGroup.contains(event.target)) return;
+        setAdminSubmenuExpanded(adminTrigger, adminSubmenu, false);
+      });
+    }
+    // ── End admin submenu ───────────────────────────────────────────
     // ── Notification bell ────────────────────────────────────────
     var existingDropdown = document.getElementById('notificationDropdown');
     if (existingDropdown) existingDropdown.parentNode.removeChild(existingDropdown);
@@ -829,6 +924,9 @@
       if (event.key === 'Escape' && shortcutModal && !shortcutModal.classList.contains('hidden')) {
         closeShortcutHelp();
       }
+      if (event.key === 'Escape' && adminTrigger && adminTrigger.getAttribute('aria-expanded') === 'true') {
+        setAdminSubmenuExpanded(adminTrigger, adminSubmenu, false);
+      }
     });
 
     var sidebarNode = mountNode.querySelector('.navbar');
@@ -839,12 +937,18 @@
         var nextCollapsed = !document.body.classList.contains('sidebar-collapsed');
         persistSidebarCollapsed(nextCollapsed);
         applySidebarCollapsed(nextCollapsed);
+        if (nextCollapsed && adminTrigger && adminSubmenu) {
+          setAdminSubmenuExpanded(adminTrigger, adminSubmenu, false);
+        }
       });
     }
 
     if (window && window.addEventListener) {
       window.addEventListener('resize', function () {
         applySidebarCollapsed(readStoredSidebarCollapsed());
+        if (adminTrigger && adminSubmenu && !isAdminSubmenuAvailable()) {
+          setAdminSubmenuExpanded(adminTrigger, adminSubmenu, false);
+        }
       });
     }
   }
