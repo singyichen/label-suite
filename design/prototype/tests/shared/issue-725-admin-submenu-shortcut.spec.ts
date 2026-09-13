@@ -16,7 +16,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Admin submenu direct shortcut to role-settings (issue #725)', () => {
   test('desktop expanded sidebar: clicking 系統管理 opens a submenu with two direct links without adding an L0 item', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto('/pages/dashboard/dashboard.html');
+    await page.goto('/pages/dashboard/dashboard.html?scenario=super_admin_data');
 
     const l0Links = page.locator('.navbar-center .nav-link');
     await expect(l0Links).toHaveCount(6);
@@ -40,7 +40,7 @@ test.describe('Admin submenu direct shortcut to role-settings (issue #725)', () 
 
   test('clicking 角色設定 sublink from dashboard navigates directly to role-settings.html', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto('/pages/dashboard/dashboard.html');
+    await page.goto('/pages/dashboard/dashboard.html?scenario=super_admin_data');
 
     await page.getByTestId('admin-nav-trigger').click();
     await page.getByTestId('admin-nav-sublink-role-settings').click();
@@ -64,7 +64,7 @@ test.describe('Admin submenu direct shortcut to role-settings (issue #725)', () 
 
   test('clicking outside or pressing Escape closes the submenu', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto('/pages/dashboard/dashboard.html');
+    await page.goto('/pages/dashboard/dashboard.html?scenario=super_admin_data');
 
     const trigger = page.getByTestId('admin-nav-trigger');
     await trigger.click();
@@ -80,7 +80,7 @@ test.describe('Admin submenu direct shortcut to role-settings (issue #725)', () 
 
   test('mobile bottom nav: 系統管理 still navigates directly to user-management without opening a submenu', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
-    await page.goto('/pages/dashboard/dashboard.html');
+    await page.goto('/pages/dashboard/dashboard.html?scenario=super_admin_data');
 
     await page.getByTestId('admin-nav-trigger').click();
 
@@ -92,7 +92,7 @@ test.describe('Admin submenu direct shortcut to role-settings (issue #725)', () 
     await page.addInitScript(() => {
       window.localStorage.setItem('labelsuite.sidebarCollapsed', 'true');
     });
-    await page.goto('/pages/dashboard/dashboard.html');
+    await page.goto('/pages/dashboard/dashboard.html?scenario=super_admin_data');
 
     await expect(page.locator('body')).toHaveClass(/sidebar-collapsed/);
 
