@@ -1,7 +1,7 @@
 ---
 功能分支: feat/shared/008-sidebar-navbar-shared
 建立日期: 2026-04-16
-版本: 1.4.4
+版本: 1.5.0
 狀態: Clarified
 ---
 
@@ -125,7 +125,7 @@ sequenceDiagram
 - Work：`任務管理` → `task-list`
 - Work：`標記作業` → `annotation-list`
 - Work：`資料集分析` → `dataset-analysis-list`（產品路由 `/dataset-analysis`；prototype 檔案 `dataset-analysis-list.html`）
-- Admin：`系統管理` → `user-management`（僅 `super_admin` 可見）
+- Admin：`系統管理` → `user-management`（僅 `super_admin` 可見；Desktop 未收合狀態下另提供次選單直達 `role-settings`，見使用者故事 8／FR-019 群，issue #725；次選單子項不計入本節之 L0 清單與計數）
 - Account：`個人設定` → `profile`
 
 **角色可見性與 L0 項目數（Desktop / Mobile 一致）**：
@@ -275,6 +275,33 @@ Desktop 使用者可將左側 Sidebar 收合為 icon-only，以增加主內容�
 
 ---
 
+### 使用者故事 8 — 系統管理次選單快速直達（優先級：P2，issue #725）
+
+`super_admin` 可在 Desktop 未收合 Sidebar 時展開「系統管理」次選單，一次點擊直達 `role-settings`，不需先落地 `user-management`。
+
+**此優先級原因**：導覽路徑效率提升，非新功能可見性變更；`系統管理` 本身的存在與可見性規則（使用者故事 1）優先級較高。
+
+**獨立測試方式**：以 `super_admin` 於 Desktop 未收合 Sidebar 點擊「系統管理」，驗證出現次選單並可直達兩個子頁；並於 Mobile／Desktop 收合狀態驗證維持既有單一連結行為。
+
+**驗收情境**：
+
+1. **Given** `system_role = super_admin`，viewport `1440x900`（`> MOBILE_BP`）且 Sidebar 未收合，位於任一 `SUPPORTED_PAGES`，**When** 點擊 L0「系統管理」，**Then** 觸發項 `aria-expanded` 由 `false` 變為 `true`，顯示次選單，內容包含「使用者管理」與「角色設定」兩個子項連結，且 `.navbar-center .nav-link` 命中數維持 `6`；點擊「角色設定」子項後直接導向 `role-settings.html`，不經過 `user-management.html`。
+2. **Given** 次選單已開啟，**When** 點擊次選單以外的頁面區域，或按 `Esc`，**Then** 次選單關閉，觸發項 `aria-expanded` 回到 `false`。
+3. **Given** `super_admin` 位於 `role-settings.html`，**When** 展開「系統管理」次選單，**Then** 「角色設定」子項帶 `aria-current="page"` 且「使用者管理」子項不帶；L0「系統管理」觸發項仍依既有 FR-006／FR-007 顯示 active 樣式與 `aria-current="page"`；改為位於 `user-management.html` 時則反之。
+4. **Given** viewport `<= MOBILE_BP`，或 Desktop Sidebar 已收合為 `SIDEBAR_COLLAPSED_WIDTH`，**When** 點擊「系統管理」，**Then** 直接導向 `user-management.html`，不開啟次選單，與本次變更前行為一致。
+5. **Given** `super_admin` 位於 `user-management.html`，**When** 不透過側欄次選單、直接點擊頁內既有 admin-tabs 的「角色設定」，**Then** 導向 `role-settings.html`，既有 tabs 導頁契約（spec 006 FR-010、spec 007 FR-006）不變。
+
+**次選單行為規則**：
+
+- 次選單子項不計入既有 FR-002／FR-003A 之 L0 導覽項清單與計數，`.navbar-center .nav-link` 選擇器命中數維持 `user`=5／`super_admin`=6 不變。
+- 觸發方式為點擊「系統管理」；再次點擊觸發項、點擊選單外任一處，或按 `Esc`，皆會關閉次選單。
+- 觸發項帶 `aria-haspopup="true"` 與正確同步的 `aria-expanded` 狀態；次選單容器使用 `role="menu"`，子項使用 `role="menuitem"`。
+- 次選單子項依目前頁面（`user-management` 或 `role-settings`）標示恰一個「目前項」（`aria-current="page"` 與對應樣式）；此標示與既有 L0「系統管理」active 狀態（FR-006）為互補關係，不互斥、不重複渲染兩種語意。
+- Mobile（`<= MOBILE_BP`）或 Desktop Sidebar 收合（`SIDEBAR_COLLAPSED_WIDTH`）狀態下，「系統管理」維持既有行為——點擊直接導向 `user-management`，不開啟次選單。
+- 本次新增為 `user-management.html` 既有 admin-tabs（使用者管理／角色設定，spec 006 FR-010、spec 007 FR-006）導覽之外的**額外**直達入口，不移除或改變 admin-tabs 既有行為與導頁契約。
+
+---
+
 ### 邊界情況
 
 - zh/en 長度差異不得造成 L0 文字截斷到不可辨識。
@@ -342,6 +369,12 @@ Desktop 使用者可將左側 Sidebar 收合為 icon-only，以增加主內容�
 - **FR-018D**：通知 dropdown 定位規則：Desktop 展開時 `left: SIDEBAR_WIDTH`；Desktop 收合時 `left: SIDEBAR_COLLAPSED_WIDTH`；Mobile 時 `top: MOBILE_TOP_HEIGHT`，靠右對齊。
 - **FR-018E**：通知 dropdown 不提供跳轉「通知設定」連結；通知偏好設定位於 `/profile` 通知設定區塊（見 spec 005 FR-013B）。
 - **FR-018F**：通知資料來源由目前頁面或 prototype mock 提供；本規格僅定義 Shared Navbar 前端展示契約，不新增通知 API、後端事件模型或跨模組資料擁有權。
+- **FR-019**（issue #725 新增）：Desktop（`> MOBILE_BP`）且 Sidebar 未收合時，L0「系統管理」項目必須提供可展開次選單，內容恰為「使用者管理」（→ `user-management`）與「角色設定」（→ `role-settings`）兩個子項連結；次選單子項不計入 FR-002／FR-003A 之 L0 導覽項清單與計數。
+- **FR-019A**：次選單觸發方式為點擊「系統管理」；再次點擊觸發項、點擊選單外任一處，或按 `Esc`，必須關閉次選單。
+- **FR-019B**：次選單觸發項必須帶 `aria-haspopup="true"` 與正確同步的 `aria-expanded` 狀態；次選單容器必須使用 `role="menu"`，子項必須使用 `role="menuitem"`。
+- **FR-019C**：次選單子項必須依目前頁面（`user-management` 或 `role-settings`）標示恰一個「目前項」（`aria-current="page"` 與對應樣式）；此標示與既有 L0「系統管理」active 狀態（FR-006）為互補關係，不互斥、不重複渲染兩種語意。
+- **FR-019D**：Mobile（`<= MOBILE_BP`）或 Desktop Sidebar 收合（`SIDEBAR_COLLAPSED_WIDTH`）狀態下，「系統管理」必須維持既有行為——點擊直接導向 `user-management`，不開啟次選單，與本次變更前互動路徑完全一致。
+- **FR-019E**：本次新增為 `user-management.html` 既有 admin-tabs（使用者管理／角色設定，spec 006 FR-010、spec 007 FR-006）導覽之外的額外直達入口；不得移除或改變 admin-tabs 既有行為與導頁契約。
 
 ### 使用者流程與導頁
 
@@ -477,6 +510,9 @@ flowchart LR
 - **SC-011C**：通知 dropdown 不包含「通知設定」跳轉連結；通知偏好設定入口位於 `/profile`（spec 005）。
 - **SC-011D**：語系為 `en` 時，通知 dropdown 不得顯示中文任務名稱或中文相對時間；語系為 `zh` 時，通知 dropdown 不得顯示英文事件句型。
 - **SC-011E**：Shared Navbar 可使用頁面或 prototype mock 提供的通知資料渲染 badge 與 dropdown；驗收不得要求本規格提供通知 API 或後端事件模型。
+- **SC-012**（issue #725 新增）：`super_admin` 在 Desktop 未收合 Sidebar，可透過「系統管理」次選單於一次點擊內直達 `role-settings`，不需先進入 `user-management`。
+- **SC-012A**：次選單子項不影響本規格既有的 L0 可見性與計數矩陣（`user`=5／`super_admin`=6 維持不變）。
+- **SC-012B**：Mobile 與 Desktop 收合狀態下「系統管理」點擊行為與次選單新增前一致，不因本次變更產生互動落差或死角。
 
 ### 驗證建議
 
@@ -521,6 +557,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.5.0 | 2026-09-13 | Issue #725（OpenSpec change `admin-role-settings-nav-shortcut`，PR #757）：新增使用者故事 8（系統管理次選單快速直達）、FR-019 群（FR-019／FR-019A／FR-019B／FR-019C／FR-019D／FR-019E）與 SC-012 群（SC-012／SC-012A／SC-012B）——`super_admin` 在 Desktop 未收合 Sidebar 時，L0「系統管理」項目提供可展開次選單（使用者管理／角色設定兩個子項連結），一次點擊即可直達 `role-settings`，不需先落地 `user-management`；Mobile 與 Desktop 收合狀態維持既有單一連結行為。次選單子項不計入既有 FR-002／FR-003A／SC-003 之 L0 導覽項清單與計數，兩者文字逐字不變，僅在「L0 群組與目標頁（IA Contract）」之 Admin 條目補註次選單存在事實。維護者已就「新增側欄一級項目 vs. 展開次選單」的架構衝突裁示採用後者（不新增/移除 L0 項目）。 |
 | 1.4.4 | 2026-09-13 | 結構補齊：新增缺漏的 `## 功能目標` 標題（Project SDD lint `SPEC_REQUIRED_HEADING` ratchet——OpenSpec change `admin-role-settings-nav-shortcut`（issue #725）首次以本流程觸碰本規格，觸發既有 legacy heading debt 的強制補齊）。規格條文未變，純結構 patch；`scripts/sdd-lint-baseline.txt` 同步移除本檔對應的 `LEGACY_SPEC_HEADING` 豁免項。 |
 | 1.4.3 | 2026-08-26 | **修正快捷鍵總覽 `R` 列標籤誤導性文案**（issue #409）：v1.4.1 加上的「（限正式標記）」註記，字面上讀起來像整個退回動作／`R` 快捷鍵都被限制在 `official_run`，但實際上 reject 控件與 `R` 鍵在 `dry_run` 一樣可用且必須維持一致呈現（annotation-015 **AC-3.33** 禁止審核卡上任何依 `run_type` 分流的呈現分支）——僅有「退回時把標記員狀態回退為待標記」這個副作用（annotation-015 FR-014I／AC-3.15／AC-6.4）才是 `official_run` 專屬。修法：標籤字面由「退回目前結果（限正式標記）」改為「退回目前結果（回退標記員狀態僅限正式標記）」（en：「Return current result (formal runs only)」改為「Return current result (annotator status rollback is formal-run only)」），將限定範圍精確掛在「回退標記員狀態」上。規格條文未變（FR-016G／SC-009D 既有行為的標籤字面精確化，非新增契約）；同步修訂 AC 6 例示、FR-016G 與 SC-009D 的標籤字面。 |
 | 1.4.2 | 2026-08-24 | Issue #261：新增 Prototype Traceability，明確對應共用 `sidebar.js`／`sidebar.css`（14 個消費頁面）與 living styleguide 參考頁的責任邊界；規格條文未變。 |
