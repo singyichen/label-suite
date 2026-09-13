@@ -37,15 +37,16 @@ issue #724 指出 Step 1 有兩個結構性的高點擊位置：① 任務型態
 - 衍生檢視：`openspec/specs/task-management/013-task-new/spec.md`（archive 時自動合併）
 - `specs/STATUS.md`：`task-management-013` 列版本號與分支欄同步更新
 
-**原型程式（Principle X 之產品檔案盤點，共 3 個手寫產品檔案）**
+**原型程式（Principle X 之產品檔案盤點，共 4 個手寫產品檔案）**
 
 | 檔案 | 變更 |
 |------|------|
 | `design/prototype/pages/task-management/task-config.data.js` | 新增 `TASK_TYPE_PRESETS` 常數（config-driven 預設清單） |
 | `design/prototype/pages/task-management/task-config.engine.js` | 新增 `renderTaskTypePresets()` / `applyTaskTypePreset()`，接入既有 `initTaskTypeChips()` |
 | `design/prototype/pages/task-management/task-new.html` | Step 1 新增預設按鈕容器與其 zh/en 標籤，語言切換時同步重繪 |
+| `design/prototype/pages/task-management/task-config.css` | 新增預設按鈕群組與按鈕的最小樣式，沿用既有 chip 樣式慣例 |
 
-3 個手寫產品檔案、預估 diff 遠低於 300 行，單一 PR 即可完成（propose／apply／archive 同 PR，依 ADR-033 Rule 1 與 git-workflow.md）。
+4 個手寫產品檔案、預估 diff 遠低於 300 行，單一 PR 即可完成（propose／apply／archive 同 PR，依 ADR-033 Rule 1 與 git-workflow.md）。
 
 **測試**
 
@@ -61,7 +62,7 @@ issue #724 指出 Step 1 有兩個結構性的高點擊位置：① 任務型態
 |------|------|
 | **Generalization-First（NON-NEGOTIABLE）** | ✅ 通過。`TASK_TYPE_PRESETS` 為資料表而非任務類型專屬程式邏輯；套用邏輯讀取 preset 的 `category`／`inputType`／`outputTypes` 欄位並重用既有 `syncChipsFromState()` / `onChipSelectionChange()`，不在選擇核心流程新增依大分類或輸出類型 key 的硬編分支。 |
 | **Data Fairness（NON-NEGOTIABLE）** | ✅ 通過。本 change 僅影響 Step 1 任務類型選擇的互動效率，不涉及任何標記者可見資料或 ground-truth 欄位。 |
-| **Principle X（PR 規模）** | ✅ 通過，3 個手寫產品檔案、預估 diff 遠低於 300 行，單一 PR 即可完成，無需拆分。 |
+| **Principle X（PR 規模）** | ✅ 通過，4 個手寫產品檔案、預估 diff 遠低於 300 行，單一 PR 即可完成，無需拆分。 |
 | **TDD** | ✅ 每項可觀察行為皆配對 Red（`senior-qa` 角色）與 Green（`senior-frontend` 角色）任務，Red 須先 commit 並留下預期失敗證據。 |
 | **PR Single Purpose** | ✅ 單一目的：「Step 1 任務類型選擇新增一鍵預設，降低必點次數」。 |
 | **Simplicity First** | ✅ 不新增資料形狀、不改變既有驗證關卡；預設清單本版僅 1 筆，足以驗證機制且不過度設計。 |
