@@ -69,7 +69,7 @@ test.describe('Issue #724 — Step 1 task type one-click preset', () => {
   test('one click on the preset button reaches the same chip state as three manual chip clicks', async ({ page }) => {
     await page.goto(TASK_NEW_URL);
 
-    const preset = page.locator('[data-testid="task-type-preset-classification_single_label"]');
+    const preset = page.locator('[data-testid="task-type-preset-classification-single-label-btn"]');
     await expect(preset).toBeVisible();
 
     let presetClicks = 0;
@@ -101,7 +101,7 @@ test.describe('Issue #724 — Step 1 task type one-click preset', () => {
     // AFTER: reload for a clean state, then apply the one-click preset.
     await page.reload();
     let presetClicks = 0;
-    await page.click('[data-testid="task-type-preset-classification_single_label"]');
+    await page.click('[data-testid="task-type-preset-classification-single-label-btn"]');
     presetClicks += 1;
     expect(presetClicks).toBe(1);
 
@@ -113,7 +113,7 @@ test.describe('Issue #724 — Step 1 task type one-click preset', () => {
   test('the three-group selector remains fully adjustable after applying the preset', async ({ page }) => {
     await page.goto(TASK_NEW_URL);
 
-    await page.click('[data-testid="task-type-preset-classification_single_label"]');
+    await page.click('[data-testid="task-type-preset-classification-single-label-btn"]');
     await page.click('#taskCategoryChips [data-key="sequence"]');
 
     await expect(page.locator('#taskCategoryChips [data-key="classification"]')).toHaveAttribute('aria-checked', 'true');

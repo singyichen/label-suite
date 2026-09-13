@@ -5649,7 +5649,7 @@ function renderTaskTypePresets() {
     var btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'task-type-preset-btn';
-    btn.setAttribute('data-testid', 'task-type-preset-' + preset.key);
+    btn.setAttribute('data-testid', 'task-type-preset-' + preset.key.replace(/_/g, '-') + '-btn');
     btn.textContent = preset[state.lang] || preset.zh;
     btn.addEventListener('click', function() { applyTaskTypePreset(preset); });
     container.appendChild(btn);
