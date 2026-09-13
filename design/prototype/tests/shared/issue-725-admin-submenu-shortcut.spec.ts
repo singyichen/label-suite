@@ -87,6 +87,18 @@ test.describe('Admin submenu direct shortcut to role-settings (issue #725)', () 
     await expect(page).toHaveURL(/user-management\.html$/);
   });
 
+  test('exactly 768px (mobile CSS boundary): 系統管理 still navigates directly to user-management without opening a submenu', async ({ page }) => {
+    // Regression for PR review finding: sidebar.css's mobile media query is
+    // `max-width: 768px`, so 768px itself must fall back to the plain link
+    // instead of toggling a menu the CSS still force-hides.
+    await page.setViewportSize({ width: 768, height: 1024 });
+    await page.goto('/pages/dashboard/dashboard.html?scenario=super_admin_data');
+
+    await page.getByTestId('admin-nav-trigger').click();
+
+    await expect(page).toHaveURL(/user-management\.html$/);
+  });
+
   test('desktop collapsed sidebar: 系統管理 still navigates directly to user-management without opening a submenu', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.addInitScript(() => {

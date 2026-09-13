@@ -343,7 +343,13 @@
   }
 
   function isAdminSubmenuAvailable() {
-    return isDesktopViewport() && !document.body.classList.contains('sidebar-collapsed');
+    // Reuse the 769px desktop boundary (shouldEnableDesktopSidebarCollapse)
+    // instead of isDesktopViewport()'s 768px: sidebar.css's mobile media query
+    // is `max-width: 768px`, so at exactly 768px isDesktopViewport() would
+    // report desktop while the CSS still force-hides the submenu, leaving the
+    // trigger toggling an invisible menu instead of falling back to
+    // data-admin-href (issue #725 PR review).
+    return shouldEnableDesktopSidebarCollapse() && !document.body.classList.contains('sidebar-collapsed');
   }
 
   function setAdminSubmenuExpanded(trigger, submenu, expanded) {
