@@ -1675,7 +1675,7 @@
     var reviewerId = context.identity && context.identity.reviewerId;
     if (!reviewerId) return units;
     var assigned = window.LabelSuiteAnnotationWorkspaceData.getAssignedReviewUnits(
-      context.runType, reviewerId,
+      context.taskId, context.runType, reviewerId,
       units.map(function (unit) {
         return { sample_id: unit.recordId, annotator_id: unit.annotator };
       }));

@@ -86,10 +86,28 @@ test.describe('issue #617: 審核指派名冊來源為任務自身的 reviewer_i
     const reviewerIds = await taskReviewerIds(page);
     expect(reviewerIds.length).toBeGreaterThan(0);
 
-    /* The list page and the workspace must agree on who owns what:
-       findNextActionableReviewUnit() gates on the same assignment, so a task
-       reviewer whose list is non-empty must also have somewhere to go. */
-    for (const reviewerId of reviewerIds) {
+    /* The list page and the workspace must agree on WHO may act:
+       findNextActionableReviewUnit() gates on the same FR-093 assignment, so
+       anyone it hands a unit to has to be someone this task checked. Not
+       "every task reviewer has work" -- a task can have fewer unfinalized
+       units than reviewers, and T015 deliberately does (one pending unit
+       against four reviewers), so that stronger claim would be false for
+       reasons that have nothing to do with this defect.
+
+       Candidates deliberately include the demo seed's own roster: before the
+       fix that seed WAS the assignment source, so its members could act on a
+       task that had never checked them -- which is exactly what this asserts
+       can no longer happen. */
+    const candidates = await page.evaluate((ids) => {
+      const data = (window as unknown as {
+        LabelSuiteAnnotationWorkspaceData: { REVIEWER_ROSTER: { id: string }[] };
+      }).LabelSuiteAnnotationWorkspaceData;
+      const seed = data.REVIEWER_ROSTER.map((r) => r.id);
+      return [...new Set([...ids, ...seed, 'reviewer_outsider'])];
+    }, reviewerIds);
+
+    let actionableCount = 0;
+    for (const reviewerId of candidates) {
       const next = await page.evaluate(
         ([taskId, runType, id]) => {
           const data = (window as unknown as {
@@ -101,7 +119,14 @@ test.describe('issue #617: 審核指派名冊來源為任務自身的 reviewer_i
         },
         [TASK, RUN_TYPE, reviewerId]
       );
-      expect(next, `${reviewerId} is a ${TASK} reviewer and must have an actionable unit`).not.toBeNull();
+      if (next === null) continue;
+      actionableCount += 1;
+      expect(reviewerIds, `${reviewerId} may act on ${TASK} so ${TASK} must have checked them`)
+        .toContain(reviewerId);
     }
+
+    /* Without this the loop above passes vacuously if nobody can act at all. */
+    expect(actionableCount, `${TASK} must leave at least one reviewer something to do`)
+      .toBeGreaterThan(0);
   });
 });
