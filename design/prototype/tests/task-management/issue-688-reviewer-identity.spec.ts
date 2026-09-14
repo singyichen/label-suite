@@ -19,9 +19,10 @@
  * ---------------------------------------------------------------------
  * Contract decided by this Red:
  *
- *   The seven TASK_MEMBERS people (Mandy Chen / Kevin Liu / Rachel Wu /
- *   Alex Wang / Olivia Lin / Jason Huang / Derek Yeh) are NOT changing --
- *   this is only adding an `id` field alongside the existing `email` field.
+ *   The TASK_MEMBERS people are NOT changing -- this is only adding an
+ *   `id` field alongside the existing `email` field. (issue #617 later
+ *   added four more members, so the roster size below is 11, not the seven
+ *   this Red was written against; nothing else about the contract moved.)
  *   The literal id values are Green's choice (the spec only pins the shape:
  *   a slug, cf. annotation/015-annotation-workspace's REVIEWER_ROSTER shape
  *   `reviewer_wang`), so every assertion below checks shape (lowercase
@@ -102,7 +103,7 @@ test.describe('Task detail reviewer identity format — opaque user id, not Emai
     await page.goto(TASK_DETAIL_URL);
     const members = await getTaskMembers(page);
 
-    expect(members).toHaveLength(7);
+    expect(members).toHaveLength(11);
     members.forEach((member) => {
       expect(typeof member.id, `member ${member.name} is missing an id field`).toBe('string');
       expect(member.id).not.toContain('@');
