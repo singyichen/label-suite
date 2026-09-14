@@ -2810,11 +2810,12 @@
    * decided or may not decide. Lower rank wins; ties keep enumeration order,
    * so the earliest unit of the strongest category is the target.
    *
-   *   1  pending    -- nobody has reviewed it yet. A null status (annotator
-   *                    has not submitted) ranks here too, matching how
-   *                    computeReviewSummary counts it and how the list row
-   *                    renders it, so the CTA can never contradict the 待審
-   *                    count shown next to it.
+   *   1  pending    -- nobody has reviewed it yet AND the unit is THIS
+   *                    reviewer's FR-093 assignment. A null status
+   *                    (annotator has not submitted) ranks here too,
+   *                    matching how computeReviewSummary counts it and how
+   *                    the list row renders it, so the CTA can never
+   *                    contradict the 待審 count shown next to it.
    *   2  disputed   -- only when FR-060 lets THIS reviewer arbitrate it:
    *                    can_arbitrate plus no submission of their own on the
    *                    unit. A reviewer who produced the dispute must never
@@ -2824,9 +2825,20 @@
    *
    * Nothing here reads a task id: the rule is task state plus reviewer
    * identity only (Generalization-First). */
-  function reviewUnitActionRank(taskId, runType, unit, reviewerId) {
+  /* issue #719 (FR-073 clause 2, spec 015 v6.2.0): `assignedKeys` is the set
+   * of units FR-093 assigned to this reviewer, NUL-joined the same way
+   * annotation-list.html's filterToAssignedUnits() keys them. Rank 1 now
+   * requires membership -- without it a reviewer is handed a pending unit
+   * that belongs to someone else, which is exactly the self-selection
+   * FR-093 forbids. Rank 2 deliberately does NOT consult it: an eligible
+   * arbiter holds no submission on the unit and the assignee is precisely
+   * who does, so requiring assignment there would leave FR-060 arbitration
+   * with no reachable target at all. */
+  function reviewUnitActionRank(taskId, runType, unit, reviewerId, assignedKeys) {
     var identity = { annotatorId: unit.annotatorId, reviewerId: reviewerId };
-    if (unit.status === null || unit.status === REVIEW_UNIT_STATUS.PENDING) return 1;
+    if (unit.status === null || unit.status === REVIEW_UNIT_STATUS.PENDING) {
+      return assignedKeys[unit.sampleId + '\u0000' + unit.annotatorId] === true ? 1 : 0;
+    }
     if (unit.status === REVIEW_UNIT_STATUS.DISPUTED) {
       return isArbiterCandidate(taskId, runType, unit.sampleId, identity) ? 2 : 0;
     }
@@ -2837,10 +2849,22 @@
      nothing left to do on the task -- the caller must then say so rather
      than opening an arbitrary read-only unit. */
   function findNextActionableReviewUnit(taskId, runType, reviewerId) {
+    var units = listReviewUnits(taskId, runType);
+    /* The FULL enumeration goes in: getReviewAssignments() is positional --
+       official_run walks the sorted list with a fixed stride and dry_run
+       keys on a sample's first appearance -- so handing it a pre-filtered
+       subset would shift every reviewer's share and make the workspace
+       disagree with the list page about who owns what. */
+    var assignedKeys = {};
+    getAssignedReviewUnits(runType, reviewerId, units.map(function (unit) {
+      return { sample_id: unit.sampleId, annotator_id: unit.annotatorId };
+    })).forEach(function (assigned) {
+      assignedKeys[assigned.sample_id + '\u0000' + assigned.annotator_id] = true;
+    });
     var best = null;
     var bestRank = 0;
-    listReviewUnits(taskId, runType).forEach(function (unit) {
-      var rank = reviewUnitActionRank(taskId, runType, unit, reviewerId);
+    units.forEach(function (unit) {
+      var rank = reviewUnitActionRank(taskId, runType, unit, reviewerId, assignedKeys);
       if (rank === 0) return;
       if (best === null || rank < bestRank) {
         best = unit;

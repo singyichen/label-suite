@@ -660,7 +660,30 @@ async function submitCorrection(page: Page, sampleId: string, annotatorId: strin
   // issue #552 (FR-016A): a reject needs a reason before submit goes through.
   await page.getByTestId('ws-review-reason').fill('理由');
   await page.getByTestId('ws-review-submit-btn').click();
-  await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
+  /* issue #719 (FR-099): a non-finalizing review submit no longer stays on
+   * the unit it just submitted -- it advances in place to the next
+   * actionable unit, or returns to the list with
+   * notice=no_actionable_review when the reviewer has none left. The
+   * success toast therefore belongs to a card this helper is already off,
+   * so leaving the submitted unit IS the success signal: FR-099 clause 6
+   * makes navigation conditional on the write having succeeded, and the
+   * just-submitted unit can never be its own target (its submitter is a
+   * participant, so isArbiterCandidate() rules it out and
+   * reviewUnitActionRank() scores it 0).
+   *
+   * submitApproval() above keeps the toast assertion on purpose: an
+   * `approve` finalizes the unit, and FR-099 clause 7 exempts a finalizing
+   * submit from advancing at all. */
+  await expect.poll(() => page.url()).not.toContain('sample_id=' + sampleId);
+  /* The URL flips as soon as the navigation commits, but callers read
+   * derived state straight off this page afterwards -- wait until the
+   * destination's data module has actually booted, or the very next
+   * page.evaluate() lands in a half-loaded document. waitForFunction (not
+   * expect.poll) because it re-installs itself in the new execution
+   * context instead of throwing when navigation destroys the old one. */
+  await page.waitForFunction(
+    () => Boolean((window as unknown as Record<string, unknown>).LabelSuiteAnnotationWorkspaceData)
+  );
 }
 
 test('XROLE-10: project leader publishes the official run and the assigned annotators submit (checkpoint C)', async () => {

@@ -190,8 +190,11 @@ test.describe('Dashboard — review-flow demo tasks (T014-T017)', () => {
 
   /* Issue #449: the quick-review action lands on the next unit the
      can_arbitrate reviewer can actually act on, not the task's first dataset
-     record -- T014's first record is finalized for every annotator, so the
-     first actionable unit is the pending dry-02 x tony0950127 one. The
+     record -- T014's first record is finalized for every annotator. Issue
+     #719 then narrowed "can act on" to the units FR-093 actually assigned
+     to this reviewer, and dry_run assigns per sample in first-appearance
+     order (dry-01 wang, dry-02 li, dry-03 chen), so reviewer_chen's first
+     actionable unit is the pending dry-03 x kioleemg12 one. The
      per-priority rule itself is pinned by
      dashboard-quick-review-next-actionable.spec.ts. */
   test('reviewer quick-review opens the workspace on the next actionable unit as reviewer_chen', async ({ page }) => {
@@ -202,8 +205,8 @@ test.describe('Dashboard — review-flow demo tasks (T014-T017)', () => {
 
     await expect(page).toHaveURL(/\/pages\/annotation\/annotation-workspace\.html\?/);
     await expect(page).toHaveURL(/task_id=T014/);
-    await expect(page).toHaveURL(/sample_id=dry-02-one-divergent/);
-    await expect(page).toHaveURL(/annotator_id=tony0950127/);
+    await expect(page).toHaveURL(/sample_id=dry-03-dispute-open/);
+    await expect(page).toHaveURL(/annotator_id=kioleemg12/);
     await expect(page).toHaveURL(/role=reviewer/);
     await expect(page).toHaveURL(/run_type=dry_run/);
     await expect(page).toHaveURL(/reviewer_id=reviewer_chen/);

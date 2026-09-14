@@ -69,20 +69,24 @@ function quickReviewButton(page: Page, taskId: string) {
 
 test.describe('Dashboard — quick review opens the next actionable unit', () => {
   /* T014's first record (dry-01-all-agree) is finalized for all three
-     annotators; the first unit anybody still has to review is
-     dry-02-one-divergent x tony0950127. dry-02 x 113450022 sorts EARLIER in
-     the enumeration but is not actionable either way -- it is finalized
-     (issue #551: its sole reviewer's correction converges at N=1), so this
-     test still pins pending as the top priority, just no longer against a
-     disputed sibling. */
+     annotators. The first unit ANYBODY still has to review is
+     dry-02-one-divergent x tony0950127, but issue #719 made rank 1 require
+     that the unit be FR-093-assigned to the signed-in reviewer, and dry_run
+     assigns per SAMPLE in first-appearance order -- dry-01 to reviewer_wang,
+     dry-02 to reviewer_li, dry-03 to reviewer_chen. So reviewer_chen's own
+     first pending unit is dry-03-dispute-open x kioleemg12: within that
+     sample 113450022 is finalized (issue #551: its sole reviewer's
+     correction converges at N=1) and tony0950127 sorts later by
+     annotator_id. This test still pins pending as the top priority -- the
+     unit it lands on is just the reviewer's own, not the task's. */
   test('routes to the first pending unit, not the first dataset record', async ({ page }) => {
     await openReviewerScenario(page);
     await quickReviewButton(page, 'T014').click();
 
     await expect(page).toHaveURL(/\/pages\/annotation\/annotation-workspace\.html\?/);
     await expect(page).toHaveURL(/task_id=T014/);
-    await expect(page).toHaveURL(/sample_id=dry-02-one-divergent/);
-    await expect(page).toHaveURL(/annotator_id=tony0950127/);
+    await expect(page).toHaveURL(/sample_id=dry-03-dispute-open/);
+    await expect(page).toHaveURL(/annotator_id=kioleemg12/);
     await expect(page).toHaveURL(/reviewer_id=reviewer_chen/);
     await expect(page).toHaveURL(/role=reviewer/);
     await expect(page).toHaveURL(/run_type=dry_run/);
