@@ -590,8 +590,16 @@
    * `reason` is required by FR-089 rather than merely expected: without the
    * guard, appendHistoryEvent's null-key drop would quietly emit a
    * reason-less event, which is the exact outcome FR-089 forbids. Silent
-   * return follows markSampleRejected's run_type guard. */
-  function appendSampleTimelineEvent(taskId, runType, sampleId, action, role, reason, historySummary, identity, timing) {
+   * return follows markSampleRejected's run_type guard.
+   *
+   * `resultSnapshot` (issue #754) is optional and appended last so every
+   * pre-existing positional call site (markSampleSkipped below) keeps
+   * passing undefined for it without being touched -- appendHistoryEvent's
+   * `!= null` filter already drops undefined/null extras, so an event with
+   * no result to show (skipped, or an arbitration `reject`/`兩者皆非`
+   * outcome) ends up with no `result_snapshot` key at all, same as before
+   * this parameter existed. */
+  function appendSampleTimelineEvent(taskId, runType, sampleId, action, role, reason, historySummary, identity, timing, resultSnapshot) {
     if (!reason) return;
     var key = submissionBucketKey(taskId, 'annotator', runType, identity);
     var bucket = readSubmissionBucket(key);
@@ -601,7 +609,7 @@
       bucket[sampleId] = entry;
     }
     appendHistoryEvent(entry, action, role, historySummary, actorIdFor(role, identity), Object.assign(
-      { reason: reason },
+      { reason: reason, result_snapshot: resultSnapshot || null },
       timingFields(timing)
     ));
     writeSubmissionBucket(key, bucket);
@@ -2457,6 +2465,36 @@
    * instead of appending a duplicate -- finalized_value/finalized_by are
    * already last-write-wins for the same item, so votes[] must stay one
    * entry per arbiter to match. */
+
+  /* issue #754: the definitive result for the 'adjudicated' history event,
+     reusing the SAME buildResultSnapshot(payload) shape (previewState /
+     previewEntities / previewTriples) that every other settling action
+     already writes -- FR-096's dry-run feedback (buildDryRunFeedbackRow())
+     runs BOTH myAnswer and finalizedAnswer through convertSubmissionAnswer(),
+     which reads that exact shape, so `adjudicated` must match it too instead
+     of the lossy CompactAnswer shape `decision.value` carries.
+     `adopt_a` finalizes to the annotator's own submitted payload,
+     `adopt_b` to the unit's one assigned reviewer's submitted payload
+     (FR-093: exactly one reviewer per unit, so reviewerSubmissions[0] is
+     unambiguous -- the same lookup buildArbitrationCard() uses in
+     annotation-workspace.config.js). `reject` ("兩者皆非") finalizes to
+     nothing, matching design.md D2's "bypass 不存值" convention: returning
+     null here means appendSampleTimelineEvent's `resultSnapshot || null`
+     leaves `result_snapshot` off the event entirely (appendHistoryEvent's
+     `!= null` filter), the same "absent, not a stored null" outcome bypass
+     already gets. */
+  function arbitrationFinalizedSnapshot(taskId, runType, sampleId, identity, choice) {
+    if (choice === 'adopt_a') {
+      var annotatorAnswers = getSubmission(taskId, 'annotator', runType, sampleId, identity);
+      return annotatorAnswers ? buildResultSnapshot(annotatorAnswers) : null;
+    }
+    if (choice === 'adopt_b') {
+      var reviewerSubmission = readReviewerSubmissions(taskId, runType, sampleId, identity)[0];
+      return reviewerSubmission ? buildResultSnapshot(reviewerSubmission.answers) : null;
+    }
+    return null;
+  }
+
   function submitArbitration(taskId, runType, sampleId, identity, decisions) {
     var bucketKey = arbitrationBucketKey(taskId, runType, identity);
     var arbiterId = (identity && identity.reviewerId) || DEFAULT_REVIEWER_ID;
@@ -2490,7 +2528,8 @@
          reason is asked per item. */
       appendSampleTimelineEvent(
         taskId, runType, sampleId, 'adjudicated', 'reviewer',
-        decision.reason, 'arbitration finalized: ' + decision.itemId, identity
+        decision.reason, 'arbitration finalized: ' + decision.itemId, identity,
+        undefined, arbitrationFinalizedSnapshot(taskId, runType, sampleId, identity, decision.choice)
       );
       if (decision.value === PURE_REJECT_VALUE) upheldRejectItemIds.push(decision.itemId);
     });
