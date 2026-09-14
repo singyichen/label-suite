@@ -27,8 +27,10 @@ function reviewerUrl(taskId: string, sampleId: string): string {
 
 test.beforeEach(async ({ page }) => {
   await skipGuidelineModal(page);
-  // Two full workspace navigations per case (annotator then reviewer) can
-  // exceed the default 30s in this sandbox's slower page-load conditions.
+  // Four full workspace navigations per case (annotator, reviewer, the
+  // reviewer re-open that issue #719's FR-099 auto-advance made necessary,
+  // then arbiter) can exceed the default 30s in this sandbox's slower
+  // page-load conditions.
   test.setTimeout(60_000);
 });
 
@@ -56,6 +58,13 @@ test.describe('issue #750: bypass/modify without an edited answer still derives 
     await page.getByTestId('ws-review-submit-btn').click();
     await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
 
+    /* issue #719 (FR-099, spec 015 v6.2.0): a submit that leaves the unit
+     * unfinalized now auto-advances this reviewer to their next actionable
+     * unit, so the unit context still on screen is no longer sent-001's.
+     * Re-open the unit to assert the derivation this spec is guarding --
+     * the assertion below must read sent-001, not wherever FR-099 landed. */
+    await page.goto(reviewerUrl('T001', 'sent-001'));
+    await dismissGuidelineModal(page);
     await expect(page.locator('[data-testid="ws-review-unit-context"] .rv-unit-state'))
       .toHaveText('爭議中 · 未定稿，待仲裁');
 
@@ -92,6 +101,13 @@ test.describe('issue #750: bypass/modify without an edited answer still derives 
     await page.getByTestId('ws-review-submit-btn').click();
     await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
 
+    /* issue #719 (FR-099, spec 015 v6.2.0): a submit that leaves the unit
+     * unfinalized now auto-advances this reviewer to their next actionable
+     * unit, so the unit context still on screen is no longer sent-001's.
+     * Re-open the unit to assert the derivation this spec is guarding --
+     * the assertion below must read sent-001, not wherever FR-099 landed. */
+    await page.goto(reviewerUrl('T001', 'sent-001'));
+    await dismissGuidelineModal(page);
     await expect(page.locator('[data-testid="ws-review-unit-context"] .rv-unit-state'))
       .toHaveText('爭議中 · 未定稿，待仲裁');
 
