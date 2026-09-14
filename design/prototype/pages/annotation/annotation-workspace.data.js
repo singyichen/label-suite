@@ -2192,8 +2192,8 @@
           annotatorAnswer,
           convertSubmissionAnswer(outKey, submission.answers)
         ).diffs;
-        /* issue #750 (extends issue #551's `reject` case): a `bypass` with
-           no stored value, or a `modify` left at the annotator's own value,
+        /* issue #750 (extends issue #551's `reject` case): a `bypass` left on
+           the annotator's own value, or a `modify` left at that same value,
            produces no FR-052 diff (the compared value is unchanged), so
            compareOutputAnswer() has nothing to report -- synthesize one
            whole-outKey diff so the decision still becomes an arbitrable
@@ -2215,11 +2215,24 @@
            merely equals the annotator's. `reject` keeps the original
            PURE_REJECT_VALUE sentinel (pre-issue-#596 dry_run demo seed rows,
            e.g. issue #502's T014 dry-05, still carry it). */
-        if (!diffs.length) {
-          var decision = reviewerOutKeyDecision(submission, outKey);
-          if (decision === 'bypass') {
-            diffs = [{ key: outKey, annotator: annotatorAnswer, reviewer: null }];
-          } else if (decision === 'modify') {
+        /* issue #753: `bypass` is decided by the DECISION, never by the diff.
+           FR-061 point 2 (spec.md:779) says B's rendering "必須依決策來源動態
+           決定" and that adopting a bypassed B "定案值記為無法判定，不得回填
+           標記員原答案" -- so the bypass branch must override whatever the
+           FR-052 comparison produced, not merely fill in for an empty one.
+           Gating it on `!diffs.length` assumed design.md D2's "bypass 不存值"
+           kept a bypassed answer out of the comparison, but D2 only governs
+           `values`, and convertSubmissionAnswer() compares `previewState` --
+           which collectAnswerPayload() clones unconditionally, so a reviewer
+           who edits the panel and then bypasses still produces a diff and
+           leaks that edit into both the B label and finalized_value.
+           `modify` and `reject` stay gated: their diff, when there is one,
+           already holds the reviewer's real replacement value. */
+        var decision = reviewerOutKeyDecision(submission, outKey);
+        if (decision === 'bypass') {
+          diffs = [{ key: outKey, annotator: annotatorAnswer, reviewer: null }];
+        } else if (!diffs.length) {
+          if (decision === 'modify') {
             diffs = [{ key: outKey, annotator: annotatorAnswer, reviewer: annotatorAnswer }];
           } else if (decision === 'reject') {
             diffs = [{ key: outKey, annotator: annotatorAnswer, reviewer: PURE_REJECT_VALUE }];
