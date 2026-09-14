@@ -2128,15 +2128,19 @@
   }
 
   /* issue #596: the roster that decides assignment lives HERE, not at any
-   * call site -- 014's `reviewer_ids` field is not wired up until PR
-   * group 5 (design.md D7), so today's only source is the REVIEWER_ROSTER
-   * demo seed (~line 214). Group 4's annotation-list (the only caller
-   * until group 5) only ever needs "which units is THIS reviewer
-   * assigned", never the roster itself; keeping the lookup here means
-   * group 5 swaps the roster source in exactly one place instead of
-   * every call site. */
-  function getAssignedReviewUnits(runType, reviewerId, units) {
-    var roster = REVIEWER_ROSTER.map(function (r) { return r.id; });
+   * call site -- callers only ever need "which units is THIS reviewer
+   * assigned", never the roster itself, so the source can change in one
+   * place instead of every call site. issue #617 is that change: FR-093
+   * distributes review work "在被勾選的審核員之間平均分配", and 014
+   * FR-010s-1 names `reviewer_ids` as that checked list, so the task's own
+   * field is the roster. The REVIEWER_ROSTER demo seed remains the fallback
+   * for tasks that seed no reviewer_ids -- dropping it would leave every
+   * such task with no assignable reviewer instead of today's demo cast. */
+  function getAssignedReviewUnits(taskId, runType, reviewerId, units) {
+    var profile = findTaskDetailProfile(taskId);
+    var roster = (profile && profile.reviewerIds && profile.reviewerIds.length)
+      ? profile.reviewerIds.slice()
+      : REVIEWER_ROSTER.map(function (r) { return r.id; });
     return getReviewAssignments(runType, units, roster)
       .filter(function (assignment) { return assignment.reviewer_id === reviewerId; })
       .map(function (assignment) {
@@ -2856,7 +2860,7 @@
        subset would shift every reviewer's share and make the workspace
        disagree with the list page about who owns what. */
     var assignedKeys = {};
-    getAssignedReviewUnits(runType, reviewerId, units.map(function (unit) {
+    getAssignedReviewUnits(taskId, runType, reviewerId, units.map(function (unit) {
       return { sample_id: unit.sampleId, annotator_id: unit.annotatorId };
     })).forEach(function (assigned) {
       assignedKeys[assigned.sample_id + '\u0000' + assigned.annotator_id] = true;

@@ -107,14 +107,18 @@ test.describe('Member management and review settings at mobile width (RESP-03)',
     // change handler re-renders the checklist (subset rule stays live), so
     // the clicked input node is rebuilt and focus is dropped by design --
     // the unchecked state carried into the fresh node proves the tap landed.
-    const kevinCheckbox = page
-      .locator('#reviewerOptionList .reviewer-option', { hasText: 'Kevin Liu' })
+    /* issue #617: reviewer_ids now seeds the four spec 015 REVIEWER_ROSTER
+       reviewers, so the checked option this tap has to clear is one of them
+       -- Kevin Liu is still a candidate but no longer checked, and clicking
+       an unchecked box would check it and prove nothing. */
+    const reviewerCheckbox = page
+      .locator('#reviewerOptionList .reviewer-option', { hasText: '王小明' })
       .locator('input');
-    await kevinCheckbox.scrollIntoViewIfNeeded();
-    await kevinCheckbox.click();
-    await expect(kevinCheckbox).not.toBeChecked();
+    await reviewerCheckbox.scrollIntoViewIfNeeded();
+    await reviewerCheckbox.click();
+    await expect(reviewerCheckbox).not.toBeChecked();
 
     await page.locator('#reviewSaveBtn').click();
-    await expect(page.locator('#valueReviewerIdsControl')).toHaveText('已勾選 2 人');
+    await expect(page.locator('#valueReviewerIdsControl')).toHaveText('已勾選 3 人');
   });
 });

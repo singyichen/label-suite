@@ -68,6 +68,7 @@ interface Identity {
 interface WorkspaceData {
   listReviewUnits: (taskId: string, runType: string) => ReviewUnit[];
   getAssignedReviewUnits: (
+    taskId: string,
     runType: string,
     reviewerId: string,
     units: AssignedUnit[],
@@ -130,7 +131,7 @@ test.describe('findNextActionableReviewUnit honors FR-093 assignment', () => {
 
           let assignee: string | null = null;
           for (const reviewerId of roster) {
-            const mine = data.getAssignedReviewUnits(runType, reviewerId, assignmentInput);
+            const mine = data.getAssignedReviewUnits(taskId, runType, reviewerId, assignmentInput);
             if (
               mine.some(
                 (m) => m.sample_id === firstPending.sampleId && m.annotator_id === firstPending.annotatorId,
@@ -204,7 +205,7 @@ test.describe('findNextActionableReviewUnit honors FR-093 assignment', () => {
 
             const assignedSet = new Set(
               data
-                .getAssignedReviewUnits(runType, reviewerId, assignmentInput)
+                .getAssignedReviewUnits(taskId, runType, reviewerId, assignmentInput)
                 .map((a) => `${a.sample_id} ${a.annotator_id}`),
             );
 
@@ -294,7 +295,7 @@ test.describe('findNextActionableReviewUnit honors FR-093 assignment', () => {
 
             const assignedSet = new Set(
               data
-                .getAssignedReviewUnits(runType, reviewerId, assignmentInput)
+                .getAssignedReviewUnits(taskId, runType, reviewerId, assignmentInput)
                 .map((a) => `${a.sample_id} ${a.annotator_id}`),
             );
             const key = `${result.sampleId} ${result.annotatorId}`;

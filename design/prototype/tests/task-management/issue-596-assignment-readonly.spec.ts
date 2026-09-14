@@ -110,12 +110,13 @@ test.describe('Review assignment read-only + publish gate (issue #596)', () => {
     await page.goto(TASK_DETAIL_URL + '?task_id=T001&status=draft');
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
 
-    // T001's default reviewer_ids seeds all three reviewer members (Mandy
-    // Chen, Kevin Liu, Rachel Wu); disabling every one of them drops the
+    // issue #617: T001's default reviewer_ids seeds the four spec 015
+    // REVIEWER_ROSTER reviewers; disabling every one of them drops the
     // active-member-inside-reviewer_ids count to 0, opening a gap of 1.
-    await disableMember(page, 'Mandy Chen');
-    await disableMember(page, 'Kevin Liu');
-    await disableMember(page, 'Rachel Wu');
+    await disableMember(page, '王小明');
+    await disableMember(page, '李大華');
+    await disableMember(page, '陳美玲');
+    await disableMember(page, '林佳蓉');
 
     await page.locator('#tabOverview').click();
     await expect(page.locator('#overviewPanel')).not.toHaveClass(/hidden/);
