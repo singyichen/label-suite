@@ -21,7 +21,7 @@ test.describe('Task detail review settings', () => {
     await page.locator('#reviewEditBtn').click();
 
     await page
-      .locator('#reviewerOptionList .reviewer-option', { hasText: 'Kevin Liu' })
+      .locator('#reviewerOptionList .reviewer-option', { hasText: '王小明' })
       .locator('input')
       .uncheck();
 
@@ -29,7 +29,7 @@ test.describe('Task detail review settings', () => {
     await page.locator('#reviewCancelBtn').click();
 
     await expect(page.locator('#reviewEditForm')).toHaveClass(/hidden/);
-    await expect(page.locator('#valueReviewerIdsControl')).toHaveText('已勾選 3 人');
+    await expect(page.locator('#valueReviewerIdsControl')).toHaveText('已勾選 4 人');
   });
 
   test('guards tab switches against unsaved review-setting changes', async ({ page }) => {
@@ -37,7 +37,7 @@ test.describe('Task detail review settings', () => {
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
     await page.locator('#reviewEditBtn').click();
     await page
-      .locator('#reviewerOptionList .reviewer-option', { hasText: 'Kevin Liu' })
+      .locator('#reviewerOptionList .reviewer-option', { hasText: '王小明' })
       .locator('input')
       .uncheck();
 
@@ -54,7 +54,7 @@ test.describe('Task detail review settings', () => {
     // the overview shows the summary view again (not a stale edit form).
     await page.locator('#tabOverview').click();
     await expect(page.locator('#reviewEditForm')).toHaveClass(/hidden/);
-    await expect(page.locator('#valueReviewerIdsControl')).toHaveText('已勾選 3 人');
+    await expect(page.locator('#valueReviewerIdsControl')).toHaveText('已勾選 4 人');
   });
 
   test('drops arbiters that are no longer active reviewer members', async ({ page }) => {
@@ -62,7 +62,7 @@ test.describe('Task detail review settings', () => {
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
     await page.locator('#reviewEditBtn').click();
     await page
-      .locator('#arbiterOptionList .arbiter-option', { hasText: 'Mandy Chen' })
+      .locator('#arbiterOptionList .arbiter-option', { hasText: '王小明' })
       .locator('input')
       .check();
     await page.locator('#reviewSaveBtn').click();
@@ -71,7 +71,7 @@ test.describe('Task detail review settings', () => {
     await page.locator('#tabMemberManagement').click();
     await page
       .locator('#memberTableBody tr')
-      .filter({ hasText: 'Mandy Chen' })
+      .filter({ hasText: '王小明' })
       .locator('button:has-text("停用")')
       .click();
     await page.locator('#memberActionConfirmBtn').click();
@@ -85,14 +85,14 @@ test.describe('Task detail review settings', () => {
 
     // Wait for the async panel render before toggling language (same
     // click-before-bind race guard as the sampling spec).
-    await expect(page.locator('#valueReviewerIdsControl')).toHaveText('已勾選 3 人');
+    await expect(page.locator('#valueReviewerIdsControl')).toHaveText('已勾選 4 人');
 
     await page.locator('#langToggle').click();
 
     await expect(page.locator('#reviewSettingsTitle')).toHaveText('Review Settings');
     await expect(page.locator('#labelReviewerIdsControl')).toHaveText('Reviewers');
     await expect(page.locator('#labelArbiterIdsControl')).toHaveText('Arbiters');
-    await expect(page.locator('#valueReviewerIdsControl')).toHaveText('3 selected');
+    await expect(page.locator('#valueReviewerIdsControl')).toHaveText('4 selected');
     await expect(page.locator('#valueArbiterIdsControl')).toHaveText('No arbiter designated');
   });
 });

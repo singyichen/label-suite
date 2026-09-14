@@ -55,8 +55,12 @@ test.describe('Task detail review assignment', () => {
     await expect(page.locator('#memberManagementPanel > section').nth(2).locator('h2')).toHaveText('審核指派');
     await expect(page.locator('#reviewUnassignedCount')).toHaveText('未指派 18 筆');
 
+    /* One row per ACTIVE REVIEWER MEMBER, not per checked reviewer -- issue
+       #617 added the four spec 015 roster reviewers to TASK_MEMBERS, so the
+       table grew to 7. The three seeded below are the ones
+       DEFAULT_REVIEW_WORKLOAD carries figures for; the rest render zeros. */
     const rows = page.locator('#reviewAssignmentBody tr');
-    await expect(rows).toHaveCount(3);
+    await expect(rows).toHaveCount(7);
 
     const mandyRow = rows.filter({ hasText: 'Mandy Chen' });
     await expect(mandyRow.locator('td').nth(1)).toHaveText('40');
@@ -79,11 +83,14 @@ test.describe('Task detail review assignment', () => {
   test('designated arbiters get a tag in the review assignment table', async ({ page }) => {
     await page.goto(TASK_DETAIL_URL);
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
-    await checkArbiter(page, 'Mandy Chen');
+    /* issue #617: the arbiter checklist offers only CHECKED reviewers
+       (FR-010s-1), and the default task now checks the four spec 015 roster
+       reviewers -- so the arbiter demo has to pick one of them. */
+    await checkArbiter(page, '王小明');
     await page.locator('#tabMemberManagement').click();
 
-    const mandyRow = page.locator('#reviewAssignmentBody tr').filter({ hasText: 'Mandy Chen' });
-    await expect(mandyRow.locator('.arbiter-tag')).toHaveText('仲裁');
+    const arbiterRow = page.locator('#reviewAssignmentBody tr').filter({ hasText: '王小明' });
+    await expect(arbiterRow.locator('.arbiter-tag')).toHaveText('仲裁');
   });
 
   test('disabling a reviewer returns their pending load to the unassigned pool', async ({ page }) => {
@@ -101,7 +108,7 @@ test.describe('Task detail review assignment', () => {
     // Rachel's 5 pending units flow back to the pool; her 13 done units stay
     // as historical stats (mirrors FR-005f for annotators).
     await expect(page.locator('#reviewUnassignedCount')).toHaveText('未指派 23 筆');
-    await expect(page.locator('#reviewAssignmentBody tr')).toHaveCount(2);
+    await expect(page.locator('#reviewAssignmentBody tr')).toHaveCount(6);
     const rachelRow = page.locator('#memberTableBody tr').filter({ hasText: 'Rachel Wu' });
     await expect(rachelRow.locator('td').nth(3)).toHaveText('13 筆 · 0 待審');
   });

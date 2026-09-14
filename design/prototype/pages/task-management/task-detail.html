@@ -3377,7 +3377,7 @@
     isolationEnabled: true,
     isolationLastActor: 'Mandy Chen',
     isolationLastUpdated: '2026-04-20 19:42',
-    reviewerIds: ['user_mandy', 'user_kevin', 'user_rachel'],
+    reviewerIds: ['reviewer_wang', 'reviewer_li', 'reviewer_chen', 'reviewer_lin'],
     arbiterIds: [],
     trialRounds: [
       {
@@ -3432,6 +3432,17 @@
     { id: 'user_mandy', name: 'Mandy Chen', email: 'mandy@labelsuite.io', taskRole: 'reviewer', status: 'active', joinedAt: '2026-04-20 10:13', lastActive: '2026-04-21 09:42' },
     { id: 'user_kevin', name: 'Kevin Liu', email: 'kevin.liu@labelsuite.io', taskRole: 'reviewer', status: 'active', joinedAt: '2026-04-20 10:14', lastActive: '2026-04-21 09:31' },
     { id: 'user_rachel', name: 'Rachel Wu', email: 'rachel.wu@labelsuite.io', taskRole: 'reviewer', status: 'active', joinedAt: '2026-04-20 10:14', lastActive: '2026-04-21 08:47' },
+    /* issue #617: the four demo reviewers spec 015's REVIEWER_ROSTER names.
+       They belong in this roster, not beside it: FR-010s-1 makes a task's
+       `reviewer_ids` the list FR-093 distributes review work over, and
+       REVIEWER_ID_FORMAT forbids 014 from keeping a second reviewer roster.
+       Until they were members here, the people 015 handed units to and the
+       people this task had checked were two disjoint casts, so a task's own
+       reviewer_ids could not drive assignment at all. */
+    { id: 'reviewer_wang', name: '\u738b\u5c0f\u660e', email: 'wang.xm@labelsuite.io', taskRole: 'reviewer', status: 'active', joinedAt: '2026-04-20 10:20', lastActive: '2026-04-21 09:48' },
+    { id: 'reviewer_li', name: '\u674e\u5927\u83ef', email: 'li.dh@labelsuite.io', taskRole: 'reviewer', status: 'active', joinedAt: '2026-04-20 10:21', lastActive: '2026-04-21 09:37' },
+    { id: 'reviewer_chen', name: '\u9673\u7f8e\u73b2', email: 'chen.ml@labelsuite.io', taskRole: 'reviewer', status: 'active', joinedAt: '2026-04-20 10:22', lastActive: '2026-04-21 09:21' },
+    { id: 'reviewer_lin', name: '\u6797\u4f73\u84c9', email: 'lin.jr@labelsuite.io', taskRole: 'reviewer', status: 'active', joinedAt: '2026-04-20 10:23', lastActive: '2026-04-21 08:52' },
     { id: 'user_alex', name: 'Alex Wang', email: 'alex.wang@labelsuite.io', taskRole: 'annotator', status: 'active', joinedAt: '2026-04-20 10:15', lastActive: '2026-04-21 09:12' },
     { id: 'user_olivia', name: 'Olivia Lin', email: 'olivia.lin@labelsuite.io', taskRole: 'annotator', status: 'active', joinedAt: '2026-04-20 10:16', lastActive: '2026-04-21 08:58' },
     { id: 'user_jason', name: 'Jason Huang', email: 'jason.h@labelsuite.io', taskRole: 'annotator', status: 'disabled', joinedAt: '2026-04-20 10:18', lastActive: '2026-04-20 16:11' },
@@ -4354,12 +4365,14 @@
      [reviewerId, 'approved'|'modified', modifiedValue?]. Sample text is
      read from this page's own profile.datasetRecords instead of being
      duplicated here. */
-  var REVIEWER_DEMO_NAME = {
-    reviewer_wang: '王小明',
-    reviewer_li: '李大華',
-    reviewer_lin: '林佳蓉',
-    reviewer_chen: '陳美玲'
-  };
+  /* issue #617: these display names used to live in a REVIEWER_DEMO_NAME map
+     of their own, which was the second roster REVIEWER_ID_FORMAT forbids --
+     it had to be edited in lockstep with every reviewer the task gained.
+     Now that the same people are TASK_MEMBERS, the name is looked up there. */
+  function reviewerDemoName(reviewerId) {
+    var member = TASK_MEMBERS.filter(function(m) { return m.id === reviewerId; })[0];
+    return member ? member.name : reviewerId;
+  }
 
   var REVIEW_FLOW_UNITS = {
     T014: [
@@ -4418,14 +4431,14 @@
       submittedAt: '2026-08-22 09:00',
       reviewStatus: row.rs,
       reviews: row.rv.map(function(entry) {
-        var review = { reviewer: REVIEWER_DEMO_NAME[entry[0]] || entry[0], decision: entry[1], reviewedAt: '2026-08-22 10:00' };
+        var review = { reviewer: reviewerDemoName(entry[0]), decision: entry[1], reviewedAt: '2026-08-22 10:00' };
         if (entry[1] === 'modified') review.result = { labels: [entry[2]] };
         return review;
       })
     };
     if (row.arb) {
       annotation.arbitration = {
-        arbiter: REVIEWER_DEMO_NAME[row.arb] || row.arb,
+        arbiter: reviewerDemoName(row.arb),
         pick: 'B',
         decidedAt: '2026-08-22 11:00'
       };

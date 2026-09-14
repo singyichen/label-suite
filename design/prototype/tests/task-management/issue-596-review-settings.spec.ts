@@ -37,8 +37,8 @@
  *       #arbitrationToggle behavior toggles) -- FR-010s-1.
  *     - #reviewerOptionList mounts one `.reviewer-option` checkbox per
  *       active reviewer member (existing getActiveReviewerMembers() roster:
- *       taskRole = reviewer AND status = active -- seeded as Mandy Chen,
- *       Kevin Liu, Rachel Wu). Checking one writes into `reviewer_ids`.
+ *       taskRole = reviewer AND status = active). Checking one writes into
+ *       `reviewer_ids`.
  *       (New mount id/class, parallel to the existing #arbiterOptionList
  *       pattern reused below for the arbiter checklist.)
  *     - #arbiterOptionList mounts one `.arbiter-option` checkbox per
@@ -89,12 +89,19 @@ test.describe('Task detail review settings — single-owner relay roster (issue 
     await expect(page.locator('#reviewEditForm input[name="reviewAssignmentMode"]')).toHaveCount(0);
     await expect(page.locator('#reviewEditForm .toggle-switch')).toHaveCount(0);
 
-    // 審核員 checklist candidates = active reviewer members (Mandy Chen,
-    // Kevin Liu, Rachel Wu per the seeded TASK_MEMBERS roster).
+    /* 審核員 checklist candidates = every active reviewer member, which is
+       deliberately wider than the checked set: issue #617 seeded the four
+       spec 015 REVIEWER_ROSTER reviewers alongside the three original ones,
+       so the default task has 7 candidates and 4 of them checked. That gap
+       is the point of FR-010s-1's checklist -- candidates are the roster,
+       `reviewer_ids` is the selection. */
     const reviewerOptions = page.locator('#reviewerOptionList .reviewer-option');
     await expect(page.locator('#reviewerOptionList')).toBeVisible();
-    await expect(reviewerOptions).toHaveCount(3);
-    await expect(reviewerOptions).toContainText(['Mandy Chen', 'Kevin Liu', 'Rachel Wu']);
+    await expect(reviewerOptions).toHaveCount(7);
+    await expect(reviewerOptions).toContainText([
+      'Mandy Chen', 'Kevin Liu', 'Rachel Wu',
+      '王小明', '李大華', '陳美玲', '林佳蓉',
+    ]);
 
     await expect(page.locator('#arbiterOptionList')).toBeVisible();
   });
@@ -105,7 +112,7 @@ test.describe('Task detail review settings — single-owner relay roster (issue 
 
     // Fast-failing precondition (fails on the missing checklist itself
     // instead of timing out 30s later on a .check() call against nothing).
-    await expect(page.locator('#reviewerOptionList .reviewer-option')).toHaveCount(3);
+    await expect(page.locator('#reviewerOptionList .reviewer-option')).toHaveCount(7);
 
     // Normalize to a known state: uncheck every reviewer, then check only
     // Mandy Chen and Kevin Liu, leaving Rachel Wu unchecked.
@@ -135,7 +142,7 @@ test.describe('Task detail review settings — single-owner relay roster (issue 
   test('unchecking a reviewer clears their arbiter selection', async ({ page }) => {
     await openReviewEdit(page);
 
-    await expect(page.locator('#reviewerOptionList .reviewer-option')).toHaveCount(3);
+    await expect(page.locator('#reviewerOptionList .reviewer-option')).toHaveCount(7);
 
     await page
       .locator('#reviewerOptionList .reviewer-option', { hasText: 'Mandy Chen' })
@@ -184,7 +191,7 @@ test.describe('Task detail review settings — single-owner relay roster (issue 
   test('arbiter summary value has no 啟用/停用 prefix and follows the count rule', async ({ page }) => {
     await openReviewEdit(page);
 
-    await expect(page.locator('#reviewerOptionList .reviewer-option')).toHaveCount(3);
+    await expect(page.locator('#reviewerOptionList .reviewer-option')).toHaveCount(7);
 
     const reviewerCheckboxes = page.locator('#reviewerOptionList .reviewer-option input');
     const count = await reviewerCheckboxes.count();

@@ -1019,7 +1019,11 @@
        014 TaskDetail entity's roster fields (`reviewer_ids` / `arbiter_ids`,
        ARBITER_CANDIDATE_RULE below) for the review-flow demo tasks; every
        reviewer listed also appears in TASK_MEMBERS (task-detail.html) with
-       `taskRole: 'reviewer'`. None of these profiles set
+       `taskRole: 'reviewer'`. issue #617: these are the 015 REVIEWER_ROSTER
+       ids because FR-093 distributes review work over exactly this list --
+       seeding people 015 has never heard of would leave the demo tasks with
+       no assignable reviewer at all. `arbiterIds` holds the one roster
+       member 015 marks `can_arbitrate`. None of these profiles set
        `forceShowGuideline` (issue #395) -- they keep the shared false
        default on both task-detail.html's overview and
        annotation-workspace.data.js's resolveTaskProfile(), same as every
@@ -1032,8 +1036,8 @@
     T014: {
       taskCategories: ['classification'],
       taskInputTypes: ['single_item'],
-      reviewerIds: ['user_mandy', 'user_kevin', 'user_rachel'],
-      arbiterIds: ['user_mandy'],
+      reviewerIds: ['reviewer_wang', 'reviewer_li', 'reviewer_chen', 'reviewer_lin'],
+      arbiterIds: ['reviewer_chen'],
       outputs: [
         {
           type: 'single_label',
@@ -1085,8 +1089,8 @@
     T015: {
       taskCategories: ['classification'],
       taskInputTypes: ['single_item'],
-      reviewerIds: ['user_mandy', 'user_kevin', 'user_rachel'],
-      arbiterIds: ['user_mandy'],
+      reviewerIds: ['reviewer_wang', 'reviewer_li', 'reviewer_chen', 'reviewer_lin'],
+      arbiterIds: ['reviewer_chen'],
       outputs: [
         {
           type: 'single_label',
@@ -1138,8 +1142,8 @@
     T016: {
       taskCategories: ['classification'],
       taskInputTypes: ['single_item'],
-      reviewerIds: ['user_mandy', 'user_kevin', 'user_rachel'],
-      arbiterIds: ['user_mandy'],
+      reviewerIds: ['reviewer_wang', 'reviewer_li', 'reviewer_chen', 'reviewer_lin'],
+      arbiterIds: ['reviewer_chen'],
       outputs: [
         {
           type: 'single_label',
@@ -1191,8 +1195,8 @@
     T017: {
       taskCategories: ['classification'],
       taskInputTypes: ['single_item'],
-      reviewerIds: ['user_mandy', 'user_kevin', 'user_rachel'],
-      arbiterIds: ['user_mandy'],
+      reviewerIds: ['reviewer_wang', 'reviewer_li', 'reviewer_chen', 'reviewer_lin'],
+      arbiterIds: ['reviewer_chen'],
       outputs: [
         {
           type: 'single_label',
