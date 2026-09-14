@@ -738,7 +738,7 @@ Reviewer 審查呈現 MUST 依 `outputs[].type` 對應下列規則之一：`sing
 
 8. **不得硬編任務 ID**（Generalization-First）：前進目標僅得由審核單位狀態與登入審核員身分推導，MUST NOT 對 T014–T017 或任何任務 ID 分流。
 
-本條不改變 FR-073 條文本身，僅新增其第二個消費端；不改變 FR-022A／FR-022C 與標記端之提交後導覽行為；不改變 FR-060 之仲裁資格條件、FR-061 之仲裁寫入規則、FR-065 之改票語意、AC-3.39／FR-053 之定稿鎖定行為，亦不改變 `REVIEW_UNIT_ACTION_PRIORITY`、`listReviewUnits()` 與 `findNextActionableReviewUnit()` 之簽章或行為。
+本條不改變 FR-022A／FR-022C 與標記端之提交後導覽行為；不改變 FR-060 之仲裁資格條件、FR-061 之仲裁寫入規則、FR-065 之改票語意、AC-3.39／FR-053 之定稿鎖定行為，亦不改變 `REVIEW_UNIT_ACTION_PRIORITY` 之順位定義與 `listReviewUnits()` 之列舉行為。**本版同時修訂 FR-073 第 2 點之第 1 順位**（issue #719，FR-093 缺陷修正）：該順位原未帶指派條件，使審核員被導向他人被指派的 `pending` 單位；修訂後 `findNextActionableReviewUnit()` 之簽章不變而行為改變，FR-073 與本條兩個消費端同步只把依 FR-093 指派予該審核員的 `pending` 單位視為可處理。此為 FR-073 既有缺陷之修正，非本條另立之判定——本條仍不得自立第二套「哪些單位可處理」的判準。
 
 #### Scenario: AC-3.55 未定稿的審核送出成功後自動前進至下一個可處理審核單位
 - **GIVEN** `role = reviewer` 進入某任務一個 `待審` 審核單位，且該任務尚有其他 `待審` 單位
