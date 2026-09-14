@@ -238,6 +238,9 @@
 | Section nav items | active / inactive 狀態 | ✅ |
 | Divider | 分組用 | ✅ |
 | 僅 Desktop 顯示 | `hidden md:flex` | ✅ |
+| Admin Submenu（issue #725） | 「系統管理」L0 項目的可展開次選單，觸發項 + `role="menu"` 容器 + 兩個 `role="menuitem"` 子項連結；Desktop 展開狀態限定，Mobile／收合 fallback 為既有單一連結 | ❌ 尚未定義 |
+
+**Admin Submenu 出現頁面：** 所有登入後頁面（`design/prototype/pages/shared/sidebar.js` 共用元件；子項僅於 `system_role = super_admin` 可見）
 
 ---
 
