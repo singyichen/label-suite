@@ -3455,62 +3455,28 @@
     { id: 'user_derek', name: 'Derek Yeh', email: 'derek.yeh@labelsuite.io', taskRole: 'annotator', status: 'active', joinedAt: '2026-04-20 10:19', lastActive: '2026-04-21 09:05' },
   ];
 
-  /* Review workload seed (issue #148). `已指派` is always derived as
-     pending + done, so only the two live counters are stored per reviewer.
-     DEFAULT_REVIEW_WORKLOAD is the legacy shared figure kept for every task
-     without its own entry in REVIEW_WORKLOAD_BY_TASK (issue #396); auto-
-     fill/manual-assign actions mutate the working REVIEW_WORKLOAD copy in
-     place, so resetTaskData() re-clones it per task the same way TASK_DATA
-     re-clones DEFAULT_TASK_DATA. */
+  /* Review workload seed (issue #148). issue #761 retired this object's
+     `byReviewer` and `unassignedCount`: AC-1.6 requires the 審核指派 table
+     to reflect an Overview `reviewer_ids` change immediately and SC-034
+     requires it to stay consistent with the member list's 審核負荷 column,
+     neither of which a hand-seeded figure can do. Those two now come from
+     annotation-workspace.data.js's computeReviewWorkload() -- the module
+     that owns the FR-093 assignment rule -- leaving only the two pool
+     counters this prototype iteration still illustrates rather than
+     derives. DEFAULT_REVIEW_WORKLOAD stays the shared fallback for every
+     task without its own entry in REVIEW_WORKLOAD_BY_TASK (issue #396),
+     and resetTaskData() still re-clones per task. */
   var DEFAULT_REVIEW_WORKLOAD = {
-    unassignedCount: 18,
     disputeCount: 7,
-    byReviewer: {
-      user_mandy: { pending: 12, done: 28 },
-      user_kevin: { pending: 31, done: 9 },
-      user_rachel: { pending: 5, done: 13 },
-    },
   };
   var REVIEW_WORKLOAD_BY_TASK = {
     /* T014-T017 (review-flow demo, 5 dataset records each): small figures
        proportionate to that data volume instead of the legacy shared
        18-116-item scale. */
-    T014: {
-      unassignedCount: 2,
-      disputeCount: 0,
-      byReviewer: {
-        user_mandy: { pending: 1, done: 2 },
-        user_kevin: { pending: 1, done: 1 },
-        user_rachel: { pending: 0, done: 1 },
-      },
-    },
-    T015: {
-      unassignedCount: 1,
-      disputeCount: 1,
-      byReviewer: {
-        user_mandy: { pending: 1, done: 2 },
-        user_kevin: { pending: 0, done: 1 },
-        user_rachel: { pending: 0, done: 0 },
-      },
-    },
-    T016: {
-      unassignedCount: 3,
-      disputeCount: 1,
-      byReviewer: {
-        user_mandy: { pending: 2, done: 4 },
-        user_kevin: { pending: 1, done: 3 },
-        user_rachel: { pending: 1, done: 1 },
-      },
-    },
-    T017: {
-      unassignedCount: 2,
-      disputeCount: 1,
-      byReviewer: {
-        user_mandy: { pending: 1, done: 3 },
-        user_kevin: { pending: 1, done: 2 },
-        user_rachel: { pending: 0, done: 0 },
-      },
-    },
+    T014: { disputeCount: 0 },
+    T015: { disputeCount: 1 },
+    T016: { disputeCount: 1 },
+    T017: { disputeCount: 1 },
   };
   var REVIEW_WORKLOAD = cloneData(DEFAULT_REVIEW_WORKLOAD);
 
@@ -6884,6 +6850,9 @@ function getTaskTypeLabel() {
   function renderMemberTable() {
     var tbody = document.getElementById('memberTableBody');
     if (!tbody) return;
+    /* SC-034: this table's 審核負荷 column and the 審核指派 table must agree,
+       so both refresh the same derivation before reading it. */
+    refreshReviewWorkload();
     while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
 
     var total = TASK_MEMBERS.length;
@@ -7207,11 +7176,9 @@ function getTaskTypeLabel() {
 
     if (action.type === 'remove') {
       createUnassignedAssignmentsForRemovedMember(target);
-      releaseReviewerPendingLoad(target);
       TASK_MEMBERS.splice(action.index, 1);
     } else if (action.type === 'disable') {
       target.status = 'disabled';
-      releaseReviewerPendingLoad(target);
     } else if (action.type === 'enable') {
       target.status = 'active';
     }
@@ -7225,25 +7192,38 @@ function getTaskTypeLabel() {
     renderReviewEditState();
   }
 
+  /* issue #761 (AC-1.6, SC-034): the per-reviewer workload and the
+     unassigned pool are derived from 015's real review units, never seeded.
+     The derivation is recomputed per render pass rather than cached,
+     because every input that moves it -- `reviewer_ids`, member status, the
+     round selector, submitted reviews -- lives outside this module and a
+     cache would need to observe all four. One pass over ~15 demo units is
+     cheaper than getting that invalidation wrong.
+
+     `TASK_DATA.reviewerIds` goes in unfiltered on purpose: FR-005j returns
+     a removed or disabled reviewer's `pending` to the unassigned pool and
+     keeps their `done` as historical stats, which requires the derivation
+     to see who the work was dealt to BEFORE liveness is applied. */
+  var REVIEW_WORKLOAD_DERIVED = { byReviewer: {}, unassigned: 0 };
+
+  function refreshReviewWorkload() {
+    var wsData = window.LabelSuiteAnnotationWorkspaceData;
+    if (!wsData || !wsData.computeReviewWorkload) return;
+    REVIEW_WORKLOAD_DERIVED = wsData.computeReviewWorkload(
+      TASK_DATA.taskId,
+      getSelectedRunType(),
+      TASK_DATA.reviewerIds || [],
+      getActiveReviewerMembers().map(function(member) { return member.id; })
+    );
+  }
+
   function getReviewWorkload(id) {
-    var byReviewer = REVIEW_WORKLOAD.byReviewer;
-    if (!byReviewer[id]) byReviewer[id] = { pending: 0, done: 0 };
-    return byReviewer[id];
+    return REVIEW_WORKLOAD_DERIVED.byReviewer[id] || { pending: 0, done: 0 };
   }
 
   function formatReviewLoad(id) {
     var load = getReviewWorkload(id);
     return interpolate(t('reviewLoadTpl'), { assigned: load.pending + load.done, pending: load.pending });
-  }
-
-  /* Removing or disabling a reviewer must not orphan their in-flight review
-     units: pending flows back to the unassigned pool, done stays as
-     historical stats (mirrors FR-005f for annotators). */
-  function releaseReviewerPendingLoad(member) {
-    var load = REVIEW_WORKLOAD.byReviewer[member.id];
-    if (!load || !load.pending) return;
-    REVIEW_WORKLOAD.unassignedCount += load.pending;
-    load.pending = 0;
   }
 
   /* FR-005j / FR-005k: review_assignment_mode and arbitration_enabled are
@@ -7254,10 +7234,11 @@ function getTaskTypeLabel() {
     var body = document.getElementById('reviewAssignmentBody');
     if (!body) return;
     var arbiters = getEffectiveArbiterIds(TASK_DATA.arbiterIds);
+    refreshReviewWorkload();
 
     setText('reviewAssignmentTitle', t('reviewAssignmentTitle'));
     setText('reviewAssignmentHint', t('reviewAssignmentHintReadonly'));
-    setText('reviewUnassignedCount', interpolate(t('reviewUnassignedTpl'), { count: REVIEW_WORKLOAD.unassignedCount }));
+    setText('reviewUnassignedCount', interpolate(t('reviewUnassignedTpl'), { count: REVIEW_WORKLOAD_DERIVED.unassigned }));
     setText('thAssignReviewer', t('thAssignReviewer'));
     setText('thAssignAssigned', t('thAssignAssigned'));
     setText('thAssignPending', t('thAssignPending'));
@@ -7992,8 +7973,10 @@ function getTaskTypeLabel() {
      state (design.md D6). run_type follows the same round-selector state
      the rest of this panel already uses (state.progressStage), so switching
      the existing dry/official pills also re-scopes the pool (FR-018 point
-     5) without a second, independent filter control. */
-  function getExceptionPoolRunType() {
+     5) without a second, independent filter control. issue #761's review
+     workload derivation reads the same rule, so the name is no longer
+     exception-pool specific. */
+  function getSelectedRunType() {
     return state.progressStage === 'official' ? 'official_run' : 'dry_run';
   }
 
@@ -8009,7 +7992,7 @@ function getTaskTypeLabel() {
 
     var detailData = window.LabelSuiteTaskDetailData;
     var items = detailData
-      ? detailData.getFinalExceptionPoolItems(TASK_DATA.taskId, getExceptionPoolRunType())
+      ? detailData.getFinalExceptionPoolItems(TASK_DATA.taskId, getSelectedRunType())
       : [];
 
     setText('finalExceptionPoolTitle', interpolate(t('finalExceptionPoolTpl'), { count: items.length }));
@@ -9430,7 +9413,7 @@ function getTaskTypeLabel() {
      exception pool) is always scoped to `official_run` regardless of the
      annotation-progress panel's currently selected round (FR-008b point 4:
      "僅計 official_run 的待處置項目") -- unlike renderFinalExceptionPoolSection()
-     above, this never follows getExceptionPoolRunType(). See
+     above, this never follows getSelectedRunType(). See
      task-detail.data.js's getTaskCompletionBlockers() doc comment for which
      of the five FR-008b conditions this prototype iteration wires live. */
   function getTaskCompletionBlockerMessages() {
