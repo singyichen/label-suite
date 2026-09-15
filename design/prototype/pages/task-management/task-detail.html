@@ -4629,9 +4629,7 @@ function interpolate(template, payload) {
     ANNOTATION_PROGRESS = cloneData(ANNOTATION_PROGRESS_BY_TASK[resolvedId] || DEFAULT_ANNOTATION_PROGRESS);
     UNASSIGNED_ANNOTATION_ASSIGNMENTS = cloneData(UNASSIGNED_ANNOTATION_ASSIGNMENTS_BY_TASK[resolvedId] || DEFAULT_UNASSIGNED_ANNOTATION_ASSIGNMENTS);
     WORK_LOG_ENTRIES = cloneData(WORK_LOG_ENTRIES_BY_TASK[resolvedId] || DEFAULT_WORK_LOG_ENTRIES);
-    state.progressStage = ANNOTATION_PROGRESS.rounds.length
-      ? ANNOTATION_PROGRESS.rounds[ANNOTATION_PROGRESS.rounds.length - 1].id
-      : 'official';
+    state.progressStage = getDefaultProgressStage();
     if (listEntry) {
       TASK_DATA.taskNameZh = listEntry.nameZh;
       TASK_DATA.taskNameEn = listEntry.nameEn;
@@ -4703,6 +4701,122 @@ function interpolate(template, payload) {
     setText('taskNotFoundBackLink', t('notFoundBackBtn'));
   }
 
+  /* ── FR-019 (issue #726): URL <-> view-state sync ────────────────────
+     One table, two walkers. Every row declares a query-parameter name, the
+     `state` field it mirrors, its value type, where its legal values are
+     DERIVED from, and its default. applyViewStateFromUrl() and
+     syncUrlToViewState() are the table's only readers, so a filter can no
+     longer be URL-readable but not URL-writable -- which is precisely the
+     defect issue #726 reports (`?tab=` was read by parseRole() and written
+     back by nothing).
+
+     `values` MUST point at the source that already populates the control
+     (FR-019 (4) / Generalization-First): a second hardcoded copy would let
+     a newly seeded trial round, review status or member silently fail to
+     restore. `def` is a function because three defaults are task-dependent
+     and only known after resetTaskData().
+
+     `restore: false` marks a row whose read side lives elsewhere: `tab` is
+     resolved by parseRole() and gated by setTabByRole(), so the FR-006 role
+     guard -- not the URL -- decides the rendered tab (FR-019 (5)).
+
+     Deliberately absent (FR-019 (1), last clause): the overview run-control
+     sub-tab, the export-history dialog page and the member drill-down page. */
+  function collectViewStateValues(records, key) {
+    var seen = {};
+    var values = ['all'];
+    records.forEach(function(record) {
+      var value = record[key];
+      if (value && !seen[value]) { seen[value] = true; values.push(value); }
+    });
+    return values;
+  }
+
+  function constantDefault(value) {
+    return function() { return value; };
+  }
+
+  var URL_VIEW_STATE = [
+    { param: 'tab', field: 'activeTab', type: 'enum', restore: false,
+      values: null, def: constantDefault('overview') },
+    { param: 'ap_stage', field: 'progressStage', type: 'enum',
+      values: getProgressStageValues, def: getDefaultProgressStage },
+    { param: 'ap_sort', field: 'progressSort', type: 'enum',
+      values: function() { return Object.keys(PROGRESS_SORT_COMPARATORS); },
+      def: function() { return DEFAULT_PROGRESS_SORT; } },
+    { param: 'ar_stage', field: 'arStage', type: 'enum',
+      values: function() { return collectViewStateValues(getAnnotationResultsData(), 'stage'); },
+      def: constantDefault('all') },
+    { param: 'ar_status', field: 'arStatus', type: 'enum',
+      values: function() { return collectViewStateValues(getAnnotationResultsData(), 'status'); },
+      def: constantDefault('all') },
+    { param: 'ar_annotator', field: 'arAnnotator', type: 'enum',
+      values: function() { return ['all'].concat(getArAnnotators()); },
+      def: constantDefault('all') },
+    { param: 'ar_reviewer', field: 'arReviewer', type: 'enum',
+      values: function() { return ['all'].concat(getArReviewers()); },
+      def: constantDefault('all') },
+    { param: 'ar_review_status', field: 'arReviewStatus', type: 'enum',
+      values: function() { return ['all'].concat(AR_REVIEW_STATUS_ORDER); },
+      def: constantDefault('all') },
+    { param: 'ar_page', field: 'arPage', type: 'page', values: null, def: constantDefault(1) },
+    { param: 'mm_page', field: 'memberPage', type: 'page', values: null, def: constantDefault(1) },
+    { param: 'wl_from', field: 'workLogDateFrom', type: 'date', values: null, def: constantDefault('') },
+    { param: 'wl_to', field: 'workLogDateTo', type: 'date', values: null, def: constantDefault('') },
+    { param: 'wl_stage', field: 'workLogStage', type: 'enum',
+      values: function() { return collectViewStateValues(WORK_LOG_ENTRIES, 'stage'); },
+      def: constantDefault('all') },
+    { param: 'wl_member', field: 'workLogMember', type: 'enum',
+      values: function() { return collectViewStateValues(TASK_MEMBERS, 'email'); },
+      def: constantDefault('all') },
+    { param: 'wl_page', field: 'wlPage', type: 'page', values: null, def: constantDefault(1) }
+  ];
+
+  function parseViewStateParam(entry, raw) {
+    if (entry.type === 'page') return /^[1-9][0-9]*$/.test(raw) ? parseInt(raw, 10) : null;
+    if (entry.type === 'date') return /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(raw) ? raw : null;
+    return entry.values().indexOf(raw) >= 0 ? raw : null;
+  }
+
+  /* `params` is the caller's snapshot of the query string, not a fresh read:
+     setTabByRole() has already written the gated tab back to the address bar
+     by the time this runs, which strips the still-unread default-valued
+     parameters from window.location.search.
+
+     FR-019 (4): an unparseable value needs no branch -- `state` still holds
+     the default, so leaving the field untouched IS the silent fallback. Page
+     upper bounds are deliberately not checked here (design.md D5): the total
+     page count depends on data that has not loaded yet, and the three list
+     renderers already clamp an over-large page down to the last real one. */
+  function applyViewStateFromUrl(params) {
+    URL_VIEW_STATE.forEach(function(entry) {
+      if (entry.restore === false) return;
+      var raw = params.get(entry.param);
+      if (raw === null) return;
+      var parsed = parseViewStateParam(entry, raw);
+      if (parsed !== null) state[entry.field] = parsed;
+    });
+  }
+
+  /* The only history writer on this page. FR-019 (2): replaceState, never
+     pushState -- filtering is an in-page adjustment, so five filter clicks
+     must not cost five presses of the back button. The parameter set is
+     amended in place rather than rebuilt, so task_id / task_role / role /
+     run_type / status survive untouched; a default-valued row is deleted so
+     an untouched page keeps its short, shareable URL. */
+  function syncUrlToViewState() {
+    var params = new URLSearchParams(window.location.search);
+    URL_VIEW_STATE.forEach(function(entry) {
+      if (state[entry.field] === entry.def()) {
+        params.delete(entry.param);
+      } else {
+        params.set(entry.param, String(state[entry.field]));
+      }
+    });
+    var query = params.toString();
+    window.history.replaceState(null, '', window.location.pathname + (query ? '?' + query : '') + window.location.hash);
+  }
+
   function parseRole() {
     var params = new URLSearchParams(window.location.search);
     var role = params.get('task_role') || params.get('role') || 'project_leader';
@@ -4742,6 +4856,11 @@ function interpolate(template, payload) {
     if (!allowed) {
       state.pendingReviewerTabToast = true;
     }
+    /* FR-019 (3): restore the remaining view state only after the tab has
+       been role-gated, so a URL can never talk the page into a tab FR-006
+       forbids. The panels have not loaded yet, but every renderer reads
+       `state`, so values written here take effect on the first render. */
+    applyViewStateFromUrl(params);
   }
 
   function readDryRunProgress() {
@@ -6802,9 +6921,13 @@ function getTaskTypeLabel() {
     if (state.taskRole === 'reviewer' && nextTab === 'member-management') {
       state.activeTab = 'overview';
       if (!silent) showToast(t('reviewerTabBlocked'), true);
+      /* FR-019 (5): the write-back sits AFTER the guard, so a rejected tab
+         structurally cannot reach the URL -- no extra check needed. */
+      syncUrlToViewState();
       return false;
     }
     state.activeTab = nextTab;
+    syncUrlToViewState();
     return true;
   }
 
@@ -7283,12 +7406,31 @@ function getTaskTypeLabel() {
     if (emailInput) emailInput.disabled = !isLeader;
     var roleSelect = document.getElementById('memberInviteRoleSelect');
     if (roleSelect) roleSelect.disabled = !isLeader;
+    syncUrlToViewState();
   }
 
   function getProgressStageData() {
     if (state.progressStage === 'official') return ANNOTATION_PROGRESS.official;
     var found = ANNOTATION_PROGRESS.rounds.filter(function(r) { return r.id === state.progressStage; });
     return found.length ? found[0] : ANNOTATION_PROGRESS.rounds[ANNOTATION_PROGRESS.rounds.length - 1];
+  }
+
+  /* The stage pills this panel offers are exactly the freshly-cloned task's
+     own trial rounds plus "official" (renderProgressRoundPills()), so
+     URL_VIEW_STATE's ap_stage validator reads that same set instead of a
+     second hardcoded round list -- adding a trial round must not silently
+     invalidate its own ?ap_stage= value (FR-019 (4)). */
+  function getProgressStageValues() {
+    return ANNOTATION_PROGRESS.rounds.map(function(round) { return round.id; }).concat(['official']);
+  }
+
+  /* issue #397's "always land on a real bucket" default, shared by
+     resetTaskData() and URL_VIEW_STATE so the value the URL omits and the
+     value the page starts on can never diverge. */
+  function getDefaultProgressStage() {
+    return ANNOTATION_PROGRESS.rounds.length
+      ? ANNOTATION_PROGRESS.rounds[ANNOTATION_PROGRESS.rounds.length - 1].id
+      : 'official';
   }
 
   function getActiveAnnotatorMembers() {
@@ -7429,17 +7571,20 @@ function getTaskTypeLabel() {
     return speed > 0 ? speed.toFixed(1) + ' ' + t('progressSpeedUnit') : '-';
   }
 
+  /* One map, two readers: the comparator lookup below and URL_VIEW_STATE's
+     ap_sort validator (FR-019 (4)). Keeping the sort keys in a single
+     structure means a new sort option cannot be orderable here yet be
+     rejected as an illegal ?ap_sort= value. */
+  var DEFAULT_PROGRESS_SORT = 'completed_desc';
+  var PROGRESS_SORT_COMPARATORS = {
+    completed_desc: function(a, b) { return b.completed - a.completed; },
+    speed_desc: function(a, b) { return b.avgSpeed - a.avgSpeed; },
+    submitted_desc: function(a, b) { return Date.parse(b.lastSubmitted) - Date.parse(a.lastSubmitted); }
+  };
+
   function getSortedProgressMembers(members) {
     var cloned = members.slice();
-    if (state.progressSort === 'speed_desc') {
-      cloned.sort(function(a, b) { return b.avgSpeed - a.avgSpeed; });
-      return cloned;
-    }
-    if (state.progressSort === 'submitted_desc') {
-      cloned.sort(function(a, b) { return Date.parse(b.lastSubmitted) - Date.parse(a.lastSubmitted); });
-      return cloned;
-    }
-    cloned.sort(function(a, b) { return b.completed - a.completed; });
+    cloned.sort(PROGRESS_SORT_COMPARATORS[state.progressSort] || PROGRESS_SORT_COMPARATORS[DEFAULT_PROGRESS_SORT]);
     return cloned;
   }
 
@@ -7502,6 +7647,11 @@ function getTaskTypeLabel() {
 
   function renderMemberProgressTable() {
     var stageData = getProgressStageData();
+    var sortSelect = document.getElementById('memberProgressSort');
+    /* FR-019 (3): a restored ?ap_sort= must show up in the control, not just
+       in the row order -- this select was the only filter control the page
+       never pushed state back into. */
+    if (sortSelect) sortSelect.value = state.progressSort;
     var tbody = document.getElementById('memberProgressTableBody');
     while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
 
@@ -8046,6 +8196,7 @@ function getTaskTypeLabel() {
     renderRoundProgressList();
     renderProgressEmptyState();
     renderFinalExceptionPoolSection();
+    syncUrlToViewState();
   }
 
   function getWorkLogStageLabel(stage) {
@@ -8342,6 +8493,9 @@ function getTaskTypeLabel() {
     renderWorkLogAlerts(entries);
     renderWorkLogEmptyState(entries);
     renderWorkLogPagination(entries.length);
+    /* After renderWorkLogPagination(), which is where an over-large wlPage
+       gets clamped -- the URL must carry the page actually shown. */
+    syncUrlToViewState();
   }
 
   /* Issue #284: a task_id with no ANNOTATION_RESULTS_BY_TASK entry (e.g. a
@@ -8540,7 +8694,7 @@ function getTaskTypeLabel() {
   function renderArReviewerSelect() {
     var sel = document.getElementById('arReviewerSelect');
     if (!sel) return;
-    var current = sel.value || state.arReviewer;
+    var current = state.arReviewer;
     while (sel.firstChild) sel.removeChild(sel.firstChild);
     var allOpt = document.createElement('option');
     allOpt.value = 'all';
@@ -8558,7 +8712,7 @@ function getTaskTypeLabel() {
   function renderArReviewStatusSelect() {
     var sel = document.getElementById('arReviewStatusSelect');
     if (!sel) return;
-    var current = sel.value || state.arReviewStatus;
+    var current = state.arReviewStatus;
     while (sel.firstChild) sel.removeChild(sel.firstChild);
     var allOpt = document.createElement('option');
     allOpt.value = 'all';
@@ -8587,7 +8741,7 @@ function getTaskTypeLabel() {
   function renderArAnnotatorSelect() {
     var sel = document.getElementById('arAnnotatorSelect');
     if (!sel) return;
-    var current = sel.value || state.arAnnotator;
+    var current = state.arAnnotator;
     while (sel.firstChild) sel.removeChild(sel.firstChild);
     var allOpt = document.createElement('option');
     allOpt.value = 'all';
@@ -9301,6 +9455,7 @@ function getTaskTypeLabel() {
 
     renderArPagination(samples.length);
     renderArExportHistory();
+    syncUrlToViewState();
   }
 
   function showToast(message, isError) {
