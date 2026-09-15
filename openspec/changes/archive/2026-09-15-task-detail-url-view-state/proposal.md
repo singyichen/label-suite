@@ -11,7 +11,7 @@
 
 這與專案既有的 UX 慣例 `UXC-11`（可分享的畫面狀態）直接抵觸，而同慣例已在 `admin/user-management.html`、`annotation-list.html`、`dashboard`、`dataset/dataset-analysis-detail.html` 四頁落地。`task-detail` 是這四頁之外清單密度最高的一頁，卻是唯一的漏網之魚。
 
-現況並非完全沒有讀取：`parseRole()` 已經會讀 `?tab=` 並套用（`design/prototype/pages/task-management/task-detail.html:4706-4745`），但只有讀、沒有寫——使用者手動打的 `?tab=work-log` 會生效，而使用者在畫面上點的 `work-log` 卻不會反映到網址，形成「單向可讀、不可產生」的半套狀態。本變更補上缺的另一半，並把讀取範圍從 `tab` 一項擴充到四個頁籤的篩選、排序與頁碼。
+現況並非完全沒有讀取：`parseRole()` 已經會讀 `?tab=` 並套用（`design/prototype/pages/task-management/task-detail.html:4836-4880`），但只有讀、沒有寫——使用者手動打的 `?tab=work-log` 會生效，而使用者在畫面上點的 `work-log` 卻不會反映到網址，形成「單向可讀、不可產生」的半套狀態。本變更補上缺的另一半，並把讀取範圍從 `tab` 一項擴充到四個頁籤的篩選、排序與頁碼。
 
 ## What Changes
 
@@ -54,10 +54,10 @@
 
 **既有機制交互**
 
-- **`parseRole()`（`task-detail.html:4706-4745`）**：已讀 `?tab=` 並經 `setTabByRole(resolvedTab, true)` 套用。本變更 MUST 沿用此入口擴充，MUST NOT 另建第二處網址解析——否則 `tab` 會有兩套互相覆寫的讀取路徑。
-- **`state` 物件（`task-detail.html:3680-3727`）**：本頁所有篩選與頁碼值皆存於此單一物件，渲染器一律單向由 `state` 推向 DOM（例：`task-detail.html:9266` `arStageSelect.value = state.arStage;`）。因此網址還原只需在渲染前寫入 `state`，所有控制項自然跟隨，不需逐一操作 DOM。
-- **`setTabByRole()`（`task-detail.html:6793-6809`）**：`state.activeTab` 的唯一變更點，且是 `reviewer` 被擋在 `member-management` 之外時回傳 `false` 的判定處。網址寫回 MUST 掛在此函式之後而非之前，否則會把被拒絕的頁籤寫進網址。
-- **`getTrackingContext()`（`task-detail.html:10141`）**：回傳的 `tab` 欄位取自 `state.activeTab`，與網址同源，本變更不需另行調整埋點。
+- **`parseRole()`（`task-detail.html:4836-4880`）**：已讀 `?tab=` 並經 `setTabByRole(resolvedTab, true)` 套用。本變更 MUST 沿用此入口擴充，MUST NOT 另建第二處網址解析——否則 `tab` 會有兩套互相覆寫的讀取路徑。
+- **`state` 物件（`task-detail.html:3680-3727`）**：本頁所有篩選與頁碼值皆存於此單一物件，渲染器一律單向由 `state` 推向 DOM（例：`task-detail.html:9436` `arStageSelect.value = state.arStage;`）。因此網址還原只需在渲染前寫入 `state`，所有控制項自然跟隨，不需逐一操作 DOM。
+- **`setTabByRole()`（`task-detail.html:6928-6948`）**：`state.activeTab` 的唯一變更點，且是 `reviewer` 被擋在 `member-management` 之外時回傳 `false` 的判定處。網址寫回 MUST 掛在此函式之後而非之前，否則會把被拒絕的頁籤寫進網址。
+- **`getTrackingContext()`（`task-detail.html:10308`）**：回傳的 `tab` 欄位取自 `state.activeTab`，與網址同源，本變更不需另行調整埋點。
 - **`UXC-11` 既有落地頁**：`admin/user-management.html:1132-1166` 是最完整的參照實作，但它以全新的 `URLSearchParams()` 重建參數集——該作法在 `task-detail` 會抹掉 `task_id`，MUST NOT 照抄，須改為在既有參數上增刪（作法見 `dataset-analysis-detail.html:1897-1904`）。
 
 **範圍界線（明示排除，供審閱者確認）**
@@ -66,7 +66,7 @@
 
 - `state.activeRunControlTab`（`task-detail.html:3684`）：`overview` 內「執行控制」區塊的次級頁籤，非四個主頁籤的清單控制項。
 - `state.arExportPage`（`task-detail.html:3721`）：匯出記錄「對話框」內的分頁，屬對話框開啟期間的暫態，對話框關閉即失去意義。
-- `state.mdPage`（`task-detail.html:3723`）：成員標記細項的「下鑽」區塊分頁，其資料列 `state.mdRows` 由點選特定成員後即時建構（`task-detail.html:7707-7719`），不是頁籤層級的清單。
+- `state.mdPage`（`task-detail.html:3723`）：成員標記細項的「下鑽」區塊分頁，其資料列 `state.mdRows` 由點選特定成員後即時建構（`task-detail.html:7873-7885`），不是頁籤層級的清單。
 
 若審閱者認為上述任一項應納入，於 apply 前提出即可併入 FR-019，不需另開 change。
 

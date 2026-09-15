@@ -4,11 +4,12 @@
 
 `task-detail.html` 的三項結構特徵決定了整個實作形狀：
 
-1. **單一 `state` 物件即真相來源**（`design/prototype/pages/task-management/task-detail.html:3680-3727`）。本頁十五項待同步的檢視狀態全部是這個物件的欄位，渲染器一律單向由 `state` 推向 DOM（例：`task-detail.html:9266` `arStageSelect.value = state.arStage;`）。因此網址還原不需要逐一操作控制項——寫入 `state` 後重新渲染即可。
-2. **網址讀取已有既成入口**。`parseRole()`（`task-detail.html:4706-4745`）已讀取 `task_id`、`task_role`／`role`、`status` 與 `tab` 四個參數，並以 `setTabByRole(resolvedTab, true)` 套用頁籤。缺的只有寫回，以及讀取範圍的擴充。
-3. **分頁器已自帶上界收斂**。三個清單的分頁渲染都已有 `if (state.XPage > totalPages) state.XPage = totalPages;`（`task-detail.html:6860`／`:8269`／`:9202`）。FR-019 第 (4) 點要求的「頁碼超出總頁數回退」因此不需新寫邏輯，只需在解析端補上下界與型別守衛。
+1. **單一 `state` 物件即真相來源**（`design/prototype/pages/task-management/task-detail.html:3680-3727`）。本頁十五項待同步的檢視狀態全部是這個物件的欄位，渲染器一律單向由 `state` 推向 DOM（例：`task-detail.html:9436` `arStageSelect.value = state.arStage;`）。因此網址還原不需要逐一操作控制項——寫入 `state` 後重新渲染即可。
+   **實作修正（Source-Verify gate 複驗補記）**：「一律單向」在提案時並不成立。`renderArReviewerSelect()`／`renderArReviewStatusSelect()`／`renderArAnnotatorSelect()` 三處原本寫 `var current = sel.value || state.X;`（DOM 與 `state` 雙真相來源，且 `sel.value` 首次渲染即為 `all` 這個真值，使 `|| state.X` 成為死碼），`#memberProgressSort` 則從未由 `state` 推回控制項。本變更的 Green 把這四處改為單向，前提才真正成立——見 `task-detail.html:8713`／`:8731`／`:8760`／`:7670`。
+2. **網址讀取已有既成入口**。`parseRole()`（`task-detail.html:4836-4880`）已讀取 `task_id`、`task_role`／`role`、`status` 與 `tab` 四個參數，並以 `setTabByRole(resolvedTab, true)` 套用頁籤。缺的只有寫回，以及讀取範圍的擴充。
+3. **分頁器已自帶上界收斂**。三個清單的分頁渲染都已有 `if (state.XPage > totalPages) state.XPage = totalPages;`（`task-detail.html:6999`／`:8436`／`:9372`）。FR-019 第 (4) 點要求的「頁碼超出總頁數回退」因此不需新寫邏輯，只需在解析端補上下界與型別守衛。
 
-一項時序限制：頁籤面板是非同步載入的（`loadAllTabPanels()`，`task-detail.html:4544`），四個渲染器皆在面板落地後才首次執行（`init()`，`task-detail.html:10146`）。任何在 `parseRole()` 階段寫入 `state` 的值，都會在首次渲染時自然生效。
+一項時序限制：頁籤面板是非同步載入的（`loadAllTabPanels()`，`task-detail.html:4544`），四個渲染器皆在面板落地後才首次執行（`init()`，`task-detail.html:10317`）。任何在 `parseRole()` 階段寫入 `state` 的值，都會在首次渲染時自然生效。
 
 ## Goals / Non-Goals
 
@@ -36,9 +37,9 @@
 
 ### D2 — 還原掛在 `parseRole()` 內；寫回掛在四個渲染器與 `setTabByRole()` 之後
 
-**決定**：`applyViewStateFromUrl()` 於 `parseRole()` 末尾呼叫（在 `setTabByRole()` 之後，使頁籤守門結果先確立）。`syncUrlToViewState()` 掛在四個清單渲染器 `renderMemberManagement()`（`task-detail.html:7275`）、`renderAnnotationProgress()`（`:8041`）、`renderWorkLog()`（`:8330`）、`renderAnnotationResults()`（`:9263`）與 `setTabByRole()`（`:6793-6809`）的末尾，而非掛在約二十個個別的篩選／排序／翻頁事件處理器上。
+**決定**：`applyViewStateFromUrl()` 於 `parseRole()` 末尾呼叫（在 `setTabByRole()` 之後，使頁籤守門結果先確立）。`syncUrlToViewState()` 掛在四個清單渲染器 `renderMemberManagement()`（`task-detail.html:7414`）、`renderAnnotationProgress()`（`:8207`）、`renderWorkLog()`（`:8497`）、`renderAnnotationResults()`（`:9433`）與 `setTabByRole()`（`:6928-6948`）的末尾，而非掛在約二十個個別的篩選／排序／翻頁事件處理器上。
 
-**理由**：本頁所有篩選處理器的既有寫法一律是「寫 `state` → 呼叫渲染器」（例：`task-detail.html:9906` `state.arStage = e.target.value || 'all';`）。掛在渲染器出口，等於掛在所有這些路徑的共同下游——新增一個篩選器時不需要記得補寫回。掛在事件處理器上則會重蹈 D1 想避免的漏改。
+**理由**：本頁所有篩選處理器的既有寫法一律是「寫 `state` → 呼叫渲染器」（例：`task-detail.html:10077` `state.arStage = e.target.value || 'all';`）。掛在渲染器出口，等於掛在所有這些路徑的共同下游——新增一個篩選器時不需要記得補寫回。掛在事件處理器上則會重蹈 D1 想避免的漏改。
 
 `setTabByRole()` 是 `state.activeTab` 的唯一變更點，也是 `reviewer` 被擋下時回傳 `false` 的判定處；寫回掛在其**之後**，被拒絕的頁籤就不會進入網址，FR-019 第 (5) 點因此是結構上成立而非靠額外檢查。
 
@@ -66,7 +67,7 @@
 
 ### D5 — 無效值的驗證分兩層：解析端守型別與列舉，渲染端守上界
 
-**決定**：`applyViewStateFromUrl()` 只負責型別與列舉驗證（非正整數的頁碼、不在選項集合內的篩選值 → 回退預設值）；「頁碼超出總頁數」交給三個分頁渲染器既有的收斂邏輯（`task-detail.html:6860`／`:8269`／`:9202`）。
+**決定**：`applyViewStateFromUrl()` 只負責型別與列舉驗證（非正整數的頁碼、不在選項集合內的篩選值 → 回退預設值）；「頁碼超出總頁數」交給三個分頁渲染器既有的收斂邏輯（`task-detail.html:6999`／`:8436`／`:9372`）。
 
 **理由**：總頁數取決於篩選後的資料筆數，在 `parseRole()` 執行時尚未可知（面板與資料都還沒載入）。若要在解析端驗證上界，就得引入「等資料就緒再套網址」的第二段流程——正是 Goals 明定要避免的時序耦合。而渲染器早已做這件事，重複實作反而是 DRY 違規。
 
