@@ -4787,10 +4787,26 @@ function interpolate(template, payload) {
      the default, so leaving the field untouched IS the silent fallback. Page
      upper bounds are deliberately not checked here (design.md D5): the total
      page count depends on data that has not loaded yet, and the three list
-     renderers already clamp an over-large page down to the last real one. */
-  function applyViewStateFromUrl(params) {
+     renderers already clamp an over-large page down to the last real one.
+
+     `rejectedTab` is whatever tab the FR-006 guard in setTabByRole() just
+     turned down -- the caller reads it off that guard's return value, so the
+     role rule itself is never restated here. Its filters MUST NOT be
+     restored (FR-019 (5), last clause): a `ap_`/`ar_`/`mm_`/`wl_` prefix is
+     the tab name's own initials, so the parameter already says which tab
+     owns it and no second tab table is needed. Skipping the write leaves the
+     field at its default, and syncUrlToViewState() already deletes
+     default-valued rows -- so the stale parameter drops out of the address
+     bar on the next write with no special case on the writer side. */
+  function getViewStateParamPrefix(tabName) {
+    return tabName.split('-').map(function(word) { return word.charAt(0); }).join('') + '_';
+  }
+
+  function applyViewStateFromUrl(params, rejectedTab) {
+    var rejectedPrefix = rejectedTab ? getViewStateParamPrefix(rejectedTab) : null;
     URL_VIEW_STATE.forEach(function(entry) {
       if (entry.restore === false) return;
+      if (rejectedPrefix && entry.param.indexOf(rejectedPrefix) === 0) return;
       var raw = params.get(entry.param);
       if (raw === null) return;
       var parsed = parseViewStateParam(entry, raw);
@@ -4860,7 +4876,7 @@ function interpolate(template, payload) {
        been role-gated, so a URL can never talk the page into a tab FR-006
        forbids. The panels have not loaded yet, but every renderer reads
        `state`, so values written here take effect on the first render. */
-    applyViewStateFromUrl(params);
+    applyViewStateFromUrl(params, allowed ? null : resolvedTab);
   }
 
   function readDryRunProgress() {
