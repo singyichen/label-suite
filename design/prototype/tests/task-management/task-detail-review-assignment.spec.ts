@@ -6,6 +6,14 @@ const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 // the last partial (#workLogPanel) lands; wait for it before interacting.
 const PANEL_LOAD_TIMEOUT = 15000;
 
+// The review-load cell wording, with the figures left open on purpose --
+// issue #761 moved the numbers out of a hand-seeded table and into a
+// derivation over 015's real review units, and
+// issue-761-review-workload-derivation.spec.ts owns asserting they are
+// right. This file guards the rendering contract around them.
+const REVIEW_LOAD_ZH = /^\d+ 筆 · \d+ 待審$/;
+const REVIEW_LOAD_EN = /^\d+ items · \d+ pending$/;
+
 async function openMemberTab(page: Page) {
   await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
   await page.locator('#tabMemberManagement').click();
@@ -18,9 +26,9 @@ async function openMemberTab(page: Page) {
  * assign / dispute-dispatch cases this file used to cover are gone -- that
  * "must render no button at all" contract lives in
  * issue-596-assignment-readonly.spec.ts. This file keeps only the still-live
- * read-only rendering behaviors: the review-load column, the seeded
- * workload/dispute-pool numbers, the arbiter tag, disable-driven pool
- * release, and the i18n toggle.
+ * read-only rendering behaviors: the review-load column, the assignment
+ * section's shape and the still-seeded dispute pool, the arbiter tag,
+ * disable-driven pool release, and the i18n toggle.
  */
 async function checkArbiter(page: Page, name: string) {
   await page.locator('#reviewEditBtn').click();
@@ -30,6 +38,12 @@ async function checkArbiter(page: Page, name: string) {
     .check();
   await page.locator('#reviewSaveBtn').click();
   await expect(page.locator('#reviewEditForm')).toHaveClass(/hidden/);
+}
+
+/* Reads one reviewer's 待審 figure out of the assignment table (column 2). */
+async function pendingOf(page: Page, name: string): Promise<number> {
+  const row = page.locator('#reviewAssignmentBody tr').filter({ hasText: name });
+  return Number(await row.locator('td').nth(2).textContent());
 }
 
 test.describe('Task detail review assignment', () => {
@@ -44,39 +58,34 @@ test.describe('Task detail review assignment', () => {
     const annotatorRow = page.locator('#memberTableBody tr').filter({ hasText: 'Alex Wang' });
     await expect(annotatorRow.locator('td').nth(3)).toHaveText('—');
 
-    const reviewerRow = page.locator('#memberTableBody tr').filter({ hasText: 'Mandy Chen' });
-    await expect(reviewerRow.locator('td').nth(3)).toHaveText('40 筆 · 12 待審');
+    /* issue #617 put the four spec 015 roster reviewers in `reviewer_ids`,
+       so they are the members this task's review units are dealt to. */
+    const reviewerRow = page.locator('#memberTableBody tr').filter({ hasText: '林佳蓉' });
+    await expect(reviewerRow.locator('td').nth(3)).toHaveText(REVIEW_LOAD_ZH);
   });
 
-  test('renders the review assignment section with seeded workload and dispute pool', async ({ page }) => {
+  test('renders the review assignment section with a derived workload and the dispute pool', async ({ page }) => {
     await page.goto(TASK_DETAIL_URL);
     await openMemberTab(page);
 
     await expect(page.locator('#memberManagementPanel > section').nth(2).locator('h2')).toHaveText('審核指派');
-    await expect(page.locator('#reviewUnassignedCount')).toHaveText('未指派 18 筆');
 
     /* One row per ACTIVE REVIEWER MEMBER, not per checked reviewer -- issue
        #617 added the four spec 015 roster reviewers to TASK_MEMBERS, so the
-       table grew to 7. The three seeded below are the ones
-       DEFAULT_REVIEW_WORKLOAD carries figures for; the rest render zeros. */
+       table grew to 7. Reviewers this task does not check render zeros. */
     const rows = page.locator('#reviewAssignmentBody tr');
     await expect(rows).toHaveCount(7);
 
     const mandyRow = rows.filter({ hasText: 'Mandy Chen' });
-    await expect(mandyRow.locator('td').nth(1)).toHaveText('40');
-    await expect(mandyRow.locator('td').nth(2)).toHaveText('12');
-    await expect(mandyRow.locator('td').nth(3)).toHaveText('28');
+    await expect(mandyRow.locator('td').nth(1)).toHaveText('0');
 
-    const kevinRow = rows.filter({ hasText: 'Kevin Liu' });
-    await expect(kevinRow.locator('td').nth(1)).toHaveText('40');
-    await expect(kevinRow.locator('td').nth(2)).toHaveText('31');
-    await expect(kevinRow.locator('td').nth(3)).toHaveText('9');
+    /* Every unit this task owns is dealt to an active checked reviewer, so
+       nothing is left over (issue #761 derives this from the units rather
+       than seeding it). */
+    await expect(page.locator('#reviewUnassignedCount')).toHaveText('未指派 0 筆');
 
-    const rachelRow = rows.filter({ hasText: 'Rachel Wu' });
-    await expect(rachelRow.locator('td').nth(1)).toHaveText('18');
-    await expect(rachelRow.locator('td').nth(2)).toHaveText('5');
-    await expect(rachelRow.locator('td').nth(3)).toHaveText('13');
-
+    /* The dispute pool is still a seeded prototype figure -- issue #761
+       derived only the per-reviewer workload and the unassigned pool. */
     await expect(page.locator('#disputePoolText')).toHaveText('爭議池 7 項待仲裁');
   });
 
@@ -98,19 +107,24 @@ test.describe('Task detail review assignment', () => {
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
     await openMemberTab(page);
 
+    /* FR-005j's release rule only has anything to release for a reviewer the
+       task actually checks -- an unchecked member holds no units at all. */
+    const pending = await pendingOf(page, '林佳蓉');
+    expect(pending).toBeGreaterThan(0);
+
     await page
       .locator('#memberTableBody tr')
-      .filter({ hasText: 'Rachel Wu' })
+      .filter({ hasText: '林佳蓉' })
       .locator('button:has-text("停用")')
       .click();
     await page.locator('#memberActionConfirmBtn').click();
 
-    // Rachel's 5 pending units flow back to the pool; her 13 done units stay
-    // as historical stats (mirrors FR-005f for annotators).
-    await expect(page.locator('#reviewUnassignedCount')).toHaveText('未指派 23 筆');
+    // Her pending units flow back to the pool; her done units stay as
+    // historical stats (mirrors FR-005f for annotators).
+    await expect(page.locator('#reviewUnassignedCount')).toHaveText(`未指派 ${pending} 筆`);
     await expect(page.locator('#reviewAssignmentBody tr')).toHaveCount(6);
-    const rachelRow = page.locator('#memberTableBody tr').filter({ hasText: 'Rachel Wu' });
-    await expect(rachelRow.locator('td').nth(3)).toHaveText('13 筆 · 0 待審');
+    const reviewerRow = page.locator('#memberTableBody tr').filter({ hasText: '林佳蓉' });
+    await expect(reviewerRow.locator('td').nth(3)).toHaveText(/^\d+ 筆 · 0 待審$/);
   });
 
   test('translates review-load column and assignment section to English', async ({ page }) => {
@@ -120,10 +134,10 @@ test.describe('Task detail review assignment', () => {
 
     await expect(page.locator('#thMemberReviewLoad')).toHaveText('Review load');
     await expect(page.locator('#reviewAssignmentTitle')).toHaveText('Review Assignment');
-    await expect(page.locator('#reviewUnassignedCount')).toHaveText('18 unassigned');
+    await expect(page.locator('#reviewUnassignedCount')).toHaveText(/^\d+ unassigned$/);
     await expect(page.locator('#disputePoolText')).toHaveText('Dispute pool · 7 awaiting arbitration');
 
-    const reviewerRow = page.locator('#memberTableBody tr').filter({ hasText: 'Mandy Chen' });
-    await expect(reviewerRow.locator('td').nth(3)).toHaveText('40 items · 12 pending');
+    const reviewerRow = page.locator('#memberTableBody tr').filter({ hasText: '林佳蓉' });
+    await expect(reviewerRow.locator('td').nth(3)).toHaveText(REVIEW_LOAD_EN);
   });
 });

@@ -196,38 +196,38 @@ test.describe('Task detail reviewer identity format — opaque user id, not Emai
   });
 
   // FR-010s-1: "成員清單「審核負荷」欄之聚合亦 MUST 以該 id 為鍵" -- the
-  // byReviewer aggregation tables (the shared default plus the four
-  // per-task tables) are keyed by TASK_MEMBERS id, not Email.
+  // byReviewer aggregation is keyed by TASK_MEMBERS id, not Email.
+  // issue #761 replaced the hand-seeded per-task tables this used to read
+  // with REVIEW_WORKLOAD_DERIVED, computed per render pass from the task's
+  // own review units; the identity contract it has to satisfy is unchanged,
+  // so the guard now reads the derivation each task actually renders.
   test('review workload aggregation (byReviewer) is keyed by member id, not Email', async ({ page }) => {
     await page.goto(TASK_DETAIL_URL);
 
     const members = await getTaskMembers(page);
     const idSet = new Set(members.map((m) => m.id));
 
-    const workloadKeySets = await page.evaluate((taskIds) => {
-      type Workload = { byReviewer: Record<string, unknown> };
-      const w = window as unknown as {
-        DEFAULT_REVIEW_WORKLOAD: Workload;
-        REVIEW_WORKLOAD_BY_TASK: Record<string, Workload>;
-      };
-      const result: Record<string, string[]> = {
-        DEFAULT: Object.keys(w.DEFAULT_REVIEW_WORKLOAD.byReviewer),
-      };
-      taskIds.forEach((taskId) => {
-        result[taskId] = Object.keys(w.REVIEW_WORKLOAD_BY_TASK[taskId]?.byReviewer || {});
-      });
-      return result;
-    }, REVIEW_PROFILE_TASK_IDS as unknown as string[]);
+    for (const taskId of REVIEW_PROFILE_TASK_IDS) {
+      await page.goto(`${TASK_DETAIL_URL}?task_id=${taskId}`);
+      // The derivation is refreshed by the render pass, so the member tab
+      // has to be open before reading it.
+      await openMemberTab(page);
 
-    Object.entries(workloadKeySets).forEach(([table, keys]) => {
-      expect(keys.length, `byReviewer table "${table}" must not be empty`).toBeGreaterThan(0);
+      const keys = await page.evaluate(() => {
+        const w = window as unknown as {
+          REVIEW_WORKLOAD_DERIVED: { byReviewer: Record<string, unknown> };
+        };
+        return Object.keys(w.REVIEW_WORKLOAD_DERIVED.byReviewer);
+      });
+
+      expect(keys.length, `byReviewer for task "${taskId}" must not be empty`).toBeGreaterThan(0);
       keys.forEach((key) => {
-        expect(key, `byReviewer key "${key}" in table "${table}" must not be an Email string`).not.toContain('@');
-        expect(idSet.has(key), `byReviewer key "${key}" in table "${table}" must resolve to a TASK_MEMBERS id`).toBe(
+        expect(key, `byReviewer key "${key}" in task "${taskId}" must not be an Email string`).not.toContain('@');
+        expect(idSet.has(key), `byReviewer key "${key}" in task "${taskId}" must resolve to a TASK_MEMBERS id`).toBe(
           true
         );
       });
-    });
+    }
   });
 
   // Positive regression guard: the member list keeps displaying Email for

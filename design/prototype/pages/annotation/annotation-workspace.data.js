@@ -2749,6 +2749,59 @@
     return units;
   }
 
+  /* issue #761: 014's 審核指派 table used to read a hand-seeded per-reviewer
+     workload, so it could not satisfy 014 AC-1.6 ("Overview 調整
+     `reviewer_ids` 勾選並儲存後，負荷分布即時反映") or SC-034 ("與成員清單
+     「審核負荷」欄即時一致") -- a static seed cannot react to anything. The
+     numbers live here, beside the assignment rule that produces them, for
+     the same reason computeReviewSummary() does (issue #501): the table and
+     the workspace must never disagree about who owns which unit.
+
+     `reviewerIds` is the task's STORED `reviewer_ids`, deliberately NOT
+     pre-filtered to active members. FR-005j requires that removing or
+     disabling a reviewer who still holds 待審 work returns that `pending`
+     to the unassigned pool while `done` stays as historical stats -- which
+     only works if their units are still attributed to them first and then
+     split by liveness. Pre-filtering would instead silently re-deal their
+     work to whoever is left, and the unassigned pool would never move.
+
+     A unit counts as `done` for its assigned reviewer once that reviewer's
+     submission exists, which is exactly what takes the unit past `pending`
+     -- `disputed` means reviewed-and-escalated, not unreviewed. */
+  function computeReviewWorkload(taskId, runType, reviewerIds, activeReviewerIds) {
+    var units = listReviewUnits(taskId, runType);
+    var statusByUnit = {};
+    units.forEach(function (unit) {
+      statusByUnit[unit.sampleId + '::' + unit.annotatorId] = unit.status;
+    });
+    /* getReviewAssignments() sorts its input before dealing, so the result
+       cannot be zipped back by index -- join on the unit identity instead. */
+    var assignments = getReviewAssignments(runType, units.map(function (unit) {
+      return { sample_id: unit.sampleId, annotator_id: unit.annotatorId };
+    }), reviewerIds);
+    var active = Array.isArray(activeReviewerIds) ? activeReviewerIds : [];
+    var byReviewer = {};
+    /* An empty roster leaves getReviewAssignments() with nothing to deal,
+       so every unit it dropped is unassigned by definition. */
+    var unassigned = units.length - assignments.length;
+    assignments.forEach(function (assignment) {
+      var status = statusByUnit[assignment.sample_id + '::' + assignment.annotator_id];
+      var reviewed = status === REVIEW_UNIT_STATUS.DISPUTED
+        || status === REVIEW_UNIT_STATUS.FINALIZED;
+      if (!byReviewer[assignment.reviewer_id]) {
+        byReviewer[assignment.reviewer_id] = { pending: 0, done: 0 };
+      }
+      if (reviewed) {
+        byReviewer[assignment.reviewer_id].done += 1;
+      } else if (active.indexOf(assignment.reviewer_id) < 0) {
+        unassigned += 1;
+      } else {
+        byReviewer[assignment.reviewer_id].pending += 1;
+      }
+    });
+    return { byReviewer: byReviewer, unassigned: unassigned };
+  }
+
   /* Issue #449 keeps the enumeration in listReviewUnits() and leaves this
      the projection the counters need, so the summary and the quick-review
      target can never disagree about which units exist. */
@@ -3300,6 +3353,7 @@
     getReviewAssignments: getReviewAssignments,
     getAssignedReviewUnits: getAssignedReviewUnits,
     computeReviewSummary: computeReviewSummary,
+    computeReviewWorkload: computeReviewWorkload,
     formatReviewSummary: formatReviewSummary,
     listReviewUnits: listReviewUnits,
     findNextActionableReviewUnit: findNextActionableReviewUnit,
