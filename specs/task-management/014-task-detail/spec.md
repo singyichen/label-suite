@@ -1,5 +1,5 @@
 ---
-功能分支: docs/issue-688-archive-014-review-model
+功能分支: feat/726-task-detail-url-view-state
 建立日期: 2026-04-20
 版本: 3.0.1
 狀態: Draft
