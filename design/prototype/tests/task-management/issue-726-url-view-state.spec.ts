@@ -99,12 +99,27 @@ test.describe('Task detail URL view-state (issue #726)', () => {
       await gotoTaskDetail(page, 'task_id=T001&task_role=project_leader');
       await openTab(page, 'tabAnnotationProgress', 'annotationProgressPanel');
 
+      // Sort FIRST, while the default stage (T001's latest trial round,
+      // 'r2') still has members and #memberProgressSort is visible. T001
+      // has no entry in ANNOTATION_PROGRESS_BY_TASK (only T014-T017 do), so
+      // it falls back to DEFAULT_ANNOTATION_PROGRESS, whose official.members
+      // is []; renderProgressEmptyState() then hides #memberProgressSection
+      // (and the sort control inside it) once stage=official. Interacting
+      // with the sort control AFTER switching to official is structurally
+      // unreachable on this seed data and times out for the wrong reason --
+      // ordering it first keeps both write-back assertions genuine.
+      await page.locator('#memberProgressSort').selectOption('speed_desc');
+      expect(new URL(page.url()).searchParams.get('ap_sort')).toBe('speed_desc');
+
       // T001's default progressStage is its latest trial round ('r2'), so
       // clicking the "official" pill is a genuine non-default transition.
       await page.locator('#progressRoundPills button', { hasText: '正式標記' }).click();
       expect(new URL(page.url()).searchParams.get('ap_stage')).toBe('official');
 
-      await page.locator('#memberProgressSort').selectOption('speed_desc');
+      // ap_sort is a per-tab list-state param, not scoped to a single
+      // stage -- switching stages must not silently drop it, even though
+      // the sort control itself is now hidden (official has no members to
+      // sort). The underlying state value is unaffected by visibility.
       expect(new URL(page.url()).searchParams.get('ap_sort')).toBe('speed_desc');
     });
 
