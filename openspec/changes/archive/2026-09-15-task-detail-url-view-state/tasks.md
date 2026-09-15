@@ -46,9 +46,9 @@
 > **最終群組**：是。本組執行 `/opsx:archive` 與正典回寫，並收集 Source-Verify 證據。
 > **相依**：群組 1 全部完成且證據已由主 session 核實。
 
-- [ ] 2.1 執行 `openspec archive task-detail-url-view-state --yes`（`openspec` 不在 PATH，需以 `export PATH="$HOME/Library/pnpm:$PATH"` 前置），並確認衍生視圖 `openspec/specs/task-management/014-task-detail/spec.md` 已合併本次 delta。驗證：`openspec validate --changes --no-interactive` 通過，且 `openspec/changes/task-detail-url-view-state/` 已移入 `openspec/changes/archive/` [@main]
-- [ ] 2.2 回寫正典 `specs/task-management/014-task-detail/spec.md`：版本 v3.0.1 → v3.1.0（MINOR：只新增、無移除、無語意反轉），於需求規格區 FR-018 之後新增 FR-019 全條、於使用者故事 1 新增 AC-1.8 與 AC-1.9、於使用者故事 2 新增 AC-2.5、於成功標準區 SC-043 之後新增 SC-044，並新增 v3.1.0 Changelog 條目。每處編輯須先斷言錨點恰 1 筆再替換。驗證：`scripts/check-sdd.sh` 與 `scripts/check-spec-artifacts.sh` 皆 exit 0 [@main]
-- [ ] 2.3 執行 Source-Verify gate（gate 4）：衍生視圖中每一處正典引用（FR／AC／SC ID、章節、檔案路徑、issue／PR 編號、被改寫的條文子句）必須逐一以 `grep` 於正典定位；並逐項比對衍生視圖與正典兩份文件的 FR／AC／SC ID 集合，確認無任何 ID 只存在於衍生側。`#### Scenario:` 標題為 AC ID 的權威來源，掃描時必須同時掃需求標題與情境標題。另須逐一複驗 delta 與 design.md 內所有 `task-detail.html:<行號>` 引用於**回寫後之當前檔案**仍指向所述內容（群組 1 的實作已改動該檔，行號可能位移）。驗證：全部引用可定位、零 MISSING、行號引用全數命中 [@main]
+- [x] 2.1 執行 `openspec archive task-detail-url-view-state --yes`（`openspec` 不在 PATH，需以 `export PATH="$HOME/Library/pnpm:$PATH"` 前置），並確認衍生視圖 `openspec/specs/task-management/014-task-detail/spec.md` 已合併本次 delta。驗證：`openspec validate --changes --no-interactive` 通過，且 `openspec/changes/task-detail-url-view-state/` 已移入 `openspec/changes/archive/` [@main]
+- [x] 2.2 回寫正典 `specs/task-management/014-task-detail/spec.md`：版本 v3.0.1 → v3.1.0（MINOR：只新增、無移除、無語意反轉），於需求規格區 FR-018 之後新增 FR-019 全條、於使用者故事 1 新增 AC-1.8 與 AC-1.9、於使用者故事 2 新增 AC-2.5、於成功標準區 SC-043 之後新增 SC-044，並新增 v3.1.0 Changelog 條目。每處編輯須先斷言錨點恰 1 筆再替換。驗證：`scripts/check-sdd.sh` 與 `scripts/check-spec-artifacts.sh` 皆 exit 0 [@main]
+- [x] 2.3 執行 Source-Verify gate（gate 4）：衍生視圖中每一處正典引用（FR／AC／SC ID、章節、檔案路徑、issue／PR 編號、被改寫的條文子句）必須逐一以 `grep` 於正典定位；並逐項比對衍生視圖與正典兩份文件的 FR／AC／SC ID 集合，確認無任何 ID 只存在於衍生側。`#### Scenario:` 標題為 AC ID 的權威來源，掃描時必須同時掃需求標題與情境標題。另須逐一複驗 delta 與 design.md 內所有 `task-detail.html:<行號>` 引用於**回寫後之當前檔案**仍指向所述內容（群組 1 的實作已改動該檔，行號可能位移）。驗證：全部引用可定位、零 MISSING、行號引用全數命中 [@main]
 
 ## Pre-merge finalization（NON-CHECKBOX）
 
