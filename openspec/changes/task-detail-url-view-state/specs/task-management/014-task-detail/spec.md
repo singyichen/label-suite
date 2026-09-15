@@ -42,26 +42,26 @@
 
 網址 MUST 僅承載檢視狀態（頁籤、篩選值、頁碼），MUST NOT 承載任何標記答案內容或跨角色資料。
 
-#### Scenario: 篩選與翻頁即時寫回網址
+#### Scenario: AC-1.8 篩選與翻頁即時寫回網址
 - **GIVEN** `project_leader` 開啟 `/task-detail?task_id=T-001`
 - **WHEN** 切換至 `annotation-results`、將審核狀態篩選為「爭議中」並翻到第 3 頁
 - **THEN** 網址更新為含 `tab=annotation-results`、`ar_review_status=disputed` 與 `ar_page=3` 的查詢字串
 - **AND** `task_id=T-001` 仍保留於網址
 - **AND** 瀏覽歷史未新增任何一筆紀錄，按上一頁鍵直接離開本頁
 
-#### Scenario: 貼上網址還原完整畫面座標
+#### Scenario: AC-1.9 貼上網址還原完整畫面座標
 - **GIVEN** 一組帶有 `tab=work-log`、`wl_stage`、`wl_member` 與 `wl_page=2` 的 `task-detail` 網址
 - **WHEN** 另一位具權限的使用者於新分頁開啟該網址
 - **THEN** 頁面直接停在 `work-log`，階段與成員篩選呈現網址所指定的選取值，清單停在第 2 頁
 - **AND** 畫面內容與親自操作到該狀態時一致
 
-#### Scenario: 無效參數靜默回退為預設值
+#### Scenario: SC-044 無效參數靜默回退為預設值
 - **GIVEN** 網址帶有不存在的篩選值（如 `ar_stage=r99`）與超出總頁數的頁碼（如 `ar_page=999`）
 - **WHEN** 使用者開啟該網址
 - **THEN** 該兩項各自回退為預設值（階段為全部、頁碼為可用的最後一頁）並正常渲染清單
 - **AND** 頁面不出現空白清單、錯誤訊息或載入中斷
 
-#### Scenario: reviewer 直連受限頁籤時網址一併導正
+#### Scenario: AC-2.5 reviewer 直連受限頁籤時網址一併導正
 - **GIVEN** `task_role = reviewer`
 - **WHEN** 直接開啟帶 `tab=member-management&mm_page=2` 的 `task-detail` 網址
 - **THEN** 系統依 FR-006 導回 `overview` 並提示無權限

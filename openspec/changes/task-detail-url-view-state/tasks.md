@@ -19,7 +19,7 @@
 > **為何要把正典移出 `_archive`**：`scripts/check-sdd.sh` 之 `ACTIVE_CHANGE_SPEC` 只接受 `specs/<module>/NNN-feature/spec.md` 形狀的路徑（模組段為 `[[:alnum:]-]+`，不含底線，且第三段必須是 `NNN-` 前綴的功能目錄），`specs/_archive/014-task-detail/spec.md` 兩項皆不符；同時 CLAUDE.md「Modify Existing Feature」第 1 步本就要求需直接編輯正典時先自 `specs/_archive/` 取回。本 change 於群組 2 要回寫正典版本與 Changelog，屬「需直接編輯」。
 
 - [ ] 0.1 執行 `git mv specs/_archive/014-task-detail specs/task-management/014-task-detail`，將正典自封存區取回；本任務只移動檔案，不改動任何條文。驗證：`test -f specs/task-management/014-task-detail/spec.md` 為真、`test -d specs/_archive/014-task-detail` 為偽，且 `scripts/check-spec-artifacts.sh` exit 0（該腳本不認 `specs/_archive/`，取回後其相對連結必須全數可解析） [@main]
-- [ ] 0.2 修改 `specs/STATUS.md` 之 `task-management-014` 列：狀態由 `archived` 改為 `change-open`、分支欄改為 `feat/726-task-detail-url-view-state`、描述欄補記本 change 名稱與 issue #726，並同步移除「正典已封存至 `specs/_archive/014-task-detail/`」之敘述（該敘述於 0.1 後即為不實）。驗證：`grep -n 'task-management-014' specs/STATUS.md` 之狀態欄為 `change-open`、分支欄為 `feat/726-task-detail-url-view-state` [@main]
+- [ ] 0.2 修改 `specs/STATUS.md` 之 `task-management-014` 列：狀態由 `archived` 改為 `change-open`、分支欄改為 feat/726-task-detail-url-view-state、描述欄補記本 change 名稱與 issue #726，並同步改寫「正典已封存」之敘述（該敘述於 0.1 後即為不實；本任務只動這一個檔案）。驗證：`grep -n 'task-management-014' specs/STATUS.md` 之狀態欄為 `change-open`、分支欄為 `feat/726-task-detail-url-view-state` [@main]
 - [ ] 0.3 修改 `specs/task-management/014-task-detail/spec.md` 之 frontmatter `功能分支` 欄，由 `docs/issue-688-archive-014-review-model` 改為 `feat/726-task-detail-url-view-state`，使其與 `specs/STATUS.md` 分支欄逐字相同；本任務只改 frontmatter，不動任何 FR／AC／SC 條文，版本號留待群組 2 一併處理。驗證：`scripts/check-sdd.sh` 之 `ACTIVE_CHANGE_SPEC` 與 `ACTIVE_CHANGE_STAGE` 皆為 0 筆 [@main]
 
 ## 1. 頁籤與清單檢視狀態的網址同步（FR-019 全條）
@@ -48,7 +48,7 @@
 
 - [ ] 2.1 執行 `openspec archive task-detail-url-view-state --yes`（`openspec` 不在 PATH，需以 `export PATH="$HOME/Library/pnpm:$PATH"` 前置），並確認衍生視圖 `openspec/specs/task-management/014-task-detail/spec.md` 已合併本次 delta。驗證：`openspec validate --changes --no-interactive` 通過，且 `openspec/changes/task-detail-url-view-state/` 已移入 `openspec/changes/archive/` [@main]
 - [ ] 2.2 回寫正典 `specs/task-management/014-task-detail/spec.md`：版本 v3.0.1 → v3.1.0（MINOR：只新增、無移除、無語意反轉），於需求規格區 FR-018 之後新增 FR-019 全條、於使用者故事 1 新增 AC-1.8 與 AC-1.9、於使用者故事 2 新增 AC-2.5、於成功標準區 SC-043 之後新增 SC-044，並新增 v3.1.0 Changelog 條目。每處編輯須先斷言錨點恰 1 筆再替換。驗證：`scripts/check-sdd.sh` 與 `scripts/check-spec-artifacts.sh` 皆 exit 0 [@main]
-- [ ] 2.3 執行 Source-Verify gate（gate 4）：衍生視圖中每一處正典引用（FR／AC／SC ID、章節、檔案路徑、issue／PR 編號、被改寫的條文子句）必須逐一以 `grep` 於正典定位；並逐項比對衍生視圖與正典兩份文件的 FR／AC／SC ID 集合，確認無任何 ID 只存在於衍生側。`#### Scenario:` 標題為 AC ID 的權威來源，掃描時必須同時掃需求標題與情境標題。另須逐一複驗 delta 與 design.md 內所有 `task-detail.html:<行號>` 引用於**回寫後之當前檔案**仍指向所述內容（Green 已改動該檔，行號可能位移）。驗證：全部引用可定位、零 MISSING、行號引用全數命中 [@main]
+- [ ] 2.3 執行 Source-Verify gate（gate 4）：衍生視圖中每一處正典引用（FR／AC／SC ID、章節、檔案路徑、issue／PR 編號、被改寫的條文子句）必須逐一以 `grep` 於正典定位；並逐項比對衍生視圖與正典兩份文件的 FR／AC／SC ID 集合，確認無任何 ID 只存在於衍生側。`#### Scenario:` 標題為 AC ID 的權威來源，掃描時必須同時掃需求標題與情境標題。另須逐一複驗 delta 與 design.md 內所有 `task-detail.html:<行號>` 引用於**回寫後之當前檔案**仍指向所述內容（群組 1 的實作已改動該檔，行號可能位移）。驗證：全部引用可定位、零 MISSING、行號引用全數命中 [@main]
 
 ## Pre-merge finalization（NON-CHECKBOX）
 
