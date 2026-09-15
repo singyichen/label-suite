@@ -1,7 +1,7 @@
 ---
 功能分支: feat/726-task-detail-url-view-state
 建立日期: 2026-04-20
-版本: 3.0.1
+版本: 3.1.0
 狀態: Draft
 ---
 
@@ -156,6 +156,8 @@ Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、�
 5. **AC-1.5**：**Given** 位於 `annotation-results`，**When** 點擊匯出，**Then** 可匯出 `json` 或 `json-min`，且欄位結構需依格式與 `task_type` 正確切換。
 6. **AC-1.6**：**Given** 位於 `member-management`，**When** 檢視審核指派區塊，**Then** 每位啟用中審核員的已指派／待審／已完成三欄、爭議池待仲裁數與最終例外池待處置數皆為唯讀呈現、不提供任何指派或分派按鈕，且與成員清單「審核負荷」欄一致；Overview 調整 `reviewer_ids` 勾選並儲存後，負荷分布即時反映（FR-005j、FR-005k）。
 7. **AC-1.7**：**Given** 一位 `membership_status = active` 的標記員持有 1 筆已提交與 2 筆未提交的標記作業，**When** `project_leader` 於 `member-management` 將其停用並確認，**Then** 已提交作業保留並繼續計入統計，2 筆未提交作業退回未指派池等待重新指派或排除，且該標記員不再出現在可指派對象中（FR-005l）。
+8. **AC-1.8**（**v3.1.0 新增**，issue #726）：**Given** `project_leader` 開啟 `/task-detail?task_id=T-001`，**When** 切換至 `annotation-results`、將審核狀態篩選為「爭議中」並翻到第 3 頁，**Then** 網址更新為含 `tab=annotation-results`、`ar_review_status=disputed` 與 `ar_page=3` 的查詢字串，`task_id=T-001` 仍保留於網址，且瀏覽歷史未新增任何一筆紀錄、按上一頁鍵直接離開本頁（FR-019）。
+9. **AC-1.9**（**v3.1.0 新增**，issue #726）：**Given** 一組帶有 `tab=work-log`、`wl_stage`、`wl_member` 與 `wl_page=2` 的 `task-detail` 網址，**When** 另一位具權限的使用者於新分頁開啟該網址，**Then** 頁面直接停在 `work-log`，階段與成員篩選呈現網址所指定的選取值、清單停在第 2 頁，且畫面內容與親自操作到該狀態時一致（FR-019）。
 
 **介面定義（需與 IA 導覽語意一致）**：
 
@@ -406,6 +408,7 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 2. **AC-2.2**：**Given** `task_role = reviewer`，**When** 嘗試以直連進入 `member-management`，**Then** 導回 `overview` 並顯示無權限提示。
 3. **AC-2.3**：**Given** `task_role = reviewer`，**When** 進入 `work-log`，**Then** 僅可見自己的工時資料。
 4. **AC-2.4**：**Given** `task_role = annotator`，**When** 直接開啟 `/task-detail`，**Then** 系統阻擋並導回 `/task-list` 顯示無權限提示。
+5. **AC-2.5**（**v3.1.0 新增**，issue #726）：**Given** `task_role = reviewer`，**When** 直接開啟帶 `tab=member-management&mm_page=2` 的 `task-detail` 網址，**Then** 系統依 FR-006 導回 `overview` 並提示無權限，且網址改寫為對應 `overview` 的參數、不再含 `tab=member-management` 或 `mm_page`（FR-019）。
 
 **行為規則**：
 
@@ -646,6 +649,8 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 - **FR-015l**：被排除的標記作業不得出現在 `JSON` 的 `items[].annotations[]` 或 `JSON-MIN` 的一般結果列中；若匯出範圍包含排除紀錄，只能以 metadata / manifest 中的排除摘要呈現。
 - **FR-018**（**v3.0.0 新增**，對應 AC-3.13、SC-043，issue #688）：`annotation-progress` tab 必須提供「最終例外池」區塊，作為專案負責人逐筆收尾爭議的入口：(1) 區塊標題列必須顯示待處置項目數；`0` 時必須渲染空狀態（`最終例外池已清空`），不得隱藏整個區塊——結案閘門（FR-008b）依賴此處為唯一可稽核的呈現點。(2) 清單欄位逐筆呈現樣本 ID、標記員帳號、審核員帳號、爭議的輸出類型、仲裁者帳號與其「兩者皆非」理由、落入例外池的時間。(3) 每列必須提供進入處置畫面的動作，導向 `015` FR-095 之收尾介面並攜帶完整審核單位身分（`task_id × run_type × annotator_id × sample_id`）與爭議項識別。(4) 本區塊必須僅對 `project_leader` 呈現；其他角色不得看到此區塊，直連進入時須比照 FR-006 導回並提示無權限。(5) 清單必須可依 `run_type` 篩選；`dry_run` 與 `official_run` 的例外項各自獨立計數，FR-008b 第 (4) 項之結案閘門僅計 `official_run` 的待處置項目。
 
+- **FR-019**（**v3.1.0 新增**，對應 AC-1.8、AC-1.9、AC-2.5、SC-044，issue #726）：`task-detail` 必須讓「目前頁籤」與四個頁籤的清單控制項狀態在網址與畫面之間雙向同步，使任一畫面座標可經由複製網址被重現與分享（UX 慣例 `UXC-11`）。(1) **同步範圍**：`tab`（全頁）、`ap_stage`／`ap_sort`（`annotation-progress` 之階段與排序）、`ar_stage`／`ar_status`／`ar_annotator`／`ar_reviewer`／`ar_review_status`／`ar_page`（`annotation-results` 之五項篩選與頁碼）、`mm_page`（`member-management` 頁碼）、`wl_from`／`wl_to`／`wl_stage`／`wl_member`／`wl_page`（`work-log` 之日期區間、階段、成員與頁碼），共 15 個查詢參數各對應一項檢視狀態。參數名必須帶頁籤前綴（`ap_` / `ar_` / `mm_` / `wl_`）以與既有路由參數 `task_id`、`task_role`、`role`、`tab`、`status` 區隔——`status` 已被任務狀態覆寫語意佔用，篩選器不得爭用該名稱。不在同步範圍內的頁內狀態（`overview` 的「執行控制」次級頁籤、匯出記錄對話框分頁、成員標記細項下鑽分頁）不得寫入網址。(2) **寫回**：使用者變更上述任一狀態後，系統必須以 `history.replaceState()` 更新網址，不得使用 `pushState()`——篩選調整屬頁內行為，不得產生瀏覽歷史紀錄（承 FR-004）。寫回必須在既有查詢參數之上增刪，不得重建空白參數集：`task_id`、`task_role`／`role` 等既有路由參數必須原樣保留；處於預設值的檢視狀態必須自網址移除，使未經操作的頁面維持簡潔網址。(3) **還原**：頁面載入時，系統必須在首次渲染前讀取上述參數並套用；套用結果必須與使用者親自操作到該狀態時的畫面完全一致，包含篩選控制項的選取值、清單內容與分頁列的目前頁。(4) **無效值回退**：每個參數必須在套用前對照其合法值集合驗證——篩選值對照該篩選器目前提供的選項、頁碼須為正整數且不得超出該清單的總頁數。不合法者必須靜默回退為該狀態的預設值並繼續渲染，不得使清單呈現空白、拋出錯誤或阻斷頁面載入。合法值集合必須由既有選項來源推導，不得於網址解析處硬編第二份清單（憲法：Generalization-First）。(5) **角色邊界**：網址檢視狀態不得成為角色守門的旁路——`reviewer` 以任何參數組合直連 `member-management` 時，仍必須依 FR-006 導回 `overview` 並提示無權限；導回後網址必須一併改寫為實際呈現的頁籤，不得留下與畫面不符的 `tab=member-management`，被導回後不適用的頁籤參數亦必須自網址移除。網址必須僅承載檢視狀態（頁籤、篩選值、頁碼），不得承載任何標記答案內容或跨角色資料。
+
 ### 使用者流程與導頁
 
 ```mermaid
@@ -763,6 +768,7 @@ flowchart LR
 - **SC-041**：任一試標回合建立完成後，其 `TrialRound.sampling_value` 必須與該回合實際建立之 `AnnotationListMaterialization.item_count` 完全一致；畫面（包含試標回合摘要卡、試標回合歷程）不得顯示以百分比或資料集總數換算、與實際建立筆數脫節的衍生值（issue #491／#489）。
 - **SC-042**：`R{n}`（`n >= 2`）之新增試標回合流程，未填寫 `prior_round_findings`／`guideline_change_summary`（或勾選 `no_change` 卻未填 `no_change_reason`）時必被阻擋；`R1` 不受此限制；每次成功建立回合皆同步寫入建立當下的 `guideline_version`（issue #492 A4/A5）。
 - **SC-043**：`annotation-progress` 之「最終例外池」區塊可正確顯示待處置項目數（`0` 時顯示空狀態而非隱藏區塊），逐列呈現樣本 ID、標記員、審核員、爭議輸出類型、仲裁者與理由，並可依 `run_type` 篩選；僅 `project_leader` 可見，其餘角色直連進入時被導回並提示無權限（FR-018，issue #688）。
+- **SC-044**：`task-detail` 的頁籤與四個頁籤的清單檢視狀態可經網址重現與分享——篩選或翻頁後對應查詢參數即時寫回且不產生瀏覽歷史紀錄，貼上該網址於新分頁開啟時畫面與親自操作結果一致；帶有不存在的篩選值（如 `ar_stage=r99`）或超出總頁數的頁碼（如 `ar_page=999`）時各自靜默回退為預設值並正常渲染清單，不出現空白清單、錯誤訊息或載入中斷（FR-019，issue #726）。
 
 ---
 
@@ -770,6 +776,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 3.1.0 | 2026-09-15 | **新增 FR-019 頁籤與清單檢視狀態的網址同步（issue #726，OpenSpec change `task-detail-url-view-state`，MINOR）**：`task-detail` 成為落地 UX 慣例 `UXC-11`（可分享的畫面狀態）的第五個頁面。**新增**：**FR-019** 全條——`tab` 與 `ap_stage`／`ap_sort`／`ar_stage`／`ar_status`／`ar_annotator`／`ar_reviewer`／`ar_review_status`／`ar_page`／`mm_page`／`wl_from`／`wl_to`／`wl_stage`／`wl_member`／`wl_page` 共 15 個查詢參數，寫回一律 `history.replaceState()`（篩選屬頁內行為，不得產生歷史紀錄，承 FR-004）、就地增刪既有參數集以保全 `task_id`／`task_role`／`role`、預設值自網址省略、還原在首次渲染前完成、無效值靜默回退且合法值集合由既有選項來源推導（憲法 Generalization-First，不得硬編第二份清單）、角色邊界不得被網址旁路（承 FR-006，導回後連不適用的頁籤參數一併移除）；新增 AC-1.8、AC-1.9（使用者故事 1）、AC-2.5（使用者故事 2）與 SC-044。**未變更**：既有 FR／AC／SC 條文全部維持原樣，本次為純新增，無移除、無語意反轉。參數名採頁籤前綴命名空間（`ap_`／`ar_`／`mm_`／`wl_`）之理由為 `?status=` 已被任務狀態覆寫語意佔用，詳見 `openspec/changes/archive/2026-09-15-task-detail-url-view-state/design.md`。 |
 | 3.0.1 | 2026-09-08 | **`## 流程圖` 補上成員與審核指派管理流程圖（patch，issue #679）**：原本該節只有一張 sequenceDiagram 與一張七列步驟表，兩者都只畫「進入頁面 → 推進任務狀態」的主線，第 2 列「管理成員」一句話帶過整個成員管理與審核指派的分工邊界——負責人能動什麼、系統自動做什麼、發布前哪一項會擋人，全散在 FR-005 系列與 FR-010s-1／FR-010t 的條文裡，`docs/product/ia/information-architecture.md` 旅程 A 亦僅一句話帶過。新增 `diagrams/member-review-assignment-flow.html`（`diagram-design` skill 產出的自包含 HTML + inline SVG，比照 `specs/annotation/015-annotation-workspace/diagrams/` 慣例，依 issue #528 Q4 決議不另出 PNG），以 `project_leader` 視角畫出四個步驟（新增成員並指派角色 → 成員清單「審核負荷」欄 → 恆為唯讀的審核指派區塊 → 總覽「審核設定」兩份勾選名冊）、唯一會擋人的發布前驗證閘門（FR-010t）與其不足時回成員清單補人的回頭路徑，以及移除／停用審核員時 `pending` 退回未指派池的支線；`審核指派區塊恆為唯讀` 與 `發布前驗證` 為圖上僅有的兩個焦點節點，以視覺方式固化 v3.0.0 的 BREAKING 決定——負責人決定的是「誰有資格審」而非「誰審哪一筆」。並在 `## 流程圖` 內嵌相對連結與 FR 對照。純文件補充，既有 sequenceDiagram 與步驟表未改動，無新增或移除 FR/AC，無 API 契約變更。 |
 | 3.0.0 | 2026-09-07 | **審核模型改為單人接力，對齊 015 v5.0.0（issue #688，OpenSpec change `align-014-review-model`，MAJOR/BREAKING）**：承接 issue #596 之三層單人接力審核模型，014 正典追上既有實作並解除與 015 的六處矛盾。**移除**：`REVIEW_ASSIGNMENT_MODES`、`MIN_REVIEWERS_RULE` 兩個規格常數；`TaskDetail` 的 `min_reviewers`／`review_assignment_mode`／`agreement_auto_finalize`／`arbitration_enabled` 四欄位；Overview「審核設定」同名四個檢視/編輯欄位；成員管理「審核指派」區塊的「自動補齊」「指派…」「分派給仲裁者」三組操作按鈕。**修訂**：`AR_REVIEW_STATUS` 由五態（`pending/approved/modified/disputed/finalized`）改為三態（`pending/disputed/finalized`），移除 `approved`／`modified` 兩個結構上不可達的中繼態，annotation-results 審核狀態 badge 與篩選同步三態化（FR-015a-1、FR-015d）；`ARBITER_CANDIDATE_RULE` 加上 `can_arbitrate = true`；`ReviewAssignment.source` 收斂為恆 `auto_rotation`；審核設定改為「審核員」`reviewer_ids`／「仲裁者」`arbiter_ids` 兩份勾選名冊（新增 `REVIEWER_ID_FORMAT`：元素為不透明 user id，取值來源 `TaskMembership.user_id`，形狀比照 015 `REVIEWER_ROSTER`，Email 降為顯示屬性不得作為比對鍵）；審核指派區塊與爭議池／最終例外池負荷列恆為唯讀（FR-005j、FR-005k）；FR-008b 結案前置條件第 (2)(3)(4) 項改為「審核單位皆已定稿或經例外池排除／無爭議中單位／最終例外池已清空」；FR-010t 審核員人數檢查改為「被勾選審核員 `>= 1`」，`arbiter_ids` 為空僅警示不阻擋。**新增**：**FR-018** 最終例外池——`annotation-progress` 頁籤新增區塊，供 `project_leader` 逐筆收尾仲裁「兩者皆非」之爭議項，僅本角色可見，資料由審核單位即時推導、不自建第二份種子（design.md D6）；新增規格常數 `EXCEPTION_POOL_ACTIONS`；新增 AC-3.13、SC-043。修訂 AC-1.6、AC-3.7、AC-3.8、AC-3.9、SC-033、SC-034、SC-035、SC-037、SC-038；`TaskDetail`、`ReviewAssignment` 兩個關鍵實體同步改版。**Source-Verify 期間額外修正的既有缺陷（非本次新增，隨帶修正）**：① `## Changelog` 表格上方誤植於「使用者流程與導頁」步驟表的 `2.11.3` 列（4 欄表格被寫入 3 欄變更摘要內容，破壞表格結構）已移除並補登為本表下方之正確 `2.11.3` 列；② `FR-015a-1`／`FR-015d`／使用者情境介面定義（Tab D 篩選列、標記結果表子列）原引用 `AR_REVIEW_STATUS` 五態語彙，隨常數三態化一併修訂，避免正典內部自相矛盾。完整逐條複驗依據見 issue #688（① ~ ⑦）與 `openspec/changes/archive/2026-09-07-align-014-review-model/`（proposal.md、design.md D1–D7、tasks.md）。 |
 | 2.11.3 | 2026-09-07 | **SDD lint 合規結構補齊（patch，issue #688）**：本規格自 `align-014-review-model` 起成為 active OpenSpec change 的正典，Project SDD lint 對 active change 之正典有三項硬性要求而本檔皆缺——補上 `## 功能目標` 標題；為三個使用者故事的 23 條驗收情境指派 AC 穩定 ID（`AC-1.1`–`AC-1.7`／`AC-2.1`–`AC-2.4`／`AC-3.1`–`AC-3.12`，依 PR #117 之 AC-N.N 標準，編號一經指派不重用）；`功能分支` frontmatter 對齊 `specs/STATUS.md` 該列。情境文字逐字未改，無條文、行為或 API 契約變更，不新增或移除任何 FR/SC。 |
