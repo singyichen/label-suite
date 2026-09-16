@@ -221,14 +221,20 @@ test.describe('Task detail annotation results', () => {
     expect(firstItem.annotations[0].result.labels).toBeUndefined();
   });
 
-  test('downloads JSON-MIN export with task-specific NER summary fields', async ({ page }) => {
+  test('downloads JSON-MIN export with task-specific sequence fields', async ({ page }) => {
     await page.goto(`${TASK_DETAIL_URL}?task_id=T006&tab=annotation-results`);
     await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 
     await page.locator('#arStageSelect').selectOption('official');
 
-    const downloadPromise = page.waitForEvent('download');
+    /* FR-020/AC-1.10 (issue #742): T006 declares a sequence_tagging output, so
+       the export now routes through the scheme/unit dialog instead of
+       downloading straight off the button click. */
     await page.locator('#arExportJsonMinBtn').click();
+    await expect(page.locator('#arSeqExportModal')).toBeVisible();
+
+    const downloadPromise = page.waitForEvent('download');
+    await page.locator('#arSeqExportConfirmBtn').click();
     const download = await downloadPromise;
     expect(download.suggestedFilename()).toMatch(/json-min-.*\.json$/);
 
@@ -242,10 +248,15 @@ test.describe('Task detail annotation results', () => {
 
     const firstRow = payload[0];
     expect(firstRow.task_type).toBe('sequence_labeling');
-    // ADR-029 outputs[] configs carry no legacy `subtype` field; the export
-    // falls back to the entities branch with an empty subtype marker.
+    // ADR-029 outputs[] configs carry no legacy `subtype` field.
     expect(firstRow.sequence_labeling_subtype).toBe('');
-    expect(firstRow.entities_summary).toContain('ORG:');
+    /* FR-020(6): result fields follow the annotation value's own structure, so
+       a spans[] value is carried by FR-020 and no longer emits the entity
+       summary. The entities_summary contract lives on T010 now (AC-1.13). */
+    expect(firstRow.entities_summary).toBeUndefined();
+    expect(Array.isArray(firstRow.tags)).toBe(true);
+    expect(firstRow.tagging_scheme).toBe('BIO');
+    expect(firstRow.token_unit).toBe('character');
     expect(firstRow.review_status).toBeTruthy();
     expect(firstRow.valence).toBeUndefined();
   });

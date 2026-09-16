@@ -9215,11 +9215,16 @@ function getTaskTypeLabel() {
         fields.corrected_sentence = value && value.corrected_sentence ? value.corrected_sentence : fields.original_sentence;
         fields.aspects = value && value.aspects ? value.aspects.slice() : [];
         fields.aspects_summary = fields.aspects.join(', ');
-      } else if (taskHasSequenceTaggingOutput()) {
-        /* FR-020(1)/SC-045: single derivation entry point -- no prefix
+      } else if (value ? Array.isArray(value.spans) : taskHasSequenceTaggingOutput()) {
+        /* FR-020(6): the result-field split reads the annotation value's own
+           structure, never the task config -- a `spans[]` value is carried by
+           FR-020, an `entities[]` value stays on FR-015i-3 even when the task
+           declares a sequence_tagging output. A row with no submission at all
+           has no structure to read, so it falls back to the declared output
+           type and still derives a full-length all-O sequence.
+           FR-020(1)/SC-045: single derivation entry point -- no prefix
            concatenation, no span/token boundary logic, no second scheme
-           table is reimplemented here. A missing/empty spans[] (e.g. no
-           submission yet) still derives a full-length all-O sequence. */
+           table is reimplemented here. */
         var seqResult = window.LabelSuiteSpanTaggingExport.deriveSequence(
           sample.textZh,
           value && Array.isArray(value.spans) ? value.spans : [],
