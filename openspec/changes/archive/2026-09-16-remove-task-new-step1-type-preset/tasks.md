@@ -24,7 +24,7 @@
 
 **故事目標**：SC-001 — 以型別、prototype 測試與 Project SDD lint 三道獨立 gate 證明移除後 Step 1~4 建立流程與既有驗收條文皆未受損。
 
-- [ ] 2.1 執行 command-only verification：於 `design/prototype/` 執行 `corepack pnpm typecheck` 與 `corepack pnpm playwright test`，於專案根目錄執行 `bash scripts/check-sdd.sh`；全部預期 exit 0，其中 1.1 之測試須由失敗轉為通過，分開記錄 code/test gate 與 Project SDD lint 的輸出作為證據。 [@main]
+- [x] 2.1 執行 command-only verification：於 `design/prototype/` 執行 `corepack pnpm typecheck` 與 `corepack pnpm playwright test`，於專案根目錄執行 `bash scripts/check-sdd.sh`；全部預期 exit 0，其中 1.1 之測試須由失敗轉為通過，分開記錄 code/test gate 與 Project SDD lint 的輸出作為證據。 [@main]
 
 ## 3. 正典回寫與封存
 
@@ -32,10 +32,10 @@
 
 **故事目標**：SC-002g — 以 archive 與正典回寫移除 SC-002g 及其對應 FR-002f、AC-1.4、AC-1.5，使正典、衍生檢視與實作三者一致。
 
-- [ ] 3.1 執行 archive 合併：以絕對路徑 `/Users/mandychen/Library/pnpm/openspec` 執行 `openspec archive`（本機另有舊版會靜默 no-op），將 REMOVED Requirements 併入衍生檢視；驗證 `grep -c "FR-002f" openspec/specs/task-management/013-task-new/spec.md` 回傳 0。 [@main]
-- [ ] 3.2 修改 `specs/task-management/013-task-new/spec.md`，移除 FR-002f、AC-1.4、AC-1.5、SC-002g、變更摘要之 v7.1.0 條目、Step 1 UI 描述中的一鍵套用項與對應邊界情況，版本號由 v7.1.0 改為 v8.0.0，並新增 Changelog 條目記錄移除理由與後續追蹤 issue。 [@main]
-- [ ] 3.3 修改 `specs/STATUS.md`，同步 task-management-013 之版本號與分支欄；驗證 `grep -n "task-management-013" specs/STATUS.md` 顯示更新後的值。 [@main]
-- [ ] 3.4 執行 Source-Verify：以 `grep` 逐項複驗衍生檢視與正典中每個引用之 FR/AC/SC ID、檔案路徑與 issue 編號（#645、#724、#755）皆可定位，保存指令輸出作為 gate 4 證據。 [@main]
+- [x] 3.1 執行 archive 合併：以絕對路徑 `/Users/mandychen/Library/pnpm/openspec` 執行 `openspec archive`（本機另有舊版會靜默 no-op），將 REMOVED Requirements 併入衍生檢視；驗證 `grep -c "FR-002f" openspec/specs/task-management/013-task-new/spec.md` 回傳 0。 [@main]
+- [x] 3.2 修改 `specs/task-management/013-task-new/spec.md`，移除 FR-002f、AC-1.4、AC-1.5、SC-002g、變更摘要之 v7.1.0 條目、Step 1 UI 描述中的一鍵套用項與對應邊界情況，版本號由 v7.1.0 改為 v8.0.0，並新增 Changelog 條目記錄移除理由與後續追蹤 issue。 [@main]
+- [x] 3.3 修改 `specs/STATUS.md`，同步 task-management-013 之版本號與分支欄；驗證 `grep -n "task-management-013" specs/STATUS.md` 顯示更新後的值。 [@main]
+- [x] 3.4 執行 Source-Verify：以 `grep` 逐項複驗衍生檢視與正典中每個引用之 FR/AC/SC ID、檔案路徑與 issue 編號（#645、#724、#755）皆可定位，保存指令輸出作為 gate 4 證據。 [@main]
 
 ## 4. 交付
 
