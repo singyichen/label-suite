@@ -83,7 +83,7 @@
 
 > **產品檔案（2）**：`design/prototype/pages/task-management/task-detail.data.js`、`design/prototype/pages/task-management/task-detail.html`
 > **最終群組**：否。本組不執行 archive。
-> **相依**：群組 1 全部完成且證據已由主 session 核實。2.1 與 2.2 的 committed Red 必須先於 2.3；2.3 必須先於 2.4。
+> **相依**：群組 1 全部完成且證據已由主 session 核實。2.1 與 2.2 的 committed Red 必須先於 2.3；2.3 必須先於 2.4；2.5 的 committed Red 必須先於 2.6；2.7 與 2.8 必須在 2.6 之後執行。
 > **為何切詞引擎用種資料而非實作演算法**：模組本身不切詞，詞級路徑要求呼叫端提供 token 邊界與引擎識別。若在 task-detail 頁實作一套中文斷詞，014 就成了第二個切詞權威，與本清單的範圍界線相違，而斷詞品質並非 issue #742 要示範的東西。詳見 design.md 裁決 D3。
 > **阻擋路徑的資料設計**：種入的引擎中必須有一個**刻意缺少版本資訊**，使阻擋成為資料驅動的結果而非程式碼裡的特例分支；阻擋與否一律由模組回傳值決定。
 
@@ -91,8 +91,10 @@
 - [x] 2.2 於 `design/prototype/tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` 補上 AC-1.12 的 Red 契約：單位選 word 且選到沒有版本資訊的引擎時觸發匯出，畫面顯示可理解的中文原因（明確指出缺的是切詞引擎版本資訊，而非模組回傳的英文診斷字串）、沒有任何檔案被產生、匯出記錄表列數不變；隨後於同一對話框改回 character 匯出成功，該檔不含任何切詞相關欄位且畫面無擴張摘要。另須斷言阻擋狀態下頁面不會對模組回傳值中不存在的序列欄位取值（design.md 裁決 D5 之失效模式）。驗證：`PW_PORT=8982 corepack pnpm playwright test tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` 仍為紅 [@senior-qa]
 - [x] 2.3 （Green）修改 `design/prototype/pages/task-management/task-detail.data.js`：依 design.md 裁決 D3 種入兩個切詞引擎的預先切好結果，其一具備完整引擎與版本識別且其 token 邊界須讓至少一筆標記落在 token 內部以產生擴張，其二刻意不帶版本資訊；不在本檔或任何地方實作斷詞演算法。驗證：`cd design/prototype && corepack pnpm typecheck` exit 0 [@senior-frontend]
 - [x] 2.4 （Green）修改 `design/prototype/pages/task-management/task-detail.html`：單位為 word 時把所選引擎的 token 邊界與引擎識別交給 `deriveSequence`，先判斷回傳是否為阻擋結果再取其餘欄位；成功時把切詞引擎、引擎版本、`alignment_mode` 與 `expanded_span_count` 一併寫入兩種格式，並以模組回傳的擴張清單渲染可展開摘要（擴張筆數為 0 時不渲染、字元級一律不渲染）；阻擋時顯示對應的中文 i18n 訊息、不產檔也不寫入匯出記錄；匯出記錄的條件快照一併保存方案、單位與引擎識別，使重新下載重建的檔案與原檔逐字元相同。驗證：`PW_PORT=8981 corepack pnpm playwright test tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` 全綠，且 `cd design/prototype && corepack pnpm typecheck` exit 0 [@senior-frontend]
-- [ ] 2.5 執行 `node scripts/gen-screen-inventory.mjs` 重生畫面盤點清單並單獨提交。驗證：`scripts/check-sdd.sh` 之 INVENTORY_FRESHNESS 為 0 筆、`scripts/inventory-tests.sh` exit 0 [@main]
-- [ ] 2.6 執行群組 2 回歸並保存證據。驗證：`cd design/prototype && corepack pnpm typecheck` exit 0；`PW_PORT=8983 corepack pnpm playwright test tests/task-management` exit 0；`PW_PORT=8984 corepack pnpm playwright test tests/cross-role` exit 0 [@main]
+- [ ] 2.5 於 `design/prototype/tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` 補上 design.md 裁決 D2 的 Red 契約：JSON 格式匯出檔 manifest 的 schema_version 必須為 1.1.0；斷言須同時涵蓋 T006（sequence_tagging，字元級與詞級各一次）與 T010（entity_recognition），以鎖定版號是匯出格式層級的單一值、不依任務類型或詞元單位分岔。驗證：`PW_PORT=8985 corepack pnpm playwright test tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` 出現失敗，失敗原因為實際版號仍為 1.0.0 [@senior-qa]
+- [ ] 2.6 （Green）修改 `design/prototype/pages/task-management/task-detail.html`：依 design.md 裁決 D2 將 JSON manifest 的 schema_version 由 1.0.0 升為 1.1.0，只改這一處字面值。驗證：`PW_PORT=8986 corepack pnpm playwright test tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` 全綠，且 `cd design/prototype && corepack pnpm typecheck` exit 0 [@senior-frontend]
+- [ ] 2.7 執行 `node scripts/gen-screen-inventory.mjs` 重生畫面盤點清單並單獨提交。驗證：`scripts/check-sdd.sh` 之 INVENTORY_FRESHNESS 為 0 筆、`scripts/inventory-tests.sh` exit 0 [@main]
+- [ ] 2.8 執行群組 2 回歸並保存證據。驗證：`cd design/prototype && corepack pnpm typecheck` exit 0；`PW_PORT=8983 corepack pnpm playwright test tests/task-management` exit 0；`PW_PORT=8984 corepack pnpm playwright test tests/cross-role` exit 0 [@main]
 
 > **主 session 核實紀錄（2026-09-16，Red 2.1／2.2）**：兩項的 Red 於 `9d57245f` 單一提交落地（amend 前為 `8baaf1ec`）。`git show --stat` 確認僅 `design/prototype/tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` 一個測試檔 322 行、零產品檔、`tasks.md` 未被產出者更動、工作區乾淨。主 session 獨立重跑 `PW_PORT=8996 corepack pnpm playwright test tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` 取得 **EXIT=1、9 failed／10 passed（1.6m）**：9 個新案例（2.1 五項、2.2 四項）全數失敗，10 個群組 1 既有案例維持全綠。
 >
@@ -119,6 +121,8 @@
 > **以實際匯出檔核對（一次性臨時腳本，跑完即刪、未提交）**：T006、word、`ckip-transformers` 下，JSON manifest 為 `tokenizer = {engine: ckip-transformers, version: 0.3.4}`、`alignment_mode = expand`、`expanded_span_count = 6`；畫面摘要文字為「6 段標記因對齊被擴張」，展開 6 筆（`張忠謀`→`人張忠謀` ×2、`台北`→`在台北` ×3、`鴻海`→`鴻海精密` ×1）；JSON-MIN 18 列的 `expanded_span_count` 相異值集合為 `[6]`，且無任何一列 `tags` 為空。
 >
 > **尚未落地、不屬本任務**：design.md 裁決 D2（`schema_version` 升 `1.1.0`）目前實際匯出仍為 `1.0.0`，而 tasks.md 沒有任何任務承接此裁決；另 FR-020 第 3 點「重新下載重建出的檔案與原檔逐字元相同」所依賴的重新下載功能頁面上不存在，本任務只把引擎識別寫進條件快照。兩項皆已回報使用者待裁。
+>
+> **使用者裁定（2026-09-16，問答式）**：① D2 於本組追加任務 2.5（Red）與 2.6（Green）承接，原盤點重生與回歸順延為 2.7／2.8——此為 Generator 開跑後的範圍追加，經使用者明示核准；追加前以 `c8323def` 先跑過一輪群組 2 回歸作為基線（見 2.8 核實紀錄）。② 重新下載維持現況：本 change 只負責把方案、單位與引擎識別寫入條件快照；匯出記錄列的「下載」按鈕目前未綁定任何行為，快照無讀取端，FR-010i-2 與 FR-020 第 3 點的「重建逐字元相同」改由 issue #772 追蹤，不在本 change 範圍內。
 
 ## 3. Archive 與正典回寫（最終群組）
 
