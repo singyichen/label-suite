@@ -1,133 +1,72 @@
+/*
+ * Traceability: specs/task-management/013-task-new/spec.md
+ *   FR-002 / FR-002a–FR-002e (three-group task type selector, unchanged)
+ *
+ * Contract history: this file originally asserted that Step 1's one-click
+ * "common combos" preset (FR-002f, added in v7.1.0 per issue #724 direction ①)
+ * was present and usable. Direction ① was reverted in v8.0.0 (OpenSpec change
+ * remove-task-new-step1-type-preset) because the single-entry preset list did
+ * not pay for the extra interface concept it introduced above the three-group
+ * chip selector. This file's contract has been flipped from a positive
+ * acceptance test for the preset feature into a removal contract: it fails
+ * while the preset implementation still exists (TDD Red) and passes once
+ * TASK_TYPE_PRESETS / applyTaskTypePreset and their DOM are fully removed
+ * (TDD Green). The three-group selector regression case is unchanged
+ * capability and must stay green throughout.
+ */
 import { test, expect } from '@playwright/test';
+import path from 'path';
 
 const TASK_NEW_URL = '/pages/task-management/task-new.html';
+const FIXTURE = path.resolve(__dirname, 'three-column-dataset.json');
 
-test.describe('Issue #724 — Step 1 task type one-click preset', () => {
-  test('exposes a data-driven TASK_TYPE_PRESETS entry for the common classification/single-label combo', async ({ page }) => {
+test.describe('Issue #724 — Step 1 task type one-click preset removed', () => {
+  test('Step 1 does not render the preset container or its label', async ({ page }) => {
     await page.goto(TASK_NEW_URL);
 
-    const preset = await page.evaluate(() => {
-      const win = window as typeof window & {
-        TASK_TYPE_PRESETS?: Array<{
-          key: string;
-          category: string;
-          inputType: string;
-          outputTypes: string[];
-          zh: string;
-          en: string;
-        }>;
-      };
-      return Array.isArray(win.TASK_TYPE_PRESETS) ? win.TASK_TYPE_PRESETS[0] : undefined;
-    });
-
-    expect(preset).toBeDefined();
-    expect(preset?.key).toBe('classification_single_label');
-    expect(preset?.category).toBe('classification');
-    expect(preset?.inputType).toBe('single_item');
-    expect(preset?.outputTypes).toEqual(['single_label']);
-    expect(preset?.zh).toBeTruthy();
-    expect(preset?.en).toBeTruthy();
+    await expect(page.locator('#taskTypePresets')).toHaveCount(0);
+    await expect(page.locator('#taskTypePresetsLabel')).toHaveCount(0);
   });
 
-  test('applyTaskTypePreset writes the preset combo into state in a single call', async ({ page }) => {
+  test('Step 1 does not render any preset button', async ({ page }) => {
     await page.goto(TASK_NEW_URL);
 
-    const result = await page.evaluate(() => {
+    await expect(page.locator('[data-testid^="task-type-preset-"]')).toHaveCount(0);
+  });
+
+  test('TASK_TYPE_PRESETS data table and applyTaskTypePreset function are removed from window', async ({ page }) => {
+    await page.goto(TASK_NEW_URL);
+
+    const globals = await page.evaluate(() => {
       const win = window as typeof window & {
-        TASK_TYPE_PRESETS?: Array<{ category: string; inputType: string; outputTypes: string[] }>;
-        applyTaskTypePreset?: (preset: { category: string; inputType: string; outputTypes: string[] }) => void;
-        state: {
-          taskCategories: string[];
-          taskInputTypes: string[];
-          taskOutputTypes: string[];
-          taskType: string;
-          selectedOutputTypes: string[];
-        };
+        TASK_TYPE_PRESETS?: unknown;
+        applyTaskTypePreset?: unknown;
       };
-      if (typeof win.applyTaskTypePreset !== 'function' || !win.TASK_TYPE_PRESETS) {
-        return { applied: false };
-      }
-      win.applyTaskTypePreset(win.TASK_TYPE_PRESETS[0]);
       return {
-        applied: true,
-        taskCategories: win.state.taskCategories,
-        taskInputTypes: win.state.taskInputTypes,
-        taskOutputTypes: win.state.taskOutputTypes,
-        taskType: win.state.taskType,
-        selectedOutputTypes: win.state.selectedOutputTypes,
+        presets: win.TASK_TYPE_PRESETS,
+        applyPreset: win.applyTaskTypePreset,
       };
     });
 
-    expect(result.applied).toBe(true);
-    expect(result.taskCategories).toEqual(['classification']);
-    expect(result.taskInputTypes).toEqual(['single_item']);
-    expect(result.taskOutputTypes).toEqual(['single_label']);
-    expect(result.taskType).toBe('single_sentence_classification');
-    expect(result.selectedOutputTypes).toEqual(['single_label']);
+    expect(globals.presets).toBeUndefined();
+    expect(globals.applyPreset).toBeUndefined();
   });
 
-  test('one click on the preset button reaches the same chip state as three manual chip clicks', async ({ page }) => {
-    await page.goto(TASK_NEW_URL);
+  test('regression: the three-group selector alone still composes classification + single_item + single_label and enables Next', async ({ page }) => {
+    await page.goto(TASK_NEW_URL, { waitUntil: 'load' });
+    await page.waitForFunction(() => document.querySelectorAll('#taskCategoryChips [data-key]').length > 0, null, { timeout: 30000 });
 
-    const preset = page.locator('[data-testid="task-type-preset-classification-single-label-btn"]');
-    await expect(preset).toBeVisible();
+    await page.fill('#taskNameInput', 'test-task');
+    await page.locator('#taskCategoryChips [data-key="classification"]').click();
+    await page.locator('#taskOutputTypeChips [data-key="single_label"]').click();
+    await page.locator('#datasetFileInput').setInputFiles(FIXTURE);
+    await expect(page.locator('.inline-dataset-preview-wrap')).toBeVisible();
+    await page.locator('#taskInputTypeChips [data-key="single_item"]').click();
+    await page.locator('.inline-preview-role-select[aria-label*="sentence_a"]').selectOption('input');
 
-    let presetClicks = 0;
-    await preset.click();
-    presetClicks += 1;
-    expect(presetClicks).toBe(1);
+    const taskType = await page.evaluate(() => (window as typeof window & { state: { taskType: string } }).state.taskType);
+    expect(taskType).toBe('single_sentence_classification');
 
-    await expect(page.locator('#taskCategoryChips [data-key="classification"]')).toHaveAttribute('aria-checked', 'true');
-    await expect(page.locator('#taskInputTypeChips [data-key="single_item"]')).toHaveAttribute('aria-checked', 'true');
-    await expect(page.locator('#taskOutputTypeChips [data-key="single_label"]')).toHaveAttribute('aria-checked', 'true');
-  });
-
-  test('before/after click-count comparison for the same combo, measured against the same page state', async ({ page }) => {
-    await page.goto(TASK_NEW_URL);
-
-    // BEFORE (baseline, unchanged capability): three-group custom selector.
-    let baselineClicks = 0;
-    await page.click('#taskCategoryChips [data-key="classification"]');
-    baselineClicks += 1;
-    await page.click('#taskInputTypeChips [data-key="single_item"]');
-    baselineClicks += 1;
-    await page.click('#taskOutputTypeChips [data-key="single_label"]');
-    baselineClicks += 1;
-    expect(baselineClicks).toBe(3);
-
-    const baselineTaskType = await page.evaluate(() => (window as typeof window & { state: { taskType: string } }).state.taskType);
-    expect(baselineTaskType).toBe('single_sentence_classification');
-
-    // AFTER: reload for a clean state, then apply the one-click preset.
-    await page.reload();
-    let presetClicks = 0;
-    await page.click('[data-testid="task-type-preset-classification-single-label-btn"]');
-    presetClicks += 1;
-    expect(presetClicks).toBe(1);
-
-    const presetTaskType = await page.evaluate(() => (window as typeof window & { state: { taskType: string } }).state.taskType);
-    expect(presetTaskType).toBe(baselineTaskType);
-    expect(presetClicks).toBeLessThan(baselineClicks);
-  });
-
-  test('the three-group selector remains fully adjustable after applying the preset', async ({ page }) => {
-    await page.goto(TASK_NEW_URL);
-
-    await page.click('[data-testid="task-type-preset-classification-single-label-btn"]');
-    await page.click('#taskCategoryChips [data-key="sequence"]');
-
-    await expect(page.locator('#taskCategoryChips [data-key="classification"]')).toHaveAttribute('aria-checked', 'true');
-    await expect(page.locator('#taskInputTypeChips [data-key="single_item"]')).toHaveAttribute('aria-checked', 'true');
-    await expect(page.locator('#taskOutputTypeChips [data-key="single_label"]')).toHaveAttribute('aria-checked', 'true');
-    await expect(page.locator('#taskCategoryChips [data-key="sequence"]')).toHaveAttribute('aria-checked', 'true');
-  });
-
-  test('preset group accessible name localizes to English (issue #756 review)', async ({ page }) => {
-    await page.addInitScript(() => {
-      window.localStorage.setItem('labelsuite.lang', 'en');
-    });
-    await page.goto(TASK_NEW_URL);
-
-    await expect(page.getByRole('group', { name: 'Common combos · one-click apply' })).toBeVisible();
+    await expect(page.locator('#nextBtn')).not.toBeDisabled();
   });
 });

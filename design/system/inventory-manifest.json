@@ -32,8 +32,7 @@
     "toggle-switch": "Toggle Switch 開關",
     "code-editor": "Code Editor（Schema）",
     "accordion": "Accordion 手風琴",
-    "state-switcher": "State Switcher ⚠ prototype-only",
-    "preset-button": "Preset Button 常用組合一鍵預設 ⚠ prototype-only"
+    "state-switcher": "State Switcher ⚠ prototype-only"
   },
   "entry": {
     "page": "index.html",
@@ -163,8 +162,8 @@
       "roles": ["project_leader"],
       "states": ["Step 1 / Step 2 / Step 3", "草稿警告", "驗證錯誤"],
       "reactOwnership": "features/task-management",
-      "components": ["sidebar", "step-indicator", "upload-zone", "tag-input", "toggle-switch", "code-editor", "chip", "preset-button", "accordion", "color-dot", "input", "language-toggle", "button"],
-      "note": "Chip 兼作輸出型態選取與 Bypass 互斥開關；Preset Button 為 Step 1 常用組合一鍵預設（issue #724），尚未收錄進 MASTER.md 之 Button 變體目錄；Step 1/2 設定與 task-detail 共用 task-config.* 引擎"
+      "components": ["sidebar", "step-indicator", "upload-zone", "tag-input", "toggle-switch", "code-editor", "chip", "accordion", "color-dot", "input", "language-toggle", "button"],
+      "note": "Chip 兼作輸出型態選取與 Bypass 互斥開關；Step 1/2 設定與 task-detail 共用 task-config.* 引擎"
     },
     {
       "id": "09",
