@@ -9248,6 +9248,35 @@ function getTaskTypeLabel() {
     return exportedAt;
   }
 
+  /* Both export buttons ran byte-identical bodies apart from the format
+     string, the history label and the toast key; the duplication made any
+     change to export-history bookkeeping a two-place edit. */
+  function performArExport(format) {
+    var samples = getArFilteredSamples();
+    var exportedAt = downloadArExport(format);
+    var exportType = (state.arStatus === 'all' && state.arAnnotator === 'all' && state.arStage === 'all' && state.arReviewer === 'all' && state.arReviewStatus === 'all') ? 'full' : 'filtered';
+    if (!TASK_DATA.exportHistory) TASK_DATA.exportHistory = [];
+    TASK_DATA.exportHistory.unshift({
+      exportedAt: exportedAt.slice(0, 16).replace('T', ' '),
+      exportType: exportType,
+      stage: state.arStage,
+      count: samples.length,
+      scope: state.arAnnotator === 'all' ? '__all__' : state.arAnnotator,
+      exportedBy: 'Mandy',
+      format: format === 'json' ? 'JSON' : 'JSON-MIN',
+      conditionsSnapshot: {
+        export_format: format,
+        run_stage: state.arStage,
+        submission_status: state.arStatus,
+        annotator_scope: state.arAnnotator,
+        excluded_annotation_assignments: getExcludedExportMetadata(state.arStage)
+      }
+    });
+    renderArExportHistory();
+    showToast(format === 'json' ? t('toastExportJson') : t('toastExportJsonMin'));
+    trackEvent('prototype_ar_export', { format: format, stage: state.arStage });
+  }
+
   function getArExportStageLabel(stage) {
     if (stage === 'dry') return t('arStageDry');
     if (stage === 'official') return t('arStageOfficial');
@@ -10109,55 +10138,11 @@ document.getElementById('memberProgressSort').addEventListener('change', functio
     });
 
     document.getElementById('arExportJsonBtn').addEventListener('click', function() {
-      var samples = getArFilteredSamples();
-      var exportedAt = downloadArExport('json');
-      var exportType = (state.arStatus === 'all' && state.arAnnotator === 'all' && state.arStage === 'all' && state.arReviewer === 'all' && state.arReviewStatus === 'all') ? 'full' : 'filtered';
-      if (!TASK_DATA.exportHistory) TASK_DATA.exportHistory = [];
-      TASK_DATA.exportHistory.unshift({
-        exportedAt: exportedAt.slice(0, 16).replace('T', ' '),
-        exportType: exportType,
-        stage: state.arStage,
-        count: samples.length,
-        scope: state.arAnnotator === 'all' ? '__all__' : state.arAnnotator,
-        exportedBy: 'Mandy',
-        format: 'JSON',
-        conditionsSnapshot: {
-          export_format: 'json',
-          run_stage: state.arStage,
-          submission_status: state.arStatus,
-          annotator_scope: state.arAnnotator,
-          excluded_annotation_assignments: getExcludedExportMetadata(state.arStage)
-        }
-      });
-      renderArExportHistory();
-      showToast(t('toastExportJson'));
-      trackEvent('prototype_ar_export', { format: 'json', stage: state.arStage });
+      performArExport('json');
     });
 
     document.getElementById('arExportJsonMinBtn').addEventListener('click', function() {
-      var samples = getArFilteredSamples();
-      var exportedAt = downloadArExport('json-min');
-      var exportType = (state.arStatus === 'all' && state.arAnnotator === 'all' && state.arStage === 'all' && state.arReviewer === 'all' && state.arReviewStatus === 'all') ? 'full' : 'filtered';
-      if (!TASK_DATA.exportHistory) TASK_DATA.exportHistory = [];
-      TASK_DATA.exportHistory.unshift({
-        exportedAt: exportedAt.slice(0, 16).replace('T', ' '),
-        exportType: exportType,
-        stage: state.arStage,
-        count: samples.length,
-        scope: state.arAnnotator === 'all' ? '__all__' : state.arAnnotator,
-        exportedBy: 'Mandy',
-        format: 'JSON-MIN',
-        conditionsSnapshot: {
-          export_format: 'json-min',
-          run_stage: state.arStage,
-          submission_status: state.arStatus,
-          annotator_scope: state.arAnnotator,
-          excluded_annotation_assignments: getExcludedExportMetadata(state.arStage)
-        }
-      });
-      renderArExportHistory();
-      showToast(t('toastExportJsonMin'));
-      trackEvent('prototype_ar_export', { format: 'json-min', stage: state.arStage });
+      performArExport('json-min');
     });
 
     document.getElementById('arPrevPageBtn').addEventListener('click', function() {
