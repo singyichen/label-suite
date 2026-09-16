@@ -41,7 +41,7 @@
 
 > **相依與平行性**：前置條件為第 3 組完成；4.1 與 4.2 可依序執行。
 >
-> **執行紀錄**：4.1 issue #724 已重開並留言 https://github.com/singyichen/label-suite/issues/724#issuecomment-reopen-2026-09-16（方向①實作後回退、方向②③轉由 issue #755 承接）；4.2 PR https://github.com/singyichen/label-suite/pull/770。
+> **執行紀錄**：4.1 issue #724 已重開並留言 https://github.com/singyichen/label-suite/issues/724#issuecomment-5691882389（方向①實作後回退、方向②③轉由 issue #755 承接）；4.2 PR https://github.com/singyichen/label-suite/pull/770。
 
 **故事目標**：SC-001 — 以重新開啟的 issue 與 PR 完整記錄「方向①已實作後回退」之決策軌跡，避免日後在不知情下重新提出同一方向。
 
