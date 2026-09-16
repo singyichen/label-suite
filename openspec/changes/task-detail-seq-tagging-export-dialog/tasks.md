@@ -6,7 +6,13 @@
 >
 > **TDD 硬規則**：每一項可觀察行為為一組 Red（`[@senior-qa]`）＋ Green（`[@senior-frontend]`）配對。Red 任務必須先 commit 並執行、留下預期失敗證據，Green 任務才能開始；Green 任務不得為了讓測試通過而改寫或弱化 Red 契約。
 >
-> **拆分總則（憲法原則 X）**：本變更觸及 3 個手寫產品檔案——`design/prototype/pages/task-management/task-detail.data.js`、`design/prototype/pages/task-management/task-detail.panels/annotation-results.html`、`design/prototype/pages/task-management/task-detail.html`——檔案數低於 5 檔上限，但預估 diff 280–330 行，**跨越 300 行門檻**，故拆為兩個堆疊 PR 群組：群組 1（PR-A）交付對話框與字元級路徑，群組 2（PR-B）交付詞級路徑。群組 1 合併後 OpenSpec change 維持開啟，群組 3 為最終群組並執行 archive。測試檔、`specs/**`、`openspec/**` 與 `design/system/screen-inventory.md` 不計入門檻。
+> **拆分總則（憲法原則 X）**：本變更觸及 3 個手寫產品檔案——`design/prototype/pages/task-management/task-detail.data.js`、`design/prototype/pages/task-management/task-detail.panels/annotation-results.html`、`design/prototype/pages/task-management/task-detail.html`——檔案數低於 5 檔上限，但 diff 跨越 300 行門檻，故拆為堆疊 PR 群組：群組 1 交付對話框與字元級路徑，群組 2 交付詞級路徑。群組 1 合併後 OpenSpec change 維持開啟，群組 3 為最終群組並執行 archive。測試檔、`specs/**`、`openspec/**` 與 `design/system/screen-inventory.md` 不計入門檻。
+>
+> **群組 1 再拆為三個堆疊 PR（2026-09-16 使用者裁定，覆寫原「群組 1 ＝單一 PR-A」之敘述）**：群組 1 完工後實測產品檔 diff 為 **412 行**（以 `origin/main` 為基準；先前回報的 613 行係誤用過期本機 `main`、把已合併的 issue #726 變更一併計入所致），超出門檻 112 行。裁定為**重排順序**而非申請豁免：把純重構與種子資料移到 Red commit **之前**，使前兩個 PR 天然全綠、各自獨立可合——
+> **PR-1 `refactor/742-extract-ar-export`**（77 行）：兩顆匯出按鈕的 handler 原為除 format 字串／歷程標籤／toast 鍵外逐字相同的兩份，抽出 `performArExport(format)`。純重構、行為不變，**刻意不帶 `seqOptions` 參數**（那屬 PR-3）。
+> **PR-2 `feat/742-t006-span-seed`**（86 行）：任務 1.4 的 T006 種子資料，為既有形狀的超集，既有斷言全數維持成立。
+> **PR-3 `feat/742-seq-export-dialog`**（270 行）：Red（1.1–1.3）＋ 對話框骨架（1.5）＋ 字元路徑串接（1.6）。
+> 三者皆在 300 行門檻內、皆為單一目的。代價是 rebase 重寫 SHA，本清單內既有的證據引用已逐條更新為新 SHA。
 >
 > **群組間相依**：0 → 1 → 2 → 3 嚴格序列。群組 0 未落地前，第二道硬閘必然報錯（正典尚在 `specs/_archive/`、STATUS 仍為 `archived`）。群組 2 依賴群組 1 已建立的對話框骨架與選項渲染。群組內一律序列執行。
 >
@@ -26,7 +32,7 @@
 - [x] 0.4 修改 `design/system/inventory-manifest.json` 中 task-detail 條目的 specs 欄位，把封存路徑改為取回後的模組路徑，使畫面盤點產生器不再指向已不存在的目錄。驗證：`scripts/inventory-tests.sh` exit 0 [@main]
 - [x] 0.5 執行 `node scripts/gen-screen-inventory.mjs` 重生畫面盤點清單，使其連結與 0.4 的來源一致；產物為生成檔，不手改。驗證：`scripts/check-sdd.sh` 之 INVENTORY_FRESHNESS 為 0 筆 [@main]
 
-> **主 session 核實紀錄（2026-09-16，群組 0）**：五項於 `33a32a58` 同批落地（`55ceef34` 為 propose 產物）。逐項複驗：正典已在 `specs/task-management/014-task-detail/spec.md`、封存路徑已不存在；STATUS 之 task-management-014 列狀態為 `change-open`、分支欄為 `feat/742-seq-tagging-export-dialog`；正典 frontmatter 第 2 行與該分支欄逐字相同；畫面盤點來源已指向取回後的模組路徑。`scripts/check-sdd.sh` 之 ACTIVE_CHANGE_SPEC、ACTIVE_CHANGE_STAGE 與 INVENTORY_FRESHNESS 皆 0 筆，`scripts/check-spec-artifacts.sh` 與 `scripts/inventory-tests.sh` 皆 exit 0。
+> **主 session 核實紀錄（2026-09-16，群組 0）**：五項於 `ae0b7d34` 同批落地（`483d4296` 為 propose 產物）。逐項複驗：正典已在 `specs/task-management/014-task-detail/spec.md`、封存路徑已不存在；STATUS 之 task-management-014 列狀態為 `change-open`、分支欄為 `feat/742-seq-tagging-export-dialog`；正典 frontmatter 第 2 行與該分支欄逐字相同；畫面盤點來源已指向取回後的模組路徑。`scripts/check-sdd.sh` 之 ACTIVE_CHANGE_SPEC、ACTIVE_CHANGE_STAGE 與 INVENTORY_FRESHNESS 皆 0 筆，`scripts/check-spec-artifacts.sh` 與 `scripts/inventory-tests.sh` 皆 exit 0。
 
 ## 1. 匯出對話框、選項來源與字元級序列匯出（PR-A）
 
@@ -47,13 +53,29 @@
 - [x] 1.1 撰寫 `design/prototype/tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` 之 Red 契約（對話框與選擇器）：於 T006 按下匯出後出現對話框且含標註方案與詞元單位兩組選擇器；方案選項恰為 BIO／BIOES／IOB2 且預設選中 BIO、單位選項恰為 character／word 且預設選中 character；單位切到 word 時出現切詞引擎選擇、切回 character 時該選擇消失；於非 `sequence_tagging` 任務（T010）按下匯出時不出現此對話框且既有兩顆匯出按鈕行為不變。驗證：`PW_PORT=8971 corepack pnpm playwright test tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` 出現失敗，失敗原因為頁面不存在該對話框 [@senior-qa]
 - [x] 1.2 於 `design/prototype/tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` 補上 AC-1.10 的 Red 契約：以預設值匯出後，檔案 metadata 之 `tagging_scheme` 為 BIO、`token_unit` 為 character；檔案不含切詞引擎、引擎版本、`alignment_mode` 與 `expanded_span_count` 任一鍵；畫面無擴張摘要；改選 BIOES 再匯一次可成功且兩份檔案的方案各自為 BIO 與 BIOES；兩次匯出後任務設定物件不含任何方案或單位欄位。斷言必須同時覆蓋 JSON 與 JSON-MIN 兩種格式——JSON-MIN 無 manifest，是最容易漏掉 metadata 的一側。驗證：`PW_PORT=8972 corepack pnpm playwright test tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` 仍為紅 [@senior-qa]
 - [x] 1.3 於 `design/prototype/tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` 補上鎖住 SC-045 的原始碼掃描 Red 案例，使「行為斷言過得了、但頁面自己寫了一份轉換邏輯」這種失效模式被擋下：頁面內 `deriveSequence` 的呼叫點必須存在且收斂為單一入口；頁面內不得出現 B-／I-／E-／S-／O 前綴的字面量拼接、不得出現第二份方案或單位的硬編陣列（以模組常數識別字之引用計數斷言）；`entity_recognition` 的匯出路徑不得出現該呼叫。驗證：`PW_PORT=8973 corepack pnpm playwright test tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` 仍為紅，且掃描案例的失敗原因為模組呼叫點出現次數須為 1、現為 0 [@senior-qa]
-- [ ] 1.4 （Green）修改 `design/prototype/pages/task-management/task-detail.html`：依 design.md 裁決 D4 與上方主 session 裁決，於既有 NER 種子之後新增一組序列標記種子供 T006 使用，文本沿用既有 NER 種子的中文句子、每筆標記保留原有實體欄位並另補字元起訖，再把 T006 的結果來源改指這組新種子；T010 維持原來源不動。驗證：`cd design/prototype && corepack pnpm typecheck` exit 0 [@senior-frontend]
-- [ ] 1.5 （Green）修改 `design/prototype/pages/task-management/task-detail.panels/annotation-results.html`：在既有匯出區塊之後加入匯出對話框骨架，含標註方案與詞元單位兩組選擇器容器、切詞引擎選擇容器、擴張摘要容器與阻擋提示容器，全部為空殼並預設隱藏，焦點鎖定與 Esc 關閉沿用共用的 modal-focus 機制（design.md 裁決 D6）；本任務只加標記結構，不含任何行為程式碼。驗證：`PW_PORT=8974 corepack pnpm playwright test tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` 之對話框存在性案例轉綠 [@senior-frontend]
-- [ ] 1.6 （Green）修改 `design/prototype/pages/task-management/task-detail.html`：於既有共用 script 區塊追加載入序列推導模組（design.md 裁決 D7）；以模組匯出的方案與單位常數渲染兩組選擇器（不得硬編選項）；匯出入口依任務 outputs 是否含 `sequence_tagging` 決定是否先開對話框；字元級路徑呼叫 `deriveSequence` 取得序列，並把 `tagging_scheme` 與 `token_unit` 依 design.md 裁決 D1 寫入 JSON 的 manifest 與 JSON-MIN 的每一列；一併補上對話框與選項標籤的雙語 i18n 鍵。驗證：`PW_PORT=8971 corepack pnpm playwright test tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` 全綠，且 `cd design/prototype && corepack pnpm typecheck` exit 0 [@senior-frontend]
-- [ ] 1.7 執行 `node scripts/gen-screen-inventory.mjs` 重生畫面盤點清單並單獨提交（產品原型檔已變更）。驗證：`scripts/check-sdd.sh` 之 INVENTORY_FRESHNESS 為 0 筆、`scripts/inventory-tests.sh` exit 0 [@main]
-- [ ] 1.8 執行群組 1 回歸並保存證據，須逐一確認既有 task-detail 匯出契約全數維持通過（匯出記錄、階段指定、被排除標記作業之結果列規則、reviewer 唯讀邊界）。驗證：`PW_PORT=8975 corepack pnpm playwright test tests/task-management` exit 0；`PW_PORT=8976 corepack pnpm playwright test tests/cross-role` exit 0 [@main]
+- [x] 1.4 （Green）修改 `design/prototype/pages/task-management/task-detail.html`：依 design.md 裁決 D4 與上方主 session 裁決，於既有 NER 種子之後新增一組序列標記種子供 T006 使用，文本沿用既有 NER 種子的中文句子、每筆標記保留原有實體欄位並另補字元起訖，再把 T006 的結果來源改指這組新種子；T010 維持原來源不動。驗證：`cd design/prototype && corepack pnpm typecheck` exit 0 [@senior-frontend]
+- [x] 1.5 （Green）修改 `design/prototype/pages/task-management/task-detail.panels/annotation-results.html`：在既有匯出區塊之後加入匯出對話框骨架，含標註方案與詞元單位兩組選擇器容器、切詞引擎選擇容器、擴張摘要容器與阻擋提示容器，全部為空殼並預設隱藏，焦點鎖定與 Esc 關閉沿用共用的 modal-focus 機制（design.md 裁決 D6）；本任務只加標記結構，不含任何行為程式碼。驗證：`PW_PORT=8974 corepack pnpm playwright test tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` 之對話框存在性案例轉綠 [@senior-frontend]
+- [x] 1.6 （Green）修改 `design/prototype/pages/task-management/task-detail.html`：於既有共用 script 區塊追加載入序列推導模組（design.md 裁決 D7）；以模組匯出的方案與單位常數渲染兩組選擇器（不得硬編選項）；匯出入口依任務 outputs 是否含 `sequence_tagging` 決定是否先開對話框；字元級路徑呼叫 `deriveSequence` 取得序列，並把 `tagging_scheme` 與 `token_unit` 依 design.md 裁決 D1 寫入 JSON 的 manifest 與 JSON-MIN 的每一列；一併補上對話框與選項標籤的雙語 i18n 鍵。驗證：`PW_PORT=8971 corepack pnpm playwright test tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` 全綠，且 `cd design/prototype && corepack pnpm typecheck` exit 0 [@senior-frontend]
+- [x] 1.7 執行 `node scripts/gen-screen-inventory.mjs` 重生畫面盤點清單並單獨提交（產品原型檔已變更）。驗證：`scripts/check-sdd.sh` 之 INVENTORY_FRESHNESS 為 0 筆、`scripts/inventory-tests.sh` exit 0 [@main]
+- [x] 1.8 執行群組 1 回歸並保存證據，須逐一確認既有 task-detail 匯出契約全數維持通過（匯出記錄、階段指定、被排除標記作業之結果列規則、reviewer 唯讀邊界）。驗證：`PW_PORT=8975 corepack pnpm playwright test tests/task-management` exit 0；`PW_PORT=8976 corepack pnpm playwright test tests/cross-role` exit 0 [@main]
 
-> **主 session 核實紀錄（2026-09-16，Red 1.1／1.2／1.3）**：三項的 Red 於 `abf4b7f2` 單一提交落地，`git show --name-only` 僅一個測試檔 295 行、零產品檔、工作區乾淨、`tasks.md` 未被產出者更動。主 session 獨立重跑 `PW_PORT=8973` 確認 **7 failed／3 passed**，失敗皆為契約性失敗而非載入或選擇器問題：五項因對話框節點不存在而 `toBeVisible()` 逾時，一項為模組呼叫點次數 `Expected: 1 / Received: 0`，一項為模組常數引用計數 `Expected: >= 1 / Received: 0`。三項先天為綠者皆為**前瞻性護欄**而非 Red 斷言：T010 不出現對話框、頁面無標籤前綴字面量、實體匯出分支不呼叫推導函式——三者今日成立且必須在 Green 後仍成立，任一轉紅即代表 Green 越界。
+> **主 session 核實紀錄（2026-09-16，Red 1.1／1.2／1.3）**：三項的 Red 於 `16b4185d` 單一提交落地，`git show --name-only` 僅一個測試檔 295 行、零產品檔、工作區乾淨、`tasks.md` 未被產出者更動。主 session 獨立重跑 `PW_PORT=8973` 確認 **7 failed／3 passed**，失敗皆為契約性失敗而非載入或選擇器問題：五項因對話框節點不存在而 `toBeVisible()` 逾時，一項為模組呼叫點次數 `Expected: 1 / Received: 0`，一項為模組常數引用計數 `Expected: >= 1 / Received: 0`。三項先天為綠者皆為**前瞻性護欄**而非 Red 斷言：T010 不出現對話框、頁面無標籤前綴字面量、實體匯出分支不呼叫推導函式——三者今日成立且必須在 Green 後仍成立，任一轉紅即代表 Green 越界。
+
+> **主 session 核實紀錄（2026-09-16，Green 1.4／1.5／1.6／1.7）**：四項分屬四個提交——1.4 為 `de53b2b8`（T006`spans[]` 種子，85 ins／1 del）、1.5 為 `c6638c9a`（對話框骨架，annotation-results.html 30 ins／0 del）、1.6 為 `5bf0699e`（串接，task-detail.html 199 ins／41 del）、1.7 為 `da6abdb9`（畫面盤點重生，單檔一行）。主 session 獨立重跑 `PW_PORT=8991` 取得 **10 passed（6.0s）exit 0**，其中三項為 SC-045 原始碼掃描護欄：`deriveSequence` 呼叫點恰為 1、頁面無 `B-`／`I-`／`E-`／`S-` 前綴字面量拼接、選項域由模組常數渲染而非第二份硬編清單；另有一項確認 `entity_recognition` 匯出分支不呼叫推導函式。`corepack pnpm typecheck` exit 0、`scripts/check-sdd.sh` **0 error／20 warning**（INVENTORY_FRESHNESS 0 筆）。
+
+> **主 session 核實紀錄（2026-09-16，任務 1.8）**：本項回歸**抓到一處規格違反並已修掉**。既有回歸 `task-detail-annotation-results.spec.ts` 的 JSON-MIN 案例轉紅，追下去發現 `buildTaskSpecificExportFields()` 把匯出結果欄位的分流鍵寫成任務設定（`taskHasSequenceTaggingOutput()`），但 FR-020 第 6 點明文要求「結果欄位分流仍依 FR-015i 所定『依標記結果實際結構決定』」。修法為改讀標記值本身的結構（`0b885332`）：值帶 `spans[]` 走 FR-020、值帶 `entities[]` 仍走 FR-015i-3；三元式的 fallback 是**承重的**而非防禦性補丁——種子列 NER-004／`tony0950127` 的 `value` 實際為 `null`，而 Red 規格的 JSON-MIN 案例不指定階段卻斷言每一列都帶 BIO／character，無 fallback 會讓該列取不到宣告的輸出型別而轉紅。**對話框開關**仍依任務設定分流（FR-020 開頭語句），只有結果欄位分流改依值結構。
+>
+> 使用者裁定 T006 的 JSON-MIN 列改帶序列欄位：`spans[]` 存在即由 FR-020 承接，既有測試的欄位斷言連同入口路徑一併改寫（`entities_summary` 契約改由 AC-1.13 的 `entity_recognition`／T010 承接）。
+>
+> **閘門盲點**：`openspec validate` 與 `scripts/check-sdd.sh` 都不可能抓到分流鍵用錯——兩者只讀文件。抓到它的是既有回歸，而且只因為 1.4 的 T006 種子被刻意做成既有形狀的**超集**（同時帶 `entities[]` 與 `spans[]`），兩條路徑才都還有資料可跑。若照最初計畫「T006 只種 `spans[]`」，這個規格違反會靜默通過所有閘門。
+>
+> **修後證據**（本機並行負載高，改用未被占用的埠，非清單所列的 8975／8976）：`cd design/prototype && corepack pnpm typecheck` exit 0；`PW_PORT=8982 corepack pnpm playwright test tests/task-management` **353 passed（2.8m）exit 0**、零失敗；`PW_PORT=8983 corepack pnpm playwright test tests/cross-role` **34 passed（45.8s）exit 0**，其中 3 個 `✘` 為 `xrole-canonical-journey.spec.ts` 第 391／991／1014 行以 `test.fail()` 標註的已知缺口文件（XROLE-04／20／21），列表報告器印 `✘` 但計入 passed、不影響 exit code，與本次改動無關。清單點名的四項既有匯出契約（匯出記錄、階段指定、被排除標記作業之結果列規則、reviewer 唯讀邊界）皆含在這 353 項之中且全綠。
+>
+> **並行負載造成的偽紅**：修改前後共跑三輪，失敗集合每輪都不同（第一輪 3 紅含 `task-detail-task-profiles`、第二輪 1 紅為 `issue-395`、第三輪全綠），此為負載型 flake 的指紋。單獨重跑 `PW_PORT=8993 ... issue-395-force-guideline-per-task.spec.ts` 得 **2 passed／exit 0／1.8s**，對照全量並行下的 30s `page.goto` 逾時，確認非回歸。
+>
+> **連帶的盤點重生**：`0b885332` 動到 `design/prototype/pages` 之後，INVENTORY_FRESHNESS 轉紅（該檢查比對的是 pages 的最後一次提交），故於 `6ff8abe4` 重跑產生器單獨提交；diff 僅為來源 commit 戳記一行，無任何畫面、元件或路由變動。重生後 `scripts/check-sdd.sh` **0 error／20 warning**、`bash scripts/inventory-tests.sh` exit 0。
+
+> **主 session 規模複驗（2026-09-16）**：三個堆疊 PR 各自對**自己的 base**量測（非對 `origin/main` 的累計值）——PR-1 `origin/main...refactor/742-extract-ar-export` 為 1 檔 77 行；PR-2 `refactor/742-extract-ar-export...feat/742-t006-span-seed` 為 1 檔 86 行；PR-3 `feat/742-t006-span-seed...feat/742-seq-export-dialog` 為 2 檔 270 行（task-detail.html 199/41、annotation-results.html 30/0）。三者皆在憲法原則 X 的 5 檔／300 行雙門檻內。整疊對 `origin/main` 的累計值為 415 行，該數字**不對應任何一個 PR 的 diff**，不得用於門檻判定。任務 1.8 的修正提交 `0b885332` 之後重新量測 PR-3，為 2 檔 **275 行**（task-detail.html 204/41、annotation-results.html 30/0），仍在門檻內。
 
 ## 2. 詞級序列匯出、對齊擴張摘要與缺版本阻擋（PR-B）
 
