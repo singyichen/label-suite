@@ -1,5 +1,5 @@
 ---
-功能分支: chore/726-rearchive-014-canon
+功能分支: feat/742-seq-tagging-export-dialog
 建立日期: 2026-04-20
 版本: 3.1.0
 狀態: Draft
