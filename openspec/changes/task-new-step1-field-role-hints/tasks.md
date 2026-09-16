@@ -28,7 +28,9 @@
 > **相依**：群組 0。1.1 的 committed Red 必須先於 1.2。
 
 - [x] 1.1 新增 `design/prototype/tests/task-management/issue-755-field-role-input-hints.spec.ts` 之 Red 契約：斷言瀏覽器全域變數 `FIELD_ROLE_INPUT_NAME_HINTS` 為陣列且至少含 1 筆、每筆皆為非空字串、且陣列內容包含 `text`（依 docs/product/example-data 下全部 17 份 fixture 逐檔實測，七個關鍵字命中 14 份且全由 `text` 達成，故 `text` 為欄名線索的最低驗收基準）。驗證：`PW_PORT=8899 corepack pnpm playwright test tests/task-management/issue-755-field-role-input-hints.spec.ts` 全數失敗，失敗原因須為全域變數 `FIELD_ROLE_INPUT_NAME_HINTS` 未定義。 [@senior-qa]
-- [ ] 1.2 （Green）修改 `design/prototype/pages/task-management/task-config.data.js`：於 `FIELD_ROLE_LABELS`（:602-605）鄰近新增 `FIELD_ROLE_INPUT_NAME_HINTS` 常數（config-driven 字串陣列，內容為 `text`／`content`／`sentence`／`passage`／`document`／`body`／`context`）。不得修改 `FIELD_ROLE_LABELS` 或任何既有常數。驗證：`PW_PORT=8899 corepack pnpm playwright test tests/task-management/issue-755-field-role-input-hints.spec.ts` 之 1.1 斷言轉綠（其餘尚未實作之斷言仍可能失敗）。 [@senior-frontend]
+- [x] 1.2 （Green）修改 `design/prototype/pages/task-management/task-config.data.js`：於 `FIELD_ROLE_LABELS`（:602-605）鄰近新增 `FIELD_ROLE_INPUT_NAME_HINTS` 常數（config-driven 字串陣列，內容為 `text`／`content`／`sentence`／`passage`／`document`／`body`／`context`）。不得修改 `FIELD_ROLE_LABELS` 或任何既有常數。驗證：`PW_PORT=8899 corepack pnpm playwright test tests/task-management/issue-755-field-role-input-hints.spec.ts` 之 1.1 斷言轉綠（其餘尚未實作之斷言仍可能失敗）。 [@senior-frontend]
+
+> **主 session 核實紀錄（2026-09-16，任務 1.2）**：Green 於 `941b2119` 落地，`git show --stat` 為單檔 5 行純插入（:606-610），位於 `FIELD_ROLE_LABELS`（:602-605）與 `SAMPLING_DEFAULTS_BY_TYPE`（:611）之間，既有常數零修改、工作區乾淨、`task-config.engine.js` 最新提交仍為 `0e724859`（未被本任務碰觸）。主 session 獨立重跑 `PW_PORT=8903` 確認 1 passed；`/usr/bin/grep -rn FIELD_ROLE_INPUT_NAME_HINTS design/prototype/pages design/prototype/tests` 僅命中 data.js:610 與測試檔，確認頁面層無第二份硬編清單。實作 agent 另回報 `corepack pnpm typecheck` exit 0、`tests/task-management` 全量回歸連跑兩次皆 344 passed／0 failed。
 
 ## 2. PR-755-FIELD-ROLE-HINTS-ENGINE — 初始化推測邏輯（FR-002c-8、AC-1.6、AC-1.7）
 
