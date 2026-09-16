@@ -82,6 +82,11 @@
 **故事目標**（SC-045）：`project_leader` 把詞元單位切到 word 並指定切詞引擎後，匯出檔自帶引擎與版本、對齊模式與擴張筆數，畫面同時顯示「N 段標記因對齊被擴張」並可展開逐筆比對；選到沒有版本資訊的引擎時匯出被擋下並說明原因、不產檔也不留紀錄；切回 character 一切照舊。擴張只發生在匯出產物，已儲存的標記起訖值一個字元都沒動。
 
 > **產品檔案（2）**：`design/prototype/pages/task-management/task-detail.data.js`、`design/prototype/pages/task-management/task-detail.html`
+>
+> **群組 2 再拆為兩個堆疊 PR（2026-09-16 使用者裁定，覆寫原「群組 2 ＝單一 PR-B」之敘述）**：群組 2 完工後實測產品檔 diff 為 **319 行**（task-detail.html 207／37、task-detail.data.js 75／0，以群組 1 分支為基準），超出門檻 19 行；追加 D2 前即已是 317 行。沿用群組 1 的先例重排順序：
+> **PR-4 `feat/742-tokenizer-seed`**（75 行）：任務 2.3 的切詞引擎種子，純資料、頁面尚無讀取端，單獨合併不改變任何可觀察行為。
+> **PR-5 `feat/742-seq-word-level-export`**（244 行）：Red（2.1／2.2／2.5）＋串接（2.4）＋`schema_version`（2.6）＋盤點與回歸（2.7／2.8）。本 PR 使用 `Closes #742`，且為群組 3 archive 的承載 PR。
+> 2.3 因此提交於 Red 之前；它只種資料、不帶任何行為，「committed Red 先於帶行為的 Green」在 2.4 與 2.6 上仍然成立。代價是重排重寫 SHA，本清單內群組 2 的證據引用已逐條更新為新 SHA；重排前的完整鏈保留於分支 `wip/742-group2-snapshot`。
 > **最終群組**：否。本組不執行 archive。
 > **相依**：群組 1 全部完成且證據已由主 session 核實。2.1 與 2.2 的 committed Red 必須先於 2.3；2.3 必須先於 2.4；2.5 的 committed Red 必須先於 2.6；2.7 與 2.8 必須在 2.6 之後執行。
 > **為何切詞引擎用種資料而非實作演算法**：模組本身不切詞，詞級路徑要求呼叫端提供 token 邊界與引擎識別。若在 task-detail 頁實作一套中文斷詞，014 就成了第二個切詞權威，與本清單的範圍界線相違，而斷詞品質並非 issue #742 要示範的東西。詳見 design.md 裁決 D3。
@@ -98,30 +103,37 @@
 
 > **主 session 核實紀錄（2026-09-16，D2 追加任務 2.5–2.8）**：
 >
-> - **2.5 Red `b17c48e9`**：`git show --stat` 僅 `design/prototype/tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` 一檔 +60 行、零產品檔。主 session 獨立重跑 `PW_PORT=8987` 得 **3 failed／19 passed**，三項新案例（T006 字元級、T006 詞級、T010）皆為精確相等斷言失敗於 `Expected: "1.1.0"`／`Received: "1.0.0"`——契約性失敗。T010 不經對話框，直接點 `#arExportJsonBtn` 下載，與任務 1.1 既有 T010 案例的入口一致。
-> - **2.6 Green `5d9daa09`**：`git show` 僅 `design/prototype/pages/task-management/task-detail.html` 一行字面值 `'1.0.0'` → `'1.1.0'`；`git diff b17c48e9 5d9daa09 -- design/prototype/tests` 為空，Red 契約未被改動。產出者回報 typecheck exit 0、issue-742 規格 22 passed，由 2.8 全量回歸涵蓋複驗。該提交的 Co-Authored-By 署名為實際執行的模型（Haiku 4.5），屬實，未 amend。
-> - **2.7 盤點重生 `0955d507`**：`screen-inventory.md` 僅來源戳記一行；`bash scripts/inventory-tests.sh` exit 0；`scripts/check-sdd.sh` **0 error／21 warning**，無 INVENTORY_FRESHNESS（warning 較先前 +1 為新增 Red 任務 2.5 的 TASK_RED_EVIDENCE_REVIEW）。
-> - **2.8 群組 2 回歸（於 `0955d507`）**：`corepack pnpm typecheck` **exit 0**；`PW_PORT=8983 corepack pnpm playwright test tests/task-management` **exit 0、365 passed（2.8m）**；`PW_PORT=8984 corepack pnpm playwright test tests/cross-role` **exit 0、34 passed（58.7s）**。追加 D2 任務前的基線（`c8323def`）為 typecheck exit 0、task-management 362 passed、cross-role 34 passed；365 − 362 = 3，恰為 2.5 新增案例數。
+> - **2.5 Red `22df2e0d`**：`git show --stat` 僅 `design/prototype/tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` 一檔 +60 行、零產品檔。主 session 獨立重跑 `PW_PORT=8987` 得 **3 failed／19 passed**，三項新案例（T006 字元級、T006 詞級、T010）皆為精確相等斷言失敗於 `Expected: "1.1.0"`／`Received: "1.0.0"`——契約性失敗。T010 不經對話框，直接點 `#arExportJsonBtn` 下載，與任務 1.1 既有 T010 案例的入口一致。
+> - **2.6 Green `e5e2207d`**：`git show` 僅 `design/prototype/pages/task-management/task-detail.html` 一行字面值 `'1.0.0'` → `'1.1.0'`；`git diff 22df2e0d e5e2207d -- design/prototype/tests` 為空，Red 契約未被改動。產出者回報 typecheck exit 0、issue-742 規格 22 passed，由 2.8 全量回歸涵蓋複驗。該提交的 Co-Authored-By 署名為實際執行的模型（Haiku 4.5），屬實，未 amend。
+> - **2.7 盤點重生 `de569dff`**：`screen-inventory.md` 僅來源戳記一行；`bash scripts/inventory-tests.sh` exit 0；`scripts/check-sdd.sh` **0 error／21 warning**，無 INVENTORY_FRESHNESS（warning 較先前 +1 為新增 Red 任務 2.5 的 TASK_RED_EVIDENCE_REVIEW）。
+> - **2.8 群組 2 回歸（於 `de569dff`）**：`corepack pnpm typecheck` **exit 0**；`PW_PORT=8983 corepack pnpm playwright test tests/task-management` **exit 0、365 passed（2.8m）**；`PW_PORT=8984 corepack pnpm playwright test tests/cross-role` **exit 0、34 passed（58.7s）**。追加 D2 任務前的基線（`64941972`）為 typecheck exit 0、task-management 362 passed、cross-role 34 passed；365 − 362 = 3，恰為 2.5 新增案例數。
 
-> **主 session 核實紀錄（2026-09-16，Red 2.1／2.2）**：兩項的 Red 於 `9d57245f` 單一提交落地（amend 前為 `8baaf1ec`）。`git show --stat` 確認僅 `design/prototype/tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` 一個測試檔 322 行、零產品檔、`tasks.md` 未被產出者更動、工作區乾淨。主 session 獨立重跑 `PW_PORT=8996 corepack pnpm playwright test tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` 取得 **EXIT=1、9 failed／10 passed（1.6m）**：9 個新案例（2.1 五項、2.2 四項）全數失敗，10 個群組 1 既有案例維持全綠。
+> **主 session 核實紀錄（2026-09-16，群組 2 再拆後重驗）**：以 cherry-pick 在 `9c73ab02` 之上重建兩條分支，盤點重生提交因來源戳記衝突而改為重跑產生器。`git rev-parse` 比對重排前頂端與重排後頂端 `841ee709` 的 `design/prototype` 樹物件**完全相同**，兩者差異只有 `design/system/screen-inventory.md` 的來源戳記一行。三組驗證皆在獨立的 detached worktree 執行：
 >
-> **失敗原因是契約性的**：全部停在 `#arSeqExportTokenizerSelect` 的 `selectOption` 逾時，call log 顯示該節點已解析為 `<select class="input-select" id="arSeqExportTokenizerSelect"></select>`——**節點存在但沒有任何 option**，即任務 2.3 尚未種入切詞引擎資料，而非選擇器寫錯或頁面載入失敗。這正是清單對 2.1／2.2 所要求的「失敗原因為單位選擇無詞級行為」。（本機並行負載高，改用未被占用的埠，非清單所列的 8981／8982。）
+> - **PR-4 頂端 `d8ae96b0`**（種子 `e1d1688d`＋盤點重生）：`corepack pnpm typecheck` **exit 0**；`PW_PORT=8971 corepack pnpm playwright test tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts tests/task-management/task-detail-annotation-results.spec.ts` **exit 0、27 passed**（群組 1 的 10 項＋既有 17 項），確認種子單獨合併不破壞任何既有契約。
+> - **Red `f9a8047f`**（疊在種子之上）：`PW_PORT=8972` 同規格 **exit 1、9 failed／10 passed**，9 個失敗全部停在 `#arSeqExportTokenizerSelect` 的 `selectOption` 逾時。種子已在但選項渲染屬 2.4，失敗集合與重排前相同，Red 仍為契約性失敗。
+> - **PR-5 頂端 `841ee709`**：typecheck **exit 0**；`PW_PORT=8973 … tests/task-management` **exit 0、365 passed（1.8m）**；`PW_PORT=8974 … tests/cross-role` **exit 0、34 passed（42.9s）**。
+> - 兩條分支重建後 `scripts/check-sdd.sh` **0 error／21 warning**、`bash scripts/inventory-tests.sh` exit 0。
+
+> **主 session 核實紀錄（2026-09-16，Red 2.1／2.2）**：兩項的 Red 於 `f9a8047f` 單一提交落地（amend 前為 `8baaf1ec`）。`git show --stat` 確認僅 `design/prototype/tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` 一個測試檔 322 行、零產品檔、`tasks.md` 未被產出者更動、工作區乾淨。主 session 獨立重跑 `PW_PORT=8996 corepack pnpm playwright test tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` 取得 **EXIT=1、9 failed／10 passed（1.6m）**：9 個新案例（2.1 五項、2.2 四項）全數失敗，10 個群組 1 既有案例維持全綠。
+>
+> **失敗原因是契約性的**：全部停在 `#arSeqExportTokenizerSelect` 的 `selectOption` 逾時，call log 顯示該節點已解析為 `<select class="input-select" id="arSeqExportTokenizerSelect"></select>`——**節點存在但沒有任何 option**，即切詞引擎尚未被渲染成選項，而非選擇器寫錯或頁面載入失敗。（此次跑測時 2.3 種子尚未提交；重排後 Red 疊在種子之上，選項渲染仍屬 2.4，失敗集合不變，見下方「群組 2 再拆」重驗紀錄。）這正是清單對 2.1／2.2 所要求的「失敗原因為單位選擇無詞級行為」。（本機並行負載高，改用未被占用的埠，非清單所列的 8981／8982。）
 >
 > **Green 的邊界已可確定**：`design/prototype/pages/shared/span-tagging-export.js` 既有的 `deriveWordSequence()`、`expandToTokens()`、`missingTokenizerField()` 與 `{ blocked, reason }` 回傳形狀已完整支援詞級與阻擋兩條路徑，故 2.3／2.4 限於種資料與串接，**不得也不需要改動該模組**。
 >
-> **主 session 退件一次**：產出者的 docblock 原把「詞級路徑確認後對話框不關閉」整條標為可被 senior-frontend 推翻的範圍決策，但 AC-1.12 第三條 AND 明文為「使用者於同一對話框改回單位 `character` 後匯出正常完成」——阻擋路徑不關閉是**規格強制**，照原文放行等同授權 Green 違反 AC-1.12。已要求拆成兩半後 amend：阻擋路徑引 AC-1.12 為不可推翻，成功路徑則標明是本檔依任務 1.5 已落地標記結構（摘要節點是 `#arSeqExportModal > .modal` 的子節點）所作的推論，要推翻須改那份已鎖定的標記而非 Green 單方決定。`git diff 8baaf1ec 9d57245f` 確認 amend **只動註解**，無任何 `expect(`／`await`／`const`／`test(` 行變動，Red 斷言集合逐字未變；產出者 amend 後於 `PW_PORT=8998` 重跑得到相同的 9 failed／10 passed。
+> **主 session 退件一次**：產出者的 docblock 原把「詞級路徑確認後對話框不關閉」整條標為可被 senior-frontend 推翻的範圍決策，但 AC-1.12 第三條 AND 明文為「使用者於同一對話框改回單位 `character` 後匯出正常完成」——阻擋路徑不關閉是**規格強制**，照原文放行等同授權 Green 違反 AC-1.12。已要求拆成兩半後 amend：阻擋路徑引 AC-1.12 為不可推翻，成功路徑則標明是本檔依任務 1.5 已落地標記結構（摘要節點是 `#arSeqExportModal > .modal` 的子節點）所作的推論，要推翻須改那份已鎖定的標記而非 Green 單方決定。`git diff 8baaf1ec 9d57245f`（重排前 SHA，`9d57245f` 保留於 `wip/742-group2-snapshot`，重排後對應 `f9a8047f`）確認 amend **只動註解**，無任何 `expect(`／`await`／`const`／`test(` 行變動，Red 斷言集合逐字未變；產出者 amend 後於 `PW_PORT=8998` 重跑得到相同的 9 failed／10 passed。
 >
 > 另記：該次 amend 首次被 `scripts/git-hooks/commit-msg` 擋下，因 commit body 逐字引用了中文 AC 條文；改以英文轉述後通過。此為 CLAUDE.md「commit message 全英文」與「OpenSpec 產物繁中」兩條規則交界處的固定摩擦點。
 
 > **切詞引擎識別的來源**：測試鎖定的 `ckip-transformers`／`0.3.4`（具版本，驅動 AC-1.11 成功路徑）與 `jieba`（刻意不帶 version，驅動 AC-1.12 阻擋路徑）出自 design.md 維護者裁決第 4 點，非產出者自擬；任務 2.3 種入的資料必須與此逐字相同，版本字串須以註解標明為原型佔位值。
 
-> **主 session 核實紀錄（2026-09-16，Green 2.3）**：以 `7d82427f` 為準。此提交經兩次 amend（`f7666b1c` → `523c9f32` → `7d82427f`），產出者完成報告所列的 `523c9f32` 已不在分支上，**任何證據一律不得引用該 SHA**。`git show --stat 7d82427f` 確認僅 `design/prototype/pages/task-management/task-detail.data.js` 一檔、新增 75 行、零刪除。為隔離工作區內尚未提交的 2.4 半成品，另以 `git worktree add --detach` 在 `7d82427f` 建乾淨副本重跑：`corepack pnpm typecheck` **exit 0**；`PW_PORT=8991 corepack pnpm playwright test tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` 為 **9 failed／10 passed（1.6m）**，9 個失敗全部停在 `#arSeqExportTokenizerSelect` 的 `selectOption` 逾時——與 Red 核實紀錄的失敗集合相同，符合預期（2.3 只種資料，把資料渲染成 option 屬 2.4）。
+> **主 session 核實紀錄（2026-09-16，Green 2.3）**：以 `e1d1688d` 為準。此提交經兩次 amend（`f7666b1c` → `523c9f32` → `e1d1688d`），產出者完成報告所列的 `523c9f32` 已不在分支上，**任何證據一律不得引用該 SHA**。`git show --stat e1d1688d` 確認僅 `design/prototype/pages/task-management/task-detail.data.js` 一檔、新增 75 行、零刪除。重排前（種子疊在 Red 之上）曾以 `git worktree add --detach` 建乾淨副本重跑 typecheck **exit 0**、issue-742 規格 **9 failed／10 passed**，9 個失敗全部停在 `#arSeqExportTokenizerSelect` 的 `selectOption` 逾時——與 Red 核實紀錄的失敗集合相同（2.3 只種資料，把資料渲染成 option 屬 2.4）。重排後種子提交已不含 Red 測試，其現行證據見下方「群組 2 再拆」重驗紀錄。
 >
-> **退件一次（已由 amend 修正）**：`523c9f32` 版只替 NER-001 種 token，產出者以 YAGNI 為由略過 NER-002～006。但 `deriveWordSequence()` 在 `opts.tokens` 缺席時以空陣列處理，會讓該樣本每位標記員的 `tags` 靜默匯出為 `[]`——這是產品缺陷，不是範圍選擇。`7d82427f` 已為六筆樣本全數種入 token，並改以 `tokenRanges()` 將預先切好的 `|` 分隔字串換算成 offset（只加總長度，不決定邊界，未違反 D3「不實作斷詞演算法」）。
+> **退件一次（已由 amend 修正）**：`523c9f32` 版只替 NER-001 種 token，產出者以 YAGNI 為由略過 NER-002～006。但 `deriveWordSequence()` 在 `opts.tokens` 缺席時以空陣列處理，會讓該樣本每位標記員的 `tags` 靜默匯出為 `[]`——這是產品缺陷，不是範圍選擇。`e1d1688d` 已為六筆樣本全數種入 token，並改以 `tokenRanges()` 將預先切好的 `|` 分隔字串換算成 offset（只加總長度，不決定邊界，未違反 D3「不實作斷詞演算法」）。
 >
 > **種子內容逐項核對**：六筆種子以 `|` 串接後皆與 `AR_SAMPLES_SEQ_TAGGING` 對應樣本的 `textZh` 逐字相同（長度 29／32／29／34／29／45）。刻意錯位的擴張案例：NER-001 kioleemg12 的 PER (6,9) `張忠謀` → (5,9) `人張忠謀`、LOC (10,12) `台北` → (9,12) `在台北`；ORG (0,3) 對齊不擴張；NER-002 tony0950127 的 ORG (0,2) `鴻海` → (0,4) `鴻海精密`。`jieba` 無 `version` 鍵，`missingTokenizerField()` 於讀取 tokens 前即回傳阻擋。
 
-> **主 session 核實紀錄（2026-09-16，Green 2.4）**：以 `8672e5dd` 為準（由 `554d552f` amend 而來，後者已不在分支上）。`git show --stat 8672e5dd` 僅 `design/prototype/pages/task-management/task-detail.html` 一檔；`git diff 7d82427f 8672e5dd -- design/prototype/tests` 為空，Red 契約未被改動；`grep -c "deriveSequence(" task-detail.html` 為 1（SC-045 單一入口）。主 session 獨立重跑：`corepack pnpm typecheck` **exit 0**；`PW_PORT=8993 corepack pnpm playwright test tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` **exit 0、19 passed（12.7s）**。
+> **主 session 核實紀錄（2026-09-16，Green 2.4）**：以 `142f0218` 為準（由 `554d552f` amend 而來，後者已不在分支上）。`git show --stat 142f0218` 僅 `design/prototype/pages/task-management/task-detail.html` 一檔；`git diff f9a8047f 142f0218 -- design/prototype/tests` 為空，Red 契約未被改動；`grep -c "deriveSequence(" task-detail.html` 為 1（SC-045 單一入口）。主 session 獨立重跑：`corepack pnpm typecheck` **exit 0**；`PW_PORT=8993 corepack pnpm playwright test tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` **exit 0、19 passed（12.7s）**。
 >
 > **退件一次（已由 amend 修正）**：`554d552f` 版 JSON-MIN 每列的 `expanded_span_count` 取自單一標記作業的擴張筆數，各列數值不同，且不等於 manifest 總數與畫面 N——違反 FR-020 第 3 點「本次匯出實際採用的選項」之 metadata 語意與第 4 點 N 的來源一致性。Red 測試標題寫「identically on every row」，但斷言只檢查型別，故 19 綠未能抓到；測試未改，修正在頁面端（迴圈後以同一累加器回填每列）。另該版 commit 缺 Co-Authored-By trailer，一併 amend。
 >
@@ -129,7 +141,7 @@
 >
 > **尚未落地、不屬本任務**：design.md 裁決 D2（`schema_version` 升 `1.1.0`）目前實際匯出仍為 `1.0.0`，而 tasks.md 沒有任何任務承接此裁決；另 FR-020 第 3 點「重新下載重建出的檔案與原檔逐字元相同」所依賴的重新下載功能頁面上不存在，本任務只把引擎識別寫進條件快照。兩項皆已回報使用者待裁。
 >
-> **使用者裁定（2026-09-16，問答式）**：① D2 於本組追加任務 2.5（Red）與 2.6（Green）承接，原盤點重生與回歸順延為 2.7／2.8——此為 Generator 開跑後的範圍追加，經使用者明示核准；追加前以 `c8323def` 先跑過一輪群組 2 回歸作為基線（見 2.8 核實紀錄）。② 重新下載維持現況：本 change 只負責把方案、單位與引擎識別寫入條件快照；匯出記錄列的「下載」按鈕目前未綁定任何行為，快照無讀取端，FR-010i-2 與 FR-020 第 3 點的「重建逐字元相同」改由 issue #772 追蹤，不在本 change 範圍內。
+> **使用者裁定（2026-09-16，問答式）**：① D2 於本組追加任務 2.5（Red）與 2.6（Green）承接，原盤點重生與回歸順延為 2.7／2.8——此為 Generator 開跑後的範圍追加，經使用者明示核准；追加前以 `64941972` 先跑過一輪群組 2 回歸作為基線（見 2.8 核實紀錄）。② 重新下載維持現況：本 change 只負責把方案、單位與引擎識別寫入條件快照；匯出記錄列的「下載」按鈕目前未綁定任何行為，快照無讀取端，FR-010i-2 與 FR-020 第 3 點的「重建逐字元相同」改由 issue #772 追蹤，不在本 change 範圍內。
 
 ## 3. Archive 與正典回寫（最終群組）
 
