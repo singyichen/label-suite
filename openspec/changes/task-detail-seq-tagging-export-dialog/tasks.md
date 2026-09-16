@@ -87,12 +87,24 @@
 > **為何切詞引擎用種資料而非實作演算法**：模組本身不切詞，詞級路徑要求呼叫端提供 token 邊界與引擎識別。若在 task-detail 頁實作一套中文斷詞，014 就成了第二個切詞權威，與本清單的範圍界線相違，而斷詞品質並非 issue #742 要示範的東西。詳見 design.md 裁決 D3。
 > **阻擋路徑的資料設計**：種入的引擎中必須有一個**刻意缺少版本資訊**，使阻擋成為資料驅動的結果而非程式碼裡的特例分支；阻擋與否一律由模組回傳值決定。
 
-- [ ] 2.1 於 `design/prototype/tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` 補上 AC-1.11 的 Red 契約：單位選 word、指定具備版本資訊的引擎後匯出成功，檔案 metadata 含切詞引擎、引擎版本、`alignment_mode` 與 `expanded_span_count`；畫面出現「N 段標記因對齊被擴張」且 N 與 metadata 的擴張筆數一致；展開後逐筆顯示原始標記文字、擴張後文字與起訖差值；匯出前後該樣本已儲存的 `spans[]` 起訖值完全相同；同一任務改回 character 匯出時該摘要不出現。JSON 與 JSON-MIN 兩側都要斷言。驗證：`PW_PORT=8981 corepack pnpm playwright test tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` 出現失敗，失敗原因為單位選擇無詞級行為 [@senior-qa]
-- [ ] 2.2 於 `design/prototype/tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` 補上 AC-1.12 的 Red 契約：單位選 word 且選到沒有版本資訊的引擎時觸發匯出，畫面顯示可理解的中文原因（明確指出缺的是切詞引擎版本資訊，而非模組回傳的英文診斷字串）、沒有任何檔案被產生、匯出記錄表列數不變；隨後於同一對話框改回 character 匯出成功，該檔不含任何切詞相關欄位且畫面無擴張摘要。另須斷言阻擋狀態下頁面不會對模組回傳值中不存在的序列欄位取值（design.md 裁決 D5 之失效模式）。驗證：`PW_PORT=8982 corepack pnpm playwright test tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` 仍為紅 [@senior-qa]
+- [x] 2.1 於 `design/prototype/tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` 補上 AC-1.11 的 Red 契約：單位選 word、指定具備版本資訊的引擎後匯出成功，檔案 metadata 含切詞引擎、引擎版本、`alignment_mode` 與 `expanded_span_count`；畫面出現「N 段標記因對齊被擴張」且 N 與 metadata 的擴張筆數一致；展開後逐筆顯示原始標記文字、擴張後文字與起訖差值；匯出前後該樣本已儲存的 `spans[]` 起訖值完全相同；同一任務改回 character 匯出時該摘要不出現。JSON 與 JSON-MIN 兩側都要斷言。驗證：`PW_PORT=8981 corepack pnpm playwright test tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` 出現失敗，失敗原因為單位選擇無詞級行為 [@senior-qa]
+- [x] 2.2 於 `design/prototype/tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` 補上 AC-1.12 的 Red 契約：單位選 word 且選到沒有版本資訊的引擎時觸發匯出，畫面顯示可理解的中文原因（明確指出缺的是切詞引擎版本資訊，而非模組回傳的英文診斷字串）、沒有任何檔案被產生、匯出記錄表列數不變；隨後於同一對話框改回 character 匯出成功，該檔不含任何切詞相關欄位且畫面無擴張摘要。另須斷言阻擋狀態下頁面不會對模組回傳值中不存在的序列欄位取值（design.md 裁決 D5 之失效模式）。驗證：`PW_PORT=8982 corepack pnpm playwright test tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` 仍為紅 [@senior-qa]
 - [ ] 2.3 （Green）修改 `design/prototype/pages/task-management/task-detail.data.js`：依 design.md 裁決 D3 種入兩個切詞引擎的預先切好結果，其一具備完整引擎與版本識別且其 token 邊界須讓至少一筆標記落在 token 內部以產生擴張，其二刻意不帶版本資訊；不在本檔或任何地方實作斷詞演算法。驗證：`cd design/prototype && corepack pnpm typecheck` exit 0 [@senior-frontend]
 - [ ] 2.4 （Green）修改 `design/prototype/pages/task-management/task-detail.html`：單位為 word 時把所選引擎的 token 邊界與引擎識別交給 `deriveSequence`，先判斷回傳是否為阻擋結果再取其餘欄位；成功時把切詞引擎、引擎版本、`alignment_mode` 與 `expanded_span_count` 一併寫入兩種格式，並以模組回傳的擴張清單渲染可展開摘要（擴張筆數為 0 時不渲染、字元級一律不渲染）；阻擋時顯示對應的中文 i18n 訊息、不產檔也不寫入匯出記錄；匯出記錄的條件快照一併保存方案、單位與引擎識別，使重新下載重建的檔案與原檔逐字元相同。驗證：`PW_PORT=8981 corepack pnpm playwright test tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` 全綠，且 `cd design/prototype && corepack pnpm typecheck` exit 0 [@senior-frontend]
 - [ ] 2.5 執行 `node scripts/gen-screen-inventory.mjs` 重生畫面盤點清單並單獨提交。驗證：`scripts/check-sdd.sh` 之 INVENTORY_FRESHNESS 為 0 筆、`scripts/inventory-tests.sh` exit 0 [@main]
 - [ ] 2.6 執行群組 2 回歸並保存證據。驗證：`cd design/prototype && corepack pnpm typecheck` exit 0；`PW_PORT=8983 corepack pnpm playwright test tests/task-management` exit 0；`PW_PORT=8984 corepack pnpm playwright test tests/cross-role` exit 0 [@main]
+
+> **主 session 核實紀錄（2026-09-16，Red 2.1／2.2）**：兩項的 Red 於 `9d57245f` 單一提交落地（amend 前為 `8baaf1ec`）。`git show --stat` 確認僅 `design/prototype/tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` 一個測試檔 322 行、零產品檔、`tasks.md` 未被產出者更動、工作區乾淨。主 session 獨立重跑 `PW_PORT=8996 corepack pnpm playwright test tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` 取得 **EXIT=1、9 failed／10 passed（1.6m）**：9 個新案例（2.1 五項、2.2 四項）全數失敗，10 個群組 1 既有案例維持全綠。
+>
+> **失敗原因是契約性的**：全部停在 `#arSeqExportTokenizerSelect` 的 `selectOption` 逾時，call log 顯示該節點已解析為 `<select class="input-select" id="arSeqExportTokenizerSelect"></select>`——**節點存在但沒有任何 option**，即任務 2.3 尚未種入切詞引擎資料，而非選擇器寫錯或頁面載入失敗。這正是清單對 2.1／2.2 所要求的「失敗原因為單位選擇無詞級行為」。（本機並行負載高，改用未被占用的埠，非清單所列的 8981／8982。）
+>
+> **Green 的邊界已可確定**：`design/prototype/pages/shared/span-tagging-export.js` 既有的 `deriveWordSequence()`、`expandToTokens()`、`missingTokenizerField()` 與 `{ blocked, reason }` 回傳形狀已完整支援詞級與阻擋兩條路徑，故 2.3／2.4 限於種資料與串接，**不得也不需要改動該模組**。
+>
+> **主 session 退件一次**：產出者的 docblock 原把「詞級路徑確認後對話框不關閉」整條標為可被 senior-frontend 推翻的範圍決策，但 AC-1.12 第三條 AND 明文為「使用者於同一對話框改回單位 `character` 後匯出正常完成」——阻擋路徑不關閉是**規格強制**，照原文放行等同授權 Green 違反 AC-1.12。已要求拆成兩半後 amend：阻擋路徑引 AC-1.12 為不可推翻，成功路徑則標明是本檔依任務 1.5 已落地標記結構（摘要節點是 `#arSeqExportModal > .modal` 的子節點）所作的推論，要推翻須改那份已鎖定的標記而非 Green 單方決定。`git diff 8baaf1ec 9d57245f` 確認 amend **只動註解**，無任何 `expect(`／`await`／`const`／`test(` 行變動，Red 斷言集合逐字未變；產出者 amend 後於 `PW_PORT=8998` 重跑得到相同的 9 failed／10 passed。
+>
+> 另記：該次 amend 首次被 `scripts/git-hooks/commit-msg` 擋下，因 commit body 逐字引用了中文 AC 條文；改以英文轉述後通過。此為 CLAUDE.md「commit message 全英文」與「OpenSpec 產物繁中」兩條規則交界處的固定摩擦點。
+
+> **切詞引擎識別的來源**：測試鎖定的 `ckip-transformers`／`0.3.4`（具版本，驅動 AC-1.11 成功路徑）與 `jieba`（刻意不帶 version，驅動 AC-1.12 阻擋路徑）出自 design.md 維護者裁決第 4 點，非產出者自擬；任務 2.3 種入的資料必須與此逐字相同，版本字串須以註解標明為原型佔位值。
 
 ## 3. Archive 與正典回寫（最終群組）
 
