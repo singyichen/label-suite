@@ -129,6 +129,36 @@
     </div>
   </section>
 
+  <!-- issue #742 (design.md D6): markup only, reusing the `.modal-overlay`
+       show/hide and modal-focus.js focus-trap/Esc mechanism already used by
+       #riskModal (task-detail.html:2318). Selectors are the QA-owned Red
+       contract (tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts);
+       option lists and behaviour wiring land in a later task. -->
+  <div class="modal-overlay" id="arSeqExportModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="arSeqExportModalTitle">
+    <div class="modal">
+      <h2 id="arSeqExportModalTitle">序列標記匯出設定</h2>
+      <p id="arSeqExportModalBody">選擇本次匯出採用的標註方案與詞元單位。</p>
+      <div class="ar-seq-export-field">
+        <label class="field-label" id="arSeqExportSchemeLabel" for="arSeqExportSchemeSelect">標註方案</label>
+        <select class="input-select" id="arSeqExportSchemeSelect"></select>
+      </div>
+      <div class="ar-seq-export-field">
+        <label class="field-label" id="arSeqExportUnitLabel" for="arSeqExportUnitSelect">詞元單位</label>
+        <select class="input-select" id="arSeqExportUnitSelect"></select>
+      </div>
+      <div class="ar-seq-export-field hidden" id="arSeqExportTokenizerField">
+        <label class="field-label" id="arSeqExportTokenizerLabel" for="arSeqExportTokenizerSelect">切詞引擎</label>
+        <select class="input-select" id="arSeqExportTokenizerSelect"></select>
+      </div>
+      <div class="ar-seq-export-summary hidden" id="arSeqExportExpansionSummary"></div>
+      <div class="ar-seq-export-blocked hidden" id="arSeqExportBlockedNotice"></div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" type="button" id="arSeqExportCancelBtn">取消</button>
+        <button class="btn btn-primary" type="button" id="arSeqExportConfirmBtn">確認匯出</button>
+      </div>
+    </div>
+  </div>
+
   <section class="panel hidden" id="arEmptyState" aria-labelledby="arEmptyTitle">
     <div class="ar-empty-state">
       <img src="../../assets/icons/file-text.svg" alt="" aria-hidden="true" class="ar-empty-icon" />
