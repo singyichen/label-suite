@@ -6,25 +6,25 @@
 
 > 本組為單一任務，須先 commit 並跑出預期失敗，才可進入第 2 組。
 
-- [ ] 1.1 將 `design/prototype/tests/task-management/issue-724-task-new-step1-preset.spec.ts` 由「預設按鈕可用」契約改寫為移除後契約：斷言 Step 1 不存在 `#taskTypePresets` 容器、不存在 `#taskTypePresetsLabel` 標籤、不存在任何 `[data-testid^="task-type-preset-"]` 按鈕，並斷言三段式選擇器仍可獨立湊出 `classification` + `single_item` + `single_label` 且 `下一步` 按鈕啟用；提交後執行 `corepack pnpm playwright test tests/task-management/issue-724-task-new-step1-preset.spec.ts`（於 `design/prototype/`），預期失敗且失敗原因為「預設按鈕仍存在於 DOM」 [@senior-qa]
+- [x] 1.1 將 `design/prototype/tests/task-management/issue-724-task-new-step1-preset.spec.ts` 由「預設按鈕可用」契約改寫為移除後契約：斷言 Step 1 不存在 `#taskTypePresets` 容器、不存在 `#taskTypePresetsLabel` 標籤、不存在任何 `[data-testid^="task-type-preset-"]` 按鈕，並斷言三段式選擇器仍可獨立湊出 `classification` + `single_item` + `single_label`（此迴歸斷言須補齊 `validateStep1()` 於 `task-new.html` 定義之完整前置條件——任務名稱非空、已上傳資料集、`single_item` 需恰好 1 個 `input` 角色欄位——否則 `#nextBtn` 恆為 disabled，斷言與 preset 存廢無關而形同恆假；可沿用 `task-new-input-count-validation.spec.ts` 之 setup 模式）且 `#nextBtn` 啟用；提交後執行 `corepack pnpm playwright test tests/task-management/issue-724-task-new-step1-preset.spec.ts`（於 `design/prototype/`），預期失敗且失敗原因為「預設按鈕仍存在於 DOM」 [@senior-qa]
 
 ## 2. Green 實作（移除）
 
 > 本組各任務皆為淨刪除、互不相依，但共同決定第 1 組測試能否轉綠；須全數完成後才重跑測試。
 
 <!-- parallel:start -->
-- [ ] 2.1 `design/prototype/pages/task-management/task-config.data.js`：移除 `TASK_TYPE_PRESETS` 常數定義；驗證 `grep -c "TASK_TYPE_PRESETS" design/prototype/pages/task-management/task-config.data.js` 回傳 0 [@senior-frontend]
-- [ ] 2.2 `design/prototype/pages/task-management/task-config.engine.js`：移除 `renderTaskTypePresets()` 與 `applyTaskTypePreset()` 兩個函式及其區塊註解，並移除 `initTaskTypeChips()` 內的 `renderTaskTypePresets();` 呼叫；不得移除 `syncChipsFromState()` 或 `onChipSelectionChange()`（另有 5 處呼叫者）；驗證 `grep -c "TaskTypePreset" design/prototype/pages/task-management/task-config.engine.js` 回傳 0 且 `grep -c "function syncChipsFromState" …/task-config.engine.js` 回傳 1 [@senior-frontend]
-- [ ] 2.3 `design/prototype/pages/task-management/task-new.html`：移除 `taskTypePresetsLabel` 與 `taskTypePresets` 兩個 div 及其上方註解、zh 與 en 兩處 `taskTypePresetsLabel` 詞條、語言切換 `ids` 陣列中的 `'taskTypePresetsLabel'` 項；驗證 `grep -c "taskTypePreset\|常用組合" design/prototype/pages/task-management/task-new.html` 回傳 0 [@senior-frontend]
-- [ ] 2.4 `design/prototype/pages/task-management/task-config.css`：移除 `.task-type-presets-label`、`.task-type-presets`、`.task-type-preset-btn`、`.task-type-preset-btn:hover` 樣式規則與其區塊註解；不得動到其下 `.task-type-selector` 起始之三段式選擇器樣式；驗證 `grep -c "task-type-preset" design/prototype/pages/task-management/task-config.css` 回傳 0 [@senior-frontend]
+- [x] 2.1 `design/prototype/pages/task-management/task-config.data.js`：移除 `TASK_TYPE_PRESETS` 常數定義；驗證 `grep -c "TASK_TYPE_PRESETS" design/prototype/pages/task-management/task-config.data.js` 回傳 0 [@senior-frontend] ✅ `b7329f02`（grep=0）
+- [x] 2.2 `design/prototype/pages/task-management/task-config.engine.js`：移除 `renderTaskTypePresets()` 與 `applyTaskTypePreset()` 兩個函式及其區塊註解，並移除 `initTaskTypeChips()` 內的 `renderTaskTypePresets();` 呼叫；不得移除 `syncChipsFromState()` 或 `onChipSelectionChange()`（另有 5 處呼叫者）；驗證 `grep -c "TaskTypePreset" design/prototype/pages/task-management/task-config.engine.js` 回傳 0 且 `grep -c "function syncChipsFromState" …/task-config.engine.js` 回傳 1 [@senior-frontend] ✅ `e2818e48`（`TaskTypePreset`=0、`function syncChipsFromState`=1；註：`onChipSelectionChange` 之定義本就不在本檔，非本 change 造成）
+- [x] 2.3 `design/prototype/pages/task-management/task-new.html`：移除 `taskTypePresetsLabel` 與 `taskTypePresets` 兩個 div 及其上方註解、zh 與 en 兩處 `taskTypePresetsLabel` 詞條、語言切換 `ids` 陣列中的 `'taskTypePresetsLabel'` 項；驗證 `grep -c "taskTypePreset\|常用組合" design/prototype/pages/task-management/task-new.html` 回傳 0 [@senior-frontend] ✅ `e496a7fc`（grep=0）。**額外移除第 5 處**：語言切換處理器內之 `renderTaskTypePresets();`（原 L1522）——本項原訂之 grep pattern 用小寫 `taskTypePreset`，無法命中大寫 `renderTaskTypePresets`，故該殘留未被斷言涵蓋，由主 session 複驗 `grep -rni` 後補除；未移除將於每次切換語言丟 `ReferenceError`
+- [x] 2.4 `design/prototype/pages/task-management/task-config.css`：移除 `.task-type-presets-label`、`.task-type-presets`、`.task-type-preset-btn`、`.task-type-preset-btn:hover` 樣式規則與其區塊註解；不得動到其下 `.task-type-selector` 起始之三段式選擇器樣式；驗證 `grep -c "task-type-preset" design/prototype/pages/task-management/task-config.css` 回傳 0 [@senior-frontend] ✅ `1a1b7b60`（grep=0，`.task-type-selector` 起始樣式未動）
 <!-- parallel:end -->
 
 ## 3. 設計系統盤點同步
 
 > 需第 2 組完成後執行（manifest 描述的是移除後狀態）。
 
-- [ ] 3.1 `design/system/inventory-manifest.json`：移除 `preset-button` 元件條目與頁面 08 note 內「Preset Button 為 Step 1 常用組合一鍵預設（issue #724），尚未收錄進 MASTER.md 之 Button 變體目錄；」片段；驗證 `grep -c "preset-button\|常用組合" design/system/inventory-manifest.json` 回傳 0 [@senior-frontend]
-- [ ] 3.2 重新產生 generated view：於專案根目錄執行 `node scripts/gen-screen-inventory.mjs`，再執行 `bash scripts/inventory-tests.sh`，預期兩者皆 exit 0 且 `git diff --stat design/system/screen-inventory.md` 顯示該檔已更新 [@main]
+- [x] 3.1 `design/system/inventory-manifest.json`：移除 `preset-button` 元件條目與頁面 08 note 內「Preset Button 為 Step 1 常用組合一鍵預設（issue #724），尚未收錄進 MASTER.md 之 Button 變體目錄；」片段；驗證 `grep -c "preset-button\|常用組合" design/system/inventory-manifest.json` 回傳 0 [@senior-frontend] ✅ 移除元件字典條目、頁面 08 `components` 陣列項與 note 片段共 3 處，`grep -c "preset-button\|常用組合"`=0，JSON 仍合法
+- [x] 3.2 重新產生 generated view：於專案根目錄執行 `node scripts/gen-screen-inventory.mjs`，再執行 `bash scripts/inventory-tests.sh`，預期兩者皆 exit 0 且 `git diff --stat design/system/screen-inventory.md` 顯示該檔已更新 [@main] ✅ `gen-screen-inventory.mjs` exit 0、`inventory-tests.sh` 10 項全 PASS、`screen-inventory.md` +3/-4
 
 ## 4. 驗證閘門
 
