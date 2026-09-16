@@ -14,8 +14,10 @@
 
 > **相依與平行性**：0.1 與 0.2 為同一致性修正，同批提交。本群組不動任何產品程式。
 
-- [ ] 0.1 修改 `specs/STATUS.md`，將 task-management-013 之狀態由 in-progress 更新為 change-open、分支欄由已合併之舊分支 feat/task-new-step1-click-reduction 改為本 change 的分支 feat/task-new-step1-field-role-hints（該欄位為 issue #724 合併後未同步之舊值）。驗證：執行 `scripts/check-sdd.sh` 不再回報 ACTIVE_CHANGE_STAGE（待與 0.2 同批提交後由主 session 核實）。 [@main]
-- [ ] 0.2 修改 `specs/task-management/013-task-new/spec.md` 之 frontmatter 功能分支欄，使其與 `specs/STATUS.md` 分支欄一致；本任務只改 frontmatter 該欄，不動任何 FR／AC／SC 條文。驗證：執行 `scripts/check-sdd.sh` 之 ACTIVE_CHANGE_STAGE 為 0 筆（待與 0.1 同批提交後由主 session 核實）。 [@main]
+- [x] 0.1 修改 `specs/STATUS.md`，將 task-management-013 之狀態由 in-progress 更新為 change-open、分支欄由已合併之舊分支 feat/task-new-step1-click-reduction 改為本 change 的分支 feat/task-new-step1-field-role-hints（該欄位為 issue #724 合併後未同步之舊值）。驗證：執行 `scripts/check-sdd.sh` 不再回報 ACTIVE_CHANGE_STAGE（待與 0.2 同批提交後由主 session 核實）。 [@main]
+- [x] 0.2 修改 `specs/task-management/013-task-new/spec.md` 之 frontmatter 功能分支欄，使其與 `specs/STATUS.md` 分支欄一致；本任務只改 frontmatter 該欄，不動任何 FR／AC／SC 條文。驗證：執行 `scripts/check-sdd.sh` 之 ACTIVE_CHANGE_STAGE 為 0 筆（待與 0.1 同批提交後由主 session 核實）。 [@main]
+
+> **主 session 核實紀錄（2026-09-16）**：群組 0 於 `00db4611` 落地（`9c18cc4b` 為 propose 產物）；`scripts/check-sdd.sh` 0 error／20 warning、`scripts/check-spec-artifacts.sh` exit 0，ACTIVE_CHANGE_STAGE 與 ACTIVE_CHANGE_SPEC 皆 0 筆。任務 1.1 的 Red 於 `b61157c6` 提交（單檔 22 行），主 session 獨立重跑確認 1 failed，失敗行為 `expect(Array.isArray(hints)).toBe(true)`、`/usr/bin/grep -rn FIELD_ROLE_INPUT_NAME_HINTS design/prototype/pages/` 零命中，屬預期失敗而非頁面載入或 selector 問題。
 
 ## 1. PR-755-FIELD-ROLE-HINTS-DATA — 欄名線索常數（FR-002c-8 判定規則資料來源）
 
@@ -25,7 +27,7 @@
 > **最終群組**：否。
 > **相依**：群組 0。1.1 的 committed Red 必須先於 1.2。
 
-- [ ] 1.1 新增 `design/prototype/tests/task-management/issue-755-field-role-input-hints.spec.ts` 之 Red 契約：斷言瀏覽器全域變數 `FIELD_ROLE_INPUT_NAME_HINTS` 為陣列且至少含 1 筆、每筆皆為非空字串、且陣列內容包含 `text`（依 docs/product/example-data 下全部 17 份 fixture 逐檔實測，七個關鍵字命中 14 份且全由 `text` 達成，故 `text` 為欄名線索的最低驗收基準）。驗證：`PW_PORT=8899 corepack pnpm playwright test tests/task-management/issue-755-field-role-input-hints.spec.ts` 全數失敗，失敗原因須為全域變數 `FIELD_ROLE_INPUT_NAME_HINTS` 未定義。 [@senior-qa]
+- [x] 1.1 新增 `design/prototype/tests/task-management/issue-755-field-role-input-hints.spec.ts` 之 Red 契約：斷言瀏覽器全域變數 `FIELD_ROLE_INPUT_NAME_HINTS` 為陣列且至少含 1 筆、每筆皆為非空字串、且陣列內容包含 `text`（依 docs/product/example-data 下全部 17 份 fixture 逐檔實測，七個關鍵字命中 14 份且全由 `text` 達成，故 `text` 為欄名線索的最低驗收基準）。驗證：`PW_PORT=8899 corepack pnpm playwright test tests/task-management/issue-755-field-role-input-hints.spec.ts` 全數失敗，失敗原因須為全域變數 `FIELD_ROLE_INPUT_NAME_HINTS` 未定義。 [@senior-qa]
 - [ ] 1.2 （Green）修改 `design/prototype/pages/task-management/task-config.data.js`：於 `FIELD_ROLE_LABELS`（:602-605）鄰近新增 `FIELD_ROLE_INPUT_NAME_HINTS` 常數（config-driven 字串陣列，內容為 `text`／`content`／`sentence`／`passage`／`document`／`body`／`context`）。不得修改 `FIELD_ROLE_LABELS` 或任何既有常數。驗證：`PW_PORT=8899 corepack pnpm playwright test tests/task-management/issue-755-field-role-input-hints.spec.ts` 之 1.1 斷言轉綠（其餘尚未實作之斷言仍可能失敗）。 [@senior-frontend]
 
 ## 2. PR-755-FIELD-ROLE-HINTS-ENGINE — 初始化推測邏輯（FR-002c-8、AC-1.6、AC-1.7）
