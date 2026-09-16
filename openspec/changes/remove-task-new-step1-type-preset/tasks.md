@@ -1,49 +1,47 @@
-# Tasks — 移除 Step 1 任務類型常用組合一鍵預設
+# 任務清單：remove-task-new-step1-type-preset
 
-目標 SC：本 change 移除 SC-002g，故驗收目標為「移除後 Step 1 任務類型選擇回到 FR-002／FR-002a–FR-002e 定義之三段式選擇模型，且既有 SC-002、SC-002b–SC-002f 不受影響」。
+> **角色分工**：主 session／team lead 是唯一可驗證 Red／Green evidence 與更新 checkbox 的角色。實作角色不得改寫 1.1 的測試契約以求通過。
 
-## 1. Red 契約
+## 1. 移除 Step 1 一鍵預設並同步盤點
 
-> 本組為單一任務，須先 commit 並跑出預期失敗，才可進入第 2 組。
+> **相依與平行性**：1.1 的 committed 失敗證據必須先於 1.2～1.5；1.2～1.5 為互不相依之淨刪除，可平行執行；1.6～1.7 描述的是移除後狀態，須待 1.2～1.5 全數完成後才執行。
+>
+> **執行紀錄（1.4）**：除原訂四處外另須移除語言切換處理器內之 `renderTaskTypePresets();` 呼叫。本項原訂的驗證 pattern 使用小寫 `taskTypePreset`，無法命中大寫開頭的 `renderTaskTypePresets`，故該處未被斷言涵蓋，由主 session 以 `grep -rni` 跨檔複驗後補除；若留下該呼叫，每次切換語言都會丟 `ReferenceError`。
 
-- [x] 1.1 將 `design/prototype/tests/task-management/issue-724-task-new-step1-preset.spec.ts` 由「預設按鈕可用」契約改寫為移除後契約：斷言 Step 1 不存在 `#taskTypePresets` 容器、不存在 `#taskTypePresetsLabel` 標籤、不存在任何 `[data-testid^="task-type-preset-"]` 按鈕，並斷言三段式選擇器仍可獨立湊出 `classification` + `single_item` + `single_label`（此迴歸斷言須補齊 `validateStep1()` 於 `task-new.html` 定義之完整前置條件——任務名稱非空、已上傳資料集、`single_item` 需恰好 1 個 `input` 角色欄位——否則 `#nextBtn` 恆為 disabled，斷言與 preset 存廢無關而形同恆假；可沿用 `task-new-input-count-validation.spec.ts` 之 setup 模式）且 `#nextBtn` 啟用；提交後執行 `corepack pnpm playwright test tests/task-management/issue-724-task-new-step1-preset.spec.ts`（於 `design/prototype/`），預期失敗且失敗原因為「預設按鈕仍存在於 DOM」 [@senior-qa]
+**故事目標**：SC-001、SC-002e — 移除 FR-002f 後，Step 1 任務類型選擇回到 FR-002／FR-002a–FR-002e 定義之三段式模型，使用者仍可完成 Step 1~4 建立任務，且既有輸出 chip 的單選與互斥語意不受影響。
 
-## 2. Green 實作（移除）
+- [x] 1.1 修改 `design/prototype/tests/task-management/issue-724-task-new-step1-preset.spec.ts`，將「預設按鈕可用」契約改寫為移除後契約，斷言 Step 1 不存在預設容器、標籤與任何預設按鈕，且三段式選擇器仍可獨立湊出合法組合並啟用下一步；此迴歸斷言須補齊 `validateStep1()` 之完整前置條件——任務名稱非空、已上傳資料集、`single_item` 需恰好 1 個 `input` 角色欄位——否則下一步恆為 disabled 而斷言形同恆假；先提交此單檔 Red，再執行 prototype 測試，expected failure 必須只因預設實作仍存在於 DOM，並保存 command、exit 與失敗訊息。 [@senior-qa]
+- [x] 1.2 Green：只修改 `design/prototype/pages/task-management/task-config.data.js`，移除 `TASK_TYPE_PRESETS` 常數定義與其區塊註解；驗證 `grep -c "TASK_TYPE_PRESETS" design/prototype/pages/task-management/task-config.data.js` 回傳 0，且其後之 `FIELD_ROLE_LABELS` 不受影響。 [@senior-frontend]
+- [x] 1.3 修改 `design/prototype/pages/task-management/task-config.engine.js`，移除 `renderTaskTypePresets()` 與 `applyTaskTypePreset()` 兩個函式、其區塊註解，以及 `initTaskTypeChips()` 內的呼叫點；不得移除 `syncChipsFromState()` 或 `onChipSelectionChange()`，兩者另有其他呼叫者；驗證 `grep -c "TaskTypePreset" design/prototype/pages/task-management/task-config.engine.js` 回傳 0 且 `grep -c "function syncChipsFromState" design/prototype/pages/task-management/task-config.engine.js` 回傳 1。 [@senior-frontend]
+- [x] 1.4 修改 `design/prototype/pages/task-management/task-new.html`，移除預設容器與其標籤 div 及上方註解、zh 與 en 兩處預設標籤詞條、語言切換 ids 陣列中的對應項，以及語言切換處理器內殘留的預設重繪呼叫；不得改動 `validateStep1()` 或下一步啟用邏輯；驗證 `grep -rni "taskTypePreset" design/prototype/pages/task-management/task-new.html` 無輸出。 [@senior-frontend]
+- [x] 1.5 修改 `design/prototype/pages/task-management/task-config.css`，移除預設按鈕群組、按鈕與其 hover 之樣式規則與區塊註解；不得動到其後 `.task-type-selector` 起始之三段式選擇器樣式；驗證 `grep -c "task-type-preset" design/prototype/pages/task-management/task-config.css` 回傳 0。 [@senior-frontend]
+- [x] 1.6 修改 `design/system/inventory-manifest.json`，移除元件字典中的預設按鈕條目、頁面 08 之 components 陣列項與 note 內對應片段；驗證 `grep -c "preset-button" design/system/inventory-manifest.json` 回傳 0 且檔案仍為合法 JSON。 [@senior-frontend]
+- [x] 1.7 執行 generated view 重產與盤點驗證：`node scripts/gen-screen-inventory.mjs`、`bash scripts/inventory-tests.sh`、`git diff --stat design/system/screen-inventory.md`；前兩者預期 exit 0，第三者預期顯示該檔已更新，以證明盤點文件與移除後實作一致。 [@main]
 
-> 本組各任務皆為淨刪除、互不相依，但共同決定第 1 組測試能否轉綠；須全數完成後才重跑測試。
+## 2. 驗證閘門
 
-<!-- parallel:start -->
-- [x] 2.1 `design/prototype/pages/task-management/task-config.data.js`：移除 `TASK_TYPE_PRESETS` 常數定義；驗證 `grep -c "TASK_TYPE_PRESETS" design/prototype/pages/task-management/task-config.data.js` 回傳 0 [@senior-frontend] ✅ `b7329f02`（grep=0）
-- [x] 2.2 `design/prototype/pages/task-management/task-config.engine.js`：移除 `renderTaskTypePresets()` 與 `applyTaskTypePreset()` 兩個函式及其區塊註解，並移除 `initTaskTypeChips()` 內的 `renderTaskTypePresets();` 呼叫；不得移除 `syncChipsFromState()` 或 `onChipSelectionChange()`（另有 5 處呼叫者）；驗證 `grep -c "TaskTypePreset" design/prototype/pages/task-management/task-config.engine.js` 回傳 0 且 `grep -c "function syncChipsFromState" …/task-config.engine.js` 回傳 1 [@senior-frontend] ✅ `e2818e48`（`TaskTypePreset`=0、`function syncChipsFromState`=1；註：`onChipSelectionChange` 之定義本就不在本檔，非本 change 造成）
-- [x] 2.3 `design/prototype/pages/task-management/task-new.html`：移除 `taskTypePresetsLabel` 與 `taskTypePresets` 兩個 div 及其上方註解、zh 與 en 兩處 `taskTypePresetsLabel` 詞條、語言切換 `ids` 陣列中的 `'taskTypePresetsLabel'` 項；驗證 `grep -c "taskTypePreset\|常用組合" design/prototype/pages/task-management/task-new.html` 回傳 0 [@senior-frontend] ✅ `e496a7fc`（grep=0）。**額外移除第 5 處**：語言切換處理器內之 `renderTaskTypePresets();`（原 L1522）——本項原訂之 grep pattern 用小寫 `taskTypePreset`，無法命中大寫 `renderTaskTypePresets`，故該殘留未被斷言涵蓋，由主 session 複驗 `grep -rni` 後補除；未移除將於每次切換語言丟 `ReferenceError`
-- [x] 2.4 `design/prototype/pages/task-management/task-config.css`：移除 `.task-type-presets-label`、`.task-type-presets`、`.task-type-preset-btn`、`.task-type-preset-btn:hover` 樣式規則與其區塊註解；不得動到其下 `.task-type-selector` 起始之三段式選擇器樣式；驗證 `grep -c "task-type-preset" design/prototype/pages/task-management/task-config.css` 回傳 0 [@senior-frontend] ✅ `1a1b7b60`（grep=0，`.task-type-selector` 起始樣式未動）
-<!-- parallel:end -->
+> **相依與平行性**：前置條件為第 1 組全數完成；本組只有 command-only verification，不修改檔案。任一紅燈即停並回報。
 
-## 3. 設計系統盤點同步
+**故事目標**：SC-001 — 以型別、prototype 測試與 Project SDD lint 三道獨立 gate 證明移除後 Step 1~4 建立流程與既有驗收條文皆未受損。
 
-> 需第 2 組完成後執行（manifest 描述的是移除後狀態）。
+- [ ] 2.1 執行 command-only verification：於 `design/prototype/` 執行 `corepack pnpm typecheck` 與 `corepack pnpm playwright test`，於專案根目錄執行 `bash scripts/check-sdd.sh`；全部預期 exit 0，其中 1.1 之測試須由失敗轉為通過，分開記錄 code/test gate 與 Project SDD lint 的輸出作為證據。 [@main]
 
-- [x] 3.1 `design/system/inventory-manifest.json`：移除 `preset-button` 元件條目與頁面 08 note 內「Preset Button 為 Step 1 常用組合一鍵預設（issue #724），尚未收錄進 MASTER.md 之 Button 變體目錄；」片段；驗證 `grep -c "preset-button\|常用組合" design/system/inventory-manifest.json` 回傳 0 [@senior-frontend] ✅ 移除元件字典條目、頁面 08 `components` 陣列項與 note 片段共 3 處，`grep -c "preset-button\|常用組合"`=0，JSON 仍合法
-- [x] 3.2 重新產生 generated view：於專案根目錄執行 `node scripts/gen-screen-inventory.mjs`，再執行 `bash scripts/inventory-tests.sh`，預期兩者皆 exit 0 且 `git diff --stat design/system/screen-inventory.md` 顯示該檔已更新 [@main] ✅ `gen-screen-inventory.mjs` exit 0、`inventory-tests.sh` 10 項全 PASS、`screen-inventory.md` +3/-4
+## 3. 正典回寫與封存
 
-## 4. 驗證閘門
+> **相依與平行性**：僅本 change 之最終 PR 執行；須在第 2 組全綠後依 3.1 → 3.2 → 3.3 → 3.4 序列進行。
 
-> 第 1–3 組全數完成後執行；任一紅燈即停並回報。
+**故事目標**：SC-002g — 以 archive 與正典回寫移除 SC-002g 及其對應 FR-002f、AC-1.4、AC-1.5，使正典、衍生檢視與實作三者一致。
 
-- [ ] 4.1 於 `design/prototype/` 執行 `corepack pnpm typecheck`，預期 exit 0 [@main]
-- [ ] 4.2 於 `design/prototype/` 執行 `corepack pnpm playwright test`，預期 exit 0 且第 1.1 項之 Red 測試轉綠（留存 Green 證據） [@main]
-- [ ] 4.3 於專案根目錄執行 `bash scripts/check-sdd.sh`，預期 exit 0 [@main]
+- [ ] 3.1 執行 archive 合併：以絕對路徑 `/Users/mandychen/Library/pnpm/openspec` 執行 `openspec archive`（本機另有舊版會靜默 no-op），將 REMOVED Requirements 併入衍生檢視；驗證 `grep -c "FR-002f" openspec/specs/task-management/013-task-new/spec.md` 回傳 0。 [@main]
+- [ ] 3.2 修改 `specs/task-management/013-task-new/spec.md`，移除 FR-002f、AC-1.4、AC-1.5、SC-002g、變更摘要之 v7.1.0 條目、Step 1 UI 描述中的一鍵套用項與對應邊界情況，版本號由 v7.1.0 改為 v8.0.0，並新增 Changelog 條目記錄移除理由與後續追蹤 issue。 [@main]
+- [ ] 3.3 修改 `specs/STATUS.md`，同步 task-management-013 之版本號與分支欄；驗證 `grep -n "task-management-013" specs/STATUS.md` 顯示更新後的值。 [@main]
+- [ ] 3.4 執行 Source-Verify：以 `grep` 逐項複驗衍生檢視與正典中每個引用之 FR/AC/SC ID、檔案路徑與 issue 編號（#645、#724、#755）皆可定位，保存指令輸出作為 gate 4 證據。 [@main]
 
-## 5. 正典回寫與封存
+## 4. 交付
 
-> 僅本 change 之最終 PR 執行；須在第 4 組全綠後進行。
+> **相依與平行性**：前置條件為第 3 組完成；4.1 與 4.2 可依序執行。
 
-- [ ] 5.1 執行 `openspec archive`（本機須用絕對路徑 `/Users/mandychen/Library/pnpm/openspec`，v1.10.0），將 `## REMOVED Requirements` 合併入衍生檢視 `openspec/specs/task-management/013-task-new/spec.md`；驗證 `grep -c "FR-002f" openspec/specs/task-management/013-task-new/spec.md` 回傳 0 [@main]
-- [ ] 5.2 `specs/task-management/013-task-new/spec.md`：移除 FR-002f、AC-1.4、AC-1.5、SC-002g、變更摘要 v7.1.0 條目、Step 1 UI 描述中「常用組合一鍵套用」項與對應邊界情況，版本號 v7.1.0 → **v8.0.0** 並新增 Changelog 條目記錄移除理由與 issue 追蹤；驗證 `grep -c "FR-002f\|AC-1.4\|AC-1.5\|SC-002g\|常用組合" specs/task-management/013-task-new/spec.md` 僅命中 Changelog 條目本身 [@main]
-- [ ] 5.3 `specs/STATUS.md`：同步 `task-management-013` 之版本號與分支欄至 v8.0.0 / `feat/remove-task-new-step1-preset`；驗證 `grep -n "task-management-013" specs/STATUS.md` 顯示更新後值 [@main]
-- [ ] 5.4 Source-Verify：以 `grep` 逐項複驗衍生檢視與正典中每個引用之 FR/AC ID、檔案路徑、issue 編號（#645／#724／#755）皆可定位，留存指令輸出作為 gate 4 證據 [@main]
+**故事目標**：SC-001 — 以重新開啟的 issue 與 PR 完整記錄「方向①已實作後回退」之決策軌跡，避免日後在不知情下重新提出同一方向。
 
-## 6. 交付
-
-- [ ] 6.1 重新開啟 issue #724 並以繁中留言註記：方向①（一鍵預設）已實作後判定投報率不成立而回退，方向②③仍由 issue #755 追蹤；記錄 issue URL [@main]
-- [ ] 6.2 開 PR（繁中標題與內文，`<type>: <中文描述>` 格式），附 Red／Green 證據與四道 gate 之驗證輸出 [@main]
+- [ ] 4.1 重新開啟 issue #724 並以繁體中文留言註記：一鍵預設方向已實作後判定投報率不成立而回退，欄位角色與必填預設兩個方向仍由 issue #755 追蹤；記錄 issue URL。 [@main]
+- [ ] 4.2 開 PR，使用繁體中文標題與內文，附測試由紅轉綠之證據與四道 gate 的驗證輸出。 [@main]
