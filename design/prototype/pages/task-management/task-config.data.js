@@ -603,6 +603,11 @@ var FIELD_ROLE_LABELS = {
   zh: { '': '— 不使用 —', evidence: 'Evidence（背景）', input: 'Input（輸入）', output: 'Output（輸出）' },
   en: { '': '— not used —', evidence: 'Evidence', input: 'Input', output: 'Output' },
 };
+/* Input-role name-hint keywords for Step 1 field role auto-inference
+   (FR-002c-8, issue #755). Column names containing any of these substrings
+   (case-insensitive) are treated as hinting Input; task-config.engine.js
+   is the only reader, so adding a keyword never requires a code branch. */
+var FIELD_ROLE_INPUT_NAME_HINTS = ['text', 'content', 'sentence', 'passage', 'document', 'body', 'context'];
 var SAMPLING_DEFAULTS_BY_TYPE = {
   single_sentence_classification: { targetIAA: 0.75, targetStd: null, minAnnotators: 3, trialPercent: 12 },
   single_sentence_va_scoring:     { targetIAA: 0.75, targetStd: 0.10, minAnnotators: 5, trialPercent: 15 },
