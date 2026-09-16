@@ -90,7 +90,7 @@
 - [x] 2.1 於 `design/prototype/tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` 補上 AC-1.11 的 Red 契約：單位選 word、指定具備版本資訊的引擎後匯出成功，檔案 metadata 含切詞引擎、引擎版本、`alignment_mode` 與 `expanded_span_count`；畫面出現「N 段標記因對齊被擴張」且 N 與 metadata 的擴張筆數一致；展開後逐筆顯示原始標記文字、擴張後文字與起訖差值；匯出前後該樣本已儲存的 `spans[]` 起訖值完全相同；同一任務改回 character 匯出時該摘要不出現。JSON 與 JSON-MIN 兩側都要斷言。驗證：`PW_PORT=8981 corepack pnpm playwright test tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` 出現失敗，失敗原因為單位選擇無詞級行為 [@senior-qa]
 - [x] 2.2 於 `design/prototype/tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` 補上 AC-1.12 的 Red 契約：單位選 word 且選到沒有版本資訊的引擎時觸發匯出，畫面顯示可理解的中文原因（明確指出缺的是切詞引擎版本資訊，而非模組回傳的英文診斷字串）、沒有任何檔案被產生、匯出記錄表列數不變；隨後於同一對話框改回 character 匯出成功，該檔不含任何切詞相關欄位且畫面無擴張摘要。另須斷言阻擋狀態下頁面不會對模組回傳值中不存在的序列欄位取值（design.md 裁決 D5 之失效模式）。驗證：`PW_PORT=8982 corepack pnpm playwright test tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` 仍為紅 [@senior-qa]
 - [x] 2.3 （Green）修改 `design/prototype/pages/task-management/task-detail.data.js`：依 design.md 裁決 D3 種入兩個切詞引擎的預先切好結果，其一具備完整引擎與版本識別且其 token 邊界須讓至少一筆標記落在 token 內部以產生擴張，其二刻意不帶版本資訊；不在本檔或任何地方實作斷詞演算法。驗證：`cd design/prototype && corepack pnpm typecheck` exit 0 [@senior-frontend]
-- [ ] 2.4 （Green）修改 `design/prototype/pages/task-management/task-detail.html`：單位為 word 時把所選引擎的 token 邊界與引擎識別交給 `deriveSequence`，先判斷回傳是否為阻擋結果再取其餘欄位；成功時把切詞引擎、引擎版本、`alignment_mode` 與 `expanded_span_count` 一併寫入兩種格式，並以模組回傳的擴張清單渲染可展開摘要（擴張筆數為 0 時不渲染、字元級一律不渲染）；阻擋時顯示對應的中文 i18n 訊息、不產檔也不寫入匯出記錄；匯出記錄的條件快照一併保存方案、單位與引擎識別，使重新下載重建的檔案與原檔逐字元相同。驗證：`PW_PORT=8981 corepack pnpm playwright test tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` 全綠，且 `cd design/prototype && corepack pnpm typecheck` exit 0 [@senior-frontend]
+- [x] 2.4 （Green）修改 `design/prototype/pages/task-management/task-detail.html`：單位為 word 時把所選引擎的 token 邊界與引擎識別交給 `deriveSequence`，先判斷回傳是否為阻擋結果再取其餘欄位；成功時把切詞引擎、引擎版本、`alignment_mode` 與 `expanded_span_count` 一併寫入兩種格式，並以模組回傳的擴張清單渲染可展開摘要（擴張筆數為 0 時不渲染、字元級一律不渲染）；阻擋時顯示對應的中文 i18n 訊息、不產檔也不寫入匯出記錄；匯出記錄的條件快照一併保存方案、單位與引擎識別，使重新下載重建的檔案與原檔逐字元相同。驗證：`PW_PORT=8981 corepack pnpm playwright test tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` 全綠，且 `cd design/prototype && corepack pnpm typecheck` exit 0 [@senior-frontend]
 - [ ] 2.5 執行 `node scripts/gen-screen-inventory.mjs` 重生畫面盤點清單並單獨提交。驗證：`scripts/check-sdd.sh` 之 INVENTORY_FRESHNESS 為 0 筆、`scripts/inventory-tests.sh` exit 0 [@main]
 - [ ] 2.6 執行群組 2 回歸並保存證據。驗證：`cd design/prototype && corepack pnpm typecheck` exit 0；`PW_PORT=8983 corepack pnpm playwright test tests/task-management` exit 0；`PW_PORT=8984 corepack pnpm playwright test tests/cross-role` exit 0 [@main]
 
@@ -111,6 +111,14 @@
 > **退件一次（已由 amend 修正）**：`523c9f32` 版只替 NER-001 種 token，產出者以 YAGNI 為由略過 NER-002～006。但 `deriveWordSequence()` 在 `opts.tokens` 缺席時以空陣列處理，會讓該樣本每位標記員的 `tags` 靜默匯出為 `[]`——這是產品缺陷，不是範圍選擇。`7d82427f` 已為六筆樣本全數種入 token，並改以 `tokenRanges()` 將預先切好的 `|` 分隔字串換算成 offset（只加總長度，不決定邊界，未違反 D3「不實作斷詞演算法」）。
 >
 > **種子內容逐項核對**：六筆種子以 `|` 串接後皆與 `AR_SAMPLES_SEQ_TAGGING` 對應樣本的 `textZh` 逐字相同（長度 29／32／29／34／29／45）。刻意錯位的擴張案例：NER-001 kioleemg12 的 PER (6,9) `張忠謀` → (5,9) `人張忠謀`、LOC (10,12) `台北` → (9,12) `在台北`；ORG (0,3) 對齊不擴張；NER-002 tony0950127 的 ORG (0,2) `鴻海` → (0,4) `鴻海精密`。`jieba` 無 `version` 鍵，`missingTokenizerField()` 於讀取 tokens 前即回傳阻擋。
+
+> **主 session 核實紀錄（2026-09-16，Green 2.4）**：以 `8672e5dd` 為準（由 `554d552f` amend 而來，後者已不在分支上）。`git show --stat 8672e5dd` 僅 `design/prototype/pages/task-management/task-detail.html` 一檔；`git diff 7d82427f 8672e5dd -- design/prototype/tests` 為空，Red 契約未被改動；`grep -c "deriveSequence(" task-detail.html` 為 1（SC-045 單一入口）。主 session 獨立重跑：`corepack pnpm typecheck` **exit 0**；`PW_PORT=8993 corepack pnpm playwright test tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts` **exit 0、19 passed（12.7s）**。
+>
+> **退件一次（已由 amend 修正）**：`554d552f` 版 JSON-MIN 每列的 `expanded_span_count` 取自單一標記作業的擴張筆數，各列數值不同，且不等於 manifest 總數與畫面 N——違反 FR-020 第 3 點「本次匯出實際採用的選項」之 metadata 語意與第 4 點 N 的來源一致性。Red 測試標題寫「identically on every row」，但斷言只檢查型別，故 19 綠未能抓到；測試未改，修正在頁面端（迴圈後以同一累加器回填每列）。另該版 commit 缺 Co-Authored-By trailer，一併 amend。
+>
+> **以實際匯出檔核對（一次性臨時腳本，跑完即刪、未提交）**：T006、word、`ckip-transformers` 下，JSON manifest 為 `tokenizer = {engine: ckip-transformers, version: 0.3.4}`、`alignment_mode = expand`、`expanded_span_count = 6`；畫面摘要文字為「6 段標記因對齊被擴張」，展開 6 筆（`張忠謀`→`人張忠謀` ×2、`台北`→`在台北` ×3、`鴻海`→`鴻海精密` ×1）；JSON-MIN 18 列的 `expanded_span_count` 相異值集合為 `[6]`，且無任何一列 `tags` 為空。
+>
+> **尚未落地、不屬本任務**：design.md 裁決 D2（`schema_version` 升 `1.1.0`）目前實際匯出仍為 `1.0.0`，而 tasks.md 沒有任何任務承接此裁決；另 FR-020 第 3 點「重新下載重建出的檔案與原檔逐字元相同」所依賴的重新下載功能頁面上不存在，本任務只把引擎識別寫進條件快照。兩項皆已回報使用者待裁。
 
 ## 3. Archive 與正典回寫（最終群組）
 
