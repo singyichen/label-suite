@@ -615,3 +615,63 @@ test.describe('issue #742 -- sequence_tagging export dialog (task 2.2: AC-1.12 b
     await expect(page.locator('#arSeqExportExpansionSummary')).toBeHidden();
   });
 });
+
+/*
+ * --- task 2.5 addendum (design.md decision D2) ---
+ *
+ * `buildJsonExportPayload()` (task-detail.html:9331) hardcodes
+ * `schema_version: '1.0.0'` in the JSON manifest today. design.md D2 (2026-09-16
+ * maintainer ruling) requires this to become `1.1.0` -- a MINOR bump because
+ * the six new fields (D1) are an additive, backward-compatible change for
+ * downstream parsers.
+ *
+ * `schema_version` lives only in the JSON manifest (buildJsonExportPayload),
+ * never in JSON-MIN (buildJsonMinExportPayload has no manifest at all, per
+ * task-detail.html:9389-9424) -- so unlike the other tests in this file, the
+ * three cases below deliberately do NOT assert anything about JSON-MIN.
+ *
+ * The point of testing all three of T006-character, T006-word and T010 here
+ * is that `schema_version` is a single export-*format*-level constant, not a
+ * per-task-type or per-token-unit value: T006 (sequence_tagging) goes through
+ * `#arSeqExportModal` on both the character and word paths, while T010
+ * (entity_recognition) never opens that dialog at all (task 1.1 above) and
+ * downloads immediately from `performArExport('json')`. All three must
+ * observe the identical `1.1.0` string so a future Green fix cannot special-case
+ * the bump onto only one of these call paths.
+ */
+test.describe('issue #742 -- sequence_tagging export dialog (task 2.5: design.md D2 schema_version pinned to 1.1.0)', () => {
+  test('T006 (sequence_tagging) character-level JSON export manifest.schema_version is 1.1.0', async ({ page }) => {
+    await gotoAnnotationResults(page, SEQ_TAGGING_TASK_ID);
+    await page.locator('#arExportJsonBtn').click();
+    await expect(page.locator('#arSeqExportModal')).toBeVisible();
+    await expect(page.locator('#arSeqExportUnitSelect')).toHaveValue('character');
+
+    const payload = (await downloadDialogExport(page)) as { manifest?: Record<string, unknown> };
+    expect(payload.manifest?.schema_version).toBe('1.1.0');
+  });
+
+  test('T006 (sequence_tagging) word-level JSON export manifest.schema_version is 1.1.0', async ({ page }) => {
+    await gotoAnnotationResults(page, SEQ_TAGGING_TASK_ID);
+    await page.locator('#arExportJsonBtn').click();
+    await expect(page.locator('#arSeqExportModal')).toBeVisible();
+    await page.locator('#arSeqExportUnitSelect').selectOption('word');
+    await page.locator('#arSeqExportTokenizerSelect').selectOption(TOKENIZER_ENGINE_WITH_VERSION);
+
+    const payload = (await downloadDialogExport(page)) as { manifest?: Record<string, unknown> };
+    expect(payload.manifest?.schema_version).toBe('1.1.0');
+  });
+
+  test('T010 (entity_recognition) JSON export manifest.schema_version is 1.1.0 -- same value as the sequence_tagging cases even though this path never opens #arSeqExportModal', async ({ page }) => {
+    await gotoAnnotationResults(page, ENTITY_RECOGNITION_TASK_ID);
+
+    const downloadPromise = page.waitForEvent('download');
+    await page.locator('#arExportJsonBtn').click();
+    const download = await downloadPromise;
+    const downloadPath = await download.path();
+    expect(downloadPath).not.toBeNull();
+    const raw = await fsp.readFile(downloadPath as string, 'utf8');
+    const payload = JSON.parse(raw) as { manifest?: Record<string, unknown> };
+
+    expect(payload.manifest?.schema_version).toBe('1.1.0');
+  });
+});
