@@ -1,5 +1,5 @@
 ---
-功能分支: feat/task-new-step1-click-reduction
+功能分支: feat/task-new-step1-field-role-hints
 建立日期: 2026-04-20
 版本: 7.1.0
 狀態: Draft
