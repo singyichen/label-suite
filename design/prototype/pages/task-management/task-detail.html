@@ -2850,6 +2850,8 @@
       arSeqExportUnitWord: '詞',
       arSeqExportCancelBtn: '取消',
       arSeqExportConfirmBtn: '確認匯出',
+      arSeqExportExpansionToggleTpl: '{count} 段標記因對齊被擴張',
+      arSeqExportBlockedTokenizerVersion: '所選切詞引擎缺少版本資訊，無法以詞為單位匯出，請改選其他引擎或改用字元單位。',
       arEmptyTitle: '尚無標記結果',
       arEmptyHint: '標記員提交後，結果將顯示於此。',
       navDashboard: '儀表板',
@@ -3346,6 +3348,8 @@
       arSeqExportUnitWord: 'Word',
       arSeqExportCancelBtn: 'Cancel',
       arSeqExportConfirmBtn: 'Confirm export',
+      arSeqExportExpansionToggleTpl: '{count} label(s) expanded for token alignment',
+      arSeqExportBlockedTokenizerVersion: 'The selected tokenizer engine is missing version information, so a word-level export cannot be produced. Choose a different engine or switch to character-level export.',
       arEmptyTitle: 'No annotation results yet',
       arEmptyHint: 'Results will appear here once annotators submit.',
       navDashboard: 'Dashboard',
@@ -3740,6 +3744,7 @@
     arExportPage: 1,
     arExportPageSize: 20,
     arSeqExportFormat: null,
+    arSeqExportRun: null,
     mdPage: 1,
     mdPageSize: 20,
     mdRows: [],
@@ -9224,15 +9229,39 @@ function getTaskTypeLabel() {
            type and still derives a full-length all-O sequence.
            FR-020(1)/SC-045: single derivation entry point -- no prefix
            concatenation, no span/token boundary logic, no second scheme
-           table is reimplemented here. */
+           table is reimplemented here. D3: tokens/tokenizer are looked up
+           from seed data by sampleId, never computed on this page. */
+        var callOptions = seqOptions || {};
+        if (callOptions.token_unit === 'word' && callOptions.tokenizerEngine) {
+          var seed = ((window.LabelSuiteTaskDetailData || {}).SEQ_TAGGING_TOKENIZER_SEEDS || {})[callOptions.tokenizerEngine] || {};
+          callOptions = Object.assign({}, callOptions, {
+            tokenizer: { engine: callOptions.tokenizerEngine, version: seed.version },
+            tokens: (seed.tokensBySample || {})[sample.sampleId] || []
+          });
+        }
         var seqResult = window.LabelSuiteSpanTaggingExport.deriveSequence(
           sample.textZh,
           value && Array.isArray(value.spans) ? value.spans : [],
-          seqOptions || {}
+          callOptions
         );
+        /* D5: blocked must be checked before reading any other field -- the
+           module's blocked result carries no `tags`/`expansions`. */
+        if (seqResult.blocked) {
+          if (state.arSeqExportRun) state.arSeqExportRun.blocked = true;
+          return fields;
+        }
         fields.tags = seqResult.tags;
         fields.tagging_scheme = seqResult.tagging_scheme;
         fields.token_unit = seqResult.token_unit;
+        if (seqResult.token_unit === 'word' && state.arSeqExportRun) {
+          fields.tokenizer = seqResult.tokenizer;
+          fields.alignment_mode = seqResult.alignment_mode;
+          fields.expanded_span_count = seqResult.expanded_span_count;
+          state.arSeqExportRun.tokenizer = seqResult.tokenizer;
+          state.arSeqExportRun.alignmentMode = seqResult.alignment_mode;
+          state.arSeqExportRun.expandedSpanCount += seqResult.expanded_span_count;
+          state.arSeqExportRun.expansions = state.arSeqExportRun.expansions.concat(seqResult.expansions);
+        }
       } else {
         fields.entities = value && value.entities ? cloneExportValue(value.entities) : [];
         fields.entities_summary = fields.entities.map(function(entity) {
@@ -9247,11 +9276,15 @@ function getTaskTypeLabel() {
   function buildExportAnnotationRecord(sample, annotation, sampleIndex, annotationIndex, config, seqOptions) {
     var annotationId = 'ann-' + sample.sampleId + '-' + (annotationIndex + 1);
     var taskFields = buildTaskSpecificExportFields(sample, annotation, config, seqOptions);
-    /* D1: the JSON format records tagging_scheme/token_unit at the manifest
-       level only; JSON-MIN (buildJsonMinExportPayload) is the flat format
-       that repeats them per row instead. */
+    /* D1: the JSON format records tagging_scheme/token_unit/tokenizer/
+       alignment_mode/expanded_span_count at the manifest level only;
+       JSON-MIN (buildJsonMinExportPayload) is the flat format that repeats
+       them per row instead. */
     delete taskFields.tagging_scheme;
     delete taskFields.token_unit;
+    delete taskFields.tokenizer;
+    delete taskFields.alignment_mode;
+    delete taskFields.expanded_span_count;
     return {
       annotation_id: annotationId,
       annotator_id: getAnnotatorId(annotation.annotator),
@@ -9295,7 +9328,7 @@ function getTaskTypeLabel() {
       export_format: 'json',
       exported_at: exportedAt,
       exported_by: getExportedByName(),
-      schema_version: '1.0.0',
+      schema_version: '1.1.0',
       run_stage: state.arStage,
       isolation_enabled: TASK_DATA.isolationEnabled,
       sampling_mode: TASK_DATA.samplingMode,
@@ -9311,34 +9344,45 @@ function getTaskTypeLabel() {
     };
     /* AC-1.10 / D1: the character path records tagging_scheme/token_unit in
        the manifest; it MUST NOT gain a tokenizer/alignment_mode/expanded_span_count
-       key -- those only exist on the word path, which this task does not wire. */
+       key -- those only exist on the word path. */
     if (seqOptions) {
       manifest.tagging_scheme = seqOptions.tagging_scheme;
       manifest.token_unit = seqOptions.token_unit;
     }
+    var items = samples.map(function(sample, sampleIndex) {
+      return {
+        task_id: TASK_DATA.taskId,
+        task_name: state.lang === 'en' ? TASK_DATA.taskNameEn : TASK_DATA.taskNameZh,
+        task_type: TASK_DATA.taskTypeKey,
+        run_stage: sample.stage,
+        sample_snapshot_id: getExportSampleSnapshotId(sample.stage),
+        sample_id: sample.sampleId,
+        source_data: buildExportSourceData(sample, config),
+        annotation_status: sample.status,
+        review_status: sample.annotations.every(function(annotation) { return annotation.reviewStatus === 'approved'; }) ? 'approved' : 'pending',
+        created_at: sample.completedAt || null,
+        updated_at: sample.completedAt || null,
+        annotations: sample.annotations.map(function(annotation, annotationIndex) {
+          return buildExportAnnotationRecord(sample, annotation, sampleIndex, annotationIndex, config, seqOptions);
+        }),
+        reviews: sample.annotations.map(function(annotation, annotationIndex) {
+          return buildExportReviewData(annotation, sample.sampleId + '-' + (annotationIndex + 1));
+        })
+      };
+    });
+    /* AC-1.11/D1: the word path's tokenizer/alignment_mode/expanded_span_count
+       come from state.arSeqExportRun -- the same accumulator
+       buildTaskSpecificExportFields just populated while building `items`
+       above, so the manifest's file-level total is exactly the number of
+       expansions this same pass produced (task 2.4 point 4). */
+    if (seqOptions && seqOptions.token_unit === 'word' && state.arSeqExportRun) {
+      manifest.tokenizer = state.arSeqExportRun.tokenizer;
+      manifest.alignment_mode = state.arSeqExportRun.alignmentMode;
+      manifest.expanded_span_count = state.arSeqExportRun.expandedSpanCount;
+    }
     return {
       manifest: manifest,
-      items: samples.map(function(sample, sampleIndex) {
-        return {
-          task_id: TASK_DATA.taskId,
-          task_name: state.lang === 'en' ? TASK_DATA.taskNameEn : TASK_DATA.taskNameZh,
-          task_type: TASK_DATA.taskTypeKey,
-          run_stage: sample.stage,
-          sample_snapshot_id: getExportSampleSnapshotId(sample.stage),
-          sample_id: sample.sampleId,
-          source_data: buildExportSourceData(sample, config),
-          annotation_status: sample.status,
-          review_status: sample.annotations.every(function(annotation) { return annotation.reviewStatus === 'approved'; }) ? 'approved' : 'pending',
-          created_at: sample.completedAt || null,
-          updated_at: sample.completedAt || null,
-          annotations: sample.annotations.map(function(annotation, annotationIndex) {
-            return buildExportAnnotationRecord(sample, annotation, sampleIndex, annotationIndex, config, seqOptions);
-          }),
-          reviews: sample.annotations.map(function(annotation, annotationIndex) {
-            return buildExportReviewData(annotation, sample.sampleId + '-' + (annotationIndex + 1));
-          })
-        };
-      })
+      items: items
     };
   }
 
@@ -9378,6 +9422,18 @@ function getTaskTypeLabel() {
         }, taskFields));
       });
     });
+    /* FR-020(3)/FR-020(4): expanded_span_count is metadata of the export
+       itself (the file-level total also shown in the expansion summary and,
+       for JSON, the manifest), not a per-annotation count -- every row must
+       carry the same total so JSON-MIN alone stays reproducible. Stamp it
+       after the loop, once state.arSeqExportRun holds the fully accumulated
+       total, mirroring how buildJsonExportPayload reads it after building
+       `items` above. */
+    if (seqOptions && seqOptions.token_unit === 'word' && state.arSeqExportRun) {
+      rows.forEach(function(row) {
+        row.expanded_span_count = state.arSeqExportRun.expandedSpanCount;
+      });
+    }
     return rows;
   }
 
@@ -9414,11 +9470,15 @@ function getTaskTypeLabel() {
       annotator_scope: state.arAnnotator,
       excluded_annotation_assignments: getExcludedExportMetadata(state.arStage)
     };
-    /* AC-1.10: recorded on the conditions snapshot so the export-history row
-       shows which scheme/unit produced that download; character path only. */
+    /* AC-1.10/task 2.4 point 5: recorded on the conditions snapshot so the
+       export-history row shows which scheme/unit (and, on the word path,
+       which tokenizer engine) produced that download. */
     if (seqOptions) {
       conditionsSnapshot.tagging_scheme = seqOptions.tagging_scheme;
       conditionsSnapshot.token_unit = seqOptions.token_unit;
+      if (seqOptions.token_unit === 'word') {
+        conditionsSnapshot.tokenizer_engine = seqOptions.tokenizerEngine;
+      }
     }
     TASK_DATA.exportHistory.unshift({
       exportedAt: exportedAt.slice(0, 16).replace('T', ' '),
@@ -9437,9 +9497,11 @@ function getTaskTypeLabel() {
 
   /* FR-020(2): dialog visibility is config-driven (constitution:
      Generalization-First) via taskHasSequenceTaggingOutput() -- never a
-     task-ID whitelist. renderArSeqExportOptions() renders both selects from
-     the shared module's exported constants (never a hardcoded option list),
-     per D7/AC-1.10 and SC-045. */
+     task-ID whitelist. renderArSeqExportOptions() renders the scheme/unit
+     selects from the shared module's exported constants (never a hardcoded
+     option list), per D7/AC-1.10 and SC-045, and the tokenizer-engine
+     select from the seed data's own keys (D3, task 2.4) -- no hardcoded
+     engine list on this page either. */
   function renderArSeqExportOptions() {
     var schemeSelect = document.getElementById('arSeqExportSchemeSelect');
     var unitSelect = document.getElementById('arSeqExportUnitSelect');
@@ -9462,6 +9524,20 @@ function getTaskTypeLabel() {
       unitSelect.appendChild(opt);
     });
     unitSelect.value = seq.EXPORT_DEFAULT_TOKEN_UNIT;
+    renderArSeqExportTokenizerOptions();
+  }
+
+  function renderArSeqExportTokenizerOptions() {
+    var tokenizerSelect = document.getElementById('arSeqExportTokenizerSelect');
+    if (!tokenizerSelect) return;
+    var seeds = ((window.LabelSuiteTaskDetailData || {}).SEQ_TAGGING_TOKENIZER_SEEDS) || {};
+    while (tokenizerSelect.firstChild) tokenizerSelect.removeChild(tokenizerSelect.firstChild);
+    Object.keys(seeds).forEach(function(engine) {
+      var opt = document.createElement('option');
+      opt.value = engine;
+      opt.textContent = engine;
+      tokenizerSelect.appendChild(opt);
+    });
   }
 
   function updateArSeqExportTokenizerVisibility() {
@@ -9472,6 +9548,66 @@ function getTaskTypeLabel() {
     else tokenizerField.classList.add('hidden');
   }
 
+  /* AC-1.11/task 2.4: renders the "N 段標記因對齊被擴張" toggle and the
+     per-expansion list from the real (non-probe) export pass's accumulator.
+     A zero count (character path, or a word-level run with no expansions)
+     clears and hides the container -- there is nothing to disclose. */
+  function renderArSeqExportExpansionSummary(run) {
+    var container = document.getElementById('arSeqExportExpansionSummary');
+    if (!container) return;
+    while (container.firstChild) container.removeChild(container.firstChild);
+    var count = run ? run.expandedSpanCount : 0;
+    if (!count) {
+      container.classList.add('hidden');
+      return;
+    }
+    container.classList.remove('hidden');
+    var toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.id = 'arSeqExportExpansionToggle';
+    toggle.className = 'btn btn-secondary';
+    toggle.textContent = interpolate(t('arSeqExportExpansionToggleTpl'), { count: count });
+    var list = document.createElement('div');
+    list.id = 'arSeqExportExpansionList';
+    list.classList.add('hidden');
+    (run.expansions || []).forEach(function(expansion) {
+      var item = document.createElement('div');
+      item.className = 'ar-seq-expansion-item';
+      var original = document.createElement('span');
+      original.className = 'ar-seq-expansion-original';
+      original.textContent = expansion.original_text;
+      var expanded = document.createElement('span');
+      expanded.className = 'ar-seq-expansion-expanded';
+      expanded.textContent = expansion.expanded_text;
+      var delta = document.createElement('span');
+      delta.className = 'ar-seq-expansion-delta';
+      delta.textContent = 'Δ' + expansion.start_delta + ' / Δ' + expansion.end_delta;
+      item.appendChild(original);
+      item.appendChild(expanded);
+      item.appendChild(delta);
+      list.appendChild(item);
+    });
+    toggle.addEventListener('click', function() {
+      list.classList.toggle('hidden');
+    });
+    container.appendChild(toggle);
+    container.appendChild(list);
+  }
+
+  /* D5/task 2.4: the page's own i18n message, never the module's raw
+     English `reason` -- a null message clears and hides the notice. */
+  function renderArSeqExportBlockedNotice(message) {
+    var notice = document.getElementById('arSeqExportBlockedNotice');
+    if (!notice) return;
+    if (!message) {
+      notice.textContent = '';
+      notice.classList.add('hidden');
+      return;
+    }
+    notice.textContent = message;
+    notice.classList.remove('hidden');
+  }
+
   /* Confirming closes the dialog; re-opening always resets to the module's
      default scheme/unit (BIO/character) rather than remembering the last
      selection, per issue #742 task 1.6 spec. */
@@ -9479,6 +9615,8 @@ function getTaskTypeLabel() {
     state.arSeqExportFormat = format;
     renderArSeqExportOptions();
     updateArSeqExportTokenizerVisibility();
+    renderArSeqExportExpansionSummary(null);
+    renderArSeqExportBlockedNotice(null);
     var modal = document.getElementById('arSeqExportModal');
     modal.classList.add('show');
     modal.setAttribute('aria-hidden', 'false');
@@ -10377,17 +10515,49 @@ document.getElementById('memberProgressSort').addEventListener('change', functio
 
     document.getElementById('arSeqExportConfirmBtn').addEventListener('click', function() {
       var unit = document.getElementById('arSeqExportUnitSelect').value;
+      var format = state.arSeqExportFormat;
       if (unit === 'word') {
-        /* Word-level derivation (tokenizer selection, blocked-export
-           handling, expansion summary) is group 2 scope (design.md D3/D5,
-           tasks 2.1-2.4); this task only wires the character path. */
+        var wordOptions = {
+          tagging_scheme: document.getElementById('arSeqExportSchemeSelect').value,
+          token_unit: unit,
+          tokenizerEngine: document.getElementById('arSeqExportTokenizerSelect').value
+        };
+        /* AC-1.12/D5: blocked must be decided before any file is written or
+           any history row recorded. A probe pass runs the same payload
+           builder used for the real download so the derivation stays
+           behind the module's single call site (SC-045); its
+           accumulator is discarded before the real download runs, so the
+           probe's expansion count never bleeds into the real pass's total
+           (task 2.4 point 4). */
+        var probeSamples = getArFilteredSamples();
+        state.arSeqExportRun = { blocked: false, tokenizer: null, alignmentMode: null, expandedSpanCount: 0, expansions: [] };
+        if (format === 'json') { buildJsonExportPayload(probeSamples, wordOptions); }
+        else { buildJsonMinExportPayload(probeSamples, wordOptions); }
+        var blocked = state.arSeqExportRun.blocked;
+        state.arSeqExportRun = null;
+        if (blocked) {
+          renderArSeqExportExpansionSummary(null);
+          renderArSeqExportBlockedNotice(t('arSeqExportBlockedTokenizerVersion'));
+          /* AC-1.12: the dialog stays open so the user can switch back to
+             character in the same dialog -- no closeArSeqExportModal() call
+             on the blocked path. */
+          return;
+        }
+        renderArSeqExportBlockedNotice(null);
+        state.arSeqExportRun = { blocked: false, tokenizer: null, alignmentMode: null, expandedSpanCount: 0, expansions: [] };
+        performArExport(format, wordOptions);
+        renderArSeqExportExpansionSummary(state.arSeqExportRun);
+        state.arSeqExportRun = null;
+        /* AC-1.11: the word path does not auto-close either, so the
+           expansion summary just rendered stays readable. */
         return;
       }
       var seqOptions = {
         tagging_scheme: document.getElementById('arSeqExportSchemeSelect').value,
         token_unit: unit
       };
-      var format = state.arSeqExportFormat;
+      renderArSeqExportExpansionSummary(null);
+      renderArSeqExportBlockedNotice(null);
       closeArSeqExportModal();
       performArExport(format, seqOptions);
     });
