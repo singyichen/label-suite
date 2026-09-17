@@ -8787,20 +8787,26 @@ function getTaskTypeLabel() {
     return inReviews || !!(annotation.arbitration && annotation.arbitration.arbiter === reviewer);
   }
 
-  function getArFilteredSamples() {
+  /* D1: conditions come from the caller -- the export button path builds
+     them from live state (buildArConditionsFromState); the redownload path
+     (task 1.5) builds them from a stored conditions snapshot instead. The
+     no-arg default keeps the results-table renderer and pagination handler,
+     which are outside FR-021's scope, reading live state as before. */
+  function getArFilteredSamples(conditions) {
+    var c = conditions || buildArConditionsFromState();
     return getAnnotationResultsData().filter(function(sample) {
-      if (state.arStage !== 'all' && sample.stage !== state.arStage) return false;
-      if (state.arStatus !== 'all' && sample.status !== state.arStatus) return false;
-      if (state.arAnnotator !== 'all') {
-        var hasAnnotator = sample.annotations.some(function(a) { return a.annotator === state.arAnnotator; });
+      if (c.runStage !== 'all' && sample.stage !== c.runStage) return false;
+      if (c.submissionStatus !== 'all' && sample.status !== c.submissionStatus) return false;
+      if (c.annotatorScope !== 'all') {
+        var hasAnnotator = sample.annotations.some(function(a) { return a.annotator === c.annotatorScope; });
         if (!hasAnnotator) return false;
       }
-      if (state.arReviewer !== 'all') {
-        var hasReviewer = sample.annotations.some(function(a) { return annotationHasReviewer(a, state.arReviewer); });
+      if (c.reviewerScope !== 'all') {
+        var hasReviewer = sample.annotations.some(function(a) { return annotationHasReviewer(a, c.reviewerScope); });
         if (!hasReviewer) return false;
       }
-      if (state.arReviewStatus !== 'all') {
-        var hasReviewStatus = sample.annotations.some(function(a) { return (a.reviewStatus || 'pending') === state.arReviewStatus; });
+      if (c.reviewStatusScope !== 'all') {
+        var hasReviewStatus = sample.annotations.some(function(a) { return (a.reviewStatus || 'pending') === c.reviewStatusScope; });
         if (!hasReviewStatus) return false;
       }
       return true;
@@ -9117,6 +9123,23 @@ function getTaskTypeLabel() {
     return state.taskRole === 'reviewer' ? 'Mandy Chen' : 'Mandy Chen';
   }
 
+  /* D1/D2: the export-button path's single source of a conditions object --
+     built once so exported_at (and the filename stamp that must match it)
+     is a single value shared by every downstream function instead of each
+     one calling `new Date()` independently. */
+  function buildArConditionsFromState() {
+    return {
+      runStage: state.arStage,
+      submissionStatus: state.arStatus,
+      annotatorScope: state.arAnnotator,
+      reviewerScope: state.arReviewer,
+      reviewStatusScope: state.arReviewStatus,
+      lang: state.lang,
+      exportedAt: new Date().toISOString(),
+      exportedBy: getExportedByName()
+    };
+  }
+
   function getExportedById() {
     return state.taskRole === 'reviewer' ? 'mandy.chen' : 'mandy.chen';
   }
@@ -9145,9 +9168,10 @@ function getTaskTypeLabel() {
     return JSON.parse(JSON.stringify(value));
   }
 
-  function buildExportSourceData(sample, config) {
+  function buildExportSourceData(sample, config, conditions) {
+    var lang = conditions ? conditions.lang : state.lang;
     var sourceData = {
-      text: state.lang === 'en' ? sample.textEn : sample.textZh,
+      text: lang === 'en' ? sample.textEn : sample.textZh,
       text_zh: sample.textZh,
       text_en: sample.textEn
     };
@@ -9179,7 +9203,7 @@ function getTaskTypeLabel() {
     return reviewData;
   }
 
-  function buildTaskSpecificExportFields(sample, annotation, config, seqOptions) {
+  function buildTaskSpecificExportFields(sample, annotation, config, seqOptions, conditions) {
     var value = annotation && annotation.value ? annotation.value : null;
     var fields = {};
     if (TASK_DATA.taskTypeKey === 'single_sentence_classification') {
@@ -9216,7 +9240,7 @@ function getTaskTypeLabel() {
          the annotation value's actual shape — aspect-style results carry
          `aspects[]`, entity-style results carry `entities[]`. */
       if (value && Array.isArray(value.aspects)) {
-        fields.original_sentence = state.lang === 'en' ? sample.textEn : sample.textZh;
+        fields.original_sentence = (conditions ? conditions.lang : state.lang) === 'en' ? sample.textEn : sample.textZh;
         fields.corrected_sentence = value && value.corrected_sentence ? value.corrected_sentence : fields.original_sentence;
         fields.aspects = value && value.aspects ? value.aspects.slice() : [];
         fields.aspects_summary = fields.aspects.join(', ');
@@ -9273,9 +9297,9 @@ function getTaskTypeLabel() {
     return fields;
   }
 
-  function buildExportAnnotationRecord(sample, annotation, sampleIndex, annotationIndex, config, seqOptions) {
+  function buildExportAnnotationRecord(sample, annotation, sampleIndex, annotationIndex, config, seqOptions, conditions) {
     var annotationId = 'ann-' + sample.sampleId + '-' + (annotationIndex + 1);
-    var taskFields = buildTaskSpecificExportFields(sample, annotation, config, seqOptions);
+    var taskFields = buildTaskSpecificExportFields(sample, annotation, config, seqOptions, conditions);
     /* D1: the JSON format records tagging_scheme/token_unit/tokenizer/
        alignment_mode/expanded_span_count at the manifest level only;
        JSON-MIN (buildJsonMinExportPayload) is the flat format that repeats
@@ -9304,7 +9328,7 @@ function getTaskTypeLabel() {
      TASK_DATA.outputs[] entry (ADR-029), reading the shared
      OUTPUT_TYPE_IAA_REGISTRY plus any target_agreement_overrides; a newly
      registered output type needs no changes here. */
-  function getAppliedIaaMetrics() {
+  function getAppliedIaaMetrics(lang) {
     return (TASK_DATA.outputs || []).map(function(out) {
       var entry = getIaaEntry(out.type);
       if (!entry || entry.notApplicable) {
@@ -9312,34 +9336,39 @@ function getTaskTypeLabel() {
       }
       return {
         output_type: out.type,
-        metric: entry[state.lang] || entry.zh,
+        metric: entry[lang] || entry.zh,
         threshold: getEffectiveTargetAgreement(out.type)
       };
     });
   }
 
-  function buildJsonExportPayload(samples, seqOptions) {
-    var exportedAt = new Date().toISOString();
+  /* D1: `conditions` is the sole source of the filter/time/actor/language
+     values that determine this file's content -- the export-button path
+     passes one built from live state (buildArConditionsFromState), the
+     redownload path (task 1.5) passes one rebuilt from a stored snapshot.
+     No `state.*` is read directly below. */
+  function buildJsonExportPayload(samples, conditions, seqOptions) {
+    var c = conditions || buildArConditionsFromState();
     var config = getExportConfigData();
     var manifest = {
       task_id: TASK_DATA.taskId,
-      task_name: state.lang === 'en' ? TASK_DATA.taskNameEn : TASK_DATA.taskNameZh,
+      task_name: c.lang === 'en' ? TASK_DATA.taskNameEn : TASK_DATA.taskNameZh,
       task_type: TASK_DATA.taskTypeKey,
       export_format: 'json',
-      exported_at: exportedAt,
-      exported_by: getExportedByName(),
+      exported_at: c.exportedAt,
+      exported_by: c.exportedBy,
       schema_version: '1.1.0',
-      run_stage: state.arStage,
+      run_stage: c.runStage,
       isolation_enabled: TASK_DATA.isolationEnabled,
       sampling_mode: TASK_DATA.samplingMode,
       sampling_value: TASK_DATA.samplingValue,
-      applied_iaa_metrics: getAppliedIaaMetrics(),
-      sample_snapshot_id: getExportSampleSnapshotId(state.arStage),
-      excluded_annotation_assignments: getExcludedExportMetadata(state.arStage),
+      applied_iaa_metrics: getAppliedIaaMetrics(c.lang),
+      sample_snapshot_id: getExportSampleSnapshotId(c.runStage),
+      excluded_annotation_assignments: getExcludedExportMetadata(c.runStage),
       applied_filters: {
-        run_stage: state.arStage,
-        submission_status: state.arStatus,
-        annotators: state.arAnnotator === 'all' ? [] : [state.arAnnotator]
+        run_stage: c.runStage,
+        submission_status: c.submissionStatus,
+        annotators: c.annotatorScope === 'all' ? [] : [c.annotatorScope]
       }
     };
     /* AC-1.10 / D1: the character path records tagging_scheme/token_unit in
@@ -9352,18 +9381,18 @@ function getTaskTypeLabel() {
     var items = samples.map(function(sample, sampleIndex) {
       return {
         task_id: TASK_DATA.taskId,
-        task_name: state.lang === 'en' ? TASK_DATA.taskNameEn : TASK_DATA.taskNameZh,
+        task_name: c.lang === 'en' ? TASK_DATA.taskNameEn : TASK_DATA.taskNameZh,
         task_type: TASK_DATA.taskTypeKey,
         run_stage: sample.stage,
         sample_snapshot_id: getExportSampleSnapshotId(sample.stage),
         sample_id: sample.sampleId,
-        source_data: buildExportSourceData(sample, config),
+        source_data: buildExportSourceData(sample, config, c),
         annotation_status: sample.status,
         review_status: sample.annotations.every(function(annotation) { return annotation.reviewStatus === 'approved'; }) ? 'approved' : 'pending',
         created_at: sample.completedAt || null,
         updated_at: sample.completedAt || null,
         annotations: sample.annotations.map(function(annotation, annotationIndex) {
-          return buildExportAnnotationRecord(sample, annotation, sampleIndex, annotationIndex, config, seqOptions);
+          return buildExportAnnotationRecord(sample, annotation, sampleIndex, annotationIndex, config, seqOptions, c);
         }),
         reviews: sample.annotations.map(function(annotation, annotationIndex) {
           return buildExportReviewData(annotation, sample.sampleId + '-' + (annotationIndex + 1));
@@ -9386,22 +9415,23 @@ function getTaskTypeLabel() {
     };
   }
 
-  function buildJsonMinExportPayload(samples, seqOptions) {
+  function buildJsonMinExportPayload(samples, conditions, seqOptions) {
+    var c = conditions || buildArConditionsFromState();
     var config = getExportConfigData();
-    var excludedMetadata = getExcludedExportMetadata(state.arStage);
+    var excludedMetadata = getExcludedExportMetadata(c.runStage);
     var rows = [];
     samples.forEach(function(sample) {
       sample.annotations.forEach(function(annotation, annotationIndex) {
-        var taskFields = buildTaskSpecificExportFields(sample, annotation, config, seqOptions);
+        var taskFields = buildTaskSpecificExportFields(sample, annotation, config, seqOptions, c);
         var reviewData = buildExportReviewData(annotation, sample.sampleId + '-' + (annotationIndex + 1));
         rows.push(Object.assign({
           task_id: TASK_DATA.taskId,
-          task_name: state.lang === 'en' ? TASK_DATA.taskNameEn : TASK_DATA.taskNameZh,
+          task_name: c.lang === 'en' ? TASK_DATA.taskNameEn : TASK_DATA.taskNameZh,
           task_type: TASK_DATA.taskTypeKey,
           run_stage: sample.stage,
           sample_snapshot_id: getExportSampleSnapshotId(sample.stage),
           sample_id: sample.sampleId,
-          source_data: buildExportSourceData(sample, config),
+          source_data: buildExportSourceData(sample, config, c),
           annotation_status: sample.status,
           review_status: annotation.reviewStatus || 'pending',
           created_at: annotation.submittedAt || null,
@@ -9437,11 +9467,15 @@ function getTaskTypeLabel() {
     return rows;
   }
 
-  function downloadArExport(format, seqOptions) {
-    var samples = getArFilteredSamples();
-    var payload = format === 'json' ? buildJsonExportPayload(samples, seqOptions) : buildJsonMinExportPayload(samples, seqOptions);
-    var exportedAt = new Date().toISOString();
-    var stamp = exportedAt.slice(0, 19).replace(/[:T]/g, '-');
+  /* D2: exported_at is decided once by the caller's conditions object and
+     reused for both the manifest field and the filename stamp -- previously
+     this function called `new Date()` a second time here, so the same
+     export could carry two different timestamps across a second boundary. */
+  function downloadArExport(format, conditions, seqOptions) {
+    var c = conditions || buildArConditionsFromState();
+    var samples = getArFilteredSamples(c);
+    var payload = format === 'json' ? buildJsonExportPayload(samples, c, seqOptions) : buildJsonMinExportPayload(samples, c, seqOptions);
+    var stamp = c.exportedAt.slice(0, 19).replace(/[:T]/g, '-');
     var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     var url = URL.createObjectURL(blob);
     var link = document.createElement('a');
@@ -9452,23 +9486,34 @@ function getTaskTypeLabel() {
     link.click();
     document.body.removeChild(link);
     setTimeout(function() { URL.revokeObjectURL(url); }, 0);
-    return exportedAt;
+    return c.exportedAt;
   }
 
   /* Both export buttons ran byte-identical bodies apart from the format
      string, the history label and the toast key; the duplication made any
      change to export-history bookkeeping a two-place edit. */
   function performArExport(format, seqOptions) {
-    var samples = getArFilteredSamples();
-    var exportedAt = downloadArExport(format, seqOptions);
-    var exportType = (state.arStatus === 'all' && state.arAnnotator === 'all' && state.arStage === 'all' && state.arReviewer === 'all' && state.arReviewStatus === 'all') ? 'full' : 'filtered';
+    var conditions = buildArConditionsFromState();
+    var samples = getArFilteredSamples(conditions);
+    var exportedAt = downloadArExport(format, conditions, seqOptions);
+    var exportType = (conditions.submissionStatus === 'all' && conditions.annotatorScope === 'all' && conditions.runStage === 'all' && conditions.reviewerScope === 'all' && conditions.reviewStatusScope === 'all') ? 'full' : 'filtered';
     if (!TASK_DATA.exportHistory) TASK_DATA.exportHistory = [];
+    /* FR-021(3)/D2: reviewer/review-status filters, the full-precision
+       export time, the exporter and the interface language are the
+       remaining values that determine this file's content but were not
+       previously on the snapshot -- FR-021(6)/D3 disables "download" when
+       any of them (or the pre-existing fields above) is missing. */
     var conditionsSnapshot = {
       export_format: format,
-      run_stage: state.arStage,
-      submission_status: state.arStatus,
-      annotator_scope: state.arAnnotator,
-      excluded_annotation_assignments: getExcludedExportMetadata(state.arStage)
+      run_stage: conditions.runStage,
+      submission_status: conditions.submissionStatus,
+      annotator_scope: conditions.annotatorScope,
+      reviewer_scope: conditions.reviewerScope,
+      review_status_scope: conditions.reviewStatusScope,
+      exported_at: conditions.exportedAt,
+      exported_by: conditions.exportedBy,
+      lang: conditions.lang,
+      excluded_annotation_assignments: getExcludedExportMetadata(conditions.runStage)
     };
     /* AC-1.10/task 2.4 point 5: recorded on the conditions snapshot so the
        export-history row shows which scheme/unit (and, on the word path,
@@ -9483,16 +9528,16 @@ function getTaskTypeLabel() {
     TASK_DATA.exportHistory.unshift({
       exportedAt: exportedAt.slice(0, 16).replace('T', ' '),
       exportType: exportType,
-      stage: state.arStage,
+      stage: conditions.runStage,
       count: samples.length,
-      scope: state.arAnnotator === 'all' ? '__all__' : state.arAnnotator,
+      scope: conditions.annotatorScope === 'all' ? '__all__' : conditions.annotatorScope,
       exportedBy: 'Mandy',
       format: format === 'json' ? 'JSON' : 'JSON-MIN',
       conditionsSnapshot: conditionsSnapshot
     });
     renderArExportHistory();
     showToast(format === 'json' ? t('toastExportJson') : t('toastExportJsonMin'));
-    trackEvent('prototype_ar_export', { format: format, stage: state.arStage });
+    trackEvent('prototype_ar_export', { format: format, stage: conditions.runStage });
   }
 
   /* FR-020(2): dialog visibility is config-driven (constitution:
@@ -10531,8 +10576,8 @@ document.getElementById('memberProgressSort').addEventListener('change', functio
            (task 2.4 point 4). */
         var probeSamples = getArFilteredSamples();
         state.arSeqExportRun = { blocked: false, tokenizer: null, alignmentMode: null, expandedSpanCount: 0, expansions: [] };
-        if (format === 'json') { buildJsonExportPayload(probeSamples, wordOptions); }
-        else { buildJsonMinExportPayload(probeSamples, wordOptions); }
+        if (format === 'json') { buildJsonExportPayload(probeSamples, null, wordOptions); }
+        else { buildJsonMinExportPayload(probeSamples, null, wordOptions); }
         var blocked = state.arSeqExportRun.blocked;
         state.arSeqExportRun = null;
         if (blocked) {
