@@ -1,5 +1,5 @@
 ---
-功能分支: docs/issue-719-review-autoadvance
+功能分支: feat/766-finalized-card-remaining-cue
 建立日期: 2026-04-23
 版本: 6.2.0
 狀態: Draft
