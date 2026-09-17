@@ -1371,6 +1371,80 @@
    * 池清單／結案閘門判定使用，見 FR-018／FR-008b）。 */
   var EXCEPTION_POOL_ACTIONS = ['adopt_annotator', 'adopt_reviewer', 'custom_answer', 'exclude_from_dataset'];
 
+  /* SEQ_TAGGING_TOKENIZER_SEEDS -- issue #742 (design.md D3, maintainer
+   * ruling 2026-09-16 #4). Pre-tokenized word-level results for the
+   * `sequence_tagging` export dialog's two tokenizer engines. Neither this
+   * file nor any caller implements a segmentation algorithm -- token
+   * boundaries are fixed seed data here, keyed by the AR_SAMPLES_SEQ_TAGGING
+   * `sampleId` (task-detail.html, task 1.8) whose `textZh` they tokenize.
+   *
+   * `ckip-transformers` carries a full engine+version identity and drives
+   * the AC-1.11 success path. All six AR_SAMPLES_SEQ_TAGGING samples need a
+   * token seed here: `buildTaskSpecificExportFields()` calls
+   * `deriveSequence()` per sample, and any sample missing from
+   * `tokensBySample` would silently export an empty `tags: []` for every
+   * annotator's real saved spans on that row -- a product defect, not a
+   * gap the AC-1.11/1.12 assertions happen to catch. Each sample's tokens
+   * are written as a single '|'-delimited string of its already-segmented
+   * words (hand-authored fixed data, not computed) and decoded into
+   * `{start, end}` ranges by `tokenRanges()` below purely to keep this
+   * seed compact -- `tokenRanges()` only sums the pre-chosen segment
+   * lengths into offsets; it never decides where a boundary goes.
+   *
+   * NER-001's segmentation is deliberately misaligned with two of that
+   * sample's saved spans -- kioleemg12's PER span (6,9) '張忠謀' and LOC
+   * span (10,12) '台北' each start one character before a token boundary
+   * (see the '人張'/'在台' tokens) -- so span-tagging-export.js's
+   * `expandToTokens()` actually grows them (PER expands to (5,9) '人張忠謀';
+   * LOC expands to (9,12) '在台北') and `expanded_span_count > 0` is
+   * reachable. NER-002's segmentation merges '鴻海精密' into one token, so
+   * tony0950127's ORG span (0,2) '鴻海' likewise expands to (0,4). The
+   * remaining samples use natural, unforced word segmentation; not every
+   * sample needs an expansion, only a full-length non-empty `tags` array
+   * for every annotator row. `version: '0.3.4'` is a prototype placeholder,
+   * not a verified real backend integration (maintainer ruling #4) -- it
+   * exists only so `tokenizer.engine`/`tokenizer.version` are real seeded
+   * data instead of hardcoded literals in the export path.
+   *
+   * `jieba` deliberately carries no `version` key at all (not `''`, not
+   * `null` -- the key is simply absent). `missingTokenizerField()` in
+   * span-tagging-export.js checks `!meta.version` before `opts.tokens` is
+   * ever read, so a blocked engine needs no token seed; jieba releases
+   * genuinely do not expose a queryable model version, so this omission is
+   * semantically honest, not an artificial gap (design.md D3).
+   */
+  function tokenRanges(segmented) {
+    var parts = segmented.split('|');
+    var ranges = [];
+    var pos = 0;
+    for (var i = 0; i < parts.length; i += 1) {
+      var end = pos + parts[i].length;
+      ranges.push({ start: pos, end: end });
+      pos = end;
+    }
+    return ranges;
+  }
+
+  var SEQ_TAGGING_TOKENIZER_SEEDS = {
+    'ckip-transformers': {
+      version: '0.3.4', // prototype placeholder -- see block comment above
+      tokensBySample: {
+        // Each string is pre-segmented, hand-authored fixed data; see the
+        // block comment above for why it is written this way.
+        'NER-001': tokenRanges('台積|電|創辦|人張|忠謀|在台|北|出席| |2024| |年|半導體|產業|論壇|。'),
+        'NER-002': tokenRanges('鴻海精密|工業|宣布|在|越南|胡志明市|設立|新廠|，|預計| |2025| |年|完工|。'),
+        'NER-003': tokenRanges('衛生|福利部|長|薛瑞元|出席|世界|衛生|大會|，|代表|台灣|宣導|健康|政策|。'),
+        'NER-004': tokenRanges('美國|聯準會|宣布|維持|利率|不變|，|聯準會|主席|鮑威爾|表示|將|持續|觀察|通膨|走勢|。'),
+        'NER-005': tokenRanges('歐盟|議會|通過|新版|人工智慧|法案|，|預計|明年|在|歐洲|全境|正式|生效|。'),
+        'NER-006': tokenRanges('Google| |執行長| |Sundar| |Pichai| |在|加州山景城|發表| |Gemini| |新版本|。')
+      }
+    },
+    jieba: {
+      // No `version` key -- intentional, see block comment above.
+      tokensBySample: {}
+    }
+  };
+
   /* FR-018 (issue #688, design.md D6): the final exception pool draws its
    * rows live from 015 annotation-workspace's already-existing dispute /
    * arbitration primitives instead of a second, 014-only seed of the same
@@ -1461,6 +1535,7 @@
     ARBITER_CANDIDATE_RULE: ARBITER_CANDIDATE_RULE,
     OVERVIEW_EDITABLE_FIELDS: OVERVIEW_EDITABLE_FIELDS,
     EXCEPTION_POOL_ACTIONS: EXCEPTION_POOL_ACTIONS,
+    SEQ_TAGGING_TOKENIZER_SEEDS: SEQ_TAGGING_TOKENIZER_SEEDS,
     getFinalExceptionPoolItems: getFinalExceptionPoolItems,
     getTaskCompletionBlockers: getTaskCompletionBlockers
   };
