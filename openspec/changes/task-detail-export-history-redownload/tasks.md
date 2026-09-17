@@ -44,7 +44,7 @@
 - [x] 1.5 （Green）修改 `design/prototype/pages/task-management/task-detail.html`：依 FR-021 第 1 至第 5 點與 design.md 裁決 D5，為匯出記錄列的下載按鈕綁定重新下載行為，以該列條件快照作為條件物件呼叫 1.4 的同一組組裝與下載函式；不開啟匯出對話框、不寫入匯出記錄、不回寫頁面篩選、不渲染擴張摘要，且頁面內推導函式呼叫點維持一處。驗證：`PW_PORT=8975 corepack pnpm playwright test tests/task-management/issue-772-export-history-redownload.spec.ts` 之 AC-1.14 與 AC-1.15 案例全綠 [@senior-frontend]
 - [x] 1.6 （Green）修改 `design/prototype/pages/task-management/task-detail.html`：依 FR-021 第 6 點與 design.md 裁決 D3、D4，快照缺失或缺少必要欄位的列其下載按鈕渲染為停用並附中文說明；word 單位紀錄重新下載時以模組回傳的阻擋結果決定是否中止，阻擋時以中文訊息指明切詞引擎不可用、不產檔也不寫入紀錄；一併補上停用說明與阻擋原因的雙語 i18n 鍵。驗證：`PW_PORT=8976 corepack pnpm playwright test tests/task-management/issue-772-export-history-redownload.spec.ts` 全綠，且 `cd design/prototype && corepack pnpm typecheck` exit 0 [@senior-frontend]
 - [x] 1.7 執行 `node scripts/gen-screen-inventory.mjs` 重生畫面盤點清單並單獨提交（產品原型檔已變更）。驗證：`scripts/check-sdd.sh` 之 INVENTORY_FRESHNESS 為 0 筆、`scripts/inventory-tests.sh` exit 0 [@main]
-- [ ] 1.8 執行群組 1 回歸並保存證據，須逐一確認 issue #742 的序列匯出契約（含 SC-045 原始碼掃描護欄）、既有匯出記錄與階段指定契約、被排除標記作業之結果列規則與 reviewer 唯讀邊界全數維持通過，並以 `origin/main` 為基準量測產品檔 diff 行數。驗證：`PW_PORT=8977 corepack pnpm playwright test tests/task-management` exit 0；`PW_PORT=8978 corepack pnpm playwright test tests/cross-role` exit 0 [@main]
+- [x] 1.8 執行群組 1 回歸並保存證據，須逐一確認 issue #742 的序列匯出契約（含 SC-045 原始碼掃描護欄）、既有匯出記錄與階段指定契約、被排除標記作業之結果列規則與 reviewer 唯讀邊界全數維持通過，並以 `origin/main` 為基準量測產品檔 diff 行數。驗證：`PW_PORT=8977 corepack pnpm playwright test tests/task-management` exit 0；`PW_PORT=8978 corepack pnpm playwright test tests/cross-role` exit 0 [@main]
 
 ## 2. Archive 與正典回寫（最終群組）
 
