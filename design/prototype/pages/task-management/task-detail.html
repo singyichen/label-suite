@@ -2224,6 +2224,7 @@
 <div id="sharedSidebarMount"></div>
 <script src="../shared/sidebar.js"></script>
 <script src="../shared/modal-focus.js"></script>
+<script src="../shared/span-tagging-export.js"></script>
 <script>
   window.LabelSuiteSharedSidebar.mountSidebar({
     mountId: 'sharedSidebarMount',
@@ -2840,6 +2841,15 @@
       arExportHistoryEmpty: '尚未執行過匯出',
       toastExportJson: '已建立 JSON 匯出',
       toastExportJsonMin: '已建立精簡 JSON 匯出',
+      arSeqExportModalTitle: '序列標記匯出設定',
+      arSeqExportModalBody: '選擇本次匯出採用的標註方案與詞元單位。',
+      arSeqExportSchemeLabel: '標註方案',
+      arSeqExportUnitLabel: '詞元單位',
+      arSeqExportTokenizerLabel: '切詞引擎',
+      arSeqExportUnitCharacter: '字元',
+      arSeqExportUnitWord: '詞',
+      arSeqExportCancelBtn: '取消',
+      arSeqExportConfirmBtn: '確認匯出',
       arEmptyTitle: '尚無標記結果',
       arEmptyHint: '標記員提交後，結果將顯示於此。',
       navDashboard: '儀表板',
@@ -3327,6 +3337,15 @@
       arExportHistoryEmpty: 'No exports yet',
       toastExportJson: 'JSON export created',
       toastExportJsonMin: 'Compact JSON export created',
+      arSeqExportModalTitle: 'Sequence tagging export settings',
+      arSeqExportModalBody: 'Choose the tagging scheme and token unit for this export.',
+      arSeqExportSchemeLabel: 'Tagging scheme',
+      arSeqExportUnitLabel: 'Token unit',
+      arSeqExportTokenizerLabel: 'Tokenizer engine',
+      arSeqExportUnitCharacter: 'Character',
+      arSeqExportUnitWord: 'Word',
+      arSeqExportCancelBtn: 'Cancel',
+      arSeqExportConfirmBtn: 'Confirm export',
       arEmptyTitle: 'No annotation results yet',
       arEmptyHint: 'Results will appear here once annotators submit.',
       navDashboard: 'Dashboard',
@@ -3720,6 +3739,7 @@
     arExpandedRows: {},
     arExportPage: 1,
     arExportPageSize: 20,
+    arSeqExportFormat: null,
     mdPage: 1,
     mdPageSize: 20,
     mdRows: [],
@@ -5232,6 +5252,14 @@ function interpolate(template, payload) {
     setText('thArExportBy', t('thArExportBy'));
     setText('thArExportFormat', t('thArExportFormat'));
     setText('thArExportOps', t('thArExportOps'));
+    setText('arSeqExportModalTitle', t('arSeqExportModalTitle'));
+    setText('arSeqExportModalBody', t('arSeqExportModalBody'));
+    setText('arSeqExportSchemeLabel', t('arSeqExportSchemeLabel'));
+    setText('arSeqExportUnitLabel', t('arSeqExportUnitLabel'));
+    setText('arSeqExportTokenizerLabel', t('arSeqExportTokenizerLabel'));
+    setText('arSeqExportCancelBtn', t('arSeqExportCancelBtn'));
+    setText('arSeqExportConfirmBtn', t('arSeqExportConfirmBtn'));
+    renderArSeqExportOptions();
     setText('arEmptyTitle', t('arEmptyTitle'));
     setText('arEmptyHint', t('arEmptyHint'));
     renderAnnotationResults();
@@ -9069,6 +9097,13 @@ function getTaskTypeLabel() {
     return out ? (out.config || {}) : {};
   }
 
+  /* FR-020(2)/(6): dialog visibility and export-field branching both read
+     outputs[] directly (constitution: Generalization-First) instead of a
+     task-ID whitelist -- entity_recognition tasks never match this. */
+  function taskHasSequenceTaggingOutput() {
+    return (TASK_DATA.outputs || []).some(function(out) { return out.type === 'sequence_tagging'; });
+  }
+
   function getExportSequenceSubtype(config) {
     return (config && config.subtype) || '';
   }
@@ -9139,7 +9174,7 @@ function getTaskTypeLabel() {
     return reviewData;
   }
 
-  function buildTaskSpecificExportFields(sample, annotation, config) {
+  function buildTaskSpecificExportFields(sample, annotation, config, seqOptions) {
     var value = annotation && annotation.value ? annotation.value : null;
     var fields = {};
     if (TASK_DATA.taskTypeKey === 'single_sentence_classification') {
@@ -9180,6 +9215,24 @@ function getTaskTypeLabel() {
         fields.corrected_sentence = value && value.corrected_sentence ? value.corrected_sentence : fields.original_sentence;
         fields.aspects = value && value.aspects ? value.aspects.slice() : [];
         fields.aspects_summary = fields.aspects.join(', ');
+      } else if (value ? Array.isArray(value.spans) : taskHasSequenceTaggingOutput()) {
+        /* FR-020(6): the result-field split reads the annotation value's own
+           structure, never the task config -- a `spans[]` value is carried by
+           FR-020, an `entities[]` value stays on FR-015i-3 even when the task
+           declares a sequence_tagging output. A row with no submission at all
+           has no structure to read, so it falls back to the declared output
+           type and still derives a full-length all-O sequence.
+           FR-020(1)/SC-045: single derivation entry point -- no prefix
+           concatenation, no span/token boundary logic, no second scheme
+           table is reimplemented here. */
+        var seqResult = window.LabelSuiteSpanTaggingExport.deriveSequence(
+          sample.textZh,
+          value && Array.isArray(value.spans) ? value.spans : [],
+          seqOptions || {}
+        );
+        fields.tags = seqResult.tags;
+        fields.tagging_scheme = seqResult.tagging_scheme;
+        fields.token_unit = seqResult.token_unit;
       } else {
         fields.entities = value && value.entities ? cloneExportValue(value.entities) : [];
         fields.entities_summary = fields.entities.map(function(entity) {
@@ -9191,8 +9244,14 @@ function getTaskTypeLabel() {
     return fields;
   }
 
-  function buildExportAnnotationRecord(sample, annotation, sampleIndex, annotationIndex, config) {
+  function buildExportAnnotationRecord(sample, annotation, sampleIndex, annotationIndex, config, seqOptions) {
     var annotationId = 'ann-' + sample.sampleId + '-' + (annotationIndex + 1);
+    var taskFields = buildTaskSpecificExportFields(sample, annotation, config, seqOptions);
+    /* D1: the JSON format records tagging_scheme/token_unit at the manifest
+       level only; JSON-MIN (buildJsonMinExportPayload) is the flat format
+       that repeats them per row instead. */
+    delete taskFields.tagging_scheme;
+    delete taskFields.token_unit;
     return {
       annotation_id: annotationId,
       annotator_id: getAnnotatorId(annotation.annotator),
@@ -9203,7 +9262,7 @@ function getTaskTypeLabel() {
       result: Object.assign(
         {},
         cloneExportValue(annotation.value) || {},
-        buildTaskSpecificExportFields(sample, annotation, config)
+        taskFields
       )
     };
   }
@@ -9226,31 +9285,39 @@ function getTaskTypeLabel() {
     });
   }
 
-  function buildJsonExportPayload(samples) {
+  function buildJsonExportPayload(samples, seqOptions) {
     var exportedAt = new Date().toISOString();
     var config = getExportConfigData();
-    return {
-      manifest: {
-        task_id: TASK_DATA.taskId,
-        task_name: state.lang === 'en' ? TASK_DATA.taskNameEn : TASK_DATA.taskNameZh,
-        task_type: TASK_DATA.taskTypeKey,
-        export_format: 'json',
-        exported_at: exportedAt,
-        exported_by: getExportedByName(),
-        schema_version: '1.0.0',
+    var manifest = {
+      task_id: TASK_DATA.taskId,
+      task_name: state.lang === 'en' ? TASK_DATA.taskNameEn : TASK_DATA.taskNameZh,
+      task_type: TASK_DATA.taskTypeKey,
+      export_format: 'json',
+      exported_at: exportedAt,
+      exported_by: getExportedByName(),
+      schema_version: '1.0.0',
+      run_stage: state.arStage,
+      isolation_enabled: TASK_DATA.isolationEnabled,
+      sampling_mode: TASK_DATA.samplingMode,
+      sampling_value: TASK_DATA.samplingValue,
+      applied_iaa_metrics: getAppliedIaaMetrics(),
+      sample_snapshot_id: getExportSampleSnapshotId(state.arStage),
+      excluded_annotation_assignments: getExcludedExportMetadata(state.arStage),
+      applied_filters: {
         run_stage: state.arStage,
-        isolation_enabled: TASK_DATA.isolationEnabled,
-        sampling_mode: TASK_DATA.samplingMode,
-        sampling_value: TASK_DATA.samplingValue,
-        applied_iaa_metrics: getAppliedIaaMetrics(),
-        sample_snapshot_id: getExportSampleSnapshotId(state.arStage),
-        excluded_annotation_assignments: getExcludedExportMetadata(state.arStage),
-        applied_filters: {
-          run_stage: state.arStage,
-          submission_status: state.arStatus,
-          annotators: state.arAnnotator === 'all' ? [] : [state.arAnnotator]
-        }
-      },
+        submission_status: state.arStatus,
+        annotators: state.arAnnotator === 'all' ? [] : [state.arAnnotator]
+      }
+    };
+    /* AC-1.10 / D1: the character path records tagging_scheme/token_unit in
+       the manifest; it MUST NOT gain a tokenizer/alignment_mode/expanded_span_count
+       key -- those only exist on the word path, which this task does not wire. */
+    if (seqOptions) {
+      manifest.tagging_scheme = seqOptions.tagging_scheme;
+      manifest.token_unit = seqOptions.token_unit;
+    }
+    return {
+      manifest: manifest,
       items: samples.map(function(sample, sampleIndex) {
         return {
           task_id: TASK_DATA.taskId,
@@ -9265,7 +9332,7 @@ function getTaskTypeLabel() {
           created_at: sample.completedAt || null,
           updated_at: sample.completedAt || null,
           annotations: sample.annotations.map(function(annotation, annotationIndex) {
-            return buildExportAnnotationRecord(sample, annotation, sampleIndex, annotationIndex, config);
+            return buildExportAnnotationRecord(sample, annotation, sampleIndex, annotationIndex, config, seqOptions);
           }),
           reviews: sample.annotations.map(function(annotation, annotationIndex) {
             return buildExportReviewData(annotation, sample.sampleId + '-' + (annotationIndex + 1));
@@ -9275,13 +9342,13 @@ function getTaskTypeLabel() {
     };
   }
 
-  function buildJsonMinExportPayload(samples) {
+  function buildJsonMinExportPayload(samples, seqOptions) {
     var config = getExportConfigData();
     var excludedMetadata = getExcludedExportMetadata(state.arStage);
     var rows = [];
     samples.forEach(function(sample) {
       sample.annotations.forEach(function(annotation, annotationIndex) {
-        var taskFields = buildTaskSpecificExportFields(sample, annotation, config);
+        var taskFields = buildTaskSpecificExportFields(sample, annotation, config, seqOptions);
         var reviewData = buildExportReviewData(annotation, sample.sampleId + '-' + (annotationIndex + 1));
         rows.push(Object.assign({
           task_id: TASK_DATA.taskId,
@@ -9314,9 +9381,9 @@ function getTaskTypeLabel() {
     return rows;
   }
 
-  function downloadArExport(format) {
+  function downloadArExport(format, seqOptions) {
     var samples = getArFilteredSamples();
-    var payload = format === 'json' ? buildJsonExportPayload(samples) : buildJsonMinExportPayload(samples);
+    var payload = format === 'json' ? buildJsonExportPayload(samples, seqOptions) : buildJsonMinExportPayload(samples, seqOptions);
     var exportedAt = new Date().toISOString();
     var stamp = exportedAt.slice(0, 19).replace(/[:T]/g, '-');
     var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
@@ -9335,11 +9402,24 @@ function getTaskTypeLabel() {
   /* Both export buttons ran byte-identical bodies apart from the format
      string, the history label and the toast key; the duplication made any
      change to export-history bookkeeping a two-place edit. */
-  function performArExport(format) {
+  function performArExport(format, seqOptions) {
     var samples = getArFilteredSamples();
-    var exportedAt = downloadArExport(format);
+    var exportedAt = downloadArExport(format, seqOptions);
     var exportType = (state.arStatus === 'all' && state.arAnnotator === 'all' && state.arStage === 'all' && state.arReviewer === 'all' && state.arReviewStatus === 'all') ? 'full' : 'filtered';
     if (!TASK_DATA.exportHistory) TASK_DATA.exportHistory = [];
+    var conditionsSnapshot = {
+      export_format: format,
+      run_stage: state.arStage,
+      submission_status: state.arStatus,
+      annotator_scope: state.arAnnotator,
+      excluded_annotation_assignments: getExcludedExportMetadata(state.arStage)
+    };
+    /* AC-1.10: recorded on the conditions snapshot so the export-history row
+       shows which scheme/unit produced that download; character path only. */
+    if (seqOptions) {
+      conditionsSnapshot.tagging_scheme = seqOptions.tagging_scheme;
+      conditionsSnapshot.token_unit = seqOptions.token_unit;
+    }
     TASK_DATA.exportHistory.unshift({
       exportedAt: exportedAt.slice(0, 16).replace('T', ' '),
       exportType: exportType,
@@ -9348,17 +9428,71 @@ function getTaskTypeLabel() {
       scope: state.arAnnotator === 'all' ? '__all__' : state.arAnnotator,
       exportedBy: 'Mandy',
       format: format === 'json' ? 'JSON' : 'JSON-MIN',
-      conditionsSnapshot: {
-        export_format: format,
-        run_stage: state.arStage,
-        submission_status: state.arStatus,
-        annotator_scope: state.arAnnotator,
-        excluded_annotation_assignments: getExcludedExportMetadata(state.arStage)
-      }
+      conditionsSnapshot: conditionsSnapshot
     });
     renderArExportHistory();
     showToast(format === 'json' ? t('toastExportJson') : t('toastExportJsonMin'));
     trackEvent('prototype_ar_export', { format: format, stage: state.arStage });
+  }
+
+  /* FR-020(2): dialog visibility is config-driven (constitution:
+     Generalization-First) via taskHasSequenceTaggingOutput() -- never a
+     task-ID whitelist. renderArSeqExportOptions() renders both selects from
+     the shared module's exported constants (never a hardcoded option list),
+     per D7/AC-1.10 and SC-045. */
+  function renderArSeqExportOptions() {
+    var schemeSelect = document.getElementById('arSeqExportSchemeSelect');
+    var unitSelect = document.getElementById('arSeqExportUnitSelect');
+    if (!schemeSelect || !unitSelect) return;
+    var seq = window.LabelSuiteSpanTaggingExport;
+    if (!seq) return;
+    while (schemeSelect.firstChild) schemeSelect.removeChild(schemeSelect.firstChild);
+    seq.EXPORT_TAGGING_SCHEMES.forEach(function(scheme) {
+      var opt = document.createElement('option');
+      opt.value = scheme;
+      opt.textContent = scheme;
+      schemeSelect.appendChild(opt);
+    });
+    schemeSelect.value = seq.EXPORT_DEFAULT_TAGGING_SCHEME;
+    while (unitSelect.firstChild) unitSelect.removeChild(unitSelect.firstChild);
+    seq.EXPORT_TOKEN_UNITS.forEach(function(unit) {
+      var opt = document.createElement('option');
+      opt.value = unit;
+      opt.textContent = unit === 'word' ? t('arSeqExportUnitWord') : t('arSeqExportUnitCharacter');
+      unitSelect.appendChild(opt);
+    });
+    unitSelect.value = seq.EXPORT_DEFAULT_TOKEN_UNIT;
+  }
+
+  function updateArSeqExportTokenizerVisibility() {
+    var unitSelect = document.getElementById('arSeqExportUnitSelect');
+    var tokenizerField = document.getElementById('arSeqExportTokenizerField');
+    if (!unitSelect || !tokenizerField) return;
+    if (unitSelect.value === 'word') tokenizerField.classList.remove('hidden');
+    else tokenizerField.classList.add('hidden');
+  }
+
+  /* Confirming closes the dialog; re-opening always resets to the module's
+     default scheme/unit (BIO/character) rather than remembering the last
+     selection, per issue #742 task 1.6 spec. */
+  function openArSeqExportModal(format, triggerEl) {
+    state.arSeqExportFormat = format;
+    renderArSeqExportOptions();
+    updateArSeqExportTokenizerVisibility();
+    var modal = document.getElementById('arSeqExportModal');
+    modal.classList.add('show');
+    modal.setAttribute('aria-hidden', 'false');
+    if (window.LabelSuiteModalFocus) {
+      window.LabelSuiteModalFocus.open(modal, { trigger: triggerEl, onClose: closeArSeqExportModal });
+    }
+  }
+
+  function closeArSeqExportModal() {
+    var modal = document.getElementById('arSeqExportModal');
+    modal.classList.remove('show');
+    modal.setAttribute('aria-hidden', 'true');
+    state.arSeqExportFormat = null;
+    if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(modal);
   }
 
   function getArExportStageLabel(stage) {
@@ -10221,12 +10355,41 @@ document.getElementById('memberProgressSort').addEventListener('change', functio
       trackEvent('prototype_ar_filter_changed', { filter: 'review_status', value: state.arReviewStatus });
     });
 
-    document.getElementById('arExportJsonBtn').addEventListener('click', function() {
+    document.getElementById('arExportJsonBtn').addEventListener('click', function(e) {
+      if (taskHasSequenceTaggingOutput()) { openArSeqExportModal('json', e.currentTarget); return; }
       performArExport('json');
     });
 
-    document.getElementById('arExportJsonMinBtn').addEventListener('click', function() {
+    document.getElementById('arExportJsonMinBtn').addEventListener('click', function(e) {
+      if (taskHasSequenceTaggingOutput()) { openArSeqExportModal('json-min', e.currentTarget); return; }
       performArExport('json-min');
+    });
+
+    document.getElementById('arSeqExportUnitSelect').addEventListener('change', updateArSeqExportTokenizerVisibility);
+
+    document.getElementById('arSeqExportCancelBtn').addEventListener('click', function() {
+      closeArSeqExportModal();
+    });
+
+    document.getElementById('arSeqExportModal').addEventListener('click', function(e) {
+      if (e.target.id === 'arSeqExportModal') closeArSeqExportModal();
+    });
+
+    document.getElementById('arSeqExportConfirmBtn').addEventListener('click', function() {
+      var unit = document.getElementById('arSeqExportUnitSelect').value;
+      if (unit === 'word') {
+        /* Word-level derivation (tokenizer selection, blocked-export
+           handling, expansion summary) is group 2 scope (design.md D3/D5,
+           tasks 2.1-2.4); this task only wires the character path. */
+        return;
+      }
+      var seqOptions = {
+        tagging_scheme: document.getElementById('arSeqExportSchemeSelect').value,
+        token_unit: unit
+      };
+      var format = state.arSeqExportFormat;
+      closeArSeqExportModal();
+      performArExport(format, seqOptions);
     });
 
     document.getElementById('arPrevPageBtn').addEventListener('click', function() {
