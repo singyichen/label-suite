@@ -40,6 +40,7 @@ class TestSqliteForeignKeysEnforced:
     """Issue #778: `get_engine()` must turn on SQLite foreign key enforcement."""
 
     async def test_pragma_foreign_keys_is_on(self) -> None:
+        """A fresh SQLite connection from `get_engine()` reports `PRAGMA foreign_keys` as on."""
         engine = get_engine()
 
         async with engine.connect() as conn:
@@ -47,6 +48,7 @@ class TestSqliteForeignKeysEnforced:
             assert result.scalar_one() == 1
 
     async def test_inserting_orphan_child_row_raises_integrity_error(self) -> None:
+        """Inserting a child row whose parent does not exist is rejected with `IntegrityError`."""
         engine = get_engine()
 
         async with engine.begin() as conn:

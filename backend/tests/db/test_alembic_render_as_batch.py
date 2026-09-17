@@ -90,6 +90,7 @@ class TestAlembicRendersAsBatch:
     def test_offline_mode_configures_render_as_batch(
         self, _alembic_config: Config, monkeypatch: pytest.MonkeyPatch
     ) -> None:
+        """Offline (`--sql`) upgrade passes `render_as_batch=True` to `context.configure`."""
         calls = _spy_on_configure(monkeypatch)
 
         command.upgrade(_alembic_config, "head", sql=True)
@@ -100,6 +101,7 @@ class TestAlembicRendersAsBatch:
     def test_online_mode_configures_render_as_batch(
         self, _alembic_config: Config, monkeypatch: pytest.MonkeyPatch
     ) -> None:
+        """Online upgrade passes `render_as_batch=True` to `context.configure`."""
         calls = _spy_on_configure(monkeypatch)
 
         command.upgrade(_alembic_config, "head")
