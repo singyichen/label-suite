@@ -163,6 +163,27 @@ test.describe('issue #772 -- export-history redownload (task 1.1: AC-1.14 sequen
     await page.locator('#arSeqExportCancelBtn').click();
     await expect(page.locator('#arSeqExportModal')).toBeHidden();
 
+    // 切換介面語言 (SC-046: 同一筆記錄要在頁面篩選、對話框選項「與」介面語言皆變動後
+    // 重新下載, 三者缺一不可)
+    const htmlLangBefore = await page.locator('html').getAttribute('lang');
+    await page.locator('#langToggle').click();
+    await expect(page.locator('html')).not.toHaveAttribute('lang', htmlLangBefore ?? '');
+
+    // Finding 1: capture the expansion-summary container's rendering
+    // right before the redownload click. The container lives inside
+    // #arSeqExportModal (already asserted hidden above), so asserting the
+    // container itself is `hidden` is vacuous -- it is a subset of an
+    // already-true fact. Snapshot its class/markup here and assert both
+    // are byte-identical afterwards: that is the only way to prove
+    // redownloadArExportRecord() never called
+    // renderArSeqExportExpansionSummary() to rebuild it.
+    const expansionSummaryClassBefore = await page
+      .locator('#arSeqExportExpansionSummary')
+      .getAttribute('class');
+    const expansionSummaryHtmlBefore = await page
+      .locator('#arSeqExportExpansionSummary')
+      .innerHTML();
+
     // 按下匯出記錄表第一列的下載按鈕
     const firstRow = page.locator('#arExportHistoryBody tr').first();
     const redownload = await captureDownload(
@@ -187,7 +208,12 @@ test.describe('issue #772 -- export-history redownload (task 1.1: AC-1.14 sequen
     const historyRowsAfter = await page.locator('#arExportHistoryBody tr').count();
     expect(historyRowsAfter).toBe(historyRowsBefore);
     await expect(page.locator('#arSeqExportModal')).toBeHidden();
-    await expect(page.locator('#arSeqExportExpansionSummary')).toBeHidden();
+    expect(await page.locator('#arSeqExportExpansionSummary').getAttribute('class')).toBe(
+      expansionSummaryClassBefore
+    );
+    expect(await page.locator('#arSeqExportExpansionSummary').innerHTML()).toBe(
+      expansionSummaryHtmlBefore
+    );
     await expect(page.locator('#arStageSelect')).toHaveValue(changedStage);
     await expect(page.locator('#arAnnotatorSelect')).toHaveValue(changedAnnotator);
   });
