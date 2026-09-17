@@ -8694,20 +8694,20 @@ function getTaskTypeLabel() {
     }).join(sep);
   }
 
-  function localizeResultLabel(label) {
+  function localizeResultLabel(label, lang) {
     var labelText = String(label || '');
     var labelEntry = RESULT_LABEL_I18N[labelText];
     if (!labelEntry) return labelText;
-    return labelEntry[state.lang] || labelEntry.zh || labelText;
+    return labelEntry[lang || state.lang] || labelEntry.zh || labelText;
   }
 
   var SORTED_RESULT_LABEL_KEYS = Object.keys(RESULT_LABEL_I18N).sort(function(a, b) {
     return b.length - a.length;
   });
 
-  function localizeResultText(text) {
+  function localizeResultText(text, lang) {
     var output = String(text || '');
-    if (state.lang !== 'en' || output === '-' || !output) return output;
+    if ((lang || state.lang) !== 'en' || output === '-' || !output) return output;
     SORTED_RESULT_LABEL_KEYS.forEach(function(label) {
       var labelEntry = RESULT_LABEL_I18N[label];
       var translated = labelEntry && labelEntry.en ? labelEntry.en : label;
@@ -8723,24 +8723,24 @@ function getTaskTypeLabel() {
       .trim();
   }
 
-  function getAnnotationResultDisplay(annotation) {
+  function getAnnotationResultDisplay(annotation, lang) {
     var v = annotation.value;
     if (!v) return { tags: ['-'], colorClass: '' };
     if (v.resultText) {
-      return { tags: [localizeResultText(v.resultText)], colorClass: '' };
+      return { tags: [localizeResultText(v.resultText, lang)], colorClass: '' };
     }
     if (v.valence !== undefined && v.arousal !== undefined) {
       return { tags: ['[' + v.valence + ', ' + v.arousal + ']'], colorClass: '' };
     }
     if (v.labels && v.labels.length > 0) {
-      return { tags: [v.labels.map(localizeResultLabel).join(', ')], colorClass: '' };
+      return { tags: [v.labels.map(function(label) { return localizeResultLabel(label, lang); }).join(', ')], colorClass: '' };
     }
     if (v.aspects && v.aspects.length > 0) {
-      return { tags: [v.aspects.map(localizeResultLabel).join(', ')], colorClass: '' };
+      return { tags: [v.aspects.map(function(label) { return localizeResultLabel(label, lang); }).join(', ')], colorClass: '' };
     }
     if (v.entities && v.entities.length > 0) {
       return {
-        tags: [v.entities.map(function(entity) { return entity.type + ':' + localizeResultText(entity.text); }).join(', ')],
+        tags: [v.entities.map(function(entity) { return entity.type + ':' + localizeResultText(entity.text, lang); }).join(', ')],
         colorClass: ''
       };
     }
@@ -8748,7 +8748,7 @@ function getTaskTypeLabel() {
       return { tags: [v.triples.join(' | ')], colorClass: '' };
     }
     if (v.label) {
-      return { tags: [localizeResultLabel(v.label)], colorClass: '' };
+      return { tags: [localizeResultLabel(v.label, lang)], colorClass: '' };
     }
     return { tags: ['-'], colorClass: '' };
   }
@@ -9446,7 +9446,7 @@ function getTaskTypeLabel() {
           reviewer_name: reviewData.reviewer_name,
           reviewed_at: reviewData.reviewed_at,
           decision: reviewData.decision,
-          corrected_result_summary: reviewData.corrected_result ? getAnnotationResultDisplay({ value: reviewData.corrected_result }).tags[0] : null,
+          corrected_result_summary: reviewData.corrected_result ? getAnnotationResultDisplay({ value: reviewData.corrected_result }, c.lang).tags[0] : null,
           excluded_annotation_assignments_count: excludedMetadata.reduce(function(sum, item) { return sum + item.sample_count; }, 0),
           excluded_annotation_assignments_ref: excludedMetadata.map(function(item) { return item.assignment_id; }).join(',')
         }, taskFields));
@@ -9684,6 +9684,42 @@ function getTaskTypeLabel() {
     return t('arStageBoth');
   }
 
+  /* FR-021(1)(2)(5): rebuilds a past export from its stored conditions
+     snapshot only -- never reads a live `state.ar*` filter or the dialog's
+     current selections, never opens #arSeqExportModal, never writes a new
+     TASK_DATA.exportHistory row, and reuses downloadArExport/
+     buildJsonExportPayload/buildJsonMinExportPayload (D1) so
+     deriveSequence keeps its single call site (SC-045). */
+  function redownloadArExportRecord(record) {
+    var snapshot = record.conditionsSnapshot;
+    var conditions = {
+      runStage: snapshot.run_stage,
+      submissionStatus: snapshot.submission_status,
+      annotatorScope: snapshot.annotator_scope,
+      reviewerScope: snapshot.reviewer_scope,
+      reviewStatusScope: snapshot.review_status_scope,
+      lang: snapshot.lang,
+      exportedAt: snapshot.exported_at,
+      exportedBy: snapshot.exported_by
+    };
+    var seqOptions = null;
+    if (snapshot.tagging_scheme && snapshot.token_unit) {
+      seqOptions = { tagging_scheme: snapshot.tagging_scheme, token_unit: snapshot.token_unit };
+      if (snapshot.token_unit === 'word') seqOptions.tokenizerEngine = snapshot.tokenizer_engine;
+    }
+    var format = snapshot.export_format;
+    if (seqOptions && seqOptions.token_unit === 'word') {
+      /* D5: the word path's manifest tokenizer/alignment_mode/
+         expanded_span_count come from state.arSeqExportRun, same as a live
+         export -- but redownload MUST NOT render the expansion summary. */
+      state.arSeqExportRun = { blocked: false, tokenizer: null, alignmentMode: null, expandedSpanCount: 0, expansions: [] };
+      downloadArExport(format, conditions, seqOptions);
+      state.arSeqExportRun = null;
+      return;
+    }
+    downloadArExport(format, conditions, seqOptions);
+  }
+
   function renderArExportHistory() {
     var body = document.getElementById('arExportHistoryBody');
     var empty = document.getElementById('arExportHistoryEmpty');
@@ -9723,6 +9759,9 @@ function getTaskTypeLabel() {
       dlBtn.className = 'mini-btn mini-btn-primary ar-export-action-btn';
       dlBtn.type = 'button';
       dlBtn.textContent = t('arExportDownload');
+      dlBtn.addEventListener('click', function() {
+        redownloadArExportRecord(record);
+      });
       opsTd.appendChild(dlBtn);
       tr.appendChild(opsTd);
       body.appendChild(tr);
