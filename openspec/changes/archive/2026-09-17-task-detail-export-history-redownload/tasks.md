@@ -56,7 +56,7 @@
 > **版本判定**：**MINOR v3.3.0**（新增 FR／AC／SC、無既有行為被推翻；理由見 proposal.md「規格」節）。回寫前須先 `git fetch` 並確認 `origin/main` 上正典 014 仍為 v3.2.0；若期間有其他 change 已把 014 推進，版本號須依合併目標重算，不得倒退。
 > **propose 期乾跑**：已以 `openspec/` 暫存複本乾跑 archive，結果為 `+ 1 added` 與 `Specs updated successfully.`，證明本 delta 為純 ADDED、不會在 archive 階段硬中止。
 
-- [ ] 2.1 執行 `openspec archive task-detail-export-history-redownload --yes`（`openspec` 不在 PATH 時以 `export PATH="$HOME/Library/pnpm:$PATH"` 前置），並確認衍生視圖已合併本次 delta。驗證：`openspec validate --changes --no-interactive` 通過，且本 change 目錄已移入 archive [@main]
+- [x] 2.1 執行 `openspec archive task-detail-export-history-redownload --yes`（`openspec` 不在 PATH 時以 `export PATH="$HOME/Library/pnpm:$PATH"` 前置），並確認衍生視圖已合併本次 delta。驗證：`openspec validate --changes --no-interactive` 通過，且本 change 目錄已移入 archive [@main]
 - [ ] 2.2 回寫正典 `specs/task-management/014-task-detail/spec.md`：版本 v3.2.0 → v3.3.0，於功能需求區 FR-020 之後新增 FR-021 全條、於使用者故事 1 的 AC-1.13 之後新增 AC-1.14 至 AC-1.16、於成功標準區 SC-045 之後新增 SC-046，最後新增 v3.3.0 Changelog 條目；每處編輯須先斷言錨點恰 1 筆再替換。驗證：`scripts/check-spec-artifacts.sh` exit 0 [@main]
 - [ ] 2.3 執行 `node scripts/gen-screen-inventory.mjs` 重生畫面盤點清單並單獨提交——產生器會計入正典的 FR 與 SC 數量，2.2 回寫後 INVENTORY_FRESHNESS 必然轉紅。驗證：`scripts/check-sdd.sh` 為 0 error、`scripts/inventory-tests.sh` exit 0 [@main]
 - [ ] 2.4 執行 Source-Verify gate（gate 4）：衍生視圖中每一處正典引用（FR／AC／SC ID、點次、檔案路徑、issue 編號、被改寫的條文子句）必須逐一以 grep 於正典定位，特別是 FR-021 所引用的 FR-010i-1、FR-010i-2 與 FR-020 第 1、3、4 點；並逐項比對衍生視圖與正典兩份文件的 ID 集合，確認無任何 ID 只存在於衍生側。`#### Scenario:` 標題為 AC 與 SC ID 的權威來源，掃描時須同時掃需求標題與情境標題。驗證：全部引用可定位、零 MISSING [@main]
