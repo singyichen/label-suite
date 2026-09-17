@@ -60,6 +60,17 @@ declare global {
   }
 }
 
+// `Window.TASK_DATA` is already declared (with a different, narrower shape)
+// by issue-742-seq-tagging-export-dialog.spec.ts's own `declare global`
+// block; TS requires merged global property declarations to share one exact
+// type, so this file reads `exportHistory` via a local cast instead of a
+// second conflicting global augmentation.
+type ArExportHistoryRecord = {
+  exportType?: string;
+  scope?: string;
+  conditionsSnapshot?: Record<string, unknown>;
+};
+
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 const PANEL_LOAD_TIMEOUT = 15000;
 // Short timeout for the redownload click: today's baseline has no handler
@@ -320,5 +331,59 @@ test.describe('issue #772 -- export-history redownload (task 1.3: AC-1.16 cannot
     expect(downloadFired).toBe(false);
     const historyRowsAfter = await page.locator('#arExportHistoryBody tr').count();
     expect(historyRowsAfter).toBe(historyRowsBefore);
+  });
+});
+
+test.describe('issue #772 -- export-history redownload (gap: FR-010i-2 scope_label/export_type on conditions snapshot)', () => {
+  test('a fresh export records export_type and scope_label on its conditions snapshot, and removing export_type from that snapshot disables the row\'s download button', async ({ page }) => {
+    await gotoAnnotationResults(page, ENTITY_RECOGNITION_TASK_ID);
+
+    // 執行一次真正的匯出，建立一筆帶條件快照的匯出記錄（非 sequence_tagging
+    // 任務點擊匯出按鈕不會開對話框，直接呼叫 performArExport()）。
+    const exported = await captureDownload(page, async () => {
+      await page.locator('#arExportJsonBtn').click();
+    });
+    // Guard against a vacuous pass.
+    expect(exported.filename.length).toBeGreaterThan(0);
+    expect(exported.content.length).toBeGreaterThan(0);
+
+    // FR-010i-2: 條件快照至少須包含 export_type 與 scope_label，與紀錄本身的
+    // exportType / scope 一致。今日的 performArExport() 只把這兩個值寫在
+    // record 本身，未寫進 conditionsSnapshot，因此以下比對預期落空。
+    const snapshotFields = await page.evaluate(() => {
+      const history = (window as unknown as { TASK_DATA?: { exportHistory?: ArExportHistoryRecord[] } })
+        .TASK_DATA?.exportHistory;
+      const record = history?.[0];
+      return {
+        recordExportType: record?.exportType,
+        recordScope: record?.scope,
+        snapshotExportType: record?.conditionsSnapshot?.export_type,
+        snapshotScopeLabel: record?.conditionsSnapshot?.scope_label
+      };
+    });
+    expect(snapshotFields.snapshotExportType).toBe(snapshotFields.recordExportType);
+    expect(snapshotFields.snapshotScopeLabel).toBe(snapshotFields.recordScope);
+
+    // FR-021(6): 快照缺少 FR-010i-2 所列任一必要欄位時，該列「下載」須呈停用
+    // 狀態並附中文說明。移除 export_type 製造缺欄快照，再以篩選變更觸發
+    // renderAnnotationResults() -> renderArExportHistory() 重繪
+    // (task-detail.html:9985-9986)，重新讀取按鈕狀態。
+    await page.evaluate(() => {
+      const history = (window as unknown as { TASK_DATA?: { exportHistory?: ArExportHistoryRecord[] } })
+        .TASK_DATA?.exportHistory;
+      const record = history?.[0];
+      if (record && record.conditionsSnapshot) {
+        delete record.conditionsSnapshot.export_type;
+      }
+    });
+    const currentStage = await page.locator('#arStageSelect').inputValue();
+    await page.locator('#arStageSelect').selectOption(currentStage === 'official' ? 'dry' : 'official');
+
+    const firstRow = page.locator('#arExportHistoryBody tr').first();
+    const dlBtn = firstRow.locator('.ar-export-action-btn');
+    await expect(dlBtn).toBeDisabled();
+    const title = await dlBtn.getAttribute('title');
+    expect(title).toBeTruthy();
+    expect(title as string).toMatch(/[一-鿿]/);
   });
 });
