@@ -20,10 +20,11 @@ import os
 from collections.abc import AsyncGenerator
 
 import pytest
+import sqlalchemy as sa
 from sqlalchemy import String, text
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.db.base import Base
+from app.db.base import NAMING_CONVENTION, Base
 from app.db.session import get_engine
 from tests.db.helpers import get_db_context
 
@@ -122,3 +123,53 @@ class TestPostgresAppliesNamingConvention:
 
         assert "pk_pg_probe" in names
         assert "uq_pg_probe_code" in names
+
+
+class TestPostgresAcceptsCompositeKeysSharingFirstColumn:
+    """Issue #793: PostgreSQL must accept two composite unique keys on one first column.
+
+    SQLite ignores constraint names, so a first-column-only convention passes
+    locally and fails only here: PostgreSQL backs each unique constraint with an
+    index of the same name, and index names must be unique per schema.
+    """
+
+    async def test_create_all_succeeds_and_keeps_both_names(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("ALLOWED_ORIGINS", "http://localhost:5173")
+        metadata = sa.MetaData(naming_convention=NAMING_CONVENTION)
+        table = sa.Table(
+            "pg_composite_probe",
+            metadata,
+            sa.Column("id", sa.Integer, primary_key=True),
+            sa.Column("task_id", sa.Integer),
+            sa.Column("user_id", sa.Integer),
+            sa.Column("trial_round", sa.Integer),
+            sa.UniqueConstraint("task_id", "user_id"),
+            sa.UniqueConstraint("task_id", "trial_round"),
+            sa.Index(None, "task_id", "user_id"),
+            sa.Index(None, "task_id", "trial_round"),
+        )
+        engine = get_engine()
+        try:
+            async with engine.begin() as conn:
+                await conn.run_sync(metadata.create_all, tables=[table])
+            try:
+                async with get_db_context() as session:
+                    result = await session.execute(
+                        text(
+                            "SELECT relname FROM pg_class WHERE relkind = 'i' "
+                            "AND relname LIKE '%pg_composite_probe%' ORDER BY relname"
+                        )
+                    )
+                    names = list(result.scalars())
+            finally:
+                async with engine.begin() as conn:
+                    await conn.run_sync(metadata.drop_all, tables=[table])
+        finally:
+            await engine.dispose()
+
+        unique_names = [name for name in names if name.startswith("uq_")]
+        index_names = [name for name in names if name.startswith("ix_")]
+        assert len(unique_names) == 2, names
+        assert len(index_names) == 2, names
