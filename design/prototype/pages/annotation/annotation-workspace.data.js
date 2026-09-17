@@ -2954,10 +2954,12 @@
     return 0;
   }
 
-  /* Returns { sampleId, annotatorId, status } or null when this reviewer has
-     nothing left to do on the task -- the caller must then say so rather
-     than opening an arbitrary read-only unit. */
-  function findNextActionableReviewUnit(taskId, runType, reviewerId) {
+  /* issue #766 (FR-100 clause 1): every unit this reviewer can act on, as
+     { unit, rank } in enumeration order. It is the ONLY place the per-unit
+     actionable judgement runs: findNextActionableReviewUnit() picks from it
+     and the finalized card counts it, so "0 left" and "no next unit" can
+     never disagree. */
+  function listActionableReviewUnits(taskId, runType, reviewerId) {
     var units = listReviewUnits(taskId, runType);
     /* The FULL enumeration goes in: getReviewAssignments() is positional --
        official_run walks the sorted list with a fixed stride and dry_run
@@ -2970,18 +2972,39 @@
     })).forEach(function (assigned) {
       assignedKeys[assigned.sample_id + '\u0000' + assigned.annotator_id] = true;
     });
-    var best = null;
-    var bestRank = 0;
+    var actionable = [];
     units.forEach(function (unit) {
       var rank = reviewUnitActionRank(taskId, runType, unit, reviewerId, assignedKeys);
-      if (rank === 0) return;
-      if (best === null || rank < bestRank) {
-        best = unit;
-        bestRank = rank;
-      }
+      if (rank !== 0) actionable.push({ unit: unit, rank: rank });
     });
-    return best;
+    return actionable;
   }
+
+  /* Returns { sampleId, annotatorId, status } or null when this reviewer has
+     nothing left to do on the task -- the caller must then say so rather
+     than opening an arbitrary read-only unit. */
+  function findNextActionableReviewUnit(taskId, runType, reviewerId) {
+    var best = null;
+    listActionableReviewUnits(taskId, runType, reviewerId).forEach(function (entry) {
+      if (best === null || entry.rank < best.rank) best = entry;
+    });
+    return best ? best.unit : null;
+  }
+
+  /* issue #766 (FR-100 clause 3): the "nothing left" wording shared by the
+     list page's no-actionable notice and the workspace finalized card.
+     Defined once here, like REVIEW_SUMMARY_LABELS, so the two screens cannot
+     drift into different phrasings. */
+  var NO_ACTIONABLE_REVIEW_LABELS = {
+    zh: {
+      title: '目前沒有可處理項目',
+      message: '這個任務的審核單位都已定稿，或不在你的可處理範圍內。',
+    },
+    en: {
+      title: 'No actionable items right now',
+      message: 'Every review unit on this task is finalized or outside what you can act on.',
+    },
+  };
 
   /* ---- Review-flow demo seeder (Phase 2 slice C) -------------------------
    * Stages the T014-T017 demo review states at boot so every review-flow
@@ -3356,7 +3379,9 @@
     computeReviewWorkload: computeReviewWorkload,
     formatReviewSummary: formatReviewSummary,
     listReviewUnits: listReviewUnits,
+    listActionableReviewUnits: listActionableReviewUnits,
     findNextActionableReviewUnit: findNextActionableReviewUnit,
+    NO_ACTIONABLE_REVIEW_LABELS: NO_ACTIONABLE_REVIEW_LABELS,
     getDisputeItems: getDisputeItems,
     isArbiterCandidate: isArbiterCandidate,
     readReviewerSubmissions: readReviewerSubmissions,
