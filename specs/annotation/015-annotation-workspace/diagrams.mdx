@@ -1,0 +1,309 @@
+---
+title: 標註工作區審核流程圖
+description: spec.md 所列五張流程圖的彙整檢視。圖的唯一來源是同層 diagrams/*.html，本檔以建置期 ?raw 引用，不複製任何圖形內容。
+tags: [annotation, review, diagram]
+---
+
+本頁是 [spec.md](./spec.md)〈審核流程〉一節所列五張圖的彙整檢視，供 NoteCraft
+一次讀完。**每張圖的唯一來源都是同層 `diagrams/*.html`**——本檔在建置期以
+Vite 的 `?raw` 引用原檔並抽出其中的 `<svg>`，沒有複製任何一行圖形內容，
+改圖只需要改 `.html`，本頁自動跟著變。
+
+五張原檔皆各自使用 `arw` / `arw-ac` / `arw-sf` 三個相同的 marker id，
+同一份文件內 `url(#id)` 是文件層級解析、會互相覆蓋，故 `svgOf()` 在
+render 時替每張圖的 id 與其引用加上專屬前綴。
+
+原檔的 `svg { width: 100%; min-width: 1200px; display: block; }` 寫在 `<head>`
+而不是 `<svg>` 上，抽 `<svg>` 時會一併掉失；`svgOf()` 把它補回 `<svg>` 的 inline
+`style`，外層再包一層 `overflow-x: auto`，讓圖維持原始尺寸並可橫向捲動，而不是
+隨欄寬縮到說明文字看不清。
+
+import overview from './diagrams/review-flow-overview.html?raw';
+import dryRun from './diagrams/review-flow-dry-run.html?raw';
+import officialRun from './diagrams/review-flow-official-run.html?raw';
+import reviewUnit from './diagrams/review-unit-state-machine.html?raw';
+import taskStatus from './diagrams/task-status-state-machine.html?raw';
+
+export const svgOf = (raw, ns) =>
+  raw
+    .slice(raw.indexOf('<svg'), raw.lastIndexOf('</svg>') + 6)
+    .replace('<svg', '<svg style="width:100%;min-width:1200px;display:block"')
+    .replace(/(?<![\w-])id="([^"]+)"/g, `id="${ns}-$1"`)
+    .replace(/url\(#([^)]+)\)/g, `url(#${ns}-$1)`)
+    .replace(
+      /(?<![\w-])aria-(labelledby|describedby)="([^"]+)"/g,
+      (_m, attr, ids) =>
+        `aria-${attr}="${ids.trim().split(/\s+/).map((id) => `${ns}-${id}`).join(' ')}"`,
+    );
+
+## 審核流程總覽
+
+原檔：[review-flow-overview.html](./diagrams/review-flow-overview.html)
+
+<div style={{ overflowX: 'auto' }}>
+  <Fragment set:html={svgOf(overview, 'rvov')} />
+</div>
+
+## 試標審核詳細流程
+
+原檔：[review-flow-dry-run.html](./diagrams/review-flow-dry-run.html)
+
+<div style={{ overflowX: 'auto' }}>
+  <Fragment set:html={svgOf(dryRun, 'rvdr')} />
+</div>
+
+### 重繪版
+
+{/* @ai-visualize
+id: review-flow-dry-run-interactive
+type: motion
+status: generated
+prompt: |
+  重繪「試標（dry_run）審核詳細流程」，對象是要驗收規格的教授與專案負責人。
+  上方同一頁已有一張靜態 SVG 原圖，本元件是它的互動重繪版，兩者並列比對。
+
+  核心洞察（元件要收斂到這一句，原圖已明寫）：
+  「審核員的每一次決定只影響一份標記；要整批跑完，才看得出指引哪裡不夠清楚。」
+  張力在「單筆」與「整批」兩個尺度：單筆看不出品質問題，整批才看得出來。
+  請讓讀者能親手在這兩個尺度之間切換，而不是讀兩段文字。
+
+  單筆流程（一份樣本搭一位標記員）依序是：
+  1. 標記員送出試標 → 成立審核單位（送出前不成立，畫面顯示「尚無標記提交」）
+  2. 審核分配：以樣本為單位，同一份資料的所有標記交給同一位審核員
+  3. 審核員逐項比對後做決定，三選一：通過 approve／改答案 modify／無法判定 bypass
+     —— 沒有「退回重標」這個選項，試標不退回
+  4. 全部 approve → 直接定稿；任一項 modify 或 bypass → 該項進爭議池（修改不立即生效）
+  5. 仲裁者逐項裁決，只能二選一：採標記員原答案 or 採審核員的值。
+     不能自己寫第三種答案。仲裁者須勾選為仲裁者且未參與這份標記。
+  6. 兩邊都不能用 → 必填理由 → 落入最終例外池，由專案負責人逐筆處理：
+     採用原答案／採用審核員答案／從資料集移除（試標沒有「自己填答案」這個出口）。
+     例外池清空，任務才能結案。
+  7. 已定稿：鎖定，只顯示文字不能再改。歷程為「原答案 → 審核員改 → 仲裁採用」。
+
+  整批流程（全部試標跑完之後）：
+  所有標記員都送出 → 任務轉為待確認 → 系統自動統計出兩項指標一起看：
+  標記一致性（標記員彼此之間有多一致）、標記員被修改的比例（每個人最後被改掉多少）。
+  由專案主持人判讀「可接受」或「不理想」，系統不會自動判定合格。
+  可接受 → 開放正式標記（表示指引已經夠清楚）；
+  不理想 → 修改指引後再跑一輪試標（改的是指引，不是退回個別樣本）。
+  另有「試標歷程回饋」：標記員自己看得到哪幾項被改、被誰定案，不用退回也能學到。
+  試標不產出最終答案——這條路要收斂的是分歧，產出的是指引該修哪裡的證據。
+
+  建議做法（可覆寫，若你想到更能體現張力的形式）：
+  用一個「單筆 / 整批」的尺度切換作為主軸。單筆模式做成 stepper，讀者點擊推進
+  1→7，每一步高亮當前節點並顯示該步的規則；在第 3 步讓讀者實際選 approve／
+  modify／bypass，後續路徑隨選擇分歧（approve 直達定稿，另兩者走爭議池）。
+  切到整批模式時，呈現三位標記員各自的結果匯總成兩項指標，並讓讀者在
+  「可接受／不理想」兩個判讀之間切換，看出口導向正式標記或再跑一輪。
+  務必讓「不存在的出口」看得見：退回重標、自己寫第三種答案，兩者都要明確標示為不存在。
+caption: 試標審核流程的互動重繪版——可切換單筆／整批兩個尺度，並在審核決策點實際分歧
+*/}
+
+import GeneratedFrame from '@/components/GeneratedFrame.astro'
+import ReviewFlowDryRunInteractive from '@notes/components/review-flow-dry-run-interactive'
+
+<GeneratedFrame id="review-flow-dry-run-interactive" type="motion" prompt={"重繪「試標（dry_run）審核詳細流程」，對象是要驗收規格的教授與專案負責人。\n上方同一頁已有一張靜態 SVG 原圖，本元件是它的互動重繪版，兩者並列比對。\n\n核心洞察（元件要收斂到這一句，原圖已明寫）：\n「審核員的每一次決定只影響一份標記；要整批跑完，才看得出指引哪裡不夠清楚。」\n張力在「單筆」與「整批」兩個尺度：單筆看不出品質問題，整批才看得出來。\n請讓讀者能親手在這兩個尺度之間切換，而不是讀兩段文字。\n\n單筆流程（一份樣本搭一位標記員）依序是：\n1. 標記員送出試標 → 成立審核單位（送出前不成立，畫面顯示「尚無標記提交」）\n2. 審核分配：以樣本為單位，同一份資料的所有標記交給同一位審核員\n3. 審核員逐項比對後做決定，三選一：通過 approve／改答案 modify／無法判定 bypass\n   —— 沒有「退回重標」這個選項，試標不退回\n4. 全部 approve → 直接定稿；任一項 modify 或 bypass → 該項進爭議池（修改不立即生效）\n5. 仲裁者逐項裁決，只能二選一：採標記員原答案 or 採審核員的值。\n   不能自己寫第三種答案。仲裁者須勾選為仲裁者且未參與這份標記。\n6. 兩邊都不能用 → 必填理由 → 落入最終例外池，由專案負責人逐筆處理：\n   採用原答案／採用審核員答案／從資料集移除（試標沒有「自己填答案」這個出口）。\n   例外池清空，任務才能結案。\n7. 已定稿：鎖定，只顯示文字不能再改。歷程為「原答案 → 審核員改 → 仲裁採用」。\n\n整批流程（全部試標跑完之後）：\n所有標記員都送出 → 任務轉為待確認 → 系統自動統計出兩項指標一起看：\n標記一致性（標記員彼此之間有多一致）、標記員被修改的比例（每個人最後被改掉多少）。\n由專案主持人判讀「可接受」或「不理想」，系統不會自動判定合格。\n可接受 → 開放正式標記（表示指引已經夠清楚）；\n不理想 → 修改指引後再跑一輪試標（改的是指引，不是退回個別樣本）。\n另有「試標歷程回饋」：標記員自己看得到哪幾項被改、被誰定案，不用退回也能學到。\n試標不產出最終答案——這條路要收斂的是分歧，產出的是指引該修哪裡的證據。\n\n建議做法（可覆寫，若你想到更能體現張力的形式）：\n用一個「單筆 / 整批」的尺度切換作為主軸。單筆模式做成 stepper，讀者點擊推進\n1→7，每一步高亮當前節點並顯示該步的規則；在第 3 步讓讀者實際選 approve／\nmodify／bypass，後續路徑隨選擇分歧（approve 直達定稿，另兩者走爭議池）。\n切到整批模式時，呈現三位標記員各自的結果匯總成兩項指標，並讓讀者在\n「可接受／不理想」兩個判讀之間切換，看出口導向正式標記或再跑一輪。\n務必讓「不存在的出口」看得見：退回重標、自己寫第三種答案，兩者都要明確標示為不存在。"} caption="試標審核流程的互動重繪版——可切換單筆／整批兩個尺度，並在審核決策點實際分歧">
+  <ReviewFlowDryRunInteractive client:visible />
+</GeneratedFrame>
+
+
+## 正式標記審核詳細流程
+
+原檔：[review-flow-official-run.html](./diagrams/review-flow-official-run.html)
+
+<div style={{ overflowX: 'auto' }}>
+  <Fragment set:html={svgOf(officialRun, 'rvof')} />
+</div>
+
+## ReviewUnit 狀態機
+
+原檔：[review-unit-state-machine.html](./diagrams/review-unit-state-machine.html)
+
+<div style={{ overflowX: 'auto' }}>
+  <Fragment set:html={svgOf(reviewUnit, 'rusm')} />
+</div>
+
+### 重繪版
+
+{/* @ai-visualize
+id: review-unit-state-machine-interactive
+type: diagram
+status: generated
+prompt: |
+  重繪「ReviewUnit 形式狀態機」，對象是要驗收規格的教授與工程師。
+  上方同一頁已有一張靜態 SVG 原圖，本元件是它的互動重繪版，兩者並列比對。
+  這是形式規格，正確性優先於美觀——任何一條轉換都不能畫錯或自行補齊。
+
+  核心洞察（元件要收斂到這一句，原圖已明寫）：
+  「爭議中不是終態，但它是唯一會停在原地的狀態——出口全部要人裁定，沒有一條自動路徑。」
+
+  狀態集合 REVIEW_UNIT_STATUS 恰三態，線性推進：
+  - pending 待審：已指派審核員，審核員尚未提交
+  - disputed 爭議中：有 modify／bypass 決策，等待仲裁或例外池收尾（唯一有自留迴圈者）
+  - finalized 已定稿：終態，出邊為空集合
+
+  合法轉換（只有這些）：
+  - null → pending：標記員提交，系統指派 1 位審核員
+  - pending → finalized：審核員逐項決策皆為 approve
+  - pending → disputed：任一項決策為 modify 或 bypass
+  - disputed → finalized：所有爭議項皆已解決（仲裁定案 FR-061 或例外池收尾 FR-095）
+  - disputed → disputed（自留迴圈）：仍有未解決的爭議項，維持 disputed，不回退
+
+  狀態判定式 FR-051 恰五句，狀態是推導值而非可寫欄位：
+  1. 標記員未提交 → 不成立審核單位（推導為 null）
+  2. 該單位之指派審核員（FR-093）尚未提交 → pending
+  3. 審核員逐項決策皆為 approve → finalized
+  4. 任一項決策為 modify 或 bypass → disputed
+  5. disputed 之所有爭議項皆已解決 → finalized，否則維持 disputed
+
+  定址：REVIEW_UNIT_DIMENSIONS = sample_id × annotator_id × run_type。
+  狀態解析須讀取該標記員名下所有審核員的已提交決策，不得僅讀目前登入審核員自己的紀錄。
+
+  明確不存在的狀態與轉換（v5.0.0 BREAKING, issue #596）——必須醒目呈現，
+  這是本圖存在的一半理由，不要只畫合法轉換：
+  - approved（已同意）／modified（已修改）兩個中繼態已移除：其存在前提是
+    「已表態人數未達 min_reviewers 門檻」，單人接力下一個審核單位恰指派一位
+    審核員（FR-093），該區間不存在，兩態必恆為瞬時值
+  - disputed → pending 不存在：爭議中不回退，未解決項只使 disputed 自留
+  - finalized → 任何狀態 不存在：finalized 為終態，出邊為空集合
+  - pending → null 不存在：標記員提交後不會退回不成立
+  - reject（退回重標）不存在：不在 REVIEW_DECISIONS 內，兩種 run_type 皆不得出現；
+    退回控件、退回決策值、退回歷程產生點一律不存在（FR-092）
+  - 自動收斂（多數決）不存在：DISPUTE_CONVERGENCE_RULE 已於 v5.0.0 廢止，
+    爭議項必須全數由仲裁者逐項裁定（FR-061）
+  - 依 run_type 分流的狀態機 不存在：定址與判定於兩種 run_type 完全一致（FR-051）
+  - 未送出草稿改變狀態 不存在：草稿不計入狀態解析（FR-051）
+
+  建議做法（可覆寫）：
+  畫成可點擊的狀態機。讀者點一個狀態或一條轉換，右側顯示該轉換的守衛條件與
+  對應的 FR-051 判定式第幾句；並提供一個「逐項決策」的小控制項，讓讀者實際勾選
+  approve／modify／bypass 的組合，狀態機當場算出落到哪一態——把五句判定式變成
+  可驗證的東西，而不是一段要對照著讀的文字。
+  「不存在的轉換」請保持原圖的處理方式：不畫線，另列清單並標示 ✕，
+  但可讓讀者嘗試觸發後看到明確的「此轉換不存在」回饋與理由。
+caption: ReviewUnit 三態機的互動重繪版——可點擊轉換查守衛條件，並實際勾選決策組合驗證 FR-051 五句判定式
+*/}
+
+import ReviewUnitStateMachineInteractive from '@notes/components/review-unit-state-machine-interactive'
+
+<GeneratedFrame id="review-unit-state-machine-interactive" type="diagram" prompt={"重繪「ReviewUnit 形式狀態機」，對象是要驗收規格的教授與工程師。\n上方同一頁已有一張靜態 SVG 原圖，本元件是它的互動重繪版，兩者並列比對。\n這是形式規格，正確性優先於美觀——任何一條轉換都不能畫錯或自行補齊。\n\n核心洞察（元件要收斂到這一句，原圖已明寫）：\n「爭議中不是終態，但它是唯一會停在原地的狀態——出口全部要人裁定，沒有一條自動路徑。」\n\n狀態集合 REVIEW_UNIT_STATUS 恰三態，線性推進：\n- pending 待審：已指派審核員，審核員尚未提交\n- disputed 爭議中：有 modify／bypass 決策，等待仲裁或例外池收尾（唯一有自留迴圈者）\n- finalized 已定稿：終態，出邊為空集合\n\n合法轉換（只有這些）：\n- null → pending：標記員提交，系統指派 1 位審核員\n- pending → finalized：審核員逐項決策皆為 approve\n- pending → disputed：任一項決策為 modify 或 bypass\n- disputed → finalized：所有爭議項皆已解決（仲裁定案 FR-061 或例外池收尾 FR-095）\n- disputed → disputed（自留迴圈）：仍有未解決的爭議項，維持 disputed，不回退\n\n狀態判定式 FR-051 恰五句，狀態是推導值而非可寫欄位：\n1. 標記員未提交 → 不成立審核單位（推導為 null）\n2. 該單位之指派審核員（FR-093）尚未提交 → pending\n3. 審核員逐項決策皆為 approve → finalized\n4. 任一項決策為 modify 或 bypass → disputed\n5. disputed 之所有爭議項皆已解決 → finalized，否則維持 disputed\n\n定址：REVIEW_UNIT_DIMENSIONS = sample_id × annotator_id × run_type。\n狀態解析須讀取該標記員名下所有審核員的已提交決策，不得僅讀目前登入審核員自己的紀錄。\n\n明確不存在的狀態與轉換（v5.0.0 BREAKING, issue #596）——必須醒目呈現，\n這是本圖存在的一半理由，不要只畫合法轉換：\n- approved（已同意）／modified（已修改）兩個中繼態已移除：其存在前提是\n  「已表態人數未達 min_reviewers 門檻」，單人接力下一個審核單位恰指派一位\n  審核員（FR-093），該區間不存在，兩態必恆為瞬時值\n- disputed → pending 不存在：爭議中不回退，未解決項只使 disputed 自留\n- finalized → 任何狀態 不存在：finalized 為終態，出邊為空集合\n- pending → null 不存在：標記員提交後不會退回不成立\n- reject（退回重標）不存在：不在 REVIEW_DECISIONS 內，兩種 run_type 皆不得出現；\n  退回控件、退回決策值、退回歷程產生點一律不存在（FR-092）\n- 自動收斂（多數決）不存在：DISPUTE_CONVERGENCE_RULE 已於 v5.0.0 廢止，\n  爭議項必須全數由仲裁者逐項裁定（FR-061）\n- 依 run_type 分流的狀態機 不存在：定址與判定於兩種 run_type 完全一致（FR-051）\n- 未送出草稿改變狀態 不存在：草稿不計入狀態解析（FR-051）\n\n建議做法（可覆寫）：\n畫成可點擊的狀態機。讀者點一個狀態或一條轉換，右側顯示該轉換的守衛條件與\n對應的 FR-051 判定式第幾句；並提供一個「逐項決策」的小控制項，讓讀者實際勾選\napprove／modify／bypass 的組合，狀態機當場算出落到哪一態——把五句判定式變成\n可驗證的東西，而不是一段要對照著讀的文字。\n「不存在的轉換」請保持原圖的處理方式：不畫線，另列清單並標示 ✕，\n但可讓讀者嘗試觸發後看到明確的「此轉換不存在」回饋與理由。"} caption="ReviewUnit 三態機的互動重繪版——可點擊轉換查守衛條件，並實際勾選決策組合驗證 FR-051 五句判定式">
+  <ReviewUnitStateMachineInteractive client:visible />
+</GeneratedFrame>
+
+
+## Task 狀態機
+
+原檔：[task-status-state-machine.html](./diagrams/task-status-state-machine.html)
+
+<div style={{ overflowX: 'auto' }}>
+  <Fragment set:html={svgOf(taskStatus, 'tssm')} />
+</div>
+
+## 資料實體關係（ERD）
+
+資料來源：[spec.md](./spec.md)〈關鍵實體〉。本節不是原檔 SVG 的彙整，而是依該節文字重繪的 ERD。
+
+{/* @ai-visualize
+id: annotation-workspace-erd
+type: diagram
+status: generated
+prompt: |
+  仿 dbdiagram.io 風格的 ERD，對象是要驗收規格的教授與工程師。
+  唯一來源是 spec.md〈關鍵實體〉；這是概念資料模型，不是資料庫 DDL。
+  正確性優先：只畫原文列出的欄位；原文沒寫明的外鍵或關聯一律畫成虛線並標「推導」，
+  不得自行補欄位。
+
+  核心洞察：「真正寫入儲存的只有標記與決策；審核單位的狀態、爭議項的身分都是推導值。」
+  張力在「儲存」與「推導」——請讓讀者一眼分出哪些欄位／實體是實際寫入、哪些是算出來的。
+
+  表格（欄位照抄原文）：
+  - TaskProfile（唯讀，上游 013 凍結）：task_id、input_type、outputs[]（OutputConfig[]：type, config）、
+    field_role_map、item_pair_labels?、guidelineFiles?（{name,type,url}[]）、materializedRuns?、
+    forceShowGuideline?、guidelineVersion?
+  - AnnotationListItem：task_id、sample_id、run_type、trial_round?、sample_snapshot_id、完成狀態、鎖定狀態、摘要資訊
+    （由 task-detail run 發布事件建立，任務建立時不得預先產生）
+  - AnnotationRecord：sample_id、answers: OutputAnswer[]、note?、version、status（pending|saved|submitted）、annotator_id、submitted_at?
+  - OutputAnswer（內嵌於 AnnotationRecord.answers[]）：type（OUTPUT_TYPE_KEYS）、bypass: boolean、note?、version、
+    依 type 的 payload（8 種：single_label/multi_label/single_dim/multi_dim/sequence_tagging/entity_recognition/relation_identification/free_text）
+  - ReviewUnit：sample_id、annotator_id、run_type、status（推導：pending|disputed|finalized）、
+    reviewer_decisions[]（v5.0.0：至多一筆）、diffs_by_output_type（推導，FR-052）
+    定址 = sample_id × annotator_id × run_type
+  - ReviewDecision：annotator_id、output_type、decision（approve|modify|bypass）、correction?、
+    reason?（decision = modify|bypass 時必填）、reviewer_id、decided_at；維度為「標記員 × 輸出類型」
+  - DisputeItem：output_type、item_key、annotator_value?、reviewer_values（至多一筆）、
+    votes[]?（arbiter_id、choice：adopt_a|adopt_b|reject、voted_at）、finalized_value?、finalized_by?
+    身分與 A/B 值由 FR-052 推導、不實體化；votes[] 與 finalized_* 是僅有的寫入狀態，以審核單位定址儲存
+  - AnnotationHistoryItem：action（HISTORY_ACTIONS 九值）、role、actor_id、at、summary、
+    result_snapshot、started_at、lead_time、reason
+  - GuidelineAsset：文字摘要、檔案清單（來源 TaskProfile.guidelineFiles）、指引閘門確認紀錄（逐 task_id）
+  - 已廢止（v4.0.0，灰階、名稱保留不重用）：AdjudicationItem、GoldRecord——畫出但明確標示「已廢止」
+
+  關聯：
+  - TaskProfile 1 — * AnnotationListItem（task_id，原文明寫）
+  - AnnotationRecord 1 — 1..* OutputAnswer（內嵌陣列，依 TaskProfile.outputs[] 順序）
+  - TaskProfile.outputs[].type → OutputAnswer.type（型別約束）
+  - AnnotationRecord → ReviewUnit（sample_id + annotator_id；AnnotationRecord 原文無 run_type 欄位 → 推導，虛線）
+  - ReviewUnit 1 — reviewer_decisions[] ReviewDecision
+  - ReviewUnit 1 — * DisputeItem（推導，虛線；僅 votes/finalized 寫入）
+  - TaskProfile.guidelineFiles → GuidelineAsset
+  - AnnotationListItem ↔ AnnotationRecord（task_id / sample_id；AnnotationRecord 原文無 task_id → 推導，虛線）
+  - AnnotationHistoryItem 原文未列關聯鍵 → 不畫實線，標示「關聯鍵未定義」
+
+  建議做法（可覆寫）：dbdiagram 風格表格卡片（表頭色帶、欄位列、型別右對齊、PK/定址鍵與推導欄位不同標記），
+  crow's foot 表示基數；hover 表格高亮其關聯線與對應欄位；表格可拖曳、線跟著移動；
+  提供「儲存／推導」切換或圖例，讓推導欄位與虛線關聯可以一鍵凸顯。
+caption: 標註工作區資料實體 ERD——實線為原文明寫的關聯，虛線為推導；灰階為 v4.0.0 已廢止實體
+*/}
+
+import AnnotationWorkspaceErd from '@notes/components/annotation-workspace-erd'
+
+<GeneratedFrame id="annotation-workspace-erd" type="diagram" prompt={"仿 dbdiagram.io 風格的 ERD，對象是要驗收規格的教授與工程師。\n唯一來源是 spec.md〈關鍵實體〉；這是概念資料模型，不是資料庫 DDL。\n正確性優先：只畫原文列出的欄位；原文沒寫明的外鍵或關聯一律畫成虛線並標「推導」，\n不得自行補欄位。\n\n核心洞察：「真正寫入儲存的只有標記與決策；審核單位的狀態、爭議項的身分都是推導值。」\n張力在「儲存」與「推導」——請讓讀者一眼分出哪些欄位／實體是實際寫入、哪些是算出來的。\n\n表格（欄位照抄原文）：\n- TaskProfile（唯讀，上游 013 凍結）：task_id、input_type、outputs[]（OutputConfig[]：type, config）、\n  field_role_map、item_pair_labels?、guidelineFiles?（{name,type,url}[]）、materializedRuns?、\n  forceShowGuideline?、guidelineVersion?\n- AnnotationListItem：task_id、sample_id、run_type、trial_round?、sample_snapshot_id、完成狀態、鎖定狀態、摘要資訊\n  （由 task-detail run 發布事件建立，任務建立時不得預先產生）\n- AnnotationRecord：sample_id、answers: OutputAnswer[]、note?、version、status（pending|saved|submitted）、annotator_id、submitted_at?\n- OutputAnswer（內嵌於 AnnotationRecord.answers[]）：type（OUTPUT_TYPE_KEYS）、bypass: boolean、note?、version、\n  依 type 的 payload（8 種：single_label/multi_label/single_dim/multi_dim/sequence_tagging/entity_recognition/relation_identification/free_text）\n- ReviewUnit：sample_id、annotator_id、run_type、status（推導：pending|disputed|finalized）、\n  reviewer_decisions[]（v5.0.0：至多一筆）、diffs_by_output_type（推導，FR-052）\n  定址 = sample_id × annotator_id × run_type\n- ReviewDecision：annotator_id、output_type、decision（approve|modify|bypass）、correction?、\n  reason?（decision = modify|bypass 時必填）、reviewer_id、decided_at；維度為「標記員 × 輸出類型」\n- DisputeItem：output_type、item_key、annotator_value?、reviewer_values（至多一筆）、\n  votes[]?（arbiter_id、choice：adopt_a|adopt_b|reject、voted_at）、finalized_value?、finalized_by?\n  身分與 A/B 值由 FR-052 推導、不實體化；votes[] 與 finalized_* 是僅有的寫入狀態，以審核單位定址儲存\n- AnnotationHistoryItem：action（HISTORY_ACTIONS 九值）、role、actor_id、at、summary、\n  result_snapshot、started_at、lead_time、reason\n- GuidelineAsset：文字摘要、檔案清單（來源 TaskProfile.guidelineFiles）、指引閘門確認紀錄（逐 task_id）\n- 已廢止（v4.0.0，灰階、名稱保留不重用）：AdjudicationItem、GoldRecord——畫出但明確標示「已廢止」\n\n關聯：\n- TaskProfile 1 — * AnnotationListItem（task_id，原文明寫）\n- AnnotationRecord 1 — 1..* OutputAnswer（內嵌陣列，依 TaskProfile.outputs[] 順序）\n- TaskProfile.outputs[].type → OutputAnswer.type（型別約束）\n- AnnotationRecord → ReviewUnit（sample_id + annotator_id；AnnotationRecord 原文無 run_type 欄位 → 推導，虛線）\n- ReviewUnit 1 — reviewer_decisions[] ReviewDecision\n- ReviewUnit 1 — * DisputeItem（推導，虛線；僅 votes/finalized 寫入）\n- TaskProfile.guidelineFiles → GuidelineAsset\n- AnnotationListItem ↔ AnnotationRecord（task_id / sample_id；AnnotationRecord 原文無 task_id → 推導，虛線）\n- AnnotationHistoryItem 原文未列關聯鍵 → 不畫實線，標示「關聯鍵未定義」\n\n建議做法（可覆寫）：dbdiagram 風格表格卡片（表頭色帶、欄位列、型別右對齊、PK/定址鍵與推導欄位不同標記），\ncrow's foot 表示基數；hover 表格高亮其關聯線與對應欄位；表格可拖曳、線跟著移動；\n提供「儲存／推導」切換或圖例，讓推導欄位與虛線關聯可以一鍵凸顯。"} caption="標註工作區資料實體 ERD——實線為原文明寫的關聯，虛線為推導；灰階為 v4.0.0 已廢止實體">
+  <AnnotationWorkspaceErd client:visible />
+</GeneratedFrame>
+
+## 互動式 ERD（dbdiagram 範例 schema）
+
+{/* @ai-visualize
+id: dbml-sample-interactive-erd
+type: diagram
+status: generated
+prompt: |
+  可實際操作的互動式 ERD，視覺與操作體驗參考 dbdiagram.io（不複製其網站介面）。
+  對象：教授與工程師。第一個畫面就是可操作的 ERD，不放說明文件或靜態預覽。
+
+  唯一資料來源（不得增刪改名或推測任何資料表、欄位、關聯）：
+    Table follows { following_user_id integer [not null]; followed_user_id integer [not null]; created_at timestamp }
+    Table users   { id integer [primary key]; username varchar; role varchar; created_at timestamp }
+    Table posts   { id integer [primary key]; title varchar; body text [note: 'Content of the post'];
+                    user_id integer [not null]; status varchar; created_at timestamp }
+    Ref user_posts: posts.user_id ?> users.id   // many-to-one
+    Ref: users.id <? follows.following_user_id
+    Ref: users.id <? follows.followed_user_id
+    Records users(id, username, role)  { 0,'Alice','admin' / 1,'Bob','moderator' / 2,'Candice','moderator' / 3,'David','member' }
+    Records follows(following_user_id, followed_user_id, created_at) { 1,0,'2026-01-01' / 3,2,'2026-02-28' }
+    Records posts(id, title, user_id)  { 0,'Welcome to the forum!',0 / 1,'Guidelines',1 / 2,'Hello all!',3 }
+
+  初始：三表全部展開；users 中央偏左、posts 在 users 右側、follows 在 users 下方。
+  欄位名完整不截斷、型別靠右；PK／FK 以文字標記（不只靠顏色）；not null 低調必填標記；
+  posts.body 有 note 圖示，hover／focus／點擊顯示 "Content of the post"。
+  關聯線接到實際欄位列，crow's foot 表基數，中性色；線不穿過卡片或文字。
+  關聯：user_posts（posts.user_id → users.id，many-to-one）、following_user、followed_user
+  （users.id 一 對 follows 零或多）。
+
+  互動：拖曳表頭移動卡片（線即時跟隨、不觸發平移）；滾輪縮放、拖空白處平移；
+  放大／縮小／適合畫面／重設，限制縮放範圍；每表獨立展開收合（收合保留表頭與 PK/FK）；
+  全部展開／全部收合；顯示層級三段式：全部欄位／僅鍵值／僅資料表，短暫平順過渡、無循環動畫；
+  hover／點擊／鍵盤 focus 資料表、欄位或關聯線 → 高亮相關表、欄位、線，淡化無關元素，
+  顯示關聯名稱與方向（例如 posts.user_id → users.id）。
+  點擊資料表開輕量側邊詳細面板顯示 Records（缺值顯示 —），可用關閉鈕或 Esc 關閉，不永久遮住 ERD。
+
+  風格：乾淨工程工具風、點狀低對比格線、等寬識別碼；無漸層、玻璃擬態、裝飾插圖、KPI 卡；
+  亮／暗色模式；窄螢幕工具列不裁切。
+  無障礙：真按鈕、aria-label、鍵盤可操作、aria-live="polite"、遵守 prefers-reduced-motion。
+*/}
+
+import DbmlSampleInteractiveErd from '@notes/components/dbml-sample-interactive-erd'
+
+<GeneratedFrame id="dbml-sample-interactive-erd" type="diagram" prompt={"可實際操作的互動式 ERD，視覺與操作體驗參考 dbdiagram.io（不複製其網站介面）。\n對象：教授與工程師。第一個畫面就是可操作的 ERD，不放說明文件或靜態預覽。\n\n唯一資料來源（不得增刪改名或推測任何資料表、欄位、關聯）：\n  Table follows { following_user_id integer [not null]; followed_user_id integer [not null]; created_at timestamp }\n  Table users   { id integer [primary key]; username varchar; role varchar; created_at timestamp }\n  Table posts   { id integer [primary key]; title varchar; body text [note: 'Content of the post'];\n                  user_id integer [not null]; status varchar; created_at timestamp }\n  Ref user_posts: posts.user_id ?> users.id   // many-to-one\n  Ref: users.id <? follows.following_user_id\n  Ref: users.id <? follows.followed_user_id\n  Records users(id, username, role)  { 0,'Alice','admin' / 1,'Bob','moderator' / 2,'Candice','moderator' / 3,'David','member' }\n  Records follows(following_user_id, followed_user_id, created_at) { 1,0,'2026-01-01' / 3,2,'2026-02-28' }\n  Records posts(id, title, user_id)  { 0,'Welcome to the forum!',0 / 1,'Guidelines',1 / 2,'Hello all!',3 }\n\n初始：三表全部展開；users 中央偏左、posts 在 users 右側、follows 在 users 下方。\n欄位名完整不截斷、型別靠右；PK／FK 以文字標記（不只靠顏色）；not null 低調必填標記；\nposts.body 有 note 圖示，hover／focus／點擊顯示 \"Content of the post\"。\n關聯線接到實際欄位列，crow's foot 表基數，中性色；線不穿過卡片或文字。\n關聯：user_posts（posts.user_id → users.id，many-to-one）、following_user、followed_user\n（users.id 一 對 follows 零或多）。\n\n互動：拖曳表頭移動卡片（線即時跟隨、不觸發平移）；滾輪縮放、拖空白處平移；\n放大／縮小／適合畫面／重設，限制縮放範圍；每表獨立展開收合（收合保留表頭與 PK/FK）；\n全部展開／全部收合；顯示層級三段式：全部欄位／僅鍵值／僅資料表，短暫平順過渡、無循環動畫；\nhover／點擊／鍵盤 focus 資料表、欄位或關聯線 → 高亮相關表、欄位、線，淡化無關元素，\n顯示關聯名稱與方向（例如 posts.user_id → users.id）。\n點擊資料表開輕量側邊詳細面板顯示 Records（缺值顯示 —），可用關閉鈕或 Esc 關閉，不永久遮住 ERD。\n\n風格：乾淨工程工具風、點狀低對比格線、等寬識別碼；無漸層、玻璃擬態、裝飾插圖、KPI 卡；\n亮／暗色模式；窄螢幕工具列不裁切。\n無障礙：真按鈕、aria-label、鍵盤可操作、aria-live=\"polite\"、遵守 prefers-reduced-motion。"} caption="dbdiagram 風格互動式 ERD——可拖曳資料表、縮放平移、切換顯示層級，點資料表查看範例資料">
+  <DbmlSampleInteractiveErd client:visible />
+</GeneratedFrame>
