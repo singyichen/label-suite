@@ -10,6 +10,9 @@ description: 為 NoteCraft 的 MDX 筆記生成豐富的視覺化與動態互動
        skill to this project's `label-suite-design` (ADR-030).
     2. YAML frontmatter moved to line 1; upstream shipped it below this comment,
        which broke skill/agent description parsing.
+    3. Styling switched from Tailwind classes to scoped CSS, and validation
+       expanded to standalone tsc + SSR probe + browser acceptance (both
+       failure classes were observed on this machine, 2026-09-16/17).
   Upstream conventions that still apply:
     - Generated components live at <notesDir>/.notecraft/components/<id>.tsx
     - MDX imports go through the @notes alias, e.g.
@@ -76,7 +79,7 @@ status: pending | generated | locked | failed
 
 4. **時間軸 / Gantt / 階段推進** —— 描述「沿時間發生的事件」。自行繪製 SVG 時間軸；若能用 slider 或捲動推進，優先做成可互動。
 
-5. **含豐富欄位的比較表（圖示、徽章、迷你長條）** —— 以 Tailwind 樣式化的 HTML `<table>` 呈現，不要做成 SVG。表格本質靜態，通常不需互動；但若比較項目多到適合分頁或篩選，可考慮升級為 tab。
+5. **含豐富欄位的比較表（圖示、徽章、迷你長條）** —— 以 scoped CSS 樣式化的 HTML `<table>` 呈現，不要做成 SVG。表格本質靜態，通常不需互動；但若比較項目多到適合分頁或篩選，可考慮升級為 tab。
 
 6. **複合需求** —— 把上面幾種組合起來。例如「以動畫呈現 token bucket 的限流演算法」就是自訂 SVG + motion 的組合。請組合，不要二選一。
 
@@ -97,8 +100,11 @@ status: pending | generated | locked | failed
   - 不可有 required props —— MDX 使用端不會傳入任何 props
   - import 來源限制為：<!-- BEGIN:whitelist -->`react`、`react-dom`、`motion`、`recharts`、`d3`、`lucide-react`、`clsx`、`tailwind-merge`<!-- END:whitelist -->、以及專案內的相對路徑檔案。若需要其他套件，請先在對話中詢問作者
   - **元件本體不得自帶外框卡片**：根（最外層）元素**禁止**同時或單獨加上 `border`／`shadow-*`／`rounded-*`（大圓角卡片）／白底（`bg-white`）等「卡片化」樣式，也**不要**自畫左上類型標籤或右上 `generated/<id>.tsx` 來源標頭、或外層 padding。這些外框、陰影、來源標頭、底部 caption 一律由系統元件 `GeneratedFrame` 在寫回時統一提供（見第 5 步），元件自帶會造成**雙層外框**。根元素只應是透明的版型容器（`flex`／`grid`／`space-y-*` 等），以及必要的 `max-w-*`、`mx-auto`、`not-prose`。**也不要 import 任何自製的 `Figure` 之類外框包裝元件**——外框只有 `GeneratedFrame` 一個來源。（內部的子卡片、面板、表格圓角等屬於內容結構，不在此限。）
-  - **禁止使用 emoji**（包含 Unicode emoji、表情符號、🚀 ✅ ⚠️ 等任何 emoji 字元），無論是 JSX 文字節點、字串、aria-label、註解、或 SVG `<text>` 內。需要表達狀態 / 物件 / 方向 / 警示等語意時，一律改用 `lucide-react` 的 icon 元件（例如 `<Check />`、`<TriangleAlert />`、`<ArrowRight />`），icon 大小以 `size` prop 控制，顏色用 Tailwind class 透過 `currentColor` 繼承
-  - 樣式使用 Tailwind utility classes；除非動畫需要，否則不要寫原生 CSS
+  - **禁止使用 emoji**（包含 Unicode emoji、表情符號、🚀 ✅ ⚠️ 等任何 emoji 字元），無論是 JSX 文字節點、字串、aria-label、註解、或 SVG `<text>` 內。需要表達狀態 / 物件 / 方向 / 警示等語意時，一律改用 `lucide-react` 的 icon 元件（例如 `<Check />`、`<TriangleAlert />`、`<ArrowRight />`），icon 大小以 `size` prop 控制，顏色以 scoped CSS 設定、透過 `currentColor` 繼承
+  - **樣式用 scoped CSS，不要用 Tailwind class**：NoteCraft 的 Tailwind `content` glob 只掃它自己的安裝目錄，`.notecraft/components/` 不在範圍內，class 會**整批靜默失效**（實測 84 個死 74 個，`overflow-x-auto` 算成 `visible` 還會讓寬圖被外框無聲裁掉）；也沒有 preflight。做法：根節點掛專屬 class（如 `<id縮寫>-root`），以 `<style dangerouslySetInnerHTML={{ __html: SCOPED_CSS }} />` 注入，每條規則都加該前綴；需要捲動的容器用 inline `style={{ overflowX: 'auto' }}`
+  - **prop 不可命名為 `ref` 或 `key`**：React 會把它剝掉，子元件收到 `undefined`，SSR 丟例外後整篇筆記變空白，tsc 抓不到
+  - **互動事件**：點擊處理器掛在群組（`<g>`／容器）上時，**不要**用 `e.target === e.currentTarget` 過濾——滑鼠實際點到的是子 `rect`／`text`，只剩鍵盤能觸發；要排除的子元件（按鈕、可選取列）改在子元件上 `stopPropagation()`。拖曳與點擊並存時，用位移門檻（例如 3px）記下「剛拖曳過」並吞掉那次 click
+  - **畫布型 SVG**（可平移縮放的圖）：鋪滿畫布的背景／點陣 `rect` 要 `pointerEvents: 'none'`，否則吞掉平移事件；浮層不要塞進小尺寸 `foreignObject`（會被裁），也不要疊在畫布內容上（會遮住鄰近文字），放到畫布外的固定區域；`marker-start` 搭配 `orient="auto"` 會朝內畫而被節點蓋住，端點符號（如 crow's foot）改用明確的 `path` 繪製；「適合畫面」的邊界要把連線與標籤一起算進去
   - 純 SVG 元件請設定 `viewBox` 並用 `width="100%"` 讓它可縮放；挑一個合理的長寬比
   - motion 元件預設動畫保持節制（200–400ms、ease-out）；並透過 `motion/react` 的 `useReducedMotion()` 尊重 `prefers-reduced-motion`
 - 目標是讓元件看起來像「一位用心的設計師寫出來的」，而不是「程式生成的產物」。具體的顏色與間距，永遠勝過通用的灰色方塊。
@@ -110,10 +116,57 @@ status: pending | generated | locked | failed
 <!-- BEGIN:validation-skill -->
 完成元件寫入後，**不要在使用者 cwd 跑 `npx tsc --noEmit` 或 `npx astro build`**——viewer 場景下 cwd 只是 md/mdx 資料夾、沒有 astro 專案設定，這兩個指令一定會失敗，錯誤訊息也對本次生成沒幫助。
 
-驗證的正確做法是**觀察使用者的 `npx notecraftapp serve ./notes`**：mdx-writer 寫回 mdx 後，viewer 的 chokidar watcher 會在 300ms 內觸發 rebuild、SSE 廣播 auto reload；成功則瀏覽器直接看到元件、失敗則 fallback 頁顯示錯誤節錄。
+**只看 serve rebuild 不夠**：rebuild 成功、頁面也有 reload，元件仍可能壞掉——SSR 階段丟例外時 NoteCraft **不會**出 fallback 頁，而是**整篇筆記內文靜默變空白**。所以寫入後依序跑三層，任何一層紅就修、最多重試 3 次：
+
+1. **型別（standalone tsc）**：NoteCraft 內建的 tsc 在 repo 內是**假綠**——`node_modules` 在 `~/.notecraft/app-<版本>/`，型別找不到就當 `any` 放行。改在暫存目錄（**不要放進 repo**，內含機器絕對路徑）建單檔 tsconfig，`<APP>` 換成 `ls -d ~/.notecraft/app-* | sort -V | tail -1` 的結果，再跑 `<APP>/node_modules/.bin/tsc -p <config>`：
+
+```json
+{
+  "compilerOptions": {
+    "jsx": "react-jsx", "strict": true, "noEmit": true, "skipLibCheck": true,
+    "module": "esnext", "moduleResolution": "bundler", "target": "es2022",
+    "lib": ["es2022", "dom", "dom.iterable"], "types": [],
+    "paths": {
+      "react": ["<APP>/node_modules/@types/react"], "react/*": ["<APP>/node_modules/@types/react/*"],
+      "react-dom": ["<APP>/node_modules/@types/react-dom"], "react-dom/*": ["<APP>/node_modules/@types/react-dom/*"],
+      "d3": ["<APP>/node_modules/@types/d3"],
+      "*": ["<APP>/node_modules/*"]
+    }
+  },
+  "files": ["<repo>/.notecraft/components/<id>.tsx"]
+}
+```
+
+   `@types/*` 必須逐條寫進 `paths`（`"*"` 萬用字元涵蓋不到，漏掉會變成整檔 JSX 錯誤瀑布）。第一次使用這份 config 時先故意種一個型別錯誤確認它會紅，否則分不出「通過」與「沒檢查」。
+
+2. **SSR 探針**：把元件連同 `react-dom/server` 的 `renderToString` 打包成 cjs 後直接執行；`exit=0` 且印出 `SSR ok` 才算過。腳本必須放在 app 目錄下執行（esbuild 與 react 只裝在那裡）：
+
+```bash
+REPO="$PWD"; ID=<id>
+APP="$(ls -d ~/.notecraft/app-* | sort -V | tail -1)"   # 需 Node 22
+cat > "$APP/.ssr-probe.mjs" <<'EOF'
+import { build } from 'esbuild';
+import { createRequire } from 'module';
+const [comp, out] = process.argv.slice(2);
+await build({
+  stdin: {
+    contents: `import C from '${comp}'; import { renderToString } from 'react-dom/server'; import { createElement } from 'react'; console.log('SSR ok, html length', renderToString(createElement(C)).length);`,
+    resolveDir: process.cwd(),
+    loader: 'tsx',
+  },
+  bundle: true, platform: 'node', format: 'cjs', outfile: out, jsx: 'automatic', logLevel: 'error',
+  nodePaths: [process.cwd() + '/node_modules'],
+});
+createRequire(import.meta.url)(out);
+EOF
+(cd "$APP" && node .ssr-probe.mjs "$REPO/.notecraft/components/$ID.tsx" "${TMPDIR:-/tmp}/$ID-ssr.cjs"); echo "exit=$?"
+rm -f "$APP/.ssr-probe.mjs" "${TMPDIR:-/tmp}/$ID-ssr.cjs"
+```
+
+3. **瀏覽器互動**（由主 Agent 在 mdx-writer 寫回後執行，Subagent 不做）：見第 6 步「寫回後驗收」。
 
 - 若作者離線測試（沒開 serve）：可跑 `npx notecraftapp build ./notes` 手動觸發一次 build 產物到 `~/.notecraft/cache/<hash>/dist/`
-- 若 rebuild 失敗、每次修正後仍不通過：3 次後放棄，**跳到第 5 步、將該 MDX 標記的 `status` 設為 `failed`**（保留原始 prompt），並在對話中回報錯誤節錄。驗證未通過前，不要進行第 5 步的 MDX 寫回。
+- 若三層中任一層修正 3 次後仍不通過：放棄，**將該 MDX 標記的 `status` 設為 `failed`**（保留原始 prompt），並在對話中回報錯誤節錄。驗證未通過前，不要進行 MDX 寫回。
 <!-- END:validation-skill -->
 
 ### 5. 寫回 MDX
@@ -143,6 +196,18 @@ import <PascalCaseId> from '@notes/components/<id>'
 
 驗證失敗的區塊：僅把 `status` 改為 `failed`，**不要寫入 import 與 JSX**（避免 MDX 引用到不可用的元件）；此時**保留**作者原本的圍欄，不要拆。
 
+### 6. 寫回後驗收（主 Agent 執行）
+
+寫回 MDX 後，在瀏覽器（Playwright）開啟筆記頁實際操作，`tsc` 與 SSR 探針看不到以下這一類缺陷：
+
+- **先確認 hydrate**：`client:visible` 島剛進入視窗時 motion 可能還停在 `initial`（`opacity: 0`）。捲到元件後等約 2 秒，並以「操作後狀態有改變」證明 hydrate 完成，而不是以 DOM 有內容為證（SSR 本來就有內容）
+- **樣式真的套上**：抽幾個關鍵元素用 `getComputedStyle` 比對 padding／背景／字級，不是只看「有渲染」
+- **滑鼠與鍵盤各測一次**：同一個功能（開面板、切換、選取）用 `mouse.click` 與 `Tab`＋`Enter` 分別驗證。只測其中一條會掩蓋另一條失效
+- **看截圖**：每個會改變版面的互動（hover 浮層、展開收合、拖曳、面板開啟）後截圖並實際檢視，確認文字、節點、連線沒有互相遮擋或溢出——斷言全綠時遮擋仍只能從截圖發現
+- **寬度與主題**：至少驗一次約 400px 寬（工具列換行不被裁、頁面不橫向捲動）與 `prefers-color-scheme: dark`
+- **錯誤**：收集 `pageerror`，必須為空
+- **寬元件的 hover**：元件在 `GeneratedFrame` 內橫向捲動時，游標座標若落在被裁區，事件不會進元件。先調整內層捲動位置再取 `boundingBox`
+
 ## Astro / MDX 整合規範
 
 - 元件統一放在 `.notecraft/components/`；`tsconfig.json` 已設定 import 別名 `@notes/components/<id>`
@@ -156,7 +221,7 @@ import <PascalCaseId> from '@notes/components/<id>'
 
 - 在第 3 步「生成元件」之前，若尚未在本次對話中讀過 `label-suite-design`，先讀取其 SKILL.md，了解可用的色票 token、字級、間距系統與既有 utility class 慣例
 - 元件的色彩、字級、間距、圓角、陰影、互動狀態（hover / focus / active）等，一律遵循 `label-suite-design` 的規範
-- 在 SVG 中使用顏色時，優先採用 `label-suite-design` 指定的色票 token；若該 Skill 提供 CSS variables 或 Tailwind 自訂 class，請優先使用，而非寫死十六進位色碼
+- 在 SVG 中使用顏色時，優先採用 `label-suite-design` 指定的色票 token；若該 Skill 提供 CSS variables，請優先使用，而非寫死十六進位色碼
 - `label-suite-design` 未涵蓋的細節（例如某些 SVG 線寬、特定動畫曲線），才回到本 Skill 的常識性原則決定
 
 只有當提示詞明確要求「跳脫設計系統」（例如「畫一張像黑板手繪的示意圖」、「請用 80 年代復古風」）時，才暫時忽略 `label-suite-design`，並在對話回覆中告知作者你做了這個決定與理由。
