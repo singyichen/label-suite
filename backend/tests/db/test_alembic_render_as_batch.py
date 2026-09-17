@@ -20,10 +20,9 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from alembic import command, context
 from alembic.config import Config
-from alembic.runtime.migration import MigrationContext
 
+from alembic import command, context
 from app.core.config import get_settings
 from app.db.session import get_engine
 
@@ -48,7 +47,13 @@ def _alembic_config(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Config:
     get_settings.cache_clear()
     get_engine.cache_clear()
 
-    config = Config(str(_BACKEND_ROOT / "alembic.ini"))
+    # Built without a `file_` argument (rather than pointing at the real
+    # `alembic.ini`) so `config.config_file_name` stays `None`: `env.py`
+    # only calls `logging.config.fileConfig(...)` when it is set, and that
+    # call's default `disable_existing_loggers=True` would otherwise mutate
+    # global logging state for the rest of the pytest session, silently
+    # breaking unrelated `caplog`-based tests that run afterwards.
+    config = Config()
     config.set_main_option("script_location", str(_BACKEND_ROOT / "alembic"))
     return config
 
@@ -71,9 +76,9 @@ def _spy_on_configure(
     calls: list[dict[str, Any]] = []
     original_configure = context.configure
 
-    def _spy(**kwargs: Any) -> MigrationContext:
+    def _spy(**kwargs: Any) -> None:
         calls.append(kwargs)
-        return original_configure(**kwargs)
+        original_configure(**kwargs)
 
     monkeypatch.setattr(context, "configure", _spy)
     return calls
