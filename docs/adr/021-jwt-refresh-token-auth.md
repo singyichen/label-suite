@@ -58,31 +58,44 @@ Task role is **not** included in the JWT. The frontend fetches task membership v
 
 Issue #779 identified a gap: the `role` claim above is encoded at login and stays valid for the full 15-minute access-token TTL. If an authorization check trusted that claim directly, a `super_admin` demoted to `user` — or an account disabled mid-session — would keep the old privileges (or continued access) on any request made with an already-issued access token, for up to 15 minutes. This violates Constitution Principle XV: "access must be revoked immediately on role removal" (`specs/_governance/constitution.md:196`).
 
-**Decision (maintainer, 2026-09-17):** every authorization check that depends on system role — including whether the account is still active — MUST re-read `role` and `is_active` from the `users` table on each privileged request. The JWT `role` claim is kept in the payload for **frontend display only** (e.g., conditionally rendering the admin nav item without an extra round trip) and MUST NOT be treated as authoritative by any backend authorization dependency.
+**Decision (maintainer, 2026-09-17):** every authenticated request MUST re-read the caller's `role` and `is_active` from the `users` table; the JWT supplies only the identity (`sub`). The JWT `role` claim is kept in the payload for **frontend display only** (e.g., conditionally rendering the admin nav item without an extra round trip) and MUST NOT be treated as authoritative by any backend authorization dependency.
+
+The check lives in two layers so that no endpoint can skip it:
+
+- `get_current_user` decodes `sub` from the access token, loads the `users` row, and raises `401` (`auth.token_invalid`) when the row is missing or `is_active` is false. Every authenticated endpoint depends on it — including task-role-gated endpoints that never look at system role — so a disabled account loses access on its next request, not at access-token expiry.
+- `require_role` builds on `get_current_user` and compares the freshly loaded `role` against the allowed set.
 
 ```python
 # app/core/deps.py
-async def require_role(*allowed: UserRole):
-    async def _dependency(
-        user_id: UUID = Depends(get_current_user_id),  # decoded from JWT `sub` only
-        db: AsyncSession = Depends(get_db),
-    ) -> User:
-        user = await db.get(User, user_id)
-        if user is None or not user.is_active:
-            raise HTTPException(401, "auth.token_invalid")
+async def get_current_user(
+    token: str = Depends(get_access_token_from_cookie),
+    db: AsyncSession = Depends(get_db),
+) -> User:
+    user_id = decode_access_token_subject(token)  # verifies signature/exp, returns `sub` only
+    user = await db.get(User, user_id)
+    if user is None or not user.is_active:
+        raise HTTPException(401, "auth.token_invalid")
+    return user
+
+
+def require_role(*allowed: UserRole) -> Callable[..., Awaitable[User]]:
+    async def _dependency(user: User = Depends(get_current_user)) -> User:
         if user.role not in allowed:
             raise HTTPException(403, "auth.forbidden")
         return user
+
     return _dependency
 ```
 
-`get_current_user` (used by endpoints that only need to know *who* is calling, such as `GET /auth/me`) is unaffected — it still identifies the caller from the JWT `sub` and does not gate on role.
+`require_role` is a plain `def` factory: `Depends(require_role(UserRole.super_admin))` must receive the inner dependency function, not a coroutine. `get_access_token_from_cookie` and `decode_access_token_subject` are illustrative names for the cookie-read and JWT-decode steps; the `auth.forbidden` i18n key does not exist yet and must be added to the account-001 i18n table (`specs/account/001-login-email-password/plan.md`, alongside `auth.token_invalid`) when the first role-gated endpoint is implemented.
 
-**Cost:** one indexed primary-key read (`users.id`) per privileged request. Label Suite is a research portal (not public-facing) at thesis/demo scale — see this ADR's Context — so the added read has no documented performance requirement to satisfy and does not warrant a caching layer.
+`POST /auth/refresh` MUST apply the same `is_active` check before rotating the refresh token. Otherwise the frontend's silent refresh on `401` (see Frontend Behavior) would hand a disabled account a fresh access token.
+
+**Cost:** one indexed primary-key read (`users.id`) per authenticated request. That is far inside the Constitution Principle VIII budget of "P95 response time ≤ 500ms" for core labeling and annotation APIs (`specs/_governance/constitution.md:117`), so it does not warrant a caching layer.
 
 **Rejected alternative — token versioning.** Add a `token_version` (or `role_version`) claim to the JWT, bumped on the `users` row on every role change or enable/disable, and compare it against the DB value on each privileged request. This gives the same immediate-revocation guarantee but still requires a DB read on every privileged request to fetch the current version — so it does not remove the read this decision already pays for — while adding a new column and an invalidation-on-write rule that every role/status mutation must remember to apply. A missed version bump would silently reopen the exact vulnerability this amendment closes. Not chosen (2026-09-17).
 
-**Disabled accounts:** the same rule applies verbatim — `is_active` must be read from the database on every privileged request, never cached in the token or trusted from an earlier check in the same session. This closes the equivalent window for `specs/admin/006-user-management/spec.md` FR-008 / SC-008 (disable/enable flows) once their backend is implemented.
+**Disabled accounts:** `is_active` is read from the database by `get_current_user` on every authenticated request and by `/auth/refresh`, never cached in the token or trusted from an earlier check in the same session. Together with revoking the account's rows in `refresh_tokens`, this is the mechanism behind `specs/admin/006-user-management/spec.md` FR-008a ("立即撤銷該帳號所有 active session/token") and SC-008 once the disable flow's backend is implemented.
 
 ### Refresh Token Store
 
@@ -99,7 +112,7 @@ Refresh tokens are stored server-side in the `refresh_tokens` table (PostgreSQL)
 | `/api/v1/auth/login` | POST | Issue access + refresh tokens via cookies |
 | `/api/v1/auth/refresh` | POST | Rotate refresh token, reissue access token |
 | `/api/v1/auth/logout` | POST | Revoke refresh token, clear cookies |
-| `/api/v1/auth/me` | GET | Return current user profile from JWT |
+| `/api/v1/auth/me` | GET | Return current user profile (identity from JWT `sub`; `role` and profile read from the database — Amendment 2026-09-17) |
 
 ### Frontend Behavior
 
@@ -125,7 +138,7 @@ Refresh tokens are stored server-side in the `refresh_tokens` table (PostgreSQL)
 - CORS configuration must include `credentials: true`; frontend `fetch`/`axios` calls must set `credentials: 'include'`.
 - In local development, backend and frontend run on different ports — requires `SameSite=None; Secure` with HTTPS or a dev proxy (Vite proxy to same origin is the recommended approach).
 - Refresh token reuse detection (rotation abuse) requires careful implementation to avoid false positives from concurrent tab refreshes. **Chosen strategy (FR-075): grace period.** A revoked refresh token that falls within `REFRESH_TOKEN_GRACE_PERIOD` (default 30 s) is treated as valid and re-issues a new token without triggering full revocation. This prevents false-positive session termination when two browser tabs race to refresh simultaneously — the typical pattern for a research portal with long annotation sessions. The mutex strategy (`SELECT ... FOR UPDATE`) was considered but rejected because blocking concurrent requests adds latency and the grace window is short enough to limit the exposure of a stolen refresh token.
-- Every system-role-gated endpoint pays one extra DB read per request (`require_role` in Amendment 2026-09-17, issue #779); route handlers must use that dependency, not a JWT-decoded `role`, for any privileged check.
+- Every authenticated endpoint pays one primary-key DB read per request (`get_current_user` in Amendment 2026-09-17, issue #779); route handlers must use `require_role`, not a JWT-decoded `role`, for any privileged check.
 
 ## Referenced by
 
