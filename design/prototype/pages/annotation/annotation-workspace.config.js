@@ -105,6 +105,8 @@
       reviewEmptyUnitNote: '此標記員尚未提交此樣本，暫無可審核的內容。',
       reviewFinalizedTitle: '審核已定稿',
       reviewFinalizedNote: '此審核單位已定稿，結果為唯讀。',
+      reviewFinalizedRemaining: '本任務你還有 {n} 個可處理的審核單位。',
+      reviewFinalizedBackToList: '回到審核清單',
       traceLabel: '歷程：',
       traceAnnotator: '標記',
       traceReviewer: '審核',
@@ -228,6 +230,8 @@
       reviewEmptyUnitNote: 'This annotator has not submitted this sample yet; there is nothing to review.',
       reviewFinalizedTitle: 'Review finalized',
       reviewFinalizedNote: 'This review unit is finalized; results are read-only.',
+      reviewFinalizedRemaining: 'You have {n} actionable review units left on this task.',
+      reviewFinalizedBackToList: 'Back to review list',
       traceLabel: 'Trace: ',
       traceAnnotator: 'Annotated',
       traceReviewer: 'Reviewed',
@@ -1384,6 +1388,12 @@
       if (value) listParams.set(key, value);
     });
     return 'annotation-list.html?' + listParams.toString();
+  }
+
+  /* One place for the FR-099 §5 no-actionable exit URL, shared by the
+     auto-advance exit and the finalized card's zero-state link (FR-100 §4). */
+  function buildNoActionableListUrl() {
+    return buildListReturnUrl() + '&notice=no_actionable_review';
   }
 
   function renderEntryBreadcrumb() {
@@ -4181,6 +4191,43 @@
      notice deliberately offers no way out of the lock. `submission` is
      never null here: getReviewUnitStatus() cannot return FINALIZED without
      a stored annotator submission. */
+  /* FR-100 (issue #766): how many units this reviewer can still act on in
+     this task. The count is the length of the data layer's actionable list
+     -- the same per-unit judgement the next-actionable lookup reads --
+     so "0 remaining" and "no next unit" cannot disagree. At zero the wording
+     is the list page's shared empty-state definition plus one anchor to the
+     same list-return URL the no-actionable exit uses. Plain text and a
+     navigation link only: no button, no auto-navigation (FR-099 §7). */
+  function buildFinalizedRemaining(data) {
+    var box = document.createElement('div');
+    box.setAttribute('data-testid', 'ws-finalized-remaining');
+    box.style.cssText = 'font-size:12px;margin:0 0 10px;';
+    var count = data.listActionableReviewUnits(
+      currentProfile.id, currentRunType, currentIdentity.reviewerId
+    ).length;
+    if (count > 0) {
+      box.textContent = t('reviewFinalizedRemaining').replace('{n}', String(count));
+      return box;
+    }
+    var labels = data.NO_ACTIONABLE_REVIEW_LABELS[state.lang] || data.NO_ACTIONABLE_REVIEW_LABELS.zh;
+    var title = document.createElement('strong');
+    title.style.display = 'block';
+    title.setAttribute('data-testid', 'ws-finalized-remaining-title');
+    title.textContent = labels.title;
+    var message = document.createElement('span');
+    message.style.display = 'block';
+    message.setAttribute('data-testid', 'ws-finalized-remaining-message');
+    message.textContent = labels.message;
+    var link = document.createElement('a');
+    link.setAttribute('data-testid', 'ws-finalized-back-to-list');
+    link.href = buildNoActionableListUrl();
+    link.textContent = t('reviewFinalizedBackToList');
+    box.appendChild(title);
+    box.appendChild(message);
+    box.appendChild(link);
+    return box;
+  }
+
   function renderFinalizedCard(preview, submission) {
     var data = window.LabelSuiteAnnotationWorkspaceData;
 
@@ -4197,6 +4244,8 @@
     note.style.cssText = 'font-size:12px;color:var(--color-text-soft);margin:0 0 10px;';
     note.textContent = t('reviewFinalizedNote');
     card.appendChild(note);
+
+    card.appendChild(buildFinalizedRemaining(data));
 
     state.selectedOutputTypes.forEach(function (outKey) {
       var line = document.createElement('div');
@@ -4756,7 +4805,7 @@
     if (next) {
       selectSample(next.sampleId, next.annotatorId);
     } else {
-      window.location.href = buildListReturnUrl() + '&notice=no_actionable_review';
+      window.location.href = buildNoActionableListUrl();
     }
   }
 
