@@ -1,7 +1,7 @@
 ---
 功能分支: feat/account/001-login-email-password
 建立日期: 2026-05-28
-版本: 2.1.0
+版本: 2.1.1
 狀態: plan-ready
 ---
 
@@ -268,6 +268,8 @@ sequenceDiagram
 ## Phase 1：設計與契約
 
 ### 1. 實體與資料模型 → `data-model.md`
+
+> 實體層 schema（account 001～005＋admin-006 共用的欄位字典、限制清單、待裁決事項）見 [`account-admin-db-schema.md`](../../../docs/diagrams/architecture/account-admin-db-schema.md)。本節欄位與該文件不一致時，以該文件 §5 的裁決結果回寫本節；例如 `hashed_password` 的 NOT NULL 與 005 SSO 帳號（`hashed_password` 為 null）衝突，待該文件 D-1 裁決。
 
 **User 實體**：
 
@@ -591,6 +593,7 @@ Loading 策略（對應 TanStack Query 狀態欄位）：
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.1.1 | 2026-09-17 | 「實體與資料模型」段落加入實體層 schema 文件 `docs/diagrams/architecture/account-admin-db-schema.md` 的連結，並註記 `hashed_password` NOT NULL 與 005 SSO 帳號的衝突待該文件 D-1 裁決；欄位定義本身未改 |
 | 2.1.0 | 2026-09-17 | 對齊 ADR-021（issue #790）：token 改存 `httpOnly` cookie（移除 localStorage token 方案與其複雜度追蹤列）、access token 30→15 分鐘、補 refresh token（7 天滑動輪替、`refresh_tokens` 表、grace period）與 `/auth/refresh`、`/auth/logout` 端點；`TokenResponse` 改為 `AuthSessionResponse {user_id, role}`；`authStore` 改僅記憶體；授權一律重讀 DB `role`／`is_active`（ADR-021 修訂、issue #779）；補 `auth.forbidden` i18n key 與對應測試情境。語言狀態 `labelsuite.lang` 仍存 localStorage（spec FR-003／FR-004A），不受影響 |
 | 2.0.0 | 2026-06-09 | 完整對齊 plan-template v1.13.6：補齊 功能目標、技術方向、DB index 分析、狀態轉換、Pydantic 2b schema 表、切版分析（Stories/ARIA/響應式欄）、畫面狀態轉換、畫面×API 對應、前端技術決策、後端/前端 i18n key 清單；系統流程圖改為 module-first 架構（app/modules/auth/）含 Repository 層；Exception 設計表使用 i18n key；安全測試情境新增；憲章更新至 v1.31.0（補齊 IX、XI 檢查項；領域憲章載入節） |
 | 1.0.0 | 2026-05-28 | 初版 plan：涵蓋真實前後端實作（JWT auth、LoginPage API 串接），擴展 spec 001 的 prototype-only 範圍 |

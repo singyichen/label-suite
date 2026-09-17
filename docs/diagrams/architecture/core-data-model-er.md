@@ -135,6 +135,9 @@ erDiagram
     RolePermissionMatrix ||--|| RolePermissionVersion : "樂觀鎖版本欄"
 ```
 
+
+> 本圖是概念層。account 001～005＋admin-006 的實體層（欄位型別、限制、索引、待裁決事項）見 [`account-admin-db-schema.md`](./account-admin-db-schema.md)。
+
 ---
 
 ## 圖 3 — 任務設定與 run 生命週期（task-management 010／013／014）
