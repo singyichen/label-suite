@@ -130,6 +130,7 @@ status: pending | generated | locked | failed
       "react": ["<APP>/node_modules/@types/react"], "react/*": ["<APP>/node_modules/@types/react/*"],
       "react-dom": ["<APP>/node_modules/@types/react-dom"], "react-dom/*": ["<APP>/node_modules/@types/react-dom/*"],
       "d3": ["<APP>/node_modules/@types/d3"],
+      "@notes/*": ["<repo>/.notecraft/*"], "@/*": ["<APP>/src/*"],
       "*": ["<APP>/node_modules/*"]
     }
   },
@@ -139,7 +140,7 @@ status: pending | generated | locked | failed
 
    `@types/*` 必須逐條寫進 `paths`（`"*"` 萬用字元涵蓋不到，漏掉會變成整檔 JSX 錯誤瀑布）。第一次使用這份 config 時先故意種一個型別錯誤確認它會紅，否則分不出「通過」與「沒檢查」。
 
-2. **SSR 探針**：把元件連同 `react-dom/server` 的 `renderToString` 打包成 cjs 後直接執行；`exit=0` 且印出 `SSR ok` 才算過。腳本必須放在 app 目錄下執行（esbuild 與 react 只裝在那裡）：
+2. **SSR 探針**：把元件連同 `react-dom/server` 的 `renderToString` 打包成 cjs 後直接執行；指令本身的退出碼即探針結果（清理後仍保留），`exit=0` 且印出 `SSR ok` 才算過。腳本必須放在 app 目錄下執行（esbuild 與 react 只裝在那裡）：
 
 ```bash
 REPO="$PWD"; ID=<id>
@@ -147,20 +148,23 @@ APP="$(ls -d ~/.notecraft/app-* | sort -V | tail -1)"   # 需 Node 22
 cat > "$APP/.ssr-probe.mjs" <<'EOF'
 import { build } from 'esbuild';
 import { createRequire } from 'module';
-const [comp, out] = process.argv.slice(2);
+const [comp, out, repo] = process.argv.slice(2);
 await build({
   stdin: {
-    contents: `import C from '${comp}'; import { renderToString } from 'react-dom/server'; import { createElement } from 'react'; console.log('SSR ok, html length', renderToString(createElement(C)).length);`,
+    contents: `import GeneratedComponent from '${comp}'; import { renderToString } from 'react-dom/server'; import { createElement } from 'react'; console.log('SSR ok, html length', renderToString(createElement(GeneratedComponent)).length);`,
     resolveDir: process.cwd(),
     loader: 'tsx',
   },
   bundle: true, platform: 'node', format: 'cjs', outfile: out, jsx: 'automatic', logLevel: 'error',
   nodePaths: [process.cwd() + '/node_modules'],
+  alias: { '@notes': repo + '/.notecraft', '@': process.cwd() + '/src' },
 });
 createRequire(import.meta.url)(out);
 EOF
-(cd "$APP" && node .ssr-probe.mjs "$REPO/.notecraft/components/$ID.tsx" "${TMPDIR:-/tmp}/$ID-ssr.cjs"); echo "exit=$?"
+(cd "$APP" && node .ssr-probe.mjs "$REPO/.notecraft/components/$ID.tsx" "${TMPDIR:-/tmp}/$ID-ssr.cjs" "$REPO")
+PROBE_STATUS=$?
 rm -f "$APP/.ssr-probe.mjs" "${TMPDIR:-/tmp}/$ID-ssr.cjs"
+echo "exit=$PROBE_STATUS"; exit "$PROBE_STATUS"
 ```
 
 3. **瀏覽器互動**（由主 Agent 在 mdx-writer 寫回後執行，Subagent 不做）：見第 6 步「寫回後驗收」。
@@ -206,6 +210,8 @@ import <PascalCaseId> from '@notes/components/<id>'
 - **看截圖**：每個會改變版面的互動（hover 浮層、展開收合、拖曳、面板開啟）後截圖並實際檢視，確認文字、節點、連線沒有互相遮擋或溢出——斷言全綠時遮擋仍只能從截圖發現
 - **寬度與主題**：至少驗一次約 400px 寬（工具列換行不被裁、頁面不橫向捲動）與 `prefers-color-scheme: dark`
 - **錯誤**：收集 `pageerror`，必須為空
+
+**驗收失敗的處理**：此時元件已嵌入筆記。先修元件並重跑第 4 步兩層與本步驟，最多 3 次；仍不通過就**回滾**——移除該標記下方由寫回插入的元件 `import` 與 `<GeneratedFrame>…</GeneratedFrame>` 區塊（`GeneratedFrame` 的 import 若已無其他使用者也一併移除），把 `status` 改為 `failed`，並在對話中回報失敗項目與截圖。**不可**把未通過驗收的元件留在筆記中。
 - **寬元件的 hover**：元件在 `GeneratedFrame` 內橫向捲動時，游標座標若落在被裁區，事件不會進元件。先調整內層捲動位置再取 `boundingBox`
 
 ## Astro / MDX 整合規範
