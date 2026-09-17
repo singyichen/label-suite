@@ -9501,17 +9501,23 @@ function getTaskTypeLabel() {
     var samples = getArFilteredSamples(conditions);
     var exportedAt = downloadArExport(format, conditions, seqOptions);
     var exportType = (conditions.submissionStatus === 'all' && conditions.annotatorScope === 'all' && conditions.runStage === 'all' && conditions.reviewerScope === 'all' && conditions.reviewStatusScope === 'all') ? 'full' : 'filtered';
+    var scopeLabel = conditions.annotatorScope === 'all' ? '__all__' : conditions.annotatorScope;
     if (!TASK_DATA.exportHistory) TASK_DATA.exportHistory = [];
     /* FR-021(3)/D2: reviewer/review-status filters, the full-precision
        export time, the exporter and the interface language are the
        remaining values that determine this file's content but were not
        previously on the snapshot -- FR-021(6)/D3 disables "download" when
-       any of them (or the pre-existing fields above) is missing. */
+       any of them (or the pre-existing fields above) is missing.
+       FR-010i-2 additionally requires export_type/scope_label to be
+       mirrored onto the snapshot so a redownload can be validated without
+       trusting the record's own fields. */
     var conditionsSnapshot = {
       export_format: format,
       run_stage: conditions.runStage,
       submission_status: conditions.submissionStatus,
       annotator_scope: conditions.annotatorScope,
+      scope_label: scopeLabel,
+      export_type: exportType,
       reviewer_scope: conditions.reviewerScope,
       review_status_scope: conditions.reviewStatusScope,
       exported_at: conditions.exportedAt,
@@ -9534,7 +9540,7 @@ function getTaskTypeLabel() {
       exportType: exportType,
       stage: conditions.runStage,
       count: samples.length,
-      scope: conditions.annotatorScope === 'all' ? '__all__' : conditions.annotatorScope,
+      scope: scopeLabel,
       exportedBy: 'Mandy',
       format: format === 'json' ? 'JSON' : 'JSON-MIN',
       conditionsSnapshot: conditionsSnapshot
@@ -9692,10 +9698,11 @@ function getTaskTypeLabel() {
      every field a redownload needs to rebuild the exact same file -- no
      default-filling from the current screen. sequence_tagging tasks also
      need the scheme/unit (and, for word units, the tokenizer engine)
-     recorded by FR-020(3). */
+     recorded by FR-020(3). FR-010i-2 also requires scope_label/export_type
+     on the snapshot. */
   function isArExportSnapshotComplete(snapshot) {
     if (!snapshot) return false;
-    var requiredBaseFields = ['export_format', 'run_stage', 'submission_status', 'annotator_scope', 'reviewer_scope', 'review_status_scope', 'exported_at', 'exported_by', 'lang'];
+    var requiredBaseFields = ['export_format', 'run_stage', 'submission_status', 'annotator_scope', 'scope_label', 'export_type', 'reviewer_scope', 'review_status_scope', 'exported_at', 'exported_by', 'lang'];
     for (var i = 0; i < requiredBaseFields.length; i++) {
       if (snapshot[requiredBaseFields[i]] == null) return false;
     }
