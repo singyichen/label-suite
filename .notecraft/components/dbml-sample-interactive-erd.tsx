@@ -63,10 +63,8 @@ const SCOPED_CSS = `
   height: 640px;
   width: 100%;
   overflow: hidden;
-  background: var(--dbe-bg);
   color: var(--dbe-ink);
   font-family: var(--dbe-font-sans);
-  border-radius: 8px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -1106,26 +1104,22 @@ function TableCard({
             key={col.name}
             onMouseEnter={() => onEnterColumn(col.name)}
             onMouseLeave={onLeaveColumn}
-            {...(keyish
-              ? {
-                  tabIndex: 0,
-                  role: 'button',
-                  'aria-label': `欄位 ${table.name}.${col.name}，${badges.join('、')}`,
-                  onFocus: () => onEnterColumn(col.name),
-                  onBlur: onLeaveColumn,
-                  onClick: (e: React.MouseEvent) => {
-                    e.stopPropagation();
-                    onSelectColumn(col.name);
-                  },
-                  onKeyDown: (e: ReactKeyboardEvent<SVGGElement>) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      onSelectColumn(col.name);
-                    }
-                  },
-                }
-              : {})}
+            tabIndex={0}
+            role="button"
+            aria-label={badges.length > 0 ? `欄位 ${table.name}.${col.name}，${badges.join('、')}` : `欄位 ${table.name}.${col.name}`}
+            onFocus={() => onEnterColumn(col.name)}
+            onBlur={onLeaveColumn}
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelectColumn(col.name);
+            }}
+            onKeyDown={(e: ReactKeyboardEvent<SVGGElement>) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                e.stopPropagation();
+                onSelectColumn(col.name);
+              }
+            }}
           >
             {isColActive && (
               <rect x={position.x + 2} y={rowTop} width={width - 4} height={ROW_HEIGHT} style={{ fill: 'var(--dbe-primary-soft-bg)' }} />

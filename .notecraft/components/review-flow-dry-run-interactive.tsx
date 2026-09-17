@@ -120,7 +120,7 @@ type ExceptionAction = 'adopt_annotator' | 'adopt_reviewer' | 'exclude_from_data
 type BatchJudgment = 'acceptable' | 'unacceptable';
 
 interface SingleFlowState {
-  step: number; // 1..7，僅能在 computeVisiblePath 已解鎖的步驟之間移動
+  step: number; // 0..7，僅能在 computeVisiblePath 已解鎖的步驟之間移動
   decision: ReviewDecision | null;
   arbitration: ArbitrationOutcome | null;
   exceptionAction: ExceptionAction | null;
@@ -128,15 +128,18 @@ interface SingleFlowState {
   // 規劃書 SingleFlowState 未列出此欄位；用來標記「例外池已按下確認收尾」，
   // 是 computeVisiblePath 判斷步驟 7 是否解鎖所需的最小狀態，見交付報告的偏離說明。
   exceptionConfirmed: boolean;
+  // 一旦走到步驟 7 即為已定稿：往回瀏覽仍可，但所有決定鎖定，只能重新示範。
+  finalized: boolean;
 }
 
 const INITIAL_SINGLE_STATE: SingleFlowState = {
-  step: 1,
+  step: 0,
   decision: null,
   arbitration: null,
   exceptionAction: null,
   exceptionReason: '',
   exceptionConfirmed: false,
+  finalized: false,
 };
 
 const DECISION_LABEL: Record<ReviewDecision, string> = {
@@ -162,10 +165,14 @@ interface StepDef {
   detail: string;
 }
 
-// 步驟編號即流程圖上的節點：1 送出、2 逐份審核、3 做決定、4 爭議池、
+// 步驟 0 是送出前（尚未成立審核單位，圖上沒有對應節點）；其餘編號即流程圖上的節點：1 送出、2 逐份審核、3 做決定、4 爭議池、
 // 5 仲裁、6 例外池／負責人、7 已定稿。標題沿用 diagrams/review-flow-dry-run.html
 // 節點上的文字，讓詳情面板與圖上讀到的字一致。
 const STEP_DEFS: Record<number, StepDef> = {
+  0: {
+    label: '尚無標記提交',
+    detail: '標記員送出前不成立審核單位，審核端只顯示「尚無標記提交」。按下一步模擬標記員送出。',
+  },
   1: {
     label: '標記員送出試標',
     detail: '同一份資料由多位標記員各標一次，送出後成立審核單位。',
@@ -202,7 +209,7 @@ function computeVisiblePath(
   arbitration: ArbitrationOutcome | null,
   exceptionConfirmed: boolean,
 ): number[] {
-  const path = [1, 2, 3];
+  const path = [0, 1, 2, 3];
   if (decision === null) return path;
   // 通過直接走「通過」那條線到已定稿，不經過爭議池（步驟 4）。
   if (decision === 'approve') {
@@ -886,9 +893,11 @@ function StepDetailPanel({
 
 function DecisionButtons({
   decision,
+  locked,
   onSelect,
 }: {
   decision: ReviewDecision | null;
+  locked: boolean;
   onSelect: (next: ReviewDecision) => void;
 }) {
   return (
@@ -898,6 +907,7 @@ function DecisionButtons({
           key={d}
           type="button"
           aria-pressed={decision === d}
+          disabled={locked}
           onClick={() => onSelect(d)}
           className={clsx(
             'rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors',
@@ -926,9 +936,11 @@ function DecisionButtons({
 
 function ArbitrationButtons({
   arbitration,
+  locked,
   onSelect,
 }: {
   arbitration: ArbitrationOutcome | null;
+  locked: boolean;
   onSelect: (next: ArbitrationOutcome) => void;
 }) {
   return (
@@ -938,6 +950,7 @@ function ArbitrationButtons({
           key={a}
           type="button"
           aria-pressed={arbitration === a}
+          disabled={locked}
           onClick={() => onSelect(a)}
           className={clsx(
             'rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors',
@@ -964,11 +977,13 @@ function ArbitrationButtons({
 
 function ExceptionPoolPanel({
   state,
+  locked,
   onSelectAction,
   onReasonChange,
   onConfirm,
 }: {
   state: SingleFlowState;
+  locked: boolean;
   onSelectAction: (next: ExceptionAction) => void;
   onReasonChange: (value: string) => void;
   onConfirm: () => void;
@@ -982,6 +997,7 @@ function ExceptionPoolPanel({
             key={a}
             type="button"
             aria-pressed={state.exceptionAction === a}
+            disabled={locked}
             onClick={() => onSelectAction(a)}
             className={clsx(
               'rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors',
@@ -1002,6 +1018,7 @@ function ExceptionPoolPanel({
           id="review-flow-exception-reason"
           value={state.exceptionReason}
           onChange={(e) => onReasonChange(e.target.value)}
+          disabled={locked}
           rows={2}
           placeholder="請說明處置理由"
           className="w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm text-slate-700"
@@ -1011,10 +1028,21 @@ function ExceptionPoolPanel({
       <button
         type="button"
         onClick={onConfirm}
-        disabled={!state.exceptionAction || !reasonFilled}
+        disabled={locked || !state.exceptionAction || !reasonFilled}
         className="rounded-lg bg-indigo-600 px-3.5 py-1.5 text-sm font-medium text-white transition-colors"
       >
         確認收尾
+      </button>
+    </div>
+  );
+}
+
+function LockedNotice({ onReset }: { onReset: () => void }) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5">
+      <p className="text-xs text-slate-600">已定稿：這一步的決定已鎖定，不能再修改。</p>
+      <button type="button" onClick={onReset} className="text-xs font-medium text-indigo-600 transition-colors">
+        重新示範一次
       </button>
     </div>
   );
@@ -1082,22 +1110,26 @@ function SingleUnitFlow() {
   const canGoPrev = path.indexOf(state.step) > 0;
   const canGoNext = computeCanGoNext(state, path);
 
+  function moveTo(s: SingleFlowState, step: number): SingleFlowState {
+    return { ...s, step, finalized: s.finalized || step === 7 };
+  }
+
   function jumpTo(id: number) {
-    setState((s) => ({ ...s, step: id }));
+    setState((s) => moveTo(s, id));
   }
 
   function goPrev() {
     const idx = path.indexOf(state.step);
-    if (idx > 0) setState((s) => ({ ...s, step: path[idx - 1] }));
+    if (idx > 0) setState((s) => moveTo(s, path[idx - 1]));
   }
 
   function goNext() {
     const idx = path.indexOf(state.step);
-    if (idx !== -1 && idx < path.length - 1) setState((s) => ({ ...s, step: path[idx + 1] }));
+    if (idx !== -1 && idx < path.length - 1) setState((s) => moveTo(s, path[idx + 1]));
   }
 
   function selectDecision(next: ReviewDecision) {
-    setState((s) => ({
+    setState((s) => s.finalized ? s : ({
       ...s,
       decision: next,
       arbitration: null,
@@ -1108,7 +1140,7 @@ function SingleUnitFlow() {
   }
 
   function selectArbitration(next: ArbitrationOutcome) {
-    setState((s) => ({
+    setState((s) => s.finalized ? s : ({
       ...s,
       arbitration: next,
       exceptionAction: null,
@@ -1118,17 +1150,17 @@ function SingleUnitFlow() {
   }
 
   function selectExceptionAction(next: ExceptionAction) {
-    setState((s) => ({ ...s, exceptionAction: next }));
+    setState((s) => (s.finalized ? s : { ...s, exceptionAction: next }));
   }
 
   function setExceptionReason(value: string) {
-    setState((s) => ({ ...s, exceptionReason: value }));
+    setState((s) => (s.finalized ? s : { ...s, exceptionReason: value }));
   }
 
   function confirmException() {
     setState((s) => {
       if (!s.exceptionAction || s.exceptionReason.trim().length === 0) return s;
-      return { ...s, exceptionConfirmed: true, step: 7 };
+      return moveTo({ ...s, exceptionConfirmed: true }, 7);
     });
   }
 
@@ -1140,13 +1172,15 @@ function SingleUnitFlow() {
     <div className="space-y-4">
       <SingleFlowDiagram state={state} path={path} onJump={jumpTo} />
       <StepDetailPanel id={state.step} label={currentDef.label} detail={currentDef.detail} />
-      {state.step === 3 && <DecisionButtons decision={state.decision} onSelect={selectDecision} />}
+      {state.finalized && [3, 5, 6].includes(state.step) && <LockedNotice onReset={reset} />}
+      {state.step === 3 && <DecisionButtons decision={state.decision} locked={state.finalized} onSelect={selectDecision} />}
       {state.step === 5 && (
-        <ArbitrationButtons arbitration={state.arbitration} onSelect={selectArbitration} />
+        <ArbitrationButtons arbitration={state.arbitration} locked={state.finalized} onSelect={selectArbitration} />
       )}
       {state.step === 6 && (
         <ExceptionPoolPanel
           state={state}
+          locked={state.finalized}
           onSelectAction={selectExceptionAction}
           onReasonChange={setExceptionReason}
           onConfirm={confirmException}

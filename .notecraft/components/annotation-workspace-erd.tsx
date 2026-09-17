@@ -193,6 +193,7 @@ const TABLES: TableSpec[] = [
     fields: [
       { name: '文字摘要', typeLabel: '', kind: 'stored' },
       { name: '檔案清單', typeLabel: '', kind: 'stored', note: '來源 TaskProfile.guidelineFiles' },
+      { name: 'modal／右欄同步呈現設定', typeLabel: '', kind: 'stored' },
       { name: '指引閘門確認紀錄', typeLabel: '', kind: 'stored', note: '逐 task_id' },
     ],
   },
@@ -569,21 +570,21 @@ function renderMarkers(): ReactNode {
   return states.flatMap((state) => {
     const color = MARKER_COLORS[state];
     return [
-      <marker key={`one-${state}`} id={`awerd-one-${state}`} markerWidth="12" markerHeight="14" refX="10" refY="7" orient="auto">
+      <marker key={`one-${state}`} id={`awerd-one-${state}`} markerWidth="12" markerHeight="14" refX="10" refY="7" orient="auto-start-reverse">
         <line x1="5" y1="1" x2="5" y2="13" stroke={color} strokeWidth="1.3" />
         <line x1="9" y1="1" x2="9" y2="13" stroke={color} strokeWidth="1.3" />
       </marker>,
-      <marker key={`many-${state}`} id={`awerd-many-${state}`} markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto">
+      <marker key={`many-${state}`} id={`awerd-many-${state}`} markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto-start-reverse">
         <path d="M 0 7 L 12 1 M 0 7 L 12 7 M 0 7 L 12 13" fill="none" stroke={color} strokeWidth="1.3" />
       </marker>,
-      <marker key={`zero-one-${state}`} id={`awerd-zero-one-${state}`} markerWidth="18" markerHeight="14" refX="16" refY="7" orient="auto">
+      <marker key={`zero-one-${state}`} id={`awerd-zero-one-${state}`} markerWidth="18" markerHeight="14" refX="16" refY="7" orient="auto-start-reverse">
         <circle cx="5" cy="7" r="4" fill={PAPER} stroke={color} strokeWidth="1.2" />
         <line x1="13" y1="1" x2="13" y2="13" stroke={color} strokeWidth="1.3" />
       </marker>,
-      <marker key={`open-arrow-${state}`} id={`awerd-open-arrow-${state}`} markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <marker key={`open-arrow-${state}`} id={`awerd-open-arrow-${state}`} markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto-start-reverse">
         <path d="M 1 1 L 10 6 L 1 11" fill="none" stroke={color} strokeWidth="1.4" />
       </marker>,
-      <marker key={`circle-${state}`} id={`awerd-circle-${state}`} markerWidth="12" markerHeight="12" refX="6" refY="6" orient="auto">
+      <marker key={`circle-${state}`} id={`awerd-circle-${state}`} markerWidth="12" markerHeight="12" refX="6" refY="6" orient="auto-start-reverse">
         <circle cx="6" cy="6" r="4" fill={PAPER} stroke={color} strokeWidth="1.2" />
       </marker>,
     ];
