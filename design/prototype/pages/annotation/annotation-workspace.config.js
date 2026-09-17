@@ -4181,16 +4181,6 @@
     preview.appendChild(card);
   }
 
-  /* Finalized unit lock (issue #308): a FINALIZED unit renders this
-     read-only results card instead of the interactive review card -- no
-     ✕/✓ rows, no correction controls, no submit path. Mirrors the
-     arbitration card's read-only layout: the annotator's answers per
-     outKey, one resolved row per arbitrated dispute item, and FR-094's
-     single-line responsibility trace. The FR-016A
-     reopen-with-audit-reason flow is deferred to the backend phase, so the
-     notice deliberately offers no way out of the lock. `submission` is
-     never null here: getReviewUnitStatus() cannot return FINALIZED without
-     a stored annotator submission. */
   /* FR-100 (issue #766): how many units this reviewer can still act on in
      this task. The count is the length of the data layer's actionable list
      -- the same per-unit judgement the next-actionable lookup reads --
@@ -4228,6 +4218,16 @@
     return box;
   }
 
+  /* Finalized unit lock (issue #308): a FINALIZED unit renders this
+     read-only results card instead of the interactive review card -- no
+     ✕/✓ rows, no correction controls, no submit path. Mirrors the
+     arbitration card's read-only layout: the annotator's answers per
+     outKey, one resolved row per arbitrated dispute item, and FR-094's
+     single-line responsibility trace. The FR-016A
+     reopen-with-audit-reason flow is deferred to the backend phase, so the
+     notice deliberately offers no way out of the lock. `submission` is
+     never null here: getReviewUnitStatus() cannot return FINALIZED without
+     a stored annotator submission. */
   function renderFinalizedCard(preview, submission) {
     var data = window.LabelSuiteAnnotationWorkspaceData;
 
