@@ -20,11 +20,11 @@
 > **相依與平行性**：0.1 至 0.5 **必須同批提交**。只做 0.1 則 STATUS 仍為 `archived`，觸發 `ACTIVE_CHANGE_STAGE`；只做 0.2 則正典 frontmatter 之 `功能分支` 與 STATUS 分支欄不一致；漏掉 0.4／0.5 則畫面盤點清單指向已不存在的封存路徑。
 > **為何要把正典移出 `_archive`**：`scripts/check-sdd.sh` 之 `ACTIVE_CHANGE_SPEC` 只接受 `specs/<module>/NNN-feature/spec.md` 形狀的路徑；且群組 2 須直接回寫正典版本與 Changelog。程序與 issue #742（`ae0b7d34`）、issue #726 之先例相同。
 
-- [ ] 0.1 執行 `git mv specs/_archive/014-task-detail specs/task-management/014-task-detail` 把正典自封存區取回；本任務只移動檔案、不改動任何條文。驗證：`test -f specs/task-management/014-task-detail/spec.md` 為真、`test -d specs/_archive/014-task-detail` 為偽，且 `scripts/check-spec-artifacts.sh` exit 0 [@main]
-- [ ] 0.2 修改 `specs/STATUS.md` 之 task-management-014 列：狀態由 archived 改為 change-open、分支欄改為 feat/772-export-history-redownload、描述欄補記本 change 名稱與 issue #772 並改寫「正典已封存」之敘述，另於變更紀錄區新增一列說明取回原因。驗證：`grep -n 'task-management-014' specs/STATUS.md` 之狀態欄為 change-open [@main]
-- [ ] 0.3 修改正典 `specs/task-management/014-task-detail/spec.md` 之 frontmatter 功能分支欄為 feat/772-export-history-redownload，使其與 STATUS 分支欄逐字相同；本任務只改 frontmatter、不動任何條文，版本號留待群組 2 一併處理。驗證：`scripts/check-sdd.sh` 之 ACTIVE_CHANGE_SPEC 與 ACTIVE_CHANGE_STAGE 皆為 0 筆 [@main]
-- [ ] 0.4 修改 `design/system/inventory-manifest.json` 中 task-detail 條目的 specs 欄位，把封存路徑改為取回後的模組路徑。驗證：`scripts/inventory-tests.sh` exit 0 [@main]
-- [ ] 0.5 執行 `node scripts/gen-screen-inventory.mjs` 重生畫面盤點清單，使其連結與 0.4 的來源一致；產物為生成檔，不手改。驗證：`scripts/check-sdd.sh` 之 INVENTORY_FRESHNESS 為 0 筆 [@main]
+- [x] 0.1 執行 `git mv specs/_archive/014-task-detail specs/task-management/014-task-detail` 把正典自封存區取回；本任務只移動檔案、不改動任何條文。驗證：`test -f specs/task-management/014-task-detail/spec.md` 為真、`test -d specs/_archive/014-task-detail` 為偽，且 `scripts/check-spec-artifacts.sh` exit 0 [@main]
+- [x] 0.2 修改 `specs/STATUS.md` 之 task-management-014 列：狀態由 archived 改為 change-open、分支欄改為 feat/772-export-history-redownload、描述欄補記本 change 名稱與 issue #772 並改寫「正典已封存」之敘述，另於變更紀錄區新增一列說明取回原因。驗證：`grep -n 'task-management-014' specs/STATUS.md` 之狀態欄為 change-open [@main]
+- [x] 0.3 修改正典 `specs/task-management/014-task-detail/spec.md` 之 frontmatter 功能分支欄為 feat/772-export-history-redownload，使其與 STATUS 分支欄逐字相同；本任務只改 frontmatter、不動任何條文，版本號留待群組 2 一併處理。驗證：`scripts/check-sdd.sh` 之 ACTIVE_CHANGE_SPEC 與 ACTIVE_CHANGE_STAGE 皆為 0 筆 [@main]
+- [x] 0.4 修改 `design/system/inventory-manifest.json` 中 task-detail 條目的 specs 欄位，把封存路徑改為取回後的模組路徑。驗證：`scripts/inventory-tests.sh` exit 0 [@main]
+- [x] 0.5 執行 `node scripts/gen-screen-inventory.mjs` 重生畫面盤點清單，使其連結與 0.4 的來源一致；產物為生成檔，不手改。驗證：`scripts/check-sdd.sh` 之 INVENTORY_FRESHNESS 為 0 筆 [@main]
 
 ## 1. 匯出記錄重新下載（單一 PR）
 
