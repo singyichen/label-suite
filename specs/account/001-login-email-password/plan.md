@@ -1,7 +1,7 @@
 ---
 功能分支: feat/account/001-login-email-password
 建立日期: 2026-05-28
-版本: 2.0.0
+版本: 2.1.0
 狀態: plan-ready
 ---
 
@@ -18,7 +18,7 @@
 完整行為：
 
 - 未登入使用者開啟 `/login`，見到完整登入表單（導覽列 + Google 按鈕 + Email/Password 欄位 + 導流連結）。
-- 填妥 Email/Password 送出後，後端驗證憑證，成功回傳 JWT；前端存入 `authStore`（Zustand + localStorage），導向 `/dashboard`。
+- 填妥 Email/Password 送出後，後端驗證憑證，成功以 `httpOnly` cookie 核發 access token 與 refresh token，並於 JSON body 回傳 `{user_id, role}`；前端將其存入 `authStore`（Zustand，僅存記憶體），導向 `/dashboard`（ADR-021）。
 - Email/Password 任一缺漏時顯示欄位錯誤；憑證錯誤（401）或帳號停用（403）顯示 inline error banner。
 - 頁面支援 zh/en 雙語切換，語言狀態透過 `localStorage['labelsuite.lang']` 持久化並跨頁維持。
 - RWD：支援 375px / 768px / 1440px 三種視口，`MOBILE_BP = 767px`。
@@ -27,16 +27,16 @@
 
 ## 技術方向
 
-本功能同時觸及後端與前端。後端採 FastAPI module-first 架構（`app/modules/auth/`），以 `passlib[bcrypt]` 驗證密碼後簽發 JWT（`app/core/security.py`）；前端為 React 18 + Vite vertical-slice 架構（`src/features/account/`），`LoginPage` 呼叫真實 API，成功後將 JWT 存入 Zustand `authStore` + localStorage 並導向 `/dashboard`。失敗路徑（401/403）顯示 inline error banner，語言與 token 狀態透過 shared hooks/stores 跨頁持久化。
+本功能同時觸及後端與前端。後端採 FastAPI module-first 架構（`app/modules/auth/`），以 `passlib[bcrypt]` 驗證密碼後簽發 JWT（`app/core/security.py`），access token 與 refresh token 皆以 `httpOnly` cookie 傳送，refresh token 雜湊後存入 `refresh_tokens` 表（ADR-021）；前端為 React 18 + Vite vertical-slice 架構（`src/features/account/`），`LoginPage` 呼叫真實 API，成功後將回應 body 的 `{user_id, role}` 存入 Zustand `authStore`（僅記憶體，不寫 localStorage）並導向 `/dashboard`。失敗路徑（401/403）顯示 inline error banner；語言狀態透過 `useLanguage` 以 localStorage 跨頁持久化，登入狀態則以 cookie 為準、重新整理頁面後由 `GET /auth/me` 重建。
 
 ## 技術脈絡
 
 **語言 / 版本**: Python 3.12+ / TypeScript 5+
 **主要相依套件**: FastAPI / React 18 + Vite 5 / react-router-dom v6 / react-i18next / TanStack Query v5 / Zustand v5 / shadcn/ui / passlib[bcrypt] / python-jose[cryptography]
-**儲存**: PostgreSQL（prod）/ SQLite（local dev，ADR-024）/ 無 Redis（無需 token blacklist）
+**儲存**: PostgreSQL（prod）/ SQLite（local dev，ADR-024）/ 無 Redis（撤銷走 `refresh_tokens` 表；授權每次請求查 `users` 表，ADR-021 修訂）
 **測試**: pytest + pytest-asyncio / Vitest + Testing Library + MSW / Playwright
 **效能目標**: `POST /api/v1/auth/login` P95 < 500ms（bcrypt cost=12 約 100ms）
-**限制**: 不涉及 task type 邏輯；JWT secret 從環境變數讀取；HttpOnly cookie defer 至 security spec；i18n 邊界：前端 locale 檔僅含 UI 字串，後端 `detail` 依 `Accept-Language` 回傳
+**限制**: 不涉及 task type 邏輯；JWT secret 從環境變數讀取；token 一律以 `httpOnly`、`Secure`、`SameSite=Lax` cookie 傳送（ADR-021），前端請求須帶 `credentials: 'include'`；i18n 邊界：前端 locale 檔僅含 UI 字串，後端 `detail` 依 `Accept-Language` 回傳
 
 **前置條件**: 本 feature 依賴 Foundation-Core（`specs/foundation/000-foundation`）骨架已實作：`app/core/`、`app/api/v1/router.py`、`AppBaseModel`、`ErrorResponse`、`PaginatedResponse`、`conftest.py`、Vite + React 環境、`shared/api/apiClient.ts`、Docker Compose 服務。Foundation tasks.md 必須先完成後，方可開始本 feature 實作。
 
@@ -98,7 +98,7 @@ frontend/
 │   │       ├── pages/
 │   │       │   └── LoginPage.tsx
 │   │       ├── services/
-│   │       │   └── auth.ts             # POST /api/v1/auth/login wrapper
+│   │       │   └── auth.ts             # POST /api/v1/auth/login、/refresh、/logout wrapper（credentials: 'include'）
 │   │       ├── types/
 │   │       │   └── auth.ts             # LoginFormState, AuthResponse, UserInfo
 │   │       └── __tests__/
@@ -111,7 +111,7 @@ frontend/
 │   │   ├── hooks/
 │   │   │   └── useLanguage.ts          # localStorage-backed，全站語言 hook
 │   │   ├── stores/
-│   │   │   └── authStore.ts            # Zustand: {token, user, setAuth, clearAuth}
+│   │   │   └── authStore.ts            # Zustand（僅記憶體）: {userId, role, setAuth, clearAuth}
 │   │   └── __tests__/
 │   │       └── useLanguage.test.ts
 │   └── locales/
@@ -133,17 +133,17 @@ backend/
 │   │       └── router.py               # Foundation 已建立；須 include auth router
 │   └── modules/
 │       └── auth/
-│           ├── router.py               # login + me endpoints
-│           ├── service.py              # authenticate_user
-│           ├── repository.py           # get_user_by_email, get_user_by_id
-│           ├── models.py               # User SQLAlchemy model
-│           ├── schemas.py              # LoginRequest, TokenResponse, UserBase, UserResponse, UserRole
+│           ├── router.py               # login + refresh + logout + me endpoints
+│           ├── service.py              # authenticate_user, issue_tokens, rotate_refresh_token, revoke_refresh_token
+│           ├── repository.py           # get_user_by_email, get_user_by_id, refresh token CRUD
+│           ├── models.py               # User, RefreshToken SQLAlchemy models
+│           ├── schemas.py              # LoginRequest, AuthSessionResponse, UserBase, UserResponse, UserRole
 │           ├── dependencies.py         # re-export get_current_user from core/deps.py
-│           ├── constants.py            # ACCESS_TOKEN_EXPIRE_MINUTES default
+│           ├── constants.py            # ACCESS_TOKEN_EXPIRE_MINUTES (15), REFRESH_TOKEN_EXPIRE_DAYS (7) defaults
 │           └── exceptions.py           # AuthError helpers（薄包裝 HTTPException）
 ├── alembic/
 │   └── versions/
-│       └── [hash]_create_users_table.py
+│       └── [hash]_create_users_and_refresh_tokens_tables.py
 ├── tests/
 │   ├── conftest.py                     # Foundation 已建立；補充 auth fixtures
 │   ├── factories/
@@ -207,12 +207,12 @@ sequenceDiagram
             LoginPage-->>User: inline error banner (detail from response)
         else credentials valid + account active
             Service->>Service: create_access_token({sub: user.id, role: user.role})
-            Service-->>Controller: TokenResponse {access_token, token_type, user}
-            Controller-->>Route: 200 TokenResponse
-            Route-->>AuthService: 200 TokenResponse
-            AuthService-->>LoginPage: TokenResponse
-            LoginPage->>AuthStore: setAuth(access_token, user)
-            AuthStore->>localStorage: write labelsuite.token
+            Service->>Repository: insert refresh_tokens row (token_hash, expires_at)
+            Service-->>Controller: access token + refresh token + AuthSessionResponse {user_id, role}
+            Controller-->>Route: 200 AuthSessionResponse + Set-Cookie (httpOnly, Secure, SameSite=Lax) ×2
+            Route-->>AuthService: 200 AuthSessionResponse
+            AuthService-->>LoginPage: AuthSessionResponse
+            LoginPage->>AuthStore: setAuth(user_id, role)（僅記憶體）
             LoginPage->>Router: navigate('/dashboard')
         end
     end
@@ -221,14 +221,14 @@ sequenceDiagram
 | 層 | 元件 | 職責 |
 |----|------|------|
 | Frontend Page | `LoginPage` | 表單狀態、語言 init、mutation、錯誤顯示、導頁 |
-| Frontend Service | `auth.ts` | fetch wrapper，回傳 `TokenResponse` 或拋出 `AuthError` |
-| Frontend Store | `authStore` | Zustand: 存取 token + user；同步至 localStorage |
+| Frontend Service | `auth.ts` | fetch wrapper（`credentials: 'include'`），回傳 `AuthSessionResponse` 或拋出 `AuthError`；收到 401 時靜默呼叫 `/auth/refresh` 一次後重送 |
+| Frontend Store | `authStore` | Zustand: 存放 `userId` + `role`（僅供顯示）；僅記憶體，不寫 localStorage；token 在 `httpOnly` cookie，JS 不可讀 |
 | Route | `app/api/v1/router.py` | API v1 路由彙整（Foundation 已建立） |
 | Controller boundary | `app/modules/auth/router.py` | 請求驗證（Pydantic）、委派 service、包裝 HTTP response |
-| Service | `app/modules/auth/service.py` | 查找 user、驗證密碼、簽發 JWT |
-| Repository | `app/modules/auth/repository.py` | DB 查詢：get_user_by_email、get_user_by_id |
-| Model | `app/modules/auth/models.py` | User SQLAlchemy ORM 定義 |
-| DB | `users` table | 持久化 |
+| Service | `app/modules/auth/service.py` | 查找 user、驗證密碼、簽發 JWT、核發／輪替／撤銷 refresh token |
+| Repository | `app/modules/auth/repository.py` | DB 查詢：get_user_by_email、get_user_by_id；refresh_tokens 寫入、查詢、撤銷 |
+| Model | `app/modules/auth/models.py` | User、RefreshToken SQLAlchemy ORM 定義 |
+| DB | `users`、`refresh_tokens` tables | 持久化 |
 
 ---
 
@@ -242,8 +242,10 @@ sequenceDiagram
 |---------|------|------|
 | 密碼 hash | `passlib[bcrypt]` cost=12 | 業界標準；FastAPI 生態推薦；支援 future hash upgrade |
 | JWT | `python-jose[cryptography]` | FastAPI 官方文件採用；支援 HS256；足夠輕量 |
-| Token 儲存（前端） | Zustand store + `localStorage` | 跨 session 持久化；XSS 風險已記錄於複雜度追蹤 |
-| Access token 有效期 | 30 分鐘（env: `ACCESS_TOKEN_EXPIRE_MINUTES`） | 平衡安全性與 UX；refresh token defer |
+| Token 儲存 | access token 與 refresh token 皆存 `httpOnly`、`Secure`、`SameSite=Lax` cookie；前端 Zustand 僅記憶體存 `{userId, role}` | ADR-021：`localStorage` 因 XSS 可讀取 token 而否決；`SameSite=Lax` 阻擋跨站 POST |
+| Access token 有效期 | 15 分鐘（env: `ACCESS_TOKEN_EXPIRE_MINUTES`） | ADR-021；過期由前端靜默 refresh 一次 |
+| Refresh token | 不透明 UUID，7 天滑動，每次使用即輪替；雜湊後存 `refresh_tokens` 表；並行 refresh 採 grace period（`REFRESH_TOKEN_GRACE_PERIOD`，foundation FR-075） | ADR-021；逾寬限重用已輪替 token → 撤銷該使用者全部 refresh token |
+| 授權角色來源 | 每次認證請求由 `get_current_user` 重讀 `users.role` 與 `is_active`；JWT `role` 僅供前端顯示 | ADR-021 修訂（issue #779）：降級或停用於下一個請求即生效 |
 | i18n library | `react-i18next` | 符合 Foundation 建立的 namespace 規範；成熟的 lazy 支援 |
 | 路由守衛策略 | `PrivateRoute` wrapper：未登入 → `/login?redirect_to=...` | 簡單 HOC，後續可擴展 role-based guard |
 | 後端模組 | `app/modules/auth/` | 對齊 Foundation module-first 架構 |
@@ -255,7 +257,9 @@ sequenceDiagram
 | `POST /auth/login` | email 不存在 / 密碼錯誤 | `HTTPException` | 401 | `{detail: i18n("auth.invalid_credentials")}` |
 | `POST /auth/login` | 帳號停用 (`is_active=False`) | `HTTPException` | 403 | `{detail: i18n("auth.account_disabled")}` |
 | `GET /auth/me` | token 過期 | `HTTPException` | 401 | `{detail: i18n("auth.token_expired")}` |
-| `GET /auth/me` | token 無效 / 缺少 | `HTTPException` | 401 | `{detail: i18n("auth.token_invalid")}` |
+| `GET /auth/me` | token 無效 / 缺少，或 user 不存在 / `is_active=False` | `HTTPException` | 401 | `{detail: i18n("auth.token_invalid")}` |
+| `POST /auth/refresh` | refresh token 缺少 / 過期 / 已撤銷，或 user `is_active=False` | `HTTPException` | 401 | `{detail: i18n("auth.token_invalid")}` |
+| 角色守門端點（`require_role`） | DB 角色不在允許集合 | `HTTPException` | 403 | `{detail: i18n("auth.forbidden")}` |
 
 > 注意：login 失敗一律回 401（不區分「email 不存在」vs「密碼錯誤」），防止 user enumeration 攻擊。
 
@@ -277,14 +281,27 @@ sequenceDiagram
 | `created_at` | `DateTime(timezone=True)` | 建立時間（auto `func.now()`，timezone-aware） |
 | `updated_at` | `DateTime(timezone=True)` | 更新時間（auto `func.now()` onupdate，timezone-aware） |
 
-**狀態轉換**：本功能無多狀態實體。User `is_active` 僅 True/False，由 admin-006 管理，不在本 spec 範圍。
+**RefreshToken 實體**（ADR-021）：
+
+| 欄位 | 型別 | 說明 |
+|------|------|------|
+| `id` | `UUID` PK | 主鍵（server-side generated） |
+| `user_id` | `UUID` FK → `users.id` NOT NULL | 擁有者 |
+| `token_hash` | `String` UNIQUE NOT NULL | refresh token（不透明 UUID）的雜湊；原值只存在 cookie，不落 DB |
+| `expires_at` | `DateTime(timezone=True)` NOT NULL | 7 天滑動到期時間 |
+| `revoked_at` | `DateTime(timezone=True)` NULL | 輪替或登出時寫入（soft delete）；NULL＝有效 |
+| `created_at` | `DateTime(timezone=True)` | 核發時間（auto `func.now()`） |
+
+**狀態轉換**：User `is_active` 僅 True/False，由 admin-006 管理，不在本 spec 範圍。RefreshToken 只有「有效 → 已撤銷」單向轉換（輪替、登出、重用偵測），不可回復。
 
 **DB Index 分析**：
 
 | 查詢 | 篩選欄位 | Index 策略 | Loading Strategy | 風險 |
 |------|---------|-----------|-----------------|------|
 | 登入查詢 | `email` | `UNIQUE INDEX users(email)` | 直接查詢，無 relationship | — |
-| JWT 驗證（GET /me） | `id` | Primary key（UUID） | 直接查詢，無 relationship | — |
+| JWT 驗證（每次認證請求） | `id` | Primary key（UUID） | 直接查詢，無 relationship | — |
+| Refresh token 查找 | `token_hash` | `UNIQUE INDEX refresh_tokens(token_hash)` | 直接查詢 | — |
+| 撤銷使用者全部 refresh token | `user_id` | `INDEX refresh_tokens(user_id)` | 批次 UPDATE `revoked_at` | — |
 
 > `lazy="raise"` 設於所有 relationship（本 model 目前無 relationship），防止未來新增欄位後產生隱性 N+1。
 
@@ -294,12 +311,14 @@ sequenceDiagram
 
 | Method | Path | System Role | Task Role | Auth Dependency | 說明 | Bruno 檔案 |
 |--------|------|-------------|-----------|----------------|------|-----------|
-| POST | `/api/v1/auth/login` | 無（公開） | 無 | 無 | Email/password 驗證，回傳 JWT | `backend/bruno/account/001-login-email-password/post-auth-login.bru` |
-| GET | `/api/v1/auth/me` | user / super_admin | 無 | `get_current_user` | 取得目前登入用戶資訊 | `backend/bruno/account/001-login-email-password/get-auth-me.bru` |
+| POST | `/api/v1/auth/login` | 無（公開） | 無 | 無 | Email/password 驗證，以 cookie 核發 access + refresh token，body 回傳 `{user_id, role}` | `backend/bruno/account/001-login-email-password/post-auth-login.bru` |
+| POST | `/api/v1/auth/refresh` | 無（憑 refresh cookie） | 無 | 無 | 檢查 `is_active` 後輪替 refresh token、重發 access token，body 回傳 `{user_id, role}` | `backend/bruno/account/001-login-email-password/post-auth-refresh.bru` |
+| POST | `/api/v1/auth/logout` | 無（憑 refresh cookie） | 無 | 無 | 撤銷 refresh token（設 `revoked_at`）並清除 cookie | `backend/bruno/account/001-login-email-password/post-auth-logout.bru` |
+| GET | `/api/v1/auth/me` | user / super_admin | 無 | `get_current_user` | 取得目前登入用戶資訊（role 與 profile 讀 DB） | `backend/bruno/account/001-login-email-password/get-auth-me.bru` |
 
 完整契約 → `contracts/auth-login.md`
 
-**事務邊界設計**：兩個端點均為單一 DB 讀取，無複合寫入操作。本端點無複合事務。
+**事務邊界設計**：`GET /auth/me` 為單一 DB 讀取。`POST /auth/login` 在驗證成功後寫入一筆 `refresh_tokens`；`POST /auth/refresh` 的「撤銷舊 row＋寫入新 row」必須在同一交易內完成；`POST /auth/logout` 為單筆 UPDATE。
 
 ---
 
@@ -311,7 +330,7 @@ sequenceDiagram
 | `LoginRequest` | `AppBaseModel` | POST /auth/login body：`email: EmailStr`、`password: str (min_length=1)` | — |
 | `UserBase` | `AppBaseModel` | 共用欄位：`id: UUID`、`email: EmailStr`、`role: UserRole`、`is_active: bool` | — |
 | `UserResponse` | `UserBase` | API 回應（含 `created_at: datetime`） | `hashed_password` |
-| `TokenResponse` | `AppBaseModel` | 登入成功回應：`access_token: str`、`token_type: str = "bearer"`、`user: UserResponse` | `hashed_password`（透過 UserResponse 排除） |
+| `AuthSessionResponse` | `AppBaseModel` | login／refresh 成功回應 body：`user_id: UUID`、`role: UserRole`（token 只在 cookie，不得出現在 body） | `hashed_password`、access token、refresh token |
 
 > `AppBaseModel` 繼承自 Foundation 建立的 `app/core/schemas.py`（設有 `model_config = ConfigDict(from_attributes=True)`）。
 
@@ -385,7 +404,7 @@ LoginPage
 
 TanStack Query 策略：
 - queryKey 格式：QUERY_KEYS.auth.me = ['auth', 'me']（從 shared/constants/queryKeys.ts 匯入）
-- mutation：useMutation for POST /auth/login → onSuccess: setAuth(token, user) + invalidate QUERY_KEYS.auth.me
+- mutation：useMutation for POST /auth/login → onSuccess: setAuth(user_id, role) + invalidate QUERY_KEYS.auth.me
 - 無 optimistic update（登入操作為 all-or-nothing）
 
 API 錯誤處理策略：
@@ -403,7 +422,7 @@ Loading 策略（對應 TanStack Query 狀態欄位）：
 
 | Path | 元件 | 是否需要 Route Guard | 重導向規則 | Guard 失敗行為 |
 |------|------|-------------------|-----------|--------------|
-| `/login` | `LoginPage` | ❌ 公開（但已登入則 redirect） | authStore.token 存在 → `/dashboard` | — |
+| `/login` | `LoginPage` | ❌ 公開（但已登入則 redirect） | `GET /auth/me` 成功 → `/dashboard` | — |
 | `/` | — | — | redirect to `/login`（或 `/dashboard` 若已登入） | — |
 
 **i18n Key 清單**（namespace: `account`）：
@@ -442,7 +461,8 @@ Loading 策略（對應 TanStack Query 狀態欄位）：
 | `auth.invalid_credentials` | `帳號或密碼錯誤，請再試一次` | `Invalid email or password` | `POST /api/v1/auth/login` |
 | `auth.account_disabled` | `此帳號已被停用，請聯繫管理員` | `This account has been disabled` | `POST /api/v1/auth/login` |
 | `auth.token_expired` | `登入已過期，請重新登入` | `Session expired, please sign in again` | `GET /api/v1/auth/me` |
-| `auth.token_invalid` | `驗證失敗，請重新登入` | `Authentication failed, please sign in` | `GET /api/v1/auth/me` |
+| `auth.token_invalid` | `驗證失敗，請重新登入` | `Authentication failed, please sign in` | `GET /api/v1/auth/me`、`POST /api/v1/auth/refresh` |
+| `auth.forbidden` | `你沒有執行此操作的權限` | `You do not have permission to perform this action` | 角色守門端點（`require_role`，ADR-021 修訂） |
 
 > 後端 i18n 檔案路徑：`backend/app/i18n/zh_TW/auth.py` 與 `backend/app/i18n/en/auth.py`
 
@@ -454,13 +474,18 @@ Loading 策略（對應 TanStack Query 狀態欄位）：
 |------|-------|------|------|
 | `hash_password` / `verify_password` 正確性 | 單元測試 | pytest | `tests/auth/test_auth_core.py` |
 | `create_access_token` / `decode_access_token` | 單元測試 | pytest | `tests/auth/test_auth_core.py` |
-| `POST /auth/login` 成功（200 + TokenResponse） | 整合測試 | pytest + httpx | `tests/auth/test_auth_routes.py` |
+| `POST /auth/login` 成功（200 + `{user_id, role}` + 兩個 `httpOnly` cookie、body 不含 token） | 整合測試 | pytest + httpx | `tests/auth/test_auth_routes.py` |
 | `POST /auth/login` 錯誤密碼 → 401 | 整合測試 | pytest + httpx | `tests/auth/test_auth_routes.py` |
 | `POST /auth/login` email 不存在 → 401（防 enumeration） | 整合測試 | pytest + httpx | `tests/auth/test_auth_routes.py` |
 | `POST /auth/login` 帳號停用 → 403 | 整合測試 | pytest + httpx | `tests/auth/test_auth_routes.py` |
 | `GET /auth/me` 有效 token → UserResponse（無 hashed_password） | 整合測試 | pytest + httpx | `tests/auth/test_auth_routes.py` |
 | `GET /auth/me` 無效 token → 401 | 整合測試 | pytest + httpx | `tests/auth/test_auth_routes.py` |
 | `GET /auth/me` 過期 token → 401 | 整合測試 | pytest + httpx | `tests/auth/test_auth_routes.py` |
+| `GET /auth/me` token 有效但帳號已停用 → 401（每次查 DB） | 整合測試 | pytest + httpx | `tests/auth/test_auth_routes.py` |
+| `require_role` 以 DB 角色判定：JWT 帶 `super_admin` 但 DB 已降級 → 403 | 整合測試 | pytest + httpx | `tests/auth/test_auth_routes.py` |
+| `POST /auth/refresh` 輪替：舊 token 設 `revoked_at`、寫入新 row、帳號停用 → 401 | 整合測試 | pytest + httpx | `tests/auth/test_auth_routes.py` |
+| `POST /auth/refresh` 逾寬限重用已輪替 token → 撤銷該使用者全部 refresh token；寬限內並行 refresh 不誤撤銷 | 整合測試 | pytest + httpx | `tests/auth/test_auth_routes.py` |
+| `POST /auth/logout` 撤銷 refresh token 並清除 cookie | 整合測試 | pytest + httpx | `tests/auth/test_auth_routes.py` |
 | `GET /auth/me` 回應不含 `hashed_password`（security gate） | 安全測試 | pytest (`@pytest.mark.security`) | `tests/auth/test_auth_routes.py` |
 | `LoginForm` email 空白送出 → 錯誤顯示 | 元件測試 | Vitest + Testing Library | `src/features/account/__tests__/LoginForm.test.tsx` |
 | `LoginForm` password 空白送出 → 錯誤顯示 | 元件測試 | Vitest + Testing Library | `src/features/account/__tests__/LoginForm.test.tsx` |
@@ -492,11 +517,11 @@ Loading 策略（對應 TanStack Query 狀態欄位）：
   - `app/modules/auth/service.py`（authenticate_user）→ 整合測試 [P] + 實作
   - Backend i18n：`backend/app/i18n/zh_TW/auth.py` + `backend/app/i18n/en/auth.py`（各一任務）
 - **Phase 2 — Auth API（對應 US3）**：
-  - `app/modules/auth/schemas.py`（LoginRequest / TokenResponse / UserBase / UserResponse）→ 測試 [P] + 實作
+  - `app/modules/auth/schemas.py`（LoginRequest / AuthSessionResponse / UserBase / UserResponse）→ 測試 [P] + 實作
   - `app/core/deps.py`（get_current_user dependency）→ 整合測試 [P] + 實作
-  - `app/modules/auth/router.py`（POST /login + GET /me）→ 整合測試 [P] + 實作
+  - `app/modules/auth/router.py`（POST /login + POST /refresh + POST /logout + GET /me）→ 整合測試 [P] + 實作
   - `contracts/auth-login.md` 契約文件任務
-  - Bruno `.bru` skeleton 任務（post-auth-login + get-auth-me）
+  - Bruno `.bru` skeleton 任務（post-auth-login + post-auth-refresh + post-auth-logout + get-auth-me）
 - **Phase 3 — Shared 前端基礎（對應 US4）**：
   - `features/account/types/auth.ts`（型別定義）
   - `shared/stores/authStore.ts` → 單元測試 [P] + 實作
@@ -536,7 +561,7 @@ Loading 策略（對應 TanStack Query 狀態欄位）：
 
 | 違反項目 | 需要原因 | 拒絕更簡單替代方案的理由 |
 |---------|---------|----------------------|
-| Token 儲存於 localStorage（XSS 風險） | MVP 首版；HttpOnly cookie 需要後端 CORS 同步設定，defer 至安全加固 spec | 短期 XSS 風險可接受；HttpOnly 遷移為已知技術債，待 security spec 解決 |
+| 新增 `refresh_tokens` 表（後端多一個有狀態元件） | ADR-021：登出需立即撤銷、需偵測 refresh token 重用 | 純無狀態 JWT 無法立即撤銷；`localStorage` 存 token 因 XSS 風險已由 ADR-021 否決 |
 | Plan 擴展 spec 001 未定義的後端範圍 | 使用者明確指示依真實系統撰寫；spec 001 的原型限制僅適用於 prototype 確認階段 | 若僅實作 prototype 行為，系統永遠無法進入 production |
 | `auth` module 擁有 User model（可能被 admin-006 共用） | 目前僅 auth 需要 User；YAGNI 不預建 shared user module | admin-006 實作時如有需要，可依 plan-template 拆分慣例遷移 User model |
 
@@ -558,7 +583,7 @@ Loading 策略（對應 TanStack Query 狀態欄位）：
 - [x] 初始憲章檢查：PASS
 - [x] 設計後憲章檢查：PASS
 - [x] 所有 NEEDS CLARIFICATION 已解決
-- [x] 複雜度偏差已記錄（localStorage token、spec 擴展、User model 歸屬）
+- [x] 複雜度偏差已記錄（`refresh_tokens` 表、spec 擴展、User model 歸屬）
 
 ---
 
@@ -566,5 +591,6 @@ Loading 策略（對應 TanStack Query 狀態欄位）：
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.1.0 | 2026-09-17 | 對齊 ADR-021（issue #790）：token 改存 `httpOnly` cookie（移除 localStorage token 方案與其複雜度追蹤列）、access token 30→15 分鐘、補 refresh token（7 天滑動輪替、`refresh_tokens` 表、grace period）與 `/auth/refresh`、`/auth/logout` 端點；`TokenResponse` 改為 `AuthSessionResponse {user_id, role}`；`authStore` 改僅記憶體；授權一律重讀 DB `role`／`is_active`（ADR-021 修訂、issue #779）；補 `auth.forbidden` i18n key 與對應測試情境。語言狀態 `labelsuite.lang` 仍存 localStorage（spec FR-003／FR-004A），不受影響 |
 | 2.0.0 | 2026-06-09 | 完整對齊 plan-template v1.13.6：補齊 功能目標、技術方向、DB index 分析、狀態轉換、Pydantic 2b schema 表、切版分析（Stories/ARIA/響應式欄）、畫面狀態轉換、畫面×API 對應、前端技術決策、後端/前端 i18n key 清單；系統流程圖改為 module-first 架構（app/modules/auth/）含 Repository 層；Exception 設計表使用 i18n key；安全測試情境新增；憲章更新至 v1.31.0（補齊 IX、XI 檢查項；領域憲章載入節） |
 | 1.0.0 | 2026-05-28 | 初版 plan：涵蓋真實前後端實作（JWT auth、LoginPage API 串接），擴展 spec 001 的 prototype-only 範圍 |
