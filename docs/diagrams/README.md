@@ -41,7 +41,7 @@
 | [`architecture/system-container-architecture.html`](./architecture/system-container-architecture.html) | `architecture` | `archify` | 系統／容器架構（issue #667） |
 | [`architecture/config-driven-task-engine-data-flow.html`](./architecture/config-driven-task-engine-data-flow.html) | `dataflow` | `archify` | Config-Driven 任務引擎資料流（issue #668） |
 | [`architecture/core-data-model-er.md`](./architecture/core-data-model-er.md) | `er` | Mermaid `erDiagram` | 核心資料模型 ER 圖，整合各 spec 的關鍵實體（issue #669） |
-| [`architecture/account-admin-db-schema.md`](./architecture/account-admin-db-schema.md) | `er` | Mermaid `erDiagram` | account 001～005＋admin-006 實體層 DB schema：ERD、欄位字典、限制清單、待裁決事項 |
+| [`architecture/account-admin-db-schema.md`](./architecture/account-admin-db-schema.md) | `er` | Mermaid `erDiagram` | account 001～005＋admin-006／007 實體層 DB schema：ERD、欄位字典、限制清單、待裁決事項 |
 
 `archify` 要**同時提交 `.json` 與 `.html`**：`.json` 是唯一可 diff、可驗證的原始檔，`.html` 是唯一不需工具鏈即可閱讀的成品，缺任一邊都會讓圖變成不可維護的黑盒。改圖時改 `.json` 再重跑 `deliver` 重生 `.html`，不要手改 `.html`。
 

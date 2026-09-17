@@ -1,10 +1,10 @@
-# account 與 admin-006 資料庫 schema（實體層）
+# account 與 admin 資料庫 schema（實體層）
 
 > **受眾為寫 migration、repository 與 service 的工程師。** 圖面與表格保留 spec／ADR 的原始識別字，方便用 `grep` 回到來源條文。
 
 - **定位**：[`core-data-model-er.md`](./core-data-model-er.md) 圖 2 回答「有哪些實體、彼此怎麼關聯」（概念層）；本文件回答「建哪些表與欄位、哪些規則 DB 擋不住、各用什麼測試驗證」（實體層）。
 - **衍生視圖，不是正典**：與 spec 或 Accepted ADR 衝突時，以它們為準，並回頭修本文件。依據層級：feature spec ＞ foundation spec ＞ Accepted ADR ＞ Proposed ADR ＞ 本文件的設計建議。
-- **範圍**：account 001–005、admin-006。admin-007（角色權限矩陣）不在本文件。
+- **範圍**：account 001–005、admin-006、admin-007。admin-007 規格仍為 **Draft**，且其表是否需要建立取決於 §5 D-9。
 - **不歸屬任何單一 spec**：同一張 `users` 表被 001、003、005、006 共同修改，因此放在 `docs/diagrams/architecture/`，不隨任何 spec 進 `specs/_archive/`。各 spec 的 plan.md「實體與資料模型」段落應連結本文件，不各自複製欄位表。
 - **狀態：草稿**。§5 仍有阻擋性待裁決，定案前不得據以產生 migration。
 - **驗證方式**：本文件不執行 SQL。每條限制的正確性在實作時由 Alembic migration 的 upgrade／downgrade／roundtrip 測試，以及 §4 指定的測試驗證。
@@ -21,6 +21,9 @@
 | `users.name` 長度 | 不加上限 | 003 Clarifications（「不加長度上限」） |
 | `users.email` 長度 | 254 | 001 plan v2.1.0 `String(254)` |
 | 外部身分 | 不建獨立身分表，用 `users.google_subject` | ADR-035（單一 provider） |
+| 角色權限矩陣表形 | 逐格一列（`admin_role_permission`）＋整份矩陣一個版本號（`admin_role_permission_version`，單列表） | 007 關鍵實體 RolePermissionMatrix、RolePermissionVersion |
+| 矩陣樂觀鎖粒度 | 整份矩陣共用一個版本號，不逐格加版本 | 007 FR-005b、區塊 D（衝突時整頁重新載入） |
+| `permission_key` 白名單 | 放在後端程式常數，不建權限鍵表 | 007 `PERMISSION_KEYS_SOURCE = backend_whitelist`、FR-003a |
 | 約束命名 | 交給 `NAMING_CONVENTION`（`column_0_N_name`），不逐一手寫 `name=` | `backend/app/db/base.py` |
 
 ## 2. ERD
@@ -88,6 +91,18 @@ erDiagram
         varchar request_id "nullable"
         timestamptz occurred_at
     }
+    admin_role_permission {
+        varchar role_type PK "CK system|task"
+        varchar role_key PK "CK consistent with role_type"
+        varchar permission_key PK "backend whitelist, no CK"
+        boolean allowed
+        timestamptz updated_at
+    }
+    admin_role_permission_version {
+        smallint id PK "CK id = 1 (single row)"
+        integer version "optimistic lock"
+        timestamptz updated_at
+    }
 
     users ||--o{ refresh_tokens : "sessions (CASCADE)"
     users ||--o{ account_password_token : "reset / invite (CASCADE)"
@@ -103,14 +118,16 @@ erDiagram
 | `users.name`／`contact_info`／`avatar_url` | 005 實體 User；006 PlatformUser |
 | `users.hashed_password` 可為 null | ADR-035 修訂（連結時設 null）、005 FR-008（SSO 帳號為 null）、006 FR-006a（受邀帳號尚未設密碼）；001 plan 仍寫 NOT NULL，見 §5 D-1 |
 | `users.google_subject` | ADR-035 |
-| `users.is_seeder` | 006 FR-008c |
+| `users.is_seeder` | 006 FR-008c；007 FR-008b |
 | `refresh_tokens.family_id` | 005 FR-010 |
 | `refresh_tokens.session_started_at` | foundation FR-076 |
 | `refresh_tokens.revoked_reason` | foundation FR-075；限定只有被輪替的 token 可進入寬限期為設計建議 |
 | `account_password_token` | 004；006 FR-006a；ADR-013（reset token 存於 DB） |
 | `account_email_change_request` | 005 FR-004C–FR-004M |
 | `account_notification_preference` | 005 FR-013B–FR-013E |
-| `audit_event` | 006 FR-013；表形依 ADR-032（**Proposed**，見 §5 D-4） |
+| `audit_event` | 006 FR-013、007 FR-010；表形依 ADR-032（**Proposed**，見 §5 D-4） |
+| `admin_role_permission` | 007 關鍵實體 RolePermissionMatrix、「角色 × 權限預設矩陣（V1）」 |
+| `admin_role_permission_version` | 007 關鍵實體 RolePermissionVersion、FR-005b |
 
 ## 3. 欄位字典
 
@@ -193,12 +210,12 @@ erDiagram
 
 ### 3.6 audit_event：操作稽核紀錄
 
-一列＝一次需留紀錄的操作（006 FR-013：新增、編輯、停用、啟用、角色變更）。只能新增。
+一列＝一次需留紀錄的操作（006 FR-013：新增、編輯、停用、啟用、角色變更；007 FR-010：角色權限矩陣儲存）。只能新增。
 
 | 欄位 | 型別 | 可空 | 代表什麼 | 何時寫入／改變 | 規則 |
 |---|---|---|---|---|---|
 | `id` | bigint | 否 | 流水號 | 寫入時 | — |
-| `actor_user_id` | uuid → users | 否 | 操作者；FK 為 RESTRICT，有稽核紀錄的帳號不可實體刪除 | 與被稽核操作同一交易 | A-01、A-04 |
+| `actor_user_id` | uuid → users | 否 | 操作者；FK 為 RESTRICT，有稽核紀錄的帳號不可實體刪除。007 操作紀錄抽屜顯示的「操作者名稱」讀取時以此欄 join `users.name`（顯示目前名稱） | 與被稽核操作同一交易 | A-01、A-04 |
 | `actor_role` | varchar | 否 | 操作**當下**的角色快照（ADR-032） | 同上 | — |
 | `action` | varchar | 否 | 命名空間動詞，例如 `member.deactivated`；值由 registry 管理，DB 不加 CHECK | 同上 | — |
 | `target_type` | varchar | 否 | 操作對象種類，例如 `user` | 同上 | — |
@@ -206,6 +223,28 @@ erDiagram
 | `payload_summary` | jsonb | 否 | 變更前後摘要，只含 allowlist 欄位 | 同上 | A-03 |
 | `request_id` | varchar | 是 | 對應 API log 的請求 ID | 同上 | — |
 | `occurred_at` | timestamptz | 否 | 伺服器端發生時間（UTC） | 同上 | A-02 |
+
+### 3.7 admin_role_permission：角色權限矩陣的一格
+
+一列＝某個角色對某個 `permission_key` 是否允許。只存 007 預設矩陣中有意義的格：system role × 平台層級鍵（9 個鍵 × 2 個角色），task role × 任務層級鍵（7 個鍵 × 3 個角色），共 39 列；矩陣中標「⛔（需 task role）」的格不存（見 §5 D-13）。
+
+| 欄位 | 型別 | 可空 | 代表什麼 | 何時寫入／改變 | 規則 |
+|---|---|---|---|---|---|
+| `role_type` | varchar | 否 | `system`＝平台層級角色；`task`＝任務內角色。兩層不可互相推導（007 授權判斷規則） | migration 建立 | M-01 |
+| `role_key` | varchar | 否 | `role_type='system'` 時為 `user`／`super_admin`；`task` 時為 `project_leader`／`reviewer`／`annotator` | migration 建立 | M-01 |
+| `permission_key` | varchar | 否 | 007「權限鍵白名單（V1）」中的鍵，例如 `task.create`；白名單在後端程式，DB 不加 CHECK | migration 建立；白名單增減時由 migration 補列或刪列 | M-02、M-08 |
+| `allowed` | boolean | 否 | 是否允許。**注意**：007 預設矩陣中 reviewer 的 `task.detail.view` 標為「✅（唯讀）」，boolean 表達不了，見 §5 D-10 | migration 寫入 V1 預設值；007 儲存時改變 | M-03、M-04 |
+| `updated_at` | timestamptz | 否 | 最後一次被改變的時間 | 該格值改變時 | X-02 |
+
+### 3.8 admin_role_permission_version：矩陣版本號
+
+整張表只有一列（`id = 1`）。每次儲存成功，版本號加一；儲存時帶上讀取當下的版本號，不一致就拒絕（007 FR-005b）。操作者與變更內容記在 `audit_event`，這張表不重複記。
+
+| 欄位 | 型別 | 可空 | 代表什麼 | 何時寫入／改變 | 規則 |
+|---|---|---|---|---|---|
+| `id` | smallint | 否 | 固定為 1，保證單列 | migration 建立 | M-06 |
+| `version` | integer | 否 | 目前矩陣版本，初始為 1；前端讀取時一併取得，儲存時送回 | 每次有實際變更的儲存 +1 | M-06、M-07 |
+| `updated_at` | timestamptz | 否 | 最後一次儲存時間 | 與 `version` 同時 | X-02 |
 
 ## 4. 限制清單（ERD 表達不了的規則）
 
@@ -221,9 +260,9 @@ erDiagram
 | U-02 | PT | SQLite `lower()` 只處理 ASCII，PG 不是；應用層先正規化 email 再寫入，兩種 DB 的唯一性語意才一致 | 應用層＋DB | SVC：非 ASCII 大小寫的 email 在兩種 DB 判定一致 | ADR-024（SQLite／PG 雙層） |
 | U-03 | CK | `trim(name)` 非空；不加長度上限 | DB＋Pydantic | DB：全空白失敗；10,000 字元成功 | 003 FR-005A、003 Clarifications |
 | U-04 | CK | `role IN ('user','super_admin')` | DB | DB：未知值失敗 | 006 PlatformUser、ADR-021 |
-| U-05 | CK | seeder 必定是 active super_admin：`NOT is_seeder OR (role='super_admin' AND is_active)` | DB | DB：seeder 列停用或降級各失敗 | 006 FR-008c |
+| U-05 | CK | seeder 必定是 active super_admin：`NOT is_seeder OR (role='super_admin' AND is_active)` | DB | DB：seeder 列停用或降級各失敗 | 006 FR-008c；007 FR-008b |
 | U-06 | CK | 最多一位 seeder | DB 部分唯一索引 `WHERE is_seeder` | DB：第二筆失敗；M：downgrade 後索引消失 | 006 FR-008c |
-| U-07 | SM | `is_seeder` 只能在初始化時設為 true，之後不可改回 false 或移轉；seeder 列不可刪除。U-05 只檢查單列當下狀態，不涵蓋旗標本身的變更，因此需另外保證 | 應用層不提供此路徑＋PG trigger | SVC：清除旗標被拒；PG：直接 UPDATE 旗標或 DELETE seeder 列被 trigger 擋下 | 006 FR-008c |
+| U-07 | SM | `is_seeder` 只能在初始化時設為 true，之後不可改回 false 或移轉；seeder 列不可刪除。U-05 只檢查單列當下狀態，不涵蓋旗標本身的變更，因此需另外保證 | 應用層不提供此路徑＋PG trigger | SVC：清除旗標被拒；PG：直接 UPDATE 旗標或 DELETE seeder 列被 trigger 擋下 | 006 FR-008c；007 FR-008b（含刪除） |
 | U-08 | CC | 任何時刻至少一位 active super_admin，**併發**停用或降級時也必須成立。不得採「先查數量、再更新」的兩步寫法（SQLite 驅動延遲開始交易，兩步之間沒有鎖） | 單一條件式 UPDATE（條件內含 active super_admin 數量 > 1），依 rowcount 判定；或 SQLite 改用 `BEGIN IMMEDIATE` | SVC（SQLite）與 PG：兩個連線同時停用彼此 → 恰一個成功，active super_admin ≥ 1 | 006 FR-008d |
 | U-09 | CD | `hashed_password` 為 null 時可免舊密碼設定密碼；判定條件不得改為 `google_subject IS NOT NULL`，否則已設密碼又連結 Google 的帳號會被免除舊密碼驗證 | 應用層 | API：有密碼且有 `google_subject` 的帳號改密碼時缺 `current_password` → 拒絕 | 005 FR-006、FR-008 |
 | U-10 | XT | Google 連結（email 相符且 `email_verified=true`）時同一交易：寫入 `google_subject`、`hashed_password=null`、撤銷全部 refresh token；`email_verified` 非 true → 拒絕，不寫任何列 | 應用層單一交易 | SVC：連結後密碼為 null、token 全撤銷；`email_verified=false` → 無任何寫入；中途失敗 → 全部回滾 | ADR-035 修訂 |
@@ -288,8 +327,26 @@ erDiagram
 | A-02 | SM | 只能新增，禁止 UPDATE | 應用層＋DB trigger（兩種 DB 各一份） | SQLite 與 PG：直接 UPDATE 被 trigger 擋下；M：downgrade 移除 trigger | ADR-032（Proposed） |
 | A-03 | CD | `payload_summary` 只含 allowlist 欄位（`name`、`email`、`role`、`is_active`、`contact_info`），不得含 `hashed_password`、任何 token 或雜湊 | 應用層 allowlist | SVC：改密碼、停用等操作後，`payload_summary` 不含上述鍵 | 006 FR-013；ADR-032 |
 | A-04 | CK | `actor_user_id` 的 FK 為 RESTRICT | DB | SQLite 與 PG：刪除有稽核紀錄的使用者 → 失敗（SQLite 依賴 X-01） | 設計建議 |
+| A-05 | CD | 角色權限矩陣的稽核紀錄至少保存 1 年；日後的清理作業不得刪除未滿 1 年的這類紀錄 | 清理作業的條件 | SVC：清理作業執行後，未滿 1 年的矩陣稽核紀錄仍在 | 007 FR-010；ADR-032 的保存期限尚未訂定 |
+| A-06 | CD | 矩陣儲存的 `payload_summary` 記錄版本號前後值與每個變更格的 `role_type`、`role_key`、`permission_key`、前後值；diff 由伺服器比對儲存前後的資料列算出，不採用前端送來的 diff | 應用層 | SVC：前端送出的 diff 與實際變更不一致時，稽核紀錄以實際變更為準 | 007 FR-010、區塊 C；伺服器端計算為設計建議 |
 
-### 4.7 跨表與基礎設施
+### 4.7 admin_role_permission 與 admin_role_permission_version
+
+以下規則的前提是 §5 D-9 選 (a) 或 (b)；若選 (c)，這兩張表與本節整節刪除。
+
+| ID | 類型 | 規則 | 執行位置 | 實作時驗證 | 來源 |
+|---|---|---|---|---|---|
+| M-01 | CK | `role_type IN ('system','task')`，且 `role_key` 與 `role_type` 一致：system 限 `user`／`super_admin`，task 限 `project_leader`／`reviewer`／`annotator` | DB | DB：`('task','super_admin', …)` 失敗；未知 `role_type` 失敗 | 007 `SYSTEM_ROLES`、`TASK_ROLES`、授權判斷規則 |
+| M-02 | CD | `permission_key` 必須在後端白名單內，且層級相符：system 列只能用平台層級鍵，task 列只能用任務層級鍵 | 應用層（白名單常數附帶層級屬性） | API：送出白名單外的鍵 → 拒絕；送出 system × `task.detail.view` → 拒絕 | 007 FR-003a、SC-009、預設矩陣中的「⛔（需 task role）」；層級屬性為設計建議 |
+| M-03 | CK | `super_admin` 的所有 `admin.*` 格必須為 true | DB CHECK：`NOT (role_type='system' AND role_key='super_admin' AND permission_key LIKE 'admin.%') OR allowed` | DB：把其中任一格改為 false 失敗；API：錯誤訊息指出是哪一格 | 007 FR-008a、邊界情況（指出哪個組合有問題） |
+| M-04 | CK | `user` 的所有 `admin.*` 格必須為 false | DB CHECK（形式同 M-03） | DB：把其中任一格改為 true 失敗 | 由 007 FR-002 與使用者故事 3 行為規則（admin 兩頁僅允許 `super_admin`）推得；是否另訂其他不可變更的格見 §5 D-13 |
+| M-05 | CD | 儲存後的列集合必須恰好等於「白名單 × 適用角色」；不得缺列或多列 | 應用層 | SVC：送出缺一格的矩陣 → 拒絕且資料不變 | 007 FR-003b、FR-003c；設計建議 |
+| M-06 | CC | 樂觀鎖：`UPDATE admin_role_permission_version SET version = version + 1 … WHERE id = 1 AND version = :expected`，rowcount = 0 → 回傳版本衝突，本次所有變更不寫入 | 條件式 UPDATE | SQLite 與 PG：兩個連線帶同一版本號同時儲存 → 恰一個成功，另一個收到衝突 | 007 FR-005b、SC-007 |
+| M-07 | XT | 儲存在同一交易內完成：M-06 版本檢查、更新變更的格、寫入 `audit_event`（A-01、A-06）。沒有任何格改變的儲存不加版本、不寫稽核紀錄 | 應用層單一交易 | SVC：稽核寫入失敗 → 矩陣與版本號皆不變；空變更儲存 → 版本號不變、無稽核紀錄 | 007 FR-004、FR-010；空變更的處理為設計建議 |
+| M-08 | SM | 白名單新增鍵時，同一個 migration 為每個適用角色補列，初始值取 V1 預設矩陣；未列在預設矩陣的新鍵預設 false。授權判斷查不到列時一律視為不允許 | migration＋應用層 | M：新增鍵的 migration 後列數正確；SVC：刪除某列後該權限判斷為不允許 | 設計建議，見 §5 D-12 |
+| M-09 | CD | 讀取矩陣、讀取矩陣稽核紀錄、儲存矩陣三個端點都在伺服器端以 `require_role(super_admin)` 驗證 | 應用層 | API：`user` 呼叫三個端點皆 403；未登入 401 | 007 FR-002、FR-008、使用者故事 3 行為規則；ADR-021 修訂 |
+
+### 4.8 跨表與基礎設施
 
 | ID | 類型 | 規則 | 執行位置 | 實作時驗證 | 來源 |
 |---|---|---|---|---|---|
@@ -307,11 +364,16 @@ erDiagram
 | D-1 | 001 plan 的 `hashed_password NOT NULL` 與 ADR-035、005 FR-008、006 受邀帳號衝突 | 改為可空（001 plan 小改版） | 改為可空 | **是** |
 | D-2 | invite token 有效期限（006 未定義）；被作廢的 token 在 004 三種狀態中顯示為哪一種 | 沿用 reset 的期限或另訂；作廢顯示為 used | 補 006 條文 | 否 |
 | D-3 | 寬限期內重發次數上限（R-06） | (a) 同一張已輪替 token 只能重發一次，新增 `grace_reissued_at` 欄 (b) 不設上限 | (a) | **是**（決定是否多一欄） |
-| D-4 | 稽核依 Proposed ADR-032 建共用表，或 006 自建表；另外 ADR-032 事件模型含 `task_id`、表名為 `audit_events`，本文件兩者皆未採用 | (a) ADR-032 先轉 Accepted，表形完全依 ADR (b) 006 自建 `admin_user_audit_log` | (a)，`task_id` 保留為可空欄以供後續模組使用 | **是** |
+| D-4 | 稽核依 Proposed ADR-032 建共用表，或 006 自建表；另外 ADR-032 事件模型含 `task_id`、表名為 `audit_events`，本文件兩者皆未採用 | (a) ADR-032 先轉 Accepted，表形完全依 ADR (b) 006 自建 `admin_user_audit_log`。另外 ADR-032 的 admin 動作清單沒有矩陣儲存的動作，保存期限也未訂，而 007 FR-010 要求至少 1 年（A-05） | (a)，`task_id` 保留為可空欄以供後續模組使用；ADR-032 補矩陣儲存動作與保存期限 | **是** |
 | D-5 | 通知偏好沒有資料列時的預設值 | 全開／全關 | 補 005 條文 | 否 |
 | D-6 | foundation FR-077 要求高風險事件能立即作廢 access token；ADR-021 修訂只處理角色與停用並否決 token versioning，改密碼與改 email 沒有指定機制 | (a) 接受 access token 剩餘有效期作為窗口，並記錄於 ADR-021 (b) 每個請求比對密碼／email 變更時間與 JWT `iat` (c) 重新評估 token versioning | 需維護者於 ADR 層裁決 | **是**（可能多一欄） |
 | D-7 | seeder 由誰、何時建立 | bootstrap 指令／data migration／環境變數指定首位 super_admin | bootstrap 指令 | 否 |
 | D-8 | email 唯一性是否不分大小寫（U-01）；規格只規定 006 搜尋不分大小寫（006 FR-004a） | (a) 不分大小寫，表達式唯一索引 (b) 區分大小寫，一般唯一索引 | (a)，並補 003 條文 | **是**（決定索引形狀） |
+| D-9 | 矩陣是否真的參與授權判斷。007 使用者故事 2 寫「新配置成為平台後續授權判斷基準」，但 ADR-021 的 `require_role` 以程式內的角色集合判斷、007 使用者故事 3 要求 admin 兩頁用 RoleGuard 僅允許 `super_admin`、014 AC-2.2／AC-2.4 以固定的 task role 決定能否進入頁面，且沒有任何其他 spec 或 ADR 引用 `permission_key` | (a) 矩陣為授權依據：所有守門改查 `permission_key`，需新 ADR，並改寫 006、014、015 以鍵描述權限；每次請求讀矩陣或依 foundation FR-054 快取 (b) 矩陣可編輯並留稽核，但守門仍依角色，007 需改寫使用者故事 2 並在畫面上說明 (c) V1 矩陣改為唯讀展示，刪除編輯、樂觀鎖、稽核需求（007 MAJOR 改版），不建 §3.7、§3.8 兩張表 | 需維護者依論文需求裁決；技術面傾向 (c)：沒有下游使用者，且 (a) 無法表達 014／015 中「reviewer 唯讀」「只看自己的工時」這類規則 | **是**（決定兩張表是否存在） |
+| D-10 | reviewer 的 `task.detail.view` 在預設矩陣標為「✅（唯讀）」，但 `allowed` 是 boolean；白名單也沒有「編輯任務詳情」的鍵 | (a) 新增鍵 `task.detail.edit`，`allowed` 維持 boolean (b) `allowed` 改為三值（不允許／唯讀／完整） | (a) | **是**（D-9 選 (a)、(b) 時；決定欄位型別或列數） |
+| D-11 | 007 授權判斷規則允許同一人在同一任務同時有多個 task role，但 014 FR-005d 在新增成員時排除已在任務中的人，`TaskMembership` 每列只有一個 `task_role` | (a) 允許多角色，`task_membership` 唯一鍵為 `(task_id, user_id, task_role)`，014 補條文 (b) 一人一角色，唯一鍵為 `(task_id, user_id)`，007 刪除多角色條文 | 屬 task-management 盤點範圍，於該模組盤點時裁決 | 否（不影響本文件的表） |
+| D-12 | 白名單新增鍵時的預設值（M-08） | (a) 取 V1 預設矩陣，未列者為 false (b) 一律 false (c) 一律 true | (a) | 否 |
+| D-13 | 除了 M-03、M-04，是否還有不可變更的格。例如 `user` 的 `dashboard.view` 若可關閉，007 FR-007 的無權限導向目標 `/dashboard` 本身就不可進入；「⛔（需 task role）」的格是否完全不存 | 列出固定格清單並補 007 條文；⛔ 格不存 | 固定 `dashboard.view`；⛔ 格不存 | 否（不改表形，只改 CHECK 與種子資料） |
 
 ## 6. 刻意不做
 
@@ -320,10 +382,12 @@ erDiagram
 - 不為 `role`、`is_active`、`created_at` 建索引：目前規模不需要。
 - 不建 `token_version`：ADR-021 修訂否決（但見 §5 D-6）。
 - 不提供使用者實體刪除，只能停用。
+- 不建權限鍵表：白名單以後端程式常數為唯一來源（007 `PERMISSION_KEYS_SOURCE`）。
+- 不在矩陣表存操作者：操作者與變更內容只記在 `audit_event`，避免兩處不一致。
 
 ## 7. 維護方式
 
 - 上游 spec 或 ADR 異動涉及本文件的表、欄位或規則時，同一個 PR 更新本文件。
 - §5 每項定案後：刪除該列、把結果寫回 §1 或 §4 對應位置，並在來源欄引用定案的 spec／ADR 版本。
 - 實作時若測試證明某條規則寫錯，先修本文件，再修程式。
-- 新增其他模組的表時另開文件，不擴充本檔範圍；本檔只描述 account 與 admin-006。
+- 新增其他模組的表時另開文件，不擴充本檔範圍；本檔只描述 account 與 admin（006、007）。
