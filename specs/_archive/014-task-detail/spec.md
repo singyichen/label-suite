@@ -1,5 +1,5 @@
 ---
-功能分支: feat/772-export-history-redownload
+功能分支: chore/772-rearchive-014-canon
 建立日期: 2026-04-20
 版本: 3.3.0
 狀態: Draft
