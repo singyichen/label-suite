@@ -18,8 +18,8 @@
 
 > **相依與平行性**：0.1 與 0.2 必須同批提交，兩者分開則 `scripts/check-sdd.sh` 的 `ACTIVE_CHANGE_STAGE` 會因分支欄與正典 frontmatter 不一致而報錯。本群組不動任何產品程式。
 
-- [ ] 0.1 修改 `specs/STATUS.md`，將 `annotation-015` 之狀態由 in-progress 更新為 change-open、分支欄改為本 change 的分支並填入 change 名稱。驗證：Project SDD lint 之 `ACTIVE_CHANGE_STAGE` 為 0 筆（propose 期已隨本 change 一併提交，待主 session 核實後勾選） [@main]
-- [ ] 0.2 修改 `specs/annotation/015-annotation-workspace/spec.md` 之 frontmatter 功能分支欄，使其與 `specs/STATUS.md` 分支欄一致；本任務只改 frontmatter，不動任何 FR／AC／SC 條文。驗證：Project SDD lint 之 `ACTIVE_CHANGE_STAGE` 為 0 筆（propose 期已隨本 change 一併提交，待主 session 核實後勾選） [@main]
+- [x] 0.1 修改 `specs/STATUS.md`，將 `annotation-015` 之狀態由 in-progress 更新為 change-open、分支欄改為本 change 的分支並填入 change 名稱。驗證：Project SDD lint 之 `ACTIVE_CHANGE_STAGE` 為 0 筆（已隨 propose commit `e3cb13e1` 提交，主 session 於 apply 前以 Project SDD lint 0 error 核實） [@main]
+- [x] 0.2 修改 `specs/annotation/015-annotation-workspace/spec.md` 之 frontmatter 功能分支欄，使其與 `specs/STATUS.md` 分支欄一致；本任務只改 frontmatter，不動任何 FR／AC／SC 條文。驗證：Project SDD lint 之 `ACTIVE_CHANGE_STAGE` 為 0 筆（已隨 propose commit `e3cb13e1` 提交，主 session 於 apply 前以 Project SDD lint 0 error 核實） [@main]
 
 ## 1. 定稿卡之剩餘可處理量與歸零去向（FR-100 全條）
 
