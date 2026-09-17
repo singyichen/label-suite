@@ -4191,6 +4191,10 @@
   function buildFinalizedRemaining(data) {
     var box = document.createElement('div');
     box.setAttribute('data-testid', 'ws-finalized-remaining');
+    /* Same live-region role as the list page's no-actionable notice: the
+       zero state can replace the count in place after an arbitration submit
+       (FR-099 §7), with no navigation to announce it. */
+    box.setAttribute('role', 'status');
     box.style.cssText = 'font-size:12px;margin:0 0 10px;';
     var count = data.listActionableReviewUnits(
       currentProfile.id, currentRunType, currentIdentity.reviewerId
@@ -4211,6 +4215,10 @@
     var link = document.createElement('a');
     link.setAttribute('data-testid', 'ws-finalized-back-to-list');
     link.href = buildNoActionableListUrl();
+    /* The page resets anchors to inherited color with no underline, so the
+       link needs its own affordance; 44px keeps it a usable touch target. */
+    link.style.cssText = 'display:inline-flex;align-items:center;min-height:44px;'
+      + 'color:var(--color-primary);text-decoration:underline;';
     link.textContent = t('reviewFinalizedBackToList');
     box.appendChild(title);
     box.appendChild(message);
