@@ -2,6 +2,7 @@
 
 **Status**: Accepted
 **Date**: 2026-05-29
+**Amended**: 2026-09-17 — the JWT `role` claim is display-only; authorization reads current role and active status from the database (issue #779)
 
 ## Context
 
@@ -53,6 +54,36 @@ Use **httpOnly cookie** for both the access token and the refresh token, with th
 
 Task role is **not** included in the JWT. The frontend fetches task membership via `GET /api/v1/tasks/{task_id}/membership` after entering a task page, using `useTaskRole(taskId)` (TanStack Query).
 
+### Amendment (2026-09-17) — Role Claim Is Display-Only; Authorization Reads Current Role From the Database
+
+Issue #779 identified a gap: the `role` claim above is encoded at login and stays valid for the full 15-minute access-token TTL. If an authorization check trusted that claim directly, a `super_admin` demoted to `user` — or an account disabled mid-session — would keep the old privileges (or continued access) on any request made with an already-issued access token, for up to 15 minutes. This violates Constitution Principle XV: "access must be revoked immediately on role removal" (`specs/_governance/constitution.md:196`).
+
+**Decision (maintainer, 2026-09-17):** every authorization check that depends on system role — including whether the account is still active — MUST re-read `role` and `is_active` from the `users` table on each privileged request. The JWT `role` claim is kept in the payload for **frontend display only** (e.g., conditionally rendering the admin nav item without an extra round trip) and MUST NOT be treated as authoritative by any backend authorization dependency.
+
+```python
+# app/core/deps.py
+async def require_role(*allowed: UserRole):
+    async def _dependency(
+        user_id: UUID = Depends(get_current_user_id),  # decoded from JWT `sub` only
+        db: AsyncSession = Depends(get_db),
+    ) -> User:
+        user = await db.get(User, user_id)
+        if user is None or not user.is_active:
+            raise HTTPException(401, "auth.token_invalid")
+        if user.role not in allowed:
+            raise HTTPException(403, "auth.forbidden")
+        return user
+    return _dependency
+```
+
+`get_current_user` (used by endpoints that only need to know *who* is calling, such as `GET /auth/me`) is unaffected — it still identifies the caller from the JWT `sub` and does not gate on role.
+
+**Cost:** one indexed primary-key read (`users.id`) per privileged request. Label Suite is a research portal (not public-facing) at thesis/demo scale — see this ADR's Context — so the added read has no documented performance requirement to satisfy and does not warrant a caching layer.
+
+**Rejected alternative — token versioning.** Add a `token_version` (or `role_version`) claim to the JWT, bumped on the `users` row on every role change or enable/disable, and compare it against the DB value on each privileged request. This gives the same immediate-revocation guarantee but still requires a DB read on every privileged request to fetch the current version — so it does not remove the read this decision already pays for — while adding a new column and an invalidation-on-write rule that every role/status mutation must remember to apply. A missed version bump would silently reopen the exact vulnerability this amendment closes. Not chosen (2026-09-17).
+
+**Disabled accounts:** the same rule applies verbatim — `is_active` must be read from the database on every privileged request, never cached in the token or trusted from an earlier check in the same session. This closes the equivalent window for `specs/admin/006-user-management/spec.md` FR-008 / SC-008 (disable/enable flows) once their backend is implemented.
+
 ### Refresh Token Store
 
 Refresh tokens are stored server-side in the `refresh_tokens` table (PostgreSQL) with `user_id`, `token_hash`, `expires_at`, `revoked_at`. This enables:
@@ -86,6 +117,7 @@ Refresh tokens are stored server-side in the `refresh_tokens` table (PostgreSQL)
 - Server-side refresh token table enables hard logout (token revocation is immediate).
 - Refresh token rotation limits damage window if a refresh token is intercepted.
 - `SameSite=Lax` mitigates CSRF for state-changing requests without requiring CSRF tokens.
+- Role demotion and account disablement take effect on the very next request, independent of the 15-minute access-token TTL — satisfies Constitution Principle XV without any token-invalidation infrastructure (see Amendment 2026-09-17, issue #779).
 
 ### Harder
 
@@ -93,10 +125,13 @@ Refresh tokens are stored server-side in the `refresh_tokens` table (PostgreSQL)
 - CORS configuration must include `credentials: true`; frontend `fetch`/`axios` calls must set `credentials: 'include'`.
 - In local development, backend and frontend run on different ports — requires `SameSite=None; Secure` with HTTPS or a dev proxy (Vite proxy to same origin is the recommended approach).
 - Refresh token reuse detection (rotation abuse) requires careful implementation to avoid false positives from concurrent tab refreshes. **Chosen strategy (FR-075): grace period.** A revoked refresh token that falls within `REFRESH_TOKEN_GRACE_PERIOD` (default 30 s) is treated as valid and re-issues a new token without triggering full revocation. This prevents false-positive session termination when two browser tabs race to refresh simultaneously — the typical pattern for a research portal with long annotation sessions. The mutex strategy (`SELECT ... FOR UPDATE`) was considered but rejected because blocking concurrent requests adds latency and the grace window is short enough to limit the exposure of a stolen refresh token.
+- Every system-role-gated endpoint pays one extra DB read per request (`require_role` in Amendment 2026-09-17, issue #779); route handlers must use that dependency, not a JWT-decoded `role`, for any privileged check.
 
 ## Referenced by
 
 - [Constitution](../../specs/_governance/constitution.md) — Principle VII: Security-by-Default
+- [Constitution](../../specs/_governance/constitution.md) — Principle XV: Role-Based Access Control (immediate revocation on role removal; Amendment 2026-09-17)
 - [ADR-003](003-backend-framework-fastapi.md) — FastAPI dependency injection used for `current_user`
 - [ADR-011](011-frontend-source-structure.md) — `useAuthStore` Zustand store; `useTaskRole(taskId)` hook pattern
 - `specs/account/001-login-email-password/` — first feature consuming this contract
+- Issue #779 — role claim trust boundary correction (JWT `role` is display-only; authorization reads current role and active status from the database)
