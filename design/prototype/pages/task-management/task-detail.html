@@ -4297,6 +4297,90 @@
       }
     ];
 
+  /* issue #742 (design.md D4 / maintainer ruling 5): T006 declares output
+     type `sequence_tagging` (task-detail.data.js:338), whose export requires
+     char-offset `spans[]` -- AR_SAMPLES_NER's `entities:[{type,text}]` value
+     shape has no offsets, and T010 (entity_recognition) still needs that
+     exact shape, so AR_SAMPLES_NER stays untouched and T006 gets its own
+     seed instead. Text and every existing `entities` entry are reused
+     verbatim from AR_SAMPLES_NER; `spans` is a same-shape sibling field
+     (`{start,end,label}`, matching task-detail.data.js T006 datasetRecords)
+     computed by locating each entity's text inside `textZh`. */
+  var AR_SAMPLES_SEQ_TAGGING = [
+      {
+        sampleId: 'NER-001', stage: 'official',
+        textZh: '台積電創辦人張忠謀在台北出席 2024 年半導體產業論壇。',
+        textEn: 'TSMC founder Morris Chang attended the 2024 semiconductor forum in Taipei.',
+        summaryStats: [{ label: 'ORG', value: '×3' }, { label: 'PER', value: '×3' }, { label: 'LOC', value: '×3' }, { label: 'DATE', value: '×2' }],
+        status: 'submitted', completedAt: '2026-04-28',
+        annotations: [
+          { annotator: 'kioleemg12', value: { entities: [{ type: 'ORG', text: '台積電' }, { type: 'PER', text: '張忠謀' }, { type: 'LOC', text: '台北' }], spans: [{ start: 0, end: 3, label: 'ORG' }, { start: 6, end: 9, label: 'PER' }, { start: 10, end: 12, label: 'LOC' }] }, submittedAt: '2026-04-28 10:10', reviewStatus: 'pending' },
+          { annotator: '113450022', value: { entities: [{ type: 'ORG', text: '台積電' }, { type: 'PER', text: '張忠謀' }, { type: 'LOC', text: '台北' }, { type: 'MISC', text: '半導體產業論壇' }], spans: [{ start: 0, end: 3, label: 'ORG' }, { start: 6, end: 9, label: 'PER' }, { start: 10, end: 12, label: 'LOC' }, { start: 21, end: 28, label: 'MISC' }] }, submittedAt: '2026-04-28 10:24', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-28 17:30' }] },
+          { annotator: 'tony0950127', value: { entities: [{ type: 'ORG', text: '台積電' }, { type: 'PER', text: '創辦人張忠謀' }, { type: 'LOC', text: '台北' }], spans: [{ start: 0, end: 3, label: 'ORG' }, { start: 3, end: 9, label: 'PER' }, { start: 10, end: 12, label: 'LOC' }] }, submittedAt: '2026-04-28 10:42', reviewStatus: 'pending' }
+        ]
+      },
+      {
+        sampleId: 'NER-002', stage: 'official',
+        textZh: '鴻海精密工業宣布在越南胡志明市設立新廠，預計 2025 年完工。',
+        textEn: 'Hon Hai announced a new plant in Ho Chi Minh City, Vietnam, expected in 2025.',
+        summaryStats: [{ label: 'ORG', value: '×3' }, { label: 'LOC', value: '×3' }, { label: 'DATE', value: '×3' }],
+        status: 'submitted', completedAt: '2026-04-28',
+        annotations: [
+          { annotator: 'kioleemg12', value: { entities: [{ type: 'ORG', text: '鴻海精密工業' }, { type: 'LOC', text: '越南' }, { type: 'LOC', text: '胡志明市' }], spans: [{ start: 0, end: 6, label: 'ORG' }, { start: 9, end: 11, label: 'LOC' }, { start: 11, end: 15, label: 'LOC' }] }, submittedAt: '2026-04-28 11:08', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-28 17:30' }] },
+          { annotator: '113450022', value: { entities: [{ type: 'ORG', text: '鴻海精密工業' }, { type: 'LOC', text: '胡志明市' }, { type: 'DATE', text: '2025 年' }], spans: [{ start: 0, end: 6, label: 'ORG' }, { start: 11, end: 15, label: 'LOC' }, { start: 23, end: 29, label: 'DATE' }] }, submittedAt: '2026-04-28 11:26', reviewStatus: 'pending' },
+          { annotator: 'tony0950127', value: { entities: [{ type: 'ORG', text: '鴻海' }, { type: 'LOC', text: '越南胡志明市' }, { type: 'DATE', text: '2025 年' }], spans: [{ start: 0, end: 2, label: 'ORG' }, { start: 9, end: 15, label: 'LOC' }, { start: 23, end: 29, label: 'DATE' }] }, submittedAt: '2026-04-28 11:44', reviewStatus: 'pending' }
+        ]
+      },
+      {
+        sampleId: 'NER-003', stage: 'official',
+        textZh: '衛生福利部長薛瑞元出席世界衛生大會，代表台灣宣導健康政策。',
+        textEn: 'Minister Hsueh Jui-yuan attended the World Health Assembly on behalf of Taiwan.',
+        summaryStats: [{ label: 'ORG', value: '×2' }, { label: 'PER', value: '×2' }],
+        status: 'draft', completedAt: '2026-04-28',
+        annotations: [
+          { annotator: 'kioleemg12', value: { entities: [{ type: 'ORG', text: '衛生福利部' }, { type: 'PER', text: '薛瑞元' }], spans: [{ start: 0, end: 5, label: 'ORG' }, { start: 6, end: 9, label: 'PER' }] }, submittedAt: '2026-04-28 13:04', reviewStatus: 'pending' },
+          { annotator: '113450022', value: { entities: [{ type: 'ORG', text: '世界衛生大會' }, { type: 'LOC', text: '台灣' }], spans: [{ start: 11, end: 17, label: 'ORG' }, { start: 20, end: 22, label: 'LOC' }] }, submittedAt: '2026-04-28 13:18', reviewStatus: 'modified', reviews: [{ reviewer: 'dahua_lee', decision: 'modified', result: { entities: [{ type: 'ORG', text: '世界衛生大會' }] }, reviewedAt: '2026-04-28 14:30' }] },
+          { annotator: 'tony0950127', value: { entities: [{ type: 'PER', text: '薛瑞元' }, { type: 'ORG', text: '衛生福利部' }], spans: [{ start: 6, end: 9, label: 'PER' }, { start: 0, end: 5, label: 'ORG' }] }, submittedAt: '2026-04-28 13:34', reviewStatus: 'pending' }
+        ]
+      },
+      {
+        sampleId: 'NER-004', stage: 'dry',
+        textZh: '美國聯準會宣布維持利率不變，聯準會主席鮑威爾表示將持續觀察通膨走勢。',
+        textEn: 'The Fed kept rates unchanged, and Chair Jerome Powell said inflation will be monitored.',
+        summaryStats: [{ label: 'ORG', value: '×2' }, { label: 'PER', value: '×1' }, { label: 'LOC', value: '×1' }],
+        status: 'pending', completedAt: '',
+        annotations: [
+          { annotator: 'kioleemg12', value: { entities: [{ type: 'LOC', text: '美國' }, { type: 'ORG', text: '聯準會' }], spans: [{ start: 0, end: 2, label: 'LOC' }, { start: 2, end: 5, label: 'ORG' }] }, submittedAt: '', reviewStatus: 'pending' },
+          { annotator: '113450022', value: { entities: [{ type: 'ORG', text: '聯準會' }, { type: 'PER', text: '鮑威爾' }], spans: [{ start: 2, end: 5, label: 'ORG' }, { start: 19, end: 22, label: 'PER' }] }, submittedAt: '', reviewStatus: 'pending' },
+          { annotator: 'tony0950127', value: null, submittedAt: '', reviewStatus: 'pending' }
+        ]
+      },
+      {
+        sampleId: 'NER-005', stage: 'dry',
+        textZh: '歐盟議會通過新版人工智慧法案，預計明年在歐洲全境正式生效。',
+        textEn: 'The European Parliament passed a new AI Act to take effect across Europe next year.',
+        summaryStats: [{ label: 'ORG', value: '×3' }, { label: 'LOC', value: '×2' }, { label: 'DATE', value: '×1' }],
+        status: 'pending', completedAt: '',
+        annotations: [
+          { annotator: 'kioleemg12', value: { entities: [{ type: 'ORG', text: '歐盟議會' }, { type: 'LOC', text: '歐洲' }], spans: [{ start: 0, end: 4, label: 'ORG' }, { start: 20, end: 22, label: 'LOC' }] }, submittedAt: '', reviewStatus: 'pending' },
+          { annotator: '113450022', value: { entities: [{ type: 'ORG', text: '人工智慧法案' }, { type: 'DATE', text: '明年' }], spans: [{ start: 8, end: 14, label: 'ORG' }, { start: 17, end: 19, label: 'DATE' }] }, submittedAt: '', reviewStatus: 'pending' },
+          { annotator: 'tony0950127', value: { entities: [{ type: 'ORG', text: '歐盟' }, { type: 'LOC', text: '歐洲全境' }], spans: [{ start: 0, end: 2, label: 'ORG' }, { start: 20, end: 24, label: 'LOC' }] }, submittedAt: '', reviewStatus: 'pending' }
+        ]
+      },
+      {
+        sampleId: 'NER-006', stage: 'dry',
+        textZh: 'Google 執行長 Sundar Pichai 在加州山景城發表 Gemini 新版本。',
+        textEn: 'Google CEO Sundar Pichai unveiled a new Gemini version in Mountain View, California.',
+        summaryStats: [{ label: 'ORG', value: '×3' }, { label: 'PER', value: '×3' }, { label: 'LOC', value: '×2' }, { label: 'PRODUCT', value: '×2' }],
+        status: 'submitted', completedAt: '2026-05-01',
+        annotations: [
+          { annotator: 'kioleemg12', value: { entities: [{ type: 'ORG', text: 'Google' }, { type: 'PER', text: 'Sundar Pichai' }, { type: 'LOC', text: '加州山景城' }], spans: [{ start: 0, end: 6, label: 'ORG' }, { start: 11, end: 24, label: 'PER' }, { start: 26, end: 31, label: 'LOC' }] }, submittedAt: '2026-05-01 16:08', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-05-01 17:30' }] },
+          { annotator: '113450022', value: { entities: [{ type: 'ORG', text: 'Google' }, { type: 'PRODUCT', text: 'Gemini' }, { type: 'PER', text: 'Sundar Pichai' }], spans: [{ start: 0, end: 6, label: 'ORG' }, { start: 34, end: 40, label: 'PRODUCT' }, { start: 11, end: 24, label: 'PER' }] }, submittedAt: '2026-05-01 16:22', reviewStatus: 'pending' },
+          { annotator: 'tony0950127', value: { entities: [{ type: 'ORG', text: 'Google' }, { type: 'PER', text: '執行長 Sundar Pichai' }, { type: 'PRODUCT', text: 'Gemini' }], spans: [{ start: 0, end: 6, label: 'ORG' }, { start: 7, end: 24, label: 'PER' }, { start: 34, end: 40, label: 'PRODUCT' }] }, submittedAt: '2026-05-01 16:40', reviewStatus: 'pending' }
+        ]
+      }
+    ];
+
   /* Structural remap after the 13-seed data unification: mock result sets
      are matched to each task's annotation STRUCTURE (labels / VA scores /
      aspects / relations / pairs / entities), not its domain text. T009 and
@@ -4308,7 +4392,7 @@
     T003: AR_SAMPLES_CLASSIFICATION,
     T004: AR_SAMPLES_VA,
     T005: AR_SAMPLES_VA,
-    T006: AR_SAMPLES_NER,
+    T006: AR_SAMPLES_SEQ_TAGGING,
     T007: AR_SAMPLES_ASPECT,
     T008: AR_SAMPLES_RELATION,
     T009: AR_SAMPLES_CLASSIFICATION,
