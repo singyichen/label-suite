@@ -750,8 +750,6 @@
       clearFiltersLabel: '清除篩選',
       emptyNoResults: '找不到符合條件的資料。',
       emptyNoData: '目前尚無資料。',
-      noActionableReviewTitle: '目前沒有可處理項目',
-      noActionableReviewMessage: '這個任務的審核單位都已定稿，或不在你的可處理範圍內。',
       paginationTpl: '共 {total} 筆 · 第 {page} / {totalPages} 頁',
       pageSizeTpl: '{size} / 頁',
       roleLabelAnnotator: '標記員',
@@ -823,8 +821,6 @@
       clearFiltersLabel: 'Clear filters',
       emptyNoResults: 'No matching data.',
       emptyNoData: 'No data yet.',
-      noActionableReviewTitle: 'No actionable items right now',
-      noActionableReviewMessage: 'Every review unit on this task is finalized or outside what you can act on.',
       paginationTpl: 'Total {total} · Page {page} / {totalPages}',
       pageSizeTpl: '{size} / page',
       roleLabelAnnotator: 'Annotator',
@@ -2233,13 +2229,17 @@
       el.classList.add('hidden');
       return;
     }
+    /* FR-100 §3 (issue #766): the wording is defined once in the data layer
+       and shared with the workspace's finalized-card zero state. */
+    var allLabels = window.LabelSuiteAnnotationWorkspaceData.NO_ACTIONABLE_REVIEW_LABELS;
+    var labels = allLabels[CURRENT_LANG] || allLabels.zh;
     el.innerHTML = '';
     var title = document.createElement('strong');
     title.style.display = 'block';
     title.style.marginBottom = '4px';
-    title.textContent = t('noActionableReviewTitle');
+    title.textContent = labels.title;
     var message = document.createElement('span');
-    message.textContent = t('noActionableReviewMessage');
+    message.textContent = labels.message;
     el.appendChild(title);
     el.appendChild(message);
     el.classList.remove('hidden');
