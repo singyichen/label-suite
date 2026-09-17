@@ -2852,6 +2852,8 @@
       arSeqExportConfirmBtn: '確認匯出',
       arSeqExportExpansionToggleTpl: '{count} 段標記因對齊被擴張',
       arSeqExportBlockedTokenizerVersion: '所選切詞引擎缺少版本資訊，無法以詞為單位匯出，請改選其他引擎或改用字元單位。',
+      arExportSnapshotMissingTitle: '此筆紀錄缺少重新下載所需的匯出條件，無法重建原始檔案。',
+      arSeqExportRedownloadBlockedTokenizer: '切詞引擎「{engine}」已不可用，無法重新下載此詞元單位的匯出結果，請改用字元單位重新匯出。',
       arEmptyTitle: '尚無標記結果',
       arEmptyHint: '標記員提交後，結果將顯示於此。',
       navDashboard: '儀表板',
@@ -3350,6 +3352,8 @@
       arSeqExportConfirmBtn: 'Confirm export',
       arSeqExportExpansionToggleTpl: '{count} label(s) expanded for token alignment',
       arSeqExportBlockedTokenizerVersion: 'The selected tokenizer engine is missing version information, so a word-level export cannot be produced. Choose a different engine or switch to character-level export.',
+      arExportSnapshotMissingTitle: 'This record is missing the export conditions needed to rebuild the original file.',
+      arSeqExportRedownloadBlockedTokenizer: 'The tokenizer engine "{engine}" is no longer available, so this word-level export cannot be redownloaded. Re-export using character-level units instead.',
       arEmptyTitle: 'No annotation results yet',
       arEmptyHint: 'Results will appear here once annotators submit.',
       navDashboard: 'Dashboard',
@@ -9684,12 +9688,32 @@ function getTaskTypeLabel() {
     return t('arStageBoth');
   }
 
+  /* FR-021(6)/D3: "download" is only enabled when the row's snapshot has
+     every field a redownload needs to rebuild the exact same file -- no
+     default-filling from the current screen. sequence_tagging tasks also
+     need the scheme/unit (and, for word units, the tokenizer engine)
+     recorded by FR-020(3). */
+  function isArExportSnapshotComplete(snapshot) {
+    if (!snapshot) return false;
+    var requiredBaseFields = ['export_format', 'run_stage', 'submission_status', 'annotator_scope', 'reviewer_scope', 'review_status_scope', 'exported_at', 'exported_by', 'lang'];
+    for (var i = 0; i < requiredBaseFields.length; i++) {
+      if (snapshot[requiredBaseFields[i]] == null) return false;
+    }
+    if (taskHasSequenceTaggingOutput()) {
+      if (!snapshot.tagging_scheme || !snapshot.token_unit) return false;
+      if (snapshot.token_unit === 'word' && !snapshot.tokenizer_engine) return false;
+    }
+    return true;
+  }
+
   /* FR-021(1)(2)(5): rebuilds a past export from its stored conditions
      snapshot only -- never reads a live `state.ar*` filter or the dialog's
      current selections, never opens #arSeqExportModal, never writes a new
      TASK_DATA.exportHistory row, and reuses downloadArExport/
      buildJsonExportPayload/buildJsonMinExportPayload (D1) so
-     deriveSequence keeps its single call site (SC-045). */
+     deriveSequence keeps its single call site (SC-045). The caller (see
+     renderArExportHistory) only wires this up when
+     isArExportSnapshotComplete() is true. */
   function redownloadArExportRecord(record) {
     var snapshot = record.conditionsSnapshot;
     var conditions = {
@@ -9709,6 +9733,21 @@ function getTaskTypeLabel() {
     }
     var format = snapshot.export_format;
     if (seqOptions && seqOptions.token_unit === 'word') {
+      /* FR-021(6)/D4: a probe pass mirrors arSeqExportConfirmBtn's pattern
+         (:10600) -- blocked is decided only by the shared module's return
+         value (SC-045's single deriveSequence call site), never by this
+         page inspecting the snapshot's tokenizer fields itself. The probe
+         accumulator is discarded before any real download. */
+      var probeSamples = getArFilteredSamples(conditions);
+      state.arSeqExportRun = { blocked: false, tokenizer: null, alignmentMode: null, expandedSpanCount: 0, expansions: [] };
+      if (format === 'json') { buildJsonExportPayload(probeSamples, conditions, seqOptions); }
+      else { buildJsonMinExportPayload(probeSamples, conditions, seqOptions); }
+      var blocked = state.arSeqExportRun.blocked;
+      state.arSeqExportRun = null;
+      if (blocked) {
+        showToast(interpolate(t('arSeqExportRedownloadBlockedTokenizer'), { engine: seqOptions.tokenizerEngine }), true);
+        return;
+      }
       /* D5: the word path's manifest tokenizer/alignment_mode/
          expanded_span_count come from state.arSeqExportRun, same as a live
          export -- but redownload MUST NOT render the expansion summary. */
@@ -9759,9 +9798,14 @@ function getTaskTypeLabel() {
       dlBtn.className = 'mini-btn mini-btn-primary ar-export-action-btn';
       dlBtn.type = 'button';
       dlBtn.textContent = t('arExportDownload');
-      dlBtn.addEventListener('click', function() {
-        redownloadArExportRecord(record);
-      });
+      if (isArExportSnapshotComplete(record.conditionsSnapshot)) {
+        dlBtn.addEventListener('click', function() {
+          redownloadArExportRecord(record);
+        });
+      } else {
+        dlBtn.disabled = true;
+        dlBtn.title = t('arExportSnapshotMissingTitle');
+      }
       opsTd.appendChild(dlBtn);
       tr.appendChild(opsTd);
       body.appendChild(tr);
