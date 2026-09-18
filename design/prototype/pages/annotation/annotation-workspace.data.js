@@ -1413,24 +1413,6 @@
       ]
     },
 
-    T017: {
-      'oft-01-final-exception': [
-        { annotator: 'kioleemg12', answers: { single_label: 'neutral' } }
-      ],
-      'oft-02-approved-interim': [
-        { annotator: 'kioleemg12', answers: { single_label: 'positive' } }
-      ],
-      'oft-03-modified-interim': [
-        { annotator: 'kioleemg12', answers: { single_label: 'neutral' } }
-      ],
-      'oft-04-unanimous-gold': [
-        { annotator: 'kioleemg12', answers: { single_label: 'positive' } }
-      ],
-      'oft-05-pending-review': [
-        { annotator: 'kioleemg12', answers: { single_label: 'positive' } }
-      ]
-    },
-
     T013: {
       'absa-001': [
         {
@@ -3146,22 +3128,6 @@
          (兩者皆非) -> final-exception-pool seed (FR-061 point 3, FR-095)
          survives T017's removal. */
       { t: 'T016', r: 'official_run', s: 'ofm-05-final-exception', a: A, v: 'neutral', rev: { reviewer_wang: 'positive' }, modifyBy: 'reviewer_wang', reason: '語境不足以判斷情緒傾向，正面與中性難以取捨', arbReject: true, arbReason: '原標記與審核修正結果皆缺乏明確文本依據支持，需退回標記指南徵詢更明確判準' }, // disputed (reviewer modifies, arbitration rejects both sides -> final exception pool)
-      /* T017 official_run, min_reviewers = 2 */
-      /* issue #596 (FR-093/FR-061 point 3/FR-095): the canonical exception
-         path -- reviewer_wang corrects the annotator's value, but
-         reviewer_chen's arbitration rejects BOTH sides (兩者皆非), so the
-         unit stays disputed and the item queues in the final exception pool
-         until a project_leader visit resolves it. */
-      { t: 'T017', r: 'official_run', s: 'oft-01-final-exception', a: A, v: 'neutral', rev: { reviewer_wang: 'positive' }, modifyBy: 'reviewer_wang', reason: '語境不足以判斷情緒傾向，正面與中性難以取捨', arbReject: true, arbReason: '原標記與審核修正結果皆缺乏明確文本依據支持，需退回標記指南徵詢更明確判準' }, // disputed (reviewer modifies, arbitration rejects both sides -> final exception pool)
-      { t: 'T017', r: 'official_run', s: 'oft-02-approved-interim', a: A, v: 'positive', rev: { reviewer_wang: 'positive' } }, // approved (1 < 2)
-      { t: 'T017', r: 'official_run', s: 'oft-03-modified-interim', a: A, v: 'neutral', rev: { reviewer_wang: 'positive' } }, // modified (1 < 2)
-      { t: 'T017', r: 'official_run', s: 'oft-04-unanimous-gold', a: A, v: 'positive', rev: { reviewer_wang: 'positive', reviewer_li: 'positive' } }, // finalized
-      /* issue #804 group 2 (FR-092): a reviewer reject no longer rolls the
-         annotator's sample back to 'pending' in either run_type -- reject
-         still blocks finalization (DISPUTE_FORCING_DECISIONS), so this unit
-         reads as disputed with the annotator's original submission intact,
-         same as T014's dry-05-pending-review pure-reject row above. */
-      { t: 'T017', r: 'official_run', s: 'oft-05-pending-review', a: A, v: 'positive', rev: { reviewer_wang: 'positive' }, rejectBy: 'reviewer_wang', reason: '語氣偏中性，請重新判讀第二句的轉折' }, // disputed (pure reject blocks finalization)
     ];
 
     function labelPayload(value, decision, reason) {
