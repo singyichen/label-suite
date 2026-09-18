@@ -2509,6 +2509,10 @@
       dryRunDisabled: '新增試標回合（唯讀）',
       officialRunDisabled: '開始正式標記（唯讀）',
       dryRunNextRoundReason: '本回合全部提交並完成 IAA 後才能新增下一回合',
+      retryIaaComputation: '重試計算',
+      iaaComputationPendingOfficialReason: 'IAA 計算中，完成後才能開始正式標記',
+      iaaComputationPendingDryRunReason: 'IAA 計算中，完成後才能新增下一回合',
+      iaaComputationFailedReason: 'IAA 計算失敗，請重試計算',
       statusHintDraft: '目前任務仍在草稿，可建立第一個試標回合。',
       statusHintDry: '目前處於試標階段，可依結果持續建立下一個試標回合。',
       statusHintIaa: '已有試標回合達標，可用剩餘樣本啟動正式標記。',
@@ -2569,6 +2573,10 @@
       roundDecisionDescRoundActiveTpl: '本回合尚未全員提交，暫不提供新增下一回合；待全數提交並完成 IAA 後任務會自動進入待確認，再決定下一步。',
       roundDecisionTitleInProgressTpl: 'R{round} 尚無法判定是否達標',
       roundDecisionDescInProgressTpl: '目前沒有足夠的標記資料可計算一致性，待標記員完成後即可判定是否達標。',
+      iaaComputationPendingTitle: 'IAA 計算中',
+      iaaComputationPendingDesc: '本回合的 IAA 尚在計算中，完成後才能判定是否達標，暫不提供開始正式標記或新增下一回合。',
+      iaaComputationFailedTitle: 'IAA 計算失敗',
+      iaaComputationFailedDesc: '本回合的 IAA 計算執行失敗，請專案負責人點擊「重試計算」，完成後才能開始正式標記或新增下一回合。',
       roundDecisionTitleOfficialTpl: '正式標記進行中，共 {count} 筆',
       roundDecisionDescOfficialTpl: '正式標記池已從未參與試標的剩餘樣本建立，持續完成後即可結束任務。',
       roundDecisionTitleCompletedTpl: '正式標記已完成，共 {count} 筆',
@@ -3011,6 +3019,10 @@
       dryRunDisabled: 'Add trial round (Read-only)',
       officialRunDisabled: 'Start official run (Read-only)',
       dryRunNextRoundReason: 'Submit all outputs and finish IAA for this round before adding the next one',
+      retryIaaComputation: 'Retry computation',
+      iaaComputationPendingOfficialReason: 'IAA computation is in progress; official run can start once it finishes',
+      iaaComputationPendingDryRunReason: 'IAA computation is in progress; the next round can be added once it finishes',
+      iaaComputationFailedReason: 'IAA computation failed. Please retry the computation',
       statusHintDraft: 'The task is still in draft. Create the first trial round to start validation.',
       statusHintDry: 'The task is in the trial stage. You can continue with another round based on the latest outcome.',
       statusHintIaa: 'At least one trial round passed. The remaining pool can now enter official work.',
@@ -3071,6 +3083,10 @@
       roundDecisionDescRoundActiveTpl: 'This round has not been fully submitted yet, so adding the next round is unavailable. Once everyone finishes and IAA completes, the task moves to confirmation and you can decide the next step.',
       roundDecisionTitleInProgressTpl: 'R{round} outcome not yet determined',
       roundDecisionDescInProgressTpl: 'There is not enough marked data yet to compute agreement. The outcome will be clear once annotators finish.',
+      iaaComputationPendingTitle: 'IAA computation in progress',
+      iaaComputationPendingDesc: 'This round\'s IAA is still being computed. Starting official work and adding the next round are unavailable until it finishes.',
+      iaaComputationFailedTitle: 'IAA computation failed',
+      iaaComputationFailedDesc: 'This round\'s IAA computation failed to execute. The project leader should retry the computation before starting official work or adding the next round.',
       roundDecisionTitleOfficialTpl: 'Official run in progress with {count} items',
       roundDecisionDescOfficialTpl: 'The official pool was created from the remaining items that never entered a trial round.',
       roundDecisionTitleCompletedTpl: 'Official run completed with {count} items',
@@ -4763,10 +4779,16 @@ function interpolate(template, payload) {
         TASK_DATA.outputs.map(function(o) { return o.type; })
       );
     }
-    /* None of the unified profiles carry legacy trialRounds/run-control data;
-       &status= URL overrides (see parseRole()) still exercise every run-control
+    /* Most unified profiles carry no trialRounds/run-control data; &status=
+       URL overrides (see parseRole()) still exercise every run-control
        state via the generic DEFAULT_TASK_DATA trial history. */
     resetRunProgressData();
+    /* issue #783 (design.md D7): only overwrite the freshly-reset empty
+       trialRounds when this profile actually seeds its own (T018), same
+       opt-in pattern as reviewerIds above. getTrialRounds() returns this
+       array as-is once non-empty, so TASK_DATA.trialRound (left at 0 by
+       resetRunProgressData()) never matters for these profiles. */
+    if (profile && profile.trialRounds) TASK_DATA.trialRounds = cloneData(profile.trialRounds);
   }
 
   /* Issue #200: renders the not-found state (mirrors annotation-list's
@@ -5474,6 +5496,16 @@ function interpolate(template, payload) {
     return 'trial';
   }
 
+  /* issue #783 (FR-010o-4(1)): a missing field means the round predates
+     this feature (or is the synthetic getTrialRounds() fallback), which is
+     always a determined outcome -- so absence MUST read as 'done', not
+     'pending'. This is a separate axis from round.result: result is the
+     IAA verdict (passed/failed/in_progress), this is whether the async
+     computation itself has finished. */
+  function getRoundComputationStatus(round) {
+    return (round && round.iaaComputationStatus) || 'done';
+  }
+
   function getRoundOutcomeKey() {
     var currentRound = getCurrentTrialRound();
     if (!currentRound) return 'in_progress';
@@ -5799,6 +5831,18 @@ function interpolate(template, payload) {
          button. */
       setText('trialDecisionTitle', interpolate(t('roundDecisionTitleRoundActiveTpl'), { round: currentRound.round }));
       setText('trialDecisionDesc', t('roundDecisionDescRoundActiveTpl'));
+    } else if (TASK_DATA.status === 'waiting_iaa_confirmation' && currentRound && getRoundComputationStatus(currentRound) !== 'done') {
+      /* issue #783 (FR-010o-4(2)-(4)): the computation has not finished, so
+         it MUST NOT be presented as an IAA-not-met verdict -- this branch
+         takes priority over the result-based branches below, which only
+         apply once the computation is done. */
+      if (getRoundComputationStatus(currentRound) === 'pending') {
+        setText('trialDecisionTitle', t('iaaComputationPendingTitle'));
+        setText('trialDecisionDesc', t('iaaComputationPendingDesc'));
+      } else {
+        setText('trialDecisionTitle', t('iaaComputationFailedTitle'));
+        setText('trialDecisionDesc', t('iaaComputationFailedDesc'));
+      }
     } else if (currentRound && currentRound.result === 'passed') {
       setText('trialDecisionTitle', interpolate(t('roundDecisionTitlePassedTpl'), { round: currentRound.round }));
       setText('trialDecisionDesc', interpolate(t('roundDecisionDescPassedTpl'), { count: reserveCount }));
@@ -6015,6 +6059,25 @@ function interpolate(template, payload) {
     }
 
     if (TASK_DATA.status === 'waiting_iaa_confirmation') {
+      /* issue #783 (FR-010o-4(5)/(6)): neither the "start official run" nor
+         the "add next trial round" transition may proceed while the latest
+         round's IAA computation has not finished -- disable both with a
+         visible reason, same "disabled + visible reason" pattern as the
+         dry_run_in_progress branch above (issue #791 D4). The retry control
+         (FR-010o-4(3)) is project_leader-only; the reviewer branch above
+         already returns before this point, so state.taskRole here is
+         always 'project_leader'. */
+      var computationStatus = getRoundComputationStatus(getCurrentTrialRound());
+      if (computationStatus !== 'done') {
+        var isPending = computationStatus === 'pending';
+        actionRow.innerHTML =
+          '<button class="btn btn-primary" type="button" id="publishOfficialRunBtn" disabled>' + t('publishOfficialRun') + '</button>' +
+          '<span class="status-hint">' + t(isPending ? 'iaaComputationPendingOfficialReason' : 'iaaComputationFailedReason') + '</span>' +
+          '<button class="btn btn-cta" type="button" id="publishDryRunBtn" disabled>' + t('publishDryRun') + ' R' + nextRound + '</button>' +
+          '<span class="status-hint">' + t(isPending ? 'iaaComputationPendingDryRunReason' : 'iaaComputationFailedReason') + '</span>' +
+          (isPending ? '' : '<button class="btn btn-secondary" type="button" id="retryIaaComputationBtn">' + t('retryIaaComputation') + '</button>');
+        return;
+      }
       actionRow.innerHTML = '<button class="btn btn-primary" type="button" id="publishOfficialRunBtn">' + t('publishOfficialRun') + '</button>' +
         '<button class="btn btn-cta" type="button" id="publishDryRunBtn">' + t('publishDryRun') + ' R' + nextRound + '</button>';
       return;
@@ -10141,6 +10204,20 @@ function getTaskTypeLabel() {
     renderOverview();
   }
 
+  /* issue #783 (FR-010o-4(3)): resets the latest round's computation back
+     to 'pending' in place -- MUST NOT change TASK_DATA.status and MUST NOT
+     push a new round, unlike publishDryRun()/publishOfficialRun() above. */
+  function retryIaaComputation() {
+    var currentRound = getCurrentTrialRound();
+    if (!currentRound || getRoundComputationStatus(currentRound) !== 'failed') return;
+    if (!Array.isArray(TASK_DATA.trialRounds) || !TASK_DATA.trialRounds.length) {
+      TASK_DATA.trialRounds = getTrialRounds();
+    }
+    TASK_DATA.trialRounds[TASK_DATA.trialRounds.length - 1].iaaComputationStatus = 'pending';
+    trackEvent('prototype_cta_clicked', { cta: 'retry_iaa_computation' });
+    renderOverview();
+  }
+
   /* FR-008b: task-completion blockers, localized. Condition 4 (final
      exception pool) is always scoped to `official_run` regardless of the
      annotation-progress panel's currently selected round (FR-008b point 4:
@@ -10489,6 +10566,10 @@ function getTaskTypeLabel() {
       if (e.target.id === 'publishCompleteBtn') {
         trackEvent('prototype_cta_clicked', { cta: 'publish_complete' });
         publishComplete();
+      }
+
+      if (e.target.id === 'retryIaaComputationBtn') {
+        retryIaaComputation();
       }
     });
 

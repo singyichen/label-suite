@@ -80,9 +80,10 @@
       /* Matches the dashboard's admin sample card (adminTask1 / T002,
          dashboard.data.js, runType dry_run) so the "等待 IAA 確認" stat and
          the /task-list?status=waiting_iaa_confirmation filter reconcile
-         instead of contradicting each other (issue #186). Only this dry_run
-         seed carries the status: IAA confirmation follows dry-run completion
-         (spec 014 lifecycle), and the other seeds must stay draft for the
+         instead of contradicting each other (issue #186). Only this seed and
+         T018 (issue #783) carry the status -- the dashboard stat counts
+         both: IAA confirmation follows dry-run completion (spec 014
+         lifecycle), and the other seeds must stay draft for the
          task-detail settings-edit tests. */
       status: 'waiting_iaa_confirmation',
       updatedAt: '2026-07-28',
@@ -277,6 +278,24 @@
       runType: 'official_run',
       status: 'official_run_in_progress',
       updatedAt: '2026-08-21',
+      canViewDetail: true,
+      isMine: true,
+      deletedAt: ''
+    },
+    {
+      id: 'T018',
+      nameZh: '審核流程示範：IAA 計算失敗',
+      nameEn: 'Review Flow Demo: IAA Computation Failed',
+      sourceFile: 'review-flow-iaa-failed.json',
+      outputTypes: ['single_label'],
+      /* issue #783 (FR-010o-4): demonstrates the waiting_iaa_confirmation
+         page while the latest trial round's IAA computation has failed
+         (task-detail.data.js profile carries iaaComputationStatus: 'failed'
+         on its latest round) -- distinct from T002's already-computed
+         waiting state. */
+      runType: 'dry_run',
+      status: 'waiting_iaa_confirmation',
+      updatedAt: '2026-08-22',
       canViewDetail: true,
       isMine: true,
       deletedAt: ''

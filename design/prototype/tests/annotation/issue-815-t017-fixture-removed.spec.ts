@@ -74,7 +74,12 @@ test.describe('T017 review-flow demo fixture is fully removed (issue #815, tasks
         .sort();
     });
 
-    expect(demoTaskIds).toEqual(SURVIVING_TASK_IDS);
+    /* issue #783 later adds T018 (FR-010o-4 IAA-computation-failed demo,
+       sourceFile 'review-flow-iaa-failed.json') to task-list.data.js only;
+       it shares the review-flow- prefix but is not part of the dashboard
+       registries SURVIVING_TASK_IDS drives below, so it is appended here
+       rather than to that constant. */
+    expect(demoTaskIds).toEqual([...SURVIVING_TASK_IDS, 'T018']);
   });
 
   test('requirement 2a: task-detail.html-loaded registries (annotation-workspace, task-list, task-detail, task-detail.html itself) no longer key T017', async ({ page }) => {

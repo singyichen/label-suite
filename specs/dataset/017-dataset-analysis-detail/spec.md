@@ -1,7 +1,7 @@
 ---
-功能分支: feat/dataset/017-dataset-analysis-detail
+功能分支: docs/783-iaa-precondition-017-values-on-main
 建立日期: 2026-04-24
-版本: 3.0.0
+版本: 3.0.1
 狀態: Draft
 ---
 
@@ -416,7 +416,7 @@ Project Leader 可將 `sequence_tagging` 的 span 標記結果以 BIO／BIOES／
 - **FR-005**: detail 頁必須提供共用 detail shell，至少包含麵包屑、任務基本資訊與 Tab 列。
 - **FR-006**: Tab 列必須提供「統計總覽」與「品質監控」兩個入口；切換為頁內切換，active tab 以 `?tab=` query 標示。
 - **FR-007**: 未帶 `?tab=` 時，系統必須以 `DEFAULT_TAB`（`stats`）作為預設 active tab。
-- **FR-008**: 統計總覽 tab 必須固定顯示 `SHARED_METRICS`（Sentence 數量、Token 數量、完成率、已提交樣本、平均標記時間）。
+- **FR-008**（**v3.0.1 修訂**，issue #783）: 統計總覽 tab 必須固定顯示 `SHARED_METRICS`（Sentence 數量、Token 數量、完成率、已提交樣本、平均標記時間）。承載這些數值的 `SharedMetrics` 實體必須恰好包含 `SHARED_METRICS` 的五個 key 作為欄位，欄名與常數逐字相同：`sentence_count`、`token_count`、`completion_rate`、`submitted_sample_count`、`avg_annotation_time_per_sentence`；不得以其他別名表示完成率，不得增減欄位。
 - **FR-008A**: stats tab 必須實作正式狀態列舉 `STATS_TAB_STATES`，並以互斥狀態驅動 loading、empty、ready、error 顯示。
 - **FR-009**: 系統必須依任務資料中的 `outputs[]` 動態渲染 stats tab 對應各輸出類型特定統計指標區塊，涵蓋 `OUTPUT_TYPE_KEYS` 所有值；複合任務需依 `outputs[]` 原順序逐型並列顯示，不得壓縮為單一固定類型。
 - **FR-009F**: `single_label` 必須顯示各標籤次數 / 比例長條圖。
@@ -455,7 +455,7 @@ Project Leader 可將 `sequence_tagging` 的 span 標記結果以 BIO／BIOES／
 - **FR-024A**（v3.0.0 修訂，BREAKING）: 系統必須依 `IAA_COMPOSITE_BADGE_FORMAT` 顯示任務層級 `x/y` 達標徽章；`x` 為主指標達標的輸出類型數，`y` 為 `outputs[]` 中**既不在 `IAA_GATE_EXCLUDED_TYPES`、也不在 `IAA_UNCALIBRATED_TYPES`** 的相異輸出類型數。未校準型別無門檻可比較，因此 MUST NOT 進入 `x` 或 `y` 任一側——把它算進分母會使一個永遠無法達標的型別把 `IAA_COMPOSITE_GATE_RULE`（`pass ⟺ x == y AND y > 0`）永久鎖在未通過。`IAA_COMPOSITE_BADGE_FORMAT` 的「`· {N} 型排除`」後綴 MUST 同時涵蓋兩類排除型別，`N` 為兩集合於該任務 `outputs[]` 中命中的相異型別總數。`y = 0`（`outputs[]` 中所有型別皆落入兩集合之一）時，MUST 依 FR-024B 輸出 `IAA_SUMMARY_STATES = not_applicable`，MUST NOT 顯示 `0/0` 或任何 `pass | fail | pending` 判定。
 - **FR-024B**: 當 `y = 0`（任務 `outputs[]` 僅含被排除類型，如僅 `free_text`）時，`IAA_SUMMARY_STATES` 必須為 `not_applicable`，不得顯示 `pass | fail | pending`。
 - **FR-024C**: 尚無 Dry Run 資料但 `y` 可由 `outputs[]` 靜態算出時，quality tab 必須以 `IAA_PENDING_BADGE_FORMAT`（`—/{y} 待完成 Dry Run`）顯示，不得顯示 `0/{y}`。
-- **FR-025**: 系統必須依 `ANNOTATOR_RISK_LEVELS` 規則為每位標記員計算並顯示風險等級（`normal | watch | high_risk`）。
+- **FR-025**（**v3.0.1 修訂**，issue #783）: 系統必須依 `ANNOTATOR_RISK_LEVELS` 規則為每位標記員計算並顯示風險等級（`normal | watch | high_risk`）。`AnnotatorRiskAssessment.risk_level` 的值域必須恰為 `ANNOTATOR_RISK_LEVELS` 三值，不得以第四個值表示資料不足。依 FR-026 略過風險評估的標記員，其 `risk_level` 必須為 null 且 `insufficient_data` 必須為 true；其餘標記員的 `insufficient_data` 必須為 false 且 `risk_level` 必須為三值之一。兩欄不得出現互相矛盾的組合。
 - **FR-026**: 當標記員已完成樣本數低於 `ANNOTATOR_MIN_SAMPLE_THRESHOLD` 時，系統必須顯示「資料不足，暫不評估」並略過風險等級計算；不可顯示預設 normal 等級。
 - **FR-027**: 系統必須依 `ANNOTATOR_CAUSE_TYPES` 為 `watch` 或 `high_risk` 標記員標示一個或多個異常原因；原因分類限定於 annotator-level（`annotator_bias | marking_too_fast | marking_too_slow`），不得以「資料模糊」等 sample-level 屬性作為標記員異常原因。
 - **FR-028**: 系統必須將 `SAMPLE_FLAG_TYPES = high_divergence` 的樣本獨立以樣本層級旗標顯示，與標記員風險等級區塊分開呈現；高分歧樣本不應拉高對應標記員的風險等級。
@@ -468,7 +468,7 @@ Project Leader 可將 `sequence_tagging` 的 span 標記結果以 BIO／BIOES／
 - **FR-037**: 系統必須為 `BOUNDARY_DISAGREEMENT_SCOPE`（僅 `entity_recognition`、`sequence_tagging` 兩型）提供「邊界分歧分析」，統計 `BOUNDARY_ERROR_TYPES` 分類下部分重疊但邊界不一致的案例數與範例；`BOUNDARY_DISAGREEMENT_SCOPE` 以外的輸出類型不得顯示邊界分歧分析內容。
 - **FR-038**: 標記員風險表的建議行動按鈕必須可導頁（僅 `RISK_ACTION_ALLOWED_ROLE` 可觸發，見 FR-029）：「審核標記」導向 `/annotation-list?task_id={task_id}&role=reviewer&run_type=dry_run`（品質分析以 dry run 完成為前提，見 `QUALITY_EMPTY_STATE_TRIGGER`）；「調整參與狀態」導向 `/task-detail/{task_id}?tab=member-management`。
 - **FR-039**（v2.2.0 新增，IAA 閘門語意跨模組唯一權威來源）：本規格為 IAA（Inter-Annotator Agreement）閘門語意的唯一權威來源（SSoT）；`task-management-014`、`annotation-015` 及其他模組對 IAA 閘門行為的呈現須以本條為準，不得另行定義或推導出不同語意。核心語意如下：
-  1. **顧問性、非阻擋**：IAA 為顧問性指標，`waiting_iaa_confirmation`（或等義）狀態語意為「軟性警告 + 需人工確認」，非硬性閘門；α 未達 `OUTPUT_TYPE_IAA_REGISTRY` 門檻時系統必須顯示明顯警示，但不得阻擋使用者進入正式標記（承接並升格 FR-034 之既有語意為跨模組正典）。**（v3.0.0 新增例外）本點僅適用於 `OUTPUT_TYPE_IAA_REGISTRY` 中實際登錄門檻的輸出類型**；屬 `IAA_UNCALIBRATED_TYPES` 者沒有門檻可比較，MUST NOT 顯示任何「未達門檻」警示，亦 MUST NOT 因此被視為未通過（其呈現規則見 FR-043）。此例外 MUST NOT 被解讀為放寬阻擋語意——未校準型別同樣不阻擋流程。
+  1. **顧問性、非阻擋**：IAA 為顧問性指標，`waiting_iaa_confirmation`（或等義）狀態語意為「軟性警告 + 需人工確認」，非硬性閘門；α 未達 `OUTPUT_TYPE_IAA_REGISTRY` 門檻時系統必須顯示明顯警示，但不得阻擋使用者進入正式標記（承接並升格 FR-034 之既有語意為跨模組正典）。**（v3.0.0 新增例外）本點僅適用於 `OUTPUT_TYPE_IAA_REGISTRY` 中實際登錄門檻的輸出類型**；屬 `IAA_UNCALIBRATED_TYPES` 者沒有門檻可比較，MUST NOT 顯示任何「未達門檻」警示，亦 MUST NOT 因此被視為未通過（其呈現規則見 FR-043）。此例外 MUST NOT 被解讀為放寬阻擋語意——未校準型別同樣不阻擋流程。**IAA 計算尚未結束不屬本點（v3.0.1 釐清）**：最新試標回合的 IAA 仍在計算中或計算失敗時尚無任何 IAA 結果，不是本點所稱的「α 未達門檻」；此時能否進入正式標記，依 `task-management/014-task-detail` 待 IAA 確認頁的 IAA 計算狀態需求（`TrialRound.iaa_computation_status`）處理。本句不改變本點對 IAA 結果的非阻擋語意；第 4 點的「無法計算」屬已得到結果，仍不得阻擋流程。
   2. **輸入僅限標記員原始標記**：α 計算的輸入僅為標記員（`annotator`）於 `outputs[]` 各輸出類型的原始作答；審核員（`reviewer`）並非一位 rater，其審核修正值（`annotation-015` FR-051／FR-052 定義之審核單位差異）不得併入 α 計算。
   3. **逐回合計算**：α 以單一試標回合（`trial_round`）為計算單位，不得跨回合累積計算。
   4. **樣本或標記員數不足時必須顯示「無法計算」**：Krippendorff α 於 `De = 0`（有效樣本 `< 2` 或有效標記員 `< 2`）時數學上未定義；此情境系統必須顯示明確的「無法計算」狀態並說明原因，不得回退顯示 `0.00` 等任何數值，亦不得阻擋流程。本點對 nominal α 與單位化 α（u-α）同等適用（v3.0.0 補述）。
@@ -538,7 +538,7 @@ flowchart LR
 
 - **TaskContext**: 任務上下文，至少包含 `task_id`、`task_name`、`outputs[]`（`{ type ∈ OUTPUT_TYPE_KEYS, config }`）、`membership_role`。
 - **DetailShellState**: detail 頁共用狀態，包含 `active_tab`、`breadcrumb`、`task_context_loaded`、`error_state`。
-- **SharedMetrics**: 共用統計指標，包含 `sentence_count`、`token_count`、`overall_completion_rate`。
+- **SharedMetrics**: 共用統計指標，恰含 `SHARED_METRICS` 五個欄位：`sentence_count`、`token_count`、`completion_rate`、`submitted_sample_count`、`avg_annotation_time_per_sentence`（FR-008）。
 - **OutputTypeStats**: 單一輸出類型的統計抽象父型別，依 `type` 分派至 `SingleLabelStats` / `MultiLabelStats` / `SingleDimStats` / `MultiDimStats` / `EntityRecognitionStats` / `RelationIdentificationStats` / `SequenceTaggingStats` / `FreeTextStats`。
 - **SingleLabelStats**: 包含各標籤次數 / 比例分佈。
 - **MultiLabelStats**: 包含各標籤次數 / 比例分佈與多標籤共現矩陣。
@@ -554,7 +554,7 @@ flowchart LR
 - **AnomalyDetectionResult**: 異常偵測結果，包含速度異常標記員清單與離群樣本清單。
 - **AnnotatorConsistencyDeviationSummary**: 標記一致性偏離分析摘要，包含 `comparison_unit_count`、`outlier_count_1_5xstd`、`outlier_rate_1_5xstd`、`outlier_count_2xstd`、`outlier_rate_2xstd`；僅作 annotator-level 觀測，不直接代表風險等級。
 - **AnnotatorQualityProfile**: 標記員個別品質資料，包含個別速度與個別 IAA vs 群體平均。
-- **AnnotatorRiskAssessment**: 標記員風險評估結果，包含 `risk_level`（`normal | watch | high_risk | insufficient_data`）、`cause_types`（`ANNOTATOR_CAUSE_TYPES` 陣列）、`sample_count`、`insufficient_data`（布林）。
+- **AnnotatorRiskAssessment**: 標記員風險評估結果，包含 `risk_level`（`normal | watch | high_risk`；`insufficient_data = true` 時為 null，FR-025）、`cause_types`（`ANNOTATOR_CAUSE_TYPES` 陣列）、`sample_count`、`insufficient_data`（布林）。
 - **SampleDivergenceFlag**: 樣本層級高分歧旗標，包含 `sample_id`、`divergence_score`、`outlier_annotator_ids`（非一致標記員清單）；與 `AnnotatorRiskAssessment` 分離儲存與顯示。
 - **SmallSampleFlag**: 小樣本估計旗標，包含 `output_type`、`completed_annotator_count`、`is_small_sample`（`completed_annotator_count < IAA_SMALL_SAMPLE_THRESHOLD`）。
 - **LowConsistencySampleEntry**: 一致性最低樣本清單單筆項目，包含 `output_type`、`sample_id`、`divergence_score`、`divergence_metric_name`（依型別而異：`vote_split` / `value_dispersion` / `pairwise_f1`；**v3.0.0** 移除 `non_o_token_disagreement_rate`，`sequence_tagging` 改由 `pairwise_f1` 涵蓋）、`text_summary`。
@@ -643,6 +643,7 @@ flowchart LR
 
 | Version | Date | Change Summary |
 | --- | --- | --- |
+| 3.0.1 | 2026-09-18 | **實體欄位與常數值域對齊、FR-039 第 1 點釐清（issue #783 第 3 點，OpenSpec change `dataset-quality-entity-value-alignment`，PATCH）**：關鍵實體段與規格常數段互相矛盾——`SharedMetrics` 列 `sentence_count`、`token_count`、`overall_completion_rate` 三欄，而 `SHARED_METRICS` 為五個 key 且完成率名為 `completion_rate`；`AnnotatorRiskAssessment.risk_level` 列四值（含 `insufficient_data`），而 `ANNOTATOR_RISK_LEVELS` 為三值且另有布林 `insufficient_data`。**修訂**：FR-008 原地補上 `SharedMetrics` 恰含 `SHARED_METRICS` 五個欄位、欄名逐字相同；FR-025 原地補上 `risk_level` 恰為三值、資料不足時為 null 且 `insufficient_data = true`；兩實體說明同步。FR-039 第 1 點末尾原地補一句：IAA 計算中或計算失敗不屬「α 未達門檻」，依 `task-management/014-task-detail` 的 `TrialRound.iaa_computation_status` 處理，第 4 點「無法計算」仍不得阻擋流程。**未變更**：常數 `SHARED_METRICS`、`ANNOTATOR_RISK_LEVELS` 與 SC-003、SC-014 原文不動，未新增或移除任何 FR／AC／SC 編號（原實體段的寫法屬漂移，本版改為與常數一致）。 |
 | 3.0.0 | 2026-09-09 | **`sequence_tagging` 遷移至 span 模型：匯出層 BIO 推導契約 + IAA 主指標改 u-α（major，BREAKING）**（issue #581，OpenSpec change `seq-tagging-span-export-metrics`）：`task-management/013-task-new` v7.0.0 破壞性移除 `tokenization` 與 `tagging_scheme` 兩個任務設定欄位、`annotation/015-annotation-workspace` v6.0.0 將 `sequence_tagging` 的標記結果改為字元 offset 的 `spans[]`，017 原本依附 token 座標系的統計母體與 IAA 指標全數失去對象。本版三項新增、七項修訂。**新增 FR-041**（匯出層 BIO 序列推導契約，SSoT）：新增常數 `EXPORT_TAGGING_SCHEMES = BIO \| BIOES \| IOB2`、`EXPORT_DEFAULT_TAGGING_SCHEME = BIO`、`EXPORT_TOKEN_UNITS = character \| word`、`EXPORT_DEFAULT_TOKEN_UNIT = character`；推導僅適用 `sequence_tagging`（正確性前提為 `SPAN_OVERLAP_POLICY_BY_OUTPUT_TYPE` 鎖定 `allow_overlapping = false` 的不相交不變式）、MUST 為純函式且逐字元決定性、方案屬匯出而非任務設定、字元級為預設且不需 tokenizer、三方案自同一組 span 推導、空 span 樣本輸出等長全 `O` 序列。**新增 FR-042**（詞級 tokenizer metadata 與對齊擴張報告）：新增常數 `SPAN_TOKEN_ALIGNMENT_MODE = expand`；詞級匯出 MUST 寫入 `tokenizer.engine`／`tokenizer.version`，缺任一即阻擋；邊界落在 token 內部時擴張至完整 token 而非截斷或丟棄；擴張只發生於匯出產物、MUST NOT 回寫 `spans[]`。**新增 FR-043**（未校準門檻型別的中性呈現）：新增常數 `IAA_UNCALIBRATED_TYPES = sequence_tagging`，顯示數值與排序但不判紅綠、不得偷渡預設門檻、與 `IAA_GATE_EXCLUDED_TYPES` 文案 MUST NOT 共用、不阻擋流程、小樣本與「無法計算」等其餘規則照常適用；新增 AC-3.18 為其驗收情境。**修訂 FR-009L**（BREAKING）：統計母體由 token 序列改為 span 集合，標籤類型分佈不得出現 `B-`／`I-`／`E-`／`S-`／`O` 前綴，一段 n 字計為 1 筆，長度分佈改以字元計。**修訂 FR-012L**（BREAKING）：主指標由 Token-level Alpha（nominal）改為 Krippendorff 單位化 α（u-α），計算單位由 token 改為 span，`O` 遮罩規則廢止且不得以任何 span 等價規則取代；`IAA_THRESHOLD_TOKEN = 0.75` 正式廢止，識別名稱不得重新使用；本型別刻意不設門檻。**修訂 FR-013**：達標綠／未達標紅僅適用實際具門檻的型別，`IAA_GATE_EXCLUDED_TYPES` 與 `IAA_UNCALIBRATED_TYPES` 皆用中性樣式但文案不得互相沿用。**修訂 FR-024A**（BREAKING）：`x/y` 分母同時排除兩集合，「· {N} 型排除」後綴涵蓋兩類。**修訂 FR-035**（BREAKING）：`sequence_tagging` 逐樣本分歧度由非 `O` token 分歧率改為 pairwise span F1 strict，`divergence_metric_name` 由 `non_o_token_disagreement_rate` 改為 `pairwise_f1`。**修訂 FR-036**（BREAKING）：標記員排名一致率由與多數決 token 一致率改為與合併聚合參考值的 F1，`metric_name` 由 `token_majority_agreement_rate` 改為 `f1_to_merged_reference`。**修訂 FR-039** 第 1 點：加註未校準型別例外（無門檻可比較故不顯示未達門檻警示、不視為未通過），第 4 點補述對 nominal α 與 u-α 同等適用。同步更新 `OUTPUT_TYPE_IAA_REGISTRY` 的 `sequence_tagging` 列（主指標改 u-α、單位改 span、門檻欄留空）、規格常數區逐型分歧度與逐型一致率兩處條列、AC-2.7／AC-3.7／AC-3.8／AC-3.9／AC-3.13／AC-3.14／AC-3.16、統計總覽與品質監控兩處介面定義、實體 `SequenceTaggingStats`／`LowConsistencySampleEntry`／`AnnotatorQualityRankingEntry`。新增使用者故事 5（AC-5.1～AC-5.4）與 SC-033～SC-036；淘汰 SC-024（其所述 `O` 遮罩規則已不存在），編號不再重複使用。**範圍界線**：本版只定義推導契約與欄位語意，匯出對話框 UI、匯出入口與匯出記錄表屬 `task-management/014-task-detail`，依「一 change 一正典」規則由 issue #742 承接的 companion change 落地（維護者裁決 D3、H）；`entity_recognition` 維持既有 Pairwise Span F1 strict 主指標與門檻不動（裁決 D2）。 |
 | 2.2.2 | 2026-09-07 | **新增「試標品質判讀與開放正式標記的決策流程」圖（patch，無條文變更）**（issue #677）：本規格的 IAA 判讀規則原本只以純文字分散於規格常數區（`IAA_GATE_EXCLUDED_TYPES`、`IAA_COMPOSITE_GATE_RULE`、`IAA_SMALL_SAMPLE_THRESHOLD`、`IAA_SUMMARY_STATES`）、AC-3.16 與 FR-039，讀者必須自行拼出「一個輸出類型會走到哪一種結果」。新增 `diagrams/iaa-quality-decision-flow.html`（自給自足單檔 HTML，依 issue #528 維護者裁定 Q4：僅連結、不附 PNG），並於「流程圖」章節加上連結。圖的結構為三個判斷（要不要算一致性／算不算得出來／是否全數達標）→ 四種結果（不適用—由審核員評估、無法計算、未達標警示、全數達標）→ 一個人工決定點，共 9 節點 11 箭頭。**刻意不使用「閘門」／`gate` 字眼**：issue #677 原標題的「品質關卡」硬閘門語意與 FR-039 第 1 點「IAA 為顧問性指標⋯⋯不得阻擋使用者進入正式標記」矛盾，故改稱「判讀與決策」，並以三重視覺表達非阻擋語意——唯一的 accent 焦點節點是人工決定點、四條結果線全部以 accent 色匯流到同一終點並標註「四條路都通到這裡 · 沒有一條是門」、standfirst 明寫「這裡沒有任何一道門」；圖中不存在任何「退回修正」節點。小樣本（`IAA_SMALL_SAMPLE_THRESHOLD = 5`）依 FR-034「不阻擋達標判定」語意以編輯性旁註呈現，不佔判斷節點。圖底另附 FR-038 兩個導頁出口與 FR-029 角色限制。走 Lightweight Path：僅新增文件與連結，未新增或移除任何 FR／AC，未變更 API 契約。 |
 | 2.2.1 | 2026-09-05 | **補上 `## 功能目標` 章節與驗收情境 AC-N.N 穩定 ID（patch，無條文變更）**：本規格建立於 AC 穩定 ID 標準（spec-template v1.5.0）之前，且缺少 `## 功能目標` 章節，導致 `scripts/check-sdd.sh` 的 `SPEC_REQUIRED_HEADING`／`SPEC_REQUIRED_IDS` 規則將本檔標記為結構不完整，後續 OpenSpec change 亦無穩定情境編號可引用。本版純為結構補完：新增 `## 功能目標` 章節摘要本規格目的；依既有標準為四組使用者故事共 34 條驗收情境補上 `AC-<故事編號>.<情境序號>` 前綴（AC-1.1~1.4、AC-2.1~2.10、AC-3.1~3.17、AC-4.1~4.3）。情境文字、FR/SC 條文與編號順序皆未更動，不新增或刪除任何 FR/AC。 |

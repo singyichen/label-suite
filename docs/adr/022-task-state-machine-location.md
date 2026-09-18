@@ -4,6 +4,7 @@
 **Date**: 2026-05-29
 **Amended**: 2026-08-19 — `official_run_in_progress → completed` pre-conditions strengthened (issue #190, decision D2)
 **Amended**: 2026-09-18 — `waiting_iaa_confirmation → dry_run_in_progress` transition added to support starting a new trial round from `waiting_iaa_confirmation` (issue #791)
+**Amended**: 2026-09-18 — IAA calculation moved off `dry_run_in_progress → waiting_iaa_confirmation` onto both transitions leaving `waiting_iaa_confirmation`, gated by the latest `TrialRound.iaa_computation_status = done` (issue #783)
 
 ## Context
 
@@ -85,10 +86,10 @@ Implement task state machine logic exclusively in the **service layer** (`app/se
 | From | To | Pre-conditions |
 |------|----|----------------|
 | `draft` | `dry_run_in_progress` | ≥ 2 annotators assigned; config validated; sample snapshot locked |
-| `dry_run_in_progress` | `waiting_iaa_confirmation` | All dry-run annotations submitted; IAA calculated |
-| `waiting_iaa_confirmation` | `official_run_in_progress` | Project leader confirms IAA; `confirmed_by` recorded |
+| `dry_run_in_progress` | `waiting_iaa_confirmation` | All dry-run annotations submitted (see Amendment 2026-09-18, issue #783) |
+| `waiting_iaa_confirmation` | `official_run_in_progress` | Latest `TrialRound.iaa_computation_status = done`; project leader confirms IAA; `confirmed_by` recorded |
 | `waiting_iaa_confirmation` | `draft` | Project leader rejects IAA; `sample_snapshot_id` cleared to allow re-dry-run |
-| `waiting_iaa_confirmation` | `dry_run_in_progress` | Project leader starts a new trial round; `TrialRound` revision-note mandatory check (FR-017) passed; new round's independent trial list already created (see Amendment 2026-09-18) |
+| `waiting_iaa_confirmation` | `dry_run_in_progress` | Project leader starts a new trial round; `TrialRound` revision-note mandatory check (FR-017) passed; new round's independent trial list already created; latest `TrialRound.iaa_computation_status = done` (see Amendment 2026-09-18) |
 | `official_run_in_progress` | `completed` | All official-run annotations submitted; all required review units finalized; no unresolved disputes; all required arbitrations completed; final quality scores calculated (see Amendment 2026-08-19) |
 
 Reverse transitions (other than `waiting_iaa_confirmation → draft` and `waiting_iaa_confirmation → dry_run_in_progress`) are **not permitted**. Any attempt raises `InvalidTransitionError`.
@@ -106,6 +107,17 @@ Issue #180's cross-role lifecycle review found that the original `official_run_i
 5. Final quality scores calculated and available — unchanged.
 
 `check_preconditions` must evaluate all five conditions for this transition; a failed check must surface the specific unmet conditions to the caller rather than a generic error. The user-facing behavior (confirmation and blocking-reason display) is specified in `specs/task-management/014-task-detail/` FR-008b.
+
+### Amendment (2026-09-18, issue #783) — IAA Calculation Status Pre-condition
+
+The original `dry_run_in_progress → waiting_iaa_confirmation` pre-condition also required the IAA result to be available. IAA is computed asynchronously once the last dry-run annotation is submitted, so a failed or slow calculation would leave the task stuck in `dry_run_in_progress` with every annotation already in — contradicting `specs/task-management/014-task-detail/` FR-008a, whose completion rule counts submissions only. The calculation requirement therefore moves to the two transitions that leave `waiting_iaa_confirmation`:
+
+1. `dry_run_in_progress → waiting_iaa_confirmation` requires only that all dry-run annotations are submitted.
+2. `waiting_iaa_confirmation → official_run_in_progress` and `waiting_iaa_confirmation → dry_run_in_progress` both additionally require the latest `TrialRound.iaa_computation_status = done`. `ALLOWED_TRANSITIONS` is unchanged; `check_preconditions` evaluates this condition for both transitions and, when it fails, reports whether the calculation is still pending or has failed rather than a generic error.
+
+**Definition of `done`**: every output type of the latest trial round that requires IAA has a definite result — either a number or "cannot be computed" as defined in `specs/dataset/017-dataset-analysis-detail/` FR-039 point 4 (`De = 0`, mathematically undefined). Only `pending` and `failed` (an execution error) count as not finished. Types in `IAA_GATE_EXCLUDED_TYPES` (`free_text`) need no calculation and are not considered. Treating "cannot be computed" as unfinished would block small-sample tasks from ever reaching the official run, which FR-039 point 4 forbids.
+
+**Recovery from `failed`**: the project leader retries the calculation, which returns the status to `pending`; the task does not move backwards through the state machine. The user-facing behavior (pending/failed display, retry action, and disabled actions with visible reasons) is specified in `specs/task-management/014-task-detail/` FR-010o-4.
 
 ### `validate_transition` Implementation
 

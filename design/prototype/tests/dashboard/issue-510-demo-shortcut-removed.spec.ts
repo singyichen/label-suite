@@ -13,6 +13,8 @@
  *
  * issue #815: T017 (review-flow-official-tie) is retired; DEMO_TASK_NAMES
  * and the seeded-task count below drop from four/17 to three/16.
+ * issue #783 then adds T018 (FR-010o-4 IAA-computation-failed demo), so
+ * the seeded-task count is back to 17.
  *
  * The second test pins that premise rather than the removal: should View All
  * ever start applying a filter, the demo tasks would lose the discoverable
@@ -47,7 +49,7 @@ test.describe('Dashboard — PL demo shortcut removed (issue #510)', () => {
 
     await expect(page).toHaveURL(/\/task-list\.html\?task_role=project_leader$/);
     await expect(page.locator('#searchInput')).toHaveValue('');
-    await expect(page.locator('#paginationInfo')).toContainText('共 16 筆');
+    await expect(page.locator('#paginationInfo')).toContainText('共 17 筆');
 
     for (const name of DEMO_TASK_NAMES) {
       await expect(page.getByText(name, { exact: true })).toBeVisible();
