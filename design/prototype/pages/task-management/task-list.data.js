@@ -280,19 +280,6 @@
       canViewDetail: true,
       isMine: true,
       deletedAt: ''
-    },
-    {
-      id: 'T017',
-      nameZh: '審核流程示範：正式標記（雙審核員平手）',
-      nameEn: 'Review Flow Demo: Official Run (Two Reviewers Tie)',
-      sourceFile: 'review-flow-official-tie.json',
-      outputTypes: ['single_label'],
-      runType: 'official_run',
-      status: 'official_run_in_progress',
-      updatedAt: '2026-08-21',
-      canViewDetail: true,
-      isMine: true,
-      deletedAt: ''
     }
   ];
 

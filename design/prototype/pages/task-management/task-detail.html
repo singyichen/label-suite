@@ -3499,13 +3499,12 @@
     disputeCount: 7,
   };
   var REVIEW_WORKLOAD_BY_TASK = {
-    /* T014-T017 (review-flow demo, 5 dataset records each): small figures
+    /* T014-T016 (review-flow demo, 5 dataset records each): small figures
        proportionate to that data volume instead of the legacy shared
        18-116-item scale. */
     T014: { disputeCount: 0 },
     T015: { disputeCount: 1 },
     T016: { disputeCount: 1 },
-    T017: { disputeCount: 1 },
   };
   var REVIEW_WORKLOAD = cloneData(DEFAULT_REVIEW_WORKLOAD);
 
@@ -3584,10 +3583,10 @@
     },
   };
 
-  /* issue #397: T014-T017 (review-flow demo, 5 dataset records each) get
+  /* issue #397: T014-T016 (review-flow demo, 5 dataset records each) get
      progress figures proportionate to that data volume instead of the
      legacy shared 40/124/1160-sample scale. T014 is a dry_run task (one
-     active round, official not yet reached); T015-T017 are official_run
+     active round, official not yet reached); T015-T016 are official_run
      tasks (no dry-run rounds, official reflects each task's own submission
      count from annotation-workspace.data.js's seedReviewFlowDemo()). */
   var ANNOTATION_PROGRESS_BY_TASK = {
@@ -3629,18 +3628,6 @@
         ],
       },
     },
-    T017: {
-      rounds: [],
-      official: {
-        id: 'official', status: 'active', result: null, iaa: 0.55,
-        totalSamples: 5, completedSamples: 5, avgSpeed: 5.2,
-        remainingEta: '-', remainingEtaEn: '-',
-        members: [
-          { name: 'Alex Wang', role: 'annotator', completed: 5, pending: 0, avgSpeed: 5.2, lastSubmitted: '2026-08-21 09:40', quality: 'good' },
-          { name: 'Mandy Chen', role: 'reviewer', completed: 5, pending: 0, avgSpeed: 5.2, lastSubmitted: '2026-08-21 10:35', quality: 'good' },
-        ],
-      },
-    },
   };
   var ANNOTATION_PROGRESS = cloneData(DEFAULT_ANNOTATION_PROGRESS);
 
@@ -3668,11 +3655,11 @@
       createdAt: '2026-05-22 10:18'
     }
   ];
-  /* T014-T017 have no "member removed mid-run" backstory, so they start
+  /* T014-T016 have no "member removed mid-run" backstory, so they start
      with an empty unassigned pool instead of inheriting T001's demo
      entries (whose roundId: 'official' would otherwise leak Jason Huang's
      phantom ASP-1201~1203 rows into every official_run task). */
-  var UNASSIGNED_ANNOTATION_ASSIGNMENTS_BY_TASK = { T014: [], T015: [], T016: [], T017: [] };
+  var UNASSIGNED_ANNOTATION_ASSIGNMENTS_BY_TASK = { T014: [], T015: [], T016: [] };
   var UNASSIGNED_ANNOTATION_ASSIGNMENTS = cloneData(DEFAULT_UNASSIGNED_ANNOTATION_ASSIGNMENTS);
 
   var EXCLUDED_ANNOTATION_ASSIGNMENTS = [];
@@ -3698,10 +3685,6 @@
     T016: [
       { date: '2026-08-21', memberEmail: 'alex.wang@labelsuite.io', memberName: 'Alex Wang', loginAt: '09:00', logoutAt: '09:40', durationHours: 0.7, annotatedCount: 5, reviewedCount: null, arbitratedCount: null, stage: 'official' },
       { date: '2026-08-21', memberEmail: 'mandy@labelsuite.io', memberName: 'Mandy Chen', loginAt: '10:00', logoutAt: '10:40', durationHours: 0.7, annotatedCount: null, reviewedCount: 5, arbitratedCount: 1, stage: 'official' },
-    ],
-    T017: [
-      { date: '2026-08-21', memberEmail: 'alex.wang@labelsuite.io', memberName: 'Alex Wang', loginAt: '09:00', logoutAt: '09:40', durationHours: 0.7, annotatedCount: 5, reviewedCount: null, arbitratedCount: null, stage: 'official' },
-      { date: '2026-08-21', memberEmail: 'mandy@labelsuite.io', memberName: 'Mandy Chen', loginAt: '10:00', logoutAt: '10:35', durationHours: 0.6, annotatedCount: null, reviewedCount: 5, arbitratedCount: 1, stage: 'official' },
     ],
   };
   var WORK_LOG_ENTRIES = cloneData(DEFAULT_WORK_LOG_ENTRIES);
@@ -4495,13 +4478,6 @@
       { id: 'ofm-03-awaiting-arbitration', rows: [{ a: 'kioleemg12', v: 'neutral', rs: 'disputed', rv: [['reviewer_wang', 'modified', 'negative']] }] },
       { id: 'ofm-04-reviewer-bypass', rows: [{ a: 'kioleemg12', v: 'positive', rs: 'disputed', rv: [['reviewer_wang', 'bypass']] }] },
       { id: 'ofm-05-final-exception', rows: [{ a: 'kioleemg12', v: 'neutral', rs: 'disputed', rv: [['reviewer_wang', 'modified', 'positive']] }] }
-    ],
-    T017: [
-      { id: 'oft-01-final-exception', rows: [{ a: 'kioleemg12', v: 'neutral', rs: 'disputed', rv: [['reviewer_wang', 'modified', 'positive']] }] },
-      { id: 'oft-02-approved-interim', rows: [{ a: 'kioleemg12', v: 'positive', rs: 'finalized', rv: [['reviewer_wang', 'approved']] }] },
-      { id: 'oft-03-modified-interim', rows: [{ a: 'kioleemg12', v: 'neutral', rs: 'disputed', rv: [['reviewer_wang', 'modified', 'positive']] }] },
-      { id: 'oft-04-unanimous-gold', rows: [{ a: 'kioleemg12', v: 'positive', rs: 'finalized', rv: [['reviewer_wang', 'approved'], ['reviewer_li', 'approved']] }] },
-      { id: 'oft-05-pending-review', rows: [{ a: 'kioleemg12', v: 'positive', rs: 'pending', rv: [] }] }
     ]
   };
 
@@ -4546,7 +4522,7 @@
     });
   }
 
-  ['T014', 'T015', 'T016', 'T017'].forEach(function(taskId) {
+  ['T014', 'T015', 'T016'].forEach(function(taskId) {
     ANNOTATION_RESULTS_BY_TASK[taskId] = buildReviewFlowResults(taskId);
   });
 
@@ -4763,7 +4739,7 @@ function interpolate(template, payload) {
       TASK_DATA.datasetTotal = TASK_DATA.datasetRecords.length;
       /* issue #596: reviewer_ids / arbiter_ids seed the single-owner review
          relay roster; only overwrite the shared DEFAULT_TASK_DATA roster
-         when this profile actually seeds its own (T014-T017), same
+         when this profile actually seeds its own (T014-T016), same
          opt-in pattern as reviewerGuidelineText below. */
       if (profile.reviewerIds) TASK_DATA.reviewerIds = profile.reviewerIds.slice();
       if (profile.arbiterIds) TASK_DATA.arbiterIds = profile.arbiterIds.slice();
@@ -5511,7 +5487,7 @@ function interpolate(template, payload) {
      computeIaaAlpha() equivalent and stays useful demo copy describing a
      specific story beat, so it is kept verbatim. Only the NUMBERS
      (agreement, result) are replaced -- and only when computeIaaAlpha()
-     actually has real annotator data for this task (T014-T017; every other
+     actually has real annotator data for this task (T014-T016; every other
      seed task has no seeded dry_run submissions, so computeIaaAlpha()
      returns computable:false and this function is an exact passthrough of
      the old scripted table). std has no computeIaaAlpha() equivalent

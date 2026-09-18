@@ -35,7 +35,7 @@ test.describe.configure({ mode: 'serial', retries: 2 });
 
 test.describe('Reviewer view speaks review vocabulary (zh)', () => {
   /* No reviewer_id on purpose: the generic reviewer path (default roster
-   * identity) must be correct too, not only the T014–T017 demo entries. */
+   * identity) must be correct too, not only the T014–T016 demo entries. */
   test('left-column entries read 待審, not 待標記', async ({ page }) => {
     await skipGuidelineModal(page);
     await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer', run_type: 'dry_run' }));
@@ -62,7 +62,7 @@ test.describe('Reviewer view speaks review vocabulary (zh)', () => {
     await expect(page.getByTestId('role-indicator')).toHaveText('審核員');
   });
 
-  /* T014–T017 seeded demo units (the walkthrough that surfaced #309) must
+  /* T014–T016 seeded demo units (the walkthrough that surfaced #309) must
    * surface the seeded review-state mix, never the annotator tri-state nor
    * the retired 已同意／已修改 wording (issue #626). */
   test('seeded demo task T016 lists review-state labels only, never the retired 已同意／已修改', async ({ page }) => {

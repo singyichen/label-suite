@@ -12,10 +12,17 @@
  * per-task min_reviewers annotations are historical: issue #596 (FR-093)
  * retired the setting, so a unit is disputed or finalized on its one
  * reviewer's decision, not on a quorum.
- *   T017 oft-01 disputed [wang, li]   T015 ofs-04 pending (no reviewer yet)
+ *   T016 ofm-05 disputed [wang]       T015 ofs-04 pending (no reviewer yet)
  *   T016 ofm-01 finalized             T016 ofm-02 reviewed [wang]
  *   T015 ofs-05 no annotator submission (null)
  *   T014 dry_run dry-05 x kioleemg12 disputed [wang, pure reject]
+ *
+ * issue #815: T017 (its whole premise being an N=2 tie, structurally
+ * impossible under FR-093's single-owner relay) is retired; every T017
+ * fixture below is retargeted at its same-shape T016 counterpart --
+ * oft-03-modified-interim -> ofm-03-awaiting-arbitration (disputed, wang
+ * already submitted) and oft-01-final-exception -> ofm-05-final-exception
+ * (disputed, arbitration-reject-to-exception-pool, migrated verbatim).
  */
 import { test, expect, type Page } from '@playwright/test';
 import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
@@ -72,18 +79,18 @@ test.describe('issue #562 — no action hint under the review-unit banner', () =
   });
 
   test('modified unit, reviewer already submitted (was 你的審核已記錄)', async ({ page }) => {
-    await openUnit(page, { task_id: 'T017', sample_id: 'oft-03-modified-interim', reviewer_id: 'reviewer_wang' });
+    await openUnit(page, { task_id: 'T016', sample_id: 'ofm-03-awaiting-arbitration', reviewer_id: 'reviewer_wang' });
     await expectNoHint(page);
   });
 
   test('disputed unit, arbiter candidate (was 需要你的仲裁)', async ({ page }) => {
-    await openUnit(page, { task_id: 'T017', sample_id: 'oft-01-final-exception' });
+    await openUnit(page, { task_id: 'T016', sample_id: 'ofm-05-final-exception' });
     await expectNoHint(page);
     await expect(page.getByTestId('ws-arbitration-card')).toHaveCount(1);
   });
 
   test('disputed unit, participant without arbitration rights', async ({ page }) => {
-    await openUnit(page, { task_id: 'T017', sample_id: 'oft-01-final-exception', reviewer_id: 'reviewer_wang' });
+    await openUnit(page, { task_id: 'T016', sample_id: 'ofm-05-final-exception', reviewer_id: 'reviewer_wang' });
     await expectNoHint(page);
   });
 
@@ -108,7 +115,7 @@ test.describe('issue #562 — no action hint under the review-unit banner', () =
   });
 
   test('hint stays absent after switching language', async ({ page }) => {
-    await openUnit(page, { task_id: 'T017', sample_id: 'oft-03-modified-interim' });
+    await openUnit(page, { task_id: 'T016', sample_id: 'ofm-03-awaiting-arbitration' });
     await page.getByTestId('lang-toggle').click();
     await expectNoHint(page);
   });

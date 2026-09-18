@@ -1187,7 +1187,7 @@ var OUTPUT_TYPE_LABELS = {
  * T101–T109 are spec-scenario fixtures (FR-024A/B/C composite badge,
  * small-sample flags, …) that have no host among the 13 registry tasks;
  * they are reachable only by direct URL and are exercised by tests.
- * T014–T017 are the review-flow demo tasks (task-list.data.js, issue #302);
+ * T014–T016 are the review-flow demo tasks (task-list.data.js, issue #302);
  * like T101–T109 they have no host row in the list's 13-task registry and
  * are reachable only by direct task_id URL (issue #490). */
 var TASK_META = {
@@ -1289,12 +1289,6 @@ var TASK_META = {
     outputs: ['single_label'],
     iaaData: {},
     title: { zh: '審核流程示範：正式標記（三審核員多數決）', en: 'Review Flow Demo: Official Run (Three Reviewers)' },
-    membershipRole: 'project_leader',
-  },
-  T017: {
-    outputs: ['single_label'],
-    iaaData: {},
-    title: { zh: '審核流程示範：正式標記（雙審核員平手）', en: 'Review Flow Demo: Official Run (Two Reviewers Tie)' },
     membershipRole: 'project_leader',
   },
   T101: {

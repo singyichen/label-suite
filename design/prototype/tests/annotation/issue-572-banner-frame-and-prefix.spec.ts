@@ -6,6 +6,10 @@
  * run-type badge and the quorum chip, so both were visual noise.
  * aria-label, data-terminal, the null branch and the drawer's track marker
  * are untouched.
+ *
+ * issue #815: every T017 oft-01-final-exception fixture below is retargeted
+ * at T016 ofm-05-final-exception, its same-shape migrated successor (both
+ * disputed · awaiting arbitration) -- T017 itself is retired.
  */
 import { test, expect, type Page } from '@playwright/test';
 import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
@@ -41,7 +45,7 @@ test.beforeEach(async ({ page }) => {
 
 test.describe('issue #572 -- banner frame removed', () => {
   test('the banner has no border, background or padding of its own', async ({ page }) => {
-    await openUnit(page, { task_id: 'T017', sample_id: 'oft-01-final-exception' });
+    await openUnit(page, { task_id: 'T016', sample_id: 'ofm-05-final-exception' });
 
     const box = await banner(page).evaluate((el) => {
       const cs = getComputedStyle(el);
@@ -53,7 +57,7 @@ test.describe('issue #572 -- banner frame removed', () => {
   });
 
   test('the chips still render in the same order above the review card', async ({ page }) => {
-    await openUnit(page, { task_id: 'T017', sample_id: 'oft-01-final-exception' });
+    await openUnit(page, { task_id: 'T016', sample_id: 'ofm-05-final-exception' });
 
     /* issue #596 (AC-4.37): one chip left -- the finalize-threshold chip
        went with the reviewer quorum it counted against. The subject here is
@@ -65,14 +69,14 @@ test.describe('issue #572 -- banner frame removed', () => {
 
 test.describe('issue #572 -- state pill has no 目前： prefix', () => {
   test('zh: the pill is the bare state and note', async ({ page }) => {
-    await openUnit(page, { task_id: 'T017', sample_id: 'oft-01-final-exception' });
+    await openUnit(page, { task_id: 'T016', sample_id: 'ofm-05-final-exception' });
 
     await expect(statePill(page)).toHaveText('爭議中 · 未定稿，待仲裁');
     await expect(banner(page)).not.toContainText('目前：');
   });
 
   test('en: no Now: prefix either', async ({ page }) => {
-    await openUnit(page, { task_id: 'T017', sample_id: 'oft-01-final-exception' });
+    await openUnit(page, { task_id: 'T016', sample_id: 'ofm-05-final-exception' });
     await page.getByTestId('lang-toggle').click();
 
     await expect(statePill(page)).toHaveText('Disputed · not finalized, awaiting arbitration');
@@ -96,7 +100,7 @@ test.describe('issue #572 -- state pill has no 目前： prefix', () => {
   });
 
   test('the drawer track marker still says 目前： (AC-4.32, out of scope)', async ({ page }) => {
-    await openUnit(page, { task_id: 'T017', sample_id: 'oft-01-final-exception' });
+    await openUnit(page, { task_id: 'T016', sample_id: 'ofm-05-final-exception' });
     await page.getByTestId('ws-review-flow-trigger').click();
 
     await expect(page.locator('.review-track-marker')).toHaveText('目前：');

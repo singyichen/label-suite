@@ -9,10 +9,13 @@ const TASK_LIST_URL =
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 const PANEL_LOAD_TIMEOUT = 15000;
 
-/* Review-flow demo seeds (T014-T017): four single_label sentiment tasks
+/* Review-flow demo seeds (T014-T016): three single_label sentiment tasks
    built from docs/product/task-configs/review-flow-*.json +
    docs/product/example-data/review-flow-*.json. T014 exercises the dry_run
-   consensus path; T015-T017 exercise official_run reviewer variants. */
+   consensus path; T015-T016 exercise official_run reviewer variants.
+   issue #815 (retire-stale-review-demo-fixtures) retired the fourth demo
+   task, T017 (review-flow-official-tie) -- its whole premise, an N=2 tie,
+   is structurally impossible under the single-owner relay model (FR-093). */
 const DEMO_TASKS = [
   {
     id: 'T014',
@@ -38,17 +41,9 @@ const DEMO_TASKS = [
     runBadgeClass: '.badge-official',
     statusBadge: '正式標記中',
   },
-  {
-    id: 'T017',
-    sourceFile: 'review-flow-official-tie.json',
-    nameZh: '審核流程示範：正式標記（雙審核員平手）',
-    runBadge: '正式標記',
-    runBadgeClass: '.badge-official',
-    statusBadge: '正式標記中',
-  },
 ];
 
-test.describe('Review-flow demo seeds (T014-T017)', () => {
+test.describe('Review-flow demo seeds (T014-T016)', () => {
   test('renders every demo row with source file, run badge, and status', async ({
     page,
   }) => {

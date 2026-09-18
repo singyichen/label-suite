@@ -28,13 +28,13 @@
 
 **規模例外聲明 `[Principle: X]`**：本群組會動到 7 份 prototype 種子登錄檔（`annotation-workspace.data.js`、`task-list.data.js`、`task-detail.data.js`、`task-detail.html`、`dashboard.data.js`、`dashboard.assignments.js`、`dataset-analysis-detail.html`；propose 時誤算為 6 份，漏列 `dashboard.assignments.js`），超過單一 PR 5 檔上限。移除一個 fixture 在字串相等耦合下是原子操作——任一登錄檔留下 T017 而其他已移除，prototype 即進入不一致狀態並使既有回歸轉紅，因此拆分會讓中間態變紅。docs 側的刪除與文案改寫不在字串相等耦合內，已拆至群組 3，使本群組只剩無法再拆的 7 檔。此例外已於 Apply 前硬閘取得使用者確認（2026-09-18）。
 
-- [ ] 2.1 撰寫 `design/prototype/tests/annotation/issue-815-t017-fixture-removed.spec.ts` 作為 Red 契約，釘住三件事：示範任務集合恰為三個且不含 T017、任一消費端列舉示範任務時皆不再出現該 id、以及移除後 T014 至 T016 的既有清單與儀表板筆數仍各自正確。先提交此單檔再跑測試並保存 expected failure 證據。 [@senior-qa]
-- [ ] 2.2 Green：自 `design/prototype/pages/annotation/annotation-workspace.data.js` 刪除 T017 的五列種子與其對應的樣本答案登錄。 [@senior-frontend]
-- [ ] 2.3 接續移除任務清單側的登錄：`design/prototype/pages/task-management/task-list.data.js` 的 T017 任務列。 [@senior-frontend]
-- [ ] 2.4 接續移除任務詳情側的兩處登錄：`design/prototype/pages/task-management/task-detail.data.js` 的設定側寫與其樣本清單，以及同目錄頁面檔內嵌的同一筆示範任務登錄。 [@senior-frontend]
-- [ ] 2.5 接續移除儀表板與資料集側的三處登錄：`design/prototype/pages/dashboard/dashboard.data.js` 的任務列、同目錄指派摘要種子的示範任務欄位，以及 dataset-analysis-detail 頁面內嵌的任務登錄。 [@senior-frontend]
-- [ ] 2.6 逐一檢視測試層對 T017 的既有引用並調整其內部斷言——命名含 `t014-t017` 的兩支測試檔其檔名為 issue 標記而非斷言內容，檔名維持不動。 [@senior-frontend]
-- [ ] 2.7 執行 code/test gate：於 `design/prototype/` 帶專屬 `PW_PORT` 跑 typecheck 與 Playwright 全量，兩者預期 exit `0`；本群組刪除整個 fixture，全量回歸是唯一能證明無殘留引用的證據，分段跑不算數。 [@main]
+- [x] 2.1 撰寫 `design/prototype/tests/annotation/issue-815-t017-fixture-removed.spec.ts` 作為 Red 契約，釘住三件事：示範任務集合恰為三個且不含 T017、任一消費端列舉示範任務時皆不再出現該 id、以及移除後 T014 至 T016 的既有清單與儀表板筆數仍各自正確。先提交此單檔再跑測試並保存 expected failure 證據。 — Red：`8e9da457`；`playwright test tests/annotation/issue-815-t017-fixture-removed.spec.ts` exit `1`（6 failed／3 passed：示範集合仍含 T017、七處登錄與 DOM 仍可見 T017；T014–T016 保全 3 項為綠） [@senior-qa]
+- [x] 2.2 Green：自 `design/prototype/pages/annotation/annotation-workspace.data.js` 刪除 T017 的五列種子與其對應的樣本答案登錄。 — `b7037d87`；2.2–2.5 合計 7 檔 +2／−155 純刪除後 Red 規格 9/9 通過 [@senior-frontend]
+- [x] 2.3 接續移除任務清單側的登錄：`design/prototype/pages/task-management/task-list.data.js` 的 T017 任務列。 — `e1671e29` [@senior-frontend]
+- [x] 2.4 接續移除任務詳情側的兩處登錄：`design/prototype/pages/task-management/task-detail.data.js` 的設定側寫與其樣本清單，以及同目錄頁面檔內嵌的同一筆示範任務登錄。 — `f5c1c046` [@senior-frontend]
+- [x] 2.5 接續移除儀表板與資料集側的三處登錄：`design/prototype/pages/dashboard/dashboard.data.js` 的任務列、同目錄指派摘要種子的示範任務欄位，以及 dataset-analysis-detail 頁面內嵌的任務登錄。 — `9547909d`；過期範圍註解修正 `91a95fed` [@senior-frontend]
+- [x] 2.6 逐一檢視測試層對 T017 的既有引用並調整其內部斷言——命名含 `t014-t017` 的兩支測試檔其檔名為 issue 標記而非斷言內容，檔名維持不動。 — `2e7dc252`／`41792b12`／`8d711fd0`／`aef7bad8`（37 檔；同形狀樣本改指 T016 `ofm-02`／`ofm-03`／`ofm-05`，平手與審核員層級退回兩種已退役情境整段刪除並於檔頭記理由；筆數 17→16、`single_label` 6→5） [@senior-frontend]
+- [x] 2.7 執行 code/test gate：於 `design/prototype/` 帶專屬 `PW_PORT` 跑 typecheck 與 Playwright 全量，兩者預期 exit `0`；本群組刪除整個 fixture，全量回歸是唯一能證明無殘留引用的證據，分段跑不算數。 — typecheck exit `0`；`PW_PORT=8947` Playwright 全量 exit `0`（1732 passed） [@main]
 
 ---
 

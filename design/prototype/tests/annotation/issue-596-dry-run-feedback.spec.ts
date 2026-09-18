@@ -99,7 +99,7 @@ const PEER_MARKER = 'PEER-FEEDBACK-MARKER-b7e2'; // used as the PEER's arbitrati
  * deliberately stops short of arbitration. The `waiting_iaa_confirmation`
  * and peer-isolation tests further below need an actual settled row and
  * use seedAdjudicatedFeedbackScript() instead. Reuses the two
- * already-exported, already-tested primitives the T014-T017 review-flow
+ * already-exported, already-tested primitives the T014-T016 review-flow
  * demo seeder (annotation-workspace.data.js ~L2779) builds fixtures from,
  * rather than hand-writing the localStorage bucket schema. */
 function seedModifiedFeedbackScript(
