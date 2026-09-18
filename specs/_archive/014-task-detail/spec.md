@@ -1,5 +1,5 @@
 ---
-功能分支: docs/783-iaa-precondition-017-values-on-main
+功能分支: chore/783-archive-014-canon
 建立日期: 2026-04-20
 版本: 4.1.0
 狀態: Draft
