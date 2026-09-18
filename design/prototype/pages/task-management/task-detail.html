@@ -1099,8 +1099,6 @@
       min-width: 72px;
       flex-shrink: 0;
     }
-    .badge-ar-approved { color: var(--color-success); background: var(--color-success-bg); border-color: var(--color-success-border); }
-    .badge-ar-modified { color: var(--color-warning); background: var(--color-warning-bg); border-color: var(--color-warning-border); }
     .badge-ar-disputed { color: var(--color-error); background: var(--color-error-bg); border-color: var(--color-error-border); }
     .badge-ar-finalized { color: var(--color-primary); background: var(--color-primary-soft-bg); border-color: var(--color-primary-border); }
     .badge-ar-pending-review { color: var(--color-ink-muted); background: var(--color-slate-50); border-color: var(--color-border); }
@@ -2792,8 +2790,6 @@
       thArValue: '標記值',
       thArSubmittedAt: '提交時間',
       thArReviewStatus: '審核狀態',
-      arReviewApproved: '已同意',
-      arReviewModified: '已修改',
       arReviewPending: '待審',
       arReviewDisputed: '爭議中',
       arReviewFinalized: '已定稿',
@@ -3292,8 +3288,6 @@
       thArValue: 'Label value',
       thArSubmittedAt: 'Submitted at',
       thArReviewStatus: 'Review',
-      arReviewApproved: 'Approved',
-      arReviewModified: 'Modified',
       arReviewPending: 'Pending',
       arReviewDisputed: 'Disputed',
       arReviewFinalized: 'Finalized',
@@ -3881,7 +3875,7 @@
         summaryStats: [{ label: '政治', value: '×2' }, { label: '科技', value: '×3' }],
         status: 'submitted', completedAt: '2026-04-25',
         annotations: [
-          { annotator: 'kioleemg12', value: { labels: ['政治', '科技'] }, submittedAt: '2026-04-25 14:10', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-25 15:02' }] },
+          { annotator: 'kioleemg12', value: { labels: ['政治', '科技'] }, submittedAt: '2026-04-25 14:10', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-25 15:02' }] },
           { annotator: '113450022', value: { labels: ['政治', '科技'] }, submittedAt: '2026-04-25 14:22', reviewStatus: 'pending' },
           { annotator: 'tony0950127', value: { labels: ['科技'] }, submittedAt: '2026-04-25 14:30', reviewStatus: 'pending' }
         ]
@@ -3894,7 +3888,7 @@
         status: 'draft', completedAt: '2026-04-23',
         annotations: [
           { annotator: 'kioleemg12', value: { labels: ['體育', '娛樂'] }, submittedAt: '2026-04-23 09:00', reviewStatus: 'pending' },
-          { annotator: '113450022', value: { labels: ['娛樂', '社會'] }, submittedAt: '2026-04-23 09:30', reviewStatus: 'modified', reviews: [{ reviewer: 'dahua_lee', decision: 'modified', result: { labels: ['娛樂'] }, reviewedAt: '2026-04-23 11:12' }] },
+          { annotator: '113450022', value: { labels: ['娛樂', '社會'] }, submittedAt: '2026-04-23 09:30', reviewStatus: 'disputed', reviews: [{ reviewer: 'dahua_lee', decision: 'modified', result: { labels: ['娛樂'] }, reviewedAt: '2026-04-23 11:12' }] },
           { annotator: 'tony0950127', value: { labels: ['體育', '社會'] }, submittedAt: '2026-04-23 10:00', reviewStatus: 'pending' }
         ]
       },
@@ -3905,8 +3899,8 @@
         summaryStats: [{ label: '社會', value: '×3' }, { label: '政治', value: '×1' }],
         status: 'submitted', completedAt: '2026-04-24',
         annotations: [
-          { annotator: 'kioleemg12', value: { labels: ['社會'] }, submittedAt: '2026-04-24 11:05', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-24 13:40' }] },
-          { annotator: '113450022', value: { labels: ['社會', '政治'] }, submittedAt: '2026-04-24 11:18', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-24 13:47' }] },
+          { annotator: 'kioleemg12', value: { labels: ['社會'] }, submittedAt: '2026-04-24 11:05', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-24 13:40' }] },
+          { annotator: '113450022', value: { labels: ['社會', '政治'] }, submittedAt: '2026-04-24 11:18', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-24 13:47' }] },
           { annotator: 'tony0950127', value: { labels: ['社會'] }, submittedAt: '2026-04-24 11:34', reviewStatus: 'pending' }
         ]
       },
@@ -3917,9 +3911,9 @@
         summaryStats: [{ label: '娛樂', value: '×3' }, { label: '社會', value: '×2' }],
         status: 'submitted', completedAt: '2026-04-22',
         annotations: [
-          { annotator: 'kioleemg12', value: { labels: ['娛樂'] }, submittedAt: '2026-04-22 16:05', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-22 17:20' }] },
+          { annotator: 'kioleemg12', value: { labels: ['娛樂'] }, submittedAt: '2026-04-22 16:05', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-22 17:20' }] },
           { annotator: '113450022', value: { labels: ['娛樂', '社會'] }, submittedAt: '2026-04-22 16:18', reviewStatus: 'finalized', reviews: [{ reviewer: 'dahua_lee', decision: 'modified', result: { labels: ['娛樂'] }, reviewedAt: '2026-04-22 17:31' }], arbitration: { arbiter: 'meiling.c', pick: 'B', decidedAt: '2026-04-22 18:05' } },
-          { annotator: 'tony0950127', value: { labels: ['娛樂', '社會'] }, submittedAt: '2026-04-22 16:34', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-22 17:24' }] }
+          { annotator: 'tony0950127', value: { labels: ['娛樂', '社會'] }, submittedAt: '2026-04-22 16:34', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-22 17:24' }] }
         ]
       },
       {
@@ -3941,7 +3935,7 @@
         summaryStats: [{ label: '科技', value: '×2' }, { label: '健康', value: '×2' }, { label: '財經', value: '×1' }],
         status: 'submitted', completedAt: '2026-05-01',
         annotations: [
-          { annotator: 'kioleemg12', value: { labels: ['科技', '健康'] }, submittedAt: '2026-05-01 09:10', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-05-01 10:05' }] },
+          { annotator: 'kioleemg12', value: { labels: ['科技', '健康'] }, submittedAt: '2026-05-01 09:10', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-05-01 10:05' }] },
           { annotator: '113450022', value: { labels: ['科技', '財經'] }, submittedAt: '2026-05-01 09:26', reviewStatus: 'disputed', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-05-01 10:12' }, { reviewer: 'dahua_lee', decision: 'modified', result: { labels: ['科技'] }, reviewedAt: '2026-05-01 10:40' }] },
           { annotator: 'tony0950127', value: { labels: ['健康'] }, submittedAt: '2026-05-01 09:44', reviewStatus: 'pending' }
         ]
@@ -3957,11 +3951,11 @@
         status: 'submitted', completedAt: '2026-04-23',
         annotations: [
           { annotator: 'kioleemg12', value: { valence: 6, arousal: 5.5 }, submittedAt: '2026-04-23 10:00', reviewStatus: 'pending' },
-          { annotator: '113450022', value: { valence: 8, arousal: 8 }, submittedAt: '2026-04-23 10:20', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-23 17:30' }] },
+          { annotator: '113450022', value: { valence: 8, arousal: 8 }, submittedAt: '2026-04-23 10:20', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-23 17:30' }] },
           { annotator: 'tony0950127', value: { valence: 7.5, arousal: 8 }, submittedAt: '2026-04-23 10:40', reviewStatus: 'pending' },
-          { annotator: 'hui', value: { valence: 7.5, arousal: 7.5 }, submittedAt: '2026-04-23 11:00', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-23 17:30' }] },
+          { annotator: 'hui', value: { valence: 7.5, arousal: 7.5 }, submittedAt: '2026-04-23 11:00', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-23 17:30' }] },
           { annotator: 'chiao11', value: { valence: 6, arousal: 5 }, submittedAt: '2026-04-23 11:20', reviewStatus: 'pending' },
-          { annotator: 'mandy610425', value: { valence: 9, arousal: 9 }, submittedAt: '2026-04-23 11:40', reviewStatus: 'modified', reviews: [{ reviewer: 'dahua_lee', decision: 'modified', result: { valence: 7.5, arousal: 8 }, reviewedAt: '2026-04-23 13:05' }] }
+          { annotator: 'mandy610425', value: { valence: 9, arousal: 9 }, submittedAt: '2026-04-23 11:40', reviewStatus: 'disputed', reviews: [{ reviewer: 'dahua_lee', decision: 'modified', result: { valence: 7.5, arousal: 8 }, reviewedAt: '2026-04-23 13:05' }] }
         ]
       },
       {
@@ -3971,9 +3965,9 @@
         summaryStats: [{ label: '平均 V/A', value: '1.8 / 7.5' }, { label: '分布區間', value: 'V 1.5-2.0 · A 7.0-8.0', muted: true }],
         status: 'submitted', completedAt: '2026-04-23',
         annotations: [
-          { annotator: 'kioleemg12', value: { valence: 2, arousal: 7 }, submittedAt: '2026-04-23 12:00', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-23 17:30' }] },
-          { annotator: '113450022', value: { valence: 1.5, arousal: 8 }, submittedAt: '2026-04-23 12:20', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-23 17:30' }] },
-          { annotator: 'tony0950127', value: { valence: 2, arousal: 7.5 }, submittedAt: '2026-04-23 12:40', reviewStatus: 'modified', reviews: [{ reviewer: 'dahua_lee', decision: 'modified', result: { valence: 2, arousal: 7 }, reviewedAt: '2026-04-23 14:02' }] }
+          { annotator: 'kioleemg12', value: { valence: 2, arousal: 7 }, submittedAt: '2026-04-23 12:00', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-23 17:30' }] },
+          { annotator: '113450022', value: { valence: 1.5, arousal: 8 }, submittedAt: '2026-04-23 12:20', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-23 17:30' }] },
+          { annotator: 'tony0950127', value: { valence: 2, arousal: 7.5 }, submittedAt: '2026-04-23 12:40', reviewStatus: 'disputed', reviews: [{ reviewer: 'dahua_lee', decision: 'modified', result: { valence: 2, arousal: 7 }, reviewedAt: '2026-04-23 14:02' }] }
         ]
       },
       {
@@ -4007,8 +4001,8 @@
         summaryStats: [{ label: '平均 V/A', value: '7.5 / 5.0' }, { label: '分布區間', value: 'V 7.0-8.0 · A 4.0-6.0', muted: true }],
         status: 'submitted', completedAt: '2026-05-01',
         annotations: [
-          { annotator: 'kioleemg12', value: { valence: 7, arousal: 5 }, submittedAt: '2026-05-01 10:00', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-05-01 17:30' }] },
-          { annotator: '113450022', value: { valence: 8, arousal: 6 }, submittedAt: '2026-05-01 10:20', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-05-01 17:30' }] },
+          { annotator: 'kioleemg12', value: { valence: 7, arousal: 5 }, submittedAt: '2026-05-01 10:00', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-05-01 17:30' }] },
+          { annotator: '113450022', value: { valence: 8, arousal: 6 }, submittedAt: '2026-05-01 10:20', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-05-01 17:30' }] },
           { annotator: 'tony0950127', value: { valence: 7.5, arousal: 4 }, submittedAt: '2026-05-01 10:40', reviewStatus: 'pending' }
         ]
       },
@@ -4020,8 +4014,8 @@
         status: 'submitted', completedAt: '2026-05-02',
         annotations: [
           { annotator: 'kioleemg12', value: { valence: 2, arousal: 7 }, submittedAt: '2026-05-02 11:08', reviewStatus: 'pending' },
-          { annotator: '113450022', value: { valence: 3, arousal: 6 }, submittedAt: '2026-05-02 11:22', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-05-02 17:30' }] },
-          { annotator: 'tony0950127', value: { valence: 2, arousal: 7.5 }, submittedAt: '2026-05-02 11:37', reviewStatus: 'modified', reviews: [{ reviewer: 'dahua_lee', decision: 'modified', result: { valence: 2, arousal: 7 }, reviewedAt: '2026-05-02 13:15' }] }
+          { annotator: '113450022', value: { valence: 3, arousal: 6 }, submittedAt: '2026-05-02 11:22', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-05-02 17:30' }] },
+          { annotator: 'tony0950127', value: { valence: 2, arousal: 7.5 }, submittedAt: '2026-05-02 11:37', reviewStatus: 'disputed', reviews: [{ reviewer: 'dahua_lee', decision: 'modified', result: { valence: 2, arousal: 7 }, reviewedAt: '2026-05-02 13:15' }] }
         ]
       }
   ];
@@ -4034,7 +4028,7 @@
         summaryStats: [{ label: '螢幕', value: '×3' }, { label: '電池', value: '×2' }],
         status: 'submitted', completedAt: '2026-04-28',
         annotations: [
-          { annotator: 'kioleemg12', value: { aspects: ['螢幕', '電池'] }, submittedAt: '2026-04-28 09:12', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-28 17:30' }] },
+          { annotator: 'kioleemg12', value: { aspects: ['螢幕', '電池'] }, submittedAt: '2026-04-28 09:12', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-28 17:30' }] },
           { annotator: '113450022', value: { aspects: ['螢幕'] }, submittedAt: '2026-04-28 09:28', reviewStatus: 'pending' },
           { annotator: 'tony0950127', value: { aspects: ['螢幕', '電池'] }, submittedAt: '2026-04-28 09:44', reviewStatus: 'pending' }
         ]
@@ -4046,8 +4040,8 @@
         summaryStats: [{ label: '客服', value: '×3' }, { label: '退款流程', value: '×2' }],
         status: 'submitted', completedAt: '2026-04-28',
         annotations: [
-          { annotator: 'kioleemg12', value: { aspects: ['客服', '退款流程'] }, submittedAt: '2026-04-28 10:10', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-28 17:30' }] },
-          { annotator: '113450022', value: { aspects: ['客服'] }, submittedAt: '2026-04-28 10:26', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-28 17:30' }] },
+          { annotator: 'kioleemg12', value: { aspects: ['客服', '退款流程'] }, submittedAt: '2026-04-28 10:10', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-28 17:30' }] },
+          { annotator: '113450022', value: { aspects: ['客服'] }, submittedAt: '2026-04-28 10:26', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-28 17:30' }] },
           { annotator: 'tony0950127', value: { aspects: ['客服', '退款流程'] }, submittedAt: '2026-04-28 10:42', reviewStatus: 'pending' }
         ]
       },
@@ -4059,7 +4053,7 @@
         status: 'draft', completedAt: '2026-04-27',
         annotations: [
           { annotator: 'kioleemg12', value: { aspects: ['鍵盤', '觸控板', '散熱'] }, submittedAt: '2026-04-27 15:00', reviewStatus: 'pending' },
-          { annotator: '113450022', value: { aspects: ['觸控板', '散熱'] }, submittedAt: '2026-04-27 15:16', reviewStatus: 'modified', reviews: [{ reviewer: 'dahua_lee', decision: 'modified', result: { aspects: ['觸控板'] }, reviewedAt: '2026-04-27 16:20' }] },
+          { annotator: '113450022', value: { aspects: ['觸控板', '散熱'] }, submittedAt: '2026-04-27 15:16', reviewStatus: 'disputed', reviews: [{ reviewer: 'dahua_lee', decision: 'modified', result: { aspects: ['觸控板'] }, reviewedAt: '2026-04-27 16:20' }] },
           { annotator: 'tony0950127', value: { aspects: ['鍵盤', '散熱'] }, submittedAt: '2026-04-27 15:34', reviewStatus: 'pending' }
         ]
       },
@@ -4070,9 +4064,9 @@
         summaryStats: [{ label: '包裝', value: '×3' }, { label: '外盒', value: '×1' }],
         status: 'submitted', completedAt: '2026-04-22',
         annotations: [
-          { annotator: 'kioleemg12', value: { aspects: ['包裝'] }, submittedAt: '2026-04-22 13:02', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-22 17:30' }] },
-          { annotator: '113450022', value: { aspects: ['包裝', '外盒'] }, submittedAt: '2026-04-22 13:18', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-22 17:30' }] },
-          { annotator: 'tony0950127', value: { aspects: ['包裝'] }, submittedAt: '2026-04-22 13:34', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-22 17:30' }] }
+          { annotator: 'kioleemg12', value: { aspects: ['包裝'] }, submittedAt: '2026-04-22 13:02', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-22 17:30' }] },
+          { annotator: '113450022', value: { aspects: ['包裝', '外盒'] }, submittedAt: '2026-04-22 13:18', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-22 17:30' }] },
+          { annotator: 'tony0950127', value: { aspects: ['包裝'] }, submittedAt: '2026-04-22 13:34', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-22 17:30' }] }
         ]
       },
       {
@@ -4094,7 +4088,7 @@
         summaryStats: [{ label: '噪音', value: '×2' }, { label: '出風', value: '×2' }, { label: '安裝預約', value: '×2' }],
         status: 'submitted', completedAt: '2026-05-01',
         annotations: [
-          { annotator: 'kioleemg12', value: { aspects: ['噪音', '出風'] }, submittedAt: '2026-05-01 14:04', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-05-01 17:30' }] },
+          { annotator: 'kioleemg12', value: { aspects: ['噪音', '出風'] }, submittedAt: '2026-05-01 14:04', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-05-01 17:30' }] },
           { annotator: '113450022', value: { aspects: ['噪音', '安裝預約'] }, submittedAt: '2026-05-01 14:20', reviewStatus: 'pending' },
           { annotator: 'tony0950127', value: { aspects: ['出風', '安裝預約'] }, submittedAt: '2026-05-01 14:38', reviewStatus: 'pending' }
         ]
@@ -4109,7 +4103,7 @@
         labelStatsText: '(DRUG:阿司匹靈)→treats→(SYMP:發燒) ×2 · (DOCTOR:醫師)→indicates→(TREATMENT:補水) ×2',
         status: 'submitted', completedAt: '2026-04-30',
         annotations: [
-          { annotator: 'kioleemg12', value: { resultText: '(DRUG:阿司匹靈)→treats→(SYMP:發燒)' }, submittedAt: '2026-04-30 09:06', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-30 17:30' }] },
+          { annotator: 'kioleemg12', value: { resultText: '(DRUG:阿司匹靈)→treats→(SYMP:發燒)' }, submittedAt: '2026-04-30 09:06', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-30 17:30' }] },
           { annotator: '113450022', value: { resultText: '(DRUG:阿司匹靈)→treats→(SYMP:發燒)' }, submittedAt: '2026-04-30 09:24', reviewStatus: 'pending' },
           { annotator: 'tony0950127', value: { resultText: '(DOCTOR:醫師)→indicates→(TREATMENT:補水)' }, submittedAt: '2026-04-30 09:38', reviewStatus: 'pending' }
         ]
@@ -4121,9 +4115,9 @@
         labelStatsText: '(DRUG:抗生素)→causes→(SYMP:腹瀉) ×2 · (SYMP:腹瀉)→associated_with→(DISEASE:腸胃疾病) ×2',
         status: 'submitted', completedAt: '2026-04-30',
         annotations: [
-          { annotator: 'kioleemg12', value: { resultText: '(DRUG:抗生素)→causes→(SYMP:腹瀉)' }, submittedAt: '2026-04-30 10:12', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-30 17:30' }] },
-          { annotator: '113450022', value: { resultText: '(SYMP:腹瀉)→associated_with→(DISEASE:腸胃疾病)' }, submittedAt: '2026-04-30 10:30', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-30 17:30' }] },
-          { annotator: 'tony0950127', value: { resultText: '(DRUG:抗生素)→causes→(SYMP:腹瀉)' }, submittedAt: '2026-04-30 10:46', reviewStatus: 'modified', reviews: [{ reviewer: 'dahua_lee', decision: 'modified', result: { resultText: '(DRUG:抗生素)→treats→(SYMP:感染)' }, reviewedAt: '2026-04-30 11:50' }] }
+          { annotator: 'kioleemg12', value: { resultText: '(DRUG:抗生素)→causes→(SYMP:腹瀉)' }, submittedAt: '2026-04-30 10:12', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-30 17:30' }] },
+          { annotator: '113450022', value: { resultText: '(SYMP:腹瀉)→associated_with→(DISEASE:腸胃疾病)' }, submittedAt: '2026-04-30 10:30', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-30 17:30' }] },
+          { annotator: 'tony0950127', value: { resultText: '(DRUG:抗生素)→causes→(SYMP:腹瀉)' }, submittedAt: '2026-04-30 10:46', reviewStatus: 'disputed', reviews: [{ reviewer: 'dahua_lee', decision: 'modified', result: { resultText: '(DRUG:抗生素)→treats→(SYMP:感染)' }, reviewedAt: '2026-04-30 11:50' }] }
         ]
       },
       {
@@ -4145,8 +4139,8 @@
         labelStatsText: '(DRUG:止痛藥)→treats→(SYMP:術後疼痛) ×2 · (DRUG:止痛藥)→causes→(SYMP:噁心) ×1',
         status: 'submitted', completedAt: '2026-04-22',
         annotations: [
-          { annotator: 'kioleemg12', value: { resultText: '(DRUG:止痛藥)→treats→(SYMP:術後疼痛)' }, submittedAt: '2026-04-22 08:56', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-22 17:30' }] },
-          { annotator: '113450022', value: { resultText: '(DRUG:止痛藥)→treats→(SYMP:術後疼痛)' }, submittedAt: '2026-04-22 09:12', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-22 17:30' }] },
+          { annotator: 'kioleemg12', value: { resultText: '(DRUG:止痛藥)→treats→(SYMP:術後疼痛)' }, submittedAt: '2026-04-22 08:56', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-22 17:30' }] },
+          { annotator: '113450022', value: { resultText: '(DRUG:止痛藥)→treats→(SYMP:術後疼痛)' }, submittedAt: '2026-04-22 09:12', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-22 17:30' }] },
           { annotator: 'tony0950127', value: { resultText: '(DRUG:止痛藥)→causes→(SYMP:噁心)' }, submittedAt: '2026-04-22 09:28', reviewStatus: 'pending' }
         ]
       },
@@ -4169,7 +4163,7 @@
         labelStatsText: '(DRUG:止咳藥)→treats→(SYMP:夜間咳嗽) ×2 · (DRUG:止咳藥)→weak_on→(SYMP:喉嚨乾癢) ×1',
         status: 'submitted', completedAt: '2026-05-01',
         annotations: [
-          { annotator: 'kioleemg12', value: { resultText: '(DRUG:止咳藥)→treats→(SYMP:夜間咳嗽)' }, submittedAt: '2026-05-01 15:08', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-05-01 17:30' }] },
+          { annotator: 'kioleemg12', value: { resultText: '(DRUG:止咳藥)→treats→(SYMP:夜間咳嗽)' }, submittedAt: '2026-05-01 15:08', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-05-01 17:30' }] },
           { annotator: '113450022', value: { resultText: '(DRUG:止咳藥)→treats→(SYMP:夜間咳嗽)' }, submittedAt: '2026-05-01 15:22', reviewStatus: 'pending' },
           { annotator: 'tony0950127', value: { resultText: '(DRUG:止咳藥)→weak_on→(SYMP:喉嚨乾癢)' }, submittedAt: '2026-05-01 15:36', reviewStatus: 'pending' }
         ]
@@ -4184,8 +4178,8 @@
         summaryStats: [{ label: '蘊含', value: '×2' }, { label: '中立', value: '×1' }],
         status: 'submitted', completedAt: '2026-04-26',
         annotations: [
-          { annotator: 'kioleemg12', value: { label: '蘊含' }, submittedAt: '2026-04-26 09:05', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-26 17:30' }] },
-          { annotator: '113450022', value: { label: '蘊含' }, submittedAt: '2026-04-26 09:22', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-26 17:30' }] },
+          { annotator: 'kioleemg12', value: { label: '蘊含' }, submittedAt: '2026-04-26 09:05', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-26 17:30' }] },
+          { annotator: '113450022', value: { label: '蘊含' }, submittedAt: '2026-04-26 09:22', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-26 17:30' }] },
           { annotator: 'tony0950127', value: { label: '中立' }, submittedAt: '2026-04-26 09:38', reviewStatus: 'pending' }
         ]
       },
@@ -4196,9 +4190,9 @@
         summaryStats: [{ label: '矛盾', value: '×3' }],
         status: 'submitted', completedAt: '2026-04-26',
         annotations: [
-          { annotator: 'kioleemg12', value: { label: '矛盾' }, submittedAt: '2026-04-26 10:04', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-26 17:30' }] },
-          { annotator: '113450022', value: { label: '矛盾' }, submittedAt: '2026-04-26 10:18', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-26 17:30' }] },
-          { annotator: 'tony0950127', value: { label: '矛盾' }, submittedAt: '2026-04-26 10:32', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-26 17:30' }] }
+          { annotator: 'kioleemg12', value: { label: '矛盾' }, submittedAt: '2026-04-26 10:04', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-26 17:30' }] },
+          { annotator: '113450022', value: { label: '矛盾' }, submittedAt: '2026-04-26 10:18', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-26 17:30' }] },
+          { annotator: 'tony0950127', value: { label: '矛盾' }, submittedAt: '2026-04-26 10:32', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-26 17:30' }] }
         ]
       },
       {
@@ -4210,7 +4204,7 @@
         annotations: [
           { annotator: 'kioleemg12', value: { label: '中立' }, submittedAt: '2026-04-26 11:00', reviewStatus: 'pending' },
           { annotator: '113450022', value: { label: '中立' }, submittedAt: '2026-04-26 11:14', reviewStatus: 'pending' },
-          { annotator: 'tony0950127', value: { label: '蘊含' }, submittedAt: '2026-04-26 11:28', reviewStatus: 'modified', reviews: [{ reviewer: 'dahua_lee', decision: 'modified', result: { label: '中立' }, reviewedAt: '2026-04-26 13:00' }] }
+          { annotator: 'tony0950127', value: { label: '蘊含' }, submittedAt: '2026-04-26 11:28', reviewStatus: 'disputed', reviews: [{ reviewer: 'dahua_lee', decision: 'modified', result: { label: '中立' }, reviewedAt: '2026-04-26 13:00' }] }
         ]
       },
       {
@@ -4220,8 +4214,8 @@
         summaryStats: [{ label: '蘊含', value: '×3' }],
         status: 'submitted', completedAt: '2026-04-21',
         annotations: [
-          { annotator: 'kioleemg12', value: { label: '蘊含' }, submittedAt: '2026-04-21 13:06', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-21 17:30' }] },
-          { annotator: '113450022', value: { label: '蘊含' }, submittedAt: '2026-04-21 13:22', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-21 17:30' }] },
+          { annotator: 'kioleemg12', value: { label: '蘊含' }, submittedAt: '2026-04-21 13:06', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-21 17:30' }] },
+          { annotator: '113450022', value: { label: '蘊含' }, submittedAt: '2026-04-21 13:22', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-21 17:30' }] },
           { annotator: 'tony0950127', value: { label: '蘊含' }, submittedAt: '2026-04-21 13:38', reviewStatus: 'pending' }
         ]
       },
@@ -4245,7 +4239,7 @@
         status: 'submitted', completedAt: '2026-05-01',
         annotations: [
           { annotator: 'kioleemg12', value: { label: '中立' }, submittedAt: '2026-05-01 10:12', reviewStatus: 'pending' },
-          { annotator: '113450022', value: { label: '蘊含' }, submittedAt: '2026-05-01 10:26', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-05-01 17:30' }] },
+          { annotator: '113450022', value: { label: '蘊含' }, submittedAt: '2026-05-01 10:26', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-05-01 17:30' }] },
           { annotator: 'tony0950127', value: { label: '中立' }, submittedAt: '2026-05-01 10:42', reviewStatus: 'pending' }
         ]
       }
@@ -4260,7 +4254,7 @@
         status: 'submitted', completedAt: '2026-04-28',
         annotations: [
           { annotator: 'kioleemg12', value: { entities: [{ type: 'ORG', text: '台積電' }, { type: 'PER', text: '張忠謀' }, { type: 'LOC', text: '台北' }] }, submittedAt: '2026-04-28 10:10', reviewStatus: 'pending' },
-          { annotator: '113450022', value: { entities: [{ type: 'ORG', text: '台積電' }, { type: 'PER', text: '張忠謀' }, { type: 'LOC', text: '台北' }, { type: 'MISC', text: '半導體產業論壇' }] }, submittedAt: '2026-04-28 10:24', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-28 17:30' }] },
+          { annotator: '113450022', value: { entities: [{ type: 'ORG', text: '台積電' }, { type: 'PER', text: '張忠謀' }, { type: 'LOC', text: '台北' }, { type: 'MISC', text: '半導體產業論壇' }] }, submittedAt: '2026-04-28 10:24', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-28 17:30' }] },
           { annotator: 'tony0950127', value: { entities: [{ type: 'ORG', text: '台積電' }, { type: 'PER', text: '創辦人張忠謀' }, { type: 'LOC', text: '台北' }] }, submittedAt: '2026-04-28 10:42', reviewStatus: 'pending' }
         ]
       },
@@ -4271,7 +4265,7 @@
         summaryStats: [{ label: 'ORG', value: '×3' }, { label: 'LOC', value: '×3' }, { label: 'DATE', value: '×3' }],
         status: 'submitted', completedAt: '2026-04-28',
         annotations: [
-          { annotator: 'kioleemg12', value: { entities: [{ type: 'ORG', text: '鴻海精密工業' }, { type: 'LOC', text: '越南' }, { type: 'LOC', text: '胡志明市' }] }, submittedAt: '2026-04-28 11:08', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-28 17:30' }] },
+          { annotator: 'kioleemg12', value: { entities: [{ type: 'ORG', text: '鴻海精密工業' }, { type: 'LOC', text: '越南' }, { type: 'LOC', text: '胡志明市' }] }, submittedAt: '2026-04-28 11:08', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-28 17:30' }] },
           { annotator: '113450022', value: { entities: [{ type: 'ORG', text: '鴻海精密工業' }, { type: 'LOC', text: '胡志明市' }, { type: 'DATE', text: '2025 年' }] }, submittedAt: '2026-04-28 11:26', reviewStatus: 'pending' },
           { annotator: 'tony0950127', value: { entities: [{ type: 'ORG', text: '鴻海' }, { type: 'LOC', text: '越南胡志明市' }, { type: 'DATE', text: '2025 年' }] }, submittedAt: '2026-04-28 11:44', reviewStatus: 'pending' }
         ]
@@ -4284,7 +4278,7 @@
         status: 'draft', completedAt: '2026-04-28',
         annotations: [
           { annotator: 'kioleemg12', value: { entities: [{ type: 'ORG', text: '衛生福利部' }, { type: 'PER', text: '薛瑞元' }] }, submittedAt: '2026-04-28 13:04', reviewStatus: 'pending' },
-          { annotator: '113450022', value: { entities: [{ type: 'ORG', text: '世界衛生大會' }, { type: 'LOC', text: '台灣' }] }, submittedAt: '2026-04-28 13:18', reviewStatus: 'modified', reviews: [{ reviewer: 'dahua_lee', decision: 'modified', result: { entities: [{ type: 'ORG', text: '世界衛生大會' }] }, reviewedAt: '2026-04-28 14:30' }] },
+          { annotator: '113450022', value: { entities: [{ type: 'ORG', text: '世界衛生大會' }, { type: 'LOC', text: '台灣' }] }, submittedAt: '2026-04-28 13:18', reviewStatus: 'disputed', reviews: [{ reviewer: 'dahua_lee', decision: 'modified', result: { entities: [{ type: 'ORG', text: '世界衛生大會' }] }, reviewedAt: '2026-04-28 14:30' }] },
           { annotator: 'tony0950127', value: { entities: [{ type: 'PER', text: '薛瑞元' }, { type: 'ORG', text: '衛生福利部' }] }, submittedAt: '2026-04-28 13:34', reviewStatus: 'pending' }
         ]
       },
@@ -4319,7 +4313,7 @@
         summaryStats: [{ label: 'ORG', value: '×3' }, { label: 'PER', value: '×3' }, { label: 'LOC', value: '×2' }, { label: 'PRODUCT', value: '×2' }],
         status: 'submitted', completedAt: '2026-05-01',
         annotations: [
-          { annotator: 'kioleemg12', value: { entities: [{ type: 'ORG', text: 'Google' }, { type: 'PER', text: 'Sundar Pichai' }, { type: 'LOC', text: '加州山景城' }] }, submittedAt: '2026-05-01 16:08', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-05-01 17:30' }] },
+          { annotator: 'kioleemg12', value: { entities: [{ type: 'ORG', text: 'Google' }, { type: 'PER', text: 'Sundar Pichai' }, { type: 'LOC', text: '加州山景城' }] }, submittedAt: '2026-05-01 16:08', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-05-01 17:30' }] },
           { annotator: '113450022', value: { entities: [{ type: 'ORG', text: 'Google' }, { type: 'PRODUCT', text: 'Gemini' }, { type: 'PER', text: 'Sundar Pichai' }] }, submittedAt: '2026-05-01 16:22', reviewStatus: 'pending' },
           { annotator: 'tony0950127', value: { entities: [{ type: 'ORG', text: 'Google' }, { type: 'PER', text: '執行長 Sundar Pichai' }, { type: 'PRODUCT', text: 'Gemini' }] }, submittedAt: '2026-05-01 16:40', reviewStatus: 'pending' }
         ]
@@ -4344,7 +4338,7 @@
         status: 'submitted', completedAt: '2026-04-28',
         annotations: [
           { annotator: 'kioleemg12', value: { entities: [{ type: 'ORG', text: '台積電' }, { type: 'PER', text: '張忠謀' }, { type: 'LOC', text: '台北' }], spans: [{ start: 0, end: 3, label: 'ORG' }, { start: 6, end: 9, label: 'PER' }, { start: 10, end: 12, label: 'LOC' }] }, submittedAt: '2026-04-28 10:10', reviewStatus: 'pending' },
-          { annotator: '113450022', value: { entities: [{ type: 'ORG', text: '台積電' }, { type: 'PER', text: '張忠謀' }, { type: 'LOC', text: '台北' }, { type: 'MISC', text: '半導體產業論壇' }], spans: [{ start: 0, end: 3, label: 'ORG' }, { start: 6, end: 9, label: 'PER' }, { start: 10, end: 12, label: 'LOC' }, { start: 21, end: 28, label: 'MISC' }] }, submittedAt: '2026-04-28 10:24', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-28 17:30' }] },
+          { annotator: '113450022', value: { entities: [{ type: 'ORG', text: '台積電' }, { type: 'PER', text: '張忠謀' }, { type: 'LOC', text: '台北' }, { type: 'MISC', text: '半導體產業論壇' }], spans: [{ start: 0, end: 3, label: 'ORG' }, { start: 6, end: 9, label: 'PER' }, { start: 10, end: 12, label: 'LOC' }, { start: 21, end: 28, label: 'MISC' }] }, submittedAt: '2026-04-28 10:24', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-28 17:30' }] },
           { annotator: 'tony0950127', value: { entities: [{ type: 'ORG', text: '台積電' }, { type: 'PER', text: '創辦人張忠謀' }, { type: 'LOC', text: '台北' }], spans: [{ start: 0, end: 3, label: 'ORG' }, { start: 3, end: 9, label: 'PER' }, { start: 10, end: 12, label: 'LOC' }] }, submittedAt: '2026-04-28 10:42', reviewStatus: 'pending' }
         ]
       },
@@ -4355,7 +4349,7 @@
         summaryStats: [{ label: 'ORG', value: '×3' }, { label: 'LOC', value: '×3' }, { label: 'DATE', value: '×3' }],
         status: 'submitted', completedAt: '2026-04-28',
         annotations: [
-          { annotator: 'kioleemg12', value: { entities: [{ type: 'ORG', text: '鴻海精密工業' }, { type: 'LOC', text: '越南' }, { type: 'LOC', text: '胡志明市' }], spans: [{ start: 0, end: 6, label: 'ORG' }, { start: 9, end: 11, label: 'LOC' }, { start: 11, end: 15, label: 'LOC' }] }, submittedAt: '2026-04-28 11:08', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-28 17:30' }] },
+          { annotator: 'kioleemg12', value: { entities: [{ type: 'ORG', text: '鴻海精密工業' }, { type: 'LOC', text: '越南' }, { type: 'LOC', text: '胡志明市' }], spans: [{ start: 0, end: 6, label: 'ORG' }, { start: 9, end: 11, label: 'LOC' }, { start: 11, end: 15, label: 'LOC' }] }, submittedAt: '2026-04-28 11:08', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-28 17:30' }] },
           { annotator: '113450022', value: { entities: [{ type: 'ORG', text: '鴻海精密工業' }, { type: 'LOC', text: '胡志明市' }, { type: 'DATE', text: '2025 年' }], spans: [{ start: 0, end: 6, label: 'ORG' }, { start: 11, end: 15, label: 'LOC' }, { start: 23, end: 29, label: 'DATE' }] }, submittedAt: '2026-04-28 11:26', reviewStatus: 'pending' },
           { annotator: 'tony0950127', value: { entities: [{ type: 'ORG', text: '鴻海' }, { type: 'LOC', text: '越南胡志明市' }, { type: 'DATE', text: '2025 年' }], spans: [{ start: 0, end: 2, label: 'ORG' }, { start: 9, end: 15, label: 'LOC' }, { start: 23, end: 29, label: 'DATE' }] }, submittedAt: '2026-04-28 11:44', reviewStatus: 'pending' }
         ]
@@ -4368,7 +4362,7 @@
         status: 'draft', completedAt: '2026-04-28',
         annotations: [
           { annotator: 'kioleemg12', value: { entities: [{ type: 'ORG', text: '衛生福利部' }, { type: 'PER', text: '薛瑞元' }], spans: [{ start: 0, end: 5, label: 'ORG' }, { start: 6, end: 9, label: 'PER' }] }, submittedAt: '2026-04-28 13:04', reviewStatus: 'pending' },
-          { annotator: '113450022', value: { entities: [{ type: 'ORG', text: '世界衛生大會' }, { type: 'LOC', text: '台灣' }], spans: [{ start: 11, end: 17, label: 'ORG' }, { start: 20, end: 22, label: 'LOC' }] }, submittedAt: '2026-04-28 13:18', reviewStatus: 'modified', reviews: [{ reviewer: 'dahua_lee', decision: 'modified', result: { entities: [{ type: 'ORG', text: '世界衛生大會' }] }, reviewedAt: '2026-04-28 14:30' }] },
+          { annotator: '113450022', value: { entities: [{ type: 'ORG', text: '世界衛生大會' }, { type: 'LOC', text: '台灣' }], spans: [{ start: 11, end: 17, label: 'ORG' }, { start: 20, end: 22, label: 'LOC' }] }, submittedAt: '2026-04-28 13:18', reviewStatus: 'disputed', reviews: [{ reviewer: 'dahua_lee', decision: 'modified', result: { entities: [{ type: 'ORG', text: '世界衛生大會' }] }, reviewedAt: '2026-04-28 14:30' }] },
           { annotator: 'tony0950127', value: { entities: [{ type: 'PER', text: '薛瑞元' }, { type: 'ORG', text: '衛生福利部' }], spans: [{ start: 6, end: 9, label: 'PER' }, { start: 0, end: 5, label: 'ORG' }] }, submittedAt: '2026-04-28 13:34', reviewStatus: 'pending' }
         ]
       },
@@ -4403,7 +4397,7 @@
         summaryStats: [{ label: 'ORG', value: '×3' }, { label: 'PER', value: '×3' }, { label: 'LOC', value: '×2' }, { label: 'PRODUCT', value: '×2' }],
         status: 'submitted', completedAt: '2026-05-01',
         annotations: [
-          { annotator: 'kioleemg12', value: { entities: [{ type: 'ORG', text: 'Google' }, { type: 'PER', text: 'Sundar Pichai' }, { type: 'LOC', text: '加州山景城' }], spans: [{ start: 0, end: 6, label: 'ORG' }, { start: 11, end: 24, label: 'PER' }, { start: 26, end: 31, label: 'LOC' }] }, submittedAt: '2026-05-01 16:08', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-05-01 17:30' }] },
+          { annotator: 'kioleemg12', value: { entities: [{ type: 'ORG', text: 'Google' }, { type: 'PER', text: 'Sundar Pichai' }, { type: 'LOC', text: '加州山景城' }], spans: [{ start: 0, end: 6, label: 'ORG' }, { start: 11, end: 24, label: 'PER' }, { start: 26, end: 31, label: 'LOC' }] }, submittedAt: '2026-05-01 16:08', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-05-01 17:30' }] },
           { annotator: '113450022', value: { entities: [{ type: 'ORG', text: 'Google' }, { type: 'PRODUCT', text: 'Gemini' }, { type: 'PER', text: 'Sundar Pichai' }], spans: [{ start: 0, end: 6, label: 'ORG' }, { start: 34, end: 40, label: 'PRODUCT' }, { start: 11, end: 24, label: 'PER' }] }, submittedAt: '2026-05-01 16:22', reviewStatus: 'pending' },
           { annotator: 'tony0950127', value: { entities: [{ type: 'ORG', text: 'Google' }, { type: 'PER', text: '執行長 Sundar Pichai' }, { type: 'PRODUCT', text: 'Gemini' }], spans: [{ start: 0, end: 6, label: 'ORG' }, { start: 7, end: 24, label: 'PER' }, { start: 34, end: 40, label: 'PRODUCT' }] }, submittedAt: '2026-05-01 16:40', reviewStatus: 'pending' }
         ]
@@ -4489,15 +4483,15 @@
     ],
     T016: [
       { id: 'ofm-01-reviewer-corrects-b', rows: [{ a: 'kioleemg12', v: 'positive', rs: 'finalized', rv: [['reviewer_wang', 'modified', 'negative']], arb: 'reviewer_chen' }] },
-      { id: 'ofm-02-approved-interim', rows: [{ a: 'kioleemg12', v: 'negative', rs: 'approved', rv: [['reviewer_wang', 'approved']] }] },
-      { id: 'ofm-03-modified-interim', rows: [{ a: 'kioleemg12', v: 'neutral', rs: 'modified', rv: [['reviewer_wang', 'modified', 'negative']] }] },
+      { id: 'ofm-02-approved-interim', rows: [{ a: 'kioleemg12', v: 'negative', rs: 'finalized', rv: [['reviewer_wang', 'approved']] }] },
+      { id: 'ofm-03-modified-interim', rows: [{ a: 'kioleemg12', v: 'neutral', rs: 'disputed', rv: [['reviewer_wang', 'modified', 'negative']] }] },
       { id: 'ofm-04-majority-converged', rows: [{ a: 'kioleemg12', v: 'positive', rs: 'finalized', rv: [['reviewer_wang', 'modified', 'neutral'], ['reviewer_li', 'modified', 'neutral'], ['reviewer_lin', 'approved']] }] },
       { id: 'ofm-05-all-divergent', rows: [{ a: 'kioleemg12', v: 'neutral', rs: 'disputed', rv: [['reviewer_wang', 'modified', 'positive'], ['reviewer_li', 'modified', 'negative'], ['reviewer_lin', 'approved']] }] }
     ],
     T017: [
       { id: 'oft-01-final-exception', rows: [{ a: 'kioleemg12', v: 'neutral', rs: 'disputed', rv: [['reviewer_wang', 'modified', 'positive']] }] },
-      { id: 'oft-02-approved-interim', rows: [{ a: 'kioleemg12', v: 'positive', rs: 'approved', rv: [['reviewer_wang', 'approved']] }] },
-      { id: 'oft-03-modified-interim', rows: [{ a: 'kioleemg12', v: 'neutral', rs: 'modified', rv: [['reviewer_wang', 'modified', 'positive']] }] },
+      { id: 'oft-02-approved-interim', rows: [{ a: 'kioleemg12', v: 'positive', rs: 'finalized', rv: [['reviewer_wang', 'approved']] }] },
+      { id: 'oft-03-modified-interim', rows: [{ a: 'kioleemg12', v: 'neutral', rs: 'disputed', rv: [['reviewer_wang', 'modified', 'positive']] }] },
       { id: 'oft-04-unanimous-gold', rows: [{ a: 'kioleemg12', v: 'positive', rs: 'finalized', rv: [['reviewer_wang', 'approved'], ['reviewer_li', 'approved']] }] },
       { id: 'oft-05-pending-review', rows: [{ a: 'kioleemg12', v: 'positive', rs: 'pending', rv: [] }] }
     ]
@@ -8765,20 +8759,20 @@ function getTaskTypeLabel() {
     td.appendChild(statsEl);
   }
 
-  /* AR_REVIEW_STATUS — five-state review vocabulary reused from spec 015 REVIEW_UNIT_STATUS. */
-  var AR_REVIEW_STATUS_ORDER = ['pending', 'approved', 'modified', 'disputed', 'finalized'];
+  /* AR_REVIEW_STATUS — three-state review vocabulary, spec 014 v3.0.0 (issue #688),
+     reused from spec 015 REVIEW_UNIT_STATUS. The single-relay review model (015
+     FR-093) assigns exactly one reviewer per official_run unit, so there is no
+     interim state between a reviewer's decision and the unit's outcome; the
+     former `approved`/`modified` states were retired. */
+  var AR_REVIEW_STATUS_ORDER = ['pending', 'disputed', 'finalized'];
   var AR_REVIEW_STATUS_LABEL_KEYS = {
     pending: 'arReviewPending',
-    approved: 'arReviewApproved',
-    modified: 'arReviewModified',
     disputed: 'arReviewDisputed',
     finalized: 'arReviewFinalized'
   };
 
   function getArReviewBadge(reviewStatus) {
     var map = {
-      approved: { cls: 'badge-ar-approved', label: t('arReviewApproved') },
-      modified: { cls: 'badge-ar-modified', label: t('arReviewModified') },
       disputed: { cls: 'badge-ar-disputed', label: t('arReviewDisputed') },
       finalized: { cls: 'badge-ar-finalized', label: t('arReviewFinalized') },
       pending: { cls: 'badge-ar-pending-review', label: t('arReviewPending') }
@@ -9392,7 +9386,7 @@ function getTaskTypeLabel() {
         sample_id: sample.sampleId,
         source_data: buildExportSourceData(sample, config, c),
         annotation_status: sample.status,
-        review_status: sample.annotations.every(function(annotation) { return annotation.reviewStatus === 'approved'; }) ? 'approved' : 'pending',
+        review_status: sample.annotations.every(function(annotation) { return annotation.reviewStatus === 'finalized'; }) ? 'finalized' : 'pending',
         created_at: sample.completedAt || null,
         updated_at: sample.completedAt || null,
         annotations: sample.annotations.map(function(annotation, annotationIndex) {
