@@ -172,6 +172,16 @@ type RunControlCase = {
   actionButton: string;
   actionText: string;
   absentButton?: string;
+  /* issue #791: dry_run_in_progress must keep the "add next round" button
+     visible but disabled, with a visible (non-tooltip) reason next to it,
+     and it must be the only run-control button in the action row. */
+  actionDisabled?: boolean;
+  reasonText?: string;
+  onlyButtonInRow?: boolean;
+  /* issue #791: waiting_iaa_confirmation is the only decision point where
+     both "start official run" and "add next round" are offered side by
+     side, both enabled regardless of IAA result (FR-010o-3). */
+  secondaryButton?: { selector: string; text: string };
 };
 
 const RUN_CONTROL_CASES: RunControlCase[] = [
@@ -190,6 +200,9 @@ const RUN_CONTROL_CASES: RunControlCase[] = [
     roundCount: 1,
     actionButton: '#publishDryRunBtn',
     actionText: '新增試標回合 R2',
+    actionDisabled: true,
+    reasonText: '本回合全部提交並完成 IAA 後才能新增下一回合',
+    onlyButtonInRow: true,
   },
   {
     status: 'waiting_iaa_confirmation',
@@ -198,7 +211,7 @@ const RUN_CONTROL_CASES: RunControlCase[] = [
     roundCount: 1,
     actionButton: '#publishOfficialRunBtn',
     actionText: '開始正式標記',
-    absentButton: '#publishDryRunBtn',
+    secondaryButton: { selector: '#publishDryRunBtn', text: '新增試標回合 R2' },
   },
   {
     status: 'official_run_in_progress',
@@ -305,6 +318,21 @@ test.describe('Task detail profile mapping', () => {
       await expect(page.locator('#statusStepper .step-current .step-label-wrap')).toHaveText(rc.activeStepLabel);
       await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(rc.roundCount);
       await expect(page.locator(rc.actionButton)).toHaveText(rc.actionText);
+      if (rc.actionDisabled) {
+        await expect(page.locator(rc.actionButton)).toBeDisabled();
+      }
+      if (rc.reasonText) {
+        await expect(page.locator('#publishActionRow')).toContainText(rc.reasonText);
+      }
+      if (rc.onlyButtonInRow) {
+        await expect(page.locator('#publishActionRow button')).toHaveCount(1);
+      }
+      if (rc.secondaryButton) {
+        await expect(page.locator(rc.actionButton)).toBeEnabled();
+        const secondary = page.locator(rc.secondaryButton.selector);
+        await expect(secondary).toHaveText(rc.secondaryButton.text);
+        await expect(secondary).toBeEnabled();
+      }
       if (rc.absentButton) {
         await expect(page.locator(rc.absentButton)).toHaveCount(0);
       }

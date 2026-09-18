@@ -1,7 +1,7 @@
 ---
-功能分支: chore/772-rearchive-014-canon
+功能分支: docs/791-trial-round-from-waiting
 建立日期: 2026-04-20
-版本: 3.3.1
+版本: 4.0.0
 狀態: Draft
 ---
 
@@ -373,8 +373,8 @@ Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、�
 - 首次進入 `/task-detail` 時，頁面需有 `loading skeleton` 狀態；資料載入完成後才顯示 tab 內容。
 - `overview` 的執行控制按鈕顯示規則固定化：
   - `draft`：顯示 `新增試標回合 R1`
-  - `dry_run_in_progress`：顯示 `新增試標回合 R{trial_round+1}`
-  - `waiting_iaa_confirmation`：顯示 `開始正式標記`
+  - `dry_run_in_progress`：以**停用**狀態顯示 `新增試標回合 R{trial_round+1}`，按鈕旁以可見文字顯示原因「本回合全部提交並完成 IAA 後才能新增下一回合」（v4.0.0 修訂，issue #791）
+  - `waiting_iaa_confirmation`：`開始正式標記` 與 `新增試標回合 R{trial_round+1}` 兩者並列（v4.0.0 修訂，issue #791）
   - `official_run_in_progress`：顯示 `標記完成`
   - `completed`：不顯示執行按鈕，只顯示狀態 badge 與說明文字
 - `draft` 狀態需可調整每回合試標抽樣筆數。
@@ -447,12 +447,15 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 9. **AC-3.9**：**Given** 任務為 `official_run_in_progress` 且仍有未定案審核單位、未解決爭議或最終例外池待處置項，**When** `project_leader` 嘗試標記完成，**Then** 系統阻擋轉換為 `completed` 並逐項列出未滿足的前置條件（FR-008b）。
 10. **AC-3.10**：**Given** 抽樣設定 `min_annotators = 3` 且任務僅有 2 位 `membership_status = active` 的標記員，**When** `project_leader` 嘗試發布試標回合，**Then** 系統阻擋發布並顯示標記員「還差 1 位」的缺口訊息（FR-010t）。
 11. **AC-3.11**：**Given** 任務有 3 位 `membership_status = active` 的標記員且扣除試標後剩餘 5 筆正式標記樣本，**When** `project_leader` 開始正式標記，**Then** 系統依輪流分派建立 assignment，每筆樣本恰指派一位標記員，且任兩位標記員的分派筆數差距不超過 1（FR-010f-4）。
-12. **AC-3.12**：**Given** 任務已完成 R1 試標且處於 `dry_run_in_progress`，**When** `project_leader` 點擊 `新增試標回合 R2` 但未填寫 `prior_round_findings` 與 `guideline_change_summary`、也未勾選 `no_change`，**Then** 系統阻擋建立並逐欄提示缺項；補齊必填欄位（或勾選 `no_change` 並填寫 `no_change_reason`）後方可成功建立 R2，且新建立的 `TrialRound.sampling_value` 等於本輪實際建立之試標清單筆數（FR-017、FR-010f-2）。
+12. **AC-3.12**（**v4.0.0 修訂**，issue #791）：**Given** 任務已完成 R1 試標且處於 `waiting_iaa_confirmation`，**When** `project_leader` 點擊 `新增試標回合 R2` 但未填寫 `prior_round_findings` 與 `guideline_change_summary`、也未勾選 `no_change`，**Then** 系統阻擋建立並逐欄提示缺項，任務狀態維持 `waiting_iaa_confirmation`；補齊必填欄位（或勾選 `no_change` 並填寫 `no_change_reason`）後方可成功建立 R2，任務狀態轉為 `dry_run_in_progress`，且新建立的 `TrialRound.sampling_value` 等於本輪實際建立之試標清單筆數（FR-017、FR-010f-2）。
 13. **AC-3.13**：**Given** 某任務有 2 項 `official_run` 待處置例外，**When** `project_leader` 開啟 `annotation-progress`，**Then** 「最終例外池」區塊標題顯示 2 項待處置，逐列呈現樣本 ID、標記員、審核員、爭議輸出類型、仲裁者與其理由，點擊任一列進入該爭議項的處置畫面且網址攜帶完整審核單位身分；`reviewer` 開啟同頁時不存在此區塊（FR-018，issue #688）。
+14. **AC-3.14**（**v4.0.0 新增**，issue #791）：**Given** 任務處於 `dry_run_in_progress`（不論目前是 R1 或其後任一回合），**When** `project_leader` 檢視 Overview「任務狀態與執行控制」，**Then** 操作列顯示停用狀態的 `新增試標回合 R{trial_round+1}`，按鈕旁可見原因文字「本回合全部提交並完成 IAA 後才能新增下一回合」，且不出現其他執行控制按鈕；點擊該按鈕不建立任何回合，任務狀態維持 `dry_run_in_progress`（FR-013）。
+15. **AC-3.15**（**v4.0.0 新增**，issue #791）：**Given** 任務處於 `waiting_iaa_confirmation` 且已完成 R1，最新回合 IAA 未達目標門檻，**When** `project_leader` 檢視 Overview「任務狀態與執行控制」，**Then** 操作列同時顯示 `開始正式標記` 與 `新增試標回合 R2`，兩者皆可點擊；IAA 未達標只以警示樣式呈現，不停用或隱藏任一按鈕（FR-013、FR-010o-3）。
+16. **AC-3.16**（**v4.0.0 新增**，issue #791）：**Given** 任務自 `waiting_iaa_confirmation` 成功建立 R2，任務狀態已轉為 `dry_run_in_progress`，且 R2 尚無任何標記提交，**When** 系統依 FR-008a 評估試標完成條件，**Then** 任務狀態維持 `dry_run_in_progress`，直到 R2 的標記作業依 `DRY_RUN_COMPLETION_RULE` 全部完成才轉為 `waiting_iaa_confirmation`（FR-013、FR-008a）。
 
 **行為規則**：
 
-- 狀態轉換必須符合 `TASK_STATUSES` 順序，不允許跳階。
+- 狀態轉換必須符合 `TASK_STATUSES` 順序，不允許跳階。合法轉換以 ADR-022 轉換表為準；表列的回溯轉換不視為跳階（v4.0.0 釐清，issue #791）。
 - 任務建立後，task-detail 必須先顯示由 `task-new` 帶入的 creator membership、抽樣與資料隔離設定，再允許後續成員調整。
 - Dry Run 完成條件採 `DRY_RUN_COMPLETION_RULE`；成員完成度僅計入 `membership_status = active` 的 `annotator`，但未指派 Dry Run 標記作業也必須清零。
 - 只要仍有任一位 `membership_status = active` 的 `annotator` 未完成其被指派的 Dry Run 樣本，或仍存在未指派 Dry Run 標記作業，任務狀態不得由 `dry_run_in_progress` 轉為 `waiting_iaa_confirmation`。
@@ -598,7 +601,7 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 - **FR-011**：頁面必須支援 `RWD_VIEWPORTS`，在 `<= MOBILE_BP` 仍可完成核心查看與操作。
 - **FR-011a**：在 `375px`、`768px`、`1440px` 三個 viewport，必須可完成：進入詳情、tab 切換、run 發布權限顯示、`project_leader` 成員管理、`work-log` 篩選、匯出操作，且不得資訊重疊。
 - **FR-012**：Prototype 必須提供三類畫面狀態：`loading`、`empty`、`error`，且各 tab 至少有一組可展示案例。
-- **FR-013**：Run 控制按鈕顯示邏輯需與任務狀態一一對應，且按鈕必須與 `達標條件` 位於同一操作列；`draft` 狀態顯示 `新增試標回合 R1`，`dry_run_in_progress` 狀態顯示 `新增試標回合 R{n}`，`waiting_iaa_confirmation` 狀態顯示 `開始正式標記`，`official_run_in_progress` 狀態顯示 `標記完成`；不得同時顯示語意衝突的操作。點擊 `新增試標回合 R{n}`（`n >= 2`）時，若未通過 FR-017 之修訂紀錄必填檢查，系統必須阻擋建立並逐欄列出缺項提示，阻擋樣式比照 FR-010t（逐項顯示未滿足條件，不得靜默忽略點擊）。
+- **FR-013**（**v4.0.0 修訂**，對應 AC-3.12、AC-3.14、AC-3.15、AC-3.16、SC-047，issue #791）：Run 控制按鈕顯示邏輯需與任務狀態一一對應，且按鈕必須與 `達標條件` 位於同一操作列；`draft` 狀態顯示 `新增試標回合 R1`，`dry_run_in_progress` 狀態以**停用**狀態顯示 `新增試標回合 R{trial_round+1}` 並於按鈕旁以可見文字顯示原因「本回合全部提交並完成 IAA 後才能新增下一回合」，`waiting_iaa_confirmation` 狀態同時顯示 `開始正式標記` 與 `新增試標回合 R{trial_round+1}`，`official_run_in_progress` 狀態顯示 `標記完成`，`completed` 狀態不顯示執行控制按鈕。(1) **回合必須先結束才能開下一回合**：`dry_run_in_progress` 下該按鈕必須維持可見但停用，點擊不得建立回合、不得改變任務狀態，原因文字不得只放在 tooltip；下一回合只能在目前回合依 FR-008a 完成、任務自動進入 `waiting_iaa_confirmation` 之後發起。此停用依據是本回合尚未結束，與 IAA 是否達標無關，不違反 FR-010o-3。(2) **待 IAA 確認是唯一的決策點**：`開始正式標記` 與 `新增試標回合 R{trial_round+1}` 是同一決策點上的互斥選項，任一成功後操作列改依新狀態呈現，不構成語意衝突的操作；兩者不得因 IAA 未達標而停用或隱藏（FR-010o-3）。(3) **新狀態轉換**：自 `waiting_iaa_confirmation` 成功建立 `新增試標回合 R{n}`（`n >= 2`）時，任務狀態必須轉為 `dry_run_in_progress`；回合清單建立（FR-010f-2）與狀態轉換視為同一動作，不得出現清單已建立但狀態未轉換、或狀態已轉換但清單未建立的可觀察中間狀態；轉換後不得在新回合任何一筆標記提交之前即因 FR-008a 立即轉回 `waiting_iaa_confirmation`，FR-008a 對新回合的評估必須涵蓋本回合剛建立的標記作業。(4) **修訂紀錄必填檢查不變**：點擊 `新增試標回合 R{n}`（`n >= 2`）時，若未通過 FR-017 之修訂紀錄必填檢查，系統必須阻擋建立並逐欄列出缺項提示，阻擋樣式比照 FR-010t（逐項顯示未滿足條件，不得靜默忽略點擊）；被阻擋時任務狀態維持 `waiting_iaa_confirmation`。(5) **狀態機來源**：`waiting_iaa_confirmation → dry_run_in_progress` 轉換必須同步列入 `docs/adr/022-task-state-machine-location.md` 的 Transition Table 與 `ALLOWED_TRANSITIONS`；`dry_run_in_progress → dry_run_in_progress`（進行中另開回合）不得列入。(6) **揭露時點不變**：`annotation/015-annotation-workspace` FR-096 之試標歷史回饋揭露規則不因本條修改；R{n+1} 只能在 R{n} 進入 `waiting_iaa_confirmation` 之後建立，R{n+1} 進行中其本身資料仍一律不揭露。(7) **回溯轉換不是跳階**：使用者故事 3 行為規則「不允許跳階」與 SC-004「遵循定義順序」以 ADR-022 轉換表判定；表列的回溯轉換（含本條新增者）不視為跳階。
 - **FR-014**：Overview 必須支援 `OVERVIEW_EDITABLE_FIELDS` 的編輯能力，且僅 `project_leader` 在 `draft` 狀態可儲存變更。
 - **FR-014a**：Overview 編輯需提供各區塊 `編輯 / 儲存 / 取消` 的明確互動流程；取消後需還原未儲存內容。
 - **FR-014b**：系統必須支援重新上傳資料集與重設標記設定檔，並在儲存前揭露影響範圍。
@@ -734,7 +737,7 @@ flowchart LR
 - **SC-001c**：`member-management` 可同時支援「搜尋平台成員加入」與「Email 邀請加入」兩種流程；Email 邀請成功後，新成員會以 `invited` 狀態顯示於目前成員清單。
 - **SC-002**：`reviewer` 可唯讀存取授權內容，且 `work-log` 僅顯示本人資料。
 - **SC-003**：`annotator` 不能進入 `/task-detail`，會被導向 `/task-list` 並顯示無權限提示。
-- **SC-004**：任務狀態轉換遵循定義順序，且僅在沒有未指派 Dry Run 標記作業、所有 `membership_status = active` 的 `annotator` 完成各自全部試標樣本後，才可由 `dry_run_in_progress` 自動進入 `waiting_iaa_confirmation` 並產生提醒。
+- **SC-004**：任務狀態轉換遵循定義順序，且僅在沒有未指派 Dry Run 標記作業、所有 `membership_status = active` 的 `annotator` 完成各自全部試標樣本後，才可由 `dry_run_in_progress` 自動進入 `waiting_iaa_confirmation` 並產生提醒。合法轉換以 ADR-022 轉換表為準；表列的回溯轉換不視為跳階（v4.0.0 釐清，issue #791）。
 - **SC-004a**：被 `project_leader` 明確排除的標記作業不會影響完成率或標記分布統計；若屬 Dry Run 亦不影響 IAA。匯出時僅在 metadata 中保留排除摘要，供審計追溯。
 - **SC-005**：當 `isolation_enabled = true` 時，匯出與查詢結果中 Dry Run / Official Run 資料不會混入；當 `isolation_enabled = false` 時，系統可清楚揭露風險狀態與審計紀錄。
 - **SC-006**：`reviewer` 不可見 `member-management`，且直連嘗試會導回 `overview`。
@@ -781,6 +784,7 @@ flowchart LR
 - **SC-044**：`task-detail` 的頁籤與四個頁籤的清單檢視狀態可經網址重現與分享——篩選或翻頁後對應查詢參數即時寫回且不產生瀏覽歷史紀錄，貼上該網址於新分頁開啟時畫面與親自操作結果一致；帶有不存在的篩選值（如 `ar_stage=r99`）或超出總頁數的頁碼（如 `ar_page=999`）時各自靜默回退為預設值並正常渲染清單，不出現空白清單、錯誤訊息或載入中斷（FR-019，issue #726）。
 - **SC-045**：`task-detail` 的匯出實作以原始碼掃描檢視時，序列的唯一產生入口為共用模組的推導函式，頁面內不存在自行拼接標記前綴、自行判斷 span 與 token 邊界或複製方案轉換表的程式碼；兩組選擇器的選項由模組匯出的方案與單位常數渲染，頁面內不存在第二份硬編的選項清單；`entity_recognition` 任務的匯出路徑未呼叫該推導函式（FR-020，issue #742）。
 - **SC-046**：以 Playwright 對同一筆匯出記錄，在變更頁面篩選、匯出對話框選項與介面語言之後執行重新下載，重建檔與原始下載檔逐字元相同的比率為 100%，且每次重新下載後匯出記錄表列數增量為 0（FR-021，issue #772）。
+- **SC-047**（**v4.0.0 新增**，issue #791）：以 `project_leader` 逐一開啟 `TASK_STATUSES` 五種狀態各一個任務，可點擊的 `新增試標回合` 按鈕恰只出現在 `draft`（R1）與 `waiting_iaa_confirmation`（R{trial_round+1}），`dry_run_in_progress` 只出現停用按鈕並附原因文字，5／5 符合 FR-013 對照表；且任一任務經歷 N 個試標回合（N >= 2）時，每一個 R{n}（`n >= 2`）的建立都恰對應一次 `waiting_iaa_confirmation → dry_run_in_progress` 轉換，不存在任何在 `dry_run_in_progress` 期間建立的回合（FR-013）。
 
 ---
 
@@ -788,6 +792,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 4.0.0 | 2026-09-18 | **BREAKING：新增試標回合只能自 `waiting_iaa_confirmation` 發起（issue #791，OpenSpec change `task-detail-trial-round-from-waiting`，MAJOR）**：v3.x 之 FR-013 與 Prototype 互動規格讓 `dry_run_in_progress` 顯示 `新增試標回合 R{n}`，使專案負責人能在目前回合尚未結束時另開下一回合；本版收回此既有行為（維護者 2026-09-18 裁定屬破壞性變更）。**修訂**：FR-013 原地改寫為五狀態對照表加 (1)–(7) 七點（`dry_run_in_progress` 停用並顯示原因、`waiting_iaa_confirmation` 並列 `開始正式標記` 與 `新增試標回合 R{trial_round+1}`、新轉換 `waiting_iaa_confirmation → dry_run_in_progress` 與清單建立同為一個動作、修訂紀錄必填檢查不變、狀態機來源、FR-096 揭露時點不變、回溯轉換不是跳階）；AC-3.12 前提由 `dry_run_in_progress` 改為 `waiting_iaa_confirmation` 並補上阻擋時與成功後的狀態；Prototype 互動規格按鈕列 `dry_run_in_progress`／`waiting_iaa_confirmation` 兩項同步。**新增**：AC-3.14（試標進行中按鈕停用並顯示原因）、AC-3.15（待確認同時提供兩個按鈕且不因 IAA 未達標停用）、AC-3.16（新回合在任何提交前不自動轉回待確認）、SC-047。**釐清**：使用者故事 3 行為規則「不允許跳階」與 SC-004 原地補上「合法轉換以 ADR-022 轉換表為準；表列的回溯轉換不視為跳階」，未新增編號。`docs/adr/022-task-state-machine-location.md` 同步新增該轉換。FR-008、FR-008a、FR-017 與 `annotation/015-annotation-workspace` FR-096 條文不動；FR-017 修訂紀錄阻擋在 prototype 尚未落地，另由 issue #838 追蹤；FR-096 回饋揭露落差由 issue #834 追蹤。 |
 | 3.3.1 | 2026-09-18 | **釐清 FR-021 第 (6) 項其一之必要欄位口徑（issue #801，Lightweight Path，PATCH）**：v3.3.0 之條文寫「快照缺少第 (3) 項與 FR-010i-2 所列**任一**必要欄位」即停用該列「下載」，但 FR-010i-2 的列舉含 `scope_label`／`export_type`，而 issue #772 change 之 `design.md` D2／Q6 已定案本次不把兩者搬進快照（兩者只影響匯出記錄表顯示、不影響檔案內容）。照字面讀，v3.3.0 之後的每一筆紀錄都缺這兩個欄位、按鈕應全部停用，與 FR-021 本意（以快照重建檔案）及 Q6 定案矛盾。本版把該項收斂為「重建檔案內容所需的欄位」，明列 FR-010i-2 中屬此範圍者為 `export_format`／`run_stage`／`submission_status`／`annotator_scope`，並明載 `scope_label`／`export_type` 不屬必要欄位。**行為不變**（`isArExportSnapshotComplete()` 既有檢查即為本版口徑），未新增或移除任何 FR／AC／SC 編號，FR-010i-2 與 FR-020 條文本身不動。若維護者認為 FR-010i-2 字面要求兩欄位必須入快照，依 Q6 之指示另開 issue 處理。 |
 | 3.3.0 | 2026-09-17 | **新增 FR-021 匯出記錄重新下載依條件快照重建且不新增紀錄（issue #772，OpenSpec change `task-detail-export-history-redownload`，MINOR）**：FR-010i-2 已要求匯出記錄保存條件快照、重新下載以快照為唯一依據，但未定義按下「下載」後的行為，原型的下載按鈕亦無任何作用；本版補上讀取側。**新增**：**FR-021** 全條——重新下載只讀快照（不讀畫面篩選與對話框選項、不開對話框、不回寫篩選）、不新增匯出記錄、快照另存審核員／審核狀態篩選值、完整精度匯出時間、匯出人與介面語言、同次匯出 metadata 與檔名共用同一匯出時間、重建檔與原檔逐字元相同（全部任務類型、兩種格式）、沿用同一條匯出內容產生路徑且不增加推導函式呼叫點、不顯示對齊擴張摘要、缺快照時停用「下載」並附中文說明、詞級紀錄之切詞引擎不可用時依模組回傳值阻擋並顯示中文原因；新增 AC-1.14、AC-1.15、AC-1.16（使用者故事 1）與 SC-046。**未變更**：既有 FR／AC／SC 條文全部維持原樣（含 FR-010i-2、FR-020），本次為純新增。回寫時修正 propose 期 delta 兩處引用：「新記錄插入表格最前列」與「任何會影響匯出結果集合的條件」兩句皆出自使用者故事 1 介面定義「匯出記錄表」區塊，而非 FR-010i-2 本文（衍生視圖同步更正）。詳見 `openspec/changes/archive/2026-09-17-task-detail-export-history-redownload/design.md`。 |
 | 3.2.0 | 2026-09-16 | **新增 FR-020 `sequence_tagging` 匯出對話框與序列匯出欄位（issue #742，OpenSpec change `task-detail-seq-tagging-export-dialog`，MINOR）**：`dataset/017` v3.0.0 的 FR-041／FR-042 已定義自 `spans[]` 推導序列標記的契約，並於 FR-042 第 3 點將擴張摘要的畫面落地指名給本規格，本版承接。**新增**：**FR-020** 全條——唯一推導入口（共用純函式模組，頁面不得自拼前綴或複製轉換表）、方案／詞元單位選擇器（值域與預設取自 017 四個 `EXPORT_*` 規格常數）、`JSON` 與 `JSON-MIN` 同步寫入 `tagging_scheme`／`token_unit` 與詞級專屬的 tokenizer metadata、方案不寫回任務 config、條件快照保存匯出選項、詞級「N 段標記因對齊被擴張」可展開摘要、缺 tokenizer 版本時阻擋且不留紀錄、`entities[]` 實體型結果不套用序列推導；新增 AC-1.10、AC-1.11、AC-1.12、AC-1.13（使用者故事 1）與 SC-045；規格相依性表 017 上游列補上匯出推導契約。**未變更**：既有 FR／AC／SC 條文全部維持原樣（`entity_recognition` 匯出欄位仍全文依 FR-015i-3），本次為純新增，無移除、無語意反轉。回寫時修正 propose 期 delta 兩處引用：「SSoT」出自 017 FR-041 本文而非第 1 點；017 FR-041 未指名模組路徑，改為引用第 2 點「純函式」並將路徑標為原型落點。詳見 `openspec/changes/archive/2026-09-16-task-detail-seq-tagging-export-dialog/design.md`。 |
