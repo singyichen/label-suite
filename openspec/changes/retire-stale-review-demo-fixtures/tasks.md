@@ -15,10 +15,10 @@
 
 **故事目標**（SC-004W）：`ofm-04-majority-converged` 與 `ofm-05-all-divergent` 各登錄三位審核員同審一個 `official_run` 單位，違反 FR-093「每個審核單位恰有一位指派審核員」，使該示範任務的橫幅無法區辨任何現行審核情境。兩個槽位改為承接整組零覆蓋的決策值 `bypass`，以及自 T017 遷入的仲裁「兩者皆非」→ 最終例外池路徑。
 
-- [ ] 1.1 撰寫 `design/prototype/tests/annotation/issue-815-review-demo-seed-model-fit.spec.ts` 作為 Red 契約，釘住四件事：T016 的每一個 `official_run` 審核單位恰有一位審核員、整組示範種子對三個決策值皆有至少一列見證、T016 中存在一列其仲裁裁定為兩者皆非且該單位維持爭議中並列入最終例外池（綁定 T016 而非整組，因 T017 既有種子今日即滿足此條件且將於群組 2 移除）、以及 T016 的種子中不存在任何審核員層級的退回決策（防回歸守門；T014 `dry-05-pending-review` 為本單非目標，另以 Bug 單追蹤）；型別宣告必須使用 local cast 而非第二份 `declare global`（重複宣告會撞 TS2717）。先提交此單檔再跑測試，expected failure 必須是前三項同時紅、第 4 項今日為綠，並保存 command、exit 與失敗訊息。 [@senior-qa]
-- [ ] 1.2 Green：於 `design/prototype/pages/annotation/annotation-workspace.data.js` 改寫 T016 的第四、第五列種子——前者改名並改為單一審核員之 bypass 決策（帶非空理由、刻意不帶答案值），後者改名並改為單一審核員 modify 後仲裁裁定兩者皆非（沿用既有的仲裁退回欄位形狀）；兩列原本的多審核員結構整個移除，不留任何欄位殘留。 [@senior-frontend]
-- [ ] 1.3 同步 docs 副本：於 `docs/product/example-data/review-flow-official-multi.json` 改寫兩筆樣本的 id 與文字使其與 prototype 種子逐列一致，並一併修正既有漂移的第一筆 id（docs 側目前寫的是與 prototype 不符的舊名）。 [@senior-frontend]
-- [ ] 1.4 執行 code/test gate：於 `design/prototype/` 帶本 worktree 專屬 `PW_PORT` 跑 typecheck 與 Playwright，兩者預期 exit `0`，且必須分開記錄——它們是兩道獨立閘門。 [@main]
+- [x] 1.1 撰寫 `design/prototype/tests/annotation/issue-815-review-demo-seed-model-fit.spec.ts` 作為 Red 契約，釘住四件事：T016 的每一個 `official_run` 審核單位恰有一位審核員、整組示範種子對三個決策值皆有至少一列見證、T016 中存在一列其仲裁裁定為兩者皆非且該單位維持爭議中並列入最終例外池（綁定 T016 而非整組，因 T017 既有種子今日即滿足此條件且將於群組 2 移除）、以及 T016 的種子中不存在任何審核員層級的退回決策（防回歸守門；T014 `dry-05-pending-review` 為本單非目標，另以 Bug 單追蹤）；型別宣告必須使用 local cast 而非第二份 `declare global`（重複宣告會撞 TS2717）。先提交此單檔再跑測試，expected failure 必須是前三項同時紅、第 4 項今日為綠，並保存 command、exit 與失敗訊息。 — Red：`eaec9128`＋`c3773c63`；`playwright test tests/annotation/issue-815-review-demo-seed-model-fit.spec.ts` exit `1`（3 failed／1 passed：`ofm-04` 審核員 3 位、`bypass` 無見證、T016 無仲裁兩者皆非列；第 4 項守門為綠） [@senior-qa]
+- [x] 1.2 Green：於 `design/prototype/pages/annotation/annotation-workspace.data.js` 改寫 T016 的第四、第五列種子——前者改名並改為單一審核員之 bypass 決策（帶非空理由、刻意不帶答案值），後者改名並改為單一審核員 modify 後仲裁裁定兩者皆非（沿用既有的仲裁退回欄位形狀）；兩列原本的多審核員結構整個移除，不留任何欄位殘留。 — Green：`06b38be4`（`ofm-04-reviewer-bypass`／`ofm-05-final-exception`；既有回歸僅換 id 或目標，`17f2b4ea` 將 issue #688 空池測試改指 T015） [@senior-frontend]
+- [x] 1.3 同步 docs 副本：於 `docs/product/example-data/review-flow-official-multi.json` 改寫兩筆樣本的 id 與文字使其與 prototype 種子逐列一致，並一併修正既有漂移的第一筆 id（docs 側目前寫的是與 prototype 不符的舊名）。 — `6d37d67e` [@senior-frontend]
+- [x] 1.4 執行 code/test gate：於 `design/prototype/` 帶本 worktree 專屬 `PW_PORT` 跑 typecheck 與 Playwright，兩者預期 exit `0`，且必須分開記錄——它們是兩道獨立閘門。 — typecheck exit `0`；`PW_PORT=8947` Playwright 全量 exit `0`（1734 passed） [@main]
 
 ---
 
