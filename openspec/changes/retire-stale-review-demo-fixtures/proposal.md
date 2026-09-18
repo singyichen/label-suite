@@ -38,8 +38,8 @@ Issue #815。四個審核流程示範任務（T014–T017）的種子列建於 v
 - **修訂 FR-093（審核指派粒度）**：補一則 scenario，把「每個審核單位恰一位指派審核員」這條規則的約束對象明確擴及示範種子資料本身。
 - **新增兩則 AC**（gate 4 回寫正典時編號，接續各章現行最大者）：一則釘住示範種子的合法性與決策值覆蓋、一則釘住雙份副本一致性檢查。
 - **種子汰換**：`ofm-04-majority-converged` 改為 `bypass` 決策示範、`ofm-05-all-divergent` 改為承接 `oft-01` 的仲裁「兩者皆非」→ 最終例外池示範（兩者皆改名），T017／`review-flow-official-tie` 整組移除。
-- **消費端同步**：6 份 prototype 種子登錄檔各刪一列 T017 登錄。
-- **任務設定文案**：四份 `docs/product/task-configs/review-flow-*.json` 的 `typical_tasks` 字串移除 `min_reviewers=N`、「多數決」、「偶數平手」等已廢止語彙。
+- **消費端同步**：7 份 prototype 種子登錄檔各刪一列 T017 登錄（含 `dashboard.assignments.js`）。
+- **任務設定文案**：三份存活的 `docs/product/task-configs/review-flow-*.json`（平手示範那份整份刪除）的 `typical_tasks` 字串移除 `min_reviewers=N`、「多數決」、「偶數平手」等已廢止語彙。
 - **一致性閘門**：新增一支比對 `docs/product/example-data` 與 prototype 種子的檢查腳本，並依 CLAUDE.md 的兩向契約同時登錄 `scripts/ci-jobs.tsv` 與 CI job。
 - **正典回寫**：015 為主（FR-044、FR-093、兩則新 AC、`:21` 示例基線、`:1031` 種子來源註、SC-004W、AC-1.22／AC-1.23／AC-1.24／AC-4.39／AC-4.40 的 Given 前提），010（示例基線表與筆數）與 `specs/dashboard/012-dashboard/spec.md`（FR-011D／FR-011E／SC-024 的 T014–T017 範圍）為下游同步，三份各自 bump 版號與補 Changelog 一列。
 
