@@ -1870,12 +1870,18 @@
    * actions on the merged trail that count as "this sample's dry-run review
    * is settled" -- the same closed set annotation-history.js's
    * ACTION_LABEL/BADGE_CLASS render, minus the ones that never conclude a
-   * unit (submitted/draft_saved/skipped/bypassed/rejected). Reused as-is
-   * rather than re-deriving it, so a new terminal action added there is not
-   * silently invisible here. */
+   * unit (submitted/draft_saved/skipped/modified/bypassed/rejected). Reused
+   * as-is rather than re-deriving it, so a new terminal action added there
+   * is not silently invisible here.
+   *
+   * `modified` and `bypassed` are excluded together, because FR-092 gives
+   * them the same standing: a reviewer's `modify` and `bypass` decisions do
+   * not take effect, they only push the item into the dispute pool, and it
+   * is the arbiter's `adjudicated` that settles it. Treating `modified` as
+   * a settling action would feed the reviewer's proposed-but-not-effective
+   * value back to the annotator as the "finalized result" (issue #804). */
   var DRY_RUN_FEEDBACK_SOURCE_ACTIONS = {
     accepted: true,
-    modified: true,
     adjudicated: true,
     exception_resolved: true,
     excluded: true,
