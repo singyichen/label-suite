@@ -1,7 +1,7 @@
 # dataset/017-dataset-analysis-detail Specification
 
 ## Purpose
-Dataset Analysis Detail（統計總覽 + 品質監控雙 Tab，Project Leader／Reviewer）的 derived view。正典為 `specs/dataset/017-dataset-analysis-detail/spec.md`（v2.2.2）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR/AC ID，不改動其正典措辭。收錄 change `seq-tagging-span-export-metrics`（issue #581）之 FR-009L／FR-012L／FR-013／FR-024A／FR-035／FR-036／FR-039（修訂）；此七條於該 change archive 前以正典 v2.2.2 原文建立基線，使 MODIFIED 有可比對的前值，archive 後基線內容即被完整取代。基線的 scenario 標題刻意採用 delta 的新標題——`openspec archive` 以標題比對判定 MODIFIED 是否丟失既有 scenario，標題不一致即中止；標題以下的條文仍為 v2.2.2 原文。
+Dataset Analysis Detail（統計總覽 + 品質監控雙 Tab，Project Leader／Reviewer）的 derived view。正典為 `specs/dataset/017-dataset-analysis-detail/spec.md`（v3.0.1）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR/AC ID，不改動其正典措辭。收錄 change `seq-tagging-span-export-metrics`（issue #581）之 FR-009L／FR-012L／FR-013／FR-024A／FR-035／FR-036／FR-039（修訂）；change `dataset-quality-entity-value-alignment`（issue #783）之 FR-008／FR-025（新收錄，實體欄位與常數值域對齊）與 FR-039（修訂，IAA 計算未結束不是 IAA 結果）；此七條於該 change archive 前以正典 v2.2.2 原文建立基線，使 MODIFIED 有可比對的前值，archive 後基線內容即被完整取代。基線的 scenario 標題刻意採用 delta 的新標題——`openspec archive` 以標題比對判定 MODIFIED 是否丟失既有 scenario，標題不一致即中止；標題以下的條文仍為 v2.2.2 原文。
 
 ## Requirements
 
