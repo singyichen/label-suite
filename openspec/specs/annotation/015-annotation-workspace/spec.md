@@ -215,6 +215,12 @@ Reviewer 審查列 MUST 僅呈現**受審標記員本人**的提交，MUST NOT �
 - **WHEN** 該樣本的標記員回到工作區
 - **THEN** 該樣本 MUST NOT 出現於其待辦，狀態 MUST NOT 回退為 `待標記`，畫面上不存在重標理由橫幅
 
+#### Scenario: 示範審核單位的 sample id 不得編碼已廢止的審核狀態詞
+- **GIVEN** `run_type = official_run` 的審核流程示範任務 T016，其審核單位種子同時被 workspace 種子、task-detail 樣本清單與 `docs/product/example-data` fixture 三處消費
+- **WHEN** 任一消費端列舉該審核單位的 `sample_id`
+- **THEN** 該 `sample_id` MUST NOT 含 v5.0.0 已自 `REVIEW_UNIT_STATUS` 移除的中間狀態詞（`approved`、`modified`），MUST 改以該情境實際發生的審核行為命名，使 id 與 FR-051 現行三態語彙一致
+- **AND** 同一個 id 的每一處出現（種子物件的 map key 與資料列欄位、樣本清單、fixture、Playwright 測試與正典條文引文）MUST 於同一次變更內同步改名；只改其中一部分會使該筆種子查無對應答案而整列不渲染，因此部分改名 MUST NOT 發生
+
 ### Requirement: FR-051 審核單位定址與狀態機
 
 審核單位（`ReviewUnit`）MUST 以 `REVIEW_UNIT_DIMENSIONS`（`sample_id × annotator_id × run_type`）定址——同一樣本由 N 位標記員標記即為 N 個各自獨立、狀態互不影響的審核單位。此定址於 `dry_run` 與 `official_run` 完全一致，MUST NOT 依 `run_type` 分流。
