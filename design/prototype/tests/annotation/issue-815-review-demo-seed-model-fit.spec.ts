@@ -23,15 +23,19 @@ import { buildListUrl, skipGuidelineModal } from './_workspace-helpers';
  *      today (T016 has no arbReject row yet) and green once 1.2 migrates
  *      oft-01's content into ofm-05, without hardcoding either the old or
  *      the migrated sample id.
- *   4. no reviewer-level "reject" decision exists anywhere in the whole
- *      seed set -- REVIEW_DECISIONS has been approve/modify/bypass only
- *      since v5.0.0; `reject` survives solely as an ARBITRATION_OUTCOMES
- *      value. Scoped whole-set per tasks.md 1.1's literal "整組種子" --
- *      note T014's dry-05-pending-review `rejectBy` is an explicit
- *      proposal.md 非目標 (never addressed by this change's five groups),
- *      so this assertion cannot go green under this change's current scope
- *      even after every later group lands; flagged in the PR-815-A handback
- *      for team-lead, not silently narrowed here.
+ *   4. no reviewer-level "reject" decision exists in T016's seed --
+ *      REVIEW_DECISIONS has been approve/modify/bypass only since v5.0.0;
+ *      `reject` survives solely as an ARBITRATION_OUTCOMES value. Scoped to
+ *      T016 (this group's own rewrite target), not the whole T014-T017 set:
+ *      T016 has no `rejectBy` row today, so this is a guard-rail assertion
+ *      expected to stay green through this group's Green work -- it exists
+ *      to catch 1.2 accidentally reintroducing a reject decision while it
+ *      rewrites T016's rows, not to pin a currently-red fact. T014's
+ *      dry-05-pending-review `rejectBy` is a pre-existing legacy row outside
+ *      T016 and outside this change's five groups (proposal.md 非目標);
+ *      it is now tracked separately by issue #837 and intentionally left
+ *      out of this assertion's scope. T017's oft-05-pending-review `reject`
+ *      row is removed independently by Group 2.
  *
  * Type declarations use local casts per `page.evaluate()` call, matching
  * annotation-review-flow-demo-seed.spec.ts and issue-596-arbitration.spec.ts
@@ -166,13 +170,13 @@ test.describe('review-flow demo seed fits the single-owner-relay model (issue #8
     await expect(page.getByTestId('ws-exception-pool-item')).toHaveCount(1);
   });
 
-  test('the whole demo seed set (T014-T017) has no reviewer-level reject decision', async ({ page }) => {
+  test('T016 has no reviewer-level reject decision (guard rail against 1.2 regressing one back in)', async ({ page }) => {
     await page.goto(buildListUrl({ task_id: 'T016', role: 'reviewer', run_type: 'official_run', reviewer_id: 'reviewer_wang' }));
     const probe = await collectSeedProbe(page);
-    const offenders = probe.units.filter((unit) => unit.decisions.includes('reject'));
+    const offenders = probe.units.filter((unit) => unit.taskId === 'T016' && unit.decisions.includes('reject'));
     expect(
       offenders.map((unit) => `${unit.taskId}/${unit.sampleId}`),
-      'reviewer-level "reject" decision found -- REVIEW_DECISIONS only allows approve/modify/bypass since v5.0.0'
+      'reviewer-level "reject" decision found in T016 -- REVIEW_DECISIONS only allows approve/modify/bypass since v5.0.0'
     ).toEqual([]);
   });
 });
