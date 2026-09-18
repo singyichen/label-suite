@@ -30,14 +30,20 @@ test.describe('Task detail annotation results for T014-T017 (issue #393)', () =>
     await expect(page.locator('.ar-expand-btn')).toHaveCount(5);
   });
 
-  test('T016 (three-reviewer majority demo) shows a finalized row for the converged majority sample', async ({ page }) => {
+  /* issue #815 (retire-stale-review-demo-fixtures): the row this test used
+     to target, ofm-04-majority-converged, seeded a three-reviewer majority
+     vote FR-093 cannot produce and has been rewritten to a single-reviewer
+     `bypass` demo, which is disputed rather than finalized. Retargeted to
+     ofm-02-reviewer-accepts-a, T016's simplest still-finalized single-owner
+     row (reviewer accepts the annotator's value -> finalizes on submit). */
+  test('T016 (single-owner relay demo) shows a finalized row for the reviewer-accepted sample', async ({ page }) => {
     await page.goto(`${TASK_DETAIL_URL}?task_id=T016&tab=annotation-results`);
 
     await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
     await expect(page.locator('.ar-expand-btn')).toHaveCount(5);
 
-    const majorityRow = page.locator('#arResultTableBody tr.ar-summary-row').filter({ hasText: 'ofm-04-majority-converged' });
-    await majorityRow.locator('.ar-expand-btn').click();
+    const acceptedRow = page.locator('#arResultTableBody tr.ar-summary-row').filter({ hasText: 'ofm-02-reviewer-accepts-a' });
+    await acceptedRow.locator('.ar-expand-btn').click();
     await expect(page.locator('.annotator-detail-row .badge-ar-finalized')).toBeVisible();
   });
 

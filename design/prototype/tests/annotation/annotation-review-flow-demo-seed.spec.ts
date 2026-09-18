@@ -256,8 +256,8 @@ test.describe('T016 official_run: reviewer corrects, arbitration adopts B, unit 
     const expected: Record<string, string> = {
       'ofm-02-reviewer-accepts-a::kioleemg12': '已定稿',
       'ofm-03-awaiting-arbitration::kioleemg12': '爭議中',
-      'ofm-04-majority-converged::kioleemg12': '爭議中',
-      'ofm-05-all-divergent::kioleemg12': '爭議中',
+      'ofm-04-reviewer-bypass::kioleemg12': '爭議中',
+      'ofm-05-final-exception::kioleemg12': '爭議中',
     };
     for (const [key, state] of Object.entries(expected)) {
       expect(nonCanonical.get(key), key).toBe(badgeText(state));
@@ -266,15 +266,16 @@ test.describe('T016 official_run: reviewer corrects, arbitration adopts B, unit 
 
   /* Restores the old "arbitration entries on the staged disputes" block's
      breadth for T016's 3 disputed non-canonical samples (ofm-03/04/05,
-     the modified/majority/divergent rows -- see the test above), enumerated
-     per sample rather than summarized. ofm-01 and ofm-02 are excluded: the
-     canonical slot is covered by its own describe block above and finalizes
-     (no arbitrate entry), and ofm-02 finalizes too (see the map above). */
+     the modified/bypass/final-exception rows -- see the test above),
+     enumerated per sample rather than summarized. ofm-01 and ofm-02 are
+     excluded: the canonical slot is covered by its own describe block above
+     and finalizes (no arbitrate entry), and ofm-02 finalizes too (see the
+     map above). */
   test('reviewer_chen gets a 仲裁 entry on each of ofm-03/04/05 (the disputed non-canonical samples)', async ({ page }) => {
     await page.goto(
       buildListUrl({ task_id: 'T016', role: 'reviewer', run_type: 'official_run', reviewer_id: 'reviewer_chen' })
     );
-    for (const sampleId of ['ofm-03-awaiting-arbitration', 'ofm-04-majority-converged', 'ofm-05-all-divergent']) {
+    for (const sampleId of ['ofm-03-awaiting-arbitration', 'ofm-04-reviewer-bypass', 'ofm-05-final-exception']) {
       const row = page.getByTestId('ws-sample-item').filter({ hasText: sampleId });
       await expect(row, sampleId).toHaveCount(1);
       await expect(row.getByTestId('list-arbitrate-entry'), sampleId).toHaveText('仲裁');

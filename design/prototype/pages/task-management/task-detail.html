@@ -2801,6 +2801,7 @@
       arHistoryArbiterRole: '仲裁',
       arHistoryAgree: '同意',
       arHistoryModifiedPrefix: '修改 → ',
+      arHistoryBypass: '無法判定',
       arHistoryPickA: '採 A（維持標記員）',
       arHistoryPickB: '採 B（採用審核員修正）',
       arPaginationTpl: '共 {total} 筆 · 第 {page} / {totalPages} 頁',
@@ -3299,6 +3300,7 @@
       arHistoryArbiterRole: 'Arbiter',
       arHistoryAgree: 'Agreed',
       arHistoryModifiedPrefix: 'Modified → ',
+      arHistoryBypass: 'Cannot determine',
       arHistoryPickA: 'Adopted A (keep annotator)',
       arHistoryPickB: 'Adopted B (adopt reviewer edit)',
       arPaginationTpl: 'Total {total} · Page {page} / {totalPages}',
@@ -4485,8 +4487,8 @@
       { id: 'ofm-01-reviewer-corrects-b', rows: [{ a: 'kioleemg12', v: 'positive', rs: 'finalized', rv: [['reviewer_wang', 'modified', 'negative']], arb: 'reviewer_chen' }] },
       { id: 'ofm-02-reviewer-accepts-a', rows: [{ a: 'kioleemg12', v: 'negative', rs: 'finalized', rv: [['reviewer_wang', 'approved']] }] },
       { id: 'ofm-03-awaiting-arbitration', rows: [{ a: 'kioleemg12', v: 'neutral', rs: 'disputed', rv: [['reviewer_wang', 'modified', 'negative']] }] },
-      { id: 'ofm-04-majority-converged', rows: [{ a: 'kioleemg12', v: 'positive', rs: 'finalized', rv: [['reviewer_wang', 'modified', 'neutral'], ['reviewer_li', 'modified', 'neutral'], ['reviewer_lin', 'approved']] }] },
-      { id: 'ofm-05-all-divergent', rows: [{ a: 'kioleemg12', v: 'neutral', rs: 'disputed', rv: [['reviewer_wang', 'modified', 'positive'], ['reviewer_li', 'modified', 'negative'], ['reviewer_lin', 'approved']] }] }
+      { id: 'ofm-04-reviewer-bypass', rows: [{ a: 'kioleemg12', v: 'positive', rs: 'disputed', rv: [['reviewer_wang', 'bypass']] }] },
+      { id: 'ofm-05-final-exception', rows: [{ a: 'kioleemg12', v: 'neutral', rs: 'disputed', rv: [['reviewer_wang', 'modified', 'positive']] }] }
     ],
     T017: [
       { id: 'oft-01-final-exception', rows: [{ a: 'kioleemg12', v: 'neutral', rs: 'disputed', rv: [['reviewer_wang', 'modified', 'positive']] }] },
@@ -8919,7 +8921,9 @@ function getTaskTypeLabel() {
     (annotation.reviews || []).forEach(function(review) {
       var decisionText = review.decision === 'modified'
         ? t('arHistoryModifiedPrefix') + getAnnotationResultDisplay({ value: review.result }).tags[0]
-        : t('arHistoryAgree');
+        : review.decision === 'bypass'
+          ? t('arHistoryBypass')
+          : t('arHistoryAgree');
       var reviewLine = buildArHistoryLine(
         'ar-history-review', t('arHistoryReviewerRole'), review.reviewer, decisionText, review.reviewedAt
       );
