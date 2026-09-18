@@ -2562,9 +2562,11 @@
       roundHistoryHint: '每個回合使用新的抽樣樣本；通過的回合會解鎖正式標記。',
       roundHistorySummaryTpl: '已用 {used} / {total} 筆試標',
       roundDecisionTitlePassedTpl: 'R{round} 已達標，可啟動正式標記',
-      roundDecisionTitleFailedTpl: 'R{round} 未達標，建議新增下一個試標回合',
+      roundDecisionTitleFailedTpl: 'R{round} 未達標，可開始正式標記或新增試標回合',
+      roundDecisionTitleRoundActiveTpl: 'R{round} 進行中，全員完成後進入待 IAA 確認',
       roundDecisionDescPassedTpl: '系統將以尚未進入試標的剩餘 {count} 筆樣本建立正式標記池，避免與前面回合混用。',
-      roundDecisionDescFailedTpl: '目前僅使用了 {used} 筆試標樣本，仍可從未使用資料中抽新樣本進行下一回合。',
+      roundDecisionDescFailedTpl: '目前僅使用了 {used} 筆試標樣本，IAA 未達標僅供參考：可直接開始正式標記，或新增下一個試標回合再抽新樣本。',
+      roundDecisionDescRoundActiveTpl: '本回合尚未全員提交，暫不提供新增下一回合；待全數提交並完成 IAA 後任務會自動進入待確認，再決定下一步。',
       roundDecisionTitleInProgressTpl: 'R{round} 尚無法判定是否達標',
       roundDecisionDescInProgressTpl: '目前沒有足夠的標記資料可計算一致性，待標記員完成後即可判定是否達標。',
       roundDecisionTitleOfficialTpl: '正式標記進行中，共 {count} 筆',
@@ -3062,9 +3064,11 @@
       roundHistoryHint: 'Each round uses a fresh sample slice. A passed round unlocks official work.',
       roundHistorySummaryTpl: '{used} / {total} items used in trial',
       roundDecisionTitlePassedTpl: 'R{round} passed and official work can start',
-      roundDecisionTitleFailedTpl: 'R{round} did not pass. Add the next trial round',
+      roundDecisionTitleFailedTpl: 'R{round} did not pass. Start official work or add another round',
+      roundDecisionTitleRoundActiveTpl: 'R{round} is in progress. It moves to IAA confirmation once everyone finishes',
       roundDecisionDescPassedTpl: 'The system will build the official pool from the remaining {count} unused items to avoid mixing with previous rounds.',
-      roundDecisionDescFailedTpl: 'Only {used} items have been consumed by trials so far. You can still draw the next round from unused data.',
+      roundDecisionDescFailedTpl: 'Only {used} items have been consumed by trials so far. The IAA result is advisory only -- you can start official work directly, or add the next trial round to draw a new sample.',
+      roundDecisionDescRoundActiveTpl: 'This round has not been fully submitted yet, so adding the next round is unavailable. Once everyone finishes and IAA completes, the task moves to confirmation and you can decide the next step.',
       roundDecisionTitleInProgressTpl: 'R{round} outcome not yet determined',
       roundDecisionDescInProgressTpl: 'There is not enough marked data yet to compute agreement. The outcome will be clear once annotators finish.',
       roundDecisionTitleOfficialTpl: 'Official run in progress with {count} items',
@@ -5793,6 +5797,14 @@ function interpolate(template, payload) {
     } else if (taskStageKey === 'completed') {
       setText('trialDecisionTitle', interpolate(t('roundDecisionTitleCompletedTpl'), { count: getOfficialRunCount() }));
       setText('trialDecisionDesc', t('roundDecisionDescCompletedTpl'));
+    } else if (TASK_DATA.status === 'dry_run_in_progress' && currentRound) {
+      /* issue #791 (FR-013(1)/D2): this round has not finished yet, so its
+         scripted/computed outcome (currentRound.result) must not drive the
+         banner -- adding the next round is disabled until the round
+         completes, and suggesting it here would point at a disabled
+         button. */
+      setText('trialDecisionTitle', interpolate(t('roundDecisionTitleRoundActiveTpl'), { round: currentRound.round }));
+      setText('trialDecisionDesc', t('roundDecisionDescRoundActiveTpl'));
     } else if (currentRound && currentRound.result === 'passed') {
       setText('trialDecisionTitle', interpolate(t('roundDecisionTitlePassedTpl'), { round: currentRound.round }));
       setText('trialDecisionDesc', interpolate(t('roundDecisionDescPassedTpl'), { count: reserveCount }));
