@@ -129,14 +129,14 @@ diagnostic 必須陳述觸發條件（缺漏／重複／格式錯誤／inventory
 6. **fresh、各 stale trigger 與各 configuration case 的 stable rule ID／訊息。**
    → 沿用 Stage 1 已建立的 `PATH_MAP_*` 命名慣例（`scripts/check-user-path-map-freshness.mjs:53-101`），新增：
    - `PATH_MAP_FRESH`（exit `0`）：fingerprint 相符。
-   - `PATH_MAP_STALE_FINGERPRINT`（exit `1`）：`screen-inventory.md` 目前的畫面／視圖 ID 清單與 `<meta>` 記錄的 fingerprint 不符。
+   - `PATH_MAP_STALE_FINGERPRINT`（exit `1`）：`screen-inventory.md` 目前的畫面／視圖 ID 清單與 `<meta>` 記錄的 fingerprint 不符。診斷同時印出記錄值與即時重算的 `sha256:<hex>`，讓維護者依 #645 流程重走路徑圖後，直接用這個值更新 `<meta>`，不必另外重現演算法（2026-09-18 補充；checker 仍不提供 write／fix mode）。
    - `PATH_MAP_META_MISSING`（exit `2`）：`<head>` 沒有 `path-map-screen-fingerprint` meta。
    - `PATH_MAP_META_DUPLICATE`（exit `2`）：`<head>` 出現 2 個以上該 meta。
    - `PATH_MAP_META_MALFORMED`（exit `2`）：`content` 不符 `sha256:[0-9a-f]{64}`。
    - `PATH_MAP_INVENTORY_UNREADABLE`（exit `2`）：`design/system/screen-inventory.md` 缺席，或其 `## 畫面 × 元件`／`## 同頁多重視圖` 表格無法解析出 ID 清單。
    沿用既有 `PATH_MAP_ARTIFACT_MISSING`（path map 本身缺席）。Stage 1 佔位用的 `PATH_MAP_AUTHORITY_UNSETTLED` 於 Stage 2 Green 由上列具體規則取代，不得與新規則並存造成雙重訊息。
 7. **production CI 是否需要 checkout full history，以及最小 fetch-depth 契約。**
-   → 不適用：checker 不呼叫任何 `git` 指令，不需要 full history 或任何 fetch-depth 契約；沿用既有 CI checkout 設定即可，Stage 2 task 2.4 的 workflow 新增不得引入 history 相關參數。
+   → 不適用：checker 不呼叫任何 `git` 指令，不需要 full history 或任何 fetch-depth 契約；沿用既有 CI checkout 設定即可，Stage 2 task 2.5 的 workflow 新增不得引入 history 相關參數。
 
 ### Fingerprint 演算法（新增，使第 1／2／6 項可測試）
 
@@ -166,7 +166,7 @@ diagnostic 必須陳述觸發條件（缺漏／重複／格式錯誤／inventory
 
 Stage 1 Red 只修改 harness，先提交並執行，expected failure 必須是 checker entry point 缺失。paired Green 建立 checker；因新增 checker 與 mandatory registry row 必須原子避免 `CI_JOB_PARITY` gap，該 task 使用允許的 `scaffold` exception，且不得修改 Red harness。
 
-Stage 2 在 hard checkpoint 後先修改同一 harness，expected failure 必須是 foundation checker 尚未解析權威 metadata／比較 screen-list fingerprint；Green 只修改 checker。CI registry、workflow 與 `CLAUDE.md` 各為後續單檔 task。
+Stage 2 在 hard checkpoint 後先修改同一 harness，expected failure 必須是 foundation checker 尚未解析權威 metadata／比較 screen-list fingerprint；Green 只修改 checker。路徑圖 `<meta>` 初始值（先核對涵蓋範圍）、CI registry、workflow 與 `CLAUDE.md` 各為後續單檔 task。
 
 ## Verification gates
 

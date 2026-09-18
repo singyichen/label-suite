@@ -52,7 +52,7 @@ User Path Map Freshness Check 的 derived capability；正典為 `specs/foundati
 
 - **GIVEN** `design/system/screen-inventory.md` 目前的畫面或視圖 ID 清單改變，使即時重算的 fingerprint 與 `<meta>` 記錄值不同
 - **WHEN** 執行 checker
-- **THEN** command 以 exit `1` 結束（`PATH_MAP_STALE_FINGERPRINT`），並指出需依 #645 流程重新實走並更新 `<meta>` 值
+- **THEN** command 以 exit `1` 結束（`PATH_MAP_STALE_FINGERPRINT`），並指出需依 #645 流程重新實走並更新 `<meta>` 值；診斷同時印出記錄值與即時重算的 `sha256:<hex>`
 
 #### Scenario: AC-2.3（Retired — 併入 AC-2.2，原文保留供追溯）
 

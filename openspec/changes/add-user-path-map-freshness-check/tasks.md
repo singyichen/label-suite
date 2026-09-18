@@ -23,24 +23,25 @@ Stage 1 可合併後保持本 change open。Stage 2 開始前，主 session 必�
 4. 重新執行 OpenSpec schema validation 與 `scripts/check-sdd.sh`。（本 amendment PR 已個別回報兩道 gate 結果；此步驟仍須在使用者確認前，於合入本 amendment 後之最新 branch 狀態下重跑一次）
 5. 停止並取得使用者第二次明確確認，才可進入下列 Stage 2 tasks。
 
-任一條未完成時，2.1～2.6 全部 blocked。
+任一條未完成時，2.1～2.7 全部 blocked。
 
 ## 2. PR-PATH-MAP-FRESHNESS-AUTHORITY — #645 後的 authoritative Red／Green
 
-> **相依與平行性**：本群組嚴格序列 2.1 → 2.2 → 2.3 → 2.4 → 2.5 → 2.6；前置條件為 #645 hard checkpoint 全數完成。2.1 committed Red 必須先於 2.2；2.3～2.5 只有真實 repository checker exit `0` 後才能開始。不得使用 conditional skip 或 missing-artifact pass。
+> **相依與平行性**：本群組嚴格序列 2.1 → 2.2 → 2.3 → 2.4 → 2.5 → 2.6 → 2.7；前置條件為 #645 hard checkpoint 全數完成。2.1 committed Red 必須先於 2.2；2.4～2.6 只有 2.3 完成、真實 repository checker exit `0` 後才能開始。不得使用 conditional skip 或 missing-artifact pass。
 
 **故事目標**：SC-003～SC-006 — 依 #645 的已合併 authority 完成可定位的 fresh／stale 判定，再啟用 local／CI production gate。
 
 - [ ] 2.1 修改 `scripts/speckit-tests.sh`，依已核准 design amendment 新增 Stage 2 QA Red fixtures，涵蓋 fresh（fingerprint 相符）、stale（screen-list fingerprint mismatch）、invalid metadata／inventory（`<meta>` missing／duplicate／malformed、screen-inventory.md ID 表格無法解析）與 unmonitored-content negative control（含未變更 ID 清單的 prototype-only 編輯），對應 AC-2.1～AC-2.5；先提交此單檔 Red，再執行 harness，expected failure 必須是 foundation checker 尚未實作核准的 fingerprint 解析／比較語意，並保存 command、exit 與失敗訊息。 [@senior-qa]
 - [ ] 2.2 Green：只修改 `scripts/check-user-path-map-freshness.mjs`，依 approved QA contract 與 amended design 實作 FR-004～FR-007；不得修改 QA contract、HTML、prototype 或 screen inventory。 [@senior-devops]
-- [ ] 2.3 修改 `scripts/ci-jobs.tsv`，保留既有 harness mapping，並將 checker row 由 regression coverage 切換至新的 direct production job 與已核准本機命令；不得加入豁免列或重複 script row。 [@senior-devops]
-- [ ] 2.4 修改 `.github/workflows/ci.yml`，新增獨立 user path map freshness job，執行 direct checker；checker 全程不呼叫 `git`，故不需要 full history checkout 或任何 fetch-depth 契約，沿用既有 checkout 設定即可；job 不得在 artifact／metadata 缺少時 skip 或回傳成功，也不得包裝 OpenSpec／Project SDD lint。 [@senior-devops]
-- [ ] 2.5 修改 `CLAUDE.md` 的 Verification Commands，加入與 production job 相同的 direct checker command，並清楚區分它與 regression command；此 protected-file 修改只依使用者對 issue #665 的明確實作授權執行。 [@main]
-- [ ] 2.6 執行 command-only Stage 2 verification：`node --check scripts/check-user-path-map-freshness.mjs`、`bash scripts/speckit-tests.sh`、`node scripts/check-user-path-map-freshness.mjs`、`scripts/check-sdd.sh`、`scripts/check-spec-artifacts.sh`、`rg -n 'check-user-path-map-freshness' scripts/ci-jobs.tsv .github/workflows/ci.yml CLAUDE.md`、`git diff --check`；全部預期 exit `0`，Project SDD lint 不得輸出 `CI_JOB_PARITY`，並逐一保存 true-repository fresh 與 direct local／CI parity evidence。 [@main]
+- [ ] 2.3 在 `design/system/user-path-map.html` 的 `<head>` 寫入唯一的 `<meta name="path-map-screen-fingerprint">`。寫入前先逐一核對路徑圖是否涵蓋 screen inventory 目前的畫面／視圖 ID 清單（路徑圖最後更新於 2026-09-08，之後 inventory 仍有變動）：全數涵蓋才寫入 2.2 checker 回報的即時重算值；有缺漏時不得寫入值來宣告 fresh，改為開 issue 依 #645 流程補走，本 task 保持未勾。只修改該 HTML 的 `<head>`，不改 walkthrough 內文。 [@main]
+- [ ] 2.4 修改 `scripts/ci-jobs.tsv`，保留既有 harness mapping，並將 checker row 由 regression coverage 切換至新的 direct production job 與已核准本機命令；不得加入豁免列或重複 script row。 [@senior-devops]
+- [ ] 2.5 修改 `.github/workflows/ci.yml`，新增獨立 user path map freshness job，執行 direct checker；checker 全程不呼叫 `git`，故不需要 full history checkout 或任何 fetch-depth 契約，沿用既有 checkout 設定即可；job 不得在 artifact／metadata 缺少時 skip 或回傳成功，也不得包裝 OpenSpec／Project SDD lint。 [@senior-devops]
+- [ ] 2.6 修改 `CLAUDE.md` 的 Verification Commands，加入與 production job 相同的 direct checker command，並清楚區分它與 regression command；此 protected-file 修改只依使用者對 issue #665 的明確實作授權執行。 [@main]
+- [ ] 2.7 執行 command-only Stage 2 verification：`node --check scripts/check-user-path-map-freshness.mjs`、`bash scripts/speckit-tests.sh`、`node scripts/check-user-path-map-freshness.mjs`、`scripts/check-sdd.sh`、`scripts/check-spec-artifacts.sh`、`rg -n 'check-user-path-map-freshness' scripts/ci-jobs.tsv .github/workflows/ci.yml CLAUDE.md`、`git diff --check`；全部預期 exit `0`，Project SDD lint 不得輸出 `CI_JOB_PARITY`，並逐一保存 true-repository fresh 與 direct local／CI parity evidence。 [@main]
 
 ## 3. PR-PATH-MAP-FRESHNESS-FINAL — 完整驗證與 archive readiness
 
-> **相依與平行性**：前置條件為 2.6 與 production CI 成功；本群組只有 command-only verification，不修改檔案、不使用 parallel markers。完成後才可進 final PR group 的 Source-Verify／archive continuation。
+> **相依與平行性**：前置條件為 2.7 與 production CI 成功；本群組只有 command-only verification，不修改檔案、不使用 parallel markers。完成後才可進 final PR group 的 Source-Verify／archive continuation。
 
 **故事目標**：SC-004～SC-006 — 以四個獨立 gate 與真實 repository freshness evidence 證明 change 可進入 final archive。
 
