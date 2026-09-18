@@ -363,14 +363,6 @@
     return Object.keys(snapshot).length ? snapshot : null;
   }
 
-  /* One output type's answer, for the FR-086 accepted/modified decision.
-     Plain-value types live under previewState[outKey]; position-type
-     comparison is registry-driven and lands with FR-087's position half. */
-  function outputSlice(payload, outKey) {
-    var state = (payload && payload.previewState) || {};
-    return JSON.stringify(state[outKey] != null ? state[outKey] : null);
-  }
-
   function markSampleSubmitted(taskId, role, runType, sampleId, payload, historySummary, identity) {
     var key = submissionBucketKey(taskId, role, runType, identity);
     var bucket = readSubmissionBucket(key);
@@ -393,18 +385,24 @@
     writeSubmissionBucket(key, bucket);
   }
 
-  /* FR-086 emission points for `accepted` / `modified`. A reviewer submit
-     carries one decision per output type (FR-051); an approve whose value
-     matches the annotator's is an acceptance, an approve whose value
-     differs is a correction. `reject` is not emitted here -- that path
-     already writes `rejected` through markSampleRejected. */
+  /* FR-086 / FR-092 emission points for the three REVIEW_DECISIONS values.
+     A reviewer submit carries one decision per output type (FR-051); each
+     decision maps to exactly one history action, per FR-086's v5.0.0
+     revision -- `approve` always writes `accepted` (FR-092 point 1: "無異議
+     直接定稿"), `modify` writes `modified` (FR-092 point 2: the correction
+     does not take effect immediately, it only opens a dispute), and
+     `bypass` writes `bypassed` (FR-092 point 3). This is a closed one-to-one
+     table, not a value-diff comparison -- AC-2.21's v5.0.0 revision fixes
+     `modified`'s trigger to the decision itself. `reject` is not in
+     REVIEW_DECISIONS (FR-092) and has no emission point here. */
+  var REVIEW_DECISION_EVENT_ACTION = { approve: 'accepted', modify: 'modified', bypass: 'bypassed' };
+
   function appendReviewDecisionEvents(entry, taskId, runType, sampleId, payload, summary, actorId, identity, decisions) {
-    var reviewed = getSubmission(taskId, 'annotator', runType, sampleId, identity);
     var reasons = (payload && payload.reasons) || {};
     Object.keys(decisions).forEach(function (outKey) {
-      if (decisions[outKey] !== 'approve') return;
-      var changed = outputSlice(payload, outKey) !== outputSlice(reviewed, outKey);
-      appendHistoryEvent(entry, changed ? 'modified' : 'accepted', 'reviewer', summary, actorId, Object.assign(
+      var action = REVIEW_DECISION_EVENT_ACTION[decisions[outKey]];
+      if (!action) return;
+      appendHistoryEvent(entry, action, 'reviewer', summary, actorId, Object.assign(
         { result_snapshot: buildResultSnapshot(payload), reason: reasons[outKey] || null },
         timingFields(payload && payload.timing)
       ));

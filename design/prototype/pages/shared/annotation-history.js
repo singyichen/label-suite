@@ -117,12 +117,14 @@
      `submitted` is never dropped -- it is the one event carrying their
      answer.
 
-     `bypassed` counts as a decision (issue #596): it is written per outKey
-     exactly like the other two, so leaving it out would resurrect the
-     duplicate envelope for every reviewer who could not decide. The other
-     new values do not -- `adjudicated`, `exception_resolved` and `excluded`
-     close a unit rather than answer one of its outputs, and none is written
-     behind a submit envelope. */
+     `bypassed` counts as a decision (issue #596): appendReviewDecisionEvents()
+     (annotation-workspace.data.js) writes it per outKey exactly like the
+     other two via its REVIEW_DECISION_EVENT_ACTION table (issue #804), so
+     leaving it out would resurrect the duplicate envelope for every
+     reviewer who could not decide. The other new values do not --
+     `adjudicated`, `exception_resolved` and `excluded` close a unit rather
+     than answer one of its outputs, and none is written behind a submit
+     envelope. */
   var REVIEW_DECISION_ACTIONS = { accepted: true, modified: true, bypassed: true };
 
   function isReviewDecision(action) {
