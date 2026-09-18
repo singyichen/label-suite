@@ -254,8 +254,8 @@ test.describe('T016 official_run: reviewer corrects, arbitration adopts B, unit 
     const nonCanonical = new Map([...map].filter(([key]) => !key.startsWith('ofm-01')));
     expect(nonCanonical.size).toBe(4);
     const expected: Record<string, string> = {
-      'ofm-02-approved-interim::kioleemg12': '已定稿',
-      'ofm-03-modified-interim::kioleemg12': '爭議中',
+      'ofm-02-reviewer-accepts-a::kioleemg12': '已定稿',
+      'ofm-03-awaiting-arbitration::kioleemg12': '爭議中',
       'ofm-04-majority-converged::kioleemg12': '爭議中',
       'ofm-05-all-divergent::kioleemg12': '爭議中',
     };
@@ -274,7 +274,7 @@ test.describe('T016 official_run: reviewer corrects, arbitration adopts B, unit 
     await page.goto(
       buildListUrl({ task_id: 'T016', role: 'reviewer', run_type: 'official_run', reviewer_id: 'reviewer_chen' })
     );
-    for (const sampleId of ['ofm-03-modified-interim', 'ofm-04-majority-converged', 'ofm-05-all-divergent']) {
+    for (const sampleId of ['ofm-03-awaiting-arbitration', 'ofm-04-majority-converged', 'ofm-05-all-divergent']) {
       const row = page.getByTestId('ws-sample-item').filter({ hasText: sampleId });
       await expect(row, sampleId).toHaveCount(1);
       await expect(row.getByTestId('list-arbitrate-entry'), sampleId).toHaveText('仲裁');

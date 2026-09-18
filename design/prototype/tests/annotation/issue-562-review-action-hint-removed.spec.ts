@@ -88,7 +88,7 @@ test.describe('issue #562 — no action hint under the review-unit banner', () =
   });
 
   test('approved unit (T016, min 3)', async ({ page }) => {
-    await openUnit(page, { task_id: 'T016', sample_id: 'ofm-02-approved-interim' });
+    await openUnit(page, { task_id: 'T016', sample_id: 'ofm-02-reviewer-accepts-a' });
     await expectNoHint(page);
   });
 

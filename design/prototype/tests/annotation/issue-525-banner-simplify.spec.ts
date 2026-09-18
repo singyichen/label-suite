@@ -62,7 +62,7 @@ test.beforeEach(async ({ page }) => {
 
 test.describe('issue #525 PR-B — banner DOM order is run type -> state -> threshold', () => {
   test('T016 ofm-02: the state element sits right after the run chip', async ({ page }) => {
-    await openUnit(page, { task_id: 'T016', sample_id: 'ofm-02-approved-interim', annotator_id: 'kioleemg12' });
+    await openUnit(page, { task_id: 'T016', sample_id: 'ofm-02-reviewer-accepts-a', annotator_id: 'kioleemg12' });
 
     expect(await childClasses(page)).toEqual([
       'rv-unit-chip rv-unit-run',
