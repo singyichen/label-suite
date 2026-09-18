@@ -22,7 +22,7 @@
     '· positive：內容整體評價正面、無保留的稱讚或滿意陳述。\n' +
     '· neutral：中立敘述、有褒有貶或程度輕微的評論，找不到明確正負傾向時歸此類。\n' +
     '· negative：內容整體評價負面、抱怨或不滿意陳述。\n' +
-    '與標記員標註不一致時，請依上述判準重新檢視文本語意後決定核可或修改，不可僅以標記員多數意見為準。\n';
+    '與標記員標註不一致時，請依上述判準重新檢視文本語意後決定通過或修正，不可僅以標記員的既有標註為準。\n';
 
   var profiles = {
     T001: {
@@ -1053,9 +1053,10 @@
       fieldRoleMap: { text: 'input', gold_label: 'output' },
       reviewerGuidelineText:
         REVIEWER_GUIDELINE_SENTIMENT_BOUNDARY_ZH +
-        '（T014）本任務為 dry_run 共識校準情境，審核門檻為 1 位審核員；出現 ' +
-        'dry-03-dispute-open、dry-04-dispute-resolved 等標記員分歧的項目時，' +
-        '需由具 can_arbitrate 權限的審核員仲裁決定最終標籤，不可逕自採多數意見核可。',
+        '（T014）本任務為試標（dry_run）：同一份樣本由多位標記員各標一次，每份提交各自形成一個審核單位，' +
+        '並依 FR-093 以樣本為單位指派——同一份資料的所有標記交給同一位審核員，便於比對彼此差異。' +
+        '審核決策為通過／修正／無法判定三選一：通過即定稿；修正與無法判定皆須填寫理由並轉入爭議池（如 ' +
+        'dry-03-dispute-open、dry-04-dispute-resolved），改由具 can_arbitrate 權限且非當事人的仲裁員裁定，審核員不得自行收斂。',
       datasetFileName: 'review-flow-dry-run.json',
       datasetRecords: [
         {
@@ -1106,9 +1107,10 @@
       fieldRoleMap: { text: 'input', gold_label: 'output' },
       reviewerGuidelineText:
         REVIEWER_GUIDELINE_SENTIMENT_BOUNDARY_ZH +
-        '（T015）本任務為正式標記單一審核員核可情境，審核門檻為 1 位審核員；' +
-        '審核員可直接核可（approved）或修改（modified）標記員的標註結果，如 ' +
-        'ofs-02-modified-dispute 項目。',
+        '（T015）本任務為正式標記（official_run）：每筆樣本恰指派一位標記員，因此每份樣本只有一個審核單位，' +
+        '系統再依 FR-093 以審核單位為單位指派，把這些單位平均分給名冊上被勾選的審核員。' +
+        '審核決策為通過／修正／無法判定三選一：通過即定稿並成為最終答案；修正與無法判定皆須填寫理由並轉入爭議池（如 ' +
+        'ofs-02-modified-dispute）。仲裁只能在標記員與審核員兩個答案之間擇一，或裁定兩者皆非轉入最終例外池。',
       datasetFileName: 'review-flow-official-single.json',
       datasetRecords: [
         {
@@ -1159,9 +1161,10 @@
       fieldRoleMap: { text: 'input', gold_label: 'output' },
       reviewerGuidelineText:
         REVIEWER_GUIDELINE_SENTIMENT_BOUNDARY_ZH +
-        '（T016）本任務為正式標記三審核員多數決收斂情境，審核門檻為 3 位審核員；' +
-        '當三位審核員的判斷出現分歧（如 ofm-05-all-divergent）且未達過半多數時，' +
-        '須轉交仲裁員決定，不可逕自收斂。',
+        '（T016）本任務為正式標記（official_run）：每筆樣本恰指派一位標記員、形成一個審核單位，' +
+        '系統再依 FR-093 以審核單位為單位指派，平均分給名冊上被勾選的審核員；每個單位恰有一位審核員，不存在票數或人數要求。' +
+        '審核決策為通過／修正／無法判定三選一：修正與無法判定皆須填寫理由並轉入爭議池（如 ' +
+        'ofm-05-all-divergent），由具 can_arbitrate 權限且非當事人的仲裁員裁定。',
       datasetFileName: 'review-flow-official-multi.json',
       datasetRecords: [
         {
@@ -1212,9 +1215,10 @@
       fieldRoleMap: { text: 'input', gold_label: 'output' },
       reviewerGuidelineText:
         REVIEWER_GUIDELINE_SENTIMENT_BOUNDARY_ZH +
-        '（T017）本任務為正式標記兩審核員情境，審核門檻為 2 位審核員；' +
-        '兩位審核員意見不一致時（如 oft-01-final-exception）屬平手情況，依 ' +
-        'per-item-strict-majority 規則不會自動收斂，須轉交仲裁員決定最終結果。',
+        '（T017）本任務為正式標記（official_run）：每筆樣本恰指派一位標記員、形成一個審核單位，' +
+        '系統再依 FR-093 以審核單位為單位指派，平均分給名冊上被勾選的審核員。' +
+        '審核決策為通過／修正／無法判定三選一：修正與無法判定皆須填寫理由並轉入爭議池；' +
+        '仲裁裁定兩者皆非者（如 oft-01-final-exception）落入最終例外池，由專案負責人逐筆收尾。',
       datasetFileName: 'review-flow-official-tie.json',
       datasetRecords: [
         {
