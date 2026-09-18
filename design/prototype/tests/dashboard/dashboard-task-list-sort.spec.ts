@@ -8,7 +8,16 @@
  *   - Sorting must not change which tasks render, only their order; the
  *     existing "keep current fixed assignment set" scope (issue #187,
  *     no per-user assignment data in dashboard.assignments.js) is
- *     verified by asserting the full 17-task baseline still renders.
+ *     verified by asserting the full 18-task baseline still renders.
+ *
+ * issue #783 (openspec/changes/task-detail-iaa-precondition-and-override-scope,
+ * design.md D7): T018 is appended to dashboard.assignments.js with annotator
+ * progress 55 -- distinct from every existing value, so it joins neither the
+ * T003 18%-minimum nor the T014/T016/T017 100%-tie group the order-assertion
+ * test above this comment block relies on; only the count assertions below
+ * change. T018's reviewer progress is derived (not seeded) and resolves to
+ * 0% with no review-unit state seeded, so it does not disturb T016's sole
+ * 100%-reviewer-entry assertion either.
  */
 import { test, expect } from '@playwright/test';
 
@@ -46,11 +55,11 @@ test.describe('Dashboard — issue #187 annotator task list sort', () => {
   test('sorting does not change the assigned task subset or card actions', async ({ page }) => {
     await page.goto(`${DASHBOARD_URL}?scenario=annotator`);
     const view = page.getByTestId('annotator-view');
-    await expect(view.locator('.list-item-title')).toHaveCount(17);
+    await expect(view.locator('.list-item-title')).toHaveCount(18);
 
     await page.locator('#annotatorSortSelect').selectOption('progress_desc');
-    await expect(view.locator('.list-item-title')).toHaveCount(17);
-    await expect(view.locator('.role-task-action-btn')).toHaveCount(17);
+    await expect(view.locator('.list-item-title')).toHaveCount(18);
+    await expect(view.locator('.role-task-action-btn')).toHaveCount(18);
   });
 
   test('sort control labels localize on language toggle', async ({ page }) => {
@@ -69,12 +78,12 @@ test.describe('Dashboard — issue #187 reviewer task list sort', () => {
     await page.goto(`${DASHBOARD_URL}?scenario=reviewer`);
     const view = page.getByTestId('reviewer-view');
     const titles = view.locator('.list-item-title');
-    await expect(titles).toHaveCount(17);
+    await expect(titles).toHaveCount(18);
 
     await page.locator('#reviewerSortSelect').selectOption('progress_desc');
     // T016 is the sole 100% (審核覆蓋率) reviewer entry.
     await expect(titles.first()).toHaveText('審核流程示範：正式標記（三審核員多數決）');
-    await expect(titles).toHaveCount(17);
-    await expect(view.locator('.role-task-action-btn')).toHaveCount(17);
+    await expect(titles).toHaveCount(18);
+    await expect(view.locator('.role-task-action-btn')).toHaveCount(18);
   });
 });

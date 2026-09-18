@@ -19,6 +19,16 @@ const OUTPUT_TYPE_KEYS = [
   'free_text',
 ];
 
+/*
+ * issue #783 (openspec/changes/task-detail-iaa-precondition-and-override-scope,
+ * design.md D7): T018 is the new demo task backing FR-010o-4's
+ * "waiting_iaa_confirmation with a failed/pending IAA computation" scenarios
+ * (see issue-783-iaa-computation-status.spec.ts). Its sourceFile
+ * 'review-flow-iaa-failed.json' sorts between 'review-flow-dry-run.json' and
+ * 'review-flow-official-multi.json'. This file only reads task-list.data.js's
+ * `outputTypes`, so T018's chosen outputTypes is ['single_label'] -- picked
+ * to keep the fixture minimal; it is not itself part of FR-010o-4's contract.
+ */
 const EXAMPLE_DATA_FILES = [
   'absa-va.json',
   'entity-recognition.json',
@@ -31,6 +41,7 @@ const EXAMPLE_DATA_FILES = [
   'nli.json',
   'relation-identification.json',
   'review-flow-dry-run.json',
+  'review-flow-iaa-failed.json',
   'review-flow-official-multi.json',
   'review-flow-official-single.json',
   'review-flow-official-tie.json',
@@ -40,7 +51,7 @@ const EXAMPLE_DATA_FILES = [
 ];
 
 const FILTER_COUNTS: Record<string, number> = {
-  single_label: 6,
+  single_label: 7,
   multi_label: 2,
   single_dim: 1,
   multi_dim: 2,
@@ -78,7 +89,7 @@ async function visibleSourceFiles(
 }
 
 test.describe('Task list output-type model', () => {
-  test('renders the 17 illustrative example-data tasks and canonical filter', async ({
+  test('renders the 18 illustrative example-data tasks and canonical filter', async ({
     page,
   }) => {
     await page.goto(TASK_LIST_URL);
@@ -86,7 +97,7 @@ test.describe('Task list output-type model', () => {
     await expect(page.locator('#thTaskType')).toHaveText('輸出類型');
 
     const rows = page.locator('#taskTableBody tr[data-source-file]');
-    await expect(rows).toHaveCount(17);
+    await expect(rows).toHaveCount(18);
 
     const sourceFiles = await rows.evaluateAll((elements) =>
       elements

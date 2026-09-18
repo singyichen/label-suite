@@ -15,6 +15,13 @@ const OUTPUT_TYPE_KEYS = [
   'free_text',
 ] as const;
 
+/*
+ * issue #783 (openspec/changes/task-detail-iaa-precondition-and-override-scope,
+ * design.md D7): T018 is the new demo task backing FR-010o-4. Its sourceFile
+ * 'review-flow-iaa-failed.json' is appended here; this list's own equality
+ * check (below) sorts both sides first, so its position in this array is
+ * irrelevant to that assertion.
+ */
 const EXAMPLE_DATA_FILES = [
   'single-label.json',
   'multi-label.json',
@@ -33,15 +40,31 @@ const EXAMPLE_DATA_FILES = [
   'review-flow-official-single.json',
   'review-flow-official-multi.json',
   'review-flow-official-tie.json',
+  'review-flow-iaa-failed.json',
 ] as const;
 
 /* T014-T017 are the review-flow demo tasks: annotation-workspace.data.js
  * stages their submission/review states in localStorage at boot (the
  * labelsuite.reviewFlowDemoSeed.v1 seeder), so their first sample rows may
  * legitimately start out submitted. The fresh-first-sample invariant below
- * only holds for the un-staged T001-T013 baseline. */
+ * only holds for the un-staged T001-T013 baseline. T018 (issue #783) is
+ * deliberately NOT staged the same way -- design.md D7 scopes it to a
+ * task-detail-only demo profile, so its first annotator sample must stay
+ * fresh like T001-T013's. */
 const DEMO_STAGED_TASK_IDS = new Set(['T014', 'T015', 'T016', 'T017']);
 
+/*
+ * issue #783: T018 must also be appended to dashboard.assignments.js's
+ * `assignments` array (annotator progress 55 -- distinct from every existing
+ * value so it disturbs neither the 18%-minimum nor the 100%-tie group
+ * dashboard-task-list-sort.spec.ts asserts on; reviewer progress is derived,
+ * not seeded, and T018 carries no review-unit state so it resolves to 0%,
+ * below T016's sole-100% reviewer entry). That file is NOT among tasks.md's
+ * declared product files for this change -- see the Red-evidence report for
+ * senior-frontend. Without it, `dashboard.data.roleLists.annotator/.reviewer`
+ * stay at 17 entries and the two taskIds arrays below would silently go
+ * stale the moment task-list.data.js/task-detail.data.js alone gain T018.
+ */
 const ROLE_EXPECTATIONS = {
   super_admin_data: {
     testId: 'super-admin-view',
@@ -59,7 +82,7 @@ const ROLE_EXPECTATIONS = {
     taskIds: [
       'T001', 'T002', 'T003', 'T004', 'T005', 'T006', 'T007',
       'T008', 'T009', 'T010', 'T011', 'T012', 'T013',
-      'T014', 'T015', 'T016', 'T017',
+      'T014', 'T015', 'T016', 'T017', 'T018',
     ],
   },
   reviewer: {
@@ -68,7 +91,7 @@ const ROLE_EXPECTATIONS = {
     taskIds: [
       'T001', 'T002', 'T003', 'T004', 'T005', 'T006', 'T007',
       'T008', 'T009', 'T010', 'T011', 'T012', 'T013',
-      'T014', 'T015', 'T016', 'T017',
+      'T014', 'T015', 'T016', 'T017', 'T018',
     ],
   },
 } as const;
@@ -136,7 +159,7 @@ async function openScenario(
 }
 
 test.describe('Dashboard output-type task summaries', () => {
-  test('loads the eight-output registry and all 17 safe example summaries', async ({
+  test('loads the eight-output registry and all 18 safe example summaries', async ({
     page,
   }) => {
     await page.goto(DASHBOARD_URL);
@@ -149,7 +172,7 @@ test.describe('Dashboard output-type task summaries', () => {
     expect(dashboardData.outputTypes.map((item) => item.key)).toEqual(
       OUTPUT_TYPE_KEYS,
     );
-    expect(dashboardData.tasks).toHaveLength(17);
+    expect(dashboardData.tasks).toHaveLength(18);
     expect(dashboardData.tasks.map((task) => task.sourceFile).sort()).toEqual(
       [...EXAMPLE_DATA_FILES].sort(),
     );
@@ -235,7 +258,7 @@ test.describe('Dashboard output-type task summaries', () => {
   });
 
   for (const role of ['annotator', 'reviewer'] as const) {
-    test(`${role} exposes all 17 tasks with independent workspace routes`, async ({
+    test(`${role} exposes all 18 tasks with independent workspace routes`, async ({
       page,
     }) => {
       await openScenario(page, role);
