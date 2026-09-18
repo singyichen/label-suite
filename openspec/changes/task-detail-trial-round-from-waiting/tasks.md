@@ -1,6 +1,6 @@
 # 任務清單：task-detail-trial-round-from-waiting（issue #791）
 
-> **Apply 前硬閘（兩道，互不替代）**：先執行 `openspec validate --changes --no-interactive` 取得 **OpenSpec schema validation** 結果，再執行 `scripts/check-sdd.sh` 取得 **Project SDD lint** 結果。兩者皆通過後必須停止，取得維護者明確確認才可進入 `/opsx:apply`。**design.md「未決事項」Q1–Q5 須先由維護者定案**；任一項被推翻時，先改 delta 與本清單再 apply。**主 session／team lead 是唯一可驗證 Red／實作 evidence 與更新 checkbox 的角色**。
+> **Apply 前硬閘（兩道，互不替代）**：先執行 `openspec validate --changes --no-interactive` 取得 **OpenSpec schema validation** 結果，再執行 `scripts/check-sdd.sh` 取得 **Project SDD lint** 結果。兩者皆通過後必須停止，取得維護者明確確認才可進入 `/opsx:apply`。**design.md「未決事項」Q1–Q3 須先由維護者定案**（Q4、Q5 已於 2026-09-18 裁定）；任一項被推翻時，先改 delta 與本清單再 apply。**主 session／team lead 是唯一可驗證 Red／實作 evidence 與更新 checkbox 的角色**。
 >
 > **群組 0 的當前狀態**：propose 階段已在本分支第一個 commit 實際執行群組 0 的五項操作（否則 `scripts/check-sdd.sh` 的 `ACTIVE_CHANGE_SPEC` 與 `ACTIVE_CHANGE_STAGE` 必然報錯，無法取得 propose 驗證輸出）。checkbox 一律留空，待主 session 核實後才由主 session 勾選。
 >
@@ -35,8 +35,8 @@
 > **相依**：群組 0。1.1 的 committed Red 必須先於 1.2。
 > **既有契約改寫**：`RUN_CONTROL_CASES` 的 `dry_run_in_progress` 與 `waiting_iaa_confirmation` 兩列斷言的是舊規則，屬本 Red 的一部分；其餘三列不得改動。
 
-- [ ] 1.1 修改 `design/prototype/tests/task-management/task-detail-task-profiles.spec.ts` 為 Red 回歸契約（FR-013 對照表、SC-047 第一段）：`RUN_CONTROL_CASES` 之 `dry_run_in_progress` 列改為斷言操作列不存在 `#publishDryRunBtn` 且不存在任何執行控制按鈕；`waiting_iaa_confirmation` 列改為斷言 `#publishOfficialRunBtn` 文字為「開始正式標記」且 `#publishDryRunBtn` 文字為「新增試標回合 R2」、兩者皆可點擊。驗證：`node $HOME/.cache/node/corepack/v1/pnpm/12.3.4/bin/pnpm.mjs playwright test tests/task-management/task-detail-task-profiles.spec.ts` 出現失敗，失敗原因為上述兩列 [@senior-qa]
-- [ ] 1.2 （Green）修改 `design/prototype/pages/task-management/task-detail.html` 之 `renderPublishActions()`：`dry_run_in_progress` 不渲染任何執行控制按鈕，`waiting_iaa_confirmation` 同時渲染開始正式標記與新增試標回合 R{trial_round+1} 兩顆按鈕，兩者皆不依 IAA 結果停用。驗證：`node $HOME/.cache/node/corepack/v1/pnpm/12.3.4/bin/pnpm.mjs playwright test tests/task-management/task-detail-task-profiles.spec.ts` exit 0，且 `cd design/prototype && node $HOME/.cache/node/corepack/v1/pnpm/12.3.4/bin/pnpm.mjs typecheck` exit 0 [@senior-frontend]
+- [ ] 1.1 修改 `design/prototype/tests/task-management/task-detail-task-profiles.spec.ts` 為 Red 回歸契約（FR-013 對照表、SC-047 第一段）：`RUN_CONTROL_CASES` 之 `dry_run_in_progress` 列改為斷言 `#publishDryRunBtn` 存在且為停用狀態、文字為「新增試標回合 R2」、按鈕旁可見原因文字「本回合全部提交並完成 IAA 後才能新增下一回合」，且操作列只有這一顆執行控制按鈕；`waiting_iaa_confirmation` 列改為斷言 `#publishOfficialRunBtn` 文字為「開始正式標記」且 `#publishDryRunBtn` 文字為「新增試標回合 R2」、兩者皆可點擊。驗證：`node $HOME/.cache/node/corepack/v1/pnpm/12.3.4/bin/pnpm.mjs playwright test tests/task-management/task-detail-task-profiles.spec.ts` 出現失敗，失敗原因為上述兩列 [@senior-qa]
+- [ ] 1.2 （Green）修改 `design/prototype/pages/task-management/task-detail.html` 之 `renderPublishActions()`：依 design.md D4，`dry_run_in_progress` 只渲染停用狀態的新增試標回合 R{trial_round+1} 與可見原因文字（含雙語 i18n 鍵），`waiting_iaa_confirmation` 同時渲染開始正式標記與新增試標回合 R{trial_round+1} 兩顆按鈕，兩者皆不依 IAA 結果停用。驗證：`node $HOME/.cache/node/corepack/v1/pnpm/12.3.4/bin/pnpm.mjs playwright test tests/task-management/task-detail-task-profiles.spec.ts` exit 0，且 `cd design/prototype && node $HOME/.cache/node/corepack/v1/pnpm/12.3.4/bin/pnpm.mjs typecheck` exit 0 [@senior-frontend]
 
 ## 2. 自待確認發起新回合
 
@@ -46,8 +46,8 @@
 > **相依**：群組 1。2.1 與 2.2 的 committed Red 必須全部先於 2.3；2.3 → 2.4 序列執行。
 > **回合完成的製造方式**：依 design.md D3，以頁面載入前寫入標記端試標進度（全數提交）觸發 `syncStatusFromDryRunProgress()`，或以 `?status=waiting_iaa_confirmation` 直接載入；實作端不得為測試新增任何開關。
 
-- [ ] 2.1 撰寫 `design/prototype/tests/task-management/issue-791-trial-round-from-waiting.spec.ts` 之 Red 回歸契約（AC-3.12、SC-047 第二段與 delta 內三條未編號情境）：其一自 `draft` 發布 R1 後任務狀態為 `dry_run_in_progress` 且不論 R1 腳本 IAA 結果為何皆不直接進入待確認；其二寫入全數提交之試標進度後任務進入 `waiting_iaa_confirmation`；其三於待確認點擊新增試標回合 R2 而未填修訂紀錄時被逐欄阻擋且狀態維持待確認；其四補齊後成功建立 R2、狀態轉為 `dry_run_in_progress`、操作列不再出現新增試標回合，且在未寫入 R2 進度前重新整理頁面狀態仍為 `dry_run_in_progress`。驗證：`node $HOME/.cache/node/corepack/v1/pnpm/12.3.4/bin/pnpm.mjs playwright test tests/task-management/issue-791-trial-round-from-waiting.spec.ts` 出現失敗 [@senior-qa]
-- [ ] 2.2 修改 `design/prototype/tests/task-management/task-detail-stage-flow.spec.ts` 為 Red 契約；R1 發布後判定 banner 不得再出現「建議新增下一個試標回合」且操作列不存在新增回合按鈕；改以寫入全數提交之試標進度使任務進入待確認後，才於同一操作列點擊新增試標回合 R2，其後斷言維持原有的樣本池分配與回合歷程內容。驗證：`node $HOME/.cache/node/corepack/v1/pnpm/12.3.4/bin/pnpm.mjs playwright test tests/task-management/task-detail-stage-flow.spec.ts` 出現失敗 [@senior-qa]
+- [ ] 2.1 撰寫 `design/prototype/tests/task-management/issue-791-trial-round-from-waiting.spec.ts` 之 Red 回歸契約（AC-3.12、SC-047 第二段與 delta 內三條未編號情境）：其一自 `draft` 發布 R1 後任務狀態為 `dry_run_in_progress` 且不論 R1 腳本 IAA 結果為何皆不直接進入待確認；其二寫入全數提交之試標進度後任務進入 `waiting_iaa_confirmation`；其三於待確認點擊新增試標回合 R2 而未填修訂紀錄時被逐欄阻擋且狀態維持待確認；其四補齊後成功建立 R2、狀態轉為 `dry_run_in_progress`、操作列的新增試標回合 R3 為停用並顯示原因文字，且在未寫入 R2 進度前重新整理頁面狀態仍為 `dry_run_in_progress`。驗證：`node $HOME/.cache/node/corepack/v1/pnpm/12.3.4/bin/pnpm.mjs playwright test tests/task-management/issue-791-trial-round-from-waiting.spec.ts` 出現失敗 [@senior-qa]
+- [ ] 2.2 修改 `design/prototype/tests/task-management/task-detail-stage-flow.spec.ts` 為 Red 契約；R1 發布後判定 banner 不得再出現「建議新增下一個試標回合」且操作列的新增回合按鈕為停用；改以寫入全數提交之試標進度使任務進入待確認後，才於同一操作列點擊新增試標回合 R2，其後斷言維持原有的樣本池分配與回合歷程內容。驗證：`node $HOME/.cache/node/corepack/v1/pnpm/12.3.4/bin/pnpm.mjs playwright test tests/task-management/task-detail-stage-flow.spec.ts` 出現失敗 [@senior-qa]
 - [ ] 2.3 （Green）修改 `design/prototype/pages/task-management/task-detail.html` 之 `publishDryRun()` 與 `syncStatusFromDryRunProgress()`：依 design.md D1 與 D2，發布任一回合後狀態一律為 `dry_run_in_progress`、回合紀錄於發布時不寫入一致性結果，改於進度同步轉入待確認時補寫。驗證：`node $HOME/.cache/node/corepack/v1/pnpm/12.3.4/bin/pnpm.mjs playwright test tests/task-management/issue-791-trial-round-from-waiting.spec.ts` exit 0 [@senior-frontend]
 - [ ] 2.4 （Green）修改 `design/prototype/pages/task-management/task-detail.html` 之判定 banner 與雙語 i18n 鍵：依 design.md D2，試標進行中說明本回合進行中、待確認且未達標時的下一步說明同時指向開始正式標記與新增試標回合。驗證：`node $HOME/.cache/node/corepack/v1/pnpm/12.3.4/bin/pnpm.mjs playwright test tests/task-management/task-detail-stage-flow.spec.ts` exit 0，且 `cd design/prototype && node $HOME/.cache/node/corepack/v1/pnpm/12.3.4/bin/pnpm.mjs typecheck` exit 0 [@senior-frontend]
 - [ ] 2.5 執行 `node scripts/gen-screen-inventory.mjs` 重生畫面盤點清單並單獨提交（產品原型檔已變更，須在最後一次 rebase 之後執行）。驗證：`scripts/check-sdd.sh` 之 INVENTORY_FRESHNESS 為 0 筆、`scripts/inventory-tests.sh` exit 0 [@main]
@@ -55,17 +55,17 @@
 
 ## 3. ADR 修訂、archive 與正典回寫（最終群組）
 
-**故事目標**（SC-047）：ADR-022 狀態機與正典 014 自 v3.3.1 回寫為 v3.4.0 後，「新增試標回合只能自待 IAA 確認發起」成為狀態機白名單、FR 條文、驗收情境與成功標準四處一致的契約。
+**故事目標**（SC-047）：ADR-022 狀態機與正典 014 自 v3.3.1 回寫為 v4.0.0 後，「新增試標回合只能自待 IAA 確認發起」成為狀態機白名單、FR 條文、驗收情境與成功標準四處一致的契約。
 
 > **產品檔案（0）**：本組不動任何產品程式。
 > **最終群組**：是。本組執行 `/opsx:archive` 與正典回寫，並收集 Source-Verify 證據。
 > **相依**：群組 2 全部完成且證據已由主 session 核實。
-> **版本判定**：**MINOR v3.4.0**（理由見 proposal.md「規格」節；若維護者依 design.md Q5 改判 MAJOR，則為 v4.0.0）。回寫前須先 `git fetch` 並確認 `origin/main` 上正典 014 仍為 v3.3.1；若期間有其他 change 已把 014 推進，版本號須依合併目標重算，不得倒退。
+> **版本判定**：**MAJOR v4.0.0**（維護者 2026-09-18 裁定，理由見 proposal.md Impact 節）。回寫前須先 `git fetch` 並確認 `origin/main` 上正典 014 仍為 v3.3.1；若期間有其他 change 已把 014 推進，版本號須依合併目標重算，不得倒退。
 > **原地改寫，不得追加**：FR-013 與 AC-3.12 以既有 ID 置於 delta 的 `## ADDED Requirements`（衍生檢視無此二條，無法 `## MODIFIED`）；回寫正典時必須改寫原條文，正典中每個 ID 仍只能出現一次定義。
 
 - [ ] 3.1 修改 `docs/adr/022-task-state-machine-location.md`：Transition Table 新增 waiting_iaa_confirmation 至 dry_run_in_progress 一列（前置條件為專案負責人新增試標回合且通過修訂紀錄必填檢查、新回合清單已建立），回溯轉換限制句補列此轉換，ALLOWED_TRANSITIONS 的 WAITING_IAA_CONFIRMATION 集合加入 DRY_RUN_IN_PROGRESS，並於標頭新增 Amended 日期列註明 issue #791。驗證：`grep -n 'DRY_RUN_IN_PROGRESS' docs/adr/022-task-state-machine-location.md` 於 ALLOWED_TRANSITIONS 區塊內出現兩次 [@senior-architect]
 - [ ] 3.2 執行 `openspec archive task-detail-trial-round-from-waiting --yes`，並確認衍生視圖已合併本次 delta。驗證：`openspec validate --changes --no-interactive` 通過，且本 change 目錄已移入 archive [@main]
-- [ ] 3.3 修改正典 `specs/task-management/014-task-detail/spec.md`：版本 v3.3.1 → v3.4.0；原地改寫 Prototype 互動規格按鈕列（dry_run_in_progress 與 waiting_iaa_confirmation 兩項）、AC-3.12 與 FR-013；於 AC-3.13 之後新增 delta 內三條未編號情境並接續 AC-3.13 依序配發三個新 AC 編號；於 SC-046 之後新增 SC-047；最後新增 v3.4.0 Changelog 條目。每處編輯須先斷言錨點恰 1 筆再替換。驗證：`scripts/check-spec-artifacts.sh` exit 0 [@main]
+- [ ] 3.3 修改正典 `specs/task-management/014-task-detail/spec.md`：版本 v3.3.1 → v4.0.0；原地改寫 Prototype 互動規格按鈕列（dry_run_in_progress 與 waiting_iaa_confirmation 兩項）、AC-3.12 與 FR-013；於 AC-3.13 之後新增 delta 內三條未編號情境並接續 AC-3.13 依序配發三個新 AC 編號；於 SC-046 之後新增 SC-047；最後新增 v4.0.0 Changelog 條目並標註 BREAKING。每處編輯須先斷言錨點恰 1 筆再替換。驗證：`scripts/check-spec-artifacts.sh` exit 0 [@main]
 - [ ] 3.4 執行 `node scripts/gen-screen-inventory.mjs` 重生畫面盤點清單並單獨提交——產生器會計入正典的 FR 與 SC 數量，3.3 回寫後 INVENTORY_FRESHNESS 必然轉紅。驗證：`scripts/check-sdd.sh` 為 0 error、`scripts/inventory-tests.sh` exit 0 [@main]
 - [ ] 3.5 執行 Source-Verify gate（gate 4）：衍生視圖中每一處正典引用（FR／AC／SC ID、點次、檔案路徑、issue 編號、被改寫的條文子句）必須逐一以 grep 於正典定位，特別是 FR-013 所引用的 FR-008a、FR-010f-2、FR-010o-3、FR-010t、FR-017 與 `annotation/015-annotation-workspace` FR-096；同步更新衍生視圖開頭的「目前收錄」清單與正典路徑版本註記。驗證：全部引用可定位、零 MISSING [@main]
 

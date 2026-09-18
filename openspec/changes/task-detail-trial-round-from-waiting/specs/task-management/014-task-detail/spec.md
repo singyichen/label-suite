@@ -1,4 +1,4 @@
-> 正典：`specs/task-management/014-task-detail/spec.md`（v3.3.1 → v3.4.0，**MINOR**，版本判定理由見 proposal.md「規格」節）。issue #791。
+> 正典：`specs/task-management/014-task-detail/spec.md`（v3.3.1 → v4.0.0，**MAJOR**，維護者 2026-09-18 裁定：收回既有行為屬破壞性變更，理由見 proposal.md Impact 節）。issue #791。
 >
 > **為何既有 ID 放在 `## ADDED Requirements` 底下**：FR-013 與 AC-3.12 皆已存在於正典，但**不在** `openspec/specs/task-management/014-task-detail/spec.md` 衍生檢視內（衍生檢視目前只收錄 FR-005j、FR-005k、FR-008b、FR-010s、FR-010s-1、FR-010s-2、FR-010t、FR-018、FR-019、FR-020、FR-021）。對它們下 `## MODIFIED` 會在 archive 階段以 header not found 硬中止，而 `openspec validate` 對此零訊號。因此本 delta 以既有 ID 在衍生檢視中「首次收錄」修訂後的全文；gate 4 回寫正典時 MUST **原地改寫** FR-013 與 AC-3.12，不得在正典中新增第二條同 ID 條文。本 delta 內未帶 AC ID 的情境為新增驗收情境，AC 編號於 gate 4 回寫時依正典既有順序配發（接續 AC-3.13）。
 
@@ -11,14 +11,14 @@ Overview「任務狀態與執行控制」的執行控制按鈕 MUST 與任務狀
 | 任務狀態 | 顯示的執行控制按鈕 |
 |----------|--------------------|
 | `draft` | `新增試標回合 R1` |
-| `dry_run_in_progress` | 不顯示任何執行控制按鈕；MUST NOT 顯示 `新增試標回合 R{n}` |
+| `dry_run_in_progress` | `新增試標回合 R{trial_round+1}` 以**停用**狀態顯示，並於按鈕旁以可見文字顯示原因「本回合全部提交並完成 IAA 後才能新增下一回合」 |
 | `waiting_iaa_confirmation` | `開始正式標記` 與 `新增試標回合 R{trial_round+1}` 兩者並列 |
 | `official_run_in_progress` | `標記完成` |
 | `completed` | 不顯示執行控制按鈕，只顯示狀態 badge 與說明文字 |
 
-**(1) 回合必須先結束才能開下一回合**。`dry_run_in_progress` 表示目前回合仍在進行；此狀態下 MUST NOT 提供任何新增試標回合的入口。下一個回合只能在目前回合依 FR-008a 完成、任務自動進入 `waiting_iaa_confirmation` 之後發起。
+**(1) 回合必須先結束才能開下一回合**。`dry_run_in_progress` 表示目前回合仍在進行；此狀態下 `新增試標回合 R{trial_round+1}` MUST 維持可見但停用，點擊 MUST NOT 建立回合、MUST NOT 改變任務狀態，原因文字 MUST 以可見文字呈現（MUST NOT 只放在 tooltip）。下一個回合只能在目前回合依 FR-008a 完成、任務自動進入 `waiting_iaa_confirmation` 之後發起。此停用的依據是「本回合尚未結束」，與 IAA 是否達標無關，因此不違反 FR-010o-3。
 
-**(2) 待 IAA 確認是唯一的決策點**。`waiting_iaa_confirmation` 狀態 MUST 同時提供 `開始正式標記` 與 `新增試標回合 R{trial_round+1}`：兩者是同一決策點上的互斥選項，任一成功後任務即轉入新狀態、另一按鈕依新狀態不再顯示，因此不構成「語意衝突的操作」。本需求不改變 FR-010o-3——IAA 達標與否仍只是顧問性警示，兩個按鈕 MUST NOT 因 IAA 未達標而停用或隱藏。
+**(2) 待 IAA 確認是唯一的決策點**。`waiting_iaa_confirmation` 狀態 MUST 同時提供 `開始正式標記` 與 `新增試標回合 R{trial_round+1}`：兩者是同一決策點上的互斥選項，任一成功後任務即轉入新狀態、操作列改依新狀態的對照表呈現，因此不構成「語意衝突的操作」。本需求不改變 FR-010o-3——IAA 達標與否仍只是顧問性警示，兩個按鈕 MUST NOT 因 IAA 未達標而停用或隱藏。
 
 **(3) 新狀態轉換**。自 `waiting_iaa_confirmation` 成功建立 `新增試標回合 R{n}`（`n >= 2`）時，任務狀態 MUST 轉為 `dry_run_in_progress`；該回合清單建立（FR-010f-2）與狀態轉換 MUST 視為同一動作，MUST NOT 出現「清單已建立但狀態仍為 `waiting_iaa_confirmation`」或「狀態已轉換但清單尚未建立」的可觀察中間狀態。轉換後 MUST NOT 在新回合任何一筆標記提交之前，就因 FR-008a 的完成條件立即轉回 `waiting_iaa_confirmation`——FR-008a 對新回合的評估 MUST 涵蓋本回合剛建立的標記作業。
 
@@ -35,11 +35,12 @@ Overview「任務狀態與執行控制」的執行控制按鈕 MUST 與任務狀
 - **THEN** 系統阻擋建立並逐欄提示缺項，任務狀態維持 `waiting_iaa_confirmation`
 - **AND** 補齊必填欄位（或勾選 `no_change` 並填寫 `no_change_reason`）後方可成功建立 R2，任務狀態轉為 `dry_run_in_progress`，且新建立的 `TrialRound.sampling_value` 等於本輪實際建立之試標清單筆數（FR-017、FR-010f-2）
 
-#### Scenario: 試標進行中不提供新增試標回合
+#### Scenario: 試標進行中的新增試標回合按鈕停用並顯示原因
 
 - **GIVEN** 任務處於 `dry_run_in_progress`（不論目前是 R1 或其後任一回合）
 - **WHEN** `project_leader` 檢視 Overview「任務狀態與執行控制」
-- **THEN** 畫面 MUST NOT 出現 `新增試標回合` 按鈕，亦不出現其他執行控制按鈕
+- **THEN** 操作列顯示停用狀態的 `新增試標回合 R{trial_round+1}`，按鈕旁可見原因文字「本回合全部提交並完成 IAA 後才能新增下一回合」，且不出現其他執行控制按鈕
+- **AND** 點擊該按鈕不建立任何回合，任務狀態維持 `dry_run_in_progress`
 
 #### Scenario: 待 IAA 確認同時提供開始正式標記與新增試標回合
 
@@ -58,5 +59,5 @@ Overview「任務狀態與執行控制」的執行控制按鈕 MUST 與任務狀
 
 - **GIVEN** `TASK_STATUSES` 五種任務狀態各一個以 `project_leader` 開啟的任務
 - **WHEN** 逐一檢視 Overview「任務狀態與執行控制」操作列
-- **THEN** `新增試標回合` 按鈕恰只出現在 `draft`（顯示 R1）與 `waiting_iaa_confirmation`（顯示 R{trial_round+1}）兩種狀態，五種狀態逐一比對 5／5 符合 FR-013 對照表
+- **THEN** 可點擊的 `新增試標回合` 按鈕恰只出現在 `draft`（顯示 R1）與 `waiting_iaa_confirmation`（顯示 R{trial_round+1}）兩種狀態，`dry_run_in_progress` 只出現停用狀態的該按鈕並附原因文字，五種狀態逐一比對 5／5 符合 FR-013 對照表
 - **AND** 任一任務自 `draft` 起經歷 N 個試標回合（N >= 2），每一個 R{n}（`n >= 2`）的建立都恰對應一次 `waiting_iaa_confirmation → dry_run_in_progress` 轉換，不存在任何在 `dry_run_in_progress` 期間建立的回合
