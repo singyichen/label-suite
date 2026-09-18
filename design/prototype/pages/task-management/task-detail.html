@@ -9322,6 +9322,23 @@ function getTaskTypeLabel() {
     };
   }
 
+  /* Issue #800/FR-021(6): getArFilteredSamples() returning zero rows means
+     the samples.map()/forEach() loops in buildJsonExportPayload and
+     buildJsonMinExportPayload never run, so buildTaskSpecificExportFields's
+     single deriveSequence call site (SC-045) never executes and
+     state.arSeqExportRun.blocked stays false regardless of whether the
+     recorded tokenizer engine is actually available. Reusing that same call
+     site with a synthetic empty sample/annotation keeps the blocked decision
+     coming from the module's own return value (D5) -- this page still never
+     inspects the tokenizer fields itself. */
+  function ensureArSeqExportProbeChecksTokenizer(samples, seqOptions, conditions) {
+    if (samples.length > 0) return;
+    if (!seqOptions || seqOptions.token_unit !== 'word') return;
+    var probeSample = { sampleId: '__ar_seq_export_probe__', textZh: '', textEn: '' };
+    var probeAnnotation = { annotator: '__ar_seq_export_probe__', value: null, reviewStatus: 'pending' };
+    buildTaskSpecificExportFields(probeSample, probeAnnotation, getExportConfigData(), seqOptions, conditions);
+  }
+
   /* Config-driven (constitution: Generalization-First) — one record per
      TASK_DATA.outputs[] entry (ADR-029), reading the shared
      OUTPUT_TYPE_IAA_REGISTRY plus any target_agreement_overrides; a newly
@@ -9734,6 +9751,10 @@ function getTaskTypeLabel() {
          accumulator is discarded before any real download. */
       var probeSamples = getArFilteredSamples(conditions);
       state.arSeqExportRun = { blocked: false, tokenizer: null, alignmentMode: null, expandedSpanCount: 0, expansions: [] };
+      /* Issue #800: probeSamples can legitimately be empty (the snapshot's
+         own filter conditions re-derive to zero rows) -- without this, the
+         map()/forEach() below never runs and the block check is skipped. */
+      ensureArSeqExportProbeChecksTokenizer(probeSamples, seqOptions, conditions);
       if (format === 'json') { buildJsonExportPayload(probeSamples, conditions, seqOptions); }
       else { buildJsonMinExportPayload(probeSamples, conditions, seqOptions); }
       var blocked = state.arSeqExportRun.blocked;
@@ -10653,6 +10674,10 @@ document.getElementById('memberProgressSort').addEventListener('change', functio
            (task 2.4 point 4). */
         var probeSamples = getArFilteredSamples();
         state.arSeqExportRun = { blocked: false, tokenizer: null, alignmentMode: null, expandedSpanCount: 0, expansions: [] };
+        /* Issue #800: probeSamples can legitimately be empty (current
+           filters match no rows) -- without this, the map()/forEach() below
+           never runs and the block check is skipped. */
+        ensureArSeqExportProbeChecksTokenizer(probeSamples, wordOptions, null);
         if (format === 'json') { buildJsonExportPayload(probeSamples, null, wordOptions); }
         else { buildJsonMinExportPayload(probeSamples, null, wordOptions); }
         var blocked = state.arSeqExportRun.blocked;
