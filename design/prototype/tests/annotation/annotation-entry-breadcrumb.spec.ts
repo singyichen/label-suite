@@ -6,7 +6,7 @@
  * inside, nothing on screen names the task or says which run the unit belongs
  * to. FR-064's context banner answers "which unit", but it is scoped to one
  * review unit and never carries the task name, so a reviewer who arrived by
- * deep link cannot tell T016 from T017 — both render the same card.
+ * deep link cannot tell T015 from T016 — both render the same card.
  *
  * These tests pin the breadcrumb that closes that gap on all three entry
  * paths that exist before submission (dashboard quick-review CTA, list row,

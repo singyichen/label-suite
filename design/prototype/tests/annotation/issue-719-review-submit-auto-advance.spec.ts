@@ -23,7 +23,7 @@ import { buildWorkspaceUrl, fillArbitrationReasons, patchDataFile, skipGuideline
  *
  * Every scenario below pins the review-unit ENUMERATION with
  * REVIEWER_MOCK_ROWS.T001 (patched at runtime via patchDataFile, never the
- * source file) rather than relying on the demo T014-T017 seed: this file's
+ * source file) rather than relying on the demo T014-T016 seed: this file's
  * seedReviewFlowDemo() inline comments are stale against the current FR-093
  * single-owner-relay derivation (getReviewUnitStatus), and pinning the mock
  * rows is the only way to control enumeration ORDER deterministically, which

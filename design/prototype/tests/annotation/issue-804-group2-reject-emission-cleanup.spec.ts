@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { buildListUrl, buildWorkspaceUrl, fillArbitrationReasons, skipGuidelineModal } from './_workspace-helpers';
+import { buildWorkspaceUrl, fillArbitrationReasons, skipGuidelineModal } from './_workspace-helpers';
 
 /* issue #804 group 2 (FR-092): the retired `reject` decision must have no
  * live history-event emission point left in EITHER run_type. Group 1
@@ -15,14 +15,22 @@ import { buildListUrl, buildWorkspaceUrl, fillArbitrationReasons, skipGuidelineM
  * -- render-side compatibility for PRE-EXISTING 'rejected' events (FR-086)
  * is untouched; only the write side is in scope here.
  *
- * Both tests below are real-behavior, UI-driven assertions per project TDD
- * rules -- no history event is seeded directly into a bucket. The
- * arbitration test drives an actual arbiter submit through the real UI
- * (seeding only the two PRECONDITION submissions via the production
- * markSampleSubmitted() function, the same legitimate pattern
- * annotation-workspace-arbitration.spec.ts uses); the demo-seed test drives
- * the real seedReviewFlowDemo() by loading the page, the same path every
- * T014-T017 visitor goes through.
+ * The test below is a real-behavior, UI-driven assertion per project TDD
+ * rules -- no history event is seeded directly into a bucket. It drives an
+ * actual arbiter submit through the real UI (seeding only the two
+ * PRECONDITION submissions via the production markSampleSubmitted()
+ * function, the same legitimate pattern
+ * annotation-workspace-arbitration.spec.ts uses).
+ *
+ * issue #815: the seedReviewFlowDemo() demo-data companion test that used to
+ * follow it (T017 oft-05-pending-review, loading the page to drive the real
+ * seeder) is deleted, not retargeted -- T017 is retired, and no seed row
+ * anywhere (official_run or otherwise) still carries the `rejectBy` this
+ * test needed; the same reasoning already deleted the equivalent block in
+ * issue-502-reject-branch-seed.spec.ts. The bullet above documenting group
+ * 2's removal of that seed row's markSampleRejected() call stays as an
+ * accurate historical record of the code change; only the row itself, and
+ * the test that exercised it, are gone.
  */
 
 interface Identity {
@@ -128,23 +136,6 @@ test.describe('issue #804 group 2 -- arbitration no longer upholds a pure reject
 
     // FR-092 / AC-1.25: no fresh 'rejected' event may be produced.
     const history = await getSampleHistory(page, TASK, 'official_run', SAMPLE, { annotatorId: ANNOTATOR });
-    expect(history.some((event) => event.action === 'rejected')).toBe(false);
-  });
-});
-
-test.describe('issue #804 group 2 -- seedReviewFlowDemo no longer rolls T017 oft-05 back to pending', () => {
-  test('oft-05-pending-review keeps the annotator submitted with no rejected event', async ({ page }) => {
-    // Loading any reviewer/official_run page for T017 triggers the demo
-    // seeder (seedReviewFlowDemo(), idempotent via a localStorage marker) --
-    // this is the same real path every T017 visitor goes through, not a
-    // fixture seeded directly into the bucket.
-    await page.goto(buildListUrl({ task_id: 'T017', role: 'reviewer', run_type: 'official_run' }));
-
-    const annotatorIdentity = { annotatorId: 'kioleemg12' };
-    const status = await getSampleStatus(page, 'T017', 'annotator', 'official_run', 'oft-05-pending-review', annotatorIdentity);
-    expect(status).toBe('submitted');
-
-    const history = await getSampleHistory(page, 'T017', 'official_run', 'oft-05-pending-review', annotatorIdentity);
     expect(history.some((event) => event.action === 'rejected')).toBe(false);
   });
 });
