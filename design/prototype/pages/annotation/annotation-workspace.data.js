@@ -363,14 +363,6 @@
     return Object.keys(snapshot).length ? snapshot : null;
   }
 
-  /* One output type's answer, for the FR-086 accepted/modified decision.
-     Plain-value types live under previewState[outKey]; position-type
-     comparison is registry-driven and lands with FR-087's position half. */
-  function outputSlice(payload, outKey) {
-    var state = (payload && payload.previewState) || {};
-    return JSON.stringify(state[outKey] != null ? state[outKey] : null);
-  }
-
   function markSampleSubmitted(taskId, role, runType, sampleId, payload, historySummary, identity) {
     var key = submissionBucketKey(taskId, role, runType, identity);
     var bucket = readSubmissionBucket(key);
@@ -393,18 +385,23 @@
     writeSubmissionBucket(key, bucket);
   }
 
-  /* FR-086 emission points for `accepted` / `modified`. A reviewer submit
-     carries one decision per output type (FR-051); an approve whose value
-     matches the annotator's is an acceptance, an approve whose value
-     differs is a correction. `reject` is not emitted here -- that path
-     already writes `rejected` through markSampleRejected. */
+  /* FR-086 / FR-092 emission points for the three REVIEW_DECISIONS values.
+     A reviewer submit carries one decision per output type (FR-051); each
+     decision maps to exactly one history action, per FR-086's v5.0.0
+     revision -- `approve` always writes `accepted` (FR-092 point 1: "無異議，直接定稿"), `modify` writes `modified` (FR-092 point 2: the correction
+     does not take effect immediately, it only opens a dispute), and
+     `bypass` writes `bypassed` (FR-092 point 3). This is a closed one-to-one
+     table, not a value-diff comparison -- AC-2.21's v5.0.0 revision fixes
+     `modified`'s trigger to the decision itself. `reject` is not in
+     REVIEW_DECISIONS (FR-092) and has no emission point here. */
+  var REVIEW_DECISION_EVENT_ACTION = { approve: 'accepted', modify: 'modified', bypass: 'bypassed' };
+
   function appendReviewDecisionEvents(entry, taskId, runType, sampleId, payload, summary, actorId, identity, decisions) {
-    var reviewed = getSubmission(taskId, 'annotator', runType, sampleId, identity);
     var reasons = (payload && payload.reasons) || {};
     Object.keys(decisions).forEach(function (outKey) {
-      if (decisions[outKey] !== 'approve') return;
-      var changed = outputSlice(payload, outKey) !== outputSlice(reviewed, outKey);
-      appendHistoryEvent(entry, changed ? 'modified' : 'accepted', 'reviewer', summary, actorId, Object.assign(
+      var action = REVIEW_DECISION_EVENT_ACTION[decisions[outKey]];
+      if (!action) return;
+      appendHistoryEvent(entry, action, 'reviewer', summary, actorId, Object.assign(
         { result_snapshot: buildResultSnapshot(payload), reason: reasons[outKey] || null },
         timingFields(payload && payload.timing)
       ));
@@ -1872,12 +1869,18 @@
    * actions on the merged trail that count as "this sample's dry-run review
    * is settled" -- the same closed set annotation-history.js's
    * ACTION_LABEL/BADGE_CLASS render, minus the ones that never conclude a
-   * unit (submitted/draft_saved/skipped/bypassed/rejected). Reused as-is
-   * rather than re-deriving it, so a new terminal action added there is not
-   * silently invisible here. */
+   * unit (submitted/draft_saved/skipped/modified/bypassed/rejected). Reused
+   * as-is rather than re-deriving it, so a new terminal action added there
+   * is not silently invisible here.
+   *
+   * `modified` and `bypassed` are excluded together, because FR-092 gives
+   * them the same standing: a reviewer's `modify` and `bypass` decisions do
+   * not take effect, they only push the item into the dispute pool, and it
+   * is the arbiter's `adjudicated` that settles it. Treating `modified` as
+   * a settling action would feed the reviewer's proposed-but-not-effective
+   * value back to the annotator as the "finalized result" (issue #804). */
   var DRY_RUN_FEEDBACK_SOURCE_ACTIONS = {
     accepted: true,
-    modified: true,
     adjudicated: true,
     exception_resolved: true,
     excluded: true,
@@ -1900,9 +1903,13 @@
       myAnswer: entry.answers || {},
       finalizedAnswer: last.result_snapshot || entry.answers || {},
       /* Unchanged only when every settling action on this sample was a
-       * plain approve -- a task with several output keys can carry one
-       * 'accepted' and one 'modified' event for the same sample, and that
-       * sample is still a "被修改" row for FR-096 point 1's count. */
+       * plain approve. `decisive` is already filtered through
+       * DRY_RUN_FEEDBACK_SOURCE_ACTIONS, so a reviewer's `modified` can
+       * never appear here (issue #804) -- the non-approve settling actions
+       * that do are 'adjudicated', 'exception_resolved' and 'excluded'. A
+       * task with several output keys can carry one 'accepted' and one of
+       * those for the same sample, and that sample is still a "被修改" row
+       * for FR-096 point 1's count. */
       modified: decisive.some(function (event) { return event.action !== 'accepted'; }),
       action: last.action,
       actorId: last.actorId,
