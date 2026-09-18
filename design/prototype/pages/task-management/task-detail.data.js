@@ -1247,6 +1247,80 @@
           gold_label: 'positive'
         }
       ]
+    },
+
+    /* issue #783 (FR-010o-4, design.md D7): demonstrates the
+       waiting_iaa_confirmation page while the latest trial round's IAA
+       computation has failed. trialRounds is an opt-in field -- most
+       unified profiles carry no rounds of their own and fall back to
+       DEFAULT_TASK_DATA.trialRounds / the synthetic single-round fallback
+       in getTrialRounds(); this profile overrides it so the round's
+       iaa_computation_status can be seeded directly. */
+    T018: {
+      taskCategories: ['classification'],
+      taskInputTypes: ['single_item'],
+      reviewerIds: ['reviewer_wang', 'reviewer_li', 'reviewer_chen', 'reviewer_lin'],
+      arbiterIds: ['reviewer_chen'],
+      outputs: [
+        {
+          type: 'single_label',
+          config: {
+            label_options: [
+              { name: 'positive', color: '#10B981' },
+              { name: 'neutral', color: '#F59E0B' },
+              { name: 'negative', color: '#EC4899' }
+            ]
+          }
+        }
+      ],
+      fieldRoleMap: { text: 'input', gold_label: 'output' },
+      reviewerGuidelineText:
+        REVIEWER_GUIDELINE_SENTIMENT_BOUNDARY_ZH +
+        '（T018）本任務的第一回合試標已完成收樣，但 IAA 計算執行失敗，' +
+        '尚未產生一致性數值：專案負責人可於總覽頁重試計算，計算完成前不開放開始正式標記或新增下一回合。',
+      datasetFileName: 'review-flow-iaa-failed.json',
+      datasetRecords: [
+        {
+          id: 'oif-01',
+          text: '客服人員態度親切，退換貨流程也說明得很清楚。',
+          gold_label: 'positive'
+        },
+        {
+          id: 'oif-02',
+          text: '包裝普通，內容物與敘述相符，沒有特別驚喜也沒有落差。',
+          gold_label: 'neutral'
+        },
+        {
+          id: 'oif-03',
+          text: '物流延遲了三天，客服的回覆也很慢，體驗不佳。',
+          gold_label: 'negative'
+        },
+        {
+          id: 'oif-04',
+          text: '產品規格與官網描述一致，操作介面簡潔易懂。',
+          gold_label: 'positive'
+        },
+        {
+          id: 'oif-05',
+          text: '價格中等，功能陽春，暫時看不出有什麼特別亮點。',
+          gold_label: 'neutral'
+        }
+      ],
+      trialRounds: [
+        {
+          round: 1,
+          sampleCount: 5,
+          agreement: null,
+          annotators: 3,
+          std: null,
+          result: null,
+          usedSamples: 5,
+          date: '2026-08-22',
+          noteZh: '第一回合的樣本已收齊，但 IAA 計算執行失敗，尚未產生一致性數值。',
+          noteEn: 'Round 1 samples are complete, but the IAA computation failed to execute and produced no agreement value.',
+          iaaComputationStatus: 'failed'
+        }
+      ]
     }
   };
 
