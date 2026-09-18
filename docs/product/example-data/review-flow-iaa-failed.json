@@ -1,0 +1,27 @@
+[
+  {
+    "id": "oif-01",
+    "text": "客服人員態度親切，退換貨流程也說明得很清楚。",
+    "gold_label": "positive"
+  },
+  {
+    "id": "oif-02",
+    "text": "包裝普通，內容物與敘述相符，沒有特別驚喜也沒有落差。",
+    "gold_label": "neutral"
+  },
+  {
+    "id": "oif-03",
+    "text": "物流延遲了三天，客服的回覆也很慢，體驗不佳。",
+    "gold_label": "negative"
+  },
+  {
+    "id": "oif-04",
+    "text": "產品規格與官網描述一致，操作介面簡潔易懂。",
+    "gold_label": "positive"
+  },
+  {
+    "id": "oif-05",
+    "text": "價格中等，功能陽春，暫時看不出有什麼特別亮點。",
+    "gold_label": "neutral"
+  }
+]
