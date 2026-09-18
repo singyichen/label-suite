@@ -17,10 +17,10 @@
 
 Stage 1 可合併後保持本 change open。Stage 2 開始前，主 session 必須：
 
-1. 確認 #645 已合併，且 `design/system/user-path-map.html` 與權威 source metadata 可從本 branch 讀取。
-2. 逐項解決 `design.md` 的七個 Stage 2 Open Decisions；不得由 QA 或 implementation agent 自行選擇。
-3. 更新 canonical spec、design 與 delta，使 metadata locator、revision resolution、完整 stale semantics、dirty／shallow history handling、stable diagnostics 與 CI fetch contract 都可測試。
-4. 重新執行 OpenSpec schema validation 與 `scripts/check-sdd.sh`。
+1. 確認 #645 已合併，且 `design/system/user-path-map.html` 與權威 source metadata 可從本 branch 讀取。（已完成——#645 已合併）
+2. 逐項解決 `design.md` 的七個 Stage 2 Open Decisions；不得由 QA 或 implementation agent 自行選擇。（已完成，見 2026-09-18 Design Amendment PR，`design.md` 之「Stage 2 Design Amendment — Screen-List Fingerprint Model」一節；不得由 QA 或 implementation agent 自行推翻已核准內容）
+3. 更新 design 與 delta，使 metadata locator（`<head>` 內唯一 `<meta name="path-map-screen-fingerprint" content="sha256:<64 碼 hex>">`）、fingerprint 比較語意與 stable diagnostics 都可測試。（已完成，見同一 PR）canonical `specs/foundation/002-user-path-map-freshness-check/spec.md` 的 FR／AC 措辭與版本號依規則不在本 PR 內修改，待步驟 4～5 完成後、於 Stage 2 apply／archive 既定回寫步驟同步。
+4. 重新執行 OpenSpec schema validation 與 `scripts/check-sdd.sh`。（本 amendment PR 已個別回報兩道 gate 結果；此步驟仍須在使用者確認前，於合入本 amendment 後之最新 branch 狀態下重跑一次）
 5. 停止並取得使用者第二次明確確認，才可進入下列 Stage 2 tasks。
 
 任一條未完成時，2.1～2.6 全部 blocked。
@@ -31,10 +31,10 @@ Stage 1 可合併後保持本 change open。Stage 2 開始前，主 session 必�
 
 **故事目標**：SC-003～SC-006 — 依 #645 的已合併 authority 完成可定位的 fresh／stale 判定，再啟用 local／CI production gate。
 
-- [ ] 2.1 修改 `scripts/speckit-tests.sh`，依已核准 design amendment 新增 Stage 2 QA Red fixtures，涵蓋 fresh、兩個來源各自 stale、兩者 stale、invalid authority／history、dirty／shallow boundary 與 unmonitored-path negative control，對應 AC-2.1～AC-2.5；先提交此單檔 Red，再執行 harness，expected failure 必須是 foundation checker 尚未實作核准的解析／比較語意，並保存 command、exit 與失敗訊息。 [@senior-qa]
+- [ ] 2.1 修改 `scripts/speckit-tests.sh`，依已核准 design amendment 新增 Stage 2 QA Red fixtures，涵蓋 fresh（fingerprint 相符）、stale（screen-list fingerprint mismatch）、invalid metadata／inventory（`<meta>` missing／duplicate／malformed、screen-inventory.md ID 表格無法解析）與 unmonitored-content negative control（含未變更 ID 清單的 prototype-only 編輯），對應 AC-2.1～AC-2.5；先提交此單檔 Red，再執行 harness，expected failure 必須是 foundation checker 尚未實作核准的 fingerprint 解析／比較語意，並保存 command、exit 與失敗訊息。 [@senior-qa]
 - [ ] 2.2 Green：只修改 `scripts/check-user-path-map-freshness.mjs`，依 approved QA contract 與 amended design 實作 FR-004～FR-007；不得修改 QA contract、HTML、prototype 或 screen inventory。 [@senior-devops]
 - [ ] 2.3 修改 `scripts/ci-jobs.tsv`，保留既有 harness mapping，並將 checker row 由 regression coverage 切換至新的 direct production job 與已核准本機命令；不得加入豁免列或重複 script row。 [@senior-devops]
-- [ ] 2.4 修改 `.github/workflows/ci.yml`，新增獨立 user path map freshness job，以 Stage 2 amendment 核准的 checkout history 契約執行 direct checker；job 不得在 artifact／metadata 缺少時 skip 或回傳成功，也不得包裝 OpenSpec／Project SDD lint。 [@senior-devops]
+- [ ] 2.4 修改 `.github/workflows/ci.yml`，新增獨立 user path map freshness job，執行 direct checker；checker 全程不呼叫 `git`，故不需要 full history checkout 或任何 fetch-depth 契約，沿用既有 checkout 設定即可；job 不得在 artifact／metadata 缺少時 skip 或回傳成功，也不得包裝 OpenSpec／Project SDD lint。 [@senior-devops]
 - [ ] 2.5 修改 `CLAUDE.md` 的 Verification Commands，加入與 production job 相同的 direct checker command，並清楚區分它與 regression command；此 protected-file 修改只依使用者對 issue #665 的明確實作授權執行。 [@main]
 - [ ] 2.6 執行 command-only Stage 2 verification：`node --check scripts/check-user-path-map-freshness.mjs`、`bash scripts/speckit-tests.sh`、`node scripts/check-user-path-map-freshness.mjs`、`scripts/check-sdd.sh`、`scripts/check-spec-artifacts.sh`、`rg -n 'check-user-path-map-freshness' scripts/ci-jobs.tsv .github/workflows/ci.yml CLAUDE.md`、`git diff --check`；全部預期 exit `0`，Project SDD lint 不得輸出 `CI_JOB_PARITY`，並逐一保存 true-repository fresh 與 direct local／CI parity evidence。 [@main]
 
