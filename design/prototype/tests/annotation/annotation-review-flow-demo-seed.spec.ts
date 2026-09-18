@@ -372,7 +372,10 @@ test.describe('T017 official_run: arbitration rejects both sides, final exceptio
      samples aren't part of 7.4a's canonical rewrite, but they ARE derivable
      today under FR-093 round robin. Excluded by the `oft-01` prefix so this
      stays correct whether the canonical slot keeps its current name or has
-     been rewritten to oft-01-final-exception. */
+     been rewritten to oft-01-final-exception.
+     issue #804 group 2 (FR-092): oft-05's reviewer reject no longer rolls
+     the annotator back to pending -- it blocks finalization like any other
+     reject, so the unit now reads 爭議中 instead of 待審. */
   test('the four non-canonical oft samples keep deriving under FR-093 round robin, unaffected by the canonical rewrite', async ({ page }) => {
     const map = await collectStatusMap(page, 'T017', 'official_run');
     const nonCanonical = new Map([...map].filter(([key]) => !key.startsWith('oft-01')));
@@ -381,7 +384,7 @@ test.describe('T017 official_run: arbitration rejects both sides, final exceptio
       'oft-02-approved-interim::kioleemg12': '已定稿',
       'oft-03-modified-interim::kioleemg12': '爭議中',
       'oft-04-unanimous-gold::kioleemg12': '已定稿',
-      'oft-05-pending-review::kioleemg12': '待審',
+      'oft-05-pending-review::kioleemg12': '爭議中',
     };
     for (const [key, state] of Object.entries(expected)) {
       expect(nonCanonical.get(key), key).toBe(badgeText(state));
@@ -389,10 +392,9 @@ test.describe('T017 official_run: arbitration rejects both sides, final exceptio
   });
 
   /* Restores the old "arbitration entries on the staged disputes" block's
-     breadth for T017's disputed non-canonical sample. Only oft-03-modified-
-     interim is disputed among the 4 non-canonical samples (see the map
-     above) -- oft-02 and oft-04 finalize, oft-05 is still pending, so this
-     is a one-sample enumeration, not a retirement. */
+     breadth for T017's disputed non-canonical sample. Scoped to oft-03
+     only, as before -- oft-05 also reads 爭議中 now (issue #804 group 2),
+     but its 仲裁-entry eligibility is not asserted by this test. */
   test('reviewer_chen gets a 仲裁 entry on oft-03-modified-interim (the disputed non-canonical sample)', async ({ page }) => {
     await page.goto(
       buildListUrl({ task_id: 'T017', role: 'reviewer', run_type: 'official_run', reviewer_id: 'reviewer_chen' })

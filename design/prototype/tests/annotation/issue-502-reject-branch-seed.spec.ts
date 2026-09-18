@@ -17,9 +17,8 @@ import { buildListUrl } from './_workspace-helpers';
  *     now `reject`, but dry_run has no rollback channel -- the annotator
  *     stays 'submitted'.
  *   - T017 oft-05-pending-review x kioleemg12: reviewer_wang's decision is
- *     `reject` on official_run -- markSampleRejected() rolls the annotator
- *     back to 'pending' (existing answers kept), opening a rework backlog,
- *     while the reviewer's own decision still counts as a real review.
+ *     `reject` on official_run. The reviewer's own decision still counts as
+ *     a real review.
  *
  * issue #551 (v4.54.0) revised what dry-05's reject-with-no-correction does
  * to the unit's derived status: a reject that carries no value change used
@@ -28,12 +27,16 @@ import { buildListUrl } from './_workspace-helpers';
  * reviewer explicitly objected to it. It now blocks finalization instead --
  * the unit stays disputed until an arbiter resolves it (or a later reviewer
  * submits a correction) -- so the two dry-05 assertions below that used to
- * read 已定稿/`finalized` now read 爭議中/`disputed`. oft-05 is unaffected:
- * its annotator submission is wiped by the official_run rollback before
- * getReviewUnitStatus() ever runs, so there is nothing to derive either way.
+ * read 已定稿/`finalized` now read 爭議中/`disputed`.
+ *
+ * issue #804 group 2 (FR-092) retired official_run's reject-rollback path:
+ * markSampleRejected() no longer has a live caller in either run_type, so
+ * oft-05 behaves the same way as dry-05 above instead of wiping the
+ * annotator's submission back to 'pending' -- the four official_run
+ * assertions below were updated in lockstep with that removal.
  *
  * Traceability: specs/annotation/015-annotation-workspace/spec.md
- *   FR-014I, FR-051, FR-061, AC-3.15, AC-6.4
+ *   FR-014I, FR-051, FR-061, FR-092, AC-1.25, AC-3.15, AC-6.4
  */
 
 interface Identity {
@@ -171,42 +174,44 @@ test.describe('issue #502 -- dry_run reject: decision recorded, no rework backlo
   });
 });
 
-test.describe('issue #502 -- official_run reject: rollback to pending, rework backlog', () => {
-  test('reviewer_wang rejecting oft-05 x kioleemg12 rolls the sample back to pending', async ({ page }) => {
+test.describe('issue #502 -- official_run reject: decision recorded, no rework backlog (issue #804 group 2)', () => {
+  test('reviewer_wang rejecting oft-05 x kioleemg12 leaves the annotator submitted', async ({ page }) => {
     await page.goto(buildListUrl({ task_id: 'T017', role: 'reviewer', run_type: 'official_run' }));
 
     const annotatorIdentity = { annotatorId: 'kioleemg12' };
     const reviewerIdentity = { annotatorId: 'kioleemg12', reviewerId: 'reviewer_wang' };
 
-    // Rework backlog: the annotator's own sample is back to 'pending'.
+    // issue #804 group 2: official_run no longer has a rework-backlog
+    // channel either -- the annotator's own sample stays 'submitted'.
     const annotatorStatus = await getSampleStatus(
       page, 'T017', 'annotator', 'official_run', 'oft-05-pending-review', annotatorIdentity
     );
-    expect(annotatorStatus).toBe('pending');
+    expect(annotatorStatus).toBe('submitted');
 
-    // The annotator's original answers are kept, not wiped (they revise,
-    // they don't re-label from scratch).
+    // The annotator's original answers are untouched.
     const answers = await getSampleAnswers(
       page, 'T017', 'annotator', 'official_run', 'oft-05-pending-review', annotatorIdentity
     );
     expect(answers).toEqual({ previewState: { single_label: { selected: 'positive' } } });
 
     // The reviewer's own decision is still a real, stored submission --
-    // official_run reject counts as a completed review too.
+    // this IS what "退回也計入已審人數" means: the review happened.
     const reviewerSubmission = await getSubmission(
       page, 'T017', 'reviewer', 'official_run', 'oft-05-pending-review', reviewerIdentity
     );
     expect(reviewerSubmission).not.toBeNull();
 
-    // A 'rejected' event is traceable on the annotator's own history,
-    // attributed to the reviewer who acted.
+    // The decision text is traceable on the reviewer's own history.
     const history = await getSampleHistory(page, 'T017', 'official_run', 'oft-05-pending-review', annotatorIdentity);
-    const rejectedEvent = history.find((event) => event.action === 'rejected');
-    expect(rejectedEvent).toBeTruthy();
-    expect(rejectedEvent?.actorId).toBe('reviewer_wang');
+    const reviewerEntry = history.find((event) => event.role === 'reviewer' && event.actorId === 'reviewer_wang');
+    expect(reviewerEntry?.summary ?? '').toContain('reject');
+
+    // No 'rejected' event on the ANNOTATOR's own history -- FR-092 retired
+    // markSampleRejected()'s only official_run caller (issue #804 group 2).
+    expect(history.some((event) => event.action === 'rejected')).toBe(false);
   });
 
-  test('the rolled-back unit derives a known REVIEW_UNIT_STATUS value, not a special "rejected" state', async ({ page }) => {
+  test('the unit still derives a known REVIEW_UNIT_STATUS value, not a special "rejected" state', async ({ page }) => {
     await page.goto(buildListUrl({ task_id: 'T017', role: 'reviewer', run_type: 'official_run' }));
 
     const identity = { annotatorId: 'kioleemg12', reviewerId: 'reviewer_wang' };
@@ -215,24 +220,27 @@ test.describe('issue #502 -- official_run reject: rollback to pending, rework ba
     );
     const knownValues = await knownReviewUnitStatusValues(page);
     expect([...knownValues, null]).toContain(status);
-    // No stored annotator submission anymore (it was rolled back) --
-    // getReviewUnitStatus has nothing to review yet.
-    expect(status).toBeNull();
+    // issue #551 / #804 group 2: a reject with no correction blocks
+    // finalization instead of rolling the sample back, so the unit stays
+    // disputed -- same derivation as dry-05 above.
+    expect(status).toBe('disputed');
   });
 
-  test('the reviewer list still renders the unit as 待審, matching a never-reviewed pending unit', async ({ page }) => {
+  test('the reviewer list badge for oft-05 x kioleemg12 reads 爭議中, not 待審', async ({ page }) => {
     await page.goto(buildListUrl({ task_id: 'T017', role: 'reviewer', run_type: 'official_run' }));
 
-    const rows = page.getByTestId('ws-sample-item').filter({ hasText: 'oft-05-pending-review' });
-    await expect(rows).toHaveCount(1);
-    await expect(rows.locator('.status-badge')).toHaveText('待審');
+    const target = page.getByTestId('ws-sample-item')
+      .filter({ hasText: 'oft-05-pending-review' })
+      .filter({ hasText: 'kioleemg12' });
+    await expect(target).toHaveCount(1);
+    await expect(target.locator('.status-badge')).toHaveText('爭議中 · 未定稿');
   });
 
-  test('the annotator list surfaces the rework backlog as a pending item', async ({ page }) => {
+  test('the annotator list no longer surfaces a rework backlog -- the sample reads 已提交', async ({ page }) => {
     await page.goto(buildListUrl({ task_id: 'T017', role: 'annotator', run_type: 'official_run' }));
 
     const rows = page.getByTestId('ws-sample-item').filter({ hasText: 'oft-05-pending-review' });
     await expect(rows).toHaveCount(1);
-    await expect(rows.locator('.status-badge')).not.toHaveText('已提交');
+    await expect(rows.locator('.status-badge')).toHaveText('已提交');
   });
 });
