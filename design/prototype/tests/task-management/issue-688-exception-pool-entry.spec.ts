@@ -98,11 +98,13 @@ test.describe('Final exception pool entry + completion gate (issue #688)', () =>
 
   // FR-018 point 1: 0 pending items renders the empty state, the section
   // itself is never removed/hidden -- it is the closure gate's only
-  // auditable surface (FR-008b point 4). T016 seeds 0 pending review units
-  // (dashboard-review-flow-demo.spec.ts: "T016=0 pending") and has no
-  // arbReject seed row, so it has zero final-exception-pool items.
+  // auditable surface (FR-008b point 4). issue #815 (retire-stale-review-
+  // demo-fixtures, tasks.md 1.2) migrated T017's sole arbReject row into
+  // T016 (ofm-05-final-exception), so T016 no longer has zero
+  // final-exception-pool items -- retargeted to T015, the other official_run
+  // review demo task, which still has no arbReject seed row.
   test('renders the empty state instead of hiding the section when the pool is empty', async ({ page }) => {
-    await openAnnotationProgress(page, '?task_id=T016&tab=annotation-progress&status=official_run_in_progress');
+    await openAnnotationProgress(page, '?task_id=T015&tab=annotation-progress&status=official_run_in_progress');
 
     await expect(page.locator('#finalExceptionPoolSection')).toBeVisible();
     await expect(page.locator('#finalExceptionPoolTitle')).toHaveText(/0\s*項待處置/);
