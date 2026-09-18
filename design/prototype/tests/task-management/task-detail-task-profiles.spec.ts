@@ -219,10 +219,18 @@ const RUN_CONTROL_CASES: RunControlCase[] = [
 ];
 
 test.describe('Task detail profile mapping', () => {
-  test('project leader can open task detail from every illustrative task row', async ({ page }) => {
-    await page.goto(TASK_LIST_URL);
+  /* #771: these two loops used to walk all 7 EXAMPLE_SOURCE_FILES rows inside
+     a single test -- 14 click/goBack round trips sharing one 30s Playwright
+     budget. Under machine load the whole file's runtime went from ~16s to
+     50s-1.8m and blew that shared budget. A budget-shaped fix (test.slow()'s
+     flat 3x multiplier, or a shared `retries`) still leaves one slow row able
+     to starve the rest; splitting into one test per row instead gives every
+     round trip its own fresh 30s budget, so a load spike only threatens the
+     row it hits. Assertions are unchanged, just re-scoped per row. */
+  for (const sourceFile of EXAMPLE_SOURCE_FILES) {
+    test(`project leader can open task detail from task row ${sourceFile}`, async ({ page }) => {
+      await page.goto(TASK_LIST_URL);
 
-    for (const sourceFile of EXAMPLE_SOURCE_FILES) {
       const row = page.locator(
         `#taskTableBody tr[data-source-file="${sourceFile}"]`,
       );
@@ -233,13 +241,13 @@ test.describe('Task detail profile mapping', () => {
       );
       await page.goBack();
       await expect(page).toHaveURL(/task-list\.html\?task_role=project_leader/);
-    }
-  });
+    });
+  }
 
-  test('super admin can open task detail from every illustrative task row', async ({ page }) => {
-    await page.goto('/pages/task-management/task-list.html?task_role=super_admin');
+  for (const sourceFile of EXAMPLE_SOURCE_FILES) {
+    test(`super admin can open task detail from task row ${sourceFile}`, async ({ page }) => {
+      await page.goto('/pages/task-management/task-list.html?task_role=super_admin');
 
-    for (const sourceFile of EXAMPLE_SOURCE_FILES) {
       const row = page.locator(
         `#taskTableBody tr[data-source-file="${sourceFile}"]`,
       );
@@ -250,8 +258,8 @@ test.describe('Task detail profile mapping', () => {
       );
       await page.goBack();
       await expect(page).toHaveURL(/task-list\.html\?task_role=super_admin/);
-    }
-  });
+    });
+  }
 
   for (const task of TASK_PROFILES) {
     test(`renders task-specific overview for ${task.id}`, async ({ page }) => {
