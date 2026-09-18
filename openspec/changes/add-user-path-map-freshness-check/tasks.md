@@ -45,7 +45,7 @@ Stage 1 可合併後保持本 change open。Stage 2 開始前，主 session 必�
 
 **故事目標**：SC-004～SC-006 — 以四個獨立 gate 與真實 repository freshness evidence 證明 change 可進入 final archive。
 
-- [ ] 3.1 執行 command-only final verification：`openspec validate add-user-path-map-freshness-check --type change`、`scripts/check-sdd.sh`、`bash scripts/speckit-tests.sh`、`node scripts/check-user-path-map-freshness.mjs`、`scripts/check-spec-artifacts.sh`、`git diff --check`；全部預期 exit `0`，分開記錄 OpenSpec schema、Project SDD lint、code/test、真實 artifact freshness 與 scope evidence。 [@main]
+- [x] 3.1 執行 command-only final verification：`openspec validate add-user-path-map-freshness-check --type change`、`scripts/check-sdd.sh`、`bash scripts/speckit-tests.sh`、`node scripts/check-user-path-map-freshness.mjs`、`scripts/check-spec-artifacts.sh`、`git diff --check`；全部預期 exit `0`，分開記錄 OpenSpec schema、Project SDD lint、code/test、真實 artifact freshness 與 scope evidence。 [@main]
 
 ## Pre-merge finalization（在 /opsx:apply 外，NON-CHECKBOX）
 
