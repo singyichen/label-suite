@@ -1,5 +1,5 @@
 ---
-功能分支: chore/772-rearchive-014-canon
+功能分支: docs/791-trial-round-from-waiting
 建立日期: 2026-04-20
 版本: 3.3.1
 狀態: Draft
