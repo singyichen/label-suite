@@ -302,8 +302,10 @@ test.describe('Task detail URL view-state (issue #726)', () => {
       // ar_review_status enum (design.md D5); a second hardcoded copy in
       // the URL-parsing code would silently drift from it the next time a
       // status is added.
+      // Three-state as of spec 014 v3.0.0 (issue #688); the former
+      // `approved`/`modified` interim states were retired (issue #807).
       const literalArrayCount = (
-        source.match(/\['pending', 'approved', 'modified', 'disputed', 'finalized'\]/g) || []
+        source.match(/\['pending', 'disputed', 'finalized'\]/g) || []
       ).length;
       expect(literalArrayCount).toBe(1);
 
