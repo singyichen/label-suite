@@ -12,11 +12,11 @@
 
 **故事目標**：SC-004W、SC-004K — 使示範審核單位的識別碼與現行三態語彙一致，讓 reviewer 視圖橫幅與審核單位狀態推導的示範資料停止教一套已廢止的中間狀態。
 
-- [ ] 1.1 新增 Red 測試檔 `design/prototype/tests/annotation/issue-627-demo-sample-id-vocabulary.spec.ts`，斷言 T016 五個審核單位的識別碼皆不含已廢止的中間狀態詞，且兩個新識別碼各自可解析出對應的審核單位與答案種子；先提交此單檔再執行，expected failure 必須只因舊識別碼仍在。 [@senior-qa]
-- [ ] 1.2 Green：於 `design/prototype/pages/annotation/annotation-workspace.data.js` 將 T016 答案種子的兩個 map key 與審核種子列的對應欄位同步改名，兩處在同一次編輯內一起改。 [@senior-frontend]
-- [ ] 1.3 於 `design/prototype/pages/task-management/task-detail.data.js` 將兩個樣本清單識別碼與其上方散文敘述同步改名。 [@senior-frontend]
-- [ ] 1.4 於 `design/prototype/pages/task-management/task-detail.html` 將標記結果種子的兩列識別碼改名，該列其餘欄位維持 PR #823 合併後的值。 [@senior-frontend]
-- [ ] 1.5 於 `docs/product/example-data/review-flow-official-multi.json` 將對應識別碼改名，使示範資料檔與原型種子保持同一組識別碼。 [@senior-frontend]
-- [ ] 1.6 於 design prototype 測試目錄下 9 個既有規格檔內將兩個識別碼逐處改名，斷言強度與夾具錨點維持原樣。 [@senior-qa]
-- [ ] 1.7 回寫正典 `specs/annotation/015-annotation-workspace/spec.md`：同步 AC-4.31 與 AC-4.36 兩條活條文的引文、版本號遞增與 Changelog 新增一列；沿革條文、已撤銷條文、Changelog 舊列與 STATUS 歷史敘事列維持逐字原樣。 [@main]
+- [x] 1.1 新增 Red 測試檔 `design/prototype/tests/annotation/issue-627-demo-sample-id-vocabulary.spec.ts`，斷言 T016 五個審核單位的識別碼皆不含已廢止的中間狀態詞，且兩個新識別碼各自可解析出對應的審核單位與答案種子；先提交此單檔再執行，expected failure 必須只因舊識別碼仍在。（Red `821be240`：3 則皆因舊識別碼仍在而失敗） [@senior-qa]
+- [x] 1.2 Green：於 `design/prototype/pages/annotation/annotation-workspace.data.js` 將 T016 答案種子的兩個 map key 與審核種子列的對應欄位同步改名，兩處在同一次編輯內一起改。（Green `1bd4f834`） [@senior-frontend]
+- [x] 1.3 於 `design/prototype/pages/task-management/task-detail.data.js` 將兩個樣本清單識別碼與其上方散文敘述同步改名。（`1bd4f834`） [@senior-frontend]
+- [x] 1.4 於 `design/prototype/pages/task-management/task-detail.html` 將標記結果種子的兩列識別碼改名，該列其餘欄位維持 PR #823 合併後的值。（`1bd4f834`） [@senior-frontend]
+- [x] 1.5 於 `docs/product/example-data/review-flow-official-multi.json` 將對應識別碼改名，使示範資料檔與原型種子保持同一組識別碼。（`1bd4f834`） [@senior-frontend]
+- [x] 1.6 於 design prototype 測試目錄下 9 個既有規格檔內將兩個識別碼逐處改名，斷言強度與夾具錨點維持原樣。（`1bd4f834`：9 檔、共 29 處連同產品檔一次改名） [@senior-qa]
+- [x] 1.7 回寫正典 `specs/annotation/015-annotation-workspace/spec.md`：同步 AC-4.31 與 AC-4.36 兩條活條文的引文、版本號遞增與 Changelog 新增一列；沿革條文、已撤銷條文、Changelog 舊列與 STATUS 歷史敘事列維持逐字原樣。（`d2cf1313`：正典 v6.4.0，archive 為 `2026-09-18-rename-misleading-review-sample-ids`） [@main]
 - [ ] 1.8 執行 `pnpm typecheck` 與 `pnpm playwright test` 於 design prototype 目錄，並執行 `scripts/check-sdd.sh`；三者皆須 exit 0，並以全庫搜尋複驗舊識別碼僅殘留於沿革條文與歷史敘事列。 [@main]
