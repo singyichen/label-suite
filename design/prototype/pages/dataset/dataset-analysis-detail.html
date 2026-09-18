@@ -1755,8 +1755,12 @@ function computeAnnotatorModificationRates(taskId, outputs) {
     var sampleIds = byAnnotator[annotatorId];
     var reviewedUnits = sampleIds.length;
     var perType = {};
-    var totalModified = 0;
-    var totalReviewed = 0;
+    // FR-040 (spec.md:479, 485): the total column is one number per
+    // annotator -- its denominator is the plain review-unit count and its
+    // numerator is a per-unit OR across output types, never a per-type sum
+    // (a unit changed in 2 of 3 types would otherwise be double-counted,
+    // and the denominator would inflate by outputs.length).
+    var totalModifiedSampleIds = {};
     outputs.forEach(function(outKey) {
       var modified = 0;
       sampleIds.forEach(function(sampleId) {
@@ -1768,16 +1772,15 @@ function computeAnnotatorModificationRates(taskId, outputs) {
           var reviewerAnswer = api.convertSubmissionAnswer(outKey, reviewerSubmission.answers);
           return !api.compareOutputAnswer(outKey, annotatorAnswer, reviewerAnswer).equal;
         });
+        if (changed) totalModifiedSampleIds[sampleId] = true;
         if (changed) modified += 1;
       });
       perType[outKey] = { modified: modified, reviewed: reviewedUnits };
-      totalModified += modified;
-      totalReviewed += reviewedUnits;
     });
     return {
       annotatorId: annotatorId,
       perType: perType,
-      total: { modified: totalModified, reviewed: totalReviewed },
+      total: { modified: Object.keys(totalModifiedSampleIds).length, reviewed: reviewedUnits },
       smallSample: reviewedUnits < IAA_SMALL_SAMPLE_THRESHOLD,
     };
   });
