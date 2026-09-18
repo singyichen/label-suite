@@ -1,6 +1,6 @@
 ## Purpose
 
-User Path Map Freshness Check 的 derived capability；正典為 `specs/foundation/002-user-path-map-freshness-check/spec.md` v1.0.0。本 change 以兩階段實作 FR-001～FR-010、AC-1.1～AC-3.3 與 SC-001～SC-006。Stage 2 原本明確受 GitHub issue #645 的 artifact／metadata authority 阻擋；#645 已合併，且 2026-09-18 design amendment（screen-list fingerprint model，見 `design.md`）已核准 metadata locator 與比較語意。Stage 2 實作仍受 `#645 hard checkpoint` 的 gate 重跑與使用者第二次明確確認阻擋（`tasks.md`）。
+User Path Map Freshness Check 的 derived capability；正典為 `specs/foundation/002-user-path-map-freshness-check/spec.md` v2.0.0。本 change 以兩階段實作 FR-001～FR-010、AC-1.1～AC-3.3 與 SC-001～SC-006：Stage 1 交付 fail-closed CLI 與 fixture regression；#645 合併後，依 2026-09-18 design amendment 的 screen-list fingerprint 模型交付 Stage 2 判定並啟用 production CI gate。AC-2.3 已退役併入 AC-2.2。
 
 ## ADDED Requirements
 
@@ -40,7 +40,7 @@ User Path Map Freshness Check 的 derived capability；正典為 `specs/foundati
 
 ### Requirement: FR-004～FR-007、SC-003～SC-004 — #645 後的 authoritative freshness 判定（2026-09-18 amendment：screen-list fingerprint model）
 
-#645 已合併 `design/system/user-path-map.html`；2026-09-18 design amendment 依維護者裁定，將 recorded metadata 定義為 screen-list fingerprint（`design/system/screen-inventory.md` 的畫面／視圖 ID 清單雜湊），而非 git revision。系統 MUST 只監看 `design/system/screen-inventory.md` 目前渲染的畫面 ID（`screens[].id`）與視圖 ID（`entry.views[].id`、`screenViews[*].views[].id`）；`design/prototype/pages/**` 的內容變更不再由本 checker 直接監看，只有在該變更透過既有 `gen-screen-inventory.mjs --check` 反映為 screen-inventory.md 的 ID 增減時才會被偵測到。系統 MUST 從 `design/system/user-path-map.html` 的 `<head>` 讀取唯一 `<meta name="path-map-screen-fingerprint" content="sha256:<64 碼小寫 hex>">`，並與依 screen-inventory.md 即時重算的 sha256 fingerprint 逐位元比較；相符為 fresh，不符為 stale。系統 MUST 區分 fresh、stale 與無法判斷（metadata／inventory 缺漏、重複、格式錯誤、無法解析）。實作仍受 `#645 hard checkpoint` 的 gate 重跑與使用者第二次明確確認阻擋。
+#645 已合併 `design/system/user-path-map.html`；2026-09-18 design amendment 依維護者裁定，將 recorded metadata 定義為 screen-list fingerprint（`design/system/screen-inventory.md` 的畫面／視圖 ID 清單雜湊），而非 git revision。系統 MUST 只監看 `design/system/screen-inventory.md` 目前渲染的畫面 ID（`screens[].id`）與視圖 ID（`entry.views[].id`、`screenViews[*].views[].id`）；`design/prototype/pages/**` 的內容變更不再由本 checker 直接監看，只有在該變更透過既有 `gen-screen-inventory.mjs --check` 反映為 screen-inventory.md 的 ID 增減時才會被偵測到。系統 MUST 從 `design/system/user-path-map.html` 的 `<head>` 讀取唯一 `<meta name="path-map-screen-fingerprint" content="sha256:<64 碼小寫 hex>">`，並與依 screen-inventory.md 即時重算的 sha256 fingerprint 逐位元比較；相符為 fresh，不符為 stale。系統 MUST 區分 fresh、stale 與無法判斷（metadata／inventory 缺漏、重複、格式錯誤、無法解析）。
 
 #### Scenario: AC-2.1 authoritative fresh
 
@@ -124,4 +124,4 @@ Stage 1 MUST 由既有 `scripts/speckit-tests.sh` 與 `speckit-tests` CI job 覆
 
 - **GIVEN** 本 change 的任一階段
 - **WHEN** 複核 diff
-- **THEN** 不包含 path map 重繪、prototype／screen inventory 修改、API、DB schema、產品 runtime 或 dependency 變更
+- **THEN** 除在 `design/system/user-path-map.html` 的 `<head>` 寫入唯一指紋 meta 外，不包含 path map 重繪、prototype／screen inventory 修改、API、DB schema、產品 runtime 或 dependency 變更
