@@ -15,7 +15,7 @@
 
 ### D1 發布回合只進入進行中，完成改走既有的進度同步
 
-`publishDryRun()` 不再依回合結果決定狀態：自 `draft` 或 `waiting_iaa_confirmation` 發布任一回合後，狀態一律為 `dry_run_in_progress`。進入 `waiting_iaa_confirmation` 只經由 `syncStatusFromDryRunProgress()`（背景第 4 點）。這同時修正背景第 2 點對 FR-010o-3 的違反。
+`publishDryRun()` 不再依回合結果決定狀態：自 `draft` 或 `waiting_iaa_confirmation` 發布任一回合後，狀態一律為 `dry_run_in_progress`。進入 `waiting_iaa_confirmation` 只經由 `syncStatusFromDryRunProgress()`（背景第 4 點）。這同時修正背景第 2 點對 FR-010o-3 的違反（維護者 2026-09-18 裁定：`:10092` 的既有違規在本 change 的 apply 內修正，不另開 issue）：發布後的狀態不再讀取回合 IAA 結果；回合全員完成後一律進入 `waiting_iaa_confirmation`，不論該回合 IAA 是否達標。
 
 **不採用的替代方案**：
 - **保留「發布即完成」、直接落在 `waiting_iaa_confirmation`**：Red 最好寫，但等於讓 prototype 永遠不經過 `dry_run_in_progress`，FR-013 對照表中「試標進行中不顯示新增回合」這一列將沒有任何可觀察畫面，且與 FR-008a 相悖。
@@ -43,14 +43,16 @@ prototype 目前以 `STATUS_ORDER`（:4568）排序 stepper，沒有轉換白名
 
 ## 範圍界線
 
-- **不修改** `annotation/015-annotation-workspace` 與其 prototype。FR-096 的揭露閘門 `getDryRunFeedback()`（`design/prototype/pages/annotation/annotation-workspace.data.js:1930`）以**任務狀態**而非回合判斷，R2 進行中時會連同已結束的 R1 回饋一併隱藏——這是過度隱藏、不是洩漏，Data Fairness 不受影響；但與 FR-096「看到自己在歷次試標中的表現回饋」有落差。此落差在舊流程中同樣存在（舊流程的未達標回合從未進入待確認，回饋從未揭露），不是本 change 引入，列為維護者待決事項 Q3。
-- **不修改** FR-008、FR-008a、SC-004 與正典 `:455`「不允許跳階」的措辭（見未決事項 Q2）。
+- **不修改** `annotation/015-annotation-workspace` 與其 prototype。FR-096 的揭露閘門 `getDryRunFeedback()`（`design/prototype/pages/annotation/annotation-workspace.data.js:1930`）以**任務狀態**而非回合判斷，R2 進行中時會連同已結束的 R1 回饋一併隱藏——這是過度隱藏、不是洩漏，Data Fairness 不受影響；但與 FR-096「看到自己在歷次試標中的表現回饋」有落差。此落差在舊流程中同樣存在（舊流程的未達標回合從未進入待確認，回饋從未揭露），不是本 change 引入；維護者 2026-09-18 裁定另以 issue #834 追蹤，本 change 不修改 FR-096（Q3）。
+- **不修改** FR-008、FR-008a 的條文。正典 `:455`「不允許跳階」與 SC-004 依 Q2 裁定只補一句釐清（delta FR-013 第 (7) 點），不新增編號。
 - **不修改** `task-config.data.js`、`task-detail.data.js`。
 
-## 未決事項（apply 前由維護者確認）
+## 未決事項（維護者 2026-09-18 已全數裁定）
 
-- **Q1**：正典中除 issue #791 點名的 `:375-376` 與 AC-3.12 外，`:377`（`waiting_iaa_confirmation` 的按鈕列）與 FR-013（`:601`，與 `:376` 同一條規則的 FR 版本）若不同步改寫，正典會自相矛盾；本 change 已將兩者納入。請確認。
-- **Q2**：正典 `:455`「狀態轉換必須符合 `TASK_STATUSES` 順序，不允許跳階」與 SC-004「任務狀態轉換遵循定義順序」在新增回溯轉換後是否需補一句說明（本 change 判定「回溯不等於跳階」而維持原文）。
-- **Q3**：`annotation/015-annotation-workspace` FR-096 揭露閘門以任務狀態判斷所造成的 R{n+1} 進行中隱藏 R{n} 回饋，是否另開 issue 追蹤（見範圍界線）。
-- ~~**Q4**~~（**已裁定** 2026-09-18）：`dry_run_in_progress` 顯示停用的新增回合按鈕並附原因文字，見 D4。
-- ~~**Q5**~~（**已裁定** 2026-09-18）：移除既有行為屬 MAJOR，014 v3.3.1 → v4.0.0；issue #783 的 014 change 相應為 v4.1.0。
+- ~~**Q1**~~（**已裁定**）：正典 `:377` 與 FR-013（`:601`）納入本 change 同步改寫，與 issue #791 點名的 `:375-376`、AC-3.12 一起處理。
+- ~~**Q2**~~（**已裁定**）：delta FR-013 第 (7) 點補上釐清句「合法轉換以 ADR-022 轉換表為準；表列的回溯轉換不視為跳階」，gate 4 原地寫入正典 `:455` 行為規則與 SC-004；屬措辭釐清，不新增 AC。
+- ~~**Q3**~~（**已裁定**）：`annotation/015-annotation-workspace` FR-096 揭露閘門造成的 R{n+1} 進行中隱藏 R{n} 回饋，另以 issue #834 追蹤；本 change 不修改 FR-096。
+- ~~**Q4**~~（**已裁定**）：`dry_run_in_progress` 顯示停用的新增回合按鈕並附原因文字，見 D4。
+- ~~**Q5**~~（**已裁定**）：移除既有行為屬 MAJOR，014 v3.3.1 → v4.0.0；issue #783 的 014 change 相應為 v4.1.0。
+- ~~**`:10092` 既有違規**~~（**已裁定**）：於本 change apply 內修正，見 D1；tasks.md 2.1 Red 斷言、2.3 Green 修正。
+- ~~**正典取回**~~（**已裁定**）：自 `specs/_archive/014-task-detail/` 搬回 `specs/task-management/014-task-detail/` 可接受，依 CLAUDE.md「Modify Existing Feature」第 1、5 步；合併後再歸位。

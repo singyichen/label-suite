@@ -13,6 +13,8 @@
 
 維護者已於 2026-09-18 裁定：**新增試標回合只能自 `waiting_iaa_confirmation` 發起**，新增 `waiting_iaa_confirmation → dry_run_in_progress` 轉換，`dry_run_in_progress` 期間不得新增回合；`annotation/015-annotation-workspace` FR-096 不變。
 
+同日維護者就本 change 的待決事項全數裁定：`:377` 與 FR-013 一併改寫（Q1）；`:455`「不允許跳階」與 SC-004 補一句釐清（Q2）；FR-096 揭露閘門的既有落差另以 issue #834 追蹤（Q3）；`publishDryRun()` `:10092` 的既有違規於本 change apply 內修正；正典自 `specs/_archive/` 取回可接受。
+
 **是否需要存在（YAGNI 檢查）**：需要。這不是新功能而是補上狀態機缺的一條邊——少了它，「看完結果再決定要不要再試一輪」這個試標迴圈的核心動作在規格上不存在。
 
 ## What Changes
@@ -21,9 +23,10 @@
 - **新增狀態轉換** `waiting_iaa_confirmation → dry_run_in_progress`：新回合清單建立與狀態轉換為同一動作；轉換後在新回合任何提交之前不得因 FR-008a 立即轉回待確認。
 - **AC-3.12 前提改寫**：由「處於 `dry_run_in_progress`」改為「處於 `waiting_iaa_confirmation`」，並補上「被阻擋時狀態維持不變」與「成功後轉為 `dry_run_in_progress`」兩個可觀察結果。
 - **新增 SC-047**：可點擊的 `新增試標回合` 恰只出現在 `draft` 與 `waiting_iaa_confirmation` 兩種狀態（`dry_run_in_progress` 只顯示停用按鈕與原因），且每個 R{n}（`n >= 2`）恰對應一次自待確認發起的轉換。
+- **`:455` 與 SC-004 釐清**（Q2，不新增編號）：「合法轉換以 ADR-022 轉換表為準；表列的回溯轉換不視為跳階」，寫在 delta FR-013 第 (7) 點，gate 4 原地補入正典。
 - **新增三條驗收情境**（AC 編號於 gate 4 回寫時配發，接續 AC-3.13）：試標進行中的新增回合按鈕停用並顯示原因、待確認同時提供兩個按鈕、新回合建立後不會立即轉回。
 - **ADR-022 修訂**（apply 任務，不在本 propose 內改動）：Transition Table 新增一列、`:92`「Reverse transitions (other than `waiting_iaa_confirmation → draft`) are not permitted」補列新的回溯轉換、`ALLOWED_TRANSITIONS`（`:113`）`WAITING_IAA_CONFIRMATION` 集合加入 `DRY_RUN_IN_PROGRESS`，並新增 Amended 日期列。
-- **prototype**：`renderPublishActions()` 依新對照表渲染；`publishDryRun()` 不再依 IAA 決定狀態，回合完成改走既有的 `syncStatusFromDryRunProgress()`；回合結果改在完成時寫入（design.md D1、D2）。
+- **prototype**：`renderPublishActions()` 依新對照表渲染；`publishDryRun()` 不再依 IAA 決定狀態（修正 `:10092` 對 FR-010o-3／FR-008a 的既有違規），發布後一律為 `dry_run_in_progress`，回合全員完成後經既有的 `syncStatusFromDryRunProgress()` 一律進入 `waiting_iaa_confirmation`，不論 IAA 是否達標；回合結果改在完成時寫入（design.md D1、D2）。
 
 **BREAKING 判定**：**BREAKING**。沒有任何 FR／AC／SC ID 被移除，但既有行為「`dry_run_in_progress` 可新增下一回合」被收回；維護者 2026-09-18 裁定移除既有行為一律視為 MAJOR。版本判定見 Impact。
 
@@ -44,11 +47,11 @@
 **規格**
 
 - 正典：`specs/task-management/014-task-detail/spec.md`（v3.3.1 → v4.0.0，**MAJOR**）。維護者 2026-09-18 裁定：本 change 收回 `dry_run_in_progress` 可新增下一回合的既有行為，移除既有行為屬破壞性變更，一律判為 MAJOR。FR-013 與 AC-3.12 的 ID 保留、條文原地改寫。issue #783 的 014 change 以本版為基準，目標版本相應為 v4.1.0。
-- 正典待改寫錨點（gate 4）：`:375-377`（Prototype 互動規格按鈕列）、`:450` AC-3.12、`:601` FR-013、驗收情境清單末（AC-3.13 之後新增三條）、成功標準區 SC-046 之後新增 SC-047、Changelog 新增 v4.0.0 列。
+- 正典待改寫錨點（gate 4）：`:375-377`（Prototype 互動規格按鈕列）、`:450` AC-3.12、`:455` 行為規則（補釐清句）、`:601` FR-013、SC-004（`:737`，補釐清句）、驗收情境清單末（AC-3.13 之後新增三條）、成功標準區 SC-046 之後新增 SC-047、Changelog 新增 v4.0.0 列。
 - 該正典原封存於 `specs/_archive/014-task-detail/`，本 change 開立時已依 issue #648 取回至 `specs/task-management/014-task-detail/`（本分支第一個 commit）；合併後依 #742／#772 先例另開 PR 歸位。
 - 衍生檢視：`openspec/specs/task-management/014-task-detail/spec.md`（archive 時自動合併；開頭「目前收錄」清單與正典版本註記須於 gate 4 同步）。
 - ADR：`docs/adr/022-task-state-machine-location.md`（`:5` Amended、`:82` Transition Table、`:92` 回溯轉換句、`:113` `ALLOWED_TRANSITIONS`）。
-- 上游 `annotation/015-annotation-workspace`：不修改（FR-096 不變，揭露閘門的既有落差列於 design.md Q3）。
+- 上游 `annotation/015-annotation-workspace`：不修改（FR-096 不變；揭露閘門的既有落差另以 issue #834 追蹤，見 design.md Q3）。
 - 下游：無。
 
 **原型程式（Principle X 之產品檔案盤點）**
