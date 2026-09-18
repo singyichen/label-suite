@@ -1405,10 +1405,10 @@
       'ofm-03-awaiting-arbitration': [
         { annotator: 'kioleemg12', answers: { single_label: 'neutral' } }
       ],
-      'ofm-04-majority-converged': [
+      'ofm-04-reviewer-bypass': [
         { annotator: 'kioleemg12', answers: { single_label: 'positive' } }
       ],
-      'ofm-05-all-divergent': [
+      'ofm-05-final-exception': [
         { annotator: 'kioleemg12', answers: { single_label: 'neutral' } }
       ]
     },
@@ -3074,7 +3074,18 @@
        single assigned reviewer (this change's tasks.md group 7, design.md
        Migration Plan point 3). The remaining ofm-* / oft-* rows keep their
        pre-existing multi-reviewer shape untouched -- they exercise
-       unaffected, non-canonical derivation paths, not the FR-093 model. */
+       unaffected, non-canonical derivation paths, not the FR-093 model.
+
+       issue #815 (retire-stale-review-demo-fixtures, tasks.md 1.2): T016's
+       `ofm-04-majority-converged` / `ofm-05-all-divergent` rows above were
+       the last two T016 rows still seeding a three-reviewer unit -- a shape
+       FR-093 cannot produce. Both are now single-assigned-reviewer rows
+       too: `ofm-04-reviewer-bypass` demos the `bypass` decision (FR-044,
+       FR-092) that had zero seed coverage anywhere in this table, and
+       `ofm-05-final-exception` absorbs T017's `oft-01-final-exception`
+       content (FR-061 point 3's arbitration-reject -> final-exception-pool
+       path), preserving that coverage ahead of T017's removal in this
+       change's group 2. */
     var scripts = [
       /* T014 dry_run, min_reviewers = 1 */
       { t: 'T014', r: 'dry_run', s: 'dry-01-all-agree', a: A, v: 'positive', rev: { reviewer_wang: 'positive' } }, // finalized
@@ -3125,8 +3136,16 @@
       { t: 'T016', r: 'official_run', s: 'ofm-01-reviewer-corrects-b', a: A, v: 'positive', rev: { reviewer_wang: 'negative' }, modifyBy: 'reviewer_wang', reason: '第二句語氣轉折應判讀為負面，而非正面', arb: 'negative' }, // finalized (reviewer modifies, arbitration adopts B)
       { t: 'T016', r: 'official_run', s: 'ofm-02-reviewer-accepts-a', a: A, v: 'negative', rev: { reviewer_wang: 'negative' } }, // finalized (reviewer accepts A)
       { t: 'T016', r: 'official_run', s: 'ofm-03-awaiting-arbitration', a: A, v: 'neutral', rev: { reviewer_wang: 'negative' } }, // disputed (reviewer modifies, awaiting arbitration)
-      { t: 'T016', r: 'official_run', s: 'ofm-04-majority-converged', a: A, v: 'positive', rev: { reviewer_wang: 'neutral', reviewer_li: 'neutral', reviewer_lin: 'positive' } }, // finalized (neutral 2 > 3/2)
-      { t: 'T016', r: 'official_run', s: 'ofm-05-all-divergent', a: A, v: 'neutral', rev: { reviewer_wang: 'positive', reviewer_li: 'negative', reviewer_lin: 'neutral' } }, // disputed (1/1/1)
+      /* issue #815: bypass (無法判定) had zero seed rows anywhere -- a lone
+         bypass, like a lone modify, forces the unit into dispute
+         (DISPUTE_FORCING_DECISIONS). design.md D2: bypass stores no answer
+         value, so `rev` carries the reviewer key with an undefined value. */
+      { t: 'T016', r: 'official_run', s: 'ofm-04-reviewer-bypass', a: A, v: 'positive', rev: { reviewer_wang: undefined }, bypassBy: 'reviewer_wang', reason: '文本正負面線索交雜且語氣曖昧，難以判定情緒傾向' }, // disputed (reviewer bypasses, no answer value recorded)
+      /* issue #815: migrated verbatim from T017's oft-01-final-exception
+         (removed in this change's group 2) so the sole arbitration-reject
+         (兩者皆非) -> final-exception-pool seed (FR-061 point 3, FR-095)
+         survives T017's removal. */
+      { t: 'T016', r: 'official_run', s: 'ofm-05-final-exception', a: A, v: 'neutral', rev: { reviewer_wang: 'positive' }, modifyBy: 'reviewer_wang', reason: '語境不足以判斷情緒傾向，正面與中性難以取捨', arbReject: true, arbReason: '原標記與審核修正結果皆缺乏明確文本依據支持，需退回標記指南徵詢更明確判準' }, // disputed (reviewer modifies, arbitration rejects both sides -> final exception pool)
       /* T017 official_run, min_reviewers = 2 */
       /* issue #596 (FR-093/FR-061 point 3/FR-095): the canonical exception
          path -- reviewer_wang corrects the annotator's value, but
@@ -3164,16 +3183,20 @@
       Object.keys(row.rev || {}).forEach(function (reviewerId) {
         var isReject = row.rejectBy === reviewerId;
         var isModify = row.modifyBy === reviewerId;
-        var decision = isReject ? 'reject' : (isModify ? 'modify' : 'approve');
-        /* issue #502/#596: mirrors handleReviewSubmit's per-row decision
+        /* issue #815: `bypassBy` mirrors `modifyBy`/`rejectBy` -- names the
+           one entry in `rev` whose decision was `bypass` (無法判定) rather
+           than approve/modify/reject. */
+        var isBypass = row.bypassBy === reviewerId;
+        var decision = isReject ? 'reject' : (isModify ? 'modify' : (isBypass ? 'bypass' : 'approve'));
+        /* issue #502/#596/#815: mirrors handleReviewSubmit's per-row decision
            line (annotation-workspace.config.js's decisionLines, ~L4780) so
-           a seeded reject/modify reads the same way a live one would. */
-        var reviewSummary = (isReject || isModify)
+           a seeded reject/modify/bypass reads the same way a live one would. */
+        var reviewSummary = (isReject || isModify || isBypass)
           ? 'single_label · ' + row.a + ': ' + decision + ' — ' + (row.reason || '')
           : '';
         markSampleSubmitted(
           row.t, 'reviewer', row.r, row.s,
-          labelPayload(row.rev[reviewerId], decision, (isReject || isModify) ? row.reason : null),
+          labelPayload(row.rev[reviewerId], decision, (isReject || isModify || isBypass) ? row.reason : null),
           reviewSummary,
           { annotatorId: row.a, reviewerId: reviewerId }
         );

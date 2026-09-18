@@ -1164,7 +1164,7 @@
         '（T016）本任務為正式標記（official_run）：每筆樣本恰指派一位標記員、形成一個審核單位，' +
         '系統再依 FR-093 以審核單位為單位指派，平均分給名冊上被勾選的審核員；每個單位恰有一位審核員，不存在票數或人數要求。' +
         '審核決策為通過／修正／無法判定三選一：修正與無法判定皆須填寫理由並轉入爭議池（如 ' +
-        'ofm-05-all-divergent），由具 can_arbitrate 權限且非當事人的仲裁員裁定。',
+        'ofm-05-final-exception），由具 can_arbitrate 權限且非當事人的仲裁員裁定。',
       datasetFileName: 'review-flow-official-multi.json',
       datasetRecords: [
         {
@@ -1183,12 +1183,12 @@
           gold_label: 'neutral'
         },
         {
-          id: 'ofm-04-majority-converged',
+          id: 'ofm-04-reviewer-bypass',
           text: '平日中午人不多用餐很安靜，餐點水準就是一般商業午餐的等級。',
           gold_label: 'neutral'
         },
         {
-          id: 'ofm-05-all-divergent',
+          id: 'ofm-05-final-exception',
           text: '餐點好吃但服務很糟，價格又偏貴，實在說不上推不推薦。',
           gold_label: 'neutral'
         }

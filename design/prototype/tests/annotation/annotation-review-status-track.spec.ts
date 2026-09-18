@@ -40,11 +40,14 @@ import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
    it is the only same-lane finalized T016 sample left after the rewrite
    (see annotation-review-flow-demo-seed.spec.ts's non-canonical-samples
    test for the other three staying disputed). ofm-05's reviewer differs
-   with no arbitration record -> the differing lane, still disputed. */
+   -> the differing lane, still disputed. issue #815: ofm-05 (now
+   ofm-05-final-exception) has since gained a migrated arbitration-reject
+   record, but lane/status derivation reads unit status + lane only, not
+   arbitration history, so this stays true unchanged. */
 const UNITS = {
   finalizedSame: 'ofm-02-reviewer-accepts-a',
   finalizedSameOther: 'ofm-02-reviewer-accepts-a',
-  disputed: 'ofm-05-all-divergent',
+  disputed: 'ofm-05-final-exception',
 };
 
 /* The one seeded unit that reaches 已定稿 through the differing lane: the
