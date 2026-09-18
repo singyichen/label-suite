@@ -36,6 +36,18 @@
  * it now routes straight to `disputed` instead of an interim `已修改`
  * state. Task/coverage counts below are also updated to match: units that
  * used to land in the `已同意`/`已修改` buckets now land in `爭議中`.
+ *
+ * issue #804 group 2 fixup: T017's oft-05-pending-review reject no longer
+ * rolls the annotator's sample back to pending (FR-092 removed that
+ * production point), so T017 now sits at full coverage (0 pending) and can
+ * no longer demonstrate the "partial coverage + N pending" denominator
+ * case the first test below existed to pin. Swapped to T015, the task that
+ * still carries a genuinely pending unit (see
+ * issue-450-reviewer-summary-derived.spec.ts's MATRIX) -- the covered/
+ * pending/unfinalized/disputed counts below are read from that same
+ * MATRIX entry and from computeReviewSummary()/formatReviewSummary() in
+ * annotation-workspace.data.js (unfinalized = total - finalized, which is
+ * why it reads 2 here, not 1).
  */
 import { test, expect, type Page } from '@playwright/test';
 import { buildListUrl } from './_workspace-helpers';
@@ -64,12 +76,12 @@ function statePill(page: Page) {
 }
 
 test.describe('issue #452 — task-level coverage names the review-unit denominator', () => {
-  test('annotation-list T017 reads 任務覆蓋 4 / 5 個審核單位, never a bare 覆蓋率', async ({ page }) => {
-    await page.goto(buildListUrl({ task_id: 'T017', role: 'reviewer', run_type: 'official_run' }));
+  test('annotation-list T015 reads 任務覆蓋 3 / 4 個審核單位, never a bare 覆蓋率', async ({ page }) => {
+    await page.goto(buildListUrl({ task_id: 'T015', role: 'reviewer', run_type: 'official_run' }));
 
     const detail = page.locator('#taskInfoDetail');
     await expect(detail).toContainText(
-      '任務覆蓋 4 / 5 個審核單位 · 待審 1 個 · 爭議中 2 個 · IAA 無法計算',
+      '任務覆蓋 3 / 4 個審核單位 · 待審 1 個 · 爭議中 1 個 · IAA 無法計算',
     );
     await expect(detail).not.toContainText('審核覆蓋率');
   });
