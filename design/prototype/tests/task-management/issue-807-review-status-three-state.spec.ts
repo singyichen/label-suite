@@ -73,13 +73,13 @@ test.describe('Task detail annotation-results review status is three-state (issu
     // Same disambiguation already applied to annotation-workspace.data.js's
     // seedReviewFlowDemo() output (issue #627) and asserted in
     // tests/annotation/annotation-review-flow-demo-seed.spec.ts:
-    //   ofm-02-approved-interim -> 已定稿, ofm-03-modified-interim -> 爭議中.
+    //   ofm-02-reviewer-accepts-a -> 已定稿, ofm-03-awaiting-arbitration -> 爭議中.
     // task-detail.html keeps its own REVIEW_FLOW_UNITS copy for the
     // annotation-results tab and must agree.
     await page.goto(`${TASK_DETAIL_URL}?task_id=T016&tab=annotation-results`);
     await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 
-    const approvedInterimRow = page.locator('#arResultTableBody tr.ar-summary-row').filter({ hasText: 'ofm-02-approved-interim' });
+    const approvedInterimRow = page.locator('#arResultTableBody tr.ar-summary-row').filter({ hasText: 'ofm-02-reviewer-accepts-a' });
     await approvedInterimRow.locator('.ar-expand-btn').click();
     const kioleeRow = page.locator('#arResultTableBody .annotator-row').filter({ hasText: 'kioleemg12' });
     await expect(kioleeRow.locator('.ar-review-badge .badge')).toHaveText('已定稿');

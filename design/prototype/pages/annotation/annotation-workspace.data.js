@@ -1399,10 +1399,10 @@
       'ofm-01-reviewer-corrects-b': [
         { annotator: 'kioleemg12', answers: { single_label: 'positive' } }
       ],
-      'ofm-02-approved-interim': [
+      'ofm-02-reviewer-accepts-a': [
         { annotator: 'kioleemg12', answers: { single_label: 'negative' } }
       ],
-      'ofm-03-modified-interim': [
+      'ofm-03-awaiting-arbitration': [
         { annotator: 'kioleemg12', answers: { single_label: 'neutral' } }
       ],
       'ofm-04-majority-converged': [
@@ -3123,8 +3123,8 @@
          reviewer who is not a participant, FR-060) adopts wang's corrected
          value, and the unit finalizes on that value. */
       { t: 'T016', r: 'official_run', s: 'ofm-01-reviewer-corrects-b', a: A, v: 'positive', rev: { reviewer_wang: 'negative' }, modifyBy: 'reviewer_wang', reason: '第二句語氣轉折應判讀為負面，而非正面', arb: 'negative' }, // finalized (reviewer modifies, arbitration adopts B)
-      { t: 'T016', r: 'official_run', s: 'ofm-02-approved-interim', a: A, v: 'negative', rev: { reviewer_wang: 'negative' } }, // approved (1 < 3)
-      { t: 'T016', r: 'official_run', s: 'ofm-03-modified-interim', a: A, v: 'neutral', rev: { reviewer_wang: 'negative' } }, // modified (1 < 3)
+      { t: 'T016', r: 'official_run', s: 'ofm-02-reviewer-accepts-a', a: A, v: 'negative', rev: { reviewer_wang: 'negative' } }, // finalized (reviewer accepts A)
+      { t: 'T016', r: 'official_run', s: 'ofm-03-awaiting-arbitration', a: A, v: 'neutral', rev: { reviewer_wang: 'negative' } }, // disputed (reviewer modifies, awaiting arbitration)
       { t: 'T016', r: 'official_run', s: 'ofm-04-majority-converged', a: A, v: 'positive', rev: { reviewer_wang: 'neutral', reviewer_li: 'neutral', reviewer_lin: 'positive' } }, // finalized (neutral 2 > 3/2)
       { t: 'T016', r: 'official_run', s: 'ofm-05-all-divergent', a: A, v: 'neutral', rev: { reviewer_wang: 'positive', reviewer_li: 'negative', reviewer_lin: 'neutral' } }, // disputed (1/1/1)
       /* T017 official_run, min_reviewers = 2 */

@@ -42,8 +42,8 @@ import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
    test for the other three staying disputed). ofm-05's reviewer differs
    with no arbitration record -> the differing lane, still disputed. */
 const UNITS = {
-  finalizedSame: 'ofm-02-approved-interim',
-  finalizedSameOther: 'ofm-02-approved-interim',
+  finalizedSame: 'ofm-02-reviewer-accepts-a',
+  finalizedSameOther: 'ofm-02-reviewer-accepts-a',
   disputed: 'ofm-05-all-divergent',
 };
 

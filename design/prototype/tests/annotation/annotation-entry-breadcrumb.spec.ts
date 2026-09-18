@@ -39,7 +39,7 @@ test.describe('Entry breadcrumb — workspace', () => {
     await page.goto(
       buildWorkspaceUrl({
         task_id: 'T016',
-        sample_id: 'ofm-03-modified-interim',
+        sample_id: 'ofm-03-awaiting-arbitration',
         role: 'reviewer',
         run_type: 'official_run',
         reviewer_id: 'reviewer_wang',
@@ -55,7 +55,7 @@ test.describe('Entry breadcrumb — workspace', () => {
     await expect(nav.locator('a').nth(1)).toContainText(T016_NAME);
     await expect(nav.locator('a').nth(1)).toContainText('正式標記');
     const current = nav.locator('[aria-current="page"]');
-    await expect(current).toContainText('ofm-03-modified-interim');
+    await expect(current).toContainText('ofm-03-awaiting-arbitration');
     await expect(current).toContainText('kioleemg12');
   });
 
@@ -63,7 +63,7 @@ test.describe('Entry breadcrumb — workspace', () => {
     await page.goto(
       buildWorkspaceUrl({
         task_id: 'T016',
-        sample_id: 'ofm-03-modified-interim',
+        sample_id: 'ofm-03-awaiting-arbitration',
         role: 'reviewer',
         run_type: 'official_run',
         reviewer_id: 'reviewer_wang',
@@ -115,7 +115,7 @@ test.describe('Entry breadcrumb — workspace', () => {
     await page.goto(
       buildWorkspaceUrl({
         task_id: 'T016',
-        sample_id: 'ofm-03-modified-interim',
+        sample_id: 'ofm-03-awaiting-arbitration',
         role: 'reviewer',
         run_type: 'official_run',
       }),
@@ -135,7 +135,7 @@ test.describe('Entry breadcrumb — workspace', () => {
     await page.goto(
       buildWorkspaceUrl({
         task_id: 'T016',
-        sample_id: 'ofm-03-modified-interim',
+        sample_id: 'ofm-03-awaiting-arbitration',
         role: 'reviewer',
         run_type: 'official_run',
       }),
