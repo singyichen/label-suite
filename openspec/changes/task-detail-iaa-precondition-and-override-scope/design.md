@@ -2,7 +2,9 @@
 
 > 本文件存在的理由：兩點都直接決定資料庫 schema 與狀態機檢查位置（issue #783「這三點會阻擋 dataset 模組的 schema 定案」）。依專案規則，觸及 DB schema 的 change 需要 design.md。本文件記錄 schema 形狀、ADR 修訂內容與計算狀態的呈現，並列出裁定本身沒有回答、實作前必須先定案的問題。
 >
-> **2026-09-18 追加裁定**：維護者已就 propose 階段的 Q1、Q2、Q4、Q5 選定建議方案——014 新增 FR-010o-4 描述 waiting 頁的計算中／計算失敗＋重試；`TrialRound` 新增 `iaa_computation_status`（`pending | done | failed`）；「無法計算」視為 `done`；版本為 v4.1.0（issue #791 改判 MAJOR v4.0.0）。以下 D2、D5、D6 據此定案；Q3 仍待決，另新增 Q6–Q9。
+> **2026-09-18 追加裁定**：維護者已就 propose 階段的 Q1、Q2、Q4、Q5 選定建議方案——014 新增 FR-010o-4 描述 waiting 頁的計算中／計算失敗＋重試；`TrialRound` 新增 `iaa_computation_status`（`pending | done | failed`）；「無法計算」視為 `done`；版本為 v4.1.0（issue #791 改判 MAJOR v4.0.0）。以下 D2、D5、D6 據此定案。
+>
+> **2026-09-18 最終裁定**：其後提出的 Q3、Q6–Q9 同日全數採建議方案——資料庫 CHECK 是未來後端 schema 契約、本 change 不含 migration（Q3，D3）；`waiting_iaa_confirmation → dry_run_in_progress` 同樣要求最新回合 `done`（Q6，D1）；兩顆按鈕皆採停用＋可見原因（Q7，D6）；prototype 以回合欄位＋新示範 profile 產生計算狀態（Q8，D7）；017 FR-039 交叉引用由姊妹 change 承接（Q9）。本文件已無未決事項。
 
 ## 背景
 
@@ -21,10 +23,13 @@
 |------|----|----------------|
 | `dry_run_in_progress` | `waiting_iaa_confirmation` | All dry-run annotations submitted（刪除 "IAA calculated"；與正典 014 FR-008a `DRY_RUN_COMPLETION_RULE` 一致） |
 | `waiting_iaa_confirmation` | `official_run_in_progress` | Latest `TrialRound.iaa_computation_status = done`; project leader confirms IAA; `confirmed_by` recorded |
+| `waiting_iaa_confirmation` | `dry_run_in_progress` | issue #791 change 寫入的既有條件不變，另加 Latest `TrialRound.iaa_computation_status = done`（Q6 裁定） |
 
 另於標頭新增 `**Amended**: 2026-09-18 — ... (issue #783)` 一列，並新增一段 Amendment 說明：為何搬移（非同步計算失敗不得讓任務卡在試標進行中）、`done` 的定義（見 D2）、以及計算失敗的恢復路徑為重試計算（D6）而非回退狀態。
 
-issue #791 的 change 會在同一張表新增 `waiting_iaa_confirmation → dry_run_in_progress` 一列；該列是否也要求 `done` 未經裁定（Q6），本 change 不動該列。
+第三列由 issue #791 的 change 新增；本 change 依 Q6 裁定只為它補上計算狀態前置條件，不改動 #791 寫入的其餘條件。兩條自 `waiting_iaa_confirmation` 出發的轉換因此共用同一項檢查：最新回合計算未結束時兩者皆不可執行（FR-010o-4 第 (5)、(6) 點）。
+
+**`ALLOWED_TRANSITIONS` 註記**：白名單只描述「From 可到哪些 To」，本 change 不改其成員（`WAITING_IAA_CONFIRMATION` 集合中的 `DRY_RUN_IN_PROGRESS` 由 issue #791 加入）。計算狀態條件屬 ADR-022 服務層流程中的 `check_preconditions`，兩條轉換皆須檢查；未滿足時須回報具體未滿足的條件（計算中或計算失敗），而非一般性錯誤。
 
 ### D2 `done` 的定義（已裁定，原 Q2）
 
@@ -36,8 +41,8 @@ issue #791 的 change 會在同一張表新增 `waiting_iaa_confirmation → dry
 
 - 形狀不變：`{ [output_type]: number }`，值域 `0..1`（FR-010q）。
 - **應用層驗證**：儲存請求中出現屬 `IAA_UNCALIBRATED_TYPES` 的 key，或出現不屬於該任務 `outputs[]` 的 key，回 422 並逐項指出不允許的 key；不得靜默丟棄。
-- **資料庫 CHECK**：`target_agreement_overrides` 不得含有 `IAA_UNCALIBRATED_TYPES` 現值（目前為 `sequence_tagging`）的 key。CHECK 是縱深防禦，不取代應用層驗證。
-- **校準後自動開放**：UI 與應用層驗證都讀取 `IAA_UNCALIBRATED_TYPES` 常數與 registry，型別移出集合後不需改動 014 頁面程式。**但資料庫 CHECK 內的型別清單是 migration 裡的字面值**，型別移出集合時必須同一個 change 附上移除該 key 限制的 migration（Q3）。
+- **資料庫 CHECK（未來後端 schema 契約）**：`target_agreement_overrides` 不得含有 `IAA_UNCALIBRATED_TYPES` 現值（目前為 `sequence_tagging`）的 key。CHECK 是縱深防禦，不取代應用層驗證。本 repo 目前沒有後端 schema（`backend/alembic/versions/` 為 0 個檔案），本條記錄的是後端建置時須落地的 schema 契約；**本 change 不含任何 migration，也不新增後端任務**（Q3）。
+- **校準後自動開放**：UI 與應用層驗證都讀取 `IAA_UNCALIBRATED_TYPES` 常數與 registry，型別移出集合後不需改動 014 頁面程式。CHECK 內的型別清單將是字面值；只有在 `sequence_tagging` 完成校準時後端已經存在，才需要一支移除該 key 限制的 migration，由該校準 change 承擔，與本 change 無關（Q3）。
 - `SampleSnapshot.target_agreement_overrides`（正典 014 `:700`）沿用同一約束：快照於鎖定時複製任務設定，任務端已擋下，快照不會出現這類 key。
 
 ### D4 第 2 點不改 prototype
@@ -57,23 +62,33 @@ issue #791 的 change 會在同一張表新增 `waiting_iaa_confirmation → dry
 - 呈現位置：Overview「任務狀態與執行控制」，與既有達標條件 pills、判定 banner 同一區塊。
 - `pending`：顯示「IAA 計算中」；IAA pill、判定 banner、試標回合歷程不顯示數值與判定。
 - `failed`：顯示計算失敗狀態與「重試計算」操作（只給 `project_leader`）；點擊後回到 `pending`。
-- 最新回合不為 `done` 時，`開始正式標記` 停用並以可見文字說明原因。這個「停用＋可見原因」的形式比照 issue #791 design.md D4 已裁定的試標進行中新增回合按鈕；本 change 的原因文字草案為「IAA 計算中，完成後才能開始正式標記」與「IAA 計算失敗，請重試計算」（Q7 待確認）。
+- 最新回合不為 `done` 時，`開始正式標記` 停用並以可見文字說明原因。這個「停用＋可見原因」的形式比照 issue #791 design.md D4 已裁定的試標進行中新增回合按鈕；本 change 的原因文字草案為「IAA 計算中，完成後才能開始正式標記」與「IAA 計算失敗，請重試計算」（Q7 已裁定採停用＋可見原因；文案由維護者於 PR 審閱時確認）。
+- 最新回合不為 `done` 時，待確認頁的 `新增試標回合 R{n+1}` 同樣停用並以可見文字說明原因（Q6），草案為「IAA 計算中，完成後才能新增下一回合」與「IAA 計算失敗，請重試計算」，同樣於 PR 審閱時確認。
 - 呈現「計算未結束」時一律使用中性或資訊樣式，不使用 FR-010o-3 的未達標警示樣式。
+
+### D7 prototype 的計算狀態示範資料（Q8 裁定）
+
+- 回合紀錄新增 `iaaComputationStatus`（`pending | done | failed`），對應 D5 的 `iaa_computation_status`；**缺值視為 `done`**，既有種子與 `publishDryRun()` 產生的回合不需回填。
+- 於 `design/prototype/pages/task-management/task-detail.data.js` 新增一組示範 profile（T018，`waiting_iaa_confirmation`），其最新試標回合 `iaaComputationStatus = failed`；計算中狀態由該任務上的「重試計算」操作產生（D6 的 `failed → pending`），不另設第二組 profile。既有 T001–T017 profile 不變，也不新增網址參數（issue #791 design.md D3）。
+- `resetTaskData()`（`design/prototype/pages/task-management/task-detail.html:4708`）同時要求任務列與 profile，缺一即判為找不到任務，因此 T018 必須同步在 `design/prototype/pages/task-management/task-list.data.js` 新增任務列，產品檔案多一個。
+- 目前所有 profile 都不帶試標回合紀錄，`resetTaskData()` 末尾一律清空（`:4782`）；實作時讓 profile 可選擇性帶入回合紀錄（比照同函式內 `reviewerIds` 的 opt-in 寫法），其餘 profile 行為不變。
+- 連帶影響：任務清單由 17 筆變為 18 筆。下列既有測試寫死 17 筆或逐範例檔一對一對應，須由 Red 任務（tasks.md 2.2–2.4）更新：`design/prototype/tests/task-management/task-list-output-types.spec.ts:89`、`design/prototype/tests/dashboard/dashboard-output-types.spec.ts:152-155`、`design/prototype/tests/dashboard/dashboard-task-list-sort.spec.ts:49-78`。另有 dashboard、annotation-list、dataset-analysis-detail 等頁面讀取同一份任務清單，以全量回歸確認（tasks.md 2.9）。
+- 「無法計算」視為 `done` 的驗證沿用既有 T015（`De = 0`，`design/prototype/tests/task-management/issue-489-task-detail-iaa-derived.spec.ts:65-72`）搭配既有的 `&status=waiting_iaa_confirmation` 覆寫，不需新種子。
 
 ## 範圍界線
 
-- **不修改** `dataset/017-dataset-analysis-detail`（裁定第 1、2 點皆明言 017 不動）。FR-039 第 1 點與 FR-010o-4 第 5 點的字面關係見 Q9。
-- **不修改** 正典 014 FR-008a、FR-010o-3、FR-013 與 `:376`／`:377` 按鈕列。FR-010o-4 第 5 點以「計算未結束不屬於 IAA 未達標」界定與 FR-010o-3 的邊界，不改寫 FR-010o-3 原文。
-- **不修改** ADR-022 中 issue #791 新增的 `waiting_iaa_confirmation → dry_run_in_progress` 一列（Q6）。
+- **不修改** `dataset/017-dataset-analysis-detail`（裁定第 1、2 點皆明言本 change 不動 017）。FR-039 第 1 點與 FR-010o-4 的界線，由姊妹 change `dataset-quality-entity-value-alignment` 於 FR-039 第 1 點補一句交叉引用（Q9）。
+- **不修改** 正典 014 FR-008a、FR-010o-3、FR-013 與 `:376`／`:377` 按鈕列。FR-010o-4 第 5 點以「計算未結束不屬於 IAA 未達標」界定與 FR-010o-3 的邊界，不改寫 FR-010o-3 原文。FR-010o-4 第 (6) 點停用新增回合的依據同樣是計算未結束，不改寫 FR-013 第 (2) 點。
+- **不新增** 任何後端程式、migration 或後端任務（Q3）。
 
-## 未決事項（apply 前由維護者確認）
+## 未決事項（維護者 2026-09-18 已全數裁定）
 
 - ~~**Q1**~~（**已裁定** 2026-09-18）：採選項 (a)，於本 change 新增 014 FR-010o-4，見 D6 與 delta。
 - ~~**Q2**~~（**已裁定** 2026-09-18）：「無法計算」視為 `done`，見 D2。
-- **Q3**：資料庫 CHECK 以字面值寫入 `sequence_tagging`，型別校準時需同步 migration；或改為只做應用層驗證、不設 CHECK（裁定明言用 CHECK，此處僅提醒其代價）。
+- ~~**Q3**~~（**已裁定** 2026-09-18）：CHECK 保留為未來後端 schema 契約；本 repo 目前沒有後端 schema，本 change 不含 migration，也沒有 migration 成本。只有型別校準時後端已存在，才由該校準 change 附 migration，見 D3。
 - ~~**Q4**~~（**已裁定** 2026-09-18）：MINOR，目標 v4.1.0（基準為 issue #791 的 v4.0.0）。
 - ~~**Q5**~~（**已裁定** 2026-09-18）：`TrialRound.iaa_computation_status`，見 D5。
-- **Q6（新）**：issue #791 已裁定試標進行中的新增回合按鈕原因文字為「本回合全部提交並完成 IAA 後才能新增下一回合」，字面上暗示新增下一回合也要等 IAA 算完。但 ADR-022 新增的 `waiting_iaa_confirmation → dry_run_in_progress` 是否也以 `iaa_computation_status = done` 為前置條件、待確認頁在計算中／失敗時新增回合按鈕要不要一併停用，兩份裁定都沒有寫。本 change 未自行決定。
-- **Q7（新）**：`開始正式標記` 在計算未結束時採「停用＋可見原因」（比照 #791 D4），以及 D6 的兩句原因文字草案，請確認；另一種做法是保持可點擊、點擊後阻擋並說明（比照 FR-010t）。
-- **Q8（新，Red 前必須定案）**：prototype 如何產生計算中／計算失敗兩種示範狀態。選項：(a) 回合紀錄新增 `iaaComputationStatus` 欄位，缺值視為 `done`（既有種子不受影響），另於 `task-detail.data.js` 新增一組示範 profile 或調整既有 `waiting_iaa_confirmation` 任務的最新回合；(b) 新增類似既有 `?status=` 的網址參數。(b) 最省檔案，但 issue #791 design.md D3 規定不得為測試新增開關；(a) 會多動一個產品檔，且調整既有 profile 可能影響其他頁面的回歸。
-- **Q9（新）**：`dataset/017-dataset-analysis-detail` FR-039 自稱 IAA 閘門語意唯一來源，第 1 點寫「不得阻擋使用者進入正式標記」。FR-010o-4 第 5 點在計算未結束時停用開始正式標記，本 change 的立場是「計算未結束不是 IAA 結果，不在 FR-039 的範圍」，但 017 字面沒有這個區分。是否需要在 017 FR-039 補一句交叉引用（屬 017 的另一個 change）？
+- ~~**Q6**~~（**已裁定** 2026-09-18）：`waiting_iaa_confirmation → dry_run_in_progress` 同樣要求最新回合 `iaa_computation_status = done`；計算中或失敗時待確認頁的新增試標回合按鈕停用並附可見原因，見 FR-010o-4 第 (6) 點、D1、D6。
+- ~~**Q7**~~（**已裁定** 2026-09-18）：停用＋可見原因，比照 issue #791 design.md D4；D6 的原因文字草案成立，由維護者於 PR 審閱時確認文案。
+- ~~**Q8**~~（**已裁定** 2026-09-18）：採選項 (a)，回合紀錄欄位 `iaaComputationStatus`（缺值視為 `done`）＋新示範 profile，不新增網址參數，見 D7。
+- ~~**Q9**~~（**已裁定** 2026-09-18）：於姊妹 change `dataset-quality-entity-value-alignment` 內為 017 FR-039 第 1 點補一句交叉引用，仍為 017 PATCH v3.0.1。
