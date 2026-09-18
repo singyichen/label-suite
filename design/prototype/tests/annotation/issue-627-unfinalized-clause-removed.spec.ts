@@ -45,19 +45,23 @@ type WorkspaceData = {
 /* T016: 5 / 5 coverage with 3 units still disputed -- the profile whose
    summary carries the clause in every language today. */
 const TASK = 'T016';
+/* The scenario is reviewer × official_run in every case below; naming it once
+   keeps computeReviewSummary() and buildListUrl() from drifting apart. */
+const ROLE = 'reviewer';
+const RUN_TYPE = 'official_run';
 
 function summaryOf(page: Page) {
-  return page.evaluate((taskId) => {
+  return page.evaluate(([taskId, runType]) => {
     const data = (window as unknown as { LabelSuiteAnnotationWorkspaceData: WorkspaceData })
       .LabelSuiteAnnotationWorkspaceData;
-    const summary = data.computeReviewSummary(taskId, 'official_run');
+    const summary = data.computeReviewSummary(taskId, runType);
     return { summary, text: data.formatReviewSummary(summary, null) };
-  }, TASK);
+  }, [TASK, RUN_TYPE] as const);
 }
 
 test.describe('issue #627 item 7: 摘要不再渲染「未達定稿門檻」', () => {
   test('neither language renders the clause, and the rest of the line is unchanged', async ({ page }) => {
-    await page.goto(buildListUrl({ task_id: TASK, role: 'reviewer', run_type: 'official_run' }));
+    await page.goto(buildListUrl({ task_id: TASK, role: ROLE, run_type: RUN_TYPE }));
     const { text } = await summaryOf(page);
 
     expect(text.zh).not.toContain('未達定稿門檻');
@@ -70,7 +74,7 @@ test.describe('issue #627 item 7: 摘要不再渲染「未達定稿門檻」', (
     /* Contract point 2. This is the boundary between 「刪文案」 and
        「刪計算式」: the field must still be derivable and still non-zero
        here, or annotation-list.html :2009 would read T016 as finished. */
-    await page.goto(buildListUrl({ task_id: TASK, role: 'reviewer', run_type: 'official_run' }));
+    await page.goto(buildListUrl({ task_id: TASK, role: ROLE, run_type: RUN_TYPE }));
     const { summary } = await summaryOf(page);
 
     expect(summary.unfinalized).toBe(summary.pending + summary.disputed);
@@ -78,7 +82,7 @@ test.describe('issue #627 item 7: 摘要不再渲染「未達定稿門檻」', (
   });
 
   test('the rendered annotation-list task info drops the clause too', async ({ page }) => {
-    await page.goto(buildListUrl({ task_id: TASK, role: 'reviewer', run_type: 'official_run' }));
+    await page.goto(buildListUrl({ task_id: TASK, role: ROLE, run_type: RUN_TYPE }));
 
     const detail = page.locator('#taskInfoDetail');
     await expect(detail).toContainText('任務覆蓋 5 / 5 個審核單位');
