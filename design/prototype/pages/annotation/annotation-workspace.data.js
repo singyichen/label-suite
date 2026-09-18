@@ -2522,7 +2522,6 @@
   function submitArbitration(taskId, runType, sampleId, identity, decisions) {
     var bucketKey = arbitrationBucketKey(taskId, runType, identity);
     var arbiterId = (identity && identity.reviewerId) || DEFAULT_REVIEWER_ID;
-    var upheldRejectItemIds = [];
     (decisions || []).forEach(function (decision) {
       var itemKey = arbitrationItemKey(bucketKey, sampleId, decision.itemId);
       var item = readArbitrationItem(itemKey) || { votes: [] };
@@ -2555,18 +2554,7 @@
         decision.reason, 'arbitration finalized: ' + decision.itemId, identity,
         undefined, arbitrationFinalizedSnapshot(taskId, runType, sampleId, identity, decision.choice)
       );
-      if (decision.value === PURE_REJECT_VALUE) upheldRejectItemIds.push(decision.itemId);
     });
-    /* issue #551 point 2: choosing B on a pure-reject item means "maintain
-       the reject" -- the same official_run rework rollback a live reviewer
-       reject already triggers (markSampleRejected), still no third answer
-       written. dry_run has no such channel and only keeps the vote. */
-    if (upheldRejectItemIds.length && runType === 'official_run') {
-      markSampleRejected(
-        taskId, 'annotator', runType, sampleId,
-        'arbitration upheld reject: ' + upheldRejectItemIds.join(', '), identity
-      );
-    }
   }
 
   /* issue #722: an arbiter's workspace progress counter must count
@@ -3149,16 +3137,12 @@
       { t: 'T017', r: 'official_run', s: 'oft-02-approved-interim', a: A, v: 'positive', rev: { reviewer_wang: 'positive' } }, // approved (1 < 2)
       { t: 'T017', r: 'official_run', s: 'oft-03-modified-interim', a: A, v: 'neutral', rev: { reviewer_wang: 'positive' } }, // modified (1 < 2)
       { t: 'T017', r: 'official_run', s: 'oft-04-unanimous-gold', a: A, v: 'positive', rev: { reviewer_wang: 'positive', reviewer_li: 'positive' } }, // finalized
-      /* issue #502: reject on official_run rolls the annotator's sample
-         back to 'pending' (existing answers kept), opening a rework
-         backlog -- getReviewUnitStatus then has no submission to derive
-         from, so the reviewer list falls back to the same PENDING it
-         shows for a never-reviewed unit (buildReviewUnitRows in
-         annotation-list.html). Stops here rather than seeding a
-         resubmission + new review cycle: the rework backlog itself is
-         this row's whole demo point, and simulating the annotator's next
-         action is what the live workspace is for. */
-      { t: 'T017', r: 'official_run', s: 'oft-05-pending-review', a: A, v: 'positive', rev: { reviewer_wang: 'positive' }, rejectBy: 'reviewer_wang', reason: '語氣偏中性，請重新判讀第二句的轉折' }, // rolled back to pending (reject, rework backlog)
+      /* issue #804 group 2 (FR-092): a reviewer reject no longer rolls the
+         annotator's sample back to 'pending' in either run_type -- reject
+         still blocks finalization (DISPUTE_FORCING_DECISIONS), so this unit
+         reads as disputed with the annotator's original submission intact,
+         same as T014's dry-05-pending-review pure-reject row above. */
+      { t: 'T017', r: 'official_run', s: 'oft-05-pending-review', a: A, v: 'positive', rev: { reviewer_wang: 'positive' }, rejectBy: 'reviewer_wang', reason: '語氣偏中性，請重新判讀第二句的轉折' }, // disputed (pure reject blocks finalization)
     ];
 
     function labelPayload(value, decision, reason) {
@@ -3193,14 +3177,6 @@
           reviewSummary,
           { annotatorId: row.a, reviewerId: reviewerId }
         );
-        /* issue #502: mirrors handleReviewSubmit's post-submit rollback
-           (annotation-workspace.config.js ~L3864). markSampleRejected() is
-           itself official_run-gated (this file, ~L467), so calling it here
-           for a dry_run row is a deliberate no-op: only official_run rolls
-           the annotator's sample back to pending. */
-        if (isReject) {
-          markSampleRejected(row.t, 'annotator', row.r, row.s, reviewSummary, { annotatorId: row.a });
-        }
       });
       if (row.arb) {
         submitArbitration(row.t, row.r, row.s, { annotatorId: row.a, reviewerId: 'reviewer_chen' }, [
