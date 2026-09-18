@@ -15,7 +15,7 @@
  *   2. disputed units THIS reviewer is eligible to arbitrate (FR-060)
  *   3. nothing actionable -> the review list plus an explicit empty state
  *
- * The rule reads task state and reviewer identity only -- no T014-T017
+ * The rule reads task state and reviewer identity only -- no T014-T016
  * branch anywhere (Generalization-First).
  */
 import { test, expect, type Page } from '@playwright/test';
