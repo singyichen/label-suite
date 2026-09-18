@@ -46,6 +46,7 @@ prototype 目前以 `STATUS_ORDER`（:4568）排序 stepper，沒有轉換白名
 - **不修改** `annotation/015-annotation-workspace` 與其 prototype。FR-096 的揭露閘門 `getDryRunFeedback()`（`design/prototype/pages/annotation/annotation-workspace.data.js:1930`）以**任務狀態**而非回合判斷，R2 進行中時會連同已結束的 R1 回饋一併隱藏——這是過度隱藏、不是洩漏，Data Fairness 不受影響；但與 FR-096「看到自己在歷次試標中的表現回饋」有落差。此落差在舊流程中同樣存在（舊流程的未達標回合從未進入待確認，回饋從未揭露），不是本 change 引入；維護者 2026-09-18 裁定另以 issue #834 追蹤，本 change 不修改 FR-096（Q3）。
 - **不修改** FR-008、FR-008a 的條文。正典 `:455`「不允許跳階」與 SC-004 依 Q2 裁定只補一句釐清（delta FR-013 第 (7) 點），不新增編號。
 - **不修改** `task-config.data.js`、`task-detail.data.js`。
+- **不實作** FR-017 修訂紀錄必填阻擋的 prototype。apply 期間複驗發現此阻擋在 prototype 從未落地（`#publishActionRow` 點擊後只經隔離風險確認即呼叫 `publishDryRun()`）；維護者 2026-09-18 裁定另以 issue #838 追蹤。本 change 的測試一律以「於待確認直接成功建立 R{n}」驗證轉換，不斷言修訂紀錄阻擋；AC-3.12 條文仍依 delta 原地改寫，因需求本身不變、缺的只是 prototype 落地。
 
 ## 未決事項（維護者 2026-09-18 已全數裁定）
 
