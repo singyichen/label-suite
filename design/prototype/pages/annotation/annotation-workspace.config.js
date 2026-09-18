@@ -63,6 +63,7 @@
       reviewBypassLabel: '無法判定',
       wsReviewSubmitSuccess: '審核已送出',
       reviewNoAnswer: '（無）',
+      reviewOriginalAnswerBypass: '無法判定',
       reviewNote: '通過：該項直接定稿，正式標記中即成為最終答案。修正：您的修正不會立即生效，該項進入爭議池待仲裁。無法判定：同樣進入爭議池，仲裁者採用審核員側即定案為無法判定。試標與正式標記皆不會將樣本送回給標記員重做。',
       reviewNoteDryRunExtra: '試標的定稿只彙總一致性與被修改率，不產生最終答案。',
       reviewNoteTriggerLabel: '審核決策說明',
@@ -188,6 +189,7 @@
       reviewBypassLabel: 'Cannot determine',
       wsReviewSubmitSuccess: 'Review submitted',
       reviewNoAnswer: '(none)',
+      reviewOriginalAnswerBypass: 'Cannot determine',
       reviewNote: 'Approve: the item is finalized as it stands, and in an official run that value becomes the final answer. Modify: your correction does not take effect immediately; the item enters the dispute pool for arbitration. Cannot determine: the item also enters the dispute pool, and an arbiter adopting the reviewer side settles it as undecidable. Neither a dry run nor an official run sends the sample back to the annotator to redo it.',
       reviewNoteDryRunExtra: ' A dry-run finalization produces no final answer; it only aggregates agreement and the modification rate.',
       reviewNoteTriggerLabel: 'Review decision guidance',
@@ -2481,6 +2483,14 @@
      annotator control, do not build a dedicated correction UI" mandate. */
   var reviewRowDecisions = {};
   var reviewRowOriginals = {};
+  /* issue #809: reviewRowOriginals is a raw-value cache (isRowCorrected()
+     and issue-453's pre-submit-summary spec diff/assert against it), so the
+     annotator's previewBypass flag -- an explicit "I cannot judge this
+     output" decision, distinct from the reviewer's own bypass DECISION
+     value that issue #811 renames -- cannot be stuffed into that string.
+     This parallel map carries the same per-outKey signal for display only,
+     seeded in seedReviewRow() exactly where reviewRowOriginals itself is. */
+  var reviewRowOriginalBypass = {};
   /* Every decision pair currently on screen, so the A/R shortcuts below can
      redraw them all after deciding the unit in one go. Rebuilt alongside
      reviewRowDecisions on each renderReviewerWorkspace(). */
@@ -3137,8 +3147,15 @@
       origin.setAttribute('data-outkey', originKey);
       var originalAnswer = reviewRowOriginals[originKey] || '';
       origin.setAttribute('data-answer', originalAnswer);
+      /* issue #809: an empty originalAnswer is ambiguous by itself -- it
+         means either "annotator explicitly bypassed this output" or
+         "annotator left it empty." reviewRowOriginalBypass disambiguates
+         for display only; data-answer above stays the untouched raw value
+         isRowCorrected() and issue-453's spec depend on. */
+      var originalIsBypass = !originalAnswer && !!reviewRowOriginalBypass[originKey];
       origin.textContent =
-        t('reviewOriginalAnswerLabel') + (originalAnswer || t('reviewNoAnswer'));
+        t('reviewOriginalAnswerLabel') +
+        (originalAnswer || (originalIsBypass ? t('reviewOriginalAnswerBypass') : t('reviewNoAnswer')));
       row.appendChild(origin);
     });
 
@@ -3269,6 +3286,7 @@
   function seedReviewRow(outKey, submission) {
     if (submission) {
       reviewRowOriginals[outKey] = describeOutputAnswer(outKey, submission);
+      reviewRowOriginalBypass[outKey] = !!(submission.previewBypass && submission.previewBypass[outKey]);
       if (!reviewRowSeeded[outKey]) {
         seedReviewState(outKey, submission, false);
         reviewRowSeeded[outKey] = true;
@@ -3278,6 +3296,7 @@
     var demoRow = demoAnnotatorRow();
     var answer = demoRow && demoRow.answers ? demoRow.answers[outKey] : null;
     reviewRowOriginals[outKey] = answer != null ? describeCompactAnswer(outKey, answer) : '';
+    reviewRowOriginalBypass[outKey] = !!(demoRow && demoRow.bypass && demoRow.bypass[outKey]);
     if (!reviewRowSeeded[outKey]) {
       seedReviewState(outKey, answer, true);
       reviewRowSeeded[outKey] = true;
@@ -4612,6 +4631,7 @@
     while (preview.firstChild) preview.removeChild(preview.firstChild);
     reviewRowDecisions = {};
     reviewRowOriginals = {};
+    reviewRowOriginalBypass = {};
     reviewDecisionRefreshers = [];
     reviewDecisionAnswers = {};
     reviewRowReasons = {};
