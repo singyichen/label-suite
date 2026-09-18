@@ -5013,6 +5013,24 @@ function interpolate(template, payload) {
     var total = Number(progress.totalSamples);
     if (!Number.isFinite(submitted) || !Number.isFinite(total) || total < 1) return;
     if (submitted < total) return;
+    /* issue #791 (D2): materialize getTrialRounds()'s synthetic fallback
+       into TASK_DATA.trialRounds (same technique as publishDryRun(), D1) so
+       a round created without a real seed still gets its outcome filled in
+       below, then fill the current (latest) round's agreement/std/result
+       from its scripted scenario now that it is fully submitted -- this is
+       the only point where a round's IAA outcome becomes real. */
+    if (!Array.isArray(TASK_DATA.trialRounds) || !TASK_DATA.trialRounds.length) {
+      TASK_DATA.trialRounds = getTrialRounds();
+    }
+    var currentRound = TASK_DATA.trialRounds[TASK_DATA.trialRounds.length - 1];
+    if (currentRound) {
+      var scenario = getTrialRoundScenario(currentRound.round);
+      currentRound.agreement = scenario.agreement;
+      currentRound.std = scenario.std;
+      currentRound.result = scenario.result;
+      TASK_DATA.currentAgreement = scenario.agreement;
+      TASK_DATA.currentStd = scenario.std;
+    }
     TASK_DATA.status = 'waiting_iaa_confirmation';
     TASK_DATA.updatedAt = new Date().toISOString().slice(0, 16).replace('T', ' ');
   }
@@ -10101,22 +10119,27 @@ function getTaskTypeLabel() {
     }
     var nextRound = TASK_DATA.trialRounds.length + 1;
     var scenario = getTrialRoundScenario(nextRound);
+    /* issue #791 (D2): a round's IAA outcome is not known until it
+       finishes -- only the round number, sample count, and date are real at
+       publish time. agreement/std/result stay null until
+       syncStatusFromDryRunProgress() fills them in from this same scenario
+       table once the round is fully submitted. */
     TASK_DATA.trialRounds.push({
       round: nextRound,
       sampleCount: Number(TASK_DATA.samplingValue) || 0,
-      agreement: scenario.agreement,
+      agreement: null,
       annotators: Number(TASK_DATA.minAnnotators) || 0,
-      std: scenario.std,
-      result: scenario.result,
+      std: null,
+      result: null,
       usedSamples: Number(TASK_DATA.samplingValue) || 0,
       date: scenario.date,
       noteZh: scenario.noteZh,
       noteEn: scenario.noteEn
     });
     TASK_DATA.trialRound = nextRound;
-    TASK_DATA.currentAgreement = scenario.agreement;
+    TASK_DATA.currentAgreement = null;
     TASK_DATA.currentAnnotators = Number(TASK_DATA.minAnnotators) || 0;
-    TASK_DATA.currentStd = scenario.std;
+    TASK_DATA.currentStd = null;
     /* issue #791 (FR-010o-3): publishing any round always moves the task
        into dry_run_in_progress. The round's own IAA outcome (scenario.result
        above) still drives its round-timeline badge, but it MUST NOT decide
