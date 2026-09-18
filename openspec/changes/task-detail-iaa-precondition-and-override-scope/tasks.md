@@ -29,7 +29,7 @@
 > **產品檔案（1）**：`docs/adr/022-task-state-machine-location.md`
 > **相依**：群組 0。
 
-- [ ] 1.1 修改 `docs/adr/022-task-state-machine-location.md`：依 design.md D1 刪除 dry_run_in_progress 至 waiting_iaa_confirmation 一列中的 IAA calculated，於 waiting_iaa_confirmation 至 official_run_in_progress 一列與 issue #791 新增的 waiting_iaa_confirmation 至 dry_run_in_progress 一列皆補上最新試標回合 `TrialRound.iaa_computation_status = done`，依 D2 新增 Amendment 段落說明 done 之定義（含無法計算）與失敗時以重試恢復，並於標頭新增 Amended 日期列註明 issue #783。驗證：`grep -n 'IAA calculated' docs/adr/022-task-state-machine-location.md` 無輸出、`grep -n 'iaa_computation_status' docs/adr/022-task-state-machine-location.md` 命中 Transition Table 兩列，且 `grep -n 'issue #783' docs/adr/022-task-state-machine-location.md` 至少命中標頭與 Amendment 段落各一處 [@senior-architect]
+- [x] 1.1 修改 `docs/adr/022-task-state-machine-location.md`：依 design.md D1 刪除 dry_run_in_progress 至 waiting_iaa_confirmation 一列中的 IAA calculated，於 waiting_iaa_confirmation 至 official_run_in_progress 一列與 issue #791 新增的 waiting_iaa_confirmation 至 dry_run_in_progress 一列皆補上最新試標回合 `TrialRound.iaa_computation_status = done`，依 D2 新增 Amendment 段落說明 done 之定義（含無法計算）與失敗時以重試恢復，並於標頭新增 Amended 日期列註明 issue #783。驗證：`grep -n 'IAA calculated' docs/adr/022-task-state-machine-location.md` 無輸出、`grep -n 'iaa_computation_status' docs/adr/022-task-state-machine-location.md` 命中 Transition Table 兩列，且 `grep -n 'issue #783' docs/adr/022-task-state-machine-location.md` 至少命中標頭與 Amendment 段落各一處 [@senior-architect]
 
 ## 2. 待確認頁呈現 IAA 計算狀態
 
