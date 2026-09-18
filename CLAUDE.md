@@ -155,6 +155,10 @@ Run after every change. Task is NOT complete until all pass.
 scripts/check-sdd.sh
 scripts/speckit-tests.sh
 
+# User path map freshness — production check against the real artifact (run from project root)
+# (scripts/speckit-tests.sh above is only the checker's regression harness on fixtures)
+node scripts/check-user-path-map-freshness.mjs
+
 # Repository scripts and git hooks (run from project root)
 scripts/check-spec-artifacts.sh
 scripts/inventory-tests.sh
