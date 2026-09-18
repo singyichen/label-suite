@@ -70,6 +70,7 @@
       reviewReasonLabel: '理由（必填）',
       reviewReasonPlaceholder: '請說明理由',
       toastReasonRequired: '請填寫以下輸出類型的理由：{list}',
+      toastAnswerRequired: '以下輸出類型選了「修正」但修正後答案為空，請填寫答案：{list}',
       reviewCorrectionTitle: '直接修正（Reviewer 修正後答案）',
       toastSelectDecision: '請完成以下輸出類型的審核決策：{list}',
       toastReviewCorrectionReset: '偵測到直接修正的內容因重新整理而遺失，對應的審核決策已重置，請重新確認後再送出',
@@ -196,6 +197,7 @@
       reviewReasonLabel: 'Reason (required)',
       reviewReasonPlaceholder: 'Explain the reason',
       toastReasonRequired: 'Please give a reason for the following output types: {list}',
+      toastAnswerRequired: 'The following output types are marked Modify but the corrected answer is empty: {list}',
       reviewCorrectionTitle: "Direct correction (reviewer's corrected answer)",
       toastSelectDecision: 'Please decide on the following output types before submitting: {list}',
       toastReviewCorrectionReset: 'The direct correction was lost on reload, so the matching review decision was reset -- please re-confirm before submitting',
@@ -4801,14 +4803,17 @@
      sole surviving "still undecided" derivation in the file; the submit
      guard below is its only caller. */
   /* issue #552/#596 (FR-016A / FR-083): the ONE per-outKey answer to "does
-     this row block submit, and why" -- null, 'undecided', or 'reason'
-     (modify/bypass without a reason). pendingReviewOutputKeys(), the footer
-     button's aria-disabled state and the blocking toast all read it;
-     nothing else recomputes it. */
+     this row block submit, and why" -- null, 'undecided', 'reason'
+     (modify/bypass without a reason), or 'answer' (issue #818: modify whose
+     corrected answer is empty -- bypass stores no value by design, so it is
+     never checked). pendingReviewOutputKeys(), the footer button's
+     aria-disabled state and the blocking toast all read it; nothing else
+     recomputes it. */
   function reviewRowBlocker(outKey, rowName) {
     var decision = reviewRowDecisions[decisionKey(outKey, rowName)];
     if (!decision) return 'undecided';
     if (reviewDecisionRequiresReason(decision) && !reviewRowReason(outKey, rowName)) return 'reason';
+    if (decision === 'modify' && !currentRowAnswer(outKey)) return 'answer';
     return null;
   }
 
@@ -4871,13 +4876,15 @@
     });
     var pendingOutputKeys = pendingReviewOutputKeys(annotatorId);
     if (pendingOutputKeys.length) {
-      /* issue #552/#596: same list either way; the wording only switches to
-         the reason-specific copy once every blocker is a reason-less
-         modify/bypass. */
-      var onlyReasons = pendingOutputKeys.every(function (outKey) {
-        return reviewRowBlocker(outKey, annotatorId) === 'reason';
+      /* issue #552/#596/#818: same list either way; the wording only
+         switches to a specific copy once every blocker is the same kind
+         (all reason-less, or all empty-answer modify). Any mix falls back
+         to the generic decision copy. */
+      var kinds = pendingOutputKeys.map(function (outKey) {
+        return reviewRowBlocker(outKey, annotatorId);
       });
-      var toastKey = onlyReasons ? 'toastReasonRequired' : 'toastSelectDecision';
+      var sameKind = kinds.every(function (kind) { return kind === kinds[0]; }) ? kinds[0] : null;
+      var toastKey = { reason: 'toastReasonRequired', answer: 'toastAnswerRequired' }[sameKind] || 'toastSelectDecision';
       showToast(t(toastKey).replace('{list}', pendingOutputKeys.join('、')), 'warning');
       return;
     }
