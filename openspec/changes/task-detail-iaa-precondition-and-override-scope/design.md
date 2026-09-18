@@ -73,6 +73,7 @@
 - `resetTaskData()`（`design/prototype/pages/task-management/task-detail.html:4708`）同時要求任務列與 profile，缺一即判為找不到任務，因此 T018 必須同步在 `design/prototype/pages/task-management/task-list.data.js` 新增任務列，產品檔案多一個。
 - 目前所有 profile 都不帶試標回合紀錄，`resetTaskData()` 末尾一律清空（`:4782`）；實作時讓 profile 可選擇性帶入回合紀錄（比照同函式內 `reviewerIds` 的 opt-in 寫法），其餘 profile 行為不變。
 - 連帶影響：任務清單由 17 筆變為 18 筆。下列既有測試寫死 17 筆或逐範例檔一對一對應，須由 Red 任務（tasks.md 2.2–2.4）更新：`design/prototype/tests/task-management/task-list-output-types.spec.ts:89`、`design/prototype/tests/dashboard/dashboard-output-types.spec.ts:152-155`、`design/prototype/tests/dashboard/dashboard-task-list-sort.spec.ts:49-78`。另有 dashboard、annotation-list、dataset-analysis-detail 等頁面讀取同一份任務清單，以全量回歸確認（tasks.md 2.9）。
+- **apply 時更正（2026-09-18）**：上一點把兩支 dashboard 測試列入更新對象，前提是 dashboard 讀取同一份任務清單；實查 `design/prototype/pages/dashboard/dashboard.data.js` 與 `dashboard.assignments.js` 為 dashboard 自有的手寫種子，不讀 `task-list.data.js`。讓 dashboard 也出現 T018 須再動這兩個產品檔案，合計 6 檔超出憲法原則 X 上限；T018 只為 task-detail 的 FR-010o-4 示範而存在，故不加入 dashboard，兩支 dashboard 測試維持 17 筆不修改（tasks.md 2.3、2.4 改為確認任務）。實際受影響的只有 `task-list-output-types.spec.ts`。
 - 「無法計算」視為 `done` 的驗證沿用既有 T015（`De = 0`，`design/prototype/tests/task-management/issue-489-task-detail-iaa-derived.spec.ts:65-72`）搭配既有的 `&status=waiting_iaa_confirmation` 覆寫，不需新種子。
 
 ## 範圍界線
