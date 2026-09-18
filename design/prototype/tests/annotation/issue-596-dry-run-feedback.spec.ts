@@ -101,7 +101,7 @@ function seedModifiedFeedbackScript(
       data.markSampleSubmitted(${JSON.stringify(TASK_ID)}, 'reviewer', 'dry_run', ${JSON.stringify(sampleId)},
         {
           previewState: { multi_label: { selected: ${JSON.stringify(finalAnswer)} } },
-          decisions: { multi_label: 'approve' },
+          decisions: { multi_label: 'modify' },
           reasons: { multi_label: ${JSON.stringify(reason)} }
         }, '', identity);
     })();
