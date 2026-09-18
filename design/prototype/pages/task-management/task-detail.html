@@ -10141,9 +10141,9 @@ function getTaskTypeLabel() {
     TASK_DATA.currentAnnotators = Number(TASK_DATA.minAnnotators) || 0;
     TASK_DATA.currentStd = null;
     /* issue #791 (FR-010o-3): publishing any round always moves the task
-       into dry_run_in_progress. The round's own IAA outcome (scenario.result
-       above) still drives its round-timeline badge, but it MUST NOT decide
-       the task's status -- only a fully-submitted round, via
+       into dry_run_in_progress. The round's IAA outcome is not written here
+       (D2) and MUST NOT decide the task's status -- only a fully-submitted
+       round, via
        syncStatusFromDryRunProgress(), advances the task to
        waiting_iaa_confirmation (FR-008a). */
     TASK_DATA.status = 'dry_run_in_progress';
