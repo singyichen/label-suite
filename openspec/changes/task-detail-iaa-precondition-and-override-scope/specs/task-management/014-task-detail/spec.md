@@ -1,4 +1,4 @@
-> 正典：`specs/task-management/014-task-detail/spec.md`（v4.0.0 → v4.1.0，**MINOR**，版本判定理由見 proposal.md Impact 節）。issue #783 第 1、2 點。第 1 點依維護者 2026-09-18 追加裁定，於 014 新增 FR-010o-4（待 IAA 確認頁的計算狀態）與 `TrialRound.iaa_computation_status` 欄位；轉換前置條件本身仍只寫在 ADR-022。
+> 正典：`specs/task-management/014-task-detail/spec.md`（v4.0.0 → v4.1.0，**MINOR**，版本判定理由見 proposal.md Impact 節）。issue #783 第 1、2 點。第 1 點依維護者 2026-09-18 追加裁定，於 014 新增 FR-010o-4（待 IAA 確認頁的計算狀態）與 `TrialRound.iaa_computation_status` 欄位；轉換前置條件本身仍只寫在 ADR-022。同日最終裁定（design.md Q6）：`waiting_iaa_confirmation → dry_run_in_progress` 同樣以最新回合計算已結束為前置條件，見 FR-010o-4 第 (6) 點。
 >
 > **為何既有 ID 放在 `## ADDED Requirements` 底下**：FR-010o-1 已存在於正典，但**不在** `openspec/specs/task-management/014-task-detail/spec.md` 衍生檢視內。對它下 `## MODIFIED` 會在 archive 階段以 header not found 硬中止，而 `openspec validate` 對此零訊號。gate 4 回寫正典時 MUST **原地改寫** FR-010o-1，不得新增第二條同 ID 條文。FR-010o-4 為全新 ID。本 delta 內未帶 AC ID 的情境皆為新增驗收情境，AC 編號於 gate 4 回寫時依正典既有順序配發（新 AC ID 若寫在 `## MODIFIED` 底下會被 check-sdd 判紅，因此一律置於本節且不預先編號）。
 ## ADDED Requirements
@@ -49,6 +49,8 @@ IAA 為非同步計算。任務依 FR-008a 進入 `waiting_iaa_confirmation` 時
 
 **(5) 開始正式標記的前置條件**。最新回合不為 `done` 時，`開始正式標記` MUST 以停用狀態顯示，並於按鈕旁以可見文字說明原因（計算中或計算失敗），系統 MUST NOT 執行 `waiting_iaa_confirmation → official_run_in_progress`（`docs/adr/022-task-state-machine-location.md` Transition Table）。最新回合為 `done` 後，`開始正式標記` 依 FR-010o-3 不因 IAA 未達標而停用；此處的停用依據是「計算尚未結束」，不屬於 FR-010o-3 所禁止的「因 IAA 未達標停用」。
 
+**(6) 新增試標回合的前置條件**。最新回合不為 `done` 時，`waiting_iaa_confirmation` 狀態下的 `新增試標回合 R{trial_round+1}` 同樣 MUST 以停用狀態顯示，並於按鈕旁以可見文字說明原因（計算中或計算失敗）；系統 MUST NOT 執行 `waiting_iaa_confirmation → dry_run_in_progress`（`docs/adr/022-task-state-machine-location.md` Transition Table）。停用依據同樣是「計算尚未結束」，與 IAA 是否達標無關；最新回合為 `done` 後，該按鈕依 FR-013 第 (2) 點可點擊。
+
 #### Scenario: IAA 計算中不呈現為未達標且暫不能開始正式標記
 
 - **GIVEN** 任務處於 `waiting_iaa_confirmation`，最新試標回合 `iaa_computation_status = pending`
@@ -68,4 +70,11 @@ IAA 為非同步計算。任務依 FR-008a 進入 `waiting_iaa_confirmation` 時
 - **GIVEN** 任務處於 `waiting_iaa_confirmation`，最新試標回合某輸出類型因有效標記員數 `< 2` 而為「無法計算」（`De = 0`），其餘需計算的輸出類型皆已得到數值
 - **WHEN** `project_leader` 檢視 Overview「任務狀態與執行控制」
 - **THEN** 該回合 `iaa_computation_status = done`，畫面不顯示「IAA 計算中」或計算失敗狀態
-- **AND** `開始正式標記` 可點擊
+- **AND** `開始正式標記` 與 `新增試標回合 R{trial_round+1}` 皆可點擊
+
+#### Scenario: IAA 計算未結束時新增試標回合同樣停用
+
+- **GIVEN** 任務處於 `waiting_iaa_confirmation` 且已完成 R1，最新試標回合 `iaa_computation_status` 為 `pending` 或 `failed`
+- **WHEN** `project_leader` 檢視 Overview「任務狀態與執行控制」
+- **THEN** `新增試標回合 R2` 為停用狀態，按鈕旁可見說明計算中或計算失敗的原因文字
+- **AND** 點擊該按鈕不建立任何回合，任務狀態維持 `waiting_iaa_confirmation`
