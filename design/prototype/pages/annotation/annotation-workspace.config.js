@@ -3614,16 +3614,26 @@
     return btn;
   }
 
-  /* FR-061 point 2: B's wording depends on the assigned reviewer's decision
-     source for this outKey. design.md D2's "bypass 不存值" rule makes the
-     stored value itself the reliable signal: a `modify` decision always
-     carries a real replacement value, a `bypass` decision never stores one
-     at all -- so item.reviewerValues reading as "no answer" (the same
-     null/'' test formatDisputeValue()'s reviewNoAnswer branch already uses)
-     IS the bypass case, not a value to render. */
+  /* FR-061 point 2 / AC-4.54: B's wording follows the assigned reviewer's
+     DECISION for this outKey, never whether a value happens to be stored.
+     The older reading ran design.md D2's "bypass 不存值" rule backwards --
+     "a `modify` always carries a real replacement value" -- and the submit
+     path falsifies that: it stores currentRowAnswer() unconditionally
+     (:4866), so a reviewer who clears the answer panel and chooses 修正
+     persists an empty `modify` and was reported to the arbiter as
+     無法判定 -- a decision they never made, under a B option that exists
+     to represent that decision. Same move getDisputeItems() already made for
+     the opposite direction in issue #753 (data.js :2238, "`bypass` is
+     decided by the DECISION, never by the diff").
+     The emptiness test survives only where there is no decision to read:
+     `decisions` is absent on every pre-#551 submission (data.js :1946). */
   function arbitrationBChoiceText(item, reviewerSubmission) {
+    var decisions = (reviewerSubmission && reviewerSubmission.answers
+      && reviewerSubmission.answers.decisions) || {};
+    var decision = decisions[item.outKey];
     var value = reviewerSubmission ? item.reviewerValues[reviewerSubmission.reviewerId] : undefined;
-    if (value == null || value === '') return t('arbitrationChoiceBBypass');
+    var bypassed = decision ? decision === 'bypass' : (value == null || value === '');
+    if (bypassed) return t('arbitrationChoiceBBypass');
     return t('arbitrationChoiceB') + '：' + formatDisputeValue(value);
   }
 
