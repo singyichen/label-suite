@@ -369,6 +369,28 @@
       </div>
       <div id="qualityPanelMount" aria-live="polite"></div>
 
+      <!-- Block A-5 (FR-040, spec.md:477-486): task-level table, placed
+           outside the per-output-type partial loop (spec.md:315, :331 —
+           must never merge with the A-3 ranking block above). Rendered by
+           applyAnnotatorModificationRates(). -->
+      <section class="panel" id="annotatorModRateSection" aria-labelledby="annotatorModRateTitle">
+        <h2 class="panel-title" id="annotatorModRateTitle" data-i18n="annotatorModRate.title">標記員被修改率</h2>
+        <p class="panel-subtitle" style="margin-top:0;margin-bottom:var(--space-md)" id="annotatorModRateSubtitle" data-i18n="annotatorModRate.subtitle">依標記員彙總 Reviewer 實際變更答案的比例；分母為至少一位 Reviewer 已提交決定的審核單位（不含待審）</p>
+        <div class="table-wrap">
+          <div class="table-scroll">
+            <table class="annotator-table" id="annotatorModRateTable" aria-label="標記員被修改率" data-i18n-aria-label="annotatorModRate.title">
+              <thead>
+                <tr id="annotatorModRateHeadRow">
+                  <th id="annotatorModRateHeaderAnnotator" data-i18n="annotatorModRate.headerAnnotator">標記員</th>
+                  <th id="annotatorModRateHeaderTotal" data-i18n="annotatorModRate.headerTotal">總計</th>
+                </tr>
+              </thead>
+              <tbody id="annotatorModRateBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
     </div><!-- /qualityReady -->
 
   </div><!-- /qualityPanel -->
@@ -613,6 +635,13 @@ var I18N = {
       boundaryHeaderType: '錯誤類型',
       boundaryHeaderCount: '案例數',
       boundaryExampleTitle: '代表範例',
+    },
+    annotatorModRate: {
+      title: '標記員被修改率',
+      subtitle: '依標記員彙總 Reviewer 實際變更答案的比例；分母為至少一位 Reviewer 已提交決定的審核單位（不含待審）',
+      headerAnnotator: '標記員',
+      headerTotal: '總計',
+      smallSampleBadge: '小樣本估計',
     },
     multiLabelListRank: {
       sample1Detail: '樣本 #101：3 位標記員分別選擇「劇情」「演技」「配樂」等不同主標籤組合，標籤重疊率低',
@@ -970,6 +999,13 @@ var I18N = {
       boundaryHeaderType: 'Error Type',
       boundaryHeaderCount: 'Case Count',
       boundaryExampleTitle: 'Representative Example',
+    },
+    annotatorModRate: {
+      title: 'Annotator Modification Rate',
+      subtitle: 'Per-annotator share of reviewed answers a reviewer actually changed; the denominator is review units with at least one reviewer decision submitted (pending excluded)',
+      headerAnnotator: 'Annotator',
+      headerTotal: 'Total',
+      smallSampleBadge: 'Small sample estimate',
     },
     multiLabelListRank: {
       sample1Detail: 'Sample #101: 3 annotators chose different label combinations ("plot", "acting", "score"); low label overlap',
@@ -1673,6 +1709,138 @@ function applySingleLabelIaaCard() {
     + ' — <strong class="t-' + state + '">' + resultText + '</strong>';
 }
 
+/* ── Block A-5: annotator modification rate (FR-040, spec.md:477-486) ──
+ * Task-level table, rows = annotators, columns = each configured output
+ * type's modification_rate + a total. Lives outside #qualityPanelMount
+ * (never a per-output-type sub-block, spec.md:315/:331 — must not merge
+ * with the A-3 ranking block).
+ *
+ * Numerator (spec.md:478): review units where the reviewer's decision
+ * actually differs from the annotator's answer for that output_type,
+ * per the FR-052 diff (compareOutputAnswer) — NOT REVIEW_UNIT_STATUS,
+ * which would systematically undercount units that reached quorum.
+ * Denominator (spec.md:479): review units with >=1 reviewer submission
+ * (status disputed/finalized); pending and never-submitted-annotator
+ * units (status null) are excluded, which also removes annotators with
+ * zero reviewed units from the table entirely (a 0/0 rate is undefined).
+ * The two documented prototype gaps (bypass exclusion, spec.md:480;
+ * excluded-assignment exclusion, spec.md:481) are intentionally NOT
+ * implemented here, per spec.
+ *
+ * run_type is hardcoded to 'dry_run' (spec.md:484 — the quality tab is
+ * entirely dry_run-bound already), unlike applySingleLabelIaaCard()
+ * which derives run_type dynamically for IAA.
+ *
+ * Design decision (not spec-mandated): the "total" column sums
+ * modified/reviewed units across the task's configured output types.
+ * Since a review unit's denominator (spec.md:479) is the same physical
+ * set of reviewed units for every output type of that annotator, this
+ * sum over-counts the denominator once per extra output type for
+ * multi-type tasks — a known scope limitation, not exercised by the
+ * single-output-type T001 fixture this feature's Red test uses.
+ */
+function computeAnnotatorModificationRates(taskId, outputs) {
+  var api = window.LabelSuiteAnnotationWorkspaceData;
+  if (!api) return [];
+  var runType = 'dry_run';
+  var units = api.listReviewUnits(taskId, runType);
+  var byAnnotator = {};
+  units.forEach(function(unit) {
+    if (unit.status !== 'disputed' && unit.status !== 'finalized') return;
+    if (!byAnnotator[unit.annotatorId]) byAnnotator[unit.annotatorId] = [];
+    byAnnotator[unit.annotatorId].push(unit.sampleId);
+  });
+  return Object.keys(byAnnotator).sort().map(function(annotatorId) {
+    var identity = { annotatorId: annotatorId };
+    var sampleIds = byAnnotator[annotatorId];
+    var reviewedUnits = sampleIds.length;
+    var perType = {};
+    var totalModified = 0;
+    var totalReviewed = 0;
+    outputs.forEach(function(outKey) {
+      var modified = 0;
+      sampleIds.forEach(function(sampleId) {
+        var annotatorSubmission = api.getSubmission(taskId, 'annotator', runType, sampleId, identity);
+        var reviewerSubmissions = api.readReviewerSubmissions(taskId, runType, sampleId, identity);
+        if (!annotatorSubmission || !reviewerSubmissions.length) return;
+        var annotatorAnswer = api.convertSubmissionAnswer(outKey, annotatorSubmission);
+        var changed = reviewerSubmissions.some(function(reviewerSubmission) {
+          var reviewerAnswer = api.convertSubmissionAnswer(outKey, reviewerSubmission.answers);
+          return !api.compareOutputAnswer(outKey, annotatorAnswer, reviewerAnswer).equal;
+        });
+        if (changed) modified += 1;
+      });
+      perType[outKey] = { modified: modified, reviewed: reviewedUnits };
+      totalModified += modified;
+      totalReviewed += reviewedUnits;
+    });
+    return {
+      annotatorId: annotatorId,
+      perType: perType,
+      total: { modified: totalModified, reviewed: totalReviewed },
+      smallSample: reviewedUnits < IAA_SMALL_SAMPLE_THRESHOLD,
+    };
+  });
+}
+
+function modRateCellText(modified, reviewed) {
+  var pct = reviewed > 0 ? Math.round((modified / reviewed) * 100) : 0;
+  return modified + ' / ' + reviewed + ' (' + pct + '%)';
+}
+
+function applyAnnotatorModificationRates() {
+  var section = document.getElementById('annotatorModRateSection');
+  if (!section || !window.LabelSuiteAnnotationWorkspaceData) return;
+  applyDataI18n(section);
+  var taskMeta = TASK_META[S_ROUTE.taskId] || TASK_META[DEFAULT_TASK_ID];
+  var outputs = (taskMeta && taskMeta.outputs && taskMeta.outputs.length) ? taskMeta.outputs : [S.type];
+  var headRow = document.getElementById('annotatorModRateHeadRow');
+  var headerTotal = document.getElementById('annotatorModRateHeaderTotal');
+  var body = document.getElementById('annotatorModRateBody');
+  if (!headRow || !headerTotal || !body) return;
+
+  Array.prototype.forEach.call(headRow.querySelectorAll('.mod-rate-type-th'), function(el) { el.remove(); });
+  var typeLabels = OUTPUT_TYPE_LABELS[S.lang] || OUTPUT_TYPE_LABELS.zh;
+  outputs.forEach(function(outKey) {
+    var th = document.createElement('th');
+    th.className = 'mod-rate-type-th';
+    th.setAttribute('data-output-type', outKey);
+    th.textContent = typeLabels[outKey] || outKey;
+    headRow.insertBefore(th, headerTotal);
+  });
+
+  var rows = computeAnnotatorModificationRates(S_ROUTE.taskId, outputs);
+  body.innerHTML = '';
+  rows.forEach(function(row) {
+    var tr = document.createElement('tr');
+    var nameCell = document.createElement('td');
+    var nameSpan = document.createElement('span');
+    nameSpan.className = 'annotator-name';
+    nameSpan.textContent = row.annotatorId;
+    nameCell.appendChild(nameSpan);
+    if (row.smallSample) {
+      var badge = document.createElement('span');
+      badge.className = 'badge badge-neutral mod-rate-small-sample-badge';
+      badge.textContent = tPath('annotatorModRate.smallSampleBadge');
+      nameCell.appendChild(document.createTextNode(' '));
+      nameCell.appendChild(badge);
+    }
+    tr.appendChild(nameCell);
+    outputs.forEach(function(outKey) {
+      var cell = document.createElement('td');
+      cell.setAttribute('data-output-type', outKey);
+      var entry = row.perType[outKey];
+      cell.textContent = modRateCellText(entry.modified, entry.reviewed);
+      tr.appendChild(cell);
+    });
+    var totalCell = document.createElement('td');
+    totalCell.className = 'mod-rate-total';
+    totalCell.textContent = modRateCellText(row.total.modified, row.total.reviewed);
+    tr.appendChild(totalCell);
+    body.appendChild(tr);
+  });
+}
+
 /* ── IAA method name (primary output type only) ───────────────────── */
 function updateMethodName() {
   var methodTarget = document.getElementById('iaaMethodName');
@@ -1821,6 +1989,7 @@ function loadQualityPanel() {
     updateSummaryBadge();
     applySmallSampleBadge();
     applySingleLabelIaaCard();
+    applyAnnotatorModificationRates();
     syncRoleUi();
     wireQualityPanelInteractions();
   };

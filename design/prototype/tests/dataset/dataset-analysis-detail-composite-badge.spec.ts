@@ -23,6 +23,8 @@ test.describe('Dataset analysis detail composite IAA badge math (outputs[] itera
 
     // Primary output type (entity_recognition, outputs[0]) is mounted in full, so its own
     // section titles still appear in document order; secondary cards contribute no panel-title.
+    // Block A-5 (標記員被修改率, issue #808) is a static task-level section outside
+    // #qualityPanelMount, so it always renders last regardless of outputs[].
     const titles = await page.locator('#qualityReady .panel .panel-title').allTextContents();
     expect(titles).toEqual([
       'IAA 報告',
@@ -32,6 +34,7 @@ test.describe('Dataset analysis detail composite IAA badge math (outputs[] itera
       '異常偵測',
       '標記員風險評估',
       '標記一致性偏離分析',
+      '標記員被修改率',
     ]);
 
     // single_label (secondary) renders as an IAA-only card with a type label subtitle.
