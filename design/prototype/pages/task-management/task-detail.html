@@ -3499,7 +3499,6 @@
     T014: { disputeCount: 0 },
     T015: { disputeCount: 1 },
     T016: { disputeCount: 1 },
-    T017: { disputeCount: 1 },
   };
   var REVIEW_WORKLOAD = cloneData(DEFAULT_REVIEW_WORKLOAD);
 
@@ -3623,18 +3622,6 @@
         ],
       },
     },
-    T017: {
-      rounds: [],
-      official: {
-        id: 'official', status: 'active', result: null, iaa: 0.55,
-        totalSamples: 5, completedSamples: 5, avgSpeed: 5.2,
-        remainingEta: '-', remainingEtaEn: '-',
-        members: [
-          { name: 'Alex Wang', role: 'annotator', completed: 5, pending: 0, avgSpeed: 5.2, lastSubmitted: '2026-08-21 09:40', quality: 'good' },
-          { name: 'Mandy Chen', role: 'reviewer', completed: 5, pending: 0, avgSpeed: 5.2, lastSubmitted: '2026-08-21 10:35', quality: 'good' },
-        ],
-      },
-    },
   };
   var ANNOTATION_PROGRESS = cloneData(DEFAULT_ANNOTATION_PROGRESS);
 
@@ -3666,7 +3653,7 @@
      with an empty unassigned pool instead of inheriting T001's demo
      entries (whose roundId: 'official' would otherwise leak Jason Huang's
      phantom ASP-1201~1203 rows into every official_run task). */
-  var UNASSIGNED_ANNOTATION_ASSIGNMENTS_BY_TASK = { T014: [], T015: [], T016: [], T017: [] };
+  var UNASSIGNED_ANNOTATION_ASSIGNMENTS_BY_TASK = { T014: [], T015: [], T016: [] };
   var UNASSIGNED_ANNOTATION_ASSIGNMENTS = cloneData(DEFAULT_UNASSIGNED_ANNOTATION_ASSIGNMENTS);
 
   var EXCLUDED_ANNOTATION_ASSIGNMENTS = [];
@@ -3692,10 +3679,6 @@
     T016: [
       { date: '2026-08-21', memberEmail: 'alex.wang@labelsuite.io', memberName: 'Alex Wang', loginAt: '09:00', logoutAt: '09:40', durationHours: 0.7, annotatedCount: 5, reviewedCount: null, arbitratedCount: null, stage: 'official' },
       { date: '2026-08-21', memberEmail: 'mandy@labelsuite.io', memberName: 'Mandy Chen', loginAt: '10:00', logoutAt: '10:40', durationHours: 0.7, annotatedCount: null, reviewedCount: 5, arbitratedCount: 1, stage: 'official' },
-    ],
-    T017: [
-      { date: '2026-08-21', memberEmail: 'alex.wang@labelsuite.io', memberName: 'Alex Wang', loginAt: '09:00', logoutAt: '09:40', durationHours: 0.7, annotatedCount: 5, reviewedCount: null, arbitratedCount: null, stage: 'official' },
-      { date: '2026-08-21', memberEmail: 'mandy@labelsuite.io', memberName: 'Mandy Chen', loginAt: '10:00', logoutAt: '10:35', durationHours: 0.6, annotatedCount: null, reviewedCount: 5, arbitratedCount: 1, stage: 'official' },
     ],
   };
   var WORK_LOG_ENTRIES = cloneData(DEFAULT_WORK_LOG_ENTRIES);
@@ -4489,13 +4472,6 @@
       { id: 'ofm-03-awaiting-arbitration', rows: [{ a: 'kioleemg12', v: 'neutral', rs: 'disputed', rv: [['reviewer_wang', 'modified', 'negative']] }] },
       { id: 'ofm-04-reviewer-bypass', rows: [{ a: 'kioleemg12', v: 'positive', rs: 'disputed', rv: [['reviewer_wang', 'bypass']] }] },
       { id: 'ofm-05-final-exception', rows: [{ a: 'kioleemg12', v: 'neutral', rs: 'disputed', rv: [['reviewer_wang', 'modified', 'positive']] }] }
-    ],
-    T017: [
-      { id: 'oft-01-final-exception', rows: [{ a: 'kioleemg12', v: 'neutral', rs: 'disputed', rv: [['reviewer_wang', 'modified', 'positive']] }] },
-      { id: 'oft-02-approved-interim', rows: [{ a: 'kioleemg12', v: 'positive', rs: 'finalized', rv: [['reviewer_wang', 'approved']] }] },
-      { id: 'oft-03-modified-interim', rows: [{ a: 'kioleemg12', v: 'neutral', rs: 'disputed', rv: [['reviewer_wang', 'modified', 'positive']] }] },
-      { id: 'oft-04-unanimous-gold', rows: [{ a: 'kioleemg12', v: 'positive', rs: 'finalized', rv: [['reviewer_wang', 'approved'], ['reviewer_li', 'approved']] }] },
-      { id: 'oft-05-pending-review', rows: [{ a: 'kioleemg12', v: 'positive', rs: 'pending', rv: [] }] }
     ]
   };
 
@@ -4540,7 +4516,7 @@
     });
   }
 
-  ['T014', 'T015', 'T016', 'T017'].forEach(function(taskId) {
+  ['T014', 'T015', 'T016'].forEach(function(taskId) {
     ANNOTATION_RESULTS_BY_TASK[taskId] = buildReviewFlowResults(taskId);
   });
 
