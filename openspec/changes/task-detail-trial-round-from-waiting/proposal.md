@@ -2,7 +2,7 @@
 對應 Spec: specs/task-management/014-task-detail/spec.md
 對應 Issue: #791
 基準版本: 014 v3.3.1
-目標版本: 014 v3.4.0
+目標版本: 014 v4.0.0
 ---
 
 ## Why
@@ -17,15 +17,15 @@
 
 ## What Changes
 
-- **FR-013 改寫**：執行控制按鈕對照表中，`dry_run_in_progress` 不再顯示任何執行控制按鈕；`waiting_iaa_confirmation` 同時顯示 `開始正式標記` 與 `新增試標回合 R{trial_round+1}`。兩者是同一決策點的互斥選項，改寫後明文說明其不構成「語意衝突的操作」。
+- **FR-013 改寫**：執行控制按鈕對照表中，`dry_run_in_progress` 的 `新增試標回合 R{trial_round+1}` 改為可見但停用，並於按鈕旁以可見文字顯示原因「本回合全部提交並完成 IAA 後才能新增下一回合」（維護者 2026-09-18 裁定）；`waiting_iaa_confirmation` 同時顯示 `開始正式標記` 與 `新增試標回合 R{trial_round+1}`。兩者是同一決策點的互斥選項，改寫後明文說明其不構成「語意衝突的操作」。
 - **新增狀態轉換** `waiting_iaa_confirmation → dry_run_in_progress`：新回合清單建立與狀態轉換為同一動作；轉換後在新回合任何提交之前不得因 FR-008a 立即轉回待確認。
 - **AC-3.12 前提改寫**：由「處於 `dry_run_in_progress`」改為「處於 `waiting_iaa_confirmation`」，並補上「被阻擋時狀態維持不變」與「成功後轉為 `dry_run_in_progress`」兩個可觀察結果。
-- **新增 SC-047**：`新增試標回合` 恰只出現在 `draft` 與 `waiting_iaa_confirmation` 兩種狀態，且每個 R{n}（`n >= 2`）恰對應一次自待確認發起的轉換。
-- **新增三條驗收情境**（AC 編號於 gate 4 回寫時配發，接續 AC-3.13）：試標進行中不提供新增回合、待確認同時提供兩個按鈕、新回合建立後不會立即轉回。
+- **新增 SC-047**：可點擊的 `新增試標回合` 恰只出現在 `draft` 與 `waiting_iaa_confirmation` 兩種狀態（`dry_run_in_progress` 只顯示停用按鈕與原因），且每個 R{n}（`n >= 2`）恰對應一次自待確認發起的轉換。
+- **新增三條驗收情境**（AC 編號於 gate 4 回寫時配發，接續 AC-3.13）：試標進行中的新增回合按鈕停用並顯示原因、待確認同時提供兩個按鈕、新回合建立後不會立即轉回。
 - **ADR-022 修訂**（apply 任務，不在本 propose 內改動）：Transition Table 新增一列、`:92`「Reverse transitions (other than `waiting_iaa_confirmation → draft`) are not permitted」補列新的回溯轉換、`ALLOWED_TRANSITIONS`（`:113`）`WAITING_IAA_CONFIRMATION` 集合加入 `DRY_RUN_IN_PROGRESS`，並新增 Amended 日期列。
 - **prototype**：`renderPublishActions()` 依新對照表渲染；`publishDryRun()` 不再依 IAA 決定狀態，回合完成改走既有的 `syncStatusFromDryRunProgress()`；回合結果改在完成時寫入（design.md D1、D2）。
 
-**BREAKING 判定**：非 BREAKING。沒有任何 FR／AC／SC 被移除；被收回的「進行中另開回合」本身即為 issue #791 所指的缺陷。版本判定見 Impact。
+**BREAKING 判定**：**BREAKING**。沒有任何 FR／AC／SC ID 被移除，但既有行為「`dry_run_in_progress` 可新增下一回合」被收回；維護者 2026-09-18 裁定移除既有行為一律視為 MAJOR。版本判定見 Impact。
 
 **delta 形式說明**：FR-013 與 AC-3.12 不在 `openspec/specs/` 衍生檢視內，無法使用 `## MODIFIED`（archive 會硬中止、`openspec validate` 零訊號），因此以既有 ID 置於 `## ADDED Requirements`。gate 4 回寫正典時必須**原地改寫** FR-013 與 AC-3.12，不得新增第二條同 ID 條文（見 tasks.md 群組 3）。
 
@@ -43,8 +43,8 @@
 
 **規格**
 
-- 正典：`specs/task-management/014-task-detail/spec.md`（v3.3.1 → v3.4.0，**MINOR**）。判為 MINOR 的理由：新增一條狀態轉換、一條 SC 與三條驗收情境屬功能擴充；FR-013 與 AC-3.12 為改寫而非移除，其 ID 與意圖（執行控制按鈕與狀態一一對應、R{n} 修訂紀錄必填）不變。若維護者認為「收回 `dry_run_in_progress` 的新增回合入口」屬於對既有契約的破壞，則應改判 MAJOR v4.0.0（見 design.md 與 PR 描述之待決事項）。
-- 正典待改寫錨點（gate 4）：`:375-377`（Prototype 互動規格按鈕列）、`:450` AC-3.12、`:601` FR-013、驗收情境清單末（AC-3.13 之後新增三條）、成功標準區 SC-046 之後新增 SC-047、Changelog 新增 v3.4.0 列。
+- 正典：`specs/task-management/014-task-detail/spec.md`（v3.3.1 → v4.0.0，**MAJOR**）。維護者 2026-09-18 裁定：本 change 收回 `dry_run_in_progress` 可新增下一回合的既有行為，移除既有行為屬破壞性變更，一律判為 MAJOR。FR-013 與 AC-3.12 的 ID 保留、條文原地改寫。issue #783 的 014 change 以本版為基準，目標版本相應為 v4.1.0。
+- 正典待改寫錨點（gate 4）：`:375-377`（Prototype 互動規格按鈕列）、`:450` AC-3.12、`:601` FR-013、驗收情境清單末（AC-3.13 之後新增三條）、成功標準區 SC-046 之後新增 SC-047、Changelog 新增 v4.0.0 列。
 - 該正典原封存於 `specs/_archive/014-task-detail/`，本 change 開立時已依 issue #648 取回至 `specs/task-management/014-task-detail/`（本分支第一個 commit）；合併後依 #742／#772 先例另開 PR 歸位。
 - 衍生檢視：`openspec/specs/task-management/014-task-detail/spec.md`（archive 時自動合併；開頭「目前收錄」清單與正典版本註記須於 gate 4 同步）。
 - ADR：`docs/adr/022-task-state-machine-location.md`（`:5` Amended、`:82` Transition Table、`:92` 回溯轉換句、`:113` `ALLOWED_TRANSITIONS`）。
