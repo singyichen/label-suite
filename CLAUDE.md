@@ -161,6 +161,7 @@ node scripts/check-user-path-map-freshness.mjs
 
 # Repository scripts and git hooks (run from project root)
 scripts/check-spec-artifacts.sh
+scripts/check-demo-data-parity.sh
 scripts/inventory-tests.sh
 scripts/pre-commit-tests.sh
 scripts/pre-tool-use-tests.sh

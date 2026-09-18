@@ -56,11 +56,11 @@
 
 **故事目標**（SC-004W）：兩份手寫副本目前沒有任何閘門比對，20 列中已有 2 列 id 漂移且無聲存在；示範任務要能被信賴為區辨審核情境的基準，前提是讀者手上那一份與原型跑的那一份是同一份。
 
-- [ ] 4.1 撰寫 `design/prototype/tests/annotation/issue-815-demo-data-parity.spec.ts` 作為 Red 契約，釘住檢查本身的行為：兩份副本相同時通過、人為在其一注入一筆差異時必須以非零 exit 失敗並指名該筆差異所在。先提交此單檔再跑測試並保存 expected failure 證據。 [@senior-qa]
-- [ ] 4.2 Green：建立 `scripts/check-demo-data-parity.sh` 比對兩份副本的任務集合、樣本 id 序列與樣本文字，以 prototype 種子為基準，差異時逐筆輸出並回非零 exit。 [@senior-devops]
-- [ ] 4.3 依 CLAUDE.md 的兩向契約補上登錄：於 `scripts/ci-jobs.tsv` 為新腳本登錄其 CI job 與本機指令，並於 CLAUDE.md 的驗證指令清單列入同一支腳本；缺任一側時 `CI_JOB_PARITY` 會回報缺口。 [@senior-devops]
-- [ ] 4.4 於 `.github/workflows/ci.yml` 接上對應 job，使該檢查在 CI 實際執行而非僅登錄於表。 [@senior-devops]
-- [ ] 4.5 執行 code/test gate：跑 Project SDD lint 確認 `CI_JOB_PARITY` 無缺口，並跑新腳本本身確認在當前樹上為 exit `0`。 [@main]
+- [x] 4.1 撰寫 `design/prototype/tests/annotation/issue-815-demo-data-parity.spec.ts` 作為 Red 契約，釘住檢查本身的行為：兩份副本相同時通過、人為在其一注入一筆差異時必須以非零 exit 失敗並指名該筆差異所在。先提交此單檔再跑測試並保存 expected failure 證據。 — Red：`349ca398`；`playwright test tests/annotation/issue-815-demo-data-parity.spec.ts` exit `1`（5 failed／0 passed：腳本不存在，bash exit `127` 且輸出不含任何被竄改的檔名或樣本 id） [@senior-qa]
+- [x] 4.2 Green：建立 `scripts/check-demo-data-parity.sh` 比對兩份副本的任務集合、樣本 id 序列與樣本文字，以 prototype 種子為基準，差異時逐筆輸出並回非零 exit。 — `172eb638`；Red 規格 5/5 通過 [@senior-devops]
+- [x] 4.3 依 CLAUDE.md 的兩向契約補上登錄：於 `scripts/ci-jobs.tsv` 為新腳本登錄其 CI job 與本機指令，並於 CLAUDE.md 的驗證指令清單列入同一支腳本；缺任一側時 `CI_JOB_PARITY` 會回報缺口。 — `1124c00b` [@senior-devops]
+- [x] 4.4 於 `.github/workflows/ci.yml` 接上對應 job，使該檢查在 CI 實際執行而非僅登錄於表。 — `6c0918ff` [@senior-devops]
+- [x] 4.5 執行 code/test gate：跑 Project SDD lint 確認 `CI_JOB_PARITY` 無缺口，並跑新腳本本身確認在當前樹上為 exit `0`。 — `scripts/check-sdd.sh` 0 error、無 `CI_JOB_PARITY`；`scripts/check-demo-data-parity.sh` exit `0`（3 份 review-flow 資料檔一致）；另於 `design/prototype/` 以 `PW_PORT=8947` 跑 `pnpm typecheck` exit `0`、`pnpm playwright test`（全量）exit `0`，1745 passed [@main]
 
 ---
 
