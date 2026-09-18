@@ -9,7 +9,7 @@
  *   - the demo tasks appear in the annotator/reviewer task lists
  *   - card clicks route to annotation-list with the correct run_type
  *   - reviewer summaries match the seeded review-state matrix
- *     (T014=5, T015=1, T016=0, T017=1 pending review units) using the
+ *     (T014=5, T015=1, T016=0, T017=0 pending review units) using the
  *     subject-bearing wording (issue #452): the share of units past 待審 is
  *     labeled 任務覆蓋 x / n 個審核單位, and T016 — whose pending count is 0
  *     while 3 units sit unresolved in the dispute pool — must disclose
@@ -89,9 +89,13 @@ const DEMO_TASKS = [
     id: 'T017',
     runType: 'official_run',
     runTypeBadge: '正式標記',
-    reviewerSummaryZh: '任務覆蓋 4 / 5 個審核單位 · 待審 1 個 · 爭議中 2 個 · IAA 無法計算',
+    /* issue #804 group 2 (FR-092): seedReviewFlowDemo() no longer rolls
+       oft-05's annotator sample back, so that unit is past 待審 while its
+       reject still blocks finalization -- it counts as 爭議中 now
+       (coverage 4 -> 5, 爭議中 2 -> 3, and 待審 drops out). */
+    reviewerSummaryZh: '任務覆蓋 5 / 5 個審核單位 · 爭議中 3 個 · IAA 無法計算',
     reviewerSummaryEn:
-      'Task coverage 4 / 5 review units · 1 pending · 2 disputed · IAA Not computable',
+      'Task coverage 5 / 5 review units · 3 disputed · IAA Not computable',
   },
 ] as const;
 
