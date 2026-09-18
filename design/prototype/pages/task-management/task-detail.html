@@ -10078,9 +10078,17 @@ function getTaskTypeLabel() {
     if (!canPublish()) return;
     state.publishingDryRun = true;
     setTimeout(function() { state.publishingDryRun = false; }, 200);
-    var nextRound = getTrialRounds().length + 1;
+    /* issue #791 (D1): materialize getTrialRounds()'s synthetic fallback
+       into TASK_DATA.trialRounds before pushing the new round, instead of
+       pushing onto whatever TASK_DATA.trialRounds already holds. Without
+       this, a task that reached waiting_iaa_confirmation via a page load
+       (no real TASK_DATA.trialRounds seed) would lose the fallback R1 entry
+       the moment R2 is pushed onto the still-empty real array. */
+    if (!Array.isArray(TASK_DATA.trialRounds) || !TASK_DATA.trialRounds.length) {
+      TASK_DATA.trialRounds = getTrialRounds();
+    }
+    var nextRound = TASK_DATA.trialRounds.length + 1;
     var scenario = getTrialRoundScenario(nextRound);
-    if (!Array.isArray(TASK_DATA.trialRounds)) TASK_DATA.trialRounds = [];
     TASK_DATA.trialRounds.push({
       round: nextRound,
       sampleCount: Number(TASK_DATA.samplingValue) || 0,
@@ -10097,7 +10105,13 @@ function getTaskTypeLabel() {
     TASK_DATA.currentAgreement = scenario.agreement;
     TASK_DATA.currentAnnotators = Number(TASK_DATA.minAnnotators) || 0;
     TASK_DATA.currentStd = scenario.std;
-    TASK_DATA.status = scenario.result === 'passed' ? 'waiting_iaa_confirmation' : 'dry_run_in_progress';
+    /* issue #791 (FR-010o-3): publishing any round always moves the task
+       into dry_run_in_progress. The round's own IAA outcome (scenario.result
+       above) still drives its round-timeline badge, but it MUST NOT decide
+       the task's status -- only a fully-submitted round, via
+       syncStatusFromDryRunProgress(), advances the task to
+       waiting_iaa_confirmation (FR-008a). */
+    TASK_DATA.status = 'dry_run_in_progress';
     TASK_DATA.updatedAt = scenario.date + ' 10:07';
     showToast(t('toastPublishedDry'));
     trackEvent('prototype_publish_success', { target_status: TASK_DATA.status });
