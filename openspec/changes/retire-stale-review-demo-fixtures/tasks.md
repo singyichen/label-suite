@@ -42,13 +42,13 @@
 
 **故事目標**（SC-004W）：群組 2 已讓 prototype 只剩三個示範任務，但 `docs/product` 仍保留整組平手示範的樣本與設定，三份存活任務設定的 `typical_tasks` 也仍以定稿門檻、多數決與偶數平手描述情境；讀者手上的說明文件因此仍在教一個模型產不出的審核情境。
 
-- [ ] 3.1 撰寫 `design/prototype/tests/annotation/issue-815-docs-review-configs-current-model.spec.ts` 作為 Red 契約，以讀檔方式釘住兩件事：`docs/product/example-data` 與 `docs/product/task-configs` 皆不再存在平手示範的同名檔、以及三份存活審核流程任務設定的 `typical_tasks` 不含定稿門檻數值、多數決與偶數平手語彙。先提交此單檔再跑測試，expected failure 必須兩項同時紅，並保存 command、exit 與失敗訊息。 [@senior-qa]
-- [ ] 3.2 Green：刪除 `docs/product/example-data/review-flow-official-tie.json`，平手示範在單人接力模型下已無對應情境。 [@senior-frontend]
-- [ ] 3.3 刪除 `docs/product/task-configs/review-flow-official-tie.json`，與上一項的樣本檔成對移除。 [@senior-frontend]
-- [ ] 3.4 改寫 `docs/product/task-configs/review-flow-dry-run.json` 的 `typical_tasks` 字串，改以指派粒度與仲裁路徑描述該示範任務的實際情境。 [@senior-frontend]
-- [ ] 3.5 改寫 `docs/product/task-configs/review-flow-official-single.json` 的 `typical_tasks` 字串，同上一項的語彙收斂。 [@senior-frontend]
-- [ ] 3.6 改寫 `docs/product/task-configs/review-flow-official-multi.json` 的 `typical_tasks` 字串，同上一項的語彙收斂。 [@senior-frontend]
-- [ ] 3.7 執行 code/test gate：於 `design/prototype/` 帶專屬 `PW_PORT` 跑 typecheck 與 Playwright 全量，兩者預期 exit `0` 且分開記錄。 [@main]
+- [x] 3.1 撰寫 `design/prototype/tests/annotation/issue-815-docs-review-configs-current-model.spec.ts` 作為 Red 契約，以讀檔方式釘住兩件事：`docs/product/example-data` 與 `docs/product/task-configs` 皆不再存在平手示範的同名檔、以及三份存活審核流程任務設定的 `typical_tasks` 不含定稿門檻數值、多數決與偶數平手語彙。先提交此單檔再跑測試，expected failure 必須兩項同時紅，並保存 command、exit 與失敗訊息。 — Red：`fc697819`；`playwright test tests/annotation/issue-815-docs-review-configs-current-model.spec.ts` exit `1`（5 failed／0 passed：兩份平手檔仍存在、三份 `typical_tasks` 皆命中 `min_reviewers=`） [@senior-qa]
+- [x] 3.2 Green：刪除 `docs/product/example-data/review-flow-official-tie.json`，平手示範在單人接力模型下已無對應情境。 — `135a2667`；3.2–3.6 完成後 Red 規格 5/5 通過 [@senior-frontend]
+- [x] 3.3 刪除 `docs/product/task-configs/review-flow-official-tie.json`，與上一項的樣本檔成對移除。 — `135a2667` [@senior-frontend]
+- [x] 3.4 改寫 `docs/product/task-configs/review-flow-dry-run.json` 的 `typical_tasks` 字串，改以指派粒度與仲裁路徑描述該示範任務的實際情境。 — `76d41ce5` [@senior-frontend]
+- [x] 3.5 改寫 `docs/product/task-configs/review-flow-official-single.json` 的 `typical_tasks` 字串，同上一項的語彙收斂。 — `76d41ce5` [@senior-frontend]
+- [x] 3.6 改寫 `docs/product/task-configs/review-flow-official-multi.json` 的 `typical_tasks` 字串，同上一項的語彙收斂。 — `76d41ce5` [@senior-frontend]
+- [x] 3.7 執行 code/test gate：於 `design/prototype/` 帶專屬 `PW_PORT` 跑 typecheck 與 Playwright 全量，兩者預期 exit `0` 且分開記錄。 — `PW_PORT=8947`：`pnpm typecheck` exit `0`；`pnpm playwright test`（全量）exit `0`，1736 passed／1 flaky（`dataset-analysis-detail-sequence-tagging-i18n.spec.ts:118` 重試通過，與本群組 docs 變更無關） [@main]
 
 ---
 
