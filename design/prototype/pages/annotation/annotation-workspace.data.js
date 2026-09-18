@@ -1345,8 +1345,8 @@
       ]
     },
 
-    /* T014-T017: review-flow demo tasks (Phase 2). T014 keeps the dry_run
-     * 3-annotator convention; T015-T017 are official_run tasks with a
+    /* T014-T016: review-flow demo tasks (Phase 2). T014 keeps the dry_run
+     * 3-annotator convention; T015-T016 are official_run tasks with a
      * single annotator per sample. T015 deliberately OMITS
      * ofs-05-not-submitted: a sample with no mock row renders no review
      * unit, which is exactly that sample's demo point. Answers align with
@@ -1410,24 +1410,6 @@
       ],
       'ofm-05-final-exception': [
         { annotator: 'kioleemg12', answers: { single_label: 'neutral' } }
-      ]
-    },
-
-    T017: {
-      'oft-01-final-exception': [
-        { annotator: 'kioleemg12', answers: { single_label: 'neutral' } }
-      ],
-      'oft-02-approved-interim': [
-        { annotator: 'kioleemg12', answers: { single_label: 'positive' } }
-      ],
-      'oft-03-modified-interim': [
-        { annotator: 'kioleemg12', answers: { single_label: 'neutral' } }
-      ],
-      'oft-04-unanimous-gold': [
-        { annotator: 'kioleemg12', answers: { single_label: 'positive' } }
-      ],
-      'oft-05-pending-review': [
-        { annotator: 'kioleemg12', answers: { single_label: 'positive' } }
       ]
     },
 
@@ -3009,13 +2991,13 @@
   };
 
   /* ---- Review-flow demo seeder (Phase 2 slice C) -------------------------
-   * Stages the T014-T017 demo review states at boot so every review-flow
+   * Stages the T014-T016 demo review states at boot so every review-flow
    * scenario (five unit states, quorum thresholds, majority convergence,
    * tie -> arbitration) is visible without clicking through 29 submissions.
    * Idempotent: the marker key short-circuits every later page load, so
    * timestamps and history events are written exactly once -- and any state
    * the demo visitor then changes (their own reviews, arbitrations) is
-   * never overwritten. T014-T017 ONLY; other tasks' buckets stay untouched,
+   * never overwritten. T014-T016 ONLY; other tasks' buckets stay untouched,
    * and dry-run progress (DRY_RUN_PROGRESS_KEY) is deliberately not synced
    * -- these are review-side fixtures, not the visitor's own annotation
    * progress. */
@@ -3146,22 +3128,6 @@
          (兩者皆非) -> final-exception-pool seed (FR-061 point 3, FR-095)
          survives T017's removal. */
       { t: 'T016', r: 'official_run', s: 'ofm-05-final-exception', a: A, v: 'neutral', rev: { reviewer_wang: 'positive' }, modifyBy: 'reviewer_wang', reason: '語境不足以判斷情緒傾向，正面與中性難以取捨', arbReject: true, arbReason: '原標記與審核修正結果皆缺乏明確文本依據支持，需退回標記指南徵詢更明確判準' }, // disputed (reviewer modifies, arbitration rejects both sides -> final exception pool)
-      /* T017 official_run, min_reviewers = 2 */
-      /* issue #596 (FR-093/FR-061 point 3/FR-095): the canonical exception
-         path -- reviewer_wang corrects the annotator's value, but
-         reviewer_chen's arbitration rejects BOTH sides (兩者皆非), so the
-         unit stays disputed and the item queues in the final exception pool
-         until a project_leader visit resolves it. */
-      { t: 'T017', r: 'official_run', s: 'oft-01-final-exception', a: A, v: 'neutral', rev: { reviewer_wang: 'positive' }, modifyBy: 'reviewer_wang', reason: '語境不足以判斷情緒傾向，正面與中性難以取捨', arbReject: true, arbReason: '原標記與審核修正結果皆缺乏明確文本依據支持，需退回標記指南徵詢更明確判準' }, // disputed (reviewer modifies, arbitration rejects both sides -> final exception pool)
-      { t: 'T017', r: 'official_run', s: 'oft-02-approved-interim', a: A, v: 'positive', rev: { reviewer_wang: 'positive' } }, // approved (1 < 2)
-      { t: 'T017', r: 'official_run', s: 'oft-03-modified-interim', a: A, v: 'neutral', rev: { reviewer_wang: 'positive' } }, // modified (1 < 2)
-      { t: 'T017', r: 'official_run', s: 'oft-04-unanimous-gold', a: A, v: 'positive', rev: { reviewer_wang: 'positive', reviewer_li: 'positive' } }, // finalized
-      /* issue #804 group 2 (FR-092): a reviewer reject no longer rolls the
-         annotator's sample back to 'pending' in either run_type -- reject
-         still blocks finalization (DISPUTE_FORCING_DECISIONS), so this unit
-         reads as disputed with the annotator's original submission intact,
-         same as T014's dry-05-pending-review pure-reject row above. */
-      { t: 'T017', r: 'official_run', s: 'oft-05-pending-review', a: A, v: 'positive', rev: { reviewer_wang: 'positive' }, rejectBy: 'reviewer_wang', reason: '語氣偏中性，請重新判讀第二句的轉折' }, // disputed (pure reject blocks finalization)
     ];
 
     function labelPayload(value, decision, reason) {

@@ -2,18 +2,24 @@
  * Review-flow demo tasks on the dashboard (issue #302, Phase 3)
  * Source spec: specs/dashboard/012-dashboard/spec.md
  *
- * T014-T017 are the review-flow demo tasks staged by the
+ * T014-T016 are the review-flow demo tasks staged by the
  * annotation-workspace.data.js boot seeder. The dashboard assignment rows
  * are the ONLY place a run_type is bound to a task for navigation, so these
  * tests pin:
  *   - the demo tasks appear in the annotator/reviewer task lists
  *   - card clicks route to annotation-list with the correct run_type
  *   - reviewer summaries match the seeded review-state matrix
- *     (T014=5, T015=1, T016=0, T017=0 pending review units) using the
+ *     (T014=5, T015=1, T016=0 pending review units) using the
  *     subject-bearing wording (issue #452): the share of units past 待審 is
  *     labeled 任務覆蓋 x / n 個審核單位, and T016 — whose pending count is 0
  *     while 3 units sit unresolved in the dispute pool — must disclose
  *     爭議中 3 instead of reading as a completed task.
+ *
+ * issue #815: T017 (review-flow-official-tie) is retired -- its whole
+ * premise, an N=2 tie, is structurally impossible under FR-093's
+ * single-owner relay. Its DEMO_TASKS entry is dropped (T016 already covers
+ * the same official_run shape at full coverage), and its dedicated
+ * card-click routing test is retargeted at T016 below.
  *
  * Issue #596: FR-093 gives each unit exactly one reviewer, so the interim
  * states a quorum used to produce (已同意 / 已修改) no longer exist.
@@ -85,21 +91,9 @@ const DEMO_TASKS = [
     reviewerSummaryEn:
       'Task coverage 5 / 5 review units · 3 disputed · IAA Not computable',
   },
-  {
-    id: 'T017',
-    runType: 'official_run',
-    runTypeBadge: '正式標記',
-    /* issue #804 group 2 (FR-092): seedReviewFlowDemo() no longer rolls
-       oft-05's annotator sample back, so that unit is past 待審 while its
-       reject still blocks finalization -- it counts as 爭議中 now
-       (coverage 4 -> 5, 爭議中 2 -> 3, and 待審 drops out). */
-    reviewerSummaryZh: '任務覆蓋 5 / 5 個審核單位 · 爭議中 3 個 · IAA 無法計算',
-    reviewerSummaryEn:
-      'Task coverage 5 / 5 review units · 3 disputed · IAA Not computable',
-  },
 ] as const;
 
-test.describe('Dashboard — review-flow demo tasks (T014-T017)', () => {
+test.describe('Dashboard — review-flow demo tasks (T014-T016)', () => {
   test('reviewer list renders every demo task with matrix-consistent review summaries', async ({ page }) => {
     await openScenario(page, 'reviewer');
 
@@ -177,16 +171,16 @@ test.describe('Dashboard — review-flow demo tasks (T014-T017)', () => {
     await expect(page).not.toHaveURL(/sample_id=/);
   });
 
-  test('clicking the reviewer T017 card routes to annotation-list as official_run', async ({ page }) => {
+  test('clicking the reviewer T016 card routes to annotation-list as official_run', async ({ page }) => {
     await openScenario(page, 'reviewer');
 
     const card = page.locator(
-      '#reviewerTaskList [data-example-task-id="T017"]',
+      '#reviewerTaskList [data-example-task-id="T016"]',
     );
     await card.click({ position: { x: 80, y: 24 } });
 
     await expect(page).toHaveURL(/\/pages\/annotation\/annotation-list\.html\?/);
-    await expect(page).toHaveURL(/task_id=T017/);
+    await expect(page).toHaveURL(/task_id=T016/);
     await expect(page).toHaveURL(/role=reviewer/);
     await expect(page).toHaveURL(/run_type=official_run/);
     await expect(page).toHaveURL(/reviewer_id=reviewer_chen/);

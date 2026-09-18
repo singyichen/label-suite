@@ -16,6 +16,10 @@
  * make it pass -- if a case here conflicts with Green's implementation,
  * Green is wrong, not this test.
  *
+ * issue #815 (retire-stale-review-demo-fixtures) retired T017 outright, so
+ * REVIEW_PROFILE_TASK_IDS below now iterates the three surviving T014-T016
+ * profiles instead of four.
+ *
  * ---------------------------------------------------------------------
  * Contract decided by this Red:
  *
@@ -44,7 +48,7 @@ const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 const PANEL_LOAD_TIMEOUT = 15000;
 const SLUG_RE = /^[a-z][a-z0-9_-]*$/;
 
-const REVIEW_PROFILE_TASK_IDS = ['T014', 'T015', 'T016', 'T017'] as const;
+const REVIEW_PROFILE_TASK_IDS = ['T014', 'T015', 'T016'] as const;
 
 type TaskMember = { id?: string; email: string; name: string };
 
@@ -116,7 +120,7 @@ test.describe('Task detail reviewer identity format — opaque user id, not Emai
   });
 
   // FR-010s-1: reviewer_ids/arbiter_ids seeds (the default roster and the
-  // four T014-T017 task profiles) hold TASK_MEMBERS ids, not Email strings.
+  // three T014-T016 task profiles) hold TASK_MEMBERS ids, not Email strings.
   test('reviewer_ids/arbiter_ids seeds hold member ids, not Email, and resolve into TASK_MEMBERS', async ({
     page,
   }) => {

@@ -1,7 +1,12 @@
 /**
- * T014-T017 (review-flow demo tasks, issue #302 / task-list.data.js) were
+ * T014-T016 (review-flow demo tasks, issue #302 / task-list.data.js) were
  * missing from TASK_META, so opening the dataset detail page with any of
  * their task_id redirected to the list as "invalid_task" (issue #490).
+ *
+ * issue #815: T017 (review-flow-official-tie) is retired -- its row below is
+ * dropped, not retargeted; T014-T016 already cover this file's whole point
+ * (every review-flow demo task_id resolves without an invalid_task
+ * redirect), so no coverage is lost.
  */
 import { test, expect } from '@playwright/test';
 
@@ -11,10 +16,9 @@ const REVIEW_FLOW_TASKS: Array<{ taskId: string; title: string }> = [
   { taskId: 'T014', title: '審核流程示範：試標' },
   { taskId: 'T015', title: '審核流程示範：正式標記（單一審核員）' },
   { taskId: 'T016', title: '審核流程示範：正式標記（三審核員多數決）' },
-  { taskId: 'T017', title: '審核流程示範：正式標記（雙審核員平手）' },
 ];
 
-test.describe('Dataset detail — review-flow demo tasks (T014-T017) are reachable', () => {
+test.describe('Dataset detail — review-flow demo tasks (T014-T016) are reachable', () => {
   for (const { taskId, title } of REVIEW_FLOW_TASKS) {
     test(`${taskId} opens on the detail page without an invalid_task redirect`, async ({ page }) => {
       await page.goto(`${DETAIL_URL}?task_id=${taskId}&tab=quality`);

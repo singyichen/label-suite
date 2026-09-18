@@ -3,13 +3,16 @@
  * Source spec: specs/dashboard/012-dashboard/spec.md
  *
  * Issue #404 put a "審核流程示範" shortcut above the PL task list, on the
- * premise that T014-T017 could not be found from the dashboard or from its
+ * premise that T014-T016 could not be found from the dashboard or from its
  * "查看全部" entry. That premise only held for the three task cards the
  * dashboard itself renders: `plViewAllBtn` calls openTaskList without a
- * keyword, so the unfiltered task list already lists all 17 seeded tasks,
- * the four review-flow demo ones included. The shortcut saved a keyword
+ * keyword, so the unfiltered task list already lists all 16 seeded tasks,
+ * the three review-flow demo ones included. The shortcut saved a keyword
  * lookup rather than making anything reachable, so FR-009E and SC-027 were
  * retired and the button removed.
+ *
+ * issue #815: T017 (review-flow-official-tie) is retired; DEMO_TASK_NAMES
+ * and the seeded-task count below drop from four/17 to three/16.
  *
  * The second test pins that premise rather than the removal: should View All
  * ever start applying a filter, the demo tasks would lose the discoverable
@@ -24,7 +27,6 @@ const DEMO_TASK_NAMES = [
   '審核流程示範：試標',
   '審核流程示範：正式標記（單一審核員）',
   '審核流程示範：正式標記（三審核員多數決）',
-  '審核流程示範：正式標記（雙審核員平手）',
 ];
 
 test.describe('Dashboard — PL demo shortcut removed (issue #510)', () => {
@@ -45,7 +47,7 @@ test.describe('Dashboard — PL demo shortcut removed (issue #510)', () => {
 
     await expect(page).toHaveURL(/\/task-list\.html\?task_role=project_leader$/);
     await expect(page.locator('#searchInput')).toHaveValue('');
-    await expect(page.locator('#paginationInfo')).toContainText('共 17 筆');
+    await expect(page.locator('#paginationInfo')).toContainText('共 16 筆');
 
     for (const name of DEMO_TASK_NAMES) {
       await expect(page.getByText(name, { exact: true })).toBeVisible();

@@ -1,16 +1,19 @@
 /*
  * Traceability: specs/task-management/014-task-detail/spec.md
  *   FR-014f-1
- * Issue #405: T014-T017 (the review-flow demo tasks introduced by PR #305)
+ * Issue #405: T014-T016 (the review-flow demo tasks introduced by PR #305)
  * never had any "提供給審核員" guideline content seeded in
  * task-detail.data.js's profiles, so the overview's reviewer guideline
  * card always fell back to the shared empty state ("未上傳" /
- * "尚無說明內容") on all four tasks.
+ * "尚無說明內容") on all three tasks.
  *
  * Issue #815: the guideline text seeded for #405 described the pre-#596
  * review model -- it named a per-task `審核門檻為 N 位審核員` and, on
- * T016/T017, explained majority convergence and even-tie handling in full
- * sentences. specs/annotation/015-annotation-workspace/spec.md v5.0.0
+ * T016, explained majority convergence and even-tie handling in full
+ * sentences. T017 (review-flow-official-tie, the even-tie case this prose
+ * named) is retired outright by this same issue -- its whole premise, an
+ * N=2 tie, is structurally impossible under the single-owner relay model.
+ * specs/annotation/015-annotation-workspace/spec.md v5.0.0
  * retired `MIN_REVIEWERS_DEFAULT` (015:63) and `DISPUTE_CONVERGENCE_RULE`
  * (015:66) as BREAKING, names reserved and not reused: FR-093 gives every
  * assignment target exactly one reviewer, so there is no threshold, no
@@ -28,18 +31,17 @@ import { test, expect } from '@playwright/test';
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 
 /* FR-093: dry_run assigns by sample, official_run by review unit. That is
- * the only review-model difference between these four demo tasks now. */
+ * the only review-model difference between these three demo tasks now. */
 const CASES = [
   { taskId: 'T014', reviewModelMarker: '以樣本為單位指派' },
   { taskId: 'T015', reviewModelMarker: '以審核單位為單位指派' },
   { taskId: 'T016', reviewModelMarker: '以審核單位為單位指派' },
-  { taskId: 'T017', reviewModelMarker: '以審核單位為單位指派' },
 ];
 
 /* Retired with 015 v5.0.0 (issue #596); names reserved and not reused. */
 const BANNED_COPY = ['審核門檻', '定稿門檻', '多數決', 'min_reviewers', 'per-item-strict-majority', '核可', '退回'];
 
-test.describe('Task detail reviewer guideline content for T014-T017 (issue #405, #815)', () => {
+test.describe('Task detail reviewer guideline content for T014-T016 (issue #405, #815)', () => {
   for (const { taskId, reviewModelMarker } of CASES) {
     test(`${taskId} overview shows reviewer guideline content, not the empty state`, async ({ page }) => {
       await page.goto(`${TASK_DETAIL_URL}?task_id=${taskId}`);

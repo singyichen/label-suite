@@ -10,13 +10,13 @@
  * FR-093/FR-064 v5.0.0): a review unit now has exactly ONE assigned
  * reviewer, so there is no population left for a finalize threshold to
  * count against. The 定稿門檻 {x} / {n} 位審核員 chip (`.rv-unit-threshold`)
- * is removed for every task, not only T016/T017 -- confirmed by grep of
+ * is removed for every task, not only T016 -- confirmed by grep of
  * annotation-workspace.config.js:4459-4461 (comment) and the absence of the
- * `.rv-unit-threshold` class anywhere in that file. T016/T017 additionally
- * lose their whole seed shape (majority-of-3 / tie-of-2 have no meaning
- * with one reviewer); design.md's Migration Plan retargets both at a single
- * canonical relay path each -- see annotation-review-flow-demo-seed.spec.ts's
- * header for the full path description.
+ * `.rv-unit-threshold` class anywhere in that file. T016 additionally loses
+ * its whole seed shape (majority-of-3 / tie-of-2 have no meaning with one
+ * reviewer); design.md's Migration Plan retargets it at two canonical relay
+ * paths -- see annotation-review-flow-demo-seed.spec.ts's header for the
+ * full path description.
  */
 import { test, expect, type Page } from '@playwright/test';
 
@@ -38,7 +38,7 @@ function contextBanner(page: Page) {
   return page.locator('[data-testid="ws-review-unit-context"]');
 }
 
-test.describe('Reviewer workspace — review-unit context banner (T014-T017)', () => {
+test.describe('Reviewer workspace — review-unit context banner (T014-T016)', () => {
   test('T014 dry-01: dry_run badge, 3-annotator roster, finalized, no threshold chip', async ({ page }) => {
     await openReviewerWorkspace(page, 'T014', 'dry-01-all-agree', 'dry_run');
 
@@ -77,8 +77,8 @@ test.describe('Reviewer workspace — review-unit context banner (T014-T017)', (
     await expect(banner.locator('.rv-unit-state')).toHaveText('已定稿 · 已鎖定');
   });
 
-  test('T017 oft-01-final-exception: arbitration rejected both sides, still disputed, banner coexists with the arbitration card, no threshold chip', async ({ page }) => {
-    await openReviewerWorkspace(page, 'T017', 'oft-01-final-exception', 'official_run');
+  test('T016 ofm-05-final-exception: arbitration rejected both sides, still disputed, banner coexists with the arbitration card, no threshold chip', async ({ page }) => {
+    await openReviewerWorkspace(page, 'T016', 'ofm-05-final-exception', 'official_run');
 
     const banner = contextBanner(page);
     await expect(banner).toBeVisible();

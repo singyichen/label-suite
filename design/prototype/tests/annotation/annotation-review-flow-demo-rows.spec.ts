@@ -4,11 +4,11 @@ import { buildListUrl } from './_workspace-helpers';
 /* Review-flow demo mock rows + roster (spec 015, review-flow demo Phase 2
  * slice B).
  *
- * T014-T017 landed in the task-list/task-detail seeds in Phase 1, but
+ * T014-T016 landed in the task-list/task-detail seeds in Phase 1, but
  * REVIEWER_MOCK_ROWS still stops at T013, so their reviewer lists render
  * zero review units. This file pins the demo roster expansion (a 4th
  * reviewer, reviewer_lin, WITHOUT can_arbitrate) and the per-task mock row
- * shape: T014 keeps the 3-annotator dry_run convention, T015-T017 are
+ * shape: T014 keeps the 3-annotator dry_run convention, T015-T016 are
  * official_run single-annotator tasks -- and T015's ofs-05-not-submitted
  * sample deliberately ships NO mock row (no submission -> no review unit).
  *
@@ -16,9 +16,9 @@ import { buildListUrl } from './_workspace-helpers';
  * has exactly ONE assigned reviewer (round-robin over the 4-member roster),
  * not all four at once. reviewer_chen stays the roster's only
  * can_arbitrate:true reviewer (FR-060), so she stays free to arbitrate any
- * OTHER reviewer's disputed unit -- e.g. T016/T017's canonical samples,
- * both index 0 -> assigned to reviewer_wang (see
- * annotation-review-flow-demo-seed.spec.ts for the full T016/T017 paths).
+ * OTHER reviewer's disputed unit -- e.g. T016's canonical sample, index 0
+ * -> assigned to reviewer_wang (see annotation-review-flow-demo-seed.spec.ts
+ * for the full T016 path).
  *
  * Traceability: specs/annotation/015-annotation-workspace/spec.md
  *   FR-055, FR-060, FR-093, SC-004N
@@ -121,7 +121,7 @@ test.describe('T014 dry_run: 3 annotators per sample', () => {
   });
 });
 
-test.describe('T015-T017 official_run: single annotator per sample', () => {
+test.describe('T015-T016 official_run: single annotator per sample', () => {
   test('T015 renders 4 rows across the roster -- ofs-05-not-submitted ships no mock row', async ({ page }) => {
     expect((await reviewUnitsAcrossRoster(page, 'T015', 'official_run')).size).toBe(4);
 
@@ -137,19 +137,17 @@ test.describe('T015-T017 official_run: single annotator per sample', () => {
     }
   });
 
-  for (const taskId of ['T016', 'T017'] as const) {
-    test(`${taskId} renders 5 single-annotator rows across the roster`, async ({ page }) => {
-      expect((await reviewUnitsAcrossRoster(page, taskId, 'official_run')).size).toBe(5);
+  test('T016 renders 5 single-annotator rows across the roster', async ({ page }) => {
+    expect((await reviewUnitsAcrossRoster(page, 'T016', 'official_run')).size).toBe(5);
 
-      for (const reviewerId of ROSTER) {
-        await page.goto(
-          buildListUrl({ task_id: taskId, role: 'reviewer', run_type: 'official_run', reviewer_id: reviewerId })
-        );
-        const annotators = page.getByTestId('list-review-annotator');
-        for (let i = 0; i < (await annotators.count()); i += 1) {
-          await expect(annotators.nth(i)).toHaveText('kioleemg12');
-        }
+    for (const reviewerId of ROSTER) {
+      await page.goto(
+        buildListUrl({ task_id: 'T016', role: 'reviewer', run_type: 'official_run', reviewer_id: reviewerId })
+      );
+      const annotators = page.getByTestId('list-review-annotator');
+      for (let i = 0; i < (await annotators.count()); i += 1) {
+        await expect(annotators.nth(i)).toHaveText('kioleemg12');
       }
-    });
-  }
+    }
+  });
 });

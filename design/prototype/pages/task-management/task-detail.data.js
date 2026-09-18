@@ -1,5 +1,5 @@
 /*
- * Seed configuration profiles for the 17 task-list example tasks (T001-T017).
+ * Seed configuration profiles for the 16 task-list example tasks (T001-T016).
  *
  * Sources:
  *  - docs/product/task-configs/<sourceFile>   -> outputs[] (ADR-029 composition model)
@@ -12,8 +12,8 @@
   'use strict';
 
   /* Shared reviewer guideline text for the single_label sentiment schema
-     used by T001 and the T014-T017 review-flow demo seeds (issue #405).
-     Each of T014-T017 appends its own review-model addendum below so the
+     used by T001 and the T014-T016 review-flow demo seeds (issue #405).
+     Each of T014-T016 appends its own review-model addendum below so the
      "提供給審核員" content actually matches that task's demo scenario
      instead of generic boilerplate -- see seedReviewFlowDemo() in
      annotation-workspace.data.js and PR #305 for the scenario source. */
@@ -1008,7 +1008,7 @@
       ]
     },
 
-    /* T014-T017: review-flow demo seeds. Same single_label sentiment
+    /* T014-T016: review-flow demo seeds. Same single_label sentiment
        schema (docs/product/task-configs/review-flow-*.json) with label
        colors mapped to the prototype palette exactly as T001 maps
        single-label.json; records copied verbatim from
@@ -1195,67 +1195,6 @@
       ]
     },
 
-    T017: {
-      taskCategories: ['classification'],
-      taskInputTypes: ['single_item'],
-      reviewerIds: ['reviewer_wang', 'reviewer_li', 'reviewer_chen', 'reviewer_lin'],
-      arbiterIds: ['reviewer_chen'],
-      outputs: [
-        {
-          type: 'single_label',
-          config: {
-            label_options: [
-              { name: 'positive', color: '#10B981' },
-              { name: 'neutral', color: '#F59E0B' },
-              { name: 'negative', color: '#EC4899' }
-            ]
-          }
-        }
-      ],
-      fieldRoleMap: { text: 'input', gold_label: 'output' },
-      reviewerGuidelineText:
-        REVIEWER_GUIDELINE_SENTIMENT_BOUNDARY_ZH +
-        '（T017）本任務為正式標記（official_run）：每筆樣本恰指派一位標記員、形成一個審核單位，' +
-        '系統再依 FR-093 以審核單位為單位指派，平均分給名冊上被勾選的審核員。' +
-        '審核決策為通過／修正／無法判定三選一：修正與無法判定皆須填寫理由並轉入爭議池；' +
-        '仲裁裁定兩者皆非者（如 oft-01-final-exception）落入最終例外池，由專案負責人逐筆收尾。',
-      datasetFileName: 'review-flow-official-tie.json',
-      datasetRecords: [
-        {
-          id: 'oft-01-final-exception',
-          text: '餐廳景觀一流，可以看到整片河岸夜景，但餐點的表現撐不起這個價位。',
-          gold_label: 'neutral'
-        },
-        {
-          id: 'oft-02-approved-interim',
-          text: '兒童友善空間規劃得很好，餐具和座椅都有替小朋友準備，家庭聚餐首選。',
-          gold_label: 'positive'
-        },
-        {
-          id: 'oft-03-modified-interim',
-          text: '咖哩飯口味偏甜，附餐的沙拉倒是很新鮮，喜不喜歡見仁見智。',
-          gold_label: 'neutral'
-        },
-        {
-          id: 'oft-04-unanimous-gold',
-          text: '壽司的新鮮度沒話說，師傅還會依季節推薦食材，每次來都很滿意。',
-          gold_label: 'positive'
-        },
-        {
-          id: 'oft-05-pending-review',
-          text: '新開的早午餐店，鬆餅口感紮實，佐餐咖啡的比例也調得剛剛好。',
-          gold_label: 'positive'
-        }
-      ]
-    },
-
-    /* issue #783 (FR-010o-4, design.md D7): demonstrates the
-       waiting_iaa_confirmation page while the latest trial round's IAA
-       computation has failed. trialRounds is an opt-in field -- most
-       unified profiles carry no rounds of their own and fall back to
-       DEFAULT_TASK_DATA.trialRounds / the synthetic single-round fallback
-       in getTrialRounds(); this profile overrides it so the round's
-       iaa_computation_status can be seeded directly. */
     T018: {
       taskCategories: ['classification'],
       taskInputTypes: ['single_item'],

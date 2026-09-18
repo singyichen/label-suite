@@ -163,8 +163,8 @@ test.describe('issue #452 — the unit banner states which state the unit is in'
     await expect(pill).toHaveAttribute('data-terminal', 'false');
   });
 
-  test('T017 a disputed unit says so in words', async ({ page }) => {
-    await openReviewerWorkspace(page, 'T017', 'oft-01-final-exception');
+  test('T016 ofm-05-final-exception: a disputed unit says so in words', async ({ page }) => {
+    await openReviewerWorkspace(page, 'T016', 'ofm-05-final-exception');
 
     await expect(contextBanner(page)).not.toContainText('定稿門檻');
     const pill = statePill(page);

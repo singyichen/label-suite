@@ -54,7 +54,7 @@ test.describe('Dataset detail — registry mirror coherence', () => {
  * IAA_GATE_EXCLUDED_TYPES (free_text) and IAA_UNCALIBRATED_TYPES
  * (sequence_tagging, spec 017 FR-024A/FR-013/FR-043, AC-3.9/AC-3.8).
  *
- * No shipped registry task (T001–T017, T101–T109) combines sequence_tagging
+ * No shipped registry task (T001–T016, T101–T109) combines sequence_tagging
  * with a thresholded output type, so these exercise the real
  * computeCompositeBadge()/compositeBadgeText()/applyRouteTask() functions
  * with a synthetic taskMeta — same technique already established by
