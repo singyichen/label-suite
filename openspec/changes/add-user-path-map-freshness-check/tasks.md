@@ -31,7 +31,7 @@ Stage 1 可合併後保持本 change open。Stage 2 開始前，主 session 必�
 
 **故事目標**：SC-003～SC-006 — 依 #645 的已合併 authority 完成可定位的 fresh／stale 判定，再啟用 local／CI production gate。
 
-- [ ] 2.1 修改 `scripts/speckit-tests.sh`，依已核准 design amendment 新增 Stage 2 QA Red fixtures，涵蓋 fresh（fingerprint 相符）、stale（screen-list fingerprint mismatch）、invalid metadata／inventory（`<meta>` missing／duplicate／malformed、screen-inventory.md ID 表格無法解析）與 unmonitored-content negative control（含未變更 ID 清單的 prototype-only 編輯），對應 AC-2.1～AC-2.5；先提交此單檔 Red，再執行 harness，expected failure 必須是 foundation checker 尚未實作核准的 fingerprint 解析／比較語意，並保存 command、exit 與失敗訊息。 [@senior-qa]
+- [x] 2.1 修改 `scripts/speckit-tests.sh`，依已核准 design amendment 新增 Stage 2 QA Red fixtures，涵蓋 fresh（fingerprint 相符）、stale（screen-list fingerprint mismatch）、invalid metadata／inventory（`<meta>` missing／duplicate／malformed、screen-inventory.md ID 表格無法解析）與 unmonitored-content negative control（含未變更 ID 清單的 prototype-only 編輯），對應 AC-2.1～AC-2.5；先提交此單檔 Red，再執行 harness，expected failure 必須是 foundation checker 尚未實作核准的 fingerprint 解析／比較語意，並保存 command、exit 與失敗訊息。 [@senior-qa]
 - [ ] 2.2 Green：只修改 `scripts/check-user-path-map-freshness.mjs`，依 approved QA contract 與 amended design 實作 FR-004～FR-007；不得修改 QA contract、HTML、prototype 或 screen inventory。 [@senior-devops]
 - [ ] 2.3 在 `design/system/user-path-map.html` 的 `<head>` 寫入唯一的 `<meta name="path-map-screen-fingerprint">`。寫入前先逐一核對路徑圖是否涵蓋 screen inventory 目前的畫面／視圖 ID 清單（路徑圖最後更新於 2026-09-08，之後 inventory 仍有變動）：全數涵蓋才寫入 2.2 checker 回報的即時重算值；有缺漏時不得寫入值來宣告 fresh，改為開 issue 依 #645 流程補走，本 task 保持未勾。只修改該 HTML 的 `<head>`，不改 walkthrough 內文。 [@main]
 - [ ] 2.4 修改 `scripts/ci-jobs.tsv`，保留既有 harness mapping，並將 checker row 由 regression coverage 切換至新的 direct production job 與已核准本機命令；不得加入豁免列或重複 script row。 [@senior-devops]
