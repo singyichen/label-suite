@@ -37,7 +37,7 @@ Stage 1 可合併後保持本 change open。Stage 2 開始前，主 session 必�
 - [x] 2.4 修改 `scripts/ci-jobs.tsv`，保留既有 harness mapping，並將 checker row 由 regression coverage 切換至新的 direct production job 與已核准本機命令；不得加入豁免列或重複 script row。 [@senior-devops]
 - [x] 2.5 修改 `.github/workflows/ci.yml`，新增獨立 user path map freshness job，執行 direct checker；checker 全程不呼叫 `git`，故不需要 full history checkout 或任何 fetch-depth 契約，沿用既有 checkout 設定即可；job 不得在 artifact／metadata 缺少時 skip 或回傳成功，也不得包裝 OpenSpec／Project SDD lint。 [@senior-devops]
 - [x] 2.6 修改 `CLAUDE.md` 的 Verification Commands，加入與 production job 相同的 direct checker command，並清楚區分它與 regression command；此 protected-file 修改只依使用者對 issue #665 的明確實作授權執行。 [@main]
-- [ ] 2.7 執行 command-only Stage 2 verification：`node --check scripts/check-user-path-map-freshness.mjs`、`bash scripts/speckit-tests.sh`、`node scripts/check-user-path-map-freshness.mjs`、`scripts/check-sdd.sh`、`scripts/check-spec-artifacts.sh`、`rg -n 'check-user-path-map-freshness' scripts/ci-jobs.tsv .github/workflows/ci.yml CLAUDE.md`、`git diff --check`；全部預期 exit `0`，Project SDD lint 不得輸出 `CI_JOB_PARITY`，並逐一保存 true-repository fresh 與 direct local／CI parity evidence。 [@main]
+- [x] 2.7 執行 command-only Stage 2 verification：`node --check scripts/check-user-path-map-freshness.mjs`、`bash scripts/speckit-tests.sh`、`node scripts/check-user-path-map-freshness.mjs`、`scripts/check-sdd.sh`、`scripts/check-spec-artifacts.sh`、`rg -n 'check-user-path-map-freshness' scripts/ci-jobs.tsv .github/workflows/ci.yml CLAUDE.md`、`git diff --check`；全部預期 exit `0`，Project SDD lint 不得輸出 `CI_JOB_PARITY`，並逐一保存 true-repository fresh 與 direct local／CI parity evidence。 [@main]
 
 ## 3. PR-PATH-MAP-FRESHNESS-FINAL — 完整驗證與 archive readiness
 
