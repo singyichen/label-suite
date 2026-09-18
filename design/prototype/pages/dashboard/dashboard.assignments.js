@@ -269,10 +269,10 @@
        and 任務覆蓋 counts the units past 待審 over the review-unit total
        — a coverage count, not a completion count, because a unit past MY
        review is not necessarily finalized (issue #310): T016 sits at
-       5 / 5 coverage with 3 units still short of their finalize threshold
-       (1 approved + 1 modified + 1 disputed awaiting arbitration), so its
-       summary swaps the vacuous 待審 0 for the 未達定稿門檻 3 · 爭議中 1
-       breakdown. Every seeded summary here names its subject and its
+       5 / 5 coverage with 3 units still unresolved, so its summary swaps
+       the vacuous 待審 0 for the 爭議中 breakdown (issue #627 item 7
+       removed the 未達定稿門檻 clause: under the single-owner relay model
+       that count is an identity with 待審 + 爭議中). Every seeded summary here names its subject and its
        denominator unit (issue #452). Reviewer
        sample ids point at each task's first dataset record so the
        quick-review entry lands on the initial reviewer screen, and every

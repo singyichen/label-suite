@@ -52,7 +52,7 @@ test.describe('Annotation list task info card: progress summary', () => {
        stated as not computable because T001 IS single_label, so alpha is
        defined for it; there are simply no submissions to derive it from. */
     await expect(page.locator('#taskInfoDetail')).toHaveText(
-      '任務覆蓋 0 / 15 個審核單位 · 待審 15 個 · 未達定稿門檻 15 個 · IAA 無法計算 · 共 5 筆資料'
+      '任務覆蓋 0 / 15 個審核單位 · 待審 15 個 · IAA 無法計算 · 共 5 筆資料'
     );
     expect(await progressBarWidth(page)).toBe('0%');
   });

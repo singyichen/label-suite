@@ -2857,8 +2857,8 @@
   /* Renders a computeReviewSummary() result as the localized summary text
    * both consumers display. One rule, no per-task branches: coverage is
    * always shown, every other counter appears only when non-zero, so a
-   * vacuous "待審 0 個" never crowds out the 未達定稿門檻/爭議中 breakdown
-   * that actually needs the reviewer's attention. `iaa` is the seed's
+   * vacuous "待審 0 個" never crowds out the 爭議中 breakdown that
+   * actually needs the reviewer's attention. `iaa` is the seed's
    * structured inter-annotator agreement value (not derivable from review
    * units) and is omitted when absent.
    *
@@ -2867,14 +2867,23 @@
    * of a bare percentage, because the same page also shows a per-reviewer
    * count and a per-unit threshold count -- three numbers that used to be
    * spelled 「已審 / 覆蓋」 alike. The counters that follow inherit that
-   * unit, so 「任務覆蓋 5 / 5 個審核單位 · 未達定稿門檻 3 個」 reads as one
+   * unit, so 「任務覆蓋 5 / 5 個審核單位 · 爭議中 3 個」 reads as one
    * sentence and full coverage can no longer be misread as a finished
-   * task. */
+   * task.
+   *
+   * Issue #627 item 7: the 「未達定稿門檻 {n} 個」 clause is gone. AC-1.24
+   * (015:167) removed it in v5.0.0 -- 「該計數隨 `approved`／`modified` 中間
+   * 狀態移除而失效」 -- and FR-076 point 1 was missed in the same version;
+   * this renderer had been following the stale FR. With REVIEW_UNIT_STATUS
+   * down to three states, `unfinalized` is an identity with pending +
+   * disputed, so the clause restated units the line already counted. The
+   * FIELD stays: annotation-list.html :2009 reads it to decide whether a
+   * task is finished for this reviewer, which FR-076 explicitly leaves
+   * out of scope (「本條僅規範顯示文字」). */
   var REVIEW_SUMMARY_LABELS = {
     zh: {
       coverage: '任務覆蓋 {n} / {total} 個審核單位',
       pending: '待審 {n} 個',
-      unfinalized: '未達定稿門檻 {n} 個',
       disputed: '爭議中 {n} 個',
       iaa: 'IAA {n}',
       iaaNotComputable: 'IAA 無法計算',
@@ -2882,7 +2891,6 @@
     en: {
       coverage: 'Task coverage {n} / {total} review units',
       pending: '{n} pending',
-      unfinalized: '{n} short of finalize threshold',
       disputed: '{n} disputed',
       iaa: 'IAA {n}',
       iaaNotComputable: 'IAA Not computable',
@@ -2900,7 +2908,6 @@
       }
       push('coverage', summary.total - summary.pending, summary.total);
       if (summary.pending > 0) push('pending', summary.pending);
-      if (summary.unfinalized > 0) push('unfinalized', summary.unfinalized);
       if (summary.disputed > 0) push('disputed', summary.disputed);
       /* IAA is tri-state (dataset-017 FR-039.4): a number renders at the
          2-decimal precision used everywhere else; `null` means the caller

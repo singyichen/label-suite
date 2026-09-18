@@ -14,7 +14,7 @@
  *   - task level      「任務覆蓋 4 / 5 個審核單位」
  *   - reviewer level  「我的審核提交 0 / 5 個審核單位」
  *   - unit level      「定稿門檻 1 / 3 位審核員」（issue #596 已移除，見檔尾說明）
- *   - interim pills carry a 「未達定稿門檻 x / n」 note, finalized carries
+ *   - finalized carries
  *     「已鎖定」, and the distinction is exposed as text + data-terminal,
  *     never colour alone.
  *
@@ -69,7 +69,7 @@ test.describe('issue #452 — task-level coverage names the review-unit denomina
 
     const detail = page.locator('#taskInfoDetail');
     await expect(detail).toContainText(
-      '任務覆蓋 4 / 5 個審核單位 · 待審 1 個 · 未達定稿門檻 3 個 · 爭議中 2 個 · IAA 無法計算',
+      '任務覆蓋 4 / 5 個審核單位 · 待審 1 個 · 爭議中 2 個 · IAA 無法計算',
     );
     await expect(detail).not.toContainText('審核覆蓋率');
   });
@@ -78,7 +78,7 @@ test.describe('issue #452 — task-level coverage names the review-unit denomina
     await page.goto(buildListUrl({ task_id: 'T016', role: 'reviewer', run_type: 'official_run' }));
 
     await expect(page.locator('#taskInfoDetail')).toContainText(
-      '任務覆蓋 5 / 5 個審核單位 · 未達定稿門檻 3 個 · 爭議中 3 個 · IAA 無法計算',
+      '任務覆蓋 5 / 5 個審核單位 · 爭議中 3 個 · IAA 無法計算',
     );
   });
 
@@ -90,7 +90,7 @@ test.describe('issue #452 — task-level coverage names the review-unit denomina
 
     const card = page.locator('.role-task-card[data-role="reviewer"][data-example-task-id="T016"]').first();
     await expect(card).toContainText('任務覆蓋 5 / 5 個審核單位');
-    await expect(card).toContainText('未達定稿門檻 3 個');
+    await expect(card).toContainText('爭議中 3 個');
   });
 
   test('a task with no derivable review state still names its denominator', async ({ page }) => {
