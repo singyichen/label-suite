@@ -130,3 +130,108 @@ test.describe('Dataset detail — Block A-5 標記員被修改率 (issue #808)',
     await expect(rows.nth(1).locator('.mod-rate-small-sample-badge')).toHaveCount(0);
   });
 });
+
+/**
+ * FR-040 Block A-5 — 「總計」欄跨輸出類型加總缺陷 (issue #808 追加修正, RED).
+ *
+ * spec.md:479/485 之「總計」欄本質是逐標記員一個數字：分母＝該標記員的
+ * 審核單位數（與 output_type 數量無關），分子＝任一 output_type 被
+ * Reviewer 更動的審核單位數（逐單位取 OR，而非逐型加總）。T001 只有 1
+ * 個 output_type，這個缺陷在該夾具下不可觀測（× 1 是 no-op）；T010
+ * （2 個 output_type：entity_recognition、relation_identification）
+ * 才踩得到。
+ *
+ * Fixture (T010, dry_run, annotator `kioleemg12`, 3 reviewed units):
+ *   - med-001: 兩型皆與 reviewer 一致 -> finalized，未修改
+ *   - med-002: entity_recognition 被更動，relation_identification 一致
+ *   - med-003: 兩型皆被更動（同一審核單位在兩個 outKey 都算「有改」，
+ *     OR 只能記一次，不能記兩次）
+ *
+ * 正確總計：分子 2（med-002、med-003 各記一次）、分母 3（審核單位數）
+ * -> "2 / 3 (67%)"。
+ * 現行 Green 實作逐型加總：分子 1+2=3、分母 3×2=6 -> "3 / 6 (50%)"。
+ *
+ * Traceability: specs/dataset/017-dataset-analysis-detail/spec.md
+ *   FR-040 (line 479, 485), AC-3.17, Block A-5.
+ */
+const TASK_MULTI = 'T010';
+const MULTI_ANNOTATOR = 'kioleemg12';
+
+type EntityAnswer = { text: string; type: string };
+type TripleAnswer = { subj: string; rel: string; obj: string };
+
+async function seedMultiTypeUnit(
+  page: Page,
+  sampleId: string,
+  annotatorEntities: EntityAnswer[],
+  reviewerEntities: EntityAnswer[],
+  annotatorTriples: TripleAnswer[],
+  reviewerTriples: TripleAnswer[],
+): Promise<void> {
+  await page.evaluate((a) => {
+    const api = (window as unknown as { LabelSuiteAnnotationWorkspaceData: WorkspaceApi })
+      .LabelSuiteAnnotationWorkspaceData;
+    api.markSampleSubmitted(
+      'T010', 'annotator', 'dry_run', a.sampleId,
+      { previewEntities: a.annotatorEntities, previewTriples: a.annotatorTriples }, '',
+      { annotatorId: a.annotatorId },
+    );
+    api.markSampleSubmitted(
+      'T010', 'reviewer', 'dry_run', a.sampleId,
+      { previewEntities: a.reviewerEntities, previewTriples: a.reviewerTriples }, '',
+      { annotatorId: a.annotatorId, reviewerId: 'reviewer_wang' },
+    );
+  }, {
+    sampleId,
+    annotatorId: MULTI_ANNOTATOR,
+    annotatorEntities,
+    reviewerEntities,
+    annotatorTriples,
+    reviewerTriples,
+  });
+}
+
+async function seedMultiTypeFixture(page: Page): Promise<void> {
+  await page.goto(`${DETAIL_URL}?task_id=${TASK_MULTI}`);
+  const baseEntities: EntityAnswer[] = [{ text: '糖尿病', type: 'DISE' }];
+  const baseTriples: TripleAnswer[] = [{ subj: '糖尿病', rel: 'causes', obj: '腎病變' }];
+
+  // med-001: no diff in either output type -> finalized, not modified.
+  await seedMultiTypeUnit(page, 'med-001', baseEntities, baseEntities, baseTriples, baseTriples);
+
+  // med-002: entity_recognition changed, relation_identification unchanged.
+  await seedMultiTypeUnit(
+    page, 'med-002',
+    baseEntities, [...baseEntities, { text: '腎病變', type: 'DISE' }],
+    baseTriples, baseTriples,
+  );
+
+  // med-003: BOTH output types changed on the same review unit -- the case
+  // that exposes the numerator's per-type double count.
+  await seedMultiTypeUnit(
+    page, 'med-003',
+    baseEntities, [...baseEntities, { text: '眼科', type: 'INST' }],
+    baseTriples, [{ subj: '糖尿病', rel: 'causes', obj: '視網膜病變' }],
+  );
+}
+
+test.describe('Dataset detail — Block A-5 總計欄跨輸出類型加總缺陷 (issue #808)', () => {
+  test('total column denominator equals the review-unit count, not reviewed_units x output_type count', async ({ page }) => {
+    await seedMultiTypeFixture(page);
+    await page.goto(`${DETAIL_URL}?task_id=${TASK_MULTI}&tab=quality`);
+
+    const row = page.locator('#annotatorModRateBody tr').filter({ hasText: MULTI_ANNOTATOR });
+    // 3 real review units (med-001..003), regardless of T010 having 2 output_types.
+    await expect(row.locator('.mod-rate-total')).toContainText('/ 3');
+    await expect(row.locator('.mod-rate-total')).not.toContainText('/ 6');
+  });
+
+  test('total column numerator counts a unit modified in two output types once (OR), not twice (sum)', async ({ page }) => {
+    await seedMultiTypeFixture(page);
+    await page.goto(`${DETAIL_URL}?task_id=${TASK_MULTI}&tab=quality`);
+
+    const row = page.locator('#annotatorModRateBody tr').filter({ hasText: MULTI_ANNOTATOR });
+    // med-002 (entity_recognition only) + med-003 (both) = 2 modified units, not 3.
+    await expect(row.locator('.mod-rate-total')).toHaveText('2 / 3 (67%)');
+  });
+});
