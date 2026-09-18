@@ -70,7 +70,11 @@ function readSummary(page: Page, taskId: string, runType: string): Promise<Summa
    dry-03 "B" rows now converge at N=1 (finalized, +2 vs before), and
    dry-05's pure reject now blocks finalization instead of reading as
    agreement (disputed, -1 vs before) -- net +1 finalized / -1 disputed;
-   T015's ofs-02 now converges at N=1 too (finalized, was disputed). */
+   T015's ofs-02 now converges at N=1 too (finalized, was disputed).
+   issue #804 group 2: T017's oft-05-pending-review reject no longer rolls
+   the annotator's sample back to pending -- it stays disputed with the
+   submission intact, so T017 now has 0 pending / 3 disputed (was 1 / 2)
+   and full coverage. */
 const MATRIX = [
   {
     taskId: 'T014', runType: 'dry_run',
@@ -86,7 +90,7 @@ const MATRIX = [
   },
   {
     taskId: 'T017', runType: 'official_run',
-    expected: { total: 5, pending: 1, approved: 0, modified: 0, disputed: 2, finalized: 2, unfinalized: 3, coveragePct: 80, derivable: true },
+    expected: { total: 5, pending: 0, approved: 0, modified: 0, disputed: 3, finalized: 2, unfinalized: 3, coveragePct: 100, derivable: true },
   },
 ] as const;
 
