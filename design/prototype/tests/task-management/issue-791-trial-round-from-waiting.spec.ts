@@ -1,33 +1,38 @@
 /*
  * Traceability: openspec/changes/task-detail-trial-round-from-waiting/
- *   tasks.md group 2 (2.1); specs/task-management/014-task-detail/spec.md
- *   delta -- FR-013, FR-013(1)-(4), FR-017, FR-008a, FR-010o-3, AC-3.12,
- *   SC-047. Issue #791.
+ *   tasks.md group 2 (2.1, as rewritten in commit 9fb4450a); design.md
+ *   "範圍界線" last bullet (FR-017's revision-note gate is out of scope for
+ *   #791 -- moved to issue #838; the prototype never implemented it, so no
+ *   scenario here may assert revision-note blocking); specs/task-management/
+ *   014-task-detail/spec.md delta -- FR-013, FR-013(1)-(3), FR-008a,
+ *   FR-010o-3, AC-3.12, SC-047. Issue #791.
  *
- * Scenarios 3 and 4 exercise AC-3.12's revision-note gate (FR-017). Nothing
- * under pages/ implements this gate today (confirmed by an exhaustive grep
- * across pages/, tests/, and `git log --all -S` for prior_round_findings,
- * guideline_change_summary, no_change_reason, and every plausible i18n/JS
- * name -- all zero hits), and design.md's D1-D5 do not name any UI for it
- * either. Per CLAUDE.md ("A static prototype shell may precede Red, but
- * target selectors and behavior may not"), this Red test establishes the
- * selectors below (#trialRoundRevisionModal and its fields) as the contract
- * task 2.3 must implement against; they are not sourced from an existing
- * design artifact and should be confirmed with the design owner before
- * Green, since task 2.3/2.4's own descriptions never mention building this
- * modal.
+ * Reaching R2's creation from waiting_iaa_confirmation must pass through
+ * canPublish()'s existing isolation risk-confirm modal if it opens, exactly
+ * like the other task-management specs that click a publish button (see
+ * task-detail-publish-risk-confirm.spec.ts). T001 seeds isolationEnabled:
+ * true, so the modal does not open for these tests, but the check is kept
+ * for parity with that convention rather than relying on the seed.
  */
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 const DRY_RUN_PROGRESS_KEY = 'labelsuite.prototypeDryRunProgress';
 const TASK_ID = 'T001';
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 
+async function publishDryRunRound(page: Page) {
+  await page.locator('#publishDryRunBtn').click();
+  const riskModal = page.locator('#riskModal');
+  if (await riskModal.isVisible()) {
+    await page.locator('#riskConfirmBtn').click();
+  }
+}
+
 test('publishing R1 from draft always lands in dry_run_in_progress regardless of the round outcome (FR-013(1), FR-010o-3)', async ({ page }) => {
   await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}`);
 
   await expect(page.locator('#statusBadge')).toContainText('草稿');
-  await page.locator('#publishDryRunBtn').click();
+  await publishDryRunRound(page);
 
   // R1's scripted result is 'failed' (getTrialRoundScenario(1)), so this
   // assertion alone cannot distinguish the old IAA-branching bug from the
@@ -38,7 +43,7 @@ test('publishing R1 from draft always lands in dry_run_in_progress regardless of
   await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(1);
 });
 
-test('a fully-submitted dry-run progress moves the task into waiting_iaa_confirmation (FR-008a)', async ({ page }) => {
+test('a fully-submitted dry-run progress moves the task into waiting_iaa_confirmation regardless of the round outcome (FR-008a, FR-010o-3)', async ({ page }) => {
   await page.addInitScript(
     ({ key, taskId }) => {
       window.localStorage.setItem(
@@ -49,6 +54,15 @@ test('a fully-submitted dry-run progress moves the task into waiting_iaa_confirm
     { key: DRY_RUN_PROGRESS_KEY, taskId: TASK_ID }
   );
 
+  // task-detail.html has no cross-reload persistence of TASK_DATA itself
+  // (only DRY_RUN_PROGRESS_KEY survives a navigation), so this loads
+  // dry_run_in_progress directly rather than clicking through a real R1 --
+  // syncStatusFromDryRunProgress() only runs once, synchronously, inside
+  // init(). The round it sees is task-detail.html's own not-yet-computable
+  // fallback (getTrialRounds()'s 'in_progress' synthesis, since T001 has no
+  // seeded dry-run submissions), not a literal 'failed' scripted result --
+  // but the transition below is unconditional on the round's outcome either
+  // way, which is exactly what FR-010o-3 requires.
   await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}&status=dry_run_in_progress`);
 
   await expect(page.locator('#statusBadge')).toContainText('待 IAA 確認');
@@ -56,54 +70,39 @@ test('a fully-submitted dry-run progress moves the task into waiting_iaa_confirm
   await expect(page.locator('#publishDryRunBtn')).toBeEnabled();
 });
 
-test('blocks creating R2 from waiting_iaa_confirmation until the revision note is complete (AC-3.12, FR-017)', async ({ page }) => {
+test('creating R2 from waiting_iaa_confirmation lands in dry_run_in_progress, never straight back to waiting_iaa_confirmation (FR-013(2)-(3))', async ({ page }) => {
   await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}&status=waiting_iaa_confirmation`);
-
   await expect(page.locator('#statusBadge')).toContainText('待 IAA 確認');
-  const roundCountBefore = await page.locator('#trialRoundTimeline .round-timeline-item').count();
 
-  await page.locator('#publishDryRunBtn').click();
+  await publishDryRunRound(page);
 
-  const modal = page.locator('#trialRoundRevisionModal');
-  await expect(modal).toBeVisible();
+  // R2 is created.
+  await expect(page.locator('#trialRoundTimeline')).toContainText('R2');
 
-  await page.locator('#trialRoundRevisionConfirmBtn').click();
-
-  // Blocked: modal stays open, no round created, status unchanged.
-  await expect(modal).toBeVisible();
-  await expect(page.locator('#statusBadge')).toContainText('待 IAA 確認');
-  await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(roundCountBefore);
-
-  // "逐欄提示缺項" -- field-by-field indication of the two missing fields.
-  await expect(page.locator('#trialRoundFindingsInput')).toHaveAttribute('aria-invalid', 'true');
-  await expect(page.locator('#trialRoundGuidelineChangeInput')).toHaveAttribute('aria-invalid', 'true');
-});
-
-test('creates R2 once the revision note is complete, stays dry_run_in_progress until R2 is submitted (AC-3.12, SC-047)', async ({ page }) => {
-  await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}&status=waiting_iaa_confirmation`);
-
-  await page.locator('#publishDryRunBtn').click();
-  await expect(page.locator('#trialRoundRevisionModal')).toBeVisible();
-  await page.locator('#trialRoundFindingsInput').fill('R1 顯示情緒界線案例分歧較大。');
-  await page.locator('#trialRoundGuidelineChangeInput').fill('已於指引補充情緒界線案例的判定原則。');
-  await page.locator('#trialRoundRevisionConfirmBtn').click();
-
-  await expect(page.locator('#trialRoundRevisionModal')).toBeHidden();
-
-  // FR-013(3): creating R2 from waiting_iaa_confirmation must land in
-  // dry_run_in_progress -- never jump straight back to waiting_iaa_confirmation.
-  // This is the exact :10096 IAA-branch bug this change removes: R2's
-  // scripted result is 'passed' (getTrialRoundScenario(2)), so the pre-fix
-  // ternary would jump straight to waiting_iaa_confirmation with zero
-  // submissions against the new round.
+  // FR-013(3) / the smoking-gun assertion: getTrialRoundScenario(2) is
+  // hardcoded 'passed', so today's :10096 ternary
+  // (`scenario.result === 'passed' ? 'waiting_iaa_confirmation' :
+  // 'dry_run_in_progress'`) jumps R2 straight back to
+  // waiting_iaa_confirmation with zero submissions against the new round.
+  // This must land in dry_run_in_progress instead.
   await expect(page.locator('#statusBadge')).toContainText('試標進行中');
   await expect(page.locator('#publishDryRunBtn')).toBeDisabled();
-  await expect(page.locator('#publishDryRunBtn')).toHaveText('新增試標回合 R3');
+  // renderPublishActions() labels the disabled next-round button from
+  // `getTrialRounds().length + 1` (task-detail.html:5991), not from R2's own
+  // round number. Reaching this state through the sanctioned reload-based
+  // technique (there is no other way to flip into waiting_iaa_confirmation;
+  // see the header comment) discards the real R1 entry that a continuous,
+  // no-reload session would have kept in TASK_DATA.trialRounds, so the array
+  // holds only the just-created R2 (length 1) and the label reads "R2"
+  // again, not "R3" -- confirmed empirically against the live page. This is
+  // a limitation of the stateless-reload simulation, not a claim about the
+  // label a real multi-round session would show.
+  await expect(page.locator('#publishDryRunBtn')).toHaveText('新增試標回合 R2');
   await expect(page.locator('#publishActionRow')).toContainText('本回合全部提交並完成 IAA 後才能新增下一回合');
   await expect(page.locator('#publishActionRow button')).toHaveCount(1);
 
-  // "新回合建立後在任何提交前不會自動轉回待確認": a fresh load of
-  // dry_run_in_progress with no submitted progress must not auto-advance.
+  // Reloading before any R2 progress is written must not auto-advance past
+  // dry_run_in_progress (a fresh load with no progress key set stays put).
   await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}&status=dry_run_in_progress`);
   await expect(page.locator('#statusBadge')).toContainText('試標進行中');
 });
