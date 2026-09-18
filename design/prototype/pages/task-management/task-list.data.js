@@ -293,6 +293,24 @@
       canViewDetail: true,
       isMine: true,
       deletedAt: ''
+    },
+    {
+      id: 'T018',
+      nameZh: '審核流程示範：IAA 計算失敗',
+      nameEn: 'Review Flow Demo: IAA Computation Failed',
+      sourceFile: 'review-flow-iaa-failed.json',
+      outputTypes: ['single_label'],
+      /* issue #783 (FR-010o-4): demonstrates the waiting_iaa_confirmation
+         page while the latest trial round's IAA computation has failed
+         (task-detail.data.js profile carries iaaComputationStatus: 'failed'
+         on its latest round) -- distinct from T002's already-computed
+         waiting state. */
+      runType: 'dry_run',
+      status: 'waiting_iaa_confirmation',
+      updatedAt: '2026-08-22',
+      canViewDetail: true,
+      isMine: true,
+      deletedAt: ''
     }
   ];
 
