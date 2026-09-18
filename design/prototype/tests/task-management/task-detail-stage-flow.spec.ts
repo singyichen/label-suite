@@ -14,10 +14,12 @@
  *
  * task-detail.html has no cross-reload persistence of TASK_DATA itself, so
  * the fresh navigation to waiting_iaa_confirmation below does not carry R1's
- * real round forward; the sample-pool and round-history assertions after it
- * are against the round that navigation's own state produces (confirmed
+ * real round forward; the sample-pool and round-history assertions against
+ * that state are against getTrialRounds()'s synthetic R1 fallback (confirmed
  * against the live page), not a literal continuation of the R1 created
- * earlier in this test.
+ * earlier in this test. Creating R2 from there must materialize that
+ * fallback into TASK_DATA.trialRounds alongside R2 (FR-013), so the
+ * post-creation assertions expect both R1 and R2 in the round history.
  */
 import { test, expect, type Page } from '@playwright/test';
 
@@ -86,11 +88,16 @@ test('keeps the 4-stage stepper while showing R1 into a waiting-confirmation-gat
   await publishDryRunRound(page);
 
   // FR-013(2): R2 is created directly, no revision-note modal in between
-  // (out of scope for #791, see design.md "範圍界線").
-  await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(1);
-  await expect(page.locator('#trialRoundTimeline .round-timeline-item').first()).toContainText('R2');
+  // (out of scope for #791, see design.md "範圍界線"). R1's round-history
+  // entry must still be present: publishDryRun() has to materialize
+  // getTrialRounds()'s synthetic R1 fallback into TASK_DATA.trialRounds
+  // before pushing R2, not push R2 onto an empty array.
+  await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(2);
+  await expect(page.locator('#trialRoundTimeline .round-timeline-item').nth(0)).toContainText('R1');
+  await expect(page.locator('#trialRoundTimeline .round-timeline-item').nth(1)).toContainText('R2');
+  await expect(page.locator('#splitLegendDynamic')).toContainText('R1 1筆');
   await expect(page.locator('#splitLegendDynamic')).toContainText('R2 1筆');
-  await expect(page.locator('#splitLegendDynamic')).toContainText('正式 4筆');
+  await expect(page.locator('#splitLegendDynamic')).toContainText('正式 3筆');
 
   // FR-013(3): must land in dry_run_in_progress, never jump straight back
   // to waiting_iaa_confirmation -- R2's scripted IAA result is 'passed'
@@ -98,11 +105,8 @@ test('keeps the 4-stage stepper while showing R1 into a waiting-confirmation-gat
   // change removes.
   await expect(page.locator('#statusBadge')).toContainText('試標進行中');
   await expect(page.locator('#publishDryRunBtn')).toBeDisabled();
-  // See issue-791-trial-round-from-waiting.spec.ts for why this reads "R2"
-  // and not "R3": renderPublishActions() labels the button from
-  // getTrialRounds().length + 1 (task-detail.html:5991), and the reload
-  // needed to reach waiting_iaa_confirmation drops the real R1 entry, so
-  // TASK_DATA.trialRounds holds only the just-created R2 at this point.
-  await expect(page.locator('#publishDryRunBtn')).toHaveText('新增試標回合 R2');
+  // FR-013: the label is R{trial_round + 1}. With R1 and R2 both
+  // materialized in TASK_DATA.trialRounds, the next round is R3.
+  await expect(page.locator('#publishDryRunBtn')).toHaveText('新增試標回合 R3');
   await expect(page.locator('#publishActionRow')).toContainText('本回合全部提交並完成 IAA 後才能新增下一回合');
 });

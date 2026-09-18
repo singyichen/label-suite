@@ -76,8 +76,13 @@ test('creating R2 from waiting_iaa_confirmation lands in dry_run_in_progress, ne
 
   await publishDryRunRound(page);
 
-  // R2 is created.
-  await expect(page.locator('#trialRoundTimeline')).toContainText('R2');
+  // R2 is created, and R1's round-history entry must still be present:
+  // publishDryRun() has to materialize getTrialRounds()'s synthetic R1
+  // fallback into TASK_DATA.trialRounds before pushing R2, not push R2 onto
+  // an empty array (FR-013(2)).
+  await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(2);
+  await expect(page.locator('#trialRoundTimeline .round-timeline-item').nth(0)).toContainText('R1');
+  await expect(page.locator('#trialRoundTimeline .round-timeline-item').nth(1)).toContainText('R2');
 
   // FR-013(3) / the smoking-gun assertion: getTrialRoundScenario(2) is
   // hardcoded 'passed', so today's :10096 ternary
@@ -87,17 +92,9 @@ test('creating R2 from waiting_iaa_confirmation lands in dry_run_in_progress, ne
   // This must land in dry_run_in_progress instead.
   await expect(page.locator('#statusBadge')).toContainText('試標進行中');
   await expect(page.locator('#publishDryRunBtn')).toBeDisabled();
-  // renderPublishActions() labels the disabled next-round button from
-  // `getTrialRounds().length + 1` (task-detail.html:5991), not from R2's own
-  // round number. Reaching this state through the sanctioned reload-based
-  // technique (there is no other way to flip into waiting_iaa_confirmation;
-  // see the header comment) discards the real R1 entry that a continuous,
-  // no-reload session would have kept in TASK_DATA.trialRounds, so the array
-  // holds only the just-created R2 (length 1) and the label reads "R2"
-  // again, not "R3" -- confirmed empirically against the live page. This is
-  // a limitation of the stateless-reload simulation, not a claim about the
-  // label a real multi-round session would show.
-  await expect(page.locator('#publishDryRunBtn')).toHaveText('新增試標回合 R2');
+  // FR-013: the label is R{trial_round + 1}. With R1 and R2 both
+  // materialized in TASK_DATA.trialRounds, the next round is R3.
+  await expect(page.locator('#publishDryRunBtn')).toHaveText('新增試標回合 R3');
   await expect(page.locator('#publishActionRow')).toContainText('本回合全部提交並完成 IAA 後才能新增下一回合');
   await expect(page.locator('#publishActionRow button')).toHaveCount(1);
 
