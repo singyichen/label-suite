@@ -159,7 +159,7 @@
         'multi_dim',
       ],
     },
-    /* T014-T017: review-flow demo tasks (issue #302). Names mirror
+    /* T014-T016: review-flow demo tasks (issue #302). Names mirror
        task-list.data.js; their review states are staged at boot by the
        annotation-workspace.data.js localStorage seeder. */
     {

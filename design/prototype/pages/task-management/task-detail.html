@@ -3493,7 +3493,7 @@
     disputeCount: 7,
   };
   var REVIEW_WORKLOAD_BY_TASK = {
-    /* T014-T017 (review-flow demo, 5 dataset records each): small figures
+    /* T014-T016 (review-flow demo, 5 dataset records each): small figures
        proportionate to that data volume instead of the legacy shared
        18-116-item scale. */
     T014: { disputeCount: 0 },
@@ -3577,10 +3577,10 @@
     },
   };
 
-  /* issue #397: T014-T017 (review-flow demo, 5 dataset records each) get
+  /* issue #397: T014-T016 (review-flow demo, 5 dataset records each) get
      progress figures proportionate to that data volume instead of the
      legacy shared 40/124/1160-sample scale. T014 is a dry_run task (one
-     active round, official not yet reached); T015-T017 are official_run
+     active round, official not yet reached); T015-T016 are official_run
      tasks (no dry-run rounds, official reflects each task's own submission
      count from annotation-workspace.data.js's seedReviewFlowDemo()). */
   var ANNOTATION_PROGRESS_BY_TASK = {
@@ -3649,7 +3649,7 @@
       createdAt: '2026-05-22 10:18'
     }
   ];
-  /* T014-T017 have no "member removed mid-run" backstory, so they start
+  /* T014-T016 have no "member removed mid-run" backstory, so they start
      with an empty unassigned pool instead of inheriting T001's demo
      entries (whose roundId: 'official' would otherwise leak Jason Huang's
      phantom ASP-1201~1203 rows into every official_run task). */
@@ -4733,7 +4733,7 @@ function interpolate(template, payload) {
       TASK_DATA.datasetTotal = TASK_DATA.datasetRecords.length;
       /* issue #596: reviewer_ids / arbiter_ids seed the single-owner review
          relay roster; only overwrite the shared DEFAULT_TASK_DATA roster
-         when this profile actually seeds its own (T014-T017), same
+         when this profile actually seeds its own (T014-T016), same
          opt-in pattern as reviewerGuidelineText below. */
       if (profile.reviewerIds) TASK_DATA.reviewerIds = profile.reviewerIds.slice();
       if (profile.arbiterIds) TASK_DATA.arbiterIds = profile.arbiterIds.slice();
@@ -5463,7 +5463,7 @@ function interpolate(template, payload) {
      computeIaaAlpha() equivalent and stays useful demo copy describing a
      specific story beat, so it is kept verbatim. Only the NUMBERS
      (agreement, result) are replaced -- and only when computeIaaAlpha()
-     actually has real annotator data for this task (T014-T017; every other
+     actually has real annotator data for this task (T014-T016; every other
      seed task has no seeded dry_run submissions, so computeIaaAlpha()
      returns computable:false and this function is an exact passthrough of
      the old scripted table). std has no computeIaaAlpha() equivalent

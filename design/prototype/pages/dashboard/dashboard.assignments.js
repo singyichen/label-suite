@@ -262,10 +262,10 @@
       ),
       reviewer: reviewWorkItem('absa-001', 'official_run', 'pending_review', ''),
     },
-    /* T014-T017: review-flow demo tasks (issue #302). Numbers follow the
+    /* T014-T016: review-flow demo tasks (issue #302). Numbers follow the
        seeded review-state matrix staged at boot by
        annotation-workspace.data.js: pending counts are the review units
-       still 待審 (T014=6 of 15, T015=1 of 4, T016=0 of 5, T017=1 of 5)
+       still 待審 (T014=6 of 15, T015=1 of 4, T016=0 of 5)
        and 任務覆蓋 counts the units past 待審 over the review-unit total
        — a coverage count, not a completion count, because a unit past MY
        review is not necessarily finalized (issue #310): T016 sits at

@@ -1,5 +1,5 @@
 /*
- * Seed configuration profiles for the 17 task-list example tasks (T001-T017).
+ * Seed configuration profiles for the 16 task-list example tasks (T001-T016).
  *
  * Sources:
  *  - docs/product/task-configs/<sourceFile>   -> outputs[] (ADR-029 composition model)
@@ -12,8 +12,8 @@
   'use strict';
 
   /* Shared reviewer guideline text for the single_label sentiment schema
-     used by T001 and the T014-T017 review-flow demo seeds (issue #405).
-     Each of T014-T017 appends its own review-model addendum below so the
+     used by T001 and the T014-T016 review-flow demo seeds (issue #405).
+     Each of T014-T016 appends its own review-model addendum below so the
      "提供給審核員" content actually matches that task's demo scenario
      instead of generic boilerplate -- see seedReviewFlowDemo() in
      annotation-workspace.data.js and PR #305 for the scenario source. */
@@ -1008,7 +1008,7 @@
       ]
     },
 
-    /* T014-T017: review-flow demo seeds. Same single_label sentiment
+    /* T014-T016: review-flow demo seeds. Same single_label sentiment
        schema (docs/product/task-configs/review-flow-*.json) with label
        colors mapped to the prototype palette exactly as T001 maps
        single-label.json; records copied verbatim from

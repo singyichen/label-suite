@@ -1345,8 +1345,8 @@
       ]
     },
 
-    /* T014-T017: review-flow demo tasks (Phase 2). T014 keeps the dry_run
-     * 3-annotator convention; T015-T017 are official_run tasks with a
+    /* T014-T016: review-flow demo tasks (Phase 2). T014 keeps the dry_run
+     * 3-annotator convention; T015-T016 are official_run tasks with a
      * single annotator per sample. T015 deliberately OMITS
      * ofs-05-not-submitted: a sample with no mock row renders no review
      * unit, which is exactly that sample's demo point. Answers align with
@@ -2991,13 +2991,13 @@
   };
 
   /* ---- Review-flow demo seeder (Phase 2 slice C) -------------------------
-   * Stages the T014-T017 demo review states at boot so every review-flow
+   * Stages the T014-T016 demo review states at boot so every review-flow
    * scenario (five unit states, quorum thresholds, majority convergence,
    * tie -> arbitration) is visible without clicking through 29 submissions.
    * Idempotent: the marker key short-circuits every later page load, so
    * timestamps and history events are written exactly once -- and any state
    * the demo visitor then changes (their own reviews, arbitrations) is
-   * never overwritten. T014-T017 ONLY; other tasks' buckets stay untouched,
+   * never overwritten. T014-T016 ONLY; other tasks' buckets stay untouched,
    * and dry-run progress (DRY_RUN_PROGRESS_KEY) is deliberately not synced
    * -- these are review-side fixtures, not the visitor's own annotation
    * progress. */
