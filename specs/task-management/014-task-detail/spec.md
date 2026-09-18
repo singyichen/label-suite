@@ -1,5 +1,5 @@
 ---
-功能分支: docs/791-trial-round-from-waiting
+功能分支: docs/783-iaa-precondition-017-values-on-main
 建立日期: 2026-04-20
 版本: 4.0.0
 狀態: Draft

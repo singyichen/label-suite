@@ -14,7 +14,7 @@
 
 > **產品檔案（0）**：本組不動任何產品程式。
 
-- [ ] 0.1 確認 `specs/STATUS.md` 之 dataset-017 列狀態為 change-open、分支欄與正典 017 frontmatter 功能分支欄逐字相同；若 apply 改在其他分支進行，兩處同步改為該分支名。驗證：`scripts/check-sdd.sh` 之 ACTIVE_CHANGE_SPEC 與 ACTIVE_CHANGE_STAGE 皆為 0 筆 [@main]
+- [x] 0.1 確認 `specs/STATUS.md` 之 dataset-017 列狀態為 change-open、分支欄與正典 017 frontmatter 功能分支欄逐字相同；若 apply 改在其他分支進行，兩處同步改為該分支名。驗證：`scripts/check-sdd.sh` 之 ACTIVE_CHANGE_SPEC 與 ACTIVE_CHANGE_STAGE 皆為 0 筆 [@main]
 
 ## 1. archive 與正典回寫（最終群組）
 

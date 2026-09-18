@@ -19,8 +19,8 @@
 > **產品檔案（0）**：本組不動任何產品程式。
 > **相依**：issue #791 change 已合併。
 
-- [ ] 0.1 確認正典 014 位置：若 issue #791 合併後已將正典移回 `specs/_archive/014-task-detail/`，依 `113d9e20` 先例以 `git mv` 取回 `specs/task-management/014-task-detail/`，並同步 `design/system/inventory-manifest.json` 路徑與重生畫面盤點清單；若仍在模組目錄則不動。驗證：`test -f specs/task-management/014-task-detail/spec.md` 為真且 `scripts/check-spec-artifacts.sh` exit 0 [@main]
-- [ ] 0.2 修改 `specs/STATUS.md` 之 task-management-014 列與正典 014 frontmatter 功能分支欄，使兩者皆為本 change 的 apply 分支名且逐字相同，狀態為 change-open。驗證：`scripts/check-sdd.sh` 之 ACTIVE_CHANGE_SPEC 與 ACTIVE_CHANGE_STAGE 皆為 0 筆 [@main]
+- [x] 0.1 確認正典 014 位置：若 issue #791 合併後已將正典移回 `specs/_archive/014-task-detail/`，依 `113d9e20` 先例以 `git mv` 取回 `specs/task-management/014-task-detail/`，並同步 `design/system/inventory-manifest.json` 路徑與重生畫面盤點清單；若仍在模組目錄則不動。驗證：`test -f specs/task-management/014-task-detail/spec.md` 為真且 `scripts/check-spec-artifacts.sh` exit 0 [@main]
+- [x] 0.2 修改 `specs/STATUS.md` 之 task-management-014 列與正典 014 frontmatter 功能分支欄，使兩者皆為本 change 的 apply 分支名且逐字相同，狀態為 change-open。驗證：`scripts/check-sdd.sh` 之 ACTIVE_CHANGE_SPEC 與 ACTIVE_CHANGE_STAGE 皆為 0 筆 [@main]
 
 ## 1. ADR-022 轉換前置條件搬移
 

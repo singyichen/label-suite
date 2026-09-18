@@ -1,5 +1,5 @@
 ---
-功能分支: feat/dataset/017-dataset-analysis-detail
+功能分支: docs/783-iaa-precondition-017-values-on-main
 建立日期: 2026-04-24
 版本: 3.0.0
 狀態: Draft
