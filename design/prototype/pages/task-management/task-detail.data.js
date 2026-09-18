@@ -1173,12 +1173,12 @@
           gold_label: 'positive'
         },
         {
-          id: 'ofm-02-approved-interim',
+          id: 'ofm-02-reviewer-accepts-a',
           text: '訂位系統顯示訂位成功，到現場卻說沒有紀錄，白跑一趟非常生氣。',
           gold_label: 'negative'
         },
         {
-          id: 'ofm-03-modified-interim',
+          id: 'ofm-03-awaiting-arbitration',
           text: '湯頭喝得出有熬過，但配料普通，加點的滷味倒是出乎意料地好。',
           gold_label: 'neutral'
         },

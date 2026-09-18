@@ -105,7 +105,7 @@ test.describe('Dashboard — quick review opens the next actionable unit', () =>
 
     await expect(page).toHaveURL(/\/pages\/annotation\/annotation-workspace\.html\?/);
     await expect(page).toHaveURL(/task_id=T016/);
-    await expect(page).toHaveURL(/sample_id=ofm-03-modified-interim/);
+    await expect(page).toHaveURL(/sample_id=ofm-03-awaiting-arbitration/);
     await expect(page).toHaveURL(/annotator_id=kioleemg12/);
     await expect(page).toHaveURL(/reviewer_id=reviewer_chen/);
     await expect(page).toHaveURL(/run_type=official_run/);

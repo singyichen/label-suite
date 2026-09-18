@@ -148,14 +148,14 @@ test.describe('issue #452 — the unit banner states which state the unit is in'
   });
 
   /* issue #596: min_reviewers is retired -- every profile (T016 included)
-     now defaults to minReviewers = 1, so ofm-02-approved-interim's sole
+     now defaults to minReviewers = 1, so ofm-02-reviewer-accepts-a's sole
      reviewer's unchanged decision finalizes on first submit. The "approved
      but short of a threshold > 1" state this case existed to pin can no
      longer be produced by any seed; deleted rather than converted. Same
      reasoning retires the T017 oft-02-approved-interim case that used to
      follow it ("approved unit reports 1 / 2"). */
   test('T016 a `modify` decision disputes the unit instead of an interim 已修改 state', async ({ page }) => {
-    await openReviewerWorkspace(page, 'T016', 'ofm-03-modified-interim');
+    await openReviewerWorkspace(page, 'T016', 'ofm-03-awaiting-arbitration');
 
     await expect(contextBanner(page)).not.toContainText('定稿門檻');
     const pill = statePill(page);
