@@ -2508,6 +2508,7 @@
       reviewerHint: '僅 project leader 可操作',
       dryRunDisabled: '新增試標回合（唯讀）',
       officialRunDisabled: '開始正式標記（唯讀）',
+      dryRunNextRoundReason: '本回合全部提交並完成 IAA 後才能新增下一回合',
       statusHintDraft: '目前任務仍在草稿，可建立第一個試標回合。',
       statusHintDry: '目前處於試標階段，可依結果持續建立下一個試標回合。',
       statusHintIaa: '已有試標回合達標，可用剩餘樣本啟動正式標記。',
@@ -3007,6 +3008,7 @@
       reviewerHint: 'Only project leader can perform this action',
       dryRunDisabled: 'Add trial round (Read-only)',
       officialRunDisabled: 'Start official run (Read-only)',
+      dryRunNextRoundReason: 'Submit all outputs and finish IAA for this round before adding the next one',
       statusHintDraft: 'The task is still in draft. Create the first trial round to start validation.',
       statusHintDry: 'The task is in the trial stage. You can continue with another round based on the latest outcome.',
       statusHintIaa: 'At least one trial round passed. The remaining pool can now enter official work.',
@@ -6001,12 +6003,14 @@ function interpolate(template, payload) {
     }
 
     if (TASK_DATA.status === 'dry_run_in_progress') {
-      actionRow.innerHTML = '<button class="btn btn-cta" type="button" id="publishDryRunBtn">' + t('publishDryRun') + ' R' + nextRound + '</button>';
+      actionRow.innerHTML = '<button class="btn btn-cta" type="button" id="publishDryRunBtn" disabled>' + t('publishDryRun') + ' R' + nextRound + '</button>' +
+        '<span class="status-hint">' + t('dryRunNextRoundReason') + '</span>';
       return;
     }
 
     if (TASK_DATA.status === 'waiting_iaa_confirmation') {
-      actionRow.innerHTML = '<button class="btn btn-primary" type="button" id="publishOfficialRunBtn">' + t('publishOfficialRun') + '</button>';
+      actionRow.innerHTML = '<button class="btn btn-primary" type="button" id="publishOfficialRunBtn">' + t('publishOfficialRun') + '</button>' +
+        '<button class="btn btn-cta" type="button" id="publishDryRunBtn">' + t('publishDryRun') + ' R' + nextRound + '</button>';
       return;
     }
 
