@@ -19,6 +19,10 @@ const OUTPUT_TYPE_KEYS = [
   'free_text',
 ];
 
+// issue #815 (retire-stale-review-demo-fixtures): review-flow-official-tie.json
+// (T017, the two-reviewer tie demo) is retired outright -- its whole premise
+// is structurally impossible under the single-owner relay model (FR-093) --
+// so task-list.data.js now seeds 16 example tasks, not 17.
 const EXAMPLE_DATA_FILES = [
   'absa-va.json',
   'entity-recognition.json',
@@ -33,14 +37,13 @@ const EXAMPLE_DATA_FILES = [
   'review-flow-dry-run.json',
   'review-flow-official-multi.json',
   'review-flow-official-single.json',
-  'review-flow-official-tie.json',
   'sequence-tagging.json',
   'single-dim.json',
   'single-label.json',
 ];
 
 const FILTER_COUNTS: Record<string, number> = {
-  single_label: 6,
+  single_label: 5,
   multi_label: 2,
   single_dim: 1,
   multi_dim: 2,
@@ -78,7 +81,7 @@ async function visibleSourceFiles(
 }
 
 test.describe('Task list output-type model', () => {
-  test('renders the 17 illustrative example-data tasks and canonical filter', async ({
+  test('renders the 16 illustrative example-data tasks and canonical filter', async ({
     page,
   }) => {
     await page.goto(TASK_LIST_URL);
@@ -86,7 +89,7 @@ test.describe('Task list output-type model', () => {
     await expect(page.locator('#thTaskType')).toHaveText('輸出類型');
 
     const rows = page.locator('#taskTableBody tr[data-source-file]');
-    await expect(rows).toHaveCount(17);
+    await expect(rows).toHaveCount(16);
 
     const sourceFiles = await rows.evaluateAll((elements) =>
       elements

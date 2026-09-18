@@ -2,11 +2,12 @@
  * Traceability: specs/task-management/014-task-detail/spec.md
  *   FR-015f, FR-015g, FR-015h
  * Issue #393: ANNOTATION_RESULTS_BY_TASK only carried T001-T013, so the
- * "標記結果" panel showed the shared empty state for T014-T017 (the
+ * "標記結果" panel showed the shared empty state for T014-T016 (the
  * review-flow demo tasks) even though their review journeys -- dry-run
- * quorum, single-reviewer approval, three-reviewer majority convergence,
- * and a two-reviewer tie -- are exactly what those tasks exist to
- * demonstrate.
+ * quorum, single-reviewer approval, and single-owner relay disputes (issue
+ * #815 retired the three-reviewer majority convergence and two-reviewer tie
+ * this bullet used to name; see the per-test notes below) -- are exactly
+ * what those tasks exist to demonstrate.
  *
  * This spec does NOT reuse T014 as the "no AR seed" regression subject
  * that issue-284-annotation-results-fallback.spec.ts relies on -- once
@@ -21,7 +22,7 @@ import { test, expect } from '@playwright/test';
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 const PANEL_LOAD_TIMEOUT = 15000;
 
-test.describe('Task detail annotation results for T014-T017 (issue #393)', () => {
+test.describe('Task detail annotation results for T014-T016 (issue #393)', () => {
   test('T014 (dry-run quorum demo) shows five result rows, not the empty state', async ({ page }) => {
     await page.goto(`${TASK_DETAIL_URL}?task_id=T014&tab=annotation-results`);
 
@@ -47,14 +48,19 @@ test.describe('Task detail annotation results for T014-T017 (issue #393)', () =>
     await expect(page.locator('.annotator-detail-row .badge-ar-finalized')).toBeVisible();
   });
 
-  test('T017 (two-reviewer tie demo) shows a disputed row for the tied sample', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T017&tab=annotation-results`);
+  /* issue #815: T017 (two-reviewer tie demo) is retired -- its whole
+     premise, an N=2 tie, is structurally impossible under the single-owner
+     relay model (FR-093). Retargeted to T016's ofm-05-final-exception, the
+     row T017's oft-01-final-exception was migrated into verbatim
+     (arbitration rejects both sides -> still disputed). */
+  test('T016 (single-owner relay demo) shows a disputed row for the arbitration-rejected sample', async ({ page }) => {
+    await page.goto(`${TASK_DETAIL_URL}?task_id=T016&tab=annotation-results`);
 
     await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
     await expect(page.locator('.ar-expand-btn')).toHaveCount(5);
 
-    const tieRow = page.locator('#arResultTableBody tr.ar-summary-row').filter({ hasText: 'oft-01-final-exception' });
-    await tieRow.locator('.ar-expand-btn').click();
+    const disputedRow = page.locator('#arResultTableBody tr.ar-summary-row').filter({ hasText: 'ofm-05-final-exception' });
+    await disputedRow.locator('.ar-expand-btn').click();
     await expect(page.locator('.annotator-detail-row .badge-ar-disputed')).toBeVisible();
   });
 });

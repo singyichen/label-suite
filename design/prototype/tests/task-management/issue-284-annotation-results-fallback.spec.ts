@@ -13,11 +13,11 @@ const UNSEEDED_TASK_ID = 'T998';
 /* Issue #284: getAnnotationResultsData() used to fall back to
  * ANNOTATION_RESULTS_BY_TASK.T001 whenever TASK_DATA.taskId had no entry in
  * the mock table -- silently showing T001's seed results (and export
- * content) for any other task, including real seeded tasks like T014-T017
+ * content) for any other task, including real seeded tasks like T014-T016
  * (review-flow-demo, see task-list-review-flow-demo.spec.ts) that used to
  * have no entry there either.
  *
- * Issue #393 gave T014-T017 real ANNOTATION_RESULTS_BY_TASK entries, so
+ * Issue #393 gave T014-T016 real ANNOTATION_RESULTS_BY_TASK entries, so
  * none of them can stand in for "a registered task with no AR seed entry"
  * any more. This spec instead injects a synthetic task (T998) at request
  * time via patchDataFile -- registered in both task-list.data.js and

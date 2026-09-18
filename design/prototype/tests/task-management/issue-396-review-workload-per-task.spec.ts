@@ -5,7 +5,7 @@
  * (task-detail.html:3400-3408), never keyed by TASK_DATA.taskId, so every
  * task's "審核指派" section shows the exact same figures -- Mandy Chen
  * 40/12/28, Kevin Liu 40/31/9, Rachel Wu 18/5/13, 18 unassigned, 7 in the
- * dispute pool -- regardless of that task's actual data volume. T014-T017
+ * dispute pool -- regardless of that task's actual data volume. T014-T016
  * each ship only 5 dataset records, so the shared 18-116-item figures are
  * an obvious scale mismatch.
  *

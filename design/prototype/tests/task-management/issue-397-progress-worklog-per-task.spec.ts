@@ -5,7 +5,7 @@
  * module-level structures never keyed by TASK_DATA.taskId, so the "標記進度"
  * and "工時紀錄" tabs apply the same generic demo data (total samples 124,
  * total annotated 270, ...) to every task regardless of its actual record
- * count. T014-T017 each ship only 5 dataset records, so the shared figures
+ * count. T014-T016 each ship only 5 dataset records, so the shared figures
  * are an obvious scale mismatch with the task overview's own "總筆數 5 筆".
  */
 import { test, expect, type Page } from '@playwright/test';

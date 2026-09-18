@@ -69,7 +69,7 @@ test.describe('Task detail annotation-results review status is three-state (issu
     await expect(targetRow.locator('.ar-review-badge .badge')).toHaveText('爭議中');
   });
 
-  test('the review-flow demo interim seeds (T016/T017) resolve to finalized/disputed, not approved/modified', async ({ page }) => {
+  test('the review-flow demo interim seeds (T016) resolve to finalized/disputed, not approved/modified', async ({ page }) => {
     // Same disambiguation already applied to annotation-workspace.data.js's
     // seedReviewFlowDemo() output (issue #627) and asserted in
     // tests/annotation/annotation-review-flow-demo-seed.spec.ts:
