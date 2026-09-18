@@ -1,6 +1,6 @@
 [
   {
-    "id": "ofm-01-unanimous-gold",
+    "id": "ofm-01-reviewer-corrects-b",
     "text": "從前菜到甜點每一道都很用心，擺盤精緻、味道也無可挑剔，值得專程前往。",
     "gold_label": "positive"
   },
@@ -15,12 +15,12 @@
     "gold_label": "neutral"
   },
   {
-    "id": "ofm-04-majority-converged",
+    "id": "ofm-04-reviewer-bypass",
     "text": "平日中午人不多用餐很安靜，餐點水準就是一般商業午餐的等級。",
     "gold_label": "neutral"
   },
   {
-    "id": "ofm-05-all-divergent",
+    "id": "ofm-05-final-exception",
     "text": "餐點好吃但服務很糟，價格又偏貴，實在說不上推不推薦。",
     "gold_label": "neutral"
   }
