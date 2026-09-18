@@ -13,17 +13,25 @@
  * sits between the click and R2's creation.
  *
  * task-detail.html has no cross-reload persistence of TASK_DATA itself, so
- * the fresh navigation to waiting_iaa_confirmation below does not carry R1's
- * real round forward; the sample-pool and round-history assertions against
- * that state are against getTrialRounds()'s synthetic R1 fallback (confirmed
+ * the reload into waiting_iaa_confirmation below does not carry R1's real
+ * round forward; the sample-pool and round-history assertions against that
+ * state are against getTrialRounds()'s synthetic R1 fallback (confirmed
  * against the live page), not a literal continuation of the R1 created
- * earlier in this test. Creating R2 from there must materialize that
- * fallback into TASK_DATA.trialRounds alongside R2 (FR-013), so the
- * post-creation assertions expect both R1 and R2 in the round history.
+ * earlier in this test. That reload writes a fully-submitted dry-run
+ * progress and reloads into dry_run_in_progress so that
+ * syncStatusFromDryRunProgress() actually fires (design.md D3's first
+ * technique); D2 has it fill the fallback record with
+ * getTrialRoundScenario(1)'s scripted result only at that transition, so
+ * R1's badge reads 未通過 once waiting_iaa_confirmation is reached.
+ * Creating R2 from there must materialize that fallback into
+ * TASK_DATA.trialRounds alongside R2 (FR-013), so the post-creation
+ * assertions expect both R1 and R2 in the round history.
  */
 import { test, expect, type Page } from '@playwright/test';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html?task_id=T001';
+const DRY_RUN_PROGRESS_KEY = 'labelsuite.prototypeDryRunProgress';
+const TASK_ID = 'T001';
 
 async function publishDryRunRound(page: Page) {
   await page.locator('#publishDryRunBtn').click();
@@ -66,7 +74,18 @@ test('keeps the 4-stage stepper while showing R1 into a waiting-confirmation-gat
   await expect(page.locator('.exec-stage-banner #trialDecisionTitle')).not.toHaveText('R1 未達標，建議新增下一個試標回合');
   await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(1);
   await expect(page.locator('#trialRoundTimeline .round-timeline-item').first()).toContainText('R1');
-  await expect(page.locator('#trialRoundTimeline .round-status-badge').first()).toHaveText('未通過');
+  // D2: the round record is written at publish time with only round
+  // number/sample count/date -- agreement/std/result stay blank until
+  // syncStatusFromDryRunProgress() fills them at the waiting_iaa_confirmation
+  // transition below. An in-progress round must not show a pass/fail result
+  // it hasn't earned yet.
+  const r1Badge = page.locator('#trialRoundTimeline .round-status-badge').first();
+  await expect(r1Badge).toHaveText('進行中');
+  await expect(r1Badge).not.toHaveText('未通過');
+  await expect(r1Badge).not.toHaveText('已通過');
+  await expect(
+    page.locator('#trialRoundTimeline .round-timeline-item').first().locator('.round-timeline-metrics')
+  ).toContainText('IAA 無法計算');
   await expect(page.locator('#splitLegendDynamic')).toContainText('R1 1筆');
   await expect(page.locator('#splitLegendDynamic')).toContainText('正式 4筆');
 
@@ -77,11 +96,28 @@ test('keeps the 4-stage stepper while showing R1 into a waiting-confirmation-gat
   // R1 can only be advanced past dry_run_in_progress once its dry-run
   // progress is fully submitted (FR-008a), which flips the task into
   // waiting_iaa_confirmation -- the only state R2 can be created from
-  // (FR-013(2)). Load that state directly (design.md D3's second documented
-  // technique) rather than re-clicking the now-disabled button.
-  await page.goto(`${TASK_DETAIL_URL}&status=waiting_iaa_confirmation`);
+  // (FR-013(2)). Write that completed progress and reload into
+  // dry_run_in_progress (design.md D3's first documented technique) so that
+  // syncStatusFromDryRunProgress() actually fires: D2 gates R1's scripted
+  // IAA fill-in behind that same transition, so loading
+  // waiting_iaa_confirmation directly (D3's second technique) would skip
+  // the fill and cannot be used for the badge assertion below.
+  await page.addInitScript(
+    ({ key, taskId }) => {
+      window.localStorage.setItem(
+        key,
+        JSON.stringify({ runType: 'dry_run', taskId, submittedSamples: 1, totalSamples: 1 })
+      );
+    },
+    { key: DRY_RUN_PROGRESS_KEY, taskId: TASK_ID }
+  );
+  await page.goto(`${TASK_DETAIL_URL}&status=dry_run_in_progress`);
   await expect(page.locator('#statusBadge')).toContainText('待 IAA 確認');
   await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(1);
+  // D2: syncStatusFromDryRunProgress() fills the round's scripted IAA
+  // outcome only once it transitions the task into waiting_iaa_confirmation
+  // -- getTrialRoundScenario(1) is 'failed', so R1's badge now reads 未通過.
+  await expect(page.locator('#trialRoundTimeline .round-status-badge').first()).toHaveText('未通過');
   await expect(page.locator('#splitLegendDynamic')).toContainText('R1 1筆');
   await expect(page.locator('#splitLegendDynamic')).toContainText('正式 4筆');
 

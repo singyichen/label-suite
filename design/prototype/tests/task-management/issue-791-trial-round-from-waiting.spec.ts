@@ -59,13 +59,17 @@ test('a fully-submitted dry-run progress moves the task into waiting_iaa_confirm
   // dry_run_in_progress directly rather than clicking through a real R1 --
   // syncStatusFromDryRunProgress() only runs once, synchronously, inside
   // init(). The round it sees is task-detail.html's own not-yet-computable
-  // fallback (getTrialRounds()'s 'in_progress' synthesis, since T001 has no
-  // seeded dry-run submissions), not a literal 'failed' scripted result --
-  // but the transition below is unconditional on the round's outcome either
-  // way, which is exactly what FR-010o-3 requires.
+  // fallback (getTrialRounds()'s synthesis, since T001 has no seeded
+  // dry-run submissions), but the transition below is unconditional on the
+  // round's outcome either way, which is exactly what FR-010o-3 requires.
+  // D2: syncStatusFromDryRunProgress() fills that fallback record with
+  // getTrialRoundScenario(1)'s scripted result only once it fires this
+  // transition -- getTrialRoundScenario(1) is 'failed', so the round-history
+  // badge below reads 未通過.
   await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}&status=dry_run_in_progress`);
 
   await expect(page.locator('#statusBadge')).toContainText('待 IAA 確認');
+  await expect(page.locator('#trialRoundTimeline .round-status-badge').first()).toHaveText('未通過');
   await expect(page.locator('#publishOfficialRunBtn')).toBeEnabled();
   await expect(page.locator('#publishDryRunBtn')).toBeEnabled();
 });
