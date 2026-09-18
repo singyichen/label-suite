@@ -388,8 +388,7 @@
   /* FR-086 / FR-092 emission points for the three REVIEW_DECISIONS values.
      A reviewer submit carries one decision per output type (FR-051); each
      decision maps to exactly one history action, per FR-086's v5.0.0
-     revision -- `approve` always writes `accepted` (FR-092 point 1: "無異議
-     直接定稿"), `modify` writes `modified` (FR-092 point 2: the correction
+     revision -- `approve` always writes `accepted` (FR-092 point 1: "無異議，直接定稿"), `modify` writes `modified` (FR-092 point 2: the correction
      does not take effect immediately, it only opens a dispute), and
      `bypass` writes `bypassed` (FR-092 point 3). This is a closed one-to-one
      table, not a value-diff comparison -- AC-2.21's v5.0.0 revision fixes
@@ -1904,9 +1903,13 @@
       myAnswer: entry.answers || {},
       finalizedAnswer: last.result_snapshot || entry.answers || {},
       /* Unchanged only when every settling action on this sample was a
-       * plain approve -- a task with several output keys can carry one
-       * 'accepted' and one 'modified' event for the same sample, and that
-       * sample is still a "被修改" row for FR-096 point 1's count. */
+       * plain approve. `decisive` is already filtered through
+       * DRY_RUN_FEEDBACK_SOURCE_ACTIONS, so a reviewer's `modified` can
+       * never appear here (issue #804) -- the non-approve settling actions
+       * that do are 'adjudicated', 'exception_resolved' and 'excluded'. A
+       * task with several output keys can carry one 'accepted' and one of
+       * those for the same sample, and that sample is still a "被修改" row
+       * for FR-096 point 1's count. */
       modified: decisive.some(function (event) { return event.action !== 'accepted'; }),
       action: last.action,
       actorId: last.actorId,
