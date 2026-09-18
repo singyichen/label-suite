@@ -2508,6 +2508,7 @@
       reviewerHint: '僅 project leader 可操作',
       dryRunDisabled: '新增試標回合（唯讀）',
       officialRunDisabled: '開始正式標記（唯讀）',
+      dryRunNextRoundReason: '本回合全部提交並完成 IAA 後才能新增下一回合',
       statusHintDraft: '目前任務仍在草稿，可建立第一個試標回合。',
       statusHintDry: '目前處於試標階段，可依結果持續建立下一個試標回合。',
       statusHintIaa: '已有試標回合達標，可用剩餘樣本啟動正式標記。',
@@ -2561,9 +2562,11 @@
       roundHistoryHint: '每個回合使用新的抽樣樣本；通過的回合會解鎖正式標記。',
       roundHistorySummaryTpl: '已用 {used} / {total} 筆試標',
       roundDecisionTitlePassedTpl: 'R{round} 已達標，可啟動正式標記',
-      roundDecisionTitleFailedTpl: 'R{round} 未達標，建議新增下一個試標回合',
+      roundDecisionTitleFailedTpl: 'R{round} 未達標，可開始正式標記或新增試標回合',
+      roundDecisionTitleRoundActiveTpl: 'R{round} 進行中，全員完成後進入待 IAA 確認',
       roundDecisionDescPassedTpl: '系統將以尚未進入試標的剩餘 {count} 筆樣本建立正式標記池，避免與前面回合混用。',
-      roundDecisionDescFailedTpl: '目前僅使用了 {used} 筆試標樣本，仍可從未使用資料中抽新樣本進行下一回合。',
+      roundDecisionDescFailedTpl: '目前僅使用了 {used} 筆試標樣本，IAA 未達標僅供參考：可直接開始正式標記，或新增下一個試標回合再抽新樣本。',
+      roundDecisionDescRoundActiveTpl: '本回合尚未全員提交，暫不提供新增下一回合；待全數提交並完成 IAA 後任務會自動進入待確認，再決定下一步。',
       roundDecisionTitleInProgressTpl: 'R{round} 尚無法判定是否達標',
       roundDecisionDescInProgressTpl: '目前沒有足夠的標記資料可計算一致性，待標記員完成後即可判定是否達標。',
       roundDecisionTitleOfficialTpl: '正式標記進行中，共 {count} 筆',
@@ -3007,6 +3010,7 @@
       reviewerHint: 'Only project leader can perform this action',
       dryRunDisabled: 'Add trial round (Read-only)',
       officialRunDisabled: 'Start official run (Read-only)',
+      dryRunNextRoundReason: 'Submit all outputs and finish IAA for this round before adding the next one',
       statusHintDraft: 'The task is still in draft. Create the first trial round to start validation.',
       statusHintDry: 'The task is in the trial stage. You can continue with another round based on the latest outcome.',
       statusHintIaa: 'At least one trial round passed. The remaining pool can now enter official work.',
@@ -3060,9 +3064,11 @@
       roundHistoryHint: 'Each round uses a fresh sample slice. A passed round unlocks official work.',
       roundHistorySummaryTpl: '{used} / {total} items used in trial',
       roundDecisionTitlePassedTpl: 'R{round} passed and official work can start',
-      roundDecisionTitleFailedTpl: 'R{round} did not pass. Add the next trial round',
+      roundDecisionTitleFailedTpl: 'R{round} did not pass. Start official work or add another round',
+      roundDecisionTitleRoundActiveTpl: 'R{round} is in progress. It moves to IAA confirmation once everyone finishes',
       roundDecisionDescPassedTpl: 'The system will build the official pool from the remaining {count} unused items to avoid mixing with previous rounds.',
-      roundDecisionDescFailedTpl: 'Only {used} items have been consumed by trials so far. You can still draw the next round from unused data.',
+      roundDecisionDescFailedTpl: 'Only {used} items have been consumed by trials so far. The IAA result is advisory only -- you can start official work directly, or add the next trial round to draw a new sample.',
+      roundDecisionDescRoundActiveTpl: 'This round has not been fully submitted yet, so adding the next round is unavailable. Once everyone finishes and IAA completes, the task moves to confirmation and you can decide the next step.',
       roundDecisionTitleInProgressTpl: 'R{round} outcome not yet determined',
       roundDecisionDescInProgressTpl: 'There is not enough marked data yet to compute agreement. The outcome will be clear once annotators finish.',
       roundDecisionTitleOfficialTpl: 'Official run in progress with {count} items',
@@ -4983,6 +4989,24 @@ function interpolate(template, payload) {
     var total = Number(progress.totalSamples);
     if (!Number.isFinite(submitted) || !Number.isFinite(total) || total < 1) return;
     if (submitted < total) return;
+    /* issue #791 (D2): materialize getTrialRounds()'s synthetic fallback
+       into TASK_DATA.trialRounds (same technique as publishDryRun(), D1) so
+       a round created without a real seed still gets its outcome filled in
+       below, then fill the current (latest) round's agreement/std/result
+       from its scripted scenario now that it is fully submitted -- this is
+       the only point where a round's IAA outcome becomes real. */
+    if (!Array.isArray(TASK_DATA.trialRounds) || !TASK_DATA.trialRounds.length) {
+      TASK_DATA.trialRounds = getTrialRounds();
+    }
+    var currentRound = TASK_DATA.trialRounds[TASK_DATA.trialRounds.length - 1];
+    if (currentRound) {
+      var scenario = getTrialRoundScenario(currentRound.round);
+      currentRound.agreement = scenario.agreement;
+      currentRound.std = scenario.std;
+      currentRound.result = scenario.result;
+      TASK_DATA.currentAgreement = scenario.agreement;
+      TASK_DATA.currentStd = scenario.std;
+    }
     TASK_DATA.status = 'waiting_iaa_confirmation';
     TASK_DATA.updatedAt = new Date().toISOString().slice(0, 16).replace('T', ' ');
   }
@@ -5767,6 +5791,14 @@ function interpolate(template, payload) {
     } else if (taskStageKey === 'completed') {
       setText('trialDecisionTitle', interpolate(t('roundDecisionTitleCompletedTpl'), { count: getOfficialRunCount() }));
       setText('trialDecisionDesc', t('roundDecisionDescCompletedTpl'));
+    } else if (TASK_DATA.status === 'dry_run_in_progress' && currentRound) {
+      /* issue #791 (FR-013(1)/D2): this round has not finished yet, so its
+         scripted/computed outcome (currentRound.result) must not drive the
+         banner -- adding the next round is disabled until the round
+         completes, and suggesting it here would point at a disabled
+         button. */
+      setText('trialDecisionTitle', interpolate(t('roundDecisionTitleRoundActiveTpl'), { round: currentRound.round }));
+      setText('trialDecisionDesc', t('roundDecisionDescRoundActiveTpl'));
     } else if (currentRound && currentRound.result === 'passed') {
       setText('trialDecisionTitle', interpolate(t('roundDecisionTitlePassedTpl'), { round: currentRound.round }));
       setText('trialDecisionDesc', interpolate(t('roundDecisionDescPassedTpl'), { count: reserveCount }));
@@ -5977,12 +6009,14 @@ function interpolate(template, payload) {
     }
 
     if (TASK_DATA.status === 'dry_run_in_progress') {
-      actionRow.innerHTML = '<button class="btn btn-cta" type="button" id="publishDryRunBtn">' + t('publishDryRun') + ' R' + nextRound + '</button>';
+      actionRow.innerHTML = '<button class="btn btn-cta" type="button" id="publishDryRunBtn" disabled>' + t('publishDryRun') + ' R' + nextRound + '</button>' +
+        '<span class="status-hint">' + t('dryRunNextRoundReason') + '</span>';
       return;
     }
 
     if (TASK_DATA.status === 'waiting_iaa_confirmation') {
-      actionRow.innerHTML = '<button class="btn btn-primary" type="button" id="publishOfficialRunBtn">' + t('publishOfficialRun') + '</button>';
+      actionRow.innerHTML = '<button class="btn btn-primary" type="button" id="publishOfficialRunBtn">' + t('publishOfficialRun') + '</button>' +
+        '<button class="btn btn-cta" type="button" id="publishDryRunBtn">' + t('publishDryRun') + ' R' + nextRound + '</button>';
       return;
     }
 
@@ -10050,26 +10084,45 @@ function getTaskTypeLabel() {
     if (!canPublish()) return;
     state.publishingDryRun = true;
     setTimeout(function() { state.publishingDryRun = false; }, 200);
-    var nextRound = getTrialRounds().length + 1;
+    /* issue #791 (D1): materialize getTrialRounds()'s synthetic fallback
+       into TASK_DATA.trialRounds before pushing the new round, instead of
+       pushing onto whatever TASK_DATA.trialRounds already holds. Without
+       this, a task that reached waiting_iaa_confirmation via a page load
+       (no real TASK_DATA.trialRounds seed) would lose the fallback R1 entry
+       the moment R2 is pushed onto the still-empty real array. */
+    if (!Array.isArray(TASK_DATA.trialRounds) || !TASK_DATA.trialRounds.length) {
+      TASK_DATA.trialRounds = getTrialRounds();
+    }
+    var nextRound = TASK_DATA.trialRounds.length + 1;
     var scenario = getTrialRoundScenario(nextRound);
-    if (!Array.isArray(TASK_DATA.trialRounds)) TASK_DATA.trialRounds = [];
+    /* issue #791 (D2): a round's IAA outcome is not known until it
+       finishes -- only the round number, sample count, and date are real at
+       publish time. agreement/std/result stay null until
+       syncStatusFromDryRunProgress() fills them in from this same scenario
+       table once the round is fully submitted. */
     TASK_DATA.trialRounds.push({
       round: nextRound,
       sampleCount: Number(TASK_DATA.samplingValue) || 0,
-      agreement: scenario.agreement,
+      agreement: null,
       annotators: Number(TASK_DATA.minAnnotators) || 0,
-      std: scenario.std,
-      result: scenario.result,
+      std: null,
+      result: null,
       usedSamples: Number(TASK_DATA.samplingValue) || 0,
       date: scenario.date,
       noteZh: scenario.noteZh,
       noteEn: scenario.noteEn
     });
     TASK_DATA.trialRound = nextRound;
-    TASK_DATA.currentAgreement = scenario.agreement;
+    TASK_DATA.currentAgreement = null;
     TASK_DATA.currentAnnotators = Number(TASK_DATA.minAnnotators) || 0;
-    TASK_DATA.currentStd = scenario.std;
-    TASK_DATA.status = scenario.result === 'passed' ? 'waiting_iaa_confirmation' : 'dry_run_in_progress';
+    TASK_DATA.currentStd = null;
+    /* issue #791 (FR-010o-3): publishing any round always moves the task
+       into dry_run_in_progress. The round's IAA outcome is not written here
+       (D2) and MUST NOT decide the task's status -- only a fully-submitted
+       round, via
+       syncStatusFromDryRunProgress(), advances the task to
+       waiting_iaa_confirmation (FR-008a). */
+    TASK_DATA.status = 'dry_run_in_progress';
     TASK_DATA.updatedAt = scenario.date + ' 10:07';
     showToast(t('toastPublishedDry'));
     trackEvent('prototype_publish_success', { target_status: TASK_DATA.status });
