@@ -45,22 +45,25 @@ interface WorkspaceData {
   getSampleHistory: (taskId: string, runType: string, sampleId: string, identity: Identity) => HistoryEvent[];
 }
 
-declare global {
-  interface Window {
-    LabelSuiteAnnotationWorkspaceData: WorkspaceData;
-  }
-}
+/* Cast rather than `declare global`: annotation-workspace-arbitration.spec.ts
+ * already augments `Window.LabelSuiteAnnotationWorkspaceData` with a
+ * differently shaped WorkspaceData, and TS requires merged global
+ * declarations to be structurally identical (see
+ * issue-199-arbitration-vote-dedup.spec.ts for the same pattern). */
+type WorkspaceWindow = { LabelSuiteAnnotationWorkspaceData: WorkspaceData };
 
 async function getSampleStatus(page: Page, taskId: string, role: string, runType: string, sampleId: string, identity: Identity) {
   return page.evaluate(
-    ([t, r, rt, s, id]) => window.LabelSuiteAnnotationWorkspaceData.getSampleStatus(t, r, rt, s, id as Identity),
+    ([t, r, rt, s, id]) => (window as unknown as WorkspaceWindow)
+      .LabelSuiteAnnotationWorkspaceData.getSampleStatus(t, r, rt, s, id as Identity),
     [taskId, role, runType, sampleId, identity] as const
   );
 }
 
 async function getSampleHistory(page: Page, taskId: string, runType: string, sampleId: string, identity: Identity) {
   return page.evaluate(
-    ([t, rt, s, id]) => window.LabelSuiteAnnotationWorkspaceData.getSampleHistory(t, rt, s, id as Identity),
+    ([t, rt, s, id]) => (window as unknown as WorkspaceWindow)
+      .LabelSuiteAnnotationWorkspaceData.getSampleHistory(t, rt, s, id as Identity),
     [taskId, runType, sampleId, identity] as const
   );
 }
@@ -74,7 +77,7 @@ const ARBITER = 'reviewer_chen'; // can_arbitrate: true
 function seedAnnotator(page: Page, value: string) {
   return page.evaluate(
     ([v, annotator]) => {
-      window.LabelSuiteAnnotationWorkspaceData.markSampleSubmitted(
+      (window as unknown as WorkspaceWindow).LabelSuiteAnnotationWorkspaceData.markSampleSubmitted(
         'T001', 'annotator', 'official_run', 'sent-001',
         { previewState: { single_label: { selected: v } } }, '', { annotatorId: annotator }
       );
@@ -92,7 +95,7 @@ function seedAnnotator(page: Page, value: string) {
 function seedPureRejectReviewer(page: Page) {
   return page.evaluate(
     ([annotator, reviewer]) => {
-      window.LabelSuiteAnnotationWorkspaceData.markSampleSubmitted(
+      (window as unknown as WorkspaceWindow).LabelSuiteAnnotationWorkspaceData.markSampleSubmitted(
         'T001', 'reviewer', 'official_run', 'sent-001',
         { previewState: { single_label: { selected: 'sad' } }, decisions: { single_label: 'reject' } }, '',
         { annotatorId: annotator, reviewerId: reviewer }
