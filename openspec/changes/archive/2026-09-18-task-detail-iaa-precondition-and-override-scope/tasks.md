@@ -61,8 +61,8 @@
 
 - [x] 3.1 執行 `/opsx:archive task-detail-iaa-precondition-and-override-scope`，使衍生檢視收錄 FR-010o-1 與 FR-010o-4。驗證：`openspec/changes/archive/` 下出現本 change 之日期前綴目錄，且 `grep -n 'FR-010o-4' openspec/specs/task-management/014-task-detail/spec.md` 命中 [@main]
 - [x] 3.2 修改正典 `specs/task-management/014-task-detail/spec.md`：原地改寫 FR-010o-1；同步改寫常數區 target_agreement_overrides 說明、使用者故事 1 抽樣設定編輯狀態描述與進階輸入驗證兩處、FR-010q 驗證規則與 TaskDetail 實體之覆寫範圍敘述；於 FR-010o-3 之後新增 FR-010o-4；於 TrialRound 實體新增 iaa_computation_status 欄位說明；於對應使用者故事之驗收情境末尾新增 delta 內七條情境並依序配發新 AC 編號（FR-010o-4 的四條接續 issue #791 回寫後的最後一個 AC 編號）；版本改為 v4.1.0 並新增 Changelog 列。每處編輯須先斷言錨點恰 1 筆再替換。驗證：`grep -c 'FR-010o-1' specs/task-management/014-task-detail/spec.md` 中定義行恰一筆、`grep -n 'iaa_computation_status' specs/task-management/014-task-detail/spec.md` 命中 TrialRound 實體，且 `grep -n '任一 `outputs\[\].type` 覆寫' specs/task-management/014-task-detail/spec.md` 無輸出 [@main]
-- [ ] 3.3 執行 `node scripts/gen-screen-inventory.mjs` 重生畫面盤點清單並單獨提交——產生器會計入正典的 FR 數量，3.2 回寫後 INVENTORY_FRESHNESS 必然轉紅。驗證：`scripts/check-sdd.sh` 為 0 error、`scripts/inventory-tests.sh` exit 0 [@main]
-- [ ] 3.4 執行 Source-Verify（gate 4）：衍生檢視與正典中本 change 引入的每一個 FR／AC ID、`dataset/017-dataset-analysis-detail` FR-039 第 4 點、AC-3.16 與 FR-043 引用、ADR-022 路徑與 issue 編號皆可逐項 `grep` 定位。驗證：`scripts/check-sdd.sh` exit 0 且 `openspec validate --changes --no-interactive` exit 0 [@main]
+- [x] 3.3 執行 `node scripts/gen-screen-inventory.mjs` 重生畫面盤點清單並單獨提交——產生器會計入正典的 FR 數量，3.2 回寫後 INVENTORY_FRESHNESS 必然轉紅。驗證：`scripts/check-sdd.sh` 為 0 error、`scripts/inventory-tests.sh` exit 0 [@main]
+- [x] 3.4 執行 Source-Verify（gate 4）：衍生檢視與正典中本 change 引入的每一個 FR／AC ID、`dataset/017-dataset-analysis-detail` FR-039 第 4 點、AC-3.16 與 FR-043 引用、ADR-022 路徑與 issue 編號皆可逐項 `grep` 定位。驗證：`scripts/check-sdd.sh` exit 0 且 `openspec validate --changes --no-interactive` exit 0 [@main]
 
 ## 合併前注意
 
