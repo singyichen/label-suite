@@ -23,7 +23,7 @@ import { test, expect, type Page } from '@playwright/test';
 const DASHBOARD_URL = '/pages/dashboard/dashboard.html';
 
 /** T003: multi_label, official_run, 15 units, none reviewed. */
-const T003_DERIVED = '任務覆蓋 0 / 15 個審核單位 · 待審 15 個 · 未達定稿門檻 15 個';
+const T003_DERIVED = '任務覆蓋 0 / 15 個審核單位 · 待審 15 個';
 
 async function openReviewer(page: Page) {
   await page.goto(DASHBOARD_URL);

@@ -16,7 +16,7 @@
  *     (pending / unfinalized / disputed / coverage), and both consumers
  *     read it.
  *   - coverage is share-of-units-past-待審, NOT a completion rate: T016
- *     sits at 5 / 5 coverage while still disclosing 未達定稿門檻 3 · 爭議中 1.
+ *     sits at 5 / 5 coverage while still disclosing 爭議中 1.
  *   - `derivable: false` reports "no unit has been reviewed yet" and is
  *     keyed on the presence of review-unit data, never on a task id.
  *     (Issue #501 later removed the consumer fallback it used to gate: a
@@ -128,7 +128,7 @@ test.describe('issue #450 -- annotation-list task info card', () => {
     await page.goto(buildListUrl({ task_id: 'T016', role: 'reviewer', run_type: 'official_run' }));
 
     await expect(page.locator('#taskInfoDetail')).toContainText(
-      '任務覆蓋 5 / 5 個審核單位 · 未達定稿門檻 3 個 · 爭議中 3 個 · IAA 無法計算',
+      '任務覆蓋 5 / 5 個審核單位 · 爭議中 3 個 · IAA 無法計算',
     );
     await expect(page.locator('#taskInfoStatus')).not.toHaveText('已完成');
   });
@@ -153,16 +153,16 @@ test.describe('issue #450 -- annotation-list task info card', () => {
        instead of converging, so it is disputed (not finalized) by the time
        this test runs (see annotation-review-flow-demo-seed.spec.ts). This
        agreeing review still finalizes ofs-04, but ofs-02 keeps the task at
-       未達定稿門檻/爭議中 rather than clearing both clauses the way N = 1
+       爭議中 rather than clearing the clause the way N = 1
        convergence used to. */
     await expect(detail).toContainText(
-      '任務覆蓋 4 / 4 個審核單位 · 未達定稿門檻 1 個 · 爭議中 1 個 · IAA 無法計算',
+      '任務覆蓋 4 / 4 個審核單位 · 爭議中 1 個 · IAA 無法計算',
     );
 
     // Reload: the derived numbers must be stable, not a one-shot render.
     await page.reload();
     await expect(page.locator('#taskInfoDetail')).toContainText(
-      '任務覆蓋 4 / 4 個審核單位 · 未達定稿門檻 1 個 · 爭議中 1 個 · IAA 無法計算',
+      '任務覆蓋 4 / 4 個審核單位 · 爭議中 1 個 · IAA 無法計算',
     );
   });
 });
@@ -192,9 +192,9 @@ test.describe('issue #450 -- dashboard reviewer card', () => {
     /* issue #596: min_reviewers = 1 auto-convergence (issue #551) is
        retired -- ofs-02's reviewer correction stays disputed instead of
        converging at N = 1 (see annotation-review-flow-demo-seed.spec.ts),
-       so the card keeps disclosing 未達定稿門檻/爭議中 after this submit. */
+       so the card keeps disclosing 爭議中 after this submit. */
     await expect(page.locator(T015_CARD)).toContainText(
-      '任務覆蓋 4 / 4 個審核單位 · 未達定稿門檻 1 個 · 爭議中 1 個 · IAA 無法計算',
+      '任務覆蓋 4 / 4 個審核單位 · 爭議中 1 個 · IAA 無法計算',
     );
   });
 
