@@ -323,21 +323,6 @@
         'ofm-01-reviewer-corrects-b', 'official_run', 'in_progress', 'reviewer_chen'
       ),
     },
-    {
-      exampleTaskId: 'T017',
-      annotationTaskType: 'single_sentence_classification',
-      annotator: workItem(
-        'oft-01-final-exception',
-        '已完成 100% · 今日 10 筆 · 平均速度 3.2',
-        '100% Completed · 10 Today · Avg Speed 3.2',
-        100,
-        'official_run',
-        'in_progress'
-      ),
-      reviewer: reviewWorkItem(
-        'oft-01-final-exception', 'official_run', 'pending_review', 'reviewer_chen'
-      ),
-    },
   ];
 
   /* issue #501: the reviewer seeds' one derived field, applied here rather
