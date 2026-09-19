@@ -381,6 +381,10 @@
     if (decisions) {
       appendReviewDecisionEvents(entry, taskId, runType, sampleId, payload, historySummary, actorId, identity, decisions);
     }
+    /* issue #834 (FR-096, design.md D1): a dry-run annotator submission
+       records the trial round it belongs to, so feedback can be gated per
+       round rather than per task status. */
+    if (role === 'annotator' && runType === 'dry_run') entry.trialRound = currentTrialRound(taskId);
     bucket[sampleId] = entry;
     writeSubmissionBucket(key, bucket);
   }
@@ -1899,28 +1903,57 @@
     };
   }
 
-  /* FR-096 試標歷史回饋 (design.md D5, Data Fairness NON-NEGOTIABLE): the
-   * annotator's own dry-run round feedback, gated on task status IN THE
-   * DATA LAYER -- while the round is still in progress this MUST return an
-   * empty collection, not a full result the UI merely hides (D5's whole
-   * point: data that reaches the browser has already leaked). Includes
-   * every one of the annotator's submitted samples in the round, not only
-   * the modified ones, so the caller can compute FR-096 point 1's ratio
-   * over the true denominator. Scoped to one annotatorId by construction
-   * (the bucket key and getSampleHistory's reviewer-bucket prefix both key
-   * off it), so another annotator's answers never enter the result. */
+  /* The task's current trial round r, from the same field the annotation
+   * pages read for "試標回合 R{n}"; defaults to 1 (issue #834, design.md D1). */
+  function currentTrialRound(taskId) {
+    var detail = findTaskDetailProfile(taskId);
+    var runs = detail && detail.materializedRuns;
+    var round = runs && runs.dry_run && runs.dry_run.round;
+    return round >= 1 ? round : 1;
+  }
+
+  /* Highest disclosable trial round per task status (design.md D2): the
+   * in-progress round R{r} is never disclosable; every ended round is,
+   * including after official_run starts. 0 = nothing disclosable. */
+  var DISCLOSED_ROUND_OFFSET = {
+    dry_run_in_progress: -1,
+    waiting_iaa_confirmation: 0,
+    official_run_in_progress: 0,
+    completed: 0,
+  };
+
+  /* FR-096 試標歷史回饋 (Data Fairness NON-NEGOTIABLE): the annotator's own
+   * dry-run feedback, gated PER ROUND IN THE DATA LAYER (issue #834) -- rows
+   * of the in-progress round are never returned, not merely hidden by the
+   * UI (data that reaches the browser has already leaked). Includes every
+   * submitted sample of each disclosed round, not only the modified ones,
+   * so the caller can compute FR-096 point 1's per-round ratio over the
+   * true denominator. Each row carries its `round`. An entry without a
+   * round stamp (written before D1) is withheld while a round is in
+   * progress (fail closed) and attributed to the current round otherwise
+   * (design.md D4). Scoped to one annotatorId by construction (the bucket
+   * key and getSampleHistory's reviewer-bucket prefix both key off it), so
+   * another annotator's answers never enter the result. */
   function getDryRunFeedback(taskId, runType, identity) {
     if (runType !== 'dry_run') return [];
     var listEntry = findTaskListEntry(taskId);
-    if (!listEntry || listEntry.status !== 'waiting_iaa_confirmation') return [];
+    if (!listEntry || !Object.prototype.hasOwnProperty.call(DISCLOSED_ROUND_OFFSET, listEntry.status)) return [];
+    var currentRound = currentTrialRound(taskId);
+    var maxRound = currentRound + DISCLOSED_ROUND_OFFSET[listEntry.status];
+    if (maxRound < 1) return [];
+    var inProgress = listEntry.status === 'dry_run_in_progress';
     var scopedIdentity = { annotatorId: (identity && identity.annotatorId) || DEFAULT_ANNOTATOR_ID };
     var bucket = readSubmissionBucket(submissionBucketKey(taskId, 'annotator', runType, scopedIdentity));
     var rows = [];
     Object.keys(bucket).forEach(function (sampleId) {
       var entry = bucket[sampleId];
       if (entryStatus(entry) !== 'submitted') return;
+      var round = entry.trialRound >= 1 ? entry.trialRound : inProgress ? null : currentRound;
+      if (round === null || round > maxRound) return;
       var row = buildDryRunFeedbackRow(taskId, runType, sampleId, entry, scopedIdentity);
-      if (row) rows.push(row);
+      if (!row) return;
+      row.round = round;
+      rows.push(row);
     });
     return rows;
   }
