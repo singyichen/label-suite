@@ -1,7 +1,7 @@
 ---
-功能分支: feat/task-new-step1-click-reduction
+功能分支: feat/task-new-step1-field-role-hints
 建立日期: 2026-04-20
-版本: 8.0.0
+版本: 8.1.0
 狀態: Draft
 ---
 
@@ -169,6 +169,8 @@ sequenceDiagram
 1. **AC-1.1**：**Given** 已登入且可使用任務管理模組，**When** 完成 Step 1~4 並提交，**Then** 成功建立任務且導向 `/task-detail?task_id=...`。
 2. **AC-1.2**：**Given** 建立成功，**When** 檢查任務成員資料，**Then** 建立者自動有一筆 `project_leader` 的 `task_membership`。
 3. **AC-1.3**：**Given** 正在建立流程中，**When** 點擊取消，**Then** 導回 `/task-list` 且不建立任務。
+4. **AC-1.6**：**Given** 已上傳資料集且其中一欄位名稱包含 `FIELD_ROLE_INPUT_NAME_HINTS` 命中線索（如欄名為 `text`）、其餘欄位皆未命中，**When** 嵌入式資料預覽表格完成初始化，**Then** 該命中欄位的角色下拉選單初始值已為 Input、無需使用者點擊即完成該欄位角色指定，**And** 使用者仍可再點擊改為其他角色或「不使用」（FR-002c-8）。
+5. **AC-1.7**：**Given** 使用者已於目前資料集手動指定至少一個欄位角色，**When** 使用者重新上傳資料集或移除目前資料集檔案，**Then** 所有欄位角色依 FR-002c-1 重設，但欄名命中 `FIELD_ROLE_INPUT_NAME_HINTS` 的欄位依 FR-002c-8 取得 Input 初始值，其餘欄位為「不使用」。
 
 **介面定義（需與 IA 導覽語意一致）**：
 
@@ -544,13 +546,14 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 - **FR-002a**：每個資料集檔案必須為 `.json` 格式（`DATASET_UPLOAD_FORMATS = json`），且符合 `DATASET_MAX_FILE_SIZE_MB`；非 JSON 格式的檔案須個別顯示錯誤並阻擋加入；已通過驗證的其他檔案不受影響。`.json` 檔內容為 JSON Lines（逐行 JSON object）時，系統必須可解析為紀錄集合。
 - **FR-002b**：每個已上傳資料集檔案獨立一列，顯示眼睛預覽圖示與 × 移除按鈕；點擊該列（× 除外）或眼睛按鈕開啟 Modal，顯示該檔案第 1 筆紀錄的原始 JSON（依目前所選資料列來源路徑取出，格式化縮排呈現）；Modal 以近全視窗尺寸呈現以盡量完整顯示該筆 JSON：長字串值於區塊寬度內自動換行（無需水平捲動），高度隨內容伸縮、超出上限時於 JSON 區塊內垂直捲動；Modal 提供關閉按鈕，點擊 overlay 亦可關閉；預覽為唯讀。若於目前所選資料列來源路徑取不出該檔案的紀錄，系統須依序回退：先改用該檔案自身偵測出的最佳候選來源，仍取不出時顯示該檔案的原始根節點 JSON，確保 Modal 開啟後必有內容可顯示。系統將所有已上傳檔案合併視為同一資料集進行後續處理。
 - **FR-002c**：資料集上傳成功後，系統必須在 Step 1 上傳區塊下方即時顯示一個**嵌入式資料預覽表格**，無需使用者點擊任何按鈕觸發。預覽表格呈現所選資料列來源的**前 2 筆資料列**，表格欄位為該來源**所有紀錄**第一層 key 的聯集，欄位標頭顯示原始 JSON key 名稱（不做中文轉換）並附型別摘要 badge（字串／數字／布林／陣列／物件／混合／空）；陣列或物件型儲存格以摘要文字呈現，hover 可檢視原始 JSON 內容；預覽提示列須顯示資料總筆數。**每個欄位標頭下方提供角色下拉選單**（`FIELD_ROLES`：`Evidence（背景）`、`Input（輸入）`、`Output（輸出）`，以及「不使用」），使用者可逐欄指定角色。
-- **FR-002c-1**：欄位角色指定行為規則：預設全部欄位角色為「不使用」；重新上傳或移除檔案後，所有欄位角色重設為「不使用」；**切換資料列來源時，系統必須保留各來源已指定的角色，切回原來源時自動還原**；驗證與 payload 僅以目前所選來源的角色指定為準。最終角色指定結果以 `field_role_map: Record<string, FieldRole>` 傳入建立任務 payload（僅包含已指定角色的欄位；未指定角色欄位不列入）。Evidence 與 Output 角色為 optional，全部留空代表不特別標記角色，所有欄位照常納入 config。**Input 角色受 FR-002c-2 約束**：當使用者已選定輸入類型時，Input 欄位數量必須符合該類型要求，否則阻擋進入 Step 2。
+- **FR-002c-1**：欄位角色指定行為規則：預設全部欄位角色為「不使用」（欄名命中 Input 線索之例外見 FR-002c-8）；重新上傳或移除檔案後，所有欄位角色重設為「不使用」；**切換資料列來源時，系統必須保留各來源已指定的角色，切回原來源時自動還原**；驗證與 payload 僅以目前所選來源的角色指定為準。最終角色指定結果以 `field_role_map: Record<string, FieldRole>` 傳入建立任務 payload（僅包含已指定角色的欄位；未指定角色欄位不列入）。Evidence 與 Output 角色為 optional，全部留空代表不特別標記角色，所有欄位照常納入 config。**Input 角色受 FR-002c-2 約束**：當使用者已選定輸入類型時，Input 欄位數量必須符合該類型要求，否則阻擋進入 Step 2。
 - **FR-002c-2**：當輸入類型為 `single_item` 時，`field_role_map` 中 `input` 角色欄位數量必須恰好為 1；當輸入類型為 `item_pair` 時，必須恰好為 2；不符合時阻擋進入 Step 2 並顯示修正提示。
 - **FR-002c-3**：資料集解析 array 型別欄位時必須先辨識 shape，不得一律 flatten。`string[]` 各元素個別收集為 flat unique values（例如 `["positive","negative"]` 拆為兩個值）；`string[][]` 的每個內層陣列視為一條完整 root-to-selected-node ID path，segment 必須在全樹唯一，並依所有 records 首次出現順序合併共同 prefix；路徑終點可以是後續仍有 children 的 branch。同一欄位混用兩種 shape、出現非字串 segment 或相同 ID 出現在不同 parent 下時視為資料錯誤。
 - **FR-002c-4**：資料集上傳成功後，系統必須自動偵測 JSON 中可作為紀錄集合的陣列（含巢狀結構與物件包裹形式，如 `{ meta, data: [...] }`），預設選擇最合適的候選作為**資料列來源**；偵測到多個候選時，須於預覽表格上方提供下拉選單供手動切換並顯示候選數提示，僅一個候選時下拉選單停用；完全偵測不到可用紀錄集合時，顯示錯誤並阻擋進入下一步。切換資料列來源後，若任一已上傳檔案於新來源路徑取不出紀錄，系統必須顯示標明該檔案的不相容提示，且該檔案的紀錄不納入合併資料集統計；切換至所有檔案皆可取出紀錄的來源時提示解除。
 - **FR-002c-5**：欄位剖析必須涵蓋所選資料列來源的**全部紀錄**（非僅預覽的前 2 筆），逐欄統計缺值筆數。空值定義：缺少該 key、`null`、空字串或僅含空白字元的字串、空陣列、空物件；**`0` 與 `false` 視為有值**。
 - **FR-002c-6**：指定欄位角色後，系統必須於該欄位下方顯示回饋註記：Input 或 Evidence 角色且有缺值 → 紅色錯誤，列出問題紀錄識別（紀錄含 `id` 欄位時顯示其值，否則顯示列號，先列出前幾筆）；Input 或 Evidence 角色且全數有值 → 綠色確認；Output 角色 → 藍色預標記覆蓋率資訊（N/total 筆有預標記）。**Output 欄位存在空值不阻擋流程**，視為該筆未預標記；未指定 Evidence 時不檢核、不顯示 Evidence 結果。
 - **FR-002c-7**：任一 Input 或已指定 Evidence 角色欄位存在缺值時，系統必須阻擋進入 Step 2，並以欄位下方 inline 錯誤與頁首錯誤提示指出角色、欄位名稱與缺值筆數；多個缺值欄位並存時頁首先顯示第一個不完整欄位。角色改回「不使用」後，該欄位造成的錯誤與阻擋必須立即解除。
+- **FR-002c-8**：Step 1 資料集欄位角色 Input 欄名自動推測初始值。嵌入式資料預覽表格為尚未指定過角色的欄位進行角色初始化時（包含資料集首次上傳成功、重新上傳、移除檔案後的重新初始化，以及切換資料列來源後首次出現、先前未指定過角色的欄位），系統 MUST 依欄名慣例自動推測 Input 角色初始值；此推測僅適用於前述「尚未指定過角色」的欄位，不得覆寫使用者已手動指定的角色，亦不得覆寫 FR-002c-1 依資料列來源記憶還原的既有角色指定。判定規則：規格常數 `FIELD_ROLE_INPUT_NAME_HINTS` 的內容定為七個泛用輸入欄名關鍵字——`text`、`content`、`sentence`、`passage`、`document`、`body`、`context`；欄位名稱（不分大小寫）包含其中任一子字串者視為命中欄名線索；命中線索的欄位依所選資料列來源全部紀錄聯集欄位的原始出現順序，依序指定為 Input，至多指定至當下輸入類型所要求的 Input 欄位數量（`single_item` 為 1、`item_pair` 為 2；尚未選定輸入類型時上限為 1）；超出上限的其餘命中欄位與未命中線索的欄位相同，維持「不使用」。本條為 FR-002c-1「欄位角色預設為『不使用』」之**具名例外**：欄名命中線索且尚未指定過角色的欄位，其初始值以本條為準而非 FR-002c-1 的預設值；FR-002c-1 的其餘規則（資料列來源記憶與還原、`field_role_map` payload 形狀、Evidence／Output 為 optional、Input 數量受 FR-002c-2 約束）一律不受本條影響。使用者可逐欄覆寫任一推測結果，覆寫方式與手動指定角色完全相同（FR-002c-1）。系統 MUST NOT 對 Evidence 或 Output 角色進行任何自動推測，此排除為**永久性規則**而非本版的暫行範圍限制：Output 角色資料依 FR-003g-5 為 annotator-visible preannotation，若以欄名字面比對決定某欄是否成為 Output，等同把「是否對標記者公開此欄」的判斷移出建立者手中；`docs/product/example-data/` 既有 fixture 普遍存在 `gold_label`／`gold_answer`／`gold_entities` 等保留答案欄名，自動推測將構成 test-set 答案洩漏途徑，違反 Data Fairness（NON-NEGOTIABLE）。任何後續變更若要放寬此排除，MUST 先行提出不依賴欄名字面比對的建立者確認機制。
 - **FR-002d**：當使用者追加上傳資料集檔案時，系統必須驗證新檔案於目前所選資料列來源路徑可取出紀錄、且紀錄欄位集合與已上傳檔案完全一致；不符合時阻擋該檔案加入並顯示不相容提示，已上傳的其他檔案不受影響；嵌入式預覽表格必須於每次上傳成功後即時重新整理；移除任一檔案後，系統必須同步重新偵測資料列來源並重建欄位剖析與預覽。
 - **FR-003**：Step 2 標記設定檔必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型的 schema 欄位由 registry 定義。
 - **FR-003a**：Step 2 必須採所有輸出類型及多輸出組合共通的單頁設定優先佈局，由設定與預覽主工作區及下方整合設定檔工具卡組成，不得依 output type key 切換為其他版面。
@@ -744,6 +747,7 @@ flowchart LR
 - **SC-002d**：Step 4 分別設定的標記員/審核員說明內容與附件，可於建立後在 task-detail 或 annotation-workspace 依角色正確讀取。
 - **SC-002e**：Step 1 的分類（單一標籤／多標籤）與回歸（單維度／多維度）輸出 chip 皆以 radio 呈現且各組同時最多選一項；切換同組選項會取消原項目，跨分類／回歸組可各保留一項；序列輸出仍可用 checkbox 同時選取多項。
 - **SC-002f**：Step 1 每個指定為 Evidence 的欄位皆顯示全資料完整性結果；全數有值時顯示綠色「全部 N 筆有值」，任一缺值時顯示紅色缺值筆數與可定位紀錄並阻擋進入 Step 2，改回「不使用」後立即解除該欄位的阻擋。
+- **SC-002h**：Step 1 資料集含至少一個欄名命中 `FIELD_ROLE_INPUT_NAME_HINTS` 的欄位時，嵌入式資料預覽表格完成初始化後，該欄位的 Input 角色可於 0 次點擊內完成指定（相對於逐欄手動點選下拉選單需要至少 1 次點擊）；推測結果超出當下輸入類型所需 Input 欄位數量時不指定多餘欄位，且使用者仍可對任一欄位手動覆寫推測結果（FR-002c-8）。
 - **SC-003**：Step 2 可依 `OUTPUT_TYPE_REGISTRY` 產生設定介面，且 schema 設定區與 code 區內容一致。
 - **SC-003a**：Step 2 標記預覽可呈現每個輸出類型的互動式標記體驗，並可反映當前設定。
 - **SC-003b**：Step 2 預覽支援使用者實際操作（點擊 token 上標、圈選文字、拖曳滑桿、選取標籤等）。
@@ -789,6 +793,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 8.1.0 | 2026-09-19 | **Step 1 資料集欄位角色 Input 欄名自動推測（MINOR，issue #755，OpenSpec change `task-new-step1-field-role-hints`）**：新增 FR-002c-8、AC-1.6、AC-1.7、SC-002h——嵌入式資料預覽表格為尚未指定過角色的欄位初始化時，欄名（不分大小寫）包含 `FIELD_ROLE_INPUT_NAME_HINTS` 七個關鍵字（`text`／`content`／`sentence`／`passage`／`document`／`body`／`context`）任一者，依出現順序自動預填 Input，至多至當下輸入類型所需數量（`single_item` 1、`item_pair` 2）；不覆寫使用者手動指定或資料列來源記憶還原的角色。**永久不對 Evidence／Output 自動推測**（Data Fairness：fixture 普遍含 `gold_*` 保留答案欄名）。FR-002c-1 預設值敘述補「（欄名命中 Input 線索之例外見 FR-002c-8）」交叉引用；此句刻意不進入 delta（delta 維持純 ADDED 以確保可套用至衍生檢視），衍生檢視就此句與正典存在已記錄之分歧。AC-1.4／AC-1.5／SC-002g 為 8.0.0 已撤銷編號，不重用 |
 | 8.0.0 | 2026-09-16 | **移除 Step 1 常用組合一鍵預設（破壞性，issue #724，OpenSpec change `remove-task-new-step1-type-preset`）**：移除 FR-002f、AC-1.4、AC-1.5、SC-002g 與對應邊界情況。本版預設清單僅 1 筆，卻佔據 Step 1「任務類型」欄位最上方一整列的視覺權重，並在三組 chip 之外多加一層使用者必須先理解的介面概念，投報率不成立。任務類型選擇回到 FR-002／FR-002a–FR-002e 之三段式模型；選擇語意、cascade（`rebuildOutputChips()`）、`deriveTaskType()` 推導、`validateStep1()` 必填判斷與提交 payload 形狀皆不變。issue #724 之欄位角色批次動作與必填項合理預設兩個方向仍由 issue #755 追蹤。 |
 | 7.1.0 | 2026-09-13 | **Step 1 常用組合一鍵預設（MINOR，issue #724，OpenSpec change `task-new-step1-type-preset`）**：三段式任務類型選擇器（大分類／輸入類型／輸出類型）上方新增由 `OUTPUT_TYPE_REGISTRY` 與 `TASK_TAXONOMY` 衍生的一鍵預設按鈕，本版提供 1 個預設——「文字分類（單一標籤）」（`classification` + `single_item` + `single_label`，對應現行任務清單 fixture 中命中數最高的任務型態）。點擊預設按鈕，在單一互動內同時寫入 `selected_categories[]`、`input_type`、`selectedOutputTypes[]`，效果與逐一點選三組 chip 完全等價；三段式選擇器維持完整可見、可個別再調整任一組選取，不移除任何現有能力。新增 FR-002f、AC-1.4、AC-1.5、SC-002g 與 1 條邊界情況；不修改任何既有 FR/AC/SC 條文，不新增或變更提交 payload 欄位，不改變 `validateStep1()` 既有必填判斷。issue #724 同時指出的方向 ②（資料集欄位角色批次動作或依欄名自動推測初值）與方向 ③（`validateStep1()` 必填項是否有可免點的合理預設值）留待 issue #755 追蹤，不在本版範圍。 |
 | 7.0.2 | 2026-09-07 | **`## 流程圖` 補上四步精靈完整流程圖（patch，issue #678）**：原本該節只有一張 sequenceDiagram 與一張 `flowchart LR` 導頁圖，兩者都只畫順利走完的主線，讀者看不出「每一步的 `下一步` 何時才 enabled」「Step 2 的八種輸出類型面板是怎麼長出來的」「離頁與 F5 之後會發生什麼」。新增 `diagrams/task-new-wizard-flow.html`（`diagram-design` skill 產出的自包含 HTML + inline SVG，比照 `specs/annotation/015-annotation-workspace/diagrams/` 慣例，依 issue #528 Q4 決議不另出 PNG），畫出 Step 1–3 三道驗證關卡與未通過退回、Step 2 由 `OUTPUT_TYPE_REGISTRY` 逐型展開同一套設定面板（刻意不畫成八條硬編分支，以呈現 registry-driven 的設計）、離頁確認與 `navigation type = reload` 還原兩條例外路徑，以及 Step 4 選填且按鈕轉為 `建立任務` 的收尾分支；並在 `## 流程圖` 內嵌相對連結與 FR 對照。純文件補充，既有兩段 mermaid 區塊未改動，無新增或移除 FR/AC，無 API 契約變更。 |

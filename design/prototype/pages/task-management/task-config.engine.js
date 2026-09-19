@@ -5339,9 +5339,20 @@ function renderInlineDatasetPreview() {
   var cols = state.datasetParsedColumns;
 
   // Init fieldRoleMap for any new columns not yet in state
+  var initInputType = (state.taskInputTypes && state.taskInputTypes[0]) || 'single_item';
+  var maxInputHints = initInputType === 'item_pair' ? 2 : 1;
+  var usedInputHints = 0;
   cols.forEach(function(col) {
     if (state.fieldRoleMap[col] === undefined) {
-      state.fieldRoleMap[col] = '';
+      var isInputHintMatch = usedInputHints < maxInputHints && FIELD_ROLE_INPUT_NAME_HINTS.some(function(hint) {
+        return col.toLowerCase().indexOf(hint) !== -1;
+      });
+      if (isInputHintMatch) {
+        state.fieldRoleMap[col] = 'input';
+        usedInputHints++;
+      } else {
+        state.fieldRoleMap[col] = '';
+      }
     }
   });
 

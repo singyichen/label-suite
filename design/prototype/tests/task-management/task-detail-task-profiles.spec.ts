@@ -406,9 +406,14 @@ test.describe('Task detail profile mapping', () => {
     );
     await expect(page.locator('#datasetFileList .upload-file-name')).toContainText('three-column-dataset.json');
 
-    /* The fresh dataset has no input roles assigned yet, so the saved NLI
-       labels must not leak through — labels fall back to the generic pair names */
+    /* FR-002c-8 auto-infers sentence_a/sentence_b as Input on load (name-hint
+       match on "sentence"), so the generic-name fallback ("句子 A") no longer
+       applies here — that fallback only fires when zero fields are Input.
+       With an Input assigned, getItemPairLabels() derives the label from the
+       dataset column name instead. The saved NLI label must still not leak
+       through regardless of which default path is taken. */
     await settingsEditBtn.click();
-    await expect(page.getByTestId('item-pair-label-input-1')).toHaveValue('句子 A');
+    await expect(page.getByTestId('item-pair-label-input-1')).toHaveValue('sentence_a');
+    await expect(page.getByTestId('item-pair-label-input-1')).not.toHaveValue('前提');
   });
 });

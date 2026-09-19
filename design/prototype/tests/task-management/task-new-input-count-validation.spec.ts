@@ -38,6 +38,10 @@ test.describe('Step 1 input-count validation', () => {
   test('single_item with 0 Input fields blocks Next and shows error', async ({ page }) => {
     await setupTask(page);
     await page.locator('#taskInputTypeChips [data-key="single_item"]').click();
+    // FR-002c-8 auto-infers `sentence_a` as Input on load (name-hint match on
+    // "sentence"), so the 0-Input precondition must now be rebuilt explicitly
+    // by overriding it back to "not used" before asserting the block.
+    await setFieldRole(page, 'sentence_a', '');
     await expect(page.locator('#errInlineFieldCount')).toHaveClass(/show/);
     await expect(page.locator('#nextBtn')).toBeDisabled();
   });
