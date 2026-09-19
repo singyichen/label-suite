@@ -14,13 +14,13 @@
 
 **故事目標**：SC-004J — 歷程要依時序讀出審核員實際做出的決策，並附上真實的操作者 ID；一筆與標記員提交同名、又不帶答案的包裝事件，會讓「依動作分類」的讀者把審核送出誤認為標記提交，而同一段耗時重複 N+1 次，也會讓 reviewer 讀到的耗時失真。
 
-- [ ] 1.1 撰寫 `design/prototype/tests/annotation/issue-583-reviewer-submit-events.spec.ts` 作為 Red 契約，釘住下列事項。型別宣告必須使用 local cast，不得新增第二份 `declare global`（重複宣告會撞 TS2717）。先提交此單檔再跑測試，expected failure 必須是「審核員送出仍寫 `submitted`」或「timing 仍寫在每一筆決策事件」，並保存 command、exit 與失敗訊息。 [@senior-qa]
+- [x] 1.1 撰寫 `design/prototype/tests/annotation/issue-583-reviewer-submit-events.spec.ts` 作為 Red 契約，釘住下列事項。型別宣告必須使用 local cast，不得新增第二份 `declare global`（重複宣告會撞 TS2717）。先提交此單檔再跑測試，expected failure 必須是「審核員送出仍寫 `submitted`」或「timing 仍寫在每一筆決策事件」，並保存 command、exit 與失敗訊息。 [@senior-qa]
   - 審核員對多 `outKey` 審核單位送出後，該審核員新寫入的事件數等於 `outKey` 數，`action` 皆屬 `accepted`／`modified`／`bypassed`，且沒有任何 `submitted`。
   - 同一次送出只有第一筆寫入的決策事件帶 `started_at`／`lead_time`；reviewer 視角 `歷程` 頁籤中，該次送出只有一張卡片顯示耗時。
   - 標記員提交仍然恰好寫入一筆帶 `result_snapshot` 與 timing 的 `submitted`。
   - 預先植入一筆舊版審核員包裝 `submitted`（其後緊接同一 `actor_id` 的 `accepted`）時，歷程頁籤照舊折疊它，不擲錯。
   - `annotation-list` 對同一時戳的 `accepted`、`modified` 兩筆事件，「最後動作」的 `data-action` 為後寫入的 `modified`（此條在現況已成立，預期為綠，用途是把 R3 固定成契約）。
-- [ ] 1.2 同步既有測試中以審核員包裝事件計數或斷言其存在的斷言，只改期望值與篩選條件，不改測試結構。雙擊不重複的測試改為斷言「每個 `outKey` 恰一筆決策事件」，繼續守住雙擊防護。範圍以 probe（見 1.2 附註）為準；issue #856 的 T014–T016 歷程基線筆數若因此位移，也在本項同步。先提交再跑，保存「舊實作下這些斷言失敗」的證據。 [@senior-qa]
+- [x] 1.2 同步既有測試中以審核員包裝事件計數或斷言其存在的斷言，只改期望值與篩選條件，不改測試結構。雙擊不重複的測試改為斷言「每個 `outKey` 恰一筆決策事件」，繼續守住雙擊防護。範圍以 probe（見 1.2 附註）為準；issue #856 的 T014–T016 歷程基線筆數若因此位移，也在本項同步。先提交再跑，保存「舊實作下這些斷言失敗」的證據。 [@senior-qa]
   - probe 結果（2026-09-19，基底 `278e4872`，暫時套用 1.3 的 data.js 修改後跑全量 1815 則，跑完即還原）：7 則失敗，全部屬本項同步範圍——`tests/annotation/annotation-review-unit.spec.ts:394`（DUP-02）、`tests/annotation/annotation-reviewer-decision-persistence.spec.ts:83`（CONT-03）、`tests/annotation/annotation-workspace-review-identity.spec.ts:91`／`:103`／`:143`、`tests/cross-role/xrole-canonical-journey.spec.ts:749`（XROLE-12；同檔其後 13 則因 serial 模式未執行，同步後須確認全數執行且通過）、`tests/cross-role/xrole-concurrency.spec.ts:86`（CONC-01）。另有 4 則 flaky 落在 `tests/account/forgot-password.spec.ts:106` 與 `tests/account/reset-password.spec.ts:173` 的 loading lock，與歷程無關、不在本項範圍。issue #856 的歷程基線若在本 change apply 前已進 main，須於 rebase 後重跑 probe 補列。
 - [ ] 1.3 Green：修改 `design/prototype/pages/annotation/annotation-workspace.data.js`。`markSampleSubmitted()` 只在沒有 `decisions` 時寫 `submitted`；`appendReviewDecisionEvents()` 只在第一筆有 `action` 的決策事件附上 `timingFields()`；同步修正 `appendHistoryEvent()` 連點防護註解中「Reviewer submit hits this same function」的錯誤敘述。不得放寬或改寫 Red 契約。 [@senior-frontend]
 - [ ] 1.4 修改 `design/prototype/pages/shared/annotation-history.js` 的 `collapseHistory()`、`totalLeadTime()` 註解，以及 `design/prototype/pages/annotation/annotation-list.html` 的 `buildSampleSummary()` 註解，把「一次送出寫包裝事件加逐項決策」改寫為本版以前的舊資料形狀；不改任何邏輯。 [@senior-frontend]
