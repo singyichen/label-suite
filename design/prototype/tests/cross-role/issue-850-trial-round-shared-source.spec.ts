@@ -89,6 +89,22 @@ async function readTaskStatus(page: Page, taskId: string): Promise<string | null
   }, taskId);
 }
 
+/* patchDataFile() intercepts every network request for the target file via
+ * page.route(), so the injected script re-runs on EVERY later load of that
+ * file within the same test -- and both task-detail.html and
+ * annotation-list.html load annotation-workspace.data.js (see this file's
+ * header comment). Each seed below therefore guards itself with a
+ * one-time-per-test localStorage marker: without it, a later reload/
+ * navigation would replay markSampleSubmitted() with the exact same
+ * payload it already wrote, which is indistinguishable from a genuine
+ * identical-answer resubmission and must not be attributed to whatever
+ * round happens to be current at replay time. This is a fixture-setup
+ * concern only -- it must not be confused with the real identical-answer
+ * resubmission the new test below performs directly via
+ * markSampleSubmitted() after R2 already exists. */
+const SEED_R1_REVIEWED_MARKER = 'labelsuite.__test850SeedR1ReviewedDone';
+const SEED_FULL_R1_MARKER = 'labelsuite.__test850SeedFullR1Done';
+
 /* Seeds one reviewed R1 submission (annotator answer + reviewer 'approve'),
  * so buildDryRunFeedbackRow() has a settling 'accepted' action to report.
  * T002 has no seeded materializedRuns, so currentTrialRound(T002) defaults
@@ -97,6 +113,8 @@ async function readTaskStatus(page: Page, taskId: string): Promise<string | null
 function seedR1ReviewedSubmissionJs(): string {
   return `
     (function () {
+      if (window.localStorage.getItem(${JSON.stringify(SEED_R1_REVIEWED_MARKER)})) return;
+      window.localStorage.setItem(${JSON.stringify(SEED_R1_REVIEWED_MARKER)}, '1');
       var data = window.LabelSuiteAnnotationWorkspaceData;
       var identity = { annotatorId: ${JSON.stringify(MY_ANNOTATOR_ID)}, reviewerId: ${JSON.stringify(REVIEWER_ID)} };
       data.markSampleSubmitted(${JSON.stringify(TASK_ID)}, 'annotator', 'dry_run', ${JSON.stringify(R1_SAMPLE)},
@@ -122,6 +140,8 @@ function seedFullR1SubmissionJs(): string {
   ).join('\n      ');
   return `
     (function () {
+      if (window.localStorage.getItem(${JSON.stringify(SEED_FULL_R1_MARKER)})) return;
+      window.localStorage.setItem(${JSON.stringify(SEED_FULL_R1_MARKER)}, '1');
       var data = window.LabelSuiteAnnotationWorkspaceData;
       var identity = { annotatorId: ${JSON.stringify(MY_ANNOTATOR_ID)}, reviewerId: ${JSON.stringify(REVIEWER_ID)} };
       ${calls}
@@ -282,6 +302,91 @@ test.describe('issue #850: task-detail and annotation pages share no trial-round
     await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}&status=dry_run_in_progress`);
 
     await expect(page.locator('#statusBadge')).toContainText('試標進行中');
+  });
+
+  test('issue #850 D1: an R2 resubmission with an answer byte-identical to R1 still counts toward R2 progress', async ({
+    page,
+  }) => {
+    // R1 fully submitted (5/5), all stamped trialRound: 1 by the seed above.
+    await patchDataFile(page, 'annotation-workspace.data.js', seedFullR1SubmissionJs());
+    await page.goto(buildListUrl({ task_id: TASK_ID, role: 'annotator', run_type: 'dry_run' }));
+
+    // Guard: R1's completion actually wrote the fully-submitted progress
+    // flag this test's mechanism depends on.
+    const initialProgress = await page.evaluate((key) => window.localStorage.getItem(key), DRY_RUN_PROGRESS_KEY);
+    expect(initialProgress).not.toBeNull();
+    expect(JSON.parse(initialProgress as string)).toMatchObject({ submittedSamples: 5, totalSamples: 5 });
+
+    // R1 -> waiting_iaa_confirmation -> create R2 from task-detail.
+    await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}&status=dry_run_in_progress`);
+    await expect(page.locator('#statusBadge')).toContainText('待 IAA 確認');
+    await createRoundTwoFromWaiting(page);
+    await expect(page.locator('#statusBadge')).toContainText('試標進行中');
+
+    // Real R2 resubmission of ONE sample (not a replaying fixture -- this
+    // call happens after R2 already exists), with the SAME answer payload
+    // ({ selected: ['sad'] }) the R1 seed above used for every sample. Per
+    // issue #834 D1, an R2 sample resubmission overwrites its R1 bucket
+    // entry; this must be stamped trialRound: 2, not kept at R1, purely
+    // because the answer text happens to match.
+    await page.goto(buildListUrl({ task_id: TASK_ID, role: 'annotator', run_type: 'dry_run' }));
+    await page.evaluate(
+      ({ taskId, sampleId, annotatorId, reviewerId }) => {
+        const data = (window as unknown as { LabelSuiteAnnotationWorkspaceData: WorkspaceDataGlobal })
+          .LabelSuiteAnnotationWorkspaceData;
+        const identity = { annotatorId, reviewerId };
+        data.markSampleSubmitted(
+          taskId,
+          'annotator',
+          'dry_run',
+          sampleId,
+          { previewState: { multi_label: { selected: ['sad'] } } },
+          '',
+          identity
+        );
+        data.syncDryRunProgress(taskId, 'annotator', 'dry_run', 5, identity);
+      },
+      { taskId: TASK_ID, sampleId: 'emo-001', annotatorId: MY_ANNOTATOR_ID, reviewerId: REVIEWER_ID }
+    );
+
+    // Only 1/5 of R2 submitted so far -> R2 must not read as complete yet.
+    await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}&status=dry_run_in_progress`);
+    await expect(page.locator('#statusBadge')).toContainText('試標進行中');
+
+    // Resubmit the remaining 4 samples in R2, also with answers
+    // byte-identical to their R1 answers.
+    await page.goto(buildListUrl({ task_id: TASK_ID, role: 'annotator', run_type: 'dry_run' }));
+    await page.evaluate(
+      ({ taskId, sampleIds, annotatorId, reviewerId }) => {
+        const data = (window as unknown as { LabelSuiteAnnotationWorkspaceData: WorkspaceDataGlobal })
+          .LabelSuiteAnnotationWorkspaceData;
+        const identity = { annotatorId, reviewerId };
+        sampleIds.forEach((sampleId) => {
+          data.markSampleSubmitted(
+            taskId,
+            'annotator',
+            'dry_run',
+            sampleId,
+            { previewState: { multi_label: { selected: ['sad'] } } },
+            '',
+            identity
+          );
+        });
+        data.syncDryRunProgress(taskId, 'annotator', 'dry_run', 5, identity);
+      },
+      {
+        taskId: TASK_ID,
+        sampleIds: ['emo-002', 'emo-003', 'emo-004', 'emo-005'],
+        annotatorId: MY_ANNOTATOR_ID,
+        reviewerId: REVIEWER_ID,
+      }
+    );
+
+    // All 5 of R2's samples now genuinely submitted (albeit with R1-identical
+    // answers) -> R2 must read as complete, same as any other fully-submitted
+    // round.
+    await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}&status=dry_run_in_progress`);
+    await expect(page.locator('#statusBadge')).toContainText('待 IAA 確認');
   });
 
   test('fallback regression (guard, not Red): seeded tasks still show their own seed rounds with no task-detail action', async ({
