@@ -30,6 +30,16 @@
     return lang === 'en' ? 'en' : 'zh';
   }
 
+  /* issue #811: single source for the two bypass-related vocabularies that
+   * `無法判定` used to conflate -- the annotator's answer value
+   * (`OutputAnswer.bypass`) and the reviewer's decision value
+   * (`REVIEW_DECISIONS` `bypass`). All consumers read from here instead of
+   * hardcoding either string (design.md D1/D2). */
+  var BYPASS_WORDING = {
+    zh: { answer: '無法判定 (Bypass)', decision: '無法裁決' },
+    en: { answer: 'Unable to determine (Bypass)', decision: 'Cannot adjudicate' }
+  };
+
   var shortcutI18n = {
     zh: {
       shortcutLabel: '快捷鍵',
@@ -48,7 +58,7 @@
       /* issue #596 (design.md 已確認決策 #1): 審核「退回」流程與 `R` 快捷鍵已
        * 廢除，`B`（無法判定）取而代之
        * （annotation-workspace.config.js setupReviewShortcuts()）。 */
-      reviewBypass: '無法判定目前結果',
+      reviewBypass: BYPASS_WORDING.zh.decision,
       switchToDark: '切換為深色模式',
       switchToLight: '切換為淺色模式'
     },
@@ -66,7 +76,7 @@
       workspaceNext: 'Next sample',
       reviewTitle: 'Review',
       reviewApprove: 'Approve current result',
-      reviewBypass: 'Mark current result as unable to determine',
+      reviewBypass: BYPASS_WORDING.en.decision,
       switchToDark: 'Switch to dark mode',
       switchToLight: 'Switch to light mode'
     }
@@ -597,7 +607,7 @@
               '</div>' +
               '<dl class="shortcut-help-list">' +
                 '<div class="shortcut-help-row"><dt><strong id="shortcutReviewApprove">通過目前結果</strong></dt>' + keyGroup(['A']) + '</div>' +
-                '<div class="shortcut-help-row"><dt><strong id="shortcutReviewBypass">無法判定目前結果</strong></dt>' + keyGroup(['B']) + '</div>' +
+                '<div class="shortcut-help-row"><dt><strong id="shortcutReviewBypass">' + BYPASS_WORDING.zh.decision + '</strong></dt>' + keyGroup(['B']) + '</div>' +
               '</dl>' +
             '</div>' +
           '</section>' +
@@ -994,5 +1004,6 @@
     applySidebarCollapsed: applySidebarCollapsed,
     applyGlobalLanguage: applyGlobalLanguage,
     updateUserChip: updateUserChip,
+    BYPASS_WORDING: BYPASS_WORDING,
   };
 })();

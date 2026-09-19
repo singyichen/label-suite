@@ -84,7 +84,10 @@
     skipped: '已跳過',
     modified: '審核修正',
     accepted: '審核通過',
-    bypassed: '無法判定',
+    /* issue #811: this is the reviewer's decision value, not the annotator's
+       answer value, so it reads shared/sidebar.js's decision vocabulary
+       (design.md D1/D2) rather than a hardcoded literal. */
+    bypassed: window.LabelSuiteSharedSidebar.BYPASS_WORDING.zh.decision,
     adjudicated: '仲裁定案',
     exception_resolved: '例外收尾',
     excluded: '已排除',
