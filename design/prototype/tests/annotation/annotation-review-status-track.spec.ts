@@ -222,14 +222,14 @@ test.describe('Review status track — structure, regression and language', () =
   test('follows the language toggle', async ({ page }) => {
     await openUnit(page, UNITS.disputed);
     await expect(track(page).locator('[aria-current="step"]')).toContainText('爭議中');
-    await expect(branch(page, 'differing')).toHaveText('修正或無法判定');
+    await expect(branch(page, 'differing')).toHaveText('修正或無法裁決');
 
     await closeFlowDrawer(page);
     await page.getByTestId('lang-toggle').click();
     await openFlowDrawer(page);
     await expect(track(page).locator('[aria-current="step"]')).toContainText('Disputed');
     await expect(track(page).locator('.review-track-marker')).toHaveText('Now:');
-    await expect(branch(page, 'differing')).toHaveText('Modified or undecidable');
+    await expect(branch(page, 'differing')).toHaveText('Modified or cannot adjudicate');
   });
 
   test('re-renders when the reviewer switches unit', async ({ page }) => {

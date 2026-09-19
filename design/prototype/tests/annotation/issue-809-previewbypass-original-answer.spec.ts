@@ -59,8 +59,8 @@ test.describe('issue #809: previewBypass must be visible to the reviewer', () =>
 
     const origin = page.getByTestId('ws-review-original-answer');
     await expect(origin).toHaveCount(1);
-    // Positive: the bypass must be named.
-    await expect(origin).toContainText('無法判定');
+    // Positive: the bypass must be named, as the exact answer-value string.
+    await expect(origin).toHaveText('標記員原答案：無法判定 (Bypass)');
     // Negative, named: must NOT be indistinguishable from a plain no-answer.
     await expect(origin).not.toHaveText('標記員原答案：（無）');
 
@@ -96,6 +96,6 @@ test.describe('issue #809: previewBypass must be visible to the reviewer', () =>
     const origin = page.getByTestId('ws-review-original-answer');
     await expect(origin).toHaveCount(1);
     await expect(origin).toHaveText('標記員原答案：（無）');
-    await expect(origin).not.toContainText('無法判定');
+    await expect(origin).not.toHaveText('標記員原答案：無法判定 (Bypass)');
   });
 });

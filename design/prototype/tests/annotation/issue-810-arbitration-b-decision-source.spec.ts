@@ -130,7 +130,7 @@ test.describe('issue #810: B 選項依決策值渲染，不依值是否為空 (A
     });
     await gotoAsArbiter(page);
 
-    await expect(bChoice(page)).toContainText('審核員 Bypass（無法判定）');
+    await expect(bChoice(page)).toContainText('B・審核員：無法裁決');
   });
 
   test('a submission with no decisions map falls back to the emptiness reading', async ({ page }) => {
@@ -139,6 +139,6 @@ test.describe('issue #810: B 選項依決策值渲染，不依值是否為空 (A
     await seedDisputedUnit(page, { previewState: {} });
     await gotoAsArbiter(page);
 
-    await expect(bChoice(page)).toContainText('審核員 Bypass（無法判定）');
+    await expect(bChoice(page)).toContainText('B・審核員：無法裁決');
   });
 });

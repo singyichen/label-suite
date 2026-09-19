@@ -123,6 +123,6 @@ test.describe('the review decision note is rendered once per review unit (issue 
 
     await expect(page.getByRole('button', { name: '通過', exact: true })).toHaveCount(3);
     await expect(page.getByRole('button', { name: '修正', exact: true })).toHaveCount(3);
-    await expect(page.getByRole('button', { name: '無法判定', exact: true })).toHaveCount(3);
+    await expect(page.getByRole('button', { name: '無法裁決', exact: true })).toHaveCount(3);
   });
 });

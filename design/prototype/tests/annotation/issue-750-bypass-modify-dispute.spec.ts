@@ -81,7 +81,7 @@ test.describe('issue #750: bypass/modify without an edited answer still derives 
     await page.goto(arbiterUrl('T001', 'sent-001'));
     await dismissGuidelineModal(page);
     const item = page.getByTestId('ws-arbitration-item').first();
-    await expect(item).toContainText('無法判定');
+    await expect(item).toContainText('無法裁決');
     await item.getByTestId('ws-arbitration-choose-a').click();
     await page.getByTestId('ws-arbitration-submit').click();
     await expect(page.locator('#toastMsg')).toHaveText('仲裁已提交');

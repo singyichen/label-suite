@@ -83,7 +83,7 @@ test.describe('Decision buttons carry visible text, not only a glyph (issue #453
     await dismissGuidelineModal(page);
 
     const LABELS: Record<string, string> = {
-      approve: '通過', modify: '修正', bypass: '無法判定',
+      approve: '通過', modify: '修正', bypass: '無法裁決',
     };
     for (const [decision, label] of Object.entries(LABELS)) {
       await expect(page.getByTestId('ws-review-row-' + decision)).toContainText(label);

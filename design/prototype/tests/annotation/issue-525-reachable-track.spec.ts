@@ -149,7 +149,7 @@ test.describe('issue #525 PR-C — the track renders only the reachable states',
     // issue #596: the captions name the reviewer's DECISION, not whether the
     // answer text happened to change -- 修正 and 無法判定 share the lane.
     await expect(branch(page, 'same')).toHaveText('審核通過');
-    await expect(branch(page, 'differing')).toHaveText('修正或無法判定');
+    await expect(branch(page, 'differing')).toHaveText('修正或無法裁決');
     await expect(branch(page, 'arbitrated')).toHaveText('仲裁後');
     // 未收斂 labelled 已修改 -> 爭議中, a transition the state machine lost.
     await expect(branch(page, 'unconverged')).toHaveCount(0);
@@ -210,7 +210,7 @@ test.describe('issue #525 PR-C — the track renders only the reachable states',
     await page.getByTestId('ws-review-flow-trigger').click();
 
     await expect(branch(page, 'same')).toHaveText('Review approved');
-    await expect(branch(page, 'differing')).toHaveText('Modified or undecidable');
+    await expect(branch(page, 'differing')).toHaveText('Modified or cannot adjudicate');
     await expect(branch(page, 'arbitrated')).toHaveText('After arbitration');
   });
 });

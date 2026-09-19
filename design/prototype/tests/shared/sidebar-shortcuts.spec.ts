@@ -27,7 +27,7 @@ test.describe('Shared sidebar shortcut entry', () => {
     /* issue #596 (design.md 已確認決策 #1): `R`（退回）已隨審核退回流程廢除
      * 一併移除，`B`（無法判定）取而代之（annotation-workspace.config.js
      * setupReviewShortcuts()）。此列改為說明 B 快捷鍵（issue #621）。 */
-    await expect(page.locator('#shortcutReviewBypass')).toHaveText('無法判定目前結果');
+    await expect(page.locator('#shortcutReviewBypass')).toHaveText('無法裁決');
     await expect(page.locator('.shortcut-help-row').filter({ hasText: '全部通過' })).toHaveCount(0);
     await expect(page.locator('.shortcut-help-row').filter({ hasText: '全部退回' })).toHaveCount(0);
   });
@@ -51,7 +51,7 @@ test.describe('Shared sidebar shortcut entry', () => {
     await expect(page.locator('#shortcutReviewApprove')).toHaveText('Approve current result');
     /* issue #621: see the zh-locale test above -- this row now documents the
      * `B` (Cannot determine) shortcut instead of the retired `R` (Reject). */
-    await expect(page.locator('#shortcutReviewBypass')).toHaveText('Mark current result as unable to determine');
+    await expect(page.locator('#shortcutReviewBypass')).toHaveText('Cannot adjudicate');
   });
 
   test('does not expose or open shortcut help on mobile', async ({ page }) => {

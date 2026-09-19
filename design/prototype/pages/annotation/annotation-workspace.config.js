@@ -60,16 +60,16 @@
       reviewSubmitLabel: '送出審核',
       reviewApproveLabel: '通過',
       reviewModifyLabel: '修正',
-      reviewBypassLabel: '無法判定',
+      reviewBypassLabel: window.LabelSuiteSharedSidebar.BYPASS_WORDING.zh.decision,
       wsReviewSubmitSuccess: '審核已送出',
       reviewNoAnswer: '（無）',
-      reviewOriginalAnswerBypass: '無法判定',
-      reviewNote: '通過：該項直接定稿，正式標記中即成為最終答案。修正：您的修正不會立即生效，該項進入爭議池待仲裁。無法判定：同樣進入爭議池，仲裁者採用審核員側即定案為無法判定。試標與正式標記皆不會將樣本送回給標記員重做。',
+      reviewOriginalAnswerBypass: window.LabelSuiteSharedSidebar.BYPASS_WORDING.zh.answer,
+      reviewNote: '通過：該項直接定稿，正式標記中即成為最終答案。修正：您的修正不會立即生效，該項進入爭議池待仲裁。無法裁決：同樣進入爭議池，仲裁者採用審核員側即定案為無法判定。試標與正式標記皆不會將樣本送回給標記員重做。',
       reviewNoteDryRunExtra: '試標的定稿只彙總一致性與被修改率，不產生最終答案。',
       reviewNoteTriggerLabel: '審核決策說明',
       reviewReasonLabel: '理由（必填）',
       reviewReasonPlaceholder: '請說明理由',
-      toastReasonRequired: '請填寫以下輸出類型的理由：{list}',
+      toastReasonRequired: '請填寫以下輸出類型的審核理由：{list}',
       toastAnswerRequired: '以下輸出類型選了「修正」但修正後答案為空，請填寫答案：{list}',
       reviewCorrectionTitle: '直接修正（Reviewer 修正後答案）',
       toastSelectDecision: '請完成以下輸出類型的審核決策：{list}',
@@ -83,7 +83,6 @@
       wsArbitrationSubmitSuccess: '仲裁已提交',
       arbitrationChoiceA: 'A・標記員',
       arbitrationChoiceB: 'B・審核員',
-      arbitrationChoiceBBypass: 'B・審核員 Bypass（無法判定）',
       arbitrationChoiceReject: '兩者皆非',
       arbitrationPureRejectLabel: '審核員退回（無替代值）',
       historyActionOverridden: '已覆寫',
@@ -131,7 +130,7 @@
       trackAria: '審核單位狀態',
       trackMarker: '目前：',
       trackBranchSame: '審核通過',
-      trackBranchDiffering: '修正或無法判定',
+      trackBranchDiffering: '修正或無法裁決',
       trackBranchArbitrated: '仲裁後',
       flowDrawerOpen: '了解審核流程',
       flowDrawerTitle: '審核流程',
@@ -187,16 +186,16 @@
       reviewSubmitLabel: 'Submit review',
       reviewApproveLabel: 'Approve',
       reviewModifyLabel: 'Modify',
-      reviewBypassLabel: 'Cannot determine',
+      reviewBypassLabel: window.LabelSuiteSharedSidebar.BYPASS_WORDING.en.decision,
       wsReviewSubmitSuccess: 'Review submitted',
       reviewNoAnswer: '(none)',
-      reviewOriginalAnswerBypass: 'Cannot determine',
-      reviewNote: 'Approve: the item is finalized as it stands, and in an official run that value becomes the final answer. Modify: your correction does not take effect immediately; the item enters the dispute pool for arbitration. Cannot determine: the item also enters the dispute pool, and an arbiter adopting the reviewer side settles it as undecidable. Neither a dry run nor an official run sends the sample back to the annotator to redo it.',
+      reviewOriginalAnswerBypass: window.LabelSuiteSharedSidebar.BYPASS_WORDING.en.answer,
+      reviewNote: 'Approve: the item is finalized as it stands, and in an official run that value becomes the final answer. Modify: your correction does not take effect immediately; the item enters the dispute pool for arbitration. Cannot adjudicate: the item also enters the dispute pool, and an arbiter adopting the reviewer side settles it as undecidable. Neither a dry run nor an official run sends the sample back to the annotator to redo it.',
       reviewNoteDryRunExtra: ' A dry-run finalization produces no final answer; it only aggregates agreement and the modification rate.',
       reviewNoteTriggerLabel: 'Review decision guidance',
       reviewReasonLabel: 'Reason (required)',
       reviewReasonPlaceholder: 'Explain the reason',
-      toastReasonRequired: 'Please give a reason for the following output types: {list}',
+      toastReasonRequired: 'Please give a review reason for the following output types: {list}',
       toastAnswerRequired: 'The following output types are marked Modify but the corrected answer is empty: {list}',
       reviewCorrectionTitle: "Direct correction (reviewer's corrected answer)",
       toastSelectDecision: 'Please decide on the following output types before submitting: {list}',
@@ -210,7 +209,6 @@
       wsArbitrationSubmitSuccess: 'Arbitration submitted',
       arbitrationChoiceA: 'A · Annotator',
       arbitrationChoiceB: 'B · Reviewer',
-      arbitrationChoiceBBypass: 'B · Reviewer Bypass (undecidable)',
       arbitrationChoiceReject: 'Neither (reject both)',
       arbitrationPureRejectLabel: 'Reviewer rejected (no replacement value)',
       historyActionOverridden: 'Overridden',
@@ -258,7 +256,7 @@
       trackAria: 'Review unit status',
       trackMarker: 'Now:',
       trackBranchSame: 'Review approved',
-      trackBranchDiffering: 'Modified or undecidable',
+      trackBranchDiffering: 'Modified or cannot adjudicate',
       trackBranchArbitrated: 'After arbitration',
       flowDrawerOpen: 'Review flow',
       flowDrawerTitle: 'Review flow',
@@ -482,8 +480,8 @@
      plain <button aria-pressed>, so role+aria-checked are added here,
      mirroring aria-pressed on every render (the chip is recreated fresh
      each render, so this must re-run every time, not just once). */
-  var BYPASS_LABEL_ZH = '無法判定 (Bypass)';
-  var BYPASS_LABEL_EN = 'Unable to determine (Bypass)';
+  var BYPASS_LABEL_ZH = window.LabelSuiteSharedSidebar.BYPASS_WORDING.zh.answer;
+  var BYPASS_LABEL_EN = window.LabelSuiteSharedSidebar.BYPASS_WORDING.en.answer;
   function findBypassChip(container) {
     var buttons = container.querySelectorAll('button');
     for (var i = 0; i < buttons.length; i++) {
@@ -3654,7 +3652,7 @@
     var decision = decisions[item.outKey];
     var value = reviewerSubmission ? item.reviewerValues[reviewerSubmission.reviewerId] : undefined;
     var bypassed = decision ? decision === 'bypass' : (value == null || value === '');
-    if (bypassed) return t('arbitrationChoiceBBypass');
+    if (bypassed) return t('arbitrationChoiceB') + '：' + t('reviewBypassLabel');
     return t('arbitrationChoiceB') + '：' + formatDisputeValue(value);
   }
 
