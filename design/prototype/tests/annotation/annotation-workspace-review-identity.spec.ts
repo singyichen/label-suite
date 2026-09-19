@@ -92,24 +92,25 @@ test.describe('review identity foundation', () => {
     await approveAndSubmitAsReviewer(page, REVIEWER_A);
     await approveAndSubmitAsReviewer(page, REVIEWER_B);
 
-    /* issue #578 (FR-086): a reviewer submit now also writes one per-outKey
-       decision event, so the wrapper `submitted` is what counts submissions. */
-    const reviewerSubmits = (await readTrail(page, TRAIL)).filter(
-      (e) => e.role === 'reviewer' && e.action === 'submitted'
+    /* issue #583 (FR-086): a reviewer submit no longer writes a wrapper
+       `submitted` event -- it writes one per-outKey decision event instead,
+       so that decision event is what counts submissions. */
+    const reviewerDecisions = (await readTrail(page, TRAIL)).filter(
+      (e) => e.role === 'reviewer' && ['accepted', 'modified', 'bypassed'].includes(e.action)
     );
-    expect(reviewerSubmits.map((e) => e.actorId)).toEqual([REVIEWER_A, REVIEWER_B]);
+    expect(reviewerDecisions.map((e) => e.actorId)).toEqual([REVIEWER_A, REVIEWER_B]);
   });
 
   test('a review decision records the real reviewer id and never the string current', async ({ page }) => {
     await approveAndSubmitAsReviewer(page, REVIEWER_A);
 
-    const reviewerSubmits = (await readTrail(page, TRAIL)).filter(
-      (e) => e.role === 'reviewer' && e.action === 'submitted'
+    const reviewerDecisions = (await readTrail(page, TRAIL)).filter(
+      (e) => e.role === 'reviewer' && ['accepted', 'modified', 'bypassed'].includes(e.action)
     );
-    expect(reviewerSubmits).toHaveLength(1);
-    expect(reviewerSubmits[0].actorId).toBe(REVIEWER_A);
-    expect(reviewerSubmits[0].summary).toContain(ANNOTATOR_A);
-    expect(reviewerSubmits[0].summary).not.toContain('current');
+    expect(reviewerDecisions).toHaveLength(1);
+    expect(reviewerDecisions[0].actorId).toBe(REVIEWER_A);
+    expect(reviewerDecisions[0].summary).toContain(ANNOTATOR_A);
+    expect(reviewerDecisions[0].summary).not.toContain('current');
   });
 
   test('an official_run annotator submission is stored under the real annotator id', async ({ page }) => {
@@ -156,11 +157,11 @@ test.describe('review identity foundation', () => {
     await approveAndSubmitAsReviewer(page, REVIEWER_A);
 
     const trail = await readTrail(page, TRAIL);
-    /* issue #578 (FR-086): the approve decision is its own event after the
-       wrapper, so the action is pinned here rather than left implicit. */
+    /* issue #583 (FR-086): the approve decision is the reviewer's only
+       event -- no wrapper `submitted` precedes it -- so the action is
+       pinned here rather than left implicit. */
     expect(trail.map((e) => [e.role, e.actorId, e.action])).toEqual([
       ['annotator', ANNOTATOR_A, 'submitted'],
-      ['reviewer', REVIEWER_A, 'submitted'],
       ['reviewer', REVIEWER_A, 'accepted'],
     ]);
   });
