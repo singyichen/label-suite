@@ -355,7 +355,7 @@
       var raw = global.localStorage ? global.localStorage.getItem(TRIAL_RUN_STATE_KEY) : null;
       var parsed = raw ? JSON.parse(raw) : {};
       return parsed && typeof parsed === 'object' ? parsed : {};
-    } catch (e) {
+    } catch (error) {
       return {};
     }
   }
@@ -368,6 +368,10 @@
 
   global.LabelSuiteTaskListData = {
     outputTypes: outputTypes,
-    tasks: tasks
+    tasks: tasks,
+    /* issue #850: single owner of the shared trial-run record's key and
+     * read policy; task-detail.data.js and task-detail.html reuse these. */
+    trialRunStateKey: TRIAL_RUN_STATE_KEY,
+    loadTrialRunState: loadTrialRunState
   };
 }(window));

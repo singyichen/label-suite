@@ -1344,20 +1344,12 @@
    * trialRounds half of that record here -- task-list.data.js overlays the
    * status half onto its own tasks -- and derive materializedRuns.dry_run
    * from the latest round so both consumers of "the current round" agree.
-   * Same opt-in merge pattern as CREATED_TASKS_KEY above. */
-  var TRIAL_RUN_STATE_KEY = 'labelsuite.trialRunState';
-
-  function loadTrialRunState() {
-    try {
-      var raw = global.localStorage ? global.localStorage.getItem(TRIAL_RUN_STATE_KEY) : null;
-      var parsed = raw ? JSON.parse(raw) : {};
-      return parsed && typeof parsed === 'object' ? parsed : {};
-    } catch (e) {
-      return {};
-    }
-  }
-
-  var trialRunState = loadTrialRunState();
+   * Same opt-in merge pattern as CREATED_TASKS_KEY above. The record's
+   * key and read policy are owned by task-list.data.js (always loaded
+   * first on every page); the fallback only covers standalone evaluation
+   * such as scripts/check-demo-data-parity.sh's vm sandbox. */
+  var taskListData = global.LabelSuiteTaskListData;
+  var trialRunState = taskListData && taskListData.loadTrialRunState ? taskListData.loadTrialRunState() : {};
   Object.keys(trialRunState).forEach(function (taskId) {
     var persisted = trialRunState[taskId];
     var rounds = persisted && Array.isArray(persisted.trialRounds) ? persisted.trialRounds : null;

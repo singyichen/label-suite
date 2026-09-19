@@ -5073,18 +5073,15 @@ function interpolate(template, payload) {
      vice versa); getDryRunFeedback()'s DISCLOSED_ROUND_OFFSET keys off
      status to decide the highest disclosable round, so that split-write
      window is a Data Fairness leak, not just a display glitch. */
-  var TRIAL_RUN_STATE_KEY = 'labelsuite.trialRunState';
-
   function persistTrialRunState() {
+    var taskListData = window.LabelSuiteTaskListData;
     try {
-      var raw = window.localStorage.getItem(TRIAL_RUN_STATE_KEY);
-      var all = raw ? JSON.parse(raw) : {};
-      if (!all || typeof all !== 'object') all = {};
+      var all = taskListData.loadTrialRunState();
       all[TASK_DATA.taskId] = {
         status: TASK_DATA.status,
         trialRounds: cloneData(TASK_DATA.trialRounds || [])
       };
-      window.localStorage.setItem(TRIAL_RUN_STATE_KEY, JSON.stringify(all));
+      window.localStorage.setItem(taskListData.trialRunStateKey, JSON.stringify(all));
     } catch (error) {
       /* localStorage unavailable (private mode, quota); state simply won't
          persist across reload/navigation, same graceful degradation as
