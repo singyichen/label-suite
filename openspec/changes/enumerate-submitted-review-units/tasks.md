@@ -32,5 +32,6 @@
   - FR-055、FR-056、FR-072 第 1 點、FR-073 第 1 點補本版修訂段。
   - delta 中未編號的新情境，於本步驟接續使用者故事 1 現行最大編號，編成新 AC。
   - 已被取代的條文、條文內記錄舊版的修訂段、Changelog 舊列（含 6.3.1 列「另由 issue #792 追蹤」）一律逐字保留。
-- [ ] 1.8 另開 issue 追蹤：`computeIaaAlpha()` 與 `countDistinctRaters()` 的評分者列舉同樣只走示範列（proposal.md 非目標）。issue URL 記在此項。 [@main]
+- [x] 1.8 另開 issue 追蹤：`computeIaaAlpha()` 與 `countDistinctRaters()` 的評分者列舉同樣只走示範列（proposal.md 非目標）。issue URL 記在此項。 [@main]
+  - 已開：https://github.com/singyichen/label-suite/issues/866
 - [ ] 1.9 執行 `/opsx:archive enumerate-submitted-review-units`。產生衍生檢視後，依 `docs/sdd-workflow.md` §6.2 逐條 grep 本 change 寫入的 canonical citation（FR-044a、FR-051、FR-055、FR-056、FR-062、FR-072、FR-073、FR-093、FR-100、AC-1.26、AC-3.38、新 AC、SC-004N、issue #784／#792／#824 等），確認每一條都能個別定位。archive 指令須經使用者明確授權才執行。final merge 後才更新 `specs/STATUS.md`。 [@main]
