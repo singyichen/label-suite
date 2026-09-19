@@ -28,9 +28,12 @@ import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
 
 /** T016: official_run, annotator kioleemg12. issue #596: ofm-02's sole
  *  reviewer agreed, so it derives `finalized`; ofm-05's differs, so it stays
- *  `disputed` and is the only one of the two still showing review rows. */
-const FINALIZED_UNIT = 'ofm-02-approved-interim';
-const DISPUTED_UNIT = 'ofm-05-all-divergent';
+ *  `disputed` and is the only one of the two still showing review rows.
+ *  issue #815: ofm-05 (now ofm-05-final-exception) also carries a migrated
+ *  arbitration-reject record, but that does not change its unit status or
+ *  lane -- still disputed, still the differing lane. */
+const FINALIZED_UNIT = 'ofm-02-reviewer-accepts-a';
+const DISPUTED_UNIT = 'ofm-05-final-exception';
 
 const DRAWER_ID = 'wsReviewFlowDrawer';
 

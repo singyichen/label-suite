@@ -23,15 +23,21 @@ type WorkspaceData = {
  * annotator's sample back to pending and erased the finalized unit (P0-2).
  *
  * Both finalize paths must lock:
- * - reviewer-approved: T015 ofs-01 and T017 oft-04
+ * - reviewer-approved: T015 ofs-01 and T016 ofm-02
  * - arbitration-resolved: T015 ofs-03 (seeded arb) and the live path where
  *   the arbiter's own submit re-renders the unit into the locked card.
  *
  * issue #596 (FR-093) removed the interim band this file used to guard the
  * other side of: with exactly one reviewer per unit there is no "approved at
- * 1 of 2" state that stays interactive, so the T017 oft-02 regression case
- * is gone. What replaces it is the PENDING case -- a unit whose reviewer has
- * not submitted yet -- already covered by issue-307's overfire probe.
+ * 1 of 2" state that stays interactive, so the old T017 oft-02 regression
+ * case is gone. What replaces it is the PENDING case -- a unit whose
+ * reviewer has not submitted yet -- already covered by issue-307's overfire
+ * probe.
+ *
+ * issue #815: T017 oft-04-unanimous-gold (a two-reviewer canonical form --
+ * the retired tie shape) is gone; T016 ofm-02-reviewer-accepts-a is the
+ * same reviewer-approved finalize shape with a single reviewer and takes
+ * its place below.
  */
 
 function reviewerUrl(taskId: string, sampleId: string): string {
@@ -66,9 +72,9 @@ test.describe('issue #308 -- finalized review units are fully read-only', () => 
     await expect(page.locator('#toastMsg')).not.toHaveText('審核已送出');
   });
 
-  test('T017 oft-04: read-only card once the unit is finalized', async ({ page }) => {
+  test('T016 ofm-02: read-only card once the unit is finalized', async ({ page }) => {
     await skipGuidelineModal(page);
-    await page.goto(reviewerUrl('T017', 'oft-04-unanimous-gold'));
+    await page.goto(reviewerUrl('T016', 'ofm-02-reviewer-accepts-a'));
 
     await expect(page.locator('[data-testid="ws-review-unit-context"] .rv-unit-state'))
       .toHaveText('已定稿 · 已鎖定');
@@ -87,7 +93,7 @@ test.describe('issue #308 -- finalized review units are fully read-only', () => 
   });
 
   /* Seeded in-test rather than off a demo row: every seeded dispute in
-     data.js still encodes the retired multi-reviewer model (T016/T017 are
+     data.js still encodes the retired multi-reviewer model (T016 is
      rewritten by group 7, task 7.4), and on those rows the arbitration
      card's single B slot resolves to the wrong reviewer. FR-093's shape --
      one annotator, one dissenting reviewer, one arbiter -- is what this

@@ -15,7 +15,7 @@
  *   2. disputed units THIS reviewer is eligible to arbitrate (FR-060)
  *   3. nothing actionable -> the review list plus an explicit empty state
  *
- * The rule reads task state and reviewer identity only -- no T014-T017
+ * The rule reads task state and reviewer identity only -- no T014-T016
  * branch anywhere (Generalization-First).
  */
 import { test, expect, type Page } from '@playwright/test';
@@ -105,7 +105,7 @@ test.describe('Dashboard — quick review opens the next actionable unit', () =>
 
     await expect(page).toHaveURL(/\/pages\/annotation\/annotation-workspace\.html\?/);
     await expect(page).toHaveURL(/task_id=T016/);
-    await expect(page).toHaveURL(/sample_id=ofm-03-modified-interim/);
+    await expect(page).toHaveURL(/sample_id=ofm-03-awaiting-arbitration/);
     await expect(page).toHaveURL(/annotator_id=kioleemg12/);
     await expect(page).toHaveURL(/reviewer_id=reviewer_chen/);
     await expect(page).toHaveURL(/run_type=official_run/);

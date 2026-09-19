@@ -14,11 +14,13 @@ import { test, expect } from '@playwright/test';
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 const PANEL_LOAD_TIMEOUT = 15000;
 
-/* AR_REVIEW_STATUS five-state vocabulary reused from spec 015 REVIEW_UNIT_STATUS. */
-const REVIEW_STATUS_OPTION_VALUES = ['all', 'pending', 'approved', 'modified', 'disputed', 'finalized'];
+/* AR_REVIEW_STATUS three-state vocabulary (spec 014 v3.0.0, issue #688), reused
+   from spec 015 REVIEW_UNIT_STATUS. The single-relay review model (015 FR-093)
+   retired the former `approved`/`modified` interim states (issue #807). */
+const REVIEW_STATUS_OPTION_VALUES = ['all', 'pending', 'disputed', 'finalized'];
 
 test.describe('Task detail annotation results review history', () => {
-  test('renders five-state review badges and a timeline line only for reviewed entries', async ({ page }) => {
+  test('renders three-state review badges and a timeline line only for reviewed entries', async ({ page }) => {
     await page.goto(`${TASK_DETAIL_URL}?task_id=T001&tab=annotation-results`);
     await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 
@@ -27,7 +29,9 @@ test.describe('Task detail annotation results review history', () => {
 
     const detailRows = page.locator('#arResultTableBody .annotator-row');
     await expect(detailRows).toHaveCount(3);
-    await expect(detailRows.filter({ hasText: 'kioleemg12' }).locator('.ar-review-badge .badge')).toHaveText('已同意');
+    // Single-reviewer approve decision, no arbitration -> finalized under the
+    // single-relay model (issue #807), not the retired 已同意 interim state.
+    await expect(detailRows.filter({ hasText: 'kioleemg12' }).locator('.ar-review-badge .badge')).toHaveText('已定稿');
     await expect(detailRows.filter({ hasText: 'tony0950127' }).locator('.ar-review-badge .badge')).toHaveText('待審');
 
     // Only the reviewed (approved) entry carries a history line; pending entries show none.
@@ -46,7 +50,9 @@ test.describe('Task detail annotation results review history', () => {
     await page.locator('#arResultTableBody tr.ar-summary-row').filter({ hasText: 'CLS-002' }).click();
 
     const modifiedRow = page.locator('#arResultTableBody .annotator-row').filter({ hasText: '113450022' });
-    await expect(modifiedRow.locator('.ar-review-badge .badge')).toHaveText('已修改');
+    // Single-reviewer modify decision, no arbitration -> disputed under the
+    // single-relay model (issue #807), not the retired 已修改 interim state.
+    await expect(modifiedRow.locator('.ar-review-badge .badge')).toHaveText('爭議中');
 
     const reviewLine = page.locator('#arResultTableBody .ar-history-line.ar-history-review');
     await expect(reviewLine).toHaveCount(1);
@@ -107,7 +113,7 @@ test.describe('Task detail annotation results review history', () => {
     await expect(rows.first()).toContainText('CLS-004');
   });
 
-  test('filters samples by five-state review status with constant-derived options', async ({ page }) => {
+  test('filters samples by three-state review status with constant-derived options', async ({ page }) => {
     await page.goto(`${TASK_DETAIL_URL}?task_id=T001&tab=annotation-results`);
     await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 
@@ -118,10 +124,15 @@ test.describe('Task detail annotation results review history', () => {
     );
     expect(optionValues).toEqual(REVIEW_STATUS_OPTION_VALUES);
 
+    // Under the single-relay three-state model (issue #807), CLS-002's lone
+    // modify (no arbitration) and CLS-006's mixed-reviewer disagreement both
+    // legitimately collapse to disputed -- they are the same unresolved
+    // state, not two distinct legacy states as before.
     await statusSelect.selectOption('disputed');
     const rows = page.locator('#arResultTableBody tr.ar-summary-row');
-    await expect(rows).toHaveCount(1);
-    await expect(rows.first()).toContainText('CLS-006');
+    await expect(rows).toHaveCount(2);
+    await expect(rows.nth(0)).toContainText('CLS-002');
+    await expect(rows.nth(1)).toContainText('CLS-006');
   });
 
   test('combines reviewer and review-status filters with AND semantics', async ({ page }) => {
@@ -131,10 +142,14 @@ test.describe('Task detail annotation results review history', () => {
     await page.locator('#arReviewerSelect').selectOption('wangxm88');
     await expect(page.locator('#arResultTableBody tr.ar-summary-row')).not.toHaveCount(1);
 
-    await page.locator('#arReviewStatusSelect').selectOption('finalized');
+    // 'finalized' no longer discriminates within wangxm88's samples now that
+    // a lone approve and an arbitrated approve are the same terminal state
+    // (issue #807); 'disputed' still narrows to CLS-006 (kioleemg12 reviewed
+    // by wangxm88, 113450022 unresolved).
+    await page.locator('#arReviewStatusSelect').selectOption('disputed');
     const rows = page.locator('#arResultTableBody tr.ar-summary-row');
     await expect(rows).toHaveCount(1);
-    await expect(rows.first()).toContainText('CLS-004');
+    await expect(rows.first()).toContainText('CLS-006');
   });
 
   test('translates review history vocabulary in English mode', async ({ page }) => {
@@ -152,7 +167,7 @@ test.describe('Task detail annotation results review history', () => {
 
     await page.locator('#arResultTableBody tr.ar-summary-row').filter({ hasText: 'CLS-002' }).click();
     const modifiedRow = page.locator('#arResultTableBody .annotator-row').filter({ hasText: '113450022' });
-    await expect(modifiedRow.locator('.ar-review-badge .badge')).toHaveText('Modified');
+    await expect(modifiedRow.locator('.ar-review-badge .badge')).toHaveText('Disputed');
     const reviewLine = page.locator('#arResultTableBody .ar-history-line.ar-history-review');
     await expect(reviewLine).toContainText('Modified');
     await expect(reviewLine).toContainText('Entertainment');

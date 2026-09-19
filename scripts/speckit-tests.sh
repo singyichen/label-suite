@@ -2713,6 +2713,230 @@ test_path_map_freshness_does_not_write_to_the_repository() {
     fi
 }
 
+# --- User path map freshness checker (issue #665 Stage 2) -------------------
+# Stage 2 fixtures pin the approved screen-list fingerprint model recorded in
+# design.md's "Stage 2 Design Amendment — Screen-List Fingerprint Model" and
+# its "Fingerprint 演算法" subsection. They MUST fail today: the checker has
+# not implemented fingerprint parsing/comparison yet, so its real invocation
+# still always exits 2 with PATH_MAP_AUTHORITY_UNSETTLED. Do not weaken these
+# assertions to make them pass early, and do not touch the Stage 1 helpers or
+# tests above.
+
+# Computes the canonical screen-list fingerprint independently of the checker,
+# following design.md's "Fingerprint 演算法": sort each ID list ordinally,
+# serialize as "screens:<csv>\nviews:<csv>" (UTF-8, no trailing newline), then
+# sha256 the result. Prints "sha256:<64-char lowercase hex>" with no newline.
+compute_stage2_screen_list_fingerprint() {
+    local screen_ids_csv="$1"
+    local view_ids_csv="$2"
+
+    node -e '
+        const screenIds = (process.argv[1] || "").split(",").filter(Boolean);
+        const viewIds = (process.argv[2] || "").split(",").filter(Boolean);
+        screenIds.sort();
+        viewIds.sort();
+        const serialized = `screens:${screenIds.join(",")}\nviews:${viewIds.join(",")}`;
+        const digest = require("node:crypto").createHash("sha256").update(serialized, "utf8").digest("hex");
+        process.stdout.write(`sha256:${digest}`);
+    ' "$screen_ids_csv" "$view_ids_csv"
+}
+
+# Writes a screen-inventory.md fixture with parseable "## 畫面 × 元件" and
+# "## 同頁多重視圖" ID tables, matching the layout gen-screen-inventory.mjs
+# produces (scripts/gen-screen-inventory.mjs:319,369,377).
+write_stage2_screen_inventory() {
+    local repo="$1"
+    local screen_ids_csv="$2"
+    local view_ids_csv="$3"
+    local screen_id view_id
+    local -a screen_ids view_ids
+
+    IFS=',' read -r -a screen_ids <<< "$screen_ids_csv"
+    IFS=',' read -r -a view_ids <<< "$view_ids_csv"
+
+    {
+        echo '# Screen inventory fixture'
+        echo
+        echo '## 畫面 × 元件（fixture）'
+        echo
+        echo '| # | 頁面 | Module | 使用元件 | 備註 |'
+        echo '|---|------|--------|----------|------|'
+        for screen_id in "${screen_ids[@]}"; do
+            echo "| $screen_id | Fixture Screen $screen_id \`shared/fixture-$screen_id.html\` | shared | Card 卡片 | — |"
+        done
+        echo
+        echo '## 同頁多重視圖（fixture）'
+        echo
+        echo '### 入口 `index.html`'
+        echo
+        echo '| # | 視圖 | URL 參數 | 說明 |'
+        echo '|---|------|----------|------|'
+        for view_id in "${view_ids[@]}"; do
+            echo "| $view_id | Fixture View $view_id | （無） | — |"
+        done
+    } > "$repo/design/system/screen-inventory.md"
+}
+
+# Writes a screen-inventory.md whose required headings exist but neither has a
+# parseable ID table underneath it (AC-2.4 unparsable-inventory case).
+write_stage2_unparsable_screen_inventory() {
+    local repo="$1"
+
+    cat > "$repo/design/system/screen-inventory.md" <<'INVENTORY'
+# Screen inventory fixture
+
+## 畫面 × 元件（fixture）
+
+(no table here — fixture for AC-2.4 unparsable inventory)
+
+## 同頁多重視圖（fixture）
+
+(no view table here either)
+INVENTORY
+}
+
+# Writes design/system/user-path-map.html with the given raw HTML placed
+# inside <head>. Callers control the exact <meta name="path-map-screen-fingerprint">
+# markup (absent, single, duplicate, or malformed) per AC-2.1/AC-2.2/AC-2.4.
+write_stage2_path_map() {
+    local repo="$1"
+    local head_meta_html="$2"
+
+    cat > "$repo/design/system/user-path-map.html" <<HTML
+<!doctype html>
+<html>
+<head>
+<title>User Path Map</title>
+$head_meta_html
+</head>
+<body>
+<p>Fixture artifact body for the screen-list fingerprint model.</p>
+</body>
+</html>
+HTML
+}
+
+stage2_meta_tag() {
+    local fingerprint="$1"
+    printf '<meta name="path-map-screen-fingerprint" content="%s">' "$fingerprint"
+}
+
+test_path_map_freshness_stage2_reports_fresh_when_screen_list_fingerprint_matches() {
+    local repo fingerprint
+
+    repo="$(make_path_map_repo)"
+    fingerprint="$(compute_stage2_screen_list_fingerprint "01,02,03" "V00,V01")"
+    write_stage2_screen_inventory "$repo" "01,02,03" "V00,V01"
+    write_stage2_path_map "$repo" "$(stage2_meta_tag "$fingerprint")"
+
+    run_path_map_checker_capture "$repo" 0
+    assert_contains "$PATH_MAP_OUTPUT" "PATH_MAP_FRESH"
+    assert_contains "$PATH_MAP_OUTPUT" "$fingerprint"
+}
+
+test_path_map_freshness_stage2_reports_stale_when_screen_list_fingerprint_mismatches() {
+    local repo recorded_fingerprint recomputed_fingerprint
+
+    repo="$(make_path_map_repo)"
+    recorded_fingerprint="$(compute_stage2_screen_list_fingerprint "01,02" "V00")"
+    recomputed_fingerprint="$(compute_stage2_screen_list_fingerprint "01,02,03" "V00,V01")"
+    write_stage2_screen_inventory "$repo" "01,02,03" "V00,V01"
+    write_stage2_path_map "$repo" "$(stage2_meta_tag "$recorded_fingerprint")"
+
+    run_path_map_checker_capture "$repo" 1
+    assert_contains "$PATH_MAP_OUTPUT" "PATH_MAP_STALE_FINGERPRINT"
+    assert_contains "$PATH_MAP_OUTPUT" "$recorded_fingerprint"
+    assert_contains "$PATH_MAP_OUTPUT" "$recomputed_fingerprint"
+}
+
+test_path_map_freshness_stage2_fails_closed_for_missing_meta() {
+    local repo
+
+    repo="$(make_path_map_repo)"
+    write_stage2_screen_inventory "$repo" "01,02" "V00"
+    write_stage2_path_map "$repo" ""
+
+    run_path_map_checker_capture "$repo" 2
+    assert_contains "$PATH_MAP_OUTPUT" "ERROR [PATH_MAP_META_MISSING]"
+    assert_not_contains "$PATH_MAP_OUTPUT" "PATH_MAP_FRESH"
+    assert_not_contains "$PATH_MAP_OUTPUT" "PATH_MAP_STALE_FINGERPRINT"
+}
+
+test_path_map_freshness_stage2_fails_closed_for_duplicate_meta() {
+    local repo first_fingerprint second_fingerprint
+
+    repo="$(make_path_map_repo)"
+    first_fingerprint="$(compute_stage2_screen_list_fingerprint "01,02" "V00")"
+    second_fingerprint="$(compute_stage2_screen_list_fingerprint "01,02,03" "V00,V01")"
+    write_stage2_screen_inventory "$repo" "01,02" "V00"
+    write_stage2_path_map "$repo" "$(stage2_meta_tag "$first_fingerprint")
+$(stage2_meta_tag "$second_fingerprint")"
+
+    run_path_map_checker_capture "$repo" 2
+    assert_contains "$PATH_MAP_OUTPUT" "ERROR [PATH_MAP_META_DUPLICATE]"
+    assert_not_contains "$PATH_MAP_OUTPUT" "PATH_MAP_FRESH"
+    assert_not_contains "$PATH_MAP_OUTPUT" "PATH_MAP_STALE_FINGERPRINT"
+}
+
+test_path_map_freshness_stage2_fails_closed_for_malformed_meta() {
+    local repo
+
+    repo="$(make_path_map_repo)"
+    write_stage2_screen_inventory "$repo" "01,02" "V00"
+    write_stage2_path_map "$repo" "$(stage2_meta_tag "sha256:0123")"
+
+    run_path_map_checker_capture "$repo" 2
+    assert_contains "$PATH_MAP_OUTPUT" "ERROR [PATH_MAP_META_MALFORMED]"
+    assert_not_contains "$PATH_MAP_OUTPUT" "PATH_MAP_FRESH"
+    assert_not_contains "$PATH_MAP_OUTPUT" "PATH_MAP_STALE_FINGERPRINT"
+}
+
+test_path_map_freshness_stage2_fails_closed_for_missing_inventory() {
+    local repo fingerprint
+
+    repo="$(make_path_map_repo)"
+    fingerprint="$(compute_stage2_screen_list_fingerprint "01,02" "V00")"
+    write_stage2_path_map "$repo" "$(stage2_meta_tag "$fingerprint")"
+    rm -f "$repo/design/system/screen-inventory.md"
+
+    run_path_map_checker_capture "$repo" 2
+    assert_contains "$PATH_MAP_OUTPUT" "ERROR [PATH_MAP_INVENTORY_UNREADABLE]"
+    assert_not_contains "$PATH_MAP_OUTPUT" "PATH_MAP_FRESH"
+    assert_not_contains "$PATH_MAP_OUTPUT" "PATH_MAP_STALE_FINGERPRINT"
+}
+
+test_path_map_freshness_stage2_fails_closed_for_unparsable_inventory_tables() {
+    local repo fingerprint
+
+    repo="$(make_path_map_repo)"
+    fingerprint="$(compute_stage2_screen_list_fingerprint "01,02" "V00")"
+    write_stage2_unparsable_screen_inventory "$repo"
+    write_stage2_path_map "$repo" "$(stage2_meta_tag "$fingerprint")"
+
+    run_path_map_checker_capture "$repo" 2
+    assert_contains "$PATH_MAP_OUTPUT" "ERROR [PATH_MAP_INVENTORY_UNREADABLE]"
+    assert_not_contains "$PATH_MAP_OUTPUT" "PATH_MAP_FRESH"
+    assert_not_contains "$PATH_MAP_OUTPUT" "PATH_MAP_STALE_FINGERPRINT"
+}
+
+test_path_map_freshness_stage2_stays_fresh_for_unmonitored_prototype_only_edit() {
+    local repo fingerprint
+
+    repo="$(make_path_map_repo)"
+    fingerprint="$(compute_stage2_screen_list_fingerprint "01,02,03" "V00,V01")"
+    write_stage2_screen_inventory "$repo" "01,02,03" "V00,V01"
+    write_stage2_path_map "$repo" "$(stage2_meta_tag "$fingerprint")"
+
+    # Unmonitored-content negative control: edit a prototype-only page without
+    # adding or removing any screen/view ID, so the fingerprint is unchanged.
+    printf '<!doctype html>\n<title>Prototype page fixture (edited)</title>\n<p>unrelated copy change</p>\n' \
+        > "$repo/design/prototype/pages/shared/index.html"
+
+    run_path_map_checker_capture "$repo" 0
+    assert_contains "$PATH_MAP_OUTPUT" "PATH_MAP_FRESH"
+    assert_contains "$PATH_MAP_OUTPUT" "$fingerprint"
+}
+
 test_check_spec_artifacts_passes_for_synced_repo
 test_check_spec_artifacts_fails_for_untracked_spec
 test_check_spec_artifacts_accepts_archived_spec_location
@@ -2796,5 +3020,13 @@ test_path_map_freshness_rejects_unresolvable_root
 test_path_map_freshness_fails_closed_for_missing_artifact
 test_path_map_freshness_fails_closed_for_unsettled_authority
 test_path_map_freshness_does_not_write_to_the_repository
+test_path_map_freshness_stage2_reports_fresh_when_screen_list_fingerprint_matches
+test_path_map_freshness_stage2_reports_stale_when_screen_list_fingerprint_mismatches
+test_path_map_freshness_stage2_fails_closed_for_missing_meta
+test_path_map_freshness_stage2_fails_closed_for_duplicate_meta
+test_path_map_freshness_stage2_fails_closed_for_malformed_meta
+test_path_map_freshness_stage2_fails_closed_for_missing_inventory
+test_path_map_freshness_stage2_fails_closed_for_unparsable_inventory_tables
+test_path_map_freshness_stage2_stays_fresh_for_unmonitored_prototype_only_edit
 
 echo "speckit script tests passed"

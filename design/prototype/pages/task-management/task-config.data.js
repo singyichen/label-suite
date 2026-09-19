@@ -584,21 +584,6 @@ var TASK_TAXONOMY = {
     },
   },
 };
-/* One-click "common combo" presets for the Step 1 task type selector
-   (issue #724). Each entry batches an existing, valid (category, inputType,
-   outputTypes) selection already reachable via the three chip groups; the
-   apply logic (task-config.engine.js) only reads these fields, so adding a
-   preset never requires a code branch. */
-var TASK_TYPE_PRESETS = [
-  {
-    key: 'classification_single_label',
-    category: 'classification',
-    inputType: 'single_item',
-    outputTypes: ['single_label'],
-    zh: '文字分類（單一標籤）',
-    en: 'Text classification (single label)',
-  },
-];
 var FIELD_ROLE_LABELS = {
   zh: { '': '— 不使用 —', evidence: 'Evidence（背景）', input: 'Input（輸入）', output: 'Output（輸出）' },
   en: { '': '— not used —', evidence: 'Evidence', input: 'Input', output: 'Output' },

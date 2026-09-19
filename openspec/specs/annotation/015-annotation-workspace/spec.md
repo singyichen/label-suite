@@ -210,10 +210,33 @@ Reviewer 審查列 MUST 僅呈現**受審標記員本人**的提交，MUST NOT �
 
 **v5.0.0 移除**：原文末段「退回後回退為待標記並保留原答案供修改之機制沿用 FR-014I／AC-3.15」隨退回機制移除而失效——兩種 `run_type` 皆 MUST NOT 提供任何使標記員重新標記的通道。seed 來源規則（真實提交 → FR-044a 示範遞補）不變。
 
+**本版新增——示範 seed 的合法性**：審核流程示範任務的種子列 MUST 只示範現行資料模型可產生的形狀。任一種子列所描述的狀態，MUST 能由 FR-051 的三態推導、FR-093 的指派粒度、FR-092 的 `REVIEW_DECISIONS` 與 FR-061 的 `ARBITRATION_OUTCOMES` 共同產生；MUST NOT 保留任何只能由已廢止規則（定稿門檻 `min_reviewers`、多數決收斂、審核員層級的退回決策）產生的列。示範任務整組的種子 MUST 集體見證 `REVIEW_DECISIONS` 的每一個值——含 `bypass`——以及仲裁「兩者皆非」進入最終例外池（FR-095）的路徑；任一決策值於整組種子零命中時，該組 MUST 視為覆蓋不足。
+
+**本版新增——雙份副本一致性**：示範審核單位的種子資料存在兩份手寫副本（`docs/product/example-data/review-flow-*.json` 與 prototype `task-detail.data.js` 各示範任務 profile 的 `datasetFileName`／`datasetRecords`）。兩份 MUST 逐列一致，以實際渲染的 prototype 種子為基準；此一致性 MUST 由一道可執行的檢查守住，並依本專案的兩向契約同時登錄本機驗證指令與對應 CI job，MUST NOT 僅以文件約定或人工比對代替。
+
 #### Scenario: AC-6.11 正式標記不再產生重標待辦
 - **GIVEN** `run_type = official_run` 的一筆樣本，其審核員對某 outKey 送出 `修正`
 - **WHEN** 該樣本的標記員回到工作區
 - **THEN** 該樣本 MUST NOT 出現於其待辦，狀態 MUST NOT 回退為 `待標記`，畫面上不存在重標理由橫幅
+
+#### Scenario: 示範審核單位的 sample id 不得編碼已廢止的審核狀態詞
+- **GIVEN** `run_type = official_run` 的審核流程示範任務 T016，其審核單位種子同時被 workspace 種子、task-detail 樣本清單與 `docs/product/example-data` fixture 三處消費
+- **WHEN** 任一消費端列舉該審核單位的 `sample_id`
+- **THEN** 該 `sample_id` MUST NOT 含 v5.0.0 已自 `REVIEW_UNIT_STATUS` 移除的中間狀態詞（`approved`、`modified`），MUST 改以該情境實際發生的審核行為命名，使 id 與 FR-051 現行三態語彙一致
+- **AND** 同一個 id 的每一處出現（種子物件的 map key 與資料列欄位、樣本清單、fixture、Playwright 測試與正典條文引文）MUST 於同一次變更內同步改名；只改其中一部分會使該筆種子查無對應答案而整列不渲染，因此部分改名 MUST NOT 發生
+
+#### Scenario: 示範種子集體見證三向決策與例外池路徑
+- **GIVEN** 審核流程示範任務整組的審核單位種子
+- **WHEN** 列舉每一列所攜帶的審核決策與仲裁裁定
+- **THEN** `REVIEW_DECISIONS` 的三個值 MUST 各至少有一列見證，其中 `bypass` MUST 有一列以 `official_run` 形態呈現非空理由與空答案值——`bypass` 依設計不寫入答案值，此為其與 `modify` 在資料層的唯一區辨
+- **AND** MUST 有一列見證審核員 `修正` 後仲裁裁定為 `reject`（兩者皆非），使該單位維持 `爭議中` 並列入最終例外池；此路徑 MUST NOT 因任何示範任務被移除而失去其唯一見證
+- **AND** MUST NOT 存在任何一列，其狀態只能由 `MIN_REVIEWERS_DEFAULT`、多數決收斂或審核員層級的 `reject` 產生
+
+#### Scenario: 兩份示範資料副本逐列一致
+- **GIVEN** `docs/product/example-data` 的審核流程 fixture 與 prototype 的審核單位種子
+- **WHEN** 執行示範資料一致性檢查
+- **THEN** 兩份的任務集合、每個任務的樣本 id 序列與每筆樣本的文字內容 MUST 完全相同，任一差異 MUST 使該檢查以非零 exit 失敗並逐筆指名差異所在
+- **AND** 該檢查 MUST 同時被列為本機驗證指令與 CI job；只存在其一時，本專案的 `CI_JOB_PARITY` 檢查 MUST 回報缺口
 
 ### Requirement: FR-051 審核單位定址與狀態機
 
@@ -424,17 +447,26 @@ workspace reviewer 視圖 MUST 於審核卡（FR-053）、仲裁版面（FR-061�
 
 ### Requirement: FR-083 送出阻擋同時指名缺理由之決策
 
-送出驗證 MUST 為「每個 outKey 一筆決策，且 `修正` 與 `無法判定` 者皆有非空理由」（FR-016A）。阻擋 toast MUST 指名全部阻擋之 outKey（多筆以「、」串接）：存在尚未決策者時沿用 `toastSelectDecision`；全部阻擋皆為缺理由時使用缺理由文案。兩類 outKey 之推導 MUST 與送出驗證共用同一份逐 outKey 判定，MUST NOT 另建第二份計算。
+送出驗證 MUST 為「每個 outKey 一筆決策，且 `修正` 與 `無法判定` 者皆有非空理由（FR-016A），且 `修正` 者之修正後答案非空」。阻擋 toast MUST 指名全部阻擋之 outKey（多筆以「、」串接）：存在尚未決策者時沿用 `toastSelectDecision`；全部阻擋皆為缺理由時使用缺理由文案。三類 outKey 之推導 MUST 與送出驗證共用同一份逐 outKey 判定，MUST NOT 另建第二份計算。
 
 存在缺理由之決策時「送出審核」按鈕 MUST 帶 `data-submit-blocked="reason"` 以呈現停用外觀，且 MUST NOT 使用 `disabled` 或 `aria-disabled`（兩者皆會攔下點擊，使 toast 無法指名 outKey）。
 
 **v5.0.0 修訂**：原文之判定對象「退回者」改為「`修正` 與 `無法判定` 者」——退回決策已移除（FR-092）；缺理由文案 MUST NOT 再出現「退回理由」字樣。
+
+**v6.5.0 修訂**（issue #818）：逐 outKey 判定之回傳值集合自兩類阻擋擴為三類，新增「決策為 `修正` 但修正後答案為空」。此前該不變式僅存在於實作註解（「`values[outKey]` 只在 `修正` 時存在，`無法判定` 刻意不存值」），從未由任何條文強制，故一筆空的 `修正` 可被寫入儲存層，於資料層與 `無法判定` 無從區辨。
 
 #### Scenario: AC-3.47 缺理由阻擋送出並指名 outKey
 - **GIVEN** `role=reviewer` 對 `single_label` 點 `無法判定` 但未填理由
 - **WHEN** 點擊「送出審核」
 - **THEN** 送出中止，toast 指名 `single_label` 且文案不含「退回」字樣，`ws-review-submit-btn` 帶 `data-submit-blocked="reason"`
 - **AND** 填入理由後該屬性移除，再送出成功
+
+#### Scenario: AC-3.59 決策為修正但修正後答案為空時阻擋送出
+- **GIVEN** `role=reviewer` 之審核單位中，某 outKey 已選 `修正` 且已填妥非空理由，惟其直接修正控件之當前答案為空
+- **WHEN** 點擊「送出審核」
+- **THEN** 送出 MUST 中止，該 outKey MUST 列入同一份阻擋清單並由 toast 指名，MUST NOT 有任何審核提交被寫入
+- **AND** 此第三類阻擋 MUST 由既有逐 outKey 判定同一份推導產生，其回傳值集合 MUST 擴充而非於其外另設旁路；阻擋清單之唯一來源 MUST NOT 因本版新增而變成兩份
+- **AND** 決策為 `無法判定` 且答案為空時 MUST NOT 阻擋——`無法判定` 依設計不寫入答案值，其空值為契約而非缺漏，兩者 MUST 分別判定
 
 ### Requirement: FR-092 審核員三向決策
 
@@ -469,6 +501,8 @@ workspace reviewer 視圖 MUST 於審核卡（FR-053）、仲裁版面（FR-061�
 
 每個審核單位恰有**一位**指派審核員，MUST NOT 出現同一單位由多位審核員並行審核的情形。
 
+**本版釐清**：前段「恰有一位」同樣約束**種子與示範資料**，而非僅約束執行期的指派演算法。一筆在 `rev` 之類的審核結果結構中登錄了兩位以上審核員的 `official_run` 種子列，描述的是本資料模型永遠無法產生的狀態，MUST NOT 存在於示範資料中。
+
 **明確不存在的規則**：系統 MUST NOT 因某位審核員恰為該筆樣本的標記員而將其排除於指派之外——「審核員不得審自己標的資料」不是本規格的規則。非當事人限制僅適用於仲裁者（FR-060）。
 
 #### Scenario: 試標以樣本為單位指派
@@ -481,6 +515,12 @@ workspace reviewer 視圖 MUST 於審核卡（FR-053）、仲裁版面（FR-061�
 - **WHEN** 系統建立審核指派
 - **THEN** 兩位審核員的分派筆數差距不超過 1
 - **AND** 該審核員仍可能被指派到自己標記的樣本，系統不因此排除或重新分派
+
+#### Scenario: 示範種子不得讓多位審核員並行審同一個正式標記單位
+- **GIVEN** 任一 `run_type = official_run` 的示範審核單位種子列
+- **WHEN** 讀取該列所登錄的審核員集合
+- **THEN** 該集合 MUST 恰含一位審核員；含兩位以上者 MUST 視為與本條文直接衝突的失效種子並汰換
+- **AND** 該單位若需示範定稿前的第二個判斷，MUST 循 FR-060 的仲裁路徑表達（一位審核員 + 一位非當事人仲裁者），MUST NOT 以並列多位審核員表達
 
 ### Requirement: FR-094 純文字定稿結果卡與微型衝突歷程
 
@@ -529,20 +569,29 @@ workspace reviewer 視圖 MUST 於審核卡（FR-053）、仲裁版面（FR-061�
 
 標記員視角 MUST 提供**試標歷史回饋**列表，使標記員在「不退回重標」的前提下仍能自我對齊。列表逐筆呈現該標記員於已完成試標回合中的標記，並 MUST 包含：
 
-1. 被修改筆數（該回合中該標記員被審核員修正或被仲裁改判的項目數）與其占比；
+1. 被修改筆數（該回合中該標記員被審核員修正或被仲裁改判的項目數）與其占比——MUST 逐回合分列計算，MUST NOT 將多個回合合併為單一分母；
 2. 逐筆之「我的答案 → 定案結果」對照；
 3. 定案來源（審核員通過／仲裁採 A／仲裁採 B／例外池收尾）與具名決策者；
 4. 原因——審核員或仲裁者填寫的理由原文；理由中引用之標註指南段落 MUST 可點擊跳轉至該段落。
 
-**揭露時機（Data Fairness NON-NEGOTIABLE）**：本列表 MUST 僅在該試標回合全部標記提交、任務轉入 `waiting_iaa_confirmation` 之後對標記員開放。回合進行中 MUST NOT 對標記員揭露任何定案結果、他人答案或審核判斷——否則標記員可據以回頭對齊，直接污染同輪 IAA。
+**揭露時機（Data Fairness NON-NEGOTIABLE）**：揭露閘門 MUST 以**回合**為單位判定，MUST NOT 以任務狀態整體判定。某試標回合 R{n} 之回饋 MUST 僅在 R{n} 全部標記提交、R{n} 轉入 `waiting_iaa_confirmation` 之後對標記員開放；開放後 MUST NOT 因任務建立 R{n+1}（任務狀態回到 `dry_run_in_progress`）或轉入 `official_run_in_progress`／`completed` 而收回。**進行中之回合** MUST NOT 對標記員揭露任何定案結果、他人答案或審核判斷——否則標記員可據以回頭對齊，直接污染同輪 IAA。無法判定所屬回合之提交，於任務處於 `dry_run_in_progress` 時 MUST 視為屬於進行中回合而不揭露（fail closed）。
 
 本列表 MUST 僅呈現該標記員**本人**的標記與其定案結果，MUST NOT 呈現其他標記員的答案。
+
+**本版修訂**（issue #834）：原條文以「任務轉入 `waiting_iaa_confirmation`」作為唯一開放條件，並將「回合進行中」等同於「任務狀態為 `dry_run_in_progress`」——此等同僅在單一試標回合下成立。`task-management/014-task-detail` 開放自 `waiting_iaa_confirmation` 建立 R{n+1} 後，任務狀態層級之閘門使已結束之 R{n} 回饋在 R{n+1} 進行期間整段消失，與本需求「自我對齊」之目的相反；而 R{n} 之揭露前提在 R{n+1} 建立前即已成立（`task-management/014-task-detail` FR-013 第 (6) 點）。本版將閘門改為逐回合判定；進行中回合不揭露之 Data Fairness 保證不變。
 
 #### Scenario: AC-1.27 回合結束後才開放試標歷史回饋
 - **GIVEN** 某試標回合仍在進行中（任務狀態為 `dry_run_in_progress`）
 - **WHEN** 標記員嘗試進入試標歷史回饋
 - **THEN** 該回合之資料不揭露，畫面說明需待該回合結束
 - **AND** 任務轉入 `waiting_iaa_confirmation` 後，同一標記員可看到被修改筆數、逐筆「我的答案 → 定案結果」、定案來源與具名決策者、以及理由原文與可跳轉的指南段落引用，且看不到其他標記員的答案
+
+#### Scenario: AC-1.28 下一回合進行中仍可見已結束回合之試標歷史回饋
+- **GIVEN** 某 `dry_run` 任務之 R{n} 已轉入 `waiting_iaa_confirmation`，其後負責人建立 R{n+1}，任務狀態回到 `dry_run_in_progress`，且同一標記員於 R{n} 與 R{n+1} 皆有已提交之標記
+- **WHEN** 該標記員進入試標歷史回饋
+- **THEN** R{n} 之回饋 MUST 照常呈現，其被修改筆數與占比 MUST 僅以 R{n} 之提交計算
+- **AND** R{n+1} 之任何提交、定案結果與審核判斷 MUST NOT 出現在回饋中，且畫面 MUST 說明 R{n+1} 需待該回合結束
+- **AND** 任務轉入 `official_run_in_progress` 後，已結束之各試標回合回饋 MUST 仍可見
 
 ### Requirement: FR-097 歷程事件的責任鏈加詳
 
@@ -765,3 +814,53 @@ Reviewer 審查呈現 MUST 依 `outputs[].type` 對應下列規則之一：`sing
 - **AND** 使單位定稿的送出中，發生前進或導頁的次數 MUST 為 0，且該次送出後該單位之 `ws-review-finalized-card` MUST 恰為 1 個（AC-3.39）
 - **AND** 審核送出與仲裁送出兩條路徑所使用的目標推導函式與返回網址建構器 MUST 完全相同，工作區內「哪些單位可處理」的判定實作 MUST 恰為 1 份
 - **AND** 最後一次送出後導回之清單網址，其 FR-081 檢視狀態鍵與 `notice=no_actionable_review` MUST 同時存在，`sample_id` MUST 為 0 次出現
+
+### Requirement: FR-100 定稿卡之本任務剩餘可處理量與歸零去向
+
+**FR-100**（本版新增，對應 AC-3.57、AC-3.58、SC-004Z，issue #766）：**唯讀定稿卡必須說明該審核員在本任務上還剩多少可處理單位，並於歸零時提供回清單的去向**。
+
+`role = reviewer` 之工作區渲染 FR-094 之唯讀定稿卡時，卡上 MUST 渲染一段**剩餘量敘述**（testid `ws-finalized-remaining`），位置在唯讀說明之後、第一個 outKey 定稿值之前。本條適用於一切會渲染該卡的情形——開啟一個已定稿單位、FR-099 第 7 點之定稿後就地重渲染、以及語言切換後之重繪——不限於送出之後。
+
+1. **剩餘量之定義與單一判定來源**：剩餘量為本任務、本 `run_type` 中，依 FR-073 第 2 點對**目前登入之審核員身分**判為可處理（第 1 或第 2 順位）之審核單位數；候選列舉沿用 FR-073 第 1 點。此判定 MUST 與 `findNextActionableReviewUnit()` 共用同一份逐單位判定，使兩者對「哪些單位可處理」不可能給出不同答案——恆有「剩餘量為 0 ⇔ `findNextActionableReviewUnit()` 對同一任務、`run_type` 與審核員回傳空值」。系統 MUST NOT 另立第二套計數公式；MUST NOT 新增任何儲存的計數欄位、計數快取或計數狀態（沿用 issue #761 之推導先例）；MUST NOT 由頂部進度 `我的審核提交 {done} / {total}` 相減或換算得出——該進度計的是本人提交數，與可處理量不是同一個量。目前檢視中的已定稿單位依 FR-073 第 2 點本即不可處理，MUST NOT 以任何特例額外排除或納入。
+
+2. **剩餘量大於 0 時**：敘述 MUST 寫出剩餘量之數字（zh／en 同步），MUST NOT 渲染任何連結或其他行動點——回到清單的既有路徑為 FR-080 麵包屑第 2 層，本條不重複之。
+
+3. **剩餘量為 0 時之措辭**：敘述 MUST 由一個標題（testid `ws-finalized-remaining-title`）與一段說明（testid `ws-finalized-remaining-message`）組成，兩者文字 MUST 分別與 `annotation-list` 之 `list-no-actionable-notice`（FR-073 第 5 點）所顯示的標題與說明**逐字相同**，zh 與 en 皆然。系統 MUST NOT 為定稿卡另寫一套「已無可處理項目」的措辭，亦 MUST NOT 依角色（審核員／仲裁者）或依剩餘可處理單位之類型分流措辭。該組措辭 MUST 只有一份定義、由兩個消費端共讀，使兩處不可能因只改其中一處而分歧。
+
+4. **剩餘量為 0 時之回清單連結**：敘述 MUST 另含一個回清單連結（testid `ws-finalized-back-to-list`），其目標網址 MUST 與 FR-099 第 5 點之無可處理出口相同：經 `buildListReturnUrl()` 產生（保留 FR-081 之檢視狀態鍵與 FR-049 之身分參數，MUST NOT 另立第二個 query 建構器），並附帶 `notice=no_actionable_review`，MUST NOT 帶 `sample_id`。該連結 MUST 為導覽用之錨點元素，MUST NOT 為 `button`、表單控件或以腳本攔截點擊後再導頁之元素。
+
+5. **與 FR-099 第 7 點之邊界**：本條不改變使單位定稿的送出之去向——該送出 MUST 仍停留於原單位、MUST NOT 前進、MUST NOT 自動導頁；剩餘量為 0 時亦同，回清單連結 MUST 僅於審核員主動點擊時導頁。本條只補上 FR-099 第 7 點未規範的卡片內容；FR-099 第 7 點所稱「審核員離開已定稿單位的路徑是既有的清單返回入口（FR-081）」仍成立——本條之連結以同一個返回網址建構器產生，是同一入口的另一個觸及點，而非第二套返回路徑。
+
+6. **與 FR-094 之邊界**：FR-094 之純文字約束不變。剩餘量敘述為純文字；歸零時之回清單連結為導覽，不是決策控件、修正控件或送出按鈕，亦非作答面板。卡內 `button` 之數量 MUST NOT 因本條增加。
+
+7. **與已撤銷之 FR-082 之邊界**：FR-082（v4.40.0 撤銷，issue #517）之出口卡提供「下一個可處理單位」「返回審核清單」「返回 Dashboard」三個出口，因三者皆與既有導覽重複而撤銷。本條與之不同處在於：出口數恰為 1、僅於剩餘量為 0 時出現、且其存在理由是「宣告本任務對該審核員已無可處理項目」這項麵包屑無法表達的資訊。系統 MUST NOT 於定稿卡提供「下一個可處理單位」或「返回 Dashboard」出口，MUST NOT 重用 FR-082 之任何已撤銷 testid 或樣式類別。
+
+8. **不得硬編任務 ID**（Generalization-First）：剩餘量僅得由審核單位狀態與登入審核員身分推導，MUST NOT 對 T014–T017 或任何任務 ID 分流。
+
+本條不改變 FR-073 之列舉、優先序與資格判定，不改變 FR-094 之卡片既有內容與純文字約束，不改變 FR-099 任一點之導覽行為，亦不改變 `list-no-actionable-notice` 之 testid、觸發條件與顯示文字；`findNextActionableReviewUnit()` 之簽章與回傳值不變。
+
+#### Scenario: AC-3.57 定稿卡依推導之剩餘量呈現兩種敘述
+- **GIVEN** `role = reviewer` 開啟某任務一個 `已定稿` 審核單位，而依 FR-073 第 2 點該審核員於本任務、本 `run_type` 尚有 N 個可處理單位（N > 0）
+- **WHEN** 定稿卡渲染完成
+- **THEN** `ws-finalized-remaining` MUST 恰為 1 個，位於唯讀說明之後、第一個 outKey 定稿值之前，其文字 MUST 含數字 N
+- **AND** 卡內 `ws-finalized-back-to-list` MUST 為 0 個，`ws-finalized-remaining-title` 與 `ws-finalized-remaining-message` MUST 為 0 個
+- **AND** 同一頁面上 `findNextActionableReviewUnit()` 對同一任務、`run_type` 與審核員 MUST 回傳非空值
+- **AND** 以不同審核員身分開啟同一已定稿單位時，敘述之數字 MUST 依該身分之可處理量推導，MUST NOT 沿用前一身分之結果
+- **AND**〔歸零〕同一審核員於本任務已無可處理單位（`findNextActionableReviewUnit()` 回傳空值）時，`ws-finalized-remaining-title` 與 `ws-finalized-remaining-message` 之文字 MUST 分別與 `annotation-list` 於 `notice=no_actionable_review` 下渲染之 `list-no-actionable-notice` 標題與說明逐字相同，且 `ws-finalized-back-to-list` MUST 恰為 1 個
+- **AND**〔語言〕切換為 en 後重繪，上述逐字相同之關係 MUST 於 en 仍成立
+- **AND**〔送出後即時〕仲裁者送出使其最後一個可處理爭議單位定稿後，就地重渲染之定稿卡 MUST 直接呈現歸零敘述，MUST NOT 需要重新整理才更新
+
+#### Scenario: AC-3.58 歸零連結之目標與既有保證之維持
+- **GIVEN** `role = reviewer` 於帶有 FR-081 檢視狀態鍵（如 `status`、`q`）與身分參數之工作區網址，開啟一個剩餘量為 0 的定稿卡
+- **WHEN** 點擊 `ws-finalized-back-to-list`
+- **THEN** 該次導頁所請求之網址 MUST 同時帶有送出前的 FR-081 檢視狀態鍵、FR-049 身分參數與 `notice=no_actionable_review`，MUST NOT 帶 `sample_id`，且落地頁 MUST 渲染 `list-no-actionable-notice`
+- **AND** `ws-finalized-back-to-list` MUST 為錨點元素，卡內 `button` 之數量 MUST 與本條新增前相同（AC-3.52、FR-100 第 6 點）
+- **AND**〔不自動導頁〕使單位定稿而剩餘量為 0 之送出後，在未點擊連結前 MUST 停留於原單位、MUST NOT 發生任何導頁，`ws-review-finalized-card` MUST 恰為 1 個（FR-099 第 7 點、AC-3.55、AC-3.56）
+- **AND**〔已撤銷出口不復活〕頁面上 FR-082 之已撤銷 testid（`ws-post-submit-cta` 及其子項）與 `.rv-exits` 類別 MUST 為 0 個，卡內 MUST NOT 出現「下一個可處理單位」或「返回 Dashboard」出口
+
+#### Scenario: SC-004Z 剩餘量與清單空狀態之一致性
+- **GIVEN** 審核員與仲裁者於同一任務內逐一處理可處理單位，直到該身分已無可處理單位
+- **WHEN** 逐次觀察每次渲染之定稿卡，並對照同一時點之 `findNextActionableReviewUnit()` 結果與 `list-no-actionable-notice`
+- **THEN** 定稿卡剩餘量為 0 與 `findNextActionableReviewUnit()` 回傳空值兩者不一致的次數 MUST 為 0
+- **AND** 定稿卡歸零措辭與清單空狀態措辭不一致之語言數 MUST 為 0，該組措辭於原型原始碼中之定義 MUST 恰為 1 份
+- **AND** 為產生剩餘量而新增之儲存欄位或計數快取 MUST 為 0 個，工作區與資料層中「哪些單位可處理」的判定實作 MUST 恰為 1 份

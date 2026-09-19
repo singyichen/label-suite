@@ -34,7 +34,7 @@
  * it is the lightest page that (a) loads annotation-workspace.data.js as a
  * plain <script> tag, so window.LabelSuiteAnnotationWorkspaceData is
  * available, and (b) triggers seedReviewFlowDemo() on load, which is what
- * stages the T014-T017 pending/disputed/finalized review states this
+ * stages the T014-T016 pending/disputed/finalized review states this
  * contract reads. The task_id/run_type in the URL only pick an initial
  * render target for the list page itself -- every assertion below re-derives
  * its own task/run_type/reviewer scenario from the full demo dataset via

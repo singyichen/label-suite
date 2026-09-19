@@ -63,12 +63,14 @@
       reviewBypassLabel: '無法判定',
       wsReviewSubmitSuccess: '審核已送出',
       reviewNoAnswer: '（無）',
+      reviewOriginalAnswerBypass: '無法判定',
       reviewNote: '通過：該項直接定稿，正式標記中即成為最終答案。修正：您的修正不會立即生效，該項進入爭議池待仲裁。無法判定：同樣進入爭議池，仲裁者採用審核員側即定案為無法判定。試標與正式標記皆不會將樣本送回給標記員重做。',
       reviewNoteDryRunExtra: '試標的定稿只彙總一致性與被修改率，不產生最終答案。',
       reviewNoteTriggerLabel: '審核決策說明',
       reviewReasonLabel: '理由（必填）',
       reviewReasonPlaceholder: '請說明理由',
       toastReasonRequired: '請填寫以下輸出類型的理由：{list}',
+      toastAnswerRequired: '以下輸出類型選了「修正」但修正後答案為空，請填寫答案：{list}',
       reviewCorrectionTitle: '直接修正（Reviewer 修正後答案）',
       toastSelectDecision: '請完成以下輸出類型的審核決策：{list}',
       toastReviewCorrectionReset: '偵測到直接修正的內容因重新整理而遺失，對應的審核決策已重置，請重新確認後再送出',
@@ -105,6 +107,8 @@
       reviewEmptyUnitNote: '此標記員尚未提交此樣本，暫無可審核的內容。',
       reviewFinalizedTitle: '審核已定稿',
       reviewFinalizedNote: '此審核單位已定稿，結果為唯讀。',
+      reviewFinalizedRemaining: '本任務你還有 {n} 個可處理的審核單位。',
+      reviewFinalizedBackToList: '回到審核清單',
       traceLabel: '歷程：',
       traceAnnotator: '標記',
       traceReviewer: '審核',
@@ -186,12 +190,14 @@
       reviewBypassLabel: 'Cannot determine',
       wsReviewSubmitSuccess: 'Review submitted',
       reviewNoAnswer: '(none)',
+      reviewOriginalAnswerBypass: 'Cannot determine',
       reviewNote: 'Approve: the item is finalized as it stands, and in an official run that value becomes the final answer. Modify: your correction does not take effect immediately; the item enters the dispute pool for arbitration. Cannot determine: the item also enters the dispute pool, and an arbiter adopting the reviewer side settles it as undecidable. Neither a dry run nor an official run sends the sample back to the annotator to redo it.',
       reviewNoteDryRunExtra: ' A dry-run finalization produces no final answer; it only aggregates agreement and the modification rate.',
       reviewNoteTriggerLabel: 'Review decision guidance',
       reviewReasonLabel: 'Reason (required)',
       reviewReasonPlaceholder: 'Explain the reason',
       toastReasonRequired: 'Please give a reason for the following output types: {list}',
+      toastAnswerRequired: 'The following output types are marked Modify but the corrected answer is empty: {list}',
       reviewCorrectionTitle: "Direct correction (reviewer's corrected answer)",
       toastSelectDecision: 'Please decide on the following output types before submitting: {list}',
       toastReviewCorrectionReset: 'The direct correction was lost on reload, so the matching review decision was reset -- please re-confirm before submitting',
@@ -228,6 +234,8 @@
       reviewEmptyUnitNote: 'This annotator has not submitted this sample yet; there is nothing to review.',
       reviewFinalizedTitle: 'Review finalized',
       reviewFinalizedNote: 'This review unit is finalized; results are read-only.',
+      reviewFinalizedRemaining: 'You have {n} actionable review units left on this task.',
+      reviewFinalizedBackToList: 'Back to review list',
       traceLabel: 'Trace: ',
       traceAnnotator: 'Annotated',
       traceReviewer: 'Reviewed',
@@ -1386,6 +1394,12 @@
     return 'annotation-list.html?' + listParams.toString();
   }
 
+  /* One place for the FR-099 §5 no-actionable exit URL, shared by the
+     auto-advance exit and the finalized card's zero-state link (FR-100 §4). */
+  function buildNoActionableListUrl() {
+    return buildListReturnUrl() + '&notice=no_actionable_review';
+  }
+
   function renderEntryBreadcrumb() {
     var nav = document.getElementById('entryBreadcrumb');
     if (!nav) return;
@@ -2471,6 +2485,14 @@
      annotator control, do not build a dedicated correction UI" mandate. */
   var reviewRowDecisions = {};
   var reviewRowOriginals = {};
+  /* issue #809: reviewRowOriginals is a raw-value cache (isRowCorrected()
+     and issue-453's pre-submit-summary spec diff/assert against it), so the
+     annotator's previewBypass flag -- an explicit "I cannot judge this
+     output" decision, distinct from the reviewer's own bypass DECISION
+     value that issue #811 renames -- cannot be stuffed into that string.
+     This parallel map carries the same per-outKey signal for display only,
+     seeded in seedReviewRow() exactly where reviewRowOriginals itself is. */
+  var reviewRowOriginalBypass = {};
   /* Every decision pair currently on screen, so the A/R shortcuts below can
      redraw them all after deciding the unit in one go. Rebuilt alongside
      reviewRowDecisions on each renderReviewerWorkspace(). */
@@ -3127,8 +3149,15 @@
       origin.setAttribute('data-outkey', originKey);
       var originalAnswer = reviewRowOriginals[originKey] || '';
       origin.setAttribute('data-answer', originalAnswer);
+      /* issue #809: an empty originalAnswer is ambiguous by itself -- it
+         means either "annotator explicitly bypassed this output" or
+         "annotator left it empty." reviewRowOriginalBypass disambiguates
+         for display only; data-answer above stays the untouched raw value
+         isRowCorrected() and issue-453's spec depend on. */
+      var originalIsBypass = !originalAnswer && !!reviewRowOriginalBypass[originKey];
       origin.textContent =
-        t('reviewOriginalAnswerLabel') + (originalAnswer || t('reviewNoAnswer'));
+        t('reviewOriginalAnswerLabel') +
+        (originalAnswer || (originalIsBypass ? t('reviewOriginalAnswerBypass') : t('reviewNoAnswer')));
       row.appendChild(origin);
     });
 
@@ -3259,6 +3288,7 @@
   function seedReviewRow(outKey, submission) {
     if (submission) {
       reviewRowOriginals[outKey] = describeOutputAnswer(outKey, submission);
+      reviewRowOriginalBypass[outKey] = !!(submission.previewBypass && submission.previewBypass[outKey]);
       if (!reviewRowSeeded[outKey]) {
         seedReviewState(outKey, submission, false);
         reviewRowSeeded[outKey] = true;
@@ -3268,6 +3298,7 @@
     var demoRow = demoAnnotatorRow();
     var answer = demoRow && demoRow.answers ? demoRow.answers[outKey] : null;
     reviewRowOriginals[outKey] = answer != null ? describeCompactAnswer(outKey, answer) : '';
+    reviewRowOriginalBypass[outKey] = !!(demoRow && demoRow.bypass && demoRow.bypass[outKey]);
     if (!reviewRowSeeded[outKey]) {
       seedReviewState(outKey, answer, true);
       reviewRowSeeded[outKey] = true;
@@ -3604,16 +3635,26 @@
     return btn;
   }
 
-  /* FR-061 point 2: B's wording depends on the assigned reviewer's decision
-     source for this outKey. design.md D2's "bypass 不存值" rule makes the
-     stored value itself the reliable signal: a `modify` decision always
-     carries a real replacement value, a `bypass` decision never stores one
-     at all -- so item.reviewerValues reading as "no answer" (the same
-     null/'' test formatDisputeValue()'s reviewNoAnswer branch already uses)
-     IS the bypass case, not a value to render. */
+  /* FR-061 point 2 / AC-4.54: B's wording follows the assigned reviewer's
+     DECISION for this outKey, never whether a value happens to be stored.
+     The older reading ran design.md D2's "bypass 不存值" rule backwards --
+     "a `modify` always carries a real replacement value" -- and the submit
+     path falsifies that: it stores currentRowAnswer() unconditionally
+     (:4866), so a reviewer who clears the answer panel and chooses 修正
+     persists an empty `modify` and was reported to the arbiter as
+     無法判定 -- a decision they never made, under a B option that exists
+     to represent that decision. Same move getDisputeItems() already made for
+     the opposite direction in issue #753 (data.js :2238, "`bypass` is
+     decided by the DECISION, never by the diff").
+     The emptiness test survives only where there is no decision to read:
+     `decisions` is absent on every pre-#551 submission (data.js :1946). */
   function arbitrationBChoiceText(item, reviewerSubmission) {
+    var decisions = (reviewerSubmission && reviewerSubmission.answers
+      && reviewerSubmission.answers.decisions) || {};
+    var decision = decisions[item.outKey];
     var value = reviewerSubmission ? item.reviewerValues[reviewerSubmission.reviewerId] : undefined;
-    if (value == null || value === '') return t('arbitrationChoiceBBypass');
+    var bypassed = decision ? decision === 'bypass' : (value == null || value === '');
+    if (bypassed) return t('arbitrationChoiceBBypass');
     return t('arbitrationChoiceB') + '：' + formatDisputeValue(value);
   }
 
@@ -4171,6 +4212,51 @@
     preview.appendChild(card);
   }
 
+  /* FR-100 (issue #766): how many units this reviewer can still act on in
+     this task. The count is the length of the data layer's actionable list
+     -- the same per-unit judgement the next-actionable lookup reads --
+     so "0 remaining" and "no next unit" cannot disagree. At zero the wording
+     is the list page's shared empty-state definition plus one anchor to the
+     same list-return URL the no-actionable exit uses. Plain text and a
+     navigation link only: no button, no auto-navigation (FR-099 §7). */
+  function buildFinalizedRemaining(data) {
+    var box = document.createElement('div');
+    box.setAttribute('data-testid', 'ws-finalized-remaining');
+    /* Same live-region role as the list page's no-actionable notice: the
+       zero state can replace the count in place after an arbitration submit
+       (FR-099 §7), with no navigation to announce it. */
+    box.setAttribute('role', 'status');
+    box.style.cssText = 'font-size:12px;margin:0 0 10px;';
+    var count = data.listActionableReviewUnits(
+      currentProfile.id, currentRunType, currentIdentity.reviewerId
+    ).length;
+    if (count > 0) {
+      box.textContent = t('reviewFinalizedRemaining').replace('{n}', String(count));
+      return box;
+    }
+    var labels = data.NO_ACTIONABLE_REVIEW_LABELS[state.lang] || data.NO_ACTIONABLE_REVIEW_LABELS.zh;
+    var title = document.createElement('strong');
+    title.style.display = 'block';
+    title.setAttribute('data-testid', 'ws-finalized-remaining-title');
+    title.textContent = labels.title;
+    var message = document.createElement('span');
+    message.style.display = 'block';
+    message.setAttribute('data-testid', 'ws-finalized-remaining-message');
+    message.textContent = labels.message;
+    var link = document.createElement('a');
+    link.setAttribute('data-testid', 'ws-finalized-back-to-list');
+    link.href = buildNoActionableListUrl();
+    /* The page resets anchors to inherited color with no underline, so the
+       link needs its own affordance; 44px keeps it a usable touch target. */
+    link.style.cssText = 'display:inline-flex;align-items:center;min-height:44px;'
+      + 'color:var(--color-primary);text-decoration:underline;';
+    link.textContent = t('reviewFinalizedBackToList');
+    box.appendChild(title);
+    box.appendChild(message);
+    box.appendChild(link);
+    return box;
+  }
+
   /* Finalized unit lock (issue #308): a FINALIZED unit renders this
      read-only results card instead of the interactive review card -- no
      ✕/✓ rows, no correction controls, no submit path. Mirrors the
@@ -4197,6 +4283,8 @@
     note.style.cssText = 'font-size:12px;color:var(--color-text-soft);margin:0 0 10px;';
     note.textContent = t('reviewFinalizedNote');
     card.appendChild(note);
+
+    card.appendChild(buildFinalizedRemaining(data));
 
     state.selectedOutputTypes.forEach(function (outKey) {
       var line = document.createElement('div');
@@ -4545,6 +4633,7 @@
     while (preview.firstChild) preview.removeChild(preview.firstChild);
     reviewRowDecisions = {};
     reviewRowOriginals = {};
+    reviewRowOriginalBypass = {};
     reviewDecisionRefreshers = [];
     reviewDecisionAnswers = {};
     reviewRowReasons = {};
@@ -4714,14 +4803,17 @@
      sole surviving "still undecided" derivation in the file; the submit
      guard below is its only caller. */
   /* issue #552/#596 (FR-016A / FR-083): the ONE per-outKey answer to "does
-     this row block submit, and why" -- null, 'undecided', or 'reason'
-     (modify/bypass without a reason). pendingReviewOutputKeys(), the footer
-     button's aria-disabled state and the blocking toast all read it;
-     nothing else recomputes it. */
+     this row block submit, and why" -- null, 'undecided', 'reason'
+     (modify/bypass without a reason), or 'answer' (issue #818: modify whose
+     corrected answer is empty -- bypass stores no value by design, so it is
+     never checked). pendingReviewOutputKeys(), the footer button's
+     aria-disabled state and the blocking toast all read it; nothing else
+     recomputes it. */
   function reviewRowBlocker(outKey, rowName) {
     var decision = reviewRowDecisions[decisionKey(outKey, rowName)];
     if (!decision) return 'undecided';
     if (reviewDecisionRequiresReason(decision) && !reviewRowReason(outKey, rowName)) return 'reason';
+    if (decision === 'modify' && !currentRowAnswer(outKey)) return 'answer';
     return null;
   }
 
@@ -4756,7 +4848,7 @@
     if (next) {
       selectSample(next.sampleId, next.annotatorId);
     } else {
-      window.location.href = buildListReturnUrl() + '&notice=no_actionable_review';
+      window.location.href = buildNoActionableListUrl();
     }
   }
 
@@ -4784,13 +4876,15 @@
     });
     var pendingOutputKeys = pendingReviewOutputKeys(annotatorId);
     if (pendingOutputKeys.length) {
-      /* issue #552/#596: same list either way; the wording only switches to
-         the reason-specific copy once every blocker is a reason-less
-         modify/bypass. */
-      var onlyReasons = pendingOutputKeys.every(function (outKey) {
-        return reviewRowBlocker(outKey, annotatorId) === 'reason';
+      /* issue #552/#596/#818: same list either way; the wording only
+         switches to a specific copy once every blocker is the same kind
+         (all reason-less, or all empty-answer modify). Any mix falls back
+         to the generic decision copy. */
+      var kinds = pendingOutputKeys.map(function (outKey) {
+        return reviewRowBlocker(outKey, annotatorId);
       });
-      var toastKey = onlyReasons ? 'toastReasonRequired' : 'toastSelectDecision';
+      var sameKind = kinds.every(function (kind) { return kind === kinds[0]; }) ? kinds[0] : null;
+      var toastKey = { reason: 'toastReasonRequired', answer: 'toastAnswerRequired' }[sameKind] || 'toastSelectDecision';
       showToast(t(toastKey).replace('{list}', pendingOutputKeys.join('、')), 'warning');
       return;
     }

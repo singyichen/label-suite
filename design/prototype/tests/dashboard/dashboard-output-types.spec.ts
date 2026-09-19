@@ -32,15 +32,16 @@ const EXAMPLE_DATA_FILES = [
   'review-flow-dry-run.json',
   'review-flow-official-single.json',
   'review-flow-official-multi.json',
-  'review-flow-official-tie.json',
 ] as const;
 
-/* T014-T017 are the review-flow demo tasks: annotation-workspace.data.js
+/* T014-T016 are the review-flow demo tasks: annotation-workspace.data.js
  * stages their submission/review states in localStorage at boot (the
  * labelsuite.reviewFlowDemoSeed.v1 seeder), so their first sample rows may
  * legitimately start out submitted. The fresh-first-sample invariant below
- * only holds for the un-staged T001-T013 baseline. */
-const DEMO_STAGED_TASK_IDS = new Set(['T014', 'T015', 'T016', 'T017']);
+ * only holds for the un-staged T001-T013 baseline.
+ * issue #815: T017 (review-flow-official-tie) is retired; the review-flow
+ * demo set is now exactly T014-T016. */
+const DEMO_STAGED_TASK_IDS = new Set(['T014', 'T015', 'T016']);
 
 const ROLE_EXPECTATIONS = {
   super_admin_data: {
@@ -59,7 +60,7 @@ const ROLE_EXPECTATIONS = {
     taskIds: [
       'T001', 'T002', 'T003', 'T004', 'T005', 'T006', 'T007',
       'T008', 'T009', 'T010', 'T011', 'T012', 'T013',
-      'T014', 'T015', 'T016', 'T017',
+      'T014', 'T015', 'T016',
     ],
   },
   reviewer: {
@@ -68,7 +69,7 @@ const ROLE_EXPECTATIONS = {
     taskIds: [
       'T001', 'T002', 'T003', 'T004', 'T005', 'T006', 'T007',
       'T008', 'T009', 'T010', 'T011', 'T012', 'T013',
-      'T014', 'T015', 'T016', 'T017',
+      'T014', 'T015', 'T016',
     ],
   },
 } as const;
@@ -136,7 +137,7 @@ async function openScenario(
 }
 
 test.describe('Dashboard output-type task summaries', () => {
-  test('loads the eight-output registry and all 17 safe example summaries', async ({
+  test('loads the eight-output registry and all 16 safe example summaries', async ({
     page,
   }) => {
     await page.goto(DASHBOARD_URL);
@@ -149,7 +150,7 @@ test.describe('Dashboard output-type task summaries', () => {
     expect(dashboardData.outputTypes.map((item) => item.key)).toEqual(
       OUTPUT_TYPE_KEYS,
     );
-    expect(dashboardData.tasks).toHaveLength(17);
+    expect(dashboardData.tasks).toHaveLength(16);
     expect(dashboardData.tasks.map((task) => task.sourceFile).sort()).toEqual(
       [...EXAMPLE_DATA_FILES].sort(),
     );
@@ -235,7 +236,7 @@ test.describe('Dashboard output-type task summaries', () => {
   });
 
   for (const role of ['annotator', 'reviewer'] as const) {
-    test(`${role} exposes all 17 tasks with independent workspace routes`, async ({
+    test(`${role} exposes all 16 tasks with independent workspace routes`, async ({
       page,
     }) => {
       await openScenario(page, role);
@@ -343,7 +344,7 @@ test.describe('Dashboard output-type task summaries', () => {
 
         // The URL's sample is a fresh, unfinished sample — the corresponding
         // row must not already carry the submitted contract flag. Demo-staged
-        // tasks (T014-T017) are exempt: their boot-time localStorage seeder
+        // tasks (T014-T016) are exempt: their boot-time localStorage seeder
         // legitimately pre-submits first rows (see DEMO_STAGED_TASK_IDS).
         if (!DEMO_STAGED_TASK_IDS.has(entry.exampleTaskId)) {
           await expect(

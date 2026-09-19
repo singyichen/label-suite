@@ -9,7 +9,7 @@
  */
 import { test, expect } from '@playwright/test';
 
-const TASK_DETAIL_URL = '/pages/task-management/task-detail.html?task_id=T017';
+const TASK_DETAIL_URL = '/pages/task-management/task-detail.html?task_id=T016';
 const PANEL_LOAD_TIMEOUT = 15000;
 
 test.use({ viewport: { width: 375, height: 812 } });

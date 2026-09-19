@@ -172,6 +172,16 @@ type RunControlCase = {
   actionButton: string;
   actionText: string;
   absentButton?: string;
+  /* issue #791: dry_run_in_progress must keep the "add next round" button
+     visible but disabled, with a visible (non-tooltip) reason next to it,
+     and it must be the only run-control button in the action row. */
+  actionDisabled?: boolean;
+  reasonText?: string;
+  onlyButtonInRow?: boolean;
+  /* issue #791: waiting_iaa_confirmation is the only decision point where
+     both "start official run" and "add next round" are offered side by
+     side, both enabled regardless of IAA result (FR-010o-3). */
+  secondaryButton?: { selector: string; text: string };
 };
 
 const RUN_CONTROL_CASES: RunControlCase[] = [
@@ -190,6 +200,9 @@ const RUN_CONTROL_CASES: RunControlCase[] = [
     roundCount: 1,
     actionButton: '#publishDryRunBtn',
     actionText: '新增試標回合 R2',
+    actionDisabled: true,
+    reasonText: '本回合全部提交並完成 IAA 後才能新增下一回合',
+    onlyButtonInRow: true,
   },
   {
     status: 'waiting_iaa_confirmation',
@@ -198,7 +211,7 @@ const RUN_CONTROL_CASES: RunControlCase[] = [
     roundCount: 1,
     actionButton: '#publishOfficialRunBtn',
     actionText: '開始正式標記',
-    absentButton: '#publishDryRunBtn',
+    secondaryButton: { selector: '#publishDryRunBtn', text: '新增試標回合 R2' },
   },
   {
     status: 'official_run_in_progress',
@@ -219,10 +232,18 @@ const RUN_CONTROL_CASES: RunControlCase[] = [
 ];
 
 test.describe('Task detail profile mapping', () => {
-  test('project leader can open task detail from every illustrative task row', async ({ page }) => {
-    await page.goto(TASK_LIST_URL);
+  /* #771: these two loops used to walk all 7 EXAMPLE_SOURCE_FILES rows inside
+     a single test -- 14 click/goBack round trips sharing one 30s Playwright
+     budget. Under machine load the whole file's runtime went from ~16s to
+     50s-1.8m and blew that shared budget. A budget-shaped fix (test.slow()'s
+     flat 3x multiplier, or a shared `retries`) still leaves one slow row able
+     to starve the rest; splitting into one test per row instead gives every
+     round trip its own fresh 30s budget, so a load spike only threatens the
+     row it hits. Assertions are unchanged, just re-scoped per row. */
+  for (const sourceFile of EXAMPLE_SOURCE_FILES) {
+    test(`project leader can open task detail from task row ${sourceFile}`, async ({ page }) => {
+      await page.goto(TASK_LIST_URL);
 
-    for (const sourceFile of EXAMPLE_SOURCE_FILES) {
       const row = page.locator(
         `#taskTableBody tr[data-source-file="${sourceFile}"]`,
       );
@@ -233,13 +254,13 @@ test.describe('Task detail profile mapping', () => {
       );
       await page.goBack();
       await expect(page).toHaveURL(/task-list\.html\?task_role=project_leader/);
-    }
-  });
+    });
+  }
 
-  test('super admin can open task detail from every illustrative task row', async ({ page }) => {
-    await page.goto('/pages/task-management/task-list.html?task_role=super_admin');
+  for (const sourceFile of EXAMPLE_SOURCE_FILES) {
+    test(`super admin can open task detail from task row ${sourceFile}`, async ({ page }) => {
+      await page.goto('/pages/task-management/task-list.html?task_role=super_admin');
 
-    for (const sourceFile of EXAMPLE_SOURCE_FILES) {
       const row = page.locator(
         `#taskTableBody tr[data-source-file="${sourceFile}"]`,
       );
@@ -250,8 +271,8 @@ test.describe('Task detail profile mapping', () => {
       );
       await page.goBack();
       await expect(page).toHaveURL(/task-list\.html\?task_role=super_admin/);
-    }
-  });
+    });
+  }
 
   for (const task of TASK_PROFILES) {
     test(`renders task-specific overview for ${task.id}`, async ({ page }) => {
@@ -297,6 +318,21 @@ test.describe('Task detail profile mapping', () => {
       await expect(page.locator('#statusStepper .step-current .step-label-wrap')).toHaveText(rc.activeStepLabel);
       await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(rc.roundCount);
       await expect(page.locator(rc.actionButton)).toHaveText(rc.actionText);
+      if (rc.actionDisabled) {
+        await expect(page.locator(rc.actionButton)).toBeDisabled();
+      }
+      if (rc.reasonText) {
+        await expect(page.locator('#publishActionRow')).toContainText(rc.reasonText);
+      }
+      if (rc.onlyButtonInRow) {
+        await expect(page.locator('#publishActionRow button')).toHaveCount(1);
+      }
+      if (rc.secondaryButton) {
+        await expect(page.locator(rc.actionButton)).toBeEnabled();
+        const secondary = page.locator(rc.secondaryButton.selector);
+        await expect(secondary).toHaveText(rc.secondaryButton.text);
+        await expect(secondary).toBeEnabled();
+      }
       if (rc.absentButton) {
         await expect(page.locator(rc.absentButton)).toHaveCount(0);
       }

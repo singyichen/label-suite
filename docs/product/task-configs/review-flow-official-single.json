@@ -1,7 +1,7 @@
 {
   "task_category": "classification",
   "input_type": "single_item",
-  "typical_tasks": ["Sentiment Analysis（情感分析）— 審核流程示範：正式標記（official_run）· 1 標記員 × min_reviewers=1"],
+  "typical_tasks": ["Sentiment Analysis（情感分析）— 審核流程示範：正式標記（official_run）· 1 標記員 · 以審核單位為單位指派，每單位一位審核員"],
   "outputs": [
     {
       "type": "single_label",

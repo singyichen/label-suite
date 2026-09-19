@@ -101,7 +101,7 @@ test.describe('Task detail URL view-state (issue #726)', () => {
 
       // Sort FIRST, while the default stage (T001's latest trial round,
       // 'r2') still has members and #memberProgressSort is visible. T001
-      // has no entry in ANNOTATION_PROGRESS_BY_TASK (only T014-T017 do), so
+      // has no entry in ANNOTATION_PROGRESS_BY_TASK (only T014-T016 do), so
       // it falls back to DEFAULT_ANNOTATION_PROGRESS, whose official.members
       // is []; renderProgressEmptyState() then hides #memberProgressSection
       // (and the sort control inside it) once stage=official. Interacting
@@ -302,8 +302,10 @@ test.describe('Task detail URL view-state (issue #726)', () => {
       // ar_review_status enum (design.md D5); a second hardcoded copy in
       // the URL-parsing code would silently drift from it the next time a
       // status is added.
+      // Three-state as of spec 014 v3.0.0 (issue #688); the former
+      // `approved`/`modified` interim states were retired (issue #807).
       const literalArrayCount = (
-        source.match(/\['pending', 'approved', 'modified', 'disputed', 'finalized'\]/g) || []
+        source.match(/\['pending', 'disputed', 'finalized'\]/g) || []
       ).length;
       expect(literalArrayCount).toBe(1);
 

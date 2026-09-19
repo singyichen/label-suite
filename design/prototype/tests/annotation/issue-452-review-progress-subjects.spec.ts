@@ -14,7 +14,7 @@
  *   - task level      「任務覆蓋 4 / 5 個審核單位」
  *   - reviewer level  「我的審核提交 0 / 5 個審核單位」
  *   - unit level      「定稿門檻 1 / 3 位審核員」（issue #596 已移除，見檔尾說明）
- *   - interim pills carry a 「未達定稿門檻 x / n」 note, finalized carries
+ *   - finalized carries
  *     「已鎖定」, and the distinction is exposed as text + data-terminal,
  *     never colour alone.
  *
@@ -36,6 +36,18 @@
  * it now routes straight to `disputed` instead of an interim `已修改`
  * state. Task/coverage counts below are also updated to match: units that
  * used to land in the `已同意`/`已修改` buckets now land in `爭議中`.
+ *
+ * issue #804 group 2 fixup: T017's oft-05-pending-review reject no longer
+ * rolls the annotator's sample back to pending (FR-092 removed that
+ * production point), so T017 now sits at full coverage (0 pending) and can
+ * no longer demonstrate the "partial coverage + N pending" denominator
+ * case the first test below existed to pin. Swapped to T015, the task that
+ * still carries a genuinely pending unit (see
+ * issue-450-reviewer-summary-derived.spec.ts's MATRIX) -- the covered/
+ * pending/unfinalized/disputed counts below are read from that same
+ * MATRIX entry and from computeReviewSummary()/formatReviewSummary() in
+ * annotation-workspace.data.js (unfinalized = total - finalized, which is
+ * why it reads 2 here, not 1).
  */
 import { test, expect, type Page } from '@playwright/test';
 import { buildListUrl } from './_workspace-helpers';
@@ -64,12 +76,12 @@ function statePill(page: Page) {
 }
 
 test.describe('issue #452 — task-level coverage names the review-unit denominator', () => {
-  test('annotation-list T017 reads 任務覆蓋 4 / 5 個審核單位, never a bare 覆蓋率', async ({ page }) => {
-    await page.goto(buildListUrl({ task_id: 'T017', role: 'reviewer', run_type: 'official_run' }));
+  test('annotation-list T015 reads 任務覆蓋 3 / 4 個審核單位, never a bare 覆蓋率', async ({ page }) => {
+    await page.goto(buildListUrl({ task_id: 'T015', role: 'reviewer', run_type: 'official_run' }));
 
     const detail = page.locator('#taskInfoDetail');
     await expect(detail).toContainText(
-      '任務覆蓋 4 / 5 個審核單位 · 待審 1 個 · 未達定稿門檻 3 個 · 爭議中 2 個 · IAA 無法計算',
+      '任務覆蓋 3 / 4 個審核單位 · 待審 1 個 · 爭議中 1 個 · IAA 無法計算',
     );
     await expect(detail).not.toContainText('審核覆蓋率');
   });
@@ -78,7 +90,7 @@ test.describe('issue #452 — task-level coverage names the review-unit denomina
     await page.goto(buildListUrl({ task_id: 'T016', role: 'reviewer', run_type: 'official_run' }));
 
     await expect(page.locator('#taskInfoDetail')).toContainText(
-      '任務覆蓋 5 / 5 個審核單位 · 未達定稿門檻 3 個 · 爭議中 3 個 · IAA 無法計算',
+      '任務覆蓋 5 / 5 個審核單位 · 爭議中 3 個 · IAA 無法計算',
     );
   });
 
@@ -90,7 +102,7 @@ test.describe('issue #452 — task-level coverage names the review-unit denomina
 
     const card = page.locator('.role-task-card[data-role="reviewer"][data-example-task-id="T016"]').first();
     await expect(card).toContainText('任務覆蓋 5 / 5 個審核單位');
-    await expect(card).toContainText('未達定稿門檻 3 個');
+    await expect(card).toContainText('爭議中 3 個');
   });
 
   test('a task with no derivable review state still names its denominator', async ({ page }) => {
@@ -136,14 +148,14 @@ test.describe('issue #452 — the unit banner states which state the unit is in'
   });
 
   /* issue #596: min_reviewers is retired -- every profile (T016 included)
-     now defaults to minReviewers = 1, so ofm-02-approved-interim's sole
+     now defaults to minReviewers = 1, so ofm-02-reviewer-accepts-a's sole
      reviewer's unchanged decision finalizes on first submit. The "approved
      but short of a threshold > 1" state this case existed to pin can no
      longer be produced by any seed; deleted rather than converted. Same
      reasoning retires the T017 oft-02-approved-interim case that used to
      follow it ("approved unit reports 1 / 2"). */
   test('T016 a `modify` decision disputes the unit instead of an interim 已修改 state', async ({ page }) => {
-    await openReviewerWorkspace(page, 'T016', 'ofm-03-modified-interim');
+    await openReviewerWorkspace(page, 'T016', 'ofm-03-awaiting-arbitration');
 
     await expect(contextBanner(page)).not.toContainText('定稿門檻');
     const pill = statePill(page);
@@ -151,8 +163,8 @@ test.describe('issue #452 — the unit banner states which state the unit is in'
     await expect(pill).toHaveAttribute('data-terminal', 'false');
   });
 
-  test('T017 a disputed unit says so in words', async ({ page }) => {
-    await openReviewerWorkspace(page, 'T017', 'oft-01-final-exception');
+  test('T016 ofm-05-final-exception: a disputed unit says so in words', async ({ page }) => {
+    await openReviewerWorkspace(page, 'T016', 'ofm-05-final-exception');
 
     await expect(contextBanner(page)).not.toContainText('定稿門檻');
     const pill = statePill(page);

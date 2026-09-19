@@ -19,6 +19,20 @@ const OUTPUT_TYPE_KEYS = [
   'free_text',
 ];
 
+// issue #815 (retire-stale-review-demo-fixtures): review-flow-official-tie.json
+// (T017, the two-reviewer tie demo) is retired outright -- its whole premise
+// is structurally impossible under the single-owner relay model (FR-093) --
+// so task-list.data.js now seeds 16 example tasks, not 17.
+/*
+ * issue #783 (openspec/changes/task-detail-iaa-precondition-and-override-scope,
+ * design.md D7): T018 is the new demo task backing FR-010o-4's
+ * "waiting_iaa_confirmation with a failed/pending IAA computation" scenarios
+ * (see issue-783-iaa-computation-status.spec.ts). Its sourceFile
+ * 'review-flow-iaa-failed.json' sorts between 'review-flow-dry-run.json' and
+ * 'review-flow-official-multi.json', so the page seeds 17 example tasks. This file only reads task-list.data.js's
+ * `outputTypes`, so T018's chosen outputTypes is ['single_label'] -- picked
+ * to keep the fixture minimal; it is not itself part of FR-010o-4's contract.
+ */
 const EXAMPLE_DATA_FILES = [
   'absa-va.json',
   'entity-recognition.json',
@@ -31,9 +45,9 @@ const EXAMPLE_DATA_FILES = [
   'nli.json',
   'relation-identification.json',
   'review-flow-dry-run.json',
+  'review-flow-iaa-failed.json',
   'review-flow-official-multi.json',
   'review-flow-official-single.json',
-  'review-flow-official-tie.json',
   'sequence-tagging.json',
   'single-dim.json',
   'single-label.json',

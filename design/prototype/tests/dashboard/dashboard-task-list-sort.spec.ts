@@ -8,7 +8,10 @@
  *   - Sorting must not change which tasks render, only their order; the
  *     existing "keep current fixed assignment set" scope (issue #187,
  *     no per-user assignment data in dashboard.assignments.js) is
- *     verified by asserting the full 17-task baseline still renders.
+ *     verified by asserting the full 16-task baseline still renders.
+ *
+ * issue #815: T017 (review-flow-official-tie) is retired; the 100%-progress
+ * annotator tie group below shrinks from [T014, T016, T017] to [T014, T016].
  */
 import { test, expect } from '@playwright/test';
 
@@ -28,16 +31,16 @@ test.describe('Dashboard — issue #187 annotator task list sort', () => {
     const titles = page.getByTestId('annotator-view').locator('.list-item-title');
 
     await page.locator('#annotatorSortSelect').selectOption('progress_desc');
-    // T014/T016/T017 are tied at 100% progress; stable sort keeps their
+    // T014/T016 are tied at 100% progress; stable sort keeps their
     // original relative order, so T014 (first in the seed) leads.
     await expect(titles.first()).toHaveText('審核流程示範：試標');
     await expect(titles.last()).toHaveText('病患情緒與照護情境階層分類'); // T003, 18%
 
     await page.locator('#annotatorSortSelect').selectOption('progress_asc');
     await expect(titles.first()).toHaveText('病患情緒與照護情境階層分類'); // T003, 18%
-    // Stable sort keeps the 100%-tie group (T014/T016/T017) in seed order
-    // regardless of direction, so T017 (last of the tie) lands last here.
-    await expect(titles.last()).toHaveText('審核流程示範：正式標記（雙審核員平手）');
+    // Stable sort keeps the 100%-tie group (T014/T016) in seed order
+    // regardless of direction, so T016 (last of the tie) lands last here.
+    await expect(titles.last()).toHaveText('審核流程示範：正式標記（三審核員多數決）');
 
     await page.locator('#annotatorSortSelect').selectOption('default');
     await expect(titles.first()).toHaveText('醫療文本情感分類');
@@ -46,11 +49,11 @@ test.describe('Dashboard — issue #187 annotator task list sort', () => {
   test('sorting does not change the assigned task subset or card actions', async ({ page }) => {
     await page.goto(`${DASHBOARD_URL}?scenario=annotator`);
     const view = page.getByTestId('annotator-view');
-    await expect(view.locator('.list-item-title')).toHaveCount(17);
+    await expect(view.locator('.list-item-title')).toHaveCount(16);
 
     await page.locator('#annotatorSortSelect').selectOption('progress_desc');
-    await expect(view.locator('.list-item-title')).toHaveCount(17);
-    await expect(view.locator('.role-task-action-btn')).toHaveCount(17);
+    await expect(view.locator('.list-item-title')).toHaveCount(16);
+    await expect(view.locator('.role-task-action-btn')).toHaveCount(16);
   });
 
   test('sort control labels localize on language toggle', async ({ page }) => {
@@ -69,12 +72,12 @@ test.describe('Dashboard — issue #187 reviewer task list sort', () => {
     await page.goto(`${DASHBOARD_URL}?scenario=reviewer`);
     const view = page.getByTestId('reviewer-view');
     const titles = view.locator('.list-item-title');
-    await expect(titles).toHaveCount(17);
+    await expect(titles).toHaveCount(16);
 
     await page.locator('#reviewerSortSelect').selectOption('progress_desc');
     // T016 is the sole 100% (審核覆蓋率) reviewer entry.
     await expect(titles.first()).toHaveText('審核流程示範：正式標記（三審核員多數決）');
-    await expect(titles).toHaveCount(17);
-    await expect(view.locator('.role-task-action-btn')).toHaveCount(17);
+    await expect(titles).toHaveCount(16);
+    await expect(view.locator('.role-task-action-btn')).toHaveCount(16);
   });
 });

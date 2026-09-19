@@ -27,6 +27,13 @@ import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
  * this test ever loads it and its submit button is gone. Swapped to T017
  * oft-05-pending-review, a unit whose annotator has submitted but whose
  * (sole) reviewer has not -- genuinely pre-finalize under the new model.
+ *
+ * issue #804 group 2 fixup: oft-05-pending-review is no longer pending --
+ * FR-092 stopped the reject decision seeded on it from rolling the
+ * annotator's sample back, so the unit now reads as disputed and its
+ * submit button is gone (the same problem the #596 fixup above describes,
+ * one seed row later). Swapped again to T015 ofs-04-pending-review, the
+ * task's still-genuinely-pending row (no reviewer decision seeded at all).
  */
 
 async function expectNoNoteField(page: Page) {
@@ -69,8 +76,8 @@ test.describe('issue #457 -- the workspace ships no unpersisted free-text note f
   test('reviewer, pending unit: no note field', async ({ page }) => {
     await page.goto(
       buildWorkspaceUrl({
-        task_id: 'T017', sample_id: 'oft-05-pending-review',
-        role: 'reviewer', run_type: 'official_run', reviewer_id: 'reviewer_chen',
+        task_id: 'T015', sample_id: 'ofs-04-pending-review',
+        role: 'reviewer', run_type: 'official_run',
       })
     );
 

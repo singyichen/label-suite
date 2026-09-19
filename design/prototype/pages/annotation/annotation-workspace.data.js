@@ -363,14 +363,6 @@
     return Object.keys(snapshot).length ? snapshot : null;
   }
 
-  /* One output type's answer, for the FR-086 accepted/modified decision.
-     Plain-value types live under previewState[outKey]; position-type
-     comparison is registry-driven and lands with FR-087's position half. */
-  function outputSlice(payload, outKey) {
-    var state = (payload && payload.previewState) || {};
-    return JSON.stringify(state[outKey] != null ? state[outKey] : null);
-  }
-
   function markSampleSubmitted(taskId, role, runType, sampleId, payload, historySummary, identity) {
     var key = submissionBucketKey(taskId, role, runType, identity);
     var bucket = readSubmissionBucket(key);
@@ -389,22 +381,31 @@
     if (decisions) {
       appendReviewDecisionEvents(entry, taskId, runType, sampleId, payload, historySummary, actorId, identity, decisions);
     }
+    /* issue #834 (FR-096, design.md D1): a dry-run annotator submission
+       records the trial round it belongs to, so feedback can be gated per
+       round rather than per task status. */
+    if (role === 'annotator' && runType === 'dry_run') entry.trialRound = currentTrialRound(taskId);
     bucket[sampleId] = entry;
     writeSubmissionBucket(key, bucket);
   }
 
-  /* FR-086 emission points for `accepted` / `modified`. A reviewer submit
-     carries one decision per output type (FR-051); an approve whose value
-     matches the annotator's is an acceptance, an approve whose value
-     differs is a correction. `reject` is not emitted here -- that path
-     already writes `rejected` through markSampleRejected. */
+  /* FR-086 / FR-092 emission points for the three REVIEW_DECISIONS values.
+     A reviewer submit carries one decision per output type (FR-051); each
+     decision maps to exactly one history action, per FR-086's v5.0.0
+     revision -- `approve` always writes `accepted` (FR-092 point 1: "無異議，直接定稿"), `modify` writes `modified` (FR-092 point 2: the correction
+     does not take effect immediately, it only opens a dispute), and
+     `bypass` writes `bypassed` (FR-092 point 3). This is a closed one-to-one
+     table, not a value-diff comparison -- AC-2.21's v5.0.0 revision fixes
+     `modified`'s trigger to the decision itself. `reject` is not in
+     REVIEW_DECISIONS (FR-092) and has no emission point here. */
+  var REVIEW_DECISION_EVENT_ACTION = { approve: 'accepted', modify: 'modified', bypass: 'bypassed' };
+
   function appendReviewDecisionEvents(entry, taskId, runType, sampleId, payload, summary, actorId, identity, decisions) {
-    var reviewed = getSubmission(taskId, 'annotator', runType, sampleId, identity);
     var reasons = (payload && payload.reasons) || {};
     Object.keys(decisions).forEach(function (outKey) {
-      if (decisions[outKey] !== 'approve') return;
-      var changed = outputSlice(payload, outKey) !== outputSlice(reviewed, outKey);
-      appendHistoryEvent(entry, changed ? 'modified' : 'accepted', 'reviewer', summary, actorId, Object.assign(
+      var action = REVIEW_DECISION_EVENT_ACTION[decisions[outKey]];
+      if (!action) return;
+      appendHistoryEvent(entry, action, 'reviewer', summary, actorId, Object.assign(
         { result_snapshot: buildResultSnapshot(payload), reason: reasons[outKey] || null },
         timingFields(payload && payload.timing)
       ));
@@ -1348,8 +1349,8 @@
       ]
     },
 
-    /* T014-T017: review-flow demo tasks (Phase 2). T014 keeps the dry_run
-     * 3-annotator convention; T015-T017 are official_run tasks with a
+    /* T014-T016: review-flow demo tasks (Phase 2). T014 keeps the dry_run
+     * 3-annotator convention; T015-T016 are official_run tasks with a
      * single annotator per sample. T015 deliberately OMITS
      * ofs-05-not-submitted: a sample with no mock row renders no review
      * unit, which is exactly that sample's demo point. Answers align with
@@ -1402,35 +1403,17 @@
       'ofm-01-reviewer-corrects-b': [
         { annotator: 'kioleemg12', answers: { single_label: 'positive' } }
       ],
-      'ofm-02-approved-interim': [
+      'ofm-02-reviewer-accepts-a': [
         { annotator: 'kioleemg12', answers: { single_label: 'negative' } }
       ],
-      'ofm-03-modified-interim': [
+      'ofm-03-awaiting-arbitration': [
         { annotator: 'kioleemg12', answers: { single_label: 'neutral' } }
       ],
-      'ofm-04-majority-converged': [
+      'ofm-04-reviewer-bypass': [
         { annotator: 'kioleemg12', answers: { single_label: 'positive' } }
       ],
-      'ofm-05-all-divergent': [
+      'ofm-05-final-exception': [
         { annotator: 'kioleemg12', answers: { single_label: 'neutral' } }
-      ]
-    },
-
-    T017: {
-      'oft-01-final-exception': [
-        { annotator: 'kioleemg12', answers: { single_label: 'neutral' } }
-      ],
-      'oft-02-approved-interim': [
-        { annotator: 'kioleemg12', answers: { single_label: 'positive' } }
-      ],
-      'oft-03-modified-interim': [
-        { annotator: 'kioleemg12', answers: { single_label: 'neutral' } }
-      ],
-      'oft-04-unanimous-gold': [
-        { annotator: 'kioleemg12', answers: { single_label: 'positive' } }
-      ],
-      'oft-05-pending-review': [
-        { annotator: 'kioleemg12', answers: { single_label: 'positive' } }
       ]
     },
 
@@ -1872,12 +1855,18 @@
    * actions on the merged trail that count as "this sample's dry-run review
    * is settled" -- the same closed set annotation-history.js's
    * ACTION_LABEL/BADGE_CLASS render, minus the ones that never conclude a
-   * unit (submitted/draft_saved/skipped/bypassed/rejected). Reused as-is
-   * rather than re-deriving it, so a new terminal action added there is not
-   * silently invisible here. */
+   * unit (submitted/draft_saved/skipped/modified/bypassed/rejected). Reused
+   * as-is rather than re-deriving it, so a new terminal action added there
+   * is not silently invisible here.
+   *
+   * `modified` and `bypassed` are excluded together, because FR-092 gives
+   * them the same standing: a reviewer's `modify` and `bypass` decisions do
+   * not take effect, they only push the item into the dispute pool, and it
+   * is the arbiter's `adjudicated` that settles it. Treating `modified` as
+   * a settling action would feed the reviewer's proposed-but-not-effective
+   * value back to the annotator as the "finalized result" (issue #804). */
   var DRY_RUN_FEEDBACK_SOURCE_ACTIONS = {
     accepted: true,
-    modified: true,
     adjudicated: true,
     exception_resolved: true,
     excluded: true,
@@ -1900,9 +1889,13 @@
       myAnswer: entry.answers || {},
       finalizedAnswer: last.result_snapshot || entry.answers || {},
       /* Unchanged only when every settling action on this sample was a
-       * plain approve -- a task with several output keys can carry one
-       * 'accepted' and one 'modified' event for the same sample, and that
-       * sample is still a "被修改" row for FR-096 point 1's count. */
+       * plain approve. `decisive` is already filtered through
+       * DRY_RUN_FEEDBACK_SOURCE_ACTIONS, so a reviewer's `modified` can
+       * never appear here (issue #804) -- the non-approve settling actions
+       * that do are 'adjudicated', 'exception_resolved' and 'excluded'. A
+       * task with several output keys can carry one 'accepted' and one of
+       * those for the same sample, and that sample is still a "被修改" row
+       * for FR-096 point 1's count. */
       modified: decisive.some(function (event) { return event.action !== 'accepted'; }),
       action: last.action,
       actorId: last.actorId,
@@ -1910,28 +1903,57 @@
     };
   }
 
-  /* FR-096 試標歷史回饋 (design.md D5, Data Fairness NON-NEGOTIABLE): the
-   * annotator's own dry-run round feedback, gated on task status IN THE
-   * DATA LAYER -- while the round is still in progress this MUST return an
-   * empty collection, not a full result the UI merely hides (D5's whole
-   * point: data that reaches the browser has already leaked). Includes
-   * every one of the annotator's submitted samples in the round, not only
-   * the modified ones, so the caller can compute FR-096 point 1's ratio
-   * over the true denominator. Scoped to one annotatorId by construction
-   * (the bucket key and getSampleHistory's reviewer-bucket prefix both key
-   * off it), so another annotator's answers never enter the result. */
+  /* The task's current trial round r, from the same field the annotation
+   * pages read for "試標回合 R{n}"; defaults to 1 (issue #834, design.md D1). */
+  function currentTrialRound(taskId) {
+    var detail = findTaskDetailProfile(taskId);
+    var runs = detail && detail.materializedRuns;
+    var round = runs && runs.dry_run && runs.dry_run.round;
+    return round >= 1 ? round : 1;
+  }
+
+  /* Highest disclosable trial round per task status (design.md D2): the
+   * in-progress round R{r} is never disclosable; every ended round is,
+   * including after official_run starts. 0 = nothing disclosable. */
+  var DISCLOSED_ROUND_OFFSET = {
+    dry_run_in_progress: -1,
+    waiting_iaa_confirmation: 0,
+    official_run_in_progress: 0,
+    completed: 0,
+  };
+
+  /* FR-096 試標歷史回饋 (Data Fairness NON-NEGOTIABLE): the annotator's own
+   * dry-run feedback, gated PER ROUND IN THE DATA LAYER (issue #834) -- rows
+   * of the in-progress round are never returned, not merely hidden by the
+   * UI (data that reaches the browser has already leaked). Includes every
+   * submitted sample of each disclosed round, not only the modified ones,
+   * so the caller can compute FR-096 point 1's per-round ratio over the
+   * true denominator. Each row carries its `round`. An entry without a
+   * round stamp (written before D1) is withheld while a round is in
+   * progress (fail closed) and attributed to the current round otherwise
+   * (design.md D4). Scoped to one annotatorId by construction (the bucket
+   * key and getSampleHistory's reviewer-bucket prefix both key off it), so
+   * another annotator's answers never enter the result. */
   function getDryRunFeedback(taskId, runType, identity) {
     if (runType !== 'dry_run') return [];
     var listEntry = findTaskListEntry(taskId);
-    if (!listEntry || listEntry.status !== 'waiting_iaa_confirmation') return [];
+    if (!listEntry || !Object.prototype.hasOwnProperty.call(DISCLOSED_ROUND_OFFSET, listEntry.status)) return [];
+    var currentRound = currentTrialRound(taskId);
+    var maxRound = currentRound + DISCLOSED_ROUND_OFFSET[listEntry.status];
+    if (maxRound < 1) return [];
+    var inProgress = listEntry.status === 'dry_run_in_progress';
     var scopedIdentity = { annotatorId: (identity && identity.annotatorId) || DEFAULT_ANNOTATOR_ID };
     var bucket = readSubmissionBucket(submissionBucketKey(taskId, 'annotator', runType, scopedIdentity));
     var rows = [];
     Object.keys(bucket).forEach(function (sampleId) {
       var entry = bucket[sampleId];
       if (entryStatus(entry) !== 'submitted') return;
+      var round = entry.trialRound >= 1 ? entry.trialRound : inProgress ? null : currentRound;
+      if (round === null || round > maxRound) return;
       var row = buildDryRunFeedbackRow(taskId, runType, sampleId, entry, scopedIdentity);
-      if (row) rows.push(row);
+      if (!row) return;
+      row.round = round;
+      rows.push(row);
     });
     return rows;
   }
@@ -2515,7 +2537,6 @@
   function submitArbitration(taskId, runType, sampleId, identity, decisions) {
     var bucketKey = arbitrationBucketKey(taskId, runType, identity);
     var arbiterId = (identity && identity.reviewerId) || DEFAULT_REVIEWER_ID;
-    var upheldRejectItemIds = [];
     (decisions || []).forEach(function (decision) {
       var itemKey = arbitrationItemKey(bucketKey, sampleId, decision.itemId);
       var item = readArbitrationItem(itemKey) || { votes: [] };
@@ -2548,18 +2569,7 @@
         decision.reason, 'arbitration finalized: ' + decision.itemId, identity,
         undefined, arbitrationFinalizedSnapshot(taskId, runType, sampleId, identity, decision.choice)
       );
-      if (decision.value === PURE_REJECT_VALUE) upheldRejectItemIds.push(decision.itemId);
     });
-    /* issue #551 point 2: choosing B on a pure-reject item means "maintain
-       the reject" -- the same official_run rework rollback a live reviewer
-       reject already triggers (markSampleRejected), still no third answer
-       written. dry_run has no such channel and only keeps the vote. */
-    if (upheldRejectItemIds.length && runType === 'official_run') {
-      markSampleRejected(
-        taskId, 'annotator', runType, sampleId,
-        'arbitration upheld reject: ' + upheldRejectItemIds.join(', '), identity
-      );
-    }
   }
 
   /* issue #722: an arbiter's workspace progress counter must count
@@ -2850,8 +2860,8 @@
   /* Renders a computeReviewSummary() result as the localized summary text
    * both consumers display. One rule, no per-task branches: coverage is
    * always shown, every other counter appears only when non-zero, so a
-   * vacuous "待審 0 個" never crowds out the 未達定稿門檻/爭議中 breakdown
-   * that actually needs the reviewer's attention. `iaa` is the seed's
+   * vacuous "待審 0 個" never crowds out the 爭議中 breakdown that
+   * actually needs the reviewer's attention. `iaa` is the seed's
    * structured inter-annotator agreement value (not derivable from review
    * units) and is omitted when absent.
    *
@@ -2860,14 +2870,23 @@
    * of a bare percentage, because the same page also shows a per-reviewer
    * count and a per-unit threshold count -- three numbers that used to be
    * spelled 「已審 / 覆蓋」 alike. The counters that follow inherit that
-   * unit, so 「任務覆蓋 5 / 5 個審核單位 · 未達定稿門檻 3 個」 reads as one
+   * unit, so 「任務覆蓋 5 / 5 個審核單位 · 爭議中 3 個」 reads as one
    * sentence and full coverage can no longer be misread as a finished
-   * task. */
+   * task.
+   *
+   * Issue #627 item 7: the 「未達定稿門檻 {n} 個」 clause is gone. AC-1.24
+   * (015:167) removed it in v5.0.0 -- 「該計數隨 `approved`／`modified` 中間
+   * 狀態移除而失效」 -- and FR-076 point 1 was missed in the same version;
+   * this renderer had been following the stale FR. With REVIEW_UNIT_STATUS
+   * down to three states, `unfinalized` is an identity with pending +
+   * disputed, so the clause restated units the line already counted. The
+   * FIELD stays: annotation-list.html :2009 reads it to decide whether a
+   * task is finished for this reviewer, which FR-076 explicitly leaves
+   * out of scope (「本條僅規範顯示文字」). */
   var REVIEW_SUMMARY_LABELS = {
     zh: {
       coverage: '任務覆蓋 {n} / {total} 個審核單位',
       pending: '待審 {n} 個',
-      unfinalized: '未達定稿門檻 {n} 個',
       disputed: '爭議中 {n} 個',
       iaa: 'IAA {n}',
       iaaNotComputable: 'IAA 無法計算',
@@ -2875,7 +2894,6 @@
     en: {
       coverage: 'Task coverage {n} / {total} review units',
       pending: '{n} pending',
-      unfinalized: '{n} short of finalize threshold',
       disputed: '{n} disputed',
       iaa: 'IAA {n}',
       iaaNotComputable: 'IAA Not computable',
@@ -2893,7 +2911,6 @@
       }
       push('coverage', summary.total - summary.pending, summary.total);
       if (summary.pending > 0) push('pending', summary.pending);
-      if (summary.unfinalized > 0) push('unfinalized', summary.unfinalized);
       if (summary.disputed > 0) push('disputed', summary.disputed);
       /* IAA is tri-state (dataset-017 FR-039.4): a number renders at the
          2-decimal precision used everywhere else; `null` means the caller
@@ -2954,10 +2971,12 @@
     return 0;
   }
 
-  /* Returns { sampleId, annotatorId, status } or null when this reviewer has
-     nothing left to do on the task -- the caller must then say so rather
-     than opening an arbitrary read-only unit. */
-  function findNextActionableReviewUnit(taskId, runType, reviewerId) {
+  /* issue #766 (FR-100 clause 1): every unit this reviewer can act on, as
+     { unit, rank } in enumeration order. It is the ONLY place the per-unit
+     actionable judgement runs: findNextActionableReviewUnit() picks from it
+     and the finalized card counts it, so "0 left" and "no next unit" can
+     never disagree. */
+  function listActionableReviewUnits(taskId, runType, reviewerId) {
     var units = listReviewUnits(taskId, runType);
     /* The FULL enumeration goes in: getReviewAssignments() is positional --
        official_run walks the sorted list with a fixed stride and dry_run
@@ -2970,27 +2989,48 @@
     })).forEach(function (assigned) {
       assignedKeys[assigned.sample_id + '\u0000' + assigned.annotator_id] = true;
     });
-    var best = null;
-    var bestRank = 0;
+    var actionable = [];
     units.forEach(function (unit) {
       var rank = reviewUnitActionRank(taskId, runType, unit, reviewerId, assignedKeys);
-      if (rank === 0) return;
-      if (best === null || rank < bestRank) {
-        best = unit;
-        bestRank = rank;
-      }
+      if (rank !== 0) actionable.push({ unit: unit, rank: rank });
     });
-    return best;
+    return actionable;
   }
 
+  /* Returns { sampleId, annotatorId, status } or null when this reviewer has
+     nothing left to do on the task -- the caller must then say so rather
+     than opening an arbitrary read-only unit. */
+  function findNextActionableReviewUnit(taskId, runType, reviewerId) {
+    var best = null;
+    listActionableReviewUnits(taskId, runType, reviewerId).forEach(function (entry) {
+      if (best === null || entry.rank < best.rank) best = entry;
+    });
+    return best ? best.unit : null;
+  }
+
+  /* issue #766 (FR-100 clause 3): the "nothing left" wording shared by the
+     list page's no-actionable notice and the workspace finalized card.
+     Defined once here, like REVIEW_SUMMARY_LABELS, so the two screens cannot
+     drift into different phrasings. */
+  var NO_ACTIONABLE_REVIEW_LABELS = {
+    zh: {
+      title: '目前沒有可處理項目',
+      message: '這個任務的審核單位都已定稿，或不在你的可處理範圍內。',
+    },
+    en: {
+      title: 'No actionable items right now',
+      message: 'Every review unit on this task is finalized or outside what you can act on.',
+    },
+  };
+
   /* ---- Review-flow demo seeder (Phase 2 slice C) -------------------------
-   * Stages the T014-T017 demo review states at boot so every review-flow
+   * Stages the T014-T016 demo review states at boot so every review-flow
    * scenario (five unit states, quorum thresholds, majority convergence,
    * tie -> arbitration) is visible without clicking through 29 submissions.
    * Idempotent: the marker key short-circuits every later page load, so
    * timestamps and history events are written exactly once -- and any state
    * the demo visitor then changes (their own reviews, arbitrations) is
-   * never overwritten. T014-T017 ONLY; other tasks' buckets stay untouched,
+   * never overwritten. T014-T016 ONLY; other tasks' buckets stay untouched,
    * and dry-run progress (DRY_RUN_PROGRESS_KEY) is deliberately not synced
    * -- these are review-side fixtures, not the visitor's own annotation
    * progress. */
@@ -3049,28 +3089,36 @@
        single assigned reviewer (this change's tasks.md group 7, design.md
        Migration Plan point 3). The remaining ofm-* / oft-* rows keep their
        pre-existing multi-reviewer shape untouched -- they exercise
-       unaffected, non-canonical derivation paths, not the FR-093 model. */
+       unaffected, non-canonical derivation paths, not the FR-093 model.
+
+       issue #815 (retire-stale-review-demo-fixtures, tasks.md 1.2): T016's
+       `ofm-04-majority-converged` / `ofm-05-all-divergent` rows above were
+       the last two T016 rows still seeding a three-reviewer unit -- a shape
+       FR-093 cannot produce. Both are now single-assigned-reviewer rows
+       too: `ofm-04-reviewer-bypass` demos the `bypass` decision (FR-044,
+       FR-092) that had zero seed coverage anywhere in this table, and
+       `ofm-05-final-exception` absorbs T017's `oft-01-final-exception`
+       content (FR-061 point 3's arbitration-reject -> final-exception-pool
+       path), preserving that coverage ahead of T017's removal in this
+       change's group 2. */
     var scripts = [
       /* T014 dry_run, min_reviewers = 1 */
       { t: 'T014', r: 'dry_run', s: 'dry-01-all-agree', a: A, v: 'positive', rev: { reviewer_wang: 'positive' } }, // finalized
       { t: 'T014', r: 'dry_run', s: 'dry-01-all-agree', a: B, v: 'positive', rev: { reviewer_wang: 'positive' } }, // finalized
       { t: 'T014', r: 'dry_run', s: 'dry-01-all-agree', a: C, v: 'positive', rev: { reviewer_wang: 'positive' } }, // finalized
       { t: 'T014', r: 'dry_run', s: 'dry-02-one-divergent', a: A, v: 'neutral', rev: { reviewer_wang: 'neutral' } }, // finalized
-      // issue #551: N = 1 correction now converges on submit -- was disputed.
-      { t: 'T014', r: 'dry_run', s: 'dry-02-one-divergent', a: B, v: 'neutral', rev: { reviewer_wang: 'positive' } }, // finalized (N=1 quorum converges)
+      // issue #843 (FR-092): a changed value is a `modify`, never an approve.
+      { t: 'T014', r: 'dry_run', s: 'dry-02-one-divergent', a: B, v: 'neutral', rev: { reviewer_wang: 'positive' }, modifyBy: 'reviewer_wang', reason: '整段以讚賞語氣收尾，應判讀為正面而非中性' }, // disputed (reviewer modifies)
       { t: 'T014', r: 'dry_run', s: 'dry-02-one-divergent', a: C, v: 'positive' }, // pending
       { t: 'T014', r: 'dry_run', s: 'dry-03-dispute-open', a: A, v: 'neutral' }, // pending
-      // issue #551: N = 1 correction now converges on submit -- was disputed.
-      { t: 'T014', r: 'dry_run', s: 'dry-03-dispute-open', a: B, v: 'neutral', rev: { reviewer_wang: 'negative' } }, // finalized (N=1 quorum converges)
+      // issue #843 (FR-092): a changed value is a `modify`, never an approve.
+      { t: 'T014', r: 'dry_run', s: 'dry-03-dispute-open', a: B, v: 'neutral', rev: { reviewer_wang: 'negative' }, modifyBy: 'reviewer_wang', reason: '抱怨語氣明確，應判讀為負面而非中性' }, // disputed (reviewer modifies)
       { t: 'T014', r: 'dry_run', s: 'dry-03-dispute-open', a: C, v: 'neutral' }, // pending
       { t: 'T014', r: 'dry_run', s: 'dry-04-dispute-resolved', a: A, v: 'negative', rev: { reviewer_wang: 'negative' } }, // finalized
-      /* issue #551: N = 1 already converges this item on 'negative' before
-         chen's seeded arbitration vote is even applied -- the arb call
-         below is now redundant (it writes the same value the majority rule
-         already resolved) but harmless, and kept so the arbitration record
-         (finalized_by = reviewer_chen) this row's test still reads stays
-         populated. */
-      { t: 'T014', r: 'dry_run', s: 'dry-04-dispute-resolved', a: B, v: 'neutral', rev: { reviewer_wang: 'negative' }, arb: 'negative' }, // finalized (N=1 quorum converges; arbitration record redundant)
+      /* issue #843 (FR-092/FR-060): wang's modify sends the item to
+         dispute; chen's arbitration adopts the corrected value and
+         finalizes it (finalized_by = reviewer_chen). */
+      { t: 'T014', r: 'dry_run', s: 'dry-04-dispute-resolved', a: B, v: 'neutral', rev: { reviewer_wang: 'negative' }, modifyBy: 'reviewer_wang', reason: '文末表達失望，應判讀為負面而非中性', arb: 'negative' }, // finalized by arbitration
       { t: 'T014', r: 'dry_run', s: 'dry-04-dispute-resolved', a: C, v: 'negative', rev: { reviewer_wang: 'negative' } }, // finalized
       /* issue #502: reject on dry_run has no rollback channel -- the
          annotator stays 'submitted'. issue #551: a pure reject (no
@@ -3082,14 +3130,13 @@
       { t: 'T014', r: 'dry_run', s: 'dry-05-pending-review', a: C, v: 'positive' }, // pending
       /* T015 official_run, min_reviewers = 1 (ofs-05 stays unsubmitted) */
       { t: 'T015', r: 'official_run', s: 'ofs-01-agree-gold', a: A, v: 'negative', rev: { reviewer_wang: 'negative' } }, // finalized
-      // issue #551: N = 1 correction now converges on submit -- was disputed.
-      { t: 'T015', r: 'official_run', s: 'ofs-02-modified-dispute', a: A, v: 'neutral', rev: { reviewer_wang: 'positive' } }, // finalized (N=1 quorum converges)
-      /* issue #551: a second, AGREEING reviewer (li) keeps this a genuine
-         N = 2 tie (wang's 'neutral' vs the implicit agree vote for
-         'positive') so the row still needs chen's arbitration to finalize,
-         same as before -- without li this would now converge at N = 1 like
-         ofs-02 above and stop demoing an arbitration-resolved finalize. */
-      { t: 'T015', r: 'official_run', s: 'ofs-03-arbitrated-gold', a: A, v: 'positive', rev: { reviewer_wang: 'neutral', reviewer_li: 'positive' }, arb: 'neutral' }, // finalized by arbitration
+      // issue #843 (FR-092): a changed value is a `modify`, never an approve.
+      { t: 'T015', r: 'official_run', s: 'ofs-02-modified-dispute', a: A, v: 'neutral', rev: { reviewer_wang: 'positive' }, modifyBy: 'reviewer_wang', reason: '對產品表達肯定，應判讀為正面而非中性' }, // disputed (reviewer modifies)
+      /* issue #843 (FR-093, AC-6.12): exactly one reviewer per unit -- the
+         issue #551-era second reviewer (li) is gone. wang's modify forces
+         the dispute and chen's arbitration adopts it, so this row still
+         demos an arbitration-resolved finalize. */
+      { t: 'T015', r: 'official_run', s: 'ofs-03-arbitrated-gold', a: A, v: 'positive', rev: { reviewer_wang: 'neutral' }, modifyBy: 'reviewer_wang', reason: '褒貶並陳且未表態，應判讀為中性而非正面', arb: 'neutral' }, // finalized by arbitration
       { t: 'T015', r: 'official_run', s: 'ofs-04-pending-review', a: A, v: 'positive' }, // pending
       /* T016 official_run, min_reviewers = 3 */
       /* issue #596 (FR-093/FR-060/FR-061/FR-094): the canonical single-owner
@@ -3098,30 +3145,18 @@
          reviewer who is not a participant, FR-060) adopts wang's corrected
          value, and the unit finalizes on that value. */
       { t: 'T016', r: 'official_run', s: 'ofm-01-reviewer-corrects-b', a: A, v: 'positive', rev: { reviewer_wang: 'negative' }, modifyBy: 'reviewer_wang', reason: '第二句語氣轉折應判讀為負面，而非正面', arb: 'negative' }, // finalized (reviewer modifies, arbitration adopts B)
-      { t: 'T016', r: 'official_run', s: 'ofm-02-approved-interim', a: A, v: 'negative', rev: { reviewer_wang: 'negative' } }, // approved (1 < 3)
-      { t: 'T016', r: 'official_run', s: 'ofm-03-modified-interim', a: A, v: 'neutral', rev: { reviewer_wang: 'negative' } }, // modified (1 < 3)
-      { t: 'T016', r: 'official_run', s: 'ofm-04-majority-converged', a: A, v: 'positive', rev: { reviewer_wang: 'neutral', reviewer_li: 'neutral', reviewer_lin: 'positive' } }, // finalized (neutral 2 > 3/2)
-      { t: 'T016', r: 'official_run', s: 'ofm-05-all-divergent', a: A, v: 'neutral', rev: { reviewer_wang: 'positive', reviewer_li: 'negative', reviewer_lin: 'neutral' } }, // disputed (1/1/1)
-      /* T017 official_run, min_reviewers = 2 */
-      /* issue #596 (FR-093/FR-061 point 3/FR-095): the canonical exception
-         path -- reviewer_wang corrects the annotator's value, but
-         reviewer_chen's arbitration rejects BOTH sides (兩者皆非), so the
-         unit stays disputed and the item queues in the final exception pool
-         until a project_leader visit resolves it. */
-      { t: 'T017', r: 'official_run', s: 'oft-01-final-exception', a: A, v: 'neutral', rev: { reviewer_wang: 'positive' }, modifyBy: 'reviewer_wang', reason: '語境不足以判斷情緒傾向，正面與中性難以取捨', arbReject: true, arbReason: '原標記與審核修正結果皆缺乏明確文本依據支持，需退回標記指南徵詢更明確判準' }, // disputed (reviewer modifies, arbitration rejects both sides -> final exception pool)
-      { t: 'T017', r: 'official_run', s: 'oft-02-approved-interim', a: A, v: 'positive', rev: { reviewer_wang: 'positive' } }, // approved (1 < 2)
-      { t: 'T017', r: 'official_run', s: 'oft-03-modified-interim', a: A, v: 'neutral', rev: { reviewer_wang: 'positive' } }, // modified (1 < 2)
-      { t: 'T017', r: 'official_run', s: 'oft-04-unanimous-gold', a: A, v: 'positive', rev: { reviewer_wang: 'positive', reviewer_li: 'positive' } }, // finalized
-      /* issue #502: reject on official_run rolls the annotator's sample
-         back to 'pending' (existing answers kept), opening a rework
-         backlog -- getReviewUnitStatus then has no submission to derive
-         from, so the reviewer list falls back to the same PENDING it
-         shows for a never-reviewed unit (buildReviewUnitRows in
-         annotation-list.html). Stops here rather than seeding a
-         resubmission + new review cycle: the rework backlog itself is
-         this row's whole demo point, and simulating the annotator's next
-         action is what the live workspace is for. */
-      { t: 'T017', r: 'official_run', s: 'oft-05-pending-review', a: A, v: 'positive', rev: { reviewer_wang: 'positive' }, rejectBy: 'reviewer_wang', reason: '語氣偏中性，請重新判讀第二句的轉折' }, // rolled back to pending (reject, rework backlog)
+      { t: 'T016', r: 'official_run', s: 'ofm-02-reviewer-accepts-a', a: A, v: 'negative', rev: { reviewer_wang: 'negative' } }, // finalized (reviewer accepts A)
+      { t: 'T016', r: 'official_run', s: 'ofm-03-awaiting-arbitration', a: A, v: 'neutral', rev: { reviewer_wang: 'negative' }, modifyBy: 'reviewer_wang', reason: '反諷語氣明顯，應判讀為負面而非中性' }, // disputed (reviewer modifies, awaiting arbitration)
+      /* issue #815: bypass (無法判定) had zero seed rows anywhere -- a lone
+         bypass, like a lone modify, forces the unit into dispute
+         (DISPUTE_FORCING_DECISIONS). design.md D2: bypass stores no answer
+         value, so `rev` carries the reviewer key with an undefined value. */
+      { t: 'T016', r: 'official_run', s: 'ofm-04-reviewer-bypass', a: A, v: 'positive', rev: { reviewer_wang: undefined }, bypassBy: 'reviewer_wang', reason: '文本正負面線索交雜且語氣曖昧，難以判定情緒傾向' }, // disputed (reviewer bypasses, no answer value recorded)
+      /* issue #815: migrated verbatim from T017's oft-01-final-exception
+         (removed in this change's group 2) so the sole arbitration-reject
+         (兩者皆非) -> final-exception-pool seed (FR-061 point 3, FR-095)
+         survives T017's removal. */
+      { t: 'T016', r: 'official_run', s: 'ofm-05-final-exception', a: A, v: 'neutral', rev: { reviewer_wang: 'positive' }, modifyBy: 'reviewer_wang', reason: '語境不足以判斷情緒傾向，正面與中性難以取捨', arbReject: true, arbReason: '原標記與審核修正結果皆缺乏明確文本依據支持，需退回標記指南徵詢更明確判準' }, // disputed (reviewer modifies, arbitration rejects both sides -> final exception pool)
     ];
 
     function labelPayload(value, decision, reason) {
@@ -3143,27 +3178,23 @@
       Object.keys(row.rev || {}).forEach(function (reviewerId) {
         var isReject = row.rejectBy === reviewerId;
         var isModify = row.modifyBy === reviewerId;
-        var decision = isReject ? 'reject' : (isModify ? 'modify' : 'approve');
-        /* issue #502/#596: mirrors handleReviewSubmit's per-row decision
+        /* issue #815: `bypassBy` mirrors `modifyBy`/`rejectBy` -- names the
+           one entry in `rev` whose decision was `bypass` (無法判定) rather
+           than approve/modify/reject. */
+        var isBypass = row.bypassBy === reviewerId;
+        var decision = isReject ? 'reject' : (isModify ? 'modify' : (isBypass ? 'bypass' : 'approve'));
+        /* issue #502/#596/#815: mirrors handleReviewSubmit's per-row decision
            line (annotation-workspace.config.js's decisionLines, ~L4780) so
-           a seeded reject/modify reads the same way a live one would. */
-        var reviewSummary = (isReject || isModify)
+           a seeded reject/modify/bypass reads the same way a live one would. */
+        var reviewSummary = (isReject || isModify || isBypass)
           ? 'single_label · ' + row.a + ': ' + decision + ' — ' + (row.reason || '')
           : '';
         markSampleSubmitted(
           row.t, 'reviewer', row.r, row.s,
-          labelPayload(row.rev[reviewerId], decision, (isReject || isModify) ? row.reason : null),
+          labelPayload(row.rev[reviewerId], decision, (isReject || isModify || isBypass) ? row.reason : null),
           reviewSummary,
           { annotatorId: row.a, reviewerId: reviewerId }
         );
-        /* issue #502: mirrors handleReviewSubmit's post-submit rollback
-           (annotation-workspace.config.js ~L3864). markSampleRejected() is
-           itself official_run-gated (this file, ~L467), so calling it here
-           for a dry_run row is a deliberate no-op: only official_run rolls
-           the annotator's sample back to pending. */
-        if (isReject) {
-          markSampleRejected(row.t, 'annotator', row.r, row.s, reviewSummary, { annotatorId: row.a });
-        }
       });
       if (row.arb) {
         submitArbitration(row.t, row.r, row.s, { annotatorId: row.a, reviewerId: 'reviewer_chen' }, [
@@ -3356,7 +3387,9 @@
     computeReviewWorkload: computeReviewWorkload,
     formatReviewSummary: formatReviewSummary,
     listReviewUnits: listReviewUnits,
+    listActionableReviewUnits: listActionableReviewUnits,
     findNextActionableReviewUnit: findNextActionableReviewUnit,
+    NO_ACTIONABLE_REVIEW_LABELS: NO_ACTIONABLE_REVIEW_LABELS,
     getDisputeItems: getDisputeItems,
     isArbiterCandidate: isArbiterCandidate,
     readReviewerSubmissions: readReviewerSubmissions,

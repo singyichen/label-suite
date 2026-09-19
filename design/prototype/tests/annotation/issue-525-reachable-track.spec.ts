@@ -36,7 +36,7 @@ const BYPASS_REVIEWER = 'reviewer_wang';
  * payload carries NO values[outKey] at all (design.md D3) and the unit goes
  * to 爭議中 without the reviewer proposing an answer. T001 has no seeded
  * review unit, so this is written directly rather than added to the shared
- * T014-T017 seed matrix. */
+ * T014-T016 seed matrix. */
 async function seedBypassUnit(page: Page): Promise<void> {
   await page.evaluate((a) => {
     const data = (window as unknown as {

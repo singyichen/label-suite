@@ -296,7 +296,8 @@
     }
     .input-text.error,
     .input-number.error,
-    .input-select.error {
+    .input-select.error,
+    .input-textarea.error {
       border-color: var(--color-error);
     }
     .inline-help {
@@ -1099,8 +1100,6 @@
       min-width: 72px;
       flex-shrink: 0;
     }
-    .badge-ar-approved { color: var(--color-success); background: var(--color-success-bg); border-color: var(--color-success-border); }
-    .badge-ar-modified { color: var(--color-warning); background: var(--color-warning-bg); border-color: var(--color-warning-border); }
     .badge-ar-disputed { color: var(--color-error); background: var(--color-error-bg); border-color: var(--color-error-border); }
     .badge-ar-finalized { color: var(--color-primary); background: var(--color-primary-soft-bg); border-color: var(--color-primary-border); }
     .badge-ar-pending-review { color: var(--color-ink-muted); background: var(--color-slate-50); border-color: var(--color-border); }
@@ -2224,6 +2223,7 @@
 <div id="sharedSidebarMount"></div>
 <script src="../shared/sidebar.js"></script>
 <script src="../shared/modal-focus.js"></script>
+<script src="../shared/span-tagging-export.js"></script>
 <script>
   window.LabelSuiteSharedSidebar.mountSidebar({
     mountId: 'sharedSidebarMount',
@@ -2326,7 +2326,37 @@
   </div>
 </div>
 
-<div class="modal-overlay" id="memberActionModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="memberActionModalTitle">
+<!-- FR-017 (issue #838): revision note required before trial round R{n}, n >= 2. -->
+<div class="modal-overlay" id="trialRoundRevisionModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="trialRoundRevisionTitle">
+  <div class="modal">
+    <h2 id="trialRoundRevisionTitle"></h2>
+    <p id="trialRoundRevisionDesc"></p>
+    <div class="settings-edit-form">
+      <div class="field-group">
+        <label class="field-label" for="priorRoundFindingsInput"><span id="priorRoundFindingsLabel"></span><span class="required">*</span></label>
+        <textarea class="input-textarea" id="priorRoundFindingsInput" aria-describedby="priorRoundFindingsError"></textarea>
+        <p class="inline-error" id="priorRoundFindingsError"></p>
+      </div>
+      <label class="settings-checkbox-row"><input type="checkbox" id="noChangeCheckbox"><span id="noChangeLabel"></span></label>
+      <div class="field-group" id="guidelineChangeSummaryField">
+        <label class="field-label" for="guidelineChangeSummaryInput"><span id="guidelineChangeSummaryLabel"></span><span class="required">*</span></label>
+        <textarea class="input-textarea" id="guidelineChangeSummaryInput" aria-describedby="guidelineChangeSummaryError"></textarea>
+        <p class="inline-error" id="guidelineChangeSummaryError"></p>
+      </div>
+      <div class="field-group hidden" id="noChangeReasonField">
+        <label class="field-label" for="noChangeReasonInput"><span id="noChangeReasonLabel"></span><span class="required">*</span></label>
+        <textarea class="input-textarea" id="noChangeReasonInput" aria-describedby="noChangeReasonError"></textarea>
+        <p class="inline-error" id="noChangeReasonError"></p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" type="button" id="trialRoundRevisionCancelBtn"></button>
+        <button class="btn btn-cta" type="button" id="trialRoundRevisionConfirmBtn"></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="memberActionModal"aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="memberActionModalTitle">
   <div class="modal">
     <h2 id="memberActionModalTitle">確認成員操作</h2>
     <p id="memberActionModalBody">請確認是否要對成員執行危險操作。</p>
@@ -2509,6 +2539,23 @@
       reviewerHint: '僅 project leader 可操作',
       dryRunDisabled: '新增試標回合（唯讀）',
       officialRunDisabled: '開始正式標記（唯讀）',
+      dryRunNextRoundReason: '本回合全部提交並完成 IAA 後才能新增下一回合',
+      retryIaaComputation: '重試計算',
+      iaaComputationPendingOfficialReason: 'IAA 計算中，完成後才能開始正式標記',
+      iaaComputationPendingDryRunReason: 'IAA 計算中，完成後才能新增下一回合',
+      iaaComputationFailedReason: 'IAA 計算失敗，請重試計算',
+      trialRoundRevisionTitleTpl: '新增試標回合 R{round}：本輪修訂紀錄',
+      trialRoundRevisionDesc: '建立下一個試標回合前，請記錄前一輪的發現與本輪的指引調整；若本輪未變更指引，請勾選並說明理由。',
+      priorRoundFindingsLabel: '前一輪發現摘要',
+      guidelineChangeSummaryLabel: '指引異動摘要',
+      noChangeLabel: '本輪未變更指引',
+      noChangeReasonLabel: '未變更理由',
+      priorRoundFindingsRequired: '請填寫前一輪發現摘要。',
+      guidelineChangeSummaryRequired: '請填寫指引異動摘要，或勾選「本輪未變更指引」並說明理由。',
+      noChangeReasonRequired: '勾選「本輪未變更指引」時，請填寫未變更理由。',
+      toastRevisionNoteBlockedTpl: '修訂紀錄未完成，無法新增試標回合 R{round}：',
+      trialRoundRevisionCancelBtn: '取消',
+      trialRoundRevisionConfirmTpl: '建立 R{round}',
       statusHintDraft: '目前任務仍在草稿，可建立第一個試標回合。',
       statusHintDry: '目前處於試標階段，可依結果持續建立下一個試標回合。',
       statusHintIaa: '已有試標回合達標，可用剩餘樣本啟動正式標記。',
@@ -2562,11 +2609,17 @@
       roundHistoryHint: '每個回合使用新的抽樣樣本；通過的回合會解鎖正式標記。',
       roundHistorySummaryTpl: '已用 {used} / {total} 筆試標',
       roundDecisionTitlePassedTpl: 'R{round} 已達標，可啟動正式標記',
-      roundDecisionTitleFailedTpl: 'R{round} 未達標，建議新增下一個試標回合',
+      roundDecisionTitleFailedTpl: 'R{round} 未達標，可開始正式標記或新增試標回合',
+      roundDecisionTitleRoundActiveTpl: 'R{round} 進行中，全員完成後進入待 IAA 確認',
       roundDecisionDescPassedTpl: '系統將以尚未進入試標的剩餘 {count} 筆樣本建立正式標記池，避免與前面回合混用。',
-      roundDecisionDescFailedTpl: '目前僅使用了 {used} 筆試標樣本，仍可從未使用資料中抽新樣本進行下一回合。',
+      roundDecisionDescFailedTpl: '目前僅使用了 {used} 筆試標樣本，IAA 未達標僅供參考：可直接開始正式標記，或新增下一個試標回合再抽新樣本。',
+      roundDecisionDescRoundActiveTpl: '本回合尚未全員提交，暫不提供新增下一回合；待全數提交並完成 IAA 後任務會自動進入待確認，再決定下一步。',
       roundDecisionTitleInProgressTpl: 'R{round} 尚無法判定是否達標',
       roundDecisionDescInProgressTpl: '目前沒有足夠的標記資料可計算一致性，待標記員完成後即可判定是否達標。',
+      iaaComputationPendingTitle: 'IAA 計算中',
+      iaaComputationPendingDesc: '本回合的 IAA 尚在計算中，完成後才能判定是否達標，暫不提供開始正式標記或新增下一回合。',
+      iaaComputationFailedTitle: 'IAA 計算失敗',
+      iaaComputationFailedDesc: '本回合的 IAA 計算執行失敗，請專案負責人點擊「重試計算」，完成後才能開始正式標記或新增下一回合。',
       roundDecisionTitleOfficialTpl: '正式標記進行中，共 {count} 筆',
       roundDecisionDescOfficialTpl: '正式標記池已從未參與試標的剩餘樣本建立，持續完成後即可結束任務。',
       roundDecisionTitleCompletedTpl: '正式標記已完成，共 {count} 筆',
@@ -2791,8 +2844,6 @@
       thArValue: '標記值',
       thArSubmittedAt: '提交時間',
       thArReviewStatus: '審核狀態',
-      arReviewApproved: '已同意',
-      arReviewModified: '已修改',
       arReviewPending: '待審',
       arReviewDisputed: '爭議中',
       arReviewFinalized: '已定稿',
@@ -2804,6 +2855,7 @@
       arHistoryArbiterRole: '仲裁',
       arHistoryAgree: '同意',
       arHistoryModifiedPrefix: '修改 → ',
+      arHistoryBypass: '無法判定',
       arHistoryPickA: '採 A（維持標記員）',
       arHistoryPickB: '採 B（採用審核員修正）',
       arPaginationTpl: '共 {total} 筆 · 第 {page} / {totalPages} 頁',
@@ -2840,6 +2892,19 @@
       arExportHistoryEmpty: '尚未執行過匯出',
       toastExportJson: '已建立 JSON 匯出',
       toastExportJsonMin: '已建立精簡 JSON 匯出',
+      arSeqExportModalTitle: '序列標記匯出設定',
+      arSeqExportModalBody: '選擇本次匯出採用的標註方案與詞元單位。',
+      arSeqExportSchemeLabel: '標註方案',
+      arSeqExportUnitLabel: '詞元單位',
+      arSeqExportTokenizerLabel: '切詞引擎',
+      arSeqExportUnitCharacter: '字元',
+      arSeqExportUnitWord: '詞',
+      arSeqExportCancelBtn: '取消',
+      arSeqExportConfirmBtn: '確認匯出',
+      arSeqExportExpansionToggleTpl: '{count} 段標記因對齊被擴張',
+      arSeqExportBlockedTokenizerVersion: '所選切詞引擎缺少版本資訊，無法以詞為單位匯出，請改選其他引擎或改用字元單位。',
+      arExportSnapshotMissingTitle: '此筆紀錄缺少重新下載所需的匯出條件，無法重建原始檔案。',
+      arSeqExportRedownloadBlockedTokenizer: '切詞引擎「{engine}」已不可用，無法重新下載此詞元單位的匯出結果，請改用字元單位重新匯出。',
       arEmptyTitle: '尚無標記結果',
       arEmptyHint: '標記員提交後，結果將顯示於此。',
       navDashboard: '儀表板',
@@ -2996,6 +3061,23 @@
       reviewerHint: 'Only project leader can perform this action',
       dryRunDisabled: 'Add trial round (Read-only)',
       officialRunDisabled: 'Start official run (Read-only)',
+      dryRunNextRoundReason: 'Submit all outputs and finish IAA for this round before adding the next one',
+      retryIaaComputation: 'Retry computation',
+      iaaComputationPendingOfficialReason: 'IAA computation is in progress; official run can start once it finishes',
+      iaaComputationPendingDryRunReason: 'IAA computation is in progress; the next round can be added once it finishes',
+      iaaComputationFailedReason: 'IAA computation failed. Please retry the computation',
+      trialRoundRevisionTitleTpl: 'Add trial round R{round}: revision note',
+      trialRoundRevisionDesc: 'Before creating the next trial round, record what the previous round found and how the guideline changed. If the guideline is unchanged, check the box and give a reason.',
+      priorRoundFindingsLabel: 'Previous round findings',
+      guidelineChangeSummaryLabel: 'Guideline change summary',
+      noChangeLabel: 'Guideline unchanged this round',
+      noChangeReasonLabel: 'Reason for no change',
+      priorRoundFindingsRequired: 'Enter the previous round findings.',
+      guidelineChangeSummaryRequired: 'Enter a guideline change summary, or check "Guideline unchanged this round" and give a reason.',
+      noChangeReasonRequired: 'Enter a reason when "Guideline unchanged this round" is checked.',
+      toastRevisionNoteBlockedTpl: 'Revision note incomplete, cannot add trial round R{round}: ',
+      trialRoundRevisionCancelBtn: 'Cancel',
+      trialRoundRevisionConfirmTpl: 'Create R{round}',
       statusHintDraft: 'The task is still in draft. Create the first trial round to start validation.',
       statusHintDry: 'The task is in the trial stage. You can continue with another round based on the latest outcome.',
       statusHintIaa: 'At least one trial round passed. The remaining pool can now enter official work.',
@@ -3049,11 +3131,17 @@
       roundHistoryHint: 'Each round uses a fresh sample slice. A passed round unlocks official work.',
       roundHistorySummaryTpl: '{used} / {total} items used in trial',
       roundDecisionTitlePassedTpl: 'R{round} passed and official work can start',
-      roundDecisionTitleFailedTpl: 'R{round} did not pass. Add the next trial round',
+      roundDecisionTitleFailedTpl: 'R{round} did not pass. Start official work or add another round',
+      roundDecisionTitleRoundActiveTpl: 'R{round} is in progress. It moves to IAA confirmation once everyone finishes',
       roundDecisionDescPassedTpl: 'The system will build the official pool from the remaining {count} unused items to avoid mixing with previous rounds.',
-      roundDecisionDescFailedTpl: 'Only {used} items have been consumed by trials so far. You can still draw the next round from unused data.',
+      roundDecisionDescFailedTpl: 'Only {used} items have been consumed by trials so far. The IAA result is advisory only -- you can start official work directly, or add the next trial round to draw a new sample.',
+      roundDecisionDescRoundActiveTpl: 'This round has not been fully submitted yet, so adding the next round is unavailable. Once everyone finishes and IAA completes, the task moves to confirmation and you can decide the next step.',
       roundDecisionTitleInProgressTpl: 'R{round} outcome not yet determined',
       roundDecisionDescInProgressTpl: 'There is not enough marked data yet to compute agreement. The outcome will be clear once annotators finish.',
+      iaaComputationPendingTitle: 'IAA computation in progress',
+      iaaComputationPendingDesc: 'This round\'s IAA is still being computed. Starting official work and adding the next round are unavailable until it finishes.',
+      iaaComputationFailedTitle: 'IAA computation failed',
+      iaaComputationFailedDesc: 'This round\'s IAA computation failed to execute. The project leader should retry the computation before starting official work or adding the next round.',
       roundDecisionTitleOfficialTpl: 'Official run in progress with {count} items',
       roundDecisionDescOfficialTpl: 'The official pool was created from the remaining items that never entered a trial round.',
       roundDecisionTitleCompletedTpl: 'Official run completed with {count} items',
@@ -3278,8 +3366,6 @@
       thArValue: 'Label value',
       thArSubmittedAt: 'Submitted at',
       thArReviewStatus: 'Review',
-      arReviewApproved: 'Approved',
-      arReviewModified: 'Modified',
       arReviewPending: 'Pending',
       arReviewDisputed: 'Disputed',
       arReviewFinalized: 'Finalized',
@@ -3291,6 +3377,7 @@
       arHistoryArbiterRole: 'Arbiter',
       arHistoryAgree: 'Agreed',
       arHistoryModifiedPrefix: 'Modified → ',
+      arHistoryBypass: 'Cannot determine',
       arHistoryPickA: 'Adopted A (keep annotator)',
       arHistoryPickB: 'Adopted B (adopt reviewer edit)',
       arPaginationTpl: 'Total {total} · Page {page} / {totalPages}',
@@ -3327,6 +3414,19 @@
       arExportHistoryEmpty: 'No exports yet',
       toastExportJson: 'JSON export created',
       toastExportJsonMin: 'Compact JSON export created',
+      arSeqExportModalTitle: 'Sequence tagging export settings',
+      arSeqExportModalBody: 'Choose the tagging scheme and token unit for this export.',
+      arSeqExportSchemeLabel: 'Tagging scheme',
+      arSeqExportUnitLabel: 'Token unit',
+      arSeqExportTokenizerLabel: 'Tokenizer engine',
+      arSeqExportUnitCharacter: 'Character',
+      arSeqExportUnitWord: 'Word',
+      arSeqExportCancelBtn: 'Cancel',
+      arSeqExportConfirmBtn: 'Confirm export',
+      arSeqExportExpansionToggleTpl: '{count} label(s) expanded for token alignment',
+      arSeqExportBlockedTokenizerVersion: 'The selected tokenizer engine is missing version information, so a word-level export cannot be produced. Choose a different engine or switch to character-level export.',
+      arExportSnapshotMissingTitle: 'This record is missing the export conditions needed to rebuild the original file.',
+      arSeqExportRedownloadBlockedTokenizer: 'The tokenizer engine "{engine}" is no longer available, so this word-level export cannot be redownloaded. Re-export using character-level units instead.',
       arEmptyTitle: 'No annotation results yet',
       arEmptyHint: 'Results will appear here once annotators submit.',
       navDashboard: 'Dashboard',
@@ -3470,13 +3570,12 @@
     disputeCount: 7,
   };
   var REVIEW_WORKLOAD_BY_TASK = {
-    /* T014-T017 (review-flow demo, 5 dataset records each): small figures
+    /* T014-T016 (review-flow demo, 5 dataset records each): small figures
        proportionate to that data volume instead of the legacy shared
        18-116-item scale. */
     T014: { disputeCount: 0 },
     T015: { disputeCount: 1 },
     T016: { disputeCount: 1 },
-    T017: { disputeCount: 1 },
   };
   var REVIEW_WORKLOAD = cloneData(DEFAULT_REVIEW_WORKLOAD);
 
@@ -3555,10 +3654,10 @@
     },
   };
 
-  /* issue #397: T014-T017 (review-flow demo, 5 dataset records each) get
+  /* issue #397: T014-T016 (review-flow demo, 5 dataset records each) get
      progress figures proportionate to that data volume instead of the
      legacy shared 40/124/1160-sample scale. T014 is a dry_run task (one
-     active round, official not yet reached); T015-T017 are official_run
+     active round, official not yet reached); T015-T016 are official_run
      tasks (no dry-run rounds, official reflects each task's own submission
      count from annotation-workspace.data.js's seedReviewFlowDemo()). */
   var ANNOTATION_PROGRESS_BY_TASK = {
@@ -3600,18 +3699,6 @@
         ],
       },
     },
-    T017: {
-      rounds: [],
-      official: {
-        id: 'official', status: 'active', result: null, iaa: 0.55,
-        totalSamples: 5, completedSamples: 5, avgSpeed: 5.2,
-        remainingEta: '-', remainingEtaEn: '-',
-        members: [
-          { name: 'Alex Wang', role: 'annotator', completed: 5, pending: 0, avgSpeed: 5.2, lastSubmitted: '2026-08-21 09:40', quality: 'good' },
-          { name: 'Mandy Chen', role: 'reviewer', completed: 5, pending: 0, avgSpeed: 5.2, lastSubmitted: '2026-08-21 10:35', quality: 'good' },
-        ],
-      },
-    },
   };
   var ANNOTATION_PROGRESS = cloneData(DEFAULT_ANNOTATION_PROGRESS);
 
@@ -3639,11 +3726,11 @@
       createdAt: '2026-05-22 10:18'
     }
   ];
-  /* T014-T017 have no "member removed mid-run" backstory, so they start
+  /* T014-T016 have no "member removed mid-run" backstory, so they start
      with an empty unassigned pool instead of inheriting T001's demo
      entries (whose roundId: 'official' would otherwise leak Jason Huang's
      phantom ASP-1201~1203 rows into every official_run task). */
-  var UNASSIGNED_ANNOTATION_ASSIGNMENTS_BY_TASK = { T014: [], T015: [], T016: [], T017: [] };
+  var UNASSIGNED_ANNOTATION_ASSIGNMENTS_BY_TASK = { T014: [], T015: [], T016: [] };
   var UNASSIGNED_ANNOTATION_ASSIGNMENTS = cloneData(DEFAULT_UNASSIGNED_ANNOTATION_ASSIGNMENTS);
 
   var EXCLUDED_ANNOTATION_ASSIGNMENTS = [];
@@ -3670,10 +3757,6 @@
       { date: '2026-08-21', memberEmail: 'alex.wang@labelsuite.io', memberName: 'Alex Wang', loginAt: '09:00', logoutAt: '09:40', durationHours: 0.7, annotatedCount: 5, reviewedCount: null, arbitratedCount: null, stage: 'official' },
       { date: '2026-08-21', memberEmail: 'mandy@labelsuite.io', memberName: 'Mandy Chen', loginAt: '10:00', logoutAt: '10:40', durationHours: 0.7, annotatedCount: null, reviewedCount: 5, arbitratedCount: 1, stage: 'official' },
     ],
-    T017: [
-      { date: '2026-08-21', memberEmail: 'alex.wang@labelsuite.io', memberName: 'Alex Wang', loginAt: '09:00', logoutAt: '09:40', durationHours: 0.7, annotatedCount: 5, reviewedCount: null, arbitratedCount: null, stage: 'official' },
-      { date: '2026-08-21', memberEmail: 'mandy@labelsuite.io', memberName: 'Mandy Chen', loginAt: '10:00', logoutAt: '10:35', durationHours: 0.6, annotatedCount: null, reviewedCount: 5, arbitratedCount: 1, stage: 'official' },
-    ],
   };
   var WORK_LOG_ENTRIES = cloneData(DEFAULT_WORK_LOG_ENTRIES);
 
@@ -3690,6 +3773,8 @@
     workLogMember: 'all',
     showSkeleton: true,
     pendingAction: null,
+    trialRoundRevisionRound: null,
+    trialRoundRevisionNote: null,
     isolationConfirmed: false,
     publishingDryRun: false,
     publishingOfficialRun: false,
@@ -3720,6 +3805,8 @@
     arExpandedRows: {},
     arExportPage: 1,
     arExportPageSize: 20,
+    arSeqExportFormat: null,
+    arSeqExportRun: null,
     mdPage: 1,
     mdPageSize: 20,
     mdRows: [],
@@ -3852,7 +3939,7 @@
         summaryStats: [{ label: '政治', value: '×2' }, { label: '科技', value: '×3' }],
         status: 'submitted', completedAt: '2026-04-25',
         annotations: [
-          { annotator: 'kioleemg12', value: { labels: ['政治', '科技'] }, submittedAt: '2026-04-25 14:10', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-25 15:02' }] },
+          { annotator: 'kioleemg12', value: { labels: ['政治', '科技'] }, submittedAt: '2026-04-25 14:10', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-25 15:02' }] },
           { annotator: '113450022', value: { labels: ['政治', '科技'] }, submittedAt: '2026-04-25 14:22', reviewStatus: 'pending' },
           { annotator: 'tony0950127', value: { labels: ['科技'] }, submittedAt: '2026-04-25 14:30', reviewStatus: 'pending' }
         ]
@@ -3865,7 +3952,7 @@
         status: 'draft', completedAt: '2026-04-23',
         annotations: [
           { annotator: 'kioleemg12', value: { labels: ['體育', '娛樂'] }, submittedAt: '2026-04-23 09:00', reviewStatus: 'pending' },
-          { annotator: '113450022', value: { labels: ['娛樂', '社會'] }, submittedAt: '2026-04-23 09:30', reviewStatus: 'modified', reviews: [{ reviewer: 'dahua_lee', decision: 'modified', result: { labels: ['娛樂'] }, reviewedAt: '2026-04-23 11:12' }] },
+          { annotator: '113450022', value: { labels: ['娛樂', '社會'] }, submittedAt: '2026-04-23 09:30', reviewStatus: 'disputed', reviews: [{ reviewer: 'dahua_lee', decision: 'modified', result: { labels: ['娛樂'] }, reviewedAt: '2026-04-23 11:12' }] },
           { annotator: 'tony0950127', value: { labels: ['體育', '社會'] }, submittedAt: '2026-04-23 10:00', reviewStatus: 'pending' }
         ]
       },
@@ -3876,8 +3963,8 @@
         summaryStats: [{ label: '社會', value: '×3' }, { label: '政治', value: '×1' }],
         status: 'submitted', completedAt: '2026-04-24',
         annotations: [
-          { annotator: 'kioleemg12', value: { labels: ['社會'] }, submittedAt: '2026-04-24 11:05', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-24 13:40' }] },
-          { annotator: '113450022', value: { labels: ['社會', '政治'] }, submittedAt: '2026-04-24 11:18', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-24 13:47' }] },
+          { annotator: 'kioleemg12', value: { labels: ['社會'] }, submittedAt: '2026-04-24 11:05', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-24 13:40' }] },
+          { annotator: '113450022', value: { labels: ['社會', '政治'] }, submittedAt: '2026-04-24 11:18', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-24 13:47' }] },
           { annotator: 'tony0950127', value: { labels: ['社會'] }, submittedAt: '2026-04-24 11:34', reviewStatus: 'pending' }
         ]
       },
@@ -3888,9 +3975,9 @@
         summaryStats: [{ label: '娛樂', value: '×3' }, { label: '社會', value: '×2' }],
         status: 'submitted', completedAt: '2026-04-22',
         annotations: [
-          { annotator: 'kioleemg12', value: { labels: ['娛樂'] }, submittedAt: '2026-04-22 16:05', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-22 17:20' }] },
+          { annotator: 'kioleemg12', value: { labels: ['娛樂'] }, submittedAt: '2026-04-22 16:05', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-22 17:20' }] },
           { annotator: '113450022', value: { labels: ['娛樂', '社會'] }, submittedAt: '2026-04-22 16:18', reviewStatus: 'finalized', reviews: [{ reviewer: 'dahua_lee', decision: 'modified', result: { labels: ['娛樂'] }, reviewedAt: '2026-04-22 17:31' }], arbitration: { arbiter: 'meiling.c', pick: 'B', decidedAt: '2026-04-22 18:05' } },
-          { annotator: 'tony0950127', value: { labels: ['娛樂', '社會'] }, submittedAt: '2026-04-22 16:34', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-22 17:24' }] }
+          { annotator: 'tony0950127', value: { labels: ['娛樂', '社會'] }, submittedAt: '2026-04-22 16:34', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-22 17:24' }] }
         ]
       },
       {
@@ -3912,7 +3999,7 @@
         summaryStats: [{ label: '科技', value: '×2' }, { label: '健康', value: '×2' }, { label: '財經', value: '×1' }],
         status: 'submitted', completedAt: '2026-05-01',
         annotations: [
-          { annotator: 'kioleemg12', value: { labels: ['科技', '健康'] }, submittedAt: '2026-05-01 09:10', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-05-01 10:05' }] },
+          { annotator: 'kioleemg12', value: { labels: ['科技', '健康'] }, submittedAt: '2026-05-01 09:10', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-05-01 10:05' }] },
           { annotator: '113450022', value: { labels: ['科技', '財經'] }, submittedAt: '2026-05-01 09:26', reviewStatus: 'disputed', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-05-01 10:12' }, { reviewer: 'dahua_lee', decision: 'modified', result: { labels: ['科技'] }, reviewedAt: '2026-05-01 10:40' }] },
           { annotator: 'tony0950127', value: { labels: ['健康'] }, submittedAt: '2026-05-01 09:44', reviewStatus: 'pending' }
         ]
@@ -3928,11 +4015,11 @@
         status: 'submitted', completedAt: '2026-04-23',
         annotations: [
           { annotator: 'kioleemg12', value: { valence: 6, arousal: 5.5 }, submittedAt: '2026-04-23 10:00', reviewStatus: 'pending' },
-          { annotator: '113450022', value: { valence: 8, arousal: 8 }, submittedAt: '2026-04-23 10:20', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-23 17:30' }] },
+          { annotator: '113450022', value: { valence: 8, arousal: 8 }, submittedAt: '2026-04-23 10:20', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-23 17:30' }] },
           { annotator: 'tony0950127', value: { valence: 7.5, arousal: 8 }, submittedAt: '2026-04-23 10:40', reviewStatus: 'pending' },
-          { annotator: 'hui', value: { valence: 7.5, arousal: 7.5 }, submittedAt: '2026-04-23 11:00', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-23 17:30' }] },
+          { annotator: 'hui', value: { valence: 7.5, arousal: 7.5 }, submittedAt: '2026-04-23 11:00', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-23 17:30' }] },
           { annotator: 'chiao11', value: { valence: 6, arousal: 5 }, submittedAt: '2026-04-23 11:20', reviewStatus: 'pending' },
-          { annotator: 'mandy610425', value: { valence: 9, arousal: 9 }, submittedAt: '2026-04-23 11:40', reviewStatus: 'modified', reviews: [{ reviewer: 'dahua_lee', decision: 'modified', result: { valence: 7.5, arousal: 8 }, reviewedAt: '2026-04-23 13:05' }] }
+          { annotator: 'mandy610425', value: { valence: 9, arousal: 9 }, submittedAt: '2026-04-23 11:40', reviewStatus: 'disputed', reviews: [{ reviewer: 'dahua_lee', decision: 'modified', result: { valence: 7.5, arousal: 8 }, reviewedAt: '2026-04-23 13:05' }] }
         ]
       },
       {
@@ -3942,9 +4029,9 @@
         summaryStats: [{ label: '平均 V/A', value: '1.8 / 7.5' }, { label: '分布區間', value: 'V 1.5-2.0 · A 7.0-8.0', muted: true }],
         status: 'submitted', completedAt: '2026-04-23',
         annotations: [
-          { annotator: 'kioleemg12', value: { valence: 2, arousal: 7 }, submittedAt: '2026-04-23 12:00', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-23 17:30' }] },
-          { annotator: '113450022', value: { valence: 1.5, arousal: 8 }, submittedAt: '2026-04-23 12:20', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-23 17:30' }] },
-          { annotator: 'tony0950127', value: { valence: 2, arousal: 7.5 }, submittedAt: '2026-04-23 12:40', reviewStatus: 'modified', reviews: [{ reviewer: 'dahua_lee', decision: 'modified', result: { valence: 2, arousal: 7 }, reviewedAt: '2026-04-23 14:02' }] }
+          { annotator: 'kioleemg12', value: { valence: 2, arousal: 7 }, submittedAt: '2026-04-23 12:00', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-23 17:30' }] },
+          { annotator: '113450022', value: { valence: 1.5, arousal: 8 }, submittedAt: '2026-04-23 12:20', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-23 17:30' }] },
+          { annotator: 'tony0950127', value: { valence: 2, arousal: 7.5 }, submittedAt: '2026-04-23 12:40', reviewStatus: 'disputed', reviews: [{ reviewer: 'dahua_lee', decision: 'modified', result: { valence: 2, arousal: 7 }, reviewedAt: '2026-04-23 14:02' }] }
         ]
       },
       {
@@ -3978,8 +4065,8 @@
         summaryStats: [{ label: '平均 V/A', value: '7.5 / 5.0' }, { label: '分布區間', value: 'V 7.0-8.0 · A 4.0-6.0', muted: true }],
         status: 'submitted', completedAt: '2026-05-01',
         annotations: [
-          { annotator: 'kioleemg12', value: { valence: 7, arousal: 5 }, submittedAt: '2026-05-01 10:00', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-05-01 17:30' }] },
-          { annotator: '113450022', value: { valence: 8, arousal: 6 }, submittedAt: '2026-05-01 10:20', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-05-01 17:30' }] },
+          { annotator: 'kioleemg12', value: { valence: 7, arousal: 5 }, submittedAt: '2026-05-01 10:00', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-05-01 17:30' }] },
+          { annotator: '113450022', value: { valence: 8, arousal: 6 }, submittedAt: '2026-05-01 10:20', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-05-01 17:30' }] },
           { annotator: 'tony0950127', value: { valence: 7.5, arousal: 4 }, submittedAt: '2026-05-01 10:40', reviewStatus: 'pending' }
         ]
       },
@@ -3991,8 +4078,8 @@
         status: 'submitted', completedAt: '2026-05-02',
         annotations: [
           { annotator: 'kioleemg12', value: { valence: 2, arousal: 7 }, submittedAt: '2026-05-02 11:08', reviewStatus: 'pending' },
-          { annotator: '113450022', value: { valence: 3, arousal: 6 }, submittedAt: '2026-05-02 11:22', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-05-02 17:30' }] },
-          { annotator: 'tony0950127', value: { valence: 2, arousal: 7.5 }, submittedAt: '2026-05-02 11:37', reviewStatus: 'modified', reviews: [{ reviewer: 'dahua_lee', decision: 'modified', result: { valence: 2, arousal: 7 }, reviewedAt: '2026-05-02 13:15' }] }
+          { annotator: '113450022', value: { valence: 3, arousal: 6 }, submittedAt: '2026-05-02 11:22', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-05-02 17:30' }] },
+          { annotator: 'tony0950127', value: { valence: 2, arousal: 7.5 }, submittedAt: '2026-05-02 11:37', reviewStatus: 'disputed', reviews: [{ reviewer: 'dahua_lee', decision: 'modified', result: { valence: 2, arousal: 7 }, reviewedAt: '2026-05-02 13:15' }] }
         ]
       }
   ];
@@ -4005,7 +4092,7 @@
         summaryStats: [{ label: '螢幕', value: '×3' }, { label: '電池', value: '×2' }],
         status: 'submitted', completedAt: '2026-04-28',
         annotations: [
-          { annotator: 'kioleemg12', value: { aspects: ['螢幕', '電池'] }, submittedAt: '2026-04-28 09:12', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-28 17:30' }] },
+          { annotator: 'kioleemg12', value: { aspects: ['螢幕', '電池'] }, submittedAt: '2026-04-28 09:12', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-28 17:30' }] },
           { annotator: '113450022', value: { aspects: ['螢幕'] }, submittedAt: '2026-04-28 09:28', reviewStatus: 'pending' },
           { annotator: 'tony0950127', value: { aspects: ['螢幕', '電池'] }, submittedAt: '2026-04-28 09:44', reviewStatus: 'pending' }
         ]
@@ -4017,8 +4104,8 @@
         summaryStats: [{ label: '客服', value: '×3' }, { label: '退款流程', value: '×2' }],
         status: 'submitted', completedAt: '2026-04-28',
         annotations: [
-          { annotator: 'kioleemg12', value: { aspects: ['客服', '退款流程'] }, submittedAt: '2026-04-28 10:10', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-28 17:30' }] },
-          { annotator: '113450022', value: { aspects: ['客服'] }, submittedAt: '2026-04-28 10:26', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-28 17:30' }] },
+          { annotator: 'kioleemg12', value: { aspects: ['客服', '退款流程'] }, submittedAt: '2026-04-28 10:10', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-28 17:30' }] },
+          { annotator: '113450022', value: { aspects: ['客服'] }, submittedAt: '2026-04-28 10:26', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-28 17:30' }] },
           { annotator: 'tony0950127', value: { aspects: ['客服', '退款流程'] }, submittedAt: '2026-04-28 10:42', reviewStatus: 'pending' }
         ]
       },
@@ -4030,7 +4117,7 @@
         status: 'draft', completedAt: '2026-04-27',
         annotations: [
           { annotator: 'kioleemg12', value: { aspects: ['鍵盤', '觸控板', '散熱'] }, submittedAt: '2026-04-27 15:00', reviewStatus: 'pending' },
-          { annotator: '113450022', value: { aspects: ['觸控板', '散熱'] }, submittedAt: '2026-04-27 15:16', reviewStatus: 'modified', reviews: [{ reviewer: 'dahua_lee', decision: 'modified', result: { aspects: ['觸控板'] }, reviewedAt: '2026-04-27 16:20' }] },
+          { annotator: '113450022', value: { aspects: ['觸控板', '散熱'] }, submittedAt: '2026-04-27 15:16', reviewStatus: 'disputed', reviews: [{ reviewer: 'dahua_lee', decision: 'modified', result: { aspects: ['觸控板'] }, reviewedAt: '2026-04-27 16:20' }] },
           { annotator: 'tony0950127', value: { aspects: ['鍵盤', '散熱'] }, submittedAt: '2026-04-27 15:34', reviewStatus: 'pending' }
         ]
       },
@@ -4041,9 +4128,9 @@
         summaryStats: [{ label: '包裝', value: '×3' }, { label: '外盒', value: '×1' }],
         status: 'submitted', completedAt: '2026-04-22',
         annotations: [
-          { annotator: 'kioleemg12', value: { aspects: ['包裝'] }, submittedAt: '2026-04-22 13:02', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-22 17:30' }] },
-          { annotator: '113450022', value: { aspects: ['包裝', '外盒'] }, submittedAt: '2026-04-22 13:18', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-22 17:30' }] },
-          { annotator: 'tony0950127', value: { aspects: ['包裝'] }, submittedAt: '2026-04-22 13:34', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-22 17:30' }] }
+          { annotator: 'kioleemg12', value: { aspects: ['包裝'] }, submittedAt: '2026-04-22 13:02', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-22 17:30' }] },
+          { annotator: '113450022', value: { aspects: ['包裝', '外盒'] }, submittedAt: '2026-04-22 13:18', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-22 17:30' }] },
+          { annotator: 'tony0950127', value: { aspects: ['包裝'] }, submittedAt: '2026-04-22 13:34', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-22 17:30' }] }
         ]
       },
       {
@@ -4065,7 +4152,7 @@
         summaryStats: [{ label: '噪音', value: '×2' }, { label: '出風', value: '×2' }, { label: '安裝預約', value: '×2' }],
         status: 'submitted', completedAt: '2026-05-01',
         annotations: [
-          { annotator: 'kioleemg12', value: { aspects: ['噪音', '出風'] }, submittedAt: '2026-05-01 14:04', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-05-01 17:30' }] },
+          { annotator: 'kioleemg12', value: { aspects: ['噪音', '出風'] }, submittedAt: '2026-05-01 14:04', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-05-01 17:30' }] },
           { annotator: '113450022', value: { aspects: ['噪音', '安裝預約'] }, submittedAt: '2026-05-01 14:20', reviewStatus: 'pending' },
           { annotator: 'tony0950127', value: { aspects: ['出風', '安裝預約'] }, submittedAt: '2026-05-01 14:38', reviewStatus: 'pending' }
         ]
@@ -4080,7 +4167,7 @@
         labelStatsText: '(DRUG:阿司匹靈)→treats→(SYMP:發燒) ×2 · (DOCTOR:醫師)→indicates→(TREATMENT:補水) ×2',
         status: 'submitted', completedAt: '2026-04-30',
         annotations: [
-          { annotator: 'kioleemg12', value: { resultText: '(DRUG:阿司匹靈)→treats→(SYMP:發燒)' }, submittedAt: '2026-04-30 09:06', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-30 17:30' }] },
+          { annotator: 'kioleemg12', value: { resultText: '(DRUG:阿司匹靈)→treats→(SYMP:發燒)' }, submittedAt: '2026-04-30 09:06', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-30 17:30' }] },
           { annotator: '113450022', value: { resultText: '(DRUG:阿司匹靈)→treats→(SYMP:發燒)' }, submittedAt: '2026-04-30 09:24', reviewStatus: 'pending' },
           { annotator: 'tony0950127', value: { resultText: '(DOCTOR:醫師)→indicates→(TREATMENT:補水)' }, submittedAt: '2026-04-30 09:38', reviewStatus: 'pending' }
         ]
@@ -4092,9 +4179,9 @@
         labelStatsText: '(DRUG:抗生素)→causes→(SYMP:腹瀉) ×2 · (SYMP:腹瀉)→associated_with→(DISEASE:腸胃疾病) ×2',
         status: 'submitted', completedAt: '2026-04-30',
         annotations: [
-          { annotator: 'kioleemg12', value: { resultText: '(DRUG:抗生素)→causes→(SYMP:腹瀉)' }, submittedAt: '2026-04-30 10:12', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-30 17:30' }] },
-          { annotator: '113450022', value: { resultText: '(SYMP:腹瀉)→associated_with→(DISEASE:腸胃疾病)' }, submittedAt: '2026-04-30 10:30', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-30 17:30' }] },
-          { annotator: 'tony0950127', value: { resultText: '(DRUG:抗生素)→causes→(SYMP:腹瀉)' }, submittedAt: '2026-04-30 10:46', reviewStatus: 'modified', reviews: [{ reviewer: 'dahua_lee', decision: 'modified', result: { resultText: '(DRUG:抗生素)→treats→(SYMP:感染)' }, reviewedAt: '2026-04-30 11:50' }] }
+          { annotator: 'kioleemg12', value: { resultText: '(DRUG:抗生素)→causes→(SYMP:腹瀉)' }, submittedAt: '2026-04-30 10:12', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-30 17:30' }] },
+          { annotator: '113450022', value: { resultText: '(SYMP:腹瀉)→associated_with→(DISEASE:腸胃疾病)' }, submittedAt: '2026-04-30 10:30', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-30 17:30' }] },
+          { annotator: 'tony0950127', value: { resultText: '(DRUG:抗生素)→causes→(SYMP:腹瀉)' }, submittedAt: '2026-04-30 10:46', reviewStatus: 'disputed', reviews: [{ reviewer: 'dahua_lee', decision: 'modified', result: { resultText: '(DRUG:抗生素)→treats→(SYMP:感染)' }, reviewedAt: '2026-04-30 11:50' }] }
         ]
       },
       {
@@ -4116,8 +4203,8 @@
         labelStatsText: '(DRUG:止痛藥)→treats→(SYMP:術後疼痛) ×2 · (DRUG:止痛藥)→causes→(SYMP:噁心) ×1',
         status: 'submitted', completedAt: '2026-04-22',
         annotations: [
-          { annotator: 'kioleemg12', value: { resultText: '(DRUG:止痛藥)→treats→(SYMP:術後疼痛)' }, submittedAt: '2026-04-22 08:56', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-22 17:30' }] },
-          { annotator: '113450022', value: { resultText: '(DRUG:止痛藥)→treats→(SYMP:術後疼痛)' }, submittedAt: '2026-04-22 09:12', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-22 17:30' }] },
+          { annotator: 'kioleemg12', value: { resultText: '(DRUG:止痛藥)→treats→(SYMP:術後疼痛)' }, submittedAt: '2026-04-22 08:56', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-22 17:30' }] },
+          { annotator: '113450022', value: { resultText: '(DRUG:止痛藥)→treats→(SYMP:術後疼痛)' }, submittedAt: '2026-04-22 09:12', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-22 17:30' }] },
           { annotator: 'tony0950127', value: { resultText: '(DRUG:止痛藥)→causes→(SYMP:噁心)' }, submittedAt: '2026-04-22 09:28', reviewStatus: 'pending' }
         ]
       },
@@ -4140,7 +4227,7 @@
         labelStatsText: '(DRUG:止咳藥)→treats→(SYMP:夜間咳嗽) ×2 · (DRUG:止咳藥)→weak_on→(SYMP:喉嚨乾癢) ×1',
         status: 'submitted', completedAt: '2026-05-01',
         annotations: [
-          { annotator: 'kioleemg12', value: { resultText: '(DRUG:止咳藥)→treats→(SYMP:夜間咳嗽)' }, submittedAt: '2026-05-01 15:08', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-05-01 17:30' }] },
+          { annotator: 'kioleemg12', value: { resultText: '(DRUG:止咳藥)→treats→(SYMP:夜間咳嗽)' }, submittedAt: '2026-05-01 15:08', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-05-01 17:30' }] },
           { annotator: '113450022', value: { resultText: '(DRUG:止咳藥)→treats→(SYMP:夜間咳嗽)' }, submittedAt: '2026-05-01 15:22', reviewStatus: 'pending' },
           { annotator: 'tony0950127', value: { resultText: '(DRUG:止咳藥)→weak_on→(SYMP:喉嚨乾癢)' }, submittedAt: '2026-05-01 15:36', reviewStatus: 'pending' }
         ]
@@ -4155,8 +4242,8 @@
         summaryStats: [{ label: '蘊含', value: '×2' }, { label: '中立', value: '×1' }],
         status: 'submitted', completedAt: '2026-04-26',
         annotations: [
-          { annotator: 'kioleemg12', value: { label: '蘊含' }, submittedAt: '2026-04-26 09:05', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-26 17:30' }] },
-          { annotator: '113450022', value: { label: '蘊含' }, submittedAt: '2026-04-26 09:22', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-26 17:30' }] },
+          { annotator: 'kioleemg12', value: { label: '蘊含' }, submittedAt: '2026-04-26 09:05', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-26 17:30' }] },
+          { annotator: '113450022', value: { label: '蘊含' }, submittedAt: '2026-04-26 09:22', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-26 17:30' }] },
           { annotator: 'tony0950127', value: { label: '中立' }, submittedAt: '2026-04-26 09:38', reviewStatus: 'pending' }
         ]
       },
@@ -4167,9 +4254,9 @@
         summaryStats: [{ label: '矛盾', value: '×3' }],
         status: 'submitted', completedAt: '2026-04-26',
         annotations: [
-          { annotator: 'kioleemg12', value: { label: '矛盾' }, submittedAt: '2026-04-26 10:04', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-26 17:30' }] },
-          { annotator: '113450022', value: { label: '矛盾' }, submittedAt: '2026-04-26 10:18', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-26 17:30' }] },
-          { annotator: 'tony0950127', value: { label: '矛盾' }, submittedAt: '2026-04-26 10:32', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-26 17:30' }] }
+          { annotator: 'kioleemg12', value: { label: '矛盾' }, submittedAt: '2026-04-26 10:04', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-26 17:30' }] },
+          { annotator: '113450022', value: { label: '矛盾' }, submittedAt: '2026-04-26 10:18', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-26 17:30' }] },
+          { annotator: 'tony0950127', value: { label: '矛盾' }, submittedAt: '2026-04-26 10:32', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-26 17:30' }] }
         ]
       },
       {
@@ -4181,7 +4268,7 @@
         annotations: [
           { annotator: 'kioleemg12', value: { label: '中立' }, submittedAt: '2026-04-26 11:00', reviewStatus: 'pending' },
           { annotator: '113450022', value: { label: '中立' }, submittedAt: '2026-04-26 11:14', reviewStatus: 'pending' },
-          { annotator: 'tony0950127', value: { label: '蘊含' }, submittedAt: '2026-04-26 11:28', reviewStatus: 'modified', reviews: [{ reviewer: 'dahua_lee', decision: 'modified', result: { label: '中立' }, reviewedAt: '2026-04-26 13:00' }] }
+          { annotator: 'tony0950127', value: { label: '蘊含' }, submittedAt: '2026-04-26 11:28', reviewStatus: 'disputed', reviews: [{ reviewer: 'dahua_lee', decision: 'modified', result: { label: '中立' }, reviewedAt: '2026-04-26 13:00' }] }
         ]
       },
       {
@@ -4191,8 +4278,8 @@
         summaryStats: [{ label: '蘊含', value: '×3' }],
         status: 'submitted', completedAt: '2026-04-21',
         annotations: [
-          { annotator: 'kioleemg12', value: { label: '蘊含' }, submittedAt: '2026-04-21 13:06', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-21 17:30' }] },
-          { annotator: '113450022', value: { label: '蘊含' }, submittedAt: '2026-04-21 13:22', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-21 17:30' }] },
+          { annotator: 'kioleemg12', value: { label: '蘊含' }, submittedAt: '2026-04-21 13:06', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-21 17:30' }] },
+          { annotator: '113450022', value: { label: '蘊含' }, submittedAt: '2026-04-21 13:22', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-21 17:30' }] },
           { annotator: 'tony0950127', value: { label: '蘊含' }, submittedAt: '2026-04-21 13:38', reviewStatus: 'pending' }
         ]
       },
@@ -4216,7 +4303,7 @@
         status: 'submitted', completedAt: '2026-05-01',
         annotations: [
           { annotator: 'kioleemg12', value: { label: '中立' }, submittedAt: '2026-05-01 10:12', reviewStatus: 'pending' },
-          { annotator: '113450022', value: { label: '蘊含' }, submittedAt: '2026-05-01 10:26', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-05-01 17:30' }] },
+          { annotator: '113450022', value: { label: '蘊含' }, submittedAt: '2026-05-01 10:26', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-05-01 17:30' }] },
           { annotator: 'tony0950127', value: { label: '中立' }, submittedAt: '2026-05-01 10:42', reviewStatus: 'pending' }
         ]
       }
@@ -4231,7 +4318,7 @@
         status: 'submitted', completedAt: '2026-04-28',
         annotations: [
           { annotator: 'kioleemg12', value: { entities: [{ type: 'ORG', text: '台積電' }, { type: 'PER', text: '張忠謀' }, { type: 'LOC', text: '台北' }] }, submittedAt: '2026-04-28 10:10', reviewStatus: 'pending' },
-          { annotator: '113450022', value: { entities: [{ type: 'ORG', text: '台積電' }, { type: 'PER', text: '張忠謀' }, { type: 'LOC', text: '台北' }, { type: 'MISC', text: '半導體產業論壇' }] }, submittedAt: '2026-04-28 10:24', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-28 17:30' }] },
+          { annotator: '113450022', value: { entities: [{ type: 'ORG', text: '台積電' }, { type: 'PER', text: '張忠謀' }, { type: 'LOC', text: '台北' }, { type: 'MISC', text: '半導體產業論壇' }] }, submittedAt: '2026-04-28 10:24', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-28 17:30' }] },
           { annotator: 'tony0950127', value: { entities: [{ type: 'ORG', text: '台積電' }, { type: 'PER', text: '創辦人張忠謀' }, { type: 'LOC', text: '台北' }] }, submittedAt: '2026-04-28 10:42', reviewStatus: 'pending' }
         ]
       },
@@ -4242,7 +4329,7 @@
         summaryStats: [{ label: 'ORG', value: '×3' }, { label: 'LOC', value: '×3' }, { label: 'DATE', value: '×3' }],
         status: 'submitted', completedAt: '2026-04-28',
         annotations: [
-          { annotator: 'kioleemg12', value: { entities: [{ type: 'ORG', text: '鴻海精密工業' }, { type: 'LOC', text: '越南' }, { type: 'LOC', text: '胡志明市' }] }, submittedAt: '2026-04-28 11:08', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-28 17:30' }] },
+          { annotator: 'kioleemg12', value: { entities: [{ type: 'ORG', text: '鴻海精密工業' }, { type: 'LOC', text: '越南' }, { type: 'LOC', text: '胡志明市' }] }, submittedAt: '2026-04-28 11:08', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-28 17:30' }] },
           { annotator: '113450022', value: { entities: [{ type: 'ORG', text: '鴻海精密工業' }, { type: 'LOC', text: '胡志明市' }, { type: 'DATE', text: '2025 年' }] }, submittedAt: '2026-04-28 11:26', reviewStatus: 'pending' },
           { annotator: 'tony0950127', value: { entities: [{ type: 'ORG', text: '鴻海' }, { type: 'LOC', text: '越南胡志明市' }, { type: 'DATE', text: '2025 年' }] }, submittedAt: '2026-04-28 11:44', reviewStatus: 'pending' }
         ]
@@ -4255,7 +4342,7 @@
         status: 'draft', completedAt: '2026-04-28',
         annotations: [
           { annotator: 'kioleemg12', value: { entities: [{ type: 'ORG', text: '衛生福利部' }, { type: 'PER', text: '薛瑞元' }] }, submittedAt: '2026-04-28 13:04', reviewStatus: 'pending' },
-          { annotator: '113450022', value: { entities: [{ type: 'ORG', text: '世界衛生大會' }, { type: 'LOC', text: '台灣' }] }, submittedAt: '2026-04-28 13:18', reviewStatus: 'modified', reviews: [{ reviewer: 'dahua_lee', decision: 'modified', result: { entities: [{ type: 'ORG', text: '世界衛生大會' }] }, reviewedAt: '2026-04-28 14:30' }] },
+          { annotator: '113450022', value: { entities: [{ type: 'ORG', text: '世界衛生大會' }, { type: 'LOC', text: '台灣' }] }, submittedAt: '2026-04-28 13:18', reviewStatus: 'disputed', reviews: [{ reviewer: 'dahua_lee', decision: 'modified', result: { entities: [{ type: 'ORG', text: '世界衛生大會' }] }, reviewedAt: '2026-04-28 14:30' }] },
           { annotator: 'tony0950127', value: { entities: [{ type: 'PER', text: '薛瑞元' }, { type: 'ORG', text: '衛生福利部' }] }, submittedAt: '2026-04-28 13:34', reviewStatus: 'pending' }
         ]
       },
@@ -4290,9 +4377,93 @@
         summaryStats: [{ label: 'ORG', value: '×3' }, { label: 'PER', value: '×3' }, { label: 'LOC', value: '×2' }, { label: 'PRODUCT', value: '×2' }],
         status: 'submitted', completedAt: '2026-05-01',
         annotations: [
-          { annotator: 'kioleemg12', value: { entities: [{ type: 'ORG', text: 'Google' }, { type: 'PER', text: 'Sundar Pichai' }, { type: 'LOC', text: '加州山景城' }] }, submittedAt: '2026-05-01 16:08', reviewStatus: 'approved', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-05-01 17:30' }] },
+          { annotator: 'kioleemg12', value: { entities: [{ type: 'ORG', text: 'Google' }, { type: 'PER', text: 'Sundar Pichai' }, { type: 'LOC', text: '加州山景城' }] }, submittedAt: '2026-05-01 16:08', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-05-01 17:30' }] },
           { annotator: '113450022', value: { entities: [{ type: 'ORG', text: 'Google' }, { type: 'PRODUCT', text: 'Gemini' }, { type: 'PER', text: 'Sundar Pichai' }] }, submittedAt: '2026-05-01 16:22', reviewStatus: 'pending' },
           { annotator: 'tony0950127', value: { entities: [{ type: 'ORG', text: 'Google' }, { type: 'PER', text: '執行長 Sundar Pichai' }, { type: 'PRODUCT', text: 'Gemini' }] }, submittedAt: '2026-05-01 16:40', reviewStatus: 'pending' }
+        ]
+      }
+    ];
+
+  /* issue #742 (design.md D4 / maintainer ruling 5): T006 declares output
+     type `sequence_tagging` (task-detail.data.js:338), whose export requires
+     char-offset `spans[]` -- AR_SAMPLES_NER's `entities:[{type,text}]` value
+     shape has no offsets, and T010 (entity_recognition) still needs that
+     exact shape, so AR_SAMPLES_NER stays untouched and T006 gets its own
+     seed instead. Text and every existing `entities` entry are reused
+     verbatim from AR_SAMPLES_NER; `spans` is a same-shape sibling field
+     (`{start,end,label}`, matching task-detail.data.js T006 datasetRecords)
+     computed by locating each entity's text inside `textZh`. */
+  var AR_SAMPLES_SEQ_TAGGING = [
+      {
+        sampleId: 'NER-001', stage: 'official',
+        textZh: '台積電創辦人張忠謀在台北出席 2024 年半導體產業論壇。',
+        textEn: 'TSMC founder Morris Chang attended the 2024 semiconductor forum in Taipei.',
+        summaryStats: [{ label: 'ORG', value: '×3' }, { label: 'PER', value: '×3' }, { label: 'LOC', value: '×3' }, { label: 'DATE', value: '×2' }],
+        status: 'submitted', completedAt: '2026-04-28',
+        annotations: [
+          { annotator: 'kioleemg12', value: { entities: [{ type: 'ORG', text: '台積電' }, { type: 'PER', text: '張忠謀' }, { type: 'LOC', text: '台北' }], spans: [{ start: 0, end: 3, label: 'ORG' }, { start: 6, end: 9, label: 'PER' }, { start: 10, end: 12, label: 'LOC' }] }, submittedAt: '2026-04-28 10:10', reviewStatus: 'pending' },
+          { annotator: '113450022', value: { entities: [{ type: 'ORG', text: '台積電' }, { type: 'PER', text: '張忠謀' }, { type: 'LOC', text: '台北' }, { type: 'MISC', text: '半導體產業論壇' }], spans: [{ start: 0, end: 3, label: 'ORG' }, { start: 6, end: 9, label: 'PER' }, { start: 10, end: 12, label: 'LOC' }, { start: 21, end: 28, label: 'MISC' }] }, submittedAt: '2026-04-28 10:24', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-28 17:30' }] },
+          { annotator: 'tony0950127', value: { entities: [{ type: 'ORG', text: '台積電' }, { type: 'PER', text: '創辦人張忠謀' }, { type: 'LOC', text: '台北' }], spans: [{ start: 0, end: 3, label: 'ORG' }, { start: 3, end: 9, label: 'PER' }, { start: 10, end: 12, label: 'LOC' }] }, submittedAt: '2026-04-28 10:42', reviewStatus: 'pending' }
+        ]
+      },
+      {
+        sampleId: 'NER-002', stage: 'official',
+        textZh: '鴻海精密工業宣布在越南胡志明市設立新廠，預計 2025 年完工。',
+        textEn: 'Hon Hai announced a new plant in Ho Chi Minh City, Vietnam, expected in 2025.',
+        summaryStats: [{ label: 'ORG', value: '×3' }, { label: 'LOC', value: '×3' }, { label: 'DATE', value: '×3' }],
+        status: 'submitted', completedAt: '2026-04-28',
+        annotations: [
+          { annotator: 'kioleemg12', value: { entities: [{ type: 'ORG', text: '鴻海精密工業' }, { type: 'LOC', text: '越南' }, { type: 'LOC', text: '胡志明市' }], spans: [{ start: 0, end: 6, label: 'ORG' }, { start: 9, end: 11, label: 'LOC' }, { start: 11, end: 15, label: 'LOC' }] }, submittedAt: '2026-04-28 11:08', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-04-28 17:30' }] },
+          { annotator: '113450022', value: { entities: [{ type: 'ORG', text: '鴻海精密工業' }, { type: 'LOC', text: '胡志明市' }, { type: 'DATE', text: '2025 年' }], spans: [{ start: 0, end: 6, label: 'ORG' }, { start: 11, end: 15, label: 'LOC' }, { start: 23, end: 29, label: 'DATE' }] }, submittedAt: '2026-04-28 11:26', reviewStatus: 'pending' },
+          { annotator: 'tony0950127', value: { entities: [{ type: 'ORG', text: '鴻海' }, { type: 'LOC', text: '越南胡志明市' }, { type: 'DATE', text: '2025 年' }], spans: [{ start: 0, end: 2, label: 'ORG' }, { start: 9, end: 15, label: 'LOC' }, { start: 23, end: 29, label: 'DATE' }] }, submittedAt: '2026-04-28 11:44', reviewStatus: 'pending' }
+        ]
+      },
+      {
+        sampleId: 'NER-003', stage: 'official',
+        textZh: '衛生福利部長薛瑞元出席世界衛生大會，代表台灣宣導健康政策。',
+        textEn: 'Minister Hsueh Jui-yuan attended the World Health Assembly on behalf of Taiwan.',
+        summaryStats: [{ label: 'ORG', value: '×2' }, { label: 'PER', value: '×2' }],
+        status: 'draft', completedAt: '2026-04-28',
+        annotations: [
+          { annotator: 'kioleemg12', value: { entities: [{ type: 'ORG', text: '衛生福利部' }, { type: 'PER', text: '薛瑞元' }], spans: [{ start: 0, end: 5, label: 'ORG' }, { start: 6, end: 9, label: 'PER' }] }, submittedAt: '2026-04-28 13:04', reviewStatus: 'pending' },
+          { annotator: '113450022', value: { entities: [{ type: 'ORG', text: '世界衛生大會' }, { type: 'LOC', text: '台灣' }], spans: [{ start: 11, end: 17, label: 'ORG' }, { start: 20, end: 22, label: 'LOC' }] }, submittedAt: '2026-04-28 13:18', reviewStatus: 'disputed', reviews: [{ reviewer: 'dahua_lee', decision: 'modified', result: { entities: [{ type: 'ORG', text: '世界衛生大會' }] }, reviewedAt: '2026-04-28 14:30' }] },
+          { annotator: 'tony0950127', value: { entities: [{ type: 'PER', text: '薛瑞元' }, { type: 'ORG', text: '衛生福利部' }], spans: [{ start: 6, end: 9, label: 'PER' }, { start: 0, end: 5, label: 'ORG' }] }, submittedAt: '2026-04-28 13:34', reviewStatus: 'pending' }
+        ]
+      },
+      {
+        sampleId: 'NER-004', stage: 'dry',
+        textZh: '美國聯準會宣布維持利率不變，聯準會主席鮑威爾表示將持續觀察通膨走勢。',
+        textEn: 'The Fed kept rates unchanged, and Chair Jerome Powell said inflation will be monitored.',
+        summaryStats: [{ label: 'ORG', value: '×2' }, { label: 'PER', value: '×1' }, { label: 'LOC', value: '×1' }],
+        status: 'pending', completedAt: '',
+        annotations: [
+          { annotator: 'kioleemg12', value: { entities: [{ type: 'LOC', text: '美國' }, { type: 'ORG', text: '聯準會' }], spans: [{ start: 0, end: 2, label: 'LOC' }, { start: 2, end: 5, label: 'ORG' }] }, submittedAt: '', reviewStatus: 'pending' },
+          { annotator: '113450022', value: { entities: [{ type: 'ORG', text: '聯準會' }, { type: 'PER', text: '鮑威爾' }], spans: [{ start: 2, end: 5, label: 'ORG' }, { start: 19, end: 22, label: 'PER' }] }, submittedAt: '', reviewStatus: 'pending' },
+          { annotator: 'tony0950127', value: null, submittedAt: '', reviewStatus: 'pending' }
+        ]
+      },
+      {
+        sampleId: 'NER-005', stage: 'dry',
+        textZh: '歐盟議會通過新版人工智慧法案，預計明年在歐洲全境正式生效。',
+        textEn: 'The European Parliament passed a new AI Act to take effect across Europe next year.',
+        summaryStats: [{ label: 'ORG', value: '×3' }, { label: 'LOC', value: '×2' }, { label: 'DATE', value: '×1' }],
+        status: 'pending', completedAt: '',
+        annotations: [
+          { annotator: 'kioleemg12', value: { entities: [{ type: 'ORG', text: '歐盟議會' }, { type: 'LOC', text: '歐洲' }], spans: [{ start: 0, end: 4, label: 'ORG' }, { start: 20, end: 22, label: 'LOC' }] }, submittedAt: '', reviewStatus: 'pending' },
+          { annotator: '113450022', value: { entities: [{ type: 'ORG', text: '人工智慧法案' }, { type: 'DATE', text: '明年' }], spans: [{ start: 8, end: 14, label: 'ORG' }, { start: 17, end: 19, label: 'DATE' }] }, submittedAt: '', reviewStatus: 'pending' },
+          { annotator: 'tony0950127', value: { entities: [{ type: 'ORG', text: '歐盟' }, { type: 'LOC', text: '歐洲全境' }], spans: [{ start: 0, end: 2, label: 'ORG' }, { start: 20, end: 24, label: 'LOC' }] }, submittedAt: '', reviewStatus: 'pending' }
+        ]
+      },
+      {
+        sampleId: 'NER-006', stage: 'dry',
+        textZh: 'Google 執行長 Sundar Pichai 在加州山景城發表 Gemini 新版本。',
+        textEn: 'Google CEO Sundar Pichai unveiled a new Gemini version in Mountain View, California.',
+        summaryStats: [{ label: 'ORG', value: '×3' }, { label: 'PER', value: '×3' }, { label: 'LOC', value: '×2' }, { label: 'PRODUCT', value: '×2' }],
+        status: 'submitted', completedAt: '2026-05-01',
+        annotations: [
+          { annotator: 'kioleemg12', value: { entities: [{ type: 'ORG', text: 'Google' }, { type: 'PER', text: 'Sundar Pichai' }, { type: 'LOC', text: '加州山景城' }], spans: [{ start: 0, end: 6, label: 'ORG' }, { start: 11, end: 24, label: 'PER' }, { start: 26, end: 31, label: 'LOC' }] }, submittedAt: '2026-05-01 16:08', reviewStatus: 'finalized', reviews: [{ reviewer: 'wangxm88', decision: 'approved', reviewedAt: '2026-05-01 17:30' }] },
+          { annotator: '113450022', value: { entities: [{ type: 'ORG', text: 'Google' }, { type: 'PRODUCT', text: 'Gemini' }, { type: 'PER', text: 'Sundar Pichai' }], spans: [{ start: 0, end: 6, label: 'ORG' }, { start: 34, end: 40, label: 'PRODUCT' }, { start: 11, end: 24, label: 'PER' }] }, submittedAt: '2026-05-01 16:22', reviewStatus: 'pending' },
+          { annotator: 'tony0950127', value: { entities: [{ type: 'ORG', text: 'Google' }, { type: 'PER', text: '執行長 Sundar Pichai' }, { type: 'PRODUCT', text: 'Gemini' }], spans: [{ start: 0, end: 6, label: 'ORG' }, { start: 7, end: 24, label: 'PER' }, { start: 34, end: 40, label: 'PRODUCT' }] }, submittedAt: '2026-05-01 16:40', reviewStatus: 'pending' }
         ]
       }
     ];
@@ -4308,7 +4479,7 @@
     T003: AR_SAMPLES_CLASSIFICATION,
     T004: AR_SAMPLES_VA,
     T005: AR_SAMPLES_VA,
-    T006: AR_SAMPLES_NER,
+    T006: AR_SAMPLES_SEQ_TAGGING,
     T007: AR_SAMPLES_ASPECT,
     T008: AR_SAMPLES_RELATION,
     T009: AR_SAMPLES_CLASSIFICATION,
@@ -4376,17 +4547,10 @@
     ],
     T016: [
       { id: 'ofm-01-reviewer-corrects-b', rows: [{ a: 'kioleemg12', v: 'positive', rs: 'finalized', rv: [['reviewer_wang', 'modified', 'negative']], arb: 'reviewer_chen' }] },
-      { id: 'ofm-02-approved-interim', rows: [{ a: 'kioleemg12', v: 'negative', rs: 'approved', rv: [['reviewer_wang', 'approved']] }] },
-      { id: 'ofm-03-modified-interim', rows: [{ a: 'kioleemg12', v: 'neutral', rs: 'modified', rv: [['reviewer_wang', 'modified', 'negative']] }] },
-      { id: 'ofm-04-majority-converged', rows: [{ a: 'kioleemg12', v: 'positive', rs: 'finalized', rv: [['reviewer_wang', 'modified', 'neutral'], ['reviewer_li', 'modified', 'neutral'], ['reviewer_lin', 'approved']] }] },
-      { id: 'ofm-05-all-divergent', rows: [{ a: 'kioleemg12', v: 'neutral', rs: 'disputed', rv: [['reviewer_wang', 'modified', 'positive'], ['reviewer_li', 'modified', 'negative'], ['reviewer_lin', 'approved']] }] }
-    ],
-    T017: [
-      { id: 'oft-01-final-exception', rows: [{ a: 'kioleemg12', v: 'neutral', rs: 'disputed', rv: [['reviewer_wang', 'modified', 'positive']] }] },
-      { id: 'oft-02-approved-interim', rows: [{ a: 'kioleemg12', v: 'positive', rs: 'approved', rv: [['reviewer_wang', 'approved']] }] },
-      { id: 'oft-03-modified-interim', rows: [{ a: 'kioleemg12', v: 'neutral', rs: 'modified', rv: [['reviewer_wang', 'modified', 'positive']] }] },
-      { id: 'oft-04-unanimous-gold', rows: [{ a: 'kioleemg12', v: 'positive', rs: 'finalized', rv: [['reviewer_wang', 'approved'], ['reviewer_li', 'approved']] }] },
-      { id: 'oft-05-pending-review', rows: [{ a: 'kioleemg12', v: 'positive', rs: 'pending', rv: [] }] }
+      { id: 'ofm-02-reviewer-accepts-a', rows: [{ a: 'kioleemg12', v: 'negative', rs: 'finalized', rv: [['reviewer_wang', 'approved']] }] },
+      { id: 'ofm-03-awaiting-arbitration', rows: [{ a: 'kioleemg12', v: 'neutral', rs: 'disputed', rv: [['reviewer_wang', 'modified', 'negative']] }] },
+      { id: 'ofm-04-reviewer-bypass', rows: [{ a: 'kioleemg12', v: 'positive', rs: 'disputed', rv: [['reviewer_wang', 'bypass']] }] },
+      { id: 'ofm-05-final-exception', rows: [{ a: 'kioleemg12', v: 'neutral', rs: 'disputed', rv: [['reviewer_wang', 'modified', 'positive']] }] }
     ]
   };
 
@@ -4431,7 +4595,7 @@
     });
   }
 
-  ['T014', 'T015', 'T016', 'T017'].forEach(function(taskId) {
+  ['T014', 'T015', 'T016'].forEach(function(taskId) {
     ANNOTATION_RESULTS_BY_TASK[taskId] = buildReviewFlowResults(taskId);
   });
 
@@ -4648,7 +4812,7 @@ function interpolate(template, payload) {
       TASK_DATA.datasetTotal = TASK_DATA.datasetRecords.length;
       /* issue #596: reviewer_ids / arbiter_ids seed the single-owner review
          relay roster; only overwrite the shared DEFAULT_TASK_DATA roster
-         when this profile actually seeds its own (T014-T017), same
+         when this profile actually seeds its own (T014-T016), same
          opt-in pattern as reviewerGuidelineText below. */
       if (profile.reviewerIds) TASK_DATA.reviewerIds = profile.reviewerIds.slice();
       if (profile.arbiterIds) TASK_DATA.arbiterIds = profile.arbiterIds.slice();
@@ -4672,10 +4836,16 @@ function interpolate(template, payload) {
         TASK_DATA.outputs.map(function(o) { return o.type; })
       );
     }
-    /* None of the unified profiles carry legacy trialRounds/run-control data;
-       &status= URL overrides (see parseRole()) still exercise every run-control
+    /* Most unified profiles carry no trialRounds/run-control data; &status=
+       URL overrides (see parseRole()) still exercise every run-control
        state via the generic DEFAULT_TASK_DATA trial history. */
     resetRunProgressData();
+    /* issue #783 (design.md D7): only overwrite the freshly-reset empty
+       trialRounds when this profile actually seeds its own (T018), same
+       opt-in pattern as reviewerIds above. getTrialRounds() returns this
+       array as-is once non-empty, so TASK_DATA.trialRound (left at 0 by
+       resetRunProgressData()) never matters for these profiles. */
+    if (profile && profile.trialRounds) TASK_DATA.trialRounds = cloneData(profile.trialRounds);
   }
 
   /* Issue #200: renders the not-found state (mirrors annotation-list's
@@ -4898,6 +5068,24 @@ function interpolate(template, payload) {
     var total = Number(progress.totalSamples);
     if (!Number.isFinite(submitted) || !Number.isFinite(total) || total < 1) return;
     if (submitted < total) return;
+    /* issue #791 (D2): materialize getTrialRounds()'s synthetic fallback
+       into TASK_DATA.trialRounds (same technique as publishDryRun(), D1) so
+       a round created without a real seed still gets its outcome filled in
+       below, then fill the current (latest) round's agreement/std/result
+       from its scripted scenario now that it is fully submitted -- this is
+       the only point where a round's IAA outcome becomes real. */
+    if (!Array.isArray(TASK_DATA.trialRounds) || !TASK_DATA.trialRounds.length) {
+      TASK_DATA.trialRounds = getTrialRounds();
+    }
+    var currentRound = TASK_DATA.trialRounds[TASK_DATA.trialRounds.length - 1];
+    if (currentRound) {
+      var scenario = getTrialRoundScenario(currentRound.round);
+      currentRound.agreement = scenario.agreement;
+      currentRound.std = scenario.std;
+      currentRound.result = scenario.result;
+      TASK_DATA.currentAgreement = scenario.agreement;
+      TASK_DATA.currentStd = scenario.std;
+    }
     TASK_DATA.status = 'waiting_iaa_confirmation';
     TASK_DATA.updatedAt = new Date().toISOString().slice(0, 16).replace('T', ' ');
   }
@@ -5148,6 +5336,14 @@ function interpolate(template, payload) {
     setText('thArExportBy', t('thArExportBy'));
     setText('thArExportFormat', t('thArExportFormat'));
     setText('thArExportOps', t('thArExportOps'));
+    setText('arSeqExportModalTitle', t('arSeqExportModalTitle'));
+    setText('arSeqExportModalBody', t('arSeqExportModalBody'));
+    setText('arSeqExportSchemeLabel', t('arSeqExportSchemeLabel'));
+    setText('arSeqExportUnitLabel', t('arSeqExportUnitLabel'));
+    setText('arSeqExportTokenizerLabel', t('arSeqExportTokenizerLabel'));
+    setText('arSeqExportCancelBtn', t('arSeqExportCancelBtn'));
+    setText('arSeqExportConfirmBtn', t('arSeqExportConfirmBtn'));
+    renderArSeqExportOptions();
     setText('arEmptyTitle', t('arEmptyTitle'));
     setText('arEmptyHint', t('arEmptyHint'));
     renderAnnotationResults();
@@ -5357,6 +5553,16 @@ function interpolate(template, payload) {
     return 'trial';
   }
 
+  /* issue #783 (FR-010o-4(1)): a missing field means the round predates
+     this feature (or is the synthetic getTrialRounds() fallback), which is
+     always a determined outcome -- so absence MUST read as 'done', not
+     'pending'. This is a separate axis from round.result: result is the
+     IAA verdict (passed/failed/in_progress), this is whether the async
+     computation itself has finished. */
+  function getRoundComputationStatus(round) {
+    return (round && round.iaaComputationStatus) || 'done';
+  }
+
   function getRoundOutcomeKey() {
     var currentRound = getCurrentTrialRound();
     if (!currentRound) return 'in_progress';
@@ -5370,7 +5576,7 @@ function interpolate(template, payload) {
      computeIaaAlpha() equivalent and stays useful demo copy describing a
      specific story beat, so it is kept verbatim. Only the NUMBERS
      (agreement, result) are replaced -- and only when computeIaaAlpha()
-     actually has real annotator data for this task (T014-T017; every other
+     actually has real annotator data for this task (T014-T016; every other
      seed task has no seeded dry_run submissions, so computeIaaAlpha()
      returns computable:false and this function is an exact passthrough of
      the old scripted table). std has no computeIaaAlpha() equivalent
@@ -5674,6 +5880,26 @@ function interpolate(template, payload) {
     } else if (taskStageKey === 'completed') {
       setText('trialDecisionTitle', interpolate(t('roundDecisionTitleCompletedTpl'), { count: getOfficialRunCount() }));
       setText('trialDecisionDesc', t('roundDecisionDescCompletedTpl'));
+    } else if (TASK_DATA.status === 'dry_run_in_progress' && currentRound) {
+      /* issue #791 (FR-013(1)/D2): this round has not finished yet, so its
+         scripted/computed outcome (currentRound.result) must not drive the
+         banner -- adding the next round is disabled until the round
+         completes, and suggesting it here would point at a disabled
+         button. */
+      setText('trialDecisionTitle', interpolate(t('roundDecisionTitleRoundActiveTpl'), { round: currentRound.round }));
+      setText('trialDecisionDesc', t('roundDecisionDescRoundActiveTpl'));
+    } else if (TASK_DATA.status === 'waiting_iaa_confirmation' && currentRound && getRoundComputationStatus(currentRound) !== 'done') {
+      /* issue #783 (FR-010o-4(2)-(4)): the computation has not finished, so
+         it MUST NOT be presented as an IAA-not-met verdict -- this branch
+         takes priority over the result-based branches below, which only
+         apply once the computation is done. */
+      if (getRoundComputationStatus(currentRound) === 'pending') {
+        setText('trialDecisionTitle', t('iaaComputationPendingTitle'));
+        setText('trialDecisionDesc', t('iaaComputationPendingDesc'));
+      } else {
+        setText('trialDecisionTitle', t('iaaComputationFailedTitle'));
+        setText('trialDecisionDesc', t('iaaComputationFailedDesc'));
+      }
     } else if (currentRound && currentRound.result === 'passed') {
       setText('trialDecisionTitle', interpolate(t('roundDecisionTitlePassedTpl'), { round: currentRound.round }));
       setText('trialDecisionDesc', interpolate(t('roundDecisionDescPassedTpl'), { count: reserveCount }));
@@ -5884,12 +6110,33 @@ function interpolate(template, payload) {
     }
 
     if (TASK_DATA.status === 'dry_run_in_progress') {
-      actionRow.innerHTML = '<button class="btn btn-cta" type="button" id="publishDryRunBtn">' + t('publishDryRun') + ' R' + nextRound + '</button>';
+      actionRow.innerHTML = '<button class="btn btn-cta" type="button" id="publishDryRunBtn" disabled>' + t('publishDryRun') + ' R' + nextRound + '</button>' +
+        '<span class="status-hint">' + t('dryRunNextRoundReason') + '</span>';
       return;
     }
 
     if (TASK_DATA.status === 'waiting_iaa_confirmation') {
-      actionRow.innerHTML = '<button class="btn btn-primary" type="button" id="publishOfficialRunBtn">' + t('publishOfficialRun') + '</button>';
+      /* issue #783 (FR-010o-4(5)/(6)): neither the "start official run" nor
+         the "add next trial round" transition may proceed while the latest
+         round's IAA computation has not finished -- disable both with a
+         visible reason, same "disabled + visible reason" pattern as the
+         dry_run_in_progress branch above (issue #791 D4). The retry control
+         (FR-010o-4(3)) is project_leader-only; the reviewer branch above
+         already returns before this point, so state.taskRole here is
+         always 'project_leader'. */
+      var computationStatus = getRoundComputationStatus(getCurrentTrialRound());
+      if (computationStatus !== 'done') {
+        var isPending = computationStatus === 'pending';
+        actionRow.innerHTML =
+          '<button class="btn btn-primary" type="button" id="publishOfficialRunBtn" disabled>' + t('publishOfficialRun') + '</button>' +
+          '<span class="status-hint">' + t(isPending ? 'iaaComputationPendingOfficialReason' : 'iaaComputationFailedReason') + '</span>' +
+          '<button class="btn btn-cta" type="button" id="publishDryRunBtn" disabled>' + t('publishDryRun') + ' R' + nextRound + '</button>' +
+          '<span class="status-hint">' + t(isPending ? 'iaaComputationPendingDryRunReason' : 'iaaComputationFailedReason') + '</span>' +
+          (isPending ? '' : '<button class="btn btn-secondary" type="button" id="retryIaaComputationBtn">' + t('retryIaaComputation') + '</button>');
+        return;
+      }
+      actionRow.innerHTML = '<button class="btn btn-primary" type="button" id="publishOfficialRunBtn">' + t('publishOfficialRun') + '</button>' +
+        '<button class="btn btn-cta" type="button" id="publishDryRunBtn">' + t('publishDryRun') + ' R' + nextRound + '</button>';
       return;
     }
 
@@ -8577,20 +8824,20 @@ function getTaskTypeLabel() {
     }).join(sep);
   }
 
-  function localizeResultLabel(label) {
+  function localizeResultLabel(label, lang) {
     var labelText = String(label || '');
     var labelEntry = RESULT_LABEL_I18N[labelText];
     if (!labelEntry) return labelText;
-    return labelEntry[state.lang] || labelEntry.zh || labelText;
+    return labelEntry[lang || state.lang] || labelEntry.zh || labelText;
   }
 
   var SORTED_RESULT_LABEL_KEYS = Object.keys(RESULT_LABEL_I18N).sort(function(a, b) {
     return b.length - a.length;
   });
 
-  function localizeResultText(text) {
+  function localizeResultText(text, lang) {
     var output = String(text || '');
-    if (state.lang !== 'en' || output === '-' || !output) return output;
+    if ((lang || state.lang) !== 'en' || output === '-' || !output) return output;
     SORTED_RESULT_LABEL_KEYS.forEach(function(label) {
       var labelEntry = RESULT_LABEL_I18N[label];
       var translated = labelEntry && labelEntry.en ? labelEntry.en : label;
@@ -8606,24 +8853,24 @@ function getTaskTypeLabel() {
       .trim();
   }
 
-  function getAnnotationResultDisplay(annotation) {
+  function getAnnotationResultDisplay(annotation, lang) {
     var v = annotation.value;
     if (!v) return { tags: ['-'], colorClass: '' };
     if (v.resultText) {
-      return { tags: [localizeResultText(v.resultText)], colorClass: '' };
+      return { tags: [localizeResultText(v.resultText, lang)], colorClass: '' };
     }
     if (v.valence !== undefined && v.arousal !== undefined) {
       return { tags: ['[' + v.valence + ', ' + v.arousal + ']'], colorClass: '' };
     }
     if (v.labels && v.labels.length > 0) {
-      return { tags: [v.labels.map(localizeResultLabel).join(', ')], colorClass: '' };
+      return { tags: [v.labels.map(function(label) { return localizeResultLabel(label, lang); }).join(', ')], colorClass: '' };
     }
     if (v.aspects && v.aspects.length > 0) {
-      return { tags: [v.aspects.map(localizeResultLabel).join(', ')], colorClass: '' };
+      return { tags: [v.aspects.map(function(label) { return localizeResultLabel(label, lang); }).join(', ')], colorClass: '' };
     }
     if (v.entities && v.entities.length > 0) {
       return {
-        tags: [v.entities.map(function(entity) { return entity.type + ':' + localizeResultText(entity.text); }).join(', ')],
+        tags: [v.entities.map(function(entity) { return entity.type + ':' + localizeResultText(entity.text, lang); }).join(', ')],
         colorClass: ''
       };
     }
@@ -8631,7 +8878,7 @@ function getTaskTypeLabel() {
       return { tags: [v.triples.join(' | ')], colorClass: '' };
     }
     if (v.label) {
-      return { tags: [localizeResultLabel(v.label)], colorClass: '' };
+      return { tags: [localizeResultLabel(v.label, lang)], colorClass: '' };
     }
     return { tags: ['-'], colorClass: '' };
   }
@@ -8644,20 +8891,20 @@ function getTaskTypeLabel() {
     td.appendChild(statsEl);
   }
 
-  /* AR_REVIEW_STATUS — five-state review vocabulary reused from spec 015 REVIEW_UNIT_STATUS. */
-  var AR_REVIEW_STATUS_ORDER = ['pending', 'approved', 'modified', 'disputed', 'finalized'];
+  /* AR_REVIEW_STATUS — three-state review vocabulary, spec 014 v3.0.0 (issue #688),
+     reused from spec 015 REVIEW_UNIT_STATUS. The single-relay review model (015
+     FR-093) assigns exactly one reviewer per official_run unit, so there is no
+     interim state between a reviewer's decision and the unit's outcome; the
+     former `approved`/`modified` states were retired. */
+  var AR_REVIEW_STATUS_ORDER = ['pending', 'disputed', 'finalized'];
   var AR_REVIEW_STATUS_LABEL_KEYS = {
     pending: 'arReviewPending',
-    approved: 'arReviewApproved',
-    modified: 'arReviewModified',
     disputed: 'arReviewDisputed',
     finalized: 'arReviewFinalized'
   };
 
   function getArReviewBadge(reviewStatus) {
     var map = {
-      approved: { cls: 'badge-ar-approved', label: t('arReviewApproved') },
-      modified: { cls: 'badge-ar-modified', label: t('arReviewModified') },
       disputed: { cls: 'badge-ar-disputed', label: t('arReviewDisputed') },
       finalized: { cls: 'badge-ar-finalized', label: t('arReviewFinalized') },
       pending: { cls: 'badge-ar-pending-review', label: t('arReviewPending') }
@@ -8670,20 +8917,26 @@ function getTaskTypeLabel() {
     return inReviews || !!(annotation.arbitration && annotation.arbitration.arbiter === reviewer);
   }
 
-  function getArFilteredSamples() {
+  /* D1: conditions come from the caller -- the export button path builds
+     them from live state (buildArConditionsFromState); the redownload path
+     (task 1.5) builds them from a stored conditions snapshot instead. The
+     no-arg default keeps the results-table renderer and pagination handler,
+     which are outside FR-021's scope, reading live state as before. */
+  function getArFilteredSamples(conditions) {
+    var c = conditions || buildArConditionsFromState();
     return getAnnotationResultsData().filter(function(sample) {
-      if (state.arStage !== 'all' && sample.stage !== state.arStage) return false;
-      if (state.arStatus !== 'all' && sample.status !== state.arStatus) return false;
-      if (state.arAnnotator !== 'all') {
-        var hasAnnotator = sample.annotations.some(function(a) { return a.annotator === state.arAnnotator; });
+      if (c.runStage !== 'all' && sample.stage !== c.runStage) return false;
+      if (c.submissionStatus !== 'all' && sample.status !== c.submissionStatus) return false;
+      if (c.annotatorScope !== 'all') {
+        var hasAnnotator = sample.annotations.some(function(a) { return a.annotator === c.annotatorScope; });
         if (!hasAnnotator) return false;
       }
-      if (state.arReviewer !== 'all') {
-        var hasReviewer = sample.annotations.some(function(a) { return annotationHasReviewer(a, state.arReviewer); });
+      if (c.reviewerScope !== 'all') {
+        var hasReviewer = sample.annotations.some(function(a) { return annotationHasReviewer(a, c.reviewerScope); });
         if (!hasReviewer) return false;
       }
-      if (state.arReviewStatus !== 'all') {
-        var hasReviewStatus = sample.annotations.some(function(a) { return (a.reviewStatus || 'pending') === state.arReviewStatus; });
+      if (c.reviewStatusScope !== 'all') {
+        var hasReviewStatus = sample.annotations.some(function(a) { return (a.reviewStatus || 'pending') === c.reviewStatusScope; });
         if (!hasReviewStatus) return false;
       }
       return true;
@@ -8798,7 +9051,9 @@ function getTaskTypeLabel() {
     (annotation.reviews || []).forEach(function(review) {
       var decisionText = review.decision === 'modified'
         ? t('arHistoryModifiedPrefix') + getAnnotationResultDisplay({ value: review.result }).tags[0]
-        : t('arHistoryAgree');
+        : review.decision === 'bypass'
+          ? t('arHistoryBypass')
+          : t('arHistoryAgree');
       var reviewLine = buildArHistoryLine(
         'ar-history-review', t('arHistoryReviewerRole'), review.reviewer, decisionText, review.reviewedAt
       );
@@ -8985,12 +9240,36 @@ function getTaskTypeLabel() {
     return out ? (out.config || {}) : {};
   }
 
+  /* FR-020(2)/(6): dialog visibility and export-field branching both read
+     outputs[] directly (constitution: Generalization-First) instead of a
+     task-ID whitelist -- entity_recognition tasks never match this. */
+  function taskHasSequenceTaggingOutput() {
+    return (TASK_DATA.outputs || []).some(function(out) { return out.type === 'sequence_tagging'; });
+  }
+
   function getExportSequenceSubtype(config) {
     return (config && config.subtype) || '';
   }
 
   function getExportedByName() {
     return state.taskRole === 'reviewer' ? 'Mandy Chen' : 'Mandy Chen';
+  }
+
+  /* D1/D2: the export-button path's single source of a conditions object --
+     built once so exported_at (and the filename stamp that must match it)
+     is a single value shared by every downstream function instead of each
+     one calling `new Date()` independently. */
+  function buildArConditionsFromState() {
+    return {
+      runStage: state.arStage,
+      submissionStatus: state.arStatus,
+      annotatorScope: state.arAnnotator,
+      reviewerScope: state.arReviewer,
+      reviewStatusScope: state.arReviewStatus,
+      lang: state.lang,
+      exportedAt: new Date().toISOString(),
+      exportedBy: getExportedByName()
+    };
   }
 
   function getExportedById() {
@@ -9021,9 +9300,10 @@ function getTaskTypeLabel() {
     return JSON.parse(JSON.stringify(value));
   }
 
-  function buildExportSourceData(sample, config) {
+  function buildExportSourceData(sample, config, conditions) {
+    var lang = conditions ? conditions.lang : state.lang;
     var sourceData = {
-      text: state.lang === 'en' ? sample.textEn : sample.textZh,
+      text: lang === 'en' ? sample.textEn : sample.textZh,
       text_zh: sample.textZh,
       text_en: sample.textEn
     };
@@ -9055,7 +9335,7 @@ function getTaskTypeLabel() {
     return reviewData;
   }
 
-  function buildTaskSpecificExportFields(sample, annotation, config) {
+  function buildTaskSpecificExportFields(sample, annotation, config, seqOptions, conditions) {
     var value = annotation && annotation.value ? annotation.value : null;
     var fields = {};
     if (TASK_DATA.taskTypeKey === 'single_sentence_classification') {
@@ -9092,10 +9372,52 @@ function getTaskTypeLabel() {
          the annotation value's actual shape — aspect-style results carry
          `aspects[]`, entity-style results carry `entities[]`. */
       if (value && Array.isArray(value.aspects)) {
-        fields.original_sentence = state.lang === 'en' ? sample.textEn : sample.textZh;
+        fields.original_sentence = (conditions ? conditions.lang : state.lang) === 'en' ? sample.textEn : sample.textZh;
         fields.corrected_sentence = value && value.corrected_sentence ? value.corrected_sentence : fields.original_sentence;
         fields.aspects = value && value.aspects ? value.aspects.slice() : [];
         fields.aspects_summary = fields.aspects.join(', ');
+      } else if (value ? Array.isArray(value.spans) : taskHasSequenceTaggingOutput()) {
+        /* FR-020(6): the result-field split reads the annotation value's own
+           structure, never the task config -- a `spans[]` value is carried by
+           FR-020, an `entities[]` value stays on FR-015i-3 even when the task
+           declares a sequence_tagging output. A row with no submission at all
+           has no structure to read, so it falls back to the declared output
+           type and still derives a full-length all-O sequence.
+           FR-020(1)/SC-045: single derivation entry point -- no prefix
+           concatenation, no span/token boundary logic, no second scheme
+           table is reimplemented here. D3: tokens/tokenizer are looked up
+           from seed data by sampleId, never computed on this page. */
+        var callOptions = seqOptions || {};
+        if (callOptions.token_unit === 'word' && callOptions.tokenizerEngine) {
+          var seed = ((window.LabelSuiteTaskDetailData || {}).SEQ_TAGGING_TOKENIZER_SEEDS || {})[callOptions.tokenizerEngine] || {};
+          callOptions = Object.assign({}, callOptions, {
+            tokenizer: { engine: callOptions.tokenizerEngine, version: seed.version },
+            tokens: (seed.tokensBySample || {})[sample.sampleId] || []
+          });
+        }
+        var seqResult = window.LabelSuiteSpanTaggingExport.deriveSequence(
+          sample.textZh,
+          value && Array.isArray(value.spans) ? value.spans : [],
+          callOptions
+        );
+        /* D5: blocked must be checked before reading any other field -- the
+           module's blocked result carries no `tags`/`expansions`. */
+        if (seqResult.blocked) {
+          if (state.arSeqExportRun) state.arSeqExportRun.blocked = true;
+          return fields;
+        }
+        fields.tags = seqResult.tags;
+        fields.tagging_scheme = seqResult.tagging_scheme;
+        fields.token_unit = seqResult.token_unit;
+        if (seqResult.token_unit === 'word' && state.arSeqExportRun) {
+          fields.tokenizer = seqResult.tokenizer;
+          fields.alignment_mode = seqResult.alignment_mode;
+          fields.expanded_span_count = seqResult.expanded_span_count;
+          state.arSeqExportRun.tokenizer = seqResult.tokenizer;
+          state.arSeqExportRun.alignmentMode = seqResult.alignment_mode;
+          state.arSeqExportRun.expandedSpanCount += seqResult.expanded_span_count;
+          state.arSeqExportRun.expansions = state.arSeqExportRun.expansions.concat(seqResult.expansions);
+        }
       } else {
         fields.entities = value && value.entities ? cloneExportValue(value.entities) : [];
         fields.entities_summary = fields.entities.map(function(entity) {
@@ -9107,8 +9429,18 @@ function getTaskTypeLabel() {
     return fields;
   }
 
-  function buildExportAnnotationRecord(sample, annotation, sampleIndex, annotationIndex, config) {
+  function buildExportAnnotationRecord(sample, annotation, sampleIndex, annotationIndex, config, seqOptions, conditions) {
     var annotationId = 'ann-' + sample.sampleId + '-' + (annotationIndex + 1);
+    var taskFields = buildTaskSpecificExportFields(sample, annotation, config, seqOptions, conditions);
+    /* D1: the JSON format records tagging_scheme/token_unit/tokenizer/
+       alignment_mode/expanded_span_count at the manifest level only;
+       JSON-MIN (buildJsonMinExportPayload) is the flat format that repeats
+       them per row instead. */
+    delete taskFields.tagging_scheme;
+    delete taskFields.token_unit;
+    delete taskFields.tokenizer;
+    delete taskFields.alignment_mode;
+    delete taskFields.expanded_span_count;
     return {
       annotation_id: annotationId,
       annotator_id: getAnnotatorId(annotation.annotator),
@@ -9119,16 +9451,33 @@ function getTaskTypeLabel() {
       result: Object.assign(
         {},
         cloneExportValue(annotation.value) || {},
-        buildTaskSpecificExportFields(sample, annotation, config)
+        taskFields
       )
     };
+  }
+
+  /* Issue #800/FR-021(6): getArFilteredSamples() returning zero rows means
+     the samples.map()/forEach() loops in buildJsonExportPayload and
+     buildJsonMinExportPayload never run, so buildTaskSpecificExportFields's
+     single deriveSequence call site (SC-045) never executes and
+     state.arSeqExportRun.blocked stays false regardless of whether the
+     recorded tokenizer engine is actually available. Reusing that same call
+     site with a synthetic empty sample/annotation keeps the blocked decision
+     coming from the module's own return value (D5) -- this page still never
+     inspects the tokenizer fields itself. */
+  function ensureArSeqExportProbeChecksTokenizer(samples, seqOptions, conditions) {
+    if (samples.length > 0) return;
+    if (!seqOptions || seqOptions.token_unit !== 'word') return;
+    var probeSample = { sampleId: '__ar_seq_export_probe__', textZh: '', textEn: '' };
+    var probeAnnotation = { annotator: '__ar_seq_export_probe__', value: null, reviewStatus: 'pending' };
+    buildTaskSpecificExportFields(probeSample, probeAnnotation, getExportConfigData(), seqOptions, conditions);
   }
 
   /* Config-driven (constitution: Generalization-First) — one record per
      TASK_DATA.outputs[] entry (ADR-029), reading the shared
      OUTPUT_TYPE_IAA_REGISTRY plus any target_agreement_overrides; a newly
      registered output type needs no changes here. */
-  function getAppliedIaaMetrics() {
+  function getAppliedIaaMetrics(lang) {
     return (TASK_DATA.outputs || []).map(function(out) {
       var entry = getIaaEntry(out.type);
       if (!entry || entry.notApplicable) {
@@ -9136,77 +9485,102 @@ function getTaskTypeLabel() {
       }
       return {
         output_type: out.type,
-        metric: entry[state.lang] || entry.zh,
+        metric: entry[lang] || entry.zh,
         threshold: getEffectiveTargetAgreement(out.type)
       };
     });
   }
 
-  function buildJsonExportPayload(samples) {
-    var exportedAt = new Date().toISOString();
+  /* D1: `conditions` is the sole source of the filter/time/actor/language
+     values that determine this file's content -- the export-button path
+     passes one built from live state (buildArConditionsFromState), the
+     redownload path (task 1.5) passes one rebuilt from a stored snapshot.
+     No `state.*` is read directly below. */
+  function buildJsonExportPayload(samples, conditions, seqOptions) {
+    var c = conditions || buildArConditionsFromState();
     var config = getExportConfigData();
-    return {
-      manifest: {
+    var manifest = {
+      task_id: TASK_DATA.taskId,
+      task_name: c.lang === 'en' ? TASK_DATA.taskNameEn : TASK_DATA.taskNameZh,
+      task_type: TASK_DATA.taskTypeKey,
+      export_format: 'json',
+      exported_at: c.exportedAt,
+      exported_by: c.exportedBy,
+      schema_version: '1.1.0',
+      run_stage: c.runStage,
+      isolation_enabled: TASK_DATA.isolationEnabled,
+      sampling_mode: TASK_DATA.samplingMode,
+      sampling_value: TASK_DATA.samplingValue,
+      applied_iaa_metrics: getAppliedIaaMetrics(c.lang),
+      sample_snapshot_id: getExportSampleSnapshotId(c.runStage),
+      excluded_annotation_assignments: getExcludedExportMetadata(c.runStage),
+      applied_filters: {
+        run_stage: c.runStage,
+        submission_status: c.submissionStatus,
+        annotators: c.annotatorScope === 'all' ? [] : [c.annotatorScope]
+      }
+    };
+    /* AC-1.10 / D1: the character path records tagging_scheme/token_unit in
+       the manifest; it MUST NOT gain a tokenizer/alignment_mode/expanded_span_count
+       key -- those only exist on the word path. */
+    if (seqOptions) {
+      manifest.tagging_scheme = seqOptions.tagging_scheme;
+      manifest.token_unit = seqOptions.token_unit;
+    }
+    var items = samples.map(function(sample, sampleIndex) {
+      return {
         task_id: TASK_DATA.taskId,
-        task_name: state.lang === 'en' ? TASK_DATA.taskNameEn : TASK_DATA.taskNameZh,
+        task_name: c.lang === 'en' ? TASK_DATA.taskNameEn : TASK_DATA.taskNameZh,
         task_type: TASK_DATA.taskTypeKey,
-        export_format: 'json',
-        exported_at: exportedAt,
-        exported_by: getExportedByName(),
-        schema_version: '1.0.0',
-        run_stage: state.arStage,
-        isolation_enabled: TASK_DATA.isolationEnabled,
-        sampling_mode: TASK_DATA.samplingMode,
-        sampling_value: TASK_DATA.samplingValue,
-        applied_iaa_metrics: getAppliedIaaMetrics(),
-        sample_snapshot_id: getExportSampleSnapshotId(state.arStage),
-        excluded_annotation_assignments: getExcludedExportMetadata(state.arStage),
-        applied_filters: {
-          run_stage: state.arStage,
-          submission_status: state.arStatus,
-          annotators: state.arAnnotator === 'all' ? [] : [state.arAnnotator]
-        }
-      },
-      items: samples.map(function(sample, sampleIndex) {
-        return {
-          task_id: TASK_DATA.taskId,
-          task_name: state.lang === 'en' ? TASK_DATA.taskNameEn : TASK_DATA.taskNameZh,
-          task_type: TASK_DATA.taskTypeKey,
-          run_stage: sample.stage,
-          sample_snapshot_id: getExportSampleSnapshotId(sample.stage),
-          sample_id: sample.sampleId,
-          source_data: buildExportSourceData(sample, config),
-          annotation_status: sample.status,
-          review_status: sample.annotations.every(function(annotation) { return annotation.reviewStatus === 'approved'; }) ? 'approved' : 'pending',
-          created_at: sample.completedAt || null,
-          updated_at: sample.completedAt || null,
-          annotations: sample.annotations.map(function(annotation, annotationIndex) {
-            return buildExportAnnotationRecord(sample, annotation, sampleIndex, annotationIndex, config);
-          }),
-          reviews: sample.annotations.map(function(annotation, annotationIndex) {
-            return buildExportReviewData(annotation, sample.sampleId + '-' + (annotationIndex + 1));
-          })
-        };
-      })
+        run_stage: sample.stage,
+        sample_snapshot_id: getExportSampleSnapshotId(sample.stage),
+        sample_id: sample.sampleId,
+        source_data: buildExportSourceData(sample, config, c),
+        annotation_status: sample.status,
+        review_status: sample.annotations.every(function(annotation) { return annotation.reviewStatus === 'finalized'; }) ? 'finalized' : 'pending',
+        created_at: sample.completedAt || null,
+        updated_at: sample.completedAt || null,
+        annotations: sample.annotations.map(function(annotation, annotationIndex) {
+          return buildExportAnnotationRecord(sample, annotation, sampleIndex, annotationIndex, config, seqOptions, c);
+        }),
+        reviews: sample.annotations.map(function(annotation, annotationIndex) {
+          return buildExportReviewData(annotation, sample.sampleId + '-' + (annotationIndex + 1));
+        })
+      };
+    });
+    /* AC-1.11/D1: the word path's tokenizer/alignment_mode/expanded_span_count
+       come from state.arSeqExportRun -- the same accumulator
+       buildTaskSpecificExportFields just populated while building `items`
+       above, so the manifest's file-level total is exactly the number of
+       expansions this same pass produced (task 2.4 point 4). */
+    if (seqOptions && seqOptions.token_unit === 'word' && state.arSeqExportRun) {
+      manifest.tokenizer = state.arSeqExportRun.tokenizer;
+      manifest.alignment_mode = state.arSeqExportRun.alignmentMode;
+      manifest.expanded_span_count = state.arSeqExportRun.expandedSpanCount;
+    }
+    return {
+      manifest: manifest,
+      items: items
     };
   }
 
-  function buildJsonMinExportPayload(samples) {
+  function buildJsonMinExportPayload(samples, conditions, seqOptions) {
+    var c = conditions || buildArConditionsFromState();
     var config = getExportConfigData();
-    var excludedMetadata = getExcludedExportMetadata(state.arStage);
+    var excludedMetadata = getExcludedExportMetadata(c.runStage);
     var rows = [];
     samples.forEach(function(sample) {
       sample.annotations.forEach(function(annotation, annotationIndex) {
-        var taskFields = buildTaskSpecificExportFields(sample, annotation, config);
+        var taskFields = buildTaskSpecificExportFields(sample, annotation, config, seqOptions, c);
         var reviewData = buildExportReviewData(annotation, sample.sampleId + '-' + (annotationIndex + 1));
         rows.push(Object.assign({
           task_id: TASK_DATA.taskId,
-          task_name: state.lang === 'en' ? TASK_DATA.taskNameEn : TASK_DATA.taskNameZh,
+          task_name: c.lang === 'en' ? TASK_DATA.taskNameEn : TASK_DATA.taskNameZh,
           task_type: TASK_DATA.taskTypeKey,
           run_stage: sample.stage,
           sample_snapshot_id: getExportSampleSnapshotId(sample.stage),
           sample_id: sample.sampleId,
-          source_data: buildExportSourceData(sample, config),
+          source_data: buildExportSourceData(sample, config, c),
           annotation_status: sample.status,
           review_status: annotation.reviewStatus || 'pending',
           created_at: annotation.submittedAt || null,
@@ -9221,20 +9595,36 @@ function getTaskTypeLabel() {
           reviewer_name: reviewData.reviewer_name,
           reviewed_at: reviewData.reviewed_at,
           decision: reviewData.decision,
-          corrected_result_summary: reviewData.corrected_result ? getAnnotationResultDisplay({ value: reviewData.corrected_result }).tags[0] : null,
+          corrected_result_summary: reviewData.corrected_result ? getAnnotationResultDisplay({ value: reviewData.corrected_result }, c.lang).tags[0] : null,
           excluded_annotation_assignments_count: excludedMetadata.reduce(function(sum, item) { return sum + item.sample_count; }, 0),
           excluded_annotation_assignments_ref: excludedMetadata.map(function(item) { return item.assignment_id; }).join(',')
         }, taskFields));
       });
     });
+    /* FR-020(3)/FR-020(4): expanded_span_count is metadata of the export
+       itself (the file-level total also shown in the expansion summary and,
+       for JSON, the manifest), not a per-annotation count -- every row must
+       carry the same total so JSON-MIN alone stays reproducible. Stamp it
+       after the loop, once state.arSeqExportRun holds the fully accumulated
+       total, mirroring how buildJsonExportPayload reads it after building
+       `items` above. */
+    if (seqOptions && seqOptions.token_unit === 'word' && state.arSeqExportRun) {
+      rows.forEach(function(row) {
+        row.expanded_span_count = state.arSeqExportRun.expandedSpanCount;
+      });
+    }
     return rows;
   }
 
-  function downloadArExport(format) {
-    var samples = getArFilteredSamples();
-    var payload = format === 'json' ? buildJsonExportPayload(samples) : buildJsonMinExportPayload(samples);
-    var exportedAt = new Date().toISOString();
-    var stamp = exportedAt.slice(0, 19).replace(/[:T]/g, '-');
+  /* D2: exported_at is decided once by the caller's conditions object and
+     reused for both the manifest field and the filename stamp -- previously
+     this function called `new Date()` a second time here, so the same
+     export could carry two different timestamps across a second boundary. */
+  function downloadArExport(format, conditions, seqOptions) {
+    var c = conditions || buildArConditionsFromState();
+    var samples = getArFilteredSamples(c);
+    var payload = format === 'json' ? buildJsonExportPayload(samples, c, seqOptions) : buildJsonMinExportPayload(samples, c, seqOptions);
+    var stamp = c.exportedAt.slice(0, 19).replace(/[:T]/g, '-');
     var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     var url = URL.createObjectURL(blob);
     var link = document.createElement('a');
@@ -9245,13 +9635,277 @@ function getTaskTypeLabel() {
     link.click();
     document.body.removeChild(link);
     setTimeout(function() { URL.revokeObjectURL(url); }, 0);
-    return exportedAt;
+    return c.exportedAt;
+  }
+
+  /* Both export buttons ran byte-identical bodies apart from the format
+     string, the history label and the toast key; the duplication made any
+     change to export-history bookkeeping a two-place edit. */
+  function performArExport(format, seqOptions) {
+    var conditions = buildArConditionsFromState();
+    var samples = getArFilteredSamples(conditions);
+    var exportedAt = downloadArExport(format, conditions, seqOptions);
+    var exportType = (conditions.submissionStatus === 'all' && conditions.annotatorScope === 'all' && conditions.runStage === 'all' && conditions.reviewerScope === 'all' && conditions.reviewStatusScope === 'all') ? 'full' : 'filtered';
+    if (!TASK_DATA.exportHistory) TASK_DATA.exportHistory = [];
+    /* FR-021(3)/D2: reviewer/review-status filters, the full-precision
+       export time, the exporter and the interface language are the
+       remaining values that determine this file's content but were not
+       previously on the snapshot -- FR-021(6)/D3 disables "download" when
+       any of them (or the pre-existing fields above) is missing. */
+    var conditionsSnapshot = {
+      export_format: format,
+      run_stage: conditions.runStage,
+      submission_status: conditions.submissionStatus,
+      annotator_scope: conditions.annotatorScope,
+      reviewer_scope: conditions.reviewerScope,
+      review_status_scope: conditions.reviewStatusScope,
+      exported_at: conditions.exportedAt,
+      exported_by: conditions.exportedBy,
+      lang: conditions.lang,
+      excluded_annotation_assignments: getExcludedExportMetadata(conditions.runStage)
+    };
+    /* AC-1.10/task 2.4 point 5: recorded on the conditions snapshot so the
+       export-history row shows which scheme/unit (and, on the word path,
+       which tokenizer engine) produced that download. */
+    if (seqOptions) {
+      conditionsSnapshot.tagging_scheme = seqOptions.tagging_scheme;
+      conditionsSnapshot.token_unit = seqOptions.token_unit;
+      if (seqOptions.token_unit === 'word') {
+        conditionsSnapshot.tokenizer_engine = seqOptions.tokenizerEngine;
+      }
+    }
+    TASK_DATA.exportHistory.unshift({
+      exportedAt: exportedAt.slice(0, 16).replace('T', ' '),
+      exportType: exportType,
+      stage: conditions.runStage,
+      count: samples.length,
+      scope: conditions.annotatorScope === 'all' ? '__all__' : conditions.annotatorScope,
+      exportedBy: 'Mandy',
+      format: format === 'json' ? 'JSON' : 'JSON-MIN',
+      conditionsSnapshot: conditionsSnapshot
+    });
+    renderArExportHistory();
+    showToast(format === 'json' ? t('toastExportJson') : t('toastExportJsonMin'));
+    trackEvent('prototype_ar_export', { format: format, stage: conditions.runStage });
+  }
+
+  /* FR-020(2): dialog visibility is config-driven (constitution:
+     Generalization-First) via taskHasSequenceTaggingOutput() -- never a
+     task-ID whitelist. renderArSeqExportOptions() renders the scheme/unit
+     selects from the shared module's exported constants (never a hardcoded
+     option list), per D7/AC-1.10 and SC-045, and the tokenizer-engine
+     select from the seed data's own keys (D3, task 2.4) -- no hardcoded
+     engine list on this page either. */
+  function renderArSeqExportOptions() {
+    var schemeSelect = document.getElementById('arSeqExportSchemeSelect');
+    var unitSelect = document.getElementById('arSeqExportUnitSelect');
+    if (!schemeSelect || !unitSelect) return;
+    var seq = window.LabelSuiteSpanTaggingExport;
+    if (!seq) return;
+    while (schemeSelect.firstChild) schemeSelect.removeChild(schemeSelect.firstChild);
+    seq.EXPORT_TAGGING_SCHEMES.forEach(function(scheme) {
+      var opt = document.createElement('option');
+      opt.value = scheme;
+      opt.textContent = scheme;
+      schemeSelect.appendChild(opt);
+    });
+    schemeSelect.value = seq.EXPORT_DEFAULT_TAGGING_SCHEME;
+    while (unitSelect.firstChild) unitSelect.removeChild(unitSelect.firstChild);
+    seq.EXPORT_TOKEN_UNITS.forEach(function(unit) {
+      var opt = document.createElement('option');
+      opt.value = unit;
+      opt.textContent = unit === 'word' ? t('arSeqExportUnitWord') : t('arSeqExportUnitCharacter');
+      unitSelect.appendChild(opt);
+    });
+    unitSelect.value = seq.EXPORT_DEFAULT_TOKEN_UNIT;
+    renderArSeqExportTokenizerOptions();
+  }
+
+  function renderArSeqExportTokenizerOptions() {
+    var tokenizerSelect = document.getElementById('arSeqExportTokenizerSelect');
+    if (!tokenizerSelect) return;
+    var seeds = ((window.LabelSuiteTaskDetailData || {}).SEQ_TAGGING_TOKENIZER_SEEDS) || {};
+    while (tokenizerSelect.firstChild) tokenizerSelect.removeChild(tokenizerSelect.firstChild);
+    Object.keys(seeds).forEach(function(engine) {
+      var opt = document.createElement('option');
+      opt.value = engine;
+      opt.textContent = engine;
+      tokenizerSelect.appendChild(opt);
+    });
+  }
+
+  function updateArSeqExportTokenizerVisibility() {
+    var unitSelect = document.getElementById('arSeqExportUnitSelect');
+    var tokenizerField = document.getElementById('arSeqExportTokenizerField');
+    if (!unitSelect || !tokenizerField) return;
+    if (unitSelect.value === 'word') tokenizerField.classList.remove('hidden');
+    else tokenizerField.classList.add('hidden');
+  }
+
+  /* AC-1.11/task 2.4: renders the "N 段標記因對齊被擴張" toggle and the
+     per-expansion list from the real (non-probe) export pass's accumulator.
+     A zero count (character path, or a word-level run with no expansions)
+     clears and hides the container -- there is nothing to disclose. */
+  function renderArSeqExportExpansionSummary(run) {
+    var container = document.getElementById('arSeqExportExpansionSummary');
+    if (!container) return;
+    while (container.firstChild) container.removeChild(container.firstChild);
+    var count = run ? run.expandedSpanCount : 0;
+    if (!count) {
+      container.classList.add('hidden');
+      return;
+    }
+    container.classList.remove('hidden');
+    var toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.id = 'arSeqExportExpansionToggle';
+    toggle.className = 'btn btn-secondary';
+    toggle.textContent = interpolate(t('arSeqExportExpansionToggleTpl'), { count: count });
+    var list = document.createElement('div');
+    list.id = 'arSeqExportExpansionList';
+    list.classList.add('hidden');
+    (run.expansions || []).forEach(function(expansion) {
+      var item = document.createElement('div');
+      item.className = 'ar-seq-expansion-item';
+      var original = document.createElement('span');
+      original.className = 'ar-seq-expansion-original';
+      original.textContent = expansion.original_text;
+      var expanded = document.createElement('span');
+      expanded.className = 'ar-seq-expansion-expanded';
+      expanded.textContent = expansion.expanded_text;
+      var delta = document.createElement('span');
+      delta.className = 'ar-seq-expansion-delta';
+      delta.textContent = 'Δ' + expansion.start_delta + ' / Δ' + expansion.end_delta;
+      item.appendChild(original);
+      item.appendChild(expanded);
+      item.appendChild(delta);
+      list.appendChild(item);
+    });
+    toggle.addEventListener('click', function() {
+      list.classList.toggle('hidden');
+    });
+    container.appendChild(toggle);
+    container.appendChild(list);
+  }
+
+  /* D5/task 2.4: the page's own i18n message, never the module's raw
+     English `reason` -- a null message clears and hides the notice. */
+  function renderArSeqExportBlockedNotice(message) {
+    var notice = document.getElementById('arSeqExportBlockedNotice');
+    if (!notice) return;
+    if (!message) {
+      notice.textContent = '';
+      notice.classList.add('hidden');
+      return;
+    }
+    notice.textContent = message;
+    notice.classList.remove('hidden');
+  }
+
+  /* Confirming closes the dialog; re-opening always resets to the module's
+     default scheme/unit (BIO/character) rather than remembering the last
+     selection, per issue #742 task 1.6 spec. */
+  function openArSeqExportModal(format, triggerEl) {
+    state.arSeqExportFormat = format;
+    renderArSeqExportOptions();
+    updateArSeqExportTokenizerVisibility();
+    renderArSeqExportExpansionSummary(null);
+    renderArSeqExportBlockedNotice(null);
+    var modal = document.getElementById('arSeqExportModal');
+    modal.classList.add('show');
+    modal.setAttribute('aria-hidden', 'false');
+    if (window.LabelSuiteModalFocus) {
+      window.LabelSuiteModalFocus.open(modal, { trigger: triggerEl, onClose: closeArSeqExportModal });
+    }
+  }
+
+  function closeArSeqExportModal() {
+    var modal = document.getElementById('arSeqExportModal');
+    modal.classList.remove('show');
+    modal.setAttribute('aria-hidden', 'true');
+    state.arSeqExportFormat = null;
+    if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(modal);
   }
 
   function getArExportStageLabel(stage) {
     if (stage === 'dry') return t('arStageDry');
     if (stage === 'official') return t('arStageOfficial');
     return t('arStageBoth');
+  }
+
+  /* FR-021(6)/D3: "download" is only enabled when the row's snapshot has
+     every field a redownload needs to rebuild the exact same file -- no
+     default-filling from the current screen. sequence_tagging tasks also
+     need the scheme/unit (and, for word units, the tokenizer engine)
+     recorded by FR-020(3). */
+  function isArExportSnapshotComplete(snapshot) {
+    if (!snapshot) return false;
+    var requiredBaseFields = ['export_format', 'run_stage', 'submission_status', 'annotator_scope', 'reviewer_scope', 'review_status_scope', 'exported_at', 'exported_by', 'lang'];
+    for (var i = 0; i < requiredBaseFields.length; i++) {
+      if (snapshot[requiredBaseFields[i]] == null) return false;
+    }
+    if (taskHasSequenceTaggingOutput()) {
+      if (!snapshot.tagging_scheme || !snapshot.token_unit) return false;
+      if (snapshot.token_unit === 'word' && !snapshot.tokenizer_engine) return false;
+    }
+    return true;
+  }
+
+  /* FR-021(1)(2)(5): rebuilds a past export from its stored conditions
+     snapshot only -- never reads a live `state.ar*` filter or the dialog's
+     current selections, never opens #arSeqExportModal, never writes a new
+     TASK_DATA.exportHistory row, and reuses downloadArExport/
+     buildJsonExportPayload/buildJsonMinExportPayload (D1) so
+     deriveSequence keeps its single call site (SC-045). The caller (see
+     renderArExportHistory) only wires this up when
+     isArExportSnapshotComplete() is true. */
+  function redownloadArExportRecord(record) {
+    var snapshot = record.conditionsSnapshot;
+    var conditions = {
+      runStage: snapshot.run_stage,
+      submissionStatus: snapshot.submission_status,
+      annotatorScope: snapshot.annotator_scope,
+      reviewerScope: snapshot.reviewer_scope,
+      reviewStatusScope: snapshot.review_status_scope,
+      lang: snapshot.lang,
+      exportedAt: snapshot.exported_at,
+      exportedBy: snapshot.exported_by
+    };
+    var seqOptions = null;
+    if (snapshot.tagging_scheme && snapshot.token_unit) {
+      seqOptions = { tagging_scheme: snapshot.tagging_scheme, token_unit: snapshot.token_unit };
+      if (snapshot.token_unit === 'word') seqOptions.tokenizerEngine = snapshot.tokenizer_engine;
+    }
+    var format = snapshot.export_format;
+    if (seqOptions && seqOptions.token_unit === 'word') {
+      /* FR-021(6)/D4: a probe pass mirrors arSeqExportConfirmBtn's pattern
+         (:10600) -- blocked is decided only by the shared module's return
+         value (SC-045's single deriveSequence call site), never by this
+         page inspecting the snapshot's tokenizer fields itself. The probe
+         accumulator is discarded before any real download. */
+      var probeSamples = getArFilteredSamples(conditions);
+      state.arSeqExportRun = { blocked: false, tokenizer: null, alignmentMode: null, expandedSpanCount: 0, expansions: [] };
+      /* Issue #800: probeSamples can legitimately be empty (the snapshot's
+         own filter conditions re-derive to zero rows) -- without this, the
+         map()/forEach() below never runs and the block check is skipped. */
+      ensureArSeqExportProbeChecksTokenizer(probeSamples, seqOptions, conditions);
+      if (format === 'json') { buildJsonExportPayload(probeSamples, conditions, seqOptions); }
+      else { buildJsonMinExportPayload(probeSamples, conditions, seqOptions); }
+      var blocked = state.arSeqExportRun.blocked;
+      state.arSeqExportRun = null;
+      if (blocked) {
+        showToast(interpolate(t('arSeqExportRedownloadBlockedTokenizer'), { engine: seqOptions.tokenizerEngine }), true);
+        return;
+      }
+      /* D5: the word path's manifest tokenizer/alignment_mode/
+         expanded_span_count come from state.arSeqExportRun, same as a live
+         export -- but redownload MUST NOT render the expansion summary. */
+      state.arSeqExportRun = { blocked: false, tokenizer: null, alignmentMode: null, expandedSpanCount: 0, expansions: [] };
+      downloadArExport(format, conditions, seqOptions);
+      state.arSeqExportRun = null;
+      return;
+    }
+    downloadArExport(format, conditions, seqOptions);
   }
 
   function renderArExportHistory() {
@@ -9293,6 +9947,14 @@ function getTaskTypeLabel() {
       dlBtn.className = 'mini-btn mini-btn-primary ar-export-action-btn';
       dlBtn.type = 'button';
       dlBtn.textContent = t('arExportDownload');
+      if (isArExportSnapshotComplete(record.conditionsSnapshot)) {
+        dlBtn.addEventListener('click', function() {
+          redownloadArExportRecord(record);
+        });
+      } else {
+        dlBtn.disabled = true;
+        dlBtn.title = t('arExportSnapshotMissingTitle');
+      }
       opsTd.appendChild(dlBtn);
       tr.appendChild(opsTd);
       body.appendChild(tr);
@@ -9520,6 +10182,86 @@ function getTaskTypeLabel() {
     if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(modal);
   }
 
+  /* FR-017 / FR-013(4) (issue #838): trial round R{n} with n >= 2 needs a
+     revision note -- prior_round_findings, plus guideline_change_summary or,
+     with no_change checked, no_change_reason. Every missing field gets its
+     own inline hint and the toast lists them all (same per-item rule as the
+     FR-010t gate in canPublish()). R1 never reaches this dialog. */
+  var TRIAL_ROUND_REVISION_FIELDS = [
+    { key: 'priorRoundFindings', inputId: 'priorRoundFindingsInput', errorId: 'priorRoundFindingsError', labelKey: 'priorRoundFindingsLabel', messageKey: 'priorRoundFindingsRequired' },
+    { key: 'guidelineChangeSummary', inputId: 'guidelineChangeSummaryInput', errorId: 'guidelineChangeSummaryError', labelKey: 'guidelineChangeSummaryLabel', messageKey: 'guidelineChangeSummaryRequired' },
+    { key: 'noChangeReason', inputId: 'noChangeReasonInput', errorId: 'noChangeReasonError', labelKey: 'noChangeReasonLabel', messageKey: 'noChangeReasonRequired' }
+  ];
+
+  function setTrialRoundRevisionFieldError(field, message) {
+    document.getElementById(field.inputId).classList.toggle('error', Boolean(message));
+    var error = document.getElementById(field.errorId);
+    error.textContent = message || '';
+    error.classList.toggle('show', Boolean(message));
+  }
+
+  function syncNoChangeFields() {
+    var noChange = document.getElementById('noChangeCheckbox').checked;
+    document.getElementById('guidelineChangeSummaryField').classList.toggle('hidden', noChange);
+    document.getElementById('noChangeReasonField').classList.toggle('hidden', !noChange);
+  }
+
+  function openTrialRoundRevisionModal(round) {
+    var modal = document.getElementById('trialRoundRevisionModal');
+    state.trialRoundRevisionRound = round;
+    setText('trialRoundRevisionTitle', interpolate(t('trialRoundRevisionTitleTpl'), { round: round }));
+    setText('trialRoundRevisionDesc', t('trialRoundRevisionDesc'));
+    setText('noChangeLabel', t('noChangeLabel'));
+    setText('trialRoundRevisionCancelBtn', t('trialRoundRevisionCancelBtn'));
+    setText('trialRoundRevisionConfirmBtn', interpolate(t('trialRoundRevisionConfirmTpl'), { round: round }));
+    TRIAL_ROUND_REVISION_FIELDS.forEach(function(field) {
+      setText(field.labelKey, t(field.labelKey));
+      document.getElementById(field.inputId).value = '';
+      setTrialRoundRevisionFieldError(field, '');
+    });
+    document.getElementById('noChangeCheckbox').checked = false;
+    syncNoChangeFields();
+    modal.classList.add('show');
+    modal.setAttribute('aria-hidden', 'false');
+    if (window.LabelSuiteModalFocus) {
+      window.LabelSuiteModalFocus.open(modal, { trigger: document.getElementById('publishDryRunBtn'), onClose: closeTrialRoundRevisionModal });
+    }
+  }
+
+  function closeTrialRoundRevisionModal() {
+    var modal = document.getElementById('trialRoundRevisionModal');
+    modal.classList.remove('show');
+    modal.setAttribute('aria-hidden', 'true');
+    if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(modal);
+  }
+
+  function confirmTrialRoundRevision() {
+    var noChange = document.getElementById('noChangeCheckbox').checked;
+    var values = {};
+    TRIAL_ROUND_REVISION_FIELDS.forEach(function(field) {
+      values[field.key] = document.getElementById(field.inputId).value.trim();
+    });
+    var requiredKeys = ['priorRoundFindings', noChange ? 'noChangeReason' : 'guidelineChangeSummary'];
+    var missing = TRIAL_ROUND_REVISION_FIELDS.filter(function(field) {
+      var isMissing = requiredKeys.indexOf(field.key) !== -1 && !values[field.key];
+      setTrialRoundRevisionFieldError(field, isMissing ? t(field.messageKey) : '');
+      return isMissing;
+    });
+    if (missing.length) {
+      var labels = missing.map(function(field) { return t(field.labelKey); });
+      showToast(interpolate(t('toastRevisionNoteBlockedTpl'), { round: state.trialRoundRevisionRound }) + labels.join(t('memberGapJoiner')), true);
+      trackEvent('prototype_publish_failed', { reason: 'revision_note_missing: ' + missing.map(function(field) { return field.key; }).join(', ') });
+      return;
+    }
+    closeTrialRoundRevisionModal();
+    state.trialRoundRevisionNote = {
+      priorRoundFindings: values.priorRoundFindings,
+      guidelineChangeSummary: noChange ? 'no_change' : values.guidelineChangeSummary,
+      noChangeReason: noChange ? values.noChangeReason : null
+    };
+    publishDryRun();
+  }
+
   function canPublish() {
     var result = validateSampling();
     if (!result.valid) {
@@ -9540,28 +10282,58 @@ function getTaskTypeLabel() {
   function publishDryRun() {
     if (state.publishingDryRun) return;
     if (!canPublish()) return;
+    /* FR-017 (issue #838): R2 and later are created only with a confirmed
+       revision note; the note is consumed by this one creation. */
+    var revisionNote = state.trialRoundRevisionNote;
+    state.trialRoundRevisionNote = null;
+    if (getTrialRounds().length >= 1 && !revisionNote) {
+      openTrialRoundRevisionModal(getTrialRounds().length + 1);
+      return;
+    }
     state.publishingDryRun = true;
     setTimeout(function() { state.publishingDryRun = false; }, 200);
-    var nextRound = getTrialRounds().length + 1;
+    /* issue #791 (D1): materialize getTrialRounds()'s synthetic fallback
+       into TASK_DATA.trialRounds before pushing the new round, instead of
+       pushing onto whatever TASK_DATA.trialRounds already holds. Without
+       this, a task that reached waiting_iaa_confirmation via a page load
+       (no real TASK_DATA.trialRounds seed) would lose the fallback R1 entry
+       the moment R2 is pushed onto the still-empty real array. */
+    if (!Array.isArray(TASK_DATA.trialRounds) || !TASK_DATA.trialRounds.length) {
+      TASK_DATA.trialRounds = getTrialRounds();
+    }
+    var nextRound = TASK_DATA.trialRounds.length + 1;
     var scenario = getTrialRoundScenario(nextRound);
-    if (!Array.isArray(TASK_DATA.trialRounds)) TASK_DATA.trialRounds = [];
+    /* issue #791 (D2): a round's IAA outcome is not known until it
+       finishes -- only the round number, sample count, and date are real at
+       publish time. agreement/std/result stay null until
+       syncStatusFromDryRunProgress() fills them in from this same scenario
+       table once the round is fully submitted. */
     TASK_DATA.trialRounds.push({
       round: nextRound,
       sampleCount: Number(TASK_DATA.samplingValue) || 0,
-      agreement: scenario.agreement,
+      agreement: null,
       annotators: Number(TASK_DATA.minAnnotators) || 0,
-      std: scenario.std,
-      result: scenario.result,
+      std: null,
+      result: null,
       usedSamples: Number(TASK_DATA.samplingValue) || 0,
       date: scenario.date,
       noteZh: scenario.noteZh,
-      noteEn: scenario.noteEn
+      noteEn: scenario.noteEn,
+      priorRoundFindings: revisionNote ? revisionNote.priorRoundFindings : null,
+      guidelineChangeSummary: revisionNote ? revisionNote.guidelineChangeSummary : null,
+      noChangeReason: revisionNote ? revisionNote.noChangeReason : null
     });
     TASK_DATA.trialRound = nextRound;
-    TASK_DATA.currentAgreement = scenario.agreement;
+    TASK_DATA.currentAgreement = null;
     TASK_DATA.currentAnnotators = Number(TASK_DATA.minAnnotators) || 0;
-    TASK_DATA.currentStd = scenario.std;
-    TASK_DATA.status = scenario.result === 'passed' ? 'waiting_iaa_confirmation' : 'dry_run_in_progress';
+    TASK_DATA.currentStd = null;
+    /* issue #791 (FR-010o-3): publishing any round always moves the task
+       into dry_run_in_progress. The round's IAA outcome is not written here
+       (D2) and MUST NOT decide the task's status -- only a fully-submitted
+       round, via
+       syncStatusFromDryRunProgress(), advances the task to
+       waiting_iaa_confirmation (FR-008a). */
+    TASK_DATA.status = 'dry_run_in_progress';
     TASK_DATA.updatedAt = scenario.date + ' 10:07';
     showToast(t('toastPublishedDry'));
     trackEvent('prototype_publish_success', { target_status: TASK_DATA.status });
@@ -9577,6 +10349,20 @@ function getTaskTypeLabel() {
     TASK_DATA.updatedAt = '2026-05-04 11:20';
     showToast(t('toastPublishedOfficial'));
     trackEvent('prototype_publish_success', { target_status: 'official_run_in_progress' });
+    renderOverview();
+  }
+
+  /* issue #783 (FR-010o-4(3)): resets the latest round's computation back
+     to 'pending' in place -- MUST NOT change TASK_DATA.status and MUST NOT
+     push a new round, unlike publishDryRun()/publishOfficialRun() above. */
+  function retryIaaComputation() {
+    var currentRound = getCurrentTrialRound();
+    if (!currentRound || getRoundComputationStatus(currentRound) !== 'failed') return;
+    if (!Array.isArray(TASK_DATA.trialRounds) || !TASK_DATA.trialRounds.length) {
+      TASK_DATA.trialRounds = getTrialRounds();
+    }
+    TASK_DATA.trialRounds[TASK_DATA.trialRounds.length - 1].iaaComputationStatus = 'pending';
+    trackEvent('prototype_cta_clicked', { cta: 'retry_iaa_computation' });
     renderOverview();
   }
 
@@ -9929,6 +10715,10 @@ function getTaskTypeLabel() {
         trackEvent('prototype_cta_clicked', { cta: 'publish_complete' });
         publishComplete();
       }
+
+      if (e.target.id === 'retryIaaComputationBtn') {
+        retryIaaComputation();
+      }
     });
 
     document.getElementById('riskCancelBtn').addEventListener('click', function() {
@@ -9947,6 +10737,15 @@ function getTaskTypeLabel() {
     document.getElementById('riskModal').addEventListener('click', function(e) {
       if (e.target.id === 'riskModal') {
         closeRiskModal();
+      }
+    });
+
+    document.getElementById('noChangeCheckbox').addEventListener('change', syncNoChangeFields);
+    document.getElementById('trialRoundRevisionCancelBtn').addEventListener('click', closeTrialRoundRevisionModal);
+    document.getElementById('trialRoundRevisionConfirmBtn').addEventListener('click', confirmTrialRoundRevision);
+    document.getElementById('trialRoundRevisionModal').addEventListener('click', function(e) {
+      if (e.target.id === 'trialRoundRevisionModal') {
+        closeTrialRoundRevisionModal();
       }
     });
 
@@ -10108,56 +10907,77 @@ document.getElementById('memberProgressSort').addEventListener('change', functio
       trackEvent('prototype_ar_filter_changed', { filter: 'review_status', value: state.arReviewStatus });
     });
 
-    document.getElementById('arExportJsonBtn').addEventListener('click', function() {
-      var samples = getArFilteredSamples();
-      var exportedAt = downloadArExport('json');
-      var exportType = (state.arStatus === 'all' && state.arAnnotator === 'all' && state.arStage === 'all' && state.arReviewer === 'all' && state.arReviewStatus === 'all') ? 'full' : 'filtered';
-      if (!TASK_DATA.exportHistory) TASK_DATA.exportHistory = [];
-      TASK_DATA.exportHistory.unshift({
-        exportedAt: exportedAt.slice(0, 16).replace('T', ' '),
-        exportType: exportType,
-        stage: state.arStage,
-        count: samples.length,
-        scope: state.arAnnotator === 'all' ? '__all__' : state.arAnnotator,
-        exportedBy: 'Mandy',
-        format: 'JSON',
-        conditionsSnapshot: {
-          export_format: 'json',
-          run_stage: state.arStage,
-          submission_status: state.arStatus,
-          annotator_scope: state.arAnnotator,
-          excluded_annotation_assignments: getExcludedExportMetadata(state.arStage)
-        }
-      });
-      renderArExportHistory();
-      showToast(t('toastExportJson'));
-      trackEvent('prototype_ar_export', { format: 'json', stage: state.arStage });
+    document.getElementById('arExportJsonBtn').addEventListener('click', function(e) {
+      if (taskHasSequenceTaggingOutput()) { openArSeqExportModal('json', e.currentTarget); return; }
+      performArExport('json');
     });
 
-    document.getElementById('arExportJsonMinBtn').addEventListener('click', function() {
-      var samples = getArFilteredSamples();
-      var exportedAt = downloadArExport('json-min');
-      var exportType = (state.arStatus === 'all' && state.arAnnotator === 'all' && state.arStage === 'all' && state.arReviewer === 'all' && state.arReviewStatus === 'all') ? 'full' : 'filtered';
-      if (!TASK_DATA.exportHistory) TASK_DATA.exportHistory = [];
-      TASK_DATA.exportHistory.unshift({
-        exportedAt: exportedAt.slice(0, 16).replace('T', ' '),
-        exportType: exportType,
-        stage: state.arStage,
-        count: samples.length,
-        scope: state.arAnnotator === 'all' ? '__all__' : state.arAnnotator,
-        exportedBy: 'Mandy',
-        format: 'JSON-MIN',
-        conditionsSnapshot: {
-          export_format: 'json-min',
-          run_stage: state.arStage,
-          submission_status: state.arStatus,
-          annotator_scope: state.arAnnotator,
-          excluded_annotation_assignments: getExcludedExportMetadata(state.arStage)
+    document.getElementById('arExportJsonMinBtn').addEventListener('click', function(e) {
+      if (taskHasSequenceTaggingOutput()) { openArSeqExportModal('json-min', e.currentTarget); return; }
+      performArExport('json-min');
+    });
+
+    document.getElementById('arSeqExportUnitSelect').addEventListener('change', updateArSeqExportTokenizerVisibility);
+
+    document.getElementById('arSeqExportCancelBtn').addEventListener('click', function() {
+      closeArSeqExportModal();
+    });
+
+    document.getElementById('arSeqExportModal').addEventListener('click', function(e) {
+      if (e.target.id === 'arSeqExportModal') closeArSeqExportModal();
+    });
+
+    document.getElementById('arSeqExportConfirmBtn').addEventListener('click', function() {
+      var unit = document.getElementById('arSeqExportUnitSelect').value;
+      var format = state.arSeqExportFormat;
+      if (unit === 'word') {
+        var wordOptions = {
+          tagging_scheme: document.getElementById('arSeqExportSchemeSelect').value,
+          token_unit: unit,
+          tokenizerEngine: document.getElementById('arSeqExportTokenizerSelect').value
+        };
+        /* AC-1.12/D5: blocked must be decided before any file is written or
+           any history row recorded. A probe pass runs the same payload
+           builder used for the real download so the derivation stays
+           behind the module's single call site (SC-045); its
+           accumulator is discarded before the real download runs, so the
+           probe's expansion count never bleeds into the real pass's total
+           (task 2.4 point 4). */
+        var probeSamples = getArFilteredSamples();
+        state.arSeqExportRun = { blocked: false, tokenizer: null, alignmentMode: null, expandedSpanCount: 0, expansions: [] };
+        /* Issue #800: probeSamples can legitimately be empty (current
+           filters match no rows) -- without this, the map()/forEach() below
+           never runs and the block check is skipped. */
+        ensureArSeqExportProbeChecksTokenizer(probeSamples, wordOptions, null);
+        if (format === 'json') { buildJsonExportPayload(probeSamples, null, wordOptions); }
+        else { buildJsonMinExportPayload(probeSamples, null, wordOptions); }
+        var blocked = state.arSeqExportRun.blocked;
+        state.arSeqExportRun = null;
+        if (blocked) {
+          renderArSeqExportExpansionSummary(null);
+          renderArSeqExportBlockedNotice(t('arSeqExportBlockedTokenizerVersion'));
+          /* AC-1.12: the dialog stays open so the user can switch back to
+             character in the same dialog -- no closeArSeqExportModal() call
+             on the blocked path. */
+          return;
         }
-      });
-      renderArExportHistory();
-      showToast(t('toastExportJsonMin'));
-      trackEvent('prototype_ar_export', { format: 'json-min', stage: state.arStage });
+        renderArSeqExportBlockedNotice(null);
+        state.arSeqExportRun = { blocked: false, tokenizer: null, alignmentMode: null, expandedSpanCount: 0, expansions: [] };
+        performArExport(format, wordOptions);
+        renderArSeqExportExpansionSummary(state.arSeqExportRun);
+        state.arSeqExportRun = null;
+        /* AC-1.11: the word path does not auto-close either, so the
+           expansion summary just rendered stays readable. */
+        return;
+      }
+      var seqOptions = {
+        tagging_scheme: document.getElementById('arSeqExportSchemeSelect').value,
+        token_unit: unit
+      };
+      renderArSeqExportExpansionSummary(null);
+      renderArSeqExportBlockedNotice(null);
+      closeArSeqExportModal();
+      performArExport(format, seqOptions);
     });
 
     document.getElementById('arPrevPageBtn').addEventListener('click', function() {

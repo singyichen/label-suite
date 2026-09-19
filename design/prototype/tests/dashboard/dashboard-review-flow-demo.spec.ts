@@ -2,28 +2,35 @@
  * Review-flow demo tasks on the dashboard (issue #302, Phase 3)
  * Source spec: specs/dashboard/012-dashboard/spec.md
  *
- * T014-T017 are the review-flow demo tasks staged by the
+ * T014-T016 are the review-flow demo tasks staged by the
  * annotation-workspace.data.js boot seeder. The dashboard assignment rows
  * are the ONLY place a run_type is bound to a task for navigation, so these
  * tests pin:
  *   - the demo tasks appear in the annotator/reviewer task lists
  *   - card clicks route to annotation-list with the correct run_type
  *   - reviewer summaries match the seeded review-state matrix
- *     (T014=5, T015=1, T016=0, T017=1 pending review units) using the
+ *     (T014=5, T015=1, T016=0 pending review units) using the
  *     subject-bearing wording (issue #452): the share of units past 待審 is
  *     labeled 任務覆蓋 x / n 個審核單位, and T016 — whose pending count is 0
  *     while 3 units sit unresolved in the dispute pool — must disclose
- *     未達定稿門檻 3 · 爭議中 3 instead of reading as a completed task.
+ *     爭議中 3 instead of reading as a completed task.
+ *
+ * issue #815: T017 (review-flow-official-tie) is retired -- its whole
+ * premise, an N=2 tie, is structurally impossible under FR-093's
+ * single-owner relay. Its DEMO_TASKS entry is dropped (T016 already covers
+ * the same official_run shape at full coverage), and its dedicated
+ * card-click routing test is retargeted at T016 below.
  *
  * Issue #596: FR-093 gives each unit exactly one reviewer, so the interim
- * states a quorum used to produce (已同意 / 已修改) no longer exist and
- * 未達定稿門檻 is now always 待審 + 爭議中. The counter is kept because the
- * issue #310 misreading it guards against — 100% coverage reading as done —
- * is exactly T016's shape.
+ * states a quorum used to produce (已同意 / 已修改) no longer exist.
+ * Issue #627 item 7 then removed the 未達定稿門檻 clause outright, since it
+ * had become an identity with 待審 + 爭議中; the issue #310 misreading it
+ * used to guard against — 100% coverage reading as done — is now carried by
+ * 爭議中 alone, which is exactly T016's shape.
  *
  * Issue #450: these summaries are no longer the seed's prebuilt display
  * string — computeReviewSummary() derives them from the stored review-unit
- * state, so every non-zero counter (待審 / 未達定稿門檻 / 爭議中) now appears under
+ * state, so every non-zero counter (待審 / 爭議中) now appears under
  * one shared rule instead of being hand-written per demo task.
  *
  * Traceability: specs/dashboard/012-dashboard/spec.md
@@ -57,11 +64,11 @@ const DEMO_TASKS = [
        converges a sole reviewer's correction" rule is gone -- there is no
        reviewer count left to converge over. dry-02/dry-03's "B" rows and
        dry-05's pure reject are all a single owner's modify/bypass, so all
-       three now sit in the dispute pool (爭議中 1 -> 3, 未達定稿門檻 6 -> 8).
+       three now sit in the dispute pool (爭議中 1 -> 3).
        IAA is derived from annotator values only (computeIaaAlpha), untouched. */
-    reviewerSummaryZh: '任務覆蓋 10 / 15 個審核單位 · 待審 5 個 · 未達定稿門檻 8 個 · 爭議中 3 個 · IAA 0.59',
+    reviewerSummaryZh: '任務覆蓋 10 / 15 個審核單位 · 待審 5 個 · 爭議中 3 個 · IAA 0.59',
     reviewerSummaryEn:
-      'Task coverage 10 / 15 review units · 5 pending · 8 short of finalize threshold · 3 disputed · IAA 0.59',
+      'Task coverage 10 / 15 review units · 5 pending · 3 disputed · IAA 0.59',
   },
   {
     id: 'T015',
@@ -69,9 +76,9 @@ const DEMO_TASKS = [
     runTypeBadge: '正式標記',
     // issue #596: ofs-02's sole reviewer correction no longer converges --
     // FR-092 sends every modify to the dispute pool, so it is disputed again.
-    reviewerSummaryZh: '任務覆蓋 3 / 4 個審核單位 · 待審 1 個 · 未達定稿門檻 2 個 · 爭議中 1 個 · IAA 無法計算',
+    reviewerSummaryZh: '任務覆蓋 3 / 4 個審核單位 · 待審 1 個 · 爭議中 1 個 · IAA 無法計算',
     reviewerSummaryEn:
-      'Task coverage 3 / 4 review units · 1 pending · 2 short of finalize threshold · 1 disputed · IAA Not computable',
+      'Task coverage 3 / 4 review units · 1 pending · 1 disputed · IAA Not computable',
   },
   {
     id: 'T016',
@@ -80,21 +87,13 @@ const DEMO_TASKS = [
     /* issue #596: ofm-03/ofm-04 used to read as interim (short of the
        retired min_reviewers = 3 quorum); with one owner per unit their
        reviewer's modify lands them in the dispute pool alongside ofm-05. */
-    reviewerSummaryZh: '任務覆蓋 5 / 5 個審核單位 · 未達定稿門檻 3 個 · 爭議中 3 個 · IAA 無法計算',
+    reviewerSummaryZh: '任務覆蓋 5 / 5 個審核單位 · 爭議中 3 個 · IAA 無法計算',
     reviewerSummaryEn:
-      'Task coverage 5 / 5 review units · 3 short of finalize threshold · 3 disputed · IAA Not computable',
-  },
-  {
-    id: 'T017',
-    runType: 'official_run',
-    runTypeBadge: '正式標記',
-    reviewerSummaryZh: '任務覆蓋 4 / 5 個審核單位 · 待審 1 個 · 未達定稿門檻 3 個 · 爭議中 2 個 · IAA 無法計算',
-    reviewerSummaryEn:
-      'Task coverage 4 / 5 review units · 1 pending · 3 short of finalize threshold · 2 disputed · IAA Not computable',
+      'Task coverage 5 / 5 review units · 3 disputed · IAA Not computable',
   },
 ] as const;
 
-test.describe('Dashboard — review-flow demo tasks (T014-T017)', () => {
+test.describe('Dashboard — review-flow demo tasks (T014-T016)', () => {
   test('reviewer list renders every demo task with matrix-consistent review summaries', async ({ page }) => {
     await openScenario(page, 'reviewer');
 
@@ -172,16 +171,16 @@ test.describe('Dashboard — review-flow demo tasks (T014-T017)', () => {
     await expect(page).not.toHaveURL(/sample_id=/);
   });
 
-  test('clicking the reviewer T017 card routes to annotation-list as official_run', async ({ page }) => {
+  test('clicking the reviewer T016 card routes to annotation-list as official_run', async ({ page }) => {
     await openScenario(page, 'reviewer');
 
     const card = page.locator(
-      '#reviewerTaskList [data-example-task-id="T017"]',
+      '#reviewerTaskList [data-example-task-id="T016"]',
     );
     await card.click({ position: { x: 80, y: 24 } });
 
     await expect(page).toHaveURL(/\/pages\/annotation\/annotation-list\.html\?/);
-    await expect(page).toHaveURL(/task_id=T017/);
+    await expect(page).toHaveURL(/task_id=T016/);
     await expect(page).toHaveURL(/role=reviewer/);
     await expect(page).toHaveURL(/run_type=official_run/);
     await expect(page).toHaveURL(/reviewer_id=reviewer_chen/);

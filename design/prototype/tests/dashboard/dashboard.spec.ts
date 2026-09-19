@@ -40,9 +40,10 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(leaderView.getByRole('heading', { name: /任務概況|Task Overview/ })).toBeVisible();
     await expect(leaderView.locator('.metric strong').nth(0)).toContainText('127');
     await expect(leaderView.locator('.metric strong').nth(1)).toContainText('24');
-    /* Pending-IAA stat reconciles with the single waiting_iaa_confirmation
-       seed (T002) in task-list.data.js (issue #186). */
-    await expect(leaderView.locator('.metric strong').nth(2)).toContainText('1');
+    /* Pending-IAA stat reconciles with the two waiting_iaa_confirmation
+       seeds (T002, and T018 from issue #783) in task-list.data.js
+       (issue #186). */
+    await expect(leaderView.locator('.metric strong').nth(2)).toContainText('2');
     await expect(leaderView.locator('.metric strong').nth(3)).toContainText('3');
     await expect(leaderView.getByText('病患情緒與照護情境階層分類')).toBeVisible();
     await expect(leaderView.getByText('產品評論觀點實體辨識')).toBeVisible();
@@ -102,7 +103,7 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(annotatorView.getByText(/已完成 76% · 今日 18 筆 · 平均速度 4.2/)).toBeVisible();
     await expect(annotatorView.getByText(/試標|Dry Run/).first()).toBeVisible();
     await expect(annotatorView.getByText(/正式標記|Official Run/).first()).toBeVisible();
-    await expect(annotatorView.getByRole('button', { name: /快速繼續|Continue/ })).toHaveCount(17);
+    await expect(annotatorView.getByRole('button', { name: /快速繼續|Continue/ })).toHaveCount(16);
   });
 
   test('annotator output tags use registry colors and preserve composite outputs', async ({ page }) => {
@@ -125,8 +126,9 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(entityBadges.first()).toHaveClass(/badge-task-type-sequence/);
     await expect(relationBadges).toHaveCount(3);
     await expect(relationBadges.first()).toHaveClass(/badge-task-type-relation/);
-    // T001 + T011 + the four single_label review-flow demo tasks (T014-T017)
-    await expect(singleLabelBadge).toHaveCount(6);
+    // T001 + T011 + the three single_label review-flow demo tasks (T014-T016;
+    // issue #815 retired T017, review-flow-official-tie)
+    await expect(singleLabelBadge).toHaveCount(5);
     await expect(singleLabelBadge.first()).toHaveClass(/badge-task-type-single/);
 
     await expect(multiLabelBadge.first()).toHaveCSS('background-color', 'rgb(236, 254, 255)');
@@ -151,14 +153,14 @@ test.describe('Dashboard page — scenario rendering', () => {
        seeded narrative they used to carry. Both tasks have 15 units and
        nothing reviewed, hence identical text -- addressed by task id so the
        assertion still says which card it is about. */
-    const derived = '任務覆蓋 0 / 15 個審核單位 · 待審 15 個 · 未達定稿門檻 15 個';
+    const derived = '任務覆蓋 0 / 15 個審核單位 · 待審 15 個';
     await expect(
       reviewerView.locator('.list-item[data-example-task-id="T003"] .list-item-detail')
     ).toHaveText(derived);
     await expect(
       reviewerView.locator('.list-item[data-example-task-id="T005"] .list-item-detail')
     ).toHaveText(derived);
-    await expect(reviewerView.getByRole('button', { name: /快速審核|Quick Review/ })).toHaveCount(17);
+    await expect(reviewerView.getByRole('button', { name: /快速審核|Quick Review/ })).toHaveCount(16);
   });
 
   test('annotator quick continue routes to workspace first non-submitted sample', async ({ page }) => {

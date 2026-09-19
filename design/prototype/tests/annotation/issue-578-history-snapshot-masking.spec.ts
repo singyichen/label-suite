@@ -113,9 +113,10 @@ test.describe('issue #578 -- history snapshots, diffs and layered masking', () =
       role: 'reviewer', runType: 'official_run', payload: reviewerPayload('neutral', 'approve'),
       summary: 'single_label: neutral', identity: { annotatorId: ANNOTATOR_A, reviewerId: REVIEWER },
     });
-    /* approve, value changed -> modified (a correction is not a rejection) */
+    /* the `modify` decision -> modified (FR-086 v5.0.0: the emission point is
+       the decision itself, not an approve whose value happened to differ) */
     await submit(page, {
-      role: 'reviewer', runType: 'official_run', payload: reviewerPayload('positive', 'approve'),
+      role: 'reviewer', runType: 'official_run', payload: reviewerPayload('positive', 'modify'),
       summary: 'single_label: positive', identity: { annotatorId: ANNOTATOR_A, reviewerId: PEER_REVIEWER },
     });
 
@@ -147,7 +148,7 @@ test.describe('issue #578 -- history snapshots, diffs and layered masking', () =
       summary: 'single_label: neutral', identity: { annotatorId: ANNOTATOR_A },
     });
     await submit(page, {
-      role: 'reviewer', runType: 'official_run', payload: reviewerPayload('positive', 'approve'),
+      role: 'reviewer', runType: 'official_run', payload: reviewerPayload('positive', 'modify'),
       summary: 'single_label: positive', identity: { annotatorId: ANNOTATOR_A, reviewerId: REVIEWER },
     });
 

@@ -262,17 +262,17 @@
       ),
       reviewer: reviewWorkItem('absa-001', 'official_run', 'pending_review', ''),
     },
-    /* T014-T017: review-flow demo tasks (issue #302). Numbers follow the
+    /* T014-T016: review-flow demo tasks (issue #302). Numbers follow the
        seeded review-state matrix staged at boot by
        annotation-workspace.data.js: pending counts are the review units
-       still 待審 (T014=6 of 15, T015=1 of 4, T016=0 of 5, T017=1 of 5)
+       still 待審 (T014=6 of 15, T015=1 of 4, T016=0 of 5)
        and 任務覆蓋 counts the units past 待審 over the review-unit total
        — a coverage count, not a completion count, because a unit past MY
        review is not necessarily finalized (issue #310): T016 sits at
-       5 / 5 coverage with 3 units still short of their finalize threshold
-       (1 approved + 1 modified + 1 disputed awaiting arbitration), so its
-       summary swaps the vacuous 待審 0 for the 未達定稿門檻 3 · 爭議中 1
-       breakdown. Every seeded summary here names its subject and its
+       5 / 5 coverage with 3 units still unresolved, so its summary swaps
+       the vacuous 待審 0 for the 爭議中 breakdown (issue #627 item 7
+       removed the 未達定稿門檻 clause: under the single-owner relay model
+       that count is an identity with 待審 + 爭議中). Every seeded summary here names its subject and its
        denominator unit (issue #452). Reviewer
        sample ids point at each task's first dataset record so the
        quick-review entry lands on the initial reviewer screen, and every
@@ -321,21 +321,6 @@
       ),
       reviewer: reviewWorkItem(
         'ofm-01-reviewer-corrects-b', 'official_run', 'in_progress', 'reviewer_chen'
-      ),
-    },
-    {
-      exampleTaskId: 'T017',
-      annotationTaskType: 'single_sentence_classification',
-      annotator: workItem(
-        'oft-01-final-exception',
-        '已完成 100% · 今日 10 筆 · 平均速度 3.2',
-        '100% Completed · 10 Today · Avg Speed 3.2',
-        100,
-        'official_run',
-        'in_progress'
-      ),
-      reviewer: reviewWorkItem(
-        'oft-01-final-exception', 'official_run', 'pending_review', 'reviewer_chen'
       ),
     },
   ];

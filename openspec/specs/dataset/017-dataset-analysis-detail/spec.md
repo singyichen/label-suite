@@ -1,7 +1,7 @@
 # dataset/017-dataset-analysis-detail Specification
 
 ## Purpose
-Dataset Analysis Detail（統計總覽 + 品質監控雙 Tab，Project Leader／Reviewer）的 derived view。正典為 `specs/dataset/017-dataset-analysis-detail/spec.md`（v2.2.2）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR/AC ID，不改動其正典措辭。收錄 change `seq-tagging-span-export-metrics`（issue #581）之 FR-009L／FR-012L／FR-013／FR-024A／FR-035／FR-036／FR-039（修訂）；此七條於該 change archive 前以正典 v2.2.2 原文建立基線，使 MODIFIED 有可比對的前值，archive 後基線內容即被完整取代。基線的 scenario 標題刻意採用 delta 的新標題——`openspec archive` 以標題比對判定 MODIFIED 是否丟失既有 scenario，標題不一致即中止；標題以下的條文仍為 v2.2.2 原文。
+Dataset Analysis Detail（統計總覽 + 品質監控雙 Tab，Project Leader／Reviewer）的 derived view。正典為 `specs/dataset/017-dataset-analysis-detail/spec.md`（v3.0.1）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR/AC ID，不改動其正典措辭。收錄 change `seq-tagging-span-export-metrics`（issue #581）之 FR-009L／FR-012L／FR-013／FR-024A／FR-035／FR-036／FR-039（修訂）；change `dataset-quality-entity-value-alignment`（issue #783）之 FR-008／FR-025（新收錄，實體欄位與常數值域對齊）與 FR-039（修訂，IAA 計算未結束不是 IAA 結果）；此七條於該 change archive 前以正典 v2.2.2 原文建立基線，使 MODIFIED 有可比對的前值，archive 後基線內容即被完整取代。基線的 scenario 標題刻意採用 delta 的新標題——`openspec archive` 以標題比對判定 MODIFIED 是否丟失既有 scenario，標題不一致即中止；標題以下的條文仍為 v2.2.2 原文。
 
 ## Requirements
 
@@ -115,7 +115,7 @@ u-α 的計算輸入沿用 FR-039 的既有規則不變：僅標記員原始標�
 
 本規格為 IAA（Inter-Annotator Agreement）閘門語意的唯一權威來源（SSoT）；`task-management-014`、`annotation-015` 及其他模組對 IAA 閘門行為的呈現須以本條為準，不得另行定義或推導出不同語意。核心語意如下：
 
-1. **顧問性、非阻擋**：IAA 為顧問性指標，`waiting_iaa_confirmation`（或等義）狀態語意為「軟性警告 + 需人工確認」，非硬性閘門；α 未達 `OUTPUT_TYPE_IAA_REGISTRY` 門檻時系統必須顯示明顯警示，但不得阻擋使用者進入正式標記（承接並升格 FR-034 之既有語意為跨模組正典）。**本點僅適用於 `OUTPUT_TYPE_IAA_REGISTRY` 中實際登錄門檻的輸出類型**；屬 `IAA_UNCALIBRATED_TYPES` 者沒有門檻可比較，MUST NOT 顯示任何「未達門檻」警示，亦 MUST NOT 因此被視為未通過（其呈現規則見 FR-043）。此例外 MUST NOT 被解讀為放寬阻擋語意——未校準型別同樣不阻擋流程。
+1. **顧問性、非阻擋**：IAA 為顧問性指標，`waiting_iaa_confirmation`（或等義）狀態語意為「軟性警告 + 需人工確認」，非硬性閘門；α 未達 `OUTPUT_TYPE_IAA_REGISTRY` 門檻時系統必須顯示明顯警示，但不得阻擋使用者進入正式標記（承接並升格 FR-034 之既有語意為跨模組正典）。**本點僅適用於 `OUTPUT_TYPE_IAA_REGISTRY` 中實際登錄門檻的輸出類型**；屬 `IAA_UNCALIBRATED_TYPES` 者沒有門檻可比較，MUST NOT 顯示任何「未達門檻」警示，亦 MUST NOT 因此被視為未通過（其呈現規則見 FR-043）。此例外 MUST NOT 被解讀為放寬阻擋語意——未校準型別同樣不阻擋流程。**IAA 計算尚未結束不屬本點（v3.0.1 釐清）**：最新試標回合的 IAA 仍在計算中或計算失敗時尚無任何 IAA 結果，不是本點所稱的「α 未達門檻」；此時能否進入正式標記，依 `task-management/014-task-detail` 待 IAA 確認頁的 IAA 計算狀態需求（`TrialRound.iaa_computation_status`）處理。本句不改變本點對 IAA 結果的非阻擋語意；第 4 點的「無法計算」屬已得到結果，仍不得阻擋流程。
 2. **輸入僅限標記員原始標記**：α 計算的輸入僅為標記員（`annotator`）於 `outputs[]` 各輸出類型的原始作答；審核員（`reviewer`）並非一位 rater，其審核修正值（`annotation/015-annotation-workspace` FR-051／FR-052 定義之審核單位差異）不得併入 α 計算。
 3. **逐回合計算**：α 以單一試標回合（`trial_round`）為計算單位，不得跨回合累積計算。
 4. **樣本或標記員數不足時必須顯示「無法計算」**：Krippendorff α 於 `De = 0`（有效樣本 `< 2` 或有效標記員 `< 2`）時數學上未定義；此情境系統必須顯示明確的「無法計算」狀態並說明原因，不得回退顯示 `0.00` 等任何數值，亦不得阻擋流程。本點對 nominal α 與單位化 α（u-α）同等適用。
@@ -211,3 +211,29 @@ u-α 的計算輸入沿用 FR-039 的既有規則不變：僅標記員原始標�
 - **AND** 顯示文案不是 `free_text` 使用的「不適用—由審核員評估」
 - **WHEN** 完成標記員數 `n < IAA_SMALL_SAMPLE_THRESHOLD`
 - **THEN** u-α 旁照常顯示中性「小樣本估計」警示徽章，點估計值照常顯示
+
+### Requirement: FR-008 統計總覽固定顯示共用指標，實體欄位與 SHARED_METRICS 逐字一致
+
+統計總覽 tab MUST 固定顯示 `SHARED_METRICS`（Sentence 數量、Token 數量、完成率、已提交樣本、平均標記時間）。
+
+承載這些數值的 `SharedMetrics` 實體 MUST 恰好包含 `SHARED_METRICS` 的五個 key 作為欄位，欄名與常數逐字相同：`sentence_count`、`token_count`、`completion_rate`、`submitted_sample_count`、`avg_annotation_time_per_sentence`。MUST NOT 以 `overall_completion_rate` 或其他別名表示完成率，MUST NOT 增減欄位。
+
+#### Scenario: SC-003 共用指標五項在任何輸出類型組合下皆可見
+
+- **GIVEN** 任一 `outputs[]` 組合的任務，且已有提交的標記
+- **WHEN** 使用者進入統計總覽 tab
+- **THEN** 畫面固定顯示 `SHARED_METRICS` 五項指標
+- **AND** 其資料來源 `SharedMetrics` 恰含 `sentence_count`、`token_count`、`completion_rate`、`submitted_sample_count`、`avg_annotation_time_per_sentence` 五個欄位，不含 `overall_completion_rate`
+
+### Requirement: FR-025 標記員風險等級恰為三值，資料不足以 null 與布林旗標表示
+
+系統 MUST 依 `ANNOTATOR_RISK_LEVELS` 規則為每位標記員計算並顯示風險等級（`normal | watch | high_risk`）。
+
+`AnnotatorRiskAssessment.risk_level` 的值域 MUST 恰為 `ANNOTATOR_RISK_LEVELS` 三值，MUST NOT 以第四個值表示資料不足。依 FR-026 略過風險評估的標記員，其 `risk_level` MUST 為 null 且 `insufficient_data` MUST 為 true；其餘標記員的 `insufficient_data` MUST 為 false 且 `risk_level` MUST 為三值之一。兩欄 MUST NOT 出現互相矛盾的組合。
+
+#### Scenario: SC-014 資料足夠顯示三值之一，資料不足以 null 表示
+
+- **GIVEN** 一位標記員已完成樣本數大於等於 `ANNOTATOR_MIN_SAMPLE_THRESHOLD`，另一位低於該門檻
+- **WHEN** 系統產生兩人的風險評估
+- **THEN** 前者 `insufficient_data` 為 false，`risk_level` 為 `normal`、`watch`、`high_risk` 其中之一，畫面顯示對應風險等級
+- **AND** 後者 `insufficient_data` 為 true、`risk_level` 為 null，畫面顯示「資料不足，暫不評估」且不顯示任何風險等級

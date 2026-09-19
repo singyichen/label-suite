@@ -229,7 +229,7 @@ test.describe('the tooltip mounts once per review unit, above the card stack (is
     await page.goto(
       buildWorkspaceUrl({
         task_id: 'T016',
-        sample_id: 'ofm-05-all-divergent',
+        sample_id: 'ofm-05-final-exception',
         role: 'reviewer',
         run_type: 'official_run',
         annotator_id: 'kioleemg12',

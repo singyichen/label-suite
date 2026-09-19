@@ -1,5 +1,5 @@
 /*
- * Seed configuration profiles for the 17 task-list example tasks (T001-T017).
+ * Seed configuration profiles for the 16 task-list example tasks (T001-T016).
  *
  * Sources:
  *  - docs/product/task-configs/<sourceFile>   -> outputs[] (ADR-029 composition model)
@@ -12,8 +12,8 @@
   'use strict';
 
   /* Shared reviewer guideline text for the single_label sentiment schema
-     used by T001 and the T014-T017 review-flow demo seeds (issue #405).
-     Each of T014-T017 appends its own review-model addendum below so the
+     used by T001 and the T014-T016 review-flow demo seeds (issue #405).
+     Each of T014-T016 appends its own review-model addendum below so the
      "提供給審核員" content actually matches that task's demo scenario
      instead of generic boilerplate -- see seedReviewFlowDemo() in
      annotation-workspace.data.js and PR #305 for the scenario source. */
@@ -22,7 +22,7 @@
     '· positive：內容整體評價正面、無保留的稱讚或滿意陳述。\n' +
     '· neutral：中立敘述、有褒有貶或程度輕微的評論，找不到明確正負傾向時歸此類。\n' +
     '· negative：內容整體評價負面、抱怨或不滿意陳述。\n' +
-    '與標記員標註不一致時，請依上述判準重新檢視文本語意後決定核可或修改，不可僅以標記員多數意見為準。\n';
+    '與標記員標註不一致時，請依上述判準重新檢視文本語意後決定通過或修正，不可僅以標記員的既有標註為準。\n';
 
   var profiles = {
     T001: {
@@ -1008,7 +1008,7 @@
       ]
     },
 
-    /* T014-T017: review-flow demo seeds. Same single_label sentiment
+    /* T014-T016: review-flow demo seeds. Same single_label sentiment
        schema (docs/product/task-configs/review-flow-*.json) with label
        colors mapped to the prototype palette exactly as T001 maps
        single-label.json; records copied verbatim from
@@ -1053,9 +1053,10 @@
       fieldRoleMap: { text: 'input', gold_label: 'output' },
       reviewerGuidelineText:
         REVIEWER_GUIDELINE_SENTIMENT_BOUNDARY_ZH +
-        '（T014）本任務為 dry_run 共識校準情境，審核門檻為 1 位審核員；出現 ' +
-        'dry-03-dispute-open、dry-04-dispute-resolved 等標記員分歧的項目時，' +
-        '需由具 can_arbitrate 權限的審核員仲裁決定最終標籤，不可逕自採多數意見核可。',
+        '（T014）本任務為試標（dry_run）：同一份樣本由多位標記員各標一次，每份提交各自形成一個審核單位，' +
+        '並依 FR-093 以樣本為單位指派——同一份資料的所有標記交給同一位審核員，便於比對彼此差異。' +
+        '審核決策為通過／修正／無法判定三選一：通過即定稿；修正與無法判定皆須填寫理由並轉入爭議池（如 ' +
+        'dry-03-dispute-open、dry-04-dispute-resolved），改由具 can_arbitrate 權限且非當事人的仲裁員裁定，審核員不得自行收斂。',
       datasetFileName: 'review-flow-dry-run.json',
       datasetRecords: [
         {
@@ -1106,9 +1107,10 @@
       fieldRoleMap: { text: 'input', gold_label: 'output' },
       reviewerGuidelineText:
         REVIEWER_GUIDELINE_SENTIMENT_BOUNDARY_ZH +
-        '（T015）本任務為正式標記單一審核員核可情境，審核門檻為 1 位審核員；' +
-        '審核員可直接核可（approved）或修改（modified）標記員的標註結果，如 ' +
-        'ofs-02-modified-dispute 項目。',
+        '（T015）本任務為正式標記（official_run）：每筆樣本恰指派一位標記員，因此每份樣本只有一個審核單位，' +
+        '系統再依 FR-093 以審核單位為單位指派，把這些單位平均分給名冊上被勾選的審核員。' +
+        '審核決策為通過／修正／無法判定三選一：通過即定稿並成為最終答案；修正與無法判定皆須填寫理由並轉入爭議池（如 ' +
+        'ofs-02-modified-dispute）。仲裁只能在標記員與審核員兩個答案之間擇一，或裁定兩者皆非轉入最終例外池。',
       datasetFileName: 'review-flow-official-single.json',
       datasetRecords: [
         {
@@ -1159,9 +1161,10 @@
       fieldRoleMap: { text: 'input', gold_label: 'output' },
       reviewerGuidelineText:
         REVIEWER_GUIDELINE_SENTIMENT_BOUNDARY_ZH +
-        '（T016）本任務為正式標記三審核員多數決收斂情境，審核門檻為 3 位審核員；' +
-        '當三位審核員的判斷出現分歧（如 ofm-05-all-divergent）且未達過半多數時，' +
-        '須轉交仲裁員決定，不可逕自收斂。',
+        '（T016）本任務為正式標記（official_run）：每筆樣本恰指派一位標記員、形成一個審核單位，' +
+        '系統再依 FR-093 以審核單位為單位指派，平均分給名冊上被勾選的審核員；每個單位恰有一位審核員，不存在票數或人數要求。' +
+        '審核決策為通過／修正／無法判定三選一：修正與無法判定皆須填寫理由並轉入爭議池（如 ' +
+        'ofm-05-final-exception），由具 can_arbitrate 權限且非當事人的仲裁員裁定。',
       datasetFileName: 'review-flow-official-multi.json',
       datasetRecords: [
         {
@@ -1170,29 +1173,29 @@
           gold_label: 'positive'
         },
         {
-          id: 'ofm-02-approved-interim',
+          id: 'ofm-02-reviewer-accepts-a',
           text: '訂位系統顯示訂位成功，到現場卻說沒有紀錄，白跑一趟非常生氣。',
           gold_label: 'negative'
         },
         {
-          id: 'ofm-03-modified-interim',
+          id: 'ofm-03-awaiting-arbitration',
           text: '湯頭喝得出有熬過，但配料普通，加點的滷味倒是出乎意料地好。',
           gold_label: 'neutral'
         },
         {
-          id: 'ofm-04-majority-converged',
+          id: 'ofm-04-reviewer-bypass',
           text: '平日中午人不多用餐很安靜，餐點水準就是一般商業午餐的等級。',
           gold_label: 'neutral'
         },
         {
-          id: 'ofm-05-all-divergent',
+          id: 'ofm-05-final-exception',
           text: '餐點好吃但服務很糟，價格又偏貴，實在說不上推不推薦。',
           gold_label: 'neutral'
         }
       ]
     },
 
-    T017: {
+    T018: {
       taskCategories: ['classification'],
       taskInputTypes: ['single_item'],
       reviewerIds: ['reviewer_wang', 'reviewer_li', 'reviewer_chen', 'reviewer_lin'],
@@ -1212,35 +1215,49 @@
       fieldRoleMap: { text: 'input', gold_label: 'output' },
       reviewerGuidelineText:
         REVIEWER_GUIDELINE_SENTIMENT_BOUNDARY_ZH +
-        '（T017）本任務為正式標記兩審核員情境，審核門檻為 2 位審核員；' +
-        '兩位審核員意見不一致時（如 oft-01-final-exception）屬平手情況，依 ' +
-        'per-item-strict-majority 規則不會自動收斂，須轉交仲裁員決定最終結果。',
-      datasetFileName: 'review-flow-official-tie.json',
+        '（T018）本任務的第一回合試標已完成收樣，但 IAA 計算執行失敗，' +
+        '尚未產生一致性數值：專案負責人可於總覽頁重試計算，計算完成前不開放開始正式標記或新增下一回合。',
+      datasetFileName: 'review-flow-iaa-failed.json',
       datasetRecords: [
         {
-          id: 'oft-01-final-exception',
-          text: '餐廳景觀一流，可以看到整片河岸夜景，但餐點的表現撐不起這個價位。',
+          id: 'oif-01',
+          text: '客服人員態度親切，退換貨流程也說明得很清楚。',
+          gold_label: 'positive'
+        },
+        {
+          id: 'oif-02',
+          text: '包裝普通，內容物與敘述相符，沒有特別驚喜也沒有落差。',
           gold_label: 'neutral'
         },
         {
-          id: 'oft-02-approved-interim',
-          text: '兒童友善空間規劃得很好，餐具和座椅都有替小朋友準備，家庭聚餐首選。',
+          id: 'oif-03',
+          text: '物流延遲了三天，客服的回覆也很慢，體驗不佳。',
+          gold_label: 'negative'
+        },
+        {
+          id: 'oif-04',
+          text: '產品規格與官網描述一致，操作介面簡潔易懂。',
           gold_label: 'positive'
         },
         {
-          id: 'oft-03-modified-interim',
-          text: '咖哩飯口味偏甜，附餐的沙拉倒是很新鮮，喜不喜歡見仁見智。',
+          id: 'oif-05',
+          text: '價格中等，功能陽春，暫時看不出有什麼特別亮點。',
           gold_label: 'neutral'
-        },
+        }
+      ],
+      trialRounds: [
         {
-          id: 'oft-04-unanimous-gold',
-          text: '壽司的新鮮度沒話說，師傅還會依季節推薦食材，每次來都很滿意。',
-          gold_label: 'positive'
-        },
-        {
-          id: 'oft-05-pending-review',
-          text: '新開的早午餐店，鬆餅口感紮實，佐餐咖啡的比例也調得剛剛好。',
-          gold_label: 'positive'
+          round: 1,
+          sampleCount: 5,
+          agreement: null,
+          annotators: 3,
+          std: null,
+          result: null,
+          usedSamples: 5,
+          date: '2026-08-22',
+          noteZh: '第一回合的樣本已收齊，但 IAA 計算執行失敗，尚未產生一致性數值。',
+          noteEn: 'Round 1 samples are complete, but the IAA computation failed to execute and produced no agreement value.',
+          iaaComputationStatus: 'failed'
         }
       ]
     }
@@ -1371,6 +1388,80 @@
    * 池清單／結案閘門判定使用，見 FR-018／FR-008b）。 */
   var EXCEPTION_POOL_ACTIONS = ['adopt_annotator', 'adopt_reviewer', 'custom_answer', 'exclude_from_dataset'];
 
+  /* SEQ_TAGGING_TOKENIZER_SEEDS -- issue #742 (design.md D3, maintainer
+   * ruling 2026-09-16 #4). Pre-tokenized word-level results for the
+   * `sequence_tagging` export dialog's two tokenizer engines. Neither this
+   * file nor any caller implements a segmentation algorithm -- token
+   * boundaries are fixed seed data here, keyed by the AR_SAMPLES_SEQ_TAGGING
+   * `sampleId` (task-detail.html, task 1.8) whose `textZh` they tokenize.
+   *
+   * `ckip-transformers` carries a full engine+version identity and drives
+   * the AC-1.11 success path. All six AR_SAMPLES_SEQ_TAGGING samples need a
+   * token seed here: `buildTaskSpecificExportFields()` calls
+   * `deriveSequence()` per sample, and any sample missing from
+   * `tokensBySample` would silently export an empty `tags: []` for every
+   * annotator's real saved spans on that row -- a product defect, not a
+   * gap the AC-1.11/1.12 assertions happen to catch. Each sample's tokens
+   * are written as a single '|'-delimited string of its already-segmented
+   * words (hand-authored fixed data, not computed) and decoded into
+   * `{start, end}` ranges by `tokenRanges()` below purely to keep this
+   * seed compact -- `tokenRanges()` only sums the pre-chosen segment
+   * lengths into offsets; it never decides where a boundary goes.
+   *
+   * NER-001's segmentation is deliberately misaligned with two of that
+   * sample's saved spans -- kioleemg12's PER span (6,9) '張忠謀' and LOC
+   * span (10,12) '台北' each start one character before a token boundary
+   * (see the '人張'/'在台' tokens) -- so span-tagging-export.js's
+   * `expandToTokens()` actually grows them (PER expands to (5,9) '人張忠謀';
+   * LOC expands to (9,12) '在台北') and `expanded_span_count > 0` is
+   * reachable. NER-002's segmentation merges '鴻海精密' into one token, so
+   * tony0950127's ORG span (0,2) '鴻海' likewise expands to (0,4). The
+   * remaining samples use natural, unforced word segmentation; not every
+   * sample needs an expansion, only a full-length non-empty `tags` array
+   * for every annotator row. `version: '0.3.4'` is a prototype placeholder,
+   * not a verified real backend integration (maintainer ruling #4) -- it
+   * exists only so `tokenizer.engine`/`tokenizer.version` are real seeded
+   * data instead of hardcoded literals in the export path.
+   *
+   * `jieba` deliberately carries no `version` key at all (not `''`, not
+   * `null` -- the key is simply absent). `missingTokenizerField()` in
+   * span-tagging-export.js checks `!meta.version` before `opts.tokens` is
+   * ever read, so a blocked engine needs no token seed; jieba releases
+   * genuinely do not expose a queryable model version, so this omission is
+   * semantically honest, not an artificial gap (design.md D3).
+   */
+  function tokenRanges(segmented) {
+    var parts = segmented.split('|');
+    var ranges = [];
+    var pos = 0;
+    for (var i = 0; i < parts.length; i += 1) {
+      var end = pos + parts[i].length;
+      ranges.push({ start: pos, end: end });
+      pos = end;
+    }
+    return ranges;
+  }
+
+  var SEQ_TAGGING_TOKENIZER_SEEDS = {
+    'ckip-transformers': {
+      version: '0.3.4', // prototype placeholder -- see block comment above
+      tokensBySample: {
+        // Each string is pre-segmented, hand-authored fixed data; see the
+        // block comment above for why it is written this way.
+        'NER-001': tokenRanges('台積|電|創辦|人張|忠謀|在台|北|出席| |2024| |年|半導體|產業|論壇|。'),
+        'NER-002': tokenRanges('鴻海精密|工業|宣布|在|越南|胡志明市|設立|新廠|，|預計| |2025| |年|完工|。'),
+        'NER-003': tokenRanges('衛生|福利部|長|薛瑞元|出席|世界|衛生|大會|，|代表|台灣|宣導|健康|政策|。'),
+        'NER-004': tokenRanges('美國|聯準會|宣布|維持|利率|不變|，|聯準會|主席|鮑威爾|表示|將|持續|觀察|通膨|走勢|。'),
+        'NER-005': tokenRanges('歐盟|議會|通過|新版|人工智慧|法案|，|預計|明年|在|歐洲|全境|正式|生效|。'),
+        'NER-006': tokenRanges('Google| |執行長| |Sundar| |Pichai| |在|加州山景城|發表| |Gemini| |新版本|。')
+      }
+    },
+    jieba: {
+      // No `version` key -- intentional, see block comment above.
+      tokensBySample: {}
+    }
+  };
+
   /* FR-018 (issue #688, design.md D6): the final exception pool draws its
    * rows live from 015 annotation-workspace's already-existing dispute /
    * arbitration primitives instead of a second, 014-only seed of the same
@@ -1461,6 +1552,7 @@
     ARBITER_CANDIDATE_RULE: ARBITER_CANDIDATE_RULE,
     OVERVIEW_EDITABLE_FIELDS: OVERVIEW_EDITABLE_FIELDS,
     EXCEPTION_POOL_ACTIONS: EXCEPTION_POOL_ACTIONS,
+    SEQ_TAGGING_TOKENIZER_SEEDS: SEQ_TAGGING_TOKENIZER_SEEDS,
     getFinalExceptionPoolItems: getFinalExceptionPoolItems,
     getTaskCompletionBlockers: getTaskCompletionBlockers
   };

@@ -2,6 +2,7 @@
 
 **Status**: Accepted
 **Date**: 2026-09-08
+**Amended**: 2026-09-17 — account linking discards the local password and revokes all refresh tokens
 
 ## Context
 
@@ -45,6 +46,11 @@ When `GOOGLE_CLIENT_ID` is not configured, the button falls back to the existing
 ### Account-linking strategy
 
 If a Google login's email already has an existing Email/Password account, the two are **auto-linked only when Google reports `email_verified: true`**; otherwise the login is rejected. This avoids account takeover via an unverified email address while not requiring a manual linking flow for the common case.
+
+Google's verification proves control of the mailbox; the existing local account proves nothing, because `account-003` registration does not verify email ownership. Linking therefore treats Google as the owner and discards every credential the local account was holding. In the same transaction as the link:
+
+1. Set the account's `hashed_password` to `null`, making it a Google SSO account as defined by `account-005` FR-008. The owner can set a new password afterwards through `account-005` or `account-004`.
+2. Revoke all of the user's refresh tokens (`revoked_at` in ADR-021's `refresh_tokens` table), so no session issued before the link survives it.
 
 ### Reversal trigger
 

@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-new-step1-field-role-hints
 建立日期: 2026-04-20
-版本: 7.1.0
+版本: 8.0.0
 狀態: Draft
 ---
 
@@ -45,7 +45,6 @@
 - **v6.6.0 自由文字說明欄位 helper text 改為 Tooltip**：`free_text` 的「輸入區說明」與「作答區說明」欄位於 registry 宣告 `hintAsTooltip: true`，用途與範例說明不再固定顯示於欄位下方，改為欄位標題旁的實心圓形「?」按鈕，hover 或鍵盤 focus 時以 tooltip 泡泡顯示。泡泡樣式對齊 MASTER.md §Tooltip：深色（`--color-ink`）泡泡置於觸發點上方、帶指向觸發點的向下箭頭、opacity 150ms 過場，並因多行說明文字放寬為 `max-width: 320px` 自動換行、左緣對齊觸發點（置中會被欄位左緣裁切）；`.output-accordion` 移除 `overflow: hidden`（圓角改由 header 自身處理），泡泡才能完整彈出 accordion 邊界。`.field-help-tooltip` + `.tooltip-bubble` 樣式集中於共用 `task-config.css`（移除 task-new／task-detail 頁內重複定義），task-new 與 task-detail 的抽樣筆數提示同步套用新樣式，task-detail 標記設定編輯模式經共用引擎同步生效。其他欄位的 helper text 顯示方式不變。
 - **v6.5.0 自由文字預覽移除輸出卡片標題與內部分隔線**：`free_text` 於 registry 宣告 `hidePreviewTitle: true`，Step 2 標記預覽（含 014 Overview「標記設定」編輯模式的 parity surface）不再顯示輸出卡片的「自由文字」標題；同步移除預覽內兩條分隔線（Evidence 區塊後、Input 內容卡與作答區之間），區塊間距改以 spacing 維持。其他輸出類型的卡片標題與多輸出組合之間的分隔線行為不變。
 - **v6.4.3 Dashboard consumer 同步**：012 Dashboard 與 010／016 一致，直接依 `outputs[].type` 順序顯示一至多個 registry-driven tag；13 筆 fixture 只作 prototype 基線，第 14 筆任意合法組合無需新增 renderer 分支。014／015 consumer 延後範圍不變。
-- **v7.1.0 Step 1 常用組合一鍵預設**：三段式任務類型選擇器（大分類／輸入類型／輸出類型）上方新增由 `OUTPUT_TYPE_REGISTRY` 與 `TASK_TAXONOMY` 衍生的一鍵預設按鈕，本版提供 1 個預設（`classification` + `single_item` + `single_label`）；點擊預設在單一互動內同時寫入三組 chip 狀態，效果與逐一點選三組 chip 完全等價，三段式選擇器維持完整可見與可個別再調整，不移除任何現有能力（issue #724）。
 
 ## 規格常數
 
@@ -170,8 +169,6 @@ sequenceDiagram
 1. **AC-1.1**：**Given** 已登入且可使用任務管理模組，**When** 完成 Step 1~4 並提交，**Then** 成功建立任務且導向 `/task-detail?task_id=...`。
 2. **AC-1.2**：**Given** 建立成功，**When** 檢查任務成員資料，**Then** 建立者自動有一筆 `project_leader` 的 `task_membership`。
 3. **AC-1.3**：**Given** 正在建立流程中，**When** 點擊取消，**Then** 導回 `/task-list` 且不建立任務。
-4. **AC-1.4**：**Given** 使用者尚未選擇任何任務類型，**When** 點擊常用組合的一鍵預設按鈕，**Then** 大分類、輸入類型與輸出類型三組 chip 同時反映該預設的選取狀態，且與逐一點選三組 chip 湊出同一組合的最終狀態相同；使用者可再逐一調整任一組 chip，調整不影響其餘兩組已選狀態。
-5. **AC-1.5**：**Given** 「文字分類（單一標籤）」之三段式選擇器路徑需要 3 次點擊（大分類、輸入類型、輸出類型各一次）才能湊齊，**When** 改為點擊該組合的一鍵預設按鈕，**Then** 僅需 1 次點擊即可達成與 3 次點擊路徑相同的選擇結果。
 
 **介面定義（需與 IA 導覽語意一致）**：
 
@@ -200,7 +197,6 @@ sequenceDiagram
       - 預設全部欄位為「不使用」；重新上傳或移除檔案後角色重設為「不使用」；切換資料列來源時保留各來源已指定的角色，切回原來源時自動還原
       - 角色指定結果以 `field_role_map: Record<string, FieldRole>` 傳入建立任務 payload；僅含已指定角色的欄位
   - 輸出組合選擇狀態：三組 chip（分別維護 `selected_categories[]`、`input_type`、`selectedOutputTypes[]`，不存在單一 `task_type`）
-    - **常用組合一鍵套用**：三組 chip 上方提供依 `OUTPUT_TYPE_REGISTRY`／taxonomy 衍生的常用組合預設按鈕（本版 1 個：文字分類・單一標籤），點擊一次即同時寫入三組 chip 狀態；套用後三段式選擇器維持可見與可操作，使用者仍可個別調整任一組選取以自訂組合
     - 大分類（可多選，`role="checkbox"`）
       - `分類 Classification`
       - `回歸 Regression`
@@ -503,7 +499,6 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 - 切換資料列來源後任一已上傳檔案於新來源路徑取不出紀錄：顯示標明該檔案的不相容提示，該檔案紀錄不納入統計；不阻擋使用者切換回相容來源。
 - 變更輸出類型選擇後已填 Step 2 設定不相容：移除已被取消選擇的輸出類型之 config，保留仍選中的輸出類型之 config。
 - 分類或回歸組已選一個輸出類型後選擇同組另一項：原項目必須自動取消且清除其 config；不得出現同組兩個 radio 同時選取。序列組的多個 checkbox 選取不受影響。
-- 套用一鍵預設後，使用者再手動調整任一組 chip（大分類、輸入類型或輸出類型）：僅異動使用者實際點擊的那組，其餘兩組維持預設帶入的選取狀態不被重置。
 - Code 區輸入非有效 YAML/JSON：保留輸入內容並顯示可定位錯誤。
 - Step 3 `每回合抽樣筆數` 輸入為 `0`、負數、或 `>= 資料集總筆數`：阻擋進入 Step 4 並顯示修正提示。
 - Step 4 僅填標記員說明、僅填審核員說明，或兩者皆空：皆視為合法；不得強制要求兩個角色都填。
@@ -557,7 +552,6 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 - **FR-002c-6**：指定欄位角色後，系統必須於該欄位下方顯示回饋註記：Input 或 Evidence 角色且有缺值 → 紅色錯誤，列出問題紀錄識別（紀錄含 `id` 欄位時顯示其值，否則顯示列號，先列出前幾筆）；Input 或 Evidence 角色且全數有值 → 綠色確認；Output 角色 → 藍色預標記覆蓋率資訊（N/total 筆有預標記）。**Output 欄位存在空值不阻擋流程**，視為該筆未預標記；未指定 Evidence 時不檢核、不顯示 Evidence 結果。
 - **FR-002c-7**：任一 Input 或已指定 Evidence 角色欄位存在缺值時，系統必須阻擋進入 Step 2，並以欄位下方 inline 錯誤與頁首錯誤提示指出角色、欄位名稱與缺值筆數；多個缺值欄位並存時頁首先顯示第一個不完整欄位。角色改回「不使用」後，該欄位造成的錯誤與阻擋必須立即解除。
 - **FR-002d**：當使用者追加上傳資料集檔案時，系統必須驗證新檔案於目前所選資料列來源路徑可取出紀錄、且紀錄欄位集合與已上傳檔案完全一致；不符合時阻擋該檔案加入並顯示不相容提示，已上傳的其他檔案不受影響；嵌入式預覽表格必須於每次上傳成功後即時重新整理；移除任一檔案後，系統必須同步重新偵測資料列來源並重建欄位剖析與預覽。
-- **FR-002f**：Step 1 的三組 chip（大分類、輸入類型、輸出類型）上方必須提供依 `OUTPUT_TYPE_REGISTRY` 與 `TASK_TAXONOMY` 衍生的「常用組合」一鍵預設按鈕，每個預設對應一組合法的（大分類、輸入類型、輸出類型）組合。點擊任一預設按鈕，系統必須在單一使用者互動內同時寫入 `selected_categories[]`、`input_type` 與 `selectedOutputTypes[]`，其結果必須與逐一點選三組 chip 後的最終狀態完全等價，包含 `outputs[].type` 推導結果與 Step 2 schema 初始化。套用預設後，三組 chip 必須維持可見且可個別再調整（新增、取消或替換任一已選項），系統不得停用、隱藏或移除三段式自訂入口；使用者調整任一組時，只異動該組，其餘兩組維持預設帶入的選取狀態不被重置。預設清單與其內容必須由 registry／taxonomy 資料驅動，系統不得為單一預設情境於選擇核心流程（`rebuildOutputChips()`、`deriveTaskType()`、chip 點擊處理）新增依大分類或輸出類型 key 的硬編分支（issue #724）。
 - **FR-003**：Step 2 標記設定檔必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型的 schema 欄位由 registry 定義。
 - **FR-003a**：Step 2 必須採所有輸出類型及多輸出組合共通的單頁設定優先佈局，由設定與預覽主工作區及下方整合設定檔工具卡組成，不得依 output type key 切換為其他版面。
 - **FR-003a-1**：Step 2 的範本／上傳設定檔與 Code 必須位於主工作區下方並整合於單一外框；外框內依序呈現橫向範本／上傳列、分隔線、Code 格式切換、固定 240px 編輯器與儲存按鈕，範本列與 Code 區不得各自再顯示外框。
@@ -750,7 +744,6 @@ flowchart LR
 - **SC-002d**：Step 4 分別設定的標記員/審核員說明內容與附件，可於建立後在 task-detail 或 annotation-workspace 依角色正確讀取。
 - **SC-002e**：Step 1 的分類（單一標籤／多標籤）與回歸（單維度／多維度）輸出 chip 皆以 radio 呈現且各組同時最多選一項；切換同組選項會取消原項目，跨分類／回歸組可各保留一項；序列輸出仍可用 checkbox 同時選取多項。
 - **SC-002f**：Step 1 每個指定為 Evidence 的欄位皆顯示全資料完整性結果；全數有值時顯示綠色「全部 N 筆有值」，任一缺值時顯示紅色缺值筆數與可定位紀錄並阻擋進入 Step 2，改回「不使用」後立即解除該欄位的阻擋。
-- **SC-002g**：Step 1 提供至少一個常用組合一鍵預設；點擊該預設可在 1 次點擊內完成原本需要至少 3 次點擊（大分類、輸入類型、輸出類型各一次）才能湊齊的合法任務類型組合，且套用後三段式選擇器維持可操作。
 - **SC-003**：Step 2 可依 `OUTPUT_TYPE_REGISTRY` 產生設定介面，且 schema 設定區與 code 區內容一致。
 - **SC-003a**：Step 2 標記預覽可呈現每個輸出類型的互動式標記體驗，並可反映當前設定。
 - **SC-003b**：Step 2 預覽支援使用者實際操作（點擊 token 上標、圈選文字、拖曳滑桿、選取標籤等）。
@@ -796,6 +789,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 8.0.0 | 2026-09-16 | **移除 Step 1 常用組合一鍵預設（破壞性，issue #724，OpenSpec change `remove-task-new-step1-type-preset`）**：移除 FR-002f、AC-1.4、AC-1.5、SC-002g 與對應邊界情況。本版預設清單僅 1 筆，卻佔據 Step 1「任務類型」欄位最上方一整列的視覺權重，並在三組 chip 之外多加一層使用者必須先理解的介面概念，投報率不成立。任務類型選擇回到 FR-002／FR-002a–FR-002e 之三段式模型；選擇語意、cascade（`rebuildOutputChips()`）、`deriveTaskType()` 推導、`validateStep1()` 必填判斷與提交 payload 形狀皆不變。issue #724 之欄位角色批次動作與必填項合理預設兩個方向仍由 issue #755 追蹤。 |
 | 7.1.0 | 2026-09-13 | **Step 1 常用組合一鍵預設（MINOR，issue #724，OpenSpec change `task-new-step1-type-preset`）**：三段式任務類型選擇器（大分類／輸入類型／輸出類型）上方新增由 `OUTPUT_TYPE_REGISTRY` 與 `TASK_TAXONOMY` 衍生的一鍵預設按鈕，本版提供 1 個預設——「文字分類（單一標籤）」（`classification` + `single_item` + `single_label`，對應現行任務清單 fixture 中命中數最高的任務型態）。點擊預設按鈕，在單一互動內同時寫入 `selected_categories[]`、`input_type`、`selectedOutputTypes[]`，效果與逐一點選三組 chip 完全等價；三段式選擇器維持完整可見、可個別再調整任一組選取，不移除任何現有能力。新增 FR-002f、AC-1.4、AC-1.5、SC-002g 與 1 條邊界情況；不修改任何既有 FR/AC/SC 條文，不新增或變更提交 payload 欄位，不改變 `validateStep1()` 既有必填判斷。issue #724 同時指出的方向 ②（資料集欄位角色批次動作或依欄名自動推測初值）與方向 ③（`validateStep1()` 必填項是否有可免點的合理預設值）留待 issue #755 追蹤，不在本版範圍。 |
 | 7.0.2 | 2026-09-07 | **`## 流程圖` 補上四步精靈完整流程圖（patch，issue #678）**：原本該節只有一張 sequenceDiagram 與一張 `flowchart LR` 導頁圖，兩者都只畫順利走完的主線，讀者看不出「每一步的 `下一步` 何時才 enabled」「Step 2 的八種輸出類型面板是怎麼長出來的」「離頁與 F5 之後會發生什麼」。新增 `diagrams/task-new-wizard-flow.html`（`diagram-design` skill 產出的自包含 HTML + inline SVG，比照 `specs/annotation/015-annotation-workspace/diagrams/` 慣例，依 issue #528 Q4 決議不另出 PNG），畫出 Step 1–3 三道驗證關卡與未通過退回、Step 2 由 `OUTPUT_TYPE_REGISTRY` 逐型展開同一套設定面板（刻意不畫成八條硬編分支，以呈現 registry-driven 的設計）、離頁確認與 `navigation type = reload` 還原兩條例外路徑，以及 Step 4 選填且按鈕轉為 `建立任務` 的收尾分支；並在 `## 流程圖` 內嵌相對連結與 FR 對照。純文件補充，既有兩段 mermaid 區塊未改動，無新增或移除 FR/AC，無 API 契約變更。 |
 | 7.0.1 | 2026-09-05 | **釐清 FR-003d-1 相交拒絕回饋涵蓋完全覆蓋情形（patch，issue #659）**：v7.0.0 導入的相交拒絕回饋原僅描述「色條轉為錯誤色」，未涵蓋新圈選範圍完全落在既有 span 內、沒有暴露字元可上色的情形，導致該情境下畫面無任何回饋。條文明訂完全覆蓋與部分相交同屬相交、須給出等量回饋：部分相交沿用暴露字元色條，完全覆蓋改為在被撞到的既有 span 加上危險色虛線外框；兩種情形皆須顯示 `role="alert"` 拒絕訊息列，且點擊標籤類型不得清除處於拒絕狀態的暫存選取。無新增或移除 FR/AC，僅澄清既有 FR-003d-1 措辭與其實作缺口。 |
