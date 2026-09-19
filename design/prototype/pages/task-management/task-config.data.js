@@ -389,7 +389,10 @@ var OUTPUT_TYPE_REGISTRY = {
 
 /* Shared bypass field — every output type lets annotators mark an item as
    「無法判定 (Bypass)」; task creators can turn it off per output type */
-var BYPASS_FIELD = { key: 'allow_bypass', type: 'boolean', zh: '允許無法判定 (Bypass)', en: 'Allow bypass (unable to determine)', required: false, defaultValue: true };
+/* issue #811: zh/en wording built from the shared answer-value source
+ * (shared/sidebar.js BYPASS_WORDING, design.md D1/D2) instead of a literal
+ * string, so this stays in sync with the single source. */
+var BYPASS_FIELD = { key: 'allow_bypass', type: 'boolean', zh: '允許' + window.LabelSuiteSharedSidebar.BYPASS_WORDING.zh.answer, en: 'Allow "' + window.LabelSuiteSharedSidebar.BYPASS_WORDING.en.answer + '"', required: false, defaultValue: true };
 Object.keys(OUTPUT_TYPE_REGISTRY).forEach(function(outKey) {
   OUTPUT_TYPE_REGISTRY[outKey].fields.push(Object.assign({}, BYPASS_FIELD));
   OUTPUT_TYPE_REGISTRY[outKey].defaultConfig.allow_bypass = true;

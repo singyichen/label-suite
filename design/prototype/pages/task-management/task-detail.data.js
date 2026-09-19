@@ -1055,7 +1055,7 @@
         REVIEWER_GUIDELINE_SENTIMENT_BOUNDARY_ZH +
         '（T014）本任務為試標（dry_run）：同一份樣本由多位標記員各標一次，每份提交各自形成一個審核單位，' +
         '並依 FR-093 以樣本為單位指派——同一份資料的所有標記交給同一位審核員，便於比對彼此差異。' +
-        '審核決策為通過／修正／無法判定三選一：通過即定稿；修正與無法判定皆須填寫理由並轉入爭議池（如 ' +
+        '審核決策為通過／修正／無法裁決三選一：通過即定稿；修正與無法裁決皆須填寫理由並轉入爭議池（如 ' +
         'dry-03-dispute-open、dry-04-dispute-resolved），改由具 can_arbitrate 權限且非當事人的仲裁員裁定，審核員不得自行收斂。',
       datasetFileName: 'review-flow-dry-run.json',
       datasetRecords: [
@@ -1109,7 +1109,7 @@
         REVIEWER_GUIDELINE_SENTIMENT_BOUNDARY_ZH +
         '（T015）本任務為正式標記（official_run）：每筆樣本恰指派一位標記員，因此每份樣本只有一個審核單位，' +
         '系統再依 FR-093 以審核單位為單位指派，把這些單位平均分給名冊上被勾選的審核員。' +
-        '審核決策為通過／修正／無法判定三選一：通過即定稿並成為最終答案；修正與無法判定皆須填寫理由並轉入爭議池（如 ' +
+        '審核決策為通過／修正／無法裁決三選一：通過即定稿並成為最終答案；修正與無法裁決皆須填寫理由並轉入爭議池（如 ' +
         'ofs-02-modified-dispute）。仲裁只能在標記員與審核員兩個答案之間擇一，或裁定兩者皆非轉入最終例外池。',
       datasetFileName: 'review-flow-official-single.json',
       datasetRecords: [
@@ -1163,7 +1163,7 @@
         REVIEWER_GUIDELINE_SENTIMENT_BOUNDARY_ZH +
         '（T016）本任務為正式標記（official_run）：每筆樣本恰指派一位標記員、形成一個審核單位，' +
         '系統再依 FR-093 以審核單位為單位指派，平均分給名冊上被勾選的審核員；每個單位恰有一位審核員，不存在票數或人數要求。' +
-        '審核決策為通過／修正／無法判定三選一：修正與無法判定皆須填寫理由並轉入爭議池（如 ' +
+        '審核決策為通過／修正／無法裁決三選一：修正與無法裁決皆須填寫理由並轉入爭議池（如 ' +
         'ofm-05-final-exception），由具 can_arbitrate 權限且非當事人的仲裁員裁定。',
       datasetFileName: 'review-flow-official-multi.json',
       datasetRecords: [
