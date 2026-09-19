@@ -296,7 +296,8 @@
     }
     .input-text.error,
     .input-number.error,
-    .input-select.error {
+    .input-select.error,
+    .input-textarea.error {
       border-color: var(--color-error);
     }
     .inline-help {
@@ -2325,7 +2326,37 @@
   </div>
 </div>
 
-<div class="modal-overlay" id="memberActionModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="memberActionModalTitle">
+<!-- FR-017 (issue #838): revision note required before trial round R{n}, n >= 2. -->
+<div class="modal-overlay" id="trialRoundRevisionModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="trialRoundRevisionTitle">
+  <div class="modal">
+    <h2 id="trialRoundRevisionTitle"></h2>
+    <p id="trialRoundRevisionDesc"></p>
+    <div class="settings-edit-form">
+      <div class="field-group">
+        <label class="field-label" for="priorRoundFindingsInput"><span id="priorRoundFindingsLabel"></span><span class="required">*</span></label>
+        <textarea class="input-textarea" id="priorRoundFindingsInput" aria-describedby="priorRoundFindingsError"></textarea>
+        <p class="inline-error" id="priorRoundFindingsError"></p>
+      </div>
+      <label class="settings-checkbox-row"><input type="checkbox" id="noChangeCheckbox"><span id="noChangeLabel"></span></label>
+      <div class="field-group" id="guidelineChangeSummaryField">
+        <label class="field-label" for="guidelineChangeSummaryInput"><span id="guidelineChangeSummaryLabel"></span><span class="required">*</span></label>
+        <textarea class="input-textarea" id="guidelineChangeSummaryInput" aria-describedby="guidelineChangeSummaryError"></textarea>
+        <p class="inline-error" id="guidelineChangeSummaryError"></p>
+      </div>
+      <div class="field-group hidden" id="noChangeReasonField">
+        <label class="field-label" for="noChangeReasonInput"><span id="noChangeReasonLabel"></span><span class="required">*</span></label>
+        <textarea class="input-textarea" id="noChangeReasonInput" aria-describedby="noChangeReasonError"></textarea>
+        <p class="inline-error" id="noChangeReasonError"></p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" type="button" id="trialRoundRevisionCancelBtn"></button>
+        <button class="btn btn-cta" type="button" id="trialRoundRevisionConfirmBtn"></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="memberActionModal"aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="memberActionModalTitle">
   <div class="modal">
     <h2 id="memberActionModalTitle">確認成員操作</h2>
     <p id="memberActionModalBody">請確認是否要對成員執行危險操作。</p>
@@ -2513,6 +2544,18 @@
       iaaComputationPendingOfficialReason: 'IAA 計算中，完成後才能開始正式標記',
       iaaComputationPendingDryRunReason: 'IAA 計算中，完成後才能新增下一回合',
       iaaComputationFailedReason: 'IAA 計算失敗，請重試計算',
+      trialRoundRevisionTitleTpl: '新增試標回合 R{round}：本輪修訂紀錄',
+      trialRoundRevisionDesc: '建立下一個試標回合前，請記錄前一輪的發現與本輪的指引調整；若本輪未變更指引，請勾選並說明理由。',
+      priorRoundFindingsLabel: '前一輪發現摘要',
+      guidelineChangeSummaryLabel: '指引異動摘要',
+      noChangeLabel: '本輪未變更指引',
+      noChangeReasonLabel: '未變更理由',
+      priorRoundFindingsRequired: '請填寫前一輪發現摘要。',
+      guidelineChangeSummaryRequired: '請填寫指引異動摘要，或勾選「本輪未變更指引」並說明理由。',
+      noChangeReasonRequired: '勾選「本輪未變更指引」時，請填寫未變更理由。',
+      toastRevisionNoteBlockedTpl: '修訂紀錄未完成，無法新增試標回合 R{round}：',
+      trialRoundRevisionCancelBtn: '取消',
+      trialRoundRevisionConfirmTpl: '建立 R{round}',
       statusHintDraft: '目前任務仍在草稿，可建立第一個試標回合。',
       statusHintDry: '目前處於試標階段，可依結果持續建立下一個試標回合。',
       statusHintIaa: '已有試標回合達標，可用剩餘樣本啟動正式標記。',
@@ -3023,6 +3066,18 @@
       iaaComputationPendingOfficialReason: 'IAA computation is in progress; official run can start once it finishes',
       iaaComputationPendingDryRunReason: 'IAA computation is in progress; the next round can be added once it finishes',
       iaaComputationFailedReason: 'IAA computation failed. Please retry the computation',
+      trialRoundRevisionTitleTpl: 'Add trial round R{round}: revision note',
+      trialRoundRevisionDesc: 'Before creating the next trial round, record what the previous round found and how the guideline changed. If the guideline is unchanged, check the box and give a reason.',
+      priorRoundFindingsLabel: 'Previous round findings',
+      guidelineChangeSummaryLabel: 'Guideline change summary',
+      noChangeLabel: 'Guideline unchanged this round',
+      noChangeReasonLabel: 'Reason for no change',
+      priorRoundFindingsRequired: 'Enter the previous round findings.',
+      guidelineChangeSummaryRequired: 'Enter a guideline change summary, or check "Guideline unchanged this round" and give a reason.',
+      noChangeReasonRequired: 'Enter a reason when "Guideline unchanged this round" is checked.',
+      toastRevisionNoteBlockedTpl: 'Revision note incomplete, cannot add trial round R{round}: ',
+      trialRoundRevisionCancelBtn: 'Cancel',
+      trialRoundRevisionConfirmTpl: 'Create R{round}',
       statusHintDraft: 'The task is still in draft. Create the first trial round to start validation.',
       statusHintDry: 'The task is in the trial stage. You can continue with another round based on the latest outcome.',
       statusHintIaa: 'At least one trial round passed. The remaining pool can now enter official work.',
@@ -3718,6 +3773,8 @@
     workLogMember: 'all',
     showSkeleton: true,
     pendingAction: null,
+    trialRoundRevisionRound: null,
+    trialRoundRevisionNote: null,
     isolationConfirmed: false,
     publishingDryRun: false,
     publishingOfficialRun: false,
@@ -10125,6 +10182,86 @@ function getTaskTypeLabel() {
     if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(modal);
   }
 
+  /* FR-017 / FR-013(4) (issue #838): trial round R{n} with n >= 2 needs a
+     revision note -- prior_round_findings, plus guideline_change_summary or,
+     with no_change checked, no_change_reason. Every missing field gets its
+     own inline hint and the toast lists them all (same per-item rule as the
+     FR-010t gate in canPublish()). R1 never reaches this dialog. */
+  var TRIAL_ROUND_REVISION_FIELDS = [
+    { key: 'priorRoundFindings', inputId: 'priorRoundFindingsInput', errorId: 'priorRoundFindingsError', labelKey: 'priorRoundFindingsLabel', messageKey: 'priorRoundFindingsRequired' },
+    { key: 'guidelineChangeSummary', inputId: 'guidelineChangeSummaryInput', errorId: 'guidelineChangeSummaryError', labelKey: 'guidelineChangeSummaryLabel', messageKey: 'guidelineChangeSummaryRequired' },
+    { key: 'noChangeReason', inputId: 'noChangeReasonInput', errorId: 'noChangeReasonError', labelKey: 'noChangeReasonLabel', messageKey: 'noChangeReasonRequired' }
+  ];
+
+  function setTrialRoundRevisionFieldError(field, message) {
+    document.getElementById(field.inputId).classList.toggle('error', Boolean(message));
+    var error = document.getElementById(field.errorId);
+    error.textContent = message || '';
+    error.classList.toggle('show', Boolean(message));
+  }
+
+  function syncNoChangeFields() {
+    var noChange = document.getElementById('noChangeCheckbox').checked;
+    document.getElementById('guidelineChangeSummaryField').classList.toggle('hidden', noChange);
+    document.getElementById('noChangeReasonField').classList.toggle('hidden', !noChange);
+  }
+
+  function openTrialRoundRevisionModal(round) {
+    var modal = document.getElementById('trialRoundRevisionModal');
+    state.trialRoundRevisionRound = round;
+    setText('trialRoundRevisionTitle', interpolate(t('trialRoundRevisionTitleTpl'), { round: round }));
+    setText('trialRoundRevisionDesc', t('trialRoundRevisionDesc'));
+    setText('noChangeLabel', t('noChangeLabel'));
+    setText('trialRoundRevisionCancelBtn', t('trialRoundRevisionCancelBtn'));
+    setText('trialRoundRevisionConfirmBtn', interpolate(t('trialRoundRevisionConfirmTpl'), { round: round }));
+    TRIAL_ROUND_REVISION_FIELDS.forEach(function(field) {
+      setText(field.labelKey, t(field.labelKey));
+      document.getElementById(field.inputId).value = '';
+      setTrialRoundRevisionFieldError(field, '');
+    });
+    document.getElementById('noChangeCheckbox').checked = false;
+    syncNoChangeFields();
+    modal.classList.add('show');
+    modal.setAttribute('aria-hidden', 'false');
+    if (window.LabelSuiteModalFocus) {
+      window.LabelSuiteModalFocus.open(modal, { trigger: document.getElementById('publishDryRunBtn'), onClose: closeTrialRoundRevisionModal });
+    }
+  }
+
+  function closeTrialRoundRevisionModal() {
+    var modal = document.getElementById('trialRoundRevisionModal');
+    modal.classList.remove('show');
+    modal.setAttribute('aria-hidden', 'true');
+    if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(modal);
+  }
+
+  function confirmTrialRoundRevision() {
+    var noChange = document.getElementById('noChangeCheckbox').checked;
+    var values = {};
+    TRIAL_ROUND_REVISION_FIELDS.forEach(function(field) {
+      values[field.key] = document.getElementById(field.inputId).value.trim();
+    });
+    var requiredKeys = ['priorRoundFindings', noChange ? 'noChangeReason' : 'guidelineChangeSummary'];
+    var missing = TRIAL_ROUND_REVISION_FIELDS.filter(function(field) {
+      var isMissing = requiredKeys.indexOf(field.key) !== -1 && !values[field.key];
+      setTrialRoundRevisionFieldError(field, isMissing ? t(field.messageKey) : '');
+      return isMissing;
+    });
+    if (missing.length) {
+      var labels = missing.map(function(field) { return t(field.labelKey); });
+      showToast(interpolate(t('toastRevisionNoteBlockedTpl'), { round: state.trialRoundRevisionRound }) + labels.join(t('memberGapJoiner')), true);
+      trackEvent('prototype_publish_failed', { reason: 'revision_note_missing: ' + missing.map(function(field) { return field.key; }).join(', ') });
+      return;
+    }
+    closeTrialRoundRevisionModal();
+    state.trialRoundRevisionNote = {
+      priorRoundFindings: values.priorRoundFindings,
+      guidelineChangeSummary: noChange ? 'no_change' : values.guidelineChangeSummary,
+      noChangeReason: noChange ? values.noChangeReason : null
+    };
+    publishDryRun();
+  }
+
   function canPublish() {
     var result = validateSampling();
     if (!result.valid) {
@@ -10145,6 +10282,14 @@ function getTaskTypeLabel() {
   function publishDryRun() {
     if (state.publishingDryRun) return;
     if (!canPublish()) return;
+    /* FR-017 (issue #838): R2 and later are created only with a confirmed
+       revision note; the note is consumed by this one creation. */
+    var revisionNote = state.trialRoundRevisionNote;
+    state.trialRoundRevisionNote = null;
+    if (getTrialRounds().length >= 1 && !revisionNote) {
+      openTrialRoundRevisionModal(getTrialRounds().length + 1);
+      return;
+    }
     state.publishingDryRun = true;
     setTimeout(function() { state.publishingDryRun = false; }, 200);
     /* issue #791 (D1): materialize getTrialRounds()'s synthetic fallback
@@ -10173,7 +10318,10 @@ function getTaskTypeLabel() {
       usedSamples: Number(TASK_DATA.samplingValue) || 0,
       date: scenario.date,
       noteZh: scenario.noteZh,
-      noteEn: scenario.noteEn
+      noteEn: scenario.noteEn,
+      priorRoundFindings: revisionNote ? revisionNote.priorRoundFindings : null,
+      guidelineChangeSummary: revisionNote ? revisionNote.guidelineChangeSummary : null,
+      noChangeReason: revisionNote ? revisionNote.noChangeReason : null
     });
     TASK_DATA.trialRound = nextRound;
     TASK_DATA.currentAgreement = null;
@@ -10589,6 +10737,15 @@ function getTaskTypeLabel() {
     document.getElementById('riskModal').addEventListener('click', function(e) {
       if (e.target.id === 'riskModal') {
         closeRiskModal();
+      }
+    });
+
+    document.getElementById('noChangeCheckbox').addEventListener('change', syncNoChangeFields);
+    document.getElementById('trialRoundRevisionCancelBtn').addEventListener('click', closeTrialRoundRevisionModal);
+    document.getElementById('trialRoundRevisionConfirmBtn').addEventListener('click', confirmTrialRoundRevision);
+    document.getElementById('trialRoundRevisionModal').addEventListener('click', function(e) {
+      if (e.target.id === 'trialRoundRevisionModal') {
+        closeTrialRoundRevisionModal();
       }
     });
 

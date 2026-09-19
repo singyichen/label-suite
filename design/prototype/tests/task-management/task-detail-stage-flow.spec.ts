@@ -8,9 +8,10 @@
  * (FR-013(1)). Reaching R2 requires first completing R1's dry-run progress
  * (FR-008a, via syncStatusFromDryRunProgress()) to land on
  * waiting_iaa_confirmation, then clicking the add-round button directly from
- * there (FR-013(2)) -- design.md's "範圍界線" places the FR-017
- * revision-note gate out of scope for #791 (issue #838), so no modal step
- * sits between the click and R2's creation.
+ * there (FR-013(2)). Since issue #838 that click opens the FR-017
+ * revision-note dialog (#trialRoundRevisionModal) first; R2 is created only
+ * after its required fields are filled and confirmed. The gate's blocking
+ * paths are covered by issue-838-fr017-revision-note-gate.spec.ts.
  *
  * task-detail.html has no cross-reload persistence of TASK_DATA itself, so
  * the reload into waiting_iaa_confirmation below does not carry R1's real
@@ -39,6 +40,14 @@ async function publishDryRunRound(page: Page) {
   if (await riskModal.isVisible()) {
     await page.locator('#riskConfirmBtn').click();
   }
+}
+
+// FR-017 (issue #838): R{n} with n >= 2 must pass the revision-note dialog.
+async function fillRevisionNoteAndConfirm(page: Page) {
+  await expect(page.locator('#trialRoundRevisionModal')).toBeVisible();
+  await page.locator('#priorRoundFindingsInput').fill('R1 的 A 類與 B 類邊界判讀分歧大');
+  await page.locator('#guidelineChangeSummaryInput').fill('補充 A／B 邊界的正反例各兩則');
+  await page.locator('#trialRoundRevisionConfirmBtn').click();
 }
 
 test('keeps the 4-stage stepper while showing R1 into a waiting-confirmation-gated R2 (#791)', async ({ page }) => {
@@ -122,9 +131,10 @@ test('keeps the 4-stage stepper while showing R1 into a waiting-confirmation-gat
   await expect(page.locator('#splitLegendDynamic')).toContainText('正式 4筆');
 
   await publishDryRunRound(page);
+  await fillRevisionNoteAndConfirm(page);
 
-  // FR-013(2): R2 is created directly, no revision-note modal in between
-  // (out of scope for #791, see design.md "範圍界線"). R1's round-history
+  // FR-013(2) + FR-017: R2 is created once the revision note is confirmed.
+  // R1's round-history
   // entry must still be present: publishDryRun() has to materialize
   // getTrialRounds()'s synthetic R1 fallback into TASK_DATA.trialRounds
   // before pushing R2, not push R2 onto an empty array.
