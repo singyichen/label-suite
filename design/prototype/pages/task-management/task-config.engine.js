@@ -2370,7 +2370,9 @@ function renderAbsaUnifiedPreview(previewContainer) {
 
 /* Prefix the chip with the output-type name only when both types share the unified preview */
 function bypassChipLabel(outKey, needPrefix) {
-  var base = state.lang === 'zh' ? '無法判定 (Bypass)' : 'Unable to determine (Bypass)';
+  /* issue #811: read the shared answer-value source (shared/sidebar.js
+   * BYPASS_WORDING, design.md D1/D2) instead of a literal string. */
+  var base = window.LabelSuiteSharedSidebar.BYPASS_WORDING[state.lang].answer;
   if (!needPrefix) return base;
   var outReg = OUTPUT_TYPE_REGISTRY[outKey];
   var name = outReg ? (outReg[state.lang] || outReg.zh) : outKey;
@@ -2503,7 +2505,9 @@ function appendBypassControl(container, outKey, refresh) {
   var wrap = document.createElement('div');
   wrap.className = BYPASS_ROW_CLASS;
   wrap.style.cssText = 'margin-top:12px;padding-top:10px;border-top:1px dashed var(--color-border);display:flex;flex-wrap:wrap;align-items:center;gap:8px;';
-  wrap.appendChild(makeBypassChip(outKey, refresh, state.lang === 'zh' ? '無法判定 (Bypass)' : 'Unable to determine (Bypass)'));
+  /* issue #811: read the shared answer-value source (shared/sidebar.js
+   * BYPASS_WORDING, design.md D1/D2) instead of a literal string. */
+  wrap.appendChild(makeBypassChip(outKey, refresh, window.LabelSuiteSharedSidebar.BYPASS_WORDING[state.lang].answer));
   container.appendChild(wrap);
 }
 
