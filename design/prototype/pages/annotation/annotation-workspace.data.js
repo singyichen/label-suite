@@ -384,7 +384,9 @@
     /* issue #834 (FR-096, design.md D1): a dry-run annotator submission
        records the trial round it belongs to, so feedback can be gated per
        round rather than per task status. */
-    if (role === 'annotator' && runType === 'dry_run') entry.trialRound = currentTrialRound(taskId);
+    if (role === 'annotator' && runType === 'dry_run') {
+      entry.trialRound = currentTrialRound(taskId);
+    }
     bucket[sampleId] = entry;
     writeSubmissionBucket(key, bucket);
   }
@@ -516,21 +518,44 @@
     }).length;
   }
 
+  /* issue #850: counts only THIS round's submissions, unlike
+   * getSubmittedSampleCount() above -- submissionBucketKey() carries no
+   * round dimension, so a bucket keeps every prior round's stale entries
+   * forever, and a fresh R{n+1} would otherwise read as already fully
+   * submitted from R{n}'s leftovers alone. An entry with no trialRound
+   * stamp predates FR-096 (issue #834) and can only be R1 work, matching
+   * getDryRunFeedback()'s own fallback for the same field. */
+  function getCurrentRoundSubmittedCount(taskId, role, runType, identity) {
+    var bucket = readSubmissionBucket(submissionBucketKey(taskId, role, runType, identity));
+    var round = currentTrialRound(taskId);
+    return Object.keys(bucket).filter(function (sampleId) {
+      var entry = bucket[sampleId];
+      if (entryStatus(entry) !== 'submitted') return false;
+      return (entry.trialRound >= 1 ? entry.trialRound : 1) === round;
+    }).length;
+  }
+
   /* Bridges the workspace's per-sample submission tracking to
    * task-detail.html's dry-run completion status sync (that page's
    * syncStatusFromDryRunProgress() reads DRY_RUN_PROGRESS_KEY and flips the
    * task status to 'waiting_iaa_confirmation' once every dataset record has
    * been submitted). Annotator-only, dry_run-only -- reviewer decisions and
-   * official_run submissions never drive this status transition. */
+   * official_run submissions never drive this status transition.
+   * issue #850: stamps the round this progress snapshot was taken for, so a
+   * stale flag left over from an earlier round (now that task-detail's round
+   * is live rather than fixed by a static seed) can be told apart from a
+   * fresh one instead of blindly flipping status backward -- see
+   * syncStatusFromDryRunProgress()'s matching round check. */
   function syncDryRunProgress(taskId, role, runType, totalSamples, identity) {
     if (runType !== 'dry_run' || role !== 'annotator') return;
-    var submitted = getSubmittedSampleCount(taskId, role, runType, identity);
+    var submitted = getCurrentRoundSubmittedCount(taskId, role, runType, identity);
     try {
       global.localStorage.setItem(
         DRY_RUN_PROGRESS_KEY,
         JSON.stringify({
           runType: 'dry_run',
           taskId: taskId,
+          round: currentTrialRound(taskId),
           submittedSamples: submitted,
           totalSamples: totalSamples,
         })
