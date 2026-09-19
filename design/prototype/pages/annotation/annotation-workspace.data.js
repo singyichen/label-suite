@@ -3066,12 +3066,47 @@
    * and dry-run progress (DRY_RUN_PROGRESS_KEY) is deliberately not synced
    * -- these are review-side fixtures, not the visitor's own annotation
    * progress. */
-  var REVIEW_FLOW_DEMO_SEED_KEY = 'labelsuite.reviewFlowDemoSeed.v1';
+  var REVIEW_FLOW_DEMO_SEED_KEY_V1 = 'labelsuite.reviewFlowDemoSeed.v1';
+  /* issue #856: v1 was never bumped while the T014-T016 table below kept
+   * changing underneath it (#815, #843, #837), so a browser already holding
+   * v1 short-circuited forever and never saw any later seed fix. Bump this
+   * key whenever the T014-T016 rows change again; seedReviewFlowDemo() below
+   * clears and re-derives those rows for anyone still on the OLD marker
+   * before writing the new one, so the fix reaches existing browsers without
+   * duplicating arbitration votes or history events (a naive marker bump
+   * alone would re-run submitArbitration()/appendReviewDecisionEvents() on
+   * top of the stale rows). */
+  var REVIEW_FLOW_DEMO_SEED_KEY = 'labelsuite.reviewFlowDemoSeed.v2';
+
+  /* issue #856: removes exactly the buckets seedReviewFlowDemo() itself can
+   * have written for `taskIds` -- wsSubmissions (covers both the annotator
+   * and reviewer rows, since submissionBucketKey's first segment is always
+   * the task id) and wsArbitration -- so a v1-upgrade reseed starts from a
+   * clean slate without touching any task outside the seed table. */
+  function clearReviewFlowDemoSeedBuckets(taskIds) {
+    listSubmissionBucketKeys().forEach(function (bucketKey) {
+      if (taskIds.indexOf(bucketKey.split('::')[0]) === -1) return;
+      try {
+        global.localStorage.removeItem(SUBMISSION_KEY_PREFIX + bucketKey);
+      } catch (e) {
+        /* storage unavailable: nothing to clear */
+      }
+    });
+    listArbitrationItemKeys().forEach(function (itemKey) {
+      if (taskIds.indexOf(itemKey.split('::')[0]) === -1) return;
+      try {
+        global.localStorage.removeItem(ARBITRATION_KEY_PREFIX + itemKey);
+      } catch (e) {
+        /* storage unavailable: nothing to clear */
+      }
+    });
+  }
 
   function seedReviewFlowDemo() {
+    var upgradingFromV1 = false;
     try {
       if (global.localStorage.getItem(REVIEW_FLOW_DEMO_SEED_KEY)) return;
-      global.localStorage.setItem(REVIEW_FLOW_DEMO_SEED_KEY, new Date().toISOString());
+      upgradingFromV1 = !!global.localStorage.getItem(REVIEW_FLOW_DEMO_SEED_KEY_V1);
     } catch (e) {
       return; /* storage unavailable: nothing to stage into */
     }
@@ -3192,6 +3227,31 @@
          survives T017's removal. */
       { t: 'T016', r: 'official_run', s: 'ofm-05-final-exception', a: A, v: 'neutral', rev: { reviewer_wang: 'positive' }, modifyBy: 'reviewer_wang', reason: '語境不足以判斷情緒傾向，正面與中性難以取捨', arbReject: true, arbReason: '原標記與審核修正結果皆缺乏明確文本依據支持，需退回標記指南徵詢更明確判準' }, // disputed (reviewer modifies, arbitration rejects both sides -> final exception pool)
     ];
+
+    if (upgradingFromV1) {
+      /* issue #856: derive the task ids to clear from `scripts` itself
+         (single source of truth) rather than a second hardcoded T014-T016
+         list, so this sweep can never drift from the rows it is supposed
+         to cover. */
+      var taskIdsToReseed = [];
+      scripts.forEach(function (row) {
+        if (taskIdsToReseed.indexOf(row.t) === -1) taskIdsToReseed.push(row.t);
+      });
+      clearReviewFlowDemoSeedBuckets(taskIdsToReseed);
+    }
+
+    try {
+      global.localStorage.setItem(REVIEW_FLOW_DEMO_SEED_KEY, new Date().toISOString());
+    } catch (e) {
+      return; /* storage unavailable: don't run the writes below either */
+    }
+    /* Separate try: once v2 is written the buckets must be reseeded, so a
+       failed v1 cleanup must not skip the writes below. */
+    try {
+      global.localStorage.removeItem(REVIEW_FLOW_DEMO_SEED_KEY_V1);
+    } catch (e) {
+      /* a leftover v1 marker is harmless: v2 is checked first */
+    }
 
     function labelPayload(value, decision, reason) {
       /* issue #551: `decision` mirrors handleReviewSubmit's persisted
