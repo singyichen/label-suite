@@ -25,7 +25,8 @@
   - 證據：Green commit `e393f853`；`PW_PORT=8964 node ~/.cache/node/corepack/v1/pnpm/12.3.4/bin/pnpm.mjs playwright test` 兩支 issue-834 檔＋596＋754 → exit 0，17 passed；Red 檔未修改
 - [x] 2.3 執行 code/test gate：`node ~/.cache/node/corepack/v1/pnpm/12.3.4/bin/pnpm.mjs typecheck` 與 `node ~/.cache/node/corepack/v1/pnpm/12.3.4/bin/pnpm.mjs playwright test`（於 `design/prototype/`，並帶本 worktree 專屬 `PW_PORT`），兩者預期 exit `0`；typecheck 必須與 Playwright 分開記錄，兩者是獨立閘門 [@main]
   - 證據（2026-09-19，tip `e393f853`）：typecheck → exit 0；`PW_PORT=8964 node ~/.cache/node/corepack/v1/pnpm/12.3.4/bin/pnpm.mjs playwright test tests/annotation/` → exit 0，851 passed。依協調者指示本輪只跑 `tests/annotation/` 整個目錄，全量 Playwright 待 CI 閘門
-- [ ] 2.4 更新 `specs/annotation/015-annotation-workspace/spec.md` 完成 gate 4 回寫：FR-096 揭露時機改為逐回合並補本版修訂段、新增一則 AC（編號接續第 1 章現行最大者）、版號 bump 與 Changelog 補一列；Changelog 既有列不得改寫，被取代的條文逐字保留為沿革 [@main]
+- [x] 2.4 更新 `specs/annotation/015-annotation-workspace/spec.md` 完成 gate 4 回寫：FR-096 揭露時機改為逐回合並補本版修訂段、新增一則 AC（編號接續第 1 章現行最大者）、版號 bump 與 Changelog 補一列；Changelog 既有列不得改寫，被取代的條文逐字保留為沿革 [@main]
+  - 證據：canonical write-back commit `d84432a0`：`specs/annotation/015-annotation-workspace/spec.md` 版本 6.6.0 → 6.7.0、FR-096 補 v6.7.0 修訂段（原文逐字保留）、新增 AC-1.28（第 1 章現行最大為 AC-1.27）、Changelog 新增 6.7.0 列，既有列未改
 
 ## Pre-merge finalization（在 /opsx:apply 外，NON-CHECKBOX）
 
