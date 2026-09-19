@@ -30,7 +30,7 @@ test('the Chinese reviewer copy reflects the correct-or-arbitrate model (I18N-03
   await expect(page.locator('#stepReviewer2Desc')).toHaveText('通過、修正或無法判定；歧異交付仲裁與例外池');
   /* issue #596 (design.md 已確認決策 #1): `R`（退回）已隨審核退回流程廢除一併
    * 移除，`B`（無法判定）取而代之。此列改為說明 B 快捷鍵（issue #621）。 */
-  await expect(page.locator('#shortcutReviewBypass')).toHaveText('無法判定目前結果');
+  await expect(page.locator('#shortcutReviewBypass')).toHaveText('無法裁決');
 });
 
 test('the English reviewer copy carries the same semantics (I18N-03)', async ({ page }) => {
@@ -43,7 +43,7 @@ test('the English reviewer copy carries the same semantics (I18N-03)', async ({ 
   await expect(page.locator('#roleReviewerSubtitle')).toHaveText('Review each annotator independently, correct results directly, and arbitrate disputes.');
   await expect(page.locator('#stepReviewer2Title')).toHaveText('Correct or Arbitrate');
   await expect(page.locator('#stepReviewer2Desc')).toHaveText('Approve, modify, or mark unable to determine; disputes go to arbitration and the exception pool');
-  await expect(page.locator('#shortcutReviewBypass')).toHaveText('Mark current result as unable to determine');
+  await expect(page.locator('#shortcutReviewBypass')).toHaveText('Cannot adjudicate');
 });
 
 /* Issue #458: 審核 is the canonical zh-TW term for the reviewer flow
