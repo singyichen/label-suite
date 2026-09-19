@@ -68,11 +68,11 @@
 
 **故事目標**（SC-004W）：該成功指標本身逐字寫著「四個審核流程示範任務（T014–T017）」，示範任務收斂為三個之後，三份正典裡所有把 T016／T017 寫進 Given 前提或示例基線筆數的條文都必須同步，否則本變更一落地該指標即永遠不成立。
 
-- [ ] 5.1 更新 `specs/annotation/015-annotation-workspace/spec.md`：FR-044 與 FR-093 依本 delta 改寫、新增兩則 AC（編號接續各章現行最大者）、示例基線筆數與種子來源註中的示範任務範圍收斂為三個、SC-004W 的示範任務數同步，並改寫 AC-1.22／AC-1.23／AC-1.24／AC-4.39／AC-4.40 的 Given 前提使其改引仍存在的示範單位；版號 bump 並補 Changelog 一列。Changelog 既有列不得改寫，被取代的條文逐字保留為沿革。 [@main]
-- [ ] 5.2 下游同步 `specs/task-management/010-task-list/spec.md`：示例基線表移除該筆 fixture 列、基線筆數自 17 改為 16，版號 bump 並補 Changelog 一列。 [@main]
-- [ ] 5.3 下游同步 `specs/dashboard/012-dashboard/spec.md`：FR-011D、FR-011E 與 SC-024 三處的示範任務範圍與快速操作筆數同步收斂，版號 bump 並補 Changelog 一列。 [@main]
-- [ ] 5.4 更新 `design/system/screen-inventory.md`：本 change 動到原型頁面，須於分支尾端、rebase 之後重新產生，避免內嵌的來源 commit 過期。 [@main]
-- [ ] 5.5 執行四道閘門的完整記錄：OpenSpec schema validation、Project SDD lint、prototype 的 typecheck 與 Playwright 全量，逐項回報 command 與 exit。 [@main]
+- [x] 5.1 更新 `specs/annotation/015-annotation-workspace/spec.md`：FR-044 與 FR-093 依本 delta 改寫、新增兩則 AC（編號接續各章現行最大者）、示例基線筆數與種子來源註中的示範任務範圍收斂為三個、SC-004W 的示範任務數同步，並改寫 AC-1.22／AC-1.23／AC-1.24／AC-4.39／AC-4.40 的 Given 前提使其改引仍存在的示範單位；版號 bump 並補 Changelog 一列。Changelog 既有列不得改寫，被取代的條文逐字保留為沿革。 （證據：`1b9309b6` 015 v6.6.0，AC-6.12／AC-6.13；AC-1.22 複驗不依賴 T017 故不改） [@main]
+- [x] 5.2 下游同步 `specs/task-management/010-task-list/spec.md`：示例基線表移除該筆 fixture 列、基線筆數自 17 改為 16，版號 bump 並補 Changelog 一列。 （證據：`1b9309b6` 010 v2.2.0） [@main]
+- [x] 5.3 下游同步 `specs/dashboard/012-dashboard/spec.md`：FR-011D、FR-011E 與 SC-024 三處的示範任務範圍與快速操作筆數同步收斂，版號 bump 並補 Changelog 一列。 （證據：`1b9309b6` 012 v2.12.0） [@main]
+- [x] 5.4 更新 `design/system/screen-inventory.md`：本 change 動到原型頁面，須於分支尾端、rebase 之後重新產生，避免內嵌的來源 commit 過期。 （證據：merge main `c8c929fc` 後 `node scripts/gen-screen-inventory.mjs --check` exit 0，群組 5 未動 `pages/` 免重生） [@main]
+- [x] 5.5 執行四道閘門的完整記錄：OpenSpec schema validation、Project SDD lint、prototype 的 typecheck 與 Playwright 全量，逐項回報 command 與 exit。 （證據：head `c8c929fc`；`openspec validate --changes --no-interactive` exit 0；`scripts/check-sdd.sh` 0 error；`pnpm typecheck` exit 0；`PW_PORT=8947 pnpm playwright test` 全量 exit 0，1745 passed；`scripts/check-demo-data-parity.sh` exit 0） [@main]
 
 ---
 

@@ -10,7 +10,7 @@ Reviewer 審查列 MUST 僅呈現**受審標記員本人**的提交，MUST NOT �
 
 **本版新增——示範 seed 的合法性**：審核流程示範任務的種子列 MUST 只示範現行資料模型可產生的形狀。任一種子列所描述的狀態，MUST 能由 FR-051 的三態推導、FR-093 的指派粒度、FR-092 的 `REVIEW_DECISIONS` 與 FR-061 的 `ARBITRATION_OUTCOMES` 共同產生；MUST NOT 保留任何只能由已廢止規則（定稿門檻 `min_reviewers`、多數決收斂、審核員層級的退回決策）產生的列。示範任務整組的種子 MUST 集體見證 `REVIEW_DECISIONS` 的每一個值——含 `bypass`——以及仲裁「兩者皆非」進入最終例外池（FR-095）的路徑；任一決策值於整組種子零命中時，該組 MUST 視為覆蓋不足。
 
-**本版新增——雙份副本一致性**：示範審核單位的種子資料存在兩份手寫副本（`docs/product/example-data/review-flow-*.json` 與 prototype 的 `REVIEWER_MOCK_ROWS`）。兩份 MUST 逐列一致，以實際渲染的 prototype 種子為基準；此一致性 MUST 由一道可執行的檢查守住，並依本專案的兩向契約同時登錄本機驗證指令與對應 CI job，MUST NOT 僅以文件約定或人工比對代替。
+**本版新增——雙份副本一致性**：示範審核單位的種子資料存在兩份手寫副本（`docs/product/example-data/review-flow-*.json` 與 prototype `task-detail.data.js` 各示範任務 profile 的 `datasetFileName`／`datasetRecords`）。兩份 MUST 逐列一致，以實際渲染的 prototype 種子為基準；此一致性 MUST 由一道可執行的檢查守住，並依本專案的兩向契約同時登錄本機驗證指令與對應 CI job，MUST NOT 僅以文件約定或人工比對代替。
 
 #### Scenario: AC-6.11 正式標記不再產生重標待辦
 - **GIVEN** `run_type = official_run` 的一筆樣本，其審核員對某 outKey 送出 `修正`
