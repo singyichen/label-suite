@@ -383,19 +383,9 @@
     }
     /* issue #834 (FR-096, design.md D1): a dry-run annotator submission
        records the trial round it belongs to, so feedback can be gated per
-       round rather than per task status.
-       issue #850: a byte-identical resubmission of an already-stamped entry
-       keeps its existing trialRound instead of re-reading currentTrialRound()
-       -- now that task-detail's round is live (not a static seed), the same
-       kind of duplicate replay the double-submit guard above already treats
-       as a no-op (e.g. a test fixture's page.route() patch re-running on a
-       later navigation) would otherwise silently reattribute an old round's
-       answer to whichever round is current *now*. A genuine resubmission
-       (the answer actually changed) still advances the stamp. */
+       round rather than per task status. */
     if (role === 'annotator' && runType === 'dry_run') {
-      var unchangedReplay = existing && existing.trialRound != null &&
-        JSON.stringify(existing.answers || {}) === JSON.stringify(payload || {});
-      entry.trialRound = unchangedReplay ? existing.trialRound : currentTrialRound(taskId);
+      entry.trialRound = currentTrialRound(taskId);
     }
     bucket[sampleId] = entry;
     writeSubmissionBucket(key, bucket);
