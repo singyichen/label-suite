@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-new-step1-field-role-hints
 建立日期: 2026-04-20
-版本: 8.1.0
+版本: 8.1.1
 狀態: Draft
 ---
 
@@ -588,7 +588,7 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 - **FR-003h**：Step 2 必須支援上傳 `CONFIG_UPLOAD_FORMATS` 設定檔，載入至 code 區並由使用者手動儲存套用。
 - **FR-003i**：Step 2 預設模板需支援 i18n（至少 zh/en）；切換語言時，若 code 區無未儲存變更（`codeDraftDirty = false`）且使用中為預設 labels，需同步轉換為對應語言 labels；若有未儲存變更則不自動覆寫，保留使用者手動修改。
 - **FR-003j**：每個輸出類型必須提供獨立的「無法判定 (Bypass)」選項，供標記員在無法判定該輸出類型時選擇。行為規則如下：
-  - **共通 schema 欄位**：`OUTPUT_TYPE_REGISTRY` 必須為所有輸出類型統一附加共通欄位 `allow_bypass`（`boolean`，非必填，預設 `true`），出現於每個輸出類型的 `fields` 與 `defaultConfig`，不得在個別輸出類型中重複硬編；schema 設定面板以 toggle 呈現（zh「允許無法判定 (Bypass)」／en「Allow bypass (unable to determine)」），前方存在其他 schema 欄位時須保留 12px 垂直群組間距，並隨 `outputs[]` 格式序列化至 code 區、支援 code 區編輯儲存回填。
+  - **共通 schema 欄位**：`OUTPUT_TYPE_REGISTRY` 必須為所有輸出類型統一附加共通欄位 `allow_bypass`（`boolean`，非必填，預設 `true`），出現於每個輸出類型的 `fields` 與 `defaultConfig`，不得在個別輸出類型中重複硬編；schema 設定面板以 toggle 呈現（zh「允許無法判定 (Bypass)」／en「Allow "Unable to determine (Bypass)"」；**v8.1.1 修訂**，issue #811：en 文案改為與答案值單一來源 `shared/sidebar.js` `BYPASS_WORDING` 一致，見 015 FR-092），前方存在其他 schema 欄位時須保留 12px 垂直群組間距，並隨 `outputs[]` 格式序列化至 code 區、支援 code 區編輯儲存回填。
   - **預覽勾選項**：`allow_bypass` 開啟時，該輸出類型的預覽區塊底部顯示獨立的「無法判定 (Bypass)」勾選項（toggle button 語意，含 `aria-pressed` 狀態）；關閉時不顯示，且既有勾選狀態必須一併清除、預覽重新初始化。
   - **互斥行為**：勾選 Bypass 後，該輸出類型預覽的其他互動控制項必須**清空既有標記狀態並停用**（視覺弱化且不可操作），僅影響該輸出類型的預覽區塊，不影響輸入文字與其他輸出類型；Bypass 勾選項本身維持可點擊。
   - **取消恢復**：取消勾選後，該輸出類型的預覽必須恢復可操作並**重新初始化如同初次載入**（含 FR-003g-5～FR-003g-8 的預標記初始化重新套用）。
@@ -793,6 +793,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 8.1.1 | 2026-09-19 | **FR-003j 英文 toggle 引文對齊答案值單一來源（PATCH，issue #811，OpenSpec change `split-bypass-answer-and-decision-wording`）**：schema 設定面板 `allow_bypass` toggle 之 en 引文由 `Allow bypass (unable to determine)` 改為 `Allow "Unable to determine (Bypass)"`（維護者裁定 R2），使其與 015 FR-092 v6.8.0 所定答案值之唯一 i18n 來源（`shared/sidebar.js` `BYPASS_WORDING`）一致；zh 引文「允許無法判定 (Bypass)」本即一致、不變。欄位、預設值、行為與 `outputs[]` 契約皆不變，無 FR／AC 增刪——PATCH。 |
 | 8.1.0 | 2026-09-19 | **Step 1 資料集欄位角色 Input 欄名自動推測（MINOR，issue #755，OpenSpec change `task-new-step1-field-role-hints`）**：新增 FR-002c-8、AC-1.6、AC-1.7、SC-002h——嵌入式資料預覽表格為尚未指定過角色的欄位初始化時，欄名（不分大小寫）包含 `FIELD_ROLE_INPUT_NAME_HINTS` 七個關鍵字（`text`／`content`／`sentence`／`passage`／`document`／`body`／`context`）任一者，依出現順序自動預填 Input，至多至當下輸入類型所需數量（`single_item` 1、`item_pair` 2）；不覆寫使用者手動指定或資料列來源記憶還原的角色。**永久不對 Evidence／Output 自動推測**（Data Fairness：fixture 普遍含 `gold_*` 保留答案欄名）。FR-002c-1 預設值敘述補「（欄名命中 Input 線索之例外見 FR-002c-8）」交叉引用；此句刻意不進入 delta（delta 維持純 ADDED 以確保可套用至衍生檢視），衍生檢視就此句與正典存在已記錄之分歧。AC-1.4／AC-1.5／SC-002g 為 8.0.0 已撤銷編號，不重用 |
 | 8.0.0 | 2026-09-16 | **移除 Step 1 常用組合一鍵預設（破壞性，issue #724，OpenSpec change `remove-task-new-step1-type-preset`）**：移除 FR-002f、AC-1.4、AC-1.5、SC-002g 與對應邊界情況。本版預設清單僅 1 筆，卻佔據 Step 1「任務類型」欄位最上方一整列的視覺權重，並在三組 chip 之外多加一層使用者必須先理解的介面概念，投報率不成立。任務類型選擇回到 FR-002／FR-002a–FR-002e 之三段式模型；選擇語意、cascade（`rebuildOutputChips()`）、`deriveTaskType()` 推導、`validateStep1()` 必填判斷與提交 payload 形狀皆不變。issue #724 之欄位角色批次動作與必填項合理預設兩個方向仍由 issue #755 追蹤。 |
 | 7.1.0 | 2026-09-13 | **Step 1 常用組合一鍵預設（MINOR，issue #724，OpenSpec change `task-new-step1-type-preset`）**：三段式任務類型選擇器（大分類／輸入類型／輸出類型）上方新增由 `OUTPUT_TYPE_REGISTRY` 與 `TASK_TAXONOMY` 衍生的一鍵預設按鈕，本版提供 1 個預設——「文字分類（單一標籤）」（`classification` + `single_item` + `single_label`，對應現行任務清單 fixture 中命中數最高的任務型態）。點擊預設按鈕，在單一互動內同時寫入 `selected_categories[]`、`input_type`、`selectedOutputTypes[]`，效果與逐一點選三組 chip 完全等價；三段式選擇器維持完整可見、可個別再調整任一組選取，不移除任何現有能力。新增 FR-002f、AC-1.4、AC-1.5、SC-002g 與 1 條邊界情況；不修改任何既有 FR/AC/SC 條文，不新增或變更提交 payload 欄位，不改變 `validateStep1()` 既有必填判斷。issue #724 同時指出的方向 ②（資料集欄位角色批次動作或依欄名自動推測初值）與方向 ③（`validateStep1()` 必填項是否有可免點的合理預設值）留待 issue #755 追蹤，不在本版範圍。 |
