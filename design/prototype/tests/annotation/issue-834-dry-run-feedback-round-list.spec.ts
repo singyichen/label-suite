@@ -136,6 +136,23 @@ test.describe('issue #834: FR-096 dry-run feedback grouped per round (annotation
     await expect(r2.getByTestId('ws-dry-run-feedback-reason')).toHaveText(R2_MARKER);
   });
 
+  // Maintainer ruling 2026-09-19: an ended trial with zero feedback still
+  // states the count ("共 0 筆") instead of rendering only the card title.
+  test('waiting with zero feedback: summary still reads "共 0 筆"', async ({ page }) => {
+    await patchDataFile(
+      page,
+      'annotation-workspace.data.js',
+      setRoundJs(1) +
+        `window.LabelSuiteTaskListData.tasks.find(function (t) { return t.id === ${JSON.stringify(TASK_ID)}; }).status = 'waiting_iaa_confirmation';`
+    );
+    await page.goto(buildListUrl({ task_id: TASK_ID, run_type: 'dry_run' }));
+
+    await expect(page.getByTestId('ws-dry-run-feedback-pending')).toHaveCount(0);
+    await expect(page.getByTestId('ws-dry-run-feedback-row')).toHaveCount(0);
+    await expect(page.getByTestId('ws-dry-run-feedback-summary')).toHaveCount(1);
+    await expect(page.getByTestId('ws-dry-run-feedback-summary')).toContainText('共 0 筆');
+  });
+
   test('official_run_in_progress: ended trial rounds stay visible without a pending note', async ({ page }) => {
     await seedTwoRounds(page, 'official_run_in_progress');
 
