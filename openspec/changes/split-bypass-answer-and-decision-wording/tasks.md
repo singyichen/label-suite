@@ -1,6 +1,6 @@
 # 任務清單：split-bypass-answer-and-decision-wording
 
-> **Apply 前硬閘**：先執行 `openspec validate split-bypass-answer-and-decision-wording --type change` 與 `scripts/check-sdd.sh`，分別回報 OpenSpec schema validation 與 Project SDD lint。兩者通過後必須停止，取得使用者對 design.md 待裁定問題 Q1–Q4 的確認後，才可進入 Stage 1 `/opsx:apply`。主 session／team lead 是唯一可驗證 Red／Green evidence 與更新 checkbox 的角色。
+> **Apply 前硬閘**：先執行 `openspec validate split-bypass-answer-and-decision-wording --type change` 與 `scripts/check-sdd.sh`，分別回報 OpenSpec schema validation 與 Project SDD lint。兩者通過後才可進入 Stage 1 `/opsx:apply`；design.md 原列之待裁定問題已由維護者於 2026-09-19 全數裁定（見 design.md「維護者裁定」R1–R4），apply 依裁定執行。主 session／team lead 是唯一可驗證 Red／Green evidence 與更新 checkbox 的角色。
 
 > **群組間序列**：1 → 2，不並行，每一群組為一條堆疊 PR。
 >
@@ -33,13 +33,13 @@
 
 **故事目標**：SC-004D — 決策名改為 `無法裁決` 之後，任務設定面的答案值與提到審核決策的說明句也必須同步，否則負責人設定 `allow_bypass` 時看到的名稱、儀表板與示範指引描述的決策名，會與審核員實際按下的按鈕不一致。
 
-- [ ] 2.1 撰寫 `design/prototype/tests/task-management/issue-811-bypass-wording-task-surfaces.spec.ts` 作為 Red 契約，釘住四件事：task-new 輸出類型設定之 `allow_bypass` toggle 兩種語言文案（zh 維持 `允許無法判定 (Bypass)`，en 依 design.md Q2 裁定值）、task-new 預覽 chip 兩種語言皆等於共用側欄匯出之答案值來源、儀表板審核步驟說明兩種語言皆不含 `無法判定`／`unable to determine` 且含 `無法裁決`／`cannot adjudicate`、task-detail 三份示範指引文字不含 `無法判定` 而含 `無法裁決`。型別宣告必須使用 local cast。先提交此單檔再跑測試，expected failure 必須是上述文案仍為舊字串，並保存 command、exit 與失敗訊息。 [@senior-qa]
-- [ ] 2.2 Green：修改 `design/prototype/pages/task-management/task-config.data.js`，`BYPASS_FIELD` 之 zh／en 文案改由 `允許`（`Allow`）加答案值來源組成，en 依 design.md Q2 裁定值；不得放寬或改寫 Red 契約。 [@senior-frontend]
+- [ ] 2.1 撰寫 `design/prototype/tests/task-management/issue-811-bypass-wording-task-surfaces.spec.ts` 作為 Red 契約，釘住四件事：task-new 輸出類型設定之 `allow_bypass` toggle 兩種語言文案（zh 維持 `允許無法判定 (Bypass)`，en 為 `Allow "Unable to determine (Bypass)"`，維護者裁定 R2）、task-new 預覽 chip 兩種語言皆等於共用側欄匯出之答案值來源、儀表板審核步驟說明兩種語言皆不含 `無法判定`／`unable to determine` 且含 `無法裁決`／`cannot adjudicate`、task-detail 三份示範指引文字不含 `無法判定` 而含 `無法裁決`。型別宣告必須使用 local cast。先提交此單檔再跑測試，expected failure 必須是上述文案仍為舊字串，並保存 command、exit 與失敗訊息。 [@senior-qa]
+- [ ] 2.2 Green：修改 `design/prototype/pages/task-management/task-config.data.js`，`BYPASS_FIELD` 之 zh／en 文案改由 `允許`（`Allow`）加答案值來源組成，en 得 `Allow "Unable to determine (Bypass)"`（維護者裁定 R2）；不得放寬或改寫 Red 契約。 [@senior-frontend]
 - [ ] 2.3 修改 `design/prototype/pages/task-management/task-config.engine.js`，兩處預覽 chip 之行內字面值改讀答案值來源。 [@senior-frontend]
 - [ ] 2.4 修改 `design/prototype/pages/task-management/task-detail.data.js`，三份示範指引敘述句中的決策名由 `無法判定` 改為 `無法裁決`。 [@senior-frontend]
 - [ ] 2.5 修改 `design/prototype/pages/dashboard/dashboard.i18n.js`，`stepReviewer2Desc` 兩種語言之決策名改為 `無法裁決`／`cannot adjudicate`。 [@senior-frontend]
 - [ ] 2.6 修改 `design/prototype/pages/dashboard/dashboard.html`，`stepReviewer2Desc` 之靜態 fallback 文字與 2.5 之 zh 值一致。 [@senior-frontend]
 - [ ] 2.7 執行 code/test gate：於 `design/prototype/` 帶本 worktree 專屬 `PW_PORT` 執行 `node ~/.cache/node/corepack/v1/pnpm/12.3.4/bin/pnpm.mjs typecheck` 與 `node ~/.cache/node/corepack/v1/pnpm/12.3.4/bin/pnpm.mjs playwright test`（全量），兩者預期 exit `0` 且分開記錄；rebase 後再執行 `node scripts/gen-screen-inventory.mjs` 重生盤點並提交。 [@main]
-- [ ] 2.8 更新 `specs/annotation/015-annotation-workspace/spec.md` 完成 gate 4 回寫：版號 bump（建議 MINOR 6.7.0 → 6.8.0，以當下最新版號接續）與 Changelog 補一列；FR-092 補 v6.8.0 修訂段（兩套語彙與唯一來源約束）並新增一則 AC（編號接續第 3 章現行最大者）釘住「答案值與決策值各自同源且互不混用」；FR-083 與 AC-3.47 之現行鍵名改為 `toastReasonRequired`，以 v6.8.0 修訂段寫入；其餘活條文中作為決策標籤的 `無法判定` 改為 `無法裁決`，範圍以 `/usr/bin/grep -n '無法判定'` 逐條盤點，至少涵蓋流程圖說明、AC-3.8、AC-3.51、AC-3.53、AC-3.54、元件表、AC-6.3、AC-4.52、AC-4.54、AC-4.55、FR-014、FR-014B、FR-044、FR-053、FR-054、FR-061、FR-064、FR-070、FR-016A、FR-089、FR-092、SC-004D；描述定案結果之「無法判定」依 design.md Q1 裁定處理；已被取代的條文（如 AC-3.37）、條文內記錄舊版的修訂段與 Changelog 舊列逐字保留。 [@main]
-- [ ] 2.9 更新 `specs/task-management/013-task-new/spec.md`：FR-003j 之英文 toggle 引文改為 design.md Q2 裁定值，版號 PATCH bump（8.1.0 → 8.1.1，以當下最新版號接續）並於 Changelog 補一列；僅在 Q2 裁定改變英文文案時執行，否則於本項記錄「不適用」。 [@main]
+- [ ] 2.8 更新 `specs/annotation/015-annotation-workspace/spec.md` 完成 gate 4 回寫：版號 bump（建議 MINOR 6.7.0 → 6.8.0，以當下最新版號接續）與 Changelog 補一列；FR-092 補 v6.8.0 修訂段（兩套語彙與唯一來源約束）並新增一則 AC（編號接續第 3 章現行最大者）釘住「答案值與決策值各自同源且互不混用」；FR-083 與 AC-3.47 之現行鍵名改為 `toastReasonRequired`，以 v6.8.0 修訂段寫入；其餘活條文中作為決策標籤的 `無法判定` 改為 `無法裁決`，範圍以 `/usr/bin/grep -n '無法判定'` 逐條盤點，至少涵蓋流程圖說明、AC-3.8、AC-3.51、AC-3.53、AC-3.54、元件表、AC-6.3、AC-4.52、AC-4.54、AC-4.55、FR-014、FR-014B、FR-044、FR-053、FR-054、FR-061、FR-064、FR-070、FR-016A、FR-089、FR-092、SC-004D；描述定案結果之「無法判定」依維護者裁定 R1 維持不改；已被取代的條文（如 AC-3.37）、條文內記錄舊版的修訂段與 Changelog 舊列逐字保留。 [@main]
+- [ ] 2.9 更新 `specs/task-management/013-task-new/spec.md`：FR-003j 之英文 toggle 引文改為 `Allow "Unable to determine (Bypass)"`（維護者裁定 R2），版號 PATCH bump（8.1.0 → 8.1.1，以當下最新版號接續）並於 Changelog 補一列。 [@main]
 - [ ] 2.10 執行 `/opsx:archive split-bypass-answer-and-decision-wording`，產生衍生檢視後依 `docs/sdd-workflow.md` §6.2 逐條 grep 本 change 寫入的 canonical citation（FR-086、FR-014B、FR-051、FR-054、FR-061、FR-016A、FR-064、FR-070、FR-083、FR-092、FR-094、AC-3.47、新 AC、SC-004D、issue／PR 編號），確認每一條都可被個別定位；archive 指令需使用者明確授權後才執行。final merge 後才更新 `specs/STATUS.md`。 [@main]

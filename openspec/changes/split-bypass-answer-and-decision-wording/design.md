@@ -14,7 +14,7 @@
 
 **Goals**：兩套語彙各有一個定義處；所有使用者可見的決策值與答案值標籤都讀自該處；toast 鍵名與文案與正典一致。
 
-**Non-Goals**：不改識別字、資料形狀、行為或版面；不改描述定案結果的「無法判定」（見 Q1）。
+**Non-Goals**：不改識別字、資料形狀、行為或版面；不改描述定案結果的「無法判定」（維護者裁定 R1）。
 
 ## Decisions
 
@@ -39,7 +39,7 @@ var BYPASS_WORDING = {
 - 各頁保留字面值、只改內容：直接違反「每個概念恰有一個 i18n 來源」的裁定，且正是今天英文分裂的成因。
 - 定義在 `annotation-workspace.config.js`：側欄與 task-detail 讀不到。
 
-**代價**：側欄本身的職責是導覽，現在多承載一組審核語彙。這是務實取捨，維護者若偏好獨立檔案，只影響 D1 的落點，不影響其餘設計。
+**代價**：側欄本身的職責是導覽，現在多承載一組審核語彙。這是務實取捨，維護者已於 2026-09-19 裁定採此落點（R3）。
 
 ### D2：消費端一覽
 
@@ -54,7 +54,7 @@ var BYPASS_WORDING = {
 | 答案值 | `annotation-workspace.config.js` `reviewOriginalAnswerBypass` | 由來源取值（現為 `無法判定`／`Cannot determine`，會改成含 `(Bypass)` 的完整答案值） |
 | 答案值 | `annotation-list.html` `reviewBypassPill` | 由來源取值（英文由 `Bypassed (cannot determine)` 改為 `Unable to determine (Bypass)`） |
 | 答案值 | `task-config.engine.js` 兩處預覽 chip | 由來源取值 |
-| 答案值 | `task-config.data.js` `BYPASS_FIELD` | zh `允許` + 答案值（字串不變）；en 見 Q2 |
+| 答案值 | `task-config.data.js` `BYPASS_FIELD` | zh `允許` + 答案值（字串不變）；en `Allow "Unable to determine (Bypass)"`（維護者裁定 R2） |
 
 ### D3：敘述句只改字面措辭
 
@@ -62,11 +62,11 @@ var BYPASS_WORDING = {
 
 ### D4：描述定案結果的「無法判定」保留
 
-FR-061「採 B 即定案為無法判定」、FR-063、FR-095、FR-097 描述的是**定案後的值**：該項最終沒有可採之答案，語意上較接近答案值。本單只改標籤，不改這些描述。見 Q1。
+FR-061「採 B 即定案為無法判定」、FR-063、FR-095、FR-097 描述的是**定案後的值**：該項最終沒有可採之答案，語意上較接近答案值。本單只改標籤，不改這些描述（維護者 2026-09-19 裁定 R1）。
 
 ### D5：toast 鍵名採實作、文案採正典
 
-理由見 proposal.md `## Why`。實作只改文案：zh `請填寫以下輸出類型的審核理由：{list}`；en `Please give a review reason for the following output types: {list}`（正典只規定 zh，en 依 zh 對應補上 `review`）。正典 FR-083 與 AC-3.47 的鍵名在 gate 4 改為 `toastReasonRequired`。兩條中「v4.58.0 修訂」「v5.0.0 修訂」的括號段是沿革，逐字保留；新鍵名以 v6.8.0 修訂段寫入。
+理由見 proposal.md `## Why`；維護者已於 2026-09-19 確認。實作只改文案：zh `請填寫以下輸出類型的審核理由：{list}`；en `Please give a review reason for the following output types: {list}`（正典只規定 zh，en 依 zh 對應補上 `review`）。正典 FR-083 與 AC-3.47 的鍵名在 gate 4 改為 `toastReasonRequired`。兩條中「v4.58.0 修訂」「v5.0.0 修訂」的括號段是沿革，逐字保留；新鍵名以 v6.8.0 修訂段寫入。
 
 ### D6：分兩個 PR 群組
 
@@ -88,9 +88,13 @@ FR-061「採 B 即定案為無法判定」、FR-063、FR-095、FR-097 描述的�
 | **X. Change Scope Discipline** | 兩個群組各 5 個產品檔（D6） |
 | **XX. Source of Truth & Contract Governance** | 每個標籤只在 `shared/sidebar.js` 定義一次（D1） |
 
-## 待裁定問題
+## 維護者裁定（2026-09-19）
 
-- **Q1**：描述定案結果的「無法判定」（D4）是否也改為 `無法裁決`？本提案建議不改：定案值屬於「該項無答案」，改了反而讓「決策」與「結果」再度混用。
-- **Q2**：`BYPASS_FIELD` 英文 toggle 文案。建議 `Allow "Unable to determine (Bypass)"`，與 zh `允許無法判定 (Bypass)` 同構（`允許` + 答案值）。若採用，`task-management/013-task-new` FR-003j 的英文引文要在 gate 4 同步（PATCH）。
-- **Q3**：D1 的落點（側欄 vs 獨立共用檔）。
-- **Q4**：issue #811 於 2026-09-18 追記的答案值目標字串（去掉 `(Bypass)`），與 2026-09-19 裁定不同；本提案依 2026-09-19 裁定，請確認追記已被取代。
+以下四項原列為待裁定問題，維護者已於 2026-09-19 裁定，全數採本提案建議，apply 依此執行：
+
+- **R1 定案結果措辭**：描述定案結果的「無法判定」（FR-061「採 B 即定案為無法判定」、FR-063、FR-095、FR-097、FR-092 第 3 點審核員側值）**不改**。定案值屬於「該項無答案」，改為 `無法裁決` 會讓「決策」與「結果」再度混用（見 D4）。
+- **R2 `BYPASS_FIELD` 英文 toggle 文案**：定為 `Allow "Unable to determine (Bypass)"`，與 zh `允許無法判定 (Bypass)` 同構（`允許` + 答案值）。`task-management/013-task-new` FR-003j 的英文引文於 gate 4 同步（PATCH）。
+- **R3 唯一來源落點**：兩套語彙定義於 `shared/sidebar.js`（見 D1），不另建共用檔。
+- **R4 issue 追記之取捨**：2026-09-19 裁定取代 issue #811 於 2026-09-18 的追記；答案值保留 `(Bypass)`，即 `無法判定 (Bypass)`／`Unable to determine (Bypass)`。仲裁 B 選項 `B・審核員：無法裁決` 兩者一致。
+
+toast 鍵名與文案（D5）亦於同日確認：鍵名保留 `toastReasonRequired`、正典 FR-083／AC-3.47 於 gate 4 改名；文案採正典 `請填寫以下輸出類型的審核理由：{list}`。
