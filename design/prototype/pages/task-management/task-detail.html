@@ -5059,11 +5059,69 @@ function interpolate(template, payload) {
     }
   }
 
+  /* issue #850: this task's real source of trialRounds/status is this
+     page's TASK_DATA, but resetTaskData() only ever re-clones it from the
+     static seed -- so any round created here evaporates on the next
+     navigation/reload, and the annotation pages (which read the seed's
+     profiles[taskId].trialRounds/materializedRuns and task-list.data.js's
+     tasks[].status, never TASK_DATA) never see it either. Persist both
+     into ONE shared localStorage record with a single setItem call so
+     task-detail.data.js's / task-list.data.js's overlays -- read by every
+     page, including this one's own resetTaskData() -- always see the round
+     and the status together. Writing them separately would let a reader
+     land between the two writes and see a round with its OLD status (or
+     vice versa); getDryRunFeedback()'s DISCLOSED_ROUND_OFFSET keys off
+     status to decide the highest disclosable round, so that split-write
+     window is a Data Fairness leak, not just a display glitch. */
+  var TRIAL_RUN_STATE_KEY = 'labelsuite.trialRunState';
+
+  function persistTrialRunState() {
+    try {
+      var raw = window.localStorage.getItem(TRIAL_RUN_STATE_KEY);
+      var all = raw ? JSON.parse(raw) : {};
+      if (!all || typeof all !== 'object') all = {};
+      all[TASK_DATA.taskId] = {
+        status: TASK_DATA.status,
+        trialRounds: cloneData(TASK_DATA.trialRounds || [])
+      };
+      window.localStorage.setItem(TRIAL_RUN_STATE_KEY, JSON.stringify(all));
+    } catch (error) {
+      /* localStorage unavailable (private mode, quota); state simply won't
+         persist across reload/navigation, same graceful degradation as
+         loadCreatedTasks() elsewhere in this file's data module. */
+    }
+  }
+
+  /* FR-013(3): a round created from a fully-submitted prior round must not
+     immediately read as fully-submitted again -- the stale
+     DRY_RUN_PROGRESS_KEY flag belongs to the round that just ended, and
+     syncStatusFromDryRunProgress() has no round dimension to tell it
+     apart from the brand-new round. Scoped to this taskId so it never
+     clears another task's unrelated in-flight progress. */
+  function clearDryRunProgressForTask(taskId) {
+    var progress = readDryRunProgress();
+    if (!progress || progress.taskId !== taskId) return;
+    try {
+      window.localStorage.removeItem(DRY_RUN_PROGRESS_KEY);
+    } catch (error) {
+      /* no-op */
+    }
+  }
+
   function syncStatusFromDryRunProgress() {
     if (TASK_DATA.status !== 'dry_run_in_progress') return;
     var progress = readDryRunProgress();
     if (!progress || progress.runType !== 'dry_run') return;
     if (progress.taskId && progress.taskId !== TASK_DATA.taskId) return;
+    /* issue #850: a progress flag with no round stamp predates this fix and
+       can only describe round 1 (matches getCurrentRoundSubmittedCount()'s
+       own fallback in annotation-workspace.data.js). Once a later round
+       exists, that stale round-1 flag must not flip status backward --
+       clearDryRunProgressForTask() clears it once, but nothing stops a
+       caller (e.g. a re-seeded fixture) from writing it again afterward. */
+    var activeRound = (getCurrentTrialRound() || {}).round || 1;
+    var progressRound = progress.round >= 1 ? progress.round : 1;
+    if (progressRound !== activeRound) return;
     var submitted = Number(progress.submittedSamples);
     var total = Number(progress.totalSamples);
     if (!Number.isFinite(submitted) || !Number.isFinite(total) || total < 1) return;
@@ -5088,6 +5146,7 @@ function interpolate(template, payload) {
     }
     TASK_DATA.status = 'waiting_iaa_confirmation';
     TASK_DATA.updatedAt = new Date().toISOString().slice(0, 16).replace('T', ' ');
+    persistTrialRunState();
   }
 
   function applyLang(lang) {
@@ -10335,6 +10394,11 @@ function getTaskTypeLabel() {
        waiting_iaa_confirmation (FR-008a). */
     TASK_DATA.status = 'dry_run_in_progress';
     TASK_DATA.updatedAt = scenario.date + ' 10:07';
+    /* issue #850 (FR-013(3)): this round just started, so a leftover
+       fully-submitted progress flag from the round that just ended must
+       not immediately read as THIS round being done too. */
+    clearDryRunProgressForTask(TASK_DATA.taskId);
+    persistTrialRunState();
     showToast(t('toastPublishedDry'));
     trackEvent('prototype_publish_success', { target_status: TASK_DATA.status });
     renderOverview();
@@ -10347,6 +10411,7 @@ function getTaskTypeLabel() {
     setTimeout(function() { state.publishingOfficialRun = false; }, 200);
     TASK_DATA.status = 'official_run_in_progress';
     TASK_DATA.updatedAt = '2026-05-04 11:20';
+    persistTrialRunState();
     showToast(t('toastPublishedOfficial'));
     trackEvent('prototype_publish_success', { target_status: 'official_run_in_progress' });
     renderOverview();
@@ -10362,6 +10427,7 @@ function getTaskTypeLabel() {
       TASK_DATA.trialRounds = getTrialRounds();
     }
     TASK_DATA.trialRounds[TASK_DATA.trialRounds.length - 1].iaaComputationStatus = 'pending';
+    persistTrialRunState();
     trackEvent('prototype_cta_clicked', { cta: 'retry_iaa_computation' });
     renderOverview();
   }

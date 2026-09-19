@@ -1333,6 +1333,41 @@
     };
   });
 
+  /* issue #850: task-detail.html persists a task's trialRounds together
+   * with its status in one shared record whenever a round is created or
+   * its status otherwise changes there (persistTrialRunState(),
+   * task-detail.html), because task-detail's own TASK_DATA is in-memory
+   * only and this profile seed is the independent source annotation pages
+   * (currentTrialRound() in annotation-workspace.data.js,
+   * annotation-list.html's own runCtx.round read) and task-detail.html's
+   * own resetTaskData() read trial-round data from. Overlay only the
+   * trialRounds half of that record here -- task-list.data.js overlays the
+   * status half onto its own tasks -- and derive materializedRuns.dry_run
+   * from the latest round so both consumers of "the current round" agree.
+   * Same opt-in merge pattern as CREATED_TASKS_KEY above. */
+  var TRIAL_RUN_STATE_KEY = 'labelsuite.trialRunState';
+
+  function loadTrialRunState() {
+    try {
+      var raw = global.localStorage ? global.localStorage.getItem(TRIAL_RUN_STATE_KEY) : null;
+      var parsed = raw ? JSON.parse(raw) : {};
+      return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  var trialRunState = loadTrialRunState();
+  Object.keys(trialRunState).forEach(function (taskId) {
+    var persisted = trialRunState[taskId];
+    var rounds = persisted && Array.isArray(persisted.trialRounds) ? persisted.trialRounds : null;
+    if (!rounds || !rounds.length || !profiles[taskId]) return;
+    profiles[taskId].trialRounds = rounds;
+    profiles[taskId].materializedRuns = Object.assign({}, profiles[taskId].materializedRuns, {
+      dry_run: { round: rounds[rounds.length - 1].round }
+    });
+  });
+
   /* 014 規格常數（issue #596, single-owner review relay, spec v3.0.0）。
    * 與 015 `annotation-workspace.data.js` 的同名/同源常數保持同值，避免
    * 014／015 兩端各自硬編一份不同步的清單（Generalization-First）。
