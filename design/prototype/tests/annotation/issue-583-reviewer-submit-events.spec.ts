@@ -74,6 +74,11 @@ const RUN_TYPE = 'official_run';
 const ANNOTATOR = 'kioleemg12'; // DEFAULT_ANNOTATOR_ID (annotation-workspace.data.js)
 const REVIEWER = 'reviewer_wang'; // DEFAULT_REVIEWER_ID (REVIEWER_ROSTER[0])
 
+/* page.evaluate() serializes its callback and runs it inside the browser --
+ * it cannot close over this file's module-scope TASK/RUN_TYPE/SAMPLE
+ * constants, so every value the callback needs travels through the single
+ * `args` parameter (same reason seedBucket()'s addInitScript below takes an
+ * explicit tuple instead of closing over its callers' variables). */
 function submit(
   page: Page,
   args: { role: string; payload: unknown; identity: { annotatorId?: string; reviewerId?: string } }
@@ -82,15 +87,15 @@ function submit(
     (a) =>
       (window as unknown as { LabelSuiteAnnotationWorkspaceData: WorkspaceDataGlobal })
         .LabelSuiteAnnotationWorkspaceData.markSampleSubmitted(
-          TASK,
+          a.task,
           a.role,
-          RUN_TYPE,
-          SAMPLE,
+          a.runType,
+          a.sample,
           a.payload,
           '',
           a.identity
         ),
-    args
+    { task: TASK, runType: RUN_TYPE, sample: SAMPLE, role: args.role, payload: args.payload, identity: args.identity }
   );
 }
 
@@ -98,8 +103,8 @@ function readHistory(page: Page, identity: { annotatorId?: string; reviewerId?: 
   return page.evaluate(
     (a) =>
       (window as unknown as { LabelSuiteAnnotationWorkspaceData: WorkspaceDataGlobal })
-        .LabelSuiteAnnotationWorkspaceData.getSampleHistory(TASK, RUN_TYPE, SAMPLE, a),
-    identity
+        .LabelSuiteAnnotationWorkspaceData.getSampleHistory(a.task, a.runType, a.sample, a.identity),
+    { task: TASK, runType: RUN_TYPE, sample: SAMPLE, identity }
   );
 }
 
