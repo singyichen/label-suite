@@ -481,12 +481,18 @@ test.describe('Dataset analysis list filters and pagination', () => {
   test('debounces keyword search before syncing the URL', async ({
     page,
   }) => {
+    // issue #835: the 300ms debounce is a real setTimeout, so a wall-clock
+    // negative assertion raced it under load. Drive the page clock instead so
+    // "not synced before 300ms" is deterministic.
+    await page.clock.install();
     await page.goto(DATASET_ANALYSIS_URL);
+    await page.clock.pauseAt(Date.now() + 60_000);
 
     await page.locator('#searchInput').fill('entity_recognition');
-    await expect(page).not.toHaveURL(/keyword=entity_recognition/);
+    await page.clock.runFor(299);
+    expect(page.url()).not.toMatch(/keyword=entity_recognition/);
 
-    await page.waitForTimeout(350);
+    await page.clock.runFor(1);
     await expect(page).toHaveURL(/keyword=entity_recognition/);
 
     const params = new URL(page.url()).searchParams;
