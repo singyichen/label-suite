@@ -1406,6 +1406,13 @@ function setText(id, key) {
   var v = t(key);
   if (typeof v === 'string') el.textContent = v;
 }
+/* Scoped to one mount: a document-wide pass let whichever panel partial
+   loaded last overwrite the other panel's data-i18n text (issue #835). */
+function applySimpleIds(root) {
+  SIMPLE_IDS.forEach(function(id) {
+    if (root.querySelector('#' + id)) setText(id, id);
+  });
+}
 function applyDataI18n(root) {
   if (!root || !root.querySelectorAll) return;
   Array.prototype.forEach.call(root.querySelectorAll('[data-i18n]'), function(el) {
@@ -1434,7 +1441,7 @@ function loadStatsPanel() {
     })
     .then(function(html) {
       mount.innerHTML = html.trim();
-      SIMPLE_IDS.forEach(function(id) { setText(id, id); });
+      applySimpleIds(mount);
       applyDataI18n(mount);
       updateStatsEmptyBtn();
     })
@@ -1976,7 +1983,7 @@ function loadQualityPanel() {
   if (!mount) return Promise.resolve();
   mount.innerHTML = '';
   var finish = function() {
-    SIMPLE_IDS.forEach(function(id) { setText(id, id); });
+    applySimpleIds(mount);
     applyDataI18n(mount);
     updateLowConsistencyCountBadge();
     updateConsistencyDeviationTexts();
