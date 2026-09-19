@@ -26,6 +26,7 @@
   - 維護者裁定（2026-09-19）追加：試標已結束且零回饋時仍顯示「共 0 筆」摘要。Red commit `89c4c6e8`（同檔新增一則，exit 1：`ws-dry-run-feedback-summary` 數 0，預期 1）；Green commit `afc2bd6e`（`renderDryRunFeedback()` 於結束狀態且無任何回合時補零摘要）→ 同檔 exit 0，4 passed；既有三則未修改
 - [x] 2.3 執行 code/test gate：`node ~/.cache/node/corepack/v1/pnpm/12.3.4/bin/pnpm.mjs typecheck` 與 `node ~/.cache/node/corepack/v1/pnpm/12.3.4/bin/pnpm.mjs playwright test`（於 `design/prototype/`，並帶本 worktree 專屬 `PW_PORT`），兩者預期 exit `0`；typecheck 必須與 Playwright 分開記錄，兩者是獨立閘門 [@main]
   - 證據（2026-09-19，tip `e393f853`）：typecheck → exit 0；`PW_PORT=8964 node ~/.cache/node/corepack/v1/pnpm/12.3.4/bin/pnpm.mjs playwright test tests/annotation/` → exit 0，851 passed。依協調者指示本輪只跑 `tests/annotation/` 整個目錄，全量 Playwright 待 CI 閘門
+  - 全量證據（2026-09-19，合入 main `e452a426` 並重生 inventory 後之 tip `272af471`，含零回饋裁定 Red/Green）：`node ~/.cache/node/corepack/v1/pnpm/12.3.4/bin/pnpm.mjs typecheck` → exit 0；`PW_PORT=8964 node ~/.cache/node/corepack/v1/pnpm/12.3.4/bin/pnpm.mjs playwright test`（全量）→ exit 0，1769 passed
 - [x] 2.4 更新 `specs/annotation/015-annotation-workspace/spec.md` 完成 gate 4 回寫：FR-096 揭露時機改為逐回合並補本版修訂段、新增一則 AC（編號接續第 1 章現行最大者）、版號 bump 與 Changelog 補一列；Changelog 既有列不得改寫，被取代的條文逐字保留為沿革 [@main]
   - 證據：canonical write-back commit `d84432a0`：`specs/annotation/015-annotation-workspace/spec.md` 版本 6.6.0 → 6.7.0、FR-096 補 v6.7.0 修訂段（原文逐字保留）、新增 AC-1.28（第 1 章現行最大為 AC-1.27）、Changelog 新增 6.7.0 列，既有列未改
 
