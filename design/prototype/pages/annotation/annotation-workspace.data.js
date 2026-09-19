@@ -1980,13 +1980,16 @@
    * compareOutputAnswer() sees no diff: `modify`/`bypass` (FR-051, spec.md
    * line 740: "任一項決策為 `modify` 或 `bypass` → `disputed`" -- a same-value
    * `modify` or a `bypass` left on the pre-filled preview panel is still a
-   * real decision, not agreement), plus the retired `reject` (issue #551 --
-   * kept for the pre-issue-#596 dry_run demo seed rows that still carry it,
-   * e.g. issue #502's T014 dry-05; `reject` has not been a selectable
-   * REVIEW_DECISIONS value since issue #596, but existing stored submissions
-   * predating that migration must keep deriving the same status they always
-   * have). Shared by anyReviewerChanged() and getDisputeItems() so the two
-   * stay a single source of truth for which decisions force a dispute. */
+   * real decision, not agreement). `reject` has not been a selectable
+   * REVIEW_DECISIONS value since issue #596, and issue #837 retired its last
+   * demo-seed producer (T014 dry-05, rewritten to a `bypass`) -- no seed row
+   * writes a reviewer-level `reject` decision anymore. `reject` stays listed
+   * here anyway: a submission carrying one (pre-migration data, or a
+   * directly-constructed submission such as
+   * issue-804-group2-reject-emission-cleanup.spec.ts's pure-reject
+   * arbitration fixture) must still force a dispute rather than silently
+   * finalize. Shared by anyReviewerChanged() and getDisputeItems() so the
+   * two stay a single source of truth for which decisions force a dispute. */
   var DISPUTE_FORCING_DECISIONS = { modify: true, bypass: true, reject: true };
 
   /* True when ANY reviewer's answer differs from the annotator's on ANY of
@@ -2222,9 +2225,7 @@
            dispute item instead of silently vanishing (anyReviewerChanged()
            already routes the unit to `disputed` for every
            DISPUTE_FORCING_DECISIONS member; without this, `bypass`/`modify`
-           would have no item left to resolve that dispute with). The three
-           branches below enumerate DISPUTE_FORCING_DECISIONS' members
-           individually because each needs a different synthesized shape.
+           would have no item left to resolve that dispute with).
            Granularity is the outKey itself (there is no differing sub-key
            to point at), matching the single_label/free_text "no merge key"
            shape.
@@ -2234,9 +2235,15 @@
            already use, so the B choice renders as 無法判定 without needing
            the PURE_REJECT_VALUE sentinel. `reviewer: annotatorAnswer` for
            `modify` -- the reviewer did submit a real replacement value, it
-           merely equals the annotator's. `reject` keeps the original
-           PURE_REJECT_VALUE sentinel (pre-issue-#596 dry_run demo seed rows,
-           e.g. issue #502's T014 dry-05, still carry it). */
+           merely equals the annotator's. The `reject` branch below no
+           longer has a demo-seed producer: issue #837 retired T014 dry-05,
+           the last seed row that wrote a reviewer-level `reject` decision,
+           rewriting it to a `bypass`. The branch and PURE_REJECT_VALUE stay
+           live for a directly-constructed `reject` submission
+           (pre-migration data, or
+           issue-804-group2-reject-emission-cleanup.spec.ts's pure-reject
+           arbitration fixture), which DISPUTE_FORCING_DECISIONS still
+           routes here. */
         /* issue #753: `bypass` is decided by the DECISION, never by the diff.
            FR-061 point 2 (spec.md:779) says B's rendering "必須依決策來源動態
            決定" and that adopting a bypassed B "定案值記為無法判定，不得回填
@@ -3050,13 +3057,9 @@
     /* One row per review unit: annotator `a` answered `v`; `rev` maps each
        reviewer to their decision (same value = agree, different = changed);
        `arb` is chen's arbitration adopting that reviewer value (choice
-       adopt_b). `rejectBy` names the one entry in `rev` whose decision was
-       `reject` (issue #502) rather than approve/modify -- reject is a
-       decision, not a value, so the reviewer's `rev` value can still equal
-       `v` (agree, i.e. a "pure reject": issue #551 makes this block
-       finalization instead of reading as an agreement vote). `modifyBy`
-       (issue #596, FR-094) names the one entry in `rev` whose decision was
-       `modify` -- without it a value change would still derive `disputed`
+       adopt_b). `modifyBy` (issue #596, FR-094) names the one entry in
+       `rev` whose decision was `modify` -- without it a value change would
+       still derive `disputed`
        via anyReviewerChanged(), but the FR-094 micro-trace's `（修正）`
        segment reads unitReviewDecision()'s stored `decisions` map, which
        only a `modify` decision (not the default `approve`) populates.
@@ -3073,9 +3076,11 @@
            reviewer's correction immediately -- what used to require
            arbitration at N = 1 now finalizes on submit, so several rows
            below moved from `disputed`/`arbitrated` to `finalized`; and
-       (2) a pure reject (no correction) now blocks finalization instead of
-           reading as agreement, so dry-05's A row moved the other way,
-           from `finalized` to `disputed`.
+       (2) a decision that carries no correction (a pure reject, historically;
+           `reject` was retired by issue #837, so T014 dry-05's A row below
+           is now a `bypass` instead) blocks finalization instead of reading
+           as agreement, so that row stays `disputed` rather than
+           `finalized`.
 
        issue #596 (design.md D1): getReviewUnitStatus() no longer has any
        quorum/min_reviewers concept, so the inline `// finalized (N=1 quorum
@@ -3120,12 +3125,16 @@
          finalizes it (finalized_by = reviewer_chen). */
       { t: 'T014', r: 'dry_run', s: 'dry-04-dispute-resolved', a: B, v: 'neutral', rev: { reviewer_wang: 'negative' }, modifyBy: 'reviewer_wang', reason: '文末表達失望，應判讀為負面而非中性', arb: 'negative' }, // finalized by arbitration
       { t: 'T014', r: 'dry_run', s: 'dry-04-dispute-resolved', a: C, v: 'negative', rev: { reviewer_wang: 'negative' } }, // finalized
-      /* issue #502: reject on dry_run has no rollback channel -- the
-         annotator stays 'submitted'. issue #551: a pure reject (no
-         correction) now blocks finalization instead of reading as
-         agreement, so this unit is disputed, not finalized -- only an
-         arbiter (or a later correction) can resolve it. */
-      { t: 'T014', r: 'dry_run', s: 'dry-05-pending-review', a: A, v: 'positive', rev: { reviewer_wang: 'positive' }, rejectBy: 'reviewer_wang' }, // disputed (pure reject blocks finalization)
+      /* issue #837: this row used to seed a reviewer-level `reject`
+         (rollback-free on dry_run anyway -- the annotator stayed
+         'submitted'), but REVIEW_DECISIONS has been approve/modify/bypass
+         only since issue #596, so it is now a `bypass` instead: design.md
+         D2's "bypass 不存值" means `rev` carries the reviewer key with an
+         undefined value, the same shape as T016's ofm-04-reviewer-bypass.
+         `bypass` is a DISPUTE_FORCING_DECISIONS member, so the unit still
+         blocks finalization and stays disputed -- only an arbiter (or a
+         later correction) can resolve it. */
+      { t: 'T014', r: 'dry_run', s: 'dry-05-pending-review', a: A, v: 'positive', rev: { reviewer_wang: undefined }, bypassBy: 'reviewer_wang', reason: '正負面線索交雜，難以判定情緒傾向為何' }, // disputed (reviewer bypasses, no answer value recorded)
       { t: 'T014', r: 'dry_run', s: 'dry-05-pending-review', a: B, v: 'positive' }, // pending
       { t: 'T014', r: 'dry_run', s: 'dry-05-pending-review', a: C, v: 'positive' }, // pending
       /* T015 official_run, min_reviewers = 1 (ofs-05 stays unsubmitted) */
@@ -3161,10 +3170,11 @@
 
     function labelPayload(value, decision, reason) {
       /* issue #551: `decision` mirrors handleReviewSubmit's persisted
-         `decisions` map (per outKey approve/reject) -- without it, a seeded
-         pure reject (rejectBy, same value as `v`) is indistinguishable from
-         a seeded approve, and getReviewUnitStatus()/getDisputeItems() would
-         read it as agreement instead of a blocking reject.
+         `decisions` map (per outKey approve/modify/bypass) -- without it, a
+         seeded `modify`/`bypass` that leaves the value unchanged (modifyBy/
+         bypassBy, same value as `v`) is indistinguishable from a seeded
+         approve, and getReviewUnitStatus()/getDisputeItems() would read it
+         as agreement instead of a blocking decision.
          issue #552: `reason` mirrors the persisted `reasons` map the
          annotator's rework banner (FR-084) reads. */
       var payload = { previewState: { single_label: { selected: value } } };
@@ -3176,22 +3186,21 @@
     scripts.forEach(function (row) {
       markSampleSubmitted(row.t, 'annotator', row.r, row.s, labelPayload(row.v), '', { annotatorId: row.a });
       Object.keys(row.rev || {}).forEach(function (reviewerId) {
-        var isReject = row.rejectBy === reviewerId;
         var isModify = row.modifyBy === reviewerId;
-        /* issue #815: `bypassBy` mirrors `modifyBy`/`rejectBy` -- names the
-           one entry in `rev` whose decision was `bypass` (無法判定) rather
-           than approve/modify/reject. */
+        /* issue #815: `bypassBy` mirrors `modifyBy` -- names the one entry
+           in `rev` whose decision was `bypass` (無法判定) rather than
+           approve/modify. */
         var isBypass = row.bypassBy === reviewerId;
-        var decision = isReject ? 'reject' : (isModify ? 'modify' : (isBypass ? 'bypass' : 'approve'));
+        var decision = isModify ? 'modify' : (isBypass ? 'bypass' : 'approve');
         /* issue #502/#596/#815: mirrors handleReviewSubmit's per-row decision
            line (annotation-workspace.config.js's decisionLines, ~L4780) so
-           a seeded reject/modify/bypass reads the same way a live one would. */
-        var reviewSummary = (isReject || isModify || isBypass)
+           a seeded modify/bypass reads the same way a live one would. */
+        var reviewSummary = (isModify || isBypass)
           ? 'single_label · ' + row.a + ': ' + decision + ' — ' + (row.reason || '')
           : '';
         markSampleSubmitted(
           row.t, 'reviewer', row.r, row.s,
-          labelPayload(row.rev[reviewerId], decision, (isReject || isModify || isBypass) ? row.reason : null),
+          labelPayload(row.rev[reviewerId], decision, (isModify || isBypass) ? row.reason : null),
           reviewSummary,
           { annotatorId: row.a, reviewerId: reviewerId }
         );
