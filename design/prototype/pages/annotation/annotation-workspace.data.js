@@ -3396,6 +3396,7 @@
     getSampleAnswers: getSampleAnswers,
     getSampleHistory: getSampleHistory,
     getSubmittedSampleCount: getSubmittedSampleCount,
+    getCurrentRoundSubmittedCount: getCurrentRoundSubmittedCount,
     syncDryRunProgress: syncDryRunProgress,
     DEFAULT_ANNOTATOR_ID: DEFAULT_ANNOTATOR_ID,
     DEFAULT_REVIEWER_ID: DEFAULT_REVIEWER_ID,

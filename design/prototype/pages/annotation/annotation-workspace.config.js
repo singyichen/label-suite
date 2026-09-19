@@ -1547,6 +1547,16 @@
   function countSubmittedUnits(units) {
     var data = window.LabelSuiteAnnotationWorkspaceData;
     if (currentRole !== 'reviewer') {
+      /* issue #858: dry_run's nav progress must scope to the CURRENT trial
+         round (same round-scoping getCurrentRoundSubmittedCount() already
+         applies for task-detail.html, issue #850) -- submissionBucketKey()
+         carries no round dimension, so getSubmittedSampleCount() would keep
+         counting a prior round's leftover 'submitted' entries once a new
+         round starts. official_run submissions carry no trialRound stamp
+         at all, so they stay on the unscoped count. */
+      if (currentRunType === 'dry_run') {
+        return data.getCurrentRoundSubmittedCount(currentProfile.id, currentRole, currentRunType, currentIdentity);
+      }
       return data.getSubmittedSampleCount(currentProfile.id, currentRole, currentRunType, currentIdentity);
     }
     return units.filter(function (unit) {
