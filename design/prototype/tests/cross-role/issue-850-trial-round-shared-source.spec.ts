@@ -107,6 +107,7 @@ async function readTaskStatus(page: Page, taskId: string): Promise<string | null
  * markSampleSubmitted() after R2 already exists. */
 const SEED_R1_REVIEWED_MARKER = 'labelsuite.__test850SeedR1ReviewedDone';
 const SEED_FULL_R1_MARKER = 'labelsuite.__test850SeedFullR1Done';
+const SEED_STALE_OFFICIAL_MARKER = 'labelsuite.__test850SeedStaleOfficialDone';
 
 /* Seeds one reviewed R1 submission (annotator answer + reviewer 'approve'),
  * so buildDryRunFeedbackRow() has a settling 'accepted' action to report.
@@ -476,14 +477,24 @@ test.describe('issue #850: task-detail and annotation pages share no trial-round
     // session already wrote for this task -- this is the ONLY way
     // TASK_DATA.status resolves to non-draft on first load, so this line
     // stands in for that earlier click rather than being test-only setup.
+    // addInitScript() re-runs on EVERY navigation, including the
+    // page.reload() below (same class of hazard the seeds above guard
+    // against, see this file's header comment ~:95-107) -- without the
+    // one-time marker, the reload would re-seed the stale
+    // 'official_run_in_progress' record right before task-detail.html's own
+    // scripts run, clobbering the 'completed' record publishComplete() just
+    // persisted and failing the reload assertion for a fixture reason, not
+    // the product regression this test targets.
     await page.addInitScript(
-      ({ key, taskId }) => {
+      ({ key, taskId, marker }) => {
+        if (window.localStorage.getItem(marker)) return;
         window.localStorage.setItem(
           key,
           JSON.stringify({ [taskId]: { status: 'official_run_in_progress', trialRounds: [{ round: 1 }] } })
         );
+        window.localStorage.setItem(marker, '1');
       },
-      { key: TRIAL_RUN_STATE_KEY, taskId: TASK_ID }
+      { key: TRIAL_RUN_STATE_KEY, taskId: TASK_ID, marker: SEED_STALE_OFFICIAL_MARKER }
     );
 
     await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}`);
