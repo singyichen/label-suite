@@ -1364,7 +1364,11 @@
     if (!rounds || !rounds.length || !profiles[taskId]) return;
     profiles[taskId].trialRounds = rounds;
     profiles[taskId].materializedRuns = Object.assign({}, profiles[taskId].materializedRuns, {
-      dry_run: { round: rounds[rounds.length - 1].round }
+      /* issue #850 regression A: merge, not replace, so seeded dry_run
+       * fields (e.g. total) survive the round overlay. */
+      dry_run: Object.assign({}, (profiles[taskId].materializedRuns || {}).dry_run, {
+        round: rounds[rounds.length - 1].round
+      })
     });
   });
 

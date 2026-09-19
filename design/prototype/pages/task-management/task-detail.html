@@ -10474,6 +10474,8 @@ function getTaskTypeLabel() {
     }
     TASK_DATA.status = 'completed';
     TASK_DATA.updatedAt = '2026-05-06 18:20';
+    /* issue #850 regression B: persist like publishDryRun/publishOfficialRun so completion survives reload. */
+    persistTrialRunState();
     showToast(t('toastPublishedComplete'));
     trackEvent('prototype_publish_success', { target_status: 'completed' });
     renderOverview();
