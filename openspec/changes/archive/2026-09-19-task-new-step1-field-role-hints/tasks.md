@@ -72,7 +72,7 @@
 - [x] 3.4 Security Review（自我審查）：確認本次改動不引入使用者輸入注入面、不擴大 CORS、不新增任何後端呼叫或秘密處理、不透過欄名比對間接洩漏被標記為 Output／Evidence 之欄位內容；純前端 DOM／state 初始化邏輯調整。 [@main]
 - [x] 3.5 Source-Verify：`grep` 確認正典 `specs/task-management/013-task-new/spec.md` 內已逐字可定位 FR-002c-8、AC-1.6、AC-1.7、SC-002h 各段落，且七個欄名關鍵字逐字可定位；確認版本號 8.0.0 → 8.1.0（原寫 7.1.0 → 7.2.0，為 propose 時的基準；issue #724／PR #770 已將 013 推進至 8.0.0，本 change 為純 ADDED 故 MINOR）與 Changelog 新增列已寫入；確認 `FIELD_ROLE_INPUT_NAME_HINTS`／`state.fieldRoleMap`／`FIELD_ROLE_LABELS` 等程式碼識別字於對應原型檔案中皆可 grep 定位（proposal.md 之 Source-Verify 更正段落所列項目）。 [@main]
 - [x] 3.6 正典回寫附加動作：於正典 FR-002c-1 的預設值敘述後補一句交叉引用指向 FR-002c-8，使單獨閱讀 FR-002c-1 不會得到錯誤結論。此句刻意不進入 delta（delta 保持純新增以確保 archive 可套用至衍生檢視），因此衍生檢視與正典就此句存在已記錄的分歧。驗證：`grep -n 'FR-002c-8' specs/task-management/013-task-new/spec.md` 於 FR-002c-1 該行亦有命中。 [@main]
-- [ ] 3.7 執行 `/opsx:archive` 等價流程：將本 change 的 delta 併入 `openspec/specs/task-management/013-task-new/spec.md`（derived view）、移動本 change 至 `openspec/changes/archive/`。PR 合併後另行更新 `specs/STATUS.md` 之 `task-management-013` 列由 `change-open` 改回 `in-progress`（比照本規格既有先例，013 為持續演進中的長期規格，非本次一次性完成後即封存的功能，不進入 `done`／`archived`）。 [@main]
+- [x] 3.7 執行 `/opsx:archive` 等價流程：將本 change 的 delta 併入 `openspec/specs/task-management/013-task-new/spec.md`（derived view）、移動本 change 至 `openspec/changes/archive/`。PR 合併後另行更新 `specs/STATUS.md` 之 `task-management-013` 列由 `change-open` 改回 `in-progress`（比照本規格既有先例，013 為持續演進中的長期規格，非本次一次性完成後即封存的功能，不進入 `done`／`archived`）。 [@main]
 
 > **主 session 核實紀錄（2026-09-19，任務 3.1～3.6）**：
 >
@@ -82,3 +82,4 @@
 > - **3.4**：純前端 state 初始化，欄名只做 `toLowerCase().indexOf()` 比對、不寫入 DOM；無新後端呼叫、CORS 或秘密；Evidence／Output 永不推測，`gold_label`（7 份 fixture）／`gold_answer`（1 份）／`gold_entities`（1 份）不會因欄名被自動設為 Output。
 > - **3.5**：正典 `specs/task-management/013-task-new/spec.md` `版本: 8.1.0`，FR-002c-8 於 :556、AC-1.6／AC-1.7 於 :172-173、SC-002h 於 :750、Changelog 8.1.0 列於 :796，七個關鍵字與 FR-003g-5（:584）皆可 grep 定位；程式識別字 `FIELD_ROLE_INPUT_NAME_HINTS` 於 `task-config.data.js:595`／`task-config.engine.js:5347`。
 > - **3.6**：FR-002c-1（:549）已補「（欄名命中 Input 線索之例外見 FR-002c-8）」。
+> - **3.7**：經維護者授權執行 `openspec archive task-new-step1-field-role-hints --yes`，衍生檢視 `openspec/specs/task-management/013-task-new/spec.md` 新增 1 條（FR-002c-8，+1／~0／−0），change 移至 `openspec/changes/archive/2026-09-19-task-new-step1-field-role-hints/`。gate 4 Source-Verify：衍生檢視中 FR-002c-8 引用的 FR-002c-1、FR-002c-2、FR-003g-5、AC-1.6、AC-1.7、SC-002h、`FIELD_ROLE_INPUT_NAME_HINTS`、`field_role_map`、`docs/product/example-data/`、`gold_label`／`gold_answer`／`gold_entities` 均逐一於正典或 repo grep 定位。STATUS 013 列改回 in-progress 於 PR 合併後處理。
