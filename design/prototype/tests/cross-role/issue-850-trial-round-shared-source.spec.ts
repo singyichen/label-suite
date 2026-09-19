@@ -414,7 +414,13 @@ test.describe('issue #850: task-detail and annotation pages share no trial-round
    * `{ round: rounds[rounds.length - 1].round }` instead of merging into
    * the existing object, so `total` is silently dropped the first time any
    * trialRunState write happens for that task -- even one, like
-   * retryIaaComputation(), that never touches materializedRuns itself.
+   * createRoundTwoFromWaiting()'s publishDryRun() (task-detail.html
+   * :10340-10404), that never touches materializedRuns itself. T004 has no
+   * seeded TASK_DATA.trialRounds of its own (task-detail.data.js:229-263),
+   * so publishDryRun() materializes getTrialRounds()'s synthetic R1
+   * fallback first (task-detail.html :10358-10361, issue #791 D1) and then
+   * pushes a real R2 -- exactly the "even a write that never touches
+   * materializedRuns" case this comment describes.
    *
    * Consumer / visible surface: annotation-list.html's renderTaskInfo()
    * reads `profile.materializedRuns[context.runType].total` at :2015-2018
@@ -432,15 +438,15 @@ test.describe('issue #850: task-detail and annotation pages share no trial-round
   test('issue #850 regression A: persisted overlay must not drop materializedRuns.dry_run.total (trial list count shrinks after reload)', async ({
     page,
   }) => {
-    // T004 seeds iaaComputationStatus: 'failed' for its only real round
-    // (task-detail.data.js :1248-1262), so retryIaaComputationBtn -- a
-    // single click that writes trialRunState via persistTrialRunState()
-    // but never sets round/total itself -- only renders once the task is
-    // in waiting_iaa_confirmation (task-detail.html :6186-6194).
+    // T004 has no seeded trialRounds (only materializedRuns.dry_run =
+    // {round:2, total:10}), so creating R2 through the same
+    // waiting_iaa_confirmation -> revision-note -> R2 flow the rest of this
+    // file already exercises for T002 is the only trialRunState-writing
+    // action available for T004 without further seeding.
     await page.goto(`${TASK_DETAIL_URL}?task_id=T004&status=waiting_iaa_confirmation`);
     await expect(page.locator('#statusBadge')).toContainText('待 IAA 確認');
-    await expect(page.locator('#retryIaaComputationBtn')).toBeVisible();
-    await page.locator('#retryIaaComputationBtn').click();
+    await createRoundTwoFromWaiting(page);
+    await expect(page.locator('#statusBadge')).toContainText('試標進行中');
 
     await page.goto(buildListUrl({ task_id: 'T004', role: 'annotator', run_type: 'dry_run' }));
     // Must still read the real materialized list size (10), not the
