@@ -33,6 +33,9 @@ const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 const MY_ANNOTATOR_ID = 'kioleemg12';
 const REVIEWER_ID = 'reviewer_wang';
 const DRY_RUN_PROGRESS_KEY = 'labelsuite.prototypeDryRunProgress';
+// Mirrors task-detail.html's own TRIAL_RUN_STATE_KEY (:5076) -- the shared
+// {status, trialRounds} record persistTrialRunState() writes.
+const TRIAL_RUN_STATE_KEY = 'labelsuite.trialRunState';
 const R1_SAMPLE = 'emo-004';
 // T002 (multi-label.json) ships exactly these 5 dataset records
 // (task-detail.data.js profiles.T002.datasetRecords).
@@ -399,5 +402,97 @@ test.describe('issue #850: task-detail and annotation pages share no trial-round
 
     await page.goto(buildListUrl({ task_id: 'T009', role: 'annotator', run_type: 'dry_run' }));
     await expect(page.locator('#taskInfoDetail')).toContainText('試標回合 R1');
+  });
+
+  /* PR #857 code-review bot finding "Trial counts shrink after reload"
+   * (issue #850). T004's static seed carries `materializedRuns: { dry_run:
+   * { round: 2, total: 10 } }` (task-detail.data.js:248) -- 10 is the real
+   * materialized dry-run list size, while the 5 datasetRecords beneath it
+   * are only the prototype's rendered subset. But task-detail.data.js's
+   * persisted-state overlay (:1361-1369, added by PR #857) REPLACES
+   * `profiles[taskId].materializedRuns.dry_run` wholesale with
+   * `{ round: rounds[rounds.length - 1].round }` instead of merging into
+   * the existing object, so `total` is silently dropped the first time any
+   * trialRunState write happens for that task -- even one, like
+   * retryIaaComputation(), that never touches materializedRuns itself.
+   *
+   * Consumer / visible surface: annotation-list.html's renderTaskInfo()
+   * reads `profile.materializedRuns[context.runType].total` at :2015-2018
+   * ("Count follows the materialized run context... task-detail run
+   * publish events, not raw dataset size") and falls back to
+   * `profile.datasetRecords.length` only when `total` is not a number.
+   * That computed `totalCount` is rendered into the `#taskInfoDetail` node
+   * via `trialListCountTpl` ("本回合清單 {total} 筆", :759/:2036) -- an
+   * annotator-visible list-size claim, not an internal-only field. After
+   * the overlay drops `total`, this falls back to 5 (T004's rendered
+   * subset), which is exactly the "shrinks from 10 to 5" the bot reported.
+   * (annotation-workspace.config.js:2089-2092's `#sampleListCount` reads
+   * the same shape and would shrink the same way, but annotation-list.html
+   * is exercised here since this spec file already drives it.) */
+  test('issue #850 regression A: persisted overlay must not drop materializedRuns.dry_run.total (trial list count shrinks after reload)', async ({
+    page,
+  }) => {
+    // T004 seeds iaaComputationStatus: 'failed' for its only real round
+    // (task-detail.data.js :1248-1262), so retryIaaComputationBtn -- a
+    // single click that writes trialRunState via persistTrialRunState()
+    // but never sets round/total itself -- only renders once the task is
+    // in waiting_iaa_confirmation (task-detail.html :6186-6194).
+    await page.goto(`${TASK_DETAIL_URL}?task_id=T004&status=waiting_iaa_confirmation`);
+    await expect(page.locator('#statusBadge')).toContainText('待 IAA 確認');
+    await expect(page.locator('#retryIaaComputationBtn')).toBeVisible();
+    await page.locator('#retryIaaComputationBtn').click();
+
+    await page.goto(buildListUrl({ task_id: 'T004', role: 'annotator', run_type: 'dry_run' }));
+    // Must still read the real materialized list size (10), not the
+    // prototype's rendered-subset fallback (5).
+    await expect(page.locator('#taskInfoDetail')).toContainText('本回合清單 10 筆');
+    await expect(page.locator('#taskInfoDetail')).not.toContainText('本回合清單 5 筆');
+  });
+
+  /* PR #857 code-review bot finding "Completed tasks revert after reload"
+   * (issue #850). publishComplete() (task-detail.html ~10468-10480) sets
+   * TASK_DATA.status = 'completed' directly and calls renderOverview(), but
+   * -- unlike every other status-changing action in this file
+   * (publishDryRun() :10401, publishOfficialRun() :10414,
+   * syncStatusFromDryRunProgress() :5149) -- never calls
+   * persistTrialRunState(). So a task that already has an earlier persisted
+   * record in `labelsuite.trialRunState` (status written by a prior
+   * publishOfficialRun() in the same session) keeps that stale status in
+   * localStorage forever: the in-memory TASK_DATA looks completed until the
+   * next full read of the shared record, at which point task-list.data.js's
+   * status overlay (:363-367) and task-detail.data.js's own resetTaskData()
+   * read (via listEntry.status, task-detail.html :4800) both still see the
+   * old 'official_run_in_progress'. */
+  test('issue #850 regression B: completing a task must persist status, not revert to a stale persisted status', async ({
+    page,
+  }) => {
+    // Simulate the record a prior publishOfficialRun() in an earlier
+    // session already wrote for this task -- this is the ONLY way
+    // TASK_DATA.status resolves to non-draft on first load, so this line
+    // stands in for that earlier click rather than being test-only setup.
+    await page.addInitScript(
+      ({ key, taskId }) => {
+        window.localStorage.setItem(
+          key,
+          JSON.stringify({ [taskId]: { status: 'official_run_in_progress', trialRounds: [{ round: 1 }] } })
+        );
+      },
+      { key: TRIAL_RUN_STATE_KEY, taskId: TASK_ID }
+    );
+
+    await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}`);
+    await expect(page.locator('#statusBadge')).toContainText('正式標記進行中');
+
+    await page.locator('#publishCompleteBtn').click();
+    await expect(page.locator('#statusBadge')).toContainText('已完成');
+
+    // Reload: a real navigation re-reads the shared record from scratch,
+    // the same way opening task-list.html separately would.
+    await page.reload();
+    await expect(page.locator('#statusBadge')).toContainText('已完成');
+
+    await page.goto('/pages/task-management/task-list.html?task_role=project_leader');
+    const row = page.locator('#taskTableBody tr[data-source-file="multi-label.json"]');
+    await expect(row).toContainText('已完成');
   });
 });
