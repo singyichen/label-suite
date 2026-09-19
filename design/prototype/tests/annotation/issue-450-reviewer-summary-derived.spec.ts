@@ -68,8 +68,10 @@ function readSummary(page: Page, taskId: string, runType: string): Promise<Summa
    issue #551 (v4.54.0) moved several T014/T015 rows between finalized and
    disputed (see seedReviewFlowDemo's per-row comments): T014's dry-02 and
    dry-03 "B" rows now converge at N=1 (finalized, +2 vs before), and
-   dry-05's pure reject now blocks finalization instead of reading as
-   agreement (disputed, -1 vs before) -- net +1 finalized / -1 disputed;
+   dry-05's decision with no correction (a pure reject at the time; issue
+   #837 later rewrote it to a `bypass`, same blocking effect) blocks
+   finalization instead of reading as agreement (disputed, -1 vs before) --
+   net +1 finalized / -1 disputed;
    T015's ofs-02 now converges at N=1 too (finalized, was disputed).
    issue #815: T016 now has 0 pending / 3 disputed (ofm-03/04/05) and full
    coverage -- ofm-04-reviewer-bypass and ofm-05-final-exception (migrated
