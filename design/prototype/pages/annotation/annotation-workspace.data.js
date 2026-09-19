@@ -313,8 +313,12 @@
        markSampleSubmitted twice for the same sample/annotator/run before
        handleSubmit's busy-flag registers -- drop an identical consecutive
        'submitted' event instead of appending a duplicate that would
-       corrupt the audit trail. Reviewer submit hits this same function,
-       so the guard covers that path too. */
+       corrupt the audit trail. issue #583: this guard only ever compares
+       consecutive 'submitted' events, and a reviewer submit's last-written
+       event is always a decision event (accepted/modified/bypassed), never
+       'submitted' -- so this guard never matches on the reviewer path.
+       Reviewer double-submit protection is the UI busy flag instead
+       (handleReviewSubmit, annotation-workspace.config.js). */
     if (action === 'submitted' && last && last.action === 'submitted' && last.role === role && last.actorId === normalizedActorId) {
       return;
     }
@@ -371,15 +375,18 @@
     if (existing && Array.isArray(existing.history)) entry.history = existing.history;
     var actorId = actorIdFor(role, identity);
     var decisions = role === 'reviewer' ? (payload && payload.decisions) || null : null;
-    /* When per-outKey decision events follow (FR-086), the answer lives on
-       those -- repeating it on the wrapper `submitted` event would show the
-       same result twice, a millisecond apart, in the same trail. */
-    appendHistoryEvent(entry, 'submitted', role, historySummary, actorId, Object.assign(
-      { result_snapshot: decisions ? null : buildResultSnapshot(payload) },
-      timingFields(payload && payload.timing)
-    ));
+    /* issue #583 (FR-086 R1): a reviewer submit writes only its per-outKey
+       decision events -- the wrapper `submitted` event carried no answer
+       (result_snapshot lived on the decision events already) and no
+       information a decision event doesn't already express, so it is no
+       longer written at all. `submitted` stays annotator-only. */
     if (decisions) {
       appendReviewDecisionEvents(entry, taskId, runType, sampleId, payload, historySummary, actorId, identity, decisions);
+    } else {
+      appendHistoryEvent(entry, 'submitted', role, historySummary, actorId, Object.assign(
+        { result_snapshot: buildResultSnapshot(payload) },
+        timingFields(payload && payload.timing)
+      ));
     }
     /* issue #834 (FR-096, design.md D1): a dry-run annotator submission
        records the trial round it belongs to, so feedback can be gated per
@@ -404,13 +411,21 @@
 
   function appendReviewDecisionEvents(entry, taskId, runType, sampleId, payload, summary, actorId, identity, decisions) {
     var reasons = (payload && payload.reasons) || {};
+    /* issue #583 (FR-088 R2): one submit measures one span of visible time,
+       so only the first decision event this submit writes carries it --
+       attaching the same started_at/lead_time to every outKey's event would
+       repeat the same measurement N times for a single occurrence. "First"
+       follows Object.keys(decisions) order, i.e. append order. */
+    var timingWritten = false;
     Object.keys(decisions).forEach(function (outKey) {
       var action = REVIEW_DECISION_EVENT_ACTION[decisions[outKey]];
       if (!action) return;
-      appendHistoryEvent(entry, action, 'reviewer', summary, actorId, Object.assign(
-        { result_snapshot: buildResultSnapshot(payload), reason: reasons[outKey] || null },
-        timingFields(payload && payload.timing)
-      ));
+      var extra = { result_snapshot: buildResultSnapshot(payload), reason: reasons[outKey] || null };
+      if (!timingWritten) {
+        Object.assign(extra, timingFields(payload && payload.timing));
+        timingWritten = true;
+      }
+      appendHistoryEvent(entry, action, 'reviewer', summary, actorId, extra);
     });
   }
 

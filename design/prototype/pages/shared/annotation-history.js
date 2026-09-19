@@ -102,17 +102,21 @@
     return Object.prototype.hasOwnProperty.call(ACTION_LABEL, action) ? ACTION_LABEL[action] : action;
   }
 
-  /* issue #601: markSampleSubmitted() is shared by both roles, so a reviewer
-     submit writes an envelope `submitted` event and then one decision event
-     per approved outKey. The envelope deliberately carries no answer -- the
-     data layer omits its snapshot because the decision events already hold
-     it -- so beside them it reads as a bare duplicate, and #596 adds two
-     more reviewer actions to the same trail.
+  /* issue #601 (legacy data, pre-issue #583): before markSampleSubmitted()
+     stopped writing a reviewer wrapper event (issue #583 / FR-086 R1), a
+     reviewer submit wrote an envelope `submitted` event and then one
+     decision event per approved outKey. The envelope deliberately carried
+     no answer -- the data layer omitted its snapshot because the decision
+     events already held it -- so beside them it read as a bare duplicate,
+     and #596 added two more reviewer actions to the same trail.
 
      Folded away here rather than at the write site: the events already in
      localStorage would otherwise keep their duplicate card until someone
      cleared their browser, and the envelope still carries FR-088 timing and
-     the audit fact that a submit happened.
+     the audit fact that a submit happened. New reviewer submits no longer
+     produce this envelope, so this filter has nothing to fold for them; it
+     still folds any pre-#583 envelope already sitting in a user's
+     localStorage (events are append-only and never rewritten).
 
      Dropped only when that same reviewer's next act was a decision. A
      reviewer who recorded no decision at all emits none, leaving the
@@ -276,9 +280,13 @@
 
      A plain sum is wrong because lead_time is not per-event: it is the
      running page-visible accumulator for one OPEN SESSION, stamped with the
-     started_at of that opening and copied verbatim onto every event a single
-     submit writes -- the envelope plus one decision per outKey. Summing the
-     column therefore multiplies a reviewer's time by their output count.
+     started_at of that opening. Pre-issue #583 data copied it verbatim onto
+     every event a single reviewer submit wrote -- the envelope plus one
+     decision per outKey -- so summing the column multiplied a reviewer's
+     time by their output count for that legacy shape. Since issue #583
+     (FR-088 R2), a submit carries it on only its first-written event, but
+     grouping is still needed: a session that first saves a draft and later
+     submits still shares one started_at across those two events.
 
      So group by session and sum the groups. The session is (actorId,
      started_at): started_at alone would merge two people who happened to

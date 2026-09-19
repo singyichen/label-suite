@@ -1701,10 +1701,11 @@
       { role: context.role, actorId: viewerActorId(context, identity) });
     if (!events.length) return null;
     var latest = events[events.length - 1];
-    /* Per open session, not per event (issue #606): one submit writes the
-       envelope plus one decision per outKey and copies the same timing onto
-       all of them, so the reduce this replaces reported a three-output
-       review as four times the reviewer's real time. */
+    /* Per open session, not per event (issue #606): legacy (pre-issue #583)
+       data had one submit write the envelope plus one decision per outKey
+       and copy the same timing onto all of them, so the reduce this
+       replaces reported a three-output review as four times the reviewer's
+       real time. */
     var totalLeadMs = window.LabelSuiteAnnotationHistory.totalLeadTime(events);
     return { action: latest.action, at: latest.at, totalLeadMs: totalLeadMs };
   }
