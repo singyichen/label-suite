@@ -34,4 +34,5 @@
   - 已被取代的條文、條文內記錄舊版的修訂段、Changelog 舊列一律逐字保留。
 - [x] 1.7 另開 issue 追蹤：正典 FR-091「累計耗時為全部事件 `lead_time` 之和」與 issue #606 落地的作業階段去重口徑不一致（proposal.md 非目標）。issue URL 記在此項。 [@main]
   - 已開：https://github.com/singyichen/label-suite/issues/864
-- [ ] 1.8 執行 `/opsx:archive drop-reviewer-submit-wrapper-event`。產生衍生檢視後，依 `docs/sdd-workflow.md` §6.2 逐條 grep 本 change 寫入的 canonical citation（FR-016B、FR-086、FR-088、FR-091、AC-1.25、AC-2.15、AC-2.16、AC-2.19、AC-2.21、AC-3.49、新 AC、SC-004J、issue #583／#601／#606 等），確認每一條都能個別定位。archive 指令須經使用者明確授權才執行。final merge 後才更新 `specs/STATUS.md`。 [@main]
+- [x] 1.8 執行 `/opsx:archive drop-reviewer-submit-wrapper-event`。產生衍生檢視後，依 `docs/sdd-workflow.md` §6.2 逐條 grep 本 change 寫入的 canonical citation（FR-016B、FR-086、FR-088、FR-091、AC-1.25、AC-2.15、AC-2.16、AC-2.19、AC-2.21、AC-3.49、新 AC、SC-004J、issue #583／#601／#606 等），確認每一條都能個別定位。archive 指令須經使用者明確授權才執行。final merge 後才更新 `specs/STATUS.md`。 [@main]
+  - 證據（2026-09-19，使用者授權）：`openspec archive -y` 套用 4 則 MODIFIED 至衍生檢視；§6.2 逐條 grep：delta 內所有 FR／AC／issue ID 在衍生檢視零 MISSING；AC-1.29、AC-2.24～AC-2.26、SC-004J、#606 於正典 015 v6.9.0 皆可定位（新 AC 於回寫時編號，僅存於正典）。
