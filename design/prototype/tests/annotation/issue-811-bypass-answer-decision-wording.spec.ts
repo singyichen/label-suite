@@ -148,7 +148,7 @@ test.describe('issue #811: 決策值一律等於共用側欄匯出之決策值�
   test('zh: the history tab bypassed badge reads 無法裁決', async ({ page }) => {
     const bucketKey = `labelsuite.wsSubmissions.${ARB_TASK}::annotator::official_run::${ARB_ANNOTATOR}::-`;
     await page.addInitScript(
-      ([key, sample]) => {
+      ([key, sample, actorId]) => {
         window.localStorage.setItem(
           key as string,
           JSON.stringify({
@@ -160,7 +160,7 @@ test.describe('issue #811: 決策值一律等於共用側欄匯出之決策值�
                 {
                   action: 'bypassed',
                   role: 'reviewer',
-                  actorId: ARB_PARTICIPANT,
+                  actorId: actorId as string,
                   at: '2026-01-01T00:01:00.000Z',
                   summary: '審核 bypass',
                 },
@@ -169,7 +169,7 @@ test.describe('issue #811: 決策值一律等於共用側欄匯出之決策值�
           })
         );
       },
-      [bucketKey, ARB_SAMPLE] as const
+      [bucketKey, ARB_SAMPLE, ARB_PARTICIPANT] as const
     );
 
     await page.goto(buildWorkspaceUrl({
@@ -276,23 +276,18 @@ test.describe('issue #811: 答案值一律等於共用側欄匯出之答案值�
 
   /* 7. 清單 pill (reviewBypassPill) -- design.md D2：英文由
    * `Bypassed (cannot determine)` 改為 `Unable to determine (Bypass)`；中文
-   * 字面值本就等於答案值來源，不變。用 dry_run 是因為官方跑
-   * (official_run) 之 sent-001 依 FR-093 指派給另一位標記員
-   * (113450022)（見 annotation-list-reviewer.spec.ts 的 ASSIGNED_UNITS 表），
-   * 預設審核員看不到 kioleemg12 在 official_run 對 sent-001 的單位；dry_run
-   * 則把同一樣本的三位標記員一起指派給預設審核員（同表 row 0 =
-   * sent-001/kioleemg12），因此改用 dry_run 才能確保新提交落在預設審核員
-   * 看得到的範圍內。 */
+   * 字面值本就等於答案值來源，不變。annotation-list.html 的
+   * buildAnswerCell() 只讀 item.mockRow.bypass/.answers（來自
+   * annotation-workspace.data.js 的 REVIEWER_MOCK_ROWS，經
+   * getReviewerMockRows() 逐次讀 window.LabelSuiteAnnotationWorkspaceData
+   * 的即時參照），完全不讀標記員的即時 localStorage 提交（annotation-
+   * list.html:1366-1367、annotation-workspace.data.js:1606-1611 的 getter
+   * 註解明講支援 override）；因此用 patchDataFile 直接覆寫該筆 mock row 的
+   * bypass 旗標，而不是走 UI 驅動的提交流程（那條路徑清單頁面根本讀不到）。 */
   test('zh: the list pill for a bypassed answer reads 無法判定 (Bypass), exactly', async ({ page }) => {
-    await patchDataFile(page, 'task-detail.data.js', `
-      window.LabelSuiteTaskDetailData.profiles.T001.outputs[0].config.allow_bypass = true;
+    await patchDataFile(page, 'annotation-workspace.data.js', `
+      window.LabelSuiteAnnotationWorkspaceData.REVIEWER_MOCK_ROWS.T001['sent-001'][0].bypass = { single_label: true };
     `);
-    await page.goto(buildWorkspaceUrl({
-      task_id: 'T001', sample_id: 'sent-001', role: 'annotator', run_type: 'dry_run',
-    }));
-    await dismissGuidelineModal(page);
-    await page.getByTestId('ws-bypass-single_label').check();
-    await page.getByTestId('ws-submit-btn').click();
 
     await page.goto(buildListUrl({ task_id: 'T001', role: 'reviewer', run_type: 'dry_run' }));
     const rows = page.getByTestId('ws-sample-item');
@@ -303,15 +298,9 @@ test.describe('issue #811: 答案值一律等於共用側欄匯出之答案值�
 
   test('en: the list pill for a bypassed answer reads Unable to determine (Bypass), exactly', async ({ page }) => {
     await setLangEn(page);
-    await patchDataFile(page, 'task-detail.data.js', `
-      window.LabelSuiteTaskDetailData.profiles.T001.outputs[0].config.allow_bypass = true;
+    await patchDataFile(page, 'annotation-workspace.data.js', `
+      window.LabelSuiteAnnotationWorkspaceData.REVIEWER_MOCK_ROWS.T001['sent-001'][0].bypass = { single_label: true };
     `);
-    await page.goto(buildWorkspaceUrl({
-      task_id: 'T001', sample_id: 'sent-001', role: 'annotator', run_type: 'dry_run',
-    }));
-    await dismissGuidelineModal(page);
-    await page.getByTestId('ws-bypass-single_label').check();
-    await page.getByTestId('ws-submit-btn').click();
 
     await page.goto(buildListUrl({ task_id: 'T001', role: 'reviewer', run_type: 'dry_run' }));
     const rows = page.getByTestId('ws-sample-item');
