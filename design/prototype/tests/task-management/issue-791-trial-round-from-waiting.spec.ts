@@ -2,8 +2,10 @@
  * Traceability: openspec/changes/task-detail-trial-round-from-waiting/
  *   tasks.md group 2 (2.1, as rewritten in commit 9fb4450a); design.md
  *   "範圍界線" last bullet (FR-017's revision-note gate is out of scope for
- *   #791 -- moved to issue #838; the prototype never implemented it, so no
- *   scenario here may assert revision-note blocking); specs/task-management/
+ *   #791 -- moved to issue #838, so no scenario here asserts revision-note
+ *   blocking; since #838 the R2 scenario fills the note to get past the
+ *   gate, whose blocking paths live in
+ *   issue-838-fr017-revision-note-gate.spec.ts); specs/task-management/
  *   014-task-detail/spec.md delta -- FR-013, FR-013(1)-(3), FR-008a,
  *   FR-010o-3, AC-3.12, SC-047. Issue #791.
  *
@@ -79,6 +81,11 @@ test('creating R2 from waiting_iaa_confirmation lands in dry_run_in_progress, ne
   await expect(page.locator('#statusBadge')).toContainText('待 IAA 確認');
 
   await publishDryRunRound(page);
+  // FR-017 (issue #838): R2 must pass the revision-note dialog first.
+  await expect(page.locator('#trialRoundRevisionModal')).toBeVisible();
+  await page.locator('#priorRoundFindingsInput').fill('R1 的 A 類與 B 類邊界判讀分歧大');
+  await page.locator('#guidelineChangeSummaryInput').fill('補充 A／B 邊界的正反例各兩則');
+  await page.locator('#trialRoundRevisionConfirmBtn').click();
 
   // R2 is created, and R1's round-history entry must still be present:
   // publishDryRun() has to materialize getTrialRounds()'s synthetic R1
