@@ -2143,13 +2143,13 @@
     return rowEl;
   }
 
-  /* FR-096 試標歷史回饋 (design.md D5): the UI half of the disclosure gate.
-     While the round is in progress, the section renders ONLY the pending
-     explanation and never calls getDryRunFeedback -- the data-layer gate in
-     annotation-workspace.data.js already returns [] in that state, but not
-     even attempting the call keeps the two gates from silently drifting
-     apart. Annotator + dry_run only (design.md's confirmed 已確認決策 #4:
-     falls on annotation-list.html, no separate screen). */
+  /* FR-096 試標歷史回饋 (issue #834 design.md D2/D3): the disclosure gate is
+     judged per round inside getDryRunFeedback, so this renders whatever
+     ended rounds it returns, grouped by round with a per-round summary.
+     The pending note stays while a round can still be in progress (any
+     status before waiting_iaa_confirmation). Annotator + dry_run only
+     (falls on annotation-list.html, no separate screen). */
+  var DRY_RUN_FEEDBACK_ENDED_STATUSES = ['waiting_iaa_confirmation', 'official_run_in_progress', 'completed'];
   function renderDryRunFeedback(context, profile) {
     var card = document.getElementById('dryRunFeedbackCard');
     if (!card) return;
@@ -2163,27 +2163,51 @@
     title.textContent = t('dryRunFeedbackTitle');
     card.appendChild(title);
 
-    if (profile.status !== 'waiting_iaa_confirmation') {
+    if (DRY_RUN_FEEDBACK_ENDED_STATUSES.indexOf(profile.status) === -1) {
       var pending = document.createElement('p');
       pending.setAttribute('data-testid', 'ws-dry-run-feedback-pending');
       pending.textContent = t('dryRunFeedbackPending');
       card.appendChild(pending);
-      return;
     }
 
-    var rows = window.LabelSuiteAnnotationWorkspaceData.getDryRunFeedback(
-      profile.id, context.runType, context.identity);
-    var modifiedCount = rows.filter(function (row) { return row.modified; }).length;
-    var pct = rows.length ? Math.round((modifiedCount / rows.length) * 1000) / 10 : 0;
-
-    var summary = document.createElement('p');
-    summary.setAttribute('data-testid', 'ws-dry-run-feedback-summary');
-    summary.textContent = t('dryRunFeedbackSummaryTpl', { total: rows.length, modified: modifiedCount, pct: pct });
-    card.appendChild(summary);
-
-    rows.forEach(function (row) {
-      card.appendChild(buildDryRunFeedbackRowEl(context, profile, row));
+    var rowsByRound = {};
+    window.LabelSuiteAnnotationWorkspaceData.getDryRunFeedback(
+      profile.id, context.runType, context.identity).forEach(function (row) {
+      (rowsByRound[row.round] = rowsByRound[row.round] || []).push(row);
     });
+
+    Object.keys(rowsByRound).map(Number).sort(function (a, b) { return a - b; }).forEach(function (round) {
+      var rows = rowsByRound[round];
+      var group = document.createElement('section');
+      group.setAttribute('data-testid', 'ws-dry-run-feedback-round');
+      group.setAttribute('data-round', String(round));
+
+      var groupTitle = document.createElement('h3');
+      groupTitle.setAttribute('data-testid', 'ws-dry-run-feedback-round-title');
+      groupTitle.textContent = t('trialRoundTpl', { round: round });
+      group.appendChild(groupTitle);
+
+      var modifiedCount = rows.filter(function (row) { return row.modified; }).length;
+      var pct = Math.round((modifiedCount / rows.length) * 1000) / 10;
+      var summary = document.createElement('p');
+      summary.setAttribute('data-testid', 'ws-dry-run-feedback-summary');
+      summary.textContent = t('dryRunFeedbackSummaryTpl', { total: rows.length, modified: modifiedCount, pct: pct });
+      group.appendChild(summary);
+
+      rows.forEach(function (row) {
+        group.appendChild(buildDryRunFeedbackRowEl(context, profile, row));
+      });
+      card.appendChild(group);
+    });
+
+    // Maintainer ruling 2026-09-19: an ended trial with no feedback still
+    // states "共 0 筆" rather than showing only the card title.
+    if (!Object.keys(rowsByRound).length && DRY_RUN_FEEDBACK_ENDED_STATUSES.indexOf(profile.status) !== -1) {
+      var emptySummary = document.createElement('p');
+      emptySummary.setAttribute('data-testid', 'ws-dry-run-feedback-summary');
+      emptySummary.textContent = t('dryRunFeedbackSummaryTpl', { total: 0, modified: 0, pct: 0 });
+      card.appendChild(emptySummary);
+    }
   }
 
   function renderNotFound(taskId) {
