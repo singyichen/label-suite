@@ -2199,6 +2199,15 @@
       });
       card.appendChild(group);
     });
+
+    // Maintainer ruling 2026-09-19: an ended trial with no feedback still
+    // states "共 0 筆" rather than showing only the card title.
+    if (!Object.keys(rowsByRound).length && DRY_RUN_FEEDBACK_ENDED_STATUSES.indexOf(profile.status) !== -1) {
+      var emptySummary = document.createElement('p');
+      emptySummary.setAttribute('data-testid', 'ws-dry-run-feedback-summary');
+      emptySummary.textContent = t('dryRunFeedbackSummaryTpl', { total: 0, modified: 0, pct: 0 });
+      card.appendChild(emptySummary);
+    }
   }
 
   function renderNotFound(taskId) {
