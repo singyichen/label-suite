@@ -1,5 +1,5 @@
 ---
-功能分支: feat/766-finalized-card-remaining-cue
+功能分支: feat/834-trial-feedback-by-round
 建立日期: 2026-04-23
 版本: 6.6.0
 狀態: Draft
