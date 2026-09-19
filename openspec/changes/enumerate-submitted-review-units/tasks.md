@@ -14,13 +14,15 @@
 
 **故事目標**：SC-004N — 審核員要能在清單列出、篩選並定位到實際的審核標的；一個標記員已經提交、審核員也能審到定稿的單位，卻不出現在清單、摘要與快速審核裡，審核員就無從知道它存在。
 
-- [ ] 1.1 撰寫 `design/prototype/tests/annotation/issue-792-submitted-unit-enumerated.spec.ts` 作為 Red 契約，釘住下列事項。型別宣告必須使用 local cast，不得新增第二份 `declare global`（重複宣告會撞 TS2717）。先提交此單檔再跑測試，expected failure 必須是「已提交但無示範列之單位不在列舉中」，並保存 command、exit 與失敗訊息。 [@senior-qa]
+- [x] 1.1 撰寫 `design/prototype/tests/annotation/issue-792-submitted-unit-enumerated.spec.ts` 作為 Red 契約，釘住下列事項。型別宣告必須使用 local cast，不得新增第二份 `declare global`（重複宣告會撞 TS2717）。先提交此單檔再跑測試，expected failure 必須是「已提交但無示範列之單位不在列舉中」，並保存 command、exit 與失敗訊息。 [@senior-qa]
   - 以 T015 的預設標記員身分，對 `ofs-05-not-submitted`（`official_run`，無示範列）寫入一筆已提交的答案後：`listReviewUnits('T015', 'official_run')` 含該樣本 × 該標記員、狀態為 `pending`；`computeReviewSummary()` 的待審與未定稿各比寫入前多 1。
   - 同一情境下，該單位恰被 `getAssignedReviewUnits()` 指派給名冊中一位審核員；以該審核員身分開啟 `annotation-list` reviewer 視圖，清單出現該列，答案欄顯示提交的答案；以該審核員身分，`findNextActionableReviewUnit()` 在其餘指派單位都處理完後會回傳它（或在待審順位中可達）。
   - 同一情境下，以該審核員身分開啟工作區，左欄導覽含該單位。
   - 只存草稿（未提交）時，上述列舉都不含該單位；兩個 seed 來源皆缺時亦同（`tests/annotation/issue-784-enumerated-units-have-seed-source.spec.ts` 的不變量維持綠燈）。
   - 斷言不得寫死任務的單位總數；以寫入前後的差值斷言。
-- [ ] 1.2 以 probe（暫時套用 1.3–1.5 的修改跑全量，跑完即還原）找出既有測試中寫死列舉結果、且會因本單位移的斷言，同步其期望值，只改期望值不改結構。無位移則在此項記錄「probe 無位移」。先提交再跑，保存「舊實作下這些斷言失敗」的證據。 [@senior-qa]
+  - Red 證據：`639171b1`；`PW_PORT=8973 pnpm playwright test tests/annotation/issue-792-submitted-unit-enumerated.spec.ts` → exit 1，2 failed（列舉與指派兩則，`hasUnit` 收到 `false`、`assignedTo.length` 收到 `0`）／2 passed（草稿與雙缺排除兩則本就成立）；typecheck exit 0。
+- [x] 1.2 以 probe（暫時套用 1.3–1.5 的修改跑全量，跑完即還原）找出既有測試中寫死列舉結果、且會因本單位移的斷言，同步其期望值，只改期望值不改結構。無位移則在此項記錄「probe 無位移」。先提交再跑，保存「舊實作下這些斷言失敗」的證據。 [@senior-qa]
+  - probe 無位移：暫套 D1／D2 跑全量 1833 passed、0 failed，Red 四則全綠；已還原，`git diff --stat e30d8797 -- design/prototype/pages` 為空。
 - [ ] 1.3 Green：修改 `design/prototype/pages/annotation/annotation-workspace.data.js`，新增 `getReviewUnitRows(taskId, runType, sampleId, outKeys)`（見 design.md D1）並匯出；`listReviewUnits()` 改讀它。不得放寬或改寫 Red 契約。 [@senior-frontend]
 - [ ] 1.4 修改 `design/prototype/pages/annotation/annotation-list.html`：`getMockRows()` 改讀 `getReviewUnitRows()`，同步更新 `buildAllReviewUnitRows()` 上方的列舉註解（見 design.md D2）。 [@senior-frontend]
 - [ ] 1.5 修改 `design/prototype/pages/annotation/annotation-workspace.config.js`：`buildUnits()` 改讀 `getReviewUnitRows()`，同步更新其「與 annotation-list 同源」的註解（見 design.md D2）；`demoAnnotatorRow()` 維持讀示範列。 [@senior-frontend]
