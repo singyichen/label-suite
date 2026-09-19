@@ -773,10 +773,11 @@ test('XROLE-12: blind review -- reviewer events are invisible to peers until the
   await submitApproval(r01Page, dryDivergenceSample, dryDivergenceAnnotator, REVIEWER_R01, 'dry_run');
 
   const trail = await readReviewerTrail(r02Page, 'dry_run', dryDivergenceSample, dryDivergenceAnnotator);
-  /* issue #578 (FR-086): an approval writes the wrapper `submitted` plus one
-     `accepted` per output key. What this test pins is visibility -- before
-     R01 submitted, the trail was empty; after, both events are R01's. */
-  expect(trail.map((e) => e.action)).toEqual(['submitted', 'accepted']);
+  /* issue #583 (FR-086): an approval no longer writes a wrapper `submitted`
+     event -- it writes one `accepted` decision event per output key. What
+     this test pins is visibility -- before R01 submitted, the trail was
+     empty; after, the sole event is R01's. */
+  expect(trail.map((e) => e.action)).toEqual(['accepted']);
   expect(trail.every((e) => e.actorId === REVIEWER_R01)).toBe(true);
 });
 

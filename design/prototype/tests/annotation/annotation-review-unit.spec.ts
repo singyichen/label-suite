@@ -429,7 +429,11 @@ test.describe('review unit: double submit stays a single terminal unit (DUP-02)'
     // there: the duplicate submit adds no second unit and no state change.
     expect(await statusOf(page, { runType: 'official_run', minReviewers: 1 })).toBe('finalized');
 
-    const reviewerSubmitted = await page.evaluate(() => {
+    // issue #583 (FR-086): a reviewer submit no longer writes a wrapper
+    // `submitted` event, so DUP-02's dedup guard is pinned on the decision
+    // event T001's single output type produces -- one 'accepted' -- rather
+    // than on a `submitted` count.
+    const reviewerDecisionEvents = await page.evaluate(() => {
       const data = (window as unknown as {
         LabelSuiteAnnotationWorkspaceData: {
           getSampleHistory: (
@@ -442,9 +446,9 @@ test.describe('review unit: double submit stays a single terminal unit (DUP-02)'
       }).LabelSuiteAnnotationWorkspaceData;
       return data
         .getSampleHistory('T001', 'official_run', 'sent-001', {})
-        .filter((e) => e.role === 'reviewer' && e.action === 'submitted');
+        .filter((e) => e.role === 'reviewer' && ['accepted', 'modified', 'bypassed'].includes(e.action));
     });
-    expect(reviewerSubmitted).toHaveLength(1);
-    expect(reviewerSubmitted[0].actorId).toBe(REVIEWER_A);
+    expect(reviewerDecisionEvents).toHaveLength(1);
+    expect(reviewerDecisionEvents[0].actorId).toBe(REVIEWER_A);
   });
 });

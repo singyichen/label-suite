@@ -34,9 +34,11 @@ const ANNOTATOR_B = '113450022';
 const REVIEWER_A = 'reviewer_wang';
 const REVIEWER_B = 'reviewer_li';
 
-/* Reviewer 'submitted' actor ids for T001/official_run/sent-001 under the
+/* Reviewer decision-event actor ids for T001/official_run/sent-001 under the
  * default annotator identity -- same trail read as
- * annotation-workspace-review-identity.spec.ts. */
+ * annotation-workspace-review-identity.spec.ts. issue #583 (FR-086): a
+ * reviewer submit no longer writes a wrapper `submitted` event, so "has
+ * this reviewer submitted" is read off the decision-action events. */
 async function readReviewerSubmittedActorIds(page: Page): Promise<Array<string | null>> {
   return page.evaluate((annotatorId) => {
     const data = (window as unknown as {
@@ -51,7 +53,7 @@ async function readReviewerSubmittedActorIds(page: Page): Promise<Array<string |
     }).LabelSuiteAnnotationWorkspaceData;
     return data
       .getSampleHistory('T001', 'official_run', 'sent-001', { annotatorId })
-      .filter((e) => e.role === 'reviewer' && e.action === 'submitted')
+      .filter((e) => e.role === 'reviewer' && ['accepted', 'modified', 'bypassed'].includes(e.action))
       .map((e) => e.actorId);
   }, ANNOTATOR_A);
 }

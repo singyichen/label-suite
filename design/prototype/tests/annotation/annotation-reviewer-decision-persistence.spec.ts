@@ -24,6 +24,9 @@ const REVIEWER_URL = buildWorkspaceUrl({
   run_type: 'official_run',
 });
 
+// issue #583 (FR-086): a reviewer submit no longer writes a wrapper
+// `submitted` event -- it writes one decision event per outKey instead, so
+// "has this review been submitted" is read off the decision-action events.
 async function readReviewerSubmittedEvents(page: Page): Promise<number> {
   return page.evaluate(() => {
     const data = (window as unknown as {
@@ -38,7 +41,7 @@ async function readReviewerSubmittedEvents(page: Page): Promise<number> {
     }).LabelSuiteAnnotationWorkspaceData;
     return data
       .getSampleHistory('T001', 'official_run', 'sent-001', {})
-      .filter((e) => e.role === 'reviewer' && e.action === 'submitted').length;
+      .filter((e) => e.role === 'reviewer' && ['accepted', 'modified', 'bypassed'].includes(e.action)).length;
   });
 }
 
