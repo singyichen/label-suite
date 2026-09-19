@@ -3107,21 +3107,18 @@
       { t: 'T014', r: 'dry_run', s: 'dry-01-all-agree', a: B, v: 'positive', rev: { reviewer_wang: 'positive' } }, // finalized
       { t: 'T014', r: 'dry_run', s: 'dry-01-all-agree', a: C, v: 'positive', rev: { reviewer_wang: 'positive' } }, // finalized
       { t: 'T014', r: 'dry_run', s: 'dry-02-one-divergent', a: A, v: 'neutral', rev: { reviewer_wang: 'neutral' } }, // finalized
-      // issue #551: N = 1 correction now converges on submit -- was disputed.
-      { t: 'T014', r: 'dry_run', s: 'dry-02-one-divergent', a: B, v: 'neutral', rev: { reviewer_wang: 'positive' } }, // finalized (N=1 quorum converges)
+      // issue #843 (FR-092): a changed value is a `modify`, never an approve.
+      { t: 'T014', r: 'dry_run', s: 'dry-02-one-divergent', a: B, v: 'neutral', rev: { reviewer_wang: 'positive' }, modifyBy: 'reviewer_wang', reason: '整段以讚賞語氣收尾，應判讀為正面而非中性' }, // disputed (reviewer modifies)
       { t: 'T014', r: 'dry_run', s: 'dry-02-one-divergent', a: C, v: 'positive' }, // pending
       { t: 'T014', r: 'dry_run', s: 'dry-03-dispute-open', a: A, v: 'neutral' }, // pending
-      // issue #551: N = 1 correction now converges on submit -- was disputed.
-      { t: 'T014', r: 'dry_run', s: 'dry-03-dispute-open', a: B, v: 'neutral', rev: { reviewer_wang: 'negative' } }, // finalized (N=1 quorum converges)
+      // issue #843 (FR-092): a changed value is a `modify`, never an approve.
+      { t: 'T014', r: 'dry_run', s: 'dry-03-dispute-open', a: B, v: 'neutral', rev: { reviewer_wang: 'negative' }, modifyBy: 'reviewer_wang', reason: '抱怨語氣明確，應判讀為負面而非中性' }, // disputed (reviewer modifies)
       { t: 'T014', r: 'dry_run', s: 'dry-03-dispute-open', a: C, v: 'neutral' }, // pending
       { t: 'T014', r: 'dry_run', s: 'dry-04-dispute-resolved', a: A, v: 'negative', rev: { reviewer_wang: 'negative' } }, // finalized
-      /* issue #551: N = 1 already converges this item on 'negative' before
-         chen's seeded arbitration vote is even applied -- the arb call
-         below is now redundant (it writes the same value the majority rule
-         already resolved) but harmless, and kept so the arbitration record
-         (finalized_by = reviewer_chen) this row's test still reads stays
-         populated. */
-      { t: 'T014', r: 'dry_run', s: 'dry-04-dispute-resolved', a: B, v: 'neutral', rev: { reviewer_wang: 'negative' }, arb: 'negative' }, // finalized (N=1 quorum converges; arbitration record redundant)
+      /* issue #843 (FR-092/FR-060): wang's modify sends the item to
+         dispute; chen's arbitration adopts the corrected value and
+         finalizes it (finalized_by = reviewer_chen). */
+      { t: 'T014', r: 'dry_run', s: 'dry-04-dispute-resolved', a: B, v: 'neutral', rev: { reviewer_wang: 'negative' }, modifyBy: 'reviewer_wang', reason: '文末表達失望，應判讀為負面而非中性', arb: 'negative' }, // finalized by arbitration
       { t: 'T014', r: 'dry_run', s: 'dry-04-dispute-resolved', a: C, v: 'negative', rev: { reviewer_wang: 'negative' } }, // finalized
       /* issue #502: reject on dry_run has no rollback channel -- the
          annotator stays 'submitted'. issue #551: a pure reject (no
@@ -3133,14 +3130,13 @@
       { t: 'T014', r: 'dry_run', s: 'dry-05-pending-review', a: C, v: 'positive' }, // pending
       /* T015 official_run, min_reviewers = 1 (ofs-05 stays unsubmitted) */
       { t: 'T015', r: 'official_run', s: 'ofs-01-agree-gold', a: A, v: 'negative', rev: { reviewer_wang: 'negative' } }, // finalized
-      // issue #551: N = 1 correction now converges on submit -- was disputed.
-      { t: 'T015', r: 'official_run', s: 'ofs-02-modified-dispute', a: A, v: 'neutral', rev: { reviewer_wang: 'positive' } }, // finalized (N=1 quorum converges)
-      /* issue #551: a second, AGREEING reviewer (li) keeps this a genuine
-         N = 2 tie (wang's 'neutral' vs the implicit agree vote for
-         'positive') so the row still needs chen's arbitration to finalize,
-         same as before -- without li this would now converge at N = 1 like
-         ofs-02 above and stop demoing an arbitration-resolved finalize. */
-      { t: 'T015', r: 'official_run', s: 'ofs-03-arbitrated-gold', a: A, v: 'positive', rev: { reviewer_wang: 'neutral', reviewer_li: 'positive' }, arb: 'neutral' }, // finalized by arbitration
+      // issue #843 (FR-092): a changed value is a `modify`, never an approve.
+      { t: 'T015', r: 'official_run', s: 'ofs-02-modified-dispute', a: A, v: 'neutral', rev: { reviewer_wang: 'positive' }, modifyBy: 'reviewer_wang', reason: '對產品表達肯定，應判讀為正面而非中性' }, // disputed (reviewer modifies)
+      /* issue #843 (FR-093, AC-6.12): exactly one reviewer per unit -- the
+         issue #551-era second reviewer (li) is gone. wang's modify forces
+         the dispute and chen's arbitration adopts it, so this row still
+         demos an arbitration-resolved finalize. */
+      { t: 'T015', r: 'official_run', s: 'ofs-03-arbitrated-gold', a: A, v: 'positive', rev: { reviewer_wang: 'neutral' }, modifyBy: 'reviewer_wang', reason: '褒貶並陳且未表態，應判讀為中性而非正面', arb: 'neutral' }, // finalized by arbitration
       { t: 'T015', r: 'official_run', s: 'ofs-04-pending-review', a: A, v: 'positive' }, // pending
       /* T016 official_run, min_reviewers = 3 */
       /* issue #596 (FR-093/FR-060/FR-061/FR-094): the canonical single-owner
@@ -3150,7 +3146,7 @@
          value, and the unit finalizes on that value. */
       { t: 'T016', r: 'official_run', s: 'ofm-01-reviewer-corrects-b', a: A, v: 'positive', rev: { reviewer_wang: 'negative' }, modifyBy: 'reviewer_wang', reason: '第二句語氣轉折應判讀為負面，而非正面', arb: 'negative' }, // finalized (reviewer modifies, arbitration adopts B)
       { t: 'T016', r: 'official_run', s: 'ofm-02-reviewer-accepts-a', a: A, v: 'negative', rev: { reviewer_wang: 'negative' } }, // finalized (reviewer accepts A)
-      { t: 'T016', r: 'official_run', s: 'ofm-03-awaiting-arbitration', a: A, v: 'neutral', rev: { reviewer_wang: 'negative' } }, // disputed (reviewer modifies, awaiting arbitration)
+      { t: 'T016', r: 'official_run', s: 'ofm-03-awaiting-arbitration', a: A, v: 'neutral', rev: { reviewer_wang: 'negative' }, modifyBy: 'reviewer_wang', reason: '反諷語氣明顯，應判讀為負面而非中性' }, // disputed (reviewer modifies, awaiting arbitration)
       /* issue #815: bypass (無法判定) had zero seed rows anywhere -- a lone
          bypass, like a lone modify, forces the unit into dispute
          (DISPUTE_FORCING_DECISIONS). design.md D2: bypass stores no answer
