@@ -23,6 +23,7 @@
   - 證據：Red commit `aca461eb`；`PW_PORT=8964 node ~/.cache/node/corepack/v1/pnpm/12.3.4/bin/pnpm.mjs playwright test tests/annotation/issue-834-dry-run-feedback-round-list.spec.ts` → exit 1，3 failed；失敗訊息為分組容器數 0（預期 1／2）與 `official_run_in_progress` 時待結束說明數 1（預期 0），即僅渲染待結束說明，符合預期原因
 - [x] 2.2 Green：修改 `design/prototype/pages/annotation/annotation-list.html`，`renderDryRunFeedback()` 移除以任務狀態短路之判定，改依資料層回傳列之 `round` 逐回合分組渲染摘要與逐筆列，有進行中回合時另顯示既有待結束說明；不得放寬或改寫 Red 契約 [@senior-frontend]
   - 證據：Green commit `e393f853`；`PW_PORT=8964 node ~/.cache/node/corepack/v1/pnpm/12.3.4/bin/pnpm.mjs playwright test` 兩支 issue-834 檔＋596＋754 → exit 0，17 passed；Red 檔未修改
+  - 維護者裁定（2026-09-19）追加：試標已結束且零回饋時仍顯示「共 0 筆」摘要。Red commit `89c4c6e8`（同檔新增一則，exit 1：`ws-dry-run-feedback-summary` 數 0，預期 1）；Green commit `afc2bd6e`（`renderDryRunFeedback()` 於結束狀態且無任何回合時補零摘要）→ 同檔 exit 0，4 passed；既有三則未修改
 - [x] 2.3 執行 code/test gate：`node ~/.cache/node/corepack/v1/pnpm/12.3.4/bin/pnpm.mjs typecheck` 與 `node ~/.cache/node/corepack/v1/pnpm/12.3.4/bin/pnpm.mjs playwright test`（於 `design/prototype/`，並帶本 worktree 專屬 `PW_PORT`），兩者預期 exit `0`；typecheck 必須與 Playwright 分開記錄，兩者是獨立閘門 [@main]
   - 證據（2026-09-19，tip `e393f853`）：typecheck → exit 0；`PW_PORT=8964 node ~/.cache/node/corepack/v1/pnpm/12.3.4/bin/pnpm.mjs playwright test tests/annotation/` → exit 0，851 passed。依協調者指示本輪只跑 `tests/annotation/` 整個目錄，全量 Playwright 待 CI 閘門
 - [x] 2.4 更新 `specs/annotation/015-annotation-workspace/spec.md` 完成 gate 4 回寫：FR-096 揭露時機改為逐回合並補本版修訂段、新增一則 AC（編號接續第 1 章現行最大者）、版號 bump 與 Changelog 補一列；Changelog 既有列不得改寫，被取代的條文逐字保留為沿革 [@main]
