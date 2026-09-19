@@ -40,7 +40,7 @@ test.describe('Review decision buttons have accessible names and the review note
   const DECISION_LABELS: Array<[string, string]> = [
     ['approve', '通過'],
     ['modify', '修正'],
-    ['bypass', '無法判定'],
+    ['bypass', '無法裁決'],
   ];
 
   for (const [decision, label] of DECISION_LABELS) {

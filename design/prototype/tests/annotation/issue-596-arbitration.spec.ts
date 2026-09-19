@@ -192,7 +192,7 @@ test.describe('issue #596: FR-061 three-exit arbitration layout (AC-4.54)', () =
     const item = page.getByTestId('ws-arbitration-item').first();
     // Fails today: the vote layout passes the raw (absent) reviewer value
     // through to the B option instead of the Bypass wording (AC-4.54).
-    await expect(item.getByTestId('ws-arbitration-choose-b')).toContainText('審核員 Bypass（無法判定）');
+    await expect(item.getByTestId('ws-arbitration-choose-b')).toContainText('B・審核員：無法裁決');
   });
 
   test('兩者皆非 requires a reason, then records a reject vote with the unit still 爭議中', async ({ page }) => {

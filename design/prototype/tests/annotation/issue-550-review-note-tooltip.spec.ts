@@ -54,14 +54,14 @@ const OTHER_ANNOTATOR = '113450022';
  * that diverged the two texts anywhere else would have to edit the base and
  * would fail both run types at once, instead of silently passing one. */
 const NOTE_OFFICIAL_ZH =
-  '通過：該項直接定稿，正式標記中即成為最終答案。修正：您的修正不會立即生效，該項進入爭議池待仲裁。無法判定：同樣進入爭議池，仲裁者採用審核員側即定案為無法判定。試標與正式標記皆不會將樣本送回給標記員重做。';
+  '通過：該項直接定稿，正式標記中即成為最終答案。修正：您的修正不會立即生效，該項進入爭議池待仲裁。無法裁決：同樣進入爭議池，仲裁者採用審核員側即定案為無法判定。試標與正式標記皆不會將樣本送回給標記員重做。';
 
 const DRY_SUFFIX_ZH = '試標的定稿只彙總一致性與被修改率，不產生最終答案。';
 
 const NOTE_DRY_ZH = NOTE_OFFICIAL_ZH + DRY_SUFFIX_ZH;
 
 const NOTE_OFFICIAL_EN =
-  'Approve: the item is finalized as it stands, and in an official run that value becomes the final answer. Modify: your correction does not take effect immediately; the item enters the dispute pool for arbitration. Cannot determine: the item also enters the dispute pool, and an arbiter adopting the reviewer side settles it as undecidable. Neither a dry run nor an official run sends the sample back to the annotator to redo it.';
+  'Approve: the item is finalized as it stands, and in an official run that value becomes the final answer. Modify: your correction does not take effect immediately; the item enters the dispute pool for arbitration. Cannot adjudicate: the item also enters the dispute pool, and an arbiter adopting the reviewer side settles it as undecidable. Neither a dry run nor an official run sends the sample back to the annotator to redo it.';
 
 const DRY_SUFFIX_EN =
   ' A dry-run finalization produces no final answer; it only aggregates agreement and the modification rate.';
@@ -279,7 +279,7 @@ test.describe('the review card is unaffected by the tooltip (AC-3.33 still holds
     await openReviewer(page, 'official_run');
     await expect(page.getByRole('button', { name: '通過', exact: true })).toHaveCount(1);
     await expect(page.getByRole('button', { name: '修正', exact: true })).toHaveCount(1);
-    await expect(page.getByRole('button', { name: '無法判定', exact: true })).toHaveCount(1);
+    await expect(page.getByRole('button', { name: '無法裁決', exact: true })).toHaveCount(1);
   });
 });
 

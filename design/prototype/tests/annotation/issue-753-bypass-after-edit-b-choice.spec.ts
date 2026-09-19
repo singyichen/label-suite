@@ -86,7 +86,7 @@ test.describe('issue #753: bypass after an edit must not surface the edited valu
     const bChoice = item.getByTestId('ws-arbitration-choose-b');
 
     // Positive: the exact FR-061 point 2 bypass wording (annotation-workspace.config.js:84).
-    await expect(bChoice).toHaveText('B・審核員 Bypass（無法判定）');
+    await expect(bChoice).toHaveText('B・審核員：無法裁決');
     // Negative, named: must NOT carry the stale edited value anywhere in the button text.
     await expect(bChoice).not.toContainText('positive');
   });

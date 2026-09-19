@@ -227,7 +227,7 @@ test.describe('issue #596 FR-094: pure-text finalized card + micro conflict trac
     await gotoAsReviewer(page);
 
     const trace = page.getByTestId('ws-finalized-trace');
-    await expect(trace).toHaveText('歷程：標記 A ➔ 審核 B（無法判定）➔ 仲裁 B');
+    await expect(trace).toHaveText('歷程：標記 A ➔ 審核 B（無法裁決）➔ 仲裁 B');
   });
 
   /* FAILS TODAY: missing trace. Also pins that adopt_a names the A side --

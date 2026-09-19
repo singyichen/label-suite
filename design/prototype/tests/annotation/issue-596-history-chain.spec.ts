@@ -46,7 +46,7 @@ const HISTORY_ACTIONS: Array<[string, string, string]> = [
   ['skipped', 'skipped', '已跳過'],
   ['modified', 'modified', '審核修正'],
   ['accepted', 'accepted', '審核通過'],
-  ['bypassed', 'bypassed', '無法判定'],
+  ['bypassed', 'bypassed', '無法裁決'],
   ['adjudicated', 'adjudicated', '仲裁定案'],
   ['exception_resolved', 'exception-resolved', '例外收尾'],
   ['excluded', 'excluded', '已排除'],

@@ -185,7 +185,7 @@ test.describe('issue #596 FR-064: three-node review status track', () => {
     const branches = page.getByTestId('ws-review-flow-drawer').locator('.review-track-branch');
     await expect(branches).toHaveCount(3);
     await expect(branches.nth(0)).toHaveText('審核通過');
-    await expect(branches.nth(1)).toHaveText('修正或無法判定');
+    await expect(branches.nth(1)).toHaveText('修正或無法裁決');
     await expect(branches.nth(2)).toHaveText('仲裁後');
 
     const flags = await branches.evaluateAll((els) =>
@@ -213,7 +213,7 @@ test.describe('issue #596 FR-070: review-decision tooltip matches the three-way 
     expect(text).toContain('直接定稿');
     expect(text).toContain('修正');
     expect(text).toContain('不會立即生效');
-    expect(text).toContain('無法判定');
+    expect(text).toContain('無法裁決');
     expect(text).toContain('爭議池');
     expect(text).toContain('仲裁');
     /* FR-070 point 4: neither run_type sends work back to be re-annotated. */
