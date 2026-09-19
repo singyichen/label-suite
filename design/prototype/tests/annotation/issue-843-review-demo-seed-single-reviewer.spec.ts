@@ -55,6 +55,7 @@ type ReviewerOutcome = {
   annotatorValue: unknown;
   reviewerValue: unknown;
   decision: string | undefined;
+  reason: string | undefined;
 };
 
 type SeedProbe = { units: SeedUnit[]; outcomes: ReviewerOutcome[] };
@@ -70,6 +71,7 @@ async function collectSeedProbe(page: Page): Promise<SeedProbe> {
           reviewerId: string;
           answers?: {
             decisions?: Record<string, string>;
+            reasons?: Record<string, string>;
             previewState?: Record<string, { selected?: unknown }>;
           };
         }>;
@@ -98,6 +100,7 @@ async function collectSeedProbe(page: Page): Promise<SeedProbe> {
                 annotatorValue: row.answers[outKey],
                 reviewerValue: submission.answers?.previewState?.[outKey]?.selected,
                 decision: submission.answers?.decisions?.[outKey],
+                reason: submission.answers?.reasons?.[outKey],
               });
             });
           });
@@ -128,7 +131,7 @@ test.describe('review-flow demo seed: single reviewer + modify decision on chang
     ).toEqual([]);
   });
 
-  test('every reviewer submission with a changed answer value stores decision "modify", never "approve" (FR-092)', async ({ page }) => {
+  test('every reviewer submission with a changed answer value stores a reasoned "modify" decision (FR-092, FR-016A)', async ({ page }) => {
     await page.goto(buildListUrl({ task_id: 'T016', role: 'reviewer', run_type: 'official_run', reviewer_id: 'reviewer_wang' }));
     const probe = await collectSeedProbe(page);
 
@@ -139,14 +142,16 @@ test.describe('review-flow demo seed: single reviewer + modify decision on chang
     );
     expect(changedValueOutcomes.length, 'no seed row changes the reviewer value away from the annotator value -- probe is vacuous').toBeGreaterThan(0);
 
-    const offenders = changedValueOutcomes.filter((o) => o.decision === 'approve');
+    const offenders = changedValueOutcomes.filter(
+      (o) => o.decision !== 'modify' || typeof o.reason !== 'string' || o.reason.trim() === ''
+    );
     expect(
       offenders.map(
         (o) =>
           `${o.taskId}/${o.sampleId} (annotator ${o.annotatorId}, reviewer ${o.reviewerId}, outKey ${o.outKey}): ` +
-          `annotatorValue=${JSON.stringify(o.annotatorValue)} reviewerValue=${JSON.stringify(o.reviewerValue)} decision=${o.decision}`
+          `annotatorValue=${JSON.stringify(o.annotatorValue)} reviewerValue=${JSON.stringify(o.reviewerValue)} decision=${o.decision} reason=${JSON.stringify(o.reason)}`
       ),
-      '"approve" decision stored alongside a changed answer value -- FR-092 approve means no objection to the annotator value; a changed value must be "modify"'
+      'changed answer value not stored as a reasoned "modify" -- FR-092 approve means no objection to the annotator value, so a changed value must be "modify", and FR-016A requires its reason'
     ).toEqual([]);
   });
 });
