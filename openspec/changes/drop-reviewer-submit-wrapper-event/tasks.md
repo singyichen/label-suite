@@ -22,14 +22,16 @@
   - `annotation-list` 對同一時戳的 `accepted`、`modified` 兩筆事件，「最後動作」的 `data-action` 為後寫入的 `modified`（此條在現況已成立，預期為綠，用途是把 R3 固定成契約）。
 - [x] 1.2 同步既有測試中以審核員包裝事件計數或斷言其存在的斷言，只改期望值與篩選條件，不改測試結構。雙擊不重複的測試改為斷言「每個 `outKey` 恰一筆決策事件」，繼續守住雙擊防護。範圍以 probe（見 1.2 附註）為準；issue #856 的 T014–T016 歷程基線筆數若因此位移，也在本項同步。先提交再跑，保存「舊實作下這些斷言失敗」的證據。 [@senior-qa]
   - probe 結果（2026-09-19，基底 `278e4872`，暫時套用 1.3 的 data.js 修改後跑全量 1815 則，跑完即還原）：7 則失敗，全部屬本項同步範圍——`tests/annotation/annotation-review-unit.spec.ts:394`（DUP-02）、`tests/annotation/annotation-reviewer-decision-persistence.spec.ts:83`（CONT-03）、`tests/annotation/annotation-workspace-review-identity.spec.ts:91`／`:103`／`:143`、`tests/cross-role/xrole-canonical-journey.spec.ts:749`（XROLE-12；同檔其後 13 則因 serial 模式未執行，同步後須確認全數執行且通過）、`tests/cross-role/xrole-concurrency.spec.ts:86`（CONC-01）。另有 4 則 flaky 落在 `tests/account/forgot-password.spec.ts:106` 與 `tests/account/reset-password.spec.ts:173` 的 loading lock，與歷程無關、不在本項範圍。issue #856 的歷程基線若在本 change apply 前已進 main，須於 rebase 後重跑 probe 補列。
-- [ ] 1.3 Green：修改 `design/prototype/pages/annotation/annotation-workspace.data.js`。`markSampleSubmitted()` 只在沒有 `decisions` 時寫 `submitted`；`appendReviewDecisionEvents()` 只在第一筆有 `action` 的決策事件附上 `timingFields()`；同步修正 `appendHistoryEvent()` 連點防護註解中「Reviewer submit hits this same function」的錯誤敘述。不得放寬或改寫 Red 契約。 [@senior-frontend]
-- [ ] 1.4 修改 `design/prototype/pages/shared/annotation-history.js` 的 `collapseHistory()`、`totalLeadTime()` 註解，以及 `design/prototype/pages/annotation/annotation-list.html` 的 `buildSampleSummary()` 註解，把「一次送出寫包裝事件加逐項決策」改寫為本版以前的舊資料形狀；不改任何邏輯。 [@senior-frontend]
-- [ ] 1.5 執行 code/test gate：在 `design/prototype/` 下帶本 worktree 專屬 `PW_PORT` 執行 `node ~/.cache/node/corepack/v1/pnpm/12.3.4/bin/pnpm.mjs typecheck` 與 `node ~/.cache/node/corepack/v1/pnpm/12.3.4/bin/pnpm.mjs playwright test`（全量，不得只跑子目錄）。兩者預期 exit `0`，且分開記錄，因為它們是兩道獨立閘門。rebase 後再執行 `node scripts/gen-screen-inventory.mjs` 重生盤點並提交。 [@main]
-- [ ] 1.6 更新 `specs/annotation/015-annotation-workspace/spec.md`，完成 gate 4 回寫，內容如下。 [@main]
+- [x] 1.3 Green：修改 `design/prototype/pages/annotation/annotation-workspace.data.js`。`markSampleSubmitted()` 只在沒有 `decisions` 時寫 `submitted`；`appendReviewDecisionEvents()` 只在第一筆有 `action` 的決策事件附上 `timingFields()`；同步修正 `appendHistoryEvent()` 連點防護註解中「Reviewer submit hits this same function」的錯誤敘述。不得放寬或改寫 Red 契約。 [@senior-frontend]
+- [x] 1.4 修改 `design/prototype/pages/shared/annotation-history.js` 的 `collapseHistory()`、`totalLeadTime()` 註解，以及 `design/prototype/pages/annotation/annotation-list.html` 的 `buildSampleSummary()` 註解，把「一次送出寫包裝事件加逐項決策」改寫為本版以前的舊資料形狀；不改任何邏輯。 [@senior-frontend]
+- [x] 1.5 執行 code/test gate：在 `design/prototype/` 下帶本 worktree 專屬 `PW_PORT` 執行 `node ~/.cache/node/corepack/v1/pnpm/12.3.4/bin/pnpm.mjs typecheck` 與 `node ~/.cache/node/corepack/v1/pnpm/12.3.4/bin/pnpm.mjs playwright test`（全量，不得只跑子目錄）。兩者預期 exit `0`，且分開記錄，因為它們是兩道獨立閘門。rebase 後再執行 `node scripts/gen-screen-inventory.mjs` 重生盤點並提交。 [@main]
+  - 證據（rebase 至 `75126271` 後，tip `04ece2ae`）：typecheck exit 0；`PW_PORT=8975` 全量 1829 passed、0 failed；issue #856 歷程基線未位移，無須再同步。
+- [x] 1.6 更新 `specs/annotation/015-annotation-workspace/spec.md`，完成 gate 4 回寫，內容如下。 [@main]
   - 版號 MINOR bump（6.8.0 → 6.9.0，以當下最新版號接續），Changelog 補一列。
   - FR-086、FR-088、FR-016B、FR-091 補本版修訂段。
   - AC-2.21 中 v4.63.0 的外層 `submitted` 子句改為只適用舊事件。
   - delta 中未編號的新情境，於本步驟接續各章現行最大編號，編成新 AC。
   - 已被取代的條文、條文內記錄舊版的修訂段、Changelog 舊列一律逐字保留。
-- [ ] 1.7 另開 issue 追蹤：正典 FR-091「累計耗時為全部事件 `lead_time` 之和」與 issue #606 落地的作業階段去重口徑不一致（proposal.md 非目標）。issue URL 記在此項。 [@main]
+- [x] 1.7 另開 issue 追蹤：正典 FR-091「累計耗時為全部事件 `lead_time` 之和」與 issue #606 落地的作業階段去重口徑不一致（proposal.md 非目標）。issue URL 記在此項。 [@main]
+  - 已開：https://github.com/singyichen/label-suite/issues/864
 - [ ] 1.8 執行 `/opsx:archive drop-reviewer-submit-wrapper-event`。產生衍生檢視後，依 `docs/sdd-workflow.md` §6.2 逐條 grep 本 change 寫入的 canonical citation（FR-016B、FR-086、FR-088、FR-091、AC-1.25、AC-2.15、AC-2.16、AC-2.19、AC-2.21、AC-3.49、新 AC、SC-004J、issue #583／#601／#606 等），確認每一條都能個別定位。archive 指令須經使用者明確授權才執行。final merge 後才更新 `specs/STATUS.md`。 [@main]
