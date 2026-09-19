@@ -3242,9 +3242,15 @@
 
     try {
       global.localStorage.setItem(REVIEW_FLOW_DEMO_SEED_KEY, new Date().toISOString());
-      global.localStorage.removeItem(REVIEW_FLOW_DEMO_SEED_KEY_V1);
     } catch (e) {
       return; /* storage unavailable: don't run the writes below either */
+    }
+    /* Separate try: once v2 is written the buckets must be reseeded, so a
+       failed v1 cleanup must not skip the writes below. */
+    try {
+      global.localStorage.removeItem(REVIEW_FLOW_DEMO_SEED_KEY_V1);
+    } catch (e) {
+      /* a leftover v1 marker is harmless: v2 is checked first */
     }
 
     function labelPayload(value, decision, reason) {
