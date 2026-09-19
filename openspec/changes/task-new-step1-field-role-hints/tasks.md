@@ -66,7 +66,7 @@
 
 **故事目標**（SC-002h）：以完整回歸、自我審查與 Source-Verify 證據，確認 Input 欄名自動推測落地且未影響既有欄位角色手動指定、資料列來源記憶或 014 task-detail 概覽面板行為，並完成正典回寫。
 
-- [ ] 3.1 執行本 change 全部回歸並保存證據。驗證：`cd design/prototype && corepack pnpm typecheck` 與 `PW_PORT=8899 corepack pnpm playwright test tests/task-management` 皆 exit 0（含既有 `task-new-*` 與 `task-detail-*` 相關測試，確認 013／014 共用引擎未被本次改動破壞）；`git diff <commit 1.1> HEAD -- design/prototype/tests/task-management/issue-755-field-role-input-hints.spec.ts` 除 2.1 明訂之新增斷言外，既有已轉綠斷言不得被弱化或刪除。 [@main]
+- [x] 3.1 執行本 change 全部回歸並保存證據。驗證：`cd design/prototype && corepack pnpm typecheck` 與 `PW_PORT=8899 corepack pnpm playwright test tests/task-management` 皆 exit 0（含既有 `task-new-*` 與 `task-detail-*` 相關測試，確認 013／014 共用引擎未被本次改動破壞）；`git diff <commit 1.1> HEAD -- design/prototype/tests/task-management/issue-755-field-role-input-hints.spec.ts` 除 2.1 明訂之新增斷言外，既有已轉綠斷言不得被弱化或刪除。 [@main]
 - [x] 3.2 Code Review（自我審查）：檢查 `FIELD_ROLE_INPUT_NAME_HINTS` 未硬編任務類型或輸出類型邏輯（Generalization-First）、推測邏輯僅涵蓋 Input 角色、未對 Evidence／Output 角色做任何自動推測、未新增或修改提交 payload 欄位或 ground-truth 可見性（Data Fairness）、`validateStep1()` 未被修改、diff 規模於 Principle X 門檻內（2 個手寫產品檔案、預估約 30–35 行）。 [@main]
 - [x] 3.3 QA Scenario 驗收：逐條核對 AC-1.6、AC-1.7、SC-002h 與 `issue-755-field-role-input-hints.spec.ts` 測試斷言一致；並於 `design/prototype/pages/task-management/task-detail.html` 概覽面板手動或既有回歸測試確認既有任務（`field_role_map` 已於任務初始設定當下決定）載入後角色顯示不受影響。 [@main]
 - [x] 3.4 Security Review（自我審查）：確認本次改動不引入使用者輸入注入面、不擴大 CORS、不新增任何後端呼叫或秘密處理、不透過欄名比對間接洩漏被標記為 Output／Evidence 之欄位內容；純前端 DOM／state 初始化邏輯調整。 [@main]
@@ -74,8 +74,9 @@
 - [x] 3.6 正典回寫附加動作：於正典 FR-002c-1 的預設值敘述後補一句交叉引用指向 FR-002c-8，使單獨閱讀 FR-002c-1 不會得到錯誤結論。此句刻意不進入 delta（delta 保持純新增以確保 archive 可套用至衍生檢視），因此衍生檢視與正典就此句存在已記錄的分歧。驗證：`grep -n 'FR-002c-8' specs/task-management/013-task-new/spec.md` 於 FR-002c-1 該行亦有命中。 [@main]
 - [ ] 3.7 執行 `/opsx:archive` 等價流程：將本 change 的 delta 併入 `openspec/specs/task-management/013-task-new/spec.md`（derived view）、移動本 change 至 `openspec/changes/archive/`。PR 合併後另行更新 `specs/STATUS.md` 之 `task-management-013` 列由 `change-open` 改回 `in-progress`（比照本規格既有先例，013 為持續演進中的長期規格，非本次一次性完成後即封存的功能，不進入 `done`／`archived`）。 [@main]
 
-> **主 session 核實紀錄（2026-09-19，任務 3.2～3.6）**：
+> **主 session 核實紀錄（2026-09-19，任務 3.1～3.6）**：
 >
+> - **3.1**：於 merge `92dab975` 之後的 tip，以 `PW_PORT=8966` 執行 `pnpm typecheck` exit 0 與**全量** `pnpm playwright test` 得 **1775 passed**（涵蓋 `tests/task-management` 與其餘全部目錄）；`git diff b61157c6 HEAD -- design/prototype/tests/task-management/issue-755-field-role-input-hints.spec.ts` 為 109 行純新增、0 行刪除，既有斷言未被弱化。
 > - **3.2**：相對 merge-base 的產品 diff 僅 `task-config.data.js`（+5）與 `task-config.engine.js`（+12／−1），合計 17 行、2 檔，低於 Principle X 門檻；`FIELD_ROLE_INPUT_NAME_HINTS` 為純字串陣列、未依任務或輸出類型分支（Generalization-First）；推測只寫 `'input'`，diff 中 evidence／output 僅出現在未改動的 `FIELD_ROLE_LABELS` 上下文行；`validateStep1()`、提交 payload 與 ground-truth 可見性零改動。已知取捨：`item_pair` → 2 的上限沿用 `task-new.html` 既有的寫死慣例（該檔同樣以字面值判斷 `item_pair`），全庫無共用常數，抽取需修改 `validateStep1()`，與本任務禁令衝突，故不抽取。
 > - **3.3**：AC-1.6 ↔ 2.1 (a)、AC-1.7 ↔ 2.1 (c) 的來源切換來回、SC-002h 的上限 ↔ 2.1 (b)；task-detail 概覽由既有 `task-detail-task-profiles.spec.ts` 回歸涵蓋（2.4 已對齊）。
 > - **3.4**：純前端 state 初始化，欄名只做 `toLowerCase().indexOf()` 比對、不寫入 DOM；無新後端呼叫、CORS 或秘密；Evidence／Output 永不推測，`gold_label`（7 份 fixture）／`gold_answer`（1 份）／`gold_entities`（1 份）不會因欄名被自動設為 Output。
