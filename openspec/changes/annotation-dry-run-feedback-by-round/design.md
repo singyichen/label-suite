@@ -74,3 +74,14 @@ dry_run 標記員提交時，`markSampleSubmitted()` 於 entry 上寫入 `trialR
 - **Q4**：版號 MINOR 或 MAJOR？**建議：MINOR（6.6.0 → 6.7.0）**——放寬揭露範圍且新增 AC，未移除既有需求或 AC。
 - **Q5**：是否統一 `materializedRuns` 與 `trialRounds` 兩份原型回合來源？**建議：本單不處理**，另開 issue。
 - **Q6**：確認回合間揭露屬 FR-096 所欲之「自我對齊」而非 IAA 污染，且各回合樣本互斥（由 `task-management/014-task-detail` FR-010f-3 筆數等式推得，非明文）。**建議：確認**，`task-management/014-task-detail` FR-013 第 (6) 點已採此口徑；若需明文互斥，另於 014 追加釐清。
+
+## 維護者裁定（2026-09-19）
+
+維護者於 2026-09-19 裁定 Q1–Q6 全數採建議方案：
+
+- **Q1**：`official_run_in_progress`／`completed` 後，已結束之試標回合回饋仍可見。
+- **Q2**：無回合標記之提交於 `dry_run_in_progress` 時 fail closed；`waiting_iaa_confirmation` 以後歸於目前回合（D4）。
+- **Q3**：被修改筆數與占比逐回合分列。
+- **Q4**：MINOR，正典 015 v6.6.0 → v6.7.0。
+- **Q5**：兩份原型回合來源（`materializedRuns` 與 `trialRounds`）之統一不在本單處理，**待另開 issue**（由 coordinator 開立，本 change 不開）。
+- **Q6**：兩項前提皆確認——回合間揭露屬 FR-096 所欲之自我對齊；各回合樣本互斥。
