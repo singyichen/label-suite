@@ -337,8 +337,41 @@
     });
   });
 
+  /* issue #850: task-detail.html persists a task's status together with its
+   * trialRounds in one shared record whenever a round is created or its
+   * status otherwise changes there (persistTrialRunState(),
+   * task-detail.html), because task-detail's own TASK_DATA is in-memory
+   * only and this seed list is the independent source annotation-list.html
+   * and this page itself read status from. Overlay only the status half of
+   * that record here -- task-detail.data.js overlays the trialRounds half
+   * onto its own profiles -- so the two never disagree about which status
+   * a round belongs to (Data Fairness: getDryRunFeedback()'s
+   * DISCLOSED_ROUND_OFFSET keys off this same status). Same opt-in merge
+   * pattern as CREATED_TASKS_KEY above. */
+  var TRIAL_RUN_STATE_KEY = 'labelsuite.trialRunState';
+
+  function loadTrialRunState() {
+    try {
+      var raw = global.localStorage ? global.localStorage.getItem(TRIAL_RUN_STATE_KEY) : null;
+      var parsed = raw ? JSON.parse(raw) : {};
+      return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch (error) {
+      return {};
+    }
+  }
+
+  var trialRunState = loadTrialRunState();
+  tasks.forEach(function (task) {
+    var persisted = trialRunState[task.id];
+    if (persisted && persisted.status) task.status = persisted.status;
+  });
+
   global.LabelSuiteTaskListData = {
     outputTypes: outputTypes,
-    tasks: tasks
+    tasks: tasks,
+    /* issue #850: single owner of the shared trial-run record's key and
+     * read policy; task-detail.data.js and task-detail.html reuse these. */
+    trialRunStateKey: TRIAL_RUN_STATE_KEY,
+    loadTrialRunState: loadTrialRunState
   };
 }(window));
