@@ -1090,7 +1090,16 @@
     T015: {
       taskCategories: ['classification'],
       taskInputTypes: ['single_item'],
-      reviewerIds: ['reviewer_wang', 'reviewer_li', 'reviewer_chen', 'reviewer_lin'],
+      /* issue #824: chen is the roster's only `can_arbitrate` reviewer, and
+         FR-093's positional deal always hands them one unit per task. In
+         T015's default order chen lands on `ofs-03-arbitrated-gold` -- the
+         one unit whose seed needs chen to arbitrate, which FR-060 forbids
+         once chen is its own reviewer. Moving chen last hands ofs-03 to lin
+         instead, so the arbitration demo survives untouched. chen ends up
+         with no assigned unit here (the lone unreviewed unit, ofs-04,
+         restarts the stride at index 0 and goes to wang), which costs
+         nothing: arbitration eligibility is FR-060, not assignment. */
+      reviewerIds: ['reviewer_wang', 'reviewer_li', 'reviewer_lin', 'reviewer_chen'],
       arbiterIds: ['reviewer_chen'],
       outputs: [
         {
