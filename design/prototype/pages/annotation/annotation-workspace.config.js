@@ -5091,6 +5091,28 @@
   function isSafeMarkdownUrl(url) {
     return /^(https?:\/\/|mailto:|\.{0,2}\/|#)/i.test(url);
   }
+  /* Anchor ids for headings (issue #620, FR-096/FR-020D): derived from the
+     heading text itself, not the heading's position in the document, so a
+     stable id survives paragraph insertions elsewhere in the same source.
+     Non-word characters (including CJK, which \w does not cover) collapse to
+     '-'; an all-non-word heading falls back to a fixed literal rather than
+     an empty id. Callers pass a per-render `seen` map so duplicate slugs get
+     a numeric suffix that is unique within that single renderMarkdown() call
+     without leaking state across separate guidelines or reopens. */
+  function slugifyHeading(text) {
+    var slug = String(text)
+      .trim()
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}]+/gu, '-')
+      .replace(/^-+|-+$/g, '');
+    return slug || 'section';
+  }
+  function headingAnchorId(text, seen) {
+    var base = slugifyHeading(text);
+    var count = seen[base] || 0;
+    seen[base] = count + 1;
+    return count === 0 ? base : base + '-' + (count + 1);
+  }
   function renderMarkdownInline(text) {
     var out = escapeHtml(text);
     out = out.replace(/`([^`]+)`/g, '<code>$1</code>');
@@ -5109,6 +5131,7 @@
     var html = '';
     var list = null;
     var para = [];
+    var seenHeadingIds = {};
     function flushPara() {
       if (para.length) html += '<p>' + renderMarkdownInline(para.join(' ')) + '</p>';
       para = [];
@@ -5170,7 +5193,9 @@
       var ordered = /^\s*\d+\.\s+(.+)$/.exec(line);
       if (heading) {
         flushPara(); flushList();
-        html += '<h' + heading[1].length + '>' + renderMarkdownInline(heading[2]) + '</h' + heading[1].length + '>';
+        var level = heading[1].length;
+        var anchorId = headingAnchorId(heading[2], seenHeadingIds);
+        html += '<h' + level + ' id="' + escapeHtml(anchorId) + '">' + renderMarkdownInline(heading[2]) + '</h' + level + '>';
       } else if (bullet || ordered) {
         flushPara();
         var tag = bullet ? 'ul' : 'ol';
