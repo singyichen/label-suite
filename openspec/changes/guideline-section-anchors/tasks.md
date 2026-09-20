@@ -27,9 +27,19 @@
   - 四則的失敗根因同一個：`renderMarkdown()` 的 `<h1>`～`<h3>` 完全不帶 `id`，每次讀取都得到空字串。無任何一則意外變綠，故非假紅。
   - 契約為性質式，不斷言 slug 字串格式，推導演算法由 Green 自訂。重複標題那則以 `patchDataFile` 自行注入夾具（覆寫 T001 的 `guidelineFiles`），不依賴 1.4 尚未落地的種子——1.4 完成後此則也不會變成空轉。
   - 其中一則同時要求首訪指南 gate（`#wsGuidelineModalBody`）與檔案點擊 modal（`#wsGuidelineMdModalBody`）對同一份來源產生相同錨點，因兩個出口共用同一個渲染器（FR-020D）。
-- [ ] 1.3 Green：於 `design/prototype/pages/annotation/annotation-workspace.config.js` 的 `renderMarkdown()` 為 `<h1>`～`<h3>` 產生由標題文字推導之錨點 `id`，同名標題以序號後綴去重；既有輸出標籤、跳脫規則與 URL 白名單一律不變。不得放寬或改寫 Red 契約。 [@senior-frontend]
-- [ ] 1.4 修改 `design/prototype/pages/task-management/task-detail.data.js`，為 T014–T016 追加一份帶段落標題的標記判準 Markdown 指南，使示範資料存在可跳轉的目標；其餘任務沿用共用預設清單。 [@senior-frontend]
-- [ ] 1.5 執行群組 1 的 gate 3：於 `design/prototype/` 帶 `PW_PORT=8984` 跑 `pnpm typecheck` 與全量 `pnpm playwright test` 兩道獨立閘門，並於 rebase 之後重生螢幕盤點。 [@main]
+- [x] 1.3 Green：於 `design/prototype/pages/annotation/annotation-workspace.config.js` 的 `renderMarkdown()` 為 `<h1>`～`<h3>` 產生由標題文字推導之錨點 `id`，同名標題以序號後綴去重；既有輸出標籤、跳脫規則與 URL 白名單一律不變。不得放寬或改寫 Red 契約。 [@senior-frontend]
+  - Green 證據：`f1cb3379`（單檔 +27／-1）。新增 `slugifyHeading()`（`\p{L}\p{N}` 以外字元轉 `-`，全為分隔符時退回 `section`）與 `headingAnchorId()`（以 `seen` 計數表加序號後綴去重）。
+  - 去重計數表 `seenHeadingIds` 宣告於 `renderMarkdown()` **函式內**而非模組層——這是跨次渲染穩定性的關鍵：模組層計數會讓第二次開啟同一份指南的錨點整批變成 `-2` 後綴，Red 第二則即為此而設。
+  - Red 契約未被改動：`git show --stat f1cb3379` 僅含該一支生產檔，測試檔零改動。
+- [x] 1.4 修改 `design/prototype/pages/task-management/task-detail.data.js`，為 T014–T016 追加一份帶段落標題的標記判準 Markdown 指南，使示範資料存在可跳轉的目標；其餘任務沿用共用預設清單。 [@senior-frontend]
+  - 證據：`9f7443d6`（單檔 +35）。新增 `REVIEW_FLOW_ANNOTATOR_GUIDELINE_MD`（一個 `#` 標題＋四個 `##` 段落標題），以 `DEFAULT_GUIDELINE_FILES.concat([...])` 掛給 T014／T015／T016。
+  - 用 `.concat()` 而非 `.push()`：17 個 profile 共用同一個 `DEFAULT_GUIDELINE_FILES` 陣列參照，`push()` 會讓全部任務都長出這份指南，超出本變更範圍且會污染既有斷言。
+  - 未動 `REVIEWER_GUIDELINE_SENTIMENT_BOUNDARY_ZH` 與 `reviewerGuidelineText`（非目標，且既有測試對其摘要文字有斷言）。
+- [x] 1.5 執行群組 1 的 gate 3：於 `design/prototype/` 帶 `PW_PORT=8984` 跑 `pnpm typecheck` 與全量 `pnpm playwright test` 兩道獨立閘門，並於 rebase 之後重生螢幕盤點。 [@main]
+  - 螢幕盤點：`d0e6596f`（`node scripts/gen-screen-inventory.mjs`，來源 commit 指標 `8d66102c3ae3` → `9f7443d6f0d1`）。開工前已確認 `origin/main` 停在 `ae59086c`、落後 0 commit，故無需 rebase。
+  - 閘門 A `pnpm typecheck` → exit **0**（`tsc --noEmit` 無錯誤）。
+  - 閘門 B 全量 `pnpm exec playwright test` → exit **0**，**1847 passed**（8.7m）。輸出中 3 個 `✘` 係 `tests/cross-role/xrole-canonical-journey.spec.ts` 以 `test.fail()` 包住的 XROLE-20／21 缺口測試，計為通過，非本變更引入。
+  - 本次由主 session 自行執行，未採用 subagent 回報之數字。
 
 ---
 
