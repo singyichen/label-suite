@@ -1312,6 +1312,41 @@
     profiles[taskId].guidelineFiles = DEFAULT_GUIDELINE_FILES;
   });
 
+  /* T014-T016 review-flow demo guidelines (issue #620, FR-096 4th clause):
+   * appended on top of the shared DEFAULT_GUIDELINE_FILES above (not a
+   * replacement -- DEFAULT_GUIDELINE_FILES is shared by all 17 seed
+   * profiles, so touching it directly would ripple into unrelated tests)
+   * so review feedback reasons on these three review-flow tasks have real
+   * section headings to cite and jump to (group 2,
+   * issue-620-guideline-citation-jump.spec.ts). Uses .concat() rather than
+   * .push() because the forEach above assigns every profile the same
+   * DEFAULT_GUIDELINE_FILES array reference -- pushing would mutate that
+   * shared array and leak this file into the other 14 profiles too.
+   * Content mirrors the sentiment thresholds already used in
+   * REVIEWER_GUIDELINE_SENTIMENT_BOUNDARY_ZH so it reads as a genuine
+   * labeling criteria doc rather than filler; out of scope for #620 is the
+   * reviewer-facing REVIEWER_GUIDELINE_SENTIMENT_BOUNDARY_ZH /
+   * reviewerGuidelineText surface itself, which this leaves untouched. */
+  var REVIEW_FLOW_ANNOTATOR_GUIDELINE_MD =
+    '# 情感分類標記判準\n\n' +
+    '## 正向（positive）的判準\n\n' +
+    '語句整體傳達滿意、稱讚或推薦之意，即使夾雜些許保留，只要整體傾向正面仍標為正向。\n\n' +
+    '## 中立（neutral）的判準\n\n' +
+    '語句同時包含正負面描述且未有明顯傾向，或僅屬客觀敘述、不帶評價色彩，皆標為中立。\n\n' +
+    '## 負向（negative）的判準\n\n' +
+    '語句整體傳達不滿、抱怨或不推薦之意，即使用詞委婉、未使用負面字眼，只要整體傾向負面仍標為負向。\n\n' +
+    '## 難以判定時的處理\n\n' +
+    '無法從語句本身判斷傾向時，於備註欄具體說明理由並照個人最佳判斷選擇，交由審核員複核，不得憑感覺任選一項。';
+  ['T014', 'T015', 'T016'].forEach(function (taskId) {
+    profiles[taskId].guidelineFiles = DEFAULT_GUIDELINE_FILES.concat([
+      {
+        name: '情感分類標記判準.md',
+        type: 'markdown',
+        content: REVIEW_FLOW_ANNOTATOR_GUIDELINE_MD
+      }
+    ]);
+  });
+
   /* Wizard-created tasks (issue #285): merge the same localStorage bucket
    * task-list.data.js reads, so resetTaskData() (task-detail.html:4303)
    * can resolve a profile for the id task-new.html just created instead of
