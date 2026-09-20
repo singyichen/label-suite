@@ -36,5 +36,10 @@
   - 逐字保留複驗：FR-088 之 v6.9.0 修訂段、v4.63.0 Changelog 列（含「另案處理」之原文）皆不得改寫——它們是本變更成立的依據，改掉依據等於抹去沿革。
   - 回寫證據：正典 015 v6.12.0 → **v6.13.0**（MINOR）。內容：frontmatter 版號、FR-091 補 v6.13.0 修訂段（作業階段鍵＋三條分支規則＋禁止全域最大值）、AC-1.25 補 v6.13.0 註記、FR-016B 之 v4.63.0 段落補 v6.13.0 註記、新增 **AC-1.33**（四筆事件三種分支之彙總值為 145，而非 175 或 80）、Changelog 補一列。
   - 逐字保留已複驗：v4.63.0 原句「其「累計耗時」仍計入全部事件」、FR-088 v6.9.0 修訂段、v4.63.0 與 v6.9.0 兩列 Changelog 皆原樣未動，新內容一律以附加註記形式呈現。
-- [ ] 1.4 執行 Source-Verify 後 `/opsx:archive`，並確認衍生檢視中每一處正典引用皆可 `grep` 定位（FR-091、FR-088、FR-090、FR-086、FR-016B、AC-1.25、SC-006、issue #864／#606／#601／#583，以及 `totalLeadTime` 與 `design/prototype/pages/shared/annotation-history.js`）。 [@main]
+- [x] 1.4 執行 Source-Verify 後 `/opsx:archive`，並確認衍生檢視中每一處正典引用皆可 `grep` 定位（FR-091、FR-088、FR-090、FR-086、FR-016B、AC-1.25、SC-006、issue #864／#606／#601／#583，以及 `totalLeadTime` 與 `design/prototype/pages/shared/annotation-history.js`）。 [@main]
   - archive 之後必須數一次 diff 刪除行中的 `#### Scenario` 計數，須為 0——`## MODIFIED` 以整塊覆蓋既有 requirement，漏抄任何一則既有情境都會靜默消失。
+  - Source-Verify 預掃（archive 之前執行，`/usr/bin/grep`）：FR-091 11／FR-088 12／FR-090 7／FR-086 19／FR-016B 23／AC-1.25 5／AC-1.33 2／SC-006 3 命中，issue `#864` 5／`#606` 3／`#601` 6／`#583` 13 命中（皆於正典 015）；`function totalLeadTime` 於 `design/prototype/pages/shared/annotation-history.js` 1 命中；`design/prototype/tests/annotation/issue-606-lead-time-dedup.spec.ts` 檔案存在。
+  - **預掃抓到一處引用誤植**：Changelog 原本把 FR-088 的 #583 條文引為「……舊事件 MUST 原樣保留」，但那是**衍生檢視**的措辭——正典自己寫的是「必須原樣保留」，以引文 grep 正典 0 命中。已於 `3cf435b5` 改為正典逐字措辭。兩道 lint 都不驗引用，這類誤植只有 gate 4 抓得到。
+  - Archive：`openspec archive align-lead-time-summation-caliber --yes` → exit **0**，`archived as '2026-09-20-align-lead-time-summation-caliber'`；衍生檢視 `openspec/specs/annotation/015-annotation-workspace/spec.md` **+12 行、0 刪除**（`Totals: + 0, ~ 1, - 0, → 0`）。
+  - 情境流失複驗：diff 刪除行中 `#### Scenario` 計數為 **0**，新增 1 則——`## MODIFIED` 已逐字重現 FR-091 原有兩則情境（AC-1.25 清單彙總、同時戳決策事件取最後寫入者）。
+  - archive 後重跑：`scripts/check-sdd.sh` → 0 error／12 warning；`scripts/check-spec-artifacts.sh` → `Spec artifact check passed`。
