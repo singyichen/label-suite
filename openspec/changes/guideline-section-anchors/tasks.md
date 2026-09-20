@@ -22,7 +22,11 @@
   - 閘門 1 → exit **0**（`Change 'guideline-section-anchors' is valid`）。
   - 閘門 2 → exit **0**，0 error／15 warning（皆為既有 legacy 與 review 類：`LEGACY_SPEC_HEADING`、`STATUS_EXTERNAL_STATE`、`GOAL_SEMANTIC_REVIEW`、`TASK_RED_EVIDENCE_REVIEW`，非本變更引入之缺陷）。
   - 首跑為 3 個 `TASK_RED_OWNER` error：lint 的 Red／Green 配對是一對一消耗，一組寫了 2–3 條「Green：」卻只有 1 條 Red。依既有先例改為一組僅一條掛 `Green` 字樣、其餘實作行寫成「修改 `path`」，配對即成立。
-- [ ] 1.2 Red：新增 `design/prototype/tests/annotation/issue-620-guideline-anchors.spec.ts`，斷言開啟指南 Markdown 預覽後每個標題帶有由標題文字推導之 `id`、重複渲染得到相同 `id`、兩個文字相同之標題取得互不相同的 `id`，並提交跑出預期失敗。 [@senior-qa]
+- [x] 1.2 Red：新增 `design/prototype/tests/annotation/issue-620-guideline-anchors.spec.ts`，斷言開啟指南 Markdown 預覽後每個標題帶有由標題文字推導之 `id`、重複渲染得到相同 `id`、兩個文字相同之標題取得互不相同的 `id`，並提交跑出預期失敗。 [@senior-qa]
+  - Red 證據：`9ee53a16`（單檔 129 行，未動任何生產碼）。`PW_PORT=8984 pnpm exec playwright test tests/annotation/issue-620-guideline-anchors.spec.ts` → exit **1**，**4 failed／0 passed**。
+  - 四則的失敗根因同一個：`renderMarkdown()` 的 `<h1>`～`<h3>` 完全不帶 `id`，每次讀取都得到空字串。無任何一則意外變綠，故非假紅。
+  - 契約為性質式，不斷言 slug 字串格式，推導演算法由 Green 自訂。重複標題那則以 `patchDataFile` 自行注入夾具（覆寫 T001 的 `guidelineFiles`），不依賴 1.4 尚未落地的種子——1.4 完成後此則也不會變成空轉。
+  - 其中一則同時要求首訪指南 gate（`#wsGuidelineModalBody`）與檔案點擊 modal（`#wsGuidelineMdModalBody`）對同一份來源產生相同錨點，因兩個出口共用同一個渲染器（FR-020D）。
 - [ ] 1.3 Green：於 `design/prototype/pages/annotation/annotation-workspace.config.js` 的 `renderMarkdown()` 為 `<h1>`～`<h3>` 產生由標題文字推導之錨點 `id`，同名標題以序號後綴去重；既有輸出標籤、跳脫規則與 URL 白名單一律不變。不得放寬或改寫 Red 契約。 [@senior-frontend]
 - [ ] 1.4 修改 `design/prototype/pages/task-management/task-detail.data.js`，為 T014–T016 追加一份帶段落標題的標記判準 Markdown 指南，使示範資料存在可跳轉的目標；其餘任務沿用共用預設清單。 [@senior-frontend]
 - [ ] 1.5 執行群組 1 的 gate 3：於 `design/prototype/` 帶 `PW_PORT=8984` 跑 `pnpm typecheck` 與全量 `pnpm playwright test` 兩道獨立閘門，並於 rebase 之後重生螢幕盤點。 [@main]
