@@ -41,4 +41,5 @@
   - delta 中未編號的新情境，於本步驟接續對應使用者故事現行最大編號，編成新 AC。
   - 已被取代的條文、條文內記錄舊版的修訂段（含 v6.6.0 種子釐清）、Changelog 舊列一律逐字保留。
   - 回寫證據：`95e4994b`（正典 015 v6.10.0 → v6.11.0）。gate 1 `openspec validate sticky-review-assignment --type change` → exit 0；gate 2 `scripts/check-sdd.sh` → 0 error／15 warning（皆為既有 review 類與 legacy debt）。
-- [ ] 1.9 執行 `/opsx:archive sticky-review-assignment`。產生衍生檢視後，依 `docs/sdd-workflow.md` §6.2 逐條 grep 本 change 寫入的 canonical citation（FR-050、FR-055、FR-056、FR-058、FR-060、FR-062、FR-093、FR-094、FR-097、新 AC、SC-004O、`task-management/014-task-detail` FR-005j 與 FR-010f-4、issue #824 等），確認每一條都能個別定位。archive 指令須經使用者明確授權才執行。final merge 後才更新 `specs/STATUS.md`。 [@main]
+- [x] 1.9 執行 `/opsx:archive sticky-review-assignment`。產生衍生檢視後，依 `docs/sdd-workflow.md` §6.2 逐條 grep 本 change 寫入的 canonical citation（FR-050、FR-055、FR-056、FR-058、FR-060、FR-062、FR-093、FR-094、FR-097、新 AC、SC-004O、`task-management/014-task-detail` FR-005j 與 FR-010f-4、issue #824 等），確認每一條都能個別定位。archive 指令須經使用者明確授權才執行。final merge 後才更新 `specs/STATUS.md`。 [@main]
+  - 證據：`openspec archive` exit 0，歸檔為 `2026-09-20-sticky-review-assignment`，衍生檢視 1 modified。Source-Verify 逐條通過：FR-050／055／056／058／060／062／093／094／097 在正典皆可定位，FR-005j 與 FR-010f-4 在 014 正典各 1 處，issue #824 與 #868 皆可定位；新 AC-4.58～4.61 依慣例只存在於正典（`## MODIFIED` 不得含新 AC ID）。
