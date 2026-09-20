@@ -23,10 +23,11 @@
   - Red 證據：`639171b1`；`PW_PORT=8973 pnpm playwright test tests/annotation/issue-792-submitted-unit-enumerated.spec.ts` → exit 1，2 failed（列舉與指派兩則，`hasUnit` 收到 `false`、`assignedTo.length` 收到 `0`）／2 passed（草稿與雙缺排除兩則本就成立）；typecheck exit 0。
 - [x] 1.2 以 probe（暫時套用 1.3–1.5 的修改跑全量，跑完即還原）找出既有測試中寫死列舉結果、且會因本單位移的斷言，同步其期望值，只改期望值不改結構。無位移則在此項記錄「probe 無位移」。先提交再跑，保存「舊實作下這些斷言失敗」的證據。 [@senior-qa]
   - probe 無位移：暫套 D1／D2 跑全量 1833 passed、0 failed，Red 四則全綠；已還原，`git diff --stat e30d8797 -- design/prototype/pages` 為空。
-- [ ] 1.3 Green：修改 `design/prototype/pages/annotation/annotation-workspace.data.js`，新增 `getReviewUnitRows(taskId, runType, sampleId, outKeys)`（見 design.md D1）並匯出；`listReviewUnits()` 改讀它。不得放寬或改寫 Red 契約。 [@senior-frontend]
-- [ ] 1.4 修改 `design/prototype/pages/annotation/annotation-list.html`：`getMockRows()` 改讀 `getReviewUnitRows()`，同步更新 `buildAllReviewUnitRows()` 上方的列舉註解（見 design.md D2）。 [@senior-frontend]
-- [ ] 1.5 修改 `design/prototype/pages/annotation/annotation-workspace.config.js`：`buildUnits()` 改讀 `getReviewUnitRows()`，同步更新其「與 annotation-list 同源」的註解（見 design.md D2）；`demoAnnotatorRow()` 維持讀示範列。 [@senior-frontend]
-- [ ] 1.6 執行 code/test gate：在 `design/prototype/` 下帶本 worktree 專屬 `PW_PORT` 執行 `node ~/.cache/node/corepack/v1/pnpm/12.3.4/bin/pnpm.mjs typecheck` 與 `node ~/.cache/node/corepack/v1/pnpm/12.3.4/bin/pnpm.mjs playwright test`（全量，不得只跑子目錄）。兩者預期 exit `0`，且分開記錄。rebase 後再執行 `node scripts/gen-screen-inventory.mjs` 重生盤點並提交。 [@main]
+- [x] 1.3 Green：修改 `design/prototype/pages/annotation/annotation-workspace.data.js`，新增 `getReviewUnitRows(taskId, runType, sampleId, outKeys)`（見 design.md D1）並匯出；`listReviewUnits()` 改讀它。不得放寬或改寫 Red 契約。 [@senior-frontend]
+- [x] 1.4 修改 `design/prototype/pages/annotation/annotation-list.html`：`getMockRows()` 改讀 `getReviewUnitRows()`，同步更新 `buildAllReviewUnitRows()` 上方的列舉註解（見 design.md D2）。 [@senior-frontend]
+- [x] 1.5 修改 `design/prototype/pages/annotation/annotation-workspace.config.js`：`buildUnits()` 改讀 `getReviewUnitRows()`，同步更新其「與 annotation-list 同源」的註解（見 design.md D2）；`demoAnnotatorRow()` 維持讀示範列。 [@senior-frontend]
+- [x] 1.6 執行 code/test gate：在 `design/prototype/` 下帶本 worktree 專屬 `PW_PORT` 執行 `node ~/.cache/node/corepack/v1/pnpm/12.3.4/bin/pnpm.mjs typecheck` 與 `node ~/.cache/node/corepack/v1/pnpm/12.3.4/bin/pnpm.mjs playwright test`（全量，不得只跑子目錄）。兩者預期 exit `0`，且分開記錄。rebase 後再執行 `node scripts/gen-screen-inventory.mjs` 重生盤點並提交。 [@main]
+  - Green 證據：`74941064`（1.3–1.5 三檔同 commit）；gate：`pnpm typecheck` → exit 0；`PW_PORT=8973 pnpm playwright test` 全量 → exit 0，1833 passed（8.7m）。main 未前進故未 rebase；`node scripts/gen-screen-inventory.mjs` 重生於 `4045b1e5`。
 - [ ] 1.7 更新 `specs/annotation/015-annotation-workspace/spec.md`，完成 gate 4 回寫，內容如下。 [@main]
   - 版號 MINOR bump（6.9.0 → 6.10.0，以當下最新版號接續），Changelog 補一列。
   - FR-055、FR-056、FR-072 第 1 點、FR-073 第 1 點補本版修訂段。
