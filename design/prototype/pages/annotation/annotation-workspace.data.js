@@ -3562,10 +3562,10 @@
       var sampleId = getRecordId(record, index);
       var counts = {};
       var raters = 0;
-      getReviewerMockRows(taskId, sampleId).forEach(function (mockRow) {
+      getReviewUnitRows(taskId, runType, sampleId, [outKey]).forEach(function (row) {
         var category = iaaCategory(
           outKey,
-          getSubmission(taskId, 'annotator', runType, sampleId, { annotatorId: mockRow.annotator }));
+          getSubmission(taskId, 'annotator', runType, sampleId, { annotatorId: row.annotator }));
         if (category === null) return;
         counts[category] = (counts[category] || 0) + 1;
         raters += 1;
@@ -3625,10 +3625,10 @@
     var seen = {};
     (detail.datasetRecords || []).forEach(function (record, index) {
       var sampleId = getRecordId(record, index);
-      getReviewerMockRows(taskId, sampleId).forEach(function (mockRow) {
+      getReviewUnitRows(taskId, runType, sampleId, [outKey]).forEach(function (row) {
         if (iaaCategory(outKey, getSubmission(
-          taskId, 'annotator', runType, sampleId, { annotatorId: mockRow.annotator })) !== null) {
-          seen[mockRow.annotator] = true;
+          taskId, 'annotator', runType, sampleId, { annotatorId: row.annotator })) !== null) {
+          seen[row.annotator] = true;
         }
       });
     });
