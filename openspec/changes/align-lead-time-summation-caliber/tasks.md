@@ -16,20 +16,25 @@
 
 **故事目標**：SC-006 — 關鍵操作皆有歷程可追溯；但「累計耗時」的彙總口徑在正典與實作之間分岔，照 FR-091 條文驗收的人會得到和 `annotation-list` 畫面不一樣的數字，追溯因此失效。
 
-- [ ] 1.1 執行 `openspec validate align-lead-time-summation-caliber --type change` 與 `scripts/check-sdd.sh`，分別記錄 OpenSpec schema validation 與 Project SDD lint 之 exit code。兩者皆 exit 0 才可進入 1.2。 [@main]
-- [ ] 1.2 執行 `design/prototype/tests/annotation/issue-606-lead-time-dedup.spec.ts`（於 `design/prototype/` 下帶本 worktree 專屬 `PW_PORT=8983`），確認三則皆綠，並逐則對應到新條文的三條分支規則。 [@main]
+- [x] 1.1 執行 `openspec validate align-lead-time-summation-caliber --type change` 與 `scripts/check-sdd.sh`，分別記錄 OpenSpec schema validation 與 Project SDD lint 之 exit code。兩者皆 exit 0 才可進入 1.2。 [@main]
+  - 閘門 1 → exit **0**（`Change 'align-lead-time-summation-caliber' is valid`）。
+  - 閘門 2 → exit **0**，0 error／13 warning（皆為既有 legacy 與 review 類：`LEGACY_SPEC_HEADING`、`STATUS_EXTERNAL_STATE`、`GOAL_SEMANTIC_REVIEW` 等，非本變更引入）。
+- [x] 1.2 執行 `design/prototype/tests/annotation/issue-606-lead-time-dedup.spec.ts`（於 `design/prototype/` 下帶本 worktree 專屬 `PW_PORT=8983`），確認三則皆綠，並逐則對應到新條文的三條分支規則。 [@main]
   - 對應關係（這是本項的重點，不是只看綠燈）：
     - 「一次送出寫入的信封與三筆決策事件只計一次工時」→ 規則（1）同一作業階段（同 `actor_id` 且同 `started_at`）取其中最大值，不逐筆相加。
     - 「同一位審核員在同一樣本上分兩次送出，兩段工時必須相加」→ 規則（2）`started_at` 不同即為不同作業階段，各自計入。
     - 「沒有 `started_at` 的舊事件各自獨立計時，不被誤併」→ 規則（3）無 `started_at` 之事件各自計入，不得併入任何階段，也不得被丟棄。
   - 若任一則紅，即代表實作與本變更所寫的條文不符——此時**必須停止回寫**並回報，不得改條文去遷就紅燈。
   - 本變更未觸及 `design/prototype/pages/**` 與 `frontend/**`，故 prototype 全量 `playwright test` 與 `typecheck` 不在本 PR 的 code/test gate 範圍內（CI 對應 job 亦為路徑閘門）；上述單檔執行為口徑證據，不冒充全量閘門。
-- [ ] 1.3 更新 `specs/annotation/015-annotation-workspace/spec.md`，完成 gate 4 回寫，內容如下。 [@main]
+  - 執行證據：`PW_PORT=8983 pnpm exec playwright test tests/annotation/issue-606-lead-time-dedup.spec.ts` → exit **0**，**3 passed (1.4s)**，三則對應三條分支規則，全數成立。本 worktree 之 `design/prototype/node_modules` 原不存在，先以 `pnpm install --frozen-lockfile` 還原（未改動 `pnpm-lock.yaml`）。
+- [x] 1.3 更新 `specs/annotation/015-annotation-workspace/spec.md`，完成 gate 4 回寫，內容如下。 [@main]
   - 版號 MINOR bump（以當下最新版號接續），Changelog 補一列，並載明本次不動生產碼、不新增測試之理由。
   - FR-091 補本版修訂段：把「累計耗時為該樣本全部事件 `lead_time` 之和」改為以作業階段為單位彙總，逐一載明三條分支規則，並明確禁止「取全域最大值」這個看似等價的簡化。
   - AC-1.25 補一句修訂註記：其「累計耗時為兩筆事件耗時之和」於新口徑下仍成立（兩筆分屬不同 `actor_id` 之作業階段），既有斷言逐字保留、不得改寫。
   - FR-016B 之 v4.63.0 段落末句「其『累計耗時』仍計入全部事件」補註指向新口徑——該句是同一個舊說法的第二份拷貝，漏改即留下半套。其原意（折疊為呈現層、不影響彙總）不變。
   - 新情境於回寫時取得正式 AC 編號（`## MODIFIED` 區塊不得含新 AC ID，故 delta 內該情境只有標題）。
   - 逐字保留複驗：FR-088 之 v6.9.0 修訂段、v4.63.0 Changelog 列（含「另案處理」之原文）皆不得改寫——它們是本變更成立的依據，改掉依據等於抹去沿革。
+  - 回寫證據：正典 015 v6.12.0 → **v6.13.0**（MINOR）。內容：frontmatter 版號、FR-091 補 v6.13.0 修訂段（作業階段鍵＋三條分支規則＋禁止全域最大值）、AC-1.25 補 v6.13.0 註記、FR-016B 之 v4.63.0 段落補 v6.13.0 註記、新增 **AC-1.33**（四筆事件三種分支之彙總值為 145，而非 175 或 80）、Changelog 補一列。
+  - 逐字保留已複驗：v4.63.0 原句「其「累計耗時」仍計入全部事件」、FR-088 v6.9.0 修訂段、v4.63.0 與 v6.9.0 兩列 Changelog 皆原樣未動，新內容一律以附加註記形式呈現。
 - [ ] 1.4 執行 Source-Verify 後 `/opsx:archive`，並確認衍生檢視中每一處正典引用皆可 `grep` 定位（FR-091、FR-088、FR-090、FR-086、FR-016B、AC-1.25、SC-006、issue #864／#606／#601／#583，以及 `totalLeadTime` 與 `design/prototype/pages/shared/annotation-history.js`）。 [@main]
   - archive 之後必須數一次 diff 刪除行中的 `#### Scenario` 計數，須為 0——`## MODIFIED` 以整塊覆蓋既有 requirement，漏抄任何一則既有情境都會靜默消失。
