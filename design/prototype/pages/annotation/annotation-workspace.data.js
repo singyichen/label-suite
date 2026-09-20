@@ -1653,6 +1653,55 @@
     return (bySample && bySample[sampleId]) || [];
   }
 
+  /* ---- Review unit enumeration (issue #792, spec 015 FR-055) ------------
+   * SINGLE SOURCE OF TRUTH for which sample x annotator rows are review
+   * units: the union of this sample's REVIEWER_MOCK_ROWS demo rows and any
+   * annotator who has a stored SUBMITTED answer for this run_type but no
+   * mock row of their own. An annotator missing both seed sources (no mock
+   * row, no stored submission) is still excluded -- v6.3.1's invariant is
+   * unchanged. Consumed by listReviewUnits() below plus annotation-list.html
+   * and annotation-workspace.config.js (design.md D1/D2), so the three
+   * enumerations can never disagree again.
+   *
+   * Rows beyond the mock set are synthesized in the SAME shape mock rows
+   * ship (`{ annotator, answers, bypass }`) via convertSubmissionAnswer(),
+   * so every downstream consumer of a mock row (answer cells, stats) works
+   * on either kind without a branch. Only submitted answers qualify --
+   * getSubmission() already returns null for drafts. */
+  function getReviewUnitRows(taskId, runType, sampleId, outKeys) {
+    var mockRows = getReviewerMockRows(taskId, sampleId);
+    var known = {};
+    mockRows.forEach(function (row) { known[row.annotator] = true; });
+
+    var prefix = taskId + '::annotator::' + runType + '::';
+    var suffix = '::' + NO_REVIEWER;
+    var extras = [];
+    listSubmissionBucketKeys().forEach(function (key) {
+      if (key.indexOf(prefix) !== 0 || key.slice(-suffix.length) !== suffix) return;
+      var annotatorId = key.slice(prefix.length, key.length - suffix.length);
+      if (known[annotatorId]) return;
+      var submission = getSubmission(taskId, 'annotator', runType, sampleId, { annotatorId: annotatorId });
+      if (!submission) return;
+      known[annotatorId] = true;
+      extras.push({ annotatorId: annotatorId, submission: submission });
+    });
+    extras.sort(function (a, b) {
+      return a.annotatorId < b.annotatorId ? -1 : a.annotatorId > b.annotatorId ? 1 : 0;
+    });
+
+    var extraRows = extras.map(function (extra) {
+      var answers = {};
+      var bypass = {};
+      (outKeys || []).forEach(function (outKey) {
+        answers[outKey] = convertSubmissionAnswer(outKey, extra.submission);
+        bypass[outKey] = !!(extra.submission.previewBypass && extra.submission.previewBypass[outKey]);
+      });
+      return { annotator: extra.annotatorId, answers: answers, bypass: bypass };
+    });
+
+    return mockRows.concat(extraRows);
+  }
+
   /* Converts a submitted OutputAnswer (engine previewState/previewEntities/
    * previewTriples shape) into the SAME CompactAnswer shape
    * REVIEWER_MOCK_ROWS ships, shared by both the workspace's live
@@ -2781,11 +2830,12 @@
    * still promised 待審 1 筆.
    *
    * Review units are enumerated exactly the way annotation-list's
-   * buildReviewUnitRows() enumerates its rows -- one unit per
-   * datasetRecord x mock annotator row -- and each one's state comes from
-   * getReviewUnitStatus(). A unit whose annotator has not submitted derives
-   * null and is counted as 待審, matching the row's own `|| PENDING`
-   * fallback. */
+   * buildAllReviewUnitRows() enumerates its rows -- one unit per
+   * datasetRecord x getReviewUnitRows() row (issue #792: the mock rows plus
+   * any submitted-but-unlisted annotator, design.md D1) -- and each one's
+   * state comes from getReviewUnitStatus(). A unit whose annotator has not
+   * submitted derives null and is counted as 待審, matching the row's own
+   * `|| PENDING` fallback. */
   function listReviewUnits(taskId, runType) {
     var listEntry = findTaskListEntry(taskId);
     var detail = findTaskDetailProfile(taskId);
@@ -2794,12 +2844,12 @@
     var units = [];
     (detail.datasetRecords || []).forEach(function (record, index) {
       var sampleId = getRecordId(record, index);
-      getReviewerMockRows(taskId, sampleId).forEach(function (mockRow) {
+      getReviewUnitRows(taskId, runType, sampleId, outKeys).forEach(function (row) {
         units.push({
           sampleId: sampleId,
-          annotatorId: mockRow.annotator,
+          annotatorId: row.annotator,
           status: getReviewUnitStatus(
-            taskId, runType, sampleId, { annotatorId: mockRow.annotator }, outKeys),
+            taskId, runType, sampleId, { annotatorId: row.annotator }, outKeys),
         });
       });
     });
@@ -3479,6 +3529,7 @@
     resolveIdentity: resolveIdentity,
     REVIEWER_MOCK_ROWS: REVIEWER_MOCK_ROWS,
     getReviewerMockRows: getReviewerMockRows,
+    getReviewUnitRows: getReviewUnitRows,
     computeReviewStats: computeReviewStats,
     dimDeviationClass: dimDeviationClass,
     meanStd: meanStd,

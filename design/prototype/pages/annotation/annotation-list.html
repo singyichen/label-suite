@@ -1363,8 +1363,10 @@
      many annotators a sample has. The list carries no decision of its own;
      approve / reject / bypass all live on the workspace's review row
      (FR-053), so there is exactly one place a decision can be made. */
-  function getMockRows(profile, recordId) {
-    return window.LabelSuiteAnnotationWorkspaceData.getReviewerMockRows(profile.id, recordId);
+  function getMockRows(context, recordId) {
+    var profile = context.profile;
+    return window.LabelSuiteAnnotationWorkspaceData.getReviewUnitRows(
+      profile.id, context.runType, recordId, profile.outputTypes);
   }
 
   /* Per-output-type answer views feeding the shared stats algorithm in
@@ -1605,14 +1607,19 @@
      annotators, so a sample marked by three people becomes three rows in
      both run types. getReviewUnitStatus returns null while the annotator
      has no stored submission — the mock row IS that annotator's answer, so
-     an un-stored unit is still awaiting review, not absent. */
+     an un-stored unit is still awaiting review, not absent. Since issue
+     #792, the per-sample row set also includes any annotator who submitted
+     for real but has no mock row (getReviewUnitRows(), design.md D1) — the
+     same union annotation-workspace.data.js's listReviewUnits() and
+     annotation-workspace.config.js's buildUnits() enumerate, so all three
+     pages agree on how many units a task holds. */
   function buildAllReviewUnitRows(context) {
     var profile = context.profile;
     var data = window.LabelSuiteAnnotationWorkspaceData;
     var units = [];
     profile.datasetRecords.forEach(function (record, index) {
       var recordId = getRecordId(record, index);
-      var mockRows = getMockRows(profile, recordId);
+      var mockRows = getMockRows(context, recordId);
       var text = getRecordSnippet(record, profile.fieldRoleMap);
       mockRows.forEach(function (mockRow, rowIdx) {
         var identity = { annotatorId: mockRow.annotator, reviewerId: context.identity.reviewerId };

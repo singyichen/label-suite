@@ -1476,9 +1476,11 @@
   /* The unit the left column, the nav and the review card all address
      (spec 015 v4.3.0, FR-056). For a reviewer it is sample × annotator --
      the same flattening annotation-list.html applies, off the same
-     getReviewerMockRows() roster, so the two pages can never disagree on
-     how many units a task holds. For an annotator the record IS the unit,
-     which is why every annotator-facing behaviour below is unchanged. */
+     getReviewUnitRows() roster (issue #792, design.md D1: mock rows plus
+     any annotator who submitted for real but has no mock row), so the two
+     pages can never disagree on how many units a task holds. For an
+     annotator the record IS the unit, which is why every annotator-facing
+     behaviour below is unchanged. */
   function buildUnits() {
     var data = window.LabelSuiteAnnotationWorkspaceData;
     var units = [];
@@ -1488,7 +1490,7 @@
         units.push({ record: record, recordId: recordId, annotatorId: currentAnnotatorId() });
         return;
       }
-      data.getReviewerMockRows(currentProfile.id, recordId).forEach(function (row) {
+      data.getReviewUnitRows(currentProfile.id, currentRunType, recordId, state.selectedOutputTypes).forEach(function (row) {
         units.push({ record: record, recordId: recordId, annotatorId: row.annotator });
       });
     });
