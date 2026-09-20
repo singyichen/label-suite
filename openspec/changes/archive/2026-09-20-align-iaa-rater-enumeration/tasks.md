@@ -45,5 +45,13 @@
   - 引用更正（Source-Verify 前置掃描所得）：原文四處把 `FR-079` 歸給 `dataset-017`，但 `grep FR-079 specs/dataset/017-dataset-analysis-detail/spec.md` 為 0 命中——`dataset-017` 的 IAA 跨模組權威條文是 **FR-039**（v2.2.0）。已於正典、delta、proposal、本檔一併更正為「`dataset-017`（閘門語意見 FR-039）」；指向 015 自身 FR-079 的引用不變。
   - 閘門 1 `openspec validate align-iaa-rater-enumeration --type change` → exit 0（`Change 'align-iaa-rater-enumeration' is valid`）。
   - 閘門 2 `scripts/check-sdd.sh` → exit 0，0 error／15 warning（皆為既有 review 類：`STATUS_EXTERNAL_STATE`、`TASK_FILE_COUNT_REVIEW`、`TASK_RED_EVIDENCE_REVIEW` 等，非本變更引入）。
-- [ ] 1.6 執行 Source-Verify 後 `/opsx:archive`，並確認衍生檢視中每一處正典引用皆可 `grep` 定位（FR-055、FR-056、FR-072、FR-073、FR-079、FR-093、FR-100、FR-044a、`dataset-017` FR-039、issue #792／#866）。 [@main]
-  - 證據：<待填>
+- [x] 1.6 執行 Source-Verify 後 `/opsx:archive`，並確認衍生檢視中每一處正典引用皆可 `grep` 定位（FR-055、FR-056、FR-072、FR-073、FR-079、FR-093、FR-100、FR-044a、`dataset-017` FR-039、issue #792／#866）。 [@main]
+  - Archive：`openspec archive align-iaa-rater-enumeration --yes` → exit 0，`Change 'align-iaa-rater-enumeration' archived as '2026-09-20-align-iaa-rater-enumeration'`；衍生檢視 `openspec/specs/annotation/015-annotation-workspace/spec.md` **+8 行、0 刪除**（`Totals: + 0, ~ 1, - 0, → 0`）。
+  - 情境流失複驗：diff 的刪除行中 `#### Scenario` 計數為 **0**，新增 1 則——`## MODIFIED` 已逐字重現 FR-055 原有全部情境，無整塊覆蓋導致的流失。
+  - Source-Verify（逐條 `grep` 可定位，`/usr/bin/grep`）：
+    - `FR-079` → 正典 015 14 命中；`dataset-017` `FR-039` → `specs/dataset/017-dataset-analysis-detail/spec.md` 13 命中（檔案存在）。
+    - `FR-055` 44／`FR-056` 26／`FR-072` 14／`FR-073` 16／`FR-093` 29／`FR-100` 6／`FR-044a` 24／`AC-1.32` 3 —— 皆於正典 015 命中。
+    - issue `#866` 5 命中、`#792` 9 命中（正典 015）。
+    - 程式碼識別子：`getReviewUnitRows`／`getReviewerMockRows`／`computeIaaAlpha`／`countDistinctRaters`／`demoAnnotatorRow` 皆於 `design/prototype/pages/annotation/` 下可定位。
+    - 錯誤歸屬殘留掃描：`dataset-017`（FR-079） 於衍生檢視 **0 命中**（已於 `ff7c53bd` 全面更正）。
+  - `AC-1.32` 於衍生檢視 0 命中屬設計如此——`## MODIFIED` 區塊不得含新 AC ID，編號僅於 gate 4 正典回寫時產生（見 1.5）。
