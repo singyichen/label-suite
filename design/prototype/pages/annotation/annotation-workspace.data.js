@@ -2185,6 +2185,63 @@
     return allResolved ? REVIEW_UNIT_STATUS.FINALIZED : REVIEW_UNIT_STATUS.DISPUTED;
   }
 
+  /* issue #824 (FR-093 本版修訂 1): the key a sticky lookup is built on.
+   * U+0000 appears in no sample or annotator id, so two different units
+   * can never collide onto one entry the way a printable separator could
+   * (an annotator id containing the separator would merge them). */
+  function stickyUnitKey(sampleId, annotatorId) {
+    return String(sampleId) + '\u0000' + String(annotatorId);
+  }
+
+  /* Deterministic tie-break for the shape FR-093 forbids -- two reviewers
+   * holding a submitted review on ONE official_run unit. Earliest
+   * submittedAt wins, a missing timestamp sorts last, and the reviewer id
+   * breaks a remaining tie. Without a total order here the sticky owner
+   * would follow listSubmissionBucketKeys()' scan order, and "恆為該提交者"
+   * would silently depend on storage iteration. */
+  function stickyPrecedes(candidate, held) {
+    if (candidate.submittedAt !== held.submittedAt) {
+      if (!candidate.submittedAt) return false;
+      if (!held.submittedAt) return true;
+      return candidate.submittedAt < held.submittedAt;
+    }
+    return String(candidate.reviewerId) < String(held.reviewerId);
+  }
+
+  /* issue #824 (design.md D1): which review units already carry a stored
+   * reviewer submission, as `{ stickyUnitKey(): reviewerId }`. This is the
+   * whole fact stickiness needs -- no second, persisted assignment table,
+   * which could contradict the submissions it claims to describe.
+   *
+   * Scanned once over every `taskId::reviewer::runType::annotator::reviewer`
+   * bucket rather than by calling readReviewerSubmissions() per unit: same
+   * prefix, same submitted-only condition (FR-062 -- a draft never sticks),
+   * but O(bucket keys) instead of O(units x bucket keys). */
+  function getStickyReviewers(taskId, runType) {
+    var prefix = taskId + '::reviewer::' + runType + '::';
+    var best = {};
+    listSubmissionBucketKeys().forEach(function (key) {
+      if (key.indexOf(prefix) !== 0) return;
+      var tail = key.slice(prefix.length);
+      var separator = tail.indexOf('::');
+      if (separator < 0) return;
+      var annotatorId = tail.slice(0, separator);
+      var reviewerId = tail.slice(separator + 2);
+      var bucket = readSubmissionBucket(key);
+      Object.keys(bucket).forEach(function (sampleId) {
+        if (entryStatus(bucket[sampleId]) !== 'submitted') return;
+        var unitKey = stickyUnitKey(sampleId, annotatorId);
+        var candidate = { reviewerId: reviewerId, submittedAt: bucket[sampleId].submittedAt || null };
+        if (!best[unitKey] || stickyPrecedes(candidate, best[unitKey])) best[unitKey] = candidate;
+      });
+    });
+    var stickyByUnit = {};
+    Object.keys(best).forEach(function (unitKey) {
+      stickyByUnit[unitKey] = best[unitKey].reviewerId;
+    });
+    return stickyByUnit;
+  }
+
   /* issue #596 (FR-093): the ONLY flow difference between run_types is
    * assignment granularity -- there is no manual-assignment mode, so this
    * is the sole, deterministic derivation both the workspace and the
@@ -2205,8 +2262,16 @@
    * unit's own annotator (that non-participant restriction applies only
    * to arbiters, FR-060). Determinism follows from using only the input
    * arrays' order -- no randomness, no wall-clock read -- so the same
-   * `(runType, units, reviewerIds)` always yields the same assignment. */
-  function getReviewAssignments(runType, units, reviewerIds) {
+   * `(runType, units, reviewerIds)` always yields the same assignment.
+   *
+   * issue #824 (design.md D2) adds an OPTIONAL fourth argument, the
+   * `getStickyReviewers()` lookup: a unit found in it keeps its submitter
+   * whatever the roster now looks like, and the positional deal walks only
+   * the units left over. Optional, and the function stays pure, because
+   * that purity is what lets callers feed it synthetic units without first
+   * staging storage; reading the lookup is taskReviewAssignments()' job.
+   * Omit it and the behavior is the pre-#824 one, verbatim. */
+  function getReviewAssignments(runType, units, reviewerIds, stickyByUnit) {
     /* Sorted before anything else because assignment is positional -- the
        dry_run branch keys on a sample's first appearance and official_run
        walks the array with a fixed stride. Left in caller order, the list
@@ -2222,31 +2287,69 @@
         : String(a.sample_id).localeCompare(String(b.sample_id));
     });
     var roster = Array.isArray(reviewerIds) ? reviewerIds : [];
-    if (!roster.length) return [];
+    var sticky = stickyByUnit || {};
+    /* No early return on an empty roster: a unit whose reviewer already
+       submitted keeps that reviewer even when nobody is checked any more
+       (#824 symptom 2 -- otherwise emptying the roster erases the record of
+       who reviewed what). Units with nobody to deal to are simply dropped,
+       which is the same [] the old early return produced. */
     if (runType === 'dry_run') {
+      /* per_sample granularity outranks per-unit stickiness (FR-093 本版
+         修訂 3): one stuck unit takes its whole sample with it, so a sample
+         is never split between two reviewers. */
       var sampleOrder = [];
-      var sampleReviewerIndex = {};
+      var seenSample = Object.create(null);
+      var stickyBySample = Object.create(null);
       list.forEach(function (unit) {
-        if (!(unit.sample_id in sampleReviewerIndex)) {
-          sampleReviewerIndex[unit.sample_id] = sampleOrder.length % roster.length;
+        if (!seenSample[unit.sample_id]) {
+          seenSample[unit.sample_id] = true;
           sampleOrder.push(unit.sample_id);
         }
+        if (stickyBySample[unit.sample_id]) return;
+        var sampleStickyId = sticky[stickyUnitKey(unit.sample_id, unit.annotator_id)];
+        if (sampleStickyId) stickyBySample[unit.sample_id] = sampleStickyId;
       });
-      return list.map(function (unit) {
-        return {
-          sample_id: unit.sample_id,
-          annotator_id: unit.annotator_id,
-          reviewer_id: roster[sampleReviewerIndex[unit.sample_id]],
-        };
+      var reviewerBySample = Object.create(null);
+      var dealtSamples = 0;
+      sampleOrder.forEach(function (sampleId) {
+        if (stickyBySample[sampleId]) {
+          reviewerBySample[sampleId] = stickyBySample[sampleId];
+          return;
+        }
+        if (!roster.length) return;
+        reviewerBySample[sampleId] = roster[dealtSamples % roster.length];
+        dealtSamples += 1;
       });
+      return list
+        .filter(function (unit) { return !!reviewerBySample[unit.sample_id]; })
+        .map(function (unit) {
+          return {
+            sample_id: unit.sample_id,
+            annotator_id: unit.annotator_id,
+            reviewer_id: reviewerBySample[unit.sample_id],
+          };
+        });
     }
-    return list.map(function (unit, index) {
-      return {
+    var assignments = [];
+    var dealtUnits = 0;
+    list.forEach(function (unit) {
+      var reviewerId = sticky[stickyUnitKey(unit.sample_id, unit.annotator_id)];
+      if (!reviewerId) {
+        if (!roster.length) return;
+        /* The stride counts only units being dealt, so FR-093 本版修訂 2's
+           "任兩位審核員的分派筆數差距 MUST NOT 超過 1" is measured over the
+           待分配池 rather than over a list whose stuck members would
+           otherwise push the rotation off by their own count. */
+        reviewerId = roster[dealtUnits % roster.length];
+        dealtUnits += 1;
+      }
+      assignments.push({
         sample_id: unit.sample_id,
         annotator_id: unit.annotator_id,
-        reviewer_id: roster[index % roster.length],
-      };
+        reviewer_id: reviewerId,
+      });
     });
+    return assignments;
   }
 
   /* issue #596: the roster that decides assignment lives HERE, not at any
@@ -2258,12 +2361,30 @@
    * field is the roster. The REVIEWER_ROSTER demo seed remains the fallback
    * for tasks that seed no reviewer_ids -- dropping it would leave every
    * such task with no assignable reviewer instead of today's demo cast. */
-  function getAssignedReviewUnits(taskId, runType, reviewerId, units) {
+  function taskReviewerRoster(taskId) {
     var profile = findTaskDetailProfile(taskId);
-    var roster = (profile && profile.reviewerIds && profile.reviewerIds.length)
+    return (profile && profile.reviewerIds && profile.reviewerIds.length)
       ? profile.reviewerIds.slice()
       : REVIEWER_ROSTER.map(function (r) { return r.id; });
-    return getReviewAssignments(runType, units, roster)
+  }
+
+  /* issue #824 (FR-093 本版修訂 4): the read-only gate's membership test.
+     Lives here, beside the roster the assignment itself is dealt from, so
+     the workspace cannot answer "is this reviewer on the roster" from a
+     second derivation that could drift from the first. */
+  function isRosterReviewer(taskId, reviewerId) {
+    return taskReviewerRoster(taskId).indexOf(reviewerId) >= 0;
+  }
+
+  /* issue #824 (design.md D3): the one entry point that combines the task's
+     roster with its sticky lookup. Callers that have a taskId go through
+     here; getReviewAssignments() stays the pure rule underneath. */
+  function taskReviewAssignments(taskId, runType, units) {
+    return getReviewAssignments(runType, units, taskReviewerRoster(taskId), getStickyReviewers(taskId, runType));
+  }
+
+  function getAssignedReviewUnits(taskId, runType, reviewerId, units) {
+    return taskReviewAssignments(taskId, runType, units)
       .filter(function (assignment) { return assignment.reviewer_id === reviewerId; })
       .map(function (assignment) {
         return { sample_id: assignment.sample_id, annotator_id: assignment.annotator_id };
@@ -2883,9 +3004,15 @@
     });
     /* getReviewAssignments() sorts its input before dealing, so the result
        cannot be zipped back by index -- join on the unit identity instead. */
+    /* issue #824: the sticky lookup is passed in, but `reviewerIds` stays
+       the caller's STORED roster (see above) -- the two consumers share the
+       fact of who already reviewed what, not a roster. Swapping in
+       taskReviewerRoster() here would re-deal a departed reviewer's units
+       before the liveness split below ever sees them, and the unassigned
+       pool FR-005j requires would never move. */
     var assignments = getReviewAssignments(runType, units.map(function (unit) {
       return { sample_id: unit.sampleId, annotator_id: unit.annotatorId };
-    }), reviewerIds);
+    }), reviewerIds, getStickyReviewers(taskId, runType));
     var active = Array.isArray(activeReviewerIds) ? activeReviewerIds : [];
     var byReviewer = {};
     /* An empty roster leaves getReviewAssignments() with nothing to deal,
@@ -3230,26 +3357,36 @@
        `ofm-05-final-exception` absorbs T017's `oft-01-final-exception`
        content (FR-061 point 3's arbitration-reject -> final-exception-pool
        path), preserving that coverage ahead of T017's removal in this
-       change's group 2. */
+       change's group 2.
+
+       issue #824 (sticky-review-assignment): a stored submission now PINS
+       its unit to whoever wrote it, so every `rev` key below MUST equal the
+       reviewer FR-093's positional deal already hands that unit -- the
+       task's `reviewerIds` order in task-detail.data.js, dealt per sample
+       for dry_run and per unit for official_run. Until now every row named
+       `reviewer_wang` regardless, which the pure derivation silently
+       papered over; under stickiness it would have handed wang every
+       reviewed unit and left li/chen/lin with none. When adding a row, read
+       its position off that deal instead of copying a neighbour's key. */
     var scripts = [
       /* T014 dry_run, min_reviewers = 1 */
       { t: 'T014', r: 'dry_run', s: 'dry-01-all-agree', a: A, v: 'positive', rev: { reviewer_wang: 'positive' } }, // finalized
       { t: 'T014', r: 'dry_run', s: 'dry-01-all-agree', a: B, v: 'positive', rev: { reviewer_wang: 'positive' } }, // finalized
       { t: 'T014', r: 'dry_run', s: 'dry-01-all-agree', a: C, v: 'positive', rev: { reviewer_wang: 'positive' } }, // finalized
-      { t: 'T014', r: 'dry_run', s: 'dry-02-one-divergent', a: A, v: 'neutral', rev: { reviewer_wang: 'neutral' } }, // finalized
+      { t: 'T014', r: 'dry_run', s: 'dry-02-one-divergent', a: A, v: 'neutral', rev: { reviewer_li: 'neutral' } }, // finalized
       // issue #843 (FR-092): a changed value is a `modify`, never an approve.
-      { t: 'T014', r: 'dry_run', s: 'dry-02-one-divergent', a: B, v: 'neutral', rev: { reviewer_wang: 'positive' }, modifyBy: 'reviewer_wang', reason: '整段以讚賞語氣收尾，應判讀為正面而非中性' }, // disputed (reviewer modifies)
+      { t: 'T014', r: 'dry_run', s: 'dry-02-one-divergent', a: B, v: 'neutral', rev: { reviewer_li: 'positive' }, modifyBy: 'reviewer_li', reason: '整段以讚賞語氣收尾，應判讀為正面而非中性' }, // disputed (reviewer modifies)
       { t: 'T014', r: 'dry_run', s: 'dry-02-one-divergent', a: C, v: 'positive' }, // pending
       { t: 'T014', r: 'dry_run', s: 'dry-03-dispute-open', a: A, v: 'neutral' }, // pending
       // issue #843 (FR-092): a changed value is a `modify`, never an approve.
-      { t: 'T014', r: 'dry_run', s: 'dry-03-dispute-open', a: B, v: 'neutral', rev: { reviewer_wang: 'negative' }, modifyBy: 'reviewer_wang', reason: '抱怨語氣明確，應判讀為負面而非中性' }, // disputed (reviewer modifies)
+      { t: 'T014', r: 'dry_run', s: 'dry-03-dispute-open', a: B, v: 'neutral', rev: { reviewer_chen: 'negative' }, modifyBy: 'reviewer_chen', reason: '抱怨語氣明確，應判讀為負面而非中性' }, // disputed (reviewer modifies)
       { t: 'T014', r: 'dry_run', s: 'dry-03-dispute-open', a: C, v: 'neutral' }, // pending
-      { t: 'T014', r: 'dry_run', s: 'dry-04-dispute-resolved', a: A, v: 'negative', rev: { reviewer_wang: 'negative' } }, // finalized
-      /* issue #843 (FR-092/FR-060): wang's modify sends the item to
+      { t: 'T014', r: 'dry_run', s: 'dry-04-dispute-resolved', a: A, v: 'negative', rev: { reviewer_lin: 'negative' } }, // finalized
+      /* issue #843 (FR-092/FR-060): lin's modify sends the item to
          dispute; chen's arbitration adopts the corrected value and
          finalizes it (finalized_by = reviewer_chen). */
-      { t: 'T014', r: 'dry_run', s: 'dry-04-dispute-resolved', a: B, v: 'neutral', rev: { reviewer_wang: 'negative' }, modifyBy: 'reviewer_wang', reason: '文末表達失望，應判讀為負面而非中性', arb: 'negative' }, // finalized by arbitration
-      { t: 'T014', r: 'dry_run', s: 'dry-04-dispute-resolved', a: C, v: 'negative', rev: { reviewer_wang: 'negative' } }, // finalized
+      { t: 'T014', r: 'dry_run', s: 'dry-04-dispute-resolved', a: B, v: 'neutral', rev: { reviewer_lin: 'negative' }, modifyBy: 'reviewer_lin', reason: '文末表達失望，應判讀為負面而非中性', arb: 'negative' }, // finalized by arbitration
+      { t: 'T014', r: 'dry_run', s: 'dry-04-dispute-resolved', a: C, v: 'negative', rev: { reviewer_lin: 'negative' } }, // finalized
       /* issue #837: this row used to seed a reviewer-level `reject`
          (rollback-free on dry_run anyway -- the annotator stayed
          'submitted'), but REVIEW_DECISIONS has been approve/modify/bypass
@@ -3265,12 +3402,12 @@
       /* T015 official_run, min_reviewers = 1 (ofs-05 stays unsubmitted) */
       { t: 'T015', r: 'official_run', s: 'ofs-01-agree-gold', a: A, v: 'negative', rev: { reviewer_wang: 'negative' } }, // finalized
       // issue #843 (FR-092): a changed value is a `modify`, never an approve.
-      { t: 'T015', r: 'official_run', s: 'ofs-02-modified-dispute', a: A, v: 'neutral', rev: { reviewer_wang: 'positive' }, modifyBy: 'reviewer_wang', reason: '對產品表達肯定，應判讀為正面而非中性' }, // disputed (reviewer modifies)
+      { t: 'T015', r: 'official_run', s: 'ofs-02-modified-dispute', a: A, v: 'neutral', rev: { reviewer_li: 'positive' }, modifyBy: 'reviewer_li', reason: '對產品表達肯定，應判讀為正面而非中性' }, // disputed (reviewer modifies)
       /* issue #843 (FR-093, AC-6.12): exactly one reviewer per unit -- the
-         issue #551-era second reviewer (li) is gone. wang's modify forces
+         issue #551-era second reviewer (li) is gone. lin's modify forces
          the dispute and chen's arbitration adopts it, so this row still
          demos an arbitration-resolved finalize. */
-      { t: 'T015', r: 'official_run', s: 'ofs-03-arbitrated-gold', a: A, v: 'positive', rev: { reviewer_wang: 'neutral' }, modifyBy: 'reviewer_wang', reason: '褒貶並陳且未表態，應判讀為中性而非正面', arb: 'neutral' }, // finalized by arbitration
+      { t: 'T015', r: 'official_run', s: 'ofs-03-arbitrated-gold', a: A, v: 'positive', rev: { reviewer_lin: 'neutral' }, modifyBy: 'reviewer_lin', reason: '褒貶並陳且未表態，應判讀為中性而非正面', arb: 'neutral' }, // finalized by arbitration
       { t: 'T015', r: 'official_run', s: 'ofs-04-pending-review', a: A, v: 'positive' }, // pending
       /* T016 official_run, min_reviewers = 3 */
       /* issue #596 (FR-093/FR-060/FR-061/FR-094): the canonical single-owner
@@ -3279,13 +3416,13 @@
          reviewer who is not a participant, FR-060) adopts wang's corrected
          value, and the unit finalizes on that value. */
       { t: 'T016', r: 'official_run', s: 'ofm-01-reviewer-corrects-b', a: A, v: 'positive', rev: { reviewer_wang: 'negative' }, modifyBy: 'reviewer_wang', reason: '第二句語氣轉折應判讀為負面，而非正面', arb: 'negative' }, // finalized (reviewer modifies, arbitration adopts B)
-      { t: 'T016', r: 'official_run', s: 'ofm-02-reviewer-accepts-a', a: A, v: 'negative', rev: { reviewer_wang: 'negative' } }, // finalized (reviewer accepts A)
-      { t: 'T016', r: 'official_run', s: 'ofm-03-awaiting-arbitration', a: A, v: 'neutral', rev: { reviewer_wang: 'negative' }, modifyBy: 'reviewer_wang', reason: '反諷語氣明顯，應判讀為負面而非中性' }, // disputed (reviewer modifies, awaiting arbitration)
+      { t: 'T016', r: 'official_run', s: 'ofm-02-reviewer-accepts-a', a: A, v: 'negative', rev: { reviewer_li: 'negative' } }, // finalized (reviewer accepts A)
+      { t: 'T016', r: 'official_run', s: 'ofm-03-awaiting-arbitration', a: A, v: 'neutral', rev: { reviewer_chen: 'negative' }, modifyBy: 'reviewer_chen', reason: '反諷語氣明顯，應判讀為負面而非中性' }, // disputed (reviewer modifies, awaiting arbitration)
       /* issue #815: bypass (無法判定) had zero seed rows anywhere -- a lone
          bypass, like a lone modify, forces the unit into dispute
          (DISPUTE_FORCING_DECISIONS). design.md D2: bypass stores no answer
          value, so `rev` carries the reviewer key with an undefined value. */
-      { t: 'T016', r: 'official_run', s: 'ofm-04-reviewer-bypass', a: A, v: 'positive', rev: { reviewer_wang: undefined }, bypassBy: 'reviewer_wang', reason: '文本正負面線索交雜且語氣曖昧，難以判定情緒傾向' }, // disputed (reviewer bypasses, no answer value recorded)
+      { t: 'T016', r: 'official_run', s: 'ofm-04-reviewer-bypass', a: A, v: 'positive', rev: { reviewer_lin: undefined }, bypassBy: 'reviewer_lin', reason: '文本正負面線索交雜且語氣曖昧，難以判定情緒傾向' }, // disputed (reviewer bypasses, no answer value recorded)
       /* issue #815: migrated verbatim from T017's oft-01-final-exception
          (removed in this change's group 2) so the sole arbitration-reject
          (兩者皆非) -> final-exception-pool seed (FR-061 point 3, FR-095)
@@ -3543,6 +3680,10 @@
     getReviewUnitStatus: getReviewUnitStatus,
     getReviewUnitLane: getReviewUnitLane,
     getReviewAssignments: getReviewAssignments,
+    getStickyReviewers: getStickyReviewers,
+    taskReviewerRoster: taskReviewerRoster,
+    taskReviewAssignments: taskReviewAssignments,
+    isRosterReviewer: isRosterReviewer,
     getAssignedReviewUnits: getAssignedReviewUnits,
     computeReviewSummary: computeReviewSummary,
     computeReviewWorkload: computeReviewWorkload,

@@ -92,20 +92,26 @@ test.describe('Dashboard — quick review opens the next actionable unit', () =>
     await expect(page).toHaveURL(/run_type=dry_run/);
   });
 
-  /* T016 has zero pending units (審核覆蓋率 100%). issue #596 (FR-092): the
-     two units that used to sit interim below a min_reviewers = 3 quorum are
-     now disputed like ofm-05, because a single owner's modify always enters
-     the pool. reviewer_chen is the only can_arbitrate reviewer and took no
-     part, so all three are actionable for them and the enumeration order
-     (listReviewUnits sorts by sample_id) decides which one opens --
-     ofm-03, not ofm-05. */
+  /* T016 has zero pending units (審核覆蓋率 100%). issue #596 (FR-092): a
+     single owner's modify/bypass always enters the dispute pool, so
+     ofm-03/ofm-04/ofm-05 all start out disputed. issue #824 (sticky review
+     assignment) changes WHO arbitration eligibility excludes here: the demo
+     seed's sole reviewer submission on ofm-03 is reviewer_chen's own modify
+     (annotation-workspace.data.js), so FR-060 disqualifies chen as a
+     participant on that unit -- isArbiterCandidate() now returns false for
+     ofm-03. ofm-05 is arbitrated by chen too (an arbReject vote into the
+     final exception pool), which finalizes it and drops it out of
+     `disputed` entirely. That leaves ofm-04-reviewer-bypass (reviewer_lin
+     bypassed, chen never submitted on it) as the only unit left in rank 2
+     for chen, so the enumeration order no longer matters -- it is the sole
+     candidate. */
   test('routes to a disputed unit this reviewer may arbitrate when nothing is pending', async ({ page }) => {
     await openReviewerScenario(page);
     await quickReviewButton(page, 'T016').click();
 
     await expect(page).toHaveURL(/\/pages\/annotation\/annotation-workspace\.html\?/);
     await expect(page).toHaveURL(/task_id=T016/);
-    await expect(page).toHaveURL(/sample_id=ofm-03-awaiting-arbitration/);
+    await expect(page).toHaveURL(/sample_id=ofm-04-reviewer-bypass/);
     await expect(page).toHaveURL(/annotator_id=kioleemg12/);
     await expect(page).toHaveURL(/reviewer_id=reviewer_chen/);
     await expect(page).toHaveURL(/run_type=official_run/);

@@ -270,21 +270,35 @@ test.describe('T016 official_run: reviewer corrects, arbitration adopts B, unit 
   });
 
   /* Restores the old "arbitration entries on the staged disputes" block's
-     breadth for T016's 3 disputed non-canonical samples (ofm-03/04/05,
-     the modified/bypass/final-exception rows -- see the test above),
-     enumerated per sample rather than summarized. ofm-01 and ofm-02 are
-     excluded: the canonical slot is covered by its own describe block above
-     and finalizes (no arbitrate entry), and ofm-02 finalizes too (see the
-     map above). */
-  test('reviewer_chen gets a 仲裁 entry on each of ofm-03/04/05 (the disputed non-canonical samples)', async ({ page }) => {
+     breadth for T016's disputed non-canonical samples (the
+     modified/bypass/final-exception rows -- see the test above), enumerated
+     per sample rather than summarized. ofm-01 and ofm-02 are excluded: the
+     canonical slot is covered by its own describe block above and finalizes
+     (no arbitrate entry), and ofm-02 finalizes too (see the map above).
+
+     ofm-03 is excluded for a different reason (issue #824 / #868). Under
+     FR-093 round robin over T016's roster it is reviewer_chen's own unit
+     (index 2), and issue #824 re-attributed the demo seed so each row's
+     review is stored under the reviewer the round robin actually assigns.
+     reviewer_chen is therefore a party to ofm-03, and FR-060 disqualifies a
+     party from arbitrating the sample -- so no arbitrate entry can exist
+     there for him, and he is the roster's only can_arbitrate member. That
+     structural gap (a dispute landing on the sole arbiter is unarbitrable)
+     is tracked in issue #868 and is out of scope for #824; ofm-03 is
+     asserted here as "no arbitrate entry" so the gap stays pinned rather
+     than silently regressing. */
+  test('reviewer_chen gets a 仲裁 entry on ofm-04/05 but not on his own ofm-03 (FR-060, issue #868)', async ({ page }) => {
     await page.goto(
       buildListUrl({ task_id: 'T016', role: 'reviewer', run_type: 'official_run', reviewer_id: 'reviewer_chen' })
     );
-    for (const sampleId of ['ofm-03-awaiting-arbitration', 'ofm-04-reviewer-bypass', 'ofm-05-final-exception']) {
+    for (const sampleId of ['ofm-04-reviewer-bypass', 'ofm-05-final-exception']) {
       const row = page.getByTestId('ws-sample-item').filter({ hasText: sampleId });
       await expect(row, sampleId).toHaveCount(1);
       await expect(row.getByTestId('list-arbitrate-entry'), sampleId).toHaveText('仲裁');
     }
+    const ownRow = page.getByTestId('ws-sample-item').filter({ hasText: 'ofm-03-awaiting-arbitration' });
+    await expect(ownRow, 'ofm-03-awaiting-arbitration').toHaveCount(1);
+    await expect(ownRow.getByTestId('list-arbitrate-entry'), 'ofm-03-awaiting-arbitration').toHaveCount(0);
   });
 });
 

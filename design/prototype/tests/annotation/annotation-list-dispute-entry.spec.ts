@@ -154,12 +154,21 @@ test.describe('arbitration entry on disputed rows', () => {
     await expect(row.locator('.mini-btn-primary')).toHaveText('編輯');
   });
 
-  test('a non-participant without the can_arbitrate flag keeps 編輯', async ({ page }) => {
+  /* issue #824 (sticky review assignment): a unit only becomes disputed once
+   * it carries >= 2 stored reviewer submissions, so its sticky owner -- the
+   * LAST of those submissions -- is always one of the dispute's own
+   * participants (never a bystander). FR-093 already hides a unit from a
+   * reviewer who is not its assignee, the same exclusion the "dispute
+   * participant" test above demonstrates for a mere participant, so a
+   * non-participant, non-arbiter reviewer now has no path back to this row
+   * at all: it must not render, not just lose its 仲裁/編輯 action. */
+  test('a non-participant without the can_arbitrate flag never sees the disputed row', async ({ page }) => {
     await gotoList(page, BYSTANDER);
 
-    const row = disputedRow(page);
-    await expect(row.getByTestId('list-arbitrate-entry')).toHaveCount(0);
-    await expect(row.locator('.mini-btn-primary')).toHaveText('編輯');
+    await expect(disputedRow(page)).toHaveCount(0);
+    // The list itself must still render normally for this reviewer -- a
+    // missing row must mean "not assigned", not a broken page load.
+    await expect(page.getByTestId('ws-sample-item').first()).toBeVisible();
   });
 
   test('non-disputed rows never offer 仲裁, even to an arbiter', async ({ page }) => {

@@ -104,6 +104,7 @@
       unitStateFinalized: '已定稿',
       unitStateNone: '尚無標記提交',
       reviewEmptyUnitNote: '此標記員尚未提交此樣本，暫無可審核的內容。',
+      reviewOffRosterNote: '你已不在本任務的審核員名冊中，可檢視自己審核過的內容與歷程，但無法再提交審核決策。',
       reviewFinalizedTitle: '審核已定稿',
       reviewFinalizedNote: '此審核單位已定稿，結果為唯讀。',
       reviewFinalizedRemaining: '本任務你還有 {n} 個可處理的審核單位。',
@@ -230,6 +231,7 @@
       unitStateFinalized: 'Finalized',
       unitStateNone: 'No submission yet',
       reviewEmptyUnitNote: 'This annotator has not submitted this sample yet; there is nothing to review.',
+      reviewOffRosterNote: 'You are no longer on this task\'s reviewer roster. You can still view the units and history you reviewed, but you can no longer submit review decisions.',
       reviewFinalizedTitle: 'Review finalized',
       reviewFinalizedNote: 'This review unit is finalized; results are read-only.',
       reviewFinalizedRemaining: 'You have {n} actionable review units left on this task.',
@@ -3447,6 +3449,10 @@
   var REVIEW_UNIT_BLOCK = {
     ARBITRATION: 'arbitration',
     FINALIZED: 'finalized',
+    /* issue #824 (FR-093 本版修訂 4): a reviewer dropped from the task's
+       reviewer_ids keeps read-only access to the units they reviewed, but
+       may no longer submit a decision on anything. */
+    OFF_ROSTER: 'off_roster',
     EMPTY: 'empty',
   };
 
@@ -3466,6 +3472,16 @@
       return REVIEW_UNIT_BLOCK.ARBITRATION;
     }
     if (unitStatus === workspaceData.REVIEW_UNIT_STATUS.FINALIZED) return REVIEW_UNIT_BLOCK.FINALIZED;
+    /* issue #824: after arbitration and finalization, never before them.
+       Arbiter eligibility is judged against REVIEWER_ROSTER.can_arbitrate
+       (isArbiterCandidate, FR-060) -- a different roster from the task's
+       reviewer_ids -- so gating earlier would shut the arbitration entry
+       for a legitimate arbiter who was never a checked reviewer. And a
+       finalized unit is read-only for everyone already; its finalized card
+       (FR-094) tells an off-roster viewer strictly more than this note. */
+    if (!workspaceData.isRosterReviewer(currentProfile.id, currentIdentity.reviewerId)) {
+      return REVIEW_UNIT_BLOCK.OFF_ROSTER;
+    }
     if (unitStatus === null && !demoAnnotatorRow()) return REVIEW_UNIT_BLOCK.EMPTY;
     return null;
   }
@@ -4722,6 +4738,28 @@
       lockedInputCard.textContent = buildReviewerInputText(rawRecord, currentProfile.fieldRoleMap);
       preview.appendChild(lockedInputCard);
       renderFinalizedCard(preview, submission);
+      return;
+    }
+    /* Off-roster read-only gate (issue #824, FR-093 本版修訂 4): the unit is
+       still reachable -- getAssignedReviewUnits() keeps it listed for the
+       reviewer who submitted on it -- but no submittable control may be
+       rendered. Hiding the footer submit also closes the FR-058
+       Ctrl/Cmd+Enter path (setupActionShortcuts skips hidden buttons).
+       The history tab is not gated here: it is a separate tab reading
+       getSampleHistory(), which FR-097's chain of responsibility needs to
+       stay open. */
+    if (blockReason === REVIEW_UNIT_BLOCK.OFF_ROSTER) {
+      if (reviewSubmitBtn) reviewSubmitBtn.classList.add('hidden');
+      var offRosterInputCard = document.createElement('div');
+      offRosterInputCard.className = 'content-card';
+      offRosterInputCard.setAttribute('data-testid', 'ws-input-content');
+      offRosterInputCard.textContent = buildReviewerInputText(rawRecord, currentProfile.fieldRoleMap);
+      preview.appendChild(offRosterInputCard);
+      var offRosterCard = document.createElement('div');
+      offRosterCard.className = 'content-card';
+      offRosterCard.setAttribute('data-testid', 'ws-review-off-roster');
+      offRosterCard.textContent = t('reviewOffRosterNote');
+      preview.appendChild(offRosterCard);
       return;
     }
     /* Empty review unit gate (issue #307): "truly empty" reuses the exact
