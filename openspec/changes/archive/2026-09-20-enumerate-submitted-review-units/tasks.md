@@ -28,11 +28,13 @@
 - [x] 1.5 修改 `design/prototype/pages/annotation/annotation-workspace.config.js`：`buildUnits()` 改讀 `getReviewUnitRows()`，同步更新其「與 annotation-list 同源」的註解（見 design.md D2）；`demoAnnotatorRow()` 維持讀示範列。 [@senior-frontend]
 - [x] 1.6 執行 code/test gate：在 `design/prototype/` 下帶本 worktree 專屬 `PW_PORT` 執行 `node ~/.cache/node/corepack/v1/pnpm/12.3.4/bin/pnpm.mjs typecheck` 與 `node ~/.cache/node/corepack/v1/pnpm/12.3.4/bin/pnpm.mjs playwright test`（全量，不得只跑子目錄）。兩者預期 exit `0`，且分開記錄。rebase 後再執行 `node scripts/gen-screen-inventory.mjs` 重生盤點並提交。 [@main]
   - Green 證據：`74941064`（1.3–1.5 三檔同 commit）；gate：`pnpm typecheck` → exit 0；`PW_PORT=8973 pnpm playwright test` 全量 → exit 0，1833 passed（8.7m）。main 未前進故未 rebase；`node scripts/gen-screen-inventory.mjs` 重生於 `4045b1e5`。
-- [ ] 1.7 更新 `specs/annotation/015-annotation-workspace/spec.md`，完成 gate 4 回寫，內容如下。 [@main]
+- [x] 1.7 更新 `specs/annotation/015-annotation-workspace/spec.md`，完成 gate 4 回寫，內容如下。 [@main]
   - 版號 MINOR bump（6.9.0 → 6.10.0，以當下最新版號接續），Changelog 補一列。
   - FR-055、FR-056、FR-072 第 1 點、FR-073 第 1 點補本版修訂段。
   - delta 中未編號的新情境，於本步驟接續使用者故事 1 現行最大編號，編成新 AC。
   - 已被取代的條文、條文內記錄舊版的修訂段、Changelog 舊列（含 6.3.1 列「另由 issue #792 追蹤」）一律逐字保留。
 - [x] 1.8 另開 issue 追蹤：`computeIaaAlpha()` 與 `countDistinctRaters()` 的評分者列舉同樣只走示範列（proposal.md 非目標）。issue URL 記在此項。 [@main]
   - 已開：https://github.com/singyichen/label-suite/issues/866
-- [ ] 1.9 執行 `/opsx:archive enumerate-submitted-review-units`。產生衍生檢視後，依 `docs/sdd-workflow.md` §6.2 逐條 grep 本 change 寫入的 canonical citation（FR-044a、FR-051、FR-055、FR-056、FR-062、FR-072、FR-073、FR-093、FR-100、AC-1.26、AC-3.38、新 AC、SC-004N、issue #784／#792／#824 等），確認每一條都能個別定位。archive 指令須經使用者明確授權才執行。final merge 後才更新 `specs/STATUS.md`。 [@main]
+- [x] 1.9 執行 `/opsx:archive enumerate-submitted-review-units`。產生衍生檢視後，依 `docs/sdd-workflow.md` §6.2 逐條 grep 本 change 寫入的 canonical citation（FR-044a、FR-051、FR-055、FR-056、FR-062、FR-072、FR-073、FR-093、FR-100、AC-1.26、AC-3.38、新 AC、SC-004N、issue #784／#792／#824 等），確認每一條都能個別定位。archive 指令須經使用者明確授權才執行。final merge 後才更新 `specs/STATUS.md`。 [@main]
+  - archive 已於使用者授權後執行，衍生檢視 `openspec/specs/annotation/015-annotation-workspace/spec.md` 更新 1 條（FR-055 修訂段＋兩則 Scenario）。
+  - Source-Verify：FR-044a／FR-056／FR-072／FR-073／FR-093／FR-100／AC-1.30／AC-1.31／SC-004N／v6.3.1／issue #784／#792／#824／#866 逐條 `grep` 於正典皆可定位；FR-044a `:752` 優先序「真實提交 → 示範標記員答案」與本版「第一／第二 seed 來源」措辭一致；`getReviewUnitRows` 於三個 prototype 產品檔可定位。
