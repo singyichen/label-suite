@@ -28,6 +28,7 @@ Issue #824。審核指派是**純推導、零持久化**的：`getReviewAssignme
 - **原型實作**（2 個產品檔）：
   - `design/prototype/pages/annotation/annotation-workspace.data.js`：新增黏住查表與帶任務脈絡的指派入口，`getAssignedReviewUnits()` 與 `computeReviewWorkload()` 改讀它（見 design.md D1–D3）。
   - `design/prototype/pages/annotation/annotation-workspace.config.js`：新增 `REVIEW_UNIT_BLOCK.OFF_ROSTER` 唯讀閘門與其文案（見 design.md D4）。
+- **示範種子歸屬修正**（同 `annotation-workspace.data.js`，另加 `design/prototype/pages/task-management/task-detail.data.js`）：`seedReviewFlowDemo()` 的 `scripts` 表原本把**每一筆** `rev` 都掛給 `reviewer_wang`，包含 FR-093 位置式分派實際派給 li／chen／lin 的單位。純推導時這個矛盾看不出來（指派本來就不查提交歷程），但黏住之後 wang 會獨吞全部已審單位、其餘三位審核員歸零。本單把每筆 `rev`／`modifyBy`／`bypassBy` 改成該單位在位置式分派下的實際落點。連帶：T015 的 `reviewerIds` 改序為 `['reviewer_wang', 'reviewer_li', 'reviewer_lin', 'reviewer_chen']`——`reviewer_chen` 是名冊唯一帶 `can_arbitrate` 者，原順序下正好落在 `ofs-03-arbitrated-gold`，種子歸屬改正後 chen 會成為該單位的當事人而依 FR-060 失去仲裁資格，使種子的 `arb` 成為無效資料。
 - **正典回寫（gate 4）**：015 版號 MINOR bump（6.10.0 → 6.11.0，以當下最新版號接續）並補一列 Changelog；delta 中未編號的新情境於回寫時接續對應使用者故事現行最大編號，編成新 AC。
 
 **非目標**：
@@ -37,7 +38,8 @@ Issue #824。審核指派是**純推導、零持久化**的：`getReviewAssignme
 - **不改 014 的任何條文**。FR-005j 與 FR-010f-4 在本單只作為理據引用；014 的「未指派筆數」呈現與 `computeReviewWorkload()` 的分桶語意（`done`／`pending`／未指派）不變。
 - **不改仲裁者資格判定（FR-060）與 `isArbiterCandidate()`**。離冊閘門的優先序低於仲裁分支，仲裁路徑不因本單關閉。
 - **不改 IAA、摘要計數與快速審核的候選推導本身**；它們讀到的指派變了，但推導規則不變。
-- **不改任何種子資料**。
+- **不改示範任務的內容、樣本命名與示範情境**。種子修正只動「這筆審核掛在誰名下」與 T015 的名冊順序；樣本 id、標記內容、`arb`／`modifyBy`／`bypassBy` 的存在與否、以及每個示範想演示的流程全部不變。
+- **不修補「爭議單位落在唯一仲裁者名下就無人可仲裁」這個結構性缺口**。T014 `dry-03` 與 T016 `ofm-03` 在種子歸屬改正後會出現此情形，但那是單一仲裁者配 N 人名冊的產品層限制，與本單的黏住規則無關，另開 issue 追蹤。
 
 ## Capabilities
 
@@ -49,5 +51,5 @@ Issue #824。審核指派是**純推導、零持久化**的：`getReviewAssignme
 | --- | --- |
 | **II. Generalization-First（NON-NEGOTIABLE）** | 黏住以審核提交 bucket 前綴泛掃推導，不含任何任務 ID、樣本 ID、帳號或輸出類型分支 |
 | **III. Data Fairness（NON-NEGOTIABLE）** | 離冊審核員只看得到**自己已提交**過的單位；`getSubmission()` 只回傳已提交者，盲審隔離（FR-062）不放寬 |
-| **X. Change Scope Discipline** | 2 個產品檔；測試檔與 `openspec/**`／`specs/**` 不計入門檻 |
+| **X. Change Scope Discipline** | 3 個產品檔（含種子歸屬修正的 `task-detail.data.js`）；測試檔與 `openspec/**`／`specs/**` 不計入門檻 |
 | **XX. Source of Truth & Contract Governance** | 黏住事實收斂為資料層單一查表，`getAssignedReviewUnits()` 與 `computeReviewWorkload()` 對「誰擁有這個已審單位」不再可能給出不同答案 |
