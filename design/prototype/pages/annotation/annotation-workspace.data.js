@@ -3268,13 +3268,17 @@
    * duplicating arbitration votes or history events (a naive marker bump
    * alone would re-run submitArbitration()/appendReviewDecisionEvents() on
    * top of the stale rows). */
-  var REVIEW_FLOW_DEMO_SEED_KEY = 'labelsuite.reviewFlowDemoSeed.v2';
+  var REVIEW_FLOW_DEMO_SEED_KEY_V2 = 'labelsuite.reviewFlowDemoSeed.v2';
+  /* issue #620: v3 adds guideline citations to review/arbitration reasons.
+   * A browser holding v2 must clear and replay the T014-T016 buckets or it
+   * would keep the old uncited reason strings forever. */
+  var REVIEW_FLOW_DEMO_SEED_KEY = 'labelsuite.reviewFlowDemoSeed.v3';
 
-  /* issue #856: removes exactly the buckets seedReviewFlowDemo() itself can
-   * have written for `taskIds` -- wsSubmissions (covers both the annotator
+  /* issues #856/#620: removes exactly the buckets seedReviewFlowDemo() itself
+   * can have written for `taskIds` -- wsSubmissions (covers both annotator
    * and reviewer rows, since submissionBucketKey's first segment is always
-   * the task id) and wsArbitration -- so a v1-upgrade reseed starts from a
-   * clean slate without touching any task outside the seed table. */
+   * the task id) and wsArbitration -- so a marker-upgrade reseed starts from
+   * a clean slate without touching any task outside the seed table. */
   function clearReviewFlowDemoSeedBuckets(taskIds) {
     listSubmissionBucketKeys().forEach(function (bucketKey) {
       if (taskIds.indexOf(bucketKey.split('::')[0]) === -1) return;
@@ -3295,10 +3299,13 @@
   }
 
   function seedReviewFlowDemo() {
-    var upgradingFromV1 = false;
+    var upgradingFromPrevious = false;
     try {
       if (global.localStorage.getItem(REVIEW_FLOW_DEMO_SEED_KEY)) return;
-      upgradingFromV1 = !!global.localStorage.getItem(REVIEW_FLOW_DEMO_SEED_KEY_V1);
+      upgradingFromPrevious = !!(
+        global.localStorage.getItem(REVIEW_FLOW_DEMO_SEED_KEY_V1) ||
+        global.localStorage.getItem(REVIEW_FLOW_DEMO_SEED_KEY_V2)
+      );
     } catch (e) {
       return; /* storage unavailable: nothing to stage into */
     }
@@ -3375,17 +3382,17 @@
       { t: 'T014', r: 'dry_run', s: 'dry-01-all-agree', a: C, v: 'positive', rev: { reviewer_wang: 'positive' } }, // finalized
       { t: 'T014', r: 'dry_run', s: 'dry-02-one-divergent', a: A, v: 'neutral', rev: { reviewer_li: 'neutral' } }, // finalized
       // issue #843 (FR-092): a changed value is a `modify`, never an approve.
-      { t: 'T014', r: 'dry_run', s: 'dry-02-one-divergent', a: B, v: 'neutral', rev: { reviewer_li: 'positive' }, modifyBy: 'reviewer_li', reason: '整段以讚賞語氣收尾，應判讀為正面而非中性' }, // disputed (reviewer modifies)
+      { t: 'T014', r: 'dry_run', s: 'dry-02-one-divergent', a: B, v: 'neutral', rev: { reviewer_li: 'positive' }, modifyBy: 'reviewer_li', reason: '依 [[正向（positive）的判準]]，整段以讚賞語氣收尾，應判讀為正面而非中性' }, // disputed (reviewer modifies)
       { t: 'T014', r: 'dry_run', s: 'dry-02-one-divergent', a: C, v: 'positive' }, // pending
       { t: 'T014', r: 'dry_run', s: 'dry-03-dispute-open', a: A, v: 'neutral' }, // pending
       // issue #843 (FR-092): a changed value is a `modify`, never an approve.
-      { t: 'T014', r: 'dry_run', s: 'dry-03-dispute-open', a: B, v: 'neutral', rev: { reviewer_chen: 'negative' }, modifyBy: 'reviewer_chen', reason: '抱怨語氣明確，應判讀為負面而非中性' }, // disputed (reviewer modifies)
+      { t: 'T014', r: 'dry_run', s: 'dry-03-dispute-open', a: B, v: 'neutral', rev: { reviewer_chen: 'negative' }, modifyBy: 'reviewer_chen', reason: '依 [[負向（negative）的判準]]，抱怨語氣明確，應判讀為負面而非中性' }, // disputed (reviewer modifies)
       { t: 'T014', r: 'dry_run', s: 'dry-03-dispute-open', a: C, v: 'neutral' }, // pending
       { t: 'T014', r: 'dry_run', s: 'dry-04-dispute-resolved', a: A, v: 'negative', rev: { reviewer_lin: 'negative' } }, // finalized
       /* issue #843 (FR-092/FR-060): lin's modify sends the item to
          dispute; chen's arbitration adopts the corrected value and
          finalizes it (finalized_by = reviewer_chen). */
-      { t: 'T014', r: 'dry_run', s: 'dry-04-dispute-resolved', a: B, v: 'neutral', rev: { reviewer_lin: 'negative' }, modifyBy: 'reviewer_lin', reason: '文末表達失望，應判讀為負面而非中性', arb: 'negative' }, // finalized by arbitration
+      { t: 'T014', r: 'dry_run', s: 'dry-04-dispute-resolved', a: B, v: 'neutral', rev: { reviewer_lin: 'negative' }, modifyBy: 'reviewer_lin', reason: '依 [[負向（negative）的判準]]，文末表達失望，應判讀為負面而非中性', arb: 'negative', arbReason: '依 [[負向（negative）的判準]]，採用審核員提出的負向修正。' }, // finalized by arbitration
       { t: 'T014', r: 'dry_run', s: 'dry-04-dispute-resolved', a: C, v: 'negative', rev: { reviewer_lin: 'negative' } }, // finalized
       /* issue #837: this row used to seed a reviewer-level `reject`
          (rollback-free on dry_run anyway -- the annotator stayed
@@ -3396,18 +3403,18 @@
          `bypass` is a DISPUTE_FORCING_DECISIONS member, so the unit still
          blocks finalization and stays disputed -- only an arbiter (or a
          later correction) can resolve it. */
-      { t: 'T014', r: 'dry_run', s: 'dry-05-pending-review', a: A, v: 'positive', rev: { reviewer_wang: undefined }, bypassBy: 'reviewer_wang', reason: '正負面線索交雜，難以判定情緒傾向為何' }, // disputed (reviewer bypasses, no answer value recorded)
+      { t: 'T014', r: 'dry_run', s: 'dry-05-pending-review', a: A, v: 'positive', rev: { reviewer_wang: undefined }, bypassBy: 'reviewer_wang', reason: '依 [[難以判定時的處理]]，正負面線索交雜，難以判定情緒傾向為何' }, // disputed (reviewer bypasses, no answer value recorded)
       { t: 'T014', r: 'dry_run', s: 'dry-05-pending-review', a: B, v: 'positive' }, // pending
       { t: 'T014', r: 'dry_run', s: 'dry-05-pending-review', a: C, v: 'positive' }, // pending
       /* T015 official_run, min_reviewers = 1 (ofs-05 stays unsubmitted) */
       { t: 'T015', r: 'official_run', s: 'ofs-01-agree-gold', a: A, v: 'negative', rev: { reviewer_wang: 'negative' } }, // finalized
       // issue #843 (FR-092): a changed value is a `modify`, never an approve.
-      { t: 'T015', r: 'official_run', s: 'ofs-02-modified-dispute', a: A, v: 'neutral', rev: { reviewer_li: 'positive' }, modifyBy: 'reviewer_li', reason: '對產品表達肯定，應判讀為正面而非中性' }, // disputed (reviewer modifies)
+      { t: 'T015', r: 'official_run', s: 'ofs-02-modified-dispute', a: A, v: 'neutral', rev: { reviewer_li: 'positive' }, modifyBy: 'reviewer_li', reason: '依 [[正向（positive）的判準]]，對產品表達肯定，應判讀為正面而非中性' }, // disputed (reviewer modifies)
       /* issue #843 (FR-093, AC-6.12): exactly one reviewer per unit -- the
          issue #551-era second reviewer (li) is gone. lin's modify forces
          the dispute and chen's arbitration adopts it, so this row still
          demos an arbitration-resolved finalize. */
-      { t: 'T015', r: 'official_run', s: 'ofs-03-arbitrated-gold', a: A, v: 'positive', rev: { reviewer_lin: 'neutral' }, modifyBy: 'reviewer_lin', reason: '褒貶並陳且未表態，應判讀為中性而非正面', arb: 'neutral' }, // finalized by arbitration
+      { t: 'T015', r: 'official_run', s: 'ofs-03-arbitrated-gold', a: A, v: 'positive', rev: { reviewer_lin: 'neutral' }, modifyBy: 'reviewer_lin', reason: '依 [[中立（neutral）的判準]]，褒貶並陳且未表態，應判讀為中性而非正面', arb: 'neutral', arbReason: '依 [[中立（neutral）的判準]]，採用審核員提出的中立修正。' }, // finalized by arbitration
       { t: 'T015', r: 'official_run', s: 'ofs-04-pending-review', a: A, v: 'positive' }, // pending
       /* T016 official_run, min_reviewers = 3 */
       /* issue #596 (FR-093/FR-060/FR-061/FR-094): the canonical single-owner
@@ -3415,22 +3422,22 @@
          annotator's value, reviewer_chen (the roster's only can_arbitrate
          reviewer who is not a participant, FR-060) adopts wang's corrected
          value, and the unit finalizes on that value. */
-      { t: 'T016', r: 'official_run', s: 'ofm-01-reviewer-corrects-b', a: A, v: 'positive', rev: { reviewer_wang: 'negative' }, modifyBy: 'reviewer_wang', reason: '第二句語氣轉折應判讀為負面，而非正面', arb: 'negative' }, // finalized (reviewer modifies, arbitration adopts B)
+      { t: 'T016', r: 'official_run', s: 'ofm-01-reviewer-corrects-b', a: A, v: 'positive', rev: { reviewer_wang: 'negative' }, modifyBy: 'reviewer_wang', reason: '依 [[負向（negative）的判準]]，第二句語氣轉折應判讀為負面，而非正面', arb: 'negative', arbReason: '依 [[負向（negative）的判準]]，採用審核員提出的負向修正。' }, // finalized (reviewer modifies, arbitration adopts B)
       { t: 'T016', r: 'official_run', s: 'ofm-02-reviewer-accepts-a', a: A, v: 'negative', rev: { reviewer_li: 'negative' } }, // finalized (reviewer accepts A)
-      { t: 'T016', r: 'official_run', s: 'ofm-03-awaiting-arbitration', a: A, v: 'neutral', rev: { reviewer_chen: 'negative' }, modifyBy: 'reviewer_chen', reason: '反諷語氣明顯，應判讀為負面而非中性' }, // disputed (reviewer modifies, awaiting arbitration)
+      { t: 'T016', r: 'official_run', s: 'ofm-03-awaiting-arbitration', a: A, v: 'neutral', rev: { reviewer_chen: 'negative' }, modifyBy: 'reviewer_chen', reason: '依 [[負向（negative）的判準]]，反諷語氣明顯，應判讀為負面而非中性' }, // disputed (reviewer modifies, awaiting arbitration)
       /* issue #815: bypass (無法判定) had zero seed rows anywhere -- a lone
          bypass, like a lone modify, forces the unit into dispute
          (DISPUTE_FORCING_DECISIONS). design.md D2: bypass stores no answer
          value, so `rev` carries the reviewer key with an undefined value. */
-      { t: 'T016', r: 'official_run', s: 'ofm-04-reviewer-bypass', a: A, v: 'positive', rev: { reviewer_lin: undefined }, bypassBy: 'reviewer_lin', reason: '文本正負面線索交雜且語氣曖昧，難以判定情緒傾向' }, // disputed (reviewer bypasses, no answer value recorded)
+      { t: 'T016', r: 'official_run', s: 'ofm-04-reviewer-bypass', a: A, v: 'positive', rev: { reviewer_lin: undefined }, bypassBy: 'reviewer_lin', reason: '依 [[難以判定時的處理]]，文本正負面線索交雜且語氣曖昧，難以判定情緒傾向' }, // disputed (reviewer bypasses, no answer value recorded)
       /* issue #815: migrated verbatim from T017's oft-01-final-exception
          (removed in this change's group 2) so the sole arbitration-reject
          (兩者皆非) -> final-exception-pool seed (FR-061 point 3, FR-095)
          survives T017's removal. */
-      { t: 'T016', r: 'official_run', s: 'ofm-05-final-exception', a: A, v: 'neutral', rev: { reviewer_wang: 'positive' }, modifyBy: 'reviewer_wang', reason: '語境不足以判斷情緒傾向，正面與中性難以取捨', arbReject: true, arbReason: '原標記與審核修正結果皆缺乏明確文本依據支持，需退回標記指南徵詢更明確判準' }, // disputed (reviewer modifies, arbitration rejects both sides -> final exception pool)
+      { t: 'T016', r: 'official_run', s: 'ofm-05-final-exception', a: A, v: 'neutral', rev: { reviewer_wang: 'positive' }, modifyBy: 'reviewer_wang', reason: '依 [[難以判定時的處理]]，語境不足以判斷情緒傾向，正面與中性難以取捨', arbReject: true, arbReason: '依 [[難以判定時的處理]]，原標記與審核修正結果皆缺乏明確文本依據支持，需徵詢更明確判準。' }, // disputed (reviewer modifies, arbitration rejects both sides -> final exception pool)
     ];
 
-    if (upgradingFromV1) {
+    if (upgradingFromPrevious) {
       /* issue #856: derive the task ids to clear from `scripts` itself
          (single source of truth) rather than a second hardcoded T014-T016
          list, so this sweep can never drift from the rows it is supposed
@@ -3447,12 +3454,13 @@
     } catch (e) {
       return; /* storage unavailable: don't run the writes below either */
     }
-    /* Separate try: once v2 is written the buckets must be reseeded, so a
-       failed v1 cleanup must not skip the writes below. */
+    /* Separate try: once v3 is written the buckets have been reseeded, so a
+       failed old-marker cleanup must not skip the writes below. */
     try {
       global.localStorage.removeItem(REVIEW_FLOW_DEMO_SEED_KEY_V1);
+      global.localStorage.removeItem(REVIEW_FLOW_DEMO_SEED_KEY_V2);
     } catch (e) {
-      /* a leftover v1 marker is harmless: v2 is checked first */
+      /* leftover old markers are harmless: v3 is checked first */
     }
 
     function labelPayload(value, decision, reason) {
@@ -3494,7 +3502,7 @@
       });
       if (row.arb) {
         submitArbitration(row.t, row.r, row.s, { annotatorId: row.a, reviewerId: 'reviewer_chen' }, [
-          { itemId: 'single_label::single_label', choice: 'adopt_b', value: row.arb },
+          { itemId: 'single_label::single_label', choice: 'adopt_b', value: row.arb, reason: row.arbReason },
         ]);
       } else if (row.arbReject) {
         /* issue #596 (FR-061 point 3, design.md D2): a reject vote carries

@@ -918,6 +918,7 @@
       status: listEntry.status,
       outputTypes: listEntry.outputTypes || [],
       fieldRoleMap: detailProfile.fieldRoleMap || {},
+      guidelineFiles: detailProfile.guidelineFiles || [],
       datasetRecords: detailProfile.datasetRecords || [],
       materializedRuns: detailProfile.materializedRuns || null
     };
@@ -1027,6 +1028,75 @@
       '&run_type=' + encodeURIComponent(context.runType) +
       identityQuery(context, annotatorId) +
       listStateQuery();
+  }
+
+  /* Issue #620 / FR-096 point 4: annotation-list is a standalone prototype
+     page, so it mirrors the workspace renderer's heading allocation rules
+     when resolving [[heading text]] citations. The Set reserves generated
+     suffixes as well as natural slugs (Foo, Foo, Foo-2 stays collision-free).
+     Allocation resets for each Markdown file, matching renderMarkdown(). */
+  function slugifyGuidelineHeading(text) {
+    var slug = String(text)
+      .trim()
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}]+/gu, '-')
+      .replace(/^-+|-+$/g, '');
+    return slug || 'section';
+  }
+  function allocateGuidelineHeadingId(text, used) {
+    var base = slugifyGuidelineHeading(text);
+    var candidate = base;
+    var suffix = 2;
+    while (used.has(candidate)) {
+      candidate = base + '-' + suffix;
+      suffix += 1;
+    }
+    used.add(candidate);
+    return candidate;
+  }
+  function guidelineHeadingAnchors(profile) {
+    var anchors = new Map();
+    ((profile && profile.guidelineFiles) || []).forEach(function (file) {
+      if (file.type !== 'markdown') return;
+      var used = new Set();
+      String(file.content || '').replace(/\r\n?/g, '\n').split('\n').forEach(function (line) {
+        var heading = /^(#{1,3})\s+(.+)$/.exec(line);
+        if (!heading) return;
+        var title = heading[2].trim();
+        var anchorId = allocateGuidelineHeadingId(title, used);
+        if (!anchors.has(title)) anchors.set(title, anchorId);
+      });
+    });
+    return anchors;
+  }
+  function renderGuidelineCitations(container, reason, profile, context, row) {
+    var anchors = guidelineHeadingAnchors(profile);
+    var citation = /\[\[([^\]\r\n]+)\]\]/g;
+    var cursor = 0;
+    var match = null;
+    var foundSyntax = false;
+    while ((match = citation.exec(reason)) !== null) {
+      foundSyntax = true;
+      if (match.index > cursor) {
+        container.appendChild(document.createTextNode(reason.slice(cursor, match.index)));
+      }
+      var title = match[1].trim();
+      var anchorId = anchors.get(title);
+      if (anchorId) {
+        var link = document.createElement('a');
+        link.setAttribute('data-testid', 'ws-dry-run-feedback-guideline-link');
+        link.textContent = title;
+        link.href = buildWorkspaceUrl(profile.id, row.sampleId, context) + '#' + encodeURIComponent(anchorId);
+        container.appendChild(link);
+      } else {
+        container.appendChild(document.createTextNode(title));
+      }
+      cursor = citation.lastIndex;
+    }
+    if (cursor < reason.length) {
+      container.appendChild(document.createTextNode(reason.slice(cursor)));
+    }
+    return foundSyntax;
   }
 
   function getSampleStatus(profile, context, record, index) {
@@ -2102,12 +2172,9 @@
 
   /* One FR-096 row. `row.modified === false` (审核員通過, unchanged) renders
      the source line only -- no diff, matching the maintainer's ruling that
-     an approved-unchanged sample carries nothing to compare. The guideline
-     jump link (FR-096 point 4) opens the sample's workspace, the closest
-     the current data model gets to "jump to the referenced section": no
-     guideline file exposes per-heading anchors, so linking the whole
-     document open in the workspace context is what the data can support
-     without inventing a second, task-specific reference scheme. */
+     an approved-unchanged sample carries nothing to compare. Issue #620
+     completes FR-096 point 4: [[heading text]] is resolved against the
+     task's Markdown guideline headings and links to that exact fragment. */
   function buildDryRunFeedbackRowEl(context, profile, row) {
     var history = window.LabelSuiteAnnotationHistory;
     var rowEl = document.createElement('div');
@@ -2136,16 +2203,21 @@
       var reasonEl = document.createElement('span');
       reasonEl.className = 'dry-run-feedback-reason';
       reasonEl.setAttribute('data-testid', 'ws-dry-run-feedback-reason');
-      reasonEl.textContent = row.reason;
+      var hasCitationSyntax = renderGuidelineCitations(reasonEl, row.reason, profile, context, row);
       rowEl.appendChild(reasonEl);
 
-      var link = document.createElement('a');
-      link.setAttribute('data-testid', 'ws-dry-run-feedback-guideline-link');
-      link.textContent = t('dryRunFeedbackGuidelineLink');
-      link.target = '_blank';
-      link.rel = 'noopener';
-      link.href = buildWorkspaceUrl(profile.id, row.sampleId, context);
-      rowEl.appendChild(link);
+      /* Preserve the pre-#620 whole-guideline affordance for legacy reasons
+         that carry no citation syntax. Once a reason opts into [[...]], an
+         unknown title must degrade to plain text and create no false link. */
+      if (!hasCitationSyntax) {
+        var link = document.createElement('a');
+        link.setAttribute('data-testid', 'ws-dry-run-feedback-guideline-link');
+        link.textContent = t('dryRunFeedbackGuidelineLink');
+        link.target = '_blank';
+        link.rel = 'noopener';
+        link.href = buildWorkspaceUrl(profile.id, row.sampleId, context);
+        rowEl.appendChild(link);
+      }
     }
 
     return rowEl;

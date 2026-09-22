@@ -11,13 +11,13 @@ import { buildListUrl } from './_workspace-helpers';
  * invisible to it -- a fresh browser (including every Playwright test) never
  * shows the bug, which is how it survived three seed-table rewrites unnoticed.
  *
- * Maintainer ruling (issue #856): bump the marker to v2. A browser carrying
- * the OLD v1 marker must have its T014-T016 seed-related buckets cleared and
- * reseeded on the v2 upgrade -- naively bumping the marker without clearing
- * first would make submitArbitration() and the history-event appenders run a
- * SECOND time on top of the stale data, duplicating arbitration votes and
- * history events. State the visitor left on tasks OUTSIDE T014-T016 must
- * never be touched by that clear+reseed.
+ * Maintainer ruling (issue #856): bump the marker whenever the seed contract
+ * changes. A browser carrying the OLD v1 marker must have its T014-T016
+ * seed-related buckets cleared and reseeded on the current upgrade -- naively
+ * bumping the marker without clearing first would make submitArbitration()
+ * and the history-event appenders run a SECOND time on top of the stale data,
+ * duplicating arbitration votes and history events. State the visitor left on
+ * tasks OUTSIDE T014-T016 must never be touched by that clear+reseed.
  *
  * Traceability: specs/annotation/015-annotation-workspace/spec.md
  *   FR-051 (seedReviewFlowDemo, review-flow demo Phase 2 slice C)
@@ -80,7 +80,7 @@ const VISITOR_ENTRY = {
  * Guarded by a sessionStorage flag because page.addInitScript() replays on
  * EVERY navigation, including a later page.reload() within the same test
  * (issue #850's lesson) -- without the guard, a reload would re-clobber
- * whatever the app itself already wrote on the first load (e.g. the v2
+ * whatever the app itself already wrote on the first load (e.g. the current
  * marker and the freshly reseeded buckets), making it impossible to observe
  * true reload idempotence. */
 async function seedOldBrowser(page: Page) {
@@ -161,14 +161,14 @@ test.describe('issue #856: review demo seed marker upgrade', () => {
     expect(await readDry05WangDecision(page)).toBe('bypass');
   });
 
-  test('the upgrade bumps the stored marker to v2', async ({ page }) => {
+  test('the upgrade bumps the stored marker to the current version', async ({ page }) => {
     await seedOldBrowser(page);
     await page.goto(buildListUrl({ task_id: 'T014', role: 'reviewer', run_type: 'dry_run' }));
 
     const markers = await page.evaluate(() =>
       Object.keys(window.localStorage).filter((key) => key.indexOf('labelsuite.reviewFlowDemoSeed.') === 0)
     );
-    expect(markers).toContain(SEED_MARKER_PREFIX + 'v2');
+    expect(markers).toContain(SEED_MARKER_PREFIX + 'v3');
   });
 
   test('the upgrade does not duplicate T014-T016 history events or arbitration votes versus a fresh browser', async ({ page, browser }) => {
