@@ -2023,7 +2023,13 @@
     /* Only a reviewer's annotator moves while stepping (FR-056). Writing it
        for an annotator would add a param their entry link never carried. */
     if (currentRole === 'reviewer') params.set('annotator_id', currentAnnotatorId());
-    window.history.replaceState(null, '', window.location.pathname + '?' + params.toString());
+    /* Keep an incoming guideline fragment alive until boot can open and
+       focus it (issue #620). Unit synchronization owns query state only. */
+    window.history.replaceState(
+      null,
+      '',
+      window.location.pathname + '?' + params.toString() + window.location.hash
+    );
   }
 
   /* Reviewer-only sample group wrapper (issue #455). One review unit per
@@ -5233,6 +5239,60 @@
       });
     }
   }
+  function guidelineElementById(container, id) {
+    if (!container) return null;
+    var elements = container.querySelectorAll('[id]');
+    for (var i = 0; i < elements.length; i += 1) {
+      if (elements[i].id === id) return elements[i];
+    }
+    return null;
+  }
+  /* Issue #620 / FR-096 point 4: a feedback citation navigates to the
+     workspace with the rendered heading id as its fragment. Find the
+     Markdown file that actually owns that id, open it, then focus and mark
+     the heading. Invalid/manual fragments fall through to the normal
+     first-visit guideline behavior instead of opening a blank modal. */
+  function openGuidelineSectionFromHash() {
+    var rawHash = window.location.hash ? window.location.hash.slice(1) : '';
+    if (!rawHash || !currentProfile) return false;
+    var anchorId = rawHash;
+    try {
+      anchorId = decodeURIComponent(rawHash);
+    } catch (e) {
+      return false;
+    }
+
+    var files = currentProfile.guidelineFiles || [];
+    var matchedFile = null;
+    for (var i = 0; i < files.length; i += 1) {
+      if (files[i].type !== 'markdown') continue;
+      var probe = document.createElement('div');
+      probe.innerHTML = renderMarkdown(files[i].content);
+      if (guidelineElementById(probe, anchorId)) {
+        matchedFile = files[i];
+        break;
+      }
+    }
+    if (!matchedFile) return false;
+
+    openGuidelineMdModal(matchedFile.content, matchedFile.name, document.getElementById('wsRoot'));
+    var body = document.getElementById('wsGuidelineMdModalBody');
+    var target = guidelineElementById(body, anchorId);
+    if (!target) return false;
+    target.setAttribute('data-guideline-anchor-target', 'true');
+    target.setAttribute('aria-current', 'location');
+    target.setAttribute('tabindex', '-1');
+    target.style.backgroundColor = 'var(--color-warning-soft-bg, #FEF3C7)';
+    target.style.outline = '2px solid var(--color-warning, #D97706)';
+    target.style.outlineOffset = '4px';
+    target.style.borderRadius = 'var(--radius-sm, 4px)';
+    target.style.scrollMarginTop = '24px';
+    window.requestAnimationFrame(function () {
+      target.scrollIntoView({ block: 'center', behavior: 'auto' });
+      target.focus({ preventScroll: true });
+    });
+    return true;
+  }
   function closeGuidelineMdModal() {
     var modal = document.getElementById('wsGuidelineMdModal');
     if (modal) modal.classList.add('hidden');
@@ -5647,7 +5707,7 @@
     setupGuidelineTabs();
     setupSampleNav();
     setupMobileDrawer();
-    setupGuidelineModal();
+    if (!openGuidelineSectionFromHash()) setupGuidelineModal();
     setupLangToggle();
   }
 
