@@ -30,6 +30,10 @@
 
 T014／T016 目前把部分已提交審核掛給 `reviewer_chen`，issue #824 黏住後會使其永遠成為當事人。seed marker 由 v3 升為 v4，偵測 v1～v3 時重建 T014–T016 的 prototype 審核 bucket；審核決策改掛有效分派池 `wang → li → lin` 的位置性落點，既有仲裁內容、樣本 ID 與答案不變。這是 prototype localStorage 遷移，不代表正式資料庫 migration。
 
+### D7：下一個可處理單位不為仲裁者製造例外指派
+
+`findNextActionableReviewUnit()` 不新增仲裁者專用分支；它繼續消費 `getAssignedReviewUnits()` 與 FR-060 仲裁資格。D2 使保留仲裁者沒有新的 `pending` 指派，因此 FR-073 原本「pending 優先」對該身分自然成為不可達分支。仲裁送出 `兩者皆非` 後，若目前爭議仍是其最前面的可仲裁單位，函式可回傳目前單位以保留 FR-065 改票；任務中屬於其他審核員的 pending 不得改變這個結果。
+
 ## Risks / Trade-offs
 
 - 指定多位仲裁者會縮小審核池；014 因此必須保證至少留一位非仲裁審核員。

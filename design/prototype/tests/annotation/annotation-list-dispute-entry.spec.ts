@@ -171,11 +171,8 @@ test.describe('arbitration entry on disputed rows', () => {
     await expect(page.getByTestId('ws-sample-item').first()).toBeVisible();
   });
 
-  test('non-disputed rows never offer 仲裁, even to an arbiter', async ({ page }) => {
-    const pendingRows = page
-      .getByTestId('ws-sample-item')
-      .filter({ hasText: '待審' });
-    await expect(pendingRows.first()).toBeVisible();
-    await expect(page.getByTestId('list-arbitrate-entry')).toHaveCount(1); // only the one disputed row
+  test('a reserved arbiter receives no pending rows and only sees the disputed arbitration entry', async ({ page }) => {
+    await expect(page.getByTestId('ws-sample-item').filter({ hasText: '待審' })).toHaveCount(0);
+    await expect(page.getByTestId('list-arbitrate-entry')).toHaveCount(1);
   });
 });

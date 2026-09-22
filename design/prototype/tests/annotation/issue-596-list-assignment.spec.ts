@@ -29,18 +29,19 @@ import { buildListUrl } from './_workspace-helpers';
 const TASK = 'T001';
 const OFFICIAL = 'official_run' as const;
 
-/* FR-093's per_unit round-robin over T001's 15 units and the 4-reviewer
-   roster. Sorted by sample_id then annotator_id, so these are derived, not
+/* FR-093's per_unit round-robin over T001's 15 units and its 3-person
+   assignment roster after designated arbiter reviewer_chen is reserved.
+   Sorted by sample_id then annotator_id, so these are derived, not
    chosen -- they are here as a concrete anchor for the relational
    assertions, which alone could be satisfied by an empty list. */
 const OFFICIAL_ASSIGNMENT: Record<string, string[]> = {
-  reviewer_wang: ['sent-001/113450022', 'sent-002/kioleemg12', 'sent-003/tony0950127', 'sent-005/113450022'],
-  reviewer_lin: ['sent-002/113450022', 'sent-003/kioleemg12', 'sent-004/tony0950127'],
+  reviewer_wang: ['sent-001/113450022', 'sent-002/113450022', 'sent-003/113450022', 'sent-004/113450022', 'sent-005/113450022'],
+  reviewer_lin: ['sent-001/tony0950127', 'sent-002/tony0950127', 'sent-003/tony0950127', 'sent-004/tony0950127', 'sent-005/tony0950127'],
 };
 
-/* dry_run round-robins over DISTINCT samples: 5 samples over 4 reviewers, so
-   reviewer_wang draws sent-001 and sent-005 whole. */
-const DRY_RUN_SAMPLES = ['sent-001', 'sent-005'];
+/* dry_run round-robins over DISTINCT samples: 5 samples over the 3-person
+   assignment roster, so reviewer_wang draws sent-001 and sent-004 whole. */
+const DRY_RUN_SAMPLES = ['sent-001', 'sent-004'];
 const ANNOTATORS_PER_SAMPLE = 3;
 
 const DISPUTE = { sample: 'sent-001', annotator: 'kioleemg12' };
@@ -151,8 +152,8 @@ test.describe('FR-060 指派過濾不得使仲裁入口消失', () => {
     await gotoList(page, ARBITER);
     const units = await visibleUnits(page);
 
-    /* not among reviewer_chen's four assigned units, yet present -- because
-       the dispute is claimable by them */
+    /* reviewer_chen is reserved from every new review assignment, yet the
+       dispute is visible because it is claimable by them */
     expect(units).toContain(`${DISPUTE.sample}/${DISPUTE.annotator}`);
 
     const row = page

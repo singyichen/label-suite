@@ -26,15 +26,15 @@ import { buildListUrl } from './_workspace-helpers';
  * issue #596 (FR-093): a reviewer's list now carries only the units the
  * system assigned to THEM, so 15 is no longer what any one reviewer sees.
  * The default identity is reviewer_wang, and T001's 15 units spread over the
- * 4-strong demo roster give it:
- *   dry_run (per_sample): sent-001 and sent-005 whole -> 6 units, three
+ * 3-strong assignment roster (reviewer_chen is reserved) give it:
+ *   dry_run (per_sample): sent-001 and sent-004 whole -> 6 units, three
  *     annotators each, which is where the per-unit row shape stays visible.
- *   official_run (per_unit): one unit each from sent-001 / sent-002 /
- *     sent-003 / sent-005 -> 4 units, never two from the same sample.
+ *   official_run (per_unit): one unit from each sample -> 5 units, never
+ *     two from the same sample.
  * The row shape is still identical in both run types -- one row IS one
  * review unit. What differs is which units land on one reviewer, and that
  * is the FR-093 assignment granularity, not a run_type branch in the list. */
-const ASSIGNED_UNITS = { dry_run: 6, official_run: 4 } as const;
+const ASSIGNED_UNITS = { dry_run: 6, official_run: 5 } as const;
 
 test.describe('One row per review unit', () => {
   for (const runType of ['dry_run', 'official_run'] as const) {
@@ -70,7 +70,7 @@ test.describe('One row per review unit', () => {
     await expect(rows.nth(0).getByTestId('list-review-annotator')).toHaveText('kioleemg12');
     await expect(rows.nth(1).getByTestId('list-review-annotator')).toHaveText('113450022');
     await expect(rows.nth(2).getByTestId('list-review-annotator')).toHaveText('tony0950127');
-    await expect(rows.nth(3)).toContainText('sent-005');
+    await expect(rows.nth(3)).toContainText('sent-004');
   });
 
   /* official_run spreads unit-by-unit, so the same reviewer never holds two
@@ -82,8 +82,9 @@ test.describe('One row per review unit', () => {
     const rows = page.getByTestId('ws-sample-item');
     const expected = [
       ['sent-001', '113450022'],
-      ['sent-002', 'kioleemg12'],
-      ['sent-003', 'tony0950127'],
+      ['sent-002', '113450022'],
+      ['sent-003', '113450022'],
+      ['sent-004', '113450022'],
       ['sent-005', '113450022'],
     ] as const;
     for (let i = 0; i < expected.length; i += 1) {
@@ -131,7 +132,7 @@ test.describe('One row per review unit', () => {
     await expect(page).toHaveURL(/annotation-workspace\.html/);
     await expect(page).toHaveURL(/sample_id=sent-002/);
     await expect(page).toHaveURL(/run_type=official_run/);
-    await expect(page).toHaveURL(/annotator_id=kioleemg12/);
+    await expect(page).toHaveURL(/annotator_id=113450022/);
   });
 
   test('the retired expand control and detail rows are gone in both run types', async ({ page }) => {

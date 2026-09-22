@@ -82,6 +82,8 @@ interface WorkspaceData {
     identity: ReviewIdentity
   ) => void;
   getAssignedReviewUnits: (taskId: string, runType: string, reviewerId: string, units: Unit[]) => Unit[];
+  taskArbiterRoster: (taskId: string) => string[];
+  reviewAssignmentRoster: (reviewerIds: string[], arbiterIds: string[]) => string[];
 }
 
 interface DataWindow {
@@ -164,6 +166,16 @@ async function assignedTo(page: Page, taskId: string, runType: string, reviewerI
       return data.getAssignedReviewUnits(taskId, runType, reviewerId, units);
     },
     { taskId, runType, reviewerId, units }
+  );
+}
+
+async function effectiveAssignmentRoster(page: Page, taskId: string, reviewerIds: string[]): Promise<string[]> {
+  return page.evaluate(
+    ({ taskId, reviewerIds }) => {
+      const data = (window as unknown as DataWindow).LabelSuiteAnnotationWorkspaceData;
+      return data.reviewAssignmentRoster(reviewerIds, data.taskArbiterRoster(taskId));
+    },
+    { taskId, reviewerIds }
   );
 }
 
@@ -346,11 +358,13 @@ test('official_run: a draft-only (unsubmitted) review does not stick -- the unit
   expect(hasUnit(ownedByDraftAuthor, target)).toBe(false);
 
   /* ...and whoever the plain positional rule now points to (index 1 in the
-   * shrunk roster) does own it. This assertion is expected to PASS even
+   * effective shrunk roster, excluding reserved arbiters) does own it. This
+   * assertion is expected to PASS even
    * against today's pre-fix code -- drafts already have zero effect on
    * assignment today, which is exactly the baseline this bullet must keep
    * once stickiness ships. */
-  const newOwnerId = shrunk[1 % shrunk.length];
+  const effectiveRoster = await effectiveAssignmentRoster(page, TASK_OFFICIAL, shrunk);
+  const newOwnerId = effectiveRoster[1 % effectiveRoster.length];
   const ownedByNewOwner = await assignedTo(page, TASK_OFFICIAL, RUN_OFFICIAL, newOwnerId, units);
   expect(hasUnit(ownedByNewOwner, target)).toBe(true);
 });

@@ -10,5 +10,6 @@
 
 - [x] 1.1 以 `design/prototype/tests/task-management/issue-868-arbitration-reserve.spec.ts` 建立 committed Red：所有 reviewer 皆勾為 arbiter 時儲存被阻擋且顯示可修正雙語訊息；至少保留一位非 arbiter reviewer 時儲存成功；`arbiter_ids = []` 仍可儲存。記錄 expected failure。 [@senior-qa]
   - Red commit：`7a8752e1`。同一指令 → 本檔 3 failed／2 passed；預期失敗為中英文零分派池儲存未阻擋與 helper text 尚未揭露保留語意，合法角色分離與空仲裁名冊兩例維持通過。
-- [ ] 1.2 Green：修改 `task-detail.html` 的 `validateReviewData()` 與審核設定 helper text／i18n；不得改其他 task-detail 行為。 [@main]
-- [ ] 1.3 與 annotation companion change 一起執行 prototype typecheck、定向 Playwright 與相關回歸；完成後正典 014 MINOR bump，修訂 FR-010s-1；delta 中的新情境於 archive 時接續使用者故事 3 現行最大 AC 編號，並新增一條可量測成功標準，補 Changelog並逐條 Source-Verify。 [@main]
+- [x] 1.2 Green：修改 `task-detail.html` 的 `validateReviewData()` 與審核設定 helper text／i18n；不得改其他 task-detail 行為。 [@main]
+- [x] 1.3 與 annotation companion change 一起執行 prototype typecheck、定向 Playwright 與相關回歸；完成後正典 014 MINOR bump，修訂 FR-010s-1；delta 中的新情境於 archive 時接續使用者故事 3 現行最大 AC 編號，並新增一條可量測成功標準，補 Changelog並逐條 Source-Verify。 [@main]
+  - Apply／archive evidence：issue #868 定向套件 10 passed、受影響回歸 70 passed、完整 prototype Playwright 1,864 passed、`pnpm run typecheck` 通過；正典更新為 v4.2.0，新增 AC-3.21～AC-3.23 與 SC-048，修訂 FR-010s-1 並補 Changelog。change 已 archive 為 `2026-09-23-validate-reviewer-arbiter-role-separation`；canonical ID grep 回報 0 missing，Project SDD lint 回報 0 errors。

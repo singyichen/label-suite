@@ -7,15 +7,16 @@ import { buildListUrl, buildWorkspaceUrl, skipGuidelineModal } from './_workspac
  * unit still derives 待審 because nothing is submitted. This file pins the
  * boot-time seeder that stages the full review-flow demo: annotator
  * submissions, reviewer decisions and one arbitration per script, T014-T016
- * ONLY, guarded by the marker key `labelsuite.reviewFlowDemoSeed.v3` (issues
- * #856 and #620) so a reload never duplicates history events or refreshes
+ * ONLY, guarded by the marker key `labelsuite.reviewFlowDemoSeed.v4` (issues
+ * #856, #620 and #868) so a reload never duplicates history events or refreshes
  * timestamps.
  *
  * Expected status matrix (derived, not stored -- see getReviewUnitStatus).
  * issue #596 (OpenSpec change 2026-09-01-single-owner-review-relay, FR-093)
  * changed the assignment model this matrix depends on: a review unit now
- * belongs to exactly ONE assigned reviewer, spread across the 4-member
- * roster by round robin (index % 4 over [wang, li, chen, lin], sorted by
+ * belongs to exactly ONE assigned reviewer, spread across the effective
+ * assignment roster by round robin. Issue #868 reserves designated arbiters,
+ * so T014-T016 use [wang, li, lin], excluding chen, sorted by
  * sample_id). That reassignment changed WHO reviewed which annotator-unit
  * within each sample, which in turn changed some of issue #551's original
  * per-row outcomes -- the matrix below is read directly off today's
@@ -45,7 +46,7 @@ import { buildListUrl, buildWorkspaceUrl, skipGuidelineModal } from './_workspac
  *     submits, wang MODIFIES the value, arbiter reviewer_chen (the roster's
  *     only can_arbitrate reviewer, not a participant -- FR-060) adopts B ->
  *     unit finalizes on wang's corrected value, decided by chen.
- *   T016 (`ofm-05-final-exception`, index 4 -> reviewer_wang): same dispute
+ *   T016 (`ofm-05-final-exception`, index 4 -> reviewer_li): same dispute
  *     shape, but chen's arbitration REJECTS both sides (兩者皆非, FR-061
  *     point 3) -> the item queues in the final exception pool (FR-095),
  *     unit stays disputed until a role=project_leader visit resolves it.
@@ -64,7 +65,7 @@ import { buildListUrl, buildWorkspaceUrl, skipGuidelineModal } from './_workspac
  *   FR-093, FR-060, FR-061 (v5.0.0), FR-094, FR-095
  */
 
-const SEED_MARKER = 'labelsuite.reviewFlowDemoSeed.v3';
+const SEED_MARKER = 'labelsuite.reviewFlowDemoSeed.v4';
 
 /* Issue #452 appended a finalize-threshold qualifier to every non-待審
    badge so colour is never the only signal. This suite pins the five-state
@@ -277,29 +278,19 @@ test.describe('T016 official_run: reviewer corrects, arbitration adopts B, unit 
      canonical slot is covered by its own describe block above and finalizes
      (no arbitrate entry), and ofm-02 finalizes too (see the map above).
 
-     ofm-03 is excluded for a different reason (issue #824 / #868). Under
-     FR-093 round robin over T016's roster it is reviewer_chen's own unit
-     (index 2), and issue #824 re-attributed the demo seed so each row's
-     review is stored under the reviewer the round robin actually assigns.
-     reviewer_chen is therefore a party to ofm-03, and FR-060 disqualifies a
-     party from arbitrating the sample -- so no arbitrate entry can exist
-     there for him, and he is the roster's only can_arbitrate member. That
-     structural gap (a dispute landing on the sole arbiter is unarbitrable)
-     is tracked in issue #868 and is out of scope for #824; ofm-03 is
-     asserted here as "no arbitrate entry" so the gap stays pinned rather
-     than silently regressing. */
-  test('reviewer_chen gets a 仲裁 entry on ofm-04/05 but not on his own ofm-03 (FR-060, issue #868)', async ({ page }) => {
+     Issue #868 removes the structural gap where ofm-03 was assigned to
+     reviewer_chen and therefore could not be arbitrated by the task's only
+     designated arbiter. All designated arbiters are now excluded from new
+     review assignment, so chen is a nonparticipant on all three disputes. */
+  test('reviewer_chen gets a 仲裁 entry on every staged T016 dispute (FR-060, issue #868)', async ({ page }) => {
     await page.goto(
       buildListUrl({ task_id: 'T016', role: 'reviewer', run_type: 'official_run', reviewer_id: 'reviewer_chen' })
     );
-    for (const sampleId of ['ofm-04-reviewer-bypass', 'ofm-05-final-exception']) {
+    for (const sampleId of ['ofm-03-awaiting-arbitration', 'ofm-04-reviewer-bypass', 'ofm-05-final-exception']) {
       const row = page.getByTestId('ws-sample-item').filter({ hasText: sampleId });
       await expect(row, sampleId).toHaveCount(1);
       await expect(row.getByTestId('list-arbitrate-entry'), sampleId).toHaveText('仲裁');
     }
-    const ownRow = page.getByTestId('ws-sample-item').filter({ hasText: 'ofm-03-awaiting-arbitration' });
-    await expect(ownRow, 'ofm-03-awaiting-arbitration').toHaveCount(1);
-    await expect(ownRow.getByTestId('list-arbitrate-entry'), 'ofm-03-awaiting-arbitration').toHaveCount(0);
   });
 });
 
@@ -320,7 +311,7 @@ test.describe('T016 official_run: reviewer corrects, arbitration adopts B, unit 
 test.describe('T016 official_run: arbitration rejects both sides, final exception pool, project leader resolves (issue #596 FR-061/FR-095, migrated from T017 by issue #815)', () => {
   test('ofm-05-final-exception stays 爭議中 -- rejected by arbitration, not yet resolved', async ({ page }) => {
     await page.goto(
-      buildListUrl({ task_id: 'T016', role: 'reviewer', run_type: 'official_run', reviewer_id: 'reviewer_wang' })
+      buildListUrl({ task_id: 'T016', role: 'reviewer', run_type: 'official_run', reviewer_id: 'reviewer_li' })
     );
     const row = page.getByTestId('ws-sample-item').filter({ hasText: 'ofm-05-final-exception' });
     await expect(row).toHaveCount(1);
@@ -329,7 +320,7 @@ test.describe('T016 official_run: arbitration rejects both sides, final exceptio
 
   test('ofm-05-final-exception: arbitration recorded a reject with no finalized value, and the exception pool has not resolved it yet', async ({ page }) => {
     await page.goto(
-      buildListUrl({ task_id: 'T016', role: 'reviewer', run_type: 'official_run', reviewer_id: 'reviewer_wang' })
+      buildListUrl({ task_id: 'T016', role: 'reviewer', run_type: 'official_run', reviewer_id: 'reviewer_li' })
     );
 
     const probe = await page.evaluate(() => {
@@ -387,7 +378,7 @@ test.describe('T016 official_run: arbitration rejects both sides, final exceptio
      vote -- isArbiterCandidate only checks can_arbitrate + no REVIEWER
      submission of her own, and the unit stays 爭議中 until the pool
      resolves it. So the list row keeps offering chen the 仲裁 entry. */
-  test("reviewer_chen still gets a 仲裁 entry on ofm-05-final-exception's list row; wang (the participant) never does", async ({ page }) => {
+  test("reviewer_chen still gets a 仲裁 entry on ofm-05-final-exception's list row; li (the participant) never does", async ({ page }) => {
     await page.goto(
       buildListUrl({ task_id: 'T016', role: 'reviewer', run_type: 'official_run', reviewer_id: 'reviewer_chen' })
     );
@@ -396,11 +387,11 @@ test.describe('T016 official_run: arbitration rejects both sides, final exceptio
     await expect(chenRow.getByTestId('list-arbitrate-entry')).toHaveText('仲裁');
 
     await page.goto(
-      buildListUrl({ task_id: 'T016', role: 'reviewer', run_type: 'official_run', reviewer_id: 'reviewer_wang' })
+      buildListUrl({ task_id: 'T016', role: 'reviewer', run_type: 'official_run', reviewer_id: 'reviewer_li' })
     );
-    const wangRow = page.getByTestId('ws-sample-item').filter({ hasText: 'ofm-05-final-exception' });
-    await expect(wangRow).toHaveCount(1);
-    await expect(wangRow.getByTestId('list-arbitrate-entry')).toHaveCount(0);
+    const liRow = page.getByTestId('ws-sample-item').filter({ hasText: 'ofm-05-final-exception' });
+    await expect(liRow).toHaveCount(1);
+    await expect(liRow.getByTestId('list-arbitrate-entry')).toHaveCount(0);
   });
 });
 

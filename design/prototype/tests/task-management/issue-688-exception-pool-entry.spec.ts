@@ -79,12 +79,10 @@ test.describe('Final exception pool entry + completion gate (issue #688)', () =>
     await expect(row).toHaveCount(1);
     await expect(row.locator('[data-testid="fep-sample-id"]')).toContainText('ofm-05-final-exception');
     await expect(row.locator('[data-testid="fep-annotator"]')).toContainText('kioleemg12');
-    await expect(row.locator('[data-testid="fep-reviewer"]')).toContainText('reviewer_wang');
+    await expect(row.locator('[data-testid="fep-reviewer"]')).toContainText('reviewer_li');
     await expect(row.locator('[data-testid="fep-output-type"]')).toContainText('single_label');
     await expect(row.locator('[data-testid="fep-arbiter"]')).toContainText('reviewer_chen');
-    // Reason cell must render SOME content (Green's documented fallback for
-    // this seed's reason-less reject vote), not necessarily a specific string.
-    await expect(row.locator('[data-testid="fep-arbiter"]')).not.toHaveText('reviewer_chen');
+    await expect(row.locator('[data-testid="fep-fell-at"]')).not.toHaveText('-');
   });
 
   // FR-018 point 3: row navigation carries the full review-unit identity.

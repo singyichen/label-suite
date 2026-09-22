@@ -68,50 +68,32 @@ function quickReviewButton(page: Page, taskId: string) {
 }
 
 test.describe('Dashboard — quick review opens the next actionable unit', () => {
-  /* T014's first record (dry-01-all-agree) is finalized for all three
-     annotators. The first unit ANYBODY still has to review is
-     dry-02-one-divergent x tony0950127, but issue #719 made rank 1 require
-     that the unit be FR-093-assigned to the signed-in reviewer, and dry_run
-     assigns per SAMPLE in first-appearance order -- dry-01 to reviewer_wang,
-     dry-02 to reviewer_li, dry-03 to reviewer_chen. So reviewer_chen's own
-     first pending unit is dry-03-dispute-open x kioleemg12: within that
-     sample 113450022 is finalized (issue #551: its sole reviewer's
-     correction converges at N=1) and tony0950127 sorts later by
-     annotator_id. This test still pins pending as the top priority -- the
-     unit it lands on is just the reviewer's own, not the task's. */
-  test('routes to the first pending unit, not the first dataset record', async ({ page }) => {
+  /* T014's first record is finalized. reviewer_chen is reserved from new
+     review assignments, so quick review skips every pending unit and opens
+     the first dispute they may arbitrate instead. */
+  test('routes a reserved arbiter to the first eligible dispute, not a pending assignment', async ({ page }) => {
     await openReviewerScenario(page);
     await quickReviewButton(page, 'T014').click();
 
     await expect(page).toHaveURL(/\/pages\/annotation\/annotation-workspace\.html\?/);
     await expect(page).toHaveURL(/task_id=T014/);
-    await expect(page).toHaveURL(/sample_id=dry-03-dispute-open/);
-    await expect(page).toHaveURL(/annotator_id=kioleemg12/);
+    await expect(page).toHaveURL(/sample_id=dry-02-one-divergent/);
+    await expect(page).toHaveURL(/annotator_id=113450022/);
     await expect(page).toHaveURL(/reviewer_id=reviewer_chen/);
     await expect(page).toHaveURL(/role=reviewer/);
     await expect(page).toHaveURL(/run_type=dry_run/);
   });
 
-  /* T016 has zero pending units (審核覆蓋率 100%). issue #596 (FR-092): a
-     single owner's modify/bypass always enters the dispute pool, so
-     ofm-03/ofm-04/ofm-05 all start out disputed. issue #824 (sticky review
-     assignment) changes WHO arbitration eligibility excludes here: the demo
-     seed's sole reviewer submission on ofm-03 is reviewer_chen's own modify
-     (annotation-workspace.data.js), so FR-060 disqualifies chen as a
-     participant on that unit -- isArbiterCandidate() now returns false for
-     ofm-03. ofm-05 is arbitrated by chen too (an arbReject vote into the
-     final exception pool), which finalizes it and drops it out of
-     `disputed` entirely. That leaves ofm-04-reviewer-bypass (reviewer_lin
-     bypassed, chen never submitted on it) as the only unit left in rank 2
-     for chen, so the enumeration order no longer matters -- it is the sole
-     candidate. */
+  /* T016 has zero pending units. The reseeded single-owner disputes are
+     reviewed by non-arbiters, so reviewer_chen reaches the first eligible
+     dispute in enumeration order. */
   test('routes to a disputed unit this reviewer may arbitrate when nothing is pending', async ({ page }) => {
     await openReviewerScenario(page);
     await quickReviewButton(page, 'T016').click();
 
     await expect(page).toHaveURL(/\/pages\/annotation\/annotation-workspace\.html\?/);
     await expect(page).toHaveURL(/task_id=T016/);
-    await expect(page).toHaveURL(/sample_id=ofm-04-reviewer-bypass/);
+    await expect(page).toHaveURL(/sample_id=ofm-03-awaiting-arbitration/);
     await expect(page).toHaveURL(/annotator_id=kioleemg12/);
     await expect(page).toHaveURL(/reviewer_id=reviewer_chen/);
     await expect(page).toHaveURL(/run_type=official_run/);

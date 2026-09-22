@@ -45,8 +45,10 @@ async function openMemberTab(page: Page) {
 // annotation-workspace.data.js.
 const TOTAL_REVIEW_UNITS = 15;
 
-// T001's DEFAULT_TASK_DATA.reviewerIds -- the four checked reviewers.
-const CHECKED_REVIEWER_NAMES = ['王小明', '李大華', '陳美玲', '林佳蓉'];
+// T001's effective assignment roster. 陳美玲 remains checked as a reviewer
+// but is reserved by arbiter_ids, so her new-assignment workload is zero.
+const ASSIGNMENT_REVIEWER_NAMES = ['王小明', '李大華', '林佳蓉'];
+const RESERVED_ARBITER_NAMES = ['陳美玲'];
 
 // The legacy seed ids that DEFAULT_REVIEW_WORKLOAD carries numbers for, none
 // of which T001 actually checks.
@@ -67,13 +69,20 @@ test.describe('Issue #761 review workload derivation', () => {
     await expect(rows).toHaveCount(7);
 
     let checkedSum = 0;
-    for (const name of CHECKED_REVIEWER_NAMES) {
+    for (const name of ASSIGNMENT_REVIEWER_NAMES) {
       const row = rows.filter({ hasText: name });
       const assigned = parseCount(await row.locator('td').nth(1).textContent());
       expect(assigned).toBeGreaterThan(0);
       checkedSum += assigned;
     }
     expect(checkedSum).toBe(TOTAL_REVIEW_UNITS);
+
+    for (const name of RESERVED_ARBITER_NAMES) {
+      const row = rows.filter({ hasText: name });
+      await expect(row.locator('td').nth(1)).toHaveText('0');
+      await expect(row.locator('td').nth(2)).toHaveText('0');
+      await expect(row.locator('td').nth(3)).toHaveText('0');
+    }
 
     for (const name of UNCHECKED_LEGACY_NAMES) {
       const row = rows.filter({ hasText: name });
@@ -119,11 +128,14 @@ test.describe('Issue #761 review workload derivation', () => {
     await expect(linRowAfter.locator('td').nth(3)).toHaveText('0');
 
     let remainingSum = 0;
-    for (const name of ['王小明', '李大華', '陳美玲']) {
+    for (const name of ['王小明', '李大華']) {
       const row = page.locator('#reviewAssignmentBody tr').filter({ hasText: name });
       remainingSum += parseCount(await row.locator('td').nth(1).textContent());
     }
     expect(remainingSum).toBe(TOTAL_REVIEW_UNITS);
+
+    const reservedArbiter = page.locator('#reviewAssignmentBody tr').filter({ hasText: '陳美玲' });
+    await expect(reservedArbiter.locator('td').nth(1)).toHaveText('0');
   });
 
   test('SC-034：成員清單「審核負荷」欄與審核指派表一致', async ({ page }) => {

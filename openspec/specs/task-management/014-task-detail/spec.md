@@ -2,7 +2,7 @@
 
 ## Purpose
 
-任務詳情頁（`task-detail`）是專案負責人設定審核模型、監看審核進度並判定任務可否結案的單一控制面。正典為 `specs/_archive/014-task-detail/spec.md`（v4.1.0，已封存）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR ID，不改動其正典措辭。目前收錄：change `align-014-review-model`（issue #688）之 FR-005j／FR-005k／FR-008b／FR-010s／FR-010s-1／FR-010s-2／FR-010t（修訂，issue #596 單人接力審核模型對齊）、FR-018（新增，最終例外池）；change `task-detail-url-view-state`（issue #726）之 FR-019（新增，頁籤與清單檢視狀態的網址同步）；change `task-detail-seq-tagging-export-dialog`（issue #742）之 FR-020（新增，`sequence_tagging` 匯出對話框與序列匯出欄位）；change `task-detail-export-history-redownload`（issue #772）之 FR-021（新增，匯出記錄重新下載依條件快照重建且不新增紀錄）；change `task-detail-trial-round-from-waiting`（issue #791）之 FR-013（首次收錄修訂後全文，新增試標回合僅自待 IAA 確認狀態發起）；change `task-detail-iaa-precondition-and-override-scope`（issue #783）之 FR-010o-1（修訂，門檻覆寫排除未校準型別）、FR-010o-4（新增，待 IAA 確認頁顯示 IAA 計算狀態）。本檔於該 change archive 前以正典 v2.11.3 原文建立基線，使 MODIFIED 有可比對的前值，archive 後基線內容已被完整取代。
+任務詳情頁（`task-detail`）是專案負責人設定審核模型、監看審核進度並判定任務可否結案的單一控制面。正典為 `specs/task-management/014-task-detail/spec.md`（v4.2.0；issue #868 合併後移回封存路徑）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR ID，不改動其正典措辭。目前收錄：change `align-014-review-model`（issue #688）之 FR-005j／FR-005k／FR-008b／FR-010s／FR-010s-1／FR-010s-2／FR-010t（修訂，issue #596 單人接力審核模型對齊）、FR-018（新增，最終例外池）；change `task-detail-url-view-state`（issue #726）之 FR-019（新增，頁籤與清單檢視狀態的網址同步）；change `task-detail-seq-tagging-export-dialog`（issue #742）之 FR-020（新增，`sequence_tagging` 匯出對話框與序列匯出欄位）；change `task-detail-export-history-redownload`（issue #772）之 FR-021（新增，匯出記錄重新下載依條件快照重建且不新增紀錄）；change `task-detail-trial-round-from-waiting`（issue #791）之 FR-013（首次收錄修訂後全文，新增試標回合僅自待 IAA 確認狀態發起）；change `task-detail-iaa-precondition-and-override-scope`（issue #783）之 FR-010o-1（修訂，門檻覆寫排除未校準型別）、FR-010o-4（新增，待 IAA 確認頁顯示 IAA 計算狀態）；以及 change `validate-reviewer-arbiter-role-separation`（issue #868）之 FR-010s-1（修訂）。
 
 ## Requirements
 
@@ -71,24 +71,44 @@ Overview MUST 在「抽樣設定」之後提供獨立「審核設定」區塊。
 
 ### Requirement: FR-010s-1 審核設定編輯模式
 
-審核設定編輯模式 MUST 提供**兩份勾選清單**，MUST NOT 提供任何數值輸入框、模式單選或行為 toggle：
+審核設定編輯模式 MUST 提供兩份勾選清單，MUST NOT 提供任何數值輸入框、模式單選或行為 toggle：`reviewer_ids` 的候選為 `membership_status = active AND task_role = reviewer`；`arbiter_ids` 的候選 MUST 為 `reviewer_ids` 子集合，未勾選為 reviewer 者不得出現在 arbiter 候選。兩份名冊元素 MUST 遵守 `REVIEWER_ID_FORMAT`，使用 `TaskMembership.user_id` 作為唯一比對與審核負荷聚合鍵，不得以 Email 或顯示名稱比對；Email 只供顯示。
 
-1. `審核員` 勾選清單——候選 = `membership_status = active AND task_role = reviewer`；勾選結果寫入 `reviewer_ids`，即系統自動指派的分派對象（`annotation/015-annotation-workspace` FR-093）；
-2. `仲裁者` 勾選清單——候選 MUST 為 `reviewer_ids` 的子集合（未被勾選為審核員者 MUST NOT 出現於仲裁者候選）；勾選結果寫入 `arbiter_ids`，即 `can_arbitrate = true` 的來源（`annotation/015-annotation-workspace` FR-060 條件一）。
+儲存時 MUST 同時符合：
 
-兩份名冊寫入的元素 MUST 遵守 `REVIEWER_ID_FORMAT`：值為該成員的 `TaskMembership.user_id`（不透明 user id，形狀比照 `annotation/015-annotation-workspace` 之 `REVIEWER_ROSTER`），MUST NOT 寫入 Email 或顯示名稱。消費端比對審核員身分時 MUST 以該 id 為唯一鍵；成員清單「審核負荷」欄之聚合亦 MUST 以該 id 為鍵。Email 僅供成員清單顯示，MUST NOT 參與比對。
+1. `reviewer_ids` 至少一人；
+2. `reviewer_ids - arbiter_ids` 至少一人，因 `arbiter_ids` 成員依 annotation/015 FR-093 保留處理仲裁，不接收新審核單位。
 
-驗證：儲存時 `reviewer_ids` 至少 1 人，否則 MUST 阻擋儲存並顯示可修正錯誤訊息。`arbiter_ids` 允許為空並於摘要值標示（FR-010s-2），不阻擋儲存。取消勾選某審核員時，若其 `arbiter_ids` 亦被勾選，MUST 同步取消並於儲存前提示。
+任一條件不符時 MUST 阻擋整筆儲存並顯示可修正錯誤。`arbiter_ids` 仍 MAY 為空；空值依 FR-010s-2 顯示摘要並沿用 FR-010t 發布警示，不構成儲存阻擋。取消 reviewer 勾選時，若同一人亦在 `arbiter_ids`，系統 MUST 同步取消並於儲存前提示。編輯區 MUST 揭露指定仲裁者不會收到新審核單位，且仲裁時另受 015 FR-060 非當事人限制；系統不得因 reviewer 恰為該筆標記員而排除其一般審核指派。
 
-編輯區塊 MUST 載明：仲裁時另受非當事人限制（對該審核單位已提交審核者不得仲裁該單位，`annotation/015-annotation-workspace` FR-060），且系統 MUST NOT 因某審核員恰為該筆的標記員而排除其審核指派。
+#### Scenario: 全部審核員同時是仲裁者時阻擋儲存
+
+- **GIVEN** PL 在審核設定中勾選兩位 reviewer，並把這兩人都勾為 arbiter
+- **WHEN** PL 儲存審核設定
+- **THEN** 儲存被阻擋，既有設定不被覆寫
+- **AND** 畫面明確提示至少保留一位未被指定為仲裁者的審核員
+
+#### Scenario: 保留一位可分派審核員後可儲存
+
+- **GIVEN** `reviewer_ids = [W, C]` 且 `arbiter_ids = [C]`
+- **WHEN** PL 儲存審核設定
+- **THEN** 儲存成功，W 是新審核單位的有效分派對象，C 保留處理仲裁
+
+#### Scenario: 空仲裁名冊仍可儲存
+
+- **GIVEN** `reviewer_ids` 至少一人且 `arbiter_ids = []`
+- **WHEN** PL 儲存審核設定
+- **THEN** 儲存成功
+- **AND** 摘要與發布確認仍依既有規則警示未指定仲裁者，不新增儲存阻擋
 
 #### Scenario: 仲裁者候選限於已勾選審核員
+
 - **GIVEN** 任務有 4 位啟用中審核員，其中 2 位被勾選為 `審核員`
 - **WHEN** 專案負責人展開 `仲裁者` 勾選清單
 - **THEN** 候選恰為該 2 位被勾選的審核員
 - **AND** 取消勾選其中一位審核員時，其仲裁者勾選同步取消並於儲存前提示
 
 #### Scenario: 名冊以不透明 user id 儲存而非 Email
+
 - **GIVEN** 專案負責人於審核設定勾選一位啟用中審核員並儲存
 - **WHEN** 檢視該任務的 `reviewer_ids`
 - **THEN** 其元素為該成員的 `TaskMembership.user_id`（形如 `reviewer_wang`），不含任何 Email 字串

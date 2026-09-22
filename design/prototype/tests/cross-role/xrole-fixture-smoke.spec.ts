@@ -95,11 +95,11 @@ test.describe('XROLE fixture: buildXRoleSeedPatch + patchDataFile', () => {
      * pre-#596 task-wide list); it is one row per unit THIS REVIEWER is
      * assigned.
      *
-     * official_run (per_unit): 3 records, 1 unit each, round-robin 1-for-1
-     * across the 3-entry roster -- R01 (roster index 0) is assigned exactly
-     * the first sorted sample_id's unit (xr-off-001) -> 1 row. */
+     * official_run (per_unit): R03 is reserved as the task arbiter, so the
+     * 3 records round-robin across R01/R02 only. R01 receives the first and
+     * third sorted units -> 2 rows. */
     await page.goto(buildListUrl({ task_id: taskId, role: 'reviewer', run_type: 'official_run', reviewer_id: 'R01' }));
-    await expect(page.getByTestId('ws-sample-item')).toHaveCount(1);
+    await expect(page.getByTestId('ws-sample-item')).toHaveCount(2);
     await expect(page.getByTestId('list-review-annotator').first()).toBeVisible();
 
     /* dry_run (per_sample): round-robin walks DISTINCT sample_ids instead of

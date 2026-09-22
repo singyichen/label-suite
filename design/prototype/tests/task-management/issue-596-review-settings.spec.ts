@@ -130,7 +130,6 @@ test.describe('Task detail review settings — single-owner relay roster (issue 
       .locator('#reviewerOptionList .reviewer-option', { hasText: 'Kevin Liu' })
       .locator('input')
       .check();
-
     const arbiterOptions = page.locator('#arbiterOptionList .arbiter-option');
     await expect(arbiterOptions).toHaveCount(2);
     await expect(arbiterOptions).toContainText(['Mandy Chen', 'Kevin Liu']);
@@ -205,6 +204,11 @@ test.describe('Task detail review settings — single-owner relay roster (issue 
       .check();
     await page
       .locator('#reviewerOptionList .reviewer-option', { hasText: 'Kevin Liu' })
+      .locator('input')
+      .check();
+    // Keep one non-arbiter reviewer in the assignment pool (issue #868).
+    await page
+      .locator('#reviewerOptionList .reviewer-option', { hasText: 'Rachel Wu' })
       .locator('input')
       .check();
     await page
