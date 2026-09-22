@@ -4,9 +4,9 @@
 
 ## Why
 
-Issue #620。FR-096 第 4 點規定「理由中引用之標註指南段落 MUST 可點擊跳轉至該段落」，但 issue #596 群組 7 落實 7.3 時發現**沒有可跳轉的目標**，只能退而把連結指向該樣本的工作區，並於 `openspec/changes/archive/2026-09-01-single-owner-review-relay/tasks.md:162` 誠實標註為部分達成。現行程式碼仍是那個狀態：`design/prototype/pages/annotation/annotation-list.html` 的 `buildDryRunFeedbackRowEl()` 產出的連結 `href` 是 `buildWorkspaceUrl(profile.id, row.sampleId, context)`，注解逐字寫著「no guideline file exposes per-heading anchors」。
+Issue #620。FR-096 第 4 點規定「理由中引用之標註指南段落 MUST 可點擊跳轉至該段落」，但 issue #596 群組 7 落實 7.3 時發現**沒有可跳轉的目標**，只能退而把連結指向該樣本的工作區，並於 `openspec/changes/archive/2026-09-01-single-owner-review-relay/tasks.md:162` 誠實標註為部分達成。現行程式碼仍是那個狀態：`design/prototype/pages/annotation/annotation-list.html` 的 `buildDryRunFeedbackRowEl()` 產出的連結 `href` 是 `buildWorkspaceUrl(profile.id, row.sampleId, context)`，其相鄰注解亦說明當時沒有可供段落定位的 heading anchors。
 
-**但 issue #620 對現況的描述只對了一半，其診斷因此需要修正。** issue 寫「標註指南目前是一整段換行分隔的純字串」並指向 `design/prototype/pages/task-management/task-detail.data.js:20` 的 `REVIEWER_GUIDELINE_SENTIMENT_BOUNDARY_ZH`——那是**審核員指南**（`reviewerGuidelineText`，呈現於 task-detail 的審核說明摘要）。標記員在工作區看到的指南不是它，而是 `TaskProfile.guidelineFiles` 之 markdown 條目，經 `renderMarkdown()`（`design/prototype/pages/annotation/annotation-workspace.config.js:5107`）渲染為 HTML；該渲染器**早已支援 `#`～`###` 標題並產生 `<h1>`～`<h3>`**（FR-020D 明文列舉）。而 FR-096 的回饋對象是標記員，要跳轉的自然是標記員自己的指南。
+**但 issue #620 對現況的描述只對了一半，其診斷因此需要修正。** issue 寫「標註指南目前是一整段換行分隔的純字串」並指向 `design/prototype/pages/task-management/task-detail.data.js:20` 的 `REVIEWER_GUIDELINE_SENTIMENT_BOUNDARY_ZH`——那是**審核員指南**（`reviewerGuidelineText`，呈現於 task-detail 的審核說明摘要）。標記員在工作區看到的指南不是它，而是 `TaskProfile.guidelineFiles` 之 markdown 條目，經 `design/prototype/pages/annotation/annotation-workspace.config.js` 的 `renderMarkdown()` 渲染為 HTML；該渲染器**早已支援 `#`～`###` 標題並產生 `<h1>`～`<h3>`**（FR-020D 明文列舉）。而 FR-096 的回饋對象是標記員，要跳轉的自然是標記員自己的指南。
 
 **因此段落結構並不缺，缺的只是標題沒有 `id`。** 這把問題從「另造一套段落資料模型」降為「渲染器補錨點」：
 

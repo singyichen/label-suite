@@ -127,3 +127,68 @@ test('two headings with identical text within one guideline get distinct, non-em
   }
   expect(ids[0]).not.toBe(ids[1]);
 });
+
+test('a generated duplicate suffix never collides with a later natural heading slug', async ({
+  page,
+}) => {
+  await patchDataFile(
+    page,
+    'task-detail.data.js',
+    `window.LabelSuiteTaskDetailData.profiles.T001.guidelineFiles = [{
+      name: 'issue-620-suffix-collision.md',
+      type: 'markdown',
+      content: '# Foo\\n\\nFirst.\\n\\n# Foo\\n\\nSecond.\\n\\n# Foo-2\\n\\nThird.'
+    }];`
+  );
+  await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001' }));
+  await dismissGuidelineModal(page);
+  await mdItem(page).click();
+
+  const ids = await headingIds(page.getByTestId('ws-guideline-md-modal-body'));
+  expect(ids).toHaveLength(3);
+  expect(new Set(ids).size).toBe(3);
+});
+
+test('a heading matching an inherited object property keeps a predictable safe slug', async ({
+  page,
+}) => {
+  await patchDataFile(
+    page,
+    'task-detail.data.js',
+    `window.LabelSuiteTaskDetailData.profiles.T001.guidelineFiles = [{
+      name: 'issue-620-reserved-heading.md',
+      type: 'markdown',
+      content: '# Constructor\\n\\nFirst.\\n\\n# Constructor\\n\\nSecond.'
+    }];`
+  );
+  await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001' }));
+  await dismissGuidelineModal(page);
+  await mdItem(page).click();
+
+  const ids = await headingIds(page.getByTestId('ws-guideline-md-modal-body'));
+  expect(ids).toEqual(['constructor', 'constructor-2']);
+});
+
+test('opening the file preview leaves only one DOM element for each guideline anchor id', async ({
+  page,
+}) => {
+  await patchDataFile(
+    page,
+    'task-detail.data.js',
+    `window.LabelSuiteTaskDetailData.profiles.T001.forceShowGuideline = true;`
+  );
+  await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001' }));
+
+  const gateBody = page.getByTestId('ws-guideline-modal-body');
+  const [gateId] = await headingIds(gateBody);
+  expect(gateId).toBeTruthy();
+
+  await dismissGuidelineModal(page);
+  await mdItem(page).click();
+
+  const previewBody = page.getByTestId('ws-guideline-md-modal-body');
+  const [previewId] = await headingIds(previewBody);
+  expect(previewId).toBe(gateId);
+  expect(await page.locator('[id]').evaluateAll((elements, id) =>
+    elements.filter((element) => element.id === id).length, previewId)).toBe(1);
+});
