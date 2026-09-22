@@ -2594,6 +2594,7 @@
       toastPublishBlockedMembers: '啟用中成員人數不足，無法發布：',
       memberGapAnnotatorTpl: '標記員還差 {count} 位',
       memberGapReviewerTpl: '審核員還差 {count} 位',
+      memberGapAssignableReviewer: '至少需 1 位未被指定為仲裁者的啟用中審核員',
       memberGapJoiner: '、',
       yes: '是',
       no: '否',
@@ -3117,6 +3118,7 @@
       toastPublishBlockedMembers: 'Not enough active members to publish: ',
       memberGapAnnotatorTpl: 'annotators need {count} more',
       memberGapReviewerTpl: 'reviewers need {count} more',
+      memberGapAssignableReviewer: 'at least 1 active reviewer must not be designated as an arbiter',
       memberGapJoiner: '; ',
       yes: 'Yes',
       no: 'No',
@@ -7782,9 +7784,16 @@ function getTaskTypeLabel() {
     if (annotatorGap > 0) {
       messages.push(interpolate(t('memberGapAnnotatorTpl'), { count: annotatorGap }));
     }
-    var reviewerGap = 1 - getEffectiveReviewerIds(TASK_DATA.reviewerIds).length;
+    var activeReviewerIds = getEffectiveReviewerIds(TASK_DATA.reviewerIds);
+    var reviewerGap = 1 - activeReviewerIds.length;
     if (reviewerGap > 0) {
       messages.push(interpolate(t('memberGapReviewerTpl'), { count: reviewerGap }));
+    } else {
+      var activeArbiterIds = getEffectiveArbiterIds(TASK_DATA.arbiterIds);
+      var hasAssignableReviewer = activeReviewerIds.some(function(reviewerId) {
+        return activeArbiterIds.indexOf(reviewerId) === -1;
+      });
+      if (!hasAssignableReviewer) messages.push(t('memberGapAssignableReviewer'));
     }
     return messages;
   }

@@ -638,6 +638,13 @@ issue #824 的黏住規則 MUST 優先於本次保留規則：已有已提交審
 - **THEN** 有效分派名冊等於完整 `reviewer_ids`
 - **AND** 系統不得以全域示範名冊偷偷排除任何人
 
+#### Scenario: 失敗的 v4 示範重播不得提交完成 marker
+
+- **GIVEN** 瀏覽器仍有舊版 review-flow demo marker，且 v4 重播任一必要 seed 寫入失敗
+- **WHEN** 頁面完成本次 migration 嘗試
+- **THEN** 系統不得寫入 v4 完成 marker，亦不得移除舊 marker
+- **AND** 下次載入必須重試，只有逐筆驗證 T014～T016 的必要標記提交、審核決策與仲裁票皆存在後，才可寫入 v4 marker 並移除舊 marker
+
 #### Scenario: 試標以樣本為單位指派
 
 - **GIVEN** 一份試標樣本由三位標記員各標一次，任務勾選了兩位審核員

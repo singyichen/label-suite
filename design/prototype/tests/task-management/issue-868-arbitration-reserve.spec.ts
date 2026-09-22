@@ -7,6 +7,7 @@
 import { test, expect, type Page } from '@playwright/test';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
+const PANEL_LOAD_TIMEOUT = 15000;
 
 async function openReviewEdit(page: Page, language: 'zh' | 'en' = 'zh'): Promise<void> {
   await page.goto(TASK_DETAIL_URL);
@@ -36,6 +37,15 @@ async function selectArbiters(page: Page, names: string[]): Promise<void> {
   }
 }
 
+async function disableMember(page: Page, name: string): Promise<void> {
+  await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
+  await page.locator('#tabMemberManagement').click();
+  const row = page.locator('#memberTableBody tr').filter({ hasText: name });
+  await row.locator('button:has-text("停用")').click();
+  await page.locator('#memberActionConfirmBtn').click();
+  await expect(row).toContainText('停用');
+}
+
 for (const language of ['zh', 'en'] as const) {
   test(`blocks save when every reviewer is also an arbiter (${language})`, async ({ page }) => {
     await openReviewEdit(page, language);
@@ -47,6 +57,8 @@ for (const language of ['zh', 'en'] as const) {
 
     await expect(page.locator('#reviewEditForm')).not.toHaveClass(/hidden/);
     await expect(page.locator('#reviewSettingsError')).toBeVisible();
+    await expect(page.locator('#reviewSettingsError')).toHaveAttribute('role', 'alert');
+    await expect(page.locator('#reviewSettingsError')).toHaveAttribute('aria-live', 'assertive');
     await expect(page.locator('#reviewSettingsError')).toHaveText(
       language === 'zh'
         ? '請至少保留一位未被指定為仲裁者的審核員。'
@@ -65,6 +77,21 @@ test('saves when at least one checked reviewer is not an arbiter', async ({ page
   await expect(page.locator('#reviewEditForm')).toHaveClass(/hidden/);
   await expect(page.locator('#valueReviewerIdsControl')).toHaveText('已勾選 2 人');
   await expect(page.locator('#valueArbiterIdsControl')).toHaveText('仲裁者 1 人');
+});
+
+test('blocks publish when membership churn leaves only an active arbiter', async ({ page }) => {
+  await openReviewEdit(page);
+  await selectReviewers(page, ['Mandy Chen', 'Kevin Liu']);
+  await selectArbiters(page, ['Mandy Chen']);
+  await page.locator('#reviewSaveBtn').click();
+
+  await disableMember(page, 'Kevin Liu');
+  await page.locator('#tabOverview').click();
+  await page.locator('#publishDryRunBtn').click();
+
+  await expect(page.locator('#toastMsg')).toContainText('至少需 1 位未被指定為仲裁者的啟用中審核員');
+  await expect(page.locator('#statusBadge')).toHaveText('草稿');
+  await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(0);
 });
 
 test('an empty arbiter roster remains valid', async ({ page }) => {

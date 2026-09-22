@@ -3323,6 +3323,49 @@
     });
   }
 
+  /* A seed marker is a completion record, not an intent record. Verify the
+     rows the current script promises before committing v4, so a quota or
+     storage failure leaves the old marker in place and the next load retries
+     the migration instead of treating a partial reseed as complete. */
+  function verifyReviewFlowDemoSeedRows(scripts) {
+    return scripts.every(function (row) {
+      var annotatorBucket = readSubmissionBucket(submissionBucketKey(
+        row.t, 'annotator', row.r, { annotatorId: row.a }
+      ));
+      var annotatorEntry = annotatorBucket[row.s];
+      var annotatorSelected = annotatorEntry && annotatorEntry.answers &&
+        annotatorEntry.answers.previewState && annotatorEntry.answers.previewState.single_label &&
+        annotatorEntry.answers.previewState.single_label.selected;
+      if (entryStatus(annotatorEntry) !== 'submitted' || annotatorSelected !== row.v) return false;
+
+      var reviewersValid = Object.keys(row.rev || {}).every(function (reviewerId) {
+        var reviewerBucket = readSubmissionBucket(submissionBucketKey(
+          row.t, 'reviewer', row.r, { annotatorId: row.a, reviewerId: reviewerId }
+        ));
+        var reviewerEntry = reviewerBucket[row.s];
+        var decisions = reviewerEntry && reviewerEntry.answers && reviewerEntry.answers.decisions;
+        var expectedDecision = row.modifyBy === reviewerId
+          ? 'modify'
+          : (row.bypassBy === reviewerId ? 'bypass' : 'approve');
+        return entryStatus(reviewerEntry) === 'submitted' &&
+          decisions && decisions.single_label === expectedDecision;
+      });
+      if (!reviewersValid) return false;
+
+      if (!row.arb && !row.arbReject) return true;
+      var itemKey = arbitrationItemKey(
+        arbitrationBucketKey(row.t, row.r, { annotatorId: row.a }),
+        row.s,
+        'single_label::single_label'
+      );
+      var arbitrationItem = readArbitrationItem(itemKey);
+      var expectedChoice = row.arbReject ? 'reject' : 'adopt_b';
+      return !!arbitrationItem && (arbitrationItem.votes || []).some(function (vote) {
+        return vote.arbiter_id === 'reviewer_chen' && vote.choice === expectedChoice;
+      });
+    });
+  }
+
   function seedReviewFlowDemo() {
     var upgradingFromPrevious = false;
     try {
@@ -3480,21 +3523,6 @@
       clearReviewFlowDemoSeedBuckets(taskIdsToReseed);
     }
 
-    try {
-      global.localStorage.setItem(REVIEW_FLOW_DEMO_SEED_KEY, new Date().toISOString());
-    } catch (e) {
-      return; /* storage unavailable: don't run the writes below either */
-    }
-    /* Separate try: once v4 is written the buckets have been reseeded, so a
-       failed old-marker cleanup must not skip the writes below. */
-    try {
-      global.localStorage.removeItem(REVIEW_FLOW_DEMO_SEED_KEY_V1);
-      global.localStorage.removeItem(REVIEW_FLOW_DEMO_SEED_KEY_V2);
-      global.localStorage.removeItem(REVIEW_FLOW_DEMO_SEED_KEY_V3);
-    } catch (e) {
-      /* leftover old markers are harmless: v4 is checked first */
-    }
-
     function labelPayload(value, decision, reason) {
       /* issue #551: `decision` mirrors handleReviewSubmit's persisted
          `decisions` map (per outKey approve/modify/bypass) -- without it, a
@@ -3546,6 +3574,20 @@
         ]);
       }
     });
+
+    if (!verifyReviewFlowDemoSeedRows(scripts)) return;
+    try {
+      global.localStorage.setItem(REVIEW_FLOW_DEMO_SEED_KEY, new Date().toISOString());
+    } catch (e) {
+      return; /* no completion marker means the next load retries */
+    }
+    try {
+      global.localStorage.removeItem(REVIEW_FLOW_DEMO_SEED_KEY_V1);
+      global.localStorage.removeItem(REVIEW_FLOW_DEMO_SEED_KEY_V2);
+      global.localStorage.removeItem(REVIEW_FLOW_DEMO_SEED_KEY_V3);
+    } catch (e) {
+      /* leftover old markers are harmless: v4 is checked first */
+    }
   }
 
   migrateLegacySubmissionStore();

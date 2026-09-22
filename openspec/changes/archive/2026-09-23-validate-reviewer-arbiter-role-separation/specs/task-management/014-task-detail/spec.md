@@ -44,3 +44,14 @@
 - **WHEN** 檢視該任務的 `reviewer_ids`
 - **THEN** 其元素為該成員的 `TaskMembership.user_id`（形如 `reviewer_wang`），不含任何 Email 字串
 - **AND** 審核工作分派、審核負荷聚合與審核員身分比對皆以該 id 為鍵，Email 僅出現於成員清單顯示欄
+
+### Requirement: FR-010t 發布前的成員人數檢查
+
+發布 `新增試標回合 R{n}` 或 `開始正式標記` 前，系統 MUST 依當下成員狀態驗證：(1) 啟用中標記員人數符合 `min_annotators`；(2) 至少一位 `reviewer_ids` 成員仍為啟用中；(3) 啟用中的有效分派池 `reviewer_ids - arbiter_ids` 至少一人。任一條件不足時 MUST 阻擋發布並顯示可修正缺口訊息，且 MUST NOT 建立回合或改變任務狀態。`arbiter_ids = []` MUST NOT 阻擋發布，但仍沿用未指定仲裁者的發布警示。
+
+#### Scenario: 成員異動不得留下零分派池
+
+- **GIVEN** 任務已儲存 `reviewer_ids = [W, C]`、`arbiter_ids = [C]`，之後 W 被停用而只剩 C 為啟用中 reviewer
+- **WHEN** 專案負責人發布新增試標回合或開始正式標記
+- **THEN** 發布被阻擋並顯示至少需一位未被指定為仲裁者的啟用中審核員
+- **AND** 任務狀態與回合數維持不變
