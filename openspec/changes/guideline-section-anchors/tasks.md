@@ -53,6 +53,7 @@
   - 閘門 B 全量 `pnpm exec playwright test` → exit **0**，**1847 passed**（8.7m）。輸出中 3 個 `✘` 係 `tests/cross-role/xrole-canonical-journey.spec.ts` 以 `test.fail()` 包住的 XROLE-20／21 缺口測試，計為通過，非本變更引入。
   - 本次由主 session 自行執行，未採用 subagent 回報之數字。
   - 2026-09-22 合併前 review 補強：新增 slug 後綴碰撞、`constructor` 原型屬性污染與跨 modal 重複 DOM id 三則回歸測試。暫時還原生產修正後 targeted suite 為 **3 failed／4 passed**，三則皆以預期行為失敗；恢復修正後為 **7 passed**，`pnpm typecheck` exit **0**。修正 commit：`9a2e062f`。
+  - 2026-09-22 rebase 至最新 `main` 後重跑全量 `PW_PORT=8984 pnpm exec playwright test` → exit **0**，**1850 passed**（9.6m）；新增的三則 review 回歸測試已納入全量結果。
 
 ---
 
