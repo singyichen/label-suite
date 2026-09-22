@@ -12,6 +12,18 @@
 
 ---
 
+## 0. Rebase 後 active change 狀態對齊
+
+> **相依與平行性**：0.1 與 0.2 必須同批提交；只改任一處都會使 Project SDD lint 的 `ACTIVE_CHANGE_STAGE` 繼續失敗。本群組只修正 active change bookkeeping，不改任何 FR／AC／SC 條文。
+
+**故事目標**：SC-006 — 關鍵操作皆有歷程可追溯；active change 的 STATUS 與正典分支欄必須先指向同一條實作鏈，後續 Red／Green 與 archive 證據才有可追溯起點。
+
+- [x] 0.1 將 `specs/STATUS.md` 的 annotation-015 更新為 change-open、分支 feat/620-guideline-anchors、版本 6.13.0，並記錄 active change guideline-section-anchors。 [@main]
+- [x] 0.2 將正典 `specs/annotation/015-annotation-workspace/spec.md` frontmatter 的功能分支同步為 feat/620-guideline-anchors。 [@main]
+  - 驗證：`scripts/check-sdd.sh` → exit **0**，0 error／14 warning；原 `ACTIVE_CHANGE_STAGE` 已歸零，14 則皆為既有 legacy、external-state 或 Red evidence 人工覆核 warning。
+
+---
+
 ## 1. PR-620-A — 指南 Markdown 標題取得穩定錨點
 
 > **相依與平行性**：嚴格依序 1.1 → 1.2 → 1.3 → 1.4 → 1.5，不使用 parallel markers。本群組只讓錨點**存在**，不處理理由中的引用與跳轉後的定位（群組 2）。
@@ -40,6 +52,7 @@
   - 閘門 A `pnpm typecheck` → exit **0**（`tsc --noEmit` 無錯誤）。
   - 閘門 B 全量 `pnpm exec playwright test` → exit **0**，**1847 passed**（8.7m）。輸出中 3 個 `✘` 係 `tests/cross-role/xrole-canonical-journey.spec.ts` 以 `test.fail()` 包住的 XROLE-20／21 缺口測試，計為通過，非本變更引入。
   - 本次由主 session 自行執行，未採用 subagent 回報之數字。
+  - 2026-09-22 合併前 review 補強：新增 slug 後綴碰撞、`constructor` 原型屬性污染與跨 modal 重複 DOM id 三則回歸測試。暫時還原生產修正後 targeted suite 為 **3 failed／4 passed**，三則皆以預期行為失敗；恢復修正後為 **7 passed**，`pnpm typecheck` exit **0**。修正 commit：`9a2e062f`。
 
 ---
 
