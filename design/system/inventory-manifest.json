@@ -200,7 +200,7 @@
       "title": "標記工作區",
       "module": "annotation",
       "page": "pages/annotation/annotation-workspace.html",
-      "specs": ["specs/annotation/015-annotation-workspace", "specs/shared/008-sidebar-navbar-shared"],
+      "specs": ["specs/_archive/015-annotation-workspace", "specs/shared/008-sidebar-navbar-shared"],
       "design": "design/system/pages/annotation-workspace.md",
       "tests": ["design/prototype/tests/annotation/annotation-workspace-*.spec.ts"],
       "routeKey": null,
