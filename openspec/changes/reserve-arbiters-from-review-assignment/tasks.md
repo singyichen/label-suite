@@ -8,7 +8,8 @@
 
 **故事目標**：SC-004S — 被指定的非當事人仲裁者必須能抵達爭議列並完成仲裁；不得再由自動審核指派先把唯一仲裁者變成當事人。
 
-- [ ] 1.1 以 `design/prototype/tests/annotation/issue-868-arbitration-reserve.spec.ts` 建立 committed Red：任務 `arbiterIds` 的每一人皆不取得新分派；非仲裁審核員維持平均分派；歷史黏住的仲裁者提交不被改派；仲裁資格改讀 task profile；T014／T016 的 Chen 皆可看到既有爭議列之仲裁入口。記錄 expected failure。 [@senior-qa]
+- [x] 1.1 以 `design/prototype/tests/annotation/issue-868-arbitration-reserve.spec.ts` 建立 committed Red：任務 `arbiterIds` 的每一人皆不取得新分派；非仲裁審核員維持平均分派；歷史黏住的仲裁者提交不被改派；仲裁資格改讀 task profile；T014／T016 的 Chen 皆可看到既有爭議列之仲裁入口。記錄 expected failure。 [@senior-qa]
+  - Red commit：`7a8752e1`。`PW_PORT=8991 pnpm playwright test tests/annotation/issue-868-arbitration-reserve.spec.ts tests/task-management/issue-868-arbitration-reserve.spec.ts` → exit 1；本檔 4 failed／1 passed。預期失敗為 helper 尚不存在、T014／T016 仲裁入口缺漏；黏住歷史提交案例維持通過，證明本契約未破壞 #824。
 - [ ] 1.2 Green：於 `annotation-workspace.data.js` 新增並匯出 `taskArbiterRoster()`、`reviewAssignmentRoster()`；接入 `taskReviewAssignments()`、`computeReviewWorkload()` 與 `isArbiterCandidate()`，且不得弱化 1.1。 [@main]
 - [ ] 1.3 將 review-flow demo marker 升為 v4，重塑 T014／T016 的 reviewer 歸屬，使已提交種子符合保留後的分派落點；同步移除 T015 名冊順序 workaround，不改樣本 ID、答案或仲裁結果。 [@main]
 - [ ] 1.4 執行 prototype typecheck、issue #868 定向 Playwright、既有 annotation／task-management 相關回歸、demo-data parity、screen inventory check；全部通過後才回寫正典。 [@main]
