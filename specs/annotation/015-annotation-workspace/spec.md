@@ -1,5 +1,5 @@
 ---
-功能分支: feat/834-trial-feedback-by-round
+功能分支: feat/620-guideline-anchors
 建立日期: 2026-04-23
 版本: 6.13.0
 狀態: Draft

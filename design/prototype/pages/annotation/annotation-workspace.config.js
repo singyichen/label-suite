@@ -5091,6 +5091,33 @@
   function isSafeMarkdownUrl(url) {
     return /^(https?:\/\/|mailto:|\.{0,2}\/|#)/i.test(url);
   }
+  /* Anchor ids for headings (issue #620, FR-096/FR-020D): derived from the
+     heading text itself, not the heading's position in the document, so a
+     stable id survives paragraph insertions elsewhere in the same source.
+     Non-word characters (including CJK, which \w does not cover) collapse to
+     '-'; an all-non-word heading falls back to a fixed literal rather than
+     an empty id. Callers pass a per-render `used` set so every allocated id,
+     including generated suffixes, is reserved within that renderMarkdown()
+     call without leaking state across separate guidelines or reopens. */
+  function slugifyHeading(text) {
+    var slug = String(text)
+      .trim()
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}]+/gu, '-')
+      .replace(/^-+|-+$/g, '');
+    return slug || 'section';
+  }
+  function headingAnchorId(text, used) {
+    var base = slugifyHeading(text);
+    var candidate = base;
+    var suffix = 2;
+    while (used.has(candidate)) {
+      candidate = base + '-' + suffix;
+      suffix += 1;
+    }
+    used.add(candidate);
+    return candidate;
+  }
   function renderMarkdownInline(text) {
     var out = escapeHtml(text);
     out = out.replace(/`([^`]+)`/g, '<code>$1</code>');
@@ -5109,6 +5136,7 @@
     var html = '';
     var list = null;
     var para = [];
+    var seenHeadingIds = new Set();
     function flushPara() {
       if (para.length) html += '<p>' + renderMarkdownInline(para.join(' ')) + '</p>';
       para = [];
@@ -5170,7 +5198,9 @@
       var ordered = /^\s*\d+\.\s+(.+)$/.exec(line);
       if (heading) {
         flushPara(); flushList();
-        html += '<h' + heading[1].length + '>' + renderMarkdownInline(heading[2]) + '</h' + heading[1].length + '>';
+        var level = heading[1].length;
+        var anchorId = headingAnchorId(heading[2], seenHeadingIds);
+        html += '<h' + level + ' id="' + escapeHtml(anchorId) + '">' + renderMarkdownInline(heading[2]) + '</h' + level + '>';
       } else if (bullet || ordered) {
         flushPara();
         var tag = bullet ? 'ul' : 'ol';
@@ -5381,26 +5411,6 @@
       modal.classList.add('hidden');
       return;
     }
-    if (body) {
-      /* Same data source as the right-side 說明 tab (renderGuidelinePanel):
-         guidelineFiles[]. The markdown entry's `content` is the only
-         actual prose text in that data -- pdf/image entries are links,
-         not text -- so it's what "guideline text" means here. */
-      var files = currentProfile.guidelineFiles || [];
-      var mdFile = files.filter(function (file) {
-        return file.type === 'markdown';
-      })[0];
-      if (mdFile) {
-        /* innerHTML only receives renderMarkdown() output (issue #527). */
-        body.innerHTML = renderMarkdown(mdFile.content);
-      } else {
-        body.textContent = files
-          .map(function (file) {
-            return file.name;
-          })
-          .join('\n');
-      }
-    }
     var storageKey = guidelineModalStorageKey(currentProfile.id);
     var seen = null;
     try {
@@ -5410,9 +5420,30 @@
     }
     function hideGuidelineModal() {
       modal.classList.add('hidden');
+      if (body) body.textContent = '';
       if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(modal);
     }
     if (!seen) {
+      if (body) {
+        /* Same data source as the right-side 說明 tab (renderGuidelinePanel):
+           guidelineFiles[]. The markdown entry's `content` is the only
+           actual prose text in that data -- pdf/image entries are links,
+           not text -- so it's what "guideline text" means here. */
+        var files = currentProfile.guidelineFiles || [];
+        var mdFile = files.filter(function (file) {
+          return file.type === 'markdown';
+        })[0];
+        if (mdFile) {
+          /* innerHTML only receives renderMarkdown() output (issue #527). */
+          body.innerHTML = renderMarkdown(mdFile.content);
+        } else {
+          body.textContent = files
+            .map(function (file) {
+              return file.name;
+            })
+            .join('\n');
+        }
+      }
       modal.classList.remove('hidden');
       if (window.LabelSuiteModalFocus) {
         /* No user click triggers this modal (shown automatically on first
@@ -5425,6 +5456,7 @@
       }
     } else {
       modal.classList.add('hidden');
+      if (body) body.textContent = '';
     }
     confirmBtn.addEventListener('click', function () {
       try {
