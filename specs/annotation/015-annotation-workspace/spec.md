@@ -1,5 +1,5 @@
 ---
-功能分支: feat/620-guideline-anchors
+功能分支: fix/868-arbitration-reserve
 建立日期: 2026-04-23
 版本: 6.14.0
 狀態: Draft

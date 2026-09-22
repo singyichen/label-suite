@@ -1,5 +1,5 @@
 ---
-功能分支: chore/783-archive-014-canon
+功能分支: fix/868-arbitration-reserve
 建立日期: 2026-04-20
 版本: 4.1.1
 狀態: Draft
