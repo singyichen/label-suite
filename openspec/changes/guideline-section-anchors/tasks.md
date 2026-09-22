@@ -87,5 +87,6 @@
 
 **故事目標**：SC-006 — 關鍵操作皆有歷程可追溯；正典自己若停留在「FR-096 第 4 點部分達成」的狀態，追溯鏈的起點就是錯的。
 
-- [ ] 3.1 更新 `specs/annotation/015-annotation-workspace/spec.md`：FR-096 第 4 點補上錨點推導、引用記號解析與跳轉定位三條規則與其已知上限，FR-020D 補上渲染器層級的標題錨點規則並與 FR-096 互相交叉引用，新增對應之驗收條件，版本升版並補 Changelog 一列。 [@main]
+- [x] 3.1 更新 `specs/annotation/015-annotation-workspace/spec.md`：FR-096 第 4 點補上錨點推導、引用記號解析與跳轉定位三條規則與其已知上限，FR-020D 補上渲染器層級的標題錨點規則並與 FR-096 互相交叉引用，新增對應之驗收條件，版本升版並補 Changelog 一列。 [@main]
+  - 證據：正典升至 **v6.14.0**；FR-020D／FR-096 互引並分別對應新增之 **AC-5.5／AC-1.34**，Changelog 記錄原型三個生產檔、v3 seed migration、已知上限與 MINOR 分級。change delta 的兩則 scenario 同步取得正典 AC ID。OpenSpec validation → 通過；Project SDD lint → **0 errors／14 warnings**；archive 前 Source-Verify 對版本、FR／AC、檔案路徑與 ID 唯一性之檢查 → exit **0**。
 - [ ] 3.2 執行 gate 4：先逐條 grep 複驗本次新增的全部正典引用（FR／AC 編號、章節引用、檔案路徑、issue 編號、逐字引述之條文），再執行 `openspec archive guideline-section-anchors --yes`，並確認衍生檢視 diff 的移除行中 `#### Scenario` 計數為 0。 [@main]
