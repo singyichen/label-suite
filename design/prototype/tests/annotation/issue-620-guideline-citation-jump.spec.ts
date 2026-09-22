@@ -116,3 +116,33 @@ test('an unknown citation degrades to plain text without losing the surrounding 
   await expect(reason).toHaveText(`理由前文 ${missing} 理由後文。`);
   await expect(row.getByTestId('ws-dry-run-feedback-guideline-link')).toHaveCount(0);
 });
+
+test('an existing v2 review-flow seed is upgraded so citation reasons reach returning browsers', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem('labelsuite.reviewFlowDemoSeed.v2', 'stale-v2-marker');
+  });
+  await page.goto(buildListUrl({
+    task_id: 'T014',
+    run_type: 'dry_run',
+    annotator_id: '113450022',
+  }));
+
+  const result = await page.evaluate(() => {
+    const data = (window as any).LabelSuiteAnnotationWorkspaceData;
+    const history = data.getSampleHistory(
+      'T014',
+      'dry_run',
+      'dry-04-dispute-resolved',
+      { annotatorId: '113450022' }
+    );
+    return {
+      reasons: history.map((event: { reason?: string }) => event.reason || ''),
+      v2: window.localStorage.getItem('labelsuite.reviewFlowDemoSeed.v2'),
+      v3: window.localStorage.getItem('labelsuite.reviewFlowDemoSeed.v3'),
+    };
+  });
+
+  expect(result.reasons.some((reason: string) => reason.includes('[[負向（negative）的判準]]'))).toBe(true);
+  expect(result.v2).toBeNull();
+  expect(result.v3).toBeTruthy();
+});
