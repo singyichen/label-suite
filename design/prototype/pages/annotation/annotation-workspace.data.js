@@ -3268,13 +3268,17 @@
    * duplicating arbitration votes or history events (a naive marker bump
    * alone would re-run submitArbitration()/appendReviewDecisionEvents() on
    * top of the stale rows). */
-  var REVIEW_FLOW_DEMO_SEED_KEY = 'labelsuite.reviewFlowDemoSeed.v2';
+  var REVIEW_FLOW_DEMO_SEED_KEY_V2 = 'labelsuite.reviewFlowDemoSeed.v2';
+  /* issue #620: v3 adds guideline citations to review/arbitration reasons.
+   * A browser holding v2 must clear and replay the T014-T016 buckets or it
+   * would keep the old uncited reason strings forever. */
+  var REVIEW_FLOW_DEMO_SEED_KEY = 'labelsuite.reviewFlowDemoSeed.v3';
 
-  /* issue #856: removes exactly the buckets seedReviewFlowDemo() itself can
-   * have written for `taskIds` -- wsSubmissions (covers both the annotator
+  /* issues #856/#620: removes exactly the buckets seedReviewFlowDemo() itself
+   * can have written for `taskIds` -- wsSubmissions (covers both annotator
    * and reviewer rows, since submissionBucketKey's first segment is always
-   * the task id) and wsArbitration -- so a v1-upgrade reseed starts from a
-   * clean slate without touching any task outside the seed table. */
+   * the task id) and wsArbitration -- so a marker-upgrade reseed starts from
+   * a clean slate without touching any task outside the seed table. */
   function clearReviewFlowDemoSeedBuckets(taskIds) {
     listSubmissionBucketKeys().forEach(function (bucketKey) {
       if (taskIds.indexOf(bucketKey.split('::')[0]) === -1) return;
@@ -3295,10 +3299,13 @@
   }
 
   function seedReviewFlowDemo() {
-    var upgradingFromV1 = false;
+    var upgradingFromPrevious = false;
     try {
       if (global.localStorage.getItem(REVIEW_FLOW_DEMO_SEED_KEY)) return;
-      upgradingFromV1 = !!global.localStorage.getItem(REVIEW_FLOW_DEMO_SEED_KEY_V1);
+      upgradingFromPrevious = !!(
+        global.localStorage.getItem(REVIEW_FLOW_DEMO_SEED_KEY_V1) ||
+        global.localStorage.getItem(REVIEW_FLOW_DEMO_SEED_KEY_V2)
+      );
     } catch (e) {
       return; /* storage unavailable: nothing to stage into */
     }
@@ -3430,7 +3437,7 @@
       { t: 'T016', r: 'official_run', s: 'ofm-05-final-exception', a: A, v: 'neutral', rev: { reviewer_wang: 'positive' }, modifyBy: 'reviewer_wang', reason: '依 [[難以判定時的處理]]，語境不足以判斷情緒傾向，正面與中性難以取捨', arbReject: true, arbReason: '依 [[難以判定時的處理]]，原標記與審核修正結果皆缺乏明確文本依據支持，需徵詢更明確判準。' }, // disputed (reviewer modifies, arbitration rejects both sides -> final exception pool)
     ];
 
-    if (upgradingFromV1) {
+    if (upgradingFromPrevious) {
       /* issue #856: derive the task ids to clear from `scripts` itself
          (single source of truth) rather than a second hardcoded T014-T016
          list, so this sweep can never drift from the rows it is supposed
@@ -3447,12 +3454,13 @@
     } catch (e) {
       return; /* storage unavailable: don't run the writes below either */
     }
-    /* Separate try: once v2 is written the buckets must be reseeded, so a
-       failed v1 cleanup must not skip the writes below. */
+    /* Separate try: once v3 is written the buckets have been reseeded, so a
+       failed old-marker cleanup must not skip the writes below. */
     try {
       global.localStorage.removeItem(REVIEW_FLOW_DEMO_SEED_KEY_V1);
+      global.localStorage.removeItem(REVIEW_FLOW_DEMO_SEED_KEY_V2);
     } catch (e) {
-      /* a leftover v1 marker is harmless: v2 is checked first */
+      /* leftover old markers are harmless: v3 is checked first */
     }
 
     function labelPayload(value, decision, reason) {
