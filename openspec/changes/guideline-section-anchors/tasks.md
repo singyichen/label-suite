@@ -70,12 +70,13 @@
   - Green 證據：`5ec1cb9c`。annotation-list 從既有 task-detail profile 帶入 `guidelineFiles`，以與 renderer 相同的 slug／去重規則解析引用；有效引用同頁連至 workspace fragment，無效引用只移除 `[[...]]` 語法並保留完整理由。舊的無引用理由仍保留通用指南連結，以免破壞既有回饋。
 - [x] 2.3 修改 `design/prototype/pages/annotation/annotation-workspace.data.js`，將審核流示範種子的審核與仲裁理由改為帶 `[[段落標題]]` 引用記號，使示範資料真的示範得出該行為。 [@senior-frontend]
   - 證據：`828b9564`。T014–T016 的正向／中立／負向／難判定審核理由皆引用群組 1 新增的真實標題；會定案的仲裁種子另持久化帶引用的 `arbReason`，使標記員回饋列讀得到 settling action 的引用。
+  - 合併前 review 補強：既有瀏覽器若已持有 v2 seed marker，原實作會永久跳過新理由。`05f6106a` 先以 returning-browser contract 跑出 **1 failed／3 passed**；`7f8b5415` 將 marker 升至 v3、清除舊 T014–T016 buckets 後重播，targeted suite → **4 passed**。`c154e150` 同步既有 v1 升級與冪等 prototype contract 至目前的 v3 marker；三組 seed／citation 相容性套件 → **24 passed**。
 - [x] 2.4 修改 `design/prototype/pages/annotation/annotation-workspace.config.js`，處理載入時帶段落錨點的網址——開啟指南、定位至該段落並以可見方式標示之。 [@senior-frontend]
   - Green 證據：`718047d3`。`syncUrlToUnit()` 保留 fragment；boot 僅在 fragment 能解析到實際 Markdown heading 時開啟對應 modal，並以 scroll、focus、`aria-current`、可見背景／outline 標示。targeted contract → exit **0**，**3 passed**。
 - [x] 2.5 執行群組 2 的 gate 3：於 `design/prototype/` 帶 `PW_PORT=8984` 跑 `pnpm typecheck` 與全量 `pnpm playwright test` 兩道獨立閘門，並於 rebase 之後重生螢幕盤點。 [@main]
   - `pnpm typecheck` → exit **0**。
-  - focused regression bundle（FR-096、逐回合回饋、URL sync、群組 1 錨點、群組 2 引用）→ exit **0**，**26 passed**。
-  - 全量 `PW_PORT=8984 pnpm exec playwright test` → exit **0**，**1853 passed**（9.8m）。輸出中的 XROLE-04／20／21 `✘` 皆為既有 `test.fail()` 已知缺口，最終計為通過。
+  - focused regression bundle（FR-096、逐回合回饋、URL sync、群組 1 錨點、群組 2 引用）→ exit **0**，**27 passed**；seed／citation 相容性套件另為 **24 passed**。
+  - 最終全量 `PW_PORT=8984 pnpm exec playwright test` → exit **0**，**1854 passed**（9.4m）。輸出中的 XROLE-04／20／21 `✘` 皆為既有 `test.fail()` 已知缺口，最終計為通過。
   - `node scripts/gen-screen-inventory.mjs` 已重生 `design/system/screen-inventory.md`，並於下列最終 gate 複驗 freshness。
 
 ---
