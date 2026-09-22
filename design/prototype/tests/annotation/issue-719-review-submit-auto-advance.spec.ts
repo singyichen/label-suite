@@ -54,6 +54,9 @@ type WorkspaceData = {
     payload: unknown, historySummary: string,
     identity: { annotatorId?: string; reviewerId?: string }
   ) => void;
+  findNextActionableReviewUnit: (
+    taskId: string, runType: string, reviewerId: string
+  ) => { sampleId: string; annotatorId: string; status: string | null } | null;
 };
 
 const TASK = 'T001';
@@ -63,19 +66,24 @@ const RUN_TYPE = 'official_run';
 const PARTICIPANT = 'reviewer_wang';
 const ARBITER = 'reviewer_chen';
 
-/* FR-093 hands out units POSITIONALLY across the whole roster
+/* FR-093 hands out units POSITIONALLY across the effective assignment roster
  * (getReviewAssignments(): official_run walks the sorted unit list with
  * `roster[index % roster.length]`), and FR-073 rank 1 offers a pending unit
  * only to the reviewer it was assigned to. Against the four-member demo
  * roster a scenario that pins two or three units can never have them all
  * land on one reviewer, so each advance scenario ALSO pins the roster to the
- * single reviewer it is about. That is this file's way of stating the
+ * single participant it is about. Arbitration scenarios keep that reviewer
+ * plus a designated arbiter; issue #868 reserves the arbiter from new
+ * assignments. That is this file's way of stating the
  * scenario's assignment premise -- it does not relax any assertion, and it
  * is what makes "did NOT advance to the other pending unit" mean something
  * in the finalization-exemption cases below (an unassigned unit would not
  * have been a candidate in the first place). */
 const SOLO_PARTICIPANT = [{ id: PARTICIPANT, name: '王小明' }];
-const SOLO_ARBITER = [{ id: ARBITER, name: '陳美玲', can_arbitrate: true }];
+const ARBITER_WITH_REVIEWER = [
+  { id: PARTICIPANT, name: '王小明' },
+  { id: ARBITER, name: '陳美玲', can_arbitrate: true },
+];
 
 const labelPayload = (selected: string) => ({ previewState: { single_label: { selected } } });
 
@@ -197,41 +205,27 @@ test.describe('AC-3.55 clauses 1-2: successful review submit advances in-place',
   });
 });
 
-test.describe('AC-3.55 clause 3: a pending unit wins over a disputed unit enumerated earlier', () => {
-  test('an eligible-arbiter disputed unit enumerated first is skipped in favour of a later pending unit', async ({ page }) => {
+test.describe('AC-3.55 clause 3 (issue #868 revision): reserved arbiters do not receive pending review units', () => {
+  test('an eligible arbiter receives the disputed unit, not the participant-only pending unit', async ({ page }) => {
     await pinReviewUnits(page, {
       // enumerated FIRST, disputed, reviewer_chen is an eligible arbiter (never reviewed it)
       'sent-001': [{ annotator: 'kioleemg12', answers: { single_label: 'sad' } }],
-      // enumerated SECOND, pending -- must still win over sent-001's rank-2 dispute
+      // enumerated SECOND, pending -- assigned to reviewer_wang, not the reserved arbiter
       'sent-002': [{ annotator: '113450022', answers: { single_label: 'positive' } }],
-      // the unit reviewer_chen is actually about to submit on
-      'sent-003': [{ annotator: 'tony0950127', answers: { single_label: 'neutral' } }],
-    }, SOLO_ARBITER);
-    await page.goto(workspaceUrl({ sampleId: 'sent-003', role: 'reviewer', annotatorId: 'tony0950127', reviewerId: ARBITER }));
+    }, ARBITER_WITH_REVIEWER);
+    await page.goto(workspaceUrl({ sampleId: 'sent-001', role: 'reviewer', annotatorId: 'kioleemg12', reviewerId: ARBITER }));
     await seedSubmission(page, 'annotator', 'sent-001', 'sad', { annotatorId: 'kioleemg12' });
     await seedSubmission(page, 'reviewer', 'sent-001', 'fear', { annotatorId: 'kioleemg12', reviewerId: PARTICIPANT });
     await seedSubmission(page, 'annotator', 'sent-002', 'positive', { annotatorId: '113450022' });
-    await seedSubmission(page, 'annotator', 'sent-003', 'neutral', { annotatorId: 'tony0950127' });
     await page.reload();
 
-    const loads = countLoads(page);
-    const row = page.getByTestId('ws-review-row').first();
-    // Non-finalizing decision (see FR-099 §7 note above): 修正, not 通過.
-    // anyReviewerChanged() derives 爭議中 from an answer-value difference
-    // alone (see the clause-1-2 test's comment) -- pick a single_label chip
-    // different from the annotator's seeded 'neutral' answer so the
-    // submitted reviewer value actually differs.
-    await row.getByTestId('ws-review-correct-single_label').getByTestId('ws-single-label-chip-negative').click();
-    await row.getByTestId('ws-review-row-modify').click();
-    await page.getByTestId('ws-review-reason').fill('審核修正理由（測試）');
-    await page.getByTestId('ws-review-submit-btn').click();
-
-    await expect.poll(() => activeSampleItem(page).getAttribute('data-sample-id')).toBe('sent-002');
-    await expect.poll(() => activeSampleItem(page).getAttribute('data-annotator-id')).toBe('113450022');
-    const url = new URL(page.url());
-    expect(url.searchParams.get('sample_id')).toBe('sent-002');
-    expect(url.searchParams.get('annotator_id')).toBe('113450022');
-    expect(loads.value).toBe(0);
+    const next = await page.evaluate(
+      ({ task, runType, reviewerId }) =>
+        (window as unknown as { LabelSuiteAnnotationWorkspaceData: WorkspaceData })
+          .LabelSuiteAnnotationWorkspaceData.findNextActionableReviewUnit(task, runType, reviewerId),
+      { task: TASK, runType: RUN_TYPE, reviewerId: ARBITER }
+    );
+    expect(next).toEqual({ sampleId: 'sent-001', annotatorId: 'kioleemg12', status: 'disputed' });
   });
 });
 
@@ -305,19 +299,19 @@ test.describe('AC-3.55 clause 5 (reverse guard): a blocked review submit navigat
   });
 });
 
-test.describe('AC-3.56 clause 6: a successful arbitration submit advances the same way', () => {
-  test('a non-finalizing arbitration decision (含兩者皆非) advances in place to the next pending unit', async ({ page }) => {
+test.describe('AC-3.56 clause 6 (issue #868 revision): arbitration advance stays within arbiter-eligible disputes', () => {
+  test('a non-finalizing arbitration decision stays on the same dispute when pending units belong to reviewers', async ({ page }) => {
     /* FR-099 §7 (delta 7d1df391): resolving every dispute item (adopt_a /
        adopt_b) finalizes the unit, which MUST stay put rather than advance
        -- see the dedicated finalization-exemption test below. This
        scenario's premise is an arbitration submit that does NOT finalize,
        so at least one item is voted 兩者皆非 (FR-061 §3 keeps the unit
-       爭議中), proving the review path and the arbitration path share the
-       same advance-in-place mechanism. */
+       爭議中). Issue #868 reserves the arbiter from new review assignments,
+       so the other pending unit cannot become their next target. */
     await pinReviewUnits(page, {
       'sent-001': [{ annotator: 'kioleemg12', answers: { single_label: 'sad' } }],
       'sent-002': [{ annotator: '113450022', answers: { single_label: 'positive' } }],
-    }, SOLO_ARBITER);
+    }, ARBITER_WITH_REVIEWER);
     await page.goto(workspaceUrl({ sampleId: 'sent-001', role: 'reviewer', annotatorId: 'kioleemg12', reviewerId: ARBITER }));
     await seedSubmission(page, 'annotator', 'sent-001', 'sad', { annotatorId: 'kioleemg12' });
     await seedSubmission(page, 'reviewer', 'sent-001', 'fear', { annotatorId: 'kioleemg12', reviewerId: PARTICIPANT });
@@ -330,11 +324,11 @@ test.describe('AC-3.56 clause 6: a successful arbitration submit advances the sa
     await fillArbitrationReasons(page);
     await page.getByTestId('ws-arbitration-submit').click();
 
-    await expect.poll(() => activeSampleItem(page).getAttribute('data-sample-id')).toBe('sent-002');
-    await expect.poll(() => activeSampleItem(page).getAttribute('data-annotator-id')).toBe('113450022');
+    await expect.poll(() => activeSampleItem(page).getAttribute('data-sample-id')).toBe('sent-001');
+    await expect.poll(() => activeSampleItem(page).getAttribute('data-annotator-id')).toBe('kioleemg12');
     const url = new URL(page.url());
-    expect(url.searchParams.get('sample_id')).toBe('sent-002');
-    expect(url.searchParams.get('annotator_id')).toBe('113450022');
+    expect(url.searchParams.get('sample_id')).toBe('sent-001');
+    expect(url.searchParams.get('annotator_id')).toBe('kioleemg12');
     expect(loads.value).toBe(0);
   });
 });
@@ -439,7 +433,7 @@ test.describe('FR-099 clause 7 (finalization exemption): an arbitration submit t
     await pinReviewUnits(page, {
       'sent-001': [{ annotator: 'kioleemg12', answers: { single_label: 'sad' } }],
       'sent-002': [{ annotator: '113450022', answers: { single_label: 'positive' } }],
-    }, SOLO_ARBITER);
+    }, ARBITER_WITH_REVIEWER);
     await page.goto(workspaceUrl({ sampleId: 'sent-001', role: 'reviewer', annotatorId: 'kioleemg12', reviewerId: ARBITER }));
     await seedSubmission(page, 'annotator', 'sent-001', 'sad', { annotatorId: 'kioleemg12' });
     await seedSubmission(page, 'reviewer', 'sent-001', 'fear', { annotatorId: 'kioleemg12', reviewerId: PARTICIPANT });

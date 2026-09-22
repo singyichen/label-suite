@@ -2368,6 +2368,29 @@
       : REVIEWER_ROSTER.map(function (r) { return r.id; });
   }
 
+  /* issue #868 (FR-060): arbiter eligibility belongs to the task's own
+     `arbiter_ids`, not the global demo roster. An explicitly empty array is
+     meaningful (the PL chose no arbiter), so only a missing legacy field
+     falls back to REVIEWER_ROSTER.can_arbitrate. */
+  function taskArbiterRoster(taskId) {
+    var profile = findTaskDetailProfile(taskId);
+    if (profile && Array.isArray(profile.arbiterIds)) return profile.arbiterIds.slice();
+    return REVIEWER_ROSTER
+      .filter(function (reviewer) { return reviewer.can_arbitrate; })
+      .map(function (reviewer) { return reviewer.id; });
+  }
+
+  /* issue #868 (FR-093): every designated arbiter is reserved from NEW
+     review assignment. Preserve reviewer order because the positional deal
+     depends on it; do not silently keep one arbiter in the pool when more
+     than one was designated. */
+  function reviewAssignmentRoster(reviewerIds, arbiterIds) {
+    var reserved = Array.isArray(arbiterIds) ? arbiterIds : [];
+    return (Array.isArray(reviewerIds) ? reviewerIds : []).filter(function (reviewerId) {
+      return reserved.indexOf(reviewerId) === -1;
+    });
+  }
+
   /* issue #824 (FR-093 本版修訂 4): the read-only gate's membership test.
      Lives here, beside the roster the assignment itself is dealt from, so
      the workspace cannot answer "is this reviewer on the roster" from a
@@ -2380,7 +2403,8 @@
      roster with its sticky lookup. Callers that have a taskId go through
      here; getReviewAssignments() stays the pure rule underneath. */
   function taskReviewAssignments(taskId, runType, units) {
-    return getReviewAssignments(runType, units, taskReviewerRoster(taskId), getStickyReviewers(taskId, runType));
+    var roster = reviewAssignmentRoster(taskReviewerRoster(taskId), taskArbiterRoster(taskId));
+    return getReviewAssignments(runType, units, roster, getStickyReviewers(taskId, runType));
   }
 
   function getAssignedReviewUnits(taskId, runType, reviewerId, units) {
@@ -2407,8 +2431,7 @@
    * that produced it. Whether the unit IS disputed stays the caller's concern
    * -- every consumer already derives the unit status for its own display. */
   function isArbiterCandidate(taskId, runType, sampleId, identity) {
-    var entry = REVIEWER_ROSTER.filter(function (r) { return r.id === identity.reviewerId; })[0];
-    if (!entry || !entry.can_arbitrate) return false;
+    if (taskArbiterRoster(taskId).indexOf(identity.reviewerId) === -1) return false;
     return !getSubmission(taskId, 'reviewer', runType, sampleId, identity);
   }
 
@@ -3010,9 +3033,10 @@
        taskReviewerRoster() here would re-deal a departed reviewer's units
        before the liveness split below ever sees them, and the unassigned
        pool FR-005j requires would never move. */
+    var assignmentRoster = reviewAssignmentRoster(reviewerIds, taskArbiterRoster(taskId));
     var assignments = getReviewAssignments(runType, units.map(function (unit) {
       return { sample_id: unit.sampleId, annotator_id: unit.annotatorId };
-    }), reviewerIds, getStickyReviewers(taskId, runType));
+    }), assignmentRoster, getStickyReviewers(taskId, runType));
     var active = Array.isArray(activeReviewerIds) ? activeReviewerIds : [];
     var byReviewer = {};
     /* An empty roster leaves getReviewAssignments() with nothing to deal,
@@ -3272,7 +3296,8 @@
   /* issue #620: v3 adds guideline citations to review/arbitration reasons.
    * A browser holding v2 must clear and replay the T014-T016 buckets or it
    * would keep the old uncited reason strings forever. */
-  var REVIEW_FLOW_DEMO_SEED_KEY = 'labelsuite.reviewFlowDemoSeed.v3';
+  var REVIEW_FLOW_DEMO_SEED_KEY_V3 = 'labelsuite.reviewFlowDemoSeed.v3';
+  var REVIEW_FLOW_DEMO_SEED_KEY = 'labelsuite.reviewFlowDemoSeed.v4';
 
   /* issues #856/#620: removes exactly the buckets seedReviewFlowDemo() itself
    * can have written for `taskIds` -- wsSubmissions (covers both annotator
@@ -3298,13 +3323,57 @@
     });
   }
 
+  /* A seed marker is a completion record, not an intent record. Verify the
+     rows the current script promises before committing v4, so a quota or
+     storage failure leaves the old marker in place and the next load retries
+     the migration instead of treating a partial reseed as complete. */
+  function verifyReviewFlowDemoSeedRows(scripts) {
+    return scripts.every(function (row) {
+      var annotatorBucket = readSubmissionBucket(submissionBucketKey(
+        row.t, 'annotator', row.r, { annotatorId: row.a }
+      ));
+      var annotatorEntry = annotatorBucket[row.s];
+      var annotatorSelected = annotatorEntry && annotatorEntry.answers &&
+        annotatorEntry.answers.previewState && annotatorEntry.answers.previewState.single_label &&
+        annotatorEntry.answers.previewState.single_label.selected;
+      if (entryStatus(annotatorEntry) !== 'submitted' || annotatorSelected !== row.v) return false;
+
+      var reviewersValid = Object.keys(row.rev || {}).every(function (reviewerId) {
+        var reviewerBucket = readSubmissionBucket(submissionBucketKey(
+          row.t, 'reviewer', row.r, { annotatorId: row.a, reviewerId: reviewerId }
+        ));
+        var reviewerEntry = reviewerBucket[row.s];
+        var decisions = reviewerEntry && reviewerEntry.answers && reviewerEntry.answers.decisions;
+        var expectedDecision = row.modifyBy === reviewerId
+          ? 'modify'
+          : (row.bypassBy === reviewerId ? 'bypass' : 'approve');
+        return entryStatus(reviewerEntry) === 'submitted' &&
+          decisions && decisions.single_label === expectedDecision;
+      });
+      if (!reviewersValid) return false;
+
+      if (!row.arb && !row.arbReject) return true;
+      var itemKey = arbitrationItemKey(
+        arbitrationBucketKey(row.t, row.r, { annotatorId: row.a }),
+        row.s,
+        'single_label::single_label'
+      );
+      var arbitrationItem = readArbitrationItem(itemKey);
+      var expectedChoice = row.arbReject ? 'reject' : 'adopt_b';
+      return !!arbitrationItem && (arbitrationItem.votes || []).some(function (vote) {
+        return vote.arbiter_id === 'reviewer_chen' && vote.choice === expectedChoice;
+      });
+    });
+  }
+
   function seedReviewFlowDemo() {
     var upgradingFromPrevious = false;
     try {
       if (global.localStorage.getItem(REVIEW_FLOW_DEMO_SEED_KEY)) return;
       upgradingFromPrevious = !!(
         global.localStorage.getItem(REVIEW_FLOW_DEMO_SEED_KEY_V1) ||
-        global.localStorage.getItem(REVIEW_FLOW_DEMO_SEED_KEY_V2)
+        global.localStorage.getItem(REVIEW_FLOW_DEMO_SEED_KEY_V2) ||
+        global.localStorage.getItem(REVIEW_FLOW_DEMO_SEED_KEY_V3)
       );
     } catch (e) {
       return; /* storage unavailable: nothing to stage into */
@@ -3374,7 +3443,12 @@
        `reviewer_wang` regardless, which the pure derivation silently
        papered over; under stickiness it would have handed wang every
        reviewed unit and left li/chen/lin with none. When adding a row, read
-       its position off that deal instead of copying a neighbour's key. */
+       its position off that deal instead of copying a neighbour's key.
+
+       issue #868: every task arbiter is now reserved from the NEW assignment
+       pool. T014-T016 therefore deal over wang/li/lin; existing visitors are
+       reseeded once through the v4 marker so the old sticky submissions by
+       chen do not preserve the dead-end fixture this change removes. */
     var scripts = [
       /* T014 dry_run, min_reviewers = 1 */
       { t: 'T014', r: 'dry_run', s: 'dry-01-all-agree', a: A, v: 'positive', rev: { reviewer_wang: 'positive' } }, // finalized
@@ -3386,14 +3460,14 @@
       { t: 'T014', r: 'dry_run', s: 'dry-02-one-divergent', a: C, v: 'positive' }, // pending
       { t: 'T014', r: 'dry_run', s: 'dry-03-dispute-open', a: A, v: 'neutral' }, // pending
       // issue #843 (FR-092): a changed value is a `modify`, never an approve.
-      { t: 'T014', r: 'dry_run', s: 'dry-03-dispute-open', a: B, v: 'neutral', rev: { reviewer_chen: 'negative' }, modifyBy: 'reviewer_chen', reason: '依 [[負向（negative）的判準]]，抱怨語氣明確，應判讀為負面而非中性' }, // disputed (reviewer modifies)
+      { t: 'T014', r: 'dry_run', s: 'dry-03-dispute-open', a: B, v: 'neutral', rev: { reviewer_lin: 'negative' }, modifyBy: 'reviewer_lin', reason: '依 [[負向（negative）的判準]]，抱怨語氣明確，應判讀為負面而非中性' }, // disputed (reviewer modifies)
       { t: 'T014', r: 'dry_run', s: 'dry-03-dispute-open', a: C, v: 'neutral' }, // pending
-      { t: 'T014', r: 'dry_run', s: 'dry-04-dispute-resolved', a: A, v: 'negative', rev: { reviewer_lin: 'negative' } }, // finalized
+      { t: 'T014', r: 'dry_run', s: 'dry-04-dispute-resolved', a: A, v: 'negative', rev: { reviewer_wang: 'negative' } }, // finalized
       /* issue #843 (FR-092/FR-060): lin's modify sends the item to
          dispute; chen's arbitration adopts the corrected value and
          finalizes it (finalized_by = reviewer_chen). */
-      { t: 'T014', r: 'dry_run', s: 'dry-04-dispute-resolved', a: B, v: 'neutral', rev: { reviewer_lin: 'negative' }, modifyBy: 'reviewer_lin', reason: '依 [[負向（negative）的判準]]，文末表達失望，應判讀為負面而非中性', arb: 'negative', arbReason: '依 [[負向（negative）的判準]]，採用審核員提出的負向修正。' }, // finalized by arbitration
-      { t: 'T014', r: 'dry_run', s: 'dry-04-dispute-resolved', a: C, v: 'negative', rev: { reviewer_lin: 'negative' } }, // finalized
+      { t: 'T014', r: 'dry_run', s: 'dry-04-dispute-resolved', a: B, v: 'neutral', rev: { reviewer_wang: 'negative' }, modifyBy: 'reviewer_wang', reason: '依 [[負向（negative）的判準]]，文末表達失望，應判讀為負面而非中性', arb: 'negative', arbReason: '依 [[負向（negative）的判準]]，採用審核員提出的負向修正。' }, // finalized by arbitration
+      { t: 'T014', r: 'dry_run', s: 'dry-04-dispute-resolved', a: C, v: 'negative', rev: { reviewer_wang: 'negative' } }, // finalized
       /* issue #837: this row used to seed a reviewer-level `reject`
          (rollback-free on dry_run anyway -- the annotator stayed
          'submitted'), but REVIEW_DECISIONS has been approve/modify/bypass
@@ -3403,7 +3477,7 @@
          `bypass` is a DISPUTE_FORCING_DECISIONS member, so the unit still
          blocks finalization and stays disputed -- only an arbiter (or a
          later correction) can resolve it. */
-      { t: 'T014', r: 'dry_run', s: 'dry-05-pending-review', a: A, v: 'positive', rev: { reviewer_wang: undefined }, bypassBy: 'reviewer_wang', reason: '依 [[難以判定時的處理]]，正負面線索交雜，難以判定情緒傾向為何' }, // disputed (reviewer bypasses, no answer value recorded)
+      { t: 'T014', r: 'dry_run', s: 'dry-05-pending-review', a: A, v: 'positive', rev: { reviewer_li: undefined }, bypassBy: 'reviewer_li', reason: '依 [[難以判定時的處理]]，正負面線索交雜，難以判定情緒傾向為何' }, // disputed (reviewer bypasses, no answer value recorded)
       { t: 'T014', r: 'dry_run', s: 'dry-05-pending-review', a: B, v: 'positive' }, // pending
       { t: 'T014', r: 'dry_run', s: 'dry-05-pending-review', a: C, v: 'positive' }, // pending
       /* T015 official_run, min_reviewers = 1 (ofs-05 stays unsubmitted) */
@@ -3424,17 +3498,17 @@
          value, and the unit finalizes on that value. */
       { t: 'T016', r: 'official_run', s: 'ofm-01-reviewer-corrects-b', a: A, v: 'positive', rev: { reviewer_wang: 'negative' }, modifyBy: 'reviewer_wang', reason: '依 [[負向（negative）的判準]]，第二句語氣轉折應判讀為負面，而非正面', arb: 'negative', arbReason: '依 [[負向（negative）的判準]]，採用審核員提出的負向修正。' }, // finalized (reviewer modifies, arbitration adopts B)
       { t: 'T016', r: 'official_run', s: 'ofm-02-reviewer-accepts-a', a: A, v: 'negative', rev: { reviewer_li: 'negative' } }, // finalized (reviewer accepts A)
-      { t: 'T016', r: 'official_run', s: 'ofm-03-awaiting-arbitration', a: A, v: 'neutral', rev: { reviewer_chen: 'negative' }, modifyBy: 'reviewer_chen', reason: '依 [[負向（negative）的判準]]，反諷語氣明顯，應判讀為負面而非中性' }, // disputed (reviewer modifies, awaiting arbitration)
+      { t: 'T016', r: 'official_run', s: 'ofm-03-awaiting-arbitration', a: A, v: 'neutral', rev: { reviewer_lin: 'negative' }, modifyBy: 'reviewer_lin', reason: '依 [[負向（negative）的判準]]，反諷語氣明顯，應判讀為負面而非中性' }, // disputed (reviewer modifies, awaiting arbitration)
       /* issue #815: bypass (無法判定) had zero seed rows anywhere -- a lone
          bypass, like a lone modify, forces the unit into dispute
          (DISPUTE_FORCING_DECISIONS). design.md D2: bypass stores no answer
          value, so `rev` carries the reviewer key with an undefined value. */
-      { t: 'T016', r: 'official_run', s: 'ofm-04-reviewer-bypass', a: A, v: 'positive', rev: { reviewer_lin: undefined }, bypassBy: 'reviewer_lin', reason: '依 [[難以判定時的處理]]，文本正負面線索交雜且語氣曖昧，難以判定情緒傾向' }, // disputed (reviewer bypasses, no answer value recorded)
+      { t: 'T016', r: 'official_run', s: 'ofm-04-reviewer-bypass', a: A, v: 'positive', rev: { reviewer_wang: undefined }, bypassBy: 'reviewer_wang', reason: '依 [[難以判定時的處理]]，文本正負面線索交雜且語氣曖昧，難以判定情緒傾向' }, // disputed (reviewer bypasses, no answer value recorded)
       /* issue #815: migrated verbatim from T017's oft-01-final-exception
          (removed in this change's group 2) so the sole arbitration-reject
          (兩者皆非) -> final-exception-pool seed (FR-061 point 3, FR-095)
          survives T017's removal. */
-      { t: 'T016', r: 'official_run', s: 'ofm-05-final-exception', a: A, v: 'neutral', rev: { reviewer_wang: 'positive' }, modifyBy: 'reviewer_wang', reason: '依 [[難以判定時的處理]]，語境不足以判斷情緒傾向，正面與中性難以取捨', arbReject: true, arbReason: '依 [[難以判定時的處理]]，原標記與審核修正結果皆缺乏明確文本依據支持，需徵詢更明確判準。' }, // disputed (reviewer modifies, arbitration rejects both sides -> final exception pool)
+      { t: 'T016', r: 'official_run', s: 'ofm-05-final-exception', a: A, v: 'neutral', rev: { reviewer_li: 'positive' }, modifyBy: 'reviewer_li', reason: '依 [[難以判定時的處理]]，語境不足以判斷情緒傾向，正面與中性難以取捨', arbReject: true, arbReason: '依 [[難以判定時的處理]]，原標記與審核修正結果皆缺乏明確文本依據支持，需徵詢更明確判準。' }, // disputed (reviewer modifies, arbitration rejects both sides -> final exception pool)
     ];
 
     if (upgradingFromPrevious) {
@@ -3447,20 +3521,6 @@
         if (taskIdsToReseed.indexOf(row.t) === -1) taskIdsToReseed.push(row.t);
       });
       clearReviewFlowDemoSeedBuckets(taskIdsToReseed);
-    }
-
-    try {
-      global.localStorage.setItem(REVIEW_FLOW_DEMO_SEED_KEY, new Date().toISOString());
-    } catch (e) {
-      return; /* storage unavailable: don't run the writes below either */
-    }
-    /* Separate try: once v3 is written the buckets have been reseeded, so a
-       failed old-marker cleanup must not skip the writes below. */
-    try {
-      global.localStorage.removeItem(REVIEW_FLOW_DEMO_SEED_KEY_V1);
-      global.localStorage.removeItem(REVIEW_FLOW_DEMO_SEED_KEY_V2);
-    } catch (e) {
-      /* leftover old markers are harmless: v3 is checked first */
     }
 
     function labelPayload(value, decision, reason) {
@@ -3514,6 +3574,20 @@
         ]);
       }
     });
+
+    if (!verifyReviewFlowDemoSeedRows(scripts)) return;
+    try {
+      global.localStorage.setItem(REVIEW_FLOW_DEMO_SEED_KEY, new Date().toISOString());
+    } catch (e) {
+      return; /* no completion marker means the next load retries */
+    }
+    try {
+      global.localStorage.removeItem(REVIEW_FLOW_DEMO_SEED_KEY_V1);
+      global.localStorage.removeItem(REVIEW_FLOW_DEMO_SEED_KEY_V2);
+      global.localStorage.removeItem(REVIEW_FLOW_DEMO_SEED_KEY_V3);
+    } catch (e) {
+      /* leftover old markers are harmless: v4 is checked first */
+    }
   }
 
   migrateLegacySubmissionStore();
@@ -3690,6 +3764,8 @@
     getReviewAssignments: getReviewAssignments,
     getStickyReviewers: getStickyReviewers,
     taskReviewerRoster: taskReviewerRoster,
+    taskArbiterRoster: taskArbiterRoster,
+    reviewAssignmentRoster: reviewAssignmentRoster,
     taskReviewAssignments: taskReviewAssignments,
     isRosterReviewer: isRosterReviewer,
     getAssignedReviewUnits: getAssignedReviewUnits,

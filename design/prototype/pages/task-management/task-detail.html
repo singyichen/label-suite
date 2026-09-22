@@ -2494,12 +2494,13 @@
       labelArbiterIdsControl: '仲裁者',
       reviewerSelectLabel: '審核員',
       arbiterSelectLabel: '仲裁者',
-      arbiterSelectHint: '可留空＝任一未參與該筆審核的審核員皆可認領',
+      arbiterSelectHint: '被指定者保留處理仲裁，不會收到新的審核單位；可留空，但爭議將無人可仲裁。',
       reviewerIdsValueWithCountTpl: '已勾選 {count} 人',
       reviewerIdsValueEmpty: '未勾選審核員',
       arbiterIdsValueWithCountTpl: '仲裁者 {count} 人',
       arbiterIdsValueEmpty: '未指定仲裁者',
       reviewSettingsErrorReviewerIdsEmpty: '請至少勾選一位審核員。',
+      reviewSettingsErrorNoAssignableReviewer: '請至少保留一位未被指定為仲裁者的審核員。',
       reviewLeaveConfirm: '你有尚未儲存的審核設定變更，確定要離開編輯模式嗎？',
       reviewReadonlyRoleOnly: '目前為唯讀角色，僅 project leader 可編輯審核設定。',
       reviewSaveSuccess: '審核設定已更新',
@@ -2593,6 +2594,7 @@
       toastPublishBlockedMembers: '啟用中成員人數不足，無法發布：',
       memberGapAnnotatorTpl: '標記員還差 {count} 位',
       memberGapReviewerTpl: '審核員還差 {count} 位',
+      memberGapAssignableReviewer: '至少需 1 位未被指定為仲裁者的啟用中審核員',
       memberGapJoiner: '、',
       yes: '是',
       no: '否',
@@ -3016,12 +3018,13 @@
       labelArbiterIdsControl: 'Arbiters',
       reviewerSelectLabel: 'Reviewers',
       arbiterSelectLabel: 'Arbiters',
-      arbiterSelectHint: 'Leave empty to let any non-participating reviewer claim the item',
+      arbiterSelectHint: 'Designated arbiters are reserved from new review assignment; leaving this empty means disputes cannot be arbitrated.',
       reviewerIdsValueWithCountTpl: '{count} selected',
       reviewerIdsValueEmpty: 'No reviewers selected',
       arbiterIdsValueWithCountTpl: '{count} arbiter(s)',
       arbiterIdsValueEmpty: 'No arbiter designated',
       reviewSettingsErrorReviewerIdsEmpty: 'Select at least one reviewer.',
+      reviewSettingsErrorNoAssignableReviewer: 'Keep at least one reviewer who is not designated as an arbiter.',
       reviewLeaveConfirm: 'You have unsaved review-setting changes. Leave edit mode?',
       reviewReadonlyRoleOnly: 'Read-only role. Only project leader can edit review settings.',
       reviewSaveSuccess: 'Review settings updated',
@@ -3115,6 +3118,7 @@
       toastPublishBlockedMembers: 'Not enough active members to publish: ',
       memberGapAnnotatorTpl: 'annotators need {count} more',
       memberGapReviewerTpl: 'reviewers need {count} more',
+      memberGapAssignableReviewer: 'at least 1 active reviewer must not be designated as an arbiter',
       memberGapJoiner: '; ',
       yes: 'Yes',
       no: 'No',
@@ -6544,10 +6548,18 @@ function getTaskTypeLabel() {
     };
   }
 
-  /* FR-010s-1: saving with an empty reviewer_ids roster is blocked. */
+  /* FR-010s-1 / issue #868: saving needs both a non-empty reviewer roster
+     and at least one reviewer who is not reserved in arbiter_ids. */
   function validateReviewData(data) {
     if (!data.reviewerIds || data.reviewerIds.length === 0) {
       return { valid: false, message: t('reviewSettingsErrorReviewerIdsEmpty') };
+    }
+    var arbiterIds = Array.isArray(data.arbiterIds) ? data.arbiterIds : [];
+    var assignableReviewerIds = data.reviewerIds.filter(function(reviewerId) {
+      return arbiterIds.indexOf(reviewerId) === -1;
+    });
+    if (assignableReviewerIds.length === 0) {
+      return { valid: false, message: t('reviewSettingsErrorNoAssignableReviewer') };
     }
     return { valid: true, message: '' };
   }
@@ -7772,9 +7784,16 @@ function getTaskTypeLabel() {
     if (annotatorGap > 0) {
       messages.push(interpolate(t('memberGapAnnotatorTpl'), { count: annotatorGap }));
     }
-    var reviewerGap = 1 - getEffectiveReviewerIds(TASK_DATA.reviewerIds).length;
+    var activeReviewerIds = getEffectiveReviewerIds(TASK_DATA.reviewerIds);
+    var reviewerGap = 1 - activeReviewerIds.length;
     if (reviewerGap > 0) {
       messages.push(interpolate(t('memberGapReviewerTpl'), { count: reviewerGap }));
+    } else {
+      var activeArbiterIds = getEffectiveArbiterIds(TASK_DATA.arbiterIds);
+      var hasAssignableReviewer = activeReviewerIds.some(function(reviewerId) {
+        return activeArbiterIds.indexOf(reviewerId) === -1;
+      });
+      if (!hasAssignableReviewer) messages.push(t('memberGapAssignableReviewer'));
     }
     return messages;
   }

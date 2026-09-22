@@ -284,18 +284,18 @@ test.describe('AC-3.57 clauses 1-2: N > 0 renders the count, positioned per desi
  * two genuinely different non-zero counts, per listActionableReviewUnits()
  * (FR-100 §1) -- not because either identity's number is stale. Assignment
  * is positional (getReviewAssignments(): official_run walks the sorted
- * unit list with `roster[index % roster.length]`) against a 2-member
- * roster:
+ * unit list with `roster[index % roster.length]`) against the effective
+ * assignment roster. ARBITER is reserved, so PARTICIPANT receives every
+ * new pending unit:
  *   sent-001 (index 0 -> PARTICIPANT) finalized, the unit being viewed.
- *   sent-002 (index 1 -> ARBITER) pending, assigned to ARBITER only.
- *   sent-003 (index 2 -> PARTICIPANT) pending, assigned to PARTICIPANT only.
- *   sent-004 (index 3 -> ARBITER) disputed -- PARTICIPANT reviewed it with
+ *   sent-002 and sent-003 pending, assigned to PARTICIPANT only.
+ *   sent-004 disputed -- PARTICIPANT reviewed it with
  *     a differing value ('fear' vs the annotator's 'joy'), so PARTICIPANT
  *     already holds a reviewer submission on it (not arbiter-eligible
  *     regardless of the can_arbitrate flag) while ARBITER never touched it
  *     and IS arbiter-eligible (FR-060).
- * Derived: PARTICIPANT's actionable = {sent-003} -> 1;
- *          ARBITER's actionable = {sent-002, sent-004} -> 2.
+ * Derived: PARTICIPANT's actionable = {sent-002, sent-003} -> 2;
+ *          ARBITER's actionable = {sent-004} -> 1.
  */
 async function seedTwoIdentityRemaining(page: Page): Promise<void> {
   await pinReviewUnits(
@@ -326,8 +326,8 @@ test.describe('AC-3.57 clause 4: a different identity on the same finalized unit
 
     const participantCount = await readActionableCount(page, PARTICIPANT);
     const arbiterCount = await readActionableCount(page, ARBITER);
-    expect(participantCount, 'precondition: PARTICIPANT derived actionable count').toBe(1);
-    expect(arbiterCount, 'precondition: ARBITER derived actionable count').toBe(2);
+    expect(participantCount, 'precondition: PARTICIPANT derived actionable count').toBe(2);
+    expect(arbiterCount, 'precondition: ARBITER derived actionable count').toBe(1);
     expect(
       participantCount,
       'this fixture is deliberately built so the two identities derive genuinely different non-zero counts -- if this ever fails, the fixture (not the feature) needs revisiting',

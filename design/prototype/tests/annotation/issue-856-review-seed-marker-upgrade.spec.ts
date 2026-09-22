@@ -96,7 +96,31 @@ async function seedOldBrowser(page: Page) {
   );
 }
 
-async function readDry05WangDecision(page: Page): Promise<unknown> {
+async function seedOldBrowserWithOneFailedSeedWrite(page: Page) {
+  await page.addInitScript(
+    ([marker, dry05Key, dry05Entry, submissionPrefix]) => {
+      if (window.sessionStorage.getItem('e2e-856-failed-write-seeded')) return;
+      window.sessionStorage.setItem('e2e-856-failed-write-seeded', '1');
+      window.localStorage.setItem(marker, '2026-01-01T00:00:00.000Z');
+      window.localStorage.setItem(dry05Key, dry05Entry);
+
+      const originalSetItem = Storage.prototype.setItem;
+      Storage.prototype.setItem = function setItemWithOneSeedFailure(key: string, value: string): void {
+        if (
+          key.indexOf(submissionPrefix) === 0 &&
+          !window.sessionStorage.getItem('e2e-856-seed-write-failed-once')
+        ) {
+          window.sessionStorage.setItem('e2e-856-seed-write-failed-once', '1');
+          throw new DOMException('simulated seed write failure', 'QuotaExceededError');
+        }
+        originalSetItem.call(this, key, value);
+      };
+    },
+    [SEED_MARKER, STALE_DRY05_KEY, JSON.stringify(STALE_DRY05_ENTRY), SUBMISSION_PREFIX]
+  );
+}
+
+async function readDry05CurrentDecision(page: Page): Promise<unknown> {
   return page.evaluate(() => {
     const data = (window as unknown as {
       LabelSuiteAnnotationWorkspaceData: {
@@ -106,7 +130,7 @@ async function readDry05WangDecision(page: Page): Promise<unknown> {
       };
     }).LabelSuiteAnnotationWorkspaceData;
     const submissions = data.readReviewerSubmissions('T014', 'dry_run', 'dry-05-pending-review', { annotatorId: 'kioleemg12' });
-    return submissions.find((s) => s.reviewerId === 'reviewer_wang')?.answers?.decisions?.single_label;
+    return submissions.find((s) => s.reviewerId === 'reviewer_li')?.answers?.decisions?.single_label;
   });
 }
 
@@ -149,16 +173,16 @@ async function countReviewFlowDemoState(page: Page) {
 }
 
 test.describe('issue #856: review demo seed marker upgrade', () => {
-  test('baseline: a fresh browser derives dry-05 reviewer_wang as bypass, not reject', async ({ page }) => {
+  test('baseline: a fresh browser derives dry-05 reviewer_li as bypass, not reject', async ({ page }) => {
     await page.goto(buildListUrl({ task_id: 'T014', role: 'reviewer', run_type: 'dry_run' }));
-    expect(await readDry05WangDecision(page)).toBe('bypass');
+    expect(await readDry05CurrentDecision(page)).toBe('bypass');
   });
 
   test('an old browser holding the v1 marker and a stale reject decision upgrades to the current bypass seed', async ({ page }) => {
     await seedOldBrowser(page);
     await page.goto(buildListUrl({ task_id: 'T014', role: 'reviewer', run_type: 'dry_run' }));
 
-    expect(await readDry05WangDecision(page)).toBe('bypass');
+    expect(await readDry05CurrentDecision(page)).toBe('bypass');
   });
 
   test('the upgrade bumps the stored marker to the current version', async ({ page }) => {
@@ -168,7 +192,7 @@ test.describe('issue #856: review demo seed marker upgrade', () => {
     const markers = await page.evaluate(() =>
       Object.keys(window.localStorage).filter((key) => key.indexOf('labelsuite.reviewFlowDemoSeed.') === 0)
     );
-    expect(markers).toContain(SEED_MARKER_PREFIX + 'v3');
+    expect(markers).toContain(SEED_MARKER_PREFIX + 'v4');
   });
 
   test('the upgrade does not duplicate T014-T016 history events or arbitration votes versus a fresh browser', async ({ page, browser }) => {
@@ -204,12 +228,32 @@ test.describe('issue #856: review demo seed marker upgrade', () => {
     await seedOldBrowser(page);
     await page.goto(buildListUrl({ task_id: 'T014', role: 'reviewer', run_type: 'dry_run' }));
     const afterUpgrade = await countReviewFlowDemoState(page);
-    expect(await readDry05WangDecision(page)).toBe('bypass');
+    expect(await readDry05CurrentDecision(page)).toBe('bypass');
 
     await page.reload();
 
     const afterReload = await countReviewFlowDemoState(page);
     expect(afterReload).toEqual(afterUpgrade);
-    expect(await readDry05WangDecision(page)).toBe('bypass');
+    expect(await readDry05CurrentDecision(page)).toBe('bypass');
+  });
+
+  test('a failed reseed does not commit v4 and retries on the next load', async ({ page }) => {
+    await seedOldBrowserWithOneFailedSeedWrite(page);
+    await page.goto(buildListUrl({ task_id: 'T014', role: 'reviewer', run_type: 'dry_run' }));
+
+    let markers = await page.evaluate(() =>
+      Object.keys(window.localStorage).filter((key) => key.indexOf('labelsuite.reviewFlowDemoSeed.') === 0)
+    );
+    expect(markers).not.toContain(SEED_MARKER_PREFIX + 'v4');
+    expect(markers).toContain(SEED_MARKER);
+
+    await page.reload();
+
+    markers = await page.evaluate(() =>
+      Object.keys(window.localStorage).filter((key) => key.indexOf('labelsuite.reviewFlowDemoSeed.') === 0)
+    );
+    expect(markers).toContain(SEED_MARKER_PREFIX + 'v4');
+    expect(markers).not.toContain(SEED_MARKER);
+    expect(await readDry05CurrentDecision(page)).toBe('bypass');
   });
 });

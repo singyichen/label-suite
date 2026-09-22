@@ -1,7 +1,7 @@
 # annotation/015-annotation-workspace Specification
 
 ## Purpose
-Annotation List + Workspace（標記清單與標記作業，Annotator／Reviewer）的 derived view。正典為 `specs/annotation/015-annotation-workspace/spec.md`（v5.0.0）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR/AC ID，不改動其正典措辭。目前收錄：change `reviewer-action-hint`（issue #526）之 FR-084、AC-4.47 ~ AC-4.50 與 FR-064 第 7 點第 6 項之範圍註記；以及 change `2026-09-01-single-owner-review-relay`（issue #596）之 FR-092 ~ FR-097（新增）、FR-014B／FR-016A／FR-044／FR-051／FR-053／FR-054／FR-055／FR-060／FR-061／FR-062／FR-063／FR-064／FR-070／FR-083／FR-086（修訂）、FR-014I／FR-069／FR-074／FR-085（移除）。另收錄 change `seq-tagging-span-workspace`（issue #581）之 FR-024A／FR-024A-1／FR-024A-2／FR-024A-3／FR-052／FR-024L（修訂）；此六條於該 change archive 前以正典 v5.0.0 原文建立基線，使 MODIFIED 有可比對的前值，archive 後基線內容已被完整取代。
+Annotation List + Workspace（標記清單與標記作業，Annotator／Reviewer）的 derived view。正典為 `specs/annotation/015-annotation-workspace/spec.md`（v6.15.0）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR/AC ID，不改動其正典措辭。目前收錄：change `reviewer-action-hint`（issue #526）之 FR-084、AC-4.47 ~ AC-4.50 與 FR-064 第 7 點第 6 項之範圍註記；change `2026-09-01-single-owner-review-relay`（issue #596）之 FR-092 ~ FR-097（新增）、FR-014B／FR-016A／FR-044／FR-051／FR-053／FR-054／FR-055／FR-060／FR-061／FR-062／FR-063／FR-064／FR-070／FR-083／FR-086（修訂）、FR-014I／FR-069／FR-074／FR-085（移除）；change `seq-tagging-span-workspace`（issue #581）之 FR-024A／FR-024A-1／FR-024A-2／FR-024A-3／FR-052／FR-024L（修訂）；以及 change `reserve-arbiters-from-review-assignment`（issue #868）之 FR-060／FR-073／FR-093／FR-099（修訂）。
 
 ## Requirements
 
@@ -379,16 +379,21 @@ Reviewer 審查列 MUST 僅呈現**受審標記員本人**的提交，MUST NOT �
 
 ### Requirement: FR-060 仲裁資格與清單入口
 
-`annotation-list` reviewer 視圖中，狀態為 `爭議中`（FR-051）的審核單位列，對**具仲裁資格**的審核員 MUST 將列動作按鈕由 `編輯` 換為 `仲裁`（testid `list-arbitrate-entry`）。仲裁資格＝以下兩條件**同時**成立：
+`annotation-list` reviewer 視圖中，狀態為 `爭議中`（FR-051）的審核單位列，對具仲裁資格的審核員 MUST 將列動作按鈕由 `編輯` 換為 `仲裁`（testid `list-arbitrate-entry`）。仲裁資格 MUST 同時符合：
 
-1. **名冊勾選**：該審核員已被勾選進該任務的仲裁者名冊（`can_arbitrate`；勾選來源為 014 之審核設定名冊，其正典修改隨 companion change 提案）；
-2. **非當事人**：該審核員於該審核單位**沒有自己的審核提交**——產生爭議的參與者不得仲裁自己參與的爭議。
+1. 目前審核員的 `user_id` 存在於該任務 `arbiter_ids`；該欄位是 `can_arbitrate = true` 的唯一任務層來源，系統 MUST NOT 只以全域示範名冊或其他任務的旗標授權；
+2. 目前審核員於該審核單位沒有自己的已提交審核（FR-049 reviewer bucket 查無提交）。
 
-不符資格者維持 `編輯`；非 `爭議中` 之列對任何人皆 MUST NOT 出現 `仲裁`。`仲裁` 與 `編輯` 導向**同一**工作區網址並攜帶完整審核單位身分，MUST NOT 新增任何網址參數。
+不符資格者維持 `編輯`；非 `爭議中` 列不得出現 `仲裁`。`仲裁` 與 `編輯` 導向同一工作區網址並攜帶完整審核單位身分，MUST NOT 新增任何網址參數。非當事人限制只適用仲裁，不得用來排除審核員對自己標記資料的審核指派。
 
-**明確不存在的規則**：本規格 MUST NOT 定義、亦 MUST NOT 實作「審核員不得審核自己標記的資料」——非當事人限制**僅**適用於仲裁者。審核指派一律由系統把資料平均分給被勾選的審核員（FR-093），不因指派對象恰為該筆的標記員而排除。
+#### Scenario: 任務仲裁名冊覆蓋全域示範旗標
+
+- **GIVEN** 任務 profile 的 `arbiter_ids` 只含 reviewer L，而全域示範名冊另將 reviewer C 標為可仲裁
+- **WHEN** L 與 C 分別檢視一個兩人皆未參與的爭議單位
+- **THEN** L 具仲裁資格且 C 不具仲裁資格
 
 #### Scenario: AC-4.53 仲裁資格兩條件
+
 - **GIVEN** 審核員 X 已被勾選進仲裁者名冊且未對某 `爭議中` 單位提交過審核
 - **WHEN** X 檢視該列
 - **THEN** 該列動作按鈕為 `仲裁`
@@ -581,63 +586,108 @@ workspace reviewer 視圖 MUST 於審核卡（FR-053）、仲裁版面（FR-061�
 - **THEN** 標記員原答案處顯示 `無法判定 (Bypass)`，決策按鈕、仲裁 B 選項、`bypassed` 徽章與快捷鍵 `B` 說明皆顯示 `無法裁決`
 - **AND** 切換為英文時分別為 `Unable to determine (Bypass)` 與 `Cannot adjudicate`，且兩組字串皆等於同一個 i18n 來源所定義之值
 
+### Requirement: FR-073 審核員快速入口必須導向下一個可處理審核單位
+
+`findNextActionableReviewUnit(task_id, run_type, reviewer_id)` MUST 沿用 FR-093 的有效分派名冊。位於任務 `arbiter_ids` 的保留仲裁者對新 `pending` 單位一律不是被指派人，因此該單位不得成為其第 1 順位候選；保留仲裁者只可依 FR-060 把自己未參與的 `disputed` 單位視為可處理。非仲裁審核員的 `pending` 候選與既有第 1 順位不變；issue #824 已黏住給現任仲裁者的歷史提交亦不得因此改派。
+
+#### Scenario: 保留仲裁者不會被快速入口送進待審單位
+
+- **GIVEN** reviewer C 位於任務 `arbiter_ids`，任務同時有一個指派給 reviewer W 的 `pending` 單位與一個 C 可仲裁的 `disputed` 單位
+- **WHEN** 系統為 C 推導下一個可處理單位
+- **THEN** 回傳該 `disputed` 單位
+- **AND** 不得回傳指派給 W 的 `pending` 單位
+
+#### Scenario: 快速入口以可處理單位為目標
+
+- **GIVEN** 任務同時包含可處理與不可處理的審核單位
+- **WHEN** 審核員由快速入口進入工作區
+- **THEN** 目標必須由 `findNextActionableReviewUnit()` 依登入身分與既有優先序推導
+
 ### Requirement: FR-093 審核指派粒度
 
-審核指派 MUST 由系統自動執行，MUST NOT 提供手動指派模式。指派對象為該任務**被勾選進審核員名冊**的成員（勾選來源為 014 之審核設定名冊，其正典修改隨 companion change 提案）。指派粒度依 `REVIEW_ASSIGNMENT_GRANULARITY` 分流，此為兩種 `run_type` **唯一**的流程差異：
+審核工作 MUST 由系統自動指派；`dry_run` 以樣本為粒度，`official_run` 以審核單位為粒度。新審核工作的有效分派名冊 MUST 為該任務 `reviewer_ids - arbiter_ids`，且集合差 MUST 保留 `reviewer_ids` 原順序。所有指定於 `arbiter_ids` 的人都 MUST 自新分派池排除，不得只保留第一位或依人員身分硬編例外。有效名冊中的新單位仍依既有位置性規則平均分配。
 
-1. `dry_run: per_sample`——試標中同一份樣本由多位標記員各標一次，其產生的全部審核單位 MUST 指派給**同一位**審核員，使該審核員得以一次看完同一份資料的所有標記；
-2. `official_run: per_unit`——每筆樣本恰一位標記員、恰一個審核單位，系統 MUST 把全部審核單位平均分給被勾選的審核員；樣本數不可整除時，任兩位審核員的分派筆數差距 MUST NOT 超過 1。
+issue #824 的黏住規則 MUST 優先於本次保留規則：已有已提交審核的單位仍黏住原提交者，即使該人目前位於 `arbiter_ids`；該人依 FR-060 仍不得仲裁自己參與的單位。`arbiter_ids` 為空時，有效分派名冊 MUST 等於完整 `reviewer_ids`。所有 reviewer 同時也是 arbiter 的零分派池形狀由 companion change `validate-reviewer-arbiter-role-separation` 在 014 儲存時阻擋，annotation 不得私自把仲裁者加回分派池。
 
-每個審核單位恰有**一位**指派審核員，MUST NOT 出現同一單位由多位審核員並行審核的情形。
+指派 MUST NOT 提供手動模式；每個審核單位恰有一位指派審核員。`dry_run` 採 per-sample 粒度，同一樣本的所有審核單位由同一人承接；`official_run` 採 per-unit 粒度。平均分配的差距規則只計尚無已提交審核的待分配池，已黏住單位不參與差距判定。示範種子同樣不得替一個 `official_run` 單位登錄多位 reviewer。黏住 MUST 由既有提交推導，不得另存第二份指派表，且不得依 task、sample 或帳號硬編分流。離冊審核員仍可唯讀檢視自己已提交的單位與歷程，但不得再送出審核；其仲裁資格仍依 FR-060 判定。
 
-**本版釐清**：前段「恰有一位」同樣約束**種子與示範資料**，而非僅約束執行期的指派演算法。一筆在 `rev` 之類的審核結果結構中登錄了兩位以上審核員的 `official_run` 種子列，描述的是本資料模型永遠無法產生的狀態，MUST NOT 存在於示範資料中。
+#### Scenario: 唯一仲裁者不再收到新審核單位
 
-**明確不存在的規則**：系統 MUST NOT 因某位審核員恰為該筆樣本的標記員而將其排除於指派之外——「審核員不得審自己標的資料」不是本規格的規則。非當事人限制僅適用於仲裁者（FR-060）。
+- **GIVEN** 任務 `reviewer_ids = [W, L, C, N]` 且 `arbiter_ids = [C]`
+- **WHEN** 系統對尚無提交的審核單位建立自動指派
+- **THEN** 新單位只在 W、L、N 間平均分配，C 的新分派數為 0
+- **AND** 爭議由 W、L 或 N 的提交產生時，C 仍符合 FR-060 的非當事人條件並可仲裁
 
-**本版修訂（issue #824，指派之黏住與離冊審核員之可見性）**：
+#### Scenario: 多位指定仲裁者全部保留
 
-1. **指派黏住**：一個審核單位一旦存在任一**已儲存的審核提交**，其指派審核員 MUST 恆為該提交者，MUST NOT 因審核員名冊異動（勾選／取消勾選 `reviewer_ids`）或審核單位集合異動（新單位進入列舉，FR-055）而改派。單位狀態為 `爭議中`（含該判定已被仲裁推翻者）或 `已定稿` 皆不例外。未提交之草稿 MUST NOT 造成黏住。同一單位存在多位提交者時（本模型不應產生、示範資料亦禁止之形狀，見前段釐清），指派 MUST 以決定性規則取其一，MUST NOT 依掃描順序浮動。
-2. **平均分配之適用範圍**：前文第 2 點「任兩位審核員的分派筆數差距 MUST NOT 超過 1」自本版起僅約束**尚無已提交審核**之單位所構成的待分配池；已黏住之單位 MUST NOT 參與該次分配，亦 MUST NOT 計入該差距之判定。理由與 `task-management/014-task-detail` FR-005j 一致——審核員異動時其 `done` 保留為歷史統計，只有 `pending` 退回未指派池；亦與同規格 FR-010f-4「發布後的成員異動不得自動重算既有 assignment」同向。前文第 2 點之文字逐字保留為沿革。
-3. **`dry_run` 粒度不變**：per_sample 粒度優先於逐單位黏住——同一樣本內任一單位黏住某審核員時，該樣本之**全部**審核單位 MUST 隨之黏住同一位審核員，MUST NOT 出現同一樣本被拆給兩位審核員的情形。
-4. **離冊審核員之唯讀可見**：已不在該任務 `reviewer_ids` 名冊中的審核員，對其持有已提交審核之審核單位 MUST 維持可見——`annotation-list` reviewer 清單（FR-055）與工作區之審核單位導覽（FR-056）MUST 仍列出該單位，其歷程（FR-050、FR-097）MUST 仍可開啟；但該審核員 MUST NOT 再對任何審核單位提交審核決策，工作區 MUST NOT 渲染可送出之審核控件（含經鍵盤捷徑之送出路徑，FR-058）。其仲裁者資格不受本條影響，仍依 FR-060 判定；判定順序上，仲裁入口與已定稿唯讀卡（FR-094）皆優先於本條之唯讀呈現。
-5. **推導來源**：黏住 MUST 由既有之審核提交推導，MUST NOT 另存第二份指派資料——正典不定義持久化的指派表，第二份資料一旦與提交歷程不一致即無從裁決。推導 MUST NOT 依任務 ID、樣本 ID 或帳號分流（Generalization-First）。
+- **GIVEN** `reviewer_ids = [W, L, C, N]` 且 `arbiter_ids = [C, N]`
+- **WHEN** 系統建立新指派
+- **THEN** 有效分派名冊恰為 `[W, L]`，不得把 N 當作備用審核員加入
+
+#### Scenario: 歷史黏住優先於新角色保留
+
+- **GIVEN** C 過去已對單位 U 提交審核，之後 C 被加入 `arbiter_ids`
+- **WHEN** 系統重新推導指派
+- **THEN** U 仍指派給 C，不得改寫歷史責任鏈
+- **AND** C 對 U 不具仲裁資格，但對自己未參與的其他爭議單位仍可仲裁
+
+#### Scenario: 未指定仲裁者時不縮小審核池
+
+- **GIVEN** `arbiter_ids` 為明確空陣列
+- **WHEN** 系統建立新指派
+- **THEN** 有效分派名冊等於完整 `reviewer_ids`
+- **AND** 系統不得以全域示範名冊偷偷排除任何人
+
+#### Scenario: 失敗的 v4 示範重播不得提交完成 marker
+
+- **GIVEN** 瀏覽器仍有舊版 review-flow demo marker，且 v4 重播任一必要 seed 寫入失敗
+- **WHEN** 頁面完成本次 migration 嘗試
+- **THEN** 系統不得寫入 v4 完成 marker，亦不得移除舊 marker
+- **AND** 下次載入必須重試，只有逐筆驗證 T014～T016 的必要標記提交、審核決策與仲裁票皆存在後，才可寫入 v4 marker 並移除舊 marker
 
 #### Scenario: 試標以樣本為單位指派
+
 - **GIVEN** 一份試標樣本由三位標記員各標一次，任務勾選了兩位審核員
 - **WHEN** 系統建立審核指派
 - **THEN** 該樣本產生的三個審核單位全部指派給同一位審核員
 
 #### Scenario: 正式標記平均分派且不排除標記員本人
+
 - **GIVEN** `official_run` 有 7 筆樣本、勾選 2 位審核員，其中一位同時是部分樣本的標記員
 - **WHEN** 系統建立審核指派
 - **THEN** 兩位審核員的分派筆數差距不超過 1
 - **AND** 該審核員仍可能被指派到自己標記的樣本，系統不因此排除或重新分派
 
 #### Scenario: 示範種子不得讓多位審核員並行審同一個正式標記單位
+
 - **GIVEN** 任一 `run_type = official_run` 的示範審核單位種子列
 - **WHEN** 讀取該列所登錄的審核員集合
 - **THEN** 該集合 MUST 恰含一位審核員；含兩位以上者 MUST 視為與本條文直接衝突的失效種子並汰換
 - **AND** 該單位若需示範定稿前的第二個判斷，MUST 循 FR-060 的仲裁路徑表達（一位審核員 + 一位非當事人仲裁者），MUST NOT 以並列多位審核員表達
 
 #### Scenario: 已審單位不因名冊異動而改派
+
 - **GIVEN** `official_run` 任務勾選了數位審核員，其中審核員 X 已對某審核單位提交審核
 - **WHEN** 專案負責人變更 `reviewer_ids` 勾選（新增或移除一位審核員）後重新列舉指派
 - **THEN** 該單位的指派審核員仍為 X
 - **AND** 該單位若因仲裁而被推翻判定或已定稿，指派審核員亦仍為 X
 
 #### Scenario: 離冊審核員對其審過的單位唯讀可見
+
 - **GIVEN** 審核員 X 已對某審核單位提交審核，其後被移出該任務的 `reviewer_ids` 名冊
 - **WHEN** X 開啟 `annotation-list` reviewer 清單與該單位的工作區
 - **THEN** 清單仍列出該單位，工作區導覽仍含該單位，歷程仍可開啟
 - **AND** 工作區不渲染任何可送出的審核控件，X 無法再對該單位提交審核決策
 
 #### Scenario: 平均分配只約束尚未被審核的單位
+
 - **GIVEN** `official_run` 共 6 個審核單位，其中 4 個已由同一位審核員提交審核，名冊勾選 3 位審核員
 - **WHEN** 系統建立審核指派
 - **THEN** 那 4 個單位全部仍指派給該提交者
 - **AND** 其餘 2 個單位在 3 位審核員之間分配，該 2 筆的分派差距不超過 1，且 4 個已黏住的單位不計入差距判定
 
 #### Scenario: 試標樣本內任一單位已被審核即整個樣本黏住
+
 - **GIVEN** `dry_run` 某樣本由三位標記員各標一次，審核員 X 已對其中一個單位提交審核
 - **WHEN** 系統重新建立審核指派（名冊已異動）
 - **THEN** 該樣本的三個審核單位全部指派給 X
@@ -903,59 +953,47 @@ Reviewer 審查呈現 MUST 依 `outputs[].type` 對應下列規則之一：`sing
 
 ### Requirement: FR-099 審核單位送出後的自動前進
 
-**FR-099**（本版新增，對應 AC-3.55、AC-3.56、SC-004Y，issue #719）：**未使單位定稿的審核送出後必須自動前進至下一個可處理審核單位**。
+未使單位定稿的成功送出仍 MUST 共用 `findNextActionableReviewUnit()`。審核員送出後既有 `pending` 優先序不變；仲裁者送出後因 FR-093 角色保留而不擁有任何新 `pending` 單位，故系統 MUST 在其具資格的 `disputed` 候選中選擇下一個目標。若 `兩者皆非` 使目前單位維持 `disputed` 且沒有列舉順序更前的其他可仲裁爭議，目前單位 MAY 再次成為目標，以保留 FR-065 改票能力。系統不得以全任務存在其他 reviewer 的 `pending` 單位為由，把仲裁者導入未指派的審核工作。
 
-`role = reviewer` 於 `annotation-workspace` 完成一次**成功寫入**的送出後，若該次送出**未使該審核單位推導為 `已定稿`**，系統 MUST 自動前進至下一個可處理審核單位。適用兩條送出路徑：審核決策送出（FR-092 之 `approve | modify | bypass` 三向決策）與爭議仲裁送出（FR-061）。使該單位定稿的送出不適用本條之前進，其去向見第 7 點。
+1. **單一目標來源**：審核決策與仲裁送出 MUST 共用 `findNextActionableReviewUnit(task_id, run_type, reviewer_id)`，其列舉、優先序與資格判定沿用 FR-073，MUST NOT 改用標記端 `findNextPendingUnit()` 或另立第二套判定。
+2. **頁內切換與網址同步**：取得下一個單位後 MUST 在同一工作區切換，並同步 `sample_id` 與 `annotator_id`；不得以導向新工作區網址代替。網址同步由 FR-057 單一 writer 承擔。
+3. **全域最高優先序**：目標為所有可處理單位中優先序最高且列舉最前者，不採自目前位置向後繞行。
+4. **不得以排除目前單位的特例取代資格判定**：審核送出後，提交者因已成為該單位當事人而自然不具仲裁資格；仲裁送出 `reject` 後未寫入 reviewer bucket，若單位仍爭議且無更前候選，目前單位仍可再次成為目標。指定仲裁者不擁有其他 reviewer 的 `pending` 指派，該類單位不得成為其目標。
+5. **無可處理項目**：推導為空時 MUST 經既有 `buildListReturnUrl()` 返回 `annotation-list`，保留 FR-081 檢視狀態與 FR-049 身分參數，附 `notice=no_actionable_review`，且不得攜帶 `sample_id` 或回退至唯讀單位。
+6. **驗證失敗不導覽**：被 FR-083、FR-089、空單位或已定稿守衛阻擋而未寫入的送出不得切換或導頁。
+7. **定稿送出留在原單位**：送出使單位定稿時 MUST 就地重渲染 FR-094 唯讀定稿卡，不得前進或導頁。
+8. **Generalization-First**：目標推導不得對任何 task id、sample id 或帳號硬編例外。
 
-1. **目標推導之單一來源**：下一個單位 MUST 由 `findNextActionableReviewUnit(task_id, run_type, reviewer_id)` 取得，其 `REVIEW_UNIT_ACTION_PRIORITY` 優先序、資格判定與候選列舉逐字沿用 FR-073 第 1～3 點。系統 MUST NOT 另立第二套「哪些單位可處理」的判定；亦 MUST NOT 沿用標記端之 `findNextPendingUnit()`——後者所稱「待處理」為「該樣本尚未提交」之二元事實，不含優先序，亦不含 FR-060 之仲裁資格與利益迴避，以之為審核端目標會把審核員送進其無權處理的唯讀單位，正是 FR-073 為 dashboard 入口修掉的同一個缺陷。
+#### Scenario: 仲裁送出後忽略屬於審核員的待審單位
 
-2. **前進方式為工作區內切換，不得導頁**：取得目標單位後 MUST 於同一頁面切換至該單位，MUST NOT 導向 `annotation-workspace` 之新網址。審核單位維度為 `sample_id × annotator_id × run_type`（FR-051、FR-056），故切換 MUST 同時帶入目標單位之 `annotator_id`；缺少該維度時工作區會依 FR-049 回退為預設標記員身分而顯示另一個單位。切換後之網址同步由 FR-057 既有契約承擔，本條 MUST NOT 新增第二個網址寫入點。
-
-3. **方向性刻意不同於標記端**：目標為全體可處理單位中優先序最高者，同順位取列舉順序最前者（FR-073 第 2 點），而非自目前單位往後繞行。因此送出後 MAY 前進至列舉順序在目前單位之前的單位；此為刻意行為。標記端之待處理無優先序故採繞行（FR-022A），審核端之可處理有優先序故採全域最佳；系統 MUST NOT 為了讓兩者「看起來一致」而在審核端加上繞行限制——那會使一個更該優先處理的 `pending` 單位僅因排序在目前單位之前而被跳過。
-
-4. **目標之排除一律由既有資格判定決定，不得以特例達成**：系統 MUST NOT 另加「排除目前單位」之特例判斷；該特例會在單位狀態推導日後變動時與資格判定各說各話，並掩蓋資格判定本身的缺陷。依 FR-073 第 2 點之既有判定，兩條送出路徑的結果**刻意不同**，此差異 MUST 被如實承認而非抹平：
-   - **審核決策送出**：送出後該單位或推導為 `已定稿`（不可處理，且依第 7 點不前進），或推導為 `爭議中` 而該審核員已於其上寫入 reviewer 提交、故依 FR-060 第 2 點不具仲裁資格（不可處理）。剛送出的單位因而**自然**不會成為目標。
-   - **爭議仲裁送出且裁定含「兩者皆非」**：該單位依 FR-061 第 3 點維持 `爭議中` 直到最終例外池（FR-095）收尾；而仲裁狀態依 FR-061 第 4 點 MUST NOT 寫入任何 reviewer bucket，故該仲裁者於 FR-060 第 2 點「查無其 reviewer bucket」之非當事人判定下**仍具仲裁資格**，該單位**仍為可處理**。因此該單位 MUST 仍為合法的前進目標——任務內若無更高優先序之 `pending` 單位，推導結果即為該單位本身，畫面 MUST 停留於其仲裁版面而 MUST NOT 導回清單。此為 FR-065 改票語意（`爭議中` 期間同一仲裁者得改票）的必然結果；系統 MUST NOT 為了讓兩條路徑「看起來一致」而把已投票的仲裁者排除，那等同於在 FR-060 之外私設第三個資格條件。
-
-5. **無可處理項目時的去向**：推導結果為空時 MUST 導向 `annotation-list`（不帶 `sample_id`），且下列兩項 MUST 同時成立：
-   - 網址 MUST 經 `buildListReturnUrl()` 這個既有單一 writer 產生，因而保留 FR-081 之檢視狀態四鍵與 FR-049 之身分參數（AC-4.43）；系統 MUST NOT 於返回路徑上另立第二個 query 建構器（FR-081 第 3 點）。
-   - 網址 MUST 附帶 `notice=no_actionable_review`，觸發 FR-073 第 5 點既有之 `list-no-actionable-notice` 空狀態說明（zh／en 同步）。
-
-   兩項缺一不可：只保留篩選條件會讓審核員面對一整頁已定稿列而無任何「此任務已無可處理單位」的訊號；只顯示空狀態則會落在未篩選的第 1 頁。系統 MUST NOT 回退為開啟任何已定稿唯讀單位。
-
-6. **未成功寫入的送出不得產生任何導覽**：被 FR-083（每個 outKey 須有一筆決策）、FR-089（`modified`／`bypassed`／`adjudicated` 之理由必填）或工作區既有之空單位與 `已定稿` 守衛擋下而未實際寫入的送出，MUST NOT 前進，亦 MUST NOT 導頁；畫面 MUST 停留於原單位，使阻擋原因得以呈現。
-
-7. **使單位定稿的送出 MUST 停留於原單位**：一次成功寫入的送出若使該審核單位推導為 `已定稿`（依 FR-051 推導；定稿路徑見 FR-063。本條 MUST NOT 自行列舉哪些逐項決策組合會定稿——該判準完全由 FR-051 決定，任何複述都會隨其演進而失真），系統 MUST NOT 前進、MUST NOT 導頁，MUST 就地重渲染為 FR-094 之唯讀定稿卡（`ws-review-finalized-card`）。此非本條新創之例外，而是 AC-3.39 與 FR-053 既有之定稿鎖定契約——「中間狀態不受影響……含促成定稿的那一筆送出本身；仲裁者於現場送出仲裁後，重渲染即落入唯讀結果卡」——本條 MUST NOT 推翻之。理由：定稿卡是該次送出唯一的結果回饋，逕行前進會使審核員無從當場確認自己剛剛定稿了什麼、也無從察覺誤觸；審核員離開已定稿單位的路徑是既有的清單返回入口（FR-081），不由本條接管。
-
-8. **不得硬編任務 ID**（Generalization-First）：前進目標僅得由審核單位狀態與登入審核員身分推導，MUST NOT 對 T014–T017 或任何任務 ID 分流。
-
-本條不改變 FR-022A／FR-022C 與標記端之提交後導覽行為；不改變 FR-060 之仲裁資格條件、FR-061 之仲裁寫入規則、FR-065 之改票語意、AC-3.39／FR-053 之定稿鎖定行為，亦不改變 `REVIEW_UNIT_ACTION_PRIORITY` 之順位定義與 `listReviewUnits()` 之列舉行為。**本版同時修訂 FR-073 第 2 點之第 1 順位**（issue #719，FR-093 缺陷修正）：該順位原未帶指派條件，使審核員被導向他人被指派的 `pending` 單位；修訂後 `findNextActionableReviewUnit()` 之簽章不變而行為改變，FR-073 與本條兩個消費端同步只把依 FR-093 指派予該審核員的 `pending` 單位視為可處理。此為 FR-073 既有缺陷之修正，非本條另立之判定——本條仍不得自立第二套「哪些單位可處理」的判準。
+- **GIVEN** reviewer C 是保留仲裁者，正在處理爭議單位 D，且任務另有指派給 reviewer W 的 `pending` 單位 P
+- **WHEN** C 對 D 送出 `兩者皆非`，D 仍為 `disputed`
+- **THEN** 下一個可處理單位不得是 P
+- **AND** 若沒有其他更前的可仲裁爭議，工作區停留於 D
 
 #### Scenario: AC-3.55 未定稿的審核送出成功後自動前進至下一個可處理審核單位
+
 - **GIVEN** `role = reviewer` 進入某任務一個 `待審` 審核單位，且該任務尚有其他 `待審` 單位
-- **WHEN** 成功送出一次審核決策，且該次送出使該單位依 FR-051 推導為 `爭議中` 而非 `已定稿`（何種逐項決策組合會落入哪一邊由 FR-051 決定，本條不複述）
-- **THEN** 工作區 MUST 於同一頁面切換至 `findNextActionableReviewUnit()` 選出的單位，網址之 `sample_id` 與 `annotator_id` MUST 同步為該單位，且 MUST NOT 發生跳離工作區的導頁
-- **AND** 剛送出的單位 MUST NOT 成為切換目標——該審核員已於其上寫入 reviewer 提交，依 FR-060 第 2 點不具仲裁資格
-- **AND** 任務同時存在 `待審` 與該審核員可仲裁之 `爭議中` 時，MUST 前進至 `待審` 單位，即使該 `爭議中` 單位於列舉順序中在前
-- **AND** 該審核員於此任務已無可處理單位時，MUST 導向 `annotation-list`：該次導頁所請求之網址 MUST 同時帶有送出前的 FR-081 檢視狀態鍵（如 `status`、`q`）與 `notice=no_actionable_review`，MUST NOT 帶 `sample_id`，且落地頁 MUST 渲染 `list-no-actionable-notice`
-- **AND**〔定稿豁免〕使該單位依 FR-051 推導為 `已定稿` 的送出，MUST 停留於原單位並就地渲染 `ws-review-finalized-card`，MUST NOT 切換至任何其他單位、MUST NOT 發生任何導頁（AC-3.39、FR-053、FR-099 第 7 點）
-- **AND**〔反向守衛〕缺一筆決策而被 FR-083 擋下的送出，MUST 停留於原單位——`sample_id` 不變、未切換至任何其他單位、未發生任何導頁
+- **WHEN** 成功送出一次未使單位定稿的審核決策
+- **THEN** 工作區 MUST 於同一頁面切換至 `findNextActionableReviewUnit()` 選出的單位，網址之 `sample_id` 與 `annotator_id` MUST 同步為該單位，且不得發生跳離工作區的導頁
+- **AND** 剛送出的單位不得成為切換目標；無可處理單位時返回清單並保留檢視狀態與 `notice=no_actionable_review`
+- **AND** 定稿或驗證失敗的送出不得前進
 
 #### Scenario: AC-3.56 仲裁送出共用同一套前進規則
+
 - **GIVEN** `role = reviewer` 且依 FR-060 具仲裁資格，進入某 `爭議中` 單位之仲裁版面
-- **WHEN** 逐項裁定並成功送出仲裁，其中至少一項裁定為 `兩者皆非`（依 FR-061 第 3 點該單位維持 `爭議中`），且該任務另有一個 `待審` 單位
-- **THEN** 前進行為 MUST 與 AC-3.55 相同——同一個目標推導函式與同一個返回網址建構器，MUST NOT 另立仲裁專用導覽；MUST 前進至該 `待審` 單位
-- **AND** 該任務除此爭議單位外已無其他可處理單位時，推導結果 MUST 為該單位本身——仲裁狀態依 FR-061 第 4 點未寫入任何 reviewer bucket，故該仲裁者於 FR-060 第 2 點下仍具資格（FR-065 改票語意）；畫面 MUST 停留於該仲裁版面，MUST NOT 導回 `annotation-list`，且 `list-no-actionable-notice` MUST 為 0 個
-- **AND**〔定稿豁免〕逐項採 A／採 B 全數落定而使該單位推導為 `已定稿` 的仲裁送出，MUST 停留於原單位並就地渲染 `ws-review-finalized-card`，MUST NOT 切換至任何其他單位、MUST NOT 發生任何導頁（AC-3.39、FR-053、FR-099 第 7 點）
-- **AND** 未逐項裁定或缺必填理由而被擋下的仲裁送出 MUST NOT 產生任何導覽
+- **WHEN** 成功送出未使單位定稿的仲裁
+- **THEN** 前進行為 MUST 與審核送出共用同一個目標推導函式與返回網址建構器
+- **AND** 指定仲裁者不得前進至其他 reviewer 的 `pending` 單位；目前單位仍可處理且無更前候選時，畫面 MUST 停留於該仲裁版面
+- **AND** 定稿或驗證失敗的仲裁不得產生前進導覽
 
 #### Scenario: SC-004Y 送出後去向的完整性與一致性
+
 - **GIVEN** 一位審核員在同一任務內連續送出，直到該任務已無其可處理單位
 - **WHEN** 逐次觀察每次送出後的落點
-- **THEN** 未使單位定稿的送出中，停留於一個對該審核員已不可處理之單位的次數 MUST 為 0；被前進到的單位中不可處理者（`已定稿`、或該審核員無 FR-060 資格之 `爭議中`）MUST 為 0 筆
-- **AND** 使單位定稿的送出中，發生前進或導頁的次數 MUST 為 0，且該次送出後該單位之 `ws-review-finalized-card` MUST 恰為 1 個（AC-3.39）
-- **AND** 審核送出與仲裁送出兩條路徑所使用的目標推導函式與返回網址建構器 MUST 完全相同，工作區內「哪些單位可處理」的判定實作 MUST 恰為 1 份
-- **AND** 最後一次送出後導回之清單網址，其 FR-081 檢視狀態鍵與 `notice=no_actionable_review` MUST 同時存在，`sample_id` MUST 為 0 次出現
+- **THEN** 被前進到的不可處理單位數 MUST 為 0，定稿送出發生前進或導頁的次數 MUST 為 0
+- **AND** 審核與仲裁兩條路徑的目標推導與返回網址建構器 MUST 完全相同，工作區內「哪些單位可處理」的判定實作恰為 1 份
+- **AND** 最後返回清單的網址同時含 FR-081 檢視狀態與 `notice=no_actionable_review`，且不含 `sample_id`
 
 ### Requirement: FR-100 定稿卡之本任務剩餘可處理量與歸零去向
 

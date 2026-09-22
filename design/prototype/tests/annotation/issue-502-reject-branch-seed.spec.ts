@@ -117,11 +117,11 @@ async function knownReviewUnitStatusValues(page: Page) {
 }
 
 test.describe('issue #502/#837 -- dry_run bypass: decision recorded, no rework backlog', () => {
-  test('reviewer_wang bypassing dry-05 x kioleemg12 leaves the annotator submitted', async ({ page }) => {
+  test('reviewer_li bypassing dry-05 x kioleemg12 leaves the annotator submitted', async ({ page }) => {
     await page.goto(buildListUrl({ task_id: 'T014', role: 'reviewer', run_type: 'dry_run' }));
 
     const annotatorIdentity = { annotatorId: 'kioleemg12' };
-    const reviewerIdentity = { annotatorId: 'kioleemg12', reviewerId: 'reviewer_wang' };
+    const reviewerIdentity = { annotatorId: 'kioleemg12', reviewerId: 'reviewer_li' };
 
     const annotatorStatus = await getSampleStatus(
       page, 'T014', 'annotator', 'dry_run', 'dry-05-pending-review', annotatorIdentity
@@ -137,7 +137,7 @@ test.describe('issue #502/#837 -- dry_run bypass: decision recorded, no rework b
 
     // The decision text is traceable on the reviewer's own history.
     const history = await getSampleHistory(page, 'T014', 'dry_run', 'dry-05-pending-review', annotatorIdentity);
-    const reviewerEntry = history.find((event) => event.role === 'reviewer' && event.actorId === 'reviewer_wang');
+    const reviewerEntry = history.find((event) => event.role === 'reviewer' && event.actorId === 'reviewer_li');
     expect(reviewerEntry?.summary ?? '').toContain('bypass');
 
     // No 'rejected' event on the ANNOTATOR's own history -- dry_run never
@@ -148,7 +148,7 @@ test.describe('issue #502/#837 -- dry_run bypass: decision recorded, no rework b
   test('the unit still derives a known REVIEW_UNIT_STATUS value, not a special "rejected" state', async ({ page }) => {
     await page.goto(buildListUrl({ task_id: 'T014', role: 'reviewer', run_type: 'dry_run' }));
 
-    const identity = { annotatorId: 'kioleemg12', reviewerId: 'reviewer_wang' };
+    const identity = { annotatorId: 'kioleemg12', reviewerId: 'reviewer_li' };
     const status = await getReviewUnitStatus(
       page, 'T014', 'dry_run', 'dry-05-pending-review', identity, ['single_label'], 1
     );
@@ -162,7 +162,7 @@ test.describe('issue #502/#837 -- dry_run bypass: decision recorded, no rework b
   });
 
   test('the reviewer list badge for dry-05 x kioleemg12 reads 爭議中, not a silent finalize (issue #551)', async ({ page }) => {
-    await page.goto(buildListUrl({ task_id: 'T014', role: 'reviewer', run_type: 'dry_run' }));
+    await page.goto(buildListUrl({ task_id: 'T014', role: 'reviewer', run_type: 'dry_run', reviewer_id: 'reviewer_li' }));
 
     const target = page.getByTestId('ws-sample-item')
       .filter({ hasText: 'dry-05-pending-review' })
