@@ -66,10 +66,17 @@
 - [x] 2.1 Red：新增 `design/prototype/tests/annotation/issue-620-guideline-citation-jump.spec.ts`，斷言回饋列的 `[[段落標題]]` 引用渲染為連結且其 `href` 帶對應錨點、點擊後進入工作區會開啟指南並標示該段落、引用不存在之標題時退化為純文字且該筆理由仍完整呈現，並提交跑出預期失敗。 [@senior-qa]
   - Red 證據：`e839fd43` 僅新增 prototype contract 測試，未動任何生產檔。`PW_PORT=8984 pnpm exec playwright test tests/annotation/issue-620-guideline-citation-jump.spec.ts` → exit **1**，**3 failed／0 passed**。
   - 三則皆為預期缺口：有效引用仍顯示 `[[...]]` 且沒有帶 hash 的連結；點擊既有通用指南連結不會在同頁進入帶錨點的工作區；不存在標題仍保留引用語法且錯誤產生通用連結。fixture 已成功產生定案回饋列，非環境或資料假紅。
-- [ ] 2.2 Green：於 `design/prototype/pages/annotation/annotation-list.html` 將試標歷史回饋列理由中的 `[[段落標題]]` 記號渲染為連結（目標為該樣本工作區網址加錨點），找不到對應標題時退化為純文字，並移除記錄本缺口的既有注解。不得放寬或改寫 Red 契約。 [@senior-frontend]
-- [ ] 2.3 修改 `design/prototype/pages/annotation/annotation-workspace.data.js`，將審核流示範種子的審核與仲裁理由改為帶 `[[段落標題]]` 引用記號，使示範資料真的示範得出該行為。 [@senior-frontend]
-- [ ] 2.4 修改 `design/prototype/pages/annotation/annotation-workspace.config.js`，處理載入時帶段落錨點的網址——開啟指南、定位至該段落並以可見方式標示之。 [@senior-frontend]
-- [ ] 2.5 執行群組 2 的 gate 3：於 `design/prototype/` 帶 `PW_PORT=8984` 跑 `pnpm typecheck` 與全量 `pnpm playwright test` 兩道獨立閘門，並於 rebase 之後重生螢幕盤點。 [@main]
+- [x] 2.2 Green：於 `design/prototype/pages/annotation/annotation-list.html` 將試標歷史回饋列理由中的 `[[段落標題]]` 記號渲染為連結（目標為該樣本工作區網址加錨點），找不到對應標題時退化為純文字，並移除記錄本缺口的既有注解。不得放寬或改寫 Red 契約。 [@senior-frontend]
+  - Green 證據：`5ec1cb9c`。annotation-list 從既有 task-detail profile 帶入 `guidelineFiles`，以與 renderer 相同的 slug／去重規則解析引用；有效引用同頁連至 workspace fragment，無效引用只移除 `[[...]]` 語法並保留完整理由。舊的無引用理由仍保留通用指南連結，以免破壞既有回饋。
+- [x] 2.3 修改 `design/prototype/pages/annotation/annotation-workspace.data.js`，將審核流示範種子的審核與仲裁理由改為帶 `[[段落標題]]` 引用記號，使示範資料真的示範得出該行為。 [@senior-frontend]
+  - 證據：`828b9564`。T014–T016 的正向／中立／負向／難判定審核理由皆引用群組 1 新增的真實標題；會定案的仲裁種子另持久化帶引用的 `arbReason`，使標記員回饋列讀得到 settling action 的引用。
+- [x] 2.4 修改 `design/prototype/pages/annotation/annotation-workspace.config.js`，處理載入時帶段落錨點的網址——開啟指南、定位至該段落並以可見方式標示之。 [@senior-frontend]
+  - Green 證據：`718047d3`。`syncUrlToUnit()` 保留 fragment；boot 僅在 fragment 能解析到實際 Markdown heading 時開啟對應 modal，並以 scroll、focus、`aria-current`、可見背景／outline 標示。targeted contract → exit **0**，**3 passed**。
+- [x] 2.5 執行群組 2 的 gate 3：於 `design/prototype/` 帶 `PW_PORT=8984` 跑 `pnpm typecheck` 與全量 `pnpm playwright test` 兩道獨立閘門，並於 rebase 之後重生螢幕盤點。 [@main]
+  - `pnpm typecheck` → exit **0**。
+  - focused regression bundle（FR-096、逐回合回饋、URL sync、群組 1 錨點、群組 2 引用）→ exit **0**，**26 passed**。
+  - 全量 `PW_PORT=8984 pnpm exec playwright test` → exit **0**，**1853 passed**（9.8m）。輸出中的 XROLE-04／20／21 `✘` 皆為既有 `test.fail()` 已知缺口，最終計為通過。
+  - `node scripts/gen-screen-inventory.mjs` 已重生 `design/system/screen-inventory.md`，並於下列最終 gate 複驗 freshness。
 
 ---
 
