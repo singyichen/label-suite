@@ -159,31 +159,34 @@
         'multi_dim',
       ],
     },
-    /* T014-T016: review-flow demo tasks (issue #302). Names mirror
-       task-list.data.js; their review states are staged at boot by the
+    /* T014-T016: review-flow page summaries join the shared task catalog
+       below; their review states are staged at boot by the
        annotation-workspace.data.js localStorage seeder. */
     {
       id: 'T014',
-      nameZh: '審核流程示範：試標',
-      nameEn: 'Review Flow Demo: Dry Run',
-      sourceFile: 'review-flow-dry-run.json',
       outputTypes: ['single_label'],
     },
     {
       id: 'T015',
-      nameZh: '審核流程示範：正式標記（基礎審核）',
-      nameEn: 'Review Flow Demo: Official Run (Basic Review)',
-      sourceFile: 'review-flow-official-single.json',
       outputTypes: ['single_label'],
     },
     {
       id: 'T016',
-      nameZh: '審核流程示範：正式標記（輪派、仲裁與最終例外）',
-      nameEn: 'Review Flow Demo: Official Run (Round-Robin Assignment, Arbitration, and Final Exceptions)',
-      sourceFile: 'review-flow-official-multi.json',
       outputTypes: ['single_label'],
     },
   ];
+
+  var taskCatalog = (global.LabelSuiteTaskListData && global.LabelSuiteTaskListData.tasks) || [];
+  tasks.forEach(function (task) {
+    if (task.nameZh && task.nameEn && task.sourceFile) return;
+    var catalogTask = taskCatalog.filter(function (candidate) {
+      return candidate.id === task.id;
+    })[0];
+    if (!catalogTask) return;
+    task.nameZh = catalogTask.nameZh;
+    task.nameEn = catalogTask.nameEn;
+    task.sourceFile = catalogTask.sourceFile;
+  });
 
   var roleLists = {
     admin: [

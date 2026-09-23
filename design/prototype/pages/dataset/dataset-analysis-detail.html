@@ -1276,19 +1276,16 @@ var TASK_META = {
   T014: {
     outputs: ['single_label'],
     iaaData: { single_label: { pass: false, n: 15 } },
-    title: { zh: '審核流程示範：試標', en: 'Review Flow Demo: Dry Run' },
     membershipRole: 'project_leader',
   },
   T015: {
     outputs: ['single_label'],
     iaaData: {},
-    title: { zh: '審核流程示範：正式標記（基礎審核）', en: 'Review Flow Demo: Official Run (Basic Review)' },
     membershipRole: 'project_leader',
   },
   T016: {
     outputs: ['single_label'],
     iaaData: {},
-    title: { zh: '審核流程示範：正式標記（輪派、仲裁與最終例外）', en: 'Review Flow Demo: Official Run (Round-Robin Assignment, Arbitration, and Final Exceptions)' },
     membershipRole: 'project_leader',
   },
   T101: {
@@ -2036,10 +2033,15 @@ function loadQualityPanel() {
 
 /* ── Header texts per type ──────────────────────────────────────── */
 function applyTypeContent() {
+  var catalogTask = ((window.LabelSuiteTaskListData && window.LabelSuiteTaskListData.tasks) || [])
+    .filter(function(task) { return task.id === S_ROUTE.taskId; })[0];
+  var catalogTitle = catalogTask && (S.lang === 'en' ? catalogTask.nameEn : catalogTask.nameZh);
   var taskMeta = TASK_META[S_ROUTE.taskId] || TASK_META[DEFAULT_TASK_ID];
-  var localizedTitle = taskMeta && taskMeta.title ? (taskMeta.title[S.lang] || taskMeta.title.zh || taskMeta.title.en) : '';
+  var fallbackTitle = taskMeta && taskMeta.title
+    ? (taskMeta.title[S.lang] || taskMeta.title.zh || taskMeta.title.en)
+    : '';
 
-  document.getElementById('bcCurrent').textContent = localizedTitle;
+  document.getElementById('bcCurrent').textContent = catalogTitle || fallbackTitle;
   updateTaskDetailHref();
   syncRoleUi();
   return Promise.all([loadStatsPanel(), loadQualityPanel()]);
