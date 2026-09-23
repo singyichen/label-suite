@@ -1,6 +1,6 @@
 # ADR-034: Formal E2E Test Directory — Root `e2e/[module]/`
 
-**Status**: Proposed
+**Status**: Accepted
 **Date**: 2026-08-24
 **Supersedes in part**: ADR-009 (Test Categories table, Consequences → Easier), ADR-011 (Playwright Test Structure), ADR-012 (Decision two-layer table, E2E Testing (Playwright), E2E Coverage Matrix)
 
