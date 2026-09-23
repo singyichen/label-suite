@@ -27,8 +27,10 @@ import { test, expect, type Page } from '@playwright/test';
  *      T017 is removed and stays green both before and after this group's
  *      Green work.
  *
- * Issue #892 retired the task-detail page's static REVIEW_FLOW_UNITS. The
- * REVIEW_WORKLOAD_BY_TASK registry remains required and retains T014-T016.
+ * Issues #892/#891 retired task-detail's static REVIEW_FLOW_UNITS and
+ * REVIEW_WORKLOAD_BY_TASK registries. Their live replacements
+ * listReviewPoolItems()/computeReviewWorkload() must return no T017 work
+ * while continuing to derive the surviving T014-T016 fixtures.
  *
  * Type declarations use local casts per `page.evaluate()` call -- no second
  * `declare global` in this directory (annotation-workspace-arbitration.spec.ts
@@ -48,9 +50,14 @@ const PANEL_LOAD_TIMEOUT = 15000;
 const REMOVED_TASK_ID = 'T017';
 const SURVIVING_TASK_IDS = ['T014', 'T015', 'T016'];
 
-type TaskListTask = { id: string; sourceFile?: string };
+type RunType = 'dry_run' | 'official_run';
+type TaskListTask = { id: string; sourceFile?: string; runType?: RunType };
 type AssignmentSeed = { exampleTaskId: string };
 type DashboardTask = { id: string };
+type ReviewWorkload = {
+  byReviewer: Record<string, { pending: number; done: number }>;
+  unassigned: number;
+};
 
 async function openDashboardScenario(page: Page, scenario: 'annotator' | 'reviewer') {
   await page.goto(DASHBOARD_URL);
@@ -84,36 +91,84 @@ test.describe('T017 review-flow demo fixture is fully removed (issue #815, tasks
     await page.goto(TASK_DETAIL_URL + '?task_id=T014');
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
 
-    const registryKeys = await page.evaluate(() => {
+    const registryKeys = await page.evaluate(({ removedTaskId, survivingTaskIds }) => {
       const w = window as unknown as {
-        LabelSuiteAnnotationWorkspaceData: { REVIEWER_MOCK_ROWS: Record<string, unknown> };
+        LabelSuiteAnnotationWorkspaceData: {
+          REVIEWER_MOCK_ROWS: Record<string, unknown>;
+          listReviewPoolItems: (
+            taskId: string,
+            runType: RunType,
+          ) => { awaitingArbitration: unknown[]; pendingExceptions: unknown[] };
+          computeReviewWorkload: (
+            taskId: string,
+            runType: RunType,
+            reviewerIds: string[],
+            activeReviewerIds: string[],
+          ) => ReviewWorkload;
+        };
         LabelSuiteTaskListData: { tasks: TaskListTask[] };
-        LabelSuiteTaskDetailData: { profiles: Record<string, unknown> };
-        REVIEW_WORKLOAD_BY_TASK: Record<string, unknown>;
+        LabelSuiteTaskDetailData: {
+          profiles: Record<string, { reviewerIds?: string[] }>;
+        };
+        REVIEW_WORKLOAD_BY_TASK?: Record<string, unknown>;
         REVIEW_FLOW_UNITS?: Record<string, unknown>;
+      };
+      const liveReviewState = (taskId: string) => {
+        const task = w.LabelSuiteTaskListData.tasks.find((entry) => entry.id === taskId);
+        const runType = task?.runType || 'official_run';
+        const reviewerIds = w.LabelSuiteTaskDetailData.profiles[taskId]?.reviewerIds || [];
+        const pools = w.LabelSuiteAnnotationWorkspaceData.listReviewPoolItems(taskId, runType);
+        const workload = w.LabelSuiteAnnotationWorkspaceData.computeReviewWorkload(
+          taskId,
+          runType,
+          reviewerIds,
+          reviewerIds,
+        );
+        const assignedUnits = Object.values(workload.byReviewer).reduce(
+          (total, reviewer) => total + reviewer.pending + reviewer.done,
+          0,
+        );
+        return {
+          taskId,
+          awaiting: pools.awaitingArbitration.length,
+          exceptions: pools.pendingExceptions.length,
+          workloadUnits: assignedUnits + workload.unassigned,
+        };
       };
       return {
         reviewerMockRows: Object.keys(w.LabelSuiteAnnotationWorkspaceData.REVIEWER_MOCK_ROWS),
         taskListIds: w.LabelSuiteTaskListData.tasks.map((task) => task.id),
         taskDetailProfiles: Object.keys(w.LabelSuiteTaskDetailData.profiles),
-        reviewWorkloadByTask: Object.keys(w.REVIEW_WORKLOAD_BY_TASK),
         reviewFlowUnits: Object.keys(w.REVIEW_FLOW_UNITS || {}),
+        staticReviewWorkloadRetired: w.REVIEW_WORKLOAD_BY_TASK === undefined,
         staticReviewFlowUnitsRetired: w.REVIEW_FLOW_UNITS === undefined,
+        removedTaskLiveReviewState: liveReviewState(removedTaskId),
+        survivingTaskLiveReviewState: survivingTaskIds.map(liveReviewState),
       };
-    });
+    }, { removedTaskId: REMOVED_TASK_ID, survivingTaskIds: SURVIVING_TASK_IDS });
 
     expect(registryKeys.reviewerMockRows, 'REVIEWER_MOCK_ROWS (annotation-workspace.data.js)').not.toContain(REMOVED_TASK_ID);
     expect(registryKeys.taskListIds, 'LabelSuiteTaskListData.tasks (task-list.data.js)').not.toContain(REMOVED_TASK_ID);
     expect(registryKeys.taskDetailProfiles, 'LabelSuiteTaskDetailData.profiles (task-detail.data.js)').not.toContain(REMOVED_TASK_ID);
-    expect(registryKeys.reviewWorkloadByTask, 'REVIEW_WORKLOAD_BY_TASK (task-detail.html)').not.toContain(REMOVED_TASK_ID);
     expect(registryKeys.reviewFlowUnits, 'REVIEW_FLOW_UNITS (task-detail.html)').not.toContain(REMOVED_TASK_ID);
+    expect(registryKeys.staticReviewWorkloadRetired, 'static REVIEW_WORKLOAD_BY_TASK must remain retired after #891').toBe(true);
     expect(registryKeys.staticReviewFlowUnitsRetired, 'static REVIEW_FLOW_UNITS must remain retired after #892').toBe(true);
+    expect(registryKeys.removedTaskLiveReviewState).toEqual({
+      taskId: 'T017',
+      awaiting: 0,
+      exceptions: 0,
+      workloadUnits: 0,
+    });
+    expect(registryKeys.survivingTaskLiveReviewState).toEqual([
+      { taskId: 'T014', awaiting: 3, exceptions: 0, workloadUnits: 15 },
+      { taskId: 'T015', awaiting: 1, exceptions: 0, workloadUnits: 4 },
+      { taskId: 'T016', awaiting: 2, exceptions: 1, workloadUnits: 5 },
+    ]);
 
     for (const taskId of SURVIVING_TASK_IDS) {
       expect(registryKeys.reviewerMockRows, `REVIEWER_MOCK_ROWS missing ${taskId}`).toContain(taskId);
       expect(registryKeys.taskListIds, `LabelSuiteTaskListData.tasks missing ${taskId}`).toContain(taskId);
       expect(registryKeys.taskDetailProfiles, `LabelSuiteTaskDetailData.profiles missing ${taskId}`).toContain(taskId);
-      expect(registryKeys.reviewWorkloadByTask, `REVIEW_WORKLOAD_BY_TASK missing ${taskId}`).toContain(taskId);
     }
   });
 

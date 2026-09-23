@@ -3562,30 +3562,6 @@
     { id: 'user_derek', name: 'Derek Yeh', email: 'derek.yeh@labelsuite.io', taskRole: 'annotator', status: 'active', joinedAt: '2026-04-20 10:19', lastActive: '2026-04-21 09:05' },
   ];
 
-  /* Review workload seed (issue #148). issue #761 retired this object's
-     `byReviewer` and `unassignedCount`: AC-1.6 requires the 審核指派 table
-     to reflect an Overview `reviewer_ids` change immediately and SC-034
-     requires it to stay consistent with the member list's 審核負荷 column,
-     neither of which a hand-seeded figure can do. Those two now come from
-     annotation-workspace.data.js's computeReviewWorkload() -- the module
-     that owns the FR-093 assignment rule -- leaving only the two pool
-     counters this prototype iteration still illustrates rather than
-     derives. DEFAULT_REVIEW_WORKLOAD stays the shared fallback for every
-     task without its own entry in REVIEW_WORKLOAD_BY_TASK (issue #396),
-     and resetTaskData() still re-clones per task. */
-  var DEFAULT_REVIEW_WORKLOAD = {
-    disputeCount: 7,
-  };
-  var REVIEW_WORKLOAD_BY_TASK = {
-    /* T014-T016 (review-flow demo, 5 dataset records each): small figures
-       proportionate to that data volume instead of the legacy shared
-       18-116-item scale. */
-    T014: { disputeCount: 0 },
-    T015: { disputeCount: 1 },
-    T016: { disputeCount: 1 },
-  };
-  var REVIEW_WORKLOAD = cloneData(DEFAULT_REVIEW_WORKLOAD);
-
   /* `id` here is the same canonical id carried by this person's TASK_MEMBERS
      record (issue #688). It belongs to the platform user, not to their
      membership in this particular task: removing a member only dissolves
@@ -4836,9 +4812,6 @@ function interpolate(template, payload) {
       }
     }
     TASK_DATA.taskId = resolvedId;
-    /* issue #396: re-clone the review-assignment workload per task instead
-       of leaving every task pointed at the same mutable global object. */
-    REVIEW_WORKLOAD = cloneData(REVIEW_WORKLOAD_BY_TASK[resolvedId] || DEFAULT_REVIEW_WORKLOAD);
     /* issue #397: same re-clone-per-task treatment for the annotation
        progress / work-log seeds, which were previously generic figures
        shared by every task regardless of its actual dataset size. Point
@@ -7735,6 +7708,7 @@ function getTaskTypeLabel() {
      keeps their `done` as historical stats, which requires the derivation
      to see who the work was dealt to BEFORE liveness is applied. */
   var REVIEW_WORKLOAD_DERIVED = { byReviewer: {}, unassigned: 0 };
+  var REVIEW_POOLS_DERIVED = { awaitingArbitration: [], pendingExceptions: [] };
 
   function refreshReviewWorkload() {
     var wsData = window.LabelSuiteAnnotationWorkspaceData;
@@ -7745,6 +7719,9 @@ function getTaskTypeLabel() {
       TASK_DATA.reviewerIds || [],
       getActiveReviewerMembers().map(function(member) { return member.id; })
     );
+    REVIEW_POOLS_DERIVED = wsData.listReviewPoolItems
+      ? wsData.listReviewPoolItems(TASK_DATA.taskId, getSelectedRunType())
+      : { awaitingArbitration: [], pendingExceptions: [] };
   }
 
   function getReviewWorkload(id) {
@@ -7773,8 +7750,8 @@ function getTaskTypeLabel() {
     setText('thAssignAssigned', t('thAssignAssigned'));
     setText('thAssignPending', t('thAssignPending'));
     setText('thAssignDone', t('thAssignDone'));
-    setText('disputePoolText', interpolate(t('disputePoolTpl'), { count: REVIEW_WORKLOAD.disputeCount }));
-    setText('exceptionPoolText', interpolate(t('exceptionPoolTpl'), { count: REVIEW_WORKLOAD.exceptionCount || 0 }));
+    setText('disputePoolText', interpolate(t('disputePoolTpl'), { count: REVIEW_POOLS_DERIVED.awaitingArbitration.length }));
+    setText('exceptionPoolText', interpolate(t('exceptionPoolTpl'), { count: REVIEW_POOLS_DERIVED.pendingExceptions.length }));
 
     while (body.firstChild) body.removeChild(body.firstChild);
     getActiveReviewerMembers().forEach(function(member) {

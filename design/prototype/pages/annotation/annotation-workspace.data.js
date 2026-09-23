@@ -3012,6 +3012,58 @@
     return units;
   }
 
+  /* issue #891: live item-level queues shared by Task Detail's Member
+   * Management and Annotation Progress surfaces. A review unit is the
+   * Dashboard's status granularity, but arbitration and final-exception
+   * work is one row per disputed output item, so exposing only the unit
+   * summary cannot keep those two pool counts accurate.
+   *
+   * Both queues are derived from the same storage-backed primitives that
+   * drive the workspace itself. An item already finalized by arbitration
+   * or covered by a project-leader exception-pool record belongs to neither
+   * live queue. Of the remaining items, a latest reject vote moves the item
+   * to the final-exception queue; every other unresolved dispute is still
+   * awaiting valid arbitration. */
+  function listReviewPoolItems(taskId, runType) {
+    var result = { awaitingArbitration: [], pendingExceptions: [] };
+    var listEntry = findTaskListEntry(taskId);
+    if (!listEntry) return result;
+    var outKeys = listEntry.outputTypes || [];
+
+    listReviewUnits(taskId, runType).forEach(function (unit) {
+      if (unit.status !== REVIEW_UNIT_STATUS.DISPUTED) return;
+      var identity = { annotatorId: unit.annotatorId };
+      var exceptionPool = getExceptionPool(taskId, runType, unit.sampleId, identity);
+      var arbitrationState = getArbitrationState(taskId, runType, unit.sampleId, identity);
+      var reviewerIds = readReviewerSubmissions(taskId, runType, unit.sampleId, identity)
+        .map(function (submission) { return submission.reviewerId; });
+
+      getDisputeItems(taskId, runType, unit.sampleId, identity, outKeys)
+        .forEach(function (item) {
+          var stored = arbitrationState[item.outKey + '::' + item.key];
+          if (exceptionPool[item.outKey] || (stored && stored.finalized_by)) return;
+          var rejectVote = stored && (stored.votes || []).filter(function (vote) {
+            return vote.choice === 'reject';
+          }).pop();
+          var poolItem = {
+            taskId: taskId,
+            runType: runType,
+            sampleId: unit.sampleId,
+            annotatorId: unit.annotatorId,
+            outKey: item.outKey,
+            key: item.key,
+            outputType: item.outKey,
+            reviewerIds: reviewerIds,
+            arbiterId: rejectVote ? rejectVote.arbiter_id : '',
+            reason: rejectVote ? (rejectVote.reason || '') : '',
+            fellAt: rejectVote ? rejectVote.voted_at : '',
+          };
+          result[rejectVote ? 'pendingExceptions' : 'awaitingArbitration'].push(poolItem);
+        });
+    });
+    return result;
+  }
+
   /* issue #761: 014's 審核指派 table used to read a hand-seeded per-reviewer
      workload, so it could not satisfy 014 AC-1.6 ("Overview 調整
      `reviewer_ids` 勾選並儲存後，負荷分布即時反映") or SC-034 ("與成員清單
@@ -3785,6 +3837,7 @@
     computeReviewWorkload: computeReviewWorkload,
     formatReviewSummary: formatReviewSummary,
     listReviewUnits: listReviewUnits,
+    listReviewPoolItems: listReviewPoolItems,
     listActionableReviewUnits: listActionableReviewUnits,
     findNextActionableReviewUnit: findNextActionableReviewUnit,
     NO_ACTIONABLE_REVIEW_LABELS: NO_ACTIONABLE_REVIEW_LABELS,
