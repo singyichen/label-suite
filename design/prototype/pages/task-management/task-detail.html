@@ -5534,13 +5534,17 @@ function interpolate(template, payload) {
     return window.LabelSuiteAnnotationWorkspaceData.computeIaaAlpha(TASK_DATA.taskId, runType || 'dry_run', outKey);
   }
 
-  /* issue #491: renders "N/A" instead of coercing a not-yet-computable
-     alpha to 0.00, which reads as "total disagreement" rather than "not
-     enough marked data yet". */
+  /* Preserve the shared IAA result's three states: unsupported outputs are
+     not applicable, supported outputs without enough data are not
+     computable, and numeric alpha values are formatted for display. */
   function formatIaaValue(agreement) {
-    return (agreement === null || agreement === undefined)
-      ? t('iaaNotComputableShort')
-      : Number(agreement).toFixed(2);
+    if (agreement === undefined) return '-';
+    return agreement === null ? t('iaaNotComputableShort') : Number(agreement).toFixed(2);
+  }
+
+  function getIaaAlphaValue(result) {
+    if (!result || result.reason === 'unsupported_output_type') return undefined;
+    return result.computable ? result.alpha : null;
   }
 
   function hasExplicitEmptyTrialRounds() {
@@ -8004,7 +8008,7 @@ function getTaskTypeLabel() {
     setText('progressMetricEtaValue', state.lang === 'zh' ? stageData.remainingEta : stageData.remainingEtaEn);
     setText('progressMetricIAAValue', (state.progressStage !== 'official' && unassignedCount)
       ? t('unassignedIaaBlocked')
-      : formatIaaValue(iaaResult.computable ? iaaResult.alpha : null));
+      : formatIaaValue(getIaaAlphaValue(iaaResult)));
   }
 
   function renderMemberProgressTable() {
