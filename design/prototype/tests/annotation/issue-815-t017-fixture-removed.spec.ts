@@ -173,8 +173,8 @@ test.describe('T017 review-flow demo fixture is fully removed (issue #815, tasks
 
     const survivors = [
       { sourceFile: 'review-flow-dry-run.json', nameZh: '審核流程示範：試標', runBadgeClass: '.badge-dry-run', runBadge: '試標' },
-      { sourceFile: 'review-flow-official-single.json', nameZh: '審核流程示範：正式標記（單一審核員）', runBadgeClass: '.badge-official', runBadge: '正式標記' },
-      { sourceFile: 'review-flow-official-multi.json', nameZh: '審核流程示範：正式標記（三審核員多數決）', runBadgeClass: '.badge-official', runBadge: '正式標記' },
+      { sourceFile: 'review-flow-official-single.json', nameZh: '審核流程示範：正式標記（基礎審核）', runBadgeClass: '.badge-official', runBadge: '正式標記' },
+      { sourceFile: 'review-flow-official-multi.json', nameZh: '審核流程示範：正式標記（輪派、仲裁與最終例外）', runBadgeClass: '.badge-official', runBadge: '正式標記' },
     ];
 
     for (const task of survivors) {
