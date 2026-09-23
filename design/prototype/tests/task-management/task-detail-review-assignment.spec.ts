@@ -27,7 +27,7 @@ async function openMemberTab(page: Page) {
  * "must render no button at all" contract lives in
  * issue-596-assignment-readonly.spec.ts. This file keeps only the still-live
  * read-only rendering behaviors: the review-load column, the assignment
- * section's shape and the still-seeded dispute pool, the arbiter tag,
+ * section's shape and the live pool summary, the arbiter tag,
  * disable-driven pool release, and the i18n toggle.
  */
 async function checkArbiter(page: Page, name: string) {
@@ -84,9 +84,10 @@ test.describe('Task detail review assignment', () => {
        than seeding it). */
     await expect(page.locator('#reviewUnassignedCount')).toHaveText('未指派 0 筆');
 
-    /* The dispute pool is still a seeded prototype figure -- issue #761
-       derived only the per-reviewer workload and the unassigned pool. */
-    await expect(page.locator('#disputePoolText')).toHaveText('爭議池 7 項待仲裁');
+    /* Issue #891 owns the exact live pool counts. This rendering test keeps
+       only the localized shape so it cannot reintroduce T001's retired
+       hand-seeded `7` as a second source of truth. */
+    await expect(page.locator('#disputePoolText')).toHaveText(/^爭議池 \d+ 項待仲裁$/);
   });
 
   test('designated arbiters get a tag in the review assignment table', async ({ page }) => {
@@ -135,7 +136,7 @@ test.describe('Task detail review assignment', () => {
     await expect(page.locator('#thMemberReviewLoad')).toHaveText('Review load');
     await expect(page.locator('#reviewAssignmentTitle')).toHaveText('Review Assignment');
     await expect(page.locator('#reviewUnassignedCount')).toHaveText(/^\d+ unassigned$/);
-    await expect(page.locator('#disputePoolText')).toHaveText('Dispute pool · 7 awaiting arbitration');
+    await expect(page.locator('#disputePoolText')).toHaveText(/^Dispute pool · \d+ awaiting arbitration$/);
 
     const reviewerRow = page.locator('#memberTableBody tr').filter({ hasText: '林佳蓉' });
     await expect(reviewerRow.locator('td').nth(3)).toHaveText(REVIEW_LOAD_EN);
