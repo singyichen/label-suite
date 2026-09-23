@@ -4,6 +4,7 @@
  * making the surrounding Dashboard and Task Detail UI name each measure.
  */
 import { test, expect, type Page } from '@playwright/test';
+import { patchDataFile } from '../annotation/_workspace-helpers';
 
 const DASHBOARD_URL = '/pages/dashboard/dashboard.html?scenario=reviewer';
 const DETAIL_URL = '/pages/task-management/task-detail.html?task_id=T016&tab=annotation-progress&ap_stage=official';
@@ -150,3 +151,107 @@ test('T016 review breakdown updates after a live arbitration without changing th
   await expect(review.getByTestId('review-exception-count')).toHaveText('最終例外待處置 1');
   await expect(page.locator('#statusBadge')).toContainText('進行中');
 });
+
+for (const language of ['zh', 'en'] as const) {
+  test(`multi-output ${language} breakdown distinguishes review units from output items`, async ({ page }) => {
+    await setLanguage(page, language);
+    await patchDataFile(page, 'task-list.data.js', `
+      var task = JSON.parse(JSON.stringify(window.LabelSuiteTaskListData.tasks.find(function (item) { return item.id === 'T016'; })));
+      task.id = 'T886M';
+      task.runType = 'official_run';
+      task.outputTypes = ['single_label', 'free_text', 'single_dim'];
+      window.LabelSuiteTaskListData.tasks.push(task);
+    `);
+    await patchDataFile(page, 'task-detail.data.js', `
+      var profiles = window.LabelSuiteTaskDetailData.profiles;
+      var profile = JSON.parse(JSON.stringify(profiles.T016));
+      profile.outputs = [profiles.T016.outputs[0], profiles.T009.outputs[0], profiles.T004.outputs[0]];
+      profile.fieldRoleMap = { text: 'input' };
+      profile.datasetRecords = [{ id: 'multi-output-progress', text: 'Three output decisions for one review unit.' }];
+      profile.reviewerIds = ['reviewer_wang', 'reviewer_chen'];
+      profile.arbiterIds = ['reviewer_chen'];
+      profile.materializedRuns = { official_run: { total: 1 } };
+      profiles.T886M = profile;
+    `);
+
+    const url = '/pages/task-management/task-detail.html?task_id=T886M&tab=annotation-progress&ap_stage=official';
+    const response = await page.goto(url);
+    expect(response?.status()).toBe(200);
+    await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: 15000 });
+    const fixture = await page.evaluate(() => {
+      const data = (window as unknown as {
+        LabelSuiteAnnotationWorkspaceData: {
+          markSampleSubmitted: (
+            taskId: string, role: 'annotator' | 'reviewer', runType: string,
+            sampleId: string, payload: Record<string, unknown>, summary: string,
+            identity: { annotatorId: string; reviewerId?: string }
+          ) => void;
+          getDisputeItems: (
+            taskId: string, runType: string, sampleId: string,
+            identity: { annotatorId: string }, outKeys: string[]
+          ) => Array<{ outKey: string; key: string }>;
+          submitArbitration: (
+            taskId: string, runType: string, sampleId: string,
+            identity: { annotatorId: string; reviewerId: string },
+            decisions: Array<{ itemId: string; choice: string; reason: string }>
+          ) => void;
+          computeReviewSummary: (taskId: string, runType: string) =>
+            { total: number; finalized: number; disputed: number };
+          listReviewPoolItems: (taskId: string, runType: string) =>
+            { awaitingArbitration: unknown[]; pendingExceptions: unknown[] };
+        };
+      }).LabelSuiteAnnotationWorkspaceData;
+      const taskId = 'T886M';
+      const sampleId = 'multi-output-progress';
+      const annotatorId = 'fixture_annotator';
+      data.markSampleSubmitted(taskId, 'annotator', 'official_run', sampleId, {
+        previewState: {
+          single_label: { selected: 'positive' },
+          free_text: { text: 'Annotator explanation' },
+          single_dim: { value: 1 },
+        },
+      }, '', { annotatorId });
+      data.markSampleSubmitted(taskId, 'reviewer', 'official_run', sampleId, {
+        previewState: {
+          single_label: { selected: 'negative' },
+          free_text: { text: 'Reviewer explanation' },
+          single_dim: { value: 5 },
+        },
+        decisions: { single_label: 'modify', free_text: 'modify', single_dim: 'modify' },
+        reasons: { single_label: 'Different label', free_text: 'Different text', single_dim: 'Different score' },
+      }, '', { annotatorId, reviewerId: 'reviewer_wang' });
+      const items = data.getDisputeItems(taskId, 'official_run', sampleId,
+        { annotatorId }, ['single_label', 'free_text', 'single_dim']);
+      const rejected = items.find((item) => item.outKey === 'free_text');
+      if (!rejected) throw new Error('Fixture must contain a free_text dispute item');
+      data.submitArbitration(taskId, 'official_run', sampleId,
+        { annotatorId, reviewerId: 'reviewer_chen' },
+        [{ itemId: `${rejected.outKey}::${rejected.key}`, choice: 'reject', reason: 'Needs PL disposition' }]);
+      const summary = data.computeReviewSummary(taskId, 'official_run');
+      const pools = data.listReviewPoolItems(taskId, 'official_run');
+      return {
+        itemCount: items.length,
+        total: summary.total,
+        finalized: summary.finalized,
+        disputed: summary.disputed,
+        awaiting: pools.awaitingArbitration.length,
+        exceptions: pools.pendingExceptions.length,
+      };
+    });
+    expect(fixture).toEqual({ itemCount: 3, total: 1, finalized: 0, disputed: 1, awaiting: 2, exceptions: 1 });
+
+    await page.reload();
+    const review = page.getByTestId('review-progress-breakdown');
+    await expect(review).toBeVisible({ timeout: 15000 });
+    const units = language === 'zh' ? '審核單位' : 'review unit';
+    const items = language === 'zh' ? '輸出項' : 'output item';
+    await expect(review.getByTestId('review-finalized-count')).toContainText(units);
+    await expect(review.getByTestId('review-disputed-count')).toContainText(units);
+    await expect(review.getByTestId('review-pending-arbitration-count')).toContainText(items);
+    await expect(review.getByTestId('review-exception-count')).toContainText(items);
+    await expect(review.getByTestId('review-finalized-count')).toContainText(/0\s*\/\s*1/);
+    await expect(review.getByTestId('review-disputed-count')).toContainText('1');
+    await expect(review.getByTestId('review-pending-arbitration-count')).toContainText('2');
+    await expect(review.getByTestId('review-exception-count')).toContainText('1');
+  });
+}
