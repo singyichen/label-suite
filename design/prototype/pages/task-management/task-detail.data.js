@@ -1533,57 +1533,17 @@
     }
   };
 
-  /* FR-018 (issue #688, design.md D6): the final exception pool draws its
-   * rows live from 015 annotation-workspace's already-existing dispute /
-   * arbitration primitives instead of a second, 014-only seed of the same
-   * data (Generalization-First / DRY) -- a review unit's disputed item is a
-   * pending exception when its arbitration outcome is `reject`
-   * (window.LabelSuiteAnnotationWorkspaceData.ARBITRATION_OUTCOMES) and it
-   * has not yet been resolved via EXCEPTION_POOL_ACTIONS
-   * (getExceptionPool()). Mirrors annotation-workspace.config.js's
-   * exceptionPoolQueue(), generalized from one open sample to every review
-   * unit of a task+run_type (FR-018 point 5: dry_run/official_run counted
-   * independently). Returns [] when the 015 data module or this task's
-   * profile is unavailable, rather than throwing -- annotation-workspace.data.js
-   * is a same-page script dependency (task-detail.html loads it before this
-   * file's caller runs), not a build-time import. */
+  /* FR-018 (issue #688, design.md D6; issue #891): the final exception pool
+   * is one view of annotation-workspace's public live pool query. Member
+   * Management reads the other view from that same query, so arbitration /
+   * project-leader transitions cannot leave the two surfaces on different
+   * hand-maintained derivations. Returns [] while the workspace data module
+   * is unavailable; task-detail.data.js is loaded before that same-page
+   * dependency assigns its public API. */
   function getFinalExceptionPoolItems(taskId, runType) {
     var wsData = global.LabelSuiteAnnotationWorkspaceData;
-    var profile = profiles[taskId];
-    if (!wsData || !profile) return [];
-    var outKeys = (profile.outputs || []).map(function (o) { return o.type; });
-    var items = [];
-    wsData.listReviewUnits(taskId, runType).forEach(function (unit) {
-      if (unit.status !== wsData.REVIEW_UNIT_STATUS.DISPUTED) return;
-      var identity = { annotatorId: unit.annotatorId };
-      var pool = wsData.getExceptionPool(taskId, runType, unit.sampleId, identity);
-      var arbState = wsData.getArbitrationState(taskId, runType, unit.sampleId, identity);
-      var disputeItems = wsData.getDisputeItems(taskId, runType, unit.sampleId, identity, outKeys);
-      var reviewerIds = wsData.readReviewerSubmissions(taskId, runType, unit.sampleId, identity)
-        .map(function (submission) { return submission.reviewerId; });
-      disputeItems.forEach(function (item) {
-        var itemId = item.outKey + '::' + item.key;
-        var stored = arbState[itemId];
-        /* design.md D2's sentinel: a `reject` vote never writes finalized_by
-           (submitArbitration only sets it for adopt_a/adopt_b), so "stored
-           but no finalized_by" IS "arbitrated reject, still open" -- the same
-           condition exceptionPoolQueue() checks. */
-        if (!stored || stored.finalized_by || pool[item.outKey]) return;
-        var rejectVote = (stored.votes || []).filter(function (v) { return v.choice === 'reject'; }).pop();
-        items.push({
-          taskId: taskId,
-          runType: runType,
-          sampleId: unit.sampleId,
-          annotatorId: unit.annotatorId,
-          reviewerIds: reviewerIds,
-          outputType: item.outKey,
-          arbiterId: rejectVote ? rejectVote.arbiter_id : '',
-          reason: rejectVote ? (rejectVote.reason || '') : '',
-          fellAt: rejectVote ? rejectVote.voted_at : ''
-        });
-      });
-    });
-    return items;
+    if (!wsData || !wsData.listReviewPoolItems) return [];
+    return wsData.listReviewPoolItems(taskId, runType).pendingExceptions;
   }
 
   /* FR-008b (issue #688): task-completion blocker list. `context` carries
