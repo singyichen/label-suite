@@ -23,7 +23,7 @@ test.describe('Guideline tab and panel chrome localization (I18N-02)', () => {
     await dismissGuidelineModal(page);
 
     await expect(page.locator('#wsTabGuidelineLabel')).toHaveText('說明與檔案');
-    await expect(page.locator('#wsTabHistoryLabel')).toHaveText('歷程');
+    await expect(page.locator('#wsTabHistoryLabel')).toHaveText('操作紀錄');
     await expect(page.locator('#guidelineSummaryTitle')).toHaveText('任務說明');
   });
 
@@ -43,7 +43,7 @@ test.describe('Guideline tab and panel chrome localization (I18N-02)', () => {
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
 
     await expect(page.locator('#wsTabGuidelineLabel')).toHaveText('Guidelines & Files');
-    await expect(page.locator('#wsTabHistoryLabel')).toHaveText('History');
+    await expect(page.locator('#wsTabHistoryLabel')).toHaveText('Activity log');
     await expect(page.locator('#guidelineSummaryTitle')).toHaveText('Task Guideline');
   });
 });

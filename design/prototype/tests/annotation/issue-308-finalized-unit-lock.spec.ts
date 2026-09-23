@@ -86,9 +86,9 @@ test.describe('issue #308 -- finalized review units are fully read-only', () => 
     await page.goto(reviewerUrl('T015', 'ofs-03-arbitrated-gold'));
 
     await expectLockedCard(page);
-    // The resolved dispute row carries the arbitrated value, not an A/B vote UI.
-    await expect(page.getByTestId('ws-finalized-resolved')).toHaveCount(1);
-    await expect(page.getByTestId('ws-finalized-resolved')).toContainText('neutral');
+    // The final-result row carries the arbitrated value, not an A/B vote UI.
+    await expect(page.getByTestId('ws-finalized-result')).toHaveCount(1);
+    await expect(page.getByTestId('ws-finalized-result')).toContainText('neutral');
     await expect(page.getByTestId('ws-arbitration-card')).toHaveCount(0);
   });
 
@@ -124,7 +124,7 @@ test.describe('issue #308 -- finalized review units are fully read-only', () => 
     // now finalized, so the arbitration card gives way to the locked card.
     await expectLockedCard(page);
     await expect(page.getByTestId('ws-arbitration-card')).toHaveCount(0);
-    await expect(page.getByTestId('ws-finalized-resolved')).toContainText('positive');
+    await expect(page.getByTestId('ws-finalized-result')).toContainText('positive');
     await expect(page.locator('[data-testid="ws-review-unit-context"] .rv-unit-state'))
       .toHaveText('已定稿 · 已鎖定');
   });

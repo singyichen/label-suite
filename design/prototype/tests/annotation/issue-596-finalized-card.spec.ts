@@ -1,66 +1,20 @@
 import { test, expect, type Page } from '@playwright/test';
 import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
 
-/* issue #596 (OpenSpec change 2026-09-01-single-owner-review-relay, task 3.3,
- * RED): the finalized review unit stops being a vote-breakdown card and
- * becomes FR-094's pure-text read-only card carrying a single-line micro
- * conflict trace.
+/* Issue #596 introduced FR-094's pure-text finalized card. Issue #880
+ * refines its information hierarchy: every finalized output shows the final
+ * result; complex arbitration or exception-pool paths additionally show the
+ * annotator's original answer and a data-derived finalization basis. The
+ * retired vote table, responsibility-chain micro trace, actor tooltips and
+ * all answer/decision controls remain absent from the finalized card.
  *
- * The CURRENT implementation (annotation-workspace.config.js
- * renderFinalizedCard() around :3831) still renders the removed FR-069
- * per-reviewer vote table (`ws-finalized-vote`, one row per reviewer, with
- * the majority-convergence note 「已依審核員多數決收斂」) and no trace line
- * at all. Every case below is expected to fail today -- see each test's own
- * comment for which assertion does the failing.
+ * Seeding follows the existing data-layer helpers. A differing reviewer
+ * payload creates a dispute; arbitration or exception-pool state supplies
+ * the finalization basis. The assertions deliberately cover both adopted
+ * sides, bypass, exception actions and the direct-approval result-only path.
  *
- * --- Decided Red contract (task 3.4's Green implementation is wrong if it
- *     disagrees with this file, not the other way round) ---
- *
- *   - Kept testid: `ws-review-finalized-card`.
- *   - New testid: `ws-finalized-trace` -- ONE line per unit, prefixed 歷程：
- *     and joining the unit's responsibility chain with ` ➔ `.
- *   - New testid: `ws-trace-actor` -- each chain segment that names an
- *     account is a real <button> per MASTER.md §Tooltip, carrying
- *     `data-actor-role` (annotator | reviewer | arbiter | exception_pool)
- *     and `aria-describedby` pointing at its own `ws-trace-account`
- *     role="tooltip" bubble holding the FULL account id. FR-094 point 2
- *     forbids the native `title` attribute.
- *   - Removed testid (task 3.4; retired, never reused): `ws-finalized-vote`.
- *
- *   - Segment vocabulary (A/B are the SAME positional letters the
- *     arbitration layout already uses -- `A・標記員` / `B・審核員`, FR-061
- *     point 2 -- not truncated account names; the account behind each
- *     letter is what the tooltip expands):
- *       1. `標記 A`                       always present
- *       2. `審核 B（通過｜修正｜無法判定）`  the reviewer's decision for the
- *          unit; bypass renders 無法判定, per FR-094 point 2's explicit
- *          「來源為 bypass 時該段呈現為 審核 B（無法判定）」
- *       3. `仲裁 A｜B`                     present only when arbitration
- *          finalized a dispute item; the letter is the adopted side
- *          (adopt_a -> A, adopt_b -> B)
- *       4. `例外池 {處置}`                 present only when the final
- *          exception pool closed a dispute item; MUST be the last segment
- *
- *   - Pure text (FR-094 point 1 / AC-3.52): the card renders NO answer
- *     control at all, including `disabled` ones -- no input, select or
- *     textarea anywhere inside it, no `ws-review-row-*` decision control on
- *     the page, and no visible submit button. The only <button> the card may
- *     contain is a `ws-trace-actor` tooltip trigger.
- *
- * Seeding: the same data-layer idiom as the sibling
- * issue-596-arbitration.spec.ts -- markSampleSubmitted() via page.evaluate.
- * A reviewer payload whose answer differs derives `modify`; an empty
- * reviewer payload derives `bypass` (design.md D3). Arbitration is written
- * with the exported submitArbitration(); the exception-pool RESOLUTION
- * record is written straight to localStorage in design.md D2's shape,
- * because its write path (FR-095's project-leader screen) belongs to group
- * 6 and does not exist yet.
- *
- * Traceability: openspec/changes/2026-09-01-single-owner-review-relay/
- *   specs/annotation/015-annotation-workspace/spec.md FR-094 (+ its
- *   scenario), FR-053's 已定稿單位鎖定 / AC-3.52, FR-069 REMOVED note;
- *   design.md D1 (status derivation), D2 (arbitration / exceptionPool
- *   shapes), D3 (bypass adopted as 無法判定); tasks.md task 3.3.
+ * Traceability: specs/annotation/015-annotation-workspace/spec.md FR-053,
+ * FR-094, FR-095, FR-097 and AC-3.52 (issues #596 and #880).
  */
 
 type Identity = { annotatorId?: string; reviewerId?: string };
@@ -196,132 +150,81 @@ function gotoAsReviewer(page: Page) {
   }));
 }
 
-test.describe('issue #596 FR-094: pure-text finalized card + micro conflict trace', () => {
-  /* Each test gets a fresh browser context (empty localStorage); the init
-     script only silences the first-visit guideline modal. */
+test.describe('issue #596 FR-094 + issue #880: pure-text finalized result summary', () => {
   test.beforeEach(async ({ page }) => {
     await skipGuidelineModal(page);
   });
 
-  /* FAILS TODAY: `ws-finalized-trace` does not exist -- renderFinalizedCard()
-     emits the title, the note and one plain line per outKey, then jumps
-     straight to the resolved/vote rows. */
-  test('a modified-then-arbitrated unit traces 標記 A ➔ 審核 B（修正）➔ 仲裁 B', async ({ page }) => {
+  test('a modified-then-arbitrated unit shows original, adopted result and reviewer-side basis', async ({ page }) => {
     await seedUnit(page, 'modify');
     await arbitrate(page, 'adopt_b', 'happy');
     await gotoAsReviewer(page);
 
     const card = page.getByTestId('ws-review-finalized-card');
-    await expect(card).toBeVisible();
-
-    const trace = page.getByTestId('ws-finalized-trace');
-    await expect(trace).toHaveCount(1);
-    await expect(trace).toHaveText('歷程：標記 A ➔ 審核 B（修正）➔ 仲裁 B');
+    await expect(card.getByTestId('ws-finalized-original')).toHaveText('標記員原答案：single_label：sad');
+    await expect(card.getByTestId('ws-finalized-result')).toHaveText('最終結果：single_label：happy');
+    await expect(card.getByTestId('ws-finalized-basis')).toHaveText('定稿依據：仲裁採用審核員答案');
   });
 
-  /* FAILS TODAY: same missing trace; this case additionally pins FR-094
-     point 2's bypass wording, which no code path produces at all. */
-  test('a bypassed unit renders 審核 B（無法判定） in the trace', async ({ page }) => {
+  test('adopting a bypassed reviewer side renders the final result as no answer', async ({ page }) => {
     await seedUnit(page, 'bypass');
     await arbitrate(page, 'adopt_b', null);
     await gotoAsReviewer(page);
 
-    const trace = page.getByTestId('ws-finalized-trace');
-    await expect(trace).toHaveText('歷程：標記 A ➔ 審核 B（無法裁決）➔ 仲裁 B');
+    await expect(page.getByTestId('ws-finalized-result')).toHaveText('最終結果：single_label：（無）');
+    await expect(page.getByTestId('ws-finalized-basis')).toHaveText('定稿依據：仲裁採用審核員答案');
   });
 
-  /* FAILS TODAY: missing trace. Also pins that adopt_a names the A side --
-     the letter is the adopted side, not a fixed string. */
-  test('adopt_a renders 仲裁 A as the last segment', async ({ page }) => {
+  test('adopt_a keeps the annotator value and names the annotator-side basis', async ({ page }) => {
     await seedUnit(page, 'modify');
     await arbitrate(page, 'adopt_a', 'sad');
     await gotoAsReviewer(page);
 
-    await expect(page.getByTestId('ws-finalized-trace'))
-      .toHaveText('歷程：標記 A ➔ 審核 B（修正）➔ 仲裁 A');
+    await expect(page.getByTestId('ws-finalized-result')).toHaveText('最終結果：single_label：sad');
+    await expect(page.getByTestId('ws-finalized-basis')).toHaveText('定稿依據：仲裁採用標記員答案');
   });
 
-  /* FAILS TODAY: missing trace. FR-094 point 2's 「經例外池收尾時末段為
-     例外池 {處置}」 -- the pool closure replaces arbitration as the tail. */
-  test('an exception-pool closure ends the trace with 例外池 {處置}', async ({ page }) => {
+  test('an exception-pool closure shows its finalized value and disposition basis', async ({ page }) => {
     await seedUnit(page, 'modify');
     await seedExceptionPoolResolution(page, 'adopt_annotator');
     await gotoAsReviewer(page);
 
-    await expect(page.getByTestId('ws-review-finalized-card')).toBeVisible();
-    await expect(page.getByTestId('ws-finalized-trace'))
-      .toHaveText('歷程：標記 A ➔ 審核 B（修正）➔ 例外池 採用標記員答案');
+    await expect(page.getByTestId('ws-finalized-result')).toHaveText('最終結果：single_label：neutral');
+    await expect(page.getByTestId('ws-finalized-basis')).toHaveText('定稿依據：例外池採用標記員答案');
   });
 
-  /* FAILS TODAY: a unit whose reviewer approved everything derives
-     FINALIZED with no dispute item, and the card still has no trace line. */
-  test('an approved unit traces 標記 A ➔ 審核 B（通過） with no third segment', async ({ page }) => {
+  test('an approved unit shows only the final result', async ({ page }) => {
     await seedUnit(page, 'approve');
     await gotoAsReviewer(page);
 
-    await expect(page.getByTestId('ws-finalized-trace'))
-      .toHaveText('歷程：標記 A ➔ 審核 B（通過）');
+    await expect(page.getByTestId('ws-finalized-result')).toHaveText('最終結果：single_label：sad');
+    await expect(page.getByTestId('ws-finalized-original')).toHaveCount(0);
+    await expect(page.getByTestId('ws-finalized-basis')).toHaveCount(0);
   });
 
-  /* FAILS TODAY: buildFinalizedVoteRows() still appends one
-     `ws-finalized-vote` row per reviewer under every resolved item. */
-  test('the retired FR-069 per-reviewer vote table is gone', async ({ page }) => {
+  test('the retired vote table and micro trace are gone', async ({ page }) => {
     await seedUnit(page, 'modify');
     await arbitrate(page, 'adopt_b', 'happy');
     await gotoAsReviewer(page);
 
-    await expect(page.getByTestId('ws-review-finalized-card')).toBeVisible();
-    await expect(page.getByTestId('ws-finalized-vote')).toHaveCount(0);
-    /* The majority-convergence note went with it: a single-reviewer unit
-       has no majority to converge (FR-093). */
-    await expect(page.getByTestId('ws-review-finalized-card')).not.toContainText('多數決');
+    const card = page.getByTestId('ws-review-finalized-card');
+    await expect(card.getByTestId('ws-finalized-vote')).toHaveCount(0);
+    await expect(card.getByTestId('ws-finalized-trace')).toHaveCount(0);
+    await expect(card.getByTestId('ws-trace-actor')).toHaveCount(0);
+    await expect(card).not.toContainText('多數決');
   });
 
-  /* FAILS TODAY on the trace assertion; the control assertions are the
-     AC-3.52 guard that task 3.4's Green must not regress while adding it. */
-  test('the card is pure text: no answer control, disabled or otherwise', async ({ page }) => {
+  test('the card remains pure text with no answer or decision controls', async ({ page }) => {
     await seedUnit(page, 'modify');
     await arbitrate(page, 'adopt_b', 'happy');
     await gotoAsReviewer(page);
 
     const card = page.getByTestId('ws-review-finalized-card');
     await expect(card).toBeVisible();
-    await expect(card.locator('input, select, textarea')).toHaveCount(0);
-    /* Only the trace's tooltip triggers may be buttons. */
-    await expect(card.locator('button:not([data-testid="ws-trace-actor"])')).toHaveCount(0);
+    await expect(card.locator('input, select, textarea, button')).toHaveCount(0);
     await expect(page.getByTestId('ws-review-row-approve')).toHaveCount(0);
     await expect(page.getByTestId('ws-review-row-modify')).toHaveCount(0);
     await expect(page.getByTestId('ws-review-row-bypass')).toHaveCount(0);
     await expect(page.locator('#wsReviewSubmitBtn')).toBeHidden();
-    await expect(page.getByTestId('ws-finalized-trace')).toHaveCount(1);
-  });
-
-  /* FAILS TODAY: no `ws-trace-actor` exists, so the tooltip contract has
-     nothing to hold. FR-094 point 2 + MASTER.md §Tooltip. */
-  test('each account segment expands its full account on hover, never via title', async ({ page }) => {
-    await seedUnit(page, 'modify');
-    await arbitrate(page, 'adopt_b', 'happy');
-    await gotoAsReviewer(page);
-
-    const card = page.getByTestId('ws-review-finalized-card');
-    await expect(card.locator('[title]')).toHaveCount(0);
-
-    const actors = page.getByTestId('ws-trace-actor');
-    await expect(actors).toHaveCount(3);
-    await expect(actors.nth(0)).toHaveAttribute('data-actor-role', 'annotator');
-    await expect(actors.nth(1)).toHaveAttribute('data-actor-role', 'reviewer');
-    await expect(actors.nth(2)).toHaveAttribute('data-actor-role', 'arbiter');
-
-    const annotatorBubbleId = await actors.nth(0).getAttribute('aria-describedby');
-    expect(annotatorBubbleId).toBeTruthy();
-    const bubble = page.locator('#' + annotatorBubbleId);
-    await expect(bubble).toHaveAttribute('role', 'tooltip');
-    await expect(bubble).toHaveText(ANNOTATOR);
-    await expect(bubble).toBeHidden();
-    await actors.nth(0).hover();
-    await expect(bubble).toBeVisible();
-
-    const arbiterBubbleId = await actors.nth(2).getAttribute('aria-describedby');
-    await expect(page.locator('#' + arbiterBubbleId)).toHaveText(ARBITER);
   });
 });

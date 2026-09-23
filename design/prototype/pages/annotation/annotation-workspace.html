@@ -459,38 +459,22 @@
     }
     .rv-review-note .tooltip-bubble::after { display: none; }
 
-    /* issue #596 FR-094: the finalized card's micro conflict trace. Each
-       account bubble is a SIBLING of the trace line, never a descendant --
-       the line must read as the trace and nothing else -- so §Tooltip's
-       adjacent-sibling reveal cannot apply and config.js toggles .is-open
-       instead. The bubble spans the host for the same reason the review
-       note's does: an inline trigger anywhere along a 375px line cannot
-       carry a bubble hanging off its own left edge. */
-    .rv-trace-host { position: relative; margin-top: 10px; }
-    .rv-finalized-trace { font-size: 12px; line-height: 1.9; color: var(--color-text-soft); }
-    .rv-trace-actor-wrap { position: static; }
-    .rv-trace-actor {
-      border: none;
-      background: none;
-      padding: 0 1px;
-      font: inherit;
-      color: var(--color-ink);
-      font-weight: 700;
-      text-decoration: underline dotted;
-      text-underline-offset: 3px;
-      cursor: help;
+    /* issue #880: finalized cards summarize the answer, not the audit trail.
+       A complex route adds original/final/basis rows; direct approval keeps
+       only the final row. The two-column layout collapses naturally because
+       the value column owns the remaining width and may wrap independently. */
+    .rv-finalized-summary {
+      display: grid;
+      grid-template-columns: 112px minmax(0, 1fr);
+      gap: 8px;
+      padding-top: 8px;
+      font-size: 12px;
+      line-height: 1.6;
     }
-    .rv-trace-actor:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
-    .rv-trace-bubble {
-      top: calc(100% + 6px);
-      bottom: auto;
-      left: 0;
-      right: 0;
-      width: auto;
-      max-width: none;
-    }
-    .rv-trace-bubble::after { display: none; }
-    .rv-trace-bubble.is-open { visibility: visible; opacity: 1; }
+    .rv-finalized-summary-label { color: var(--color-text-soft); font-weight: 700; }
+    .rv-finalized-summary-values { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .rv-finalized-summary-value { white-space: pre-line; overflow-wrap: anywhere; }
+    .rv-finalized-basis { color: var(--color-ink); }
     .rv-bulk-actions { display: flex; gap: 8px; flex-shrink: 0; }
 
     .rv-annotator-list { display: flex; flex-direction: column; gap: 8px; }
@@ -962,9 +946,19 @@
        `.modal-overlay`, which is what keeps the review card's
        getBoundingClientRect().top identical across open and close. */
     .rv-flow-overlay { align-items: stretch; justify-content: flex-end; padding: 0; }
-    .rv-flow-drawer { max-width: 420px; height: 100%; border-radius: var(--radius-xl) 0 0 var(--radius-xl); overflow-y: auto; }
-    /* The track is a 2-row grid wider than the drawer, so it keeps the
-       horizontal scroll it had when it was a full-width banner row. */
+    .rv-flow-drawer { max-width: 520px; height: 100%; border-radius: var(--radius-xl) 0 0 var(--radius-xl); overflow-y: auto; }
+    .rv-flow-body { display: flex; flex-direction: column; gap: var(--space-lg); }
+    .rv-flow-description { margin: 0; color: var(--color-text-soft); font-size: 13px; line-height: 1.6; }
+    .rv-flow-route-summary {
+      margin: 0;
+      padding-top: var(--space-md);
+      border-top: 1px solid var(--color-border);
+      color: var(--color-ink);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    /* Keep horizontal scrolling as a mobile fallback; the desktop drawer is
+       wide enough to show the complete three-state track without clipping. */
     .rv-flow-track { overflow-x: auto; }
     @media (max-width: 767px) {
       .rv-flow-drawer { max-width: none; border-radius: 0; }
@@ -1152,7 +1146,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
       </button>
     </div>
-    <div class="rv-flow-track" id="wsReviewFlowDrawerBody" data-testid="ws-review-flow-drawer-body"></div>
+    <div class="rv-flow-body" id="wsReviewFlowDrawerBody" data-testid="ws-review-flow-drawer-body"></div>
   </div>
 </div>
 

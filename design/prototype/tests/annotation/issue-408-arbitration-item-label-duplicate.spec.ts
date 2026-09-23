@@ -1,11 +1,11 @@
 import { test, expect, type Page } from '@playwright/test';
 import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
 
-/* Arbitration/finalized item labels double up the outKey for output types
+/* Arbitration/finalized result labels double up the outKey for output types
  * with no sub-key (issue #408, RV-05).
  *
- * `buildArbitrationItemRow()` and `buildArbitrationResolvedRow()` both build
- * the label as `item.outKey + ' · ' + item.key`. `compareOutputAnswer()`'s
+ * Arbitration and finalized-result renderers both consume a dispute item's
+ * outKey and optional sub-key. `compareOutputAnswer()`'s
  * default branch (single_label / single_dim / free_text -- anything without
  * a merge key) sets `diff.key = outKey`, so `item.key === item.outKey` for
  * every dispute item on these output types, and the label reads
@@ -62,17 +62,17 @@ test.describe('issue #408 -- arbitration/finalized item labels do not duplicate 
     await expect(label).not.toHaveText('single_label · single_label');
   });
 
-  test('finalized resolved row: single_label converged item renders the outKey once', async ({ page }) => {
+  test('finalized result row: single_label arbitrated item renders the outKey once', async ({ page }) => {
     await skipGuidelineModal(page);
     await page.goto(buildWorkspaceUrl({
       task_id: 'T015', sample_id: 'ofs-03-arbitrated-gold', role: 'reviewer', run_type: 'official_run',
     }));
 
-    const row = page.getByTestId('ws-finalized-resolved');
+    const row = page.getByTestId('ws-finalized-result');
     await expect(row).toBeVisible();
     await expect(row).toContainText('neutral');
     await expect(row).not.toContainText('single_label · single_label');
-    // The row must still lead with the outKey once, not drop it entirely.
-    await expect(row).toContainText(/^single_label：/);
+    // The final-result label is followed by the outKey once, never duplicated.
+    await expect(row).toContainText(/^最終結果：single_label：/);
   });
 });

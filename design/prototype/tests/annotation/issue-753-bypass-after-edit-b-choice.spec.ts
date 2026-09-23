@@ -114,14 +114,12 @@ test.describe('issue #753: bypass after an edit must not surface the edited valu
     await expect(page.getByTestId('ws-review-finalized-card')).toBeVisible();
 
     /* FR-061 point 2: "採 B 即定案為無法判定...不得回填標記員原答案". The
-     * finalized resolved row (established testid/assertion convention:
-     * issue-308-finalized-unit-lock.spec.ts, issue-408-...spec.ts) renders
-     * `disputeItemLabel + '：' + formatDisputeValue(finalized_value) + '（' +
-     * finalized_by + '）'`. formatDisputeValue(null) renders the same
+     * finalized result row renders formatDisputeValue(finalized_value).
+     * formatDisputeValue(null) renders the same
      * "（無）" no-answer wording reviewNoAnswer uses elsewhere -- a real
      * fix must store finalized_value = null for this bypass item, not the
      * stale edited 'positive'. */
-    const resolved = page.getByTestId('ws-finalized-resolved');
+    const resolved = page.getByTestId('ws-finalized-result');
     await expect(resolved).toHaveCount(1);
     await expect(resolved).not.toContainText('positive');
     await expect(resolved).toContainText('（無）');
