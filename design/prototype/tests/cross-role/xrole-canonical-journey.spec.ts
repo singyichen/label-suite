@@ -108,13 +108,9 @@ import {
  *   as dead weight -- getReviewUnitStatus's 6th arg is no longer consulted.
  *   XROLE-15/16 pin the new single-decision-is-decisive and
  *   agreement-does-not-converge behavior respectively.
- * - The annotation-results panel and its export never read localStorage
- *   submissions: since issue #284, getAnnotationResultsData()
- *   (task-detail.html) returns an empty set for any task id without an
- *   ANNOTATION_RESULTS_BY_TASK entry (it used to fall back to the T001
- *   seed and show another task's data), so XROLE-19/22 assert the real
- *   cross-page sync at the reviewer list / data layer and the honest
- *   empty state on the panel.
+ * - Issue #892 derives annotation-results from live task-scoped submissions,
+ *   reviews, and arbitration. XROLE-19 verifies the same finalized unit and
+ *   role history in the reviewer list and the project leader's result table.
  */
 test.use({ screenshot: 'only-on-failure', video: 'retain-on-failure' });
 test.describe.configure({ mode: 'serial' });
@@ -967,18 +963,22 @@ test('XROLE-19: checkpoint E -- the arbitrated unit reads as finalized across pa
     r02Page.getByTestId('ws-sample-item').filter({ hasText: FORCED_DIVERGENCE_RECORD_ID }).locator('.status-badge')
   ).toHaveText('已定稿 · 已鎖定');
 
-  /* PL-side annotation-results panel: the journey's live arbitration
-   * outcome still cannot reach this panel (the remaining prototype gap,
-   * documented in the final report) -- but since issue #284
-   * getAnnotationResultsData() returns an empty set for a task id without
-   * an ANNOTATION_RESULTS_BY_TASK entry instead of falling back to the
-   * T001 seed, so the checkpoint now asserts the honest empty state
-   * rather than another task's leaked content. The seeded panel's
-   * finalized badge + arbitration history affordance stays covered on
-   * T001 by task-detail-review-history.spec.ts:54-70. */
+  /* #892: the PL result table derives this same unit from submitted review
+   * and arbitration, retaining the reviewer and arbiter as separate roles. */
   await plPage.goto(`/pages/task-management/task-detail.html?task_role=project_leader&task_id=${fixtureTaskId}&tab=annotation-results`);
-  await expect(plPage.locator('#arEmptyState')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
-  await expect(plPage.locator('#arTableSection')).toBeHidden();
+  await expect(plPage.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
+  await expect(plPage.locator('#arEmptyState')).toBeHidden();
+  const summary = plPage.locator('#arResultTableBody tr.ar-summary-row')
+    .filter({ hasText: FORCED_DIVERGENCE_RECORD_ID });
+  await expect(summary).toHaveCount(1);
+  await summary.locator('.ar-expand-btn').click();
+  const detail = summary.locator('xpath=following-sibling::tr[1]');
+  await expect(detail).toHaveClass(/annotator-detail-row/);
+  await expect(detail.locator('.annotator-row .ar-review-badge .badge')).toHaveText('已定稿');
+  await expect(detail.locator('.ar-history-review .ar-history-name')).toHaveText(REVIEWER_R02);
+  await expect(detail.locator('.ar-history-review .ar-history-decision')).toContainText(DIVERGENCE_CORRECTION);
+  await expect(detail.locator('.ar-history-arbitration .ar-history-name')).toHaveText(ARBITER_R03);
+  await expect(detail.locator('.ar-history-arbitration .ar-history-decision')).toContainText('採 B');
 });
 
 test.describe('XROLE-20: completion is not blocked by unresolved disputes (documents the D2 gap)', () => {
@@ -1027,7 +1027,7 @@ test.describe('XROLE-21: completion has no confirmation modal (documents the D2 
   });
 });
 
-test('XROLE-22: official-stage export carries the official run_stage; the arbitrated value lives at the data layer', async () => {
+test('XROLE-22: official-stage export carries live review results while arbitration retains B', async () => {
   // plPage still sits on the annotation-results tab from XROLE-19.
   await plPage.locator('#arStageSelect').selectOption('official');
 
@@ -1042,18 +1042,14 @@ test('XROLE-22: official-stage export carries the official run_stage; the arbitr
 
   expect(payload.manifest.applied_filters.run_stage).toBe('official');
   expect(Array.isArray(payload.items)).toBe(true);
-  // Since issue #284 an unseeded task id exports an empty item set instead
-  // of leaking the T001 seed's items.
-  expect(payload.items).toHaveLength(0);
+  expect(payload.items.map((item: { sample_id: string }) => item.sample_id).sort())
+    .toEqual([...OFFICIAL_RUN_RECORD_IDS].sort());
+  const arbitratedItem = payload.items.find((item: { sample_id: string }) =>
+    item.sample_id === FORCED_DIVERGENCE_RECORD_ID);
+  expect(arbitratedItem?.review_status).toBe('finalized');
 
-  /* Deviation from w4's "匯出 JSON 的 xrole-003 標註值為仲裁後 negative":
-   * the export serializes getAnnotationResultsData(), which for this task
-   * id is empty since issue #284 (it used to leak the T001 seed) -- the
-   * journey's items/values still cannot appear in it (same gap as
-   * XROLE-19, reported in the final report). The arbitrated-value truth w4
-   * wants is therefore pinned at the data layer the export WOULD read from
-   * once wired: the finalized value is R02's correction, not the
-   * annotator's original gold answer. */
+  /* The live panel/export now includes the task's actual review unit. Its
+   * arbitration truth remains independently pinned in the public state. */
   const state = await readArbitrationState(r03Page, FORCED_DIVERGENCE_RECORD_ID, OFFICIAL_RUN_ASSIGNMENTS[FORCED_DIVERGENCE_RECORD_ID]);
   expect(state['single_label::single_label'].finalized_value).toBe(DIVERGENCE_CORRECTION);
   expect(state['single_label::single_label'].finalized_value).not.toBe(OFFICIAL_GOLD[FORCED_DIVERGENCE_RECORD_ID]);

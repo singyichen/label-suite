@@ -1108,6 +1108,7 @@
       padding: 2px 8px 2px 28px; font-size: 12px; color: var(--color-ink-muted);
     }
     .ar-history-role { flex-shrink: 0; font-weight: 600; }
+    .ar-history-output { flex-shrink: 0; color: var(--color-ink); }
     .ar-history-time { margin-left: auto; flex-shrink: 0; }
     .badge-ar-submitted { color: var(--color-success); background: var(--color-success-bg); border-color: var(--color-success-border); }
     .badge-ar-draft { color: var(--color-ink-muted); background: var(--color-slate-50); border-color: var(--color-border); }
@@ -2860,6 +2861,7 @@
       arHistoryBypass: window.LabelSuiteSharedSidebar.BYPASS_WORDING.zh.decision,
       arHistoryPickA: '採 A（維持標記員）',
       arHistoryPickB: '採 B（採用審核員修正）',
+      arHistoryReject: '兩者皆非',
       arPaginationTpl: '共 {total} 筆 · 第 {page} / {totalPages} 頁',
       arPageSizeLabel: ' 筆/頁',
       arPrevPageAria: '上一頁',
@@ -3384,6 +3386,7 @@
       arHistoryBypass: window.LabelSuiteSharedSidebar.BYPASS_WORDING.en.decision,
       arHistoryPickA: 'Adopted A (keep annotator)',
       arHistoryPickB: 'Adopted B (adopt reviewer edit)',
+      arHistoryReject: 'Rejected both',
       arPaginationTpl: 'Total {total} · Page {page} / {totalPages}',
       arPageSizeLabel: ' / page',
       arPrevPageAria: 'Previous page',
@@ -4493,114 +4496,162 @@
     T013: AR_SAMPLES_VA
   };
 
-  /* Issue #393: T014-T017 (review-flow demo tasks) never appeared in
-     ANNOTATION_RESULTS_BY_TASK, so the "標記結果" panel always fell back to
-     the empty state for them -- even though their review journeys (dry-run
-     quorum, single-reviewer approval, three-reviewer majority convergence,
-     a two-reviewer tie) are exactly what those tasks exist to demonstrate.
-     REVIEW_FLOW_UNITS translates the same review outcomes seeded into
-     annotation-workspace.data.js's seedReviewFlowDemo() scripts (reviewer
-     ids/values and the resulting REVIEW_UNIT_STATUS, derived from
-     getReviewUnitStatus()'s quorum/majority rules) into this page's own
-     AR_SAMPLES-shape records; row.rv entries are
-     [reviewerId, 'approved'|'modified', modifiedValue?]. Sample text is
-     read from this page's own profile.datasetRecords instead of being
-     duplicated here. */
-  /* issue #617: these display names used to live in a REVIEWER_DEMO_NAME map
-     of their own, which was the second roster REVIEWER_ID_FORMAT forbids --
-     it had to be edited in lockstep with every reviewer the task gained.
-     Now that the same people are TASK_MEMBERS, the name is looked up there. */
-  function reviewerDemoName(reviewerId) {
+  /* Review identities remain opaque ids until the rendering boundary. The
+     shared TASK_MEMBERS roster supplies display names without introducing a
+     second reviewer roster that could drift from assignment/submission data. */
+  function reviewerDisplayName(reviewerId) {
     var member = TASK_MEMBERS.filter(function(m) { return m.id === reviewerId; })[0];
     return member ? member.name : reviewerId;
   }
 
-  var REVIEW_FLOW_UNITS = {
-    T014: [
-      { id: 'dry-01-all-agree', rows: [
-        { a: 'kioleemg12', v: 'positive', rs: 'finalized', rv: [['reviewer_wang', 'approved']] },
-        { a: '113450022', v: 'positive', rs: 'finalized', rv: [['reviewer_wang', 'approved']] },
-        { a: 'tony0950127', v: 'positive', rs: 'finalized', rv: [['reviewer_wang', 'approved']] }
-      ] },
-      { id: 'dry-02-one-divergent', rows: [
-        { a: 'kioleemg12', v: 'neutral', rs: 'finalized', rv: [['reviewer_wang', 'approved']] },
-        { a: '113450022', v: 'neutral', rs: 'disputed', rv: [['reviewer_wang', 'modified', 'positive']] },
-        { a: 'tony0950127', v: 'positive', rs: 'pending', rv: [] }
-      ] },
-      { id: 'dry-03-dispute-open', rows: [
-        { a: 'kioleemg12', v: 'neutral', rs: 'pending', rv: [] },
-        { a: '113450022', v: 'neutral', rs: 'disputed', rv: [['reviewer_wang', 'modified', 'negative']] },
-        { a: 'tony0950127', v: 'neutral', rs: 'pending', rv: [] }
-      ] },
-      { id: 'dry-04-dispute-resolved', rows: [
-        { a: 'kioleemg12', v: 'negative', rs: 'finalized', rv: [['reviewer_wang', 'approved']] },
-        { a: '113450022', v: 'neutral', rs: 'finalized', rv: [['reviewer_wang', 'modified', 'negative']], arb: 'reviewer_chen' },
-        { a: 'tony0950127', v: 'negative', rs: 'finalized', rv: [['reviewer_wang', 'approved']] }
-      ] },
-      { id: 'dry-05-pending-review', rows: [
-        { a: 'kioleemg12', v: 'positive', rs: 'pending', rv: [] },
-        { a: '113450022', v: 'positive', rs: 'pending', rv: [] },
-        { a: 'tony0950127', v: 'positive', rs: 'pending', rv: [] }
-      ] }
-    ],
-    T015: [
-      { id: 'ofs-01-agree-gold', rows: [{ a: 'kioleemg12', v: 'negative', rs: 'finalized', rv: [['reviewer_wang', 'approved']] }] },
-      { id: 'ofs-02-modified-dispute', rows: [{ a: 'kioleemg12', v: 'neutral', rs: 'disputed', rv: [['reviewer_wang', 'modified', 'positive']] }] },
-      { id: 'ofs-03-arbitrated-gold', rows: [{ a: 'kioleemg12', v: 'positive', rs: 'finalized', rv: [['reviewer_wang', 'modified', 'neutral']], arb: 'reviewer_chen' }] },
-      { id: 'ofs-04-pending-review', rows: [{ a: 'kioleemg12', v: 'positive', rs: 'pending', rv: [] }] }
-    ],
-    T016: [
-      { id: 'ofm-01-reviewer-corrects-b', rows: [{ a: 'kioleemg12', v: 'positive', rs: 'finalized', rv: [['reviewer_wang', 'modified', 'negative']], arb: 'reviewer_chen' }] },
-      { id: 'ofm-02-reviewer-accepts-a', rows: [{ a: 'kioleemg12', v: 'negative', rs: 'finalized', rv: [['reviewer_wang', 'approved']] }] },
-      { id: 'ofm-03-awaiting-arbitration', rows: [{ a: 'kioleemg12', v: 'neutral', rs: 'disputed', rv: [['reviewer_wang', 'modified', 'negative']] }] },
-      { id: 'ofm-04-reviewer-bypass', rows: [{ a: 'kioleemg12', v: 'positive', rs: 'disputed', rv: [['reviewer_wang', 'bypass']] }] },
-      { id: 'ofm-05-final-exception', rows: [{ a: 'kioleemg12', v: 'neutral', rs: 'disputed', rv: [['reviewer_wang', 'modified', 'positive']] }] }
-    ]
-  };
+  function getReviewFlowRunType(taskId) {
+    var tasks = (window.LabelSuiteTaskListData && window.LabelSuiteTaskListData.tasks) || [];
+    var task = tasks.filter(function(item) { return item.id === taskId; })[0];
+    return task && task.runType ? task.runType : null;
+  }
 
-  function buildReviewFlowAnnotation(row) {
-    var annotation = {
-      annotator: row.a,
-      value: { labels: [row.v] },
-      submittedAt: '2026-08-22 09:00',
-      reviewStatus: row.rs,
-      reviews: row.rv.map(function(entry) {
-        var review = { reviewer: reviewerDemoName(entry[0]), decision: entry[1], reviewedAt: '2026-08-22 10:00' };
-        if (entry[1] === 'modified') review.result = { labels: [entry[2]] };
-        return review;
+  /* Keep the review-flow adapter config-driven: the task profile selects the
+     output keys and the shared data layer owns conversion/comparison for each
+     output type. The result page only carries that normalized public shape. */
+  function getReviewFlowAnswers(data, outputTypes, submission) {
+    var answers = {};
+    outputTypes.forEach(function(outKey) {
+      answers[outKey] = data.convertSubmissionAnswer(outKey, submission || {});
+    });
+    return answers;
+  }
+
+  function buildReviewFlowResultValue(outputTypes, answers) {
+    return {
+      outputAnswers: outputTypes.map(function(outKey) {
+        return { outKey: outKey, answer: answers[outKey] };
       })
     };
-    if (row.arb) {
-      annotation.arbitration = {
-        arbiter: reviewerDemoName(row.arb),
-        pick: 'B',
-        decidedAt: '2026-08-22 11:00'
-      };
+  }
+
+  function getReviewFlowOutputDecision(data, submission, outKey, annotatorAnswer, reviewerAnswer) {
+    var decisions = (submission && submission.decisions) || {};
+    var decision = decisions[outKey];
+    if (decision === 'approve') return 'approved';
+    if (decision === 'modify') return 'modified';
+    if (decision === 'bypass') return 'bypass';
+    if (reviewerAnswer === undefined || reviewerAnswer === null) return 'bypass';
+    return data.compareOutputAnswer(outKey, annotatorAnswer, reviewerAnswer).equal ? 'approved' : 'modified';
+  }
+
+  function getReviewFlowArbitrations(data, taskId, runType, sampleId, annotatorId, outputTypes) {
+    var stateByItem = data.getArbitrationState(taskId, runType, sampleId, { annotatorId: annotatorId });
+    var events = [];
+    outputTypes.forEach(function(outKey) {
+      Object.keys(stateByItem).filter(function(itemId) {
+        return itemId.indexOf(outKey + '::') === 0;
+      }).sort().forEach(function(itemId) {
+        (stateByItem[itemId].votes || []).slice().sort(function(a, b) {
+          return String(a.voted_at || '').localeCompare(String(b.voted_at || ''));
+        }).forEach(function(vote) {
+          events.push({
+            outputKey: outKey,
+            arbiter: vote.arbiter_id,
+            pick: vote.choice === 'adopt_a' ? 'A' : (vote.choice === 'adopt_b' ? 'B' : 'reject'),
+            decidedAt: vote.voted_at || ''
+          });
+        });
+      });
+    });
+    return events;
+  }
+
+  function buildReviewFlowAnnotation(data, taskId, runType, outputTypes, unit, assignedReviewerId) {
+    var identity = { annotatorId: unit.annotatorId };
+    var annotatorSubmission = data.getSubmission(taskId, 'annotator', runType, unit.sampleId, identity);
+    var annotatorAnswers = getReviewFlowAnswers(data, outputTypes, annotatorSubmission);
+    var reviewerSubmissions = data.readReviewerSubmissions(taskId, runType, unit.sampleId, identity);
+    var ownerSubmission = reviewerSubmissions.filter(function(submission) {
+      return submission.reviewerId === assignedReviewerId;
+    })[0] || reviewerSubmissions[0];
+    var annotation = {
+      annotator: unit.annotatorId,
+      value: buildReviewFlowResultValue(outputTypes, annotatorAnswers),
+      submittedAt: data.getSampleSubmittedAt(taskId, 'annotator', runType, unit.sampleId, identity) || '',
+      reviewStatus: unit.status || 'pending',
+      reviews: []
+    };
+    if (ownerSubmission) {
+      var reviewerAnswers = getReviewFlowAnswers(data, outputTypes, ownerSubmission.answers);
+      outputTypes.forEach(function(outKey) {
+        var decision = getReviewFlowOutputDecision(
+          data, ownerSubmission.answers, outKey, annotatorAnswers[outKey], reviewerAnswers[outKey]
+        );
+        var review = {
+          outputKey: outKey,
+          reviewer: ownerSubmission.reviewerId,
+          decision: decision,
+          reviewedAt: ownerSubmission.submittedAt || ''
+        };
+        if (decision === 'modified') {
+          review.result = buildReviewFlowResultValue([outKey], reviewerAnswers);
+        }
+        annotation.reviews.push(review);
+      });
     }
+    annotation.arbitrations = getReviewFlowArbitrations(
+      data, taskId, runType, unit.sampleId, unit.annotatorId, outputTypes
+    );
     return annotation;
   }
 
   function buildReviewFlowResults(taskId) {
-    var profiles = (window.LabelSuiteTaskDetailData && window.LabelSuiteTaskDetailData.profiles) || {};
-    var records = (profiles[taskId] && profiles[taskId].datasetRecords) || [];
-    var textById = {};
-    records.forEach(function(record) { textById[record.id] = record.text; });
-    var stage = taskId === 'T014' ? 'dry' : 'official';
-    return (REVIEW_FLOW_UNITS[taskId] || []).map(function(unit) {
+    var data = window.LabelSuiteAnnotationWorkspaceData;
+    var runType = getReviewFlowRunType(taskId);
+    if (!data || !runType) return [];
+    var profile = data.resolveTaskProfile(taskId);
+    if (!profile) return [];
+    var records = profile.datasetRecords || [];
+    var outputTypes = (profile.outputs || []).map(function(output) { return output.type; });
+    var units = data.listReviewUnits(taskId, runType);
+    var assignmentByUnit = {};
+    data.taskReviewAssignments(taskId, runType, units.map(function(unit) {
+      return { sample_id: unit.sampleId, annotator_id: unit.annotatorId };
+    })).forEach(function(assignment) {
+      assignmentByUnit[assignment.sample_id + '::' + assignment.annotator_id] = assignment.reviewer_id;
+    });
+    var unitsBySample = {};
+    units.forEach(function(unit) {
+      if (!unitsBySample[unit.sampleId]) unitsBySample[unit.sampleId] = [];
+      unitsBySample[unit.sampleId].push(unit);
+    });
+    return records.filter(function(record) {
+      return unitsBySample[record.id] && unitsBySample[record.id].length;
+    }).map(function(record) {
+      var sampleUnits = unitsBySample[record.id];
+      var submittedAt = data.getSampleSubmittedAt(
+        taskId, 'annotator', runType, record.id, { annotatorId: sampleUnits[0].annotatorId }
+      );
       return {
-        sampleId: unit.id,
-        stage: stage,
-        textZh: textById[unit.id] || '',
+        sampleId: record.id,
+        stage: runType === 'dry_run' ? 'dry' : 'official',
+        textZh: record.text || '',
         textEn: '',
         status: 'submitted',
-        completedAt: '2026-08-22',
-        annotations: unit.rows.map(buildReviewFlowAnnotation)
+        completedAt: submittedAt ? String(submittedAt).slice(0, 10) : '',
+        annotations: sampleUnits.map(function(unit) {
+          return buildReviewFlowAnnotation(
+            data,
+            taskId,
+            runType,
+            outputTypes,
+            unit,
+            assignmentByUnit[unit.sampleId + '::' + unit.annotatorId]
+          );
+        })
       };
     });
   }
 
-  ['T014', 'T015', 'T016'].forEach(function(taskId) {
-    ANNOTATION_RESULTS_BY_TASK[taskId] = buildReviewFlowResults(taskId);
+  Object.keys((window.LabelSuiteTaskDetailData && window.LabelSuiteTaskDetailData.profiles) || {}).forEach(function(taskId) {
+    if (ANNOTATION_RESULTS_BY_TASK[taskId]) return;
+    var results = buildReviewFlowResults(taskId);
+    if (results.length) ANNOTATION_RESULTS_BY_TASK[taskId] = results;
   });
 
   var MEMBER_ANNOTATOR_MAP = {
@@ -8956,9 +9007,34 @@ function getTaskTypeLabel() {
       .trim();
   }
 
+  /* Review-flow rows carry CompactAnswer values produced by the shared data
+     adapter. Render that normalized shape structurally so new configured
+     outputs do not require another output-type switch on this page. */
+  function formatReviewFlowAnswer(answer, lang) {
+    if (answer === undefined || answer === null || answer === '') return '';
+    if (Array.isArray(answer)) {
+      return answer.map(function(item) { return formatReviewFlowAnswer(item, lang); })
+        .filter(Boolean)
+        .join(', ');
+    }
+    if (typeof answer === 'object') {
+      return Object.keys(answer).map(function(key) {
+        var value = formatReviewFlowAnswer(answer[key], lang);
+        return value ? key + '=' + value : '';
+      }).filter(Boolean).join(', ');
+    }
+    return localizeResultText(String(answer), lang);
+  }
+
   function getAnnotationResultDisplay(annotation, lang) {
     var v = annotation.value;
     if (!v) return { tags: ['-'], colorClass: '' };
+    if (Array.isArray(v.outputAnswers)) {
+      var configuredAnswers = v.outputAnswers.map(function(output) {
+        return formatReviewFlowAnswer(output.answer, lang);
+      }).filter(Boolean);
+      return { tags: [configuredAnswers.length ? configuredAnswers.join(' · ') : '-'], colorClass: '' };
+    }
     if (v.resultText) {
       return { tags: [localizeResultText(v.resultText, lang)], colorClass: '' };
     }
@@ -9015,9 +9091,16 @@ function getTaskTypeLabel() {
     return map[reviewStatus] || map.pending;
   }
 
+  function getAnnotationArbitrations(annotation) {
+    if (Array.isArray(annotation.arbitrations)) return annotation.arbitrations;
+    return annotation.arbitration ? [annotation.arbitration] : [];
+  }
+
   function annotationHasReviewer(annotation, reviewer) {
     var inReviews = (annotation.reviews || []).some(function(review) { return review.reviewer === reviewer; });
-    return inReviews || !!(annotation.arbitration && annotation.arbitration.arbiter === reviewer);
+    return inReviews || getAnnotationArbitrations(annotation).some(function(arbitration) {
+      return arbitration.arbiter === reviewer;
+    });
   }
 
   /* D1: conditions come from the caller -- the export button path builds
@@ -9054,10 +9137,12 @@ function getTaskTypeLabel() {
         (a.reviews || []).forEach(function(review) {
           if (!seen[review.reviewer]) { seen[review.reviewer] = true; list.push(review.reviewer); }
         });
-        if (a.arbitration && !seen[a.arbitration.arbiter]) {
-          seen[a.arbitration.arbiter] = true;
-          list.push(a.arbitration.arbiter);
-        }
+        getAnnotationArbitrations(a).forEach(function(arbitration) {
+          if (!seen[arbitration.arbiter]) {
+            seen[arbitration.arbiter] = true;
+            list.push(arbitration.arbiter);
+          }
+        });
       });
     });
     return list;
@@ -9072,10 +9157,10 @@ function getTaskTypeLabel() {
     allOpt.value = 'all';
     allOpt.textContent = t('arReviewerAll');
     sel.appendChild(allOpt);
-    getArReviewers().forEach(function(name) {
+    getArReviewers().forEach(function(reviewerId) {
       var opt = document.createElement('option');
-      opt.value = name;
-      opt.textContent = name;
+      opt.value = reviewerId;
+      opt.textContent = reviewerDisplayName(reviewerId);
       sel.appendChild(opt);
     });
     sel.value = current;
@@ -9128,15 +9213,24 @@ function getTaskTypeLabel() {
     sel.value = current;
   }
 
-  function buildArHistoryLine(lineClass, roleText, nameText, decisionText, timeText) {
+  function buildArHistoryLine(lineClass, roleText, nameText, decisionText, timeText, outputKey) {
     var line = document.createElement('div');
     line.className = 'ar-history-line ' + lineClass;
+    var configuredOutputs = TASK_DATA.outputs || [];
+    var resolvedOutputKey = outputKey || (configuredOutputs.length === 1 ? configuredOutputs[0].type : '');
+    if (resolvedOutputKey) line.setAttribute('data-output-key', resolvedOutputKey);
     var role = document.createElement('span');
     role.className = 'ar-history-role';
     role.textContent = roleText;
     var name = document.createElement('span');
     name.className = 'ar-history-name';
     name.textContent = nameText;
+    var output = null;
+    if (outputKey && configuredOutputs.length > 1) {
+      output = document.createElement('span');
+      output.className = 'ar-history-output';
+      output.textContent = getOutputTypeDisplayLabel(outputKey);
+    }
     var decision = document.createElement('span');
     decision.className = 'ar-history-decision';
     decision.textContent = decisionText;
@@ -9145,6 +9239,7 @@ function getTaskTypeLabel() {
     time.textContent = timeText || '-';
     line.appendChild(role);
     line.appendChild(name);
+    if (output) line.appendChild(output);
     line.appendChild(decision);
     line.appendChild(time);
     return line;
@@ -9158,22 +9253,26 @@ function getTaskTypeLabel() {
           ? t('arHistoryBypass')
           : t('arHistoryAgree');
       var reviewLine = buildArHistoryLine(
-        'ar-history-review', t('arHistoryReviewerRole'), review.reviewer, decisionText, review.reviewedAt
+        'ar-history-review', t('arHistoryReviewerRole'), reviewerDisplayName(review.reviewer), decisionText,
+        review.reviewedAt, review.outputKey
       );
       reviewLine.setAttribute('data-annotator', annotation.annotator);
       container.appendChild(reviewLine);
     });
-    if (annotation.arbitration) {
+    getAnnotationArbitrations(annotation).forEach(function(arbitration) {
       var arbitrationLine = buildArHistoryLine(
         'ar-history-arbitration',
         t('arHistoryArbiterRole'),
-        annotation.arbitration.arbiter,
-        annotation.arbitration.pick === 'A' ? t('arHistoryPickA') : t('arHistoryPickB'),
-        annotation.arbitration.decidedAt
+        reviewerDisplayName(arbitration.arbiter),
+        arbitration.pick === 'A'
+          ? t('arHistoryPickA')
+          : (arbitration.pick === 'B' ? t('arHistoryPickB') : t('arHistoryReject')),
+        arbitration.decidedAt,
+        arbitration.outputKey
       );
       arbitrationLine.setAttribute('data-annotator', annotation.annotator);
       container.appendChild(arbitrationLine);
-    }
+    });
   }
 
   function getArStatusBadge(status) {
