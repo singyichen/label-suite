@@ -21,6 +21,12 @@ const DASHBOARD_URL = '/pages/dashboard/dashboard.html?scenario=reviewer';
 const PANEL_LOAD_TIMEOUT = 15_000;
 const T016_ANNOTATOR = 'kioleemg12';
 const T016_ARBITER = 'reviewer_chen';
+const MULTI_OUTPUT_TASK = 'T891M';
+const MULTI_OUTPUT_SAMPLE = 'multi-output-review-unit';
+const MULTI_OUTPUT_ANNOTATOR = 'fixture_annotator';
+const MULTI_OUTPUT_REVIEWER = 'reviewer_wang';
+const MULTI_OUTPUT_ARBITER = 'reviewer_chen';
+const MULTI_OUTPUT_KEYS = ['single_label', 'free_text', 'single_dim'] as const;
 
 type ReviewPoolItem = {
   taskId: string;
@@ -43,6 +49,65 @@ type ReviewPoolItems = {
 
 type WorkspaceData = {
   listReviewPoolItems?: (taskId: string, runType: RunType) => ReviewPoolItems;
+  listReviewUnits: (
+    taskId: string,
+    runType: RunType,
+  ) => Array<{ sampleId: string; annotatorId: string; status: string }>;
+  markSampleSubmitted: (
+    taskId: string,
+    role: 'annotator' | 'reviewer',
+    runType: RunType,
+    sampleId: string,
+    payload: Record<string, unknown>,
+    summary: string,
+    identity: { annotatorId: string; reviewerId?: string },
+  ) => void;
+  getDisputeItems: (
+    taskId: string,
+    runType: RunType,
+    sampleId: string,
+    identity: { annotatorId: string },
+    outKeys: readonly string[],
+  ) => Array<{
+    outKey: string;
+    key: string;
+    annotatorValue: unknown;
+    reviewerValues: Record<string, unknown>;
+  }>;
+  submitArbitration: (
+    taskId: string,
+    runType: RunType,
+    sampleId: string,
+    identity: { annotatorId: string; reviewerId: string },
+    decisions: Array<{
+      itemId: string;
+      choice: 'adopt_a' | 'adopt_b' | 'reject';
+      value?: unknown;
+      reason: string;
+    }>,
+  ) => void;
+  getArbitrationState: (
+    taskId: string,
+    runType: RunType,
+    sampleId: string,
+    identity: { annotatorId: string },
+  ) => Record<string, { finalized_by?: string }>;
+  resolveExceptionPoolItem: (
+    taskId: string,
+    runType: RunType,
+    sampleId: string,
+    identity: { annotatorId: string },
+    outKey: string,
+    action: 'adopt_annotator',
+    value: unknown,
+    reason: string,
+  ) => void;
+  getExceptionPool: (
+    taskId: string,
+    runType: RunType,
+    sampleId: string,
+    identity: { annotatorId: string },
+  ) => Record<string, { action?: string }>;
 };
 
 const SEED_MATRIX = [
@@ -110,8 +175,13 @@ function poolItemIdentity(item: ReviewPoolItem): string {
   ].join('::');
 }
 
-async function openMemberManagement(page: Page, taskId: string): Promise<void> {
-  await page.goto(`${TASK_DETAIL_URL}?task_id=${taskId}`);
+async function openMemberManagement(
+  page: Page,
+  taskId: string,
+  progressStage?: 'official',
+): Promise<void> {
+  const stageQuery = progressStage ? `&ap_stage=${progressStage}` : '';
+  await page.goto(`${TASK_DETAIL_URL}?task_id=${taskId}${stageQuery}`);
   await page
     .locator('#workLogPanel')
     .waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
@@ -124,8 +194,9 @@ async function expectMemberPools(
   taskId: string,
   awaiting: number,
   exceptions: number,
+  progressStage?: 'official',
 ): Promise<void> {
-  await openMemberManagement(page, taskId);
+  await openMemberManagement(page, taskId, progressStage);
   await expect.soft(
     page.locator('#disputePoolText'),
     `${taskId} awaiting-arbitration items`,
@@ -194,6 +265,261 @@ function projectLeaderExceptionUrl(sampleId: string): string {
   return '/pages/annotation/annotation-workspace.html'
     + `?task_id=T016&sample_id=${sampleId}&role=project_leader`
     + `&run_type=official_run&annotator_id=${T016_ANNOTATOR}`;
+}
+
+type ReviewPoolIdentity = Pick<
+  ReviewPoolItem,
+  'taskId' | 'runType' | 'sampleId' | 'annotatorId' | 'outKey' | 'key'
+>;
+type DisputeIdentity = readonly [outKey: string, key: string];
+type ArbitrationDecision = {
+  itemId: string;
+  choice: 'adopt_a' | 'adopt_b' | 'reject';
+  value?: unknown;
+  reason: string;
+};
+
+function reviewPoolIdentities(items: ReviewPoolItem[]): ReviewPoolIdentity[] {
+  return items
+    .map(({ taskId, runType, sampleId, annotatorId, outKey, key }) => ({
+      taskId,
+      runType,
+      sampleId,
+      annotatorId,
+      outKey,
+      key,
+    }))
+    .sort((left, right) => poolItemIdentity(left).localeCompare(poolItemIdentity(right)));
+}
+
+function expectedMultiOutputIdentities(
+  identities: readonly DisputeIdentity[],
+): ReviewPoolIdentity[] {
+  return identities
+    .map(([outKey, key]) => ({
+      taskId: 'T891M',
+      runType: 'official_run' as const,
+      sampleId: 'multi-output-review-unit',
+      annotatorId: 'fixture_annotator',
+      outKey,
+      key,
+    }))
+    .sort((left, right) => poolItemIdentity(left).localeCompare(poolItemIdentity(right)));
+}
+
+async function installMultiOutputFixture(page: Page): Promise<void> {
+  await patchDataFile(page, 'task-list.data.js', `
+    var task = JSON.parse(JSON.stringify(
+      window.LabelSuiteTaskListData.tasks.find(function (item) { return item.id === 'T016'; })
+    ));
+    task.id = '${MULTI_OUTPUT_TASK}';
+    task.nameZh = 'Live pool multi-output fixture';
+    task.nameEn = 'Live pool multi-output fixture';
+    task.sourceFile = 'live-pool-multi-output.json';
+    task.outputTypes = ['single_label', 'free_text', 'single_dim'];
+    task.runType = 'official_run';
+    window.LabelSuiteTaskListData.tasks.push(task);
+  `);
+  await patchDataFile(page, 'task-detail.data.js', `
+    var profiles = window.LabelSuiteTaskDetailData.profiles;
+    var profile = JSON.parse(JSON.stringify(profiles.T016));
+    profile.outputs = [
+      JSON.parse(JSON.stringify(profiles.T016.outputs[0])),
+      JSON.parse(JSON.stringify(profiles.T009.outputs[0])),
+      JSON.parse(JSON.stringify(profiles.T004.outputs[0]))
+    ];
+    profile.fieldRoleMap = { text: 'input' };
+    profile.datasetFileName = 'live-pool-multi-output.json';
+    profile.datasetRecords = [{
+      id: '${MULTI_OUTPUT_SAMPLE}',
+      text: 'One disputed unit with three configured output items.'
+    }];
+    profile.reviewerIds = ['${MULTI_OUTPUT_REVIEWER}', '${MULTI_OUTPUT_ARBITER}'];
+    profile.arbiterIds = ['${MULTI_OUTPUT_ARBITER}'];
+    profile.materializedRuns = { official_run: { total: 1 } };
+    profiles.${MULTI_OUTPUT_TASK} = profile;
+  `);
+
+  await page.goto(`${TASK_DETAIL_URL}?task_id=${MULTI_OUTPUT_TASK}`);
+  await page
+    .locator('#workLogPanel')
+    .waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
+  const disputeIds = await page.evaluate(
+    ({ taskId, sampleId, annotatorId, reviewerId, outKeys }) => {
+      const data = (window as unknown as {
+        LabelSuiteAnnotationWorkspaceData: WorkspaceData;
+      }).LabelSuiteAnnotationWorkspaceData;
+      data.markSampleSubmitted(
+        taskId,
+        'annotator',
+        'official_run',
+        sampleId,
+        {
+          previewState: {
+            single_label: { selected: 'positive' },
+            free_text: { text: 'Annotator explanation' },
+            single_dim: { value: 1 },
+          },
+        },
+        '',
+        { annotatorId },
+      );
+      data.markSampleSubmitted(
+        taskId,
+        'reviewer',
+        'official_run',
+        sampleId,
+        {
+          previewState: {
+            single_label: { selected: 'negative' },
+            free_text: { text: 'Reviewer explanation' },
+            single_dim: { value: 5 },
+          },
+          decisions: {
+            single_label: 'modify',
+            free_text: 'modify',
+            single_dim: 'modify',
+          },
+          reasons: {
+            single_label: 'Fixture changes label',
+            free_text: 'Fixture changes text',
+            single_dim: 'Fixture changes score',
+          },
+        },
+        '',
+        { annotatorId, reviewerId },
+      );
+      return data
+        .getDisputeItems(taskId, 'official_run', sampleId, { annotatorId }, outKeys)
+        .map((item) => `${item.outKey}::${item.key}`)
+        .sort();
+    },
+    {
+      taskId: MULTI_OUTPUT_TASK,
+      sampleId: MULTI_OUTPUT_SAMPLE,
+      annotatorId: MULTI_OUTPUT_ANNOTATOR,
+      reviewerId: MULTI_OUTPUT_REVIEWER,
+      outKeys: MULTI_OUTPUT_KEYS,
+    },
+  );
+  expect(disputeIds, 'fixture must create one dispute item per configured output').toEqual([
+    'free_text::free_text',
+    'single_dim::single_dim',
+    'single_label::single_label',
+  ]);
+}
+
+async function expectMultiOutputPoolsAfterReload(
+  page: Page,
+  expected: {
+    awaitingArbitration: readonly DisputeIdentity[];
+    pendingExceptions: readonly DisputeIdentity[];
+  },
+): Promise<void> {
+  await page.reload();
+  await page
+    .locator('#workLogPanel')
+    .waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
+
+  const pools = await readReviewPoolItems(
+    page,
+    MULTI_OUTPUT_TASK,
+    'official_run',
+  );
+  expect(reviewPoolIdentities(pools.awaitingArbitration)).toEqual(
+    expectedMultiOutputIdentities(expected.awaitingArbitration),
+  );
+  expect(reviewPoolIdentities(pools.pendingExceptions)).toEqual(
+    expectedMultiOutputIdentities(expected.pendingExceptions),
+  );
+
+  const units = await page.evaluate(
+    ({ taskId }) => {
+      const data = (window as unknown as {
+        LabelSuiteAnnotationWorkspaceData: WorkspaceData;
+      }).LabelSuiteAnnotationWorkspaceData;
+      return data.listReviewUnits(taskId, 'official_run');
+    },
+    { taskId: MULTI_OUTPUT_TASK },
+  );
+  expect(units).toEqual([
+    {
+      sampleId: MULTI_OUTPUT_SAMPLE,
+      annotatorId: MULTI_OUTPUT_ANNOTATOR,
+      status: 'disputed',
+    },
+  ]);
+  const pendingOutKeys = expected.pendingExceptions.map(([outKey]) => outKey);
+  await expectMemberPools(
+    page,
+    MULTI_OUTPUT_TASK,
+    expected.awaitingArbitration.length,
+    pendingOutKeys.length,
+    'official',
+  );
+  await expectProgressExceptions(
+    page,
+    MULTI_OUTPUT_TASK,
+    'official',
+    pendingOutKeys.map(() => MULTI_OUTPUT_SAMPLE),
+  );
+  const rows = page.getByTestId('final-exception-pool-row');
+  await expect(rows.getByTestId('fep-annotator')).toHaveText(
+    pendingOutKeys.map(() => MULTI_OUTPUT_ANNOTATOR),
+  );
+  await expect(rows.getByTestId('fep-output-type')).toHaveText(pendingOutKeys);
+}
+
+async function submitMultiOutputArbitration(
+  page: Page,
+  decision: ArbitrationDecision,
+): Promise<void> {
+  await page.evaluate(
+    ({ taskId, sampleId, annotatorId, arbiterId, submittedDecision }) => {
+      const data = (window as unknown as {
+        LabelSuiteAnnotationWorkspaceData: WorkspaceData;
+      }).LabelSuiteAnnotationWorkspaceData;
+      data.submitArbitration(
+        taskId,
+        'official_run',
+        sampleId,
+        { annotatorId, reviewerId: arbiterId },
+        [submittedDecision],
+      );
+    },
+    {
+      taskId: MULTI_OUTPUT_TASK,
+      sampleId: MULTI_OUTPUT_SAMPLE,
+      annotatorId: MULTI_OUTPUT_ANNOTATOR,
+      arbiterId: MULTI_OUTPUT_ARBITER,
+      submittedDecision: decision,
+    },
+  );
+}
+
+async function resolveMultiOutputException(page: Page): Promise<void> {
+  await page.evaluate(
+    ({ taskId, sampleId, annotatorId }) => {
+      const data = (window as unknown as {
+        LabelSuiteAnnotationWorkspaceData: WorkspaceData;
+      }).LabelSuiteAnnotationWorkspaceData;
+      data.resolveExceptionPoolItem(
+        taskId,
+        'official_run',
+        sampleId,
+        { annotatorId },
+        'free_text',
+        'adopt_annotator',
+        'Annotator explanation',
+        'Project leader accepts the annotator text',
+      );
+    },
+    {
+      taskId: MULTI_OUTPUT_TASK,
+      sampleId: MULTI_OUTPUT_SAMPLE,
+      annotatorId: MULTI_OUTPUT_ANNOTATOR,
+    },
+  );
 }
 
 test.beforeEach(async ({ page }) => {
@@ -311,45 +637,98 @@ test.describe('Issue #891 — live review pools', () => {
     await expectDashboardDisputed(page, 3);
   });
 
-  test('Member Management and Annotation Progress consume the same public pool query', async ({
+  test('one multi-output unit keeps item identities through every live pool state', async ({
     page,
   }) => {
-    await patchDataFile(page, 'annotation-workspace.data.js', `
-      var data = window.LabelSuiteAnnotationWorkspaceData;
-      data.listReviewPoolItems = function(taskId, runType) {
-        if (taskId !== 'T016' || runType !== 'official_run') {
-          return { awaitingArbitration: [], pendingExceptions: [] };
-        }
-        function item(sampleId) {
-          return {
-            taskId: taskId,
-            runType: runType,
-            sampleId: sampleId,
-            annotatorId: 'kioleemg12',
-            outKey: 'single_label',
-            outputType: 'single_label',
-            key: 'single_label',
-            reviewerIds: ['reviewer_li'],
-            arbiterId: 'reviewer_chen',
-            reason: 'seam fixture',
-            fellAt: '2026-09-23T00:00:00.000Z'
-          };
-        }
-        return {
-          awaitingArbitration: [item('seam-awaiting-01'), item('seam-awaiting-02')],
-          pendingExceptions: [item('seam-exception-01'), item('seam-exception-02')]
-        };
-      };
-    `);
+    await installMultiOutputFixture(page);
 
-    await expectMemberPools(page, 'T016', 2, 2);
-    // The helper now reports four pool items, but Dashboard must stay on its
-    // independent review-unit count instead of displaying 2 + 2 as disputed.
-    await expectDashboardDisputed(page, 3);
-    await expectProgressExceptions(page, 'T016', 'official', [
-      'seam-exception-01',
-      'seam-exception-02',
-    ]);
+    // Mutation guards: the first state fails a per-unit collapse or a
+    // single_label-only derivation; the last two states fail if either the
+    // item-level finalized_by or exception-pool filter is removed.
+    await test.step('all three configured output items initially await arbitration', async () => {
+      await expectMultiOutputPoolsAfterReload(page, {
+        awaitingArbitration: [
+          ['free_text', 'free_text'],
+          ['single_dim', 'single_dim'],
+          ['single_label', 'single_label'],
+        ],
+        pendingExceptions: [],
+      });
+    });
+
+    await test.step('reject moves only the addressed item to pending exceptions', async () => {
+      await submitMultiOutputArbitration(page, {
+        itemId: 'free_text::free_text',
+        choice: 'reject',
+        reason: 'Neither text answer is acceptable',
+      });
+      await expectMultiOutputPoolsAfterReload(page, {
+        awaitingArbitration: [
+          ['single_dim', 'single_dim'],
+          ['single_label', 'single_label'],
+        ],
+        pendingExceptions: [['free_text', 'free_text']],
+      });
+    });
+
+    await test.step('a partially finalized item leaves both live pools', async () => {
+      await submitMultiOutputArbitration(page, {
+        itemId: 'single_dim::single_dim',
+        choice: 'adopt_b',
+        value: 5,
+        reason: 'Adopt the reviewer score',
+      });
+      await expectMultiOutputPoolsAfterReload(page, {
+        awaitingArbitration: [['single_label', 'single_label']],
+        pendingExceptions: [['free_text', 'free_text']],
+      });
+      const finalizedBy = await page.evaluate(
+        ({ taskId, sampleId, annotatorId }) => {
+          const data = (window as unknown as {
+            LabelSuiteAnnotationWorkspaceData: WorkspaceData;
+          }).LabelSuiteAnnotationWorkspaceData;
+          return data.getArbitrationState(
+            taskId,
+            'official_run',
+            sampleId,
+            { annotatorId },
+          )['single_dim::single_dim']?.finalized_by;
+        },
+        {
+          taskId: MULTI_OUTPUT_TASK,
+          sampleId: MULTI_OUTPUT_SAMPLE,
+          annotatorId: MULTI_OUTPUT_ANNOTATOR,
+        },
+      );
+      expect(finalizedBy).toBe('reviewer_chen');
+    });
+
+    await test.step('an exception-pool record removes only its pending item', async () => {
+      await resolveMultiOutputException(page);
+      await expectMultiOutputPoolsAfterReload(page, {
+        awaitingArbitration: [['single_label', 'single_label']],
+        pendingExceptions: [],
+      });
+      const exceptionAction = await page.evaluate(
+        ({ taskId, sampleId, annotatorId }) => {
+          const data = (window as unknown as {
+            LabelSuiteAnnotationWorkspaceData: WorkspaceData;
+          }).LabelSuiteAnnotationWorkspaceData;
+          return data.getExceptionPool(
+            taskId,
+            'official_run',
+            sampleId,
+            { annotatorId },
+          ).free_text?.action;
+        },
+        {
+          taskId: MULTI_OUTPUT_TASK,
+          sampleId: MULTI_OUTPUT_SAMPLE,
+          annotatorId: MULTI_OUTPUT_ANNOTATOR,
+        },
+      );
+      expect(exceptionAction).toBe('adopt_annotator');
+    });
   });
 
   test('adopting A finalizes one item and persists reduced pools after reload', async ({
