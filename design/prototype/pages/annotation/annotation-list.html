@@ -1467,6 +1467,11 @@
      whole output, while arbitration records settle individual dispute
      items, so composite answers are rebuilt from the annotator value plus
      each settled sub-item. */
+  function sameCompositeItem(outKey, left, right) {
+    return window.LabelSuiteAnnotationWorkspaceData.compareOutputAnswer(
+      outKey, [left], [right]).equal;
+  }
+
   function applyFinalizedDisputeItem(outKey, answer, item, resolvedValue) {
     if (item.key === item.outKey) return resolvedValue;
     if (outKey === 'multi_dim') {
@@ -1476,10 +1481,11 @@
       return dims;
     }
     if (Array.isArray(answer)) {
-      var annotatorKey = JSON.stringify(item.annotatorValue);
-      var next = answer.filter(function (entry) { return JSON.stringify(entry) !== annotatorKey; });
+      var next = answer.filter(function (entry) {
+        return !sameCompositeItem(outKey, entry, item.annotatorValue);
+      });
       if (resolvedValue !== null &&
-          !next.some(function (entry) { return JSON.stringify(entry) === JSON.stringify(resolvedValue); })) {
+          !next.some(function (entry) { return sameCompositeItem(outKey, entry, resolvedValue); })) {
         next.push(resolvedValue);
       }
       return next;
