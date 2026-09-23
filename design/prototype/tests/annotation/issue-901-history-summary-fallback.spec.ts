@@ -38,7 +38,36 @@ test.describe('issue #901: structured history summary fallback', () => {
       reviewer_id: REVIEWER,
     };
 
-    await openHistory(page, params);
+    await page.goto(buildWorkspaceUrl(params));
+    /* The demo seeder can write all three events in the same millisecond.
+       Normalize this test fixture's chronology so the responsibility chain
+       deterministically matches the real T014 scenario: submit, modify,
+       then arbitrate. The product behavior under test remains DOM-only. */
+    await page.evaluate(() => {
+      const prefix = 'labelsuite.wsSubmissions.T014::';
+      const sampleId = 'dry-04-dispute-resolved';
+      const times: Record<string, string> = {
+        submitted: '2026-09-23T07:55:00.000Z',
+        modified: '2026-09-23T07:55:01.000Z',
+        adjudicated: '2026-09-23T07:55:02.000Z',
+      };
+      Object.keys(window.localStorage)
+        .filter((key) => key.startsWith(prefix))
+        .forEach((key) => {
+          const bucket = JSON.parse(window.localStorage.getItem(key) || '{}') as Record<
+            string,
+            { history?: Array<{ action: string; at: string }> }
+          >;
+          const entry = bucket[sampleId];
+          if (!entry?.history) return;
+          entry.history.forEach((event) => {
+            if (times[event.action]) event.at = times[event.action];
+          });
+          window.localStorage.setItem(key, JSON.stringify(bucket));
+        });
+    });
+    await page.reload();
+    await page.getByTestId('ws-guideline-tab-history').click();
 
     const modified = historyCard(page, 'modified');
     await expect(modified).toHaveCount(1);
