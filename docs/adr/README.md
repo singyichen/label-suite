@@ -52,6 +52,6 @@ Each ADR follows this structure:
 | [031](031-sequence-tagging-tokenization-contract.md) | Sequence Tagging Tokenization — Versioned Annotation Contract | Superseded | 2026-07-28 |
 | [032](032-user-action-audit-trail.md) | User-Action Audit Trail | Proposed | 2026-08-19 |
 | [033](033-openspec-change-workflow.md) | OpenSpec as the Change Workflow Layer (`specs/` Remains Canon) | Proposed | 2026-08-24 |
-| [034](034-formal-e2e-directory-location.md) | Formal E2E Test Directory — Root `e2e/[module]/` | Proposed | 2026-08-24 |
+| [034](034-formal-e2e-directory-location.md) | Formal E2E Test Directory — Root `e2e/[module]/` | Accepted | 2026-08-24 |
 | [035](035-google-oidc-no-external-idp.md) | Google SSO via Direct OIDC Integration — No External IdP | Accepted | 2026-09-08 |
 | [036](036-oss-repository-split.md) | Open-Source Development in a New `label-suite` Organization Repository — Spec Canon Stays Here | Proposed | 2026-09-17 |
