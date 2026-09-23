@@ -5543,16 +5543,29 @@ function interpolate(template, payload) {
       : Number(agreement).toFixed(2);
   }
 
+  function hasExplicitEmptyTrialRounds() {
+    var taskProfile = window.LabelSuiteTaskDetailData &&
+      window.LabelSuiteTaskDetailData.profiles[TASK_DATA.taskId];
+    var progressProfile = ANNOTATION_PROGRESS_BY_TASK[TASK_DATA.taskId];
+    return Boolean(
+      (taskProfile && Array.isArray(taskProfile.trialRounds) && !taskProfile.trialRounds.length) ||
+      (progressProfile && Array.isArray(progressProfile.rounds) && !progressProfile.rounds.length)
+    );
+  }
+
   function getTrialRounds() {
     if (Array.isArray(TASK_DATA.trialRounds) && TASK_DATA.trialRounds.length) {
       return TASK_DATA.trialRounds.slice();
     }
+    if (hasExplicitEmptyTrialRounds()) {
+      return [];
+    }
     if (TASK_DATA.status === 'draft') {
       return [];
     }
-    /* issue #489/#491: this is the fallback synthetic round for every task
-       that never got a hand-authored TASK_DATA.trialRounds seed (every
-       task except the T001 fixture -- see resetTaskData()'s comment).
+    /* issue #489/#491/#887: this is the fallback synthetic round only for
+       legacy tasks that never got an explicit trial-round field. An explicit
+       empty array is authoritative and must not consume the official pool.
        agreement/annotators now come from computeIaaAlpha() -- the single
        IAA derivation -- instead of TASK_DATA.currentAgreement/
        currentAnnotators, which resetRunProgressData() always nulls before
@@ -5730,9 +5743,15 @@ function interpolate(template, payload) {
     if (!rounds.length) {
       var empty = document.createElement('p');
       empty.className = 'status-hint';
-      empty.textContent = state.lang === 'zh'
-        ? '尚未建立任何試標回合。先建立 R1 再開始追蹤一致性。'
-        : 'No trial rounds yet. Create R1 first to start tracking agreement.';
+      if (hasExplicitEmptyTrialRounds()) {
+        empty.textContent = state.lang === 'zh'
+          ? '尚未建立任何試標回合。'
+          : 'No trial rounds were created.';
+      } else {
+        empty.textContent = state.lang === 'zh'
+          ? '尚未建立任何試標回合。先建立 R1 再開始追蹤一致性。'
+          : 'No trial rounds yet. Create R1 first to start tracking agreement.';
+      }
       mount.appendChild(empty);
       return;
     }
@@ -6004,11 +6023,13 @@ function interpolate(template, payload) {
       (function() {
         var rounds = getTrialRounds();
         if (!rounds.length) {
+          var isMaterializedOfficialPool = hasExplicitEmptyTrialRounds() &&
+            (taskStageKey === 'official' || taskStageKey === 'completed');
           return [{
-            label: t('totalSamplesLabel'),
+            label: t(isMaterializedOfficialPool ? 'officialReserveLabel' : 'totalSamplesLabel'),
             valueText: TASK_DATA.datasetTotal + unitText,
             count: Number(TASK_DATA.datasetTotal) || 0,
-            color: '#94A3B8'
+            color: isMaterializedOfficialPool ? '#14B8A6' : '#94A3B8'
           }];
         }
         var segments = rounds.map(function(round) {
