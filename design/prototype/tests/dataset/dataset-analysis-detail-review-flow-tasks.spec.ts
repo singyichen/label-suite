@@ -14,8 +14,8 @@ const DETAIL_URL = '/pages/dataset/dataset-analysis-detail.html';
 
 const REVIEW_FLOW_TASKS: Array<{ taskId: string; title: string }> = [
   { taskId: 'T014', title: '審核流程示範：試標' },
-  { taskId: 'T015', title: '審核流程示範：正式標記（單一審核員）' },
-  { taskId: 'T016', title: '審核流程示範：正式標記（三審核員多數決）' },
+  { taskId: 'T015', title: '審核流程示範：正式標記（基礎審核）' },
+  { taskId: 'T016', title: '審核流程示範：正式標記（輪派、仲裁與最終例外）' },
 ];
 
 test.describe('Dataset detail — review-flow demo tasks (T014-T016) are reachable', () => {
