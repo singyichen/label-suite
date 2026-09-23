@@ -3694,7 +3694,7 @@
     T016: {
       rounds: [],
       official: {
-        id: 'official', status: 'active', result: null, iaa: 0.62,
+        id: 'official', status: 'active', result: null, iaa: null,
         totalSamples: 5, completedSamples: 5, avgSpeed: 5.5,
         remainingEta: '-', remainingEtaEn: '-',
         members: [
@@ -5522,25 +5522,29 @@ function interpolate(template, payload) {
     return outputs.length ? outputs[0].type : null;
   }
 
-  /* Single call site every trial-round consumer below reads through --
+  /* Every task-detail IAA consumer reads through this shared derivation --
      never re-implements the alpha formula itself (that lives only in
-     computeIaaAlpha()). Trial rounds are always the dry_run stage, so
-     runType is hardcoded here rather than threaded through as a param. */
-  function getPrimaryIaaResult() {
+     computeIaaAlpha()). Trial-round consumers rely on the dry_run default;
+     stage-aware consumers pass their selected run type explicitly. */
+  function getPrimaryIaaResult(runType) {
     var outKey = getPrimaryIaaOutKey();
     if (!outKey || !window.LabelSuiteAnnotationWorkspaceData) {
       return { computable: false, reason: 'unknown_task', outKey: outKey };
     }
-    return window.LabelSuiteAnnotationWorkspaceData.computeIaaAlpha(TASK_DATA.taskId, 'dry_run', outKey);
+    return window.LabelSuiteAnnotationWorkspaceData.computeIaaAlpha(TASK_DATA.taskId, runType || 'dry_run', outKey);
   }
 
-  /* issue #491: renders "N/A" instead of coercing a not-yet-computable
-     alpha to 0.00, which reads as "total disagreement" rather than "not
-     enough marked data yet". */
+  /* Preserve the shared IAA result's three states: unsupported outputs are
+     not applicable, supported outputs without enough data are not
+     computable, and numeric alpha values are formatted for display. */
   function formatIaaValue(agreement) {
-    return (agreement === null || agreement === undefined)
-      ? t('iaaNotComputableShort')
-      : Number(agreement).toFixed(2);
+    if (agreement === undefined) return '-';
+    return agreement === null ? t('iaaNotComputableShort') : Number(agreement).toFixed(2);
+  }
+
+  function getIaaAlphaValue(result) {
+    if (!result || result.reason === 'unsupported_output_type') return undefined;
+    return result.computable ? result.alpha : null;
   }
 
   function hasExplicitEmptyTrialRounds() {
@@ -7985,6 +7989,7 @@ function getTaskTypeLabel() {
 
   function renderProgressSummary() {
     var stageData = getProgressStageData();
+    var iaaResult = getPrimaryIaaResult(getSelectedRunType());
     var unassignedCount = getAssignmentCount(getUnassignedForStage(state.progressStage));
     var excludedCount = getAssignmentCount(getExcludedForStage(state.progressStage));
     var effectiveTotal = Math.max(0, stageData.totalSamples - excludedCount);
@@ -8001,7 +8006,9 @@ function getTaskTypeLabel() {
     setText('progressMetricRateValue', rateText);
     setText('progressMetricSpeedValue', formatProgressSpeed(stageData.avgSpeed));
     setText('progressMetricEtaValue', state.lang === 'zh' ? stageData.remainingEta : stageData.remainingEtaEn);
-    setText('progressMetricIAAValue', (state.progressStage !== 'official' && unassignedCount) ? t('unassignedIaaBlocked') : (stageData.iaa != null ? stageData.iaa.toFixed(2) : '-'));
+    setText('progressMetricIAAValue', (state.progressStage !== 'official' && unassignedCount)
+      ? t('unassignedIaaBlocked')
+      : formatIaaValue(getIaaAlphaValue(iaaResult)));
   }
 
   function renderMemberProgressTable() {
