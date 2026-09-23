@@ -482,8 +482,9 @@
       padding: 3px 12px; font-family: monospace; min-width: 80px; text-align: center;
     }
     .annotator-row-actions { display: flex; gap: 6px; margin-left: auto; }
-    /* Issue #400: marks a FINALIZED unit's answer as the reviewer-majority-
-       converged value, not the annotator's original one. */
+    /* Issue #400/#888: marks a review unit whose displayed outcome came
+       from arbitration or the project leader, rather than its original
+       annotator answer. */
     .review-overwritten-badge {
       font-size: 11px; color: var(--color-warning);
       background: var(--color-warning-soft-bg);
@@ -772,7 +773,12 @@
       reviewUnitFinalized: '已定稿',
       reviewFreeTextStats: '自由文本任務 — 請並列比對各標記員結果',
       reviewBypassPill: window.LabelSuiteSharedSidebar.BYPASS_WORDING.zh.answer,
-      reviewOverwrittenBadge: '已由審核多數決覆寫',
+      reviewFinalizationArbitrationAdoptB: '仲裁採 B 定稿',
+      reviewFinalizationPlCustom: 'PL 自訂答案定稿',
+      reviewFinalizationPlAdoptAnnotator: 'PL 採標記員答案定稿',
+      reviewFinalizationPlAdoptReviewer: 'PL 採審核員答案定稿',
+      reviewFinalizationPlExclude: 'PL 已排除資料',
+      reviewFinalizationLegacy: '定稿值已覆寫',
       reviewNoAnswer: '（無）',
       textExpandLabel: '展開全文',
       textCollapseLabel: '收合',
@@ -843,7 +849,12 @@
       reviewUnitFinalized: 'Finalized',
       reviewFreeTextStats: 'Free-text task — compare annotator answers side by side',
       reviewBypassPill: window.LabelSuiteSharedSidebar.BYPASS_WORDING.en.answer,
-      reviewOverwrittenBadge: 'Overwritten by reviewer majority',
+      reviewFinalizationArbitrationAdoptB: 'Finalized by arbitration adopting B',
+      reviewFinalizationPlCustom: 'Finalized with PL custom answer',
+      reviewFinalizationPlAdoptAnnotator: 'Finalized by PL adopting annotator answer',
+      reviewFinalizationPlAdoptReviewer: 'Finalized by PL adopting reviewer answer',
+      reviewFinalizationPlExclude: 'Excluded by PL',
+      reviewFinalizationLegacy: 'Finalized value overwritten',
       reviewNoAnswer: '(none)',
       textExpandLabel: 'Show full text',
       textCollapseLabel: 'Collapse',
@@ -1451,39 +1462,120 @@
     });
   }
 
-  /* A FINALIZED unit's dispute items may have converged (or been arbiter-
-     finalized) away from the annotator's original scalar answer (issue
-     #400): the workspace's own finalized card already shows that converged
-     value, so the list must read the same source instead of freezing on the
-     annotator's original mockRow answer. Reuses the shared dispute-
-     resolution algorithm (annotation-workspace.data.js) so the two never
-     drift. Only scalar-shaped output types (item.key === item.outKey, e.g.
-     single_label/single_dim) are covered -- composite types diff per
-     sub-part and keep showing the annotator's answer unchanged. Returns
-     null when nothing was overwritten. */
-  function getFinalizedOverwrites(profile, context, recordId, identity) {
+  /* A FINALIZED unit's displayed answers must follow its per-output
+     responsibility chain (issues #400/#888). PL exception records settle a
+     whole output, while arbitration records settle individual dispute
+     items, so composite answers are rebuilt from the annotator value plus
+     each settled sub-item. */
+  function sameCompositeItem(outKey, left, right) {
+    return window.LabelSuiteAnnotationWorkspaceData.compareOutputAnswer(
+      outKey, [left], [right]).equal;
+  }
+
+  function applyFinalizedDisputeItem(outKey, answer, item, resolvedValue) {
+    if (item.key === item.outKey) return resolvedValue;
+    if (outKey === 'multi_dim') {
+      var dims = {};
+      Object.keys(answer || {}).forEach(function (name) { dims[name] = answer[name]; });
+      dims[item.key] = resolvedValue;
+      return dims;
+    }
+    if (Array.isArray(answer)) {
+      var next = answer.filter(function (entry) {
+        return !sameCompositeItem(outKey, entry, item.annotatorValue);
+      });
+      if (resolvedValue !== null &&
+          !next.some(function (entry) { return sameCompositeItem(outKey, entry, resolvedValue); })) {
+        next.push(resolvedValue);
+      }
+      return next;
+    }
+    return answer;
+  }
+
+  function getFinalizedOverwrites(profile, context, recordId, identity, originalAnswers) {
     var data = window.LabelSuiteAnnotationWorkspaceData;
     var items = data.getDisputeItems(profile.id, context.runType, recordId, identity, profile.outputTypes);
-    if (!items.length) return null;
     var reviewerCount = data.readReviewerSubmissions(profile.id, context.runType, recordId, identity).length;
     var arbState = data.getArbitrationState(profile.id, context.runType, recordId, identity);
+    var exceptionPool = data.getExceptionPool(profile.id, context.runType, recordId, identity);
     var overwrites = null;
+    profile.outputTypes.forEach(function (outKey) {
+      var poolRecord = exceptionPool[outKey];
+      if (poolRecord && poolRecord.action !== 'exclude_from_dataset' &&
+          Object.prototype.hasOwnProperty.call(poolRecord, 'finalized_value')) {
+        overwrites = overwrites || {};
+        overwrites[outKey] = poolRecord.finalized_value;
+      }
+    });
     items.forEach(function (item) {
-      if (item.key !== item.outKey) return;
+      var poolRecord = exceptionPool[item.outKey];
+      if (poolRecord && poolRecord.action !== 'exclude_from_dataset' &&
+          Object.prototype.hasOwnProperty.call(poolRecord, 'finalized_value')) {
+        return;
+      }
       var resolvedValue;
-      var convergence = data.resolveDisputeConvergence(item, reviewerCount);
-      if (convergence.converged) {
-        resolvedValue = convergence.value;
+      var stored = arbState[item.outKey + '::' + item.key];
+      if (stored && stored.finalized_by) {
+        resolvedValue = stored.finalized_value;
       } else {
-        var stored = arbState[item.outKey + '::' + item.key];
-        if (stored && stored.finalized_by) resolvedValue = stored.finalized_value;
+        var convergence = data.resolveDisputeConvergence(item, reviewerCount);
+        if (convergence.converged) resolvedValue = convergence.value;
       }
       if (resolvedValue !== undefined) {
         overwrites = overwrites || {};
-        overwrites[item.outKey] = resolvedValue;
+        var currentAnswer = Object.prototype.hasOwnProperty.call(overwrites, item.outKey)
+          ? overwrites[item.outKey]
+          : originalAnswers[item.outKey];
+        overwrites[item.outKey] = applyFinalizedDisputeItem(
+          item.outKey, currentAnswer, item, resolvedValue);
       }
     });
     return overwrites;
+  }
+
+  function getFinalizationSourceKeys(profile, context, recordId, identity, overwrites) {
+    var data = window.LabelSuiteAnnotationWorkspaceData;
+    var exceptionPool = data.getExceptionPool(profile.id, context.runType, recordId, identity);
+    var exceptionSourceKeys = {
+      custom_answer: 'reviewFinalizationPlCustom',
+      adopt_annotator: 'reviewFinalizationPlAdoptAnnotator',
+      adopt_reviewer: 'reviewFinalizationPlAdoptReviewer',
+      exclude_from_dataset: 'reviewFinalizationPlExclude'
+    };
+    var sourceKeys = {};
+    profile.outputTypes.forEach(function (outKey) {
+      var poolRecord = exceptionPool[outKey];
+      if (poolRecord && exceptionSourceKeys[poolRecord.action]) {
+        sourceKeys[outKey] = exceptionSourceKeys[poolRecord.action];
+      }
+    });
+    var arbState = data.getArbitrationState(profile.id, context.runType, recordId, identity);
+    var itemIds = Object.keys(arbState);
+    profile.outputTypes.forEach(function (outKey) {
+      if (sourceKeys[outKey]) return;
+      var hasAdoptB = false;
+      var hasLegacyFinalization = false;
+      itemIds.forEach(function (itemId) {
+        if (itemId.indexOf(outKey + '::') !== 0) return;
+        var stored = arbState[itemId];
+        if (!stored || !stored.finalized_by) return;
+        var votes = Array.isArray(stored.votes) ? stored.votes : [];
+        var finalizedVote = null;
+        votes.forEach(function (vote) {
+          if (vote.arbiter_id === stored.finalized_by) finalizedVote = vote;
+        });
+        if (finalizedVote && finalizedVote.choice === 'adopt_b') hasAdoptB = true;
+        if (!finalizedVote) hasLegacyFinalization = true;
+      });
+      if (hasAdoptB) {
+        sourceKeys[outKey] = 'reviewFinalizationArbitrationAdoptB';
+      } else if (hasLegacyFinalization && overwrites &&
+                 Object.prototype.hasOwnProperty.call(overwrites, outKey)) {
+        sourceKeys[outKey] = 'reviewFinalizationLegacy';
+      }
+    });
+    return Object.keys(sourceKeys).length ? sourceKeys : null;
   }
 
   function buildReviewStatsText(profile, mockRows) {
@@ -1544,11 +1636,12 @@
     wrap.className = 'annotator-answer';
     wrap.setAttribute('data-testid', 'list-review-answer');
     outer.appendChild(wrap);
-    var overwrittenOutKeys = [];
+    var sourceBadges = [];
     profile.outputTypes.forEach(function (outKey) {
       var tagSpan = document.createElement('span');
       var colorClass = dimColorClass(outKey, item.rowIdx, item.mockRows);
       tagSpan.className = 'annotator-result-tag' + (colorClass ? ' ' + colorClass : '');
+      tagSpan.setAttribute('data-output-key', outKey);
       var bypassed = !!(item.mockRow.bypass && item.mockRow.bypass[outKey]);
       var overwritten = !bypassed && item.overwrites &&
         Object.prototype.hasOwnProperty.call(item.overwrites, outKey);
@@ -1557,15 +1650,21 @@
         : (item.mockRow.answers ? item.mockRow.answers[outKey] : undefined);
       tagSpan.textContent = bypassed ? t('reviewBypassPill') : formatCompactAnswer(outKey, answer);
       wrap.appendChild(tagSpan);
-      if (overwritten) overwrittenOutKeys.push(outKey);
+      var sourceKey = item.finalizationSourceKeys && item.finalizationSourceKeys[outKey];
+      if (sourceKey) {
+        var badge = document.createElement('span');
+        badge.className = 'review-overwritten-badge';
+        badge.setAttribute('data-testid', 'list-review-finalization-source-badge');
+        badge.setAttribute('data-output-key', outKey);
+        var legacyBadge = document.createElement('span');
+        legacyBadge.setAttribute('data-testid', 'list-review-overwritten-badge');
+        legacyBadge.setAttribute('data-output-key', outKey);
+        legacyBadge.textContent = t(sourceKey);
+        badge.appendChild(legacyBadge);
+        sourceBadges.push(badge);
+      }
     });
-    if (overwrittenOutKeys.length) {
-      var badge = document.createElement('span');
-      badge.className = 'review-overwritten-badge';
-      badge.setAttribute('data-testid', 'list-review-overwritten-badge');
-      badge.textContent = t('reviewOverwrittenBadge');
-      outer.appendChild(badge);
-    }
+    sourceBadges.forEach(function (badge) { outer.appendChild(badge); });
     return outer;
   }
 
@@ -1697,6 +1796,10 @@
           profile.id, context.runType, recordId, identity, profile.outputTypes) || REVIEW_UNIT_STATUS.PENDING;
         var submittedAt = data.getSampleSubmittedAt(
           profile.id, 'annotator', context.runType, recordId, identity);
+        var overwrites = status === REVIEW_UNIT_STATUS.FINALIZED
+          ? getFinalizedOverwrites(
+            profile, context, recordId, identity, mockRow.answers || {})
+          : null;
         units.push({
           recordId: recordId,
           annotator: mockRow.annotator,
@@ -1709,9 +1812,9 @@
           statusLabel: reviewUnitStatusText(status),
           completedAt: submittedAt ? formatCompletedAt(submittedAt) : '-',
           text: text,
-          overwrites: status === REVIEW_UNIT_STATUS.FINALIZED
-            ? getFinalizedOverwrites(profile, context, recordId, identity)
-            : null
+          overwrites: overwrites,
+          finalizationSourceKeys: getFinalizationSourceKeys(
+            profile, context, recordId, identity, overwrites)
         });
       });
     });

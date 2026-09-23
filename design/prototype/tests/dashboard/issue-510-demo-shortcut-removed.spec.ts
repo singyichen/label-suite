@@ -27,8 +27,8 @@ const DASHBOARD_URL = '/pages/dashboard/dashboard.html';
 const DEMO_SHORTCUT_NAME = /審核流程示範|Review Flow Demo/;
 const DEMO_TASK_NAMES = [
   '審核流程示範：試標',
-  '審核流程示範：正式標記（單一審核員）',
-  '審核流程示範：正式標記（三審核員多數決）',
+  '審核流程示範：正式標記（基礎審核）',
+  '審核流程示範：正式標記（輪派、仲裁與最終例外）',
 ];
 
 test.describe('Dashboard — PL demo shortcut removed (issue #510)', () => {
