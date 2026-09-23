@@ -4509,21 +4509,38 @@
     return task && task.runType ? task.runType : null;
   }
 
-  function getReviewFlowLabel(submission) {
-    var previewState = submission && submission.previewState;
-    var outputState = previewState && previewState.single_label;
-    return outputState ? outputState.selected : undefined;
+  /* Keep the review-flow adapter config-driven: the task profile selects the
+     output keys and the shared data layer owns conversion/comparison for each
+     output type. The result page only carries that normalized public shape. */
+  function getReviewFlowAnswers(data, outputTypes, submission) {
+    var answers = {};
+    outputTypes.forEach(function(outKey) {
+      answers[outKey] = data.convertSubmissionAnswer(outKey, submission || {});
+    });
+    return answers;
   }
 
-  function getReviewFlowDecision(submission, annotatorLabel) {
-    var decisions = submission && submission.decisions;
-    var decision = decisions && decisions.single_label;
-    if (decision === 'approve') return 'approved';
-    if (decision === 'modify') return 'modified';
-    if (decision === 'bypass') return 'bypass';
-    var reviewerLabel = getReviewFlowLabel(submission);
-    if (reviewerLabel === undefined) return 'bypass';
-    return reviewerLabel === annotatorLabel ? 'approved' : 'modified';
+  function buildReviewFlowResultValue(outputTypes, answers) {
+    return {
+      outputAnswers: outputTypes.map(function(outKey) {
+        return { outKey: outKey, answer: answers[outKey] };
+      })
+    };
+  }
+
+  function getReviewFlowDecision(data, submission, outputTypes, annotatorAnswers, reviewerAnswers) {
+    var decisions = (submission && submission.decisions) || {};
+    var explicit = outputTypes.map(function(outKey) { return decisions[outKey]; }).filter(Boolean);
+    if (explicit.indexOf('modify') !== -1) return 'modified';
+    if (explicit.indexOf('bypass') !== -1) return 'bypass';
+    if (explicit.length === outputTypes.length && explicit.every(function(decision) { return decision === 'approve'; })) {
+      return 'approved';
+    }
+    if (!outputTypes.length) return 'bypass';
+    var changed = outputTypes.some(function(outKey) {
+      return !data.compareOutputAnswer(outKey, annotatorAnswers[outKey], reviewerAnswers[outKey]).equal;
+    });
+    return changed ? 'modified' : 'approved';
   }
 
   function getReviewFlowArbitration(data, taskId, runType, sampleId, annotatorId) {
@@ -4542,31 +4559,33 @@
     };
   }
 
-  function buildReviewFlowAnnotation(data, taskId, runType, unit, assignedReviewerId) {
+  function buildReviewFlowAnnotation(data, taskId, runType, outputTypes, unit, assignedReviewerId) {
     var identity = { annotatorId: unit.annotatorId };
     var annotatorSubmission = data.getSubmission(taskId, 'annotator', runType, unit.sampleId, identity);
-    var annotatorLabel = getReviewFlowLabel(annotatorSubmission);
+    var annotatorAnswers = getReviewFlowAnswers(data, outputTypes, annotatorSubmission);
     var reviewerSubmissions = data.readReviewerSubmissions(taskId, runType, unit.sampleId, identity);
     var ownerSubmission = reviewerSubmissions.filter(function(submission) {
       return submission.reviewerId === assignedReviewerId;
     })[0] || reviewerSubmissions[0];
     var annotation = {
       annotator: unit.annotatorId,
-      value: { labels: annotatorLabel === undefined ? [] : [annotatorLabel] },
+      value: buildReviewFlowResultValue(outputTypes, annotatorAnswers),
       submittedAt: data.getSampleSubmittedAt(taskId, 'annotator', runType, unit.sampleId, identity) || '',
       reviewStatus: unit.status || 'pending',
       reviews: []
     };
     if (ownerSubmission) {
-      var decision = getReviewFlowDecision(ownerSubmission.answers, annotatorLabel);
+      var reviewerAnswers = getReviewFlowAnswers(data, outputTypes, ownerSubmission.answers);
+      var decision = getReviewFlowDecision(
+        data, ownerSubmission.answers, outputTypes, annotatorAnswers, reviewerAnswers
+      );
       var review = {
         reviewer: ownerSubmission.reviewerId,
         decision: decision,
         reviewedAt: ownerSubmission.submittedAt || ''
       };
       if (decision === 'modified') {
-        var reviewerLabel = getReviewFlowLabel(ownerSubmission.answers);
-        review.result = { labels: reviewerLabel === undefined ? [] : [reviewerLabel] };
+        review.result = buildReviewFlowResultValue(outputTypes, reviewerAnswers);
       }
       annotation.reviews.push(review);
     }
@@ -4579,8 +4598,10 @@
     var data = window.LabelSuiteAnnotationWorkspaceData;
     var runType = getReviewFlowRunType(taskId);
     if (!data || !runType) return [];
-    var profiles = (window.LabelSuiteTaskDetailData && window.LabelSuiteTaskDetailData.profiles) || {};
-    var records = (profiles[taskId] && profiles[taskId].datasetRecords) || [];
+    var profile = data.resolveTaskProfile(taskId);
+    if (!profile) return [];
+    var records = profile.datasetRecords || [];
+    var outputTypes = (profile.outputs || []).map(function(output) { return output.type; });
     var units = data.listReviewUnits(taskId, runType);
     var assignmentByUnit = {};
     data.taskReviewAssignments(taskId, runType, units.map(function(unit) {
@@ -4612,6 +4633,7 @@
             data,
             taskId,
             runType,
+            outputTypes,
             unit,
             assignmentByUnit[unit.sampleId + '::' + unit.annotatorId]
           );
@@ -8979,9 +9001,34 @@ function getTaskTypeLabel() {
       .trim();
   }
 
+  /* Review-flow rows carry CompactAnswer values produced by the shared data
+     adapter. Render that normalized shape structurally so new configured
+     outputs do not require another output-type switch on this page. */
+  function formatReviewFlowAnswer(answer, lang) {
+    if (answer === undefined || answer === null || answer === '') return '';
+    if (Array.isArray(answer)) {
+      return answer.map(function(item) { return formatReviewFlowAnswer(item, lang); })
+        .filter(Boolean)
+        .join(', ');
+    }
+    if (typeof answer === 'object') {
+      return Object.keys(answer).map(function(key) {
+        var value = formatReviewFlowAnswer(answer[key], lang);
+        return value ? key + '=' + value : '';
+      }).filter(Boolean).join(', ');
+    }
+    return localizeResultText(String(answer), lang);
+  }
+
   function getAnnotationResultDisplay(annotation, lang) {
     var v = annotation.value;
     if (!v) return { tags: ['-'], colorClass: '' };
+    if (Array.isArray(v.outputAnswers)) {
+      var configuredAnswers = v.outputAnswers.map(function(output) {
+        return formatReviewFlowAnswer(output.answer, lang);
+      }).filter(Boolean);
+      return { tags: [configuredAnswers.length ? configuredAnswers.join(' · ') : '-'], colorClass: '' };
+    }
     if (v.resultText) {
       return { tags: [localizeResultText(v.resultText, lang)], colorClass: '' };
     }
