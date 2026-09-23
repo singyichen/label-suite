@@ -1108,6 +1108,7 @@
       padding: 2px 8px 2px 28px; font-size: 12px; color: var(--color-ink-muted);
     }
     .ar-history-role { flex-shrink: 0; font-weight: 600; }
+    .ar-history-output { flex-shrink: 0; color: var(--color-ink); }
     .ar-history-time { margin-left: auto; flex-shrink: 0; }
     .badge-ar-submitted { color: var(--color-success); background: var(--color-success-bg); border-color: var(--color-success-border); }
     .badge-ar-draft { color: var(--color-ink-muted); background: var(--color-slate-50); border-color: var(--color-border); }
@@ -4528,35 +4529,36 @@
     };
   }
 
-  function getReviewFlowDecision(data, submission, outputTypes, annotatorAnswers, reviewerAnswers) {
+  function getReviewFlowOutputDecision(data, submission, outKey, annotatorAnswer, reviewerAnswer) {
     var decisions = (submission && submission.decisions) || {};
-    var explicit = outputTypes.map(function(outKey) { return decisions[outKey]; }).filter(Boolean);
-    if (explicit.indexOf('modify') !== -1) return 'modified';
-    if (explicit.indexOf('bypass') !== -1) return 'bypass';
-    if (explicit.length === outputTypes.length && explicit.every(function(decision) { return decision === 'approve'; })) {
-      return 'approved';
-    }
-    if (!outputTypes.length) return 'bypass';
-    var changed = outputTypes.some(function(outKey) {
-      return !data.compareOutputAnswer(outKey, annotatorAnswers[outKey], reviewerAnswers[outKey]).equal;
-    });
-    return changed ? 'modified' : 'approved';
+    var decision = decisions[outKey];
+    if (decision === 'approve') return 'approved';
+    if (decision === 'modify') return 'modified';
+    if (decision === 'bypass') return 'bypass';
+    if (reviewerAnswer === undefined || reviewerAnswer === null) return 'bypass';
+    return data.compareOutputAnswer(outKey, annotatorAnswer, reviewerAnswer).equal ? 'approved' : 'modified';
   }
 
-  function getReviewFlowArbitration(data, taskId, runType, sampleId, annotatorId) {
+  function getReviewFlowArbitrations(data, taskId, runType, sampleId, annotatorId, outputTypes) {
     var stateByItem = data.getArbitrationState(taskId, runType, sampleId, { annotatorId: annotatorId });
-    var votes = [];
-    Object.keys(stateByItem).forEach(function(itemId) {
-      (stateByItem[itemId].votes || []).forEach(function(vote) { votes.push(vote); });
+    var events = [];
+    outputTypes.forEach(function(outKey) {
+      Object.keys(stateByItem).filter(function(itemId) {
+        return itemId.indexOf(outKey + '::') === 0;
+      }).sort().forEach(function(itemId) {
+        (stateByItem[itemId].votes || []).slice().sort(function(a, b) {
+          return String(a.voted_at || '').localeCompare(String(b.voted_at || ''));
+        }).forEach(function(vote) {
+          events.push({
+            outputKey: outKey,
+            arbiter: vote.arbiter_id,
+            pick: vote.choice === 'adopt_a' ? 'A' : (vote.choice === 'adopt_b' ? 'B' : 'reject'),
+            decidedAt: vote.voted_at || ''
+          });
+        });
+      });
     });
-    if (!votes.length) return null;
-    votes.sort(function(a, b) { return String(a.voted_at || '').localeCompare(String(b.voted_at || '')); });
-    var vote = votes[votes.length - 1];
-    return {
-      arbiter: vote.arbiter_id,
-      pick: vote.choice === 'adopt_a' ? 'A' : (vote.choice === 'adopt_b' ? 'B' : 'reject'),
-      decidedAt: vote.voted_at || ''
-    };
+    return events;
   }
 
   function buildReviewFlowAnnotation(data, taskId, runType, outputTypes, unit, assignedReviewerId) {
@@ -4576,21 +4578,25 @@
     };
     if (ownerSubmission) {
       var reviewerAnswers = getReviewFlowAnswers(data, outputTypes, ownerSubmission.answers);
-      var decision = getReviewFlowDecision(
-        data, ownerSubmission.answers, outputTypes, annotatorAnswers, reviewerAnswers
-      );
-      var review = {
-        reviewer: ownerSubmission.reviewerId,
-        decision: decision,
-        reviewedAt: ownerSubmission.submittedAt || ''
-      };
-      if (decision === 'modified') {
-        review.result = buildReviewFlowResultValue(outputTypes, reviewerAnswers);
-      }
-      annotation.reviews.push(review);
+      outputTypes.forEach(function(outKey) {
+        var decision = getReviewFlowOutputDecision(
+          data, ownerSubmission.answers, outKey, annotatorAnswers[outKey], reviewerAnswers[outKey]
+        );
+        var review = {
+          outputKey: outKey,
+          reviewer: ownerSubmission.reviewerId,
+          decision: decision,
+          reviewedAt: ownerSubmission.submittedAt || ''
+        };
+        if (decision === 'modified') {
+          review.result = buildReviewFlowResultValue([outKey], reviewerAnswers);
+        }
+        annotation.reviews.push(review);
+      });
     }
-    var arbitration = getReviewFlowArbitration(data, taskId, runType, unit.sampleId, unit.annotatorId);
-    if (arbitration) annotation.arbitration = arbitration;
+    annotation.arbitrations = getReviewFlowArbitrations(
+      data, taskId, runType, unit.sampleId, unit.annotatorId, outputTypes
+    );
     return annotation;
   }
 
@@ -9085,9 +9091,16 @@ function getTaskTypeLabel() {
     return map[reviewStatus] || map.pending;
   }
 
+  function getAnnotationArbitrations(annotation) {
+    if (Array.isArray(annotation.arbitrations)) return annotation.arbitrations;
+    return annotation.arbitration ? [annotation.arbitration] : [];
+  }
+
   function annotationHasReviewer(annotation, reviewer) {
     var inReviews = (annotation.reviews || []).some(function(review) { return review.reviewer === reviewer; });
-    return inReviews || !!(annotation.arbitration && annotation.arbitration.arbiter === reviewer);
+    return inReviews || getAnnotationArbitrations(annotation).some(function(arbitration) {
+      return arbitration.arbiter === reviewer;
+    });
   }
 
   /* D1: conditions come from the caller -- the export button path builds
@@ -9124,10 +9137,12 @@ function getTaskTypeLabel() {
         (a.reviews || []).forEach(function(review) {
           if (!seen[review.reviewer]) { seen[review.reviewer] = true; list.push(review.reviewer); }
         });
-        if (a.arbitration && !seen[a.arbitration.arbiter]) {
-          seen[a.arbitration.arbiter] = true;
-          list.push(a.arbitration.arbiter);
-        }
+        getAnnotationArbitrations(a).forEach(function(arbitration) {
+          if (!seen[arbitration.arbiter]) {
+            seen[arbitration.arbiter] = true;
+            list.push(arbitration.arbiter);
+          }
+        });
       });
     });
     return list;
@@ -9198,15 +9213,24 @@ function getTaskTypeLabel() {
     sel.value = current;
   }
 
-  function buildArHistoryLine(lineClass, roleText, nameText, decisionText, timeText) {
+  function buildArHistoryLine(lineClass, roleText, nameText, decisionText, timeText, outputKey) {
     var line = document.createElement('div');
     line.className = 'ar-history-line ' + lineClass;
+    var configuredOutputs = TASK_DATA.outputs || [];
+    var resolvedOutputKey = outputKey || (configuredOutputs.length === 1 ? configuredOutputs[0].type : '');
+    if (resolvedOutputKey) line.setAttribute('data-output-key', resolvedOutputKey);
     var role = document.createElement('span');
     role.className = 'ar-history-role';
     role.textContent = roleText;
     var name = document.createElement('span');
     name.className = 'ar-history-name';
     name.textContent = nameText;
+    var output = null;
+    if (outputKey && configuredOutputs.length > 1) {
+      output = document.createElement('span');
+      output.className = 'ar-history-output';
+      output.textContent = getOutputTypeDisplayLabel(outputKey);
+    }
     var decision = document.createElement('span');
     decision.className = 'ar-history-decision';
     decision.textContent = decisionText;
@@ -9215,6 +9239,7 @@ function getTaskTypeLabel() {
     time.textContent = timeText || '-';
     line.appendChild(role);
     line.appendChild(name);
+    if (output) line.appendChild(output);
     line.appendChild(decision);
     line.appendChild(time);
     return line;
@@ -9228,24 +9253,26 @@ function getTaskTypeLabel() {
           ? t('arHistoryBypass')
           : t('arHistoryAgree');
       var reviewLine = buildArHistoryLine(
-        'ar-history-review', t('arHistoryReviewerRole'), reviewerDisplayName(review.reviewer), decisionText, review.reviewedAt
+        'ar-history-review', t('arHistoryReviewerRole'), reviewerDisplayName(review.reviewer), decisionText,
+        review.reviewedAt, review.outputKey
       );
       reviewLine.setAttribute('data-annotator', annotation.annotator);
       container.appendChild(reviewLine);
     });
-    if (annotation.arbitration) {
+    getAnnotationArbitrations(annotation).forEach(function(arbitration) {
       var arbitrationLine = buildArHistoryLine(
         'ar-history-arbitration',
         t('arHistoryArbiterRole'),
-        reviewerDisplayName(annotation.arbitration.arbiter),
-        annotation.arbitration.pick === 'A'
+        reviewerDisplayName(arbitration.arbiter),
+        arbitration.pick === 'A'
           ? t('arHistoryPickA')
-          : (annotation.arbitration.pick === 'B' ? t('arHistoryPickB') : t('arHistoryReject')),
-        annotation.arbitration.decidedAt
+          : (arbitration.pick === 'B' ? t('arHistoryPickB') : t('arHistoryReject')),
+        arbitration.decidedAt,
+        arbitration.outputKey
       );
       arbitrationLine.setAttribute('data-annotator', annotation.annotator);
       container.appendChild(arbitrationLine);
-    }
+    });
   }
 
   function getArStatusBadge(status) {
