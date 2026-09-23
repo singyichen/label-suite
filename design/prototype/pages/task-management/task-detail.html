@@ -2725,10 +2725,12 @@
       progressMetricEtaLabel: '剩餘估計時間',
       progressMetricIAALabel: 'IAA',
       reviewProgressGroupAria: '審核定稿狀態',
-      reviewFinalizedTpl: '已定稿 {count} / {total}',
-      reviewDisputedTpl: '爭議中 {count}',
-      reviewPendingArbitrationTpl: '待仲裁 {count}',
-      reviewExceptionTpl: '最終例外待處置 {count}',
+      reviewFinalizedTpl: '已定稿 {count} / {total}{subject}',
+      reviewDisputedTpl: '爭議中 {count}{subject}',
+      reviewPendingArbitrationTpl: '待仲裁 {count}{subject}',
+      reviewExceptionTpl: '最終例外待處置 {count}{subject}',
+      reviewUnitCountSubject: ' · 審核單位數',
+      reviewOutputItemCountSubject: ' · 輸出項數',
       finalExceptionPoolTpl: '最終例外池 · {count} 項待處置',
       finalExceptionPoolSubtitle: '仲裁裁定為「兩者皆非」且尚未收尾的爭議項，逐筆進入處置畫面決定最終結果，例外池清空前任務無法標記完成。',
       finalExceptionPoolEmptyText: '最終例外池已清空',
@@ -3255,10 +3257,12 @@
       progressMetricEtaLabel: 'Remaining ETA',
       progressMetricIAALabel: 'IAA',
       reviewProgressGroupAria: 'Review finalization status',
-      reviewFinalizedTpl: 'Finalized {count} / {total}',
-      reviewDisputedTpl: 'Disputed {count}',
-      reviewPendingArbitrationTpl: 'Pending arbitration {count}',
-      reviewExceptionTpl: 'Final exceptions pending {count}',
+      reviewFinalizedTpl: 'Finalized {count} / {total}{subject}',
+      reviewDisputedTpl: 'Disputed {count}{subject}',
+      reviewPendingArbitrationTpl: 'Pending arbitration {count}{subject}',
+      reviewExceptionTpl: 'Final exceptions pending {count}{subject}',
+      reviewUnitCountSubject: ' · review unit count',
+      reviewOutputItemCountSubject: ' · output item count',
       finalExceptionPoolTpl: 'Final exception pool · {count} pending',
       finalExceptionPoolSubtitle: 'Items an arbiter voted "neither side" on, still unresolved. Resolve each one to reach a final value; the task cannot be marked complete until the pool is empty.',
       finalExceptionPoolEmptyText: 'Final exception pool is empty',
@@ -8073,17 +8077,30 @@ function getTaskTypeLabel() {
     var reviewPools = workspaceData && workspaceData.listReviewPoolItems
       ? workspaceData.listReviewPoolItems(TASK_DATA.taskId, getSelectedRunType())
       : null;
+    var showReviewCountSubjects = (TASK_DATA.outputs || []).length > 1;
+    var reviewUnitSubject = showReviewCountSubjects ? t('reviewUnitCountSubject') : '';
+    var reviewOutputItemSubject = showReviewCountSubjects ? t('reviewOutputItemCountSubject') : '';
     setText('reviewFinalizedCount', reviewSummary
-      ? interpolate(t('reviewFinalizedTpl'), { count: reviewSummary.finalized, total: reviewSummary.total })
+      ? interpolate(t('reviewFinalizedTpl'), {
+          count: reviewSummary.finalized,
+          total: reviewSummary.total,
+          subject: reviewUnitSubject,
+        })
       : '-');
     setText('reviewDisputedCount', reviewSummary
-      ? interpolate(t('reviewDisputedTpl'), { count: reviewSummary.disputed })
+      ? interpolate(t('reviewDisputedTpl'), { count: reviewSummary.disputed, subject: reviewUnitSubject })
       : '-');
     setText('reviewPendingArbitrationCount', reviewPools
-      ? interpolate(t('reviewPendingArbitrationTpl'), { count: reviewPools.awaitingArbitration.length })
+      ? interpolate(t('reviewPendingArbitrationTpl'), {
+          count: reviewPools.awaitingArbitration.length,
+          subject: reviewOutputItemSubject,
+        })
       : '-');
     setText('reviewExceptionCount', reviewPools
-      ? interpolate(t('reviewExceptionTpl'), { count: reviewPools.pendingExceptions.length })
+      ? interpolate(t('reviewExceptionTpl'), {
+          count: reviewPools.pendingExceptions.length,
+          subject: reviewOutputItemSubject,
+        })
       : '-');
   }
 
