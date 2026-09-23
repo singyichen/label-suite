@@ -35,7 +35,7 @@
       wsAutosaveDirty: '尚未儲存的變更',
       wsAutosaveSavedAt: '上次儲存於 {time}',
       wsTabGuideline: '說明與檔案',
-      wsTabHistory: '歷程',
+      wsTabHistory: '操作紀錄',
       wsStatusSubmitted: '已提交',
       wsStatusSaved: '已儲存',
       wsStatusPending: '待標記',
@@ -109,12 +109,14 @@
       reviewFinalizedNote: '此審核單位已定稿，結果為唯讀。',
       reviewFinalizedRemaining: '本任務你還有 {n} 個可處理的審核單位。',
       reviewFinalizedBackToList: '回到審核清單',
-      traceLabel: '歷程：',
-      traceAnnotator: '標記',
-      traceReviewer: '審核',
-      traceArbitration: '仲裁',
-      traceExceptionPool: '例外池',
-      traceDecisionTpl: '（{decision}）',
+      finalizedOriginalLabel: '標記員原答案',
+      finalizedResultLabel: '最終結果',
+      finalizedBasisLabel: '定稿依據',
+      finalizedBasisArbitrationAnnotator: '仲裁採用標記員答案',
+      finalizedBasisArbitrationReviewer: '仲裁採用審核員答案',
+      finalizedBasisExceptionAnnotator: '例外池採用標記員答案',
+      finalizedBasisExceptionReviewer: '例外池採用審核員答案',
+      finalizedBasisExceptionCustom: '例外池採用自訂答案',
       exceptionActionAdoptAnnotator: '採用標記員答案',
       exceptionActionAdoptReviewer: '採用審核員答案',
       exceptionActionCustomAnswer: '自訂答案',
@@ -133,9 +135,15 @@
       trackBranchSame: '審核通過',
       trackBranchDiffering: '修正或無法裁決',
       trackBranchArbitrated: '仲裁後',
-      flowDrawerOpen: '了解審核流程',
-      flowDrawerTitle: '審核流程',
-      flowDrawerCloseAria: '關閉審核流程',
+      flowDrawerOpen: '流程與目前狀態',
+      flowDrawerTitle: '流程與目前狀態',
+      flowDrawerCloseAria: '關閉流程與目前狀態',
+      flowDrawerDescription: '顯示此審核單位目前所在階段與可能路線',
+      flowRoutePending: '此單位目前待審，尚未決定後續路線。',
+      flowRouteSameFinalized: '此單位經由「審核通過」直接定稿。',
+      flowRouteDifferingDisputed: '此單位經由「修正或無法裁決」進入爭議，等待仲裁或例外池處置。',
+      flowRouteDifferingArbitrated: '此單位經由「修正或無法裁決」進入爭議，仲裁後定稿。',
+      flowRouteDifferingException: '此單位經由「修正或無法裁決」進入爭議，例外池收尾後定稿。',
       unitStateFinalizedNote: '已鎖定',
       unitStateAria: '審核單位狀態：{state}',
       unitStateAriaFinalized: '審核單位狀態：{state}，內容已鎖定',
@@ -162,7 +170,7 @@
       wsAutosaveDirty: 'Unsaved changes',
       wsAutosaveSavedAt: 'Last saved at {time}',
       wsTabGuideline: 'Guidelines & Files',
-      wsTabHistory: 'History',
+      wsTabHistory: 'Activity log',
       wsStatusSubmitted: 'Submitted',
       wsStatusSaved: 'Saved',
       wsStatusPending: 'Pending',
@@ -236,12 +244,14 @@
       reviewFinalizedNote: 'This review unit is finalized; results are read-only.',
       reviewFinalizedRemaining: 'You have {n} actionable review units left on this task.',
       reviewFinalizedBackToList: 'Back to review list',
-      traceLabel: 'Trace: ',
-      traceAnnotator: 'Annotated',
-      traceReviewer: 'Reviewed',
-      traceArbitration: 'Arbitrated',
-      traceExceptionPool: 'Exception pool',
-      traceDecisionTpl: ' ({decision})',
+      finalizedOriginalLabel: 'Annotator original',
+      finalizedResultLabel: 'Final result',
+      finalizedBasisLabel: 'Finalization basis',
+      finalizedBasisArbitrationAnnotator: 'Arbitration adopted the annotator answer',
+      finalizedBasisArbitrationReviewer: 'Arbitration adopted the reviewer answer',
+      finalizedBasisExceptionAnnotator: 'Exception pool adopted the annotator answer',
+      finalizedBasisExceptionReviewer: 'Exception pool adopted the reviewer answer',
+      finalizedBasisExceptionCustom: 'Exception pool adopted a custom answer',
       exceptionActionAdoptAnnotator: 'Adopt annotator answer',
       exceptionActionAdoptReviewer: 'Adopt reviewer answer',
       exceptionActionCustomAnswer: 'Custom answer',
@@ -260,9 +270,15 @@
       trackBranchSame: 'Review approved',
       trackBranchDiffering: 'Modified or cannot adjudicate',
       trackBranchArbitrated: 'After arbitration',
-      flowDrawerOpen: 'Review flow',
-      flowDrawerTitle: 'Review flow',
-      flowDrawerCloseAria: 'Close the review flow',
+      flowDrawerOpen: 'Flow & current status',
+      flowDrawerTitle: 'Flow & current status',
+      flowDrawerCloseAria: 'Close flow and current status',
+      flowDrawerDescription: 'Shows this review unit’s current stage and possible routes.',
+      flowRoutePending: 'This unit is pending review; its next route has not been determined.',
+      flowRouteSameFinalized: 'This unit was finalized directly through “Review approved”.',
+      flowRouteDifferingDisputed: 'This unit entered a dispute through “Modified or cannot adjudicate” and is awaiting arbitration or exception-pool disposition.',
+      flowRouteDifferingArbitrated: 'This unit entered a dispute through “Modified or cannot adjudicate” and was finalized after arbitration.',
+      flowRouteDifferingException: 'This unit entered a dispute through “Modified or cannot adjudicate” and was finalized through exception-pool disposition.',
       unitStateFinalizedNote: 'locked',
       unitStateAria: 'Review unit status: {state}',
       unitStateAriaFinalized: 'Review unit status: {state}, locked',
@@ -3774,170 +3790,158 @@
     return row;
   }
 
-  /* FR-094 point 2/3 (issue #596): the micro conflict trace that REPLACES
-   * the removed FR-069 per-reviewer vote breakdown. One reviewer owns a
-   * unit (FR-093), so "who voted what" no longer exists; what a reader of a
-   * finalized unit needs is the responsibility chain that closed it.
-   *
-   * A and B are FR-061's POSITIONAL letters (A・標記員 / B・審核員), never
-   * truncated accounts -- the account behind a letter is exactly what the
-   * tooltip expands, so printing it in the line too would make the tooltip
-   * pointless. Every segment is derived from the same three stores the
-   * status derivation reads (the reviewer submission's decisions, the
-   * arbitration items, the exception pool): no second copy of the chain is
-   * persisted, and no task id or account is ever branched on. */
-  var TRACE_SIDE_LETTERS = { adopt_a: 'A', adopt_b: 'B' };
-  var TRACE_ANNOTATOR_LETTER = TRACE_SIDE_LETTERS.adopt_a;
-  var TRACE_REVIEWER_LETTER = TRACE_SIDE_LETTERS.adopt_b;
-  var TRACE_SEPARATOR = ' ➔ ';
-  /* A unit with several dispute items can close on different sides (or with
-   * different pool actions). Naming every distinct one keeps the single
-   * line honest instead of silently reporting whichever item happened to be
-   * read last. */
-  var TRACE_MULTI_JOIN = '／';
-  var TRACE_DECISION_I18N_KEYS = {
-    approve: 'reviewApproveLabel',
-    modify: 'reviewModifyLabel',
-    bypass: 'reviewBypassLabel',
+  /* issue #880: the finalized card no longer repeats the activity log as a
+   * compact actor chain. It answers only two questions: what the final
+   * result is, and (for a complex route) what source supplied that result.
+   * Actor ids, timestamps and reasons stay exclusively in the right-side
+   * activity log; route geometry stays exclusively in the flow drawer. */
+  var ARBITRATION_BASIS_I18N_KEYS = {
+    adopt_a: 'finalizedBasisArbitrationAnnotator',
+    adopt_b: 'finalizedBasisArbitrationReviewer',
   };
+  var EXCEPTION_BASIS_I18N_KEYS = {
+    adopt_annotator: 'finalizedBasisExceptionAnnotator',
+    adopt_reviewer: 'finalizedBasisExceptionReviewer',
+    custom_answer: 'finalizedBasisExceptionCustom',
+  };
+  /* Shared by the still-interactive exception-pool action buttons. This is
+   * deliberately separate from the finalized-card basis wording above:
+   * one names an available action, the other explains an outcome. */
   var EXCEPTION_ACTION_I18N_KEYS = {
     adopt_annotator: 'exceptionActionAdoptAnnotator',
     adopt_reviewer: 'exceptionActionAdoptReviewer',
     custom_answer: 'exceptionActionCustomAnswer',
     exclude_from_dataset: 'exceptionActionExcludeFromDataset',
   };
-  /* Most escalated first: one line describes the WHOLE unit, and the
-   * decision that pushed it down the differing lane is the one worth
-   * naming. Order is data, not a branch chain. */
-  var TRACE_DECISION_PRECEDENCE = ['bypass', 'modify', 'approve'];
 
-  function unitReviewDecision(reviewerSubmission) {
-    var decisions = (reviewerSubmission && reviewerSubmission.answers
-      && reviewerSubmission.answers.decisions) || {};
-    var winner = null;
-    TRACE_DECISION_PRECEDENCE.forEach(function (decision) {
-      if (winner) return;
-      var hit = state.selectedOutputTypes.some(function (outKey) {
-        return decisions[outKey] === decision;
-      });
-      if (hit) winner = decision;
-    });
-    return winner;
-  }
-
-  var traceAccountSeq = 0;
-
-  /* Appends one account-bearing segment: the visible token goes in `line`,
-   * its full-account bubble goes in `host` -- deliberately OUTSIDE the
-   * trace line, so the line's text content is the trace and nothing else.
-   * That separation is also why the reveal is two listeners instead of
-   * §Tooltip's adjacent-sibling CSS rule, which cannot reach across it.
-   * MUST NOT fall back to the native `title` attribute (FR-094 point 2). */
-  function appendTraceActor(line, host, role, token, account) {
-    var wrap = document.createElement('span');
-    wrap.className = 'tooltip-wrap rv-trace-actor-wrap';
-    var trigger = document.createElement('button');
-    trigger.type = 'button';
-    trigger.className = 'rv-trace-actor';
-    trigger.setAttribute('data-testid', 'ws-trace-actor');
-    trigger.setAttribute('data-actor-role', role);
-    trigger.textContent = token;
-    traceAccountSeq += 1;
-    var bubbleId = 'wsTraceAccount' + traceAccountSeq;
-    trigger.setAttribute('aria-describedby', bubbleId);
-    wrap.appendChild(trigger);
-    line.appendChild(wrap);
-
-    var bubble = document.createElement('span');
-    bubble.className = 'tooltip-bubble rv-trace-bubble';
-    bubble.id = bubbleId;
-    bubble.setAttribute('role', 'tooltip');
-    bubble.setAttribute('data-testid', 'ws-trace-account');
-    bubble.textContent = account;
-    host.appendChild(bubble);
-
-    var toggle = function (open) {
-      return function () { bubble.classList.toggle('is-open', open); };
-    };
-    trigger.addEventListener('mouseenter', toggle(true));
-    trigger.addEventListener('mouseleave', toggle(false));
-    trigger.addEventListener('focus', toggle(true));
-    trigger.addEventListener('blur', toggle(false));
-  }
-
-  function buildFinalizedTrace(reviewerSubmission, arbState, exceptionPool) {
-    var host = document.createElement('div');
-    host.className = 'rv-trace-host';
-    var line = document.createElement('div');
-    line.className = 'rv-finalized-trace';
-    line.setAttribute('data-testid', 'ws-finalized-trace');
-    host.appendChild(line);
-    var text = function (value) { line.appendChild(document.createTextNode(value)); };
-    /* FR-094's example reads 「（修正）➔ 仲裁 B」: a full-width closer already
-       carries its own trailing whitespace, so the separator drops its
-       leading space right after one. Latin locales, whose decision template
-       closes with an ASCII ')', keep it. */
-    var separate = function () {
-      var rendered = line.textContent;
-      var keepSpace = rendered.charAt(rendered.length - 1) !== '）';
-      text(keepSpace ? TRACE_SEPARATOR : TRACE_SEPARATOR.slice(1));
-    };
-
-    text(t('traceLabel') + t('traceAnnotator') + ' ');
-    appendTraceActor(line, host, 'annotator', TRACE_ANNOTATOR_LETTER,
-      (currentIdentity && currentIdentity.annotatorId) || '');
-
-    var decision = unitReviewDecision(reviewerSubmission);
-    if (decision) {
-      separate();
-      text(t('traceReviewer') + ' ');
-      appendTraceActor(line, host, 'reviewer', TRACE_REVIEWER_LETTER,
-        (reviewerSubmission && reviewerSubmission.reviewerId) || '');
-      text(t('traceDecisionTpl').replace('{decision}', t(TRACE_DECISION_I18N_KEYS[decision])));
+  function compactItemKey(outKey, value) {
+    if (outKey === 'multi_label') return String(value);
+    if (outKey === 'entity_recognition') return (value && value.text) + '::' + (value && value.type);
+    if (outKey === 'relation_identification') {
+      return (value && value.subj) + '::' + (value && value.rel) + '::' + (value && value.obj);
     }
+    if (outKey === 'sequence_tagging') {
+      return (value && value.start) + '::' + (value && value.end) + '::' + (value && value.label);
+    }
+    return '';
+  }
 
-    /* An arbitration item finalizes on the side its arbiter voted for, so
-       the adopted letter is read off that arbiter's own vote rather than
-       re-derived from the stored value. */
-    var sides = [];
-    var arbiterId = null;
+  function cloneCompactAnswer(value) {
+    if (Array.isArray(value)) {
+      return value.map(function (item) {
+        return item && typeof item === 'object' ? Object.assign({}, item) : item;
+      });
+    }
+    if (value && typeof value === 'object') return Object.assign({}, value);
+    return value;
+  }
+
+  /* Apply a resolved dispute item to the annotator's compact answer. This
+   * mirrors the data layer's output-type-driven diff shapes instead of
+   * branching on task ids. Set-shaped answers replace the one keyed item;
+   * multi_dim replaces one dimension; scalar answers replace the whole
+   * output. */
+  function applyFinalizedItem(outKey, answer, item, finalizedValue) {
+    if (outKey === 'multi_dim') {
+      var dims = answer && typeof answer === 'object' ? Object.assign({}, answer) : {};
+      if (finalizedValue === null || finalizedValue === undefined) delete dims[item.key];
+      else dims[item.key] = finalizedValue;
+      return dims;
+    }
+    if (
+      outKey === 'multi_label' || outKey === 'entity_recognition'
+      || outKey === 'relation_identification' || outKey === 'sequence_tagging'
+    ) {
+      var items = (Array.isArray(answer) ? answer : []).filter(function (candidate) {
+        return compactItemKey(outKey, candidate) !== item.key;
+      });
+      if (finalizedValue !== null && finalizedValue !== undefined) {
+        items.push(cloneCompactAnswer(finalizedValue));
+      }
+      return items;
+    }
+    return finalizedValue;
+  }
+
+  function finalizedAnswers(submission, disputeItems, arbState, exceptionPool) {
+    var data = window.LabelSuiteAnnotationWorkspaceData;
+    var answers = {};
+    state.selectedOutputTypes.forEach(function (outKey) {
+      var answer = cloneCompactAnswer(data.convertSubmissionAnswer(outKey, submission));
+      var poolRecord = exceptionPool[outKey];
+      if (
+        poolRecord && poolRecord.action !== 'exclude_from_dataset'
+        && Object.prototype.hasOwnProperty.call(poolRecord, 'finalized_value')
+      ) {
+        answers[outKey] = cloneCompactAnswer(poolRecord.finalized_value);
+        return;
+      }
+      disputeItems.forEach(function (item) {
+        if (item.outKey !== outKey) return;
+        var stored = arbState[item.outKey + '::' + item.key];
+        if (!stored || !stored.finalized_by) return;
+        answer = applyFinalizedItem(outKey, answer, item, stored.finalized_value);
+      });
+      answers[outKey] = answer;
+    });
+    return answers;
+  }
+
+  function buildFinalizedAnswerSection(testId, labelKey, answers) {
+    var section = document.createElement('div');
+    section.className = 'rv-finalized-summary';
+    section.setAttribute('data-testid', testId);
+
+    var label = document.createElement('span');
+    label.className = 'rv-finalized-summary-label';
+    label.textContent = t(labelKey) + '：';
+    section.appendChild(label);
+
+    var values = document.createElement('span');
+    values.className = 'rv-finalized-summary-values';
+    state.selectedOutputTypes.forEach(function (outKey) {
+      var line = document.createElement('span');
+      line.className = 'rv-finalized-summary-value';
+      line.textContent = outKey + '：' + (describeCompactAnswer(outKey, answers[outKey]) || t('reviewNoAnswer'));
+      values.appendChild(line);
+    });
+    section.appendChild(values);
+    return section;
+  }
+
+  function finalizedBasisLabels(arbState, exceptionPool) {
+    var labels = [];
+    function pushLabel(key) {
+      if (!key) return;
+      var label = t(key);
+      if (labels.indexOf(label) === -1) labels.push(label);
+    }
     Object.keys(arbState).forEach(function (itemId) {
       var stored = arbState[itemId];
       if (!stored || !stored.finalized_by) return;
-      var vote = null;
-      (stored.votes || []).forEach(function (candidate) {
-        if (candidate.arbiter_id === stored.finalized_by) vote = candidate;
+      var finalVote = null;
+      (stored.votes || []).forEach(function (vote) {
+        if (vote.arbiter_id === stored.finalized_by) finalVote = vote;
       });
-      var letter = vote && TRACE_SIDE_LETTERS[vote.choice];
-      if (!letter) return;
-      if (sides.indexOf(letter) === -1) sides.push(letter);
-      if (!arbiterId) arbiterId = stored.finalized_by;
+      pushLabel(finalVote && ARBITRATION_BASIS_I18N_KEYS[finalVote.choice]);
     });
-    if (sides.length) {
-      separate();
-      text(t('traceArbitration') + ' ');
-      appendTraceActor(line, host, 'arbiter', sides.sort().join(TRACE_MULTI_JOIN), arbiterId);
-    }
-
-    /* The pool is always the tail: it only ever runs on what arbitration
-       could not close (FR-095). */
-    var actions = [];
-    var resolverId = null;
     Object.keys(exceptionPool).forEach(function (outKey) {
       var record = exceptionPool[outKey];
-      var key = record && EXCEPTION_ACTION_I18N_KEYS[record.action];
-      if (!key) return;
-      var label = t(key);
-      if (actions.indexOf(label) === -1) actions.push(label);
-      if (!resolverId) resolverId = record.resolver_id;
+      pushLabel(record && EXCEPTION_BASIS_I18N_KEYS[record.action]);
     });
-    if (actions.length) {
-      separate();
-      text(t('traceExceptionPool') + ' ');
-      appendTraceActor(line, host, 'exception_pool', actions.join(TRACE_MULTI_JOIN), resolverId);
-    }
+    return labels;
+  }
 
-    return host;
+  function buildFinalizedBasis(labels) {
+    var section = document.createElement('div');
+    section.className = 'rv-finalized-summary rv-finalized-basis';
+    section.setAttribute('data-testid', 'ws-finalized-basis');
+    var label = document.createElement('span');
+    label.className = 'rv-finalized-summary-label';
+    label.textContent = t('finalizedBasisLabel') + '：';
+    section.appendChild(label);
+    section.appendChild(document.createTextNode(labels.join('；')));
+    return section;
   }
 
   function renderArbitrationCard(preview, submission) {
@@ -4291,10 +4295,10 @@
 
   /* Finalized unit lock (issue #308): a FINALIZED unit renders this
      read-only results card instead of the interactive review card -- no
-     ✕/✓ rows, no correction controls, no submit path. Mirrors the
-     arbitration card's read-only layout: the annotator's answers per
-     outKey, one resolved row per arbitrated dispute item, and FR-094's
-     single-line responsibility trace. The FR-016A
+     ✕/✓ rows, no correction controls, no submit path. issue #880 keeps the
+     direct-approval path focused on the final result; a differing path also
+     shows the annotator's original answer and a data-derived finalization
+     basis. Full actors/times/reasons remain in the activity log. The FR-016A
      reopen-with-audit-reason flow is deferred to the backend phase, so the
      notice deliberately offers no way out of the lock. `submission` is
      never null here: getReviewUnitStatus() cannot return FINALIZED without
@@ -4318,36 +4322,33 @@
 
     card.appendChild(buildFinalizedRemaining(data));
 
-    state.selectedOutputTypes.forEach(function (outKey) {
-      var line = document.createElement('div');
-      line.style.cssText = 'font-size:12px;white-space:pre-line;margin-bottom:2px;';
-      line.textContent = outKey + '：'
-        + (describeCompactAnswer(outKey, data.convertSubmissionAnswer(outKey, submission)) || t('reviewNoAnswer'));
-      card.appendChild(line);
-    });
-
     var arbState = data.getArbitrationState(currentProfile.id, currentRunType, currentSampleId, currentIdentity);
-    /* Majority convergence went with FR-069: one reviewer per unit (FR-093)
-       means an item is either untouched or settled by a named arbiter, so
-       the only resolved row left is the arbitrated one. */
-    data.getDisputeItems(
+    var exceptionPool = data.getExceptionPool(
+      currentProfile.id, currentRunType, currentSampleId, currentIdentity
+    );
+    var disputeItems = data.getDisputeItems(
       currentProfile.id, currentRunType, currentSampleId, currentIdentity, state.selectedOutputTypes
-    ).forEach(function (item) {
-      var stored = arbState[disputeItemId(item)];
-      if (!stored || !stored.finalized_by) return;
-      card.appendChild(buildArbitrationResolvedRow(
-        item, stored.finalized_value, stored.finalized_by, 'ws-finalized-resolved'
-      ));
+    );
+    var lane = data.getReviewUnitLane(
+      currentProfile.id, currentRunType, currentSampleId, currentIdentity, state.selectedOutputTypes
+    );
+    var originalAnswers = {};
+    state.selectedOutputTypes.forEach(function (outKey) {
+      originalAnswers[outKey] = data.convertSubmissionAnswer(outKey, submission);
     });
 
-    /* FR-093: exactly one reviewer ever owns the unit. */
-    card.appendChild(buildFinalizedTrace(
-      data.readReviewerSubmissions(
-        currentProfile.id, currentRunType, currentSampleId, currentIdentity
-      )[0] || null,
-      arbState,
-      data.getExceptionPool(currentProfile.id, currentRunType, currentSampleId, currentIdentity)
+    if (lane === 'differing') {
+      card.appendChild(buildFinalizedAnswerSection(
+        'ws-finalized-original', 'finalizedOriginalLabel', originalAnswers
+      ));
+    }
+    card.appendChild(buildFinalizedAnswerSection(
+      'ws-finalized-result', 'finalizedResultLabel',
+      finalizedAnswers(submission, disputeItems, arbState, exceptionPool)
     ));
+
+    var basis = finalizedBasisLabels(arbState, exceptionPool);
+    if (lane === 'differing' && basis.length) card.appendChild(buildFinalizedBasis(basis));
 
     preview.appendChild(card);
   }
@@ -4627,6 +4628,19 @@
     if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(drawer);
   }
 
+  function reviewFlowRouteSummaryKey(unitStatus, lane, exceptionPool) {
+    if (lane === 'same' && unitStatus === 'finalized') return 'flowRouteSameFinalized';
+    if (lane === 'differing' && unitStatus === 'finalized') {
+      var throughExceptionPool = Object.keys(exceptionPool).some(function (outKey) {
+        var record = exceptionPool[outKey];
+        return record && record.action !== 'exclude_from_dataset';
+      });
+      return throughExceptionPool ? 'flowRouteDifferingException' : 'flowRouteDifferingArbitrated';
+    }
+    if (lane === 'differing') return 'flowRouteDifferingDisputed';
+    return 'flowRoutePending';
+  }
+
   /* Refills the drawer from the unit the banner is describing. Closing first
      is not cosmetic: every render replaces the banner, so the trigger that an
      open drawer would return focus to is a detached node by the time the
@@ -4637,13 +4651,31 @@
     if (!body) return;
     while (body.firstChild) body.removeChild(body.firstChild);
     if (unitStatus === null) return;
-    body.appendChild(buildReviewStatusTrack(
-      unitStatus,
-      window.LabelSuiteAnnotationWorkspaceData.getReviewUnitLane(
-        currentProfile.id, currentRunType, currentSampleId, currentIdentity,
-        state.selectedOutputTypes
-      )
-    ));
+    var data = window.LabelSuiteAnnotationWorkspaceData;
+    var lane = data.getReviewUnitLane(
+      currentProfile.id, currentRunType, currentSampleId, currentIdentity,
+      state.selectedOutputTypes
+    );
+    var exceptionPool = data.getExceptionPool(
+      currentProfile.id, currentRunType, currentSampleId, currentIdentity
+    );
+
+    var description = document.createElement('p');
+    description.className = 'rv-flow-description';
+    description.setAttribute('data-testid', 'ws-review-flow-description');
+    description.textContent = t('flowDrawerDescription');
+    body.appendChild(description);
+
+    var trackWrap = document.createElement('div');
+    trackWrap.className = 'rv-flow-track';
+    trackWrap.appendChild(buildReviewStatusTrack(unitStatus, lane));
+    body.appendChild(trackWrap);
+
+    var summary = document.createElement('p');
+    summary.className = 'rv-flow-route-summary';
+    summary.setAttribute('data-testid', 'ws-review-flow-route-summary');
+    summary.textContent = t(reviewFlowRouteSummaryKey(unitStatus, lane, exceptionPool));
+    body.appendChild(summary);
   }
 
   function setupReviewFlowDrawer() {

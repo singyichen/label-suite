@@ -66,7 +66,7 @@ import { buildListUrl, buildWorkspaceUrl, fillArbitrationReasons, patchDataFile,
  * FR-093 (single-owner review relay), FR-060 (arbiter eligibility), FR-099
  * §7 (finalization exemption -- a submit that finalizes a unit stays in
  * place); issue-596-finalized-card.spec.ts (button-exclusion pattern,
- * ws-trace-actor); issue-719-review-submit-auto-advance.spec.ts
+ * zero-button finalized card); issue-719-review-submit-auto-advance.spec.ts
  * (pinReviewUnits/seedSubmission/countLoads/requested-URL pattern);
  * issue-517-post-submit-cta-removed.spec.ts (retired testids/classes).
  */
@@ -209,22 +209,19 @@ function readFindNext(page: Page, reviewerId: string): Promise<ReviewUnit | null
   );
 }
 
-/* design.md D4: ws-finalized-remaining MUST sit immediately after the
- * read-only note (a plain <p>) and immediately before the first outKey
- * value line (a <div> whose text starts with the outKey name + '：',
- * annotation-workspace.config.js renderFinalizedCard() :4204). Checked
- * structurally via DOM siblings rather than a fixed child index, so this
- * Red contract does not assume exactly how Green wraps the new element. */
+/* design.md D4 + issue #880: ws-finalized-remaining MUST sit immediately
+ * after the read-only note and immediately before the final-result summary.
+ * Checked structurally via DOM siblings rather than a fixed child index. */
 async function assertRemainingPosition(remaining: Locator): Promise<void> {
   const info = await remaining.evaluate((el) => ({
     prevTag: el.previousElementSibling ? el.previousElementSibling.tagName : null,
-    nextStartsWithOutKey: el.nextElementSibling ? /^single_label(：|:)/.test(el.nextElementSibling.textContent || '') : false,
+    nextTestId: el.nextElementSibling ? el.nextElementSibling.getAttribute('data-testid') : null,
   }));
   expect(info.prevTag, 'ws-finalized-remaining must immediately follow the read-only note (a <p> element), per design.md D4').toBe('P');
   expect(
-    info.nextStartsWithOutKey,
-    'ws-finalized-remaining must immediately precede the first outKey value line',
-  ).toBe(true);
+    info.nextTestId,
+    'ws-finalized-remaining must immediately precede the final-result summary',
+  ).toBe('ws-finalized-result');
 }
 
 /* Parallel workers hitting the static server occasionally drop a
@@ -449,7 +446,7 @@ test.describe('AC-3.58 clauses 4-5: the zero-state link requests the FR-081/FR-0
 });
 
 test.describe('AC-3.58 clause 6: the zero-state link is an anchor, not a button, and adds no new button to the card', () => {
-  test('ws-finalized-back-to-list is an <a> element; the card still has zero non-trace buttons (issue-596 pattern)', async ({ page }) => {
+  test('ws-finalized-back-to-list is an <a> element; the card has zero buttons', async ({ page }) => {
     await seedZeroRemaining(page);
 
     const card = page.getByTestId('ws-review-finalized-card');
@@ -458,9 +455,7 @@ test.describe('AC-3.58 clause 6: the zero-state link is an anchor, not a button,
     const tagName = await link.evaluate((el) => el.tagName);
     expect(tagName, 'the zero-state exit MUST be an anchor element, never a button/form control (FR-100 §4)').toBe('A');
 
-    /* Only the trace's ws-trace-actor tooltip triggers may be <button>
-       (issue-596-finalized-card.spec.ts's identical assertion). */
-    await expect(card.locator('button:not([data-testid="ws-trace-actor"])')).toHaveCount(0);
+    await expect(card.locator('button')).toHaveCount(0);
   });
 });
 

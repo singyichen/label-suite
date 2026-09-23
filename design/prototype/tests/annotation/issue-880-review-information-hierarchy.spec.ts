@@ -11,9 +11,8 @@ import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
  * - The drawer is the flow/current-state model: stage, possible routes and the
  *   route this unit took, without actors, timestamps or answer values.
  *
- * These tests intentionally fail against the pre-#880 implementation, which
- * still renders `ws-finalized-trace`, labels the tab 「歷程」 and names the
- * drawer 「審核流程」 without an explanatory or route-summary sentence.
+ * The suite guards the retired `ws-finalized-trace`, the renamed activity-log
+ * tab and the explanatory, route-specific flow drawer in both languages.
  */
 
 const COMPLEX_URL = buildWorkspaceUrl({
@@ -120,5 +119,24 @@ test.describe('issue #880 — activity log and flow/current-state drawer', () =>
     await expect(dialog.getByTestId('ws-review-flow-route-summary')).toHaveText(
       'This unit entered a dispute through “Modified or cannot adjudicate” and was finalized after arbitration.',
     );
+  });
+
+  test('desktop drawer shows the complete state track without horizontal clipping', async ({ page }) => {
+    await page.setViewportSize({ width: 1600, height: 1000 });
+    await page.getByTestId('ws-review-flow-trigger').click();
+
+    const track = page.getByTestId('ws-review-flow-drawer').locator('.rv-flow-track');
+    const overflow = await track.evaluate((element) => ({
+      clientWidth: element.clientWidth,
+      scrollWidth: element.scrollWidth,
+    }));
+    expect(overflow.scrollWidth).toBeLessThanOrEqual(overflow.clientWidth);
+
+    const drawerBox = await page.getByTestId('ws-review-flow-drawer').boundingBox();
+    const currentBox = await track.locator('[aria-current="step"]').boundingBox();
+    expect(drawerBox).not.toBeNull();
+    expect(currentBox).not.toBeNull();
+    expect((currentBox?.x ?? 0) + (currentBox?.width ?? 0))
+      .toBeLessThanOrEqual((drawerBox?.x ?? 0) + (drawerBox?.width ?? 0));
   });
 });

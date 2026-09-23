@@ -230,17 +230,25 @@ test.describe('T016 official_run: reviewer corrects, arbitration adopts B, unit 
     expect(item?.finalized_by).not.toBe('reviewer_wang');
   });
 
-  test("ofm-01-reviewer-corrects-b's finalized card carries the FR-094 micro-trace: 標記 A ➔ 審核 B（修正）➔ 仲裁 B", async ({ page }) => {
+  test("ofm-01-reviewer-corrects-b's finalized card summarizes the adopted reviewer answer without a micro trace", async ({ page }) => {
     await skipGuidelineModal(page);
     await page.goto(buildWorkspaceUrl({
       task_id: 'T016', sample_id: 'ofm-01-reviewer-corrects-b', role: 'reviewer', run_type: 'official_run',
       annotator_id: 'kioleemg12', reviewer_id: 'reviewer_wang',
     }));
 
-    await expect(page.getByTestId('ws-review-finalized-card')).toBeVisible();
-    await expect(page.getByTestId('ws-finalized-trace')).toHaveText(
-      '歷程：標記 A ➔ 審核 B（修正）➔ 仲裁 B'
+    const card = page.getByTestId('ws-review-finalized-card');
+    await expect(card).toBeVisible();
+    await expect(card.getByTestId('ws-finalized-original')).toHaveText(
+      '標記員原答案：single_label：positive'
     );
+    await expect(card.getByTestId('ws-finalized-result')).toHaveText(
+      '最終結果：single_label：negative'
+    );
+    await expect(card.getByTestId('ws-finalized-basis')).toHaveText(
+      '定稿依據：仲裁採用審核員答案'
+    );
+    await expect(card.getByTestId('ws-finalized-trace')).toHaveCount(0);
   });
 
   /* The other 4 samples (this test's grouping predates issue #815, which

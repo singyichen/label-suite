@@ -77,7 +77,7 @@ test.describe('issue #525 PR-A — the trigger in the FR-064 banner', () => {
 
     const btn = trigger(page);
     await expect(btn).toBeVisible();
-    await expect(btn).toHaveText('了解審核流程');
+    await expect(btn).toHaveText('流程與目前狀態');
     expect(await btn.evaluate((el) => el.tagName)).toBe('BUTTON');
     await expect(btn).toHaveAttribute('type', 'button');
     await expect(btn).toHaveAttribute('aria-expanded', 'false');
@@ -114,7 +114,7 @@ test.describe('issue #525 PR-A — the trigger in the FR-064 banner', () => {
     await openUnit(page, FINALIZED_UNIT);
     await page.getByTestId('lang-toggle').click();
 
-    await expect(trigger(page)).toHaveText('Review flow');
+    await expect(trigger(page)).toHaveText('Flow & current status');
   });
 
   test('is not rendered for a unit with no annotator submission', async ({ page }) => {
@@ -152,7 +152,7 @@ test.describe('issue #525 PR-A — the flow track lives in the Drawer, not the b
     const dialog = page.getByRole('dialog');
     await expect(dialog).toBeVisible();
     await expect(dialog).toHaveAttribute('aria-modal', 'true');
-    await expect(dialog).toHaveAccessibleName('審核流程');
+    await expect(dialog).toHaveAccessibleName('流程與目前狀態');
     await expect(trigger(page)).toHaveAttribute('aria-expanded', 'true');
 
     // Reverse anchor: the track must BE here, not merely be gone from the

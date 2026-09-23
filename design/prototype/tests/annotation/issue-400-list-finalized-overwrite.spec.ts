@@ -83,7 +83,7 @@ test('issue #400: a finalized unit\'s list row shows the arbitrated answer, not 
   // describes before asserting on the list.
   await expect(page.locator('[data-testid="ws-review-unit-context"] .rv-unit-state'))
     .toHaveText('已定稿 · 已鎖定');
-  await expect(page.getByTestId('ws-finalized-resolved')).toContainText(REVIEWER_ANSWER);
+  await expect(page.getByTestId('ws-finalized-result')).toContainText(REVIEWER_ANSWER);
 
   await page.goto(buildListUrl({
     task_id: TASK, role: 'reviewer', run_type: 'official_run', reviewer_id: ASSIGNED_REVIEWER,
