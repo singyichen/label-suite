@@ -32,7 +32,24 @@ const TASKS = [
   },
 ] as const;
 
-const RETIRED_NAME_WORDING = /多數決|三審核員|單一審核員|majority|quorum|three reviewers?|single reviewers?|\b[123]\s+reviewers?\b/i;
+const RETIRED_NAME_WORDING = /多數決|審核員(?:人數|數量|門檻)|(?:\d+|[一二三四五六七八九十兩]|單一|多位)\s*(?:位|名|個|人)?\s*審核員|min_reviewers|majority|quorum|(?:\d+|one|two|three|four|five|single|multiple)\s+reviewers?|reviewers?\s+(?:count|threshold|minimum)|minimum\s+(?:number\s+of\s+)?reviewers?/i;
+
+async function replaceLoadedCatalogNames(page: Page): Promise<() => number> {
+  let patchedResponses = 0;
+  await page.route('**/task-list.data.js', async (route) => {
+    const response = await route.fetch();
+    let body = await response.text();
+    for (const task of TASKS.slice(1)) {
+      expect(body).toContain(task.zh);
+      expect(body).toContain(task.en);
+      body = body.replace(task.zh, `CATALOG_${task.id}_ZH`);
+      body = body.replace(task.en, `CATALOG_${task.id}_EN`);
+    }
+    patchedResponses += 1;
+    await route.fulfill({ response, body });
+  });
+  return () => patchedResponses;
+}
 
 async function expectTaskName(name: Locator, zh: string, en: string, page: Page): Promise<void> {
   await expect(name).toHaveText(zh);
@@ -77,6 +94,34 @@ test('dashboard reviewer cards retain task IDs and show current names in both la
   }
 });
 
+test('dashboard review cards derive their names from the loaded task catalog', async ({ page }) => {
+  const patchedResponses = await replaceLoadedCatalogNames(page);
+  await page.goto('/pages/dashboard/dashboard.html?scenario=reviewer');
+  await expect(page.getByTestId('reviewer-view')).toBeVisible();
+  expect(patchedResponses()).toBeGreaterThan(0);
+  for (const task of TASKS.slice(1)) {
+    const name = page.locator(`#reviewerTaskList [data-example-task-id="${task.id}"] .list-item-title`);
+    await expect(name).toHaveText(`CATALOG_${task.id}_ZH`);
+  }
+  await page.getByTestId('lang-toggle').click();
+  for (const task of TASKS.slice(1)) {
+    const name = page.locator(`#reviewerTaskList [data-example-task-id="${task.id}"] .list-item-title`);
+    await expect(name).toHaveText(`CATALOG_${task.id}_EN`);
+  }
+});
+
+test('dataset detail derives its review-flow title from the loaded task catalog', async ({ page }) => {
+  const patchedResponses = await replaceLoadedCatalogNames(page);
+  for (const task of TASKS.slice(1)) {
+    await page.goto(`/pages/dataset/dataset-analysis-detail.html?task_id=${task.id}&tab=quality`);
+    expect(patchedResponses()).toBeGreaterThan(0);
+    await expect(page.locator('#bcCurrent')).toHaveText(`CATALOG_${task.id}_ZH`);
+    await page.getByTestId('lang-toggle').click();
+    await expect(page.locator('#bcCurrent')).toHaveText(`CATALOG_${task.id}_EN`);
+    await page.getByTestId('lang-toggle').click();
+  }
+});
+
 for (const task of TASKS) {
   test(`${task.id} task detail uses the same visible name in zh and en`, async ({ page }) => {
     await page.goto(`/pages/task-management/task-detail.html?task_id=${task.id}`);
@@ -89,10 +134,13 @@ for (const task of TASKS) {
     await expectTaskName(page.locator('#taskInfoTitle'), task.zh, task.en, page);
     await page.goto(`/pages/annotation/annotation-workspace.html?${context}&sample_id=${task.sampleId}`);
     await expect(page.locator('#entryBreadcrumb')).toContainText(task.en);
+    await expect(page.locator('#entryBreadcrumb')).not.toContainText(RETIRED_NAME_WORDING);
     await expect(page.locator('#guidelineSummaryText')).toHaveText(task.en);
+    await expect(page.locator('#guidelineSummaryText')).not.toHaveText(RETIRED_NAME_WORDING);
     await page.getByTestId('lang-toggle').click();
     await expect(page.locator('#guidelineSummaryText')).toHaveText(task.zh);
     await expect(page.locator('#entryBreadcrumb')).toContainText(task.zh);
+    await expect(page.locator('#entryBreadcrumb')).not.toContainText(RETIRED_NAME_WORDING);
     await expect(page.locator('#guidelineSummaryText')).not.toHaveText(RETIRED_NAME_WORDING);
   });
 
