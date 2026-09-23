@@ -130,6 +130,43 @@ test.describe('Issue #889 — IAA stays consistent across task surfaces', () => 
     });
   }
 
+  test('T003 unsupported output stays not applicable across zh and en', async ({
+    page,
+  }) => {
+    await skipGuidelineModal(page);
+
+    for (const language of ['zh', 'en'] as const) {
+      await openReviewerDashboard(page);
+      await ensureLanguage(page, language, page.getByTestId('lang-toggle'));
+      await expect(
+        page.locator(
+          '#reviewerTaskList [data-example-task-id="T003"] .list-item-detail',
+        ),
+        `T003 ${language} Dashboard summary must not claim an IAA result`,
+      ).not.toContainText('IAA');
+
+      await page.goto(
+        buildListUrl({
+          task_id: 'T003',
+          role: 'reviewer',
+          run_type: 'official_run',
+        }),
+      );
+      await ensureLanguage(page, language, page.locator('#langToggle'));
+      await expect(
+        page.locator('#taskInfoDetail'),
+        `T003 ${language} Annotation List summary must not claim an IAA result`,
+      ).not.toContainText('IAA');
+
+      await openTaskDetailProgress(page, 'T003', 'official');
+      await ensureLanguage(page, language, page.locator('#langToggle'));
+      await expect.soft(
+        page.locator('#progressMetricIAAValue'),
+        `T003 ${language} unsupported output must remain not applicable`,
+      ).toHaveText('-');
+    }
+  });
+
   test('Task Detail follows computeIaaAlpha and uses the selected stage run type', async ({
     page,
   }) => {
