@@ -180,7 +180,11 @@
       || STATUS_CLASS[entry.status]
       || 'badge-info';
     var progress = Math.max(0, Math.min(100, Number(entry.progress) || 0));
+    var isReviewCoverage = role === 'reviewer';
+    var reviewDisputed = Math.max(0, Number(entry.reviewDisputed) || 0);
+    var coverageUnresolved = isReviewCoverage && progress === 100 && reviewDisputed > 0;
     var actionMarkup = '';
+    var progressMarkup = '';
 
     if (isInteractive) {
       actionMarkup =
@@ -190,6 +194,28 @@
         + ' data-task-index="' + String(index) + '">'
         + escapeHtml(getActionText(entry, role))
         + '</button>'
+        + '</div>';
+    }
+
+    if (isReviewCoverage) {
+      var coverageAriaValue = t('reviewCoverageAriaValueTpl')
+        .replace('{percent}', String(progress))
+        .replace('{disputed}', String(reviewDisputed));
+      progressMarkup = '<div class="review-coverage-heading">'
+        + '<span class="review-coverage-label">' + escapeHtml(t('reviewCoverageLabel')) + '</span>'
+        + '<span class="review-coverage-value">' + String(progress) + '%</span>'
+        + '</div>'
+        + '<div class="progress' + (coverageUnresolved ? ' coverage-unresolved' : '') + '"'
+        + ' role="progressbar"'
+        + ' aria-label="' + escapeHtml(t('reviewCoverageLabel')) + '"'
+        + ' aria-valuemin="0" aria-valuemax="100"'
+        + ' aria-valuenow="' + String(progress) + '"'
+        + ' aria-valuetext="' + escapeHtml(coverageAriaValue) + '">'
+        + '<span style="width: ' + String(progress) + '%;"></span>'
+        + '</div>';
+    } else {
+      progressMarkup = '<div class="progress" style="margin-top: 10px;">'
+        + '<span style="width: ' + String(progress) + '%;"></span>'
         + '</div>';
     }
 
@@ -221,9 +247,7 @@
       + actionMarkup
       + '</div>'
       + '</div>'
-      + '<div class="progress" style="margin-top: 10px;">'
-      + '<span style="width: ' + String(progress) + '%;"></span>'
-      + '</div>'
+      + progressMarkup
       + '</div>';
   }
 
@@ -378,6 +402,7 @@
     Object.keys(entry).forEach(function (key) { derived[key] = entry[key]; });
     derived.detail = workspaceData.formatReviewSummary(summary, entry.iaa);
     derived.progress = summary.coveragePct;
+    derived.reviewDisputed = summary.disputed;
     return derived;
   }
 

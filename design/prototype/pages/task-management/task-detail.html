@@ -446,6 +446,21 @@
       font-weight: 700;
       word-break: break-word;
     }
+    .review-progress-breakdown {
+      grid-column: 1 / -1;
+    }
+    .review-progress-values {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 18px;
+    }
+    .review-progress-value {
+      color: var(--color-ink);
+      font-size: 14px;
+      line-height: 1.4;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
     .sort-row {
       display: flex;
       align-items: center;
@@ -2705,10 +2720,15 @@
       progressStageOfficial: '正式標記',
       progressMetricTotalLabel: '總樣本數',
       progressMetricCompletedLabel: '已完成數',
-      progressMetricRateLabel: '完成率',
+      progressMetricRateLabel: '標記提交進度',
       progressMetricSpeedLabel: '平均速度',
       progressMetricEtaLabel: '剩餘估計時間',
       progressMetricIAALabel: 'IAA',
+      reviewProgressGroupAria: '審核定稿狀態',
+      reviewFinalizedTpl: '已定稿 {count} / {total}',
+      reviewDisputedTpl: '爭議中 {count}',
+      reviewPendingArbitrationTpl: '待仲裁 {count}',
+      reviewExceptionTpl: '最終例外待處置 {count}',
       finalExceptionPoolTpl: '最終例外池 · {count} 項待處置',
       finalExceptionPoolSubtitle: '仲裁裁定為「兩者皆非」且尚未收尾的爭議項，逐筆進入處置畫面決定最終結果，例外池清空前任務無法標記完成。',
       finalExceptionPoolEmptyText: '最終例外池已清空',
@@ -3230,10 +3250,15 @@
       progressStageOfficial: 'Official Run',
       progressMetricTotalLabel: 'Total samples',
       progressMetricCompletedLabel: 'Completed',
-      progressMetricRateLabel: 'Completion rate',
+      progressMetricRateLabel: 'Annotation submission progress',
       progressMetricSpeedLabel: 'Average speed',
       progressMetricEtaLabel: 'Remaining ETA',
       progressMetricIAALabel: 'IAA',
+      reviewProgressGroupAria: 'Review finalization status',
+      reviewFinalizedTpl: 'Finalized {count} / {total}',
+      reviewDisputedTpl: 'Disputed {count}',
+      reviewPendingArbitrationTpl: 'Pending arbitration {count}',
+      reviewExceptionTpl: 'Final exceptions pending {count}',
       finalExceptionPoolTpl: 'Final exception pool · {count} pending',
       finalExceptionPoolSubtitle: 'Items an arbiter voted "neither side" on, still unresolved. Resolve each one to reach a final value; the task cannot be marked complete until the pool is empty.',
       finalExceptionPoolEmptyText: 'Final exception pool is empty',
@@ -5355,6 +5380,9 @@ function interpolate(template, payload) {
     setText('progressMetricSpeedLabel', t('progressMetricSpeedLabel'));
     setText('progressMetricEtaLabel', t('progressMetricEtaLabel'));
     setText('progressMetricIAALabel', t('progressMetricIAALabel'));
+    setText('reviewProgressBreakdownLabel', t('reviewProgressGroupAria'));
+    var reviewProgressBreakdown = document.querySelector('[data-testid="review-progress-breakdown"]');
+    if (reviewProgressBreakdown) reviewProgressBreakdown.setAttribute('aria-label', t('reviewProgressGroupAria'));
     setText('finalExceptionPoolSubtitle', t('finalExceptionPoolSubtitle'));
     setText('thFepSample', t('thFepSample'));
     setText('thFepAnnotator', t('thFepAnnotator'));
@@ -8022,7 +8050,7 @@ function getTaskTypeLabel() {
     var excludedCount = getAssignmentCount(getExcludedForStage(state.progressStage));
     var effectiveTotal = Math.max(0, stageData.totalSamples - excludedCount);
     var rate = getProgressRate(stageData.completedSamples, effectiveTotal);
-    var rateText = rate + '%';
+    var rateText = stageData.completedSamples + ' / ' + effectiveTotal + ' · ' + rate + '%';
     if (unassignedCount || excludedCount) {
       rateText += t('unassignedRateSuffixTpl')
         .replace('{unassigned}', unassignedCount)
@@ -8037,6 +8065,26 @@ function getTaskTypeLabel() {
     setText('progressMetricIAAValue', (state.progressStage !== 'official' && unassignedCount)
       ? t('unassignedIaaBlocked')
       : formatIaaValue(getIaaAlphaValue(iaaResult)));
+
+    var workspaceData = window.LabelSuiteAnnotationWorkspaceData;
+    var reviewSummary = workspaceData && workspaceData.computeReviewSummary
+      ? workspaceData.computeReviewSummary(TASK_DATA.taskId, getSelectedRunType())
+      : null;
+    var reviewPools = workspaceData && workspaceData.listReviewPoolItems
+      ? workspaceData.listReviewPoolItems(TASK_DATA.taskId, getSelectedRunType())
+      : null;
+    setText('reviewFinalizedCount', reviewSummary
+      ? interpolate(t('reviewFinalizedTpl'), { count: reviewSummary.finalized, total: reviewSummary.total })
+      : '-');
+    setText('reviewDisputedCount', reviewSummary
+      ? interpolate(t('reviewDisputedTpl'), { count: reviewSummary.disputed })
+      : '-');
+    setText('reviewPendingArbitrationCount', reviewPools
+      ? interpolate(t('reviewPendingArbitrationTpl'), { count: reviewPools.awaitingArbitration.length })
+      : '-');
+    setText('reviewExceptionCount', reviewPools
+      ? interpolate(t('reviewExceptionTpl'), { count: reviewPools.pendingExceptions.length })
+      : '-');
   }
 
   function renderMemberProgressTable() {

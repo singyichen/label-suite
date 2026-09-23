@@ -8,10 +8,19 @@
     <div class="progress-metric-grid">
       <article class="progress-metric-item"><span class="progress-metric-key" id="progressMetricTotalLabel">總樣本數</span><span class="progress-metric-value" id="progressMetricTotalValue">-</span></article>
       <article class="progress-metric-item"><span class="progress-metric-key" id="progressMetricCompletedLabel">已完成數</span><span class="progress-metric-value" id="progressMetricCompletedValue">-</span></article>
-      <article class="progress-metric-item"><span class="progress-metric-key" id="progressMetricRateLabel">完成率</span><span class="progress-metric-value" id="progressMetricRateValue">-</span></article>
+      <article class="progress-metric-item" data-testid="annotation-submission-progress"><span class="progress-metric-key" id="progressMetricRateLabel">標記提交進度</span><span class="progress-metric-value" id="progressMetricRateValue">-</span></article>
       <article class="progress-metric-item"><span class="progress-metric-key" id="progressMetricSpeedLabel">平均速度</span><span class="progress-metric-value" id="progressMetricSpeedValue">-</span></article>
       <article class="progress-metric-item"><span class="progress-metric-key" id="progressMetricEtaLabel">剩餘估計時間</span><span class="progress-metric-value" id="progressMetricEtaValue">-</span></article>
       <article class="progress-metric-item"><span class="progress-metric-key" id="progressMetricIAALabel">IAA</span><span class="progress-metric-value" id="progressMetricIAAValue">-</span></article>
+      <article class="progress-metric-item review-progress-breakdown" data-testid="review-progress-breakdown" role="group" aria-label="審核定稿狀態">
+        <span class="progress-metric-key" id="reviewProgressBreakdownLabel">審核定稿狀態</span>
+        <div class="review-progress-values" aria-live="polite">
+          <span class="review-progress-value" id="reviewFinalizedCount" data-testid="review-finalized-count">-</span>
+          <span class="review-progress-value" id="reviewDisputedCount" data-testid="review-disputed-count">-</span>
+          <span class="review-progress-value" id="reviewPendingArbitrationCount" data-testid="review-pending-arbitration-count">-</span>
+          <span class="review-progress-value" id="reviewExceptionCount" data-testid="review-exception-count">-</span>
+        </div>
+      </article>
     </div>
   </section>
 
