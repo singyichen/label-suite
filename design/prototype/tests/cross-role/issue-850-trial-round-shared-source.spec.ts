@@ -1,5 +1,5 @@
 /*
- * Traceability: specs/_archive/014-task-detail/spec.md FR-013(3) (:622) --
+ * Traceability: specs/task-management/014-task-detail/spec.md FR-013(3) (:622) --
  *   creating R{n} (n>=2) from waiting_iaa_confirmation and switching the
  *   status to dry_run_in_progress is one action with no observable
  *   intermediate state, and FR-008a must not flip the task back to
