@@ -258,8 +258,8 @@
     },
     {
       id: 'T015',
-      nameZh: '審核流程示範：正式標記（單一審核員）',
-      nameEn: 'Review Flow Demo: Official Run (Single Reviewer)',
+      nameZh: '審核流程示範：正式標記（基礎審核）',
+      nameEn: 'Review Flow Demo: Official Run (Basic Review)',
       sourceFile: 'review-flow-official-single.json',
       outputTypes: ['single_label'],
       runType: 'official_run',
@@ -271,8 +271,8 @@
     },
     {
       id: 'T016',
-      nameZh: '審核流程示範：正式標記（三審核員多數決）',
-      nameEn: 'Review Flow Demo: Official Run (Three Reviewers)',
+      nameZh: '審核流程示範：正式標記（輪派、仲裁與最終例外）',
+      nameEn: 'Review Flow Demo: Official Run (Round-Robin Assignment, Arbitration, and Final Exceptions)',
       sourceFile: 'review-flow-official-multi.json',
       outputTypes: ['single_label'],
       runType: 'official_run',
