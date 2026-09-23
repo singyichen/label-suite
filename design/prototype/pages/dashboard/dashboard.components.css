@@ -247,6 +247,30 @@
       transition: width 300ms ease;
     }
 
+    .review-coverage-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-sm);
+      margin-top: 10px;
+      margin-bottom: 5px;
+      color: var(--color-ink-muted);
+      font-size: 0.75rem;
+      line-height: 1.3;
+    }
+
+    .review-coverage-label {
+      font-weight: 600;
+    }
+
+    .review-coverage-value {
+      font-variant-numeric: tabular-nums;
+    }
+
+    .progress.coverage-unresolved > span {
+      background: var(--color-warning);
+    }
+
     /* ── Responsive ────────────────────────────────────────────– */
     @media (max-width: 768px) {
       .layout {
