@@ -1,5 +1,5 @@
 /*
- * Traceability: specs/_archive/014-task-detail/spec.md (v4.1.0) --
+ * Traceability: specs/task-management/014-task-detail/spec.md (v4.1.0) --
  *   FR-017, FR-013(4), FR-010f-2, AC-3.12, SC-042; TrialRound entity
  *   (prior_round_findings / guideline_change_summary / no_change_reason).
  *   Issue #838 (split out of #791, whose design.md "範圍界線" left the

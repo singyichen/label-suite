@@ -409,8 +409,20 @@
      REVIEW_DECISIONS (FR-092) and has no emission point here. */
   var REVIEW_DECISION_EVENT_ACTION = { approve: 'accepted', modify: 'modified', bypass: 'bypassed' };
 
+  function reviewSummaryWithoutReasons(summary, reasons) {
+    var sanitized = summary || '';
+    Object.keys(reasons).forEach(function (outKey) {
+      if (reasons[outKey]) sanitized = sanitized.split(' — ' + reasons[outKey]).join('');
+    });
+    return sanitized.trim();
+  }
+
   function appendReviewDecisionEvents(entry, taskId, runType, sampleId, payload, summary, actorId, identity, decisions) {
     var reasons = (payload && payload.reasons) || {};
+    /* issue #881: FR-089 made `reason` the single structured source. Keep
+       this boundary defensive so a caller using the old combined summary
+       shape cannot create another duplicated history card. */
+    var sanitizedSummary = reviewSummaryWithoutReasons(summary, reasons);
     /* issue #583 (FR-088 R2): one submit measures one span of visible time,
        so only the first decision event this submit writes carries it --
        attaching the same started_at/lead_time to every outKey's event would
@@ -425,7 +437,7 @@
         Object.assign(extra, timingFields(payload && payload.timing));
         timingWritten = true;
       }
-      appendHistoryEvent(entry, action, 'reviewer', summary, actorId, extra);
+      appendHistoryEvent(entry, action, 'reviewer', sanitizedSummary, actorId, extra);
     });
   }
 
@@ -2806,7 +2818,7 @@
          reason is asked per item. */
       appendSampleTimelineEvent(
         taskId, runType, sampleId, 'adjudicated', 'reviewer',
-        decision.reason, 'arbitration finalized: ' + decision.itemId, identity,
+        decision.reason, '', identity,
         undefined, arbitrationFinalizedSnapshot(taskId, runType, sampleId, identity, decision.choice)
       );
     });
@@ -3551,7 +3563,7 @@
            line (annotation-workspace.config.js's decisionLines, ~L4780) so
            a seeded modify/bypass reads the same way a live one would. */
         var reviewSummary = (isModify || isBypass)
-          ? 'single_label · ' + row.a + ': ' + decision + ' — ' + (row.reason || '')
+          ? 'single_label · ' + row.a + ': ' + decision
           : '';
         markSampleSubmitted(
           row.t, 'reviewer', row.r, row.s,

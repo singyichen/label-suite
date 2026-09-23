@@ -1832,6 +1832,22 @@
     return block;
   }
 
+  /* issue #881: `reason` became a structured history field in FR-089, but
+     records written before this fix may still repeat the same text inside
+     `summary`. Keep those append-only records intact and normalize only the
+     display value. Every known structured reason is removed because one
+     reviewer submit can emit multiple per-outKey events that share the same
+     legacy summary. The arbitration writer also used an implementation-only
+     marker as its summary; it is not user-facing history content. */
+  function historySummaryForDisplay(event, structuredReasons) {
+    var summary = event.summary || '';
+    if (event.action === 'adjudicated' && summary.indexOf('arbitration finalized:') === 0) return '';
+    structuredReasons.forEach(function (reason) {
+      summary = summary.split(' — ' + reason).join('');
+    });
+    return summary.trim();
+  }
+
   function renderHistoryPanel() {
     var container = document.getElementById('wsHistoryContainer');
     if (!container) return;
@@ -1865,6 +1881,7 @@
       return;
     }
     var answerBlocks = buildHistoryAnswerBlocks(events);
+    var structuredReasons = events.map(function (event) { return event.reason; }).filter(Boolean);
     var list = document.createElement('div');
     list.className = 'history-list';
     events.slice().reverse().forEach(function (event, reversedIdx) {
@@ -1905,10 +1922,11 @@
       header.appendChild(actor);
       header.appendChild(meta);
       card.appendChild(header);
-      if (event.summary) {
+      var visibleSummary = historySummaryForDisplay(event, structuredReasons);
+      if (visibleSummary) {
         var summary = document.createElement('div');
         summary.className = 'history-summary';
-        summary.textContent = event.summary;
+        summary.textContent = visibleSummary;
         card.appendChild(summary);
       }
       if (answer) card.appendChild(answer);
@@ -4976,25 +4994,29 @@
     }
 
     var decisionLines = [];
+    var reviewHistoryLines = [];
     var reasons = {};
     var values = {};
     state.selectedOutputTypes.forEach(function (outKey) {
       rowsByOutKey[outKey].forEach(function (row) {
         var decision = reviewRowDecisions[decisionKey(outKey, row.name)];
         var line = outKey + ' · ' + row.name + ': ' + decision;
+        var reviewHistoryLine = line;
         if (row.name === annotatorId) {
           /* issue #596 (design.md D2): `values[outKey]` only exists for a
              `modify` decision -- `bypass` deliberately stores no value
              ("bypass 不存值"). */
           if (decision === 'modify') values[outKey] = currentRowAnswer(outKey);
-          /* issue #552 (FR-016A): the reason rides the history line so the
-             decision's summary carries it as well. */
+          /* issue #881: keep the detailed in-workspace review note, while
+             the persisted right-side history stores the same explanation
+             only in its structured `reason` field. */
           if (reviewDecisionRequiresReason(decision)) {
             reasons[outKey] = reviewRowReason(outKey, annotatorId);
-            line += ' — ' + reasons[outKey];
+            reviewHistoryLine += ' — ' + reasons[outKey];
           }
         }
         decisionLines.push(line);
+        reviewHistoryLines.push(reviewHistoryLine);
       });
     });
     var correctionLines = state.selectedOutputTypes.map(function (outKey) {
@@ -5006,7 +5028,7 @@
       var original = reviewRowOriginals[outKey] || '';
       return outKey + ': ' + original + ' -> ' + corrected;
     });
-    appendReviewHistoryEntry(history, decisionLines.concat(correctionLines).join('\n'));
+    appendReviewHistoryEntry(history, reviewHistoryLines.concat(correctionLines).join('\n'));
 
     var summary = buildHistorySummary() + '\n' + decisionLines.join('\n');
     /* issue #551/#596: the decision itself must survive into storage, not

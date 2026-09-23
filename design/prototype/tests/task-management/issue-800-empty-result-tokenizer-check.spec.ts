@@ -1,5 +1,5 @@
 /*
- * Traceability: specs/_archive/014-task-detail/spec.md
+ * Traceability: specs/task-management/014-task-detail/spec.md
  *   FR-021(6) (issue #772); SC-045 (issue #742)
  *
  * Issue #800 (Qodo finding on PR #799): when the current annotation-results
