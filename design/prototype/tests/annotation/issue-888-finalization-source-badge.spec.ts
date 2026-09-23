@@ -26,7 +26,7 @@ type WorkspaceData = {
   submitArbitration: (
     taskId: string, runType: string, sampleId: string,
     identity: { annotatorId: string; reviewerId: string },
-    decisions: Array<{ itemId: string; choice: string; value: number; reason: string }>
+    decisions: Array<{ itemId: string; choice: string; value: unknown; reason: string }>
   ) => void;
   resolveExceptionPoolItem: (
     taskId: string, runType: string, sampleId: string,
@@ -133,6 +133,41 @@ async function seedMixedSourceUnit(page: Page): Promise<void> {
     const status = data.getReviewUnitStatus('T013', 'official_run', sampleId,
       { annotatorId }, ['entity_recognition', 'relation_identification', 'multi_dim']);
     if (status !== 'finalized') throw new Error(`Mixed-source fixture did not finalize: ${status}`);
+  });
+  await page.reload();
+}
+
+async function seedArbitratedRelationRemoval(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const data = (window as unknown as { LabelSuiteAnnotationWorkspaceData: WorkspaceData })
+      .LabelSuiteAnnotationWorkspaceData;
+    const original = data.getReviewerMockRows('T013', 'absa-001')
+      .find((row) => row.annotator === 'kioleemg12');
+    if (!original) throw new Error('Missing T013 review unit fixture');
+    const annotatorId = 'kioleemg12';
+    const sampleId = 'absa-001';
+    const shared = {
+      previewEntities: original.answers.entity_recognition,
+      previewState: {
+        multi_dim: { dims: { valence: { value: 3 }, arousal: { value: 6 } } },
+      },
+    };
+    data.markSampleSubmitted('T013', 'annotator', 'official_run', sampleId,
+      { ...shared, previewTriples: original.answers.relation_identification },
+      '', { annotatorId });
+    data.markSampleSubmitted('T013', 'reviewer', 'official_run', sampleId,
+      { ...shared, previewTriples: original.answers.relation_identification.slice(1) },
+      '', { annotatorId, reviewerId: 'reviewer_wang' });
+    data.submitArbitration('T013', 'official_run', sampleId,
+      { annotatorId, reviewerId: 'reviewer_chen' }, [
+        {
+          itemId: 'relation_identification::Note 10 plus::has_aspect::過熱問題',
+          choice: 'adopt_b', value: null, reason: 'Synthetic relation removal rationale',
+        },
+      ]);
+    const status = data.getReviewUnitStatus('T013', 'official_run', sampleId,
+      { annotatorId }, ['entity_recognition', 'relation_identification', 'multi_dim']);
+    if (status !== 'finalized') throw new Error(`Relation removal did not finalize: ${status}`);
   });
   await page.reload();
 }
@@ -248,6 +283,29 @@ test('composite PL value and badge describe the same output in zh and en', async
   await page.locator('#langToggle').click();
   await expect(entityAnswer).toHaveText('Synthetic Target(Target)');
   await expect(entitySource).toHaveText('Finalized with PL custom answer');
+});
+
+test('arbitration adopting B removes only the disputed relation from the finalized list answer', async ({ page }) => {
+  const response = await page.goto(buildListUrl({
+    task_id: 'T013', role: 'reviewer', run_type: 'official_run', reviewer_id: 'reviewer_wang',
+  }));
+  expect(response?.status()).toBe(200);
+  await seedArbitratedRelationRemoval(page);
+  const row = rowFor(page, 'absa-001').filter({ hasText: 'kioleemg12' });
+  await expect(row.locator('.status-badge')).toHaveText('已定稿 · 已鎖定');
+  const relationAnswer = row.locator(
+    '[data-testid="list-review-answer"] [data-output-key="relation_identification"]'
+  );
+  const relationSource = row.locator(
+    '[data-testid="list-review-finalization-source-badge"][data-output-key="relation_identification"]'
+  );
+  await expect(relationAnswer).not.toContainText('has_aspect-過熱問題');
+  await expect(relationAnswer).toContainText('Note 10 plus-has_opinion-嚴重');
+  await expect(relationSource).toHaveText('仲裁採 B 定稿');
+  await page.locator('#langToggle').click();
+  await expect(relationAnswer).not.toContainText('has_aspect-過熱問題');
+  await expect(relationAnswer).toContainText('Note 10 plus-has_opinion-嚴重');
+  await expect(relationSource).toHaveText('Finalized by arbitration adopting B');
 });
 
 test('legacy arbitration result without a recorded choice uses a neutral source label', async ({ page }) => {
