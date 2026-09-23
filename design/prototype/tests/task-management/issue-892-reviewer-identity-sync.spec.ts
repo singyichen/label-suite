@@ -171,3 +171,88 @@ test('config-driven multi-label history shows the output decision and arbitratio
   await expect(detail.locator('.ar-history-arbitration .ar-history-name')).toHaveText('陳美玲');
   await expect(detail.locator('.ar-history-arbitration .ar-history-decision')).toHaveText('採 B（採用審核員修正）');
 });
+
+async function openMixedOutputFixture(page: Page): Promise<void> {
+  const taskId = 'T892M';
+  const sampleId = 'synthetic-mixed-output-review';
+  const annotatorId = 'fixture_annotator';
+
+  await patchDataFile(page, 'task-list.data.js', `
+    var task = JSON.parse(JSON.stringify(window.LabelSuiteTaskListData.tasks.find(function (item) { return item.id === 'T002'; })));
+    task.id = '${taskId}';
+    task.runType = 'official_run';
+    task.outputTypes = ['multi_label', 'single_label'];
+    window.LabelSuiteTaskListData.tasks.push(task);
+  `);
+  await patchDataFile(page, 'task-detail.data.js', `
+    var profile = JSON.parse(JSON.stringify(window.LabelSuiteTaskDetailData.profiles.T002));
+    profile.outputs.push(JSON.parse(JSON.stringify(window.LabelSuiteTaskDetailData.profiles.T001.outputs[0])));
+    profile.datasetRecords = [{ id: '${sampleId}', text: 'Synthetic mixed-output sample' }];
+    profile.reviewerIds = ['reviewer_wang', 'reviewer_chen'];
+    profile.arbiterIds = ['reviewer_chen'];
+    window.LabelSuiteTaskDetailData.profiles.${taskId} = profile;
+  `);
+  await patchDataFile(page, 'annotation-workspace.data.js', `
+    var data = window.LabelSuiteAnnotationWorkspaceData;
+    var identity = { annotatorId: '${annotatorId}' };
+    data.markSampleSubmitted('${taskId}', 'annotator', 'official_run', '${sampleId}',
+      { previewState: { multi_label: { selected: ['sad', 'fear'] },
+        single_label: { selected: 'positive' } } }, '', identity);
+    data.markSampleSubmitted('${taskId}', 'reviewer', 'official_run', '${sampleId}',
+      { previewState: { multi_label: { selected: ['sad', 'fear', 'angry'] },
+          single_label: { selected: 'positive' } },
+        previewBypass: { single_label: true },
+        decisions: { multi_label: 'modify', single_label: 'bypass' },
+        reasons: { multi_label: 'Add angry', single_label: 'Cannot adjudicate' } }, '',
+      { annotatorId: '${annotatorId}', reviewerId: 'reviewer_wang' });
+    var items = data.getDisputeItems('${taskId}', 'official_run', '${sampleId}', identity,
+      ['multi_label', 'single_label']);
+    if (items.length !== 2) throw new Error('Expected one dispute item per configured output');
+    data.submitArbitration('${taskId}', 'official_run', '${sampleId}',
+      { annotatorId: '${annotatorId}', reviewerId: 'reviewer_chen' },
+      items.map(function (item) {
+        return item.outKey === 'multi_label'
+          ? { itemId: item.outKey + '::' + item.key, choice: 'adopt_b',
+              value: item.reviewerValues.reviewer_wang, reason: 'Adopt the added label' }
+          : { itemId: item.outKey + '::' + item.key, choice: 'reject',
+              reason: 'Neither side resolves this output' };
+      }));
+  `);
+
+  const response = await page.goto(`/pages/task-management/task-detail.html?task_id=${taskId}&tab=annotation-results`);
+  expect(response?.status()).toBe(200);
+  await expect(page.locator('#arTableSection')).toBeVisible({ timeout: 15000 });
+  const summary = page.locator('#arResultTableBody tr.ar-summary-row').filter({ hasText: sampleId });
+  await expect(summary).toHaveCount(1);
+  await summary.locator('.ar-expand-btn').click();
+}
+
+test('mixed-output review history keeps modify and bypass as separately labeled decisions', async ({ page }) => {
+  await openMixedOutputFixture(page);
+  const summary = page.locator('#arResultTableBody tr.ar-summary-row').filter({ hasText: 'synthetic-mixed-output-review' });
+  const detail = summary.locator('xpath=following-sibling::tr[1]');
+  const reviews = detail.locator('.ar-history-review');
+  await expect(reviews).toHaveCount(2);
+  const multiLabel = detail.locator('.ar-history-review[data-output-key="multi_label"]');
+  const singleLabel = detail.locator('.ar-history-review[data-output-key="single_label"]');
+  await expect(multiLabel.locator('.ar-history-output')).toHaveText('多標籤');
+  await expect(multiLabel.locator('.ar-history-decision')).toHaveText('修改 → sad, fear, angry');
+  await expect(singleLabel.locator('.ar-history-output')).toHaveText('單一標籤');
+  await expect(singleLabel.locator('.ar-history-decision')).toHaveText('無法裁決');
+  await expect(reviews.locator('.ar-history-name')).toHaveText(['王小明', '王小明']);
+});
+
+test('mixed-output arbitration history keeps adopt B and reject on their own outputs', async ({ page }) => {
+  await openMixedOutputFixture(page);
+  const summary = page.locator('#arResultTableBody tr.ar-summary-row').filter({ hasText: 'synthetic-mixed-output-review' });
+  const detail = summary.locator('xpath=following-sibling::tr[1]');
+  const arbitrations = detail.locator('.ar-history-arbitration');
+  await expect(arbitrations).toHaveCount(2);
+  const multiLabel = detail.locator('.ar-history-arbitration[data-output-key="multi_label"]');
+  const singleLabel = detail.locator('.ar-history-arbitration[data-output-key="single_label"]');
+  await expect(multiLabel.locator('.ar-history-output')).toHaveText('多標籤');
+  await expect(multiLabel.locator('.ar-history-decision')).toHaveText('採 B（採用審核員修正）');
+  await expect(singleLabel.locator('.ar-history-output')).toHaveText('單一標籤');
+  await expect(singleLabel.locator('.ar-history-decision')).toHaveText('兩者皆非');
+  await expect(arbitrations.locator('.ar-history-name')).toHaveText(['陳美玲', '陳美玲']);
+});
