@@ -1462,49 +1462,73 @@
     });
   }
 
-  /* A FINALIZED unit's dispute items may have converged (or been arbiter-
-     finalized) away from the annotator's original scalar answer (issue
-     #400): the workspace's own finalized card already shows that converged
-     value, so the list must read the same source instead of freezing on the
-     annotator's original mockRow answer. Reuses the shared dispute-
-     resolution algorithm (annotation-workspace.data.js) so the two never
-     drift. Only scalar-shaped output types (item.key === item.outKey, e.g.
-     single_label/single_dim) are covered -- composite types diff per
-     sub-part and keep showing the annotator's answer unchanged. Returns
-     null when nothing was overwritten. */
-  function getFinalizedOverwrites(profile, context, recordId, identity) {
+  /* A FINALIZED unit's displayed answers must follow its per-output
+     responsibility chain (issues #400/#888). PL exception records settle a
+     whole output, while arbitration records settle individual dispute
+     items, so composite answers are rebuilt from the annotator value plus
+     each settled sub-item. */
+  function applyFinalizedDisputeItem(outKey, answer, item, resolvedValue) {
+    if (item.key === item.outKey) return resolvedValue;
+    if (outKey === 'multi_dim') {
+      var dims = {};
+      Object.keys(answer || {}).forEach(function (name) { dims[name] = answer[name]; });
+      dims[item.key] = resolvedValue;
+      return dims;
+    }
+    if (Array.isArray(answer)) {
+      var annotatorKey = JSON.stringify(item.annotatorValue);
+      var next = answer.filter(function (entry) { return JSON.stringify(entry) !== annotatorKey; });
+      if (resolvedValue !== null &&
+          !next.some(function (entry) { return JSON.stringify(entry) === JSON.stringify(resolvedValue); })) {
+        next.push(resolvedValue);
+      }
+      return next;
+    }
+    return answer;
+  }
+
+  function getFinalizedOverwrites(profile, context, recordId, identity, originalAnswers) {
     var data = window.LabelSuiteAnnotationWorkspaceData;
     var items = data.getDisputeItems(profile.id, context.runType, recordId, identity, profile.outputTypes);
-    if (!items.length) return null;
     var reviewerCount = data.readReviewerSubmissions(profile.id, context.runType, recordId, identity).length;
     var arbState = data.getArbitrationState(profile.id, context.runType, recordId, identity);
     var exceptionPool = data.getExceptionPool(profile.id, context.runType, recordId, identity);
     var overwrites = null;
+    profile.outputTypes.forEach(function (outKey) {
+      var poolRecord = exceptionPool[outKey];
+      if (poolRecord && poolRecord.action !== 'exclude_from_dataset' &&
+          Object.prototype.hasOwnProperty.call(poolRecord, 'finalized_value')) {
+        overwrites = overwrites || {};
+        overwrites[outKey] = poolRecord.finalized_value;
+      }
+    });
     items.forEach(function (item) {
-      if (item.key !== item.outKey) return;
-      var resolvedValue;
       var poolRecord = exceptionPool[item.outKey];
       if (poolRecord && poolRecord.action !== 'exclude_from_dataset' &&
           Object.prototype.hasOwnProperty.call(poolRecord, 'finalized_value')) {
-        resolvedValue = poolRecord.finalized_value;
+        return;
+      }
+      var resolvedValue;
+      var stored = arbState[item.outKey + '::' + item.key];
+      if (stored && stored.finalized_by) {
+        resolvedValue = stored.finalized_value;
       } else {
-        var stored = arbState[item.outKey + '::' + item.key];
-        if (stored && stored.finalized_by) {
-          resolvedValue = stored.finalized_value;
-        } else {
-          var convergence = data.resolveDisputeConvergence(item, reviewerCount);
-          if (convergence.converged) resolvedValue = convergence.value;
-        }
+        var convergence = data.resolveDisputeConvergence(item, reviewerCount);
+        if (convergence.converged) resolvedValue = convergence.value;
       }
       if (resolvedValue !== undefined) {
         overwrites = overwrites || {};
-        overwrites[item.outKey] = resolvedValue;
+        var currentAnswer = Object.prototype.hasOwnProperty.call(overwrites, item.outKey)
+          ? overwrites[item.outKey]
+          : originalAnswers[item.outKey];
+        overwrites[item.outKey] = applyFinalizedDisputeItem(
+          item.outKey, currentAnswer, item, resolvedValue);
       }
     });
     return overwrites;
   }
 
-  function getFinalizationSourceKey(profile, context, recordId, identity, overwrites) {
+  function getFinalizationSourceKeys(profile, context, recordId, identity, overwrites) {
     var data = window.LabelSuiteAnnotationWorkspaceData;
     var exceptionPool = data.getExceptionPool(profile.id, context.runType, recordId, identity);
     var exceptionSourceKeys = {
@@ -1513,31 +1537,39 @@
       adopt_reviewer: 'reviewFinalizationPlAdoptReviewer',
       exclude_from_dataset: 'reviewFinalizationPlExclude'
     };
-    for (var i = 0; i < profile.outputTypes.length; i += 1) {
-      var poolRecord = exceptionPool[profile.outputTypes[i]];
+    var sourceKeys = {};
+    profile.outputTypes.forEach(function (outKey) {
+      var poolRecord = exceptionPool[outKey];
       if (poolRecord && exceptionSourceKeys[poolRecord.action]) {
-        return exceptionSourceKeys[poolRecord.action];
+        sourceKeys[outKey] = exceptionSourceKeys[poolRecord.action];
       }
-    }
-
-    if (!overwrites) return null;
+    });
     var arbState = data.getArbitrationState(profile.id, context.runType, recordId, identity);
     var itemIds = Object.keys(arbState);
-    var hasLegacyFinalization = false;
-    for (var j = 0; j < itemIds.length; j += 1) {
-      var stored = arbState[itemIds[j]];
-      if (!stored || !stored.finalized_by) continue;
-      var votes = Array.isArray(stored.votes) ? stored.votes : [];
-      var finalizedVote = null;
-      votes.forEach(function (vote) {
-        if (vote.arbiter_id === stored.finalized_by) finalizedVote = vote;
+    profile.outputTypes.forEach(function (outKey) {
+      if (sourceKeys[outKey]) return;
+      var hasAdoptB = false;
+      var hasLegacyFinalization = false;
+      itemIds.forEach(function (itemId) {
+        if (itemId.indexOf(outKey + '::') !== 0) return;
+        var stored = arbState[itemId];
+        if (!stored || !stored.finalized_by) return;
+        var votes = Array.isArray(stored.votes) ? stored.votes : [];
+        var finalizedVote = null;
+        votes.forEach(function (vote) {
+          if (vote.arbiter_id === stored.finalized_by) finalizedVote = vote;
+        });
+        if (finalizedVote && finalizedVote.choice === 'adopt_b') hasAdoptB = true;
+        if (!finalizedVote) hasLegacyFinalization = true;
       });
-      if (finalizedVote && finalizedVote.choice === 'adopt_b') {
-        return 'reviewFinalizationArbitrationAdoptB';
+      if (hasAdoptB) {
+        sourceKeys[outKey] = 'reviewFinalizationArbitrationAdoptB';
+      } else if (hasLegacyFinalization && overwrites &&
+                 Object.prototype.hasOwnProperty.call(overwrites, outKey)) {
+        sourceKeys[outKey] = 'reviewFinalizationLegacy';
       }
-      if (!finalizedVote) hasLegacyFinalization = true;
-    }
-    return hasLegacyFinalization ? 'reviewFinalizationLegacy' : null;
+    });
+    return Object.keys(sourceKeys).length ? sourceKeys : null;
   }
 
   function buildReviewStatsText(profile, mockRows) {
@@ -1598,10 +1630,12 @@
     wrap.className = 'annotator-answer';
     wrap.setAttribute('data-testid', 'list-review-answer');
     outer.appendChild(wrap);
+    var sourceBadges = [];
     profile.outputTypes.forEach(function (outKey) {
       var tagSpan = document.createElement('span');
       var colorClass = dimColorClass(outKey, item.rowIdx, item.mockRows);
       tagSpan.className = 'annotator-result-tag' + (colorClass ? ' ' + colorClass : '');
+      tagSpan.setAttribute('data-output-key', outKey);
       var bypassed = !!(item.mockRow.bypass && item.mockRow.bypass[outKey]);
       var overwritten = !bypassed && item.overwrites &&
         Object.prototype.hasOwnProperty.call(item.overwrites, outKey);
@@ -1610,17 +1644,21 @@
         : (item.mockRow.answers ? item.mockRow.answers[outKey] : undefined);
       tagSpan.textContent = bypassed ? t('reviewBypassPill') : formatCompactAnswer(outKey, answer);
       wrap.appendChild(tagSpan);
+      var sourceKey = item.finalizationSourceKeys && item.finalizationSourceKeys[outKey];
+      if (sourceKey) {
+        var badge = document.createElement('span');
+        badge.className = 'review-overwritten-badge';
+        badge.setAttribute('data-testid', 'list-review-finalization-source-badge');
+        badge.setAttribute('data-output-key', outKey);
+        var legacyBadge = document.createElement('span');
+        legacyBadge.setAttribute('data-testid', 'list-review-overwritten-badge');
+        legacyBadge.setAttribute('data-output-key', outKey);
+        legacyBadge.textContent = t(sourceKey);
+        badge.appendChild(legacyBadge);
+        sourceBadges.push(badge);
+      }
     });
-    if (item.finalizationSourceKey) {
-      var badge = document.createElement('span');
-      badge.className = 'review-overwritten-badge';
-      badge.setAttribute('data-testid', 'list-review-finalization-source-badge');
-      var legacyBadge = document.createElement('span');
-      legacyBadge.setAttribute('data-testid', 'list-review-overwritten-badge');
-      legacyBadge.textContent = t(item.finalizationSourceKey);
-      badge.appendChild(legacyBadge);
-      outer.appendChild(badge);
-    }
+    sourceBadges.forEach(function (badge) { outer.appendChild(badge); });
     return outer;
   }
 
@@ -1753,7 +1791,8 @@
         var submittedAt = data.getSampleSubmittedAt(
           profile.id, 'annotator', context.runType, recordId, identity);
         var overwrites = status === REVIEW_UNIT_STATUS.FINALIZED
-          ? getFinalizedOverwrites(profile, context, recordId, identity)
+          ? getFinalizedOverwrites(
+            profile, context, recordId, identity, mockRow.answers || {})
           : null;
         units.push({
           recordId: recordId,
@@ -1768,7 +1807,7 @@
           completedAt: submittedAt ? formatCompletedAt(submittedAt) : '-',
           text: text,
           overwrites: overwrites,
-          finalizationSourceKey: getFinalizationSourceKey(
+          finalizationSourceKeys: getFinalizationSourceKeys(
             profile, context, recordId, identity, overwrites)
         });
       });
