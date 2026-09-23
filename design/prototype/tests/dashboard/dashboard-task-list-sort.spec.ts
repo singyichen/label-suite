@@ -40,7 +40,7 @@ test.describe('Dashboard — issue #187 annotator task list sort', () => {
     await expect(titles.first()).toHaveText('病患情緒與照護情境階層分類'); // T003, 18%
     // Stable sort keeps the 100%-tie group (T014/T016) in seed order
     // regardless of direction, so T016 (last of the tie) lands last here.
-    await expect(titles.last()).toHaveText('審核流程示範：正式標記（三審核員多數決）');
+    await expect(titles.last()).toHaveText('審核流程示範：正式標記（輪派、仲裁與最終例外）');
 
     await page.locator('#annotatorSortSelect').selectOption('default');
     await expect(titles.first()).toHaveText('醫療文本情感分類');
@@ -76,7 +76,7 @@ test.describe('Dashboard — issue #187 reviewer task list sort', () => {
 
     await page.locator('#reviewerSortSelect').selectOption('progress_desc');
     // T016 is the sole 100% (審核覆蓋率) reviewer entry.
-    await expect(titles.first()).toHaveText('審核流程示範：正式標記（三審核員多數決）');
+    await expect(titles.first()).toHaveText('審核流程示範：正式標記（輪派、仲裁與最終例外）');
     await expect(titles).toHaveCount(16);
     await expect(view.locator('.role-task-action-btn')).toHaveCount(16);
   });

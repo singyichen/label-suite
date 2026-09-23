@@ -24,7 +24,7 @@ import { buildListUrl, buildWorkspaceUrl, skipGuidelineModal } from './_workspac
 const DASHBOARD_URL = '/pages/dashboard/dashboard.html';
 
 /** T016 — official_run, min_reviewers = 3. Its name is what a deep link needs. */
-const T016_NAME = '審核流程示範：正式標記（三審核員多數決）';
+const T016_NAME = '審核流程示範：正式標記（輪派、仲裁與最終例外）';
 
 function crumb(page: Page) {
   return page.locator('nav.breadcrumb[data-testid="entry-breadcrumb"]');
