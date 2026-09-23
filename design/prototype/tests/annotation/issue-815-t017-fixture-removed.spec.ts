@@ -27,9 +27,8 @@ import { test, expect, type Page } from '@playwright/test';
  *      T017 is removed and stays green both before and after this group's
  *      Green work.
  *
- * Issue #892 retired the task-detail page's static REVIEW_FLOW_UNITS. Legacy
- * page registries are optional here: an absent registry contains no T017,
- * while the remaining canonical task registries still retain T014-T016.
+ * Issue #892 retired the task-detail page's static REVIEW_FLOW_UNITS. The
+ * REVIEW_WORKLOAD_BY_TASK registry remains required and retains T014-T016.
  *
  * Type declarations use local casts per `page.evaluate()` call -- no second
  * `declare global` in this directory (annotation-workspace-arbitration.spec.ts
@@ -90,14 +89,14 @@ test.describe('T017 review-flow demo fixture is fully removed (issue #815, tasks
         LabelSuiteAnnotationWorkspaceData: { REVIEWER_MOCK_ROWS: Record<string, unknown> };
         LabelSuiteTaskListData: { tasks: TaskListTask[] };
         LabelSuiteTaskDetailData: { profiles: Record<string, unknown> };
-        REVIEW_WORKLOAD_BY_TASK?: Record<string, unknown>;
+        REVIEW_WORKLOAD_BY_TASK: Record<string, unknown>;
         REVIEW_FLOW_UNITS?: Record<string, unknown>;
       };
       return {
         reviewerMockRows: Object.keys(w.LabelSuiteAnnotationWorkspaceData.REVIEWER_MOCK_ROWS),
         taskListIds: w.LabelSuiteTaskListData.tasks.map((task) => task.id),
         taskDetailProfiles: Object.keys(w.LabelSuiteTaskDetailData.profiles),
-        reviewWorkloadByTask: Object.keys(w.REVIEW_WORKLOAD_BY_TASK || {}),
+        reviewWorkloadByTask: Object.keys(w.REVIEW_WORKLOAD_BY_TASK),
         reviewFlowUnits: Object.keys(w.REVIEW_FLOW_UNITS || {}),
         staticReviewFlowUnitsRetired: w.REVIEW_FLOW_UNITS === undefined,
       };
@@ -114,6 +113,7 @@ test.describe('T017 review-flow demo fixture is fully removed (issue #815, tasks
       expect(registryKeys.reviewerMockRows, `REVIEWER_MOCK_ROWS missing ${taskId}`).toContain(taskId);
       expect(registryKeys.taskListIds, `LabelSuiteTaskListData.tasks missing ${taskId}`).toContain(taskId);
       expect(registryKeys.taskDetailProfiles, `LabelSuiteTaskDetailData.profiles missing ${taskId}`).toContain(taskId);
+      expect(registryKeys.reviewWorkloadByTask, `REVIEW_WORKLOAD_BY_TASK missing ${taskId}`).toContain(taskId);
     }
   });
 
