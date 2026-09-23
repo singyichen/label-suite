@@ -9,10 +9,29 @@ const EXCEPTION = 'ofm-05-final-exception';
 const ITEM = 'single_label::single_label';
 
 type WorkspaceData = {
+  getReviewerMockRows: (
+    taskId: string, sampleId: string
+  ) => Array<{
+    annotator: string;
+    answers: {
+      entity_recognition: Array<{ text: string; type: string }>;
+      relation_identification: Array<{ subj: string; rel: string; obj: string }>;
+    };
+  }>;
+  markSampleSubmitted: (
+    taskId: string, role: string, runType: string, sampleId: string,
+    payload: unknown, historySummary: string,
+    identity: { annotatorId: string; reviewerId?: string }
+  ) => void;
+  submitArbitration: (
+    taskId: string, runType: string, sampleId: string,
+    identity: { annotatorId: string; reviewerId: string },
+    decisions: Array<{ itemId: string; choice: string; value: number; reason: string }>
+  ) => void;
   resolveExceptionPoolItem: (
     taskId: string, runType: string, sampleId: string,
     identity: { annotatorId: string }, outKey: string,
-    action: string, value: string | undefined, reason: string
+    action: string, value: unknown, reason: string
   ) => void;
   getReviewUnitStatus: (
     taskId: string, runType: string, sampleId: string,
@@ -72,6 +91,50 @@ async function resolveException(
       ).single_label,
     };
   }, { action, value });
+}
+
+// T013 is an ordinary config-driven three-output task. Its first official
+// review unit is owned by reviewer_wang; reviewer_chen can arbitrate it.
+async function seedMixedSourceUnit(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const data = (window as unknown as { LabelSuiteAnnotationWorkspaceData: WorkspaceData })
+      .LabelSuiteAnnotationWorkspaceData;
+    const original = data.getReviewerMockRows('T013', 'absa-001')
+      .find((row) => row.annotator === 'kioleemg12');
+    if (!original) throw new Error('Missing T013 review unit fixture');
+    const annotatorId = 'kioleemg12';
+    const sampleId = 'absa-001';
+    const annotatorPayload = {
+      previewEntities: original.answers.entity_recognition,
+      previewTriples: original.answers.relation_identification,
+      previewState: {
+        multi_dim: { dims: { valence: { value: 3 }, arousal: { value: 6 } } },
+      },
+    };
+    const reviewerPayload = {
+      previewEntities: original.answers.entity_recognition.slice(0, -1),
+      previewTriples: original.answers.relation_identification,
+      previewState: {
+        multi_dim: { dims: { valence: { value: 7 }, arousal: { value: 6 } } },
+      },
+    };
+    data.markSampleSubmitted('T013', 'annotator', 'official_run', sampleId,
+      annotatorPayload, '', { annotatorId });
+    data.markSampleSubmitted('T013', 'reviewer', 'official_run', sampleId,
+      reviewerPayload, '', { annotatorId, reviewerId: 'reviewer_wang' });
+    data.submitArbitration('T013', 'official_run', sampleId,
+      { annotatorId, reviewerId: 'reviewer_chen' }, [
+        { itemId: 'multi_dim::valence', choice: 'adopt_b', value: 7,
+          reason: 'Synthetic arbitration rationale' },
+      ]);
+    data.resolveExceptionPoolItem('T013', 'official_run', sampleId,
+      { annotatorId }, 'entity_recognition', 'custom_answer',
+      [{ text: 'Synthetic Target', type: 'Target' }], 'Synthetic exception rationale');
+    const status = data.getReviewUnitStatus('T013', 'official_run', sampleId,
+      { annotatorId }, ['entity_recognition', 'relation_identification', 'multi_dim']);
+    if (status !== 'finalized') throw new Error(`Mixed-source fixture did not finalize: ${status}`);
+  });
+  await page.reload();
 }
 
 test.beforeEach(async ({ page }) => {
@@ -137,6 +200,54 @@ test('PL exclusion names its source without fabricating a final answer', async (
   const row = rowFor(page, EXCEPTION);
   await expect(row.locator('.status-badge')).toHaveText('爭議中 · 未定稿');
   await expectBadgeInBothLanguages(page, EXCEPTION, 'PL 已排除資料', 'Excluded by PL');
+});
+
+test('multi-output unit pairs arbitration and PL sources with their own answer tags', async ({ page }) => {
+  const response = await page.goto(buildListUrl({
+    task_id: 'T013', role: 'reviewer', run_type: 'official_run', reviewer_id: 'reviewer_wang',
+  }));
+  expect(response?.status()).toBe(200);
+  await seedMixedSourceUnit(page);
+  const row = rowFor(page, 'absa-001').filter({ hasText: 'kioleemg12' });
+  await expect(row.locator('.status-badge')).toHaveText('已定稿 · 已鎖定');
+  await expect(row.getByTestId('list-review-finalization-source-badge')).toHaveCount(2);
+
+  const dimensionAnswer = row.locator('[data-testid="list-review-answer"] [data-output-key="multi_dim"]');
+  const dimensionSource = row.locator(
+    '[data-testid="list-review-finalization-source-badge"][data-output-key="multi_dim"]'
+  );
+  const entitySource = row.locator(
+    '[data-testid="list-review-finalization-source-badge"][data-output-key="entity_recognition"]'
+  );
+  await expect(dimensionAnswer).toHaveText('[7, 6]');
+  await expect(dimensionSource).toHaveText('仲裁採 B 定稿');
+  await expect(entitySource).toHaveText('PL 自訂答案定稿');
+  await page.locator('#langToggle').click();
+  await expect(dimensionAnswer).toHaveText('[7, 6]');
+  await expect(dimensionSource).toHaveText('Finalized by arbitration adopting B');
+  await expect(entitySource).toHaveText('Finalized with PL custom answer');
+});
+
+test('composite PL value and badge describe the same output in zh and en', async ({ page }) => {
+  const response = await page.goto(buildListUrl({
+    task_id: 'T013', role: 'reviewer', run_type: 'official_run', reviewer_id: 'reviewer_wang',
+  }));
+  expect(response?.status()).toBe(200);
+  await seedMixedSourceUnit(page);
+  const row = rowFor(page, 'absa-001').filter({ hasText: 'kioleemg12' });
+  const entityAnswer = row.locator(
+    '[data-testid="list-review-answer"] [data-output-key="entity_recognition"]'
+  );
+  const entitySource = row.locator(
+    '[data-testid="list-review-finalization-source-badge"][data-output-key="entity_recognition"]'
+  );
+  await expect(row.getByTestId('list-review-answer').locator('.annotator-result-tag').first())
+    .toHaveText('Synthetic Target(Target)');
+  await expect(entityAnswer).toHaveText('Synthetic Target(Target)');
+  await expect(entitySource).toHaveText('PL 自訂答案定稿');
+  await page.locator('#langToggle').click();
+  await expect(entityAnswer).toHaveText('Synthetic Target(Target)');
+  await expect(entitySource).toHaveText('Finalized with PL custom answer');
 });
 
 test('legacy arbitration result without a recorded choice uses a neutral source label', async ({ page }) => {
