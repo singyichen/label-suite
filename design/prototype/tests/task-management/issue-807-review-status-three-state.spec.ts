@@ -1,5 +1,5 @@
 /*
- * Traceability: specs/_archive/014-task-detail/spec.md
+ * Traceability: specs/task-management/014-task-detail/spec.md
  *   FR-015a-1, FR-015d (AR_REVIEW_STATUS)
  * Issue #807: canonical 014 v3.0.0 (issue #688) collapsed AR_REVIEW_STATUS
  * from five states to three (pending / disputed / finalized), retiring the

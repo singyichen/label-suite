@@ -2,7 +2,7 @@
  * Issue #761 -- review workload numbers must be derived from real review
  * units, not a hardcoded per-reviewer seed.
  *
- * Traceability: specs/_archive/014-task-detail/spec.md
+ * Traceability: specs/task-management/014-task-detail/spec.md
  *   AC-1.6  (:157) -- "每位啟用中審核員的已指派／待審／已完成三欄...且與成員清單
  *                      「審核負荷」欄一致；Overview 調整 reviewer_ids 勾選並儲存後，
  *                      負荷分布即時反映（FR-005j、FR-005k）。"
