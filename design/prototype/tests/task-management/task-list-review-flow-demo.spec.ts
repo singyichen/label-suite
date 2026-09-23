@@ -28,7 +28,7 @@ const DEMO_TASKS = [
   {
     id: 'T015',
     sourceFile: 'review-flow-official-single.json',
-    nameZh: '審核流程示範：正式標記（單一審核員）',
+    nameZh: '審核流程示範：正式標記（基礎審核）',
     runBadge: '正式標記',
     runBadgeClass: '.badge-official',
     statusBadge: '正式標記中',
@@ -36,7 +36,7 @@ const DEMO_TASKS = [
   {
     id: 'T016',
     sourceFile: 'review-flow-official-multi.json',
-    nameZh: '審核流程示範：正式標記（三審核員多數決）',
+    nameZh: '審核流程示範：正式標記（輪派、仲裁與最終例外）',
     runBadge: '正式標記',
     runBadgeClass: '.badge-official',
     statusBadge: '正式標記中',
