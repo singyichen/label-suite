@@ -1,7 +1,7 @@
 # foundation/002-user-path-map-freshness-check Specification
 
 ## Purpose
-User Path Map Freshness Check 的 derived capability；正典為 `specs/_archive/002-user-path-map-freshness-check/spec.md` v2.0.0。本 change 以兩階段實作 FR-001～FR-010、AC-1.1～AC-3.3 與 SC-001～SC-006：Stage 1 交付 fail-closed CLI 與 fixture regression；#645 合併後，依 2026-09-18 design amendment 的 screen-list fingerprint 模型交付 Stage 2 判定並啟用 production CI gate。AC-2.3 已退役併入 AC-2.2。
+User Path Map Freshness Check 的 derived capability；正典為 `specs/foundation/002-user-path-map-freshness-check/spec.md` v2.0.0。本 change 以兩階段實作 FR-001～FR-010、AC-1.1～AC-3.3 與 SC-001～SC-006：Stage 1 交付 fail-closed CLI 與 fixture regression；#645 合併後，依 2026-09-18 design amendment 的 screen-list fingerprint 模型交付 Stage 2 判定並啟用 production CI gate。AC-2.3 已退役併入 AC-2.2。
 
 ## Requirements
 
