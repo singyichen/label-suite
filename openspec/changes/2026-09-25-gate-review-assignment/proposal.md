@@ -24,25 +24,28 @@ FR-093（`specs/annotation/015-annotation-workspace/spec.md:1004`）規定每個
 
 ## What Changes
 
-- **修訂 FR-093**：補一段本版修訂（第 6 點），定義工作區側的指派閘門：
-  1. **左欄與導覽只列出指派給自己的單位**：工作區左欄、上一筆／下一筆導覽、送出後自動前進，MUST 只在指派給目前審核員的單位（含仲裁資格覆蓋的爭議單位，見下）之間運作，與 `annotation-list` 的過濾邏輯同源（`getAssignedReviewUnits()`）。
-  2. **直接網址開啟未指派單位時唯讀可見**：審核員以直接網址開啟未指派給自己的審核單位時，MUST 仍顯示樣本內容，但 MUST NOT 渲染任何可送出的審核控件（含鍵盤捷徑之送出路徑，FR-058），並 MUST 顯示明確原因說明。
-  3. **仲裁入口不受影響**：具仲裁資格（FR-060 `isArbiterCandidate()`）的爭議單位入口 MUST NOT 被本條閘門擋掉——仲裁判定序 MUST 優先於本條。
-  4. **推導來源**：本條閘門 MUST 沿用既有的 `getAssignedReviewUnits()` 推導，MUST NOT 另立第二套指派判定（DRY，避免與 `annotation-list` 的過濾邏輯分歧）。
+**範圍收斂（apply 階段追加，team lead 裁定）**：維護者裁定包含兩件事——(1) 送出動作依指派收斂為唯讀閘門，(2) 工作區左欄／導覽只列出指派給自己的單位。實作 (2) 時實測發現既有測試語料庫（reviewer 角色工作區測試）廣泛假設「任一在冊審核員可開啟任一單位」，全面補上左欄過濾會牽動約 48 個既有測試檔，遠超單一 PR 承載範圍與 CLAUDE.md 之「task 觸及 ≥ 10 檔須升級」門檻。經升級判定，(2) 移交新開 issue #956（前置為本 issue 先合併），本變更之 delta 與實作只保留 (1)。
+
+- **修訂 FR-093**：補一段本版修訂，定義工作區側的**送出**指派閘門：
+  1. **直接網址開啟未指派單位時唯讀可見**：審核員以直接網址開啟未指派給自己的審核單位時，MUST 仍顯示樣本內容，但 MUST NOT 渲染任何可送出的審核控件（含鍵盤捷徑之送出路徑，FR-058），並 MUST 顯示明確原因說明。
+  2. **仲裁入口不受影響**：具仲裁資格（FR-060 `isArbiterCandidate()`）的爭議單位入口 MUST NOT 被本條閘門擋掉——仲裁判定序 MUST 優先於本條。
+  3. **推導來源**：本條閘門 MUST 沿用既有的 `getAssignedReviewUnits()` 推導，MUST NOT 另立第二套指派判定（DRY，避免與 `annotation-list` 的過濾邏輯分歧）。
 - **原型實作**（1 個產品檔，`design/prototype/pages/annotation/annotation-workspace.config.js`）：
-  - `buildUnits()` 拆分為 `buildAllUnits()`（未過濾的完整單位宇宙，供指派推導與非 reviewer 角色使用）與過濾後的 `buildUnits()`（reviewer 角色套用指派 + 仲裁例外，其餘角色不受影響）。
-  - `REVIEW_UNIT_BLOCK` 新增 `NOT_ASSIGNED` 值，`reviewUnitBlockReason()` 判定序改為 ARBITRATION → FINALIZED → OFF_ROSTER → **NOT_ASSIGNED** → EMPTY。
+  - `buildUnits()` 維持不變（左欄／導覽列舉全部單位，不過濾——過濾留給 #956）。
+  - 新增 `isCurrentUnitAssigned()`：把 `buildUnits()` 既有的完整單位宇宙原樣交給既有的 `getAssignedReviewUnits()`，只檢查**目前這一個單位**是否在回傳結果中，不另立第二套判定。
+  - `REVIEW_UNIT_BLOCK` 新增 `NOT_ASSIGNED` 值，`reviewUnitBlockReason()` 判定序改為 ARBITRATION → FINALIZED → OFF_ROSTER → **EMPTY → NOT_ASSIGNED**（EMPTY 排在 NOT_ASSIGNED 之前：真正空的單位——標記員尚無提交、亦無示範列——在指派推導的輸入宇宙中不產生任何列舉項，對任何人都不構成「已指派」，若指派檢查排在前面，會讓未來輪值會分到它的審核員收到「未指派給你」的假訊息；此為 apply 階段跑既有測試才發現並修正的設計缺陷，非 propose 階段原始設計）。
   - 新增唯讀渲染分支（沿用 OFF_ROSTER 分支寫法）與中英文案 `reviewNotAssignedNote`。
-- **既有測試期望值同步**：比照 issue #824 `sticky-review-assignment` 的 probe 方法論，找出因指派閘門生效而位移的既有斷言（多數涉及使用預設身分開啟 `reviewerIds` 未設定或多人名冊任務的工作區測試），只同步期望值、不改測試結構；若某則斷言的前提本身消失（而非單純位移），另行判定並在 PR 說明。
+- **既有測試修正**：跑受影響既有測試（`annotation-list-reviewer.spec.ts`、`annotation-workspace-arbitration.spec.ts`、`issue-307-empty-review-unit-gate.spec.ts`）發現 6 則因本閘門生效而轉紅，逐一 triage：1 則由上述判定序修正自動轉綠（無需測試改動）；3 則為位移（測試固定使用 T015 唯一 `can_arbitrate` 成員 `reviewer_chen` 作為預設身分，但 chen 依 issue #868／v6.15.0 規則被排除於全部新指派之外，改為傳入各案例實際受派者，斷言本身未改）；2 則為前提消失（`annotation-workspace-arbitration.spec.ts` 兩則「非受派者／非爭議單位仍正常審核」案例，其前提正是本單要修的多提交漏洞本身，在指派閘門生效後不可能合法發生，未刪除，改為斷言 FR-093 要求的正確結果並更名說明理由）。
 - **正典回寫（gate 4）**：015 版號 MINOR bump（自當下最新版號接續）並補一列 Changelog；delta 中未編號的新情境於回寫時接續 FR-093 使用者故事（US4）現行最大 AC 編號，編成新 AC。
 
 **非目標**：
 
+- **不做工作區左欄／導覽的指派過濾**。維護者裁定的這半部分移交 issue #956（前置本 issue），詳見本節開頭之範圍收斂說明；`buildUnits()` 本變更維持不過濾。
 - **不改 `getAssignedReviewUnits()`／`getReviewAssignments()`／`taskReviewAssignments()` 等指派推導本身**。工作區只是**消費**既有的指派結果，不重新定義指派規則本身（該規則已由 issue #596／#824／#868 定案）。
-- **不改 `annotation-list.html` 的既有過濾邏輯**。它已經正確過濾，本單只是把工作區補齊到同一標準。
+- **不改 `annotation-list.html` 的既有過濾邏輯**。它已經正確過濾，不受本單影響。
 - **不改仲裁者資格判定（FR-060）與 `isArbiterCandidate()`**。
 - **不新增後端權限控管**。維護者已明確裁定本單只做前端唯讀呈現，真正的存取控管屬於後端職責，非本單範圍。
-- **不處理 #913（`[0]` 取值錯誤而非 sticky 擁有者）與 #914**。兩者依維護者排程（#921 → #913 → #914）為獨立 issue，本單只切斷「未指派審核員產生多提交」的產生途徑本身。
+- **不處理 #913（`[0]` 取值錯誤而非 sticky 擁有者）與 #914**。兩者依維護者排程（#921 → #913 → #914）為獨立 issue，本單只切斷「未指派審核員送出決策」的產生途徑本身。
 
 ## Capabilities
 
