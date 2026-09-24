@@ -1295,7 +1295,10 @@
      the sr-only <h1> above, so the heading always names the current task/
      sample without duplicating any config.js logic. Kept in sync via
      MutationObserver since renderEntryBreadcrumb() re-renders on sample
-     navigation without a full page reload. -->
+     navigation without a full page reload.
+     ponytail: mirrors the breadcrumb via MutationObserver because
+     annotation-workspace.config.js was an in-flight conflict zone (#931);
+     set the heading directly in renderEntryBreadcrumb() once #931 has landed -->
 <script>
 (function () {
   var heading = document.getElementById('wsPageHeading');
