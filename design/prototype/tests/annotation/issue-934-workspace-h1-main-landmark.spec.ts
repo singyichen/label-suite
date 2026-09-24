@@ -12,19 +12,24 @@
  * aria-allowed-attr, and any other axe-core finding are explicitly out of
  * scope for this fix.
  *
- * The h1 is asserted as a static, role/task-agnostic screen-type label (the
- * same pattern as annotation-list.html's `<h1 class="page-title"
- * id="pageTitle">標記清單</h1>`), not required to contain the live task name
- * or sample id: `annotation-workspace.config.js` -- the only place that data
- * exists at render time -- is a separate in-flight issue's (#931) conflict
- * zone the Green implementer must not touch, so a JS-populated per-task h1
- * is out of scope here. Only the non-empty, human-meaningful text and the
- * <main> landmark are asserted.
+ * The h1 must describe the CURRENT task/sample (issue #934's actual ask: "頁
+ * 面有一個描述目前任務／樣本的 h1"), not just be a static, role-agnostic
+ * screen-type label -- a hardcoded label (e.g. always "標記作業") both fails
+ * to name the current task/sample AND duplicates the wrong-label defect that
+ * issue #931 exists to fix (hardcoding the annotator-mode label even in
+ * reviewer mode). `annotation-workspace.config.js` -- the only place task/
+ * sample data exists at render time -- is a separate in-flight issue's
+ * (#931) conflict zone the Green implementer must not touch, but real task/
+ * sample content is still achievable HTML-only by having the h1 mirror the
+ * already-rendered breadcrumb DOM (`#entryBreadcrumb`, populated by
+ * config.js's existing `renderEntryBreadcrumb()`), so this test still
+ * requires the h1 text to concretely name the task or the sample.
  */
 import { test, expect } from '@playwright/test';
 import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
 
 /** T016 -- official_run, reviewer path (same fixture as annotation-entry-breadcrumb.spec.ts). */
+const T016_NAME = '審核流程示範：正式標記（輪派、仲裁與最終例外）';
 const SAMPLE_ID = 'ofm-03-awaiting-arbitration';
 
 test.describe('issue #934 -- workspace has an <h1> and a <main> landmark', () => {
@@ -46,10 +51,13 @@ test.describe('issue #934 -- workspace has an <h1> and a <main> landmark', () =>
     await expect(main.getByTestId('ws-content-scroll')).toBeVisible();
   });
 
-  test('exactly one <h1> carries a non-empty, human-meaningful label', async ({ page }) => {
+  test('exactly one <h1> names the current task or sample', async ({ page }) => {
     const h1 = page.locator('h1');
     await expect(h1).toHaveCount(1);
     const text = (await h1.textContent())?.trim() ?? '';
     expect(text.length).toBeGreaterThan(0);
+    // Must concretely describe the current task/sample -- not a generic
+    // decorative label with no task/sample context.
+    expect(text.includes(T016_NAME) || text.includes(SAMPLE_ID)).toBe(true);
   });
 });
