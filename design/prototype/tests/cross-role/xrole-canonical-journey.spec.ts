@@ -839,13 +839,13 @@ test('XROLE-15: a single reviewer approval finalizes the unit immediately', asyn
 test('XROLE-16: a second reviewer agreeing with the first does not auto-converge a disputed unit (FR-092 regression guard)', async () => {
   /* issue #596: this test used to prove the OPPOSITE of what it asserts
    * below -- that 2 reviewers voting the same non-annotator value was a
-   * strict majority under N=2, so resolveDisputeConvergence() converged the
-   * dispute item and finalized the unit WITHOUT arbitration. FR-092
+   * strict majority under N=2, so the retired majority-convergence helper
+   * converged the dispute item and finalized the unit WITHOUT arbitration. FR-092
    * explicitly forbids that shortcut now ("沒有「單一審核員修正即收斂」的例外",
    * and the same holds for any N-reviewer agreement): a `modify`/`bypass`
-   * decision always routes to the dispute pool, and getReviewUnitStatus()
-   * no longer consults resolveDisputeConvergence() for status at all (doc
-   * comment, annotation-workspace.data.js:2020-2048) -- only an arbiter's
+   * decision always routes to the dispute pool, and issue #903 deleted that
+   * convergence helper outright, so no majority path survives anywhere in
+   * the data layer -- only an arbiter's
    * explicit vote (FR-060) or the exception pool can close a dispute. This
    * is now a regression guard against that retired shortcut reappearing. */
   /* issue #596: FR-014I's reject -> pending rollback is retired
