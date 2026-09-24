@@ -1,0 +1,327 @@
+---
+name: issue-dispatch
+description: Scan GitHub issues labeled agent-ready, schedule the non-conflicting ones into waves, and drive each issue from dispatch through independent review to merge using parallel subagents in isolated worktrees. Use when asked to dispatch issues, work the agent-ready queue, run a wave, pick up labelled issues, or resume an in-flight dispatch given only an issue number.
+---
+
+# Issue Dispatch
+
+GitHub issues are the only state store for this workflow. Never record progress in `claude-progress.md`, a memory file, or the scratchpad: parallel sessions overwrite those, and another machine cannot read them. Any session, on any machine, resumes work by reading an issue's last checkpoint comment.
+
+The maintainer decides what is actionable by applying the `agent-ready` label. Everything from dispatch to merge is automated. The only stop for a maintainer decision is a MAJOR spec change.
+
+## Authority
+
+Follow the authority order in `.claude/skills/sdd-workflow/SKILL.md`: main constitution → applicable domain constitution → Accepted ADR → canonical feature spec → `docs/sdd-workflow.md` → machine guidance. This skill is machine guidance and never overrides any of them. Where it departs from `.claude/commands/pr-flow.md`, the departure is listed in **Deviations from pr-flow** below; anything not listed there follows `pr-flow` as written.
+
+## What this skill never does
+
+- Apply `agent-ready` itself. Whether an issue is actionable is the maintainer's judgment alone.
+- Handle Critical or High severity security findings. Those follow the private path in `.claude/rules/issue-reporting.md` — no public issue, no exploit detail in a comment.
+- Act as a CI gate. This is a human-triggered orchestration flow, not a verification suite. If a future revision adds a script under `scripts/`, declare it in `scripts/ci-jobs.tsv` as `none` with a reason.
+- Commit or push to `main`.
+
+## Roles and topology
+
+```
+main session  (sole arbiter, sole merger, sole label editor)
+|  scan → collision check → classify → conflict graph → waves (max 5 parallel)
+|  dispatch N leads → collect N agentIds → send each lead the wave roster
+|
++- per-issue lead  (general-purpose, Sonnet, own worktree, own PW_PORT)
+|    +- senior-qa               Red: write the test, commit it, run the expected failure
+|    +- senior-frontend | senior-backend | senior-debugger   Green: implement only
+|    +- senior-code-reviewer    independent review (did not write the code)
+|    The lead plays CLAUDE.md's "main agent/team lead" role for its own issue:
+|    verifies Red and Green evidence, is the only role that ticks tasks.md,
+|    posts checkpoint comments, opens the PR.
+|
++- per-issue lead  (next issue, next port)
+```
+
+The per-issue lead **must** be `general-purpose`. Every agent under `.claude/agents/` — `team-lead` and `senior-qa` included — omits `Agent` and `SendMessage` from its `tools:` list, so a specialist can neither delegate nor communicate. Specialists are leaves by construction, which caps nesting depth at two levels.
+
+Budget rule: a lead runs at most one nested specialist at a time. Red completes before Green is dispatched.
+
+Every nested agent's prompt must state the worktree's absolute path and require the agent to enter it first. Do not assume a nested agent inherits the lead's working directory.
+
+Model selection follows CLAUDE.md: the lead defaults to Sonnet; escalate to Opus for architecture, counter-factual, or security threat modeling work.
+
+## Peer communication
+
+Leads may talk to each other directly. The rules below are not style preferences — each follows from what the harness actually permits.
+
+| Rule | Why |
+|---|---|
+| The main session distributes the roster (`#N → agentId`) after all leads are dispatched | A subagent has no `ListAgents` and cannot discover peers; addressing a peer by name fails. The raw `agentId` from a spawn result is the only working address, and it does not exist until that agent is spawned |
+| One-shot notification only. An agent must never send a message and then wait for the reply | A waiting on B while B waits on A deadlocks the wave |
+| Never use a message as a lock to coordinate a shared file. Escalate a discovered file conflict to the main session, which arbitrates | Issues in one wave are scheduled to be non-conflicting, so needing to coordinate means the conflict graph was wrong. That is a scheduling bug to report, not something to negotiate around |
+| The main session judges progress **only** from `gh issue view <N> --comments`, never from task notifications | When one agent resumes a peer, the resumed agent's completion notification goes to the peer that sent the message, not to the main session. Notification routing is therefore unreliable; issue comments are not |
+
+## Re-entry safety
+
+`/goal` and `/loop` both re-enter this flow, and so does a fresh session handed nothing but an issue number. Three mechanisms make re-entry safe: the collision check (step 2), the `agent-running` label, and the checkpoint comments. On re-entry, read the issue's last checkpoint comment and continue from there. Never restart an issue that already has a checkpoint comment without first reconciling its branch, worktree, and PR.
+
+## Step 1 — Scan
+
+```bash
+gh issue list --label agent-ready --state open --limit 50 \
+  --json number,title,labels \
+  --jq '.[] | select((.labels | map(.name)) as $l
+        | ($l | index("blocked") | not)
+        and ($l | index("agent-running") | not))
+        | "\(.number)\t\(.title)"'
+```
+
+An issue without `agent-ready` is never claimed, even when nothing blocks it.
+
+Then, for every candidate, read the **entire comment thread** before deciding anything:
+
+```bash
+gh issue view <N> --comments
+```
+
+The body alone is not the requirement. Adjudications are routinely written in later comments — #920 and #921 both settled their real scope that way. An issue whose body and latest comment disagree is classified as needing adjudication, not guessed at.
+
+## Step 2 — Collision check
+
+Keyed on the issue number. Any hit means someone is already on it: skip the issue and say so in the wave report.
+
+```bash
+N=<number>
+git worktree list | grep -E "(^|[^0-9])${N}([^0-9]|$)"
+git branch -a | grep -E "(^|[^0-9])${N}([^0-9]|$)"
+git log --all --grep="#${N}" --oneline | head
+gh pr list --state all --search "${N}" --json number,title,state,headRefName
+```
+
+Match the bare issue number, not a `issue-<N>-` prefix. Worktrees in this repository carry at least three naming shapes — `.worktrees/feat-620-guideline-anchors`, `../wt-issue-576-diagrams`, `/private/tmp/wt-657-test` — and a prefix match finds none of them, so #620 would wrongly read as uncontested.
+
+An existing `agent-running` label or an existing checkpoint comment also counts as a collision. That is a re-entry case and follows **Re-entry safety**, not a fresh dispatch.
+
+## Step 3 — Classify
+
+| Path | Condition | Handling |
+|---|---|---|
+| Lightweight | All true: ≤ 2 production files (spec and test files excluded) · no API contract change · minor behavior change needing a spec update · no FR/AC added or removed, only clarified | Fully automated |
+| OpenSpec change | Anything else that changes specified behavior | Fully automated through archive, subject to the MAJOR stop |
+| Needs adjudication | Requirement unclear or missing · body and comments disagree · two valid readings leading to materially different work · Critical or High security finding | Post a checkpoint comment naming exactly what is undecided, add `blocked`, return it to the maintainer. Nothing was dispatched yet, so there is no `agent-running` label to remove at this stage |
+
+When any Lightweight condition is uncertain, default to the full OpenSpec flow.
+
+## Step 4 — Schedule
+
+Estimate, for each issue, the production files and the canonical spec it will touch. Two issues conflict when they share any of:
+
+- a canonical spec path (`specs/<module>/NNN-feature/spec.md`) — **the main bottleneck**, because both would bump the version and append to the same Changelog
+- a production source file, or a prototype page under `design/prototype/pages/`
+- an OpenSpec change folder under `openspec/changes/`
+
+Conflicting issues go into different waves. When a touched set cannot be determined confidently, treat the pair as conflicting: the conservative direction costs one extra wave, the optimistic direction costs a merge conflict mid-wave.
+
+Wave size is the largest independent set the conflict graph allows, capped at **5**.
+
+A second cap applies on top: **at most two issues per wave whose verification includes a full `pnpm playwright test`**. The rest wait for a later wave. This is how the Playwright throttle is enforced — see the guardrail below for why it cannot be a runtime lock.
+
+Record the conflict graph, the Playwright count, and the resulting waves in the wave report before dispatching anything.
+
+## Step 5 — Dispatch
+
+One issue, one worktree, one lead, one port.
+
+```bash
+N=931
+SLUG=sidebar-role-highlight          # short, lowercase, hyphenated
+BRANCH=fix/${N}-${SLUG}              # type prefix per .claude/rules/git-workflow.md
+WT=.claude/worktrees/issue-${N}-${SLUG}
+PORT=8980                            # 8980, 8981, ... one per worktree in the wave
+
+lsof -i:${PORT}                      # must print nothing before the port is handed out
+git fetch origin main
+git worktree add -b "${BRANCH}" "${WT}" origin/main
+gh issue edit ${N} --add-label agent-running
+```
+
+Worktrees live under `.claude/worktrees/` — not `.worktrees/`, and not a sibling directory. The reason is specific: entering a worktree **from the launch directory** works for any path in `git worktree list`, but an agent whose working directory was pinned at launch (subagent isolation) can only `EnterWorktree` into a path under `.claude/worktrees/` of the same repository. Leads and their nested specialists are exactly that case. This comes from the `EnterWorktree` contract, not from an experiment here. `scripts/worktree-init.sh` creates `../label-suite-<slug>` instead; that is the older convention and is not used here.
+
+`agent-ready` **stays on the issue**. It is the maintainer's standing authorization — including the archive authorization below — not a queue token. `agent-running` is added alongside it, and step 1 excludes `agent-running`, so an in-flight issue is never claimed twice. This deliberately refines #937's step 5 wording, which said the label is *changed* to `agent-running`: removing `agent-ready` would also remove the archive authorization that the same label carries.
+
+The lead re-runs `lsof -i:${PORT}` before its first Playwright run: another session's server can appear between dispatch and first use, and 8888 and 8899 are both known to be taken by long-running local servers.
+
+Post the opening checkpoint comment (branch, worktree, `PW_PORT`, lead model) before the lead starts work.
+
+Dispatch every lead of the wave **in one message** so they run concurrently. Each lead's prompt states: the issue number, the worktree absolute path, the branch, its `PW_PORT`, the classification from step 3, and the applicable verification commands from step 6. Once all spawn results are back, send each lead the wave roster in one `SendMessage` per lead.
+
+Each lead must follow SDD as written in CLAUDE.md:
+
+1. `senior-qa` writes the Red test, commits it, and runs it to produce the expected failure. The lead records the failure reason.
+2. Only then is the Green specialist dispatched. It must not weaken or rewrite the Red contract to make it pass.
+3. The lead verifies the committed Red evidence and the Green exit-0 evidence, and is the only role that ticks `tasks.md` checkboxes.
+
+## Per-path execution
+
+### Lightweight path
+
+TDD → implement → spec consistency review (spec version bumped, Changelog entry added, no downstream spec affected, no API contract changed) → step 6. No OpenSpec change folder.
+
+### OpenSpec path
+
+`agent-ready` authorizes the archive and the canonical write-back, so no extra confirmation is needed. The MAJOR stop below still applies. Every OpenSpec artifact is written in Traditional Chinese; only technical terms and structural keywords stay English, and `proposal.md`'s `## Why` / `## What Changes` headings stay exactly that — `openspec archive` matches them literally.
+
+1. `/opsx:propose` — the spec delta against stable FR/AC IDs, `tasks.md`, and `design.md` when an API contract or DB schema changes. For an already-merged feature, carry the change in a change folder whose `proposal.md` names the canonical spec; never start a new spec from scratch.
+2. **Gate 1** — `openspec validate --changes --no-interactive`. Non-strict schema only: it checks nothing about project headings, ownership, status, or retired paths.
+3. **Gate 2** — Project SDD lint: `scripts/check-sdd.sh` plus the canonical workflow checklist for what the tooling does not cover.
+4. `/opsx:apply` — implement under step 5's Red/Green ownership.
+5. **Gate 3** — the code and test gates in step 6.
+6. **Gate 4** — Source-Verify pre-scan, then `/opsx:archive`: dual-write into the derived `openspec/specs/` view **and** write back to `specs/<module>/NNN-feature/spec.md` with a version bump and a Changelog entry. Archive belongs to the final PR group only; an intermediate stacked group merges with the change still open.
+7. **After the final PR merges** — the main session updates `specs/STATUS.md` to archived and runs `mv specs/<module>/NNN-feature specs/_archive/`. This happens on `main` after merge, never inside the worktree and never before merge.
+
+Update `specs/STATUS.md` at every stage transition, per its own trigger list.
+
+## Step 6 — Verification and independent review
+
+**CLAUDE.md's Verification Commands section is the authority and is not restated here.** Run every command it lists. A local restatement would drift into a subset, and a subset silently drops gates the maintainer requires — `--cov-fail-under=80`, `pip-audit`, `pnpm audit --prod --audit-level high`, `scripts/speckit-tests.sh`, `node scripts/check-user-path-map-freshness.mjs`, `scripts/check-demo-data-parity.sh`, `scripts/inventory-tests.sh`, the git-hook harnesses, and `bash scripts/verify-bootstrap.sh` are exactly the kind that get dropped.
+
+Only the prototype group is conditional there (`when design/prototype/** changed`). Two dispatch-specific additions apply:
+
+- the prototype group runs on this worktree's own port: `cd design/prototype && pnpm typecheck && PW_PORT=<port> pnpm playwright test`
+- when frontend code changed, `pr-flow` step 3 also requires `cd frontend && pnpm playwright test`
+
+Paste each command and its result into the PR Test Plan. A red gate is never skipped or worked around. Fix it, then re-run.
+
+**Independent review, no self-assessment.** The lead dispatches a fresh `senior-code-reviewer` that did not write the code, or hands the diff to `codex:rescue`. The implementing agent never reviews its own work, and the lead never substitutes its own reading for the review. Record the verdict in the checkpoint comment.
+
+Then open the PR. Write the body to a file first and pass `--body-file`: a long `--body` heredoc is rejected as a compound command in some permission modes.
+
+```bash
+gh pr create --title "<type>: <中文描述>" --base main --head "${BRANCH}" \
+  --label "<type-label>" --body-file "<scratchpad>/pr-${N}.md"
+```
+
+The body follows `pr-flow` step 5b — Traditional Chinese, `##` headings in English — and **must contain `Closes #N`**. Every Test Plan item is individually verified: `[x]` with the command and its result for a pass, `[ ]` with the reason for a fail. Commit messages stay English-only.
+
+## Step 7 — Merge
+
+Wait for CI without a foreground `sleep`, which the harness blocks. Either run the watch as a background command, which re-invokes the session when it exits:
+
+```bash
+gh pr checks <pr> --watch --fail-fast
+```
+
+or arm a `Monitor` whose filter covers **every** terminal state (`pass|fail|cancel|skipping|timed out`), not just success — a filter that matches only the success marker stays silent through a crash, and silence looks exactly like "still running".
+
+Merge when the independent review passed and CI is fully green:
+
+```bash
+gh pr merge <pr> --merge
+```
+
+Merge is the main session's job alone. Applying `agent-ready` is the maintainer's advance authorization for it (see **Deviations from pr-flow**).
+
+On a red gate: fix and push, at most **twice**. If it is still red, hand the failure to `codex:rescue` for one diagnosis pass — CLAUDE.md escalates at three failed attempts on the same problem. If that does not resolve it, post a checkpoint comment containing the **exact** error output, swap `agent-running` for `blocked`, and send a `PushNotification`.
+
+## Step 8 — Checkpoint comments
+
+Post one at every stage transition: dispatch · Red confirmed · Green confirmed · gates passed · review verdict · PR opened · merged · blocked.
+
+```markdown
+<!-- issue-dispatch checkpoint -->
+### 🤖 issue-dispatch 檢查點 — <階段>
+
+- **已完成**：…
+- **已驗證**：<指令 + 結果>
+- **剩餘**：…
+- **分支 · worktree · PW_PORT**：`fix/931-…` · `.claude/worktrees/issue-931-…` · 8980
+- **PR**：#…（或「未開」）
+```
+
+The leading HTML comment is the grep anchor for finding the latest checkpoint. The body is Traditional Chinese per CLAUDE.md's Communication section; identifiers, paths, commands, and verbatim error output stay in English.
+
+The last checkpoint comment is the resume contract: a session given only an issue number must be able to continue from it without any local file.
+
+## Step 9 — Sweep
+
+Reconcile issues against PRs before cleaning anything up. A merged PR whose body lost its `Closes` line leaves the issue open: #906's timeline shows a manual close with no closing-PR reference, while PRs #912, #917 and #918 only cross-referenced it.
+
+```bash
+gh issue list --state all --limit 100 --json number,state,title
+gh pr list --state merged --limit 20 --json number,title,body,closingIssuesReferences
+```
+
+Close any issue whose PR merged but which stayed open, naming the PR in the closing comment. Then clean up:
+
+```bash
+git worktree remove "${WT}"
+git branch -d "${BRANCH}"
+gh api -X DELETE "repos/{owner}/{repo}/git/refs/heads/${BRANCH}"
+```
+
+Delete the remote branch through the API, not `git push origin --delete`: the pre-tool-use hook blocks any push while the session sits on `main`. The block is visible — the hook prints `❌ Blocked: current branch is 'main' …` and exits 2 — so treat a failed delete as the hook refusing it, not as a silent no-op. (`pr-flow` step 8 describes the same block as a silent failure; that wording is inaccurate but the API route it prescribes is right.)
+
+## Step 10 — Continuous polling
+
+After a wave completes, scan again from step 1.
+
+Stop and report a summary when any of these holds:
+
+1. no `agent-ready` issue remains
+2. every remaining candidate is `blocked`
+3. every issue in the wave just finished failed
+
+At the end of each wave, output an explicit evaluation of all three conditions — each one stated as holding or not holding, with the evidence. A bare progress summary is not enough: `/goal` evaluates its condition against this block, and a fresh session reads it to decide whether to continue.
+
+## Guardrails
+
+- **`agent-ready` is archive authorization.** Applying the label authorizes `openspec archive` and the canonical write-back for that issue. No separate confirmation is needed.
+- **MAJOR stops, MINOR and PATCH do not.** MAJOR means removing or overturning an existing FR or AC. On MAJOR: stop before archive, post a checkpoint comment explaining what would be overturned, swap `agent-running` for `blocked`, send a `PushNotification`, and wait for the maintainer.
+- **Source-Verify pre-scan before archive.** Every citation in the delta must be locatable by `grep` — FR/AC IDs, section references, file paths, ADR/issue/PR numbers, and paraphrased requirement clauses. `openspec archive` copies propose-time delta text verbatim, so a wrong citation survives into the derived view and no CLI check catches it. Follow `docs/sdd-workflow.md` §6.2, which records the pilot finding: a derived view cited a `plan.md §Phase 1.3` that did not exist and silently dropped an SC clause, and only human review caught either (issue #356 pilot finding ③).
+- **Playwright throttle is a scheduling constraint, not a runtime lock.** Concurrent Chromium instances on one machine make runs flaky, so a wave carries at most two issues needing a full suite (step 4). It cannot be a lock: leads are separate agents with no shared counter, and peer messages must never be used as locks. The main session enforces the cap when it builds the wave, which needs no coordination at run time.
+- **Never commit or push to `main`.** Commit messages are English-only; PR titles and bodies are Traditional Chinese.
+- **Push from inside the worktree.** Use `EnterWorktree`, or prefix with `cd <worktree> && `. The hook resolves the branch from `-C`, then `cd`, then the payload's `cwd` — and a subagent's `cwd` is pinned to the repository root, so an unprefixed push is read as a push from `main` and blocked (`.claude/hooks/pre-tool-use.sh`).
+- **One purpose per PR.** Size limits and the single-purpose rule in `.claude/rules/git-workflow.md` apply to every dispatched PR. An issue that cannot be delivered in one purpose is split into stacked PRs, not widened.
+
+## Pairing with /goal and /loop
+
+This skill runs standalone: nothing about it depends on either command. Binding the flow to a harness feature would break the requirement that any session on any machine can resume from an issue number.
+
+- **`/goal`** is the right companion for step 10, because the stop condition is a condition, not an interval. `/goal 直到沒有 agent-ready issue、或剩下的全是 blocked、或整波失敗才停` keeps the session from stopping after one wave. Step 10's explicit evaluation block is what the goal check-in reads.
+- **`/loop` without an interval** is for standing watch, when the maintainer labels issues over the course of a day. Never give it a fixed interval: a wave can outlast the interval, the next firing overlaps the running one, and the result is the double dispatch this skill exists to prevent. Self-paced re-entry is safe because of **Re-entry safety**.
+
+## Tooling
+
+| Tool | Use |
+|---|---|
+| `Bash` with `run_in_background` | Waiting on CI and running full Playwright suites. Foreground `sleep` is blocked; a background command re-invokes the session when it exits |
+| `Monitor` (persistent) | Per-check CI results. The filter must cover failure signatures too |
+| `SendMessage` | Roster distribution, peer notification, and returning review findings to the same implementing agent with its context intact |
+| `senior-code-reviewer` / `codex:rescue` | Independent review, and the escalation before an issue is marked `blocked` |
+| `PushNotification` | Only for events needing the maintainer: MAJOR stop, `blocked`, whole-wave failure |
+| `/fewer-permission-prompts` | One-time pre-flight. An unattended five-way dispatch otherwise stalls on permission prompts |
+
+Not used: `/schedule` (a cloud routine cannot run the local verification gates), the `Workflow` tool (leads are dispatched with the `Agent` tool), a published dashboard (issue comments are the only state store), and `/code-review ultra` (user-triggered and billed; an agent cannot start it).
+
+## Deviations from pr-flow
+
+| `pr-flow` step | Here | Why |
+|---|---|---|
+| Step 7 — visual change summary | **Skipped** | It requires the maintainer to preview the artifact and drag the PNG in by hand. An unattended dispatch has nobody to do that |
+| Step 8 — merge requires user confirmation | **Pre-authorized** by the `agent-ready` label | The label is the maintainer's decision that this issue may go to merge unattended |
+
+Every other `pr-flow` step is followed as written, including the bot-review loop in step 6.
+
+One deviation is from CLAUDE.md itself and is therefore **not** this skill's to settle:
+
+| CLAUDE.md rule | Here | Status |
+|---|---|---|
+| Cross-session tasks: create `claude-progress.md` before starting when the triggers apply | Not used. Checkpoint comments on the issue replace it | #937 exists to remove locally-stored progress files — parallel sessions overwrite them and another machine cannot read them. A skill cannot override CLAUDE.md on its own, so reconciling that rule needs a separate governance change. Until then this conflict is declared here rather than left silent |
+
+## Known pits
+
+| Pit | Guard |
+|---|---|
+| Adjudication lives in a later comment, not the body (#920, #921) | Step 1 reads the whole thread |
+| A merged PR without `Closes` leaves its issue open (#906) | Step 9 reconciles issues against merged PRs |
+| Citation typos survive archive; no CLI check catches them (issue #356 pilot finding ③, `docs/sdd-workflow.md` §6.2) | Source-Verify pre-scan before archive |
+| Port 8888 already held by another session's server | One `PW_PORT` per worktree from 8980, `lsof` checked before hand-out |
+| Push from a worktree blocked as a push from `main` | `EnterWorktree`, or `cd <worktree> && git push` |
+| Two issues bumping one canonical spec's Changelog | Shared canonical spec means different waves |
+| Leftover worktrees and `[gone]` branches after a sprint | Step 9 cleanup, plus `pr-flow`'s sprint-end sweep |
