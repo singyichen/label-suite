@@ -1,7 +1,7 @@
 ---
 功能分支: feat/shared/008-sidebar-navbar-shared
 建立日期: 2026-04-16
-版本: 1.5.0
+版本: 1.5.1
 狀態: Clarified
 ---
 
@@ -320,7 +320,7 @@ Desktop 使用者可將左側 Sidebar 收合為 icon-only，以增加主內容�
 
 ### 功能需求
 
-- **FR-001**：登入後頁面必須使用同一份 Sidebar Navbar contract。
+- **FR-001**：登入後頁面必須使用同一份 Sidebar Navbar contract；`userIds` 中的 `userAvatar`（見「關鍵實體」`SharedNavbarContract`）必須顯示與同列 `userName` 一致、由目前使用者姓名推導出的縮寫，在所有 `SUPPORTED_PAGES` 皆同（issue #932 澄清：不得停留在未依頁面覆寫的預設佔位文字）。
 - **FR-002**：L0 導覽項與順序必須符合 IA：`儀表板 / 任務管理 / 標記作業 / 資料集分析 / 系統管理(條件顯示) / 個人設定`。
 - **FR-003**：`系統管理` 僅 `super_admin` 可見，不得渲染給 `user`。
 - **FR-003A**：`user` 的 L0 可見項目數必須為 `5`；`super_admin` 的 L0 可見項目數必須為 `6`（多出 `系統管理`）。
@@ -557,6 +557,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.5.1 | 2026-09-24 | 澄清 FR-001（issue #932）：規格原文未明確規範 `userAvatar` 的顯示內容，僅在「關鍵實體」`SharedNavbarContract.userIds` 列出其為契約 id 之一，導致實作僅 dashboard 頁呼叫 `updateUserChip({ avatarLabel })` 帶入正確縮寫，其餘頁面停留在寫死的預設佔位文字「U」，與同列 `userName` 顯示的實際使用者姓名不一致。修法（`design/prototype/pages/shared/sidebar.js`）：新增 `computeAvatarInitials(name)`，接入 `renderSidebar` 初次渲染與 `updateUserChip` 的 `userName` 同步路徑（僅在未帶 `avatarLabel` 時），使所有 `SUPPORTED_PAGES` 首次渲染即依 `userName` 顯示正確縮寫；dashboard 既有以 `avatarLabel` 明確覆寫角色字母（`SA`／`PL`／`A`／`R`）的展示需求不受影響、行為不變。本次為既有 FR-001「同一份 contract」語意的澄清補述，未新增或移除 FR/AC。 |
 | 1.5.0 | 2026-09-13 | Issue #725（OpenSpec change `admin-role-settings-nav-shortcut`，PR #757）：新增使用者故事 8（系統管理次選單快速直達）、FR-019 群（FR-019／FR-019A／FR-019B／FR-019C／FR-019D／FR-019E）與 SC-012 群（SC-012／SC-012A／SC-012B）——`super_admin` 在 Desktop 未收合 Sidebar 時，L0「系統管理」項目提供可展開次選單（使用者管理／角色設定兩個子項連結），一次點擊即可直達 `role-settings`，不需先落地 `user-management`；Mobile 與 Desktop 收合狀態維持既有單一連結行為。次選單子項不計入既有 FR-002／FR-003A／SC-003 之 L0 導覽項清單與計數，兩者文字逐字不變，僅在「L0 群組與目標頁（IA Contract）」之 Admin 條目補註次選單存在事實。維護者已就「新增側欄一級項目 vs. 展開次選單」的架構衝突裁示採用後者（不新增/移除 L0 項目）。 |
 | 1.4.4 | 2026-09-13 | 結構補齊：新增缺漏的 `## 功能目標` 標題（Project SDD lint `SPEC_REQUIRED_HEADING` ratchet——OpenSpec change `admin-role-settings-nav-shortcut`（issue #725）首次以本流程觸碰本規格，觸發既有 legacy heading debt 的強制補齊）。規格條文未變，純結構 patch；`scripts/sdd-lint-baseline.txt` 同步移除本檔對應的 `LEGACY_SPEC_HEADING` 豁免項。 |
 | 1.4.3 | 2026-08-26 | **修正快捷鍵總覽 `R` 列標籤誤導性文案**（issue #409）：v1.4.1 加上的「（限正式標記）」註記，字面上讀起來像整個退回動作／`R` 快捷鍵都被限制在 `official_run`，但實際上 reject 控件與 `R` 鍵在 `dry_run` 一樣可用且必須維持一致呈現（annotation-015 **AC-3.33** 禁止審核卡上任何依 `run_type` 分流的呈現分支）——僅有「退回時把標記員狀態回退為待標記」這個副作用（annotation-015 FR-014I／AC-3.15／AC-6.4）才是 `official_run` 專屬。修法：標籤字面由「退回目前結果（限正式標記）」改為「退回目前結果（回退標記員狀態僅限正式標記）」（en：「Return current result (formal runs only)」改為「Return current result (annotator status rollback is formal-run only)」），將限定範圍精確掛在「回退標記員狀態」上。規格條文未變（FR-016G／SC-009D 既有行為的標籤字面精確化，非新增契約）；同步修訂 AC 6 例示、FR-016G 與 SC-009D 的標籤字面。 |
