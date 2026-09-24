@@ -281,9 +281,9 @@ footer { margin-top: var(--space-3xl); padding-top: var(--space-lg); border-top:
 
   <dl class="provenance">
     <dt>Prototype 來源 commit</dt>
-    <dd><span class="mono">c9cf83209257</span>（2026-09-07）——<span class="mono">design/prototype/pages</span> · <span class="mono">design/prototype/index.html</span> 的最後一次變更，與 <a href="screen-inventory.md">screen-inventory.md</a> 同源。</dd>
+    <dd><span class="mono">08087d5a8703</span>（2026-09-23）——<span class="mono">design/prototype/pages</span> · <span class="mono">design/prototype/index.html</span> 的最後一次變更，與 <a href="screen-inventory.md">screen-inventory.md</a> 同源。</dd>
     <dt>實走日期</dt>
-    <dd>2026-09-08，本機 <span class="mono">http://127.0.0.1:8765</span> 靜態伺服器（<span class="mono">file:</span> 協定被 Playwright 阻擋）。</dd>
+    <dd>13 目標全量實走：2026-09-08。第 12 節摩擦點逐項複驗：2026-09-24，複驗基底 commit <span class="mono">c373dfb403da</span>。兩次皆以本機靜態伺服器（<span class="mono">design/prototype/tests/serve.mjs</span>）承載，<span class="mono">file:</span> 協定被 Playwright 阻擋。</dd>
     <dt>重跑觸發條件</dt>
     <dd>
       ① <span class="mono">design/prototype/pages/**</span> 或 <span class="mono">index.html</span> 有變更，使上方來源 commit 前移。<br>
@@ -291,7 +291,7 @@ footer { margin-top: var(--space-3xl); padding-top: var(--space-lg); border-top:
       ③ 角色權限模型或三層接力審核模型改版（<span class="mono">specs/annotation/015</span>、<span class="mono">specs/admin/**</span>），使本圖的角色分歧前提失效。
     </dd>
     <dt>自動檢查</dt>
-    <dd><span class="mono">node scripts/check-user-path-map-freshness.mjs</span>（issue #665 階段一：在來源中繼資料契約定案前一律 fail closed，exit 2）。</dd>
+    <dd><span class="mono">node scripts/check-user-path-map-freshness.mjs</span>（issue #665 階段二，畫面清單指紋模型）：把本檔 <span class="mono">&lt;head&gt;</span> 內唯一一個 <span class="mono">&lt;meta name="path-map-screen-fingerprint"&gt;</span> 的 sha256，與從 <a href="screen-inventory.md">screen-inventory.md</a> 的「畫面 × 元件」「同頁多重視圖」兩張表重算的 sha256 逐位元比對——相符 exit 0（<span class="mono">PATH_MAP_FRESH</span>）、不符 exit 1（<span class="mono">PATH_MAP_STALE_FINGERPRINT</span>）、無法判定 exit 2。它只讀這兩個檔，不跑 <span class="mono">git</span>、不看 mtime，<strong>只涵蓋畫面／視圖基數，不涵蓋第 12 節摩擦點的內容時效</strong>——後者目前仍靠人工複驗，強化方向見 <a href="https://github.com/singyichen/label-suite/issues/906">#906</a>。</dd>
   </dl>
 
   <nav class="toc" aria-label="章節跳轉">
@@ -898,72 +898,72 @@ footer { margin-top: var(--space-3xl); padding-top: var(--space-lg); border-top:
     </div>
 
     <div class="callout">
-      <p><strong>結論：36 視圖中 34 個實走可達，2 個（V06 / V07）在 <span class="mono">c9cf83209257</span> 上不存在。</strong>清單缺口不是路徑缺口——manifest 記載了兩個實作未提供的視角，屬盤點資料與實作的落差，詳見第 13 節。</p>
+      <p><strong>結論：36 視圖中 34 個實走可達，2 個（V06 / V07）在 <span class="mono">08087d5a8703</span> 上仍不存在。</strong>清單缺口不是路徑缺口——manifest 記載了兩個實作未提供的視角，屬盤點資料與實作的落差，詳見第 13 節。</p>
     </div>
   </div>
 </section>
 
 <!-- ══════════════════════════ 12. 摩擦點總表 ══════════════════════════ -->
 <section id="m12">
-  <div class="sec-head"><span class="idx">12</span><h2>摩擦點總表</h2><span class="note">8 項 · 每項一行成因 · 皆可 grep 複驗</span></div>
+  <div class="sec-head"><span class="idx">12</span><h2>摩擦點總表</h2><span class="note">8 項 · 2026-09-24 逐項複驗：6 已修復 · 1 部分處理 · 1 判定非缺陷</span></div>
 
   <div class="tablebox">
     <table>
-      <thead><tr><th class="num">#</th><th>門檻</th><th>目標</th><th>一行成因</th><th>證據位置</th><th>追蹤</th></tr></thead>
+      <thead><tr><th class="num">#</th><th>原判定</th><th>目標</th><th>現況（2026-09-24 複驗）</th><th>證據位置</th><th>追蹤</th></tr></thead>
       <tbody>
         <tr>
-          <td class="num">1</td><td><span class="tag tag--gap">F3</span></td><td>G9 審核員送出審核</td>
-          <td>送出函式尾段只重繪與提示，沒有任何導向或選取下一筆的呼叫。</td>
-          <td class="src">annotation-workspace.config.js:4689 · 尾段 :4794–4802</td>
+          <td class="num">1</td><td><span class="tag tag--gap">F3</span> <span class="tag tag--ok">已修復</span></td><td>G9 審核員送出審核</td>
+          <td>送出成功後呼叫共用的 <span class="mono">advanceToNextActionableReviewUnit()</span>，就地選取下一個可處理審核單位並同步網址的 <span class="mono">sample_id</span> / <span class="mono">annotator_id</span>；無可處理單位時才帶 <span class="mono">notice=no_actionable_review</span> 回清單。</td>
+          <td class="src">annotation-workspace.config.js:5083（<span class="mono">handleReviewSubmit</span> 尾段）· 函式本體 :4948 · tests/annotation/issue-719-review-submit-auto-advance.spec.ts</td>
           <td><a href="https://github.com/singyichen/label-suite/issues/719">#719</a></td>
         </tr>
         <tr>
-          <td class="num">2</td><td><span class="tag tag--gap">F3</span></td><td>G10 仲裁員送出仲裁</td>
-          <td>同上；送出後仲裁面板消失、單位仍為爭議中，畫面上不再有任何送出鈕。</td>
-          <td class="src">annotation-workspace.config.js:3903 · 尾段 :3937–3940</td>
-          <td><a href="https://github.com/singyichen/label-suite/issues/720">#720</a></td>
+          <td class="num">2</td><td><span class="tag tag--gap">F3</span> <span class="tag tag--ok">已修復</span></td><td>G10 仲裁員送出仲裁</td>
+          <td>同一支共用函式也接到仲裁路徑，故仲裁送出同樣就地前進；單位因本次仲裁而定稿時，依 FR-099 第 7 點刻意停在原地顯示唯讀定稿卡，不再前進。</td>
+          <td class="src">annotation-workspace.config.js:4082（<span class="mono">handleArbitrationSubmit</span> 尾段）· 同一函式本體 :4948 · 同上測試檔的 AC-3.56 clause 6–8 案例</td>
+          <td><a href="https://github.com/singyichen/label-suite/issues/720">#720</a>（殘留定稿卡文案 → <a href="https://github.com/singyichen/label-suite/issues/766">#766</a>）</td>
         </tr>
         <tr>
-          <td class="num">3</td><td><span class="tag tag--gap">F6</span></td><td>P1 標記員開任務詳情</td>
-          <td><span class="mono">unauthorized</span> 參數全樹只寫不讀，落地頁不顯示任何說明。</td>
-          <td class="src">task-detail.html:4753 · <span class="mono">grep -rn unauthorized pages/</span> → 1 行</td>
+          <td class="num">3</td><td><span class="tag tag--gap">F6</span> <span class="tag tag--ok">已修復</span></td><td>P1 標記員開任務詳情</td>
+          <td>任務列表進站即讀取並消費 <span class="mono">unauthorized</span> 參數，顯示「無權限檢視任務詳情」提示後把該參數自網址移除，重新整理不會重複提示。</td>
+          <td class="src">task-list.html:1333 <span class="mono">pendingUnauthorizedToast</span>（寫入端 task-detail.html:5089）· tests/task-management/issue-721-task-list-unauthorized-toast.spec.ts</td>
           <td><a href="https://github.com/singyichen/label-suite/issues/721">#721</a></td>
         </tr>
         <tr>
-          <td class="num">4</td><td><span class="tag tag--gap">F6</span></td><td>G10 仲裁員進度指標</td>
-          <td>計數器只統計 <span class="mono">'reviewer'</span> 提交，仲裁走另一條寫入路徑，故仲裁提交不計入（純仲裁者恆為 0）。</td>
-          <td class="src">config.js:33 · :1535 <span class="mono">countSubmittedUnits</span> · :1548 未被 :3903 呼叫</td>
+          <td class="num">4</td><td><span class="tag tag--gap">F6</span> <span class="tag tag--ok">已修復</span></td><td>G10 仲裁員進度指標</td>
+          <td>計數器改為同時採計 <span class="mono">isArbitrationSubmitted()</span>，且仲裁送出尾段補上 <span class="mono">renderSampleNav()</span>，因此純仲裁者的提交數即時遞增、不需重新整理。</td>
+          <td class="src">annotation-workspace.config.js:1590（<span class="mono">countSubmittedUnits</span> 內）· :4076（仲裁送出尾段的 <span class="mono">renderSampleNav()</span>）· tests/annotation/issue-722-arbiter-progress-counter.spec.ts</td>
           <td><a href="https://github.com/singyichen/label-suite/issues/722">#722</a></td>
         </tr>
         <tr>
-          <td class="num">5</td><td><span class="tag tag--gap">F3</span></td><td>P2 專案負責人建立任務</td>
-          <td>建立任務 CTA 只存在於 <span class="mono">#view-user</span>，專案負責人視角看不到。</td>
-          <td class="src">dashboard.html:151（在 :105 內）vs :340</td>
-          <td><a href="https://github.com/singyichen/label-suite/issues/723">#723</a></td>
+          <td class="num">5</td><td><span class="tag tag--ok">非缺陷</span></td><td>P2 專案負責人建立任務</td>
+          <td>對照正典後判定為誤判，維持現況：一般使用者本來就是靠 <span class="mono">#view-user</span> 的行動卡建立第一個任務、建立後才升格為 PL；PL 儀表板依規格只含任務概況與任務列表，PL 再建任務的既有入口在任務列表頁。</td>
+          <td class="src">dashboard.html:151（仍在 :105 <span class="mono">#view-user</span> 內）· specs/dashboard/012-dashboard/spec.md:358（FR-007A）· :371（FR-009）</td>
+          <td><a href="https://github.com/singyichen/label-suite/issues/723">#723</a>（已關 · Won't Fix）</td>
         </tr>
         <tr>
-          <td class="num">6</td><td><span class="tag tag--gap">F1 + F2</span></td><td>G5 建立任務</td>
-          <td>Step 1 的型態選擇與逐欄位角色指派全為必點，11 次點擊中有 7 次集中於此。</td>
-          <td class="src">task-new.html:311–326（型態三群組）· task-config.engine.js:5365 <span class="mono">inline-preview-role-select</span>（逐欄位）</td>
-          <td><a href="https://github.com/singyichen/label-suite/issues/724">#724</a></td>
+          <td class="num">6</td><td><span class="tag tag--gap">F1 + F2</span> <span class="tag tag--warn">部分處理</span></td><td>G5 建立任務</td>
+          <td><strong>仍在。</strong>Step 1 的三群組型態選擇維持全數必點；曾上線的「常用組合一鍵套用」預設列已於正典 013 v8.0.0 回退移除，未降低點擊數。只有逐欄位角色指派因欄名關鍵字自動推測（#755）而減少必點次數。</td>
+          <td class="src">task-new.html:311 <span class="mono">#taskTypeSelector</span>（三群組 :313 / :318 / :323）· task-config.engine.js:5392 <span class="mono">inline-preview-role-select</span> · task-config.data.js:598 <span class="mono">FIELD_ROLE_INPUT_NAME_HINTS</span> · <span class="mono">grep -rn TASK_TYPE_PRESETS design/prototype/pages/</span> → 0 行</td>
+          <td><a href="https://github.com/singyichen/label-suite/issues/724">#724</a>（已關 · 回退紀錄）· <a href="https://github.com/singyichen/label-suite/issues/755">#755</a></td>
         </tr>
         <tr>
-          <td class="num">7</td><td><span class="tag tag--gap">F1</span></td><td>G12 調整角色權限</td>
-          <td>角色設定非側欄一級項目，且矩陣預設唯讀，兩處各多耗 1 次點擊。</td>
-          <td class="src">user-management.html:448 · role-settings.html:454</td>
+          <td class="num">7</td><td><span class="tag tag--gap">F1</span> <span class="tag tag--ok">已修復</span></td><td>G12 調整角色權限</td>
+          <td>側欄「系統管理」在桌機展開狀態下掛出「使用者管理／角色設定」兩連結子選單，可直達角色設定頁，且不新增 L0 項目（行動版與收合側欄維持單一連結）。</td>
+          <td class="src">pages/shared/sidebar.js:411（<span class="mono">admin-nav-trigger</span>）· :419（<span class="mono">admin-nav-submenu</span>）· tests/shared/issue-725-admin-submenu-shortcut.spec.ts</td>
           <td><a href="https://github.com/singyichen/label-suite/issues/725">#725</a></td>
         </tr>
         <tr>
-          <td class="num">8</td><td><span class="tag tag--warn">UXC-11</span></td><td>G7 任務詳情全頁</td>
-          <td>分頁／篩選／分頁碼皆不寫回 URL，同儕頁 dataset-analysis-detail 則有寫。</td>
-          <td class="src"><span class="mono">grep -c replaceState</span>：task-detail.html = 0 · dataset-analysis-detail.html = 1</td>
+          <td class="num">8</td><td><span class="tag tag--warn">UXC-11</span> <span class="tag tag--ok">已修復</span></td><td>G7 任務詳情全頁</td>
+          <td>分頁／篩選／分頁碼已寫回網址，與同儕頁 dataset-analysis-detail 的作法對齊。</td>
+          <td class="src"><span class="mono">grep -c replaceState</span>：task-detail.html = 2（原為 0）· dataset-analysis-detail.html = 1 · tests/task-management/issue-726-url-view-state.spec.ts</td>
           <td><a href="https://github.com/singyichen/label-suite/issues/726">#726</a></td>
         </tr>
       </tbody>
     </table>
   </div>
 
-  <p style="margin-top:var(--space-md);font-size:13.5px;color:var(--color-text-soft)">摩擦點集中在<strong>審核與仲裁的送出收尾</strong>（#1 #2 #4）與<strong>入口可及性</strong>（#3 #5 #7）兩處。標記員路徑（G8）與資料集分析路徑（G13）已具備正確的收尾與 URL 同步實作，可直接作為修補時的參照實作。</p>
+  <p style="margin-top:var(--space-md);font-size:13.5px;color:var(--color-text-soft)">原本被判為主要病灶的<strong>審核與仲裁送出收尾</strong>（#1 #2 #4）已全數修復，且三項各自有 Playwright 回歸測試護住——修法正是當初指出的參照實作：審核與仲裁共用同一支前進函式，計數改由推導而非單一寫入路徑決定。<strong>入口可及性</strong>三項中 #3 #7 已修復，#5 經對照正典判定為誤判。<strong>目前唯一仍在的摩擦是 #6</strong>：建立任務 Step 1 的三群組型態選擇仍為全數必點，一鍵預設方向已回退，只有欄位角色指派被 <a href="https://github.com/singyichen/label-suite/issues/755">#755</a> 的欄名推測降低了必點次數。</p>
 </section>
 
 <!-- ══════════════════════════ 13. 限制與偏差 ══════════════════════════ -->
@@ -989,7 +989,7 @@ footer { margin-top: var(--space-3xl); padding-top: var(--space-lg); border-top:
         <caption class="eyebrow" style="text-align:left;padding:var(--space-md) var(--space-md) 0">manifest 與實作的四項落差</caption>
         <thead><tr><th>視圖</th><th>manifest 記載</th><th>實走事實</th></tr></thead>
         <tbody>
-          <tr><td class="vid">V06 / V07</td><td><span class="mono">?task_role=annotator|reviewer</span> 為獨立視角</td><td>參數被 <span class="mono">normalizeTaskRole()</span> 歸為 <span class="mono">'user'</span>，畫面與預設視角相同（task-list.html:667–670）</td></tr>
+          <tr><td class="vid">V06 / V07</td><td><span class="mono">?task_role=annotator|reviewer</span> 為獨立視角</td><td>參數被 <span class="mono">normalizeTaskRole()</span> 歸為 <span class="mono">'user'</span>，畫面與預設視角相同（task-list.html:668–671）</td></tr>
           <tr><td class="vid">V15–V22</td><td>URL 帶 <span class="mono">&amp;task_type=…</span></td><td>工作區全程未讀取該參數，型態由 <span class="mono">task_id</span> 決定</td></tr>
           <tr><td class="vid">V01</td><td>「使用者管理捷徑」</td><td>系統管理員儀表板主內容區查無此捷徑，入口只在側欄「系統管理」</td></tr>
           <tr><td class="vid">V02</td><td>「空狀態 CTA『建立第一個任務』」</td><td>專案負責人視角實際顯示 3 張任務卡，無此 CTA（見 P2）</td></tr>
@@ -1004,7 +1004,7 @@ footer { margin-top: var(--space-3xl); padding-top: var(--space-lg); border-top:
 </section>
 
 <footer>
-  <p>Label Suite · <span class="mono">design/system/user-path-map.html</span> · 認知演練法（專家評估）· 來源 commit <span class="mono">c9cf83209257</span> · 實走 2026-09-08<br>
+  <p>Label Suite · <span class="mono">design/system/user-path-map.html</span> · 認知演練法（專家評估）· 來源 commit <span class="mono">08087d5a8703</span> · 實走 2026-09-08（第 12 節摩擦點 2026-09-24 複驗）<br>
   相關文件：<a href="screen-inventory.md">screen-inventory.md</a> · <a href="ux-conventions.md">ux-conventions.md</a>（UXC-01–11）· <a href="anti-pattern-checklist.md">anti-pattern-checklist.md</a> · <a href="MASTER.md">MASTER.md</a></p>
 </footer>
 
