@@ -188,7 +188,11 @@ function prototypeContentHash() {
     if (fs.statSync(absolute).isDirectory()) files.push(...walkAllFiles(absolute));
     else files.push(absolute);
   }
-  files.sort((a, b) => path.relative(ROOT, a).localeCompare(path.relative(ROOT, b)));
+  files.sort((a, b) => {
+    const relA = path.relative(ROOT, a);
+    const relB = path.relative(ROOT, b);
+    return relA < relB ? -1 : relA > relB ? 1 : 0;
+  });
   const hash = crypto.createHash('sha256');
   for (const file of files) {
     hash.update(path.relative(ROOT, file));
