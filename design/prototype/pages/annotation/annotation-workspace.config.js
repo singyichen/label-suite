@@ -1506,8 +1506,14 @@
      any annotator who submitted for real but has no mock row), so the two
      pages can never disagree on how many units a task holds. For an
      annotator the record IS the unit, which is why every annotator-facing
-     behaviour below is unchanged. */
-  function buildAllUnits() {
+     behaviour below is unchanged.
+     issue #921 note: this still enumerates every unit, unfiltered by
+     assignment -- narrowing the left column/nav to the reviewer's own
+     workload (matching annotation-list.html's filterToAssignedUnits()) is
+     out of scope for this change and tracked separately in issue #956. This
+     change only gates SUBMISSION on the current unit; see
+     isCurrentUnitAssigned() and reviewUnitBlockReason() below. */
+  function buildUnits() {
     var data = window.LabelSuiteAnnotationWorkspaceData;
     var units = [];
     currentProfile.datasetRecords.forEach(function (record, idx) {
@@ -1521,42 +1527,6 @@
       });
     });
     return units;
-  }
-
-  /* issue #921 (FR-093): the left column, nav progress, and prev/next must
-     show only the reviewer's own workload -- unfiltered enumeration let any
-     in-roster reviewer walk into (and submit on) a unit the system assigned
-     to someone else. Non-reviewer roles are unaffected: buildAllUnits()
-     already returns their one-unit-per-record list unfiltered. */
-  function buildUnits() {
-    var units = buildAllUnits();
-    if (currentRole !== 'reviewer') return units;
-    return filterToAssignedReviewUnits(units);
-  }
-
-  /* issue #921 (FR-093): mirrors annotation-list.html's filterToAssignedUnits()
-     -- same NUL-joined key (sample_id/annotator_id never contain U+0000, so
-     two different units can never collide onto one entry) and the same
-     arbiter carve-out: a disputed unit this reviewer may arbitrate (FR-060)
-     stays reachable even when the round-robin assignment gave it to someone
-     else -- arbitration and review assignment are two different rosters. */
-  function filterToAssignedReviewUnits(units) {
-    var data = window.LabelSuiteAnnotationWorkspaceData;
-    var assigned = data.getAssignedReviewUnits(
-      currentProfile.id, currentRunType, currentIdentity.reviewerId,
-      units.map(function (unit) { return { sample_id: unit.recordId, annotator_id: unit.annotatorId }; })
-    );
-    var mine = {};
-    assigned.forEach(function (unit) {
-      mine[unit.sample_id + '\u0000' + unit.annotator_id] = true;
-    });
-    return units.filter(function (unit) {
-      if (mine[unit.recordId + '\u0000' + unit.annotatorId] === true) return true;
-      return (
-        reviewUnitState(unit) === data.REVIEW_UNIT_STATUS.DISPUTED &&
-        data.isArbiterCandidate(currentProfile.id, currentRunType, unit.recordId, unitIdentity(unit))
-      );
-    });
   }
 
   function unitIdentity(unit) {
@@ -3669,6 +3639,19 @@
     if (!workspaceData.isRosterReviewer(currentProfile.id, currentIdentity.reviewerId)) {
       return REVIEW_UNIT_BLOCK.OFF_ROSTER;
     }
+    /* issue #921: EMPTY is checked before NOT_ASSIGNED, not after. A truly
+       empty unit (no annotator submission, no demo mock row) contributes no
+       entry to getAssignedReviewUnits()'s input universe at all (see
+       isCurrentUnitAssigned() below), so it has NO assigned reviewer for
+       ANYONE yet -- isCurrentUnitAssigned() would be false regardless of
+       who is asking, including the reviewer this unit will eventually
+       round-robin to once it exists. Checking assignment first would tell
+       that future assignee "not assigned to you", which is false (no
+       assignment has happened yet); "nothing submitted yet" (EMPTY, issue
+       #307) is the accurate message. Once a submission lands the unit
+       enters the enumeration and NOT_ASSIGNED becomes the correct gate for
+       anyone but its actual assignee. */
+    if (unitStatus === null && !demoAnnotatorRow()) return REVIEW_UNIT_BLOCK.EMPTY;
     /* issue #921: closes the gate annotation-list already enforces
        (filterToAssignedUnits(), issue #824) -- checked after ARBITRATION so
        a disputed unit this reviewer may arbitrate is never blocked here
@@ -3678,15 +3661,25 @@
     if (!isCurrentUnitAssigned()) {
       return REVIEW_UNIT_BLOCK.NOT_ASSIGNED;
     }
-    if (unitStatus === null && !demoAnnotatorRow()) return REVIEW_UNIT_BLOCK.EMPTY;
     return null;
   }
 
-  /* issue #921: reuses buildUnits()'s own filtered + arbiter-carve-out list
-     rather than re-deriving assignment a second way (DRY). */
+  /* issue #921 (FR-093): is the CURRENT review unit assigned to the current
+     reviewer? Feeds getAssignedReviewUnits() the same full, unfiltered unit
+     universe buildUnits() already enumerates (see its comment -- narrowing
+     that universe to only the reviewer's own units is issue #956, not this
+     change) and checks membership for just this one unit; no second
+     assignment derivation. By the time this runs, the ARBITRATION branch
+     above has already caught any disputed unit this reviewer may arbitrate,
+     so no separate carve-out is needed here. */
   function isCurrentUnitAssigned() {
-    return buildUnits().some(function (unit) {
-      return unit.recordId === String(currentSampleId) && unit.annotatorId === currentAnnotatorId();
+    var data = window.LabelSuiteAnnotationWorkspaceData;
+    var units = buildUnits().map(function (unit) {
+      return { sample_id: unit.recordId, annotator_id: unit.annotatorId };
+    });
+    var assigned = data.getAssignedReviewUnits(currentProfile.id, currentRunType, currentIdentity.reviewerId, units);
+    return assigned.some(function (unit) {
+      return unit.sample_id === String(currentSampleId) && unit.annotator_id === currentAnnotatorId();
     });
   }
 
