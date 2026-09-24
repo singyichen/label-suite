@@ -25,6 +25,12 @@
     }).join('');
   }
 
+  /* issue #946: single source of truth for the userName default so
+   * renderSidebar() and mountSidebar() never drift apart. */
+  function resolveUserName(opts) {
+    return opts.userName || 'Mandy Chen';
+  }
+
   function readStoredSystemRole() {
     try {
       var value = window.localStorage.getItem(SYSTEM_ROLE_STORAGE_KEY);
@@ -444,6 +450,9 @@
       '</div>';
   }
 
+  /* issue #946: returned markup leaves #userName/#userAvatar empty; a caller
+   * must also call updateUserChip({ userName }) after inserting it into the
+   * DOM, or those two nodes stay blank (mountSidebar() already does this). */
   function renderSidebar(options) {
     var opts = options || {};
     var activeNav = opts.activeNav || 'dashboard';
@@ -463,7 +472,7 @@
     var adminHref = opts.adminHref || '#';
     var roleSettingsHref = getRoleSettingsHref(adminHref);
     var brandHref = opts.brandHref || dashboardHref;
-    var userName = opts.userName || 'Mandy Chen';
+    var userName = resolveUserName(opts);
     var roleIndicator = opts.roleIndicator || '一般使用者';
 
     var navItems = [
@@ -576,9 +585,13 @@
           '</div>' +
           '<div class="user-chip">' +
             '<a class="user-chip-profile" href="' + userChipHref + '" aria-label="前往個人設定"' + userChipAriaCurrent + '>' +
-              '<div class="avatar" id="userAvatar" aria-hidden="true">' + computeAvatarInitials(userName) + '</div>' +
+              /* issue #946: userName/its avatar initials are populated via
+               * textContent by mountSidebar() after this markup is injected
+               * with innerHTML, so a malicious userName can never be parsed
+               * as markup here (see updateUserChip()). */
+              '<div class="avatar" id="userAvatar" aria-hidden="true"></div>' +
               '<div class="user-info">' +
-                '<span class="user-name" id="userName">' + userName + '</span>' +
+                '<span class="user-name" id="userName"></span>' +
                 '<span class="user-role" id="roleIndicator" data-testid="role-indicator">' + roleIndicator + '</span>' +
               '</div>' +
             '</a>' +
@@ -638,6 +651,10 @@
     var mountNode = document.getElementById(mountId);
     if (!mountNode) return;
     mountNode.innerHTML = renderSidebar(opts);
+    // issue #946: userName must land in the DOM via textContent, not the
+    // innerHTML string above, so a malicious userName can't be parsed as
+    // markup. Reuses updateUserChip()'s existing safe-write path (DRY).
+    updateUserChip({ userName: resolveUserName(opts) });
     applySystemRole(opts.systemRole || readStoredSystemRole() || (opts.hideAdmin ? 'user' : 'super_admin'));
     var initialCollapsed = typeof opts.sidebarCollapsed === 'boolean'
       ? opts.sidebarCollapsed
