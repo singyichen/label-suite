@@ -2919,7 +2919,7 @@ test_path_map_freshness_stage2_fails_closed_for_unparsable_inventory_tables() {
     assert_not_contains "$PATH_MAP_OUTPUT" "PATH_MAP_STALE_FINGERPRINT"
 }
 
-test_path_map_freshness_stage2_stays_fresh_for_unmonitored_prototype_only_edit() {
+test_path_map_freshness_stage2_stays_fresh_for_prototype_edit_touching_no_cited_claim() {
     local repo fingerprint
 
     repo="$(make_path_map_repo)"
@@ -2929,12 +2929,210 @@ test_path_map_freshness_stage2_stays_fresh_for_unmonitored_prototype_only_edit()
 
     # Unmonitored-content negative control: edit a prototype-only page without
     # adding or removing any screen/view ID, so the fingerprint is unchanged.
+    # Stage 3 (issue #906) narrows what this proves: the fixture map cites no
+    # file and states no grep count, so there is nothing for Stage 3 to
+    # recompute and the edit is still genuinely unmonitored. A prototype edit
+    # that DOES break a cited claim must now be red -- see the Stage 3 tests.
     printf '<!doctype html>\n<title>Prototype page fixture (edited)</title>\n<p>unrelated copy change</p>\n' \
         > "$repo/design/prototype/pages/shared/index.html"
 
     run_path_map_checker_capture "$repo" 0
     assert_contains "$PATH_MAP_OUTPUT" "PATH_MAP_FRESH"
     assert_contains "$PATH_MAP_OUTPUT" "$fingerprint"
+}
+
+
+# --- Stage 3: cited-source integrity (issue #906) --------------------------
+# Stage 2 only proves the screen/view ID list is unchanged, so a prototype
+# behaviour fix that neither adds nor removes an ID leaves the fingerprint
+# untouched while the path map's walkthrough text silently goes wrong. Stage 3
+# closes that hole by recomputing, from the very sources the map itself names,
+# every claim the map makes about them: file:line citations must still resolve,
+# and every `grep` count the map states must still be reproducible. No git
+# revision, mtime or timestamp is involved.
+
+# Writes a path map whose <head> carries the given fingerprint meta and whose
+# <body> carries caller-supplied Stage 3 evidence markup (citations and/or
+# grep claims).
+write_stage3_path_map() {
+    local repo="$1"
+    local fingerprint="$2"
+    local body_html="$3"
+
+    cat > "$repo/design/system/user-path-map.html" <<HTML
+<!doctype html>
+<html>
+<head>
+<title>User Path Map</title>
+$(stage2_meta_tag "$fingerprint")
+</head>
+<body>
+<p>Fixture artifact body for the screen-list fingerprint model.</p>
+$body_html
+</body>
+</html>
+HTML
+}
+
+# Writes a prototype page containing the given number of replaceState calls,
+# standing in for a prototype behaviour fix that changes a grep-able count
+# without adding or removing any screen/view ID.
+write_stage3_prototype_page() {
+    local repo="$1"
+    local occurrences="$2"
+    local i
+
+    {
+        echo '<!doctype html>'
+        echo '<title>Prototype page fixture</title>'
+        for ((i = 0; i < occurrences; i += 1)); do
+            echo "<script>history.replaceState(null, '', '?tab=$i');</script>"
+        done
+    } > "$repo/design/prototype/pages/shared/index.html"
+}
+
+# Seeds a Stage 2-fresh repo (matching fingerprint, parseable inventory) so the
+# Stage 3 assertions below are the only thing under test.
+make_stage3_repo() {
+    local repo
+    repo="$(make_path_map_repo)"
+    write_stage2_screen_inventory "$repo" "01,02,03" "V00,V01"
+    echo "$repo"
+}
+
+stage3_fingerprint() {
+    compute_stage2_screen_list_fingerprint "01,02,03" "V00,V01"
+}
+
+test_path_map_freshness_stage3_reports_stale_when_a_grep_claim_no_longer_holds() {
+    local repo fingerprint
+
+    repo="$(make_stage3_repo)"
+    fingerprint="$(stage3_fingerprint)"
+    # The prototype page now calls replaceState twice, but the map still claims
+    # the pre-fix count of 0 -- exactly the "#726 fixed, path map never
+    # re-walked" shape. No screen/view ID changed, so Stage 2 stays fresh.
+    write_stage3_prototype_page "$repo" 2
+    write_stage3_path_map "$repo" "$fingerprint" \
+        '<p><span class="mono">grep -c "replaceState" index.html</span> = <b>0</b></p>'
+
+    run_path_map_checker_capture "$repo" 1
+    assert_contains "$PATH_MAP_OUTPUT" "PATH_MAP_CLAIM_COUNT_MISMATCH"
+    assert_contains "$PATH_MAP_OUTPUT" "claimed 0"
+    assert_contains "$PATH_MAP_OUTPUT" "recomputed 2"
+    assert_not_contains "$PATH_MAP_OUTPUT" "PATH_MAP_FRESH"
+}
+
+test_path_map_freshness_stage3_reports_fresh_when_every_grep_claim_still_holds() {
+    local repo fingerprint
+
+    repo="$(make_stage3_repo)"
+    fingerprint="$(stage3_fingerprint)"
+    write_stage3_prototype_page "$repo" 2
+    write_stage3_path_map "$repo" "$fingerprint" \
+        '<p><span class="mono">grep -c "replaceState" index.html</span> = <b>2</b></p>'
+
+    run_path_map_checker_capture "$repo" 0
+    assert_contains "$PATH_MAP_OUTPUT" "PATH_MAP_FRESH"
+}
+
+test_path_map_freshness_stage3_recomputes_recursive_grep_claims() {
+    local repo fingerprint
+
+    repo="$(make_stage3_repo)"
+    fingerprint="$(stage3_fingerprint)"
+    write_stage3_prototype_page "$repo" 3
+    write_stage3_path_map "$repo" "$fingerprint" \
+        '<p><span class="mono">grep -rn replaceState design/prototype/pages/</span> → 1 行</p>'
+
+    run_path_map_checker_capture "$repo" 1
+    assert_contains "$PATH_MAP_OUTPUT" "PATH_MAP_CLAIM_COUNT_MISMATCH"
+    assert_contains "$PATH_MAP_OUTPUT" "claimed 1"
+    assert_contains "$PATH_MAP_OUTPUT" "recomputed 3"
+}
+
+test_path_map_freshness_stage3_reports_stale_when_a_cited_path_is_gone() {
+    local repo fingerprint
+
+    repo="$(make_stage3_repo)"
+    fingerprint="$(stage3_fingerprint)"
+    write_stage3_path_map "$repo" "$fingerprint" \
+        '<p>證據 pages/shared/removed-page.html:12 入口 handler</p>'
+
+    run_path_map_checker_capture "$repo" 1
+    assert_contains "$PATH_MAP_OUTPUT" "PATH_MAP_CITATION_UNRESOLVED"
+    assert_contains "$PATH_MAP_OUTPUT" "pages/shared/removed-page.html"
+    assert_not_contains "$PATH_MAP_OUTPUT" "PATH_MAP_FRESH"
+}
+
+test_path_map_freshness_stage3_reports_stale_when_a_cited_line_is_out_of_range() {
+    local repo fingerprint
+
+    repo="$(make_stage3_repo)"
+    fingerprint="$(stage3_fingerprint)"
+    write_stage3_prototype_page "$repo" 1
+    write_stage3_path_map "$repo" "$fingerprint" \
+        '<p>證據 pages/shared/index.html:900 已不存在的行</p>'
+
+    run_path_map_checker_capture "$repo" 1
+    assert_contains "$PATH_MAP_OUTPUT" "PATH_MAP_CITATION_UNRESOLVED"
+    assert_contains "$PATH_MAP_OUTPUT" "900"
+    assert_not_contains "$PATH_MAP_OUTPUT" "PATH_MAP_FRESH"
+}
+
+test_path_map_freshness_stage3_accepts_citations_that_still_resolve() {
+    local repo fingerprint
+
+    repo="$(make_stage3_repo)"
+    fingerprint="$(stage3_fingerprint)"
+    write_stage3_prototype_page "$repo" 1
+    write_stage3_path_map "$repo" "$fingerprint" \
+        '<p>證據 pages/shared/index.html:2 標題 · :3 replaceState 呼叫</p>'
+
+    run_path_map_checker_capture "$repo" 0
+    assert_contains "$PATH_MAP_OUTPUT" "PATH_MAP_FRESH"
+}
+
+test_path_map_freshness_stage3_fails_closed_for_an_unparseable_grep_claim() {
+    local repo fingerprint
+
+    repo="$(make_stage3_repo)"
+    fingerprint="$(stage3_fingerprint)"
+    write_stage3_prototype_page "$repo" 1
+    write_stage3_path_map "$repo" "$fingerprint" \
+        '<p><span class="mono">grep -rn "replaceState" design/prototype/pages/</span> 只有這 1 行</p>'
+
+    run_path_map_checker_capture "$repo" 2
+    assert_contains "$PATH_MAP_OUTPUT" "ERROR [PATH_MAP_CLAIM_UNDECIDABLE]"
+    assert_not_contains "$PATH_MAP_OUTPUT" "PATH_MAP_FRESH"
+}
+
+test_path_map_freshness_stage3_fails_closed_for_an_unresolvable_claim_target() {
+    local repo fingerprint
+
+    repo="$(make_stage3_repo)"
+    fingerprint="$(stage3_fingerprint)"
+    write_stage3_path_map "$repo" "$fingerprint" \
+        '<p><span class="mono">grep -c "replaceState" no-such-page.html</span> = <b>0</b></p>'
+
+    run_path_map_checker_capture "$repo" 2
+    assert_contains "$PATH_MAP_OUTPUT" "ERROR [PATH_MAP_CLAIM_UNDECIDABLE]"
+    assert_contains "$PATH_MAP_OUTPUT" "no-such-page.html"
+    assert_not_contains "$PATH_MAP_OUTPUT" "PATH_MAP_FRESH"
+}
+
+test_path_map_freshness_stage3_does_not_preempt_a_stage2_fingerprint_mismatch() {
+    local repo recorded
+
+    repo="$(make_stage3_repo)"
+    recorded="$(compute_stage2_screen_list_fingerprint "01,02" "V00")"
+    write_stage3_prototype_page "$repo" 2
+    write_stage3_path_map "$repo" "$recorded" \
+        '<p><span class="mono">grep -c "replaceState" index.html</span> = <b>0</b></p>'
+
+    run_path_map_checker_capture "$repo" 1
+    assert_contains "$PATH_MAP_OUTPUT" "PATH_MAP_STALE_FINGERPRINT"
+    assert_not_contains "$PATH_MAP_OUTPUT" "PATH_MAP_CLAIM_COUNT_MISMATCH"
 }
 
 test_check_spec_artifacts_passes_for_synced_repo
@@ -3027,6 +3225,15 @@ test_path_map_freshness_stage2_fails_closed_for_duplicate_meta
 test_path_map_freshness_stage2_fails_closed_for_malformed_meta
 test_path_map_freshness_stage2_fails_closed_for_missing_inventory
 test_path_map_freshness_stage2_fails_closed_for_unparsable_inventory_tables
-test_path_map_freshness_stage2_stays_fresh_for_unmonitored_prototype_only_edit
+test_path_map_freshness_stage2_stays_fresh_for_prototype_edit_touching_no_cited_claim
+test_path_map_freshness_stage3_reports_stale_when_a_grep_claim_no_longer_holds
+test_path_map_freshness_stage3_reports_fresh_when_every_grep_claim_still_holds
+test_path_map_freshness_stage3_recomputes_recursive_grep_claims
+test_path_map_freshness_stage3_reports_stale_when_a_cited_path_is_gone
+test_path_map_freshness_stage3_reports_stale_when_a_cited_line_is_out_of_range
+test_path_map_freshness_stage3_accepts_citations_that_still_resolve
+test_path_map_freshness_stage3_fails_closed_for_an_unparseable_grep_claim
+test_path_map_freshness_stage3_fails_closed_for_an_unresolvable_claim_target
+test_path_map_freshness_stage3_does_not_preempt_a_stage2_fingerprint_mismatch
 
 echo "speckit script tests passed"
