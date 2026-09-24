@@ -1794,7 +1794,7 @@
    * assigns exactly one reviewer per unit, so that reviewer's decision is
    * immediately decisive. The former five-state / min_reviewers model
    * (approved/modified as "decided but short of quorum" interim states,
-   * resolveDisputeConvergence() majority convergence) is retired:
+   * majority-of-N convergence) is retired:
    *
    *   no annotator submission                          -> null
    *   submitted, reviewer has not submitted             -> pending
@@ -2151,10 +2151,10 @@
    * unit MUST NOT read as finalized while one is pending.
    *
    * The former resolveDisputeConvergence() majority-of-N convergence check
-   * is deliberately NOT consulted here -- it has no reviewer-count input
-   * left to run on. That function stays defined/exported for
-   * describeDisputeVotes()'s pre-decision explanation (still used by the
-   * not-yet-rewritten arbitration card), but no longer decides status.
+   * is gone entirely (issue #903) -- it had no reviewer-count input left to
+   * run on once FR-093 made every unit single-owner, and while it survived
+   * as an export the annotation list still consulted it to pick a finalized
+   * unit's displayed answer. There is no majority path left to fall back to.
    *
    * issue #627 item 5: this derivation does not check whether the
    * reviewer(s) readReviewerSubmissions() finds are on the task's roster
@@ -2841,140 +2841,6 @@
       var stored = arbState[item.outKey + '::' + item.key];
       return !!stored && (stored.votes || []).some(function (vote) { return vote.arbiter_id === arbiterId; });
     });
-  }
-
-  /* Per-item majority convergence (issue #147 ⑥③): decides whether one
-   * dispute item resolves WITHOUT arbitration. Among `reviewerCount` (N)
-   * reviewers of the unit, the reviewers present in `item.reviewerValues`
-   * voted for their own value; the remaining N - |reviewerValues| reviewers
-   * agreed with `item.annotatorValue`. A value converges only with a strict
-   * majority (> N/2); anything else -- N=1, an even-N tie, all divergent --
-   * sends the item to the dispute pool.
-   *
-   * Compare values with valueKey() (deep equality via canonical JSON), not
-   * ===: span/token values are objects.
-   *
-   * Returns { converged: true, value: <winning value> } or { converged: false }.
-   */
-  function valueKey(value) {
-    return JSON.stringify(value);
-  }
-
-  /* The tally itself, extracted so the convergence verdict and the
-   * pre-decision context an arbiter reads (describeDisputeVotes, FR-074)
-   * can never disagree about who voted for what -- one derivation, two
-   * consumers. Returns [{ value, count, isAnnotatorValue }] in A-then-B
-   * order (the annotator's value first, mirroring the arbitration card's
-   * A/B buttons), with zero-vote candidates dropped: when every reviewer
-   * dissented, the annotator's value is nobody's vote and must not be
-   * offered as a 0-vote candidate. */
-  function tallyDisputeVotes(item, reviewerCount) {
-    var tally = {};
-    var values = {};
-    var order = [];
-    function vote(value, count) {
-      var key = valueKey(value);
-      if (!Object.prototype.hasOwnProperty.call(tally, key)) {
-        order.push(key);
-        values[key] = value;
-        tally[key] = 0;
-      }
-      tally[key] += count;
-    }
-    var reviewerIds = Object.keys(item.reviewerValues);
-    var annotatorKey = valueKey(item.annotatorValue);
-    vote(item.annotatorValue, reviewerCount - reviewerIds.length);
-    reviewerIds.forEach(function (reviewerId) {
-      vote(item.reviewerValues[reviewerId], 1);
-    });
-    return order
-      .filter(function (key) { return tally[key] > 0; })
-      .map(function (key) {
-        return { value: values[key], count: tally[key], isAnnotatorValue: key === annotatorKey };
-      });
-  }
-
-  /* issue #551 (extended by issue #750): true when at least one reviewer's
-     side of this item is not a proposed value -- a naked reject
-     (PURE_REJECT_VALUE) or a bypass (`null`, design.md D2's "bypass 不存值"
-     sentinel from getDisputeItems()). Both cannot be tallied as a vote for
-     any candidate value: resolveDisputeConvergence() otherwise counts a
-     lone `null` as a valid winner at N=1 (the single-owner model's only
-     reviewer count), silently overwriting whatever the arbiter or the
-     project leader's exception-pool resolution actually decided --
-     annotation-list.html's getFinalizedOverwrites() reads that convergence
-     result before consulting stored arbitration state at all. */
-  function hasPureReject(item) {
-    return Object.keys(item.reviewerValues).some(function (reviewerId) {
-      var value = item.reviewerValues[reviewerId];
-      return value === PURE_REJECT_VALUE || value == null;
-    });
-  }
-
-  /* issue #596 (design.md D1): this majority-of-N convergence check is no
-   * longer consulted by getReviewUnitStatus() -- FR-093's single reviewer
-   * per unit leaves no quorum to compute. Kept defined/exported only for
-   * describeDisputeVotes()'s pre-decision explanation, still read by the
-   * arbitration card pending its group 3 rewrite. */
-  function resolveDisputeConvergence(item, reviewerCount) {
-    /* issue #551 point 1: a naked reject proposes no replacement value, so
-       it can never be out-voted into an agreement tally -- it blocks
-       finalization outright and always needs an arbiter, however the rest
-       of the vote falls. */
-    if (hasPureReject(item)) return { converged: false };
-    /* issue #551 point 3: min_reviewers = 1 makes N = 1 the FULL quorum,
-       not an incomplete one -- the sole reviewer's correction is
-       authoritative and converges immediately (1 vote > 1/2 threshold).
-       This used to be hard-blocked unconditionally below N = 2, which sent
-       every min_reviewers = 1 correction into the dispute pool with no
-       second reviewer able to out-vote it. */
-    var winner = tallyDisputeVotes(item, reviewerCount).filter(function (candidate) {
-      return candidate.count > reviewerCount / 2;
-    })[0];
-    return winner ? { converged: true, value: winner.value } : { converged: false };
-  }
-
-  /* ---- Pre-decision dispute context (spec 015 v4.29.0, issue #454) -------
-   * Why one dispute item failed to converge, in the arbiter's terms. The
-   * arbitration card used to render two bare candidate values, so a 1:1 tie
-   * and an unmet quorum looked identical. This exposes the same numbers
-   * resolveDisputeConvergence() decides on -- candidate tallies, the strict
-   * majority threshold (> N/2) and which non-convergence shape applies:
-   *   pure_reject   at least one reviewer rejected with no replacement
-   *                   value (issue #551) -- no vote count can resolve this,
-   *                   so it must NOT be explained as a failed "> N/2" count
-   *   even_tie      exactly two candidate values share the lead (1:1, 2:2)
-   *   all_divergent three or more candidates with one vote each (1/1/1)
-   *   no_majority   anything else short of a strict majority
-   * The two-candidate case is classified as a tie BEFORE the all-divergent
-   * check so N=2 (where both shapes technically hold) reads as 平手, the
-   * distinction the arbiter actually acts on.
-   *
-   * Candidate identity is deliberately absent: the tally is an aggregate,
-   * never "reviewer X voted Y", so it is safe to render under any
-   * blind-review setting (FR-062). Only submitted answers feed it -- no
-   * gold/ground-truth column is read (Data Fairness). */
-  function describeDisputeVotes(item, reviewerCount) {
-    var candidates = tallyDisputeVotes(item, reviewerCount);
-    var converged = resolveDisputeConvergence(item, reviewerCount).converged;
-    var leadCount = candidates.reduce(function (max, candidate) {
-      return Math.max(max, candidate.count);
-    }, 0);
-    var leaders = candidates.filter(function (candidate) { return candidate.count === leadCount; });
-    var reason = null;
-    if (!converged) {
-      if (hasPureReject(item)) reason = 'pure_reject';
-      else if (candidates.length === 2 && leaders.length === 2) reason = 'even_tie';
-      else if (candidates.length >= 3 && leaders.length === candidates.length) reason = 'all_divergent';
-      else reason = 'no_majority';
-    }
-    return {
-      reviewerCount: reviewerCount,
-      majorityThreshold: reviewerCount / 2,
-      candidates: candidates,
-      converged: converged,
-      reason: reason,
-    };
   }
 
   /* ---- Reviewer task summary (spec 015 v4.27.0 FR-072, issue #450) ------
@@ -3852,8 +3718,6 @@
     DEFAULT_PROJECT_LEADER_ID: DEFAULT_PROJECT_LEADER_ID,
     submitArbitration: submitArbitration,
     isArbitrationSubmitted: isArbitrationSubmitted,
-    resolveDisputeConvergence: resolveDisputeConvergence,
-    describeDisputeVotes: describeDisputeVotes,
     PURE_REJECT_VALUE: PURE_REJECT_VALUE,
     computeIaaAlpha: computeIaaAlpha,
     IAA_NOMINAL_OUTPUT_TYPES: IAA_NOMINAL_OUTPUT_TYPES,
