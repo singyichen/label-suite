@@ -192,7 +192,7 @@ test.describe('issue #856: review demo seed marker upgrade', () => {
     const markers = await page.evaluate(() =>
       Object.keys(window.localStorage).filter((key) => key.indexOf('labelsuite.reviewFlowDemoSeed.') === 0)
     );
-    expect(markers).toContain(SEED_MARKER_PREFIX + 'v4');
+    expect(markers).toContain(SEED_MARKER_PREFIX + 'v5');
   });
 
   test('the upgrade does not duplicate T014-T016 history events or arbitration votes versus a fresh browser', async ({ page, browser }) => {
@@ -237,14 +237,14 @@ test.describe('issue #856: review demo seed marker upgrade', () => {
     expect(await readDry05CurrentDecision(page)).toBe('bypass');
   });
 
-  test('a failed reseed does not commit v4 and retries on the next load', async ({ page }) => {
+  test('a failed reseed does not commit v5 and retries on the next load', async ({ page }) => {
     await seedOldBrowserWithOneFailedSeedWrite(page);
     await page.goto(buildListUrl({ task_id: 'T014', role: 'reviewer', run_type: 'dry_run' }));
 
     let markers = await page.evaluate(() =>
       Object.keys(window.localStorage).filter((key) => key.indexOf('labelsuite.reviewFlowDemoSeed.') === 0)
     );
-    expect(markers).not.toContain(SEED_MARKER_PREFIX + 'v4');
+    expect(markers).not.toContain(SEED_MARKER_PREFIX + 'v5');
     expect(markers).toContain(SEED_MARKER);
 
     await page.reload();
@@ -252,7 +252,7 @@ test.describe('issue #856: review demo seed marker upgrade', () => {
     markers = await page.evaluate(() =>
       Object.keys(window.localStorage).filter((key) => key.indexOf('labelsuite.reviewFlowDemoSeed.') === 0)
     );
-    expect(markers).toContain(SEED_MARKER_PREFIX + 'v4');
+    expect(markers).toContain(SEED_MARKER_PREFIX + 'v5');
     expect(markers).not.toContain(SEED_MARKER);
     expect(await readDry05CurrentDecision(page)).toBe('bypass');
   });
