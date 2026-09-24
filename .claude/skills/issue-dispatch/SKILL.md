@@ -42,6 +42,10 @@ The per-issue lead **must** be `general-purpose`. Every agent under `.claude/age
 
 Budget rule: a lead runs at most one nested specialist at a time. Red completes before Green is dispatched.
 
+**Nested-specialist stall.** If a dispatched specialist goes unresponsive with no checkpoint for a normal working session, the lead may take over and produce the deliverable itself, but must independently verify the evidence — read the actual command output, not a self-report — and must declare the deviation explicitly in the PR body. This is what #931's stalled `senior-qa` (~25 minutes, no report) required in practice, and it is a deviation from CLAUDE.md's TDD ownership rule, not a substitute for it.
+
+**The main session reads every lead's diff before that lead opens its PR.** This is a role-level rule, not a Step 6 suggestion: both real defects found in the first run — #932's blank-avatar regression and #934's hardcoded `<h1>標記作業` — were caught only at this layer, never by a lead's review of its own work.
+
 Every nested agent's prompt must state the worktree's absolute path and require the agent to enter it first. Do not assume a nested agent inherits the lead's working directory.
 
 Model selection follows CLAUDE.md: the lead defaults to Sonnet; escalate to Opus for architecture, counter-factual, or security threat modeling work.
@@ -60,6 +64,10 @@ Leads may talk to each other directly. The rules below are not style preferences
 ## Re-entry safety
 
 `/goal` and `/loop` both re-enter this flow, and so does a fresh session handed nothing but an issue number. Three mechanisms make re-entry safe: the collision check (step 2), the `agent-running` label, and the checkpoint comments. On re-entry, read the issue's last checkpoint comment and continue from there. Never restart an issue that already has a checkpoint comment without first reconciling its branch, worktree, and PR.
+
+## Permission pre-flight
+
+Before dispatching the first wave, confirm `.claude/settings.json` allows every `gh` mutation this flow issues unattended — at minimum `gh issue edit` (labels), `gh issue comment`, `gh pr create`, `gh pr merge`, and `gh api -X DELETE` (branch cleanup). A missing allow rule stalls the whole flow at the first blocked call with nobody watching: the first real run stopped dead on `gh issue edit --add-label` in step 5. Run `/fewer-permission-prompts` once per machine, or add the rule directly.
 
 ## Step 1 — Scan
 
@@ -116,11 +124,13 @@ Estimate, for each issue, the production files and the canonical spec it will to
 - a production source file, or a prototype page under `design/prototype/pages/`
 - an OpenSpec change folder under `openspec/changes/`
 
-Conflicting issues go into different waves. When a touched set cannot be determined confidently, treat the pair as conflicting: the conservative direction costs one extra wave, the optimistic direction costs a merge conflict mid-wave.
+`specs/STATUS.md` and `design/system/screen-inventory.md` are touched by almost every issue (any spec version bump; any `design/prototype/pages/**` change) and must not, by themselves, split issues into different waves — flagging them as ordinary conflicts would leave almost no two issues able to share a wave. Handle them by protocol instead: `STATUS.md` edits are append-only, each PR adding only its own row and never touching a peer's; `screen-inventory.md` is always regenerated fresh immediately before merge, never hand-merged; and PRs touching either file merge in ascending issue-number order. This is what #940 needed after #934 merged first and left it `CONFLICTING` with no CI run at all.
+
+Conflicting issues (all other shared-file cases above) go into different waves. When a touched set cannot be determined confidently, treat the pair as conflicting: the conservative direction costs one extra wave, the optimistic direction costs a merge conflict mid-wave.
 
 Wave size is the largest independent set the conflict graph allows, capped at **5**.
 
-A second cap applies on top: **at most two issues per wave whose verification includes a full `pnpm playwright test`**. The rest wait for a later wave. This is how the Playwright throttle is enforced — see the guardrail below for why it cannot be a runtime lock.
+A second cap applies on top: **at most two issues per wave may run a full `pnpm playwright test` locally.** This counts local full runs specifically — step 6 now scopes ordinary local verification to the touched spec(s), so a local full run is the exception, not the default, and this cap is what stops it from recreating the flakiness that motivated that scoping. The rest wait for a later wave. See the guardrail below for why the cap cannot be a runtime lock, and for what a mid-flight wave override must also recompute.
 
 Record the conflict graph, the Playwright count, and the resulting waves in the wave report before dispatching anything.
 
@@ -179,7 +189,7 @@ Update `specs/STATUS.md` at every stage transition, per its own trigger list.
 
 ## Step 6 — Verification and independent review
 
-**CLAUDE.md's Verification Commands section is the authority and is not restated here.** Run every command it lists. A local restatement would drift into a subset, and a subset silently drops gates the maintainer requires — `--cov-fail-under=80`, `pip-audit`, `pnpm audit --prod --audit-level high`, `scripts/speckit-tests.sh`, `node scripts/check-user-path-map-freshness.mjs`, `scripts/check-demo-data-parity.sh`, `scripts/inventory-tests.sh`, the git-hook harnesses, and `bash scripts/verify-bootstrap.sh` are exactly the kind that get dropped.
+**CLAUDE.md's Verification Commands section is the authority and is not restated here.** Locally, a lead runs only what its change touches — the affected spec(s)/package(s) plus `pnpm tsc --noEmit` and `mypy` — never the full local suite (the two Playwright exceptions a few lines below aside); CI runs the complete matrix unattended. A full local run measured ~16–17 minutes and blocks the lead for all of it, against CI's ~20–24 minutes in a clean, non-blocking environment; running several full local suites at once in one wave also produced two false failures that were both green on an isolated re-run.
 
 Only the prototype group is conditional there (`when design/prototype/** changed`). Two dispatch-specific additions apply:
 
@@ -188,7 +198,7 @@ Only the prototype group is conditional there (`when design/prototype/** changed
 
 Paste each command and its result into the PR Test Plan. A red gate is never skipped or worked around. Fix it, then re-run.
 
-**Independent review, no self-assessment.** The lead dispatches a fresh `senior-code-reviewer` that did not write the code, or hands the diff to `codex:rescue`. The implementing agent never reviews its own work, and the lead never substitutes its own reading for the review. Record the verdict in the checkpoint comment.
+**Independent review, no self-assessment — dispatched in parallel with the gates above, not after them.** The lead starts a fresh `senior-code-reviewer` that did not write the code (or hands the diff to `codex:rescue`) at the same time it starts running the gates, so neither sits idle waiting on the other. The implementing agent never reviews its own work, and the lead never substitutes its own reading for the review. Record the verdict in the checkpoint comment.
 
 Then open the PR. Write the body to a file first and pass `--body-file`: a long `--body` heredoc is rejected as a compound command in some permission modes.
 
@@ -209,7 +219,14 @@ gh pr checks <pr> --watch --fail-fast
 
 or arm a `Monitor` whose filter covers **every** terminal state (`pass|fail|cancel|skipping|timed out`), not just success — a filter that matches only the success marker stays silent through a crash, and silence looks exactly like "still running".
 
-Merge when the independent review passed and CI is fully green:
+Merge only when the independent review passed and all four hold, checked with `gh pr view <pr> --json mergeable,mergeStateStatus,statusCheckRollup`:
+
+- `mergeable == "MERGEABLE"`
+- `mergeStateStatus == "CLEAN"`
+- the check count is greater than 0
+- every check passed
+
+`gh pr checks --watch` exiting 0 is not sufficient alone — it also exits 0 when the PR has zero checks, which is exactly what a `CONFLICTING` PR looks like; that gap is what nearly merged #940.
 
 ```bash
 gh pr merge <pr> --merge
@@ -274,10 +291,11 @@ At the end of each wave, output an explicit evaluation of all three conditions �
 - **`agent-ready` is archive authorization.** Applying the label authorizes `openspec archive` and the canonical write-back for that issue. No separate confirmation is needed.
 - **MAJOR stops, MINOR and PATCH do not.** MAJOR means removing or overturning an existing FR or AC. On MAJOR: stop before archive, post a checkpoint comment explaining what would be overturned, swap `agent-running` for `blocked`, send a `PushNotification`, and wait for the maintainer.
 - **Source-Verify pre-scan before archive.** Every citation in the delta must be locatable by `grep` — FR/AC IDs, section references, file paths, ADR/issue/PR numbers, and paraphrased requirement clauses. `openspec archive` copies propose-time delta text verbatim, so a wrong citation survives into the derived view and no CLI check catches it. Follow `docs/sdd-workflow.md` §6.2, which records the pilot finding: a derived view cited a `plan.md §Phase 1.3` that did not exist and silently dropped an SC clause, and only human review caught either (issue #356 pilot finding ③).
-- **Playwright throttle is a scheduling constraint, not a runtime lock.** Concurrent Chromium instances on one machine make runs flaky, so a wave carries at most two issues needing a full suite (step 4). It cannot be a lock: leads are separate agents with no shared counter, and peer messages must never be used as locks. The main session enforces the cap when it builds the wave, which needs no coordination at run time.
+- **Playwright throttle is a scheduling constraint, not a runtime lock.** Concurrent Chromium instances on one machine make runs flaky, so a wave carries at most two issues needing a full local suite (step 4). It cannot be a lock: leads are separate agents with no shared counter, and peer messages must never be used as locks. The main session enforces the cap when it builds the wave, which needs no coordination at run time. A mid-flight override that reshuffles wave membership must recompute both this count and the conflict graph for the new membership, not just PR merge order — reordering by merge order alone once put three full local suites in one wave, over the cap.
 - **Never commit or push to `main`.** Commit messages are English-only; PR titles and bodies are Traditional Chinese.
 - **Push from inside the worktree.** Use `EnterWorktree`, or prefix with `cd <worktree> && `. The hook resolves the branch from `-C`, then `cd`, then the payload's `cwd` — and a subagent's `cwd` is pinned to the repository root, so an unprefixed push is read as a push from `main` and blocked (`.claude/hooks/pre-tool-use.sh`).
 - **One purpose per PR.** Size limits and the single-purpose rule in `.claude/rules/git-workflow.md` apply to every dispatched PR. An issue that cannot be delivered in one purpose is split into stacked PRs, not widened.
+- **The main session never `cd`s into a lead's worktree.** Use `git -C <worktree> <command>` to inspect or act on it instead — `cd` there risks pinning the session inside that worktree for the rest of its run.
 
 ## Pairing with /goal and /loop
 
@@ -325,3 +343,4 @@ One deviation is from CLAUDE.md itself and is therefore **not** this skill's to 
 | Push from a worktree blocked as a push from `main` | `EnterWorktree`, or `cd <worktree> && git push` |
 | Two issues bumping one canonical spec's Changelog | Shared canonical spec means different waves |
 | Leftover worktrees and `[gone]` branches after a sprint | Step 9 cleanup, plus `pr-flow`'s sprint-end sweep |
+| Regenerating a derived file (e.g. screen inventory) after every source edit leaves throwaway commits that go empty on rebase | Regenerate it once, right after the last source edit, not after each one |
