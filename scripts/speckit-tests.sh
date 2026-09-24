@@ -1279,6 +1279,15 @@ test_check_sdd_fails_for_retired_command_in_non_sdd_workflow_skill() {
     assert_command_fails_with "$repo" 1 "RETIRED_COMMAND" ".claude/skills/other-skill/SKILL.md"
 }
 
+test_check_sdd_ignores_retired_command_text_in_pycache_artifacts() {
+    local repo
+
+    repo="$(make_sdd_repo)"
+    mkdir -p "$repo/.claude/skills/other-skill/__pycache__"
+    printf 'compiled bytecode noise /speckit.analyze more noise\n' > "$repo/.claude/skills/other-skill/__pycache__/mod.cpython-313.pyc"
+    assert_command_succeeds "$repo" --not-rule RETIRED_COMMAND
+}
+
 test_check_sdd_does_not_match_pnpm() {
     local repo output
     repo="$(make_sdd_repo)"
@@ -3164,6 +3173,7 @@ test_check_sdd_fails_for_incomplete_exception
 test_check_sdd_fails_for_wrong_red_owner
 test_check_sdd_fails_for_retired_command
 test_check_sdd_fails_for_retired_command_in_non_sdd_workflow_skill
+test_check_sdd_ignores_retired_command_text_in_pycache_artifacts
 test_check_sdd_does_not_match_pnpm
 test_check_sdd_accepts_exact_legacy_baseline
 test_check_sdd_fails_for_new_baseline_violation
