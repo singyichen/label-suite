@@ -46,4 +46,21 @@ test.describe('Shared sidebar avatar initials', () => {
     });
     await expect(userAvatar).toHaveText('U');
   });
+
+  test('falls back to the "U" placeholder when userName is made only of zero-width characters', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/pages/annotation/annotation-workspace.html');
+
+    const userAvatar = page.locator('#userAvatar');
+    await expect(userAvatar).toBeVisible();
+    await expect(userAvatar).toHaveText('MC');
+
+    // Code review finding on issue #932: U+200B (zero-width space) is not
+    // matched by \s, so a name made only of zero-width characters could
+    // slip past the whitespace-only guard and render an invisible avatar.
+    await page.evaluate(() => {
+      (window as any).LabelSuiteSharedSidebar.updateUserChip({ userName: '​​' });
+    });
+    await expect(userAvatar).toHaveText('U');
+  });
 });
