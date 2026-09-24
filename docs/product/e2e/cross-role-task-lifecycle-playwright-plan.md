@@ -40,7 +40,7 @@ flowchart LR
 
 - Fixture 主參數（w4 §1.1／w5 §2）：`task_id = XROLE-{run_id}`、`single_label`（positive/negative/neutral）、5 筆記錄 `xrole-001..005`、`sampling_value=2`（試標 = `xrole-001/002` × 3 標記員）、`min_annotators=3`、`min_reviewers=2`、`arbitration_enabled=true` + 仲裁者 R03。
 - 分歧構造：`xrole-003`（A01 標 `positive`）→ R01 核准、R02 修正 `negative` → FR-051 判定 `disputed`，N=2 平手不收斂 → R03 仲裁選 B（`negative`）→ `finalized`。
-- 對照組：`xrole-004` 全數核准 → `finalized`；`xrole-005` R01/R02 一致修正 → 多數收斂自動 `finalized`（不經仲裁）。
+- 對照組：`xrole-004` 全數核准 → `finalized`；`xrole-005` 的「R01/R02 一致修正 → 多數收斂自動 `finalized`（不經仲裁）」情境**已退場**（issue #916）——單人接力模型下每審核單位恰一位審核員（FR-093，`specs/annotation/015-annotation-workspace/spec.md:1004`），無多數決路徑，`disputed` 僅能經仲裁（FR-061）或最終例外池（FR-095）轉為 `finalized`（FR-051，`spec.md:773`）。
 - 終點斷言：匯出 JSON 中 `xrole-003` 的值必須是**仲裁後定案值** `negative`，非 A01 原始答案（w4 步驟 12）。
 - 角色交接點 A–E 的跨頁數字對帳斷言見 w4 §3（矩陣節點 16 的具體落地）。
 
@@ -62,7 +62,7 @@ flowchart LR
 - **伺服器**：沿用 Node `serve.mjs`（`playwright.config.ts:24-29`；Python http.server flake 史見 `serve.mjs:4-11`、ADR-014），baseURL `http://127.0.0.1:8888`，不得硬編其他 port。
 - **Dashboard 卡片斷言——主 agent 裁決採 w5 選項 (b)**：`dashboard.assignments.js:33-51` 為靜態陣列，新建 XROLE 任務不會自動出現在 Dashboard 卡片；主線**跳過** Dashboard 卡片斷言（節點 2 的待辦一致性由既有 F-03/F-10 finding 追蹤），避免以修改 seed 資料換取斷言而污染其他 96 個測試。
 - **仲裁者身分 URL 進入方式**：列為 **Generator 階段前置驗證**——實作前先對照 `annotation-workspace-arbitration.spec.ts` 全文確認 R03 的 query params 組合，不在本規劃文件假定。
-- **`min_reviewers=2` 的推導依據**（w7 §5.3，記錄於 fixture 章節以防日後設定漂移）：N=2 時嚴格多數需 `>1`，1:1 必平手不收斂，保證 `disputed` 停留至仲裁；若日後改為奇數 ≥3，須刻意構造全數分歧或未過半分佈，否則多數收斂會讓仲裁情境失效。
+- **`min_reviewers=2` 的推導依據——已退場**（issue #916）：`MIN_REVIEWERS_DEFAULT` 已隨 FR-093 廢止（`specs/annotation/015-annotation-workspace/spec.md:63`）——單人接力模型下每審核單位恰指派一位審核員（FR-093，`spec.md:1004`），不存在人數門檻、票數或多數決；`disputed` 一律經仲裁（FR-061）或最終例外池（FR-095）轉為 `finalized`（FR-051，`spec.md:773`）。
 
 ## 5. 每個關鍵動作的四類斷言
 

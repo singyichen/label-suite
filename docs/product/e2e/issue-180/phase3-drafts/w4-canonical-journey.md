@@ -117,7 +117,7 @@
 
 - **交接點 D 延伸**：`r03Page.goto(buildListUrl({task_id:'XROLE-001', role:'reviewer', run_type:'official_run', reviewer_id:'R03'}))` → `xrole-003` 列（disputed）顯示 `list-arbitrate-entry`（「仲裁」按鈕，015 FR-060 `spec.md:671`，`annotation-list-dispute-entry.spec.ts:91-92` 同款）；`xrole-004`／`xrole-005` 列（尚未達 disputed，見下）維持 `编辑`。
 - **When**（`xrole-004`／A02）：R01 核准、R02 核准（皆同意 A02 原答案 `negative`）→ **Then** `getReviewUnitStatus(...) = 'finalized'`（n=2=min 且全數同意，FR-051 判定式）。
-  （`xrole-005`／A03）：R01 修正為 `positive`、R02 修正為 `positive`（兩者一致但皆異於 A03 原答案 `neutral`）→ 依 `resolveDisputeConvergence`（`annotation-dispute-items.spec.ts` 同款演算法）N=2 且票數一致（2/2）→ **Then** 自動收斂為 `finalized`，`finalized_value = 'positive'`，**不需**仲裁（呼應 `annotation-workspace-arbitration.spec.ts:217-220` 「N=2 unanimous reviewers converge」情境）。
+  （`xrole-005`／A03，**已退場**，issue #916）：原描述「R01/R02 皆修正為同一新值 → 多數收斂自動 `finalized`，不需仲裁」的情境，在單人接力模型下已不可能發生——每個審核單位恰指派一位審核員（FR-093，`spec.md:1004`），沒有票數可計，也不存在多數決；`disputed` 僅能經仲裁（FR-061）或最終例外池（FR-095，`spec.md:1006`）轉為 `finalized`（FR-051 判定式，`spec.md:773`）。
   （`xrole-003`／A01，前步已建立分歧）：R03 開啟 → **Then**（UI）`ws-arbitration-card` 可見、`ws-arbitration-item` count=1（`annotation-workspace-arbitration.spec.ts:103-109`）；R03 點擊 `ws-arbitration-choose-b`（選 R02 的 `negative`）並 `ws-arbitration-submit`。
   **（資料狀態）**：`getArbitrationState(...)['single_label::single_label']` = `{votes:[{arbiter_id:'R03',choice:'B',...}], finalized_value:'negative', finalized_by:'R03'}`（沿用 `annotation-workspace-arbitration.spec.ts:154-166`）；`getReviewUnitStatus(...) = 'finalized'`。
 - **交接點 E 斷言（仲裁完成→狀態同步）**：`plPage.goto('/pages/task-management/task-detail.html?task_id=XROLE-001&tab=annotation-results')` → `#arResultTableBody` 對 `xrole-003` 列展開後，`.ar-review-badge .badge` = `'已定稿'`，且 `.ar-history-line.ar-history-arbitration` 含 R03 與「採 B」字樣（沿用 `task-detail-review-history.spec.ts:54-70` 同款斷言）；此為「仲裁完成→狀態同步」跨頁對帳的具體落地。
@@ -174,7 +174,7 @@
 | XROLE-13 | 11（dry_run 不可退回負向） | R01 於 `dry_run` 對 A01 的 `xrole-001` 判定「退回」 | 樣本狀態不應回退為 `待標記`，`markSampleRejected` 不應被呼叫於 `dry_run` | **新增**（覆蓋 F-08-b／AC-3.15，目前 FAIL） | 🟡 |
 | XROLE-14 | 11（審核分歧產生 dispute） | R01 核准、R02 修正 `xrole-003` | `getReviewUnitStatus=disputed`，`getDisputeItems` 回傳 1 筆含 R02 值 | 沿用 `annotation-dispute-items.spec.ts` 演算法，擴充為跨角色情境 | 🟢 |
 | XROLE-15 | 11（一致同意 finalize） | R01/R02 皆核准 `xrole-004` | `getReviewUnitStatus=finalized`（n=2=min） | 沿用 `annotation-review-unit.spec.ts:221` | 🟢 |
-| XROLE-16 | 11（多數收斂自動 finalize） | R01/R02 皆修正 `xrole-005` 為同一新值 | `resolveDisputeConvergence` 收斂，`getReviewUnitStatus=finalized`，無需仲裁 | 沿用 `annotation-workspace-arbitration.spec.ts:217-220` | 🟢 |
+| XROLE-16 | ~~11（多數收斂自動 finalize）~~ | — | **已退場**（issue #916）：單人接力模型下每審核單位恰一位審核員（FR-093，`spec.md:1004`），無多數決路徑；`disputed` 僅能經仲裁（FR-061）或最終例外池（FR-095，`spec.md:1006`）轉為 `finalized`（FR-051，`spec.md:773`） | 退場依據：FR-093、issue #596 | 已退場 |
 | XROLE-17 | 12（仲裁入口可見性） | `xrole-003` 為 disputed，R03 具仲裁資格 | R03 清單列顯示 `list-arbitrate-entry`；R01/R02（參與者）與 R02 之外任何非仲裁資格者維持 `編輯` | 沿用 `annotation-list-dispute-entry.spec.ts` | 🟢 |
 | XROLE-18 | 12（仲裁投票與定案） | R03 開啟 `xrole-003` 仲裁版面 | `ws-arbitration-card` 渲染、選 B、`getArbitrationState` 回傳 `finalized_by=R03` | 沿用 `annotation-workspace-arbitration.spec.ts:150-166` | 🟢 |
 | XROLE-19 | 12→13（仲裁完成→狀態同步，交接點 E） | 仲裁已定案 | `task-detail` `annotation-results` 面板顯示 `已定稿` + 仲裁歷程線 | 沿用 `task-detail-review-history.spec.ts:54-70` | 🟢 |
