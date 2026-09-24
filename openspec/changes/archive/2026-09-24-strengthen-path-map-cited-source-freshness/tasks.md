@@ -13,3 +13,6 @@
 - [x] 1.1 在 `scripts/speckit-tests.sh` 補 Stage 3 Red 回歸，涵蓋計數不符、引用失效、無法判斷與 fingerprint 優先 [@senior-qa]
 - [x] 1.2 在 `scripts/check-user-path-map-freshness.mjs` 實作 Stage 3 判定使 Red 轉綠 [@senior-devops]
 - [x] 1.3 執行四道驗證指令並蒐集 Red／Green 證據 [@main]
+- [x] 1.4 執行 Source-Verify 預掃與 `openspec archive strengthen-path-map-cited-source-freshness --yes` 完成衍生檢視 dual-write，再重跑 `scripts/check-sdd.sh`、`scripts/check-spec-artifacts.sh`、`scripts/speckit-tests.sh`、`node scripts/check-user-path-map-freshness.mjs` 與 `openspec validate --changes --no-interactive` [@main]
+- [x] 1.5 回寫正典 `specs/foundation/002-user-path-map-freshness-check/spec.md`：MINOR 升版至 2.1.0，修訂 FR-004～FR-007 與 SC-003～SC-004，補記 issue #906／PR #918 的 Changelog 條目，既有條文逐字保留為沿革 [@main]
+- [x] 1.6 更新 `specs/STATUS.md` 的 foundation-002 列，記錄 change 已 archive 且分支欄與正典 frontmatter 的功能分支字串相同 [@main]
