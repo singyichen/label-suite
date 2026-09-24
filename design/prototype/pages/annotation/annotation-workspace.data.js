@@ -3227,7 +3227,15 @@
    * A browser holding v2 must clear and replay the T014-T016 buckets or it
    * would keep the old uncited reason strings forever. */
   var REVIEW_FLOW_DEMO_SEED_KEY_V3 = 'labelsuite.reviewFlowDemoSeed.v3';
-  var REVIEW_FLOW_DEMO_SEED_KEY = 'labelsuite.reviewFlowDemoSeed.v4';
+  /* issue #923: v4's rows were seeded with same-millisecond `at` timestamps
+   * (each markSampleSubmitted/submitArbitration call stamped
+   * new Date().toISOString() back-to-back), so getSampleHistory()'s
+   * timestamp sort fell back to bucket-key lexical order and rendered
+   * causally later events before earlier ones. A browser holding v4 must
+   * clear and replay the T014-T016 buckets to pick up v5's strictly
+   * increasing per-event timestamps. */
+  var REVIEW_FLOW_DEMO_SEED_KEY_V4 = 'labelsuite.reviewFlowDemoSeed.v4';
+  var REVIEW_FLOW_DEMO_SEED_KEY = 'labelsuite.reviewFlowDemoSeed.v5';
 
   /* issues #856/#620: removes exactly the buckets seedReviewFlowDemo() itself
    * can have written for `taskIds` -- wsSubmissions (covers both annotator
@@ -3303,7 +3311,8 @@
       upgradingFromPrevious = !!(
         global.localStorage.getItem(REVIEW_FLOW_DEMO_SEED_KEY_V1) ||
         global.localStorage.getItem(REVIEW_FLOW_DEMO_SEED_KEY_V2) ||
-        global.localStorage.getItem(REVIEW_FLOW_DEMO_SEED_KEY_V3)
+        global.localStorage.getItem(REVIEW_FLOW_DEMO_SEED_KEY_V3) ||
+        global.localStorage.getItem(REVIEW_FLOW_DEMO_SEED_KEY_V4)
       );
     } catch (e) {
       return; /* storage unavailable: nothing to stage into */
@@ -3468,8 +3477,40 @@
       return payload;
     }
 
+    /* issue #923: the loop below fires markSampleSubmitted/submitArbitration
+     * back-to-back, so their own `new Date().toISOString()` stamps land in
+     * the same millisecond and getSampleHistory()'s timestamp sort falls
+     * back to bucket-key lexical order, misordering the rendered history.
+     * These seed-only helpers overwrite each freshly written event's `at`
+     * (and, where relevant, `submittedAt`) with a strictly increasing
+     * timestamp reflecting true submit -> review -> arbitration causal
+     * order. Never used outside this seeder: real user actions keep writing
+     * their own real-time stamps via appendHistoryEvent/markSampleSubmitted. */
+    var seedEventClockMs = Date.now();
+    function nextSeedEventAt() {
+      seedEventClockMs += 1000;
+      return new Date(seedEventClockMs).toISOString();
+    }
+    /* ponytail: assumes the write this follows always appended a new event
+       (true for every row in `scripts` today -- appendSampleTimelineEvent's
+       `if (!reason) return;` and appendReviewDecisionEvents' `if (!action)
+       return;` guards never fire for this table). If a future row could hit
+       either guard, this would silently restamp an unrelated earlier event
+       instead of a no-op; a length-before/after check would close that gap
+       if it ever matters. */
+    function restampLastSeedEvent(bucketKey, sampleId, alsoStampSubmittedAt) {
+      var bucket = readSubmissionBucket(bucketKey);
+      var entry = bucket[sampleId];
+      if (!entry || !Array.isArray(entry.history) || !entry.history.length) return;
+      var at = nextSeedEventAt();
+      entry.history[entry.history.length - 1].at = at;
+      if (alsoStampSubmittedAt) entry.submittedAt = at;
+      writeSubmissionBucket(bucketKey, bucket);
+    }
+
     scripts.forEach(function (row) {
       markSampleSubmitted(row.t, 'annotator', row.r, row.s, labelPayload(row.v), '', { annotatorId: row.a });
+      restampLastSeedEvent(submissionBucketKey(row.t, 'annotator', row.r, { annotatorId: row.a }), row.s, true);
       Object.keys(row.rev || {}).forEach(function (reviewerId) {
         var isModify = row.modifyBy === reviewerId;
         /* issue #815: `bypassBy` mirrors `modifyBy` -- names the one entry
@@ -3489,11 +3530,16 @@
           reviewSummary,
           { annotatorId: row.a, reviewerId: reviewerId }
         );
+        restampLastSeedEvent(
+          submissionBucketKey(row.t, 'reviewer', row.r, { annotatorId: row.a, reviewerId: reviewerId }),
+          row.s, true
+        );
       });
       if (row.arb) {
         submitArbitration(row.t, row.r, row.s, { annotatorId: row.a, reviewerId: 'reviewer_chen' }, [
           { itemId: 'single_label::single_label', choice: 'adopt_b', value: row.arb, reason: row.arbReason },
         ]);
+        restampLastSeedEvent(submissionBucketKey(row.t, 'annotator', row.r, { annotatorId: row.a }), row.s, false);
       } else if (row.arbReject) {
         /* issue #596 (FR-061 point 3, design.md D2): a reject vote carries
            no `value` -- submitArbitration() deletes finalized_value/
@@ -3502,6 +3548,7 @@
         submitArbitration(row.t, row.r, row.s, { annotatorId: row.a, reviewerId: 'reviewer_chen' }, [
           { itemId: 'single_label::single_label', choice: 'reject', reason: row.arbReason },
         ]);
+        restampLastSeedEvent(submissionBucketKey(row.t, 'annotator', row.r, { annotatorId: row.a }), row.s, false);
       }
     });
 
@@ -3515,8 +3562,9 @@
       global.localStorage.removeItem(REVIEW_FLOW_DEMO_SEED_KEY_V1);
       global.localStorage.removeItem(REVIEW_FLOW_DEMO_SEED_KEY_V2);
       global.localStorage.removeItem(REVIEW_FLOW_DEMO_SEED_KEY_V3);
+      global.localStorage.removeItem(REVIEW_FLOW_DEMO_SEED_KEY_V4);
     } catch (e) {
-      /* leftover old markers are harmless: v4 is checked first */
+      /* leftover old markers are harmless: v5 is checked first */
     }
   }
 
