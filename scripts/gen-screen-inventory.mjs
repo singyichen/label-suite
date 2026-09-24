@@ -19,7 +19,7 @@
  *   - data-testid counts, read from each screen's own prototype sources
  *   - component occurrence counts, computed from the per-screen component keys
  *   - Storybook scope, from the ADR-016 rule "shared once used on >= 6 screens"
- *   - the prototype source commit and its date, read from git
+ *   - the prototype content hash, computed from the tracked source files' bytes
  *
  * What is validated (the generator refuses to render on any of these):
  *   - every manifest page, page design doc and spec directory exists
@@ -29,7 +29,7 @@
  *   - a non-null routeKey exists in frontend/src/routes/paths.ts
  */
 
-import { execFileSync } from 'node:child_process';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -43,7 +43,7 @@ const ROUTE_PATHS_FILE = path.join(ROOT, 'frontend/src/routes/paths.ts');
 /** ADR-016: a component used on this many screens or more belongs in shared/. */
 const SHARED_THRESHOLD = 6;
 
-/** Paths whose last commit defines "how fresh is this inventory". */
+/** Paths whose byte content defines "how fresh is this inventory" — never a commit. */
 const PROTOTYPE_SOURCES = ['design/prototype/pages', 'design/prototype/index.html'];
 
 const errors = [];
@@ -165,21 +165,38 @@ function summariseIds(list) {
 }
 
 /**
- * Abbreviate here rather than with %h: git's own abbreviation length tracks the
- * local object database, so the same commit renders as 7 characters in one clone
- * and 8 in another. The freshness gate compares this file byte-for-byte.
+ * Hashes the actual bytes of every file under PROTOTYPE_SOURCES so freshness
+ * depends only on content, never on git history. A commit that touches these
+ * paths without changing their final bytes (a revert, a rebase that replays
+ * an identical diff under a new SHA) must not move this value — see issue #943.
  */
-const COMMIT_ABBREV_LENGTH = 12;
+function walkAllFiles(absoluteDir) {
+  const found = [];
+  for (const name of fs.readdirSync(absoluteDir).sort()) {
+    const entry = path.join(absoluteDir, name);
+    if (fs.statSync(entry).isDirectory()) found.push(...walkAllFiles(entry));
+    else found.push(entry);
+  }
+  return found;
+}
 
-function prototypeSource() {
-  const out = execFileSync(
-    'git',
-    ['log', '-1', '--format=%H|%ad', '--date=short', '--', ...PROTOTYPE_SOURCES],
-    { cwd: ROOT, encoding: 'utf8' },
-  ).trim();
-  const [fullCommit, date] = out.split('|');
-  if (!fullCommit || !date) throw new Error('cannot resolve the prototype source commit from git');
-  return { commit: fullCommit.slice(0, COMMIT_ABBREV_LENGTH), date };
+function prototypeContentHash() {
+  const files = [];
+  for (const source of PROTOTYPE_SOURCES) {
+    const absolute = path.join(ROOT, source);
+    if (!fs.existsSync(absolute)) continue;
+    if (fs.statSync(absolute).isDirectory()) files.push(...walkAllFiles(absolute));
+    else files.push(absolute);
+  }
+  files.sort((a, b) => path.relative(ROOT, a).localeCompare(path.relative(ROOT, b)));
+  const hash = crypto.createHash('sha256');
+  for (const file of files) {
+    hash.update(path.relative(ROOT, file));
+    hash.update('\0');
+    hash.update(fs.readFileSync(file));
+    hash.update('\0');
+  }
+  return hash.digest('hex').slice(0, 12);
 }
 
 function validate(manifest) {
@@ -234,7 +251,7 @@ function validate(manifest) {
 }
 
 function render(manifest) {
-  const { commit, date } = prototypeSource();
+  const contentHash = prototypeContentHash();
   const screens = manifest.screens;
   const registry = manifest.componentRegistry;
 
@@ -264,9 +281,9 @@ function render(manifest) {
     '>',
     '> **本檔為 generated view——請勿手動編輯。** 唯一生成來源是 [inventory-manifest.json](inventory-manifest.json)；改完 manifest 後執行 `node scripts/gen-screen-inventory.mjs` 重新產生，並以 `bash scripts/inventory-tests.sh` 驗證。元件規格唯一正典是 [MASTER.md](MASTER.md)；行為規格在 `specs/<module>/`；token 實作在 `design/prototype/assets/tokens.css`。',
     '>',
-    `> **Prototype 來源 commit：** \`${commit}\`（${date}）——`
-      + `${PROTOTYPE_SOURCES.map((p) => `\`${p}\``).join(' · ')} 的最後一次變更。`,
-    '> 本檔若落後於該 commit，`node scripts/gen-screen-inventory.mjs --check` 會失敗。',
+    `> **Prototype 內容雜湊：** \`${contentHash}\`——`
+      + `對 ${PROTOTYPE_SOURCES.map((p) => `\`${p}\``).join(' · ')} 目前的實際位元組內容計算，內容不變則雜湊不變，不隨 commit 前進而改變。`,
+    '> 本檔若落後於該內容雜湊，`node scripts/gen-screen-inventory.mjs --check` 會失敗。',
     '',
     '---',
     '',
