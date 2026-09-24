@@ -9,8 +9,8 @@ Issue #921。審核員工作區**從未檢查審核指派**。未被系統指派
 FR-093（`specs/annotation/015-annotation-workspace/spec.md:1004`）規定每個審核單位恰有**一位**指派審核員，「不由審核員自行挑單」。但目前只有 `annotation-list.html` 有依指派過濾（`filterToAssignedUnits()`，issue #824 隨 `sticky-review-assignment` 一併引入）：
 
 - `getAssignedReviewUnits()`（`annotation-workspace.data.js:2422`）本身存在且已匯出，工作區側的資料層完全就緒。
-- 但工作區 `annotation-workspace.config.js` 的 `buildUnits()`（`:1508`）從未呼叫它——左欄列出該任務**全部**審核單位，不只指派給自己的。
-- 工作區唯一的互動閘門 `reviewUnitBlockReason()`（`:3611`）只判斷仲裁（`isArbiterCandidate()`，FR-060）、已定稿（FR-094）、離冊（`isRosterReviewer()`，issue #824 FR-093 本版修訂 4），完全不判斷「目前這位審核員是不是被指派到這個單位的那一位」。
+- 但工作區 `annotation-workspace.config.js` 的 `buildUnits()`（`:1516`）從未呼叫它——左欄列出該任務**全部**審核單位，不只指派給自己的。
+- 工作區唯一的互動閘門 `reviewUnitBlockReason()`（`:3623`）只判斷仲裁（`isArbiterCandidate()`，FR-060）、已定稿（FR-094）、離冊（`isRosterReviewer()`，issue #824 FR-093 本版修訂 4），完全不判斷「目前這位審核員是不是被指派到這個單位的那一位」。
 
 **這是 #913 的實際產生途徑**：#913 內文原推測多審核員形狀要靠 #824 的名冊異動才會出現；實測顯示不需要改名冊，一般審核員在工作區正常點擊（或直接開網址）就能產生，因為工作區從未讀過 `getAssignedReviewUnits()`。
 

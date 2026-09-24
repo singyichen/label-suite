@@ -11,7 +11,7 @@
 | `:2410` | `isRosterReviewer(taskId, reviewerId)` | 「是否在該任務審核員名冊」，已被 `reviewUnitBlockReason()` 的 OFF_ROSTER 分支使用 |
 | `:2445` | `isArbiterCandidate(taskId, runType, sampleId, identity)` | FR-060 仲裁資格，與上列指派名冊是兩份查表 |
 
-消費端目前只有 `annotation-list.html:1854` 的 `filterToAssignedUnits()`（FR-055 清單列，issue #824 引入）呼叫 `getAssignedReviewUnits()`。`annotation-workspace.config.js` 的 `buildUnits()`（`:1508`）與互動閘門 `reviewUnitBlockReason()`（`:3611`）皆未呼叫，這正是本單要補的缺口——**資料層已就緒，缺的只是工作區這一側的消費**。
+消費端目前只有 `annotation-list.html:1854` 的 `filterToAssignedUnits()`（FR-055 清單列，issue #824 引入）呼叫 `getAssignedReviewUnits()`。`annotation-workspace.config.js` 的 `buildUnits()`（`:1516`）與互動閘門 `reviewUnitBlockReason()`（`:3623`）皆未呼叫，這正是本單要補的缺口——**資料層已就緒，缺的只是工作區這一側的消費**。
 
 `annotation-list.html` 的既有寫法是本單的直接參照範本：
 
@@ -42,7 +42,7 @@ function filterToAssignedUnits(context, units) {
 
 ### D1：`buildUnits()` 維持不變
 
-`buildUnits()`（`:1508`）繼續列舉任務的完整單位宇宙（annotator 角色回傳單一單位、reviewer 角色回傳 `getReviewUnitRows()` 的完整列舉），不套用任何指派過濾——左欄、導覽、送出後自動前進因此繼續顯示全部單位，與 #921 修復前相同。這是 apply 階段的範圍收斂結果：`buildUnits()` 拆分為未過濾／過濾兩版曾是 propose 階段的原始設計，但過濾左欄會牽動的既有測試面遠超單一 PR 範圍，已移交 issue #956。本變更**只**在 D2 為互動閘門新增一個單一單位的指派檢查，不改動 `buildUnits()` 本身或其任何既有呼叫端。
+`buildUnits()`（`:1516`）繼續列舉任務的完整單位宇宙（annotator 角色回傳單一單位、reviewer 角色回傳 `getReviewUnitRows()` 的完整列舉），不套用任何指派過濾——左欄、導覽、送出後自動前進因此繼續顯示全部單位，與 #921 修復前相同。這是 apply 階段的範圍收斂結果：`buildUnits()` 拆分為未過濾／過濾兩版曾是 propose 階段的原始設計，但過濾左欄會牽動的既有測試面遠超單一 PR 範圍，已移交 issue #956。本變更**只**在 D2 為互動閘門新增一個單一單位的指派檢查，不改動 `buildUnits()` 本身或其任何既有呼叫端。
 
 ### D2：新增 `isCurrentUnitAssigned()`，直接餵給既有的 `getAssignedReviewUnits()`
 
@@ -65,8 +65,8 @@ function isCurrentUnitAssigned() {
 
 `annotation-workspace.config.js`：
 
-- `REVIEW_UNIT_BLOCK`（`:3594`）新增 `NOT_ASSIGNED: 'not_assigned'`。
-- `reviewUnitBlockReason()`（`:3611`）判定序改為 **ARBITRATION → FINALIZED → OFF_ROSTER → EMPTY → NOT_ASSIGNED**，新分支插入 EMPTY 之後：
+- `REVIEW_UNIT_BLOCK`（`:3602`）新增 `NOT_ASSIGNED: 'not_assigned'`。
+- `reviewUnitBlockReason()`（`:3623`）判定序改為 **ARBITRATION → FINALIZED → OFF_ROSTER → EMPTY → NOT_ASSIGNED**，新分支插入 EMPTY 之後：
 
   ```js
   if (!workspaceData.isRosterReviewer(currentProfile.id, currentIdentity.reviewerId)) {
@@ -84,7 +84,7 @@ function isCurrentUnitAssigned() {
 
 ### D4：唯讀渲染分支
 
-於渲染函式（`:4944` OFF_ROSTER 分支之後）插入鏡射寫法的新分支：
+於渲染函式（`:4996` OFF_ROSTER 分支之後）插入鏡射寫法的新分支：
 
 ```js
 if (blockReason === REVIEW_UNIT_BLOCK.NOT_ASSIGNED) {
