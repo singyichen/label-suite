@@ -28,4 +28,22 @@ test.describe('Shared sidebar avatar initials', () => {
     await expect(userAvatar).toHaveText(expectedInitials);
     await expect(userAvatar).not.toHaveText('U');
   });
+
+  test('falls back to the "U" placeholder when updateUserChip is given an empty/whitespace-only userName', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/pages/annotation/annotation-workspace.html');
+
+    const userAvatar = page.locator('#userAvatar');
+    await expect(userAvatar).toBeVisible();
+    await expect(userAvatar).toHaveText('MC');
+
+    // No initial can be derived from an empty/whitespace-only name -- the
+    // avatar chip must keep showing a placeholder rather than rendering
+    // empty, matching its pre-fix behavior for this case (issue #932 review
+    // finding: the fix must not trade "wrong letter" for "no letter").
+    await page.evaluate(() => {
+      (window as any).LabelSuiteSharedSidebar.updateUserChip({ userName: '   ' });
+    });
+    await expect(userAvatar).toHaveText('U');
+  });
 });
