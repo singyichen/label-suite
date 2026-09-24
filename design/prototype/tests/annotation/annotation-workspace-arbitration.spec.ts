@@ -38,11 +38,6 @@ type WorkspaceData = {
     taskId: string, runType: string, sampleId: string,
     identity: { annotatorId?: string }, outKeys: string[]
   ) => string | null;
-  resolveDisputeConvergence: (
-    item: { outKey: string; key: string; annotatorValue: unknown; reviewerValues: Record<string, unknown> },
-    reviewerCount: number
-  ) => { converged: boolean; value?: unknown };
-  PURE_REJECT_VALUE: unknown;
 };
 
 declare global {
@@ -199,76 +194,5 @@ test.describe('A/B voting', () => {
       )
     );
     expect(Object.keys(state)).toHaveLength(0);
-  });
-});
-
-/* issue #596 (FR-093) retired majority convergence from BOTH the unit-status
- * derivation and the arbitration card, so the card no longer renders a
- * `ws-arbitration-converged` row and the auto-finalize case that asserted one
- * is gone. resolveDisputeConvergence() itself survives as a data-level export
- * that annotation-list.html still calls, so its contract stays pinned here. */
-test.describe('per-item majority convergence (resolveDisputeConvergence)', () => {
-  /* Data-level contract of the convergence rules (issue #147 ⑥③):
-   * among N reviewers, reviewers absent from reviewerValues implicitly
-   * agreed with the annotator's value. A value needs a strict majority
-   * (> N/2) to converge; otherwise the item goes to the dispute pool.
-   */
-  const resolve = (
-    page: Page,
-    reviewerValues: Record<string, unknown>,
-    reviewerCount: number
-  ) =>
-    page.evaluate(
-      (a) =>
-        window.LabelSuiteAnnotationWorkspaceData.resolveDisputeConvergence(
-          { outKey: 'single_label', key: 'single_label', annotatorValue: 'sad', reviewerValues: a.reviewerValues },
-          a.reviewerCount
-        ),
-      { reviewerValues, reviewerCount }
-    );
-
-  /* issue #551 (v4.54.0): min_reviewers = 1 makes N = 1 the FULL quorum,
-     not an incomplete one -- the sole reviewer's correction converges
-     immediately (1 vote > 1/2 threshold) instead of being unconditionally
-     blocked below N = 2. This used to read `converged: false`. */
-  test("N=1 converges: the sole reviewer's correction is authoritative", async ({ page }) => {
-    const r = await resolve(page, { reviewer_wang: 'fear' }, 1);
-    expect(r).toEqual({ converged: true, value: 'fear' });
-  });
-
-  /* A naked reject (no replacement value) is the one thing that still never
-     converges, at any N -- it is not a vote for a value. */
-  test('N=1 pure reject never converges: no replacement value to tally', async ({ page }) => {
-    const r = await page.evaluate(
-      () =>
-        window.LabelSuiteAnnotationWorkspaceData.resolveDisputeConvergence(
-          {
-            outKey: 'single_label', key: 'single_label', annotatorValue: 'sad',
-            reviewerValues: { reviewer_wang: window.LabelSuiteAnnotationWorkspaceData.PURE_REJECT_VALUE },
-          },
-          1
-        )
-    );
-    expect(r.converged).toBe(false);
-  });
-
-  test('N=2 unanimous reviewers converge to their value', async ({ page }) => {
-    const r = await resolve(page, { reviewer_wang: 'fear', reviewer_li: 'fear' }, 2);
-    expect(r).toEqual({ converged: true, value: 'fear' });
-  });
-
-  test('N=2 split (one agrees with the annotator) is a tie: pool', async ({ page }) => {
-    const r = await resolve(page, { reviewer_wang: 'fear' }, 2);
-    expect(r.converged).toBe(false);
-  });
-
-  test('N=3 with a 2-vote majority converges', async ({ page }) => {
-    const r = await resolve(page, { reviewer_wang: 'fear', reviewer_li: 'fear' }, 3);
-    expect(r).toEqual({ converged: true, value: 'fear' });
-  });
-
-  test('N=3 all divergent: no value reaches a majority, pool', async ({ page }) => {
-    const r = await resolve(page, { reviewer_wang: 'fear', reviewer_li: 'joy' }, 3);
-    expect(r.converged).toBe(false);
   });
 });

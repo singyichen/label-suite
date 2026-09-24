@@ -8,7 +8,8 @@ import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
  * OLD five-state / quorum model: REVIEW_UNIT_STATUS has PENDING / APPROVED /
  * MODIFIED / DISPUTED / FINALIZED, and a lone reviewer's correction at
  * min_reviewers = 1 auto-CONVERGES to FINALIZED without ever visiting an
- * arbiter (resolveDisputeConvergence(), issue #551 point 3). Under the new
+ * arbiter (the majority-convergence helper deleted in issue #903; issue
+ * #551 point 3). Under the new
  * single-owner-relay model (FR-051, design.md D1 row 4) any `modify` or
  * `bypass` decision MUST send the outKey to the dispute pool and MUST NOT
  * auto-finalize regardless of reviewer count -- there is no "quorum" concept
@@ -221,12 +222,10 @@ test.describe('issue #596: REVIEW_UNIT_STATUS three-state derivation (task 1.1)'
   /* design.md D1 row 4 / FR-051 point 4: a `modify` decision MUST send the
    * outKey to the dispute pool and MUST stay disputed until arbitrated --
    * there is no reviewer-count quorum left to satisfy (FR-093: exactly one
-   * reviewer per unit). The CURRENT implementation still treats a lone
-   * reviewer's correction as the full quorum and auto-converges it to
-   * FINALIZED (resolveDisputeConvergence, issue #551 point 3) -- see the
-   * sibling annotation-review-unit.spec.ts test "a lone reviewer's
-   * correction converges the unit at min_reviewers = 1", which asserts
-   * exactly the behavior this test says MUST NOT happen anymore. */
+   * reviewer per unit). When this test was written the implementation still
+   * treated a lone reviewer's correction as the full quorum and auto-converged
+   * it to FINALIZED (the majority-convergence helper, issue #551 point 3);
+   * issue #903 deleted that helper, so this is now a regression guard. */
   test('a lone reviewer "modify" decision must stay disputed, not auto-finalize', async ({ page }) => {
     await seed(page, {
       role: 'annotator',
@@ -273,16 +272,14 @@ test.describe('issue #596: REVIEW_UNIT_STATUS three-state derivation (task 1.1)'
    * reaches it: ONE reviewer decides `modify` on the outKey (the same
    * precondition as the case above), then that item is adjudicated.
    *
-   * This is expected to legitimately FAIL today, for the same root cause
-   * as the `modify` and `bypass` cases above: resolveDisputeConvergence()
-   * treats a single reviewer as full quorum and auto-finalizes instead of
-   * leaving the unit disputed, so the single-reviewer dispute path this
-   * case depends on does not exist yet. The failure is in the state
-   * derivation, not in arbitration itself -- once a genuinely disputed
-   * single-reviewer unit exists, the current submitArbitration() /
-   * resolveDisputeConvergence() adjudication path already finalizes it
-   * correctly (see the two-reviewer precondition this test previously
-   * used, which the current code does resolve after arbitration). */
+   * When written this was expected to legitimately FAIL, for the same root
+   * cause as the `modify` and `bypass` cases above: the majority-convergence
+   * helper treated a single reviewer as full quorum and auto-finalized
+   * instead of leaving the unit disputed, so the single-reviewer dispute
+   * path this case depends on did not exist yet. The failure was in the
+   * state derivation, not in arbitration itself -- submitArbitration()
+   * already finalized a genuinely disputed unit correctly. Issue #903
+   * deleted the helper; the path now exists and this case guards it. */
   test('after every disputed item has been adjudicated -> finalized', async ({ page }) => {
     await seed(page, {
       role: 'annotator',

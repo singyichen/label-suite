@@ -72,8 +72,9 @@ test.describe('issue #750: bypass/modify without an edited answer still derives 
      * synthesized dispute item (getDisputeItems()'s new `bypass` branch,
      * `reviewer: null`) is actually arbitrable -- an item with no B value to
      * render, or one the legacy convergence helper silently "resolves" on
-     * its own (issue #753-adjacent: resolveDisputeConvergence() previously
-     * treated a lone `null` vote as a converged winner at N=1), would leave
+     * its own (issue #753-adjacent: the majority-convergence helper, deleted
+     * in issue #903, treated a lone `null` vote as a converged winner at
+     * N=1), would leave
      * the unit stuck in `disputed` forever with no way to reach `finalized`.
      * Drive the arbitration UI end to end and assert both: B renders the
      * 無法判定 wording (not a raw null/empty value), and adopting A converges
