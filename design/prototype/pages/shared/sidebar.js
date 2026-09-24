@@ -15,6 +15,7 @@
     var parts = String(name || '').split(/\s+/).filter(function (part) {
       return part.length > 0;
     });
+    if (parts.length === 0) return 'U';
     return parts.map(function (part) {
       return part.charAt(0).toUpperCase();
     }).join('');
