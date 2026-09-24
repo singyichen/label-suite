@@ -15,7 +15,7 @@
    * so a name made only of them still falls back to the "U" placeholder
    * instead of rendering an invisible initial (code review finding). */
   function computeAvatarInitials(name) {
-    var cleaned = String(name || '').replace(/[​‌‍﻿]/g, '');
+    var cleaned = String(name || '').replace(/[\u200B\u200C\u200D\uFEFF]/g, '');
     var parts = cleaned.split(/\s+/).filter(function (part) {
       return part.length > 0;
     });
