@@ -127,6 +127,9 @@
       exceptionPoolReasonPlaceholder: '處置理由（必填）',
       exceptionPoolReasonRequired: '請先填寫理由再確認',
       exceptionPoolConfirmLabel: '確認',
+      exceptionPoolOriginTpl: '仲裁者：{arbiter} · 兩者皆非理由：{reason}',
+      exceptionQueueTitle: '最終例外池',
+      exceptionQueueProgressText: '待處置例外 {total} 項',
       wsExceptionPoolResolveSuccess: '已完成處置',
       wsHistoryRoleProjectLeader: '專案負責人',
       unitStateDisputedNote: '未定稿，待仲裁',
@@ -262,6 +265,9 @@
       exceptionPoolReasonPlaceholder: 'Reason for this disposition (required)',
       exceptionPoolReasonRequired: 'Give a reason before confirming',
       exceptionPoolConfirmLabel: 'Confirm',
+      exceptionPoolOriginTpl: 'Arbiter: {arbiter} · Rejected because: {reason}',
+      exceptionQueueTitle: 'Final exception pool',
+      exceptionQueueProgressText: '{total} exceptions awaiting disposition',
       wsExceptionPoolResolveSuccess: 'Disposition recorded',
       wsHistoryRoleProjectLeader: 'Project leader',
       unitStateDisputedNote: 'not finalized, awaiting arbitration',
@@ -1596,6 +1602,15 @@
      progress. Progress counts THIS role+run's submissions over the seeded
      unit list, matching what the prev/next buttons can actually reach. */
   function renderSampleNav() {
+    /* FR-095 (issue #907): a project leader never submits here, so the
+       annotator's "{done} / {total} 已提交" counts a write this role cannot
+       make. Its nav addresses the exception queue instead: the remaining
+       item count, with no progress bar -- the disposed items are already
+       gone from the queue, so no honest denominator exists to fill one. */
+    if (currentRole === 'project_leader') {
+      renderExceptionQueueNav();
+      return;
+    }
     var units = buildUnits();
     var total = units.length;
     var done = countSubmittedUnits(units);
@@ -1620,6 +1635,27 @@
     if (nextBtn) nextBtn.disabled = idx >= total - 1;
   }
 
+  function exceptionQueueIndex(queue) {
+    for (var i = 0; i < queue.length; i++) {
+      if (queue[i].sampleId === String(currentSampleId) && queue[i].annotatorId === currentAnnotatorId()) {
+        return i;
+      }
+    }
+    return 0;
+  }
+
+  function renderExceptionQueueNav() {
+    var queue = pendingExceptionQueue();
+    setText('wsProgressText', t('exceptionQueueProgressText').replace('{total}', String(queue.length)));
+    var track = document.getElementById('wsProgressTrack');
+    if (track) track.classList.add('hidden');
+    var idx = exceptionQueueIndex(queue);
+    var prevBtn = document.getElementById('wsPrevBtn');
+    var nextBtn = document.getElementById('wsNextBtn');
+    if (prevBtn) prevBtn.disabled = idx <= 0;
+    if (nextBtn) nextBtn.disabled = idx >= queue.length - 1;
+  }
+
   /* Bottom-bar autosave indicator (issue #470): three honest, per-sample
      states -- INITIAL (never saved/submitted, no edit since load), DIRTY
      (edited since load, not yet persisted) and SAVED (the time of an
@@ -1633,7 +1669,11 @@
   var currentSampleDirty = false;
   function renderAutosaveStatus() {
     var statusEl = document.querySelector('.autosave-status');
-    if (currentRole === 'reviewer') {
+    /* FR-095 (issue #907): a project leader persists through
+       resolveExceptionPoolItem(), never through 儲存草稿 -- leaving this row
+       visible pinned it at 尚未儲存 forever, since getSampleSavedAt() has no
+       project_leader submission to read back. Same reason as the reviewer. */
+    if (currentRole === 'reviewer' || currentRole === 'project_leader') {
       if (statusEl) statusEl.classList.add('hidden');
       return;
     }
@@ -2031,7 +2071,10 @@
        state; renderWorkspace() below recomputes INITIAL/SAVED for the
        newly loaded sample from persisted data. */
     currentSampleDirty = false;
-    if (annotatorId && currentRole === 'reviewer') currentIdentity.annotatorId = annotatorId;
+    /* issue #907: the project leader's exception queue spans annotators the
+       same way a reviewer's unit list does, so its rows must be able to move
+       the identity too -- an annotator addresses only their own records. */
+    if (annotatorId && currentRole !== 'annotator') currentIdentity.annotatorId = annotatorId;
     reviewRowSeeded = {};
     state.datasetRawFirstRow = buildAnnotatorRecord(record, currentProfile);
     /* The engine only rebuilds columnOutputTypeMap inside its own
@@ -2128,11 +2171,68 @@
     return group;
   }
 
+  /* FR-095 (issue #907): the project leader's queue for this task+run is the
+     final exception pool -- the same listReviewPoolItems() the review-pool
+     summary reads -- not buildUnits(), whose one-row-per-dataset-record
+     shape is the ANNOTATOR's workload. */
+  function pendingExceptionQueue() {
+    return window.LabelSuiteAnnotationWorkspaceData
+      .listReviewPoolItems(currentProfile.id, currentRunType).pendingExceptions;
+  }
+
+  /* Left column for role=project_leader: one row per pending exception,
+     addressed by the same sample × annotator pair the disposition screen
+     resolves, so clicking a row opens exactly the item it names. Deliberately
+     NOT `ws-sample-item`: a project leader has no annotation workload, and
+     reusing sample-navigation semantics is the defect issue #907 reports. */
+  function renderExceptionQueueList(listEl, countEl) {
+    setText('sampleListTitle', t('exceptionQueueTitle'));
+    var queue = pendingExceptionQueue();
+    if (countEl) countEl.textContent = queue.length + (state.lang === 'zh' ? ' 筆' : ' items');
+    queue.forEach(function (poolItem, idx) {
+      var item = document.createElement('button');
+      item.type = 'button';
+      var isActive = poolItem.sampleId === String(currentSampleId)
+        && poolItem.annotatorId === currentAnnotatorId();
+      item.className = 'sample-item' + (isActive ? ' active' : '');
+      item.setAttribute('data-testid', 'ws-exception-queue-item');
+      item.setAttribute('data-sample-id', poolItem.sampleId);
+      item.setAttribute('data-annotator-id', poolItem.annotatorId);
+
+      var indexBadge = document.createElement('span');
+      indexBadge.className = 'sample-index';
+      indexBadge.textContent = String(idx + 1);
+      item.appendChild(indexBadge);
+
+      var meta = document.createElement('div');
+      meta.className = 'sample-meta';
+      var snippet = document.createElement('div');
+      snippet.className = 'sample-snippet';
+      snippet.textContent = poolItem.sampleId + ' · ' + poolItem.annotatorId;
+      meta.appendChild(snippet);
+      var outLabel = document.createElement('span');
+      outLabel.className = 'sample-status-label';
+      outLabel.setAttribute('data-testid', 'ws-exception-queue-output');
+      outLabel.textContent = poolItem.outKey;
+      meta.appendChild(outLabel);
+      item.appendChild(meta);
+
+      item.addEventListener('click', function () {
+        selectSample(poolItem.sampleId, poolItem.annotatorId);
+      });
+      listEl.appendChild(item);
+    });
+  }
+
   function renderSampleList() {
     var listEl = document.getElementById('sampleList');
     var countEl = document.getElementById('sampleListCount');
     if (!listEl) return;
     while (listEl.firstChild) listEl.removeChild(listEl.firstChild);
+    if (currentRole === 'project_leader') {
+      renderExceptionQueueList(listEl, countEl);
+      return;
+    }
     var units = buildUnits();
     /* Spec 015 line "筆數仍需依 materialized run context 顯示": the count
        reflects the run's materialized list size when the profile declares
@@ -4106,6 +4206,20 @@
     });
   }
 
+  /* The latest `reject` vote on this dispute item -- the same
+     getArbitrationState() record exceptionPoolQueue() filters the queue on,
+     read one field deeper for the arbiter and reason FR-095 shows in place. */
+  function exceptionPoolRejectVote(item) {
+    var arbState = window.LabelSuiteAnnotationWorkspaceData.getArbitrationState(
+      currentProfile.id, currentRunType, currentSampleId, currentIdentity
+    );
+    var stored = arbState[disputeItemId(item)];
+    if (!stored) return null;
+    return (stored.votes || []).filter(function (vote) {
+      return vote.choice === 'reject';
+    }).pop() || null;
+  }
+
   /* `custom_answer` MUST reuse the exact config-driven answer control every
      other role already goes through (renderOutputPreview -> e.g.
      renderSingleLabelPreview) -- design.md D4 / Generalization-First forbids
@@ -4198,6 +4312,21 @@
       .replace('{b}', formatDisputeValue(reviewerValue));
     row.appendChild(context);
 
+    /* FR-095 (issue #907): the reject vote that pushed this item here is the
+       only record of WHY arbitration could not close it. Reading it required
+       leaving the screen for the history panel; it belongs beside the four
+       dispositions it is the evidence for. */
+    var rejectVote = exceptionPoolRejectVote(item);
+    if (rejectVote) {
+      var origin = document.createElement('div');
+      origin.setAttribute('data-testid', 'ws-exception-pool-origin');
+      origin.style.cssText = 'font-size:12px;color:var(--color-text-soft);margin-bottom:8px;';
+      origin.textContent = t('exceptionPoolOriginTpl')
+        .replace('{arbiter}', rejectVote.arbiter_id || '')
+        .replace('{reason}', rejectVote.reason || '');
+      row.appendChild(origin);
+    }
+
     var expandHost = document.createElement('div');
 
     var actionsWrap = document.createElement('div');
@@ -4207,7 +4336,10 @@
       .forEach(function (action) {
         var btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'mini-btn';
+        /* FR-095 (issue #907): the other three dispositions adopt an answer;
+           exclude_from_dataset drops the sample out of the dataset entirely,
+           so it may not look like a fourth interchangeable choice. */
+        btn.className = action === 'exclude_from_dataset' ? 'mini-btn mini-btn-danger' : 'mini-btn';
         btn.setAttribute('data-testid', 'ws-exception-pool-action-' + action);
         btn.textContent = t(EXCEPTION_ACTION_I18N_KEYS[action]);
         btn.addEventListener('click', function () {
@@ -5481,6 +5613,17 @@
     /* Steps one REVIEW UNIT at a time (FR-056), so a reviewer reaches every
        annotator of a sample before the sample changes. */
     function step(delta) {
+      /* FR-095 (issue #907): the project leader steps the exception queue
+         renderExceptionQueueNav() enabled these buttons against, never the
+         dataset records buildUnits() would hand back for this role. */
+      if (currentRole === 'project_leader') {
+        var queue = pendingExceptionQueue();
+        var at = exceptionQueueIndex(queue);
+        var nextItem = queue[at + delta];
+        if (!nextItem) return;
+        selectSample(nextItem.sampleId, nextItem.annotatorId);
+        return;
+      }
       var units = buildUnits();
       var next = units[currentUnitIndex(units) + delta];
       if (!next) return;

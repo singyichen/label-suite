@@ -1,7 +1,7 @@
 # annotation/015-annotation-workspace Specification
 
 ## Purpose
-Annotation List + Workspace（標記清單與標記作業，Annotator／Reviewer）的 derived view。正典為 `specs/annotation/015-annotation-workspace/spec.md`（v6.15.0）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR/AC ID，不改動其正典措辭。目前收錄：change `reviewer-action-hint`（issue #526）之 FR-084、AC-4.47 ~ AC-4.50 與 FR-064 第 7 點第 6 項之範圍註記；change `2026-09-01-single-owner-review-relay`（issue #596）之 FR-092 ~ FR-097（新增）、FR-014B／FR-016A／FR-044／FR-051／FR-053／FR-054／FR-055／FR-060／FR-061／FR-062／FR-063／FR-064／FR-070／FR-083／FR-086（修訂）、FR-014I／FR-069／FR-074／FR-085（移除）；change `seq-tagging-span-workspace`（issue #581）之 FR-024A／FR-024A-1／FR-024A-2／FR-024A-3／FR-052／FR-024L（修訂）；以及 change `reserve-arbiters-from-review-assignment`（issue #868）之 FR-060／FR-073／FR-093／FR-099（修訂）。
+Annotation List + Workspace（標記清單與標記作業，Annotator／Reviewer）的 derived view。正典為 `specs/annotation/015-annotation-workspace/spec.md`（v6.16.0）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR/AC ID，不改動其正典措辭。目前收錄：change `reviewer-action-hint`（issue #526）之 FR-084、AC-4.47 ~ AC-4.50 與 FR-064 第 7 點第 6 項之範圍註記；change `2026-09-01-single-owner-review-relay`（issue #596）之 FR-092 ~ FR-097（新增）、FR-014B／FR-016A／FR-044／FR-051／FR-053／FR-054／FR-055／FR-060／FR-061／FR-062／FR-063／FR-064／FR-070／FR-083／FR-086（修訂）、FR-014I／FR-069／FR-074／FR-085（移除）；change `seq-tagging-span-workspace`（issue #581）之 FR-024A／FR-024A-1／FR-024A-2／FR-024A-3／FR-052／FR-024L（修訂）；change `reserve-arbiters-from-review-assignment`（issue #868）之 FR-060／FR-073／FR-093／FR-099（修訂）；以及 change `pl-exception-disposal-screen-shell`（issue #907）之 FR-095（修訂，新增最終例外處置畫面外殼段落與 AC-4.69）。
 
 ## Requirements
 
@@ -723,6 +723,16 @@ issue #824 的黏住規則 MUST 優先於本次保留規則：已有已提交審
 
 每個處置 MUST 寫入一筆歷程事件（`exception_resolved` 或 `excluded`，FR-086），攜帶處置者、動作、理由與時間。
 
+**本版新增——最終例外處置畫面的外殼**：專案負責人視角之最終例外處置畫面 MUST 使用例外池專屬外殼，MUST NOT 沿用標記員工作區的樣本導覽外殼。具體而言：
+
+1. **佇列即左側清單**：左側清單 MUST 列出該 `task_id × run_type` 之最終例外池**全部待處置項目**（每列一個待處置爭議項），並 MUST 與任務詳情頁的例外池計數推導自同一個來源，兩處 MUST NOT 對「還有幾項待處置」產生分歧。該清單 MUST NOT 列出一般標記樣本，亦 MUST NOT 對其列套用標記進度狀態（待標記／已儲存／已提交）。
+2. **計數單位為例外項**：畫面進度 MUST 以待處置例外項為單位呈現，MUST NOT 使用標記提交進度（「{done} / {total} 已提交」）文案——專案負責人在本畫面不執行標記提交。
+3. **無自動儲存狀態**：自動儲存狀態列 MUST NOT 呈現於本畫面。專案負責人於本畫面無草稿儲存路徑（其儲存與送出入口 MUST 隱藏），該狀態永遠不會前進，呈現即為誤導。
+4. **仲裁理由就地可見**：每一待處置項 MUST 呈現使其落入例外池的仲裁理由與裁定者身分（FR-061 第 3 點之必填理由），使處置決定不需離開本畫面即可查證。
+5. **排除動作的危險樣式**：`exclude_from_dataset` 之操作項 MUST 在視覺上與其餘三個採用型處置可區辨（危險樣式）——該動作不產生定案答案且不可於本畫面復原。
+
+本段僅規範畫面外殼，MUST NOT 改變上列四個處置動作的集合、run_type 分流或各自的資料寫入契約。
+
 #### Scenario: AC-4.56 正式標記例外池四動作可用
 - **GIVEN** `official_run` 之最終例外池有一筆待處置項目，操作者為專案負責人
 - **WHEN** 開啟該項目的收尾畫面
@@ -734,6 +744,15 @@ issue #824 的黏住規則 MUST 優先於本次保留規則：已有已提交審
 - **WHEN** 開啟該項目的收尾畫面
 - **THEN** 僅提供採 A、採 B、自資料集排除三個處置
 - **AND** 畫面上不存在自訂答案入口，亦不渲染任何作答控件
+
+#### Scenario: AC-4.69 最終例外處置畫面不沿用標記員外殼
+- **GIVEN** 某任務之 `official_run` 最終例外池有待處置項目，操作者以專案負責人身分開啟該任務的最終例外處置畫面
+- **WHEN** 畫面完成渲染
+- **THEN** 左側清單只列出該任務該 run_type 的待處置例外項，不列出該資料集的一般標記樣本，也不出現「待標記」之類的標記進度狀態
+- **AND** 進度以待處置例外項為單位呈現，畫面上不存在「已提交」的標記提交進度文案
+- **AND** 畫面上不存在自動儲存狀態列
+- **AND** 每一待處置項同時呈現裁定「兩者皆非」的仲裁者與其理由
+- **AND** `exclude_from_dataset` 的操作項帶有與其餘三個處置可區辨的危險樣式
 
 ### Requirement: FR-096 試標歷史回饋
 
