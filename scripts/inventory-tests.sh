@@ -33,8 +33,11 @@ TMP_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/label-suite-inventory.XXXXXX")"
 TMP_ROOT="$(cd "$TMP_ROOT" && pwd)"
 
 STRAY=""
+PERTURB_FILE=""
+PERTURB_BACKUP=""
 cleanup() {
     [[ -n "$STRAY" && -f "$STRAY" ]] && rm -f "$STRAY"
+    [[ -n "$PERTURB_FILE" && -n "$PERTURB_BACKUP" && -f "$PERTURB_BACKUP" ]] && cp "$PERTURB_BACKUP" "$PERTURB_FILE"
     rm -rf "$TMP_ROOT"
 }
 trap cleanup EXIT
@@ -95,19 +98,45 @@ fi
 rm -f "$STRAY"; STRAY=""
 pass "coverage check detects an unlisted screen file"
 
-# 6. The prototype source commit must not move with git's dynamic abbreviation.
-# `--format=%h` shortens to whatever length is currently unambiguous, which grows
-# as the object database grows (a repack alone flipped this repo from 7 to 8
-# characters). The freshness gate compares the committed file byte-for-byte, so a
-# length that tracks the local repo turns the gate red for reasons unrelated to
-# the prototype.
-node "$GEN" --stdout > "$TMP_ROOT/abbrev-default.md"
-GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.abbrev GIT_CONFIG_VALUE_0=12 \
-    node "$GEN" --stdout > "$TMP_ROOT/abbrev-long.md"
-if ! diff -q "$TMP_ROOT/abbrev-default.md" "$TMP_ROOT/abbrev-long.md" >/dev/null; then
-    fail "prototype source commit changes with core.abbrev — the freshness gate is not reproducible"
+# 6. issue #943 regression — a git history that merely advances (a commit that
+# touches a PROTOTYPE_SOURCES path but nets out to the same bytes, e.g. a
+# rebase replaying an identical diff under a new SHA) must not turn the gate
+# red. Exercised in a disposable local clone so the real working tree and its
+# history are never touched.
+CLONE_DIR="$TMP_ROOT/history-advance-clone"
+git clone --quiet --local "$ROOT" "$CLONE_DIR"
+git -C "$CLONE_DIR" config user.email "inventory-tests@label-suite.invalid"
+git -C "$CLONE_DIR" config user.name "inventory-tests"
+CLONE_INDEX="$CLONE_DIR/design/prototype/index.html"
+CLONE_GEN="$CLONE_DIR/scripts/gen-screen-inventory.mjs"
+if ! node "$CLONE_GEN" --check >/dev/null 2>&1; then
+    fail "clone setup is not at a fresh baseline — cannot exercise the regression"
 fi
-pass "prototype source commit is independent of git's abbreviation length"
+printf '\n<!-- inventory-tests: transient perturbation -->\n' >> "$CLONE_INDEX"
+git -C "$CLONE_DIR" commit -aqm 'test: perturb prototype content'
+git -C "$CLONE_DIR" checkout -q HEAD~1 -- design/prototype/index.html
+git -C "$CLONE_DIR" commit -aqm 'test: revert prototype content'
+# Content is now byte-identical to the fresh baseline again, but two new
+# commits touch design/prototype/index.html — HEAD advanced without a net
+# content change.
+if ! node "$CLONE_GEN" --check >/dev/null 2>&1; then
+    fail "a commit that advances history without changing prototype content wrongly marks the inventory stale (issue #943)"
+fi
+pass "a commit touching prototype content with no net byte change does not go stale (issue #943)"
+
+# 7. issue #943 regression, complementary direction — a real content change
+# that is never regenerated must still be caught, so the switch to content
+# hashing does not also make the gate blind to genuine drift.
+PERTURB_FILE="$ROOT/design/prototype/index.html"
+PERTURB_BACKUP="$TMP_ROOT/index.html.orig"
+cp "$PERTURB_FILE" "$PERTURB_BACKUP"
+printf '\n<!-- inventory-tests: unregenerated content change -->\n' >> "$PERTURB_FILE"
+if node "$GEN" --check >/dev/null 2>&1; then
+    cp "$PERTURB_BACKUP" "$PERTURB_FILE"
+    fail "a real prototype content change without regenerating the inventory is not caught (issue #943)"
+fi
+cp "$PERTURB_BACKUP" "$PERTURB_FILE"
+pass "a real prototype content change without regeneration is still caught (issue #943)"
 
 # 5. Broken manifest references must fail.
 expect_manifest_failure "missing page file is rejected" \
