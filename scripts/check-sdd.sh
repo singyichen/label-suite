@@ -38,7 +38,7 @@ preflight_scanned_paths() {
             [ "$scan_root" != "$repo_root/openspec/changes/archive" ] || continue
             find -H "$scan_root" -print0 2>/dev/null
         done
-        for scan_root in .claude/agents .claude/commands .claude/skills/sdd-workflow; do
+        for scan_root in .claude/agents .claude/commands .claude/skills; do
             [ ! -d "$repo_root/$scan_root" ] || find -H "$repo_root/$scan_root" -mindepth 1 -print0 2>/dev/null
         done
     )
@@ -365,7 +365,7 @@ consumer_files="$tmp_dir/consumers"
 for relative in AGENTS.md CLAUDE.md docs/sdd-workflow.md openspec/config.yaml; do
     [ -f "$repo_root/$relative" ] && printf '%s\n' "$repo_root/$relative" >>"$consumer_files"
 done
-for dir in .claude/skills/sdd-workflow .claude/commands .claude/agents; do
+for dir in .claude/skills .claude/commands .claude/agents; do
     [ -d "$repo_root/$dir" ] || continue
     find -H "$repo_root/$dir" -type f -not -path '*/archive/*' -print >>"$consumer_files"
 done
@@ -376,7 +376,22 @@ for change_dir in "$repo_root"/openspec/changes/*; do
 done
 LC_ALL=C sort -u "$consumer_files" -o "$consumer_files"
 while IFS= read -r consumer; do
-    case "$consumer" in */.claude/commands/speckit.analyze.md) continue ;; esac
+    case "$consumer" in
+        */.claude/commands/speckit.analyze.md) continue ;;
+        # issue #942: vendored/self-contained skill content that incidentally matches
+        # retired_command_pattern but is not label-suite command guidance.
+        */.claude/skills/archify/package.json) continue ;;
+        */.claude/skills/archify/test/geometry.test.mjs) continue ;;
+        */.claude/skills/archify/test/golden.mjs) continue ;;
+        */.claude/skills/archify/test/community-proof-intake.test.mjs) continue ;;
+        */.claude/skills/archify/schemas/README.md) continue ;;
+        */.claude/skills/archify/brand-marks/README.md) continue ;;
+        */.claude/skills/archify/scripts/generate-validators.mjs) continue ;;
+        */.claude/skills/archify/scripts/generate-brand-marks.mjs) continue ;;
+        */.claude/skills/ui-ux-pro-max/SKILL.md) continue ;;
+        */.claude/skills/ui-ux-pro-max/data/stacks/nextjs.csv) continue ;;
+        */.claude/skills/content-present/references/atoms.md) continue ;;
+    esac
     relative="${consumer#"$repo_root"/}"
     grep -En "$retired_command_pattern" "$consumer" 2>/dev/null >"$tmp_dir/retired" || true
     while IFS= read -r match; do
