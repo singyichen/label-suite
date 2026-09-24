@@ -1156,7 +1156,7 @@
 </div>
 
 <main class="workspace-root" id="wsRoot" data-testid="ws-root" tabindex="-1">
-  <h1 class="sr-only">標記作業</h1>
+  <h1 class="sr-only" id="wsPageHeading"></h1>
   <div class="workspace-crumb-bar">
     <nav class="breadcrumb" aria-label="breadcrumb" id="entryBreadcrumb" data-testid="entry-breadcrumb"></nav>
   </div>
@@ -1291,5 +1291,29 @@
 <script src="../task-management/task-config.engine.js"></script>
 <script src="annotation-workspace.data.js"></script>
 <script src="annotation-workspace.config.js"></script>
+<!-- Mirrors the already-rendered, already role-aware breadcrumb (#934) into
+     the sr-only <h1> above, so the heading always names the current task/
+     sample without duplicating any config.js logic. Kept in sync via
+     MutationObserver since renderEntryBreadcrumb() re-renders on sample
+     navigation without a full page reload. -->
+<script>
+(function () {
+  var heading = document.getElementById('wsPageHeading');
+  var crumb = document.getElementById('entryBreadcrumb');
+  if (!heading || !crumb) return;
+
+  function syncHeading() {
+    var parts = [];
+    crumb.querySelectorAll('a, [aria-current="page"]').forEach(function (node) {
+      var text = node.textContent.trim();
+      if (text) parts.push(text);
+    });
+    heading.textContent = parts.join(' - ');
+  }
+
+  syncHeading();
+  new MutationObserver(syncHeading).observe(crumb, { childList: true, subtree: true, characterData: true });
+})();
+</script>
 </body>
 </html>
