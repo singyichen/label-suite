@@ -14,6 +14,7 @@
     ],
     "allow": [
       "Bash(npx playwright *)",
+      "Bash(gh issue edit:*)",
       "EnterWorktree",
       "ExitWorktree"
     ]
