@@ -450,6 +450,9 @@
       '</div>';
   }
 
+  /* issue #946: returned markup leaves #userName/#userAvatar empty; a caller
+   * must also call updateUserChip({ userName }) after inserting it into the
+   * DOM, or those two nodes stay blank (mountSidebar() already does this). */
   function renderSidebar(options) {
     var opts = options || {};
     var activeNav = opts.activeNav || 'dashboard';
