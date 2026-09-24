@@ -1923,7 +1923,12 @@
       header.appendChild(meta);
       card.appendChild(header);
       var visibleSummary = historySummaryForDisplay(event, structuredReasons);
-      if (visibleSummary) {
+      /* issue #901: a modified event's structured diff already names the
+         output key, decision result and before/after values. Keep summary in
+         storage, but render it only as a compatibility fallback when that
+         diff cannot be produced. Other actions keep their existing rules. */
+      var hasStructuredDiff = answer && answer.classList.contains('history-diff');
+      if (visibleSummary && !(event.action === 'modified' && hasStructuredDiff)) {
         var summary = document.createElement('div');
         summary.className = 'history-summary';
         summary.textContent = visibleSummary;
