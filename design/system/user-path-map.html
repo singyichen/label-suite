@@ -582,11 +582,11 @@ footer { margin-top: var(--space-3xl); padding-top: var(--space-lg); border-top:
         <span class="n n--screen n--end">任務詳情 · 概覽</span>
       </div>
       <div class="branch">
-        <div class="blabel">分頁分支：5 個 tab 切換皆為畫面內狀態，<strong>不寫回 URL</strong>（F6 成因，見第 10 節）</div>
+        <div class="blabel">分頁分支：5 個 tab 切換在 2026-09-08 實走時皆為畫面內狀態、<strong>不寫回 URL</strong>（當時的 F6 成因）；<a href="#m12">第 12 節</a>第 8 列已複驗為已修復</div>
         <div class="blabel">錯誤分支：任務列表載入失敗 → Alert Banner ＋ 重試（<span class="mono">?view=error</span>）</div>
       </div>
-      <p class="cites"><b>證據</b> 實走：<span class="mono">#plViewAllBtn</span> → task-list.html?task_role=project_leader → 點第一列 → task-detail.html?task_id=T001 · dashboard.js:683 <span class="mono">plViewAllBtn</span> handler · task-list.html:784 <span class="mono">window.location.href = './task-detail.html?task_id=' + …</span> · task-detail.html:4729 <span class="mono">var tab = params.get('tab') || 'overview'</span></p>
-      <p class="cites" style="color:var(--color-error)"><b>F6 成因</b> <span class="mono">grep -c "replaceState" task-detail.html</span> = <b>0</b>，同儕頁 dataset-analysis-detail.html = <b>1</b>。分頁、篩選、分頁碼切換後 URL 恆為 <span class="mono">?task_id=T001</span>，F5 重載退回概覽、網址不可分享，違反 UXC-11。</p>
+      <p class="cites"><b>證據</b>（行號依 2026-09-24 複驗基底）實走：<span class="mono">#plViewAllBtn</span> → task-list.html?task_role=project_leader → 點第一列 → task-detail.html?task_id=T001 · dashboard.js:708 <span class="mono">plViewAllBtn</span> handler · task-list.html:785 <span class="mono">window.location.href = './task-detail.html?task_id=' + …</span> · task-detail.html:5066 <span class="mono">var tab = params.get('tab') || 'overview'</span></p>
+      <p class="cites"><b>F6 原判定成因（2026-09-08）</b> 當時分頁、篩選、分頁碼切換後 URL 恆為 <span class="mono">?task_id=T001</span>，F5 重載退回概覽、網址不可分享，違反 UXC-11。<b>現況（2026-09-24 複驗）</b> 已修復：<span class="mono">grep -c "replaceState"</span>：task-detail.html = <b>2</b>（原為 0）· 同儕頁 dataset-analysis-detail.html = <b>1</b>；檢視狀態已由 task-detail.html:5050 <span class="mono">syncUrlToViewState()</span> 寫回網址，詳見<a href="#m12">第 12 節</a>第 8 列與 <a href="https://github.com/singyichen/label-suite/issues/726">#726</a>。</p>
     </div>
 
   </div>
@@ -802,8 +802,8 @@ footer { margin-top: var(--space-3xl); padding-top: var(--space-lg); border-top:
       <div class="branch">
         <div class="blabel">對照：審核員開啟成員管理分頁 → <strong>有</strong> toast「reviewer 無權限檢視成員管理，已導回任務概覽。」</div>
       </div>
-      <p class="cites"><b>證據</b> task-detail.html:4746–4756 標記員分支，:4753 <span class="mono">window.location.href = './task-list.html?unauthorized=annotator';</span> · <span class="mono">/usr/bin/grep -rn "unauthorized" design/prototype/pages/</span> 只有這 1 行——<span class="mono">unauthorized</span> 參數<strong>全樹只寫不讀</strong>，落地頁不會顯示任何訊息 · 對照組 task-detail.html:5105 與 :6821 <span class="mono">showToast(t('reviewerTabBlocked'), true)</span>，文案在 :2762</p>
-      <p class="cites" style="color:var(--color-error)"><b>F6 成因</b> 使用者點了一個連結，畫面換成任務列表，沒有任何說明。同一支檔案對審核員有提示、對標記員沒有，是實作不一致而非設計意圖。</p>
+      <p class="cites"><b>證據</b>（行號依 2026-09-24 複驗基底）寫入端 task-detail.html:5082–5091 標記員分支，:5089 <span class="mono">window.location.href = './task-list.html?unauthorized=annotator';</span> · 讀取端 task-list.html:1333 <span class="mono">pendingUnauthorizedToast = !!q.get('unauthorized');</span> · <span class="mono">/usr/bin/grep -rn "unauthorized" design/prototype/pages/</span> → 3 行 · 對照組 task-detail.html:5531 與 :7335 <span class="mono">showToast(t('reviewerTabBlocked'), true)</span>，文案在 :2840</p>
+      <p class="cites"><b>F6 原判定成因（2026-09-08）</b> 當時 <span class="mono">unauthorized</span> 參數全樹只寫不讀，使用者點了一個連結、畫面換成任務列表卻沒有任何說明；同一支檔案對審核員有提示、對標記員沒有。<b>現況（2026-09-24 複驗）</b> 已修復：落地頁讀取該參數並顯示無權限提示，顯示後參數隨 <span class="mono">syncUrl()</span> 自網址移除、重整不會重複提示，因此<strong>「全樹只寫不讀」的推論已不成立</strong>，詳見<a href="#m12">第 12 節</a>第 3 列與 <a href="https://github.com/singyichen/label-suite/issues/721">#721</a>。</p>
     </div>
 
     <div class="goal">
