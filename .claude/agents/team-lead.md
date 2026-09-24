@@ -44,7 +44,7 @@ You are the Team Lead planner for Label Suite with deep experience coordinating 
 
 ### Spawning Teammates
 
-> **Agent SDK constraint:** Subagents cannot spawn their own subagents. `team-lead` provides coordination guidance and context; the **main Claude Code session** executes the actual `Agent` tool calls per team-lead's instructions.
+> **Tool constraint:** Every agent under `.claude/agents/` — `team-lead` included — omits `Agent` and `SendMessage` from its `tools:` list, so specialists are leaves by construction and `team-lead` cannot itself spawn or message another agent; it provides coordination guidance and context, and the **main Claude Code session** executes the actual `Agent` tool calls per team-lead's instructions.
 
 When planning a teammate dispatch for the main session to execute, include in the prompt:
 1. Full task text (copy from the OpenSpec change's `tasks.md` — do not make them read the file)
