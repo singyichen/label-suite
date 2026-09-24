@@ -7,9 +7,9 @@ import { buildListUrl, buildWorkspaceUrl, skipGuidelineModal } from './_workspac
  * unit still derives 待審 because nothing is submitted. This file pins the
  * boot-time seeder that stages the full review-flow demo: annotator
  * submissions, reviewer decisions and one arbitration per script, T014-T016
- * ONLY, guarded by the marker key `labelsuite.reviewFlowDemoSeed.v4` (issues
- * #856, #620 and #868) so a reload never duplicates history events or refreshes
- * timestamps.
+ * ONLY, guarded by the marker key `labelsuite.reviewFlowDemoSeed.v5` (issues
+ * #856, #620, #868 and #923) so a reload never duplicates history events or
+ * refreshes timestamps.
  *
  * Expected status matrix (derived, not stored -- see getReviewUnitStatus).
  * issue #596 (OpenSpec change 2026-09-01-single-owner-review-relay, FR-093)
@@ -65,7 +65,7 @@ import { buildListUrl, buildWorkspaceUrl, skipGuidelineModal } from './_workspac
  *   FR-093, FR-060, FR-061 (v5.0.0), FR-094, FR-095
  */
 
-const SEED_MARKER = 'labelsuite.reviewFlowDemoSeed.v4';
+const SEED_MARKER = 'labelsuite.reviewFlowDemoSeed.v5';
 
 /* Issue #452 appended a finalize-threshold qualifier to every non-待審
    badge so colour is never the only signal. This suite pins the five-state

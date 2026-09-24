@@ -138,11 +138,11 @@ test('an existing v2 review-flow seed is upgraded so citation reasons reach retu
     return {
       reasons: history.map((event: { reason?: string }) => event.reason || ''),
       v2: window.localStorage.getItem('labelsuite.reviewFlowDemoSeed.v2'),
-      v4: window.localStorage.getItem('labelsuite.reviewFlowDemoSeed.v4'),
+      v5: window.localStorage.getItem('labelsuite.reviewFlowDemoSeed.v5'),
     };
   });
 
   expect(result.reasons.some((reason: string) => reason.includes('[[負向（negative）的判準]]'))).toBe(true);
   expect(result.v2).toBeNull();
-  expect(result.v4).toBeTruthy();
+  expect(result.v5).toBeTruthy();
 });

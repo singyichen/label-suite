@@ -40,7 +40,15 @@ test.describe('issue #881: right-side history reason deduplication', () => {
     const modified = historyCard(page, 'modified');
     await expect(modified).toHaveCount(1);
     await expect(modified.locator('.history-reason')).toHaveText(`理由：${REVIEW_REASON}`);
-    await expect(modified.locator('.history-summary')).not.toContainText(REVIEW_REASON);
+    /* issue #923: fixing the seed's causal-order bug means this card's
+       "previous" snapshot is now the annotator's own submitted answer
+       (positive), not arbitration's already-adopted value (neutral) --
+       so buildHistoryDiff() produces a real transition and the card
+       renders it via .history-diff instead of falling back to a
+       plain-text .history-summary. The reason still reads exactly once,
+       from .history-reason alone. */
+    await expect(modified.locator('.history-summary')).toHaveCount(0);
+    await expect(modified.locator('.history-diff-item')).toContainText('single_label: positive → neutral');
     expect(occurrences(await modified.innerText(), REVIEW_REASON)).toBe(1);
 
     const adjudicated = historyCard(page, 'adjudicated');
