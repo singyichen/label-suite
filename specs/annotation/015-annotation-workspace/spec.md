@@ -1,5 +1,5 @@
 ---
-功能分支: feat/annotation-history-summary
+功能分支: fix/921-review-assignment-gate
 建立日期: 2026-04-23
 版本: 6.16.2
 狀態: Draft
