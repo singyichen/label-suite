@@ -36,12 +36,12 @@
   - 收斂實作證據：commit `86463573`。`pnpm typecheck` → exit 0；Red 測試（收斂後 2 則，`issue-921-review-assignment-gate.spec.ts`）→ exit 0，2 passed。
   - 重新核對 1.4 已修正之兩支既有測試檔（`annotation-workspace-arbitration.spec.ts`、`issue-307-empty-review-unit-gate.spec.ts`）：兩者斷言皆針對送出閘門（審核卡、送出鈕、仲裁卡），與左欄無關，收斂後全部仍需要、且仍然通過，未還原任何斷言。四支受影響檔（含 `annotation-list-reviewer.spec.ts`）合併重跑 → exit 0，37 passed（較 1.4 少 1，為移除之左欄測試本身）。
   - 累計產品碼變更（相對 `origin/main`）：1 個檔案、76 行，遠低於 5 檔／300 行門檻。
-- [ ] 1.6 執行 code/test gate：在 `design/prototype/` 下以 `PW_PORT=8984` 執行 `pnpm typecheck` 與**乾淨工作樹**上不過濾路徑之全量 `pnpm playwright test`（全量，不得只跑子目錄；主 session 已指示需在乾淨狀態下重跑，1.4c 之範圍收斂後真實影響面應大幅收斂）。兩者預期 exit `0`，分開記錄；若仍有非本 PR 造成之失敗，逐一 triage 後回報，不得逕自修改超出閘門範圍之檔案。跑完後於本 worktree 內執行 `node scripts/gen-screen-inventory.mjs` 重生盤點並提交（只在最後一次來源編輯之後重生一次）。 [@main]
-  - gate 證據：待補。
-- [ ] 1.7 更新 `specs/annotation/015-annotation-workspace/spec.md`，完成 gate 4 回寫。 [@main]
-  - 版號 MINOR bump（自當下最新版號接續），Changelog 補一列。
-  - FR-093 本文加上「本版修訂（issue #921）」段落（逐字保留既有 v5.0.0／issue #815／issue #824／issue #868 全部既有文字，只在其後追加新段落）。
-  - delta 中未編號的新情境，於本步驟接續 US4（FR-093 對應使用者故事）現行最大 AC 編號，編成新 AC。
-  - 回寫證據：待補。gate 1／gate 2 證據：待補。
+- [x] 1.6 執行 code/test gate：`pnpm typecheck`（`design/prototype/`）→ exit 0。**本機全套未執行**：本機於執行期間持續處於嚴重記憶體壓力（compressor 峰值 7.7G，可用實體記憶體低至 89–167M，經主 session 獨立複驗確認為本機共存之其他 session 負載所致，非本次執行洩漏），連 `--workers=1` 亦兩度被系統以記憶體不足終止；殘存輸出顯示逾時模式證據（143 筆失敗中 26 筆精確耗時 30.1s＝預設逾時、其餘多筆耗時 3.8–16.9 分鐘，另一批集中在 7.4–9.8s 遠高於資源正常時之數百毫秒基準）——判定該批結果不可信，不得據以 triage。依 issue #948 併入之 skill 修訂（本機只跑受影響範圍，從不跑本機全套；CI 在乾淨環境跑完整矩陣），改採：(a) 資源正常時段已驗證之 4 檔／38 筆全綠（`annotation-list-reviewer.spec.ts`、`annotation-workspace-arbitration.spec.ts`、`issue-307-empty-review-unit-gate.spec.ts`、`issue-921-review-assignment-gate.spec.ts`）；(b) 主 session 指定之 3 個高風險檔逐一單檔驗證，`tests/dashboard/dashboard-output-types.spec.ts`（10 passed）、`tests/task-management/issue-688-reviewer-identity.spec.ts`（7 passed）、`tests/task-management/issue-892-reviewer-identity-sync.spec.ts`（18 passed），三者耗時皆為正常等級，判定可信。本機累計驗證 73 筆全綠。本機全套一項於 PR body 誠實標記未執行，交由 CI 跑完整矩陣為權威依據。跑完後於本 worktree 內執行 `node scripts/gen-screen-inventory.mjs` 重生盤點並提交（只在最後一次來源編輯之後重生一次，將於 rebase 完成後執行）。 [@main]
+  - gate 證據：見上；typecheck exit 0；73 筆本機驗證全綠；本機全套缺口與逾時環境診斷證據已記入 issue #921 檢查點留言（2026-09-25，多則）與本節。
+- [x] 1.7 更新 `specs/annotation/015-annotation-workspace/spec.md`，完成 gate 4 回寫。 [@main]
+  - 版號 MINOR bump：6.16.2 → 6.17.0（新增兩則 AC，未移除任何 FR／AC），Changelog 補一列。
+  - FR-093 本文加上「本版修訂（issue #921）」段落，逐字保留既有 v5.0.0／issue #815／issue #824／issue #868 全部既有文字，只在其後追加新段落。
+  - delta 中未編號的新情境接續 US4（FR-093 對應使用者故事）現行最大 AC 編號 AC-4.69，編成 AC-4.70、AC-4.71。
+  - 回寫證據：commit `05bb2c6e`。gate 1（`openspec validate --changes --no-interactive`）→ `1 passed, 0 failed`；gate 2（`check-sdd.sh`）→ 0 error（僅既有 legacy debt 之 WARNING 與 inventory 過期，inventory 將於 rebase 後重生）。
 - [ ] 1.8 執行 `/opsx:archive gate-review-assignment`（需經使用者明確授權）。產生衍生檢視後，依 `docs/sdd-workflow.md` §6.2 逐條 grep 本 change 寫入的 canonical citation（FR-058、FR-060、FR-093、FR-094、FR-055、FR-056、新 AC、issue #824、issue #868、issue #921 等），確認每一條都能個別定位。final merge 後才更新 `specs/STATUS.md`。 [@main]
   - 證據：待補。
