@@ -31,6 +31,7 @@
     button, input, select, textarea { font: inherit; }
     button, input[type="checkbox"], input[type="radio"], select { cursor: pointer; }
     .hidden { display: none !important; }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; padding: 0; margin: -1px; }
 
     /* ── Workspace Root ─────────────────────────────────────── */
     .workspace-root {
@@ -1154,7 +1155,8 @@
   </div>
 </div>
 
-<div class="workspace-root" id="wsRoot" data-testid="ws-root" tabindex="-1">
+<main class="workspace-root" id="wsRoot" data-testid="ws-root" tabindex="-1">
+  <h1 class="sr-only" id="wsPageHeading"></h1>
   <div class="workspace-crumb-bar">
     <nav class="breadcrumb" aria-label="breadcrumb" id="entryBreadcrumb" data-testid="entry-breadcrumb"></nav>
   </div>
@@ -1269,7 +1271,7 @@
       <div class="guideline-file-list" id="wsGuidelineFileListMobile"></div>
     </div>
   </div>
-</div>
+</main>
 
 <!-- Toast -->
 <div class="toast-container" aria-live="polite" aria-atomic="true">
@@ -1289,5 +1291,32 @@
 <script src="../task-management/task-config.engine.js"></script>
 <script src="annotation-workspace.data.js"></script>
 <script src="annotation-workspace.config.js"></script>
+<!-- Mirrors the already-rendered, already role-aware breadcrumb (#934) into
+     the sr-only <h1> above, so the heading always names the current task/
+     sample without duplicating any config.js logic. Kept in sync via
+     MutationObserver since renderEntryBreadcrumb() re-renders on sample
+     navigation without a full page reload.
+     ponytail: mirrors the breadcrumb via MutationObserver because
+     annotation-workspace.config.js was an in-flight conflict zone (#931);
+     set the heading directly in renderEntryBreadcrumb() once #931 has landed -->
+<script>
+(function () {
+  var heading = document.getElementById('wsPageHeading');
+  var crumb = document.getElementById('entryBreadcrumb');
+  if (!heading || !crumb) return;
+
+  function syncHeading() {
+    var parts = [];
+    crumb.querySelectorAll('a, [aria-current="page"]').forEach(function (node) {
+      var text = node.textContent.trim();
+      if (text) parts.push(text);
+    });
+    heading.textContent = parts.join(' - ');
+  }
+
+  syncHeading();
+  new MutationObserver(syncHeading).observe(crumb, { childList: true, subtree: true, characterData: true });
+})();
+</script>
 </body>
 </html>
