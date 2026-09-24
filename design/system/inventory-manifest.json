@@ -1,5 +1,5 @@
 {
-  "_comment": "Single generation source for design/system/screen-inventory.md. Hand-maintained; run `node scripts/gen-screen-inventory.mjs` after editing. Fields the generator derives (FR/SC ids, data-testid counts, component occurrence counts, Storybook scope, prototype source commit) must NOT be duplicated here.",
+  "_comment": "Single generation source for design/system/screen-inventory.md. Hand-maintained; run `node scripts/gen-screen-inventory.mjs` after editing. Fields the generator derives (FR/SC ids, data-testid counts, component occurrence counts, Storybook scope, prototype content hash) must NOT be duplicated here.",
   "componentRegistry": {
     "language-toggle": "Language Toggle 語言切換",
     "button": "Button（CTA / Primary / Secondary / Ghost / Danger / OAuth / Icon-only）",
