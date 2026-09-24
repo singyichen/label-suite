@@ -8,6 +8,23 @@
     return role === 'super_admin' ? 'super_admin' : 'user';
   }
 
+  /* issue #932: derive the avatar chip's initials from the displayed user
+   * name so every page shows the right letters, not just dashboard (which
+   * overrides them explicitly via updateUserChip's avatarLabel option).
+   * Zero-width characters (U+200B/U+200C/U+200D/U+FEFF) are stripped first
+   * so a name made only of them still falls back to the "U" placeholder
+   * instead of rendering an invisible initial (code review finding). */
+  function computeAvatarInitials(name) {
+    var cleaned = String(name || '').replace(/[\u200B\u200C\u200D\uFEFF]/g, '');
+    var parts = cleaned.split(/\s+/).filter(function (part) {
+      return part.length > 0;
+    });
+    if (parts.length === 0) return 'U';
+    return parts.map(function (part) {
+      return part.charAt(0).toUpperCase();
+    }).join('');
+  }
+
   function readStoredSystemRole() {
     try {
       var value = window.localStorage.getItem(SYSTEM_ROLE_STORAGE_KEY);
@@ -559,7 +576,7 @@
           '</div>' +
           '<div class="user-chip">' +
             '<a class="user-chip-profile" href="' + userChipHref + '" aria-label="前往個人設定"' + userChipAriaCurrent + '>' +
-              '<div class="avatar" id="userAvatar" aria-hidden="true">U</div>' +
+              '<div class="avatar" id="userAvatar" aria-hidden="true">' + computeAvatarInitials(userName) + '</div>' +
               '<div class="user-info">' +
                 '<span class="user-name" id="userName">' + userName + '</span>' +
                 '<span class="user-role" id="roleIndicator" data-testid="role-indicator">' + roleIndicator + '</span>' +
@@ -979,6 +996,10 @@
     if (typeof opts.userName === 'string') {
       var desktopName = document.getElementById('userName');
       if (desktopName) desktopName.textContent = opts.userName;
+      if (typeof opts.avatarLabel !== 'string') {
+        var syncedAvatar = document.getElementById('userAvatar');
+        if (syncedAvatar) syncedAvatar.textContent = computeAvatarInitials(opts.userName);
+      }
     }
     if (typeof opts.roleLabel === 'string') {
       var roleIndicator = document.getElementById('roleIndicator');
