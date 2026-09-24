@@ -367,7 +367,7 @@ for relative in AGENTS.md CLAUDE.md docs/sdd-workflow.md openspec/config.yaml; d
 done
 for dir in .claude/skills .claude/commands .claude/agents; do
     [ -d "$repo_root/$dir" ] || continue
-    find -H "$repo_root/$dir" -type f -not -path '*/archive/*' -print >>"$consumer_files"
+    find -H "$repo_root/$dir" -type f -not -path '*/archive/*' -not -path '*/__pycache__/*' -print >>"$consumer_files"
 done
 for change_dir in "$repo_root"/openspec/changes/*; do
     [ -d "$change_dir" ] || continue
