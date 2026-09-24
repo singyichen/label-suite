@@ -10,9 +10,13 @@
 
   /* issue #932: derive the avatar chip's initials from the displayed user
    * name so every page shows the right letters, not just dashboard (which
-   * overrides them explicitly via updateUserChip's avatarLabel option). */
+   * overrides them explicitly via updateUserChip's avatarLabel option).
+   * Zero-width characters (U+200B/U+200C/U+200D/U+FEFF) are stripped first
+   * so a name made only of them still falls back to the "U" placeholder
+   * instead of rendering an invisible initial (code review finding). */
   function computeAvatarInitials(name) {
-    var parts = String(name || '').split(/\s+/).filter(function (part) {
+    var cleaned = String(name || '').replace(/[​‌‍﻿]/g, '');
+    var parts = cleaned.split(/\s+/).filter(function (part) {
       return part.length > 0;
     });
     if (parts.length === 0) return 'U';
