@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { buildWorkspaceUrl, dismissGuidelineModal, skipGuidelineModal } from './_workspace-helpers';
+import { buildWorkspaceUrl, dismissGuidelineModal, gotoReviewerWorkspace, skipGuidelineModal } from './_workspace-helpers';
 
 const ANNOTATOR = 'kioleemg12';
 const REVIEWER = 'reviewer_wang';
@@ -129,14 +129,15 @@ test.describe('issue #881: right-side history reason deduplication', () => {
 
   test('a live reviewer modify stores its explanation only in the structured reason field', async ({ page }) => {
     const reason = '實際送出理由（issue #881）：理由不得再複製進 summary。';
-    await page.goto(buildWorkspaceUrl({
+    /* issue #921/#960: sent-001 x kioleemg12's FR-093 assignee is not the
+       file's REVIEWER constant (reviewer_wang) -- resolve the real assignee
+       instead of hardcoding one, same as every other affected spec. */
+    const reviewerId = await gotoReviewerWorkspace(page, {
       task_id: 'T001',
       sample_id: 'sent-001',
-      role: 'reviewer',
       run_type: 'official_run',
       annotator_id: ANNOTATOR,
-      reviewer_id: REVIEWER,
-    }));
+    });
     await dismissGuidelineModal(page);
 
     const correction = page.getByTestId('ws-review-correct-single_label');
@@ -168,7 +169,7 @@ test.describe('issue #881: right-side history reason deduplication', () => {
         .getSampleHistory('T001', 'official_run', 'sent-001', { annotatorId })
         .filter((item) => item.action === 'modified' && item.actorId === reviewerId && item.reason === expectedReason)
         .pop();
-    }, { annotatorId: ANNOTATOR, reviewerId: REVIEWER, expectedReason: reason });
+    }, { annotatorId: ANNOTATOR, reviewerId, expectedReason: reason });
 
     expect(event).toBeDefined();
     if (!event) {
