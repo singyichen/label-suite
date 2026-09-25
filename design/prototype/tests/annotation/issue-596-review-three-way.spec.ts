@@ -163,7 +163,7 @@ test.describe('issue #596: AC-3.53 修正／無法判定理由必填，通過不
     await page.getByTestId('ws-review-submit-btn').click();
     const toast = page.locator('#toastMsg');
     await expect(toast).not.toHaveText('審核已送出');
-    await expect(toast).toContainText('single_label');
+    await expect(toast).toContainText('單一標籤');
     await expect(page.getByTestId('ws-review-history')).not.toBeVisible();
   });
 
@@ -186,7 +186,7 @@ test.describe('issue #596: AC-3.53 修正／無法判定理由必填，通過不
     await page.getByTestId('ws-review-submit-btn').click();
     const toast = page.locator('#toastMsg');
     await expect(toast).not.toHaveText('審核已送出');
-    await expect(toast).toContainText('single_label');
+    await expect(toast).toContainText('單一標籤');
     await expect(page.getByTestId('ws-review-history')).not.toBeVisible();
   });
 

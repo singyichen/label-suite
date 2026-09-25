@@ -71,7 +71,7 @@
       reviewReasonPlaceholder: '請說明理由',
       toastReasonRequired: '請填寫以下輸出類型的審核理由：{list}',
       toastAnswerRequired: '以下輸出類型選了「修正」但修正後答案為空，請填寫答案：{list}',
-      reviewCorrectionTitle: '直接修正（Reviewer 修正後答案）',
+      reviewCorrectionTitle: '直接修正（審核員修正後答案）',
       toastSelectDecision: '請完成以下輸出類型的審核決策：{list}',
       toastReviewCorrectionReset: '偵測到直接修正的內容因重新整理而遺失，對應的審核決策已重置，請重新確認後再送出',
       toastResolveDivergent: '請先裁定所有分歧項目',
@@ -152,7 +152,7 @@
       unitStateAria: '審核單位狀態：{state}',
       unitStateAriaFinalized: '審核單位狀態：{state}，內容已鎖定',
       reviewOriginalAnswerLabel: '標記員原答案：',
-      reviewCorrectedAnswerLabel: 'Reviewer 修正後答案：',
+      reviewCorrectedAnswerLabel: '審核員修正後答案：',
       toastReviewDecisionResetOnEdit: '直接修正的值已變更，對應的審核決策已重置，請重新確認後再送出',
       annotatorFinalizedNotice: '此標記結果已定稿，無法再修改或提交',
       annotatorFinalizedToast: '此標記結果已定稿，無法再修改或提交',
@@ -5371,7 +5371,11 @@
       });
       var sameKind = kinds.every(function (kind) { return kind === kinds[0]; }) ? kinds[0] : null;
       var toastKey = { reason: 'toastReasonRequired', answer: 'toastAnswerRequired' }[sameKind] || 'toastSelectDecision';
-      showToast(t(toastKey).replace('{list}', pendingOutputKeys.join('、')), 'warning');
+      var pendingOutputLabels = pendingOutputKeys.map(function (outKey) {
+        var outReg = window.OUTPUT_TYPE_REGISTRY && window.OUTPUT_TYPE_REGISTRY[outKey];
+        return (outReg && outReg[state.lang]) || outKey;
+      });
+      showToast(t(toastKey).replace('{list}', pendingOutputLabels.join('、')), 'warning');
       return;
     }
 

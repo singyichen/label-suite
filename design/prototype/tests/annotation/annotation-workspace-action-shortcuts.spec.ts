@@ -190,8 +190,10 @@ test.describe('Ctrl/Cmd+Enter submits the unit on screen', () => {
     // No decision has been made, so the reviewer submit guard speaks up --
     // which is what proves the reviewer handler ran rather than handleSubmit.
     // issue #550: the toast now names the still-undecided output type(s);
-    // T001 carries a single output type (single_label).
-    await expect(page.locator('#toastMsg')).toHaveText('請完成以下輸出類型的審核決策：single_label');
+    // T001 carries a single output type (single_label). issue #929: named by
+    // zh display name, not raw key -- see
+    // issue-929-reviewer-jargon-wording.spec.ts.
+    await expect(page.locator('#toastMsg')).toHaveText('請完成以下輸出類型的審核決策：單一標籤');
   });
 });
 
