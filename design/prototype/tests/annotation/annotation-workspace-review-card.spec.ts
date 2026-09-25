@@ -1,8 +1,8 @@
 import { test, expect, type Page } from '@playwright/test';
 import {
   assertNoPageErrors,
-  buildWorkspaceUrl,
   dismissGuidelineModal,
+  gotoReviewerWorkspace,
   patchDataFile,
   skipGuidelineModal,
   trackPageErrors,
@@ -32,7 +32,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 async function gotoT001Reviewer(page: Page) {
-  await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer', run_type: 'dry_run' }));
+  await gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001', run_type: 'dry_run' });
   await dismissGuidelineModal(page);
 }
 
@@ -95,7 +95,7 @@ for (const { taskId, sampleId, outKeys } of TASK_COVERAGE) {
     test(`reviewer card renders for ${taskId} (${outKeys.join('+')}) in ${runType}`, async ({ page }) => {
       const errors = trackPageErrors(page);
 
-      await page.goto(buildWorkspaceUrl({ task_id: taskId, sample_id: sampleId, role: 'reviewer', run_type: runType }));
+      await gotoReviewerWorkspace(page, { task_id: taskId, sample_id: sampleId, run_type: runType });
       await dismissGuidelineModal(page);
 
       const units = reviewUnits(outKeys);
@@ -129,7 +129,7 @@ for (const { taskId, sampleId, outKeys } of TASK_COVERAGE) {
  * down; the 原始文本 card itself is gone in v4.0.0. */
 test.describe('Span output types share one review card', () => {
   test('T010 (entity+relation) renders one card with a single correction panel', async ({ page }) => {
-    await page.goto(buildWorkspaceUrl({ task_id: 'T010', sample_id: 'med-001', role: 'reviewer', run_type: 'dry_run' }));
+    await gotoReviewerWorkspace(page, { task_id: 'T010', sample_id: 'med-001', run_type: 'dry_run' });
     await dismissGuidelineModal(page);
 
     await expect(page.getByTestId('ws-review-row')).toHaveCount(1);
@@ -139,7 +139,7 @@ test.describe('Span output types share one review card', () => {
   });
 
   test('each decision pair on the merged card is labeled with its output type', async ({ page }) => {
-    await page.goto(buildWorkspaceUrl({ task_id: 'T010', sample_id: 'med-001', role: 'reviewer', run_type: 'dry_run' }));
+    await gotoReviewerWorkspace(page, { task_id: 'T010', sample_id: 'med-001', run_type: 'dry_run' });
     await dismissGuidelineModal(page);
 
     const labels = page.getByTestId('ws-review-section-label');
@@ -149,7 +149,7 @@ test.describe('Span output types share one review card', () => {
   });
 
   test('T013 keeps multi_dim as its own card next to the merged span card', async ({ page }) => {
-    await page.goto(buildWorkspaceUrl({ task_id: 'T013', sample_id: 'absa-001', role: 'reviewer', run_type: 'dry_run' }));
+    await gotoReviewerWorkspace(page, { task_id: 'T013', sample_id: 'absa-001', run_type: 'dry_run' });
     await dismissGuidelineModal(page);
 
     await expect(page.getByTestId('ws-review-row')).toHaveCount(2);
@@ -158,19 +158,19 @@ test.describe('Span output types share one review card', () => {
   });
 
   test('single-span tasks are untouched — T007 and T008 still render their own correction panel', async ({ page }) => {
-    await page.goto(buildWorkspaceUrl({ task_id: 'T007', sample_id: 'entity-recognition-001', role: 'reviewer', run_type: 'dry_run' }));
+    await gotoReviewerWorkspace(page, { task_id: 'T007', sample_id: 'entity-recognition-001', run_type: 'dry_run' });
     await dismissGuidelineModal(page);
     await expect(page.getByTestId('ws-review-correct-entity_recognition')).toHaveCount(1);
     await expect(page.getByTestId('ws-review-correct-span')).toHaveCount(0);
 
-    await page.goto(buildWorkspaceUrl({ task_id: 'T008', sample_id: 'rel-001', role: 'reviewer', run_type: 'dry_run' }));
+    await gotoReviewerWorkspace(page, { task_id: 'T008', sample_id: 'rel-001', run_type: 'dry_run' });
     await dismissGuidelineModal(page);
     await expect(page.getByTestId('ws-review-correct-relation_identification')).toHaveCount(1);
     await expect(page.getByTestId('ws-review-correct-span')).toHaveCount(0);
   });
 
   test('official_run paints the sample text exactly once', async ({ page }) => {
-    await page.goto(buildWorkspaceUrl({ task_id: 'T013', sample_id: 'absa-001', role: 'reviewer', run_type: 'official_run' }));
+    await gotoReviewerWorkspace(page, { task_id: 'T013', sample_id: 'absa-001', run_type: 'official_run' });
     await dismissGuidelineModal(page);
 
     await expect(page.getByTestId('ws-review-source-text')).toHaveCount(0);
@@ -247,10 +247,10 @@ test.describe('Review card converged across run types (v4.0.0)', () => {
     await patchDataFile(page, 'task-detail.data.js', `
       window.LabelSuiteTaskDetailData.profiles.T001.datasetRecords[0].gold_label = null;
     `);
-    await page.goto(buildWorkspaceUrl({
-      task_id: 'T001', sample_id: 'sent-001', role: 'reviewer',
+    await gotoReviewerWorkspace(page, {
+      task_id: 'T001', sample_id: 'sent-001',
       run_type: 'dry_run', annotator_id: '113450022',
-    }));
+    });
     await dismissGuidelineModal(page);
 
     const correction = page.getByTestId('ws-review-correct-single_label');
@@ -274,7 +274,7 @@ test.describe('Review card converged across run types (v4.0.0)', () => {
    * already paints those exact spans, so the card is a pixel-identical
    * duplicate for dry_run too. */
   test('dry_run drops the 原始文本 card and paints the sample text exactly once', async ({ page }) => {
-    await page.goto(buildWorkspaceUrl({ task_id: 'T013', sample_id: 'absa-001', role: 'reviewer', run_type: 'dry_run' }));
+    await gotoReviewerWorkspace(page, { task_id: 'T013', sample_id: 'absa-001', run_type: 'dry_run' });
     await dismissGuidelineModal(page);
 
     await expect(page.getByTestId('ws-review-source-text')).toHaveCount(0);
@@ -282,7 +282,7 @@ test.describe('Review card converged across run types (v4.0.0)', () => {
   });
 
   test('merged span card carries one decision toggle per output type in dry_run', async ({ page }) => {
-    await page.goto(buildWorkspaceUrl({ task_id: 'T010', sample_id: 'med-001', role: 'reviewer', run_type: 'dry_run' }));
+    await gotoReviewerWorkspace(page, { task_id: 'T010', sample_id: 'med-001', run_type: 'dry_run' });
     await dismissGuidelineModal(page);
 
     await expect(page.getByTestId('ws-review-row')).toHaveCount(1);

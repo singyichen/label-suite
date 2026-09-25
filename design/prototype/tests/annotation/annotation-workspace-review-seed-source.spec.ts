@@ -1,5 +1,11 @@
 import { test, expect, type Page } from '@playwright/test';
-import { buildWorkspaceUrl, dismissGuidelineModal, patchDataFile, skipGuidelineModal } from './_workspace-helpers';
+import {
+  buildReviewerWorkspaceUrl,
+  buildWorkspaceUrl,
+  dismissGuidelineModal,
+  patchDataFile,
+  skipGuidelineModal,
+} from './_workspace-helpers';
 
 /* Reviewer seed source (issue #161, spec 015 AC-3.35).
  *
@@ -101,10 +107,9 @@ test.describe('Reviewer panel ignores dataset output-role columns (AC-3.35)', ()
         /* Two full workspace loads per case -- twice the usual budget, which
          * overran the 30s default once under a fully loaded serial run. */
         test.slow();
-        const url = buildWorkspaceUrl({
+        const url = await buildReviewerWorkspaceUrl(page, {
           task_id: taskId,
           sample_id: sampleId,
-          role: 'reviewer',
           run_type: runType,
           annotator_id: annotatorId,
         });
@@ -120,10 +125,9 @@ test.describe('Reviewer panel ignores dataset output-role columns (AC-3.35)', ()
    * readable even if the invariant above is ever refactored. */
   test('T001 shows the reviewed annotator answer, not gold_label', async ({ page }) => {
     await page.goto(
-      buildWorkspaceUrl({
+      await buildReviewerWorkspaceUrl(page, {
         task_id: 'T001',
         sample_id: 'sent-001',
-        role: 'reviewer',
         run_type: 'official_run',
         annotator_id: '113450022',
       })

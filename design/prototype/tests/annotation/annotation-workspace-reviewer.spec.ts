@@ -4,6 +4,7 @@ import {
   buildListUrl,
   buildWorkspaceUrl,
   dismissGuidelineModal,
+  gotoReviewerWorkspace,
   selectWorkspaceText,
   setRangeValue,
   skipGuidelineModal,
@@ -61,7 +62,7 @@ test.describe('reviewer direct correction — deep example (single_label, T001)'
       await page.getByTestId('ws-single-label-chip-negative').click();
     });
 
-    await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer' }));
+    await gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001' });
     await dismissGuidelineModal(page);
 
     const row = page.getByTestId('ws-review-row').first();
@@ -82,7 +83,7 @@ test.describe('reviewer direct correction — deep example (single_label, T001)'
       await page.getByTestId('ws-single-label-chip-negative').click();
     });
 
-    await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer' }));
+    await gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001' });
     await dismissGuidelineModal(page);
 
     const row = page.getByTestId('ws-review-row').first();
@@ -102,7 +103,7 @@ test.describe('reviewer direct correction — deep example (single_label, T001)'
       await page.getByTestId('ws-single-label-chip-negative').click();
     });
 
-    await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer' }));
+    await gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001' });
     await dismissGuidelineModal(page);
 
     await page.getByTestId('ws-review-submit-btn').click();
@@ -193,7 +194,7 @@ for (const { outKey, taskId, sampleId, answer } of REGISTRY_CASES) {
 
     await submitAsAnnotator(page, taskId, sampleId, () => answer(page));
 
-    await page.goto(buildWorkspaceUrl({ task_id: taskId, sample_id: sampleId, role: 'reviewer' }));
+    await gotoReviewerWorkspace(page, { task_id: taskId, sample_id: sampleId });
     await dismissGuidelineModal(page);
 
     const row = page.getByTestId('ws-review-row').first();
@@ -213,7 +214,7 @@ for (const { outKey, taskId, sampleId, answer } of REGISTRY_CASES) {
 
 test.describe('official_run reviewer with no prior annotator submission', () => {
   test('the row renders the correction control alone, with no stats/consensus chrome', async ({ page }) => {
-    await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-002', role: 'reviewer' }));
+    await gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-002' });
     await dismissGuidelineModal(page);
 
     const row = page.getByTestId('ws-review-row').first();
@@ -250,7 +251,7 @@ const CHROME_CASES: Array<{ taskId: string; sampleId: string; outKeys: string[] 
 test.describe('official_run review card chrome', () => {
   for (const { taskId, sampleId, outKeys } of CHROME_CASES) {
     test(`${taskId} (${outKeys.join('+')}) drops the type title and docks decisions on the Bypass row`, async ({ page }) => {
-      await page.goto(buildWorkspaceUrl({ task_id: taskId, sample_id: sampleId, role: 'reviewer', run_type: 'official_run' }));
+      await gotoReviewerWorkspace(page, { task_id: taskId, sample_id: sampleId, run_type: 'official_run' });
       await dismissGuidelineModal(page);
 
       const rows = page.getByTestId('ws-review-row');
@@ -271,7 +272,7 @@ test.describe('official_run review card chrome', () => {
   test('toggling Bypass re-renders the panel without losing the decision buttons', async ({ page }) => {
     // The engine rebuilds the whole preview container on a Bypass toggle, so
     // the docked decision pair has to survive that re-render.
-    await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer', run_type: 'official_run' }));
+    await gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001', run_type: 'official_run' });
     await dismissGuidelineModal(page);
 
     const bypassChip = page.locator('.preview-bypass-row button[aria-pressed]').first();
@@ -288,7 +289,7 @@ test.describe('official_run review card chrome', () => {
     await submitAsAnnotator(page, 'T001', 'sent-001', async () => {
       await page.getByTestId('ws-single-label-chip-negative').click();
     });
-    await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer', run_type: 'official_run' }));
+    await gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001', run_type: 'official_run' });
     await dismissGuidelineModal(page);
 
     await page.getByTestId('ws-review-submit-btn').click();
@@ -303,7 +304,7 @@ test.describe('official_run review card chrome', () => {
     // v4.0.0: the consensus card that needed a title (its stats box and
     // annotator list carried no type of their own) is gone -- dry_run now
     // renders the same titleless card as official_run (FR-014P, FR-053).
-    await page.goto(buildWorkspaceUrl({ task_id: 'T005', sample_id: 'mt-001', role: 'reviewer', run_type: 'dry_run' }));
+    await gotoReviewerWorkspace(page, { task_id: 'T005', sample_id: 'mt-001', run_type: 'dry_run' });
     await dismissGuidelineModal(page);
 
     await expect(page.getByTestId('ws-review-row').locator('.content-card-title')).toHaveCount(0);
@@ -326,7 +327,7 @@ test.describe('official_run review card chrome', () => {
  * run_types, so the dry_run duplicates of these cases were dropped. */
 test.describe('reviewer demo annotator submission', () => {
   test('a span task shows the annotator entities, relations and highlights (T010)', async ({ page }) => {
-    await page.goto(buildWorkspaceUrl({ task_id: 'T010', sample_id: 'med-001', role: 'reviewer', run_type: 'official_run' }));
+    await gotoReviewerWorkspace(page, { task_id: 'T010', sample_id: 'med-001', run_type: 'official_run' });
     await dismissGuidelineModal(page);
 
     const panel = page.getByTestId('ws-review-correct-span');
@@ -338,7 +339,7 @@ test.describe('reviewer demo annotator submission', () => {
   });
 
   test('a single-type span task shows the annotator entities (T007)', async ({ page }) => {
-    await page.goto(buildWorkspaceUrl({ task_id: 'T007', sample_id: 'entity-recognition-001', role: 'reviewer', run_type: 'official_run' }));
+    await gotoReviewerWorkspace(page, { task_id: 'T007', sample_id: 'entity-recognition-001', run_type: 'official_run' });
     await dismissGuidelineModal(page);
 
     const panel = page.getByTestId('ws-review-correct-entity_recognition');
@@ -347,7 +348,7 @@ test.describe('reviewer demo annotator submission', () => {
   });
 
   test('a later card of another output type is seeded too (T013)', async ({ page }) => {
-    await page.goto(buildWorkspaceUrl({ task_id: 'T013', sample_id: 'absa-001', role: 'reviewer', run_type: 'official_run' }));
+    await gotoReviewerWorkspace(page, { task_id: 'T013', sample_id: 'absa-001', run_type: 'official_run' });
     await dismissGuidelineModal(page);
 
     const panel = page.getByTestId('ws-review-correct-span');
@@ -363,7 +364,7 @@ test.describe('reviewer demo annotator submission', () => {
     await submitAsAnnotator(page, 'T001', 'sent-001', async () => {
       await page.getByTestId('ws-single-label-chip-negative').click();
     });
-    await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer', run_type: 'official_run' }));
+    await gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001', run_type: 'official_run' });
     await dismissGuidelineModal(page);
 
     // The mock annotator answered 'positive' for this sample.
