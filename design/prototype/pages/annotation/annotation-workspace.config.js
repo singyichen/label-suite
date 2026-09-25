@@ -58,6 +58,18 @@
       wsSubmitIncomplete: '請完成所有標記項目後再提交',
       wsSubmitSuccess: '已提交',
       reviewSubmitLabel: '送出審核',
+      /* issue #926/#927/#928 CI follow-up (A11Y-05): the footer submit
+         button and this quick-submit control show the SAME visible text
+         ('送出審核') by design -- they are the same action, just two entry
+         points. But two buttons with the identical accessible name make a
+         screen reader announce "送出審核" twice with no way to tell them
+         apart. This key backs an aria-label used ONLY on the quick-submit
+         button (see buildReviewQuickSubmit()); it starts with the same
+         visible label so WCAG 2.5.3 (Label in Name) still holds, but adds
+         a location cue so the two buttons resolve to distinct accessible
+         names. The footer button's accessible name stays plain
+         reviewSubmitLabel, unchanged. */
+      reviewQuickSubmitAriaLabel: '送出審核（決策列）',
       reviewApproveLabel: '通過',
       reviewModifyLabel: '修正',
       reviewBypassLabel: window.LabelSuiteSharedSidebar.BYPASS_WORDING.zh.decision,
@@ -200,6 +212,7 @@
       wsSubmitIncomplete: 'Please answer every output before submitting',
       wsSubmitSuccess: 'Submitted',
       reviewSubmitLabel: 'Submit review',
+      reviewQuickSubmitAriaLabel: 'Submit review (decision row)',
       reviewApproveLabel: 'Approve',
       reviewModifyLabel: 'Modify',
       reviewBypassLabel: window.LabelSuiteSharedSidebar.BYPASS_WORDING.en.decision,
@@ -3249,6 +3262,43 @@
     return { el: wrap, refresh: refresh };
   }
 
+  /* issue #928 (FR-014P new point): the footer submit stays put (its
+     right-aligned position inside .action-bar is locked by issue #563's
+     coverage) but sits far from the decision row, so a decided unit gets a
+     second, secondary submit control near the decision row itself. Reuses
+     the exact same completion check and submit handler as the footer
+     button -- this is not a second submit path, just a closer trigger for
+     the same one. */
+  function buildReviewQuickSubmit() {
+    var wrap = document.createElement('div');
+    wrap.className = 'rv-quick-submit-row hidden';
+
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn btn-cta';
+    btn.setAttribute('data-testid', 'ws-review-quick-submit-btn');
+    btn.textContent = t('reviewSubmitLabel');
+    /* CI follow-up (A11Y-05, annotation-workspace-review-shortcuts.spec.ts):
+       this button's visible text is identical to the footer submit
+       button's -- same action, two entry points -- but that left two
+       buttons with the same accessible name on screen at once, which a
+       screen reader cannot tell apart. aria-label overrides the computed
+       accessible name to something that still STARTS WITH the visible
+       label (WCAG 2.5.3 Label in Name) but is unique. The footer button
+       keeps its plain reviewSubmitLabel accessible name unchanged. */
+    btn.setAttribute('aria-label', t('reviewQuickSubmitAriaLabel'));
+    btn.addEventListener('click', handleReviewSubmit);
+    wrap.appendChild(btn);
+
+    function refresh() {
+      var allDecided = pendingReviewOutputKeys(currentAnnotatorId()).length === 0;
+      wrap.classList.toggle('hidden', !allDecided);
+    }
+    refresh();
+    reviewDecisionRefreshers.push(refresh);
+    return wrap;
+  }
+
   /* FR-054: the shared sidebar has advertised A / R since spec 008 without
      either ever being wired up. v4.0.0 made a review unit one annotator, so
      the two batch shortcuts it also advertised (Shift+A / Shift+R) have no
@@ -3543,46 +3593,18 @@
     host.appendChild(wrap);
   }
 
-  /* FR-014P: a review card must end with exactly ONE decision line,
-     the same shape for every output type. The engine's Bypass row already is
-     that line ("無法判定 (Bypass)"), so the approve/reject pair is docked into
-     it instead of floating in a card header far above the answer it judges.
-     Two things make this more than an appendChild: the engine rebuilds the
-     whole panel on every Bypass toggle and every entity/relation edit, which
-     detaches whatever we put inside it, and a task configured with
-     allow_bypass:false renders no such row at all. So docking is idempotent,
-     re-runs from a MutationObserver, and always re-attaches the SAME element
-     -- a rebuilt copy would drop the reviewer's pending decision. */
-  function dockDecisionsOnBypassRow(correction, decisionEls) {
-    var fallbackRow = null;
-    function place() {
-      var bypassRow = correction.querySelector('.' + BYPASS_ROW_CLASS + ':not(.rv-decision-row)');
-      if (!bypassRow) {
-        if (!fallbackRow) {
-          fallbackRow = document.createElement('div');
-          fallbackRow.className = BYPASS_ROW_CLASS + ' rv-decision-row';
-        }
-        if (fallbackRow.parentNode !== correction) correction.appendChild(fallbackRow);
-        bypassRow = fallbackRow;
-      } else if (fallbackRow && fallbackRow.parentNode) {
-        fallbackRow.parentNode.removeChild(fallbackRow);
-      }
-      decisionEls.forEach(function (decisionEl) {
-        /* Guard the append: without it, each re-dock would itself be a
-           mutation and the observer would never settle. */
-        if (decisionEl.parentNode !== bypassRow) bypassRow.appendChild(decisionEl);
-      });
-    }
-    place();
-    new MutationObserver(place).observe(correction, { childList: true, subtree: true });
-  }
-
   /* spec 015 v4.0.0 (US3/US6, FR-044/FR-014P, BREAKING): ONE review card
      shape for both run types -- no title row, no stats box, no consensus
      badge, no apply-majority, no annotator list, no deviation coloring; just
      the reviewed annotator's answer in the correction panel, closing on one
      decision pair. dry_run's consensus/gold adjudication model (FR-030/
      FR-039~FR-042) is gone with the merge it read from. */
+  /* issue #926/#927 (FR-014P revision): decision buttons used to be docked
+     inside the correction panel's Bypass row (dockDecisionsOnBypassRow(),
+     removed) so they would survive the shared engine wholesale-rebuilding
+     that panel. They now live in their own `.rv-decision-row` sibling,
+     appended alongside the panel instead of inside it -- a sibling the
+     engine never touches, so no re-attach mechanism is needed at all. */
   /* A real submission carries the annotator's own engine state (exact spans
      included), so it seeds through the OutputAnswer path. The demo fallback
      only has a CompactAnswer and takes the compact path -- entity offsets get
@@ -3609,12 +3631,12 @@
 
   /* issue #552/#596 (FR-016A, design.md D2): `modify`/`bypass` must say why
      -- `approve` never does. The field is a direct child of the review card,
-     AFTER the correction panel rather than inside its Bypass row: the shared
-     engine rebuilds that panel wholesale (FR-014P point 3), and anything
-     docked inside it has to be re-attached by dockDecisionsOnBypassRow()'s
-     observer -- outside it, the field just stays. Visibility follows the
-     row's decision through the same refresher list the decision buttons
-     use, so shortcuts (FR-054) and draft restores drive it too. */
+     AFTER the correction panel rather than inside it: the shared engine
+     rebuilds that panel wholesale (FR-014P point 3), and anything nested
+     inside it would be wiped on the next rebuild -- outside it, the field
+     just stays. Visibility follows the row's decision through the same
+     refresher list the decision buttons use, so shortcuts (FR-054) and
+     draft restores drive it too. */
   var reviewRowReasons = {};
 
   function reviewRowReason(outKey, rowName) {
@@ -3686,8 +3708,11 @@
     var row = buildReviewRowShell(null);
 
     seedReviewRow(outKey, submission);
-    var correction = appendCorrectionControl(row, outKey);
-    dockDecisionsOnBypassRow(correction, [buildRowDecisionButtons(outKey, currentAnnotatorId(), null).el]);
+    appendCorrectionControl(row, outKey);
+    var decisionRow = document.createElement('div');
+    decisionRow.className = 'rv-decision-row';
+    decisionRow.appendChild(buildRowDecisionButtons(outKey, currentAnnotatorId(), null).el);
+    row.appendChild(decisionRow);
     row.appendChild(buildReviewReasonField(outKey, currentAnnotatorId()));
     return row;
   }
@@ -3889,8 +3914,11 @@
       seedReviewRow(outKey, submission);
     });
 
-    var correction = appendCorrectionControl(row, 'relation_identification', 'span', outKeys);
-    dockDecisionsOnBypassRow(correction, decisionEls);
+    appendCorrectionControl(row, 'relation_identification', 'span', outKeys);
+    var decisionRow = document.createElement('div');
+    decisionRow.className = 'rv-decision-row';
+    decisionEls.forEach(function (el) { decisionRow.appendChild(el); });
+    row.appendChild(decisionRow);
     outKeys.forEach(function (outKey) {
       row.appendChild(buildReviewReasonField(outKey, currentAnnotatorId()));
     });
@@ -5269,6 +5297,7 @@
       }
       preview.appendChild(buildReviewRow(outKey, submission));
     });
+    preview.appendChild(buildReviewQuickSubmit());
   }
 
   function appendReviewHistoryEntry(history, text) {
