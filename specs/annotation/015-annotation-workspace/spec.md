@@ -1,5 +1,5 @@
 ---
-功能分支: fix/913-exception-pool-sticky-owner
+功能分支: fix/926-review-decision-area
 建立日期: 2026-04-23
 版本: 6.22.0
 狀態: Draft
