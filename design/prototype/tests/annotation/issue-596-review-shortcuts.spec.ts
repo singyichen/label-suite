@@ -3,6 +3,7 @@ import {
   assertNoPageErrors,
   buildWorkspaceUrl,
   dismissGuidelineModal,
+  gotoReviewerWorkspace,
   skipGuidelineModal,
   trackPageErrors,
 } from './_workspace-helpers';
@@ -47,7 +48,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 async function gotoReviewer(page: Page, taskId: string, sampleId: string) {
-  await page.goto(buildWorkspaceUrl({ task_id: taskId, sample_id: sampleId, role: 'reviewer', run_type: 'official_run' }));
+  await gotoReviewerWorkspace(page, { task_id: taskId, sample_id: sampleId, run_type: 'official_run' });
   await dismissGuidelineModal(page);
   await expect(page.getByTestId('ws-review-row-approve').first()).toBeVisible();
 }

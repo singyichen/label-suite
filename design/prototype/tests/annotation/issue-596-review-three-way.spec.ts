@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { buildWorkspaceUrl, dismissGuidelineModal, skipGuidelineModal } from './_workspace-helpers';
+import { buildWorkspaceUrl, dismissGuidelineModal, gotoReviewerWorkspace, skipGuidelineModal } from './_workspace-helpers';
 
 /* issue #596 (OpenSpec change 2026-09-01-single-owner-review-relay, task 2.1,
  * RED): the reviewer decision control collapses from a two-way `通過 / 退回`
@@ -79,7 +79,7 @@ test.describe('issue #596: AC-3.51 三向決策控件（通過／修正／無法
     await submitAsAnnotator(page, 'T001', 'sent-001', async () => {
       await page.getByTestId('ws-single-label-chip-negative').click();
     });
-    await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer' }));
+    await gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001' });
     await dismissGuidelineModal(page);
 
     const row = page.getByTestId('ws-review-row').first();
@@ -96,7 +96,7 @@ test.describe('issue #596: AC-3.51 三向決策控件（通過／修正／無法
     await submitAsAnnotator(page, 'T001', 'sent-001', async () => {
       await page.getByTestId('ws-single-label-chip-negative').click();
     });
-    await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer' }));
+    await gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001' });
     await dismissGuidelineModal(page);
 
     const row = page.getByTestId('ws-review-row').first();
@@ -121,7 +121,7 @@ test.describe('issue #596: AC-3.51 三向決策控件（通過／修正／無法
     await submitAsAnnotator(page, 'T001', 'sent-001', async () => {
       await page.getByTestId('ws-single-label-chip-negative').click();
     });
-    await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer' }));
+    await gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001' });
     await dismissGuidelineModal(page);
 
     const row = page.getByTestId('ws-review-row').first();
@@ -148,7 +148,7 @@ test.describe('issue #596: AC-3.53 修正／無法判定理由必填，通過不
     await submitAsAnnotator(page, 'T001', 'sent-001', async () => {
       await page.getByTestId('ws-single-label-chip-negative').click();
     });
-    await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer' }));
+    await gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001' });
     await dismissGuidelineModal(page);
 
     const row = page.getByTestId('ws-review-row').first();
@@ -171,7 +171,7 @@ test.describe('issue #596: AC-3.53 修正／無法判定理由必填，通過不
     await submitAsAnnotator(page, 'T001', 'sent-001', async () => {
       await page.getByTestId('ws-single-label-chip-negative').click();
     });
-    await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer' }));
+    await gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001' });
     await dismissGuidelineModal(page);
 
     const row = page.getByTestId('ws-review-row').first();
@@ -194,7 +194,7 @@ test.describe('issue #596: AC-3.53 修正／無法判定理由必填，通過不
     await submitAsAnnotator(page, 'T001', 'sent-001', async () => {
       await page.getByTestId('ws-single-label-chip-negative').click();
     });
-    await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer' }));
+    await gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001' });
     await dismissGuidelineModal(page);
 
     const row = page.getByTestId('ws-review-row').first();
@@ -218,7 +218,7 @@ test.describe('issue #596: AC-3.53 修正／無法判定理由必填，通過不
   test('同一單位内，通過的 outKey 不受其他 outKey 缺理由拖累；補齊理由後可完整送出', async ({ page }) => {
     // T013/absa-001: entity_recognition + relation_identification merge into
     // one ws-review-row (FR-014N), multi_dim gets its own -- 2 rows total.
-    await page.goto(buildWorkspaceUrl({ task_id: 'T013', sample_id: 'absa-001', role: 'reviewer', run_type: 'official_run' }));
+    await gotoReviewerWorkspace(page, { task_id: 'T013', sample_id: 'absa-001', run_type: 'official_run' });
     await dismissGuidelineModal(page);
 
     const rows = page.getByTestId('ws-review-row');

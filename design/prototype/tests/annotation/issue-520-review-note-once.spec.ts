@@ -1,8 +1,8 @@
 import { test, expect, type Page } from '@playwright/test';
 import {
   assertNoPageErrors,
-  buildWorkspaceUrl,
   dismissGuidelineModal,
+  gotoReviewerWorkspace,
   skipGuidelineModal,
   trackPageErrors,
   type RunType,
@@ -54,9 +54,7 @@ const CASES: Array<{ taskId: string; sampleId: string; cards: number; decisions:
 ];
 
 async function openReviewer(page: Page, taskId: string, sampleId: string, runType: RunType) {
-  await page.goto(
-    buildWorkspaceUrl({ task_id: taskId, sample_id: sampleId, role: 'reviewer', run_type: runType })
-  );
+  await gotoReviewerWorkspace(page, { task_id: taskId, sample_id: sampleId, run_type: runType });
   await dismissGuidelineModal(page);
 }
 
