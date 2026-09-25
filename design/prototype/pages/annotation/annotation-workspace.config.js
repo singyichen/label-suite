@@ -1502,6 +1502,19 @@
     ) === data.REVIEW_UNIT_STATUS.FINALIZED;
   }
 
+  /* Unlike setPreviewControlsLocked() below, this function's two callers
+     (wsSaveBtn, wsSubmitBtn) are static page-level elements this lock is the
+     SOLE owner of `disabled` for -- confirmed by inspecting every other
+     write site in this file: neither button has any other persistent
+     disabled-setting logic (wsSubmitBtn's busy-flag toggle in handleSubmit()
+     sets disabled=true then always resets it to false before every return,
+     synchronously, so it never survives past that one call). Because these
+     two elements are never recreated (no engine rebuilds them the way
+     #annotationPreview's subtree is rebuilt every render), restoring
+     disabled=false on unlock is required, not optional -- without it, a
+     button left disabled=true by a locked sample would stay stuck disabled
+     forever after navigating to an unlocked sample, since nothing else
+     would ever flip it back. */
   function setControlLocked(elementId, locked) {
     var el = document.getElementById(elementId);
     if (!el) return;
@@ -1512,14 +1525,18 @@
 
   /* Generic, engine-agnostic per FR-101/Generalization-First: no per-output-
      type branching, just every native control inside the engine-rendered
-     preview subtree. */
+     preview subtree. Same additive-only contract as setControlLocked()
+     above -- see its comment. */
   function setPreviewControlsLocked(locked) {
     var preview = document.getElementById('annotationPreview');
     if (!preview) return;
     preview.querySelectorAll('button, input, select, textarea').forEach(function (control) {
-      control.disabled = locked;
-      if (locked) control.setAttribute('aria-disabled', 'true');
-      else control.removeAttribute('aria-disabled');
+      if (locked) {
+        control.disabled = true;
+        control.setAttribute('aria-disabled', 'true');
+      } else {
+        control.removeAttribute('aria-disabled');
+      }
     });
   }
 

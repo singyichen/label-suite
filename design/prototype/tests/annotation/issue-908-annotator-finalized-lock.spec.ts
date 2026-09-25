@@ -1,5 +1,11 @@
 import { test, expect, type Page } from '@playwright/test';
-import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
+import {
+  buildWorkspaceUrl,
+  skipGuidelineModal,
+  patchDataFile,
+  selectWorkspaceText,
+  dismissGuidelineModal,
+} from './_workspace-helpers';
 
 /* Annotator finalized-lock (issue #908, spec 015 v6.19.0 FR-101 / AC-2.27).
  *
@@ -364,5 +370,75 @@ test.describe('issue #908 -- annotator finalized-lock (FR-101 / AC-2.27)', () =>
       const btn = page.getByTestId(testId);
       await expect(btn).toBeEnabled();
     }
+  });
+
+  /* CI regression (2026-09-25): setPreviewControlsLocked()/setControlLocked()
+   * originally wrote `control.disabled = locked` unconditionally. When
+   * `locked` was false (the ordinary, unlocked case), this forced
+   * `disabled = false` onto EVERY control inside #annotationPreview,
+   * overwriting disabled states other logic had just set for reasons that
+   * have nothing to do with FR-101 -- e.g. relation_identification's
+   * sequential builder (buildRelationStateMachine, task-config.engine.js)
+   * disables ws-ri-relation-btn/-e2-btn/-add-btn/-undo-btn until an earlier
+   * slot is filled. The fix makes the lock ADDITIVE ONLY: it may force
+   * `disabled = true`, but on unlock it must leave `disabled` exactly as the
+   * engine already left it, touching only `aria-disabled` (which is this
+   * lock's own attribute to add/remove). This test pins that contract
+   * directly against T008/rel-001 (relation_identification, unfinalized,
+   * default identity -- no FR-101 lock in play at all) so a future
+   * regression here fails immediately without depending on the separate
+   * relation_identification suite being run in the same pass. */
+  test('lock rendering must not clear disabled states other logic owns (relation_identification step gate)', async ({
+    page,
+  }) => {
+    await skipGuidelineModal(page);
+    // rel-001/rel-002 ship with an output-role `triples` prefill (013
+    // FR-003g-5); strip both so each sample's relation draft starts
+    // genuinely empty -- same technique as
+    // annotation-workspace-relation-identification.spec.ts's own
+    // stripTriplePrefill(), extended to the second record this test also
+    // visits.
+    await patchDataFile(page, 'task-detail.data.js', `
+      window.LabelSuiteTaskDetailData.profiles.T008.datasetRecords[0].triples = [];
+      window.LabelSuiteTaskDetailData.profiles.T008.datasetRecords[1].triples = [];
+    `);
+    await page.goto(buildWorkspaceUrl({ task_id: 'T008', sample_id: 'rel-001' }));
+    await dismissGuidelineModal(page);
+
+    // Not locked (unfinalized, fresh default identity) -- the engine's own
+    // step gate must still hold: only E1/Arg1 is actionable on an empty draft.
+    await expect(page.getByTestId('ws-annotator-finalized-notice')).toHaveCount(0);
+    await expect(page.getByTestId('ws-ri-e1-btn')).toBeEnabled();
+    await expect(page.getByTestId('ws-ri-relation-btn')).toBeDisabled();
+    await expect(page.getByTestId('ws-ri-e2-btn')).toBeDisabled();
+    await expect(page.getByTestId('ws-ri-add-btn')).toBeDisabled();
+    await expect(page.getByTestId('ws-ri-undo-btn')).toBeDisabled();
+
+    // Fill E1 so the gate is now mid-sequence (Relation actionable, E2/Add
+    // still not) -- the more interesting state for the lock code to
+    // accidentally clobber than the fully-empty one above.
+    await selectWorkspaceText(page, 'ws-input-content', '高血壓');
+    await page.getByTestId('ws-ri-e1-btn').click();
+    await expect(page.getByTestId('ws-ri-relation-btn')).toBeEnabled();
+    await expect(page.getByTestId('ws-ri-e2-btn')).toBeDisabled();
+    await expect(page.getByTestId('ws-ri-add-btn')).toBeDisabled();
+
+    // In-session navigation (no reload) to a second, likewise-unfinalized
+    // sample -- exercises a fresh renderWorkspace() pass for a DIFFERENT
+    // sample within the same page/JS session, the scenario most likely to
+    // reveal any residual state the additive-only fix might have left
+    // behind. #annotationPreview is fully torn down and rebuilt by
+    // updateAnnotationPreview() on every render (task-config.engine.js:
+    // `while (preview.firstChild) preview.removeChild(preview.firstChild)`),
+    // so this must land on a clean empty-draft gate again, not the
+    // mid-sequence state carried over from rel-001 and not force-enabled by
+    // this lock's own code.
+    await page.getByTestId('ws-next-btn').click();
+    await expect(page.getByTestId('ws-annotator-finalized-notice')).toHaveCount(0);
+    await expect(page.getByTestId('ws-ri-e1-btn')).toBeEnabled();
+    await expect(page.getByTestId('ws-ri-relation-btn')).toBeDisabled();
+    await expect(page.getByTestId('ws-ri-e2-btn')).toBeDisabled();
+    await expect(page.getByTestId('ws-ri-add-btn')).toBeDisabled();
+    await expect(page.getByTestId('ws-ri-undo-btn')).toBeDisabled();
   });
 });
