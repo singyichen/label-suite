@@ -3,6 +3,7 @@ import {
   buildListUrl,
   buildWorkspaceUrl,
   dismissGuidelineModal,
+  gotoReviewerWorkspace,
   patchDataFile,
   skipGuidelineModal,
 } from './_workspace-helpers';
@@ -55,9 +56,7 @@ test.describe('issue #811: 決策值一律等於共用側欄匯出之決策值�
   /* 1. 審核卡決策按鈕 (reviewBypassLabel) -- 精確比對可存取名稱，同
    * issue-399-review-decision-a11y.spec.ts 的既有作法。 */
   test('zh: the bypass decision button reads 無法裁決', async ({ page }) => {
-    await page.goto(buildWorkspaceUrl({
-      task_id: 'T015', sample_id: 'ofs-04-pending-review', role: 'reviewer', run_type: 'official_run',
-    }));
+    await gotoReviewerWorkspace(page, { task_id: 'T015', sample_id: 'ofs-04-pending-review', run_type: 'official_run' });
     await dismissGuidelineModal(page);
 
     await expect(page.getByTestId('ws-review-row-bypass')).toBeVisible();
@@ -66,9 +65,7 @@ test.describe('issue #811: 決策值一律等於共用側欄匯出之決策值�
 
   test('en: the bypass decision button reads Cannot adjudicate', async ({ page }) => {
     await setLangEn(page);
-    await page.goto(buildWorkspaceUrl({
-      task_id: 'T015', sample_id: 'ofs-04-pending-review', role: 'reviewer', run_type: 'official_run',
-    }));
+    await gotoReviewerWorkspace(page, { task_id: 'T015', sample_id: 'ofs-04-pending-review', run_type: 'official_run' });
     await dismissGuidelineModal(page);
 
     await expect(page.getByTestId('ws-review-row-bypass')).toBeVisible();
@@ -172,6 +169,16 @@ test.describe('issue #811: 決策值一律等於共用側欄匯出之決策值�
       [bucketKey, ARB_SAMPLE, ARB_PARTICIPANT] as const
     );
 
+    /* issue #960: NOT navigated through gotoReviewerWorkspace/a resolved
+     * assignee on purpose -- this only opens the 歷程 tab, which
+     * reviewUnitBlockReason()'s NOT_ASSIGNED branch (annotation-workspace.
+     * config.js) does not touch: that branch replaces the review CARD
+     * ("preview") content only and returns early, while the history tab
+     * reads storage independently of it (matching the OFF_ROSTER note's own
+     * promise that an unassigned/off-roster viewer "可檢視自己審核過的內容
+     * 與歷程"). ARB_PARTICIPANT is kept here as the actor whose bypass
+     * event is being read back, not as a claim that it is this unit's
+     * FR-093 assignee. */
     await page.goto(buildWorkspaceUrl({
       task_id: ARB_TASK, sample_id: ARB_SAMPLE, role: 'reviewer', run_type: 'official_run',
       annotator_id: ARB_ANNOTATOR, reviewer_id: ARB_PARTICIPANT,
@@ -250,7 +257,7 @@ test.describe('issue #811: 答案值一律等於共用側欄匯出之答案值�
     await page.getByTestId('ws-bypass-single_label').check();
     await page.getByTestId('ws-submit-btn').click();
 
-    await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer' }));
+    await gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001' });
     await dismissGuidelineModal(page);
 
     await expect(page.getByTestId('ws-review-original-answer')).toHaveText('標記員原答案：無法判定 (Bypass)');
@@ -266,7 +273,7 @@ test.describe('issue #811: 答案值一律等於共用側欄匯出之答案值�
     await page.getByTestId('ws-bypass-single_label').check();
     await page.getByTestId('ws-submit-btn').click();
 
-    await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer' }));
+    await gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001' });
     await dismissGuidelineModal(page);
 
     await expect(page.getByTestId('ws-review-original-answer')).toHaveText(
@@ -318,9 +325,7 @@ test.describe('issue #811: 缺理由 toast 文案 (FR-083 / design.md D5, 鍵名
    * (tasks.md 1.1) 只要求釘住 zh，en 由 Wave 2 之外的既有鍵本身處理，不在
    * 本檔案斷言範圍內。 */
   test('zh: the missing-reason toast reads 請填寫以下輸出類型的審核理由：single_label', async ({ page }) => {
-    await page.goto(buildWorkspaceUrl({
-      task_id: 'T001', sample_id: 'sent-001', role: 'reviewer', run_type: 'official_run',
-    }));
+    await gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001', run_type: 'official_run' });
     await dismissGuidelineModal(page);
 
     await page.getByTestId('ws-review-row-modify').click();

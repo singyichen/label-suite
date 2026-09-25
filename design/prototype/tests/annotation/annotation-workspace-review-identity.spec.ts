@@ -1,5 +1,10 @@
 import { test, expect, type Page } from '@playwright/test';
-import { buildWorkspaceUrl, dismissGuidelineModal, skipGuidelineModal } from './_workspace-helpers';
+import {
+  buildWorkspaceUrl,
+  dismissGuidelineModal,
+  resolveAssignedReviewerId,
+  skipGuidelineModal,
+} from './_workspace-helpers';
 
 /* Review identity foundation (spec 015 v3.8.0, issue #145).
  *
@@ -65,7 +70,20 @@ async function readSampleStatus(
 
 /* T001 ships a single output type (single_label), so official_run renders
  * exactly one approve/reject pair -- one click completes the decision set
- * handleOfficialRunSubmit() validates. */
+ * handleOfficialRunSubmit() validates.
+ *
+ * issue #960: this file predates FR-093's single-owner review model (v3.8.0,
+ * issue #145) and 'two reviewers on the same annotator keep independent
+ * submission buckets' below deliberately puts TWO DIFFERENT reviewer
+ * identities on the SAME unit -- exactly the shape FR-093's assignment gate
+ * (issue #921) forbids once it lands (a unit has exactly one assignee).
+ * That single test is therefore a genuine model conflict, not a fixture bug:
+ * no reviewer_id choice makes "two reviewers, one unit" and "one assignee
+ * per unit" both true at once. Left unchanged here (it still passes on
+ * today's main, which has no gate yet) and flagged in issue #960 for a
+ * maintainer decision instead of guessing at a resolution. Every OTHER case
+ * in this file uses exactly one reviewer identity and is fixed below via
+ * approveAndSubmitAsAssignedReviewer(). */
 async function approveAndSubmitAsReviewer(page: Page, reviewerId: string) {
   await page.goto(
     buildWorkspaceUrl({
@@ -79,6 +97,22 @@ async function approveAndSubmitAsReviewer(page: Page, reviewerId: string) {
   await dismissGuidelineModal(page);
   await page.getByTestId('ws-review-row-approve').click();
   await page.getByTestId('ws-review-submit-btn').click();
+}
+
+/* The FR-093-safe counterpart: resolves the actual assignee instead of
+ * taking one on faith, and returns it so callers can assert identity against
+ * the real value rather than a hardcoded roster literal. Bootstraps via the
+ * annotator role first (harmless re-navigation if the page is already
+ * there, e.g. right after an in-test annotator submission) since
+ * resolveAssignedReviewerId() needs window.LabelSuiteAnnotationWorkspaceData
+ * already loaded. */
+async function approveAndSubmitAsAssignedReviewer(page: Page): Promise<string> {
+  await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'annotator' }));
+  const reviewer_id = await resolveAssignedReviewerId(page, {
+    task_id: 'T001', sample_id: 'sent-001', run_type: 'official_run',
+  });
+  await approveAndSubmitAsReviewer(page, reviewer_id);
+  return reviewer_id;
 }
 
 const TRAIL = { taskId: 'T001', runType: 'official_run', sampleId: 'sent-001', annotatorId: ANNOTATOR_A };
@@ -102,13 +136,13 @@ test.describe('review identity foundation', () => {
   });
 
   test('a review decision records the real reviewer id and never the string current', async ({ page }) => {
-    await approveAndSubmitAsReviewer(page, REVIEWER_A);
+    const reviewerId = await approveAndSubmitAsAssignedReviewer(page);
 
     const reviewerDecisions = (await readTrail(page, TRAIL)).filter(
       (e) => e.role === 'reviewer' && ['accepted', 'modified', 'bypassed'].includes(e.action)
     );
     expect(reviewerDecisions).toHaveLength(1);
-    expect(reviewerDecisions[0].actorId).toBe(REVIEWER_A);
+    expect(reviewerDecisions[0].actorId).toBe(reviewerId);
     expect(reviewerDecisions[0].summary).toContain(ANNOTATOR_A);
     expect(reviewerDecisions[0].summary).not.toContain('current');
   });
@@ -154,7 +188,7 @@ test.describe('review identity foundation', () => {
     await page.getByTestId('ws-single-label-chip-negative').click();
     await page.getByTestId('ws-submit-btn').click();
 
-    await approveAndSubmitAsReviewer(page, REVIEWER_A);
+    const reviewerId = await approveAndSubmitAsAssignedReviewer(page);
 
     const trail = await readTrail(page, TRAIL);
     /* issue #583 (FR-086): the approve decision is the reviewer's only
@@ -162,7 +196,7 @@ test.describe('review identity foundation', () => {
        pinned here rather than left implicit. */
     expect(trail.map((e) => [e.role, e.actorId, e.action])).toEqual([
       ['annotator', ANNOTATOR_A, 'submitted'],
-      ['reviewer', REVIEWER_A, 'accepted'],
+      ['reviewer', reviewerId, 'accepted'],
     ]);
   });
 

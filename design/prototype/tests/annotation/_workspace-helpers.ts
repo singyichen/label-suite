@@ -238,10 +238,15 @@ export async function buildReviewerWorkspaceUrl(
 
 /* The one-line replacement for `page.goto(buildWorkspaceUrl({ ..., role:
  * 'reviewer' }))` that most affected specs needed -- resolves via
- * buildReviewerWorkspaceUrl() above and navigates straight there. */
+ * buildReviewerWorkspaceUrl() above and navigates straight there. Returns
+ * the resolved reviewer_id for the handful of callers that need to assert
+ * against the real identity (e.g. a history entry's actor label) instead of
+ * a hardcoded roster literal. */
 export async function gotoReviewerWorkspace(
   page: Page,
   params: { task_id: string; sample_id: string; run_type?: RunType; annotator_id?: string }
-): Promise<void> {
-  await page.goto(await buildReviewerWorkspaceUrl(page, params));
+): Promise<string> {
+  const url = await buildReviewerWorkspaceUrl(page, params);
+  await page.goto(url);
+  return new URL(url, 'http://localhost').searchParams.get('reviewer_id') as string;
 }
