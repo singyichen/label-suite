@@ -24,7 +24,7 @@
  * banner/card assertions read had to follow.
  */
 import { test, expect, type Page } from '@playwright/test';
-import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
+import { buildWorkspaceUrl, gotoReviewerWorkspace, skipGuidelineModal } from './_workspace-helpers';
 
 /** T016: official_run, annotator kioleemg12. issue #596: ofm-02's sole
  *  reviewer agreed, so it derives `finalized`; ofm-05's differs, so it stays
@@ -53,7 +53,33 @@ function closeBtn(page: Page) {
   return page.getByTestId('ws-review-flow-drawer-close');
 }
 
+/* issue #960: resolves the FR-093 assignee per (taskId, sampleId) rather
+ * than a single hardcoded 'reviewer_wang' -- T016 seeds three reviewers
+ * (wang/li/lin) precisely so its quorum has a non-participant can_arbitrate
+ * member (see annotation-workspace.data.js:216-219), so distinct T016
+ * samples can round-robin to distinct reviewers; a single hardcoded id
+ * would silently stop being "the" assignee for some of them. */
 async function openUnit(page: Page, sampleId: string, taskId = 'T016') {
+  await gotoReviewerWorkspace(page, {
+    task_id: taskId,
+    sample_id: sampleId,
+    run_type: 'official_run',
+    annotator_id: taskId === 'T016' ? 'kioleemg12' : undefined,
+  });
+  await expect(banner(page)).toBeVisible();
+}
+
+/* issue #960: 'ofs-05-not-submitted' is deliberately a TRULY empty unit --
+ * no annotator submission and no REVIEWER_MOCK_ROWS fallback for this
+ * sample_id -- so getReviewUnitRows()/listReviewUnits() contributes no
+ * entry for it at all and there is nothing for resolveAssignedReviewerId()
+ * to resolve (this is exactly the case annotation-workspace.config.js's own
+ * comment documents: EMPTY is checked before NOT_ASSIGNED because a unit
+ * with no submission yet has no assignee for ANYONE to be un-assigned
+ * from). Any roster reviewer_id therefore behaves identically here, on
+ * today's main and once the #921 gate lands, so this one call keeps a
+ * plain hardcoded roster id instead of going through the helper. */
+async function openEmptyUnit(page: Page, sampleId: string, taskId: string) {
   await page.goto(
     buildWorkspaceUrl({
       task_id: taskId,
@@ -61,7 +87,6 @@ async function openUnit(page: Page, sampleId: string, taskId = 'T016') {
       role: 'reviewer',
       run_type: 'official_run',
       reviewer_id: 'reviewer_wang',
-      annotator_id: taskId === 'T016' ? 'kioleemg12' : undefined,
     }),
   );
   await expect(banner(page)).toBeVisible();
@@ -124,7 +149,7 @@ test.describe('issue #525 PR-A — the trigger in the FR-064 banner', () => {
     await openUnit(page, 'ofs-01-agree-gold', 'T015');
     await expect(trigger(page)).toBeVisible();
 
-    await openUnit(page, 'ofs-05-not-submitted', 'T015');
+    await openEmptyUnit(page, 'ofs-05-not-submitted', 'T015');
     await expect(trigger(page)).toHaveCount(0);
     await expect(drawer(page).locator('.review-track')).toHaveCount(0);
   });

@@ -1,8 +1,8 @@
 import { test, expect, type Page } from '@playwright/test';
 import {
   assertNoPageErrors,
-  buildWorkspaceUrl,
   dismissGuidelineModal,
+  gotoReviewerWorkspace,
   skipGuidelineModal,
   trackPageErrors,
   type RunType,
@@ -69,15 +69,12 @@ const DRY_SUFFIX_EN =
 const NOTE_DRY_EN = NOTE_OFFICIAL_EN + DRY_SUFFIX_EN;
 
 async function openReviewer(page: Page, runType: RunType, annotatorId = ANNOTATOR): Promise<void> {
-  await page.goto(
-    buildWorkspaceUrl({
-      task_id: 'T001',
-      sample_id: 'sent-001',
-      role: 'reviewer',
-      run_type: runType,
-      annotator_id: annotatorId,
-    })
-  );
+  await gotoReviewerWorkspace(page, {
+    task_id: 'T001',
+    sample_id: 'sent-001',
+    run_type: runType,
+    annotator_id: annotatorId,
+  });
   await dismissGuidelineModal(page);
 }
 
@@ -199,7 +196,7 @@ test.describe('the tooltip mounts once per review unit, above the card stack (is
   for (const { taskId, sampleId, cards, label } of CASES) {
     for (const runType of ['dry_run', 'official_run'] as RunType[]) {
       test(`${taskId} (${label}) renders exactly one tooltip in ${runType}`, async ({ page }) => {
-        await page.goto(buildWorkspaceUrl({ task_id: taskId, sample_id: sampleId, role: 'reviewer', run_type: runType }));
+        await gotoReviewerWorkspace(page, { task_id: taskId, sample_id: sampleId, run_type: runType });
         await dismissGuidelineModal(page);
 
         await expect(page.getByTestId('ws-review-row')).toHaveCount(cards);
@@ -226,16 +223,12 @@ test.describe('the tooltip mounts once per review unit, above the card stack (is
     // issue #596: ofm-02 no longer works here -- its sole reviewer agreed, so
     // it derives `finalized`, and FR-070's note is only rendered while the
     // unit is still decidable.
-    await page.goto(
-      buildWorkspaceUrl({
-        task_id: 'T016',
-        sample_id: 'ofm-05-final-exception',
-        role: 'reviewer',
-        run_type: 'official_run',
-        annotator_id: 'kioleemg12',
-        reviewer_id: 'reviewer_wang',
-      })
-    );
+    await gotoReviewerWorkspace(page, {
+      task_id: 'T016',
+      sample_id: 'ofm-05-final-exception',
+      run_type: 'official_run',
+      annotator_id: 'kioleemg12',
+    });
     await dismissGuidelineModal(page);
     const banner = page.getByTestId('ws-review-unit-context');
     await expect(banner.getByTestId('ws-review-flow-trigger')).toHaveCount(1);

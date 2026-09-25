@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { buildWorkspaceUrl, dismissGuidelineModal, skipGuidelineModal } from './_workspace-helpers';
+import { dismissGuidelineModal, gotoReviewerWorkspace, skipGuidelineModal } from './_workspace-helpers';
 
 /* w6-resilience-a11y.md CONT-03 / issue #196: reviewer per-row decisions
  * used to live only in module-level vars (reviewRowDecisions/
@@ -17,12 +17,9 @@ import { buildWorkspaceUrl, dismissGuidelineModal, skipGuidelineModal } from './
  *   FR-014S, AC-6.10
  */
 
-const REVIEWER_URL = buildWorkspaceUrl({
-  task_id: 'T001',
-  sample_id: 'sent-001',
-  role: 'reviewer',
-  run_type: 'official_run',
-});
+function gotoReviewer(page: Page) {
+  return gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001', run_type: 'official_run' });
+}
 
 // issue #583 (FR-086): a reviewer submit no longer writes a wrapper
 // `submitted` event -- it writes one decision event per outKey instead, so
@@ -51,7 +48,7 @@ test.beforeEach(async ({ page }) => {
 
 test.describe('Reviewer per-row decisions persist before submit (CONT-03, issue #196)', () => {
   test('an unsent row decision survives a full page reload', async ({ page }) => {
-    await page.goto(REVIEWER_URL);
+    await gotoReviewer(page);
     await dismissGuidelineModal(page);
 
     const approveBtn = page.getByTestId('ws-review-row-approve');
@@ -69,7 +66,7 @@ test.describe('Reviewer per-row decisions persist before submit (CONT-03, issue 
   });
 
   test('re-clicking an already-decided row cancels it back to undecided, and that clears too', async ({ page }) => {
-    await page.goto(REVIEWER_URL);
+    await gotoReviewer(page);
     await dismissGuidelineModal(page);
 
     const approveBtn = page.getByTestId('ws-review-row-approve');
@@ -84,7 +81,7 @@ test.describe('Reviewer per-row decisions persist before submit (CONT-03, issue 
   });
 
   test('a submitted review is unaffected by a later reload', async ({ page }) => {
-    await page.goto(REVIEWER_URL);
+    await gotoReviewer(page);
     await dismissGuidelineModal(page);
 
     await page.getByTestId('ws-review-row-approve').click();
