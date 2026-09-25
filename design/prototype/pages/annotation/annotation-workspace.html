@@ -602,14 +602,8 @@
     .rv-merged-decision { display: flex; align-items: center; gap: 6px; }
     .rv-merged-decision .rv-section-label { margin: 0; }
 
-    /* ── Reviewer mode: official_run decision docked on the Bypass row (FR-014P) ── */
-    /* Bypass chips sit at the row's left, the decision pair at its right; the
-       second merged group follows the first instead of being pushed away too. */
-    .preview-bypass-row > .rv-choice-group,
-    .preview-bypass-row > .rv-merged-decision { margin-left: auto; }
-    .preview-bypass-row > .rv-merged-decision ~ .rv-merged-decision { margin-left: 12px; }
-    /* Stand-in row for a task configured with allow_bypass:false, where the
-       engine renders no Bypass line of its own to dock onto. */
+    /* ── Reviewer mode: decision row, separate from the answer Bypass row
+       (issue #926/#927/#928, FR-014P revision) ── */
     .rv-decision-row {
       margin-top: 12px;
       padding-top: 10px;
@@ -619,6 +613,24 @@
       align-items: center;
       gap: 8px;
     }
+    /* issue #926: the decision buttons are the review card's primary
+       action, so they read as a full-width segmented control at a WCAG
+       2.5.5 touch-target height -- scoped under .rv-decision-row so
+       arbitration's choice buttons and the exception-pool action buttons
+       (issue #907), which also use the base .mini-btn/.rv-choice-group
+       rules, are unaffected. */
+    .rv-decision-row .rv-choice-group,
+    .rv-decision-row .rv-merged-decision { flex: 1; }
+    .rv-decision-row .mini-btn {
+      flex: 1;
+      justify-content: center;
+      min-height: 44px;
+      padding: 10px var(--space-md);
+      font-size: 14px;
+    }
+    /* issue #928: a secondary submit control near the decision row, shown
+       only once every outKey in the unit has a decision. */
+    .rv-quick-submit-row { display: flex; justify-content: flex-end; margin-top: var(--space-sm); }
 
     /* ── Action bar ──────────────────────────────────────────── */
     .action-bar {
