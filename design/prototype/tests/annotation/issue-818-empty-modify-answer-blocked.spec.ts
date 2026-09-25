@@ -82,7 +82,7 @@ test.describe('issue #818: 修正 with an empty corrected answer blocks review s
     await page.getByTestId('ws-review-submit-btn').click();
 
     await expect(page.locator('#toast')).toHaveClass(/toast-warning/);
-    await expect(page.locator('#toastMsg')).toContainText('single_label');
+    await expect(page.locator('#toastMsg')).toContainText('單一標籤');
     await expect(page.locator('#toastMsg')).not.toHaveText('審核已送出');
     expect(await readReviewerSubmission(page, reviewerId)).toBeNull();
   });
