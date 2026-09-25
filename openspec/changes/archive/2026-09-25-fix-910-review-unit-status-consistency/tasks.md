@@ -22,7 +22,7 @@
 
 - [x] 3.1 執行閘門：prototype typecheck、本次新增與 issue-307／issue-583／annotation-review-unit（含 DUP-02）既有 Playwright 契約、`check-sdd.sh`、`check-spec-artifacts.sh`，全部通過方可繼續。團隊主責（main）於第一輪修正與第二輪迴歸修正後皆親自重跑並獨立覆核，不採信代理自報。[@main]
 - [x] 3.2 若本次變更觸及 `design/prototype/pages/**`，於最後一次來源編輯後重新產生 screen-inventory 一次。[@main]
-- [ ] 3.3 Source-Verify：確認 FR-064、FR-016B 之修訂文字皆可於正典逐一 grep 定位；archive 回寫正典並同步更新 derived view，正典版本 bump 並補 Changelog 條目。[@main]
+- [x] 3.3 Source-Verify：確認 FR-064、FR-016B、FR-053、FR-044a、FR-088、AC-2.26 皆可於正典逐一 grep 定位；`openspec archive` 回寫正典（版本 6.16.2 → 6.17.0，補 Changelog 條目）並同步更新 `openspec/specs/` derived view（archive as `2026-09-25-fix-910-review-unit-status-consistency`）。[@main]
 
 ## 4. 獨立審查與 PR
 

@@ -1,7 +1,7 @@
 # annotation/015-annotation-workspace Specification
 
 ## Purpose
-Annotation List + Workspace（標記清單與標記作業，Annotator／Reviewer）的 derived view。正典為 `specs/annotation/015-annotation-workspace/spec.md`（v6.17.0）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR/AC ID，不改動其正典措辭。目前收錄：change `reviewer-action-hint`（issue #526）之 FR-084、AC-4.47 ~ AC-4.50 與 FR-064 第 7 點第 6 項之範圍註記；change `2026-09-01-single-owner-review-relay`（issue #596）之 FR-092 ~ FR-097（新增）、FR-014B／FR-016A／FR-044／FR-051／FR-053／FR-054／FR-055／FR-060／FR-061／FR-062／FR-063／FR-064／FR-070／FR-083／FR-086（修訂）、FR-014I／FR-069／FR-074／FR-085（移除）；change `seq-tagging-span-workspace`（issue #581）之 FR-024A／FR-024A-1／FR-024A-2／FR-024A-3／FR-052／FR-024L（修訂）；change `reserve-arbiters-from-review-assignment`（issue #868）之 FR-060／FR-073／FR-093／FR-099（修訂）；change `pl-exception-disposal-screen-shell`（issue #907）之 FR-095（修訂，新增最終例外處置畫面外殼段落與 AC-4.69）；以及 change `gate-review-assignment`（issue #921）之 FR-093（修訂，新增工作區側送出指派閘門段落與 AC-4.70、AC-4.71）。
+Annotation List + Workspace（標記清單與標記作業，Annotator／Reviewer）的 derived view。正典為 `specs/annotation/015-annotation-workspace/spec.md`（v6.18.0）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR/AC ID，不改動其正典措辭。目前收錄：change `reviewer-action-hint`（issue #526）之 FR-084、AC-4.47 ~ AC-4.50 與 FR-064 第 7 點第 6 項之範圍註記；change `2026-09-01-single-owner-review-relay`（issue #596）之 FR-092 ~ FR-097（新增）、FR-014B／FR-016A／FR-044／FR-051／FR-053／FR-054／FR-055／FR-060／FR-061／FR-062／FR-063／FR-064／FR-070／FR-083／FR-086（修訂）、FR-014I／FR-069／FR-074／FR-085（移除）；change `seq-tagging-span-workspace`（issue #581）之 FR-024A／FR-024A-1／FR-024A-2／FR-024A-3／FR-052／FR-024L（修訂）；change `reserve-arbiters-from-review-assignment`（issue #868）之 FR-060／FR-073／FR-093／FR-099（修訂）；change `pl-exception-disposal-screen-shell`（issue #907）之 FR-095（修訂，新增最終例外處置畫面外殼段落與 AC-4.69）；change `gate-review-assignment`（issue #921）之 FR-093（修訂，新增工作區側送出指派閘門段落與 AC-4.70、AC-4.71）；以及 change `fix-910-review-unit-status-consistency`（issue #910）之 FR-064（修訂，補齊與 FR-053 同源之 FR-044a 遞補列限定語）與 FR-016B（新增，審核決策事件之 outKey 範圍雙送出去重）。
 
 ## Requirements
 
@@ -61,6 +61,8 @@ v4.61.0 以前寫入、不具上述新欄位之事件 MUST 原樣顯示且不得
 
 **本版修訂（issue #583，審核員外層提交事件停產）**：審核員送出自本版起不再寫入外層 `submitted` 事件（FR-086），v4.63.0（issue #601）之審核員外層 `submitted` 折疊規則因此僅適用於本版以前已寫入之舊事件——舊事件依 append-only 原則 MUST 原樣保留、MUST NOT 被刪除或改寫，其呈現層折疊與三項邊界照舊；新資料不再產生可折疊之對象。
 
+**本版新增（issue #910，審核決策重複送出去重）**：既有「連續重複 `submitted` 事件不疊加」的雙送出防護（issue #201）MUST 擴及審核決策事件（`accepted`／`modified`／`bypassed`）：同一 `outKey` 之上一筆決策事件，若其 `action`、`role`、`actor_id`、`reason` 與該決策之修正值皆與新決策相同，新送出 MUST NOT 再疊加第二筆內容相同的事件。比對 MUST 以該 `outKey` 最近一筆事件為對象，MUST NOT 僅比對陣列最後一筆——同一次送出可能一次寫入多個不同 `outKey` 之事件，僅比對陣列最後一筆會誤刪其他 `outKey` 的合法事件。內容有實質差異（例如修正值改變）之重複送出仍 MUST 正常記錄為新事件，不受本段去重規則影響。本段不改變既有 append-only 語意——去重僅發生於「即將寫入前」，不覆寫、不刪除任何已寫入之事件。
+
 #### Scenario: 歷程合併呈現且受盲審隔離
 - **GIVEN** 某樣本已有標記員提交事件與一位審核員之已提交審核事件，另一位審核員尚有未提交之草稿事件
 - **WHEN** 檢視右欄 `歷程` 頁籤
@@ -78,6 +80,12 @@ v4.61.0 以前寫入、不具上述新欄位之事件 MUST 原樣顯示且不得
 - **WHEN** 切換至右欄 `歷程` 頁籤
 - **THEN** 該筆事件卡片顯示操作者（角色 + `actor_id`）、時間、`action` 徽章（`data-action` 屬性為原始英文 `action` 值，可見文字為對應繁體中文標籤）與作答摘要；並依 FR-090 可見性顯示 `result_snapshot` 差異區塊與 `reason`
 - **AND** 同一清單中一筆 v4.61.0 以前寫入的舊事件僅顯示既有五欄位，不渲染差異區塊、耗時或理由，且不擲出錯誤
+
+#### Scenario: 審核決策重複送出不疊加重複事件（issue #910）
+- **GIVEN** 審核員對某審核單位一個 `outKey` 送出「通過」決策，該單位因 FR-053 之雙條件判定仍維持可送出狀態（例如受審標記員無儲存提交、僅有 FR-044a 遞補列頂替，因此 `getReviewUnitStatus` 恆為 null）
+- **WHEN** 審核員以完全相同的決策再次送出審核
+- **THEN** 該 `outKey` 之 `accepted` 事件於 `歷程` 頁籤中 MUST 仍只有一筆，MUST NOT 疊加第二筆內容相同的事件
+- **AND** 若該次重複送出改變了另一個 `outKey` 的決策或修正值，該 `outKey` 的新事件 MUST 正常寫入，不受前一 `outKey` 去重規則影響
 
 ### Requirement: FR-086 歷程動作常數化
 
@@ -478,7 +486,7 @@ Reviewer 於 `dry_run` 與 `official_run` 執行**直接修正**（`decision = m
 workspace reviewer 視圖 MUST 於審核卡（FR-053）、仲裁版面（FR-061）或唯讀定稿卡（FR-094）上方渲染一個審核單位脈絡橫幅（testid `ws-review-unit-context`），逐審核單位依序呈現：
 
 1. `run_type` 徽章——`dry_run` 為 `試標 R{round}`（`{round}` 取自該任務 `materializedRuns.dry_run.round`，缺值回退為 `1`），`official_run` 為 `正式標記`；
-2. 該單位 `REVIEW_UNIT_STATUS` 之**三態** pill（`爭議中` 用 warning／error 色系、`已定稿` 用 success 色系、`待審` 用 info 色系）；標記員未提交時 pill 改顯示 `尚無標記提交`；
+2. 該單位 `REVIEW_UNIT_STATUS` 之**三態** pill（`爭議中` 用 warning／error 色系、`已定稿` 用 success 色系、`待審` 用 info 色系）；標記員未提交時 pill 改顯示 `尚無標記提交`——但存在 FR-044a 遞補列（示範標記員答案）時視為已有標記員答案，pill MUST 顯示 `待審`，MUST NOT 落到 `尚無標記提交`（issue #910）；本判定 MUST 與 FR-053 空審核單位閘門之「真空」判定同源，MUST NOT 另行維護第二份判定；本 pill 之推導與工作區左欄清單審核單位狀態標籤（FR-056）MUST 共用同一推導，不得各自維護一份判定；
 3. 開啟審核流程抽屜的觸發鈕（`ws-review-flow-trigger`，文案 `了解審核流程`／`Review flow`），抽屜（桌機靠右側邊、`< 768px` 全寬 modal，`ws-review-flow-drawer`）內渲染審核狀態軌；抽屜重用既有 `.modal-overlay` 覆蓋層與 `LabelSuiteModalFocus` 焦點陷阱，MUST NOT 另立第二套；
 4. 可互動單位再於其後掛 FR-070 之審核說明 Tooltip。
 
@@ -497,6 +505,12 @@ workspace reviewer 視圖 MUST 於審核卡（FR-053）、仲裁版面（FR-061�
 - **WHEN** 檢視橫幅並開啟審核流程抽屜
 - **THEN** 橫幅子元素依序為 `run_type` 徽章、三態 pill、抽屜觸發鈕（可互動單位另有說明 Tooltip），且不存在任何定稿門檻元素
 - **AND** 抽屜內狀態軌恰 3 個 `role="listitem"` 節點，分支標籤為 `審核通過`／`修正或無法裁決`／`仲裁後`
+
+#### Scenario: 橫幅與左欄清單對示範列遞補單位顯示一致狀態（issue #910）
+- **GIVEN** `role = reviewer` 開啟一個受審標記員從未儲存提交、但該樣本存在 FR-044a 遞補列（示範標記員答案）的審核單位
+- **WHEN** 檢視工作區左欄清單該筆項目之狀態標籤與頂部審核單位脈絡橫幅之三態 pill
+- **THEN** 兩者 MUST 皆顯示 `待審`，MUST NOT 出現左欄 `待審`、橫幅 `尚無標記提交` 並存的不一致
+- **AND** 該單位仍無真實標記員提交（`getReviewUnitStatus` 為 null）時，空審核單位閘門（FR-053）之渲染分支不受本條影響——本條只改變狀態文字之顯示，不改變 FR-053 之雙條件判定式
 
 ### Requirement: FR-070 審核決策說明必須與真實效果一致
 
