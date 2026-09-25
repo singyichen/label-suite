@@ -32,4 +32,4 @@
 **故事目標**：SC-001 — 合併前須經未參與實作者複核，確保兩處覆寫真正移除、解析邏輯在來源而非又一層包裝、#946 契約完好。
 
 - [x] 4.1 派未寫過本改動的 senior-code-reviewer 獨立審查：#309、#931 兩處覆寫是否真的移除（有無殘留）、角色解析是否寫在 `sidebar.js` 來源而非又一層包裝、#946 之 XSS 契約是否完好、既有測試是否為位移改寫而非刪除、新增 FR-020／FR-020A 與 specs/annotation/015-annotation-workspace/spec.md 的 FR-080 是否一致、Source-Verify 引用可否逐條 grep 定位。結論原文貼進 issue #944 檢查點留言。[@senior-code-reviewer]
-- [ ] 4.2 開 PR（base main，Closes #944，逐項 Test Plan 證據，紅燈／綠燈證據皆貼），push 前 `git fetch origin main && git rebase origin/main`。[@main]
+- [x] 4.2 開 PR（base main，Closes #944，逐項 Test Plan 證據，紅燈／綠燈證據皆貼），push 前 `git fetch origin main && git rebase origin/main`。PR #979。[@main]
