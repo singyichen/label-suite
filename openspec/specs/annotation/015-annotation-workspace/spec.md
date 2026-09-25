@@ -1,7 +1,7 @@
 # annotation/015-annotation-workspace Specification
 
 ## Purpose
-Annotation List + Workspace（標記清單與標記作業，Annotator／Reviewer）的 derived view。正典為 `specs/annotation/015-annotation-workspace/spec.md`（v6.19.0）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR/AC ID，不改動其正典措辭。目前收錄：change `reviewer-action-hint`（issue #526）之 FR-084、AC-4.47 ~ AC-4.50 與 FR-064 第 7 點第 6 項之範圍註記；change `2026-09-01-single-owner-review-relay`（issue #596）之 FR-092 ~ FR-097（新增）、FR-014B／FR-016A／FR-044／FR-051／FR-053／FR-054／FR-055／FR-060／FR-061／FR-062／FR-063／FR-064／FR-070／FR-083／FR-086（修訂）、FR-014I／FR-069／FR-074／FR-085（移除）；change `seq-tagging-span-workspace`（issue #581）之 FR-024A／FR-024A-1／FR-024A-2／FR-024A-3／FR-052／FR-024L（修訂）；change `reserve-arbiters-from-review-assignment`（issue #868）之 FR-060／FR-073／FR-093／FR-099（修訂）；change `pl-exception-disposal-screen-shell`（issue #907）之 FR-095（修訂，新增最終例外處置畫面外殼段落與 AC-4.69）；change `gate-review-assignment`（issue #921）之 FR-093（修訂，新增工作區側送出指派閘門段落與 AC-4.70、AC-4.71）；以及 change `fix-910-review-unit-status-consistency`（issue #910）之 FR-064（修訂，補齊與 FR-053 同源之 FR-044a 遞補列限定語）與 FR-016B（新增，審核決策事件之 outKey 範圍雙送出去重）；以及 change `fix-908-annotator-finalized-lock`（issue #908）之 FR-101（新增，標記員定稿鎖定，首次以獨立標題收錄）與 FR-072（首次以獨立標題收錄，修訂第 3 點加入「未定稿單位」限定語）。
+Annotation List + Workspace（標記清單與標記作業，Annotator／Reviewer）的 derived view。正典為 `specs/annotation/015-annotation-workspace/spec.md`（v6.23.0）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR/AC ID，不改動其正典措辭。目前收錄：change `reviewer-action-hint`（issue #526）之 FR-084、AC-4.47 ~ AC-4.50 與 FR-064 第 7 點第 6 項之範圍註記；change `2026-09-01-single-owner-review-relay`（issue #596）之 FR-092 ~ FR-097（新增）、FR-014B／FR-016A／FR-044／FR-051／FR-053／FR-054／FR-055／FR-060／FR-061／FR-062／FR-063／FR-064／FR-070／FR-083／FR-086（修訂）、FR-014I／FR-069／FR-074／FR-085（移除）；change `seq-tagging-span-workspace`（issue #581）之 FR-024A／FR-024A-1／FR-024A-2／FR-024A-3／FR-052／FR-024L（修訂）；change `reserve-arbiters-from-review-assignment`（issue #868）之 FR-060／FR-073／FR-093／FR-099（修訂）；change `pl-exception-disposal-screen-shell`（issue #907）之 FR-095（修訂，新增最終例外處置畫面外殼段落與 AC-4.69）；change `gate-review-assignment`（issue #921）之 FR-093（修訂，新增工作區側送出指派閘門段落與 AC-4.70、AC-4.71）；以及 change `fix-910-review-unit-status-consistency`（issue #910）之 FR-064（修訂，補齊與 FR-053 同源之 FR-044a 遞補列限定語）與 FR-016B（新增，審核決策事件之 outKey 範圍雙送出去重）；以及 change `fix-908-annotator-finalized-lock`（issue #908）之 FR-101（新增，標記員定稿鎖定，首次以獨立標題收錄）與 FR-072（首次以獨立標題收錄，修訂第 3 點加入「未定稿單位」限定語）；以及 change `separate-review-decision-row`（issue #926／#927／#928）之 FR-014P（首次以獨立標題收錄，第 2/3/4 點修訂為決策列獨立於答案 Bypass 列，新增第 5/6 點視覺權重與鄰近送出，對應新增 AC-3.61 ~ AC-3.63）與 FR-053（修訂，列內決策控件位置措辭同步移除「Bypass 列上」）。
 
 ## Requirements
 
@@ -318,9 +318,39 @@ Reviewer 審查列 MUST 僅呈現**受審標記員本人**的提交，MUST NOT �
 - **AND** 審核員全部 outKey 送出 `通過` 後狀態直接為 `已定稿`，過程中 MUST NOT 出現 `已同意` 或 `已修改`
 - **AND** 另一單位之審核員送出任一 `修正` 或 `無法裁決` 後狀態為 `爭議中`，直到仲裁或例外池收尾才轉為 `已定稿`
 
+### Requirement: FR-014P 審查列版面收斂
+
+審查列外框 MUST 收斂為「單一作答面板 ＋ 單一決策列」：
+
+1. MUST NOT 渲染型別標題（`.content-card-title`）。
+2. 該 outKey 的決策按鈕（`ws-review-row-approve` / `ws-review-row-modify` / `ws-review-row-bypass`）MUST 掛載於作答面板（含其 Bypass 列）之後、獨立於答案值 Bypass 列的專屬決策列（`.rv-decision-row`），MUST NOT 與答案值「無法判定 (Bypass)」chip 共處同一容器；span 合併列（FR-014N）於同一 `.rv-decision-row` 並列兩組按鈕，各組前置型別標籤（`ws-review-section-label`）以資區辨。
+3. `.rv-decision-row` MUST 為作答面板的同層 sibling，MUST NOT 掛載於共用引擎重繪的容器內。
+4. `.rv-decision-row` 的渲染 MUST NOT 依賴任務是否設定 `allow_bypass: false`，一律獨立渲染。
+5. `.rv-decision-row` 內的決策按鈕，其可視面積 MUST NOT 小於同卡答案值 chip（含 Bypass chip）的可視面積，觸控目標 MUST ≥ 44px（WCAG 2.5.5）。
+6. 該審核單位所有 outKey 皆已完成決策時，決策列附近 MUST 呈現一個可操作的送出控制（`ws-review-quick-submit-btn`），其文案 MUST 沿用既有 `reviewSubmitLabel`、點擊行為 MUST 呼叫既有 `handleReviewSubmit()`；既有 `ws-review-submit-btn` 之既有位置與右對齊契約不受影響。
+
+#### Scenario: AC-3.61 決策列與答案 Bypass 列分屬獨立容器
+- **GIVEN** reviewer 開啟一個 `allow_bypass` 未關閉的審核單位
+- **WHEN** 檢視該 outKey 的審查列
+- **THEN** 答案值「無法判定 (Bypass)」chip（`.preview-bypass-row` 內）與決策按鈕（`.rv-decision-row` 內）分屬兩個不同的 DOM 容器
+- **AND** `.preview-bypass-row` 之直接子元素 MUST NOT 包含 `.rv-choice-group` 或 `.rv-merged-decision`
+
+#### Scenario: AC-3.62 決策按鈕視覺權重與觸控目標
+- **GIVEN** reviewer 開啟任一審核單位的審查列
+- **WHEN** 量測決策按鈕（`ws-review-row-approve`/`-modify`/`-bypass`）與同卡答案值 chip 的實際 boundingBox
+- **THEN** 決策按鈕之高度 MUST ≥ 44px
+- **AND** 決策按鈕群組（`.rv-choice-group`）之總可視面積 MUST NOT 小於同卡任一答案值 chip 之可視面積
+
+#### Scenario: AC-3.63 決策完成後鄰近呈現送出控制
+- **GIVEN** reviewer 已為某審核單位所有 outKey 完成決策（無 `pendingReviewOutputKeys`）
+- **WHEN** 檢視決策列
+- **THEN** 決策列附近 MUST 出現一個可點擊的送出控制，其與決策列的垂直距離 MUST 顯著小於既有 `ws-review-submit-btn`（`.action-bar` 內）與決策列的距離
+- **AND** 點擊該控制之行為 MUST 與點擊 `ws-review-submit-btn` 一致（呼叫同一 `handleReviewSubmit()`）
+- **AND** 尚有 outKey 未完成決策時，該控制 MUST NOT 呈現
+
 ### Requirement: FR-053 審核卡版面、空單位閘門與定稿卡
 
-工作區 reviewer 審核卡 MUST 對兩種 `run_type` 渲染**同一套版面**，MUST NOT 存在任何依 `run_type` 分流的呈現分支。版面契約：每個 outKey 一列（span 型別依 FR-014N 合併為一列），列內僅有作答/修正控件與其上的一組 `REVIEW_DECISIONS` 三向決策控件（FR-092），無型別標題（FR-014P）；seed 來源為受審標記員本人答案（FR-044、FR-044a）；送出驗證為「每個 outKey 一筆決策」（FR-044）。
+工作區 reviewer 審核卡 MUST 對兩種 `run_type` 渲染**同一套版面**，MUST NOT 存在任何依 `run_type` 分流的呈現分支。版面契約：每個 outKey 一列（span 型別依 FR-014N 合併為一列），列內僅有作答/修正控件與**其後方獨立決策列（`.rv-decision-row`，見 FR-014P）上的一組** `REVIEW_DECISIONS` 三向決策控件（FR-092），無型別標題（FR-014P）；seed 來源為受審標記員本人答案（FR-044、FR-044a）；送出驗證為「每個 outKey 一筆決策」（FR-044）。
 
 **空審核單位閘門**：審核單位「真空」——受審標記員無儲存提交（FR-051 推導為 null）**且**該樣本無 `REVIEWER_MOCK_ROWS` 遞補列——時，本條版面 MUST NOT 渲染決策控件、修正控件與送出按鈕，改渲染空狀態卡（`ws-review-empty-unit`）並保持送出按鈕隱藏（FR-058 快捷鍵同步失效）；「真空」判定 MUST 與 FR-064 橫幅顯示 `尚無標記提交` 的判定同源。
 
