@@ -14,7 +14,7 @@
  * midpoint, so a full-width or centred button cannot pass by accident.
  */
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { buildWorkspaceUrl, dismissGuidelineModal, skipGuidelineModal } from './_workspace-helpers';
+import { buildWorkspaceUrl, dismissGuidelineModal, gotoReviewerWorkspace, skipGuidelineModal } from './_workspace-helpers';
 
 /* Widest gap the right padding of either container may leave between the
    button and the container edge (action-bar uses --space-lg = 24px). */
@@ -37,9 +37,7 @@ test.beforeEach(async ({ page }) => {
 
 test.describe('Submit buttons are right-aligned (issue #563)', () => {
   test('reviewer：送出審核靠底部操作列右側', async ({ page }) => {
-    await page.goto(buildWorkspaceUrl({
-      task_id: 'T001', sample_id: 'sent-001', role: 'reviewer', run_type: 'official_run',
-    }));
+    await gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001', run_type: 'official_run' });
     await dismissGuidelineModal(page);
 
     /* Anchor: this is the reviewer layout -- the autosave status is gone. */

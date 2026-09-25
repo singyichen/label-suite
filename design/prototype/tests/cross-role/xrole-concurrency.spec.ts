@@ -85,6 +85,18 @@ function reviewerUrl(reviewerId: string): string {
   });
 }
 
+/* issue #960: FLAGGED, NOT FIXED -- the same genuine FR-093 conflict already
+ * flagged in annotation-workspace-review-identity.spec.ts ('two reviewers on
+ * the same annotator keep independent submission buckets'). This test opens
+ * ONE unit (T001/sent-001/official_run) as TWO DIFFERENT reviewer identities
+ * (REVIEWER_A, REVIEWER_B) and interacts with both -- but FR-093 gives a
+ * unit exactly one assignee, so at most one of REVIEWER_A/REVIEWER_B can
+ * ever be interactive once #921 lands; the other would see the NOT_ASSIGNED
+ * read-only replacement instead of the ws-review-row-approve button this
+ * test clicks. No reviewer_id choice satisfies both "two reviewers, one
+ * unit" and "one assignee per unit" at once. Left unchanged (still passes
+ * on today's main) for the same maintainer decision already requested for
+ * the other flagged file, rather than guessing at a resolution here. */
 test('an unsent decision stays private to its reviewer; a submitted one appears to the other after reload (CONC-01)', async ({ page, context }) => {
   const r1 = page;
   await skipGuidelineModal(r1);

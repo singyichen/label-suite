@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
+import { buildWorkspaceUrl, gotoReviewerWorkspace, skipGuidelineModal } from './_workspace-helpers';
 
 /* Review unit data model (spec 015 v3.9.0, issue #146 P2a).
  *
@@ -399,15 +399,7 @@ test.describe('review unit: double submit stays a single terminal unit (DUP-02)'
       identity: { annotatorId: ANNOTATOR },
     });
 
-    await page.goto(
-      buildWorkspaceUrl({
-        task_id: TASK,
-        sample_id: SAMPLE,
-        role: 'reviewer',
-        run_type: 'official_run',
-        reviewer_id: REVIEWER_A,
-      })
-    );
+    const reviewerId = await gotoReviewerWorkspace(page, { task_id: TASK, sample_id: SAMPLE, run_type: 'official_run' });
     await page.getByTestId('ws-review-row-approve').click();
     const submitBtn = page.getByTestId('ws-review-submit-btn');
     await submitBtn.click();
@@ -449,6 +441,6 @@ test.describe('review unit: double submit stays a single terminal unit (DUP-02)'
         .filter((e) => e.role === 'reviewer' && ['accepted', 'modified', 'bypassed'].includes(e.action));
     });
     expect(reviewerDecisionEvents).toHaveLength(1);
-    expect(reviewerDecisionEvents[0].actorId).toBe(REVIEWER_A);
+    expect(reviewerDecisionEvents[0].actorId).toBe(reviewerId);
   });
 });
