@@ -1,5 +1,5 @@
-import { test, expect } from '@playwright/test';
-import { buildWorkspaceUrl, dismissGuidelineModal, skipGuidelineModal } from './_workspace-helpers';
+import { test, expect, type Page } from '@playwright/test';
+import { dismissGuidelineModal, gotoReviewerWorkspace, skipGuidelineModal } from './_workspace-helpers';
 
 /* Review decision button accessibility (issue #399).
  *
@@ -25,12 +25,9 @@ import { buildWorkspaceUrl, dismissGuidelineModal, skipGuidelineModal } from './
  * this spec once covered is gone); WCAG 2.1 SC 4.1.2.
  */
 
-const REVIEWER_URL = buildWorkspaceUrl({
-  task_id: 'T015',
-  sample_id: 'ofs-04-pending-review',
-  role: 'reviewer',
-  run_type: 'official_run',
-});
+function gotoReviewer(page: Page) {
+  return gotoReviewerWorkspace(page, { task_id: 'T015', sample_id: 'ofs-04-pending-review', run_type: 'official_run' });
+}
 
 test.beforeEach(async ({ page }) => {
   await skipGuidelineModal(page);
@@ -45,7 +42,7 @@ test.describe('Review decision buttons have accessible names and the review note
 
   for (const [decision, label] of DECISION_LABELS) {
     test(`the ${decision} button has a real accessible name, not just its icon glyph`, async ({ page }) => {
-      await page.goto(REVIEWER_URL);
+      await gotoReviewer(page);
       await dismissGuidelineModal(page);
 
       await expect(page.getByTestId('ws-review-row-' + decision)).toBeVisible();
@@ -57,7 +54,7 @@ test.describe('Review decision buttons have accessible names and the review note
   }
 
   test('the retired 退回 button is gone entirely (issue #596 FR-014B)', async ({ page }) => {
-    await page.goto(REVIEWER_URL);
+    await gotoReviewer(page);
     await dismissGuidelineModal(page);
 
     await expect(page.getByTestId('ws-review-row-reject')).toHaveCount(0);
@@ -65,7 +62,7 @@ test.describe('Review decision buttons have accessible names and the review note
   });
 
   test('reviewNote text is actually rendered on screen near the decision buttons', async ({ page }) => {
-    await page.goto(REVIEWER_URL);
+    await gotoReviewer(page);
     await dismissGuidelineModal(page);
 
     // The defined-but-never-consumed reviewNote string must now appear as

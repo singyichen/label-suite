@@ -1,5 +1,5 @@
-import { test, expect } from '@playwright/test';
-import { buildWorkspaceUrl, dismissGuidelineModal, skipGuidelineModal } from './_workspace-helpers';
+import { test, expect, type Page } from '@playwright/test';
+import { dismissGuidelineModal, gotoReviewerWorkspace, skipGuidelineModal } from './_workspace-helpers';
 
 /* Reviewer decision / direct-correction desync after reload (issue #398).
  *
@@ -28,12 +28,9 @@ import { buildWorkspaceUrl, dismissGuidelineModal, skipGuidelineModal } from './
  *   FR-014S, AC-6.10.
  */
 
-const REVIEWER_URL = buildWorkspaceUrl({
-  task_id: 'T001',
-  sample_id: 'sent-001',
-  role: 'reviewer',
-  run_type: 'official_run',
-});
+function gotoReviewer(page: Page) {
+  return gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001', run_type: 'official_run' });
+}
 
 test.beforeEach(async ({ page }) => {
   await skipGuidelineModal(page);
@@ -41,7 +38,7 @@ test.beforeEach(async ({ page }) => {
 
 test.describe('A decision kept alongside a lost correction is reset, not silently kept (issue #398)', () => {
   test('reload after editing the correction resets the previously-kept decision and warns the reviewer', async ({ page }) => {
-    await page.goto(REVIEWER_URL);
+    await gotoReviewer(page);
     await dismissGuidelineModal(page);
 
     const correction = page.getByTestId('ws-review-correct-single_label');
