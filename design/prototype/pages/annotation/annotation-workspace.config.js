@@ -6037,28 +6037,6 @@
     setText('wsReviewFlowDrawerTitle', t('flowDrawerTitle'));
     var flowCloseBtn = document.getElementById('wsReviewFlowDrawerClose');
     if (flowCloseBtn) flowCloseBtn.setAttribute('aria-label', t('flowDrawerCloseAria'));
-    /* issue #309: the shared sidebar mounts with its 一般使用者 default;
-       reviewers must read as 審核員 (same role noun the history trail uses).
-       Annotator view keeps the shared default untouched. Runs at boot and on
-       every language toggle, so it survives both. */
-    var roleIndicatorEl = document.getElementById('roleIndicator');
-    if (currentRole === 'reviewer' && roleIndicatorEl) {
-      roleIndicatorEl.textContent = t('wsHistoryRoleReviewer');
-    } else if (currentRole === 'project_leader' && roleIndicatorEl) {
-      roleIndicatorEl.textContent = t('wsHistoryRoleProjectLeader');
-    }
-    /* issue #931: the shared sidebar's annotation nav item mounts with its
-       static 標記作業 default, but the breadcrumb's first crumb already
-       reads 審核作業 for reviewers (crumbWorkAreaReviewer, used above). Reuse
-       that same value here instead of a new string so the sidebar and
-       breadcrumb never disagree on the work-area name. Annotator and
-       project_leader views keep the shared default untouched, since the
-       breadcrumb's own fallback matches it for those roles. Runs at boot and
-       on every language toggle, mirroring the #309 role-indicator block. */
-    var navAnnotationEl = document.getElementById('navAnnotation');
-    if (currentRole === 'reviewer' && navAnnotationEl) {
-      navAnnotationEl.textContent = t('crumbWorkAreaReviewer');
-    }
     var taskName = currentProfile ? (state.lang === 'zh' ? currentProfile.nameZh : currentProfile.nameEn) : '';
     setText('guidelineSummaryText', taskName);
     setText('wsMobileGuidelineSummaryText', taskName);

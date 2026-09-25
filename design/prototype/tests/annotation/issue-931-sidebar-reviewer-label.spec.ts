@@ -10,17 +10,16 @@ import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
  * renders the crumb (annotation-workspace.config.js:1431) — so in reviewer
  * mode it correctly reads 審核作業.
  *
- * The shared sidebar's "annotation" nav item, however, is built from a
- * static `navItems` entry whose `defaultLabel` is hard-coded to '標記作業'
- * (design/prototype/pages/shared/sidebar.js:471) and never branches on
- * role. The workspace page mounts the sidebar without overriding that
- * label (annotation-workspace.html:1069, `activeNav: 'annotation'`, no
- * label override passed), so `#navAnnotation` keeps reading 標記作業 even
- * when the breadcrumb right next to it reads 審核作業.
+ * The shared sidebar's "annotation" nav item resolves its `navItems` entry's
+ * `defaultLabel` from the `opts.taskRole` option passed into
+ * `mountSidebar()` (design/prototype/pages/shared/sidebar.js, FR-020,
+ * specs/shared/008-sidebar-navbar-shared/spec.md), which the workspace page
+ * derives from the URL's `role` query param before mounting
+ * (annotation-workspace.html, `taskRole: urlTaskRole`), so `#navAnnotation`
+ * reads 審核作業 in reviewer mode, matching the breadcrumb next to it.
  *
- * The reviewer-mode assertions below must fail until the sidebar's
- * annotation label also branches on role; the annotator-mode assertions
- * pin the existing, already-correct behavior as a regression guard.
+ * These assertions now pin that source-of-truth resolution as a regression
+ * guard for both roles (reviewer and annotator).
  *
  * Each mode lives in its own `test.describe` (each with its own
  * `retries: 2` guard against the shared static server's occasional
