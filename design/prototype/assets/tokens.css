@@ -10,8 +10,8 @@
   /* ── Core Palette ─────────────────────────────────────────── */
   --color-primary:          #6366F1;   /* Indigo 500 */
   --color-secondary:        #818CF8;   /* Indigo 400 */
-  --color-cta:              #10B981;   /* Emerald 500 */
-  --color-cta-hover:        #059669;   /* Emerald 600 */
+  --color-cta:              #047857;   /* Emerald 700 — WCAG AA fix (issue #973), was #10B981 (2.54:1 white text) */
+  --color-cta-hover:        #065F46;   /* Emerald 800 — WCAG AA fix (issue #973), kept darker than --color-cta */
   --color-surface:          #F5F3FF;   /* Violet 50 — page bg */
   --color-white:            #FFFFFF;
   --color-ink:              #1E1B4B;   /* Indigo 950 — body text */
@@ -21,12 +21,12 @@
   /* ── Supporting ───────────────────────────────────────────── */
   --color-border:           #E2E8F0;   /* slate-200 */
   --color-border-muted:     #F1F5F9;   /* slate-100 */
-  --color-text-muted:       #94A3B8;   /* slate-400 — deprecated alias, use --color-ink-muted */
+  --color-text-muted:       #64748B;   /* slate-500 — WCAG AA fix (issue #973), was #94A3B8 (2.56:1); deprecated alias, use --color-ink-muted */
   --color-text-soft:        #64748B;   /* slate-500 */
   --color-slate-50:         #F8FAFC;
 
   /* Canonical muted-text token (MASTER.md v1.7.1) */
-  --color-ink-muted:        #94A3B8;   /* slate-400 — canonical; --color-text-muted is the legacy alias */
+  --color-ink-muted:        #64748B;   /* slate-500 — WCAG AA fix (issue #973), was #94A3B8 (2.56:1); canonical, --color-text-muted is the legacy alias. Now equals --color-text-soft's value — the palette's next compliant step coincides with that token. */
 
   /* ── Semantic State Colors ────────────────────────────────── */
   --color-error:            #B91C1C;

@@ -38,7 +38,7 @@
 |------|-----|--------------|----------------|
 | Primary | `#6366F1` | `--color-primary` | `primary` |
 | Secondary | `#818CF8` | `--color-secondary` | `secondary` |
-| CTA/Accent | `#10B981` | `--color-cta` | `cta` |
+| CTA/Accent | `#047857` | `--color-cta` | `cta` |
 | Surface (Background) | `#F5F3FF` | `--color-surface` | `surface` |
 | Ink (Text) | `#1E1B4B` | `--color-ink` | `ink` |
 
@@ -52,23 +52,23 @@ The latest `design-system.pen` defines the following variable set. Keep these na
 |------|----------|-------|
 | Core | `color-primary` | `#6366F1` |
 | Core | `color-secondary` | `#818CF8` |
-| Core | `color-cta` | `#10B981` |
+| Core | `color-cta` | `#047857` |
 | Core | `color-surface` | `#F5F3FF` |
 | Core | `color-ink` | `#1E1B4B` |
 | Supporting | `color-border` | `#E2E8F0` |
-| Supporting | `color-ink-muted` | `#94A3B8` |
+| Supporting | `color-ink-muted` | `#64748B` |
 | Supporting | `color-white` | `#FFFFFF` |
 | State | `color-error` / `color-error-bg` / `color-error-border` | `#B91C1C` / `#FEF2F2` / `#FECACA` |
 | State | `color-success` / `color-success-bg` / `color-success-border` | `#15803D` / `#F0FDF4` / `#BBF7D0` |
 | State | `color-warning` / `color-warning-bg` / `color-warning-border` | `#A16207` / `#FEFCE8` / `#FEF08A` |
 | State | `color-info` / `color-info-bg` / `color-info-border` | `#1D4ED8` / `#EFF6FF` / `#BFDBFE` |
-| Extended | `color-cta-hover` | `#059669` |
+| Extended | `color-cta-hover` | `#065F46` |
 | Extended | `color-primary-soft-bg` | `#EEF2FF` |
 | Extended | `color-primary-border` | `#C7D2FE` |
 | Extended | `color-border-muted` | `#F1F5F9` |
 | Extended | `color-text-soft` | `#64748B` |
 | Extended | `color-slate-50` | `#F8FAFC` |
-| Alias (deprecated) | `color-text-muted` | `#94A3B8` (= `color-ink-muted` — deprecated, use `color-ink-muted` instead) |
+| Alias (deprecated) | `color-text-muted` | `#64748B` (= `color-ink-muted` — deprecated, use `color-ink-muted` instead) |
 | Alias | `color-error-soft-bg` / `color-error-soft-border` | `#FEF2F2` / `#FECACA` (= error bg/border) |
 | Alias | `color-success-soft-bg` / `color-success-soft-border` | `#F0FDF4` / `#BBF7D0` |
 | Alias | `color-warning-soft-bg` / `color-warning-soft-border` | `#FEFCE8` / `#FEF08A` |
@@ -91,7 +91,7 @@ Direct read from `design-system.pen` reusable components:
 colors: {
   primary:   '#6366F1',
   secondary: '#818CF8',
-  cta:       '#10B981',
+  cta:       '#047857',
   surface:   '#F5F3FF',
   ink:       '#1E1B4B',
 }
@@ -168,7 +168,7 @@ Activated via `<html data-theme="dark">`. All tokens in `design/prototype/assets
 | ------ | ------- | ------ | -------------- |
 | Primary | `#6366F1` | `#818CF8` (indigo-400) | `--color-primary` |
 | Secondary | `#818CF8` | `#A5B4FC` (indigo-300) | `--color-secondary` |
-| CTA/Accent | `#10B981` | `#34D399` (emerald-400) | `--color-cta` |
+| CTA/Accent | `#047857` | `#34D399` (emerald-400) | `--color-cta` |
 | Surface (page bg) | `#F5F3FF` | `#0B0B12` (near-black) | `--color-surface` |
 | Card / sidebar bg | `#FFFFFF` | `#16161F` | `--color-white` |
 | Ink (primary text) | `#1E1B4B` | `#E2E8F0` (slate-200) | `--color-ink` |
@@ -176,7 +176,7 @@ Activated via `<html data-theme="dark">`. All tokens in `design/prototype/assets
 | Primary border | `#C7D2FE` | `#3730A3` (indigo-800) | `--color-primary-border` |
 | Border | `#E2E8F0` | `#2A2A35` | `--color-border` |
 | Border muted | `#F1F5F9` | `#1F1F28` | `--color-border-muted` |
-| Text muted | `#94A3B8` | `#9CA3AF` (raised for WCAG AA) | `--color-ink-muted` |
+| Text muted | `#64748B` | `#9CA3AF` (raised for WCAG AA) | `--color-ink-muted` |
 | Text soft | `#64748B` | `#A1A1AA` (zinc-400) | `--color-text-soft` |
 | Hover bg (slate-50) | `#F8FAFC` | `#1F1F28` | `--color-slate-50` |
 | Nav active pill | `--color-surface` | `#2A2A35` (lighter than card bg) | `--nav-active-bg` |
@@ -1164,12 +1164,14 @@ Left fixed navigation used in Pattern C (Profile and other multi-section pages).
 
 | Part | Key values (shipped, `sidebar.css`) |
 |------|-------------------------------------|
-| Count badge | `.notif-badge` — 16px pill, `background: #EF4444`, white 10px/700 text, offset `top: -7px; right: -9px` |
+| Count badge | `.notif-badge` — 16px pill, `background: #B91C1C`, white 10px/700 text, offset `top: -7px; right: -9px` |
 | Dropdown | `.notif-dropdown` — `fixed; left: 248px; bottom: 24px`, 320px wide, `var(--radius-lg)`, `box-shadow: 0 8px 32px rgba(30, 27, 75, 0.14)`, z-index 600 |
 | Unread item | `background: var(--color-primary-soft-bg)`; read items `var(--color-white)` |
 | Item icon | 24px circle with a 12px inline Lucide SVG — check: `var(--color-success-bg)` / `var(--color-success)`, assign: `var(--color-primary-soft-bg)` / `var(--color-primary)` |
 
-> Arbitration record (issue #183, shared-fragment fix PR): the `.notif-badge` `#EF4444`/white pair is **sanctioned as constant across themes** — `--color-error` is a text-tone token that flips *lighter* in dark mode, so white-on-error-token would lose contrast; a count badge needs the same saturated ground in both themes. The fragment's off-scale z-index values (dropdown 600, shortcut-help overlay 700, mobile chrome 300/320) are a **sanctioned shared-fragment exception**: the fragment is injected into all pages and must layer above any host page's own z usage, so it deliberately sits between and above the host-facing bands of the Z-index Scale.
+> Arbitration record (issue #183, shared-fragment fix PR): the `.notif-badge` white-on-constant-red pair is **sanctioned as constant across themes** — `--color-error` is a text-tone token that flips *lighter* in dark mode, so white-on-error-token would lose contrast; a count badge needs the same saturated ground in both themes. The fragment's off-scale z-index values (dropdown 600, shortcut-help overlay 700, mobile chrome 300/320) are a **sanctioned shared-fragment exception**: the fragment is injected into all pages and must layer above any host page's own z usage, so it deliberately sits between and above the host-facing bands of the Z-index Scale.
+>
+> **Update (issue #973, 2026-09-25):** the constant's value was `#EF4444`, measured at 3.76:1 with white text — below WCAG AA. The "constant across themes" architecture from #183 stands; only the constant itself changed, to `#B91C1C` (6.47:1), reusing `--color-error`'s light-mode value rather than introducing a new hex.
 
 **Shortcut-help keycap (shared fragment):**
 
@@ -2531,7 +2533,7 @@ Horizontal path navigation showing the current page's position in the hierarchy.
 }
 
 .breadcrumb-sep {
-  color: var(--color-ink-muted);             /* #94A3B8 */
+  color: var(--color-ink-muted);             /* #64748B */
   font-size: 11px;
 }
 ```
@@ -2847,3 +2849,4 @@ Before delivering any UI code, verify:
 | v1.13 | 2026-08-20 | **Auth page specs (issue #183)** — Dark Rule 9 migration note removed: shipped auth pages now use the canonical local token names, so the template is the shipped state; added `design/system/pages/login.md` (hosts the shared auth-chrome arbitrations: shadow-elevated card vs Login Card, `.lang-toggle`/`.sso-btn` indigo hover vs `btn-language`/`btn-oauth`, auth navbar variant, `.eye-toggle`), `register.md` (`.banner` error/success family, `.field-hint`), `forgot-password.md` (shipped State Panel / Success), `reset-password.md` (shipped State Panel / Token Error, `proto-toggle-bar` deferral) |
 | v1.15 | 2026-08-28 | **Review Status Track re-sync (issue #547)** — canon and the components-showcase.html static copy were behind the shipped `annotation-workspace.html` since issue #525 PR-C; both are brought back in line: at `min_reviewers >= 2` the grid gains two columns (9 total) for `.review-track-branch[data-branch]` captions (`same` / `differing` / `unconverged` / `arbitrated`); added the 7-column `.review-track-single` variant for `min_reviewers = 1`, which has no `approved`/`modified` interim node; done rails thicken `2px` → `3px` and traversed fork strokes `stroke-width: 2` → `3`; the v1.14 "visited vs not-reached is colour-only" known gap is retired — PR-C's `font-weight: 600` on `done` nodes/captions closed it |
 | v1.16 | 2026-09-04 | **Review Status Track single-owner re-sync (issue #626 ①)** — issue #596's single-owner review relay gives every review unit exactly one reviewer (`annotation-015` FR-093), so the quorum-only interim nodes `approved` / `modified` and the `unconverged` rail caption between them became structurally unreachable; canon and the `components-showcase.html` demo card kept describing them. Both are brought back in line with the shipped `annotation-workspace.html` renderer: the `min_reviewers >= 2` 9-column variant and the `.review-track-single` class are removed in favour of one 7-column × 2-row grid with three nodes (`pending` / `disputed` / `finalized`); the branch caption keys drop from four to three (`same` / `differing` / `arbitrated`), and the captions are now stated as the only signal naming which lane a unit walked. The two-lane rationale for not using §Step Indicator is restated against the surviving lanes (same-answer `pending → finalized` vs differing `pending → disputed → finalized`); no token, pill chrome, or accessibility rule changes |
+| v1.17 | 2026-09-25 | **WCAG AA contrast fix (issue #973)** — three light-mode pairs raised to meet 4.5:1: `--color-ink-muted`/`--color-text-muted` `#94A3B8`→`#64748B` (2.56:1→4.76:1, now equal to `--color-text-soft`'s value); `--color-cta` `#10B981`→`#047857` (2.54:1→5.48:1) with `--color-cta-hover` `#059669`→`#065F46` (7.68:1) raised alongside it to keep the hover state darker than the new resting color; `sidebar.css` `.notif-badge` background `#EF4444`→`#B91C1C` (3.76:1→6.47:1, reuses `--color-error`'s light value — see updated arbitration note under Sidebar). Dark-mode counterparts already met AA (`--color-ink-muted` dark `#9CA3AF` ≥7:1; `--color-cta` dark consumers use `var(--color-white)` text, ≥10:1) and were left unchanged. `annotation-workspace.html`'s four 10px functional-badge font-sizes (`.sample-group-count`, `.sample-status-label`, `.rv-source-badge`, `.history-action-badge`) raised to 12px, the design system's own minimum (`--text-label`). Out of scope, flagged for follow-up: the same 10px pattern in `task-config.css`/`role-settings.html`/`dataset-analysis-detail.html`; a dark-mode-only CTA-button regression from literal `color: white` instead of `var(--color-white)` in `task-new.html`/`user-management.html`; the hardcoded `#8B5CF6` icon color in `annotation-workspace.html`'s `.guideline-file-icon.md` (no existing token covers it without colliding with `.img`'s `--color-primary` or inventing one — deferred to maintainer per #935-style token decisions) |
