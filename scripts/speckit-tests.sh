@@ -1288,6 +1288,30 @@ test_check_sdd_ignores_retired_command_text_in_pycache_artifacts() {
     assert_command_succeeds "$repo" --not-rule RETIRED_COMMAND
 }
 
+test_check_sdd_fails_for_retired_speckit_implement() {
+    local repo
+
+    repo="$(make_sdd_repo)"
+    printf '\n/speckit.implement\n' >> "$repo/AGENTS.md"
+    assert_command_fails_with "$repo" 1 "RETIRED_COMMAND" "AGENTS.md"
+}
+
+test_check_sdd_excludes_speckit_implement_self_reference() {
+    local repo
+
+    repo="$(make_sdd_repo)"
+    mkdir -p "$repo/.claude/commands"
+    printf '# /speckit.implement — DEPRECATED\n\nRetired by ADR-033.\n' \
+        > "$repo/.claude/commands/speckit.implement.md"
+    assert_command_succeeds "$repo" --not-rule RETIRED_COMMAND
+
+    repo="$(make_sdd_repo)"
+    mkdir -p "$repo/.claude/commands"
+    printf '# Other Command\n\nRun /speckit.implement to continue.\n' \
+        > "$repo/.claude/commands/other-command.md"
+    assert_command_fails_with "$repo" 1 "RETIRED_COMMAND" ".claude/commands/other-command.md"
+}
+
 test_check_sdd_does_not_match_pnpm() {
     local repo output
     repo="$(make_sdd_repo)"
@@ -3174,6 +3198,8 @@ test_check_sdd_fails_for_wrong_red_owner
 test_check_sdd_fails_for_retired_command
 test_check_sdd_fails_for_retired_command_in_non_sdd_workflow_skill
 test_check_sdd_ignores_retired_command_text_in_pycache_artifacts
+test_check_sdd_fails_for_retired_speckit_implement
+test_check_sdd_excludes_speckit_implement_self_reference
 test_check_sdd_does_not_match_pnpm
 test_check_sdd_accepts_exact_legacy_baseline
 test_check_sdd_fails_for_new_baseline_violation
