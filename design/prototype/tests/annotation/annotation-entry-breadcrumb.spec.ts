@@ -19,7 +19,7 @@
  * allowed on the reviewer path only).
  */
 import { test, expect, type Page } from '@playwright/test';
-import { buildListUrl, buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
+import { buildListUrl, buildReviewerWorkspaceUrl, buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
 
 const DASHBOARD_URL = '/pages/dashboard/dashboard.html';
 
@@ -200,14 +200,10 @@ test.describe('Entry breadcrumb — after a submit (AC-8 fourth path)', () => {
      unit — the state in which the reviewer most needs a way back out. */
   test('breadcrumb survives a submit and still carries the list view state', async ({ page }) => {
     await skipGuidelineModal(page);
-    await page.goto(
-      buildWorkspaceUrl({
-        task_id: 'T001',
-        sample_id: 'sent-001',
-        role: 'reviewer',
-        run_type: 'official_run',
-      }) + '&status=pending&limit=50',
-    );
+    const reviewerUrl = await buildReviewerWorkspaceUrl(page, {
+      task_id: 'T001', sample_id: 'sent-001', run_type: 'official_run',
+    });
+    await page.goto(reviewerUrl + '&status=pending&limit=50');
     await page.getByTestId('ws-review-row-approve').click();
     await page.getByTestId('ws-review-submit-btn').click();
     await expect(page.locator('#toastMsg')).toHaveText('審核已送出');

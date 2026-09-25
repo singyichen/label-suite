@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
+import { buildWorkspaceUrl, gotoReviewerWorkspace, skipGuidelineModal } from './_workspace-helpers';
 
 /* Empty review unit gate (issue #307, spec 015 FR-053 gate sentence).
  *
@@ -19,11 +19,25 @@ import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
  * load gets the full card and can finalize the unit.
  */
 
-function reviewerUrl(sampleId: string): string {
-  return buildWorkspaceUrl({
+/* issue #960: resolves the FR-093 assignee instead of a hardcoded
+ * 'reviewer_chen' -- used for every T015 sample that actually has a
+ * submission or a REVIEWER_MOCK_ROWS entry to derive an assignment from. */
+function gotoReviewerUnit(page: Page, sampleId: string) {
+  return gotoReviewerWorkspace(page, { task_id: 'T015', sample_id: sampleId, run_type: 'official_run' });
+}
+
+/* issue #960: 'ofs-05-not-submitted' BEFORE the annotator submits (this
+ * test's whole point) is a TRULY empty unit -- no submission, no mock-row
+ * fallback -- so listReviewUnits() contributes no entry for it and there is
+ * nothing to resolve (same reasoning as issue-525-review-flow-drawer.spec.ts's
+ * openEmptyUnit()). reviewUnitBlockReason() checks EMPTY before the #921
+ * NOT_ASSIGNED gate, so any roster id behaves identically here. Kept as a
+ * raw hardcoded URL rather than the resolved helper for that reason. */
+function gotoEmptyUnit(page: Page, sampleId: string) {
+  return page.goto(buildWorkspaceUrl({
     task_id: 'T015', sample_id: sampleId, role: 'reviewer',
     run_type: 'official_run', reviewer_id: 'reviewer_chen',
-  });
+  }));
 }
 
 async function expectFullReviewCard(page: Page) {
@@ -38,7 +52,7 @@ async function expectFullReviewCard(page: Page) {
 test.describe('issue #307 -- truly empty review unit renders no review controls', () => {
   test('T015 ofs-05: empty state instead of decision/correction/submit controls', async ({ page }) => {
     await skipGuidelineModal(page);
-    await page.goto(reviewerUrl('ofs-05-not-submitted'));
+    await gotoEmptyUnit(page, 'ofs-05-not-submitted');
 
     // Banner still frames the unit (FR-064) ...
     await expect(page.locator('[data-testid="ws-review-unit-context"] .rv-unit-state'))
@@ -62,15 +76,13 @@ test.describe('issue #307 -- truly empty review unit renders no review controls'
        it as the read-only locked card -- a different (correct) suppression
        than the empty gate under test here. */
     await skipGuidelineModal(page);
-    await page.goto(reviewerUrl('ofs-04-pending-review'));
+    await gotoReviewerUnit(page, 'ofs-04-pending-review');
     await expectFullReviewCard(page);
   });
 
   test('mock-row fallback tasks (FR-044a) keep the full review card', async ({ page }) => {
     await skipGuidelineModal(page);
-    await page.goto(buildWorkspaceUrl({
-      task_id: 'T001', sample_id: 'sent-001', role: 'reviewer', run_type: 'official_run',
-    }));
+    await gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001', run_type: 'official_run' });
     await expect(page.getByTestId('ws-review-row-approve')).toHaveCount(1);
     await expect(page.getByTestId('ws-review-submit-btn')).toBeVisible();
     await expect(page.getByTestId('ws-review-empty-unit')).toHaveCount(0);
@@ -97,7 +109,7 @@ test.describe('issue #307 -- truly empty review unit renders no review controls'
     ).toHaveText('已提交');
 
     // Reviewer reload: the gate releases and the unit derives 待審.
-    await page.goto(reviewerUrl('ofs-05-not-submitted'));
+    await gotoReviewerUnit(page, 'ofs-05-not-submitted');
     await expect(page.getByTestId('ws-review-empty-unit')).toHaveCount(0);
     await expectFullReviewCard(page);
     await expect(page.locator('[data-testid="ws-review-unit-context"] .rv-unit-state'))
