@@ -1065,9 +1065,17 @@
 <script src="../shared/modal-focus.js"></script>
 <script>
   var annotationListHref = '../annotation/annotation-list.html' + window.location.search;
+  /* issue #944: mirrors boot()'s role normalization in
+     annotation-workspace.config.js, read synchronously here because this
+     inline script runs before that file loads (script tag order below). */
+  var urlTaskRole = (function () {
+    var role = new URLSearchParams(window.location.search).get('role');
+    return role === 'reviewer' ? 'reviewer' : role === 'project_leader' ? 'project_leader' : 'annotator';
+  })();
   window.LabelSuiteSharedSidebar.mountSidebar({
     mountId: 'sharedSidebarMount',
     activeNav: 'annotation',
+    taskRole: urlTaskRole,
     annotationHref: annotationListHref,
     dashboardHref: '../dashboard/dashboard.html',
     taskHref: '../task-management/task-list.html',

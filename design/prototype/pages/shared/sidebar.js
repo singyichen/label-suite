@@ -361,6 +361,15 @@
     en: { users: 'User Management', roles: 'Role Settings' }
   };
 
+  /* issue #944: FR-020 / FR-020A -- resolves navAnnotation / roleIndicator
+     from opts.taskRole at mount time, converging the reviewer-mode
+     overrides that annotation-workspace.config.js previously patched in
+     post-mount (issue #309, issue #931). */
+  var taskRoleI18n = {
+    zh: { reviewer: '審核員', project_leader: '專案負責人', annotationLabel: '審核作業' },
+    en: { reviewer: 'Reviewer', project_leader: 'Project leader', annotationLabel: 'Review' }
+  };
+
   function getRoleSettingsHref(adminHref) {
     if (!adminHref || adminHref.indexOf(ADMIN_USER_MANAGEMENT_FILE) === -1) return adminHref;
     return adminHref.replace(ADMIN_USER_MANAGEMENT_FILE, ADMIN_ROLE_SETTINGS_FILE);
@@ -473,7 +482,13 @@
     var roleSettingsHref = getRoleSettingsHref(adminHref);
     var brandHref = opts.brandHref || dashboardHref;
     var userName = resolveUserName(opts);
-    var roleIndicator = opts.roleIndicator || '一般使用者';
+    var taskRole = opts.taskRole || null;
+    var taskRoleLabels = taskRoleI18n[readStoredLang()];
+    var roleIndicator = opts.roleIndicator || (
+      taskRole === 'reviewer' ? taskRoleLabels.reviewer :
+      taskRole === 'project_leader' ? taskRoleLabels.project_leader :
+      '一般使用者'
+    );
 
     var navItems = [
       {
@@ -494,7 +509,7 @@
         key: 'annotation',
         href: annotationHref,
         labelId: 'navAnnotation',
-        defaultLabel: '標記作業',
+        defaultLabel: taskRole === 'reviewer' ? taskRoleLabels.annotationLabel : '標記作業',
         icon: '<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>'
       },
       {
