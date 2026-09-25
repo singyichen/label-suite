@@ -2,6 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 import {
   buildWorkspaceUrl,
   dismissGuidelineModal,
+  gotoReviewerWorkspace,
   patchDataFile,
   skipGuidelineModal,
 } from './_workspace-helpers';
@@ -185,7 +186,7 @@ test.describe('Autosave indicator honesty (issue #470)', () => {
     await page.getByTestId('ws-single-label-chip-positive').click();
     await page.getByTestId('ws-submit-btn').click();
 
-    await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer' }));
+    await gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001' });
     await dismissGuidelineModal(page);
 
     const status = autosaveStatus(page);

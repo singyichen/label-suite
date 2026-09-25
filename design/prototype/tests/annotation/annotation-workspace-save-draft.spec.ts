@@ -3,6 +3,7 @@ import {
   buildListUrl,
   buildWorkspaceUrl,
   dismissGuidelineModal,
+  gotoReviewerWorkspace,
   patchDataFile,
   skipGuidelineModal,
 } from './_workspace-helpers';
@@ -56,7 +57,7 @@ test.describe('Annotator draft save (AC-2.3)', () => {
   });
 
   test('the save button is not offered in reviewer mode', async ({ page }) => {
-    await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer' }));
+    await gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001' });
     await dismissGuidelineModal(page);
 
     await expect(page.getByTestId('ws-save-btn')).toBeHidden();
