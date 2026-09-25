@@ -54,6 +54,24 @@ import { buildWorkspaceUrl, dismissGuidelineModal, skipGuidelineModal, trackPage
  * behaviour from the silent-drop bug, not a weaker stand-in for it.
  */
 
+/* issue #960: FLAGGED, NOT FIXED -- a genuine structural conflict with
+ * FR-093, not a fixture bug (see the loop below).
+ *
+ * Each loop iteration below opens `T001/sent-001` under a freshly-invented,
+ * never-submitted `annotator_id` (`issue-804-drift-guard-${i}`) specifically
+ * so issue #308's finalized-unit lock cannot block a later iteration. That
+ * technique reads a review card only via demoAnnotatorRow()'s UI fallback
+ * (annotation-workspace.config.js) -- the synthetic id is never a row
+ * getReviewUnitRows() returns (no REVIEWER_MOCK_ROWS entry, no real
+ * submission), so it is NEVER a member of buildUnits()'s enumeration either.
+ * Once #921's gate lands, isCurrentUnitAssigned() checks membership in
+ * exactly that enumeration -- a unit that was never enumerated can never be
+ * "assigned" to any reviewer_id, default or resolved. Unlike every other
+ * file in this issue, no choice of reviewer_id fixes this: the gate blocks
+ * every iteration unconditionally. Left unresolved for a maintainer
+ * decision (e.g. seed a real per-iteration annotator submission first,
+ * or accept this file needs its whole isolation technique redesigned once
+ * #921 lands) rather than guessing at a resolution here. */
 const REVIEWER = 'reviewer_wang'; // DEFAULT_REVIEWER_ID, annotation-workspace.data.js:221
 
 test.beforeEach(async ({ page }) => {
