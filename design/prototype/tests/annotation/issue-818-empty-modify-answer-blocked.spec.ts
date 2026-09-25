@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { buildWorkspaceUrl, dismissGuidelineModal, skipGuidelineModal } from './_workspace-helpers';
+import { buildWorkspaceUrl, dismissGuidelineModal, gotoReviewerWorkspace, skipGuidelineModal } from './_workspace-helpers';
 
 /* issue #818 (FR-083, spec 015): submit validation gains a third per-outKey
  * blocker -- decision `modify` (修正) with a non-empty reason but an EMPTY
@@ -30,25 +30,29 @@ type WorkspaceData = {
 
 const TASK = 'T001';
 const SAMPLE = 'sent-001';
-const REVIEWER_IDENTITY: Identity = { annotatorId: 'kioleemg12', reviewerId: 'reviewer_wang' };
 
-async function readReviewerSubmission(page: Page) {
+async function readReviewerSubmission(page: Page, reviewerId: string) {
+  const identity: Identity = { annotatorId: 'kioleemg12', reviewerId };
   return page.evaluate(
     ([t, s, id]) =>
       (window as unknown as { LabelSuiteAnnotationWorkspaceData: WorkspaceData }).LabelSuiteAnnotationWorkspaceData
         .getSubmission(t, 'reviewer', 'official_run', s, id as Identity),
-    [TASK, SAMPLE, REVIEWER_IDENTITY] as const
+    [TASK, SAMPLE, identity] as const
   );
 }
 
-async function openReviewerWithAnnotatorAnswer(page: Page) {
+/* issue #960: returns the resolved reviewer_id so callers can read back the
+ * submission under the SAME identity it was actually written to, instead of
+ * a hardcoded roster literal. */
+async function openReviewerWithAnnotatorAnswer(page: Page): Promise<string> {
   await page.goto(buildWorkspaceUrl({ task_id: TASK, sample_id: SAMPLE, role: 'annotator' }));
   await dismissGuidelineModal(page);
   await page.getByTestId('ws-single-label-chip-negative').click();
   await page.getByTestId('ws-submit-btn').click();
 
-  await page.goto(buildWorkspaceUrl({ task_id: TASK, sample_id: SAMPLE, role: 'reviewer', run_type: 'official_run' }));
+  const reviewerId = await gotoReviewerWorkspace(page, { task_id: TASK, sample_id: SAMPLE, run_type: 'official_run' });
   await dismissGuidelineModal(page);
+  return reviewerId;
 }
 
 /* AC-3.42: a decision never outlives the answer it judged -- editing the
@@ -68,7 +72,7 @@ test.beforeEach(async ({ page }) => {
 
 test.describe('issue #818: 修正 with an empty corrected answer blocks review submit', () => {
   test('修正 + reason + emptied answer aborts submit, names the outKey, writes nothing', async ({ page }) => {
-    await openReviewerWithAnnotatorAnswer(page);
+    const reviewerId = await openReviewerWithAnnotatorAnswer(page);
 
     const row = page.getByTestId('ws-review-row').first();
     await emptyCorrection(page);
@@ -80,11 +84,11 @@ test.describe('issue #818: 修正 with an empty corrected answer blocks review s
     await expect(page.locator('#toast')).toHaveClass(/toast-warning/);
     await expect(page.locator('#toastMsg')).toContainText('single_label');
     await expect(page.locator('#toastMsg')).not.toHaveText('審核已送出');
-    expect(await readReviewerSubmission(page)).toBeNull();
+    expect(await readReviewerSubmission(page, reviewerId)).toBeNull();
   });
 
   test('無法判定 with an empty answer is not blocked', async ({ page }) => {
-    await openReviewerWithAnnotatorAnswer(page);
+    const reviewerId = await openReviewerWithAnnotatorAnswer(page);
 
     const row = page.getByTestId('ws-review-row').first();
     // 無法判定 leaves the pre-filled answer on the panel (issue #750), so
@@ -96,6 +100,6 @@ test.describe('issue #818: 修正 with an empty corrected answer blocks review s
     await page.getByTestId('ws-review-submit-btn').click();
 
     await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
-    expect(await readReviewerSubmission(page)).not.toBeNull();
+    expect(await readReviewerSubmission(page, reviewerId)).not.toBeNull();
   });
 });

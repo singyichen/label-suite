@@ -1,5 +1,11 @@
 import { test, expect, type Page } from '@playwright/test';
-import { buildWorkspaceUrl, dismissGuidelineModal, patchDataFile, skipGuidelineModal } from './_workspace-helpers';
+import {
+  buildWorkspaceUrl,
+  dismissGuidelineModal,
+  gotoReviewerWorkspace,
+  patchDataFile,
+  skipGuidelineModal,
+} from './_workspace-helpers';
 
 /* issue #809: `previewBypass` (the annotator-side "I cannot judge this
  * output" flag, distinct from the reviewer decision value `bypass` --
@@ -22,18 +28,12 @@ import { buildWorkspaceUrl, dismissGuidelineModal, patchDataFile, skipGuidelineM
  * as a raw-value cache -- only the display textContent may change.
  */
 
-const T001_REVIEWER_001 = buildWorkspaceUrl({
-  task_id: 'T001',
-  sample_id: 'sent-001',
-  role: 'reviewer',
-  run_type: 'official_run',
-});
-const T001_REVIEWER_002 = buildWorkspaceUrl({
-  task_id: 'T001',
-  sample_id: 'sent-002',
-  role: 'reviewer',
-  run_type: 'official_run',
-});
+function gotoT001Reviewer001(page: Page) {
+  return gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001', run_type: 'official_run' });
+}
+function gotoT001Reviewer002(page: Page) {
+  return gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-002', run_type: 'official_run' });
+}
 
 test.beforeEach(async ({ page }) => {
   await skipGuidelineModal(page);
@@ -54,7 +54,7 @@ test.describe('issue #809: previewBypass must be visible to the reviewer', () =>
     await page.getByTestId('ws-bypass-single_label').check();
     await page.getByTestId('ws-submit-btn').click();
 
-    await page.goto(T001_REVIEWER_001);
+    await gotoT001Reviewer001(page);
     await dismissGuidelineModal(page);
 
     const origin = page.getByTestId('ws-review-original-answer');
@@ -90,7 +90,7 @@ test.describe('issue #809: previewBypass must be visible to the reviewer', () =>
       );
     });
 
-    await page.goto(T001_REVIEWER_002);
+    await gotoT001Reviewer002(page);
     await dismissGuidelineModal(page);
 
     const origin = page.getByTestId('ws-review-original-answer');

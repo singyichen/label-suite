@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { buildWorkspaceUrl, dismissGuidelineModal, skipGuidelineModal } from './_workspace-helpers';
+import { buildWorkspaceUrl, dismissGuidelineModal, gotoReviewerWorkspace, skipGuidelineModal } from './_workspace-helpers';
 
 /* issue #753: FR-061 point 2 (spec.md:779) requires that a `bypass` decision
  * renders and finalizes as "無法判定" -- it must NEVER surface the
@@ -31,8 +31,8 @@ async function submitAsAnnotator(page: Page, taskId: string, sampleId: string, a
   await page.getByTestId('ws-submit-btn').click();
 }
 
-function reviewerUrl(taskId: string, sampleId: string): string {
-  return buildWorkspaceUrl({ task_id: taskId, sample_id: sampleId, role: 'reviewer', run_type: 'official_run' });
+function gotoReviewer(page: Page, taskId: string, sampleId: string) {
+  return gotoReviewerWorkspace(page, { task_id: taskId, sample_id: sampleId, run_type: 'official_run' });
 }
 
 /* Non-participant, can_arbitrate demo roster identity (same convention as
@@ -59,7 +59,7 @@ test.describe('issue #753: bypass after an edit must not surface the edited valu
     await submitAsAnnotator(page, 'T001', 'sent-001', async () => {
       await page.getByTestId('ws-single-label-chip-negative').click();
     });
-    await page.goto(reviewerUrl('T001', 'sent-001'));
+    await gotoReviewer(page, 'T001', 'sent-001');
     await dismissGuidelineModal(page);
 
     const row = page.getByTestId('ws-review-row').first();
@@ -75,7 +75,7 @@ test.describe('issue #753: bypass after an edit must not surface the edited valu
      * unfinalized auto-advances this reviewer to their next actionable
      * unit, so the unit context on screen is no longer sent-001's. Re-open
      * the unit to assert the derivation this spec is guarding. */
-    await page.goto(reviewerUrl('T001', 'sent-001'));
+    await gotoReviewer(page, 'T001', 'sent-001');
     await dismissGuidelineModal(page);
     await expect(page.locator('[data-testid="ws-review-unit-context"] .rv-unit-state'))
       .toHaveText('爭議中 · 未定稿，待仲裁');
@@ -95,7 +95,7 @@ test.describe('issue #753: bypass after an edit must not surface the edited valu
     await submitAsAnnotator(page, 'T001', 'sent-001', async () => {
       await page.getByTestId('ws-single-label-chip-negative').click();
     });
-    await page.goto(reviewerUrl('T001', 'sent-001'));
+    await gotoReviewer(page, 'T001', 'sent-001');
     await dismissGuidelineModal(page);
 
     const row = page.getByTestId('ws-review-row').first();

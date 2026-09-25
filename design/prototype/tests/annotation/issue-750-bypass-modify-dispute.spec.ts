@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { buildWorkspaceUrl, dismissGuidelineModal, skipGuidelineModal } from './_workspace-helpers';
+import { buildWorkspaceUrl, dismissGuidelineModal, gotoReviewerWorkspace, skipGuidelineModal } from './_workspace-helpers';
 
 /* issue #750: FR-051 (spec.md:740) and AC-4.52 both require that ANY outKey
  * decision of `modify` or `bypass` derives the review unit as `disputed`,
@@ -21,8 +21,8 @@ async function submitAsAnnotator(page: Page, taskId: string, sampleId: string, a
   await page.getByTestId('ws-submit-btn').click();
 }
 
-function reviewerUrl(taskId: string, sampleId: string): string {
-  return buildWorkspaceUrl({ task_id: taskId, sample_id: sampleId, role: 'reviewer', run_type: 'official_run' });
+function gotoReviewer(page: Page, taskId: string, sampleId: string) {
+  return gotoReviewerWorkspace(page, { task_id: taskId, sample_id: sampleId, run_type: 'official_run' });
 }
 
 test.beforeEach(async ({ page }) => {
@@ -49,7 +49,7 @@ test.describe('issue #750: bypass/modify without an edited answer still derives 
     await submitAsAnnotator(page, 'T001', 'sent-001', async () => {
       await page.getByTestId('ws-single-label-chip-negative').click();
     });
-    await page.goto(reviewerUrl('T001', 'sent-001'));
+    await gotoReviewer(page, 'T001', 'sent-001');
     await dismissGuidelineModal(page);
 
     const row = page.getByTestId('ws-review-row').first();
@@ -63,7 +63,7 @@ test.describe('issue #750: bypass/modify without an edited answer still derives 
      * unit, so the unit context still on screen is no longer sent-001's.
      * Re-open the unit to assert the derivation this spec is guarding --
      * the assertion below must read sent-001, not wherever FR-099 landed. */
-    await page.goto(reviewerUrl('T001', 'sent-001'));
+    await gotoReviewer(page, 'T001', 'sent-001');
     await dismissGuidelineModal(page);
     await expect(page.locator('[data-testid="ws-review-unit-context"] .rv-unit-state'))
       .toHaveText('爭議中 · 未定稿，待仲裁');
@@ -93,7 +93,7 @@ test.describe('issue #750: bypass/modify without an edited answer still derives 
     await submitAsAnnotator(page, 'T001', 'sent-001', async () => {
       await page.getByTestId('ws-single-label-chip-negative').click();
     });
-    await page.goto(reviewerUrl('T001', 'sent-001'));
+    await gotoReviewer(page, 'T001', 'sent-001');
     await dismissGuidelineModal(page);
 
     const row = page.getByTestId('ws-review-row').first();
@@ -107,7 +107,7 @@ test.describe('issue #750: bypass/modify without an edited answer still derives 
      * unit, so the unit context still on screen is no longer sent-001's.
      * Re-open the unit to assert the derivation this spec is guarding --
      * the assertion below must read sent-001, not wherever FR-099 landed. */
-    await page.goto(reviewerUrl('T001', 'sent-001'));
+    await gotoReviewer(page, 'T001', 'sent-001');
     await dismissGuidelineModal(page);
     await expect(page.locator('[data-testid="ws-review-unit-context"] .rv-unit-state'))
       .toHaveText('爭議中 · 未定稿，待仲裁');
