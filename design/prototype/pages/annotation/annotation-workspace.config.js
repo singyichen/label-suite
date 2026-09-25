@@ -4018,6 +4018,28 @@
     return t('arbitrationChoiceB') + '：' + formatDisputeValue(value);
   }
 
+  /* issue #913: readReviewerSubmissions() returns bucket-key sort order
+     (data.js listSubmissionBucketKeys()), not the FR-093 sticky owner --
+     taking [0] silently picked whichever reviewer id sorted first among
+     leftover submissions from a pre-#921 assignment-gate gap. Both callers
+     that need "the" reviewer submission for a unit (renderArbitrationCard's
+     B side, buildExceptionPoolItemRow's 採審核員答案) go through here so
+     they agree with getStickyReviewerId()/data.js's own sticky derivation
+     instead of each re-deriving it. Falls back to [0] only when no
+     submission is tagged sticky (should not happen -- every submitted
+     reviewerSubmission is also scanned into getStickyReviewers() -- kept
+     for a null result rather than dropping the row entirely). */
+  function resolveStickyReviewerSubmission(taskId, runType, sampleId, identity) {
+    var data = window.LabelSuiteAnnotationWorkspaceData;
+    var submissions = data.readReviewerSubmissions(taskId, runType, sampleId, identity);
+    var stickyReviewerId = data.getStickyReviewerId(taskId, runType, sampleId, identity);
+    if (stickyReviewerId) {
+      var sticky = submissions.filter(function (s) { return s.reviewerId === stickyReviewerId; })[0];
+      if (sticky) return sticky;
+    }
+    return submissions[0] || null;
+  }
+
   /* `reviewerSubmission` is the unit's ONE assigned reviewer (FR-093) --
      there is exactly one B value per item, never a per-reviewer list to
      dedup (design.md D2 point 2: "MUST NOT 出現多個 B"). */
@@ -4291,10 +4313,13 @@
 
     /* FR-093: exactly one reviewer is ever assigned to a unit -- the same
        submission both produced the dispute items (getDisputeItems) and
-       decides how each item's B side renders (arbitrationBChoiceText). */
-    var reviewerSubmission = data.readReviewerSubmissions(
+       decides how each item's B side renders (arbitrationBChoiceText).
+       issue #913: resolved via resolveStickyReviewerSubmission() -- the
+       sticky owner, not bucket-key sort order -- for the shape FR-093
+       forbids but a pre-#921 assignment-gate gap could still leave behind. */
+    var reviewerSubmission = resolveStickyReviewerSubmission(
       currentProfile.id, currentRunType, currentSampleId, currentIdentity
-    )[0] || null;
+    );
 
     var items = data.getDisputeItems(
       currentProfile.id, currentRunType, currentSampleId, currentIdentity, state.selectedOutputTypes
@@ -4488,10 +4513,12 @@
     row.appendChild(label);
 
     /* FR-093: exactly one reviewer per unit -- same single-B assumption
-       buildArbitrationItemRow's arbitrationBChoiceText relies on. */
-    var reviewerSubmission = data.readReviewerSubmissions(
+       buildArbitrationItemRow's arbitrationBChoiceText relies on.
+       issue #913: resolved via resolveStickyReviewerSubmission() -- see
+       that function for why [0] was wrong. */
+    var reviewerSubmission = resolveStickyReviewerSubmission(
       currentProfile.id, currentRunType, currentSampleId, currentIdentity
-    )[0] || null;
+    );
     var reviewerValue = reviewerSubmission ? item.reviewerValues[reviewerSubmission.reviewerId] : undefined;
 
     var context = document.createElement('div');
