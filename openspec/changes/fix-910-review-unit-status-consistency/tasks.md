@@ -12,14 +12,14 @@
 **故事目標**：SC-006 — 修正後仍須維持既有流程可完成、歷程可追溯之保證。
 
 - [x] 2.1 修改 `design/prototype/pages/annotation/annotation-workspace.config.js`：新增左欄與頂部橫幅共用的狀態推導，使 1.2 測試轉綠；既有判定式與豁免邏輯不動。[@senior-frontend]
-- [ ] 2.2 修改 `design/prototype/pages/annotation/annotation-workspace.data.js`：泛化既有雙送出防護涵蓋審核決策事件，比對鍵改為同一 outKey 最近一筆事件，使 1.1 測試轉綠；決策或修正值有實質差異之送出仍需正常記錄。[@senior-backend]
+- [x] 2.2 修改 `design/prototype/pages/annotation/annotation-workspace.data.js`：泛化既有雙送出防護涵蓋審核決策事件，比對鍵改為同一 outKey 最近一筆事件，使 1.1 測試轉綠；決策或修正值有實質差異之送出仍需正常記錄。[@senior-backend]
 
 ## 3. 驗證與正典回寫
 
 **故事目標**：SC-006 — 驗證修正後主要流程與歷程呈現皆未回歸。
 
-- [ ] 3.1 執行閘門：prototype typecheck、本次新增與 issue-307 既有 Playwright 契約、`check-sdd.sh`、`check-spec-artifacts.sh`，全部通過方可繼續。[@main]
-- [ ] 3.2 若本次變更觸及 `design/prototype/pages/**`，於最後一次來源編輯後重新產生 screen-inventory 一次。[@main]
+- [x] 3.1 執行閘門：prototype typecheck、本次新增與 issue-307 既有 Playwright 契約、`check-sdd.sh`、`check-spec-artifacts.sh`，全部通過方可繼續。[@main]
+- [x] 3.2 若本次變更觸及 `design/prototype/pages/**`，於最後一次來源編輯後重新產生 screen-inventory 一次。[@main]
 - [ ] 3.3 Source-Verify：確認 FR-064、FR-016B 之修訂文字皆可於正典逐一 grep 定位；archive 回寫正典並同步更新 derived view，正典版本 bump 並補 Changelog 條目。[@main]
 
 ## 4. 獨立審查與 PR
