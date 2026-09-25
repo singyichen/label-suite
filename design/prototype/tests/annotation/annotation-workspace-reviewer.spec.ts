@@ -23,9 +23,10 @@ import {
  *
  * Each output-type row carries exactly one three-way decision toggle
  * (ws-review-row-approve/-modify/-bypass, via buildRowDecisionButtons; issue
- * #596 FR-014B retired the reject button and the rework path it drove),
- * docked on the correction panel's Bypass row (FR-014P) -- ws-review-submit-btn
- * requires every row to carry a decision before it will submit.
+ * #596 FR-014B retired the reject button and the rework path it drove), in
+ * its own `.rv-decision-row` sibling next to the correction panel (issue
+ * #926/#927, FR-014P revision) -- ws-review-submit-btn requires every row
+ * to carry a decision before it will submit.
  *
  * Reviewer rows are sourced from an actual runtime annotator submission
  * (performed in-test via the real UI), not from a static "expected answer"
@@ -250,7 +251,7 @@ const CHROME_CASES: Array<{ taskId: string; sampleId: string; outKeys: string[] 
 
 test.describe('official_run review card chrome', () => {
   for (const { taskId, sampleId, outKeys } of CHROME_CASES) {
-    test(`${taskId} (${outKeys.join('+')}) drops the type title and docks decisions on the Bypass row`, async ({ page }) => {
+    test(`${taskId} (${outKeys.join('+')}) drops the type title and puts decisions in their own decision row`, async ({ page }) => {
       await gotoReviewerWorkspace(page, { task_id: taskId, sample_id: sampleId, run_type: 'official_run' });
       await dismissGuidelineModal(page);
 
@@ -258,11 +259,11 @@ test.describe('official_run review card chrome', () => {
       await expect(rows.first()).toBeVisible();
       await expect(rows.locator('.content-card-title')).toHaveCount(0);
 
-      // One decision toggle per output type, every one of them sitting on a
-      // Bypass row rather than floating in a header.
+      // One decision toggle per output type, every one of them sitting in
+      // the review card's own decision row rather than floating in a header.
       await expect(page.getByTestId('ws-review-row-approve')).toHaveCount(outKeys.length);
       for (const decision of ['approve', 'modify', 'bypass']) {
-        await expect(page.locator('.preview-bypass-row').getByTestId('ws-review-row-' + decision))
+        await expect(page.locator('.rv-decision-row').getByTestId('ws-review-row-' + decision))
           .toHaveCount(outKeys.length);
       }
       await expect(page.getByTestId('ws-review-row-reject')).toHaveCount(0);
@@ -270,17 +271,19 @@ test.describe('official_run review card chrome', () => {
   }
 
   test('toggling Bypass re-renders the panel without losing the decision buttons', async ({ page }) => {
-    // The engine rebuilds the whole preview container on a Bypass toggle, so
-    // the docked decision pair has to survive that re-render.
+    // The engine rebuilds the whole preview container on a Bypass toggle.
+    // The decision row is a sibling the engine never touches (issue #926/
+    // #927), so this is now trivially true by construction rather than by
+    // a re-attach mechanism -- still worth guarding as a regression check.
     await gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001', run_type: 'official_run' });
     await dismissGuidelineModal(page);
 
     const bypassChip = page.locator('.preview-bypass-row button[aria-pressed]').first();
     await bypassChip.click();
-    await expect(page.locator('.preview-bypass-row').getByTestId('ws-review-row-approve')).toHaveCount(1);
+    await expect(page.locator('.rv-decision-row').getByTestId('ws-review-row-approve')).toHaveCount(1);
 
     await page.locator('.preview-bypass-row button[aria-pressed]').first().click();
-    await expect(page.locator('.preview-bypass-row').getByTestId('ws-review-row-approve')).toHaveCount(1);
+    await expect(page.locator('.rv-decision-row').getByTestId('ws-review-row-approve')).toHaveCount(1);
   });
 
   test('a docked decision still drives submit validation', async ({ page }) => {
@@ -295,7 +298,7 @@ test.describe('official_run review card chrome', () => {
     await page.getByTestId('ws-review-submit-btn').click();
     await expect(page.locator('#toastMsg')).not.toHaveText('審核已送出');
 
-    await page.locator('.preview-bypass-row').getByTestId('ws-review-row-approve').click();
+    await page.locator('.rv-decision-row').getByTestId('ws-review-row-approve').click();
     await page.getByTestId('ws-review-submit-btn').click();
     await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
   });
