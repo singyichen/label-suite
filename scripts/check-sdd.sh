@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -u
 readonly inventory_sentinel='design/system/screen-inventory.md is stale — run: node scripts/gen-screen-inventory.mjs'
-strict=0; id_pattern='(FR|SC|AC)-[[:alnum:]]+([.-][[:alnum:]]+)*'; retired_command_pattern='(^|[^[:alnum:]_])npm[[:space:]]+(test|run)([^[:alnum:]_-]|$)|/ui-ux-pro-max|/speckit[.](analyze|implement|plan|tasks)'
+strict=0; id_pattern='(FR|SC|AC)-[[:alnum:]]+([.-][[:alnum:]]+)*'; retired_command_pattern='(^|[^[:alnum:]_])npm[[:space:]]+(test|run)([^[:alnum:]_-]|$)|/ui-ux-pro-max|/speckit[.](analyze|implement|plan|tasks)([^[:alnum:]_]|$)'
 root_arg=''; root_provided=0; config_failed=0; governance_failed=0
 tmp_dir="$(mktemp -d "${TMPDIR:-/tmp}/label-suite-sdd.XXXXXX")" || exit 2
 trap 'rm -rf "$tmp_dir"' EXIT

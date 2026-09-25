@@ -1360,6 +1360,16 @@ test_check_sdd_excludes_speckit_tasks_self_reference() {
     assert_command_fails_with "$repo" 1 "RETIRED_COMMAND" ".claude/commands/other-command.md"
 }
 
+test_check_sdd_does_not_match_speckit_taskstoissues() {
+    local repo
+
+    repo="$(make_sdd_repo)"
+    mkdir -p "$repo/.claude/commands"
+    printf '# Other Command\n\nRun /speckit.taskstoissues to convert tasks to GitHub issues.\n' \
+        > "$repo/.claude/commands/other-command.md"
+    assert_command_succeeds "$repo" --not-rule RETIRED_COMMAND
+}
+
 test_check_sdd_does_not_match_pnpm() {
     local repo output
     repo="$(make_sdd_repo)"
@@ -3252,6 +3262,7 @@ test_check_sdd_fails_for_retired_speckit_plan
 test_check_sdd_excludes_speckit_plan_self_reference
 test_check_sdd_fails_for_retired_speckit_tasks
 test_check_sdd_excludes_speckit_tasks_self_reference
+test_check_sdd_does_not_match_speckit_taskstoissues
 test_check_sdd_does_not_match_pnpm
 test_check_sdd_accepts_exact_legacy_baseline
 test_check_sdd_fails_for_new_baseline_violation
