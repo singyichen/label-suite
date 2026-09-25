@@ -307,28 +307,21 @@
      修改內容). */
   var REVIEW_DECISION_EVENT_ACTIONS = { accepted: true, modified: true, bypassed: true };
 
-  /* issue #910 (FR-016B): a scoped-to-outKey slice of a result_snapshot, for
-     the reviewer-decision dedup guard below. A whole snapshot covers every
-     output type the submit touched at once (buildResultSnapshot), so
-     comparing two snapshots wholesale would call outKey A's decision
-     "changed" merely because outKey B's own value moved in between, or vice
-     versa. previewState is already keyed by outKey; entity_recognition /
-     relation_identification instead carry their answer in the unkeyed
-     previewEntities / previewTriples arrays (buildResultSnapshot's own
-     whitelist), so those two outKeys fall back to sharing that remainder.
-     ponytail: a submit whose decisions cover both an entity_recognition AND
-     a relation_identification outKey at once would have each one's guard
-     read the other's array too; no task config in this codebase composes
-     both output types within a single review submit today. */
-  function outKeyResultSlice(outKey, resultSnapshot) {
-    if (!resultSnapshot) return null;
-    if (resultSnapshot.previewState && Object.prototype.hasOwnProperty.call(resultSnapshot.previewState, outKey)) {
-      return resultSnapshot.previewState[outKey];
-    }
-    if (resultSnapshot.previewEntities != null || resultSnapshot.previewTriples != null) {
-      return { previewEntities: resultSnapshot.previewEntities || null, previewTriples: resultSnapshot.previewTriples || null };
-    }
-    return null;
+  /* issue #910 (FR-016B): the reviewer-decision dedup guard below needs each
+     outKey's own decision value, not the whole per-submit result_snapshot
+     (buildResultSnapshot covers every outKey the submit touched at once, so
+     comparing snapshots wholesale would conflate outKeys). convertSubmissionAnswer()
+     (below) is already this file's single source of truth for "outKey's
+     answer out of a previewState/previewEntities/previewTriples-shaped
+     object" -- it is already used the same way for answer-equality
+     comparisons elsewhere (getDisputeItems/anyReviewerChanged) -- so the
+     guard routes through it instead of re-deriving the per-output-type
+     mapping. buildResultSnapshot() can return null (nothing matched its
+     whitelist); convertSubmissionAnswer() does not tolerate a null
+     `submission`, so this wrapper treats a null snapshot as no answer for
+     any outKey, keeping two null snapshots equal. */
+  function outKeyDecisionValue(outKey, resultSnapshot) {
+    return resultSnapshot ? convertSubmissionAnswer(outKey, resultSnapshot) : null;
   }
 
   function appendHistoryEvent(entry, action, role, summary, actorId, extra) {
@@ -372,8 +365,8 @@
         lastForOutKey.role === role &&
         lastForOutKey.actorId === normalizedActorId &&
         (lastForOutKey.reason || null) === (extra.reason || null) &&
-        JSON.stringify(outKeyResultSlice(extra.outKey, lastForOutKey.result_snapshot)) ===
-          JSON.stringify(outKeyResultSlice(extra.outKey, extra.result_snapshot))
+        JSON.stringify(outKeyDecisionValue(extra.outKey, lastForOutKey.result_snapshot)) ===
+          JSON.stringify(outKeyDecisionValue(extra.outKey, extra.result_snapshot))
       ) {
         return;
       }
