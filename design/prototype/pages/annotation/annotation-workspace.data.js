@@ -305,6 +305,25 @@
      `role` alone answers "a reviewer did this", not "which reviewer".
      `summary` is the host-provided per-output description (對應輸出類型 +
      修改內容). */
+  var REVIEW_DECISION_EVENT_ACTIONS = { accepted: true, modified: true, bypassed: true };
+
+  /* issue #910 (FR-016B): the reviewer-decision dedup guard below needs each
+     outKey's own decision value, not the whole per-submit result_snapshot
+     (buildResultSnapshot covers every outKey the submit touched at once, so
+     comparing snapshots wholesale would conflate outKeys). convertSubmissionAnswer()
+     (below) is already this file's single source of truth for "outKey's
+     answer out of a previewState/previewEntities/previewTriples-shaped
+     object" -- it is already used the same way for answer-equality
+     comparisons elsewhere (getDisputeItems/anyReviewerChanged) -- so the
+     guard routes through it instead of re-deriving the per-output-type
+     mapping. buildResultSnapshot() can return null (nothing matched its
+     whitelist); convertSubmissionAnswer() does not tolerate a null
+     `submission`, so this wrapper treats a null snapshot as no answer for
+     any outKey, keeping two null snapshots equal. */
+  function outKeyDecisionValue(outKey, resultSnapshot) {
+    return resultSnapshot ? convertSubmissionAnswer(outKey, resultSnapshot) : null;
+  }
+
   function appendHistoryEvent(entry, action, role, summary, actorId, extra) {
     if (!Array.isArray(entry.history)) entry.history = [];
     var normalizedActorId = actorId || null;
@@ -320,7 +339,37 @@
        Reviewer double-submit protection is the UI busy flag instead
        (handleReviewSubmit, annotation-workspace.config.js). */
     if (action === 'submitted' && last && last.action === 'submitted' && last.role === role && last.actorId === normalizedActorId) {
-      return;
+      return false;
+    }
+    /* issue #910 (FR-016B): extend the same double-submit protection to
+       reviewer decision events, scoped by outKey -- appendReviewDecisionEvents
+       is the only caller that sets extra.outKey, since it is the only place
+       that knows which outKey a given decision event belongs to. One submit
+       can write several different outKeys' events at once, so the
+       comparison MUST be against that outKey's own most recent event, never
+       just entry.history's last element -- comparing the tail would wrongly
+       drop a different outKey's legitimate event. Events written before this
+       change carry no outKey field, so they never match here (correct: this
+       guard only concerns decisions made under this rule). */
+    if (REVIEW_DECISION_EVENT_ACTIONS[action] && extra && extra.outKey != null) {
+      var lastForOutKey = null;
+      for (var i = entry.history.length - 1; i >= 0; i--) {
+        if (entry.history[i].outKey === extra.outKey) {
+          lastForOutKey = entry.history[i];
+          break;
+        }
+      }
+      if (
+        lastForOutKey &&
+        lastForOutKey.action === action &&
+        lastForOutKey.role === role &&
+        lastForOutKey.actorId === normalizedActorId &&
+        (lastForOutKey.reason || null) === (extra.reason || null) &&
+        JSON.stringify(outKeyDecisionValue(extra.outKey, lastForOutKey.result_snapshot)) ===
+          JSON.stringify(outKeyDecisionValue(extra.outKey, extra.result_snapshot))
+      ) {
+        return false;
+      }
     }
     var event = {
       action: action,
@@ -339,6 +388,7 @@
       });
     }
     entry.history.push(event);
+    return true;
   }
 
   /* FR-088: `started_at` / `lead_time` as measured by the page that owns the
@@ -427,17 +477,25 @@
        so only the first decision event this submit writes carries it --
        attaching the same started_at/lead_time to every outKey's event would
        repeat the same measurement N times for a single occurrence. "First"
-       follows Object.keys(decisions) order, i.e. append order. */
+       follows Object.keys(decisions) order, i.e. append order -- but issue
+       #910's outKey-scoped dedup guard in appendHistoryEvent() can silently
+       no-op an outKey's event (exact repeat of its last recorded event), so
+       "first" here means the first outKey whose event actually gets pushed,
+       not just the first candidate in iteration order: timingWritten only
+       flips once appendHistoryEvent() reports a real push, so a deduped
+       first candidate leaves the flag unset for the next genuinely-new
+       outKey to claim. */
     var timingWritten = false;
     Object.keys(decisions).forEach(function (outKey) {
       var action = REVIEW_DECISION_EVENT_ACTION[decisions[outKey]];
       if (!action) return;
-      var extra = { result_snapshot: buildResultSnapshot(payload), reason: reasons[outKey] || null };
-      if (!timingWritten) {
+      var extra = { result_snapshot: buildResultSnapshot(payload), reason: reasons[outKey] || null, outKey: outKey };
+      var attachingTiming = !timingWritten;
+      if (attachingTiming) {
         Object.assign(extra, timingFields(payload && payload.timing));
-        timingWritten = true;
       }
-      appendHistoryEvent(entry, action, 'reviewer', sanitizedSummary, actorId, extra);
+      var pushed = appendHistoryEvent(entry, action, 'reviewer', sanitizedSummary, actorId, extra);
+      if (pushed && attachingTiming) timingWritten = true;
     });
   }
 

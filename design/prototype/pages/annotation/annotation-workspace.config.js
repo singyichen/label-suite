@@ -1551,15 +1551,18 @@
      row IS that annotator's answer, so an un-stored unit is still awaiting
      review (pending), not absent. */
   function reviewUnitState(unit) {
-    return (
-      window.LabelSuiteAnnotationWorkspaceData.getReviewUnitStatus(
-        currentProfile.id,
-        currentRunType,
-        unit.recordId,
-        unitIdentity(unit),
-        state.selectedOutputTypes
-      ) || 'pending'
+    var rawStatus = window.LabelSuiteAnnotationWorkspaceData.getReviewUnitStatus(
+      currentProfile.id,
+      currentRunType,
+      unit.recordId,
+      unitIdentity(unit),
+      state.selectedOutputTypes
     );
+    /* issue #910: single source of truth with reviewUnitBlockReason()'s EMPTY
+       check -- see deriveDisplayedReviewUnitStatus(). `|| 'pending'` stays as
+       a defensive fallback only; every enumerated unit here already has
+       either a real submission or a demo row. */
+    return deriveDisplayedReviewUnitStatus(rawStatus, unit.recordId, unit.annotatorId) || 'pending';
   }
 
   function isCurrentUnit(unit) {
@@ -2805,15 +2808,32 @@
      the same person the card claims to review), or the group's first row when
      the roster has no entry for them. No dataset gold column is read. A real
      submission always wins over it. */
-  function demoAnnotatorRow() {
+  function demoAnnotatorRow(sampleId, annotatorId) {
+    if (sampleId === undefined) sampleId = currentSampleId;
+    if (annotatorId === undefined) annotatorId = currentAnnotatorId();
     var rows = window.LabelSuiteAnnotationWorkspaceData.getReviewerMockRows(
       currentProfile.id,
-      currentSampleId
+      sampleId
     ) || [];
-    var annotatorId = currentAnnotatorId();
     var own = rows.filter(function (row) { return row.annotator === annotatorId; });
     if (own.length) return own[0];
     return rows.length ? rows[0] : null;
+  }
+
+  /* issue #910: reviewUnitState() (left column) and the top banner both read
+     getReviewUnitStatus(), which stays null forever for an FR-044a orphan
+     unit (a REVIEWER_MOCK_ROWS stand-in with no real stored submission) --
+     but the two call sites disagreed on what null means there, showing 待審
+     beside 尚無標記提交 for the same unit. reviewUnitBlockReason()'s EMPTY
+     check already draws the correct line (null + no demo row = truly empty;
+     null + a demo row = still awaiting review), so this mirrors that exact
+     check as the single source of truth for both call sites instead of
+     re-deriving a second fallback rule. */
+  function deriveDisplayedReviewUnitStatus(rawStatus, sampleId, annotatorId) {
+    if (rawStatus !== null) return rawStatus;
+    return demoAnnotatorRow(sampleId, annotatorId)
+      ? window.LabelSuiteAnnotationWorkspaceData.REVIEW_UNIT_STATUS.PENDING
+      : null;
   }
 
   function getAnnotatorSubmission() {
@@ -4742,10 +4762,17 @@
        and this banner's subject is the review MODEL: run type, finalize
        threshold, state, state track. A third copy only raised the density. */
 
+    /* issue #910: the pill's TEXT/color must agree with the left column's
+       reviewUnitState() for an FR-044a orphan unit (demo row present, no
+       real submission) -- but everything else this function gates off
+       `unitStatus` (drawer trigger, status track, terminal/disputed note)
+       must keep reading the RAW status: those describe a real submission's
+       lane/history, which genuinely does not exist for an orphan unit. */
+    var pillStatus = deriveDisplayedReviewUnitStatus(unitStatus, currentSampleId, currentAnnotatorId());
     var statePill = document.createElement('span');
     statePill.className =
-      'rv-unit-state' + (unitStatus ? ' rv-unit-state-' + unitStatus : '');
-    var stateText = t(REVIEW_STATE_I18N_KEYS[unitStatus] || 'unitStateNone');
+      'rv-unit-state' + (pillStatus ? ' rv-unit-state-' + pillStatus : '');
+    var stateText = t(REVIEW_STATE_I18N_KEYS[pillStatus] || 'unitStateNone');
     /* FINALIZED is the ONLY terminal state (issue #452): disputed is decided
        but unresolved, so the non-terminal pill carries a note saying so in
        words. Colour alone must not be the difference -- `data-terminal`
