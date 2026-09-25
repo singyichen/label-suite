@@ -323,14 +323,21 @@ test.describe('issue #811: 缺理由 toast 文案 (FR-083 / design.md D5, 鍵名
    * toastKey = toastReasonRequired。裁定後 zh 文案補回「審核」二字：
    * `請填寫以下輸出類型的審核理由：{list}`（現況缺這兩個字）。本任務書
    * (tasks.md 1.1) 只要求釘住 zh，en 由 Wave 2 之外的既有鍵本身處理，不在
-   * 本檔案斷言範圍內。 */
-  test('zh: the missing-reason toast reads 請填寫以下輸出類型的審核理由：single_label', async ({ page }) => {
+   * 本檔案斷言範圍內。
+   *
+   * issue #929（AC-3.47 對稱情形）：{list} 本身自 v6.22.0 起改代入輸出類型
+   * 顯示名稱而非原始 registry key，`toastSelectDecision` 與本測試所鎖定的
+   * `toastReasonRequired` 為同一條 AC 規範之兩種阻擋情形、共用同一段
+   * pendingOutputLabels 推導邏輯，因此隨之位移為 `單一標籤`；本條所鎖定的
+   * `toastReasonRequired` 鍵名本身、以及此檔案其餘鎖定 BYPASS_WORDING
+   * 答案值/決策值區分的斷言不受影響、一個字未動。 */
+  test('zh: the missing-reason toast reads 請填寫以下輸出類型的審核理由：單一標籤', async ({ page }) => {
     await gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001', run_type: 'official_run' });
     await dismissGuidelineModal(page);
 
     await page.getByTestId('ws-review-row-modify').click();
     await page.getByTestId('ws-review-submit-btn').click();
 
-    await expect(page.locator('#toastMsg')).toHaveText('請填寫以下輸出類型的審核理由：single_label');
+    await expect(page.locator('#toastMsg')).toHaveText('請填寫以下輸出類型的審核理由：單一標籤');
   });
 });
