@@ -305,6 +305,32 @@
      `role` alone answers "a reviewer did this", not "which reviewer".
      `summary` is the host-provided per-output description (對應輸出類型 +
      修改內容). */
+  var REVIEW_DECISION_EVENT_ACTIONS = { accepted: true, modified: true, bypassed: true };
+
+  /* issue #910 (FR-016B): a scoped-to-outKey slice of a result_snapshot, for
+     the reviewer-decision dedup guard below. A whole snapshot covers every
+     output type the submit touched at once (buildResultSnapshot), so
+     comparing two snapshots wholesale would call outKey A's decision
+     "changed" merely because outKey B's own value moved in between, or vice
+     versa. previewState is already keyed by outKey; entity_recognition /
+     relation_identification instead carry their answer in the unkeyed
+     previewEntities / previewTriples arrays (buildResultSnapshot's own
+     whitelist), so those two outKeys fall back to sharing that remainder.
+     ponytail: a submit whose decisions cover both an entity_recognition AND
+     a relation_identification outKey at once would have each one's guard
+     read the other's array too; no task config in this codebase composes
+     both output types within a single review submit today. */
+  function outKeyResultSlice(outKey, resultSnapshot) {
+    if (!resultSnapshot) return null;
+    if (resultSnapshot.previewState && Object.prototype.hasOwnProperty.call(resultSnapshot.previewState, outKey)) {
+      return resultSnapshot.previewState[outKey];
+    }
+    if (resultSnapshot.previewEntities != null || resultSnapshot.previewTriples != null) {
+      return { previewEntities: resultSnapshot.previewEntities || null, previewTriples: resultSnapshot.previewTriples || null };
+    }
+    return null;
+  }
+
   function appendHistoryEvent(entry, action, role, summary, actorId, extra) {
     if (!Array.isArray(entry.history)) entry.history = [];
     var normalizedActorId = actorId || null;
@@ -321,6 +347,36 @@
        (handleReviewSubmit, annotation-workspace.config.js). */
     if (action === 'submitted' && last && last.action === 'submitted' && last.role === role && last.actorId === normalizedActorId) {
       return;
+    }
+    /* issue #910 (FR-016B): extend the same double-submit protection to
+       reviewer decision events, scoped by outKey -- appendReviewDecisionEvents
+       is the only caller that sets extra.outKey, since it is the only place
+       that knows which outKey a given decision event belongs to. One submit
+       can write several different outKeys' events at once, so the
+       comparison MUST be against that outKey's own most recent event, never
+       just entry.history's last element -- comparing the tail would wrongly
+       drop a different outKey's legitimate event. Events written before this
+       change carry no outKey field, so they never match here (correct: this
+       guard only concerns decisions made under this rule). */
+    if (REVIEW_DECISION_EVENT_ACTIONS[action] && extra && extra.outKey != null) {
+      var lastForOutKey = null;
+      for (var i = entry.history.length - 1; i >= 0; i--) {
+        if (entry.history[i].outKey === extra.outKey) {
+          lastForOutKey = entry.history[i];
+          break;
+        }
+      }
+      if (
+        lastForOutKey &&
+        lastForOutKey.action === action &&
+        lastForOutKey.role === role &&
+        lastForOutKey.actorId === normalizedActorId &&
+        (lastForOutKey.reason || null) === (extra.reason || null) &&
+        JSON.stringify(outKeyResultSlice(extra.outKey, lastForOutKey.result_snapshot)) ===
+          JSON.stringify(outKeyResultSlice(extra.outKey, extra.result_snapshot))
+      ) {
+        return;
+      }
     }
     var event = {
       action: action,
@@ -432,7 +488,7 @@
     Object.keys(decisions).forEach(function (outKey) {
       var action = REVIEW_DECISION_EVENT_ACTION[decisions[outKey]];
       if (!action) return;
-      var extra = { result_snapshot: buildResultSnapshot(payload), reason: reasons[outKey] || null };
+      var extra = { result_snapshot: buildResultSnapshot(payload), reason: reasons[outKey] || null, outKey: outKey };
       if (!timingWritten) {
         Object.assign(extra, timingFields(payload && payload.timing));
         timingWritten = true;
