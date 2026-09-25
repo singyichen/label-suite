@@ -7,6 +7,7 @@ import {
   buildWorkspaceUrl,
   fillArbitrationReasons,
   patchDataFile,
+  resolveAssignedReviewerId,
   skipGuidelineModal,
   trackPageErrors,
 } from '../annotation/_workspace-helpers';
@@ -770,20 +771,37 @@ test('XROLE-12: blind review -- reviewer events are invisible to peers until the
   const dryDivergenceSample = DRY_RUN_RECORD_IDS[1];
   const dryDivergenceAnnotator = 'A02';
 
-  // r02Page's first navigation (list) also loads the data API for evaluates.
-  await r02Page.goto(buildListUrl({ task_id: fixtureTaskId, role: 'reviewer', run_type: 'dry_run', reviewer_id: REVIEWER_R02 }));
-  expect(await readReviewerTrail(r02Page, 'dry_run', dryDivergenceSample, dryDivergenceAnnotator)).toEqual([]);
+  /* issue #921 (FR-093): the workspace's assignment gate now blocks anyone
+     but the real dry_run assignee from interacting with a unit at all, so
+     this probe can no longer assume R01 is that assignee -- resolve it
+     instead. The other non-arbiter identity plays the "peer" role this
+     test is actually about (blind review / visibility), which is
+     unaffected by which of R01/R02 ends up holding which part. r01Page's
+     navigation (list) doubles as loading the data API resolveAssignedReviewerId()
+     reads via evaluate. */
+  await r01Page.goto(buildListUrl({ task_id: fixtureTaskId, role: 'reviewer', run_type: 'dry_run', reviewer_id: REVIEWER_R01 }));
+  const assignedReviewerId = await resolveAssignedReviewerId(r01Page, {
+    task_id: fixtureTaskId, sample_id: dryDivergenceSample, run_type: 'dry_run', annotator_id: dryDivergenceAnnotator,
+  });
+  const [submitterPage, submitterId] =
+    assignedReviewerId === REVIEWER_R01 ? [r01Page, REVIEWER_R01] : [r02Page, REVIEWER_R02];
+  const [peerPage, peerId] =
+    assignedReviewerId === REVIEWER_R01 ? [r02Page, REVIEWER_R02] : [r01Page, REVIEWER_R01];
 
-  // R01 approves A02's dry_run answer on this record.
-  await submitApproval(r01Page, dryDivergenceSample, dryDivergenceAnnotator, REVIEWER_R01, 'dry_run');
+  // peerPage's navigation (list) also loads the data API for evaluates.
+  await peerPage.goto(buildListUrl({ task_id: fixtureTaskId, role: 'reviewer', run_type: 'dry_run', reviewer_id: peerId }));
+  expect(await readReviewerTrail(peerPage, 'dry_run', dryDivergenceSample, dryDivergenceAnnotator)).toEqual([]);
 
-  const trail = await readReviewerTrail(r02Page, 'dry_run', dryDivergenceSample, dryDivergenceAnnotator);
+  // The real assignee approves A02's dry_run answer on this record.
+  await submitApproval(submitterPage, dryDivergenceSample, dryDivergenceAnnotator, submitterId, 'dry_run');
+
+  const trail = await readReviewerTrail(peerPage, 'dry_run', dryDivergenceSample, dryDivergenceAnnotator);
   /* issue #583 (FR-086): an approval no longer writes a wrapper `submitted`
      event -- it writes one `accepted` decision event per output key. What
-     this test pins is visibility -- before R01 submitted, the trail was
-     empty; after, the sole event is R01's. */
+     this test pins is visibility -- before the assignee submitted, the
+     trail was empty; after, the sole event is theirs. */
   expect(trail.map((e) => e.action)).toEqual(['accepted']);
-  expect(trail.every((e) => e.actorId === REVIEWER_R01)).toBe(true);
+  expect(trail.every((e) => e.actorId === submitterId)).toBe(true);
 });
 
 test('XROLE-13: dry_run reject never rolls the annotator sample back to pending (issue #192 regression, cross-role)', async () => {

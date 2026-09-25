@@ -1,7 +1,7 @@
 # annotation/015-annotation-workspace Specification
 
 ## Purpose
-Annotation List + Workspace（標記清單與標記作業，Annotator／Reviewer）的 derived view。正典為 `specs/annotation/015-annotation-workspace/spec.md`（v6.16.0）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR/AC ID，不改動其正典措辭。目前收錄：change `reviewer-action-hint`（issue #526）之 FR-084、AC-4.47 ~ AC-4.50 與 FR-064 第 7 點第 6 項之範圍註記；change `2026-09-01-single-owner-review-relay`（issue #596）之 FR-092 ~ FR-097（新增）、FR-014B／FR-016A／FR-044／FR-051／FR-053／FR-054／FR-055／FR-060／FR-061／FR-062／FR-063／FR-064／FR-070／FR-083／FR-086（修訂）、FR-014I／FR-069／FR-074／FR-085（移除）；change `seq-tagging-span-workspace`（issue #581）之 FR-024A／FR-024A-1／FR-024A-2／FR-024A-3／FR-052／FR-024L（修訂）；change `reserve-arbiters-from-review-assignment`（issue #868）之 FR-060／FR-073／FR-093／FR-099（修訂）；以及 change `pl-exception-disposal-screen-shell`（issue #907）之 FR-095（修訂，新增最終例外處置畫面外殼段落與 AC-4.69）。
+Annotation List + Workspace（標記清單與標記作業，Annotator／Reviewer）的 derived view。正典為 `specs/annotation/015-annotation-workspace/spec.md`（v6.17.0）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR/AC ID，不改動其正典措辭。目前收錄：change `reviewer-action-hint`（issue #526）之 FR-084、AC-4.47 ~ AC-4.50 與 FR-064 第 7 點第 6 項之範圍註記；change `2026-09-01-single-owner-review-relay`（issue #596）之 FR-092 ~ FR-097（新增）、FR-014B／FR-016A／FR-044／FR-051／FR-053／FR-054／FR-055／FR-060／FR-061／FR-062／FR-063／FR-064／FR-070／FR-083／FR-086（修訂）、FR-014I／FR-069／FR-074／FR-085（移除）；change `seq-tagging-span-workspace`（issue #581）之 FR-024A／FR-024A-1／FR-024A-2／FR-024A-3／FR-052／FR-024L（修訂）；change `reserve-arbiters-from-review-assignment`（issue #868）之 FR-060／FR-073／FR-093／FR-099（修訂）；change `pl-exception-disposal-screen-shell`（issue #907）之 FR-095（修訂，新增最終例外處置畫面外殼段落與 AC-4.69）；以及 change `gate-review-assignment`（issue #921）之 FR-093（修訂，新增工作區側送出指派閘門段落與 AC-4.70、AC-4.71）。
 
 ## Requirements
 
@@ -611,6 +611,8 @@ issue #824 的黏住規則 MUST 優先於本次保留規則：已有已提交審
 
 指派 MUST NOT 提供手動模式；每個審核單位恰有一位指派審核員。`dry_run` 採 per-sample 粒度，同一樣本的所有審核單位由同一人承接；`official_run` 採 per-unit 粒度。平均分配的差距規則只計尚無已提交審核的待分配池，已黏住單位不參與差距判定。示範種子同樣不得替一個 `official_run` 單位登錄多位 reviewer。黏住 MUST 由既有提交推導，不得另存第二份指派表，且不得依 task、sample 或帳號硬編分流。離冊審核員仍可唯讀檢視自己已提交的單位與歷程，但不得再送出審核；其仲裁資格仍依 FR-060 判定。
 
+審核員以直接網址開啟未指派給自己的審核單位時，工作區 MUST 仍顯示樣本內容（標記員原答案），MUST NOT 渲染任何可送出的審核控件（含經鍵盤捷徑之送出路徑，FR-058），並 MUST 顯示「本單位未指派給你」之類的明確原因說明；此唯讀呈現與已定稿單位（FR-094）、離冊審核員之唯讀呈現同構，MUST NOT 實作為完全擋下的無權限頁——真正的存取控管屬於後端職責，非本規格範圍。本點之閘門判定 MUST 晚於仲裁分支與已定稿分支：具仲裁資格者之爭議單位入口，以及已定稿單位之唯讀卡（FR-094），皆優先於本點之唯讀呈現。本點之閘門 MUST 沿用既有之 `getAssignedReviewUnits()` 推導，MUST NOT 另立第二套指派判定。本版不涵蓋工作區左欄、上一筆／下一筆導覽之指派過濾（issue #956，待該變更落地後另行修訂本條）。
+
 #### Scenario: 唯一仲裁者不再收到新審核單位
 
 - **GIVEN** 任務 `reviewer_ids = [W, L, C, N]` 且 `arbiter_ids = [C]`
@@ -691,6 +693,21 @@ issue #824 的黏住規則 MUST 優先於本次保留規則：已有已提交審
 - **GIVEN** `dry_run` 某樣本由三位標記員各標一次，審核員 X 已對其中一個單位提交審核
 - **WHEN** 系統重新建立審核指派（名冊已異動）
 - **THEN** 該樣本的三個審核單位全部指派給 X
+
+#### Scenario: 未指派審核員以直接網址開啟他人單位為唯讀
+
+- **GIVEN** 審核單位 U 依 FR-093 指派給審核員 A，審核員 B 在同一任務的審核員名冊中但未被指派 U
+- **WHEN** B 以直接網址開啟 U 的工作區
+- **THEN** 畫面仍顯示 U 的標記員原答案（樣本內容）
+- **AND** 審核卡不渲染任何可送出的控件，Ctrl/Cmd+Enter 送出捷徑亦不生效
+- **AND** 畫面顯示「本單位未指派給你」之類的原因說明
+
+#### Scenario: 指派閘門不擋掉仲裁入口
+
+- **GIVEN** 審核員 C 在該任務的仲裁者名冊中（`arbiter_ids`）且對某爭議單位 U 未提交過審核（具 FR-060 仲裁資格），U 未依 FR-093 指派給 C
+- **WHEN** C 開啟 U 的工作區
+- **THEN** 渲染仲裁卡與可送出之仲裁控件
+- **AND** C 不會看到「本單位未指派給你」的唯讀說明
 
 ### Requirement: FR-094 純文字定稿結果卡與微型衝突歷程
 

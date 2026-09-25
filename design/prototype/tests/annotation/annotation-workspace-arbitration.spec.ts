@@ -122,10 +122,24 @@ test.describe('arbitration layout: negative paths keep the normal review card', 
     await expect(page.getByTestId('ws-review-row-approve').first()).toBeVisible();
   });
 
-  test('a non-participant without the can_arbitrate flag reviews normally', async ({ page }) => {
+  /* issue #921 (FR-093): PARTICIPANT (wang) already holds the sticky
+     submission on this unit (seeded by beforeEach's seedDisputedUnit()), so
+     FR-093 makes wang -- and only wang -- its assigned reviewer. Before the
+     workspace enforced assignment, BYSTANDER (li, no can_arbitrate flag)
+     could still open and normally review a unit that was never theirs; this
+     was exactly the multi-submission shape FR-093 forbids and the bug issue
+     #921 fixes (the "premise" of this test -- a non-owning, non-arbiter
+     reviewer getting the normal interactive card on someone else's disputed
+     unit -- no longer holds under the assignment gate). Repurposed to
+     assert the now-correct outcome: li gets the read-only NOT_ASSIGNED
+     gate, not the normal card and not the arbitration layout either (li
+     lacks can_arbitrate). */
+  test('a non-participant without the can_arbitrate flag is gated as not assigned, not shown the normal card', async ({ page }) => {
     await gotoWorkspace(page, BYSTANDER);
     await expect(page.getByTestId('ws-arbitration-card')).toHaveCount(0);
-    await expect(page.getByTestId('ws-review-row-approve').first()).toBeVisible();
+    await expect(page.getByTestId('ws-review-row-approve')).toHaveCount(0);
+    await expect(page.getByTestId('ws-review-not-assigned')).toBeVisible();
+    await expect(page.getByTestId('ws-review-submit-btn')).toBeHidden();
   });
 
   /* PENDING, not "agreeing reviewer": with one reviewer per unit (FR-093)
@@ -133,8 +147,17 @@ test.describe('arbitration layout: negative paths keep the normal review card', 
      locks into the read-only card -- a different branch than the
      interactive one under test. A unit whose reviewer has not submitted yet
      is the only non-disputed state that still keeps the normal card, so
-     seed a second sample the arbiter has yet to review. */
-  test('an arbiter on a non-disputed unit reviews normally', async ({ page }) => {
+     seed a second sample the arbiter has yet to review.
+     issue #921 (FR-093, v6.15.0/issue #868): ARBITER (chen) is reserved
+     from ALL new round-robin assignment, so chen can never be a fresh
+     PENDING unit's assignee -- there is no reachable state left where an
+     arbiter "normally reviews" a non-disputed unit as its owner. Repurposed
+     to assert the now-correct outcome instead: chen's arbitration
+     eligibility (FR-060) does not exempt them from the FR-093 assignment
+     gate on a unit that is not (yet) disputed -- they see the read-only
+     NOT_ASSIGNED note, the same as any other non-assignee, not the
+     arbitration layout and not the normal interactive card. */
+  test('an arbiter on a non-disputed, unassigned unit is gated as not assigned, not shown the normal card', async ({ page }) => {
     const PENDING_SAMPLE = 'sent-002';
     await seed(page, {
       sample: PENDING_SAMPLE, role: 'annotator',
@@ -146,7 +169,9 @@ test.describe('arbitration layout: negative paths keep the normal review card', 
     }));
 
     await expect(page.getByTestId('ws-arbitration-card')).toHaveCount(0);
-    await expect(page.getByTestId('ws-review-row-approve').first()).toBeVisible();
+    await expect(page.getByTestId('ws-review-row-approve')).toHaveCount(0);
+    await expect(page.getByTestId('ws-review-not-assigned')).toBeVisible();
+    await expect(page.getByTestId('ws-review-submit-btn')).toBeHidden();
   });
 });
 

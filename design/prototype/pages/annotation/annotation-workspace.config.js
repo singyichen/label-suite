@@ -105,6 +105,7 @@
       unitStateNone: '尚無標記提交',
       reviewEmptyUnitNote: '此標記員尚未提交此樣本，暫無可審核的內容。',
       reviewOffRosterNote: '你已不在本任務的審核員名冊中，可檢視自己審核過的內容與歷程，但無法再提交審核決策。',
+      reviewNotAssignedNote: '這個審核單位未指派給你，可檢視內容但無法提交審核決策。',
       reviewFinalizedTitle: '審核已定稿',
       reviewFinalizedNote: '此審核單位已定稿，結果為唯讀。',
       reviewFinalizedRemaining: '本任務你還有 {n} 個可處理的審核單位。',
@@ -243,6 +244,7 @@
       unitStateNone: 'No submission yet',
       reviewEmptyUnitNote: 'This annotator has not submitted this sample yet; there is nothing to review.',
       reviewOffRosterNote: 'You are no longer on this task\'s reviewer roster. You can still view the units and history you reviewed, but you can no longer submit review decisions.',
+      reviewNotAssignedNote: 'This review unit is not assigned to you. You can view its content, but you cannot submit a review decision.',
       reviewFinalizedTitle: 'Review finalized',
       reviewFinalizedNote: 'This review unit is finalized; results are read-only.',
       reviewFinalizedRemaining: 'You have {n} actionable review units left on this task.',
@@ -1504,7 +1506,13 @@
      any annotator who submitted for real but has no mock row), so the two
      pages can never disagree on how many units a task holds. For an
      annotator the record IS the unit, which is why every annotator-facing
-     behaviour below is unchanged. */
+     behaviour below is unchanged.
+     issue #921 note: this still enumerates every unit, unfiltered by
+     assignment -- narrowing the left column/nav to the reviewer's own
+     workload (matching annotation-list.html's filterToAssignedUnits()) is
+     out of scope for this change and tracked separately in issue #956. This
+     change only gates SUBMISSION on the current unit; see
+     isCurrentUnitAssigned() and reviewUnitBlockReason() below. */
   function buildUnits() {
     var data = window.LabelSuiteAnnotationWorkspaceData;
     var units = [];
@@ -3598,6 +3606,10 @@
        reviewer_ids keeps read-only access to the units they reviewed, but
        may no longer submit a decision on anything. */
     OFF_ROSTER: 'off_roster',
+    /* issue #921 (FR-093): an in-roster reviewer who was not dealt THIS
+       unit by the round-robin assignment (another roster reviewer holds
+       it) may view it but not submit. */
+    NOT_ASSIGNED: 'not_assigned',
     EMPTY: 'empty',
   };
 
@@ -3627,8 +3639,48 @@
     if (!workspaceData.isRosterReviewer(currentProfile.id, currentIdentity.reviewerId)) {
       return REVIEW_UNIT_BLOCK.OFF_ROSTER;
     }
+    /* issue #921: EMPTY is checked before NOT_ASSIGNED, not after. A truly
+       empty unit (no annotator submission, no demo mock row) contributes no
+       entry to getAssignedReviewUnits()'s input universe at all (see
+       isCurrentUnitAssigned() below), so it has NO assigned reviewer for
+       ANYONE yet -- isCurrentUnitAssigned() would be false regardless of
+       who is asking, including the reviewer this unit will eventually
+       round-robin to once it exists. Checking assignment first would tell
+       that future assignee "not assigned to you", which is false (no
+       assignment has happened yet); "nothing submitted yet" (EMPTY, issue
+       #307) is the accurate message. Once a submission lands the unit
+       enters the enumeration and NOT_ASSIGNED becomes the correct gate for
+       anyone but its actual assignee. */
     if (unitStatus === null && !demoAnnotatorRow()) return REVIEW_UNIT_BLOCK.EMPTY;
+    /* issue #921: closes the gate annotation-list already enforces
+       (filterToAssignedUnits(), issue #824) -- checked after ARBITRATION so
+       a disputed unit this reviewer may arbitrate is never blocked here
+       (FR-060's roster is separate from the assignment roster), and after
+       OFF_ROSTER so a fully off-roster reviewer keeps that more specific
+       note. */
+    if (!isCurrentUnitAssigned()) {
+      return REVIEW_UNIT_BLOCK.NOT_ASSIGNED;
+    }
     return null;
+  }
+
+  /* issue #921 (FR-093): is the CURRENT review unit assigned to the current
+     reviewer? Feeds getAssignedReviewUnits() the same full, unfiltered unit
+     universe buildUnits() already enumerates (see its comment -- narrowing
+     that universe to only the reviewer's own units is issue #956, not this
+     change) and checks membership for just this one unit; no second
+     assignment derivation. By the time this runs, the ARBITRATION branch
+     above has already caught any disputed unit this reviewer may arbitrate,
+     so no separate carve-out is needed here. */
+  function isCurrentUnitAssigned() {
+    var data = window.LabelSuiteAnnotationWorkspaceData;
+    var units = buildUnits().map(function (unit) {
+      return { sample_id: unit.recordId, annotator_id: unit.annotatorId };
+    });
+    var assigned = data.getAssignedReviewUnits(currentProfile.id, currentRunType, currentIdentity.reviewerId, units);
+    return assigned.some(function (unit) {
+      return unit.sample_id === String(currentSampleId) && unit.annotator_id === currentAnnotatorId();
+    });
   }
 
   /* The shared engine owns every correction control and exposes no change
@@ -4953,6 +5005,28 @@
       offRosterCard.setAttribute('data-testid', 'ws-review-off-roster');
       offRosterCard.textContent = t('reviewOffRosterNote');
       preview.appendChild(offRosterCard);
+      return;
+    }
+    /* Unassigned read-only gate (issue #921, FR-093): mirrors the OFF_ROSTER
+       branch above -- content still renders, no submittable control does.
+       Checked after OFF_ROSTER (a fully off-roster reviewer gets that more
+       specific note instead) and before the EMPTY gate below (an unassigned
+       reviewer should not see the "come back later" empty-state wording for
+       a unit that was never theirs). Hiding the footer submit also closes
+       the FR-058 Ctrl/Cmd+Enter path (setupActionShortcuts skips hidden
+       buttons). */
+    if (blockReason === REVIEW_UNIT_BLOCK.NOT_ASSIGNED) {
+      if (reviewSubmitBtn) reviewSubmitBtn.classList.add('hidden');
+      var notAssignedInputCard = document.createElement('div');
+      notAssignedInputCard.className = 'content-card';
+      notAssignedInputCard.setAttribute('data-testid', 'ws-input-content');
+      notAssignedInputCard.textContent = buildReviewerInputText(rawRecord, currentProfile.fieldRoleMap);
+      preview.appendChild(notAssignedInputCard);
+      var notAssignedCard = document.createElement('div');
+      notAssignedCard.className = 'content-card';
+      notAssignedCard.setAttribute('data-testid', 'ws-review-not-assigned');
+      notAssignedCard.textContent = t('reviewNotAssignedNote');
+      preview.appendChild(notAssignedCard);
       return;
     }
     /* Empty review unit gate (issue #307): "truly empty" reuses the exact
