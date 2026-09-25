@@ -1,9 +1,9 @@
 ---
 description: Identify and clarify ambiguous or incomplete requirements in spec.md (max 5 questions), updating the spec incrementally with each accepted answer.
 handoffs:
-  - label: Build Technical Plan
-    agent: speckit.plan
-    prompt: Create a plan for the spec. I am building with FastAPI + React + TypeScript.
+  - label: Propose OpenSpec Change
+    agent: opsx:propose
+    prompt: Propose an OpenSpec change for this spec (design.md + tasks.md). I am building with FastAPI + React + TypeScript.
     send: true
 ---
 
@@ -17,7 +17,7 @@ You **MUST** consider user input before proceeding (if not empty).
 
 ## Goal
 
-Detect and reduce ambiguous or missing decision points in the current feature spec, recording clarification results directly in the spec file. This flow is expected to run and complete before `/speckit.plan`. If the user explicitly wants to skip clarification (e.g., exploratory spike), you may proceed but must warn of increased rework risk.
+Detect and reduce ambiguous or missing decision points in the current feature spec, recording clarification results directly in the spec file. This flow is expected to run and complete before `/opsx:propose`. If the user explicitly wants to skip clarification (e.g., exploratory spike), you may proceed but must warn of increased rework risk.
 
 ## Steps
 
@@ -128,7 +128,7 @@ Detect and reduce ambiguous or missing decision points in the current feature sp
      | Functional scope | Resolved | ... |
      | Non-functional | Deferred | Better handled in planning |
 
-   - If items remain unresolved or deferred, recommend whether to proceed to `/speckit.plan` or run `/speckit.clarify` again after planning
+   - If items remain unresolved or deferred, recommend whether to proceed to `/opsx:propose` or run `/speckit.clarify` again after planning
    - Suggest next command
 
 **Behavior rules:**

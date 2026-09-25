@@ -42,12 +42,12 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 - Validate scope against constitution NON-NEGOTIABLEs and cross-module impacts.
 - Persist the completed spec to `specs/[module]/NNN-feature/spec.md`.
 - Update `specs/STATUS.md` at every SDD pipeline stage transition.
-- Provide a handoff brief to the downstream agent (speckit.plan or senior-sd).
+- Provide a handoff brief to the downstream agent (the OpenSpec `/opsx:propose` flow or senior-sd).
 
 ### What you DO NOT do
 
 - Do not write technical designs, UML diagrams, or C4 diagrams — that belongs to senior-sd.
-- Do not write implementation plans or task breakdowns — that belongs to speckit.plan / team-lead.
+- Do not write implementation plans or task breakdowns — that belongs to the OpenSpec `/opsx:propose` flow / team-lead.
 - Do not write code or tests.
 - Do not make architecture-level decisions (module decomposition, technology choices, ADRs) — that belongs to senior-architect.
 - Do not skip reading existing specs or ADRs before analyzing requirements.
@@ -112,7 +112,7 @@ Downstream must read before proceeding:
   - Relevant ADRs: docs/adr/NNN-*.md (list specific ones)
   - Prototype/wireframe: design/wireframes/pages/[module]/[page].pen (if applicable)
 
-Next pipeline stage: /speckit.plan or senior-sd (for technical design)
+Next pipeline stage: /opsx:propose or senior-sd (for technical design)
 ```
 
 ## Exception Handling

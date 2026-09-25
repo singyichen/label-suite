@@ -1312,6 +1312,64 @@ test_check_sdd_excludes_speckit_implement_self_reference() {
     assert_command_fails_with "$repo" 1 "RETIRED_COMMAND" ".claude/commands/other-command.md"
 }
 
+test_check_sdd_fails_for_retired_speckit_plan() {
+    local repo
+
+    repo="$(make_sdd_repo)"
+    printf '\n/speckit.plan\n' >> "$repo/AGENTS.md"
+    assert_command_fails_with "$repo" 1 "RETIRED_COMMAND" "AGENTS.md"
+}
+
+test_check_sdd_excludes_speckit_plan_self_reference() {
+    local repo
+
+    repo="$(make_sdd_repo)"
+    mkdir -p "$repo/.claude/commands"
+    printf '# /speckit.plan — DEPRECATED\n\nRetired by ADR-033.\n' \
+        > "$repo/.claude/commands/speckit.plan.md"
+    assert_command_succeeds "$repo" --not-rule RETIRED_COMMAND
+
+    repo="$(make_sdd_repo)"
+    mkdir -p "$repo/.claude/commands"
+    printf '# Other Command\n\nRun /speckit.plan to continue.\n' \
+        > "$repo/.claude/commands/other-command.md"
+    assert_command_fails_with "$repo" 1 "RETIRED_COMMAND" ".claude/commands/other-command.md"
+}
+
+test_check_sdd_fails_for_retired_speckit_tasks() {
+    local repo
+
+    repo="$(make_sdd_repo)"
+    printf '\n/speckit.tasks\n' >> "$repo/AGENTS.md"
+    assert_command_fails_with "$repo" 1 "RETIRED_COMMAND" "AGENTS.md"
+}
+
+test_check_sdd_excludes_speckit_tasks_self_reference() {
+    local repo
+
+    repo="$(make_sdd_repo)"
+    mkdir -p "$repo/.claude/commands"
+    printf '# /speckit.tasks — DEPRECATED\n\nRetired by ADR-033.\n' \
+        > "$repo/.claude/commands/speckit.tasks.md"
+    assert_command_succeeds "$repo" --not-rule RETIRED_COMMAND
+
+    repo="$(make_sdd_repo)"
+    mkdir -p "$repo/.claude/commands"
+    printf '# Other Command\n\nRun /speckit.tasks to continue.\n' \
+        > "$repo/.claude/commands/other-command.md"
+    assert_command_fails_with "$repo" 1 "RETIRED_COMMAND" ".claude/commands/other-command.md"
+}
+
+test_check_sdd_does_not_match_speckit_taskstoissues() {
+    local repo
+
+    repo="$(make_sdd_repo)"
+    mkdir -p "$repo/.claude/commands"
+    printf '# Other Command\n\nRun /speckit.taskstoissues to convert tasks to GitHub issues.\n' \
+        > "$repo/.claude/commands/other-command.md"
+    assert_command_succeeds "$repo" --not-rule RETIRED_COMMAND
+}
+
 test_check_sdd_does_not_match_pnpm() {
     local repo output
     repo="$(make_sdd_repo)"
@@ -3200,6 +3258,11 @@ test_check_sdd_fails_for_retired_command_in_non_sdd_workflow_skill
 test_check_sdd_ignores_retired_command_text_in_pycache_artifacts
 test_check_sdd_fails_for_retired_speckit_implement
 test_check_sdd_excludes_speckit_implement_self_reference
+test_check_sdd_fails_for_retired_speckit_plan
+test_check_sdd_excludes_speckit_plan_self_reference
+test_check_sdd_fails_for_retired_speckit_tasks
+test_check_sdd_excludes_speckit_tasks_self_reference
+test_check_sdd_does_not_match_speckit_taskstoissues
 test_check_sdd_does_not_match_pnpm
 test_check_sdd_accepts_exact_legacy_baseline
 test_check_sdd_fails_for_new_baseline_violation
