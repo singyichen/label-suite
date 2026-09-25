@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import {
   buildWorkspaceUrl,
+  gotoReviewerWorkspace,
   dismissGuidelineModal,
   patchDataFile,
   selectWorkspaceText,
@@ -139,9 +140,7 @@ test.describe('relation_identification output type — pure mode (T008)', () => 
 test.describe('relation_identification output type — reviewer, pure mode (T008)', () => {
   for (const runType of ['dry_run', 'official_run'] as const) {
     test(`${runType} reviewer sees the dataset entities and can build a relation`, async ({ page }) => {
-      await page.goto(
-        buildWorkspaceUrl({ task_id: 'T008', sample_id: 'rel-001', role: 'reviewer', run_type: runType })
-      );
+      await gotoReviewerWorkspace(page, { task_id: 'T008', sample_id: 'rel-001', run_type: runType });
       await dismissGuidelineModal(page);
 
       const panel = page.getByTestId('ws-review-correct-relation_identification');
@@ -168,9 +167,7 @@ test.describe('relation_identification output type — reviewer, pure mode (T008
         answers: { entity_recognition: [{ text: '心房顫動', type: 'DISE' }], relation_identification: [] },
       }];
     `);
-    await page.goto(
-      buildWorkspaceUrl({ task_id: 'T010', sample_id: 'med-001', role: 'reviewer', run_type: 'official_run' })
-    );
+    await gotoReviewerWorkspace(page, { task_id: 'T010', sample_id: 'med-001', run_type: 'official_run' });
     await dismissGuidelineModal(page);
 
     const panel = page.getByTestId('ws-review-correct-span');

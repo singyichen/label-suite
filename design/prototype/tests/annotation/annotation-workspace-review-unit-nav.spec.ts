@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
+import { buildWorkspaceUrl, gotoReviewerWorkspace, skipGuidelineModal } from './_workspace-helpers';
 
 /* Reviewer navigation walks review units (spec 015 v4.3.0, FR-056).
  *
@@ -37,14 +37,14 @@ test.describe('The reviewer left column lists review units', () => {
   for (const runType of RUN_TYPES) {
     test(`${runType}: 5 samples × 3 annotators renders ${T001_UNITS} entries`, async ({ page }) => {
       await skipGuidelineModal(page);
-      await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer', run_type: runType }));
+      await gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001', run_type: runType });
 
       await expect(page.getByTestId('ws-sample-item')).toHaveCount(T001_UNITS);
     });
 
     test(`${runType}: consecutive entries repeat the sample and advance the annotator`, async ({ page }) => {
       await skipGuidelineModal(page);
-      await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer', run_type: runType }));
+      await gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001', run_type: runType });
 
       const annotators = page.getByTestId('ws-sample-annotator');
       await expect(annotators.nth(0)).toHaveText('kioleemg12');
@@ -55,7 +55,7 @@ test.describe('The reviewer left column lists review units', () => {
 
     test(`${runType}: the progress denominator counts review units`, async ({ page }) => {
       await skipGuidelineModal(page);
-      await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer', run_type: runType }));
+      await gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001', run_type: runType });
 
       /* Wording names the reviewer as the subject (issue #452), the
          denominator is still the review-unit count this suite pins. */
@@ -69,7 +69,7 @@ test.describe('The reviewer left column lists review units', () => {
 test.describe('Prev / next move between annotators of the same sample', () => {
   test('下一筆 reaches the second annotator of sent-001, not sent-002', async ({ page }) => {
     await skipGuidelineModal(page);
-    await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer', run_type: 'dry_run' }));
+    await gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001', run_type: 'dry_run' });
 
     // kioleemg12 answered positive.
     await expect(page.getByTestId('ws-single-label-chip-positive')).toHaveAttribute('aria-pressed', 'true');
@@ -84,7 +84,7 @@ test.describe('Prev / next move between annotators of the same sample', () => {
 
   test('上一筆 walks back into the previous sample last annotator', async ({ page }) => {
     await skipGuidelineModal(page);
-    await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-002', role: 'reviewer', run_type: 'dry_run' }));
+    await gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-002', run_type: 'dry_run' });
 
     await page.getByTestId('ws-prev-btn').click();
 
@@ -95,15 +95,12 @@ test.describe('Prev / next move between annotators of the same sample', () => {
 
   test('下一筆 stays enabled on the last sample until its last annotator', async ({ page }) => {
     await skipGuidelineModal(page);
-    await page.goto(
-      buildWorkspaceUrl({
-        task_id: 'T001',
-        sample_id: 'sent-005',
-        role: 'reviewer',
-        run_type: 'dry_run',
-        annotator_id: 'kioleemg12',
-      })
-    );
+    await gotoReviewerWorkspace(page, {
+      task_id: 'T001',
+      sample_id: 'sent-005',
+      run_type: 'dry_run',
+      annotator_id: 'kioleemg12',
+    });
 
     // Sample-shaped nav disabled this at sent-005; two units still follow.
     await expect(page.getByTestId('ws-next-btn')).toBeEnabled();
@@ -117,15 +114,12 @@ test.describe('Prev / next move between annotators of the same sample', () => {
 
   test('上一筆 is disabled on the very first review unit', async ({ page }) => {
     await skipGuidelineModal(page);
-    await page.goto(
-      buildWorkspaceUrl({
-        task_id: 'T001',
-        sample_id: 'sent-001',
-        role: 'reviewer',
-        run_type: 'dry_run',
-        annotator_id: 'kioleemg12',
-      })
-    );
+    await gotoReviewerWorkspace(page, {
+      task_id: 'T001',
+      sample_id: 'sent-001',
+      run_type: 'dry_run',
+      annotator_id: 'kioleemg12',
+    });
 
     await expect(page.getByTestId('ws-prev-btn')).toBeDisabled();
   });
@@ -134,7 +128,7 @@ test.describe('Prev / next move between annotators of the same sample', () => {
 test.describe('Selecting an entry switches the reviewed annotator', () => {
   test('clicking the third entry seeds that annotator answer', async ({ page }) => {
     await skipGuidelineModal(page);
-    await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer', run_type: 'dry_run' }));
+    await gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001', run_type: 'dry_run' });
 
     await page.getByTestId('ws-sample-item').nth(2).click();
 
@@ -148,7 +142,7 @@ test.describe('Selecting an entry switches the reviewed annotator', () => {
      someone who never gave it. */
   test('an edit on one annotator does not leak onto the next', async ({ page }) => {
     await skipGuidelineModal(page);
-    await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer', run_type: 'dry_run' }));
+    await gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001', run_type: 'dry_run' });
 
     // Correct kioleemg12 (positive) to neutral, then move to 113450022.
     await page.getByTestId('ws-single-label-chip-neutral').click();

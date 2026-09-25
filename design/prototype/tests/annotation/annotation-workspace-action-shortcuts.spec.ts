@@ -1,5 +1,5 @@
-import { test, expect } from '@playwright/test';
-import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
+import { test, expect, type Page } from '@playwright/test';
+import { buildReviewerWorkspaceUrl, buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
 
 /* The four workspace shortcuts the sidebar panel advertises (issue #152).
  *
@@ -31,11 +31,10 @@ const FREE_TEXT_URL = buildWorkspaceUrl({
   run_type: 'official_run',
 });
 
-function reviewerUrl(annotatorId: string): string {
-  return buildWorkspaceUrl({
+function reviewerUrl(page: Page, annotatorId: string): Promise<string> {
+  return buildReviewerWorkspaceUrl(page, {
     task_id: 'T001',
     sample_id: 'sent-001',
-    role: 'reviewer',
     run_type: 'dry_run',
     annotator_id: annotatorId,
   });
@@ -81,7 +80,7 @@ test.describe('Alt+Arrow steps between review units', () => {
 
   test('reviewer: Alt+ArrowRight steps one review unit, not one sample', async ({ page }) => {
     await skipGuidelineModal(page);
-    await page.goto(reviewerUrl('kioleemg12'));
+    await page.goto(await reviewerUrl(page, 'kioleemg12'));
 
     await page.keyboard.press('Alt+ArrowRight');
 
@@ -155,7 +154,7 @@ test.describe('Ctrl/Cmd+S saves the draft', () => {
 
   test('reviewer: the shortcut does nothing, because 儲存草稿 is hidden', async ({ page }) => {
     await skipGuidelineModal(page);
-    await page.goto(reviewerUrl('kioleemg12'));
+    await page.goto(await reviewerUrl(page, 'kioleemg12'));
 
     await page.keyboard.press('Control+s');
 
@@ -184,7 +183,7 @@ test.describe('Ctrl/Cmd+Enter submits the unit on screen', () => {
 
   test('reviewer: the shortcut routes to 送出審核, not 提交', async ({ page }) => {
     await skipGuidelineModal(page);
-    await page.goto(reviewerUrl('kioleemg12'));
+    await page.goto(await reviewerUrl(page, 'kioleemg12'));
 
     await page.keyboard.press('Control+Enter');
 
