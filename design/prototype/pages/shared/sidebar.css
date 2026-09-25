@@ -671,7 +671,7 @@ html[data-theme="dark"] .shortcut-help-dialog {
   height: 16px;
   padding: 0 4px;
   border-radius: 9999px;
-  background: #EF4444;
+  background: #B91C1C;   /* red-700 — WCAG AA fix (issue #973), was #EF4444 (3.76:1). Reuses --color-error's light-mode value; still hardcoded (not var(--color-error)) and constant across themes per the issue #183 arbitration — only the constant's value changed. */
   color: #fff;
   font-size: 10px;
   font-weight: 700;
