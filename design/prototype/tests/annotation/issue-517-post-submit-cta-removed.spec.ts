@@ -15,19 +15,33 @@
  * pass merely because the workspace failed to load.
  */
 import { expect, test, type Page } from '@playwright/test';
-import { buildWorkspaceUrl, dismissGuidelineModal, skipGuidelineModal } from './_workspace-helpers';
+import {
+  buildReviewerWorkspaceUrl,
+  buildWorkspaceUrl,
+  dismissGuidelineModal,
+  gotoReviewerWorkspace,
+  skipGuidelineModal,
+} from './_workspace-helpers';
 
 /* T001 defaults to min_reviewers = 1, so a single submitted review finalizes
- * the unit — the shortest route to the state that used to raise the card. */
-const T001_UNIT = buildWorkspaceUrl({
-  task_id: 'T001',
-  sample_id: 'sent-001',
-  role: 'reviewer',
-  run_type: 'official_run',
-});
+ * the unit — the shortest route to the state that used to raise the card.
+ * issue #960: resolves the FR-093 assignee instead of relying on the
+ * coincidental roster default, since T001/sent-001 is a live, interactive
+ * unit -- the gate applies. */
+function gotoT001Unit(page: Page) {
+  return gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001', run_type: 'official_run' });
+}
 
 /* T014 dry-04 × kioleemg12 is seeded finalized, so it reproduces the other
- * half of the retired contract: a finished unit the reviewer merely visits. */
+ * half of the retired contract: a finished unit the reviewer merely visits.
+ * issue #960: deliberately NOT resolved through resolveAssignedReviewerId()
+ * -- reviewUnitBlockReason() (annotation-workspace.config.js) checks
+ * FINALIZED before the #921 NOT_ASSIGNED gate, so a finalized unit is
+ * read-only for EVERY identity, assigned or not (its own FR-094 finalized
+ * card already tells an unassigned viewer strictly more than a "not
+ * assigned" note would). The hardcoded 'reviewer_chen' here exercises
+ * exactly that "any identity, unit is still finalized" contract; using the
+ * true assignee instead would test a narrower, less interesting case. */
 const T014_FINALIZED_UNIT = buildWorkspaceUrl({
   task_id: 'T014',
   sample_id: 'dry-04-dispute-resolved',
@@ -69,7 +83,7 @@ test.beforeEach(async ({ page }) => {
 
 test.describe('Reviewer workspace — post-submit exit card removed (issue #517)', () => {
   test('送出審核後不再長出出口卡', async ({ page }) => {
-    await page.goto(T001_UNIT);
+    await gotoT001Unit(page);
     await dismissGuidelineModal(page);
     await approveAndSubmit(page);
 
@@ -79,7 +93,7 @@ test.describe('Reviewer workspace — post-submit exit card removed (issue #517)
   });
 
   test('重新整理後仍然沒有出口卡（狀態推導路徑也已移除）', async ({ page }) => {
-    await page.goto(T001_UNIT);
+    await gotoT001Unit(page);
     await dismissGuidelineModal(page);
     await approveAndSubmit(page);
     await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
@@ -104,7 +118,7 @@ test.describe('Reviewer workspace — post-submit exit card removed (issue #517)
   });
 
   test('未送出的可互動單位維持原樣，沒有出口卡也沒有被連帶移除的內容', async ({ page }) => {
-    await page.goto(T001_UNIT);
+    await gotoT001Unit(page);
     await dismissGuidelineModal(page);
 
     /* Anchor: this unit is still the reviewer's to do. */
@@ -113,7 +127,8 @@ test.describe('Reviewer workspace — post-submit exit card removed (issue #517)
   });
 
   test('麵包屑仍帶得回清單檢視狀態（buildListReturnUrl 未被連帶移除）', async ({ page }) => {
-    await page.goto(T001_UNIT + '&status=pending&limit=50');
+    const t001Unit = await buildReviewerWorkspaceUrl(page, { task_id: 'T001', sample_id: 'sent-001', run_type: 'official_run' });
+    await page.goto(t001Unit + '&status=pending&limit=50');
     await dismissGuidelineModal(page);
 
     const listHref = await page

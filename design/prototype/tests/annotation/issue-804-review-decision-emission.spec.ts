@@ -1,5 +1,11 @@
 import { test, expect, type Page } from '@playwright/test';
-import { buildWorkspaceUrl, dismissGuidelineModal, skipGuidelineModal, trackPageErrors, assertNoPageErrors } from './_workspace-helpers';
+import {
+  assertNoPageErrors,
+  dismissGuidelineModal,
+  gotoReviewerWorkspace,
+  skipGuidelineModal,
+  trackPageErrors,
+} from './_workspace-helpers';
 
 /* issue #719 (merged before this file was written): a non-finalizing review
  * submit calls advanceToNextActionableReviewUnit() -> selectSample(), which
@@ -15,7 +21,7 @@ import { buildWorkspaceUrl, dismissGuidelineModal, skipGuidelineModal, trackPage
  * re-navigates back to the just-reviewed unit's own URL (identical params,
  * default identity resolution) before opening the history tab. */
 async function returnToReviewedUnit(page: Page, taskId: string, sampleId: string) {
-  await page.goto(buildWorkspaceUrl({ task_id: taskId, sample_id: sampleId, role: 'reviewer', run_type: 'official_run' }));
+  await gotoReviewerWorkspace(page, { task_id: taskId, sample_id: sampleId, run_type: 'official_run' });
   await dismissGuidelineModal(page);
 }
 
@@ -97,8 +103,6 @@ async function returnToReviewedUnit(page: Page, taskId: string, sampleId: string
  *    is the simplest already-proven fixture for that interaction.
  */
 
-const REVIEWER = 'reviewer_wang'; // DEFAULT_REVIEWER_ID, annotation-workspace.data.js:221
-
 async function openHistoryTab(page: Page) {
   await page.getByTestId('ws-guideline-tab-history').click();
 }
@@ -115,9 +119,7 @@ test.describe('issue #804 / AC-2.21 / FR-086 / FR-092 / FR-097: 審核決策 →
   test('T013/absa-001：一個 outKey 通過、另一個 outKey 修正 → 恰一筆 accepted 與恰一筆 modified，actor_id 皆為審核員', async ({ page }) => {
     const pageErrors = trackPageErrors(page);
 
-    await page.goto(
-      buildWorkspaceUrl({ task_id: 'T013', sample_id: 'absa-001', role: 'reviewer', run_type: 'official_run' })
-    );
+    const reviewerId = await gotoReviewerWorkspace(page, { task_id: 'T013', sample_id: 'absa-001', run_type: 'official_run' });
     await dismissGuidelineModal(page);
 
     const rows = page.getByTestId('ws-review-row');
@@ -155,9 +157,9 @@ test.describe('issue #804 / AC-2.21 / FR-086 / FR-092 / FR-097: 審核決策 →
     await expect(modified, 'AC-2.21 / FR-086: 修正的 outKey 必須恰產生一筆 modified 事件').toHaveCount(1);
 
     const acceptedCard = accepted.locator('xpath=ancestor::div[contains(@class,"history-item")]');
-    await expect(acceptedCard.locator('.history-actor')).toHaveText(`審核員 · ${REVIEWER}`);
+    await expect(acceptedCard.locator('.history-actor')).toHaveText(`審核員 · ${reviewerId}`);
     const modifiedCard = modified.locator('xpath=ancestor::div[contains(@class,"history-item")]');
-    await expect(modifiedCard.locator('.history-actor')).toHaveText(`審核員 · ${REVIEWER}`);
+    await expect(modifiedCard.locator('.history-actor')).toHaveText(`審核員 · ${reviewerId}`);
 
     assertNoPageErrors(pageErrors);
   });
@@ -165,9 +167,7 @@ test.describe('issue #804 / AC-2.21 / FR-086 / FR-092 / FR-097: 審核決策 →
   test('T013/absa-001：審核員選擇「無法判定」→ 必須產生 bypassed 歷程事件（FR-086，目前整個 pages/ 下無任何產生點）', async ({ page }) => {
     const pageErrors = trackPageErrors(page);
 
-    await page.goto(
-      buildWorkspaceUrl({ task_id: 'T013', sample_id: 'absa-001', role: 'reviewer', run_type: 'official_run' })
-    );
+    const reviewerId = await gotoReviewerWorkspace(page, { task_id: 'T013', sample_id: 'absa-001', run_type: 'official_run' });
     await dismissGuidelineModal(page);
 
     const rows = page.getByTestId('ws-review-row');
@@ -194,7 +194,7 @@ test.describe('issue #804 / AC-2.21 / FR-086 / FR-092 / FR-097: 審核決策 →
     const bypassed = historyBadges(page, 'bypassed');
     await expect(bypassed, 'FR-086: 無法判定決策必須恰產生一筆 bypassed 事件').toHaveCount(1);
     const bypassedCard = bypassed.locator('xpath=ancestor::div[contains(@class,"history-item")]');
-    await expect(bypassedCard.locator('.history-actor')).toHaveText(`審核員 · ${REVIEWER}`);
+    await expect(bypassedCard.locator('.history-actor')).toHaveText(`審核員 · ${reviewerId}`);
 
     assertNoPageErrors(pageErrors);
   });
@@ -202,7 +202,7 @@ test.describe('issue #804 / AC-2.21 / FR-086 / FR-092 / FR-097: 審核決策 →
   test('T001/sent-001：審核員直接修正答案值後仍點擊「通過」→ 必須寫入 accepted，不得因值變動寫入 modified', async ({ page }) => {
     const pageErrors = trackPageErrors(page);
 
-    await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer', run_type: 'official_run' }));
+    await gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001', run_type: 'official_run' });
     await dismissGuidelineModal(page);
 
     // Same "edit the correction control before deciding" interaction as

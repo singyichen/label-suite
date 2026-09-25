@@ -3,6 +3,7 @@ import {
   assertNoPageErrors,
   buildWorkspaceUrl,
   dismissGuidelineModal,
+  gotoReviewerWorkspace,
   patchDataFile,
   selectWorkspaceText,
   skipGuidelineModal,
@@ -355,9 +356,7 @@ test.describe('FR-098 §4 — an eight-key CompactAnswer rehydrates relType and 
         { subj: '高血壓', rel: '導致', relType: 'prevents', obj: '動脈硬化', subjStart: 0, subjEnd: 2, objStart: 14, objEnd: 17 }
       ];
     `);
-    await page.goto(
-      buildWorkspaceUrl({ task_id: 'T008', sample_id: 'rel-001', role: 'reviewer' })
-    );
+    await gotoReviewerWorkspace(page, { task_id: 'T008', sample_id: 'rel-001' });
     await dismissGuidelineModal(page);
 
     const panel = page.getByTestId('ws-review-correct-relation_identification');
@@ -401,9 +400,7 @@ test.describe('FR-098 §4 — an existing three-key-only CompactAnswer still reh
      * a bug would slip past a naive truthiness check by accident, but fails
      * the explicit `toBeNull()` below -- a missing key MUST become `null`,
      * never the coincidentally-matching `rel` value. */
-    await page.goto(
-      buildWorkspaceUrl({ task_id: 'T008', sample_id: 'rel-001', role: 'reviewer' })
-    );
+    await gotoReviewerWorkspace(page, { task_id: 'T008', sample_id: 'rel-001' });
     await dismissGuidelineModal(page);
 
     const panel = page.getByTestId('ws-review-correct-relation_identification');
