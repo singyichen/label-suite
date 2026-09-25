@@ -418,6 +418,10 @@
   }
 
   function markSampleSubmitted(taskId, role, runType, sampleId, payload, historySummary, identity) {
+    /* FR-101 (issue #908): an annotator write on an already-finalized unit
+       is rejected outright, before any bucket read/write -- reviewer and
+       project_leader roles are never subject to this guard. */
+    if (role === 'annotator' && isAnnotatorWriteLocked(taskId, runType, sampleId, identity)) return false;
     var key = submissionBucketKey(taskId, role, runType, identity);
     var bucket = readSubmissionBucket(key);
     var existing = bucket[sampleId];
@@ -446,6 +450,7 @@
     }
     bucket[sampleId] = entry;
     writeSubmissionBucket(key, bucket);
+    return true;
   }
 
   /* FR-086 / FR-092 emission points for the three REVIEW_DECISIONS values.
@@ -504,6 +509,9 @@
      only its answers are refreshed (spec 015 has no un-submit transition);
      pending samples become 'saved'. */
   function markSampleSaved(taskId, role, runType, sampleId, payload, historySummary, identity) {
+    /* FR-101 (issue #908): same guard as markSampleSubmitted -- see its
+       comment for the trigger's reasoning. */
+    if (role === 'annotator' && isAnnotatorWriteLocked(taskId, runType, sampleId, identity)) return false;
     var key = submissionBucketKey(taskId, role, runType, identity);
     var bucket = readSubmissionBucket(key);
     var existing = bucket[sampleId];
@@ -525,6 +533,7 @@
       bucket[sampleId] = entry;
     }
     writeSubmissionBucket(key, bucket);
+    return true;
   }
 
   /* Reviewer mode (Phase 3, FR-024L-1) reads back the annotator's own
@@ -711,7 +720,11 @@
    * outcome) ends up with no `result_snapshot` key at all, same as before
    * this parameter existed. */
   function appendSampleTimelineEvent(taskId, runType, sampleId, action, role, reason, historySummary, identity, timing, resultSnapshot) {
-    if (!reason) return;
+    if (!reason) return false;
+    /* FR-101 (issue #908): same guard as markSampleSubmitted -- see its
+       comment for the trigger's reasoning. submitArbitration()'s reviewer-
+       role call and any other non-annotator caller are unaffected. */
+    if (role === 'annotator' && isAnnotatorWriteLocked(taskId, runType, sampleId, identity)) return false;
     var key = submissionBucketKey(taskId, 'annotator', runType, identity);
     var bucket = readSubmissionBucket(key);
     var entry = bucket[sampleId];
@@ -724,12 +737,13 @@
       timingFields(timing)
     ));
     writeSubmissionBucket(key, bucket);
+    return true;
   }
 
   /* FR-089 / AC-2.20: the annotator sets a sample aside, saying why. New in
      v4.61.0 -- there was no skip action before this version. */
   function markSampleSkipped(taskId, runType, sampleId, reason, historySummary, identity, timing) {
-    appendSampleTimelineEvent(taskId, runType, sampleId, 'skipped', 'annotator', reason, historySummary, identity, timing);
+    return appendSampleTimelineEvent(taskId, runType, sampleId, 'skipped', 'annotator', reason, historySummary, identity, timing);
   }
 
   /* Reviewer per-row decision drafts (issue #196, CONT-03): approve/reject
@@ -2255,6 +2269,24 @@
     return allResolved ? REVIEW_UNIT_STATUS.FINALIZED : REVIEW_UNIT_STATUS.DISPUTED;
   }
 
+  /* FR-101 (issue #908): annotator write-lock trigger, reused verbatim from
+   * getReviewUnitStatus() rather than a second "does a reviewer decision
+   * exist" check -- that function's own first line already requires a real
+   * stored annotator submission (getSubmission(...) truthy) before it can
+   * derive anything but null, so a unit only ever seeded through an FR-044a
+   * demo-row reviewer decision (no real annotator submission underneath)
+   * reads back as null here too, never FINALIZED. That is what exempts the
+   * demo-row case for free, with no separate judgment path to fall out of
+   * sync with the status derivation. outKeys come from
+   * resolveTaskProfile(taskId).outputs, the same source the workspace host
+   * itself uses to build the task's output type list. */
+  function isAnnotatorWriteLocked(taskId, runType, sampleId, identity) {
+    if (runType !== 'official_run') return false;
+    var profile = resolveTaskProfile(taskId);
+    var outKeys = (profile && profile.outputs || []).map(function (o) { return o.type; });
+    return getReviewUnitStatus(taskId, runType, sampleId, identity, outKeys) === REVIEW_UNIT_STATUS.FINALIZED;
+  }
+
   /* issue #824 (FR-093 本版修訂 1): the key a sticky lookup is built on.
    * U+0000 appears in no sample or annotator id, so two different units
    * can never collide onto one entry the way a printable separator could
@@ -3768,6 +3800,7 @@
     markSampleSubmitted: markSampleSubmitted,
     markSampleSaved: markSampleSaved,
     markSampleSkipped: markSampleSkipped,
+    appendSampleTimelineEvent: appendSampleTimelineEvent,
     markSampleRejected: markSampleRejected,
     saveReviewRowDecisionDraft: saveReviewRowDecisionDraft,
     getReviewRowDecisionDraft: getReviewRowDecisionDraft,
