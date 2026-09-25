@@ -154,6 +154,9 @@
       reviewOriginalAnswerLabel: '標記員原答案：',
       reviewCorrectedAnswerLabel: 'Reviewer 修正後答案：',
       toastReviewDecisionResetOnEdit: '直接修正的值已變更，對應的審核決策已重置，請重新確認後再送出',
+      annotatorFinalizedNotice: '此標記結果已定稿，無法再修改或提交',
+      annotatorFinalizedToast: '此標記結果已定稿，無法再修改或提交',
+      wsAutosaveFinalized: '已定稿，不再自動儲存',
     },
     en: {
       sampleListTitle: 'Samples',
@@ -293,6 +296,9 @@
       reviewOriginalAnswerLabel: "Annotator's original answer: ",
       reviewCorrectedAnswerLabel: "Reviewer's corrected answer: ",
       toastReviewDecisionResetOnEdit: 'The direct correction changed, so the matching review decision was reset -- please re-confirm before submitting',
+      annotatorFinalizedNotice: 'This annotation is finalized and can no longer be edited or submitted.',
+      annotatorFinalizedToast: 'This annotation is finalized and can no longer be edited or submitted.',
+      wsAutosaveFinalized: 'Finalized — autosave stopped.',
     },
   };
   if (window.TASK_CONFIG_I18N) {
@@ -1482,6 +1488,67 @@
     nav.appendChild(sep);
   }
 
+  /* FR-101 (issue #908): reused by both the lock banner/control-disable
+     render below and renderAutosaveStatus()'s finalized branch, so the two
+     never risk drifting apart from re-deriving the same four-argument call
+     independently. Mirrors data.js's own isAnnotatorWriteLocked() scope
+     guard at the UI layer (belt and suspenders) so a future status shape
+     coincidence can never render the notice for dry_run. */
+  function isCurrentSampleAnnotatorLocked() {
+    if (currentRunType !== 'official_run') return false;
+    var data = window.LabelSuiteAnnotationWorkspaceData;
+    return data.getReviewUnitStatus(
+      currentProfile.id, currentRunType, currentSampleId, currentIdentity, state.selectedOutputTypes
+    ) === data.REVIEW_UNIT_STATUS.FINALIZED;
+  }
+
+  function setControlLocked(elementId, locked) {
+    var el = document.getElementById(elementId);
+    if (!el) return;
+    el.disabled = locked;
+    if (locked) el.setAttribute('aria-disabled', 'true');
+    else el.removeAttribute('aria-disabled');
+  }
+
+  /* Generic, engine-agnostic per FR-101/Generalization-First: no per-output-
+     type branching, just every native control inside the engine-rendered
+     preview subtree. */
+  function setPreviewControlsLocked(locked) {
+    var preview = document.getElementById('annotationPreview');
+    if (!preview) return;
+    preview.querySelectorAll('button, input, select, textarea').forEach(function (control) {
+      control.disabled = locked;
+      if (locked) control.setAttribute('aria-disabled', 'true');
+      else control.removeAttribute('aria-disabled');
+    });
+  }
+
+  function renderAnnotatorFinalizedLock() {
+    var scroll = document.getElementById('contentScroll');
+    var preview = document.getElementById('annotationPreview');
+    var existingNotice = document.querySelector('[data-testid="ws-annotator-finalized-notice"]');
+    if (existingNotice) existingNotice.remove();
+
+    var locked = isCurrentSampleAnnotatorLocked();
+    if (locked && scroll && preview) {
+      var notice = document.createElement('div');
+      notice.setAttribute('data-testid', 'ws-annotator-finalized-notice');
+      notice.className = 'content-card';
+      notice.style.cssText = 'border-color:var(--color-info-border);'
+        + 'background:var(--color-info-bg);color:var(--color-info);';
+      notice.textContent = t('annotatorFinalizedNotice');
+      scroll.insertBefore(notice, preview);
+    }
+
+    /* wsSkipBtn is NOT set here: renderSkipControl() (called after
+       renderWorkspace() in selectSample()) owns that button's DOM presence
+       and is the only place with a correct view of it post-insert/remove --
+       see its own comment for why. */
+    setControlLocked('wsSaveBtn', locked);
+    setControlLocked('wsSubmitBtn', locked);
+    setPreviewControlsLocked(locked);
+  }
+
   function renderWorkspace() {
     renderEntryBreadcrumb();
     if (currentRole === 'reviewer') {
@@ -1492,6 +1559,7 @@
       /* patched: original render + testid patches + question/annotation
          card regrouping (patchedUpdateAnnotationPreview above) */
       updateAnnotationPreview();
+      renderAnnotatorFinalizedLock();
     }
     renderSampleList();
     renderSampleNav();
@@ -1691,6 +1759,14 @@
     if (statusEl) statusEl.classList.remove('hidden');
     var dot = document.getElementById('wsAutosaveDot');
     if (!dot) return;
+    /* FR-101 (issue #908): finalized takes precedence over dirty/saved/
+       initial -- a locked sample never shows an "unsaved changes" or "saved
+       at" state again, since no further write can land. */
+    if (isCurrentSampleAnnotatorLocked()) {
+      dot.className = 'autosave-dot saved';
+      setText('wsAutosaveLabel', t('wsAutosaveFinalized'));
+      return;
+    }
     if (currentSampleDirty) {
       dot.className = 'autosave-dot dirty';
       setText('wsAutosaveLabel', t('wsAutosaveDirty'));
@@ -2500,17 +2576,27 @@
 
   function renderSkipControl() {
     if (!skipGroupNode) return;
+    /* FR-101 (issue #908): a finalized unit is, by construction, already
+       submitted (the lock's own trigger condition requires a real stored
+       annotator submission), so the pre-existing "already-submitted sample
+       is not skippable" removal below would otherwise strip wsSkipBtn from
+       the DOM for every locked sample too -- but FR-101 requires the three
+       controls to stay on screen, disabled, not removed. `locked` keeps the
+       group present so the disable path a few lines down has an element to
+       disable. */
+    var locked = isCurrentSampleAnnotatorLocked();
     var applies =
       currentRole === 'annotator' &&
-      !window.LabelSuiteAnnotationWorkspaceData.isSampleSubmitted(
+      (locked || !window.LabelSuiteAnnotationWorkspaceData.isSampleSubmitted(
         currentProfile.id, currentRole, currentRunType, currentSampleId, currentIdentity
-      );
+      ));
     if (applies) {
       if (!skipGroupNode.parentNode) skipGroupParent.insertBefore(skipGroupNode, skipGroupAnchor);
       refreshSkipBlocker();
     } else if (skipGroupNode.parentNode) {
       skipGroupNode.remove();
     }
+    setControlLocked('wsSkipBtn', locked);
   }
 
   function handleSkip() {
@@ -2519,7 +2605,7 @@
       showToast(t('skipNeedsReason'), 'warning');
       return;
     }
-    window.LabelSuiteAnnotationWorkspaceData.markSampleSkipped(
+    var skipped = window.LabelSuiteAnnotationWorkspaceData.markSampleSkipped(
       currentProfile.id,
       currentRunType,
       currentSampleId,
@@ -2527,6 +2613,10 @@
       buildHistorySummary(),
       currentIdentity
     );
+    if (skipped === false) {
+      showToast(t('annotatorFinalizedToast'), 'warning');
+      return;
+    }
     var input = document.getElementById('wsSkipReason');
     if (input) input.value = '';
     refreshSkipBlocker();
@@ -2542,7 +2632,7 @@
   }
 
   function handleSave() {
-    window.LabelSuiteAnnotationWorkspaceData.markSampleSaved(
+    var saved = window.LabelSuiteAnnotationWorkspaceData.markSampleSaved(
       currentProfile.id,
       currentRole,
       currentRunType,
@@ -2551,6 +2641,10 @@
       buildHistorySummary(),
       currentIdentity
     );
+    if (saved === false) {
+      showToast(t('annotatorFinalizedToast'), 'warning');
+      return;
+    }
     clearUnsaved();
     renderAutosaveStatus();
     renderSampleList();
@@ -2605,7 +2699,13 @@
       if (submitBtnEl) submitBtnEl.disabled = false;
       return;
     }
-    window.LabelSuiteAnnotationWorkspaceData.markSampleSubmitted(currentProfile.id, currentRole, currentRunType, currentSampleId, collectAnswerPayload(), buildHistorySummary(), currentIdentity);
+    var submitted = window.LabelSuiteAnnotationWorkspaceData.markSampleSubmitted(currentProfile.id, currentRole, currentRunType, currentSampleId, collectAnswerPayload(), buildHistorySummary(), currentIdentity);
+    if (submitted === false) {
+      showToast(t('annotatorFinalizedToast'), 'warning');
+      state.submitBusy = false;
+      if (submitBtnEl) submitBtnEl.disabled = false;
+      return;
+    }
     clearUnsaved();
     /* task-detail.html's dry-run status sync (waiting_iaa_confirmation once
        every sample is submitted) reads this key -- see
