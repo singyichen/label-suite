@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import {
   buildWorkspaceUrl,
   dismissGuidelineModal,
+  gotoReviewerWorkspace,
   patchDataFile,
   selectWorkspaceText,
   skipGuidelineModal,
@@ -109,14 +110,9 @@ test('a repeated span text is restored to its own offset, not to the first match
       ] },
     }];
   `);
-  await page.goto(
-    buildWorkspaceUrl({
-      task_id: 'T006',
-      sample_id: 'sequence-tagging-001',
-      role: 'reviewer',
-      annotator_id: 'kioleemg12',
-    })
-  );
+  await gotoReviewerWorkspace(page, {
+    task_id: 'T006', sample_id: 'sequence-tagging-001', annotator_id: 'kioleemg12',
+  });
   await dismissGuidelineModal(page);
 
   const spans = await page.evaluate(() => {

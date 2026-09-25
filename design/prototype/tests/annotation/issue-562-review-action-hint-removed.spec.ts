@@ -25,12 +25,24 @@
  * (disputed, arbitration-reject-to-exception-pool, migrated verbatim).
  */
 import { test, expect, type Page } from '@playwright/test';
-import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
+import { buildWorkspaceUrl, gotoReviewerWorkspace, skipGuidelineModal } from './_workspace-helpers';
 
 test.describe.configure({ retries: 2 });
 
 const HINT = 'ws-review-action-hint';
 
+/* issue #960: the 'reviewer_chen' default below is intentional, not a
+ * coincidental roster pick -- every OTHER call site in this file either (a)
+ * asserts only banner-level content (the retired hint, `.rv-action-hint`),
+ * which reviewUnitBlockReason() never gates (buildReviewUnitContext() renders
+ * unconditionally, before the block reason is even computed), or (b) opens a
+ * unit whose block reason (ARBITRATION/FINALIZED/EMPTY) is checked before the
+ * #921 NOT_ASSIGNED gate -- 'reviewer_chen' carries can_arbitrate and is
+ * therefore reliably EXCLUDED from the regular assignment pool
+ * (reviewAssignmentRoster() filters arbiterIds out), which is exactly what
+ * several of these cases want to exercise. The one exception is the first
+ * test below (a still-pending, interactive unit), which resolves the real
+ * assignee instead of taking this default. */
 async function openUnit(
   page: Page,
   params: {
@@ -73,7 +85,12 @@ test.describe('issue #562 — no action hint under the review-unit banner', () =
      anyone but its owner. T015 ofs-04-pending-review is the unit that now
      carries this case: annotator submitted, no reviewer decision yet. */
   test('pending unit, its reviewer has not submitted (was 需要你的審核)', async ({ page }) => {
-    await openUnit(page, { task_id: 'T015', sample_id: 'ofs-04-pending-review' });
+    /* issue #960: this case checks ws-review-submit-btn, a genuinely gated
+     * review-card element on a still-pending (interactive) unit -- unlike
+     * every other case below, it needs the real assignee, not the
+     * never-assignable 'reviewer_chen' openUnit() defaults to. */
+    await gotoReviewerWorkspace(page, { task_id: 'T015', sample_id: 'ofs-04-pending-review', run_type: 'official_run' });
+    await expect(page.getByTestId('ws-review-unit-context')).toBeVisible();
     await expectNoHint(page);
     await expect(page.getByTestId('ws-review-submit-btn')).toBeVisible();
   });

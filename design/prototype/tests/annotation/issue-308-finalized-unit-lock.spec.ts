@@ -40,6 +40,17 @@ type WorkspaceData = {
  * its place below.
  */
 
+/* issue #960: deliberately NOT resolved through resolveAssignedReviewerId()
+ * -- every case in this file targets a unit reviewUnitBlockReason()
+ * (annotation-workspace.config.js) locks or routes to arbitration BEFORE it
+ * ever reaches the #921 NOT_ASSIGNED check: ARBITRATION is checked first,
+ * FINALIZED second, and every sample this file opens is either already
+ * finalized (ofs-01, ofm-02, ofs-03) or becomes disputed-then-arbitrated by
+ * 'reviewer_chen' specifically because that id carries can_arbitrate and
+ * never reviewed the unit (the live-path test). 'reviewer_chen' is
+ * therefore the correct fixed identity for this file's entire contract, not
+ * a coincidental default -- resolving "the assignee" here would test the
+ * wrong thing. */
 function reviewerUrl(taskId: string, sampleId: string): string {
   return buildWorkspaceUrl({
     task_id: taskId, sample_id: sampleId, role: 'reviewer',

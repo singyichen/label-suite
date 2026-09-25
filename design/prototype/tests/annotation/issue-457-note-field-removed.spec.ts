@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
+import { buildWorkspaceUrl, gotoReviewerWorkspace, skipGuidelineModal } from './_workspace-helpers';
 
 /* Dead 備註 field removal (issue #457, spec 015 v4.30.0 FR-075 / AC-3.41).
  *
@@ -74,12 +74,7 @@ test.describe('issue #457 -- the workspace ships no unpersisted free-text note f
   });
 
   test('reviewer, pending unit: no note field', async ({ page }) => {
-    await page.goto(
-      buildWorkspaceUrl({
-        task_id: 'T015', sample_id: 'ofs-04-pending-review',
-        role: 'reviewer', run_type: 'official_run',
-      })
-    );
+    await gotoReviewerWorkspace(page, { task_id: 'T015', sample_id: 'ofs-04-pending-review', run_type: 'official_run' });
 
     // Still an interactive unit -- the submit path proves we are pre-finalize.
     await expect(page.getByTestId('ws-review-submit-btn')).toBeVisible();
@@ -87,6 +82,10 @@ test.describe('issue #457 -- the workspace ships no unpersisted free-text note f
   });
 
   test('reviewer, finalized unit: read-only card and no note field', async ({ page }) => {
+    /* issue #960: reviewer_id left hardcoded on purpose -- ofs-01-agree-gold
+     * is already finalized, and reviewUnitBlockReason() checks FINALIZED
+     * before the #921 NOT_ASSIGNED gate, so any roster identity sees the
+     * same read-only locked card here regardless of assignment. */
     await page.goto(
       buildWorkspaceUrl({
         task_id: 'T015', sample_id: 'ofs-01-agree-gold',
