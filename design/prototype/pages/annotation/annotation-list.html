@@ -1502,7 +1502,7 @@
     profile.outputTypes.forEach(function (outKey) {
       var poolRecord = exceptionPool[outKey];
       if (poolRecord && poolRecord.action !== 'exclude_from_dataset' &&
-          Object.prototype.hasOwnProperty.call(poolRecord, 'finalized_value')) {
+          data.hasLegitimateFinalizedValue(poolRecord)) {
         overwrites = overwrites || {};
         overwrites[outKey] = poolRecord.finalized_value;
       }
@@ -1510,17 +1510,19 @@
     items.forEach(function (item) {
       var poolRecord = exceptionPool[item.outKey];
       if (poolRecord && poolRecord.action !== 'exclude_from_dataset' &&
-          Object.prototype.hasOwnProperty.call(poolRecord, 'finalized_value')) {
+          data.hasLegitimateFinalizedValue(poolRecord)) {
         return;
       }
       var resolvedValue;
       var stored = arbState[item.outKey + '::' + item.key];
       /* Arbitration is the only remaining source of a finalized value here:
          the exception-pool branch above already returned for any outKey a
-         disposition supplied a value for. A unit that reaches this point
-         with no `finalized_by` has nothing legitimate to overwrite with, so
-         the row keeps the annotator's original answer (issue #903). */
-      if (stored && stored.finalized_by) {
+         disposition supplied a legitimate value for. A unit that reaches
+         this point with no `finalized_by`, or an illegitimate
+         finalized_value (issue #914), has nothing legitimate to overwrite
+         with, so the row keeps the annotator's original answer (issue
+         #903). */
+      if (stored && stored.finalized_by && data.hasLegitimateFinalizedValue(stored)) {
         resolvedValue = stored.finalized_value;
       }
       if (resolvedValue !== undefined) {
@@ -1547,7 +1549,12 @@
     var sourceKeys = {};
     profile.outputTypes.forEach(function (outKey) {
       var poolRecord = exceptionPool[outKey];
-      if (poolRecord && exceptionSourceKeys[poolRecord.action]) {
+      // issue #914: exclude_from_dataset deliberately carries no
+      // finalized_value (D2 sentinel) and always counts; the other three
+      // actions must additionally carry a legitimate value, or the badge
+      // would claim a disposition getFinalizedOverwrites() didn't apply.
+      if (poolRecord && exceptionSourceKeys[poolRecord.action] &&
+          (poolRecord.action === 'exclude_from_dataset' || data.hasLegitimateFinalizedValue(poolRecord))) {
         sourceKeys[outKey] = exceptionSourceKeys[poolRecord.action];
       }
     });
@@ -1560,7 +1567,7 @@
       itemIds.forEach(function (itemId) {
         if (itemId.indexOf(outKey + '::') !== 0) return;
         var stored = arbState[itemId];
-        if (!stored || !stored.finalized_by) return;
+        if (!stored || !stored.finalized_by || !data.hasLegitimateFinalizedValue(stored)) return;
         var votes = Array.isArray(stored.votes) ? stored.votes : [];
         var finalizedVote = null;
         votes.forEach(function (vote) {
