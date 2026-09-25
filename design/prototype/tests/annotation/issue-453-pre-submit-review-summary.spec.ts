@@ -94,9 +94,11 @@ test.describe('Multi-output tasks name the still-undecided outputs in the submit
 
     await page.getByTestId('ws-review-submit-btn').click();
     const toast = page.locator('#toastMsg');
-    await expect(toast).toContainText('entity_recognition');
-    await expect(toast).toContainText('relation_identification');
-    await expect(toast).toContainText('multi_dim');
+    // issue #929: the toast names output types by their zh display name, not
+    // the raw registry key -- see issue-929-reviewer-jargon-wording.spec.ts.
+    await expect(toast).toContainText('實體辨識');
+    await expect(toast).toContainText('關係識別');
+    await expect(toast).toContainText('多維度回歸');
   });
 
   test('T013 (3 outputs): after deciding one, the toast names only the remaining two', async ({ page }) => {
@@ -107,9 +109,11 @@ test.describe('Multi-output tasks name the still-undecided outputs in the submit
     await page.getByTestId('ws-review-submit-btn').click();
 
     const toast = page.locator('#toastMsg');
-    await expect(toast).toContainText('relation_identification');
-    await expect(toast).toContainText('multi_dim');
-    await expect(toast).not.toContainText('entity_recognition');
+    // issue #929: display name, not raw key -- see
+    // issue-929-reviewer-jargon-wording.spec.ts.
+    await expect(toast).toContainText('關係識別');
+    await expect(toast).toContainText('多維度回歸');
+    await expect(toast).not.toContainText('實體辨識');
   });
 });
 
@@ -136,7 +140,9 @@ test.describe('A decision never survives an edit to the value it judged (issue #
     await flipSingleLabel(page);
 
     await page.getByTestId('ws-review-submit-btn').click();
-    await expect(page.locator('#toastMsg')).toHaveText('請完成以下輸出類型的審核決策：single_label');
+    // issue #929: display name, not raw key -- see
+    // issue-929-reviewer-jargon-wording.spec.ts.
+    await expect(page.locator('#toastMsg')).toHaveText('請完成以下輸出類型的審核決策：單一標籤');
 
     // Re-deciding against the new value lets the submit through.
     await page.getByTestId('ws-review-row-modify').click();
