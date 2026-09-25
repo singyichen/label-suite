@@ -31,4 +31,4 @@
 **故事目標**：SC-006 — 合併前須經未參與實作者複核，確保觸發條件、示範列豁免、dry_run 邊界與定稿快照禁令皆未被弱化。
 
 - [x] 4.1 派未寫過本改動的 senior-code-reviewer 獨立審查：鎖的觸發條件是否真的是「有真實提交」而非僅 `finalized`（最關鍵一項）、示範列 seed 單位是否確實不被鎖、`dry_run` 是否未受影響、三個寫入點是否都加了守衛（有無殘留繞過路徑）、有無引入定稿快照、`issue-307`／`issue-910` 既有斷言是否仍全綠、新增 AC 與 FR-051／FR-072／FR-044a 是否一致、Source-Verify 引用可否逐條 grep 定位、紅燈契約有無被弱化。結論原文貼進 issue #908 檢查點留言。[@senior-code-reviewer]
-- [ ] 4.2 開 PR（base main，Closes #908，逐項 Test Plan 證據，紅燈／綠燈證據皆貼），push 前 `git fetch origin main && git rebase origin/main`。[@main]
+- [x] 4.2 開 PR（base main，Closes #908，逐項 Test Plan 證據，紅燈／綠燈證據皆貼），push 前 `git fetch origin main && git rebase origin/main`。PR #974。[@main]
