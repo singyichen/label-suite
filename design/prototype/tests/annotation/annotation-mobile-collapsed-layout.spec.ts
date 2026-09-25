@@ -57,4 +57,50 @@ test('reviewer mode keeps single-column width and a reachable submit control on 
   expect(box).not.toBeNull();
   expect(box!.x).toBeGreaterThanOrEqual(0);
   expect(box!.x + box!.width).toBeLessThanOrEqual(390);
+
+  /* issue #933: `.sample-progress-summary`'s min-width squeezes the
+   * prev/next nav buttons below their natural single-line width at 390px,
+   * wrapping the icon+label onto two lines. A correctly laid-out button is
+   * ~35.6px tall; the wrapped/broken layout is ~78.8px. 45 is a safe
+   * threshold below the broken height with headroom above the correct one. */
+  const prevBox = await page.locator('#wsPrevBtn').boundingBox();
+  const nextBox = await page.locator('#wsNextBtn').boundingBox();
+  expect(prevBox).not.toBeNull();
+  expect(nextBox).not.toBeNull();
+  expect(prevBox!.height).toBeLessThanOrEqual(45);
+  expect(nextBox!.height).toBeLessThanOrEqual(45);
+
+  /* issue #933: the always-visible collapsed guideline mobile-drawer handle
+   * is a fixed 52px bottom bar that `.action-bar`'s padding doesn't reserve
+   * clearance for, so the review submit button's bottom edge sinks below
+   * the handle's top edge and the two overlap. */
+  const handleBox = await page.locator('#wsMobileDrawerHandle').boundingBox();
+  expect(handleBox).not.toBeNull();
+  expect(box!.y + box!.height).toBeLessThanOrEqual(handleBox!.y);
+});
+
+/* issue #933: desktop regression guard -- the reviewer workspace at 1440x900
+ * never had the mobile drawer-handle/nav-wrap bugs, and this locks that in
+ * so a fix scoped to mobile breakpoints doesn't accidentally shrink the
+ * desktop sample list column or reintroduce nav-button wrapping there. */
+test('reviewer mode keeps sample list and single-line nav buttons on desktop (issue #933 regression guard)', async ({
+  page,
+}) => {
+  await skipGuidelineModal(page);
+  await gotoReviewerWorkspace(page, { task_id: 'T015', sample_id: 'ofs-04-pending-review' });
+  await dismissGuidelineModal(page);
+  await page.setViewportSize({ width: 1440, height: 900 });
+
+  const colSamples = page.locator('.col-samples');
+  await expect(colSamples).toHaveCSS('display', 'flex');
+  const colSamplesBox = await colSamples.boundingBox();
+  expect(colSamplesBox).not.toBeNull();
+  expect(colSamplesBox!.width).toBe(256);
+
+  const prevBox = await page.locator('#wsPrevBtn').boundingBox();
+  const nextBox = await page.locator('#wsNextBtn').boundingBox();
+  expect(prevBox).not.toBeNull();
+  expect(nextBox).not.toBeNull();
+  expect(prevBox!.height).toBeLessThanOrEqual(45);
+  expect(nextBox!.height).toBeLessThanOrEqual(45);
 });
