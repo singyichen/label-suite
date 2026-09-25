@@ -12,7 +12,7 @@
 **故事目標**：SC-006 — 修正後仍須維持既有流程可完成、歷程可追溯之保證。
 
 - [x] 2.1 修改 `design/prototype/pages/annotation/annotation-workspace.config.js`：新增左欄與頂部橫幅共用的狀態推導，使 1.2 測試轉綠；既有判定式與豁免邏輯不動。[@senior-frontend]
-- [x] 2.2 修改 `design/prototype/pages/annotation/annotation-workspace.data.js`：泛化既有雙送出防護涵蓋審核決策事件，比對鍵改為同一 outKey 最近一筆事件，使 1.1 測試轉綠；決策或修正值有實質差異之送出仍需正常記錄。[@senior-backend]
+- [x] 2.2 修改 `design/prototype/pages/annotation/annotation-workspace.data.js`：泛化既有雙送出防護涵蓋審核決策事件，比對鍵改為同一 outKey 最近一筆事件，使 1.1 測試轉綠；決策或修正值有實質差異之送出仍需正常記錄。[@senior-frontend]
 
 ## 3. 驗證與正典回寫
 
