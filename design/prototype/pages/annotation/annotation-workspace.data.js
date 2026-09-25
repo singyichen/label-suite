@@ -339,7 +339,7 @@
        Reviewer double-submit protection is the UI busy flag instead
        (handleReviewSubmit, annotation-workspace.config.js). */
     if (action === 'submitted' && last && last.action === 'submitted' && last.role === role && last.actorId === normalizedActorId) {
-      return;
+      return false;
     }
     /* issue #910 (FR-016B): extend the same double-submit protection to
        reviewer decision events, scoped by outKey -- appendReviewDecisionEvents
@@ -368,7 +368,7 @@
         JSON.stringify(outKeyDecisionValue(extra.outKey, lastForOutKey.result_snapshot)) ===
           JSON.stringify(outKeyDecisionValue(extra.outKey, extra.result_snapshot))
       ) {
-        return;
+        return false;
       }
     }
     var event = {
@@ -388,6 +388,7 @@
       });
     }
     entry.history.push(event);
+    return true;
   }
 
   /* FR-088: `started_at` / `lead_time` as measured by the page that owns the
@@ -476,17 +477,25 @@
        so only the first decision event this submit writes carries it --
        attaching the same started_at/lead_time to every outKey's event would
        repeat the same measurement N times for a single occurrence. "First"
-       follows Object.keys(decisions) order, i.e. append order. */
+       follows Object.keys(decisions) order, i.e. append order -- but issue
+       #910's outKey-scoped dedup guard in appendHistoryEvent() can silently
+       no-op an outKey's event (exact repeat of its last recorded event), so
+       "first" here means the first outKey whose event actually gets pushed,
+       not just the first candidate in iteration order: timingWritten only
+       flips once appendHistoryEvent() reports a real push, so a deduped
+       first candidate leaves the flag unset for the next genuinely-new
+       outKey to claim. */
     var timingWritten = false;
     Object.keys(decisions).forEach(function (outKey) {
       var action = REVIEW_DECISION_EVENT_ACTION[decisions[outKey]];
       if (!action) return;
       var extra = { result_snapshot: buildResultSnapshot(payload), reason: reasons[outKey] || null, outKey: outKey };
-      if (!timingWritten) {
+      var attachingTiming = !timingWritten;
+      if (attachingTiming) {
         Object.assign(extra, timingFields(payload && payload.timing));
-        timingWritten = true;
       }
-      appendHistoryEvent(entry, action, 'reviewer', sanitizedSummary, actorId, extra);
+      var pushed = appendHistoryEvent(entry, action, 'reviewer', sanitizedSummary, actorId, extra);
+      if (pushed && attachingTiming) timingWritten = true;
     });
   }
 
