@@ -2,6 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 import {
   assertNoPageErrors,
   buildWorkspaceUrl,
+  gotoReviewerWorkspace,
   dismissGuidelineModal,
   skipGuidelineModal,
   trackPageErrors,
@@ -26,7 +27,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 async function gotoReviewer(page: Page, taskId: string, sampleId: string) {
-  await page.goto(buildWorkspaceUrl({ task_id: taskId, sample_id: sampleId, role: 'reviewer', run_type: 'dry_run' }));
+  await gotoReviewerWorkspace(page, { task_id: taskId, sample_id: sampleId, run_type: 'dry_run' });
   await dismissGuidelineModal(page);
   await expect(page.getByTestId('ws-review-row-approve').first()).toBeVisible();
 }

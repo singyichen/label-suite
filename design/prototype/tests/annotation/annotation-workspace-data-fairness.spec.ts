@@ -3,6 +3,7 @@ import {
   buildListUrl,
   buildWorkspaceUrl,
   dismissGuidelineModal,
+  gotoReviewerWorkspace,
   patchDataFile,
   skipGuidelineModal,
 } from './_workspace-helpers';
@@ -125,7 +126,7 @@ test.describe('negative control: unmapped GOLD CONTENT (not just metadata) never
   });
 
   test('reviewer view never renders the unmapped gold-verification field', async ({ page }) => {
-    await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer' }));
+    await gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001' });
     await dismissGuidelineModal(page);
 
     await expect(page.getByTestId('ws-root')).not.toContainText(GOLD_CONTENT_MARKER);

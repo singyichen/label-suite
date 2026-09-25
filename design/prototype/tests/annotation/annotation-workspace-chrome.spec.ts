@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import {
   buildWorkspaceUrl,
+  gotoReviewerWorkspace,
   dismissGuidelineModal,
   patchDataFile,
   skipGuidelineModal,
@@ -199,7 +200,7 @@ test.describe('Right column: 說明與檔案 / 歷程 tabs', () => {
   });
 
   test('reviewer view renders the same two tabs', async ({ page }) => {
-    await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer' }));
+    await gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001' });
     await dismissGuidelineModal(page);
 
     await expect(page.getByTestId('ws-guideline-tab-guideline')).toBeVisible();
