@@ -1,7 +1,7 @@
 ---
 功能分支: feat/shared/008-sidebar-navbar-shared
 建立日期: 2026-04-16
-版本: 1.5.1
+版本: 1.6.0
 狀態: Clarified
 ---
 
@@ -302,6 +302,28 @@ Desktop 使用者可將左側 Sidebar 收合為 icon-only，以增加主內容�
 
 ---
 
+### 使用者故事 9 — L0「標記作業」與使用者角色標示依任務角色一致呈現（優先級：P2，issue #944）
+
+側欄 L0「標記作業」項目與使用者晶片角色標示，在 reviewer 任務角色下必須讀作「審核作業」／「審核員」，與同頁入口麵包屑（annotation-015 FR-080）一致；annotator／project_leader 任務角色維持既有預設「標記作業」／「一般使用者」。此解析必須由 Shared Sidebar 元件本身完成，消費頁面不得於掛載後另行以 DOM 操作覆寫。
+
+**此優先級原因**：文案一致性缺陷，非導覽骨架或可見性變更；issue #309（角色標示）與 issue #931（L0 項目字面）先前皆由 `annotation-workspace` 消費端各自補丁修正，未收斂至來源，本故事收斂為單一權責。
+
+**獨立測試方式**：以 `role=reviewer`／`role=annotator` 兩種任務角色進入 `annotation-workspace`，比對 `#navAnnotation`、`[data-testid="role-indicator"]` 與入口麵包屑第一層文字；並直接呼叫 Shared Sidebar 的掛載函式（不經任何消費頁面 JS）驗證解析結果同樣正確，確認來源在元件本身。
+
+**驗收情境**：
+
+1. **Given** 任務角色為 `reviewer`，**When** 進入 `annotation-workspace` 並完成側欄掛載，**Then** `#navAnnotation` 文字為「審核作業」，且與同頁入口麵包屑第一層連結文字一致；`[data-testid="role-indicator"]` 文字為「審核員」。
+2. **Given** 任務角色為 `annotator` 或 `project_leader`，**When** 進入 `annotation-workspace` 並完成側欄掛載，**Then** `#navAnnotation` 文字維持既有預設「標記作業」；`role-indicator` 於 `annotator` 維持「一般使用者」（`project_leader` 之 `role-indicator` 由頁面既有 `opts.roleIndicator` 顯式覆寫機制決定，不受本故事影響）。
+3. **Given** 消費頁面完全不執行任何掛載後 DOM 覆寫邏輯，**When** 直接以 `taskRole: 'reviewer'` 呼叫 Shared Sidebar 掛載函式，**Then** 上述兩項文字仍正確解析為「審核作業」／「審核員」——證明解析邏輯位於元件內部，而非消費端事後補寫。
+
+**任務角色解析規則**：
+
+- 值域對齊既有「任務角色」定義（`project_leader / reviewer / annotator`，見「角色可見性與 L0 項目數」備註）。
+- 使用者晶片角色標示既有之顯式覆寫入口（頁面傳入固定字串，如系統管理頁「系統管理員」）優先序不變，僅在未顯式覆寫時套用本故事之任務角色解析預設值。
+- 本故事不改變 annotation-015 FR-080 入口麵包屑既有邏輯與文字，僅使側欄與其保持一致。
+
+---
+
 ### 邊界情況
 
 - zh/en 長度差異不得造成 L0 文字截斷到不可辨識。
@@ -375,6 +397,8 @@ Desktop 使用者可將左側 Sidebar 收合為 icon-only，以增加主內容�
 - **FR-019C**：次選單子項必須依目前頁面（`user-management` 或 `role-settings`）標示恰一個「目前項」（`aria-current="page"` 與對應樣式）；此標示與既有 L0「系統管理」active 狀態（FR-006）為互補關係，不互斥、不重複渲染兩種語意。
 - **FR-019D**：Mobile（`<= MOBILE_BP`）或 Desktop Sidebar 收合（`SIDEBAR_COLLAPSED_WIDTH`）狀態下，「系統管理」必須維持既有行為——點擊直接導向 `user-management`，不開啟次選單，與本次變更前互動路徑完全一致。
 - **FR-019E**：本次新增為 `user-management.html` 既有 admin-tabs（使用者管理／角色設定，spec 006 FR-010、spec 007 FR-006）導覽之外的額外直達入口；不得移除或改變 admin-tabs 既有行為與導頁契約。
+- **FR-020**（issue #944 新增）：Shared Sidebar 之 `navItems`（`design/prototype/pages/shared/sidebar.js`）的 `annotation` 項目（DOM id `navAnnotation`），其顯示文字必須依呼叫端傳入的任務角色（`opts.taskRole`，值域對齊既有「任務角色」定義：`project_leader / reviewer / annotator`）於掛載當下解析：`reviewer` 顯示「審核作業」（en: `Review`），與 annotation-015 FR-080 入口麵包屑第一層之 `crumbWorkAreaReviewer` 文字一致；`project_leader`、`annotator` 或未提供時維持既有預設「標記作業」，與 annotation-015 FR-080 之 `crumbWorkAreaAnnotator` 文字一致。此解析必須於 Shared Sidebar 元件內部完成，消費頁面不得於掛載完成後另行以 DOM 操作覆寫該節點之顯示文字。本條不改變 FR-002／FR-008／FR-008A 既有之 L0 項目清單、順序、導頁與 `task_type` query 契約。
+- **FR-020A**（issue #944 新增）：Shared Sidebar 使用者晶片之角色標示（DOM id `roleIndicator`），於呼叫端未透過既有顯式覆寫入口傳入固定字串時（例如系統管理頁固定顯示「系統管理員」等既有頁面專屬用途，不受本條影響），其預設顯示文字必須依 FR-020 之任務角色定義解析：`reviewer` → 「審核員」（en: `Reviewer`）；`project_leader` → 「專案負責人」（en: `Project leader`）；`annotator` 或未提供時維持既有預設「一般使用者」。此解析必須於元件內部完成，消費頁面不得於掛載完成後另行以 DOM 操作覆寫該節點；既有顯式覆寫入口之優先序與行為不變。
 
 ### 使用者流程與導頁
 
@@ -513,6 +537,8 @@ flowchart LR
 - **SC-012**（issue #725 新增）：`super_admin` 在 Desktop 未收合 Sidebar，可透過「系統管理」次選單於一次點擊內直達 `role-settings`，不需先進入 `user-management`。
 - **SC-012A**：次選單子項不影響本規格既有的 L0 可見性與計數矩陣（`user`=5／`super_admin`=6 維持不變）。
 - **SC-012B**：Mobile 與 Desktop 收合狀態下「系統管理」點擊行為與次選單新增前一致，不因本次變更產生互動落差或死角。
+- **SC-013**（issue #944 新增）：`reviewer` 任務角色下，`#navAnnotation` 與 `[data-testid="role-indicator"]` 文字分別為「審核作業」與「審核員」，且 `#navAnnotation` 與同頁入口麵包屑第一層連結文字一致；直接呼叫 Shared Sidebar 掛載函式（不經任何消費頁面 JS）亦得到相同結果。
+- **SC-013A**：`annotator`／`project_leader` 任務角色下，`#navAnnotation` 維持既有預設「標記作業」；`annotator` 之 `role-indicator` 維持既有預設「一般使用者」。
 
 ### 驗證建議
 
@@ -557,6 +583,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.6.0 | 2026-09-25 | Issue #944（OpenSpec change `fix-944-sidebar-role-aware-labels`，MINOR）：新增使用者故事 9（L0「標記作業」與使用者角色標示依任務角色一致呈現）、FR-020／FR-020A、SC-013／SC-013A——共用側欄 `navItems` 的 `annotation` 項目（`#navAnnotation`）與使用者晶片角色標示（`roleIndicator`）原本恆為寫死預設值「標記作業」／「一般使用者」，`annotation-workspace` 頁面因此在消費端 `applyStaticI18nText()` 以直接 DOM 操作（`document.getElementById(...).textContent = ...`）事後補寫——issue #309（角色標示覆寫為「審核員」）與 issue #931（L0 項目覆寫為「審核作業」）各自重複同一問題，來源側欄從未真正支援角色解析。維護者裁定（2026-09-25）採方向 A——收斂到來源：`design/prototype/pages/shared/sidebar.js` 的 `renderSidebar()` 新增 `opts.taskRole`（值域對齊既有「任務角色」：`project_leader / reviewer / annotator`），內建僅含本條所需雙語詞彙之小型對照表（比照既有 `adminSubmenuI18n` 前例）解析 `navAnnotation` 標籤與 `roleIndicator` 預設值；`annotation-workspace.html` 之 `mountSidebar()` 呼叫新增自 URL `role` 參數同步解析之 `taskRole`；`annotation-workspace.config.js` 之 `applyStaticI18nText()` 移除 issue #309、#931 兩處消費端覆寫區塊（其 i18n 表資料本身保留，仍供他處使用）。新增條文與 annotation-015 FR-080 入口麵包屑既有角色分流（`crumbWorkAreaReviewer`／`crumbWorkAreaAnnotator`）一致，FR-080 本身未變更；既有 `opts.roleIndicator` 顯式覆寫入口（例如系統管理頁「系統管理員」）優先序不變。既有測試 `issue-309-reviewer-workspace-vocab.spec.ts`／`issue-931-sidebar-reviewer-label.spec.ts` 斷言全數位移保留，僅後者檔頭註解更新為描述新來源機制。 |
 | 1.5.1 | 2026-09-24 | 澄清 FR-001（issue #932）：規格原文未明確規範 `userAvatar` 的顯示內容，僅在「關鍵實體」`SharedNavbarContract.userIds` 列出其為契約 id 之一，導致實作僅 dashboard 頁呼叫 `updateUserChip({ avatarLabel })` 帶入正確縮寫，其餘頁面停留在寫死的預設佔位文字「U」，與同列 `userName` 顯示的實際使用者姓名不一致。修法（`design/prototype/pages/shared/sidebar.js`）：新增 `computeAvatarInitials(name)`，接入 `renderSidebar` 初次渲染與 `updateUserChip` 的 `userName` 同步路徑（僅在未帶 `avatarLabel` 時），使所有 `SUPPORTED_PAGES` 首次渲染即依 `userName` 顯示正確縮寫；`userName` 為空白、僅含空白字元，或僅含零寬字元（`U+200B`／`U+200C`／`U+200D`／`U+FEFF`，code review 於本次發現：`\s` 不比對零寬字元）時，無法推導出縮寫，維持顯示既有預設佔位文字「U」，避免頭像圓圈顯示為空白（不得以「無字母」取代「錯字母」）；dashboard 既有以 `avatarLabel` 明確覆寫角色字母（`SA`／`PL`／`A`／`R`）的展示需求不受影響、行為不變。本次為既有 FR-001「同一份 contract」語意的澄清補述，未新增或移除 FR/AC。 |
 | 1.5.0 | 2026-09-13 | Issue #725（OpenSpec change `admin-role-settings-nav-shortcut`，PR #757）：新增使用者故事 8（系統管理次選單快速直達）、FR-019 群（FR-019／FR-019A／FR-019B／FR-019C／FR-019D／FR-019E）與 SC-012 群（SC-012／SC-012A／SC-012B）——`super_admin` 在 Desktop 未收合 Sidebar 時，L0「系統管理」項目提供可展開次選單（使用者管理／角色設定兩個子項連結），一次點擊即可直達 `role-settings`，不需先落地 `user-management`；Mobile 與 Desktop 收合狀態維持既有單一連結行為。次選單子項不計入既有 FR-002／FR-003A／SC-003 之 L0 導覽項清單與計數，兩者文字逐字不變，僅在「L0 群組與目標頁（IA Contract）」之 Admin 條目補註次選單存在事實。維護者已就「新增側欄一級項目 vs. 展開次選單」的架構衝突裁示採用後者（不新增/移除 L0 項目）。 |
 | 1.4.4 | 2026-09-13 | 結構補齊：新增缺漏的 `## 功能目標` 標題（Project SDD lint `SPEC_REQUIRED_HEADING` ratchet——OpenSpec change `admin-role-settings-nav-shortcut`（issue #725）首次以本流程觸碰本規格，觸發既有 legacy heading debt 的強制補齊）。規格條文未變，純結構 patch；`scripts/sdd-lint-baseline.txt` 同步移除本檔對應的 `LEGACY_SPEC_HEADING` 豁免項。 |
