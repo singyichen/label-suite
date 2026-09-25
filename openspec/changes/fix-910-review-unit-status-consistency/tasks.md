@@ -28,5 +28,5 @@
 
 **故事目標**：SC-006 — 合併前須經未參與實作者複核，確保流程與歷程保證未被弱化。
 
-- [ ] 4.1 派未寫過本改動的 senior-code-reviewer 獨立審查：兩狀態函式是否真的共用同一推導、去重是否沿用既有機制、issue-307 既有正向斷言是否仍全綠、有無越界修改 FR-053 或 FR-044a、Red 契約有無被弱化；結論回報。第一輪審查抓到 FR-088 計時迴歸（見 1.3／2.3），已修正，待第二輪覆核確認關閉後方可打勾。[@senior-code-reviewer]
+- [x] 4.1 派未寫過本改動的 senior-code-reviewer 獨立審查：兩狀態函式是否真的共用同一推導、去重是否沿用既有機制、issue-307 既有正向斷言是否仍全綠、有無越界修改 FR-053 或 FR-044a、Red 契約有無被弱化；結論回報。第一輪審查抓到 FR-088 計時迴歸（見 1.3／2.3），已修正；第二輪獨立審查逐行覆核修正並重跑四套 Playwright 套件，結論 APPROVE。[@senior-code-reviewer]
 - [ ] 4.2 開 PR（base main，Closes #910，逐項 Test Plan 證據），push 前 rebase origin/main。[@main]
