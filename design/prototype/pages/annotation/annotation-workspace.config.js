@@ -58,6 +58,18 @@
       wsSubmitIncomplete: '請完成所有標記項目後再提交',
       wsSubmitSuccess: '已提交',
       reviewSubmitLabel: '送出審核',
+      /* issue #926/#927/#928 CI follow-up (A11Y-05): the footer submit
+         button and this quick-submit control show the SAME visible text
+         ('送出審核') by design -- they are the same action, just two entry
+         points. But two buttons with the identical accessible name make a
+         screen reader announce "送出審核" twice with no way to tell them
+         apart. This key backs an aria-label used ONLY on the quick-submit
+         button (see buildReviewQuickSubmit()); it starts with the same
+         visible label so WCAG 2.5.3 (Label in Name) still holds, but adds
+         a location cue so the two buttons resolve to distinct accessible
+         names. The footer button's accessible name stays plain
+         reviewSubmitLabel, unchanged. */
+      reviewQuickSubmitAriaLabel: '送出審核（決策列）',
       reviewApproveLabel: '通過',
       reviewModifyLabel: '修正',
       reviewBypassLabel: window.LabelSuiteSharedSidebar.BYPASS_WORDING.zh.decision,
@@ -200,6 +212,7 @@
       wsSubmitIncomplete: 'Please answer every output before submitting',
       wsSubmitSuccess: 'Submitted',
       reviewSubmitLabel: 'Submit review',
+      reviewQuickSubmitAriaLabel: 'Submit review (decision row)',
       reviewApproveLabel: 'Approve',
       reviewModifyLabel: 'Modify',
       reviewBypassLabel: window.LabelSuiteSharedSidebar.BYPASS_WORDING.en.decision,
@@ -3265,6 +3278,15 @@
     btn.className = 'btn btn-cta';
     btn.setAttribute('data-testid', 'ws-review-quick-submit-btn');
     btn.textContent = t('reviewSubmitLabel');
+    /* CI follow-up (A11Y-05, annotation-workspace-review-shortcuts.spec.ts):
+       this button's visible text is identical to the footer submit
+       button's -- same action, two entry points -- but that left two
+       buttons with the same accessible name on screen at once, which a
+       screen reader cannot tell apart. aria-label overrides the computed
+       accessible name to something that still STARTS WITH the visible
+       label (WCAG 2.5.3 Label in Name) but is unique. The footer button
+       keeps its plain reviewSubmitLabel accessible name unchanged. */
+    btn.setAttribute('aria-label', t('reviewQuickSubmitAriaLabel'));
     btn.addEventListener('click', handleReviewSubmit);
     wrap.appendChild(btn);
 

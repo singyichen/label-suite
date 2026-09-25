@@ -4,7 +4,7 @@
 >
 > **本檔為 generated view——請勿手動編輯。** 唯一生成來源是 [inventory-manifest.json](inventory-manifest.json)；改完 manifest 後執行 `node scripts/gen-screen-inventory.mjs` 重新產生，並以 `bash scripts/inventory-tests.sh` 驗證。元件規格唯一正典是 [MASTER.md](MASTER.md)；行為規格在 `specs/<module>/`；token 實作在 `design/prototype/assets/tokens.css`。
 >
-> **Prototype 內容雜湊：** `08f325a317a3`——對 `design/prototype/pages` · `design/prototype/index.html` 目前的實際位元組內容計算，內容不變則雜湊不變，不隨 commit 前進而改變。
+> **Prototype 內容雜湊：** `e5dd9a2987c4`——對 `design/prototype/pages` · `design/prototype/index.html` 目前的實際位元組內容計算，內容不變則雜湊不變，不隨 commit 前進而改變。
 > 本檔若落後於該內容雜湊，`node scripts/gen-screen-inventory.mjs --check` 會失敗。
 
 ---

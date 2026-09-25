@@ -327,7 +327,7 @@ Reviewer 審查列 MUST 僅呈現**受審標記員本人**的提交，MUST NOT �
 3. `.rv-decision-row` MUST 為作答面板的同層 sibling，MUST NOT 掛載於共用引擎重繪的容器內。
 4. `.rv-decision-row` 的渲染 MUST NOT 依賴任務是否設定 `allow_bypass: false`，一律獨立渲染。
 5. `.rv-decision-row` 內的決策按鈕，其個別面積之總和 MUST NOT 小於同卡答案值 chip（含 Bypass chip）的可視面積（逐顆加總，MUST NOT 以 `.rv-choice-group` 容器自身之 boundingBox 面積替代量測），觸控目標 MUST ≥ 44px（WCAG 2.5.5）。
-6. 該審核單位所有 outKey 皆已完成決策時，決策列附近 MUST 呈現一個可操作的送出控制（`ws-review-quick-submit-btn`），其文案 MUST 沿用既有 `reviewSubmitLabel`、點擊行為 MUST 呼叫既有 `handleReviewSubmit()`；既有 `ws-review-submit-btn` 之既有位置與右對齊契約不受影響。
+6. 該審核單位所有 outKey 皆已完成決策時，決策列附近 MUST 呈現一個可操作的送出控制（`ws-review-quick-submit-btn`），其文案 MUST 沿用既有 `reviewSubmitLabel`、點擊行為 MUST 呼叫既有 `handleReviewSubmit()`；既有 `ws-review-submit-btn` 之既有位置與右對齊契約不受影響。兩個送出控制同時可見（MUST NOT 互斥顯示）；`ws-review-quick-submit-btn` 之 `aria-label` MUST 以 `reviewSubmitLabel` 視覺文案為前綴（WCAG 2.5.3）另附區位說明（`reviewQuickSubmitAriaLabel`），使其可及名稱與 `ws-review-submit-btn` 不同，兩者視覺文案仍相同。
 
 #### Scenario: AC-3.61 決策列與答案 Bypass 列分屬獨立容器
 - **GIVEN** reviewer 開啟一個 `allow_bypass` 未關閉的審核單位
