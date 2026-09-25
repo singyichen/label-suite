@@ -35,7 +35,7 @@
  * this is the product's finished behavior, not a terminology-only rename.
  */
 import { test, expect, type Page } from '@playwright/test';
-import { buildListUrl, buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
+import { buildListUrl, buildWorkspaceUrl, gotoReviewerWorkspace, skipGuidelineModal } from './_workspace-helpers';
 
 type Summary = {
   total: number;
@@ -140,9 +140,7 @@ test.describe('issue #450 -- annotation-list task info card', () => {
     await page.goto(T015_LIST_URL);
     await expect(page.locator('#taskInfoDetail')).toContainText('任務覆蓋 3 / 4 個審核單位 · 待審 1 個');
 
-    await page.goto(buildWorkspaceUrl({
-      task_id: 'T015', sample_id: 'ofs-04-pending-review', role: 'reviewer', run_type: 'official_run',
-    }));
+    await gotoReviewerWorkspace(page, { task_id: 'T015', sample_id: 'ofs-04-pending-review', run_type: 'official_run' });
     await page.getByTestId('ws-review-row-approve').click();
     await page.getByTestId('ws-review-submit-btn').click();
     await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
@@ -182,9 +180,7 @@ test.describe('issue #450 -- dashboard reviewer card', () => {
     await openReviewerDashboard(page);
     await expect(page.locator(T015_CARD)).toContainText('任務覆蓋 3 / 4 個審核單位 · 待審 1 個');
 
-    await page.goto(buildWorkspaceUrl({
-      task_id: 'T015', sample_id: 'ofs-04-pending-review', role: 'reviewer', run_type: 'official_run',
-    }));
+    await gotoReviewerWorkspace(page, { task_id: 'T015', sample_id: 'ofs-04-pending-review', run_type: 'official_run' });
     await page.getByTestId('ws-review-row-approve').click();
     await page.getByTestId('ws-review-submit-btn').click();
     await expect(page.locator('#toastMsg')).toHaveText('審核已送出');

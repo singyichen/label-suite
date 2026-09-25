@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { buildWorkspaceUrl, dismissGuidelineModal, skipGuidelineModal } from '../annotation/_workspace-helpers';
+import { dismissGuidelineModal, gotoReviewerWorkspace, skipGuidelineModal } from '../annotation/_workspace-helpers';
 
 /* Issue #458 -- vocabulary regression guard: 審核 is the canonical zh-TW
  * term for the reviewer flow (outnumbering 審查 256:5 across
@@ -41,9 +41,7 @@ import { buildWorkspaceUrl, dismissGuidelineModal, skipGuidelineModal } from '..
 test.describe('issue #458 -- 審查 must not reappear in reviewer-flow UI copy', () => {
   test('annotation reviewer workspace renders no 審查, before or after a review submit', async ({ page }) => {
     await skipGuidelineModal(page);
-    await page.goto(buildWorkspaceUrl({
-      task_id: 'T001', sample_id: 'sent-001', role: 'reviewer', run_type: 'official_run',
-    }));
+    await gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001', run_type: 'official_run' });
     await dismissGuidelineModal(page);
 
     await expect(page.locator('body')).not.toContainText('審查');
