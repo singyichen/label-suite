@@ -2207,6 +2207,37 @@
     ) ? 'differing' : 'same';
   }
 
+  /* Single predicate for "does this exception-pool or arbitration record
+   * carry a value fit to read as this unit's answer" -- shared by
+   * getReviewUnitStatus() (state derivation), listReviewPoolItems() (pool
+   * queue membership) and annotation-list.html's getFinalizedOverwrites() /
+   * getFinalizationSourceKeys() (value/badge consumption), so all four stop
+   * independently re-deciding the same question (issue #914).
+   * `exclude_from_dataset` deliberately carries no `finalized_value` (D2's
+   * absent-field sentinel, FR-063) -- callers must check that action
+   * themselves before/instead of relying on this predicate, never through
+   * it.
+   *
+   * `finalized_value: null` is legitimate almost everywhere it can occur:
+   * arbitration's adopt_b on a `bypass` dispute item, and the exception
+   * pool's `adopt_reviewer` when the reviewer value being adopted is itself
+   * that same bypass-sourced `null`, both deliberately store `null` as the
+   * design.md D3 "無法判定" sentinel and MUST NOT fall back to the
+   * annotator's original answer (FR-095 point 2: adopt_reviewer 定案值為
+   * 「修正值或『無法判定』」). The ONE exception is `custom_answer`
+   * (issue #914): its `null` instead means the project leader confirmed
+   * without picking any answer from the reused config-driven control (D4
+   * requires a real value from that outKey's legal answer space, so there
+   * is no legitimate bypass-passthrough path into a custom_answer record
+   * the way there is for adopt_reviewer/adopt_b). Only `record.action ===
+   * 'custom_answer'` carries that distinguishing field -- arbitration items
+   * have none, so this check is inert for them. */
+  function hasLegitimateFinalizedValue(record) {
+    if (!record || !Object.prototype.hasOwnProperty.call(record, 'finalized_value')) return false;
+    if (record.action === 'custom_answer' && record.finalized_value === null) return false;
+    return true;
+  }
+
   /* Derives the review unit's state from the annotator's submission plus the
    * assigned reviewer's decision (design.md D1, issue #596). `outKeys` is
    * the task's composed output type list. Returns null when the annotator
@@ -2262,9 +2293,10 @@
     var arbState = getArbitrationState(taskId, runType, sampleId, identity);
     var allResolved = items.length > 0 && items.every(function (item) {
       var stored = arbState[item.outKey + '::' + item.key];
-      if (stored && stored.finalized_by) return true;
+      if (stored && stored.finalized_by && hasLegitimateFinalizedValue(stored)) return true;
       var poolRecord = exceptionPool[item.outKey];
-      return !!poolRecord && poolRecord.action !== 'exclude_from_dataset';
+      return !!poolRecord && poolRecord.action !== 'exclude_from_dataset' &&
+        hasLegitimateFinalizedValue(poolRecord);
     });
     return allResolved ? REVIEW_UNIT_STATUS.FINALIZED : REVIEW_UNIT_STATUS.DISPUTED;
   }
@@ -3009,7 +3041,18 @@
       getDisputeItems(taskId, runType, unit.sampleId, identity, outKeys)
         .forEach(function (item) {
           var stored = arbitrationState[item.outKey + '::' + item.key];
-          if (exceptionPool[item.outKey] || (stored && stored.finalized_by)) return;
+          var poolRecord = exceptionPool[item.outKey];
+          /* Same predicate getReviewUnitStatus() uses (issue #914): a
+             poolRecord counts as resolved either via exclude_from_dataset
+             (D2's valueless sentinel) or a legitimate finalized_value; an
+             arbState entry counts as resolved only with both finalized_by
+             AND a legitimate finalized_value -- so a malformed record
+             re-surfaces here instead of silently vanishing from both
+             queues while getReviewUnitStatus() reports it disputed. */
+          var poolResolved = !!poolRecord &&
+            (poolRecord.action === 'exclude_from_dataset' || hasLegitimateFinalizedValue(poolRecord));
+          var arbResolved = !!stored && stored.finalized_by && hasLegitimateFinalizedValue(stored);
+          if (poolResolved || arbResolved) return;
           var rejectVote = stored && (stored.votes || []).filter(function (vote) {
             return vote.choice === 'reject';
           }).pop();
@@ -3866,6 +3909,7 @@
     getDryRunFeedback: getDryRunFeedback,
     getArbitrationState: getArbitrationState,
     getExceptionPool: getExceptionPool,
+    hasLegitimateFinalizedValue: hasLegitimateFinalizedValue,
     resolveExceptionPoolItem: resolveExceptionPoolItem,
     DEFAULT_PROJECT_LEADER_ID: DEFAULT_PROJECT_LEADER_ID,
     submitArbitration: submitArbitration,
