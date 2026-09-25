@@ -1,5 +1,5 @@
 ---
-功能分支: fix/921-review-assignment-gate
+功能分支: fix/910-review-unit-status-consistency
 建立日期: 2026-04-23
 版本: 6.17.0
 狀態: Draft
