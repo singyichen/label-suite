@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { buildWorkspaceUrl, dismissGuidelineModal, skipGuidelineModal } from './_workspace-helpers';
+import { dismissGuidelineModal, gotoReviewerWorkspace, skipGuidelineModal } from './_workspace-helpers';
 
 /* Pre-submit review summary (issue #453, spec 015 FR-077 / AC-3.42 --
  * FR-077/AC-3.42/AC-3.44 revoked by issue #550, spec 015 v4.55.0).
@@ -23,22 +23,16 @@ import { buildWorkspaceUrl, dismissGuidelineModal, skipGuidelineModal } from './
  * path.
  */
 
-const T001_OFFICIAL = buildWorkspaceUrl({
-  task_id: 'T001',
-  sample_id: 'sent-001',
-  role: 'reviewer',
-  run_type: 'official_run',
-});
+function gotoT001Official(page: Page) {
+  return gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001', run_type: 'official_run' });
+}
 
 /* T013 (absa-001) ships entity_recognition + relation_identification +
  * multi_dim, i.e. THREE decisions spread over two review cards -- the
  * multi-output case where "did I decide every row?" is a real question. */
-const T013_OFFICIAL = buildWorkspaceUrl({
-  task_id: 'T013',
-  sample_id: 'absa-001',
-  role: 'reviewer',
-  run_type: 'official_run',
-});
+function gotoT013Official(page: Page) {
+  return gotoReviewerWorkspace(page, { task_id: 'T013', sample_id: 'absa-001', run_type: 'official_run' });
+}
 
 test.beforeEach(async ({ page }) => {
   await skipGuidelineModal(page);
@@ -60,7 +54,7 @@ async function flipSingleLabel(page: Page): Promise<string> {
 
 test.describe('Answer edit area names both the original and the corrected answer (issue #453)', () => {
   test('the correction panel is labeled with the annotator original answer', async ({ page }) => {
-    await page.goto(T001_OFFICIAL);
+    await gotoT001Official(page);
     await dismissGuidelineModal(page);
 
     const origin = page.getByTestId('ws-review-original-answer');
@@ -79,7 +73,7 @@ test.describe('Answer edit area names both the original and the corrected answer
 
 test.describe('Decision buttons carry visible text, not only a glyph (issue #453)', () => {
   test('all three decisions render their label as text', async ({ page }) => {
-    await page.goto(T001_OFFICIAL);
+    await gotoT001Official(page);
     await dismissGuidelineModal(page);
 
     const LABELS: Record<string, string> = {
@@ -95,7 +89,7 @@ test.describe('Decision buttons carry visible text, not only a glyph (issue #453
 
 test.describe('Multi-output tasks name the still-undecided outputs in the submit-blocking toast (issue #550)', () => {
   test('T013 (3 outputs): submitting with zero decisions names all three output types', async ({ page }) => {
-    await page.goto(T013_OFFICIAL);
+    await gotoT013Official(page);
     await dismissGuidelineModal(page);
 
     await page.getByTestId('ws-review-submit-btn').click();
@@ -106,7 +100,7 @@ test.describe('Multi-output tasks name the still-undecided outputs in the submit
   });
 
   test('T013 (3 outputs): after deciding one, the toast names only the remaining two', async ({ page }) => {
-    await page.goto(T013_OFFICIAL);
+    await gotoT013Official(page);
     await dismissGuidelineModal(page);
 
     await page.getByTestId('ws-review-row-approve').first().click();
@@ -121,7 +115,7 @@ test.describe('Multi-output tasks name the still-undecided outputs in the submit
 
 test.describe('A decision never survives an edit to the value it judged (issue #453)', () => {
   test('editing the correction after deciding resets the decision and warns', async ({ page }) => {
-    await page.goto(T001_OFFICIAL);
+    await gotoT001Official(page);
     await dismissGuidelineModal(page);
 
     const approve = page.getByTestId('ws-review-row-approve');
@@ -135,7 +129,7 @@ test.describe('A decision never survives an edit to the value it judged (issue #
   });
 
   test('the reset decision blocks submit until it is re-confirmed', async ({ page }) => {
-    await page.goto(T001_OFFICIAL);
+    await gotoT001Official(page);
     await dismissGuidelineModal(page);
 
     await page.getByTestId('ws-review-row-modify').click();

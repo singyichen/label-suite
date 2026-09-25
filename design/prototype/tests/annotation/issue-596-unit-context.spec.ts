@@ -1,5 +1,11 @@
 import { test, expect, type Page } from '@playwright/test';
-import { buildWorkspaceUrl, patchDataFile, skipGuidelineModal, type RunType } from './_workspace-helpers';
+import {
+  buildWorkspaceUrl,
+  patchDataFile,
+  resolveAssignedReviewerId,
+  skipGuidelineModal,
+  type RunType,
+} from './_workspace-helpers';
 
 /* issue #596 (OpenSpec change 2026-09-01-single-owner-review-relay, task 3.5,
  * RED): the review-unit context banner loses its finalize-threshold chip,
@@ -58,7 +64,6 @@ type WorkspaceData = {
 const TASK = 'T001';
 const SAMPLE = 'sent-001';
 const ANNOTATOR = 'kioleemg12';
-const REVIEWER = 'reviewer_wang';
 
 const BANNED_COPY = ['退回', '重新標記', '定稿門檻', '多數決'];
 
@@ -87,10 +92,16 @@ async function seedPendingUnit(page: Page, runType: RunType): Promise<void> {
   });
 }
 
-function gotoAsReviewer(page: Page, runType: RunType) {
+/* issue #960: resolveAssignedReviewerId() reads window.LabelSuiteAnnotationWorkspaceData
+ * directly off `page`, which every caller here has already navigated via
+ * seedPendingUnit() -- no separate bootstrap load needed. */
+async function gotoAsReviewer(page: Page, runType: RunType) {
+  const reviewer_id = await resolveAssignedReviewerId(page, {
+    task_id: TASK, sample_id: SAMPLE, run_type: runType, annotator_id: ANNOTATOR,
+  });
   return page.goto(buildWorkspaceUrl({
     task_id: TASK, sample_id: SAMPLE, role: 'reviewer', run_type: runType,
-    annotator_id: ANNOTATOR, reviewer_id: REVIEWER,
+    annotator_id: ANNOTATOR, reviewer_id,
   }));
 }
 
