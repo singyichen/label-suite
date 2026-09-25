@@ -2344,6 +2344,18 @@
     return stickyByUnit;
   }
 
+  /* issue #913: the one unit's sticky owner, for callers that already have
+   * a taskId/runType/sampleId/identity in hand (renderArbitrationCard's B
+   * side, buildExceptionPoolItemRow's 採審核員答案) and need to pick the
+   * right entry out of readReviewerSubmissions() instead of its [0] --
+   * listSubmissionBucketKeys()' sort order, not FR-093's sticky owner. Goes
+   * through getStickyReviewers()/stickyUnitKey() rather than a second
+   * derivation, per FR-093's no-second-assignment-table rule. */
+  function getStickyReviewerId(taskId, runType, sampleId, identity) {
+    var annotatorId = (identity && identity.annotatorId) || DEFAULT_ANNOTATOR_ID;
+    return getStickyReviewers(taskId, runType)[stickyUnitKey(sampleId, annotatorId)] || null;
+  }
+
   /* issue #596 (FR-093): the ONLY flow difference between run_types is
    * assignment granularity -- there is no manual-assignment mode, so this
    * is the sole, deterministic derivation both the workspace and the
@@ -3832,6 +3844,7 @@
     getReviewUnitLane: getReviewUnitLane,
     getReviewAssignments: getReviewAssignments,
     getStickyReviewers: getStickyReviewers,
+    getStickyReviewerId: getStickyReviewerId,
     taskReviewerRoster: taskReviewerRoster,
     taskArbiterRoster: taskArbiterRoster,
     reviewAssignmentRoster: reviewAssignmentRoster,
