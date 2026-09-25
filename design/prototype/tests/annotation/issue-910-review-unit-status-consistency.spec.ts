@@ -102,4 +102,113 @@ test.describe('issue #910 -- orphan review unit status consistency', () => {
     expect(reviewerDecisionEvents).toHaveLength(1);
     expect(reviewerDecisionEvents[0].actorId).toBe(reviewerId);
   });
+
+  /* Regression found in code review of the #910 fix above: appendReviewDecisionEvents()
+   * (annotation-workspace.data.js) sets its `timingWritten` flag to true as soon as it
+   * attaches started_at/lead_time to the FIRST outKey's `extra` object -- BEFORE knowing
+   * whether appendHistoryEvent() will actually push that event or silently drop it via the
+   * new #910 outKey-scoped dedup guard. When a submit covers 2+ outKeys and the FIRST one
+   * (Object.keys(decisions) order) is an exact repeat of its own last recorded event while a
+   * LATER outKey in the SAME submit is genuinely new, the timing flag is wrongly consumed by
+   * the discarded first attempt, and the event that actually lands in history ends up with NO
+   * started_at/lead_time at all. This violates FR-088 (spec 015, v6.9.0) / AC-2.26
+   * (specs/annotation/015-annotation-workspace/spec.md:262), which requires exactly ONE event
+   * per submit operation to carry started_at/lead_time.
+   *
+   * Reproduced here via two synthetic outKeys (alpha/beta) submitted directly through
+   * markSampleSubmitted() -- same known-good pattern as
+   * issue-583-reviewer-submit-events.spec.ts's multi-outKey test: appendReviewDecisionEvents()
+   * iterates Object.keys(decisions) generically with no task-specific branching
+   * (Generalization-First), so a synthetic multi-outKey shape exercises the same iteration-order
+   * code path a real multi-output-type task would, without needing a second task fixture. T001
+   * itself has only one output type (single_label, task-detail.data.js) so it cannot host this
+   * repro through its own real outKeys.
+   *
+   * Traceability: specs/annotation/015-annotation-workspace/spec.md FR-088, AC-2.26.
+   */
+  test('a genuinely-new outKey in the same submit still carries started_at/lead_time when an earlier outKey was deduped away (issue #910 regression)', async ({
+    page,
+  }) => {
+    await skipGuidelineModal(page);
+    const reviewerId = await gotoReviewerWorkspace(page, { task_id: TASK, sample_id: SAMPLE, run_type: 'official_run' });
+
+    type WorkspaceDataGlobal = {
+      markSampleSubmitted: (
+        taskId: string,
+        role: string,
+        runType: string,
+        sampleId: string,
+        payload: unknown,
+        historySummary: string,
+        identity: { annotatorId?: string; reviewerId?: string }
+      ) => void;
+      getSampleHistory: (
+        taskId: string,
+        runType: string,
+        sampleId: string,
+        identity: Record<string, never>
+      ) => Array<{
+        action: string;
+        role: string;
+        actorId: string | null;
+        outKey?: string;
+        started_at?: string | null;
+        lead_time?: number | null;
+      }>;
+    };
+
+    const submit = (payload: unknown) =>
+      page.evaluate(
+        (a) =>
+          (window as unknown as { LabelSuiteAnnotationWorkspaceData: WorkspaceDataGlobal }).LabelSuiteAnnotationWorkspaceData.markSampleSubmitted(
+            a.taskId,
+            'reviewer',
+            a.runType,
+            a.sampleId,
+            a.payload,
+            '',
+            { annotatorId: a.annotatorId, reviewerId: a.reviewerId }
+          ),
+        { taskId: TASK, runType: 'official_run', sampleId: SAMPLE, payload, annotatorId: ANNOTATOR, reviewerId }
+      );
+
+    // First submit: both synthetic outKeys approved -- establishes the
+    // baseline event each outKey's dedup comparison will be made against.
+    await submit({ decisions: { alpha: 'approve', beta: 'approve' } });
+
+    // Second submit: alpha repeats its exact prior decision (role/action/
+    // reason/value all match -> dedup guard fires, no-op) while beta
+    // genuinely changes from approve to modify (action differs -> dedup
+    // guard does NOT fire, event is written). alpha is first in
+    // Object.keys(decisions) order, so this reproduces the exact
+    // iteration-order bug: timingWritten is consumed by alpha's discarded
+    // attempt before beta -- the only outKey that actually lands a new
+    // event this submit -- is ever reached.
+    await submit({
+      decisions: { alpha: 'approve', beta: 'modify' },
+      timing: { startedAt: '2026-09-19T09:00:00.000Z', leadTime: 12_000 },
+    });
+
+    const reviewerEvents = await page.evaluate(
+      (a) =>
+        (window as unknown as { LabelSuiteAnnotationWorkspaceData: WorkspaceDataGlobal })
+          .LabelSuiteAnnotationWorkspaceData.getSampleHistory(a.taskId, a.runType, a.sampleId, {})
+          .filter((e) => e.role === 'reviewer'),
+      { taskId: TASK, runType: 'official_run', sampleId: SAMPLE }
+    );
+
+    // alpha's second attempt was deduped away (no-op): only 3 events exist
+    // total -- alpha/beta accepted (submit 1) + beta modified (submit 2).
+    expect(reviewerEvents).toHaveLength(3);
+
+    // FR-088 / AC-2.26: exactly one event per submit operation carries
+    // started_at/lead_time. Submit 2's only genuinely-new event is beta's
+    // `modified` -- it MUST carry submit 2's timing, not end up with none,
+    // even though alpha (the outKey that consumed the timing flag first)
+    // was itself deduped away.
+    const modifiedEvent = reviewerEvents.find((e) => e.action === 'modified');
+    expect(modifiedEvent).toBeDefined();
+    expect(modifiedEvent?.started_at).toBe('2026-09-19T09:00:00.000Z');
+    expect(modifiedEvent?.lead_time).toBe(12_000);
+  });
 });
