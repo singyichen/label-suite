@@ -1,9 +1,9 @@
 ---
 description: Create a feature specification (spec.md) from a natural language description.
 handoffs:
-  - label: Build Technical Plan
-    agent: speckit.plan
-    prompt: Create a plan for the spec. I am building with FastAPI + React + TypeScript.
+  - label: Propose OpenSpec Change
+    agent: opsx:propose
+    prompt: Propose an OpenSpec change for this spec (design.md + tasks.md). I am building with FastAPI + React + TypeScript.
     send: true
   - label: Clarify Spec Requirements
     agent: speckit.clarify

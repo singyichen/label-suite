@@ -1,9 +1,9 @@
 ---
 description: Identify and clarify ambiguous or incomplete requirements in spec.md (max 5 questions), updating the spec incrementally with each accepted answer.
 handoffs:
-  - label: Build Technical Plan
-    agent: speckit.plan
-    prompt: Create a plan for the spec. I am building with FastAPI + React + TypeScript.
+  - label: Propose OpenSpec Change
+    agent: opsx:propose
+    prompt: Propose an OpenSpec change for this spec (design.md + tasks.md). I am building with FastAPI + React + TypeScript.
     send: true
 ---
 
