@@ -83,4 +83,4 @@ Only run `/speckit.specify` when the change will make the system behave **differ
 
 6. **Report completion** and suggest next steps:
    - Run `/speckit.clarify` to clarify requirements (optional)
-   - Run `/speckit.plan` to create the implementation plan
+   - Run `/opsx:propose` to draft the OpenSpec change (design.md + tasks.md)

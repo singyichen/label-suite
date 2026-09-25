@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -u
 readonly inventory_sentinel='design/system/screen-inventory.md is stale — run: node scripts/gen-screen-inventory.mjs'
-strict=0; id_pattern='(FR|SC|AC)-[[:alnum:]]+([.-][[:alnum:]]+)*'; retired_command_pattern='(^|[^[:alnum:]_])npm[[:space:]]+(test|run)([^[:alnum:]_-]|$)|/ui-ux-pro-max|/speckit[.](analyze|implement)'
+strict=0; id_pattern='(FR|SC|AC)-[[:alnum:]]+([.-][[:alnum:]]+)*'; retired_command_pattern='(^|[^[:alnum:]_])npm[[:space:]]+(test|run)([^[:alnum:]_-]|$)|/ui-ux-pro-max|/speckit[.](analyze|implement|plan|tasks)'
 root_arg=''; root_provided=0; config_failed=0; governance_failed=0
 tmp_dir="$(mktemp -d "${TMPDIR:-/tmp}/label-suite-sdd.XXXXXX")" || exit 2
 trap 'rm -rf "$tmp_dir"' EXIT
@@ -381,6 +381,12 @@ while IFS= read -r consumer; do
         # issue #954: speckit.implement.md's own DEPRECATED header necessarily contains
         # "/speckit.implement" (self-hit), same rationale as speckit.analyze.md above.
         */.claude/commands/speckit.implement.md) continue ;;
+        # issue #978: speckit.plan.md's own DEPRECATED header necessarily contains
+        # "/speckit.plan" (self-hit), same rationale as speckit.analyze.md above.
+        */.claude/commands/speckit.plan.md) continue ;;
+        # issue #978: speckit.tasks.md's own DEPRECATED header necessarily contains
+        # "/speckit.tasks" (self-hit), same rationale as speckit.analyze.md above.
+        */.claude/commands/speckit.tasks.md) continue ;;
         # issue #942: vendored/self-contained skill content that incidentally matches
         # retired_command_pattern but is not label-suite command guidance.
         */.claude/skills/archify/package.json) continue ;;

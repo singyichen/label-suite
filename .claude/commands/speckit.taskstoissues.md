@@ -14,7 +14,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 1. **Read the task list**
    - Load `specs/[module]/NNN-feature/tasks.md`
-   - If tasks.md does not exist, ask the user to run `/speckit.tasks` first
+   - If tasks.md does not exist, ask the user to run `/opsx:propose` first
 
 2. **Get the GitHub remote**
    - Run: `git config --get remote.origin.url`

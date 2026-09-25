@@ -43,7 +43,7 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 
 - Do not write module-level technical designs or UML diagrams — that belongs to senior-sd
 - Do not write requirements or specs — that belongs to senior-sa
-- Do not write implementation plans or task breakdowns — that belongs to speckit.plan / team-lead
+- Do not write implementation plans or task breakdowns — that belongs to the OpenSpec `/opsx:propose` flow / team-lead
 - Do not write code or tests
 - Do not skip reading existing ADRs before proposing new ones
 
