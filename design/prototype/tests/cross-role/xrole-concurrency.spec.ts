@@ -6,7 +6,8 @@ import {
   skipGuidelineModal,
 } from '../annotation/_workspace-helpers';
 
-/* w6-resilience-a11y.md CONC-01 / CONC-02 / CONC-03 -- multi-actor scenarios.
+/* w6-resilience-a11y.md CONC-02 / CONC-03 -- multi-actor scenarios. CONC-01
+ * was retired (issue #970); see the note further down where it used to sit.
  *
  * 限制標注 (implementation notes, mirroring the annex's own caveats):
  * - The prototype is a static page over localStorage. Every Page below
@@ -31,32 +32,6 @@ import {
 
 const ANNOTATOR_A = 'kioleemg12';
 const ANNOTATOR_B = '113450022';
-const REVIEWER_A = 'reviewer_wang';
-const REVIEWER_B = 'reviewer_li';
-
-/* Reviewer decision-event actor ids for T001/official_run/sent-001 under the
- * default annotator identity -- same trail read as
- * annotation-workspace-review-identity.spec.ts. issue #583 (FR-086): a
- * reviewer submit no longer writes a wrapper `submitted` event, so "has
- * this reviewer submitted" is read off the decision-action events. */
-async function readReviewerSubmittedActorIds(page: Page): Promise<Array<string | null>> {
-  return page.evaluate((annotatorId) => {
-    const data = (window as unknown as {
-      LabelSuiteAnnotationWorkspaceData: {
-        getSampleHistory: (
-          taskId: string,
-          runType: string,
-          sampleId: string,
-          identity: { annotatorId: string }
-        ) => Array<{ action: string; role: string; actorId: string | null }>;
-      };
-    }).LabelSuiteAnnotationWorkspaceData;
-    return data
-      .getSampleHistory('T001', 'official_run', 'sent-001', { annotatorId })
-      .filter((e) => e.role === 'reviewer' && ['accepted', 'modified', 'bypassed'].includes(e.action))
-      .map((e) => e.actorId);
-  }, ANNOTATOR_A);
-}
 
 async function readSampleStatus(page: Page, annotatorId: string): Promise<string> {
   return page.evaluate((id) => {
@@ -75,57 +50,31 @@ async function readSampleStatus(page: Page, annotatorId: string): Promise<string
   }, annotatorId);
 }
 
-function reviewerUrl(reviewerId: string): string {
-  return buildWorkspaceUrl({
-    task_id: 'T001',
-    sample_id: 'sent-001',
-    role: 'reviewer',
-    run_type: 'official_run',
-    reviewer_id: reviewerId,
-  });
-}
-
-/* issue #960: FLAGGED, NOT FIXED -- the same genuine FR-093 conflict already
- * flagged in annotation-workspace-review-identity.spec.ts ('two reviewers on
- * the same annotator keep independent submission buckets'). This test opens
- * ONE unit (T001/sent-001/official_run) as TWO DIFFERENT reviewer identities
- * (REVIEWER_A, REVIEWER_B) and interacts with both -- but FR-093 gives a
- * unit exactly one assignee, so at most one of REVIEWER_A/REVIEWER_B can
- * ever be interactive once #921 lands; the other would see the NOT_ASSIGNED
- * read-only replacement instead of the ws-review-row-approve button this
- * test clicks. No reviewer_id choice satisfies both "two reviewers, one
- * unit" and "one assignee per unit" at once. Left unchanged (still passes
- * on today's main) for the same maintainer decision already requested for
- * the other flagged file, rather than guessing at a resolution here. */
-test('an unsent decision stays private to its reviewer; a submitted one appears to the other after reload (CONC-01)', async ({ page, context }) => {
-  const r1 = page;
-  await skipGuidelineModal(r1);
-  await r1.goto(reviewerUrl(REVIEWER_A));
-  await dismissGuidelineModal(r1);
-  await r1.getByTestId('ws-review-row-approve').click();
-  await expect(r1.getByTestId('ws-review-row-approve')).toHaveAttribute('aria-pressed', 'true');
-
-  // R2 opens the same unit while R1's decision is still unsent. Unsent
-  // decisions live in R1's Page memory only (see CONT-03 in
-  // annotation-reviewer-decision-persistence.spec.ts): R2 sees nothing.
-  const r2 = await context.newPage();
-  await skipGuidelineModal(r2);
-  await r2.goto(reviewerUrl(REVIEWER_B));
-  await dismissGuidelineModal(r2);
-  await expect(r2.getByTestId('ws-review-row-approve')).toHaveAttribute('aria-pressed', 'false');
-  expect(await readReviewerSubmittedActorIds(r2)).toEqual([]);
-
-  await r1.getByTestId('ws-review-submit-btn').click();
-  expect(await readReviewerSubmittedActorIds(r1)).toEqual([REVIEWER_A]);
-
-  // No push-based sync exists; R2 sees R1's submission only after its own
-  // reload -- and sees exactly one event, attributed to R1, proving R2's
-  // still-open (undecided) view never wrote anything into the bucket.
-  await r2.reload();
-  await dismissGuidelineModal(r2);
-  expect(await readReviewerSubmittedActorIds(r2)).toEqual([REVIEWER_A]);
-  await r2.close();
-});
+/* issue #970: CONC-01 ('an unsent decision stays private to its reviewer; a
+ * submitted one appears to the other after reload') was retired here (was
+ * "FLAGGED, NOT FIXED" under issue #960). It opened ONE unit
+ * (T001/sent-001/official_run) as TWO DIFFERENT reviewer identities
+ * (REVIEWER_A, REVIEWER_B) -- but FR-093 gives a unit exactly one assignee
+ * (spec.md:1004), so no reviewer_id choice could keep both interactive once
+ * #921's gate lands: the unassigned identity would see the read-only
+ * NOT_ASSIGNED replacement instead of the ws-review-row-approve button this
+ * test drove.
+ *
+ * Not rewritten to the SAME identity opening a second Page (the CONT-04
+ * pattern `annotation-workspace-review-identity.spec.ts` uses for the
+ * annotator role): that substitution was tried and does not hold. A
+ * reviewer's unsent decision is a genuine, deliberately-persisted draft
+ * (`labelsuite.wsReviewDecisionDrafts.<task>::reviewer::<runType>::
+ * <annotatorId>::<reviewerId>`, restored on both reload AND a second Page in
+ * the same browser context) -- confirmed empirically against the running
+ * prototype while investigating this issue. So "stays private until submit"
+ * was never a property of a single reviewer identity; it was specifically
+ * about ISOLATION BETWEEN two different reviewers' in-progress state, which
+ * FR-093 makes impossible to construct at all (a unit has exactly one
+ * assignee, so there is no second reviewer identity left to isolate from).
+ * Retired rather than rewritten, per the same precedent as XROLE-16's
+ * retirement (docs/product/e2e/issue-180/phase3-drafts/w4-canonical-journey.md,
+ * issue #916). */
 
 /* Deviation from the annex expectation (recorded in the PR report): the annex
  * wants the disabled member to STAY disabled for later entries. The

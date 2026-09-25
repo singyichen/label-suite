@@ -95,7 +95,7 @@ import {
  *   submit), which in official_run triggers the FR-014I rollback
  *   (annotation-workspace.config.js:2703-2705): the annotator's sample
  *   drops back to pending and the annotator must resubmit before the
- *   review unit derives again. XROLE-14/16 assert that loop instead of
+ *   review unit derives again. XROLE-14 asserts that loop instead of
  *   papering over it with data-layer seeding.
  * - issue #596 (FR-093): there is no review quorum left in the model --
  *   REVIEW_UNIT_STATUS has no 'approved' interim state, a single reviewer's
@@ -106,8 +106,14 @@ import {
  *   minReviewers = 2 to support the retired majority-of-N convergence path;
  *   that field and the export it came from (FIXTURE_MIN_REVIEWERS) are gone
  *   as dead weight -- getReviewUnitStatus's 6th arg is no longer consulted.
- *   XROLE-15/16 pin the new single-decision-is-decisive and
- *   agreement-does-not-converge behavior respectively.
+ *   XROLE-15 pins the new single-decision-is-decisive behavior. The
+ *   agreement-does-not-converge regression guard that used to sit alongside
+ *   it as XROLE-16 was retired (issue #970): it proved the guard by putting
+ *   TWO DIFFERENT reviewer identities on the SAME unit, a shape FR-093
+ *   (spec.md:1004) makes impossible to set up in the first place once a
+ *   unit has exactly one assignee -- the same retirement precedent as the
+ *   doc-side XROLE-16 majority-convergence step (issue #916,
+ *   docs/product/e2e/issue-180/phase3-drafts/w4-canonical-journey.md).
  * - Issue #892 derives annotation-results from live task-scoped submissions,
  *   reviews, and arbitration. XROLE-19 verifies the same finalized unit and
  *   role history in the reviewer list and the project leader's result table.
@@ -151,10 +157,8 @@ const OFFICIAL_GOLD: Record<string, string> = {
   'xr-off-002': 'positive',
   'xr-off-003': 'negative',
 };
-/* R02's correction on the forced-divergence record (≠ its gold 'positive'),
- * and the value R01+R02 both correct xr-off-003 to (≠ its gold 'negative'). */
+/* R02's correction on the forced-divergence record (≠ its gold 'positive'). */
 const DIVERGENCE_CORRECTION = 'negative';
-const CONVERGENCE_CORRECTION = 'positive';
 
 let context: BrowserContext;
 let plPage: Page;
@@ -748,12 +752,17 @@ test('XROLE-12: blind review -- reviewer events are invisible to peers until the
    * a unit on ANY submitted, value-unchanged reviewer decision -- it has no
    * roster/identity check, so this is a genuine "first decisive action"
    * probe, not a roster-assignment check. That means this test cannot reuse
-   * an official_run record: all three (xr-off-001/002/003) are each already
-   * claimed by a later dedicated test that needs to be the FIRST reviewer
-   * action on that exact unit (XROLE-15, XROLE-14/17/19, XROLE-16/17). Using
-   * any of them here would finalize the unit early and collapse those tests'
-   * correction panels into renderFinalizedCard's read-only view
-   * (annotation-workspace.config.js:4176-4235) before they run. xr-dry-002/A02
+   * an official_run record: two of the three (xr-off-001, xr-off-002) are
+   * each already claimed by a later dedicated test that needs to be the
+   * FIRST reviewer action on that exact unit (XROLE-15 on xr-off-001;
+   * XROLE-14/17/19 on xr-off-002). Using either here would finalize the unit
+   * early and collapse those tests' correction panels into
+   * renderFinalizedCard's read-only view (annotation-workspace.config.js:
+   * 4176-4235) before they run. (xr-off-003's own dedicated dispute test,
+   * former XROLE-16, was retired by issue #970 -- FR-093 made its "two
+   * reviewers, one unit" setup impossible -- so xr-off-003 is unclaimed too,
+   * but this test still reaches for dry_run below rather than switching to
+   * it.) xr-dry-002/A02
    * is unclaimed by any other test (only xr-dry-001/A01 is used, by
    * XROLE-13), and A02 has a genuine dry_run submission on it from XROLE-08's
    * three-annotator submission sweep, so it is a safe target for this
@@ -836,42 +845,21 @@ test('XROLE-15: a single reviewer approval finalizes the unit immediately', asyn
   expect(await readUnitStatus(r01Page, 'xr-off-001', 'A01')).toBe('finalized');
 });
 
-test('XROLE-16: a second reviewer agreeing with the first does not auto-converge a disputed unit (FR-092 regression guard)', async () => {
-  /* issue #596: this test used to prove the OPPOSITE of what it asserts
-   * below -- that 2 reviewers voting the same non-annotator value was a
-   * strict majority under N=2, so the retired majority-convergence helper
-   * converged the dispute item and finalized the unit WITHOUT arbitration. FR-092
-   * explicitly forbids that shortcut now ("沒有「單一審核員修正即收斂」的例外",
-   * and the same holds for any N-reviewer agreement): a `modify`/`bypass`
-   * decision always routes to the dispute pool, and issue #903 deleted that
-   * convergence helper outright, so no majority path survives anywhere in
-   * the data layer -- only an arbiter's
-   * explicit vote (FR-060) or the exception pool can close a dispute. This
-   * is now a regression guard against that retired shortcut reappearing. */
-  /* issue #596: FR-014I's reject -> pending rollback is retired
-   * (annotation-workspace.config.js:4838-4841), so A03's sample stays
-   * 'submitted' through both corrections below -- there is no rollback or
-   * resubmission step for the unit's status to wait on. */
-  // R01 corrects A03's 'negative' to 'positive'.
-  await submitCorrection(r01Page, 'xr-off-003', 'A03', REVIEWER_R01, CONVERGENCE_CORRECTION);
-  expect(await readUnitStatus(r01Page, 'xr-off-003', 'A03')).toBe('disputed');
-
-  // R02 makes the SAME correction on the still-disputed unit.
-  await submitCorrection(r02Page, 'xr-off-003', 'A03', REVIEWER_R02, CONVERGENCE_CORRECTION);
-
-  // Agreement between R01 and R02 is not a convergence path: the unit stays
-  // disputed, both values merge into ONE item (getDisputeItems() merges by
-  // outKey::diffKey, annotation-workspace.data.js:2152-2187), and no
-  // arbitration vote was ever stored.
-  expect(await readUnitStatus(r02Page, 'xr-off-003', 'A03')).toBe('disputed');
-  const items = await readDisputeItems(r02Page, 'xr-off-003', 'A03');
-  expect(items).toHaveLength(1);
-  expect(items[0].reviewerValues).toEqual({
-    [REVIEWER_R01]: CONVERGENCE_CORRECTION,
-    [REVIEWER_R02]: CONVERGENCE_CORRECTION,
-  });
-  expect(await readArbitrationState(r02Page, 'xr-off-003', 'A03')).toEqual({});
-});
+/* issue #970: XROLE-16 ('a second reviewer agreeing with the first does not
+ * auto-converge a disputed unit') was retired here. It proved the guard by
+ * putting TWO DIFFERENT reviewer identities (R01, R02) on the SAME unit
+ * (xr-off-003/A03) -- R01 as the FR-093-assigned reviewer, R02 as a second,
+ * unassigned one -- a shape FR-093 (spec.md:1004) makes impossible to set up
+ * at all once a unit has exactly one assignee: no reviewer_id choice keeps
+ * both interactive once issue #921's assignment gate lands. The property it
+ * guarded -- "agreement between reviewers is not a convergence path" -- has
+ * no equivalent post-FR-093 shape to rewrite into: there is no second
+ * reviewer action left to agree with the first, so nothing remains to
+ * regression-guard against. Same retirement precedent as the doc-side
+ * XROLE-16 majority-convergence step (issue #916,
+ * docs/product/e2e/issue-180/phase3-drafts/w4-canonical-journey.md, row
+ * "已退場"). xr-off-003 is otherwise unused by this journey past its
+ * XROLE-10 annotator submission -- no other step needed it disputed. */
 
 test('XROLE-17: the arbitrate entry is offered only to the eligible non-participant arbiter on the disputed row', async () => {
   const divergenceAnnotator = OFFICIAL_RUN_ASSIGNMENTS[FORCED_DIVERGENCE_RECORD_ID];
@@ -888,11 +876,10 @@ test('XROLE-17: the arbitrate entry is offered only to the eligible non-particip
    * reviewer's OWN assigned units plus any disputed unit they are an
    * eligible arbiter for (annotation-list.html filterToAssignedUnits()) --
    * it is no longer the task-wide row set every reviewer identity used to
-   * see. R03's round-robin assignment (getReviewAssignments() over this
-   * fixture's 3-entry roster) is xr-off-003 alone, and xr-off-003 is left
-   * disputed (not finalized) by XROLE-16's regression guard above, so R03
-   * never sees a FINALIZED row to check here at all -- that assertion moves
-   * to R01 below, the identity actually assigned xr-off-001. */
+   * see. R03 (the arbiter) is excluded from new-unit round-robin (FR-093,
+   * issue #868) and has no submission of its own, so it never sees a
+   * FINALIZED row to check here at all -- that assertion moves to R01
+   * below, the identity actually assigned xr-off-001. */
   await r01Page.goto(buildListUrl({ task_id: fixtureTaskId, role: 'reviewer', run_type: 'official_run', reviewer_id: REVIEWER_R01 }));
   const ownFinalizedRow = r01Page.getByTestId('ws-sample-item').filter({ hasText: 'xr-off-001' });
   await expect(ownFinalizedRow.locator('.status-badge')).toHaveText('已定稿 · 已鎖定');

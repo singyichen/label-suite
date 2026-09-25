@@ -1,5 +1,12 @@
 import { test, expect } from '@playwright/test';
-import { buildWorkspaceUrl, dismissGuidelineModal, skipGuidelineModal, trackPageErrors, assertNoPageErrors } from './_workspace-helpers';
+import {
+  buildWorkspaceUrl,
+  dismissGuidelineModal,
+  resolveAssignedReviewerId,
+  skipGuidelineModal,
+  trackPageErrors,
+  assertNoPageErrors,
+} from './_workspace-helpers';
 
 /* issue #804 drift guard: issue-804-review-decision-emission.spec.ts already
  * proves the CONCRETE three-value contract (approve -> accepted, modify ->
@@ -32,14 +39,11 @@ import { buildWorkspaceUrl, dismissGuidelineModal, skipGuidelineModal, trackPage
  * (single_label), so a single decision click plus (when required) a reason
  * fully decides the unit -- no per-outKey bookkeeping needed. Each loop
  * iteration reviews an INDEPENDENT review unit (same sample, a distinct
- * synthetic `annotator_id` per iteration) rather than resubmitting against
- * the same unit repeatedly: an `approve` decision finalizes a unit and
- * issue #308 makes a finalized unit read-only, which would silently block
- * every iteration after it. REVIEWER_MOCK_ROWS (data.js:678) has no entry
- * under any of these synthetic ids, so demoAnnotatorRow() (config.js:2631)
- * falls back to the group's first row -- the same graceful fallback the
- * FR-044a comment documents -- giving every iteration a real seeded answer
- * to decide on, with no dependency on how many decision values exist.
+ * `annotator_id` per iteration, given a real submission through the
+ * annotator flow -- issue #970) rather than resubmitting against the same
+ * unit repeatedly: an `approve` decision finalizes a unit and issue #308
+ * makes a finalized unit read-only, which would silently block every
+ * iteration after it.
  *
  * Why filtering out the `submitted` badge is safe and still generic: every
  * submit -- decided or not -- writes a `submitted` wrapper event first
@@ -54,25 +58,25 @@ import { buildWorkspaceUrl, dismissGuidelineModal, skipGuidelineModal, trackPage
  * behaviour from the silent-drop bug, not a weaker stand-in for it.
  */
 
-/* issue #960: FLAGGED, NOT FIXED -- a genuine structural conflict with
- * FR-093, not a fixture bug (see the loop below).
- *
- * Each loop iteration below opens `T001/sent-001` under a freshly-invented,
- * never-submitted `annotator_id` (`issue-804-drift-guard-${i}`) specifically
- * so issue #308's finalized-unit lock cannot block a later iteration. That
- * technique reads a review card only via demoAnnotatorRow()'s UI fallback
- * (annotation-workspace.config.js) -- the synthetic id is never a row
- * getReviewUnitRows() returns (no REVIEWER_MOCK_ROWS entry, no real
- * submission), so it is NEVER a member of buildUnits()'s enumeration either.
- * Once #921's gate lands, isCurrentUnitAssigned() checks membership in
- * exactly that enumeration -- a unit that was never enumerated can never be
- * "assigned" to any reviewer_id, default or resolved. Unlike every other
- * file in this issue, no choice of reviewer_id fixes this: the gate blocks
- * every iteration unconditionally. Left unresolved for a maintainer
- * decision (e.g. seed a real per-iteration annotator submission first,
- * or accept this file needs its whole isolation technique redesigned once
- * #921 lands) rather than guessing at a resolution here. */
-const REVIEWER = 'reviewer_wang'; // DEFAULT_REVIEWER_ID, annotation-workspace.data.js:221
+/* issue #970 (fixed; was "FLAGGED, NOT FIXED" under issue #960): the
+ * synthetic, never-submitted `annotator_id` this file used per iteration
+ * (`issue-804-drift-guard-${i}`) was never a member of
+ * getReviewUnitRows()'s FR-055 union -- it had no REVIEWER_MOCK_ROWS entry
+ * and no real submission -- so it could never be "assigned" to any
+ * reviewer_id once FR-093's gate (issue #921) checks that enumeration. No
+ * reviewer_id choice fixed that: the fix instead makes each iteration's unit
+ * REAL. Before opening the review card, the loop now submits a genuine
+ * annotator answer under that iteration's id through the real annotator
+ * flow (the same one `annotation-workspace-review-identity.spec.ts` uses).
+ * That submission puts the unit in FR-055's "actually-submitted annotator"
+ * source, so it IS enumerated, and `resolveAssignedReviewerId()` (issue
+ * #960) resolves whichever reviewer the round-robin actually deals it --
+ * this still needs no maintainer-picked reviewer_id and stays fully generic
+ * over REVIEW_DECISIONS. The isolation property issue #308 needed (each
+ * decision reviews an INDEPENDENT unit so a prior `approve` can't lock a
+ * later iteration) is unaffected: every iteration still uses its own
+ * distinct annotator_id, now with a real submission behind it instead of a
+ * fallback demo answer. */
 
 test.beforeEach(async ({ page }) => {
   await skipGuidelineModal(page);
@@ -98,12 +102,30 @@ test.describe('REVIEW_DECISIONS closed-vocabulary emission-point drift guard (FR
     for (let i = 0; i < decisions.length; i += 1) {
       const decision = decisions[i];
       const annotatorId = `issue-804-drift-guard-${i}`;
+
+      // issue #970: make this iteration's unit real -- a genuine annotator
+      // submission under a fresh id lands it in FR-055's "actually-submitted
+      // annotator" enumeration source, so FR-093's assignment derivation
+      // (issue #921) can resolve a real assignee for it below.
+      await page.goto(
+        buildWorkspaceUrl({
+          task_id: 'T001', sample_id: 'sent-001', role: 'annotator', run_type: 'official_run', annotator_id: annotatorId,
+        })
+      );
+      await dismissGuidelineModal(page);
+      await page.getByTestId('ws-single-label-chip-negative').click();
+      await page.getByTestId('ws-submit-btn').click();
+
+      const reviewerId = await resolveAssignedReviewerId(page, {
+        task_id: 'T001', sample_id: 'sent-001', run_type: 'official_run', annotator_id: annotatorId,
+      });
       const url = buildWorkspaceUrl({
         task_id: 'T001',
         sample_id: 'sent-001',
         role: 'reviewer',
         run_type: 'official_run',
         annotator_id: annotatorId,
+        reviewer_id: reviewerId,
       });
 
       await page.goto(url);
@@ -141,7 +163,7 @@ test.describe('REVIEW_DECISIONS closed-vocabulary emission-point drift guard (FR
       await expect(
         decisionCard.locator('.history-actor'),
         `decision "${decision}"'s history event must be attributed to the reviewer (AC-2.21)`
-      ).toHaveText(`審核員 · ${REVIEWER}`);
+      ).toHaveText(`審核員 · ${reviewerId}`);
     }
 
     assertNoPageErrors(pageErrors);

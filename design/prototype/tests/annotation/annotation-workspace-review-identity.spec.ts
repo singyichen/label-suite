@@ -26,8 +26,6 @@ type TrailEvent = { action: string; role: string; actorId: string | null; at: st
 
 const ANNOTATOR_A = 'kioleemg12';
 const ANNOTATOR_B = '113450022';
-const REVIEWER_A = 'reviewer_wang';
-const REVIEWER_B = 'reviewer_li';
 
 async function readTrail(
   page: Page,
@@ -72,18 +70,23 @@ async function readSampleStatus(
  * exactly one approve/reject pair -- one click completes the decision set
  * handleOfficialRunSubmit() validates.
  *
- * issue #960: this file predates FR-093's single-owner review model (v3.8.0,
- * issue #145) and 'two reviewers on the same annotator keep independent
- * submission buckets' below deliberately puts TWO DIFFERENT reviewer
- * identities on the SAME unit -- exactly the shape FR-093's assignment gate
- * (issue #921) forbids once it lands (a unit has exactly one assignee).
- * That single test is therefore a genuine model conflict, not a fixture bug:
- * no reviewer_id choice makes "two reviewers, one unit" and "one assignee
- * per unit" both true at once. Left unchanged here (it still passes on
- * today's main, which has no gate yet) and flagged in issue #960 for a
- * maintainer decision instead of guessing at a resolution. Every OTHER case
- * in this file uses exactly one reviewer identity and is fixed below via
- * approveAndSubmitAsAssignedReviewer(). */
+ * issue #970: this file used to also cover 'two reviewers on the same
+ * annotator keep independent submission buckets', which predated FR-093's
+ * single-owner review model (v3.8.0, issue #145) by deliberately putting TWO
+ * DIFFERENT reviewer identities on the SAME unit -- exactly the shape
+ * FR-093's assignment gate (issue #921) forbids (a unit has exactly one
+ * assignee, spec 015 v5.0.0, `spec.md:1004`). No reviewer_id choice makes
+ * "two reviewers, one unit" and "one assignee per unit" both true at once,
+ * and the property it protected -- that a reviewer decision is attributed to
+ * the real actor, not a shared bucket -- is already pinned below by 'a
+ * review decision records the real reviewer id and never the string
+ * current', which uses the single FR-093-assigned reviewer. Retired rather
+ * than rewritten, following the same precedent as XROLE-16's retirement
+ * (docs/product/e2e/issue-180/phase3-drafts/w4-canonical-journey.md, issue
+ * #916): the situation this test exercised no longer exists under the
+ * single-owner relay model. Takes an explicit reviewerId because
+ * approveAndSubmitAsAssignedReviewer() below is the only remaining caller,
+ * and it always resolves that id first via FR-093's assignment derivation. */
 async function approveAndSubmitAsReviewer(page: Page, reviewerId: string) {
   await page.goto(
     buildWorkspaceUrl({
@@ -122,19 +125,6 @@ test.beforeEach(async ({ page }) => {
 });
 
 test.describe('review identity foundation', () => {
-  test('two reviewers on the same annotator keep independent submission buckets', async ({ page }) => {
-    await approveAndSubmitAsReviewer(page, REVIEWER_A);
-    await approveAndSubmitAsReviewer(page, REVIEWER_B);
-
-    /* issue #583 (FR-086): a reviewer submit no longer writes a wrapper
-       `submitted` event -- it writes one per-outKey decision event instead,
-       so that decision event is what counts submissions. */
-    const reviewerDecisions = (await readTrail(page, TRAIL)).filter(
-      (e) => e.role === 'reviewer' && ['accepted', 'modified', 'bypassed'].includes(e.action)
-    );
-    expect(reviewerDecisions.map((e) => e.actorId)).toEqual([REVIEWER_A, REVIEWER_B]);
-  });
-
   test('a review decision records the real reviewer id and never the string current', async ({ page }) => {
     const reviewerId = await approveAndSubmitAsAssignedReviewer(page);
 
