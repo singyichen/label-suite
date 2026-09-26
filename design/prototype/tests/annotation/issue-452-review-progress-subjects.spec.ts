@@ -121,8 +121,10 @@ test.describe('issue #452 — the workspace top progress is MY submissions', () 
   test('T016 reviewer progress names the reviewer as its subject', async ({ page }) => {
     await openReviewerWorkspace(page, 'T016', 'ofm-01-reviewer-corrects-b');
 
+    /* issue #956 (FR-093): reviewer_chen is only assigned 3 of T016's 5
+       official_run units, not the whole task. */
     await expect(page.getByTestId('ws-progress-text')).toHaveText(
-      /^我的審核提交 \d+ \/ 5 個審核單位$/,
+      /^我的審核提交 \d+ \/ 3 個審核單位$/,
     );
   });
 });
