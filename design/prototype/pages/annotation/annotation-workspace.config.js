@@ -142,9 +142,11 @@
       wsExceptionPoolNote: '仲裁判定兩者皆非的爭議項，由專案負責人逐項決定最終處置。',
       exceptionPoolContextTpl: '標記員：{a} · 審核員：{b}',
       exceptionPoolReasonPlaceholder: '處置理由（必填）',
-      exceptionPoolReasonRequired: '請先填寫理由再確認',
       exceptionPoolConfirmLabel: '確認',
       exceptionPoolOriginTpl: '仲裁者：{arbiter} · 兩者皆非理由：{reason}',
+      exceptionPoolNoSelectionLabel: '尚未選擇最終處置',
+      exceptionPoolSummaryTpl: '已選擇：{action}',
+      exceptionPoolSummaryWithValueTpl: '已選擇：{action}，定稿值：{value}',
       exceptionQueueTitle: '最終例外池',
       exceptionQueueProgressText: '待處置例外 {total} 項',
       wsExceptionPoolResolveSuccess: '已完成處置',
@@ -289,9 +291,11 @@
       wsExceptionPoolNote: 'Dispute items arbitration marked neither side adoptable, decided one at a time by a project leader.',
       exceptionPoolContextTpl: 'Annotator: {a} · Reviewer: {b}',
       exceptionPoolReasonPlaceholder: 'Reason for this disposition (required)',
-      exceptionPoolReasonRequired: 'Give a reason before confirming',
       exceptionPoolConfirmLabel: 'Confirm',
       exceptionPoolOriginTpl: 'Arbiter: {arbiter} · Rejected because: {reason}',
+      exceptionPoolNoSelectionLabel: 'No final disposition selected yet',
+      exceptionPoolSummaryTpl: 'Selected: {action}',
+      exceptionPoolSummaryWithValueTpl: 'Selected: {action} · Final value: {value}',
       exceptionQueueTitle: 'Final exception pool',
       exceptionQueueProgressText: '{total} exceptions awaiting disposition',
       wsExceptionPoolResolveSuccess: 'Disposition recorded',
@@ -4505,73 +4509,47 @@
     }).pop() || null;
   }
 
-  /* `custom_answer` MUST reuse the exact config-driven answer control every
-     other role already goes through (renderOutputPreview -> e.g.
-     renderSingleLabelPreview) -- design.md D4 / Generalization-First forbids
-     a second, bespoke answer UI for this screen. clearOutputPreviewState()
-     resets the shared previewState slot to a blank, already-`_seeded` shape
-     first so the panel never opens pre-selected on whatever the dataset's
-     output column happens to hold (renderSingleLabelPreview's own
-     ground-truth auto-seed only fires when `_seeded` is still falsy) -- the
-     project leader picks an answer explicitly, the same as every other
-     action on this screen requiring one. */
-  function expandExceptionPoolAction(item, host, action, resolveFn) {
+  /* issue #920 (design.md D1/D4, FR-095 v7.0.0): selecting `custom_answer`
+     still mounts the exact config-driven answer control every other role
+     already goes through (renderOutputPreview -> e.g.
+     renderSingleLabelPreview) -- Generalization-First forbids a second,
+     bespoke answer UI for this screen. clearOutputPreviewState() resets the
+     shared previewState slot to a blank, already-`_seeded` shape first so
+     the panel never opens pre-selected on whatever the dataset's output
+     column happens to hold (renderSingleLabelPreview's own ground-truth
+     auto-seed only fires when `_seeded` is still falsy) -- the project
+     leader picks an answer explicitly, the same as every other outlet
+     reusing this control. Selecting the action (or a value inside the
+     expanded control) only updates local selection state -- it MUST NOT
+     call `resolveFn`; `host` is `expandHost`, the item's fixed D2 block 2
+     mount point, cleared and (for `custom_answer`) refilled on every
+     selection change. */
+  function expandExceptionPoolAction(item, host, action) {
     while (host.firstChild) host.removeChild(host.firstChild);
-
-    if (action === 'custom_answer') {
-      var panel = document.createElement('div');
-      panel.setAttribute('data-testid', 'ws-exception-pool-custom-answer');
-      var panelMount = document.createElement('div');
-      panel.appendChild(panelMount);
-      clearOutputPreviewState(item.outKey);
-      renderOutputPreview(panelMount, item.outKey);
-      host.appendChild(panel);
-    }
-
-    /* FR-063 / FR-095 point 4: both custom_answer and exclude_from_dataset
-       require an audit reason before they resolve -- the same shared
-       testid/blocked-not-disabled convention arbitration's reject reason
-       uses (refreshArbitrationBlocker), simplified to a single always-open
-       panel since only one exception-pool item ever expands at a time. */
-    var reasonInput = document.createElement('input');
-    reasonInput.type = 'text';
-    reasonInput.setAttribute('data-testid', 'ws-exception-pool-reason');
-    reasonInput.placeholder = t('exceptionPoolReasonPlaceholder');
-    reasonInput.setAttribute('aria-label', t('exceptionPoolReasonPlaceholder'));
-    reasonInput.style.cssText =
-      'width:100%;font:inherit;font-size:13px;padding:5px 8px;margin:8px 0;'
-      + 'border:1px solid var(--color-border);border-radius:var(--radius-sm);'
-      + 'background:var(--color-surface);color:var(--color-ink);';
-    host.appendChild(reasonInput);
-
-    var confirmBtn = document.createElement('button');
-    confirmBtn.type = 'button';
-    confirmBtn.className = 'mini-btn';
-    confirmBtn.setAttribute(
-      'data-testid',
-      action === 'custom_answer' ? 'ws-exception-pool-custom-answer-confirm' : 'ws-exception-pool-exclude-confirm'
-    );
-    confirmBtn.textContent = t('exceptionPoolConfirmLabel');
-    confirmBtn.addEventListener('click', function () {
-      var reason = reasonInput.value.trim();
-      if (!reason) {
-        showToast(t('exceptionPoolReasonRequired'), 'warning');
-        return;
-      }
-      var value = action === 'custom_answer'
-        ? window.LabelSuiteAnnotationWorkspaceData.convertSubmissionAnswer(item.outKey, { previewState: state.previewState })
-        : undefined;
-      resolveFn(item, action, value, reason);
-    });
-    host.appendChild(confirmBtn);
+    if (action !== 'custom_answer') return;
+    var panel = document.createElement('div');
+    panel.setAttribute('data-testid', 'ws-exception-pool-custom-answer');
+    var panelMount = document.createElement('div');
+    panel.appendChild(panelMount);
+    clearOutputPreviewState(item.outKey);
+    renderOutputPreview(panelMount, item.outKey);
+    host.appendChild(panel);
   }
 
-  /* adopt_annotator/adopt_reviewer resolve in one click with the diffed
-     CompactAnswer value already on the dispute item (no reason field, same
-     as arbitration's 採 A／採 B); custom_answer/exclude_from_dataset expand
-     their reason + confirm panel via expandExceptionPoolAction. dry_run
-     never offers custom_answer (AC-4.57 -- no free re-annotation channel
-     outside official_run). */
+  /* issue #920 (design.md D1-D4, FR-095 v7.0.0 BREAKING): all four
+     dispositions are now select-then-confirm. Clicking a
+     `ws-exception-pool-action-<action>` button only marks that action
+     selected (`aria-pressed`) and never calls `resolveFn`; `custom_answer`
+     additionally mounts its reused answer control via
+     expandExceptionPoolAction(), and picking a value inside it is likewise
+     only a selection (design.md D4's delegated `expandHost` click listener
+     below just refreshes the summary line, it does not write). The reason
+     field and the unified `ws-exception-pool-confirm` button are now always
+     rendered and shared by all four actions (previously only
+     custom_answer/exclude_from_dataset expanded a reason + confirm pair,
+     and adopt_annotator/adopt_reviewer wrote immediately with `reason: ''`
+     -- issue #913). dry_run never offers custom_answer (AC-4.57 -- no free
+     re-annotation channel outside official_run). */
   function buildExceptionPoolItemRow(item, runType, resolveFn) {
     var data = window.LabelSuiteAnnotationWorkspaceData;
     var row = document.createElement('div');
@@ -4614,7 +4592,86 @@
       row.appendChild(origin);
     }
 
+    var selectedAction = null;
+    var actionButtons = {};
     var expandHost = document.createElement('div');
+
+    /* The action's would-be finalized value -- `undefined` for
+       `exclude_from_dataset` (D2/FR-095 point 4: it never carries one).
+       Shared by the summary line (D4) and the confirm click handler so
+       both read the exact same computation (DRY). */
+    function selectedActionValue() {
+      if (selectedAction === 'adopt_annotator') return item.annotatorValue;
+      if (selectedAction === 'adopt_reviewer') return reviewerValue;
+      if (selectedAction === 'custom_answer') {
+        return data.convertSubmissionAnswer(item.outKey, { previewState: state.previewState });
+      }
+      return undefined;
+    }
+
+    var reasonInput = document.createElement('input');
+    reasonInput.type = 'text';
+    reasonInput.setAttribute('data-testid', 'ws-exception-pool-reason');
+    reasonInput.placeholder = t('exceptionPoolReasonPlaceholder');
+    reasonInput.setAttribute('aria-label', t('exceptionPoolReasonPlaceholder'));
+    reasonInput.style.cssText =
+      'width:100%;font:inherit;font-size:13px;padding:5px 8px;margin:8px 0;'
+      + 'border:1px solid var(--color-border);border-radius:var(--radius-sm);'
+      + 'background:var(--color-surface);color:var(--color-ink);';
+
+    var summary = document.createElement('div');
+    summary.setAttribute('data-testid', 'ws-exception-pool-summary');
+    summary.style.cssText = 'font-size:12px;color:var(--color-text-soft);margin:0 0 8px;';
+
+    var confirmBtn = document.createElement('button');
+    confirmBtn.type = 'button';
+    confirmBtn.className = 'mini-btn';
+    confirmBtn.setAttribute('data-testid', 'ws-exception-pool-confirm');
+    confirmBtn.textContent = t('exceptionPoolConfirmLabel');
+    confirmBtn.disabled = true;
+
+    /* design.md D4: no selection yet, adopt_annotator/adopt_reviewer always
+       have a value, custom_answer only once a legal value is chosen
+       (data.js's own `hasLegitimateFinalizedValue` sentinel: a converted
+       `null` means "no answer picked"), exclude_from_dataset never does. */
+    function refreshSummary() {
+      if (!selectedAction) {
+        summary.textContent = t('exceptionPoolNoSelectionLabel');
+        return;
+      }
+      var actionLabel = t(EXCEPTION_ACTION_I18N_KEYS[selectedAction]);
+      var hasValue = selectedAction === 'adopt_annotator' || selectedAction === 'adopt_reviewer'
+        || (selectedAction === 'custom_answer' && selectedActionValue() !== null);
+      summary.textContent = hasValue
+        ? t('exceptionPoolSummaryWithValueTpl')
+          .replace('{action}', actionLabel).replace('{value}', formatDisputeValue(selectedActionValue()))
+        : t('exceptionPoolSummaryTpl').replace('{action}', actionLabel);
+    }
+
+    /* design.md D3: native `disabled`, a deliberate divergence from this
+       screen's other blocked-not-disabled reason-gating convention
+       (refreshArbitrationBlocker) per the maintainer's 2026-09-24 ruling.
+       Switching the selected action never clears the reason input's typed
+       text (design.md D1 -- the user may be comparing dispositions before
+       deciding) but always re-disables Confirm until the reason field is
+       (re)confirmed via its own `input` event, so a leftover reason typed
+       for a previously selected action cannot silently carry over as the
+       reason for a different one (AC-4.74). */
+    function refreshConfirmDisabled() {
+      confirmBtn.disabled = !selectedAction || !reasonInput.value.trim();
+    }
+    reasonInput.addEventListener('input', refreshConfirmDisabled);
+
+    /* design.md D4: `custom_answer`'s expanded control is the shared
+       config-driven renderOutputPreview() engine (Generalization-First) --
+       this listens for its bubbled click instead of modifying that engine,
+       so picking a chip refreshes the summary line without touching any
+       shared rendering code. Native click bubbling guarantees this runs
+       after the control's own handler has already updated
+       `state.previewState`. */
+    expandHost.addEventListener('click', function () {
+      if (selectedAction === 'custom_answer') refreshSummary();
+    });
 
     var actionsWrap = document.createElement('div');
     actionsWrap.className = 'rv-choice-group';
@@ -4628,20 +4685,33 @@
            so it may not look like a fourth interchangeable choice. */
         btn.className = action === 'exclude_from_dataset' ? 'mini-btn mini-btn-danger' : 'mini-btn';
         btn.setAttribute('data-testid', 'ws-exception-pool-action-' + action);
+        btn.setAttribute('aria-pressed', 'false');
         btn.textContent = t(EXCEPTION_ACTION_I18N_KEYS[action]);
         btn.addEventListener('click', function () {
-          if (action === 'adopt_annotator') {
-            resolveFn(item, action, item.annotatorValue, '');
-          } else if (action === 'adopt_reviewer') {
-            resolveFn(item, action, reviewerValue, '');
-          } else {
-            expandExceptionPoolAction(item, expandHost, action, resolveFn);
-          }
+          selectedAction = action;
+          Object.keys(actionButtons).forEach(function (other) {
+            actionButtons[other].setAttribute('aria-pressed', other === action ? 'true' : 'false');
+          });
+          expandExceptionPoolAction(item, expandHost, action);
+          refreshSummary();
+          confirmBtn.disabled = true;
         });
+        actionButtons[action] = btn;
         actionsWrap.appendChild(btn);
       });
     row.appendChild(actionsWrap);
     row.appendChild(expandHost);
+    row.appendChild(reasonInput);
+    row.appendChild(summary);
+    row.appendChild(confirmBtn);
+
+    confirmBtn.addEventListener('click', function () {
+      var reason = reasonInput.value.trim();
+      if (!selectedAction || !reason) return;
+      resolveFn(item, selectedAction, selectedActionValue(), reason);
+    });
+
+    refreshSummary();
     return row;
   }
 
