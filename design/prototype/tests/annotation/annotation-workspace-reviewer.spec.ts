@@ -84,7 +84,7 @@ test.describe('reviewer direct correction — deep example (single_label, T001)'
       await page.getByTestId('ws-single-label-chip-negative').click();
     });
 
-    await gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001' });
+    const reviewerId = await gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001' });
     await dismissGuidelineModal(page);
 
     const row = page.getByTestId('ws-review-row').first();
@@ -92,10 +92,33 @@ test.describe('reviewer direct correction — deep example (single_label, T001)'
     await approveAllRows(page);
     await page.getByTestId('ws-review-submit-btn').click();
 
-    const history = page.getByTestId('ws-review-history');
-    await expect(history).toBeVisible();
-    const historyText = (await history.textContent()) || '';
-    expect(historyText.trim().length).toBeGreaterThan(0);
+    /* Editing the correction to a value different from the annotator's own
+     * answer, then approving, resolves this unit's status to 'disputed'
+     * (not 'finalized') -- so handleReviewSubmit()'s tail call into
+     * advanceToNextActionableReviewUnit() does NOT take its early-return
+     * guard, and it auto-advances the workspace to a different review unit
+     * (same sample_id, a different annotator_id) synchronously inside this
+     * same click. By the time `.click()` above resolves, the #924 fix has
+     * already cleared and re-hidden `#wsReviewHistory` for the new unit, so
+     * there is no externally observable moment where the DOM card is still
+     * showing this unit's history -- reading the already-persisted history
+     * via getSampleHistory() (same accessor as issue-924-review-history-clear.spec.ts)
+     * survives that advance and still proves the submit recorded a decision. */
+    const history = await page.evaluate(
+      ({ reviewerId }) =>
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (window as any).LabelSuiteAnnotationWorkspaceData.getSampleHistory(
+          'T001',
+          'official_run',
+          'sent-001',
+          { annotatorId: 'kioleemg12', reviewerId }
+        ),
+      { reviewerId }
+    );
+    expect(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (history as any[]).some((event) => event.action === 'accepted')
+    ).toBe(true);
     assertNoPageErrors(errors);
   });
 

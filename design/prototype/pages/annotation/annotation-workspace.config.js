@@ -2188,6 +2188,15 @@
        state; renderWorkspace() below recomputes INITIAL/SAVED for the
        newly loaded sample from persisted data. */
     currentSampleDirty = false;
+    /* issue #924: #wsReviewHistory only ever accumulates confirmation text
+       across submits (appendReviewHistoryEntry() never clears it) -- every
+       sample switch must start the newly loaded sample with an empty,
+       hidden history card rather than the previous sample's stale one. */
+    var reviewHistory = document.getElementById('wsReviewHistory');
+    if (reviewHistory) {
+      while (reviewHistory.firstChild) reviewHistory.removeChild(reviewHistory.firstChild);
+      reviewHistory.classList.add('hidden');
+    }
     /* issue #907: the project leader's exception queue spans annotators the
        same way a reviewer's unit list does, so its rows must be able to move
        the identity too -- an annotator addresses only their own records. */
