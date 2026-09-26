@@ -779,9 +779,14 @@ test.describe('Issue #891 — live review pools', () => {
   }) => {
     await page.goto(projectLeaderExceptionUrl('ofm-05-final-exception'));
     await expect(page.getByTestId('ws-exception-pool')).toBeVisible();
+    // issue #920: disposition is now select-then-confirm -- selecting the
+    // action alone no longer writes, so a reason must be filled and the
+    // unified confirm control clicked before the pool clears.
     await page
       .getByTestId('ws-exception-pool-action-adopt_annotator')
       .click();
+    await page.getByTestId('ws-exception-pool-reason').fill('採用標記員原答案（測試理由）');
+    await page.getByTestId('ws-exception-pool-confirm').click();
     await expect(page.getByTestId('ws-exception-pool')).toHaveCount(0);
 
     await page.reload();

@@ -1,7 +1,7 @@
 # annotation/015-annotation-workspace Specification
 
 ## Purpose
-Annotation List + Workspace（標記清單與標記作業，Annotator／Reviewer）的 derived view。正典為 `specs/annotation/015-annotation-workspace/spec.md`（v6.23.0）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR/AC ID，不改動其正典措辭。目前收錄：change `reviewer-action-hint`（issue #526）之 FR-084、AC-4.47 ~ AC-4.50 與 FR-064 第 7 點第 6 項之範圍註記；change `2026-09-01-single-owner-review-relay`（issue #596）之 FR-092 ~ FR-097（新增）、FR-014B／FR-016A／FR-044／FR-051／FR-053／FR-054／FR-055／FR-060／FR-061／FR-062／FR-063／FR-064／FR-070／FR-083／FR-086（修訂）、FR-014I／FR-069／FR-074／FR-085（移除）；change `seq-tagging-span-workspace`（issue #581）之 FR-024A／FR-024A-1／FR-024A-2／FR-024A-3／FR-052／FR-024L（修訂）；change `reserve-arbiters-from-review-assignment`（issue #868）之 FR-060／FR-073／FR-093／FR-099（修訂）；change `pl-exception-disposal-screen-shell`（issue #907）之 FR-095（修訂，新增最終例外處置畫面外殼段落與 AC-4.69）；change `gate-review-assignment`（issue #921）之 FR-093（修訂，新增工作區側送出指派閘門段落與 AC-4.70、AC-4.71）；以及 change `fix-910-review-unit-status-consistency`（issue #910）之 FR-064（修訂，補齊與 FR-053 同源之 FR-044a 遞補列限定語）與 FR-016B（新增，審核決策事件之 outKey 範圍雙送出去重）；以及 change `fix-908-annotator-finalized-lock`（issue #908）之 FR-101（新增，標記員定稿鎖定，首次以獨立標題收錄）與 FR-072（首次以獨立標題收錄，修訂第 3 點加入「未定稿單位」限定語）；以及 change `separate-review-decision-row`（issue #926／#927／#928）之 FR-014P（首次以獨立標題收錄，第 2/3/4 點修訂為決策列獨立於答案 Bypass 列，新增第 5/6 點視覺權重與鄰近送出，對應新增 AC-3.61 ~ AC-3.63）與 FR-053（修訂，列內決策控件位置措辭同步移除「Bypass 列上」）。
+Annotation List + Workspace（標記清單與標記作業，Annotator／Reviewer）的 derived view。正典為 `specs/annotation/015-annotation-workspace/spec.md`（v7.0.0，版本號將於本波次最終合併時由主 session 重新編號）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR/AC ID，不改動其正典措辭。目前收錄：change `reviewer-action-hint`（issue #526）之 FR-084、AC-4.47 ~ AC-4.50 與 FR-064 第 7 點第 6 項之範圍註記；change `2026-09-01-single-owner-review-relay`（issue #596）之 FR-092 ~ FR-097（新增）、FR-014B／FR-016A／FR-044／FR-051／FR-053／FR-054／FR-055／FR-060／FR-061／FR-062／FR-063／FR-064／FR-070／FR-083／FR-086（修訂）、FR-014I／FR-069／FR-074／FR-085（移除）；change `seq-tagging-span-workspace`（issue #581）之 FR-024A／FR-024A-1／FR-024A-2／FR-024A-3／FR-052／FR-024L（修訂）；change `reserve-arbiters-from-review-assignment`（issue #868）之 FR-060／FR-073／FR-093／FR-099（修訂）；change `pl-exception-disposal-screen-shell`（issue #907）之 FR-095（修訂，新增最終例外處置畫面外殼段落與 AC-4.69）；change `gate-review-assignment`（issue #921）之 FR-093（修訂，新增工作區側送出指派閘門段落與 AC-4.70、AC-4.71）；以及 change `fix-910-review-unit-status-consistency`（issue #910）之 FR-064（修訂，補齊與 FR-053 同源之 FR-044a 遞補列限定語）與 FR-016B（新增，審核決策事件之 outKey 範圍雙送出去重）；以及 change `fix-908-annotator-finalized-lock`（issue #908）之 FR-101（新增，標記員定稿鎖定，首次以獨立標題收錄）與 FR-072（首次以獨立標題收錄，修訂第 3 點加入「未定稿單位」限定語）；以及 change `separate-review-decision-row`（issue #926／#927／#928）之 FR-014P（首次以獨立標題收錄，第 2/3/4 點修訂為決策列獨立於答案 Bypass 列，新增第 5/6 點視覺權重與鄰近送出，對應新增 AC-3.61 ~ AC-3.63）與 FR-053（修訂，列內決策控件位置措辭同步移除「Bypass 列上」）；以及 change `exception-pool-select-then-confirm`（issue #920，**MAJOR**）之 FR-095（修訂，新增「先選取、後確認的處置互動模型」段落，廢止 AC-4.56、AC-4.57，新增 AC-4.72 ~ AC-4.75）。
 
 ## Requirements
 
@@ -814,8 +814,8 @@ workspace reviewer 視圖 MUST 於審核卡（FR-053）、仲裁版面（FR-061�
 
 仲裁裁定為 `reject`（兩者皆非，FR-061 第 3 點）的爭議項 MUST 落入該任務的**最終例外池**。最終例外池 MUST 提供專案負責人逐筆收尾的處置畫面，其處置動作 MUST 取自 `EXCEPTION_POOL_ACTIONS`：
 
-1. `adopt_annotator`（採 A）：以標記員原答案定案，一鍵完成；
-2. `adopt_reviewer`（採 B）：以審核員的答案（修正值或「無法判定」）定案，一鍵完成；
+1. `adopt_annotator`（採 A）：以標記員原答案定案；
+2. `adopt_reviewer`（採 B）：以審核員的答案（修正值或「無法判定」）定案；
 3. `custom_answer`（自訂答案）：展開**原始標記介面**——重用該輸出類型之 config-driven 作答控件（`OUTPUT_TYPE_REGISTRY` 驅動），MUST NOT 為例外池另建一套作答 UI；作答值 MUST 限於該輸出類型與其 config 所定義的合法答案空間，超出者 MUST 阻擋定案；定案理由**必填**；
 4. `exclude_from_dataset`（自資料集排除）：該樣本不產生定案答案、不進入匯出之最終答案集合，但 MUST 保留排除紀錄（處置者、理由、時間）。
 
@@ -823,7 +823,11 @@ workspace reviewer 視圖 MUST 於審核卡（FR-053）、仲裁版面（FR-061�
 
 處置完成後，`adopt_annotator`／`adopt_reviewer`／`custom_answer` 三者 MUST 使該爭議項解決；該單位全部爭議項解決後推導為 `已定稿`（FR-051）並流入標記結果；`exclude_from_dataset` 則使該單位以排除記號呈現且 MUST NOT 推導為 `已定稿`（FR-063）。
 
-每個處置 MUST 寫入一筆歷程事件（`exception_resolved` 或 `excluded`，FR-086），攜帶處置者、動作、理由與時間。
+**v6.20.0 釐清（issue #913）**：`adopt_reviewer` 所稱「審核員答案」，於出現 FR-061 第 2 點釐清所述之遺留多提交形狀時，同樣取 FR-093（1）之 sticky 擁有者，理由同 FR-061 第 2 點。
+
+**v6.21.0 釐清（issue #914）**：「全數收尾後推導為已定稿」之「收尾」，於狀態推導（`getReviewUnitStatus()`）與定稿值取用（`getFinalizedOverwrites()`／`getFinalizationSourceKeys()`）兩側先前各自認定寬嚴不一：前者僅檢查仲裁 `finalized_by` 是否存在、或例外池 `action` 是否非 `exclude_from_dataset`，未如後者要求該筆紀錄真正持有合法 `finalized_value`，使一筆缺少或不合法 `finalized_value` 之紀錄仍可讓單位誤判為 `已定稿`。本版統一為單一判準：紀錄須持有 `finalized_value` 屬性；`custom_answer` 額外要求該值不得為 `null`——專案負責人未於重用之作答控件選取任何答案時之落空值，AC-4.56「輸入合法值並填妥理由後可定案」本即隱含此要求，該值不合法時不得判為已定稿。`adopt_b`（FR-061 第 2 點）與本條第（2）點 `adopt_reviewer` 之 `finalized_value: null` 不受此限——兩者承接審核員 `bypass` 決策時，`null` 是設計既有之「無法判定」定案語意（design.md D3），非缺陷，仍須判為已定稿且不得回填標記員原答案。`listReviewPoolItems()`（任務詳情頁例外池佇列與本條第（一）點之左側清單共用來源）同步套用同一判準，使經此收緊後改判為 `爭議中` 之單位得以在佇列中重新浮現，不致無從收尾。（本版新增段落之 AC-4.72/AC-4.75 承接「輸入合法值」與「理由必填」兩項要求，AC-4.56 之原文引用因該 AC 於 v7.0.0 廢止而僅存歷史意義，實質要求不變，見下方新增段。）
+
+例外池為爭議池之後的**最後一道**出口，MUST NOT 再有第四層轉送；收尾必須附理由並寫入歷程事件（`exception_resolved` 或 `excluded`，FR-086），其責任鏈併入 FR-097。該單位在其所有例外項皆收尾前維持 `爭議中`，全數收尾後推導為 `已定稿`（FR-061 第 6 點）。四個處置動作**收尾必須附理由**——本要求適用全部四種處置，不因動作而異。
 
 **本版新增——最終例外處置畫面的外殼**：專案負責人視角之最終例外處置畫面 MUST 使用例外池專屬外殼，MUST NOT 沿用標記員工作區的樣本導覽外殼。具體而言：
 
@@ -833,19 +837,32 @@ workspace reviewer 視圖 MUST 於審核卡（FR-053）、仲裁版面（FR-061�
 4. **仲裁理由就地可見**：每一待處置項 MUST 呈現使其落入例外池的仲裁理由與裁定者身分（FR-061 第 3 點之必填理由），使處置決定不需離開本畫面即可查證。
 5. **排除動作的危險樣式**：`exclude_from_dataset` 之操作項 MUST 在視覺上與其餘三個採用型處置可區辨（危險樣式）——該動作不產生定案答案且不可於本畫面復原。
 
-本段僅規範畫面外殼，MUST NOT 改變上列四個處置動作的集合、run_type 分流或各自的資料寫入契約。
+本段僅規範畫面外殼，MUST NOT 改變上列四個處置動作的集合、run_type 分流或各自的資料寫入契約（AC-4.56、AC-4.57 已於 v7.0.0 廢止，其一鍵語意由下方新增段落取代，見本節）。
+
+**v6.25.0 釐清（issue #922）**：上述「MUST NOT 沿用標記員工作區的樣本導覽外殼」之範圍，明文化亦涵蓋畫面頂部的進入點麵包屑（`renderEntryBreadcrumb()`）：該元件於專案負責人視角下對「當前處置項」的標示，同屬樣本導覽外殼之一部分，MUST NOT 沿用標記員分支之資料集樣本序號語意（`crumbSamplePosTpl`，對 `datasetRecords` 計數，例如「樣本 5 / 5」），而須與左側清單、中欄計數同源，改以待處置例外項之 `sample_id × annotator_id` 識別當前項——此為對上述已存在之一般性禁止的具體適用範圍釐清，非新增獨立約束；AC-4.69 既有六點列舉（含 v6.25.0 追加之第 6 點）不改寫，SC-011 不修訂。
+
+**本版新增（v7.0.0，BREAKING，issue #920）——先選取、後確認的處置互動模型**：收尾畫面的四個處置動作 MUST 拆分為「選取」與「確認」兩個獨立步驟，取代 v5.0.0 原「開啟收尾畫面即以單步呈現處置結果」之契約：
+
+1. **選取不寫入**：點擊任一處置動作（含 `custom_answer` 展開之原始作答控件內的作答選取）MUST 僅標記該處置為目前選取狀態，MUST NOT 觸發定稿值寫入或任何歷程事件。使用者 MUST 可自由切換選取的處置，切換前既有輸入（理由文字）不因此清空。
+2. **彙整列**：畫面 MUST 提供彙整區塊：未選取任何處置時顯示「尚未選擇最終處置」；選取後 MUST 顯示所選處置名稱，`adopt_annotator`／`adopt_reviewer` 與已於作答控件選定合法值之 `custom_answer` MUST 額外顯示其定稿值，`exclude_from_dataset` 不顯示定稿值（其本質為不產生定稿值，見本條前段第（4）點）。
+3. **理由必填擴及四種處置**：四個處置動作 MUST 皆要求填寫理由（本條前段「收尾必須附理由」之既有規則本次明文擴及 `adopt_annotator`／`adopt_reviewer` 兩者，修正其現行缺陷——issue #913 所記錄之 `reason: ''`）；理由欄位為空時，「確認處置」控件 MUST 為停用狀態（disabled），MUST NOT 採本規格別處（如 FR-061 第 3 點之仲裁送出）之「blocked-not-disabled」提示阻擋慣例。
+4. **單一寫入點**：「確認處置」為本畫面唯一的資料寫入入口；點擊後才依已選取之處置與已填理由執行本條前段所定義之資料寫入契約（定稿值、歷程事件），寫入前的選取與作答皆不產生副作用。
 
 #### Scenario: AC-4.56 正式標記例外池四動作可用
-- **GIVEN** `official_run` 之最終例外池有一筆待處置項目，操作者為專案負責人
-- **WHEN** 開啟該項目的收尾畫面
-- **THEN** 提供採 A、採 B、自訂答案、自資料集排除四個處置
-- **AND** 選自訂答案時展開該輸出類型的原始作答控件，輸入合法值並填妥理由後可定案；未填理由時定案被阻擋
+- （v5.0.0 新增；**已於 v7.0.0 廢止，BREAKING，issue #920**）
+- ~~**GIVEN** `official_run` 之最終例外池有一筆待處置項目，操作者為專案負責人~~
+- ~~**WHEN** 開啟該項目的收尾畫面~~
+- ~~**THEN** 提供採 A、採 B、自訂答案、自資料集排除四個處置~~
+- ~~**AND** 選自訂答案時展開該輸出類型的原始作答控件，輸入合法值並填妥理由後可定案；未填理由時定案被阻擋~~
+- 收尾畫面改為「先選取、後確認」之兩段式互動（見本條新增段），開啟收尾畫面不再單步呈現處置結果，`adopt_annotator`／`adopt_reviewer` 亦不再一鍵定案；本情境所述單步契約前提消失，由 AC-4.72、AC-4.74、AC-4.75 取代，ID 保留不重用（見 FR-095）。
 
 #### Scenario: AC-4.57 試標例外池無自訂答案出口
-- **GIVEN** `dry_run` 之最終例外池有一筆待處置項目
-- **WHEN** 開啟該項目的收尾畫面
-- **THEN** 僅提供採 A、採 B、自資料集排除三個處置
-- **AND** 畫面上不存在自訂答案入口，亦不渲染任何作答控件
+- （v5.0.0 新增；**已於 v7.0.0 廢止，BREAKING，issue #920**）
+- ~~**GIVEN** `dry_run` 之最終例外池有一筆待處置項目~~
+- ~~**WHEN** 開啟該項目的收尾畫面~~
+- ~~**THEN** 僅提供採 A、採 B、自資料集排除三個處置~~
+- ~~**AND** 畫面上不存在自訂答案入口，亦不渲染任何作答控件~~
+- 三個處置的可用性集合本身不變，但同樣改為「先選取、後確認」互動，一鍵定案前提消失；由 AC-4.73 取代，ID 保留不重用（見 FR-095）。
 
 #### Scenario: AC-4.69 最終例外處置畫面不沿用標記員外殼
 - **GIVEN** 某任務之 `official_run` 最終例外池有待處置項目，操作者以專案負責人身分開啟該任務的最終例外處置畫面
@@ -855,6 +872,36 @@ workspace reviewer 視圖 MUST 於審核卡（FR-053）、仲裁版面（FR-061�
 - **AND** 畫面上不存在自動儲存狀態列
 - **AND** 每一待處置項同時呈現裁定「兩者皆非」的仲裁者與其理由
 - **AND** `exclude_from_dataset` 的操作項帶有與其餘三個處置可區辨的危險樣式
+- **AND**（v6.25.0 新增）頂部進入點麵包屑對「當前處置項」的標示以該待處置例外項之 `sample_id` 與 `annotator_id` 識別，不呈現資料集樣本序號（「樣本 {i} / {n}」）
+
+#### Scenario: AC-4.72（v7.0.0 新增，對應 FR-095 修訂，issue #920）選取不寫入
+- **GIVEN** `official_run` 之最終例外池有一筆待處置項目、操作者為專案負責人
+- **WHEN** 依序點擊採 A、採 B、自訂答案、自資料集排除任一處置按鈕
+- **THEN** 該按鈕僅被標記為已選取狀態
+- **AND** 系統不寫入定稿值、不產生任何歷程事件
+- **AND** 選取自訂答案時展開該輸出類型的原始作答控件供輸入，但選取本身仍不觸發寫入
+
+#### Scenario: AC-4.73（v7.0.0 新增，對應 FR-095 修訂，issue #920）試標選取不寫入
+- **GIVEN** `dry_run` 之最終例外池有一筆待處置項目
+- **WHEN** 點擊採 A、採 B、自資料集排除任一處置按鈕
+- **THEN** 該按鈕僅被標記為已選取狀態且不寫入
+- **AND** 畫面上仍不存在自訂答案入口、不渲染任何作答控件
+
+#### Scenario: AC-4.74（v7.0.0 新增，對應 FR-095 修訂，issue #920）彙整列狀態機
+- **GIVEN** 收尾畫面之待處置項目尚未選取任何處置
+- **THEN** 畫面底部彙整列顯示「尚未選擇最終處置」
+- **WHEN** 選取 `adopt_annotator` 或 `adopt_reviewer`
+- **THEN** 彙整列改為顯示該處置名稱與其定稿值（分別為標記員原答案／審核員答案）
+- **AND** 選取 `custom_answer` 且已於作答控件選定合法值後，彙整列同樣顯示該定稿值
+- **AND** 選取 `exclude_from_dataset` 時彙整列僅顯示處置名稱，不顯示定稿值
+
+#### Scenario: AC-4.75（v7.0.0 新增，對應 FR-095 修訂，issue #920）理由必填與確認按鈕停用
+- **GIVEN** 已選取四種處置之任一、理由欄位為空
+- **THEN** 「確認處置」按鈕為停用狀態
+- **WHEN** 填入理由後
+- **THEN** 該按鈕轉為可用，點擊後才依已選取之處置與已填理由執行對應資料寫入與歷程事件
+- **AND** 寫入之例外池紀錄的 `reason` 欄位非空字串——涵蓋 `adopt_annotator`／`adopt_reviewer` 兩者，修正其原「一鍵完成、`reason: ''`」之現行缺陷（issue #913）
+- **AND** 切換至另一個處置時，即使理由欄位仍留有前一個已選處置填入的文字，「確認處置」按鈕仍先回到停用狀態，須理由欄位再次觸發輸入事件才重新可用——避免某處置所填的理由被靜默沿用為另一處置的理由
 
 ### Requirement: FR-096 試標歷史回饋
 
