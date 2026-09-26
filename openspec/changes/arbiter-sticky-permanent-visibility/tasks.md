@@ -12,12 +12,12 @@
 
 **故事目標**：SC-004O——審核員應能在工作區左欄與導覽走訪到「自己名下的每一個審核單位」，且進度分母與清單頁一致；issue #1000（維護者裁定方案 A）延伸此契約至仲裁者：只要曾對某單位送出仲裁裁定，該單位即恆常出現在該仲裁者的工作區左欄，不受是否仍停留於當次檢視所限，與 issue #824／PR #869 之審核員前例一致。
 
-- [ ] 1.1 撰寫 `design/prototype/tests/annotation/issue-1000-arbiter-permanent-sticky.spec.ts` 作為 Red 契約，涵蓋四件事，直接沿用 issue #956 Red 契約已驗證過的 T015 `official_run` fixture（`ofs-03-arbitrated-gold` 指派給 `reviewer_lin`，仲裁者 `reviewer_chen` 具 `can_arbitrate: true`）。先提交此單檔再跑測試，保存 command、exit 與失敗訊息。 [@senior-qa]
+- [x] 1.1 撰寫 `design/prototype/tests/annotation/issue-1000-arbiter-permanent-sticky.spec.ts` 作為 Red 契約，涵蓋四件事，直接沿用 issue #956 Red 契約已驗證過的 T015 `official_run` fixture（`ofs-03-arbitrated-gold` 指派給 `reviewer_lin`，仲裁者 `reviewer_chen` 具 `can_arbitrate: true`）。先提交此單檔再跑測試，保存 command、exit 與失敗訊息。 [@senior-qa]
   - **(a) 送出仲裁後切走再切回，該單位仍在左欄**：以 `reviewer_chen` 身分對一個目前開啟中的爭議單位送出仲裁，切換至其他單位再切回原單位所在的畫面（不重新整理），確認該單位仍出現在左欄。
   - **(b) 歷史上曾被本仲裁者仲裁的單位（已定稿）也在左欄**：以 `reviewer_chen` 身分開啟工作區（非直接停留於該單位），確認 `ofs-03-arbitrated-gold`（歷史上由 `reviewer_chen` 仲裁定稿）出現在左欄。
   - **(c) 從未被本人仲裁的已定稿單位仍不在左欄（最重要，防止「全部復活」的天真實作）**：確認 `reviewer_chen` 從未仲裁過、且未指派給 `reviewer_chen` 的其他已定稿單位不出現在左欄。
   - **(d) 一般審核員（非仲裁者）的左欄不受影響**：以一般審核員身分（如 `reviewer_wang`）開啟工作區，確認其左欄範圍與 issue #956 既有契約一致，不因本次放寬而多出任何單位。
-  - Red 證據：待補（senior-qa commit hash）。team lead 獨立複驗：`git status --short` 須僅新增該測試檔一項、工作樹乾淨；獨立重跑 `PW_PORT=8980 pnpm playwright test tests/annotation/issue-1000-arbiter-permanent-sticky.spec.ts --workers=1` → 預期 exit 1（(a)(b) 因 `isCurrentUnit()` 限定尚未去除而失敗，(c)(d) 應已通過）。
+  - Red 證據：commit `502ea8f4`（senior-qa）。team lead 獨立複驗：`git status --short` 空輸出，工作樹乾淨；獨立重跑 `PW_PORT=8980 pnpm playwright test tests/annotation/issue-1000-arbiter-permanent-sticky.spec.ts --workers=1` → exit 1，3 passed, 2 failed，(a)(b) 失敗、(c)(d) 通過，與 senior-qa 回報一致。(a) 之失敗原因比預期更廣（`isCurrentUnit()` 即時求值使切走時 A 整個從左欄消失，非僅視覺態改變），已誠實記錄。
 - [ ] 1.2 Green：修改 `design/prototype/pages/annotation/annotation-workspace.config.js` 的 `filterUnitsToAssigned()`。 [@senior-frontend]
   - 第 2 個析取（issue #956 sticky）去掉 `isCurrentUnit(unit) &&` 限定，只留 `data.isArbitrationSubmitted(...)`。
   - 同步更新該析取上方之 issue #956 註解，說明範圍已由「當次檢視」放寬為「曾送出仲裁票即永久黏著」（issue #1000），移除「歷史仲裁單位須維持過濾」之過期敘述。
