@@ -107,6 +107,7 @@
       crumbWorkAreaAnnotator: '標記作業',
       crumbTaskTpl: '{name}（{run}）',
       crumbUnitTpl: '審核單位 {sample} · {annotator}',
+      crumbExceptionUnitTpl: '例外項目 {sample} · {annotator}',
       crumbSamplePosTpl: '樣本 {i} / {n}',
       wsSampleGroupCount: '{n} 位標記員',
       wsSampleGroupAria: '樣本 {sample}，{n} 位標記員',
@@ -250,6 +251,7 @@
       crumbWorkAreaAnnotator: 'Annotate',
       crumbTaskTpl: '{name} ({run})',
       crumbUnitTpl: 'Review unit {sample} · {annotator}',
+      crumbExceptionUnitTpl: 'Exception item {sample} · {annotator}',
       crumbSamplePosTpl: 'Sample {i} of {n}',
       wsSampleGroupCount: '{n} annotators',
       wsSampleGroupAria: 'Sample {sample}, {n} annotators',
@@ -1468,6 +1470,15 @@
     current.setAttribute('aria-current', 'page');
     if (currentRole === 'reviewer') {
       current.textContent = t('crumbUnitTpl')
+        .replace('{sample}', currentSampleId)
+        .replace('{annotator}', currentAnnotatorId());
+    } else if (currentRole === 'project_leader') {
+      /* FR-095 (issue #907; gap closed by issue #922): a project leader on
+         this screen addresses the same (sample, annotator) pair
+         pendingExceptionQueue()/renderExceptionQueueList() key their rows by
+         -- never a dataset record position, which is the ANNOTATOR's
+         workload shape this role has none of. */
+      current.textContent = t('crumbExceptionUnitTpl')
         .replace('{sample}', currentSampleId)
         .replace('{annotator}', currentAnnotatorId());
     } else {
