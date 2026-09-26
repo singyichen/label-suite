@@ -28,5 +28,5 @@
 
 **故事目標**：SC-006 — 合併前須經未參與實作者複核，確保後果文字忠實反映真實效果、兩個入口一致、且未弱化既有測試。
 
-- [ ] 4.1 派未寫過本改動的 senior-code-reviewer 獨立審查：(1) 後果文字是否由既有狀態推導決定、有無自寫第二套判定；(2) `dry_run`／`official_run` 的差異是否正確反映；(3) 兩個送出入口的處理是否一致；(4) 被改動的既有測試有無弱化。結論原文貼進 issue #930 檢查點留言。[@senior-code-reviewer]
+- [x] 4.1 派未寫過本改動的 senior-code-reviewer 獨立審查：(1) 後果文字是否由既有狀態推導決定、有無自寫第二套判定；(2) `dry_run`／`official_run` 的差異是否正確反映；(3) 兩個送出入口的處理是否一致；(4) 被改動的既有測試有無弱化。結論原文貼進 issue #930 檢查點留言。[@senior-code-reviewer]
 - [ ] 4.2 開 PR（base main，Closes #930，逐項 Test Plan 證據，紅燈／綠燈證據皆貼），push 前 `git fetch origin main && git merge origin/main`（禁止 rebase 已推送 commit）。[@main]
