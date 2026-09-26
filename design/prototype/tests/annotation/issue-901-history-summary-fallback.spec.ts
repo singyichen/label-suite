@@ -146,7 +146,7 @@ test.describe('issue #901: structured history summary fallback', () => {
 
     const modified = historyCard(page, 'modified');
     await expect(modified.locator('.history-diff')).toHaveCount(0);
-    await expect(modified.locator('.history-summary')).toHaveText('single_label · kioleemg12: modify');
+    await expect(modified.locator('.history-summary')).toHaveText('單一標籤 · kioleemg12：修正');
 
     const submitted = historyCard(page, 'submitted');
     await expect(submitted.locator('.history-snapshot')).toContainText('single_label: neutral');
