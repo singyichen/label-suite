@@ -52,7 +52,10 @@ test.describe('Reviewer view speaks review vocabulary (zh)', () => {
     await skipGuidelineModal(page);
     await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer', run_type: 'dry_run' }));
 
-    await expect(page.getByTestId('ws-progress-text')).toHaveText('我的審核提交 0 / 15 個審核單位');
+    /* issue #956 (FR-093): the default reviewer identity (reviewer_wang) is
+       only dealt sent-001 and sent-004 of T001's 5 dry_run samples (6 of the
+       task's 15 units), not the whole task. */
+    await expect(page.getByTestId('ws-progress-text')).toHaveText('我的審核提交 0 / 6 個審核單位');
   });
 
   test('sidebar role indicator reads 審核員, not 一般使用者', async ({ page }) => {
@@ -98,8 +101,9 @@ test.describe('Reviewer view speaks review vocabulary (en)', () => {
     await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer', run_type: 'dry_run' }));
 
     await expect(page.getByTestId('ws-sample-status').first()).toHaveText('Pending review');
+    // issue #956 (FR-093): same 6-of-15 narrowing as the zh case above.
     await expect(page.getByTestId('ws-progress-text')).toHaveText(
-      'My review submissions 0 / 15 review units',
+      'My review submissions 0 / 6 review units',
     );
     await expect(page.getByTestId('role-indicator')).toHaveText('Reviewer');
   });

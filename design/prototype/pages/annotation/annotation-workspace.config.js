@@ -1626,13 +1626,13 @@
      pages can never disagree on how many units a task holds. For an
      annotator the record IS the unit, which is why every annotator-facing
      behaviour below is unchanged.
-     issue #921 note: this still enumerates every unit, unfiltered by
-     assignment -- narrowing the left column/nav to the reviewer's own
-     workload (matching annotation-list.html's filterToAssignedUnits()) is
-     out of scope for this change and tracked separately in issue #956. This
-     change only gates SUBMISSION on the current unit; see
-     isCurrentUnitAssigned() and reviewUnitBlockReason() below. */
-  function buildUnits() {
+     issue #956: this is the FULL, unfiltered unit universe -- do not narrow
+     it here. isCurrentUnitAssigned() below feeds this same universe into
+     getAssignedReviewUnits()'s positional round-robin math, and a
+     pre-filtered universe would shift that math and corrupt its answer for
+     everyone. buildUnits() (below) is the one that narrows the reviewer's
+     own left column/nav, via filterUnitsToAssigned(). */
+  function enumerateReviewUnits() {
     var data = window.LabelSuiteAnnotationWorkspaceData;
     var units = [];
     currentProfile.datasetRecords.forEach(function (record, idx) {
@@ -1646,6 +1646,62 @@
       });
     });
     return units;
+  }
+
+  /* issue #956 (FR-093): mirrors annotation-list.html's
+     filterToAssignedUnits() -- a reviewer's left column/nav carries only the
+     units the system assigned to THEM, not every unit in the task. Must be
+     called with the FULL unit universe (enumerateReviewUnits()'s output),
+     never a pre-filtered one; see that function's comment for why. */
+  function filterUnitsToAssigned(units) {
+    var data = window.LabelSuiteAnnotationWorkspaceData;
+    var assigned = data.getAssignedReviewUnits(
+      currentProfile.id, currentRunType, currentIdentity.reviewerId,
+      units.map(function (unit) {
+        return { sample_id: unit.recordId, annotator_id: unit.annotatorId };
+      }));
+    /* NUL-joined: no sample or annotator id can contain one, so two
+       different units can never collide onto the same key (matches
+       annotation-list.html's filterToAssignedUnits()). */
+    var mine = {};
+    assigned.forEach(function (unit) {
+      mine[unit.sample_id + '\u0000' + unit.annotator_id] = true;
+    });
+    return units.filter(function (unit) {
+      if (mine[unit.recordId + '\u0000' + unit.annotatorId] === true) return true;
+      /* FR-060: an eligible arbiter for a disputed unit is never that
+         unit's FR-093 assignee (the assignee is exactly who holds the
+         submission the arbiter must not have), so filtering to assignees
+         alone would hide every unit this reviewer could arbitrate. Mirrors
+         annotation-list.html's `arbiterEntry` disjunct. */
+      if (reviewUnitState(unit) === data.REVIEW_UNIT_STATUS.DISPUTED &&
+        data.isArbiterCandidate(currentProfile.id, currentRunType, unit.recordId, unitIdentity(unit))) {
+        return true;
+      }
+      /* issue #956 sticky visibility: the moment this arbiter submits
+         their arbitration vote on the unit they currently have open, the
+         unit's status moves off DISPUTED (or is already voted on by this
+         arbiter), so the disjunct above stops matching and the unit would
+         silently drop out of this arbiter's own left column mid-session --
+         breaking issue #722's progress counter, whose denominator is this
+         same enumerated list. Scoped to isCurrentUnit() (not every unit
+         this arbiter has ever adjudicated): a roster-wide arbiter is
+         `isArbiterCandidate()`-eligible for every unit they never ordinarily
+         reviewed, including ones from a past, already-closed dispute (e.g.
+         T015's ofs-03-arbitrated-gold) -- those must stay filtered out, only
+         the unit the arbiter is actively resolving right now must stick.
+         Reuses isArbitrationSubmitted() (same call already used by
+         countSubmittedUnits() above) rather than re-deriving "has this
+         arbiter voted" here. */
+      return isCurrentUnit(unit) &&
+        data.isArbitrationSubmitted(
+          currentProfile.id, currentRunType, unit.recordId, unitIdentity(unit), state.selectedOutputTypes);
+    });
+  }
+
+  function buildUnits() {
+    var units = enumerateReviewUnits();
+    return currentRole === 'reviewer' ? filterUnitsToAssigned(units) : units;
   }
 
   function unitIdentity(unit) {
@@ -3874,16 +3930,17 @@
   }
 
   /* issue #921 (FR-093): is the CURRENT review unit assigned to the current
-     reviewer? Feeds getAssignedReviewUnits() the same full, unfiltered unit
-     universe buildUnits() already enumerates (see its comment -- narrowing
-     that universe to only the reviewer's own units is issue #956, not this
-     change) and checks membership for just this one unit; no second
-     assignment derivation. By the time this runs, the ARBITRATION branch
-     above has already caught any disputed unit this reviewer may arbitrate,
-     so no separate carve-out is needed here. */
+     reviewer? Feeds getAssignedReviewUnits() the full, unfiltered unit
+     universe from enumerateReviewUnits() -- NOT buildUnits(), which (since
+     issue #956) already narrows to the reviewer's own units -- and checks
+     membership for just this one unit; no second assignment derivation.
+     Using buildUnits()'s filtered output here would shift the round-robin
+     assignment math and corrupt this answer. By the time this runs, the
+     ARBITRATION branch above has already caught any disputed unit this
+     reviewer may arbitrate, so no separate carve-out is needed here. */
   function isCurrentUnitAssigned() {
     var data = window.LabelSuiteAnnotationWorkspaceData;
-    var units = buildUnits().map(function (unit) {
+    var units = enumerateReviewUnits().map(function (unit) {
       return { sample_id: unit.recordId, annotator_id: unit.annotatorId };
     });
     var assigned = data.getAssignedReviewUnits(currentProfile.id, currentRunType, currentIdentity.reviewerId, units);

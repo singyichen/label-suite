@@ -136,7 +136,12 @@ test.describe('The rewrite preserves the rest of the query string', () => {
         role: 'reviewer',
         run_type: 'official_run',
         annotator_id: 'kioleemg12',
-        reviewer_id: 'reviewer_chen',
+        // issue #956 (FR-093): the left-column/nav filter means 下一筆 stays
+        // enabled only for the unit's ACTUALLY assigned reviewer -- reviewer_li,
+        // not the previously-hardcoded reviewer_chen (unassigned here, which
+        // now leaves ws-next-btn disabled with nothing else in this reviewer's
+        // filtered list).
+        reviewer_id: 'reviewer_li',
       })
     );
 
@@ -146,7 +151,7 @@ test.describe('The rewrite preserves the rest of the query string', () => {
     expect(params.get('task_id')).toBe('T001');
     expect(params.get('role')).toBe('reviewer');
     expect(params.get('run_type')).toBe('official_run');
-    expect(params.get('reviewer_id')).toBe('reviewer_chen');
+    expect(params.get('reviewer_id')).toBe('reviewer_li');
     // Rebuilding the query string from known keys would silently drop
     // anything else; the v2.0.0 contract also forbids these two coming back.
     await expect(page).not.toHaveURL(/task_type=/);

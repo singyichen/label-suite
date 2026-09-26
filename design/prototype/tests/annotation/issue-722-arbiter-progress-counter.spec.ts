@@ -71,7 +71,13 @@ test.describe("issue #722 — arbiter's progress counter counts arbitration subm
 
   test('the counter is 0 before any arbitration is submitted', async ({ page }) => {
     await expect(page.getByTestId('ws-arbitration-card')).toBeVisible();
-    await expect(page.getByTestId('ws-progress-text')).toHaveText(/^我的審核提交 0 \/ 15 個審核單位$/);
+    /* issue #956 (FR-093): the left column/nav this counter's denominator is
+       driven by now filters T001's 15 units down to just the ones assigned
+       to (or, for an eligible arbiter, arbitrable by) the current identity
+       -- ARBITER here holds none of T001's ordinary assignments and is only
+       eligible for this one disputed unit, so the denominator is 1, not the
+       task's full 15. */
+    await expect(page.getByTestId('ws-progress-text')).toHaveText(/^我的審核提交 0 \/ 1 個審核單位$/);
   });
 
   test('submitting arbitration advances the counter WITHOUT a reload', async ({ page }) => {
@@ -79,7 +85,7 @@ test.describe("issue #722 — arbiter's progress counter counts arbitration subm
     await fillArbitrationReasons(page);
     await page.getByTestId('ws-arbitration-submit').click();
 
-    await expect(page.getByTestId('ws-progress-text')).toHaveText(/^我的審核提交 1 \/ 15 個審核單位$/);
+    await expect(page.getByTestId('ws-progress-text')).toHaveText(/^我的審核提交 1 \/ 1 個審核單位$/);
   });
 
   /* Persistence itself is not new behaviour under test here -- both
