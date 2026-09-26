@@ -144,13 +144,24 @@ test.describe('Arbiter exemption is not blocked by the new filter', () => {
     /* chen holds zero ordinary FR-093 assignments on T015 (excluded from the
      * round-robin pool entirely, issue #868) -- if the left-column filter
      * only consults getAssignedReviewUnits(), chen's column would be
-     * completely empty. The arbiter exemption must still surface exactly
-     * the one unit chen may arbitrate, no more and no fewer. */
+     * completely empty. The arbiter exemption must still surface the one
+     * unit chen may currently arbitrate (ofs-02), no more and no fewer. */
     const items = page.getByTestId('ws-sample-item');
-    await expect(items).toHaveCount(1);
+    /* Count is 2, not 1: issue #1000 made arbiter sticky visibility
+     * permanent, superseding issue #956's original isCurrentUnit() scoping.
+     * chen's left column also permanently carries ARBITRATED_SAMPLE
+     * (ofs-03-arbitrated-gold), which chen finalized via a real past
+     * arbitration vote -- that is not a defect, see the positive assertion
+     * below. */
+    await expect(items).toHaveCount(2);
     await expect(
       page.locator(
         `[data-testid="ws-sample-item"][data-sample-id="${LI_OWNED_SAMPLE}"][data-annotator-id="${LI_OWNED_ANNOTATOR}"]`
+      )
+    ).toHaveCount(1);
+    await expect(
+      page.locator(
+        `[data-testid="ws-sample-item"][data-sample-id="${ARBITRATED_SAMPLE}"][data-annotator-id="${LI_OWNED_ANNOTATOR}"]`
       )
     ).toHaveCount(1);
 
