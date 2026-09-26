@@ -92,6 +92,9 @@
     exception_resolved: '例外收尾',
     excluded: '已排除',
     rejected: '審核退回',
+    /* issue #909: `saved` was `draft_saved`'s pre-2026-08-31 name; still in
+       some users' localStorage. */
+    saved: '已存草稿',
   };
 
   /* the action itself for anything outside the label table, so an event from
