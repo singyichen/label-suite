@@ -16,7 +16,7 @@ v4.61.0 以前寫入、不具上述新欄位之事件 MUST 原樣顯示且不得
 
 **本版新增（issue #910，審核決策重複送出去重）**：既有「連續重複 `submitted` 事件不疊加」的雙送出防護（issue #201）MUST 擴及審核決策事件（`accepted`／`modified`／`bypassed`）：同一 `outKey` 之上一筆決策事件，若其 `action`、`role`、`actor_id`、`reason` 與該決策之修正值皆與新決策相同，新送出 MUST NOT 再疊加第二筆內容相同的事件。比對 MUST 以該 `outKey` 最近一筆事件為對象，MUST NOT 僅比對陣列最後一筆——同一次送出可能一次寫入多個不同 `outKey` 之事件，僅比對陣列最後一筆會誤刪其他 `outKey` 的合法事件。內容有實質差異（例如修正值改變）之重複送出仍 MUST 正常記錄為新事件，不受本段去重規則影響。本段不改變既有 append-only 語意——去重僅發生於「即將寫入前」，不覆寫、不刪除任何已寫入之事件。
 
-**v6.28.0 新增（issue #992，審核決策摘要之顯示層中文化）**：`.history-summary` 渲染 `accepted`／`modified`／`bypassed` 事件之 `event.summary` 時，若該行內容符合 `<outKey> · <actor_id>: <decision>` 樣式（`decision` 取值 `approve`／`modify`／`bypass`），顯示層 MUST 將 `outKey` 換成 `window.OUTPUT_TYPE_REGISTRY[outKey][state.lang]` 之對應標籤、`decision` 換成既有審核決策標籤對照（`approve`→`通過`／`Approve`、`modify`→`修正`／`Modify`、`bypass`→既有 `BYPASS_WORDING.{zh,en}.decision`）；`actor_id` MUST NOT 被轉譯，MUST 維持原識別碼。此轉換 MUST 僅發生於渲染時查表，`event.summary` 之持久化字串（含 v6.28.0 以前寫入之既有 localStorage 資料）MUST NOT 因此被改寫、遷移或刪除——舊資料於下次渲染時即自動套用新對照，無需資料遷移。此規則 MUST NOT 變更 `handleReviewSubmit()` 送出時寫入 `#wsReviewHistory`（工作區內、逐樣本清空之送出確認卡片）之既有內部格式文字，亦 MUST NOT 變更本段以外之任何既有呈現規則（含前述 `.history-diff` fallback 抑制邏輯）。
+**v7.2.0 新增（issue #992，審核決策摘要之顯示層中文化）**：`.history-summary` 渲染 `accepted`／`modified`／`bypassed` 事件之 `event.summary` 時，若該行內容符合 `<outKey> · <actor_id>: <decision>` 樣式（`decision` 取值 `approve`／`modify`／`bypass`），顯示層 MUST 將 `outKey` 換成 `window.OUTPUT_TYPE_REGISTRY[outKey][state.lang]` 之對應標籤、`decision` 換成既有審核決策標籤對照（`approve`→`通過`／`Approve`、`modify`→`修正`／`Modify`、`bypass`→既有 `BYPASS_WORDING.{zh,en}.decision`）；`actor_id` MUST NOT 被轉譯，MUST 維持原識別碼。此轉換 MUST 僅發生於渲染時查表，`event.summary` 之持久化字串（含 v7.2.0 以前寫入之既有 localStorage 資料）MUST NOT 因此被改寫、遷移或刪除——舊資料於下次渲染時即自動套用新對照，無需資料遷移。此規則 MUST NOT 變更 `handleReviewSubmit()` 送出時寫入 `#wsReviewHistory`（工作區內、逐樣本清空之送出確認卡片）之既有內部格式文字，亦 MUST NOT 變更本段以外之任何既有呈現規則（含前述 `.history-diff` fallback 抑制邏輯）。
 
 #### Scenario: 歷程合併呈現且受盲審隔離
 - **GIVEN** 某樣本已有標記員提交事件與一位審核員之已提交審核事件，另一位審核員尚有未提交之草稿事件
@@ -46,7 +46,7 @@ v4.61.0 以前寫入、不具上述新欄位之事件 MUST 原樣顯示且不得
 
 ### Requirement: AC-2.28 審核決策摘要之顯示層中文化，持久化格式不變
 
-本條為 FR-016B（見上，v6.28.0 新增段）之新增驗收條件：`.history-summary` 對 `accepted`／`modified`／`bypassed` 事件之顯示文字 MUST 將 `outKey`／`decision` 兩個 token 轉換為既有對照表之繁體中文／英文標籤，`actor_id` 與 `event.summary` 之持久化格式 MUST NOT 改變。
+本條為 FR-016B（見上，v7.2.0 新增段）之新增驗收條件：`.history-summary` 對 `accepted`／`modified`／`bypassed` 事件之顯示文字 MUST 將 `outKey`／`decision` 兩個 token 轉換為既有對照表之繁體中文／英文標籤，`actor_id` 與 `event.summary` 之持久化格式 MUST NOT 改變。
 
 #### Scenario: AC-2.28 審核決策摘要之顯示層中文化，持久化格式不變
 - **GIVEN** 審核員對 `single_label` 輸出類型送出 `通過`（`approve`）決策，其對應 `accepted` 事件之 `event.summary` 含 `single_label · kioleemg12: approve`
@@ -54,4 +54,4 @@ v4.61.0 以前寫入、不具上述新欄位之事件 MUST 原樣顯示且不得
 - **THEN** 該卡片 `.history-summary` 之可見文字為 `單一標籤 · kioleemg12：通過`（`lang=zh`）或 `Single label · kioleemg12: Approve`（`lang=en`），`kioleemg12` 維持原樣不譯
 - **AND** 透過 `getSampleHistory()` 讀取該事件之 `event.summary` 仍逐字為 `single_label · kioleemg12: approve`，未被顯示層轉換改寫
 - **AND** 若該決策為 `modify` 或 `bypass` 且附有理由，卡片 `.history-reason` 仍正確顯示該理由，且理由文字不因本段顯示轉換而重複或遺失
-- **AND** 一筆 v6.28.0 以前寫入之既有 localStorage 事件（`event.summary` 為舊內部格式字串）以本段規則渲染時同樣呈現繁體中文／英文標籤，不需任何資料遷移
+- **AND** 一筆 v7.2.0 以前寫入之既有 localStorage 事件（`event.summary` 為舊內部格式字串）以本段規則渲染時同樣呈現繁體中文／英文標籤，不需任何資料遷移

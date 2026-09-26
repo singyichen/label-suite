@@ -38,4 +38,4 @@
 - 受影響程式：`design/prototype/pages/annotation/annotation-workspace.config.js`（僅 `historySummaryForDisplay()`）。
 - 受影響測試：`design/prototype/tests/annotation/issue-881-history-reason-dedup.spec.ts`（兩處斷言位移）；新增 `issue-992-decision-summary-readable.spec.ts`。
 - 無 API／DB 契約變更、無資料遷移；`event.summary` 儲存格式與既有 localStorage 資料完全相容。
-- 正典 `specs/annotation/015-annotation-workspace/spec.md` 版本 bump（目標 6.28.0，最終號碼由主 session 於合併時依實際順序指派）＋ Changelog 一筆；`specs/STATUS.md` 同 PR 更新（僅動 `annotation-015` 一列）。
+- 正典 `specs/annotation/015-annotation-workspace/spec.md` 版本 bump（propose 時暫定 6.28.0；主 session 於合併時依實際順序指派為 **7.2.0** —— 同波 #920 為 MAJOR 落地 7.0.0、#956 落地 7.1.0，本變更接續）＋ Changelog 一筆；`specs/STATUS.md` 同 PR 更新（僅動 `annotation-015` 一列）。
