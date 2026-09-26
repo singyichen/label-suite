@@ -29,7 +29,7 @@
 - **THEN** 該元素必須顯示「尚未選擇決策」且帶 `data-consequence="pending"`
 - **AND**〔選「通過」〕**WHEN** reviewer 對該 outKey 選擇「通過」（`approve`），**THEN** `official_run` 之該元素必須顯示「送出後即定稿，成為最終答案」且帶 `data-consequence="finalized"` `data-run-type="official_run"`；同一操作於 `dry_run` 之該元素必須顯示「送出後即定稿，成為最終答案（試標不產生最終答案，僅計入一致性統計）」且帶 `data-run-type="dry_run"`
 - **AND**〔選「修正」與「無法裁決」〕**WHEN** reviewer 改選「修正」（`modify`）並填妥必填理由，**THEN** 該元素必須顯示「送出後進入爭議池，待仲裁定案」且帶 `data-consequence="disputed"`；改選「無法裁決」（`bypass`）並填妥理由後，該元素必須顯示與上一步**完全相同**的文字與 `data-consequence`，不得出現任何差異措辭；上述兩者於 `dry_run` 與 `official_run` 皆成立（爭議池分支不依 `run_type` 分流）
-- **AND**〔即時切換〕**WHEN** reviewer 從已選擇「通過」（顯示定稿文字）改選「修正」並填妥理由，**THEN** 該元素必須立即更新為爭議池文字，不須重新整理頁面；若之後改答案使「修正」決策依既有重置規則被清空、回到未決策狀態，該元素必須立即回到「尚未選擇決策」
+- **AND**〔即時切換〕**WHEN** reviewer 從已選擇「通過」（顯示定稿文字）改選「修正」並填妥理由，**THEN** 該元素必須立即更新為爭議池文字，不須重新整理頁面；**WHEN** reviewer 再次點選同一個「修正」決策按鈕使其依既有的按鈕再點選取消規則（`setReviewUnitDecision()` 之取消分支，`annotation-workspace.config.js`）被清空、回到未決策狀態，**THEN** 該元素必須立即回到「尚未選擇決策」——**明確排除**：`modify` 決策 MUST NOT 因改答案而被清空（issue #925 已確立之既有行為：`modify` 之後改答案僅重新綁定快照、不重置決策），本條之「即時切換」示範 MUST NOT 依賴改答案清空 `modify` 這個不存在的路徑；`approve`／`bypass` 兩者改答案後仍依既有規則被清空（issue #925 未變更此側行為），若改以這兩者示範改答案清空亦成立
 
 #### Scenario: AC-3.65 決策列送出鈕之提示與 footer 同源同步
 - **GIVEN** 一個僅有單一 outKey 的審核單位，尚未對該 outKey 做出決策
