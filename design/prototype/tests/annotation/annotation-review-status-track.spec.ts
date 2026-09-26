@@ -100,6 +100,25 @@ async function openUnit(page: Page, sampleId: string, taskId = 'T016') {
   await openFlowDrawer(page);
 }
 
+/* issue #956 (FR-093): the left column now only lists a reviewer's own
+   assigned units, so "click a left-column entry" needs a reviewer_id that
+   is actually assigned to it -- unlike direct navigation (unitUrl() /
+   openUnit() above), which stays viewable read-only regardless of
+   assignment and is untouched by this fix. reviewer_li is T016
+   official_run's FR-093 assignee for BOTH ofm-02-reviewer-accepts-a and
+   ofm-05-final-exception (verified via resolveAssignedReviewerId()),
+   unlike UNITS's shared default reviewer_wang. */
+function reviewerUnitUrl(sampleId: string) {
+  return buildWorkspaceUrl({
+    task_id: 'T016',
+    sample_id: sampleId,
+    role: 'reviewer',
+    run_type: 'official_run',
+    reviewer_id: 'reviewer_li',
+    annotator_id: 'kioleemg12',
+  });
+}
+
 test.describe('Review status track — current position', () => {
   test.beforeEach(async ({ page }) => {
     await skipGuidelineModal(page);
@@ -233,7 +252,11 @@ test.describe('Review status track — structure, regression and language', () =
   });
 
   test('re-renders when the reviewer switches unit', async ({ page }) => {
-    await openUnit(page, UNITS.finalizedSameOther);
+    // issue #956: reviewer_li (not UNITS' default reviewer_wang) is used here
+    // because clicking a left-column entry requires it to be in that
+    // reviewer's FR-093-filtered list; see reviewerUnitUrl()'s comment.
+    await page.goto(reviewerUnitUrl(UNITS.finalizedSameOther));
+    await openFlowDrawer(page);
     await expect(track(page).locator('[aria-current="step"]')).toContainText('已定稿');
 
     await closeFlowDrawer(page);
