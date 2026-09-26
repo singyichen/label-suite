@@ -27,10 +27,11 @@ async function openReviewerWorkspace(
   taskId: string,
   sampleId: string,
   runType: 'dry_run' | 'official_run',
+  reviewerId: string = 'reviewer_chen',
 ) {
   await page.goto(
     `${WORKSPACE_URL}?task_id=${taskId}&sample_id=${sampleId}` +
-      `&role=reviewer&run_type=${runType}&reviewer_id=reviewer_chen`,
+      `&role=reviewer&run_type=${runType}&reviewer_id=${reviewerId}`,
   );
 }
 
@@ -39,8 +40,15 @@ function contextBanner(page: Page) {
 }
 
 test.describe('Reviewer workspace — review-unit context banner (T014-T016)', () => {
-  test('T014 dry-01: dry_run badge, 1-annotator group for this reviewer (issue #956), finalized, no threshold chip', async ({ page }) => {
-    await openReviewerWorkspace(page, 'T014', 'dry-01-all-agree', 'dry_run');
+  test('T014 dry-01: dry_run badge, 3-annotator group for this reviewer, finalized, no threshold chip', async ({ page }) => {
+    /* issue #956 (FR-093): dry_run deals per-SAMPLE, not per-annotator, so
+       dry-01-all-agree's three annotator units all go to the same sticky
+       reviewer -- reviewer_wang, verified live via getAssignedReviewUnits().
+       reviewer_chen (this file's other cases' shared identity) holds ZERO
+       of this sample's units, so opening it as chen would have the left
+       column's FIRST group be a DIFFERENT sample entirely, making a
+       `.first()` assertion here pass for the wrong reason. */
+    await openReviewerWorkspace(page, 'T014', 'dry-01-all-agree', 'dry_run', 'reviewer_wang');
 
     const banner = contextBanner(page);
     await expect(banner).toBeVisible();
@@ -55,10 +63,12 @@ test.describe('Reviewer workspace — review-unit context banner (T014-T016)', (
     await expect(page.locator('nav.breadcrumb[data-testid="entry-breadcrumb"]')).toContainText(
       'kioleemg12'
     );
-    /* issue #956 (FR-093): the left column now narrows to reviewer_chen's
-       own assigned units, and this sample's sticky assignment leaves
-       reviewer_chen only 1 of its 3 annotators. */
-    await expect(page.getByTestId('ws-sample-group-count').first()).toHaveText('1 位標記員');
+    /* issue #956 (FR-093): the left column now narrows to reviewer_wang's
+       own assigned units. This sample's sticky assignment gives wang all
+       3 of its annotators (per-sample dealing), and dry-01-all-agree is the
+       first (and only, for wang) group left column entry left for this
+       reviewer, so `.first()` names the group under test. */
+    await expect(page.getByTestId('ws-sample-group-count').first()).toHaveText('3 位標記員');
   });
 
   test('T015 ofs-01: official badge, finalized, no threshold chip', async ({ page }) => {
