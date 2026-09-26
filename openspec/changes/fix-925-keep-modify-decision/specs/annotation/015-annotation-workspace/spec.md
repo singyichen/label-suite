@@ -47,7 +47,7 @@
 #### Scenario: 修正決策改答案後保留決策與理由欄（issue #925）
 - **GIVEN** reviewer 對某 outKey 已點選「修正」（`modify`）決策並填入必填理由
 - **WHEN** reviewer 接著在同一 outKey 的直接修正控件上，把答案改成另一個與原答案不同的值
-- **THEN** 該 outKey 的「修正」決策按鈕必須維持 `aria-pressed="true"` 且理由欄（`ws-review-reject-reason`）必須維持可見、既有輸入內容不得被清空
+- **THEN** 該 outKey 的「修正」決策按鈕必須維持 `aria-pressed="true"` 且理由欄（`ws-review-reason`）必須維持可見、既有輸入內容不得被清空
 - **AND** 不得顯示 `toastReviewDecisionResetOnEdit` toast
 - **AND** 若此時該審核單位所有 outKey 皆已決策，送出審核（`ws-review-submit-btn` 或 `ws-review-quick-submit-btn`）必須正常成功，不得被「請完成以下輸出類型的審核決策」toast 擋下
 
