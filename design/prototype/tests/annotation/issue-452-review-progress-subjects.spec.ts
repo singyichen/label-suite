@@ -122,9 +122,14 @@ test.describe('issue #452 — the workspace top progress is MY submissions', () 
     await openReviewerWorkspace(page, 'T016', 'ofm-01-reviewer-corrects-b');
 
     /* issue #956 (FR-093): reviewer_chen is only assigned 3 of T016's 5
-       official_run units, not the whole task. */
+       official_run units; the 4th slot is ofm-01-reviewer-corrects-b
+       itself -- the unit this test opens directly by URL, which chen
+       already arbitrated in the seed data (isArbitrationSubmitted() is
+       true for it). It stays visible via the sticky-visibility disjunct
+       (issue #722 regression guard) rather than vanishing once resolved,
+       so the denominator is 4, not 3. */
     await expect(page.getByTestId('ws-progress-text')).toHaveText(
-      /^我的審核提交 \d+ \/ 3 個審核單位$/,
+      /^我的審核提交 \d+ \/ 4 個審核單位$/,
     );
   });
 });
