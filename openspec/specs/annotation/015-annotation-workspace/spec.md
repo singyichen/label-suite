@@ -1,7 +1,7 @@
 # annotation/015-annotation-workspace Specification
 
 ## Purpose
-Annotation List + Workspace（標記清單與標記作業，Annotator／Reviewer）的 derived view。正典為 `specs/annotation/015-annotation-workspace/spec.md`（v6.23.0）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR/AC ID，不改動其正典措辭。目前收錄：change `reviewer-action-hint`（issue #526）之 FR-084、AC-4.47 ~ AC-4.50 與 FR-064 第 7 點第 6 項之範圍註記；change `2026-09-01-single-owner-review-relay`（issue #596）之 FR-092 ~ FR-097（新增）、FR-014B／FR-016A／FR-044／FR-051／FR-053／FR-054／FR-055／FR-060／FR-061／FR-062／FR-063／FR-064／FR-070／FR-083／FR-086（修訂）、FR-014I／FR-069／FR-074／FR-085（移除）；change `seq-tagging-span-workspace`（issue #581）之 FR-024A／FR-024A-1／FR-024A-2／FR-024A-3／FR-052／FR-024L（修訂）；change `reserve-arbiters-from-review-assignment`（issue #868）之 FR-060／FR-073／FR-093／FR-099（修訂）；change `pl-exception-disposal-screen-shell`（issue #907）之 FR-095（修訂，新增最終例外處置畫面外殼段落與 AC-4.69）；change `gate-review-assignment`（issue #921）之 FR-093（修訂，新增工作區側送出指派閘門段落與 AC-4.70、AC-4.71）；以及 change `fix-910-review-unit-status-consistency`（issue #910）之 FR-064（修訂，補齊與 FR-053 同源之 FR-044a 遞補列限定語）與 FR-016B（新增，審核決策事件之 outKey 範圍雙送出去重）；以及 change `fix-908-annotator-finalized-lock`（issue #908）之 FR-101（新增，標記員定稿鎖定，首次以獨立標題收錄）與 FR-072（首次以獨立標題收錄，修訂第 3 點加入「未定稿單位」限定語）；以及 change `separate-review-decision-row`（issue #926／#927／#928）之 FR-014P（首次以獨立標題收錄，第 2/3/4 點修訂為決策列獨立於答案 Bypass 列，新增第 5/6 點視覺權重與鄰近送出，對應新增 AC-3.61 ~ AC-3.63）與 FR-053（修訂，列內決策控件位置措辭同步移除「Bypass 列上」）。
+Annotation List + Workspace（標記清單與標記作業，Annotator／Reviewer）的 derived view。正典為 `specs/annotation/015-annotation-workspace/spec.md`（v6.23.0）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR/AC ID，不改動其正典措辭。目前收錄：change `reviewer-action-hint`（issue #526）之 FR-084、AC-4.47 ~ AC-4.50 與 FR-064 第 7 點第 6 項之範圍註記；change `2026-09-01-single-owner-review-relay`（issue #596）之 FR-092 ~ FR-097（新增）、FR-014B／FR-016A／FR-044／FR-051／FR-053／FR-054／FR-055／FR-060／FR-061／FR-062／FR-063／FR-064／FR-070／FR-083／FR-086（修訂）、FR-014I／FR-069／FR-074／FR-085（移除）；change `seq-tagging-span-workspace`（issue #581）之 FR-024A／FR-024A-1／FR-024A-2／FR-024A-3／FR-052／FR-024L（修訂）；change `reserve-arbiters-from-review-assignment`（issue #868）之 FR-060／FR-073／FR-093／FR-099（修訂）；change `pl-exception-disposal-screen-shell`（issue #907）之 FR-095（修訂，新增最終例外處置畫面外殼段落與 AC-4.69）；change `gate-review-assignment`（issue #921）之 FR-093（修訂，新增工作區側送出指派閘門段落與 AC-4.70、AC-4.71）；以及 change `fix-910-review-unit-status-consistency`（issue #910）之 FR-064（修訂，補齊與 FR-053 同源之 FR-044a 遞補列限定語）與 FR-016B（新增，審核決策事件之 outKey 範圍雙送出去重）；以及 change `fix-908-annotator-finalized-lock`（issue #908）之 FR-101（新增，標記員定稿鎖定，首次以獨立標題收錄）與 FR-072（首次以獨立標題收錄，修訂第 3 點加入「未定稿單位」限定語）；以及 change `separate-review-decision-row`（issue #926／#927／#928）之 FR-014P（首次以獨立標題收錄，第 2/3/4 點修訂為決策列獨立於答案 Bypass 列，新增第 5/6 點視覺權重與鄰近送出，對應新增 AC-3.61 ~ AC-3.63）與 FR-053（修訂，列內決策控件位置措辭同步移除「Bypass 列上」）；以及 change `fix-992-decision-summary-readable`（issue #992）之 FR-016B（修訂，新增審核決策摘要顯示層中文化段落）與新增 AC-2.28。
 
 ## Requirements
 
@@ -63,6 +63,8 @@ v4.61.0 以前寫入、不具上述新欄位之事件 MUST 原樣顯示且不得
 
 **本版新增（issue #910，審核決策重複送出去重）**：既有「連續重複 `submitted` 事件不疊加」的雙送出防護（issue #201）MUST 擴及審核決策事件（`accepted`／`modified`／`bypassed`）：同一 `outKey` 之上一筆決策事件，若其 `action`、`role`、`actor_id`、`reason` 與該決策之修正值皆與新決策相同，新送出 MUST NOT 再疊加第二筆內容相同的事件。比對 MUST 以該 `outKey` 最近一筆事件為對象，MUST NOT 僅比對陣列最後一筆——同一次送出可能一次寫入多個不同 `outKey` 之事件，僅比對陣列最後一筆會誤刪其他 `outKey` 的合法事件。內容有實質差異（例如修正值改變）之重複送出仍 MUST 正常記錄為新事件，不受本段去重規則影響。本段不改變既有 append-only 語意——去重僅發生於「即將寫入前」，不覆寫、不刪除任何已寫入之事件。
 
+**v6.28.0 新增（issue #992，審核決策摘要之顯示層中文化）**：`.history-summary` 渲染 `accepted`／`modified`／`bypassed` 事件之 `event.summary` 時，若該行內容符合 `<outKey> · <actor_id>: <decision>` 樣式（`decision` 取值 `approve`／`modify`／`bypass`），顯示層 MUST 將 `outKey` 換成 `window.OUTPUT_TYPE_REGISTRY[outKey][state.lang]` 之對應標籤、`decision` 換成既有審核決策標籤對照（`approve`→`通過`／`Approve`、`modify`→`修正`／`Modify`、`bypass`→既有 `BYPASS_WORDING.{zh,en}.decision`）；`actor_id` MUST NOT 被轉譯，MUST 維持原識別碼。此轉換 MUST 僅發生於渲染時查表，`event.summary` 之持久化字串（含 v6.28.0 以前寫入之既有 localStorage 資料）MUST NOT 因此被改寫、遷移或刪除——舊資料於下次渲染時即自動套用新對照，無需資料遷移。此規則 MUST NOT 變更 `handleReviewSubmit()` 送出時寫入 `#wsReviewHistory`（工作區內、逐樣本清空之送出確認卡片）之既有內部格式文字，亦 MUST NOT 變更本段以外之任何既有呈現規則（含前述 `.history-diff` fallback 抑制邏輯）。
+
 #### Scenario: 歷程合併呈現且受盲審隔離
 - **GIVEN** 某樣本已有標記員提交事件與一位審核員之已提交審核事件，另一位審核員尚有未提交之草稿事件
 - **WHEN** 檢視右欄 `歷程` 頁籤
@@ -86,6 +88,14 @@ v4.61.0 以前寫入、不具上述新欄位之事件 MUST 原樣顯示且不得
 - **WHEN** 審核員以完全相同的決策再次送出審核
 - **THEN** 該 `outKey` 之 `accepted` 事件於 `歷程` 頁籤中 MUST 仍只有一筆，MUST NOT 疊加第二筆內容相同的事件
 - **AND** 若該次重複送出改變了另一個 `outKey` 的決策或修正值，該 `outKey` 的新事件 MUST 正常寫入，不受前一 `outKey` 去重規則影響
+
+#### Scenario: AC-2.28 審核決策摘要之顯示層中文化，持久化格式不變
+- **GIVEN** 審核員對 `single_label` 輸出類型送出 `通過`（`approve`）決策，其對應 `accepted` 事件之 `event.summary` 含 `single_label · kioleemg12: approve`
+- **WHEN** 以 `role=reviewer` 檢視右欄 `歷程` 頁籤
+- **THEN** 該卡片 `.history-summary` 之可見文字為 `單一標籤 · kioleemg12：通過`（`lang=zh`）或 `Single label · kioleemg12: Approve`（`lang=en`），`kioleemg12` 維持原樣不譯
+- **AND** 透過 `getSampleHistory()` 讀取該事件之 `event.summary` 仍逐字為 `single_label · kioleemg12: approve`，未被顯示層轉換改寫
+- **AND** 若該決策為 `modify` 或 `bypass` 且附有理由，卡片 `.history-reason` 仍正確顯示該理由，理由文字不因本段顯示轉換而重複或遺失
+- **AND** 一筆 v6.28.0 以前寫入之既有 localStorage 事件（`event.summary` 為舊內部格式字串）以本段規則渲染時同樣呈現繁體中文／英文標籤，不需任何資料遷移
 
 ### Requirement: FR-086 歷程動作常數化
 
