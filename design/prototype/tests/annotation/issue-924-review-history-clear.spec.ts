@@ -88,12 +88,33 @@ test.describe('issue #924: #wsReviewHistory leaks the previous sample\'s confirm
     await page.getByTestId('ws-review-submit-btn').click();
     await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
 
-    // Confirm the confirmation card actually populated on ofs-04 first --
-    // otherwise the assertions below on the NEXT sample would pass
-    // vacuously (nothing to leak in the first place).
-    const history = page.getByTestId('ws-review-history');
-    await expect(history).toBeVisible();
-    await expect(history).toContainText('bypass');
+    // Confirm the submit actually recorded a bypass decision for ofs-04 in
+    // the app's own persisted data layer -- otherwise the assertions below
+    // on the NEXT sample would pass vacuously (nothing to leak in the
+    // first place). This deliberately does NOT read `#wsReviewHistory`
+    // (the transient DOM render): handleReviewSubmit() -> appendReviewHistoryEntry()
+    // -> advanceToNextActionableReviewUnit() -> selectSample() runs
+    // synchronously end-to-end with no setTimeout/promise/rAF anywhere in
+    // that chain, so by the time this `.click()` above resolves the
+    // workspace has already advanced past ofs-04 -- there is no
+    // externally observable moment where the card is still visible on
+    // ofs-04 for Playwright to catch. Reading the ALREADY-PERSISTED
+    // history via getSampleHistory() (same accessor sibling specs use,
+    // e.g. issue-578-history-snapshot-masking.spec.ts) survives that
+    // advance and still proves there was something to leak.
+    const ofs04History = await page.evaluate(() =>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (window as any).LabelSuiteAnnotationWorkspaceData.getSampleHistory(
+        'T015',
+        'official_run',
+        'ofs-04-pending-review',
+        { reviewerId: 'reviewer_wang' }
+      )
+    );
+    expect(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (ofs04History as any[]).some((event) => event.action === 'bypassed')
+    ).toBe(true);
 
     // Auto-advance (FR-099) must actually have moved the workspace to a
     // DIFFERENT review unit -- assert on the URL so this test cannot pass
