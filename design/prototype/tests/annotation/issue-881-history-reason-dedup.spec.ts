@@ -108,7 +108,7 @@ test.describe('issue #881: right-side history reason deduplication', () => {
 
     const modified = historyCard(page, 'modified');
     await expect(modified).toHaveCount(1);
-    await expect(modified.locator('.history-summary')).toHaveText(`single_label · ${ANNOTATOR}: modify`);
+    await expect(modified.locator('.history-summary')).toHaveText(`單一標籤 · ${ANNOTATOR}：修正`);
     await expect(modified.locator('.history-reason')).toHaveText(`理由：${legacyReason}`);
     expect(occurrences(await modified.innerText(), legacyReason)).toBe(1);
 
@@ -122,7 +122,7 @@ test.describe('issue #881: right-side history reason deduplication', () => {
     await page.reload();
     await page.getByTestId('ws-guideline-tab-history').click();
     const englishCard = historyCard(page, 'modified');
-    await expect(englishCard.locator('.history-summary')).toHaveText(`single_label · ${ANNOTATOR}: modify`);
+    await expect(englishCard.locator('.history-summary')).toHaveText(`Single label · ${ANNOTATOR}: Modify`);
     await expect(englishCard.locator('.history-reason')).toHaveText(`Reason: ${legacyReason}`);
     expect(occurrences(await englishCard.innerText(), legacyReason)).toBe(1);
   });

@@ -2079,6 +2079,24 @@
     structuredReasons.forEach(function (reason) {
       summary = summary.split(' — ' + reason).join('');
     });
+    /* issue #992: translate the "outKey · actorId: decision" line(s) for
+       display only -- the persisted event.summary keeps its old internal
+       format so existing localStorage data needs no migration. actorId is
+       never translated; any line not in this exact shape (e.g. the
+       buildHistorySummary() "outKey: describedAnswer" line) passes through
+       unchanged. */
+    summary = summary.split('\n').map(function (line) {
+      var match = /^(.+) · (.+): (approve|modify|bypass)$/.exec(line);
+      if (!match) return line;
+      var outKey = match[1];
+      var actorId = match[2];
+      var decision = match[3];
+      var outReg = window.OUTPUT_TYPE_REGISTRY && window.OUTPUT_TYPE_REGISTRY[outKey];
+      var outLabel = (outReg && outReg[state.lang]) || outKey;
+      var decisionLabel = t(REVIEW_DECISION_LABEL_KEYS[decision]);
+      var colon = state.lang === 'zh' ? '：' : ': ';
+      return outLabel + ' · ' + actorId + colon + decisionLabel;
+    }).join('\n');
     return summary.trim();
   }
 
