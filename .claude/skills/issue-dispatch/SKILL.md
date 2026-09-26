@@ -42,7 +42,7 @@ The per-issue lead **must** be `general-purpose`. Every agent under `.claude/age
 
 Budget rule: a lead runs at most one nested specialist at a time. Red completes before Green is dispatched.
 
-**Nested-specialist stall.** If a dispatched specialist goes unresponsive with no checkpoint for a normal working session, the lead may take over and produce the deliverable itself, but must independently verify the evidence — read the actual command output, not a self-report — and must declare the deviation explicitly in the PR body. This is what #931's stalled `senior-qa` (~25 minutes, no report) required in practice, and it is a deviation from CLAUDE.md's TDD ownership rule, not a substitute for it.
+**Nested-specialist stall.** If a dispatched specialist goes unresponsive with no checkpoint for a normal working session, the lead may take over and produce the deliverable itself, but must independently verify the evidence — read the actual command output, not a self-report — and must declare the deviation explicitly in the PR body. This is what #931's stalled `senior-qa` (~25 minutes, no report) required in practice, and it is a deviation from CLAUDE.md's TDD ownership rule, not a substitute for it. If the specialist leaves a diagnostic probe patch uncommitted in the worktree, the lead must revert it before trusting the worktree's state: #921's `senior-qa` left a full Green implementation uncommitted after probing, and rerunning Red against that dirty tree produced a false `3 passed`.
 
 **The main session reads every lead's diff before that lead opens its PR.** This is a role-level rule, not a Step 6 suggestion: both real defects found in the first run — #932's blank-avatar regression and #934's hardcoded `<h1>標記作業` — were caught only at this layer, never by a lead's review of its own work.
 
@@ -60,6 +60,8 @@ Leads may talk to each other directly. The rules below are not style preferences
 | One-shot notification only. An agent must never send a message and then wait for the reply | A waiting on B while B waits on A deadlocks the wave |
 | Never use a message as a lock to coordinate a shared file. Escalate a discovered file conflict to the main session, which arbitrates | Issues in one wave are scheduled to be non-conflicting, so needing to coordinate means the conflict graph was wrong. That is a scheduling bug to report, not something to negotiate around |
 | The main session judges progress **only** from `gh issue view <N> --comments`, never from task notifications | When one agent resumes a peer, the resumed agent's completion notification goes to the peer that sent the message, not to the main session. Notification routing is therefore unreliable; issue comments are not |
+| Evidence is always written into the issue's checkpoint comment, not only returned through `SubagentHandback` or a peer message. A failed handback delivery needs no redispatch | Several `SubagentHandback` reports never reached their caller in #921; the checkpoint comment was the only surviving copy of that evidence, and redispatching would only repeat finished work |
+| A late or duplicate nested-agent report — one that arrives after its issue already merged — is superseded by that issue's checkpoint comment; never act on it again | #921 received review reports for issues #942 and others after they had already merged |
 
 ## Re-entry safety
 
@@ -132,6 +134,8 @@ Wave size is the largest independent set the conflict graph allows, capped at **
 
 A second cap applies on top: **at most two issues per wave may run a full `pnpm playwright test` locally.** This counts local full runs specifically — step 6 now scopes ordinary local verification to the touched spec(s), so a local full run is the exception, not the default, and this cap is what stops it from recreating the flakiness that motivated that scoping. The rest wait for a later wave. See the guardrail below for why the cap cannot be a runtime lock, and for what a mid-flight wave override must also recompute.
 
+Before dispatching, also manually confirm the machine has enough free memory for the wave's planned Playwright scale — a judgment call, not an automated gate. #921's full local run was aborted twice by the harness on roughly 295 MB free, with other sessions' load already accounted for.
+
 Record the conflict graph, the Playwright count, and the resulting waves in the wave report before dispatching anything.
 
 ## Step 5 — Dispatch
@@ -163,7 +167,7 @@ Dispatch every lead of the wave **in one message** so they run concurrently. Eac
 
 Each lead must follow SDD as written in CLAUDE.md:
 
-1. `senior-qa` writes the Red test, commits it, and runs it to produce the expected failure. The lead records the failure reason.
+1. `senior-qa` writes the Red test, commits it, and runs it to produce the expected failure. The lead records the failure reason. Before trusting that evidence, the lead runs `git status --short` to confirm the worktree is clean and pastes that output into the checkpoint comment — a dirty worktree from an unreverted probe patch is what produced #921's false `3 passed`.
 2. Only then is the Green specialist dispatched. It must not weaken or rewrite the Red contract to make it pass.
 3. The lead verifies the committed Red evidence and the Green exit-0 evidence, and is the only role that ticks `tasks.md` checkboxes.
 
@@ -180,7 +184,7 @@ TDD → implement → spec consistency review (spec version bumped, Changelog en
 1. `/opsx:propose` — the spec delta against stable FR/AC IDs, `tasks.md`, and `design.md` when an API contract or DB schema changes. For an already-merged feature, carry the change in a change folder whose `proposal.md` names the canonical spec; never start a new spec from scratch.
 2. **Gate 1** — `openspec validate --changes --no-interactive`. Non-strict schema only: it checks nothing about project headings, ownership, status, or retired paths.
 3. **Gate 2** — Project SDD lint: `scripts/check-sdd.sh` plus the canonical workflow checklist for what the tooling does not cover.
-4. `/opsx:apply` — implement under step 5's Red/Green ownership.
+4. `/opsx:apply` — implement under step 5's Red/Green ownership. If apply narrows scope (an AC or FR deferred to a separate issue), narrow the spec delta to match before archive — otherwise archive writes an unimplemented AC into the canonical spec with no gate catching it, as would have happened when #921 deferred left-column filtering to #956.
 5. **Gate 3** — the code and test gates in step 6.
 6. **Gate 4** — Source-Verify pre-scan, then `/opsx:archive`: dual-write into the derived `openspec/specs/` view **and** write back to `specs/<module>/NNN-feature/spec.md` with a version bump and a Changelog entry. Archive belongs to the final PR group only; an intermediate stacked group merges with the change still open.
 7. **After the final PR merges** — the main session updates `specs/STATUS.md` to archived and runs `mv specs/<module>/NNN-feature specs/_archive/`. This happens on `main` after merge, never inside the worktree and never before merge.
@@ -190,6 +194,8 @@ Update `specs/STATUS.md` at every stage transition, per its own trigger list.
 ## Step 6 — Verification and independent review
 
 **CLAUDE.md's Verification Commands section is the authority and is not restated here.** Locally, a lead runs only what its change touches — the affected spec(s)/package(s) plus `pnpm tsc --noEmit` and `mypy` — never the full local suite (the two Playwright exceptions a few lines below aside); CI runs the complete matrix unattended. A full local run measured ~16–17 minutes and blocks the lead for all of it, against CI's ~20–24 minutes in a clean, non-blocking environment; running several full local suites at once in one wave also produced two false failures that were both green on an isolated re-run.
+
+**Regression measurement**, when a change might affect tests outside the touched spec: derive the candidate set with `grep -rl` over test file contents for what the change touches (a shared config, a shared component) — never guess it from a test's directory; guessing by directory in #921 missed 20 specs across three other directories that opened the same page. Compare against a `main` baseline, but only for the branch's failing subset of that candidate set — the diff is always a subset of the branch's failures, so a baseline rerun of the tests that already pass on the branch adds nothing.
 
 Only the prototype group is conditional there (`when design/prototype/** changed`). Two dispatch-specific additions apply:
 
@@ -344,3 +350,4 @@ One deviation is from CLAUDE.md itself and is therefore **not** this skill's to 
 | Two issues bumping one canonical spec's Changelog | Shared canonical spec means different waves |
 | Leftover worktrees and `[gone]` branches after a sprint | Step 9 cleanup, plus `pr-flow`'s sprint-end sweep |
 | Regenerating a derived file (e.g. screen inventory) after every source edit leaves throwaway commits that go empty on rebase | Regenerate it once, right after the last source edit, not after each one |
+| `test-results/.last-run.json` is overwritten by any later Playwright run, including an aborted one — #921's 143-item failure list was wiped down to 6 by a self-interrupted `--last-failed` rerun | Capture a run's failure list to a file of your own before rerunning anything against it |
