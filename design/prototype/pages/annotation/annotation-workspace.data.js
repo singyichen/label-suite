@@ -2906,9 +2906,9 @@
      of the lossy CompactAnswer shape `decision.value` carries.
      `adopt_a` finalizes to the annotator's own submitted payload,
      `adopt_b` to the unit's one assigned reviewer's submitted payload
-     (FR-093: exactly one reviewer per unit, so reviewerSubmissions[0] is
-     unambiguous -- the same lookup buildArbitrationCard() uses in
-     annotation-workspace.config.js). `reject` ("兩者皆非") finalizes to
+     (FR-093's sticky owner, via getStickyReviewerId() -- leftover data can
+     leave more than one reviewerSubmission on a unit, so `[0]`'s bucket-key
+     sort order is not unambiguous; issue #975). `reject` ("兩者皆非") finalizes to
      nothing, matching design.md D2's "bypass 不存值" convention: returning
      null here means appendSampleTimelineEvent's `resultSnapshot || null`
      leaves `result_snapshot` off the event entirely (appendHistoryEvent's
@@ -2920,7 +2920,11 @@
       return annotatorAnswers ? buildResultSnapshot(annotatorAnswers) : null;
     }
     if (choice === 'adopt_b') {
-      var reviewerSubmission = readReviewerSubmissions(taskId, runType, sampleId, identity)[0];
+      var reviewerSubmissions = readReviewerSubmissions(taskId, runType, sampleId, identity);
+      var stickyReviewerId = getStickyReviewerId(taskId, runType, sampleId, identity);
+      var reviewerSubmission = (stickyReviewerId && reviewerSubmissions.filter(function (s) {
+        return s.reviewerId === stickyReviewerId;
+      })[0]) || reviewerSubmissions[0] || null;
       return reviewerSubmission ? buildResultSnapshot(reviewerSubmission.answers) : null;
     }
     return null;
