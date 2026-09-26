@@ -4355,7 +4355,7 @@
       var poolRecord = exceptionPool[outKey];
       if (
         poolRecord && poolRecord.action !== 'exclude_from_dataset'
-        && Object.prototype.hasOwnProperty.call(poolRecord, 'finalized_value')
+        && data.hasLegitimateFinalizedValue(poolRecord)
       ) {
         answers[outKey] = cloneCompactAnswer(poolRecord.finalized_value);
         return;
@@ -4363,7 +4363,7 @@
       disputeItems.forEach(function (item) {
         if (item.outKey !== outKey) return;
         var stored = arbState[item.outKey + '::' + item.key];
-        if (!stored || !stored.finalized_by) return;
+        if (!stored || !stored.finalized_by || !data.hasLegitimateFinalizedValue(stored)) return;
         answer = applyFinalizedItem(outKey, answer, item, stored.finalized_value);
       });
       answers[outKey] = answer;
@@ -4394,6 +4394,7 @@
   }
 
   function finalizedBasisLabels(arbState, exceptionPool) {
+    var data = window.LabelSuiteAnnotationWorkspaceData;
     var labels = [];
     function pushLabel(key) {
       if (!key) return;
@@ -4402,7 +4403,7 @@
     }
     Object.keys(arbState).forEach(function (itemId) {
       var stored = arbState[itemId];
-      if (!stored || !stored.finalized_by) return;
+      if (!stored || !stored.finalized_by || !data.hasLegitimateFinalizedValue(stored)) return;
       var finalVote = null;
       (stored.votes || []).forEach(function (vote) {
         if (vote.arbiter_id === stored.finalized_by) finalVote = vote;
@@ -4411,7 +4412,9 @@
     });
     Object.keys(exceptionPool).forEach(function (outKey) {
       var record = exceptionPool[outKey];
-      pushLabel(record && EXCEPTION_BASIS_I18N_KEYS[record.action]);
+      if (!record) return;
+      if (record.action !== 'exclude_from_dataset' && !data.hasLegitimateFinalizedValue(record)) return;
+      pushLabel(EXCEPTION_BASIS_I18N_KEYS[record.action]);
     });
     return labels;
   }
@@ -4478,7 +4481,7 @@
     var openItemIds = [];
     items.forEach(function (item) {
       var stored = arbState[disputeItemId(item)];
-      if (stored && stored.finalized_by) {
+      if (stored && stored.finalized_by && data.hasLegitimateFinalizedValue(stored)) {
         card.appendChild(buildArbitrationResolvedRow(
           item, stored.finalized_value, stored.finalized_by, 'ws-arbitration-finalized'
         ));
@@ -4566,7 +4569,10 @@
     );
     return items.filter(function (item) {
       var stored = arbState[disputeItemId(item)];
-      return !!(stored && !stored.finalized_by) && !pool[item.outKey];
+      var poolRecord = pool[item.outKey];
+      var disposed = !!poolRecord
+        && (poolRecord.action === 'exclude_from_dataset' || data.hasLegitimateFinalizedValue(poolRecord));
+      return !!(stored && !stored.finalized_by) && !disposed;
     });
   }
 
