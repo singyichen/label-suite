@@ -28,8 +28,14 @@
  * column still shows the full unfiltered unit set instead of exactly the one
  * unit chen may arbitrate (c).
  */
-import { test, expect } from '@playwright/test';
-import { buildWorkspaceUrl, skipGuidelineModal, trackPageErrors, assertNoPageErrors } from './_workspace-helpers';
+import { test, expect, type Page } from '@playwright/test';
+import {
+  buildWorkspaceUrl,
+  skipGuidelineModal,
+  trackPageErrors,
+  assertNoPageErrors,
+  fillArbitrationReasons,
+} from './_workspace-helpers';
 
 /* Same known static-server <script src> flake guard as the sibling review-
  * unit specs (issue #582 lineage, reused by issue-921-review-assignment-gate
@@ -155,6 +161,99 @@ test.describe('Arbiter exemption is not blocked by the new filter', () => {
     await items.first().click();
     await expect(page.getByTestId('ws-arbitration-card')).toBeVisible();
     await expect(page.locator('#wsArbitrationSubmitBtn')).toBeVisible();
+
+    assertNoPageErrors(errors);
+  });
+});
+
+test.describe('Arbiter sticky visibility -- issue #722 progress-counter regression guard', () => {
+  /* filterUnitsToAssigned()'s FR-060 disjunct only re-admits a unit that is
+   * NOT this reviewer's own FR-093 assignment when it is both DISPUTED and
+   * `isArbiterCandidate()`-eligible. The moment the arbiter actually submits
+   * an arbitration vote, the unit's status moves off DISPUTED (or, in some
+   * outcomes, the vote itself already counts against it) -- so the disjunct
+   * stops matching and the unit silently drops out of the arbiter's own left
+   * column and nav mid-session, with no reload. That breaks issue #722's
+   * contract that the arbiter's progress counter advances immediately after
+   * submitting: the counter's denominator is driven by exactly this same
+   * enumerated-units list, so a unit that vanishes here is a unit issue #722
+   * can no longer count. This test asserts the unit stays enumerated in the
+   * left column across the submit, independent of the counter text itself
+   * (issue-722-arbiter-progress-counter.spec.ts already owns that assertion).
+   *
+   * Fixture mirrors issue-722-arbiter-progress-counter.spec.ts verbatim:
+   * T001/sent-001, annotator kioleemg12 says 'sad', the unit's one assigned
+   * reviewer (reviewer_wang) says 'fear' -> disputed with a single dispute
+   * item. reviewer_chen (can_arbitrate: true, not a participant) is FR-060
+   * eligible to arbitrate it.
+   */
+  const TASK = 'T001';
+  const SAMPLE = 'sent-001';
+  const ANNOTATOR = 'kioleemg12';
+  const PARTICIPANT = 'reviewer_wang';
+  const ARBITER = 'reviewer_chen'; // can_arbitrate: true
+  const labelPayload = (selected: string) => ({ previewState: { single_label: { selected } } });
+
+  type WorkspaceData = {
+    markSampleSubmitted: (
+      taskId: string, role: string, runType: string, sampleId: string,
+      payload: unknown, historySummary: string,
+      identity: { annotatorId?: string; reviewerId?: string }
+    ) => void;
+  };
+
+  function seedDisputedUnit(page: Page): Promise<void> {
+    return page.evaluate(
+      (a) => {
+        const data = (window as unknown as { LabelSuiteAnnotationWorkspaceData: WorkspaceData })
+          .LabelSuiteAnnotationWorkspaceData;
+        data.markSampleSubmitted(
+          a.task, 'annotator', 'official_run', a.sample, a.annotatorPayload, '', { annotatorId: a.annotator }
+        );
+        data.markSampleSubmitted(
+          a.task, 'reviewer', 'official_run', a.sample, a.reviewerPayload, '',
+          { annotatorId: a.annotator, reviewerId: a.participant }
+        );
+      },
+      {
+        task: TASK, sample: SAMPLE, annotator: ANNOTATOR, participant: PARTICIPANT,
+        annotatorPayload: labelPayload('sad'), reviewerPayload: labelPayload('fear'),
+      }
+    );
+  }
+
+  test("reviewer_chen's left column still shows the disputed unit after submitting the arbitration vote", async ({
+    page,
+  }) => {
+    const errors = trackPageErrors(page);
+    await skipGuidelineModal(page);
+    await page.goto(
+      buildWorkspaceUrl({
+        task_id: TASK, sample_id: SAMPLE, role: 'reviewer', run_type: 'official_run',
+        annotator_id: ANNOTATOR, reviewer_id: ARBITER,
+      })
+    );
+    await seedDisputedUnit(page);
+    await page.reload();
+
+    const unitLocator = page.locator(
+      `[data-testid="ws-sample-item"][data-sample-id="${SAMPLE}"][data-annotator-id="${ANNOTATOR}"]`
+    );
+
+    // Sanity check -- the unit must be visible in the left column BEFORE
+    // arbitrating (mirrors issue-722's first test, re-confirmed here because
+    // this test's flow depends on it).
+    await expect(unitLocator).toHaveCount(1);
+
+    await page.getByTestId('ws-arbitration-choose-b').click();
+    await fillArbitrationReasons(page);
+    await page.getByTestId('ws-arbitration-submit').click();
+
+    // Core regression assertion: the unit must remain enumerated in the
+    // arbiter's own left column after the vote -- filterUnitsToAssigned()'s
+    // DISPUTED-status disjunct must not go stale the moment this arbiter's
+    // own submission changes that very status.
+    await expect(unitLocator).toHaveCount(1);
 
     assertNoPageErrors(errors);
   });
