@@ -1655,10 +1655,10 @@
        annotation-list.html's filterToAssignedUnits()). */
     var mine = {};
     assigned.forEach(function (unit) {
-      mine[unit.sample_id + ' ' + unit.annotator_id] = true;
+      mine[unit.sample_id + '\u0000' + unit.annotator_id] = true;
     });
     return units.filter(function (unit) {
-      if (mine[unit.recordId + ' ' + unit.annotatorId] === true) return true;
+      if (mine[unit.recordId + '\u0000' + unit.annotatorId] === true) return true;
       /* FR-060: an eligible arbiter for a disputed unit is never that
          unit's FR-093 assignee (the assignee is exactly who holds the
          submission the arbiter must not have), so filtering to assignees
