@@ -814,6 +814,26 @@
       gap: 6px;
     }
     .guideline-summary-text { font-size: 13px; line-height: 1.7; color: var(--color-ink); }
+    /* issue #988: read-only review-gate callout (OFF_ROSTER/NOT_ASSIGNED/
+       EMPTY) -- reuses .guideline-summary's soft-blue/ⓘ token so it reads
+       as system copy, not as sample content sharing the .content-card's
+       visual weight. */
+    .review-blocked-note {
+      border: 1px solid rgba(99,102,241,0.2);
+      border-radius: var(--radius-lg);
+      background: var(--color-primary-soft-bg);
+      padding: var(--space-lg);
+    }
+    .review-blocked-note-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--color-primary);
+      margin-bottom: var(--space-sm);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .review-blocked-note-text { font-size: 13px; line-height: 1.7; color: var(--color-ink); }
     .guideline-file-list { display: flex; flex-direction: column; gap: var(--space-sm); }
     .guideline-file-item {
       display: flex;
