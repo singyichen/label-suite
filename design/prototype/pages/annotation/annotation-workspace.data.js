@@ -2827,10 +2827,16 @@
    * appendSampleTimelineEvent use for a reviewer/arbiter act on someone
    * else's unit (comment at markSampleSkipped above), and the same reason
    * getSampleHistory's FR-062 masking only admits a `submitted` reviewer
-   * bucket. Unlike appendSampleTimelineEvent, `reason` is NOT required here:
-   * FR-095's `adopt_annotator`/`adopt_reviewer` are one-click actions with no
-   * reason field in the UI (design.md/Red test contract), so gating the
-   * event on a non-empty reason would silently drop it for those two. */
+   * bucket. Unlike appendSampleTimelineEvent, this function itself does not
+   * reject an empty `reason` (`reason || ''` below) -- issue #920 moved
+   * reason-required enforcement for all four actions to the UI layer (the
+   * select-then-confirm screen's Confirm control stays natively disabled
+   * until the reason field is non-empty, see annotation-workspace.config.js
+   * buildExceptionPoolItemRow()/AC-4.75), so by the time this data-layer
+   * function is ever called, `reason` is already guaranteed non-empty in
+   * practice. Kept permissive here rather than throwing, matching this
+   * file's existing storage-layer stance of not re-validating what the UI
+   * already gated. */
   function resolveExceptionPoolItem(taskId, runType, sampleId, identity, outKey, action, value, reason) {
     var pool = getExceptionPool(taskId, runType, sampleId, identity);
     var record = {

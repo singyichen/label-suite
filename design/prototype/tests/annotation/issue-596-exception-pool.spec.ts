@@ -30,19 +30,27 @@ import { buildWorkspaceUrl, skipGuidelineModal, fillArbitrationReasons, type Run
  *     no error message to assert -- non-project_leader is simply "screen
  *     absent". This PR has no navigation entry point either -- every case
  *     below reaches the screen by direct URL, matching that constraint.
- *   - New testids: `ws-exception-pool` (root container), `ws-exception-pool-item`
- *     (one per unresolved item), `ws-exception-pool-action-<action>` (one
- *     button per `EXCEPTION_POOL_ACTIONS` entry, scoped inside the item --
- *     asserted data-driven off the exported constant, never a hardcoded
- *     4-item or 3-item list), `ws-exception-pool-custom-answer` (the panel
- *     that expands under the item when `custom_answer` is chosen),
- *     `ws-exception-pool-reason` (a single per-item required reason field,
- *     shared by both `custom_answer` and `exclude_from_dataset` -- see the
- *     reason-gating bullet below), `ws-exception-pool-custom-answer-confirm`
- *     (confirms the custom-answer resolution; blocked while the reason is
- *     empty), and `ws-exception-pool-exclude-confirm` (confirms the
- *     exclude_from_dataset resolution; also blocked while the reason is
- *     empty).
+ *   - **UPDATED for issue #920** (OpenSpec change
+ *     `2026-09-26-exception-pool-select-then-confirm`, FR-095 v7.0.0,
+ *     BREAKING -- retires AC-4.56/AC-4.57's one-click contract in favor of
+ *     AC-4.72~AC-4.75): testids `ws-exception-pool` (root container),
+ *     `ws-exception-pool-item` (one per unresolved item),
+ *     `ws-exception-pool-action-<action>` (one button per
+ *     `EXCEPTION_POOL_ACTIONS` entry, scoped inside the item -- asserted
+ *     data-driven off the exported constant, never a hardcoded 4-item or
+ *     3-item list) and `ws-exception-pool-custom-answer` (the panel that
+ *     expands under the item when `custom_answer` is selected) are unchanged
+ *     testids, but clicking an action button now ONLY toggles
+ *     `aria-pressed="true"` on itself and `aria-pressed="false"` on its
+ *     siblings in the same item -- it MUST NOT write. `ws-exception-pool-
+ *     reason` is unchanged as a testid but is now ALWAYS rendered per item
+ *     and shared by ALL FOUR actions (previously only `custom_answer` /
+ *     `exclude_from_dataset` expanded it). Two testids are NEW:
+ *     `ws-exception-pool-summary` (always-rendered summary line reflecting
+ *     selection state) and `ws-exception-pool-confirm` (the single, unified
+ *     write-point confirm control). Two testids are REMOVED and no longer
+ *     exist anywhere in the rendered DOM: `ws-exception-pool-custom-answer-
+ *     confirm` and `ws-exception-pool-exclude-confirm`.
  *   - design.md D4: `custom_answer`'s expanded control MUST be the SAME
  *     config-driven control the annotator/reviewer workspaces already use
  *     (task-config.engine.js `renderOutputPreview()` -> for `single_label`,
@@ -50,35 +58,32 @@ import { buildWorkspaceUrl, skipGuidelineModal, fillArbitrationReasons, type Run
  *     `label_options` entry, no per-chip testid, accessible name = the
  *     option's `name`). This file asserts those buttons by role/name inside
  *     the panel -- an exception-pool-only free-text box would NOT satisfy
- *     this and must fail the assertion.
- *   - Reason gating (team-lead ruling, Source-Verify against spec.md): FR-095
- *     point 3's "一鍵完成" appears ONLY at line 355 (`adopt_annotator`) and
- *     line 356 (`adopt_reviewer`) -- point 4 (`exclude_from_dataset`, line
- *     358) does NOT carry that wording. `adopt_annotator` / `adopt_reviewer`
- *     are tested as pure one-click actions per that literal wording -- this
- *     file does NOT assert a reason field exists for those two, and clicks
- *     the action testid exactly once before reading the persisted result.
- *     `custom_answer` (FR-095 point 3) and `exclude_from_dataset` (FR-095
- *     point 4, line 358) instead share the SAME reason-required gating
- *     shape: both `MUST 保留排除紀錄（處置者、理由、時間）`-equivalent lines
- *     (FR-063 line 190 and FR-095 point 4 line 358) name 理由 as part of the
- *     persisted record, and that reason is the audit trail for WHY a sample
- *     was dropped from the exported dataset -- a canned constant would
- *     satisfy the MUST on paper while carrying zero information, so this
- *     file requires an interactive, user-entered reason for both, gated
- *     identically: clicking the action expands a reason field + confirm
- *     control rather than resolving immediately, and confirming with an
- *     empty reason blocks the disposition. This resolves the tension
- *     design.md D2's non-optional `reason` field created for
- *     `exclude_from_dataset`; it never applied to `adopt_annotator` /
- *     `adopt_reviewer`, whose explicit "一鍵完成" wording overrides D2's
- *     shape for those two specifically.
+ *     this and must fail the assertion. Clicking a chip is itself only a
+ *     selection (AC-4.72's third bullet) -- it updates the summary line but
+ *     still requires Confirm to persist anything.
+ *   - Select-then-confirm model (issue #920, AC-4.72~AC-4.75) REPLACES the
+ *     old one-click contract for ALL FOUR actions, including
+ *     `adopt_annotator` / `adopt_reviewer`, which previously wrote
+ *     immediately on click with `reason: ''` (the issue #913 bug this change
+ *     fixes) -- and REPLACES the old per-action confirm testids for
+ *     `custom_answer` / `exclude_from_dataset`. Reason is now required for
+ *     ALL FOUR actions via the shared `ws-exception-pool-reason` field.
+ *     While the reason is empty, `ws-exception-pool-confirm` MUST be
+ *     disabled via the native `disabled` attribute (design.md D3's
+ *     deliberate divergence from this spec's other "blocked-not-disabled"
+ *     reason-gating convention, e.g. `refreshArbitrationBlocker()`) -- tests
+ *     below assert `toBeDisabled()`/`toBeEnabled()` rather than clicking a
+ *     disabled control and expecting a toast. Filling the reason enables
+ *     Confirm; clicking Confirm is the ONLY write point for all four
+ *     actions, and the persisted record's `reason` MUST be a non-empty
+ *     string even for `adopt_annotator` / `adopt_reviewer`.
  *   - FR-063 / FR-051: `adopt_annotator` / `adopt_reviewer` / `custom_answer`
- *     resolve the item and the unit derives `finalized` once every dispute
- *     item is resolved (verified via the pre-existing, unmodified
- *     `getReviewUnitStatus()`). `exclude_from_dataset` also resolves the
- *     item but the unit MUST NOT derive `finalized` (stays `disputed`).
- *   - FR-086: every disposition writes one history event via the
+ *     resolve the item (once confirmed) and the unit derives `finalized`
+ *     once every dispute item is resolved (verified via the pre-existing,
+ *     unmodified `getReviewUnitStatus()`). `exclude_from_dataset` also
+ *     resolves the item but the unit MUST NOT derive `finalized` (stays
+ *     `disputed`).
+ *   - FR-086: every confirmed disposition writes one history event via the
  *     pre-existing `getSampleHistory()` -- action `exception_resolved` for
  *     the three resolving actions, `excluded` for `exclude_from_dataset`
  *     (both action strings are named explicitly in FR-095's closing line).
@@ -97,8 +102,11 @@ import { buildWorkspaceUrl, skipGuidelineModal, fillArbitrationReasons, type Run
  *
  * Traceability: openspec/changes/2026-09-01-single-owner-review-relay/
  *   specs/annotation/015-annotation-workspace/spec.md FR-095 (AC-4.56,
- *   AC-4.57), FR-063, FR-086; design.md D2 (exceptionPool shape), D4
- *   (custom_answer control reuse); tasks.md task 6.1.
+ *   AC-4.57 -- retired v7.0.0, ID reserved, not reused), FR-063, FR-086;
+ *   design.md D2 (exceptionPool shape), D4 (custom_answer control reuse);
+ *   tasks.md task 6.1. Superseded/extended by
+ *   openspec/changes/2026-09-26-exception-pool-select-then-confirm/
+ *   (issue #920, FR-095 v7.0.0 BREAKING, AC-4.72~AC-4.75, design.md D1-D6).
  */
 
 type Identity = { annotatorId?: string; reviewerId?: string };
@@ -260,12 +268,24 @@ test.describe('issue #596: FR-095 final exception pool disposition screen', () =
     await expect(item.locator('[data-testid^="ws-exception-pool-action-"]')).toHaveCount(actions.length);
   });
 
-  test('AC-4.56: custom_answer expands the config-driven single_label control; empty reason blocks finalize', async ({ page }) => {
+  test('AC-4.56/AC-4.72/AC-4.75: custom_answer expands the config-driven single_label control; selecting alone does not write; empty reason disables Confirm', async ({ page }) => {
     await seedRejectedDisputeUnit(page, { runType: 'official_run', annotatorValue: 'positive', reviewerValue: 'negative' });
     await page.goto(buildProjectLeaderUrl('official_run'));
 
     const item = page.getByTestId('ws-exception-pool-item').first();
-    await item.getByTestId('ws-exception-pool-action-custom_answer').click();
+    const actionBtn = item.getByTestId('ws-exception-pool-action-custom_answer');
+    const confirmBtn = item.getByTestId('ws-exception-pool-confirm');
+    const summary = item.getByTestId('ws-exception-pool-summary');
+    await actionBtn.click();
+
+    // AC-4.72: selecting the action only marks it selected -- no write yet.
+    await expect(actionBtn).toHaveAttribute('aria-pressed', 'true');
+    await expect(item.getByTestId('ws-exception-pool-action-adopt_annotator')).toHaveAttribute('aria-pressed', 'false');
+    await expect(item.getByTestId('ws-exception-pool-action-adopt_reviewer')).toHaveAttribute('aria-pressed', 'false');
+    await expect(item.getByTestId('ws-exception-pool-action-exclude_from_dataset')).toHaveAttribute('aria-pressed', 'false');
+    expect((await readExceptionPool(page, 'official_run'))[OUT_KEY]).toBeUndefined();
+    expect(await unitStatus(page, 'official_run')).toBe('disputed');
+    const summaryAfterSelect = (await summary.textContent())?.trim() ?? '';
 
     const panel = item.getByTestId('ws-exception-pool-custom-answer');
     await expect(panel).toHaveCount(1);
@@ -276,16 +296,24 @@ test.describe('issue #596: FR-095 final exception pool disposition screen', () =
     await expect(panel.getByRole('button', { name: 'neutral' })).toHaveCount(1);
     await expect(panel.getByRole('button', { name: 'negative' })).toHaveCount(1);
 
+    // AC-4.72 third bullet: choosing a value inside the expanded control is
+    // still only a selection -- it MUST NOT write either.
     await panel.getByRole('button', { name: 'neutral' }).click();
-    await item.getByTestId('ws-exception-pool-custom-answer-confirm').click();
-
-    // FR-095 point 3: reason required -- blank reason blocks finalize, and
-    // nothing is written yet.
     expect((await readExceptionPool(page, 'official_run'))[OUT_KEY]).toBeUndefined();
     expect(await unitStatus(page, 'official_run')).toBe('disputed');
+    // AC-4.74 (design.md D4 live update): once a legal value is chosen the
+    // summary line changes again to reflect it.
+    const summaryAfterValue = (await summary.textContent())?.trim() ?? '';
+    expect(summaryAfterValue).not.toBe(summaryAfterSelect);
+    expect(summaryAfterValue).toContain('neutral');
+
+    // AC-4.75: reason still empty -> Confirm stays natively disabled (no
+    // toast-blocked click-through anymore).
+    await expect(confirmBtn).toBeDisabled();
 
     await item.getByTestId('ws-exception-pool-reason').fill('自訂答案（測試理由）');
-    await item.getByTestId('ws-exception-pool-custom-answer-confirm').click();
+    await expect(confirmBtn).toBeEnabled();
+    await confirmBtn.click();
 
     const pool = await readExceptionPool(page, 'official_run');
     expect(pool[OUT_KEY]).toMatchObject({
@@ -323,67 +351,123 @@ test.describe('issue #596: FR-095 final exception pool disposition screen', () =
     await expect(item.getByRole('button', { name: 'neutral' })).toHaveCount(0);
   });
 
-  test('FR-063/FR-086: adopt_annotator one-click resolves the item and finalizes the unit', async ({ page }) => {
+  test('FR-063/FR-086/AC-4.72/AC-4.75: adopt_annotator select-then-confirm resolves the item and finalizes the unit, with a non-empty reason (issue #913 fix)', async ({ page }) => {
     await seedRejectedDisputeUnit(page, { runType: 'official_run', annotatorValue: 'positive', reviewerValue: 'negative' });
     await page.goto(buildProjectLeaderUrl('official_run'));
 
     const item = page.getByTestId('ws-exception-pool-item').first();
-    await item.getByTestId('ws-exception-pool-action-adopt_annotator').click();
+    const actionBtn = item.getByTestId('ws-exception-pool-action-adopt_annotator');
+    const confirmBtn = item.getByTestId('ws-exception-pool-confirm');
+    const reasonField = item.getByTestId('ws-exception-pool-reason');
+    await actionBtn.click();
+
+    // AC-4.72: selecting only marks the button selected -- no write yet.
+    // This REPLACES the old one-click contract, and is exactly the gap
+    // issue #913 reported (adopt_annotator wrote immediately with `reason:
+    // ''`).
+    await expect(actionBtn).toHaveAttribute('aria-pressed', 'true');
+    await expect(item.getByTestId('ws-exception-pool-action-adopt_reviewer')).toHaveAttribute('aria-pressed', 'false');
+    await expect(item.getByTestId('ws-exception-pool-action-custom_answer')).toHaveAttribute('aria-pressed', 'false');
+    await expect(item.getByTestId('ws-exception-pool-action-exclude_from_dataset')).toHaveAttribute('aria-pressed', 'false');
+    expect((await readExceptionPool(page, 'official_run'))[OUT_KEY]).toBeUndefined();
+    expect(await unitStatus(page, 'official_run')).toBe('disputed');
+
+    // AC-4.75: reason required for ALL FOUR actions now, including this one
+    // -- Confirm stays natively disabled while it is empty.
+    await expect(confirmBtn).toBeDisabled();
+
+    await reasonField.fill('採用標記員原答案（測試理由）');
+    await expect(confirmBtn).toBeEnabled();
+    await confirmBtn.click();
 
     const pool = await readExceptionPool(page, 'official_run');
     expect(pool[OUT_KEY]).toMatchObject({ action: 'adopt_annotator', finalized_value: 'positive' });
+    // issue #913: the persisted reason MUST be non-empty, not the old
+    // `reason: ''`.
+    expect(pool[OUT_KEY].reason).toBeTruthy();
     expect(pool[OUT_KEY].resolver_id).toBeTruthy();
     expect(pool[OUT_KEY].resolved_at).toBeTruthy();
     expect(await unitStatus(page, 'official_run')).toBe('finalized');
 
     const history = await sampleHistory(page, 'official_run');
-    expect(history.some((e) => e.action === 'exception_resolved')).toBe(true);
+    expect(history.some((e) => e.action === 'exception_resolved' && !!e.reason)).toBe(true);
   });
 
-  test('FR-063/FR-086: adopt_reviewer one-click resolves the item and finalizes the unit', async ({ page }) => {
+  test('FR-063/FR-086/AC-4.72/AC-4.75: adopt_reviewer select-then-confirm resolves the item and finalizes the unit, with a non-empty reason (issue #913 fix)', async ({ page }) => {
     await seedRejectedDisputeUnit(page, { runType: 'official_run', annotatorValue: 'positive', reviewerValue: 'negative' });
     await page.goto(buildProjectLeaderUrl('official_run'));
 
     const item = page.getByTestId('ws-exception-pool-item').first();
-    await item.getByTestId('ws-exception-pool-action-adopt_reviewer').click();
+    const actionBtn = item.getByTestId('ws-exception-pool-action-adopt_reviewer');
+    const confirmBtn = item.getByTestId('ws-exception-pool-confirm');
+    const reasonField = item.getByTestId('ws-exception-pool-reason');
+    await actionBtn.click();
+
+    // AC-4.72: selecting only marks the button selected -- no write yet.
+    await expect(actionBtn).toHaveAttribute('aria-pressed', 'true');
+    await expect(item.getByTestId('ws-exception-pool-action-adopt_annotator')).toHaveAttribute('aria-pressed', 'false');
+    await expect(item.getByTestId('ws-exception-pool-action-custom_answer')).toHaveAttribute('aria-pressed', 'false');
+    await expect(item.getByTestId('ws-exception-pool-action-exclude_from_dataset')).toHaveAttribute('aria-pressed', 'false');
+    expect((await readExceptionPool(page, 'official_run'))[OUT_KEY]).toBeUndefined();
+    expect(await unitStatus(page, 'official_run')).toBe('disputed');
+
+    // AC-4.75: reason required -- Confirm stays natively disabled while
+    // empty.
+    await expect(confirmBtn).toBeDisabled();
+
+    await reasonField.fill('採用審核員答案（測試理由）');
+    await expect(confirmBtn).toBeEnabled();
+    await confirmBtn.click();
 
     const pool = await readExceptionPool(page, 'official_run');
     expect(pool[OUT_KEY]).toMatchObject({ action: 'adopt_reviewer', finalized_value: 'negative' });
+    // issue #913: the persisted reason MUST be non-empty, not the old
+    // `reason: ''`.
+    expect(pool[OUT_KEY].reason).toBeTruthy();
     expect(pool[OUT_KEY].resolver_id).toBeTruthy();
     expect(pool[OUT_KEY].resolved_at).toBeTruthy();
     expect(await unitStatus(page, 'official_run')).toBe('finalized');
 
     const history = await sampleHistory(page, 'official_run');
-    expect(history.some((e) => e.action === 'exception_resolved')).toBe(true);
+    expect(history.some((e) => e.action === 'exception_resolved' && !!e.reason)).toBe(true);
   });
 
-  test('FR-063/FR-095 point 4/FR-086: exclude_from_dataset collects a reason, blocks while empty, resolves the item but the unit MUST NOT read as finalized', async ({ page }) => {
+  test('FR-063/FR-095 point 4/FR-086/AC-4.72/AC-4.75: exclude_from_dataset select-then-confirm collects a reason, disables Confirm while empty, resolves the item but the unit MUST NOT read as finalized', async ({ page }) => {
     await seedRejectedDisputeUnit(page, { runType: 'official_run', annotatorValue: 'positive', reviewerValue: 'negative' });
     await page.goto(buildProjectLeaderUrl('official_run'));
 
     const item = page.getByTestId('ws-exception-pool-item').first();
-    await item.getByTestId('ws-exception-pool-action-exclude_from_dataset').click();
+    const actionBtn = item.getByTestId('ws-exception-pool-action-exclude_from_dataset');
+    await actionBtn.click();
+
+    // AC-4.72: selecting only marks the button selected -- no write yet.
+    await expect(actionBtn).toHaveAttribute('aria-pressed', 'true');
+    await expect(item.getByTestId('ws-exception-pool-action-adopt_annotator')).toHaveAttribute('aria-pressed', 'false');
+    await expect(item.getByTestId('ws-exception-pool-action-adopt_reviewer')).toHaveAttribute('aria-pressed', 'false');
+    await expect(item.getByTestId('ws-exception-pool-action-custom_answer')).toHaveAttribute('aria-pressed', 'false');
 
     // FR-063 / FR-095 point 4 (both "MUST 保留排除紀錄（處置者、理由、時間）"):
     // the exclusion record's reason is user-entered audit rationale, not a
     // canned constant -- same reason-required gating shape as
-    // custom_answer, reusing the item's single ws-exception-pool-reason
-    // field (one item shows at most one expanded action panel at a time, so
-    // no distinct testid is needed for the field itself; the confirm
-    // control is its own testid since it is a different action from
-    // custom_answer's confirm).
+    // custom_answer, reusing the item's single, always-rendered
+    // ws-exception-pool-reason field now shared by all four actions, and
+    // the unified ws-exception-pool-confirm write point (replacing the
+    // removed ws-exception-pool-exclude-confirm testid).
     const reasonField = item.getByTestId('ws-exception-pool-reason');
-    const confirm = item.getByTestId('ws-exception-pool-exclude-confirm');
+    const confirm = item.getByTestId('ws-exception-pool-confirm');
     await expect(reasonField).toHaveCount(1);
     await expect(confirm).toHaveCount(1);
 
-    await confirm.click();
-
-    // Empty reason blocks the disposition -- nothing persisted yet.
+    // AC-4.75: reason empty -> Confirm is natively disabled. This REPLACES
+    // the old "click while empty -> toast" pattern -- a disabled element
+    // cannot be clicked through, so the assertion is on the disabled state
+    // itself, and nothing is persisted yet.
+    await expect(confirm).toBeDisabled();
     expect((await readExceptionPool(page, 'official_run'))[OUT_KEY]).toBeUndefined();
     expect(await unitStatus(page, 'official_run')).toBe('disputed');
 
     await reasonField.fill('病歷內容與標註任務無關，排除本樣本');
+    await expect(confirm).toBeEnabled();
     await confirm.click();
 
     const pool = await readExceptionPool(page, 'official_run');
@@ -401,5 +485,66 @@ test.describe('issue #596: FR-095 final exception pool disposition screen', () =
     expect(
       history.some((e) => e.action === 'excluded' && e.reason === '病歷內容與標註任務無關，排除本樣本')
     ).toBe(true);
+  });
+
+  test('AC-4.74/AC-4.75: summary line changes away from the no-selection state and Confirm disables while reason is empty, across all four official_run actions', async ({ page }) => {
+    await seedRejectedDisputeUnit(page, { runType: 'official_run', annotatorValue: 'positive', reviewerValue: 'negative' });
+    await page.goto(buildProjectLeaderUrl('official_run'));
+
+    const item = page.getByTestId('ws-exception-pool-item').first();
+    const summary = item.getByTestId('ws-exception-pool-summary');
+    const confirm = item.getByTestId('ws-exception-pool-confirm');
+    const reasonField = item.getByTestId('ws-exception-pool-reason');
+
+    // AC-4.74: the summary line is always rendered, even before any
+    // selection ("尚未選擇最終處置"-equivalent) -- asserted on
+    // presence/non-emptiness rather than exact wording, per this file's
+    // existing convention of not baking translated i18n strings into
+    // assertions.
+    await expect(summary).toHaveCount(1);
+    await expect(confirm).toHaveCount(1);
+    const noSelectionText = (await summary.textContent())?.trim() ?? '';
+    expect(noSelectionText.length).toBeGreaterThan(0);
+    // Nothing selected yet -> Confirm has nothing to confirm and is
+    // disabled.
+    await expect(confirm).toBeDisabled();
+
+    const actions = await readActions(page);
+    for (const action of actions) {
+      const actionBtn = item.getByTestId(`ws-exception-pool-action-${action}`);
+      await actionBtn.click();
+      await expect(actionBtn).toHaveAttribute('aria-pressed', 'true');
+      for (const other of actions.filter((a) => a !== action)) {
+        await expect(item.getByTestId(`ws-exception-pool-action-${other}`)).toHaveAttribute('aria-pressed', 'false');
+      }
+
+      if (action === 'custom_answer') {
+        const panel = item.getByTestId('ws-exception-pool-custom-answer');
+        await expect(panel).toHaveCount(1);
+        await panel.getByRole('button', { name: 'neutral' }).click();
+      }
+
+      // AC-4.74: selecting any action changes the summary away from the
+      // no-selection text.
+      const selectedText = (await summary.textContent())?.trim() ?? '';
+      expect(selectedText).not.toBe(noSelectionText);
+      expect(selectedText.length).toBeGreaterThan(0);
+
+      // AC-4.75 last bullet: switching to this action re-disables Confirm
+      // even though `reasonField` may still hold a previous iteration's
+      // leftover text (it is never cleared between iterations) -- a
+      // leftover reason typed for one disposition must not silently carry
+      // over as the reason for a different one. Filling the reason again
+      // re-enables it. Confirm is deliberately never clicked in this loop
+      // -- doing so would resolve the item and remove it from the queue,
+      // breaking the remaining iterations on the same item.
+      await expect(confirm).toBeDisabled();
+      await reasonField.fill(`${action} 測試理由`);
+      await expect(confirm).toBeEnabled();
+    }
+
+    // Nothing was ever confirmed above -- the item is still unresolved.
+    expect((await readExceptionPool(page, 'official_run'))[OUT_KEY]).toBeUndefined();
+    expect(await unitStatus(page, 'official_run')).toBe('disputed');
   });
 });

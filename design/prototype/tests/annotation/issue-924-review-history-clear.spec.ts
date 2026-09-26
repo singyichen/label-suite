@@ -139,9 +139,14 @@ test.describe('issue #924: #wsReviewHistory leaks the previous sample\'s confirm
    * a submit that finalizes the CURRENT unit stays put rather than
    * auto-advancing), so the confirmation card populates and the page does
    * NOT navigate away on its own. The reviewer then manually clicks
-   * ws-prev-btn to reach ofs-03-arbitrated-gold -- a wholly different,
+   * ws-prev-btn to reach ofs-01-agree-gold -- a wholly different,
    * already-finalized review unit -- and the leak is reproduced there
    * without any auto-advance involved.
+   * issue #956 (FR-093): reviewer_wang's own left column for T015 is only
+   * [ofs-01-agree-gold, ofs-04-pending-review] -- ofs-03-arbitrated-gold
+   * belongs to reviewer_lin, so this now lands on ofs-01-agree-gold
+   * instead (verified live against the reviewer's own filtered
+   * ws-sample-item list).
    */
   test('manually switching sample via prev/next nav leaves the previous sample\'s history visible on the manually selected sample', async ({ page }) => {
     await page.goto(reviewerUrl('T015', 'ofs-04-pending-review', 'reviewer_wang'));
@@ -165,12 +170,12 @@ test.describe('issue #924: #wsReviewHistory leaks the previous sample\'s confirm
     // The manual nav must actually have moved the workspace to a
     // DIFFERENT review unit -- assert on the URL so this test cannot pass
     // by the page silently staying put.
-    await expect(page).toHaveURL(/sample_id=ofs-03-arbitrated-gold/);
+    await expect(page).toHaveURL(/sample_id=ofs-01-agree-gold/);
     await expect(page).not.toHaveURL(/sample_id=ofs-04-pending-review/);
 
     // Bug #924: the confirmation card from ofs-04's approve submit is
     // still showing, unhidden and populated with ofs-04's stale text,
-    // underneath ofs-03-arbitrated-gold's own (long since finalized)
+    // underneath ofs-01-agree-gold's own (long since finalized)
     // content.
     await expect(page.getByTestId('ws-review-history')).toBeHidden();
     await expect(page.getByTestId('ws-review-history')).toBeEmpty();

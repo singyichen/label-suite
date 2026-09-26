@@ -37,6 +37,17 @@ const T014_SAMPLES = [
 ];
 const T014_ANNOTATORS = ['kioleemg12', '113450022', 'tony0950127'];
 
+/* issue #956 (FR-093): the default reviewer identity (reviewer_wang, no
+ * reviewer_id in the URLs below) is dealt only 2 of T014's 5 dry_run
+ * samples whole -- dry-01-all-agree and dry-04-dispute-resolved (verified
+ * against getAssignedReviewUnits()) -- not all 5. Every test below that
+ * used to iterate/index the task's full T014_SAMPLES now iterates/indexes
+ * this narrower, reviewer-scoped list instead; the annotator ordering
+ * inside a group (T014_ANNOTATORS) is unaffected, since dry_run deals a
+ * whole sample (all 3 annotators) to one reviewer. */
+const T014_REVIEWER_SAMPLES = ['dry-01-all-agree', 'dry-04-dispute-resolved'];
+const T014_REVIEWER_UNITS = T014_REVIEWER_SAMPLES.length * T014_ANNOTATORS.length;
+
 /* Same retry guard the sibling review-unit specs carry: parallel workers
    hammering the static server occasionally drop a <script src>, which looks
    exactly like an unrendered left column. Kept as retries rather than
@@ -44,22 +55,26 @@ const T014_ANNOTATORS = ['kioleemg12', '113450022', 'tony0950127'];
 test.describe.configure({ retries: 2 });
 
 test.describe('issue #455 -- the reviewer left column groups review units by sample', () => {
-  test('T014 renders 5 sample groups of 3 review units each', async ({ page }) => {
+  test('T014 renders this reviewer\'s 2 sample groups of 3 review units each', async ({ page }) => {
     await skipGuidelineModal(page);
     await page.goto(buildWorkspaceUrl({ ...T014, sample_id: T014_SAMPLES[0] }));
 
+    // issue #956 (FR-093): this reviewer's own left column, not the task's
+    // full 5-sample/15-unit grouping -- see T014_REVIEWER_SAMPLES above.
     const groups = page.getByTestId('ws-sample-group');
-    await expect(groups).toHaveCount(5);
+    await expect(groups).toHaveCount(T014_REVIEWER_SAMPLES.length);
     // The flattened unit count (FR-056) is unchanged by the grouping.
-    await expect(page.getByTestId('ws-sample-item')).toHaveCount(15);
+    await expect(page.getByTestId('ws-sample-item')).toHaveCount(T014_REVIEWER_UNITS);
     // Denominator stays the review-unit count (T014's numerator is whatever
     // seedReviewFlowDemo staged, which this spec has no stake in).
-    await expect(page.getByTestId('ws-progress-text')).toHaveText(/\/ 15 個審核單位$/);
+    await expect(page.getByTestId('ws-progress-text')).toHaveText(
+      new RegExp(`/ ${T014_REVIEWER_UNITS} 個審核單位$`)
+    );
 
-    for (let g = 0; g < 5; g += 1) {
+    for (let g = 0; g < T014_REVIEWER_SAMPLES.length; g += 1) {
       const group = groups.nth(g);
-      await expect(group).toHaveAttribute('data-sample-id', T014_SAMPLES[g]);
-      await expect(group.getByTestId('ws-sample-group-id')).toHaveText(T014_SAMPLES[g]);
+      await expect(group).toHaveAttribute('data-sample-id', T014_REVIEWER_SAMPLES[g]);
+      await expect(group.getByTestId('ws-sample-group-id')).toHaveText(T014_REVIEWER_SAMPLES[g]);
       await expect(group.getByTestId('ws-sample-item')).toHaveCount(3);
     }
   });
@@ -68,8 +83,9 @@ test.describe('issue #455 -- the reviewer left column groups review units by sam
     await skipGuidelineModal(page);
     await page.goto(buildWorkspaceUrl({ ...T014, sample_id: T014_SAMPLES[0] }));
 
-    // One shared snippet per sample group...
-    await expect(page.getByTestId('ws-sample-group-snippet')).toHaveCount(5);
+    // One shared snippet per sample group (issue #956: this reviewer's own
+    // 2 groups, not the task's 5)...
+    await expect(page.getByTestId('ws-sample-group-snippet')).toHaveCount(T014_REVIEWER_SAMPLES.length);
     // ...and none repeated inside the individual review-unit entries.
     await expect(page.locator('#sampleList .sample-item .sample-snippet')).toHaveCount(0);
 
@@ -86,8 +102,10 @@ test.describe('issue #455 -- the reviewer left column groups review units by sam
     await skipGuidelineModal(page);
     await page.goto(buildWorkspaceUrl({ ...T014, sample_id: T014_SAMPLES[0] }));
 
+    // issue #956: nth(1) is this reviewer's SECOND own group
+    // (dry-04-dispute-resolved), not the task's dry-02-one-divergent.
     const group = page.getByTestId('ws-sample-group').nth(1);
-    await expect(group.getByTestId('ws-sample-group-id')).toHaveAttribute('title', T014_SAMPLES[1]);
+    await expect(group.getByTestId('ws-sample-group-id')).toHaveAttribute('title', T014_REVIEWER_SAMPLES[1]);
 
     const item = group.getByTestId('ws-sample-item').nth(2);
     await expect(item.getByTestId('ws-sample-annotator')).toHaveAttribute('title', T014_ANNOTATORS[2]);
@@ -97,15 +115,18 @@ test.describe('issue #455 -- the reviewer left column groups review units by sam
     await skipGuidelineModal(page);
     await page.goto(buildWorkspaceUrl({ ...T014, sample_id: T014_SAMPLES[0] }));
 
-    const group = page.getByTestId('ws-sample-group').nth(2);
+    // issue #956: only 2 groups exist for this reviewer, so nth(1) (their
+    // last own group, dry-04-dispute-resolved) stands in for the task's
+    // dry-03-dispute-open (which this reviewer is not assigned at all).
+    const group = page.getByTestId('ws-sample-group').nth(1);
     // role=group with a sample-scoped accessible name, inside the listbox.
     await expect(group).toHaveAttribute('role', 'group');
-    await expect(group).toHaveAttribute('aria-label', new RegExp(T014_SAMPLES[2]));
+    await expect(group).toHaveAttribute('aria-label', new RegExp(T014_REVIEWER_SAMPLES[1]));
     await expect(page.locator('#sampleList')).toHaveAttribute('role', 'listbox');
 
     const item = group.getByTestId('ws-sample-item').nth(1);
     const label = await item.getAttribute('aria-label');
-    expect(label).toContain(T014_SAMPLES[2]);
+    expect(label).toContain(T014_REVIEWER_SAMPLES[1]);
     expect(label).toContain(T014_ANNOTATORS[1]);
     // Reachable by that accessible name, so the entry is addressable by AT.
     await expect(page.getByRole('button', { name: label as string })).toHaveCount(1);
@@ -113,18 +134,24 @@ test.describe('issue #455 -- the reviewer left column groups review units by sam
 
   test('the selected entry is marked with BOTH its sample and its annotator', async ({ page }) => {
     await skipGuidelineModal(page);
+    /* issue #956: T014_SAMPLES[1] (dry-02-one-divergent) is not assigned to
+       this reviewer at all, so it would render no active entry whatsoever
+       (a genuinely different, already-covered gate -- issue-921-review-
+       assignment-gate.spec.ts). Use T014_REVIEWER_SAMPLES[1], this
+       reviewer's own second group, to keep testing the thing this case is
+       actually about: BOTH halves of the active marker. */
     await page.goto(
-      buildWorkspaceUrl({ ...T014, sample_id: T014_SAMPLES[1], annotator_id: T014_ANNOTATORS[2] })
+      buildWorkspaceUrl({ ...T014, sample_id: T014_REVIEWER_SAMPLES[1], annotator_id: T014_ANNOTATORS[2] })
     );
 
     const active = page.locator('.sample-item.active');
     await expect(active).toHaveCount(1);
-    await expect(active).toHaveAttribute('data-sample-id', T014_SAMPLES[1]);
+    await expect(active).toHaveAttribute('data-sample-id', T014_REVIEWER_SAMPLES[1]);
     await expect(active).toHaveAttribute('data-annotator-id', T014_ANNOTATORS[2]);
     // The owning group is marked too, so the selection is legible at group level.
     await expect(page.locator('.sample-group.has-active')).toHaveAttribute(
       'data-sample-id',
-      T014_SAMPLES[1]
+      T014_REVIEWER_SAMPLES[1]
     );
   });
 
@@ -146,19 +173,21 @@ test.describe('issue #455 -- the reviewer left column groups review units by sam
     expect(params.get('sample_id')).toBe(T014_SAMPLES[0]);
     expect(params.get('annotator_id')).toBe(T014_ANNOTATORS[1]);
 
-    // Across the group boundary: next sample, first annotator.
+    // Across the group boundary: next sample, first annotator. issue #956:
+    // this reviewer's OWN next group is dry-04-dispute-resolved
+    // (T014_REVIEWER_SAMPLES[1]), not the task's dry-02-one-divergent.
     await page.getByTestId('ws-next-btn').click();
     await page.getByTestId('ws-next-btn').click();
     await expect(page.locator('.sample-item.active')).toHaveAttribute(
       'data-sample-id',
-      T014_SAMPLES[1]
+      T014_REVIEWER_SAMPLES[1]
     );
     await expect(page.locator('.sample-item.active')).toHaveAttribute(
       'data-annotator-id',
       T014_ANNOTATORS[0]
     );
     params = new URL(page.url()).searchParams;
-    expect(params.get('sample_id')).toBe(T014_SAMPLES[1]);
+    expect(params.get('sample_id')).toBe(T014_REVIEWER_SAMPLES[1]);
     expect(params.get('annotator_id')).toBe(T014_ANNOTATORS[0]);
     expect(params.get('task_id')).toBe('T014');
     expect(params.get('role')).toBe('reviewer');
@@ -171,7 +200,11 @@ test.describe('issue #455 -- the reviewer left column groups review units by sam
     await skipGuidelineModal(page);
     await page.goto(buildWorkspaceUrl({ ...T014, sample_id: T014_SAMPLES[0] }));
 
-    const target = page.getByTestId('ws-sample-group').nth(3).getByTestId('ws-sample-item').nth(1);
+    // issue #956: only 2 groups exist for this reviewer, so nth(1) (their
+    // last own group) replaces the task-relative nth(3) -- both happen to
+    // land on the same sample, dry-04-dispute-resolved (T014_SAMPLES[3] ===
+    // T014_REVIEWER_SAMPLES[1]).
+    const target = page.getByTestId('ws-sample-group').nth(1).getByTestId('ws-sample-item').nth(1);
     await expect(target).toHaveJSProperty('tagName', 'BUTTON');
     await target.focus();
     await expect(target).toBeFocused();
@@ -182,7 +215,7 @@ test.describe('issue #455 -- the reviewer left column groups review units by sam
       T014_ANNOTATORS[1]
     );
     const params = new URL(page.url()).searchParams;
-    expect(params.get('sample_id')).toBe(T014_SAMPLES[3]);
+    expect(params.get('sample_id')).toBe(T014_REVIEWER_SAMPLES[1]);
     expect(params.get('annotator_id')).toBe(T014_ANNOTATORS[1]);
   });
 

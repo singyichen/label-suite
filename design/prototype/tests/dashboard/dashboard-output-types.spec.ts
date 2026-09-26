@@ -272,8 +272,12 @@ test.describe('Dashboard output-type task summaries', () => {
         // works one REVIEW UNIT at a time (sample × annotator, spec 015
         // v4.3.0 FR-056), so their list is the flattened annotator roster --
         // the same getReviewerMockRows() rows annotation-list flattens.
+        // issue #956 (FR-093): the query above carries no reviewer_id, so the
+        // workspace resolves DEFAULT_REVIEWER_ID -- and its left column is
+        // now narrowed to only THEIR assigned units (getAssignedReviewUnits()),
+        // not the task's full flattened roster.
         const expectedCount = await page.evaluate(
-          ({ taskId, roleKey }) => {
+          ({ taskId, roleKey, runType }) => {
             const detailWindow = window as unknown as TaskDetailWindow;
             const profile = detailWindow.LabelSuiteTaskDetailData?.profiles[taskId];
             if (!profile) return null;
@@ -282,21 +286,35 @@ test.describe('Dashboard output-type task summaries', () => {
               window as unknown as {
                 LabelSuiteAnnotationWorkspaceData: {
                   getRecordId: (record: Record<string, unknown>, index: number) => string;
-                  getReviewerMockRows: (profileId: string, recordId: string) => unknown[];
+                  getReviewerMockRows: (
+                    profileId: string,
+                    recordId: string,
+                  ) => { annotator: string }[];
+                  getAssignedReviewUnits: (
+                    taskId: string,
+                    runType: string,
+                    reviewerId: string,
+                    units: { sample_id: string; annotator_id: string }[],
+                  ) => unknown[];
+                  DEFAULT_REVIEWER_ID: string;
                 };
               }
             ).LabelSuiteAnnotationWorkspaceData;
-            return profile.datasetRecords.reduce(
-              (total, record, index) =>
-                total +
-                workspaceData.getReviewerMockRows(
-                  taskId,
-                  workspaceData.getRecordId(record, index),
-                ).length,
-              0,
-            );
+            const units: { sample_id: string; annotator_id: string }[] = [];
+            profile.datasetRecords.forEach((record, index) => {
+              const recordId = workspaceData.getRecordId(record, index);
+              workspaceData.getReviewerMockRows(taskId, recordId).forEach((row) => {
+                units.push({ sample_id: recordId, annotator_id: row.annotator });
+              });
+            });
+            return workspaceData.getAssignedReviewUnits(
+              taskId,
+              runType,
+              workspaceData.DEFAULT_REVIEWER_ID,
+              units,
+            ).length;
           },
-          { taskId: entry.exampleTaskId, roleKey: role },
+          { taskId: entry.exampleTaskId, roleKey: role, runType: entry.runType },
         );
         if (expectedCount === null) {
           throw new Error(`No TaskDetailData profile found for ${entry.exampleTaskId}`);

@@ -207,8 +207,13 @@ test.describe('issue #913: exception pool / arbitration must pick the FR-093 sti
       .toContain('"choice":"reject"');
 
     await page.goto(buildProjectLeaderUrl('official_run'));
-    await page.getByTestId('ws-exception-pool-item').first()
-      .getByTestId('ws-exception-pool-action-adopt_reviewer').click();
+    // issue #920: disposition is now select-then-confirm -- selecting the
+    // action alone no longer writes, so a reason must be filled and the
+    // unified confirm control clicked before the record persists.
+    const poolItem = page.getByTestId('ws-exception-pool-item').first();
+    await poolItem.getByTestId('ws-exception-pool-action-adopt_reviewer').click();
+    await poolItem.getByTestId('ws-exception-pool-reason').fill('採用審核員答案（測試理由）');
+    await poolItem.getByTestId('ws-exception-pool-confirm').click();
 
     const pool = await readExceptionPool(page, 'official_run');
     // Red: today's code resolves `reviewerValue` off `readReviewerSubmissions(...)[0]`

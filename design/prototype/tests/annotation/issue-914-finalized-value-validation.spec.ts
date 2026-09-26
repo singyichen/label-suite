@@ -244,7 +244,9 @@ async function seedCustomAnswerNullValueDisposition(page: Page, runType: RunType
 
   // Deliberately do NOT click any preview-control answer button.
   await poolItem.getByTestId('ws-exception-pool-reason').fill('自訂答案（未選擇答案，測試理由）');
-  await poolItem.getByTestId('ws-exception-pool-custom-answer-confirm').click();
+  // issue #920: the old per-action `ws-exception-pool-custom-answer-confirm`
+  // testid is retired in favor of the unified `ws-exception-pool-confirm`.
+  await poolItem.getByTestId('ws-exception-pool-confirm').click();
 }
 
 test.beforeEach(async ({ page }) => {
