@@ -79,6 +79,10 @@
       reviewNote: '通過：該項直接定稿，正式標記中即成為最終答案。修正：您的修正不會立即生效，該項進入爭議池待仲裁。無法裁決：同樣進入爭議池，仲裁者採用審核員側即定案為無法判定。試標與正式標記皆不會將樣本送回給標記員重做。',
       reviewNoteDryRunExtra: '試標的定稿只彙總一致性與被修改率，不產生最終答案。',
       reviewNoteTriggerLabel: '審核決策說明',
+      reviewSubmitConsequencePending: '尚未選擇決策',
+      reviewSubmitConsequenceDisputed: '送出後進入爭議池，待仲裁定案',
+      reviewSubmitConsequenceFinalized: '送出後即定稿，成為最終答案',
+      reviewSubmitConsequenceFinalizedDryRunSuffix: '（試標不產生最終答案，僅計入一致性統計）',
       reviewReasonLabel: '理由（必填）',
       reviewReasonPlaceholder: '請說明理由',
       toastReasonRequired: '請填寫以下輸出類型的審核理由：{list}',
@@ -228,6 +232,10 @@
       reviewNote: 'Approve: the item is finalized as it stands, and in an official run that value becomes the final answer. Modify: your correction does not take effect immediately; the item enters the dispute pool for arbitration. Cannot adjudicate: the item also enters the dispute pool, and an arbiter adopting the reviewer side settles it as undecidable. Neither a dry run nor an official run sends the sample back to the annotator to redo it.',
       reviewNoteDryRunExtra: ' A dry-run finalization produces no final answer; it only aggregates agreement and the modification rate.',
       reviewNoteTriggerLabel: 'Review decision guidance',
+      reviewSubmitConsequencePending: 'No decision selected yet',
+      reviewSubmitConsequenceDisputed: 'Submitting sends this item to the dispute pool for arbitration',
+      reviewSubmitConsequenceFinalized: 'Submitting finalizes this item as the final answer',
+      reviewSubmitConsequenceFinalizedDryRunSuffix: ' (a dry run produces no final answer -- it only counts toward agreement statistics)',
       reviewReasonLabel: 'Reason (required)',
       reviewReasonPlaceholder: 'Explain the reason',
       toastReasonRequired: 'Please give a review reason for the following output types: {list}',
@@ -3392,11 +3400,20 @@
        keeps its plain reviewSubmitLabel accessible name unchanged. */
     btn.setAttribute('aria-label', t('reviewQuickSubmitAriaLabel'));
     btn.addEventListener('click', handleReviewSubmit);
+
+    /* issue #930 (FR-102/AC-3.65): same wrap, so it shares wrap's own
+       hidden toggle below -- no second visibility switch to keep in sync
+       with the button's. */
+    var consequenceEl = document.createElement('span');
+    consequenceEl.className = 'rv-submit-consequence';
+    consequenceEl.setAttribute('data-testid', 'ws-review-quick-submit-consequence');
+    wrap.appendChild(consequenceEl);
     wrap.appendChild(btn);
 
     function refresh() {
       var allDecided = pendingReviewOutputKeys(currentAnnotatorId()).length === 0;
       wrap.classList.toggle('hidden', !allDecided);
+      applyReviewSubmitConsequence(consequenceEl, currentAnnotatorId());
     }
     refresh();
     reviewDecisionRefreshers.push(refresh);
@@ -5365,6 +5382,10 @@
     var rawRecord = findRecordById(currentSampleId) || {};
 
     var reviewSubmitBtn = document.getElementById('wsReviewSubmitBtn');
+    /* issue #930 (FR-102): visibility mirrors reviewSubmitBtn exactly -- one
+       added line next to every existing add('hidden')/remove('hidden') call
+       on reviewSubmitBtn below, not a second visibility rule. */
+    var reviewSubmitConsequenceEl = document.getElementById('wsReviewSubmitConsequence');
     /* issue #568: hidden by default; renderArbitrationCard() reveals it only
        while this unit still has an open dispute item. */
     var arbitrationSubmitBtn = document.getElementById('wsArbitrationSubmitBtn');
@@ -5380,6 +5401,7 @@
       /* The fixed footer submit drives handleReviewSubmit(); arbitration has
          its own in-card submit instead. */
       if (reviewSubmitBtn) reviewSubmitBtn.classList.add('hidden');
+      if (reviewSubmitConsequenceEl) reviewSubmitConsequenceEl.classList.add('hidden');
       var inputCard = document.createElement('div');
       inputCard.className = 'content-card';
       inputCard.setAttribute('data-testid', 'ws-input-content');
@@ -5400,6 +5422,7 @@
        and the empty gate below (finalized requires a submission). */
     if (blockReason === REVIEW_UNIT_BLOCK.FINALIZED) {
       if (reviewSubmitBtn) reviewSubmitBtn.classList.add('hidden');
+      if (reviewSubmitConsequenceEl) reviewSubmitConsequenceEl.classList.add('hidden');
       var lockedInputCard = document.createElement('div');
       lockedInputCard.className = 'content-card';
       lockedInputCard.setAttribute('data-testid', 'ws-input-content');
@@ -5418,6 +5441,7 @@
        stay open. */
     if (blockReason === REVIEW_UNIT_BLOCK.OFF_ROSTER) {
       if (reviewSubmitBtn) reviewSubmitBtn.classList.add('hidden');
+      if (reviewSubmitConsequenceEl) reviewSubmitConsequenceEl.classList.add('hidden');
       var offRosterInputCard = document.createElement('div');
       offRosterInputCard.className = 'content-card';
       offRosterInputCard.setAttribute('data-testid', 'ws-input-content');
@@ -5436,6 +5460,7 @@
        buttons). */
     if (blockReason === REVIEW_UNIT_BLOCK.NOT_ASSIGNED) {
       if (reviewSubmitBtn) reviewSubmitBtn.classList.add('hidden');
+      if (reviewSubmitConsequenceEl) reviewSubmitConsequenceEl.classList.add('hidden');
       var notAssignedInputCard = document.createElement('div');
       notAssignedInputCard.className = 'content-card';
       notAssignedInputCard.setAttribute('data-testid', 'ws-input-content');
@@ -5456,10 +5481,19 @@
        (setupActionShortcuts skips hidden buttons). */
     if (blockReason === REVIEW_UNIT_BLOCK.EMPTY) {
       if (reviewSubmitBtn) reviewSubmitBtn.classList.add('hidden');
+      if (reviewSubmitConsequenceEl) reviewSubmitConsequenceEl.classList.add('hidden');
       buildReviewBlockedNote(preview, 'ws-review-empty-unit', 'reviewEmptyUnitTitle', 'reviewEmptyUnitNote');
       return;
     }
     if (reviewSubmitBtn) reviewSubmitBtn.classList.remove('hidden');
+    if (reviewSubmitConsequenceEl) reviewSubmitConsequenceEl.classList.remove('hidden');
+    /* issue #930 (FR-102): text/data-consequence/data-run-type only -- the
+       visibility mirroring above already tracks reviewSubmitBtn. */
+    function refreshReviewSubmitConsequence() {
+      applyReviewSubmitConsequence(reviewSubmitConsequenceEl, currentAnnotatorId());
+    }
+    refreshReviewSubmitConsequence();
+    reviewDecisionRefreshers.push(refreshReviewSubmitConsequence);
 
     /* Output types whose registry entry declares rendersInputPreview:true
        (free_text/entity_recognition/relation_identification/sequence_tagging)
@@ -5550,6 +5584,88 @@
       if (reviewRowBlocker(outKey, rowName)) pendingKeys.push(outKey);
     });
     return pendingKeys;
+  }
+
+  /* issue #930 (FR-102): a preview-only, not-yet-submitted-draft equivalent
+     of getReviewUnitStatus()/anyReviewerChanged() (annotation-workspace.
+     data.js) -- MUST reuse the same "any modify/bypass -> disputed, else
+     all approve -> finalized, else pending" rule those already apply to a
+     stored submission, not a second dispute-forcing table. Reads the same
+     reviewRowDecisions[decisionKey(outKey, rowName)] lookup reviewRowBlocker()
+     above uses; writes nothing. */
+  function reviewSubmitConsequenceStatus(rowName) {
+    var workspaceData = window.LabelSuiteAnnotationWorkspaceData;
+    var decisions = state.selectedOutputTypes.map(function (outKey) {
+      return reviewRowDecisions[decisionKey(outKey, rowName)];
+    });
+    /* Mirrors anyReviewerChanged() (annotation-workspace.data.js:2177): a
+       decided outKey disputes either because its decision is dispute-forcing
+       (modify/bypass), OR -- coordinator finding, issue #930 -- because the
+       reviewer's current draft answer already differs from the annotator's
+       original for that outKey, even under an `approve` decision. An
+       undecided outKey (no decision yet) never contributes here; FR-083
+       already blocks submission entirely until every outKey is decided. */
+    var annotatorSubmission = getAnnotatorSubmission();
+    var reviewerDraft = {
+      previewState: state.previewState,
+      previewEntities: state.previewEntities,
+      previewTriples: state.previewTriples,
+    };
+    var hasDispute = state.selectedOutputTypes.some(function (outKey) {
+      var decision = reviewRowDecisions[decisionKey(outKey, rowName)];
+      if (!decision) return false;
+      if (decision !== 'approve') return true;
+      if (!annotatorSubmission) return false;
+      return !workspaceData.compareOutputAnswer(
+        outKey,
+        convertSubmissionAnswer(outKey, annotatorSubmission),
+        convertSubmissionAnswer(outKey, reviewerDraft)
+      ).equal;
+    });
+    if (hasDispute) return workspaceData.REVIEW_UNIT_STATUS.DISPUTED;
+    var allApproved = decisions.length > 0 && decisions.every(function (decision) {
+      return decision === 'approve';
+    });
+    if (allApproved) return workspaceData.REVIEW_UNIT_STATUS.FINALIZED;
+    return workspaceData.REVIEW_UNIT_STATUS.PENDING;
+  }
+
+  /* Same dry_run-suffix lookup pattern as REVIEW_NOTE_RUN_SUFFIX_I18N_KEYS
+     (~:3652), applied to the finalized branch's copy instead of the
+     always-rendered FR-070 note. */
+  var REVIEW_SUBMIT_CONSEQUENCE_FINALIZED_RUN_SUFFIX_I18N_KEYS = { dry_run: 'reviewSubmitConsequenceFinalizedDryRunSuffix' };
+
+  /* Single source of copy for BOTH ws-review-submit-consequence (footer)
+     and ws-review-quick-submit-consequence (decision row) -- FR-102 point 5
+     forbids either entry point from carrying a second derivation or a
+     second i18n source. */
+  function reviewSubmitConsequenceCopy(rowName) {
+    var workspaceData = window.LabelSuiteAnnotationWorkspaceData;
+    var status = reviewSubmitConsequenceStatus(rowName);
+    if (status === workspaceData.REVIEW_UNIT_STATUS.DISPUTED) {
+      return { text: t('reviewSubmitConsequenceDisputed'), consequence: 'disputed', runType: null };
+    }
+    if (status === workspaceData.REVIEW_UNIT_STATUS.FINALIZED) {
+      var suffixKey = REVIEW_SUBMIT_CONSEQUENCE_FINALIZED_RUN_SUFFIX_I18N_KEYS[currentRunType];
+      return {
+        text: t('reviewSubmitConsequenceFinalized') + (suffixKey ? t(suffixKey) : ''),
+        consequence: 'finalized',
+        runType: currentRunType,
+      };
+    }
+    return { text: t('reviewSubmitConsequencePending'), consequence: 'pending', runType: null };
+  }
+
+  function applyReviewSubmitConsequence(el, rowName) {
+    if (!el) return;
+    var copy = reviewSubmitConsequenceCopy(rowName);
+    el.textContent = copy.text;
+    el.setAttribute('data-consequence', copy.consequence);
+    if (copy.runType) {
+      el.setAttribute('data-run-type', copy.runType);
+    } else {
+      el.removeAttribute('data-run-type');
+    }
   }
 
   /* issue #719 (FR-099, SC-004Y clause 2): the single shared "what's next
