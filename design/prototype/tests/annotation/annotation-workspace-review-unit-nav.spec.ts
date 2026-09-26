@@ -19,10 +19,18 @@ import { buildWorkspaceUrl, gotoReviewerWorkspace, skipGuidelineModal } from './
  * unit, exactly one per record.
  */
 
-/* T001 ships 5 dataset records × 3 annotators. sent-001's answers are
- * kioleemg12 positive / 113450022 negative / tony0950127 positive, which is
- * what makes the seeded chip a usable probe for "which annotator am I on". */
-const T001_UNITS = 15;
+/* T001 ships 5 dataset records × 3 annotators (15 review units total), but
+ * issue #956 (FR-093) narrows a reviewer's left column/nav/progress
+ * denominator to only THEIR assigned units, not the task's full 15. The
+ * reviewer gotoReviewerWorkspace() resolves for sent-001/kioleemg12 differs
+ * by run_type -- dry_run deals per SAMPLE (this reviewer gets sent-001 and
+ * sent-004 whole, 6 units), official_run deals per UNIT (this reviewer's
+ * round-robin slot lands on kioleemg12 in every one of the 5 samples, 5
+ * units) -- so the expected count is no longer one shared constant.
+ * sent-001's answers are kioleemg12 positive / 113450022 negative /
+ * tony0950127 positive, which is what makes the seeded chip a usable probe
+ * for "which annotator am I on". */
+const REVIEWER_UNIT_COUNTS = { dry_run: 6, official_run: 5 } as const;
 const RUN_TYPES = ['dry_run', 'official_run'] as const;
 
 /* Same guard the task-new and dashboard specs carry: the prototype's static
@@ -35,23 +43,47 @@ test.describe.configure({ mode: 'serial', retries: 2 });
 
 test.describe('The reviewer left column lists review units', () => {
   for (const runType of RUN_TYPES) {
-    test(`${runType}: 5 samples × 3 annotators renders ${T001_UNITS} entries`, async ({ page }) => {
+    test(`${runType}: renders ${REVIEWER_UNIT_COUNTS[runType]} entries assigned to this reviewer`, async ({ page }) => {
       await skipGuidelineModal(page);
       await gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001', run_type: runType });
 
-      await expect(page.getByTestId('ws-sample-item')).toHaveCount(T001_UNITS);
+      await expect(page.getByTestId('ws-sample-item')).toHaveCount(REVIEWER_UNIT_COUNTS[runType]);
     });
 
-    test(`${runType}: consecutive entries repeat the sample and advance the annotator`, async ({ page }) => {
-      await skipGuidelineModal(page);
-      await gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001', run_type: runType });
+    if (runType === 'dry_run') {
+      test(`${runType}: consecutive entries repeat the sample and advance the annotator`, async ({ page }) => {
+        await skipGuidelineModal(page);
+        await gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001', run_type: runType });
 
-      const annotators = page.getByTestId('ws-sample-annotator');
-      await expect(annotators.nth(0)).toHaveText('kioleemg12');
-      await expect(annotators.nth(1)).toHaveText('113450022');
-      await expect(annotators.nth(2)).toHaveText('tony0950127');
-      await expect(annotators.nth(3)).toHaveText('kioleemg12');
-    });
+        const annotators = page.getByTestId('ws-sample-annotator');
+        await expect(annotators.nth(0)).toHaveText('kioleemg12');
+        await expect(annotators.nth(1)).toHaveText('113450022');
+        await expect(annotators.nth(2)).toHaveText('tony0950127');
+        await expect(annotators.nth(3)).toHaveText('kioleemg12');
+      });
+    } else {
+      /* issue #956 (FR-093): official_run deals per UNIT, not per sample, so
+         "consecutive entries repeat the sample and advance the annotator"
+         has no premise left for THIS reviewer -- their round-robin slot
+         lands on the same annotator (kioleemg12) in every sample they are
+         dealt, never a second annotator of the same sample. The new correct
+         behavior is the mirror image: the annotator stays fixed and the
+         sample advances instead. */
+      test(`${runType}: consecutive entries keep the annotator and advance the sample`, async ({ page }) => {
+        await skipGuidelineModal(page);
+        await gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001', run_type: runType });
+
+        const annotators = page.getByTestId('ws-sample-annotator');
+        await expect(annotators.nth(0)).toHaveText('kioleemg12');
+        await expect(annotators.nth(1)).toHaveText('kioleemg12');
+        await expect(annotators.nth(2)).toHaveText('kioleemg12');
+
+        const items = page.getByTestId('ws-sample-item');
+        await expect(items.nth(0)).toHaveAttribute('data-sample-id', 'sent-001');
+        await expect(items.nth(1)).toHaveAttribute('data-sample-id', 'sent-002');
+        await expect(items.nth(2)).toHaveAttribute('data-sample-id', 'sent-003');
+      });
+    }
 
     test(`${runType}: the progress denominator counts review units`, async ({ page }) => {
       await skipGuidelineModal(page);
@@ -60,7 +92,7 @@ test.describe('The reviewer left column lists review units', () => {
       /* Wording names the reviewer as the subject (issue #452), the
          denominator is still the review-unit count this suite pins. */
       await expect(page.getByTestId('ws-progress-text')).toHaveText(
-        `我的審核提交 0 / ${T001_UNITS} 個審核單位`,
+        `我的審核提交 0 / ${REVIEWER_UNIT_COUNTS[runType]} 個審核單位`,
       );
     });
   }
@@ -84,7 +116,12 @@ test.describe('Prev / next move between annotators of the same sample', () => {
 
   test('上一筆 walks back into the previous sample last annotator', async ({ page }) => {
     await skipGuidelineModal(page);
-    await gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-002', run_type: 'dry_run' });
+    /* issue #956 (FR-093): sent-002's assigned reviewer (dealt sent-002 and
+       sent-005) never sees sent-001 at all, so "walk back a sample" needs a
+       sample_id whose reviewer's OWN filtered list still has a previous
+       sample -- sent-004's assignee is dealt sent-001 then sent-004, same as
+       before the filter landed. */
+    await gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-004', run_type: 'dry_run' });
 
     await page.getByTestId('ws-prev-btn').click();
 
