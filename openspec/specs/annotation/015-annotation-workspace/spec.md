@@ -612,6 +612,11 @@ workspace reviewer 視圖 MUST 於審核卡（FR-053）、仲裁版面（FR-061�
 
 **明確不存在的出口**：`reject`（退回）MUST NOT 存在於任何 `run_type`。審核員 MUST NOT 有任何使標記員重新標記該樣本的通道。
 
+**決策與答案變更之失效規則收窄**（**v6.26.0 修訂**，issue #453／#925，對應 AC-3.42 撤銷附註第 (2) 點）：`syncDecisionsWithCorrections()`（`annotation-workspace.config.js:3755`）持續以「決策做出當下的答案快照」判定該決策是否仍有效——快照與當前答案不同時：
+
+- 決策為 `approve` 或 `bypass` 時，MUST 清空該決策、刪除快照、顯示 `toastReviewDecisionResetOnEdit` toast。這兩者的合法性建立在「當下這個答案值」之上，答案一變原判定即不再成立，此為既有行為，本次 **不變更**。
+- 決策為 `modify` 時（本次新增排除），MUST NOT 清空該決策、MUST NOT 清空其必填理由、MUST NOT 顯示上述 toast；MUST 將快照更新為新的當前答案值，使該決策繼續綁定「當前」答案。理由：把答案改成正確值正是 `modify` 這個決策所指的動作本身，不是對已決策答案的意外二次變更——用「答案變更即失效」同一條規則處理 `modify`，等同懲罰審核員完成修正的正確操作序列（先選「修正」、後點正確答案）。
+
 #### Scenario: 修正不立即生效而進入爭議池
 - **GIVEN** 一個 `待審` 審核單位，其審核員將某 outKey 由 `neutral` 直接改為 `positive` 並填妥理由
 - **WHEN** 送出審核
@@ -629,6 +634,19 @@ workspace reviewer 視圖 MUST 於審核卡（FR-053）、仲裁版面（FR-061�
 - **WHEN** 分別檢視審核卡、仲裁版面、歷程頁籤與共用側欄快捷鍵總覽
 - **THEN** 標記員原答案處顯示 `無法判定 (Bypass)`，決策按鈕、仲裁 B 選項、`bypassed` 徽章與快捷鍵 `B` 說明皆顯示 `無法裁決`
 - **AND** 切換為英文時分別為 `Unable to determine (Bypass)` 與 `Cannot adjudicate`，且兩組字串皆等於同一個 i18n 來源所定義之值
+
+#### Scenario: 修正決策改答案後保留決策與理由欄（issue #925）
+- **GIVEN** reviewer 對某 outKey 已點選「修正」（`modify`）決策並填入必填理由
+- **WHEN** reviewer 接著在同一 outKey 的直接修正控件上，把答案改成另一個與原答案不同的值
+- **THEN** 該 outKey 的「修正」決策按鈕必須維持 `aria-pressed="true"` 且理由欄（`ws-review-reason`）必須維持可見、既有輸入內容不得被清空
+- **AND** 不得顯示 `toastReviewDecisionResetOnEdit` toast
+- **AND** 若此時該審核單位所有 outKey 皆已決策，送出審核（`ws-review-submit-btn` 或 `ws-review-quick-submit-btn`）必須正常成功，不得被「請完成以下輸出類型的審核決策」toast 擋下
+
+#### Scenario: 通過／無法裁決決策改答案後仍須重置（issue #925 迴歸不變量）
+- **GIVEN** reviewer 對某 outKey 已點選「通過」（`approve`）決策
+- **WHEN** reviewer 接著在同一 outKey 的直接修正控件上，把答案改成另一個與原答案不同的值
+- **THEN** 該 outKey 的「通過」決策必須被清空（決策按鈕 `aria-pressed` 回到 `false`），且必須顯示 `toastReviewDecisionResetOnEdit` toast
+- **AND** 對「無法裁決」（`bypass`）決策重複上述操作，理由欄必須連同決策一併清空，且同樣顯示該 toast——本情境為既有行為，本次收窄 MUST NOT 使其失效
 
 ### Requirement: FR-073 審核員快速入口必須導向下一個可處理審核單位
 
