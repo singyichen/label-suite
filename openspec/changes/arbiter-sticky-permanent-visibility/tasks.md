@@ -23,7 +23,7 @@
   - 同步更新該析取上方之 issue #956 註解，說明範圍已由「當次檢視」放寬為「曾送出仲裁票即永久黏著」（issue #1000），移除「歷史仲裁單位須維持過濾」之過期敘述。
   - 不得放寬或改寫 1.1 的 Red 契約，並以 1.1 的 Red 測試重跑轉綠驗證之。
   - Green 證據：commit `968407c2`（senior-frontend，只改 `annotation-workspace.config.js` 1 檔，25+/16-）。team lead 獨立複驗：`PW_PORT=8980 pnpm playwright test tests/annotation/issue-1000-arbiter-permanent-sticky.spec.ts --workers=1` → exit 0，5 passed。合併 `origin/main`（`3051d8e1`，撿入 #930／PR #1007，auto-merge 無衝突）後重新確認修改仍完整存在。
-- [ ] 1.3 執行受影響既有測試並依「位移／前提消失」分類處理。目標檔案（`grep -rl "isArbitrationSubmitted\|filterUnitsToAssigned\|ofs-03-arbitrated-gold\|ofs-03\b" tests/` 導出之窄集合，13 檔，含本次 Red 契約與 `issue-722`/`issue-956` 兩支必跑契約）： [@senior-frontend]
+- [x] 1.3 執行受影響既有測試並依「位移／前提消失」分類處理。目標檔案（`grep -rl "isArbitrationSubmitted\|filterUnitsToAssigned\|ofs-03-arbitrated-gold\|ofs-03\b" tests/` 導出之窄集合，13 檔，含本次 Red 契約與 `issue-722`/`issue-956` 兩支必跑契約）： [@senior-frontend]
   - `annotation-review-flow-demo-seed.spec.ts`
   - `annotation-review-status-track.spec.ts`
   - `issue-308-finalized-unit-lock.spec.ts`
@@ -39,6 +39,7 @@
   - `issue-956-workspace-left-column-filter.spec.ts`（被本次改動函式的契約，必跑）
   - **不得直接刪除既有斷言**；前提消失者改寫為本次放寬生效後之正確行為的正向斷言，保留為迴歸覆蓋；位移者改寫期望值，斷言結構與意圖不變。 [@senior-frontend]
   - 較寬之候選集聯集（`ws-sample-item|ws-sample-group|ws-progress-text|buildUnits|getAssignedReviewUnits|isArbiterCandidate|isArbitrationSubmitted`、`arbiter|仲裁`、`annotation-workspace.html` 三組聯集去重，148 檔）不在本機重跑，交由 CI 全套把關（比照 #956 tasks.md 1.4 之作法，本次改動範圍遠窄於 #956）；若 CI 發現額外回歸，另開追蹤（不阻塞本 PR）。
+  - 結果：13 檔中僅 `issue-956-workspace-left-column-filter.spec.ts` 受影響（前提消失，非位移）；其餘 12 檔（含 `issue-722-arbiter-progress-counter.spec.ts`）62 個 test 一輪全過，未修改。`issue-956` 之修正：commit `f6775681`（senior-frontend，只改該測試檔 1 檔，14+/3-）——原第 150 行 `reviewer_chen` 左欄「恰好 1 筆」之斷言前提（chen 只有一個可仲裁單位、只有當次開啟才黏著）因 issue #1000 而消失，改為 `toHaveCount(2)` 並新增正向斷言鎖定第二筆即為 chen 歷史仲裁過的 `ofs-03-arbitrated-gold`（非巧合湊數），原第 151-155 行既有斷言保留不變，並補英文註解說明位移來源。team lead 獨立複驗：三支核心契約（`issue-956`＋`issue-722`＋`issue-1000`）合併重跑 → exit 0，12 passed；其餘 11 檔（`issue-924` 已含在上面 12 檔之外的獨立批次）重跑 → exit 0，62 passed，與 senior-frontend 回報一致。
 - [ ] 1.4 執行 code/test gate（`design/prototype/` 目錄）：`pnpm install --frozen-lockfile`、`pnpm typecheck`、`PW_PORT=8980 pnpm playwright test`（1.1、1.3 之全部檔案）。 [@main]
 - [ ] 1.5 生產碼變更完成後（最後一次來源編輯之後），於 worktree 根執行 `node scripts/gen-screen-inventory.mjs` 重生盤點並提交，接著 `node scripts/gen-screen-inventory.mjs --check`、`scripts/inventory-tests.sh`、`scripts/check-sdd.sh`（0 error）、`scripts/check-spec-artifacts.sh`、`node scripts/check-user-path-map-freshness.mjs`。 [@main]
 - [ ] 1.6 獨立審查（`senior-code-reviewer`，與 1.4 gate 並行啟動）：確認 (1) 未寫第二套平行的「是否已仲裁」判定邏輯（DRY）；(2) 一般審核員的左欄是否被誤擴大；(3) 1.3 之既有測試修正有無「前提消失」被誤當「位移」、或斷言被弱化；(4) issue #722 之進度計數器契約是否仍成立。裁決記入檢查點留言。 [@senior-code-reviewer]
