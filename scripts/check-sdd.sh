@@ -185,6 +185,42 @@ verify_required_ids() {
     grep -Eq 'AC-[0-9]+[.][0-9]+' "$canonical" || missing_ids="$missing_ids AC"
     [ -z "$missing_ids" ] || add_error SPEC_REQUIRED_IDS "$relative" "canonical spec is missing required identifiers:$missing_ids"
 }
+verify_no_duplicate_ids() {
+    local canonical="$1" relative="$2" dup_hits="$tmp_dir/dup-hits" id first second
+    awk '
+        {
+            indent = 0
+            while (substr($0, indent + 1, 1) == " ") indent++
+            if (indent <= 3) {
+                candidate = substr($0, indent + 1)
+                marker = substr(candidate, 1, 1)
+                marker_length = 0
+                if (marker == "`" || marker == "~") {
+                    while (substr(candidate, marker_length + 1, 1) == marker) marker_length++
+                }
+                if (marker_length >= 3) {
+                    remainder = substr(candidate, marker_length + 1)
+                    if (!in_fence) { in_fence = 1; fence_marker = marker; fence_length = marker_length; next }
+                    if (marker == fence_marker && marker_length >= fence_length && remainder ~ /^[[:space:]]*$/) { in_fence = 0; fence_marker = ""; fence_length = 0; next }
+                }
+            }
+            if (in_fence) next
+            id = ""
+            if ($0 ~ /^[0-9]+[.][[:space:]]+\*\*AC-[0-9]+[.][0-9]+/) {
+                match($0, /AC-[0-9]+[.][0-9]+/); id = substr($0, RSTART, RLENGTH)
+            } else if ($0 ~ /^[[:space:]]*-[[:space:]]+\*\*FR-[0-9]+/) {
+                match($0, /FR-[0-9]+[[:alnum:]-]*/); id = substr($0, RSTART, RLENGTH)
+            }
+            if (id == "") next
+            if (id in seen) printf "%s\t%s\t%s\n", id, seen[id], NR
+            else seen[id] = NR
+        }
+    ' "$canonical" >"$dup_hits"
+    while IFS="$(printf '\t')" read -r id first second; do
+        [ -n "$id" ] || continue
+        add_error SPEC_DUPLICATE_REQUIREMENT_ID "$relative" "$id defined twice at lines $first and $second"
+    done <"$dup_hits"
+}
 for change_dir in "$repo_root"/openspec/changes/*; do
     [ -d "$change_dir" ] || continue
     [ "$(basename "$change_dir")" != archive ] || continue
@@ -218,6 +254,7 @@ for change_dir in "$repo_root"/openspec/changes/*; do
     section_is_valid "$canonical" '## 功能目標' exact || add_error SPEC_REQUIRED_HEADING "$canonical_relative" 'required heading is missing, duplicated, or empty: ## 功能目標'
     section_is_valid "$canonical" '## 規格相依性' dependency || add_error SPEC_REQUIRED_HEADING "$canonical_relative" 'required heading is missing, duplicated, or empty: ## 規格相依性'
     verify_required_ids "$canonical" "$canonical_relative"
+    verify_no_duplicate_ids "$canonical" "$canonical_relative"
     if requires_page_traceability "$module" "$canonical" && ! strip_markdown_fences "$canonical" | grep -Eq '^## Prototype Traceability|Frontend Ready Gate.*不適用|prototype.*不適用'; then add_error SPEC_REQUIRED_IDS "$canonical_relative" 'page traceability or an explicit non-page exception is required'; fi
     allowed_ids="$tmp_dir/allowed-ids"
     collect_added_ids "$change_dir" "$tmp_dir/added-ids"
@@ -308,6 +345,7 @@ LC_ALL=C sort -u "$active_specs" -o "$active_specs"
 while IFS= read -r spec_file; do
     relative="${spec_file#"$repo_root"/}"
     grep -Fqx "$relative" "$active_specs" && continue
+    verify_no_duplicate_ids "$spec_file" "$relative"
     unfenced_spec="$tmp_dir/spec-unfenced"
     strip_markdown_fences "$spec_file" >"$unfenced_spec"
     spec_dir="$(basename "$(dirname "$spec_file")")"; number="${spec_dir%%-*}"
