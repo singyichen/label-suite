@@ -83,10 +83,10 @@ test.describe('issue #925: a modify decision survives a later answer edit', () =
     await expect(page.getByText('對應的審核決策已重置')).toHaveCount(0);
 
     // T001 ships a single output type, so this one modify decision
-    // completes the review unit -- the quick-submit control should be
+    // completes the review unit -- the footer submit button should be
     // visible and usable without re-confirming anything.
-    await expect(page.getByTestId('ws-review-quick-submit-btn')).toBeVisible();
-    await page.getByTestId('ws-review-quick-submit-btn').click();
+    await expect(page.getByTestId('ws-review-submit-btn')).toBeVisible();
+    await page.getByTestId('ws-review-submit-btn').click();
     await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
   });
 });
