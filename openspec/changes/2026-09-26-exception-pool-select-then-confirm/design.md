@@ -6,6 +6,8 @@
 
 四個處置按鈕（`ws-exception-pool-action-<action>`，testid 沿用不變）點擊只切換該 item 的本地狀態 `selectedAction`，以 `aria-pressed="true"`/`"false"` 呈現，不呼叫既有的 `resolveFn`。切換選取不清空已輸入的理由文字——使用者可能在比較處置後才決定選哪一個，理由框沿用同一份輸入。
 
+**但**切換選取會把「確認處置」重新強制設回 disabled（見 D3），須理由欄位自身再觸發一次 `input` 事件才重新啟用——文字沒被清空，只是啟用狀態不因循前一個處置殘留的理由文字而免檢，避免某處置所填的理由被靜默沿用為另一處置的理由。此行為已明文寫入 AC-4.75 最後一點（spec delta），不是隱含的實作細節。
+
 ## D2 版面結構（單一寫入點）
 
 每個例外項固定渲染以下區塊，不再是「點擊後才展開」：
@@ -18,7 +20,7 @@
 
 ## D3 確認按鈕停用邏輯（刻意的既有慣例分歧）
 
-`confirmBtn.disabled = !selectedAction || !reasonInput.value.trim()`，使用原生 `disabled` 屬性。
+`confirmBtn.disabled = !selectedAction || !reasonInput.value.trim()`，使用原生 `disabled` 屬性；此外，切換 `selectedAction` 的動作本身額外強制把 `confirmBtn.disabled` 設回 `true`（覆寫上述公式一次），須理由欄位的 `input` 事件重新觸發才會再依公式求值——即「切換處置後，即使理由欄位有前一個處置留下的非空文字，確認鈕仍先回到停用」，此為 AC-4.75 最後一點明文要求的行為（spec delta），不是公式本身自然推出、也不是意外副作用。
 
 本規格另兩處理由必填情境（`ws-arbitration-submit` 的 `refreshArbitrationBlocker()`、本畫面舊有的 `custom_answer`／`exclude_from_dataset` 確認鈕）走「blocked-not-disabled」慣例：按鈕恆可點擊，理由為空時點擊後跳 toast 阻擋。2026-09-24 維護者裁定明文要求「確認處置按鈕在理由為空時停用」——即原生 `disabled`，與既有慣例不同。依 general.md「Conflicting Patterns」規則：採用維護者明示的新慣例（disabled），並在程式碼註解標註此分歧與原因；既有 `refreshArbitrationBlocker()` 慣例維持不動，供未來若要統一時參考，不在本 change 處理範圍。
 

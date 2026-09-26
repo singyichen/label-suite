@@ -530,11 +530,14 @@ test.describe('issue #596: FR-095 final exception pool disposition screen', () =
       expect(selectedText).not.toBe(noSelectionText);
       expect(selectedText.length).toBeGreaterThan(0);
 
-      // AC-4.75: selected but reason still empty -> Confirm stays disabled;
-      // filling the reason enables it. Confirm is deliberately never
-      // clicked in this loop -- doing so would resolve the item and remove
-      // it from the queue, breaking the remaining iterations on the same
-      // item.
+      // AC-4.75 last bullet: switching to this action re-disables Confirm
+      // even though `reasonField` may still hold a previous iteration's
+      // leftover text (it is never cleared between iterations) -- a
+      // leftover reason typed for one disposition must not silently carry
+      // over as the reason for a different one. Filling the reason again
+      // re-enables it. Confirm is deliberately never clicked in this loop
+      // -- doing so would resolve the item and remove it from the queue,
+      // breaking the remaining iterations on the same item.
       await expect(confirm).toBeDisabled();
       await reasonField.fill(`${action} 測試理由`);
       await expect(confirm).toBeEnabled();

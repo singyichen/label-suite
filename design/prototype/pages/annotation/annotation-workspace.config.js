@@ -4656,7 +4656,9 @@
        deciding) but always re-disables Confirm until the reason field is
        (re)confirmed via its own `input` event, so a leftover reason typed
        for a previously selected action cannot silently carry over as the
-       reason for a different one (AC-4.74). */
+       reason for a different one (AC-4.75's last bullet -- this is a
+       spec'd requirement, not an accidental side effect of the disabled
+       formula above). */
     function refreshConfirmDisabled() {
       confirmBtn.disabled = !selectedAction || !reasonInput.value.trim();
     }
