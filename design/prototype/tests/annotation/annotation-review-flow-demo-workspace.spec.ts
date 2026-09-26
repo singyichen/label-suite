@@ -39,7 +39,7 @@ function contextBanner(page: Page) {
 }
 
 test.describe('Reviewer workspace — review-unit context banner (T014-T016)', () => {
-  test('T014 dry-01: dry_run badge, 3-annotator roster, finalized, no threshold chip', async ({ page }) => {
+  test('T014 dry-01: dry_run badge, 1-annotator group for this reviewer (issue #956), finalized, no threshold chip', async ({ page }) => {
     await openReviewerWorkspace(page, 'T014', 'dry-01-all-agree', 'dry_run');
 
     const banner = contextBanner(page);
@@ -55,7 +55,10 @@ test.describe('Reviewer workspace — review-unit context banner (T014-T016)', (
     await expect(page.locator('nav.breadcrumb[data-testid="entry-breadcrumb"]')).toContainText(
       'kioleemg12'
     );
-    await expect(page.getByTestId('ws-sample-group-count').first()).toHaveText('3 位標記員');
+    /* issue #956 (FR-093): the left column now narrows to reviewer_chen's
+       own assigned units, and this sample's sticky assignment leaves
+       reviewer_chen only 1 of its 3 annotators. */
+    await expect(page.getByTestId('ws-sample-group-count').first()).toHaveText('1 位標記員');
   });
 
   test('T015 ofs-01: official badge, finalized, no threshold chip', async ({ page }) => {
