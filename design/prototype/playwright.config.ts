@@ -24,6 +24,21 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: 0,
+  // Playwright's default is 50% of cores, which on GitHub's 4-vCPU
+  // ubuntu-24.04 runner means 2 workers -- half the machine idle while
+  // 2018 tests take 23m36s (issue #1005).
+  //
+  // 3, not 4: at 4 workers the run dropped to 17m20s but
+  // tests/account/reset-password.spec.ts's loading-lock assertion started
+  // failing its first attempt (clean in the 7 preceding 2-worker runs). It
+  // only reads green because that describe opted into `retries: 2` -- i.e.
+  // 4 workers spends a pre-existing fragility budget rather than being
+  // free. 3 leaves a core for the runner itself and the serve.mjs process.
+  //
+  // CI only; locally `undefined` keeps the 50% default, because a developer
+  // machine is usually running other work (and this repo's own dispatch
+  // flow runs several worktrees at once).
+  workers: process.env.CI ? 3 : undefined,
   reporter: process.env.CI ? 'html' : 'list',
 
   use: {
