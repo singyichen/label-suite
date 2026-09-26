@@ -2641,6 +2641,74 @@ test_check_sdd_accepts_reasoned_ci_job_exemption() {
     assert_command_succeeds "$repo" --not-rule "CI_JOB_PARITY"
 }
 
+test_check_sdd_accepts_ac_id_referenced_in_prose_after_single_definition() {
+    local repo spec_file
+
+    repo="$(make_sdd_repo)"
+    spec_file="$repo/specs/foundation/001-project-sdd-lint/spec.md"
+    printf '\n1. **AC-9.2**：only definition of this AC in this file.\n本規格於此另行援引 **AC-9.2** 作為既有條文之背景說明，並非新增定義。\n' >> "$spec_file"
+
+    assert_command_succeeds "$repo" --not-rule SPEC_DUPLICATE_REQUIREMENT_ID
+}
+
+test_check_sdd_accepts_same_ac_id_in_two_different_spec_files() {
+    local repo
+
+    repo="$(make_sdd_repo)"
+    printf '\n1. **AC-9.3**：definition inside foundation-001 namespace.\n' >> "$repo/specs/foundation/001-project-sdd-lint/spec.md"
+    printf '\n1. **AC-9.3**：definition inside dataset-001-legacy namespace.\n' >> "$repo/specs/dataset/001-legacy/spec.md"
+
+    assert_command_succeeds "$repo" --not-rule SPEC_DUPLICATE_REQUIREMENT_ID
+}
+
+test_check_sdd_fails_for_duplicate_ac_id() {
+    local repo spec_file output status first_line second_line
+
+    repo="$(make_sdd_repo)"
+    spec_file="$repo/specs/foundation/001-project-sdd-lint/spec.md"
+    printf '\n1. **AC-9.1**：first definition for duplicate-ID Red fixture.\n2. **AC-9.1**：second definition, duplicate of the same AC ID in the same file.\n' >> "$spec_file"
+    first_line="$(grep -n '\*\*AC-9\.1\*\*' "$spec_file" | sed -n '1p' | cut -d: -f1)"
+    second_line="$(grep -n '\*\*AC-9\.1\*\*' "$spec_file" | sed -n '2p' | cut -d: -f1)"
+
+    output="$(mktemp "$TMP_ROOT/check-sdd.XXXXXX")"
+    if run_check_sdd "$repo" >"$output" 2>&1; then
+        status=0
+    else
+        status=$?
+    fi
+    if [[ "$status" -ne 1 ]]; then
+        echo "Expected check-sdd.sh to exit 1 for a duplicate AC definition, got: $status" >&2
+        cat "$output" >&2
+        exit 1
+    fi
+    assert_contains "$output" "ERROR [SPEC_DUPLICATE_REQUIREMENT_ID] specs/foundation/001-project-sdd-lint/spec.md:"
+    assert_contains "$output" "AC-9.1 defined twice at lines $first_line and $second_line"
+}
+
+test_check_sdd_fails_for_duplicate_fr_id() {
+    local repo spec_file output status first_line second_line
+
+    repo="$(make_sdd_repo)"
+    spec_file="$repo/specs/foundation/001-project-sdd-lint/spec.md"
+    printf '\n- **FR-901**: first definition for duplicate-ID Red fixture.\n- **FR-901**: second definition, duplicate of the same FR ID in the same file.\n' >> "$spec_file"
+    first_line="$(grep -n '\*\*FR-901\*\*' "$spec_file" | sed -n '1p' | cut -d: -f1)"
+    second_line="$(grep -n '\*\*FR-901\*\*' "$spec_file" | sed -n '2p' | cut -d: -f1)"
+
+    output="$(mktemp "$TMP_ROOT/check-sdd.XXXXXX")"
+    if run_check_sdd "$repo" >"$output" 2>&1; then
+        status=0
+    else
+        status=$?
+    fi
+    if [[ "$status" -ne 1 ]]; then
+        echo "Expected check-sdd.sh to exit 1 for a duplicate FR definition, got: $status" >&2
+        cat "$output" >&2
+        exit 1
+    fi
+    assert_contains "$output" "ERROR [SPEC_DUPLICATE_REQUIREMENT_ID] specs/foundation/001-project-sdd-lint/spec.md:"
+    assert_contains "$output" "FR-901 defined twice at lines $first_line and $second_line"
+}
+
 
 # --- User path map freshness checker (issue #665 Stage 1) -------------------
 # Stage 1 fixtures only pin the fail-closed CLI surface. They must never supply
@@ -3320,6 +3388,10 @@ test_check_sdd_fails_for_registry_job_absent_from_ci
 test_check_sdd_fails_for_local_command_absent_from_claude_md
 test_check_sdd_fails_for_exempt_row_without_reason
 test_check_sdd_accepts_reasoned_ci_job_exemption
+test_check_sdd_accepts_ac_id_referenced_in_prose_after_single_definition
+test_check_sdd_accepts_same_ac_id_in_two_different_spec_files
+test_check_sdd_fails_for_duplicate_ac_id
+test_check_sdd_fails_for_duplicate_fr_id
 test_path_map_freshness_help_documents_issue_645_dependency
 test_path_map_freshness_rejects_unsupported_argument
 test_path_map_freshness_rejects_extra_positional_argument
