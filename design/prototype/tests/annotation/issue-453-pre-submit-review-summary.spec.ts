@@ -132,22 +132,23 @@ test.describe('A decision never survives an edit to the value it judged (issue #
     await expect(page.locator('#toastMsg')).toContainText('決策已重置');
   });
 
-  test('the reset decision blocks submit until it is re-confirmed', async ({ page }) => {
+  // issue #925 narrowed this rule: a `modify` decision IS the act of
+  // changing the answer, so unlike approve/bypass it must survive the edit
+  // it judged, keeping its decision and reason instead of being reset.
+  test('a modify decision keeps its decision and reason after the value it judged changes', async ({ page }) => {
     await gotoT001Official(page);
     await dismissGuidelineModal(page);
 
-    await page.getByTestId('ws-review-row-modify').click();
-    await flipSingleLabel(page);
-
-    await page.getByTestId('ws-review-submit-btn').click();
-    // issue #929: display name, not raw key -- see
-    // issue-929-reviewer-jargon-wording.spec.ts.
-    await expect(page.locator('#toastMsg')).toHaveText('請完成以下輸出類型的審核決策：單一標籤');
-
-    // Re-deciding against the new value lets the submit through.
-    await page.getByTestId('ws-review-row-modify').click();
+    const modify = page.getByTestId('ws-review-row-modify');
+    await modify.click();
     // FR-016A: a modify decision needs a reason before submit goes through.
     await page.getByTestId('ws-review-reason').fill('理由');
+
+    await flipSingleLabel(page);
+
+    await expect(modify).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('#toastMsg')).not.toContainText('決策已重置');
+
     await page.getByTestId('ws-review-submit-btn').click();
     await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
   });

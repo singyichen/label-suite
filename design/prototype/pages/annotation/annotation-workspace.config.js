@@ -3761,24 +3761,41 @@
   function syncDecisionsWithCorrections() {
     var rowName = currentAnnotatorId();
     var reset = false;
+    var quietRefresh = false;
     state.selectedOutputTypes.forEach(function (outKey) {
       var key = decisionKey(outKey, rowName);
-      if (!reviewRowDecisions[key]) return;
+      var decision = reviewRowDecisions[key];
+      if (!decision) return;
       var answer = currentRowAnswer(outKey);
       if (!(key in reviewDecisionAnswers)) {
         reviewDecisionAnswers[key] = answer;
         return;
       }
       if (reviewDecisionAnswers[key] === answer) return;
+      /* issue #925: a `modify` decision's whole point IS changing the
+         answer -- resetting it here would punish the exact action it
+         represents. Keep the decision, re-anchor the snapshot to the new
+         answer, and still refresh dependent UI (e.g. the quick-submit
+         control's completion check) so it reflects the still-active
+         decision -- just without the reset toast. approve/bypass are
+         unaffected: their "this answer is fine as-is" / "cannot
+         adjudicate" claim really does stop holding once the answer
+         changes, so they still reset below. */
+      if (decision === 'modify') {
+        reviewDecisionAnswers[key] = answer;
+        quietRefresh = true;
+        return;
+      }
       reviewRowDecisions[key] = null;
       delete reviewDecisionAnswers[key];
       reset = true;
     });
-    if (!reset) return;
+    if (!reset && !quietRefresh) return;
     reviewDecisionRefreshers.forEach(function (refresh) {
       refresh();
     });
     persistReviewDraft();
+    if (!reset) return;
     showToast(t('toastReviewDecisionResetOnEdit'), 'warning');
   }
 
