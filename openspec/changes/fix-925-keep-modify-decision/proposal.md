@@ -24,9 +24,9 @@ issue #925 回報：審核員選「修正」後，若再點選另一個答案 ch
 **衍生檢視錠點說明**：AC-3.42 之母體 FR-077 已於 v4.55.0 整組撤銷，`openspec/specs/` 衍生檢視內無對應 `### Requirement:` 段落可供本次 `## MODIFIED Requirements` 合併（`openspec validate --changes --no-interactive` 對此僅回報 INFO，非 schema 錯誤，但明言 `openspec archive` 屆時會拒絕合併）。本次 delta 之衍生檢視錠點改為 **FR-092（審核員三向決策）**——該條現為 `REVIEW_DECISIONS` 三向語彙唯一的正典居所，新增之失效規則正是三向決策各自語意的延伸；正典 `specs/.../spec.md` 的手動回寫仍直接編輯 **AC-3.42** 撤銷附註第 (2) 點（詳見下方），兩者描述同一條規則，僅衍生檢視與正典回寫的落點不同。
 
 - 修訂 **AC-3.42**（`specs/annotation/015-annotation-workspace/spec.md:413`）v4.55.0 撤銷附註第 (2) 點：重置條件由「答案變更即一律重置」收窄為「決策不是 `modify` 時，答案變更才重置」。決策為 `modify` 時，答案變更視為該修正動作本身的內容，**保留**決策與理由欄，並把快照 `reviewDecisionAnswers[key]` 更新為新答案值（使該決策繼續綁定「當前」答案），不觸發 `toastReviewDecisionResetOnEdit` toast。`approve`／`bypass`／`無法裁決`（`reject`）三向決策改答案後**仍須**一律重置並顯示既有 toast——這一側的既有行為不變。
-- 對應修改 `syncDecisionsWithCorrections()`（`annotation-workspace.config.js:3755`）：在既有的「快照存在且與當前答案不同」判定成立後，新增一層分流——決策為 `modify` 時只更新快照、不清空決策、不計入本輪 `reset` 旗標（因此不觸發 refresh／persist／toast 的既有重置路徑）；非 `modify` 時維持既有清空決策、刪快照、標記 `reset = true` 的行為，不改動。
+- 對應修改 `syncDecisionsWithCorrections()`（`annotation-workspace.config.js:3755`）：在既有的「快照存在且與當前答案不同」判定成立後，新增一層分流——決策為 `modify` 時只更新快照、不清空決策、不計入本輪 `reset` 旗標（因此不觸發既有的清空決策／toast 重置路徑；但仍會觸發 `reviewDecisionRefreshers` 與一次 `persistReviewDraft()`，用途是讓 `ws-review-quick-submit-btn` 等派生 UI 依當前仍生效的決策即時重新計算）；非 `modify` 時維持既有清空決策、刪快照、標記 `reset = true` 的行為，不改動。
 
-**不變更**：AC-3.42 撤銷附註第 (1)(3)(4) 三項移轉內容、FR-077（已整組撤銷，本次不觸及）、`reviewDecisionRequiresReason()` 之理由必填判定（`modify` 本就在必填理由的決策集合中，本次未改動該判定，理由欄之保留是「決策未被清空」的自然結果，不是新增規則）、`persistReviewDraft()` 之草稿持久化契約（decision/reason 皆未變更時無需額外呼叫）、`approve`／`bypass`／`無法裁決` 三向決策的既有重置與 toast 行為、任何其他 AC 或 FR。
+**不變更**：AC-3.42 撤銷附註第 (1)(3)(4) 三項移轉內容、FR-077（已整組撤銷，本次不觸及）、`reviewDecisionRequiresReason()` 之理由必填判定（`modify` 本就在必填理由的決策集合中，本次未改動該判定，理由欄之保留是「決策未被清空」的自然結果，不是新增規則）、`persistReviewDraft()` 之草稿持久化契約本身（`modify` 分支寫入之 decision/reason 值本身不變，僅 `corrected` 欄位可能隨新答案改變——這是 `isRowCorrected()` 既有比對邏輯的自然結果，`modify` 分支仍會多呼叫一次 `persistReviewDraft()` 以反映該值）、`approve`／`bypass`／`無法裁決` 三向決策的既有重置與 toast 行為、任何其他 AC 或 FR。
 
 ## Capabilities
 
