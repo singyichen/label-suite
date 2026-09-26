@@ -18,11 +18,11 @@
   - **(c) 從未被本人仲裁的已定稿單位仍不在左欄（最重要，防止「全部復活」的天真實作）**：確認 `reviewer_chen` 從未仲裁過、且未指派給 `reviewer_chen` 的其他已定稿單位不出現在左欄。
   - **(d) 一般審核員（非仲裁者）的左欄不受影響**：以一般審核員身分（如 `reviewer_wang`）開啟工作區，確認其左欄範圍與 issue #956 既有契約一致，不因本次放寬而多出任何單位。
   - Red 證據：commit `502ea8f4`（senior-qa）。team lead 獨立複驗：`git status --short` 空輸出，工作樹乾淨；獨立重跑 `PW_PORT=8980 pnpm playwright test tests/annotation/issue-1000-arbiter-permanent-sticky.spec.ts --workers=1` → exit 1，3 passed, 2 failed，(a)(b) 失敗、(c)(d) 通過，與 senior-qa 回報一致。(a) 之失敗原因比預期更廣（`isCurrentUnit()` 即時求值使切走時 A 整個從左欄消失，非僅視覺態改變），已誠實記錄。
-- [ ] 1.2 Green：修改 `design/prototype/pages/annotation/annotation-workspace.config.js` 的 `filterUnitsToAssigned()`。 [@senior-frontend]
+- [x] 1.2 Green：修改 `design/prototype/pages/annotation/annotation-workspace.config.js` 的 `filterUnitsToAssigned()`。 [@senior-frontend]
   - 第 2 個析取（issue #956 sticky）去掉 `isCurrentUnit(unit) &&` 限定，只留 `data.isArbitrationSubmitted(...)`。
   - 同步更新該析取上方之 issue #956 註解，說明範圍已由「當次檢視」放寬為「曾送出仲裁票即永久黏著」（issue #1000），移除「歷史仲裁單位須維持過濾」之過期敘述。
   - 不得放寬或改寫 1.1 的 Red 契約，並以 1.1 的 Red 測試重跑轉綠驗證之。
-  - Green 證據：待補（senior-frontend commit hash）。team lead 獨立複驗：`PW_PORT=8980 pnpm playwright test tests/annotation/issue-1000-arbiter-permanent-sticky.spec.ts` → 預期 exit 0，4 passed。
+  - Green 證據：commit `968407c2`（senior-frontend，只改 `annotation-workspace.config.js` 1 檔，25+/16-）。team lead 獨立複驗：`PW_PORT=8980 pnpm playwright test tests/annotation/issue-1000-arbiter-permanent-sticky.spec.ts --workers=1` → exit 0，5 passed。合併 `origin/main`（`3051d8e1`，撿入 #930／PR #1007，auto-merge 無衝突）後重新確認修改仍完整存在。
 - [ ] 1.3 執行受影響既有測試並依「位移／前提消失」分類處理。目標檔案（`grep -rl "isArbitrationSubmitted\|filterUnitsToAssigned\|ofs-03-arbitrated-gold\|ofs-03\b" tests/` 導出之窄集合，13 檔，含本次 Red 契約與 `issue-722`/`issue-956` 兩支必跑契約）： [@senior-frontend]
   - `annotation-review-flow-demo-seed.spec.ts`
   - `annotation-review-status-track.spec.ts`
