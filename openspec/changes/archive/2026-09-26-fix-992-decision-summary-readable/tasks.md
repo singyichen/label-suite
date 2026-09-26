@@ -22,4 +22,4 @@
 - [x] 3.1 執行 `openspec validate --changes --no-interactive` 與 `scripts/check-sdd.sh`，確認 Gate 1、Gate 2 皆 0 error [@main]
 - [x] 3.2 執行 `pnpm typecheck`、候選 Playwright 測試集、`gen-screen-inventory.mjs --check`、`inventory-tests.sh`、`check-spec-artifacts.sh`、`check-user-path-map-freshness.mjs`，確認 Gate 3 全數通過 [@main]
 - [x] 3.3 獨立審查（`senior-code-reviewer`，非實作者）確認持久化路徑未變、顯示／持久化路徑乾淨拆開、未新建跨模組人名對照、既有測試僅預期兩處值位移 [@main]
-- [ ] 3.4 執行 `/opsx:archive` 完成正典版本 bump 與 Changelog 寫回，並同 PR 更新 `specs/STATUS.md` 的 annotation-015 一列，確認 Gate 4 Source-Verify 通過 [@main]
+- [x] 3.4 執行 `/opsx:archive` 完成正典版本 bump 與 Changelog 寫回，並同 PR 更新 `specs/STATUS.md` 的 annotation-015 一列，確認 Gate 4 Source-Verify 通過 [@main]
