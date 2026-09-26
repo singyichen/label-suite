@@ -119,6 +119,9 @@
       reviewEmptyUnitNote: '此標記員尚未提交此樣本，暫無可審核的內容。',
       reviewOffRosterNote: '你已不在本任務的審核員名冊中，可檢視自己審核過的內容與歷程，但無法再提交審核決策。',
       reviewNotAssignedNote: '這個審核單位未指派給你，可檢視內容但無法提交審核決策。',
+      reviewOffRosterTitle: '無法提交審核決策',
+      reviewNotAssignedTitle: '無法提交審核決策',
+      reviewEmptyUnitTitle: '暫無可審核內容',
       reviewFinalizedTitle: '審核已定稿',
       reviewFinalizedNote: '此審核單位已定稿，結果為唯讀。',
       reviewFinalizedRemaining: '本任務你還有 {n} 個可處理的審核單位。',
@@ -263,6 +266,9 @@
       reviewEmptyUnitNote: 'This annotator has not submitted this sample yet; there is nothing to review.',
       reviewOffRosterNote: 'You are no longer on this task\'s reviewer roster. You can still view the units and history you reviewed, but you can no longer submit review decisions.',
       reviewNotAssignedNote: 'This review unit is not assigned to you. You can view its content, but you cannot submit a review decision.',
+      reviewOffRosterTitle: 'Cannot submit review',
+      reviewNotAssignedTitle: 'Cannot submit review',
+      reviewEmptyUnitTitle: 'Nothing to review yet',
       reviewFinalizedTitle: 'Review finalized',
       reviewFinalizedNote: 'This review unit is finalized; results are read-only.',
       reviewFinalizedRemaining: 'You have {n} actionable review units left on this task.',
@@ -4789,6 +4795,40 @@
     preview.appendChild(card);
   }
 
+  /* Read-only review-gate callout (issue #988): OFF_ROSTER, NOT_ASSIGNED and
+     EMPTY all append a "why can't I submit" note below the reviewed data
+     card. Before this helper, each gate built its own `.content-card` --
+     the same class as (and therefore visually indistinguishable from) the
+     data card directly above it, with no heading and no semantic color.
+     Reuses the `.guideline-summary` soft-blue/ⓘ token (already a real
+     component on this page, see annotation-workspace.html's guideline
+     panel) instead of introducing a new global pattern. One helper, three
+     call sites -- DRY per issue #988's own instruction. */
+  function buildReviewBlockedNote(preview, testid, titleKey, bodyKey) {
+    var card = document.createElement('div');
+    card.className = 'review-blocked-note';
+    card.setAttribute('data-testid', testid);
+
+    var title = document.createElement('div');
+    title.className = 'review-blocked-note-title';
+    title.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+      + 'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+      + '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>'
+      + '<line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+    var titleText = document.createElement('span');
+    titleText.textContent = t(titleKey);
+    title.appendChild(titleText);
+    card.appendChild(title);
+
+    var body = document.createElement('p');
+    body.className = 'review-blocked-note-text';
+    body.textContent = t(bodyKey);
+    card.appendChild(body);
+
+    preview.appendChild(card);
+    return card;
+  }
+
   /* Review-unit context banner (issue #302): FR-051 renders the SAME
      review card for every review model, so run type and the unit's state
      pill are the only way a reviewer can tell one review model from another
@@ -5236,11 +5276,7 @@
       offRosterInputCard.setAttribute('data-testid', 'ws-input-content');
       offRosterInputCard.textContent = buildReviewerInputText(rawRecord, currentProfile.fieldRoleMap);
       preview.appendChild(offRosterInputCard);
-      var offRosterCard = document.createElement('div');
-      offRosterCard.className = 'content-card';
-      offRosterCard.setAttribute('data-testid', 'ws-review-off-roster');
-      offRosterCard.textContent = t('reviewOffRosterNote');
-      preview.appendChild(offRosterCard);
+      buildReviewBlockedNote(preview, 'ws-review-off-roster', 'reviewOffRosterTitle', 'reviewOffRosterNote');
       return;
     }
     /* Unassigned read-only gate (issue #921, FR-093): mirrors the OFF_ROSTER
@@ -5258,11 +5294,7 @@
       notAssignedInputCard.setAttribute('data-testid', 'ws-input-content');
       notAssignedInputCard.textContent = buildReviewerInputText(rawRecord, currentProfile.fieldRoleMap);
       preview.appendChild(notAssignedInputCard);
-      var notAssignedCard = document.createElement('div');
-      notAssignedCard.className = 'content-card';
-      notAssignedCard.setAttribute('data-testid', 'ws-review-not-assigned');
-      notAssignedCard.textContent = t('reviewNotAssignedNote');
-      preview.appendChild(notAssignedCard);
+      buildReviewBlockedNote(preview, 'ws-review-not-assigned', 'reviewNotAssignedTitle', 'reviewNotAssignedNote');
       return;
     }
     /* Empty review unit gate (issue #307): "truly empty" reuses the exact
@@ -5277,11 +5309,7 @@
        (setupActionShortcuts skips hidden buttons). */
     if (blockReason === REVIEW_UNIT_BLOCK.EMPTY) {
       if (reviewSubmitBtn) reviewSubmitBtn.classList.add('hidden');
-      var emptyCard = document.createElement('div');
-      emptyCard.className = 'content-card';
-      emptyCard.setAttribute('data-testid', 'ws-review-empty-unit');
-      emptyCard.textContent = t('reviewEmptyUnitNote');
-      preview.appendChild(emptyCard);
+      buildReviewBlockedNote(preview, 'ws-review-empty-unit', 'reviewEmptyUnitTitle', 'reviewEmptyUnitNote');
       return;
     }
     if (reviewSubmitBtn) reviewSubmitBtn.classList.remove('hidden');
