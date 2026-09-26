@@ -1670,8 +1670,28 @@
          submission the arbiter must not have), so filtering to assignees
          alone would hide every unit this reviewer could arbitrate. Mirrors
          annotation-list.html's `arbiterEntry` disjunct. */
-      return reviewUnitState(unit) === data.REVIEW_UNIT_STATUS.DISPUTED &&
-        data.isArbiterCandidate(currentProfile.id, currentRunType, unit.recordId, unitIdentity(unit));
+      if (reviewUnitState(unit) === data.REVIEW_UNIT_STATUS.DISPUTED &&
+        data.isArbiterCandidate(currentProfile.id, currentRunType, unit.recordId, unitIdentity(unit))) {
+        return true;
+      }
+      /* issue #956 sticky visibility: the moment this arbiter submits
+         their arbitration vote on the unit they currently have open, the
+         unit's status moves off DISPUTED (or is already voted on by this
+         arbiter), so the disjunct above stops matching and the unit would
+         silently drop out of this arbiter's own left column mid-session --
+         breaking issue #722's progress counter, whose denominator is this
+         same enumerated list. Scoped to isCurrentUnit() (not every unit
+         this arbiter has ever adjudicated): a roster-wide arbiter is
+         `isArbiterCandidate()`-eligible for every unit they never ordinarily
+         reviewed, including ones from a past, already-closed dispute (e.g.
+         T015's ofs-03-arbitrated-gold) -- those must stay filtered out, only
+         the unit the arbiter is actively resolving right now must stick.
+         Reuses isArbitrationSubmitted() (same call already used by
+         countSubmittedUnits() above) rather than re-deriving "has this
+         arbiter voted" here. */
+      return isCurrentUnit(unit) &&
+        data.isArbitrationSubmitted(
+          currentProfile.id, currentRunType, unit.recordId, unitIdentity(unit), state.selectedOutputTypes);
     });
   }
 
