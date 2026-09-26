@@ -86,7 +86,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test.describe('issue #930: footer submit-consequence hint (ws-review-submit-consequence)', () => {
-  test('(a) shows the neutral "pending" hint before any decision, and the quick-submit hint stays hidden', async ({
+  test('(a) shows the neutral "pending" hint before any decision, and the quick-submit control/hint do not exist (issue #1004)', async ({
     page,
   }) => {
     await page.goto(OFFICIAL_URL);
