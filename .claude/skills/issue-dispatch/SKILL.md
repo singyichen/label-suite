@@ -24,7 +24,7 @@ Follow the authority order in `.claude/skills/sdd-workflow/SKILL.md`: main const
 
 ```
 main session  (sole arbiter, sole merger, sole label editor)
-|  scan → collision check → classify → conflict graph → waves (max 5 parallel)
+|  scan → collision check → classify → conflict graph → waves (max 3 parallel)
 |  dispatch N leads → collect N agentIds → send each lead the wave roster
 |
 +- per-issue lead  (general-purpose, Sonnet, own worktree, own PW_PORT)
@@ -130,13 +130,22 @@ Estimate, for each issue, the production files and the canonical spec it will to
 
 Conflicting issues (all other shared-file cases above) go into different waves. When a touched set cannot be determined confidently, treat the pair as conflicting: the conservative direction costs one extra wave, the optimistic direction costs a merge conflict mid-wave.
 
-Wave size is the largest independent set the conflict graph allows, capped at **5**.
+Wave size is the largest independent set the conflict graph allows, capped at **3** (lowered from 5 on 2026-09-26 — memory and conflict-resolution surface; observed free memory ~750–1000 MB).
 
 A second cap applies on top: **at most two issues per wave may run a full `pnpm playwright test` locally.** This counts local full runs specifically — step 6 now scopes ordinary local verification to the touched spec(s), so a local full run is the exception, not the default, and this cap is what stops it from recreating the flakiness that motivated that scoping. The rest wait for a later wave. See the guardrail below for why the cap cannot be a runtime lock, and for what a mid-flight wave override must also recompute.
 
 Before dispatching, also manually confirm the machine has enough free memory for the wave's planned Playwright scale — a judgment call, not an automated gate. #921's full local run was aborted twice by the harness on roughly 295 MB free, with other sessions' load already accounted for.
 
 Record the conflict graph, the Playwright count, and the resulting waves in the wave report before dispatching anything.
+
+### Controlled exceptions — function region, canonical spec, FR/AC IDs (2026-09-26)
+
+The maintainer relaxed the file- and spec-level rules above after wave 2 (2026-09-26) found the single 6,200+ line `annotation-workspace.config.js` touched by all 7 queued issues, collapsing them to one wave. This narrows those rules; it does not replace them.
+
+- **Function-region granularity**: two issues sharing one production file may share a wave if their edited regions do not overlap, located with `grep -n` against the current worktree at scheduling time — never an issue body's quoted line numbers, which drift stale (#925's `:3083-3084`/`:3565-3585` already pointed at unrelated code by the time it was checked). Evidence: four `git merge origin/main` runs on the config file auto-merged with zero conflicts, at region distances of ~1500–2500 lines.
+- **Shared canonical spec, controlled**: several issues bumping the same canonical spec may still share a wave; each lead writes a placeholder version number first, and the main session assigns the real one at merge time in issue-number order — `git merge origin/main`, renumber the Changelog entry and version, sync `specs/STATUS.md`, re-run `scripts/check-sdd.sh`, then push, as wave 4 did merging #920 → #956 → #992. Wave 2's own scan showed 5 of its 7 queued issues (#922, #956, #925, #920, #992) bumping one spec: the canonical spec, not the hotspot file, is the real bottleneck. `Changelog`/`specs/STATUS.md` conflicts here are near-guaranteed and resolved by hand; paste a `grep` check confirming the version number, the Changelog entry, and the STATUS.md row all agree before push.
+- **FR/AC ID allocation**: issues in one wave that each add FR/AC IDs independently number from `main`'s current max and collide with no conflict marker and no gate catching it — `check-sdd.sh`'s duplicate check only covers required headings, and `openspec validate` only checks schema. Wave 4 hit this exactly: #920 and #956 both numbered from main's AC-4.71 and landed on overlapping AC-4.72–4.74. The main session pre-assigns ID ranges per issue at scheduling time, or assigns a range at merge time and requires the later-merging issue to renumber, then `grep -rn` the repo for the old IDs to confirm zero remaining hits.
+- **Standard conflict resolution**: regenerate `design/system/screen-inventory.md` fresh after merging — never hand-pick a side, whose hash won't match the merged content until the next CI `--check` catches it. Canonical Changelog conflicts keep both sides' entries, newest on top. Subsequent branches merge `origin/main`, never rebase — rebase needs a force push, which the pre-tool-use hook requires the maintainer to confirm, stalling an unattended wave (#924).
 
 ## Step 5 — Dispatch
 
@@ -351,3 +360,6 @@ One deviation is from CLAUDE.md itself and is therefore **not** this skill's to 
 | Leftover worktrees and `[gone]` branches after a sprint | Step 9 cleanup, plus `pr-flow`'s sprint-end sweep |
 | Regenerating a derived file (e.g. screen inventory) after every source edit leaves throwaway commits that go empty on rebase | Regenerate it once, right after the last source edit, not after each one |
 | `test-results/.last-run.json` is overwritten by any later Playwright run, including an aborted one — #921's 143-item failure list was wiped down to 6 by a self-interrupted `--last-failed` rerun | Capture a run's failure list to a file of your own before rerunning anything against it |
+| Bare `git stash`/`git stash pop` in a multi-worktree wave can lose or cross-contaminate another lead's uncommitted work — the stash stack is shared repo-wide, not per-worktree (#956) | Park changes in a WIP commit; for a read-only probe tree use `git worktree add --detach <tmp> <base>` |
+| `specs/STATUS.md`'s per-spec row is a cumulative summary string; taking one side of a merge conflict can silently drop an intermediate version's entry, and `check-sdd.sh` only checks the leading version, never entry continuity (#925/#956) | Compare both sides' version-entry sequences and restore any segment missing from the losing side |
+| FR/AC IDs collide silently across issues sharing a wave — git merges both with no conflict marker, and no gate (`check-sdd.sh`, `openspec validate`) checks for duplicate IDs (#920/#956) | Pre-assign or merge-time-renumber ID ranges per issue (Step 4 controlled exception); `grep -rn` the repo for zero remaining hits after renumbering |
