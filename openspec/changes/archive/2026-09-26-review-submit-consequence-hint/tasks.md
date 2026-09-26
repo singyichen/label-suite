@@ -22,7 +22,7 @@
 **故事目標**：SC-006 — 確認新增提示未影響既有送出驗證與既有測試，且 OpenSpec 四道閘門與正典回寫皆完成。
 
 - [x] 3.1 執行閘門：`cd design/prototype && pnpm install --frozen-lockfile`；`pnpm typecheck`；以 `grep -rl` 推導候選集後 `PW_PORT=8988 pnpm playwright test <候選集>`；`node scripts/gen-screen-inventory.mjs`（僅於最後一次改生產碼後跑一次）；`node scripts/gen-screen-inventory.mjs --check`；`scripts/inventory-tests.sh`；`scripts/check-sdd.sh`（須 0 error）；`scripts/check-spec-artifacts.sh`；`node scripts/check-user-path-map-freshness.mjs`。全部通過方可繼續，主責（main／team-lead）親自重跑並獨立覆核，不採信代理自報。[@main]
-- [ ] 3.2 Source-Verify：確認 FR-051、FR-070、FR-092、AC-3.64、AC-3.65 之引用行號與新增函式所在位置皆可逐一 `grep -n` 定位；執行 `openspec archive` 回寫正典（版本 7.1.0 → 7.3.0，實際號碼依主 session 合併時裁決，補 Changelog 條目）並同步更新 `openspec/specs/` derived view。[@main]
+- [x] 3.2 Source-Verify：確認 FR-051、FR-070、FR-092、AC-3.64、AC-3.65 之引用行號與新增函式所在位置皆可逐一 `grep -n` 定位；執行 `openspec archive` 回寫正典（版本 7.1.0 → 7.3.0，實際號碼依主 session 合併時裁決，補 Changelog 條目）並同步更新 `openspec/specs/` derived view。[@main]
 
 ## 4. 獨立審查與 PR
 
