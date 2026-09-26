@@ -217,4 +217,51 @@ test.describe('issue #930: quick-submit hint parity (ws-review-quick-submit-cons
     await expect(submitHint).toHaveAttribute('data-consequence', 'disputed');
     await expect(quickHint).toHaveAttribute('data-consequence', 'disputed');
   });
+
+  test('(f) approve over an answer already changed from the annotator original shows disputed, not finalized (coordinator finding)', async ({
+    page,
+  }) => {
+    await page.goto(OFFICIAL_URL);
+    await dismissGuidelineModal(page);
+
+    // Change the answer away from the annotator's original value
+    // ('positive' -- annotation-workspace.data.js's ofs-04-pending-review
+    // seed row, ~3582) BEFORE picking any decision. This is the order the
+    // coordinator's finding turns on: syncDecisionsWithCorrections()
+    // (annotation-workspace.config.js:3844) only resets an EXISTING
+    // decision when the answer changes AFTER it -- an edit made before any
+    // decision exists has nothing to reset.
+    const correction = page.getByTestId('ws-review-correct-single_label');
+    const negativeChip = correction.getByTestId('ws-single-label-chip-negative');
+    await negativeChip.click();
+    await expect(negativeChip).toHaveAttribute('aria-pressed', 'true');
+
+    // THEN approve, without ever going through 修正 (modify) first.
+    const approveBtn = page.getByTestId('ws-review-row-approve');
+    await approveBtn.click();
+    await expect(approveBtn).toHaveAttribute('aria-pressed', 'true');
+
+    // reviewSubmitConsequenceStatus() (annotation-workspace.config.js:5596)
+    // must mirror anyReviewerChanged() (annotation-workspace.data.js:2177),
+    // which ORs two conditions: the decision is in
+    // DISPUTE_FORCING_DECISIONS, OR the reviewer's current answer differs
+    // from the annotator's original for this outKey. Here the decision is
+    // `approve` (not dispute-forcing) but the answer now differs
+    // ('negative' vs the seeded 'positive') -- that alone must force
+    // disputed. RED: today's hint code only implements the decision half
+    // of the OR, so it still reports data-consequence="finalized" here.
+    const hint = page.getByTestId(SUBMIT_HINT);
+    await expect(hint).toHaveAttribute('data-consequence', 'disputed');
+    await expect(hint).toHaveText(COPY.disputed);
+
+    // Parity: T015/ofs-04-pending-review ships a single output type, so
+    // this one approve decides the whole unit -- the quick-submit control
+    // must already be visible (same as (e)/(e2)) and show the identical
+    // disputed hint, not a second, differently-derived answer.
+    await expect(page.getByTestId('ws-review-quick-submit-btn')).toBeVisible();
+    const quickHint = page.getByTestId(QUICK_HINT);
+    await expect(quickHint).toBeVisible();
+    await expect(quickHint).toHaveAttribute('data-consequence', 'disputed');
+    await expect(quickHint).toHaveText(COPY.disputed);
+  });
 });
