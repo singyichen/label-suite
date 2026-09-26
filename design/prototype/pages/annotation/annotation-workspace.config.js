@@ -5598,8 +5598,29 @@
     var decisions = state.selectedOutputTypes.map(function (outKey) {
       return reviewRowDecisions[decisionKey(outKey, rowName)];
     });
-    var hasDispute = decisions.some(function (decision) {
-      return decision && decision !== 'approve';
+    /* Mirrors anyReviewerChanged() (annotation-workspace.data.js:2177): a
+       decided outKey disputes either because its decision is dispute-forcing
+       (modify/bypass), OR -- coordinator finding, issue #930 -- because the
+       reviewer's current draft answer already differs from the annotator's
+       original for that outKey, even under an `approve` decision. An
+       undecided outKey (no decision yet) never contributes here; FR-083
+       already blocks submission entirely until every outKey is decided. */
+    var annotatorSubmission = getAnnotatorSubmission();
+    var reviewerDraft = {
+      previewState: state.previewState,
+      previewEntities: state.previewEntities,
+      previewTriples: state.previewTriples,
+    };
+    var hasDispute = state.selectedOutputTypes.some(function (outKey) {
+      var decision = reviewRowDecisions[decisionKey(outKey, rowName)];
+      if (!decision) return false;
+      if (decision !== 'approve') return true;
+      if (!annotatorSubmission) return false;
+      return !workspaceData.compareOutputAnswer(
+        outKey,
+        convertSubmissionAnswer(outKey, annotatorSubmission),
+        convertSubmissionAnswer(outKey, reviewerDraft)
+      ).equal;
     });
     if (hasDispute) return workspaceData.REVIEW_UNIT_STATUS.DISPUTED;
     var allApproved = decisions.length > 0 && decisions.every(function (decision) {
