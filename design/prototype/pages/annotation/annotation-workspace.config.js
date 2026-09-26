@@ -58,18 +58,6 @@
       wsSubmitIncomplete: '請完成所有標記項目後再提交',
       wsSubmitSuccess: '已提交',
       reviewSubmitLabel: '送出審核',
-      /* issue #926/#927/#928 CI follow-up (A11Y-05): the footer submit
-         button and this quick-submit control show the SAME visible text
-         ('送出審核') by design -- they are the same action, just two entry
-         points. But two buttons with the identical accessible name make a
-         screen reader announce "送出審核" twice with no way to tell them
-         apart. This key backs an aria-label used ONLY on the quick-submit
-         button (see buildReviewQuickSubmit()); it starts with the same
-         visible label so WCAG 2.5.3 (Label in Name) still holds, but adds
-         a location cue so the two buttons resolve to distinct accessible
-         names. The footer button's accessible name stays plain
-         reviewSubmitLabel, unchanged. */
-      reviewQuickSubmitAriaLabel: '送出審核（決策列）',
       reviewApproveLabel: '通過',
       reviewModifyLabel: '修正',
       reviewBypassLabel: window.LabelSuiteSharedSidebar.BYPASS_WORDING.zh.decision,
@@ -222,7 +210,6 @@
       wsSubmitIncomplete: 'Please answer every output before submitting',
       wsSubmitSuccess: 'Submitted',
       reviewSubmitLabel: 'Submit review',
-      reviewQuickSubmitAriaLabel: 'Submit review (decision row)',
       reviewApproveLabel: 'Approve',
       reviewModifyLabel: 'Modify',
       reviewBypassLabel: window.LabelSuiteSharedSidebar.BYPASS_WORDING.en.decision,
@@ -3383,52 +3370,6 @@
     return { el: wrap, refresh: refresh };
   }
 
-  /* issue #928 (FR-014P new point): the footer submit stays put (its
-     right-aligned position inside .action-bar is locked by issue #563's
-     coverage) but sits far from the decision row, so a decided unit gets a
-     second, secondary submit control near the decision row itself. Reuses
-     the exact same completion check and submit handler as the footer
-     button -- this is not a second submit path, just a closer trigger for
-     the same one. */
-  function buildReviewQuickSubmit() {
-    var wrap = document.createElement('div');
-    wrap.className = 'rv-quick-submit-row hidden';
-
-    var btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'btn btn-cta';
-    btn.setAttribute('data-testid', 'ws-review-quick-submit-btn');
-    btn.textContent = t('reviewSubmitLabel');
-    /* CI follow-up (A11Y-05, annotation-workspace-review-shortcuts.spec.ts):
-       this button's visible text is identical to the footer submit
-       button's -- same action, two entry points -- but that left two
-       buttons with the same accessible name on screen at once, which a
-       screen reader cannot tell apart. aria-label overrides the computed
-       accessible name to something that still STARTS WITH the visible
-       label (WCAG 2.5.3 Label in Name) but is unique. The footer button
-       keeps its plain reviewSubmitLabel accessible name unchanged. */
-    btn.setAttribute('aria-label', t('reviewQuickSubmitAriaLabel'));
-    btn.addEventListener('click', handleReviewSubmit);
-
-    /* issue #930 (FR-102/AC-3.65): same wrap, so it shares wrap's own
-       hidden toggle below -- no second visibility switch to keep in sync
-       with the button's. */
-    var consequenceEl = document.createElement('span');
-    consequenceEl.className = 'rv-submit-consequence';
-    consequenceEl.setAttribute('data-testid', 'ws-review-quick-submit-consequence');
-    wrap.appendChild(consequenceEl);
-    wrap.appendChild(btn);
-
-    function refresh() {
-      var allDecided = pendingReviewOutputKeys(currentAnnotatorId()).length === 0;
-      wrap.classList.toggle('hidden', !allDecided);
-      applyReviewSubmitConsequence(consequenceEl, currentAnnotatorId());
-    }
-    refresh();
-    reviewDecisionRefreshers.push(refresh);
-    return wrap;
-  }
-
   /* FR-054: the shared sidebar has advertised A / R since spec 008 without
      either ever being wired up. v4.0.0 made a review unit one annotator, so
      the two batch shortcuts it also advertised (Shift+A / Shift+R) have no
@@ -5552,7 +5493,6 @@
       }
       preview.appendChild(buildReviewRow(outKey, submission));
     });
-    preview.appendChild(buildReviewQuickSubmit());
   }
 
   function appendReviewHistoryEntry(history, text) {
@@ -5644,10 +5584,9 @@
      always-rendered FR-070 note. */
   var REVIEW_SUBMIT_CONSEQUENCE_FINALIZED_RUN_SUFFIX_I18N_KEYS = { dry_run: 'reviewSubmitConsequenceFinalizedDryRunSuffix' };
 
-  /* Single source of copy for BOTH ws-review-submit-consequence (footer)
-     and ws-review-quick-submit-consequence (decision row) -- FR-102 point 5
-     forbids either entry point from carrying a second derivation or a
-     second i18n source. */
+  /* Single source of copy for ws-review-submit-consequence (footer) --
+     FR-102 point 5 forbids the entry point from carrying a second
+     derivation or a second i18n source. */
   function reviewSubmitConsequenceCopy(rowName) {
     var workspaceData = window.LabelSuiteAnnotationWorkspaceData;
     var status = reviewSubmitConsequenceStatus(rowName);

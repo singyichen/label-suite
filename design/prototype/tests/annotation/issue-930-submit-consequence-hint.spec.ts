@@ -1,13 +1,16 @@
 /**
  * issue #930 — a one-line, ALWAYS-VISIBLE (not a tooltip) submit-consequence
- * hint next to both review submit entry points, deriving live from the
+ * hint next to the review submit entry point, deriving live from the
  * reviewer's current, not-yet-submitted draft decisions for the review
- * unit:
- *  - `ws-review-submit-consequence`, next to the fixed footer
- *    `ws-review-submit-btn`.
- *  - `ws-review-quick-submit-consequence`, next to the decision-row
- *    `ws-review-quick-submit-btn` (itself only visible once every outKey has
- *    a decision -- existing behavior, unchanged by this issue).
+ * unit: `ws-review-submit-consequence`, next to the fixed footer
+ * `ws-review-submit-btn`.
+ *
+ * issue #1004: the decision-row quick-submit control
+ * (`ws-review-quick-submit-btn`) and its would-be consequence-hint sibling
+ * (`ws-review-quick-submit-consequence`) are removed entirely -- the footer
+ * button is the single review submit entry point, so no quick-submit hint
+ * parity requirement remains. The second `test.describe` below now pins
+ * that removal instead of hint parity.
  *
  * Source spec (delta, not yet archived):
  * openspec/changes/2026-09-26-review-submit-consequence-hint/specs/annotation/015-annotation-workspace/spec.md
@@ -15,8 +18,11 @@
  * Proposal (the "why"):
  * openspec/changes/2026-09-26-review-submit-consequence-hint/proposal.md
  *
- * RED: neither testid exists yet -- every assertion below targeting them
- * must fail (element not found / timeout) until FR-102 lands.
+ * RED: `ws-review-submit-consequence` does not exist yet -- every assertion
+ * below targeting it must fail (element not found / timeout) until FR-102
+ * lands. `ws-review-quick-submit-btn`/`-consequence` assertions are RED for
+ * the opposite reason: those elements are still rendered by today's code
+ * and must be removed for issue #1004's Green.
  *
  * Fixtures:
  *  - official_run: T015/ofs-04-pending-review (single output type
@@ -80,7 +86,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test.describe('issue #930: footer submit-consequence hint (ws-review-submit-consequence)', () => {
-  test('(a) shows the neutral "pending" hint before any decision, and the quick-submit hint stays hidden', async ({
+  test('(a) shows the neutral "pending" hint before any decision, and the quick-submit control/hint do not exist (issue #1004)', async ({
     page,
   }) => {
     await page.goto(OFFICIAL_URL);
@@ -91,11 +97,11 @@ test.describe('issue #930: footer submit-consequence hint (ws-review-submit-cons
     await expect(hint).toHaveAttribute('data-consequence', 'pending');
     await expect(hint).toHaveText(COPY.pending);
 
-    // Mirrors ws-review-quick-submit-btn's existing hidden state (issue #928):
-    // not all outKeys are decided yet, so neither the quick-submit button
-    // nor its consequence hint renders.
-    await expect(page.getByTestId('ws-review-quick-submit-btn')).toBeHidden();
-    await expect(page.getByTestId(QUICK_HINT)).toBeHidden();
+    // issue #1004: the decision-row quick-submit control and its
+    // consequence hint were removed entirely -- neither should exist in the
+    // DOM at all, regardless of decision state.
+    await expect(page.getByTestId('ws-review-quick-submit-btn')).toHaveCount(0);
+    await expect(page.getByTestId(QUICK_HINT)).toHaveCount(0);
   });
 
   test('(b1) approve on official_run shows the finalized hint with data-run-type="official_run"', async ({ page }) => {
@@ -173,52 +179,44 @@ test.describe('issue #930: footer submit-consequence hint (ws-review-submit-cons
   });
 });
 
-test.describe('issue #930: quick-submit hint parity (ws-review-quick-submit-consequence)', () => {
-  test('(e) once decisions are complete, the quick-submit hint is visible and IDENTICAL to the footer hint (finalized)', async ({
+test.describe('issue #1004: no quick-submit entry point exists, even where its hint parity used to be checked', () => {
+  test('(e) once decisions are complete (finalized, official_run), no quick-submit button/hint exist and the footer hint is finalized', async ({
     page,
   }) => {
     await page.goto(OFFICIAL_URL);
     await dismissGuidelineModal(page);
 
     await page.getByTestId('ws-review-row-approve').click();
-    await expect(page.getByTestId('ws-review-quick-submit-btn')).toBeVisible();
+
+    await expect(page.getByTestId('ws-review-quick-submit-btn')).toHaveCount(0);
+    await expect(page.getByTestId(QUICK_HINT)).toHaveCount(0);
 
     const submitHint = page.getByTestId(SUBMIT_HINT);
-    const quickHint = page.getByTestId(QUICK_HINT);
-    await expect(quickHint).toBeVisible();
-
     await expect(submitHint).toHaveText(COPY.finalizedOfficial);
-    await expect(quickHint).toHaveText(COPY.finalizedOfficial);
     await expect(submitHint).toHaveAttribute('data-consequence', 'finalized');
-    await expect(quickHint).toHaveAttribute('data-consequence', 'finalized');
     await expect(submitHint).toHaveAttribute('data-run-type', 'official_run');
-    await expect(quickHint).toHaveAttribute('data-run-type', 'official_run');
   });
 
-  test('(e2) disputed parity: modify with a filled reason shows the IDENTICAL disputed hint on both entry points', async ({
-    page,
-  }) => {
+  test('(e2) disputed via modify: no quick-submit button/hint exist and the footer hint is disputed', async ({ page }) => {
     await page.goto(OFFICIAL_URL);
     await dismissGuidelineModal(page);
 
     // T015/ofs-04-pending-review ships a single output type, so one
-    // approve decides the whole unit and the quick-submit control (and its
-    // hint) is already visible before switching to modify below.
+    // approve decides the whole unit before switching to modify below.
     await page.getByTestId('ws-review-row-approve').click();
-    await expect(page.getByTestId('ws-review-quick-submit-btn')).toBeVisible();
 
     await page.getByTestId('ws-review-row-modify').click();
     await page.getByTestId('ws-review-reason').fill('修正（測試理由）');
 
+    await expect(page.getByTestId('ws-review-quick-submit-btn')).toHaveCount(0);
+    await expect(page.getByTestId(QUICK_HINT)).toHaveCount(0);
+
     const submitHint = page.getByTestId(SUBMIT_HINT);
-    const quickHint = page.getByTestId(QUICK_HINT);
     await expect(submitHint).toHaveText(COPY.disputed);
-    await expect(quickHint).toHaveText(COPY.disputed);
     await expect(submitHint).toHaveAttribute('data-consequence', 'disputed');
-    await expect(quickHint).toHaveAttribute('data-consequence', 'disputed');
   });
 
-  test('(f) approve over an answer already changed from the annotator original shows disputed, not finalized (coordinator finding)', async ({
+  test('(f) approve over an answer already changed from the annotator original shows disputed, not finalized, with no quick-submit entry (coordinator finding)', async ({
     page,
   }) => {
     await page.goto(OFFICIAL_URL);
@@ -254,14 +252,9 @@ test.describe('issue #930: quick-submit hint parity (ws-review-quick-submit-cons
     await expect(hint).toHaveAttribute('data-consequence', 'disputed');
     await expect(hint).toHaveText(COPY.disputed);
 
-    // Parity: T015/ofs-04-pending-review ships a single output type, so
-    // this one approve decides the whole unit -- the quick-submit control
-    // must already be visible (same as (e)/(e2)) and show the identical
-    // disputed hint, not a second, differently-derived answer.
-    await expect(page.getByTestId('ws-review-quick-submit-btn')).toBeVisible();
-    const quickHint = page.getByTestId(QUICK_HINT);
-    await expect(quickHint).toBeVisible();
-    await expect(quickHint).toHaveAttribute('data-consequence', 'disputed');
-    await expect(quickHint).toHaveText(COPY.disputed);
+    // No quick-submit entry point exists (issue #1004), regardless of this
+    // scenario's disputed/finalized outcome.
+    await expect(page.getByTestId('ws-review-quick-submit-btn')).toHaveCount(0);
+    await expect(page.getByTestId(QUICK_HINT)).toHaveCount(0);
   });
 });
