@@ -17,7 +17,7 @@
   --color-ink:              #1E1B4B;   /* Indigo 950 — body text */
   --color-primary-soft-bg:  #EEF2FF;
   --color-primary-border:   #C7D2FE;   /* Indigo 200 */
-  --color-on-cta:           #FFFFFF;   /* text on --color-cta / --color-primary fills (e.g. .btn-primary, .page-btn.active) — WCAG AA fix (issue #1019); 5.48:1 on --color-cta; 4.47:1 on --color-primary (light) — below AA, tracked in #1030 */
+  --color-on-cta:           #FFFFFF;   /* text on --color-cta / --color-primary fills (e.g. .btn-primary, .page-btn.active) — WCAG AA fix (issue #1019); 5.48:1 on --color-cta; 4.47:1 on --color-primary (light) — below AA, sanctioned accepted tradeoff, see MASTER.md Step Indicator arbitration record (issue #1030) */
   --color-on-ink:           #FFFFFF;   /* text on --color-ink fills (e.g. .toast) — WCAG AA fix (issue #1019); 15.99:1 on --color-ink */
 
   /* ── Supporting ───────────────────────────────────────────── */

@@ -15,11 +15,18 @@
  *   so the Green fix for #1019 is not required to also fix this unrelated pre-existing gap.
  *   Canonical page specs: specs/task-management/010-task-list/spec.md,
  *   specs/task-management/014-task-detail/spec.md
+ *
+ *   Update (issue #1030, maintainer decision 2026-09-27): the light-theme gap is resolved
+ *   as a sanctioned accepted tradeoff, not a defect — see the Step Indicator arbitration
+ *   record in design/system/MASTER.md (measured 4.4669:1, 0.033 under AA). The floor below
+ *   still guards against regression rather than asserting AA pass, so a future change to
+ *   `--color-primary` or `--color-on-cta` that pushes this below 4.4 fails here as a signal
+ *   to update that arbitration record.
  */
 import { test, expect, type Page } from '@playwright/test';
 
 const WCAG_AA_MIN_CONTRAST = 4.5;
-// Pre-existing (non-#1019) light-theme floor — see traceability note above.
+// Accepted-tradeoff light-theme floor (issue #1030) — see traceability note above.
 const PRE_EXISTING_LIGHT_FLOOR = 4.4;
 
 const TASK_LIST_URL = '/pages/task-management/task-list.html';
@@ -122,7 +129,7 @@ async function measureTaskDetailPageBtnActiveContrast(page: Page): Promise<numbe
 }
 
 test.describe('task-list.html .page-btn.active WCAG contrast (issue #1019)', () => {
-  test('light theme: pre-existing floor, not regressed (out of #1019 scope)', async ({ page }) => {
+  test('light theme: accepted-tradeoff floor, not regressed (issue #1030)', async ({ page }) => {
     await gotoWithTheme(page, TASK_LIST_URL, 'light');
     const ratio = await measureTaskListPageBtnActiveContrast(page);
     expect(ratio).toBeGreaterThanOrEqual(PRE_EXISTING_LIGHT_FLOOR);
@@ -136,7 +143,7 @@ test.describe('task-list.html .page-btn.active WCAG contrast (issue #1019)', () 
 });
 
 test.describe('task-detail.html member-management .page-btn.active WCAG contrast (issue #1019)', () => {
-  test('light theme: pre-existing floor, not regressed (out of #1019 scope)', async ({ page }) => {
+  test('light theme: accepted-tradeoff floor, not regressed (issue #1030)', async ({ page }) => {
     await gotoWithTheme(page, TASK_DETAIL_URL, 'light');
     const ratio = await measureTaskDetailPageBtnActiveContrast(page);
     expect(ratio).toBeGreaterThanOrEqual(PRE_EXISTING_LIGHT_FLOOR);
