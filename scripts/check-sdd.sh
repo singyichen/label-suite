@@ -142,12 +142,12 @@ section_is_valid() {
     '
 }
 requires_page_traceability() { [ "$1" != foundation ] && strip_markdown_fences "$2" | grep -Eq 'Prototype|design/prototype|產品 UI|頁面'; }
-collect_added_ids() {
+collect_declared_ids() {
     local change_dir="$1" target="$2" delta
     : >"$target"
     while IFS= read -r delta; do
         strip_markdown_fences "$delta" | awk '
-            /^##[[:space:]]/ { inside = ($0 == "## ADDED Requirements"); next }
+            /^##[[:space:]]/ { inside = ($0 == "## ADDED Requirements" || $0 == "## MODIFIED Requirements"); next }
             inside && /^#/ { print }
         ' | grep -Eo "$id_pattern" >>"$target" || true
     done < <(find "$change_dir/specs" -type f -name spec.md -print 2>/dev/null | LC_ALL=C sort)
@@ -257,7 +257,7 @@ for change_dir in "$repo_root"/openspec/changes/*; do
     verify_no_duplicate_ids "$canonical" "$canonical_relative"
     if requires_page_traceability "$module" "$canonical" && ! strip_markdown_fences "$canonical" | grep -Eq '^## Prototype Traceability|Frontend Ready Gate.*不適用|prototype.*不適用'; then add_error SPEC_REQUIRED_IDS "$canonical_relative" 'page traceability or an explicit non-page exception is required'; fi
     allowed_ids="$tmp_dir/allowed-ids"
-    collect_added_ids "$change_dir" "$tmp_dir/added-ids"
+    collect_declared_ids "$change_dir" "$tmp_dir/added-ids"
     grep -Eo "$id_pattern" "$canonical" | LC_ALL=C sort -u >"$tmp_dir/canonical-citations" || true
     LC_ALL=C sort -u "$tmp_dir/canonical-citations" "$tmp_dir/added-ids" >"$allowed_ids"
     for artifact in "$proposal" "$change_dir/design.md" "$change_dir/tasks.md"; do

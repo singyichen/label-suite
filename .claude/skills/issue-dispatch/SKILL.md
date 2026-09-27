@@ -257,7 +257,18 @@ Merge only when the independent review passed and all four hold, checked with `g
 - the check count is greater than 0
 - every check passed
 
-`gh pr checks --watch` exiting 0 is not sufficient alone — it also exits 0 when the PR has zero checks, which is exactly what a `CONFLICTING` PR looks like; that gap is what nearly merged #940.
+`gh pr checks --watch` exiting 0 is not sufficient alone — it also exits 0 when the PR has zero checks (the `CONFLICTING` gap that nearly merged #940), and separately when the only registered check is an external app while this repo's own workflow run is still `queued` — PR #1026, head `0860ef12`: `checks=1` was `Amazon Q Developer` passing in 33s while `CI` sat `queued`, though the identical single-file edit type registered 17 checks in #990/#1008.
+
+These four conditions are necessary but not sufficient — they can all hold before this repo's own CI run has registered a single check. Before merging, also confirm no workflow run for the head SHA is still `queued` or `in_progress`, and that the two unconditional jobs are present and `SUCCESS`:
+
+```bash
+gh run list --branch <branch> --json status,conclusion,headSha --jq '[.[] | select(.headSha == "<sha>")] | map(select(.status != "completed")) | length'   # must be 0
+gh pr view <pr> --json statusCheckRollup --jq '[.statusCheckRollup[] | select((.name=="Project SDD Lint" or .name=="Validate Project Structure") and .conclusion=="SUCCESS")] | length == 2'   # must be true
+```
+
+The first command's `0` alone is not conclusive: an empty result set for this SHA prints the same `0` whether every run has finished or no run has been created yet, so it cannot tell those two states apart — only the second command's job-name check catches the "not created yet" case, and the two must hold together, never the first in isolation.
+
+`Project SDD Lint` and `Validate Project Structure` run unconditionally on every change; their absence from a green-looking rollup means the run has not registered yet, not that they were skipped.
 
 ```bash
 gh pr merge <pr> --merge
@@ -380,3 +391,4 @@ One deviation is from CLAUDE.md itself and is therefore **not** this skill's to 
 | `specs/STATUS.md`'s per-spec row is a cumulative summary string; taking one side of a merge conflict can silently drop an intermediate version's entry, and `check-sdd.sh` only checks the leading version, never entry continuity (#925/#956) | Compare both sides' version-entry sequences and restore any segment missing from the losing side |
 | FR/AC IDs collide silently across issues sharing a wave — git merges both with no conflict marker, and no gate (`check-sdd.sh`, `openspec validate`) checks for duplicate IDs (#920/#956) | Pre-assign or merge-time-renumber ID ranges per issue (Step 4 controlled exception); `grep -rn` the repo for zero remaining hits after renumbering |
 | A PR opened without its CI watch armed in the same turn stalls an autonomous round silently — the main session sits reporting "waiting on CI" while CI already finished (2026-09-27: #1016/#1017/#1020) | The main session, not the lead, arms the watch in the same turn it obtains the PR number, in Step 6; re-arm after every `merge main` + repush, since the prior watch already exited with that round's CI. Any already-open PR found unwatched gets one before continuing |
+| The four Step 7 merge conditions can all hold before this repo's own CI run has registered a single check (#1026, head `0860ef12`: `checks=1` was `Amazon Q Developer` alone while `CI` sat `queued`) | Confirm zero `queued`/`in_progress` runs for the head SHA and `Project SDD Lint` + `Validate Project Structure` both `SUCCESS` before trusting the four conditions |
