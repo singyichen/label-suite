@@ -62,18 +62,51 @@ async function gotoWithTheme(page: Page, url: string, theme: 'light' | 'dark') {
   await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
 }
 
-async function measureLocatorContrast(page: Page, locator: ReturnType<Page['locator']>): Promise<number> {
-  await expect(locator).toBeVisible();
-  const { color, backgroundColor } = await locator.evaluate((el) => {
+/**
+ * A page re-render (e.g. task-detail.html's 560ms skeleton timer, or this file's own
+ * #1040 regression test) can detach-and-replace the target element between resolving it
+ * and reading its computed style (issue #1040). `Locator.evaluate()` does these as two
+ * separate steps -- resolve the selector to an element handle, then call a function on
+ * that handle -- each a distinct round trip, leaving a gap where a re-render can swap the
+ * element in between; the stale handle's `getComputedStyle()` then returns empty strings.
+ *
+ * An earlier version of this fix retried around that gap with `expect(...).toPass()` at
+ * various intervals/timeouts. Independent review reproduced failures against every
+ * interval/timeout tried (including a 10s timeout, sequential single-worker, no CI
+ * contention: 2/20 failed) -- retrying a fixed-period poll against a fixed-period
+ * artificial swap loop can alias instead of converging, so no interval was actually safe,
+ * only harder to catch failing.
+ *
+ * This version removes the gap instead of outrunning it: `page.evaluate()` (not
+ * `Locator.evaluate()`) resolves the selector via `document.querySelector` and reads
+ * `getComputedStyle` in the same synchronous callback, with no `await` between them. JS
+ * execution in a page is single-threaded and non-preemptive, so nothing -- including a
+ * pending re-render's setTimeout callback -- can run between those two statements; the
+ * callback observes a live element (old or new, whichever is currently attached) and
+ * never a stale handle. No retry, interval, or timeout is needed.
+ *
+ * document.querySelector() (unlike Playwright's strict-mode Locator) silently returns
+ * only the first match on a multi-match selector instead of erroring. Verified this
+ * doesn't matter for either caller's selector: '.page-btn.active' matches exactly 1
+ * element on task-list.html, and '#memberPaginationControls .page-btn.active' matches
+ * exactly 1 on task-detail.html even though the page has 4 total .page-btn.active across
+ * its other pagination controls (metadata/work-log/audit-record/audit-export) -- the
+ * #memberPaginationControls scope already disambiguates those.
+ */
+async function measureLocatorContrast(page: Page, selector: string): Promise<number> {
+  await expect(page.locator(selector).first()).toBeVisible();
+  const { color, backgroundColor } = await page.evaluate((sel) => {
+    const el = document.querySelector(sel);
+    if (!el) throw new Error(`No element matched selector after toBeVisible(): ${sel}`);
     const style = window.getComputedStyle(el);
     return { color: style.color, backgroundColor: style.backgroundColor };
-  });
+  }, selector);
   return contrastRatio(color, backgroundColor);
 }
 
 /** task-list.html renders its numbered pagination buttons synchronously on load. */
 async function measureTaskListPageBtnActiveContrast(page: Page): Promise<number> {
-  return measureLocatorContrast(page, page.locator('.page-btn.active').first());
+  return measureLocatorContrast(page, '.page-btn.active');
 }
 
 /**
@@ -85,7 +118,7 @@ async function measureTaskDetailPageBtnActiveContrast(page: Page): Promise<numbe
   await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
   await page.locator('#tabMemberManagement').click();
   await expect(page.locator('#memberManagementPanel')).not.toHaveClass(/hidden/);
-  return measureLocatorContrast(page, page.locator('#memberPaginationControls .page-btn.active'));
+  return measureLocatorContrast(page, '#memberPaginationControls .page-btn.active');
 }
 
 test.describe('task-list.html .page-btn.active WCAG contrast (issue #1019)', () => {
@@ -113,5 +146,50 @@ test.describe('task-detail.html member-management .page-btn.active WCAG contrast
     await gotoWithTheme(page, TASK_DETAIL_URL, 'dark');
     const ratio = await measureTaskDetailPageBtnActiveContrast(page);
     expect(ratio).toBeGreaterThanOrEqual(WCAG_AA_MIN_CONTRAST);
+  });
+});
+
+test.describe('measureLocatorContrast survives a detach race (issue #1040 regression guard)', () => {
+  test('measures a live element even while it is continuously detached and replaced', async ({ page }) => {
+    await gotoWithTheme(page, TASK_DETAIL_URL, 'dark');
+    // Scoped to a throwaway container (unique id) so this test's own .page-btn.active
+    // node can never collide with any of task-detail.html's real pagination controls
+    // (member-management/metadata/work-log/audit-record/audit-export), regardless of
+    // whether the page's own 560ms re-render timer has fired yet.
+    //
+    // A single one-shot 0ms replace (matching production's single 560ms timer) reliably
+    // fires *before* the test script even reaches measureLocatorContrast, because the
+    // preceding awaited round trips already exceed 0ms -- so it never lands in the
+    // narrow internal gap between a Locator resolving an element handle and evaluating
+    // on that handle. To turn that rare production race into a deterministic repro,
+    // this continuously detaches-and-replaces the button (capped at MAX_ITERATIONS)
+    // for the whole duration of the test, guaranteeing some replacement lands inside
+    // whatever gap toBeVisible() / evaluate() leave open.
+    await page.evaluate(() => {
+      const container = document.createElement('div');
+      container.id = 'racetestContainer1040';
+      document.body.appendChild(container);
+      let current = document.createElement('button');
+      current.className = 'page-btn active';
+      current.style.color = 'rgb(255, 255, 255)';
+      current.style.backgroundColor = 'rgb(0, 0, 0)';
+      container.appendChild(current);
+
+      const MAX_ITERATIONS = 20000;
+      let iterations = 0;
+      const swap = () => {
+        if (iterations++ >= MAX_ITERATIONS) return;
+        const fresh = document.createElement('button');
+        fresh.className = 'page-btn active';
+        fresh.style.color = 'rgb(255, 255, 255)';
+        fresh.style.backgroundColor = 'rgb(0, 0, 0)';
+        current.replaceWith(fresh);
+        current = fresh;
+        window.setTimeout(swap, 0);
+      };
+      window.setTimeout(swap, 0);
+    });
+    const ratio = await measureLocatorContrast(page, '#racetestContainer1040 .page-btn.active');
+    expect(ratio).toBeGreaterThan(1);
   });
 });
