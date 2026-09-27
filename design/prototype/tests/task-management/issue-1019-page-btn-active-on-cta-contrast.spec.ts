@@ -64,40 +64,41 @@ async function gotoWithTheme(page: Page, url: string, theme: 'light' | 'dark') {
 
 /**
  * A page re-render (e.g. task-detail.html's 560ms skeleton timer, or this file's own
- * #1040 regression test) can detach-and-replace the target element between toBeVisible()
- * resolving a handle and evaluate() reading its computed style, leaving the stale handle's
- * getComputedStyle() returning empty strings (issue #1040). expect(...).toPass() retries
- * the whole measurement until it observes a live, attached element instead of failing on
- * the first stale read. The default toPass() backoff (100/250/500/1000ms, capped at 1s)
- * measured ~1 in 10 against the #1040 regression test's continuous detach-and-replace
- * loop, so a fixed 20ms interval is used instead to give it far more attempts per second.
+ * #1040 regression test) can detach-and-replace the target element between resolving it
+ * and reading its computed style (issue #1040). `Locator.evaluate()` does these as two
+ * separate steps -- resolve the selector to an element handle, then call a function on
+ * that handle -- each a distinct round trip, leaving a gap where a re-render can swap the
+ * element in between; the stale handle's `getComputedStyle()` then returns empty strings.
  *
- * toPass() with no explicit `timeout` is bounded by the *expect* timeout (this repo's
- * default: 5s), not the 30s test timeout -- an earlier version of this comment assumed
- * the latter. 5s/20ms (~250 attempts) was enough in isolation (20/20, then 80/80 real
- * -path runs), but running the full `tests/task-management/ tests/admin/` suite
- * (500+ parallel tests) slowed CDP round trips enough that this regression test's own
- * continuous-replace loop exhausted a 5s budget once. An explicit 10s timeout gives
- * headroom against that contention while staying well under the 30s test timeout.
+ * An earlier version of this fix retried around that gap with `expect(...).toPass()` at
+ * various intervals/timeouts. Independent review reproduced failures against every
+ * interval/timeout tried (including a 10s timeout, sequential single-worker, no CI
+ * contention: 2/20 failed) -- retrying a fixed-period poll against a fixed-period
+ * artificial swap loop can alias instead of converging, so no interval was actually safe,
+ * only harder to catch failing.
+ *
+ * This version removes the gap instead of outrunning it: `page.evaluate()` (not
+ * `Locator.evaluate()`) resolves the selector via `document.querySelector` and reads
+ * `getComputedStyle` in the same synchronous callback, with no `await` between them. JS
+ * execution in a page is single-threaded and non-preemptive, so nothing -- including a
+ * pending re-render's setTimeout callback -- can run between those two statements; the
+ * callback observes a live element (old or new, whichever is currently attached) and
+ * never a stale handle. No retry, interval, or timeout is needed.
  */
-async function measureLocatorContrast(page: Page, locator: ReturnType<Page['locator']>): Promise<number> {
-  await expect(locator).toBeVisible();
-  let colorPair!: { color: string; backgroundColor: string };
-  await expect(async () => {
-    colorPair = await locator.evaluate((el) => {
-      const style = window.getComputedStyle(el);
-      return { color: style.color, backgroundColor: style.backgroundColor };
-    });
-    if (!colorPair.color || !colorPair.backgroundColor) {
-      throw new Error('Element was detached mid-measurement (re-render race); retrying.');
-    }
-  }).toPass({ intervals: [20], timeout: 10_000 });
-  return contrastRatio(colorPair.color, colorPair.backgroundColor);
+async function measureLocatorContrast(page: Page, selector: string): Promise<number> {
+  await expect(page.locator(selector).first()).toBeVisible();
+  const { color, backgroundColor } = await page.evaluate((sel) => {
+    const el = document.querySelector(sel);
+    if (!el) throw new Error(`No element matched selector after toBeVisible(): ${sel}`);
+    const style = window.getComputedStyle(el);
+    return { color: style.color, backgroundColor: style.backgroundColor };
+  }, selector);
+  return contrastRatio(color, backgroundColor);
 }
 
 /** task-list.html renders its numbered pagination buttons synchronously on load. */
 async function measureTaskListPageBtnActiveContrast(page: Page): Promise<number> {
-  return measureLocatorContrast(page, page.locator('.page-btn.active').first());
+  return measureLocatorContrast(page, '.page-btn.active');
 }
 
 /**
@@ -109,7 +110,7 @@ async function measureTaskDetailPageBtnActiveContrast(page: Page): Promise<numbe
   await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
   await page.locator('#tabMemberManagement').click();
   await expect(page.locator('#memberManagementPanel')).not.toHaveClass(/hidden/);
-  return measureLocatorContrast(page, page.locator('#memberPaginationControls .page-btn.active'));
+  return measureLocatorContrast(page, '#memberPaginationControls .page-btn.active');
 }
 
 test.describe('task-list.html .page-btn.active WCAG contrast (issue #1019)', () => {
@@ -180,7 +181,7 @@ test.describe('measureLocatorContrast survives a detach race (issue #1040 regres
       };
       window.setTimeout(swap, 0);
     });
-    const ratio = await measureLocatorContrast(page, page.locator('#racetestContainer1040 .page-btn.active'));
+    const ratio = await measureLocatorContrast(page, '#racetestContainer1040 .page-btn.active');
     expect(ratio).toBeGreaterThan(1);
   });
 });
