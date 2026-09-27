@@ -19,8 +19,8 @@
 
 - [x] 3.1 執行閘門：`cd design/prototype && pnpm typecheck`；`cd design/prototype && PW_PORT=8981 pnpm playwright test tests/annotation/ tests/shared/ issue-1018-sidebar-pl-exception-label.spec.ts`；`scripts/check-sdd.sh`；`openspec validate --changes --no-interactive`；若 `design/prototype/pages/**` 有變動則 `node scripts/gen-screen-inventory.mjs`。全部通過方可繼續，由 lead 親自重跑並獨立覆核，不採信代理自報。[@main]
 - [x] 3.2 Source-Verify 預掃：確認 FR-020、SC-013A、annotation-015 之 `crumbWorkAreaProjectLeader`／FR-080 引用、issue #994／#944／#931／#1018 之引用皆可於正典或程式碼逐一 `grep` 定位。[@main]
-- [ ] 3.3 `openspec archive`：雙寫——合併進 `openspec/specs/` derived view，並回寫正典 spec.md 之 FR-020（MODIFIED）；版本號 MAJOR bump，欄位先留佔位符，由主 session 於合併時依實際順序指派；Changelog 新增一列。[@main]
-- [ ] 3.4 回寫正典時同步修訂 SC-013A（不在 delta schema 內，純手動回寫——SC-013／SC-013A 從未是本 spec 於 OpenSpec 模型裡的 Requirement，issue #944 當時的 delta 亦從未提及，比照該先例做法）：`project_leader` 自「維持既有預設『標記作業』」移出，改為對應 FR-020 新分支之「例外處置」；`annotator` 兩項與 `role-indicator` 部分逐字不動。新文字須逐字取自 `proposal.md` 之 `MODIFIED SC-013A` 一節。[@main]
+- [x] 3.3 `openspec archive`：雙寫——合併進 `openspec/specs/` derived view，並回寫正典 spec.md 之 FR-020（MODIFIED）；版本號 MAJOR bump，欄位先留佔位符，由主 session 於合併時依實際順序指派；Changelog 新增一列。[@main]
+- [x] 3.4 回寫正典時同步修訂 SC-013A（不在 delta schema 內，純手動回寫——SC-013／SC-013A 從未是本 spec 於 OpenSpec 模型裡的 Requirement，issue #944 當時的 delta 亦從未提及，比照該先例做法）：`project_leader` 自「維持既有預設『標記作業』」移出，改為對應 FR-020 新分支之「例外處置」；`annotator` 兩項與 `role-indicator` 部分逐字不動。新文字須逐字取自 `proposal.md` 之 `MODIFIED SC-013A` 一節。[@main]
 
 ## 4. 獨立審查與 PR
 
