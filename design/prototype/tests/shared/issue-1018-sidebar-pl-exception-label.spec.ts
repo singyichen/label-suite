@@ -90,11 +90,10 @@ test.describe('issue #1018: project_leader #navAnnotation reads 例外處置, ma
 
     // Red: today this renders "標記作業" because project_leader falls into
     // the same else-branch as annotator in sidebar.js's navItems resolution.
-    const breadcrumbText = await workAreaCrumb(page).textContent();
-    const sidebarText = await navAnnotation(page).textContent();
-
-    expect(sidebarText).toBe('例外處置');
-    expect(sidebarText).toBe(breadcrumbText);
+    // toHaveText() polls/retries instead of a one-shot textContent() read,
+    // avoiding the detached-node race documented in issue #1040.
+    await expect(navAnnotation(page)).toHaveText('例外處置');
+    await expect(workAreaCrumb(page)).toHaveText('例外處置');
   });
 });
 
