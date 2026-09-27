@@ -389,7 +389,7 @@ One deviation is from CLAUDE.md itself and is therefore **not** this skill's to 
 | A merged PR without `Closes` leaves its issue open (#906) | Step 9 reconciles issues against merged PRs |
 | Citation typos survive archive; no CLI check catches them (issue #356 pilot finding ③, `docs/sdd-workflow.md` §6.2) | Source-Verify pre-scan before archive |
 | Port 8888 already held by another session's server | One `PW_PORT` per worktree from 8980, `lsof` checked before hand-out |
-| Push from a worktree blocked as a push from `main` | `EnterWorktree`, or `cd <worktree> && git push` |
+| Push from a worktree blocked as a push from `main` | `EnterWorktree` (only from a session already inside a worktree), or `cd <worktree> && git push` |
 | Two issues bumping one canonical spec's Changelog | Shared canonical spec means different waves |
 | Leftover worktrees and `[gone]` branches after a sprint | Step 9 cleanup, plus `pr-flow`'s sprint-end sweep |
 | Regenerating a derived file (e.g. screen inventory) after every source edit leaves throwaway commits that go empty on rebase | Regenerate it once, right after the last source edit, not after each one |
