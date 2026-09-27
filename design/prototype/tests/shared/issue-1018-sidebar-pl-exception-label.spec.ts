@@ -29,12 +29,36 @@
  *   static server's occasional keep-alive drop under parallel load, rather
  *   than one serial block whose early failure would hide a later
  *   non-regression pin as "did not run" instead of reporting it as passed.
+ * - English assertions preset `localStorage.labelsuite.lang = 'en'` via
+ *   `addInitScript` BEFORE `page.goto`, instead of clicking the sidebar's
+ *   `data-testid="lang-toggle"` after navigation. Root cause: `sidebar.js`'s
+ *   `mountSidebar()` (annotation-workspace.html:1108-1116) bakes
+ *   `#navAnnotation`'s text into static HTML once, at mount, from
+ *   `taskRoleI18n[readStoredLang()]` (sidebar.js:486,511-512).
+ *   `annotation-workspace.config.js`'s `setupLangToggle()` (:6374-6386)
+ *   persists the new language and re-renders the breadcrumb/workspace, but
+ *   never re-invokes `mountSidebar()`, so `#navAnnotation` never reflects a
+ *   post-navigation `lang-toggle` click for ANY role -- confirmed by running
+ *   the lang-toggle-click version of this file's reviewer/annotator
+ *   regression guards, which failed on the English half even though nothing
+ *   in this issue's scope touches that path. Presetting the stored language
+ *   before navigation matches the point `mountSidebar()` actually reads it.
  *
  * Traceability: issue #1018; openspec/changes/fix-1018-sidebar-pl-label/tasks.md
  * task 1.1; specs/shared/008-sidebar-navbar-shared/spec.md FR-020.
  */
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { buildWorkspaceUrl, skipGuidelineModal } from '../annotation/_workspace-helpers';
+
+/* Mirrors skipGuidelineModal()'s addInitScript pattern: presets the shared
+ * sidebar's stored language BEFORE navigation, so mountSidebar() resolves
+ * `#navAnnotation` in English at mount time (see file-header note on why a
+ * post-navigation lang-toggle click does not work for this element). */
+async function presetEnglish(page: Page) {
+  await page.addInitScript(() => {
+    window.localStorage.setItem('labelsuite.lang', 'en');
+  });
+}
 
 const TASK = 'T016';
 const RUN_TYPE = 'official_run';
@@ -77,10 +101,10 @@ test.describe('issue #1018: project_leader #navAnnotation reads 例外處置, ma
 test.describe('issue #1018: project_leader #navAnnotation reads Exception Disposition (en)', () => {
   test.describe.configure({ retries: 2 });
 
-  test('project_leader: #navAnnotation reads Exception Disposition after lang-toggle', async ({ page }) => {
+  test('project_leader: #navAnnotation reads Exception Disposition with English preset before navigation', async ({ page }) => {
     await skipGuidelineModal(page);
+    await presetEnglish(page);
     await page.goto(buildProjectLeaderUrl(SAMPLE_EXCEPTION));
-    await page.getByTestId('lang-toggle').click();
 
     await expect(navAnnotation(page)).toHaveText('Exception Disposition');
   });
@@ -93,13 +117,18 @@ test.describe('issue #1018: regression guard — reviewer #navAnnotation unchang
    * must keep reading exactly as it does today, both before and after the
    * Green fix adds the project_leader branch alongside it. This case is
    * expected to PASS already. */
-  test('reviewer: #navAnnotation stays 審核作業 / Review', async ({ page }) => {
+  test('reviewer: #navAnnotation stays 審核作業 (zh)', async ({ page }) => {
     await skipGuidelineModal(page);
     await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer', run_type: 'dry_run' }));
 
     await expect(navAnnotation(page)).toHaveText('審核作業');
+  });
 
-    await page.getByTestId('lang-toggle').click();
+  test('reviewer: #navAnnotation stays Review (en, preset before navigation)', async ({ page }) => {
+    await skipGuidelineModal(page);
+    await presetEnglish(page);
+    await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer', run_type: 'dry_run' }));
+
     await expect(navAnnotation(page)).toHaveText('Review');
   });
 });
@@ -110,13 +139,18 @@ test.describe('issue #1018: regression guard — annotator #navAnnotation unchan
   /* Non-regression pin: the pre-existing default ('標記作業' / 'Annotate')
    * must keep rendering for the true annotator role once the else-branch
    * gains a project_leader sibling. This case is expected to PASS already. */
-  test('annotator: #navAnnotation stays 標記作業 / Annotate', async ({ page }) => {
+  test('annotator: #navAnnotation stays 標記作業 (zh)', async ({ page }) => {
     await skipGuidelineModal(page);
     await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'annotator', run_type: 'dry_run' }));
 
     await expect(navAnnotation(page)).toHaveText('標記作業');
+  });
 
-    await page.getByTestId('lang-toggle').click();
+  test('annotator: #navAnnotation stays Annotate (en, preset before navigation)', async ({ page }) => {
+    await skipGuidelineModal(page);
+    await presetEnglish(page);
+    await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'annotator', run_type: 'dry_run' }));
+
     await expect(navAnnotation(page)).toHaveText('Annotate');
   });
 });
