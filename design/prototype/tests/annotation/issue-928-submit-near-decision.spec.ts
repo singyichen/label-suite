@@ -1,14 +1,18 @@
 /**
- * The footer submit button (`#wsReviewSubmitBtn` / `ws-review-submit-btn`)
- * sits ~389px below the decision row (measured live at 1440x900 on
- * T015/ofs-04-pending-review, reviewer_wang), so every reviewed sample costs
- * a long pointer trip from decision to submit (issue #928).
+ * issue #928 introduced a decision-row "quick submit" control
+ * (`ws-review-quick-submit-btn`) that appeared next to `.rv-decision-row`
+ * once every outKey in the review unit was decided, driving the same
+ * `handleReviewSubmit()` as the pre-existing fixed footer button
+ * (`ws-review-submit-btn`). issue #1004: the maintainer ruled the two
+ * visually-identical submit entry points were confusing and decided to keep
+ * only the footer button -- the decision-row quick-submit control (and its
+ * issue #930 consequence-hint sibling, `ws-review-quick-submit-consequence`)
+ * is removed entirely.
  * Source spec: specs/annotation/015-annotation-workspace/spec.md FR-014P
  *
- * Target: once every outKey in the review unit has a decision
- * (`pendingReviewOutputKeys(...).length === 0`), a new secondary control
- * (`ws-review-quick-submit-btn`) appears near `.rv-decision-row` and drives
- * the same `handleReviewSubmit()` as the existing footer button. The footer
+ * Target: `ws-review-quick-submit-btn` never renders, at any point in the
+ * review unit's decision lifecycle -- the footer button
+ * (`ws-review-submit-btn`) is the single submit entry point. The footer
  * button itself is NOT moved and keeps its current position/right-alignment
  * inside `.action-bar` (locked by issue #563's
  * issue-563-submit-btn-right-aligned.spec.ts).
@@ -22,15 +26,17 @@ test.beforeEach(async ({ page }) => {
   await skipGuidelineModal(page);
 });
 
-test.describe('A quick-submit control appears next to the decision row once decided (issue #928)', () => {
-  test('the quick-submit control is hidden before any decision is made', async ({ page }) => {
+test.describe('the footer submit button is the single review submit entry point (issue #1004)', () => {
+  test('the quick-submit control does not exist in the DOM before any decision is made', async ({ page }) => {
     await gotoReviewerWorkspace(page, SAMPLE);
     await dismissGuidelineModal(page);
 
-    await expect(page.getByTestId('ws-review-quick-submit-btn')).toBeHidden();
+    await expect(page.getByTestId('ws-review-quick-submit-btn')).toHaveCount(0);
   });
 
-  test('the quick-submit control appears near .rv-decision-row once all outKeys are decided', async ({ page }) => {
+  test('the quick-submit control still does not exist once all outKeys are decided, leaving the footer button as the only visible submit control', async ({
+    page,
+  }) => {
     await gotoReviewerWorkspace(page, SAMPLE);
     await dismissGuidelineModal(page);
 
@@ -38,24 +44,16 @@ test.describe('A quick-submit control appears next to the decision row once deci
      * decision click clears pendingReviewOutputKeys() for this unit. */
     await page.getByTestId('ws-review-row-approve').click();
 
-    const quickSubmitBtn = page.getByTestId('ws-review-quick-submit-btn');
-    await expect(quickSubmitBtn).toBeVisible();
-
-    const decisionRowBox = await page.locator('.rv-decision-row').boundingBox();
-    const quickSubmitBox = await quickSubmitBtn.boundingBox();
-    expect(decisionRowBox, '.rv-decision-row bounding box').not.toBeNull();
-    expect(quickSubmitBox, 'ws-review-quick-submit-btn bounding box').not.toBeNull();
-
-    const gap = quickSubmitBox!.y - (decisionRowBox!.y + decisionRowBox!.height);
-    expect(gap).toBeLessThanOrEqual(120);
+    await expect(page.getByTestId('ws-review-quick-submit-btn')).toHaveCount(0);
+    await expect(page.getByTestId('ws-review-submit-btn')).toBeVisible();
   });
 
-  test('clicking the quick-submit control submits the review, same as the footer submit button', async ({ page }) => {
+  test('clicking the footer submit button after all decisions are made submits the review', async ({ page }) => {
     await gotoReviewerWorkspace(page, SAMPLE);
     await dismissGuidelineModal(page);
 
     await page.getByTestId('ws-review-row-approve').click();
-    await page.getByTestId('ws-review-quick-submit-btn').click();
+    await page.getByTestId('ws-review-submit-btn').click();
 
     await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
   });
