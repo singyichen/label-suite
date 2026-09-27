@@ -50,6 +50,20 @@ Every nested agent's prompt must state the worktree's absolute path and require 
 
 Model selection follows CLAUDE.md: the lead defaults to Sonnet; escalate to Opus for architecture, counter-factual, or security threat modeling work.
 
+### Nested-specialist preamble
+
+A nested specialist never loads this skill; it only sees what the lead's prompt gives it. Before dispatching one, copy this block verbatim into its prompt:
+
+- No bare `git stash` / `git stash pop` — the stash stack is shared across every worktree and session. Park changes in a WIP commit; for an unmodified copy use `git worktree add --detach <tmp> <base>`.
+- Never run the full Playwright suite. Always use the lead-assigned `PW_PORT`, never the default — 8888 is routinely held by another session and produces false results.
+- Revert any diagnostic probe patch before reporting done. The lead runs `git status --short` before trusting Red evidence.
+- This environment is zsh: `mapfile` / `readarray` do not exist. Build arrays with `${(f)"$(cat file)"}` or list filenames directly.
+- Enter the worktree by its absolute path (`cd <absolute-path> && ...`) before every command; do not assume the working directory persists or inherits the lead's.
+
+## Execution attribution
+
+State only the commands you yourself ran. Never write a lead's, a peer's, or the main session's execution as your own, and never claim the main session "already reran" a step it did not run in this session. Describe a future independent re-verification as a mechanism, not as an event that already happened.
+
 ## Peer communication
 
 Leads may talk to each other directly. The rules below are not style preferences — each follows from what the harness actually permits.
@@ -224,9 +238,11 @@ gh pr create --title "<type>: <中文描述>" --base main --head "${BRANCH}" \
 
 The body follows `pr-flow` step 5b — Traditional Chinese, `##` headings in English — and **must contain `Closes #N`**. Every Test Plan item is individually verified: `[x]` with the command and its result for a pass, `[ ]` with the reason for a fail. Commit messages stay English-only.
 
+The **main session** arms the CI watch — never the lead. A background command only re-invokes whoever started it, and merge is the main session's job alone (Step 7); a watch the lead arms wakes an agent that has typically already handed off and finished, leaving the main session with no wake source. The main session arms it in the same tool-call turn it obtains the PR number — whether from its own `gh pr create` call or from the lead's hand-off reporting the PR is open. A PR number that reaches the main session without a watch armed in that same turn leaves it idle: no event exists to wake it up again. Step 7 below has the watch mechanism and the merge conditions.
+
 ## Step 7 — Merge
 
-Wait for CI without a foreground `sleep`, which the harness blocks. Either run the watch as a background command, which re-invokes the session when it exits:
+The watch the main session armed in Step 6, in the same turn it obtained the PR number, is what stands in for a foreground `sleep`, which the harness blocks. Its mechanism is either a background command, which re-invokes the session when it exits:
 
 ```bash
 gh pr checks <pr> --watch --fail-fast
@@ -363,3 +379,4 @@ One deviation is from CLAUDE.md itself and is therefore **not** this skill's to 
 | Bare `git stash`/`git stash pop` in a multi-worktree wave can lose or cross-contaminate another lead's uncommitted work — the stash stack is shared repo-wide, not per-worktree (#956) | Park changes in a WIP commit; for a read-only probe tree use `git worktree add --detach <tmp> <base>` |
 | `specs/STATUS.md`'s per-spec row is a cumulative summary string; taking one side of a merge conflict can silently drop an intermediate version's entry, and `check-sdd.sh` only checks the leading version, never entry continuity (#925/#956) | Compare both sides' version-entry sequences and restore any segment missing from the losing side |
 | FR/AC IDs collide silently across issues sharing a wave — git merges both with no conflict marker, and no gate (`check-sdd.sh`, `openspec validate`) checks for duplicate IDs (#920/#956) | Pre-assign or merge-time-renumber ID ranges per issue (Step 4 controlled exception); `grep -rn` the repo for zero remaining hits after renumbering |
+| A PR opened without its CI watch armed in the same turn stalls an autonomous round silently — the main session sits reporting "waiting on CI" while CI already finished (2026-09-27: #1016/#1017/#1020) | The main session, not the lead, arms the watch in the same turn it obtains the PR number, in Step 6; re-arm after every `merge main` + repush, since the prior watch already exited with that round's CI. Any already-open PR found unwatched gets one before continuing |
