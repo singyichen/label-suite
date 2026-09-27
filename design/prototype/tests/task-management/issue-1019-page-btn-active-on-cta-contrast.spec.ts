@@ -115,3 +115,48 @@ test.describe('task-detail.html member-management .page-btn.active WCAG contrast
     expect(ratio).toBeGreaterThanOrEqual(WCAG_AA_MIN_CONTRAST);
   });
 });
+
+test.describe('measureLocatorContrast survives a detach race (issue #1040 regression guard)', () => {
+  test('retries past an element replaced between toBeVisible() and evaluate()', async ({ page }) => {
+    await gotoWithTheme(page, TASK_DETAIL_URL, 'dark');
+    // Scoped to a throwaway container (unique id) so this test's own .page-btn.active
+    // node can never collide with any of task-detail.html's real pagination controls
+    // (member-management/metadata/work-log/audit-record/audit-export), regardless of
+    // whether the page's own 560ms re-render timer has fired yet.
+    //
+    // A single one-shot 0ms replace (matching production's single 560ms timer) reliably
+    // fires *before* the test script even reaches measureLocatorContrast, because the
+    // preceding awaited round trips already exceed 0ms -- so it never lands in the
+    // narrow internal gap between a Locator resolving an element handle and evaluating
+    // on that handle. To turn that rare production race into a deterministic repro,
+    // this continuously detaches-and-replaces the button (capped at MAX_ITERATIONS)
+    // for the whole duration of the test, guaranteeing some replacement lands inside
+    // whatever gap toBeVisible() / evaluate() leave open.
+    await page.evaluate(() => {
+      const container = document.createElement('div');
+      container.id = 'racetestContainer1040';
+      document.body.appendChild(container);
+      let current = document.createElement('button');
+      current.className = 'page-btn active';
+      current.style.color = 'rgb(255, 255, 255)';
+      current.style.backgroundColor = 'rgb(0, 0, 0)';
+      container.appendChild(current);
+
+      const MAX_ITERATIONS = 20000;
+      let iterations = 0;
+      const swap = () => {
+        if (iterations++ >= MAX_ITERATIONS) return;
+        const fresh = document.createElement('button');
+        fresh.className = 'page-btn active';
+        fresh.style.color = 'rgb(255, 255, 255)';
+        fresh.style.backgroundColor = 'rgb(0, 0, 0)';
+        current.replaceWith(fresh);
+        current = fresh;
+        window.setTimeout(swap, 0);
+      };
+      window.setTimeout(swap, 0);
+    });
+    const ratio = await measureLocatorContrast(page, page.locator('#racetestContainer1040 .page-btn.active'));
+    expect(ratio).toBeGreaterThan(1);
+  });
+});
