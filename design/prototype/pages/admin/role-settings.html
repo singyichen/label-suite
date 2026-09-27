@@ -103,7 +103,7 @@
     .btn-cta {
       display: inline-flex; align-items: center; gap: 6px;
       padding: 8px 20px; border-radius: var(--radius-md); font-size: 14px; font-weight: 600;
-      border: none; background: var(--color-cta); color: var(--color-white); transition: opacity 150ms;
+      border: none; background: var(--color-cta); color: var(--color-on-cta); transition: opacity 150ms;
     }
     .btn-cta:hover { opacity: 0.9; }
     .btn-cta:disabled { opacity: 0.45; cursor: not-allowed; }
@@ -385,8 +385,6 @@
       --color-task-soft-bg:  #0C2A27;
       --color-task-header:   #2DD4BF;
     }
-    /* Bright CTA backgrounds need dark text in dark mode (MASTER §CTA button contrast) */
-    html[data-theme="dark"] .btn-cta { color: #0F172A; }
   </style>
 </head>
 <body>
