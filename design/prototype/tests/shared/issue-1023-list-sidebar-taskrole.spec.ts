@@ -37,8 +37,11 @@
  *
  * This file asserts the RENDERED DOM text of `#navAnnotation` on
  * `annotation-list.html` for reviewer and project_leader (currently wrong:
- * both still read '標記作業'), plus a non-regression pin for annotator /
- * no-role (already correct today, must stay correct after the fix).
+ * both still read '標記作業'), plus guards for annotator / no-role. The zh
+ * guards are true non-regression pins (already correct today, unaffected by
+ * the fix). The en/annotator guard is DIFFERENT and deliberately NOT a
+ * non-regression pin -- see the "DELIBERATELY ACCEPTED REGRESSION" note
+ * below and the case itself further down.
  *
  * Structural conventions (mirrors
  * issue-1018-sidebar-pl-exception-label.spec.ts):
@@ -61,22 +64,44 @@
  *   annotation-list.html has no first-visit guideline modal (confirmed by
  *   its existing annotation-list-reviewer.spec.ts, which never calls it).
  *
- * NOTE on the issue #1018 precedent (see the annotator/en regression case
- * below for the full citation): before the Green fix, annotation-list.html
- * carried its OWN legacy `applyNavLabels()` / `I18N` dictionary
- * (annotation-list.html:726, 802, 2532-2536, invoked at :2574 and again on
- * every lang-toggle click at :2587) that overwrote `#navAnnotation` AFTER
- * `mountSidebar()` ran, from a plain zh/en pair with NO taskRole awareness
- * at all -- itself a violation of FR-020. The Green fix (70c8e7ba) removed
- * `navAnnotation` from both `applyNavLabels()`'s overwrite list and the
- * `I18N[lang]` dictionary entries, in addition to passing `taskRole` into
- * the `mountSidebar()` call site. As a result, `#navAnnotation` on
- * annotation-list.html is now governed exclusively by `sidebar.js`'s
- * `renderSidebar()`, the same as on annotation-workspace.html -- there is
- * no longer any per-page deviation from the #1018 precedent.
+ * NOTE on the issue #1018 precedent, and a DELIBERATELY ACCEPTED REGRESSION
+ * (see the annotator/en case further down for the assertion itself): before
+ * the Green fix, annotation-list.html carried its OWN legacy
+ * `applyNavLabels()` / `I18N` dictionary (annotation-list.html:726, 802,
+ * 2532-2536, invoked at :2574 and again on every lang-toggle click at
+ * :2587) that overwrote `#navAnnotation` AFTER `mountSidebar()` ran, from a
+ * plain zh/en pair with NO taskRole awareness at all -- that overwrite was
+ * itself a violation of FR-020 ("消費頁面不得於掛載完成後另行以 DOM 操作
+ * 覆寫該節點之顯示文字"), and removing it is REQUIRED for the
+ * reviewer/project_leader fix above to take effect at all: `sidebar.js`'s
+ * `mountSidebar()` opts expose no nav-label override entry (only
+ * `roleIndicator`/`roleLabel`), so under "do not touch sidebar.js" there is
+ * no alternative to removing this page-local overwrite. The Green fix
+ * (70c8e7ba) removed `navAnnotation` from both `applyNavLabels()`'s
+ * overwrite list and the `I18N[lang]` dictionary entries, in addition to
+ * passing `taskRole` into the `mountSidebar()` call site.
  *
- * Traceability: issue #1023; specs/shared/008-sidebar-navbar-shared/spec.md
- * FR-020.
+ * That removal has a side effect that IS a regression, not a fix: before,
+ * `annotation-list.html` rendered `#navAnnotation` as 'Annotation' under an
+ * English locale for the annotator role; after, it renders the untranslated
+ * '標記作業' -- an English-locale user now sees Chinese text where they
+ * didn't before. This is DELIBERATELY ACCEPTED, not the desired end state.
+ * The only way to avoid it without exceeding this issue's scope would be
+ * making `sidebar.js`'s `annotator`/else branch language-aware -- but
+ * FR-020's current text gives `reviewer` (en: `Review`) and `project_leader`
+ * (en: `Exception Disposition`) English strings while `annotator` has none
+ * ("維持既有預設「標記作業」" only, no English variant). Adding one is NEW
+ * FR-020 contract content, not a clarification, and belongs to issue #1041
+ * (filed, awaiting maintainer adjudication on the L0 label i18n gap) --
+ * not this issue's Lightweight Path. Once #1041 lands an English string for
+ * the annotator/else branch, `sidebar.js` will render it correctly on BOTH
+ * `annotation-workspace.html` and `annotation-list.html`, and the assertion
+ * below should change from '標記作業' to whatever #1041 defines. Do not
+ * read '標記作業' in that case as the desired end state -- it is the
+ * regression #1041 is tracked to fix.
+ *
+ * Traceability: issue #1023; issue #1041 (tracks the deliberately accepted
+ * regression above); specs/shared/008-sidebar-navbar-shared/spec.md FR-020.
  */
 import { test, expect, type Page } from '@playwright/test';
 import { buildListUrl } from '../annotation/_workspace-helpers';
@@ -159,25 +184,26 @@ test.describe('issue #1023: regression guard — annotator/no-role #navAnnotatio
     await expect(navAnnotation(page)).toHaveText('標記作業');
   });
 
-  /* Consistent with the issue-#1018 precedent this file otherwise mirrors:
-   * on annotation-workspace.html, sidebar.js's else-branch defaultLabel is
-   * the bare literal '標記作業' with no English variant, so #1018 pins
-   * that branch as untranslated under an English preset (see
-   * issue-1018-sidebar-pl-exception-label.spec.ts's "annotator:
-   * #navAnnotation stays untranslated 標記作業" case). Before the Green fix
-   * (70c8e7ba), annotation-list.html's own legacy `applyNavLabels()`
-   * (design/prototype/pages/annotation/annotation-list.html:2532-2536)
-   * overwrote `#navAnnotation` from its own `I18N[lang].navAnnotation`
-   * dictionary entry after `mountSidebar()` ran, so this branch used to
-   * render 'Annotation' (en) instead -- a page-specific deviation that was
-   * itself the FR-020 violation Green removed. Now that `applyNavLabels()`
-   * no longer touches `#navAnnotation` and its `I18N` entries are gone,
-   * `#navAnnotation` is governed solely by `sidebar.js`, whose
-   * `annotator`/else branch has no English variant -- so this case
-   * correctly stays 標記作業, matching annotation-workspace.html exactly.
-   * This is the expected, correct side effect of the Green fix, not a
-   * regression. */
-  test('annotator: #navAnnotation stays untranslated 標記作業 (en context, preset before navigation)', async ({ page }) => {
+  /* DELIBERATELY ACCEPTED REGRESSION -- see the file-header note above for
+   * the full explanation. Before the Green fix (70c8e7ba), this case
+   * rendered 'Annotation' (en) from annotation-list.html's own legacy
+   * `applyNavLabels()` / `I18N[lang].navAnnotation` dictionary
+   * (design/prototype/pages/annotation/annotation-list.html:2532-2536),
+   * which overwrote `#navAnnotation` after `mountSidebar()` ran and was
+   * itself an FR-020 violation. Removing that overwrite was REQUIRED for
+   * the reviewer/project_leader fix above to take effect at all -- there is
+   * no alternative under `sidebar.js`'s current `opts` surface. Its side
+   * effect: `#navAnnotation` is now governed solely by `sidebar.js`, whose
+   * `annotator`/else branch has no English variant, so this case regresses
+   * to the untranslated '標記作業' -- an English-locale user sees Chinese
+   * text where they didn't before. This is an ACCEPTED regression, not a
+   * correct or desired outcome: the alternative (giving the `annotator`
+   * branch an English string in FR-020) is new contract content outside
+   * this issue's Lightweight Path, tracked at issue #1041. DO NOT read
+   * '標記作業' below as the intended behavior -- when #1041 lands, this
+   * assertion must be updated to whatever English string it defines, not
+   * kept as a permanent expectation. */
+  test('annotator: #navAnnotation regresses to untranslated 標記作業 (en context, preset before navigation) — accepted, tracked in #1041', async ({ page }) => {
     await presetEnglish(page);
     await page.goto(buildListUrl({ task_id: TASK, role: 'annotator', run_type: RUN_TYPE }));
 
