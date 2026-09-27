@@ -11,7 +11,7 @@
 
 **故事目標**：SC-013A — 解析邏輯收斂於 `sidebar.js` 元件內部，最小改動延伸既有 `taskRoleI18n`／`navItems` 結構，不引入消費端覆寫，不重構鄰近程式碼。
 
-- [ ] 2.1 修改 `design/prototype/pages/shared/sidebar.js`：`taskRoleI18n` 兩個語言物件（zh/en）各新增一鍵（值同既有 `crumbWorkAreaProjectLeader` 常數：zh「例外處置」/en `Exception Disposition`）；`navItems` 之 `annotation` 項目 `defaultLabel` 解析（現行 `taskRole === 'reviewer' ? taskRoleLabels.annotationLabel : '標記作業'`）新增 `project_leader` 分支，改為依 `taskRole` 三分流（`reviewer` → 既有審核作業、`project_leader` → 新增例外處置、其餘 → 既有標記作業）。僅新增所需的最小程式碼，不重構 `taskRoleI18n`／`navItems` 其餘既有結構與鄰近程式碼。使 1.1 全部四個案例轉綠。[@senior-frontend]
+- [x] 2.1 修改 `design/prototype/pages/shared/sidebar.js`：`taskRoleI18n` 兩個語言物件（zh/en）各新增一鍵（值同既有 `crumbWorkAreaProjectLeader` 常數：zh「例外處置」/en `Exception Disposition`）；`navItems` 之 `annotation` 項目 `defaultLabel` 解析（現行 `taskRole === 'reviewer' ? taskRoleLabels.annotationLabel : '標記作業'`）新增 `project_leader` 分支，改為依 `taskRole` 三分流（`reviewer` → 既有審核作業、`project_leader` → 新增例外處置、其餘 → 既有標記作業）。僅新增所需的最小程式碼，不重構 `taskRoleI18n`／`navItems` 其餘既有結構與鄰近程式碼。使 1.1 全部四個案例轉綠。[@senior-frontend]
 
 ## 3. 驗證與正典回寫
 
