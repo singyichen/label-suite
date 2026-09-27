@@ -68,18 +68,21 @@ function quickReviewButton(page: Page, taskId: string) {
 }
 
 test.describe('Dashboard — quick review opens the next actionable unit', () => {
-  /* T014's first record is finalized. reviewer_chen is reserved from new
-     review assignments, so quick review skips every pending unit and opens
-     the first dispute they may arbitrate instead. */
-  test('routes a reserved arbiter to the first eligible dispute, not a pending assignment', async ({ page }) => {
+  /* T014's demo entry is now reviewer_li (issue #1003), who holds a real
+     FR-093 assignment with all three states present (pending, disputed,
+     finalized). Quick review follows priority 1 (pending) and lands on her
+     own pending unit. The general rule that a reserved arbiter skips every
+     pending unit and opens the first eligible dispute instead has not gone
+     away -- it is still covered below by the T016 case (reviewer_chen). */
+  test('routes an assigned reviewer to their own pending unit first (T014, reviewer_li)', async ({ page }) => {
     await openReviewerScenario(page);
     await quickReviewButton(page, 'T014').click();
 
     await expect(page).toHaveURL(/\/pages\/annotation\/annotation-workspace\.html\?/);
     await expect(page).toHaveURL(/task_id=T014/);
     await expect(page).toHaveURL(/sample_id=dry-02-one-divergent/);
-    await expect(page).toHaveURL(/annotator_id=113450022/);
-    await expect(page).toHaveURL(/reviewer_id=reviewer_chen/);
+    await expect(page).toHaveURL(/annotator_id=tony0950127/);
+    await expect(page).toHaveURL(/reviewer_id=reviewer_li/);
     await expect(page).toHaveURL(/role=reviewer/);
     await expect(page).toHaveURL(/run_type=dry_run/);
   });
@@ -156,7 +159,7 @@ test.describe('Dashboard — quick review opens the next actionable unit', () =>
     await expect(page).toHaveURL(/task_id=T015/);
     await expect(page).toHaveURL(/role=reviewer/);
     await expect(page).toHaveURL(/run_type=official_run/);
-    await expect(page).toHaveURL(/reviewer_id=reviewer_chen/);
+    await expect(page).toHaveURL(/reviewer_id=reviewer_wang/);
     await expect(page).not.toHaveURL(/sample_id=/);
 
     const notice = page.getByTestId('list-no-actionable-notice');

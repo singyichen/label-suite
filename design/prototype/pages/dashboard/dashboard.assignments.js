@@ -275,11 +275,15 @@
        that count is an identity with 待審 + 爭議中). Every seeded summary here names its subject and its
        denominator unit (issue #452). Reviewer
        sample ids point at each task's first dataset record so the
-       quick-review entry lands on the initial reviewer screen, and every
-       demo reviewer entry enters as reviewer_chen -- the only
-       can_arbitrate reviewer (FR-060) -- so disputed units surface the
-       arbitration entry screen instead of staying invisible under the
-       default reviewer identity. */
+       quick-review entry lands on the initial reviewer screen. reviewer_chen
+       is T014's and T015's only can_arbitrate reviewer (FR-060), so
+       reviewAssignmentRoster() reserves them out of every new assignment on
+       those two tasks -- entering as chen would hide every pending and
+       finalized unit behind the one dispute chen may arbitrate (issue
+       #1003). T014 and T015 instead enter as an ordinary reviewer who
+       actually holds that task's assignments, so the demo can walk 待審 ->
+       審核 -> 定稿 on the main line. T016 keeps reviewer_chen to demo the
+       arbitration and final-exception path. */
     {
       exampleTaskId: 'T014',
       annotationTaskType: 'single_sentence_classification',
@@ -291,7 +295,7 @@
         'dry_run',
         'in_progress'
       ),
-      reviewer: reviewWorkItem('dry-01-all-agree', 'dry_run', 'pending_review', 'reviewer_chen'),
+      reviewer: reviewWorkItem('dry-01-all-agree', 'dry_run', 'pending_review', 'reviewer_li'),
     },
     {
       exampleTaskId: 'T015',
@@ -305,7 +309,7 @@
         'continue'
       ),
       reviewer: reviewWorkItem(
-        'ofs-01-agree-gold', 'official_run', 'pending_review', 'reviewer_chen'
+        'ofs-01-agree-gold', 'official_run', 'pending_review', 'reviewer_wang'
       ),
     },
     {
