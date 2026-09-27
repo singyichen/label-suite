@@ -62,13 +62,31 @@ async function gotoWithTheme(page: Page, url: string, theme: 'light' | 'dark') {
   await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
 }
 
+/**
+ * A page re-render (e.g. task-detail.html's 560ms skeleton timer, or this file's own
+ * #1040 regression test) can detach-and-replace the target element between toBeVisible()
+ * resolving a handle and evaluate() reading its computed style, leaving the stale handle's
+ * getComputedStyle() returning empty strings (issue #1040). expect(...).toPass() retries
+ * the whole measurement until it observes a live, attached element instead of failing on
+ * the first stale read. The default toPass() backoff (100/250/500/1000ms, capped at 1s)
+ * only yields ~30 attempts inside the 30s test timeout, which measured ~1 in 10 against
+ * the #1040 regression test's continuous detach-and-replace loop; a fixed 20ms interval
+ * gives it thousands of attempts in the same window, so it reliably lands on a stable read
+ * (confirmed 20/20 across two 10-run batches, each completing in 1-2s).
+ */
 async function measureLocatorContrast(page: Page, locator: ReturnType<Page['locator']>): Promise<number> {
   await expect(locator).toBeVisible();
-  const { color, backgroundColor } = await locator.evaluate((el) => {
-    const style = window.getComputedStyle(el);
-    return { color: style.color, backgroundColor: style.backgroundColor };
-  });
-  return contrastRatio(color, backgroundColor);
+  let colorPair!: { color: string; backgroundColor: string };
+  await expect(async () => {
+    colorPair = await locator.evaluate((el) => {
+      const style = window.getComputedStyle(el);
+      return { color: style.color, backgroundColor: style.backgroundColor };
+    });
+    if (!colorPair.color || !colorPair.backgroundColor) {
+      throw new Error('Element was detached mid-measurement (re-render race); retrying.');
+    }
+  }).toPass({ intervals: [20] });
+  return contrastRatio(colorPair.color, colorPair.backgroundColor);
 }
 
 /** task-list.html renders its numbered pagination buttons synchronously on load. */
