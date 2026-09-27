@@ -84,6 +84,14 @@ async function gotoWithTheme(page: Page, url: string, theme: 'light' | 'dark') {
  * pending re-render's setTimeout callback -- can run between those two statements; the
  * callback observes a live element (old or new, whichever is currently attached) and
  * never a stale handle. No retry, interval, or timeout is needed.
+ *
+ * document.querySelector() (unlike Playwright's strict-mode Locator) silently returns
+ * only the first match on a multi-match selector instead of erroring. Verified this
+ * doesn't matter for either caller's selector: '.page-btn.active' matches exactly 1
+ * element on task-list.html, and '#memberPaginationControls .page-btn.active' matches
+ * exactly 1 on task-detail.html even though the page has 4 total .page-btn.active across
+ * its other pagination controls (metadata/work-log/audit-record/audit-export) -- the
+ * #memberPaginationControls scope already disambiguates those.
  */
 async function measureLocatorContrast(page: Page, selector: string): Promise<number> {
   await expect(page.locator(selector).first()).toBeVisible();
