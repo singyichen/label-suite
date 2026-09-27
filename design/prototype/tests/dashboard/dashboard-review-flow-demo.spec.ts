@@ -167,7 +167,7 @@ test.describe('Dashboard — review-flow demo tasks (T014-T016)', () => {
     await expect(page).toHaveURL(/task_id=T014/);
     await expect(page).toHaveURL(/role=reviewer/);
     await expect(page).toHaveURL(/run_type=dry_run/);
-    await expect(page).toHaveURL(/reviewer_id=reviewer_chen/);
+    await expect(page).toHaveURL(/reviewer_id=reviewer_li/);
     await expect(page).not.toHaveURL(/sample_id=/);
   });
 
@@ -187,11 +187,13 @@ test.describe('Dashboard — review-flow demo tasks (T014-T016)', () => {
     await expect(page).not.toHaveURL(/sample_id=/);
   });
 
-  /* Issue #868 reserves reviewer_chen from new review assignments, so the
-     quick-review action lands on the first dispute they may arbitrate. The
-     per-priority rule itself is pinned by
+  /* T014's demo entry is now reviewer_li (issue #1003), who holds a real
+     FR-093 assignment, so quick review follows priority 1 (pending) and
+     lands on her own pending unit (dry-02-one-divergent / tony0950127).
+     The rule that a reserved arbiter skips every pending unit and lands on
+     the first eligible dispute instead is still pinned by the T016 case in
      dashboard-quick-review-next-actionable.spec.ts. */
-  test('reviewer quick-review opens the workspace on the next actionable unit as reviewer_chen', async ({ page }) => {
+  test('reviewer quick-review opens the workspace on the next actionable unit as reviewer_li', async ({ page }) => {
     await openScenario(page, 'reviewer');
 
     const row = page.locator('#reviewerTaskList [data-example-task-id="T014"]');
@@ -200,9 +202,9 @@ test.describe('Dashboard — review-flow demo tasks (T014-T016)', () => {
     await expect(page).toHaveURL(/\/pages\/annotation\/annotation-workspace\.html\?/);
     await expect(page).toHaveURL(/task_id=T014/);
     await expect(page).toHaveURL(/sample_id=dry-02-one-divergent/);
-    await expect(page).toHaveURL(/annotator_id=113450022/);
+    await expect(page).toHaveURL(/annotator_id=tony0950127/);
     await expect(page).toHaveURL(/role=reviewer/);
     await expect(page).toHaveURL(/run_type=dry_run/);
-    await expect(page).toHaveURL(/reviewer_id=reviewer_chen/);
+    await expect(page).toHaveURL(/reviewer_id=reviewer_li/);
   });
 });
