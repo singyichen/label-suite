@@ -146,11 +146,20 @@ test.describe('issue #1018: regression guard — annotator #navAnnotation unchan
     await expect(navAnnotation(page)).toHaveText('標記作業');
   });
 
-  test('annotator: #navAnnotation stays Annotate (en, preset before navigation)', async ({ page }) => {
+  /* sidebar.js's else-branch defaultLabel (annotator/project_leader today)
+   * is the bare literal '標記作業' with no English variant anywhere in
+   * sidebar.js -- confirmed by grep; "Annotate" only exists in
+   * annotation-workspace.config.js's separate breadcrumb dictionary, a
+   * different component. So under an English-preset context the correct
+   * pin is that this branch stays untranslated, same as zh -- that is
+   * today's real (if incomplete) behavior, not a claim it's correct, and
+   * fixing it is a second, unscoped FR change outside #1018 (task 2.1
+   * leaves this else-branch untouched). */
+  test('annotator: #navAnnotation stays untranslated 標記作業 (en context, preset before navigation)', async ({ page }) => {
     await skipGuidelineModal(page);
     await presetEnglish(page);
     await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'annotator', run_type: 'dry_run' }));
 
-    await expect(navAnnotation(page)).toHaveText('Annotate');
+    await expect(navAnnotation(page)).toHaveText('標記作業');
   });
 });
