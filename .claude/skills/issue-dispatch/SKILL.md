@@ -169,6 +169,7 @@ One issue, one worktree, one lead, one port.
 N=931
 SLUG=sidebar-role-highlight          # short, lowercase, hyphenated
 BRANCH=fix/${N}-${SLUG}              # type prefix per .claude/rules/git-workflow.md
+BASE=main                            # stacked: the previous PR's branch, not main (see step 6)
 WT=.claude/worktrees/issue-${N}-${SLUG}
 PORT=8980                            # 8980, 8981, ... one per worktree in the wave
 
