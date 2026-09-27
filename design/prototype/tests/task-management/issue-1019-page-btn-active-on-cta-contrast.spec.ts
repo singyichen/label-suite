@@ -150,7 +150,7 @@ test.describe('task-detail.html member-management .page-btn.active WCAG contrast
 });
 
 test.describe('measureLocatorContrast survives a detach race (issue #1040 regression guard)', () => {
-  test('retries past an element replaced between toBeVisible() and evaluate()', async ({ page }) => {
+  test('measures a live element even while it is continuously detached and replaced', async ({ page }) => {
     await gotoWithTheme(page, TASK_DETAIL_URL, 'dark');
     // Scoped to a throwaway container (unique id) so this test's own .page-btn.active
     // node can never collide with any of task-detail.html's real pagination controls
