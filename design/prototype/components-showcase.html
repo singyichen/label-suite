@@ -147,7 +147,7 @@
     /* Primary Button */
     .btn-primary {
       background: var(--color-cta);
-      color: white;
+      color: var(--color-on-cta);
       padding: 10px 20px;
       border-radius: var(--radius-md);
       font-weight: 600;
@@ -613,7 +613,7 @@
     .page-btn.active {
       background: var(--color-primary);
       border-color: var(--color-primary);
-      color: var(--color-white); /* token, not literal — flips with the dark palette */
+      color: var(--color-on-cta); /* WCAG AA foreground token, issue #1019 */
       font-weight: 600;
     }
     .page-btn:disabled {
