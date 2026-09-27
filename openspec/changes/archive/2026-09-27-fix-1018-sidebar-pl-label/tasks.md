@@ -26,5 +26,5 @@
 
 **故事目標**：SC-013A — 合併前須經未參與實作者複核，確保 FR-020 之 MODIFIED 範圍精準（僅動 `project_leader` 分支）、SC-013A 同步、解析在元件內部完成、11 個消費頁面無回歸。
 
-- [ ] 4.1 派未寫過本改動的 `senior-code-reviewer` 獨立審查：(1) FR-020 之 MODIFIED 是否確實只改 `project_leader` 分支、`reviewer`／`annotator` 判定逐字未動；(2) SC-013A 是否同步；(3) 是否真的在元件內部解析、沒有引入任何消費端覆寫；(4) 11 個消費頁面有無回歸；(5) 是否推翻了 #944／#931／#309 的其他既有條文。結論原文貼進 issue #1018 檢查點留言。[@senior-code-reviewer]
+- [x] 4.1 派未寫過本改動的 `senior-code-reviewer` 獨立審查：(1) FR-020 之 MODIFIED 是否確實只改 `project_leader` 分支、`reviewer`／`annotator` 判定逐字未動；(2) SC-013A 是否同步；(3) 是否真的在元件內部解析、沒有引入任何消費端覆寫；(4) 11 個消費頁面有無回歸；(5) 是否推翻了 #944／#931／#309 的其他既有條文。結論原文貼進 issue #1018 檢查點留言。[@senior-code-reviewer]
 - [ ] 4.2 開 PR（base main，Closes #1018，逐項 Test Plan 證據，紅燈／綠燈證據皆貼），push 前 `git fetch origin main && git rebase origin/main`。[@main]
