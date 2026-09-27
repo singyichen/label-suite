@@ -109,6 +109,7 @@
       unitCtxRunOfficial: '正式標記',
       crumbWorkAreaReviewer: '審核作業',
       crumbWorkAreaAnnotator: '標記作業',
+      crumbWorkAreaProjectLeader: '例外處置',
       crumbTaskTpl: '{name}（{run}）',
       crumbUnitTpl: '審核單位 {sample} · {annotator}',
       crumbExceptionUnitTpl: '例外項目 {sample} · {annotator}',
@@ -262,6 +263,7 @@
       unitCtxRunOfficial: 'Official Run',
       crumbWorkAreaReviewer: 'Review',
       crumbWorkAreaAnnotator: 'Annotate',
+      crumbWorkAreaProjectLeader: 'Exception Disposition',
       crumbTaskTpl: '{name} ({run})',
       crumbUnitTpl: 'Review unit {sample} · {annotator}',
       crumbExceptionUnitTpl: 'Exception item {sample} · {annotator}',
@@ -1468,8 +1470,16 @@
     if (!nav) return;
     nav.innerHTML = '';
 
-    appendCrumbLink(nav, '../dashboard/dashboard.html',
-      t(currentRole === 'reviewer' ? 'crumbWorkAreaReviewer' : 'crumbWorkAreaAnnotator'));
+    /* FR-095 (issue #994; gap closed by issue #922 for the THIRD segment
+       only): a project leader on this screen is doing FR-095's final
+       exception disposition, not annotation, so this FIRST segment's
+       work-area label must not fall into the annotator else-branch either. */
+    var workAreaKey = currentRole === 'reviewer'
+      ? 'crumbWorkAreaReviewer'
+      : currentRole === 'project_leader'
+        ? 'crumbWorkAreaProjectLeader'
+        : 'crumbWorkAreaAnnotator';
+    appendCrumbLink(nav, '../dashboard/dashboard.html', t(workAreaKey));
     appendCrumbSep(nav);
     appendCrumbLink(nav, buildListReturnUrl(),
       t('crumbTaskTpl')
