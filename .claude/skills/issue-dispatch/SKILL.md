@@ -169,6 +169,7 @@ One issue, one worktree, one lead, one port.
 N=931
 SLUG=sidebar-role-highlight          # short, lowercase, hyphenated
 BRANCH=fix/${N}-${SLUG}              # type prefix per .claude/rules/git-workflow.md
+BASE=main                            # stacked: the previous PR's branch, not main (see step 6)
 WT=.claude/worktrees/issue-${N}-${SLUG}
 PORT=8980                            # 8980, 8981, ... one per worktree in the wave
 
@@ -178,7 +179,9 @@ git worktree add -b "${BRANCH}" "${WT}" origin/main
 gh issue edit ${N} --add-label agent-running
 ```
 
-Worktrees live under `.claude/worktrees/` — not `.worktrees/`, and not a sibling directory. The reason is specific: entering a worktree **from the launch directory** works for any path in `git worktree list`, but an agent whose working directory was pinned at launch (subagent isolation) can only `EnterWorktree` into a path under `.claude/worktrees/` of the same repository. Leads and their nested specialists are exactly that case. This comes from the `EnterWorktree` contract, not from an experiment here. `scripts/worktree-init.sh` creates `../label-suite-<slug>` instead; that is the older convention and is not used here.
+Worktrees live under `.claude/worktrees/` — not `.worktrees/`, and not a sibling directory — because it keeps every wave's worktrees in one place, `.gitignore` already excludes the whole directory, and it never pollutes the repository's parent directory. `scripts/worktree-init.sh` creates `../label-suite-<slug>` instead; that is the older convention and is not used here.
+
+**`EnterWorktree` is unavailable to leads and their nested specialists.** Its actual contract: the caller's own cwd must already be inside a worktree before it can switch to another one. A lead's cwd at dispatch is the repository root, not a worktree, so `EnterWorktree` fails for every path, not just some — three leads in the same wave (#1018, #1028, #1035) hit exactly this and each independently worked around it. Use `git -C <absolute-worktree-path> <command>` or `cd <absolute-worktree-path> && <command>` instead; the latter also satisfies the push hook (see "Push from inside the worktree" below).
 
 `agent-ready` **stays on the issue**. It is the maintainer's standing authorization — including the archive authorization below — not a queue token. `agent-running` is added alongside it, and step 1 excludes `agent-running`, so an in-flight issue is never claimed twice. This deliberately refines #937's step 5 wording, which said the label is *changed* to `agent-running`: removing `agent-ready` would also remove the archive authorization that the same label carries.
 
@@ -231,8 +234,10 @@ Paste each command and its result into the PR Test Plan. A red gate is never ski
 
 Then open the PR. Write the body to a file first and pass `--body-file`: a long `--body` heredoc is rejected as a compound command in some permission modes.
 
+`${BASE}` is `main` for a single PR; for the Nth PR in a stack (N ≥ 2) it is the (N−1)th PR's branch, not `main` — otherwise the diff includes the prior PR's changes too, defeating single-purpose and the file-count cap.
+
 ```bash
-gh pr create --title "<type>: <中文描述>" --base main --head "${BRANCH}" \
+gh pr create --title "<type>: <中文描述>" --base "${BASE}" --head "${BRANCH}" \
   --label "<type-label>" --body-file "<scratchpad>/pr-${N}.md"
 ```
 
@@ -257,13 +262,26 @@ Merge only when the independent review passed and all four hold, checked with `g
 - the check count is greater than 0
 - every check passed
 
-`gh pr checks --watch` exiting 0 is not sufficient alone — it also exits 0 when the PR has zero checks, which is exactly what a `CONFLICTING` PR looks like; that gap is what nearly merged #940.
+`gh pr checks --watch` exiting 0 is not sufficient alone — it also exits 0 when the PR has zero checks (the `CONFLICTING` gap that nearly merged #940), and separately when the only registered check is an external app while this repo's own workflow run is still `queued` — PR #1026, head `0860ef12`: `checks=1` was `Amazon Q Developer` passing in 33s while `CI` sat `queued`, though the identical single-file edit type registered 17 checks in #990/#1008.
+
+These four conditions are necessary but not sufficient — they can all hold before this repo's own CI run has registered a single check. Before merging, also confirm no workflow run for the head SHA is still `queued` or `in_progress`, and that the two unconditional jobs are present and `SUCCESS`:
+
+```bash
+gh run list --branch <branch> --json status,conclusion,headSha --jq '[.[] | select(.headSha == "<sha>")] | map(select(.status != "completed")) | length'   # must be 0
+gh pr view <pr> --json statusCheckRollup --jq '[.statusCheckRollup[] | select((.name=="Project SDD Lint" or .name=="Validate Project Structure") and .conclusion=="SUCCESS")] | length == 2'   # must be true
+```
+
+The first command's `0` alone is not conclusive: an empty result set for this SHA prints the same `0` whether every run has finished or no run has been created yet, so it cannot tell those two states apart — only the second command's job-name check catches the "not created yet" case, and the two must hold together, never the first in isolation.
+
+`Project SDD Lint` and `Validate Project Structure` run unconditionally on every change; their absence from a green-looking rollup means the run has not registered yet, not that they were skipped.
 
 ```bash
 gh pr merge <pr> --merge
 ```
 
 Merge is the main session's job alone. Applying `agent-ready` is the maintainer's advance authorization for it (see **Deviations from pr-flow**).
+
+**Stacked PRs merge one at a time, in stack order.** `gh pr merge` merges into whatever base is currently set — after PR N merges, retarget PR N+1 with `gh pr edit <N+1> --base main` *before* merging it, then re-check all four conditions above: the edit makes GitHub recompute `mergeable`/`mergeStateStatus`, so a check taken before the edit does not count. Skipping the retarget is a silent failure that still reports success: if PR N+1's base still points at PR N's branch, merging it lands the change on that branch instead of `main`, yet `gh pr view` still reports `MERGED`, `Closes #N` still closes the issue, and the four conditions can all have passed before the retarget. Confirm `main` actually contains the change afterward, e.g. `git log origin/main --oneline | grep <pr>`.
 
 On a red gate: fix and push, at most **twice**. If it is still red, hand the failure to `codex:rescue` for one diagnosis pass — CLAUDE.md escalates at three failed attempts on the same problem. If that does not resolve it, post a checkpoint comment containing the **exact** error output, swap `agent-running` for `blocked`, and send a `PushNotification`.
 
@@ -324,7 +342,7 @@ At the end of each wave, output an explicit evaluation of all three conditions �
 - **Source-Verify pre-scan before archive.** Every citation in the delta must be locatable by `grep` — FR/AC IDs, section references, file paths, ADR/issue/PR numbers, and paraphrased requirement clauses. `openspec archive` copies propose-time delta text verbatim, so a wrong citation survives into the derived view and no CLI check catches it. Follow `docs/sdd-workflow.md` §6.2, which records the pilot finding: a derived view cited a `plan.md §Phase 1.3` that did not exist and silently dropped an SC clause, and only human review caught either (issue #356 pilot finding ③).
 - **Playwright throttle is a scheduling constraint, not a runtime lock.** Concurrent Chromium instances on one machine make runs flaky, so a wave carries at most two issues needing a full local suite (step 4). It cannot be a lock: leads are separate agents with no shared counter, and peer messages must never be used as locks. The main session enforces the cap when it builds the wave, which needs no coordination at run time. A mid-flight override that reshuffles wave membership must recompute both this count and the conflict graph for the new membership, not just PR merge order — reordering by merge order alone once put three full local suites in one wave, over the cap.
 - **Never commit or push to `main`.** Commit messages are English-only; PR titles and bodies are Traditional Chinese.
-- **Push from inside the worktree.** Use `EnterWorktree`, or prefix with `cd <worktree> && `. The hook resolves the branch from `-C`, then `cd`, then the payload's `cwd` — and a subagent's `cwd` is pinned to the repository root, so an unprefixed push is read as a push from `main` and blocked (`.claude/hooks/pre-tool-use.sh`).
+- **Push from inside the worktree.** Use `EnterWorktree` (only from a session already inside a worktree — see step 5), or prefix with `cd <worktree> && `. The hook resolves the branch from `-C`, then `cd`, then the payload's `cwd` — and a subagent's `cwd` is pinned to the repository root, so an unprefixed push is read as a push from `main` and blocked (`.claude/hooks/pre-tool-use.sh`).
 - **One purpose per PR.** Size limits and the single-purpose rule in `.claude/rules/git-workflow.md` apply to every dispatched PR. An issue that cannot be delivered in one purpose is split into stacked PRs, not widened.
 - **The main session never `cd`s into a lead's worktree.** Use `git -C <worktree> <command>` to inspect or act on it instead — `cd` there risks pinning the session inside that worktree for the rest of its run.
 
@@ -371,7 +389,7 @@ One deviation is from CLAUDE.md itself and is therefore **not** this skill's to 
 | A merged PR without `Closes` leaves its issue open (#906) | Step 9 reconciles issues against merged PRs |
 | Citation typos survive archive; no CLI check catches them (issue #356 pilot finding ③, `docs/sdd-workflow.md` §6.2) | Source-Verify pre-scan before archive |
 | Port 8888 already held by another session's server | One `PW_PORT` per worktree from 8980, `lsof` checked before hand-out |
-| Push from a worktree blocked as a push from `main` | `EnterWorktree`, or `cd <worktree> && git push` |
+| Push from a worktree blocked as a push from `main` | `EnterWorktree` (only from a session already inside a worktree), or `cd <worktree> && git push` |
 | Two issues bumping one canonical spec's Changelog | Shared canonical spec means different waves |
 | Leftover worktrees and `[gone]` branches after a sprint | Step 9 cleanup, plus `pr-flow`'s sprint-end sweep |
 | Regenerating a derived file (e.g. screen inventory) after every source edit leaves throwaway commits that go empty on rebase | Regenerate it once, right after the last source edit, not after each one |
@@ -380,3 +398,6 @@ One deviation is from CLAUDE.md itself and is therefore **not** this skill's to 
 | `specs/STATUS.md`'s per-spec row is a cumulative summary string; taking one side of a merge conflict can silently drop an intermediate version's entry, and `check-sdd.sh` only checks the leading version, never entry continuity (#925/#956) | Compare both sides' version-entry sequences and restore any segment missing from the losing side |
 | FR/AC IDs collide silently across issues sharing a wave — git merges both with no conflict marker, and no gate (`check-sdd.sh`, `openspec validate`) checks for duplicate IDs (#920/#956) | Pre-assign or merge-time-renumber ID ranges per issue (Step 4 controlled exception); `grep -rn` the repo for zero remaining hits after renumbering |
 | A PR opened without its CI watch armed in the same turn stalls an autonomous round silently — the main session sits reporting "waiting on CI" while CI already finished (2026-09-27: #1016/#1017/#1020) | The main session, not the lead, arms the watch in the same turn it obtains the PR number, in Step 6; re-arm after every `merge main` + repush, since the prior watch already exited with that round's CI. Any already-open PR found unwatched gets one before continuing |
+| The four Step 7 merge conditions can all hold before this repo's own CI run has registered a single check (#1026, head `0860ef12`: `checks=1` was `Amazon Q Developer` alone while `CI` sat `queued`) | Confirm zero `queued`/`in_progress` runs for the head SHA and `Project SDD Lint` + `Validate Project Structure` both `SUCCESS` before trusting the four conditions |
+| Merging a stacked PR while its base still points at the previous stack branch merges the change into that branch, not `main`, yet `gh pr view` still reports `MERGED` (#1033, found on #1019's PR #1031/#1032) | Retarget with `gh pr edit <N+1> --base main` before merging it; afterward confirm `main` contains the change, e.g. `git log origin/main --oneline \| grep <pr>` |
+| `EnterWorktree` fails for a lead or nested specialist dispatched at the repository root — three leads in one wave hit it before finding the workaround (#1018, #1028, #1035) | `git -C <absolute-path> <command>` or `cd <absolute-path> && <command>` instead of `EnterWorktree` |

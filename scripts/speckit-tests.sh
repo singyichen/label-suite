@@ -1190,6 +1190,42 @@ test_check_sdd_fails_for_id_only_mentioned_in_added_body() {
     assert_command_fails_with "$repo" 1 "SOURCE_VERIFY_ID" "openspec/changes/project-sdd-lint/specs/foundation/001-project-sdd-lint/spec.md"
 }
 
+test_check_sdd_accepts_modified_scenario_id_not_in_canonical_prose() {
+    local repo
+    repo="$(make_sdd_repo)"
+    cat >> "$repo/openspec/changes/project-sdd-lint/specs/foundation/001-project-sdd-lint/spec.md" <<'DELTA'
+
+## MODIFIED Requirements
+
+### Requirement: FR-001 Existing requirement, modified
+
+Updated body text.
+
+#### Scenario: AC-8.1 Existing scenario copied back verbatim
+- **THEN** the existing behavior still holds
+DELTA
+
+    assert_command_succeeds "$repo" --not-rule SOURCE_VERIFY_ID
+}
+
+test_check_sdd_fails_for_ac_id_only_cited_in_modified_prose() {
+    local repo
+    repo="$(make_sdd_repo)"
+    cat >> "$repo/openspec/changes/project-sdd-lint/specs/foundation/001-project-sdd-lint/spec.md" <<'DELTA'
+
+## MODIFIED Requirements
+
+### Requirement: FR-001 Existing requirement, modified
+
+Updated body text cites AC-8.2 without ever declaring it.
+
+#### Scenario: AC-1.1 Existing scenario copied back verbatim
+- **THEN** the existing behavior still holds
+DELTA
+
+    assert_command_fails_with "$repo" 1 "SOURCE_VERIFY_ID" "openspec/changes/project-sdd-lint/specs/foundation/001-project-sdd-lint/spec.md"
+}
+
 test_check_sdd_accepts_cross_spec_citation_naming_the_source_spec() {
     local repo
     repo="$(make_sdd_repo)"
@@ -3316,6 +3352,8 @@ test_check_sdd_fails_for_active_change_stage_drift
 test_check_sdd_fails_for_missing_source_id
 test_check_sdd_accepts_ids_defined_by_added_requirements
 test_check_sdd_fails_for_id_only_mentioned_in_added_body
+test_check_sdd_accepts_modified_scenario_id_not_in_canonical_prose
+test_check_sdd_fails_for_ac_id_only_cited_in_modified_prose
 test_check_sdd_accepts_cross_spec_citation_naming_the_source_spec
 test_check_sdd_fails_for_cross_spec_citation_absent_from_the_named_spec
 test_check_sdd_fails_for_invalid_assignee
