@@ -27,7 +27,7 @@ import { test, expect, type Page } from '@playwright/test';
 
 const WCAG_AA_MIN_CONTRAST = 4.5;
 // Accepted-tradeoff light-theme floor (issue #1030) — see traceability note above.
-const PRE_EXISTING_LIGHT_FLOOR = 4.4;
+const ACCEPTED_TRADEOFF_LIGHT_FLOOR = 4.4;
 
 const TASK_LIST_URL = '/pages/task-management/task-list.html';
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
@@ -132,7 +132,7 @@ test.describe('task-list.html .page-btn.active WCAG contrast (issue #1019)', () 
   test('light theme: accepted-tradeoff floor, not regressed (issue #1030)', async ({ page }) => {
     await gotoWithTheme(page, TASK_LIST_URL, 'light');
     const ratio = await measureTaskListPageBtnActiveContrast(page);
-    expect(ratio).toBeGreaterThanOrEqual(PRE_EXISTING_LIGHT_FLOOR);
+    expect(ratio).toBeGreaterThanOrEqual(ACCEPTED_TRADEOFF_LIGHT_FLOOR);
   });
 
   test('dark theme meets AA contrast on .page-btn.active', async ({ page }) => {
@@ -146,7 +146,7 @@ test.describe('task-detail.html member-management .page-btn.active WCAG contrast
   test('light theme: accepted-tradeoff floor, not regressed (issue #1030)', async ({ page }) => {
     await gotoWithTheme(page, TASK_DETAIL_URL, 'light');
     const ratio = await measureTaskDetailPageBtnActiveContrast(page);
-    expect(ratio).toBeGreaterThanOrEqual(PRE_EXISTING_LIGHT_FLOOR);
+    expect(ratio).toBeGreaterThanOrEqual(ACCEPTED_TRADEOFF_LIGHT_FLOOR);
   });
 
   test('dark theme meets AA contrast on .page-btn.active', async ({ page }) => {

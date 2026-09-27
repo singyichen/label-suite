@@ -26,7 +26,7 @@ import { test, expect, type Page } from '@playwright/test';
 const TASK_NEW_URL = '/pages/task-management/task-new.html';
 const WCAG_AA_MIN_CONTRAST = 4.5;
 // Accepted-tradeoff light-theme floor (issue #1030) — see traceability note above.
-const PRE_EXISTING_LIGHT_FLOOR = 4.4;
+const ACCEPTED_TRADEOFF_LIGHT_FLOOR = 4.4;
 
 /** Parses a computed `rgb(r, g, b)` / `rgba(r, g, b, a)` string into channel values. */
 function parseRgbChannels(rgbString: string): [number, number, number] {
@@ -78,7 +78,7 @@ test.describe('task-new.html .step-circle.active WCAG contrast (issue #1019)', (
   test('light theme: accepted-tradeoff floor, not regressed (issue #1030)', async ({ page }) => {
     await gotoWithTheme(page, 'light');
     const ratio = await measureStepCircleActiveContrast(page);
-    expect(ratio).toBeGreaterThanOrEqual(PRE_EXISTING_LIGHT_FLOOR);
+    expect(ratio).toBeGreaterThanOrEqual(ACCEPTED_TRADEOFF_LIGHT_FLOOR);
   });
 
   test('dark theme meets AA contrast on .step-circle.active', async ({ page }) => {
