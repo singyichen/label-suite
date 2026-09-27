@@ -366,8 +366,8 @@
      overrides that annotation-workspace.config.js previously patched in
      post-mount (issue #309, issue #931). */
   var taskRoleI18n = {
-    zh: { reviewer: '審核員', project_leader: '專案負責人', annotationLabel: '審核作業' },
-    en: { reviewer: 'Reviewer', project_leader: 'Project leader', annotationLabel: 'Review' }
+    zh: { reviewer: '審核員', project_leader: '專案負責人', annotationLabel: '審核作業', projectLeaderAnnotationLabel: '例外處置' },
+    en: { reviewer: 'Reviewer', project_leader: 'Project leader', annotationLabel: 'Review', projectLeaderAnnotationLabel: 'Exception Disposition' }
   };
 
   function getRoleSettingsHref(adminHref) {
@@ -509,7 +509,8 @@
         key: 'annotation',
         href: annotationHref,
         labelId: 'navAnnotation',
-        defaultLabel: taskRole === 'reviewer' ? taskRoleLabels.annotationLabel : '標記作業',
+        defaultLabel: taskRole === 'reviewer' ? taskRoleLabels.annotationLabel :
+          taskRole === 'project_leader' ? taskRoleLabels.projectLeaderAnnotationLabel : '標記作業',
         icon: '<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>'
       },
       {
