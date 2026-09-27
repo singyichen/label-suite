@@ -1,5 +1,5 @@
 ---
-功能分支: feat/dashboard-output-types
+功能分支: fix/1003-demo-reviewer-entry
 建立日期: 2026-04-05
 版本: 2.12.0
 狀態: In Progress
