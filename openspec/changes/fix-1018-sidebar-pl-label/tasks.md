@@ -4,7 +4,7 @@
 
 **故事目標**：SC-013A — `project_leader` 任務角色下 `#navAnnotation` 讀作「例外處置」，與同頁麵包屑首層一致；`reviewer`／`annotator` 既有行為逐字不變。
 
-- [ ] 1.1 建立 `design/prototype/tests/shared/issue-1018-sidebar-pl-exception-label.spec.ts`：以 `role=project_leader` 進入 `annotation-workspace`（`task_id=T016`、`sample_id=ofm-05-final-exception`、`run_type=official_run`、`annotator_id=kioleemg12`）驗證 `#navAnnotation` 文字為「例外處置」（en: `Exception Disposition`，因 `#navAnnotation` 之語言於掛載當下依 `localStorage` 解析、不隨頁面 `lang-toggle` 即時切換，en 案例須以 `addInitScript` 於 `page.goto` 前預設語言後驗證，而非點擊 `lang-toggle`），且與同頁入口麵包屑第一層連結文字一致；URL 建構與斷言手法比照既有 issue-994 麵包屑測試之作法。同檔案追加 `reviewer`（讀作「審核作業」/`Review`）與 `annotator`（維持「標記作業」/`Annotate`）兩個回歸守門，逐字比照同一份既有測試之 regression guard 寫法，確保本次修訂不動到這兩個既有分支。commit 並記錄執行結果為預期失敗。[@senior-qa]
+- [ ] 1.1 建立 `design/prototype/tests/shared/issue-1018-sidebar-pl-exception-label.spec.ts`：以 `role=project_leader` 進入 `annotation-workspace`（`task_id=T016`、`sample_id=ofm-05-final-exception`、`run_type=official_run`、`annotator_id=kioleemg12`）驗證 `#navAnnotation` 文字為「例外處置」（en: `Exception Disposition`，因 `#navAnnotation` 之語言於掛載當下依 `localStorage` 解析、不隨頁面 `lang-toggle` 即時切換，en 案例須以 `addInitScript` 於 `page.goto` 前預設語言後驗證，而非點擊 `lang-toggle`），且與同頁入口麵包屑第一層連結文字一致；URL 建構與斷言手法比照既有 issue-994 麵包屑測試之作法。同檔案追加 `reviewer`（讀作「審核作業」/`Review`）與 `annotator`（維持既有預設「標記作業」，en 情境下亦維持同一中文字面——`sidebar.js` 之 `annotator` 分支從未有對應英文字串，非本次範圍）兩個回歸守門，逐字比照同一份既有測試之 regression guard 寫法，確保本次修訂不動到這兩個既有分支之現行行為（含現行未翻譯此點）。commit 並記錄執行結果為預期失敗。[@senior-qa]
 - [ ] 1.2 驗證預期失敗證據前先跑 `git status --short` 確認工作樹乾淨；四個案例（project_leader zh/en、reviewer 回歸、annotator 回歸）之 Playwright 執行輸出（含失敗訊息）一併貼進 issue #1018 檢查點留言。[@senior-qa]
 
 ## 2. Green 實作
