@@ -529,7 +529,7 @@ Direct read from `design-system.pen` (`reusable: true`, total `45`):
 /* Primary Button */
 .btn-primary {
   background: var(--color-cta);
-  color: white;
+  color: var(--color-on-cta);
   padding: 10px 20px;
   border-radius: var(--radius-md);
   font-weight: 600;
@@ -1816,7 +1816,7 @@ Used in multi-step forms (e.g. task creation wizard). Shows progress through dis
 |---------|-------|
 | Container | `display: flex; align-items: center; margin-bottom: var(--space-lg)` |
 | Step circle | `32px`, `border-radius: 50%`, `border: 2px solid var(--color-border)` |
-| Active circle | `border-color: var(--color-primary); background: var(--color-primary); color: white` |
+| Active circle | `border-color: var(--color-primary); background: var(--color-primary); color: var(--color-on-cta)` |
 | Done circle | `border-color: var(--color-cta); background: var(--color-cta); color: white` |
 | Connector | `flex: 1; height: 2px; background: var(--color-border)` |
 | Done connector | `background: var(--color-cta)` |
@@ -1824,7 +1824,7 @@ Used in multi-step forms (e.g. task creation wizard). Shows progress through dis
 **CSS:**
 ```css
 .step-circle { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; border: 2px solid var(--color-border); background: var(--color-white); color: var(--color-ink-muted); transition: all var(--dur-fast); }
-.step-circle.active { border-color: var(--color-primary); background: var(--color-primary); color: white; }
+.step-circle.active { border-color: var(--color-primary); background: var(--color-primary); color: var(--color-on-cta); }
 .step-circle.done   { border-color: var(--color-cta); background: var(--color-cta); color: white; }
 .step-connector { flex: 1; height: 2px; background: var(--color-border); margin: 0 8px; margin-bottom: 18px; transition: background var(--dur-fast); }
 .step-connector.done { background: var(--color-cta); }
@@ -2389,7 +2389,7 @@ Table pagination control with page number buttons, page size selector, and recor
 .page-btn.active {
   background: var(--color-primary);
   border-color: var(--color-primary);
-  color: var(--color-white); /* token, not literal — flips with the dark palette */
+  color: var(--color-on-cta); /* WCAG AA foreground token, issue #1019 */
   font-weight: 600;
 }
 
@@ -2850,3 +2850,4 @@ Before delivering any UI code, verify:
 | v1.15 | 2026-08-28 | **Review Status Track re-sync (issue #547)** — canon and the components-showcase.html static copy were behind the shipped `annotation-workspace.html` since issue #525 PR-C; both are brought back in line: at `min_reviewers >= 2` the grid gains two columns (9 total) for `.review-track-branch[data-branch]` captions (`same` / `differing` / `unconverged` / `arbitrated`); added the 7-column `.review-track-single` variant for `min_reviewers = 1`, which has no `approved`/`modified` interim node; done rails thicken `2px` → `3px` and traversed fork strokes `stroke-width: 2` → `3`; the v1.14 "visited vs not-reached is colour-only" known gap is retired — PR-C's `font-weight: 600` on `done` nodes/captions closed it |
 | v1.16 | 2026-09-04 | **Review Status Track single-owner re-sync (issue #626 ①)** — issue #596's single-owner review relay gives every review unit exactly one reviewer (`annotation-015` FR-093), so the quorum-only interim nodes `approved` / `modified` and the `unconverged` rail caption between them became structurally unreachable; canon and the `components-showcase.html` demo card kept describing them. Both are brought back in line with the shipped `annotation-workspace.html` renderer: the `min_reviewers >= 2` 9-column variant and the `.review-track-single` class are removed in favour of one 7-column × 2-row grid with three nodes (`pending` / `disputed` / `finalized`); the branch caption keys drop from four to three (`same` / `differing` / `arbitrated`), and the captions are now stated as the only signal naming which lane a unit walked. The two-lane rationale for not using §Step Indicator is restated against the surviving lanes (same-answer `pending → finalized` vs differing `pending → disputed → finalized`); no token, pill chrome, or accessibility rule changes |
 | v1.17 | 2026-09-25 | **WCAG AA contrast fix (issue #973)** — three light-mode pairs raised to meet 4.5:1: `--color-ink-muted`/`--color-text-muted` `#94A3B8`→`#64748B` (2.56:1→4.76:1, now equal to `--color-text-soft`'s value); `--color-cta` `#10B981`→`#047857` (2.54:1→5.48:1) with `--color-cta-hover` `#059669`→`#065F46` (7.68:1) raised alongside it to keep the hover state darker than the new resting color; `sidebar.css` `.notif-badge` background `#EF4444`→`#B91C1C` (3.76:1→6.47:1, reuses `--color-error`'s light value — see updated arbitration note under Sidebar). Dark-mode counterparts already met AA (`--color-ink-muted` dark `#9CA3AF` ≥7:1; `--color-cta` dark consumers use `var(--color-white)` text, ≥10:1) and were left unchanged. `annotation-workspace.html`'s four 10px functional-badge font-sizes (`.sample-group-count`, `.sample-status-label`, `.rv-source-badge`, `.history-action-badge`) raised to 12px, the design system's own minimum (`--text-label`). Out of scope, flagged for follow-up: the same 10px pattern in `task-config.css`/`role-settings.html`/`dataset-analysis-detail.html`; a dark-mode-only CTA-button regression from literal `color: white` instead of `var(--color-white)` in `task-new.html`/`user-management.html`; the hardcoded `#8B5CF6` icon color in `annotation-workspace.html`'s `.guideline-file-icon.md` (no existing token covers it without colliding with `.img`'s `--color-primary` or inventing one — deferred to maintainer per #935-style token decisions) |
+| v1.18 | 2026-09-27 | **Foreground semantic tokens (issue #1019)** — added `--color-on-cta`, `--color-on-ink` (light/dark theme values, measured ≥4.5:1 on their named backgrounds except one tracked gap below); canonical `.btn-primary`, `.page-btn.active`, and `.step-circle.active` all switched from literal `color: white`/`var(--color-white)` to `var(--color-on-cta)`/`var(--color-on-ink)`, closing the propagation-source gap flagged by issue #981/PR #1016; `components-showcase.html`'s `.btn-primary` and Pagination demo blocks re-synced to match. Known gaps left untouched and tracked rather than left as changelog prose: `.btn-cta`/`.step-circle.done` still use a literal `color: white` and fail AA in dark theme (1.92:1) — tracked in #1029; `--color-on-cta` on `--color-primary` (light theme) measures 4.47:1, below AA — tracked in #1030, needs a `--color-primary` value change or an explicit accepted-tradeoff decision from the maintainer |
