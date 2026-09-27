@@ -24,10 +24,10 @@ Shared Sidebar 之 `navItems`（`design/prototype/pages/shared/sidebar.js`）的
 - **WHEN** 頁面完成掛載側欄
 - **THEN** `#navAnnotation` 文字必須為「標記作業」，與掛載前既有預設行為一致
 
-#### Scenario: project_leader 任務角色下讀作例外處置，與麵包屑首層一致（issue #1018 新增）
+#### Scenario: AC-020.3 project_leader 任務角色下讀作例外處置，與麵包屑首層一致（issue #1018 新增）
 - **GIVEN** 使用者以 `role=project_leader` 進入 `annotation-workspace`（如 `task_id=T016`、`sample_id=ofm-05-final-exception`、`run_type=official_run`、`annotator_id=kioleemg12`）
 - **WHEN** 頁面完成掛載側欄
 - **THEN** `#navAnnotation` 文字必須為「例外處置」（en: `Exception Disposition`）
 - **AND** 該文字必須與同頁入口麵包屑第一層連結文字（`crumbWorkAreaProjectLeader`）一致
 - **AND** 若停用或移除 `annotation-workspace.config.js` 內任何消費端覆寫邏輯，上述結果不得改變——即解析結果來自 `sidebar.js` 本身，而非頁面事後補寫
-- **AND** 同一 worktree 內其他 10 個未傳入 `opts.taskRole` 之 `mountSidebar()` 呼叫點，其 `#navAnnotation` 文字不得因本條修訂而改變
+- **AND** 其餘未傳入 `opts.taskRole` 的 `mountSidebar()` 呼叫點，其 `#navAnnotation` 文字不得因本條修訂而改變
