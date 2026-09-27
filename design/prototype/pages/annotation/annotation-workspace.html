@@ -628,10 +628,6 @@
       padding: 10px var(--space-md);
       font-size: 14px;
     }
-    /* issue #928: a secondary submit control near the decision row, shown
-       only once every outKey in the unit has a decision. */
-    .rv-quick-submit-row { display: flex; align-items: center; justify-content: flex-end; gap: var(--space-sm); margin-top: var(--space-sm); }
-
     /* ── Action bar ──────────────────────────────────────────── */
     .action-bar {
       flex-shrink: 0;
@@ -660,8 +656,7 @@
        renderAutosaveStatus() hides .autosave-status for reviewers -- with a
        single flex child, space-between alone would pin them to the left. */
     .action-bar-right { display: flex; align-items: center; gap: var(--space-sm); margin-left: auto; }
-    /* issue #930 (FR-102): plain-text submit-consequence hint, shared style
-       with the decision-row copy of the same text (buildReviewQuickSubmit). */
+    /* issue #930 (FR-102): plain-text submit-consequence hint. */
     .rv-submit-consequence { font-size: 12px; color: var(--color-ink-muted); }
 
     /* ── Right: Guideline ────────────────────────────────────── */
