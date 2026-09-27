@@ -1,4 +1,12 @@
-## MODIFIED Requirements
+## ADDED Requirements
+
+<!-- `dashboard/012-dashboard` has never had a derived view under openspec/specs/ before this
+     change (no prior OpenSpec-mediated modification touched this module), so `openspec archive`
+     requires this delta to declare ADDED rather than MODIFIED for its bootstrap entry -- see
+     `openspec validate`'s own INFO note. Against the CANONICAL spec (specs/dashboard/012-dashboard/
+     spec.md), FR-011D already exists and is being revised in place (v2.12.0 -> v2.13.0, see that
+     file's own Changelog); this ADDED heading only reflects the derived view's first-ever capture
+     of FR-011D, not a claim that FR-011D is new to the canonical spec. -->
 
 ### Requirement: FR-011D 審核流程示範任務入口身分
 
