@@ -69,10 +69,16 @@ async function gotoWithTheme(page: Page, url: string, theme: 'light' | 'dark') {
  * getComputedStyle() returning empty strings (issue #1040). expect(...).toPass() retries
  * the whole measurement until it observes a live, attached element instead of failing on
  * the first stale read. The default toPass() backoff (100/250/500/1000ms, capped at 1s)
- * only yields ~30 attempts inside the 30s test timeout, which measured ~1 in 10 against
- * the #1040 regression test's continuous detach-and-replace loop; a fixed 20ms interval
- * gives it thousands of attempts in the same window, so it reliably lands on a stable read
- * (confirmed 20/20 across two 10-run batches, each completing in 1-2s).
+ * measured ~1 in 10 against the #1040 regression test's continuous detach-and-replace
+ * loop, so a fixed 20ms interval is used instead to give it far more attempts per second.
+ *
+ * toPass() with no explicit `timeout` is bounded by the *expect* timeout (this repo's
+ * default: 5s), not the 30s test timeout -- an earlier version of this comment assumed
+ * the latter. 5s/20ms (~250 attempts) was enough in isolation (20/20, then 80/80 real
+ * -path runs), but running the full `tests/task-management/ tests/admin/` suite
+ * (500+ parallel tests) slowed CDP round trips enough that this regression test's own
+ * continuous-replace loop exhausted a 5s budget once. An explicit 10s timeout gives
+ * headroom against that contention while staying well under the 30s test timeout.
  */
 async function measureLocatorContrast(page: Page, locator: ReturnType<Page['locator']>): Promise<number> {
   await expect(locator).toBeVisible();
@@ -85,7 +91,7 @@ async function measureLocatorContrast(page: Page, locator: ReturnType<Page['loca
     if (!colorPair.color || !colorPair.backgroundColor) {
       throw new Error('Element was detached mid-measurement (re-render race); retrying.');
     }
-  }).toPass({ intervals: [20] });
+  }).toPass({ intervals: [20], timeout: 10_000 });
   return contrastRatio(colorPair.color, colorPair.backgroundColor);
 }
 
