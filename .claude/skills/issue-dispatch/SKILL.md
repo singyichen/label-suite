@@ -169,6 +169,7 @@ One issue, one worktree, one lead, one port.
 N=931
 SLUG=sidebar-role-highlight          # short, lowercase, hyphenated
 BRANCH=fix/${N}-${SLUG}              # type prefix per .claude/rules/git-workflow.md
+BASE=main                            # stacked: the previous PR's branch, not main (see step 6)
 WT=.claude/worktrees/issue-${N}-${SLUG}
 PORT=8980                            # 8980, 8981, ... one per worktree in the wave
 
@@ -231,8 +232,10 @@ Paste each command and its result into the PR Test Plan. A red gate is never ski
 
 Then open the PR. Write the body to a file first and pass `--body-file`: a long `--body` heredoc is rejected as a compound command in some permission modes.
 
+`${BASE}` is `main` for a single PR; for the Nth PR in a stack (N ≥ 2) it is the (N−1)th PR's branch, not `main` — otherwise the diff includes the prior PR's changes too, defeating single-purpose and the file-count cap.
+
 ```bash
-gh pr create --title "<type>: <中文描述>" --base main --head "${BRANCH}" \
+gh pr create --title "<type>: <中文描述>" --base "${BASE}" --head "${BRANCH}" \
   --label "<type-label>" --body-file "<scratchpad>/pr-${N}.md"
 ```
 
@@ -275,6 +278,8 @@ gh pr merge <pr> --merge
 ```
 
 Merge is the main session's job alone. Applying `agent-ready` is the maintainer's advance authorization for it (see **Deviations from pr-flow**).
+
+**Stacked PRs merge one at a time, in stack order.** `gh pr merge` merges into whatever base is currently set — after PR N merges, retarget PR N+1 with `gh pr edit <N+1> --base main` *before* merging it, then re-check all four conditions above: the edit makes GitHub recompute `mergeable`/`mergeStateStatus`, so a check taken before the edit does not count. Skipping the retarget is a silent failure that still reports success: if PR N+1's base still points at PR N's branch, merging it lands the change on that branch instead of `main`, yet `gh pr view` still reports `MERGED`, `Closes #N` still closes the issue, and the four conditions can all have passed before the retarget. Confirm `main` actually contains the change afterward, e.g. `git log origin/main --oneline | grep <pr>`.
 
 On a red gate: fix and push, at most **twice**. If it is still red, hand the failure to `codex:rescue` for one diagnosis pass — CLAUDE.md escalates at three failed attempts on the same problem. If that does not resolve it, post a checkpoint comment containing the **exact** error output, swap `agent-running` for `blocked`, and send a `PushNotification`.
 
@@ -392,3 +397,4 @@ One deviation is from CLAUDE.md itself and is therefore **not** this skill's to 
 | FR/AC IDs collide silently across issues sharing a wave — git merges both with no conflict marker, and no gate (`check-sdd.sh`, `openspec validate`) checks for duplicate IDs (#920/#956) | Pre-assign or merge-time-renumber ID ranges per issue (Step 4 controlled exception); `grep -rn` the repo for zero remaining hits after renumbering |
 | A PR opened without its CI watch armed in the same turn stalls an autonomous round silently — the main session sits reporting "waiting on CI" while CI already finished (2026-09-27: #1016/#1017/#1020) | The main session, not the lead, arms the watch in the same turn it obtains the PR number, in Step 6; re-arm after every `merge main` + repush, since the prior watch already exited with that round's CI. Any already-open PR found unwatched gets one before continuing |
 | The four Step 7 merge conditions can all hold before this repo's own CI run has registered a single check (#1026, head `0860ef12`: `checks=1` was `Amazon Q Developer` alone while `CI` sat `queued`) | Confirm zero `queued`/`in_progress` runs for the head SHA and `Project SDD Lint` + `Validate Project Structure` both `SUCCESS` before trusting the four conditions |
+| Merging a stacked PR while its base still points at the previous stack branch merges the change into that branch, not `main`, yet `gh pr view` still reports `MERGED` (#1033, found on #1019's PR #1031/#1032) | Retarget with `gh pr edit <N+1> --base main` before merging it; afterward confirm `main` contains the change, e.g. `git log origin/main --oneline \| grep <pr>` |
