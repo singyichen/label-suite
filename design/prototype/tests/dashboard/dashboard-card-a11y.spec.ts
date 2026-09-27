@@ -124,6 +124,6 @@ test.describe('Dashboard task_type compatibility param (issue #311)', () => {
     await expect(page).toHaveURL(/role=reviewer/);
     await expect(page).toHaveURL(/run_type=dry_run/);
     await expect(page).toHaveURL(/task_type=single_sentence_classification/);
-    await expect(page).toHaveURL(/reviewer_id=reviewer_chen/);
+    await expect(page).toHaveURL(/reviewer_id=reviewer_li/);
   });
 });
