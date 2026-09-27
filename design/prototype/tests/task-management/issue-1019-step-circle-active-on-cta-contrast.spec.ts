@@ -13,13 +13,20 @@
  *   against further regression (asserted at 4.4, not 4.5), so the Green fix for #1019 is
  *   not required to also fix this unrelated pre-existing gap.
  *   Canonical page spec: specs/task-management/013-task-new/spec.md
+ *
+ *   Update (issue #1030, maintainer decision 2026-09-27): the light-theme gap is resolved
+ *   as a sanctioned accepted tradeoff, not a defect — see the Step Indicator arbitration
+ *   record in design/system/MASTER.md (measured 4.4669:1, 0.033 under AA). The floor below
+ *   still guards against regression rather than asserting AA pass, so a future change to
+ *   `--color-primary` or `--color-on-cta` that pushes this below 4.4 fails here as a signal
+ *   to update that arbitration record.
  */
 import { test, expect, type Page } from '@playwright/test';
 
 const TASK_NEW_URL = '/pages/task-management/task-new.html';
 const WCAG_AA_MIN_CONTRAST = 4.5;
-// Pre-existing (non-#1019) light-theme floor — see traceability note above.
-const PRE_EXISTING_LIGHT_FLOOR = 4.4;
+// Accepted-tradeoff light-theme floor (issue #1030) — see traceability note above.
+const ACCEPTED_TRADEOFF_LIGHT_FLOOR = 4.4;
 
 /** Parses a computed `rgb(r, g, b)` / `rgba(r, g, b, a)` string into channel values. */
 function parseRgbChannels(rgbString: string): [number, number, number] {
@@ -68,10 +75,10 @@ async function measureStepCircleActiveContrast(page: Page): Promise<number> {
 }
 
 test.describe('task-new.html .step-circle.active WCAG contrast (issue #1019)', () => {
-  test('light theme: pre-existing floor, not regressed (out of #1019 scope)', async ({ page }) => {
+  test('light theme: accepted-tradeoff floor, not regressed (issue #1030)', async ({ page }) => {
     await gotoWithTheme(page, 'light');
     const ratio = await measureStepCircleActiveContrast(page);
-    expect(ratio).toBeGreaterThanOrEqual(PRE_EXISTING_LIGHT_FLOOR);
+    expect(ratio).toBeGreaterThanOrEqual(ACCEPTED_TRADEOFF_LIGHT_FLOOR);
   });
 
   test('dark theme meets AA contrast on .step-circle.active', async ({ page }) => {
