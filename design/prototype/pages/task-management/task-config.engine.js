@@ -2086,7 +2086,7 @@ function buildRelationTripleRow(triple, allRelTypes, opts) {
   content.appendChild(objSpan);
   if (triple.relType && allRelTypes.indexOf(triple.relType) >= 0) {
     var typeBadge = document.createElement('span');
-    typeBadge.style.cssText = 'margin-left:8px;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;background:var(--color-success-bg);color:var(--color-success);border:1px solid var(--color-success-border);';
+    typeBadge.style.cssText = 'margin-left:8px;padding:1px 7px;border-radius:4px;font-size:var(--text-label);font-weight:700;background:var(--color-success-bg);color:var(--color-success);border:1px solid var(--color-success-border);';
     typeBadge.textContent = (lang === 'zh' ? '類型：' : 'type: ') + triple.relType;
     content.appendChild(typeBadge);
   }
