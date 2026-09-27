@@ -585,9 +585,14 @@
 <script src="../shared/sidebar.js"></script>
 <script>
   var annotationListHref = '../annotation/annotation-list.html' + window.location.search;
+  var urlTaskRole = (function () {
+    var role = new URLSearchParams(window.location.search).get('role');
+    return role === 'reviewer' ? 'reviewer' : role === 'project_leader' ? 'project_leader' : 'annotator';
+  })();
   window.LabelSuiteSharedSidebar.mountSidebar({
     mountId: 'sharedSidebarMount',
     activeNav: 'annotation',
+    taskRole: urlTaskRole,
     annotationHref: annotationListHref,
     dashboardHref: '../dashboard/dashboard.html',
     taskHref: '../task-management/task-list.html',
@@ -723,7 +728,6 @@
       langToggleAria: '切換語言',
       navDashboard: '儀表板',
       navTaskManagement: '任務管理',
-      navAnnotation: '標記作業',
       navDataset: '資料集分析',
       navAdmin: '系統管理',
       navProfile: '個人設定',
@@ -799,7 +803,6 @@
       langToggleAria: 'Switch language',
       navDashboard: 'Dashboard',
       navTaskManagement: 'Task Management',
-      navAnnotation: 'Annotation',
       navDataset: 'Dataset Analytics',
       navAdmin: 'System Administration',
       navProfile: 'Profile',
@@ -2530,7 +2533,7 @@
   }
 
   function applyNavLabels() {
-    ['navDashboard', 'navTaskManagement', 'navAnnotation', 'navDataset', 'navAdmin', 'navProfile'].forEach(function (id) {
+    ['navDashboard', 'navTaskManagement', 'navDataset', 'navAdmin', 'navProfile'].forEach(function (id) {
       var el = document.getElementById(id);
       if (el) el.textContent = t(id);
     });
