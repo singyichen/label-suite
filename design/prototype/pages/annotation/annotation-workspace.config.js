@@ -119,6 +119,12 @@
       reviewFinalizedNote: '此審核單位已定稿，結果為唯讀。',
       reviewFinalizedRemaining: '本任務你還有 {n} 個可處理的審核單位。',
       reviewFinalizedBackToList: '回到審核清單',
+      reviewSubmittedTitle: '你已提交此單位的審核決策',
+      reviewSubmittedNote: '此單位其後因與其他審核意見不一致而進入爭議中，以下為你當時提交的決策與修正內容，唯讀顯示。',
+      reviewSubmittedDecisionLabel: '你的審核決策',
+      reviewSubmittedValueLabel: '修正值',
+      reviewEditMyDecisionBtn: '修改我的審核',
+      reviewCancelEditBtn: '取消，維持原決策',
       finalizedOriginalLabel: '標記員原答案',
       finalizedResultLabel: '最終結果',
       finalizedBasisLabel: '定稿依據',
@@ -272,6 +278,12 @@
       reviewFinalizedNote: 'This review unit is finalized; results are read-only.',
       reviewFinalizedRemaining: 'You have {n} actionable review units left on this task.',
       reviewFinalizedBackToList: 'Back to review list',
+      reviewSubmittedTitle: 'You already submitted a decision on this unit',
+      reviewSubmittedNote: 'This unit later became disputed because another reviewer disagreed. The decision and correction below are what you submitted, shown read-only.',
+      reviewSubmittedDecisionLabel: 'Your decision',
+      reviewSubmittedValueLabel: 'Corrected value',
+      reviewEditMyDecisionBtn: 'Edit my decision',
+      reviewCancelEditBtn: 'Cancel, keep original decision',
       finalizedOriginalLabel: 'Annotator original',
       finalizedResultLabel: 'Final result',
       finalizedBasisLabel: 'Finalization basis',
@@ -2311,6 +2323,7 @@
        the identity too -- an annotator addresses only their own records. */
     if (annotatorId && currentRole !== 'annotator') currentIdentity.annotatorId = annotatorId;
     reviewRowSeeded = {};
+    reviewSubmittedEditMode = false;
     state.datasetRawFirstRow = buildAnnotatorRecord(record, currentProfile);
     /* The engine only rebuilds columnOutputTypeMap inside its own
        renderSchemaFields() (a task-new Step 2 path this host never runs);
@@ -2922,6 +2935,11 @@
      with), silently discarding any live correction the reviewer already
      made on other output types. */
   var reviewRowSeeded = {};
+  /* issue #1053 (FR-103): sample-scoped like reviewRowSeeded above (reset in
+     selectSample only) -- toggled true by the SUBMITTED_DISPUTED read-only
+     card's "修改我的審核" button, false by the edit card's "取消，維持原決策"
+     button, each followed by a renderReviewerWorkspace() re-render. */
+  var reviewSubmittedEditMode = false;
 
   function describeOutputAnswer(outKey, src) {
     src = src || {};
@@ -3088,6 +3106,20 @@
     return window.LabelSuiteAnnotationWorkspaceData.getSubmission(
       currentProfile.id,
       'annotator',
+      currentRunType,
+      currentSampleId,
+      currentIdentity
+    );
+  }
+
+  /* issue #1053 (FR-103): the current reviewer's own prior submission on
+     this unit, read the same shape getAnnotatorSubmission() above reads for
+     the annotator -- the SUBMITTED_DISPUTED read-only summary and its
+     edit-entry path both source from this, never getAnnotatorSubmission(). */
+  function getReviewerOwnSubmission() {
+    return window.LabelSuiteAnnotationWorkspaceData.getSubmission(
+      currentProfile.id,
+      'reviewer',
       currentRunType,
       currentSampleId,
       currentIdentity
@@ -3690,12 +3722,20 @@
      included), so it seeds through the OutputAnswer path. The demo fallback
      only has a CompactAnswer and takes the compact path -- entity offsets get
      resolved against the passage there (placeCompactEntities). */
-  function seedReviewRow(outKey, submission) {
+  /* issue #1053 (FR-103): `correctionSource`, when given, seeds the
+     correction panel's engine state (seedReviewState()) instead of
+     `submission` -- the FR-103 edit-entry path's own reviewer submission,
+     not the annotator's. `reviewRowOriginals` (the "原答案：" comparison
+     display) always stays on `submission` regardless, matching FR-103's
+     "two uses, two sources" requirement. Omitted, behavior is unchanged:
+     the unconditional interactive-branch call site below seeds both from
+     `submission`, exactly as before. */
+  function seedReviewRow(outKey, submission, correctionSource) {
     if (submission) {
       reviewRowOriginals[outKey] = describeOutputAnswer(outKey, submission);
       reviewRowOriginalBypass[outKey] = !!(submission.previewBypass && submission.previewBypass[outKey]);
       if (!reviewRowSeeded[outKey]) {
-        seedReviewState(outKey, submission, false);
+        seedReviewState(outKey, correctionSource || submission, false);
         reviewRowSeeded[outKey] = true;
       }
       return;
@@ -3785,10 +3825,10 @@
     return wrap;
   }
 
-  function buildReviewRow(outKey, submission) {
+  function buildReviewRow(outKey, submission, correctionSource) {
     var row = buildReviewRowShell(null);
 
-    seedReviewRow(outKey, submission);
+    seedReviewRow(outKey, submission, correctionSource);
     appendCorrectionControl(row, outKey);
     var decisionRow = document.createElement('div');
     decisionRow.className = 'rv-decision-row';
@@ -3861,6 +3901,12 @@
      interactivity re-renders (see the v4.55.0 Changelog entry). */
   var REVIEW_UNIT_BLOCK = {
     ARBITRATION: 'arbitration',
+    /* issue #1053 (FR-103): the DISPUTED unit's ARBITRATION branch above
+       only catches an eligible arbiter; the reviewer who is the one who
+       already submitted a decision on it (isArbiterCandidate() false for
+       them precisely because they have a submission) falls through here
+       instead of the interactive card. */
+    SUBMITTED_DISPUTED: 'submitted_disputed',
     FINALIZED: 'finalized',
     /* issue #824 (FR-093 本版修訂 4): a reviewer dropped from the task's
        reviewer_ids keeps read-only access to the units they reviewed, but
@@ -3887,6 +3933,27 @@
       workspaceData.isArbiterCandidate(currentProfile.id, currentRunType, currentSampleId, currentIdentity)
     ) {
       return REVIEW_UNIT_BLOCK.ARBITRATION;
+    }
+    /* issue #1053 (FR-103): same DISPUTED gate as ARBITRATION above, but for
+       the submitting reviewer instead of an arbiter -- reuses getSubmission()
+       in the exact call shape isArbiterCandidate() itself uses internally
+       (annotation-workspace.data.js:2581), not a second lookup. Checked
+       after ARBITRATION (an eligible arbiter always takes that branch
+       instead) and before FINALIZED, per FR-103's required position -- which
+       means the OFF_ROSTER/NOT_ASSIGNED guards those later branches apply
+       (isRosterReviewer()/isCurrentUnitAssigned()) MUST be repeated here too:
+       FR-103 explicitly forbids changing OFF_ROSTER or NOT_ASSIGNED
+       behavior, and a reviewer dropped from the roster (or reassigned away
+       from this unit) after submitting on a since-disputed unit would
+       otherwise be caught here first instead of falling through to those
+       branches as before this change. */
+    if (
+      unitStatus === workspaceData.REVIEW_UNIT_STATUS.DISPUTED &&
+      workspaceData.isRosterReviewer(currentProfile.id, currentIdentity.reviewerId) &&
+      isCurrentUnitAssigned() &&
+      workspaceData.getSubmission(currentProfile.id, 'reviewer', currentRunType, currentSampleId, currentIdentity)
+    ) {
+      return REVIEW_UNIT_BLOCK.SUBMITTED_DISPUTED;
     }
     if (unitStatus === workspaceData.REVIEW_UNIT_STATUS.FINALIZED) return REVIEW_UNIT_BLOCK.FINALIZED;
     /* issue #824: after arbitration and finalization, never before them.
@@ -3996,7 +4063,7 @@
     return label;
   }
 
-  function buildMergedSpanReviewRow(outKeys, submission) {
+  function buildMergedSpanReviewRow(outKeys, submission, correctionSource) {
     /* One panel stands in for both output types, so each decision pair keeps
        its type label -- unlike a single-type card, where the pair is
        unambiguous on its own (FR-014P). */
@@ -4010,7 +4077,7 @@
     var row = buildReviewRowShell(null);
 
     outKeys.forEach(function (outKey) {
-      seedReviewRow(outKey, submission);
+      seedReviewRow(outKey, submission, correctionSource);
     });
 
     appendCorrectionControl(row, 'relation_identification', 'span', outKeys);
@@ -4925,6 +4992,118 @@
     preview.appendChild(card);
   }
 
+  /* issue #1053 (FR-103): per-outKey decision/value/reason section for the
+     SUBMITTED_DISPUTED read-only summary, all three read from `mySubmission`
+     (the current reviewer's own prior submission) so they can never drift
+     from getSubmission()'s actual stored values (AC-4.81). Reuses the
+     `.rv-finalized-summary` vocabulary buildFinalizedAnswerSection() already
+     established -- MUST NOT introduce a second summary style. Not built with
+     buildFinalizedAnswerSection() itself: that helper renders exactly one
+     CompactAnswer value per line, and this needs a decision label plus an
+     optional corrected value plus an optional reason on the same line. */
+  function buildReviewSubmittedDecisionSection(mySubmission) {
+    var section = document.createElement('div');
+    section.className = 'rv-finalized-summary';
+    section.setAttribute('data-testid', 'ws-review-submitted-decision');
+
+    var label = document.createElement('span');
+    label.className = 'rv-finalized-summary-label';
+    label.textContent = t('reviewSubmittedDecisionLabel') + '：';
+    section.appendChild(label);
+
+    var values = document.createElement('span');
+    values.className = 'rv-finalized-summary-values';
+    state.selectedOutputTypes.forEach(function (outKey) {
+      var decision = mySubmission.decisions && mySubmission.decisions[outKey];
+      var line = document.createElement('span');
+      line.className = 'rv-finalized-summary-value';
+      var text = outKey + '：' + (decision ? t(REVIEW_DECISION_LABEL_KEYS[decision]) : t('reviewNoAnswer'));
+      if (decision === 'modify') {
+        text += '（' + t('reviewSubmittedValueLabel') + '：' + describeOutputAnswer(outKey, mySubmission) + '）';
+      }
+      var reason = mySubmission.reasons && mySubmission.reasons[outKey];
+      if (reason && reviewDecisionRequiresReason(decision)) {
+        text += ' ' + t('reviewReasonLabel') + '：' + reason;
+      }
+      line.textContent = text;
+      values.appendChild(line);
+    });
+    section.appendChild(values);
+    return section;
+  }
+
+  /* issue #1053 (FR-103): "修改我的審核" -- switches this same unit into the
+     existing FR-053 interactive card, seeded from the reviewer's OWN
+     submission (reviewSubmittedEditMode true, read by renderReviewerWorkspace()
+     below) rather than a second card-building path. */
+  function buildReviewEditMyDecisionBtn() {
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'mini-btn';
+    btn.setAttribute('data-testid', 'ws-review-edit-my-decision-btn');
+    btn.textContent = t('reviewEditMyDecisionBtn');
+    btn.addEventListener('click', function () {
+      reviewSubmittedEditMode = true;
+      renderReviewerWorkspace();
+    });
+    return btn;
+  }
+
+  /* issue #1053 (FR-103): "取消，維持原決策" -- returns to the read-only
+     summary without calling any submit/persist function (no write path). */
+  function buildReviewCancelEditBtn() {
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'mini-btn';
+    btn.setAttribute('data-testid', 'ws-review-cancel-edit-btn');
+    btn.textContent = t('reviewCancelEditBtn');
+    btn.addEventListener('click', function () {
+      reviewSubmittedEditMode = false;
+      renderReviewerWorkspace();
+    });
+    return btn;
+  }
+
+  /* issue #1053 (FR-103): the submitting reviewer's read-only summary for a
+     unit that later became DISPUTED via a peer's differing review --
+     SUBMITTED_DISPUTED's card, rendered in place of the blank interactive
+     one so an accidental submit can never silently overwrite the decision
+     this reviewer already sent. `submission` is the annotator's (context,
+     same variable renderArbitrationCard()/renderFinalizedCard() already take
+     by that name); `mySubmission` is this reviewer's own -- getSubmission()
+     cannot return SUBMITTED_DISPUTED without one (reviewUnitBlockReason()
+     above already required it non-empty). */
+  function renderReviewSubmittedCard(preview, submission, mySubmission) {
+    var data = window.LabelSuiteAnnotationWorkspaceData;
+
+    var card = document.createElement('div');
+    card.className = 'content-card';
+    card.setAttribute('data-testid', 'ws-review-submitted-card');
+
+    var title = document.createElement('h3');
+    title.style.cssText = 'font-size:14px;margin:0 0 4px;';
+    title.textContent = t('reviewSubmittedTitle');
+    card.appendChild(title);
+
+    var note = document.createElement('p');
+    note.style.cssText = 'font-size:12px;color:var(--color-text-soft);margin:0 0 10px;';
+    note.textContent = t('reviewSubmittedNote');
+    card.appendChild(note);
+
+    var originalAnswers = {};
+    state.selectedOutputTypes.forEach(function (outKey) {
+      originalAnswers[outKey] = data.convertSubmissionAnswer(outKey, submission);
+    });
+    card.appendChild(buildFinalizedAnswerSection(
+      'ws-review-submitted-original', 'finalizedOriginalLabel', originalAnswers
+    ));
+    card.appendChild(buildReviewSubmittedDecisionSection(mySubmission));
+
+    card.appendChild(buildReviewEditMyDecisionBtn());
+
+    preview.appendChild(card);
+  }
+
   /* Read-only review-gate callout (issue #988): OFF_ROSTER, NOT_ASSIGNED and
      EMPTY all append a "why can't I submit" note below the reviewed data
      card. Before this helper, each gate built its own `.content-card` --
@@ -5376,6 +5555,26 @@
       renderArbitrationCard(preview, submission);
       return;
     }
+    /* issue #1053 (FR-103): the reviewer who already submitted a decision on
+       this now-disputed unit is not the arbiter (ARBITRATION above already
+       claimed that case) -- reopening it must replay their own decision
+       read-only instead of the blank interactive card, or an accidental
+       submit silently overwrites what they already sent. reviewSubmittedEditMode
+       (toggled by the card's own "修改我的審核"/"取消，維持原決策" buttons, each
+       followed by a re-render) is what lets this SAME blockReason fall
+       through to the ordinary interactive rendering below instead of
+       returning here. */
+    if (blockReason === REVIEW_UNIT_BLOCK.SUBMITTED_DISPUTED && !reviewSubmittedEditMode) {
+      if (reviewSubmitBtn) reviewSubmitBtn.classList.add('hidden');
+      if (reviewSubmitConsequenceEl) reviewSubmitConsequenceEl.classList.add('hidden');
+      var submittedInputCard = document.createElement('div');
+      submittedInputCard.className = 'content-card';
+      submittedInputCard.setAttribute('data-testid', 'ws-input-content');
+      submittedInputCard.textContent = buildReviewerInputText(rawRecord, currentProfile.fieldRoleMap);
+      preview.appendChild(submittedInputCard);
+      renderReviewSubmittedCard(preview, submission, getReviewerOwnSubmission());
+      return;
+    }
     /* Finalized unit lock (issue #308): both finalize paths -- quorum
        convergence and arbitration resolution -- land here, replacing the
        interactive review card with the read-only results card. Without
@@ -5498,17 +5697,43 @@
       preview.querySelector('[data-testid="ws-review-unit-context"]') || preview
     );
 
+    /* issue #1053 (FR-103): reached here with blockReason still
+       SUBMITTED_DISPUTED only via reviewSubmittedEditMode -- the edit-entry
+       path. Its correction panel, decision buttons and reason field MUST
+       seed from the reviewer's own prior submission, not the annotator's
+       (`submission`, used by every other caller of buildReviewRow() below).
+       Decision buttons/reason field read a SEPARATE map (reviewRowDecisions/
+       reviewRowReasons) that seedReviewRow() never touches, so they are set
+       here, before buildReviewRow() builds and synchronously paints them. */
+    var correctionSource;
+    if (blockReason === REVIEW_UNIT_BLOCK.SUBMITTED_DISPUTED) {
+      var mySubmission = getReviewerOwnSubmission();
+      correctionSource = mySubmission;
+      state.selectedOutputTypes.forEach(function (outKey) {
+        var key = decisionKey(outKey, currentAnnotatorId());
+        reviewRowDecisions[key] = mySubmission.decisions && mySubmission.decisions[outKey];
+        var reason = mySubmission.reasons && mySubmission.reasons[outKey];
+        if (reason) reviewRowReasons[key] = reason;
+      });
+    }
+
     var spanKeys = mergedSpanKeys();
     var spanRowRendered = false;
     state.selectedOutputTypes.forEach(function (outKey) {
       if (spanKeys && spanKeys.indexOf(outKey) >= 0) {
         if (spanRowRendered) return;
         spanRowRendered = true;
-        preview.appendChild(buildMergedSpanReviewRow(spanKeys, submission));
+        preview.appendChild(buildMergedSpanReviewRow(spanKeys, submission, correctionSource));
         return;
       }
-      preview.appendChild(buildReviewRow(outKey, submission));
+      preview.appendChild(buildReviewRow(outKey, submission, correctionSource));
     });
+
+    /* issue #1053 (FR-103): the edit-entry path's own way back to the
+       read-only summary -- writes nothing (no submit/persist call). */
+    if (blockReason === REVIEW_UNIT_BLOCK.SUBMITTED_DISPUTED) {
+      preview.appendChild(buildReviewCancelEditBtn());
+    }
   }
 
   function appendReviewHistoryEntry(history, text) {
