@@ -372,11 +372,7 @@
      overrides that annotation-workspace.config.js previously patched in
      post-mount (issue #309, issue #931). */
   var taskRoleI18n = {
-    zh: { reviewer: '審核員', project_leader: '專案負責人', annotationLabel: '審核作業', projectLeaderAnnotationLabel: '例外處置' },
-    /* issue #1041 FR-021: annotator/else branch's English string -- the
-       zh side has no `annotator` key because the zh else-branch default is
-       still the inline '標記作業' literal in navItems below, never read
-       from this table. */
+    zh: { reviewer: '審核員', project_leader: '專案負責人', annotationLabel: '審核作業', projectLeaderAnnotationLabel: '例外處置', annotator: '標記作業' },
     en: { reviewer: 'Reviewer', project_leader: 'Project leader', annotationLabel: 'Review', projectLeaderAnnotationLabel: 'Exception Disposition', annotator: 'Annotation' }
   };
 
@@ -409,9 +405,7 @@
      switch (not only at initial mount), mirroring updateAdminSubmenuLanguage()
      above. #navAnnotation's label depends on the last-mounted taskRole
      (currentTaskRole), mirroring navItems' annotation entry's ternary
-     (renderSidebar() below) -- including its zh else-branch, which stays
-     the inline '標記作業' literal rather than a taskRoleI18n.zh.annotator
-     key (see taskRoleI18n comment above). */
+     (renderSidebar() below). */
   function updateL0NavLanguage(lang) {
     var normalizedLang = normalizeLang(lang);
     var translations = l0NavI18n[normalizedLang];
@@ -425,7 +419,7 @@
     setTextById('navAnnotation',
       currentTaskRole === 'reviewer' ? taskRoleLabels.annotationLabel :
       currentTaskRole === 'project_leader' ? taskRoleLabels.projectLeaderAnnotationLabel :
-      (normalizedLang === 'en' ? taskRoleLabels.annotator : '標記作業'));
+      taskRoleLabels.annotator);
   }
 
   function isAdminSubmenuAvailable() {
@@ -553,7 +547,7 @@
         labelId: 'navAnnotation',
         defaultLabel: taskRole === 'reviewer' ? taskRoleLabels.annotationLabel :
           taskRole === 'project_leader' ? taskRoleLabels.projectLeaderAnnotationLabel :
-          (readStoredLang() === 'en' ? taskRoleLabels.annotator : '標記作業'),
+          taskRoleLabels.annotator,
         icon: '<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>'
       },
       {
