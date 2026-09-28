@@ -1,5 +1,5 @@
 ---
-功能分支: fix/1004-single-review-submit
+功能分支: fix/1053-reviewer-submitted-disputed
 建立日期: 2026-04-23
 版本: 8.1.0
 狀態: Draft
