@@ -95,12 +95,6 @@
       'thCompletion',
       'thIaaStatus',
       'thRole',
-      'navDashboard',
-      'navTaskManagement',
-      'navAnnotation',
-      'navDataset',
-      'navAdmin',
-      'navProfile',
     ].forEach(function (id) {
       view.setTextContent(id, t(id));
     });

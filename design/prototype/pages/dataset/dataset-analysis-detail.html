@@ -768,12 +768,6 @@ var I18N = {
       lead: '不適用—由審核員評估',
       desc: '自由文字回覆無標準答案，不納入自動 IAA 計算與整體達標比例分母；品質由 Reviewer 於審核流程中逐筆評估。',
     },
-    navDashboard: '儀表板',
-    navTaskManagement: '任務管理',
-    navAnnotation: '標記作業',
-    navDataset: '資料集分析',
-    navAdmin: '系統管理',
-    navProfile: '個人設定',
     roleUser: '一般使用者',
   },
   en: {
@@ -1132,12 +1126,6 @@ var I18N = {
       lead: 'Not applicable — assessed by reviewer',
       desc: 'Free-text responses have no ground-truth answer and are excluded from automated IAA computation and the composite gate denominator; quality is assessed per-sample by the reviewer during the review workflow.',
     },
-    navDashboard: 'Dashboard',
-    navTaskManagement: 'Task Management',
-    navAnnotation: 'Annotation',
-    navDataset: 'Dataset Analytics',
-    navAdmin: 'System Administration',
-    navProfile: 'Profile',
     roleUser: 'User',
   },
 };
@@ -1596,10 +1584,6 @@ function applyLang(l) {
     window.LabelSuiteSharedSidebar.applyGlobalLanguage(l, {
       langToggleAria: l === 'zh' ? '切換語言' : 'Switch language',
       roleLabel: t('roleUser'),
-    });
-    ['navDashboard', 'navTaskManagement', 'navAnnotation', 'navDataset', 'navAdmin', 'navProfile'].forEach(function(id) {
-      var el = document.getElementById(id);
-      if (el) el.textContent = t(id);
     });
   }
   if (window.LabelSuiteAnalytics) {
