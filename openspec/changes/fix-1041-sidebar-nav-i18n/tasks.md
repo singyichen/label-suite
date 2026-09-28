@@ -13,9 +13,9 @@
 - [x] 1.5 使 1.1 全部案例轉綠。[@senior-frontend]
 - [x] 1.6 改寫 `design/prototype/tests/shared/language-switch-consistency.spec.ts:77`「keeps admin sidebar navigation labels translatable in both admin pages」：admin 兩頁之覆寫移除為第二組範圍，本組尚未移除，故本測試不得再要求（也不得禁止）任何頁面自行定義/更新這六個 key——移除舊斷言（強制 admin 兩頁必須自行定義並更新六個 nav key，即強制 FR-020 違規），改為載入 admin 兩頁並斷言語言切換後六個 `#navXxx` 節點之**渲染 DOM 文字**與 FR-021 對照表逐字一致（呼應 AC-014.1：不論頁面覆寫是否已移除，渲染結果皆須正確），測試名稱同步更新以反映斷言渲染行為而非原始碼存在與否。[@senior-frontend]
 - [x] 1.7 更新 `design/prototype/tests/shared/issue-1023-list-sidebar-taskrole.spec.ts`：將「DELIBERATELY ACCEPTED REGRESSION」案例（`annotator: #navAnnotation regresses to untranslated 標記作業...`）之斷言由 `'標記作業'` 改為 `'Annotation'`，測試名稱與檔頭／行內註解同步移除「等待 #1041」之刻意接受迴歸說明，改記錄為已由本 issue 修正、迴歸已消失。[@senior-frontend]
-- [ ] 1.8 執行閘門（本組要求跑完整套件，因改動全站共用語言路徑）：`cd design/prototype && pnpm typecheck`；`cd design/prototype && PW_PORT=8981 pnpm playwright test`（完整套件）；`scripts/check-sdd.sh`；`openspec validate --changes --no-interactive`；`node scripts/gen-screen-inventory.mjs`。全部通過方可繼續，由 lead 親自重跑並獨立覆核，不採信代理自報。[@main]
-- [ ] 1.9 派全新 `senior-code-reviewer` 獨立審查：(1) 解析是否確實全在元件內部、無任何消費頁面殘留 DOM 覆寫；(2) 六個標籤 × 兩語言 × 三角色組合是否都正確；(3) 英文字串是否沿用既有而非自創；(4) 兩支測試改寫是否真的斷言新行為而非只是改名；(5) #1023 迴歸是否確實消失且其測試註解已同步；(6) 是否推翻了任何既有 FR/AC（若有回報，MAJOR）。結論貼進 issue #1041 檢查點留言。[@senior-code-reviewer]
-- [ ] 1.10 派 `senior-security` 安全審查（每個 PR 群組必做）：確認新增之語言對照表與 DOM textContent 更新無 XSS 風險（沿用既有 `setTextById`／`textContent` 寫入路徑，不引入 `innerHTML`）。結論貼進 issue #1041 檢查點留言。[@senior-security]
+- [x] 1.8 執行閘門（本組要求跑完整套件，因改動全站共用語言路徑）：`cd design/prototype && pnpm typecheck`；`cd design/prototype && PW_PORT=8981 pnpm playwright test`（完整套件）；`scripts/check-sdd.sh`；`openspec validate --changes --no-interactive`；`node scripts/gen-screen-inventory.mjs`。全部通過方可繼續，由 lead 親自重跑並獨立覆核，不採信代理自報。[@main]
+- [x] 1.9 派全新 `senior-code-reviewer` 獨立審查：(1) 解析是否確實全在元件內部、無任何消費頁面殘留 DOM 覆寫；(2) 六個標籤 × 兩語言 × 三角色組合是否都正確；(3) 英文字串是否沿用既有而非自創；(4) 兩支測試改寫是否真的斷言新行為而非只是改名；(5) #1023 迴歸是否確實消失且其測試註解已同步；(6) 是否推翻了任何既有 FR/AC（若有回報，MAJOR）。結論貼進 issue #1041 檢查點留言。[@senior-code-reviewer]
+- [x] 1.10 派 `senior-security` 安全審查（每個 PR 群組必做）：確認新增之語言對照表與 DOM textContent 更新無 XSS 風險（沿用既有 `setTextById`／`textContent` 寫入路徑，不引入 `innerHTML`）。結論貼進 issue #1041 檢查點留言。[@senior-security]
 - [ ] 1.11 開 PR 前回報主 session 讀 diff；`--base main`，`Refs #1041`（不 `Closes`，因非 final PR group），逐項 Test Plan 證據。PR 由主 session 掛 CI watch 並合併。[@main]
 
 ## 2. 第二組（PR group 2）— 移除 admin／dashboard 冗餘覆寫（生產檔 4 個）
