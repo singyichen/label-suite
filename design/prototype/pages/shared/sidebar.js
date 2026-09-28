@@ -4,6 +4,11 @@
   var ACTIVE_TASK_TYPE_STORAGE_KEY = 'labelsuite.activeTaskType';
   var SIDEBAR_COLLAPSED_STORAGE_KEY = 'labelsuite.sidebarCollapsed';
 
+  /* issue #1041: last-mounted taskRole, persisted at module scope so
+   * applyGlobalLanguage() can re-resolve #navAnnotation's role-dependent
+   * label on every language switch, not just at initial mount. */
+  var currentTaskRole = null;
+
   function normalizeSystemRole(role) {
     return role === 'super_admin' ? 'super_admin' : 'user';
   }
@@ -270,6 +275,7 @@
 
     updateShortcutHelpLanguage(normalizedLang);
     updateAdminSubmenuLanguage(normalizedLang);
+    updateL0NavLanguage(normalizedLang);
 
     if (typeof opts.roleLabel === 'string') {
       var roleEl = document.getElementById('roleIndicator');
@@ -367,7 +373,18 @@
      post-mount (issue #309, issue #931). */
   var taskRoleI18n = {
     zh: { reviewer: '審核員', project_leader: '專案負責人', annotationLabel: '審核作業', projectLeaderAnnotationLabel: '例外處置' },
-    en: { reviewer: 'Reviewer', project_leader: 'Project leader', annotationLabel: 'Review', projectLeaderAnnotationLabel: 'Exception Disposition' }
+    /* issue #1041 FR-021: annotator/else branch's English string -- the
+       zh side has no `annotator` key because the zh else-branch default is
+       still the inline '標記作業' literal in navItems below, never read
+       from this table. */
+    en: { reviewer: 'Reviewer', project_leader: 'Project leader', annotationLabel: 'Review', projectLeaderAnnotationLabel: 'Exception Disposition', annotator: 'Annotation' }
+  };
+
+  /* issue #1041 FR-021: the five non-annotation L0 labels' bilingual
+     values, mirroring adminSubmenuI18n's shape. */
+  var l0NavI18n = {
+    zh: { navDashboard: '儀表板', navTaskManagement: '任務管理', navDataset: '資料集分析', navAdmin: '系統管理', navProfile: '個人設定' },
+    en: { navDashboard: 'Dashboard', navTaskManagement: 'Task Management', navDataset: 'Dataset Analytics', navAdmin: 'System Administration', navProfile: 'Profile' }
   };
 
   function getRoleSettingsHref(adminHref) {
@@ -386,6 +403,29 @@
     var translations = adminSubmenuI18n[normalizeLang(lang)];
     setTextById('navAdminSubUsersLabel', translations.users);
     setTextById('navAdminSubRolesLabel', translations.roles);
+  }
+
+  /* issue #1041 FR-021: re-resolves all six L0 labels on every language
+     switch (not only at initial mount), mirroring updateAdminSubmenuLanguage()
+     above. #navAnnotation's label depends on the last-mounted taskRole
+     (currentTaskRole), mirroring navItems' annotation entry's ternary
+     (renderSidebar() below) -- including its zh else-branch, which stays
+     the inline '標記作業' literal rather than a taskRoleI18n.zh.annotator
+     key (see taskRoleI18n comment above). */
+  function updateL0NavLanguage(lang) {
+    var normalizedLang = normalizeLang(lang);
+    var translations = l0NavI18n[normalizedLang];
+    setTextById('navDashboard', translations.navDashboard);
+    setTextById('navTaskManagement', translations.navTaskManagement);
+    setTextById('navDataset', translations.navDataset);
+    setTextById('navAdmin', translations.navAdmin);
+    setTextById('navProfile', translations.navProfile);
+
+    var taskRoleLabels = taskRoleI18n[normalizedLang];
+    setTextById('navAnnotation',
+      currentTaskRole === 'reviewer' ? taskRoleLabels.annotationLabel :
+      currentTaskRole === 'project_leader' ? taskRoleLabels.projectLeaderAnnotationLabel :
+      (normalizedLang === 'en' ? taskRoleLabels.annotator : '標記作業'));
   }
 
   function isAdminSubmenuAvailable() {
@@ -483,7 +523,9 @@
     var brandHref = opts.brandHref || dashboardHref;
     var userName = resolveUserName(opts);
     var taskRole = opts.taskRole || null;
+    currentTaskRole = taskRole;
     var taskRoleLabels = taskRoleI18n[readStoredLang()];
+    var l0NavLabels = l0NavI18n[readStoredLang()];
     var roleIndicator = opts.roleIndicator || (
       taskRole === 'reviewer' ? taskRoleLabels.reviewer :
       taskRole === 'project_leader' ? taskRoleLabels.project_leader :
@@ -495,14 +537,14 @@
         key: 'dashboard',
         href: dashboardHref,
         labelId: 'navDashboard',
-        defaultLabel: '儀表板',
+        defaultLabel: l0NavLabels.navDashboard,
         icon: '<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>'
       },
       {
         key: 'task-management',
         href: taskHref,
         labelId: 'navTaskManagement',
-        defaultLabel: '任務管理',
+        defaultLabel: l0NavLabels.navTaskManagement,
         icon: '<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>'
       },
       {
@@ -510,21 +552,22 @@
         href: annotationHref,
         labelId: 'navAnnotation',
         defaultLabel: taskRole === 'reviewer' ? taskRoleLabels.annotationLabel :
-          taskRole === 'project_leader' ? taskRoleLabels.projectLeaderAnnotationLabel : '標記作業',
+          taskRole === 'project_leader' ? taskRoleLabels.projectLeaderAnnotationLabel :
+          (readStoredLang() === 'en' ? taskRoleLabels.annotator : '標記作業'),
         icon: '<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>'
       },
       {
         key: 'dataset',
         href: datasetHref,
         labelId: 'navDataset',
-        defaultLabel: '資料集分析',
+        defaultLabel: l0NavLabels.navDataset,
         icon: '<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3h18v18H3z"/><path d="M9 9h6v6H9z"/><path d="M3 9h6"/><path d="M15 9h6"/></svg>'
       },
       {
         key: 'admin',
         href: adminHref,
         labelId: 'navAdmin',
-        defaultLabel: '系統管理',
+        defaultLabel: l0NavLabels.navAdmin,
         itemId: 'navAdminItem',
         hidden: shouldHideAdminByRole(systemRole),
         roleSettingsHref: roleSettingsHref,
@@ -534,7 +577,7 @@
         key: 'profile',
         href: profileHref,
         labelId: 'navProfile',
-        defaultLabel: '個人設定',
+        defaultLabel: l0NavLabels.navProfile,
         icon: '<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'
       },
     ];

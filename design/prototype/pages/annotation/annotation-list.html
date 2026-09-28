@@ -726,11 +726,6 @@
       pageSubtitleAnnotator: '請先選擇要處理的資料筆次，再進入標記作業頁。',
       pageSubtitleReviewer: '請先選擇要審查的資料筆次，再進入審核作業頁。',
       langToggleAria: '切換語言',
-      navDashboard: '儀表板',
-      navTaskManagement: '任務管理',
-      navDataset: '資料集分析',
-      navAdmin: '系統管理',
-      navProfile: '個人設定',
       thStatus: '完成狀態',
       thCompletedAt: '完成時間',
       thProcessingSummary: '處理狀況',
@@ -801,11 +796,6 @@
       pageSubtitleAnnotator: 'Select a sample to annotate, then open the annotation workspace.',
       pageSubtitleReviewer: 'Select a sample to review, then open the review workspace.',
       langToggleAria: 'Switch language',
-      navDashboard: 'Dashboard',
-      navTaskManagement: 'Task Management',
-      navDataset: 'Dataset Analytics',
-      navAdmin: 'System Administration',
-      navProfile: 'Profile',
       thStatus: 'Status',
       thCompletedAt: 'Completed At',
       thProcessingSummary: 'Processing',
@@ -2532,13 +2522,6 @@
     }
   }
 
-  function applyNavLabels() {
-    ['navDashboard', 'navTaskManagement', 'navDataset', 'navAdmin', 'navProfile'].forEach(function (id) {
-      var el = document.getElementById(id);
-      if (el) el.textContent = t(id);
-    });
-  }
-
   function init() {
     var context = parseContext();
     CURRENT_LANG = window.LabelSuiteSharedSidebar ? window.LabelSuiteSharedSidebar.getStoredLang() : 'zh';
@@ -2574,7 +2557,6 @@
         roleLabel: context.role === 'reviewer' ? t('roleLabelReviewer') : t('roleLabelAnnotator'),
       });
     }
-    applyNavLabels();
 
     ['langToggle', 'mobileLangToggle'].forEach(function (id) {
       var btn = document.getElementById(id);
@@ -2587,7 +2569,6 @@
             roleLabel: context.role === 'reviewer' ? t('roleLabelReviewer') : t('roleLabelAnnotator'),
           });
         }
-        applyNavLabels();
         renderContext(context);
         if (context.profile) renderRows(context);
       });
