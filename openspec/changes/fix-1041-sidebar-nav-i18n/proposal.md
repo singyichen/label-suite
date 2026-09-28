@@ -18,7 +18,7 @@ Given this, the maintainer directed (2026-09-28) that this remains Direction A (
 ## What Changes
 
 - **ADDED FR-021**：Shared Sidebar 之六個 L0 導覽標籤（`navDashboard`／`navTaskManagement`／`navAnnotation`／`navDataset`／`navAdmin`／`navProfile`）之顯示文字必須於元件內部（`design/prototype/pages/shared/sidebar.js`）依語言（`readStoredLang()`）解析雙語值，且必須於每次呼叫 `applyGlobalLanguage(lang, options)` 時重新解析並更新對應 DOM 節點——不只於掛載當下解析一次。`navAnnotation` 項之角色分流（既有 FR-020，`reviewer` / `project_leader` / 其餘）三個分支皆須有對應英文字串（`reviewer` → `Review`、`project_leader` → `Exception Disposition`，兩者為既有值；`annotator` 或未提供 → 新增 `Annotation`，沿用全站既有消費頁一致採用之既有慣例字面值，非新創字串）。此解析必須於元件內部完成；消費頁面不得於掛載完成後另行以 DOM 操作覆寫此六個節點之顯示文字（重申既有 FR-020 消費端覆寫禁令之適用範圍，明確擴及全部六個 L0 標籤，不僅 `navAnnotation`）。
-- **ADDED SC-014**：於任一語系（zh/en）、任一 `taskRole`（`reviewer` / `project_leader` / `annotator` / 未提供）組合下，直接呼叫 Shared Sidebar 掛載函式並切換語言（呼叫 `applyGlobalLanguage`），六個 L0 標籤之渲染文字須與 FR-021 定義之雙語對照表逐字一致，且語言切換後立即反映新語系，不需重新掛載或重新整理頁面。
+- 新增一則成功標準（於任一語系、任一任務角色組合下，直接呼叫 Shared Sidebar 掛載函式並切換語言，六個 L0 標籤之渲染文字須與 FR-021 定義之雙語對照表逐字一致，且語言切換後立即反映新語系，不需重新掛載或重新整理頁面；消費頁面之自有覆寫程式碼（若尚未移除）不得導致該頁渲染結果偏離此驗收門檻）：**不在本 delta 的 `## ADDED Requirements` 內以 Requirement 形式宣告**。查證依據：衍生檢視 `openspec/specs/shared/008-…` 現行只有 FR 是 Requirement，零個 SC；正典既有的兩則成功標準（`## 成功標準` 章節第 540-541 行起）從未透過 delta 的 Requirement 宣告產生，而是 archive 時直接手寫進正典——這是 issue #1018 已查證並裁定的既有模式。若比照舊版做法以 Requirement 宣告，會使同一份正典裡的成功標準呈現兩種不同形狀。因此本次改依 issue #1018 先例（方案 (a)）：延後至最終 PR 群組 `/opsx:archive` 回寫正典時，以條列項直接寫入正典「## 成功標準」章節（格式比照既有 SC-013／SC-013A），不在 delta 內宣告為 Requirement。
 - 修訂 `design/prototype/pages/shared/sidebar.js`：`navItems` 之五個既有硬編碼中文 `defaultLabel`（`儀表板`／`任務管理`／`資料集分析`／`系統管理`／`個人設定`）與 `taskRoleI18n` 之 `annotator`/else 分支，改由 FR-021 定義之語言感知對照表解析；`applyGlobalLanguage()` 新增六個節點之重新解析掛勾（比照既有 `updateShortcutHelpLanguage()`／`updateAdminSubmenuLanguage()` 前例），並持久化最近一次 `mountSidebar()` 傳入之 `taskRole`，供語言切換時重新解析 `navAnnotation` 使用。
 - 移除 `design/prototype/pages/annotation/annotation-list.html` 已成孤兒的 5 個 `applyNavLabels()` 覆寫項目（`navDashboard`／`navTaskManagement`／`navDataset`／`navAdmin`／`navProfile`；`navAnnotation` 已於 #1023 移除）與其 `I18N.zh`／`I18N.en` 字典中對應的孤兒 key，本次 PR 群組範圍。
 - 改寫 `design/prototype/tests/shared/language-switch-consistency.spec.ts:77`「keeps admin sidebar navigation labels translatable in both admin pages」：原斷言強制 admin 兩頁在自己的 i18n 表定義並於 `applyLang` 更新六個 nav key——這正是 FR-020 明文禁止的消費端覆寫，此測試在強制違規。改寫為斷言新行為：標籤由 `sidebar.js` 內部解析、隨語言切換重新解析，且消費頁面（本次先覆蓋 admin 兩頁；其餘頁面隨後續 PR 群組移除覆寫後一併補上）不得再自行定義或更新這六個 key。
@@ -33,7 +33,7 @@ Given this, the maintainer directed (2026-09-28) that this remains Direction A (
 
 ### Modified Capabilities
 
-- `shared/008-sidebar-navbar-shared`：ADDED FR-021、SC-014（六個 L0 標籤全面語言感知，於元件內部解析並隨 `applyGlobalLanguage` 重新解析；重申 FR-020 消費端覆寫禁令適用全部六個節點）。既有 FR-020／FR-020A／FR-019 群等條文逐字不動，未推翻任何既有 FR/AC。
+- `shared/008-sidebar-navbar-shared`：ADDED FR-021（六個 L0 標籤全面語言感知，於元件內部解析並隨 `applyGlobalLanguage` 重新解析；重申 FR-020 消費端覆寫禁令適用全部六個節點）；另有一則成功標準將於最終 PR 群組 archive 時以條列項直接寫入正典「## 成功標準」章節（不在本 delta 宣告，見上）。既有 FR-020／FR-020A／FR-019 群等條文逐字不動，未推翻任何既有 FR/AC。
 
 ## Impact
 
