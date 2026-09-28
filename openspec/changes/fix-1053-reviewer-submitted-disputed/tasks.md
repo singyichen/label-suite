@@ -4,7 +4,7 @@
 
 **故事目標**：SC-006 — Annotator 與 Reviewer 主要流程（標記/審查/提交/返回）端到端可完成：當事審核員重入已提交之爭議中單位，其審核歷程須可正確回放而非被誤當未審（issue #1053）。
 
-- [ ] 1.1 於 `design/prototype/tests/annotation/issue-1053-reviewer-submitted-disputed.spec.ts` 新增涵蓋 AC-4.81 全部斷言（唯讀摘要預設呈現、內容與 getSubmission 一致、送出審核不可見不可觸發、修改我的審核切換為可編輯且修正面板以審核員自己提交值播種、取消退回唯讀不寫入、ARBITRATION 與 FINALIZED 對照組逐字不變）的測試案例，commit 後執行並記錄預期失敗原因 [@senior-qa]
+- [x] 1.1 於 `design/prototype/tests/annotation/issue-1053-reviewer-submitted-disputed.spec.ts` 新增涵蓋 AC-4.81 全部斷言（唯讀摘要預設呈現、內容與 getSubmission 一致、送出審核不可見不可觸發、修改我的審核切換為可編輯且修正面板以審核員自己提交值播種、取消退回唯讀不寫入、ARBITRATION 與 FINALIZED 對照組逐字不變）的測試案例，commit 後執行並記錄預期失敗原因 [@senior-qa]
 
 ## 2. 實作
 
