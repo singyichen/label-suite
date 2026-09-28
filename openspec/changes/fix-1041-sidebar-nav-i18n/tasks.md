@@ -30,12 +30,13 @@
 
 ## 3. 第三組（PR group 3）— 移除 dataset／account 冗餘覆寫（生產檔 4 個）
 
-**故事目標**：SC-014（AC-014.1） — 移除 `dataset/dataset-analysis-detail.html`、`dataset/dataset-analysis-list.js`、`dataset-analysis-list.i18n.js`、`account/profile.html` 四頁已成死碼之覆寫與孤兒 i18n key。
+**故事目標**：SC-014（AC-014.1） — 移除 `dataset/dataset-analysis-detail.html`、`dataset/dataset-analysis-list.js`、`dataset-analysis-list.i18n.js`、`account/profile.html` 四頁之覆寫與孤兒 i18n key。逐檔核實覆寫時序後發現並非全部已成死碼：`account/profile.html`、`dataset/dataset-analysis-detail.html` 之覆寫執行於 `applyGlobalLanguage()` **之後**，屬持續生效的覆寫（移除後行為不變是因為其字面值與元件逐字相同，非因覆寫已失效）；`dataset/dataset-analysis-list.js` 之覆寫執行於 `applyGlobalLanguage()` **之前**，元件呼叫後即蓋回正確值，屬真正的無害死碼。
 
-- [ ] 3.1 移除 `dataset/dataset-analysis-detail.html` 之覆寫與孤兒 key。[@senior-frontend]
-- [ ] 3.2 移除 `dataset/dataset-analysis-list.js` 之對應覆寫，與其讀取之 `dataset-analysis-list.i18n.js` 六個孤兒 key。[@senior-frontend]
-- [ ] 3.3 移除 `account/profile.html` 之覆寫與孤兒 key。[@senior-frontend]
-- [ ] 3.4 驗證與審查（比照第二組，受影響模組範圍）。[@main]
+- [x] 3.0 這三頁的渲染文字先前完全無測試涵蓋（不同於第二組，admin 兩頁與 dashboard.html 皆已有既有守門）。建立 `design/prototype/tests/shared/issue-1041-group3-nav-i18n.spec.ts`：涵蓋三頁語言切換後六個 `#navXxx` 渲染文字，作為移除前先確立、移除後須維持不變的基準（性質同 AC-014.1 對偶命題，移除前即應全數通過），commit 並記錄執行結果（全數通過，建立基準）。[@senior-qa]
+- [x] 3.1 移除 `dataset/dataset-analysis-detail.html` 之覆寫（含 `applyLang()` 內緊跟 `applyGlobalLanguage()` 之後、專屬 nav 的 forEach 區塊整段，及兩處字典各六個孤兒 key）。[@senior-frontend]
+- [x] 3.2 移除 `dataset/dataset-analysis-list.js` 之對應覆寫（陣列中六個 nav id，該陣列執行於 `applyGlobalLanguage()` 之前，元件隨後蓋回，故此為死碼移除），與其讀取之 `dataset-analysis-list.i18n.js` 六個孤兒 key。[@senior-frontend]
+- [x] 3.3 移除 `account/profile.html` 之覆寫（`ids` 陣列中六個 nav id，執行於 `applyGlobalLanguage()` 之後）與孤兒 key。[@senior-frontend]
+- [x] 3.4 驗證與審查（比照第二組，受影響模組範圍：`tests/shared/` + `tests/dataset/` + `tests/account/`）。[@main]
 - [ ] 3.5 開 PR，base 為 PR group 2 之分支，`Refs #1041`。[@main]
 
 ## 4. 第四組（PR group 4，final）— 移除 task-management 冗餘覆寫 + archive／回寫（生產檔 3 個）
