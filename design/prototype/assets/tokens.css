@@ -53,6 +53,12 @@
   --color-info-bg:          #EFF6FF;
   --color-info-border:      #BFDBFE;
 
+  /* ── File-type Icon Accent (non-semantic) ────────────────────
+     Not a state/role token — see MASTER.md Changelog (issue #935).
+     Distinguishes .guideline-file-icon.md from the .pdf/.img
+     variants, which already reuse --color-error/--color-primary. */
+  --color-file-markdown:    #8B5CF6;   /* Violet 500 */
+
   /* ── Type Families ────────────────────────────────────────── */
   --font-serif-display:  'Crimson Pro', 'Noto Serif TC', 'Source Han Serif TC', Georgia, serif;
   --font-sans:           'Inter', 'Noto Sans TC', 'PingFang TC', -apple-system, sans-serif;
@@ -183,6 +189,9 @@ html[data-theme="dark"] {
   --color-info:             #60A5FA;
   --color-info-bg:          #0F1F33;
   --color-info-border:      #1E3A66;
+
+  /* ── File-type Icon Accent (non-semantic) ────────────────── */
+  --color-file-markdown:    #A78BFA;   /* Violet 400, brighter on dark */
 
   /* ── Shadows — much subtler on dark, mostly ring-style ────── */
   --shadow-sm:   0 1px 2px rgba(0, 0, 0, 0.40);

@@ -26,7 +26,7 @@ Reviewer-only unit line (`.sample-unit-id` / `.sample-unit-sep` in `var(--color-
 
 ## Guideline File Icons
 
-`.guideline-file-icon`: `.pdf` error soft family · `.img` primary soft family · `.md` `#8B5CF6` on `var(--color-surface)` (Color Dot violet; dark override `#A78BFA` on `var(--color-primary-soft-bg)`).
+`.guideline-file-icon`: `.pdf` error soft family · `.img` primary soft family · `.md` `var(--color-file-markdown)` on `var(--color-surface)` (light `#8B5CF6`; dark override background `var(--color-primary-soft-bg)`, foreground still `var(--color-file-markdown)`, resolving to `#A78BFA`). `--color-file-markdown` (tokens.css, issue #935) is not a semantic-state token — unlike `.pdf`/`.img`, which reuse `--color-error`/`--color-primary`, `.md` has no comparable existing token to reuse, so this one exists purely to give the markdown file type a distinct identifying color (see MASTER.md Changelog).
 
 ## Autosave Indicator + UXC-03
 
