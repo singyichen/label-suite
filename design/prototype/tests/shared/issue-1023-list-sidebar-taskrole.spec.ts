@@ -64,9 +64,9 @@
  *   annotation-list.html has no first-visit guideline modal (confirmed by
  *   its existing annotation-list-reviewer.spec.ts, which never calls it).
  *
- * NOTE on the issue #1018 precedent, and a DELIBERATELY ACCEPTED REGRESSION
- * (see the annotator/en case further down for the assertion itself): before
- * the Green fix, annotation-list.html carried its OWN legacy
+ * NOTE on the issue #1018 precedent, and a REGRESSION THAT HAS SINCE BEEN
+ * FIXED (see the annotator/en case further down for the current assertion):
+ * before the Green fix, annotation-list.html carried its OWN legacy
  * `applyNavLabels()` / `I18N` dictionary (annotation-list.html:726, 802,
  * 2532-2536, invoked at :2574 and again on every lang-toggle click at
  * :2587) that overwrote `#navAnnotation` AFTER `mountSidebar()` ran, from a
@@ -81,27 +81,22 @@
  * overwrite list and the `I18N[lang]` dictionary entries, in addition to
  * passing `taskRole` into the `mountSidebar()` call site.
  *
- * That removal has a side effect that IS a regression, not a fix: before,
+ * That removal had a side effect that WAS a regression, not a fix: before,
  * `annotation-list.html` rendered `#navAnnotation` as 'Annotation' under an
- * English locale for the annotator role; after, it renders the untranslated
- * '標記作業' -- an English-locale user now sees Chinese text where they
- * didn't before. This is DELIBERATELY ACCEPTED, not the desired end state.
- * The only way to avoid it without exceeding this issue's scope would be
- * making `sidebar.js`'s `annotator`/else branch language-aware -- but
- * FR-020's current text gives `reviewer` (en: `Review`) and `project_leader`
- * (en: `Exception Disposition`) English strings while `annotator` has none
- * ("維持既有預設「標記作業」" only, no English variant). Adding one is NEW
- * FR-020 contract content, not a clarification, and belongs to issue #1041
- * (filed, awaiting maintainer adjudication on the L0 label i18n gap) --
- * not this issue's Lightweight Path. Once #1041 lands an English string for
- * the annotator/else branch, `sidebar.js` will render it correctly on BOTH
- * `annotation-workspace.html` and `annotation-list.html`, and the assertion
- * below should change from '標記作業' to whatever #1041 defines. Do not
- * read '標記作業' in that case as the desired end state -- it is the
- * regression #1041 is tracked to fix.
+ * English locale for the annotator role; after, it rendered the untranslated
+ * '標記作業' -- an English-locale user saw Chinese text where they didn't
+ * before. This was DELIBERATELY ACCEPTED at the time as an interim state,
+ * not a desired end state, because giving `sidebar.js`'s `annotator`/else
+ * branch an English string was NEW FR-020 contract content, not a
+ * clarification, and was out of this issue's Lightweight Path scope --
+ * tracked at issue #1041 instead. Issue #1041 has since landed FR-021,
+ * adding that English string (`taskRoleI18n.en.annotator = 'Annotation'`,
+ * sidebar.js), so `#navAnnotation` now renders 'Annotation' under an English
+ * locale for the annotator role on BOTH `annotation-workspace.html` and
+ * `annotation-list.html` -- the regression below no longer exists.
  *
- * Traceability: issue #1023; issue #1041 (tracks the deliberately accepted
- * regression above); specs/shared/008-sidebar-navbar-shared/spec.md FR-020.
+ * Traceability: issue #1023; issue #1041 (fixed the regression noted above);
+ * specs/shared/008-sidebar-navbar-shared/spec.md FR-020, FR-021.
  */
 import { test, expect, type Page } from '@playwright/test';
 import { buildListUrl } from '../annotation/_workspace-helpers';
@@ -184,30 +179,21 @@ test.describe('issue #1023: regression guard — annotator/no-role #navAnnotatio
     await expect(navAnnotation(page)).toHaveText('標記作業');
   });
 
-  /* DELIBERATELY ACCEPTED REGRESSION -- see the file-header note above for
-   * the full explanation. Before the Green fix (70c8e7ba), this case
-   * rendered 'Annotation' (en) from annotation-list.html's own legacy
-   * `applyNavLabels()` / `I18N[lang].navAnnotation` dictionary
-   * (design/prototype/pages/annotation/annotation-list.html:2532-2536),
-   * which overwrote `#navAnnotation` after `mountSidebar()` ran and was
-   * itself an FR-020 violation. Removing that overwrite was REQUIRED for
-   * the reviewer/project_leader fix above to take effect at all -- there is
-   * no alternative under `sidebar.js`'s current `opts` surface. Its side
-   * effect: `#navAnnotation` is now governed solely by `sidebar.js`, whose
-   * `annotator`/else branch has no English variant, so this case regresses
-   * to the untranslated '標記作業' -- an English-locale user sees Chinese
-   * text where they didn't before. This is an ACCEPTED regression, not a
-   * correct or desired outcome: the alternative (giving the `annotator`
-   * branch an English string in FR-020) is new contract content outside
-   * this issue's Lightweight Path, tracked at issue #1041. DO NOT read
-   * '標記作業' below as the intended behavior -- when #1041 lands, this
-   * assertion must be updated to whatever English string it defines, not
-   * kept as a permanent expectation. */
-  test('annotator: #navAnnotation regresses to untranslated 標記作業 (en context, preset before navigation) — accepted, tracked in #1041', async ({ page }) => {
+  /* Regression fixed -- see the file-header note above for the full
+   * explanation. Before the Green fix (70c8e7ba), removing
+   * annotation-list.html's own legacy `applyNavLabels()` /
+   * `I18N[lang].navAnnotation` override (an FR-020 violation) left
+   * `#navAnnotation` governed solely by `sidebar.js`, whose `annotator`/else
+   * branch had no English variant at the time -- so this case rendered the
+   * untranslated '標記作業' under an English locale. Issue #1041 (FR-021)
+   * has since added that English string, so this case now reads
+   * 'Annotation', matching the other three role/language combinations
+   * above. */
+  test('annotator: #navAnnotation reads Annotation (en, preset before navigation)', async ({ page }) => {
     await presetEnglish(page);
     await page.goto(buildListUrl({ task_id: TASK, role: 'annotator', run_type: RUN_TYPE }));
 
-    await expect(navAnnotation(page)).toHaveText('標記作業');
+    await expect(navAnnotation(page)).toHaveText('Annotation');
   });
 
   /* annotation-list.html's own default role (buildListUrl()'s `role`
