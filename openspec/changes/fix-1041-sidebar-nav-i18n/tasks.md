@@ -44,10 +44,10 @@
 **故事目標**：SC-013A — 移除 `task-management/task-detail.html`／`task-list.html`／`task-new.html` 三頁之覆寫與孤兒 i18n key（逐檔核實覆寫時序，不假設與前三組同型）；完成 Source-Verify 預掃與 `/opsx:archive` 雙寫，`Closes #1041`。
 
 - [x] 4.0 逐檔核實三頁覆寫與 `applyGlobalLanguage()` 之相對時序（比照第三組手法，不假設與前三組同型）：`task-detail.html`（`applyGlobalLanguage()` 於 `applyLang()` 內先呼叫，緊接著專屬 nav 的 forEach 隨後執行——之後，屬 LIVE 持續生效覆寫）；`task-list.html`（`simpleIds.forEach` 先執行，`applyGlobalLanguage()` 隨後呼叫——之前，元件蓋回，屬死碼）；`task-new.html`（`ids.forEach` 先執行，`applyGlobalLanguage()` 隨後呼叫——之前，元件蓋回，屬死碼）。分類結果：1 個 LIVE（task-detail.html）+ 2 個死碼（task-list.html、task-new.html）。[@main]
-- [ ] 4.1 移除 `task-management/task-detail.html` 之覆寫與孤兒 key。[@senior-frontend]
-- [ ] 4.2 移除 `task-management/task-list.html` 之覆寫與孤兒 key。[@senior-frontend]
-- [ ] 4.3 移除 `task-management/task-new.html` 之覆寫與孤兒 key。[@senior-frontend]
-- [ ] 4.4 驗證與審查（比照第二組，受影響模組範圍：`tests/shared/` + `tests/task-management/`）。[@main]
+- [x] 4.1 移除 `task-management/task-detail.html` 之覆寫與孤兒 key。[@senior-frontend]
+- [x] 4.2 移除 `task-management/task-list.html` 之覆寫與孤兒 key。[@senior-frontend]
+- [x] 4.3 移除 `task-management/task-new.html` 之覆寫與孤兒 key。[@senior-frontend]
+- [x] 4.4 驗證與審查（比照第二組，受影響模組範圍：`tests/shared/` + `tests/task-management/`）。[@main]
 - [ ] 4.5 Source-Verify 預掃：確認 FR-021、AC-021.1–1.4 之引用皆可於正典或程式碼逐一 `grep` 定位。[@main]
 - [ ] 4.6 `openspec archive`：雙寫——合併進 openspec/specs/ derived view（新增 FR-021），並回寫正典 `spec.md`：新增 FR-021、於「## 成功標準」章節新增一則成功標準（格式比照既有 SC-013／SC-013A，內容涵蓋六個 L0 標籤語言感知驗收門檻，並保留「尚未移除覆寫之消費頁面渲染結果仍須符合門檻」之語意）；版本號 MINOR bump，欄位先留佔位符 `TBD`，由主 session 於合併時依實際順序指派；Changelog 新增一列，記錄本 issue 前提更正之三點、四組 PR 拆分歷程，與成功標準未以 delta Requirement 宣告、改於本次手動回寫之裁示依據。[@main]
 - [ ] 4.7 開 PR，base 為 PR group 3 之分支，`Closes #1041`。合併後更新 `specs/STATUS.md` 為 `archived` 並 `mv specs/shared/008-sidebar-navbar-shared specs/_archive/`。[@main]
