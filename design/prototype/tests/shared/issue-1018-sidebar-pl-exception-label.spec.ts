@@ -132,7 +132,7 @@ test.describe('issue #1018: regression guard — reviewer #navAnnotation unchang
   });
 });
 
-test.describe('issue #1018: regression guard — annotator #navAnnotation unchanged (zh/en)', () => {
+test.describe('issue #1018: regression guard — annotator #navAnnotation (zh: 標記作業, en: Annotation)', () => {
   test.describe.configure({ retries: 2 });
 
   /* Non-regression pin: the pre-existing default ('標記作業' / 'Annotate')
@@ -145,20 +145,23 @@ test.describe('issue #1018: regression guard — annotator #navAnnotation unchan
     await expect(navAnnotation(page)).toHaveText('標記作業');
   });
 
-  /* sidebar.js's else-branch defaultLabel (annotator/project_leader today)
-   * is the bare literal '標記作業' with no English variant anywhere in
-   * sidebar.js -- confirmed by grep; "Annotate" only exists in
+  /* sidebar.js's else-branch defaultLabel (annotator/project_leader) was
+   * the bare literal '標記作業' with no English variant anywhere in
+   * sidebar.js at the time -- confirmed by grep; "Annotate" only existed in
    * annotation-workspace.config.js's separate breadcrumb dictionary, a
-   * different component. So under an English-preset context the correct
-   * pin is that this branch stays untranslated, same as zh -- that is
-   * today's real (if incomplete) behavior, not a claim it's correct, and
-   * fixing it is a second, unscoped FR change outside #1018 (task 2.1
-   * leaves this else-branch untouched). */
-  test('annotator: #navAnnotation stays untranslated 標記作業 (en context, preset before navigation)', async ({ page }) => {
+   * different component. So under an English-preset context this branch
+   * stayed untranslated, same as zh -- that was the real (if incomplete)
+   * behavior back then, not a claim it was correct, and fixing it was a
+   * second, unscoped FR change outside #1018 (task 2.1 left this
+   * else-branch untouched), tracked at issue #1041. Issue #1041/FR-021 has
+   * since added the English string (taskRoleI18n.en.annotator =
+   * 'Annotation', sidebar.js), so this branch now reads 'Annotation' under
+   * an English locale, matching the reviewer case above. */
+  test('annotator: #navAnnotation reads Annotation (en context, preset before navigation)', async ({ page }) => {
     await skipGuidelineModal(page);
     await presetEnglish(page);
     await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'annotator', run_type: 'dry_run' }));
 
-    await expect(navAnnotation(page)).toHaveText('標記作業');
+    await expect(navAnnotation(page)).toHaveText('Annotation');
   });
 });
