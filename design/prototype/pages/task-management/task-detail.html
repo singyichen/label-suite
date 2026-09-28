@@ -2933,12 +2933,6 @@
       arSeqExportRedownloadBlockedTokenizer: '切詞引擎「{engine}」已不可用，無法重新下載此詞元單位的匯出結果，請改用字元單位重新匯出。',
       arEmptyTitle: '尚無標記結果',
       arEmptyHint: '標記員提交後，結果將顯示於此。',
-      navDashboard: '儀表板',
-      navTaskManagement: '任務管理',
-      navAnnotation: '標記作業',
-      navDataset: '資料集分析',
-      navAdmin: '系統管理',
-      navProfile: '個人設定',
     },
     en: {
       docTitle: 'Task Detail — Label Suite (Prototype)',
@@ -3465,12 +3459,6 @@
       arSeqExportRedownloadBlockedTokenizer: 'The tokenizer engine "{engine}" is no longer available, so this word-level export cannot be redownloaded. Re-export using character-level units instead.',
       arEmptyTitle: 'No annotation results yet',
       arEmptyHint: 'Results will appear here once annotators submit.',
-      navDashboard: 'Dashboard',
-      navTaskManagement: 'Task Management',
-      navAnnotation: 'Annotation',
-      navDataset: 'Dataset Analytics',
-      navAdmin: 'System Administration',
-      navProfile: 'Profile',
     }
   };
   /* Merge the shared task-config engine's Step 1/Step 2 i18n keys (chip labels,
@@ -5211,10 +5199,6 @@ function interpolate(template, payload) {
     if (window.LabelSuiteSharedSidebar) {
       window.LabelSuiteSharedSidebar.applyGlobalLanguage(state.lang, {
         langToggleAria: state.lang === 'zh' ? '切換語言' : 'Switch language',
-      });
-      ['navDashboard', 'navTaskManagement', 'navAnnotation', 'navDataset', 'navAdmin', 'navProfile'].forEach(function (id) {
-        var el = document.getElementById(id);
-        if (el) el.textContent = t(id);
       });
       window.LabelSuiteSharedSidebar.updateUserChip({
         userName: (I18N[state.lang].userName || I18N.zh.userName)[state.taskRole] || 'User',

@@ -4,14 +4,14 @@
 
 ## 1. 第一組（PR group 1）— 核心語言感知解析（生產檔 2 個）
 
-**故事目標**：SC-014（AC-021.1、AC-021.2、AC-021.3、AC-021.4） — 修復 `annotation-list.html` 之 `annotator` 角色英文缺失，與 `annotation-workspace.html` deep-link 情境下五中一英混雜；六個 L0 標籤全面語言感知並隨語言切換重新解析。
+**故事目標**：SC-013A、AC-021.1、AC-021.2、AC-021.3、AC-021.4 — 修復 `annotation-list.html` 之 `annotator` 角色英文缺失，與 `annotation-workspace.html` deep-link 情境下五中一英混雜；六個 L0 標籤全面語言感知並隨語言切換重新解析。FR-021 延伸既有 SC-013A（`annotator` 任務角色下 `#navAnnotation` 維持既有預設「標記作業」）所治理的同一機制，新增此前未定義的英文變體，不改變 SC-013A 之 zh 保證。
 
 - [x] 1.1 建立 `design/prototype/tests/shared/issue-1041-sidebar-nav-i18n.spec.ts`：涵蓋 AC-021.1（annotation-list.html，`role=annotator`／無 `role`，`lang=en`，`#navAnnotation` 應為 `Annotation`）、AC-021.2（`annotation-workspace.html`，`localStorage.labelsuite.lang='en'` 透過 `addInitScript` 於 `page.goto` 前預設、無任何頁面語言切換操作，六個標籤全部斷言為對應英文值）、AC-021.3（任一頁面掛載後點擊語言切換，六個標籤斷言隨即更新，無需重新整理）、AC-021.4（三個 `taskRole` × 兩種語言 `#navAnnotation` 六種組合）。全部斷言使用 `expect(...).toHaveText(...)`；若需讀 computed 值，比照 `tests/task-management/issue-1019-page-btn-active-on-cta-contrast.spec.ts` 修正後的原子化寫法（單一 `page.evaluate()` 內完成，中間無 `await`），不得先 `toBeVisible()` 再 `.textContent()`/`.evaluate()`（issue #1040 detached-element 競態）。commit 並記錄執行結果為預期失敗。[@senior-qa]
 - [x] 1.2 驗證預期失敗證據前先跑 `git status --short` 確認工作樹乾淨；四類案例（AC-021.1–1.4）之 Playwright 執行輸出（含失敗訊息）貼進 issue #1041 檢查點留言。[@senior-qa]
 - [x] 1.3 修改 `design/prototype/pages/shared/sidebar.js`：新增六個 L0 標籤之語言感知對照表（五個既有硬編碼中文標籤 + 既有 `taskRoleI18n` 之 `annotator`/else 分支新增英文 `Annotation`），`navItems` 之 `defaultLabel` 改由此對照表解析；`mountSidebar()` 持久化最近一次傳入之 `opts.taskRole`（模組層變數）；`applyGlobalLanguage()` 新增六個節點之重新解析與更新（比照既有 `updateShortcutHelpLanguage()`／`updateAdminSubmenuLanguage()` 前例，新增函式並於 `applyGlobalLanguage()` 內呼叫）。僅新增所需的最小程式碼，不重構 `taskRoleI18n`／`navItems`／`applyGlobalLanguage()` 其餘既有結構與鄰近程式碼。[@senior-frontend]
 - [x] 1.4 修改 `design/prototype/pages/annotation/annotation-list.html`：移除 `applyNavLabels()` 對 `navDashboard`／`navTaskManagement`／`navDataset`／`navAdmin`／`navProfile` 五個節點的覆寫（呼叫端與函式本身，若移除後 `applyNavLabels()` 整個函式無其他用途則一併移除呼叫點），與隨之孤兒化之 `I18N.zh`／`I18N.en` 對應五個 key（比照 #1023 手法）。[@senior-frontend]
 - [x] 1.5 使 1.1 全部案例轉綠。[@senior-frontend]
-- [x] 1.6 改寫 `design/prototype/tests/shared/language-switch-consistency.spec.ts:77`「keeps admin sidebar navigation labels translatable in both admin pages」：admin 兩頁之覆寫移除為第二組範圍，本組尚未移除，故本測試不得再要求（也不得禁止）任何頁面自行定義/更新這六個 key——移除舊斷言（強制 admin 兩頁必須自行定義並更新六個 nav key，即強制 FR-020 違規），改為載入 admin 兩頁並斷言語言切換後六個 `#navXxx` 節點之**渲染 DOM 文字**與 FR-021 對照表逐字一致（呼應 AC-014.1：不論頁面覆寫是否已移除，渲染結果皆須正確），測試名稱同步更新以反映斷言渲染行為而非原始碼存在與否。[@senior-frontend]
+- [x] 1.6 改寫 `design/prototype/tests/shared/language-switch-consistency.spec.ts:77`「keeps admin sidebar navigation labels translatable in both admin pages」：admin 兩頁之覆寫移除為第二組範圍，本組尚未移除，故本測試不得再要求（也不得禁止）任何頁面自行定義/更新這六個 key——移除舊斷言（強制 admin 兩頁必須自行定義並更新六個 nav key，即強制 FR-020 違規），改為載入 admin 兩頁並斷言語言切換後六個 `#navXxx` 節點之**渲染 DOM 文字**與 FR-021 對照表逐字一致（不論頁面覆寫是否已移除，渲染結果皆須正確），測試名稱同步更新以反映斷言渲染行為而非原始碼存在與否。[@senior-frontend]
 - [x] 1.7 更新 `design/prototype/tests/shared/issue-1023-list-sidebar-taskrole.spec.ts`：將「DELIBERATELY ACCEPTED REGRESSION」案例（`annotator: #navAnnotation regresses to untranslated 標記作業...`）之斷言由 `'標記作業'` 改為 `'Annotation'`，測試名稱與檔頭／行內註解同步移除「等待 #1041」之刻意接受迴歸說明，改記錄為已由本 issue 修正、迴歸已消失。[@senior-frontend]
 - [x] 1.8 執行閘門（本組要求跑完整套件，因改動全站共用語言路徑）：`cd design/prototype && pnpm typecheck`；`cd design/prototype && PW_PORT=8981 pnpm playwright test`（完整套件）；`scripts/check-sdd.sh`；`openspec validate --changes --no-interactive`；`node scripts/gen-screen-inventory.mjs`。全部通過方可繼續，由 lead 親自重跑並獨立覆核，不採信代理自報。[@main]
 - [x] 1.9 派全新 `senior-code-reviewer` 獨立審查：(1) 解析是否確實全在元件內部、無任何消費頁面殘留 DOM 覆寫；(2) 六個標籤 × 兩語言 × 三角色組合是否都正確；(3) 英文字串是否沿用既有而非自創；(4) 兩支測試改寫是否真的斷言新行為而非只是改名；(5) #1023 迴歸是否確實消失且其測試註解已同步；(6) 是否推翻了任何既有 FR/AC（若有回報，MAJOR）。結論貼進 issue #1041 檢查點留言。[@senior-code-reviewer]
@@ -20,7 +20,7 @@
 
 ## 2. 第二組（PR group 2）— 移除 admin／dashboard 冗餘覆寫（生產檔 4 個）
 
-**故事目標**：SC-014（AC-014.1） — 移除 `admin/user-management.html`、`admin/role-settings.html`、`dashboard/dashboard.js`、`dashboard/dashboard.i18n.js` 四頁已成死碼之六個 nav key 覆寫與孤兒 i18n key。
+**故事目標**：SC-013A — 移除 `admin/user-management.html`、`admin/role-settings.html`、`dashboard/dashboard.js`、`dashboard/dashboard.i18n.js` 四頁已成死碼之六個 nav key 覆寫與孤兒 i18n key；移除前後渲染結果須維持逐字不變。
 
 - [x] 2.1 移除 `admin/user-management.html` 之 `applyLang` 對六個 nav key 的覆寫與 i18n 表對應 key。[@senior-frontend]
 - [x] 2.2 移除 `admin/role-settings.html` 之 `applyLang` 對六個 nav key 的覆寫與 i18n 表對應 key。[@senior-frontend]
@@ -30,9 +30,9 @@
 
 ## 3. 第三組（PR group 3）— 移除 dataset／account 冗餘覆寫（生產檔 4 個）
 
-**故事目標**：SC-014（AC-014.1） — 移除 `dataset/dataset-analysis-detail.html`、`dataset/dataset-analysis-list.js`、`dataset-analysis-list.i18n.js`、`account/profile.html` 四頁之覆寫與孤兒 i18n key。逐檔核實覆寫時序後發現並非全部已成死碼：`account/profile.html`、`dataset/dataset-analysis-detail.html` 之覆寫執行於 `applyGlobalLanguage()` **之後**，屬持續生效的覆寫（移除後行為不變是因為其字面值與元件逐字相同，非因覆寫已失效）；`dataset/dataset-analysis-list.js` 之覆寫執行於 `applyGlobalLanguage()` **之前**，元件呼叫後即蓋回正確值，屬真正的無害死碼。
+**故事目標**：SC-013A — 移除 `dataset/dataset-analysis-detail.html`、`dataset/dataset-analysis-list.js`、`dataset-analysis-list.i18n.js`、`account/profile.html` 四頁之覆寫與孤兒 i18n key；移除前後渲染結果須維持逐字不變。逐檔核實覆寫時序後發現並非全部已成死碼：`account/profile.html`、`dataset/dataset-analysis-detail.html` 之覆寫執行於 `applyGlobalLanguage()` **之後**，屬持續生效的覆寫（移除後行為不變是因為其字面值與元件逐字相同，非因覆寫已失效）；`dataset/dataset-analysis-list.js` 之覆寫執行於 `applyGlobalLanguage()` **之前**，元件呼叫後即蓋回正確值，屬真正的無害死碼。
 
-- [x] 3.0 這三頁的渲染文字先前完全無測試涵蓋（不同於第二組，admin 兩頁與 dashboard.html 皆已有既有守門）。建立 `design/prototype/tests/shared/issue-1041-group3-nav-i18n.spec.ts`：涵蓋三頁語言切換後六個 `#navXxx` 渲染文字，作為移除前先確立、移除後須維持不變的基準（性質同 AC-014.1 對偶命題，移除前即應全數通過），commit 並記錄執行結果（全數通過，建立基準）。[@senior-qa]
+- [x] 3.0 這三頁的渲染文字先前完全無測試涵蓋（不同於第二組，admin 兩頁與 dashboard.html 皆已有既有守門）。建立 `design/prototype/tests/shared/issue-1041-group3-nav-i18n.spec.ts`：涵蓋三頁語言切換後六個 `#navXxx` 渲染文字，作為移除前先確立、移除後須維持不變的基準（斷言「移除前後渲染結果逐字不變」此一對偶命題，移除前即應全數通過），commit 並記錄執行結果（全數通過，建立基準）。[@senior-qa]
 - [x] 3.1 移除 `dataset/dataset-analysis-detail.html` 之覆寫（含 `applyLang()` 內緊跟 `applyGlobalLanguage()` 之後、專屬 nav 的 forEach 區塊整段，及兩處字典各六個孤兒 key）。[@senior-frontend]
 - [x] 3.2 移除 `dataset/dataset-analysis-list.js` 之對應覆寫（陣列中六個 nav id，該陣列執行於 `applyGlobalLanguage()` 之前，元件隨後蓋回，故此為死碼移除），與其讀取之 `dataset-analysis-list.i18n.js` 六個孤兒 key。[@senior-frontend]
 - [x] 3.3 移除 `account/profile.html` 之覆寫（`ids` 陣列中六個 nav id，執行於 `applyGlobalLanguage()` 之後）與孤兒 key。[@senior-frontend]
@@ -41,12 +41,13 @@
 
 ## 4. 第四組（PR group 4，final）— 移除 task-management 冗餘覆寫 + archive／回寫（生產檔 3 個）
 
-**故事目標**：SC-014（AC-014.1） — 移除 `task-management/task-detail.html`／`task-list.html`／`task-new.html` 三頁已成死碼之覆寫與孤兒 i18n key；完成 Source-Verify 預掃與 `/opsx:archive` 雙寫，`Closes #1041`。
+**故事目標**：SC-013A — 移除 `task-management/task-detail.html`／`task-list.html`／`task-new.html` 三頁之覆寫與孤兒 i18n key（逐檔核實覆寫時序，不假設與前三組同型）；完成 Source-Verify 預掃與 `/opsx:archive` 雙寫，`Closes #1041`。
 
-- [ ] 4.1 移除 `task-management/task-detail.html` 之覆寫與孤兒 key。[@senior-frontend]
-- [ ] 4.2 移除 `task-management/task-list.html` 之覆寫與孤兒 key。[@senior-frontend]
-- [ ] 4.3 移除 `task-management/task-new.html` 之覆寫與孤兒 key。[@senior-frontend]
-- [ ] 4.4 驗證與審查（比照第二組，受影響模組範圍）。[@main]
-- [ ] 4.5 Source-Verify 預掃：確認 FR-021、SC-014、AC-021.1–1.4、AC-014.1 之引用皆可於正典或程式碼逐一 `grep` 定位。[@main]
-- [ ] 4.6 `openspec archive`：雙寫——合併進 openspec/specs/ derived view，並回寫正典 `spec.md` 新增 FR-021、SC-014；版本號 MINOR bump，欄位先留佔位符 `TBD`，由主 session 於合併時依實際順序指派；Changelog 新增一列，記錄本 issue 前提更正之三點與四組 PR 拆分歷程。[@main]
-- [ ] 4.7 開 PR，base 為 PR group 3 之分支，`Closes #1041`。合併後更新 `specs/STATUS.md` 為 `archived` 並 `mv specs/shared/008-sidebar-navbar-shared specs/_archive/`。[@main]
+- [x] 4.0 逐檔核實三頁覆寫與 `applyGlobalLanguage()` 之相對時序（比照第三組手法，不假設與前三組同型）：`task-detail.html`（`applyGlobalLanguage()` 於 `applyLang()` 內先呼叫，緊接著專屬 nav 的 forEach 隨後執行——之後，屬 LIVE 持續生效覆寫）；`task-list.html`（`simpleIds.forEach` 先執行，`applyGlobalLanguage()` 隨後呼叫——之前，元件蓋回，屬死碼）；`task-new.html`（`ids.forEach` 先執行，`applyGlobalLanguage()` 隨後呼叫——之前，元件蓋回，屬死碼）。分類結果：1 個 LIVE（task-detail.html）+ 2 個死碼（task-list.html、task-new.html）。[@main]
+- [x] 4.1 移除 `task-management/task-detail.html` 之覆寫與孤兒 key。[@senior-frontend]
+- [x] 4.2 移除 `task-management/task-list.html` 之覆寫與孤兒 key。[@senior-frontend]
+- [x] 4.3 移除 `task-management/task-new.html` 之覆寫與孤兒 key。[@senior-frontend]
+- [x] 4.4 驗證與審查（比照第二組，受影響模組範圍：`tests/shared/` + `tests/task-management/`）。[@main]
+- [x] 4.5 Source-Verify 預掃：確認 FR-021、AC-021.1–1.4 之引用皆可於正典或程式碼逐一 `grep` 定位（皆在 delta 內自足定義，逐一 grep 確認）；額外發現並修正 3 處測試檔內一個已無法定位之驗收條件 ID 引用（`issue-1041-group3-nav-i18n.spec.ts`、`issue-1041-group4-nav-i18n.spec.ts` 之 Traceability 標頭、`language-switch-consistency.spec.ts` 行內註解）——該引用隨本次成功標準改採手動回寫模式後不再存在於任何模型（比照既有成功標準無子場景 ID 之慣例），三處皆已改為只引用 `FR-021` 與（將於本次 archive 落地時才真正可定位的）新增成功標準本身。核實 `specs/shared/008-sidebar-navbar-shared/spec.md:400`（FR-020）與 `:540-541`（既有兩則成功標準）之行號引用準確無誤。[@main]
+- [x] 4.6 `openspec archive`：雙寫——`openspec archive fix-1041-sidebar-nav-i18n -y` 合併進 `openspec/specs/shared/008-sidebar-navbar-shared/spec.md` derived view（新增 FR-021，零 SC，與既有一致）；並回寫正典 `specs/shared/008-sidebar-navbar-shared/spec.md`：新增 FR-021（緊接 FR-020A 之後）、於「## 成功標準」章節新增 SC-014（緊接 SC-013A 之後，格式比照既有 SC-013／SC-013A，保留「尚未移除覆寫之消費頁面渲染結果仍須符合門檻」之語意）；版本號 MINOR bump為 `2.1.0`（主 session 已於裁示中直接指派，非佔位符）；frontmatter「版本」欄與 Changelog 表頭列同步更新；Changelog 新增一列，記錄本 issue 前提更正之三點、四組 PR 拆分歷程與 PR 編號、逐檔覆寫時序分類結果，與成功標準未以 delta Requirement 宣告、改於本次手動回寫之裁示依據。`specs/STATUS.md` 該列同步更新（Status 維持既有 `in-progress`，說明文字前綴新增本次 archive 摘要）。[@main]
+- [x] 4.7 開 PR：https://github.com/singyichen/label-suite/pull/1054，base `main`，`Closes #1041`。合併後更新 `specs/STATUS.md` 為 `archived` 並判斷是否 `mv specs/shared/008-sidebar-navbar-shared specs/_archive/`（由主 session 於合併後執行）。[@main]

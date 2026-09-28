@@ -79,7 +79,7 @@ test.describe('Prototype global language switch implementation', () => {
     // regardless of whether a consumer page still keeps its own i18n
     // override (admin pages' own overrides are removed in a later PR group,
     // not this one) -- this asserts the actual rendered contract, not
-    // whether page-level override source code exists (AC-014.1).
+    // whether page-level override source code exists.
     const adminPages = [
       '/pages/admin/user-management.html',
       '/pages/admin/role-settings.html',
