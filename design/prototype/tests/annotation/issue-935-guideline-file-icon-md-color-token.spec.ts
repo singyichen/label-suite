@@ -8,9 +8,14 @@
  *   pins that the icon's rendered foreground is genuinely sourced from that
  *   token in both themes, not a shadowed or reverted literal -- and that the
  *   rendered contrast against its own background still clears the
- *   applicable WCAG 1.4.11 non-text threshold (the icon is a decorative
- *   `aria-hidden="true"` SVG glyph, not text, per
- *   GUIDELINE_FILE_ICON_SVG.markdown in annotation-workspace.config.js).
+ *   applicable WCAG 1.4.11 non-text threshold, not the 4.5:1 text
+ *   threshold: `GUIDELINE_FILE_ICON_SVG.markdown`
+ *   (annotation-workspace.config.js:6065) is a `path`/`polyline`/`line`
+ *   glyph with no `<text>` element, so it is graphical content, not text;
+ *   and the adjacent `.guideline-file-name` span
+ *   (annotation-workspace.config.js:6085-6086) already carries the file
+ *   name via `textContent`, so the icon is redundant decoration rather
+ *   than the sole conveyor of information.
  *   Canonical page spec: specs/annotation/015-annotation-workspace/spec.md
  */
 import { test, expect, type Page } from '@playwright/test';
