@@ -24,7 +24,7 @@
 
 - [x] 2.1 移除 `admin/user-management.html` 之 `applyLang` 對六個 nav key 的覆寫與 i18n 表對應 key。[@senior-frontend]
 - [x] 2.2 移除 `admin/role-settings.html` 之 `applyLang` 對六個 nav key 的覆寫與 i18n 表對應 key。[@senior-frontend]
-- [x] 2.3 移除 `dashboard/dashboard.js` 之對應覆寫，與其讀取之 `dashboard.i18n.js` 六個孤兒 key。[@senior-frontend]
+- [x] 2.3 移除 `dashboard/dashboard.i18n.js` 六個 nav key；`dashboard/dashboard.js` 之 `applyLang()` 為泛型 id 比對迴圈，從未以字面值引用這六個 key，故不需改動，實際生效範圍僅 `dashboard.i18n.js` 一檔。[@senior-frontend]
 - [x] 2.4 依 1.8–1.10 同等驗證與審查流程（本組僅需跑受影響模組，非完整套件）。[@main]
 - [ ] 2.5 開 PR，base 為 PR group 1 之分支（stacked），`Refs #1041`。[@main]
 
