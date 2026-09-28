@@ -166,7 +166,7 @@ test.describe('issue #1023: project_leader #navAnnotation reads Exception Dispos
   });
 });
 
-test.describe('issue #1023: regression guard — annotator/no-role #navAnnotation stays 標記作業 on annotation-list.html (zh/en)', () => {
+test.describe('issue #1023: regression guard — annotator/no-role #navAnnotation on annotation-list.html (zh: 標記作業, en: Annotation)', () => {
   test.describe.configure({ retries: 2 });
 
   /* Non-regression pin: annotator role must keep reading '標記作業', both
