@@ -74,25 +74,47 @@ test.describe('Prototype global language switch implementation', () => {
     }
   });
 
-  test('keeps admin sidebar navigation labels translatable in both admin pages', () => {
-    const navKeys = [
-      'navDashboard',
-      'navTaskManagement',
-      'navAnnotation',
-      'navDataset',
-      'navAdmin',
-      'navProfile',
-    ];
+  test('renders correct L0 nav label text in both admin pages after a language switch', async ({ page }) => {
+    // issue #1041 FR-021/SC-014: the six #navXxx labels must render correctly
+    // regardless of whether a consumer page still keeps its own i18n
+    // override (admin pages' own overrides are removed in a later PR group,
+    // not this one) -- this asserts the actual rendered contract, not
+    // whether page-level override source code exists (AC-014.1).
     const adminPages = [
-      'pages/admin/user-management.html',
-      'pages/admin/role-settings.html',
+      '/pages/admin/user-management.html',
+      '/pages/admin/role-settings.html',
     ];
+    const zhLabels: Record<string, string> = {
+      navDashboard: '儀表板',
+      navTaskManagement: '任務管理',
+      navAnnotation: '標記作業',
+      navDataset: '資料集分析',
+      navAdmin: '系統管理',
+      navProfile: '個人設定',
+    };
+    const enLabels: Record<string, string> = {
+      navDashboard: 'Dashboard',
+      navTaskManagement: 'Task Management',
+      navAnnotation: 'Annotation',
+      navDataset: 'Dataset Analytics',
+      navAdmin: 'System Administration',
+      navProfile: 'Profile',
+    };
 
-    for (const relativePath of adminPages) {
-      const source = fs.readFileSync(path.join(ROOT, relativePath), 'utf8');
-      for (const navKey of navKeys) {
-        expect(source, `${relativePath} should define ${navKey} in i18n`).toContain(`${navKey}:`);
-        expect(source, `${relativePath} should update element ${navKey} in applyLang`).toContain(`'${navKey}'`);
+    for (const url of adminPages) {
+      await page.addInitScript(() => {
+        window.localStorage.setItem('labelsuite.lang', 'zh');
+      });
+      await page.goto(url);
+
+      for (const [navId, text] of Object.entries(zhLabels)) {
+        await expect(page.locator(`#${navId}`)).toHaveText(text);
+      }
+
+      await page.locator('#langToggle').click();
+
+      for (const [navId, text] of Object.entries(enLabels)) {
+        await expect(page.locator(`#${navId}`)).toHaveText(text);
       }
     }
   });
