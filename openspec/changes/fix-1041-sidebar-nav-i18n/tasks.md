@@ -48,6 +48,6 @@
 - [x] 4.2 移除 `task-management/task-list.html` 之覆寫與孤兒 key。[@senior-frontend]
 - [x] 4.3 移除 `task-management/task-new.html` 之覆寫與孤兒 key。[@senior-frontend]
 - [x] 4.4 驗證與審查（比照第二組，受影響模組範圍：`tests/shared/` + `tests/task-management/`）。[@main]
-- [ ] 4.5 Source-Verify 預掃：確認 FR-021、AC-021.1–1.4 之引用皆可於正典或程式碼逐一 `grep` 定位。[@main]
+- [x] 4.5 Source-Verify 預掃：確認 FR-021、AC-021.1–1.4 之引用皆可於正典或程式碼逐一 `grep` 定位（皆在 delta 內自足定義，逐一 grep 確認）；額外發現並修正 3 處測試檔內一個已無法定位之驗收條件 ID 引用（`issue-1041-group3-nav-i18n.spec.ts`、`issue-1041-group4-nav-i18n.spec.ts` 之 Traceability 標頭、`language-switch-consistency.spec.ts` 行內註解）——該引用隨本次成功標準改採手動回寫模式後不再存在於任何模型（比照既有成功標準無子場景 ID 之慣例），三處皆已改為只引用 `FR-021` 與（將於本次 archive 落地時才真正可定位的）新增成功標準本身。核實 `specs/shared/008-sidebar-navbar-shared/spec.md:400`（FR-020）與 `:540-541`（既有兩則成功標準）之行號引用準確無誤。[@main]
 - [ ] 4.6 `openspec archive`：雙寫——合併進 openspec/specs/ derived view（新增 FR-021），並回寫正典 `spec.md`：新增 FR-021、於「## 成功標準」章節新增一則成功標準（格式比照既有 SC-013／SC-013A，內容涵蓋六個 L0 標籤語言感知驗收門檻，並保留「尚未移除覆寫之消費頁面渲染結果仍須符合門檻」之語意）；版本號 MINOR bump，欄位先留佔位符 `TBD`，由主 session 於合併時依實際順序指派；Changelog 新增一列，記錄本 issue 前提更正之三點、四組 PR 拆分歷程，與成功標準未以 delta Requirement 宣告、改於本次手動回寫之裁示依據。[@main]
 - [ ] 4.7 開 PR，base 為 PR group 3 之分支，`Closes #1041`。合併後更新 `specs/STATUS.md` 為 `archived` 並 `mv specs/shared/008-sidebar-navbar-shared specs/_archive/`。[@main]

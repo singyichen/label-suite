@@ -14,7 +14,10 @@
  * during a similar removal).
  *
  * Traceability: specs/shared/008-sidebar-navbar-shared/spec.md
- *   FR-021, SC-014, AC-014.1
+ *   FR-021, SC-014 (SC-014 is written directly into the canonical spec's
+ *   "## 成功標準" section at archive time, mirroring SC-013/SC-013A --
+ *   it carries no AC-XXX.Y sub-scenario id, consistent with every other
+ *   success criterion in this module).
  */
 import { test, expect } from '@playwright/test';
 
