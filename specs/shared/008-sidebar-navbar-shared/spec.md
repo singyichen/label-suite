@@ -540,7 +540,7 @@ flowchart LR
 - **SC-012B**：Mobile 與 Desktop 收合狀態下「系統管理」點擊行為與次選單新增前一致，不因本次變更產生互動落差或死角。
 - **SC-013**（issue #944 新增）：`reviewer` 任務角色下，`#navAnnotation` 與 `[data-testid="role-indicator"]` 文字分別為「審核作業」與「審核員」，且 `#navAnnotation` 與同頁入口麵包屑第一層連結文字一致；直接呼叫 Shared Sidebar 掛載函式（不經任何消費頁面 JS）亦得到相同結果。
 - **SC-013A**（issue #1018 修訂）：`annotator` 任務角色下 `#navAnnotation` 維持既有預設「標記作業」；`project_leader` 任務角色下 `#navAnnotation` 改為「例外處置」；`annotator` 之 `role-indicator` 維持既有預設「一般使用者」。
-- **SC-014**（issue #1041 新增）：任一語系（zh/en）、任一任務角色（`reviewer` / `project_leader` / `annotator` / 未提供）組合下，直接呼叫 Shared Sidebar 掛載函式並切換語言，六個 L0 標籤（`navDashboard`／`navTaskManagement`／`navAnnotation`／`navDataset`／`navAdmin`／`navProfile`）之渲染文字須與 FR-021 定義之雙語對照表逐字一致，且語言切換後立即反映新語系，不需重新掛載或重新整理頁面。尚未移除自有覆寫程式碼之消費頁面（例如仍在後續 PR 群組待清理者），其渲染結果仍必須與此門檻一致，不得因頁面自有覆寫而產生偏離。
+- **SC-014**（issue #1041 新增）：任一語系（zh/en）、任一任務角色（`reviewer` / `project_leader` / `annotator` / 未提供）組合下，直接呼叫 Shared Sidebar 掛載函式並切換語言，六個 L0 標籤（`navDashboard`／`navTaskManagement`／`navAnnotation`／`navDataset`／`navAdmin`／`navProfile`）之渲染文字須與 FR-021 定義之雙語對照表逐字一致，且語言切換後立即反映新語系，不需重新掛載或重新整理頁面。若任何消費頁面自行實作了覆寫程式碼，其渲染結果仍必須與此門檻一致，不得因頁面自有覆寫而產生偏離。
 
 ### 驗證建議
 
