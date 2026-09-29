@@ -1,5 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 import path from 'path';
+import { resolvePort } from './resolve-port.mjs';
 
 /**
  * Playwright config for Label Suite HTML prototypes.
@@ -7,14 +8,10 @@ import path from 'path';
  * Tests run against static HTML pages to validate spec acceptance criteria.
  */
 
-// Port is configurable via PW_PORT so that a Playwright run in one git
-// worktree never silently reuses another worktree's already-listening
-// server through reuseExistingServer (issue #582) -- give each worktree its
-// own PW_PORT and they can run in parallel without cross-contaminating.
-export function resolvePort(): number {
-  const parsed = Number(process.env.PW_PORT);
-  return parsed > 0 && parsed <= 65535 ? parsed : 8888;
-}
+// resolvePort lives in ./resolve-port.mjs so `node --test` can exercise it
+// without a browser (issue #1059); re-exported here because it is part of
+// this config's public surface.
+export { resolvePort };
 
 const PORT = resolvePort();
 const BASE_URL = `http://127.0.0.1:${PORT}`;

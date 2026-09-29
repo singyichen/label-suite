@@ -4,6 +4,7 @@
   "description": "Playwright E2E tests for Label Suite HTML prototypes",
   "scripts": {
     "test": "playwright test",
+    "test:node": "node --test",
     "test:ui": "playwright test --ui",
     "test:headed": "playwright test --headed",
     "typecheck": "tsc --noEmit"

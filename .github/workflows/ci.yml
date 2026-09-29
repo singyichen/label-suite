@@ -467,6 +467,33 @@ jobs:
       - name: Type check
         run: pnpm typecheck
 
+  # Node gate for prototype cases that never open a browser (issue #1059).
+  # Separate job, not a step of prototype-playwright: it needs no chromium
+  # download and must stay runnable (and red-able) without the 19-minute suite.
+  prototype-node-tests:
+    name: Prototype — Node Tests (node:test)
+    runs-on: ubuntu-24.04
+    needs: validate
+    if: needs.validate.outputs.prototype-exists == 'true' && needs.validate.outputs.prototype-changed == 'true'
+    defaults:
+      run:
+        working-directory: design/prototype
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10
+          run_install: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          cache-dependency-path: design/prototype/pnpm-lock.yaml
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Node tests
+        run: pnpm test:node
+
   prototype-playwright:
     name: Prototype — Playwright Tests
     runs-on: ubuntu-24.04
