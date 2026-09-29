@@ -218,14 +218,22 @@ test.describe('the tooltip mounts once per review unit, above the card stack (is
   });
 
   test('the tooltip lives in the unit-context banner, right after the review-flow trigger', async ({ page }) => {
-    // T016 ofm-05 has a derived unit status, so the FR-064 banner renders
-    // its 了解審核流程 trigger; the note must be the trigger's next sibling.
+    // A unit with a derived status, so the FR-064 banner renders its 了解
+    // 審核流程 trigger; the note must be the trigger's next sibling.
     // issue #596: ofm-02 no longer works here -- its sole reviewer agreed, so
     // it derives `finalized`, and FR-070's note is only rendered while the
     // unit is still decidable.
+    // issue #1053 (FR-103, MODIFIED FR-061/AC-4.22): T016 ofm-05's own
+    // assignee had already submitted (that is what made it disputed), so
+    // FR-103 now shows a read-only summary there instead of the interactive
+    // card this test's own premise (still decidable) needs; T016 has no
+    // naturally-pending sample left to swap to (every ofm-* row already
+    // carries a `rev` key). T015's ofs-04-pending-review has no reviewer
+    // decision yet, so it is still decidable without being disputed -- this
+    // test only needs a unit with a derived status, not a disputed one.
     await gotoReviewerWorkspace(page, {
-      task_id: 'T016',
-      sample_id: 'ofm-05-final-exception',
+      task_id: 'T015',
+      sample_id: 'ofs-04-pending-review',
       run_type: 'official_run',
       annotator_id: 'kioleemg12',
     });

@@ -35,6 +35,20 @@ import { buildWorkspaceUrl, gotoReviewerWorkspace, skipGuidelineModal } from './
 const FINALIZED_UNIT = 'ofm-02-reviewer-accepts-a';
 const DISPUTED_UNIT = 'ofm-05-final-exception';
 
+/* issue #1053 (FR-103, MODIFIED FR-061/AC-4.22): a still-decidable unit that
+ * is NOT disputed. T016's own assigned reviewer for every ofm-* sample has
+ * already submitted (that is what "assigned" via FR-093's sticky reviewer
+ * means once a unit is disputed) -- opening DISPUTED_UNIT above now hits
+ * FR-103's own read-only summary instead of the interactive card these two
+ * banner/drawer-position tests need, and T016 has no naturally-pending
+ * sample left to swap to instead (every ofm-* row already carries a `rev`
+ * key). T015's ofs-04-pending-review has no reviewer decision at all yet,
+ * so its sole assignee still gets the ordinary interactive FR-053 card --
+ * these two tests only need ANY such non-terminal, decidable unit, not a
+ * disputed one specifically (see each test's own comment). */
+const DECIDABLE_TASK = 'T015';
+const DECIDABLE_UNIT = 'ofs-04-pending-review';
+
 const DRAWER_ID = 'wsReviewFlowDrawer';
 
 function banner(page: Page) {
@@ -121,15 +135,19 @@ test.describe('issue #525 PR-A — the trigger in the FR-064 banner', () => {
     // last but for the decision-note tooltip -- is what this test owns and
     // it did not move. issue #596 removed the threshold chip between them,
     // and the note tooltip only exists while the unit is still decidable, so
-    // this reads the disputed fixture rather than the finalized one.
-    await openUnit(page, DISPUTED_UNIT);
+    // this reads a still-decidable fixture rather than the finalized one.
+    // issue #1053: swapped from the disputed fixture to DECIDABLE_UNIT (see
+    // its own comment above) -- this test owns child order/count, not which
+    // status word the state chip carries, so the state modifier below
+    // follows the swap (`-pending`, not `-disputed`).
+    await openUnit(page, DECIDABLE_UNIT, DECIDABLE_TASK);
 
     const classes = await banner(page).evaluate((el) =>
       Array.from(el.children).map((c) => c.className),
     );
     expect(classes).toEqual([
       'rv-unit-chip rv-unit-run',
-      'rv-unit-state rv-unit-state-disputed',
+      'rv-unit-state rv-unit-state-pending',
       'rv-flow-trigger',
       'rv-review-note',
     ]);
@@ -251,7 +269,9 @@ test.describe('issue #525 PR-A — the Drawer is out of the workspace document f
 
   test('opening and closing does not move the review card', async ({ page }) => {
     // A decidable unit: FR-094's finalized card has no `ws-review-row`.
-    await openUnit(page, DISPUTED_UNIT);
+    // issue #1053: swapped from the disputed fixture to DECIDABLE_UNIT (see
+    // its own comment above) -- this test only needs ANY interactive card.
+    await openUnit(page, DECIDABLE_UNIT, DECIDABLE_TASK);
     const card = page.getByTestId('ws-review-row').first();
     await expect(card).toBeVisible();
 
