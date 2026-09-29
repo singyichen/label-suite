@@ -276,9 +276,10 @@ These five rules govern what may live in `tests/` (issue #1059).
 | `decision` | `keep` · `merge` · `move-out` · `delete` · `keep-uncertain` |
 | `reason` | why — **mandatory for every non-`keep` decision** |
 
-Two rules bind the inventory to the code:
+Three rules bind the inventory to the code:
 
 - **A row whose `risk` is `security`, `leakage`, `rbac`, `a11y`, `nav-status`, `p1-journey` or `data-fairness` may never carry `decision=delete`.** If such a case looks obsolete, mark it `keep-uncertain` and record the open question in `reason`; a maintainer decides.
+- **Every citation in `traceability` must be locatable by `grep`.** Each FR/AC/SC id must appear in at least one of the canonical `specs/**/spec.md` paths cited in the same row, and a row that cites an id must cite a path. An id that resolves nowhere is corrected or replaced by `REGRESSION-RISK: …` — never approximated, and never fixed by dropping the path. The `DRIFT:<old> -> <canonical>` prefix is mandatory for every spec file that still references an `openspec/changes/` path, so the number of distinct `DRIFT:`-marked files equals `grep -rl "openspec/changes" tests --include='*.spec.ts' | wc -l`; the `<old>` side is the reference verbatim as the test file writes it.
 - **A PR that touches `design/prototype/tests/**` updates the matching inventory rows in the same PR** — adding a case adds a row, deleting one removes its row, renaming one updates `case`.
 
 ---
