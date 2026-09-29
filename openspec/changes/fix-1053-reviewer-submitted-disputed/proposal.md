@@ -9,7 +9,7 @@
 
 `role=reviewer` 的審核員對某審核單位提交過審核決策（`decisions`／修正值／理由皆已寫入）後，若該單位因與其他審核意見不一致而進入 `爭議中`，這位**當事審核員**（非仲裁者，即 `isArbiterCandidate()` 為 `false`）重新開啟工作區時，畫面與「這筆單位我還沒審過」完全相同：直接修正面板回填**標記員原答案**而非審核員自己的修正值、三顆決策鈕（通過／修正／無法裁決）皆未選取、裁定理由欄空白，且「送出審核」可直接按下。頂端進度條雖已把這筆算進「已提交」，畫面卻毫無反映，誤按送出會無聲覆寫審核員自己原本已送出的決策與理由。
 
-根因兩處（維護者已實測確認，行號已由主 session 覆核與現況一致）：`reviewUnitBlockReason()`（`design/prototype/pages/annotation/annotation-workspace.config.js:3883`）唯一攔截爭議中單位的分支是 `:3889` 的 `ARBITRATION`（僅適用具仲裁資格者，即 `isArbiterCandidate()`，`annotation-workspace.data.js:2579`），當事審核員恆落回函式尾端 `return null`（互動版面）；即使補上攔截，`seedReviewRow()`（`:3693`）也無條件以呼叫端傳入的 `submission`（標記員提交）播種修正面板，從未檢查審核員自己是否已有一筆不同的提交——這正是修正面板回填 `neutral`（標記員原答案）而非 `positive`（審核員修正值）的直接原因。
+根因兩處（維護者已實測確認；`reviewUnitBlockReason()`／`seedReviewRow()` 行號為修法前狀態，經 Source-Verify 覆核已隨本 change 自身之新增內容位移，見下方 Impact 段落之修法後行號）：修法前，`reviewUnitBlockReason()`（`design/prototype/pages/annotation/annotation-workspace.config.js`）唯一攔截爭議中單位的分支是 `ARBITRATION`（僅適用具仲裁資格者，即 `isArbiterCandidate()`，`annotation-workspace.data.js:2579`，行號未變），當事審核員恆落回函式尾端 `return null`（互動版面）；即使補上攔截，`seedReviewRow()` 也無條件以呼叫端傳入的 `submission`（標記員提交）播種修正面板，從未檢查審核員自己是否已有一筆不同的提交——這正是修正面板回填 `neutral`（標記員原答案）而非 `positive`（審核員修正值）的直接原因。
 
 維護者已確認採用方案 A（唯讀摘要 ＋ 明確改判入口），本 change 依方案 A 落地。
 
@@ -49,7 +49,7 @@
 
 ## Impact
 
-- `design/prototype/pages/annotation/annotation-workspace.config.js`：`reviewUnitBlockReason()` 新增一個分支、新增渲染函式（仿 `renderFinalizedCard()`）、`seedReviewRow()` 新增可選播種來源、`:5376` 附近呼叫入口新增一個 `blockReason` 分支、`handleReviewSubmit()` 新增第三道進入時守衛（比照既有 issue #307／#308 兩道寫法）。
+- `design/prototype/pages/annotation/annotation-workspace.config.js`：`reviewUnitBlockReason()`（`:3929`）新增一個分支（`ARBITRATION` 分支 `return` 於 `:3935`）、新增渲染函式（仿 `renderFinalizedCard()`，`:4945`）、`seedReviewRow()`（`:3733`）新增可選播種來源、`renderReviewerWorkspace()` 呼叫入口新增一個 `blockReason` 分支、`handleReviewSubmit()` 新增第三道進入時守衛（比照既有 issue #307／#308 兩道寫法，緊接 `:5903` 之 FINALIZED 守衛之後）。上列行號為 commit `e04c624e`（本 change 最終生產碼狀態）之實際行號，供 Source-Verify 逐一核對。
 - i18n 新增鍵（zh／en 成對），實際檔案位置以實作時該檔案現況為準（i18n 鍵目前與其他 workspace 字串同置於 `annotation-workspace.config.js` 內）。
 - `specs/annotation/015-annotation-workspace/spec.md`：新增 FR-103、AC-4.81、AC-4.82；修訂 FR-061、AC-4.22；版本 8.1.0 → **9.0.0**（**MAJOR**，推翻既有 FR/AC 文字），Changelog 新增一列。
 - **不受影響**：`annotation-workspace.data.js` 之 `getSubmission()`／`isArbiterCandidate()`／`isRosterReviewer()` 等既有資料層函式皆重用、不新增或修改；不涉及任何 API 契約或資料庫 schema 變更（純前端原型畫面行為）；不影響標記員視角、`FINALIZED`、`OFF_ROSTER`、`NOT_ASSIGNED`、`EMPTY` 分支；不影響 AC-3.39、FR-094、FR-101（經查證不受本次修訂觸及）。
