@@ -709,6 +709,11 @@
       color: var(--color-ink);
       vertical-align: middle;
     }
+    /* Keep the final exception pool's resolve action on one line; the table
+       already scrolls horizontally (.table-scroll) on narrow viewports
+       instead of wrapping the action button (issue #1057). */
+    #finalExceptionPoolSection .member-table td:last-child { white-space: nowrap; }
+    #finalExceptionPoolSection .mini-btn { display: inline-block; white-space: nowrap; }
     .pagination {
       display: flex;
       align-items: center;
