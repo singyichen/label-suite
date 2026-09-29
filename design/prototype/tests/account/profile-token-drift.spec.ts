@@ -1,6 +1,10 @@
 /**
- * Profile — canonical design-token migration (issue #183). The both-theme
- * assertions exercise the `html[data-theme]` token application on /profile.
+ * Profile — canonical design tokens as applied on /profile (issue #183). The
+ * both-theme assertions exercise the `html[data-theme]` token application on
+ * the page; the two deprecated-token absence pins (`--color-primary-light`
+ * undefined, and unreferenced by any stylesheet rule) that used to live here
+ * were removed by issue #1059 group 3, so nothing in this file asserts the
+ * absence of a token any more.
  *
  * Traceability: specs/account/005-profile-settings/spec.md
  *   FR-013, SC-009
@@ -28,40 +32,9 @@ function setDark(page: Page): Promise<void> {
   });
 }
 
-test.describe('Profile — canonical token migration (issue #183)', () => {
+test.describe('Profile — canonical tokens as applied (issue #183)', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto(PROFILE_URL);
-  });
-
-  test('local --color-primary-light token is removed', async ({ page }) => {
-    const value = await page.evaluate(() =>
-      getComputedStyle(document.documentElement)
-        .getPropertyValue('--color-primary-light')
-        .trim(),
-    );
-    expect(value).toBe('');
-  });
-
-  test('no stylesheet rule references --color-primary-light', async ({ page }) => {
-    const refs = await page.evaluate(() => {
-      let count = 0;
-      const walk = (rules: CSSRuleList) => {
-        for (const rule of Array.from(rules)) {
-          if (rule.cssText.includes('--color-primary-light')) count += 1;
-          const nested = (rule as CSSGroupingRule).cssRules;
-          if (nested) walk(nested);
-        }
-      };
-      for (const sheet of Array.from(document.styleSheets)) {
-        try {
-          walk(sheet.cssRules);
-        } catch {
-          // cross-origin sheet (Google Fonts @import) — not page CSS
-        }
-      }
-      return count;
-    });
-    expect(refs).toBe(0);
   });
 
   test('layout-only :root keeps the navbar offsets tokens.css does not provide', async ({ page }) => {

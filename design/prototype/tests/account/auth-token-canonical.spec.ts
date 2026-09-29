@@ -1,18 +1,22 @@
 /**
- * Auth pages — canonical design-token names (issue #183, MASTER Dark Rule 9)
+ * Auth pages — rendered page ground in both themes (issue #183)
  *
- * The four standalone auth pages define local token names because they do
- * not import tokens.css. MASTER v1.8 arbitrated the canonical local names:
- *   --color-surface = page ground (#F5F3FF / #0B0B12)
- *   --color-card    = card ground (#FFFFFF / #16161F)
- *   --color-ink     = primary text (#1E1B4B / #E2E8F0)
- *   --color-primary-soft-bg = soft hover ground (#EEF2FF / #1E1B4B)
- * The deprecated names (--color-background, --color-text,
- * --color-primary-light, and --color-surface-as-card) must no longer be
- * defined.
+ * The four standalone auth pages define their design tokens locally because
+ * they do not import tokens.css. This file asserts only the rendered result
+ * of that local definition: the computed `body` background-color is the
+ * canonical page ground in light (#F5F3FF) and its dark remap (#0B0B12).
  *
- * Visual invariance: this is a pure rename — computed body/card colors
- * must stay identical in both themes.
+ * Scope — only `body` is read here. The card ground (--color-card), primary
+ * text (--color-ink) and soft hover ground (--color-primary-soft-bg) are NOT
+ * covered by this file: issue #1059 group 3 removed the token-name and
+ * token-value pins that covered them, and nothing replaced that coverage.
+ * The same group also removed this file's deprecated-token-absence pins,
+ * which guarded a different set of names (--color-background, --color-text,
+ * --color-primary-light) and so never covered the three above.
+ *
+ * Traceability: REGRESSION-RISK — auth-page rendered light/dark page-ground
+ *   invariance; design/system/MASTER.md §Dark Mode Tokens > Implementation
+ *   Rules > "9. Standalone auth pages (no tokens.css)". No feature-spec FR.
  */
 import { test, expect } from '@playwright/test';
 
@@ -23,38 +27,10 @@ const AUTH_PAGES = [
   { name: 'reset-password', url: '/pages/account/reset-password.html' },
 ];
 
-async function tokenValue(page: import('@playwright/test').Page, token: string): Promise<string> {
-  return page.evaluate(
-    (t) => getComputedStyle(document.documentElement).getPropertyValue(t).trim(),
-    token,
-  );
-}
-
 for (const { name, url } of AUTH_PAGES) {
-  test.describe(`${name} — canonical token names`, () => {
+  test.describe(`${name} — rendered page ground`, () => {
     test.beforeEach(async ({ page }) => {
       await page.goto(url);
-    });
-
-    test('light theme defines canonical names with Rule 9 values', async ({ page }) => {
-      expect(await tokenValue(page, '--color-surface')).toBe('#F5F3FF');
-      expect(await tokenValue(page, '--color-card')).toBe('#FFFFFF');
-      expect(await tokenValue(page, '--color-ink')).toBe('#1E1B4B');
-      expect(await tokenValue(page, '--color-primary-soft-bg')).toBe('#EEF2FF');
-    });
-
-    test('deprecated token names are gone', async ({ page }) => {
-      expect(await tokenValue(page, '--color-background')).toBe('');
-      expect(await tokenValue(page, '--color-text')).toBe('');
-      expect(await tokenValue(page, '--color-primary-light')).toBe('');
-    });
-
-    test('dark theme remaps the canonical names', async ({ page }) => {
-      await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark'));
-      expect(await tokenValue(page, '--color-surface')).toBe('#0B0B12');
-      expect(await tokenValue(page, '--color-card')).toBe('#16161F');
-      expect(await tokenValue(page, '--color-ink')).toBe('#E2E8F0');
-      expect(await tokenValue(page, '--color-primary-soft-bg')).toBe('#1E1B4B');
     });
 
     test('visual invariance: body ground unchanged in both themes', async ({ page }) => {
