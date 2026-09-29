@@ -121,10 +121,13 @@ jobs:
             prototype:
               - 'design/prototype/**'
               # Not every input of the suite lives under design/prototype.
-              # tests/serve.mjs roots the HTTP server there, but several specs
-              # also read these two paths straight off disk -- to see which,
-              # grep -rn '\.\./\.\./\.\./\.\./docs' design/prototype/tests. A change
-              # here is a prototype change even though it sits under docs/.
+              # tests/serve.mjs roots the HTTP server there, but tests in both
+              # gates also read these paths straight off disk -- to see which,
+              # grep -rln 'docs/product' design/prototype/tests design/prototype/tests-node.
+              # A change here is a prototype change even though it sits under
+              # docs/. Known gap: docs/product/task-configs/** is read by
+              # tests-node/docs-fixtures.test.mjs but is not filtered here, so
+              # a change confined to it skips both prototype jobs (issue #1065).
               - 'docs/product/example-data/**'
               - 'docs/product/visual-overview/**'
               - '.github/workflows/ci.yml'

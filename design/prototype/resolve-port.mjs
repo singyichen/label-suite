@@ -3,8 +3,8 @@
  * Extracted out of playwright.config.ts (issue #1059) so the contract can be
  * exercised by a Node unit test: `node --test` cannot load a .ts config, and
  * a pure function over process.env has no business holding a browser worker.
- * playwright.config.ts re-exports it, so this file is the single source of
- * truth for both the harness and the gate.
+ * playwright.config.ts imports it for its own baseURL/webServer port, so
+ * this file is the single source of truth for both the harness and the gate.
  */
 
 // Port is configurable via PW_PORT so that a Playwright run in one git
