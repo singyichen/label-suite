@@ -116,10 +116,24 @@ test.describe('arbitration layout: eligible arbiter on a disputed unit', () => {
 });
 
 test.describe('arbitration layout: negative paths keep the normal review card', () => {
-  test('a dispute participant reviews normally', async ({ page }) => {
+  /* issue #1053 (FR-103; MODIFIED FR-061/AC-4.22): PARTICIPANT (wang) is
+     seedDisputedUnit()'s own submitting reviewer -- their `modify` decision
+     (fear vs. sad) is literally what made this unit disputed, i.e. exactly
+     the "當事審核員" FR-103/AC-4.82 targets. Before this change, wang fell
+     through reviewUnitBlockReason()'s ARBITRATION check (not an arbiter)
+     straight to the blank interactive card, the very gap issue #1053 fixes.
+     FR-061/AC-4.22 now carry an explicit exception for this case: a
+     non-arbiter reviewer who already has their own submission on the unit
+     gets FR-103's read-only summary instead of the FR-053 interactive card.
+     Repurposed (same shape as issue #921's neighboring rewrite above) to
+     assert the now-correct outcome: wang is still not routed to the
+     arbitration layout (unaffected -- wang was never an eligible arbiter),
+     but no longer sees the blank interactive card either. */
+  test('a dispute participant (the unit\'s own submitting reviewer) sees the FR-103 read-only summary, not the arbitration layout or the blank interactive card', async ({ page }) => {
     await gotoWorkspace(page, PARTICIPANT);
     await expect(page.getByTestId('ws-arbitration-card')).toHaveCount(0);
-    await expect(page.getByTestId('ws-review-row-approve').first()).toBeVisible();
+    await expect(page.getByTestId('ws-review-submitted-card')).toBeVisible();
+    await expect(page.getByTestId('ws-review-row-approve')).toHaveCount(0);
   });
 
   /* issue #921 (FR-093): PARTICIPANT (wang) already holds the sticky

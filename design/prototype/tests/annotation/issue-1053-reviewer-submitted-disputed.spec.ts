@@ -44,8 +44,28 @@ interface Submission {
   reasons?: Record<string, string>;
 }
 
+interface HistoryEvent {
+  action: string;
+  role: string;
+  actorId: string;
+  at: string;
+  [key: string]: unknown;
+}
+
+interface HistoryViewer {
+  role: string;
+  actorId?: string;
+}
+
 interface WorkspaceData {
   getSubmission: (taskId: string, role: string, runType: string, sampleId: string, identity: Identity) => Submission | null;
+  getSampleHistory: (
+    taskId: string,
+    runType: string,
+    sampleId: string,
+    identity: Identity,
+    viewer: HistoryViewer
+  ) => HistoryEvent[];
 }
 
 async function getSubmission(
@@ -61,6 +81,22 @@ async function getSubmission(
       (window as unknown as { LabelSuiteAnnotationWorkspaceData: WorkspaceData }).LabelSuiteAnnotationWorkspaceData
         .getSubmission(t, r, rt, s, id as Identity),
     [taskId, role, runType, sampleId, identity] as const
+  );
+}
+
+async function getSampleHistory(
+  page: Page,
+  taskId: string,
+  runType: string,
+  sampleId: string,
+  identity: Identity,
+  viewer: HistoryViewer
+): Promise<HistoryEvent[]> {
+  return page.evaluate(
+    ([t, rt, s, id, v]) =>
+      (window as unknown as { LabelSuiteAnnotationWorkspaceData: WorkspaceData }).LabelSuiteAnnotationWorkspaceData
+        .getSampleHistory(t, rt, s, id as Identity, v as HistoryViewer),
+    [taskId, runType, sampleId, identity, viewer] as const
   );
 }
 
@@ -229,6 +265,123 @@ test.describe('issue #1053 -- regression guards (must behave identically to curr
 
     await expect(page.getByTestId('ws-review-finalized-card')).toBeVisible();
     await expect(page.getByTestId('ws-review-submitted-card')).toHaveCount(0);
+
+    assertNoPageErrors(errors);
+  });
+});
+
+test.describe('issue #1053 -- AC-4.82 write-side residual-path guard', () => {
+  test('7. a residual invocation of handleReviewSubmit() while the read-only summary is showing must not write or advance past its entry guards', async ({
+    page,
+  }) => {
+    const errors = trackPageErrors(page);
+    await skipGuidelineModal(page);
+    await page.goto(
+      reviewerUrl({ task_id: TASK_014, sample_id: SAMPLE, run_type: RUN_DRY, reviewer_id: REVIEWER_LI, annotator_id: ANNOTATOR_B })
+    );
+    const identity = { annotatorId: ANNOTATOR_B, reviewerId: REVIEWER_LI };
+
+    await expect(page.getByTestId('ws-review-submitted-card')).toBeVisible();
+    await expect(page.getByTestId('ws-review-submit-btn')).toBeHidden();
+
+    const before = await getSubmission(page, TASK_014, 'reviewer', RUN_DRY, SAMPLE, identity);
+    const historyBefore = await getSampleHistory(page, TASK_014, RUN_DRY, SAMPLE, identity, {
+      role: 'reviewer',
+      actorId: REVIEWER_LI,
+    });
+
+    /*
+     * Investigation (handleReviewSubmit() is never exposed on `window` --
+     * grep -n "window\.[A-Za-z_]* = " annotation-workspace.config.js only
+     * lists state/t/el/setText/markDirty/revalidateCurrentStep/
+     * showFieldError/showToast/renderMarkdown/track/onChipSelectionChange/
+     * showTaxonomyDeleteModal/hideTaxonomyDeleteModal/
+     * getDatasetTotalEstimate -- handleReviewSubmit is not among them, so
+     * it cannot be called directly via page.evaluate()).
+     *
+     * The Ctrl/Cmd+Enter shortcut is already covered above by test 2 and is
+     * NOT a residual path into this function at all: setupActionShortcuts()
+     * explicitly skips a button carrying the `hidden` class
+     * (annotation-workspace.config.js:3496) before it ever dispatches a
+     * click, so it never reaches handleReviewSubmit()'s body.
+     *
+     * The one invocation this file's own wiring leaves genuinely reachable
+     * is the listener `reviewSubmitBtn.addEventListener('click',
+     * handleReviewSubmit)` (:6654): it is attached unconditionally to
+     * #wsReviewSubmitBtn and stays attached even after the SUBMITTED_DISPUTED
+     * read-only branch adds the `hidden` class to that same element --
+     * native HTMLElement.click() fires a listener regardless of the
+     * element's CSS visibility, unlike Playwright's own locator `.click()`,
+     * which refuses to act on a hidden target. A raw
+     * `document.getElementById('wsReviewSubmitBtn').click()` is therefore a
+     * real residual call path -- exactly the "未來的呼叫變更" the AC-4.82
+     * rationale names -- distinct from the already-covered shortcut case.
+     *
+     * Empirically, in this single-output-type fixture the write itself is
+     * already incidentally blocked today by the separate, pre-existing
+     * FR-083 "every output decided" gate (pendingReviewOutputKeys(),
+     * further down handleReviewSubmit()): the read-only render path never
+     * seeds reviewRowDecisions, so that gate treats every output as
+     * undecided and returns before reaching the actual write. That is NOT
+     * the AC-4.82 entry-time guard task 2.5 adds, though -- it is reached
+     * only after the function has already rebuilt rowsByOutKey and
+     * evaluated every output's decision, and it responds with a visible
+     * blocking warning toast ("請完成以下輸出類型的審核決策..."), which is
+     * observable proof the function ran deep past its entry point instead
+     * of returning immediately the way AC-4.82 requires. The new
+     * entry-time guard MUST return before any of that runs, so the warning
+     * toast must not appear either -- that is this test's actual Red
+     * signal. The getSubmission()/history invariants below already hold
+     * today (the incidental FR-083 gate already prevents the write) and
+     * must keep holding after Green; they are asserted as the AC-4.82
+     * regression guard the spec scenario names, not as the changing part.
+     */
+    await page.evaluate(() => {
+      var btn = document.getElementById('wsReviewSubmitBtn');
+      if (btn) btn.click();
+    });
+
+    await expect(page.locator('#toast')).not.toHaveClass(/visible/);
+
+    const after = await getSubmission(page, TASK_014, 'reviewer', RUN_DRY, SAMPLE, identity);
+    expect(after).toEqual(before);
+
+    const historyAfter = await getSampleHistory(page, TASK_014, RUN_DRY, SAMPLE, identity, {
+      role: 'reviewer',
+      actorId: REVIEWER_LI,
+    });
+    expect(historyAfter).toEqual(historyBefore);
+
+    assertNoPageErrors(errors);
+  });
+
+  test('8. contrast -- the "修改我的審核" edit-mode entry is not blocked by the residual-path guard and still submits normally', async ({
+    page,
+  }) => {
+    const errors = trackPageErrors(page);
+    await skipGuidelineModal(page);
+    await page.goto(
+      reviewerUrl({ task_id: TASK_014, sample_id: SAMPLE, run_type: RUN_DRY, reviewer_id: REVIEWER_LI, annotator_id: ANNOTATOR_B })
+    );
+    const identity = { annotatorId: ANNOTATOR_B, reviewerId: REVIEWER_LI };
+
+    await expect(page.getByTestId('ws-review-submitted-card')).toBeVisible();
+    await page.getByTestId('ws-review-edit-my-decision-btn').click();
+
+    /* AC-4.82's guard third condition ("not in edit mode") does not hold
+     * here -- the guard MUST NOT fire, and the pre-filled decision (test 3
+     * above) must submit through the real, now-visible submit control
+     * exactly as FR-103's own re-adjudication entry point always could. */
+    await expect(page.getByTestId('ws-review-row-modify')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByTestId('ws-review-submit-btn')).toBeVisible();
+    await page.getByTestId('ws-review-submit-btn').click();
+
+    await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
+
+    const after = await getSubmission(page, TASK_014, 'reviewer', RUN_DRY, SAMPLE, identity);
+    expect(after!.decisions?.single_label).toBe('modify');
+    expect(after!.previewState?.single_label?.selected).toBe(REVIEWER_CORRECTED_VALUE);
+    expect(after!.reasons?.single_label).toBe(REVIEWER_REASON);
 
     assertNoPageErrors(errors);
   });
