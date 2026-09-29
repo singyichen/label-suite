@@ -174,6 +174,10 @@
       annotatorFinalizedNotice: '此標記結果已定稿，無法再修改或提交',
       annotatorFinalizedToast: '此標記結果已定稿，無法再修改或提交',
       wsAutosaveFinalized: '已定稿，不再自動儲存',
+      wsExceptionSampleGroupAria: '樣本 {sample}，{n} 項待處置例外',
+      wsExceptionSampleGroupCount: '{n} 項例外',
+      wsExceptionQueueItemAria: '標記員 {annotator}，{output}，{status}',
+      wsExceptionQueueStatusPending: '待處置',
     },
     en: {
       sampleListTitle: 'Samples',
@@ -327,6 +331,10 @@
       unitStateFinalizedNote: 'locked',
       unitStateAria: 'Review unit status: {state}',
       unitStateAriaFinalized: 'Review unit status: {state}, locked',
+      wsExceptionSampleGroupAria: 'Sample {sample}, {n} pending exceptions',
+      wsExceptionSampleGroupCount: '{n} exceptions',
+      wsExceptionQueueItemAria: 'Annotator {annotator}, {output}, {status}',
+      wsExceptionQueueStatusPending: 'Awaiting disposition',
       reviewOriginalAnswerLabel: "Annotator's original answer: ",
       reviewCorrectedAnswerLabel: "Reviewer's corrected answer: ",
       toastReviewDecisionResetOnEdit: 'The direct correction changed, so the matching review decision was reset -- please re-confirm before submitting',
@@ -2428,47 +2436,168 @@
       .listReviewPoolItems(currentProfile.id, currentRunType).pendingExceptions;
   }
 
+  /* Exception-pool-only sample group wrapper (issue #1060, FR-095 v9.1.0).
+     Same rationale as buildSampleGroup() (issue #455) -- hoist the sample
+     identity and preview snippet so they render once per sample instead of
+     once per pending exception -- but kept as its own function/testid
+     because this queue is pendingExceptions (counted per exception), not
+     review units (counted per annotator roster slot); reusing `ws-sample-
+     group` would conflate two structurally different counts reviewers and
+     project leaders each rely on staying distinct. Reuses the reviewer
+     group's exact CSS classes (`.sample-group*`), since the visual shape is
+     identical -- only the testids and the row content beneath the header
+     differ. */
+  function buildExceptionSampleGroup(sampleId, exceptionCount) {
+    var group = document.createElement('div');
+    group.className = 'sample-group';
+    group.setAttribute('role', 'group');
+    group.setAttribute('data-testid', 'ws-exception-sample-group');
+    group.setAttribute('data-sample-id', sampleId);
+    group.setAttribute(
+      'aria-label',
+      t('wsExceptionSampleGroupAria').replace('{sample}', sampleId).replace('{n}', String(exceptionCount))
+    );
+
+    var header = document.createElement('div');
+    header.className = 'sample-group-header';
+
+    var title = document.createElement('div');
+    title.className = 'sample-group-title';
+    var idEl = document.createElement('span');
+    idEl.className = 'sample-group-id';
+    idEl.setAttribute('data-testid', 'ws-exception-sample-group-id');
+    idEl.setAttribute('title', sampleId);
+    idEl.textContent = sampleId;
+    var countEl = document.createElement('span');
+    countEl.className = 'sample-group-count';
+    countEl.setAttribute('data-testid', 'ws-exception-sample-group-count');
+    countEl.textContent = t('wsExceptionSampleGroupCount').replace('{n}', String(exceptionCount));
+    title.appendChild(idEl);
+    title.appendChild(countEl);
+    header.appendChild(title);
+
+    /* FR-095 v9.1.0: the preview snippet is omitted, never fabricated, when
+       the record cannot be resolved -- findRecordById() returning nothing
+       (or the profile's own preview text being empty) is the caller's
+       signal to skip the node entirely rather than substitute other data
+       or a ground-truth field (Data Fairness). */
+    var record = findRecordById(sampleId);
+    var previewText = record
+      ? window.LabelSuiteAnnotationWorkspaceData.getRecordPreviewText(record, currentProfile.fieldRoleMap)
+      : '';
+    if (previewText) {
+      var snippet = document.createElement('div');
+      snippet.className = 'sample-group-snippet';
+      snippet.setAttribute('data-testid', 'ws-exception-sample-group-snippet');
+      snippet.textContent = previewText;
+      header.appendChild(snippet);
+    }
+
+    group.appendChild(header);
+    return group;
+  }
+
   /* Left column for role=project_leader: one row per pending exception,
      addressed by the same sample × annotator pair the disposition screen
      resolves, so clicking a row opens exactly the item it names. Deliberately
      NOT `ws-sample-item`: a project leader has no annotation workload, and
-     reusing sample-navigation semantics is the defect issue #907 reports. */
+     reusing sample-navigation semantics is the defect issue #907 reports.
+     Rows are grouped by sampleId (issue #1060, FR-095 v9.1.0); the top count
+     stays at exception-item granularity (issue #907's existing contract),
+     the group headers carry the sample-level count instead. */
   function renderExceptionQueueList(listEl, countEl) {
     setText('sampleListTitle', t('exceptionQueueTitle'));
     var queue = pendingExceptionQueue();
     if (countEl) countEl.textContent = queue.length + (state.lang === 'zh' ? ' 筆' : ' items');
-    queue.forEach(function (poolItem, idx) {
-      var item = document.createElement('button');
-      item.type = 'button';
-      var isActive = poolItem.sampleId === String(currentSampleId)
-        && poolItem.annotatorId === currentAnnotatorId();
-      item.className = 'sample-item' + (isActive ? ' active' : '');
-      item.setAttribute('data-testid', 'ws-exception-queue-item');
-      item.setAttribute('data-sample-id', poolItem.sampleId);
-      item.setAttribute('data-annotator-id', poolItem.annotatorId);
 
-      var indexBadge = document.createElement('span');
-      indexBadge.className = 'sample-index';
-      indexBadge.textContent = String(idx + 1);
-      item.appendChild(indexBadge);
+    /* Grouped by sampleId regardless of adjacency in `queue` -- two pending
+       exceptions on the same sample must land in one group even if a
+       different sample's exception happens to sit between them. */
+    var groupOrder = [];
+    var groupsBySampleId = {};
+    queue.forEach(function (poolItem) {
+      var group = groupsBySampleId[poolItem.sampleId];
+      if (!group) {
+        group = [];
+        groupsBySampleId[poolItem.sampleId] = group;
+        groupOrder.push(poolItem.sampleId);
+      }
+      group.push(poolItem);
+    });
 
-      var meta = document.createElement('div');
-      meta.className = 'sample-meta';
-      var snippet = document.createElement('div');
-      snippet.className = 'sample-snippet';
-      snippet.textContent = poolItem.sampleId + ' · ' + poolItem.annotatorId;
-      meta.appendChild(snippet);
-      var outLabel = document.createElement('span');
-      outLabel.className = 'sample-status-label';
-      outLabel.setAttribute('data-testid', 'ws-exception-queue-output');
-      outLabel.textContent = poolItem.outKey;
-      meta.appendChild(outLabel);
-      item.appendChild(meta);
+    var globalIdx = 0;
+    groupOrder.forEach(function (sampleId) {
+      var items = groupsBySampleId[sampleId];
+      var groupEl = buildExceptionSampleGroup(sampleId, items.length);
 
-      item.addEventListener('click', function () {
-        selectSample(poolItem.sampleId, poolItem.annotatorId);
+      items.forEach(function (poolItem) {
+        globalIdx += 1;
+        var isActive = poolItem.sampleId === String(currentSampleId)
+          && poolItem.annotatorId === currentAnnotatorId();
+        var item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'sample-item' + (isActive ? ' active' : '');
+        item.setAttribute('data-testid', 'ws-exception-queue-item');
+        item.setAttribute('data-sample-id', poolItem.sampleId);
+        item.setAttribute('data-annotator-id', poolItem.annotatorId);
+
+        var outReg = window.OUTPUT_TYPE_REGISTRY && window.OUTPUT_TYPE_REGISTRY[poolItem.outKey];
+        var outLabel = (outReg && outReg[state.lang]) || poolItem.outKey;
+        var statusLabel = t('wsExceptionQueueStatusPending');
+        item.setAttribute(
+          'aria-label',
+          t('wsExceptionQueueItemAria')
+            .replace('{annotator}', poolItem.annotatorId)
+            .replace('{output}', outLabel)
+            .replace('{status}', statusLabel)
+        );
+
+        var indexBadge = document.createElement('span');
+        indexBadge.className = 'sample-index';
+        indexBadge.textContent = String(globalIdx);
+        item.appendChild(indexBadge);
+
+        var meta = document.createElement('div');
+        meta.className = 'sample-meta';
+        /* Primary info: the annotator account -- the sample ID already sits
+           once in the group header above (same "one dimension that varies
+           inside a group" pattern buildSampleGroup()'s rows use). */
+        var unitLine = document.createElement('div');
+        unitLine.className = 'sample-unit-line';
+        var unitAnnotator = document.createElement('span');
+        unitAnnotator.className = 'sample-unit-annotator';
+        unitAnnotator.setAttribute('title', poolItem.annotatorId);
+        unitAnnotator.textContent = poolItem.annotatorId;
+        unitLine.appendChild(unitAnnotator);
+        meta.appendChild(unitLine);
+
+        /* Secondary info: human-readable output type (never the raw outKey
+           key name) plus a textual pending-status label, distinct from the
+           tri-state annotation-progress labels. */
+        var metaRow = document.createElement('div');
+        metaRow.className = 'sample-exception-meta-row';
+        var outLabelEl = document.createElement('span');
+        outLabelEl.className = 'sample-status-label';
+        outLabelEl.setAttribute('data-testid', 'ws-exception-queue-output');
+        outLabelEl.textContent = outLabel;
+        metaRow.appendChild(outLabelEl);
+        var statusEl = document.createElement('span');
+        statusEl.className = 'sample-status-label status-pending-exception';
+        statusEl.setAttribute('data-testid', 'ws-exception-queue-status');
+        statusEl.textContent = statusLabel;
+        metaRow.appendChild(statusEl);
+        meta.appendChild(metaRow);
+
+        item.appendChild(meta);
+
+        item.addEventListener('click', function () {
+          selectSample(poolItem.sampleId, poolItem.annotatorId);
+        });
+
+        groupEl.appendChild(item);
       });
-      listEl.appendChild(item);
+
+      listEl.appendChild(groupEl);
     });
   }
 
