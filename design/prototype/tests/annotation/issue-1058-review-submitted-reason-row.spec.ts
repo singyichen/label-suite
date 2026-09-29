@@ -152,23 +152,15 @@ const REPRO_URL = buildWorkspaceUrl({
     const decisionLabelEl = directChildExact(section, '.rv-finalized-summary-label', decisionLabelText);
     await expect(decisionLabelEl).toHaveCount(1);
 
-    // Today's (pre-fix) concatenated decision+reason line, nested inside
-    // `.rv-finalized-summary-values` -- read it to derive the exact
-    // "decision only" and "reason only" substrings direction 2 must
-    // preserve byte-for-byte once split into separate elements.
+    // The decision value line, nested inside `.rv-finalized-summary-values`.
+    // Once direction 2 splits the reason into its own row, this line must
+    // hold ONLY the decision text -- `single_label：<decision label>` --
+    // with no reason suffix. Under current (unfixed) code this line still
+    // has the reason concatenated on, so this assertion is one of today's
+    // Red failures too.
     const decisionValueLine = section.locator('.rv-finalized-summary-values .rv-finalized-summary-value').first();
     await expect(decisionValueLine).toBeVisible();
-    const decisionFullText = (await decisionValueLine.textContent()) ?? '';
-    const reasonIdx = decisionFullText.indexOf(reasonLabelText);
-    expect(reasonIdx).toBeGreaterThan(0);
-    const decisionOnlyText = decisionFullText.slice(0, reasonIdx).trimEnd();
-    const reasonTextFromDom = decisionFullText.slice(reasonIdx + reasonLabelText.length);
-
-    // AC: decision text unchanged -- still `single_label：<decision label>`.
-    expect(decisionOnlyText).toBe(`${OUT_KEY}：${decisionValueLabelText}`);
-    // AC: reason text unchanged -- matches both the DOM substring parsed
-    // above and the fixture's own stored raw reason string.
-    expect(reasonTextFromDom).toBe(rawReason);
+    await expect(decisionValueLine).toHaveText(`${OUT_KEY}：${decisionValueLabelText}`);
 
     // Core Red assertions (issue #1058 direction 2): a reason label/value
     // pair must exist as direct children of `.rv-finalized-summary`,
