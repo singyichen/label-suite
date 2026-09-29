@@ -5901,6 +5901,20 @@
       currentProfile.id, currentRunType, currentSampleId, currentIdentity, state.selectedOutputTypes
     );
     if (lockedStatus === window.LabelSuiteAnnotationWorkspaceData.REVIEW_UNIT_STATUS.FINALIZED) return;
+    /* issue #1053 (AC-4.82): the render path already hides the submit
+       button and replaces the card with a read-only summary once a
+       disputed unit's own reviewer has already submitted -- this guard
+       keeps any residual invocation path (e.g. a raw click on the
+       still-listening #wsReviewSubmitBtn) inert instead of silently
+       resubmitting and erasing the reviewer's own disputed decision. MUST
+       NOT fire while reviewSubmittedEditMode is true: that is FR-103's own
+       "修改我的審核" re-adjudication entry point, which must keep submitting
+       normally. */
+    if (
+      lockedStatus === window.LabelSuiteAnnotationWorkspaceData.REVIEW_UNIT_STATUS.DISPUTED &&
+      getReviewerOwnSubmission() &&
+      !reviewSubmittedEditMode
+    ) return;
     var rowsByOutKey = {};
     var annotatorId = currentAnnotatorId();
     state.selectedOutputTypes.forEach(function (outKey) {
