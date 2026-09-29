@@ -12,9 +12,9 @@
 
 **故事目標**：SC-011 — 左側清單依樣本分組呈現待處置例外項數、文本摘要與人類可讀輸出類型名稱，且清單筆數、無一般標記樣本、無標記進度狀態之既有保證維持通過（issue #1060）。
 
-- [ ] 2.1 於 `design/prototype/pages/annotation/annotation-workspace.config.js` 改寫 renderExceptionQueueList，新增例外池專用分組輔助函式（功能命名分組 selector，與 reviewer 專用分組區隔），並新增例外池分組與待處置狀態之 zh/en I18N 條目；驗證：PW_PORT=8982 執行 Playwright 測試轉綠 [@senior-frontend]
-- [ ] 2.2 於 `design/prototype/pages/annotation/annotation-workspace.html` 擴充既有樣本項目與分組相關 CSS 規則，支援例外池分組樣式、長 ID 截斷與 1024px／375px RWD；驗證：PW_PORT=8982 執行 Playwright 測試之版面斷言轉綠 [@senior-frontend]
-- [ ] 2.3 執行 `node scripts/gen-screen-inventory.mjs` 重新生成 `design/system/screen-inventory.md`；驗證：git status --short 顯示該檔已更新且無其他未預期變更 [@senior-frontend]
+- [x] 2.1 於 `design/prototype/pages/annotation/annotation-workspace.config.js` 改寫 renderExceptionQueueList，新增例外池專用分組輔助函式（功能命名分組 selector，與 reviewer 專用分組區隔），並新增例外池分組與待處置狀態之 zh/en I18N 條目；驗證：PW_PORT=8982 執行 Playwright 測試轉綠 [@senior-frontend]
+- [x] 2.2 於 `design/prototype/pages/annotation/annotation-workspace.html` 擴充既有樣本項目與分組相關 CSS 規則，支援例外池分組樣式、長 ID 截斷與 1024px／375px RWD；驗證：PW_PORT=8982 執行 Playwright 測試之版面斷言轉綠 [@senior-frontend]
+- [x] 2.3 執行 `node scripts/gen-screen-inventory.mjs` 重新生成 `design/system/screen-inventory.md`；驗證：git status --short 顯示該檔已更新且無其他未預期變更 [@senior-frontend]
 
 ## 3. 回歸與整合驗證
 
@@ -22,5 +22,5 @@
 
 **故事目標**：SC-011 — 本次左欄分組變更不影響既有例外池外殼、麵包屑與樣本分組相關規格之既有保證（issue #1060）。
 
-- [ ] 3.1 執行 `PW_PORT=8982 pnpm playwright test tests/annotation/issue-1060-exception-pool-sample-grouping.spec.ts tests/annotation/issue-907-exception-pool-screen-shell.spec.ts tests/annotation/issue-922-exception-breadcrumb.spec.ts tests/annotation/issue-455-workspace-unit-grouping.spec.ts`，確認四個測試檔全數通過 [@main]
-- [ ] 3.2 執行 `pnpm typecheck`，確認 exit 0 [@main]
+- [x] 3.1 執行 `PW_PORT=8982 pnpm playwright test tests/annotation/issue-1060-exception-pool-sample-grouping.spec.ts tests/annotation/issue-907-exception-pool-screen-shell.spec.ts tests/annotation/issue-922-exception-breadcrumb.spec.ts tests/annotation/issue-455-workspace-unit-grouping.spec.ts`，確認四個測試檔全數通過 [@main]
+- [x] 3.2 執行 `pnpm typecheck`，確認 exit 0 [@main]
