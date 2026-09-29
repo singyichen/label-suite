@@ -22,7 +22,7 @@
 - [x] 2.2 於同檔新增唯讀摘要渲染函式（testid ws-review-submitted-card，比照 renderFinalizedCard 語彙）並掛上呼叫入口，執行對應測試片段驗證唯讀摘要內容與送出審核隱藏行為轉綠 [@senior-frontend]
 - [x] 2.3 於同檔為 seedReviewRow 新增可選播種來源參數並新增「修改我的審核」／「取消，維持原決策」按鈕與切換邏輯，執行對應測試片段驗證修正面板以審核員自己提交值播種、取消不寫入行為轉綠 [@senior-frontend]
 - [x] 2.4 於同檔新增本次 i18n 鍵（zh／en 成對），執行對應測試片段驗證文字呈現轉綠 [@senior-frontend]
-- [ ] 2.5 於同檔 handleReviewSubmit 新增第三道進入時守衛（比照既有 issue #307／#308 兩道守衛寫法與註解語彙）：DISPUTED AND 當前審核員已有自己的提交 AND 不在修改我的審核編輯態 → 直接 return，不寫入不追加歷程事件；不得阻擋編輯態下之正常送出。執行 1.3 與 1.2 對應測試片段轉綠 [@senior-frontend]
+- [x] 2.5 於同檔 handleReviewSubmit 新增第三道進入時守衛（比照既有 issue #307／#308 兩道守衛寫法與註解語彙）：DISPUTED AND 當前審核員已有自己的提交 AND 不在修改我的審核編輯態 → 直接 return，不寫入不追加歷程事件；不得阻擋編輯態下之正常送出。執行 1.3 與 1.2 對應測試片段轉綠 [@senior-frontend]
 
 ## 3. 驗證與獨立審查
 
