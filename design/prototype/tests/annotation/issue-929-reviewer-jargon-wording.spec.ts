@@ -1,6 +1,4 @@
 import { test, expect, type Page } from '@playwright/test';
-import fs from 'node:fs';
-import path from 'node:path';
 import { dismissGuidelineModal, gotoReviewerWorkspace, skipGuidelineModal } from './_workspace-helpers';
 
 /* Reviewer UI jargon/identifier leakage into zh text (issue #929).
@@ -30,10 +28,9 @@ import { dismissGuidelineModal, gotoReviewerWorkspace, skipGuidelineModal } from
  *   - `reviewCorrectedAnswerLabel` (:155) has no `t('reviewCorrectedAnswerLabel')`
  *     call anywhere in the codebase today (confirmed by grep) -- it is
  *     orphaned/dead i18n text with no rendered element to assert against, so
- *     it is guarded only at the source-text level below, following this
- *     repo's own precedent for that pattern
- *     (issue-766-no-actionable-wording-single-source.spec.ts's
- *     fs.readFileSync + path.resolve(__dirname, ...) idiom).
+ *     it is guarded only at the source-text level, which under issue #1059
+ *     lives in tests-node/annotation-workspace-source.test.mjs rather than
+ *     in this browser spec.
  *   - The **en** i18n block is intentionally unchanged (`wsHistoryRoleReviewer:
  *     'Reviewer'` etc. are correct English) -- nothing here asserts anything
  *     about the en block.
@@ -145,41 +142,5 @@ test.describe('Item 2: reviewCorrectionTitle renders without raw "Reviewer" jarg
     const title = page.getByTestId('ws-review-corrected-answer-title');
     await expect(title).toHaveText('直接修正（審核員修正後答案）');
     await expect(title).not.toContainText('Reviewer');
-  });
-});
-
-test.describe('Item 2 (source-level): the zh i18n block carries zero raw "Reviewer" occurrences (issue #929)', () => {
-  test('the zh: {...} block has zero standalone occurrences of the English word "Reviewer"', () => {
-    const configPath = path.resolve(__dirname, '../../pages/annotation/annotation-workspace.config.js');
-    const source = fs.readFileSync(configPath, 'utf8');
-
-    const zhStart = source.indexOf('zh: {');
-    const enStart = source.indexOf('en: {', zhStart);
-    expect(zhStart, 'the I18N object must declare a zh: { ... } block').toBeGreaterThan(-1);
-    expect(enStart, 'the I18N object must declare an en: { ... } block after zh: {').toBeGreaterThan(zhStart);
-
-    const zhBlock = source.slice(zhStart, enStart);
-    // Word-boundary match, not a plain substring count: the zh block's KEY
-    // names legitimately contain "Reviewer" as part of a camelCase code
-    // identifier (wsHistoryRoleReviewer, crumbWorkAreaReviewer,
-    // finalizedBasisArbitrationReviewer, finalizedBasisExceptionReviewer,
-    // exceptionActionAdoptReviewer) -- those are code identifiers, not
-    // user-facing jargon leaks, and are out of this issue's two-item scope.
-    // \bReviewer\b only matches the word as a standalone token, which is
-    // exactly how it leaks into the rendered VALUE strings at
-    // reviewCorrectionTitle (:74) and reviewCorrectedAnswerLabel (:155).
-    const occurrences = (zhBlock.match(/\bReviewer\b/g) || []).length;
-
-    // Covers BOTH the consumed key (reviewCorrectionTitle, :74) and the
-    // orphaned key (reviewCorrectedAnswerLabel, :155) in one assertion,
-    // without hardcoding which i18n keys exist -- a drift guard against any
-    // future zh value that reintroduces the raw English word.
-    expect(
-      occurrences,
-      `the zh i18n block must not contain the raw English word "Reviewer" as a standalone token in any ` +
-        `value -- found ${occurrences} occurrence(s). This is the only regression guard for ` +
-        'reviewCorrectedAnswerLabel, which no t(...) call currently consumes and therefore has no ' +
-        'rendered DOM to assert against.',
-    ).toBe(0);
   });
 });

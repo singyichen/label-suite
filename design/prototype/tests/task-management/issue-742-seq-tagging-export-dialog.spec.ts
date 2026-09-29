@@ -1,8 +1,9 @@
 /*
  * Traceability: openspec/changes/task-detail-seq-tagging-export-dialog/
  *   specs/task-management/014-task-detail/spec.md
- *   FR-020, AC-1.10, SC-045 (AC-1.11/AC-1.12/AC-1.13 belong to group 2 and
- *   the final group -- not covered here).
+ *   FR-020, AC-1.10 (AC-1.11/AC-1.12/AC-1.13 belong to group 2 and
+ *   the final group -- not covered here; SC-045's source-scan guard moved to
+ *   tests-node/task-detail-source.test.mjs under issue #1059).
  *
  * TDD Red (tasks.md group 1, tasks 1.1/1.2/1.3, issue #742). Today
  * `design/prototype/pages/shared/span-tagging-export.js` has no caller
@@ -117,8 +118,6 @@
  * i18n key name and full sentence are Green's choice).
  */
 import { promises as fsp } from 'node:fs';
-import * as fs from 'node:fs';
-import * as path from 'node:path';
 import { test, expect, type Page } from '@playwright/test';
 
 declare global {
@@ -133,7 +132,6 @@ declare global {
 }
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
-const SOURCE_PATH = path.resolve(__dirname, '../../pages/task-management/task-detail.html');
 const PANEL_LOAD_TIMEOUT = 15000;
 
 const SEQ_TAGGING_TASK_ID = 'T006'; // outputs[] = [{ type: 'sequence_tagging', ... }]
@@ -333,61 +331,6 @@ test.describe('issue #742 -- sequence_tagging export dialog (task 1.2: AC-1.10 c
     expect(seqTaggingConfig).not.toBeNull();
     expect(seqTaggingConfig).not.toHaveProperty('tagging_scheme');
     expect(seqTaggingConfig).not.toHaveProperty('token_unit');
-  });
-});
-
-test.describe('issue #742 -- sequence_tagging export dialog (task 1.3: SC-045 source-scan guard)', () => {
-  const source = fs.readFileSync(SOURCE_PATH, 'utf8');
-
-  test('LabelSuiteSpanTaggingExport.deriveSequence has exactly one call site in task-detail.html (single derivation entry point)', () => {
-    const count = (source.match(/\bderiveSequence\(/g) || []).length;
-    expect(count).toBe(1);
-  });
-
-  test('task-detail.html never concatenates a B-/I-/E-/S- tag prefix literal', () => {
-    let literalCount = 0;
-    for (const prefix of ['B-', 'I-', 'E-', 'S-']) {
-      literalCount += (source.match(new RegExp(`'${prefix}'`, 'g')) || []).length;
-      literalCount += (source.match(new RegExp(`"${prefix}"`, 'g')) || []).length;
-    }
-    expect(literalCount).toBe(0);
-  });
-
-  test('the scheme/unit option domains are rendered from the shared module constants, not a second hardcoded list', () => {
-    // Reference-count assertion on the module's own identifiers (FR-020(1)):
-    // rendering MUST read LabelSuiteSpanTaggingExport.EXPORT_TAGGING_SCHEMES /
-    // .EXPORT_TOKEN_UNITS, not restate the value domain as a literal array.
-    const schemeConstantRefs = (source.match(/EXPORT_TAGGING_SCHEMES/g) || []).length;
-    const unitConstantRefs = (source.match(/EXPORT_TOKEN_UNITS/g) || []).length;
-    expect(schemeConstantRefs).toBeGreaterThanOrEqual(1);
-    expect(unitConstantRefs).toBeGreaterThanOrEqual(1);
-
-    const literalSchemeArray = (
-      source.match(/\[\s*['"]BIO['"]\s*,\s*['"]BIOES['"]\s*,\s*['"]IOB2['"]\s*\]/g) || []
-    ).length;
-    expect(literalSchemeArray).toBe(0);
-
-    const literalUnitArray = (
-      source.match(/\[\s*['"]character['"]\s*,\s*['"]word['"]\s*\]/g) || []
-    ).length;
-    expect(literalUnitArray).toBe(0);
-  });
-
-  test('the entity_recognition export branch (buildTaskSpecificExportFields entities fallback) never calls deriveSequence', () => {
-    // Anchors are the current, unmodified entities-fallback branch text
-    // (tasks.md scope: T010/entity_recognition export fields MUST NOT
-    // change) through the next function declaration -- if a future edit
-    // renames these anchors it has touched code this change must leave
-    // alone.
-    const startAnchor = 'fields.entities = value && value.entities ? cloneExportValue(value.entities) : [];';
-    const endAnchor = 'function buildExportAnnotationRecord';
-    const startIndex = source.indexOf(startAnchor);
-    const endIndex = source.indexOf(endAnchor);
-    expect(startIndex).toBeGreaterThan(-1);
-    expect(endIndex).toBeGreaterThan(startIndex);
-
-    const entityBranch = source.slice(startIndex, endIndex);
-    expect(entityBranch).not.toContain('deriveSequence');
   });
 });
 

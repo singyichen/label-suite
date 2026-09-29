@@ -8,11 +8,6 @@ import { resolvePort } from './resolve-port.mjs';
  * Tests run against static HTML pages to validate spec acceptance criteria.
  */
 
-// resolvePort lives in ./resolve-port.mjs so `node --test` can exercise it
-// without a browser (issue #1059); re-exported here because it is part of
-// this config's public surface.
-export { resolvePort };
-
 const PORT = resolvePort();
 const BASE_URL = `http://127.0.0.1:${PORT}`;
 
