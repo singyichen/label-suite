@@ -5013,6 +5013,7 @@
 
     var values = document.createElement('span');
     values.className = 'rv-finalized-summary-values';
+    var reasonsByOutKey = {};
     state.selectedOutputTypes.forEach(function (outKey) {
       var decision = mySubmission.decisions && mySubmission.decisions[outKey];
       var line = document.createElement('span');
@@ -5023,12 +5024,31 @@
       }
       var reason = mySubmission.reasons && mySubmission.reasons[outKey];
       if (reason && reviewDecisionRequiresReason(decision)) {
-        text += ' ' + t('reviewReasonLabel') + '：' + reason;
+        reasonsByOutKey[outKey] = reason;
       }
       line.textContent = text;
       values.appendChild(line);
     });
     section.appendChild(values);
+
+    var reasonOutKeys = Object.keys(reasonsByOutKey);
+    if (reasonOutKeys.length > 0) {
+      var reasonLabel = document.createElement('span');
+      reasonLabel.className = 'rv-finalized-summary-label';
+      reasonLabel.textContent = t('reviewReasonLabel') + '：';
+      section.appendChild(reasonLabel);
+
+      var reasonValue = document.createElement('span');
+      reasonValue.className = 'rv-finalized-summary-value';
+      reasonValue.textContent =
+        reasonOutKeys.length === 1
+          ? reasonsByOutKey[reasonOutKeys[0]]
+          : reasonOutKeys.map(function (outKey) {
+              return outKey + '：' + reasonsByOutKey[outKey];
+            }).join('\n');
+      section.appendChild(reasonValue);
+    }
+
     return section;
   }
 
