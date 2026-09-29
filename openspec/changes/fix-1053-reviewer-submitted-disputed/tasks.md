@@ -28,8 +28,8 @@
 
 **故事目標**：SC-006 — 確認新增分支與新守衛未影響既有審核流程與其他既有測試覆蓋，且專案 SDD 閘門皆通過（issue #1053）。
 
-- [ ] 3.1 執行 `cd design/prototype && pnpm typecheck` 與 `cd design/prototype && PW_PORT=8980 pnpm playwright test tests/annotation/ --workers=2` 並記錄結果 [@main]
-- [ ] 3.2 執行 `scripts/check-sdd.sh` 與 `openspec validate --changes --no-interactive` 並記錄結果 [@main]
+- [x] 3.1 執行 `cd design/prototype && pnpm typecheck` 與 `cd design/prototype && PW_PORT=8980 pnpm playwright test tests/annotation/ --workers=2` 並記錄結果——`typecheck` 乾淨；全目錄 `1038 passed, 0 failed (11.7m)` [@main]
+- [x] 3.2 執行 `scripts/check-sdd.sh` 與 `openspec validate --changes --no-interactive` 並記錄結果——`0 error(s), 22 warning(s)`；`1 passed, 0 failed` [@main]
 - [ ] 3.3 派獨立 senior-code-reviewer（非撰寫本次實作者）審查三分支互斥性（須自行實測 ARBITRATION／FINALIZED 對照組）、寫入側守衛不阻擋改判入口、播種來源正確性、送出鈕不可觸發、i18n 成對、既有測試斷言未被弱化，記錄裁決 [@main]
 
 ## 4. Source-Verify 與封存
