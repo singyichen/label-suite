@@ -4,7 +4,7 @@
 
 **故事目標**：SC-011 — 專案負責人開啟最終例外處置畫面時，左側清單須以樣本分組呈現待處置例外項與其資訊層級，且既有「清單筆數與待處置例外項數一致、不列一般標記樣本、不用標記進度狀態」之既有保證不受影響（issue #1060）。
 
-- [ ] 1.1 於 `design/prototype/tests/annotation/issue-1060-exception-pool-sample-grouping.spec.ts` 新增涵蓋 UI-01 至 UI-05 的 Playwright 測試案例（zh 與 en 皆驗證 UI-02；鍵盤 Tab／Enter 與 title／aria-label 驗證 UI-04；1024px 與 375px 驗證 UI-05），commit 後於 PW_PORT=8982 執行並記錄預期失敗原因 [@senior-qa]
+- [x] 1.1 於 `design/prototype/tests/annotation/issue-1060-exception-pool-sample-grouping.spec.ts` 新增涵蓋 UI-01 至 UI-05 的 Playwright 測試案例（zh 與 en 皆驗證 UI-02；鍵盤 Tab／Enter 與 title／aria-label 驗證 UI-04；1024px 與 375px 驗證 UI-05），commit 後於 PW_PORT=8982 執行並記錄預期失敗原因 [@senior-qa]
 
 ## 2. Green — 實作左欄樣本分組與資訊層級
 
