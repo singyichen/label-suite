@@ -8,9 +8,9 @@
 
 > 以下為維護者裁示採方案 A、範圍擴大為 MAJOR 後追加之測試工作（2026-09-29）。呈現層 FR-103（1.1）已於 `79d5ed5c` 完成、不需重做；本組只補寫入側守衛與規格推翻後之契約測試重寫，皆由 senior-qa 擁有，實作方不得自行改測試。
 
-- [ ] 1.2 重寫 `design/prototype/tests/annotation/annotation-workspace-arbitration.spec.ts:119`（describe 區塊 `arbitration layout: negative paths keep the normal review card`）之測試名稱與斷言，使其斷言 FR-103 行為（當事審核員 PARTICIPANT 見 `ws-review-submitted-card`、`ws-review-row-approve` 為 0 節點），commit 後執行並記錄預期失敗原因 [@senior-qa]
-- [ ] 1.3 於 `issue-1053-reviewer-submitted-disputed.spec.ts` 新增 AC-4.82 守衛測試（唯讀摘要模式下經殘留路徑觸發 `handleReviewSubmit()`，斷言 `getSubmission()` 前後逐位元組相同且無新增歷程事件；另加一案例確認「修改我的審核」編輯態下正常送出不受阻擋），commit 後執行並記錄預期失敗原因 [@senior-qa]
-- [ ] 1.4 換 fixture（不得改斷言）修好 3 支附帶損害：`issue-525-review-flow-drawer.spec.ts:117`／`:252`、`issue-550-review-note-tooltip.spec.ts:220`——三支各自僅需一個 still-decidable 單位，改用「當事審核員尚無提交」之可裁決爭議單位；若查無合適替代 fixture，停下回報，不得改斷言。commit 後執行並記錄三支皆轉綠 [@senior-qa]
+- [x] 1.2 重寫 `design/prototype/tests/annotation/annotation-workspace-arbitration.spec.ts:119`（describe 區塊 `arbitration layout: negative paths keep the normal review card`）之測試名稱與斷言，使其斷言 FR-103 行為（當事審核員 PARTICIPANT 見 `ws-review-submitted-card`、`ws-review-row-approve` 為 0 節點）。此案例斷言的是已於 `79d5ed5c` 落地之呈現層行為，改寫後即為綠燈（非預期失敗），已記錄於檢查點說明理由。[@senior-qa]
+- [x] 1.3 於 `issue-1053-reviewer-submitted-disputed.spec.ts` 新增 AC-4.82 守衛測試（唯讀摘要模式下經殘留路徑——直接呼叫 `#wsReviewSubmitBtn` 原生 `click()`（繞過隱藏樣式）——觸發 `handleReviewSubmit()`，斷言不得出現阻擋 toast 且 `getSubmission()`／歷程前後逐位元組相同；另加一案例確認「修改我的審核」編輯態下正常送出不受阻擋），commit 後執行並記錄預期失敗原因（阻擋 toast 目前仍會出現） [@senior-qa]
+- [x] 1.4 換 fixture（不改斷言）修好 `issue-525-review-flow-drawer.spec.ts` 兩案例與 issue-550 一案例共 3 支附帶損害。T016 種子已無尚未提交之 pending 單位，改用 T015 官方標記任務之 ofs-04-pending-review 樣本（其 FR-093 指派審核員 reviewer_wang 尚未提交，仍為可裁決之互動卡），逐一驗證 banner children／drawer 位置／tooltip 位置斷言與原意一致；T016 之爭議中狀態相依測試（flow track 節點）未受影響、未改動。commit 後執行並記錄三支皆轉綠 [@senior-qa]
 
 ## 2. 實作
 
