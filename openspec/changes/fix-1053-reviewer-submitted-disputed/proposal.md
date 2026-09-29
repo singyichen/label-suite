@@ -55,6 +55,24 @@
 - **不受影響**：`annotation-workspace.data.js` 之 `getSubmission()`／`isArbiterCandidate()`／`isRosterReviewer()` 等既有資料層函式皆重用、不新增或修改；不涉及任何 API 契約或資料庫 schema 變更（純前端原型畫面行為）；不影響標記員視角、`FINALIZED`、`OFF_ROSTER`、`NOT_ASSIGNED`、`EMPTY` 分支；不影響 AC-3.39、FR-094、FR-101（經查證不受本次修訂觸及）。
 - **對照組（須逐字不變）**：`T016 / official_run / ofm-03-awaiting-arbitration × kioleemg12`（reviewer_chen 為仲裁者，走 ARBITRATION 版面——仲裁者本人視角不受 FR-061／AC-4.22 例外子句影響）。
 
+## 正典回寫逐字文本（Gate 4 預先記錄，`/opsx:archive` 時逐字採用，不得改寫）
+
+**背景**：本 change 之 `## MODIFIED Requirements`（delta 檔）是為了比對衍生檢視 `openspec/specs/annotation/015-annotation-workspace/spec.md` 之既有標題與精簡內文而寫（其 FR-061 標題為 `### Requirement: FR-061 仲裁版面：逐項二選一與 Reject 出口`，非正典逐字），`openspec archive` 僅用它來合併衍生檢視。**正典 `specs/annotation/015-annotation-workspace/spec.md` 的回寫必須另外手動進行，且是「就地最小修訂」——保留正典既有之條列結構、中文「必須」語態、沿革括號與交互參照，只把例外子句切進原句，不得整段改寫成 delta 檔的英文 MUST 語態或標題格式**。以下兩行是回寫時必須逐字採用的最終正典文字（含前後未變動的既有文字，供合併前逐字 `diff` 核對）：
+
+**FR-061**（正典 `:828`，僅改動「條件不成立時」子句與沿革括號，其餘既有文字——包含下方 1–6 點與 v5.0.0 移除段——逐字不動）：
+
+```
+- **FR-061**（v4.8.0 新增，v4.54.0 修訂，**v5.0.0 修訂，BREAKING**，對應 AC-4.22 ~ AC-4.24、AC-4.54，issue #147／#551／#596；**v9.0.0 修訂，MAJOR**，issue #1053：新增當事審核員已有自己提交時之 FR-103 例外）：工作區 reviewer 視圖必須為爭議池提供**逐項仲裁版面**，切換條件為「該審核單位狀態為 `爭議中`（FR-051）**AND** 目前審核員具仲裁資格（FR-060 之兩條件）」——條件成立時整張審核卡切換為仲裁版面，不成立時，若目前審核員在該單位已有自己的提交，改依 FR-103（**v9.0.0 修訂**，issue #1053）呈現其唯讀摘要版面，其餘情形維持 FR-053 審核卡，三者互斥、不得混渲染：
+```
+
+**AC-4.22**（正典 `:584`，僅改動標題沿革括號與末尾新增一句 `**And**`，其餘既有文字逐字不動）：
+
+```
+22. **AC-4.22（v4.8.0 新增，仲裁版面切換；**v9.0.0 修訂，MAJOR**，issue #1053）**：**Given** 一個 `disputed` 審核單位（FR-051），**When** 具仲裁資格的審核員（FR-060：`can_arbitrate` 旗標 AND 非當事人）以完整審核單位身分開啟工作區 reviewer 視圖，**Then** 整張審核卡必須切換為仲裁版面（`ws-arbitration-card`）：標記員答案以唯讀摘要呈現、每個未解決爭議項恰渲染一列 A/B 選擇（`ws-arbitration-item`）；**And** 修正控件（含作答面板互動元件）與 ✕/✓ 決策按鈕（`ws-review-row-approve` / `ws-review-row-reject`）必須為 0 節點——仲裁者選邊、不重新標記；**And** 當事審核員、未具旗標的審核員、以及任何人開啟非 `disputed` 單位時，皆維持 FR-053 審核卡，不得出現仲裁版面（見 FR-061）；**And**〔v9.0.0 新增，issue #1053〕當事審核員於該單位已有自己的提交時，改依 FR-103 呈現其唯讀摘要版面，同樣不得出現仲裁版面。
+```
+
+Source-Verify 預掃時，須將上述兩行與正典合併後之實際內容逐字 `diff`；`tasks.md` 為 FR-061、AC-4.22 各給一個獨立可勾選項目，不得併入同一項「archive 回寫」任務。
+
 ## Constitution Check
 
 - **Generalization-First**：新分支的判定條件（爭議中 ＋ 當前審核員已有自己的提交）重用既有 `getSubmission()`／`REVIEW_UNIT_STATUS.DISPUTED`，不新增任何任務 ID 或輸出類型專屬邏輯；渲染沿用既有 `OUTPUT_TYPE_REGISTRY` 驅動的 `describeOutputAnswer()`／`describeCompactAnswer()`，不硬編任一輸出類型。

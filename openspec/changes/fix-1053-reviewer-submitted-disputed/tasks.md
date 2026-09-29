@@ -36,5 +36,9 @@
 
 **故事目標**：SC-006 — 正典回寫完成雙寫且每個引用皆可逐一定位，確保責任鏈可追溯性不因本次新增分支與版面推翻而退化（issue #1053）。
 
-- [ ] 4.1 對 FR-103／AC-4.81／AC-4.82 與修訂之 FR-061／AC-4.22 之全部引用（FR/AC ID、正典行號、檔案路徑、函式名、issue 編號）逐一以 grep 核對可定位，記錄結果 [@main]
-- [ ] 4.2 執行 opsx:archive 完成雙寫（openspec/specs 衍生檢視與正典 spec.md 版本回寫至 9.0.0 並新增 Changelog 條目，MAJOR），並更新 specs/STATUS.md 對應列 [@main]
+- [ ] 4.1 對 FR-103／AC-4.81／AC-4.82 之全部引用（FR/AC ID、檔案路徑、函式名、issue 編號）逐一以 grep 核對可定位，記錄結果 [@main]
+- [ ] 4.2 對修訂之 FR-061 正典行號 828 與 AC-4.22 正典行號 584 逐一核對——本輪為修訂既有條文而非僅新增，回寫後行號會位移，核對對象為 proposal.md「正典回寫逐字文本」段落與正典合併後之實際內容逐字 diff，記錄結果 [@main]
+- [ ] 4.3 執行 openspec archive 完成雙寫（openspec/specs 衍生檢視合併），版本改判 9.0.0（MAJOR），Changelog 新增一列 [@main]
+- [ ] 4.4 正典 FR-061（annotation-workspace 015 spec.md 行號 828）就地最小修訂——僅切入例外子句與沿革括號，1 至 6 點與 v5.0.0 移除段逐字不動，改動內容須與 proposal.md「正典回寫逐字文本」段落之 FR-061 區塊逐字相同 [@main]
+- [ ] 4.5 正典 AC-4.22（同檔行號 584）就地最小修訂——僅改標題沿革括號並於末尾新增一句 And，其餘既有文字逐字不動，改動內容須與 proposal.md「正典回寫逐字文本」段落之 AC-4.22 區塊逐字相同 [@main]
+- [ ] 4.6 更新 specs/STATUS.md 對應列，並執行 scripts/check-sdd.sh 確認正典回寫後 0 error [@main]
