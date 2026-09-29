@@ -121,10 +121,13 @@ jobs:
             prototype:
               - 'design/prototype/**'
               # Not every input of the suite lives under design/prototype.
-              # tests/serve.mjs roots the HTTP server there, but several specs
-              # also read these two paths straight off disk -- to see which,
-              # grep -rn '\.\./\.\./\.\./\.\./docs' design/prototype/tests. A change
-              # here is a prototype change even though it sits under docs/.
+              # tests/serve.mjs roots the HTTP server there, but tests in both
+              # gates also read these paths straight off disk -- to see which,
+              # grep -rln 'docs/product' design/prototype/tests design/prototype/tests-node.
+              # A change here is a prototype change even though it sits under
+              # docs/. Known gap: docs/product/task-configs/** is read by
+              # tests-node/docs-fixtures.test.mjs but is not filtered here, so
+              # a change confined to it skips both prototype jobs (issue #1065).
               - 'docs/product/example-data/**'
               - 'docs/product/visual-overview/**'
               - '.github/workflows/ci.yml'
@@ -466,6 +469,33 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Type check
         run: pnpm typecheck
+
+  # Node gate for prototype cases that never open a browser (issue #1059).
+  # Separate job, not a step of prototype-playwright: it needs no chromium
+  # download and must stay runnable (and red-able) without the 19-minute suite.
+  prototype-node-tests:
+    name: Prototype — Node Tests (node:test)
+    runs-on: ubuntu-24.04
+    needs: validate
+    if: needs.validate.outputs.prototype-exists == 'true' && needs.validate.outputs.prototype-changed == 'true'
+    defaults:
+      run:
+        working-directory: design/prototype
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10
+          run_install: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          cache-dependency-path: design/prototype/pnpm-lock.yaml
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Node tests
+        run: pnpm test:node
 
   prototype-playwright:
     name: Prototype — Playwright Tests

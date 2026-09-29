@@ -1,17 +1,15 @@
 /**
  * Shared notification dropdown contract: no "notification settings" link
- * inside the dropdown (preferences live on /profile), fully localized
- * dropdown content on language switch, and the removed standalone
- * notification-settings page must stay removed.
+ * inside the dropdown (preferences live on /profile) and fully localized
+ * dropdown content on language switch. The removed-page assertion (the
+ * standalone notification-settings page must stay removed) moved to
+ * tests-node/shared-page-contracts.test.mjs under issue #1059 -- it is an
+ * fs.existsSync check with nothing rendered.
  *
  * Traceability: specs/shared/008-sidebar-navbar-shared/spec.md
  *   FR-018C, FR-018C1, FR-018E
  */
 import { test, expect } from '@playwright/test';
-import fs from 'node:fs';
-import path from 'node:path';
-
-const ROOT = path.resolve(__dirname, '../..');
 
 test.describe('Shared notification dropdown', () => {
   test('does not show a notification settings link', async ({ page }) => {
@@ -41,9 +39,5 @@ test.describe('Shared notification dropdown', () => {
     await expect(dropdown).not.toContainText('任務');
     await expect(dropdown).not.toContainText('分鐘前');
     await expect(dropdown).not.toContainText('小時前');
-  });
-
-  test('does not keep the removed notification settings page', () => {
-    expect(fs.existsSync(path.join(ROOT, 'pages/account/notification-settings.html'))).toBe(false);
   });
 });

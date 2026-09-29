@@ -1,6 +1,4 @@
 import { test, expect, type Page } from '@playwright/test';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { buildListUrl } from './_workspace-helpers';
 
 /* Issue #627 item 3 (OpenSpec change rename-misleading-review-sample-ids).
@@ -9,10 +7,12 @@ import { buildListUrl } from './_workspace-helpers';
  * workspace answer seed (map key) plus its review seed row, task-detail's
  * REVIEW_FLOW_UNITS copy, and the docs/product/example-data fixture. Two ids
  * still encode interim states that v5.0.0 removed from REVIEW_UNIT_STATUS
- * (`approved`, `modified`). This suite pins the renamed ids on every consumer
- * AND that each one still resolves to a rendered, correctly-derived unit --
+ * (`approved`, `modified`). This suite pins the renamed ids on both RENDERED
+ * consumers AND that each one still resolves to a correctly-derived unit --
  * a partial rename leaves the seed row without an answer and the row silently
  * disappears, so "the old id is gone" alone would pass on a broken rename.
+ * The third consumer (the docs/product/example-data fixture) is a pure fs
+ * read and moved to tests-node/docs-fixtures.test.mjs under issue #1059.
  *
  * Traceability: specs/annotation/015-annotation-workspace/spec.md FR-044,
  *   AC-4.31, AC-4.36; openspec/changes/rename-misleading-review-sample-ids
@@ -61,17 +61,6 @@ test.describe('T016 demo sample ids carry no retired review-state word (issue #6
     expect(texts.join('\n')).not.toMatch(/ofm-\d+-(approved|modified)-/);
     for (const sampleId of Object.keys(RENAMED)) {
       await expect(summaryRows.filter({ hasText: sampleId }), sampleId).toHaveCount(1);
-    }
-  });
-
-  test('docs example-data fixture uses the same renamed ids', () => {
-    const fixturePath = resolve(__dirname, '../../../../docs/product/example-data/review-flow-official-multi.json');
-    const ids = (JSON.parse(readFileSync(fixturePath, 'utf8')) as Array<{ id: string }>).map((row) => row.id);
-    for (const id of ids) {
-      expect(id, id).not.toMatch(RETIRED_STATE_WORD);
-    }
-    for (const sampleId of Object.keys(RENAMED)) {
-      expect(ids).toContain(sampleId);
     }
   });
 });

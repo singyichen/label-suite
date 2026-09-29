@@ -15,6 +15,7 @@ none	local static server for prototype runs; cannot fail a change	serve-prototyp
 none	worktree scaffolding helper; cannot fail a change	worktree-init.sh
 pre-commit-tests	scripts/pre-commit-tests.sh	pre-commit-tests.sh
 pre-tool-use-tests	scripts/pre-tool-use-tests.sh	pre-tool-use-tests.sh
+prototype-node-tests	pnpm test:node	-
 prototype-playwright	pnpm playwright test	-
 prototype-typecheck	pnpm typecheck	-
 sdd-lint	scripts/check-sdd.sh	check-sdd.sh

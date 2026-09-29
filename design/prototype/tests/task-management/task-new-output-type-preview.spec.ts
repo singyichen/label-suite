@@ -1,5 +1,4 @@
 import { test, expect, type Page } from '@playwright/test';
-import fs from 'fs';
 import path from 'path';
 
 declare global {
@@ -12,59 +11,6 @@ declare global {
 
 const TASK_NEW_URL = '/pages/task-management/task-new.html';
 const EXAMPLE_DATA = path.resolve(__dirname, '../../../../docs/product/example-data');
-
-test('Entity Recognition fixture uses current fields and valid inclusive offsets', () => {
-  const records = JSON.parse(
-    fs.readFileSync(path.join(EXAMPLE_DATA, 'entity-recognition.json'), 'utf8'),
-  ) as Array<{
-    id: string;
-    text: string;
-    gold_entities: Array<{ text: string; start: number; end: number }>;
-  }>;
-
-  for (const record of records) {
-    expect(record.id).toMatch(/^entity-recognition-\d{3}$/);
-    expect(record.gold_entities).toBeInstanceOf(Array);
-    for (const entity of record.gold_entities) {
-      expect(record.text.substring(entity.start, entity.end + 1)).toBe(entity.text);
-    }
-  }
-});
-
-test('Sequence Tagging default fixture uses half-open character-offset spans', () => {
-  const records = JSON.parse(
-    fs.readFileSync(path.join(EXAMPLE_DATA, 'sequence-tagging.json'), 'utf8'),
-  ) as Array<{
-    id: string;
-    text: string;
-    spans: Array<{ start: number; end: number; label: string }>;
-  }>;
-
-  expect(records.length).toBeGreaterThanOrEqual(4);
-  for (const record of records) {
-    expect(record.id).toMatch(/^sequence-tagging-\d{3}$/);
-    expect(record.spans).toBeInstanceOf(Array);
-    expect(record.spans.length).toBeGreaterThan(0);
-    /* sequence_tagging spans are flat and half-open, so each one must start at
-       or after the previous one ends. */
-    let previousEnd = 0;
-    for (const span of record.spans) {
-      expect(span.label).toMatch(/^[A-Z]+$/);
-      expect(span.start).toBeGreaterThanOrEqual(previousEnd);
-      expect(span.end).toBeGreaterThan(span.start);
-      expect(span.end).toBeLessThanOrEqual(record.text.length);
-      previousEnd = span.end;
-    }
-  }
-
-  const englishRecord = records.find((record) => (
-    !/\p{Script=Han}/u.test(record.text)
-  ));
-  expect(englishRecord).toBeDefined();
-  expect(
-    englishRecord?.spans.map((span) => englishRecord.text.slice(span.start, span.end)),
-  ).toEqual(['TSMC', 'Taipei', 'today']);
-});
 
 interface SetupConfig {
   taskName: string;

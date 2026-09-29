@@ -9,8 +9,6 @@
  * work happens in task 1.3 (senior-frontend) and MUST NOT weaken any
  * assertion here to pass.
  */
-import * as fs from 'fs';
-import * as path from 'path';
 import { test, expect, type Page } from '@playwright/test';
 
 declare global {
@@ -24,7 +22,6 @@ declare global {
 }
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
-const SOURCE_PATH = path.resolve(__dirname, '../../pages/task-management/task-detail.html');
 
 // Tab panels arrive via fetched partials; event bindings and the four
 // renderers only run after the last partial (#workLogPanel) lands (see
@@ -277,43 +274,6 @@ test.describe('Task detail URL view-state (issue #726)', () => {
       const params = new URL(page.url()).searchParams;
       expect(params.get('tab')).not.toBe('member-management');
       expect(params.get('mm_page')).toBeNull();
-    });
-  });
-
-  test.describe('1.2 source-scan guards (design.md D1/D2/D3 structural contract)', () => {
-    const source = fs.readFileSync(SOURCE_PATH, 'utf8');
-
-    test('history.pushState() is never used -- filtering/pagination MUST NOT create history entries', () => {
-      const count = (source.match(/history\.pushState\(/g) || []).length;
-      expect(count).toBe(0);
-    });
-
-    test('history.replaceState() calls converge on a single write-back function', () => {
-      // design.md D1/D2: one syncUrlToViewState() function is the only
-      // caller of history.replaceState(); ~20 individual filter/sort/page
-      // handlers must NOT each call it directly. Today this is 0 -- no
-      // write-back exists at all yet.
-      const count = (source.match(/history\.replaceState\(/g) || []).length;
-      expect(count).toBe(1);
-    });
-
-    test('the review-status legal-value set has exactly one hardcoded definition (Generalization-First)', () => {
-      // AR_REVIEW_STATUS_ORDER is the sole source of truth for the
-      // ar_review_status enum (design.md D5); a second hardcoded copy in
-      // the URL-parsing code would silently drift from it the next time a
-      // status is added.
-      // Three-state as of spec 014 v3.0.0 (issue #688); the former
-      // `approved`/`modified` interim states were retired (issue #807).
-      const literalArrayCount = (
-        source.match(/\['pending', 'disputed', 'finalized'\]/g) || []
-      ).length;
-      expect(literalArrayCount).toBe(1);
-
-      const identifierCount = (source.match(/AR_REVIEW_STATUS_ORDER/g) || []).length;
-      // 1 definition + at least 1 usage site; a URL-parsing validator that
-      // reads this identifier adds a further usage site instead of a new
-      // literal array.
-      expect(identifierCount).toBeGreaterThanOrEqual(2);
     });
   });
 });

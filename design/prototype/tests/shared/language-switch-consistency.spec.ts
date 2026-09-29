@@ -1,34 +1,15 @@
 /**
- * Shared language-switch consistency across sidebar consumer pages: every
- * page must delegate to the shared sidebar global language API (no direct
- * html[lang] writes or direct persistence), the mobile toggle must stay in
- * sync with the desktop one, and admin nav labels must remain translatable.
- * The final case pins the serif fallback stack in assets/tokens.css.
+ * Shared language-switch consistency across sidebar consumer pages: the
+ * mobile toggle must stay in sync with the desktop one, and admin nav labels
+ * must remain translatable. The source-level contracts this file used to hold
+ * (shared-API delegation, the user-management i18n key, the assets/tokens.css
+ * serif fallback stack) moved to tests-node/shared-page-contracts.test.mjs
+ * under issue #1059 — they read files from disk and render nothing.
  *
  * Traceability: specs/shared/008-sidebar-navbar-shared/spec.md
- *   FR-009, FR-009A, FR-009B, SC-006, SC-006A
- * Traceability: design/system/MASTER.md (serif fallback stack — design-system
- * contract, not a feature-spec FR)
- *   §Typography
+ *   FR-009, FR-009A, FR-009B, SC-006, SC-006A, FR-021, SC-014
  */
 import { test, expect } from '@playwright/test';
-import fs from 'node:fs';
-import path from 'node:path';
-
-const ROOT = path.resolve(__dirname, '../..');
-
-// Each entry lists the page shell plus the runtime modules it loads; the
-// language-switch rules apply to their combined source.
-const pagesNeedingUnifiedLanguageSwitch = [
-  ['pages/dashboard/dashboard.html', 'pages/dashboard/dashboard.js'],
-  ['pages/admin/user-management.html'],
-  ['pages/admin/role-settings.html'],
-  ['pages/account/profile.html'],
-  ['pages/account/login.html'],
-  ['pages/account/register.html'],
-  ['pages/account/forgot-password.html'],
-  ['pages/account/reset-password.html'],
-];
 
 const mobileSidebarPages = [
   '/pages/dashboard/dashboard.html',
@@ -37,25 +18,6 @@ const mobileSidebarPages = [
 ];
 
 test.describe('Prototype global language switch implementation', () => {
-  test('uses shared sidebar global language API across all pages', () => {
-    for (const sourceFiles of pagesNeedingUnifiedLanguageSwitch) {
-      const label = sourceFiles.join(' + ');
-      const source = sourceFiles
-        .map((relativePath) => fs.readFileSync(path.join(ROOT, relativePath), 'utf8'))
-        .join('\n');
-
-      expect(source, `${label} should use shared applyGlobalLanguage`).toContain(
-        'LabelSuiteSharedSidebar.applyGlobalLanguage('
-      );
-      expect(source, `${label} should not write html lang directly`).not.toContain(
-        'document.documentElement.lang'
-      );
-      expect(source, `${label} should not persist language directly`).not.toContain(
-        'LabelSuiteSharedSidebar.setStoredLang('
-      );
-    }
-  });
-
   test('keeps mobile language toggle behavior consistent on sidebar pages', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
 
@@ -117,21 +79,5 @@ test.describe('Prototype global language switch implementation', () => {
         await expect(page.locator(`#${navId}`)).toHaveText(text);
       }
     }
-  });
-
-  test('translates disable modal title in user-management page', () => {
-    const relativePath = 'pages/admin/user-management.html';
-    const source = fs.readFileSync(path.join(ROOT, relativePath), 'utf8');
-
-    expect(source).toContain('disableModalTitle:');
-    expect(source).toContain("'disableModalTitle'");
-  });
-
-  test('uses full serif fallback stack in shared design tokens', () => {
-    const source = fs.readFileSync(path.join(ROOT, 'assets/tokens.css'), 'utf8');
-
-    expect(source).toContain(
-      "--font-serif-display:  'Crimson Pro', 'Noto Serif TC', 'Source Han Serif TC', Georgia, serif;"
-    );
   });
 });

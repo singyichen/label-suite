@@ -34,6 +34,14 @@ npm test
 
 Playwright starts the bundled Node static server (`tests/serve.mjs`) on port 8888, runs all tests against it, then shuts it down.
 
+### Non-browser gate
+
+```bash
+npm run test:node
+```
+
+Runs `tests-node/` — the source/docs/config/script cases that open no browser (see Test Policy rule 2). Needs no server and no Chromium.
+
 ### Interactive UI mode
 
 ```bash
@@ -153,6 +161,8 @@ npm run typecheck
 
 Runs `tsc --noEmit` against all test files and `playwright.config.ts`. Run this before committing to catch TypeScript errors without a full test run.
 
+`tests-node/` is plain ESM JavaScript and is not in `tsconfig.json`'s `include`, so `typecheck` does not cover it; `pnpm test:node` is its only gate.
+
 ---
 
 ## Project Structure
@@ -176,6 +186,8 @@ design/prototype/
 │   │   └── register.spec.ts  # spec 003 — Register
 │   └── dashboard/
 │       └── dashboard.spec.ts # spec 012 — Dashboard
+├── tests-node/               # Non-browser gate (`pnpm test:node`), *.test.mjs
+├── resolve-port.mjs          # PW_PORT resolution, shared by the config and the gate
 ├── playwright.config.ts      # Config: baseURL, webServer, browser projects
 ├── package.json
 ├── tsconfig.json
@@ -255,19 +267,19 @@ The server is reused across local runs (`reuseExistingServer: true`) but always 
 These five rules govern what may live in `tests/` (issue #1059).
 
 1. **One test case maps to one current requirement or risk.** Every case must be traceable to a canonical `specs/[module]/NNN-feature/spec.md` FR/AC/SC, a security invariant, or a named regression risk. A case that pins a one-off migration step, a retired mechanism, or an internal implementation choice with no observable consequence does not qualify.
-2. **Source, static and script tests do not belong in the browser suite.** A case that only reads source text, docs or config from disk, or shells out to a repo script, must run in a Node/static/script gate. The Playwright suite is for rendered prototype behavior only — every browser case costs a worker slot and CI wall-clock.
+2. **Source, static and script tests do not belong in the browser suite.** A case that only reads source text, docs or config from disk, or shells out to a repo script, must run in a Node/static/script gate. The Playwright suite is for rendered prototype behavior only — every browser case costs a worker slot and CI wall-clock. That gate is `design/prototype/tests-node/`, run by `pnpm test:node` (stdlib `node:test` + `node:assert/strict`, no runner dependency); name files there `*.test.mjs`: `node --test` also collects `*-test.mjs`, `*_test.mjs`, `test-*.mjs` and `test.mjs`, but anything outside that set — `helpers.mjs`, `checks.mjs` — is silently not collected, so a test in a wrongly named file never runs and never goes red. The invocation is a bare `node --test` rather than `node --test tests-node`: Node 22 reads a positional argument as a glob and fails the directory form with `MODULE_NOT_FOUND`, while Node 20 accepts it, so the directory form is green in CI (which pins Node 20) and red locally. Bare discovery also recurses into subdirectories.
 3. **Issue numbers are not permanent suite ownership.** `issue-NNN-*.spec.ts` is acceptable only as a short-lived Red container. Once the feature is archived, its surviving coverage folds back into the feature-oriented suite for the page it exercises, and the issue-named file goes away. This binds merges too: when an inventory row is marked `merge` and the surviving case currently lives in an issue-named file, the group executing that merge relocates the survivor into the canonical feature suite rather than leaving the issue-named file in place — a merge must not be a way of moving coverage out of the canonical suite.
 4. **A bug regression belongs in the canonical feature suite.** Add the guard to the existing suite for that page or feature rather than creating a new file named after the bug.
 5. **The inventory is part of the suite.** See below.
 
 ### Test inventory
 
-`tests/inventory.csv` is the authoritative, machine-readable record of every Playwright case: what it covers, how risky losing it would be, and whether it is staying.
+`tests/inventory.csv` is the authoritative, machine-readable record of every prototype test case — browser and non-browser alike: what it covers, how risky losing it would be, and whether it is staying.
 
 | Column | Meaning |
 |---|---|
-| `file` | spec path relative to `design/prototype/tests/` |
-| `case` | resolved Playwright case title (parametrized loops expanded) |
+| `file` | test file path relative to `design/prototype/tests/`. A non-`browser` row lives outside that directory and therefore starts with `../`, e.g. `../tests-node/docs-fixtures.test.mjs` |
+| `case` | resolved case title (parametrized loops expanded) — the `test(...)` title for a `browser` row, the `it(...)` title for a non-`browser` one |
 | `module` | owning module directory |
 | `page` | prototype page(s) the file exercises |
 | `layer` | `browser` · `node` · `static` · `script` |
@@ -276,11 +288,22 @@ These five rules govern what may live in `tests/` (issue #1059).
 | `decision` | `keep` · `merge` · `move-out` · `delete` · `keep-uncertain` |
 | `reason` | why — **mandatory for every non-`keep` decision** |
 
+**Two-way reconciliation — the inventory's core invariant.** The row set is no longer one suite's discovery output. It is the union of two, and each side must match exactly on `(file, case)`:
+
+- rows whose `layer` is `browser` must match, case for case, what `PW_PORT=<port> pnpm playwright test --list` discovers;
+- rows whose `layer` is **not** `browser` (`node` · `static` · `script`) must match, case for case, what `pnpm test:node` discovers.
+
+Compare as a **multiset**, not a plain set: a spec file may legitimately hold two cases with the identical title (19 `(file, case)` keys do today, 36 extra occurrences in total), and the inventory then holds one row per occurrence. Plain set equality would hide one of those rows going missing, so the check is per-key counts in both directions.
+
+A row matching neither discovery set is drift; a discovered case with no row is untracked coverage. Because `file` always resolves relative to `design/prototype/tests/`, the `../tests-node/` prefix tells a reader which discovery set a row belongs to without trusting `layer` alone.
+
+Moving a case between the two gates is a migration, not a deletion: the row survives, `file` and `layer` follow the case, and `reason` records where it came from. Issue #1059 group 2 did exactly this for 35 cases.
+
 Three rules bind the inventory to the code:
 
 - **A row whose `risk` is `security`, `leakage`, `rbac`, `a11y`, `nav-status`, `p1-journey` or `data-fairness` may never carry `decision=delete`.** If such a case looks obsolete, mark it `keep-uncertain` and record the open question in `reason`; a maintainer decides.
-- **Every citation in `traceability` must resolve to a _live_ clause by `grep`.** Each FR/AC/SC id must appear in at least one of the canonical `specs/**/spec.md` paths cited in the same row, and a row that cites an id must cite a path. A bare grep hit is not enough: **an id whose only match in the cited spec falls inside that spec's `## Changelog` section is retired** — the hit is a history row about something that was removed, not a requirement — and such a row must re-point to the live clause, or drop the id and state the coverage as `REGRESSION-RISK: …` instead (use `DRIFT:` only when the retired reference is an archived `openspec/changes/` path). Ids named inside a `REGRESSION-RISK: …` or `SECURITY-INVARIANT: …` clause are prose, not citations, and are not checked. Never approximate an id, and never fix one by dropping the path. The `DRIFT:<old> -> <canonical>` prefix is mandatory for every spec file that still references an `openspec/changes/` path, so the set of distinct `DRIFT:`-marked files equals the set from `grep -rl "openspec/changes" tests --include='*.spec.ts'`; the `<old>` side is the reference verbatim as the test file writes it.
-- **A PR that touches `design/prototype/tests/**` updates the matching inventory rows in the same PR** — adding a case adds a row, deleting one removes its row, renaming one updates `case`.
+- **Every citation in `traceability` must resolve to a _live_ clause by `grep`.** Each FR/AC/SC id must appear in at least one of the canonical `specs/**/spec.md` paths cited in the same row, and a row that cites an id must cite a path. A bare grep hit is not enough: **an id whose only match in the cited spec falls inside that spec's `## Changelog` section is retired** — the hit is a history row about something that was removed, not a requirement — and such a row must re-point to the live clause, or drop the id and state the coverage as `REGRESSION-RISK: …` instead (use `DRIFT:` only when the retired reference is an archived `openspec/changes/` path). Ids named inside a `REGRESSION-RISK: …` or `SECURITY-INVARIANT: …` clause are prose, not citations, and are not checked. Never approximate an id, and never fix one by dropping the path. The `DRIFT:<old> -> <canonical>` prefix is mandatory for every test file that still references an `openspec/changes/` path, so the set of distinct `DRIFT:`-marked files equals the union of `grep -rl "openspec/changes" tests --include='*.spec.ts'` and `grep -rl "openspec/changes" tests-node` — both gates, since a migrated case carries its citation across; the `<old>` side is the reference verbatim as the test file writes it.
+- **A PR that touches `design/prototype/tests/**` or `design/prototype/tests-node/**` updates the matching inventory rows in the same PR** — adding a case adds a row, deleting one removes its row, renaming one updates `case`, moving one between the two gates updates `file` and `layer`.
 
 ---
 
@@ -288,20 +311,35 @@ Three rules bind the inventory to the code:
 
 `tests/inventory.csv` is the authoritative coverage record — per-case traceability lives there, not in this file. Each spec file's header still lists the user stories and functional requirements it covers, and tests that require a live backend (authentication flows, JWT handling) are documented in each file's header under "Tests NOT covered here."
 
-Suite size at the time of writing (issue #1059 baseline):
+Suite size after issue #1059 group 2 (the baseline was 360 files / 2145 cases; 35 non-browser cases moved to the Node gate, emptying and removing 3 spec files):
+
+**Browser suite** — `pnpm playwright test`, reconciles against `layer=browser` rows:
 
 | Directory | Spec files | Cases |
 |---|---:|---:|
 | `tests/account/` | 10 | 142 |
 | `tests/admin/` | 6 | 39 |
-| `tests/annotation/` | 189 | 1047 |
+| `tests/annotation/` | 187 | 1031 |
 | `tests/cross-role/` | 7 | 54 |
 | `tests/dashboard/` | 13 | 90 |
 | `tests/dataset/` | 19 | 114 |
-| `tests/shared/` | 23 | 135 |
-| `tests/task-management/` | 92 | 518 |
-| `tests/` (root) | 1 | 6 |
-| **Total** | **360** | **2145** |
+| `tests/shared/` | 23 | 131 |
+| `tests/task-management/` | 92 | 509 |
+| **Total** | **357** | **2110** |
+
+**Node gate** — `pnpm test:node`, reconciles against the `node` / `static` / `script` rows:
+
+| File | Layer | Cases |
+|---|---|---:|
+| `tests-node/annotation-workspace-source.test.mjs` | static | 5 |
+| `tests-node/demo-data-parity.test.mjs` | script | 5 |
+| `tests-node/docs-fixtures.test.mjs` | static | 8 |
+| `tests-node/resolve-port.test.mjs` | node | 6 |
+| `tests-node/shared-page-contracts.test.mjs` | static | 4 |
+| `tests-node/task-detail-source.test.mjs` | static | 7 |
+| **Total** | | **35** |
+
+Node-gate files are named after the artifact their cases scan, not after the spec file they came from: the mutation that proves a guard still fails has to touch that artifact, and naming by subject keeps that mapping easy to follow. Five of the six hold to one artifact each. `shared-page-contracts.test.mjs` is the exception — its four cases scan eight page shells, `assets/tokens.css` and one deliberately absent page — so it is grouped by gate rather than by artifact, and its file header says so.
 
 ---
 
@@ -316,14 +354,15 @@ Suite size at the time of writing (issue #1059 baseline):
 
 ## CI
 
-The CI pipeline runs two jobs for this directory (`.github/workflows/ci.yml`):
+The CI pipeline runs three jobs for this directory (`.github/workflows/ci.yml`):
 
 | Job | What it does |
 |---|---|
 | `prototype-typecheck` | `npm run typecheck` — catches TS errors in test files |
+| `prototype-node-tests` | `npm run test:node` — runs the non-browser gate (`tests-node/`) |
 | `prototype-playwright` | `npm test` — runs all Playwright tests with Chromium |
 
-Both jobs are skipped if `design/prototype/package.json` does not exist.
+All three jobs are skipped if `design/prototype/package.json` does not exist.
 
 Artifacts (HTML test report) are uploaded under `prototype-playwright-results` on every run, including failures.
 

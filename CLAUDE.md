@@ -182,6 +182,7 @@ pnpm audit --prod --audit-level high
 
 # Prototype (run from design/prototype/, when design/prototype/** changed)
 pnpm typecheck
+pnpm test:node   # node:test gate for prototype cases that open no browser
 pnpm playwright test
 
 # Bootstrap contract (run from project root — SC-045; see docs/development.md)
