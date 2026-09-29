@@ -250,17 +250,57 @@ The server is reused across local runs (`reuseExistingServer: true`) but always 
 
 ---
 
+## Test Policy
+
+These five rules govern what may live in `tests/` (issue #1059).
+
+1. **One test case maps to one current requirement or risk.** Every case must be traceable to a canonical `specs/[module]/NNN-feature/spec.md` FR/AC/SC, a security invariant, or a named regression risk. A case that pins a one-off migration step, a retired mechanism, or an internal implementation choice with no observable consequence does not qualify.
+2. **Source, static and script tests do not belong in the browser suite.** A case that only reads source text, docs or config from disk, or shells out to a repo script, must run in a Node/static/script gate. The Playwright suite is for rendered prototype behavior only — every browser case costs a worker slot and CI wall-clock.
+3. **Issue numbers are not permanent suite ownership.** `issue-NNN-*.spec.ts` is acceptable only as a short-lived Red container. Once the feature is archived, its surviving coverage folds back into the feature-oriented suite for the page it exercises, and the issue-named file goes away.
+4. **A bug regression belongs in the canonical feature suite.** Add the guard to the existing suite for that page or feature rather than creating a new file named after the bug.
+5. **The inventory is part of the suite.** See below.
+
+### Test inventory
+
+`tests/inventory.csv` is the authoritative, machine-readable record of every Playwright case: what it covers, how risky losing it would be, and whether it is staying.
+
+| Column | Meaning |
+|---|---|
+| `file` | spec path relative to `design/prototype/tests/` |
+| `case` | resolved Playwright case title (parametrized loops expanded) |
+| `module` | owning module directory |
+| `page` | prototype page(s) the file exercises |
+| `layer` | `browser` · `node` · `static` · `script` |
+| `traceability` | canonical `specs/**/spec.md` path + FR/AC/SC ids, or `SECURITY-INVARIANT: …`, or `REGRESSION-RISK: …`. A `DRIFT:<old> -> <canonical>` prefix marks a reference that still points at an archived `openspec/changes/` path |
+| `risk` | `security` · `leakage` · `rbac` · `a11y` · `nav-status` · `p1-journey` · `data-fairness` · `data-correctness` · `ux-regression` · `impl-detail` · `infra` |
+| `decision` | `keep` · `merge` · `move-out` · `delete` · `keep-uncertain` |
+| `reason` | why — **mandatory for every non-`keep` decision** |
+
+Two rules bind the inventory to the code:
+
+- **A row whose `risk` is `security`, `leakage`, `rbac`, `a11y`, `nav-status`, `p1-journey` or `data-fairness` may never carry `decision=delete`.** If such a case looks obsolete, mark it `keep-uncertain` and record the open question in `reason`; a maintainer decides.
+- **A PR that touches `design/prototype/tests/**` updates the matching inventory rows in the same PR** — adding a case adds a row, deleting one removes its row, renaming one updates `case`.
+
+---
+
 ## Test Coverage
 
-Each spec file maps to one SDD spec. The file header lists exactly which user stories and functional requirements are covered.
+`tests/inventory.csv` is the authoritative coverage record — per-case traceability lives there, not in this file. Each spec file's header still lists the user stories and functional requirements it covers, and tests that require a live backend (authentication flows, JWT handling) are documented in each file's header under "Tests NOT covered here."
 
-| Test file | Spec | Coverage |
-|---|---|---|
-| `tests/account/login.spec.ts` | `specs/account/001-login-email-password` | US1.5, US1.6, US1.7, form validation, navigation |
-| `tests/account/register.spec.ts` | `specs/account/003-register-email-password` | US1.1, US1.3, US2.1–US2.4, FR-009, FR-010 |
-| `tests/dashboard/dashboard.spec.ts` | `specs/dashboard/012-dashboard` | role rendering, scenario states, key CTA, language toggle, responsive layout |
+Suite size at the time of writing (issue #1059 baseline):
 
-Tests that require a live backend (authentication flows, JWT handling) are documented in each file's header under "Tests NOT covered here."
+| Directory | Spec files | Cases |
+|---|---:|---:|
+| `tests/account/` | 10 | 142 |
+| `tests/admin/` | 6 | 39 |
+| `tests/annotation/` | 189 | 1047 |
+| `tests/cross-role/` | 7 | 54 |
+| `tests/dashboard/` | 13 | 90 |
+| `tests/dataset/` | 19 | 114 |
+| `tests/shared/` | 23 | 135 |
+| `tests/task-management/` | 92 | 518 |
+| `tests/` (root) | 1 | 6 |
+| **Total** | **360** | **2145** |
 
 ---
 
@@ -269,7 +309,7 @@ Tests that require a live backend (authentication flows, JWT handling) are docum
 1. Create the HTML page at `pages/[module]/[page].html`
 2. Add `data-testid` attributes to all interactive elements
 3. Create the spec file at `tests/[module]/[page].spec.ts`
-4. Add a row to the coverage table above
+4. Add one `tests/inventory.csv` row per case, filling `traceability` and `risk`
 
 ---
 
