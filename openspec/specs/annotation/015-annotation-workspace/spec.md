@@ -877,6 +877,12 @@ workspace reviewer 視圖 MUST 於審核卡（FR-053）、仲裁版面（FR-061�
 3. **理由必填擴及四種處置**：四個處置動作 MUST 皆要求填寫理由（本條前段「收尾必須附理由」之既有規則本次明文擴及 `adopt_annotator`／`adopt_reviewer` 兩者，修正其現行缺陷——issue #913 所記錄之 `reason: ''`）；理由欄位為空時，「確認處置」控件 MUST 為停用狀態（disabled），MUST NOT 採本規格別處（如 FR-061 第 3 點之仲裁送出）之「blocked-not-disabled」提示阻擋慣例。
 4. **單一寫入點**：「確認處置」為本畫面唯一的資料寫入入口；點擊後才依已選取之處置與已填理由執行本條前段所定義之資料寫入契約（定稿值、歷程事件），寫入前的選取與作答皆不產生副作用。
 
+**v7.6.0 釐清（issue #985）**：v6.21.0 之單一判準 `hasLegitimateFinalizedValue()` 當時僅套用於狀態推導（`getReviewUnitStatus()`）與 `listReviewPoolItems()`；工作區渲染層（`annotation-workspace.config.js`）之 `finalizedAnswers()`（定稿摘要卡答案）、`finalizedBasisLabels()`（定稿依據徽章）、`renderArbitrationCard()` 開放項過濾、`exceptionPoolQueue()` 四處仍沿用舊有寬判準（僅檢查 `finalized_by`／例外池紀錄是否存在，未驗證該紀錄是否持有合法 `finalized_value`）。本版將同一判準延伸套用至此四處，使定稿摘要卡答案、定稿依據徽章、仲裁列表開放項渲染、最終例外處置佇列，與既有狀態推導、清單頁三者對「是否已合法定稿」的認定完全一致，MUST NOT 各寫一套。`exceptionPoolQueue()`、`finalizedAnswers()` 之例外池分支、`finalizedBasisLabels()` 之例外池分支三處之判準額外要求 `exclude_from_dataset` 短路（該動作依本條第（4）點本就不持有 `finalized_value`），與既有例外池分支語意一致，非新規則；`renderArbitrationCard()` 讀取的仲裁狀態（`arbState`）從無 `action` 欄位，其開放項過濾之合法值檢查不涉此短路。`exceptionPoolQueue()` 之佇列成員判準仍以仲裁側 `finalized_by` 是否存在為準（不額外要求該仲裁紀錄本身合法）：一筆 `finalized_by` 為真但不合法之仲裁紀錄，其正確復原路徑是交由仲裁者於 `renderArbitrationCard()` 重新裁定（本版已使該紀錄改渲染為開放投票列），而非導向專案負責人之例外池佇列——該佇列僅承接仲裁者裁定「兩者皆非」之項目，若同時放寬佇列判準會使同一項目在仲裁開放列與例外池佇列並存，兩角色皆誤判為己方待處理。
+
+**v8.1.0 釐清（issue #994）**：v6.16.0 之上位規則「MUST NOT 沿用標記員工作區的樣本導覽外殼」與 v6.25.0（issue #922）已明文涵蓋 `renderEntryBreadcrumb()` 對「當前處置項」之標示（第三層），本版進一步涵蓋同一函式渲染之第一層——工作區標籤：該標籤原僅以 `crumbWorkAreaReviewer`／`crumbWorkAreaAnnotator` 二元分流，`project_leader` 落入 `crumbWorkAreaAnnotator`（顯示「標記作業」），與其在本畫面實際進行之最終例外處置語意不符，同屬「MUST NOT 沿用標記員工作區外殼」之具體適用範圍——此為對既有一般性禁止的進一步範圍釐清，非新增獨立約束。AC-4.69 既有六點列舉逐字不改寫，本版於其末尾追加第七個 AND 可測條件（工作區標籤須為專案負責人專屬文案），SC-011 不修訂。
+
+**v9.1.0 新增（issue #1060）**：第（1）點「佇列即左側清單」之呈現層級明文化：左側清單項目 MUST 依 `sampleId` 分組呈現——分組表頭 MUST 顯示該樣本 ID、該樣本待處置例外項數，以及 `getRecordPreviewText(record, fieldRoleMap)` 產出之文本摘要（每樣本群組僅呈現一次；摘要不可得時 MUST 省略，MUST NOT 以其他欄位或 ground truth 頂替）；分組內每個待處置例外項 MUST 仍各自渲染一個 `ws-exception-queue-item` 原生按鈕，MUST NOT 合併不同 `annotatorId` 或 `outKey` 之項目；分組數（樣本數）與全欄列項數（例外項數）為兩種不同計數。每個待處置例外項之次要資訊 MUST 使用 `OUTPUT_TYPE_REGISTRY[outKey][state.lang]` 之人類可讀輸出類型名稱取代原始 `outKey` 鍵名（原始值僅留於資料屬性／內部識別），並 MUST 同時呈現「待處置」之 zh/en 文字狀態標示（MUST NOT 僅靠顏色區辨），與一般標記進度狀態文案（待標記／已儲存／已提交）明確區隔。本版不改變第（1）點「每列一個待處置爭議項」與第（2）點「計數單位為例外項」之既有規則，僅新增分組呈現層級、人類可讀輸出類型名稱與「待處置」文字狀態標示。AC-4.69 既有七點列舉逐字不改寫，本版於其末尾追加第八至十個 AND 可測條件，SC-011 不修訂。
+
 #### Scenario: AC-4.56 正式標記例外池四動作可用
 - （v5.0.0 新增；**已於 v7.0.0 廢止，BREAKING，issue #920**）
 - ~~**GIVEN** `official_run` 之最終例外池有一筆待處置項目，操作者為專案負責人~~
@@ -902,6 +908,10 @@ workspace reviewer 視圖 MUST 於審核卡（FR-053）、仲裁版面（FR-061�
 - **AND** 每一待處置項同時呈現裁定「兩者皆非」的仲裁者與其理由
 - **AND** `exclude_from_dataset` 的操作項帶有與其餘三個處置可區辨的危險樣式
 - **AND**（v6.25.0 新增）頂部進入點麵包屑對「當前處置項」的標示以該待處置例外項之 `sample_id` 與 `annotator_id` 識別，不呈現資料集樣本序號（「樣本 {i} / {n}」）
+- **AND**（v8.1.0 新增）頂部進入點麵包屑第一段（工作區標籤）呈現專案負責人於本畫面之專屬文案（`crumbWorkAreaProjectLeader`），不沿用標記員之工作區標籤文案（`crumbWorkAreaAnnotator`，「標記作業」）
+- **AND**（v9.1.0 新增，issue #1060）左側清單項目依 `sampleId` 分組（功能命名之分組 selector，與 reviewer 專用 `ws-sample-group` 區隔）；每個分組表頭顯示該樣本 ID、該樣本待處置例外項數，以及 `getRecordPreviewText()` 產出之文本摘要，每樣本群組僅呈現一次；分組內每個待處置例外項仍各自渲染一個 `ws-exception-queue-item` 原生按鈕，不合併不同 `annotatorId` 或 `outKey`；分組數（樣本數）與全欄列項數（例外項數）為兩種不同計數，頂部總數維持例外項數不變，各列項之 `data-sample-id`／`data-annotator-id`／`ws-exception-queue-item` 與點選導向同 sample_id × annotator_id 內容之既有契約不變
+- **AND**（v9.1.0 新增，issue #1060）每個待處置例外項之次要資訊使用 `OUTPUT_TYPE_REGISTRY[outKey][state.lang]` 之人類可讀輸出類型名稱取代原始 `outKey` 鍵名（原始值僅留於資料屬性／內部識別），並同時呈現「待處置」之 zh/en 文字狀態標示（不僅靠顏色區辨），與一般標記進度狀態文案（待標記／已儲存／已提交）明確區隔
+- **AND**（v9.1.0 新增，issue #1060）長樣本 ID 與長標記員 ID 於桌面欄寬不造成水平溢出，完整值透過 `title` 屬性與按鈕 `aria-label` 可得；各列項可由鍵盤 `Tab` 到達、`Enter` 選取；1024px 與 375px 下左欄與中欄無重疊或裁切，375px 沿用既有左欄收合規則（AC-5.2）
 
 #### Scenario: AC-4.72（v7.0.0 新增，對應 FR-095 修訂，issue #920）選取不寫入
 - **GIVEN** `official_run` 之最終例外池有一筆待處置項目、操作者為專案負責人

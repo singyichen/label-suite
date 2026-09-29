@@ -201,6 +201,22 @@
     .status-color-saved { color: var(--color-warning); }
     .status-color-pending { color: var(--color-ink-muted); }
 
+    /* Exception-pool-only row (issue #1060, FR-095 v9.1.0): the human-
+       readable output type and the "待處置"/pending status label sit on one
+       line, output on the left and status on the right, both short
+       registry/i18n strings so no truncation rule is needed here -- the
+       long-ID truncation this task requires already lives on
+       `.sample-group-id` / `.sample-unit-annotator` above, reused as-is. */
+    .sample-exception-meta-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 3px;
+    }
+    .sample-exception-meta-row .sample-status-label { margin-top: 0; }
+    .status-pending-exception { color: var(--color-warning); }
+
     /* ── Middle: Content + Annotation ───────────────────────── */
     .col-content {
       display: flex;
