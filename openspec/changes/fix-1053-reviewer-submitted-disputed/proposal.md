@@ -2,7 +2,7 @@
 對應 Spec: specs/annotation/015-annotation-workspace/spec.md
 對應 Issue: https://github.com/singyichen/label-suite/issues/1053
 基準版本: 8.1.0
-目標版本: 8.2.0
+目標版本: 9.0.0
 ---
 
 ## Why
@@ -13,9 +13,13 @@
 
 維護者已確認採用方案 A（唯讀摘要 ＋ 明確改判入口），本 change 依方案 A 落地。
 
-**分類判定：不符 Lightweight Path，走完整 OpenSpec change flow**——本變更新增 FR（FR-103）與 AC（AC-4.81），非僅澄清既有條文。
+**分類判定：不符 Lightweight Path，走完整 OpenSpec change flow**——本變更新增 FR（FR-103）與 AC（AC-4.81、AC-4.82），非僅澄清既有條文。
 
-**單一目的判斷**：單一句描述——「當事審核員重入自己已送出的爭議中審核單位時，預設呈現唯讀摘要而非可誤觸送出的空白審核卡」。不拆分。
+**分級追加為 MAJOR（issue #1053 checkpoint，2026-09-29 維護者裁示，方案 A）**：主 session 初版判定為 MINOR（新增 FR/AC，未動既有條文），經覆核發現不成立——FR-103「MUST NOT 再落回 FR-053 之互動審核卡」與正典 **FR-061**（`specs/annotation/015-annotation-workspace/spec.md:828`，「條件不成立時維持 FR-053 審核卡」）及 **AC-4.22**（同檔 `:584`，「當事審核員…皆維持 FR-053 審核卡，不得出現仲裁版面」）之字面直接牴觸：對「當事審核員、單位爭議中」這個交集情境，FR-103 要求渲染唯讀摘要，FR-061／AC-4.22 原文卻要求渲染 FR-053 互動卡。維護者裁示採方案 A——承認此為推翻，本 change 之 `## MODIFIED Requirements` 對 FR-061、AC-4.22 各加一則「當事審核員於該單位已有自己的提交時，改適用 FR-103」的例外子句，兩條原有「不得出現仲裁版面」之語意逐字保留。**經查證，AC-3.39（「未達門檻單位的其餘審核員仍可正常送出」）之「其餘」天然不含已提交的當事人，不構成第三處衝突，不修訂；FR-094、FR-101 同理不動**——MAJOR 範圍僅限 FR-061、AC-4.22 兩條。比照本 repo 既定規則「推翻既有 FR/AC 文字＝MAJOR」，版本改判為 **9.0.0**（原判定 8.2.0 作廢）。
+
+**追加範圍：寫入側殘留路徑守衛（同一裁示追加，非另一目的）**：主 session 進一步查證 `markSampleSubmitted()`（`annotation-workspace.data.js:420-424`）之寫入鎖僅檢查 `role === 'annotator'`，reviewer 角色寫入路徑無守衛；寫入為整筆覆寫 `answers`（含 `decisions`／`reasons`），而 `getReviewUnitStatus()`／`getDisputeItems()` 正是讀取該欄位推導單位狀態。FR-103 目前只在呈現層隱藏送出控件，若當事審核員經殘留呼叫路徑（如快捷鍵）重新送出，會無聲抹除自己原先造成爭議的決策，使一個仍待仲裁的單位被單方面消解出爭議池——此為方案 A 急迫性高於初版描述之處。維護者裁示於 FR-103 內新增 `handleReviewSubmit()` 進入時第三道守衛（比照既有 issue #307／#308 兩道守衛之寫法），新增 **AC-4.82**；同時**明確排除**「仲裁進行中（爭議項已有 `votes[]`）是否應阻止當事人改判」——維護者裁定該為另一未定之產品問題，不在本 change 範圍，不得順帶實作。此追加與唯讀摘要呈現層是同一缺陷（「當事審核員重入爭議中單位」）在呈現層與寫入層的兩面，仍是單一目的，不拆分。
+
+**單一目的判斷**：單一句描述——「當事審核員重入自己已送出的爭議中審核單位時，呈現層預設顯示唯讀摘要、寫入層阻擋殘留路徑覆寫，取代可誤觸送出並無聲覆寫的空白審核卡」。不拆分。
 
 ## What Changes
 
@@ -24,7 +28,10 @@
 - 新增「修改我的審核」次要按鈕：按下後切換為既有可編輯的 FR-053 審核卡，修正面板改以**審核員自己的提交值**播種（而非標記員原答案）；`seedReviewRow()` 補一個可選的播種來源參數／新呼叫路徑以支援此路徑，既有無條件呼叫（互動分支之 `submission = getAnnotatorSubmission()`）行為不變。
 - 新增「取消，維持原決策」按鈕：退回唯讀摘要，不寫入任何變更。
 - 新增 i18n 鍵（zh／en 成對）：`reviewSubmittedTitle`、`reviewSubmittedNote`、`reviewSubmittedDecisionLabel`、`reviewSubmittedValueLabel`、`reviewEditMyDecisionBtn`、`reviewCancelEditBtn`。
-- **不得更動**：`ARBITRATION`（FR-061）與 `FINALIZED`（issue #308）兩既有分支的行為；新分支與既有兩者三方互斥。
+- 新增 `handleReviewSubmit()` 第三道進入時守衛：`DISPUTED` AND 當前審核員已有自己的提交 AND 畫面不在「修改我的審核」編輯態 → 直接 `return`，不寫入、不追加歷程事件；不阻擋改判入口本身的正常送出。
+- **修訂 FR-061**（正典 `:828`）與 **AC-4.22**（正典 `:584`）：各加一則「當事審核員於該單位已有自己的提交時，改適用 FR-103」的例外子句；兩條原有「不得出現仲裁版面」之語意逐字保留，仲裁者本人視角不受影響。
+- **不得更動**：`FINALIZED`（issue #308）分支的行為；`ARBITRATION`（FR-061）分支僅新增排除當事審核員的例外，仲裁者本人（`isArbiterCandidate()` 為真者）視角逐字不變；三分支互斥。
+- **明確不做**：不判定、不阻擋「爭議項已有仲裁者 `votes[]` 時是否應限制當事人改判」——另一未定之產品問題，維護者裁定不在本 change 範圍。
 
 ## Capabilities
 
@@ -34,7 +41,7 @@
 
 ### Modified Capabilities
 
-- `annotation/015-annotation-workspace`：新增 FR-103（審核員重入自己已提交、爭議中審核單位時的唯讀摘要與明確改判入口），新增 AC-4.81。
+- `annotation/015-annotation-workspace`：新增 FR-103（審核員重入自己已提交、爭議中審核單位時的唯讀摘要、明確改判入口、寫入側殘留路徑守衛），新增 AC-4.81、AC-4.82；修訂 FR-061、AC-4.22（各加一則排除當事審核員的例外子句）。
 
 ### Removed Capabilities
 
@@ -42,11 +49,11 @@
 
 ## Impact
 
-- `design/prototype/pages/annotation/annotation-workspace.config.js`：`reviewUnitBlockReason()` 新增一個分支、新增渲染函式（仿 `renderFinalizedCard()`）、`seedReviewRow()` 新增可選播種來源、`:5376` 附近呼叫入口新增一個 `blockReason` 分支。
+- `design/prototype/pages/annotation/annotation-workspace.config.js`：`reviewUnitBlockReason()` 新增一個分支、新增渲染函式（仿 `renderFinalizedCard()`）、`seedReviewRow()` 新增可選播種來源、`:5376` 附近呼叫入口新增一個 `blockReason` 分支、`handleReviewSubmit()` 新增第三道進入時守衛（比照既有 issue #307／#308 兩道寫法）。
 - i18n 新增鍵（zh／en 成對），實際檔案位置以實作時該檔案現況為準（i18n 鍵目前與其他 workspace 字串同置於 `annotation-workspace.config.js` 內）。
-- `specs/annotation/015-annotation-workspace/spec.md`：新增 FR-103、AC-4.81；版本 8.1.0 → 8.2.0（MINOR，新增 FR／AC），Changelog 新增一列。
-- **不受影響**：`annotation-workspace.data.js` 之 `getSubmission()`／`isArbiterCandidate()`／`isRosterReviewer()` 等既有資料層函式皆重用、不新增或修改；不涉及任何 API 契約或資料庫 schema 變更（純前端原型畫面行為）；不影響標記員視角、`FINALIZED`、`OFF_ROSTER`、`NOT_ASSIGNED`、`EMPTY` 分支。
-- **對照組（須逐字不變）**：`T016 / official_run / ofm-03-awaiting-arbitration × kioleemg12`（reviewer_chen 為仲裁者，走 ARBITRATION 版面）。
+- `specs/annotation/015-annotation-workspace/spec.md`：新增 FR-103、AC-4.81、AC-4.82；修訂 FR-061、AC-4.22；版本 8.1.0 → **9.0.0**（**MAJOR**，推翻既有 FR/AC 文字），Changelog 新增一列。
+- **不受影響**：`annotation-workspace.data.js` 之 `getSubmission()`／`isArbiterCandidate()`／`isRosterReviewer()` 等既有資料層函式皆重用、不新增或修改；不涉及任何 API 契約或資料庫 schema 變更（純前端原型畫面行為）；不影響標記員視角、`FINALIZED`、`OFF_ROSTER`、`NOT_ASSIGNED`、`EMPTY` 分支；不影響 AC-3.39、FR-094、FR-101（經查證不受本次修訂觸及）。
+- **對照組（須逐字不變）**：`T016 / official_run / ofm-03-awaiting-arbitration × kioleemg12`（reviewer_chen 為仲裁者，走 ARBITRATION 版面——仲裁者本人視角不受 FR-061／AC-4.22 例外子句影響）。
 
 ## Constitution Check
 
