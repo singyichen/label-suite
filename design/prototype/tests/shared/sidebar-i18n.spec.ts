@@ -21,10 +21,10 @@
  * TWO RESOLUTION PATHS, hence two matrix tables. sidebar.js resolves the
  * six labels twice, in two separate ternaries that do not share code:
  *   - at mount, renderSidebar()'s `navItems` array (sidebar.js:521-522,
- *     529-576) reads `taskRoleI18n[readStoredLang()]` /
+ *     529-577) reads `taskRoleI18n[readStoredLang()]` /
  *     `l0NavI18n[readStoredLang()]`;
  *   - on a language switch, applyGlobalLanguage() -> updateL0NavLanguage()
- *     (sidebar.js:278, 405-422) re-resolves all six from `currentTaskRole`.
+ *     (sidebar.js:278, 409-423) re-resolves all six from `currentTaskRole`.
  * A bug in one is invisible to the other, so both paths stay covered:
  *   - TOGGLE_PAGES exercise the switch path (preset zh, assert six, click
  *     #langToggle, assert six) — these nine pages pass no `taskRole`, and
@@ -193,7 +193,7 @@ test.describe('shared sidebar i18n — six L0 labels re-resolve in place on a la
 
 /* ── matrix 2: language chosen before navigation ─────────────────────────
  * The two role-aware pages. `taskRole` comes from the URL's `role` param
- * (annotation-workspace.html:1104-1111; annotation-list.html's
+ * (annotation-workspace.html:1120-1123; annotation-list.html's
  * mountSidebar() call site, fixed by issue #1023), so each role is a
  * distinct URL and therefore a distinct page load. `role: 'none'` is the
  * no-`role`-param URL, which must resolve identically to `annotator`. */
@@ -250,7 +250,7 @@ test.describe('shared sidebar i18n — six L0 labels resolve from the URL task r
   }
 });
 
-/* ── the four non-tuple sidebar contracts ────────────────────────────── */
+/* ── the five non-tuple sidebar contracts ────────────────────────────── */
 
 test.describe('shared sidebar i18n — mobile language toggle stays in sync with the desktop one (FR-009A, FR-009B, SC-006A)', () => {
   const mobileSidebarPages = [
