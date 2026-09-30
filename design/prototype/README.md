@@ -293,7 +293,7 @@ These five rules govern what may live in `tests/` (issue #1059).
 - rows whose `layer` is `browser` must match, case for case, what `PW_PORT=<port> pnpm playwright test --list` discovers;
 - rows whose `layer` is **not** `browser` (`node` · `static` · `script`) must match, case for case, what `pnpm test:node` discovers.
 
-Compare as a **multiset**, not a plain set: a spec file may legitimately hold two cases with the identical title (16 `(file, case)` keys do today, 27 extra occurrences in total), and the inventory then holds one row per occurrence. Plain set equality would hide one of those rows going missing, so the check is per-key counts in both directions.
+Compare as a **multiset**, not a plain set: a spec file may legitimately hold two cases with the identical title (12 `(file, case)` keys do today, 23 extra occurrences in total), and the inventory then holds one row per occurrence. Plain set equality would hide one of those rows going missing, so the check is per-key counts in both directions.
 
 A row matching neither discovery set is drift; a discovered case with no row is untracked coverage. Because `file` always resolves relative to `design/prototype/tests/`, the `../tests-node/` prefix tells a reader which discovery set a row belongs to without trusting `layer` alone.
 
@@ -311,21 +311,21 @@ Three rules bind the inventory to the code:
 
 `tests/inventory.csv` is the authoritative coverage record — per-case traceability lives there, not in this file. Each spec file's header still lists the user stories and functional requirements it covers, and tests that require a live backend (authentication flows, JWT handling) are documented in each file's header under "Tests NOT covered here."
 
-Suite size after issue #1059 group 3 (the baseline was 360 files / 2145 cases; group 2 moved 35 non-browser cases to the Node gate, emptying and removing 3 spec files; group 3 deleted 14 implementation-detail cases from 2 `tests/account/` files, which stay because each keeps surviving cases):
+Suite size after issue #1059 group 4 (the baseline was 360 files / 2145 cases; group 2 moved 35 non-browser cases to the Node gate, emptying and removing 3 spec files; group 3 deleted 14 implementation-detail cases from 2 `tests/account/` files, which stay because each keeps surviving cases; group 4 folded 15 design-system `issue-NNN-*.spec.ts` files — 49 cases across admin, annotation, dataset and task-management — into the single table-driven `tests/shared/design-system-a11y-contract.spec.ts`, deleting 9 implementation-detail cases and carrying the surviving 40 `(page, selector, theme)` contract rows into 12 scenarios):
 
 **Browser suite** — `pnpm playwright test`, reconciles against `layer=browser` rows:
 
 | Directory | Spec files | Cases |
 |---|---:|---:|
 | `tests/account/` | 10 | 128 |
-| `tests/admin/` | 6 | 39 |
-| `tests/annotation/` | 187 | 1031 |
+| `tests/admin/` | 2 | 29 |
+| `tests/annotation/` | 185 | 1023 |
 | `tests/cross-role/` | 7 | 54 |
 | `tests/dashboard/` | 13 | 90 |
-| `tests/dataset/` | 19 | 114 |
-| `tests/shared/` | 23 | 131 |
-| `tests/task-management/` | 92 | 509 |
-| **Total** | **357** | **2096** |
+| `tests/dataset/` | 18 | 113 |
+| `tests/shared/` | 24 | 143 |
+| `tests/task-management/` | 84 | 479 |
+| **Total** | **343** | **2059** |
 
 **Node gate** — `pnpm test:node`, reconciles against the `node` / `static` / `script` rows:
 
