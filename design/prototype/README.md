@@ -311,7 +311,7 @@ Three rules bind the inventory to the code:
 
 `tests/inventory.csv` is the authoritative coverage record — per-case traceability lives there, not in this file. Each spec file's header still lists the user stories and functional requirements it covers, and tests that require a live backend (authentication flows, JWT handling) are documented in each file's header under "Tests NOT covered here."
 
-Suite size after issue #1059 group 4 (the baseline was 360 files / 2145 cases; group 2 moved 35 non-browser cases to the Node gate, emptying and removing 3 spec files; group 3 deleted 14 implementation-detail cases from 2 `tests/account/` files, which stay because each keeps surviving cases; group 4 folded 15 design-system `issue-NNN-*.spec.ts` files — 49 cases across admin, annotation, dataset and task-management — into the single table-driven `tests/shared/design-system-a11y-contract.spec.ts`, deleting 9 implementation-detail cases and carrying the surviving 40 `(page, selector, theme)` contract rows into 12 scenarios):
+Suite size after issue #1059 group 5 (the baseline was 360 files / 2145 cases; group 2 moved 35 non-browser cases to the Node gate, emptying and removing 3 spec files; group 3 deleted 14 implementation-detail cases from 2 `tests/account/` files, which stay because each keeps surviving cases; group 4 folded 15 design-system `issue-NNN-*.spec.ts` files — 49 cases across admin, annotation, dataset and task-management — into the single table-driven `tests/shared/design-system-a11y-contract.spec.ts`, deleting 9 implementation-detail cases and carrying the surviving 40 `(page, selector, theme)` contract rows into 12 scenarios; group 5 folded 7 overlapping sidebar-i18n files — 39 cases, all of them `keep` or `merge` and none deletable — into `tests/shared/sidebar-i18n.spec.ts` as a 23-cell `(page, role, language)` matrix plus 7 scenarios whose observables are not label tuples, deleting nothing and raising `(page, role, language, label)` coverage from 137 tuples to 192):
 
 **Browser suite** — `pnpm playwright test`, reconciles against `layer=browser` rows:
 
@@ -323,9 +323,9 @@ Suite size after issue #1059 group 4 (the baseline was 360 files / 2145 cases; g
 | `tests/cross-role/` | 7 | 54 |
 | `tests/dashboard/` | 13 | 90 |
 | `tests/dataset/` | 18 | 113 |
-| `tests/shared/` | 24 | 143 |
+| `tests/shared/` | 18 | 134 |
 | `tests/task-management/` | 84 | 479 |
-| **Total** | **343** | **2059** |
+| **Total** | **337** | **2050** |
 
 **Node gate** — `pnpm test:node`, reconciles against the `node` / `static` / `script` rows:
 

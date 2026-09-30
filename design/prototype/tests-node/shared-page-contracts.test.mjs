@@ -19,13 +19,15 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '..');
 
 /* ------------------------------------------------------------------ *
- * From tests/shared/language-switch-consistency.spec.ts
+ * From tests/shared/language-switch-consistency.spec.ts (that file was itself
+ * folded into tests/shared/sidebar-i18n.spec.ts by issue #1059 group 5)
  *
  * Every page must delegate to the shared sidebar global language API (no
  * direct html[lang] writes or direct persistence), admin nav labels must
  * remain translatable, and the serif fallback stack in assets/tokens.css must
  * stay complete. The two rendered cases (mobile toggle sync, L0 nav label
- * text after a switch) stay in the Playwright spec.
+ * text after a switch) stay in the Playwright suite, now
+ * tests/shared/sidebar-i18n.spec.ts.
  *
  * Traceability: specs/shared/008-sidebar-navbar-shared/spec.md
  *   FR-009, FR-009A, FR-009B, SC-006, SC-006A
