@@ -2,9 +2,9 @@
  * Issue #868 — designated arbiters are reserved from new review assignment.
  *
  * Contract sources:
- * - openspec/changes/reserve-arbiters-from-review-assignment/specs/
- *   annotation/015-annotation-workspace/spec.md (FR-060 / FR-093)
- * - openspec/changes/reserve-arbiters-from-review-assignment/design.md D1–D6
+ * - specs/annotation/015-annotation-workspace/spec.md (FR-060 / FR-093)
+ * - design.md D1–D6 of the archived OpenSpec change
+ *   `reserve-arbiters-from-review-assignment`
  *
  * These are prototype contracts. They do not exercise production frontend,
  * backend, or root E2E code.

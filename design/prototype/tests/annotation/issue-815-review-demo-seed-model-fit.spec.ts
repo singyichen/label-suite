@@ -45,8 +45,8 @@ import { buildListUrl, skipGuidelineModal } from './_workspace-helpers';
  *
  * Traceability: specs/annotation/015-annotation-workspace/spec.md FR-044,
  *   FR-092, FR-093, FR-061, FR-095;
- *   openspec/changes/retire-stale-review-demo-fixtures/tasks.md 1.1,
- *   proposal.md 非目標; issue #815
+ *   task 1.1 and proposal 非目標 of the archived OpenSpec change
+ *   `retire-stale-review-demo-fixtures`; issue #815
  */
 
 const RUN_TYPE_BY_TASK: Record<string, string> = {

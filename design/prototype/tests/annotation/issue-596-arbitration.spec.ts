@@ -49,10 +49,10 @@ import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
  * eligibility (FR-060) comes from the group-1 demo roster:
  * reviewer_chen has can_arbitrate and never participates in these units.
  *
- * Traceability: openspec/changes/2026-09-01-single-owner-review-relay/
- *   specs/annotation/015-annotation-workspace/spec.md FR-060 (AC-4.53),
- *   FR-061 (AC-4.54), FR-095; design.md D2 (shapes), D3 (bypass adopts as
- *   無法判定); tasks.md task 3.1.
+ * Traceability: specs/annotation/015-annotation-workspace/spec.md
+ *   FR-060 (AC-4.53), FR-061 (AC-4.54), FR-095; design D2 (shapes), D3
+ *   (bypass adopts as 無法判定) and task 3.1 of the archived OpenSpec change
+ *   `2026-09-01-single-owner-review-relay`.
  */
 
 type Identity = { annotatorId?: string; reviewerId?: string };

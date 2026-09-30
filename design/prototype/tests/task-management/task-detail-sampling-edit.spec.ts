@@ -140,8 +140,8 @@ test.describe('Task detail sampling edit state', () => {
     await expect(page.locator('#samplingIaaEditRows .sampling-iaa-type-row').first()).toContainText('Not applicable');
   });
 
-  // openspec/changes/seq-tagging-span-export-metrics/specs/dataset/017-dataset-analysis-detail/spec.md
-  //   FR-012L (line 111): sequence_tagging MUST register its primary metric as
+  // specs/dataset/017-dataset-analysis-detail/spec.md
+  //   FR-012L: sequence_tagging MUST register its primary metric as
   //   span-unit u-α in OUTPUT_TYPE_IAA_REGISTRY, with an empty threshold field;
   //   the legacy Token-level Alpha / IAA_THRESHOLD_TOKEN = 0.75 pairing is
   //   retired (BREAKING) and MUST NOT be reintroduced under any name.

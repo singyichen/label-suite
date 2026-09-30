@@ -24,8 +24,11 @@
  * Mutation cases work on a throwaway mkdtempSync() copy of only the two
  * needed subtrees -- the real tree is never mutated.
  *
- * Traceability: openspec/changes/retire-stale-review-demo-fixtures/tasks.md
- *   4.1; proposal.md "第二個獨立缺陷：示範資料有兩份副本且已漂移"
+ * Traceability: REGRESSION-RISK: the prototype seed (task-detail.data.js) and
+ *   docs/product/example-data are two hand-written copies of the same demo
+ *   data with no canonical FR behind them, so they drift silently. (Guard
+ *   added by task 4.1 of the archived OpenSpec change
+ *   `retire-stale-review-demo-fixtures`.)
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';

@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test';
 import { buildListUrl } from './_workspace-helpers';
 
-/* Issue #596 / FR-093 (spec 015 v5.0.0, delta of
- * openspec/changes/2026-09-01-single-owner-review-relay): review assignment
+/* Issue #596 / FR-093 (specs/annotation/015-annotation-workspace/spec.md,
+ * v5.0.0, from the archived OpenSpec change
+ * `2026-09-01-single-owner-review-relay`): review assignment
  * is always automatic, MUST NOT offer a manual-assignment mode, and its
  * granularity is the ONLY flow difference between the two run_types:
  *

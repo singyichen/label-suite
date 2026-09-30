@@ -1,5 +1,5 @@
 /*
- * Traceability: openspec/changes/2026-09-01-single-owner-review-relay/specs/task-management/spec.md
+ * Traceability: specs/task-management/014-task-detail/spec.md
  *   FR-010s, FR-010s-1, FR-010s-2, FR-010t
  *
  * TDD Red for tasks.md 5.1. This spec is the Green contract: PR group 5's

@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test';
 import { buildListUrl, patchDataFile } from './_workspace-helpers';
 
-/* Traceability: openspec/changes/guideline-section-anchors/specs/annotation/
- * 015-annotation-workspace/spec.md — FR-096 point 4, issue #620 group 2.
+/* Traceability: specs/annotation/015-annotation-workspace/spec.md — FR-096
+ * point 4, issue #620 group 2 (archived OpenSpec change
+ * `guideline-section-anchors`).
  *
  * A feedback reason may cite a guideline heading as [[heading text]]. A
  * resolvable citation becomes a same-tab workspace link whose fragment is the

@@ -1,6 +1,5 @@
 /*
- * Traceability: openspec/changes/task-detail-export-history-redownload/
- *   specs/task-management/014-task-detail/spec.md
+ * Traceability: specs/task-management/014-task-detail/spec.md
  *   FR-021, AC-1.14, AC-1.15, AC-1.16, SC-046 (issue #772).
  *
  * TDD Red (tasks.md group 1, tasks 1.1/1.2/1.3). Today

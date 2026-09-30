@@ -15,7 +15,7 @@ import {
  * annotation-workspace-common.spec.ts.
  *
  * Traceability: specs/annotation/015-annotation-workspace/spec.md
- *   FR-013, FR-016, FR-050
+ *   FR-013, FR-016B, FR-050
  */
 
 type TrailEvent = { action: string; role: string; actorId: string | null; at: string; summary: string };

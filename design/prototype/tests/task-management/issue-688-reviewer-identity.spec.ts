@@ -1,5 +1,5 @@
 /*
- * Traceability: openspec/changes/align-014-review-model/specs/task-management/014-task-detail/spec.md
+ * Traceability: specs/task-management/014-task-detail/spec.md
  *   FR-010s-1 ("兩份名冊寫入的元素 MUST 遵守 REVIEWER_ID_FORMAT ... MUST NOT
  *   寫入 Email 或顯示名稱") and its "名冊以不透明 user id 儲存而非 Email" scenario.
  *

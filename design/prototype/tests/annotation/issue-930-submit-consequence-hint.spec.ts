@@ -12,11 +12,11 @@
  * parity requirement remains. The second `test.describe` below now pins
  * that removal instead of hint parity.
  *
- * Source spec (delta, not yet archived):
- * openspec/changes/2026-09-26-review-submit-consequence-hint/specs/annotation/015-annotation-workspace/spec.md
+ * Source spec:
+ * specs/annotation/015-annotation-workspace/spec.md
  * FR-102, AC-3.64, AC-3.65.
- * Proposal (the "why"):
- * openspec/changes/2026-09-26-review-submit-consequence-hint/proposal.md
+ * The "why" lives in the proposal of the archived OpenSpec change
+ * `2026-09-26-review-submit-consequence-hint`.
  *
  * RED: `ws-review-submit-consequence` does not exist yet -- every assertion
  * below targeting it must fail (element not found / timeout) until FR-102

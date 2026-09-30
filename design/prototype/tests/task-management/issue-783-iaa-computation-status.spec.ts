@@ -1,10 +1,11 @@
 /*
- * Traceability: openspec/changes/task-detail-iaa-precondition-and-override-scope/
- *   tasks.md group 2 (2.1); design.md D5, D6, D7; specs/task-management/
- *   014-task-detail/spec.md delta -- FR-010o-4 points (1)-(6) and its four
+ * Traceability: specs/task-management/014-task-detail/spec.md
+ *   FR-010o-4 points (1)-(6) and its four
  *   unnumbered scenarios ("IAA 計算中不呈現為未達標且暫不能開始正式標記",
  *   "IAA 計算失敗可由專案負責人重試", "無法計算視為計算已結束，不阻擋開始
  *   正式標記", "IAA 計算未結束時新增試標回合同樣停用"); SC-019. Issue #783.
+ *   (Delivered by group 2 task 2.1 and design D5/D6/D7 of the archived
+ *   OpenSpec change `task-detail-iaa-precondition-and-override-scope`.)
  *
  * T018 is a new demo task (design.md D7): status waiting_iaa_confirmation,
  * latest trial round `iaa_computation_status: 'failed'`. It does not exist

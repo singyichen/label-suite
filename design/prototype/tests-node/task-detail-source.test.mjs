@@ -18,8 +18,8 @@ const source = readFileSync(SOURCE_PATH, 'utf8');
 /* ------------------------------------------------------------------ *
  * From tests/task-management/issue-742-seq-tagging-export-dialog.spec.ts
  *
- * Traceability: openspec/changes/task-detail-seq-tagging-export-dialog/
- *   specs/task-management/014-task-detail/spec.md FR-020, AC-1.10, SC-045
+ * Traceability: specs/task-management/014-task-detail/spec.md
+ *   FR-020, AC-1.10, SC-045
  *
  * SC-045 source-scan guard (tasks.md group 1, task 1.3, issue #742): the
  * sequence derivation must have a single entry point in the shared module,
@@ -114,7 +114,7 @@ describe('issue #742 -- sequence_tagging export dialog (task 1.3: SC-045 source-
 /* ------------------------------------------------------------------ *
  * From tests/task-management/issue-726-url-view-state.spec.ts
  *
- * Traceability: openspec/changes/task-detail-url-view-state/specs/task-management/014-task-detail/spec.md
+ * Traceability: specs/task-management/014-task-detail/spec.md
  *   FR-019, AC-1.8, SC-044
  *
  * 1.2 source-scan guards (design.md D1/D2/D3 structural contract, issue

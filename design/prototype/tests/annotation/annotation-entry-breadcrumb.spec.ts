@@ -1,6 +1,11 @@
 /**
  * Reviewer/annotator entry context — breadcrumb (issue #456, AC-1/AC-3/AC-8).
  * Source spec: specs/annotation/015-annotation-workspace/spec.md FR-080
+ * REGRESSION-RISK: the post-submit exit card revoked in spec 015 v4.40.0
+ * (FR-082 / AC-4.34, issue #517) must not come back and take the breadcrumb's
+ * job with it -- FR-100 point 7 forbids reusing any of its revoked testids or
+ * style classes. FR-082 itself is revoked, so it is named as prose, never as a
+ * live citation.
  *
  * The workspace is a full-bleed three-column shell with no page header: once
  * inside, nothing on screen names the task or says which run the unit belongs

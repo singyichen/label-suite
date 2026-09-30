@@ -24,8 +24,9 @@ const OUTPUT_TYPE_KEYS = [
 // is structurally impossible under the single-owner relay model (FR-093) --
 // so task-list.data.js now seeds 16 example tasks, not 17.
 /*
- * issue #783 (openspec/changes/task-detail-iaa-precondition-and-override-scope,
- * design.md D7): T018 is the new demo task backing FR-010o-4's
+ * issue #783 (specs/task-management/014-task-detail/spec.md FR-010o-4; demo
+ * task T018 comes from design D7 of the archived OpenSpec change
+ * `task-detail-iaa-precondition-and-override-scope`): T018 backs FR-010o-4's
  * "waiting_iaa_confirmation with a failed/pending IAA computation" scenarios
  * (see issue-783-iaa-computation-status.spec.ts). Its sourceFile
  * 'review-flow-iaa-failed.json' sorts between 'review-flow-dry-run.json' and

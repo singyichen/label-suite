@@ -31,10 +31,10 @@ import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
  * more than one reviewer, and status derivation MUST read only that one
  * assigned reviewer's decision.
  *
- * Traceability: openspec/changes/2026-09-01-single-owner-review-relay/
- *   design.md D1 (status table), D2 (persisted shapes), D3 (bypass);
- *   specs/annotation/015-annotation-workspace delta FR-051 / AC-4.52,
- *   FR-063 (exclude_from_dataset MUST NOT produce a gold value).
+ * Traceability: specs/annotation/015-annotation-workspace/spec.md
+ *   FR-051 / AC-4.52, FR-063 (exclude_from_dataset MUST NOT produce a gold
+ *   value); design D1 (status table), D2 (persisted shapes), D3 (bypass) of
+ *   the archived OpenSpec change `2026-09-01-single-owner-review-relay`.
  */
 
 type Identity = { annotatorId?: string; reviewerId?: string };
