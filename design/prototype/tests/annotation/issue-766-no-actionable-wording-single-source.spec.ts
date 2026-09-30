@@ -31,8 +31,9 @@
  * NO_ACTIONABLE_REVIEW_LABELS from the live data layer via page.evaluate,
  * then scans every file under design/prototype/pages/ for that exact
  * literal, mirroring this project's existing source-level occurrence-count
- * precedent (shared/language-switch-consistency.spec.ts's
- * fs.readFileSync + path.resolve(__dirname, ...) pattern, and
+ * precedent (../tests-node/shared-page-contracts.test.mjs's
+ * readFileSync + resolve(HERE, ...) pattern — migrated there out of
+ * shared/language-switch-consistency.spec.ts by issue #1059 group 2, and
  * annotation/issue-719-review-submit-auto-advance.spec.ts's
  * `text.split(needle).length - 1` occurrence-count idiom).
  *
