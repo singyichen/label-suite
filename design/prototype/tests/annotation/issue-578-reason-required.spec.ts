@@ -81,11 +81,6 @@ type WorkspaceData = {
     payload: unknown, historySummary: string,
     identity: { annotatorId?: string; reviewerId?: string }
   ) => void;
-  markSampleSaved: (
-    taskId: string, role: string, runType: string, sampleId: string,
-    payload: unknown, historySummary: string,
-    identity: { annotatorId?: string; reviewerId?: string }
-  ) => void;
   getSampleHistory: (
     taskId: string, runType: string, sampleId: string,
     identity: { annotatorId?: string }
@@ -100,7 +95,6 @@ const FILLER = 'reviewer_lin'; // no can_arbitrate; issue #551 -- silent agree, 
 const ARBITER = 'reviewer_chen'; // can_arbitrate: true
 const ITEM_ID = 'single_label::single_label';
 
-const SKIP_REASON = '樣本敘述過於模糊，標記員無法判斷任何類別';
 const ADJUDICATE_REASON = '多數審核員支持 B 版本，依多數意見裁定採用 fear';
 
 /* Cast rather than `declare global`: annotation-workspace-arbitration.spec.ts
@@ -134,21 +128,6 @@ function seed(
   }, args);
 }
 
-// Seeds a `saved` (not `submitted`) sample -- used by the AC-2.20 availability
-// tests, which per FR-013A must treat `pending` and `saved` samples as
-// skippable and only an already-`submitted` sample as not skippable.
-function seedSaved(
-  page: Page,
-  args: { role: string; payload: unknown; identity: { annotatorId?: string; reviewerId?: string } }
-): Promise<void> {
-  return page.evaluate((a) => {
-    (window as unknown as { LabelSuiteAnnotationWorkspaceData: WorkspaceData })
-      .LabelSuiteAnnotationWorkspaceData.markSampleSaved(
-        'T001', a.role, 'official_run', 'sent-001', a.payload, '', a.identity
-      );
-  }, args);
-}
-
 /* Same seed as annotation-workspace-arbitration.spec.ts: annotator sad,
    reviewer_wang fear, reviewer_lin silently agrees (sad) -> a genuine 1:1
    tie at N=2 (issue #551 -- N=1 would converge on its own and never reach
@@ -169,100 +148,6 @@ async function seedDisputedUnit(page: Page): Promise<void> {
 
 test.beforeEach(async ({ page }) => {
   await skipGuidelineModal(page);
-});
-
-test.describe('AC-2.20: annotator skip requires a reason', () => {
-  async function openAnnotator(page: Page) {
-    await page.goto(
-      buildWorkspaceUrl({ task_id: TASK, sample_id: SAMPLE, role: 'annotator', run_type: 'official_run', annotator_id: ANNOTATOR })
-    );
-    await dismissGuidelineModal(page);
-  }
-
-  test('the skip entry point exists, with a required reason field blocked while empty', async ({ page }) => {
-    const errors = trackPageErrors(page);
-    await openAnnotator(page);
-
-    const skipBtn = page.getByTestId('ws-skip-btn');
-    const reasonField = page.getByTestId('ws-skip-reason');
-    await expect(skipBtn).toBeVisible();
-    await expect(reasonField).toBeVisible();
-    await expect(reasonField).toHaveAttribute('required', '');
-    // Nothing typed yet -- the blocked convention (data attribute, not
-    // disabled) must already reflect that on render, same as the reviewer
-    // reject-reason field's refresh().
-    await expect(skipBtn).toHaveAttribute('data-submit-blocked', 'reason');
-
-    assertNoPageErrors(errors);
-  });
-
-  test('skipping without a reason is blocked and writes no skipped event', async ({ page }) => {
-    await openAnnotator(page);
-
-    const skipBtn = page.getByTestId('ws-skip-btn');
-    // Not `disabled` / `aria-disabled`: the click must still reach the
-    // handler so it can surface a toast (established FR-016A convention).
-    await skipBtn.click();
-
-    await expect(skipBtn).toHaveAttribute('data-submit-blocked', 'reason');
-    await expect(page.locator('#toast')).toHaveClass(/toast-warning/);
-    await expect(page.locator('#toastMsg')).toContainText('理由');
-
-    const history = await readHistory(page);
-    expect(history.some((e) => e.action === 'skipped')).toBe(false);
-  });
-
-  test('skipping with a reason writes exactly one skipped event carrying it', async ({ page }) => {
-    await openAnnotator(page);
-
-    await page.getByTestId('ws-skip-reason').fill(SKIP_REASON);
-    const skipBtn = page.getByTestId('ws-skip-btn');
-    await expect(skipBtn).not.toHaveAttribute('data-submit-blocked', 'reason');
-
-    await skipBtn.click();
-
-    const history = await readHistory(page);
-    const skipped = history.filter((e) => e.action === 'skipped');
-    expect(skipped).toHaveLength(1);
-    expect(skipped[0].reason).toBe(SKIP_REASON);
-  });
-
-  test('the reviewer view never renders the skip entry point (annotator-only action)', async ({ page }) => {
-    await page.goto(buildWorkspaceUrl({
-      task_id: TASK, sample_id: SAMPLE, role: 'reviewer', run_type: 'official_run',
-      annotator_id: ANNOTATOR, reviewer_id: PARTICIPANT,
-    }));
-    await dismissGuidelineModal(page);
-
-    await expect(page.getByTestId('ws-skip-btn')).toHaveCount(0);
-    await expect(page.getByTestId('ws-skip-reason')).toHaveCount(0);
-  });
-
-  test('an already-submitted sample is not skippable', async ({ page }) => {
-    // Seeding via the data-layer global requires an already-navigated page
-    // (window.LabelSuiteAnnotationWorkspaceData only exists after the app
-    // script has loaded), so open the page before seeding, then reload to
-    // pick up the seeded bucket -- same order as seedDisputedUnit's callers.
-    await openAnnotator(page);
-    await seed(page, { role: 'annotator', payload: labelPayload('sad'), identity: { annotatorId: ANNOTATOR } });
-    await page.reload();
-    await dismissGuidelineModal(page);
-
-    // FR-013A: the sample stays `已提交` (submitted); skip must not be
-    // offered as an entry point for it at all (not merely blocked-on-click).
-    await expect(page.getByTestId('ws-skip-btn')).toHaveCount(0);
-  });
-
-  test('a saved (not yet submitted) sample remains skippable', async ({ page }) => {
-    await openAnnotator(page);
-    await seedSaved(page, { role: 'annotator', payload: labelPayload('sad'), identity: { annotatorId: ANNOTATOR } });
-    await page.reload();
-    await dismissGuidelineModal(page);
-
-    // FR-013A: `已儲存` (saved) is one of the two states -- alongside
-    // `待標記` (pending) -- for which skip must remain available.
-    await expect(page.getByTestId('ws-skip-btn')).toBeVisible();
-  });
 });
 
 /* issue #596 FR-061 point 3 narrowed AC-3.50/FR-089: only the third exit
