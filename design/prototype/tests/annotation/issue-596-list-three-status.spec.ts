@@ -111,17 +111,11 @@ test.describe('AC-4.53 爭議中列的仲裁入口', () => {
       .filter({ hasText: '爭議中' });
   }
 
-  test('具仲裁資格者於爭議中列看到 仲裁', async ({ page }) => {
-    const entry = disputedRow(page).getByTestId('list-arbitrate-entry');
-    await expect(entry).toHaveText('仲裁');
-
-    await entry.click();
-    const url = new URL(page.url());
-    expect(url.searchParams.get('sample_id')).toBe(SAMPLE);
-    expect(url.searchParams.get('annotator_id')).toBe(ANNOTATOR);
-    expect(url.searchParams.get('reviewer_id')).toBe(ARBITER);
-  });
-
+  // issue #1059 G6b (inventory.csv decision=merge): "具仲裁資格者於爭議中列看到
+  // 仲裁" used to sit here. annotation-list-dispute-entry.spec.ts's "an
+  // eligible arbiter sees 仲裁 and it carries the unit identity" asserts the
+  // same entry text and the same three URL params plus task_id, so it is the
+  // superset and nothing is lost by dropping the duplicate.
   test('已對該單位提交審核者看到 編輯', async ({ page }) => {
     await gotoList(page, PARTICIPANT);
 
