@@ -2304,6 +2304,12 @@
         <p class="status-hint" id="taskNotFoundMessage"></p>
         <a class="mini-btn mini-btn-primary" id="taskNotFoundBackLink" href="./task-list.html" style="display:inline-block;margin-top:var(--space-md);text-decoration:none;"></a>
       </div>
+
+      <div id="taskForbidden" class="panel hidden" role="alert" aria-live="polite" data-testid="task-forbidden-pane">
+        <p class="panel-title" id="taskForbiddenTitle"></p>
+        <p class="status-hint" id="taskForbiddenMessage"></p>
+        <a class="mini-btn mini-btn-primary" id="taskForbiddenBackLink" href="./task-list.html" style="display:inline-block;margin-top:var(--space-md);text-decoration:none;"></a>
+      </div>
     </section>
   </div>
 </main>
@@ -2418,6 +2424,9 @@
       notFoundTitle: '找不到任務',
       notFoundMessageTpl: '任務代碼 {taskId} 不存在，請確認網址或回到任務列表重新選擇任務。',
       notFoundBackBtn: '回任務列表',
+      forbiddenTitle: '無權限檢視此任務',
+      forbiddenMessageTpl: '您目前無權限檢視任務代碼 {taskId}，請回到任務列表或聯絡管理員。',
+      forbiddenBackBtn: '回任務列表',
       pageTitle: '任務詳情',
       pageSubtitle: '檢視任務概覽與執行控制',
       tabOverview: '任務概覽',
@@ -2946,6 +2955,9 @@
       notFoundTitle: 'Task not found',
       notFoundMessageTpl: 'Task {taskId} does not exist. Please check the URL or return to the task list to pick another task.',
       notFoundBackBtn: 'Back to task list',
+      forbiddenTitle: 'You are not allowed to view this task',
+      forbiddenMessageTpl: 'You do not have permission to view task {taskId}. Please return to the task list or contact an administrator.',
+      forbiddenBackBtn: 'Back to task list',
       pageTitle: 'Task detail',
       pageSubtitle: 'Review overview and run control',
       tabOverview: 'Task overview',
@@ -4815,6 +4827,12 @@ function interpolate(template, payload) {
      TASK_NOT_FOUND instead of silently rendering T001 (issue #200). */
   var TASK_NOT_FOUND = false;
 
+  /* issue #1075 (G2f, AC-7.1): a simulated permission-revoked state for a
+     task that DOES resolve against the seed data (?sim_403=1). Computed in
+     parseRole() right after resetTaskData(), same early-and-analogous
+     placement as TASK_NOT_FOUND above. */
+  var TASK_FORBIDDEN = false;
+
   function resetTaskData(taskId) {
     TASK_DATA = cloneData(DEFAULT_TASK_DATA);
     var requestedId = (taskId && taskId.trim()) ? taskId.trim() : '';
@@ -4919,6 +4937,28 @@ function interpolate(template, payload) {
     setText('taskNotFoundTitle', t('notFoundTitle'));
     setText('taskNotFoundMessage', interpolate(t('notFoundMessageTpl'), { taskId: TASK_DATA.taskId }));
     setText('taskNotFoundBackLink', t('notFoundBackBtn'));
+  }
+
+  /* issue #1075 (G2f, AC-7.1): mirrors renderTaskNotFoundState() above for
+     the simulated 403 (permission revoked) case. */
+  function renderTaskForbiddenState() {
+    var tabsBar = document.querySelector('.admin-tabs');
+    if (tabsBar) tabsBar.classList.add('hidden');
+    var skeleton = document.getElementById('loadingSkeleton');
+    if (skeleton) skeleton.classList.add('hidden');
+    var mount = document.getElementById('tabPanelMount');
+    if (mount) mount.classList.add('hidden');
+
+    state.lang = window.LabelSuiteSharedSidebar
+      ? window.LabelSuiteSharedSidebar.getStoredLang()
+      : 'zh';
+
+    var forbidden = document.getElementById('taskForbidden');
+    if (!forbidden) return;
+    forbidden.classList.remove('hidden');
+    setText('taskForbiddenTitle', t('forbiddenTitle'));
+    setText('taskForbiddenMessage', interpolate(t('forbiddenMessageTpl'), { taskId: TASK_DATA.taskId }));
+    setText('taskForbiddenBackLink', t('forbiddenBackBtn'));
   }
 
   /* ── FR-019 (issue #726): URL <-> view-state sync ────────────────────
@@ -5068,6 +5108,11 @@ function interpolate(template, payload) {
       TASK_DATA.taskId = taskId.trim();
     }
     if (TASK_NOT_FOUND) return;
+    /* AC-7.1: a task must resolve successfully before it can be "forbidden"
+       -- TASK_NOT_FOUND already returned above, so the resource is known to
+       exist here. */
+    TASK_FORBIDDEN = params.get('sim_403') === '1';
+    if (TASK_FORBIDDEN) return;
     applySamplingDefaultsToTaskData();
     if (urlStatus && STATUS_ORDER.indexOf(urlStatus) >= 0) TASK_DATA.status = urlStatus;
     normalizeTaskRunState();
@@ -11380,6 +11425,10 @@ document.getElementById('memberProgressSort').addEventListener('change', functio
     parseRole();
     if (TASK_NOT_FOUND) {
       renderTaskNotFoundState();
+      return;
+    }
+    if (TASK_FORBIDDEN) {
+      renderTaskForbiddenState();
       return;
     }
     syncStatusFromDryRunProgress();
