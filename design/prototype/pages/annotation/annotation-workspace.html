@@ -1066,6 +1066,9 @@
     /* ── Reviewer mode: original-answer label (AC-3.45) ───────────────── */
     .rv-btn-text { line-height: 1; }
     .rv-answer-origin { font-size: 12px; color: var(--color-ink-muted); margin-top: 12px; }
+    /* issue #1082 (AC-3.66): the annotator's own Bypass reason, a sibling of
+       .rv-answer-origin rather than appended text on it. */
+    .rv-answer-origin-reason { font-size: 12px; color: var(--color-ink-muted); margin-top: 2px; }
 
     /* ── Reviewer mode: review reason (issue #552/#596, FR-016A) ────────── */
     .rv-review-reason { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; }
@@ -1085,6 +1088,24 @@
       color: var(--color-ink);
       resize: vertical;
     }
+
+    /* ── Annotator mode: Bypass reason (issue #1082, AC-2.29/FR-089) ──────
+       Docked inline in the same .preview-bypass-row as the Bypass chip it
+       belongs to (task-config.engine.js:2502's "consumers dock their own
+       trailing controls onto this row" contract). */
+    .ws-bypass-reason-group { display: flex; flex-direction: column; gap: 2px; flex: 1 1 220px; min-width: 200px; }
+    .ws-bypass-reason-group input {
+      width: 100%;
+      font: inherit;
+      font-size: 13px;
+      padding: 5px 8px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      background: var(--color-surface);
+      color: var(--color-ink);
+    }
+    .ws-bypass-reason-error { font-size: 12px; color: var(--color-error); }
+    .ws-bypass-reason-helper { font-size: 12px; color: var(--color-text-soft); }
   </style>
 </head>
 <body>

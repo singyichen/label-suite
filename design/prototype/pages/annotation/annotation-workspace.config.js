@@ -21,6 +21,11 @@
       submitLabel: '提交',
       saveLabel: '儲存草稿',
       wsSaveSuccess: '已儲存',
+      /* issue #1082 (AC-2.29/FR-089 v10.0.0): the Bypass checkbox's own
+         required reason field, replacing the retired skip control's. */
+      bypassReasonRequired: '請填寫無法判定的理由',
+      bypassReasonHelper: '理由會隨提交寫入歷程，審核員可見',
+      toastBypassReasonRequired: '請填寫以下輸出類型「無法判定」的理由：{list}',
       arbitrationReasonPlaceholder: '裁定理由（必填）',
       arbitrationNeedsReason: '請先填寫裁定理由再送出，尚未填寫的項目',
       wsPrevBtnLabel: '上一筆',
@@ -180,6 +185,9 @@
       submitLabel: 'Submit',
       saveLabel: 'Save draft',
       wsSaveSuccess: 'Saved',
+      bypassReasonRequired: 'Give a reason for marking this undecidable',
+      bypassReasonHelper: 'This reason is written into the history on submit, visible to the reviewer.',
+      toastBypassReasonRequired: 'Please give a reason for marking the following output types undecidable: {list}',
       arbitrationReasonPlaceholder: 'Reason for this decision (required)',
       arbitrationNeedsReason: 'Give a reason before finalizing. Still missing',
       wsPrevBtnLabel: 'Previous',
@@ -350,6 +358,12 @@
     previewEntities: [],
     previewTriples: [],
     previewBypass: {},
+    /* issue #1082 (AC-2.29/FR-089 v10.0.0): per-outKey Bypass reason text,
+       keyed the same way as previewBypass but kept as a separate map -- the
+       engine (task-config.engine.js) owns previewBypass's reset sites and
+       is never touched by this change, so the reason text must not live
+       inside that object. */
+    bypassReasons: {},
     relDraft: { e1: null, rel: null, e2: null },
     activeEntityType: null,
     previewInited: false,
@@ -586,6 +600,61 @@
        the first click outside the selector, so the control is reachable by
        simply dismissing the dialog first. */
     if (state.previewBypass[outKey]) applyBypassDisabledState(container, chip);
+    patchBypassReasonGroup(chip, outKey);
+  }
+
+  /* ── Bypass reason field (issue #1082, AC-2.29/FR-089 v10.0.0) ───────
+     Each bypassed output type gets its own required reason field, docked
+     as a sibling of its chip inside the SAME .preview-bypass-row -- called
+     once per chip, so the ABSA unified preview's two-chips-in-one-row case
+     (entity_recognition + relation_identification) gets two independent
+     groups the same way a single-chip row gets one. The row is rebuilt
+     from scratch by the chip's own click handler (makeBypassChip's
+     refresh()), so this only needs to run on every render, never diff
+     against a previous DOM. */
+  function patchBypassReasonGroup(chip, outKey) {
+    var row = chip.parentNode;
+    if (!row) return;
+    if (!state.previewBypass[outKey]) {
+      /* Not bypassed (including just-unchecked): no field, and no stale
+         text left to resurrect on a later re-check. */
+      delete state.bypassReasons[outKey];
+      return;
+    }
+    var group = document.createElement('div');
+    group.className = 'ws-bypass-reason-group';
+
+    var input = document.createElement('input');
+    input.type = 'text';
+    input.setAttribute('data-testid', 'ws-bypass-reason-' + outKey);
+    input.value = state.bypassReasons[outKey] || '';
+
+    var error = document.createElement('div');
+    error.className = 'ws-bypass-reason-error hidden';
+    error.setAttribute('data-testid', 'ws-bypass-reason-error-' + outKey);
+    error.textContent = t('bypassReasonRequired');
+
+    var helper = document.createElement('div');
+    helper.className = 'ws-bypass-reason-helper hidden';
+    helper.setAttribute('data-testid', 'ws-bypass-reason-helper-' + outKey);
+    helper.textContent = t('bypassReasonHelper');
+
+    /* UXC-04/UXC-05: no validation on check (nothing submitted yet); typing
+       clears a blocked-submit error immediately and reveals the helper
+       once there is something to describe. */
+    function syncOnInput() {
+      state.bypassReasons[outKey] = input.value;
+      var hasValue = !!input.value.trim();
+      helper.classList.toggle('hidden', !hasValue);
+      if (hasValue) error.classList.add('hidden');
+    }
+    input.addEventListener('input', syncOnInput);
+    helper.classList.toggle('hidden', !input.value.trim());
+
+    group.appendChild(input);
+    group.appendChild(error);
+    group.appendChild(helper);
+    row.appendChild(group);
   }
 
   function patchSingleLabelPanel(container) {
@@ -1040,6 +1109,7 @@
       btn.setAttribute('data-testid', 'ws-bypass-' + outKey);
       btn.setAttribute('role', 'checkbox');
       btn.setAttribute('aria-checked', btn.getAttribute('aria-pressed') === 'true' ? 'true' : 'false');
+      patchBypassReasonGroup(btn, outKey);
     });
   }
 
@@ -1315,6 +1385,7 @@
       previewEntities: deepClone(state.previewEntities),
       previewTriples: deepClone(state.previewTriples),
       previewBypass: deepClone(state.previewBypass),
+      bypassReasons: deepClone(state.bypassReasons),
       relDraft: deepClone(state.relDraft),
       activeEntityType: state.activeEntityType,
       previewInited: state.previewInited,
@@ -1342,6 +1413,7 @@
           previewEntities: stored.previewEntities || [],
           previewTriples: stored.previewTriples || [],
           previewBypass: stored.previewBypass || {},
+          bypassReasons: stored.bypassReasons || {},
           relDraft: { e1: null, rel: null, e2: null },
           activeEntityType: null,
           /* Restored answers must not be overwritten by the engine's
@@ -1355,6 +1427,7 @@
       state.previewEntities = deepClone(snap.previewEntities);
       state.previewTriples = deepClone(snap.previewTriples);
       state.previewBypass = deepClone(snap.previewBypass);
+      state.bypassReasons = deepClone(snap.bypassReasons || {});
       state.relDraft = deepClone(snap.relDraft);
       state.activeEntityType = snap.activeEntityType;
       state.previewInited = snap.previewInited;
@@ -1363,6 +1436,7 @@
       state.previewEntities = [];
       state.previewTriples = [];
       state.previewBypass = {};
+      state.bypassReasons = {};
       state.relDraft = { e1: null, rel: null, e2: null };
       state.activeEntityType = null;
       state.previewInited = false;
@@ -2807,6 +2881,12 @@
       previewEntities: deepClone(state.previewEntities),
       previewTriples: deepClone(state.previewTriples),
       previewBypass: deepClone(state.previewBypass),
+      /* issue #1082 (AC-3.66): the annotator's own Bypass reason text, kept
+         alongside previewBypass rather than merged into it so legacy
+         (pre-v10.0.0) stored answers -- previewBypass set, no reason field
+         at all -- read back as "no reason" (bypassReasons undefined/empty),
+         never a rendered-but-empty string. */
+      bypassReasons: deepClone(state.bypassReasons),
       /* FR-088: how long this answer took, travelling with the answer it
          describes. The data layer lifts it onto the history event; the
          result snapshot's whitelist deliberately does not pick it up. */
@@ -2898,6 +2978,29 @@
       if (submitBtnEl) submitBtnEl.disabled = false;
       return;
     }
+    /* issue #1082 (AC-2.29/FR-089 v10.0.0): validated on submit, not on
+       check (UXC-04) -- mirrors the allAnswered loop above, one inline
+       error per bypassed-but-reason-less outKey plus a single toast naming
+       all of them (same pendingOutputLabels pattern handleReviewSubmit()
+       already uses). */
+    var missingBypassReasonKeys = state.selectedOutputTypes.filter(function (outKey) {
+      return !!state.previewBypass[outKey] && !(state.bypassReasons[outKey] || '').trim();
+    });
+    state.selectedOutputTypes.forEach(function (outKey) {
+      if (!state.previewBypass[outKey]) return;
+      var errorEl = document.querySelector('[data-testid="ws-bypass-reason-error-' + outKey + '"]');
+      if (errorEl) errorEl.classList.toggle('hidden', missingBypassReasonKeys.indexOf(outKey) < 0);
+    });
+    if (missingBypassReasonKeys.length) {
+      var missingBypassReasonLabels = missingBypassReasonKeys.map(function (outKey) {
+        var outReg = window.OUTPUT_TYPE_REGISTRY && window.OUTPUT_TYPE_REGISTRY[outKey];
+        return (outReg && outReg[state.lang]) || outKey;
+      });
+      showToast(t('toastBypassReasonRequired').replace('{list}', missingBypassReasonLabels.join('、')), 'warning');
+      state.submitBusy = false;
+      if (submitBtnEl) submitBtnEl.disabled = false;
+      return;
+    }
     var submitted = window.LabelSuiteAnnotationWorkspaceData.markSampleSubmitted(currentProfile.id, currentRole, currentRunType, currentSampleId, collectAnswerPayload(), buildHistorySummary(), currentIdentity);
     if (submitted === false) {
       showToast(t('annotatorFinalizedToast'), 'warning');
@@ -2960,6 +3063,12 @@
      This parallel map carries the same per-outKey signal for display only,
      seeded in seedReviewRow() exactly where reviewRowOriginals itself is. */
   var reviewRowOriginalBypass = {};
+  /* issue #1082 (AC-3.66): the annotator's own Bypass reason text, seeded
+     alongside reviewRowOriginalBypass for the same display-only reason --
+     absent (not an empty string) for legacy pre-v10.0.0 data with no
+     bypassReasons field at all, so appendCorrectionControl() below can tell
+     "no reason recorded" apart from "recorded as empty". */
+  var reviewRowOriginalBypassReason = {};
   /* Every decision pair currently on screen, so the A/R shortcuts below can
      redraw them all after deciding the unit in one go. Rebuilt alongside
      reviewRowDecisions on each renderReviewerWorkspace(). */
@@ -3662,6 +3771,20 @@
         t('reviewOriginalAnswerLabel') +
         (originalAnswer || (originalIsBypass ? t('reviewOriginalAnswerBypass') : t('reviewNoAnswer')));
       row.appendChild(origin);
+      /* issue #1082 (AC-3.66): a NEW sibling, never appended text on
+         `origin` itself -- issue #809's exact-text contract on
+         ws-review-original-answer's own textContent must stay untouched.
+         Absent entirely (not a rendered-but-empty element) when there is no
+         reason on file, so "no reason" can never read as "empty string". */
+      var bypassReason = originalIsBypass ? reviewRowOriginalBypassReason[originKey] : '';
+      if (bypassReason) {
+        var reasonEl = document.createElement('div');
+        reasonEl.className = 'rv-answer-origin-reason';
+        reasonEl.setAttribute('data-testid', 'ws-review-bypass-reason');
+        reasonEl.setAttribute('data-outkey', originKey);
+        reasonEl.textContent = bypassReason;
+        row.appendChild(reasonEl);
+      }
     });
 
     var correctionTitle = document.createElement('div');
@@ -3772,6 +3895,7 @@
     if (submission) {
       reviewRowOriginals[outKey] = describeOutputAnswer(outKey, submission);
       reviewRowOriginalBypass[outKey] = !!(submission.previewBypass && submission.previewBypass[outKey]);
+      reviewRowOriginalBypassReason[outKey] = (submission.bypassReasons && submission.bypassReasons[outKey]) || '';
       if (!reviewRowSeeded[outKey]) {
         seedReviewState(outKey, correctionSource || submission, false);
         reviewRowSeeded[outKey] = true;
@@ -3782,6 +3906,10 @@
     var answer = demoRow && demoRow.answers ? demoRow.answers[outKey] : null;
     reviewRowOriginals[outKey] = answer != null ? describeCompactAnswer(outKey, answer) : '';
     reviewRowOriginalBypass[outKey] = !!(demoRow && demoRow.bypass && demoRow.bypass[outKey]);
+    /* The synthetic demo row (no real stored submission) never carries a
+       Bypass reason -- unlike previewBypass/bypass, demoAnnotatorRow() has
+       no equivalent field to read one from. */
+    reviewRowOriginalBypassReason[outKey] = '';
     if (!reviewRowSeeded[outKey]) {
       seedReviewState(outKey, answer, true);
       reviewRowSeeded[outKey] = true;

@@ -417,6 +417,22 @@
     return Object.keys(snapshot).length ? snapshot : null;
   }
 
+  /* issue #1082 (AC-3.66): the annotator's own Bypass reasons, one line per
+     bypassed outKey with a reason on file, same `outKey + ': ' + text` join
+     convention as the config.js host's buildHistorySummary(). A bypassed
+     outKey with no stored reason (legacy pre-v10.0.0 data) is silently
+     skipped rather than emitting an empty line -- `null` when nothing
+     qualifies, so appendHistoryEvent's `!= null` filter drops the key
+     entirely instead of writing a reason-less `reason: ''`. */
+  function buildBypassReasonSummary(payload) {
+    var bypass = (payload && payload.previewBypass) || {};
+    var reasons = (payload && payload.bypassReasons) || {};
+    var lines = Object.keys(bypass)
+      .filter(function (outKey) { return bypass[outKey] && reasons[outKey]; })
+      .map(function (outKey) { return outKey + ': ' + reasons[outKey]; });
+    return lines.length ? lines.join('\n') : null;
+  }
+
   function markSampleSubmitted(taskId, role, runType, sampleId, payload, historySummary, identity) {
     /* FR-101 (issue #908): an annotator write on an already-finalized unit
        is rejected outright, before any bucket read/write -- reviewer and
@@ -438,7 +454,7 @@
       appendReviewDecisionEvents(entry, taskId, runType, sampleId, payload, historySummary, actorId, identity, decisions);
     } else {
       appendHistoryEvent(entry, 'submitted', role, historySummary, actorId, Object.assign(
-        { result_snapshot: buildResultSnapshot(payload) },
+        { result_snapshot: buildResultSnapshot(payload), reason: buildBypassReasonSummary(payload) },
         timingFields(payload && payload.timing)
       ));
     }
