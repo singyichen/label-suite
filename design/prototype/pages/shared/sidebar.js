@@ -721,6 +721,12 @@
 
     if (existingIndex === -1) {
       if (state.tabs.length >= TAB_CAP) {
+        // ponytail: eviction candidate is judged once, synchronously, at
+        // the moment the 9th tab is opened -- no continuous race
+        // monitoring for a tab that goes dirty in the same tick (spec
+        // 019 邊界情況, 已知簡化). Acceptable because `hasUnsavedChanges`
+        // is itself only ever updated on `pagehide`, so no tab can change
+        // dirtiness mid-judgment on this same synchronous call stack.
         var evictIndex = findWorkspaceEvictionCandidateIndex(state.tabs);
         if (evictIndex === -1) {
           // AC-4.2: all TAB_CAP tabs have unsaved changes -- block the open,
