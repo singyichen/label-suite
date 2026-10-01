@@ -438,6 +438,17 @@ while IFS= read -r consumer; do
         */.claude/skills/ui-ux-pro-max/SKILL.md) continue ;;
         */.claude/skills/ui-ux-pro-max/data/stacks/nextjs.csv) continue ;;
         */.claude/skills/content-present/references/atoms.md) continue ;;
+        # issue #1076: notecraftapp@1.6.0 upstream-vendored agents/skills (installed verbatim by
+        # `init-skill --force`) mention the upstream repo's own `npm run sync-skill`; that is the
+        # notecraft maintainers' command, not label-suite guidance. Listed per file, never as a glob.
+        */.claude/agents/component-generator.md) continue ;;
+        */.claude/agents/mdx-writer.md) continue ;;
+        */.claude/agents/note-scanner.md) continue ;;
+        */.claude/agents/present-planner.md) continue ;;
+        */.claude/agents/slide-generator.md) continue ;;
+        */.claude/agents/visualize-planner.md) continue ;;
+        */.claude/skills/content-present/SKILL.md) continue ;;
+        */.claude/skills/content-visualize/SKILL.md) continue ;;
     esac
     relative="${consumer#"$repo_root"/}"
     grep -En "$retired_command_pattern" "$consumer" 2>/dev/null >"$tmp_dir/retired" || true
