@@ -16,6 +16,11 @@ test.describe('Dashboard Skeleton (FR-018)', () => {
   test('shows the Skeleton with metric-card and task-list placeholders before content resolves', async ({
     page,
   }) => {
+    // Fake clock before goto: loadMembership() runs during page init, and
+    // ?view=skeleton returns before scheduling any setTimeout at all
+    // (dashboard.js:619), so nothing here depends on the page's own
+    // render/init timers running in real time.
+    await page.clock.install();
     await page.goto(`${DASHBOARD_URL}?view=skeleton`);
 
     const skeleton = page.locator('#dashboardSkeleton');
@@ -28,9 +33,13 @@ test.describe('Dashboard Skeleton (FR-018)', () => {
     await expect(page.locator('#dashboardErrorState')).toBeHidden();
 
     // ?view=skeleton must stay loading indefinitely (not just still be
-    // mid-transition): outlast the normal ~400ms load delay and confirm
-    // it never resolves on its own.
-    await page.waitForTimeout(1000);
+    // mid-transition): fast-forward past the normal ~400ms load delay
+    // (dashboard.js MEMBERSHIP_LOAD_DELAY_MS=400) and confirm it never
+    // resolves on its own. The hidden toggle is a plain `display: none`
+    // class swap with no CSS transition (dashboard.layout.css:44-46), so
+    // unlike a fading toast there is no real-wall-clock-bound visual
+    // settle time to race.
+    await page.clock.fastForward(1000);
     await expect(skeleton).toBeVisible();
     await expect(page.locator('#contentGrid')).toBeHidden();
   });

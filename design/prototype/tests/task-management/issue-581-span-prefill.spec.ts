@@ -21,8 +21,6 @@ const TASK_NEW_URL = '/pages/task-management/task-new.html';
 /* 20 個字元：台0 積1 電2 董3 事4 長5 今6 天7 出8 席9 台10 北11 國12 際13 論14 壇15 活16 動17 現18 場19 */
 const TEXT = '台積電董事長今天出席台北國際論壇活動現場';
 
-test.describe.configure({ retries: 2 });
-
 async function goToStep2WithSpans(page: Page, spans: Span[]) {
   await page.goto(TASK_NEW_URL, { waitUntil: 'load' });
   await page.waitForFunction(

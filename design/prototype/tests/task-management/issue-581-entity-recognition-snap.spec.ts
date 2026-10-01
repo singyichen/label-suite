@@ -18,8 +18,6 @@ declare global {
 const TASK_NEW_URL = '/pages/task-management/task-new.html';
 const EXAMPLE_DATA = path.resolve(__dirname, '../../../../docs/product/example-data');
 
-test.describe.configure({ retries: 2 });
-
 async function goToStep2(page: Page, outputTypes: string[]) {
   await page.goto(TASK_NEW_URL, { waitUntil: 'load' });
   await page.waitForFunction(

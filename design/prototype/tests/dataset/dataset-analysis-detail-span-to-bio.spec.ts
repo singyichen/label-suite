@@ -22,8 +22,6 @@
 import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
-test.describe.configure({ retries: 2 });
-
 const HOST_URL = '/pages/dataset/dataset-analysis-detail.html?task_id=T006&tab=stats';
 const MODULE_URL = '/pages/shared/span-tagging-export.js';
 

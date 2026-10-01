@@ -218,7 +218,7 @@ async function selectPreviewText(page: Page, text: string) {
 // ─── 8 Basic Output Types ───────────────────────────────────
 
 test.describe('Step 2 preview: all 8 output types with example data', () => {
-  test.describe.configure({ mode: 'serial', retries: 2 });
+  test.describe.configure({ mode: 'serial' });
 
   test('single_label — gold_label pre-selected, labels from unique values', async ({
     page,
@@ -936,7 +936,7 @@ test.describe('Step 2 preview: all 8 output types with example data', () => {
 // ─── 4 Composite Tasks ─────────────────────────────────────
 
 test.describe('Step 2 preview: composite task data files', () => {
-  test.describe.configure({ mode: 'serial', retries: 2 });
+  test.describe.configure({ mode: 'serial' });
 
   test('nli.json — item_pair single_label with Premise/Hypothesis', async ({
     page,
@@ -1233,7 +1233,7 @@ test.describe('Step 2 preview: composite task data files', () => {
 // ─── Data Transformation Validation ───────────────────────
 
 test.describe('Step 2 preview: data transformation and config integrity', () => {
-  test.describe.configure({ mode: 'serial', retries: 2 });
+  test.describe.configure({ mode: 'serial' });
 
   test('generated config does not contain _autoPopulated or other private keys', async ({
     page,

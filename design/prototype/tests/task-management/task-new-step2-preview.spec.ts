@@ -5,7 +5,7 @@ const TASK_NEW_URL = '/pages/task-management/task-new.html';
 const FIXTURE = path.resolve(__dirname, 'three-column-dataset.json');
 
 test.describe('Step 2 preview: evidence exclusion, input layout, and isolation', () => {
-  test.describe.configure({ mode: 'serial', retries: 2 });
+  test.describe.configure({ mode: 'serial' });
 
   async function setupAndGoToStep2(
     page: import('@playwright/test').Page,

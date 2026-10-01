@@ -35,17 +35,25 @@ test.describe('Profile — UXC-07 toast contract', () => {
   });
 
   test('success toast auto-dismisses on the 3000ms tier', async ({ page }) => {
+    // showToast()'s auto-dismiss removes the node outright
+    // (toast.remove(), profile.html:1608) rather than CSS-fading it, so
+    // a fake clock jump is a faithful, deterministic substitute for
+    // waiting in real time.
+    await page.clock.install();
     await page.evaluate(() => window.showToast('success', 'saved', ''));
     await expect(page.locator('.toast.success')).toBeVisible();
-    await page.waitForTimeout(3500);
+    await page.clock.fastForward(3500);
     // Tight timeout so the legacy 4000ms timer cannot satisfy the retry.
     await expect(page.locator('.toast.success')).toHaveCount(0, { timeout: 200 });
   });
 
   test('error toast never auto-dismisses and closes via its button', async ({ page }) => {
+    // Same DOM-removal (not CSS-fade) mechanism as the success case
+    // above, so fast-forwarding past the legacy window is safe here too.
+    await page.clock.install();
     await page.evaluate(() => window.showToast('error', 'failed', 'reason'));
     // Outlives the legacy 4000ms one-size timer.
-    await page.waitForTimeout(4600);
+    await page.clock.fastForward(4600);
     await expect(page.locator('.toast.error')).toBeVisible();
     await page.locator('.toast.error .toast-close').click();
     await expect(page.locator('.toast.error')).toHaveCount(0);

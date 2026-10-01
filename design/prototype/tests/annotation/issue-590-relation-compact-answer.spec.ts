@@ -157,8 +157,6 @@ function expectEightKeyShape(triple: CompactRelationTriple) {
   );
 }
 
-test.describe.configure({ retries: 2 });
-
 test.beforeEach(async ({ page }) => {
   await skipGuidelineModal(page);
 });

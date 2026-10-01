@@ -53,6 +53,11 @@ function readPublishSuccessCount(page: import('@playwright/test').Page) {
 
 test.describe('Publish button double-click guard (issue #198)', () => {
   test('double-clicking 發布試標 with isolation enabled creates exactly one trial round', async ({ page }) => {
+    // publishDryRun()'s busy flag clears on a real setTimeout(..., 200)
+    // (task-detail.html:10527); a fake clock lets the settle-wait below
+    // advance that timer deterministically instead of racing it in real
+    // wall-clock time.
+    await page.clock.install();
     await page.goto(TASK_DETAIL_URL + '&status=draft');
     // T001's R1 scenario is scripted to fail (see getTrialRoundScenario), so
     // a successful single publish lands on dry_run_in_progress, not waiting_iaa_confirmation.
@@ -69,9 +74,10 @@ test.describe('Publish button double-click guard (issue #198)', () => {
 
     // Settle before counting: if the guard ever regressed, a second
     // trial-round push/analytics event could land after the first
-    // assertion below already resolves. Wait past the guard's cooldown
-    // window so a regression is reliably caught instead of racing it.
-    await page.waitForTimeout(1000);
+    // assertion below already resolves. Fast-forward past the guard's
+    // cooldown window (5x its 200ms setTimeout) so a regression is
+    // reliably caught instead of racing it.
+    await page.clock.fastForward(1000);
 
     await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(1);
     await expect(page.locator('#trialRoundsUsedValue')).toHaveText('1');
@@ -88,6 +94,11 @@ test.describe('Publish button double-click guard (issue #198)', () => {
   });
 
   test('double-clicking 發布正式標記 with isolation enabled results in exactly one publish', async ({ page }) => {
+    // publishOfficialRun()'s busy flag clears on a real setTimeout(..., 200)
+    // (task-detail.html:10585); a fake clock lets the settle-wait below
+    // advance that timer deterministically instead of racing it in real
+    // wall-clock time.
+    await page.clock.install();
     await page.goto(TASK_DETAIL_URL + '&status=waiting_iaa_confirmation');
     await installPublishSuccessCounter(page, 'official_run_in_progress');
 
@@ -113,9 +124,10 @@ test.describe('Publish button double-click guard (issue #198)', () => {
 
     // Settle before counting: if the guard ever regressed, a second
     // publish/analytics event could land after the first assertion below
-    // already resolves. Wait past the guard's cooldown window so a
-    // regression is reliably caught instead of racing it.
-    await page.waitForTimeout(1000);
+    // already resolves. Fast-forward past the guard's cooldown window
+    // (5x its 200ms setTimeout) so a regression is reliably caught
+    // instead of racing it.
+    await page.clock.fastForward(1000);
 
     await expect(page.locator('#statusBadge')).toHaveText('正式標記進行中');
     expect(await readPublishSuccessCount(page)).toBe(1);

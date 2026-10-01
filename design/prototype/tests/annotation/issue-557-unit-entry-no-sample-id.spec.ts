@@ -40,8 +40,6 @@ const T014_ANNOTATORS = ['kioleemg12', '113450022', 'tony0950127'];
  * carries the same narrowing. */
 const T014_REVIEWER_SAMPLES = ['dry-01-all-agree', 'dry-04-dispute-resolved'];
 
-test.describe.configure({ retries: 2 });
-
 test.describe('issue #557 -- reviewer unit entries no longer echo the sample ID', () => {
   test('each unit line renders only the annotator, no separator or muted sample id', async ({
     page,

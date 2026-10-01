@@ -25,7 +25,7 @@ async function setFieldRole(page: import('@playwright/test').Page, column: strin
 }
 
 test.describe('Step 1 input-count validation', () => {
-  test.describe.configure({ mode: 'serial', retries: 2 });
+  test.describe.configure({ mode: 'serial' });
 
   test('single_item with 1 Input field allows Next', async ({ page }) => {
     await setupTask(page);

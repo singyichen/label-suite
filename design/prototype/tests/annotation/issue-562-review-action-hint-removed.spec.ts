@@ -27,8 +27,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { buildWorkspaceUrl, gotoReviewerWorkspace, skipGuidelineModal } from './_workspace-helpers';
 
-test.describe.configure({ retries: 2 });
-
 const HINT = 'ws-review-action-hint';
 
 /* issue #960: the 'reviewer_chen' default below is intentional, not a

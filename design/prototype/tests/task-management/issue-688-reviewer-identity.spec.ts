@@ -98,8 +98,6 @@ async function removeAndRejoinMemberAsReviewer(page: Page, memberName: string): 
   return original;
 }
 
-test.describe.configure({ retries: 2 });
-
 test.describe('Task detail reviewer identity format — opaque user id, not Email (issue #688)', () => {
   // FR-010s-1 REVIEWER_ID_FORMAT: every TASK_MEMBERS entry carries an `id`
   // shaped as a lowercase slug (no `@`, no whitespace) alongside `email`.

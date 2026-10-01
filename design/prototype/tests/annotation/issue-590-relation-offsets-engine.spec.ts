@@ -90,8 +90,6 @@ function expectAllOffsetsNull(triple: Triple) {
   expect(triple.objEnd).toBeNull();
 }
 
-test.describe.configure({ retries: 2 });
-
 test.beforeEach(async ({ page }) => {
   await skipGuidelineModal(page);
 });
