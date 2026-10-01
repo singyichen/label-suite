@@ -551,6 +551,16 @@
     var info = { pageKind: pageKind, dedupeKey: loc.pathname + normalizeWorkspaceSearch(loc.search) };
     if (pageKind === 'task-detail') {
       info.taskId = params.get('task_id') || '';
+      // FR-010 / TAB_STAGE_BADGE: stage is a display-only concern, not part
+      // of the dedupe key (FR-006 keys task-detail on full normalized URL).
+      var apStage = params.get('ap_stage') || '';
+      var roundMatch = /^r(\d+)$/.exec(apStage);
+      if (roundMatch) {
+        info.stageBadge = 'dry_run';
+        info.stageRound = roundMatch[1];
+      } else if (apStage === 'official') {
+        info.stageBadge = 'official_run';
+      }
     }
     return info;
   }
@@ -590,7 +600,9 @@
       url: loc.pathname + loc.search,
       pageKind: info.pageKind,
       taskId: info.taskId || null,
-      mode: info.mode || null
+      mode: info.mode || null,
+      stageBadge: info.stageBadge || null,
+      stageRound: info.stageRound || null
     };
 
     var existingIndex = -1;
@@ -650,14 +662,21 @@
     return '';
   }
 
-  // A task-detail tab's title is its nav label plus the task name (FR-010's
-  // TAB_STAGE_BADGE stage-prefix variant is added by a later sub-group);
-  // every other page kind uses its nav/admin-submenu label, falling back to
-  // the raw pageKind for an unrecognized one instead of rendering nothing.
+  // FR-010 / TAB_STAGE_BADGE (spec 019 規格常數): a task-detail tab's title
+  // is its stage badge text plus the task name; every other page kind uses
+  // its nav/admin-submenu label, falling back to the raw pageKind for an
+  // unrecognized one instead of rendering nothing.
   function computeWorkspaceTabLabel(tab, lang) {
     var l = normalizeLang(lang);
     if (tab.pageKind === 'task-detail') {
-      var stageText = workspacePageKindI18n[l]['task-detail'];
+      var stageText;
+      if (tab.stageBadge === 'dry_run') {
+        stageText = (l === 'zh' ? '試標 R' : 'Dry Run R') + (tab.stageRound || '');
+      } else if (tab.stageBadge === 'official_run') {
+        stageText = l === 'zh' ? '正式' : 'Official';
+      } else {
+        stageText = workspacePageKindI18n[l]['task-detail'];
+      }
       var taskName = resolveWorkspaceTaskName(tab.taskId, l);
       return taskName ? stageText + ' ' + taskName : stageText;
     }
@@ -667,7 +686,7 @@
     return workspacePageKindI18n[l][tab.pageKind] || tab.pageKind;
   }
 
-  function renderWorkspaceTabBar(container, state, onActivate) {
+  function renderWorkspaceTabBar(container, state, onActivate, onClose) {
     while (container.firstChild) container.removeChild(container.firstChild);
     var lang = readStoredLang();
     state.tabs.forEach(function (tab, index) {
@@ -680,12 +699,24 @@
       tabEl.setAttribute('role', 'tab');
       tabEl.setAttribute('aria-selected', isActive ? 'true' : 'false');
       tabEl.setAttribute('tabindex', '0');
+      if (tab.stageBadge) tabEl.setAttribute('data-stage-badge', tab.stageBadge);
       tabEl.addEventListener('click', function () { onActivate(index); });
 
       var labelSpan = document.createElement('span');
       labelSpan.className = 'workspace-tab-label';
       labelSpan.textContent = label;
       tabEl.appendChild(labelSpan);
+
+      var closeBtn = document.createElement('button');
+      closeBtn.type = 'button';
+      closeBtn.className = 'workspace-tab-close';
+      closeBtn.setAttribute('aria-label', (lang === 'zh' ? '關閉 ' : 'Close ') + label);
+      closeBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
+      closeBtn.addEventListener('click', function (event) {
+        event.stopPropagation();
+        onClose(index);
+      });
+      tabEl.appendChild(closeBtn);
 
       container.appendChild(tabEl);
     });
@@ -728,8 +759,36 @@
         window.location.href = state.tabs[index].url;
       }
 
+      // AC-1.5 (provisional rule, spec 019 FR-009/Q7 -- finalized later by
+      // a shared-008 MODIFIED change): closing the active tab moves focus
+      // to the tab now to its right, or to its left if it was rightmost.
+      // Closing a non-active tab never navigates; it only re-renders this
+      // page's own bar with the (possibly shifted) active index.
+      function closeWorkspaceTab(index) {
+        var state = readWorkspaceTabState();
+        var wasActive = index === state.activeIndex;
+        state.tabs.splice(index, 1);
+        if (state.tabs.length === 0) {
+          state.activeIndex = -1;
+          writeWorkspaceTabState(state);
+          renderWorkspaceTabBar(barEl, state, activateWorkspaceTab, closeWorkspaceTab);
+          return;
+        }
+        if (wasActive) {
+          state.activeIndex = Math.min(index, state.tabs.length - 1);
+        } else if (index < state.activeIndex) {
+          state.activeIndex -= 1;
+        }
+        writeWorkspaceTabState(state);
+        if (wasActive) {
+          window.location.href = state.tabs[state.activeIndex].url;
+        } else {
+          renderWorkspaceTabBar(barEl, state, activateWorkspaceTab, closeWorkspaceTab);
+        }
+      }
+
       var state = syncCurrentPageIntoWorkspaceTabs(capturedLoc);
-      renderWorkspaceTabBar(barEl, state, activateWorkspaceTab);
+      renderWorkspaceTabBar(barEl, state, activateWorkspaceTab, closeWorkspaceTab);
     }
 
     if (document.readyState === 'loading') {
