@@ -896,6 +896,14 @@
     });
   }
 
+  // AC-6.1 / FR-002, US6 (issue #1075 sub-group G2e): the mobile dropdown
+  // toggle's own "N tabs open" text -- distinct from the fixed-phrase
+  // workspaceTabCapNoticeI18n/workspaceTabRekeyNoticeI18n toasts above
+  // because this one interpolates the live tab count on every render.
+  function workspaceTabMobileToggleText(lang, count) {
+    return normalizeLang(lang) === 'zh' ? ('已開啟 ' + count + ' 頁') : (count + ' tabs open');
+  }
+
   // Mounts the bar as <main>'s first child, deferred to DOMContentLoaded:
   // mountSidebar() runs before <main> is parsed and before any page-data
   // <script> below it (e.g. task-list.data.js) has run.
@@ -1018,7 +1026,7 @@
         if (state.tabs.length === 0) {
           state.activeIndex = -1;
           writeWorkspaceTabState(state);
-          renderWorkspaceTabBar(barEl, state, activateWorkspaceTab, closeWorkspaceTab);
+          renderWorkspaceTabViews(state);
           return;
         }
         if (wasActive) {
@@ -1032,9 +1040,108 @@
           // AC-2.5 / FR-017: see activateWorkspaceTab() above.
           window.location.replace(state.tabs[state.activeIndex].url);
         } else {
-          renderWorkspaceTabBar(barEl, state, activateWorkspaceTab, closeWorkspaceTab);
+          renderWorkspaceTabViews(state);
         }
       }
+
+      // AC-6.1-AC-6.3 / FR-002 / FR-015, US6 (issue #1075 sub-group G2e):
+      // mobile (<=767px) dropdown that replaces the desktop tab bar, mirroring
+      // mountSidebar()'s own notifDropdownEl build/open/close pattern. Built
+      // here (inside run()), not mountSidebar(), because its content depends
+      // on this closure's own tab state/activateWorkspaceTab/closeWorkspaceTab.
+      var mobileToggleBtn = document.getElementById('workspaceTabMobileToggle');
+      var existingMobileDropdown = document.getElementById('workspaceTabMobileDropdown');
+      if (existingMobileDropdown && existingMobileDropdown.parentNode) {
+        existingMobileDropdown.parentNode.removeChild(existingMobileDropdown);
+      }
+      var mobileDropdownEl = document.createElement('div');
+      mobileDropdownEl.id = 'workspaceTabMobileDropdown';
+      mobileDropdownEl.className = 'workspace-tab-mobile-dropdown hidden';
+      mobileDropdownEl.setAttribute('data-testid', 'workspace-tab-mobile-dropdown');
+      document.body.appendChild(mobileDropdownEl);
+
+      function openWorkspaceTabMobileDropdown() {
+        mobileDropdownEl.classList.remove('hidden');
+        if (mobileToggleBtn) mobileToggleBtn.setAttribute('aria-expanded', 'true');
+      }
+
+      function closeWorkspaceTabMobileDropdown() {
+        mobileDropdownEl.classList.add('hidden');
+        if (mobileToggleBtn) mobileToggleBtn.setAttribute('aria-expanded', 'false');
+      }
+
+      // AC-6.2: tapping an item activates that tab and closes the dropdown.
+      // The close affordance (coordinator-directed, see this suite's own
+      // header comment) instead calls closeWorkspaceTab() via a nested,
+      // stopPropagation()'d click handler -- same nesting as
+      // renderWorkspaceTabBar()'s desktop tabEl/closeBtn pair above -- so it
+      // never bubbles into the item's own activate handler nor into the
+      // click-outside listener below, leaving the dropdown open.
+      function renderWorkspaceTabMobileDropdown(state) {
+        var lang = readStoredLang();
+        var countEl = document.getElementById('workspaceTabMobileToggleCount');
+        if (countEl) countEl.textContent = workspaceTabMobileToggleText(lang, state.tabs.length);
+
+        while (mobileDropdownEl.firstChild) mobileDropdownEl.removeChild(mobileDropdownEl.firstChild);
+        state.tabs.forEach(function (tab, index) {
+          var isActive = index === state.activeIndex;
+          var label = computeWorkspaceTabLabel(tab, lang);
+
+          var itemEl = document.createElement('div');
+          itemEl.className = 'workspace-tab-mobile-item' + (isActive ? ' active' : '');
+          itemEl.setAttribute('data-testid', 'workspace-tab-mobile-item');
+          itemEl.addEventListener('click', function () {
+            closeWorkspaceTabMobileDropdown();
+            activateWorkspaceTab(index);
+          });
+
+          var labelSpan = document.createElement('span');
+          labelSpan.className = 'workspace-tab-mobile-item-label';
+          labelSpan.textContent = label;
+          itemEl.appendChild(labelSpan);
+
+          var closeBtn = document.createElement('button');
+          closeBtn.type = 'button';
+          closeBtn.className = 'workspace-tab-mobile-item-close';
+          closeBtn.setAttribute('data-testid', 'workspace-tab-mobile-item-close');
+          closeBtn.setAttribute('aria-label', (lang === 'zh' ? '關閉 ' : 'Close ') + label);
+          closeBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
+          closeBtn.addEventListener('click', function (event) {
+            event.stopPropagation();
+            closeWorkspaceTab(index);
+          });
+          itemEl.appendChild(closeBtn);
+
+          mobileDropdownEl.appendChild(itemEl);
+        });
+      }
+
+      // Single call site for both the desktop bar and the mobile dropdown,
+      // so every state mutation below (initial mount, activate, close) keeps
+      // both views in sync without duplicating this file's three existing
+      // renderWorkspaceTabBar() call sites a second time over.
+      function renderWorkspaceTabViews(state) {
+        renderWorkspaceTabBar(barEl, state, activateWorkspaceTab, closeWorkspaceTab);
+        renderWorkspaceTabMobileDropdown(state);
+      }
+
+      if (mobileToggleBtn) {
+        mobileToggleBtn.addEventListener('click', function (event) {
+          event.stopPropagation();
+          if (mobileDropdownEl.classList.contains('hidden')) {
+            openWorkspaceTabMobileDropdown();
+          } else {
+            closeWorkspaceTabMobileDropdown();
+          }
+        });
+      }
+
+      document.addEventListener('click', function (event) {
+        if (mobileDropdownEl.classList.contains('hidden')) return;
+        if (mobileToggleBtn && mobileToggleBtn.contains(event.target)) return;
+        if (mobileDropdownEl.contains(event.target)) return;
+        closeWorkspaceTabMobileDropdown();
+      });
 
       // AC-4.2: checked and consumed BEFORE syncCurrentPageIntoWorkspaceTabs()
       // below, which may itself set this same flag and redirect here --
@@ -1051,7 +1158,7 @@
       }
 
       var state = syncCurrentPageIntoWorkspaceTabs(capturedLoc);
-      renderWorkspaceTabBar(barEl, state, activateWorkspaceTab, closeWorkspaceTab);
+      renderWorkspaceTabViews(state);
       restoreActiveWorkspaceTabScroll(state); // AC-2.1: restore on (re-)mount
       // Only now does state.activeIndex reliably identify THIS tab's own
       // slot -- safe for the replaceState patch above to act from here on.
@@ -1240,6 +1347,10 @@
               '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>' +
               '<span id="mobileNotificationBadge" class="notif-badge hidden" aria-hidden="true"></span>' +
             '</span>' +
+          '</button>' +
+          '<button id="workspaceTabMobileToggle" class="workspace-tab-mobile-toggle" type="button" data-testid="workspace-tab-mobile-toggle" aria-haspopup="true" aria-expanded="false">' +
+            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg>' +
+            '<span id="workspaceTabMobileToggleCount"></span>' +
           '</button>' +
           '<button id="mobileLogoutBtn" class="mobile-top-logout" aria-label="登出" title="登出">' +
             '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>' +
