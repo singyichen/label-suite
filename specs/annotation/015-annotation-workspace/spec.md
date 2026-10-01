@@ -1,5 +1,5 @@
 ---
-功能分支: feat/1060-exception-pool-sample-grouping
+功能分支: feat/1082-bypass-reason-remove-skip
 建立日期: 2026-04-23
 版本: 9.1.1
 狀態: Draft
