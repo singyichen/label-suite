@@ -438,7 +438,7 @@ while IFS= read -r consumer; do
         */.claude/skills/ui-ux-pro-max/SKILL.md) continue ;;
         */.claude/skills/ui-ux-pro-max/data/stacks/nextjs.csv) continue ;;
         */.claude/skills/content-present/references/atoms.md) continue ;;
-        # issue #1076: notecraftapp@1.6.0 upstream-vendored agents/skills (installed verbatim by
+        # issue #1076: notecraftapp@1.7.0 upstream-vendored agents/skills (installed verbatim by
         # `init-skill --force`) mention the upstream repo's own `npm run sync-skill`; that is the
         # notecraft maintainers' command, not label-suite guidance. Listed per file, never as a glob.
         */.claude/agents/component-generator.md) continue ;;
