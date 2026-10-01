@@ -992,8 +992,32 @@ body.sidebar-collapsed .notif-dropdown { left: 88px; }
   border-color: var(--color-border);
 }
 
-/* .workspace-tab[data-stage-badge] colors and .workspace-tab-close are
-   added by a later sub-group (AC-1.6, AC-1.5). */
+.workspace-tab[data-stage-badge="dry_run"] {
+  color: var(--color-warning);
+}
+
+.workspace-tab[data-stage-badge="official_run"] {
+  color: var(--color-primary);
+}
+
+.workspace-tab-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.workspace-tab-close:hover {
+  background: var(--color-border-muted);
+}
+
 @media (max-width: 767px) {
   .workspace-tab-bar {
     display: none;
