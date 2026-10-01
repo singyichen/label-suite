@@ -14,6 +14,13 @@
    * mountWorkspaceTabBar() run() knows to show the "switched tabs" notice
    * after its full-page navigation lands. */
   var WORKSPACE_TAB_REKEY_NOTICE_KEY = 'labelsuite.workspaceTabRekeyNotice';
+  /* specs/shared/019-workspace-tabs/spec.md 規格常數 TAB_CAP (issue #1075
+   * G2c-2 / FR-011 / AC-4.1 / AC-4.2): maximum simultaneously open tabs. */
+  var TAB_CAP = 8;
+  /* Implementation detail (not a spec constant), mirrors
+   * WORKSPACE_TAB_REKEY_NOTICE_KEY above but for the distinct AC-4.2
+   * "all 8 tabs unsaved, open blocked" notice. */
+  var WORKSPACE_TAB_CAP_NOTICE_KEY = 'labelsuite.workspaceTabCapNotice';
   /* AC-2.4: set right before the logout handler clears both keys above, so
    * the pagehide-driven scroll capture below (which fires during the
    * resulting navigation to the login page) does not recreate
@@ -670,6 +677,23 @@
     if (typeof y === 'number') window.scrollTo(0, y);
   }
 
+  // FR-011 / AC-4.1: among `tabs`, the index of the tab with no unsaved
+  // changes and the oldest `lastActiveAt` -- or -1 if every tab has unsaved
+  // changes (AC-4.2).
+  function findWorkspaceEvictionCandidateIndex(tabs) {
+    var evictIndex = -1;
+    var oldestAt = Infinity;
+    for (var i = 0; i < tabs.length; i++) {
+      if (tabs[i].hasUnsavedChanges === true) continue;
+      var at = typeof tabs[i].lastActiveAt === 'number' ? tabs[i].lastActiveAt : 0;
+      if (at < oldestAt) {
+        oldestAt = at;
+        evictIndex = i;
+      }
+    }
+    return evictIndex;
+  }
+
   // Switches to an existing dedupe-key match or inserts a new tab right of
   // the active one (FR-005, FR-008, Q19). `loc` must be a synchronous
   // snapshot, not a live window.location read: task-detail.html rewrites
@@ -696,12 +720,39 @@
     }
 
     if (existingIndex === -1) {
+      if (state.tabs.length >= TAB_CAP) {
+        var evictIndex = findWorkspaceEvictionCandidateIndex(state.tabs);
+        if (evictIndex === -1) {
+          // AC-4.2: all TAB_CAP tabs have unsaved changes -- block the open,
+          // leave state untouched, and redirect back to the previously
+          // active tab (if any).
+          var activeTab = state.tabs[state.activeIndex];
+          if (activeTab) {
+            try {
+              window.sessionStorage.setItem(WORKSPACE_TAB_CAP_NOTICE_KEY, '1');
+            } catch (error) {
+              // Ignore storage errors in prototype mode.
+            }
+            window.location.replace(activeTab.url);
+          }
+          return state;
+        }
+        state.tabs.splice(evictIndex, 1);
+        if (evictIndex <= state.activeIndex) state.activeIndex -= 1;
+      }
+      tabEntry.lastActiveAt = Date.now();
       var insertAt = state.activeIndex + 1;
       if (insertAt < 0) insertAt = 0;
       if (insertAt > state.tabs.length) insertAt = state.tabs.length;
       state.tabs.splice(insertAt, 0, tabEntry);
       state.activeIndex = insertAt;
     } else {
+      // Carries over the prior lastActiveAt rather than re-stamping: this
+      // branch also runs on a plain reload of the already-active tab (AC-2.3
+      // regression coverage asserts byte-identical state across a reload),
+      // not only on a genuine revisit. activateWorkspaceTab() below is the
+      // one path that stamps recency for an explicit tab-bar switch.
+      tabEntry.lastActiveAt = state.tabs[existingIndex].lastActiveAt;
       state.tabs[existingIndex] = tabEntry;
       state.activeIndex = existingIndex;
     }
@@ -782,6 +833,23 @@
     if (!toast) return;
     var msg = document.getElementById('toastMsg');
     if (msg) msg.textContent = workspaceTabRekeyNoticeI18n[readStoredLang()];
+    toast.classList.add('show');
+    setTimeout(function () { toast.classList.remove('show'); }, 2400);
+  }
+
+  var workspaceTabCapNoticeI18n = {
+    zh: '工作頁籤已達上限，請先儲存目前的變更',
+    en: 'Workspace tab limit reached -- save your current changes first'
+  };
+
+  // AC-4.2 / FR-011: a visible notice after opening a 9th tab is blocked
+  // because all TAB_CAP tabs have unsaved changes. Same #toast element/
+  // mechanism as showWorkspaceTabRekeyNotice() above, distinct message.
+  function showWorkspaceTabCapNotice() {
+    var toast = document.getElementById('toast');
+    if (!toast) return;
+    var msg = document.getElementById('toastMsg');
+    if (msg) msg.textContent = workspaceTabCapNoticeI18n[readStoredLang()];
     toast.classList.add('show');
     setTimeout(function () { toast.classList.remove('show'); }, 2400);
   }
@@ -875,6 +943,7 @@
         for (var i = 0; i < state.tabs.length; i++) {
           if (i !== state.activeIndex && state.tabs[i].dedupeKey === info.dedupeKey) {
             state.activeIndex = i;
+            state.tabs[i].lastActiveAt = Date.now(); // FR-011/AC-4.1
             writeWorkspaceTabState(state);
             try {
               window.sessionStorage.setItem(WORKSPACE_TAB_REKEY_NOTICE_KEY, '1');
@@ -917,6 +986,7 @@
         var state = readWorkspaceTabState();
         if (index === state.activeIndex) return;
         state.activeIndex = index;
+        if (state.tabs[index]) state.tabs[index].lastActiveAt = Date.now(); // FR-011/AC-4.1
         writeWorkspaceTabState(state);
         // AC-2.5 / FR-017: tab-bar switches must not grow history.length --
         // .replace() is the full-navigation equivalent of replaceState().
@@ -947,6 +1017,7 @@
         }
         if (wasActive) {
           state.activeIndex = Math.min(index, state.tabs.length - 1);
+          if (state.tabs[state.activeIndex]) state.tabs[state.activeIndex].lastActiveAt = Date.now(); // FR-011/AC-4.1
         } else if (index < state.activeIndex) {
           state.activeIndex -= 1;
         }
@@ -957,6 +1028,20 @@
         } else {
           renderWorkspaceTabBar(barEl, state, activateWorkspaceTab, closeWorkspaceTab);
         }
+      }
+
+      // AC-4.2: checked and consumed BEFORE syncCurrentPageIntoWorkspaceTabs()
+      // below, which may itself set this same flag and redirect here --
+      // reading it afterward, in that same synchronous call stack, would
+      // consume it on the ORIGINATING page before the browser ever
+      // navigates to this (the destination) page.
+      try {
+        if (window.sessionStorage.getItem(WORKSPACE_TAB_CAP_NOTICE_KEY)) {
+          window.sessionStorage.removeItem(WORKSPACE_TAB_CAP_NOTICE_KEY);
+          showWorkspaceTabCapNotice();
+        }
+      } catch (error) {
+        // Ignore storage errors in prototype mode.
       }
 
       var state = syncCurrentPageIntoWorkspaceTabs(capturedLoc);
