@@ -5,6 +5,20 @@
   var SIDEBAR_COLLAPSED_STORAGE_KEY = 'labelsuite.sidebarCollapsed';
   /* specs/shared/019-workspace-tabs/spec.md 規格常數 TAB_STORAGE_KEY. */
   var WORKSPACE_TAB_STORAGE_KEY = 'labelsuite.workspaceTabs';
+  /* specs/shared/019-workspace-tabs/spec.md 規格常數 TAB_SCROLL_STORAGE_KEY
+   * (G2b / AC-2.1 / FR-018 / FR-019): per-tab scroll position, keyed by
+   * dedupeKey, kept separate from WORKSPACE_TAB_STORAGE_KEY. */
+  var WORKSPACE_TAB_SCROLL_STORAGE_KEY = 'labelsuite.workspaceTabScroll';
+  /* Implementation detail (not a spec constant): a one-shot flag set right
+   * before an AC-3.5 rekey redirect so the destination tab's own
+   * mountWorkspaceTabBar() run() knows to show the "switched tabs" notice
+   * after its full-page navigation lands. */
+  var WORKSPACE_TAB_REKEY_NOTICE_KEY = 'labelsuite.workspaceTabRekeyNotice';
+  /* AC-2.4: set right before the logout handler clears both keys above, so
+   * the pagehide-driven scroll capture below (which fires during the
+   * resulting navigation to the login page) does not recreate
+   * TAB_SCROLL_STORAGE_KEY after it was just cleared. */
+  var workspaceTabLoggingOut = false;
 
   /* issue #1041: last-mounted taskRole, persisted at module scope so
    * applyGlobalLanguage() can re-resolve #navAnnotation's role-dependent
@@ -588,6 +602,46 @@
     }
   }
 
+  // AC-2.1 / FR-019: scroll positions live in their own map (dedupeKey ->
+  // scrollY), separate from WORKSPACE_TAB_STORAGE_KEY per FR-019.
+  function readWorkspaceTabScrollState() {
+    try {
+      var raw = window.sessionStorage.getItem(WORKSPACE_TAB_SCROLL_STORAGE_KEY);
+      var parsed = raw ? JSON.parse(raw) : null;
+      return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch (error) {
+      return {};
+    }
+  }
+
+  function writeWorkspaceTabScrollState(scrollState) {
+    try {
+      window.sessionStorage.setItem(WORKSPACE_TAB_SCROLL_STORAGE_KEY, JSON.stringify(scrollState));
+    } catch (error) {
+      // Ignore storage errors in prototype mode.
+    }
+  }
+
+  // Captures the CURRENT document's own scroll position under a fixed
+  // dedupeKey (the key this page was mounted with, not a re-read of
+  // sessionStorage's activeIndex -- that can already have been mutated by
+  // this same page's own activateWorkspaceTab()/the AC-3.5 rekey hook
+  // before the pagehide listener below actually runs).
+  function captureWorkspaceTabScroll(dedupeKey) {
+    if (!dedupeKey) return;
+    var scrollState = readWorkspaceTabScrollState();
+    scrollState[dedupeKey] = window.scrollY;
+    writeWorkspaceTabScrollState(scrollState);
+  }
+
+  // Restores the now-active tab's own stored scroll position, if any.
+  function restoreActiveWorkspaceTabScroll(state) {
+    if (state.activeIndex < 0 || !state.tabs[state.activeIndex]) return;
+    var dedupeKey = state.tabs[state.activeIndex].dedupeKey;
+    var y = readWorkspaceTabScrollState()[dedupeKey];
+    if (typeof y === 'number') window.scrollTo(0, y);
+  }
+
   // Switches to an existing dedupe-key match or inserts a new tab right of
   // the active one (FR-005, FR-008, Q19). `loc` must be a synchronous
   // snapshot, not a live window.location read: task-detail.html rewrites
@@ -686,6 +740,24 @@
     return workspacePageKindI18n[l][tab.pageKind] || tab.pageKind;
   }
 
+  var workspaceTabRekeyNoticeI18n = {
+    zh: '已切換至既有頁籤',
+    en: 'Switched to an existing tab'
+  };
+
+  // AC-3.5 / FR-007: a visible notice after an in-page URL change rekeys
+  // into another already-open tab. Reuses task-detail.html's own #toast
+  // element/markup (UXC-07 single-instance contract) rather than building a
+  // second shell-level toast mechanism; a page without #toast is a no-op.
+  function showWorkspaceTabRekeyNotice() {
+    var toast = document.getElementById('toast');
+    if (!toast) return;
+    var msg = document.getElementById('toastMsg');
+    if (msg) msg.textContent = workspaceTabRekeyNoticeI18n[readStoredLang()];
+    toast.classList.add('show');
+    setTimeout(function () { toast.classList.remove('show'); }, 2400);
+  }
+
   function renderWorkspaceTabBar(container, state, onActivate, onClose) {
     while (container.firstChild) container.removeChild(container.firstChild);
     var lang = readStoredLang();
@@ -731,6 +803,33 @@
     // window.location read taken later (inside run()).
     var capturedLoc = { pathname: window.location.pathname, search: window.location.search };
 
+    // AC-3.5 / FR-007 (Q18): a page's OWN history.replaceState() calls (e.g.
+    // task-management-014 FR-019's in-page sub-tab/filter writes) may rekey
+    // this tab's dedupe key onto one a DIFFERENT, already-open tab already
+    // holds. Installed once, before any page-specific script can call
+    // replaceState (sidebar.js loads first). Reads window.location AFTER
+    // the native call so it sees the just-applied new URL.
+    var nativeWorkspaceReplaceState = window.history.replaceState.bind(window.history);
+    window.history.replaceState = function (replaceStateData, title, url) {
+      nativeWorkspaceReplaceState(replaceStateData, title, url);
+      var loc = { pathname: window.location.pathname, search: window.location.search };
+      var info = computeWorkspaceDedupeInfo(loc);
+      var state = readWorkspaceTabState();
+      for (var i = 0; i < state.tabs.length; i++) {
+        if (i !== state.activeIndex && state.tabs[i].dedupeKey === info.dedupeKey) {
+          state.activeIndex = i;
+          writeWorkspaceTabState(state);
+          try {
+            window.sessionStorage.setItem(WORKSPACE_TAB_REKEY_NOTICE_KEY, '1');
+          } catch (error) {
+            // Ignore storage errors in prototype mode.
+          }
+          window.location.replace(state.tabs[i].url); // AC-2.5: no history growth
+          return;
+        }
+      }
+    };
+
     function run() {
       var mainEl = document.querySelector('main');
       if (!mainEl) return;
@@ -756,7 +855,9 @@
         if (index === state.activeIndex) return;
         state.activeIndex = index;
         writeWorkspaceTabState(state);
-        window.location.href = state.tabs[index].url;
+        // AC-2.5 / FR-017: tab-bar switches must not grow history.length --
+        // .replace() is the full-navigation equivalent of replaceState().
+        window.location.replace(state.tabs[index].url);
       }
 
       // AC-1.5 (provisional rule, spec 019 FR-009/Q7 -- finalized later by
@@ -781,7 +882,8 @@
         }
         writeWorkspaceTabState(state);
         if (wasActive) {
-          window.location.href = state.tabs[state.activeIndex].url;
+          // AC-2.5 / FR-017: see activateWorkspaceTab() above.
+          window.location.replace(state.tabs[state.activeIndex].url);
         } else {
           renderWorkspaceTabBar(barEl, state, activateWorkspaceTab, closeWorkspaceTab);
         }
@@ -789,6 +891,31 @@
 
       var state = syncCurrentPageIntoWorkspaceTabs(capturedLoc);
       renderWorkspaceTabBar(barEl, state, activateWorkspaceTab, closeWorkspaceTab);
+      restoreActiveWorkspaceTabScroll(state); // AC-2.1: restore on (re-)mount
+
+      // AC-2.1 / FR-019: capture this tab's own scroll position right before
+      // it is navigated away from, however that navigation happens (a
+      // tab-bar switch/close, a plain sidebar <a href> opening a new tab,
+      // browser back/forward, or closing the browser tab) -- pagehide covers
+      // all of them, unlike hooking activateWorkspaceTab()/closeWorkspaceTab()
+      // alone, which only fires for already-open-tab switches. Keyed by THIS
+      // page's own dedupeKey, fixed at mount time -- not re-read from
+      // sessionStorage, which activateWorkspaceTab()/the rekey hook may
+      // already have advanced to the destination tab's index by the time
+      // pagehide actually fires.
+      var myDedupeKey = state.tabs[state.activeIndex] ? state.tabs[state.activeIndex].dedupeKey : null;
+      window.addEventListener('pagehide', function () {
+        if (workspaceTabLoggingOut) return; // AC-2.4: see declaration above.
+        captureWorkspaceTabScroll(myDedupeKey);
+      });
+      try {
+        if (window.sessionStorage.getItem(WORKSPACE_TAB_REKEY_NOTICE_KEY)) {
+          window.sessionStorage.removeItem(WORKSPACE_TAB_REKEY_NOTICE_KEY);
+          showWorkspaceTabRekeyNotice();
+        }
+      } catch (error) {
+        // Ignore storage errors in prototype mode.
+      }
     }
 
     if (document.readyState === 'loading') {
@@ -1029,6 +1156,14 @@
       var btn = document.getElementById(id);
       if (!btn) return;
       btn.addEventListener('click', function () {
+        // AC-2.4 / FR-018: clear both keys so the next login starts blank.
+        workspaceTabLoggingOut = true;
+        try {
+          window.sessionStorage.removeItem(WORKSPACE_TAB_STORAGE_KEY);
+          window.sessionStorage.removeItem(WORKSPACE_TAB_SCROLL_STORAGE_KEY);
+        } catch (error) {
+          // Ignore storage errors in prototype mode.
+        }
         window.location.href = loginHref;
       });
     });
