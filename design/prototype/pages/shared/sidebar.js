@@ -20,6 +20,16 @@
    * TAB_SCROLL_STORAGE_KEY after it was just cleared. */
   var workspaceTabLoggingOut = false;
 
+  /* FR-012 (issue #1075 G2c-1): the predicate a page (annotation-workspace,
+   * task-new) registers via registerWorkspaceUnsavedPredicate() below --
+   * a zero-arg function this module polls only at the pagehide moment
+   * captureWorkspaceTabUnsavedState() runs. Pages that never register one
+   * (e.g. dashboard) leave this null. */
+  var workspaceUnsavedPredicate = null;
+  function registerWorkspaceUnsavedPredicate(predicateFn) {
+    workspaceUnsavedPredicate = predicateFn;
+  }
+
   /* issue #1041: last-mounted taskRole, persisted at module scope so
    * applyGlobalLanguage() can re-resolve #navAnnotation's role-dependent
    * label on every language switch, not just at initial mount. */
@@ -634,6 +644,24 @@
     writeWorkspaceTabScrollState(scrollState);
   }
 
+  // FR-012 (issue #1075 G2c-1): mirrors captureWorkspaceTabScroll() above --
+  // same pagehide moment, same dedupeKey match against THIS tab's own
+  // stored entry -- but persists into TAB_STORAGE_KEY's own
+  // hasUnsavedChanges field (not the separate scroll map), per the
+  // WorkspaceTab entity (spec.md 關鍵實體, hasUnsavedChanges). A tab whose
+  // page never registered a predicate is left untouched.
+  function captureWorkspaceTabUnsavedState(dedupeKey) {
+    if (!dedupeKey || !workspaceUnsavedPredicate) return;
+    var state = readWorkspaceTabState();
+    for (var i = 0; i < state.tabs.length; i++) {
+      if (state.tabs[i].dedupeKey === dedupeKey) {
+        state.tabs[i].hasUnsavedChanges = !!workspaceUnsavedPredicate();
+        writeWorkspaceTabState(state);
+        return;
+      }
+    }
+  }
+
   // Restores the now-active tab's own stored scroll position, if any.
   function restoreActiveWorkspaceTabScroll(state) {
     if (state.activeIndex < 0 || !state.tabs[state.activeIndex]) return;
@@ -903,6 +931,13 @@
       function closeWorkspaceTab(index) {
         var state = readWorkspaceTabState();
         var wasActive = index === state.activeIndex;
+        // AC-4.3/FR-012: a background tab whose last-known state was
+        // unsaved blocks the close instead of discarding it. FR-012
+        // forbids a second confirmation mechanism here, so this is a
+        // silent no-op -- the tab bar and storage stay exactly as they were.
+        if (!wasActive && state.tabs[index] && state.tabs[index].hasUnsavedChanges) {
+          return;
+        }
         state.tabs.splice(index, 1);
         if (state.tabs.length === 0) {
           state.activeIndex = -1;
@@ -945,6 +980,7 @@
       window.addEventListener('pagehide', function () {
         if (workspaceTabLoggingOut) return; // AC-2.4: see declaration above.
         captureWorkspaceTabScroll(myDedupeKey);
+        captureWorkspaceTabUnsavedState(myDedupeKey); // FR-012
       });
       try {
         if (window.sessionStorage.getItem(WORKSPACE_TAB_REKEY_NOTICE_KEY)) {
@@ -1575,6 +1611,7 @@
     applySidebarCollapsed: applySidebarCollapsed,
     applyGlobalLanguage: applyGlobalLanguage,
     updateUserChip: updateUserChip,
+    registerWorkspaceUnsavedPredicate: registerWorkspaceUnsavedPredicate,
     BYPASS_WORDING: BYPASS_WORDING,
   };
 })();
