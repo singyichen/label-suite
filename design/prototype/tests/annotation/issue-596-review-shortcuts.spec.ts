@@ -1,11 +1,8 @@
 import { test, expect, type Page } from '@playwright/test';
 import {
-  assertNoPageErrors,
-  buildWorkspaceUrl,
   dismissGuidelineModal,
   gotoReviewerWorkspace,
   skipGuidelineModal,
-  trackPageErrors,
 } from './_workspace-helpers';
 
 /* issue #596 (OpenSpec change 2026-09-01-single-owner-review-relay, task 2.3,
@@ -115,23 +112,12 @@ test.describe('issue #596: AC-3.54 R 已廢除', () => {
 });
 
 test.describe('issue #596: AC-3.54 快捷鍵不觸發情境', () => {
-  /* free_text corrections are typed, so the letters `a`/`b` are ordinary
-   * input the moment a field holds focus. */
-  test('焦點在輸入控件（textarea）時 a / b 只打字，不觸發決策', async ({ page }) => {
-    await gotoReviewer(page, 'T009', 'sum-001');
-    const approve = page.getByTestId('ws-review-row-approve');
-    const bypass = page.getByTestId('ws-review-row-bypass');
-
-    const field = page.getByTestId('ws-review-row').locator('textarea, input[type="text"]').first();
-    await field.click();
-    await field.fill('');
-    await page.keyboard.type('abab');
-
-    await expect(field).toHaveValue('abab');
-    await expect(approve).toHaveAttribute('aria-pressed', 'false');
-    await expect(bypass).toHaveAttribute('aria-pressed', 'false');
-  });
-
+  /* G6b (#1059): the "焦點在輸入控件" and "role = annotator" cases that used
+   * to live here were superset duplicates of two cases in
+   * annotation/annotation-workspace-review-shortcuts.spec.ts. Per inventory.csv
+   * decision=merge, both superset bodies moved back into that canonical
+   * feature suite (README Test Policy rule 3); this file keeps its other
+   * four cases. */
   test('帶修飾鍵（Ctrl/Cmd/Alt/Shift）時 A / B 不觸發', async ({ page }) => {
     await gotoReviewer(page, 'T013', 'absa-001');
     const approve = page.getByTestId('ws-review-row-approve');
@@ -151,18 +137,5 @@ test.describe('issue #596: AC-3.54 快捷鍵不觸發情境', () => {
       await expect(approve.nth(i)).toHaveAttribute('aria-pressed', 'false');
       await expect(bypass.nth(i)).toHaveAttribute('aria-pressed', 'false');
     }
-  });
-
-  test('role = annotator 時 A / B 不觸發（審核決策控件不存在）', async ({ page }) => {
-    const errors = trackPageErrors(page);
-    await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'annotator' }));
-    await dismissGuidelineModal(page);
-
-    await page.keyboard.press('a');
-    await page.keyboard.press('b');
-
-    await expect(page.getByTestId('ws-review-row-approve')).toHaveCount(0);
-    await expect(page.getByTestId('ws-review-row-bypass')).toHaveCount(0);
-    assertNoPageErrors(errors);
   });
 });
