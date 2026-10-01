@@ -529,10 +529,13 @@
   // ── Workspace Tabs (issue #1075, specs/shared/019-workspace-tabs) ──────
   // Shell-level strip mounted above each page's content, inside <main>, by
   // mountWorkspaceTabBar() -- distinct from a page's own in-page "Desktop
-  // Content Tabs" (see MASTER.md's terminology note). This sub-group:
-  // open/switch/dedupe only (US1 minus close+badge, US3); close button,
-  // stage badge, cap/eviction, unsaved-guard, shortcuts, mobile dropdown,
-  // 403/404 and history.replaceState() are later sub-groups.
+  // Content Tabs" (see MASTER.md's terminology note). Covers US1-US8:
+  // open/switch/dedupe/close/stage-badge, scroll/state restore, in-page
+  // URL re-key, TAB_CAP eviction/block, unsaved-change guard, keyboard
+  // shortcuts (Alt+1-8/Alt+W) and tab-bar arrow-key/Enter/Space focus
+  // handling, the mobile "N tabs open" dropdown, and 403/404 panes
+  // (task-detail.html). The shared-008 shortcut-overview entry and
+  // canonical spec write-back land in the final sub-group (G3).
   function getWorkspacePageKind(pathname) {
     var file = pathname.split('/').pop() || '';
     return file.replace(/\.html$/, '') || 'unknown';
