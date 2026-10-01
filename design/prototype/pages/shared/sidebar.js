@@ -1081,6 +1081,40 @@
       } catch (error) {
         // Ignore storage errors in prototype mode.
       }
+
+      // FR-013/AC-5.3: narrower than isInteractiveSidebarTarget() -- the
+      // spec names exactly input/textarea/contenteditable as the editable
+      // targets that suppress this shortcut (a `role="tab"` tab-bar button
+      // itself is not one of these, so it never collides).
+      function isEditableWorkspaceTabTarget(target) {
+        if (!target) return false;
+        var element = target.nodeType === 1 ? target : target.parentElement;
+        if (!element || !element.closest) return false;
+        return !!element.closest('input, textarea, [contenteditable="true"]');
+      }
+
+      // AC-5.1/AC-5.2/AC-5.4: Alt+1...8 activates the tab at that position;
+      // Alt+W closes the active tab. Uses event.code (Digit1...Digit8,
+      // KeyW), not event.key, so macOS Option+digit special characters
+      // aren't misread (AC-5.4).
+      document.addEventListener('keydown', function (event) {
+        if (!event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+        if (!isDesktopViewport()) return;
+        if (isEditableWorkspaceTabTarget(event.target)) return;
+        var digitMatch = /^Digit([1-8])$/.exec(event.code);
+        if (digitMatch) {
+          var index = Number(digitMatch[1]) - 1;
+          if (readWorkspaceTabState().tabs[index]) {
+            event.preventDefault();
+            activateWorkspaceTab(index);
+          }
+          return;
+        }
+        if (event.code === 'KeyW') {
+          event.preventDefault();
+          closeWorkspaceTab(readWorkspaceTabState().activeIndex);
+        }
+      });
     }
 
     if (document.readyState === 'loading') {
