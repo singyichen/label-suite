@@ -311,7 +311,7 @@ Three rules bind the inventory to the code:
 
 `tests/inventory.csv` is the authoritative coverage record — per-case traceability lives there, not in this file. Each spec file's header still lists the user stories and functional requirements it covers, and tests that require a live backend (authentication flows, JWT handling) are documented in each file's header under "Tests NOT covered here."
 
-Suite size after issue #1059 group 5 (the baseline was 360 files / 2145 cases; group 2 moved 35 non-browser cases to the Node gate, emptying and removing 3 spec files; group 3 deleted 14 implementation-detail cases from 2 `tests/account/` files, which stay because each keeps surviving cases; group 4 folded 15 design-system `issue-NNN-*.spec.ts` files — 49 cases across admin, annotation, dataset and task-management — into the single table-driven `tests/shared/design-system-a11y-contract.spec.ts`, deleting 9 implementation-detail cases and carrying the surviving 40 `(page, selector, theme)` contract rows into 12 scenarios; group 5 folded 7 overlapping sidebar-i18n files — 39 cases, all of them `keep` or `merge` and none deletable — into `tests/shared/sidebar-i18n.spec.ts` as a 23-cell `(page, role, language)` matrix plus 7 scenarios whose observables are not label tuples, deleting nothing and raising `(page, role, language, label)` coverage from 137 tuples to 192):
+Suite size after issue #1059 group 6b (the baseline was 360 files / 2145 cases; group 2 moved 35 non-browser cases to the Node gate, emptying and removing 3 spec files; group 3 deleted 14 implementation-detail cases from 2 `tests/account/` files, which stay because each keeps surviving cases; group 4 folded 15 design-system `issue-NNN-*.spec.ts` files — 49 cases across admin, annotation, dataset and task-management — into the single table-driven `tests/shared/design-system-a11y-contract.spec.ts`, deleting 9 implementation-detail cases and carrying the surviving 40 `(page, selector, theme)` contract rows into 12 scenarios; group 5 folded 7 overlapping sidebar-i18n files — 39 cases, all of them `keep` or `merge` and none deletable — into `tests/shared/sidebar-i18n.spec.ts` as a 23-cell `(page, role, language)` matrix plus 7 scenarios whose observables are not label tuples, deleting nothing and raising `(page, role, language, label)` coverage from 137 tuples to 192; group 6b folded the matrix's 19 remaining `decision=merge` rows — 18 in `tests/annotation/`, 1 in `tests/task-management/`, across 7 source files and 7 clusters (C1-C7) — into their named survivors, deleting no spec file; two clusters (C2, C7) landed in a canonical destination that did not already duplicate the content, so 3 new rows were added there, netting -16 cases rather than the naive -19):
 
 **Browser suite** — `pnpm playwright test`, reconciles against `layer=browser` rows:
 
@@ -319,13 +319,13 @@ Suite size after issue #1059 group 5 (the baseline was 360 files / 2145 cases; g
 |---|---:|---:|
 | `tests/account/` | 10 | 128 |
 | `tests/admin/` | 2 | 29 |
-| `tests/annotation/` | 185 | 1023 |
+| `tests/annotation/` | 185 | 1007 |
 | `tests/cross-role/` | 7 | 54 |
 | `tests/dashboard/` | 13 | 90 |
 | `tests/dataset/` | 18 | 113 |
 | `tests/shared/` | 18 | 134 |
 | `tests/task-management/` | 84 | 479 |
-| **Total** | **337** | **2050** |
+| **Total** | **337** | **2034** |
 
 **Node gate** — `pnpm test:node`, reconciles against the `node` / `static` / `script` rows:
 
