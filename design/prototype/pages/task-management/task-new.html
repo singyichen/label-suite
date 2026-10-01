@@ -1662,6 +1662,12 @@ document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape' && el('taxonomyDeleteModal').classList.contains('show')) hideTaxonomyDeleteModal();
 });
 window.addEventListener('beforeunload', function(e) { if (state.isDirty) { e.preventDefault(); e.returnValue = ''; } });
+/* FR-012 (issue #1075 G2c-2): report this flag into the workspace tab bar
+   so a background task-new tab's last-known unsaved state survives after
+   this page itself is gone (see sidebar.js's registerWorkspaceUnsavedPredicate). */
+window.LabelSuiteSharedSidebar.registerWorkspaceUnsavedPredicate(function () {
+  return state.isDirty;
+});
 
 /* ── Init ────────────────────────────────────────────────────── */
 var initLang = window.LabelSuiteSharedSidebar ? window.LabelSuiteSharedSidebar.getStoredLang() : 'zh';
