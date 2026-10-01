@@ -1,7 +1,7 @@
 ---
 功能分支: feat/shared/008-sidebar-navbar-shared
 建立日期: 2026-04-16
-版本: 2.1.0
+版本: 2.2.0
 狀態: Clarified
 ---
 
@@ -338,6 +338,23 @@ Desktop 使用者可將左側 Sidebar 收合為 icon-only，以增加主內容�
 
 ---
 
+### 使用者故事 10 — 工作頁籤殼層整合（優先級：P2，issue #1075）
+
+共用 Sidebar 殼層現在也掛載工作頁籤列；完整行為定義見 `specs/shared/019-workspace-tabs/spec.md`（本規格不重複其 FR），僅收斂兩項因性質屬於共用殼層本身而由本規格承接之條文：關閉作用中頁籤後的焦點移動規則（FR-022）、快捷鍵總覽新增之頁籤 section（FR-016H）。
+
+**此優先級原因**：頁籤列主體行為已由 `specs/shared/019-workspace-tabs/spec.md` 的 9 個使用者故事定義並於原型實作完成；本故事僅收斂歸屬邊界與兩項殼層自身條文，不含獨立新功能。
+
+**獨立測試方式**：參照 `specs/shared/019-workspace-tabs/spec.md` 之頁籤列整體測試；本規格自身僅需驗證關閉作用中頁籤之焦點移動結果與快捷鍵總覽新增 section 之顯示內容。
+
+**驗收情境**：
+
+1. **Given** 已開啟 3 個以上頁籤，目前作用中頁籤非最右側，**When** 使用者關閉該作用中頁籤，**Then** 焦點必須移至原本緊鄰其右側的頁籤。
+2. **Given** 已開啟 2 個以上頁籤，目前作用中頁籤為最右側，**When** 使用者關閉該作用中頁籤，**Then** 焦點必須移至原本緊鄰其左側的頁籤。
+3. **Given** viewport `> MOBILE_BP`，使用者開啟快捷鍵總覽，**When** 檢視 modal 內容，**Then** 必須存在一個「頁籤」section，內含恰兩列：「切換至對應位置頁籤」與「關閉作用中頁籤」，各自獨立呈現、各按鍵以獨立 keycap 呈現。
+4. **Given** 快捷鍵總覽之「頁籤」section 已顯示，**When** 使用者切換 zh/en，**Then** 該 section 標題與兩列動作文字必須同步切換，與既有「全域」「標記作業」「審核」三個 section 之既有語言切換行為一致。
+
+---
+
 ## 需求規格 *(必填)*
 
 ### 功能需求
@@ -382,6 +399,7 @@ Desktop 使用者可將左側 Sidebar 收合為 icon-only，以增加主內容�
 - **FR-016E**：快捷鍵總覽中每個 action 必須獨立成列，不得將相反或相關 action 合併顯示（例如不得以 `上一筆 / 下一筆`、`通過 / 退回目前結果` 作為單一列）。
 - **FR-016G**（v1.4.0 新增）：`審核` section 僅列出 `A`（`通過目前結果`）與 `R`（`退回目前結果（回退標記員狀態僅限正式標記）`，v1.4.1 起標籤註記退回僅限 official_run、v1.4.3 起精確化為「僅回退標記員狀態」以避免誤讀為整個退回動作僅限 official_run，見 annotation-015 AC-3.15／AC-6.4／AC-3.33）兩列；批次快捷鍵 `Shift+A`（全部通過）與 `Shift+R`（全部退回）**不得**出現於總覽——annotation-015 v4.0.0 起審核單位為「樣本 × 標記員」，一次審核只涉及一位標記員，批次操作已無可批次的對象（其行為定義見 annotation-015 FR-054）。總覽只承諾實際存在的快捷鍵。
 - **FR-016F**：Desktop 快捷鍵總覽 modal 採緊湊視覺密度：section 標題以小寫全大寫（uppercase、muted 色）呈現；每列 action 間距僅以 padding 分隔，列與列之間不加分隔線；按鍵標籤為緊湊尺寸（≤28px 高），複合按鍵間距 ≤6px。
+- **FR-016H**（issue #1075 G3 新增）：Desktop 快捷鍵總覽 modal 必須新增一個獨立的「頁籤」section，列出 `Alt+1…8`（切換至對應位置頁籤）與 `Alt+W`（關閉作用中頁籤）兩列，各自獨立成列（依既有 FR-016E）、各按鍵以獨立 keycap 呈現（依既有 FR-016C）、採既有緊湊視覺密度（依既有 FR-016F）。此二快捷鍵之實際觸發行為、按鍵位置判斷方式（`event.code`），以及焦點位於可輸入元素時之抑制規則，由 `specs/shared/019-workspace-tabs/spec.md` FR-013、AC-5.1 至 AC-5.4 定義；本條僅規範快捷鍵總覽之顯示內容與格式，不重複定義其觸發行為。
 - **FR-017**：登入後模組頁若包含最上層 `h1` 頁首標題與副標題，該 heading block 必須對齊 Dashboard baseline：`1440px` desktop viewport 下與 Dashboard 相同的左上位置、`28px` serif title、`14px / 1.8` subtitle、title/subtitle 間距 `4px`、heading block 下方留白 `24px`。
 - **FR-018**：Sidebar 必須提供通知鈴鐺（`notification_bell`）入口；Desktop 位於 Sidebar 底部 utility row（`notificationBellBtn`），Mobile 位於 top brand bar（`mobileNotificationBellBtn`）。
 - **FR-018A**：未讀通知數必須以紅色 badge 顯示於鈴鐺右上角；未讀數為 0 時不顯示 badge；超過 9 顯示 `NOTIFICATION_BADGE_MAX_DISPLAY`。
@@ -400,6 +418,7 @@ Desktop 使用者可將左側 Sidebar 收合為 icon-only，以增加主內容�
 - **FR-020**（issue #944 新增，issue #1018 修訂）：Shared Sidebar 之 `navItems`（`design/prototype/pages/shared/sidebar.js`）的 `annotation` 項目（DOM id `navAnnotation`），其顯示文字必須依呼叫端傳入的任務角色（`opts.taskRole`，值域對齊既有「任務角色」定義：`project_leader / reviewer / annotator`）於掛載當下解析：`reviewer` 顯示「審核作業」（en: `Review`），與 annotation-015 FR-080 入口麵包屑第一層之 `crumbWorkAreaReviewer` 文字一致；`project_leader` 顯示「例外處置」（en: `Exception Disposition`），與同一畫面入口麵包屑第一層之 `crumbWorkAreaProjectLeader` 文字一致（issue #994／PR #1017）；`annotator` 或未提供時維持既有預設「標記作業」，與 annotation-015 FR-080 之 `crumbWorkAreaAnnotator` 文字一致。此解析必須於 Shared Sidebar 元件內部完成，消費頁面不得於掛載完成後另行以 DOM 操作覆寫該節點之顯示文字。本條不改變 FR-002／FR-008／FR-008A 既有之 L0 項目清單、順序、導頁與 `task_type` query 契約。
 - **FR-020A**（issue #944 新增）：Shared Sidebar 使用者晶片之角色標示（DOM id `roleIndicator`），於呼叫端未透過既有顯式覆寫入口傳入固定字串時（例如系統管理頁固定顯示「系統管理員」等既有頁面專屬用途，不受本條影響），其預設顯示文字必須依 FR-020 之任務角色定義解析：`reviewer` → 「審核員」（en: `Reviewer`）；`project_leader` → 「專案負責人」（en: `Project leader`）；`annotator` 或未提供時維持既有預設「一般使用者」。此解析必須於元件內部完成，消費頁面不得於掛載完成後另行以 DOM 操作覆寫該節點；既有顯式覆寫入口之優先序與行為不變。
 - **FR-021**（issue #1041 新增）：Shared Sidebar 之 `navItems`（`design/prototype/pages/shared/sidebar.js`）六個 L0 項目（DOM id `navDashboard`／`navTaskManagement`／`navAnnotation`／`navDataset`／`navAdmin`／`navProfile`）之顯示文字，必須於元件內部依語言（`readStoredLang()`／`applyGlobalLanguage()` 傳入之 `lang`）解析對應之雙語字面值：`navDashboard` → 「儀表板」/`Dashboard`；`navTaskManagement` → 「任務管理」/`Task Management`；`navDataset` → 「資料集分析」/`Dataset Analytics`；`navAdmin` → 「系統管理」/`System Administration`；`navProfile` → 「個人設定」/`Profile`。`navAnnotation` 項之既有角色分流（FR-020）三個分支皆須有對應英文字串：`reviewer` → 「審核作業」/`Review`；`project_leader` → 「例外處置」/`Exception Disposition`（皆為既有值，逐字不變）；`annotator` 或未提供 → 維持既有預設「標記作業」，並新增對應英文 `Annotation`。上述解析不只於掛載當下（`mountSidebar()`／`renderSidebar()`）執行一次；每次呼叫 `applyGlobalLanguage(lang, options)` 必須重新解析全部六個節點並更新其顯示文字，語言切換後立即反映新語系，不需重新掛載或重新整理頁面。`navAnnotation` 之角色分流於語言切換時的重新解析，使用最近一次 `mountSidebar()` 呼叫傳入之 `opts.taskRole`（未呼叫過 `mountSidebar()` 傳入 `taskRole` 之頁面，維持既有預設「標記作業」/`Annotation`分支）。此解析必須於 Shared Sidebar 元件內部完成；消費頁面不得於掛載完成後另行以 DOM 操作覆寫本條所列六個節點之顯示文字（重申 FR-020 既有覆寫禁令，明確適用範圍擴及全部六個 L0 標籤，不僅 `navAnnotation`）。本條不改變 FR-002／FR-003A／FR-008／FR-008A／FR-019 群既有之 L0 項目清單、順序、計數、導頁與 `task_type` query 契約，僅新增顯示文字之語言解析規則與重新解析時機。
+- **FR-022**（issue #1075 G3 新增）：共用 Sidebar 殼層掛載之工作頁籤列（行為定義見 `specs/shared/019-workspace-tabs/spec.md`），關閉作用中頁籤後，焦點必須依下列規則移動：(1) 若被關閉之作用中頁籤並非最右側頁籤，焦點必須移至其右鄰頁籤；(2) 若被關閉之作用中頁籤為最右側頁籤，焦點必須移至其左鄰頁籤；(3) 若關閉後已無任何頁籤，則無頁籤可移焦，頁籤列呈現空狀態；(4) 此規則僅適用於作用中頁籤之關閉，關閉非作用中頁籤不得觸發任何焦點或導頁變化。此為 `specs/shared/019-workspace-tabs/spec.md` FR-009、AC-1.5 明文委由本規格定義的規則，行為已於原型 `design/prototype/pages/shared/sidebar.js` 之 `closeWorkspaceTab()` 實作完成。
 
 ### 使用者流程與導頁
 
@@ -494,6 +513,7 @@ flowchart LR
 | 015 | Annotation Workspace | L0 `標記作業` + 任務角色 gating |
 | 016/017 | Dataset | L0 `資料集分析` + `stats/quality` active 映射 |
 | 006/007 | Admin | L0 `系統管理` 可見性與 active 映射 |
+| 019 | Workspace Tabs — 系統內建工作頁籤 | 本規格之共用殼層掛載頁籤列掛載點；承接關閉作用中頁籤焦點移動規則（FR-022）與快捷鍵總覽新增項（FR-016H），頁籤列本身完整行為仍由該規格擁有 |
 
 ---
 
@@ -585,6 +605,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.2.0 | 2026-10-02 | Issue #1075（OpenSpec change `1075-workspace-tabs-shared-008`，MINOR，G3——issue #1075 的第 10 個、最終堆疊 PR 群組）：新增使用者故事 10、FR-022、FR-016H。`specs/shared/019-workspace-tabs/spec.md`（workspace tabs，v1.0.0，9 個使用者故事、FR-001～022、SC-001～016）已於 G1～G2g 共 9 個先行 PR 群組實作工作頁籤列完整行為，其中 FR-009／Q7 明文將「關閉作用中頁籤後的焦點移動規則」委由本規格定義——**FR-022** 正式承接此規則（優先移至右鄰、若為最右側則移至左鄰），規則本身逐字對應該規格之 AC-1.5，行為已於原型 G2a-2（PR #1080）落地為 `closeWorkspaceTab()` 之既有邏輯，本次純為規格補述，未異動任何程式碼。**FR-016H** 為既有 FR-016 群（快捷鍵總覽）新增之頁籤 section（比照既有 FR-016G 之加列慣例），列出 `Alt+1…8`（切換頁籤）與 `Alt+W`（關閉作用中頁籤）兩列；此二快捷鍵之實際觸發與抑制行為仍由 `specs/shared/019-workspace-tabs/spec.md` FR-013、AC-5.1 至 AC-5.4 擁有，本條不重複定義，僅規範總覽顯示內容與格式——此項已依 TDD（Red→Green）於 `design/prototype/pages/shared/sidebar.js` 新增對應 section markup（手寫 production 18 行）。既有 FR-001～FR-021 群（含 FR-016～FR-016G）、SC-001～SC-014 逐字不動，未推翻任何既有 FR/AC（MINOR 邊界）。OpenSpec 衍生檢視 `openspec/specs/shared/008-sidebar-navbar-shared/` 已合併本次 2 個新增 Requirement（`added: 2, modified: 0, removed: 0`）。 |
 | 2.1.0 | 2026-09-28 | Issue #1041（OpenSpec change `fix-1041-sidebar-nav-i18n`，MINOR，4 個 stacked PR 群組：PR #1049／#1050／#1052／本次）：新增 FR-021、SC-014——Shared Sidebar 六個 L0 標籤（`navDashboard`／`navTaskManagement`／`navAnnotation`／`navDataset`／`navAdmin`／`navProfile`）全面語言感知，於元件內部解析並隨每次 `applyGlobalLanguage()` 呼叫重新解析（不只掛載當下一次）；`navAnnotation` 之 `annotator`/else 分支補上此前未定義的英文變體 `Annotation`（沿用全站既有消費頁一致採用之既有慣例字面值，非新創）。**issue body 前提已於派工前更正**：原描述「六個標籤從未國際化」不成立——11 個消費頁面中 10 個本來就各自以頁面級 `applyLang` 覆寫達成語言切換（只是違反 FR-020），真實的使用者可見缺陷僅兩處：`annotation-list.html` 的 `#navAnnotation`（`annotator`/無角色情境，issue #1023 移除覆寫後暴露的英文缺失）與 `annotation-workspace.html`（deep-link 情境下五中一英混雜）。**四組拆分**：第一組（PR #1049）修好上述兩處真實缺陷；第二至四組依模組批次移除其餘 10 個頁面已成死碼或持續生效覆寫（`admin/user-management.html`、`admin/role-settings.html`、`dashboard/dashboard.i18n.js`、`dataset/dataset-analysis-detail.html`、`dataset/dataset-analysis-list.js`＋`.i18n.js`、`account/profile.html`、`task-management/task-detail.html`／`task-list.html`／`task-new.html`），純屬 FR-020 合規與 DRY，非缺陷修復；逐檔核實覆寫與 `applyGlobalLanguage()` 之相對時序後發現並非全部同型——`annotation-list.html`／`admin` 兩頁／`dashboard.i18n.js`／`account/profile.html`／`dataset-analysis-detail.html`／`task-detail.html` 為持續生效之覆寫（移除前後渲染結果不變，是因字面值與元件逐字相同，非因覆寫已失效），`dataset-analysis-list.js`／`task-list.html`／`task-new.html` 之覆寫執行於 `applyGlobalLanguage()` **之前**、元件隨後蓋回，屬真正的無害死碼，兩者於各自 PR body 分開陳述。**SC-014 建模方式**：比照 issue #1018 已查證並裁定之既有模式——`specs/shared/008` 之成功標準（`SC-001`–`SC-013A`）從未透過 OpenSpec delta 的 `### Requirement:` 宣告產生，衍生檢視 `openspec/specs/shared/008-…` 僅含 FR 項目、零個 SC；SC-014 因此比照辦理，delta 僅宣告 FR-021 一個 Requirement，SC-014 於本次 archive 直接手寫進正典本節，未經過衍生檢視。既有 FR-020／FR-020A／FR-019 群／FR-002／FR-003A 等條文逐字不動，未推翻任何既有 FR/AC。 |
 | 2.0.1 | 2026-09-27 | **Lightweight Path** 澄清（issue #1023，非 OpenSpec change）：FR-020 本身只規範 Shared Sidebar 元件內部如何依 `opts.taskRole` 解析三個任務角色，並未規範**哪些消費頁面必須傳入該參數**——issue #944／#1018 兩版變更都只碰過 `sidebar.js` 與 `annotation-workspace.html` 一個消費端，`annotation-list.html` 的 `mountSidebar()` 呼叫從未補上對應的 `taskRole` 解析。annotation-015 FR-080 第 2 點要求入口麵包屑第 2 層返回 `annotation-list.html` 時回帶 `task_id`／`role`／`run_type`，`role` 確實回帶了，但 `annotation-list.html` 端沒有讀出來餵給側欄，導致 reviewer／project_leader 從 `annotation-workspace.html` 返回清單頁時，L0「標記作業」標籤會從「審核作業」／「例外處置」變回「標記作業」，同一審核動線內文案左右搖擺。**修法**（僅 `design/prototype/pages/annotation/annotation-list.html` 一個檔案）：`mountSidebar()` 呼叫新增比照 `annotation-workspace.html` 既有 `urlTaskRole` 解析邏輯（從 URL `role` 參數解析、`reviewer`／`project_leader`／其餘落回 `annotator`）並傳入 `taskRole`；同時發現並修正該頁自有、與 `taskRole` 完全無關的 `applyNavLabels()` 對 `navAnnotation` 節點之事後 DOM 覆寫——這個覆寫本身已違反 FR-020「此解析必須於 Shared Sidebar 元件內部完成，消費頁面不得於掛載完成後另行以 DOM 操作覆寫該節點之顯示文字」，若不移除，`taskRole` 解析出來的正確文字會在 `init()` 與每次語言切換時被這個舊機制蓋回頁面自有的固定字串；隨之移除因此孤兒化的 `I18N.zh.navAnnotation`／`I18N.en.navAnnotation` 兩個字典項（僅被該覆寫陣列引用，無其他消費者）。**FR-020 條文本身未新增、未移除、未修改任何字**——本次僅是澄清其既有沉默地帶（未規定哪些頁面必須傳入）並記錄一個既存缺口的修正，實際影響面由「僅 `annotation-workspace.html`」擴大為「`annotation-workspace.html` ＋ `annotation-list.html`」兩個頁面。**範圍外**：全站 11 個 `mountSidebar()` 呼叫點中，僅這兩個頁面屬於同一條審核／標記動線（有 FR-080 回帶的 `role` 脈絡可用）；本次不規定、不代表其餘頁面也須傳入 `taskRole`，那是新增契約、需完整 OpenSpec change 且需先逐頁盤點（issue #1023 body 明確排除，另立範圍）。**副作用（刻意接受的迴歸，非本次修正的一部分）**：移除 `annotation-list.html` 之消費端覆寫（該覆寫本身已違反 FR-020）後，該頁在英文語系下對 `annotator` 任務角色的 `#navAnnotation` 由原本頁面自有字典值 `'Annotation'` 退回 `sidebar.js` 之未翻譯回退值「標記作業」——英文使用者看到的介面文字比修法前更差，屬刻意接受、非預期的正確結果。原因：FR-020 現行條文對 `reviewer`（en: `Review`）與 `project_leader`（en: `Exception Disposition`）皆已定義英文字串，但 `annotator`／else 分支僅有「維持既有預設『標記作業』」、從未定義任何英文變體；補一個英文字串屬**新增**FR-020 契約內容，不是澄清，超出本次 Lightweight Path 範圍，已由 issue #1041 追蹤（待維護者裁示 L0 標籤 i18n 缺口）。`annotation-list.html` 因本次修法而加入 #1041 待修頁面集合。**相關既存缺口**：`design/prototype/tests/shared/language-switch-consistency.spec.ts:77` 現有一支測試**強制要求** `pages/admin/user-management.html`／`pages/admin/role-settings.html` 之 `applyLang` 邏輯必須更新 `navAnnotation`——即這兩頁的消費端覆寫同樣違反 FR-020，且有測試在強制維持該違規；此缺口與本次發現同類，非本次範圍，一併留給 #1041 處理，避免該 issue 派工時需重新發現。 |
 | 2.0.0 | 2026-09-27 | Issue #1018（OpenSpec change `fix-1018-sidebar-pl-label`，維護者裁定推翻 FR-020 對 `project_leader` 之既有判定，MAJOR）：`sidebar.js` 之 `navAnnotation` 於 `taskRole === 'project_leader'` 時原落回既有預設「標記作業」——這是 FR-020（issue #944）明文之既有判定，其依據為「與 annotation-015 FR-080 之 `crumbWorkAreaAnnotator` 文字一致」。但 issue #994／PR #1017 已讓同一畫面（`annotation-workspace.html`，`role=project_leader`）之入口麵包屑第一層改用新增之 `crumbWorkAreaProjectLeader`（「例外處置」／`Exception Disposition`），不再與 `crumbWorkAreaAnnotator`（「標記作業」）一致，FR-020 原判定依據之交叉引用因此失效，造成同一畫面上側欄與麵包屑文案矛盾。**變更內容**：FR-020 新增 `project_leader` 分支，顯示「例外處置」（en: `Exception Disposition`），與 `crumbWorkAreaProjectLeader` 文字一致；`reviewer`／`annotator` 兩分支逐字不變。同步修訂 SC-013A：`annotator` 維持既有預設「標記作業」；`project_leader` 改為「例外處置」，不再與 `annotator` 併列同一預設；`role-indicator`（FR-020A／SC-013A 之 `annotator` → 「一般使用者」）部分不變，不在本次範圍內。解析全部於 `sidebar.js` 元件內部（`renderSidebar()`）完成，延伸既有 `taskRoleI18n` 對照表，未新增任何消費端 DOM 覆寫。實查 11 個 `mountSidebar()` 呼叫點，僅 `annotation-workspace.html` 傳入 `taskRole`，故本次變更之實際影響面僅一個畫面，其餘不受影響。**範圍外發現（issue #1041 追蹤，本版不動）**：`navItems` 六個 L0 標籤中五個（`儀表板`／`任務管理`／`資料集分析`／`系統管理`／`個人設定`，`sidebar.js:498,505,519,526,536`）為硬編碼中文字面值，僅 `annotation` 項之角色分支透過 `taskRoleI18n` 語言感知；`readStoredLang()`（`sidebar.js:486`）僅於掛載當下讀取一次。故根因為「`annotator`／`project_leader` 共用預設『標記作業』從未有對應英文字串」，症狀為「`#navAnnotation` 不隨頁面 `lang-toggle` 即時切換」；`lang=en` 且 `role=reviewer` 時側欄實際渲染為五個中文項夾一個英文項（`儀表板 / 任務管理 / Review / 資料集分析 / 系統管理 / 個人設定`）之中英混雜結果，本次為 `project_leader` 新增語言感知分支後，觸發面擴大一倍。`sidebar.js` 本身已具備語言更新機制（`updateShortcutHelpLanguage()` `:140`、`updateSidebarThemeToggleLanguage()` `:212`），缺的是這幾個標籤的字串而非機制。 |
