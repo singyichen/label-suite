@@ -114,6 +114,9 @@
       workspaceSubmit: '提交目前標記',
       workspacePrevious: '上一筆',
       workspaceNext: '下一筆',
+      tabsTitle: '頁籤',
+      tabsSwitch: '切換至對應位置頁籤',
+      tabsClose: '關閉作用中頁籤',
       reviewTitle: '審核',
       reviewApprove: '通過目前結果',
       /* issue #596 (design.md 已確認決策 #1): 審核「退回」流程與 `R` 快捷鍵已
@@ -135,6 +138,9 @@
       workspaceSubmit: 'Submit current annotation',
       workspacePrevious: 'Previous sample',
       workspaceNext: 'Next sample',
+      tabsTitle: 'Tabs',
+      tabsSwitch: 'Switch to a tab by position',
+      tabsClose: 'Close the active tab',
       reviewTitle: 'Review',
       reviewApprove: 'Approve current result',
       reviewBypass: BYPASS_WORDING.en.decision,
@@ -197,6 +203,9 @@
     setTextById('shortcutWorkspaceSubmit', t.workspaceSubmit);
     setTextById('shortcutWorkspacePrevious', t.workspacePrevious);
     setTextById('shortcutWorkspaceNext', t.workspaceNext);
+    setTextById('shortcutTabsTitle', t.tabsTitle);
+    setTextById('shortcutTabsSwitch', t.tabsSwitch);
+    setTextById('shortcutTabsClose', t.tabsClose);
     setTextById('shortcutReviewTitle', t.reviewTitle);
     setTextById('shortcutReviewApprove', t.reviewApprove);
     setTextById('shortcutReviewBypass', t.reviewBypass);
@@ -1445,6 +1454,15 @@
                 '<div class="shortcut-help-row"><dt><strong id="shortcutWorkspaceSubmit">提交目前標記</strong></dt>' + keyGroup(['CTRL', 'CMD', 'ENTER']) + '</div>' +
                 '<div class="shortcut-help-row"><dt><strong id="shortcutWorkspacePrevious">上一筆</strong></dt>' + keyGroup(['ALT', 'LEFT']) + '</div>' +
                 '<div class="shortcut-help-row"><dt><strong id="shortcutWorkspaceNext">下一筆</strong></dt>' + keyGroup(['ALT', 'RIGHT']) + '</div>' +
+              '</dl>' +
+            '</div>' +
+            '<div class="shortcut-help-section" data-testid="shortcut-help-section-tabs">' +
+              '<div class="shortcut-help-section-header">' +
+                '<h3 id="shortcutTabsTitle">頁籤</h3>' +
+              '</div>' +
+              '<dl class="shortcut-help-list">' +
+                '<div class="shortcut-help-row" data-testid="shortcut-tabs-switch-row"><dt><strong id="shortcutTabsSwitch">切換至對應位置頁籤</strong></dt>' + keyGroup(['ALT', '1-8']) + '</div>' +
+                '<div class="shortcut-help-row" data-testid="shortcut-tabs-close-row"><dt><strong id="shortcutTabsClose">關閉作用中頁籤</strong></dt>' + keyGroup(['ALT', 'W']) + '</div>' +
               '</dl>' +
             '</div>' +
             '<div class="shortcut-help-section">' +
