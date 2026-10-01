@@ -21,10 +21,6 @@
       submitLabel: '提交',
       saveLabel: '儲存草稿',
       wsSaveSuccess: '已儲存',
-      skipLabel: '跳過',
-      skipReasonPlaceholder: '跳過理由（必填）',
-      skipNeedsReason: '請先填寫跳過理由，再跳過這一筆',
-      skipSuccess: '已跳過這一筆',
       arbitrationReasonPlaceholder: '裁定理由（必填）',
       arbitrationNeedsReason: '請先填寫裁定理由再送出，尚未填寫的項目',
       wsPrevBtnLabel: '上一筆',
@@ -184,10 +180,6 @@
       submitLabel: 'Submit',
       saveLabel: 'Save draft',
       wsSaveSuccess: 'Saved',
-      skipLabel: 'Skip',
-      skipReasonPlaceholder: 'Reason for skipping (required)',
-      skipNeedsReason: 'Give a reason before skipping this sample',
-      skipSuccess: 'Sample skipped',
       arbitrationReasonPlaceholder: 'Reason for this decision (required)',
       arbitrationNeedsReason: 'Give a reason before finalizing. Still missing',
       wsPrevBtnLabel: 'Previous',
@@ -1616,10 +1608,6 @@
       scroll.insertBefore(notice, preview);
     }
 
-    /* wsSkipBtn is NOT set here: renderSkipControl() (called after
-       renderWorkspace() in selectSample()) owns that button's DOM presence
-       and is the only place with a correct view of it post-insert/remove --
-       see its own comment for why. */
     setControlLocked('wsSaveBtn', locked);
     setControlLocked('wsSubmitBtn', locked);
     setPreviewControlsLocked(locked);
@@ -2342,7 +2330,6 @@
     restoreSample(currentSampleId);
     syncUrlToUnit();
     renderWorkspace();
-    renderSkipControl();
   }
 
   /* A workspace URL addresses one REVIEW UNIT, so every switch writes the
@@ -2835,90 +2822,6 @@
         return outKey + ': ' + (described || t('reviewNoAnswer'));
       })
       .join('\n');
-  }
-
-  /* ── Annotator skip (issue #578, FR-089 / AC-2.20) ──────────────────
-     The control is detached rather than hidden when it does not apply: a
-     reviewer must not merely be unable to click it (FR-089 says their view
-     never renders it), and a submitted sample offers no skip at all --
-     FR-013A's three states decide, so `pending` and `saved` keep it and
-     `submitted` loses it. Skipping does NOT change the sample's status;
-     it appends one `skipped` history event, leaving "I set this aside"
-     and "how far I got" as two facts that never overwrite each other. */
-  var skipGroupNode = null;
-  var skipGroupParent = null;
-  var skipGroupAnchor = null;
-
-  function skipReasonText() {
-    var input = document.getElementById('wsSkipReason');
-    return input ? input.value.trim() : '';
-  }
-
-  /* Blocked-not-disabled, the same convention issue #552 set for the
-     reviewer submit: dimmed via [data-submit-blocked], but the click still
-     reaches the handler so the toast can say what is missing. */
-  function refreshSkipBlocker() {
-    var btn = document.getElementById('wsSkipBtn');
-    if (!btn) return;
-    if (skipReasonText()) btn.removeAttribute('data-submit-blocked');
-    else btn.setAttribute('data-submit-blocked', 'reason');
-  }
-
-  function renderSkipControl() {
-    if (!skipGroupNode) return;
-    /* FR-101 (issue #908): a finalized unit is, by construction, already
-       submitted (the lock's own trigger condition requires a real stored
-       annotator submission), so the pre-existing "already-submitted sample
-       is not skippable" removal below would otherwise strip wsSkipBtn from
-       the DOM for every locked sample too -- but FR-101 requires the three
-       controls to stay on screen, disabled, not removed. `locked` keeps the
-       group present so the disable path a few lines down has an element to
-       disable. */
-    var locked = isCurrentSampleAnnotatorLocked();
-    var applies =
-      currentRole === 'annotator' &&
-      (locked || !window.LabelSuiteAnnotationWorkspaceData.isSampleSubmitted(
-        currentProfile.id, currentRole, currentRunType, currentSampleId, currentIdentity
-      ));
-    if (applies) {
-      if (!skipGroupNode.parentNode) skipGroupParent.insertBefore(skipGroupNode, skipGroupAnchor);
-      refreshSkipBlocker();
-    } else if (skipGroupNode.parentNode) {
-      skipGroupNode.remove();
-    }
-    setControlLocked('wsSkipBtn', locked);
-  }
-
-  function handleSkip() {
-    var reason = skipReasonText();
-    if (!reason) {
-      showToast(t('skipNeedsReason'), 'warning');
-      return;
-    }
-    var skipped = window.LabelSuiteAnnotationWorkspaceData.markSampleSkipped(
-      currentProfile.id,
-      currentRunType,
-      currentSampleId,
-      reason,
-      buildHistorySummary(),
-      currentIdentity
-    );
-    if (skipped === false) {
-      showToast(t('annotatorFinalizedToast'), 'warning');
-      return;
-    }
-    var input = document.getElementById('wsSkipReason');
-    if (input) input.value = '';
-    refreshSkipBlocker();
-    renderSampleList();
-    renderHistoryPanel();
-    showToast(t('skipSuccess'));
-    /* FR-089: a skip lands on the next sample by the SAME rule a submit
-       does (FR-022A, and FR-022C when nothing is left), rather than a
-       second navigation scheme of its own. */
-    var nextUnit = findNextPendingUnit(buildUnits());
-    if (nextUnit) selectSample(nextUnit.recordId);
-    else window.location.href = buildListReturnUrl();
   }
 
   function handleSave() {
@@ -6723,14 +6626,6 @@
     } else if (submitBtn) {
       setText('wsSubmitLabel', t('submitLabel'));
       setText('wsSaveLabel', t('saveLabel'));
-      setText('wsSkipLabel', t('skipLabel'));
-      var skipReasonInput = document.getElementById('wsSkipReason');
-      if (skipReasonInput) {
-        skipReasonInput.placeholder = t('skipReasonPlaceholder');
-        /* The placeholder is the only visible wording, so it has to double
-           as the accessible name -- a placeholder alone is not one. */
-        skipReasonInput.setAttribute('aria-label', t('skipReasonPlaceholder'));
-      }
     }
     setText('wsPrevBtnLabel', t('wsPrevBtnLabel'));
     setText('wsNextBtnLabel', t('wsNextBtnLabel'));
@@ -6828,17 +6723,6 @@
     } else {
       if (submitBtn) submitBtn.addEventListener('click', handleSubmit);
       if (saveBtn) saveBtn.addEventListener('click', handleSave);
-    }
-    skipGroupNode = document.getElementById('wsSkipGroup');
-    if (skipGroupNode) {
-      skipGroupParent = skipGroupNode.parentNode;
-      skipGroupAnchor = skipGroupNode.nextSibling;
-      if (currentRole === 'annotator') {
-        document.getElementById('wsSkipBtn').addEventListener('click', handleSkip);
-        document.getElementById('wsSkipReason').addEventListener('input', refreshSkipBlocker);
-      } else {
-        skipGroupNode.remove();
-      }
     }
     setupActionShortcuts();
 
