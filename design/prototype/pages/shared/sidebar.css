@@ -1023,3 +1023,87 @@ body.sidebar-collapsed .notif-dropdown { left: 88px; }
     display: none;
   }
 }
+
+/* Mobile (<=767px) dropdown replacement for the desktop tab bar above
+   (issue #1075 sub-group G2e, AC-6.1-AC-6.3 / FR-002 / FR-015). Toggle
+   button mirrors .mobile-notification-bell-btn's default-hidden/`@media`
+   pair; dropdown panel mirrors .notif-dropdown's fixed-position pattern,
+   but spans the viewport width (minus margins) instead of a fixed 320px so
+   long task-detail labels truncate instead of forcing horizontal scroll. */
+.workspace-tab-mobile-toggle {
+  display: none;
+  align-items: center;
+  gap: 4px;
+  height: 34px;
+  padding: 0 var(--space-sm);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+  color: var(--color-ink-muted);
+  flex-shrink: 0;
+  cursor: pointer;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.workspace-tab-mobile-dropdown {
+  position: fixed;
+  left: 8px;
+  right: 8px;
+  top: var(--navbar-mobile-top-height, 64px);
+  max-height: 60vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 32px rgba(30, 27, 75, 0.14);
+  z-index: 600;
+}
+
+.workspace-tab-mobile-dropdown.hidden { display: none; }
+
+.workspace-tab-mobile-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 10px var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+  cursor: pointer;
+}
+
+.workspace-tab-mobile-item:last-child { border-bottom: none; }
+.workspace-tab-mobile-item.active { background: var(--color-primary-soft-bg); }
+
+.workspace-tab-mobile-item-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  color: var(--color-ink);
+}
+
+.workspace-tab-mobile-item-close {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-ink-muted);
+  cursor: pointer;
+}
+
+.workspace-tab-mobile-item-close:hover { background: var(--color-border); }
+
+@media (max-width: 767px) {
+  .workspace-tab-mobile-toggle {
+    display: inline-flex;
+  }
+}
