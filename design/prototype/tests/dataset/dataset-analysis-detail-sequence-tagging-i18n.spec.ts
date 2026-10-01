@@ -5,8 +5,6 @@
 import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
-test.describe.configure({ retries: 2 });
-
 const DETAIL_URL = '/pages/dataset/dataset-analysis-detail.html?task_id=T103';
 
 async function gotoWithLang(page: Page, lang: 'zh' | 'en', tab: 'stats' | 'quality') {

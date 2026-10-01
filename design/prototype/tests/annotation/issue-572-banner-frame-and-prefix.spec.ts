@@ -14,8 +14,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
 
-test.describe.configure({ retries: 2 });
-
 function banner(page: Page) {
   return page.getByTestId('ws-review-unit-context');
 }

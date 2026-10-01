@@ -93,8 +93,6 @@ async function openHistory(page: Page) {
 /* Newest-first panel, so the submit card is index 0. */
 const latestCard = (page: Page) => page.locator('.history-item').first();
 
-test.describe.configure({ retries: 2 });
-
 test.describe('issue #590 -- relation_identification position-bearing history diff (FR-098 §5)', () => {
   test('a moved subject boundary plus a new triple render as one boundary (with before/after ranges) and two added entities', async ({ page }) => {
     const errors = trackPageErrors(page);

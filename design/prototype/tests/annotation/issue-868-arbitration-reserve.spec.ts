@@ -50,8 +50,6 @@ async function loadData(page: Page): Promise<void> {
   );
 }
 
-test.describe.configure({ retries: 2 });
-
 test('all task-designated arbiters are excluded from new assignments and remaining reviewers stay balanced', async ({ page }) => {
   await loadData(page);
 
