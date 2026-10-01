@@ -803,31 +803,66 @@
     // window.location read taken later (inside run()).
     var capturedLoc = { pathname: window.location.pathname, search: window.location.search };
 
+    // Guards the replaceState patch below: sessionStorage's activeIndex
+    // only correctly identifies THIS tab's own slot once run() (deferred to
+    // DOMContentLoaded) has called syncCurrentPageIntoWorkspaceTabs() for
+    // THIS page load. Before that, activeIndex is still whatever the
+    // PREVIOUS page in this tab left behind. A page can call
+    // history.replaceState() in its own early, still-synchronous script --
+    // acting on it before this flag is set would read/write the wrong
+    // tab's slot entirely (observed via issue-891-live-review-pools.spec.ts).
+    var workspaceTabBarReady = false;
+
     // AC-3.5 / FR-007 (Q18): a page's OWN history.replaceState() calls (e.g.
     // task-management-014 FR-019's in-page sub-tab/filter writes) may rekey
     // this tab's dedupe key onto one a DIFFERENT, already-open tab already
     // holds. Installed once, before any page-specific script can call
-    // replaceState (sidebar.js loads first). Reads window.location AFTER
-    // the native call so it sees the just-applied new URL.
+    // replaceState (sidebar.js loads first).
+    //
+    // A page like task-detail.html calls replaceState many times during its
+    // OWN bootstrap as separate panels each normalize their slice of the URL
+    // (observed via issue-891-live-review-pools.spec.ts: a single page load
+    // cycles through several transient, not-yet-settled combinations of
+    // `tab=`/`ap_stage=` before landing on its final URL). Reacting to each
+    // call individually would (a) momentarily record a transient, non-final
+    // URL as this tab's own identity, and (b) risk matching another tab's
+    // dedupe key purely by transient coincidence, redirecting away from the
+    // page mid-bootstrap. Debounce to the end of that burst (a 0ms timeout
+    // still waits for the current synchronous call stack -- and any
+    // same-tick chained replaceState calls -- to finish) and act once on
+    // the final, settled URL.
     var nativeWorkspaceReplaceState = window.history.replaceState.bind(window.history);
+    var workspaceReplaceStateSettleTimer = null;
     window.history.replaceState = function (replaceStateData, title, url) {
       nativeWorkspaceReplaceState(replaceStateData, title, url);
-      var loc = { pathname: window.location.pathname, search: window.location.search };
-      var info = computeWorkspaceDedupeInfo(loc);
-      var state = readWorkspaceTabState();
-      for (var i = 0; i < state.tabs.length; i++) {
-        if (i !== state.activeIndex && state.tabs[i].dedupeKey === info.dedupeKey) {
-          state.activeIndex = i;
-          writeWorkspaceTabState(state);
-          try {
-            window.sessionStorage.setItem(WORKSPACE_TAB_REKEY_NOTICE_KEY, '1');
-          } catch (error) {
-            // Ignore storage errors in prototype mode.
-          }
-          window.location.replace(state.tabs[i].url); // AC-2.5: no history growth
-          return;
-        }
+      if (!workspaceTabBarReady) return;
+      if (workspaceReplaceStateSettleTimer) {
+        clearTimeout(workspaceReplaceStateSettleTimer);
       }
+      workspaceReplaceStateSettleTimer = setTimeout(function () {
+        workspaceReplaceStateSettleTimer = null;
+        var loc = { pathname: window.location.pathname, search: window.location.search };
+        var info = computeWorkspaceDedupeInfo(loc);
+        var state = readWorkspaceTabState();
+        for (var i = 0; i < state.tabs.length; i++) {
+          if (i !== state.activeIndex && state.tabs[i].dedupeKey === info.dedupeKey) {
+            state.activeIndex = i;
+            writeWorkspaceTabState(state);
+            try {
+              window.sessionStorage.setItem(WORKSPACE_TAB_REKEY_NOTICE_KEY, '1');
+            } catch (error) {
+              // Ignore storage errors in prototype mode.
+            }
+            window.location.replace(state.tabs[i].url); // AC-2.5: no history growth
+            return;
+          }
+        }
+        // No collision: FR-007 requires a tab's own stored entry to stay
+        // unchanged through in-page churn that doesn't collide (AC-3.5),
+        // so this is intentionally a no-op, not a sync -- see issue #1084
+        // for the known gap this leaves (a reload after non-colliding
+        // in-page navigation can restore a stale sub-state).
+      }, 0);
     };
 
     function run() {
@@ -892,6 +927,9 @@
       var state = syncCurrentPageIntoWorkspaceTabs(capturedLoc);
       renderWorkspaceTabBar(barEl, state, activateWorkspaceTab, closeWorkspaceTab);
       restoreActiveWorkspaceTabScroll(state); // AC-2.1: restore on (re-)mount
+      // Only now does state.activeIndex reliably identify THIS tab's own
+      // slot -- safe for the replaceState patch above to act from here on.
+      workspaceTabBarReady = true;
 
       // AC-2.1 / FR-019: capture this tab's own scroll position right before
       // it is navigated away from, however that navigation happens (a
