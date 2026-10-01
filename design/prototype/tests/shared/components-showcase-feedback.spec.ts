@@ -116,7 +116,16 @@ test.describe('Components showcase — feedback batch', () => {
     await page.locator('#comp-toast [data-toast-variant="error"]').click();
     const toast = page.locator('#toast');
     await expect(toast).toBeVisible();
-    // outlives the success duration — still visible well past 3000ms
+    // outlives the success duration — still visible well past 3000ms.
+    // issue #1059 G7: not converted to page.clock.fastForward() -- the
+    // toast's `visibility` is gated by a real
+    // `transition: ..., visibility 0s linear var(--dur-fast)`
+    // (components-showcase.html:406), which only elapses in actual
+    // wall-clock time, not fake JS time; a fake-clock jump would report
+    // toBeVisible() === true immediately regardless of whether a
+    // regression made TOAST_DURATIONS.error non-zero (see the sibling
+    // finding in tests/admin/user-management.spec.ts's UXC-07 case,
+    // confirmed empirically there with a deliberate mutation).
     await page.waitForTimeout(3500);
     await expect(toast).toBeVisible();
     await toast.locator('[aria-label]').click();
