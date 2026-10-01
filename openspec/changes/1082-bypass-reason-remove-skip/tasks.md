@@ -34,7 +34,7 @@
 **故事目標**：SC-006 — 確認新增之 Bypass 理由欄位與既有審核、仲裁、定稿鎖定、示範列豁免、dry_run 流程皆未回歸，且 015 正典與 STATUS.md 於最終組同步更新。
 
 - [ ] 3.1 執行閘門（每組）：`scripts/check-sdd.sh`、`scripts/speckit-tests.sh`、`scripts/check-spec-artifacts.sh`、`scripts/check-demo-data-parity.sh`、`node scripts/check-user-path-map-freshness.mjs`、`scripts/inventory-tests.sh`、`scripts/pre-commit-tests.sh`、`scripts/pre-tool-use-tests.sh`；`npx -p @fission-ai/openspec openspec validate --changes --no-interactive`（G1／G3）；`cd design/prototype && pnpm typecheck && pnpm test:node && PW_PORT=8985 pnpm playwright test <本次新增規格 + 迴歸集合> --workers=1`；`node scripts/gen-screen-inventory.mjs --check`。全部通過方可繼續，主責（lead）親自重跑並獨立覆核，不採信代理自報。[@main]
-- [ ] 3.2 執行 Source-Verify 與正典回寫（最終組）：確認 FR-089、FR-086、FR-101、AC-2.20、AC-2.27、AC-2.29、FR-092、AC-3.66 皆可於正典逐一 grep 定位；`openspec archive` 回寫正典（版本 9.1.1 → 10.0.0，補 Changelog 條目）並同步更新 `openspec/specs/` derived view；更新 `specs/STATUS.md`。[@main]
+- [ ] 3.2 執行 Source-Verify 與正典回寫（最終組）：確認 FR-089、FR-086、FR-101、AC-2.20、AC-2.27、AC-2.29、FR-092、AC-3.66 皆可於正典逐一 grep 定位（Source-Verify 時一律加 `LC_ALL=C`，裸 `grep`／`grep -n` 在 `annotation-workspace.data.js` 等檔案曾出現 locale 相關偽陰性，誤判既有函式不存在）；`openspec archive` 回寫正典（版本 9.1.1 → 10.0.0，補 Changelog 條目）——**明確子步驟**：正典 AC-2.20 之既有條文（原「跳過必須填寫理由」本體）須整段刪除並以 delta 中「Bypass 理由必填，未填阻擋送出、填寫後理由進入 submitted 事件」情境之內容取代（沿用 AC-2.20 id，不新增編號），不得同時保留兩段內容、不得僅附加不刪除舊文；AC-3.66 比照辦理，依序插入 015 現行 AC-3.65 之後；並同步更新 `openspec/specs/` derived view；更新 `specs/STATUS.md`。[@main]
 
 ## 4. 獨立審查與 PR
 
