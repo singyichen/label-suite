@@ -3,7 +3,7 @@ import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
 
 /* 歷程動作集合與責任鏈加詳 (spec 015 v5.0.0, issue #596 群組 4).
  *
- * FR-086 / AC-2.16: HISTORY_ACTIONS becomes nine values -- `rejected` leaves
+ * FR-086 / AC-2.16: HISTORY_ACTIONS becomes eight values -- `rejected` leaves
  * with the rework loop, `bypassed` / `exception_resolved` / `excluded` arrive
  * with the three-way decision, arbitration and the final exception pool.
  * Every value owns its own badge modifier, and a `rejected` event already in
@@ -16,18 +16,24 @@ import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
  * of -- action badge, per-outKey 前值 → 後值, 耗時, and a named decider --
  * and an unsubmitted peer draft is not one of them (FR-062).
  *
- * The nine events are seeded straight into the submission bucket rather than
+ * The eight events are seeded straight into the submission bucket rather than
  * driven through the UI: `bypassed` / `exception_resolved` / `excluded` get
  * their emission points in groups 3 and 6, and AC-2.16 is about how the set
  * RENDERS, not about who writes it.
  *
- * Not asserted here, deliberately: that the nine semantic colours are
+ * Not asserted here, deliberately: that the eight semantic colours are
  * pairwise distinct. The colours live in .history-action-badge.<modifier>
  * rules inside annotation-workspace.html, which PR group 4 may not touch
  * (group 3 owns that file concurrently). The single-source-of-truth half of
  * FR-086 -- one distinct modifier class per value, chosen by table and not by
  * a render-site branch -- is fully asserted below; the three new rules are
  * tracked as a follow-up for whoever owns that file next.
+ *
+ * v10.0.0 (issue #1082): `skipped` is retired along with the annotator skip
+ * control itself -- nine values become eight. A pre-existing `skipped` event
+ * now falls outside HISTORY_ACTIONS and renders via the same neutral-badge /
+ * English-literal fallback this file already pins for `rejected`; it is not
+ * re-tested here (see annotation-workspace-bypass-reason.spec.ts instead).
  */
 
 const TASK = 'T001';
@@ -43,7 +49,6 @@ const PEER_DRAFT_BUCKET = `labelsuite.wsSubmissions.${TASK}::reviewer::official_
 const HISTORY_ACTIONS: Array<[string, string, string]> = [
   ['draft_saved', 'draft-saved', '已存草稿'],
   ['submitted', 'submitted', '已提交'],
-  ['skipped', 'skipped', '已跳過'],
   ['modified', 'modified', '審核修正'],
   ['accepted', 'accepted', '審核通過'],
   ['bypassed', 'bypassed', '無法裁決'],
@@ -84,14 +89,14 @@ function seedBucket(page: Page, key: string, status: string, events: SeededEvent
   );
 }
 
-const ANNOTATOR_ACTIONS = ['draft_saved', 'submitted', 'skipped'];
+const ANNOTATOR_ACTIONS = ['draft_saved', 'submitted'];
 
 function at(idx: number): string {
   return `2026-08-31T09:${String(10 + idx).padStart(2, '0')}:00.000Z`;
 }
 
-/* The nine constants plus one retired value, so the set and its compatibility
-   path are proved by the same rendered list. */
+/* The eight constants plus one retired value, so the set and its
+   compatibility path are proved by the same rendered list. */
 function vocabularyEvents(): SeededEvent[] {
   return HISTORY_ACTIONS.map(([action]) => action)
     .concat(RETIRED_ACTION)
@@ -112,8 +117,8 @@ async function openHistory(page: Page) {
   await page.getByTestId('ws-guideline-tab-history').click();
 }
 
-test.describe('FR-086 / AC-2.16 歷程動作九值集合', () => {
-  test('九值各有專屬徽章修飾類別與中文標籤，且集合中不含 rejected', async ({ page }) => {
+test.describe('FR-086 / AC-2.16 歷程動作八值集合', () => {
+  test('八值各有專屬徽章修飾類別與中文標籤，且集合中不含 rejected', async ({ page }) => {
     const pageErrors: Error[] = [];
     page.on('pageerror', (err) => pageErrors.push(err));
 
