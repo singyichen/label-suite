@@ -42,25 +42,24 @@ import { test, expect, type Page } from '@playwright/test';
  *   alongside T014-T016); task 2.1 and "## 2. PR-815-B" 規模例外聲明
  *   (7 registries) of the archived OpenSpec change
  *   `retire-stale-review-demo-fixtures`; issue #815.
+ *
+ * issue #1059 G6b (inventory.csv decision=merge): point 2's five per-
+ * registry/DOM cases (requirement 2a-2e) were folded into requirement 1
+ * below -- see the comment above requirement 3a for the matrix's
+ * "replaced by one canonical registry assertion" rationale and the
+ * coverage trade-off it accepts. This file's point 2 above is left as
+ * historical record of what task 2.1 originally required.
  */
 
 const TASK_LIST_URL = '/pages/task-management/task-list.html?task_role=super_admin';
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 const DASHBOARD_URL = '/pages/dashboard/dashboard.html';
-const DATASET_DETAIL_URL = '/pages/dataset/dataset-analysis-detail.html';
 const PANEL_LOAD_TIMEOUT = 15000;
 
-const REMOVED_TASK_ID = 'T017';
 const SURVIVING_TASK_IDS = ['T014', 'T015', 'T016'];
 
 type RunType = 'dry_run' | 'official_run';
 type TaskListTask = { id: string; sourceFile?: string; runType?: RunType };
-type AssignmentSeed = { exampleTaskId: string };
-type DashboardTask = { id: string };
-type ReviewWorkload = {
-  byReviewer: Record<string, { pending: number; done: number }>;
-  unassigned: number;
-};
 
 async function openDashboardScenario(page: Page, scenario: 'annotator' | 'reviewer') {
   await page.goto(DASHBOARD_URL);
@@ -84,146 +83,30 @@ test.describe('T017 review-flow demo fixture is fully removed (issue #815, tasks
 
     /* issue #783 later adds T018 (FR-010o-4 IAA-computation-failed demo,
        sourceFile 'review-flow-iaa-failed.json') to task-list.data.js only;
-       it shares the review-flow- prefix but is not part of the dashboard
-       registries SURVIVING_TASK_IDS drives below, so it is appended here
-       rather than to that constant. */
+       it shares the review-flow- prefix but is not one of the
+       SURVIVING_TASK_IDS dashboard/task-detail fixtures below, so it is
+       appended here rather than to that constant. */
     expect(demoTaskIds).toEqual([...SURVIVING_TASK_IDS, 'T018']);
   });
 
-  test('requirement 2a: task-detail.html-loaded registries (annotation-workspace, task-list, task-detail, task-detail.html itself) no longer key T017', async ({ page }) => {
-    await page.goto(TASK_DETAIL_URL + '?task_id=T014');
-    await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
-
-    const registryKeys = await page.evaluate(({ removedTaskId, survivingTaskIds }) => {
-      const w = window as unknown as {
-        LabelSuiteAnnotationWorkspaceData: {
-          REVIEWER_MOCK_ROWS: Record<string, unknown>;
-          listReviewPoolItems: (
-            taskId: string,
-            runType: RunType,
-          ) => { awaitingArbitration: unknown[]; pendingExceptions: unknown[] };
-          computeReviewWorkload: (
-            taskId: string,
-            runType: RunType,
-            reviewerIds: string[],
-            activeReviewerIds: string[],
-          ) => ReviewWorkload;
-        };
-        LabelSuiteTaskListData: { tasks: TaskListTask[] };
-        LabelSuiteTaskDetailData: {
-          profiles: Record<string, { reviewerIds?: string[] }>;
-        };
-        REVIEW_WORKLOAD_BY_TASK?: Record<string, unknown>;
-        REVIEW_FLOW_UNITS?: Record<string, unknown>;
-      };
-      const liveReviewState = (taskId: string) => {
-        const task = w.LabelSuiteTaskListData.tasks.find((entry) => entry.id === taskId);
-        const runType = task?.runType || 'official_run';
-        const reviewerIds = w.LabelSuiteTaskDetailData.profiles[taskId]?.reviewerIds || [];
-        const pools = w.LabelSuiteAnnotationWorkspaceData.listReviewPoolItems(taskId, runType);
-        const workload = w.LabelSuiteAnnotationWorkspaceData.computeReviewWorkload(
-          taskId,
-          runType,
-          reviewerIds,
-          reviewerIds,
-        );
-        const assignedUnits = Object.values(workload.byReviewer).reduce(
-          (total, reviewer) => total + reviewer.pending + reviewer.done,
-          0,
-        );
-        return {
-          taskId,
-          awaiting: pools.awaitingArbitration.length,
-          exceptions: pools.pendingExceptions.length,
-          workloadUnits: assignedUnits + workload.unassigned,
-        };
-      };
-      return {
-        reviewerMockRows: Object.keys(w.LabelSuiteAnnotationWorkspaceData.REVIEWER_MOCK_ROWS),
-        taskListIds: w.LabelSuiteTaskListData.tasks.map((task) => task.id),
-        taskDetailProfiles: Object.keys(w.LabelSuiteTaskDetailData.profiles),
-        reviewFlowUnits: Object.keys(w.REVIEW_FLOW_UNITS || {}),
-        staticReviewWorkloadRetired: w.REVIEW_WORKLOAD_BY_TASK === undefined,
-        staticReviewFlowUnitsRetired: w.REVIEW_FLOW_UNITS === undefined,
-        removedTaskLiveReviewState: liveReviewState(removedTaskId),
-        survivingTaskLiveReviewState: survivingTaskIds.map(liveReviewState),
-      };
-    }, { removedTaskId: REMOVED_TASK_ID, survivingTaskIds: SURVIVING_TASK_IDS });
-
-    expect(registryKeys.reviewerMockRows, 'REVIEWER_MOCK_ROWS (annotation-workspace.data.js)').not.toContain(REMOVED_TASK_ID);
-    expect(registryKeys.taskListIds, 'LabelSuiteTaskListData.tasks (task-list.data.js)').not.toContain(REMOVED_TASK_ID);
-    expect(registryKeys.taskDetailProfiles, 'LabelSuiteTaskDetailData.profiles (task-detail.data.js)').not.toContain(REMOVED_TASK_ID);
-    expect(registryKeys.reviewFlowUnits, 'REVIEW_FLOW_UNITS (task-detail.html)').not.toContain(REMOVED_TASK_ID);
-    expect(registryKeys.staticReviewWorkloadRetired, 'static REVIEW_WORKLOAD_BY_TASK must remain retired after #891').toBe(true);
-    expect(registryKeys.staticReviewFlowUnitsRetired, 'static REVIEW_FLOW_UNITS must remain retired after #892').toBe(true);
-    expect(registryKeys.removedTaskLiveReviewState).toEqual({
-      taskId: 'T017',
-      awaiting: 0,
-      exceptions: 0,
-      workloadUnits: 0,
-    });
-    expect(registryKeys.survivingTaskLiveReviewState).toEqual([
-      { taskId: 'T014', awaiting: 3, exceptions: 0, workloadUnits: 15 },
-      { taskId: 'T015', awaiting: 1, exceptions: 0, workloadUnits: 4 },
-      { taskId: 'T016', awaiting: 2, exceptions: 1, workloadUnits: 5 },
-    ]);
-
-    for (const taskId of SURVIVING_TASK_IDS) {
-      expect(registryKeys.reviewerMockRows, `REVIEWER_MOCK_ROWS missing ${taskId}`).toContain(taskId);
-      expect(registryKeys.taskListIds, `LabelSuiteTaskListData.tasks missing ${taskId}`).toContain(taskId);
-      expect(registryKeys.taskDetailProfiles, `LabelSuiteTaskDetailData.profiles missing ${taskId}`).toContain(taskId);
-    }
-  });
-
-  test('requirement 2b: dashboard.html-loaded registries (dashboard.data.js, dashboard.assignments.js) no longer key T017', async ({ page }) => {
-    await page.goto(DASHBOARD_URL);
-
-    const registryKeys = await page.evaluate(() => {
-      const w = window as unknown as {
-        LabelSuiteDashboard: { data: { tasks: DashboardTask[] } };
-        LabelSuiteAssignmentSeeds: AssignmentSeed[];
-      };
-      return {
-        dashboardTaskIds: w.LabelSuiteDashboard.data.tasks.map((task) => task.id),
-        assignmentTaskIds: w.LabelSuiteAssignmentSeeds.map((seed) => seed.exampleTaskId),
-      };
-    });
-
-    expect(registryKeys.dashboardTaskIds, 'LabelSuiteDashboard.data.tasks (dashboard.data.js)').not.toContain(REMOVED_TASK_ID);
-    expect(registryKeys.assignmentTaskIds, 'LabelSuiteAssignmentSeeds (dashboard.assignments.js)').not.toContain(REMOVED_TASK_ID);
-
-    for (const taskId of SURVIVING_TASK_IDS) {
-      expect(registryKeys.dashboardTaskIds, `LabelSuiteDashboard.data.tasks missing ${taskId}`).toContain(taskId);
-      expect(registryKeys.assignmentTaskIds, `LabelSuiteAssignmentSeeds missing ${taskId}`).toContain(taskId);
-    }
-  });
-
-  test('requirement 2c: dataset-analysis-detail.html TASK_META no longer keys T017', async ({ page }) => {
-    await page.goto(`${DATASET_DETAIL_URL}?task_id=T014&tab=quality`);
-
-    const taskMetaKeys = await page.evaluate(() =>
-      Object.keys((window as unknown as { TASK_META: Record<string, unknown> }).TASK_META),
-    );
-
-    expect(taskMetaKeys, 'TASK_META (dataset-analysis-detail.html)').not.toContain(REMOVED_TASK_ID);
-    for (const taskId of SURVIVING_TASK_IDS) {
-      expect(taskMetaKeys, `TASK_META missing ${taskId}`).toContain(taskId);
-    }
-  });
-
-  test('requirement 2d (DOM): task-list.html no longer renders a T017 row', async ({ page }) => {
-    await page.goto(TASK_LIST_URL);
-
-    await expect(
-      page.locator('#taskTableBody tr[data-source-file="review-flow-official-tie.json"]'),
-    ).toHaveCount(0);
-  });
-
-  test('requirement 2e (DOM): dataset-analysis-detail.html no longer resolves T017 by direct URL', async ({ page }) => {
-    await page.goto(`${DATASET_DETAIL_URL}?task_id=T017&tab=quality`);
-
-    await expect(page).toHaveURL(/dataset-analysis-list\.html/);
-  });
+  // issue #1059 G6b (inventory.csv decision=merge, intra-file fold): the
+  // five "requirement 2a"-"requirement 2e" cases used to sit here, each
+  // independently re-proving across one more registry/DOM surface
+  // (annotation-workspace.data.js, task-list.data.js, task-detail.data.js,
+  // task-detail.html's REVIEW_FLOW_UNITS, dashboard.data.js,
+  // dashboard.assignments.js, dataset-analysis-detail.html's TASK_META,
+  // plus two DOM reachability checks) that T017 is gone and T014-T016
+  // survive. The matrix's reason text for all five rows: "Permanent
+  // negative proof across 7 registries replaced by one canonical registry
+  // assertion" -- requirement 1 above already pins task-list.data.js's
+  // `tasks` registry (the one place a demo task must be declared to exist
+  // at all) to exactly T014-T016 (+T018), which is this group's designated
+  // sole survivor. Carried forward as an open item: unlike requirement 1,
+  // the five dropped cases checked OTHER registries independently and a
+  // regression that hand-edits only one of those six files (without
+  // touching task-list.data.js) would no longer be caught -- this is the
+  // coverage trade-off the matrix's "replaced by one canonical registry
+  // assertion" reasoning accepts, not one G6b introduces.
 
   test('requirement 3a: T014-T016 task-list rows stay individually correct after T017 removal', async ({ page }) => {
     await page.goto(TASK_LIST_URL);

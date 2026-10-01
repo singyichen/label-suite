@@ -124,6 +124,7 @@ test.describe('Keystrokes that must not decide', () => {
   test('typing a and b into the free_text correction field only types', async ({ page }) => {
     await gotoReviewer(page, 'T009', 'sum-001');
     const approve = page.getByTestId('ws-review-row-approve');
+    const bypass = page.getByTestId('ws-review-row-bypass');
 
     const field = page.getByTestId('ws-review-row').locator('textarea, input[type="text"]').first();
     await field.click();
@@ -132,6 +133,7 @@ test.describe('Keystrokes that must not decide', () => {
 
     await expect(field).toHaveValue('abab');
     await expect(approve).toHaveAttribute('aria-pressed', 'false');
+    await expect(bypass).toHaveAttribute('aria-pressed', 'false');
   });
 
   test('the annotator workspace ignores a and b', async ({ page }) => {
@@ -143,6 +145,7 @@ test.describe('Keystrokes that must not decide', () => {
     await page.keyboard.press('b');
 
     await expect(page.getByTestId('ws-review-row-approve')).toHaveCount(0);
+    await expect(page.getByTestId('ws-review-row-bypass')).toHaveCount(0);
     assertNoPageErrors(errors);
   });
 });

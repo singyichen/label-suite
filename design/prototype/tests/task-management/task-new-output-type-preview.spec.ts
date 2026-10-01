@@ -655,6 +655,39 @@ test.describe('Step 2 preview: all 8 output types with example data', () => {
     await expectGenericInputPreview(page, 'hidden');
   });
 
+  // issue #1059 G6b (inventory.csv decision=merge, #581/FR-003d-1): this
+  // case used to sit in task-management/issue-581-seq-tagging-config-
+  // fields.spec.ts ("sequence_tagging snap unit offers character and word
+  // and defaults to character"). The matrix row named
+  // issue-581-entity-recognition-snap.spec.ts as the literal survivor
+  // (same option-list assertion, already present there), but that file is
+  // itself issue-named, so README Test Policy rule 3 points the fold at
+  // this file instead (row text: "Canonical destination: task-management/
+  // task-new-output-type-preview.spec.ts -- the only feature-named suite
+  // that already drives snap-unit-select"). issue-581-entity-recognition-
+  // snap.spec.ts keeps its own decision=keep copy of the option-list
+  // assertion untouched (outside the 19-row mandate); this test adds the
+  // one assertion nothing else covers: the default snap_unit value.
+  test('Sequence Tagging — snap unit offers character and word and defaults to character', async ({
+    page,
+  }) => {
+    await setupAndGoToStep2(page, {
+      taskName: 'sequence-tagging-snap-default-test',
+      category: 'sequence',
+      outputType: 'sequence_tagging',
+      inputType: 'single_item',
+      dataFile: 'sequence-tagging.json',
+      roles: { text: 'input', spans: 'output' },
+    });
+
+    const snapSelect = page.getByTestId('sequence-snap-unit-select');
+    await expect(snapSelect.locator('option')).toHaveText([
+      '字元（Character）',
+      '詞（Word）',
+    ]);
+    await expect(snapSelect).toHaveValue('character');
+  });
+
   test('Sequence Tagging — pre-annotated spans survive a snap-unit round-trip', async ({
     page,
   }) => {

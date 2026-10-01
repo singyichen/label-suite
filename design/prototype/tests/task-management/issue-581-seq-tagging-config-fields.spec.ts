@@ -79,19 +79,11 @@ test('sequence_tagging settings panel retires the tagging scheme column', async 
   }
 });
 
-test('sequence_tagging snap unit offers character and word and defaults to character', async ({
-  page,
-}) => {
-  await goToStep2WithSequenceTagging(page);
-
-  const snapSelect = page.getByTestId('sequence-snap-unit-select');
-  await expect(snapSelect.locator('option')).toHaveText([
-    '字元（Character）',
-    '詞（Word）',
-  ]);
-  await expect(snapSelect).toHaveValue('character');
-});
-
+// issue #1059 G6b (inventory.csv decision=merge): "sequence_tagging snap
+// unit offers character and word and defaults to character" used to sit
+// here. task-management/task-new-output-type-preview.spec.ts's "Sequence
+// Tagging -- snap unit offers character and word and defaults to
+// character" now covers the same option list and default value.
 test('serialized sequence_tagging config drops tokenization, tagging_scheme and allow_overlapping', async ({
   page,
 }) => {

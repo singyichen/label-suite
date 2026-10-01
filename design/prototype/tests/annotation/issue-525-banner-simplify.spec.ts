@@ -139,25 +139,15 @@ test.describe('issue #525 PR-B — the dry-run chip names its round', () => {
 });
 
 test.describe('issue #525 PR-B — the state element text (issue #572: no 目前： prefix)', () => {
-  test('T014 dry-01: finalized state and its note, unprefixed', async ({ page }) => {
-    await openUnit(page, { task_id: 'T014', sample_id: 'dry-01-all-agree', run_type: 'dry_run', annotator_id: 'kioleemg12' });
-
-    await expect(statePill(page)).toHaveText('已定稿 · 已鎖定');
-  });
-
-  test('T016 ofm-05: disputed state and its note, unprefixed', async ({ page }) => {
-    await openUnit(page, { task_id: 'T016', sample_id: 'ofm-05-final-exception' });
-
-    await expect(statePill(page)).toHaveText('爭議中 · 未定稿，待仲裁');
-  });
-
-  test('English is unprefixed too', async ({ page }) => {
-    await openUnit(page, { task_id: 'T016', sample_id: 'ofm-05-final-exception' });
-    await page.getByTestId('lang-toggle').click();
-
-    await expect(statePill(page)).toHaveText('Disputed · not finalized, awaiting arbitration');
-  });
-
+  // issue #1059 G6b (inventory.csv decision=merge): the three cases that
+  // used to sit here -- "T014 dry-01: finalized state and its note,
+  // unprefixed", "T016 ofm-05: disputed state and its note, unprefixed" and
+  // "English is unprefixed too" -- are the same seeds and the same
+  // statePill() text as annotation-review-status-track.spec.ts's pill
+  // coverage (its existing "unchanged alongside the track" test already
+  // carried the T016/ofm-05 zh case; the dry-run and English cases were
+  // added there in the same merge). The aria-label/data-terminal case
+  // below moved there too.
   test('a null status shows the empty-unit text', async ({ page }) => {
     await openUnit(page, { task_id: 'T015', sample_id: 'ofs-05-not-submitted' });
 
@@ -166,19 +156,6 @@ test.describe('issue #525 PR-B — the state element text (issue #572: no 目前
        no quorum to be 0 of. The banner must not say it under any state. */
     await expect(banner(page)).not.toContainText('定稿門檻');
     await expect(page.getByTestId('ws-review-flow-trigger')).toHaveCount(0);
-  });
-
-  test('the aria-label and data-terminal contract', async ({ page }) => {
-    await openUnit(page, { task_id: 'T014', sample_id: 'dry-01-all-agree', run_type: 'dry_run', annotator_id: 'kioleemg12' });
-
-    // AC-4.35: the accessible name is the state plus, when terminal, the
-    // fact that the unit is locked. issue #596 dropped the threshold
-    // reading it used to carry.
-    await expect(statePill(page)).toHaveAttribute(
-      'aria-label',
-      '審核單位狀態：已定稿，內容已鎖定',
-    );
-    await expect(statePill(page)).toHaveAttribute('data-terminal', 'true');
   });
 
   test('a non-terminal state keeps data-terminal false and a bare aria-label', async ({ page }) => {
