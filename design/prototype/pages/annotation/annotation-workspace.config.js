@@ -1945,6 +1945,12 @@
     event.preventDefault();
     event.returnValue = '';
   });
+  /* FR-012 (issue #1075 G2c-1): report this flag into the workspace tab
+     bar so a background tab's last-known unsaved state survives after this
+     page itself is gone (see sidebar.js's registerWorkspaceUnsavedPredicate). */
+  window.LabelSuiteSharedSidebar.registerWorkspaceUnsavedPredicate(function () {
+    return hasUnsavedChanges;
+  });
 
   /* Right-column 歷程 tab (FR-016 / AC-3.8): renders the merged
      annotator+reviewer event chain for the current sample. */
