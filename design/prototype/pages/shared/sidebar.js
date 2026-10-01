@@ -875,6 +875,23 @@
       tabEl.setAttribute('tabindex', '0');
       if (tab.stageBadge) tabEl.setAttribute('data-stage-badge', tab.stageBadge);
       tabEl.addEventListener('click', function () { onActivate(index); });
+      // AC-8.2 (issue #1075 sub-group G2g): ArrowLeft/ArrowRight move focus
+      // to the adjacent tab (wrap-around, ARIA APG tabs pattern) without
+      // activating it; Enter/Space activate the focused tab, same as click.
+      tabEl.addEventListener('keydown', function (event) {
+        if (event.key === 'ArrowRight') {
+          event.preventDefault();
+          var nextIndex = (index + 1) % state.tabs.length;
+          container.children[nextIndex].focus();
+        } else if (event.key === 'ArrowLeft') {
+          event.preventDefault();
+          var prevIndex = (index - 1 + state.tabs.length) % state.tabs.length;
+          container.children[prevIndex].focus();
+        } else if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onActivate(index);
+        }
+      });
 
       var labelSpan = document.createElement('span');
       labelSpan.className = 'workspace-tab-label';
