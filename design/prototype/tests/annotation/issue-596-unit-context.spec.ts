@@ -46,10 +46,10 @@ import {
  *     copy plus ONE trailing sentence about 試標 定稿 producing no final
  *     answer -- character-for-character identical otherwise.
  *
- * Traceability: openspec/changes/2026-09-01-single-owner-review-relay/
- *   specs/annotation/015-annotation-workspace/spec.md FR-064 (AC-4.37,
- *   AC-4.55), FR-070 (AC-3.40 + 說明文案與三向決策一致), FR-051, FR-093;
- *   design/system/MASTER.md §Tooltip; tasks.md task 3.5.
+ * Traceability: specs/annotation/015-annotation-workspace/spec.md
+ *   FR-064 (AC-4.37, AC-4.55), FR-070 (AC-3.40 + 說明文案與三向決策一致),
+ *   FR-051, FR-093; design/system/MASTER.md §Tooltip; task 3.5 of the
+ *   archived OpenSpec change `2026-09-01-single-owner-review-relay`.
  */
 
 type Identity = { annotatorId?: string; reviewerId?: string };

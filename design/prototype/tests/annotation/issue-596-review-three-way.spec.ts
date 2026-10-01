@@ -54,9 +54,10 @@ import { buildWorkspaceUrl, dismissGuidelineModal, gotoReviewerWorkspace, skipGu
  *     visibility doubles as "no review state was written" (AC-3.53
  *     "且不寫入任何審核狀態").
  *
- * Traceability: openspec/changes/2026-09-01-single-owner-review-relay/
- *   specs/annotation/015-annotation-workspace/spec.md FR-014B (AC-3.51),
- *   FR-016A (AC-3.53), FR-092 (REVIEW_DECISIONS); design.md D2.
+ * Traceability: specs/annotation/015-annotation-workspace/spec.md
+ *   FR-014B (AC-3.51), FR-016A (AC-3.53), FR-092 (REVIEW_DECISIONS);
+ *   design D2 of the archived OpenSpec change
+ *   `2026-09-01-single-owner-review-relay`.
  * FR-093 (exactly one assigned reviewer per review unit): every fixture
  * below is reviewed by the single default reviewer identity only -- no
  * second reviewer/annotator is ever introduced to manufacture a decision

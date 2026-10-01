@@ -1,7 +1,8 @@
 /*
- * Traceability: openspec/changes/align-014-review-model/specs/task-management/014-task-detail/spec.md
+ * Traceability: specs/task-management/014-task-detail/spec.md
  *   FR-018 (final exception pool), FR-008b (task completion preconditions,
- *   point 4), design.md D6.
+ *   point 4); design D6 of the archived OpenSpec change
+ *   `align-014-review-model`.
  *
  * TDD Red for tasks.md 2.1. This spec is the Green contract for tasks 2.2-2.4:
  * the "annotation-progress" panel MUST grow a "最終例外池" (final exception

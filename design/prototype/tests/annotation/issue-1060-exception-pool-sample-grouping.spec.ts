@@ -69,10 +69,10 @@ import { skipGuidelineModal, patchDataFile } from './_workspace-helpers';
  * for `role=project_leader` (config.js :2324) the same way a real
  * round-robin-assigned annotator would.
  *
- * Traceability: openspec/changes/exception-pool-left-column-sample-grouping/
- *   specs/annotation/015-annotation-workspace/spec.md FR-095 "v9.1.0 新增
- *   （issue #1060）" and AC-4.69's three new v9.1.0 AND clauses; tasks.md
- *   task 1.1.
+ * Traceability: specs/annotation/015-annotation-workspace/spec.md FR-095
+ *   "v9.1.0 新增（issue #1060）" and AC-4.69's three new v9.1.0 AND clauses
+ *   (task 1.1 of the archived OpenSpec change
+ *   `exception-pool-left-column-sample-grouping`).
  */
 
 const TASK = 'T016';

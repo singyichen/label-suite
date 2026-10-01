@@ -1,5 +1,5 @@
 /**
- * issue #824 (openspec/changes/sticky-review-assignment) -- review
+ * issue #824 (archived OpenSpec change `sticky-review-assignment`) -- review
  * assignment is today pure position-over-the-current-roster:
  * getReviewAssignments() (annotation-workspace.data.js:2209) recomputes
  * `roster[index % roster.length]` (official_run) or
@@ -15,13 +15,13 @@
  *    `reviewer_id === reviewerId` against a roster that no longer contains
  *    them, so the result is unconditionally empty.
  *
- * Source spec delta: openspec/changes/sticky-review-assignment/specs/
- *   annotation/015-annotation-workspace/spec.md, FR-093 本版修訂
+ * Source spec: specs/annotation/015-annotation-workspace/spec.md,
+ *   FR-093 本版修訂
  *   (issue #824) points 1-5, and its four new (not yet AC-numbered)
  *   Scenarios: 已審單位不因名冊異動而改派 / 離冊審核員對其審過的單位唯讀
  *   可見 / 平均分配只約束尚未被審核的單位 / 試標樣本內任一單位已被審核即
  *   整個樣本黏住.
- * Design: openspec/changes/sticky-review-assignment/design.md D1 (sticky
+ * Design (same archived change): D1 (sticky
  *   lookup derived from existing submitted-review buckets, no second
  *   persisted table), D2 (per-unit stickiness for official_run, per-sample
  *   stickiness for dry_run), D4 (`ws-review-off-roster` read-only card,

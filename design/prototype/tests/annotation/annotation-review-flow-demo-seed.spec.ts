@@ -60,9 +60,8 @@ import { buildListUrl, buildWorkspaceUrl, skipGuidelineModal } from './_workspac
  *
  * Traceability: specs/annotation/015-annotation-workspace/spec.md
  *   FR-051, FR-059, FR-060, FR-061 (v4.54.0, issue #551);
- *   openspec/changes/2026-09-01-single-owner-review-relay/
- *   specs/annotation/015-annotation-workspace/spec.md
- *   FR-093, FR-060, FR-061 (v5.0.0), FR-094, FR-095
+ *   same spec, FR-093, FR-060, FR-061 (v5.0.0), FR-094, FR-095 (v5.0.0,
+ *   issue #596, single-owner review relay)
  */
 
 const SEED_MARKER = 'labelsuite.reviewFlowDemoSeed.v5';

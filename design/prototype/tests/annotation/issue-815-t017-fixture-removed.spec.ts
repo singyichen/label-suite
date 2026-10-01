@@ -37,8 +37,11 @@ import { test, expect, type Page } from '@playwright/test';
  * already owns the one for LabelSuiteAnnotationWorkspaceData; a second
  * declaration collides, TS2717).
  *
- * Traceability: openspec/changes/retire-stale-review-demo-fixtures/tasks.md
- *   2.1, "## 2. PR-815-B" 規模例外聲明 (7 registries); proposal.md; issue #815.
+ * Traceability: specs/task-management/014-task-detail/spec.md FR-010o-4
+ *   (T018, the IAA-computation demo task requirement 1 below expects
+ *   alongside T014-T016); task 2.1 and "## 2. PR-815-B" 規模例外聲明
+ *   (7 registries) of the archived OpenSpec change
+ *   `retire-stale-review-demo-fixtures`; issue #815.
  */
 
 const TASK_LIST_URL = '/pages/task-management/task-list.html?task_role=super_admin';

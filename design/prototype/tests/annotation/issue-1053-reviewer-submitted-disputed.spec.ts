@@ -7,8 +7,9 @@ import { buildWorkspaceUrl, skipGuidelineModal, trackPageErrors, assertNoPageErr
  * the SAME interactive "not yet reviewed" card on reopen instead of a
  * read-only summary of their own decision.
  *
- * Root cause (spec 015 FR-103, openspec/changes/fix-1053-reviewer-submitted
- * -disputed/proposal.md): `reviewUnitBlockReason()`
+ * Root cause (specs/annotation/015-annotation-workspace/spec.md FR-103;
+ * proposal of the archived OpenSpec change
+ * `fix-1053-reviewer-submitted-disputed`): `reviewUnitBlockReason()`
  * (annotation-workspace.config.js:3883) only intercepts a DISPUTED unit via
  * the ARBITRATION branch (:3889), whose condition includes
  * `isArbiterCandidate()` (annotation-workspace.data.js:2579) -- always
@@ -30,7 +31,8 @@ import { buildWorkspaceUrl, skipGuidelineModal, trackPageErrors, assertNoPageErr
  * case FR-103 targets.
  *
  * Traceability: specs/annotation/015-annotation-workspace/spec.md FR-103,
- * AC-4.81 (via openspec/changes/fix-1053-reviewer-submitted-disputed).
+ * AC-4.81 (delivered by the archived OpenSpec change
+ * `fix-1053-reviewer-submitted-disputed`).
  */
 
 interface Identity {

@@ -31,10 +31,21 @@
  *   specs/admin/006-user-management/spec.md
  *   specs/admin/007-role-settings/spec.md
  *   specs/annotation/015-annotation-workspace/spec.md
- *   specs/dataset/  dataset-analysis-detail page spec
+ *   specs/dataset/017-dataset-analysis-detail/spec.md
  *   specs/task-management/010-task-list/spec.md
  *   specs/task-management/013-task-new/spec.md
  *   specs/task-management/014-task-detail/spec.md
+ *
+ * REGRESSION-RISK: no feature spec owns these floors -- they are design-system
+ * contracts (design/system/MASTER.md "Low contrast text — Maintain 4.5:1
+ * minimum contrast ratio" and §3 CTA button contrast; the 12px `--text-label`
+ * floor in its Typography table). The risks the table guards are therefore:
+ *   - a CTA, table header, pagination control or toast drops below its WCAG AA
+ *     contrast floor in either theme;
+ *   - functional text falls back under the 12px design-system label floor
+ *     (issues #973/#982);
+ *   - measureContrast() stops reading the live element and silently reports a
+ *     stale ratio, which would make every contrast row above vacuous.
  */
 import { test, expect, type Locator, type Page } from '@playwright/test';
 import path from 'path';

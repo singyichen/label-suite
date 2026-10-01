@@ -15,7 +15,8 @@ import { buildListUrl } from './_workspace-helpers';
  * read and moved to tests-node/docs-fixtures.test.mjs under issue #1059.
  *
  * Traceability: specs/annotation/015-annotation-workspace/spec.md FR-044,
- *   AC-4.31, AC-4.36; openspec/changes/rename-misleading-review-sample-ids
+ *   AC-4.31, AC-4.36 (renamed by the archived OpenSpec change
+ *   `rename-misleading-review-sample-ids`)
  */
 
 const RETIRED_STATE_WORD = /approved|modified/;

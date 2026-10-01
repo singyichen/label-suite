@@ -9,18 +9,19 @@ import {
 
 /* AC-1.27 (FR-096 試標歷史回饋 disclosure gate, Data Fairness NON-NEGOTIABLE).
  *
- * Sources (verified via grep -an on the change's delta spec/design):
- *   openspec/changes/2026-09-01-single-owner-review-relay/specs/annotation/
- *     015-annotation-workspace/spec.md:378 "### Requirement: FR-096 試標歷史回饋"
- *   同檔 :387 "揭露時機（Data Fairness NON-NEGOTIABLE）：本列表 MUST 僅在該試標回合
- *     全部標記提交、任務轉入 waiting_iaa_confirmation 之後對標記員開放。回合進行中
- *     MUST NOT 對標記員揭露任何定案結果、他人答案或審核判斷"
- *   同檔 :391-393 "#### Scenario: AC-1.27 回合結束後才開放試標歷史回饋"
- *   openspec/changes/2026-09-01-single-owner-review-relay/design.md:99-101
+ * Sources (canonical spec, verified via grep -n):
+ *   specs/annotation/015-annotation-workspace/spec.md FR-096 試標歷史回饋
+ *   同檔 FR-096 "**Data Fairness（NON-NEGOTIABLE）**：本回饋之揭露時點必須**嚴格
+ *     晚於**該輪試標進入 `waiting_iaa_confirmation`（一致性確認）之後" and
+ *     "回合仍在進行中（任務狀態為 `dry_run_in_progress`）時，該回合之資料一律不
+ *     揭露，畫面須說明需待該回合結束"
+ *   同檔 AC-1.27 回合結束後才開放試標歷史回饋
+ *   Design D5 of the archived OpenSpec change
+ *     `2026-09-01-single-owner-review-relay`:
  *     "### D5：試標歷史回饋的揭露閘門（Data Fairness NON-NEGOTIABLE）... FR-096 的
  *     資料 MUST 以任務狀態為閘門...回合進行中查詢 MUST 回傳空集合並顯示說明，而
- *     （不是）回傳資料後在 UI 隱藏。"
- *   同檔 :103 "資料一旦進到前端就等於已洩漏...閘門必須在資料層。"
+ *     （不是）回傳資料後在 UI 隱藏。" / "資料一旦進到前端就等於已洩漏...閘門必須
+ *     在資料層。"
  *
  * Contract this Red spec fixes for the Green tasks (7.2 data layer / 7.3 UI),
  * since neither spec.md nor design.md names a JS symbol or testid:

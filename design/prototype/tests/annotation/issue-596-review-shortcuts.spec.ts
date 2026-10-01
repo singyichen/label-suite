@@ -38,9 +38,9 @@ import {
  *     right after pressing `R` succeeds today -- exactly the "R 仍生效" bug
  *     this file pins as the observable failure.
  *
- * Traceability: openspec/changes/2026-09-01-single-owner-review-relay/
- *   specs/annotation/015-annotation-workspace/spec.md FR-054 (AC-3.54);
- *   design.md D1, 已確認決策 #1.
+ * Traceability: specs/annotation/015-annotation-workspace/spec.md
+ *   FR-054 (AC-3.54); design D1 / 已確認決策 #1 of the archived OpenSpec
+ *   change `2026-09-01-single-owner-review-relay`.
  */
 
 test.beforeEach(async ({ page }) => {

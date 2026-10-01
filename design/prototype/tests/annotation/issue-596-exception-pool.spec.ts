@@ -100,13 +100,13 @@ import { buildWorkspaceUrl, skipGuidelineModal, fillArbitrationReasons, type Run
  * so the custom_answer test can prove the expanded control is genuinely
  * config-bound rather than accepting arbitrary strings.
  *
- * Traceability: openspec/changes/2026-09-01-single-owner-review-relay/
- *   specs/annotation/015-annotation-workspace/spec.md FR-095 (AC-4.56,
- *   AC-4.57 -- retired v7.0.0, ID reserved, not reused), FR-063, FR-086;
- *   design.md D2 (exceptionPool shape), D4 (custom_answer control reuse);
- *   tasks.md task 6.1. Superseded/extended by
- *   openspec/changes/2026-09-26-exception-pool-select-then-confirm/
- *   (issue #920, FR-095 v7.0.0 BREAKING, AC-4.72~AC-4.75, design.md D1-D6).
+ * Traceability: specs/annotation/015-annotation-workspace/spec.md FR-095
+ *   (AC-4.56, AC-4.57 -- retired v7.0.0, ID reserved, not reused), FR-063,
+ *   FR-086; design D2 (exceptionPool shape), D4 (custom_answer control reuse)
+ *   and task 6.1 of the archived OpenSpec change
+ *   `2026-09-01-single-owner-review-relay`. Superseded/extended by the
+ *   archived change `2026-09-26-exception-pool-select-then-confirm`
+ *   (issue #920, FR-095 v7.0.0 BREAKING, AC-4.72~AC-4.75, its design D1-D6).
  */
 
 type Identity = { annotatorId?: string; reviewerId?: string };

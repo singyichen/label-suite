@@ -1,6 +1,5 @@
 /*
- * Traceability: openspec/changes/task-detail-seq-tagging-export-dialog/
- *   specs/task-management/014-task-detail/spec.md
+ * Traceability: specs/task-management/014-task-detail/spec.md
  *   FR-020, AC-1.10 (AC-1.11/AC-1.12/AC-1.13 belong to group 2 and
  *   the final group -- not covered here; SC-045's source-scan guard moved to
  *   tests-node/task-detail-source.test.mjs under issue #1059).

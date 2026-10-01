@@ -1,8 +1,10 @@
 /**
  * Reviewer submit buttons sit at the right edge of their row (issue #563)
- * Source spec: specs/annotation/015-annotation-workspace/spec.md
+ * Source spec: specs/annotation/015-annotation-workspace/spec.md FR-013C
+ * (the bottom action bar: autosave status on the left, 儲存草稿 and the submit
+ * button on the right).
  *
- * §頁面結構 puts the primary submit action on the RIGHT of the bottom action
+ * FR-013C puts the primary submit action on the RIGHT of the bottom action
  * bar. That held for annotators, whose autosave status occupies the left
  * slot, but `.action-bar` lays out with `justify-content: space-between`
  * and renderAutosaveStatus() hides the status entirely for reviewers -- so

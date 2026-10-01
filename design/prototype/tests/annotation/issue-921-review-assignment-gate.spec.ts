@@ -41,7 +41,10 @@
  * This matches the issue's own repro fixture verbatim: ofs-04-pending-review
  * -> reviewer_wang, ofs-02-modified-dispute -> reviewer_li.
  *
- * Design: openspec/changes/2026-09-25-gate-review-assignment/design.md
+ * Traceability: specs/annotation/015-annotation-workspace/spec.md FR-093
+ *   (the assignment gate) and FR-058 (the keyboard-submit shortcut the
+ *   read-only branch closes).
+ * Design (archived OpenSpec change `2026-09-25-gate-review-assignment`):
  *   D1 (buildUnits(), unchanged, enumerates the full unit universe --
  *   left-column filtering deferred to #956), D2 (isCurrentUnitAssigned(),
  *   feeds that universe to the existing getAssignedReviewUnits() and checks

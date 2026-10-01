@@ -86,10 +86,10 @@ import { skipGuidelineModal } from './_workspace-helpers';
  * of the annotator sample-navigation list, rather than from proving
  * task-vs-sample scoping.
  *
- * Traceability: openspec/changes/pl-exception-disposal-screen-shell/
- *   specs/annotation/015-annotation-workspace/spec.md FR-095 "本版新增——
- *   最終例外處置畫面的外殼" points 1-5 and its "最終例外處置畫面不沿用標記員
- *   外殼" scenario; tasks.md task 1.1.
+ * Traceability: specs/annotation/015-annotation-workspace/spec.md FR-095
+ *   "本版新增——最終例外處置畫面的外殼" points 1-5 and its "最終例外處置畫面
+ *   不沿用標記員外殼" scenario (task 1.1 of the archived OpenSpec change
+ *   `pl-exception-disposal-screen-shell`).
  */
 
 type ReviewUnit = { sampleId: string; annotatorId: string; status: string };

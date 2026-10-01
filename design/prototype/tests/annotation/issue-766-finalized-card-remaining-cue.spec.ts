@@ -59,16 +59,21 @@ import { buildListUrl, buildWorkspaceUrl, fillArbitrationReasons, patchDataFile,
  * issue-596-finalized-card.spec.ts uses is not needed to reach
  * PENDING/DISPUTED/FINALIZED deterministically here.
  *
- * Traceability: openspec/changes/finalized-card-remaining-cue/tasks.md task
- * 1.5 (Red, this file) / 1.6 (Green, not yet done); design.md D1-D4;
- * specs/annotation/015-annotation-workspace/spec.md FR-100, AC-3.57,
- * AC-3.58, SC-004Z; FR-081 (view-state keys), FR-049 (identity keys),
+ * Traceability: specs/annotation/015-annotation-workspace/spec.md FR-100,
+ * AC-3.57, AC-3.58, SC-004Z; FR-081 (view-state keys), FR-049 (identity
+ * keys),
  * FR-093 (single-owner review relay), FR-060 (arbiter eligibility), FR-099
  * §7 (finalization exemption -- a submit that finalizes a unit stays in
  * place); issue-596-finalized-card.spec.ts (button-exclusion pattern,
  * zero-button finalized card); issue-719-review-submit-auto-advance.spec.ts
  * (pinReviewUnits/seedSubmission/countLoads/requested-URL pattern);
- * issue-517-post-submit-cta-removed.spec.ts (retired testids/classes).
+ * issue-517-post-submit-cta-removed.spec.ts (retired testids/classes);
+ * tasks 1.5 (Red, this file) / 1.6 (Green) and design D1-D4 of the archived
+ * OpenSpec change `finalized-card-remaining-cue`.
+ * REGRESSION-RISK: the post-submit exit card revoked in spec 015 v4.40.0
+ * (FR-082 / AC-4.34, issue #517) must not come back on the zero-state card --
+ * FR-100 point 7 forbids reusing any of its revoked testids or style classes.
+ * FR-082 is itself revoked and is therefore named as prose, not as a citation.
  */
 
 type Identity = { annotatorId?: string; reviewerId?: string };

@@ -4,7 +4,8 @@ import { buildWorkspaceUrl, dismissGuidelineModal, patchDataFile } from './_work
 /* Traceability: specs/annotation/015-annotation-workspace/spec.md
  *   FR-096, FR-020D, AC-5.3, SC-005D
  *
- * Issue #620, group 1 (PR-620-A) of openspec/changes/guideline-section-anchors:
+ * Issue #620, group 1 (PR-620-A) of the archived OpenSpec change
+ * `guideline-section-anchors`:
  * FR-096's 4th clause requires the reason text shown in dry-run feedback to
  * carry a clickable jump to the cited guideline section, but renderMarkdown()
  * (FR-020D) currently emits <h1>-<h3> for '#'-'###' headings with no `id`

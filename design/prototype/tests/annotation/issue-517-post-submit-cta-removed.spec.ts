@@ -1,6 +1,11 @@
 /**
  * The reviewer workspace no longer renders a post-submit exit card (issue #517)
  * Source spec: specs/annotation/015-annotation-workspace/spec.md
+ * REGRESSION-RISK: the post-submit exit card revoked in spec 015 v4.40.0
+ * (FR-082 / AC-4.34, issue #517) must not come back -- FR-100 point 7 forbids
+ * reusing any of its revoked testids or style classes, and AC-3.58 requires
+ * them to be absent from the finalized card. FR-082 itself is revoked, so it
+ * is named here as prose, never as a live citation.
  *
  * Issue #456 AC-5 asked for "so what now?" exits once a review unit was done
  * with, and FR-082 / AC-4.34 delivered a card offering 下一個可處理單位,

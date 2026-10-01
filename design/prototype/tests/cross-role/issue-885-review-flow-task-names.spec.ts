@@ -1,7 +1,14 @@
 /**
  * Issue #885: review-flow task names describe the current single-owner relay.
- * Traceability: specs/dashboard/012-dashboard/spec.md, specs/task-management/
- * 014-task-detail/spec.md, specs/annotation/015-annotation-workspace/spec.md.
+ * Traceability: specs/dashboard/012-dashboard/spec.md FR-011D (the review-flow
+ * demo task set is exactly T014-T016), FR-011B2 (each reviewer card keeps its
+ * own task_id); specs/annotation/015-annotation-workspace/spec.md FR-014C (the
+ * task name shown in the workspace must come from the same per-task_id source
+ * as Dashboard / annotation-list), FR-080 (the entry breadcrumb that carries
+ * it); specs/task-management/014-task-detail/spec.md.
+ * REGRESSION-RISK: the review-flow demo task names stop being derived from the
+ * loaded task catalog, or reintroduce the multi-reviewer vocabulary
+ * (多數決 / 審核員人數 / min_reviewers) that the single-owner relay retired.
  */
 import { expect, test, type Locator, type Page } from '@playwright/test';
 

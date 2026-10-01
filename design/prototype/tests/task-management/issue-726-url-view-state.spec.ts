@@ -1,5 +1,5 @@
 /*
- * Traceability: openspec/changes/task-detail-url-view-state/specs/task-management/014-task-detail/spec.md
+ * Traceability: specs/task-management/014-task-detail/spec.md
  *   FR-019, AC-1.8, AC-1.9, SC-044, AC-2.5
  *
  * TDD Red (tasks.md 1.1 + 1.2, issue #726). `task-detail.html` currently only

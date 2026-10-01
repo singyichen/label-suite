@@ -2,7 +2,8 @@ import { test, expect, type Page } from '@playwright/test';
 import { buildListUrl, buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
 
 /* Submitted-but-no-mock-row review units join enumeration (issue #792,
- * spec 015 FR-055 delta -- see openspec/changes/enumerate-submitted-review-units).
+ * specs/annotation/015-annotation-workspace/spec.md FR-055 -- delivered by
+ * the archived OpenSpec change `enumerate-submitted-review-units`).
  *
  * T015's ofs-05-not-submitted ships no REVIEWER_MOCK_ROWS entry -- it is the
  * AC-3.38 empty-unit-gate demo point (issue #307/#784). Today's three

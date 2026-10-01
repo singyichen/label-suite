@@ -40,8 +40,9 @@ const TASK_CONFIGS_DIR = resolve(REPO_ROOT, 'docs/product/task-configs');
  * Reads docs fixtures via node:fs directly -- no page needed, this pins doc
  * fixture content, not rendered prototype behavior.
  *
- * Traceability: openspec/changes/retire-stale-review-demo-fixtures/tasks.md
- *   3.1; specs/annotation/015-annotation-workspace/spec.md FR-093
+ * Traceability: specs/annotation/015-annotation-workspace/spec.md FR-093
+ *   (task 3.1 of the archived OpenSpec change
+ *   `retire-stale-review-demo-fixtures`)
  * ------------------------------------------------------------------ */
 
 const RETIRED_VOCAB = [
@@ -109,7 +110,8 @@ describe('docs/product review configs match the single-owner relay model (issue 
  * surviving rendered cases live in a .spec.ts the Node gate cannot import.
  *
  * Traceability: specs/annotation/015-annotation-workspace/spec.md FR-044,
- *   AC-4.31, AC-4.36; openspec/changes/rename-misleading-review-sample-ids
+ *   AC-4.31, AC-4.36 (renamed by the archived OpenSpec change
+ *   `rename-misleading-review-sample-ids`)
  * ------------------------------------------------------------------ */
 
 const RETIRED_STATE_WORD = /approved|modified/;

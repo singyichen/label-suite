@@ -1,13 +1,12 @@
 /*
- * Traceability: openspec/changes/task-detail-trial-round-from-waiting/
- *   tasks.md group 2 (2.1, as rewritten in commit 9fb4450a); design.md
- *   "範圍界線" last bullet (FR-017's revision-note gate is out of scope for
- *   #791 -- moved to issue #838, so no scenario here asserts revision-note
- *   blocking; since #838 the R2 scenario fills the note to get past the
- *   gate, whose blocking paths live in
- *   issue-838-fr017-revision-note-gate.spec.ts); specs/task-management/
- *   014-task-detail/spec.md delta -- FR-013, FR-013(1)-(3), FR-008a,
- *   FR-010o-3, AC-3.12, SC-047. Issue #791.
+ * Traceability: specs/task-management/014-task-detail/spec.md
+ *   FR-013, FR-013(1)-(3), FR-008a, FR-010o-3, AC-3.12, SC-047. Issue #791.
+ *   (Group 2 task 2.1 of the archived OpenSpec change
+ *   `task-detail-trial-round-from-waiting`; its design "範圍界線" last bullet
+ *   puts FR-017's revision-note gate out of scope for #791 -- moved to issue
+ *   #838, so no scenario here asserts revision-note blocking; since #838 the
+ *   R2 scenario fills the note to get past the gate, whose blocking paths
+ *   live in issue-838-fr017-revision-note-gate.spec.ts.)
  *
  * Reaching R2's creation from waiting_iaa_confirmation must pass through
  * canPublish()'s existing isolation risk-confirm modal if it opens, exactly

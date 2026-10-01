@@ -1,5 +1,5 @@
 /**
- * Traceability: openspec/changes/seq-tagging-span-export-metrics/specs/dataset/017-dataset-analysis-detail/spec.md
+ * Traceability: specs/dataset/017-dataset-analysis-detail/spec.md
  *   FR-041 (AC-5.1, AC-5.2), FR-042 (AC-5.3, AC-5.4)
  *
  * issue #581 change 3, group 3, tasks 3.1 (character level) and 3.3 (word

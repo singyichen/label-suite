@@ -31,8 +31,10 @@ import { buildWorkspaceUrl, skipGuidelineModal, trackPageErrors, assertNoPageErr
  * the issue body's repro (single output type, so no outKey prefix on the
  * reason per the issue's own direction-2 note).
  *
- * Traceability: specs/annotation/015-annotation-workspace/spec.md (PATCH
- * pending per issue-dispatch checkpoint, issue #1058).
+ * Traceability: specs/annotation/015-annotation-workspace/spec.md FR-103
+ * point (1) (the read-only summary card must show the reviewer's own decision,
+ * corrected value and 裁定理由; clarified for issue #1058 in spec v9.0.1) and
+ * AC-4.81.
  */
 
 interface Identity {
