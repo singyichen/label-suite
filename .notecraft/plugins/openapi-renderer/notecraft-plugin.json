@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/SteveLin100132/notecraft/main/plugins/notecraft-plugin.schema.json",
+  "id": "openapi-renderer",
+  "title": "API 文件",
+  "description": "把 OpenAPI 3.0／3.1 文件（JSON）渲染成可導覽、可篩選的 API 文件：tag → operation 導覽、參數與欄位樹、範例與 cURL",
+  "version": "1.0.0",
+  "author": "建宇",
+  "homepage": "https://github.com/SteveLin100132/notecraft/tree/main/plugins/openapi-renderer",
+  "dataSchema": "schema.json",
+  "example": "example/petstore.openapi.json",
+  "meta": {
+    "title": "/info/title",
+    "description": "/info/description",
+    "backTo": "/x-notecraft-back-to"
+  },
+  "engines": {
+    "notecraftapp": ">=1.6.0"
+  }
+}

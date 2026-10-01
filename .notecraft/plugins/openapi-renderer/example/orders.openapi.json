@@ -1,0 +1,1171 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "TrendMile 訂單服務 API",
+    "version": "2.4.0",
+    "description": "訂單服務對外的 REST 介面，供 **一鍵發薪** 與內部後台呼叫。\n\n## 慣例\n- 所有金額以 `Money` 表示，`amount` 為最小貨幣單位（新台幣即「元」）\n- 時間一律 ISO 8601、UTC\n- 列表分頁使用 `page` / `pageSize`，上限 100\n\n錯誤格式見 `Problem`。"
+  },
+  "servers": [
+    {
+      "url": "https://api.trendmile.tw/orders",
+      "description": "正式環境"
+    },
+    {
+      "url": "https://staging-api.trendmile.tw/orders",
+      "description": "測試環境"
+    }
+  ],
+  "tags": [
+    {
+      "name": "orders",
+      "description": "建立、查詢、修改與取消訂單。"
+    },
+    {
+      "name": "members",
+      "description": "組織成員與角色指派。"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/v1/organizations/{orgId}/orders": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/OrgId"
+        }
+      ],
+      "get": {
+        "tags": [
+          "orders"
+        ],
+        "operationId": "listOrders",
+        "summary": "列出組織的訂單",
+        "description": "依建立時間由新到舊排序。`status` 可帶多個值，以逗號分隔。\n\n帶 `Accept: text/csv` 會回傳 CSV 匯出，欄位與 JSON 版相同。",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "description": "只回傳這些狀態的訂單",
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "draft",
+                  "placed",
+                  "paid",
+                  "shipped",
+                  "cancelled"
+                ]
+              }
+            },
+            "example": [
+              "placed",
+              "paid"
+            ]
+          },
+          {
+            "name": "created_after",
+            "in": "query",
+            "description": "只回傳這個時間之後建立的訂單",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "example": "2026-09-01T00:00:00Z"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "每頁筆數",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "X-Request-Id",
+            "in": "header",
+            "description": "追蹤用的請求 ID，未帶會由閘道產生",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "legacy_sort",
+            "in": "query",
+            "deprecated": true,
+            "description": "舊版排序參數，2.0 起忽略",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "tm_session",
+            "in": "cookie",
+            "description": "後台登入時由瀏覽器自動帶入",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "一頁訂單",
+            "headers": {
+              "X-Total-Count": {
+                "description": "符合條件的總筆數",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderPage"
+                }
+              },
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "id,status,total_amount,created_at\nord_8f2k,paid,1280,2026-09-28T03:12:00Z"
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "description": "超過速率限制，請依 `Retry-After` 秒數後重試"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "orders"
+        ],
+        "operationId": "createOrder",
+        "summary": "建立訂單",
+        "description": "建立一張 `draft` 狀態的訂單。送出後需另外呼叫付款流程，訂單才會進入 `placed`。\n\n同一個 `Idempotency-Key` 在 24 小時內重送，會回傳第一次的結果。",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "description": "冪等鍵，建議用 UUID v4",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOrderInput"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "payload"
+                ],
+                "properties": {
+                  "payload": {
+                    "$ref": "#/components/schemas/CreateOrderInput"
+                  },
+                  "attachment": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "採購單掃描檔（PDF，5 MB 內）"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "已建立",
+            "headers": {
+              "Location": {
+                "description": "新訂單的網址",
+                "schema": {
+                  "type": "string",
+                  "format": "uri"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Order"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "欄位驗證失敗",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblem"
+                }
+              },
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "`Idempotency-Key` 已被另一筆不同內容的請求使用",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "庫存不足或商品已下架",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/v1/organizations/{orgId}/orders/{orderId}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/OrgId"
+        },
+        {
+          "name": "orderId",
+          "in": "path",
+          "required": true,
+          "description": "訂單 ID",
+          "schema": {
+            "type": "string",
+            "pattern": "^ord_[a-z0-9]{4,}$"
+          },
+          "example": "ord_8f2k"
+        }
+      ],
+      "get": {
+        "tags": [
+          "orders"
+        ],
+        "operationId": "getOrder",
+        "summary": "取得單筆訂單",
+        "parameters": [
+          {
+            "name": "expand",
+            "in": "query",
+            "description": "一併展開的關聯",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "customer",
+                  "items.product"
+                ]
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "訂單",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Order"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "orders"
+        ],
+        "operationId": "updateOrder",
+        "summary": "修改訂單",
+        "description": "只接受 `draft` 狀態的訂單。未帶的欄位維持原值，帶 `null` 代表清空。",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/merge-patch+json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "note": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 500
+                  },
+                  "shipping": {
+                    "$ref": "#/components/schemas/Shipping"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "修改後的訂單",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Order"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "description": "訂單已不是 `draft`"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "orders"
+        ],
+        "operationId": "deleteOrder",
+        "deprecated": true,
+        "summary": "刪除訂單",
+        "description": "2.2 起改為軟刪除並標記為已棄用。請改用 `cancelOrder`，可保留取消原因與稽核紀錄。",
+        "responses": {
+          "204": {
+            "description": "已刪除"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/v1/organizations/{orgId}/orders/{orderId}/cancel": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/OrgId"
+        },
+        {
+          "name": "orderId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "post": {
+        "tags": [
+          "orders"
+        ],
+        "operationId": "cancelOrder",
+        "summary": "取消訂單",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "reason"
+                ],
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "enum": [
+                      "customer_request",
+                      "out_of_stock",
+                      "fraud",
+                      "other"
+                    ]
+                  },
+                  "comment": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "已取消",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Order"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "已出貨的訂單不能取消"
+          }
+        }
+      }
+    },
+    "/v1/organizations/{orgId}/members/{memberId}/roles": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/OrgId"
+        },
+        {
+          "name": "memberId",
+          "in": "path",
+          "required": true,
+          "description": "成員 ID",
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "tags": [
+          "members"
+        ],
+        "operationId": "listMemberRoles",
+        "summary": "列出成員的角色",
+        "description": "回傳直接指派的角色，以及從所屬單位繼承來的角色。",
+        "responses": {
+          "200": {
+            "description": "角色清單",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RoleAssignment"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "members"
+        ],
+        "operationId": "replaceMemberRoles",
+        "summary": "整批取代成員的角色",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "roles"
+                ],
+                "properties": {
+                  "roles": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "owner",
+                        "admin",
+                        "accountant",
+                        "viewer"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新後的角色",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RoleAssignment"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/organizations/{orgId}/members/{memberId}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/OrgId"
+        },
+        {
+          "name": "memberId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "tags": [
+          "members"
+        ],
+        "operationId": "getMember",
+        "summary": "取得成員",
+        "responses": {
+          "200": {
+            "description": "成員",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Member"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/healthz": {
+      "get": {
+        "operationId": "healthz",
+        "summary": "健康檢查",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "ok"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "OrgId": {
+        "name": "orgId",
+        "in": "path",
+        "required": true,
+        "description": "組織 ID",
+        "schema": {
+          "type": "string"
+        },
+        "example": "org_tm01"
+      }
+    },
+    "responses": {
+      "Unauthorized": {
+        "description": "未帶或帶了過期的 token",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "找不到資源，或你沒有權限看到它",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            }
+          }
+        }
+      },
+      "ServerError": {
+        "description": "伺服器錯誤",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Money": {
+        "type": "object",
+        "required": [
+          "amount",
+          "currency"
+        ],
+        "description": "金額。`amount` 為最小貨幣單位的整數。",
+        "properties": {
+          "amount": {
+            "type": "integer",
+            "example": 1280
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "TWD",
+              "USD",
+              "JPY"
+            ],
+            "default": "TWD"
+          }
+        }
+      },
+      "CustomerRef": {
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "cus_31aa"
+          },
+          "name": {
+            "type": "string",
+            "readOnly": true
+          }
+        }
+      },
+      "Address": {
+        "type": "object",
+        "required": [
+          "city",
+          "line1"
+        ],
+        "properties": {
+          "zip": {
+            "type": "string",
+            "pattern": "^\\d{3}(\\d{2,3})?$",
+            "example": "806"
+          },
+          "city": {
+            "type": "string",
+            "example": "高雄市"
+          },
+          "district": {
+            "type": "string",
+            "example": "前鎮區"
+          },
+          "line1": {
+            "type": "string",
+            "example": "成功二路 88 號"
+          },
+          "geo": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "由地址解析服務回填",
+            "readOnly": true,
+            "properties": {
+              "lat": {
+                "type": "number",
+                "format": "double"
+              },
+              "lng": {
+                "type": "number",
+                "format": "double"
+              }
+            }
+          }
+        }
+      },
+      "HomeDelivery": {
+        "type": "object",
+        "title": "宅配",
+        "required": [
+          "method",
+          "address"
+        ],
+        "properties": {
+          "method": {
+            "type": "string",
+            "const": "home",
+            "enum": [
+              "home"
+            ]
+          },
+          "address": {
+            "$ref": "#/components/schemas/Address"
+          },
+          "timeslot": {
+            "type": "string",
+            "enum": [
+              "morning",
+              "afternoon",
+              "any"
+            ],
+            "default": "any"
+          }
+        }
+      },
+      "StorePickup": {
+        "type": "object",
+        "title": "門市自取",
+        "required": [
+          "method",
+          "storeId"
+        ],
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": [
+              "pickup"
+            ]
+          },
+          "storeId": {
+            "type": "string",
+            "example": "st_kh05"
+          }
+        }
+      },
+      "Shipping": {
+        "description": "配送方式，依 `method` 判斷。",
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/HomeDelivery"
+          },
+          {
+            "$ref": "#/components/schemas/StorePickup"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "method"
+        }
+      },
+      "LineItemInput": {
+        "type": "object",
+        "required": [
+          "sku",
+          "quantity"
+        ],
+        "properties": {
+          "sku": {
+            "type": "string",
+            "example": "TL-PAY-STD"
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 1
+          },
+          "unitPrice": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "options": {
+            "type": "object",
+            "description": "加購與客製選項",
+            "properties": {
+              "gift": {
+                "type": "object",
+                "description": "禮品包裝",
+                "properties": {
+                  "wrap": {
+                    "type": "string",
+                    "enum": [
+                      "none",
+                      "standard",
+                      "premium"
+                    ],
+                    "default": "none"
+                  },
+                  "card": {
+                    "type": "object",
+                    "description": "附卡",
+                    "properties": {
+                      "message": {
+                        "type": "string",
+                        "maxLength": 120
+                      },
+                      "signature": {
+                        "type": "string"
+                      },
+                      "font": {
+                        "type": "string",
+                        "enum": [
+                          "serif",
+                          "sans"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "engraving": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 24
+              }
+            }
+          }
+        }
+      },
+      "CreateOrderInput": {
+        "type": "object",
+        "required": [
+          "customer",
+          "items",
+          "shipping"
+        ],
+        "properties": {
+          "customer": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CustomerRef"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "contactPhone": {
+                    "type": "string",
+                    "example": "0912-345-678"
+                  }
+                }
+              }
+            ]
+          },
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 50,
+            "items": {
+              "$ref": "#/components/schemas/LineItemInput"
+            }
+          },
+          "shipping": {
+            "$ref": "#/components/schemas/Shipping"
+          },
+          "payment": {
+            "description": "付款方式。可給信用卡或企業月結，或兩者都給（優先月結）。",
+            "anyOf": [
+              {
+                "title": "信用卡",
+                "type": "object",
+                "properties": {
+                  "cardToken": {
+                    "type": "string"
+                  }
+                }
+              },
+              {
+                "title": "企業月結",
+                "type": "object",
+                "properties": {
+                  "accountId": {
+                    "type": "string"
+                  },
+                  "poNumber": {
+                    "type": "string"
+                  }
+                }
+              }
+            ]
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 500
+          },
+          "couponCode": {
+            "type": "string",
+            "deprecated": true,
+            "description": "請改用 `promotions`"
+          },
+          "promotions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "description": "自訂鍵值，最多 20 組",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "Order": {
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "total",
+          "createdAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "ord_8f2k",
+            "readOnly": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "placed",
+              "paid",
+              "shipped",
+              "cancelled"
+            ]
+          },
+          "customer": {
+            "$ref": "#/components/schemas/CustomerRef"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LineItemInput"
+            }
+          },
+          "shipping": {
+            "$ref": "#/components/schemas/Shipping"
+          },
+          "total": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "category": {
+            "$ref": "#/components/schemas/Category"
+          },
+          "legacy_code": {
+            "type": "string",
+            "deprecated": true,
+            "description": "舊系統訂單編號，3.0 移除"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          }
+        }
+      },
+      "OrderPage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Order"
+            }
+          },
+          "page": {
+            "type": "integer"
+          },
+          "pageSize": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          }
+        }
+      },
+      "Category": {
+        "type": "object",
+        "description": "商品分類，可無限層巢狀。",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "parent": {
+            "$ref": "#/components/schemas/Category"
+          },
+          "children": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Category"
+            }
+          }
+        }
+      },
+      "Member": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "unit": {
+            "$ref": "#/components/schemas/OrgUnit"
+          }
+        }
+      },
+      "OrgUnit": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "manager": {
+            "$ref": "#/components/schemas/Member"
+          }
+        }
+      },
+      "RoleAssignment": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "owner",
+              "admin",
+              "accountant",
+              "viewer"
+            ]
+          },
+          "inheritedFrom": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OrgUnit"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "Problem": {
+        "type": "object",
+        "required": [
+          "type",
+          "title",
+          "status"
+        ],
+        "description": "RFC 9457 Problem Details。",
+        "properties": {
+          "type": {
+            "type": "string",
+            "format": "uri"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "traceId": {
+            "type": "string"
+          }
+        }
+      },
+      "ValidationProblem": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Problem"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "errors": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "field": {
+                      "type": "string",
+                      "example": "items[0].quantity"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "由一鍵發薪 SSO 發出，效期 1 小時"
+      },
+      "partnerKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Partner-Key",
+        "description": "合作夥伴伺服器對伺服器呼叫"
+      }
+    }
+  }
+}
