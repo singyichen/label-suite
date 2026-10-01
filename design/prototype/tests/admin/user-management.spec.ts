@@ -206,7 +206,20 @@ test.describe('Admin user management list interactions', () => {
     await expect(toast).toBeVisible();
     await expect(toast).toHaveClass(/toast-error/);
 
-    // UXC-07: an error toast never auto-dismisses (legacy code hid it at 4000ms)
+    // UXC-07: an error toast never auto-dismisses (legacy code hid it at
+    // 4000ms). issue #1059 G7: investigated converting this to
+    // page.clock.fastForward(), but a fake clock only virtualizes JS
+    // timers, not CSS transitions -- .toast's `visibility` change is
+    // delayed by a real `transition: visibility 0s var(--dur-fast)`
+    // (user-management.html:293-294), so immediately after fastForward()
+    // the element still *looks* visible regardless of whether
+    // hideToast() ran, because the real-time CSS fade has not had any
+    // actual wall-clock time to complete. Confirmed empirically: with a
+    // deliberate regression (TOAST_DURATIONS.error set > 0), the
+    // fastForward() variant still reported toBeVisible() === true right
+    // after the jump (false pass), while a real wait correctly observed
+    // the toast disappear. A real wait is kept here because that is what
+    // this assertion is actually testing against.
     await page.waitForTimeout(4500);
     await expect(toast).toBeVisible();
 
