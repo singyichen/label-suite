@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/SteveLin100132/notecraft/main/plugins/notecraft-plugin.schema.json",
+  "id": "er-diagram-renderer",
+  "title": "ER Diagram",
+  "description": "把資料庫 schema JSON 渲染成可導覽的 Wiki 與可聚焦、可搜尋的實體關聯圖",
+  "version": "1.2.0",
+  "author": "建宇",
+  "homepage": "https://github.com/SteveLin100132/notecraft/tree/main/plugins/er-diagram-renderer",
+  "dataSchema": "schema.json",
+  "example": "example/schema.json",
+  "engines": {
+    "notecraftapp": ">=0.6.0"
+  }
+}

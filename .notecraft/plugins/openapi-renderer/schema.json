@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/SteveLin100132/notecraft/main/plugins/openapi-renderer/schema.json",
+  "title": "OpenAPI Renderer 資料檔",
+  "description": "只驗外形、不驗 OpenAPI 規格本身：完整 OAS 驗證不是這個 plugin 的責任，太嚴會讓能看的文件因小錯 build fail。結構瑕疵（$ref 斷掉、operationId 重複）由 renderer 容錯並在 dev 警告。Swagger 2.0 允許通過，renderer 顯示轉檔指引。",
+  "type": "object",
+  "required": ["info"],
+  "oneOf": [{ "required": ["openapi"] }, { "required": ["swagger"] }],
+  "properties": {
+    "openapi": { "type": "string", "pattern": "^3\\.", "description": "3.0.x／3.1.x 完整支援；其他 3.x 以 3.1 規則盡力渲染並警示" },
+    "swagger": { "type": "string", "description": "Swagger 2.0：不渲染，顯示轉檔指引" },
+    "info": {
+      "type": "object",
+      "required": ["title", "version"],
+      "properties": {
+        "title": { "type": "string" },
+        "version": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "paths": { "type": "object" },
+    "components": { "type": "object" },
+    "tags": { "type": "array" },
+    "servers": { "type": "array" },
+    "x-notecraft-back-to": { "type": "string", "description": "「回到來源筆記」的站內路徑，例：/notes/api-design" }
+  }
+}
