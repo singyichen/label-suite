@@ -251,6 +251,45 @@ test.describe('Review status track — structure, regression and language', () =
     await expect(branch(page, 'differing')).toHaveText('Modified or cannot adjudicate');
   });
 
+  // issue #1059 G6b (inventory.csv decision=merge, #525/FR-064 cluster):
+  // these two cases used to live in annotation/issue-525-banner-simplify.spec.ts
+  // ("T014 dry-01: finalized state and its note, unprefixed" and "the
+  // aria-label and data-terminal contract" below; "English is unprefixed
+  // too" above). The matrix row names this file as the canonical
+  // destination over the issue-named annotation/issue-572-banner-frame-and-prefix.spec.ts
+  // (README Test Policy rule 3) -- the T016/ofm-05 zh case from that same
+  // cluster was already covered by "the FR-064 state pill is unchanged
+  // alongside the track" above, so only the dry-run and English cases
+  // needed adding.
+  test('a finalized dry-run unit keeps its unprefixed state text, aria-label and data-terminal', async ({ page }) => {
+    await page.goto(
+      buildWorkspaceUrl({
+        task_id: 'T014',
+        sample_id: 'dry-01-all-agree',
+        run_type: 'dry_run',
+        annotator_id: 'kioleemg12',
+        role: 'reviewer',
+        reviewer_id: 'reviewer_chen',
+      }),
+    );
+    const pill = page.locator('[data-testid="ws-review-unit-context"] .rv-unit-state');
+
+    await expect(pill).toHaveText('已定稿 · 已鎖定');
+    // AC-4.35: the accessible name still names the state and the locked-ness.
+    await expect(pill).toHaveAttribute('aria-label', '審核單位狀態：已定稿，內容已鎖定');
+    await expect(pill).toHaveAttribute('data-terminal', 'true');
+  });
+
+  test('a disputed unit in English keeps its unprefixed state text', async ({ page }) => {
+    await openUnit(page, UNITS.disputed);
+    await closeFlowDrawer(page);
+    await page.getByTestId('lang-toggle').click();
+
+    await expect(
+      page.locator('[data-testid="ws-review-unit-context"] .rv-unit-state'),
+    ).toHaveText('Disputed · not finalized, awaiting arbitration');
+  });
+
   test('re-renders when the reviewer switches unit', async ({ page }) => {
     // issue #956: reviewer_li (not UNITS' default reviewer_wang) is used here
     // because clicking a left-column entry requires it to be in that
