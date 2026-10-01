@@ -1,0 +1,347 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/SteveLin100132/notecraft/main/plugins/er-diagram-renderer/schema.json",
+  "title": "ER Diagram data",
+  "description": "一份資料庫 schema 的表、欄位與外鍵關聯，以及各層的 Wiki 說明。關聯由欄位的 fk 推導，不要另外存一份 edges。v1.2 新增 schemas 層與 description（皆選填，v1.1 資料檔不改也合法）。",
+  "type": "object",
+  "required": [
+    "requirement",
+    "flags",
+    "derivations",
+    "groups",
+    "layout",
+    "tables"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "meta": {
+      "type": "object",
+      "description": "title 與 description 由 NoteCraft 用於頁面標題與搜尋索引；其餘欄位由本 plugin 自行解讀。",
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string",
+          "description": "Wiki 總覽頁內文（Markdown）。也由 NoteCraft 用於頁面描述與搜尋索引——索引時應先去除 Markdown 標記。"
+        },
+        "source": {
+          "type": "string",
+          "description": "這份資料整理自哪裡，供日後追溯"
+        },
+        "backTo": {
+          "type": "string",
+          "description": "「回到來源筆記」要連去哪"
+        }
+      }
+    },
+    "options": {
+      "type": "object",
+      "description": "資料自帶的預設；plugins.json 傳入的同名設定會覆蓋這裡。",
+      "additionalProperties": false,
+      "properties": {
+        "defaultRows": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "卡片預設顯示幾欄；主鍵與外鍵一律顯示、不計入"
+        },
+        "hubTables": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "被極多張表指向的共用表（例：選項主檔）。它們的連線預設收起，否則整張圖會被放射狀線條蓋滿。"
+        },
+        "sectionPrefix": {
+          "type": "string"
+        },
+        "hint": {
+          "type": "string"
+        },
+        "searchPlaceholder": {
+          "type": "string"
+        },
+        "canvasHeight": {
+          "type": "integer",
+          "minimum": 240,
+          "description": "畫布高度（px）。不給就依情境取預設：內嵌 560、獨立頁依視窗高度計算。"
+        }
+      }
+    },
+    "requirement": {
+      "type": "array",
+      "minItems": 1,
+      "description": "必填性的語彙。欄位的 required 值必須出現在這裡的某個 key。",
+      "items": {
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "marker"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "marker": {
+            "enum": [
+              "solid",
+              "half",
+              "hollow",
+              "muted"
+            ],
+            "description": "圓點樣式"
+          },
+          "title": {
+            "type": "string",
+            "description": "hover 說明，沒寫就用 label"
+          }
+        }
+      }
+    },
+    "flags": {
+      "type": "array",
+      "description": "欄位徽章。key 必須是欄位上真的存在的屬性。",
+      "items": {
+        "type": "object",
+        "required": [
+          "key",
+          "badge"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "key": {
+            "enum": [
+              "pk",
+              "fk",
+              "unique",
+              "index"
+            ]
+          },
+          "badge": {
+            "type": "string",
+            "maxLength": 4
+          },
+          "tone": {
+            "enum": [
+              "danger",
+              "info",
+              "success",
+              "neutral",
+              "warning"
+            ],
+            "default": "neutral"
+          },
+          "label": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "derivations": {
+      "type": "array",
+      "description": "衍生欄的種類（計算欄、trigger 維護、加密儲存…），一律以 warning 色呈現。",
+      "items": {
+        "type": "object",
+        "required": [
+          "key",
+          "badge"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "badge": {
+            "type": "string",
+            "maxLength": 4
+          },
+          "label": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "schemas": {
+      "type": "array",
+      "description": "導覽第一層（v1.2）。選填；沒有時所有 group 歸在單一隱含 schema 下。順序即導覽順序。",
+      "items": {
+        "type": "object",
+        "required": [
+          "key",
+          "label"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "建議用資料庫實際的 schema 名，例：crm、sales"
+          },
+          "label": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "description": "Schema Wiki 頁內文（Markdown）"
+          }
+        }
+      }
+    },
+    "groups": {
+      "type": "array",
+      "minItems": 1,
+      "description": "模組分群。表只記 group key，顯示名集中在這裡，避免每張表重複一次。",
+      "items": {
+        "type": "object",
+        "required": [
+          "key",
+          "label"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "schema": {
+            "type": "string",
+            "description": "對應 schemas[].key（v1.2）。沒寫或找不到時歸入第一個 schema"
+          },
+          "description": {
+            "type": "string",
+            "description": "Schema 頁該分群標題下的說明（Markdown）"
+          }
+        }
+      }
+    },
+    "layout": {
+      "type": "object",
+      "required": [
+        "columns"
+      ],
+      "additionalProperties": false,
+      "description": "固定欄數的版面。欄與欄的順序決定外鍵連線要跨幾欄，排得好線就不必繞遠路。",
+      "properties": {
+        "columns": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "key",
+              "groups"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "groups": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "由上而下堆疊的 group key"
+              }
+            }
+          }
+        }
+      }
+    },
+    "tables": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "label",
+          "group",
+          "columns"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "section": {
+            "type": "string"
+          },
+          "group": {
+            "type": "string"
+          },
+          "columns": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "type",
+                "required"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                },
+                "required": {
+                  "type": "string",
+                  "description": "對應 requirement[].key"
+                },
+                "default": {
+                  "type": "string"
+                },
+                "note": {
+                  "type": "string",
+                  "description": "tooltip 內文"
+                },
+                "fk": {
+                  "type": "string",
+                  "description": "父表名。指向不存在的表時該條連線會被略過"
+                },
+                "pk": {
+                  "type": "boolean"
+                },
+                "unique": {
+                  "type": "boolean"
+                },
+                "index": {
+                  "type": "boolean"
+                },
+                "derivation": {
+                  "type": "string",
+                  "description": "對應 derivations[].key"
+                },
+                "pii": {
+                  "type": "boolean",
+                  "description": "個資標示。v1.2 渲染器仍不顯示，保留讓資料先記著"
+                }
+              }
+            }
+          },
+          "description": {
+            "type": "string",
+            "description": "Table Wiki 頁的表說明（Markdown）（v1.2）"
+          }
+        }
+      }
+    }
+  }
+}

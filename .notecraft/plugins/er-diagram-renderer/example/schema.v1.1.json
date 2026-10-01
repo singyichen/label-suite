@@ -1,0 +1,366 @@
+{
+  "$schema": "../schema.json",
+  "meta": {
+    "title": "範例：客戶與合約 schema",
+    "description": "5 張表的縮小範例，用來驗證 plugin 能正常渲染"
+  },
+  "options": {
+    "defaultRows": 6,
+    "hubTables": [
+      "option_item"
+    ],
+    "sectionPrefix": "§",
+    "hint": "點一張表可聚焦它的關聯，其餘變淡；再點一次、點空白處或按 Esc 取消。欄位右側的圖示 hover 可看該欄說明。",
+    "searchPlaceholder": "搜尋表名或欄位名（例：quotation、case_id）"
+  },
+  "requirement": [
+    {
+      "key": "required",
+      "label": "必填",
+      "marker": "solid"
+    },
+    {
+      "key": "condition",
+      "label": "條件",
+      "marker": "half",
+      "title": "條件必填，條件見說明"
+    },
+    {
+      "key": "nullable",
+      "label": "可空",
+      "marker": "hollow"
+    },
+    {
+      "key": "system",
+      "label": "系統",
+      "marker": "muted",
+      "title": "系統維護，應用層不可寫入"
+    }
+  ],
+  "flags": [
+    {
+      "key": "pk",
+      "badge": "PK",
+      "tone": "danger",
+      "label": "主鍵"
+    },
+    {
+      "key": "fk",
+      "badge": "FK",
+      "tone": "info",
+      "label": "外鍵"
+    },
+    {
+      "key": "unique",
+      "badge": "UQ",
+      "tone": "success",
+      "label": "唯一"
+    },
+    {
+      "key": "index",
+      "badge": "IX",
+      "tone": "neutral",
+      "label": "索引"
+    }
+  ],
+  "derivations": [
+    {
+      "key": "generated",
+      "badge": "GEN",
+      "label": "資料庫計算欄"
+    },
+    {
+      "key": "trigger",
+      "badge": "TRG",
+      "label": "由 trigger 維護"
+    },
+    {
+      "key": "encrypted",
+      "badge": "ENC",
+      "label": "加密儲存"
+    }
+  ],
+  "groups": [
+    {
+      "key": "customer",
+      "label": "客戶"
+    },
+    {
+      "key": "contract",
+      "label": "合約"
+    },
+    {
+      "key": "case",
+      "label": "案件與派案"
+    },
+    {
+      "key": "core",
+      "label": "主系統"
+    }
+  ],
+  "layout": {
+    "columns": [
+      {
+        "key": "c1",
+        "groups": [
+          "customer"
+        ]
+      },
+      {
+        "key": "c2",
+        "groups": [
+          "contract"
+        ]
+      },
+      {
+        "key": "c3",
+        "groups": [
+          "case"
+        ]
+      },
+      {
+        "key": "c4",
+        "groups": [
+          "core"
+        ]
+      }
+    ]
+  },
+  "tables": [
+    {
+      "name": "customer",
+      "label": "客戶主檔",
+      "section": "2.1",
+      "group": "customer",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "required": "system",
+          "default": "identity",
+          "pk": true,
+          "note": "代理主鍵"
+        },
+        {
+          "name": "name",
+          "type": "varchar(120)",
+          "required": "required",
+          "index": true,
+          "note": "合約（標題）／公司名稱；§4 #1 從合約拆出"
+        },
+        {
+          "name": "company_city_id",
+          "type": "bigint",
+          "required": "nullable",
+          "fk": "option_item",
+          "note": "縣市，type_code＝地區、指向該集合的縣市層。行政區不做，2026-09-01 決議"
+        },
+        {
+          "name": "industry_id",
+          "type": "bigint",
+          "required": "nullable",
+          "fk": "option_item",
+          "note": "產業類別，選項主檔歸 01-core"
+        },
+        {
+          "name": "employee_count",
+          "type": "integer",
+          "required": "nullable",
+          "note": "公司員工總數"
+        },
+        {
+          "name": "invoice_title",
+          "type": "varchar(120)",
+          "required": "nullable",
+          "note": "發票抬頭"
+        }
+      ]
+    },
+    {
+      "name": "customer_contact",
+      "label": "聯絡人子表",
+      "section": "2.1",
+      "group": "customer",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "required": "system",
+          "pk": true,
+          "note": "代理主鍵"
+        },
+        {
+          "name": "customer_id",
+          "type": "bigint",
+          "required": "required",
+          "fk": "customer",
+          "index": true,
+          "note": "所屬客戶"
+        },
+        {
+          "name": "name",
+          "type": "varchar(60)",
+          "required": "required",
+          "note": "聯絡人姓名"
+        },
+        {
+          "name": "title",
+          "type": "varchar(60)",
+          "required": "nullable",
+          "note": "職稱"
+        },
+        {
+          "name": "phone",
+          "type": "varchar(30)",
+          "required": "nullable",
+          "pii": true,
+          "note": "聯絡電話"
+        }
+      ]
+    },
+    {
+      "name": "contract",
+      "label": "合約主檔",
+      "section": "2.2",
+      "group": "contract",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "required": "system",
+          "pk": true,
+          "note": "代理主鍵"
+        },
+        {
+          "name": "customer_id",
+          "type": "bigint",
+          "required": "required",
+          "fk": "customer",
+          "index": true,
+          "note": "所屬客戶"
+        },
+        {
+          "name": "case_id",
+          "type": "bigint",
+          "required": "nullable",
+          "fk": "biz_case",
+          "note": "來源案件；直接建約時為空"
+        },
+        {
+          "name": "sign_item_id",
+          "type": "bigint",
+          "required": "condition",
+          "fk": "option_item",
+          "unique": true,
+          "note": "簽約項目，條件見 §4 #4"
+        },
+        {
+          "name": "pay_method_id",
+          "type": "bigint",
+          "required": "nullable",
+          "fk": "option_item",
+          "note": "付款方式"
+        },
+        {
+          "name": "total_amount",
+          "type": "numeric(12,0)",
+          "required": "system",
+          "derivation": "trigger",
+          "note": "由合約明細加總，trigger 維護"
+        }
+      ]
+    },
+    {
+      "name": "biz_case",
+      "label": "案件主檔",
+      "section": "2.12",
+      "group": "case",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "required": "system",
+          "pk": true,
+          "note": "代理主鍵"
+        },
+        {
+          "name": "case_no",
+          "type": "varchar(20)",
+          "required": "system",
+          "unique": true,
+          "derivation": "generated",
+          "note": "案件編號，依年度流水配號"
+        },
+        {
+          "name": "customer_id",
+          "type": "bigint",
+          "required": "required",
+          "fk": "customer",
+          "index": true,
+          "note": "所屬客戶"
+        },
+        {
+          "name": "stage",
+          "type": "case_stage",
+          "required": "required",
+          "note": "目前階段"
+        },
+        {
+          "name": "lost_reason_id",
+          "type": "bigint",
+          "required": "condition",
+          "fk": "option_item",
+          "note": "結案原因；stage＝結案時必填"
+        }
+      ]
+    },
+    {
+      "name": "option_item",
+      "label": "選項項目",
+      "section": "2.1",
+      "group": "core",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "required": "system",
+          "pk": true,
+          "note": "代理主鍵"
+        },
+        {
+          "name": "type_code",
+          "type": "varchar(40)",
+          "required": "required",
+          "index": true,
+          "note": "所屬選項集合"
+        },
+        {
+          "name": "code",
+          "type": "varchar(40)",
+          "required": "required",
+          "unique": true,
+          "note": "選項代碼"
+        },
+        {
+          "name": "label",
+          "type": "varchar(80)",
+          "required": "required",
+          "note": "顯示名稱"
+        },
+        {
+          "name": "parent_id",
+          "type": "bigint",
+          "required": "nullable",
+          "fk": "option_item",
+          "note": "上層選項，支援階層（如縣市→行政區）"
+        },
+        {
+          "name": "sort_order",
+          "type": "smallint",
+          "required": "nullable",
+          "note": "排序"
+        }
+      ]
+    }
+  ]
+}
