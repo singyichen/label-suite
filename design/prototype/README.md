@@ -366,6 +366,24 @@ All three jobs are skipped if `design/prototype/package.json` does not exist.
 
 Artifacts (HTML test report) are uploaded under `prototype-playwright-results` on every run, including failures.
 
+### CI measurement after issue #1059
+
+Issue #1059 (G1-G7) consolidated the prototype Playwright suite — 360 files / 2145 cases at the pre-#1059 baseline down to **337 files / 2034 cases** — and converted or removed fixed waits and undocumented `retries`. G8 measured the `prototype-playwright` job on `main` at `432b53d3` (the commit right after G7 merged; CI run `36873754996`, rerun three times via `gh run rerun` since `ci.yml` has no `workflow_dispatch` trigger):
+
+| Run attempt | `Prototype — Playwright Tests` job wall-clock | `Run Playwright tests` step |
+|---|---|---|
+| 1 | `2026-10-01T14:35:29Z` → `14:54:51Z` = 19m22s | `14:36:13Z` → `14:54:45Z` = 18m32s |
+| 2 | `2026-10-01T14:55:43Z` → `15:15:07Z` = 19m24s | `14:56:23Z` → `15:15:03Z` = 18m40s |
+| 3 | `2026-10-01T15:15:58Z` → `15:35:27Z` = 19m29s | `15:16:37Z` → `15:35:23Z` = 18m46s |
+| **Median** | **19m24s (1164s)** | **18m40s (1120s)** |
+
+**Verdict against both acceptance criteria:**
+
+- **Case count ≤ 1,700**: not met. 2,034 cases (337 files) is 334 above the target. Every remaining case traces to a canonical FR/AC/SC, a security/RBAC/a11y/navigation invariant, or a named regression risk per the G1-G6b inventory; none of the remaining case count is deletable coverage left un-pruned — the gap is a scope mismatch between the issue's numeric target and its own non-goals (the six large clusters and all protected-risk cases were locked as non-deletable from G1 onward), not an unfinished cleanup.
+- **CI job wall-clock ≤ 14 min**: not met. The median 19m24s job / 18m40s step both exceed the target by roughly 5-5.5 minutes. This did **not** improve alongside the local full-suite run, which dropped from 14.9 min (G6b) to 10.6 min (G7) after G7's wait/retry cleanup — CI wall-clock instead went slightly *up* across the same window (G6b CI: ~16.4 min; G7 CI: ~17.4 min; G8 median: ~19.4 min). The most likely explanation is runner contention: all three G8 measurement runs, and the G6b/G7 CI runs they are compared against, ran during a period of heavy concurrent CI activity from this same multi-group dispatch wave (several other issues' PRs merging to `main` in the same windows, sharing the same `ci.yml` concurrency group and GitHub-hosted runner pool) — a local run has no such queueing/contention cost. This is recorded as the leading hypothesis, not a confirmed root cause: no isolated, uncontended CI run was available to measure during G8 to test it directly.
+
+Remaining candidates for a future pass, not pursued in #1059 per "do not chase the number by deleting coverage": the 23 `keep-uncertain` rows (`account/auth-chrome-consistency.spec.ts` / `account/auth-dark-drift.spec.ts`), re-examining `<1s` fixed waits, and re-verifying whether the 20 *documented* `retries: 2` files (left untouched in G7) still need their stated flake protection.
+
 ---
 
 ## Troubleshooting
