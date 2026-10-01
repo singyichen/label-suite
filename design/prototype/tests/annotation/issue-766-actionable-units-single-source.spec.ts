@@ -217,45 +217,16 @@ test.describe('Part A: listActionableReviewUnits is the single source findNextAc
   });
 });
 
-test.describe('Part B: the zero-state wording has exactly one definition, shared with list-no-actionable-notice', () => {
-  test('NO_ACTIONABLE_REVIEW_LABELS.zh matches the zh list-no-actionable-notice text', async ({ page }) => {
-    await page.goto(
-      buildListUrl({ task_id: 'T001', role: 'reviewer', run_type: 'official_run' }) + '&notice=no_actionable_review',
-    );
-    const notice = page.getByTestId('list-no-actionable-notice');
-    await expect(notice).toBeVisible();
-    const renderedTitle = await notice.locator('strong').textContent();
-    const renderedMessage = await notice.locator('span').textContent();
-
-    const labels = await page.evaluate(() => {
-      const data = (window as unknown as DataWindow).LabelSuiteAnnotationWorkspaceData;
-      return data.NO_ACTIONABLE_REVIEW_LABELS;
-    });
-
-    expect(labels, 'window.LabelSuiteAnnotationWorkspaceData.NO_ACTIONABLE_REVIEW_LABELS must be exported').toBeDefined();
-    expect(labels!.zh.title).toBe(renderedTitle);
-    expect(labels!.zh.message).toBe(renderedMessage);
-  });
-
-  test('NO_ACTIONABLE_REVIEW_LABELS.en matches the en list-no-actionable-notice text after switching language', async ({ page }) => {
-    await page.goto(
-      buildListUrl({ task_id: 'T001', role: 'reviewer', run_type: 'official_run' }) + '&notice=no_actionable_review',
-    );
-    const notice = page.getByTestId('list-no-actionable-notice');
-    await expect(notice).toBeVisible();
-
-    await page.locator('#langToggle').click();
-
-    const renderedTitle = await notice.locator('strong').textContent();
-    const renderedMessage = await notice.locator('span').textContent();
-
-    const labels = await page.evaluate(() => {
-      const data = (window as unknown as DataWindow).LabelSuiteAnnotationWorkspaceData;
-      return data.NO_ACTIONABLE_REVIEW_LABELS;
-    });
-
-    expect(labels, 'window.LabelSuiteAnnotationWorkspaceData.NO_ACTIONABLE_REVIEW_LABELS must be exported').toBeDefined();
-    expect(labels!.en.title).toBe(renderedTitle);
-    expect(labels!.en.message).toBe(renderedMessage);
-  });
-});
+// issue #1059 G6b (inventory.csv decision=merge): Part B used to live here
+// (two cases: the zh rendered-notice-vs-data-layer comparison, and the same
+// comparison in en after the language toggle). Both are now covered by
+// issue-766-no-actionable-wording-single-source.spec.ts's "reviewer +
+// notice=no_actionable_review renders the shared zh wording, then the
+// shared en wording after switching language", which reads
+// NO_ACTIONABLE_REVIEW_LABELS.zh/en from the data layer the same way and
+// asserts both languages in one test. Note (matrix inconsistency, not
+// resolved here): that survivor file is itself issue-named; unlike the
+// C1/C2/C7 rows, this cluster's inventory rows carry no "Canonical
+// destination" override pointing it at a non-issue-named file per README
+// Test Policy rule 3, so this fold keeps the matrix's literal instruction
+// rather than inventing a rename.
