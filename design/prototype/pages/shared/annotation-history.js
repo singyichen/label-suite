@@ -32,7 +32,6 @@
   var ACTIONS = {
     DRAFT_SAVED: 'draft_saved',
     SUBMITTED: 'submitted',
-    SKIPPED: 'skipped',
     MODIFIED: 'modified',
     ACCEPTED: 'accepted',
     BYPASSED: 'bypassed',
@@ -47,7 +46,6 @@
   var BADGE_CLASS = {
     draft_saved: 'draft-saved',
     submitted: 'submitted',
-    skipped: 'skipped',
     modified: 'modified',
     accepted: 'accepted',
     bypassed: 'bypassed',
@@ -81,7 +79,6 @@
   var ACTION_LABEL = {
     draft_saved: '已存草稿',
     submitted: '已提交',
-    skipped: '已跳過',
     modified: '審核修正',
     accepted: '審核通過',
     /* issue #811: this is the reviewer's decision value, not the annotator's

@@ -35,7 +35,6 @@ const BUCKET_KEY = `labelsuite.wsSubmissions.${TASK}::annotator::official_run::$
 const STYLED_ACTIONS = [
   'draft_saved',
   'submitted',
-  'skipped',
   'modified',
   'accepted',
   'adjudicated',

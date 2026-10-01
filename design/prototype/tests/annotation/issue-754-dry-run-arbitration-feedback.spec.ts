@@ -237,36 +237,4 @@ test.describe('issue #754: FR-096 dry-run feedback must show the arbiter-adjudic
     expect(finalizedValue).toBe(MY_VALUE);
   });
 
-  test('regression guard: markSampleSkipped() keeps its existing reason-only event shape after appendSampleTimelineEvent()\'s signature extension', async ({ page }) => {
-    const skipSampleId = 'skip-fb-754-01';
-    const skipReason = '暫時跳過（issue #754 回歸保護測試）';
-    await patchDataFile(
-      page,
-      'annotation-workspace.data.js',
-      `
-      (function () {
-        var data = window.LabelSuiteAnnotationWorkspaceData;
-        var identity = { annotatorId: ${JSON.stringify(MY_ANNOTATOR_ID)}, reviewerId: ${JSON.stringify(REVIEWER_ID)} };
-        data.markSampleSkipped(${JSON.stringify(TASK_ID)}, 'dry_run', ${JSON.stringify(skipSampleId)}, ${JSON.stringify(skipReason)}, '', identity);
-      })();
-      `
-    );
-    await page.goto(buildListUrl({ task_id: TASK_ID, run_type: 'dry_run' }));
-
-    const event = await page.evaluate(
-      ({ taskId, sampleId, annotatorId }) => {
-        const data = (window as any).LabelSuiteAnnotationWorkspaceData;
-        const history = data.getSampleHistory(taskId, 'dry_run', sampleId, { annotatorId });
-        return history[history.length - 1];
-      },
-      { taskId: TASK_ID, sampleId: skipSampleId, annotatorId: MY_ANNOTATOR_ID }
-    );
-
-    expect(event.action).toBe('skipped');
-    expect(event.reason).toBe(skipReason);
-    // markSampleSkipped() never had a result to snapshot -- the new
-    // optional parameter must stay undefined for this call site, so
-    // appendHistoryEvent's `!= null` filter must keep the field absent.
-    expect(event.result_snapshot).toBeUndefined();
-  });
 });

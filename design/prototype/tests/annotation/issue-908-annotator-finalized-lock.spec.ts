@@ -9,6 +9,15 @@ import {
 
 /* Annotator finalized-lock (issue #908, spec 015 v6.19.0 FR-101 / AC-2.27).
  *
+ * v10.0.0 (issue #1082): FR-101/AC-2.27's locked control set shrinks from
+ * three to two (`wsSkipBtn` is retired along with the whole skip control).
+ * The two testid loops below drop `ws-skip-btn` accordingly -- the skip
+ * control's own DOM-absence is asserted in
+ * annotation-workspace-bypass-reason.spec.ts (AC-2.27 describe block), not
+ * here. `probeGuardedWrites()`'s own `'skipped'` literal is untouched: it is
+ * a generic action-string argument to `appendSampleTimelineEvent()` (a
+ * function with no action-value validation), unrelated to this change.
+ *
  * Trigger condition (the part most likely to be implemented wrong, per the
  * proposal's own framing): the lock is NOT "unit status === finalized"
  * alone. getReviewUnitStatus()'s first line (annotation-workspace.data.js)
@@ -232,7 +241,11 @@ test.describe('issue #908 -- annotator finalized-lock (FR-101 / AC-2.27)', () =>
 
     await expect(page.getByTestId('ws-annotator-finalized-notice')).toBeVisible();
 
-    for (const testId of ['ws-skip-btn', 'ws-save-btn', 'ws-submit-btn']) {
+    // issue #1082 (AC-2.27 v10.0.0): ws-skip-btn is excluded here -- the
+    // skip control is retired entirely, so it must be absent from the DOM
+    // rather than merely disabled. See annotation-workspace-bypass-reason.
+    // spec.ts for that assertion.
+    for (const testId of ['ws-save-btn', 'ws-submit-btn']) {
       const btn = page.getByTestId(testId);
       await expect(btn).toHaveCount(1);
       await expect(btn).toBeDisabled();
@@ -321,7 +334,8 @@ test.describe('issue #908 -- annotator finalized-lock (FR-101 / AC-2.27)', () =>
     expect(await readReviewUnitStatus(page, { sampleId, annotatorId })).toBeNull();
 
     await expect(page.getByTestId('ws-annotator-finalized-notice')).toHaveCount(0);
-    for (const testId of ['ws-skip-btn', 'ws-save-btn', 'ws-submit-btn']) {
+    // issue #1082 (AC-2.27 v10.0.0): ws-skip-btn excluded, same reason as above.
+    for (const testId of ['ws-save-btn', 'ws-submit-btn']) {
       const btn = page.getByTestId(testId);
       await expect(btn).not.toHaveAttribute('aria-disabled', 'true');
       await expect(btn).toBeEnabled();

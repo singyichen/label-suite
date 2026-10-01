@@ -759,7 +759,6 @@
        outside the set keeps the neutral base badge above. */
     .history-action-badge.draft-saved { background: var(--color-warning-bg); color: var(--color-warning); }
     .history-action-badge.submitted { background: var(--color-surface); color: var(--color-cta); }
-    .history-action-badge.skipped { background: var(--color-surface); color: var(--color-ink-muted); }
     .history-action-badge.modified { background: var(--color-info-bg); color: var(--color-info); }
     .history-action-badge.accepted { background: var(--color-success-bg); color: var(--color-success); }
     .history-action-badge.rejected { background: var(--color-error-bg); color: var(--color-error); }
@@ -1067,6 +1066,9 @@
     /* ── Reviewer mode: original-answer label (AC-3.45) ───────────────── */
     .rv-btn-text { line-height: 1; }
     .rv-answer-origin { font-size: 12px; color: var(--color-ink-muted); margin-top: 12px; }
+    /* issue #1082 (AC-3.66): the annotator's own Bypass reason, a sibling of
+       .rv-answer-origin rather than appended text on it. */
+    .rv-answer-origin-reason { font-size: 12px; color: var(--color-ink-muted); margin-top: 2px; }
 
     /* ── Reviewer mode: review reason (issue #552/#596, FR-016A) ────────── */
     .rv-review-reason { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; }
@@ -1075,24 +1077,6 @@
     #wsReviewSubmitBtn[data-submit-blocked] { opacity: 0.55; cursor: not-allowed; }
     .rv-review-reason-label { font-size: 12px; font-weight: 600; color: var(--color-error); }
 
-    /* ── Annotator mode: skip + its required reason (issue #578, FR-089) ── */
-    /* The reason sits beside the button rather than behind a confirm dialog:
-       FR-089 makes it required, and a field you can see is a field you can
-       answer before you commit to the action. */
-    .ws-skip-group { display: flex; align-items: center; gap: 6px; }
-    .ws-skip-group input {
-      width: 180px;
-      font: inherit;
-      font-size: 13px;
-      padding: 5px 8px;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-sm);
-      background: var(--color-surface);
-      color: var(--color-ink);
-    }
-    /* Same blocked look as the reviewer submit (issue #552): dimmed, but the
-       click still lands so the toast can say what is missing. */
-    #wsSkipBtn[data-submit-blocked] { opacity: 0.55; cursor: not-allowed; }
     .rv-review-reason textarea {
       width: 100%;
       font: inherit;
@@ -1104,6 +1088,24 @@
       color: var(--color-ink);
       resize: vertical;
     }
+
+    /* ── Annotator mode: Bypass reason (issue #1082, AC-2.29/FR-089) ──────
+       Docked inline in the same .preview-bypass-row as the Bypass chip it
+       belongs to (task-config.engine.js:2502's "consumers dock their own
+       trailing controls onto this row" contract). */
+    .ws-bypass-reason-group { display: flex; flex-direction: column; gap: 2px; flex: 1 1 220px; min-width: 200px; }
+    .ws-bypass-reason-group input {
+      width: 100%;
+      font: inherit;
+      font-size: 13px;
+      padding: 5px 8px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      background: var(--color-surface);
+      color: var(--color-ink);
+    }
+    .ws-bypass-reason-error { font-size: 12px; color: var(--color-error); }
+    .ws-bypass-reason-helper { font-size: 12px; color: var(--color-text-soft); }
   </style>
 </head>
 <body>
@@ -1268,12 +1270,6 @@
           <span id="wsAutosaveLabel"></span>
         </div>
         <div class="action-bar-right">
-          <div class="ws-skip-group" id="wsSkipGroup">
-            <input type="text" id="wsSkipReason" data-testid="ws-skip-reason" required />
-            <button class="btn btn-outline" type="button" id="wsSkipBtn" data-testid="ws-skip-btn" data-submit-blocked="reason">
-              <span id="wsSkipLabel"></span>
-            </button>
-          </div>
           <button class="btn btn-outline" type="button" id="wsSaveBtn" data-testid="ws-save-btn">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
             <span id="wsSaveLabel"></span>

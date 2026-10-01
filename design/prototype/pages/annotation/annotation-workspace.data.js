@@ -417,6 +417,22 @@
     return Object.keys(snapshot).length ? snapshot : null;
   }
 
+  /* issue #1082 (AC-3.66): the annotator's own Bypass reasons, one line per
+     bypassed outKey with a reason on file, same `outKey + ': ' + text` join
+     convention as the config.js host's buildHistorySummary(). A bypassed
+     outKey with no stored reason (legacy pre-v10.0.0 data) is silently
+     skipped rather than emitting an empty line -- `null` when nothing
+     qualifies, so appendHistoryEvent's `!= null` filter drops the key
+     entirely instead of writing a reason-less `reason: ''`. */
+  function buildBypassReasonSummary(payload) {
+    var bypass = (payload && payload.previewBypass) || {};
+    var reasons = (payload && payload.bypassReasons) || {};
+    var lines = Object.keys(bypass)
+      .filter(function (outKey) { return bypass[outKey] && reasons[outKey]; })
+      .map(function (outKey) { return outKey + ': ' + reasons[outKey]; });
+    return lines.length ? lines.join('\n') : null;
+  }
+
   function markSampleSubmitted(taskId, role, runType, sampleId, payload, historySummary, identity) {
     /* FR-101 (issue #908): an annotator write on an already-finalized unit
        is rejected outright, before any bucket read/write -- reviewer and
@@ -438,7 +454,7 @@
       appendReviewDecisionEvents(entry, taskId, runType, sampleId, payload, historySummary, actorId, identity, decisions);
     } else {
       appendHistoryEvent(entry, 'submitted', role, historySummary, actorId, Object.assign(
-        { result_snapshot: buildResultSnapshot(payload) },
+        { result_snapshot: buildResultSnapshot(payload), reason: buildBypassReasonSummary(payload) },
         timingFields(payload && payload.timing)
       ));
     }
@@ -693,19 +709,23 @@
   }
 
   /* FR-089: record something that happened TO a sample without moving where
-   * that sample stands. Both callers write into the ANNOTATOR bucket, for
-   * two different reasons that happen to point the same way:
-   *   - skip is the annotator's own timeline to begin with;
-   *   - adjudication is a reviewer act, but getSampleHistory drops any
-   *     non-annotator bucket whose entry is not `submitted` (FR-062), and an
-   *     arbiter normally has no submitted reviewer submission of their own --
-   *     an `adjudicated` event left in the arbiter's bucket would be
-   *     invisible to every viewer, forever. Same resolution markSampleRejected
-   *     already uses: annotator bucket, reviewer role on the event.
+   * that sample stands. Its one remaining caller (adjudication) writes into
+   * the ANNOTATOR bucket: adjudication is a reviewer act, but
+   * getSampleHistory drops any non-annotator bucket whose entry is not
+   * `submitted` (FR-062), and an arbiter normally has no submitted reviewer
+   * submission of their own -- an `adjudicated` event left in the arbiter's
+   * bucket would be invisible to every viewer, forever. Same resolution
+   * markSampleRejected already uses: annotator bucket, reviewer role on the
+   * event.
    *
-   * Status is deliberately untouched. `skipped` and `adjudicated` are events,
-   * not sample states, so entryStatus() keeps its three-value contract and
-   * "I set this one aside" cannot overwrite "how far I got on it".
+   * issue #1082 (v10.0.0): this function's original other caller,
+   * markSampleSkipped(), is retired along with the annotator skip control
+   * itself -- adjudication is now the sole caller, but the function stays
+   * generic (action/role/reason are still plain parameters, not hardcoded
+   * to 'adjudicated') since nothing requires narrowing it to one action.
+   *
+   * Status is deliberately untouched. `adjudicated` is an event, not a
+   * sample state, so entryStatus() keeps its three-value contract.
    *
    * `reason` is required by FR-089 rather than merely expected: without the
    * guard, appendHistoryEvent's null-key drop would quietly emit a
@@ -713,12 +733,11 @@
    * return follows markSampleRejected's run_type guard.
    *
    * `resultSnapshot` (issue #754) is optional and appended last so every
-   * pre-existing positional call site (markSampleSkipped below) keeps
-   * passing undefined for it without being touched -- appendHistoryEvent's
-   * `!= null` filter already drops undefined/null extras, so an event with
-   * no result to show (skipped, or an arbitration `reject`/`兩者皆非`
-   * outcome) ends up with no `result_snapshot` key at all, same as before
-   * this parameter existed. */
+   * pre-existing positional call site keeps passing undefined for it without
+   * being touched -- appendHistoryEvent's `!= null` filter already drops
+   * undefined/null extras, so an event with no result to show (an
+   * arbitration `reject`/`兩者皆非` outcome) ends up with no
+   * `result_snapshot` key at all, same as before this parameter existed. */
   function appendSampleTimelineEvent(taskId, runType, sampleId, action, role, reason, historySummary, identity, timing, resultSnapshot) {
     if (!reason) return false;
     /* FR-101 (issue #908): same guard as markSampleSubmitted -- see its
@@ -738,12 +757,6 @@
     ));
     writeSubmissionBucket(key, bucket);
     return true;
-  }
-
-  /* FR-089 / AC-2.20: the annotator sets a sample aside, saying why. New in
-     v4.61.0 -- there was no skip action before this version. */
-  function markSampleSkipped(taskId, runType, sampleId, reason, historySummary, identity, timing) {
-    return appendSampleTimelineEvent(taskId, runType, sampleId, 'skipped', 'annotator', reason, historySummary, identity, timing);
   }
 
   /* Reviewer per-row decision drafts (issue #196, CONT-03): approve/reject
@@ -2825,7 +2838,7 @@
    * Also appends ONE history event (FR-086/FR-095 closing line) into the
    * ANNOTATOR's bucket -- same resolution markSampleRejected/
    * appendSampleTimelineEvent use for a reviewer/arbiter act on someone
-   * else's unit (comment at markSampleSkipped above), and the same reason
+   * else's unit (comment at appendSampleTimelineEvent above), and the same reason
    * getSampleHistory's FR-062 masking only admits a `submitted` reviewer
    * bucket. Unlike appendSampleTimelineEvent, this function itself does not
    * reject an empty `reason` (`reason || ''` below) -- issue #920 moved
@@ -3864,7 +3877,6 @@
     getSampleSavedAt: getSampleSavedAt,
     markSampleSubmitted: markSampleSubmitted,
     markSampleSaved: markSampleSaved,
-    markSampleSkipped: markSampleSkipped,
     appendSampleTimelineEvent: appendSampleTimelineEvent,
     markSampleRejected: markSampleRejected,
     saveReviewRowDecisionDraft: saveReviewRowDecisionDraft,
