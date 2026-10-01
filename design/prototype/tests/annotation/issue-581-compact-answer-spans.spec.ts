@@ -136,6 +136,7 @@ test('bypassing the type records the flag beside an emptied span list', async ({
   await dismissGuidelineModal(page);
 
   await page.getByTestId('ws-bypass-sequence_tagging').check();
+  await page.getByTestId('ws-bypass-reason-sequence_tagging').fill('樣本內容不足以判斷');
   await page.getByTestId('ws-submit-btn').click();
   await expect(page.getByTestId('ws-sample-item').first()).toHaveAttribute('data-submitted', 'true');
 

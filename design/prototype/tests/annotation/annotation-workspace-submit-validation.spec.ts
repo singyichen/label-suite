@@ -127,6 +127,7 @@ test.describe('entity_recognition submit validation (T007)', () => {
     await expect(page.getByTestId('ws-output-panel-entity_recognition')).toHaveAttribute('data-error', 'true');
 
     await page.getByTestId('ws-bypass-entity_recognition').check();
+    await page.getByTestId('ws-bypass-reason-entity_recognition').fill('樣本內容不足以判斷');
     await page.getByTestId('ws-submit-btn').click();
     await expect(page.getByTestId('ws-sample-item').first()).toHaveAttribute('data-submitted', 'true');
   });
@@ -148,6 +149,7 @@ test.describe('relation_identification submit validation (T008)', () => {
     await expect(page.getByTestId('ws-output-panel-relation_identification')).toHaveAttribute('data-error', 'true');
 
     await page.getByTestId('ws-bypass-relation_identification').check();
+    await page.getByTestId('ws-bypass-reason-relation_identification').fill('樣本內容不足以判斷');
     await page.getByTestId('ws-submit-btn').click();
     await expect(page.getByTestId('ws-sample-item').first()).toHaveAttribute('data-submitted', 'true');
   });

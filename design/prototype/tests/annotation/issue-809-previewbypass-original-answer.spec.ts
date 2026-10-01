@@ -52,6 +52,7 @@ test.describe('issue #809: previewBypass must be visible to the reviewer', () =>
     await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'annotator' }));
     await dismissGuidelineModal(page);
     await page.getByTestId('ws-bypass-single_label').check();
+    await page.getByTestId('ws-bypass-reason-single_label').fill('樣本內容不足以判斷');
     await page.getByTestId('ws-submit-btn').click();
 
     await gotoT001Reviewer001(page);
