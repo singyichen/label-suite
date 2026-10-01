@@ -28,10 +28,15 @@
  *     color assertions.
  *   - `TAB_STORAGE_KEY = 'labelsuite.workspaceTabs'` (spec 規格常數):
  *     sessionStorage holds the tab list + active tab index.
+ *   - `TAB_SCROLL_STORAGE_KEY = 'labelsuite.workspaceTabScroll'` (spec 規格
+ *     常數, added for G2b / AC-2.1 / FR-018 / FR-019): sessionStorage holds
+ *     each tab's scroll position, separately from TAB_STORAGE_KEY, and is
+ *     also cleared on logout (AC-2.4 / FR-018).
  */
 import { type Locator, type Page } from '@playwright/test';
 
 export const TAB_STORAGE_KEY = 'labelsuite.workspaceTabs';
+export const TAB_SCROLL_STORAGE_KEY = 'labelsuite.workspaceTabScroll';
 
 export function tabBar(page: Page): Locator {
   return page.getByTestId('workspace-tab-bar');
