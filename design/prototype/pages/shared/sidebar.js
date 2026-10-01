@@ -3,6 +3,8 @@
   var LANG_STORAGE_KEY = 'labelsuite.lang';
   var ACTIVE_TASK_TYPE_STORAGE_KEY = 'labelsuite.activeTaskType';
   var SIDEBAR_COLLAPSED_STORAGE_KEY = 'labelsuite.sidebarCollapsed';
+  /* specs/shared/019-workspace-tabs/spec.md 規格常數 TAB_STORAGE_KEY. */
+  var WORKSPACE_TAB_STORAGE_KEY = 'labelsuite.workspaceTabs';
 
   /* issue #1041: last-mounted taskRole, persisted at module scope so
    * applyGlobalLanguage() can re-resolve #navAnnotation's role-dependent
@@ -493,6 +495,251 @@
       '</div>';
   }
 
+  // ── Workspace Tabs (issue #1075, specs/shared/019-workspace-tabs) ──────
+  // Shell-level strip mounted above each page's content, inside <main>, by
+  // mountWorkspaceTabBar() -- distinct from a page's own in-page "Desktop
+  // Content Tabs" (see MASTER.md's terminology note). This sub-group:
+  // open/switch/dedupe only (US1 minus close+badge, US3); close button,
+  // stage badge, cap/eviction, unsaved-guard, shortcuts, mobile dropdown,
+  // 403/404 and history.replaceState() are later sub-groups.
+  function getWorkspacePageKind(pathname) {
+    var file = pathname.split('/').pop() || '';
+    return file.replace(/\.html$/, '') || 'unknown';
+  }
+
+  // FR-006 requires a *normalized* URL dedupe key for task-detail and every
+  // other page kind, not a raw string match: sorts query params so two
+  // navigations to the same resource with differently-ordered params
+  // resolve to the same dedupe key.
+  function normalizeWorkspaceSearch(search) {
+    var params = new URLSearchParams(search);
+    var keys = [];
+    params.forEach(function (_, key) {
+      if (keys.indexOf(key) === -1) keys.push(key);
+    });
+    keys.sort();
+    var normalized = new URLSearchParams();
+    keys.forEach(function (key) {
+      params.getAll(key).forEach(function (value) { normalized.append(key, value); });
+    });
+    var str = normalized.toString();
+    return str ? '?' + str : '';
+  }
+
+  /* 頁面種類 → 去重鍵對照表 (spec 019 規格常數, Q3/Q8/Q16) -- the single
+   * source of truth: annotation-workspace dedupes by task id + mode,
+   * task-new is a singleton, every other page kind (including task-detail,
+   * per Q16) dedupes by full normalized URL. */
+  function computeWorkspaceDedupeInfo(loc) {
+    var pageKind = getWorkspacePageKind(loc.pathname);
+    var params = new URLSearchParams(loc.search);
+
+    if (pageKind === 'task-new') {
+      return { pageKind: pageKind, dedupeKey: 'task-new' };
+    }
+    if (pageKind === 'annotation-workspace') {
+      var taskId = params.get('task_id') || '';
+      var mode = params.get('role') === 'reviewer' ? 'review' : 'annotate';
+      return {
+        pageKind: pageKind,
+        dedupeKey: 'annotation-workspace:' + taskId + ':' + mode,
+        taskId: taskId,
+        mode: mode
+      };
+    }
+
+    var info = { pageKind: pageKind, dedupeKey: loc.pathname + normalizeWorkspaceSearch(loc.search) };
+    if (pageKind === 'task-detail') {
+      info.taskId = params.get('task_id') || '';
+    }
+    return info;
+  }
+
+  function readWorkspaceTabState() {
+    try {
+      var raw = window.sessionStorage.getItem(WORKSPACE_TAB_STORAGE_KEY);
+      if (!raw) return { tabs: [], activeIndex: -1 };
+      var parsed = JSON.parse(raw);
+      if (!parsed || !Array.isArray(parsed.tabs)) return { tabs: [], activeIndex: -1 };
+      return {
+        tabs: parsed.tabs,
+        activeIndex: typeof parsed.activeIndex === 'number' ? parsed.activeIndex : -1
+      };
+    } catch (error) {
+      return { tabs: [], activeIndex: -1 }; // sessionStorage unavailable/corrupt (private mode)
+    }
+  }
+
+  function writeWorkspaceTabState(state) {
+    try {
+      window.sessionStorage.setItem(WORKSPACE_TAB_STORAGE_KEY, JSON.stringify(state));
+    } catch (error) {
+      // Ignore storage errors in prototype mode.
+    }
+  }
+
+  // Switches to an existing dedupe-key match or inserts a new tab right of
+  // the active one (FR-005, FR-008, Q19). `loc` must be a synchronous
+  // snapshot, not a live window.location read: task-detail.html rewrites
+  // its own URL via history.replaceState() later (FR-019).
+  function syncCurrentPageIntoWorkspaceTabs(loc) {
+    var state = readWorkspaceTabState();
+    var info = computeWorkspaceDedupeInfo(loc);
+    var tabEntry = {
+      dedupeKey: info.dedupeKey,
+      url: loc.pathname + loc.search,
+      pageKind: info.pageKind,
+      taskId: info.taskId || null,
+      mode: info.mode || null
+    };
+
+    var existingIndex = -1;
+    for (var i = 0; i < state.tabs.length; i++) {
+      if (state.tabs[i].dedupeKey === info.dedupeKey) {
+        existingIndex = i;
+        break;
+      }
+    }
+
+    if (existingIndex === -1) {
+      var insertAt = state.activeIndex + 1;
+      if (insertAt < 0) insertAt = 0;
+      if (insertAt > state.tabs.length) insertAt = state.tabs.length;
+      state.tabs.splice(insertAt, 0, tabEntry);
+      state.activeIndex = insertAt;
+    } else {
+      state.tabs[existingIndex] = tabEntry;
+      state.activeIndex = existingIndex;
+    }
+
+    writeWorkspaceTabState(state);
+    return state;
+  }
+
+  var workspacePageKindI18n = {
+    zh: {
+      dashboard: '儀表板', 'task-list': '任務管理', 'task-new': '新增任務',
+      'task-detail': '任務詳情', 'annotation-list': '標記清單',
+      'dataset-analysis-list': '資料集分析', 'dataset-analysis-detail': '資料集分析',
+      'user-management': '使用者管理', 'role-settings': '角色設定', profile: '個人設定'
+    },
+    en: {
+      dashboard: 'Dashboard', 'task-list': 'Task Management', 'task-new': 'New Task',
+      'task-detail': 'Task Detail', 'annotation-list': 'Annotation List',
+      'dataset-analysis-list': 'Dataset Analytics', 'dataset-analysis-detail': 'Dataset Analytics',
+      'user-management': 'User Management', 'role-settings': 'Role Settings', profile: 'Profile'
+    }
+  };
+
+  var workspaceAnnotationModeI18n = {
+    zh: { annotate: '標記作業', review: '審核作業' },
+    en: { annotate: 'Annotation', review: 'Review' }
+  };
+
+  // Looks up a task-detail tab's task name by id from the CURRENT page's
+  // own task-list.data.js global, never hardcoded (Generalization-First).
+  function resolveWorkspaceTaskName(taskId, lang) {
+    if (!taskId) return '';
+    var data = window.LabelSuiteTaskListData;
+    if (!data || !Array.isArray(data.tasks)) return '';
+    for (var i = 0; i < data.tasks.length; i++) {
+      if (data.tasks[i].id === taskId) {
+        return lang === 'zh' ? (data.tasks[i].nameZh || '') : (data.tasks[i].nameEn || data.tasks[i].nameZh || '');
+      }
+    }
+    return '';
+  }
+
+  // A task-detail tab's title is its nav label plus the task name (FR-010's
+  // TAB_STAGE_BADGE stage-prefix variant is added by a later sub-group);
+  // every other page kind uses its nav/admin-submenu label, falling back to
+  // the raw pageKind for an unrecognized one instead of rendering nothing.
+  function computeWorkspaceTabLabel(tab, lang) {
+    var l = normalizeLang(lang);
+    if (tab.pageKind === 'task-detail') {
+      var stageText = workspacePageKindI18n[l]['task-detail'];
+      var taskName = resolveWorkspaceTaskName(tab.taskId, l);
+      return taskName ? stageText + ' ' + taskName : stageText;
+    }
+    if (tab.pageKind === 'annotation-workspace') {
+      return workspaceAnnotationModeI18n[l][tab.mode] || tab.pageKind;
+    }
+    return workspacePageKindI18n[l][tab.pageKind] || tab.pageKind;
+  }
+
+  function renderWorkspaceTabBar(container, state, onActivate) {
+    while (container.firstChild) container.removeChild(container.firstChild);
+    var lang = readStoredLang();
+    state.tabs.forEach(function (tab, index) {
+      var isActive = index === state.activeIndex;
+      var label = computeWorkspaceTabLabel(tab, lang);
+
+      var tabEl = document.createElement('div');
+      tabEl.className = 'workspace-tab' + (isActive ? ' active' : '');
+      tabEl.setAttribute('data-testid', 'workspace-tab');
+      tabEl.setAttribute('role', 'tab');
+      tabEl.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      tabEl.setAttribute('tabindex', '0');
+      tabEl.addEventListener('click', function () { onActivate(index); });
+
+      var labelSpan = document.createElement('span');
+      labelSpan.className = 'workspace-tab-label';
+      labelSpan.textContent = label;
+      tabEl.appendChild(labelSpan);
+
+      container.appendChild(tabEl);
+    });
+  }
+
+  // Mounts the bar as <main>'s first child, deferred to DOMContentLoaded:
+  // mountSidebar() runs before <main> is parsed and before any page-data
+  // <script> below it (e.g. task-list.data.js) has run.
+  function mountWorkspaceTabBar() {
+    // Captured synchronously, at mountSidebar() call time -- see
+    // syncCurrentPageIntoWorkspaceTabs() for why this must not be a live
+    // window.location read taken later (inside run()).
+    var capturedLoc = { pathname: window.location.pathname, search: window.location.search };
+
+    function run() {
+      var mainEl = document.querySelector('main');
+      if (!mainEl) return;
+
+      var existing = document.getElementById('workspaceTabBar');
+      if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
+
+      var barEl = document.createElement('div');
+      barEl.id = 'workspaceTabBar';
+      barEl.className = 'workspace-tab-bar';
+      barEl.setAttribute('data-testid', 'workspace-tab-bar');
+      barEl.setAttribute('role', 'tablist');
+      barEl.setAttribute('aria-label', readStoredLang() === 'zh' ? '工作頁籤' : 'Workspace tabs');
+      mainEl.insertBefore(barEl, mainEl.firstChild);
+
+      // Cancel a flex-column <main>'s own `gap` (e.g. annotation-list.html)
+      // so it isn't doubled above this new first child (shared-008 FR-017/SC-010).
+      var mainRowGap = parseFloat(window.getComputedStyle(mainEl).rowGap);
+      if (mainRowGap > 0) barEl.style.marginBottom = '-' + mainRowGap + 'px';
+
+      function activateWorkspaceTab(index) {
+        var state = readWorkspaceTabState();
+        if (index === state.activeIndex) return;
+        state.activeIndex = index;
+        writeWorkspaceTabState(state);
+        window.location.href = state.tabs[index].url;
+      }
+
+      var state = syncCurrentPageIntoWorkspaceTabs(capturedLoc);
+      renderWorkspaceTabBar(barEl, state, activateWorkspaceTab);
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', run);
+    } else {
+      run();
+    }
+  }
+  // ── End workspace tabs ──────────────────────────────────────────────────
+
   /* issue #946: returned markup leaves #userName/#userAvatar empty; a caller
    * must also call updateUserChip({ userName }) after inserting it into the
    * DOM, or those two nodes stay blank (mountSidebar() already does this). */
@@ -716,6 +963,7 @@
     updateShortcutHelpLanguage(readStoredLang());
     updateAdminSubmenuLanguage(readStoredLang());
     syncSidebarThemeToggle();
+    mountWorkspaceTabBar();
 
     var loginHref = opts.loginHref || '../account/login.html';
     ['mobileLogoutBtn', 'logoutBtn'].forEach(function (id) {

@@ -947,3 +947,55 @@ body.sidebar-collapsed .notif-dropdown { left: 88px; }
     display: none;
   }
 }
+
+/* ── Workspace Tabs (issue #1075, specs/shared/019-workspace-tabs) ───────
+   Shell-level tab strip mounted as the first child of each page's <main>
+   by sidebar.js mountWorkspaceTabBar(). Distinct from a page's own in-page
+   "Desktop Content Tabs" (.admin-tabs on task-detail.html /
+   user-management.html) -- see design/system/MASTER.md's terminology note.
+   Mobile (<=MOBILE_BP, 767px) dropdown replacement is a later sub-group
+   (G2f, spec 019 FR-002/US6); hidden here instead of left broken. */
+.workspace-tab-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-md) 0;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-white);
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+
+.workspace-tab {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-ink-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-bottom: none;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.workspace-tab.active {
+  color: var(--color-ink);
+  background: var(--color-surface);
+  border-color: var(--color-border);
+}
+
+/* .workspace-tab[data-stage-badge] colors and .workspace-tab-close are
+   added by a later sub-group (AC-1.6, AC-1.5). */
+@media (max-width: 767px) {
+  .workspace-tab-bar {
+    display: none;
+  }
+}
