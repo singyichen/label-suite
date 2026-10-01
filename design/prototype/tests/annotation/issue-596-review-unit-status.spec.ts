@@ -189,58 +189,16 @@ test.beforeEach(async ({ page }) => {
 });
 
 test.describe('issue #596: REVIEW_UNIT_STATUS three-state derivation (task 1.1)', () => {
-  test('annotator has not submitted -> null', async ({ page }) => {
-    expect(await statusOf(page, 'official_run')).toBeNull();
-  });
-
-  test('reviewer has not submitted -> pending', async ({ page }) => {
-    await seed(page, {
-      role: 'annotator',
-      runType: 'official_run',
-      payload: labelPayload('sad'),
-      identity: { annotatorId: ANNOTATOR },
-    });
-    expect(await statusOf(page, 'official_run')).toBe('pending');
-  });
-
-  test('every outKey decided approve -> finalized', async ({ page }) => {
-    await seed(page, {
-      role: 'annotator',
-      runType: 'official_run',
-      payload: labelPayload('sad'),
-      identity: { annotatorId: ANNOTATOR },
-    });
-    await seed(page, {
-      role: 'reviewer',
-      runType: 'official_run',
-      payload: labelPayload('sad'), // unchanged value = approve on every outKey
-      identity: { annotatorId: ANNOTATOR, reviewerId: REVIEWER },
-    });
-    expect(await statusOf(page, 'official_run')).toBe('finalized');
-  });
-
-  /* design.md D1 row 4 / FR-051 point 4: a `modify` decision MUST send the
-   * outKey to the dispute pool and MUST stay disputed until arbitrated --
-   * there is no reviewer-count quorum left to satisfy (FR-093: exactly one
-   * reviewer per unit). When this test was written the implementation still
-   * treated a lone reviewer's correction as the full quorum and auto-converged
-   * it to FINALIZED (the majority-convergence helper, issue #551 point 3);
-   * issue #903 deleted that helper, so this is now a regression guard. */
-  test('a lone reviewer "modify" decision must stay disputed, not auto-finalize', async ({ page }) => {
-    await seed(page, {
-      role: 'annotator',
-      runType: 'official_run',
-      payload: labelPayload('sad'),
-      identity: { annotatorId: ANNOTATOR },
-    });
-    await seed(page, {
-      role: 'reviewer',
-      runType: 'official_run',
-      payload: labelPayload('fear'), // reviewer corrects the value
-      identity: { annotatorId: ANNOTATOR, reviewerId: REVIEWER },
-    });
-    expect(await statusOf(page, 'official_run')).toBe('disputed');
-  });
+  // issue #1059 G6b (inventory.csv decision=merge): the four cases that
+  // used to sit here -- "annotator has not submitted -> null", "reviewer
+  // has not submitted -> pending", "every outKey decided approve ->
+  // finalized" and "a lone reviewer 'modify' decision must stay disputed,
+  // not auto-finalize" -- had identical bodies to
+  // annotation-review-unit.spec.ts's "review unit: three-state machine"
+  // describe block ("no annotator submission means there is no review
+  // unit yet", "an unreviewed annotator submission is pending", "an
+  // agreeing reviewer finalizes the unit when min_reviewers is met" and
+  // "a lone reviewer's correction stays disputed, not finalized").
 
   /* design.md D3: a `bypass` decision ("無法判定") carries no replacement
    * value -- modeled here as the reviewer submitting no selection at all,
