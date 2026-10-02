@@ -188,4 +188,106 @@ test.describe('Task detail sampling edit state', () => {
     // The row must still name the new primary metric literally as u-α.
     await expect(row).toContainText(/u-α/i);
   });
+
+  // issue #1100: the sampling-edit form's isolation block rendered a
+  // redundant `<hr class="panel-divider">` right above it, and the block
+  // itself showed two stacked borders -- `.isolation-wrap`'s own frame plus
+  // a global `.toggle-row` border (pages/task-management/task-config.css:241)
+  // leaking onto the nested `.toggle-row` that is only meant to be a plain
+  // flex row inside `.isolation-wrap`. These three cases assert the fixed
+  // rendering (single border layer, no extra divider, no overflow) and are
+  // expected to fail against the current markup/CSS.
+  test('sampling edit isolation block has a single border layer with no extra divider', async ({ page }) => {
+    await page.goto(`${TASK_DETAIL_URL}?task_id=T001`);
+    await page.locator('#samplingEditBtn').click();
+
+    // #reviewEditForm has its own, in-scope `<hr class="panel-divider">`
+    // (overview.html:396) that must not be touched or asserted here; scope
+    // the locator to #samplingEditForm only.
+    const samplingDividers = page.locator('#samplingEditForm hr.panel-divider');
+    const dividerCount = await samplingDividers.count();
+    if (dividerCount > 0) {
+      // Render-geometry assertion (not a class-name check): an <hr> that
+      // still renders with non-zero height is a visible line on screen,
+      // which is the bug under test.
+      const dividerBox = await samplingDividers.first().boundingBox();
+      expect(dividerBox === null || dividerBox.height === 0).toBe(true);
+    }
+    await expect(samplingDividers).toHaveCount(0);
+
+    // `.isolation-wrap` is unique across the prototype pages/ tree, so this
+    // locator always resolves to exactly one element once in edit mode.
+    const isolationWrap = page.locator('.isolation-wrap');
+    // Scoped selector -- plain `.toggle-row` also matches the unrelated
+    // "開始標記前強制顯示" toggle elsewhere on this page, which must keep
+    // its own independent card border and must not be touched.
+    const nestedToggleRow = page.locator('.isolation-wrap .toggle-row');
+
+    const wrapBorder = await isolationWrap.evaluate((el) => getComputedStyle(el).borderTopWidth);
+    const nestedBorder = await nestedToggleRow.evaluate((el) => getComputedStyle(el).borderTopWidth);
+
+    expect(wrapBorder).not.toBe('0px');
+    expect(nestedBorder).toBe('0px');
+
+    const hasHorizontalOverflow = await page.evaluate(
+      () => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1
+    );
+    expect(hasHorizontalOverflow).toBe(false);
+  });
+
+  test('sampling edit isolation block keeps a single border layer and a visible risk message after disabling isolation', async ({ page }) => {
+    await page.goto(`${TASK_DETAIL_URL}?task_id=T001`);
+    await page.locator('#samplingEditBtn').click();
+    await expect(page.locator('#isolationToggle')).toBeChecked();
+
+    await page.locator('label[for="isolationToggle"]').click();
+    await expect(page.locator('#isolationToggle')).not.toBeChecked();
+
+    const isolationWrap = page.locator('.isolation-wrap');
+    const nestedToggleRow = page.locator('.isolation-wrap .toggle-row');
+
+    const wrapBorder = await isolationWrap.evaluate((el) => getComputedStyle(el).borderTopWidth);
+    const nestedBorder = await nestedToggleRow.evaluate((el) => getComputedStyle(el).borderTopWidth);
+
+    expect(wrapBorder).not.toBe('0px');
+    expect(nestedBorder).toBe('0px');
+
+    // The risk message must stay visible once isolation is turned off, and
+    // the border-layer fix must not clip it or push the layout into overflow.
+    const riskMsg = page.locator('#isolationRiskMsg');
+    await expect(riskMsg).toBeVisible();
+    await expect(riskMsg).not.toHaveClass(/hidden/);
+
+    const hasHorizontalOverflow = await page.evaluate(
+      () => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1
+    );
+    expect(hasHorizontalOverflow).toBe(false);
+  });
+
+  test('sampling edit isolation block has a single border layer with no horizontal overflow at a narrow viewport', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 800 });
+    await page.goto(`${TASK_DETAIL_URL}?task_id=T001`);
+    await page.locator('#samplingEditBtn').click();
+
+    const isolationWrap = page.locator('.isolation-wrap');
+    const nestedToggleRow = page.locator('.isolation-wrap .toggle-row');
+
+    for (const isolationOn of [true, false]) {
+      if (!isolationOn) {
+        await page.locator('label[for="isolationToggle"]').click();
+        await expect(page.locator('#isolationToggle')).not.toBeChecked();
+      }
+
+      const wrapBorder = await isolationWrap.evaluate((el) => getComputedStyle(el).borderTopWidth);
+      const nestedBorder = await nestedToggleRow.evaluate((el) => getComputedStyle(el).borderTopWidth);
+
+      expect(wrapBorder).not.toBe('0px');
+      expect(nestedBorder).toBe('0px');
+
+      const hasHorizontalOverflow = await page.evaluate(
+        () => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1
+      );
+      expect(hasHorizontalOverflow).toBe(false);
+    }
+  });
 });
