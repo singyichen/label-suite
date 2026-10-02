@@ -1005,7 +1005,20 @@
             }
           ]
         }
-      ]
+      ],
+      /* issue #1120 (design.md D2/D5): T013 is still `draft` and has never
+         had a trial round published, so its own annotation-progress,
+         work-log, and unassigned-assignment queues are genuinely empty --
+         distinct from the shared legacy DEFAULT_* fixtures task-detail.html
+         falls back to for any task missing its own per-task entry (which
+         previously leaked another task's 124-sample round and "Jason
+         Huang" unassigned rows onto this 1-record task). */
+      annotationProgress: {
+        rounds: [],
+        official: { id: 'official', status: 'pending', result: null, iaa: null, totalSamples: 0, completedSamples: 0, avgSpeed: 0, remainingEta: '-', remainingEtaEn: '-', members: [] }
+      },
+      workLogEntries: [],
+      unassignedAssignments: []
     },
 
     /* T014-T016: review-flow demo seeds. Same single_label sentiment
@@ -1264,7 +1277,21 @@
           noteEn: 'Round 1 samples are complete, but the IAA computation failed to execute and produced no agreement value.',
           iaaComputationStatus: 'failed'
         }
-      ]
+      ],
+      /* issue #1120 (design.md D2/D5): T018's own round 1 collected all 5
+         of its own dataset records (matching trialRounds above) and has not
+         reached official_run yet, so annotation-progress/work-log/
+         unassigned must reflect that same scope instead of falling back to
+         the shared legacy DEFAULT_* fixtures (another task's 124-sample
+         round, "Jason Huang" unassigned rows). */
+      annotationProgress: {
+        rounds: [
+          { id: 'r1', roundNum: 1, status: 'completed', result: null, iaa: null, totalSamples: 5, completedSamples: 5, avgSpeed: 0, remainingEta: '-', remainingEtaEn: '-', members: [] }
+        ],
+        official: { id: 'official', status: 'pending', result: null, iaa: null, totalSamples: 0, completedSamples: 0, avgSpeed: 0, remainingEta: '-', remainingEtaEn: '-', members: [] }
+      },
+      workLogEntries: [],
+      unassignedAssignments: []
     }
   };
 
