@@ -125,11 +125,10 @@ jobs:
               # gates also read these paths straight off disk -- to see which,
               # grep -rln 'docs/product' design/prototype/tests design/prototype/tests-node.
               # A change here is a prototype change even though it sits under
-              # docs/. Known gap: docs/product/task-configs/** is read by
-              # tests-node/docs-fixtures.test.mjs but is not filtered here, so
-              # a change confined to it skips both prototype jobs (issue #1065).
+              # docs/.
               - 'docs/product/example-data/**'
               - 'docs/product/visual-overview/**'
+              - 'docs/product/task-configs/**'
               - '.github/workflows/ci.yml'
 
   sdd-lint:
