@@ -35,14 +35,13 @@
 - [ ] 3.4 派未參與實作之 `senior-code-reviewer` 獨立審查 `git diff origin/main...HEAD`：對照本群組 checklist 與 issue #1099 新增視覺驗收條件逐項核對（低彩度中性色、hover/focus/selected 可辨識、無孤立白帶或突兀框線、light/dark/zh-TW/en/窄螢幕/鍵盤focus/長標題/關閉入口/階段badge複驗齊全、未重設品牌或改動 dashboard 卡片配色、`#1098` 掛載位置未被觸碰）。結論原文貼進檢查點留言。[@senior-code-reviewer]
 - [ ] 3.5 執行：撰寫 `pr-1099-g1.md`（`Part of #1099`，不開 PR），貼 `git diff --stat origin/main...HEAD` 與最終 SHA，交由主 session 開啟。[@main]
 
-## 4. G2 總覽選單 — 待確認事項落地與 Red
+## 4. G2 總覽選單 — Red
 
-**故事目標**：SC-001 — 所有具 Sidebar 殼層的頁面載入後，主內容區上方皆可觀察到工作頁籤列或總覽選單二擇一可見（本群組之總覽選單取代原行動版下拉）。等待主 session 轉達維護者對「尚待確認事項」1–3 之裁定後才開始本群組。
+**故事目標**：SC-001 — 所有具 Sidebar 殼層的頁面載入後，主內容區上方皆可觀察到工作頁籤列或總覽選單二擇一可見（本群組之總覽選單取代原行動版下拉）。維護者裁定已採納（篩選演算法、鍵盤操作模型皆已定案，見 `design.md` G2 小節與 spec delta `FR-023` 第 3／4 點、`AC-023.3`～`AC-023.7`）；本群組於 G1 PR 合併後開始。
 
-- [ ] 4.1 執行：裁定到位後，以 `/opsx:update` 把篩選演算法與鍵盤操作模型的最終行為補入本 change 的 `proposal.md` 與 spec delta（新增對應 Scenario，不覆寫既有 FR-023／FR-023A）。[@main]
-- [ ] 4.2 以 `design/prototype/tests/shared/workspace-tabs-overview-menu.spec.ts` 建立測試：覆蓋 AC-023.1／AC-023.2／AC-023A.1 與裁定後補上的篩選／鍵盤情境，含桌面與行動兩種 viewport。commit 並記錄預期失敗。[@senior-qa]
-- [ ] 4.3 同一測試檔追加：既有行動版下拉選單相關斷言（AC-6.1～AC-6.3）改為針對新共用元件之對應斷言，於 commit message 說明取代關係，不得默默刪除既有斷言。commit 並記錄預期失敗。[@senior-qa]
-- [ ] 4.4 執行：`PW_PORT=8982` 執行新測試並記錄完整失敗輸出，貼進 issue #1099 檢查點留言；於 `design/prototype/tests/inventory.csv` 同一 commit 新增對應列（LF only）。[@senior-qa]
+- [ ] 4.1 以 `design/prototype/tests/shared/workspace-tabs-overview-menu.spec.ts` 建立測試：覆蓋 AC-023.1、AC-023.2、AC-023A.1、AC-023.3（篩選比對範圍／大小寫）、AC-023.4～AC-023.7（鍵盤操作模型），含桌面與行動兩種 viewport。commit 並記錄預期失敗。[@senior-qa]
+- [ ] 4.2 同一測試檔追加：既有行動版下拉選單相關斷言（AC-6.1～AC-6.3）改為針對新共用元件之對應斷言，於 commit message 說明取代關係，不得默默刪除既有斷言。commit 並記錄預期失敗。[@senior-qa]
+- [ ] 4.3 執行：`PW_PORT=8982` 執行新測試並記錄完整失敗輸出，貼進 issue #1099 檢查點留言；於 `design/prototype/tests/inventory.csv` 同一 commit 新增對應列（LF only）。[@senior-qa]
 
 ## 5. G2 總覽選單 — Green 實作
 
@@ -50,7 +49,7 @@
 
 - [ ] 5.1 修改 `design/prototype/pages/shared/sidebar.js`：新增 renderWorkspaceTabOverviewMenu()（依本 change 之 design.md G2 決策，取代 renderWorkspaceTabMobileDropdown()），mountWorkspaceTabBar() 改接線。[@senior-frontend]
 - [ ] 5.2 修改 `design/prototype/pages/shared/sidebar.css`：新增總覽選單樣式（桌面固定於頁籤列右端、行動版取代頁籤列）。[@senior-frontend]
-- [ ] 5.3 執行：使 4.2–4.3 全數轉綠；確認既有 019／008 家族不回歸。[@senior-frontend]
+- [ ] 5.3 執行：使 4.1–4.2 全數轉綠；確認既有 019／008 家族不回歸。[@senior-frontend]
 - [ ] 5.4 執行：同一 commit 內以 `node scripts/gen-screen-inventory.mjs` 重新產生 `design/system/screen-inventory.md`。[@senior-frontend]
 
 ## 6. G2 總覽選單 — 驗證、審查與 PR
@@ -61,14 +60,14 @@
 - [ ] 6.2 派未參與實作之 `senior-code-reviewer` 獨立審查，結論原文貼進檢查點留言。[@senior-code-reviewer]
 - [ ] 6.3 執行：撰寫 `pr-1099-g2.md`（`Part of #1099`，不開 PR），貼 `git diff --stat origin/main...HEAD` 與最終 SHA。[@main]
 
-## 7. G3 重開堆疊＋全部關閉 — 待確認事項落地與 Red
+## 7. G3 重開堆疊＋全部關閉 — Red
 
-**故事目標**：SC-009、SC-010 — 淘汰頁籤可依 FR-011 規則正確處理並可重開，未儲存變更頁籤於全部關閉時正確回報並保留。等待主 session 轉達維護者裁定後才開始本群組。
+**故事目標**：SC-009、SC-010 — 淘汰頁籤可依 FR-011 規則正確處理並可重開，未儲存變更頁籤於全部關閉時正確回報並保留。維護者裁定已採納（重開快捷鍵 `Alt+Shift+T`，`shared-008` 之 `FR-016H` MODIFIED delta 已隨本 change propose 附上）；本群組於 G2 PR 合併後開始。
 
-- [ ] 7.1 執行：若「尚待確認事項」第 1 項（重開快捷鍵）經裁定採納，以 `/opsx:update` 於本 change 新增 `specs/shared/008-sidebar-navbar-shared/` 的 spec delta（比照既有 `FR-016H` 前例），否則記錄「未採納，不新增」。[@main]
-- [ ] 7.2 以 `design/prototype/tests/shared/workspace-tabs-reopen-stack.spec.ts` 建立測試：覆蓋 AC-024.1～AC-024.5。commit 並記錄預期失敗。[@senior-qa]
-- [ ] 7.3 以 `design/prototype/tests/shared/workspace-tabs-close-all.spec.ts` 建立測試：覆蓋 AC-025.1～AC-025.3。commit 並記錄預期失敗。[@senior-qa]
-- [ ] 7.4 執行：`PW_PORT=8982` 執行兩份新測試並記錄完整失敗輸出；時序敏感案例（連續重開、全部關閉後焦點）另跑 `--workers=1 --repeat-each=5` 證據，貼進 issue #1099 檢查點留言；於 `design/prototype/tests/inventory.csv` 同一 commit 新增對應列（LF only）。[@senior-qa]
+- [ ] 7.1 以 `design/prototype/tests/shared/workspace-tabs-reopen-stack.spec.ts` 建立測試：覆蓋 AC-024.1～AC-024.5 與 AC-024A.1／AC-024A.2（重開快捷鍵）。commit 並記錄預期失敗。[@senior-qa]
+- [ ] 7.2 以 `design/prototype/tests/shared/workspace-tabs-close-all.spec.ts` 建立測試：覆蓋 AC-025.1～AC-025.3。commit 並記錄預期失敗。[@senior-qa]
+- [ ] 7.3 以 `design/prototype/tests/shared/sidebar-shortcut-help.spec.ts`（或既有快捷鍵總覽測試檔，依實際動手時找到的檔名為準）追加案例：覆蓋 `shared-008` `FR-016H` MODIFIED 之 AC-016H.3（section 恰三列，重開列三個獨立 keycap）。commit 並記錄預期失敗。[@senior-qa]
+- [ ] 7.4 執行：`PW_PORT=8982` 執行新測試並記錄完整失敗輸出；時序敏感案例（連續重開、全部關閉後焦點、快捷鍵觸發）另跑 `--workers=1 --repeat-each=5` 證據，貼進 issue #1099 檢查點留言；於 `design/prototype/tests/inventory.csv` 同一 commit 新增對應列（LF only）。[@senior-qa]
 
 ## 8. G3 重開堆疊＋全部關閉 — Green 實作
 
@@ -76,9 +75,9 @@
 
 - [ ] 8.1 修改 `design/prototype/pages/shared/sidebar.js`：新增 `pushWorkspaceTabToReopenStack()` 共用 helper，接入手動關閉、全部關閉、`TAB_CAP` 淘汰三個既有路徑。[@senior-frontend]
 - [ ] 8.2 修改 `design/prototype/pages/shared/sidebar.js`：新增重開（彈出堆疊並依 `FR-006` 去重判定）與全部關閉（跳過未儲存並提示、焦點規則）邏輯，接入總覽選單底部兩個操作項。[@senior-frontend]
-- [ ] 8.3 若 7.1 新增快捷鍵 delta：修改 `design/prototype/pages/shared/sidebar.js` 新增對應按鍵位置（event code）判斷與輸入框抑制規則。[@senior-frontend]
-- [ ] 8.4 若 7.1 新增快捷鍵 delta：修改 `design/prototype/pages/shared/sidebar.js` 之快捷鍵總覽 markup，新增對應列與 zh/en 字串。[@senior-frontend]
-- [ ] 8.5 執行：使 7.2–7.3 全數轉綠；確認既有 019／008 全家族（含 G1、G2 新增案例）不回歸。[@senior-frontend]
+- [ ] 8.3 修改 `design/prototype/pages/shared/sidebar.js`：新增 `Alt+Shift+T` 重開快捷鍵之按鍵位置（event code）判斷與輸入框抑制規則，呼叫既有重開處理函式。[@senior-frontend]
+- [ ] 8.4 修改 `design/prototype/pages/shared/sidebar.js`：快捷鍵總覽 markup 新增重開快捷鍵列與 zh/en 字串（`shared-008` `FR-016H` MODIFIED 第三列）。[@senior-frontend]
+- [ ] 8.5 執行：使 7.1–7.3 全數轉綠；確認既有 019／008 全家族（含 G1、G2 新增案例）不回歸。[@senior-frontend]
 - [ ] 8.6 執行：同一 commit 內以 `node scripts/gen-screen-inventory.mjs` 重新產生 `design/system/screen-inventory.md`。[@senior-frontend]
 
 ## 9. G3 正典回寫與 archive
@@ -86,7 +85,7 @@
 **故事目標**：SC-009、SC-010 — 正典規格完整反映本次全部新增與修訂條文，Source-Verify 引用可逐一定位，衍生檢視正確合併。
 
 - [ ] 9.1 執行：更新 `specs/shared/019-workspace-tabs/spec.md`（版本 1.1.0 → 1.2.0，Changelog 新增一列記錄 G1–G3 全部內容，手寫新增「## 成功標準」對應本次四組 FR 之新驗收列，編號接續正典當下最大值，比照既有 SC-014 前例，不透過 delta 的 Requirement 宣告）。[@main]
-- [ ] 9.2 若 7.1 新增 `shared-008` delta：同 PR 回寫 `specs/shared/008-sidebar-navbar-shared/spec.md` 版本與 Changelog。[@main]
+- [ ] 9.2 執行：同 PR 回寫 `specs/shared/008-sidebar-navbar-shared/spec.md` 版本與 Changelog（`FR-016H` MODIFIED 第三列）。[@main]
 - [ ] 9.3 執行：更新 `specs/STATUS.md`（`shared-019` 及視情況 `shared-008` 列附加更新，不覆蓋既有欄位歷史，狀態更新為 `done`，異動歷程新增一列）。[@main]
 - [ ] 9.4 執行：`LC_ALL=C grep` Source-Verify 預掃，確認本次所有新引用（FR/AC/SC id、檔案路徑、issue/PR 編號）皆可於正典或程式碼逐一定位。[@main]
 - [ ] 9.5 執行：`/opsx:archive`；`grep -rn` 確認新 FR/SC id 全倉庫無重複宣告。[@main]

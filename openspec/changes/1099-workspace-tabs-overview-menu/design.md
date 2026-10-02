@@ -27,6 +27,8 @@
 
 實作方式：將上述六組 SVG 字串字面量提取為一個共用常數物件（例如 `WORKSPACE_PAGE_KIND_ICON_SVG`），`navItems` 建構與 `workspaceTabIconFor()` 共同讀取，避免兩處各自維護一份重複的 SVG 字串（DRY；目前 `navItems` 內已是行內字串常數，Green 任務需做最小幅度的抽取，不得連帶重寫 `navItems` 其餘欄位或格式）。
 
+**選擇器契約（Red 已鎖定）**：`workspaceTabIconFor()` 插入之 `<svg>` MUST 帶 `class="workspace-tab-icon"`，與頁籤關閉按鈕自身未加 class 的 `<svg>` 區隔（見 `workspace-tabs-visual.spec.ts` 檔頭註解）。
+
 ### 作用中頁籤視覺（低彩度中性色）
 
 - 問題：現行 `.workspace-tab.active` 使用 `background: var(--color-surface)`（Violet 50，頁面背景色，非中性色）＋整圈 `border: 1px solid var(--color-border)`，被維護者實測認定過於突兀。
@@ -45,13 +47,14 @@
 - 不改動 `renderWorkspaceTabBar()` 的 DOM 結構契約（`role="tab"`、`aria-selected`、`data-testid="workspace-tab"`、方向鍵焦點移動邏輯）——僅新增 icon 子元素與 `title` 屬性、调整既有 class 的 CSS 規則。
 - 不改動行動版下拉選單（`.workspace-tab-mobile-*`）；D2 總覽選單取代行動版下拉是 G2 範圍。
 
-## G2 — 總覽選單（待主 session 轉達維護者裁定後開始）
+## G2 — 總覽選單（維護者裁定已採納，G1 PR 合併後開始）
 
 - 共用元件命名建議：`renderWorkspaceTabOverviewMenu()`，由 `mountWorkspaceTabBar()` 呼叫，依 `viewport > MOBILE_BP` 決定掛載為桌面頁籤列右端固定項，或行動版取代整條頁籤列（沿用現有 `<= MOBILE_BP` 判斷分支，刪除 `renderWorkspaceTabMobileDropdown()`，改呼叫同一個共用 renderer 並傳入 `variant: 'desktop' | 'mobile'` 決定外層容器／定位 class）。
-- 篩選輸入框、清單、底部兩按鈕的「結構」現在即可定案並撰寫 Red（符合 D1／D2 裁定）；篩選**演算法**（比對範圍、大小寫）與選單**鍵盤操作模型**為待確認事項，G2 的 Red/Green 任務需等待裁定後才可鎖定對應斷言，propose 階段僅记录結構性 FR（見 `specs/shared/019-workspace-tabs/spec.md` delta 的 FR-023 群），不預先鎖定演算法細節到 AC 文字。
+- 篩選演算法（2026-10-02 已採納裁定）：比對頁籤標題與頁面種類名稱（`workspacePageKindI18n` 目前語系之字串），不比對網址參數，`toLowerCase()` 後比對、不分大小寫；命中則保留該清單項目，不命中則隱藏（不移除 DOM，避免重建清單造成焦點流失）。
+- 選單鍵盤操作模型（2026-10-02 已採納裁定）：開啟時 `filterInput.focus()`；`ArrowDown`／`ArrowUp` 在可見清單項目間移動反白（循環，比照既有 `renderWorkspaceTabBar()` 方向鍵 wrap-around 寫法），不觸發切換；`Enter` 切換至目前反白項目並關閉選單；`Esc` 關閉選單並 `triggerBtn.focus()`。對應 `FR-023` 第 3／4 點、`AC-023.3`～`AC-023.7`。
 - 清單列點擊切換頁籤：直接呼叫既有 `activateWorkspaceTab(index)`（`mountWorkspaceTabBar()` 內既有閉包函式），不新增第二套切換路徑。
 
-## G3 — 重開堆疊＋全部關閉（待主 session 轉達維護者裁定後開始）
+## G3 — 重開堆疊＋全部關閉（維護者裁定已採納，G2 PR 合併後開始）
 
 ### 重開堆疊
 
@@ -59,6 +62,7 @@
 - 三個推入點：`closeWorkspaceTab()`（手動關閉單一頁籤）、新的「全部關閉」批次路徑（G3）、`TAB_CAP` 自動淘汰路徑（既有 `openWorkspaceTab()` 內達到 `TAB_CAP` 時淘汰的分支，`FR-011`）——三處共用一個 `pushWorkspaceTabToReopenStack(tabEntry)` helper，避免三份重複的 push/cap 邏輯（DRY）。
 - 重開時：彈出堆疊最後一筆（LIFO），依 `computeWorkspaceDedupeInfo()`／`FR-006` 既有去重鍵判定——命中既有頁籤則僅切換並將該筆從堆疊移除；未命中則視為一般開啟新頁籤（受 `TAB_CAP`／`FR-011` 既有規則約束，包含可能再次觸發淘汰、進而再次推入堆疊）。
 - 登出清空（`MODIFIED FR-018`）：既有登出流程清空 `TAB_STORAGE_KEY`／`TAB_SCROLL_STORAGE_KEY` 之同一處，新增清空 `TAB_REOPEN_STORAGE_KEY`。
+- 重開快捷鍵（`FR-024A`／`FR-024B`，2026-10-02 已採納裁定）：`Alt+Shift+T`，判斷用 `event.code === 'KeyT'` 搭配 `event.altKey && event.shiftKey`，焦點在可輸入元素時不攔截（比照既有 `FR-013` 守門寫法）；呼叫與「重開剛關閉的」按鈕相同的處理函式，不建立第二套重開邏輯。`shared-008` 之 `FR-016H` MODIFIED delta（已於本 change 之 `specs/shared/008-sidebar-navbar-shared/spec.md` 隨附）新增第三列顯示；Green 任務需同時修改 `sidebar.js` 之快捷鍵總覽 markup 新增該列與 zh/en 字串，不得只修行為不修顯示（或反之）。
 
 ### 全部關閉
 
@@ -69,5 +73,4 @@
 
 ## 待後續事項
 
-- 選單鍵盤模型、篩選演算法、重開快捷鍵三項，待主 session 轉達維護者裁定後，以 `/opsx:update` 補入本 change 的 `proposal.md`／spec delta，不開新 change。
-- 若採納重開快捷鍵，另立 `specs/shared/008-sidebar-navbar-shared/` 的 MODIFIED delta（比照 `FR-016H` 前例）——可在 G3 之內一併處理，或視裁定時機獨立一個小群組。
+無——選單鍵盤模型、篩選演算法、重開快捷鍵三項已於 2026-10-02 由主 session 轉達維護者裁定全數採納，並已直接併入本文件與 `proposal.md`／spec delta（含 `specs/shared/008-sidebar-navbar-shared/` 的 MODIFIED delta）。G2／G3 現僅待各自前一群組 PR 合併後依序開始（嚴格序列，不可並行）。
