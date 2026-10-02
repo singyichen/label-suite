@@ -91,9 +91,54 @@ When creating a **new prototype page** under `design/prototype/pages/`, do not i
 - [ ] Uses shared global language pattern (`getStoredLang` + `applyGlobalLanguage` + centralized `i18n` object).
 - [ ] Imports `assets/analytics.js`, calls `init(...)`, and sends `trackPageView(...)`.
 
-### Anti-pattern audit (after prototype, before wireframe freeze)
+### Anti-pattern audit (after prototype, before UI/UX re-verification)
 
-After generating or substantially revising prototype pages — and **before** handing off to `/pencil-wireframe` — walk each affected page under `design/prototype/pages/**/*.html` against **`design/system/anti-pattern-checklist.md`** (anti-AI-boilerplate rules A1–F2). For every violation, record: page · rule ID · what was found · remedy direction using existing MASTER.md tokens. Fix violations in the prototype, or document the rationale for keeping them, before the wireframe freeze locks the layout. Do not invent new tokens as remedies — raise token gaps against MASTER.md instead.
+After generating or substantially revising prototype pages, walk each affected page under `design/prototype/pages/**/*.html` against **`design/system/anti-pattern-checklist.md`** (anti-AI-boilerplate rules A1–F2). For every violation, record: page · rule ID · what was found · remedy direction using existing MASTER.md tokens. Fix violations in the prototype, or document the rationale for keeping them, before handing the page to UI/UX re-verification (see "Design flow ownership and UI/UX re-verification" below). Do not invent new tokens as remedies — raise token gaps against MASTER.md instead. `design/wireframes/` is frozen (2026-08-20, issue #183) and is read-only reference — this audit does not hand off to `/pencil-wireframe` for new wireframe work or a re-freeze.
+
+## Design flow ownership and UI/UX re-verification
+
+This section sits inside `docs/sdd-workflow.md` §2 stage `[3] prototype` → `[3d] Frontend Ready Gate`; it adds no new gate and does not reorder SDD's Red/Green ownership (`senior-qa` owns the Red contract; the implementation agent owns Green — see CLAUDE.md "TDD (REQUIRED)"). On conflict between any two steps below, or with `docs/sdd-workflow.md`, escalate to team-lead per #1106's hand-off contract rather than resolving silently.
+
+Applicable order and ownership for a page-scoped feature:
+
+1. **UX goals & journeys** — `senior-uiux` (role split per #1106): user goals, information architecture, role/task/state matrix, reachability paths, error-recovery flows.
+2. **UI presentation proposal** — `senior-visual-designer` consumes (1) and applies tokens, hierarchy, density, component states — never the reverse.
+3. **Prototype shell** — static shell per "Prototype consistency requirements" above; no target selectors or behavior yet.
+4. **Red** — `senior-qa` commits the expected-failure Playwright test against the shell.
+5. **Green** — `senior-frontend` implements against the committed Red contract; must not weaken or rewrite it.
+6. **Page design** — finish visual polish; the anti-pattern audit above runs here, before step 7.
+7. **UI/UX re-verification** — `senior-uiux` + `senior-visual-designer`, after implementation ships (rules below).
+8. **Frontend Ready Gate** — the 9-item checklist in `docs/sdd-workflow.md` §2, owned by the main agent.
+
+### Deliverable contracts
+
+- **UX (`senior-uiux`) delivers**: entry point, task goal, steps, post-completion destination, error recovery, permission boundary.
+- **UI (`senior-visual-designer`) delivers**: visual hierarchy, density, token mapping, responsive/i18n/theme coverage, component states.
+
+### Review matrix
+
+Derive the matrix at review time from the canonical spec, `design/system/user-path-map.html`, and `design/system/screen-inventory.md` — never write a hand-made, site-wide page list. One row = one page × role × state combination actually reachable per those three sources.
+
+Required columns: page, role, state, viewport, language (zh-TW/en), theme (light/dark), URL params, fixture/demo data, then the evidence fields — screenshot path, operation result, `file:line`, evidence class (`expert evaluation` / `tool rule result` / `real-user data`, per `senior-uiux`'s existing "Method classification"), matched existing issue.
+
+Required coverage per page: loading / empty / error / disabled, keyboard / focus, zh-TW / en, light / dark, desktop / narrow — each is either covered or marked N/A with a reason; never leave a cell silently blank.
+
+Example row (pilot: task-detail, #1108), values grepped from live files, not invented:
+
+| page | role | state | viewport | language | theme | URL params | fixture/demo data | screenshot | operation result | file:line | evidence class | matched issue |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| task-detail (`overview` tab) | project_leader | default | desktop | zh-TW | light | `?task_id=T001` | `task-detail.data.js` `T001`: `single_label`, label options `positive`/`neutral`/`negative` | pending (no browser tool available this run) | pending | `design/prototype/pages/task-management/task-detail.html:2288` `id="tabOverview"`; `specs/task-management/014-task-detail/spec.md:554` FR-001 | tool rule result (static grep only — not yet a live operation) | — |
+
+### Re-verification rules
+
+- Observe the rendered page and operate the core journey; use the same scenario before and after the change.
+- When no browser tool is available for a given run, say so explicitly and record `pending` — never claim a pass.
+- Every tool-rule finding is re-read in code and matched against existing issues before being recorded.
+- Distinguish `expert evaluation` (cognitive walkthrough), `tool rule result`, and `real-user data` — never present one as another.
+
+### Future hook (not installed by this skill)
+
+#936's daily-critique / fixed-journey regression concept may plug into step 7 once the maintainer authorizes running it (#936 is currently `blocked` pending that decision). This skill does not install any tool, does not change #936's acceptance criteria, and does not bypass its open execution limits.
 
 ## When this skill is invoked
 If the user invokes this skill without any specific task, ask what they want to build or design. Ask a few clarifying questions about audience, flow, and variations, then act as an expert Label Suite designer.
