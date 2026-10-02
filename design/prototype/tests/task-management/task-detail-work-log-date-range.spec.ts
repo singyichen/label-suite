@@ -321,6 +321,11 @@ test.describe('Task detail work log date-range control (issue #1101)', () => {
   test.describe('AC12: keyboard operability', () => {
     test('Enter opens the control, arrow keys + Enter pick a range, and focus returns to the trigger', async ({ page }) => {
       await gotoTaskDetail(page, 'task_id=T001&task_role=project_leader&tab=work-log');
+      // Issue #1101: `.focus()` does not auto-wait for visibility like `.click()`
+      // does, so guard against the pre-existing ~560ms #loadingSkeleton (every
+      // tab, every load -- see task-detail.html showOverviewWithSkeleton())
+      // still occupying the trigger's position when this fires.
+      await expect(trigger(page)).toBeVisible();
 
       await trigger(page).focus();
       await page.keyboard.press('Enter');
@@ -342,6 +347,9 @@ test.describe('Task detail work log date-range control (issue #1101)', () => {
 
     test('Escape discards an incomplete selection and returns focus to the trigger', async ({ page }) => {
       await gotoTaskDetail(page, 'task_id=T001&task_role=project_leader&tab=work-log');
+      // Issue #1101: same skeleton-timing guard as the Enter-opens-the-control
+      // case above -- `.focus()` does not auto-wait for visibility.
+      await expect(trigger(page)).toBeVisible();
 
       await trigger(page).focus();
       await page.keyboard.press('Enter');

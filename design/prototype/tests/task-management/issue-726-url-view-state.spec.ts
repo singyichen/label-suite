@@ -159,6 +159,12 @@ test.describe('Task detail URL view-state (issue #726)', () => {
     test('work-log filter changes write wl_stage / wl_from', async ({ page }) => {
       await gotoTaskDetail(page, 'task_id=T001&task_role=project_leader');
       await openTab(page, 'tabWorkLog', 'workLogPanel');
+      // Issue #1101: openTab()'s click synchronously unhides #workLogPanel
+      // before the pre-existing ~560ms #loadingSkeleton (every tab, every
+      // load -- see task-detail.html showOverviewWithSkeleton()) hides
+      // itself, so the skeleton's height can still push the date-range
+      // trigger below the viewport when selectWorkLogDate() clicks it.
+      await page.locator('#loadingSkeleton').waitFor({ state: 'hidden', timeout: PANEL_LOAD_TIMEOUT });
 
       await page.locator('#workLogStageSelect').selectOption('official');
       expect(new URL(page.url()).searchParams.get('wl_stage')).toBe('official');
