@@ -2,39 +2,57 @@
 
 全部行號皆於工作樹 `.claude/worktrees/issue-1120-task-lifecycle-alignment`（base `1f1e805f`，正典 014 v4.3.0）以 `grep -n` 當場重新定位。issue 所附行號取自 `b586bdad`，已漂移，本文件不沿用。
 
-## D1. MAJOR 停止規則：「試標完成」條件的對齊不在本 change 內
+## D1. 維護者裁示與「試標完成」的實作契約
 
-### 決策
+### 裁示紀錄（2026-10-02，經主 session 問答）
 
-issue §4 驗收 01／02／03 所要求的「試標完成＝該輪標註＋必要審核＋必要仲裁全部完成」**不**在本 change 實作，亦不在本 change 撰寫 delta。本 change 僅承載不推翻任何既有條文的部分（D2、D5）。此項待維護者裁示後另開 MAJOR change。
-
-### 依據——會被推翻（而非澄清或擴充）的既有條文
-
-| 條文 | 位置 | 被推翻的內容 |
+| # | 問題 | 裁示 |
 |---|---|---|
-| `DRY_RUN_COMPLETION_RULE` | `specs/task-management/014-task-detail/spec.md:56` | 常數定義本身只計標註提交：`no unassigned dry-run assignments AND all membership_status=active annotators: assigned_count == completed_count` |
-| FR-008a | 同檔 `:584` | 「系統**必須自動轉為** `waiting_iaa_confirmation`」之充分條件會被收緊為不充分 |
-| AC-3.2 | 同檔 `:449` | 其 **Then** 子句（全員 `assigned_count == completed_count` → 自動轉為 `waiting_iaa_confirmation`）在新規則下變為**偽** |
-| AC-3.16 | 同檔 `:463` | 「依 `DRY_RUN_COMPLETION_RULE` 全部完成**才轉為**」之充分性敘述需修訂 |
-| SC-004 | 同檔 `:773` | 「**僅**在沒有未指派 Dry Run 標記作業、所有 active annotator 完成各自全部試標樣本後，才可…自動進入」需修訂 |
-| FR-013 第 (1) 點 | 同檔 `:637` | 停用原因文字「本回合全部提交並完成 IAA 後才能新增下一回合」未涵蓋審核／仲裁 |
-| ADR-022 Transition Table | `docs/adr/022-task-state-machine-location.md:89` | 該列前置條件逐字為 `All dry-run annotations submitted` |
+| 1 | 是否接受 014 升 **5.0.0（BREAKING）**，改寫 `DRY_RUN_COMPLETION_RULE`／FR-008a／AC-3.2／AC-3.16／SC-004／FR-013(1) 與 ADR-022 轉換表？ | **接受**。既有測試期望於同一支改變行為的 PR 內重寫。 |
+| 2 | 無仲裁者死鎖的出口？ | **`arbiter_ids` 為空時 `project_leader` 可直接裁定爭議，視為仲裁完成**。寫入 014 delta（本 change 以新增 FR-023 承載）；若牽動 `annotation/015-annotation-workspace` FR-061 另列 015 delta。 |
+| 3 | 「必要審核／仲裁」是否包含試標例外池？ | **包含**。例外池有待處置項目時不得視為試標完成（修訂 FR-018 第 (5) 點）。 |
+| 4 | 是否授權在 015 補定義「仲裁輸出項目」的可計數單位？ | **授權**，作為 G5 合併後的獨立單一目的 PR。 |
 
-AC-3.2 的 Then 子句變為偽，是「推翻既有驗收條件」而非「新增判準」。依 014 v4.0.0（issue #791，維護者裁定收回既有可用行為屬 BREAKING）先例，此對齊為 **MAJOR（014 → 5.0.0）**。
+### 為何是 BREAKING（判定依據，行號為現況重新定位）
 
-### 測試層級的獨立佐證
+| 條文 | 位置 | 被收回的既有行為 |
+|---|---|---|
+| `DRY_RUN_COMPLETION_RULE` | `specs/task-management/014-task-detail/spec.md:56` | 常數定義只計標註提交 |
+| FR-008a | 同檔 `:584` | 「系統**必須自動轉為** `waiting_iaa_confirmation`」之充分條件被收緊 |
+| **AC-3.2** | 同檔 `:449` | 其 **Then** 子句（全員 `assigned_count == completed_count` → 自動轉換）變為**偽** |
+| AC-3.16 | 同檔 `:463` | 「依 `DRY_RUN_COMPLETION_RULE` 全部完成**才轉為**」之充分性敘述 |
+| SC-004 | 同檔 `:773` | 「**僅**在…完成各自全部試標樣本後，才可…自動進入」 |
+| FR-013 第 (1) 點 | 同檔 `:637` | 停用原因文字未涵蓋審核／仲裁 |
+| FR-018 第 (5) 點 | 同檔 `:693` | 「結案閘門**僅計** `official_run`」——`dry_run` 例外項原本無任何閘門 |
+| FR-010t 之無仲裁者警示 | 同檔 `:631` | 警示文字「任務將無法**結案**」在 FR-023 生效後不再成立 |
+| ADR-022 Transition Table | `docs/adr/022-task-state-machine-location.md:89` | 該列逐字為 `All dry-run annotations submitted` |
 
-`design/prototype/tests/task-management/issue-791-trial-round-from-waiting.spec.ts:47` 的既有**綠燈**案例標題為 `a fully-submitted dry-run progress moves the task into waiting_iaa_confirmation regardless of the round outcome (FR-008a, FR-010o-3)`，其斷言（同檔 `:72`～`:75`）在 `submittedSamples: 1, totalSamples: 1` 的前提下要求 `#statusBadge` 為「待 IAA 確認」、`#publishOfficialRunBtn` 與 `#publishDryRunBtn` 皆 `toBeEnabled()`。狀態轉移閘門在 `design/prototype/pages/task-management/task-detail.html:5199` 的 `if (submitted < total) return;`——**完全不檢查審核／仲裁狀態**。落實 §4 驗收 01／02 會使該案例三個斷言全部失敗。一條已提交並長期維持綠燈的回歸測試正面編碼現行契約，是 BREAKING 的客觀證據，不是實作瑕疵。
+**測試層級佐證**：`design/prototype/tests/task-management/issue-791-trial-round-from-waiting.spec.ts:47` 的既有綠燈案例，標題即 `a fully-submitted dry-run progress moves the task into waiting_iaa_confirmation regardless of the round outcome (FR-008a, FR-010o-3)`，於 `submittedSamples: 1, totalSamples: 1` 前提下斷言 `#statusBadge` 為「待 IAA 確認」且兩個 publish 按鈕皆 `toBeEnabled()`。閘門在 `design/prototype/pages/task-management/task-detail.html:5199` 的 `if (submitted < total) return;`，完全不檢查審核／仲裁。此案例的期望值必須在 G4（改變該行為的那一支 PR）內重寫，不得繞過或刪除。
 
-### 連帶死鎖風險（維護者裁示前必須回答）
+### 新的試標完成判定式（實作契約）
 
-FR-010t（`specs/task-management/014-task-detail/spec.md:631`）允許 `arbiter_ids = []` 僅警示不阻擋發布，其警示文字只承諾「任務將無法**結案**（FR-008b 第 3 項）」，不含試標階段。而 `annotation/015-annotation-workspace` FR-061 第 3／4 點要求爭議項必須由仲裁者逐項裁定，明文「不存在自動收斂路徑」。因此若「必要仲裁完成」成為試標完成前置條件，一個未指定仲裁者的任務在出現 `disputed` 單位後將**永遠無法完成試標**——與 issue §1 自身約束「不得把既有合法處置改成永遠無法完成」直接衝突。維護者裁示須同時決定此情境的出口（例如一併修訂 FR-010t 在試標發布前即阻擋空仲裁者名冊，或為試標階段定義不同的收斂路徑）。
+試標完成 = 以下**全部**成立，範圍限「當前回合」：
 
-### 待維護者裁示的三個問題
+1. 無未指派的 `dry_run` 標記作業（既有）
+2. 每一位 `membership_status = active` 的 `annotator` 皆 `assigned_count == completed_count`（既有）
+3. 全部 `dry_run` 審核單位皆推導為 `finalized`
+4. 不存在推導為 `disputed` 的 `dry_run` 審核單位
+5. `dry_run` 最終例外池已清空（無待處置項）
 
-1. 是否接受 014 → **5.0.0 MAJOR**、修訂 AC-3.2／AC-3.16／SC-004／FR-008a／`DRY_RUN_COMPLETION_RULE`／FR-013，並改寫 `issue-791-trial-round-from-waiting.spec.ts` 既有案例的期望值？
-2. 無仲裁者任務在試標階段的出口為何（上段死鎖風險）？
-3. 「必要審核／必要仲裁」是否包含試標階段的最終例外池？目前 FR-018 第 (5) 點（同檔 `:693`）明文「`dry_run` 與 `official_run` 的例外項各自獨立計數，FR-008b 第 (4) 項之結案閘門**僅計** `official_run`」——`dry_run` 例外項目前完全沒有任何閘門。
+第 3／4 項的判定式**一律讀** `annotation/015-annotation-workspace` FR-051（`specs/annotation/015-annotation-workspace/spec.md:797`）的五句推導，014 不得自建第二份。爭議項裁定讀 `annotation/015-annotation-workspace` FR-061（同檔 `:834`），或在 `arbiter_ids` 為空時走本 change 新增的 FR-023。第 5 項讀 FR-018 修訂後的 `dry_run` 計數。
+
+**不會被此改寫影響的語意**：IAA 仍為顧問性（FR-010o-3，`:614`），計算狀態 `pending｜done｜failed` 的呈現與停用規則不變（FR-010o-4，`:615`）；新增的三項前置條件與 IAA 達標或計算是否結束皆無關，不得被表述為 IAA 問題。`TASK_STATUSES` 五態不變。
+
+### 死鎖出口的完整性檢查（FR-023 為何足夠）
+
+`annotation/015-annotation-workspace` FR-061 第 3／4 點明文爭議項必須逐項裁定、「不存在自動收斂路徑」。納入「必要仲裁完成」後，可能卡死的路徑只有一條：`arbiter_ids` 為空（FR-010t `:631` 允許且僅警示）而出現 `disputed` 單位。FR-023 以「`arbiter_ids` 為空時 `project_leader` 可裁定」補上該路徑的唯一出口，且：
+
+- 裁定選項與仲裁者相同，`兩者皆非` 仍落入例外池由 `project_leader` 收尾（`annotation/015-annotation-workspace` FR-095，同檔 `:1030`），因此不會產生「有出口但繞過例外池」的新漏洞。
+- `arbiter_ids` 非空時不開放此通道，因此不會削弱 `annotation/015-annotation-workspace` FR-060 的非當事人要求。
+- 不放寬 `annotation/015-annotation-workspace` FR-062 的盲審隔離（同檔 `:1031` 前後段）。
+- FR-010t 的警示文案隨之修訂，否則正典會自相矛盾（警示稱無法結案，而 FR-023 明定可結案）。
+
+**仍須在 G4 的 Red 中釘住的邊界**：`dry_run` 的例外池收尾動作中，`custom_answer` 依 `annotation/015-annotation-workspace` FR-095 第 (3) 點**僅適用 `official_run`**（`dry_run` 不產出最終答案），因此 `dry_run` 例外項只能以 `adopt_annotator`／`adopt_reviewer`／`exclude_from_dataset` 收尾。Red 必須驗證 `dry_run` 收尾介面不提供 `custom_answer`，否則新閘門會把使用者導向一個不存在的出口。
 
 ## D2. 衍生狀態契約（issue §2 要求的五個定義）
 
@@ -100,8 +118,7 @@ T013／T018 的污染修正**未發現任何既有測試鎖定其舊的通用數
 
 ## D7. 明確排除於本 change 的範圍
 
-- 試標完成條件（§4 驗收 01／02／03）→ D1，待維護者裁示後另開 MAJOR change。
-- `annotation/015-annotation-workspace` 的 `仲裁輸出項目` 計數單位定義 → 015 擁有，另開 change。
+- `annotation/015-annotation-workspace` 的 `仲裁輸出項目` 計數單位定義 → 015 擁有；維護者已授權，由本單 lead 於 G5 合併後另提**獨立單一目的 PR**，不併入本 change。
 - `docs/adr/022-task-state-machine-location.md` 缺 2026-09-07 Amendment、其 Transition Table（`:93`）與 2026-08-19 Amendment（`:104`、`:106`）仍引用 014 v3.0.0 已移除的 `min_reviewers` 與舊版「所有必要仲裁完成」條件 → **既有技術債，與 #1120 無關**，另開單一目的 PR，不得夾帶。
 - issue §7 四組建議介面圖**尚未上傳**，本 change 未審閱任何圖片；正式階段 KPI 配置與決策欄屬候選 UI 方案，待維護者設計定稿，相關任務在 `tasks.md` 明確 gated。
 - #1108 的候選 A–H、backend／API／DB／React、資料集分析模組、新任務狀態、重開流程皆為範圍外（issue §8）。
