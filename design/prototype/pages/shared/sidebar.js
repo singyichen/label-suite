@@ -932,6 +932,12 @@
     // `element.scrollIntoView()`, which can also scroll ancestor scroll
     // containers (the page/window), which AC-1.* here forbids. No-op when
     // the tab is already fully visible.
+    // ponytail: the else-if below only scrolls far enough to reveal ONE
+    // clipped edge; a tab wider than the bar itself (unbounded task-name
+    // text -- no max-width on `.workspace-tab`/`.workspace-tab-label`)
+    // could still leave its close button clipped on the other edge. Not
+    // hit by any case in this issue's repro; revisit with a max-width +
+    // ellipsis on the label if a real task name triggers it.
     var activeTabEl = container.children[state.activeIndex];
     if (activeTabEl) {
       var containerRect = container.getBoundingClientRect();
