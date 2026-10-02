@@ -1,0 +1,141 @@
+/* Shared DateRangePicker component (issue #1101).
+ * Tokens come exclusively from assets/tokens.css -- this file only styles
+ * the component's own scoped classes. */
+
+.date-range-trigger {
+  display: inline-flex;
+  align-items: center;
+  min-width: 220px;
+  height: 36px;
+  padding: 0 var(--space-sm);
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.date-range-trigger:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.date-range-trigger-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.date-range-popover {
+  width: 280px;
+  max-width: calc(100vw - 16px);
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: var(--z-dropdown);
+  padding: var(--space-sm);
+}
+
+.date-range-popover[hidden] {
+  display: none;
+}
+
+.date-range-popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-sm);
+}
+
+.date-range-nav-prev,
+.date-range-nav-next {
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--color-ink);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.date-range-nav-prev:hover,
+.date-range-nav-next:hover {
+  background: var(--color-primary-soft-bg);
+}
+
+.date-range-month-label {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.date-range-grid {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.date-range-grid td {
+  text-align: center;
+  padding: 1px;
+}
+
+.date-range-day {
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.date-range-day:hover {
+  background: var(--color-primary-soft-bg);
+}
+
+.date-range-day:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.date-range-day.is-today {
+  border-color: var(--color-primary-border);
+}
+
+.date-range-day.is-in-range {
+  background: var(--color-primary-soft-bg);
+  border-radius: 0;
+}
+
+.date-range-day.is-range-start,
+.date-range-day.is-range-end {
+  background: var(--color-primary);
+  color: var(--color-on-cta);
+}
+
+.date-range-popover-footer {
+  margin-top: var(--space-sm);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.date-range-clear {
+  background: transparent;
+  border: none;
+  color: var(--color-primary);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  cursor: pointer;
+  padding: var(--space-xs) var(--space-sm);
+}
+
+.date-range-clear:hover {
+  text-decoration: underline;
+}
