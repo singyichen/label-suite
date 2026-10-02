@@ -39,11 +39,13 @@
  *   - --color-primary-soft-bg: consumed only by `:hover` rules
  *     (`.lang-toggle:hover`, and on login.html `.sso-btn:hover`), so it is not
  *     part of the static ink-on-card pair and would need hover simulation.
- *   - --color-ink-muted, which `.card-subtitle` uses. Note this is not merely
- *     uncovered: all four pages still declare #94A3B8, which on the white card
- *     is 2.564:1 for 15px normal-weight text — a live WCAG AA failure, and the
- *     same value issue #973 raised to #64748B (4.76:1) in tokens.css, a fix
- *     that never reached these pages because they do not import it.
+ *   - --color-ink-muted's declaration, re-mapping and naming — same two axes
+ *     as the bullets above, unaffected by what follows. What changed (issue
+ *     #1069): this file now also asserts the *rendered* light-theme contrast
+ *     of `.card-subtitle` (which paints no background of its own, so it is
+ *     checked against `.card`'s background, the same pairing used for
+ *     `.card-title`). Dark theme's #9CA3AF on #16161F (~7.08:1) already
+ *     passes and is out of this issue's scope, so only light is asserted.
  *   - the deprecated-name hygiene rule. Group 3 removed pins on
  *     --color-background / --color-text / --color-primary-light, names no page
  *     or asset consumes; re-declaring an unconsumed custom property changes no
@@ -172,6 +174,24 @@ for (const { name, url } of AUTH_PAGES) {
     }) => {
       await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(245, 243, 255)');
       await expectCardSurfaceAndInk(page, 'light', 'rgb(255, 255, 255)', 'rgb(30, 27, 75)');
+
+      // Light-only: `.card-subtitle` has no background of its own (confirmed by
+      // reading the CSS -- only `color` is set), so it renders against
+      // `.card`'s background. Dark theme already passes (#9CA3AF on #16161F,
+      // ~7.08:1) and is out of scope for #1069; only light's #94A3B8 on
+      // #FFFFFF (~2.56:1) fails AA, so this assertion stays light-theme-only.
+      const subtitle = page.locator('.card .card-subtitle');
+      const renderedSubtitleColor = await subtitle.evaluate(
+        (el) => window.getComputedStyle(el).color,
+      );
+      const renderedSubtitleCardBackground = await page
+        .locator('.card')
+        .evaluate((el) => window.getComputedStyle(el).backgroundColor);
+      const subtitleRatio = contrastRatio(renderedSubtitleColor, renderedSubtitleCardBackground);
+      expect(
+        subtitleRatio,
+        `light: card-subtitle ${renderedSubtitleColor} on card ${renderedSubtitleCardBackground} renders ${subtitleRatio.toFixed(2)}:1`,
+      ).toBeGreaterThanOrEqual(WCAG_AA_MIN_CONTRAST);
 
       await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark'));
       await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(11, 11, 18)');
