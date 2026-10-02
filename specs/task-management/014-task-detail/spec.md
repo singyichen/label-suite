@@ -1,7 +1,7 @@
 ---
 功能分支: feat/1101-work-log-date-range
 建立日期: 2026-04-20
-版本: 4.2.1
+版本: 4.3.0
 狀態: Draft
 ---
 
@@ -168,6 +168,12 @@ Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、�
 17. **AC-1.17**（**v4.1.0 新增**，issue #783）：**Given** 任務 `outputs[]` 含一個屬 `IAA_UNCALIBRATED_TYPES` 的輸出類型與一個已登錄 `default_threshold` 的輸出類型，且任務處於可編輯抽樣設定的狀態，**When** `project_leader` 進入 Overview「抽樣設定」編輯狀態，**Then** 已登錄門檻的輸出類型列顯示覆寫輸入框，其 placeholder 為 registry 預設門檻；未校準輸出類型列只顯示指標名稱，不渲染覆寫輸入框，且該列不出現任何門檻數值（FR-010o-1）。
 18. **AC-1.18**（**v4.1.0 新增**，issue #783）：**Given** 任務 `outputs[]` 含一個屬 `IAA_UNCALIBRATED_TYPES` 的輸出類型，**When** 一筆儲存請求的 `target_agreement_overrides` 含有該輸出類型的 key（無論值是否落在 `0..1`），**Then** 系統拒絕整筆儲存並指出該 key 不允許覆寫，任務既有的 `target_agreement_overrides` 維持儲存前的內容，不含該 key（FR-010o-1、FR-010q）。
 19. **AC-1.19**（**v4.1.0 新增**，issue #783）：**Given** 某輸出類型原屬 `IAA_UNCALIBRATED_TYPES`，其後自該集合移出並於 `OUTPUT_TYPE_IAA_REGISTRY` 登錄 `default_threshold`，**When** `project_leader` 進入含該輸出類型之任務的 Overview「抽樣設定」編輯狀態，**Then** 該輸出類型列顯示覆寫輸入框，placeholder 為新登錄的預設門檻，且可依 FR-010q 驗證後儲存（FR-010o-1）。
+20. **AC-1.20**（**v4.3.0 新增**，issue #1101）：**Given** `project_leader` 開啟 `task-detail` 的 `work-log` tab，**When** 檢視工時篩選列的日期區間輸入，**Then** 畫面僅顯示一個日期區間選擇器，不存在兩個獨立的「起始日期」「結束日期」欄位；點擊後於同一日曆介面可框選跨日或同日區間，選取範圍以高亮清楚呈現，控制項顯示 `YYYY-MM-DD ～ YYYY-MM-DD`（FR-007c）。
+21. **AC-1.21**（**v4.3.0 新增**，issue #1101）：**Given** 日曆介面已開啟，**When** 使用者只點選一個日期（尚未完成區間），**Then** 工時明細表與匯總維持選取前的結果，不套用不完整區間；**When** 使用者接著點選一個早於第一次點選的日期以完成區間，**Then** 系統以較早日期為起點、較晚日期為終點正規化套用，不產生無效篩選結果（FR-007c）。
+22. **AC-1.22**（**v4.3.0 新增**，issue #1101）：**Given** 使用者完成一組跨日區間選取，**When** 檢視工時明細表，**Then** 起日與迄日當天的紀錄皆包含在結果中；**When** 使用者點擊控制項的「清除」，**Then** 日期篩選清空，工時明細表與匯總恢復為不限制日期的完整結果（FR-007c）。
+23. **AC-1.23**（**v4.3.0 新增**，issue #1101）：**Given** `project_leader` 已選取一組日期區間，**When** 進一步調整任務階段或成員篩選，**Then** 明細表與匯總依日期區間與新篩選條件的組合結果計算，分頁回到第 1 頁，與既有篩選變更分頁重置規則一致（FR-007a、FR-007c）。
+24. **AC-1.24**（**v4.3.0 新增**，issue #1101）：**Given** 使用者以日曆選取一組日期區間，**When** 檢視網址，**Then** 網址依 FR-019 以 `history.replaceState()` 寫回 `wl_from`／`wl_to`，重新整理後畫面與控制項顯示值還原一致；**Given** 一組僅帶 `wl_from`（或僅帶 `wl_to`）的 `task-detail` 網址，**When** 直接開啟該網址，**Then** 控制項呈現為開放式區間（已知一端正確顯示），工時明細表套用與直接操作到該狀態時一致的單邊篩選結果（FR-019、FR-007c）。
+25. **AC-1.25**（**v4.3.0 新增**，issue #1101）：**Given** 日曆介面已透過鍵盤開啟（trigger 上按 Enter 或 Space），**When** 使用者以方向鍵移動日期焦點、以 Enter 完成起訖選取，**Then** 選取完成後控制項顯示新區間，焦點送回觸發元件；**When** 使用者改以 Esc 關閉日曆介面，**Then** 尚未完成的選取被捨棄、不套用任何變更，焦點送回觸發元件（FR-007c）。
 
 **介面定義（需與 IA 導覽語意一致）**：
 
@@ -326,7 +332,7 @@ Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、�
   - 空狀態：尚未開始標記時顯示「尚無進度資料」，並提供回到 `任務概覽` 的 CTA
 - Tab E：`工時紀錄`
   - 區塊 1：`工時篩選列`
-    - 篩選：日期區間、標記階段（Annotation stage：Dry Run / Official Run）
+    - 篩選：日期區間（以單一日期區間選擇器呈現，見 FR-007c）、標記階段（Annotation stage：Dry Run / Official Run）
     - `project_leader` 額外可用：成員篩選
   - 區塊 2：`工時明細表`
     - 版面順序：匯總卡片（總工時、總標記筆數、總審核筆數、加權平均速度）固定顯示於明細表上方；`加權平均速度` 卡片附「每筆平均耗時」次要說明列
@@ -573,6 +579,7 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 - **FR-007**：`reviewer` 的 `work-log` 僅可查看自己的資料。
 - **FR-007a**：`工時明細表` 底部必須提供與 `task-list` 一致的 footer pagination，至少包含總筆數 / 目前頁數、每頁筆數切換與上一頁 / 下一頁 / 頁碼按鈕；其 `page` / `pageSize` 狀態（`wlPage` / `wlPageSize`）必須獨立，不得與其他 tab 分頁狀態共用；篩選條件變更時 `wlPage` 必須重設為 `1`；匯總卡片與異常提醒區塊必須依據完整篩選結果計算，不得僅計算當前頁資料。
 - **FR-007b**：`工時明細表` 的完成筆數必須拆分為 `標記筆數`、`審核筆數`、`仲裁筆數` 三欄；角色不適用的欄位顯示 `—`（標記員僅有標記筆數；審核員僅有審核筆數與仲裁筆數）。匯總卡片必須為 `總工時`、`總標記筆數`、`總審核筆數`、`加權平均速度` 四張，且 `加權平均速度` 卡片附「每筆平均耗時」次要說明列；逐列平均速度、匯總與異常提醒計算需以三類筆數總和為分子。
+- **FR-007c**（**v4.3.0 新增**，對應 AC-1.20～AC-1.25，issue #1101）：工時篩選列的日期區間輸入必須以單一日期區間選擇器呈現，不得使用兩個獨立的日期欄位。(1) **單一控制項與高亮**：控制項必須於同一日曆介面框選起訖日期；已選範圍必須即時高亮，起訖日與其間的日期需可視覺區分；控制項必須顯示已選範圍（格式 `YYYY-MM-DD ～ YYYY-MM-DD`），未選取時必須顯示適當提示文字。(2) **不完整選取不套用**：只完成起點、尚未選取終點前，不得套用不完整的新區間——工時明細表與匯總必須維持套用前的結果。(3) **反向選取正規化**：允許使用者先點選時間較晚的日期，系統必須將任何起訖點選順序正規化為有效的 `from <= to` 區間，不得因點選順序產生無效篩選結果。(4) **包含邊界與清除**：完成區間選取後，必須套用含起日與迄日的篩選結果（既有排除式比較不變）；控制項必須提供「清除」操作，清除後必須恢復不限制日期的結果。(5) **與其他篩選組合**：日期區間必須可與任務階段、成員篩選（`project_leader`）組合使用，明細與匯總需依組合後的條件一致計算；篩選變更時的分頁重置規則（FR-007a）不變。(6) **URL 同步與單邊相容**：控制項必須讀寫既有 `state.workLogDateFrom`／`state.workLogDateTo` 與 `wl_from`／`wl_to` 網址參數（FR-019 文字不變）；既有僅帶 `wl_from` 或僅帶 `wl_to` 的單邊網址必須保留原篩選語意，並在單一控制項中呈現為開放式區間。(7) **鍵盤操作與焦點**：控制項必須可用鍵盤完整操作——方向鍵移動日期焦點、Enter／Space 選取聚焦日期、Esc 關閉控制項並捨棄尚未完成的選取，焦點必須送回觸發元件。(8) **不改變權限邊界**：`reviewer` 的 `work-log` 篩選維度（FR-007：僅日期區間與任務階段，不含成員篩選）不受本控制項影響。
 - **FR-008**：任務狀態轉換必須遵守 `TASK_STATUSES` 狀態機。
 - **FR-008a**：當任務內沒有未指派 Dry Run 標記作業，且每一位 `membership_status = active` 的 `annotator` 皆滿足 `assigned_count == completed_count`（完成各自被指派的全部試標內容）時，系統必須自動轉為 `waiting_iaa_confirmation` 並建立提醒。
 - **FR-008b**（**v3.0.0 修訂，BREAKING**，對應 AC-3.9，issue #688）：任務狀態由 `official_run_in_progress` 轉為 `completed` 前，系統必須驗證下列全部前置條件（issue #180 完整條件；ADR-022 2026-08-19 修訂版轉換表）：(1) 正式標記作業全數提交（已排除作業不計入）；(2) 全部審核單位（`015` FR-051）皆推導為「已定稿」，或經最終例外池「自資料集排除」處置；(3) 不存在狀態為「爭議中」的審核單位；(4) 最終例外池已清空——不存在待處置的 `official_run` 例外項目（FR-018）；(5) 品質指標計算完成可用。任一條件不符時，系統必須阻擋轉換並逐項列出未滿足的具體原因，不得僅以「全部標記已提交」作為完成依據。原第 (2) 項之「依生效審核設定（`min_reviewers`）應完成的 review unit 全數定案」改為上列第 (2) 項——`min_reviewers` 已移除，審核單位恆有一位審核員；原第 (4) 項「應仲裁項目全數完成仲裁」由上列第 (3)、(4) 項取代——仲裁完成不再等於結案就緒，仲裁裁定為「兩者皆非」者仍須經例外池收尾。
@@ -819,6 +826,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 4.3.0 | 2026-10-02 | **工時篩選列日期區間改為單一日期區間選擇器（issue #1101，OpenSpec change `1101-work-log-date-range-picker`，MINOR）**：`work-log` tab 的工時篩選列原以兩個獨立 `<input type="date">`（起始日期／結束日期）呈現日期區間，使用者截圖要求改為單一日期區間選擇器——點擊後於同一日曆介面框選起訖日期，已選範圍即時高亮，控制項顯示 `YYYY-MM-DD ～ YYYY-MM-DD` 或未選時的提示文字。**新增**：**FR-007c** 全條——單一控制項與高亮、不完整選取不套用、反向選取正規化、包含邊界與清除、與任務階段／成員篩選組合維持既有分頁重置規則（FR-007a）、`wl_from`／`wl_to` URL 同步與單邊相容（FR-019 文字不變）、鍵盤操作與焦點回復、不改變 reviewer 權限邊界（FR-007）；新增 AC-1.20～AC-1.25（使用者故事 1）。Tab E「工時篩選列」介面描述補一句呈現方式說明（非 FR 錨點）。**未變更**：`state.workLogDateFrom`／`state.workLogDateTo`、`wl_from`／`wl_to` 網址參數、既有日期篩選的包含邊界比較邏輯（FR-019、FR-007、FR-007a、FR-007b 文字不變），未新增或移除任何既有 FR／AC。Prototype 新增共用元件 `design/prototype/pages/shared/date-range-picker.{js,css}`（`window.DateRangePicker.mount/setValue/setLang/destroy`，在 `components-showcase.html` 展示），並整合進 `work-log.html`／`task-detail.html`，新增回歸測試 `tests/shared/date-range-picker.spec.ts`、`tests/task-management/task-detail-work-log-date-range.spec.ts`，並有意義地更新 `task-detail-work-log-i18n.spec.ts`、`issue-726-url-view-state.spec.ts`。 |
 | 4.2.1 | 2026-09-29 | **釐清 FR-018 第 (3) 項最終例外池動作按鈕的單行呈現口徑（issue #1057，Lightweight Path，PATCH）**：實測 `annotation-progress` 之「最終例外池」區塊，操作欄的進入處置連結（`fep-resolve-link`）在鄰欄文字過長（如 `fep-arbiter` 仲裁理由）時會換行為兩行，導致按鈕高度超出單行、視覺與可點擊區域不一致。FR-018 第 (3) 項原僅規定動作連結需攜帶審核單位身分與爭議項識別，未明定其排版呈現。本版補上：該動作按鈕/連結必須於操作欄內單行呈現，窄螢幕依既有 `.table-scroll` 水平捲動、不得以按鈕換行取代。**行為不變**：`href` 產生邏輯、`data-testid`、權限規則、審核單位身分組成皆未修改，未新增或移除任何 FR／AC 編號。Prototype 端以 `#finalExceptionPoolSection` 範圍內的 scoped CSS 補上 `white-space: nowrap`，不變動共用 `.mini-btn` 全域樣式，避免影響成員管理區塊 `.member-entry-row .mini-btn` 之既有排版。新增回歸測試 `issue-1057-fep-resolve-btn-layout.spec.ts`。 |
 | 4.2.0 | 2026-09-23 | **審核／仲裁角色分離，阻擋零分派池**（issue #868，OpenSpec change `validate-reviewer-arbiter-role-separation`）：**FR-010s-1** 補 v4.2.0 修訂段，明定所有 `arbiter_ids` 成員依 015 FR-093 保留處理仲裁、不接收新的審核單位，儲存時除 `reviewer_ids` 非空外亦須保證集合差 `reviewer_ids - arbiter_ids` 至少一人；全部 reviewer 同時為 arbiter 時阻擋整筆儲存並以 assertive live alert 顯示雙語可修正錯誤，`arbiter_ids = []` 仍合法且沿用既有發布警示。**FR-010t** 同步要求發布時依當下成員狀態重算啟用中的有效分派池，避免儲存後的停用／移除留下零分派池。新增 **AC-3.21～AC-3.24** 與 **SC-048**。Prototype 更新審核設定 helper text、`validateReviewData()` 與發布前成員閘門；不修改 backend、frontend 或正式測試。 |
 | 4.1.1 | 2026-09-19 | **FR-017 修訂紀錄阻擋落地至原型（issue #838，Lightweight Path，PATCH）**：v4.0.0（issue #791）改寫 FR-013 時，change `task-detail-trial-round-from-waiting` 之 `design.md`「範圍界線」將 FR-017 修訂紀錄阻擋列為範圍外，原型自此可在未填修訂紀錄的情況下自 `waiting_iaa_confirmation` 建立 R{n}（n ≥ 2）。本版僅記錄原型已依既有條文實作：`task-detail.html` 點擊「新增試標回合 R{n}」（n ≥ 2）先開啟 `#trialRoundRevisionModal`，要求 `prior_round_findings` 與 `guideline_change_summary`，或勾選 `no_change` 並填寫 `no_change_reason`；缺項時逐欄顯示提示並依 FR-013 第 (4) 點以與 FR-010t 相同的逐項清單阻擋，任務維持 `waiting_iaa_confirmation`；R1（`draft → dry_run_in_progress`）豁免；建立成功時修訂紀錄寫入新 `TrialRound`。勾選 `no_change` 時 `prior_round_findings` 仍為必填，依 `TrialRound` 實體「`round >= 2` 必填」之既有條文。**規格條文未變**：未新增或移除任何 FR／AC／SC 編號，FR-017、FR-013、AC-3.12 條文本身不動；依 #784／v6.3.1 與 #801／v3.3.1 先例，Lightweight Path 不改動 `openspec/specs/` 衍生檢視。新增回歸 `issue-838-fr017-revision-note-gate.spec.ts`。 |
