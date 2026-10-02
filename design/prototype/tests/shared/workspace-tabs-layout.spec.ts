@@ -118,7 +118,19 @@ async function scrollPage(page: Page, target: PageCase['scrollTarget']): Promise
       el.scrollTop = el.scrollHeight;
     });
   } else {
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    // behavior: 'instant' is required, not just tidy: profile.html sets
+    // `html { scroll-behavior: smooth }` (profile.html ~line 24), which
+    // makes a bare `window.scrollTo(x, y)` animate over several frames
+    // instead of jumping immediately. The very next lines read
+    // `tabBar()`/title `boundingBox()` with no wait for that animation to
+    // settle, so they landed on whatever scroll offset the animation
+    // happened to be at mid-flight -- reproduced via `--repeat-each=15`
+    // (2/15 failed, with `Received` varying wildly run to run: -216.6,
+    // 40.4, ... -- the signature of reading a moving scroll position, not
+    // a layout/content difference). `behavior: 'instant'` bypasses the
+    // CSS `scroll-behavior` entirely per the CSSOM View spec, so the jump
+    // is synchronous on every page regardless of its own CSS.
+    await page.evaluate(() => window.scrollTo({ left: 0, top: document.body.scrollHeight, behavior: 'instant' }));
   }
 }
 
