@@ -1012,6 +1012,35 @@
       var existing = document.getElementById('workspaceTabBar');
       if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
 
+      // issue #1098: a page's own content-width/padding class sometimes sits
+      // directly ON <main> (e.g. dashboard.html's <main class="layout">,
+      // profile.html's <main class="main-content">) instead of on an inner
+      // <div> the way task-list.html already does it correctly. Detect that
+      // inset via computed style and move the class onto a new inner wrapper
+      // so <main> itself goes back to being a bare flex container and the bar
+      // -- inserted as <main>'s own first child below -- is never subject to
+      // that class's padding/max-width.
+      var mainComputedStyle = window.getComputedStyle(mainEl);
+      var mainHasInset = parseFloat(mainComputedStyle.paddingLeft) > 0 ||
+        parseFloat(mainComputedStyle.paddingRight) > 0 ||
+        parseFloat(mainComputedStyle.paddingTop) > 0 ||
+        (mainComputedStyle.maxWidth && mainComputedStyle.maxWidth !== 'none');
+      if (mainEl.className && mainHasInset) {
+        var mainInnerWrap = document.createElement('div');
+        mainInnerWrap.className = mainEl.className;
+        while (mainEl.firstChild) mainInnerWrap.appendChild(mainEl.firstChild);
+        mainEl.appendChild(mainInnerWrap);
+        mainEl.removeAttribute('class');
+        // Restore the bare flex-container behavior task-list.html's own
+        // separate `main { flex: 1; ...}` tag rule already gives it -- this
+        // page's class no longer provides that now that it moved to the wrapper.
+        mainEl.style.flex = '1';
+        mainEl.style.display = 'flex';
+        mainEl.style.flexDirection = 'column';
+        mainEl.style.overflowY = 'auto';
+        mainEl.style.minWidth = '0';
+      }
+
       var barEl = document.createElement('div');
       barEl.id = 'workspaceTabBar';
       barEl.className = 'workspace-tab-bar';
