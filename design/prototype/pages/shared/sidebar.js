@@ -723,6 +723,23 @@
       stageRound: info.stageRound || null
     };
 
+    // FR-010/AC-1.6: a task-detail tab is only ever synced while that same
+    // task-detail page is current, so window.LabelSuiteTaskListData (loaded
+    // synchronously before DOMContentLoaded, see sidebar.js call site in
+    // run()) is guaranteed populated for THIS taskId right now. Snapshot
+    // both languages onto the tab entry so computeWorkspaceTabLabel() can
+    // still render a name later, after navigating to a page (e.g.
+    // account/profile.html) that provides no task-list data of its own.
+    // Re-running this sync on every revisit/reload of the tab keeps the
+    // snapshot fresh if the fixture name changes.
+    if (tabEntry.pageKind === 'task-detail' && tabEntry.taskId) {
+      var nameZh = resolveWorkspaceTaskName(tabEntry.taskId, 'zh');
+      var nameEn = resolveWorkspaceTaskName(tabEntry.taskId, 'en');
+      if (nameZh || nameEn) {
+        tabEntry.taskName = { zh: nameZh, en: nameEn };
+      }
+    }
+
     var existingIndex = -1;
     for (var i = 0; i < state.tabs.length; i++) {
       if (state.tabs[i].dedupeKey === info.dedupeKey) {
@@ -828,7 +845,19 @@
       } else {
         stageText = workspacePageKindI18n[l]['task-detail'];
       }
+      // FR-010/AC-1.6: prefer a live lookup against the CURRENT page's own
+      // task-list data (freshest when it happens to be available), then
+      // fall back to the name snapshot stored on the tab itself at sync
+      // time (so the name survives navigating to a page with no task-list
+      // data), then to the bare taskId so two otherwise-unresolvable tabs
+      // at the same stage are still distinguishable.
       var taskName = resolveWorkspaceTaskName(tab.taskId, l);
+      if (!taskName && tab.taskName) {
+        taskName = (l === 'zh' ? tab.taskName.zh : (tab.taskName.en || tab.taskName.zh)) || '';
+      }
+      if (!taskName && tab.taskId) {
+        taskName = tab.taskId;
+      }
       return taskName ? stageText + ' ' + taskName : stageText;
     }
     if (tab.pageKind === 'annotation-workspace') {
@@ -923,6 +952,31 @@
 
       container.appendChild(tabEl);
     });
+
+    // issue #1102: `.workspace-tab-bar` is `overflow-x: auto` but every
+    // render above rebuilds the bar from scratch with `scrollLeft` left at
+    // its default 0, regardless of where the active tab ends up sitting in
+    // the (unscrolled) flex row. Bring the active tab fully into view
+    // within the bar's OWN scroll box -- `scrollLeft` arithmetic only, never
+    // `element.scrollIntoView()`, which can also scroll ancestor scroll
+    // containers (the page/window), which AC-1.* here forbids. No-op when
+    // the tab is already fully visible.
+    // ponytail: the else-if below only scrolls far enough to reveal ONE
+    // clipped edge; a tab wider than the bar itself (unbounded task-name
+    // text -- no max-width on `.workspace-tab`/`.workspace-tab-label`)
+    // could still leave its close button clipped on the other edge. Not
+    // hit by any case in this issue's repro; revisit with a max-width +
+    // ellipsis on the label if a real task name triggers it.
+    var activeTabEl = container.children[state.activeIndex];
+    if (activeTabEl) {
+      var containerRect = container.getBoundingClientRect();
+      var tabRect = activeTabEl.getBoundingClientRect();
+      if (tabRect.left < containerRect.left) {
+        container.scrollLeft -= (containerRect.left - tabRect.left);
+      } else if (tabRect.right > containerRect.right) {
+        container.scrollLeft += (tabRect.right - containerRect.right);
+      }
+    }
   }
 
   // AC-6.1 / FR-002, US6 (issue #1075 sub-group G2e): the mobile dropdown
@@ -1011,6 +1065,43 @@
 
       var existing = document.getElementById('workspaceTabBar');
       if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
+
+      // issue #1098: a page's own content-width/padding class sometimes sits
+      // directly ON <main> (e.g. dashboard.html's <main class="layout">,
+      // profile.html's <main class="main-content">) instead of on an inner
+      // <div> the way task-list.html already does it correctly. Detect that
+      // inset via computed style and move the class onto a new inner wrapper
+      // so <main> itself goes back to being a bare flex container and the bar
+      // -- inserted as <main>'s own first child below -- is never subject to
+      // that class's padding/max-width.
+      var mainComputedStyle = window.getComputedStyle(mainEl);
+      var mainHasInset = parseFloat(mainComputedStyle.paddingLeft) > 0 ||
+        parseFloat(mainComputedStyle.paddingRight) > 0 ||
+        parseFloat(mainComputedStyle.paddingTop) > 0 ||
+        (mainComputedStyle.maxWidth && mainComputedStyle.maxWidth !== 'none');
+      if (mainEl.className && mainHasInset) {
+        var mainInnerWrap = document.createElement('div');
+        mainInnerWrap.className = mainEl.className;
+        while (mainEl.firstChild) mainInnerWrap.appendChild(mainEl.firstChild);
+        mainEl.appendChild(mainInnerWrap);
+        mainEl.removeAttribute('class');
+        // Restore the bare flex-container behavior task-list.html's own
+        // separate `main { flex: 1; ...}` tag rule already gives it -- this
+        // page's class no longer provides that now that it moved to the
+        // wrapper. `overflow-y: auto` is required, not cosmetic: without it
+        // <main> never establishes a scroll container for the sticky bar's
+        // `position: sticky` to resolve against, even though <main>'s own
+        // scrollHeight equals its clientHeight here (nothing overflows
+        // *inside* <main> -- the window/document is still what actually
+        // scrolls, confirmed empirically, issue #1098 PR body's
+        // scroll-measurement table). Removing this line reproduces the
+        // exact pre-fix bug numbers on annotation-list/profile.
+        mainEl.style.flex = '1';
+        mainEl.style.display = 'flex';
+        mainEl.style.flexDirection = 'column';
+        mainEl.style.overflowY = 'auto';
+        mainEl.style.minWidth = '0';
+      }
 
       var barEl = document.createElement('div');
       barEl.id = 'workspaceTabBar';
