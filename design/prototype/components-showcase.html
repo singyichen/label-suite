@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/tokens.css" />
+  <link rel="stylesheet" href="pages/shared/date-range-picker.css" />
   <style>
     /* Living styleguide (issue #183). Tokens come exclusively from
        assets/tokens.css — this block styles the showcase chrome only. */
@@ -1055,6 +1056,16 @@
         </div>
       </div>
 
+      <div class="component-card" id="comp-date-range-picker">
+        <h3>Date Range Picker</h3>
+        <p class="component-note">§Date Range Picker — 單一控制項框選日期區間（issue #1101），點擊或 Enter/Space 開啟日曆，方向鍵移動日期焦點，Esc 關閉並捨棄未完成選取。</p>
+        <div class="component-demo">
+          <button type="button" class="date-range-trigger" id="showcaseDateRangeTrigger" aria-haspopup="dialog" aria-expanded="false">
+            <span class="date-range-trigger-text"></span>
+          </button>
+        </div>
+      </div>
+
       <div class="component-card" id="comp-toggle">
         <h3>Toggle Switch</h3>
         <p class="component-note">§Toggle Switch — 40×22 track、16px thumb、checked 時 track 轉 --color-primary。</p>
@@ -1364,7 +1375,19 @@
 
   <div id="toast" aria-live="polite" aria-atomic="true"></div>
 
+  <script src="pages/shared/date-range-picker.js"></script>
   <script>
+    /* Date Range Picker demo (issue #1101) */
+    (function () {
+      var trigger = document.getElementById('showcaseDateRangeTrigger');
+      if (trigger && window.DateRangePicker) {
+        window.DateRangePicker.mount(trigger, {
+          value: { from: null, to: null },
+          lang: 'zh',
+          onChange: function () {},
+        });
+      }
+    })();
     (function () {
       'use strict';
 
