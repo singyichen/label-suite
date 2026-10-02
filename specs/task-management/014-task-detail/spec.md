@@ -1,5 +1,5 @@
 ---
-功能分支: fix/868-arbitration-reserve
+功能分支: feat/1101-work-log-date-range
 建立日期: 2026-04-20
 版本: 4.2.1
 狀態: Draft
