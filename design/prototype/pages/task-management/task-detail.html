@@ -9623,7 +9623,7 @@ function getTaskTypeLabel() {
       review_id: pending ? null : 'review-' + index,
       reviewer_id: pending ? null : getExportedById(),
       reviewer_name: pending ? null : getExportedByName(),
-      reviewed_at: pending ? null : (annotation.submittedAt || null),
+      reviewed_at: pending ? null : ((annotation.reviews && annotation.reviews.length ? annotation.reviews[annotation.reviews.length - 1].reviewedAt : null) || null),
       decision: annotation.reviewStatus || 'pending',
       review_note: null
     };
