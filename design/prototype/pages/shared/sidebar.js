@@ -923,6 +923,25 @@
 
       container.appendChild(tabEl);
     });
+
+    // issue #1102: `.workspace-tab-bar` is `overflow-x: auto` but every
+    // render above rebuilds the bar from scratch with `scrollLeft` left at
+    // its default 0, regardless of where the active tab ends up sitting in
+    // the (unscrolled) flex row. Bring the active tab fully into view
+    // within the bar's OWN scroll box -- `scrollLeft` arithmetic only, never
+    // `element.scrollIntoView()`, which can also scroll ancestor scroll
+    // containers (the page/window), which AC-1.* here forbids. No-op when
+    // the tab is already fully visible.
+    var activeTabEl = container.children[state.activeIndex];
+    if (activeTabEl) {
+      var containerRect = container.getBoundingClientRect();
+      var tabRect = activeTabEl.getBoundingClientRect();
+      if (tabRect.left < containerRect.left) {
+        container.scrollLeft -= (containerRect.left - tabRect.left);
+      } else if (tabRect.right > containerRect.right) {
+        container.scrollLeft += (tabRect.right - containerRect.right);
+      }
+    }
   }
 
   // AC-6.1 / FR-002, US6 (issue #1075 sub-group G2e): the mobile dropdown
