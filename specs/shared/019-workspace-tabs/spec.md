@@ -1,5 +1,5 @@
 ---
-功能分支: feat/1075-workspace-tabs
+功能分支: feat/1099-tabs-overview-menu
 建立日期: 2026-10-01
 版本: 1.1.0
 狀態: Clarified
