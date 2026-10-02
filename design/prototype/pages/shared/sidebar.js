@@ -723,6 +723,23 @@
       stageRound: info.stageRound || null
     };
 
+    // FR-010/AC-1.6: a task-detail tab is only ever synced while that same
+    // task-detail page is current, so window.LabelSuiteTaskListData (loaded
+    // synchronously before DOMContentLoaded, see sidebar.js call site in
+    // run()) is guaranteed populated for THIS taskId right now. Snapshot
+    // both languages onto the tab entry so computeWorkspaceTabLabel() can
+    // still render a name later, after navigating to a page (e.g.
+    // account/profile.html) that provides no task-list data of its own.
+    // Re-running this sync on every revisit/reload of the tab keeps the
+    // snapshot fresh if the fixture name changes.
+    if (tabEntry.pageKind === 'task-detail' && tabEntry.taskId) {
+      var nameZh = resolveWorkspaceTaskName(tabEntry.taskId, 'zh');
+      var nameEn = resolveWorkspaceTaskName(tabEntry.taskId, 'en');
+      if (nameZh || nameEn) {
+        tabEntry.taskName = { zh: nameZh, en: nameEn };
+      }
+    }
+
     var existingIndex = -1;
     for (var i = 0; i < state.tabs.length; i++) {
       if (state.tabs[i].dedupeKey === info.dedupeKey) {
@@ -828,7 +845,19 @@
       } else {
         stageText = workspacePageKindI18n[l]['task-detail'];
       }
+      // FR-010/AC-1.6: prefer a live lookup against the CURRENT page's own
+      // task-list data (freshest when it happens to be available), then
+      // fall back to the name snapshot stored on the tab itself at sync
+      // time (so the name survives navigating to a page with no task-list
+      // data), then to the bare taskId so two otherwise-unresolvable tabs
+      // at the same stage are still distinguishable.
       var taskName = resolveWorkspaceTaskName(tab.taskId, l);
+      if (!taskName && tab.taskName) {
+        taskName = (l === 'zh' ? tab.taskName.zh : (tab.taskName.en || tab.taskName.zh)) || '';
+      }
+      if (!taskName && tab.taskId) {
+        taskName = tab.taskId;
+      }
       return taskName ? stageText + ' ' + taskName : stageText;
     }
     if (tab.pageKind === 'annotation-workspace') {
