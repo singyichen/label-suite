@@ -1033,7 +1033,15 @@
         mainEl.removeAttribute('class');
         // Restore the bare flex-container behavior task-list.html's own
         // separate `main { flex: 1; ...}` tag rule already gives it -- this
-        // page's class no longer provides that now that it moved to the wrapper.
+        // page's class no longer provides that now that it moved to the
+        // wrapper. `overflow-y: auto` is required, not cosmetic: without it
+        // <main> never establishes a scroll container for the sticky bar's
+        // `position: sticky` to resolve against, even though <main>'s own
+        // scrollHeight equals its clientHeight here (nothing overflows
+        // *inside* <main> -- the window/document is still what actually
+        // scrolls, confirmed empirically, issue #1098 PR body's
+        // scroll-measurement table). Removing this line reproduces the
+        // exact pre-fix bug numbers on annotation-list/profile.
         mainEl.style.flex = '1';
         mainEl.style.display = 'flex';
         mainEl.style.flexDirection = 'column';
