@@ -30,6 +30,7 @@
  * "source must be fixed, not just the display text" bug (FR-010u (1),
  * FR-010p's "必須...與當前回合歷程即時同步").
  */
+import fs from 'node:fs/promises';
 import { expect, test, type Page } from '@playwright/test';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
@@ -223,5 +224,53 @@ test.describe('Task detail cross-tab derived counts share one query context (FR-
 
     const title = await page.locator('#executionSplitTitle').textContent();
     expect(title || '', 'the allocation bar heading must not read as a completion claim').not.toContain('完成');
+  });
+
+  /* FR-010u (6): "已提交時間 MUST NOT 被呈現為審核完成或仲裁完成時間；各階段
+   * 時間 MUST 取自其各自的事件來源。" T001's CLS-001 sample (AR_SAMPLES_
+   * CLASSIFICATION, task-detail.html:3951) gives annotator kioleemg12 a
+   * submittedAt of '2026-04-25 14:10' and its review a distinct reviewedAt
+   * of '2026-04-25 15:02' -- two different event sources, so a reviewed_at
+   * that collapses onto submitted_at is observable here. */
+  test("annotation-results JSON export's reviewed_at comes from the review's own event, not the annotator's submitted time (FR-010u (6))", async ({ page }) => {
+    await openResultsTab(page, 'T001');
+    await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
+
+    const downloadPromise = page.waitForEvent('download');
+    await page.locator('#arExportJsonBtn').click();
+    const download = await downloadPromise;
+    const downloadPath = await download.path();
+    expect(downloadPath, 'export must produce a downloadable file').not.toBeNull();
+    const payload = JSON.parse(await fs.readFile(downloadPath!, 'utf8'));
+
+    const sample = (payload.items as Array<{ sample_id: string; annotations: Array<{ annotator_name: string; submitted_at: string }>; reviews: Array<{ reviewed_at: string | null }> }>).find(
+      (item) => item.sample_id === 'CLS-001',
+    );
+    expect(sample, 'fixture sample CLS-001 must be present in the full export').toBeTruthy();
+    const annotationRow = sample!.annotations[0];
+    const reviewRow = sample!.reviews[0];
+    expect(annotationRow.annotator_name, 'fixture precondition: first annotation must be kioleemg12').toBe('kioleemg12');
+    expect(annotationRow.submitted_at, "fixture precondition: kioleemg12's submitted_at must be 14:10").toBe('2026-04-25 14:10');
+
+    expect(
+      reviewRow.reviewed_at,
+      `review completion time must come from the review's own reviewedAt ('2026-04-25 15:02'), not the ` +
+        `annotator's submitted_at ('${annotationRow.submitted_at}') -- FR-010u (6).`,
+    ).toBe('2026-04-25 15:02');
+  });
+
+  test("the rendered review-completion time on annotation-results comes from the review's own event, not the annotator's submitted time (FR-010u (6))", async ({ page }) => {
+    await openResultsTab(page, 'T001');
+    await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
+
+    const summaryRow = page.locator('#arResultTableBody .ar-summary-row').filter({ hasText: 'CLS-001' });
+    await summaryRow.click();
+
+    const reviewTime = page.locator('.ar-history-review[data-annotator="kioleemg12"] .ar-history-time');
+    await expect(
+      reviewTime,
+      "the rendered review-completion time must read the review's own reviewedAt ('2026-04-25 15:02'), " +
+        "not kioleemg12's submitted_at ('2026-04-25 14:10') -- FR-010u (6).",
+    ).toHaveText('2026-04-25 15:02');
   });
 });
