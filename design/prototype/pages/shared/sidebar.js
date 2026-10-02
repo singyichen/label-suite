@@ -1006,6 +1006,32 @@
     // tab's slot entirely (observed via issue-891-live-review-pools.spec.ts).
     var workspaceTabBarReady = false;
 
+    // AC-2.1 / FR-019: this tab's own current dedupe key, shared between the
+    // replaceState wrapper closure below and run()'s pagehide listener
+    // closure further down. Assigned once at mount time in run() (see the
+    // assignment near the pagehide listener), then re-assigned in the
+    // no-collision branch of the replaceState wrapper whenever an in-page
+    // replaceState() changes this tab's own dedupe key (issue #1084) -- so
+    // pagehide always captures scroll/unsaved state under the SAME key the
+    // next mount will look it up by, not a stale mount-time one.
+    var workspaceActiveTabDedupeKey = null;
+
+    // issue #1084: a page's OWN render functions can call replaceState()
+    // redundantly right after workspaceTabBarReady flips true (e.g.
+    // task-detail.html's initial render pass calls renderWorkLog() /
+    // renderAnnotationProgress() / renderAnnotationResults() /
+    // renderMemberManagement() for every tab regardless of which one is
+    // active, and each ends with its own syncUrlToViewState() call) -- this
+    // first post-ready settle only re-canonicalizes the SAME state the tab
+    // already mounted with (e.g. stripping a default-valued `tab=overview`
+    // the live address bar never showed as such at mount time), not a real
+    // in-page change. Syncing it would rewrite AC-3.5's protected
+    // pre-switch entry before the user has done anything (confirmed via a
+    // throwaway probe reproducing workspace-tabs-rekey.spec.ts's own
+    // scenario -- see PR body). Only the SECOND and later settles reflect
+    // something the user actually did.
+    var workspaceHasSyncedOwnEntryOnce = false;
+
     // AC-3.5 / FR-007 (Q18): a page's OWN history.replaceState() calls (e.g.
     // task-management-014 FR-019's in-page sub-tab/filter writes) may rekey
     // this tab's dedupe key onto one a DIFFERENT, already-open tab already
@@ -1051,11 +1077,37 @@
             return;
           }
         }
-        // No collision: FR-007 requires a tab's own stored entry to stay
-        // unchanged through in-page churn that doesn't collide (AC-3.5),
-        // so this is intentionally a no-op, not a sync -- see issue #1084
-        // for the known gap this leaves (a reload after non-colliding
-        // in-page navigation can restore a stale sub-state).
+        // No collision: FR-007/AC-3.5 only constrain the COLLIDING case
+        // above (a tab B this tab's new URL happens to match must keep its
+        // own pre-switch state) -- they say nothing about this tab's own
+        // entry. AC-2.1 separately requires sub-tab/filter/page state to
+        // survive a tab-bar switch away and back, so this tab's own stored
+        // entry must be kept in sync with its latest in-page URL, not left
+        // frozen at mount time (issue #1084). dedupeKey is updated here too,
+        // not just url: syncCurrentPageIntoWorkspaceTabs() identifies "is
+        // this tab already open" by matching the CURRENT URL's freshly
+        // computed dedupe key against each stored tab's dedupeKey. Leaving
+        // the stored dedupeKey stale would make a later remount of this same
+        // URL look like a brand-new tab and insert a duplicate instead of
+        // updating this slot.
+        if (!workspaceHasSyncedOwnEntryOnce) {
+          // See the variable's own declaration above (issue #1084): the
+          // FIRST post-ready settle is still this page's own bootstrap
+          // render burst, not a real in-page change -- skip persisting it.
+          workspaceHasSyncedOwnEntryOnce = true;
+        } else {
+          var activeTab = state.tabs[state.activeIndex];
+          if (activeTab) {
+            activeTab.url = loc.pathname + loc.search;
+            activeTab.dedupeKey = info.dedupeKey;
+            activeTab.stageBadge = info.stageBadge || null;
+            activeTab.stageRound = info.stageRound || null;
+            writeWorkspaceTabState(state);
+            // Keep the pagehide capture key (below) in step with this tab's
+            // now-updated dedupeKey -- see the shared variable's declaration.
+            workspaceActiveTabDedupeKey = info.dedupeKey;
+          }
+        }
       }, 0);
     };
 
@@ -1294,11 +1346,11 @@
       // sessionStorage, which activateWorkspaceTab()/the rekey hook may
       // already have advanced to the destination tab's index by the time
       // pagehide actually fires.
-      var myDedupeKey = state.tabs[state.activeIndex] ? state.tabs[state.activeIndex].dedupeKey : null;
+      workspaceActiveTabDedupeKey = state.tabs[state.activeIndex] ? state.tabs[state.activeIndex].dedupeKey : null;
       window.addEventListener('pagehide', function () {
         if (workspaceTabLoggingOut) return; // AC-2.4: see declaration above.
-        captureWorkspaceTabScroll(myDedupeKey);
-        captureWorkspaceTabUnsavedState(myDedupeKey); // FR-012
+        captureWorkspaceTabScroll(workspaceActiveTabDedupeKey);
+        captureWorkspaceTabUnsavedState(workspaceActiveTabDedupeKey); // FR-012
       });
       try {
         if (window.sessionStorage.getItem(WORKSPACE_TAB_REKEY_NOTICE_KEY)) {
