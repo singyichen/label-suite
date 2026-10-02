@@ -983,13 +983,34 @@ body.sidebar-collapsed .notif-dropdown { left: 88px; }
   border-bottom: none;
   cursor: pointer;
   white-space: nowrap;
-  flex-shrink: 0;
+  width: var(--workspace-tab-width);
+  flex: 0 0 var(--workspace-tab-width);
 }
 
 .workspace-tab.active {
   color: var(--color-ink);
-  background: var(--color-surface);
-  border-color: var(--color-border);
+  background: var(--color-tab-active-bg);
+}
+
+/* issue #1099 G1: hover uses a neutral bg distinguishable from both the
+   default (transparent) and the active tab's --color-tab-active-bg; never
+   applied to the active tab itself. */
+.workspace-tab:not(.active):hover {
+  background: var(--color-tab-hover-bg);
+}
+
+.workspace-tab-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.workspace-tab-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
 }
 
 .workspace-tab[data-stage-badge="dry_run"] {

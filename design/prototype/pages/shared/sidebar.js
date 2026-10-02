@@ -819,6 +819,43 @@
     return state;
   }
 
+  // issue #1099 G1: the six L0 sidebar nav icons (navItems below, ADR-030
+  // Lucide/24x24/2px-stroke/currentColor), reused as workspace tabs'
+  // per-page-kind icons. Single source of truth for the path markup so
+  // navItems and workspaceTabIconFor() never carry two copies of the same
+  // icon (DRY) -- each key's Lucide name is noted in its own comment.
+  var WORKSPACE_NAV_ICON_PATHS = {
+    dashboard: '<rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>', // layout-dashboard
+    'task-management': '<circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/>', // circle-plus
+    annotation: '<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>', // pen-line
+    dataset: '<path d="M3 3h18v18H3z"/><path d="M9 9h6v6H9z"/><path d="M3 9h6"/><path d="M15 9h6"/>', // layout-grid
+    admin: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>', // settings
+    profile: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>' // user
+  };
+
+  function workspaceNavIconSvg(navKey, className) {
+    return '<svg class="' + className + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + WORKSPACE_NAV_ICON_PATHS[navKey] + '</svg>';
+  }
+
+  // 頁籤 pageKind → L0 導覽圖示 key 對照（design.md「G1 — 視覺對齊」決策表）：
+  // 工作頁籤之「頁面種類」比 L0 類別更細，需要一個獨立於 navItems key 的對照。
+  var WORKSPACE_TAB_ICON_NAV_KEY = {
+    dashboard: 'dashboard',
+    'task-list': 'task-management', 'task-new': 'task-management', 'task-detail': 'task-management',
+    'annotation-workspace': 'annotation', 'annotation-list': 'annotation',
+    'dataset-analysis-list': 'dataset', 'dataset-analysis-detail': 'dataset',
+    'user-management': 'admin', 'role-settings': 'admin',
+    profile: 'profile'
+  };
+
+  // 選擇器契約（workspace-tabs-visual.spec.ts 已鎖定）：插入之 <svg> 必須帶
+  // class="workspace-tab-icon"，與 .workspace-tab-close 自身未加 class 的
+  // <svg> 區隔。未對照到的 pageKind 退回 dashboard 圖示。
+  function workspaceTabIconFor(pageKind) {
+    var navKey = WORKSPACE_TAB_ICON_NAV_KEY[pageKind] || 'dashboard';
+    return workspaceNavIconSvg(navKey, 'workspace-tab-icon');
+  }
+
   var workspacePageKindI18n = {
     zh: {
       dashboard: '儀表板', 'task-list': '任務管理', 'task-new': '新增任務',
@@ -937,6 +974,7 @@
       tabEl.setAttribute('role', 'tab');
       tabEl.setAttribute('aria-selected', isActive ? 'true' : 'false');
       tabEl.setAttribute('tabindex', '0');
+      tabEl.title = label; // issue #1099 G1: full untruncated label as a tooltip/accessible name once the label itself ellipsizes
       if (tab.stageBadge) tabEl.setAttribute('data-stage-badge', tab.stageBadge);
       tabEl.addEventListener('click', function () { onActivate(index); });
       // AC-8.2 (issue #1075 sub-group G2g): ArrowLeft/ArrowRight move focus
@@ -956,6 +994,8 @@
           onActivate(index);
         }
       });
+
+      tabEl.insertAdjacentHTML('beforeend', workspaceTabIconFor(tab.pageKind));
 
       var labelSpan = document.createElement('span');
       labelSpan.className = 'workspace-tab-label';
@@ -984,12 +1024,6 @@
     // `element.scrollIntoView()`, which can also scroll ancestor scroll
     // containers (the page/window), which AC-1.* here forbids. No-op when
     // the tab is already fully visible.
-    // ponytail: the else-if below only scrolls far enough to reveal ONE
-    // clipped edge; a tab wider than the bar itself (unbounded task-name
-    // text -- no max-width on `.workspace-tab`/`.workspace-tab-label`)
-    // could still leave its close button clipped on the other edge. Not
-    // hit by any case in this issue's repro; revisit with a max-width +
-    // ellipsis on the label if a real task name triggers it.
     var activeTabEl = container.children[state.activeIndex];
     if (activeTabEl) {
       var containerRect = container.getBoundingClientRect();
@@ -1475,14 +1509,14 @@
         href: dashboardHref,
         labelId: 'navDashboard',
         defaultLabel: l0NavLabels.navDashboard,
-        icon: '<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>'
+        icon: workspaceNavIconSvg('dashboard', 'nav-icon')
       },
       {
         key: 'task-management',
         href: taskHref,
         labelId: 'navTaskManagement',
         defaultLabel: l0NavLabels.navTaskManagement,
-        icon: '<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>'
+        icon: workspaceNavIconSvg('task-management', 'nav-icon')
       },
       {
         key: 'annotation',
@@ -1491,14 +1525,14 @@
         defaultLabel: taskRole === 'reviewer' ? taskRoleLabels.annotationLabel :
           taskRole === 'project_leader' ? taskRoleLabels.projectLeaderAnnotationLabel :
           taskRoleLabels.annotator,
-        icon: '<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>'
+        icon: workspaceNavIconSvg('annotation', 'nav-icon')
       },
       {
         key: 'dataset',
         href: datasetHref,
         labelId: 'navDataset',
         defaultLabel: l0NavLabels.navDataset,
-        icon: '<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3h18v18H3z"/><path d="M9 9h6v6H9z"/><path d="M3 9h6"/><path d="M15 9h6"/></svg>'
+        icon: workspaceNavIconSvg('dataset', 'nav-icon')
       },
       {
         key: 'admin',
@@ -1508,14 +1542,14 @@
         itemId: 'navAdminItem',
         hidden: shouldHideAdminByRole(systemRole),
         roleSettingsHref: roleSettingsHref,
-        icon: '<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>'
+        icon: workspaceNavIconSvg('admin', 'nav-icon')
       },
       {
         key: 'profile',
         href: profileHref,
         labelId: 'navProfile',
         defaultLabel: l0NavLabels.navProfile,
-        icon: '<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'
+        icon: workspaceNavIconSvg('profile', 'nav-icon')
       },
     ];
 
