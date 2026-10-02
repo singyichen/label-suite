@@ -19,12 +19,12 @@
  *
  * No scroll-position assertion here, deliberately: scrolling into
  * task-detail.html's work-log panel and switching tabs via the tab bar hits
- * two SEPARATE, pre-existing bugs unrelated to #1084 -- see the PR body/issue
- * this discovery was filed under (the sticky tab bar does not track window
- * scroll on this page, and restoreActiveWorkspaceTabScroll() runs before the
- * async-loaded work-log panel has grown tall enough to scroll into). The
- * plain AC-2.1 scroll case (no in-page sub-tab change) stays covered by
- * workspace-tabs-restore.spec.ts, which is unaffected by either bug.
+ * two SEPARATE, pre-existing bugs unrelated to #1084, filed as issue #1121
+ * (the sticky tab bar does not track window scroll on this page, and
+ * restoreActiveWorkspaceTabScroll() runs before the async-loaded work-log
+ * panel has grown tall enough to scroll into). The plain AC-2.1 scroll case
+ * (no in-page sub-tab change) stays covered by workspace-tabs-restore.spec.ts,
+ * which is unaffected by either bug.
  */
 import { test, expect } from '@playwright/test';
 import { workspaceTabs, readWorkspaceTabState, setDesktopViewport } from './_workspace-tabs-helpers';
