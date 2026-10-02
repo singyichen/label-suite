@@ -576,6 +576,13 @@
   // task-detail.html stripping a default-valued `tab=overview`), not a real
   // in-page change: a real change always adds a param the mount-time URL
   // didn't have or changes one to a different value.
+  // ponytail: "removal-only" is a heuristic proxy for "canonicalization,
+  // not a user action" -- it also matches a genuine first user action that
+  // happens to be a pure "clear filters" on a page mounted with a
+  // non-default, bookmarked URL (removal-only but real), which would still
+  // be skipped if it's also the page's first settle. Narrower than the gap
+  // this guard fixes (needs a non-default mount URL AND a pure-removal
+  // first action); revisit if a page hits it in practice.
   function isWorkspaceRemovalOnlySearch(newSearch, oldSearch) {
     var oldParams = new URLSearchParams(oldSearch);
     var sameOrRemovedOnly = true;
