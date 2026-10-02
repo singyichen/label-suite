@@ -41,6 +41,42 @@ async function openTab(page: Page, tabId: string, panelId: string) {
 }
 
 /*
+ * Issue #1101 (design.md D4/D5): `#workLogDateFrom`/`#workLogDateTo` are
+ * replaced by a single `#workLogDateRangeTrigger` calendar control (shared
+ * component contract: design/prototype/pages/shared/date-range-picker.js).
+ * This minimal local helper opens it and clicks one real `data-date` day
+ * cell, navigating the popover's displayed month to that day's month first
+ * -- it does not need to handle cross-month ranges because the case below
+ * only exercises a same-day range.
+ */
+async function selectWorkLogDate(page: Page, isoDate: string) {
+  const trigger = page.locator('#workLogDateRangeTrigger');
+  const popover = page.locator('#workLogDateRangeTriggerPopover');
+  if ((await trigger.getAttribute('aria-expanded')) !== 'true') {
+    await trigger.click();
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+  }
+
+  const [year, month] = isoDate.split('-').map(Number);
+  const monthLabel = popover.locator('.date-range-month-label');
+  const nextBtn = popover.locator('.date-range-nav-next');
+  const prevBtn = popover.locator('.date-range-nav-prev');
+  for (;;) {
+    const text = (await monthLabel.textContent()) ?? '';
+    const zhMatch = text.match(/(\d+)\s*年\s*(\d+)\s*月/);
+    const enMatch = text.match(/^(\d{4})-(\d{2})$/);
+    const match = zhMatch ?? enMatch;
+    if (!match) throw new Error(`unexpected month label text: ${text}`);
+    const [, curYear, curMonth] = match.map(Number);
+    const diff = (year - curYear) * 12 + (month - curMonth);
+    if (diff === 0) break;
+    await (diff > 0 ? nextBtn : prevBtn).click();
+  }
+
+  await popover.locator(`.date-range-day[data-date="${isoDate}"]`).click();
+}
+
+/*
  * All three paginated lists (annotation-results: 6 samples, member
  * -management: 7 members, work-log: 7 entries for T001) are smaller than the
  * smallest selectable page size (20) -- see the page-size <option> lists in
@@ -127,7 +163,11 @@ test.describe('Task detail URL view-state (issue #726)', () => {
       await page.locator('#workLogStageSelect').selectOption('official');
       expect(new URL(page.url()).searchParams.get('wl_stage')).toBe('official');
 
-      await page.locator('#workLogDateFrom').fill('2026-04-19');
+      // Same-day range (click 2026-04-19 twice): commits both wl_from and
+      // wl_to as '2026-04-19' via the real calendar component, in place of
+      // the old `#workLogDateFrom` `.fill()` interaction.
+      await selectWorkLogDate(page, '2026-04-19');
+      await selectWorkLogDate(page, '2026-04-19');
       expect(new URL(page.url()).searchParams.get('wl_from')).toBe('2026-04-19');
     });
 
