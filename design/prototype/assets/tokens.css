@@ -30,6 +30,14 @@
   /* Canonical muted-text token (MASTER.md v1.7.1) */
   --color-ink-muted:        #64748B;   /* slate-500 — WCAG AA fix (issue #973), was #94A3B8 (2.56:1); canonical, --color-text-muted is the legacy alias. Now equals --color-text-soft's value — the palette's next compliant step coincides with that token. */
 
+  /* ── Workspace Tabs (issue #1099 G1) ─────────────────────────
+     --workspace-tab-width is a non-color layout constant, shared by
+     both themes (no dark override needed). The two color tokens below
+     ARE theme-specific and are re-declared in the dark block. */
+  --workspace-tab-width:    180px;
+  --color-tab-active-bg:    var(--color-slate-50);     /* neutral active-tab bg, replaces the old Violet 50 --color-surface */
+  --color-tab-hover-bg:     var(--color-border-muted); /* neutral hover bg, distinguishable from --color-tab-active-bg */
+
   /* ── Semantic State Colors ────────────────────────────────── */
   --color-error:            #B91C1C;
   --color-error-bg:         #FEF2F2;
@@ -166,6 +174,16 @@ html[data-theme="dark"] {
 
   /* Canonical muted-text token (MASTER.md v1.7.1) */
   --color-ink-muted:        #9CA3AF;   /* raised from zinc-500 for WCAG AA; --color-text-muted is the legacy alias */
+
+  /* ── Workspace Tabs (issue #1099 G1) ──────────────────────────
+     --color-tab-hover-bg deliberately does NOT alias --color-border-muted
+     here: in dark mode --color-border-muted (#1F1F28) equals
+     --color-slate-50 (#1F1F28), so aliasing it would make hover and
+     active indistinguishable. --color-border (#2A2A35) is reused instead
+     -- same value already serving as a dark-mode hover bg for the sibling
+     .workspace-tab-mobile-item-close:hover rule (sidebar.css). */
+  --color-tab-active-bg:    var(--color-slate-50);
+  --color-tab-hover-bg:     var(--color-border);
 
   /* ── Semantic state — desaturated for dark backgrounds ────── */
   --color-error:            #F87171;
