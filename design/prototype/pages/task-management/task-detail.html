@@ -6,6 +6,7 @@
   <title>Label Suite — 任務詳情</title>
   <link rel="stylesheet" href="../../assets/tokens.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
+  <link rel="stylesheet" href="../shared/date-range-picker.css" />
   <script src="../../assets/theme-fouc.js"></script>
   <link rel="stylesheet" href="task-config.css">
   <style>
@@ -607,30 +608,6 @@
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 10px;
       align-items: end;
-    }
-    .worklog-date-field {
-      position: relative;
-    }
-    .worklog-date-input {
-      position: relative;
-      z-index: 1;
-    }
-    .worklog-date-field:not(.has-value) .worklog-date-input {
-      color: transparent;
-    }
-    .worklog-date-placeholder {
-      position: absolute;
-      z-index: 2;
-      left: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--color-ink);
-      font-size: 14px;
-      font-weight: 600;
-      pointer-events: none;
-    }
-    .worklog-date-field.has-value .worklog-date-placeholder {
-      display: none;
     }
     .worklog-summary-grid {
       display: grid;
@@ -2252,6 +2229,7 @@
 <body>
 <div id="sharedSidebarMount"></div>
 <script src="../shared/sidebar.js"></script>
+<script src="../shared/date-range-picker.js"></script>
 <script src="../shared/modal-focus.js"></script>
 <script src="../shared/span-tagging-export.js"></script>
 <script>
@@ -2818,9 +2796,7 @@
       progressEmptyTitle: '尚無成員進度資料',
       progressBackToOverviewBtn: '回到任務概覽',
       workLogFilterTitle: '工時篩選列',
-      workLogDateFromLabel: '起始日期',
-      workLogDateToLabel: '結束日期',
-      workLogDatePlaceholder: '年 / 月 / 日',
+      workLogDateRangeLabel: '日期區間',
       workLogStageLabel: '任務階段',
       workLogMemberLabel: '成員',
       workLogStageAll: '全部',
@@ -3347,9 +3323,7 @@
       progressEmptyTitle: 'No member progress data yet',
       progressBackToOverviewBtn: 'Back to task overview',
       workLogFilterTitle: 'Work log filters',
-      workLogDateFromLabel: 'Date from',
-      workLogDateToLabel: 'Date to',
-      workLogDatePlaceholder: 'YYYY-MM-DD',
+      workLogDateRangeLabel: 'Date range',
       workLogStageLabel: 'Run stage',
       workLogMemberLabel: 'Member',
       workLogStageAll: 'All',
@@ -3785,6 +3759,7 @@
     ],
   };
   var WORK_LOG_ENTRIES = cloneData(DEFAULT_WORK_LOG_ENTRIES);
+  var workLogDateRangeHandle = null;
 
   var state = {
     lang: 'zh',
@@ -4708,11 +4683,6 @@
     if (el) el.textContent = value;
   }
 
-  function updateWorkLogDatePlaceholderState(input) {
-    if (!input || !input.parentElement) return;
-    input.parentElement.classList.toggle('has-value', Boolean(input.value));
-  }
-
   function setRequiredLabel(id, value) {
     var el = document.getElementById(id);
     if (!el) return;
@@ -5507,14 +5477,8 @@ function interpolate(template, payload) {
     setText('arEmptyHint', t('arEmptyHint'));
     renderAnnotationResults();
     setText('workLogFilterTitle', t('workLogFilterTitle'));
-    setText('workLogDateFromLabel', t('workLogDateFromLabel'));
-    setText('workLogDateToLabel', t('workLogDateToLabel'));
-    var workLogDateFrom = document.getElementById('workLogDateFrom');
-    var workLogDateTo = document.getElementById('workLogDateTo');
-    setText('workLogDateFromPlaceholder', t('workLogDatePlaceholder'));
-    setText('workLogDateToPlaceholder', t('workLogDatePlaceholder'));
-    updateWorkLogDatePlaceholderState(workLogDateFrom);
-    updateWorkLogDatePlaceholderState(workLogDateTo);
+    setText('workLogDateRangeLabel', t('workLogDateRangeLabel'));
+    if (workLogDateRangeHandle) workLogDateRangeHandle.setLang(state.lang);
     setText('workLogStageLabel', t('workLogStageLabel'));
     setText('workLogMemberLabel', t('workLogMemberLabel'));
     setText('workLogTableTitle', t('workLogTableTitle'));
@@ -8981,10 +8945,22 @@ function getTaskTypeLabel() {
   }
 
   function renderWorkLog() {
-    document.getElementById('workLogDateFrom').value = state.workLogDateFrom;
-    document.getElementById('workLogDateTo').value = state.workLogDateTo;
-    updateWorkLogDatePlaceholderState(document.getElementById('workLogDateFrom'));
-    updateWorkLogDatePlaceholderState(document.getElementById('workLogDateTo'));
+    var workLogDateRangeValue = { from: state.workLogDateFrom || null, to: state.workLogDateTo || null };
+    if (!workLogDateRangeHandle) {
+      workLogDateRangeHandle = window.DateRangePicker.mount(document.getElementById('workLogDateRangeTrigger'), {
+        value: workLogDateRangeValue,
+        lang: state.lang,
+        onChange: function (range) {
+          state.workLogDateFrom = range.from || '';
+          state.workLogDateTo = range.to || '';
+          state.wlPage = 1;
+          renderWorkLog();
+          trackEvent('prototype_work_log_filter_changed', { filter: 'date_range' });
+        },
+      });
+    } else {
+      workLogDateRangeHandle.setValue(workLogDateRangeValue);
+    }
     document.getElementById('workLogStageSelect').value = state.workLogStage;
     renderWorkLogMemberOptions();
     var entries = getFilteredWorkLogEntries();
@@ -11318,22 +11294,6 @@ document.getElementById('memberProgressSort').addEventListener('change', functio
       state.arExportPageSize = parseInt(e.target.value, 10) || 20;
       state.arExportPage = 1;
       renderArExportHistory();
-    });
-
-    document.getElementById('workLogDateFrom').addEventListener('change', function(e) {
-      state.workLogDateFrom = e.target.value || '';
-      state.wlPage = 1;
-      updateWorkLogDatePlaceholderState(e.target);
-      renderWorkLog();
-      trackEvent('prototype_work_log_filter_changed', { filter: 'date_from' });
-    });
-
-    document.getElementById('workLogDateTo').addEventListener('change', function(e) {
-      state.workLogDateTo = e.target.value || '';
-      state.wlPage = 1;
-      updateWorkLogDatePlaceholderState(e.target);
-      renderWorkLog();
-      trackEvent('prototype_work_log_filter_changed', { filter: 'date_to' });
     });
 
     document.getElementById('workLogStageSelect').addEventListener('change', function(e) {

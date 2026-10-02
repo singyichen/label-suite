@@ -3,18 +3,10 @@
     <h2 class="panel-title" id="workLogFilterTitle">工時篩選列</h2>
     <div class="worklog-filter-grid">
       <div>
-        <label class="field-label" id="workLogDateFromLabel" for="workLogDateFrom">起始日期</label>
-        <div class="worklog-date-field">
-          <input class="input-number worklog-date-input" type="date" id="workLogDateFrom" />
-          <span class="worklog-date-placeholder" id="workLogDateFromPlaceholder" aria-hidden="true">年 / 月 / 日</span>
-        </div>
-      </div>
-      <div>
-        <label class="field-label" id="workLogDateToLabel" for="workLogDateTo">結束日期</label>
-        <div class="worklog-date-field">
-          <input class="input-number worklog-date-input" type="date" id="workLogDateTo" />
-          <span class="worklog-date-placeholder" id="workLogDateToPlaceholder" aria-hidden="true">年 / 月 / 日</span>
-        </div>
+        <label class="field-label" id="workLogDateRangeLabel" for="workLogDateRangeTrigger">日期區間</label>
+        <button type="button" class="date-range-trigger" id="workLogDateRangeTrigger" aria-haspopup="dialog" aria-expanded="false">
+          <span class="date-range-trigger-text"></span>
+        </button>
       </div>
       <div>
         <label class="field-label" id="workLogStageLabel" for="workLogStageSelect">任務階段</label>
