@@ -12,12 +12,12 @@
 
 ## 1. 跨任務資料來源對齊（intermediate PR）
 
-**故事目標**（SC-019、SC-036）：讓 Overview 執行控制與工時明細所呈現的數字出自同一組 `task_id × run_type × round` 查詢上下文，T013 與 T018 不再 fallback 到其他任務的通用示範資料，無紀錄時呈現真實空狀態。
+**故事目標**（SC-019、SC-036）：讓 Overview 執行控制與工時明細所呈現的數字出自同一組 `task_id × run_type × round` 查詢上下文，T013 與 T018 不再 fallback 到其他任務的通用示範資料、T014 三個頁籤的分配彼此一致，無紀錄時呈現真實空狀態。
 
 > **產品檔案（2）**：`design/prototype/pages/task-management/task-detail.html`、`design/prototype/pages/task-management/task-detail.data.js`
 > **相依**：無。
 
-- [ ] 1.1 撰寫 `design/prototype/tests/task-management/task-detail-cross-tab-source.spec.ts` 之 Red。涵蓋 delta FR-010u 第 (1)(5)(6)(7) 點與 issue §4 驗收 09：T013／T018 五個頁籤不出現其他任務的回合與樣本數、不出現字面 124、工時與匯出歷史依任務篩選且無紀錄時為真實空狀態、提交進度與定案進度分別命名、三種單位不相加、資料分配色條附「資料分配」語意。每案例加入 inventory.csv。驗證：`PW_PORT=8981 pnpm playwright test tests/task-management/task-detail-cross-tab-source.spec.ts` 出現失敗 [@senior-qa]
+- [ ] 1.1 撰寫 `design/prototype/tests/task-management/task-detail-cross-tab-source.spec.ts` 之 Red。涵蓋 delta FR-010u 第 (1)(2)(5)(6)(7) 點與 issue §4 驗收 09／10：T013／T018 五個頁籤不出現其他任務的回合與樣本數、不出現字面 124、工時與匯出歷史依任務篩選且無紀錄時為真實空狀態；**T014 概覽／進度／結果三個頁籤的 total／trial／official 分配彼此一致**（issue §4 驗收 10，須修來源而非僅對齊顯示文字）；`已提交` 之分子分母依第 (2) 點推導，且**依 FR-005h 被明確排除的標記作業不計入分子與分母**；提交進度與定案進度分別命名、三種單位不相加、資料分配色條附「資料分配」語意。每案例加入 inventory.csv。驗證：`PW_PORT=8981 pnpm playwright test tests/task-management/task-detail-cross-tab-source.spec.ts` 出現失敗 [@senior-qa]
 - [ ] 1.2 Green：修改 `design/prototype/pages/task-management/task-detail.data.js`。為 T013 與 T018 補上各自的 progress／work-log／unassigned 來源，使三張既有查表不再 fallback 到通用舊資料，並依 design.md D2 之分子分母推導 `已提交` 與 `已完成輪次`。驗證：`PW_PORT=8981 pnpm playwright test tests/task-management/task-detail-cross-tab-source.spec.ts` 出現部分通過 [@senior-frontend]
 - [ ] 1.3 修改 `design/prototype/pages/task-management/task-detail.html`（與 1.2 同一實作任務之頁面整合）。移除字面 124 之硬編來源、使 `exportHistory` 依任務篩選、空狀態據實呈現、提交與定案進度分列命名、資料分配色條補語意說明。驗證：`PW_PORT=8981 pnpm playwright test tests/task-management/task-detail-cross-tab-source.spec.ts` exit 0 [@senior-frontend]
 - [ ] 1.4 執行 `node scripts/gen-screen-inventory.mjs` 重生畫面盤點清單並與 1.3 同一提交。驗證：`node scripts/gen-screen-inventory.mjs --check` exit 0 [@senior-frontend]
@@ -55,7 +55,7 @@
 > **產品檔案（2）**：`design/prototype/pages/task-management/task-detail.html`、`design/prototype/pages/task-management/task-detail.data.js`
 > **相依**：群組 3 已合併；本群組動工前 `git merge origin/main`。
 
-- [ ] 4.1 撰寫 `design/prototype/tests/task-management/task-detail-official-trial-history.spec.ts` 之 Red。涵蓋 issue §4 驗收 11／12 與 delta FR-010u 第 (3) 點：T015／T016 具備可驗證的試標前置歷史、completed 與 IAA 計算未結束／IAA 已結束未達標三種情境各有可驗證 fixture、歷史回合與進行中回合可分別查看且完成數與決策不交叉、已完成輪次不計入進行中回合。每案例加入 inventory.csv。驗證：`PW_PORT=8981 pnpm playwright test tests/task-management/task-detail-official-trial-history.spec.ts` 出現失敗 [@senior-qa]
+- [ ] 4.1 撰寫 `design/prototype/tests/task-management/task-detail-official-trial-history.spec.ts` 之 Red。涵蓋 issue §4 驗收 11／12 與 delta FR-010u 第 (3) 點：T015／T016 具備可驗證的試標前置歷史、completed 與 IAA 計算未結束／IAA 已結束未達標三種情境各有可驗證 fixture、歷史回合與進行中回合可分別查看且完成數與決策不交叉、已完成輪次不計入進行中回合。**撰寫前置**：T014 待審單位數在倉庫內有兩個互相矛盾的來源（逐列核算為 `5`，而 `design/prototype/pages/dashboard/dashboard.assignments.js:268` 的註解寫 `T014=6 of 15`），須先開啟實際頁面確認真值再寫入斷言，不得沿用任一側的數字。見 design.md D5。每案例加入 inventory.csv。驗證：`PW_PORT=8981 pnpm playwright test tests/task-management/task-detail-official-trial-history.spec.ts` 出現失敗 [@senior-qa]
 - [ ] 4.2 修改 `design/prototype/tests/task-management/issue-887-explicit-empty-trial-rounds.spec.ts`（與 4.1 同批次之既有測試更新）。因 T015／T016 改為具備試標歷史，三個案例鎖定的 `#officialPoolValue`、`#trialRoundsUsedValue`、`#roundHistorySummary` 與回合項目數期望值須同步改寫為新的真實值，不得刪除案例或改為寬鬆斷言。驗證：`PW_PORT=8981 pnpm playwright test tests/task-management/issue-887-explicit-empty-trial-rounds.spec.ts` 出現失敗 [@senior-qa]
 - [ ] 4.3 Green：修改 `design/prototype/pages/task-management/task-detail.data.js`。為 T015 與 T016 補上符合前置條件的試標回合歷史，`sampling_value` 恆等於該回合實際建立筆數，歷史回合與當前回合各自獨立計數。驗證：`PW_PORT=8981 pnpm playwright test tests/task-management/task-detail-official-trial-history.spec.ts` 出現部分通過 [@senior-frontend]
 - [ ] 4.4 修改 `design/prototype/pages/task-management/task-detail.html`（與 4.3 同一實作任務之頁面整合）。使回合歷程與樣本池分配依新的試標歷史呈現，歷史與當前回合分列且不交叉累計。驗證：`PW_PORT=8981 pnpm playwright test tests/task-management/task-detail-official-trial-history.spec.ts tests/task-management/issue-887-explicit-empty-trial-rounds.spec.ts` exit 0 [@senior-frontend]

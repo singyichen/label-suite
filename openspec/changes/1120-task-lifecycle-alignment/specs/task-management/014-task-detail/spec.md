@@ -6,7 +6,7 @@
 
 ### Requirement: FR-022 正式標記池歸零之發布阻擋（成功標準 SC-049）
 
-發布 `開始正式標記` 前，系統 MUST 驗證剩餘正式標記池筆數大於 `0`。剩餘筆數之推導沿用 FR-010f-3（`dataset_total - sum(trial_round.sampling_value)`），本條 MUST NOT 另建第二份推導式。
+發布 `開始正式標記` 前，系統 MUST 驗證剩餘正式標記池筆數大於 `0`。剩餘筆數之推導一律沿用 FR-010f-3 之既有推導式，本條 MUST NOT 複製或另建第二份推導式。
 
 **(1) 發布阻擋**。剩餘正式標記池筆數為 `0` 時，系統 MUST 阻擋 `開始正式標記` 發布，任務狀態 MUST 維持 `waiting_iaa_confirmation`，且 MUST NOT 建立任何正式標記清單或 assignment。
 

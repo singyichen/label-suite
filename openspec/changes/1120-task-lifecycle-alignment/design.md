@@ -77,7 +77,9 @@ FR-010t（`specs/task-management/014-task-detail/spec.md:631`）允許 `arbiter_
 
 ## D5. Fixture 事實（已逐一 `grep` 核對）
 
-issue 走查表引用的全部數字**經核對後確認無誤**，無需修正：T013 資料總數 `1`／試標抽樣 `1`／正式保留 `0`；T014 進度 `5/5`、已完成輪次 `1`、R1 樣本 `1`、審核 `7/15` 已定案、`3` 爭議；T015 提交 `4/5`、review unit 定案 `2/4`；T016 提交 `5/5`、定案 `2/5`、爭議 `3`、仲裁輸出 `2`、最終例外輸出 `1`；T018 正式可用池 `0`。主要來源為 `task-detail.data.js`、`task-detail.html` 的 `ANNOTATION_PROGRESS_BY_TASK`／`WORK_LOG_ENTRIES_BY_TASK`，以及 `annotation-workspace.data.js` 的 `seedReviewFlowDemo()`。
+issue 走查表引用的全部數字**經核對後確認無誤**，無需修正：T013 資料總數 `1`／試標抽樣 `1`／正式保留 `0`；T014 進度 `5/5`、已完成輪次 `1`、R1 樣本 `1`、審核 `7/15` 已定案、`3` 爭議；T015 提交 `4/5`、review unit 定案 `2/4`；T016 提交 `5/5`、定案 `2/5`、爭議 `3`、仲裁輸出 `2`、最終例外輸出 `1`；T018 正式可用池 `0`。主要來源為 `task-detail.data.js`、`task-detail.html` 的 `ANNOTATION_PROGRESS_BY_TASK`／`WORK_LOG_ENTRIES_BY_TASK`，以及 `design/prototype/pages/annotation/annotation-workspace.data.js:3559` 起的 `var scripts` 審核狀態 seed 表。（**引用更正**：T01 報告原稱此表為 `seedReviewFlowDemo()`，但該符號在倉庫中不存在——`annotation-workspace.data.js` 全檔沒有任何 `function`，是純資料檔；該名稱僅作為註解措辭散見於多個既有檔案，屬本 change 之前即存在的文件漂移。）
+
+**審核單位計數的查證邊界**：`已定案`／`爭議中` 兩個數字可由上述 seed 表逐列核算（T014：15 列＝5 樣本 × 3 標記員，核算得 finalized `7`、disputed `3`）。但**待審數無法僅由靜態核算定案**：逐列核算得 `5`，而 `design/prototype/pages/dashboard/dashboard.assignments.js:268` 的既有註解寫 `T014=6 of 15`，兩者相差 1。該註解引用 issue #302／#310，而此 seed 表其後經 issue #596／#837／#843／#868 多次改寫，註解可能已過期；亦可能兩者分母語意不同（dashboard 為「對當前登入審核員而言待審」）。本 change 不裁定此數字——撰寫 Red 斷言前必須開啟實際頁面確認，見 `tasks.md` 群組 4 之撰寫前置。
 
 **跨任務污染的機制**（issue 稱 T013／T018 顯示其他任務的通用 R1/R2、124 筆與工時／匯出歷史）：
 
