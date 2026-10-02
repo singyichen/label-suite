@@ -46,7 +46,7 @@
 - [ ] 3.2 Green：修改 `design/prototype/pages/task-management/task-detail.data.js`。改寫 `getTaskCompletionBlockers()` 使五個訊號缺值時一律推導為未滿足而非放行，並依 design.md D2 讀取既有審核單位與例外池來源，不另建第二份判定式。驗證：`PW_PORT=8981 pnpm playwright test tests/task-management/task-detail-completion-gate.spec.ts` 出現部分通過 [@senior-frontend]
 - [ ] 3.3 修改 `design/prototype/pages/task-management/task-detail.html`（與 3.2 同一實作任務之頁面整合）。移除寫死的 `submissionComplete` 值，改為依實際提交狀態推導並補齊其餘四個訊號，阻擋原因逐項呈現且可由鍵盤與螢幕閱讀器取得。驗證：`PW_PORT=8981 pnpm playwright test tests/task-management/task-detail-completion-gate.spec.ts` exit 0 [@senior-frontend]
 - [ ] 3.4 執行 `node scripts/gen-screen-inventory.mjs` 重生畫面盤點清單並與 3.3 同一提交。驗證：`node scripts/gen-screen-inventory.mjs --check` exit 0 [@senior-frontend]
-- [ ] 3.5 執行群組 3 回歸候選集與 inventory 一致性核對。驗證：`cd design/prototype && pnpm typecheck && pnpm test:node && PW_PORT=8981 pnpm playwright test tests/task-management/task-detail-completion-gate.spec.ts tests/task-management/task-detail-stage-flow.spec.ts tests/annotation/issue-688-exception-pool-entry.spec.ts` exit 0 [@main]
+- [ ] 3.5 執行群組 3 回歸候選集與 inventory 一致性核對。驗證：`cd design/prototype && pnpm typecheck && pnpm test:node && PW_PORT=8981 pnpm playwright test tests/task-management/task-detail-completion-gate.spec.ts tests/task-management/task-detail-stage-flow.spec.ts tests/task-management/issue-688-exception-pool-entry.spec.ts tests/task-management/issue-891-live-review-pools.spec.ts` exit 0 [@main]
 
 ## 4. 正式案例試標前置歷史與正典回寫（最終 PR，`Closes #1120`）
 
