@@ -569,6 +569,22 @@
     return str ? '?' + str : '';
   }
 
+  // issue #1084: true when every param in `newSearch` also appears, with the
+  // IDENTICAL value, in `oldSearch` -- i.e. newSearch only ever REMOVES
+  // params relative to oldSearch, never adds or changes one. This is the
+  // signature of a page's own default-value canonicalization (e.g.
+  // task-detail.html stripping a default-valued `tab=overview`), not a real
+  // in-page change: a real change always adds a param the mount-time URL
+  // didn't have or changes one to a different value.
+  function isWorkspaceRemovalOnlySearch(newSearch, oldSearch) {
+    var oldParams = new URLSearchParams(oldSearch);
+    var sameOrRemovedOnly = true;
+    new URLSearchParams(newSearch).forEach(function (value, key) {
+      if (oldParams.get(key) !== value) sameOrRemovedOnly = false;
+    });
+    return sameOrRemovedOnly;
+  }
+
   /* 頁面種類 → 去重鍵對照表 (spec 019 規格常數, Q3/Q8/Q16) -- the single
    * source of truth: annotation-workspace dedupes by task id + mode,
    * task-new is a singleton, every other page kind (including task-detail,
@@ -1022,14 +1038,21 @@
     // renderAnnotationProgress() / renderAnnotationResults() /
     // renderMemberManagement() for every tab regardless of which one is
     // active, and each ends with its own syncUrlToViewState() call) -- this
-    // first post-ready settle only re-canonicalizes the SAME state the tab
-    // already mounted with (e.g. stripping a default-valued `tab=overview`
-    // the live address bar never showed as such at mount time), not a real
-    // in-page change. Syncing it would rewrite AC-3.5's protected
-    // pre-switch entry before the user has done anything (confirmed via a
-    // throwaway probe reproducing workspace-tabs-rekey.spec.ts's own
-    // scenario -- see PR body). Only the SECOND and later settles reflect
-    // something the user actually did.
+    // first post-ready settle can be a pure re-canonicalization of the SAME
+    // state the tab already mounted with (e.g. stripping a default-valued
+    // `tab=overview` the live address bar never showed as such at mount
+    // time), not a real in-page change; syncing it would rewrite AC-3.5's
+    // protected pre-switch entry before the user has done anything
+    // (confirmed via a throwaway probe reproducing
+    // workspace-tabs-rekey.spec.ts's own scenario -- see PR body). NOT every
+    // page produces this bootstrap noise, though (measured: task-list.html,
+    // dataset-analysis-detail.html, user-management.html,
+    // annotation-list.html, dashboard.html all emit zero settles on a bare
+    // load -- see PR body), so "first settle" alone cannot gate the sync:
+    // for those pages the user's first real change IS the first settle.
+    // Combined with isWorkspaceRemovalOnlySearch() below, only a first
+    // settle that is ALSO removal-only (pure canonicalization) is skipped;
+    // a first settle that adds or changes a param is synced like any other.
     var workspaceHasSyncedOwnEntryOnce = false;
 
     // AC-3.5 / FR-007 (Q18): a page's OWN history.replaceState() calls (e.g.
@@ -1090,23 +1113,25 @@
         // the stored dedupeKey stale would make a later remount of this same
         // URL look like a brand-new tab and insert a duplicate instead of
         // updating this slot.
-        if (!workspaceHasSyncedOwnEntryOnce) {
-          // See the variable's own declaration above (issue #1084): the
-          // FIRST post-ready settle is still this page's own bootstrap
-          // render burst, not a real in-page change -- skip persisting it.
-          workspaceHasSyncedOwnEntryOnce = true;
-        } else {
-          var activeTab = state.tabs[state.activeIndex];
-          if (activeTab) {
-            activeTab.url = loc.pathname + loc.search;
-            activeTab.dedupeKey = info.dedupeKey;
-            activeTab.stageBadge = info.stageBadge || null;
-            activeTab.stageRound = info.stageRound || null;
-            writeWorkspaceTabState(state);
-            // Keep the pagehide capture key (below) in step with this tab's
-            // now-updated dedupeKey -- see the shared variable's declaration.
-            workspaceActiveTabDedupeKey = info.dedupeKey;
-          }
+        var activeTab = state.tabs[state.activeIndex];
+        // See workspaceHasSyncedOwnEntryOnce's own declaration above (issue
+        // #1084): only a FIRST settle that is ALSO removal-only (pure
+        // canonicalization of the state already on this tab) is bootstrap
+        // noise to skip -- a first settle that adds or changes a param is a
+        // real in-page change and must be synced like any other.
+        var activeTabQueryIndex = activeTab ? activeTab.url.indexOf('?') : -1;
+        var isCanonicalizationOnlyFirstSettle = !workspaceHasSyncedOwnEntryOnce &&
+          activeTab && isWorkspaceRemovalOnlySearch(loc.search, activeTabQueryIndex >= 0 ? activeTab.url.slice(activeTabQueryIndex) : '');
+        workspaceHasSyncedOwnEntryOnce = true;
+        if (activeTab && !isCanonicalizationOnlyFirstSettle) {
+          activeTab.url = loc.pathname + loc.search;
+          activeTab.dedupeKey = info.dedupeKey;
+          activeTab.stageBadge = info.stageBadge || null;
+          activeTab.stageRound = info.stageRound || null;
+          writeWorkspaceTabState(state);
+          // Keep the pagehide capture key (below) in step with this tab's
+          // now-updated dedupeKey -- see the shared variable's declaration.
+          workspaceActiveTabDedupeKey = info.dedupeKey;
         }
       }, 0);
     };
