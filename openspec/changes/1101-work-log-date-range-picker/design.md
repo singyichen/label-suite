@@ -71,7 +71,7 @@ Day 按鈕狀態 class：`is-range-start`、`is-range-end`、`is-in-range`、`is
   - render 時以 `window.DateRangePicker.mount()` 掛載一次（冪等：重複 render 需先 `destroy()` 舊 handle 或改走 `setValue`/`setLang`，避免重複綁定事件），`value` 來自 `state.workLogDateFrom`/`state.workLogDateTo`（任一為空即視為開放式區間的那一端為 `null`）。
   - `onChange` callback 把 `range.from`/`range.to`（可能為 `null`）寫回 `state.workLogDateFrom`/`state.workLogDateTo`（`null` 正規化為 `''`，與既有欄位的空字串語意一致），並呼叫既有的「篩選變更」路徑（沿用現有 `change` listener 內部邏輯：重算篩選結果、`wlPage` 重設為第 1 頁、`history.replaceState()` 寫回 `wl_from`/`wl_to`）。
   - 單邊網址（只有 `wl_from` 或只有 `wl_to`）：掛載時以 `{from: state.workLogDateFrom || null, to: state.workLogDateTo || null}` 傳入，元件須能顯示「只有起點」或「只有終點」的開放式區間（trigger 文字與日曆高亮各自處理單邊情形，例如只顯示已知一端、另一端顯示提示符號，如 `2026-04-19 ～ 不限`）。
-  - `switchLang()` 既有流程需呼叫 `handle.setLang(lang)` 同步元件語言。
+  - 既有 `applyLang(lang)` 流程（非 `switchLang`，`task-detail.html:5253`，內含 work-log 區塊 i18n 的 `setText()` 呼叫）需同步呼叫 `handle.setLang(state.lang)` 同步元件語言。
   - i18n 新增鍵（補入既有 zh/en 字典，命名沿用現有慣例）：`workLogDateRangeLabel`（篩選列欄位標籤，取代 `workLogDateFromLabel`/`workLogDateToLabel`）、`workLogDateRangePlaceholder`（取代 `workLogDatePlaceholder`）。
 
 ## D5. 測試分組與既有測試更新
