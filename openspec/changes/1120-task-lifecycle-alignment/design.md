@@ -114,6 +114,8 @@ issue 走查表引用的全部數字**經核對後確認無誤**，無需修正�
 1. `design/prototype/tests/task-management/issue-887-explicit-empty-trial-rounds.spec.ts` 三個案例斷言 T015／T016 的 `#officialPoolValue` = `5`、`#trialRoundsUsedValue` = `0`、`#trialRoundTimeline` 項目數 `0`。來源是 `ANNOTATION_PROGRESS_BY_TASK.T015/T016.rounds = []`（`task-detail.html:3679`、`:3691`，刻意的 `hasExplicitEmptyTrialRounds()` 設計）。補上「正式案例需有符合前置條件的試標歷史」（issue §4 驗收 11）會改變這四個值。
 2. `design/prototype/tests/task-management/issue-791-trial-round-from-waiting.spec.ts:47` 之案例（D1 已詳述）——屬 D1 的 MAJOR 範圍，**本 change 不觸碰**。
 
+**G1 的殘留缺口（獨立審查 MINOR，已記錄不隱藏）**：T014 的「概覽 ↔ annotation-results」一致性目前是**巧合而非單一來源**——`T014.datasetRecords.length` 與 `ANNOTATION_PROGRESS_BY_TASK.T014.rounds[0].totalSamples` 都是 `5`，但兩者是各自撰寫的 fixture 常數，沒有任何程式由其一推導另一（annotation-results 的逐樣本 `stage` 來自另一份 seed）。「概覽 ↔ annotation-progress」已由 `getSyntheticTrialRoundSampleCount()` 真正單一來源化，但 annotation-results 這一側只由 G1 的回歸測試守住。要真正單一來源化需讓 annotation-results 的 stage 標記改讀同一份回合表，屬後續群組範圍，不在 G1 的 2 檔／300 行預算內。
+
 T013／T018 的污染修正**未發現任何既有測試鎖定其舊的通用數值**，風險最低，故排為第一組。
 
 ## D7. 明確排除於本 change 的範圍
