@@ -334,6 +334,15 @@
       justify-content: space-between;
       gap: 12px;
     }
+    /* Scoped override: task-config.css's global .toggle-row (line ~241)
+       adds its own border/padding/background, which double-frames this
+       nested row inside .isolation-wrap's own card frame (issue #1100). */
+    .isolation-wrap .toggle-row {
+      border: none;
+      padding: 0;
+      background: transparent;
+      border-radius: 0;
+    }
     .toggle-meta {
       min-width: 0;
     }
