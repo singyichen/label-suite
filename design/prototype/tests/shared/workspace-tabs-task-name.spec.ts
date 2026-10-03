@@ -40,20 +40,26 @@ const TASK_NAME_EN_T001 = 'Medical Text Sentiment Classification';
 const TASK_NAME_ZH_T002 = '癌症歷程情緒多標籤分類';
 const TASK_NAME_EN_T002 = 'Cancer Journey Emotion Multi-label Classification';
 
-// Mirrors workspace-tabs-mobile.spec.ts's own local selector-contract
-// helpers (not exported from _workspace-tabs-helpers.ts, so each spec file
-// in this family defines its own small locator functions over the same
-// testids rather than importing across sibling spec files).
+// Updated for issue #1099 G2 (MODIFIED FR-002): the mobile-only
+// `workspace-tab-mobile-toggle`/`-mobile-dropdown`/`-mobile-item` widget
+// these locators originally targeted is retired in favor of one shared
+// overview-menu component (FR-023) used by both desktop and mobile --
+// repointed to its testids so this file's own task-name-persistence
+// assertions (unrelated to the widget itself) keep covering mobile parity.
+// Mirrors workspace-tabs-overview-menu.spec.ts's own local
+// selector-contract helpers (not exported from _workspace-tabs-helpers.ts,
+// so each spec file in this family defines its own small locator functions
+// over the same testids rather than importing across sibling spec files).
 function mobileToggle(page: Page): Locator {
-  return page.getByTestId('workspace-tab-mobile-toggle');
+  return page.getByTestId('workspace-tab-overview-trigger');
 }
 
 function mobileDropdown(page: Page): Locator {
-  return page.getByTestId('workspace-tab-mobile-dropdown');
+  return page.getByTestId('workspace-tab-overview-menu');
 }
 
 function mobileItems(page: Page): Locator {
-  return mobileDropdown(page).getByTestId('workspace-tab-mobile-item');
+  return mobileDropdown(page).getByTestId('workspace-tab-overview-item');
 }
 
 test.describe('Workspace tabs — FR-010/AC-1.6 task name persists across pages (desktop, zh)', () => {
