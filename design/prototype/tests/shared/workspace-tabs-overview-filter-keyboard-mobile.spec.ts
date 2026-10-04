@@ -202,6 +202,46 @@ test.describe('Workspace tabs overview menu (G2b) — AC-023.5 ArrowDown/ArrowUp
     expect(page.url()).toBe(urlBefore);
     expect(await readWorkspaceTabState(page)).toEqual(stateBefore);
   });
+
+  // Review-reported gap (independent code review of this suite, 2026-10-04):
+  // a bare first ArrowUp with no prior highlight (no row carries
+  // aria-selected="true" yet) must wrap to the LAST row, index
+  // rows.length - 1. The current handler's cold-state math computes
+  // `(current - 1 + rows.length) % rows.length` with `current === -1`,
+  // which lands on `rows.length - 2` instead -- off by one. 5 distinct
+  // tabs are opened (not 2-3) so the bug's actual wrong answer (index 3)
+  // and the correct answer (index 4) are unambiguous, not an artifact of
+  // small-N wraparound coincidence.
+  test('first ArrowUp with no prior highlight wraps to the last row, not the second-to-last', async ({ page }) => {
+    await page.goto(DASHBOARD_URL);
+    await page.goto(TASK_LIST_URL);
+    await page.goto(DATASET_LIST_URL);
+    await page.goto(USER_MANAGEMENT_URL);
+    await page.goto(TASK_NEW_URL); // active
+    const urlBefore = page.url();
+    const stateBefore = await readWorkspaceTabState(page);
+
+    await openMenu(page);
+    const rows = items(page);
+    await expect(rows).toHaveCount(5);
+    await expect(rows.nth(0)).not.toHaveAttribute('aria-selected', 'true');
+    await expect(rows.nth(1)).not.toHaveAttribute('aria-selected', 'true');
+    await expect(rows.nth(2)).not.toHaveAttribute('aria-selected', 'true');
+    await expect(rows.nth(3)).not.toHaveAttribute('aria-selected', 'true');
+    await expect(rows.nth(4)).not.toHaveAttribute('aria-selected', 'true');
+
+    await page.keyboard.press('ArrowUp');
+
+    await expect(rows.nth(4)).toHaveAttribute('aria-selected', 'true');
+    await expect(rows.nth(3)).toHaveAttribute('aria-selected', 'false');
+    await expect(rows.nth(0)).toHaveAttribute('aria-selected', 'false');
+    await expect(rows.nth(1)).toHaveAttribute('aria-selected', 'false');
+    await expect(rows.nth(2)).toHaveAttribute('aria-selected', 'false');
+    await expect(filterInput(page)).toBeFocused();
+
+    expect(page.url()).toBe(urlBefore);
+    expect(await readWorkspaceTabState(page)).toEqual(stateBefore);
+  });
 });
 
 test.describe('Workspace tabs overview menu (G2b) — AC-023.6 Enter switches to the highlighted row and closes the menu', () => {
