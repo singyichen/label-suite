@@ -140,12 +140,17 @@ test.describe('Workspace tabs overview menu (G3) — AC-024.1/AC-024.2 reopen st
 
     await openOverviewMenu(page);
     await overviewReopenBtn(page).click();
+    // Reopening an entry with no open match is a full navigation
+    // (window.location.href); wait for the reopened tab to mount before
+    // reading TAB_STORAGE_KEY, or the read races the old document.
+    await expect(tabs).toHaveCount(2);
     let state = (await readWorkspaceTabState(page)) as { tabs: Array<{ dedupeKey: string }> };
     expect(state.tabs.some((t) => t.dedupeKey === DATASET_LIST_URL)).toBe(true); // B first
     expect(state.tabs.some((t) => t.dedupeKey === TASK_LIST_URL)).toBe(false);
 
     await openOverviewMenu(page);
     await overviewReopenBtn(page).click();
+    await expect(tabs).toHaveCount(3);
     state = (await readWorkspaceTabState(page)) as { tabs: Array<{ dedupeKey: string }> };
     expect(state.tabs.some((t) => t.dedupeKey === TASK_LIST_URL)).toBe(true); // A second
   });
@@ -264,6 +269,11 @@ test.describe('Workspace tabs overview menu (G3) — AC-4.1-updated eviction pus
 
     await openOverviewMenu(page);
     await overviewReopenBtn(page).click();
+    // Same full-navigation race as the LIFO case above: the dashboard tab
+    // only lands in TAB_STORAGE_KEY once the reopened page has mounted
+    // (this reopen is itself a 9th open, so the count stays at TAB_CAP).
+    await page.waitForURL((url) => url.pathname.endsWith(DASHBOARD_URL));
+    await expect(workspaceTabs(page)).toHaveCount(8);
     const state = (await readWorkspaceTabState(page)) as { tabs: Array<{ dedupeKey: string }> };
     expect(state.tabs.some((t) => t.dedupeKey === DASHBOARD_URL)).toBe(true);
   });
@@ -341,6 +351,9 @@ test.describe('Workspace tabs overview menu (G3) — AC-025.3 close-all tabs are
     for (let i = 0; i < 3; i++) {
       await openOverviewMenu(page);
       await overviewReopenBtn(page).click();
+      // Each reopen navigates; settle it before touching the next page's
+      // menu, otherwise the next click can land on the outgoing document.
+      await expect(workspaceTabs(page)).toHaveCount(i + 1);
     }
     await expect(workspaceTabs(page)).toHaveCount(3);
   });
