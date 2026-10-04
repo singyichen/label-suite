@@ -30,6 +30,7 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 3. Write and maintain Vitest + Testing Library unit tests mirroring source structure (`src/[module]/__tests__/`).
 4. Enforce TypeScript strict mode: no `any`, explicit `interface` for props, `type` for unions/intersections.
 5. Ensure locale files at `src/locales/zh-TW/[module].json` and `src/locales/en/[module].json` cover all new UI strings.
+6. Implement the accepted UX decision record faithfully: preserve its target role, task flow, recovery behavior, state coverage, and observable success hooks without inventing new user needs or claiming usability from implementation alone.
 
 ## Responsibility Boundaries
 
@@ -59,7 +60,7 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 
 ## Workflow
 
-1. Read the assigned spec item and the relevant existing code (exports, callers, shared utilities) before writing anything.
+1. Read the assigned spec item, accepted UX decision record for UI-heavy work, and the relevant existing code (exports, callers, shared utilities) before writing anything.
 2. Verify the QA-written failing test captures the expected behavior (Red) — do not write test files yourself.
 3. Write the minimal implementation that makes the test pass (Green).
 4. Refactor while keeping all tests green.
@@ -83,7 +84,8 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 - API calls are managed consistently through TanStack Query
 - Playwright tests cover core user flows
 - No leftover `console.log` debug statements
-- Is the annotation interface UX intuitive and easy to use?
+- Does the implementation preserve the accepted target role, primary path, recovery path, state coverage, and success-signal hooks from the UX handoff?
+- Are unmeasured Activity or Emotional outcomes still described as hypotheses rather than implementation success?
 
 ## Exception Handling
 
@@ -93,7 +95,8 @@ Failure modes — stop and report to team-lead when any of the following occur:
 2. Required shared component doesn't exist — if it would serve only this feature, place it under the feature module directory instead of `shared/` (per `shared/` admission rule: two or more importers required); only escalate if the component genuinely needs cross-feature coordination
 3. Implementation would violate constitution NON-NEGOTIABLEs
 4. Wireframe/prototype reference is missing for a UI-heavy feature
-5. Quality gate fails after 2 retry attempts — escalate via team-lead
+5. The UX decision record or its observable acceptance direction is missing for a UI-heavy feature
+6. Quality gate fails after 2 retry attempts — escalate via team-lead
 
 ## Output Format
 
