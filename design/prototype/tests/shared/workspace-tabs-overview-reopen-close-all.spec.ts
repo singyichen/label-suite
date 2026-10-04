@@ -163,7 +163,20 @@ test.describe('Workspace tabs overview menu (G3) — AC-024.3 reopen stack cap',
     // pushes. Each cycle pushes exactly one new entry onto the reopen
     // stack, oldest-pushed first.
     await page.goto(DASHBOARD_URL); // kept open throughout, never closed
-    const closedKeys: string[] = [TASK_LIST_URL, DATASET_LIST_URL, USER_MANAGEMENT_URL, TASK_NEW_URL, TASK_DETAIL_T001_R1_URL];
+    // Expected reopen-stack dedupeKey per each page's own go-to URL above --
+    // NOT always the literal URL: computeWorkspaceDedupeInfo() (sidebar.js,
+    // pre-existing FR-006/Q16 dedupe-key table) special-cases task-new as
+    // the fixed singleton string 'task-new', and normalizes task-detail's
+    // query params into alphabetical order (ap_stage before task_id), so
+    // TASK_NEW_URL/TASK_DETAIL_T001_R1_URL's own literal strings are the
+    // right navigation targets below but the WRONG expected dedupeKey.
+    const closedKeys: string[] = [
+      TASK_LIST_URL,
+      DATASET_LIST_URL,
+      USER_MANAGEMENT_URL,
+      'task-new',
+      '/pages/task-management/task-detail.html?ap_stage=r1&task_id=T001',
+    ];
     for (let i = 0; i < 6; i++) {
       closedKeys.push(`annotation-workspace:T00${i + 1}:annotate`);
     }
