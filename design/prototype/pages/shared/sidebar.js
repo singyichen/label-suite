@@ -1036,26 +1036,17 @@
     }
   }
 
-  // FR-023 point 1 (issue #1099 G2): the shared overview-menu trigger's own
-  // "N tabs open" text, reused for both the desktop and mobile variant --
-  // distinct from the fixed-phrase workspaceTabCapNoticeI18n/
-  // workspaceTabRekeyNoticeI18n toasts above because this one interpolates
-  // the live tab count on every render. Formerly
-  // workspaceTabMobileToggleText() (issue #1075 sub-group G2e, AC-6.1), the
-  // mobile-only dropdown toggle's text this change retires (FR-002 MODIFIED).
-  function workspaceTabOverviewTriggerText(lang, count) {
+  // AC-6.1 / FR-002, US6 (issue #1075 sub-group G2e): the mobile dropdown
+  // toggle's own "N tabs open" text -- distinct from the fixed-phrase
+  // workspaceTabCapNoticeI18n/workspaceTabRekeyNoticeI18n toasts above
+  // because this one interpolates the live tab count on every render.
+  function workspaceTabMobileToggleText(lang, count) {
     return normalizeLang(lang) === 'zh' ? ('已開啟 ' + count + ' 頁') : (count + ' tabs open');
   }
 
-  // FR-023 point 2: the filter input's own placeholder, also required to
-  // show the live tab count N; exact wording not locked (design.md G2).
-  function workspaceTabOverviewFilterPlaceholder(lang, count) {
-    return normalizeLang(lang) === 'zh' ? ('在 ' + count + ' 個頁籤中搜尋') : ('Search ' + count + ' tabs');
-  }
-
-  // FR-023 point 2's bottom action slots (the "重開剛關閉的"/"全部關閉" pair);
-  // behavior for both is G3 scope (FR-024/FR-025) -- this change only
-  // renders the structural button text.
+  // FR-023 point 2's bottom action slots (issue #1099 G2a desktop-only
+  // subset): the "重開剛關閉的"/"全部關閉" pair. Behavior for both is G3
+  // scope (FR-024/FR-025) -- this change only renders the structural text.
   var workspaceTabOverviewActionI18n = {
     zh: { reopen: '重開剛關閉的', closeAll: '全部關閉' },
     en: { reopen: 'Reopen closed tab', closeAll: 'Close all' }
@@ -1299,134 +1290,122 @@
         }
       }
 
-      // FR-023/FR-023A, MODIFIED FR-002 (issue #1099 G2, design.md "G2 —
-      // 總覽選單"): one shared overview-menu component replaces the old
-      // mobile-only "已開啟 N 頁" dropdown (formerly
-      // renderWorkspaceTabMobileDropdown(), retired above) for BOTH desktop
-      // (a fixed trigger at the tab strip's right end) and mobile (full
-      // replacement of the tab strip) -- mirroring mountSidebar()'s own
-      // notifDropdownEl build/open/close pattern. Built here (inside
-      // run()), not mountSidebar(), because its content depends on this
-      // closure's own tab state/activateWorkspaceTab/closeWorkspaceTab.
-      //
-      // Selector contract locked by workspace-tabs-overview-menu.spec.ts:
-      // exactly ONE trigger may exist at a time, so this is a single
-      // JS-time viewport decision (isDesktopViewport()), never two
-      // always-present/CSS-toggled instances sharing a testid.
-      var overviewVariant = isDesktopViewport() ? 'desktop' : 'mobile';
-
-      var overviewTriggerEl = document.createElement('button');
-      overviewTriggerEl.type = 'button';
-      overviewTriggerEl.className = 'workspace-tab-overview-trigger workspace-tab-overview-trigger--' + overviewVariant;
-      overviewTriggerEl.setAttribute('data-testid', 'workspace-tab-overview-trigger');
-      overviewTriggerEl.setAttribute('aria-haspopup', 'true');
-      overviewTriggerEl.setAttribute('aria-expanded', 'false');
-      overviewTriggerEl.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg><span class="workspace-tab-overview-trigger-count"></span>';
-      var overviewTriggerCountEl = overviewTriggerEl.querySelector('.workspace-tab-overview-trigger-count');
-
-      if (overviewVariant === 'mobile') {
-        // AC-6.1-updated (FR-002 MODIFIED): same top-bar slot the retired
-        // #workspaceTabMobileToggle button used to occupy. Placed once --
-        // unlike the desktop branch below, nothing ever wipes this anchor's
-        // children, so no re-append is needed on later re-renders.
-        var overviewMobileAnchor = document.getElementById('mobileLogoutBtn');
-        if (overviewMobileAnchor && overviewMobileAnchor.parentNode) {
-          overviewMobileAnchor.parentNode.insertBefore(overviewTriggerEl, overviewMobileAnchor);
-        }
+      // AC-6.1-AC-6.3 / FR-002 / FR-015, US6 (issue #1075 sub-group G2e):
+      // mobile (<=767px) dropdown that replaces the desktop tab bar, mirroring
+      // mountSidebar()'s own notifDropdownEl build/open/close pattern. Built
+      // here (inside run()), not mountSidebar(), because its content depends
+      // on this closure's own tab state/activateWorkspaceTab/closeWorkspaceTab.
+      var mobileToggleBtn = document.getElementById('workspaceTabMobileToggle');
+      var existingMobileDropdown = document.getElementById('workspaceTabMobileDropdown');
+      if (existingMobileDropdown && existingMobileDropdown.parentNode) {
+        existingMobileDropdown.parentNode.removeChild(existingMobileDropdown);
       }
-      // Desktop (AC-023.2, "桌面版頁籤列右端固定項"): appended as barEl's own
-      // last child, sticky to the right edge of its scroll box -- but
-      // renderWorkspaceTabBar() wipes barEl's children on every call
-      // (renderWorkspaceTabViews() below re-appends it after each call,
-      // not here, since the very first renderWorkspaceTabViews() call
-      // happens after this setup block and would wipe it immediately).
+      var mobileDropdownEl = document.createElement('div');
+      mobileDropdownEl.id = 'workspaceTabMobileDropdown';
+      mobileDropdownEl.className = 'workspace-tab-mobile-dropdown hidden';
+      mobileDropdownEl.setAttribute('data-testid', 'workspace-tab-mobile-dropdown');
+      document.body.appendChild(mobileDropdownEl);
 
-      var existingOverviewMenu = document.getElementById('workspaceTabOverviewMenu');
-      if (existingOverviewMenu && existingOverviewMenu.parentNode) {
-        existingOverviewMenu.parentNode.removeChild(existingOverviewMenu);
+      function openWorkspaceTabMobileDropdown() {
+        mobileDropdownEl.classList.remove('hidden');
+        if (mobileToggleBtn) mobileToggleBtn.setAttribute('aria-expanded', 'true');
       }
-      var overviewMenuEl = document.createElement('div');
-      overviewMenuEl.id = 'workspaceTabOverviewMenu';
-      overviewMenuEl.className = 'workspace-tab-overview-menu workspace-tab-overview-menu--' + overviewVariant + ' hidden';
-      overviewMenuEl.setAttribute('data-testid', 'workspace-tab-overview-menu');
 
-      var overviewFilterEl = document.createElement('input');
-      overviewFilterEl.type = 'text';
-      overviewFilterEl.className = 'workspace-tab-overview-filter';
-      overviewFilterEl.setAttribute('data-testid', 'workspace-tab-overview-filter');
-      overviewMenuEl.appendChild(overviewFilterEl);
+      function closeWorkspaceTabMobileDropdown() {
+        mobileDropdownEl.classList.add('hidden');
+        if (mobileToggleBtn) mobileToggleBtn.setAttribute('aria-expanded', 'false');
+      }
 
-      var overviewListEl = document.createElement('div');
-      overviewListEl.className = 'workspace-tab-overview-list';
-      overviewMenuEl.appendChild(overviewListEl);
+      // AC-6.2: tapping an item activates that tab and closes the dropdown.
+      // The close affordance (coordinator-directed, see this suite's own
+      // header comment) instead calls closeWorkspaceTab() via a nested,
+      // stopPropagation()'d click handler -- same nesting as
+      // renderWorkspaceTabBar()'s desktop tabEl/closeBtn pair above -- so it
+      // never bubbles into the item's own activate handler nor into the
+      // click-outside listener below, leaving the dropdown open.
+      function renderWorkspaceTabMobileDropdown(state) {
+        var lang = readStoredLang();
+        var countEl = document.getElementById('workspaceTabMobileToggleCount');
+        if (countEl) countEl.textContent = workspaceTabMobileToggleText(lang, state.tabs.length);
 
-      var overviewActionsEl = document.createElement('div');
-      overviewActionsEl.className = 'workspace-tab-overview-actions';
+        while (mobileDropdownEl.firstChild) mobileDropdownEl.removeChild(mobileDropdownEl.firstChild);
+        state.tabs.forEach(function (tab, index) {
+          var isActive = index === state.activeIndex;
+          var label = computeWorkspaceTabLabel(tab, lang);
 
-      var overviewLang = normalizeLang(readStoredLang());
-      var overviewReopenBtn = document.createElement('button');
-      overviewReopenBtn.type = 'button';
-      overviewReopenBtn.className = 'workspace-tab-overview-reopen';
-      overviewReopenBtn.setAttribute('data-testid', 'workspace-tab-overview-reopen');
-      overviewReopenBtn.textContent = workspaceTabOverviewActionI18n[overviewLang].reopen;
-      // FR-024 point 5 (issue #1099 G2 scope): no code anywhere pushes to
-      // the reopen stack until G3's pushWorkspaceTabToReopenStack() lands,
-      // so the stack is always empty here and this stays unconditionally
-      // disabled -- a genuine G2 deliverable, not a G3 placeholder.
-      overviewReopenBtn.disabled = true;
-      overviewActionsEl.appendChild(overviewReopenBtn);
+          var itemEl = document.createElement('div');
+          itemEl.className = 'workspace-tab-mobile-item' + (isActive ? ' active' : '');
+          itemEl.setAttribute('data-testid', 'workspace-tab-mobile-item');
+          itemEl.addEventListener('click', function () {
+            closeWorkspaceTabMobileDropdown();
+            activateWorkspaceTab(index);
+          });
 
-      var overviewCloseAllBtn = document.createElement('button');
-      overviewCloseAllBtn.type = 'button';
-      overviewCloseAllBtn.className = 'workspace-tab-overview-close-all';
-      overviewCloseAllBtn.setAttribute('data-testid', 'workspace-tab-overview-close-all');
-      overviewCloseAllBtn.textContent = workspaceTabOverviewActionI18n[overviewLang].closeAll;
-      // FR-025 behavior (G3 scope): structural slot only, per
-      // workspace-tabs-overview-menu.spec.ts's own documented judgment call.
-      overviewActionsEl.appendChild(overviewCloseAllBtn);
+          var labelSpan = document.createElement('span');
+          labelSpan.className = 'workspace-tab-mobile-item-label';
+          labelSpan.textContent = label;
+          itemEl.appendChild(labelSpan);
 
-      overviewMenuEl.appendChild(overviewActionsEl);
-      document.body.appendChild(overviewMenuEl);
+          var closeBtn = document.createElement('button');
+          closeBtn.type = 'button';
+          closeBtn.className = 'workspace-tab-mobile-item-close';
+          closeBtn.setAttribute('data-testid', 'workspace-tab-mobile-item-close');
+          closeBtn.setAttribute('aria-label', (lang === 'zh' ? '關閉 ' : 'Close ') + label);
+          closeBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
+          closeBtn.addEventListener('click', function (event) {
+            event.stopPropagation();
+            closeWorkspaceTab(index);
+          });
+          itemEl.appendChild(closeBtn);
 
-      // FR-023 point 2/3 (issue #1099 G2): re-renders the trigger's live
-      // count, the filter placeholder, and the row list every time this
-      // page's own tab state changes (mirrors renderWorkspaceTabBar()'s own
-      // "wipe and rebuild from state" convention). `container` is the rows
-      // list element (overviewListEl) -- the trigger/filter/action shell
-      // above is built once; closure-captured here (overviewTriggerCountEl,
-      // overviewFilterEl) rather than passed in, same as how
-      // activateWorkspaceTab()/closeWorkspaceTab() already close over barEl
-      // instead of taking it as a parameter.
-      function renderWorkspaceTabOverviewMenu(container, state, onActivate, onCloseRow, variant) {
-        var lang = normalizeLang(readStoredLang());
-        var query = overviewFilterEl.value || '';
-        var queryLower = query.toLowerCase();
+          mobileDropdownEl.appendChild(itemEl);
+        });
+      }
 
-        if (overviewTriggerCountEl) {
-          overviewTriggerCountEl.textContent = workspaceTabOverviewTriggerText(lang, state.tabs.length);
-        }
-        overviewFilterEl.setAttribute('placeholder', workspaceTabOverviewFilterPlaceholder(lang, state.tabs.length));
+      // FR-023/FR-023A (issue #1099 G2a, desktop-only subset of the shared
+      // overview menu -- G2b adds the filter input, keyboard model, and the
+      // mobile full-replacement variant from a different branch; the mobile
+      // dropdown above (issue #1075 G2e) stays untouched). Built only when
+      // isDesktopViewport() is true, mirroring mobileToggleBtn's inverse
+      // condition above. overviewTriggerEl/overviewMenuEl/overviewListEl
+      // stay null on a mobile viewport; every call site below guards on
+      // overviewDesktop first.
+      var overviewDesktop = isDesktopViewport();
+      var overviewTriggerEl = null;
+      var overviewMenuEl = null;
+      var overviewListEl = null;
 
-        while (container.firstChild) container.removeChild(container.firstChild);
+      function openOverviewMenu() {
+        overviewMenuEl.classList.remove('hidden');
+        overviewTriggerEl.setAttribute('aria-expanded', 'true');
+      }
+
+      function closeOverviewMenu() {
+        overviewMenuEl.classList.add('hidden');
+        overviewTriggerEl.setAttribute('aria-expanded', 'false');
+      }
+
+      // FR-023 point 2 (desktop subset): row icon + title + secondary
+      // (page-kind name) text + aria-current marker + close button --
+      // mirrors renderWorkspaceTabMobileDropdown()'s own item structure.
+      function renderWorkspaceTabOverviewMenu(state) {
+        var lang = readStoredLang();
+        var triggerCountEl = overviewTriggerEl.querySelector('.workspace-tab-overview-trigger-count');
+        if (triggerCountEl) triggerCountEl.textContent = workspaceTabMobileToggleText(lang, state.tabs.length);
+
+        while (overviewListEl.firstChild) overviewListEl.removeChild(overviewListEl.firstChild);
         state.tabs.forEach(function (tab, index) {
           var isActive = index === state.activeIndex;
           var label = computeWorkspaceTabLabel(tab, lang);
           var secondary = workspacePageKindI18n[lang][tab.pageKind] || '';
-          // AC-023.3: compares the tab's title AND its page-kind name,
-          // never the URL -- FR-023 point 3.
-          var matchesFilter = !queryLower ||
-            label.toLowerCase().indexOf(queryLower) !== -1 ||
-            secondary.toLowerCase().indexOf(queryLower) !== -1;
 
           var itemEl = document.createElement('div');
-          itemEl.className = 'workspace-tab-overview-item' + (isActive ? ' active' : '') + (matchesFilter ? '' : ' hidden');
+          itemEl.className = 'workspace-tab-overview-item' + (isActive ? ' active' : '');
           itemEl.setAttribute('data-testid', 'workspace-tab-overview-item');
-          itemEl.setAttribute('data-tab-index', String(index));
           itemEl.setAttribute('aria-current', isActive ? 'true' : 'false');
-          itemEl.setAttribute('aria-selected', 'false');
           itemEl.addEventListener('click', function () {
             closeOverviewMenu();
-            onActivate(index);
+            activateWorkspaceTab(index);
           });
 
           itemEl.insertAdjacentHTML('beforeend', workspaceTabIconFor(tab.pageKind));
@@ -1453,91 +1432,79 @@
           closeBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
           closeBtn.addEventListener('click', function (event) {
             event.stopPropagation();
-            onCloseRow(index);
+            closeWorkspaceTab(index);
           });
           itemEl.appendChild(closeBtn);
 
-          container.appendChild(itemEl);
+          overviewListEl.appendChild(itemEl);
         });
       }
 
-      function openOverviewMenu() {
-        overviewMenuEl.classList.remove('hidden');
-        overviewTriggerEl.setAttribute('aria-expanded', 'true');
-        overviewFilterEl.value = '';
-        renderWorkspaceTabOverviewMenu(overviewListEl, readWorkspaceTabState(), activateWorkspaceTab, closeWorkspaceTab, overviewVariant);
-        overviewFilterEl.focus(); // AC-023.4
-      }
-
-      function closeOverviewMenu() {
-        overviewMenuEl.classList.add('hidden');
+      if (overviewDesktop) {
+        overviewTriggerEl = document.createElement('button');
+        overviewTriggerEl.type = 'button';
+        overviewTriggerEl.className = 'workspace-tab-overview-trigger';
+        overviewTriggerEl.setAttribute('data-testid', 'workspace-tab-overview-trigger');
+        overviewTriggerEl.setAttribute('aria-haspopup', 'true');
         overviewTriggerEl.setAttribute('aria-expanded', 'false');
+        overviewTriggerEl.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg><span class="workspace-tab-overview-trigger-count"></span>';
+        overviewTriggerEl.addEventListener('click', function (event) {
+          event.stopPropagation();
+          if (overviewMenuEl.classList.contains('hidden')) {
+            openOverviewMenu();
+          } else {
+            closeOverviewMenu();
+          }
+        });
+
+        var existingOverviewMenu = document.getElementById('workspaceTabOverviewMenu');
+        if (existingOverviewMenu && existingOverviewMenu.parentNode) {
+          existingOverviewMenu.parentNode.removeChild(existingOverviewMenu);
+        }
+        overviewMenuEl = document.createElement('div');
+        overviewMenuEl.id = 'workspaceTabOverviewMenu';
+        overviewMenuEl.className = 'workspace-tab-overview-menu hidden';
+        overviewMenuEl.setAttribute('data-testid', 'workspace-tab-overview-menu');
+
+        overviewListEl = document.createElement('div');
+        overviewListEl.className = 'workspace-tab-overview-list';
+        overviewMenuEl.appendChild(overviewListEl);
+
+        var overviewActionsEl = document.createElement('div');
+        overviewActionsEl.className = 'workspace-tab-overview-actions';
+
+        var overviewLang = readStoredLang();
+        var overviewReopenBtn = document.createElement('button');
+        overviewReopenBtn.type = 'button';
+        overviewReopenBtn.className = 'workspace-tab-overview-reopen';
+        overviewReopenBtn.setAttribute('data-testid', 'workspace-tab-overview-reopen');
+        overviewReopenBtn.textContent = workspaceTabOverviewActionI18n[overviewLang].reopen;
+        // FR-024 (G3 scope): nothing pushes to the reopen stack yet, so
+        // this stays unconditionally disabled.
+        overviewReopenBtn.disabled = true;
+        overviewActionsEl.appendChild(overviewReopenBtn);
+
+        var overviewCloseAllBtn = document.createElement('button');
+        overviewCloseAllBtn.type = 'button';
+        overviewCloseAllBtn.className = 'workspace-tab-overview-close-all';
+        overviewCloseAllBtn.setAttribute('data-testid', 'workspace-tab-overview-close-all');
+        overviewCloseAllBtn.textContent = workspaceTabOverviewActionI18n[overviewLang].closeAll;
+        // FR-025 behavior (G3 scope): structural slot only.
+        overviewActionsEl.appendChild(overviewCloseAllBtn);
+
+        overviewMenuEl.appendChild(overviewActionsEl);
+        document.body.appendChild(overviewMenuEl);
+
+        document.addEventListener('click', function (event) {
+          if (overviewMenuEl.classList.contains('hidden')) return;
+          if (overviewTriggerEl.contains(event.target)) return;
+          if (overviewMenuEl.contains(event.target)) return;
+          closeOverviewMenu();
+        });
       }
 
-      overviewTriggerEl.addEventListener('click', function (event) {
-        event.stopPropagation();
-        if (overviewMenuEl.classList.contains('hidden')) {
-          openOverviewMenu();
-        } else {
-          closeOverviewMenu();
-        }
-      });
-
-      // AC-023.3: re-filters on every keystroke; FR-023 point 3's "不命中
-      //則隱藏（不移除 DOM）" is implemented inside renderWorkspaceTabOverviewMenu
-      // itself via a `.hidden` class per row, not by rebuilding a shorter list.
-      overviewFilterEl.addEventListener('input', function () {
-        renderWorkspaceTabOverviewMenu(overviewListEl, readWorkspaceTabState(), activateWorkspaceTab, closeWorkspaceTab, overviewVariant);
-      });
-
-      // AC-023.5/AC-023.6/AC-023.7: the filter input keeps literal DOM
-      // focus throughout (ARIA APG combobox-with-listbox pattern, see the
-      // Red suite's own header comment) -- Arrow/Enter/Escape are handled
-      // here rather than on document, since this input is the only thing
-      // that can be focused while the menu is open.
-      overviewFilterEl.addEventListener('keydown', function (event) {
-        if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-          event.preventDefault();
-          var visibleRows = Array.prototype.slice.call(
-            overviewListEl.querySelectorAll('[data-testid="workspace-tab-overview-item"]')
-          ).filter(function (row) { return !row.classList.contains('hidden'); });
-          if (visibleRows.length === 0) return;
-          var currentPos = -1;
-          for (var i = 0; i < visibleRows.length; i++) {
-            if (visibleRows[i].getAttribute('aria-selected') === 'true') { currentPos = i; break; }
-          }
-          var nextPos;
-          if (event.key === 'ArrowDown') {
-            nextPos = currentPos === -1 ? 0 : (currentPos + 1) % visibleRows.length;
-          } else {
-            nextPos = currentPos === -1 ? visibleRows.length - 1 : (currentPos - 1 + visibleRows.length) % visibleRows.length;
-          }
-          visibleRows.forEach(function (row, rowIndex) {
-            row.setAttribute('aria-selected', rowIndex === nextPos ? 'true' : 'false');
-          });
-        } else if (event.key === 'Enter') {
-          event.preventDefault();
-          var highlightedRow = overviewListEl.querySelector('[data-testid="workspace-tab-overview-item"][aria-selected="true"]');
-          if (!highlightedRow) return;
-          var tabIndex = Number(highlightedRow.getAttribute('data-tab-index'));
-          closeOverviewMenu();
-          activateWorkspaceTab(tabIndex);
-        } else if (event.key === 'Escape') {
-          event.preventDefault();
-          closeOverviewMenu();
-          overviewTriggerEl.focus(); // AC-023.7
-        }
-      });
-
-      document.addEventListener('click', function (event) {
-        if (overviewMenuEl.classList.contains('hidden')) return;
-        if (overviewTriggerEl.contains(event.target)) return;
-        if (overviewMenuEl.contains(event.target)) return;
-        closeOverviewMenu();
-      });
-
-      // Single call site for both the desktop bar and the overview menu, so
-      // every state mutation below (initial mount, activate, close) keeps
+      // Single call site for both the desktop bar and the mobile dropdown,
+      // so every state mutation below (initial mount, activate, close) keeps
       // both views in sync without duplicating this file's three existing
       // renderWorkspaceTabBar() call sites a second time over.
       function renderWorkspaceTabViews(state) {
@@ -1545,9 +1512,28 @@
         // renderWorkspaceTabBar() above just wiped and rebuilt barEl's own
         // children from scratch -- re-append the (detached, not destroyed)
         // trigger node as barEl's last child every time, desktop only.
-        if (overviewVariant === 'desktop') barEl.appendChild(overviewTriggerEl);
-        renderWorkspaceTabOverviewMenu(overviewListEl, state, activateWorkspaceTab, closeWorkspaceTab, overviewVariant);
+        if (overviewDesktop) barEl.appendChild(overviewTriggerEl);
+        renderWorkspaceTabMobileDropdown(state);
+        if (overviewDesktop) renderWorkspaceTabOverviewMenu(state);
       }
+
+      if (mobileToggleBtn) {
+        mobileToggleBtn.addEventListener('click', function (event) {
+          event.stopPropagation();
+          if (mobileDropdownEl.classList.contains('hidden')) {
+            openWorkspaceTabMobileDropdown();
+          } else {
+            closeWorkspaceTabMobileDropdown();
+          }
+        });
+      }
+
+      document.addEventListener('click', function (event) {
+        if (mobileDropdownEl.classList.contains('hidden')) return;
+        if (mobileToggleBtn && mobileToggleBtn.contains(event.target)) return;
+        if (mobileDropdownEl.contains(event.target)) return;
+        closeWorkspaceTabMobileDropdown();
+      });
 
       // AC-4.2: checked and consumed BEFORE syncCurrentPageIntoWorkspaceTabs()
       // below, which may itself set this same flag and redirect here --
@@ -1753,6 +1739,10 @@
               '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>' +
               '<span id="mobileNotificationBadge" class="notif-badge hidden" aria-hidden="true"></span>' +
             '</span>' +
+          '</button>' +
+          '<button id="workspaceTabMobileToggle" class="workspace-tab-mobile-toggle" type="button" data-testid="workspace-tab-mobile-toggle" aria-haspopup="true" aria-expanded="false">' +
+            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg>' +
+            '<span id="workspaceTabMobileToggleCount"></span>' +
           '</button>' +
           '<button id="mobileLogoutBtn" class="mobile-top-logout" aria-label="登出" title="登出">' +
             '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>' +
