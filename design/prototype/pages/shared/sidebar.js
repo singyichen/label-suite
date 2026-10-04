@@ -1036,11 +1036,9 @@
     }
   }
 
-  // AC-6.1 / FR-002, US6 (issue #1075 sub-group G2e): the mobile dropdown
-  // toggle's own "N tabs open" text -- distinct from the fixed-phrase
-  // workspaceTabCapNoticeI18n/workspaceTabRekeyNoticeI18n toasts above
-  // because this one interpolates the live tab count on every render.
-  function workspaceTabMobileToggleText(lang, count) {
+  // FR-023 point 2 (issue #1099 G2a/G2b): the overview trigger's "N tabs
+  // open" text, reused as the filter input's placeholder.
+  function workspaceTabOverviewCountText(lang, count) {
     return normalizeLang(lang) === 'zh' ? ('已開啟 ' + count + ' 頁') : (count + ' tabs open');
   }
 
@@ -1290,94 +1288,19 @@
         }
       }
 
-      // AC-6.1-AC-6.3 / FR-002 / FR-015, US6 (issue #1075 sub-group G2e):
-      // mobile (<=767px) dropdown that replaces the desktop tab bar, mirroring
-      // mountSidebar()'s own notifDropdownEl build/open/close pattern. Built
-      // here (inside run()), not mountSidebar(), because its content depends
-      // on this closure's own tab state/activateWorkspaceTab/closeWorkspaceTab.
-      var mobileToggleBtn = document.getElementById('workspaceTabMobileToggle');
-      var existingMobileDropdown = document.getElementById('workspaceTabMobileDropdown');
-      if (existingMobileDropdown && existingMobileDropdown.parentNode) {
-        existingMobileDropdown.parentNode.removeChild(existingMobileDropdown);
-      }
-      var mobileDropdownEl = document.createElement('div');
-      mobileDropdownEl.id = 'workspaceTabMobileDropdown';
-      mobileDropdownEl.className = 'workspace-tab-mobile-dropdown hidden';
-      mobileDropdownEl.setAttribute('data-testid', 'workspace-tab-mobile-dropdown');
-      document.body.appendChild(mobileDropdownEl);
-
-      function openWorkspaceTabMobileDropdown() {
-        mobileDropdownEl.classList.remove('hidden');
-        if (mobileToggleBtn) mobileToggleBtn.setAttribute('aria-expanded', 'true');
-      }
-
-      function closeWorkspaceTabMobileDropdown() {
-        mobileDropdownEl.classList.add('hidden');
-        if (mobileToggleBtn) mobileToggleBtn.setAttribute('aria-expanded', 'false');
-      }
-
-      // AC-6.2: tapping an item activates that tab and closes the dropdown.
-      // The close affordance (coordinator-directed, see this suite's own
-      // header comment) instead calls closeWorkspaceTab() via a nested,
-      // stopPropagation()'d click handler -- same nesting as
-      // renderWorkspaceTabBar()'s desktop tabEl/closeBtn pair above -- so it
-      // never bubbles into the item's own activate handler nor into the
-      // click-outside listener below, leaving the dropdown open.
-      function renderWorkspaceTabMobileDropdown(state) {
-        var lang = readStoredLang();
-        var countEl = document.getElementById('workspaceTabMobileToggleCount');
-        if (countEl) countEl.textContent = workspaceTabMobileToggleText(lang, state.tabs.length);
-
-        while (mobileDropdownEl.firstChild) mobileDropdownEl.removeChild(mobileDropdownEl.firstChild);
-        state.tabs.forEach(function (tab, index) {
-          var isActive = index === state.activeIndex;
-          var label = computeWorkspaceTabLabel(tab, lang);
-
-          var itemEl = document.createElement('div');
-          itemEl.className = 'workspace-tab-mobile-item' + (isActive ? ' active' : '');
-          itemEl.setAttribute('data-testid', 'workspace-tab-mobile-item');
-          itemEl.addEventListener('click', function () {
-            closeWorkspaceTabMobileDropdown();
-            activateWorkspaceTab(index);
-          });
-
-          var labelSpan = document.createElement('span');
-          labelSpan.className = 'workspace-tab-mobile-item-label';
-          labelSpan.textContent = label;
-          itemEl.appendChild(labelSpan);
-
-          var closeBtn = document.createElement('button');
-          closeBtn.type = 'button';
-          closeBtn.className = 'workspace-tab-mobile-item-close';
-          closeBtn.setAttribute('data-testid', 'workspace-tab-mobile-item-close');
-          closeBtn.setAttribute('aria-label', (lang === 'zh' ? '關閉 ' : 'Close ') + label);
-          closeBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
-          closeBtn.addEventListener('click', function (event) {
-            event.stopPropagation();
-            closeWorkspaceTab(index);
-          });
-          itemEl.appendChild(closeBtn);
-
-          mobileDropdownEl.appendChild(itemEl);
-        });
-      }
-
-      // FR-023/FR-023A (issue #1099 G2a, desktop-only subset of the shared
-      // overview menu -- G2b adds the filter input, keyboard model, and the
-      // mobile full-replacement variant from a different branch; the mobile
-      // dropdown above (issue #1075 G2e) stays untouched). Built only when
-      // isDesktopViewport() is true, mirroring mobileToggleBtn's inverse
-      // condition above. overviewTriggerEl/overviewMenuEl/overviewListEl
-      // stay null on a mobile viewport; every call site below guards on
-      // overviewDesktop first.
-      var overviewDesktop = isDesktopViewport();
+      // FR-023/FR-023A/FR-023 MODIFIED (#1099 G2b): filter+keyboard model; retires the mobile-only dropdown (#1075 G2e).
+      var overviewVariant = isDesktopViewport() ? 'desktop' : 'mobile';
       var overviewTriggerEl = null;
       var overviewMenuEl = null;
       var overviewListEl = null;
+      var overviewFilterEl = null;
 
       function openOverviewMenu() {
         overviewMenuEl.classList.remove('hidden');
         overviewTriggerEl.setAttribute('aria-expanded', 'true');
+        overviewFilterEl.value = '';
+        renderWorkspaceTabOverviewMenu(readWorkspaceTabState());
+        overviewFilterEl.focus();
       }
 
       function closeOverviewMenu() {
@@ -1385,24 +1308,27 @@
         overviewTriggerEl.setAttribute('aria-expanded', 'false');
       }
 
-      // FR-023 point 2 (desktop subset): row icon + title + secondary
-      // (page-kind name) text + aria-current marker + close button --
-      // mirrors renderWorkspaceTabMobileDropdown()'s own item structure.
+      // AC-023.3: non-matching rows (title/page-kind, never the URL) get a
+      // `.hidden` class instead of being removed from the DOM.
       function renderWorkspaceTabOverviewMenu(state) {
         var lang = readStoredLang();
+        var query = overviewFilterEl.value.toLowerCase();
         var triggerCountEl = overviewTriggerEl.querySelector('.workspace-tab-overview-trigger-count');
-        if (triggerCountEl) triggerCountEl.textContent = workspaceTabMobileToggleText(lang, state.tabs.length);
+        if (triggerCountEl) triggerCountEl.textContent = workspaceTabOverviewCountText(lang, state.tabs.length);
+        overviewFilterEl.placeholder = workspaceTabOverviewCountText(lang, state.tabs.length);
 
         while (overviewListEl.firstChild) overviewListEl.removeChild(overviewListEl.firstChild);
         state.tabs.forEach(function (tab, index) {
           var isActive = index === state.activeIndex;
           var label = computeWorkspaceTabLabel(tab, lang);
           var secondary = workspacePageKindI18n[lang][tab.pageKind] || '';
+          var matchesFilter = !query || label.toLowerCase().indexOf(query) !== -1 || secondary.toLowerCase().indexOf(query) !== -1;
 
           var itemEl = document.createElement('div');
-          itemEl.className = 'workspace-tab-overview-item' + (isActive ? ' active' : '');
+          itemEl.className = 'workspace-tab-overview-item' + (isActive ? ' active' : '') + (matchesFilter ? '' : ' hidden');
           itemEl.setAttribute('data-testid', 'workspace-tab-overview-item');
           itemEl.setAttribute('aria-current', isActive ? 'true' : 'false');
+          itemEl.setAttribute('aria-selected', 'false');
           itemEl.addEventListener('click', function () {
             closeOverviewMenu();
             activateWorkspaceTab(index);
@@ -1440,10 +1366,10 @@
         });
       }
 
-      if (overviewDesktop) {
+      {
         overviewTriggerEl = document.createElement('button');
         overviewTriggerEl.type = 'button';
-        overviewTriggerEl.className = 'workspace-tab-overview-trigger';
+        overviewTriggerEl.className = 'workspace-tab-overview-trigger workspace-tab-overview-trigger--' + overviewVariant;
         overviewTriggerEl.setAttribute('data-testid', 'workspace-tab-overview-trigger');
         overviewTriggerEl.setAttribute('aria-haspopup', 'true');
         overviewTriggerEl.setAttribute('aria-expanded', 'false');
@@ -1465,6 +1391,40 @@
         overviewMenuEl.id = 'workspaceTabOverviewMenu';
         overviewMenuEl.className = 'workspace-tab-overview-menu hidden';
         overviewMenuEl.setAttribute('data-testid', 'workspace-tab-overview-menu');
+
+        overviewFilterEl = document.createElement('input');
+        overviewFilterEl.type = 'text';
+        overviewFilterEl.className = 'workspace-tab-overview-filter';
+        overviewFilterEl.setAttribute('data-testid', 'workspace-tab-overview-filter');
+        overviewFilterEl.addEventListener('input', function () {
+          renderWorkspaceTabOverviewMenu(readWorkspaceTabState());
+        });
+        overviewFilterEl.addEventListener('keydown', function (event) {
+          if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+            event.preventDefault();
+            var rows = Array.prototype.filter.call(overviewListEl.children, function (row) {
+              return !row.classList.contains('hidden');
+            });
+            if (!rows.length) return;
+            var current = -1;
+            for (var i = 0; i < rows.length; i++) {
+              if (rows[i].getAttribute('aria-selected') === 'true') { current = i; break; }
+            }
+            var next = event.key === 'ArrowDown' ? (current + 1) % rows.length : (current - 1 + rows.length) % rows.length;
+            rows.forEach(function (row, rowIndex) {
+              row.setAttribute('aria-selected', rowIndex === next ? 'true' : 'false');
+            });
+          } else if (event.key === 'Enter') {
+            event.preventDefault();
+            var highlighted = overviewListEl.querySelector('[aria-selected="true"]');
+            if (highlighted) highlighted.click();
+          } else if (event.key === 'Escape') {
+            event.preventDefault();
+            closeOverviewMenu();
+            overviewTriggerEl.focus();
+          }
+        });
+        overviewMenuEl.appendChild(overviewFilterEl);
 
         overviewListEl = document.createElement('div');
         overviewListEl.className = 'workspace-tab-overview-list';
@@ -1501,9 +1461,17 @@
           if (overviewMenuEl.contains(event.target)) return;
           closeOverviewMenu();
         });
+
+        // FR-002 MODIFIED: mobile mounts where #workspaceTabMobileToggle was.
+        if (overviewVariant === 'mobile') {
+          var overviewMobileAnchor = document.getElementById('mobileLogoutBtn');
+          if (overviewMobileAnchor && overviewMobileAnchor.parentNode) {
+            overviewMobileAnchor.parentNode.insertBefore(overviewTriggerEl, overviewMobileAnchor);
+          }
+        }
       }
 
-      // Single call site for both the desktop bar and the mobile dropdown,
+      // Single call site for both the desktop bar and the overview menu,
       // so every state mutation below (initial mount, activate, close) keeps
       // both views in sync without duplicating this file's three existing
       // renderWorkspaceTabBar() call sites a second time over.
@@ -1512,28 +1480,9 @@
         // renderWorkspaceTabBar() above just wiped and rebuilt barEl's own
         // children from scratch -- re-append the (detached, not destroyed)
         // trigger node as barEl's last child every time, desktop only.
-        if (overviewDesktop) barEl.appendChild(overviewTriggerEl);
-        renderWorkspaceTabMobileDropdown(state);
-        if (overviewDesktop) renderWorkspaceTabOverviewMenu(state);
+        if (overviewVariant === 'desktop') barEl.appendChild(overviewTriggerEl);
+        renderWorkspaceTabOverviewMenu(state);
       }
-
-      if (mobileToggleBtn) {
-        mobileToggleBtn.addEventListener('click', function (event) {
-          event.stopPropagation();
-          if (mobileDropdownEl.classList.contains('hidden')) {
-            openWorkspaceTabMobileDropdown();
-          } else {
-            closeWorkspaceTabMobileDropdown();
-          }
-        });
-      }
-
-      document.addEventListener('click', function (event) {
-        if (mobileDropdownEl.classList.contains('hidden')) return;
-        if (mobileToggleBtn && mobileToggleBtn.contains(event.target)) return;
-        if (mobileDropdownEl.contains(event.target)) return;
-        closeWorkspaceTabMobileDropdown();
-      });
 
       // AC-4.2: checked and consumed BEFORE syncCurrentPageIntoWorkspaceTabs()
       // below, which may itself set this same flag and redirect here --
@@ -1739,10 +1688,6 @@
               '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>' +
               '<span id="mobileNotificationBadge" class="notif-badge hidden" aria-hidden="true"></span>' +
             '</span>' +
-          '</button>' +
-          '<button id="workspaceTabMobileToggle" class="workspace-tab-mobile-toggle" type="button" data-testid="workspace-tab-mobile-toggle" aria-haspopup="true" aria-expanded="false">' +
-            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg>' +
-            '<span id="workspaceTabMobileToggleCount"></span>' +
           '</button>' +
           '<button id="mobileLogoutBtn" class="mobile-top-logout" aria-label="登出" title="登出">' +
             '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>' +
