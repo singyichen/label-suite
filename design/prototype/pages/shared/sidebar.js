@@ -1410,7 +1410,7 @@
             for (var i = 0; i < rows.length; i++) {
               if (rows[i].getAttribute('aria-selected') === 'true') { current = i; break; }
             }
-            var next = event.key === 'ArrowDown' ? (current + 1) % rows.length : (current - 1 + rows.length) % rows.length;
+            var next = event.key === 'ArrowDown' ? (current + 1) % rows.length : current === -1 ? rows.length - 1 : (current - 1 + rows.length) % rows.length;
             rows.forEach(function (row, rowIndex) {
               row.setAttribute('aria-selected', rowIndex === next ? 'true' : 'false');
             });
