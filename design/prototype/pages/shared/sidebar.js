@@ -21,6 +21,15 @@
    * WORKSPACE_TAB_REKEY_NOTICE_KEY above but for the distinct AC-4.2
    * "all 8 tabs unsaved, open blocked" notice. */
   var WORKSPACE_TAB_CAP_NOTICE_KEY = 'labelsuite.workspaceTabCapNotice';
+  /* specs/shared/019-workspace-tabs/spec.md 規格常數 TAB_REOPEN_STORAGE_KEY /
+   * TAB_REOPEN_CAP (issue #1099 G3 / FR-024): LIFO stack of closed/evicted
+   * tabs, capped at 10 (oldest dropped via shift()). */
+  var WORKSPACE_TAB_REOPEN_STORAGE_KEY = 'labelsuite.workspaceTabReopenStack';
+  var TAB_REOPEN_CAP = 10;
+  /* One-shot flag mirroring WORKSPACE_TAB_CAP_NOTICE_KEY above, for
+   * close-all's (FR-025) skipped-count hint surviving the navigation to
+   * the surviving tab the active one was closed in favor of. */
+  var WORKSPACE_TAB_CLOSE_ALL_NOTICE_KEY = 'labelsuite.workspaceTabCloseAllNotice';
   /* AC-2.4: set right before the logout handler clears both keys above, so
    * the pagehide-driven scroll capture below (which fires during the
    * resulting navigation to the login page) does not recreate
@@ -117,6 +126,7 @@
       tabsTitle: '頁籤',
       tabsSwitch: '切換至對應位置頁籤',
       tabsClose: '關閉作用中頁籤',
+      tabsReopen: '重開剛關閉的頁籤',
       reviewTitle: '審核',
       reviewApprove: '通過目前結果',
       /* issue #596 (design.md 已確認決策 #1): 審核「退回」流程與 `R` 快捷鍵已
@@ -141,6 +151,7 @@
       tabsTitle: 'Tabs',
       tabsSwitch: 'Switch to a tab by position',
       tabsClose: 'Close the active tab',
+      tabsReopen: 'Reopen the most recently closed tab',
       reviewTitle: 'Review',
       reviewApprove: 'Approve current result',
       reviewBypass: BYPASS_WORDING.en.decision,
@@ -206,6 +217,7 @@
     setTextById('shortcutTabsTitle', t.tabsTitle);
     setTextById('shortcutTabsSwitch', t.tabsSwitch);
     setTextById('shortcutTabsClose', t.tabsClose);
+    setTextById('shortcutTabsReopen', t.tabsReopen);
     setTextById('shortcutReviewTitle', t.reviewTitle);
     setTextById('shortcutReviewApprove', t.reviewApprove);
     setTextById('shortcutReviewBypass', t.reviewBypass);
@@ -654,6 +666,55 @@
     }
   }
 
+  // FR-024 (issue #1099 G3): the reopen-closed-tab stack.
+  function readWorkspaceTabReopenStack() {
+    try {
+      var raw = window.sessionStorage.getItem(WORKSPACE_TAB_REOPEN_STORAGE_KEY);
+      var parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+      return []; // sessionStorage unavailable/corrupt (private mode)
+    }
+  }
+
+  function writeWorkspaceTabReopenStack(stack) {
+    try {
+      window.sessionStorage.setItem(WORKSPACE_TAB_REOPEN_STORAGE_KEY, JSON.stringify(stack));
+    } catch (error) {
+      // Ignore storage errors in prototype mode.
+    }
+  }
+
+  // Shared push point for closeWorkspaceTab()'s manual close, the TAB_CAP
+  // eviction branch (FR-011), and close-all (FR-025) -- one cap/shift
+  // implementation (AC-024.3), per design.md "## G3" DRY note.
+  function pushWorkspaceTabToReopenStack(tabEntry) {
+    var stack = readWorkspaceTabReopenStack();
+    stack.push(tabEntry);
+    if (stack.length > TAB_REOPEN_CAP) stack.shift();
+    writeWorkspaceTabReopenStack(stack);
+  }
+
+  // FR-024/FR-024A: pops the most-recently-closed entry and either switches
+  // to an existing dedupe-key match (FR-006, AC-024.4) or opens it as a new
+  // tab, subject to the same TAB_CAP/eviction rules as any other open
+  // (FR-011). Shared by the overview menu's "重開剛關閉的" button and the
+  // Alt+Shift+T shortcut -- no second implementation (FR-024A point 3).
+  function reopenWorkspaceTab(onMatch, onOpenNew) {
+    var stack = readWorkspaceTabReopenStack();
+    if (!stack.length) return;
+    var entry = stack.pop();
+    writeWorkspaceTabReopenStack(stack);
+    var state = readWorkspaceTabState();
+    for (var i = 0; i < state.tabs.length; i++) {
+      if (state.tabs[i].dedupeKey === entry.dedupeKey) {
+        onMatch(i);
+        return;
+      }
+    }
+    onOpenNew(entry);
+  }
+
   // AC-2.1 / FR-019: scroll positions live in their own map (dedupeKey ->
   // scrollY), separate from WORKSPACE_TAB_STORAGE_KEY per FR-019.
   function readWorkspaceTabScrollState() {
@@ -795,6 +856,7 @@
           }
           return state;
         }
+        pushWorkspaceTabToReopenStack(state.tabs[evictIndex]); // FR-024/AC-4.1-updated
         state.tabs.splice(evictIndex, 1);
         if (evictIndex <= state.activeIndex) state.activeIndex -= 1;
       }
@@ -957,6 +1019,23 @@
     if (!toast) return;
     var msg = document.getElementById('toastMsg');
     if (msg) msg.textContent = workspaceTabCapNoticeI18n[readStoredLang()];
+    toast.classList.add('show');
+    setTimeout(function () { toast.classList.remove('show'); }, 2400);
+  }
+
+  var workspaceTabCloseAllSkippedNoticeI18n = {
+    zh: function (count) { return count + ' 個頁籤有未儲存變更，未關閉'; },
+    en: function (count) { return count + ' tab(s) have unsaved changes and were not closed'; }
+  };
+
+  // AC-025.1: a visible notice naming how many tabs close-all skipped
+  // because they had unsaved changes. Same #toast element/mechanism as
+  // showWorkspaceTabCapNotice() above, distinct message.
+  function showWorkspaceTabCloseAllSkippedNotice(count) {
+    var toast = document.getElementById('toast');
+    if (!toast) return;
+    var msg = document.getElementById('toastMsg');
+    if (msg) msg.textContent = workspaceTabCloseAllSkippedNoticeI18n[readStoredLang()](count);
     toast.classList.add('show');
     setTimeout(function () { toast.classList.remove('show'); }, 2400);
   }
@@ -1266,6 +1345,7 @@
         if (!wasActive && state.tabs[index] && state.tabs[index].hasUnsavedChanges) {
           return;
         }
+        if (state.tabs[index]) pushWorkspaceTabToReopenStack(state.tabs[index]); // FR-024/AC-024.1
         state.tabs.splice(index, 1);
         if (state.tabs.length === 0) {
           state.activeIndex = -1;
@@ -1286,6 +1366,60 @@
         } else {
           renderWorkspaceTabViews(state);
         }
+      }
+
+      // FR-025: closes every tab without unsaved changes, pushing each to
+      // the reopen stack (FR-024 point 1); skips dirty tabs and shows a
+      // hint naming how many were skipped (AC-025.1). If the active tab is
+      // among those closed, focus moves to a surviving (skipped) tab
+      // (AC-025.2) -- shared-008 FR-022's neighbor rule degenerates here
+      // since both neighbors may also be closed, so this picks any one
+      // surviving tab, per design.md "## G3".
+      function closeAllWorkspaceTabs() {
+        var state = readWorkspaceTabState();
+        var activeTab = state.tabs[state.activeIndex];
+        var activeDedupeKey = activeTab ? activeTab.dedupeKey : null;
+        var kept = [];
+        var skippedCount = 0;
+        state.tabs.forEach(function (tab) {
+          if (tab.hasUnsavedChanges) {
+            skippedCount += 1;
+            kept.push(tab);
+          } else {
+            pushWorkspaceTabToReopenStack(tab); // FR-024 point 1 / FR-025 point 4
+          }
+        });
+        state.tabs = kept;
+
+        var activeKeptIndex = -1;
+        for (var i = 0; i < kept.length; i++) {
+          if (kept[i].dedupeKey === activeDedupeKey) { activeKeptIndex = i; break; }
+        }
+
+        if (activeKeptIndex !== -1 || !kept.length) {
+          // Active tab survived (it was itself skipped) or nothing survived
+          // -- either way, no navigation is needed.
+          state.activeIndex = activeKeptIndex !== -1 ? activeKeptIndex : -1;
+          writeWorkspaceTabState(state);
+          if (skippedCount) showWorkspaceTabCloseAllSkippedNotice(skippedCount);
+          renderWorkspaceTabViews(state);
+          return;
+        }
+
+        // AC-025.2: the active tab was among those closed -- focus moves to
+        // a surviving (skipped) tab via a full navigation away from here,
+        // same mechanism as closeWorkspaceTab()'s wasActive branch.
+        state.activeIndex = 0;
+        kept[0].lastActiveAt = Date.now(); // FR-011/AC-4.1
+        writeWorkspaceTabState(state);
+        if (skippedCount) {
+          try {
+            window.sessionStorage.setItem(WORKSPACE_TAB_CLOSE_ALL_NOTICE_KEY, String(skippedCount));
+          } catch (error) {
+            // Ignore storage errors in prototype mode.
+          }
+        }
+        window.location.replace(kept[0].url);
       }
 
       // FR-023/FR-023A/FR-023 MODIFIED (#1099 G2b): filter+keyboard model; retires the mobile-only dropdown (#1075 G2e).
@@ -1316,6 +1450,7 @@
         var triggerCountEl = overviewTriggerEl.querySelector('.workspace-tab-overview-trigger-count');
         if (triggerCountEl) triggerCountEl.textContent = workspaceTabOverviewCountText(lang, state.tabs.length);
         overviewFilterEl.placeholder = workspaceTabOverviewCountText(lang, state.tabs.length);
+        if (overviewReopenBtn) overviewReopenBtn.disabled = readWorkspaceTabReopenStack().length === 0; // AC-024.5
 
         while (overviewListEl.firstChild) overviewListEl.removeChild(overviewListEl.firstChild);
         state.tabs.forEach(function (tab, index) {
@@ -1439,9 +1574,15 @@
         overviewReopenBtn.className = 'workspace-tab-overview-reopen';
         overviewReopenBtn.setAttribute('data-testid', 'workspace-tab-overview-reopen');
         overviewReopenBtn.textContent = workspaceTabOverviewActionI18n[overviewLang].reopen;
-        // FR-024 (G3 scope): nothing pushes to the reopen stack yet, so
-        // this stays unconditionally disabled.
+        // AC-024.5: re-evaluated on every renderWorkspaceTabOverviewMenu()
+        // call (see there), same as the trigger's own tab count.
         overviewReopenBtn.disabled = true;
+        overviewReopenBtn.addEventListener('click', function () {
+          reopenWorkspaceTab(
+            function onMatch(index) { closeOverviewMenu(); activateWorkspaceTab(index); },
+            function onOpenNew(entry) { closeOverviewMenu(); window.location.href = entry.url; }
+          );
+        });
         overviewActionsEl.appendChild(overviewReopenBtn);
 
         var overviewCloseAllBtn = document.createElement('button');
@@ -1449,7 +1590,10 @@
         overviewCloseAllBtn.className = 'workspace-tab-overview-close-all';
         overviewCloseAllBtn.setAttribute('data-testid', 'workspace-tab-overview-close-all');
         overviewCloseAllBtn.textContent = workspaceTabOverviewActionI18n[overviewLang].closeAll;
-        // FR-025 behavior (G3 scope): structural slot only.
+        overviewCloseAllBtn.addEventListener('click', function () {
+          closeOverviewMenu();
+          closeAllWorkspaceTabs();
+        });
         overviewActionsEl.appendChild(overviewCloseAllBtn);
 
         overviewMenuEl.appendChild(overviewActionsEl);
@@ -1493,6 +1637,20 @@
         if (window.sessionStorage.getItem(WORKSPACE_TAB_CAP_NOTICE_KEY)) {
           window.sessionStorage.removeItem(WORKSPACE_TAB_CAP_NOTICE_KEY);
           showWorkspaceTabCapNotice();
+        }
+      } catch (error) {
+        // Ignore storage errors in prototype mode.
+      }
+
+      // AC-025.1: mirrors the WORKSPACE_TAB_CAP_NOTICE_KEY check above --
+      // closeAllWorkspaceTabs() sets this right before navigating away from
+      // the closed active tab to a surviving one, so the hint still shows
+      // once that destination page mounts.
+      try {
+        var closeAllSkipped = window.sessionStorage.getItem(WORKSPACE_TAB_CLOSE_ALL_NOTICE_KEY);
+        if (closeAllSkipped) {
+          window.sessionStorage.removeItem(WORKSPACE_TAB_CLOSE_ALL_NOTICE_KEY);
+          showWorkspaceTabCloseAllSkippedNotice(Number(closeAllSkipped));
         }
       } catch (error) {
         // Ignore storage errors in prototype mode.
@@ -1546,6 +1704,18 @@
       // KeyW), not event.key, so macOS Option+digit special characters
       // aren't misread (AC-5.4).
       document.addEventListener('keydown', function (event) {
+        // FR-024A: Alt+Shift+T, checked before the Alt-only guard below
+        // (which explicitly excludes shiftKey for Alt+1...8/Alt+W).
+        if (event.altKey && event.shiftKey && !event.ctrlKey && !event.metaKey && event.code === 'KeyT') {
+          if (!isDesktopViewport()) return;
+          if (isEditableWorkspaceTabTarget(event.target)) return;
+          event.preventDefault();
+          reopenWorkspaceTab(
+            function onMatch(index) { closeOverviewMenu(); activateWorkspaceTab(index); },
+            function onOpenNew(entry) { closeOverviewMenu(); window.location.href = entry.url; }
+          );
+          return;
+        }
         if (!event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
         if (!isDesktopViewport()) return;
         if (isEditableWorkspaceTabTarget(event.target)) return;
@@ -1771,6 +1941,7 @@
               '<dl class="shortcut-help-list">' +
                 '<div class="shortcut-help-row" data-testid="shortcut-tabs-switch-row"><dt><strong id="shortcutTabsSwitch">切換至對應位置頁籤</strong></dt>' + keyGroup(['ALT', '1-8']) + '</div>' +
                 '<div class="shortcut-help-row" data-testid="shortcut-tabs-close-row"><dt><strong id="shortcutTabsClose">關閉作用中頁籤</strong></dt>' + keyGroup(['ALT', 'W']) + '</div>' +
+                '<div class="shortcut-help-row" data-testid="shortcut-tabs-reopen-row"><dt><strong id="shortcutTabsReopen">重開剛關閉的頁籤</strong></dt>' + keyGroup(['ALT', 'SHIFT', 'T']) + '</div>' +
               '</dl>' +
             '</div>' +
             '<div class="shortcut-help-section">' +
@@ -1817,6 +1988,7 @@
         try {
           window.sessionStorage.removeItem(WORKSPACE_TAB_STORAGE_KEY);
           window.sessionStorage.removeItem(WORKSPACE_TAB_SCROLL_STORAGE_KEY);
+          window.sessionStorage.removeItem(WORKSPACE_TAB_REOPEN_STORAGE_KEY); // MODIFIED FR-018 (issue #1099 G3)
         } catch (error) {
           // Ignore storage errors in prototype mode.
         }
