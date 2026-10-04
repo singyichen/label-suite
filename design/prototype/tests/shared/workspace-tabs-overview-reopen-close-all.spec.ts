@@ -33,10 +33,10 @@
  *
  * Close-all's hint toast reuses the existing `#toast`/`#toastMsg` mechanism
  * `showWorkspaceTabCapNotice()` already uses (sidebar.js "AC-4.2" comment
- * block) -- only `task-new.html`/`task-list.html`/`task-detail.html` render
- * `#toast` today, so the close-all cases below run from `task-list.html`
- * (not `dashboard.html`, which has no `#toast` at all) to reliably observe
- * the hint.
+ * block) -- `dashboard.html` is one of the few pages with no `#toast` at
+ * all, so the close-all cases below run from `task-list.html` (which does
+ * render it, along with several other non-dashboard pages) to reliably
+ * observe the hint.
  *
  * Judgment calls (flagged, same convention as prior Red suites in this
  * project):
