@@ -1044,6 +1044,14 @@
     return normalizeLang(lang) === 'zh' ? ('已開啟 ' + count + ' 頁') : (count + ' tabs open');
   }
 
+  // FR-023 point 2's bottom action slots (issue #1099 G2a desktop-only
+  // subset): the "重開剛關閉的"/"全部關閉" pair. Behavior for both is G3
+  // scope (FR-024/FR-025) -- this change only renders the structural text.
+  var workspaceTabOverviewActionI18n = {
+    zh: { reopen: '重開剛關閉的', closeAll: '全部關閉' },
+    en: { reopen: 'Reopen closed tab', closeAll: 'Close all' }
+  };
+
   // Mounts the bar as <main>'s first child, deferred to DOMContentLoaded:
   // mountSidebar() runs before <main> is parsed and before any page-data
   // <script> below it (e.g. task-list.data.js) has run.
@@ -1354,13 +1362,159 @@
         });
       }
 
+      // FR-023/FR-023A (issue #1099 G2a, desktop-only subset of the shared
+      // overview menu -- G2b adds the filter input, keyboard model, and the
+      // mobile full-replacement variant from a different branch; the mobile
+      // dropdown above (issue #1075 G2e) stays untouched). Built only when
+      // isDesktopViewport() is true, mirroring mobileToggleBtn's inverse
+      // condition above. overviewTriggerEl/overviewMenuEl/overviewListEl
+      // stay null on a mobile viewport; every call site below guards on
+      // overviewDesktop first.
+      var overviewDesktop = isDesktopViewport();
+      var overviewTriggerEl = null;
+      var overviewMenuEl = null;
+      var overviewListEl = null;
+
+      function openOverviewMenu() {
+        overviewMenuEl.classList.remove('hidden');
+        overviewTriggerEl.setAttribute('aria-expanded', 'true');
+      }
+
+      function closeOverviewMenu() {
+        overviewMenuEl.classList.add('hidden');
+        overviewTriggerEl.setAttribute('aria-expanded', 'false');
+      }
+
+      // FR-023 point 2 (desktop subset): row icon + title + secondary
+      // (page-kind name) text + aria-current marker + close button --
+      // mirrors renderWorkspaceTabMobileDropdown()'s own item structure.
+      function renderWorkspaceTabOverviewMenu(state) {
+        var lang = readStoredLang();
+        var triggerCountEl = overviewTriggerEl.querySelector('.workspace-tab-overview-trigger-count');
+        if (triggerCountEl) triggerCountEl.textContent = workspaceTabMobileToggleText(lang, state.tabs.length);
+
+        while (overviewListEl.firstChild) overviewListEl.removeChild(overviewListEl.firstChild);
+        state.tabs.forEach(function (tab, index) {
+          var isActive = index === state.activeIndex;
+          var label = computeWorkspaceTabLabel(tab, lang);
+          var secondary = workspacePageKindI18n[lang][tab.pageKind] || '';
+
+          var itemEl = document.createElement('div');
+          itemEl.className = 'workspace-tab-overview-item' + (isActive ? ' active' : '');
+          itemEl.setAttribute('data-testid', 'workspace-tab-overview-item');
+          itemEl.setAttribute('aria-current', isActive ? 'true' : 'false');
+          itemEl.addEventListener('click', function () {
+            closeOverviewMenu();
+            activateWorkspaceTab(index);
+          });
+
+          itemEl.insertAdjacentHTML('beforeend', workspaceTabIconFor(tab.pageKind));
+
+          var textWrap = document.createElement('div');
+          textWrap.className = 'workspace-tab-overview-item-text';
+          var labelSpan = document.createElement('span');
+          labelSpan.className = 'workspace-tab-overview-item-label';
+          labelSpan.textContent = label;
+          textWrap.appendChild(labelSpan);
+          if (secondary) {
+            var secondarySpan = document.createElement('span');
+            secondarySpan.className = 'workspace-tab-overview-item-secondary';
+            secondarySpan.textContent = secondary;
+            textWrap.appendChild(secondarySpan);
+          }
+          itemEl.appendChild(textWrap);
+
+          var closeBtn = document.createElement('button');
+          closeBtn.type = 'button';
+          closeBtn.className = 'workspace-tab-overview-item-close';
+          closeBtn.setAttribute('data-testid', 'workspace-tab-overview-item-close');
+          closeBtn.setAttribute('aria-label', (lang === 'zh' ? '關閉 ' : 'Close ') + label);
+          closeBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
+          closeBtn.addEventListener('click', function (event) {
+            event.stopPropagation();
+            closeWorkspaceTab(index);
+          });
+          itemEl.appendChild(closeBtn);
+
+          overviewListEl.appendChild(itemEl);
+        });
+      }
+
+      if (overviewDesktop) {
+        overviewTriggerEl = document.createElement('button');
+        overviewTriggerEl.type = 'button';
+        overviewTriggerEl.className = 'workspace-tab-overview-trigger';
+        overviewTriggerEl.setAttribute('data-testid', 'workspace-tab-overview-trigger');
+        overviewTriggerEl.setAttribute('aria-haspopup', 'true');
+        overviewTriggerEl.setAttribute('aria-expanded', 'false');
+        overviewTriggerEl.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg><span class="workspace-tab-overview-trigger-count"></span>';
+        overviewTriggerEl.addEventListener('click', function (event) {
+          event.stopPropagation();
+          if (overviewMenuEl.classList.contains('hidden')) {
+            openOverviewMenu();
+          } else {
+            closeOverviewMenu();
+          }
+        });
+
+        var existingOverviewMenu = document.getElementById('workspaceTabOverviewMenu');
+        if (existingOverviewMenu && existingOverviewMenu.parentNode) {
+          existingOverviewMenu.parentNode.removeChild(existingOverviewMenu);
+        }
+        overviewMenuEl = document.createElement('div');
+        overviewMenuEl.id = 'workspaceTabOverviewMenu';
+        overviewMenuEl.className = 'workspace-tab-overview-menu hidden';
+        overviewMenuEl.setAttribute('data-testid', 'workspace-tab-overview-menu');
+
+        overviewListEl = document.createElement('div');
+        overviewListEl.className = 'workspace-tab-overview-list';
+        overviewMenuEl.appendChild(overviewListEl);
+
+        var overviewActionsEl = document.createElement('div');
+        overviewActionsEl.className = 'workspace-tab-overview-actions';
+
+        var overviewLang = readStoredLang();
+        var overviewReopenBtn = document.createElement('button');
+        overviewReopenBtn.type = 'button';
+        overviewReopenBtn.className = 'workspace-tab-overview-reopen';
+        overviewReopenBtn.setAttribute('data-testid', 'workspace-tab-overview-reopen');
+        overviewReopenBtn.textContent = workspaceTabOverviewActionI18n[overviewLang].reopen;
+        // FR-024 (G3 scope): nothing pushes to the reopen stack yet, so
+        // this stays unconditionally disabled.
+        overviewReopenBtn.disabled = true;
+        overviewActionsEl.appendChild(overviewReopenBtn);
+
+        var overviewCloseAllBtn = document.createElement('button');
+        overviewCloseAllBtn.type = 'button';
+        overviewCloseAllBtn.className = 'workspace-tab-overview-close-all';
+        overviewCloseAllBtn.setAttribute('data-testid', 'workspace-tab-overview-close-all');
+        overviewCloseAllBtn.textContent = workspaceTabOverviewActionI18n[overviewLang].closeAll;
+        // FR-025 behavior (G3 scope): structural slot only.
+        overviewActionsEl.appendChild(overviewCloseAllBtn);
+
+        overviewMenuEl.appendChild(overviewActionsEl);
+        document.body.appendChild(overviewMenuEl);
+
+        document.addEventListener('click', function (event) {
+          if (overviewMenuEl.classList.contains('hidden')) return;
+          if (overviewTriggerEl.contains(event.target)) return;
+          if (overviewMenuEl.contains(event.target)) return;
+          closeOverviewMenu();
+        });
+      }
+
       // Single call site for both the desktop bar and the mobile dropdown,
       // so every state mutation below (initial mount, activate, close) keeps
       // both views in sync without duplicating this file's three existing
       // renderWorkspaceTabBar() call sites a second time over.
       function renderWorkspaceTabViews(state) {
         renderWorkspaceTabBar(barEl, state, activateWorkspaceTab, closeWorkspaceTab);
+        // renderWorkspaceTabBar() above just wiped and rebuilt barEl's own
+        // children from scratch -- re-append the (detached, not destroyed)
+        // trigger node as barEl's last child every time, desktop only.
+        if (overviewDesktop) barEl.appendChild(overviewTriggerEl);
         renderWorkspaceTabMobileDropdown(state);
+        if (overviewDesktop) renderWorkspaceTabOverviewMenu(state);
       }
 
       if (mobileToggleBtn) {
