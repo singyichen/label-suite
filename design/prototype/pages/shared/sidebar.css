@@ -1128,3 +1128,131 @@ body.sidebar-collapsed .notif-dropdown { left: 88px; }
     display: inline-flex;
   }
 }
+
+/* Shared overview-menu component, desktop-only subset (issue #1099 G2a,
+   design.md "G2 — 總覽選單", FR-023/FR-023A). A fixed trigger at the tab
+   strip's right end; G2b adds the mobile full-replacement variant, filter
+   input, and keyboard model from a separate branch. Trigger mirrors
+   `.mobile-notification-bell-btn`'s look; menu panel mirrors
+   `.notif-dropdown`'s fixed-position/box-shadow pattern. */
+.workspace-tab-overview-trigger {
+  position: sticky;
+  right: 0;
+  margin-left: auto;
+  flex-shrink: 0;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 34px;
+  padding: 0 var(--space-sm);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+  color: var(--color-ink-muted);
+  cursor: pointer;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.workspace-tab-overview-menu {
+  position: fixed;
+  right: var(--space-md);
+  top: 72px;
+  width: 320px;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 32px rgba(30, 27, 75, 0.14);
+  z-index: 600;
+  overflow: hidden;
+}
+
+.workspace-tab-overview-menu.hidden { display: none; }
+
+.workspace-tab-overview-list {
+  overflow-y: auto;
+  padding: var(--space-xs) 0;
+}
+
+.workspace-tab-overview-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 10px var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+  cursor: pointer;
+}
+
+.workspace-tab-overview-item:last-child { border-bottom: none; }
+.workspace-tab-overview-item.active { background: var(--color-primary-soft-bg); }
+
+.workspace-tab-overview-item-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.workspace-tab-overview-item-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  color: var(--color-ink);
+}
+
+.workspace-tab-overview-item-secondary {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  color: var(--color-ink-muted);
+}
+
+.workspace-tab-overview-item-close {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-ink-muted);
+  cursor: pointer;
+}
+
+.workspace-tab-overview-item-close:hover { background: var(--color-border); }
+
+.workspace-tab-overview-actions {
+  display: flex;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-top: 1px solid var(--color-border);
+}
+
+.workspace-tab-overview-reopen,
+.workspace-tab-overview-close-all {
+  flex: 1;
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-white);
+  color: var(--color-ink);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.workspace-tab-overview-reopen:disabled {
+  color: var(--color-ink-muted);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.workspace-tab-overview-close-all:hover { background: var(--color-border-muted); }
