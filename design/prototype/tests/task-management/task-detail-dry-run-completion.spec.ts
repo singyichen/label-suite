@@ -174,9 +174,18 @@ test.describe('Review-aware dry-run completion gate (DRY_RUN_COMPLETION_RULE, FR
     // Only the disabled next-round control is offered, as in every dry_run_in_progress state.
     await expect(page.locator('#publishActionRow button')).toHaveCount(1);
 
+    // The page's skeleton hides and renders the overview (which rebuilds this button) in one task,
+    // ~560 ms after load. Wait for that to have happened so the forced click hits the final node.
+    await expect(page.locator('#loadingSkeleton')).toBeHidden();
+    await expect(page.locator('#publishDryRunBtn')).toBeDisabled();
+
     const roundsBefore = await page.locator('#trialRoundTimeline .round-timeline-item').count();
     await page.evaluate(() => document.getElementById('publishDryRunBtn')!.removeAttribute('disabled'));
     await page.locator('#publishDryRunBtn').click();
+    // With R1 present the next step of an unblocked click is the FR-017 revision-note dialog, so
+    // "no dialog" proves the handler itself re-validated (verified with a temporary probe that
+    // stripped the re-validation from the served HTML: the dialog opened and this failed).
+    await expect(page.locator('#trialRoundRevisionModal')).toBeHidden();
     await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(roundsBefore);
     await expect(page.locator('#statusBadge')).toContainText(IN_PROGRESS_BADGE);
   });

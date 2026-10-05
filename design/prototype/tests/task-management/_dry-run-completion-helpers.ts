@@ -18,6 +18,8 @@ export const IN_PROGRESS_BADGE = '試標進行中';
 export const WAITING_BADGE = '待 IAA 確認';
 
 export type DryRunParts = {
+  /** Output key of the task (default `single_label`, the T001/T014 shape). */
+  outKey?: string;
   /** Reviewers submit an `approve` decision for every unit that has no review yet. */
   review?: boolean;
   /**
@@ -39,9 +41,9 @@ export type DryRunFacts = {
 /** Run the public write paths for `taskId` in dry_run scope and report the resulting facts. */
 export async function applyDryRunState(page: Page, taskId: string, parts: DryRunParts): Promise<DryRunFacts> {
   return page.evaluate(
-    ({ task, doReview, arbitrate }) => {
+    ({ task, doReview, arbitrate, outKey }) => {
       const ws = (window as any).LabelSuiteAnnotationWorkspaceData;
-      const outKeys = ['single_label'];
+      const outKeys = [outKey];
       const runType = 'dry_run';
       const reviewerId = 'reviewer_wang';
       const arbiterId = 'reviewer_chen';
@@ -55,13 +57,13 @@ export async function applyDryRunState(page: Page, taskId: string, parts: DryRun
             const row = ws
               .getReviewUnitRows(task, runType, unit.sampleId, outKeys)
               .filter((r: any) => r.annotator === unit.annotatorId)[0];
-            annotatorAnswers = { previewState: { single_label: { selected: row.answers.single_label } } };
+            annotatorAnswers = { previewState: { [outKey]: { selected: row.answers[outKey] } } };
             ws.markSampleSubmitted(task, 'annotator', runType, unit.sampleId, annotatorAnswers, '', identity);
           }
-          const selected = annotatorAnswers.previewState.single_label.selected;
+          const selected = annotatorAnswers.previewState[outKey].selected;
           ws.markSampleSubmitted(
             task, 'reviewer', runType, unit.sampleId,
-            { previewState: { single_label: { selected } }, decisions: { single_label: 'approve' } },
+            { previewState: { [outKey]: { selected } }, decisions: { [outKey]: 'approve' } },
             '', { annotatorId: unit.annotatorId, reviewerId },
           );
         });
@@ -102,7 +104,7 @@ export async function applyDryRunState(page: Page, taskId: string, parts: DryRun
         pendingExceptions: pool.pendingExceptions.length,
       };
     },
-    { task: taskId, doReview: !!parts.review, arbitrate: parts.arbitrate || 'none' },
+    { task: taskId, doReview: !!parts.review, arbitrate: parts.arbitrate || 'none', outKey: parts.outKey || 'single_label' },
   );
 }
 

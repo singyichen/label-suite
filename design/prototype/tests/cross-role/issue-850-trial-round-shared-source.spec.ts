@@ -28,6 +28,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import { buildListUrl, patchDataFile } from '../annotation/_workspace-helpers';
 import { openGateSatisfiedT016 } from '../task-management/_completion-gate-helpers';
+import { applyDryRunState } from '../task-management/_dry-run-completion-helpers';
 
 const TASK_ID = 'T002';
 // Regression B runs on T016: the only task whose review state can satisfy FR-008b.
@@ -249,17 +250,19 @@ test.describe('issue #850: task-detail and annotation pages share no trial-round
       { key: DRY_RUN_PROGRESS_KEY, taskId: TASK_ID }
     );
 
-    await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}&status=dry_run_in_progress`);
-    // R1's dry-run progress is fully submitted, so
-    // syncStatusFromDryRunProgress() flips the task into
-    // waiting_iaa_confirmation on load (same setup as issue-791's second
-    // test).
+    // #1120 G4a: a fully-submitted flag alone no longer flips the task (review, arbitration and the
+    // exception pool must be closed too). Reaching waiting_iaa_confirmation is only SETUP here -- this
+    // case is about R2 creation not flipping back -- so load that state directly. The 5/5 round-less
+    // flag above stays in place: it is exactly what must not flip R2 back.
+    await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}&status=waiting_iaa_confirmation`);
     await expect(page.locator('#statusBadge')).toContainText('待 IAA 確認');
 
     await createRoundTwoFromWaiting(page);
     await expect(page.locator('#statusBadge')).toContainText('試標進行中');
 
-    await page.reload();
+    // Reload on the in-progress URL: the waiting_iaa_confirmation URL used for setup would pin
+    // the status itself, which is not what this case asserts.
+    await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}&status=dry_run_in_progress`);
 
     await expect(page.locator('#statusBadge')).toContainText('試標進行中');
   });
@@ -274,7 +277,9 @@ test.describe('issue #850: task-detail and annotation pages share no trial-round
     expect(initialProgress).not.toBeNull();
     expect(JSON.parse(initialProgress as string)).toMatchObject({ submittedSamples: 5, totalSamples: 5 });
 
-    await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}&status=dry_run_in_progress`);
+    // #1120 G4a: setup only (see the flip-back case) -- load waiting_iaa_confirmation directly; the
+    // stale 5/5 R1 flag written above is kept so the per-round count it must not satisfy still exists.
+    await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}&status=waiting_iaa_confirmation`);
     await expect(page.locator('#statusBadge')).toContainText('待 IAA 確認');
 
     await createRoundTwoFromWaiting(page);
@@ -325,7 +330,8 @@ test.describe('issue #850: task-detail and annotation pages share no trial-round
     expect(JSON.parse(initialProgress as string)).toMatchObject({ submittedSamples: 5, totalSamples: 5 });
 
     // R1 -> waiting_iaa_confirmation -> create R2 from task-detail.
-    await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}&status=dry_run_in_progress`);
+    // #1120 G4a: setup only -- load waiting_iaa_confirmation directly (the R1 5/5 flag stays in place).
+    await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}&status=waiting_iaa_confirmation`);
     await expect(page.locator('#statusBadge')).toContainText('待 IAA 確認');
     await createRoundTwoFromWaiting(page);
     await expect(page.locator('#statusBadge')).toContainText('試標進行中');
@@ -390,9 +396,14 @@ test.describe('issue #850: task-detail and annotation pages share no trial-round
     );
 
     // All 5 of R2's samples now genuinely submitted (albeit with R1-identical
-    // answers) -> R2 must read as complete, same as any other fully-submitted
-    // round.
+    // answers) -> R2's submission side is complete. #1120 G4a: that alone no longer
+    // moves the task, so first prove the gate still holds on review, then close
+    // review and arbitration through the public write paths -- the R2 round then
+    // reads as complete, same as any other fully-submitted round.
     await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}&status=dry_run_in_progress`);
+    await expect(page.locator('#statusBadge')).toContainText('試標進行中');
+    await applyDryRunState(page, TASK_ID, { outKey: 'multi_label', review: true, arbitrate: 'all' });
+    await page.reload();
     await expect(page.locator('#statusBadge')).toContainText('待 IAA 確認');
   });
 

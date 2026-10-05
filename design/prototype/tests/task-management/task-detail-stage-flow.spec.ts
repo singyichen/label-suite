@@ -29,6 +29,7 @@
  * assertions expect both R1 and R2 in the round history.
  */
 import { test, expect, type Page } from '@playwright/test';
+import { applyDryRunState, expectStillInProgress } from './_dry-run-completion-helpers';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html?task_id=T001';
 const DRY_RUN_PROGRESS_KEY = 'labelsuite.prototypeDryRunProgress';
@@ -121,6 +122,12 @@ test('keeps the 4-stage stepper while showing R1 into a waiting-confirmation-gat
     { key: DRY_RUN_PROGRESS_KEY, taskId: TASK_ID }
   );
   await page.goto(`${TASK_DETAIL_URL}&status=dry_run_in_progress`);
+  // #1120 G4a: submission alone no longer completes the round -- review, arbitration and the
+  // exception pool must be closed too. Prove the gate holds first, then close them through the
+  // workspace's public write paths and let the next load's gate advance the task.
+  await expectStillInProgress(page, TASK_ID);
+  await applyDryRunState(page, TASK_ID, { review: true, arbitrate: 'all' });
+  await page.reload();
   await expect(page.locator('#statusBadge')).toContainText('待 IAA 確認');
   await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(1);
   // D2: syncStatusFromDryRunProgress() fills the round's scripted IAA

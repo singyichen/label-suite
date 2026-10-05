@@ -471,7 +471,7 @@ test('XROLE-07: project leader publishes the dry run round (checkpoint A: annota
   await expect(a01Page.getByTestId('ws-sample-item')).toHaveCount(DRY_RUN_RECORD_IDS.length);
 });
 
-test('XROLE-08: three annotators submit both dry-run samples (checkpoint B: status syncs to waiting IAA confirmation)', async () => {
+test('XROLE-08: three annotators submit both dry-run samples (checkpoint B: submission alone keeps the trial in progress; waiting IAA confirmation is reached via the status override, #1120 G4a)', async () => {
   const annotators: { page: Page; id: string }[] = [
     { page: a01Page, id: 'A01' },
     { page: a02Page, id: 'A02' },
@@ -511,17 +511,22 @@ test('XROLE-08: three annotators submit both dry-run samples (checkpoint B: stat
     }
   }
 
-  /* Checkpoint B uses the established `&status=` URL-override pattern
-   * (task-detail-dry-run-status-sync.spec.ts) rather than waiting for a
-   * true 3-annotator aggregate: syncStatusFromDryRunProgress()
-   * (task-detail.html:4418-4439) reads a single global
-   * DRY_RUN_PROGRESS_KEY that getSubmittedSampleCount()
-   * (annotation-workspace.data.js:314-330) computes per-identity, scoped
-   * to whichever annotator wrote it LAST (A03 here, since the loop above
-   * submits in A01 -> A02 -> A03 order). It genuinely is not a
-   * cross-annotator aggregate gate, even though all 6 real submissions
-   * above did happen. */
+  /* Checkpoint B (#1120 G4a). Submission alone no longer completes a trial round: the task must
+   * also have every dry_run review unit finalized, no unit left disputed and no pending
+   * exception-pool item (DRY_RUN_COMPLETION_RULE). The 6 real submissions above therefore must
+   * NOT move the page -- that is the half this checkpoint can still prove for real. The
+   * journey has no dry_run review data at this point (its review/arbitration steps are the
+   * official-run XROLE-13..22 flows), so the transition itself is SETUP for XROLE-09 and is
+   * reached through the established `&status=` URL-override pattern
+   * (task-detail-dry-run-status-sync.spec.ts), exactly as this file already did for the
+   * aggregate caveat in its header; the review-aware transition is asserted end to end in
+   * task-detail-dry-run-completion.spec.ts. */
   await plPage.goto(`/pages/task-management/task-detail.html?task_role=project_leader&task_id=${fixtureTaskId}&status=dry_run_in_progress`);
+  await expect(plPage.locator('#statusBadge')).toBeAttached({ timeout: PANEL_LOAD_TIMEOUT });
+  await expect(plPage.locator('#statusBadge')).toHaveText('試標進行中');
+  await expect(plPage.locator('#publishDryRunBtn')).toBeDisabled();
+
+  await plPage.goto(`/pages/task-management/task-detail.html?task_role=project_leader&task_id=${fixtureTaskId}&status=waiting_iaa_confirmation`);
   await expect(plPage.locator('#statusBadge')).toHaveText('待 IAA 確認', { timeout: PANEL_LOAD_TIMEOUT });
 });
 

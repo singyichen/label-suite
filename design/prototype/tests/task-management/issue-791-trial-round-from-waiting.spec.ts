@@ -58,8 +58,15 @@ test('submission alone no longer moves the task into waiting_iaa_confirmation; o
   await applyDryRunState(page, 'T014', { review: true, arbitrate: 'all' });
   await page.reload();
   await expect(page.locator('#statusBadge')).toContainText(WAITING_BADGE);
-  await expect(page.locator('#publishOfficialRunBtn')).toBeEnabled();
   await expect(page.locator('#publishDryRunBtn')).toBeEnabled();
+  // T014's official pool is 0 (datasetTotal 5, the synthetic R1 uses all 5), so FR-022 correctly
+  // disables the official button. What must hold is that IAA is never the reason (FR-010o-3).
+  const official = page.locator('#publishOfficialRunBtn');
+  if (await official.isDisabled()) {
+    await expect(official).toHaveAttribute('aria-describedby', 'publishPoolReason');
+    const reasonText = await page.locator('#publishPoolReason').innerText();
+    expect(reasonText).not.toMatch(/IAA/i);
+  }
 });
 
 test('creating R2 from waiting_iaa_confirmation lands in dry_run_in_progress, never straight back to waiting_iaa_confirmation (FR-013(2)-(3))', async ({ page }) => {
