@@ -107,13 +107,15 @@ test('an empty arbiter roster remains valid', async ({ page }) => {
 });
 
 test('helper text explains that designated arbiters are reserved from review assignment', async ({ page }) => {
+  // Issue #1120 (FR-010t revision + FR-023): an empty arbiter roster now routes disputes to the
+  // project leader, so the old "爭議將無人可仲裁" / "cannot be arbitrated" claim is false.
   await openReviewEdit(page);
-  await expect(page.locator('#arbiterSelectHint')).toHaveText(
-    '被指定者保留處理仲裁，不會收到新的審核單位；可留空，但爭議將無人可仲裁。'
-  );
+  await expect(page.locator('#arbiterSelectHint')).toContainText('被指定者保留處理仲裁，不會收到新的審核單位');
+  await expect(page.locator('#arbiterSelectHint')).not.toContainText('爭議將無人可仲裁');
 
   await page.getByTestId('lang-toggle').click();
-  await expect(page.locator('#arbiterSelectHint')).toHaveText(
-    'Designated arbiters are reserved from new review assignment; leaving this empty means disputes cannot be arbitrated.'
+  await expect(page.locator('#arbiterSelectHint')).toContainText(
+    'Designated arbiters are reserved from new review assignment'
   );
+  await expect(page.locator('#arbiterSelectHint')).not.toContainText('cannot be arbitrated');
 });
