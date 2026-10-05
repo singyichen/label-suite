@@ -94,10 +94,10 @@
 
 **故事目標**：SC-009、SC-010 — 全部群組之既有與新增行為皆無回歸，四個驗證閘門皆有證據，獨立審查通過。
 
-- [ ] 10.1 執行：Gate 1–3（同第 6 階段流程，範圍擴大為全部 019／008 家族含 G1–G3 新增案例）。[@main]
-- [ ] 10.2 執行：Gate 4（Source-Verify 預掃結果 ＋ `/opsx:archive` 成功證據）。[@main]
-- [ ] 10.3 派未參與實作之 `senior-code-reviewer` 獨立審查，結論原文貼進檢查點留言。[@senior-code-reviewer]
-- [ ] 10.4 執行：撰寫 `pr-1099-g3.md`（`Closes #1099`，base main），貼 `git diff --stat origin/main...HEAD` 與最終 SHA。[@main]
+- [x] 10.1 執行：Gate 1–3（同第 6 階段流程，範圍擴大為全部 019／008 家族含 G1–G3 新增案例）。[@main]
+- [x] 10.2 執行：Gate 4（Source-Verify 預掃結果 ＋ `/opsx:archive` 成功證據）。[@main]
+- [x] 10.3 派未參與實作之 `senior-code-reviewer` 獨立審查，結論原文貼進檢查點留言。[@senior-code-reviewer]
+- [x] 10.4 執行：撰寫 `pr-1099-final.md`（`Closes #1099`，base main），貼 `git diff --stat origin/main...HEAD` 與最終 SHA。[@main]
 
 ## 11. G4a 頁籤貼齊頂端／直角 — Red
 
