@@ -29,6 +29,7 @@
  * assertions expect both R1 and R2 in the round history.
  */
 import { test, expect, type Page } from '@playwright/test';
+import { applyDryRunState, expectStillInProgress } from './_dry-run-completion-helpers';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html?task_id=T001';
 const DRY_RUN_PROGRESS_KEY = 'labelsuite.prototypeDryRunProgress';
@@ -99,7 +100,7 @@ test('keeps the 4-stage stepper while showing R1 into a waiting-confirmation-gat
   await expect(page.locator('#splitLegendDynamic')).toContainText('正式 4筆');
 
   await expect(page.locator('#publishDryRunBtn')).toBeDisabled();
-  await expect(page.locator('#publishActionRow')).toContainText('本回合全部提交並完成 IAA 後才能新增下一回合');
+  await expect(page.locator('#publishActionRow')).toContainText('本回合的標註、必要審核與必要仲裁全部完成後才能新增下一回合');
   await expect(page.locator('#publishActionRow button')).toHaveCount(1);
 
   // R1 can only be advanced past dry_run_in_progress once its dry-run
@@ -121,6 +122,18 @@ test('keeps the 4-stage stepper while showing R1 into a waiting-confirmation-gat
     { key: DRY_RUN_PROGRESS_KEY, taskId: TASK_ID }
   );
   await page.goto(`${TASK_DETAIL_URL}&status=dry_run_in_progress`);
+  // #1120 G4a: submission alone no longer completes the round -- review, arbitration and the
+  // exception pool must be closed too. Prove the gate holds first, then close them through the
+  // workspace's public write paths and let the next load's gate advance the task.
+  await expectStillInProgress(page, TASK_ID);
+  // The three annotators' marks disagree, so the round's live IAA is computable AND below target;
+  // getTrialRoundScenario() prefers live IAA, so the 未通過 outcome below is a genuine failing round.
+  await applyDryRunState(page, TASK_ID, {
+    review: true,
+    arbitrate: 'all',
+    disagreeLabels: ['positive', 'negative', 'neutral'],
+  });
+  await page.reload();
   await expect(page.locator('#statusBadge')).toContainText('待 IAA 確認');
   await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(1);
   // D2: syncStatusFromDryRunProgress() fills the round's scripted IAA
@@ -154,5 +167,5 @@ test('keeps the 4-stage stepper while showing R1 into a waiting-confirmation-gat
   // FR-013: the label is R{trial_round + 1}. With R1 and R2 both
   // materialized in TASK_DATA.trialRounds, the next round is R3.
   await expect(page.locator('#publishDryRunBtn')).toHaveText('新增試標回合 R3');
-  await expect(page.locator('#publishActionRow')).toContainText('本回合全部提交並完成 IAA 後才能新增下一回合');
+  await expect(page.locator('#publishActionRow')).toContainText('本回合的標註、必要審核與必要仲裁全部完成後才能新增下一回合');
 });

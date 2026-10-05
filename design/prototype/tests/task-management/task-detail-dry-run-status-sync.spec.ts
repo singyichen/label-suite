@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { buildWorkspaceUrl, skipGuidelineModal } from '../annotation/_workspace-helpers';
+import { applyDryRunState, expectStillInProgress, TASK_DETAIL_URL } from './_dry-run-completion-helpers';
 
 const PANEL_LOAD_TIMEOUT = 15000;
 
@@ -9,7 +10,7 @@ const PANEL_LOAD_TIMEOUT = 15000;
  * every sample can be submitted immediately without an extra chip click. */
 const SAMPLE_IDS = ['sent-001', 'sent-002', 'sent-003', 'sent-004', 'sent-005'];
 
-test('moves task status to waiting IAA confirmation after all 5 dry-run samples are submitted', async ({ page }) => {
+test('moves task status to waiting IAA confirmation only after all 5 dry-run samples are submitted and review, arbitration and the exception pool are complete (FR-008a, #1120 G4a)', async ({ page }) => {
   await skipGuidelineModal(page);
 
   for (let i = 0; i < SAMPLE_IDS.length; i += 1) {
@@ -29,6 +30,15 @@ test('moves task status to waiting IAA confirmation after all 5 dry-run samples 
     }
   }
 
-  await page.goto('/pages/task-management/task-detail.html?task_id=T001&status=dry_run_in_progress');
+  /* #1120 G4a: submission alone no longer completes the trial. Half 1: every sample submitted
+     but review outstanding -> the task stays in progress. */
+  await page.goto(`${TASK_DETAIL_URL}?task_id=T001&status=dry_run_in_progress`);
+  await expect(page.locator('#statusBadge')).toBeAttached({ timeout: PANEL_LOAD_TIMEOUT });
+  await expectStillInProgress(page, 'T001');
+
+  /* Half 2: close review and arbitration through the workspace's public write paths, then the
+     same page load re-evaluates the gate and advances. */
+  await applyDryRunState(page, 'T001', { review: true, arbitrate: 'all' });
+  await page.reload();
   await expect(page.locator('#statusBadge')).toHaveText('待 IAA 確認', { timeout: PANEL_LOAD_TIMEOUT });
 });

@@ -201,7 +201,7 @@ const RUN_CONTROL_CASES: RunControlCase[] = [
     actionButton: '#publishDryRunBtn',
     actionText: '新增試標回合 R2',
     actionDisabled: true,
-    reasonText: '本回合全部提交並完成 IAA 後才能新增下一回合',
+    reasonText: '本回合的標註、必要審核與必要仲裁全部完成後才能新增下一回合',
     onlyButtonInRow: true,
   },
   {

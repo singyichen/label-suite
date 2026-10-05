@@ -2557,7 +2557,7 @@
       reviewerHint: '僅 project leader 可操作',
       dryRunDisabled: '新增試標回合（唯讀）',
       officialRunDisabled: '開始正式標記（唯讀）',
-      dryRunNextRoundReason: '本回合全部提交並完成 IAA 後才能新增下一回合',
+      dryRunNextRoundReason: '本回合的標註、必要審核與必要仲裁全部完成後才能新增下一回合',
       retryIaaComputation: '重試計算',
       iaaComputationPendingOfficialReason: 'IAA 計算中，完成後才能開始正式標記',
       officialPoolEmptyReason: '正式標記池剩餘 0 筆，無法開始正式標記',
@@ -2752,6 +2752,9 @@
       completeBlockerReviewTpl: '尚有 {count} 個審核單位未定稿',
       completeBlockerReviewNoData: '尚無審核資料，所有審核單位須定稿後才能結案',
       completeBlockerDisputedTpl: '尚有 {count} 個審核單位處於爭議中',
+      trialBlockerSubmission: '本回合的標註未全部提交',
+      trialBlockerReviewNoData: '尚無審核資料，所有審核單位須定稿後才能完成本回合',
+      trialBlockerDisputedTpl: '尚有 {count} 個審核單位處於爭議中，須完成仲裁',
       unassignedAnnotationTitle: '未指派標記作業',
       unassignedAnnotationSubtitle: '未指派試標作業會阻擋進入待 IAA 確認；正式標記未指派作業會影響完成率。請重新指派給啟用中的標記員，或排除並保留原因。',
       thUnassignedStage: '階段 / 回合',
@@ -3089,7 +3092,7 @@
       reviewerHint: 'Only project leader can perform this action',
       dryRunDisabled: 'Add trial round (Read-only)',
       officialRunDisabled: 'Start official run (Read-only)',
-      dryRunNextRoundReason: 'Submit all outputs and finish IAA for this round before adding the next one',
+      dryRunNextRoundReason: 'Finish this round\'s annotation, required review and required arbitration before adding the next round',
       retryIaaComputation: 'Retry computation',
       iaaComputationPendingOfficialReason: 'IAA computation is in progress; official run can start once it finishes',
       officialPoolEmptyReason: 'The official pool has 0 items remaining, so the official run cannot start',
@@ -3284,6 +3287,9 @@
       completeBlockerReviewTpl: '{count} review unit(s) are not yet finalized',
       completeBlockerReviewNoData: 'No review data yet; every review unit must be finalized before completion',
       completeBlockerDisputedTpl: '{count} review unit(s) are still disputed',
+      trialBlockerSubmission: 'Not all annotations for this round have been submitted',
+      trialBlockerReviewNoData: 'No review data yet; every review unit must be finalized before this round can complete',
+      trialBlockerDisputedTpl: '{count} review unit(s) are still disputed and need arbitration',
       unassignedAnnotationTitle: 'Unassigned annotation assignments',
       unassignedAnnotationSubtitle: 'Unassigned trial work blocks Waiting IAA confirmation; unassigned official work affects completion rate. Reassign it to an active annotator, or exclude it with an audit reason.',
       thUnassignedStage: 'Stage / round',
@@ -5220,10 +5226,10 @@ function interpolate(template, payload) {
     var activeRound = (getCurrentTrialRound() || {}).round || 1;
     var progressRound = progress.round >= 1 ? progress.round : 1;
     if (progressRound !== activeRound) return;
-    var submitted = Number(progress.submittedSamples);
-    var total = Number(progress.totalSamples);
-    if (!Number.isFinite(submitted) || !Number.isFinite(total) || total < 1) return;
-    if (submitted < total) return;
+    /* issue #1120 (DRY_RUN_COMPLETION_RULE): submission alone no longer
+       completes a trial round; review, arbitration and the dry_run exception
+       pool must also be closed. Same signals/reducer as the render path. */
+    if (getDryRunCompletionBlockers().length) return;
     /* issue #791 (D2): materialize getTrialRounds()'s synthetic fallback
        into TASK_DATA.trialRounds (same technique as publishDryRun(), D1) so
        a round created without a real seed still gets its outcome filled in
@@ -6332,8 +6338,14 @@ function interpolate(template, payload) {
     }
 
     if (TASK_DATA.status === 'dry_run_in_progress') {
-      actionRow.innerHTML = '<button class="btn btn-cta" type="button" id="publishDryRunBtn" disabled>' + t('publishDryRun') + ' R' + nextRound + '</button>' +
-        '<span class="status-hint">' + t('dryRunNextRoundReason') + '</span>';
+      /* FR-013(1) / FR-008a: one visible reason per unmet condition; the fallback keeps the legacy hint. */
+      var trialReasons = getDryRunCompletionBlockerMessages();
+      var trialHtml = '<button class="btn btn-cta" type="button" id="publishDryRunBtn" disabled' + (trialReasons.length ? ' aria-describedby="publishDryRunReasons"' : '') + '>' + t('publishDryRun') + ' R' + nextRound + '</button>' +
+        '<span class="status-hint">' + t('dryRunNextRoundReason') + '</span>' +
+        (trialReasons.length
+          ? '<ul class="status-hint" id="publishDryRunReasons">' + trialReasons.map(function(reason) { return '<li>' + reason + '</li>'; }).join('') + '</ul>'
+          : '');
+      actionRow.innerHTML = trialHtml;
       return;
     }
 
@@ -10636,8 +10648,20 @@ function getTaskTypeLabel() {
     return true;
   }
 
+  /* FR-013(1): a trial round can be added from dry_run_in_progress only once the
+     round is complete; re-validated here so a forced click still creates nothing. */
+  function isTrialRoundCreationBlocked() {
+    if (TASK_DATA.status !== 'dry_run_in_progress') return false;
+    var reasons = getDryRunCompletionBlockerMessages();
+    if (!reasons.length) return false;
+    showToast(reasons.join(t('memberGapJoiner')), true);
+    trackEvent('prototype_publish_failed', { reason: 'trial_round_blocked: ' + getDryRunCompletionBlockers().map(function(b) { return b.code; }).join(', ') });
+    return true;
+  }
+
   function publishDryRun() {
     if (state.publishingDryRun) return;
+    if (isTrialRoundCreationBlocked()) return;
     if (!canPublish('dry')) return;
     /* FR-017 (issue #838): R2 and later are created only with a confirmed
        revision note; the note is consumed by this one creation. */
@@ -10730,8 +10754,29 @@ function getTaskTypeLabel() {
     renderOverview();
   }
 
-  /* FR-008b: live completion signals. Always scoped to `official_run`
-     (FR-008b(4), FR-018(5)), never to the progress panel's selected round.
+  /* issue #1120 (D1): the dry_run submission signal is the current round's
+     progress flag (round-stamped, #850), minus legally excluded assignments
+     (FR-005h) and with no unassigned dry-run work left. */
+  function getDryRunSubmissionComplete() {
+    var progress = readDryRunProgress();
+    if (!progress || progress.runType !== 'dry_run') return false;
+    if (progress.taskId && progress.taskId !== TASK_DATA.taskId) return false;
+    var activeRound = (getCurrentTrialRound() || {}).round || 1;
+    if ((progress.round >= 1 ? progress.round : 1) !== activeRound) return false;
+    var submitted = Number(progress.submittedSamples);
+    var total = Number(progress.totalSamples);
+    if (!Number.isFinite(submitted) || !Number.isFinite(total)) return false;
+    /* Dry-run stages are keyed 'r{round}'; getDefaultProgressStage() would fall back to 'official'. */
+    var stageId = 'r' + activeRound;
+    var effectiveTotal = total - getAssignmentCount(getExcludedForStage(stageId));
+    return effectiveTotal >= 1 && submitted >= effectiveTotal &&
+      getAssignmentCount(getUnassignedForStage(stageId)) === 0;
+  }
+
+  /* FR-008b: live completion signals. Scoped to the given runType
+     (official_run for FR-008b(4)/FR-018(5); dry_run for issue #1120's trial gate),
+     never to the progress panel's selected round. 015 has no per-round scoping of review units, so the
+     dry_run gate reads the task's dry_run units as 015 exposes them.
      Nothing here re-derives review status: units come from 015's
      listReviewUnits() (FR-051 derivation) and the open dispute items from
      listReviewPoolItems(). 015 reads an exclude_from_dataset-closed unit as
@@ -10740,29 +10785,40 @@ function getTaskTypeLabel() {
      resolved by arbitration or by the exception pool, incl. exclusion) is
      treated as closed for conditions (2) and (3) only. A null status (no
      annotator submission / no review data) is never closed. */
-  function getCompletionSignals() {
+  function getCompletionSignals(runType) {
     var detailData = window.LabelSuiteTaskDetailData;
     var wsData = window.LabelSuiteAnnotationWorkspaceData;
-    var officialProgress = ANNOTATION_PROGRESS && ANNOTATION_PROGRESS.official;
-    var excluded = getAssignmentCount(getExcludedForStage('official'));
-    var effectiveTotal = officialProgress ? Math.max(0, Number(officialProgress.totalSamples) - excluded) : 0;
-    var submissionComplete = Boolean(officialProgress) && effectiveTotal > 0 &&
-      Number(officialProgress.completedSamples) >= effectiveTotal;
+    var submissionComplete;
+    if (runType === 'dry_run') {
+      submissionComplete = getDryRunSubmissionComplete();
+    } else {
+      var officialProgress = ANNOTATION_PROGRESS && ANNOTATION_PROGRESS.official;
+      var excluded = getAssignmentCount(getExcludedForStage('official'));
+      var effectiveTotal = officialProgress ? Math.max(0, Number(officialProgress.totalSamples) - excluded) : 0;
+      submissionComplete = Boolean(officialProgress) && effectiveTotal > 0 &&
+        Number(officialProgress.completedSamples) >= effectiveTotal;
+    }
 
-    var units = wsData && wsData.listReviewUnits ? wsData.listReviewUnits(TASK_DATA.taskId, 'official_run') : [];
+    var units = wsData && wsData.listReviewUnits ? wsData.listReviewUnits(TASK_DATA.taskId, runType) : [];
     var poolItems = wsData && wsData.listReviewPoolItems
-      ? wsData.listReviewPoolItems(TASK_DATA.taskId, 'official_run')
+      ? wsData.listReviewPoolItems(TASK_DATA.taskId, runType)
       : { awaitingArbitration: [], pendingExceptions: [] };
     var openKeys = {};
     poolItems.awaitingArbitration.concat(poolItems.pendingExceptions).forEach(function(item) {
       openKeys[item.sampleId + '::' + item.annotatorId] = true;
     });
+    /* The official gate (FR-008b(2)) counts a disputed unit as not finalized as well; the trial
+       gate (FR-008a) lists review and arbitration as two separate counts. */
+    var separateDisputed = runType === 'dry_run';
     var unfinalized = 0;
     var disputed = 0;
     units.forEach(function(unit) {
       if (unit.status === 'finalized') return;
       if (unit.status === 'disputed') {
-        if (openKeys[unit.sampleId + '::' + unit.annotatorId]) { unfinalized += 1; disputed += 1; }
+        if (openKeys[unit.sampleId + '::' + unit.annotatorId]) {
+          disputed += 1;
+          if (!separateDisputed) unfinalized += 1;
+        }
         return;
       }
       unfinalized += 1;
@@ -10773,7 +10829,7 @@ function getTaskTypeLabel() {
       reviewUnfinalizedCount: units.length ? unfinalized : null,
       noDisputedUnits: units.length > 0 && disputed === 0,
       disputedUnitCount: disputed,
-      exceptionPoolPendingCount: detailData.getFinalExceptionPoolItems(TASK_DATA.taskId, 'official_run').length
+      exceptionPoolPendingCount: detailData.getFinalExceptionPoolItems(TASK_DATA.taskId, runType).length
     };
   }
 
@@ -10781,20 +10837,38 @@ function getTaskTypeLabel() {
      metrics) is still pending a maintainer ruling (issue #1120); see
      task-detail.data.js's getTaskCompletionBlockers() doc comment. */
   function getTaskCompletionBlockerMessages() {
+    return getBlockerMessages('official_run');
+  }
+
+  /* issue #1120 (FR-008a): same reducer for the trial round. The trial's own
+     submission reason is the legacy "submit all outputs" hint; the review
+     reasons are never phrased as an IAA problem (FR-010o-3). Condition 5
+     (quality metrics) stays official-only. */
+  function getDryRunCompletionBlockers() {
+    var detailData = window.LabelSuiteTaskDetailData;
+    return detailData ? detailData.getTaskCompletionBlockers(getCompletionSignals('dry_run')) : [];
+  }
+
+  function getDryRunCompletionBlockerMessages() {
+    return getBlockerMessages('dry_run');
+  }
+
+  function getBlockerMessages(runType) {
     var detailData = window.LabelSuiteTaskDetailData;
     if (!detailData) return [];
-    return detailData.getTaskCompletionBlockers(getCompletionSignals()).map(function(blocker) {
+    var trial = runType === 'dry_run';
+    return detailData.getTaskCompletionBlockers(getCompletionSignals(runType)).map(function(blocker) {
       if (blocker.code === 'exception_pool_pending') {
         return interpolate(t('completeBlockerExceptionPoolTpl'), { count: blocker.count });
       }
-      if (blocker.code === 'submission_incomplete') return t('completeBlockerSubmission');
+      if (blocker.code === 'submission_incomplete') return t(trial ? 'trialBlockerSubmission' : 'completeBlockerSubmission');
       if (blocker.code === 'review_pending') {
         return blocker.count === null || blocker.count === undefined
-          ? t('completeBlockerReviewNoData')
+          ? t(trial ? 'trialBlockerReviewNoData' : 'completeBlockerReviewNoData')
           : interpolate(t('completeBlockerReviewTpl'), { count: blocker.count });
       }
       if (blocker.code === 'disputed_units') {
-        return interpolate(t('completeBlockerDisputedTpl'), { count: blocker.count });
+        return interpolate(t(trial ? 'trialBlockerDisputedTpl' : 'completeBlockerDisputedTpl'), { count: blocker.count });
       }
       return '';
     }).filter(function(message) { return Boolean(message); });
@@ -11098,6 +11172,7 @@ function getTaskTypeLabel() {
     document.getElementById('publishActionRow').addEventListener('click', function(e) {
       if (e.target.id === 'publishDryRunBtn') {
         trackEvent('prototype_cta_clicked', { cta: 'publish_dry_run' });
+        if (isTrialRoundCreationBlocked()) return;
         if (!TASK_DATA.isolationEnabled && !state.isolationConfirmed) {
           openRiskModal('publishDryRun', e.target);
           return;

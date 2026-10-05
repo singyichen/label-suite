@@ -28,6 +28,16 @@
 import { test, expect, type Page } from '@playwright/test';
 import { buildListUrl, patchDataFile } from '../annotation/_workspace-helpers';
 import { openGateSatisfiedT016 } from '../task-management/_completion-gate-helpers';
+import {
+  applyDryRunState,
+  writeFullySubmittedFlag,
+  expectStillInProgress,
+  reasonTexts,
+  pick,
+  REVIEW,
+  DISPUTED,
+  POOL,
+} from '../task-management/_dry-run-completion-helpers';
 
 const TASK_ID = 'T002';
 // Regression B runs on T016: the only task whose review state can satisfy FR-008b.
@@ -85,6 +95,25 @@ async function createRoundTwoFromWaiting(page: Page) {
   await page.locator('#priorRoundFindingsInput').fill('R1 的多標籤分類在少數樣本上分歧較大');
   await page.locator('#guidelineChangeSummaryInput').fill('補充邊界案例的正反例說明');
   await page.locator('#trialRoundRevisionConfirmBtn').click();
+}
+
+/* T002 inherits the shared demo fixture whose `r2` unassigned row (removed member, ASP-041..044)
+ * is real FR-008a condition (1) work once R2 is active. The round-stamp cases below need R2 to be
+ * gate-complete on everything EXCEPT the stale R1 progress flag, so give T002's profile an empty
+ * unassigned pool, the same shape T014-T016 use (task-detail.data.js `unassignedAssignments: []`),
+ * via a runtime-only patch. patchDataFile() re-applies on every later load within the test. */
+async function emptyT002UnassignedPool(page: Page) {
+  await patchDataFile(
+    page,
+    'task-detail.data.js',
+    `window.LabelSuiteTaskDetailData.profiles[${JSON.stringify(TASK_ID)}].unassignedAssignments = [];`
+  );
+}
+
+/* Closes dry_run review and arbitration for T002 through the workspace module's public write paths,
+ * so review, arbitration and the exception pool no longer keep the task in progress. */
+async function closeT002ReviewAndArbitration(page: Page) {
+  await applyDryRunState(page, TASK_ID, { outKey: 'multi_label', review: true, arbitrate: 'all' });
 }
 
 async function readTaskStatus(page: Page, taskId: string): Promise<string | null> {
@@ -248,17 +277,23 @@ test.describe('issue #850: task-detail and annotation pages share no trial-round
       },
       { key: DRY_RUN_PROGRESS_KEY, taskId: TASK_ID }
     );
+    await emptyT002UnassignedPool(page);
 
-    await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}&status=dry_run_in_progress`);
-    // R1's dry-run progress is fully submitted, so
-    // syncStatusFromDryRunProgress() flips the task into
-    // waiting_iaa_confirmation on load (same setup as issue-791's second
-    // test).
+    // T002 is seeded waiting_iaa_confirmation, so R2 can be created without a ?status= override.
+    await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}`);
     await expect(page.locator('#statusBadge')).toContainText('待 IAA 確認');
 
     await createRoundTwoFromWaiting(page);
     await expect(page.locator('#statusBadge')).toContainText('試標進行中');
 
+    // Make R2 gate-complete on everything but the progress flag (#1120 G4a): review and arbitration
+    // are closed and the unassigned pool is empty, so the only thing still standing between the task
+    // and a flip back to waiting_iaa_confirmation is the round-less 5/5 flag above, which belongs to
+    // R1. That flag must not count for R2 (round-stamp guard in getDryRunSubmissionComplete and
+    // syncStatusFromDryRunProgress).
+    await closeT002ReviewAndArbitration(page);
+
+    // A plain reload re-evaluates the init-time gate from the persisted R2 state.
     await page.reload();
 
     await expect(page.locator('#statusBadge')).toContainText('試標進行中');
@@ -266,6 +301,7 @@ test.describe('issue #850: task-detail and annotation pages share no trial-round
 
   test('per-round progress count: exactly one R2 submission must not read as R2 fully done', async ({ page }) => {
     await patchDataFile(page, 'annotation-workspace.data.js', seedFullR1SubmissionJs());
+    await emptyT002UnassignedPool(page);
     await page.goto(buildListUrl({ task_id: TASK_ID, role: 'annotator', run_type: 'dry_run' }));
 
     // Guard: R1's completion actually wrote the fully-submitted progress
@@ -274,7 +310,9 @@ test.describe('issue #850: task-detail and annotation pages share no trial-round
     expect(initialProgress).not.toBeNull();
     expect(JSON.parse(initialProgress as string)).toMatchObject({ submittedSamples: 5, totalSamples: 5 });
 
-    await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}&status=dry_run_in_progress`);
+    // T002 is seeded waiting_iaa_confirmation, so no ?status= override is needed; the stale 5/5 R1
+    // flag written above is kept so the per-round count it must not satisfy still exists.
+    await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}`);
     await expect(page.locator('#statusBadge')).toContainText('待 IAA 確認');
 
     await createRoundTwoFromWaiting(page);
@@ -306,9 +344,41 @@ test.describe('issue #850: task-detail and annotation pages share no trial-round
       { taskId: TASK_ID, sampleId: 'emo-001', annotatorId: MY_ANNOTATOR_ID, reviewerId: REVIEWER_ID }
     );
 
-    await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}&status=dry_run_in_progress`);
+    // Gate-complete on everything but the per-round submission count (#1120 G4a): review and
+    // arbitration closed, unassigned pool empty, so only "1 of 5 R2 samples" can hold the task.
+    await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}`);
+    await expect(page.locator('#statusBadge')).toContainText('試標進行中');
+    await closeT002ReviewAndArbitration(page);
+    await page.reload();
 
     await expect(page.locator('#statusBadge')).toContainText('試標進行中');
+  });
+
+  test('#1120 FR-008a(1): R2 with its built-in unassigned `r2` work stays dry_run_in_progress even when everything else is gate-complete', async ({
+    page,
+  }) => {
+    // No unassigned-pool patch here: T002 keeps the shared fixture's unassigned R2 row
+    // (task-detail.html DEFAULT_UNASSIGNED_ANNOTATION_ASSIGNMENTS, ASP-041..044, roundId 'r2').
+    await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}`);
+    await expect(page.locator('#statusBadge')).toContainText('待 IAA 確認');
+    await createRoundTwoFromWaiting(page);
+    await expect(page.locator('#statusBadge')).toContainText('試標進行中');
+
+    // Everything except unassigned work is complete for R2: the round-2 progress flag says 5/5
+    // (round-stamped, so the round guard does not discard it), review and arbitration are closed.
+    await closeT002ReviewAndArbitration(page);
+    await writeFullySubmittedFlag(page, TASK_ID, ALL_SAMPLES.length, 2);
+    await page.reload();
+
+    await expectStillInProgress(page, TASK_ID);
+    // The unassigned work has no reason of its own: it folds into the submission condition, so with
+    // review, arbitration and the pool closed the list holds exactly that one item.
+    const reasons = await reasonTexts(page);
+    expect(reasons).toHaveLength(1);
+    expect(pick(reasons, REVIEW.accept, REVIEW.reject)).toHaveLength(0);
+    expect(pick(reasons, DISPUTED.accept, DISPUTED.reject)).toHaveLength(0);
+    expect(pick(reasons, POOL.accept)).toHaveLength(0);
+    await expect(page.locator('#publishDryRunBtn')).toHaveAttribute('aria-describedby', /publishDryRunReasons/);
   });
 
   test('issue #850 D1: an R2 resubmission with an answer byte-identical to R1 still counts toward R2 progress', async ({
@@ -325,7 +395,8 @@ test.describe('issue #850: task-detail and annotation pages share no trial-round
     expect(JSON.parse(initialProgress as string)).toMatchObject({ submittedSamples: 5, totalSamples: 5 });
 
     // R1 -> waiting_iaa_confirmation -> create R2 from task-detail.
-    await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}&status=dry_run_in_progress`);
+    // #1120 G4a: setup only -- load waiting_iaa_confirmation directly (the R1 5/5 flag stays in place).
+    await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}&status=waiting_iaa_confirmation`);
     await expect(page.locator('#statusBadge')).toContainText('待 IAA 確認');
     await createRoundTwoFromWaiting(page);
     await expect(page.locator('#statusBadge')).toContainText('試標進行中');
@@ -389,10 +460,18 @@ test.describe('issue #850: task-detail and annotation pages share no trial-round
       }
     );
 
+    // T002's unassigned `r2` row is real condition (1) work once R2 is active; empty it (see helper).
+    await emptyT002UnassignedPool(page);
+
     // All 5 of R2's samples now genuinely submitted (albeit with R1-identical
-    // answers) -> R2 must read as complete, same as any other fully-submitted
-    // round.
+    // answers) -> R2's submission side is complete. #1120 G4a: that alone no longer
+    // moves the task, so first prove the gate still holds on review, then close
+    // review and arbitration through the public write paths -- the R2 round then
+    // reads as complete, same as any other fully-submitted round.
     await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}&status=dry_run_in_progress`);
+    await expect(page.locator('#statusBadge')).toContainText('試標進行中');
+    await applyDryRunState(page, TASK_ID, { outKey: 'multi_label', review: true, arbitrate: 'all' });
+    await page.reload();
     await expect(page.locator('#statusBadge')).toContainText('待 IAA 確認');
   });
 

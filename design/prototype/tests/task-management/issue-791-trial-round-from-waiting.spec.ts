@@ -17,7 +17,8 @@
  */
 import { test, expect, type Page } from '@playwright/test';
 
-const DRY_RUN_PROGRESS_KEY = 'labelsuite.prototypeDryRunProgress';
+import { openWithState, applyDryRunState, expectStillInProgress, WAITING_BADGE } from './_dry-run-completion-helpers';
+
 const TASK_ID = 'T001';
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 
@@ -44,35 +45,29 @@ test('publishing R1 from draft always lands in dry_run_in_progress regardless of
   await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(1);
 });
 
-test('a fully-submitted dry-run progress moves the task into waiting_iaa_confirmation regardless of the round outcome (FR-008a, FR-010o-3)', async ({ page }) => {
-  await page.addInitScript(
-    ({ key, taskId }) => {
-      window.localStorage.setItem(
-        key,
-        JSON.stringify({ runType: 'dry_run', taskId, submittedSamples: 1, totalSamples: 1 })
-      );
-    },
-    { key: DRY_RUN_PROGRESS_KEY, taskId: TASK_ID }
-  );
+test('submission alone no longer moves the task into waiting_iaa_confirmation; once review, arbitration and the exception pool are complete it does so regardless of the round outcome (FR-008a, FR-010o-3, #1120 G4a)', async ({ page }) => {
+  // #1120 G4a overturns the old "fully submitted -> waiting_iaa_confirmation" assertion: that
+  // transition now also needs dry_run review, arbitration and pool closure (DRY_RUN_COMPLETION_RULE).
+  // T001 has no seeded dry-run review units, so the review-aware fixture uses T014 (R1, 5 samples).
+  // Half 1: every sample submitted but review/arbitration outstanding -> must stay in progress.
+  await openWithState(page, 'T014', 5, {});
+  await expectStillInProgress(page, 'T014');
 
-  // task-detail.html has no cross-reload persistence of TASK_DATA itself
-  // (only DRY_RUN_PROGRESS_KEY survives a navigation), so this loads
-  // dry_run_in_progress directly rather than clicking through a real R1 --
-  // syncStatusFromDryRunProgress() only runs once, synchronously, inside
-  // init(). The round it sees is task-detail.html's own not-yet-computable
-  // fallback (getTrialRounds()'s synthesis, since T001 has no seeded
-  // dry-run submissions), but the transition below is unconditional on the
-  // round's outcome either way, which is exactly what FR-010o-3 requires.
-  // D2: syncStatusFromDryRunProgress() fills that fallback record with
-  // getTrialRoundScenario(1)'s scripted result only once it fires this
-  // transition -- getTrialRoundScenario(1) is 'failed', so the round-history
-  // badge below reads 未通過.
-  await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}&status=dry_run_in_progress`);
-
-  await expect(page.locator('#statusBadge')).toContainText('待 IAA 確認');
-  await expect(page.locator('#trialRoundTimeline .round-status-badge').first()).toHaveText('未通過');
-  await expect(page.locator('#publishOfficialRunBtn')).toBeEnabled();
+  // Half 2: complete review and arbitration, re-evaluate on load -> the transition still happens
+  // whatever the round's IAA outcome is (FR-010o-3), and both publish buttons are offered again.
+  await applyDryRunState(page, 'T014', { review: true, arbitrate: 'all' });
+  await page.reload();
+  await expect(page.locator('#statusBadge')).toContainText(WAITING_BADGE);
   await expect(page.locator('#publishDryRunBtn')).toBeEnabled();
+  // T014's official pool is 0 (datasetTotal 5, the synthetic R1 uses all 5), so FR-022 correctly
+  // disables the official button, so the disabled state, its pool reason and the absence of IAA
+  // wording are all asserted unconditionally (FR-010o-3).
+  const official = page.locator('#publishOfficialRunBtn');
+  await expect(official).toBeDisabled();
+  await expect(official).toHaveAttribute('aria-describedby', 'publishPoolReason');
+  await expect(page.locator('#publishPoolReason')).toBeVisible();
+  const reasonText = await page.locator('#publishPoolReason').innerText();
+  expect(reasonText).not.toMatch(/IAA/i);
 });
 
 test('creating R2 from waiting_iaa_confirmation lands in dry_run_in_progress, never straight back to waiting_iaa_confirmation (FR-013(2)-(3))', async ({ page }) => {
@@ -105,7 +100,7 @@ test('creating R2 from waiting_iaa_confirmation lands in dry_run_in_progress, ne
   // FR-013: the label is R{trial_round + 1}. With R1 and R2 both
   // materialized in TASK_DATA.trialRounds, the next round is R3.
   await expect(page.locator('#publishDryRunBtn')).toHaveText('新增試標回合 R3');
-  await expect(page.locator('#publishActionRow')).toContainText('本回合全部提交並完成 IAA 後才能新增下一回合');
+  await expect(page.locator('#publishActionRow')).toContainText('本回合的標註、必要審核與必要仲裁全部完成後才能新增下一回合');
   await expect(page.locator('#publishActionRow button')).toHaveCount(1);
 
   // Reloading before any R2 progress is written must not auto-advance past
