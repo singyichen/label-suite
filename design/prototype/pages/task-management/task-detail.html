@@ -6315,7 +6315,6 @@ function interpolate(template, payload) {
     if (!actionRow) return;
     renderPublishArbiterWarning();
     var nextRound = getTrialRounds().length + 1;
-    if (TASK_DATA.status !== 'dry_run_in_progress') actionRow.removeAttribute('data-rendered');
 
     if (state.taskRole === 'reviewer') {
       actionRow.innerHTML = '<button class="btn btn-cta" type="button" disabled title="' + t('reviewerHint') + '">' + t('dryRunDisabled') + '</button>';
@@ -6343,11 +6342,7 @@ function interpolate(template, payload) {
         (trialReasons.length
           ? '<ul class="status-hint" id="publishDryRunReasons">' + trialReasons.map(function(reason) { return '<li>' + reason + '</li>'; }).join('') + '</ul>'
           : '<span class="status-hint">' + t('dryRunNextRoundReason') + '</span>');
-      /* Re-rendering identical markup (the skeleton's delayed renderOverview) must not replace the nodes. */
-      if (actionRow.getAttribute('data-rendered') !== trialHtml) {
-        actionRow.innerHTML = trialHtml;
-        actionRow.setAttribute('data-rendered', trialHtml);
-      }
+      actionRow.innerHTML = trialHtml;
       return;
     }
 
@@ -10768,7 +10763,8 @@ function getTaskTypeLabel() {
     var submitted = Number(progress.submittedSamples);
     var total = Number(progress.totalSamples);
     if (!Number.isFinite(submitted) || !Number.isFinite(total)) return false;
-    var stageId = getDefaultProgressStage();
+    /* Dry-run stages are keyed 'r{round}'; getDefaultProgressStage() would fall back to 'official'. */
+    var stageId = 'r' + activeRound;
     var effectiveTotal = total - getAssignmentCount(getExcludedForStage(stageId));
     return effectiveTotal >= 1 && submitted >= effectiveTotal &&
       getAssignmentCount(getUnassignedForStage(stageId)) === 0;
