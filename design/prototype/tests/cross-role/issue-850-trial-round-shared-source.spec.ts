@@ -27,8 +27,11 @@
  */
 import { test, expect, type Page } from '@playwright/test';
 import { buildListUrl, patchDataFile } from '../annotation/_workspace-helpers';
+import { openGateSatisfiedT016 } from '../task-management/_completion-gate-helpers';
 
 const TASK_ID = 'T002';
+// Regression B runs on T016: the only task whose review state can satisfy FR-008b.
+const COMPLETION_TASK_ID = 'T016';
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 const MY_ANNOTATOR_ID = 'kioleemg12';
 const REVIEWER_ID = 'reviewer_wang';
@@ -485,6 +488,10 @@ test.describe('issue #850: task-detail and annotation pages share no trial-round
     // scripts run, clobbering the 'completed' record publishComplete() just
     // persisted and failing the reload assertion for a fixture reason, not
     // the product regression this test targets.
+    // FR-008b (issue #1120 G3): completion is gated on live review state, which
+    // T002 does not carry. T016 is the review-flow demo task that can be driven
+    // to a gate-satisfying state; the persistence behavior under test is
+    // task-independent, so the same stale-record scenario runs on T016.
     await page.addInitScript(
       ({ key, taskId, marker }) => {
         if (window.localStorage.getItem(marker)) return;
@@ -494,10 +501,10 @@ test.describe('issue #850: task-detail and annotation pages share no trial-round
         );
         window.localStorage.setItem(marker, '1');
       },
-      { key: TRIAL_RUN_STATE_KEY, taskId: TASK_ID, marker: SEED_STALE_OFFICIAL_MARKER }
+      { key: TRIAL_RUN_STATE_KEY, taskId: COMPLETION_TASK_ID, marker: SEED_STALE_OFFICIAL_MARKER }
     );
 
-    await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}`);
+    await openGateSatisfiedT016(page, TASK_DETAIL_URL);
     await expect(page.locator('#statusBadge')).toContainText('正式標記進行中');
 
     await page.locator('#publishCompleteBtn').click();
@@ -509,7 +516,7 @@ test.describe('issue #850: task-detail and annotation pages share no trial-round
     await expect(page.locator('#statusBadge')).toContainText('已完成');
 
     await page.goto('/pages/task-management/task-list.html?task_role=project_leader');
-    const row = page.locator('#taskTableBody tr[data-source-file="multi-label.json"]');
+    const row = page.locator('#taskTableBody tr[data-source-file="review-flow-official-multi.json"]');
     await expect(row).toContainText('已完成');
   });
 });

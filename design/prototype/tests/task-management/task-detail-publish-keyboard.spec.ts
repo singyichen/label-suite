@@ -3,6 +3,7 @@
  *   FR-008, FR-013
  */
 import { test, expect } from '@playwright/test';
+import { openGateSatisfiedT016 } from './_completion-gate-helpers';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html?task_id=T001';
 
@@ -48,7 +49,10 @@ test.describe('Publish actions are keyboard-operable (A11Y-03)', () => {
   });
 
   test('Enter on the focused 標記完成 button completes the task', async ({ page }) => {
-    await page.goto(TASK_DETAIL_URL + '&status=official_run_in_progress');
+    // FR-008b (issue #1120 G3): 標記完成 is natively disabled until review state is
+    // closed, so a disabled button could not take Enter. Use the gate-satisfying
+    // T016 fixture; the keyboard activation under test is unchanged.
+    await openGateSatisfiedT016(page, '/pages/task-management/task-detail.html');
 
     const completeBtn = page.getByRole('button', { name: '標記完成' });
     await expect(completeBtn).toBeVisible();

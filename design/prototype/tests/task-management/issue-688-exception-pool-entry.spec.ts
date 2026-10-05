@@ -126,17 +126,19 @@ test.describe('Final exception pool entry + completion gate (issue #688)', () =>
   });
 
   // FR-008b point 4: a non-empty official_run final exception pool blocks
-  // "標記完成" and names the concrete reason, matching the SC-043/FR-008b
-  // scenario's "最終例外池尚有 N 項待處置" copy pattern.
+  // "標記完成". Since issue #1120 G3 the block is the natively disabled button
+  // plus a visible reason list in #publishActionRow (not a click-time toast), so
+  // the SC-043 "例外池尚有 N 項待處置" reason is asserted there.
   test('blocks 標記完成 and names the exception-pool reason when official_run pool is non-empty', async ({ page }) => {
     await page.goto(TASK_DETAIL_URL + '?task_id=T016&status=official_run_in_progress');
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
 
     await page.locator('#tabOverview').click();
     await expect(page.locator('#overviewPanel')).not.toHaveClass(/hidden/);
-    await page.locator('#publishCompleteBtn').click();
 
-    await expect(page.locator('#toastMsg')).toContainText(/最終例外池尚有\s*\d+\s*項待處置/);
+    await expect(page.locator('#publishCompleteBtn')).toBeDisabled();
+    await expect(page.locator('#publishActionRow li', { hasText: '例外池' })).toBeVisible();
+    await expect(page.locator('#publishActionRow li', { hasText: '例外池' })).toContainText(/(^|\D)1(\D|$)/);
     await expect(page.locator('#statusBadge')).not.toHaveText('已完成');
   });
 });

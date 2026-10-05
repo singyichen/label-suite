@@ -2749,6 +2749,9 @@
       toastCompleteBlocked: '結案前置條件尚未滿足，無法標記完成：',
       completeBlockerExceptionPoolTpl: '最終例外池尚有 {count} 項待處置',
       completeBlockerSubmission: '正式標記作業尚未全數提交',
+      completeBlockerReviewTpl: '尚有 {count} 個審核單位未定稿',
+      completeBlockerReviewNoData: '尚無審核資料，所有審核單位須定稿後才能結案',
+      completeBlockerDisputedTpl: '尚有 {count} 個審核單位處於爭議中',
       unassignedAnnotationTitle: '未指派標記作業',
       unassignedAnnotationSubtitle: '未指派試標作業會阻擋進入待 IAA 確認；正式標記未指派作業會影響完成率。請重新指派給啟用中的標記員，或排除並保留原因。',
       thUnassignedStage: '階段 / 回合',
@@ -3278,6 +3281,9 @@
       toastCompleteBlocked: 'Completion preconditions not met, cannot mark complete: ',
       completeBlockerExceptionPoolTpl: 'Final exception pool still has {count} pending item(s)',
       completeBlockerSubmission: 'Official run submissions are not yet complete',
+      completeBlockerReviewTpl: '{count} review unit(s) are not yet finalized',
+      completeBlockerReviewNoData: 'No review data yet; every review unit must be finalized before completion',
+      completeBlockerDisputedTpl: '{count} review unit(s) are still disputed',
       unassignedAnnotationTitle: 'Unassigned annotation assignments',
       unassignedAnnotationSubtitle: 'Unassigned trial work blocks Waiting IAA confirmation; unassigned official work affects completion rate. Reassign it to an active annotator, or exclude it with an audit reason.',
       thUnassignedStage: 'Stage / round',
@@ -6361,7 +6367,12 @@ function interpolate(template, payload) {
     }
 
     if (TASK_DATA.status === 'official_run_in_progress') {
-      actionRow.innerHTML = '<button class="btn btn-primary" type="button" id="publishCompleteBtn">' + t('publishComplete') + '</button>';
+      /* FR-008b / AC-3.9 / SC-037: native disabled + one visible reason per unmet condition. */
+      var completeReasons = getTaskCompletionBlockerMessages();
+      actionRow.innerHTML = completeReasons.length
+        ? '<button class="btn btn-primary" type="button" id="publishCompleteBtn" disabled aria-describedby="publishCompleteReasons">' + t('publishComplete') + '</button>' +
+          '<ul class="status-hint" id="publishCompleteReasons">' + completeReasons.map(function(reason) { return '<li>' + reason + '</li>'; }).join('') + '</ul>'
+        : '<button class="btn btn-primary" type="button" id="publishCompleteBtn">' + t('publishComplete') + '</button>';
       return;
     }
 
@@ -10719,35 +10730,72 @@ function getTaskTypeLabel() {
     renderOverview();
   }
 
-  /* FR-008b: task-completion blockers, localized. Condition 4 (final
-     exception pool) is always scoped to `official_run` regardless of the
-     annotation-progress panel's currently selected round (FR-008b point 4:
-     "僅計 official_run 的待處置項目") -- unlike renderFinalExceptionPoolSection()
-     above, this never follows getSelectedRunType(). See
-     task-detail.data.js's getTaskCompletionBlockers() doc comment for which
-     of the five FR-008b conditions this prototype iteration wires live. */
+  /* FR-008b: live completion signals. Always scoped to `official_run`
+     (FR-008b(4), FR-018(5)), never to the progress panel's selected round.
+     Nothing here re-derives review status: units come from 015's
+     listReviewUnits() (FR-051 derivation) and the open dispute items from
+     listReviewPoolItems(). 015 reads an exclude_from_dataset-closed unit as
+     `disputed` (FR-063, no gold value); FR-008b(2) counts such a unit as
+     closed, so a `disputed` unit with no open dispute item left (every item
+     resolved by arbitration or by the exception pool, incl. exclusion) is
+     treated as closed for conditions (2) and (3) only. A null status (no
+     annotator submission / no review data) is never closed. */
+  function getCompletionSignals() {
+    var detailData = window.LabelSuiteTaskDetailData;
+    var wsData = window.LabelSuiteAnnotationWorkspaceData;
+    var officialProgress = ANNOTATION_PROGRESS && ANNOTATION_PROGRESS.official;
+    var excluded = getAssignmentCount(getExcludedForStage('official'));
+    var effectiveTotal = officialProgress ? Math.max(0, Number(officialProgress.totalSamples) - excluded) : 0;
+    var submissionComplete = Boolean(officialProgress) && effectiveTotal > 0 &&
+      Number(officialProgress.completedSamples) >= effectiveTotal;
+
+    var units = wsData && wsData.listReviewUnits ? wsData.listReviewUnits(TASK_DATA.taskId, 'official_run') : [];
+    var poolItems = wsData && wsData.listReviewPoolItems
+      ? wsData.listReviewPoolItems(TASK_DATA.taskId, 'official_run')
+      : { awaitingArbitration: [], pendingExceptions: [] };
+    var openKeys = {};
+    poolItems.awaitingArbitration.concat(poolItems.pendingExceptions).forEach(function(item) {
+      openKeys[item.sampleId + '::' + item.annotatorId] = true;
+    });
+    var unfinalized = 0;
+    var disputed = 0;
+    units.forEach(function(unit) {
+      if (unit.status === 'finalized') return;
+      if (unit.status === 'disputed') {
+        if (openKeys[unit.sampleId + '::' + unit.annotatorId]) { unfinalized += 1; disputed += 1; }
+        return;
+      }
+      unfinalized += 1;
+    });
+    return {
+      submissionComplete: submissionComplete,
+      reviewFinalized: units.length > 0 && unfinalized === 0,
+      reviewUnfinalizedCount: units.length ? unfinalized : null,
+      noDisputedUnits: units.length > 0 && disputed === 0,
+      disputedUnitCount: disputed,
+      exceptionPoolPendingCount: detailData.getFinalExceptionPoolItems(TASK_DATA.taskId, 'official_run').length
+    };
+  }
+
+  /* FR-008b: task-completion blockers, localized. Condition 5 (quality
+     metrics) is still pending a maintainer ruling (issue #1120); see
+     task-detail.data.js's getTaskCompletionBlockers() doc comment. */
   function getTaskCompletionBlockerMessages() {
     var detailData = window.LabelSuiteTaskDetailData;
     if (!detailData) return [];
-    /* Condition 1 (submission complete) is NOT wired as a live gate here,
-       same reasoning and same scope note as conditions 2/3/5 in
-       task-detail.data.js's getTaskCompletionBlockers() doc comment:
-       ANNOTATION_PROGRESS is decorative demo data never derived from the
-       live publishOfficialRun()/publishComplete() click flow (unlike the
-       exception pool below, which reads the REAL 015 dispute/arbitration
-       state), so gating on it here would block completion for reasons
-       unrelated to this task's actual submission state. Only FR-018's
-       exception pool (this change's actual new gate) is live-wired. */
-    var exceptionPoolPendingCount = detailData.getFinalExceptionPoolItems(TASK_DATA.taskId, 'official_run').length;
-    var blockers = detailData.getTaskCompletionBlockers({
-      submissionComplete: true,
-      exceptionPoolPendingCount: exceptionPoolPendingCount
-    });
-    return blockers.map(function(blocker) {
+    return detailData.getTaskCompletionBlockers(getCompletionSignals()).map(function(blocker) {
       if (blocker.code === 'exception_pool_pending') {
         return interpolate(t('completeBlockerExceptionPoolTpl'), { count: blocker.count });
       }
       if (blocker.code === 'submission_incomplete') return t('completeBlockerSubmission');
+      if (blocker.code === 'review_pending') {
+        return blocker.count === null || blocker.count === undefined
+          ? t('completeBlockerReviewNoData')
+          : interpolate(t('completeBlockerReviewTpl'), { count: blocker.count });
+      }
+      if (blocker.code === 'disputed_units') {
+        return interpolate(t('completeBlockerDisputedTpl'), { count: blocker.count });
+      }
       return '';
     }).filter(function(message) { return Boolean(message); });
   }
