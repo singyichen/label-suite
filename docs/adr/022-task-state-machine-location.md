@@ -122,7 +122,7 @@ The original `dry_run_in_progress → waiting_iaa_confirmation` pre-condition al
 
 ### Amendment (2026-10-02, issue #1120) — Trial-Completion Guard Covers Review, Arbitration and the Exception Pool
 
-The 2026-09-18 amendment reduced the `dry_run_in_progress → waiting_iaa_confirmation` guard to "all dry-run annotations submitted". Issue #1120 found that this lets a task leave the trial stage while `dry_run` review units are still open, disputes are unresolved, or the `dry_run` exception pool still holds items. With maintainer authorization on 2026-10-02 (canonical `specs/task-management/014-task-detail/` bumped to 5.0.0, MAJOR/BREAKING, because FR-008a's auto-transition sufficiency is withdrawn), the guard now requires **all** of the following, evaluated for the current round only:
+The 2026-09-18 amendment reduced the `dry_run_in_progress → waiting_iaa_confirmation` guard to "all dry-run annotations submitted". Issue #1120 found that this lets a task leave the trial stage while `dry_run` review units are still open, disputes are unresolved, or the `dry_run` exception pool still holds items. With maintainer authorization on 2026-10-02 (OpenSpec change `1120-task-lifecycle-alignment` amends `specs/task-management/014-task-detail/` as MAJOR/BREAKING, bumping it to 5.0.0 at write-back in task 5.7, because FR-008a's auto-transition sufficiency is withdrawn), the guard now requires **all** of the following, evaluated for the current round only:
 
 1. No unassigned `dry_run` annotation work — unchanged.
 2. Every `membership_status = active` annotator has `assigned_count == completed_count` — unchanged.
@@ -130,7 +130,7 @@ The 2026-09-18 amendment reduced the `dry_run_in_progress → waiting_iaa_confir
 4. No `dry_run` review unit is disputed (required arbitration completed).
 5. The `dry_run` exception pool is empty.
 
-Conditions 3 and 4 read the review-unit derivation of `specs/annotation/015-annotation-workspace/` FR-051 and the dispute resolution of FR-061; the 014 side does not build a second derivation. Condition 5 follows 014 FR-018 point (5), which now counts `dry_run` exception items toward this guard and `official_run` items toward the `completed` guard, each counted independently. 014 FR-013 point (1) (disabled-reason text) follows the same rule.
+Conditions 3 and 4 read the review-unit derivation of `specs/annotation/015-annotation-workspace/` FR-051 and the dispute resolution of FR-061; the 014 side does not build a second derivation. Condition 5 follows the change's FR-018 point (5), which counts `dry_run` exception items toward this guard and `official_run` items toward the `completed` guard, each counted independently. 014 FR-013 point (1) (disabled-reason text) follows the same rule.
 
 `check_preconditions` must evaluate all five conditions and surface the specific unmet conditions with their remaining counts, as it already does for `completed` (Amendment 2026-08-19). The user-facing behavior is specified in `specs/task-management/014-task-detail/` FR-008a.
 
