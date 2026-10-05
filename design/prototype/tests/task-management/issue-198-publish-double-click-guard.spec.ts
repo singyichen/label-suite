@@ -80,7 +80,8 @@ test.describe('Publish button double-click guard (issue #198)', () => {
     await page.clock.fastForward(1000);
 
     await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(1);
-    await expect(page.locator('#trialRoundsUsedValue')).toHaveText('1');
+    // FR-010u (3): the just-published R1 is still active, so it is not a completed round.
+    await expect(page.locator('#trialRoundsUsedValue')).toHaveText('0');
     expect(await readPublishSuccessCount(page)).toBe(1);
   });
 
@@ -90,7 +91,8 @@ test.describe('Publish button double-click guard (issue #198)', () => {
     await page.locator('#publishDryRunBtn').click();
 
     await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(1);
-    await expect(page.locator('#trialRoundsUsedValue')).toHaveText('1');
+    // FR-010u (3): the just-published R1 is still active, so it is not a completed round.
+    await expect(page.locator('#trialRoundsUsedValue')).toHaveText('0');
   });
 
   test('double-clicking 發布正式標記 with isolation enabled results in exactly one publish', async ({ page }) => {

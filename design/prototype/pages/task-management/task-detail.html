@@ -3716,7 +3716,16 @@
       official: { id: 'official', status: 'pending', result: null, iaa: null, totalSamples: 0, completedSamples: 0, avgSpeed: 0, remainingEta: '-', remainingEtaEn: '-', members: [] },
     },
     T015: {
-      rounds: [],
+      rounds: [
+        {
+          id: 'r1', roundNum: 1, status: 'completed', result: 'failed', iaa: 0.62,
+          totalSamples: 1, completedSamples: 1, avgSpeed: 5.0,
+          remainingEta: '-', remainingEtaEn: '-',
+          members: [
+            { name: 'Alex Wang', role: 'annotator', completed: 1, pending: 0, avgSpeed: 5.0, lastSubmitted: '2026-08-18 09:30', quality: 'good' },
+          ],
+        },
+      ],
       official: {
         id: 'official', status: 'active', result: null, iaa: null,
         totalSamples: 5, completedSamples: 4, avgSpeed: 5.0,
@@ -3728,7 +3737,24 @@
       },
     },
     T016: {
-      rounds: [],
+      rounds: [
+        {
+          id: 'r1', roundNum: 1, status: 'completed', result: 'failed', iaa: 0.62,
+          totalSamples: 1, completedSamples: 1, avgSpeed: 5.0,
+          remainingEta: '-', remainingEtaEn: '-',
+          members: [
+            { name: 'Alex Wang', role: 'annotator', completed: 1, pending: 0, avgSpeed: 5.0, lastSubmitted: '2026-08-18 09:30', quality: 'good' },
+          ],
+        },
+        {
+          id: 'r2', roundNum: 2, status: 'completed', result: 'passed', iaa: 0.84,
+          totalSamples: 1, completedSamples: 1, avgSpeed: 5.0,
+          remainingEta: '-', remainingEtaEn: '-',
+          members: [
+            { name: 'Alex Wang', role: 'annotator', completed: 1, pending: 0, avgSpeed: 5.0, lastSubmitted: '2026-08-19 09:30', quality: 'good' },
+          ],
+        },
+      ],
       official: {
         id: 'official', status: 'active', result: null, iaa: null,
         totalSamples: 5, completedSamples: 5, avgSpeed: 5.5,
@@ -4890,7 +4916,6 @@ function interpolate(template, payload) {
     if (EXPORT_HISTORY_BY_TASK[resolvedId]) {
       TASK_DATA.exportHistory = cloneData(EXPORT_HISTORY_BY_TASK[resolvedId]);
     }
-    state.progressStage = getDefaultProgressStage();
     if (listEntry) {
       TASK_DATA.taskNameZh = listEntry.nameZh;
       TASK_DATA.taskNameEn = listEntry.nameEn;
@@ -4899,6 +4924,7 @@ function interpolate(template, payload) {
       TASK_DATA.datasetSourceZh = listEntry.sourceFile;
       TASK_DATA.datasetSourceEn = listEntry.sourceFile;
     }
+    state.progressStage = getDefaultProgressStage();
     if (profile) {
       TASK_DATA.taskCategories = (profile.taskCategories || []).slice();
       TASK_DATA.taskInputTypes = (profile.taskInputTypes || []).slice();
@@ -4906,7 +4932,11 @@ function interpolate(template, payload) {
       TASK_DATA.fieldRoleMap = Object.assign({}, profile.fieldRoleMap || {});
       TASK_DATA.datasetFileName = profile.datasetFileName || TASK_DATA.datasetSourceZh;
       TASK_DATA.datasetRecords = cloneData(profile.datasetRecords || []);
-      TASK_DATA.datasetTotal = TASK_DATA.datasetRecords.length;
+      /* issue #1120 (FR-010f-3, maintainer ruling 2026-10-05): a profile's
+         datasetTotal covers the whole dataset including trial-history
+         samples that are not in datasetRecords (the official records stay
+         bound to docs/product/example-data), so it wins over the count. */
+      TASK_DATA.datasetTotal = Number(profile.datasetTotal) || TASK_DATA.datasetRecords.length;
       /* issue #596: reviewer_ids / arbiter_ids seed the single-owner review
          relay roster; only overwrite the shared DEFAULT_TASK_DATA roster
          when this profile actually seeds its own (T014-T016), same
@@ -5733,6 +5763,14 @@ function interpolate(template, payload) {
     }];
   }
 
+  /* issue #1120 (FR-010u (3)): "rounds used" counts completed history
+     only -- while the task is in dry_run_in_progress the latest round is
+     the active one and is listed separately, never accumulated. */
+  function getCompletedTrialRoundCount() {
+    var count = getTrialRounds().length;
+    return TASK_DATA.status === 'dry_run_in_progress' ? Math.max(count - 1, 0) : count;
+  }
+
   function getCurrentTrialRound() {
     var rounds = getTrialRounds();
     return rounds.length ? rounds[rounds.length - 1] : null;
@@ -6079,7 +6117,6 @@ function interpolate(template, payload) {
       reserve: reserveCount + unitText,
     });
     var currentRound = getCurrentTrialRound();
-    var roundCount = getTrialRounds().length;
     var taskStageKey = getTaskStageKey();
     var roundOutcomeKey = getRoundOutcomeKey();
 
@@ -6099,7 +6136,7 @@ function interpolate(template, payload) {
     );
 
     setText('trialRoundValue', currentRound ? 'R' + currentRound.round : '-');
-    setText('trialRoundsUsedValue', String(roundCount));
+    setText('trialRoundsUsedValue', String(getCompletedTrialRoundCount()));
     setText('targetAgreementValue', Number(getPrimaryTargetAgreement()).toFixed(2));
     /* issue #491: formatIaaValue() renders "cannot compute" instead of
        coercing null/undefined to 0 -- the exact bug this issue reports. */
@@ -6185,6 +6222,17 @@ function interpolate(template, payload) {
             valueText: TASK_DATA.datasetTotal + unitText,
             count: Number(TASK_DATA.datasetTotal) || 0,
             color: isMaterializedOfficialPool ? '#14B8A6' : '#94A3B8'
+          }];
+        }
+        /* issue #1120 (acceptance 12): once the official run is the stage
+           at hand, the split view shows the official pool alone; finished
+           history rounds are listed in the timeline, not merged into it. */
+        if (taskStageKey === 'official' || taskStageKey === 'completed') {
+          return [{
+            label: t('officialReserveLabel'),
+            valueText: String(reserveCount) + unitText,
+            count: reserveCount,
+            color: '#14B8A6'
           }];
         }
         var segments = rounds.map(function(round) {
@@ -7971,6 +8019,9 @@ function getTaskTypeLabel() {
      resetTaskData() and URL_VIEW_STATE so the value the URL omits and the
      value the page starts on can never diverge. */
   function getDefaultProgressStage() {
+    /* issue #1120: while the official run is in progress that run is the
+       work at hand; history rounds stay one pill click away. */
+    if (TASK_DATA.status === 'official_run_in_progress') return 'official';
     return ANNOTATION_PROGRESS.rounds.length
       ? ANNOTATION_PROGRESS.rounds[ANNOTATION_PROGRESS.rounds.length - 1].id
       : 'official';

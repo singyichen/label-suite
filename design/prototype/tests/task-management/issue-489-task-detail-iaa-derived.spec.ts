@@ -102,10 +102,12 @@ test.describe('task-detail derives T014 IAA from marks (issue #489/#491)', () =>
   });
 
   test('shows "無法計算" instead of 0.00 when no marks support an alpha', async ({ page }) => {
-    /* T015 is official_run: one annotator per sample, so De = 0 and alpha
-       is mathematically undefined. dataset-017 FR-039 point 4 forbids
-       falling back to any number here. */
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T015`);
+    /* T003 is an official_run task with no trial-round history, so no
+       round supplies an alpha and none is derivable from its marks.
+       dataset-017 FR-039 point 4 forbids falling back to any number here.
+       T015 was the fixture until issue #1120 gave it a historical trial
+       round R1 (IAA 0.62), so its field now correctly shows 0.62. */
+    await page.goto(`${TASK_DETAIL_URL}?task_id=T003`);
     const value = page.locator('#currentAgreementValue');
     await expect(value).toHaveText('無法計算');
     await expect(value).not.toHaveText('0.00');

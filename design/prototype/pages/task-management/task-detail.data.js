@@ -1156,6 +1156,27 @@
           text: '老闆娘會記得常客的喜好，這種人情味在連鎖餐廳感受不到。',
           gold_label: 'positive'
         }
+      ],
+      /* issue #1120 (design.md D5, maintainer ruling 2026-10-05): the
+         trial history lives outside datasetRecords -- datasetTotal is the
+         full dataset (history samples + the 5 official records bound to
+         docs/product/example-data), so the official pool stays 5. Rounds
+         are finished ('done') results, never IAA-computing (FR-010o-4). */
+      datasetTotal: 6,
+      trialRounds: [
+        {
+          round: 1,
+          sampleCount: 1,
+          agreement: 0.62,
+          annotators: 3,
+          std: 0.1,
+          result: 'failed',
+          usedSamples: 1,
+          date: '2026-08-18',
+          noteZh: 'R1 試標一致性低於目標值 0.80，未通過，已調整指南後進入正式標記。',
+          noteEn: 'R1 trial agreement fell below the 0.80 target and failed; guidelines were revised before the official run.',
+          iaaComputationStatus: 'done'
+        }
       ]
     },
 
@@ -1209,6 +1230,40 @@
           id: 'ofm-05-final-exception',
           text: '餐點好吃但服務很糟，價格又偏貴，實在說不上推不推薦。',
           gold_label: 'neutral'
+        }
+      ],
+      /* issue #1120 (design.md D5, maintainer ruling 2026-10-05): the
+         trial history lives outside datasetRecords -- datasetTotal is the
+         full dataset (history samples + the 5 official records bound to
+         docs/product/example-data), so the official pool stays 5. Rounds
+         are finished ('done') results, never IAA-computing (FR-010o-4). */
+      datasetTotal: 7,
+      trialRounds: [
+        {
+          round: 1,
+          sampleCount: 1,
+          agreement: 0.62,
+          annotators: 3,
+          std: 0.1,
+          result: 'failed',
+          usedSamples: 1,
+          date: '2026-08-18',
+          noteZh: 'R1 試標一致性低於目標值 0.80，未通過，已調整指南後再試標。',
+          noteEn: 'R1 trial agreement fell below the 0.80 target and failed; guidelines were revised before the next trial.',
+          iaaComputationStatus: 'done'
+        },
+        {
+          round: 2,
+          sampleCount: 1,
+          agreement: 0.84,
+          annotators: 3,
+          std: 0.1,
+          result: 'passed',
+          usedSamples: 1,
+          date: '2026-08-19',
+          noteZh: 'R2 試標一致性達到目標值 0.80，已通過，進入正式標記。',
+          noteEn: 'R2 trial agreement reached the 0.80 target and passed; the task proceeded to the official run.',
+          iaaComputationStatus: 'done'
         }
       ]
     },
