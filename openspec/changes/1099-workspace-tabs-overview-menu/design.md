@@ -71,6 +71,19 @@
 - 跳過數量 > 0 時顯示提示（複用既有 `#toast` 機制，比照 `showWorkspaceTabCapNotice()` 前例新增 `showWorkspaceTabCloseAllSkippedNotice(count)`）。
 - 作用中頁籤若被關閉，焦點規則比照 `shared-008` `FR-022`（優先右鄰、否則左鄰、全空則空狀態）——全部關閉情境下「右鄰」「左鄰」皆可能同時被關閉，此時最終焦點應落在**僅存的未儲存頁籤**（若有）或空狀態；此邊界規則由 G3 的 Red 測試明確定義一個可觀測斷言，不留给實作臆測。
 
+## G4 — 頁籤貼齊頂端／直角＋總覽選單單行（維護者 2026-10-05 補充，G3 合併後實際查看所得）
+
+### G4a 頁籤貼齊頂端、直角（PR-A，僅 CSS，無 spec delta）
+
+- 動機：NoteCraft 的頁籤上緣貼齊視窗頂端、為與頁籤列同高的直角矩形；目前 `.workspace-tab-bar` 以 `padding-top: var(--space-sm)` 讓頁籤浮在頁籤列上，且 `.workspace-tab` 上方兩角帶 `--radius-md` 圓角，呈現卡片感。屬 G1「視覺對齊 NoteCraft」同一驗收主題之延伸，未新增也未推翻任何 FR／AC（`FR-010`／`FR-001` 文字不變），故不寫 spec delta，僅更新本 design 與 `tasks.md`。
+- 規則：`.workspace-tab-bar` 頂部 padding 改為 0（左右 padding 與下緣 `border-bottom` 不動）；`.workspace-tab` `border-radius: 0`，高度填滿頁籤列（`align-self: stretch`，頁籤列 `align-items` 由 `center` 改為 `stretch` 或讓頁籤自行 stretch，以 computed style 複驗後擇一最小改動）。總覽選單觸發鈕維持原本相對位置（不得因 stretch 被拉高，需自行 `align-self: center`）。
+- 不動 `#1098` 的掛載位置／寬度邏輯；側欄展開／收合兩種狀態下頁籤列 top 皆為 0、頁籤上緣等於頁籤列 top。
+
+### G4b 總覽選單每列單行（PR-B，delta `FR-023`(2) 修訂）
+
+- 移除 `.workspace-tab-overview-item-secondary` 的 DOM 產生與 CSS 規則；每列＝圖示＋標題＋關閉鈕。`FR-023`(3)／`AC-023.3` 篩選比對範圍（標題＋頁面種類名稱）不變——種類名稱仍用於比對，只是不再顯示。
+- `FR-023` 目前僅存在於本 change delta（正典 019 v1.1.0 僅收 FR-001～022），故為 archive 前修改 delta，不推翻任何正典條文，非 MAJOR；最終回寫的 Changelog 一併載明。
+
 ## 待後續事項
 
 無——選單鍵盤模型、篩選演算法、重開快捷鍵三項已於 2026-10-02 由主 session 轉達維護者裁定全數採納，並已直接併入本文件與 `proposal.md`／spec delta（含 `specs/shared/008-sidebar-navbar-shared/` 的 MODIFIED delta）。G2／G3 現僅待各自前一群組 PR 合併後依序開始（嚴格序列，不可並行）。
