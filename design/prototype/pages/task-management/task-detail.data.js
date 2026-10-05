@@ -1573,31 +1573,33 @@
     return wsData.listReviewPoolItems(taskId, runType).pendingExceptions;
   }
 
-  /* FR-008b (issue #688): task-completion blocker list. `context` carries
-   * pre-computed signals from the caller (task-detail.html), which already
-   * owns TASK_DATA/ANNOTATION_PROGRESS/the exception-pool query above --
-   * this function stays a pure reducer over booleans/counts so it needs no
-   * DOM or global state of its own.
+  /* FR-008b (issue #688, #1120): task-completion blocker list. `context`
+   * carries pre-computed signals from the caller (task-detail.html), which
+   * owns the live derivations (015 review-unit status, exception pool,
+   * official submission progress) -- this function stays a pure reducer over
+   * booleans/counts so it needs no DOM or global state of its own.
    *
-   * Scope note: this prototype iteration wires only condition 4 (final
-   * exception pool, official_run only, FR-018) as a live gate. Conditions
-   * 1/2/3/5 (submission complete, review units finalized, no disputed unit,
-   * quality metrics ready) have no live-state derivation in 014 today --
-   * ANNOTATION_PROGRESS and REVIEW_WORKLOAD are decorative demo seeds never
-   * derived from the actual publish click flow (unlike the exception pool,
-   * which reads 015's real dispute/arbitration state), so gating on them
-   * would block completion for reasons unrelated to a given task's actual
-   * state. This function still accepts all five signals so a future change
-   * can wire the rest without changing its shape; each condition defaults
-   * to "satisfied" when the caller omits it, matching task-detail.html's
-   * current caller, which only computes exceptionPoolPendingCount. */
+   * Conditions 1-4 are live. A missing signal is NEVER read as satisfied
+   * ("missing data is not completion"): a condition is satisfied only when
+   * its signal is explicitly `true` (1, 2, 3) or exactly `0` (4).
+   * Counts (reviewUnfinalizedCount, disputedUnitCount) are passthrough
+   * display data for the caller's messages.
+   *
+   * Pending (issue #1120): condition 5 (quality metrics ready) has no data
+   * source defined in any spec yet and awaits a maintainer ruling, so it
+   * keeps its previous behaviour -- it only blocks when the caller passes
+   * `qualityMetricsReady === false`, which no caller does today. */
   function getTaskCompletionBlockers(context) {
     context = context || {};
     var blockers = [];
-    if (!context.submissionComplete) blockers.push({ code: 'submission_incomplete' });
-    if (context.reviewFinalized === false) blockers.push({ code: 'review_pending' });
-    if (context.noDisputedUnits === false) blockers.push({ code: 'disputed_units' });
-    if ((context.exceptionPoolPendingCount || 0) > 0) {
+    if (context.submissionComplete !== true) blockers.push({ code: 'submission_incomplete' });
+    if (context.reviewFinalized !== true) {
+      blockers.push({ code: 'review_pending', count: context.reviewUnfinalizedCount });
+    }
+    if (context.noDisputedUnits !== true) {
+      blockers.push({ code: 'disputed_units', count: context.disputedUnitCount });
+    }
+    if (context.exceptionPoolPendingCount !== 0) {
       blockers.push({ code: 'exception_pool_pending', count: context.exceptionPoolPendingCount });
     }
     if (context.qualityMetricsReady === false) blockers.push({ code: 'quality_metrics_not_ready' });
