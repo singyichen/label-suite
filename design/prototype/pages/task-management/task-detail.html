@@ -2560,6 +2560,8 @@
       dryRunNextRoundReason: '本回合全部提交並完成 IAA 後才能新增下一回合',
       retryIaaComputation: '重試計算',
       iaaComputationPendingOfficialReason: 'IAA 計算中，完成後才能開始正式標記',
+      officialPoolEmptyReason: '正式標記池剩餘 0 筆，無法開始正式標記',
+      draftPoolEmptyReason: '依目前抽樣數，發布後正式標記池將剩 0 筆，請調降抽樣數',
       iaaComputationPendingDryRunReason: 'IAA 計算中，完成後才能新增下一回合',
       iaaComputationFailedReason: 'IAA 計算失敗，請重試計算',
       trialRoundRevisionTitleTpl: '新增試標回合 R{round}：本輪修訂紀錄',
@@ -3087,6 +3089,8 @@
       dryRunNextRoundReason: 'Submit all outputs and finish IAA for this round before adding the next one',
       retryIaaComputation: 'Retry computation',
       iaaComputationPendingOfficialReason: 'IAA computation is in progress; official run can start once it finishes',
+      officialPoolEmptyReason: 'The official pool has 0 items remaining, so the official run cannot start',
+      draftPoolEmptyReason: 'With the current sampling value the official pool would have 0 items left; lower the sampling value',
       iaaComputationPendingDryRunReason: 'IAA computation is in progress; the next round can be added once it finishes',
       iaaComputationFailedReason: 'IAA computation failed. Please retry the computation',
       trialRoundRevisionTitleTpl: 'Add trial round R{round}: revision note',
@@ -5719,6 +5723,24 @@ function interpolate(template, payload) {
     return getOfficialRunCount();
   }
 
+  /* FR-022: single derivation of the pool left after a sample draw, shared by
+     the sampling split view and the publish guard (FR-010f-3 formula). */
+  function getReserveAfterSampling(sampleCount) {
+    return Math.max(TASK_DATA.datasetTotal - sampleCount, 0);
+  }
+
+  /* FR-022: i18n key of the pool-zero reason that blocks the next publish
+     (draft R1 at the current sampling value, or the official run), else null. */
+  function getPublishPoolBlockKey(kind) {
+    if (kind === 'official') return getOfficialPoolCount() === 0 ? 'officialPoolEmptyReason' : null;
+    if (TASK_DATA.status !== 'draft') return null;
+    return getReserveAfterSampling(Number(TASK_DATA.samplingValue) || 0) === 0 ? 'draftPoolEmptyReason' : null;
+  }
+
+  function poolReasonHtml(key) {
+    return '<span class="status-hint" id="publishPoolReason">' + t(key) + '</span>';
+  }
+
   function hasPassedTrialRound() {
     return getTrialRounds().some(function(round) { return round.result === 'passed'; });
   }
@@ -6164,7 +6186,7 @@ function interpolate(template, payload) {
     var numericSamplingValue = Number(data.samplingValue);
     var numericMinAnnotators = Number(data.minAnnotators);
     var sampleCount = Number.isFinite(numericSamplingValue) ? numericSamplingValue : 0;
-    var reserveCount = Math.max(TASK_DATA.datasetTotal - sampleCount, 0);
+    var reserveCount = getReserveAfterSampling(sampleCount);
 
     if (state.samplingEditMode) {
       renderSplitVisualization([
@@ -6290,7 +6312,16 @@ function interpolate(template, payload) {
     }
 
     if (TASK_DATA.status === 'draft') {
-      actionRow.innerHTML = '<button class="btn btn-cta" type="button" id="publishDryRunBtn">' + t('publishDryRun') + ' R1</button>';
+      var draftPoolKey = getPublishPoolBlockKey('dry');
+      /* FR-022(3): the member gap (FR-010t) is its own item next to the pool reason. */
+      var draftGaps = draftPoolKey ? getMembershipGapMessages() : [];
+      var draftDescribedBy = 'publishPoolReason' + (draftGaps.length ? ' publishMemberGapReason' : '');
+      var draftGapHtml = draftGaps.length
+        ? '<span class="status-hint" id="publishMemberGapReason">' + t('toastPublishBlockedMembers') + draftGaps.join(t('memberGapJoiner')) + '</span>'
+        : '';
+      actionRow.innerHTML = draftPoolKey
+        ? '<button class="btn btn-cta" type="button" id="publishDryRunBtn" disabled aria-describedby="' + draftDescribedBy + '">' + t('publishDryRun') + ' R1</button>' + poolReasonHtml(draftPoolKey) + draftGapHtml
+        : '<button class="btn btn-cta" type="button" id="publishDryRunBtn">' + t('publishDryRun') + ' R1</button>';
       return;
     }
 
@@ -6310,17 +6341,21 @@ function interpolate(template, payload) {
          already returns before this point, so state.taskRole here is
          always 'project_leader'. */
       var computationStatus = getRoundComputationStatus(getCurrentTrialRound());
+      /* FR-022: the pool reason is its own item, never merged into the IAA reason. */
+      var officialPoolKey = getPublishPoolBlockKey('official');
+      var officialPoolAttr = officialPoolKey ? ' aria-describedby="publishPoolReason"' : '';
+      var officialPoolHint = officialPoolKey ? poolReasonHtml(officialPoolKey) : '';
       if (computationStatus !== 'done') {
         var isPending = computationStatus === 'pending';
         actionRow.innerHTML =
-          '<button class="btn btn-primary" type="button" id="publishOfficialRunBtn" disabled>' + t('publishOfficialRun') + '</button>' +
-          '<span class="status-hint">' + t(isPending ? 'iaaComputationPendingOfficialReason' : 'iaaComputationFailedReason') + '</span>' +
+          '<button class="btn btn-primary" type="button" id="publishOfficialRunBtn" disabled' + officialPoolAttr + '>' + t('publishOfficialRun') + '</button>' +
+          '<span class="status-hint">' + t(isPending ? 'iaaComputationPendingOfficialReason' : 'iaaComputationFailedReason') + '</span>' + officialPoolHint +
           '<button class="btn btn-cta" type="button" id="publishDryRunBtn" disabled>' + t('publishDryRun') + ' R' + nextRound + '</button>' +
           '<span class="status-hint">' + t(isPending ? 'iaaComputationPendingDryRunReason' : 'iaaComputationFailedReason') + '</span>' +
           (isPending ? '' : '<button class="btn btn-secondary" type="button" id="retryIaaComputationBtn">' + t('retryIaaComputation') + '</button>');
         return;
       }
-      actionRow.innerHTML = '<button class="btn btn-primary" type="button" id="publishOfficialRunBtn">' + t('publishOfficialRun') + '</button>' +
+      actionRow.innerHTML = '<button class="btn btn-primary" type="button" id="publishOfficialRunBtn"' + (officialPoolKey ? ' disabled' : '') + officialPoolAttr + '>' + t('publishOfficialRun') + '</button>' + officialPoolHint +
         '<button class="btn btn-cta" type="button" id="publishDryRunBtn">' + t('publishDryRun') + ' R' + nextRound + '</button>';
       return;
     }
@@ -7424,6 +7459,9 @@ function getTaskTypeLabel() {
     annotationProgressPanel.classList.toggle('hidden', !annotationActive);
     workLogPanel.classList.toggle('hidden', !workLogActive);
     memberManagementPanel.classList.toggle('hidden', !memberActive);
+    /* FR-022(3): member changes made in the members tab must show up in the
+       overview action row (member gap) when returning to it. */
+    if (overviewActive) renderPublishActions();
   }
 
   function renderMemberTable() {
@@ -10562,7 +10600,15 @@ function getTaskTypeLabel() {
     publishDryRun();
   }
 
-  function canPublish() {
+  function canPublish(kind) {
+    var poolKey = getPublishPoolBlockKey(kind);
+    if (poolKey) {
+      /* FR-022(3): the pool reason never replaces the FR-010t member check. */
+      var poolGaps = getMembershipGapMessages();
+      showToast(t(poolKey) + (poolGaps.length ? ' ' + t('toastPublishBlockedMembers') + poolGaps.join(t('memberGapJoiner')) : ''), true);
+      trackEvent('prototype_publish_failed', { reason: (kind === 'official' ? 'official_pool_empty' : 'draft_pool_empty') + (poolGaps.length ? '; member_gap: ' + poolGaps.join(', ') : '') });
+      return false;
+    }
     var result = validateSampling();
     if (!result.valid) {
       showToast(t('toastPublishBlocked'), true);
@@ -10581,7 +10627,7 @@ function getTaskTypeLabel() {
 
   function publishDryRun() {
     if (state.publishingDryRun) return;
-    if (!canPublish()) return;
+    if (!canPublish('dry')) return;
     /* FR-017 (issue #838): R2 and later are created only with a confirmed
        revision note; the note is consumed by this one creation. */
     var revisionNote = state.trialRoundRevisionNote;
@@ -10647,7 +10693,7 @@ function getTaskTypeLabel() {
 
   function publishOfficialRun() {
     if (state.publishingOfficialRun) return;
-    if (!canPublish()) return;
+    if (!canPublish('official')) return;
     state.publishingOfficialRun = true;
     setTimeout(function() { state.publishingOfficialRun = false; }, 200);
     TASK_DATA.status = 'official_run_in_progress';

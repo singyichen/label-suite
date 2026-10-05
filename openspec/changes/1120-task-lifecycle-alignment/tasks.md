@@ -19,11 +19,11 @@
 > **產品檔案（2）**：`design/prototype/pages/task-management/task-detail.html`、`design/prototype/pages/task-management/task-detail.data.js`
 > **相依**：無。
 
-- [ ] 1.1 撰寫 `design/prototype/tests/task-management/task-detail-cross-tab-source.spec.ts` 之 Red。涵蓋 delta FR-010u 第 (1)(2)(5)(6)(7) 點與 issue §4 驗收 09／10：T013／T018 五個頁籤不出現其他任務的回合與樣本數、不出現字面 124、工時與匯出歷史依任務篩選且無紀錄時為真實空狀態；**T014 概覽／進度／結果三個頁籤的 total／trial／official 分配彼此一致**（issue §4 驗收 10，須修來源而非僅對齊顯示文字）；`已提交` 之分子分母依第 (2) 點推導，且**依 FR-005h 被明確排除的標記作業不計入分子與分母**；第 (6) 點之時間語意——匯出與畫面上的審核／仲裁完成時間 MUST 取自各自的事件來源，不得沿用標記員的已提交時間；提交進度與定案進度分別命名、三種單位不相加、資料分配色條附「資料分配」語意。每案例加入 inventory.csv。驗證：`PW_PORT=8981 pnpm playwright test tests/task-management/task-detail-cross-tab-source.spec.ts` 出現失敗 [@senior-qa]
-- [ ] 1.2 Green：修改 `design/prototype/pages/task-management/task-detail.data.js`。為 T013 與 T018 補上各自的 progress／work-log／unassigned 來源，使三張既有查表不再 fallback 到通用舊資料，並依 design.md D2 之分子分母推導 `已提交` 與 `已完成輪次`。驗證：`PW_PORT=8981 pnpm playwright test tests/task-management/task-detail-cross-tab-source.spec.ts` 出現部分通過 [@senior-frontend]
-- [ ] 1.3 修改 `design/prototype/pages/task-management/task-detail.html`（與 1.2 同一實作任務之頁面整合）。移除字面 124 之硬編來源、使 `exportHistory` 依任務篩選、空狀態據實呈現、提交與定案進度分列命名、資料分配色條補語意說明。驗證：`PW_PORT=8981 pnpm playwright test tests/task-management/task-detail-cross-tab-source.spec.ts` exit 0 [@senior-frontend]
-- [ ] 1.4 執行 `node scripts/gen-screen-inventory.mjs` 重生畫面盤點清單並與 1.3 同一提交。驗證：`node scripts/gen-screen-inventory.mjs --check` exit 0 [@senior-frontend]
-- [ ] 1.5 執行群組 1 回歸候選集與 inventory 一致性核對。驗證：`cd design/prototype && pnpm typecheck && pnpm test:node && PW_PORT=8981 pnpm playwright test tests/task-management/task-detail-cross-tab-source.spec.ts tests/task-management/task-detail-task-profiles.spec.ts tests/task-management/task-detail-config-parity.spec.ts` exit 0 [@main]
+- [x] 1.1 撰寫 `design/prototype/tests/task-management/task-detail-cross-tab-source.spec.ts` 之 Red。涵蓋 delta FR-010u 第 (1)(2)(5)(6)(7) 點與 issue §4 驗收 09／10：T013／T018 五個頁籤不出現其他任務的回合與樣本數、不出現字面 124、工時與匯出歷史依任務篩選且無紀錄時為真實空狀態；**T014 概覽／進度／結果三個頁籤的 total／trial／official 分配彼此一致**（issue §4 驗收 10，須修來源而非僅對齊顯示文字）；`已提交` 之分子分母依第 (2) 點推導，且**依 FR-005h 被明確排除的標記作業不計入分子與分母**；第 (6) 點之時間語意——匯出與畫面上的審核／仲裁完成時間 MUST 取自各自的事件來源，不得沿用標記員的已提交時間；提交進度與定案進度分別命名、三種單位不相加、資料分配色條附「資料分配」語意。每案例加入 inventory.csv。驗證：`PW_PORT=8981 pnpm playwright test tests/task-management/task-detail-cross-tab-source.spec.ts` 出現失敗 [@senior-qa]
+- [x] 1.2 Green：修改 `design/prototype/pages/task-management/task-detail.data.js`。為 T013 與 T018 補上各自的 progress／work-log／unassigned 來源，使三張既有查表不再 fallback 到通用舊資料，並依 design.md D2 之分子分母推導 `已提交` 與 `已完成輪次`。驗證：`PW_PORT=8981 pnpm playwright test tests/task-management/task-detail-cross-tab-source.spec.ts` 出現部分通過 [@senior-frontend]
+- [x] 1.3 修改 `design/prototype/pages/task-management/task-detail.html`（與 1.2 同一實作任務之頁面整合）。移除字面 124 之硬編來源、使 `exportHistory` 依任務篩選、空狀態據實呈現、提交與定案進度分列命名、資料分配色條補語意說明。驗證：`PW_PORT=8981 pnpm playwright test tests/task-management/task-detail-cross-tab-source.spec.ts` exit 0 [@senior-frontend]
+- [x] 1.4 執行 `node scripts/gen-screen-inventory.mjs` 重生畫面盤點清單並與 1.3 同一提交。驗證：`node scripts/gen-screen-inventory.mjs --check` exit 0 [@senior-frontend]
+- [x] 1.5 執行群組 1 回歸候選集與 inventory 一致性核對。驗證：`cd design/prototype && pnpm typecheck && pnpm test:node && PW_PORT=8981 pnpm playwright test tests/task-management/task-detail-cross-tab-source.spec.ts tests/task-management/task-detail-task-profiles.spec.ts tests/task-management/task-detail-config-parity.spec.ts` exit 0 [@main]
 
 ## 2. 正式標記池歸零之發布阻擋（intermediate PR）
 
@@ -32,10 +32,10 @@
 > **產品檔案（1）**：`design/prototype/pages/task-management/task-detail.html`
 > **相依**：群組 1 已合併；本群組動工前 `git merge origin/main`。
 
-- [ ] 2.1 撰寫 `design/prototype/tests/task-management/task-detail-official-pool-guard.spec.ts` 之 Red。涵蓋 delta FR-022 全部五點與其四條情境、issue §4 驗收 06：T013 於 `draft` 提前顯示原因並停用 CTA、計算狀態為 `done` 且 IAA 已達標仍因池為 0 阻擋、阻擋原因不含任何 IAA 表述且不改變 `iaa_computation_status`、直接呼叫發布 handler 同樣失敗、原因為可見文字且可由鍵盤與螢幕閱讀器取得。每案例加入 inventory.csv。驗證：`PW_PORT=8981 pnpm playwright test tests/task-management/task-detail-official-pool-guard.spec.ts` 出現失敗 [@senior-qa]
-- [ ] 2.2 Green：修改 `design/prototype/pages/task-management/task-detail.html`。依 delta FR-022 於發布 handler 內驗證依 FR-010f-3 推導之剩餘池筆數，阻擋時逐項列出原因並與 IAA 狀態分列，`draft` 階段提前揭露並停用 CTA，原因文字不得僅依賴 hover 或顏色。驗證：`PW_PORT=8981 pnpm playwright test tests/task-management/task-detail-official-pool-guard.spec.ts` exit 0 [@senior-frontend]
-- [ ] 2.3 執行 `node scripts/gen-screen-inventory.mjs` 重生畫面盤點清單並與 2.2 同一提交。驗證：`node scripts/gen-screen-inventory.mjs --check` exit 0 [@senior-frontend]
-- [ ] 2.4 執行群組 2 回歸候選集與 inventory 一致性核對。驗證：`cd design/prototype && pnpm typecheck && pnpm test:node && PW_PORT=8981 pnpm playwright test tests/task-management/task-detail-official-pool-guard.spec.ts tests/task-management/issue-783-iaa-computation-status.spec.ts tests/task-management/task-detail-run-control-i18n.spec.ts` exit 0 [@main]
+- [x] 2.1 撰寫 `design/prototype/tests/task-management/task-detail-official-pool-guard.spec.ts` 之 Red。涵蓋 delta FR-022 全部五點與其四條情境、issue §4 驗收 06：T013 於 `draft` 提前顯示原因並停用 CTA、計算狀態為 `done` 且 IAA 已達標仍因池為 0 阻擋、阻擋原因不含任何 IAA 表述且不改變 `iaa_computation_status`、直接呼叫發布 handler 同樣失敗、原因為可見文字且可由鍵盤與螢幕閱讀器取得。每案例加入 inventory.csv。驗證：`PW_PORT=8981 pnpm playwright test tests/task-management/task-detail-official-pool-guard.spec.ts` 出現失敗 [@senior-qa]
+- [x] 2.2 Green：修改 `design/prototype/pages/task-management/task-detail.html`。依 delta FR-022 於發布 handler 內驗證依 FR-010f-3 推導之剩餘池筆數，阻擋時逐項列出原因並與 IAA 狀態分列，`draft` 階段提前揭露並停用 CTA，原因文字不得僅依賴 hover 或顏色。驗證：`PW_PORT=8981 pnpm playwright test tests/task-management/task-detail-official-pool-guard.spec.ts` exit 0 [@senior-frontend]
+- [x] 2.3 執行 `node scripts/gen-screen-inventory.mjs` 重生畫面盤點清單並與 2.2 同一提交。驗證：`node scripts/gen-screen-inventory.mjs --check` exit 0 [@senior-frontend]
+- [x] 2.4 執行群組 2 回歸候選集與 inventory 一致性核對。驗證：`cd design/prototype && pnpm typecheck && pnpm test:node && PW_PORT=8981 pnpm playwright test tests/task-management/task-detail-official-pool-guard.spec.ts tests/task-management/issue-783-iaa-computation-status.spec.ts tests/task-management/task-detail-run-control-i18n.spec.ts` exit 0 [@main]
 
 ## 3. 正式結案閘門真實化（intermediate PR）
 
