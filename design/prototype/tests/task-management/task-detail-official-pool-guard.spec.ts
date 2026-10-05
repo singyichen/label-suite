@@ -168,14 +168,96 @@ test.describe('Official pool zero publish guard (FR-022, SC-049)', () => {
     await page.goto(`${TASK_DETAIL_URL}?task_id=T013`);
     await expect(page.locator('#publishDryRunBtn')).toBeVisible();
 
-    // Lock-in (passes today): the existing sampling-validity check in canPublish()
-    // (samplingValue must be < datasetTotal) already rejects T013, so this guards
-    // against Green's pool check loosening that path rather than proving new behavior.
+    // Lock-in (passes today): canPublish() already blocks this call on the pool
+    // check (Green runs the pool check first, before validateSampling()), so this
+    // guards against that path loosening rather than proving new behavior.
     await page.evaluate(() => {
       (window as unknown as { publishDryRun: () => void }).publishDryRun();
     });
 
     await expect(page.locator('#statusBadge')).toContainText('草稿');
     await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(0);
+  });
+});
+
+/*
+ * FR-022(3): the early disclosure of the pool-zero reason MUST NOT replace the
+ * FR-010t member-count check; both are listed independently.
+ *
+ * Fixture: T013 (draft, pool 0 at the derived sampling value) has 3 active
+ * annotators against min_annotators=3, i.e. no member gap. Disabling one
+ * annotator through the real member-management action (same mechanism as
+ * issue-505-publish-member-gate.spec.ts) opens an annotator gap of 1
+ * ("標記員還差 1 位"), so the pool block and a member gap apply together.
+ *
+ * Assertion choice (does not overfit markup): both reasons must be visible text
+ * inside #publishActionRow, and the combined text of every element referenced by
+ * the disabled CTA's aria-describedby (space-separated id list) must contain both.
+ * Neither element ids nor the number of spans are pinned.
+ */
+const MEMBER_GAP = /標記員還差 1 位/;
+
+async function disableAnnotatorThenOpenOverview(page: Page, name: string) {
+  await page.goto(`${TASK_DETAIL_URL}?task_id=T013`);
+  await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: 15000 });
+  await page.locator('#tabMemberManagement').click();
+  await expect(page.locator('#memberManagementPanel')).not.toHaveClass(/hidden/);
+  const row = page.locator('#memberTableBody tr').filter({ hasText: name });
+  await row.locator('button:has-text("停用")').click();
+  await page.locator('#memberActionConfirmBtn').click();
+  await expect(row).toContainText('停用');
+  await page.locator('#tabOverview').click();
+  await expect(page.locator('#overviewPanel')).not.toHaveClass(/hidden/);
+}
+
+test.describe('Pool reason and member gap are shown independently (FR-022(3), SC-049)', () => {
+  test('draft with pool 0 and a member gap lists both reasons as visible text and in the CTA description (FR-022(3))', async ({
+    page,
+  }) => {
+    await disableAnnotatorThenOpenOverview(page, 'Alex Wang');
+
+    const cta = page.locator('#publishDryRunBtn');
+    await expect(cta).toBeDisabled();
+    // Pool reason stays present (passes today) ...
+    await expect(page.locator('#publishActionRow')).toContainText(POOL_REASON);
+    // ... and the member gap must be present at the same time (fails today).
+    await expect(page.locator('#publishActionRow')).toContainText(MEMBER_GAP);
+
+    const describedBy = ((await cta.getAttribute('aria-describedby')) || '').split(/\s+/).filter(Boolean);
+    expect(describedBy.length, 'CTA must carry aria-describedby').toBeGreaterThan(0);
+    const described = await page.evaluate(
+      (ids) => ids.map((id) => (document.getElementById(id) || { textContent: '' }).textContent).join(' '),
+      describedBy,
+    );
+    expect(described).toMatch(POOL_REASON);
+    expect(described).toMatch(MEMBER_GAP);
+  });
+
+  test('direct publishDryRun() with pool 0 and a member gap keeps draft and the blocking toast lists both (FR-022(3))', async ({
+    page,
+  }) => {
+    await disableAnnotatorThenOpenOverview(page, 'Alex Wang');
+
+    await page.evaluate(() => {
+      (window as unknown as { publishDryRun: () => void }).publishDryRun();
+    });
+
+    await expect(page.locator('#statusBadge')).toContainText('草稿');
+    await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(0);
+    await expect(page.locator('#toastMsg')).toContainText(POOL_REASON);
+    await expect(page.locator('#toastMsg')).toContainText(MEMBER_GAP);
+  });
+
+  test('control: pool 0 with no member gap shows no member-gap text (FR-022(3))', async ({ page }) => {
+    await page.goto(`${TASK_DETAIL_URL}?task_id=T013`);
+    await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: 15000 });
+    await expect(page.locator('#publishActionRow')).toContainText(POOL_REASON);
+    await expect(page.locator('#publishActionRow')).not.toContainText(/還差/);
+
+    await page.evaluate(() => {
+      (window as unknown as { publishDryRun: () => void }).publishDryRun();
+    });
+    await expect(page.locator('#toastMsg')).toContainText(POOL_REASON);
+    await expect(page.locator('#toastMsg')).not.toContainText(/還差/);
   });
 });
