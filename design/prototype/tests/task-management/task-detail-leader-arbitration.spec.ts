@@ -209,11 +209,14 @@ test.describe('Leader adjudication when arbiter_ids is empty (FR-023)', () => {
     await adjudicateAll(page, ['adopt_a', 'adopt_b', 'adopt_a']);
 
     await expandAllResultRows(page);
-    const lines = page.locator('.ar-history-arbitration');
-    await expect(lines).toHaveCount(3);
-    for (let i = 0; i < 3; i += 1) {
-      await expect(lines.nth(i)).toContainText(LEADER_LABEL);
-    }
+    // The T014 seed already carries one finalized reviewer_chen arbitration
+    // (dry-04-dispute-resolved); it must stay a plain arbiter line.
+    const allLines = page.locator('.ar-history-arbitration');
+    const leaderLines = allLines.filter({ hasText: LEADER_LABEL });
+    await expect(leaderLines).toHaveCount(3);
+    const seededLines = allLines.filter({ hasNotText: LEADER_LABEL });
+    await expect(seededLines).toHaveCount(1);
+    await expect(seededLines.first()).not.toContainText(LEADER_LABEL_EN);
   });
 
   test('the JSON export marks a leader-adjudicated item with finalization_source leader_adjudication (FR-023(3))', async ({
@@ -248,17 +251,24 @@ test.describe('Leader adjudication when arbiter_ids is empty (FR-023)', () => {
       const unit = ws.listReviewUnits(task, 'dry_run').filter((u: any) => u.status === 'disputed')[0];
       const identity = { annotatorId: unit.annotatorId };
       const item = ws.getDisputeItems(task, 'dry_run', unit.sampleId, identity, ['single_label'])[0];
+      const countVotes = () => {
+        const state = ws.getArbitrationState(task, 'dry_run', unit.sampleId, identity);
+        return Object.keys(state).reduce((n, k) => n + (state[k].votes || []).length, 0);
+      };
+      const rosterSize = ws.taskArbiterRoster(task).length;
+      const before = countVotes();
+      // Well-formed call on a genuinely disputed unit: only the non-empty roster can refuse it.
       const result = hasFn
         ? ws.submitLeaderAdjudication(task, 'dry_run', unit.sampleId, [
-            { itemId: `${item.outKey}::${item.key}`, choice: 'adopt_a', reason: 'QA must be refused' },
+            { annotatorId: unit.annotatorId, itemId: `${item.outKey}::${item.key}`, choice: 'adopt_a', reason: 'QA must be refused' },
           ])
         : 'missing';
-      const state = ws.getArbitrationState(task, 'dry_run', unit.sampleId, identity);
-      const votes = Object.keys(state).reduce((n, k) => n + (state[k].votes || []).length, 0);
+      const votes = countVotes() - before;
       const after = ws.listReviewUnits(task, 'dry_run').filter((u: any) => u.sampleId === unit.sampleId && u.annotatorId === unit.annotatorId)[0];
-      return { hasFn, refused: !result || result.ok === false, votes, status: after.status };
+      return { hasFn, rosterSize, refused: !result || result.ok === false, votes, status: after.status };
     }, TASK);
 
+    expect(outcome.rosterSize, 'precondition: the roster is not empty').toBeGreaterThan(0);
     expect(outcome.hasFn, 'submitLeaderAdjudication must be exported on LabelSuiteAnnotationWorkspaceData').toBe(true);
     expect(outcome.refused).toBe(true);
     expect(outcome.votes).toBe(0);
@@ -277,10 +287,13 @@ test.describe('Leader adjudication when arbiter_ids is empty (FR-023)', () => {
       if (!hasFn) return { hasFn };
       const units = ws.listReviewUnits(task, 'dry_run');
       const disputed = units.filter((u: any) => u.status === 'disputed')[0];
-      const finalized = units.filter((u: any) => u.status === 'finalized')[0];
       const pending = units.filter((u: any) => u.status === 'pending' || u.status === null)[0];
+      const itemsOf = (u: any) => ws.getDisputeItems(task, 'dry_run', u.sampleId, { annotatorId: u.annotatorId }, ['single_label']);
+      // Prefer a finalized unit that still has dispute items (the seeded resolved dispute).
+      const finalizedUnits = units.filter((u: any) => u.status === 'finalized');
+      const finalized = finalizedUnits.filter((u: any) => itemsOf(u).length)[0] || finalizedUnits[0];
       const itemIdOf = (u: any) => {
-        const i = ws.getDisputeItems(task, 'dry_run', u.sampleId, { annotatorId: u.annotatorId }, ['single_label'])[0];
+        const i = itemsOf(u)[0];
         return i ? `${i.outKey}::${i.key}` : 'single_label::single_label';
       };
       const voteCount = () =>
@@ -290,7 +303,11 @@ test.describe('Leader adjudication when arbiter_ids is empty (FR-023)', () => {
         }, 0);
       const refused = (r: any) => !r || r.ok === false;
       const call = (u: any, decision: any) =>
-        ws.submitLeaderAdjudication(task, 'dry_run', u.sampleId, [{ itemId: itemIdOf(u), ...decision }]);
+        ws.submitLeaderAdjudication(task, 'dry_run', u.sampleId, [
+          { annotatorId: u.annotatorId, itemId: itemIdOf(u), ...decision },
+        ]);
+      const rosterSize = ws.taskArbiterRoster(task).length;
+      const baseline = voteCount();
       const results = {
         finalizedUnit: refused(call(finalized, { choice: 'adopt_a', reason: 'x' })),
         pendingUnit: refused(call(pending, { choice: 'adopt_a', reason: 'x' })),
@@ -298,10 +315,11 @@ test.describe('Leader adjudication when arbiter_ids is empty (FR-023)', () => {
         rejectNoReason: refused(call(disputed, { choice: 'reject', reason: '' })),
         rejectBlankReason: refused(call(disputed, { choice: 'reject', reason: '   ' })),
       };
-      return { hasFn, results, votes: voteCount() };
+      return { hasFn, rosterSize, results, baseline, votes: voteCount() };
     }, TASK);
 
     expect(outcome.hasFn, 'submitLeaderAdjudication must be exported on LabelSuiteAnnotationWorkspaceData').toBe(true);
+    expect(outcome.rosterSize, 'precondition: the roster is empty, so only the unit/choice/reason guards can refuse').toBe(0);
     expect(outcome.results).toEqual({
       finalizedUnit: true,
       pendingUnit: true,
@@ -309,7 +327,35 @@ test.describe('Leader adjudication when arbiter_ids is empty (FR-023)', () => {
       rejectNoReason: true,
       rejectBlankReason: true,
     });
-    expect(outcome.votes).toBe(0);
+    // Refused calls write nothing: the seeded arbitration vote is untouched.
+    expect(outcome.votes).toBe(outcome.baseline);
+  });
+
+  test('positive control: with an empty roster a well-formed direct call on a disputed unit succeeds and writes one leader vote (FR-023(1))', async ({
+    page,
+  }) => {
+    await forceEmptyRoster(page);
+    await openProgressTab(page);
+
+    const outcome = await page.evaluate((task) => {
+      const ws = (window as any).LabelSuiteAnnotationWorkspaceData;
+      const unit = ws.listReviewUnits(task, 'dry_run').filter((u: any) => u.status === 'disputed')[0];
+      const identity = { annotatorId: unit.annotatorId };
+      const item = ws.getDisputeItems(task, 'dry_run', unit.sampleId, identity, ['single_label'])[0];
+      const leaderVotes = () => {
+        const state = ws.getArbitrationState(task, 'dry_run', unit.sampleId, identity);
+        return Object.keys(state).reduce(
+          (n, k) => n + (state[k].votes || []).filter((v: any) => v.source === 'leader').length, 0);
+      };
+      const before = leaderVotes();
+      const result = ws.submitLeaderAdjudication(task, 'dry_run', unit.sampleId, [
+        { annotatorId: unit.annotatorId, itemId: `${item.outKey}::${item.key}`, choice: 'adopt_a', reason: 'QA positive control' },
+      ]);
+      return { result, written: leaderVotes() - before };
+    }, TASK);
+
+    expect(outcome.result).toMatchObject({ ok: true });
+    expect(outcome.written).toBe(1);
   });
 
   test('reject without a reason does not submit: the item stays awaiting arbitration and no vote is written (FR-023(3))', async ({
