@@ -46,8 +46,10 @@
  *     - arbiter_ids empty (T001's seeded DEFAULT_TASK_DATA.arbiterIds = [])
  *       MUST NOT block publish (the trial round is still created), but MUST
  *       show a persistent, non-auto-dismissing warning through a BRAND NEW
- *       #publishArbiterWarning element, carrying the exact phrase quoted in
- *       design.md's Risks section: "未指定仲裁者將導致無法結案". A dedicated
+ *       #publishArbiterWarning element. Issue #1120 (FR-010t revision) replaced
+ *       the original "未指定仲裁者將導致無法結案" claim: the warning now says the
+ *       disputes will be adjudicated by the project leader (FR-023) and no
+ *       longer mentions 無法結案. A dedicated
  *       element (rather than reusing the 2.4s-auto-dismissing #toastMsg) is
  *       chosen so Green's warning does not need to race the toast timer.
  * ---------------------------------------------------------------------
@@ -145,6 +147,10 @@ test.describe('Review assignment read-only + publish gate (issue #596)', () => {
     await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(1);
 
     await expect(page.locator('#publishArbiterWarning')).toBeVisible();
-    await expect(page.locator('#publishArbiterWarning')).toContainText('未指定仲裁者將導致無法結案');
+    // Issue #1120 FR-010t revision: FR-023 gives the project leader a way to close
+    // disputes, so "無法結案" is no longer true and must be gone.
+    await expect(page.locator('#publishArbiterWarning')).not.toContainText('無法結案');
+    await expect(page.locator('#publishArbiterWarning')).toContainText('負責人');
+    await expect(page.locator('#publishArbiterWarning')).toContainText('裁定');
   });
 });

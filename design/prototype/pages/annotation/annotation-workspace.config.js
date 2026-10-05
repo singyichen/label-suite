@@ -144,6 +144,8 @@
       exceptionPoolReasonPlaceholder: '處置理由（必填）',
       exceptionPoolConfirmLabel: '確認',
       exceptionPoolOriginTpl: '仲裁者：{arbiter} · 兩者皆非理由：{reason}',
+      exceptionPoolOriginLeaderTpl: '負責人裁定（無指定仲裁者） · 兩者皆非理由：{reason}',
+      leaderAdjudicationSourceLabel: '負責人裁定（無指定仲裁者）',
       exceptionPoolNoSelectionLabel: '尚未選擇最終處置',
       exceptionPoolSummaryTpl: '已選擇：{action}',
       exceptionPoolSummaryWithValueTpl: '已選擇：{action}，定稿值：{value}',
@@ -306,6 +308,8 @@
       exceptionPoolReasonPlaceholder: 'Reason for this disposition (required)',
       exceptionPoolConfirmLabel: 'Confirm',
       exceptionPoolOriginTpl: 'Arbiter: {arbiter} · Rejected because: {reason}',
+      exceptionPoolOriginLeaderTpl: 'Leader adjudication (no arbiter designated) · Rejected because: {reason}',
+      leaderAdjudicationSourceLabel: 'Leader adjudication (no arbiter designated)',
       exceptionPoolNoSelectionLabel: 'No final disposition selected yet',
       exceptionPoolSummaryTpl: 'Selected: {action}',
       exceptionPoolSummaryWithValueTpl: 'Selected: {action} · Final value: {value}',
@@ -2178,6 +2182,7 @@
   function historySummaryForDisplay(event, structuredReasons) {
     var summary = event.summary || '';
     if (event.action === 'adjudicated' && summary.indexOf('arbitration finalized:') === 0) return '';
+    if (event.action === 'adjudicated' && summary.indexOf('leader adjudication:') === 0) return t('leaderAdjudicationSourceLabel');
     structuredReasons.forEach(function (reason) {
       summary = summary.split(' — ' + reason).join('');
     });
@@ -4877,7 +4882,7 @@
       var origin = document.createElement('div');
       origin.setAttribute('data-testid', 'ws-exception-pool-origin');
       origin.style.cssText = 'font-size:12px;color:var(--color-text-soft);margin-bottom:8px;';
-      origin.textContent = t('exceptionPoolOriginTpl')
+      origin.textContent = t(rejectVote.source === 'leader' ? 'exceptionPoolOriginLeaderTpl' : 'exceptionPoolOriginTpl')
         .replace('{arbiter}', rejectVote.arbiter_id || '')
         .replace('{reason}', rejectVote.reason || '');
       row.appendChild(origin);
