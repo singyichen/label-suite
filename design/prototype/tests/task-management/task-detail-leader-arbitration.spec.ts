@@ -1,0 +1,414 @@
+/*
+ * Traceability: openspec/changes/1120-task-lifecycle-alignment/specs/task-management/014-task-detail/spec.md
+ *   FR-023 (leader adjudication when arbiter_ids is empty) + its three scenarios,
+ *   FR-010t revision + scenario "空仲裁者名冊的發布警示指向負責人裁定通道",
+ *   design.md D1 (FR-023 row). Issue #1120 G4b (tasks.md 4.2).
+ *
+ * Green contract this Red pins (selectors and function names are the ONLY assumptions):
+ *   - Section  #leaderAdjudicationSection, in the annotation-progress panel of task-detail.html,
+ *     rendered ONLY for project_leader AND an empty task arbiter roster (arbiterIds: []).
+ *     Absent or hidden otherwise.
+ *   - Rows     [data-leader-adjudication-item]: one per dispute item of the selected run type that
+ *     is awaiting arbitration (= LabelSuiteAnnotationWorkspaceData.listReviewPoolItems().awaitingArbitration).
+ *     Inside a row: [data-choice="adopt_a|adopt_b|reject"] (clickable controls),
+ *     [data-leader-adjudication-reason] (textarea), [data-leader-adjudication-confirm] (button).
+ *     Confirming adopt_a / adopt_b / reject-with-reason writes the vote and re-renders; a
+ *     reject with an empty reason must not write (button disabled or a validation message).
+ *   - Write path  LabelSuiteAnnotationWorkspaceData.submitLeaderAdjudication(taskId, runType,
+ *     sampleId, decisions) with decisions = [{ itemId, choice, reason }] (A/B values derived
+ *     internally). Returns falsy or { ok: false } and writes nothing when the roster is non-empty,
+ *     the unit is not disputed, the choice is not in ARBITRATION_OUTCOMES, or reject has no
+ *     reason. A stored vote carries arbiter_id 'mandy@labelsuite.io' and source 'leader'.
+ *   - Source label  「負責人裁定（無指定仲裁者）」 appears in the annotation-results history line,
+ *     the final exception pool row (fep-arbiter cell) for a leader reject, and the workspace
+ *     exception-pool origin line for a leader reject. The JSON export carries
+ *     finalization_source: 'leader_adjudication' on the record of an adjudicated item (the exact
+ *     nesting level is not pinned: the export is deep-scanned for the key).
+ *   - #publishArbiterWarning no longer says 無法結案 (zh) / "block task completion" (en) and
+ *     points at 負責人 + 裁定.
+ *
+ * Fixtures: the empty roster is forced by appending one statement to the served
+ * task-detail.data.js (same effect as precedent tests/annotation/issue-868-arbitration-reserve
+ * but it survives page navigations/reloads, and both task-detail and the workspace read it).
+ * T014 dry_run seed: 15 review units = 7 finalized / 3 disputed / 5 pending, 3 awaiting arbitration.
+ *
+ * Note on FR-062 (blind isolation): a dispute unit is by derivation one whose reviewer HAS
+ * submitted, so "unit whose reviewer has not submitted" cannot appear as a dispute row. The cheap
+ * assertions are: the section lists exactly the awaitingArbitration set, and submitLeaderAdjudication
+ * refuses a unit whose reviewer has not submitted (pending).
+ */
+import { test, expect, type Page } from '@playwright/test';
+import { promises as fs } from 'node:fs';
+import {
+  TASK_DETAIL_URL,
+  WAITING_BADGE,
+  IN_PROGRESS_BADGE,
+  applyDryRunState,
+  writeFullySubmittedFlag,
+  reasonTexts,
+  pick,
+  DISPUTED,
+  POOL,
+  persistedStatus,
+} from './_dry-run-completion-helpers';
+
+const TASK = 'T014';
+const SAMPLES = 5;
+const LEADER_ID = 'mandy@labelsuite.io';
+const LEADER_LABEL = '負責人裁定（無指定仲裁者）';
+const LEADER_LABEL_EN = 'Leader adjudication (no arbiter designated)';
+const SECTION = '#leaderAdjudicationSection';
+const ROW = '[data-leader-adjudication-item]';
+
+/** Make the served profile data declare an empty arbiter roster for `taskId`. */
+async function forceEmptyRoster(page: Page, taskId = TASK) {
+  await page.route('**/task-management/task-detail.data.js*', async (route) => {
+    const response = await route.fetch();
+    const body = await response.text();
+    await route.fulfill({
+      response,
+      body: `${body}\n;window.LabelSuiteTaskDetailData.profiles['${taskId}'].arbiterIds = [];\n`,
+    });
+  });
+}
+
+async function openProgressTab(page: Page, taskId = TASK) {
+  await page.goto(`${TASK_DETAIL_URL}?task_id=${taskId}`);
+  await expect(page.locator('#statusBadge')).toBeAttached();
+  await page.locator('#tabAnnotationProgress').click();
+  await expect(page.locator('#annotationProgressPanel')).not.toHaveClass(/hidden/);
+}
+
+/** Reviews done (so only disputes remain), progress flag written, reload, then open the progress tab. */
+async function openReviewedWithEmptyRoster(page: Page) {
+  await forceEmptyRoster(page);
+  await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK}`);
+  await expect(page.locator('#statusBadge')).toBeAttached();
+  expect(
+    await page.evaluate((t) => (window as any).LabelSuiteAnnotationWorkspaceData.taskArbiterRoster(t), TASK),
+    'precondition: the served profile declares an empty arbiter roster',
+  ).toEqual([]);
+  const facts = await applyDryRunState(page, TASK, { review: true });
+  expect(facts.byStatus.disputed, 'precondition: three disputed units').toBe(3);
+  expect(facts.awaitingArbitration, 'precondition: three dispute items').toBe(3);
+  await writeFullySubmittedFlag(page, TASK, SAMPLES);
+  await page.reload();
+  await expect(page.locator('#statusBadge')).toBeAttached();
+  await page.locator('#tabAnnotationProgress').click();
+  await expect(page.locator('#annotationProgressPanel')).not.toHaveClass(/hidden/);
+}
+
+type Choice = 'adopt_a' | 'adopt_b' | 'reject';
+
+/** Adjudicate the first listed row through the UI; returns after the row left the list. */
+async function adjudicateFirstRow(page: Page, choice: Choice, reason: string) {
+  await expect(page.locator(SECTION), `${SECTION} must be rendered for an empty roster`).toBeVisible();
+  const rows = page.locator(`${SECTION} ${ROW}`);
+  const before = await rows.count();
+  const row = rows.first();
+  await row.locator(`[data-choice="${choice}"]`).click();
+  await row.locator('[data-leader-adjudication-reason]').fill(reason);
+  await row.locator('[data-leader-adjudication-confirm]').click();
+  await expect(page.locator(`${SECTION} ${ROW}`)).toHaveCount(before - 1);
+}
+
+async function adjudicateAll(page: Page, choices: Choice[]) {
+  for (const [index, choice] of choices.entries()) {
+    await adjudicateFirstRow(page, choice, `QA leader reason ${index + 1}`);
+  }
+}
+
+async function unitStatuses(page: Page): Promise<Record<string, number>> {
+  return page.evaluate((task) => {
+    const ws = (window as any).LabelSuiteAnnotationWorkspaceData;
+    const by: Record<string, number> = {};
+    ws.listReviewUnits(task, 'dry_run').forEach((u: any) => {
+      by[String(u.status)] = (by[String(u.status)] || 0) + 1;
+    });
+    return by;
+  }, TASK);
+}
+
+/** Every stored arbitration vote of the task's dry_run units. */
+async function allVotes(page: Page): Promise<any[]> {
+  return page.evaluate((task) => {
+    const ws = (window as any).LabelSuiteAnnotationWorkspaceData;
+    const votes: any[] = [];
+    ws.listReviewUnits(task, 'dry_run').forEach((u: any) => {
+      const state = ws.getArbitrationState(task, 'dry_run', u.sampleId, { annotatorId: u.annotatorId });
+      Object.keys(state).forEach((key) => (state[key].votes || []).forEach((v: any) => votes.push({ key, ...v })));
+    });
+    return votes;
+  }, TASK);
+}
+
+async function expandAllResultRows(page: Page) {
+  await page.locator('#tabAnnotationResults').click();
+  await expect(page.locator('#arTableSection')).toBeVisible({ timeout: 15000 });
+  const count = await page.locator('#arResultTableBody tr.ar-summary-row').count();
+  for (let i = 0; i < count; i += 1) {
+    const btn = page.locator('#arResultTableBody tr.ar-summary-row').nth(i).locator('.ar-expand-btn');
+    if ((await btn.getAttribute('aria-expanded')) !== 'true') await btn.click();
+  }
+}
+
+function collectValues(node: unknown, key: string, out: unknown[]) {
+  if (Array.isArray(node)) node.forEach((n) => collectValues(n, key, out));
+  else if (node && typeof node === 'object') {
+    for (const [k, v] of Object.entries(node as Record<string, unknown>)) {
+      if (k === key) out.push(v);
+      collectValues(v, key, out);
+    }
+  }
+}
+
+test.describe('Leader adjudication when arbiter_ids is empty (FR-023)', () => {
+  test('empty roster: the leader adjudicates every open dispute through the UI, units finalize, and the trial gate stops listing arbitration (FR-023 scenario 1)', async ({
+    page,
+  }) => {
+    await openReviewedWithEmptyRoster(page);
+
+    const section = page.locator(SECTION);
+    await expect(section).toBeVisible();
+    // Rows = the awaiting-arbitration set (FR-062: nothing else is listed).
+    await expect(section.locator(ROW)).toHaveCount(3);
+
+    await adjudicateAll(page, ['adopt_a', 'adopt_b', 'adopt_a']);
+
+    expect(await unitStatuses(page)).toEqual({ finalized: 15 });
+    const votes = await allVotes(page);
+    const leaderVotes = votes.filter((v) => v.source === 'leader');
+    expect(leaderVotes).toHaveLength(3);
+    for (const v of leaderVotes) {
+      expect(v.arbiter_id).toBe(LEADER_ID);
+      expect(v.reason).toMatch(/^QA leader reason \d$/);
+      expect(v.voted_at).toBeTruthy();
+    }
+
+    // The gate (G4a) no longer lists any arbitration blocker and the task advances.
+    await page.reload();
+    await expect(page.locator('#statusBadge')).toContainText(WAITING_BADGE);
+    expect(await persistedStatus(page, TASK)).toBe('waiting_iaa_confirmation');
+  });
+
+  test('before adjudication the trial gate lists the disputed units; the leader entry point is the only way out (FR-023 scenario 1, SC-051)', async ({
+    page,
+  }) => {
+    await openReviewedWithEmptyRoster(page);
+    await page.locator('#tabOverview').click();
+    await expect(page.locator('#statusBadge')).toContainText(IN_PROGRESS_BADGE);
+    expect(pick(await reasonTexts(page), DISPUTED.accept, DISPUTED.reject)).toHaveLength(1);
+    await page.locator('#tabAnnotationProgress').click();
+    await expect(page.locator(`${SECTION} ${ROW}`)).toHaveCount(3);
+  });
+
+  test('a leader adjudication is labelled 負責人裁定（無指定仲裁者） in the annotation-results history, not as a plain arbiter (FR-023(3))', async ({
+    page,
+  }) => {
+    await openReviewedWithEmptyRoster(page);
+    await adjudicateAll(page, ['adopt_a', 'adopt_b', 'adopt_a']);
+
+    await expandAllResultRows(page);
+    const lines = page.locator('.ar-history-arbitration');
+    await expect(lines).toHaveCount(3);
+    for (let i = 0; i < 3; i += 1) {
+      await expect(lines.nth(i)).toContainText(LEADER_LABEL);
+    }
+  });
+
+  test('the JSON export marks a leader-adjudicated item with finalization_source leader_adjudication (FR-023(3))', async ({
+    page,
+  }) => {
+    await openReviewedWithEmptyRoster(page);
+    await adjudicateAll(page, ['adopt_a', 'adopt_b', 'adopt_a']);
+
+    await page.locator('#tabAnnotationResults').click();
+    await expect(page.locator('#arTableSection')).toBeVisible({ timeout: 15000 });
+    const downloadPromise = page.waitForEvent('download');
+    await page.locator('#arExportJsonBtn').click();
+    const download = await downloadPromise;
+    const path = await download.path();
+    expect(path).not.toBeNull();
+    const payload = JSON.parse(await fs.readFile(path as string, 'utf8'));
+
+    const sources: unknown[] = [];
+    collectValues(payload, 'finalization_source', sources);
+    expect(sources.filter((s) => s === 'leader_adjudication').length).toBeGreaterThanOrEqual(3);
+  });
+
+  test('roster unchanged (reviewer_chen): no leader entry point, and a direct submitLeaderAdjudication call fails and leaves the unit disputed (FR-023 scenario 2)', async ({
+    page,
+  }) => {
+    await openProgressTab(page);
+    await expect(page.locator(SECTION)).toBeHidden();
+
+    const outcome = await page.evaluate((task) => {
+      const ws = (window as any).LabelSuiteAnnotationWorkspaceData;
+      const hasFn = typeof ws.submitLeaderAdjudication === 'function';
+      const unit = ws.listReviewUnits(task, 'dry_run').filter((u: any) => u.status === 'disputed')[0];
+      const identity = { annotatorId: unit.annotatorId };
+      const item = ws.getDisputeItems(task, 'dry_run', unit.sampleId, identity, ['single_label'])[0];
+      const result = hasFn
+        ? ws.submitLeaderAdjudication(task, 'dry_run', unit.sampleId, [
+            { itemId: `${item.outKey}::${item.key}`, choice: 'adopt_a', reason: 'QA must be refused' },
+          ])
+        : 'missing';
+      const state = ws.getArbitrationState(task, 'dry_run', unit.sampleId, identity);
+      const votes = Object.keys(state).reduce((n, k) => n + (state[k].votes || []).length, 0);
+      const after = ws.listReviewUnits(task, 'dry_run').filter((u: any) => u.sampleId === unit.sampleId && u.annotatorId === unit.annotatorId)[0];
+      return { hasFn, refused: !result || result.ok === false, votes, status: after.status };
+    }, TASK);
+
+    expect(outcome.hasFn, 'submitLeaderAdjudication must be exported on LabelSuiteAnnotationWorkspaceData').toBe(true);
+    expect(outcome.refused).toBe(true);
+    expect(outcome.votes).toBe(0);
+    expect(outcome.status).toBe('disputed');
+  });
+
+  test('submitLeaderAdjudication guards: unit not disputed, reviewer not submitted, unknown choice and reject without reason all write nothing (FR-023(1)(2)(3), FR-062)', async ({
+    page,
+  }) => {
+    await forceEmptyRoster(page);
+    await openProgressTab(page);
+
+    const outcome = await page.evaluate((task) => {
+      const ws = (window as any).LabelSuiteAnnotationWorkspaceData;
+      const hasFn = typeof ws.submitLeaderAdjudication === 'function';
+      if (!hasFn) return { hasFn };
+      const units = ws.listReviewUnits(task, 'dry_run');
+      const disputed = units.filter((u: any) => u.status === 'disputed')[0];
+      const finalized = units.filter((u: any) => u.status === 'finalized')[0];
+      const pending = units.filter((u: any) => u.status === 'pending' || u.status === null)[0];
+      const itemIdOf = (u: any) => {
+        const i = ws.getDisputeItems(task, 'dry_run', u.sampleId, { annotatorId: u.annotatorId }, ['single_label'])[0];
+        return i ? `${i.outKey}::${i.key}` : 'single_label::single_label';
+      };
+      const voteCount = () =>
+        units.reduce((n: number, u: any) => {
+          const s = ws.getArbitrationState(task, 'dry_run', u.sampleId, { annotatorId: u.annotatorId });
+          return n + Object.keys(s).reduce((m, k) => m + (s[k].votes || []).length, 0);
+        }, 0);
+      const refused = (r: any) => !r || r.ok === false;
+      const call = (u: any, decision: any) =>
+        ws.submitLeaderAdjudication(task, 'dry_run', u.sampleId, [{ itemId: itemIdOf(u), ...decision }]);
+      const results = {
+        finalizedUnit: refused(call(finalized, { choice: 'adopt_a', reason: 'x' })),
+        pendingUnit: refused(call(pending, { choice: 'adopt_a', reason: 'x' })),
+        unknownChoice: refused(call(disputed, { choice: 'custom_answer', reason: 'x' })),
+        rejectNoReason: refused(call(disputed, { choice: 'reject', reason: '' })),
+        rejectBlankReason: refused(call(disputed, { choice: 'reject', reason: '   ' })),
+      };
+      return { hasFn, results, votes: voteCount() };
+    }, TASK);
+
+    expect(outcome.hasFn, 'submitLeaderAdjudication must be exported on LabelSuiteAnnotationWorkspaceData').toBe(true);
+    expect(outcome.results).toEqual({
+      finalizedUnit: true,
+      pendingUnit: true,
+      unknownChoice: true,
+      rejectNoReason: true,
+      rejectBlankReason: true,
+    });
+    expect(outcome.votes).toBe(0);
+  });
+
+  test('reject without a reason does not submit: the item stays awaiting arbitration and no vote is written (FR-023(3))', async ({
+    page,
+  }) => {
+    await openReviewedWithEmptyRoster(page);
+
+    await expect(page.locator(SECTION)).toBeVisible();
+    const row = page.locator(`${SECTION} ${ROW}`).first();
+    await row.locator('[data-choice="reject"]').click();
+    const confirm = row.locator('[data-leader-adjudication-confirm]');
+    if (await confirm.isEnabled()) await confirm.click();
+
+    await expect(page.locator(`${SECTION} ${ROW}`)).toHaveCount(3);
+    expect((await allVotes(page)).filter((v) => v.source === 'leader')).toHaveLength(0);
+    expect(await unitStatuses(page)).toMatchObject({ disputed: 3 });
+  });
+
+  test('empty roster, leader picks 兩者皆非: the item lands in the final exception pool with the leader label, the unit stays disputed, the gate still blocks and dry_run offers no custom_answer (FR-023 scenario 3)', async ({
+    page,
+  }) => {
+    await openReviewedWithEmptyRoster(page);
+
+    await adjudicateFirstRow(page, 'reject', 'QA leader: neither value is supported');
+    await adjudicateAll(page, ['adopt_a', 'adopt_b']);
+    await expect(page.locator(`${SECTION} ${ROW}`)).toHaveCount(0);
+
+    // Unit stays disputed: reject never finalizes (FR-018 / 015 FR-095).
+    expect(await unitStatuses(page)).toEqual({ finalized: 14, disputed: 1 });
+
+    const pool = page.locator('#finalExceptionPoolSection [data-testid="final-exception-pool-row"]');
+    await expect(pool).toHaveCount(1);
+    await expect(pool.locator('[data-testid="fep-arbiter"]')).toContainText(LEADER_LABEL);
+    await expect(pool.locator('[data-testid="fep-arbiter"]')).toContainText('QA leader: neither value is supported');
+
+    // The trial gate still blocks: only the exception-pool reason remains.
+    await page.reload();
+    await expect(page.locator('#statusBadge')).toContainText(IN_PROGRESS_BADGE);
+    await page.locator('#tabOverview').click();
+    const texts = await reasonTexts(page);
+    expect(pick(texts, POOL.accept)).toHaveLength(1);
+    expect(pick(texts, DISPUTED.accept, DISPUTED.reject)).toHaveLength(0);
+
+    // The closure screen: leader origin, and no custom_answer in dry_run.
+    await page.locator('#tabAnnotationProgress').click();
+    await page.locator('[data-testid="fep-resolve-link"]').first().click();
+    const item = page.getByTestId('ws-exception-pool-item').first();
+    await expect(item).toBeVisible();
+    const origin = item.getByTestId('ws-exception-pool-origin');
+    await expect(origin).toContainText(LEADER_LABEL);
+    await expect(origin).not.toContainText('仲裁者：');
+    await expect(item.getByTestId('ws-exception-pool-action-custom_answer')).toHaveCount(0);
+    await expect(item.getByTestId('ws-exception-pool-action-exclude_from_dataset')).toHaveCount(1);
+  });
+});
+
+test.describe('Empty arbiter roster publish warning (FR-010t revision)', () => {
+  async function openPublishWarning(page: Page, language: 'zh' | 'en') {
+    await page.goto(`${TASK_DETAIL_URL}?task_id=T001&status=draft`);
+    await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: 15000 });
+    if (language === 'en') await page.getByTestId('lang-toggle').click();
+    await page.locator('#tabOverview').click();
+    await expect(page.locator('#overviewPanel')).not.toHaveClass(/hidden/);
+    await page.locator('#publishDryRunBtn').click();
+    await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(1);
+    await expect(page.locator('#publishArbiterWarning')).toBeVisible();
+  }
+
+  test('zh: the warning no longer says 無法結案 and points the disputes at the project leader ruling (FR-010t scenario)', async ({
+    page,
+  }) => {
+    await openPublishWarning(page, 'zh');
+    const warning = page.locator('#publishArbiterWarning');
+    await expect(warning).not.toContainText('無法結案');
+    await expect(warning).not.toContainText('無人可仲裁');
+    await expect(warning).toContainText('負責人');
+    await expect(warning).toContainText('裁定');
+  });
+
+  test('en: the warning no longer says it blocks task completion and names the project leader (FR-010t scenario)', async ({
+    page,
+  }) => {
+    await openPublishWarning(page, 'en');
+    const warning = page.locator('#publishArbiterWarning');
+    await expect(warning).not.toContainText(/block task completion/i);
+    await expect(warning).toContainText(/project leader|leader/i);
+    await expect(warning).toContainText(/adjudicat|rule|decide/i);
+  });
+});
+
+test.describe('Leader label wording is available in English too (FR-023(3))', () => {
+  test('the English leader source label is shown in the final exception pool when the page language is en', async ({
+    page,
+  }) => {
+    await openReviewedWithEmptyRoster(page);
+    await adjudicateFirstRow(page, 'reject', 'QA leader: neither value is supported');
+    await page.getByTestId('lang-toggle').click();
+    await expect(
+      page.locator('#finalExceptionPoolSection [data-testid="fep-arbiter"]').first(),
+    ).toContainText(LEADER_LABEL_EN);
+  });
+});
