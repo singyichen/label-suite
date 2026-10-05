@@ -2993,13 +2993,10 @@
     });
   }
 
-  /* FR-023 (issue #1120): when the task's arbiter roster is empty the project
-     leader adjudicates open disputes. Unlike submitArbitration() this path is
-     GUARDED -- it refuses (and writes nothing) unless the roster is empty,
-     the unit is disputed, the item is still open, the choice is a known
-     outcome and a `reject` carries a reason. `decisions` is
-     [{annotatorId, itemId, choice, reason}] (annotatorId names the review
-     unit; the A/B value is derived here, never taken from the caller). */
+  /* FR-023 (issue #1120): project leader adjudicates open disputes when the
+     arbiter roster is empty. Guarded: refuses and writes nothing unless every
+     decision is valid. decisions = [{annotatorId, itemId, choice, reason}];
+     the A/B value is derived here, never taken from the caller. */
   function submitLeaderAdjudication(taskId, runType, sampleId, decisions) {
     if (taskArbiterRoster(taskId).length) return { ok: false, error: 'arbiter_roster_not_empty' };
     var listEntry = findTaskListEntry(taskId);
@@ -3015,11 +3012,10 @@
         return candidate.outKey + '::' + candidate.key === decision.itemId;
       })[0];
       var stored = getArbitrationState(taskId, runType, sampleId, identity)[decision.itemId];
-      if (!item || (stored && stored.finalized_by)) return false;
-      var reviewerSubmission = ownerReviewerSubmission(taskId, runType, sampleId, identity);
-      var value = decision.choice === 'adopt_a'
-        ? item.annotatorValue
-        : (reviewerSubmission ? item.reviewerValues[reviewerSubmission.reviewerId] : undefined);
+      if (!item || itemResolved(stored, getExceptionPool(taskId, runType, sampleId, identity)[item.outKey]) ||
+        latestRejectVote(stored)) return false;
+      var sub = ownerReviewerSubmission(taskId, runType, sampleId, identity);
+      var value = decision.choice === 'adopt_a' ? item.annotatorValue : (sub ? item.reviewerValues[sub.reviewerId] : undefined);
       planned.push({ identity: identity, decision: { itemId: decision.itemId, choice: decision.choice, reason: decision.reason, value: value } });
       return true;
     });
@@ -3030,15 +3026,10 @@
       recordArbitrationVote(
         arbitrationBucketKey(taskId, runType, step.identity), sampleId, DEFAULT_PROJECT_LEADER_ID, step.decision, 'leader'
       );
-      /* appendHistoryEvent directly: appendSampleTimelineEvent's actorIdFor()
-         would attribute the event to the annotator. */
+      /* not appendSampleTimelineEvent: it would attribute the event to the annotator */
       var bucketKey = submissionBucketKey(taskId, 'annotator', runType, step.identity);
       var bucket = readSubmissionBucket(bucketKey);
-      var entry = bucket[sampleId];
-      if (!entry) {
-        entry = { status: 'pending', answers: {} };
-        bucket[sampleId] = entry;
-      }
+      var entry = bucket[sampleId] || (bucket[sampleId] = { status: 'pending', answers: {} });
       appendHistoryEvent(
         entry, 'adjudicated', 'project_leader', 'leader adjudication: ' + step.decision.itemId,
         DEFAULT_PROJECT_LEADER_ID, { reason: step.decision.reason || null, result_snapshot: snapshot }
@@ -3114,6 +3105,15 @@
    * live queue. Of the remaining items, a latest reject vote moves the item
    * to the final-exception queue; every other unresolved dispute is still
    * awaiting valid arbitration. */
+  function itemResolved(stored, poolRecord) {
+    return (!!poolRecord && (poolRecord.action === 'exclude_from_dataset' || hasLegitimateFinalizedValue(poolRecord))) ||
+      !!(stored && stored.finalized_by && hasLegitimateFinalizedValue(stored));
+  }
+
+  function latestRejectVote(stored) {
+    return stored && (stored.votes || []).filter(function (vote) { return vote.choice === 'reject'; }).pop();
+  }
+
   function listReviewPoolItems(taskId, runType) {
     var result = { awaitingArbitration: [], pendingExceptions: [] };
     var listEntry = findTaskListEntry(taskId);
@@ -3139,13 +3139,8 @@
              AND a legitimate finalized_value -- so a malformed record
              re-surfaces here instead of silently vanishing from both
              queues while getReviewUnitStatus() reports it disputed. */
-          var poolResolved = !!poolRecord &&
-            (poolRecord.action === 'exclude_from_dataset' || hasLegitimateFinalizedValue(poolRecord));
-          var arbResolved = !!stored && stored.finalized_by && hasLegitimateFinalizedValue(stored);
-          if (poolResolved || arbResolved) return;
-          var rejectVote = stored && (stored.votes || []).filter(function (vote) {
-            return vote.choice === 'reject';
-          }).pop();
+          if (itemResolved(stored, poolRecord)) return;
+          var rejectVote = latestRejectVote(stored);
           var poolItem = {
             taskId: taskId,
             runType: runType,

@@ -6917,6 +6917,10 @@ function getTaskTypeLabel() {
 
     TASK_DATA.reviewerIds = state.reviewDraft.reviewerIds.slice();
     TASK_DATA.arbiterIds = state.reviewDraft.arbiterIds.slice();
+    /* taskArbiterRoster() reads the profile, so keep it in step within the session. */
+    var savedProfile = window.LabelSuiteTaskDetailData && window.LabelSuiteTaskDetailData.profiles &&
+      window.LabelSuiteTaskDetailData.profiles[TASK_DATA.taskId];
+    if (savedProfile) savedProfile.arbiterIds = TASK_DATA.arbiterIds.slice();
     TASK_DATA.updatedAt = new Date().toISOString().slice(0, 16).replace('T', ' ');
 
     state.reviewEditMode = false;
@@ -8789,7 +8793,7 @@ function getTaskTypeLabel() {
     /* Full-page re-renders (e.g. the post-skeleton one) must not wipe a
        half-filled row: rebuild only when the listed items or language change. */
     var signature = state.lang + '|' + items.map(function(item) {
-      return item.sampleId + '::' + item.annotatorId + '::' + item.outKey + '::' + item.key;
+      return item.runType + '::' + item.sampleId + '::' + item.annotatorId + '::' + item.outKey + '::' + item.key;
     }).join(',');
     if (list.getAttribute('data-signature') === signature) return;
     list.setAttribute('data-signature', signature);
@@ -8799,6 +8803,7 @@ function getTaskTypeLabel() {
       var row = document.createElement('div');
       row.className = 'leader-adjudication-item';
       row.setAttribute('data-leader-adjudication-item', '');
+      row.setAttribute('data-run-type', item.runType);
       row.style.cssText = 'padding:10px 0;border-top:1px solid var(--color-border);';
       var heading = document.createElement('div');
       heading.textContent = item.sampleId + ' · ' + item.annotatorId + ' · ' + item.outputType;
