@@ -108,10 +108,14 @@
 
 ## 12. G4a 頁籤貼齊頂端／直角 — Green
 
-- [ ] 12.1 修改 `design/prototype/pages/shared/sidebar.css`（`.workspace-tab-bar`／`.workspace-tab`），使 11.1 轉綠，不回歸 `tests/shared/` 家族。[@senior-frontend]
-- [ ] 12.2 同一 commit 以 `node scripts/gen-screen-inventory.mjs` 重新產生 `design/system/screen-inventory.md`。[@senior-frontend]
+**故事目標**：SC-015 延伸 — 上述 Red 案例轉綠，頁籤貼齊頂端且為直角，既有頁籤家族不回歸。
+
+- [ ] 12.1 修改 `design/prototype/pages/shared/sidebar.css`（頁籤列與頁籤規則），使 11.1 轉綠，並確認既有頁籤與側欄測試家族不回歸。[@senior-frontend]
+- [ ] 12.2 同一 commit 重新產生 `design/system/screen-inventory.md`。[@senior-frontend]
 
 ## 13. G4a — 驗證、審查與 PR
+
+**故事目標**：SC-015 延伸 — 確認 G4a 不回歸既有頁籤家族行為，獨立審查通過，交付群組 PR。
 
 - [ ] 13.1 執行 Gate 1–3、改前／改後截圖（側欄展開、收合各一，同 viewport）、獨立審查，撰寫 `pr-1099-g4a.md`（`Part of #1099`）。[@main]
 
@@ -124,9 +128,15 @@
 
 ## 15. G4b 總覽選單單行 — Green
 
-- [ ] 15.1 修改 `design/prototype/pages/shared/sidebar.js` 移除第二行 DOM 產生（篩選比對邏輯不動）與 `sidebar.css` 對應規則；delta `FR-023`(2) 同步刪「次要說明」（`proposal.md` 同步）。[@senior-frontend]
-- [ ] 15.2 同一 commit 重新產生 `screen-inventory.md`；既有 `workspace-tabs-overview-*` 測試若斷言第二行須逐案說明、不得默默刪除。[@senior-frontend]
+**故事目標**：SC-001 延伸 — 上述 Red 案例轉綠，總覽選單每列單行且篩選行為不變。
+
+- [ ] 15.1 修改 `design/prototype/pages/shared/sidebar.js`，移除第二行 DOM 產生（篩選比對邏輯不動）。[@senior-frontend]
+- [ ] 15.2 修改 `design/prototype/pages/shared/sidebar.css`，移除第二行對應規則。[@senior-frontend]
+- [ ] 15.3 修改 delta `specs/shared/019-workspace-tabs/spec.md` 之 FR-023(2)，刪除「次要說明」。[@main]
+- [ ] 15.4 同一 commit 重新產生 `design/system/screen-inventory.md`；既有總覽選單測試若斷言第二行須逐案說明、不得默默刪除。[@senior-frontend]
 
 ## 16. G4b — 驗證、審查與 PR
+
+**故事目標**：SC-001 延伸 — 確認 G4b 不回歸既有總覽選單行為，獨立審查通過，交付群組 PR。
 
 - [ ] 16.1 執行 Gate 1–3、獨立審查，撰寫 `pr-1099-g4b.md`（`Part of #1099`）。[@main]
