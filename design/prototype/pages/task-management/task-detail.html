@@ -6313,8 +6313,14 @@ function interpolate(template, payload) {
 
     if (TASK_DATA.status === 'draft') {
       var draftPoolKey = getPublishPoolBlockKey('dry');
+      /* FR-022(3): the member gap (FR-010t) is its own item next to the pool reason. */
+      var draftGaps = draftPoolKey ? getMembershipGapMessages() : [];
+      var draftDescribedBy = 'publishPoolReason' + (draftGaps.length ? ' publishMemberGapReason' : '');
+      var draftGapHtml = draftGaps.length
+        ? '<span class="status-hint" id="publishMemberGapReason">' + t('toastPublishBlockedMembers') + draftGaps.join(t('memberGapJoiner')) + '</span>'
+        : '';
       actionRow.innerHTML = draftPoolKey
-        ? '<button class="btn btn-cta" type="button" id="publishDryRunBtn" disabled aria-describedby="publishPoolReason">' + t('publishDryRun') + ' R1</button>' + poolReasonHtml(draftPoolKey)
+        ? '<button class="btn btn-cta" type="button" id="publishDryRunBtn" disabled aria-describedby="' + draftDescribedBy + '">' + t('publishDryRun') + ' R1</button>' + poolReasonHtml(draftPoolKey) + draftGapHtml
         : '<button class="btn btn-cta" type="button" id="publishDryRunBtn">' + t('publishDryRun') + ' R1</button>';
       return;
     }
@@ -7453,6 +7459,9 @@ function getTaskTypeLabel() {
     annotationProgressPanel.classList.toggle('hidden', !annotationActive);
     workLogPanel.classList.toggle('hidden', !workLogActive);
     memberManagementPanel.classList.toggle('hidden', !memberActive);
+    /* FR-022(3): member changes made in the members tab must show up in the
+       overview action row (member gap) when returning to it. */
+    if (overviewActive) renderPublishActions();
   }
 
   function renderMemberTable() {
@@ -10594,8 +10603,10 @@ function getTaskTypeLabel() {
   function canPublish(kind) {
     var poolKey = getPublishPoolBlockKey(kind);
     if (poolKey) {
-      showToast(t(poolKey), true);
-      trackEvent('prototype_publish_failed', { reason: 'official_pool_empty' });
+      /* FR-022(3): the pool reason never replaces the FR-010t member check. */
+      var poolGaps = getMembershipGapMessages();
+      showToast(t(poolKey) + (poolGaps.length ? ' ' + t('toastPublishBlockedMembers') + poolGaps.join(t('memberGapJoiner')) : ''), true);
+      trackEvent('prototype_publish_failed', { reason: (kind === 'official' ? 'official_pool_empty' : 'draft_pool_empty') + (poolGaps.length ? '; member_gap: ' + poolGaps.join(', ') : '') });
       return false;
     }
     var result = validateSampling();
