@@ -103,21 +103,21 @@
 
 **故事目標**：SC-015 延伸（視覺對齊 NoteCraft）— 頁籤上緣貼齊頁籤列與視窗頂端、直角、高度填滿頁籤列。
 
-- [ ] 11.1 以 `design/prototype/tests/shared/workspace-tabs-flush-top.spec.ts` 建立測試：側欄展開與收合兩種狀態下，頁籤列 `getBoundingClientRect().top` 為 0、作用中頁籤 top 等於頁籤列 top、頁籤底緣等於頁籤列內容底緣（填滿高度）、`border-radius` 為 0；375px 無水平捲動；總覽選單觸發鈕仍在頁籤列右端。commit 並記錄預期失敗。[@senior-qa]
-- [ ] 11.2 執行：驗證前 `git status --short` 乾淨；`PW_PORT=8982` 執行新測試並貼完整失敗輸出；於 `design/prototype/tests/inventory.csv` 同一 commit 新增對應列（LF only）。[@senior-qa]
+- [x] 11.1 以 `design/prototype/tests/shared/workspace-tabs-flush-top.spec.ts` 建立測試：側欄展開與收合兩種狀態下，頁籤列 `getBoundingClientRect().top` 為 0、作用中頁籤 top 等於頁籤列 top、頁籤底緣等於頁籤列內容底緣（填滿高度）、`border-radius` 為 0；375px 無水平捲動；總覽選單觸發鈕仍在頁籤列右端。commit 並記錄預期失敗。[@senior-qa]
+- [x] 11.2 執行：驗證前 `git status --short` 乾淨；`PW_PORT=8982` 執行新測試並貼完整失敗輸出；於 `design/prototype/tests/inventory.csv` 同一 commit 新增對應列（LF only）。[@senior-qa]
 
 ## 12. G4a 頁籤貼齊頂端／直角 — Green
 
 **故事目標**：SC-015 延伸 — 上述 Red 案例轉綠，頁籤貼齊頂端且為直角，既有頁籤家族不回歸。
 
-- [ ] 12.1 修改 `design/prototype/pages/shared/sidebar.css`（頁籤列與頁籤規則），使 11.1 轉綠，並確認既有頁籤與側欄測試家族不回歸。[@senior-frontend]
-- [ ] 12.2 同一 commit 重新產生 `design/system/screen-inventory.md`。[@senior-frontend]
+- [x] 12.1 修改 `design/prototype/pages/shared/sidebar.css`（頁籤列與頁籤規則），使 11.1 轉綠，並確認既有頁籤與側欄測試家族不回歸。[@senior-frontend]
+- [x] 12.2 同一 commit 重新產生 `design/system/screen-inventory.md`。[@senior-frontend]
 
 ## 13. G4a — 驗證、審查與 PR
 
 **故事目標**：SC-015 延伸 — 確認 G4a 不回歸既有頁籤家族行為，獨立審查通過，交付群組 PR。
 
-- [ ] 13.1 執行 Gate 1–3、改前／改後截圖（側欄展開、收合各一，同 viewport）、獨立審查，撰寫 `pr-1099-g4a.md`（`Part of #1099`）。[@main]
+- [x] 13.1 執行 Gate 1–3、改前／改後截圖（側欄展開、收合各一，同 viewport）、獨立審查，撰寫 `pr-1099-g4a.md`（`Part of #1099`）。[@main]
 
 ## 14. G4b 總覽選單單行 — Red
 
