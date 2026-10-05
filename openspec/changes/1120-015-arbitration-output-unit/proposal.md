@@ -7,7 +7,7 @@
 
 ## Why
 
-issue #1120 的 OpenSpec change `1120-task-lifecycle-alignment`（已 archive 為 `openspec/changes/archive/2026-10-05-1120-task-lifecycle-alignment/`）在 `design.md` D2 盤點 `task-detail` 各頁籤的衍生計數時，發現「仲裁輸出項目」是五個概念中唯一「機制已定義、可顯示之計數單位未明文」的一個：015 FR-061 定義了逐爭議項裁定與 `ARBITRATION_OUTCOMES`，FR-059 定義了爭議項的推導與識別，但沒有任何條文說明「仲裁進度」的計數要以什麼為一筆。`specs/task-management/014-task-detail/spec.md` FR-010u 第 (4) 點要求 014 讀取 015 的既有定義、不得另建第二份；第 (5) 點要求三種聚合單位不得相加。014 已依此不自行定義，該 change 的 `tasks.md` 把這個定義列為 015 擁有的跨 owner 待辦，維護者已授權由本單 lead 在群組 5 合併後提一份獨立的單一目的 PR。
+issue #1120 的 OpenSpec change `1120-task-lifecycle-alignment`（已 archive 為 `openspec/changes/archive/2026-10-05-1120-task-lifecycle-alignment/`）在 `design.md` D2 盤點 `task-detail` 各頁籤的衍生計數時，發現「仲裁輸出項目」是五個概念中唯一「機制已定義、可顯示之計數單位未明文」的一個：015 FR-061 定義了逐爭議項裁定與 `ARBITRATION_OUTCOMES`，FR-059 定義了爭議項的推導與識別，但沒有任何條文說明「仲裁進度」的計數要以什麼為一筆。`specs/task-management/014-task-detail/spec.md` FR-010u 第 (4) 點要求 014 讀取 015 的既有定義、不得另建第二份；第 (5) 點要求三種聚合單位不得相加。第 (4) 點點名的是 `已定案 review unit` 與 `最終例外輸出項目` 兩處定義；第 (5) 點則把「爭議項」列為不得相加的聚合層級，但 014 與 015 都沒有定義它的計數方式（1120 change 把這個概念稱為「仲裁輸出項目」）。014 已依此不自行定義，該 change 的 `tasks.md` 把這個定義列為 015 擁有的跨 owner 待辦，維護者已授權由本單 lead 在群組 5 合併後提一份獨立的單一目的 PR。
 
 本提案只補上這一個計數單位定義，不改動任何既有 FR／AC 條文，也不改動任何版面。
 

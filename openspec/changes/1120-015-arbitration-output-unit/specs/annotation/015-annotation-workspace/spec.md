@@ -13,9 +13,9 @@
 4. **送出與寫入**：所有爭議項皆已裁定（採 A／採 B／兩者皆非）方可送出，未完成時 MUST 阻擋且 MUST NOT 寫入任何狀態。送出時逐項寫入 `votes[]`（`arbiter_id`、`choice`、`voted_at`）與 `finalized_value` / `finalized_by`；`choice` 取值 MUST 為 `ARBITRATION_OUTCOMES = adopt_a | adopt_b | reject`。仲裁狀態以**審核單位**定址（`task_id × run_type × annotator_id × sample_id`），MUST NOT 寫入任何 reviewer bucket——爭議屬於單位本身，任何仲裁者的定案必須對該單位的所有檢視者可見。
 5. **仲裁效果說明**：版面 MUST 載明仲裁的效果為「逐爭議項選定定稿值、不重新標記」。
 
-**仲裁輸出項目之計數單位**（issue #1120）：凡呈現仲裁進度之計數——含 `task-detail` 進度頁籤之 `待仲裁` 計數，以及 `task-management/014-task-detail` FR-010u 所稱之「仲裁輸出項目」——MUST 以 FR-059 推導之爭議項（`DisputeItem`）為聚合單位，本條為該計數單位之唯一定義：
+**仲裁輸出項目之計數單位**（issue #1120）：凡呈現仲裁進度之計數——含 `task-detail` 進度頁籤之 `待仲裁` 計數，以及 `task-management/014-task-detail` FR-010u 第 (5) 點所稱之「爭議項」聚合層級（issue #1120 OpenSpec change `1120-task-lifecycle-alignment` 稱之為「仲裁輸出項目」）——MUST 以 FR-059 推導之爭議項（`DisputeItem`）為聚合單位，本條為該計數單位之唯一定義：
 - **單位**：每個爭議項計為 1；其識別為所屬審核單位（`sample_id × annotator_id × run_type`，FR-051）內之 `outKey × 合併鍵`（FR-059 第 2 點），拆解粒度依 FR-059 第 4 點（集合型逐合併鍵、`sequence_tagging` 逐 token 位置、`multi_dim` 逐維度、其餘整個 outKey 至多一項）。MUST NOT 以審核單位或輸出類型將同一單位內的多個爭議項合併為一筆計數。
-- **分子與分母**：分母為查詢範圍內之爭議項總數；分子為其中已寫入 `ARBITRATION_OUTCOMES` 任一 `choice`（`adopt_a`／`adopt_b`／`reject`）之爭議項數。
+- **分子與分母**：分母為查詢範圍內之爭議項總數；分子為其中已裁定之爭議項數——即最新裁定為 `reject`，或已有合法仲裁定案（`finalized_value`／`finalized_by`，本條第 4 點）者。
 - **待仲裁**：尚未解決（既無仲裁定案、亦無最終例外池收尾，同 FR-051 之解決判定）且最新裁定不是 `reject` 之爭議項數。最新裁定為 `reject` 而尚未收尾者屬最終例外輸出項目（FR-095），MUST NOT 計入待仲裁。
 - **範圍**：查詢範圍由呼叫端之查詢上下文決定（例如 014 FR-010u 第 (1) 點），本條不另定範圍；不同 `run_type` 之爭議項 MUST 分別計數。
 - **不得相加**：本計數 MUST NOT 與審核單位數或標記 assignment 數相加，亦 MUST NOT 與兩者共用分母（014 FR-010u 第 (5) 點）。
