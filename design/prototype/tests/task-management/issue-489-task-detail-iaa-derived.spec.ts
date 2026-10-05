@@ -54,12 +54,51 @@ test.describe('task-detail derives T014 IAA from marks (issue #489/#491)', () =>
        offers "start trial round R2" and no official-run button exists at all
        -- so asserting on T014's default state would pass vacuously. The
        &status= override puts the task at the one point where IAA could
-       plausibly gate: waiting_iaa_confirmation, with alpha 0.5882 < 0.80. */
+       plausibly gate: waiting_iaa_confirmation, with alpha 0.5882 < 0.80.
+
+       Why the seed: since issue #1120 group 1 T014's trial round consumes all
+       5 of its own records, so its remaining official pool is 0, and FR-022
+       (014 task-detail) correctly disables the official-run CTA for THAT
+       reason. This case pins the IAA axis only, so it seeds a persisted
+       round 1 (same localStorage mechanism as persistTrialRunState()) that
+       leaves a non-zero pool while keeping the 0.5882 miss. */
+    await page.addInitScript(
+      ([key, state]) => window.localStorage.setItem(key as string, JSON.stringify(state)),
+      [
+        'labelsuite.trialRunState',
+        {
+          T014: {
+            status: 'waiting_iaa_confirmation',
+            trialRounds: [
+              {
+                round: 1,
+                sampleCount: 3,
+                agreement: 0.5882,
+                annotators: 3,
+                std: 0.1,
+                result: 'failed',
+                usedSamples: 3,
+                date: '2026-08-22',
+                noteZh: '第一回合 IAA 未達標。',
+                noteEn: 'Round 1 IAA missed the target.',
+                iaaComputationStatus: 'done',
+              },
+            ],
+          },
+        },
+      ],
+    );
     await page.goto(`${TASK_DETAIL_URL}?task_id=T014&status=waiting_iaa_confirmation`);
     await expect(page.locator('#currentAgreementValue')).toHaveText('0.59');
+    await expect(page.locator('#stopAgreementPill')).not.toHaveClass(/passed/);
+    const pool = Number(await page.locator('#officialPoolValue').textContent());
+    expect(pool).toBeGreaterThan(0);
     const btn = page.locator('#publishOfficialRunBtn');
     await expect(btn).toBeVisible();
     await expect(btn).toBeEnabled();
+    await expect(page.locator('#publishActionRow')).not.toContainText(
+      /IAA 未達標|IAA 計算中|IAA 計算失敗/,
+    );
   });
 
   test('shows "無法計算" instead of 0.00 when no marks support an alpha', async ({ page }) => {
