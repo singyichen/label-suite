@@ -32,10 +32,10 @@
 > **產品檔案（1）**：`design/prototype/pages/task-management/task-detail.html`
 > **相依**：群組 1 已合併；本群組動工前 `git merge origin/main`。
 
-- [ ] 2.1 撰寫 `design/prototype/tests/task-management/task-detail-official-pool-guard.spec.ts` 之 Red。涵蓋 delta FR-022 全部五點與其四條情境、issue §4 驗收 06：T013 於 `draft` 提前顯示原因並停用 CTA、計算狀態為 `done` 且 IAA 已達標仍因池為 0 阻擋、阻擋原因不含任何 IAA 表述且不改變 `iaa_computation_status`、直接呼叫發布 handler 同樣失敗、原因為可見文字且可由鍵盤與螢幕閱讀器取得。每案例加入 inventory.csv。驗證：`PW_PORT=8981 pnpm playwright test tests/task-management/task-detail-official-pool-guard.spec.ts` 出現失敗 [@senior-qa]
-- [ ] 2.2 Green：修改 `design/prototype/pages/task-management/task-detail.html`。依 delta FR-022 於發布 handler 內驗證依 FR-010f-3 推導之剩餘池筆數，阻擋時逐項列出原因並與 IAA 狀態分列，`draft` 階段提前揭露並停用 CTA，原因文字不得僅依賴 hover 或顏色。驗證：`PW_PORT=8981 pnpm playwright test tests/task-management/task-detail-official-pool-guard.spec.ts` exit 0 [@senior-frontend]
-- [ ] 2.3 執行 `node scripts/gen-screen-inventory.mjs` 重生畫面盤點清單並與 2.2 同一提交。驗證：`node scripts/gen-screen-inventory.mjs --check` exit 0 [@senior-frontend]
-- [ ] 2.4 執行群組 2 回歸候選集與 inventory 一致性核對。驗證：`cd design/prototype && pnpm typecheck && pnpm test:node && PW_PORT=8981 pnpm playwright test tests/task-management/task-detail-official-pool-guard.spec.ts tests/task-management/issue-783-iaa-computation-status.spec.ts tests/task-management/task-detail-run-control-i18n.spec.ts` exit 0 [@main]
+- [x] 2.1 撰寫 `design/prototype/tests/task-management/task-detail-official-pool-guard.spec.ts` 之 Red。涵蓋 delta FR-022 全部五點與其四條情境、issue §4 驗收 06：T013 於 `draft` 提前顯示原因並停用 CTA、計算狀態為 `done` 且 IAA 已達標仍因池為 0 阻擋、阻擋原因不含任何 IAA 表述且不改變 `iaa_computation_status`、直接呼叫發布 handler 同樣失敗、原因為可見文字且可由鍵盤與螢幕閱讀器取得。每案例加入 inventory.csv。驗證：`PW_PORT=8981 pnpm playwright test tests/task-management/task-detail-official-pool-guard.spec.ts` 出現失敗 [@senior-qa]
+- [x] 2.2 Green：修改 `design/prototype/pages/task-management/task-detail.html`。依 delta FR-022 於發布 handler 內驗證依 FR-010f-3 推導之剩餘池筆數，阻擋時逐項列出原因並與 IAA 狀態分列，`draft` 階段提前揭露並停用 CTA，原因文字不得僅依賴 hover 或顏色。驗證：`PW_PORT=8981 pnpm playwright test tests/task-management/task-detail-official-pool-guard.spec.ts` exit 0 [@senior-frontend]
+- [x] 2.3 執行 `node scripts/gen-screen-inventory.mjs` 重生畫面盤點清單並與 2.2 同一提交。驗證：`node scripts/gen-screen-inventory.mjs --check` exit 0 [@senior-frontend]
+- [x] 2.4 執行群組 2 回歸候選集與 inventory 一致性核對。驗證：`cd design/prototype && pnpm typecheck && pnpm test:node && PW_PORT=8981 pnpm playwright test tests/task-management/task-detail-official-pool-guard.spec.ts tests/task-management/issue-783-iaa-computation-status.spec.ts tests/task-management/task-detail-run-control-i18n.spec.ts` exit 0 [@main]
 
 ## 3. 正式結案閘門真實化（intermediate PR）
 
