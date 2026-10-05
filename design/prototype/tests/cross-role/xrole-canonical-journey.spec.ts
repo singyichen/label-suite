@@ -986,26 +986,23 @@ test('XROLE-19: checkpoint E -- the arbitrated unit reads as finalized across pa
   await expect(detail.locator('.ar-history-arbitration .ar-history-decision')).toContainText('採 B');
 });
 
-test.describe('XROLE-20: completion is not blocked by unresolved disputes (documents the D2 gap)', () => {
-  test('publishing complete with an unresolved dispute should be blocked but is not', async ({ page }) => {
-    /* D2 gap (w4 §5, "Spec-defined (pending revision)"): publishComplete()
-     * (task-detail.html:8863-8869) sets status = 'completed' unconditionally
-     * -- it consults no review-unit state, no dispute pool, no submission
-     * progress. Seeding a real disputed unit here would be moot: the page
-     * reads none of it, which is exactly the gap. Runs isolated from the
-     * shared journey (fresh page + own task id) like XROLE-04. */
-    test.fail();
-
+test.describe('XROLE-20: completion is blocked while the task has unresolved review state (FR-008b, issue #1120 G3)', () => {
+  test('publishing complete with an unresolved dispute is blocked', async ({ page }) => {
+    /* FR-008b / AC-3.9 (issue #1120 group 3): publishComplete() must refuse to
+     * set status = 'completed' unless all five preconditions hold. This task
+     * (own id, isolated from the shared journey like XROLE-04) has no
+     * review-unit data, which FR-008b treats as NOT satisfied -- a missing
+     * signal never defaults to complete. Converted from a `test.fail()` that
+     * documented the D2 gap; the dispute/pool/submission matrix on real
+     * fixtures lives in task-management/task-detail-completion-gate.spec.ts. */
     const gapTaskId = `XROLE-gap-d2-block-${Date.now()}`;
     await patchDataFile(page, 'task-detail.data.js', buildXRoleSeedPatch(gapTaskId));
     await page.goto(`/pages/task-management/task-detail.html?task_role=project_leader&task_id=${gapTaskId}&status=official_run_in_progress`);
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
 
     await expect(page.locator('#publishCompleteBtn')).toBeVisible();
-    await page.locator('#publishCompleteBtn').click();
-    // Desired behavior: with an unresolved dispute the task must stay in
-    // official marking and surface the blocking gap list. Actual behavior:
-    // the stepper advances to 已完成 immediately, so this assertion fails.
+    await expect(page.locator('#publishCompleteBtn')).toBeDisabled();
+    await page.evaluate(() => (window as unknown as { publishComplete: () => void }).publishComplete());
     await expect(page.locator('#statusStepper .step-current .step-label-wrap')).toHaveText('正式標記中');
   });
 });
