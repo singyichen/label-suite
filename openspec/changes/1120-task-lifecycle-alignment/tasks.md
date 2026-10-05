@@ -66,7 +66,7 @@
 - [x] 4.7 執行 `node scripts/gen-screen-inventory.mjs` 重生畫面盤點清單並與 4.5 同一提交。驗證：`node scripts/gen-screen-inventory.mjs --check` exit 0 [@senior-frontend]
 - [x] 4.8 執行群組 4 回歸候選集與 inventory 一致性核對。驗證：`cd design/prototype && pnpm typecheck && pnpm test:node && PW_PORT=8981 pnpm playwright test tests/task-management/task-detail-dry-run-completion.spec.ts tests/task-management/task-detail-leader-arbitration.spec.ts tests/task-management/issue-791-trial-round-from-waiting.spec.ts tests/task-management/task-detail-stage-flow.spec.ts tests/task-management/issue-783-iaa-computation-status.spec.ts tests/cross-role/issue-850-trial-round-shared-source.spec.ts` exit 0 **G4b 完整指令 exit 0（另含 596／868 兩檔共 58 案例）；`grep -rl` 回歸候選集 86 檔 518 案例全數通過。** [@main]
 
-## 5. 正式案例試標前置歷史與正典回寫（最終 PR，`Closes #1120`）
+## 5. 正式案例試標前置歷史與正典回寫（最終 PR，`Part of #1120`）
 
 **故事目標**（SC-041、SC-050）：讓 T015 與 T016 具備符合前置條件的試標歷史，其 `TrialRound.sampling_value` 與實際建立筆數一致、歷史回合與當前回合分列不交叉，並完成正典 014 回寫與 archive。
 
