@@ -1144,14 +1144,6 @@ body.sidebar-collapsed .notif-dropdown { left: 88px; }
   color: var(--color-ink);
 }
 
-.workspace-tab-overview-item-secondary {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 11px;
-  color: var(--color-ink-muted);
-}
-
 .workspace-tab-overview-item-close {
   flex-shrink: 0;
   width: 22px;

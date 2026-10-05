@@ -1477,12 +1477,6 @@
           labelSpan.className = 'workspace-tab-overview-item-label';
           labelSpan.textContent = label;
           textWrap.appendChild(labelSpan);
-          if (secondary) {
-            var secondarySpan = document.createElement('span');
-            secondarySpan.className = 'workspace-tab-overview-item-secondary';
-            secondarySpan.textContent = secondary;
-            textWrap.appendChild(secondarySpan);
-          }
           itemEl.appendChild(textWrap);
 
           var closeBtn = document.createElement('button');

@@ -123,20 +123,20 @@
 
 **故事目標**：SC-001 延伸 — 總覽選單每列只留圖示＋標題＋關閉鈕，篩選仍可用頁面種類名稱命中。
 
-- [ ] 14.1 以 `design/prototype/tests/shared/workspace-tabs-overview-single-line.spec.ts` 建立測試：桌面與行動 viewport、zh-TW／en，DOM 中無 `.workspace-tab-overview-item-secondary`、每列只有標題文字；以頁面種類名稱（如「任務詳情」）篩選仍命中對應列；長標題截斷且保留完整 `title`。commit 並記錄預期失敗。[@senior-qa]
-- [ ] 14.2 執行：`git status --short` 乾淨後 `PW_PORT=8982` 執行並貼完整失敗輸出；`inventory.csv` 同 commit 新增列。[@senior-qa]
+- [x] 14.1 以 `design/prototype/tests/shared/workspace-tabs-overview-single-line.spec.ts` 建立測試：桌面與行動 viewport、zh-TW／en，DOM 中無 `.workspace-tab-overview-item-secondary`、每列只有標題文字；以頁面種類名稱（如「任務詳情」）篩選仍命中對應列；長標題截斷且保留完整 `title`。commit 並記錄預期失敗。[@senior-qa]
+- [x] 14.2 執行：`git status --short` 乾淨後 `PW_PORT=8982` 執行並貼完整失敗輸出；`inventory.csv` 同 commit 新增列。[@senior-qa]
 
 ## 15. G4b 總覽選單單行 — Green
 
 **故事目標**：SC-001 延伸 — 上述 Red 案例轉綠，總覽選單每列單行且篩選行為不變。
 
-- [ ] 15.1 修改 `design/prototype/pages/shared/sidebar.js`，移除第二行 DOM 產生（篩選比對邏輯不動）。[@senior-frontend]
-- [ ] 15.2 修改 `design/prototype/pages/shared/sidebar.css`，移除第二行對應規則。[@senior-frontend]
-- [ ] 15.3 修改 delta `specs/shared/019-workspace-tabs/spec.md` 之 FR-023(2)，刪除「次要說明」。[@main]
-- [ ] 15.4 同一 commit 重新產生 `design/system/screen-inventory.md`；既有總覽選單測試若斷言第二行須逐案說明、不得默默刪除。[@senior-frontend]
+- [x] 15.1 修改 `design/prototype/pages/shared/sidebar.js`，移除第二行 DOM 產生（篩選比對邏輯不動）。[@senior-frontend]
+- [x] 15.2 修改 `design/prototype/pages/shared/sidebar.css`，移除第二行對應規則。[@senior-frontend]
+- [x] 15.3 修改 delta `specs/shared/019-workspace-tabs/spec.md` 之 FR-023(2)，刪除「次要說明」。[@main]
+- [x] 15.4 同一 commit 重新產生 `design/system/screen-inventory.md`；既有總覽選單測試若斷言第二行須逐案說明、不得默默刪除。[@senior-frontend]
 
 ## 16. G4b — 驗證、審查與 PR
 
 **故事目標**：SC-001 延伸 — 確認 G4b 不回歸既有總覽選單行為，獨立審查通過，交付群組 PR。
 
-- [ ] 16.1 執行 Gate 1–3、獨立審查，撰寫 `pr-1099-g4b.md`（`Part of #1099`）。[@main]
+- [x] 16.1 執行 Gate 1–3、獨立審查，撰寫 `pr-1099-g4b.md`（`Part of #1099`）。[@main]
