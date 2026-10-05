@@ -1,5 +1,5 @@
 ---
-功能分支: feat/1082-g3-archive
+功能分支: docs/1120-015-arbitration-output-unit
 建立日期: 2026-04-23
 版本: 10.0.0
 狀態: Draft
