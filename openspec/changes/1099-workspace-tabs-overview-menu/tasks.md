@@ -98,3 +98,45 @@
 - [ ] 10.2 執行：Gate 4（Source-Verify 預掃結果 ＋ `/opsx:archive` 成功證據）。[@main]
 - [ ] 10.3 派未參與實作之 `senior-code-reviewer` 獨立審查，結論原文貼進檢查點留言。[@senior-code-reviewer]
 - [ ] 10.4 執行：撰寫 `pr-1099-g3.md`（`Closes #1099`，base main），貼 `git diff --stat origin/main...HEAD` 與最終 SHA。[@main]
+
+## 11. G4a 頁籤貼齊頂端／直角 — Red
+
+**故事目標**：SC-015 延伸（視覺對齊 NoteCraft）— 頁籤上緣貼齊頁籤列與視窗頂端、直角、高度填滿頁籤列。
+
+- [x] 11.1 以 `design/prototype/tests/shared/workspace-tabs-flush-top.spec.ts` 建立測試：側欄展開與收合兩種狀態下，頁籤列 `getBoundingClientRect().top` 為 0、作用中頁籤 top 等於頁籤列 top、頁籤底緣等於頁籤列內容底緣（填滿高度）、`border-radius` 為 0；375px 無水平捲動；總覽選單觸發鈕仍在頁籤列右端。commit 並記錄預期失敗。[@senior-qa]
+- [x] 11.2 執行：驗證前 `git status --short` 乾淨；`PW_PORT=8982` 執行新測試並貼完整失敗輸出；於 `design/prototype/tests/inventory.csv` 同一 commit 新增對應列（LF only）。[@senior-qa]
+
+## 12. G4a 頁籤貼齊頂端／直角 — Green
+
+**故事目標**：SC-015 延伸 — 上述 Red 案例轉綠，頁籤貼齊頂端且為直角，既有頁籤家族不回歸。
+
+- [x] 12.1 修改 `design/prototype/pages/shared/sidebar.css`（頁籤列與頁籤規則），使 11.1 轉綠，並確認既有頁籤與側欄測試家族不回歸。[@senior-frontend]
+- [x] 12.2 同一 commit 重新產生 `design/system/screen-inventory.md`。[@senior-frontend]
+
+## 13. G4a — 驗證、審查與 PR
+
+**故事目標**：SC-015 延伸 — 確認 G4a 不回歸既有頁籤家族行為，獨立審查通過，交付群組 PR。
+
+- [x] 13.1 執行 Gate 1–3、改前／改後截圖（側欄展開、收合各一，同 viewport）、獨立審查，撰寫 `pr-1099-g4a.md`（`Part of #1099`）。[@main]
+
+## 14. G4b 總覽選單單行 — Red
+
+**故事目標**：SC-001 延伸 — 總覽選單每列只留圖示＋標題＋關閉鈕，篩選仍可用頁面種類名稱命中。
+
+- [ ] 14.1 以 `design/prototype/tests/shared/workspace-tabs-overview-single-line.spec.ts` 建立測試：桌面與行動 viewport、zh-TW／en，DOM 中無 `.workspace-tab-overview-item-secondary`、每列只有標題文字；以頁面種類名稱（如「任務詳情」）篩選仍命中對應列；長標題截斷且保留完整 `title`。commit 並記錄預期失敗。[@senior-qa]
+- [ ] 14.2 執行：`git status --short` 乾淨後 `PW_PORT=8982` 執行並貼完整失敗輸出；`inventory.csv` 同 commit 新增列。[@senior-qa]
+
+## 15. G4b 總覽選單單行 — Green
+
+**故事目標**：SC-001 延伸 — 上述 Red 案例轉綠，總覽選單每列單行且篩選行為不變。
+
+- [ ] 15.1 修改 `design/prototype/pages/shared/sidebar.js`，移除第二行 DOM 產生（篩選比對邏輯不動）。[@senior-frontend]
+- [ ] 15.2 修改 `design/prototype/pages/shared/sidebar.css`，移除第二行對應規則。[@senior-frontend]
+- [ ] 15.3 修改 delta `specs/shared/019-workspace-tabs/spec.md` 之 FR-023(2)，刪除「次要說明」。[@main]
+- [ ] 15.4 同一 commit 重新產生 `design/system/screen-inventory.md`；既有總覽選單測試若斷言第二行須逐案說明、不得默默刪除。[@senior-frontend]
+
+## 16. G4b — 驗證、審查與 PR
+
+**故事目標**：SC-001 延伸 — 確認 G4b 不回歸既有總覽選單行為，獨立審查通過，交付群組 PR。
+
+- [ ] 16.1 執行 Gate 1–3、獨立審查，撰寫 `pr-1099-g4b.md`（`Part of #1099`）。[@main]

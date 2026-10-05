@@ -957,9 +957,9 @@ body.sidebar-collapsed .notif-dropdown { left: 88px; }
    (G2f, spec 019 FR-002/US6); hidden here instead of left broken. */
 .workspace-tab-bar {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: var(--space-xs);
-  padding: var(--space-sm) var(--space-md) 0;
+  padding: 0 var(--space-md);
   border-bottom: 1px solid var(--color-border);
   background: var(--color-white);
   position: sticky;
@@ -974,7 +974,7 @@ body.sidebar-collapsed .notif-dropdown { left: 88px; }
   align-items: center;
   gap: var(--space-xs);
   padding: var(--space-sm) var(--space-md);
-  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  border-radius: 0;
   font-size: 13px;
   font-weight: 500;
   color: var(--color-ink-muted);
@@ -1051,6 +1051,7 @@ body.sidebar-collapsed .notif-dropdown { left: 88px; }
    mirrors `.notif-dropdown`'s fixed-position/box-shadow pattern. */
 .workspace-tab-overview-trigger {
   flex-shrink: 0;
+  align-self: center;
   display: inline-flex;
   align-items: center;
   gap: 4px;
