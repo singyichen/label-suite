@@ -2511,7 +2511,7 @@
       labelArbiterIdsControl: '仲裁者',
       reviewerSelectLabel: '審核員',
       arbiterSelectLabel: '仲裁者',
-      arbiterSelectHint: '被指定者保留處理仲裁，不會收到新的審核單位；可留空，但爭議將無人可仲裁。',
+      arbiterSelectHint: '被指定者保留處理仲裁，不會收到新的審核單位；可留空，留空時由專案負責人裁定爭議。',
       reviewerIdsValueWithCountTpl: '已勾選 {count} 人',
       reviewerIdsValueEmpty: '未勾選審核員',
       arbiterIdsValueWithCountTpl: '仲裁者 {count} 人',
@@ -2717,7 +2717,7 @@
       arbiterTagLabel: '仲裁',
       disputePoolTpl: '爭議池 {count} 項待仲裁',
       exceptionPoolTpl: '例外池 {count} 項待處置',
-      publishArbiterWarningText: '未指定仲裁者將導致無法結案：爭議項目將無人可仲裁，並持續堆積在爭議池中。',
+      publishArbiterWarningText: '未指定仲裁者：爭議項目將由專案負責人在「標記進度」分頁逐項裁定。',
       progressSummaryTitle: '整體進度摘要',
       progressStageDry: '試標',
       progressStageOfficial: '正式標記',
@@ -2746,6 +2746,14 @@
       thFepActions: '操作',
       fepResolveLinkLabel: '進入處置',
       fepReasonFallback: '（仲裁時未填寫理由）',
+      leaderAdjudicationSourceLabel: '負責人裁定（無指定仲裁者）',
+      leaderAdjudicationTitleTpl: '負責人裁定 · {count} 項待裁定',
+      leaderAdjudicationSubtitle: '本任務未指定仲裁者，爭議項目由專案負責人裁定；「兩者皆非」須填寫理由。',
+      leaderAdjudicationChoiceA: '採標記員答案',
+      leaderAdjudicationChoiceB: '採審核員答案',
+      leaderAdjudicationChoiceReject: '兩者皆非',
+      leaderAdjudicationReasonPlaceholder: '裁定理由（選「兩者皆非」時必填）',
+      leaderAdjudicationConfirm: '確認裁定',
       toastCompleteBlocked: '結案前置條件尚未滿足，無法標記完成：',
       completeBlockerExceptionPoolTpl: '最終例外池尚有 {count} 項待處置',
       completeBlockerSubmission: '正式標記作業尚未全數提交',
@@ -3046,7 +3054,7 @@
       labelArbiterIdsControl: 'Arbiters',
       reviewerSelectLabel: 'Reviewers',
       arbiterSelectLabel: 'Arbiters',
-      arbiterSelectHint: 'Designated arbiters are reserved from new review assignment; leaving this empty means disputes cannot be arbitrated.',
+      arbiterSelectHint: 'Designated arbiters are reserved from new review assignment; leaving this empty means the project leader adjudicates disputes.',
       reviewerIdsValueWithCountTpl: '{count} selected',
       reviewerIdsValueEmpty: 'No reviewers selected',
       arbiterIdsValueWithCountTpl: '{count} arbiter(s)',
@@ -3252,7 +3260,7 @@
       arbiterTagLabel: 'Arbiter',
       disputePoolTpl: 'Dispute pool · {count} awaiting arbitration',
       exceptionPoolTpl: 'Exception pool · {count} awaiting resolution',
-      publishArbiterWarningText: 'Not designating an arbiter roster will block task completion: disputed items will have no one to arbitrate and will keep piling up in the dispute pool.',
+      publishArbiterWarningText: 'No arbiter designated: the project leader will rule on each disputed item in the Annotation Progress tab.',
       progressSummaryTitle: 'Progress summary',
       progressStageDry: 'Dry Run',
       progressStageOfficial: 'Official Run',
@@ -3281,6 +3289,14 @@
       thFepActions: 'Actions',
       fepResolveLinkLabel: 'Resolve',
       fepReasonFallback: '(no reason recorded at arbitration)',
+      leaderAdjudicationSourceLabel: 'Leader adjudication (no arbiter designated)',
+      leaderAdjudicationTitleTpl: 'Leader adjudication · {count} awaiting a ruling',
+      leaderAdjudicationSubtitle: 'No arbiter is designated for this task, so the project leader rules on disputed items; "Neither" requires a reason.',
+      leaderAdjudicationChoiceA: 'Adopt annotator answer',
+      leaderAdjudicationChoiceB: 'Adopt reviewer answer',
+      leaderAdjudicationChoiceReject: 'Neither',
+      leaderAdjudicationReasonPlaceholder: 'Reason (required for "Neither")',
+      leaderAdjudicationConfirm: 'Confirm ruling',
       toastCompleteBlocked: 'Completion preconditions not met, cannot mark complete: ',
       completeBlockerExceptionPoolTpl: 'Final exception pool still has {count} pending item(s)',
       completeBlockerSubmission: 'Official run submissions are not yet complete',
@@ -4570,6 +4586,7 @@
           events.push({
             outputKey: outKey,
             arbiter: vote.arbiter_id,
+            source: vote.source || '',
             pick: vote.choice === 'adopt_a' ? 'A' : (vote.choice === 'adopt_b' ? 'B' : 'reject'),
             decidedAt: vote.voted_at || ''
           });
@@ -8734,7 +8751,7 @@ function getTaskTypeLabel() {
       tr.appendChild(td(item.reviewerIds.join(', ') || '-', 'fep-reviewer'));
       tr.appendChild(td(item.outputType, 'fep-output-type'));
       tr.appendChild(td(
-        (item.arbiterId || '-') + ' · ' + (item.reason || t('fepReasonFallback')),
+        (item.source === 'leader' ? t('leaderAdjudicationSourceLabel') : (item.arbiterId || '-')) + ' · ' + (item.reason || t('fepReasonFallback')),
         'fep-arbiter'
       ));
       tr.appendChild(td(item.fellAt || '-', 'fep-fell-at'));
@@ -8752,6 +8769,98 @@ function getTaskTypeLabel() {
     });
   }
 
+  /* FR-023: leader adjudication entry point. Shown only to the project leader
+     and only while the task's arbiter roster is empty -- decided from the
+     workspace data layer's taskArbiterRoster(), the same source that guards
+     submitLeaderAdjudication(). One row per awaiting-arbitration item. */
+  function renderLeaderAdjudicationSection() {
+    var section = document.getElementById('leaderAdjudicationSection');
+    var list = document.getElementById('leaderAdjudicationList');
+    if (!section || !list) return;
+    var wsData = window.LabelSuiteAnnotationWorkspaceData;
+    var active = state.taskRole === 'project_leader' && !!wsData && !!wsData.submitLeaderAdjudication &&
+      wsData.taskArbiterRoster(TASK_DATA.taskId).length === 0;
+    section.classList.toggle('hidden', !active);
+    if (!active) return;
+
+    var items = wsData.listReviewPoolItems(TASK_DATA.taskId, getSelectedRunType()).awaitingArbitration;
+    setText('leaderAdjudicationTitle', interpolate(t('leaderAdjudicationTitleTpl'), { count: items.length }));
+    setText('leaderAdjudicationSubtitle', t('leaderAdjudicationSubtitle'));
+    /* Full-page re-renders (e.g. the post-skeleton one) must not wipe a
+       half-filled row: rebuild only when the listed items or language change. */
+    var signature = state.lang + '|' + items.map(function(item) {
+      return item.sampleId + '::' + item.annotatorId + '::' + item.outKey + '::' + item.key;
+    }).join(',');
+    if (list.getAttribute('data-signature') === signature) return;
+    list.setAttribute('data-signature', signature);
+    while (list.firstChild) list.removeChild(list.firstChild);
+
+    items.forEach(function(item) {
+      var row = document.createElement('div');
+      row.className = 'leader-adjudication-item';
+      row.setAttribute('data-leader-adjudication-item', '');
+      row.style.cssText = 'padding:10px 0;border-top:1px solid var(--color-border);';
+      var heading = document.createElement('div');
+      heading.textContent = item.sampleId + ' · ' + item.annotatorId + ' · ' + item.outputType;
+      row.appendChild(heading);
+
+      var choice = '';
+      var buttons = [];
+      var reason = document.createElement('textarea');
+      var confirm = document.createElement('button');
+      function syncConfirm() {
+        confirm.disabled = !choice || (choice === 'reject' && !reason.value.trim());
+      }
+      [['adopt_a', 'leaderAdjudicationChoiceA'], ['adopt_b', 'leaderAdjudicationChoiceB'], ['reject', 'leaderAdjudicationChoiceReject']]
+        .forEach(function(pair) {
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'mini-btn';
+          btn.setAttribute('data-choice', pair[0]);
+          btn.setAttribute('aria-pressed', 'false');
+          btn.textContent = t(pair[1]);
+          btn.addEventListener('click', function() {
+            choice = pair[0];
+            buttons.forEach(function(b) { b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'); });
+            syncConfirm();
+          });
+          buttons.push(btn);
+          row.appendChild(btn);
+        });
+
+      reason.setAttribute('data-leader-adjudication-reason', '');
+      reason.rows = 2;
+      reason.style.cssText = 'display:block;width:100%;margin:6px 0;font:inherit;';
+      reason.placeholder = t('leaderAdjudicationReasonPlaceholder');
+      reason.setAttribute('aria-label', t('leaderAdjudicationReasonPlaceholder'));
+      reason.addEventListener('input', syncConfirm);
+      row.appendChild(reason);
+
+      confirm.type = 'button';
+      confirm.className = 'mini-btn';
+      confirm.setAttribute('data-leader-adjudication-confirm', '');
+      confirm.textContent = t('leaderAdjudicationConfirm');
+      confirm.disabled = true;
+      confirm.addEventListener('click', function() {
+        var result = wsData.submitLeaderAdjudication(item.taskId, item.runType, item.sampleId, [{
+          annotatorId: item.annotatorId,
+          itemId: item.outKey + '::' + item.key,
+          choice: choice,
+          reason: reason.value.trim()
+        }]);
+        if (!result || result.ok === false) return;
+        /* The results tab reads a snapshot built at load; refresh it so the
+           ruling shows up in history and in the export without a reload. */
+        var rebuilt = buildReviewFlowResults(TASK_DATA.taskId);
+        if (rebuilt.length) ANNOTATION_RESULTS_BY_TASK[TASK_DATA.taskId] = rebuilt;
+        renderAnnotationProgress();
+        renderPublishActions();
+      });
+      row.appendChild(confirm);
+      list.appendChild(row);
+    });
+  }
+
   function renderAnnotationProgress() {
     renderProgressRoundPills();
     renderProgressSummary();
@@ -8760,6 +8869,7 @@ function getTaskTypeLabel() {
     renderRoundProgressList();
     renderProgressEmptyState();
     renderFinalExceptionPoolSection();
+    renderLeaderAdjudicationSection();
     syncUrlToViewState();
   }
 
@@ -9421,7 +9531,7 @@ function getTaskTypeLabel() {
     getAnnotationArbitrations(annotation).forEach(function(arbitration) {
       var arbitrationLine = buildArHistoryLine(
         'ar-history-arbitration',
-        t('arHistoryArbiterRole'),
+        arbitration.source === 'leader' ? t('leaderAdjudicationSourceLabel') : t('arHistoryArbiterRole'),
         reviewerDisplayName(arbitration.arbiter),
         arbitration.pick === 'A'
           ? t('arHistoryPickA')
@@ -9802,7 +9912,7 @@ function getTaskTypeLabel() {
     delete taskFields.tokenizer;
     delete taskFields.alignment_mode;
     delete taskFields.expanded_span_count;
-    return {
+    var record = {
       annotation_id: annotationId,
       annotator_id: getAnnotatorId(annotation.annotator),
       annotator_name: annotation.annotator,
@@ -9815,6 +9925,11 @@ function getTaskTypeLabel() {
         taskFields
       )
     };
+    /* FR-023(3): a leader-adjudicated item is distinguishable from an arbiter's. */
+    if (getAnnotationArbitrations(annotation).some(function(arbitration) { return arbitration.source === 'leader'; })) {
+      record.finalization_source = 'leader_adjudication';
+    }
+    return record;
   }
 
   /* Issue #800/FR-021(6): getArFilteredSamples() returning zero rows means
@@ -10804,6 +10919,10 @@ function getTaskTypeLabel() {
       ? wsData.listReviewPoolItems(TASK_DATA.taskId, runType)
       : { awaitingArbitration: [], pendingExceptions: [] };
     var openKeys = {};
+    var awaitingKeys = {};
+    poolItems.awaitingArbitration.forEach(function(item) {
+      awaitingKeys[item.sampleId + '::' + item.annotatorId] = true;
+    });
     poolItems.awaitingArbitration.concat(poolItems.pendingExceptions).forEach(function(item) {
       openKeys[item.sampleId + '::' + item.annotatorId] = true;
     });
@@ -10815,10 +10934,12 @@ function getTaskTypeLabel() {
     units.forEach(function(unit) {
       if (unit.status === 'finalized') return;
       if (unit.status === 'disputed') {
-        if (openKeys[unit.sampleId + '::' + unit.annotatorId]) {
-          disputed += 1;
-          if (!separateDisputed) unfinalized += 1;
-        }
+        /* FR-023: the trial gate's dispute count is the units still awaiting a
+           ruling; a unit whose remaining items already fell into the exception
+           pool is listed through the pool reason instead (no double count). */
+        var unitKey = unit.sampleId + '::' + unit.annotatorId;
+        if (separateDisputed ? awaitingKeys[unitKey] : openKeys[unitKey]) disputed += 1;
+        if (openKeys[unitKey] && !separateDisputed) unfinalized += 1;
         return;
       }
       unfinalized += 1;

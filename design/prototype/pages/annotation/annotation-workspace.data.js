@@ -2933,41 +2933,53 @@
       return annotatorAnswers ? buildResultSnapshot(annotatorAnswers) : null;
     }
     if (choice === 'adopt_b') {
-      var reviewerSubmissions = readReviewerSubmissions(taskId, runType, sampleId, identity);
-      var stickyReviewerId = getStickyReviewerId(taskId, runType, sampleId, identity);
-      var reviewerSubmission = (stickyReviewerId && reviewerSubmissions.filter(function (s) {
-        return s.reviewerId === stickyReviewerId;
-      })[0]) || reviewerSubmissions[0] || null;
+      var reviewerSubmission = ownerReviewerSubmission(taskId, runType, sampleId, identity);
       return reviewerSubmission ? buildResultSnapshot(reviewerSubmission.answers) : null;
     }
     return null;
+  }
+
+  function ownerReviewerSubmission(taskId, runType, sampleId, identity) {
+    var reviewerSubmissions = readReviewerSubmissions(taskId, runType, sampleId, identity);
+    var stickyReviewerId = getStickyReviewerId(taskId, runType, sampleId, identity);
+    return (stickyReviewerId && reviewerSubmissions.filter(function (s) {
+      return s.reviewerId === stickyReviewerId;
+    })[0]) || reviewerSubmissions[0] || null;
+  }
+
+  /* Shared vote write for submitArbitration() and submitLeaderAdjudication():
+     one record shape so FR-051 derivation and the queues need no branch.
+     `source` is stamped only for a non-reviewer origin ('leader'). */
+  function recordArbitrationVote(bucketKey, sampleId, arbiterId, decision, source) {
+    var itemKey = arbitrationItemKey(bucketKey, sampleId, decision.itemId);
+    var item = readArbitrationItem(itemKey) || { votes: [] };
+    var vote = { arbiter_id: arbiterId, choice: decision.choice, voted_at: new Date().toISOString() };
+    if (decision.reason) vote.reason = decision.reason;
+    if (source) vote.source = source;
+    var existingIndex = -1;
+    item.votes.forEach(function (v, i) {
+      if (v.arbiter_id === arbiterId) existingIndex = i;
+    });
+    if (existingIndex === -1) {
+      item.votes.push(vote);
+    } else {
+      item.votes[existingIndex] = vote;
+    }
+    if (decision.choice === 'reject') {
+      delete item.finalized_value;
+      delete item.finalized_by;
+    } else {
+      item.finalized_value = decision.value;
+      item.finalized_by = arbiterId;
+    }
+    writeArbitrationItem(itemKey, item);
   }
 
   function submitArbitration(taskId, runType, sampleId, identity, decisions) {
     var bucketKey = arbitrationBucketKey(taskId, runType, identity);
     var arbiterId = (identity && identity.reviewerId) || DEFAULT_REVIEWER_ID;
     (decisions || []).forEach(function (decision) {
-      var itemKey = arbitrationItemKey(bucketKey, sampleId, decision.itemId);
-      var item = readArbitrationItem(itemKey) || { votes: [] };
-      var vote = { arbiter_id: arbiterId, choice: decision.choice, voted_at: new Date().toISOString() };
-      if (decision.reason) vote.reason = decision.reason;
-      var existingIndex = -1;
-      item.votes.forEach(function (v, i) {
-        if (v.arbiter_id === arbiterId) existingIndex = i;
-      });
-      if (existingIndex === -1) {
-        item.votes.push(vote);
-      } else {
-        item.votes[existingIndex] = vote;
-      }
-      if (decision.choice === 'reject') {
-        delete item.finalized_value;
-        delete item.finalized_by;
-      } else {
-        item.finalized_value = decision.value;
-        item.finalized_by = arbiterId;
-      }
-      writeArbitrationItem(itemKey, item);
+      recordArbitrationVote(bucketKey, sampleId, arbiterId, decision);
       /* FR-089 / AC-3.50 (new in v4.61.0): before this version arbitration
          was the only terminal action in the workspace that left no trace in
          history at all -- votes and finalized_value were written, and the
@@ -2979,6 +2991,61 @@
         undefined, arbitrationFinalizedSnapshot(taskId, runType, sampleId, identity, decision.choice)
       );
     });
+  }
+
+  /* FR-023 (issue #1120): when the task's arbiter roster is empty the project
+     leader adjudicates open disputes. Unlike submitArbitration() this path is
+     GUARDED -- it refuses (and writes nothing) unless the roster is empty,
+     the unit is disputed, the item is still open, the choice is a known
+     outcome and a `reject` carries a reason. `decisions` is
+     [{annotatorId, itemId, choice, reason}] (annotatorId names the review
+     unit; the A/B value is derived here, never taken from the caller). */
+  function submitLeaderAdjudication(taskId, runType, sampleId, decisions) {
+    if (taskArbiterRoster(taskId).length) return { ok: false, error: 'arbiter_roster_not_empty' };
+    var listEntry = findTaskListEntry(taskId);
+    var outKeys = (listEntry && listEntry.outputTypes) || [];
+    var planned = [];
+    var valid = Array.isArray(decisions) && decisions.length > 0 && decisions.every(function (decision) {
+      if (!decision || !decision.annotatorId) return false;
+      if (ARBITRATION_OUTCOMES.indexOf(decision.choice) === -1) return false;
+      if (decision.choice === 'reject' && !String(decision.reason || '').trim()) return false;
+      var identity = { annotatorId: decision.annotatorId };
+      if (getReviewUnitStatus(taskId, runType, sampleId, identity, outKeys) !== REVIEW_UNIT_STATUS.DISPUTED) return false;
+      var item = getDisputeItems(taskId, runType, sampleId, identity, outKeys).filter(function (candidate) {
+        return candidate.outKey + '::' + candidate.key === decision.itemId;
+      })[0];
+      var stored = getArbitrationState(taskId, runType, sampleId, identity)[decision.itemId];
+      if (!item || (stored && stored.finalized_by)) return false;
+      var reviewerSubmission = ownerReviewerSubmission(taskId, runType, sampleId, identity);
+      var value = decision.choice === 'adopt_a'
+        ? item.annotatorValue
+        : (reviewerSubmission ? item.reviewerValues[reviewerSubmission.reviewerId] : undefined);
+      planned.push({ identity: identity, decision: { itemId: decision.itemId, choice: decision.choice, reason: decision.reason, value: value } });
+      return true;
+    });
+    if (!valid) return { ok: false, error: 'adjudication_refused' };
+
+    planned.forEach(function (step) {
+      var snapshot = arbitrationFinalizedSnapshot(taskId, runType, sampleId, step.identity, step.decision.choice);
+      recordArbitrationVote(
+        arbitrationBucketKey(taskId, runType, step.identity), sampleId, DEFAULT_PROJECT_LEADER_ID, step.decision, 'leader'
+      );
+      /* appendHistoryEvent directly: appendSampleTimelineEvent's actorIdFor()
+         would attribute the event to the annotator. */
+      var bucketKey = submissionBucketKey(taskId, 'annotator', runType, step.identity);
+      var bucket = readSubmissionBucket(bucketKey);
+      var entry = bucket[sampleId];
+      if (!entry) {
+        entry = { status: 'pending', answers: {} };
+        bucket[sampleId] = entry;
+      }
+      appendHistoryEvent(
+        entry, 'adjudicated', 'project_leader', 'leader adjudication: ' + step.decision.itemId,
+        DEFAULT_PROJECT_LEADER_ID, { reason: step.decision.reason || null, result_snapshot: snapshot }
+      );
+      writeSubmissionBucket(bucketKey, bucket);
+    });
+    return { ok: true };
   }
 
   /* issue #722: an arbiter's workspace progress counter must count
@@ -3089,6 +3156,7 @@
             outputType: item.outKey,
             reviewerIds: reviewerIds,
             arbiterId: rejectVote ? rejectVote.arbiter_id : '',
+            source: rejectVote ? (rejectVote.source || '') : '',
             reason: rejectVote ? (rejectVote.reason || '') : '',
             fellAt: rejectVote ? rejectVote.voted_at : '',
           };
@@ -3935,6 +4003,7 @@
     resolveExceptionPoolItem: resolveExceptionPoolItem,
     DEFAULT_PROJECT_LEADER_ID: DEFAULT_PROJECT_LEADER_ID,
     submitArbitration: submitArbitration,
+    submitLeaderAdjudication: submitLeaderAdjudication,
     isArbitrationSubmitted: isArbitrationSubmitted,
     PURE_REJECT_VALUE: PURE_REJECT_VALUE,
     computeIaaAlpha: computeIaaAlpha,
