@@ -958,8 +958,8 @@ body.sidebar-collapsed .notif-dropdown { left: 88px; }
 .workspace-tab-bar {
   display: flex;
   align-items: stretch;
-  gap: var(--space-xs);
-  padding: 0 var(--space-md);
+  gap: 0;
+  padding: 0;
   border-bottom: 1px solid var(--color-border);
   background: var(--color-white);
   position: sticky;
@@ -980,6 +980,7 @@ body.sidebar-collapsed .notif-dropdown { left: 88px; }
   color: var(--color-ink-muted);
   background: transparent;
   border: 1px solid transparent;
+  border-right-color: var(--color-border);
   border-bottom: none;
   cursor: pointer;
   white-space: nowrap;
