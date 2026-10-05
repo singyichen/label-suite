@@ -7,6 +7,11 @@
  * the five materialized official-run items used by annotation list/workspace.
  * A genuinely legacy task with no explicit empty-round profile keeps the
  * existing fallback so the fix cannot collapse missing and empty together.
+ *
+ * Issue #1120 (FR-010u (3), acceptance 11): T015/T016 no longer have an empty
+ * round collection -- they carry a trial history (datasetTotal 6/7, one
+ * sample per round), so the expectations below are the true history-derived
+ * values. The five official items are unchanged.
  */
 import { expect, test, type Page } from '@playwright/test';
 import { buildListUrl, buildWorkspaceUrl, skipGuidelineModal } from '../annotation/_workspace-helpers';
@@ -29,24 +34,37 @@ async function openTaskDetail(page: Page, taskId: string): Promise<void> {
   });
 }
 
-async function expectAuthoritativeEmptyTrialRounds(page: Page): Promise<void> {
-  await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(0);
-  await expect(page.locator('#trialRoundTimeline')).toContainText('尚未建立任何試標回合');
-  await expect(page.locator('#trialRoundTimeline')).not.toContainText('R1');
+/* issue #1120: T015/T016 now carry a trial-round history (T015: R1; T016:
+   R1 + R2, one sample each) on top of datasetTotal 6/7, while the official
+   run stays the five materialized items. The pool is datasetTotal minus the
+   samples the history rounds consumed, so it is still 5. */
+const TRIAL_HISTORY_BY_TASK = {
+  T015: { rounds: 1, total: 6, currentRound: 'R1' },
+  T016: { rounds: 2, total: 7, currentRound: 'R2' },
+} as const;
 
-  await expect(page.locator('#trialRoundValue')).toHaveText('-');
-  await expect(page.locator('#trialRoundsUsedValue')).toHaveText('0');
-  await expect(page.locator('#roundHistorySummary')).toHaveText('已用 0 / 5 筆試標');
+async function expectTrialHistoryWithFiveOfficialItems(
+  page: Page,
+  taskId: keyof typeof TRIAL_HISTORY_BY_TASK,
+): Promise<void> {
+  const { rounds, total, currentRound } = TRIAL_HISTORY_BY_TASK[taskId];
+  await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(rounds);
+  await expect(page.locator('#trialRoundTimeline')).not.toContainText('尚未建立任何試標回合');
+  await expect(page.locator('#trialRoundTimeline')).toContainText('R1');
+
+  await expect(page.locator('#trialRoundValue')).toHaveText(currentRound);
+  await expect(page.locator('#trialRoundsUsedValue')).toHaveText(String(rounds));
+  await expect(page.locator('#roundHistorySummary')).toHaveText(`已用 ${rounds} / ${total} 筆試標`);
   await expect(page.locator('#officialPoolValue')).toHaveText('5');
   await expect(page.locator('#splitLegendDynamic')).not.toContainText('R1');
   await expect(page.locator('#splitLegendDynamic')).toContainText('正式 5筆');
 }
 
-test.describe('Issue #887 — explicit empty trial rounds are authoritative', () => {
-  for (const taskId of ['T015', 'T016']) {
-    test(`${taskId} shows zero trial usage and all five official items`, async ({ page }) => {
+test.describe('Issue #887 / #1120 — official-run fixtures keep the pool and official items consistent', () => {
+  for (const taskId of ['T015', 'T016'] as const) {
+    test(`${taskId} shows its trial history usage and all five official items`, async ({ page }) => {
       await openTaskDetail(page, taskId);
-      await expectAuthoritativeEmptyTrialRounds(page);
+      await expectTrialHistoryWithFiveOfficialItems(page, taskId);
     });
   }
 
@@ -80,7 +98,7 @@ test.describe('Issue #887 — explicit empty trial rounds are authoritative', ()
     await expect(page.locator('#officialPoolValue')).toHaveText('5');
   });
 
-  test('language toggle preserves the zero-trial and five-item official-pool values', async ({
+  test('language toggle preserves the trial-history and five-item official-pool values', async ({
     page,
   }) => {
     await openTaskDetail(page, 'T016');
@@ -89,11 +107,11 @@ test.describe('Issue #887 — explicit empty trial rounds are authoritative', ()
     await expect(page.locator('#trialRoundLabel')).toHaveText('Trial round');
     await expect(page.locator('#trialRoundsUsedLabel')).toHaveText('Trial rounds used');
     await expect(page.locator('#officialPoolLabel')).toHaveText('Official pool');
-    await expect(page.locator('#trialRoundValue')).toHaveText('-');
-    await expect(page.locator('#trialRoundsUsedValue')).toHaveText('0');
-    await expect(page.locator('#roundHistorySummary')).toHaveText('0 / 5 items used in trial');
+    await expect(page.locator('#trialRoundValue')).toHaveText('R2');
+    await expect(page.locator('#trialRoundsUsedValue')).toHaveText('2');
+    await expect(page.locator('#roundHistorySummary')).toHaveText('2 / 7 items used in trial');
     await expect(page.locator('#officialPoolValue')).toHaveText('5');
-    await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(0);
+    await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(2);
   });
 
   test('legacy T001 without an explicit empty-round profile retains the R1 fallback', async ({

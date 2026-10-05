@@ -66,6 +66,7 @@ test.describe('Publish risk-confirm modal with isolation disabled (DUP-06)', () 
 
     await expect(page.locator('#riskModal')).toHaveAttribute('aria-hidden', 'true');
     await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(1);
-    await expect(page.locator('#trialRoundsUsedValue')).toHaveText('1');
+    // FR-010u (3): the just-published R1 is still active, so it is not a completed round.
+    await expect(page.locator('#trialRoundsUsedValue')).toHaveText('0');
   });
 });
