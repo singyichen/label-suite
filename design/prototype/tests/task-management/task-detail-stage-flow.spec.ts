@@ -126,7 +126,13 @@ test('keeps the 4-stage stepper while showing R1 into a waiting-confirmation-gat
   // exception pool must be closed too. Prove the gate holds first, then close them through the
   // workspace's public write paths and let the next load's gate advance the task.
   await expectStillInProgress(page, TASK_ID);
-  await applyDryRunState(page, TASK_ID, { review: true, arbitrate: 'all' });
+  // The three annotators' marks disagree, so the round's live IAA is computable AND below target;
+  // getTrialRoundScenario() prefers live IAA, so the 未通過 outcome below is a genuine failing round.
+  await applyDryRunState(page, TASK_ID, {
+    review: true,
+    arbitrate: 'all',
+    disagreeLabels: ['positive', 'negative', 'neutral'],
+  });
   await page.reload();
   await expect(page.locator('#statusBadge')).toContainText('待 IAA 確認');
   await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(1);

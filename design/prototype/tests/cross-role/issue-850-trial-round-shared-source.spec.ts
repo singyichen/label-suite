@@ -395,6 +395,16 @@ test.describe('issue #850: task-detail and annotation pages share no trial-round
       }
     );
 
+    // T002 inherits the shared demo fixture whose `r2` unassigned row (removed member, ASP-041..044)
+    // is real FR-008a condition (1) work once R2 is active. This case is about R2 resubmission
+    // counting toward completion, so give T002's profile an empty unassigned pool, the same shape
+    // T014-T016 use (task-detail.data.js `unassignedAssignments: []`), via a runtime-only patch.
+    await patchDataFile(
+      page,
+      'task-detail.data.js',
+      `window.LabelSuiteTaskDetailData.profiles[${JSON.stringify(TASK_ID)}].unassignedAssignments = [];`
+    );
+
     // All 5 of R2's samples now genuinely submitted (albeit with R1-identical
     // answers) -> R2's submission side is complete. #1120 G4a: that alone no longer
     // moves the task, so first prove the gate still holds on review, then close

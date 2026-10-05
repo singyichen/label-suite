@@ -18,6 +18,11 @@ export const IN_PROGRESS_BADGE = '試標進行中';
 export const WAITING_BADGE = '待 IAA 確認';
 
 export type DryRunParts = {
+  /**
+   * Annotators the review fixture writes for still-pending units disagree with each other
+   * (distinct labels from `disagreeLabels`) so the round's live IAA stays below target.
+   */
+  disagreeLabels?: string[];
   /** Output key of the task (default `single_label`, the T001/T014 shape). */
   outKey?: string;
   /** Reviewers submit an `approve` decision for every unit that has no review yet. */
@@ -41,7 +46,7 @@ export type DryRunFacts = {
 /** Run the public write paths for `taskId` in dry_run scope and report the resulting facts. */
 export async function applyDryRunState(page: Page, taskId: string, parts: DryRunParts): Promise<DryRunFacts> {
   return page.evaluate(
-    ({ task, doReview, arbitrate, outKey }) => {
+    ({ task, doReview, arbitrate, outKey, labels }) => {
       const ws = (window as any).LabelSuiteAnnotationWorkspaceData;
       const outKeys = [outKey];
       const runType = 'dry_run';
@@ -49,11 +54,18 @@ export async function applyDryRunState(page: Page, taskId: string, parts: DryRun
       const arbiterId = 'reviewer_chen';
 
       if (doReview) {
+        const ordinals: string[] = [];
         ws.listReviewUnits(task, runType).forEach((unit: any) => {
           if (unit.status !== 'pending' && unit.status !== null) return;
+          if (ordinals.indexOf(unit.annotatorId) < 0) ordinals.push(unit.annotatorId);
           const identity = { annotatorId: unit.annotatorId };
           let annotatorAnswers = ws.getSubmission(task, 'annotator', runType, unit.sampleId, identity);
-          if (!annotatorAnswers) {
+          if (labels && labels.length) {
+            const sampleIdx = Number(String(unit.sampleId).replace(/\D/g, '')) || 0;
+            const pick = labels[(sampleIdx + ordinals.indexOf(unit.annotatorId)) % labels.length];
+            annotatorAnswers = { previewState: { [outKey]: { selected: pick } } };
+            ws.markSampleSubmitted(task, 'annotator', runType, unit.sampleId, annotatorAnswers, '', identity);
+          } else if (!annotatorAnswers) {
             const row = ws
               .getReviewUnitRows(task, runType, unit.sampleId, outKeys)
               .filter((r: any) => r.annotator === unit.annotatorId)[0];
@@ -104,7 +116,7 @@ export async function applyDryRunState(page: Page, taskId: string, parts: DryRun
         pendingExceptions: pool.pendingExceptions.length,
       };
     },
-    { task: taskId, doReview: !!parts.review, arbitrate: parts.arbitrate || 'none', outKey: parts.outKey || 'single_label' },
+    { task: taskId, doReview: !!parts.review, arbitrate: parts.arbitrate || 'none', outKey: parts.outKey || 'single_label', labels: parts.disagreeLabels || null },
   );
 }
 
