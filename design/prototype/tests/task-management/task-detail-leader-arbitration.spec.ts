@@ -594,14 +594,17 @@ test.describe('Workspace history labels a leader adjudication (review M3)', () =
 test.describe('Review-settings save keeps both roster sources in sync (review M1)', () => {
   const OPTIONS = '#arbiterOptionList .arbiter-option';
 
-  async function openEdit(page: Page) {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T013`);
+  async function openEdit(page: Page, taskId = 'T013') {
+    await page.goto(`${TASK_DETAIL_URL}?task_id=${taskId}`);
     await expect(page.locator('#statusBadge')).toBeAttached();
     await page.locator('#reviewEditBtn').click();
     await expect(page.locator('#reviewEditForm')).not.toHaveClass(/hidden/);
   }
-  const roster = (page: Page) =>
-    page.evaluate(() => (window as any).LabelSuiteAnnotationWorkspaceData.taskArbiterRoster('T013'));
+  const roster = (page: Page, taskId = 'T013') =>
+    page.evaluate(
+      (id) => (window as any).LabelSuiteAnnotationWorkspaceData.taskArbiterRoster(id),
+      taskId,
+    );
 
   test('M1: saving with arbiter X selected makes taskArbiterRoster return [X]', async ({ page }) => {
     await openEdit(page);
@@ -616,14 +619,46 @@ test.describe('Review-settings save keeps both roster sources in sync (review M1
   });
 
   test('M1: saving with no arbiter selected makes taskArbiterRoster return [] (not the reviewer_chen fallback)', async ({ page }) => {
+    // T014 is not a draft (review editing is disabled), and no draft profile seeds arbiterIds. T013 is a
+    // legacy profile whose UI shows no arbiter, so first make a real selection, save, then reopen and clear it.
     await openEdit(page);
+    await page.locator(OPTIONS).first().locator('input').check();
+    await page.locator('#reviewSaveBtn').click();
+    await expect(page.locator('#reviewEditForm')).toHaveClass(/hidden/);
+    await page.locator('#reviewEditBtn').click();
+    await expect(page.locator('#reviewEditForm')).not.toHaveClass(/hidden/);
     const boxes = page.locator(`${OPTIONS} input`);
+    let checkedBefore = 0;
+    for (let i = 0; i < (await boxes.count()); i += 1) {
+      if (await boxes.nth(i).isChecked()) checkedBefore += 1;
+    }
+    expect(checkedBefore, 'precondition: at least one arbiter box is checked').toBeGreaterThan(0);
     for (let i = 0; i < (await boxes.count()); i += 1) await boxes.nth(i).uncheck();
     await page.locator('#reviewSaveBtn').click();
     await expect(page.locator('#reviewEditForm')).toHaveClass(/hidden/);
     await expect(page.locator('#valueArbiterIdsControl')).toHaveText('未指定仲裁者');
 
     expect(await roster(page)).toEqual([]);
+  });
+
+  test('M1 (legacy): a reviewer-only save on a profile without arbiterIds leaves the arbiter roster fallback untouched (issue-761 AC-1.6)', async ({ page }) => {
+    await openEdit(page, 'T001');
+    const rosterBefore = await roster(page, 'T001');
+    expect(rosterBefore, 'precondition: legacy fallback roster contains reviewer_chen').toContain('reviewer_chen');
+
+    const option = page
+      .locator('#reviewerOptionList .reviewer-option')
+      .filter({ hasNot: page.locator('input[value="reviewer_chen"]') })
+      .first();
+    await option.locator('input').uncheck();
+    await page.locator('#reviewSaveBtn').click();
+    await expect(page.locator('#reviewEditForm')).toHaveClass(/hidden/);
+
+    const profileArbiterIds = await page.evaluate(
+      () => (window as any).LabelSuiteTaskDetailData.profiles.T001.arbiterIds,
+    );
+    expect(profileArbiterIds).toBeUndefined();
+    expect(await roster(page, 'T001')).toEqual(rosterBefore);
   });
 });
 
