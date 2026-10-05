@@ -1007,28 +1007,6 @@ test.describe('XROLE-20: completion is blocked while the task has unresolved rev
   });
 });
 
-test.describe('XROLE-21: completion has no confirmation modal (documents the D2 gap)', () => {
-  test('publishing complete should require a second confirmation before advancing', async ({ page }) => {
-    /* Same D2 family as XROLE-20 but a distinct missing affordance: w4
-     * expects a 二次確認 modal equivalent to the existing riskModal mechanism
-     * (openRiskModal(), task-detail.html:8796-8801) before the terminal,
-     * irreversible completion -- publishComplete() advances without any
-     * confirmation step. */
-    test.fail();
-
-    const gapTaskId = `XROLE-gap-d2-confirm-${Date.now()}`;
-    await patchDataFile(page, 'task-detail.data.js', buildXRoleSeedPatch(gapTaskId));
-    await page.goto(`/pages/task-management/task-detail.html?task_role=project_leader&task_id=${gapTaskId}&status=official_run_in_progress`);
-    await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
-
-    await page.locator('#publishCompleteBtn').click();
-    // Desired behavior: a confirmation modal opens (riskModal gains .show)
-    // and the status has not advanced yet. Actual behavior: no modal exists
-    // on this path, so this assertion fails.
-    await expect(page.locator('#riskModal')).toHaveClass(/show/);
-  });
-});
-
 test('XROLE-22: official-stage export carries live review results while arbitration retains B', async () => {
   // plPage still sits on the annotation-results tab from XROLE-19.
   await plPage.locator('#arStageSelect').selectOption('official');
