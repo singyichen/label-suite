@@ -2557,7 +2557,7 @@
       reviewerHint: '僅 project leader 可操作',
       dryRunDisabled: '新增試標回合（唯讀）',
       officialRunDisabled: '開始正式標記（唯讀）',
-      dryRunNextRoundReason: '本回合全部提交並完成 IAA 後才能新增下一回合',
+      dryRunNextRoundReason: '本回合的標註、必要審核與必要仲裁全部完成後才能新增下一回合',
       retryIaaComputation: '重試計算',
       iaaComputationPendingOfficialReason: 'IAA 計算中，完成後才能開始正式標記',
       officialPoolEmptyReason: '正式標記池剩餘 0 筆，無法開始正式標記',
@@ -2752,6 +2752,7 @@
       completeBlockerReviewTpl: '尚有 {count} 個審核單位未定稿',
       completeBlockerReviewNoData: '尚無審核資料，所有審核單位須定稿後才能結案',
       completeBlockerDisputedTpl: '尚有 {count} 個審核單位處於爭議中',
+      trialBlockerSubmission: '本回合的標註未全部提交',
       trialBlockerReviewNoData: '尚無審核資料，所有審核單位須定稿後才能完成本回合',
       trialBlockerDisputedTpl: '尚有 {count} 個審核單位處於爭議中，須完成仲裁',
       unassignedAnnotationTitle: '未指派標記作業',
@@ -3091,7 +3092,7 @@
       reviewerHint: 'Only project leader can perform this action',
       dryRunDisabled: 'Add trial round (Read-only)',
       officialRunDisabled: 'Start official run (Read-only)',
-      dryRunNextRoundReason: 'Submit all outputs and finish IAA for this round before adding the next one',
+      dryRunNextRoundReason: 'Finish this round\'s annotation, required review and required arbitration before adding the next round',
       retryIaaComputation: 'Retry computation',
       iaaComputationPendingOfficialReason: 'IAA computation is in progress; official run can start once it finishes',
       officialPoolEmptyReason: 'The official pool has 0 items remaining, so the official run cannot start',
@@ -3286,6 +3287,7 @@
       completeBlockerReviewTpl: '{count} review unit(s) are not yet finalized',
       completeBlockerReviewNoData: 'No review data yet; every review unit must be finalized before completion',
       completeBlockerDisputedTpl: '{count} review unit(s) are still disputed',
+      trialBlockerSubmission: 'Not all annotations for this round have been submitted',
       trialBlockerReviewNoData: 'No review data yet; every review unit must be finalized before this round can complete',
       trialBlockerDisputedTpl: '{count} review unit(s) are still disputed and need arbitration',
       unassignedAnnotationTitle: 'Unassigned annotation assignments',
@@ -6339,9 +6341,10 @@ function interpolate(template, payload) {
       /* FR-013(1) / FR-008a: one visible reason per unmet condition; the fallback keeps the legacy hint. */
       var trialReasons = getDryRunCompletionBlockerMessages();
       var trialHtml = '<button class="btn btn-cta" type="button" id="publishDryRunBtn" disabled' + (trialReasons.length ? ' aria-describedby="publishDryRunReasons"' : '') + '>' + t('publishDryRun') + ' R' + nextRound + '</button>' +
+        '<span class="status-hint">' + t('dryRunNextRoundReason') + '</span>' +
         (trialReasons.length
           ? '<ul class="status-hint" id="publishDryRunReasons">' + trialReasons.map(function(reason) { return '<li>' + reason + '</li>'; }).join('') + '</ul>'
-          : '<span class="status-hint">' + t('dryRunNextRoundReason') + '</span>');
+          : '');
       actionRow.innerHTML = trialHtml;
       return;
     }
@@ -10652,7 +10655,7 @@ function getTaskTypeLabel() {
     var reasons = getDryRunCompletionBlockerMessages();
     if (!reasons.length) return false;
     showToast(reasons.join(t('memberGapJoiner')), true);
-    trackEvent('prototype_publish_failed', { reason: 'trial_round_blocked: ' + reasons.join(', ') });
+    trackEvent('prototype_publish_failed', { reason: 'trial_round_blocked: ' + getDryRunCompletionBlockers().map(function(b) { return b.code; }).join(', ') });
     return true;
   }
 
@@ -10858,7 +10861,7 @@ function getTaskTypeLabel() {
       if (blocker.code === 'exception_pool_pending') {
         return interpolate(t('completeBlockerExceptionPoolTpl'), { count: blocker.count });
       }
-      if (blocker.code === 'submission_incomplete') return t(trial ? 'dryRunNextRoundReason' : 'completeBlockerSubmission');
+      if (blocker.code === 'submission_incomplete') return t(trial ? 'trialBlockerSubmission' : 'completeBlockerSubmission');
       if (blocker.code === 'review_pending') {
         return blocker.count === null || blocker.count === undefined
           ? t(trial ? 'trialBlockerReviewNoData' : 'completeBlockerReviewNoData')
