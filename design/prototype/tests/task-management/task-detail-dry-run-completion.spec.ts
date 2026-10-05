@@ -46,6 +46,7 @@ import {
   expectStillInProgress,
   expectNoIaaPhrasing,
   persistedStatus,
+  writeFullySubmittedFlag,
 } from './_dry-run-completion-helpers';
 
 const TASK = 'T014';
@@ -188,6 +189,33 @@ test.describe('Review-aware dry-run completion gate (DRY_RUN_COMPLETION_RULE, FR
     await expect(page.locator('#trialRoundRevisionModal')).toBeHidden();
     await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(roundsBefore);
     await expect(page.locator('#statusBadge')).toContainText(IN_PROGRESS_BADGE);
+  });
+
+  test('an incomplete round submission is listed as its own IAA-free reason naming the unfinished annotation submission (FR-008a, FR-013(1), FR-010o-3)', async ({
+    page,
+  }) => {
+    // Only submission is outstanding: review and arbitration are closed, the round's progress flag
+    // says 4 of 5 samples submitted. Wording pinned: 未全部提交 (zh) / "not all ... submitted" (en).
+    await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK}`);
+    await expect(page.locator('#statusBadge')).toBeAttached();
+    const facts = await applyDryRunState(page, TASK, { review: true, arbitrate: 'all' });
+    expect(facts.byStatus).toEqual({ finalized: 15 }); // precondition: review and arbitration are complete
+    await writeFullySubmittedFlag(page, TASK, SAMPLES, 1, SAMPLES - 1);
+    await page.reload();
+    await expect(page.locator('#statusBadge')).toBeAttached();
+
+    await expectStillInProgress(page, TASK);
+    const reasons = page.locator('#publishDryRunReasons li');
+    await expect(reasons).toHaveCount(1);
+    await expect(reasons.first()).toBeVisible();
+    await expect(reasons.first()).toContainText('未全部提交');
+    await expect(page.locator('#publishDryRunBtn')).toHaveAttribute('aria-describedby', /publishDryRunReasons/);
+    expect(await reasonTexts(page)).toHaveLength(1);
+    await expectNoIaaPhrasing(page);
+    // The delta's FR-013(1) wording is shown next to the disabled button as well, and the retired
+    // IAA phrasing is gone from the whole action row.
+    await expect(page.locator('#publishActionRow')).toContainText('本回合的標註、必要審核與必要仲裁全部完成後才能新增下一回合');
+    await expect(page.locator('#publishActionRow')).not.toContainText(/IAA/i);
   });
 
   test('dry_run exception items gate the trial but not the official completion gate (FR-018(5))', async ({ page }) => {

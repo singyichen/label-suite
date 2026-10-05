@@ -121,14 +121,20 @@ export async function applyDryRunState(page: Page, taskId: string, parts: DryRun
 }
 
 /** Stamp the dry-run progress flag the workspace page writes once every sample is submitted. */
-export async function writeFullySubmittedFlag(page: Page, taskId: string, samples: number, round = 1) {
+export async function writeFullySubmittedFlag(
+  page: Page,
+  taskId: string,
+  samples: number,
+  round = 1,
+  submitted = samples,
+) {
   await page.evaluate(
-    ({ key, task, total, r }) =>
+    ({ key, task, total, r, done }) =>
       window.localStorage.setItem(
         key,
-        JSON.stringify({ runType: 'dry_run', taskId: task, round: r, submittedSamples: total, totalSamples: total }),
+        JSON.stringify({ runType: 'dry_run', taskId: task, round: r, submittedSamples: done, totalSamples: total }),
       ),
-    { key: DRY_RUN_PROGRESS_KEY, task: taskId, total: samples, r: round },
+    { key: DRY_RUN_PROGRESS_KEY, task: taskId, total: samples, r: round, done: submitted },
   );
 }
 

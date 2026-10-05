@@ -100,7 +100,7 @@ test('keeps the 4-stage stepper while showing R1 into a waiting-confirmation-gat
   await expect(page.locator('#splitLegendDynamic')).toContainText('正式 4筆');
 
   await expect(page.locator('#publishDryRunBtn')).toBeDisabled();
-  await expect(page.locator('#publishActionRow')).toContainText('本回合全部提交並完成 IAA 後才能新增下一回合');
+  await expect(page.locator('#publishActionRow')).toContainText('本回合的標註、必要審核與必要仲裁全部完成後才能新增下一回合');
   await expect(page.locator('#publishActionRow button')).toHaveCount(1);
 
   // R1 can only be advanced past dry_run_in_progress once its dry-run
@@ -167,5 +167,5 @@ test('keeps the 4-stage stepper while showing R1 into a waiting-confirmation-gat
   // FR-013: the label is R{trial_round + 1}. With R1 and R2 both
   // materialized in TASK_DATA.trialRounds, the next round is R3.
   await expect(page.locator('#publishDryRunBtn')).toHaveText('新增試標回合 R3');
-  await expect(page.locator('#publishActionRow')).toContainText('本回合全部提交並完成 IAA 後才能新增下一回合');
+  await expect(page.locator('#publishActionRow')).toContainText('本回合的標註、必要審核與必要仲裁全部完成後才能新增下一回合');
 });
