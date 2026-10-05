@@ -39,6 +39,7 @@
  */
 import { test, expect, type Page } from '@playwright/test';
 import { promises as fs } from 'node:fs';
+import { buildWorkspaceUrl, skipGuidelineModal } from '../annotation/_workspace-helpers';
 import {
   TASK_DETAIL_URL,
   WAITING_BADGE,
@@ -456,5 +457,190 @@ test.describe('Leader label wording is available in English too (FR-023(3))', ()
     await expect(
       page.locator('#finalExceptionPoolSection [data-testid="fep-arbiter"]').first(),
     ).toContainText(LEADER_LABEL_EN);
+  });
+});
+
+/* ---- Review findings M2 / M3 / M1 / L1 (issue #1120 G4b) ---------------------- */
+
+type PoolItem = { sampleId: string; annotatorId: string; outKey: string; key: string };
+
+/** First open dispute item (awaiting arbitration) of the task's dry_run. */
+async function firstOpenItem(page: Page): Promise<PoolItem> {
+  return page.evaluate((task) => {
+    const ws = (window as any).LabelSuiteAnnotationWorkspaceData;
+    const item = ws.listReviewPoolItems(task, 'dry_run').awaitingArbitration[0];
+    return { sampleId: item.sampleId, annotatorId: item.annotatorId, outKey: item.outKey, key: item.key };
+  }, TASK);
+}
+
+/** Vote count of one item plus the pool queues, as a comparable snapshot. */
+async function itemSnapshot(page: Page, item: PoolItem) {
+  return page.evaluate(
+    ({ task, it }) => {
+      const ws = (window as any).LabelSuiteAnnotationWorkspaceData;
+      const state = ws.getArbitrationState(task, 'dry_run', it.sampleId, { annotatorId: it.annotatorId });
+      const stored = state[`${it.outKey}::${it.key}`] || { votes: [] };
+      const pools = ws.listReviewPoolItems(task, 'dry_run');
+      const has = (list: any[]) => list.some((p) => p.sampleId === it.sampleId && p.outKey === it.outKey && p.key === it.key);
+      return {
+        votes: (stored.votes || []).length,
+        finalizedBy: stored.finalized_by || null,
+        inAwaiting: has(pools.awaitingArbitration),
+        inPending: has(pools.pendingExceptions),
+        status: ws.listReviewUnits(task, 'dry_run').filter((u: any) => u.sampleId === it.sampleId && u.annotatorId === it.annotatorId)[0].status,
+      };
+    },
+    { task: TASK, it: item },
+  );
+}
+
+async function directAdjudicate(page: Page, item: PoolItem, choice: Choice, reason: string) {
+  return page.evaluate(
+    ({ task, it, choice, reason }) =>
+      (window as any).LabelSuiteAnnotationWorkspaceData.submitLeaderAdjudication(task, 'dry_run', it.sampleId, [
+        { annotatorId: it.annotatorId, itemId: `${it.outKey}::${it.key}`, choice, reason },
+      ]),
+    { task: TASK, it: item, choice, reason },
+  );
+}
+
+test.describe('Leader adjudication refuses items already in the final exception pool (review M2)', () => {
+  test('M2a: an item with an unresolved leader reject vote is refused and nothing is written (FR-023, FR-018)', async ({ page }) => {
+    await forceEmptyRoster(page);
+    await openProgressTab(page);
+    const item = await firstOpenItem(page);
+
+    expect(await directAdjudicate(page, item, 'reject', 'QA first ruling: neither')).toMatchObject({ ok: true });
+    const baseline = await itemSnapshot(page, item);
+    expect(baseline, 'precondition: item sits in the final exception pool').toMatchObject({ inPending: true, inAwaiting: false });
+
+    const second = await directAdjudicate(page, item, 'adopt_a', 'QA second ruling');
+    expect(second?.ok, 'a pooled item must not be adjudicated again').not.toBe(true);
+    expect(await itemSnapshot(page, item)).toEqual(baseline);
+  });
+
+  test('M2a (arbiter origin): an item whose unresolved reject vote came from an arbiter is refused too', async ({ page }) => {
+    await forceEmptyRoster(page);
+    await openProgressTab(page);
+    const item = await firstOpenItem(page);
+    await page.evaluate(
+      ({ task, it }) => {
+        (window as any).LabelSuiteAnnotationWorkspaceData.submitArbitration(
+          task, 'dry_run', it.sampleId, { annotatorId: it.annotatorId, reviewerId: 'reviewer_chen' },
+          [{ itemId: `${it.outKey}::${it.key}`, choice: 'reject', value: null, reason: 'QA arbiter: neither' }],
+        );
+      },
+      { task: TASK, it: item },
+    );
+    const baseline = await itemSnapshot(page, item);
+    expect(baseline, 'precondition: item sits in the final exception pool').toMatchObject({ inPending: true, inAwaiting: false });
+
+    const result = await directAdjudicate(page, item, 'adopt_b', 'QA leader override attempt');
+    expect(result?.ok, 'a pooled item must not be adjudicated').not.toBe(true);
+    expect(await itemSnapshot(page, item)).toEqual(baseline);
+  });
+
+  test('M2b: an item already resolved by an exception-pool record is refused and nothing is written (FR-023)', async ({ page }) => {
+    await forceEmptyRoster(page);
+    await openProgressTab(page);
+    const item = await firstOpenItem(page);
+    await page.evaluate(
+      ({ task, it }) => {
+        (window as any).LabelSuiteAnnotationWorkspaceData.resolveExceptionPoolItem(
+          task, 'dry_run', it.sampleId, { annotatorId: it.annotatorId }, it.outKey, 'exclude_from_dataset', null, 'QA excluded',
+        );
+      },
+      { task: TASK, it: item },
+    );
+    const baseline = await itemSnapshot(page, item);
+    expect(baseline, 'precondition: resolved by the pool record, in neither queue, unit still disputed').toMatchObject({
+      inAwaiting: false, inPending: false, status: 'disputed', votes: 0,
+    });
+
+    const result = await directAdjudicate(page, item, 'adopt_a', 'QA late ruling');
+    expect(result?.ok, 'a pool-resolved item must not be adjudicated').not.toBe(true);
+    expect(await itemSnapshot(page, item)).toEqual(baseline);
+  });
+});
+
+test.describe('Workspace history labels a leader adjudication (review M3)', () => {
+  test('M3: the history card shows 負責人裁定（無指定仲裁者） and never the raw "leader adjudication:" marker (FR-023(3))', async ({ page }) => {
+    await skipGuidelineModal(page);
+    await forceEmptyRoster(page);
+    await openProgressTab(page);
+    const item = await firstOpenItem(page);
+    expect(await directAdjudicate(page, item, 'adopt_a', 'QA history ruling')).toMatchObject({ ok: true });
+    const reviewerId = await page.evaluate(
+      ({ task, it }) => {
+        const ws = (window as any).LabelSuiteAnnotationWorkspaceData;
+        return ws.listReviewUnits(task, 'dry_run').filter((u: any) => u.sampleId === it.sampleId)[0].reviewerId;
+      },
+      { task: TASK, it: item },
+    );
+
+    await page.goto(
+      buildWorkspaceUrl({
+        task_id: TASK, sample_id: item.sampleId, role: 'reviewer', run_type: 'dry_run',
+        annotator_id: item.annotatorId, ...(reviewerId ? { reviewer_id: reviewerId } : {}),
+      }),
+    );
+    await page.getByTestId('ws-guideline-tab-history').click();
+    const history = page.locator('#wsHistoryContainer');
+    await expect(history).toContainText(LEADER_LABEL);
+    await expect(history).not.toContainText('leader adjudication:');
+  });
+});
+
+test.describe('Review-settings save keeps both roster sources in sync (review M1)', () => {
+  const OPTIONS = '#arbiterOptionList .arbiter-option';
+
+  async function openEdit(page: Page) {
+    await page.goto(`${TASK_DETAIL_URL}?task_id=T013`);
+    await expect(page.locator('#statusBadge')).toBeAttached();
+    await page.locator('#reviewEditBtn').click();
+    await expect(page.locator('#reviewEditForm')).not.toHaveClass(/hidden/);
+  }
+  const roster = (page: Page) =>
+    page.evaluate(() => (window as any).LabelSuiteAnnotationWorkspaceData.taskArbiterRoster('T013'));
+
+  test('M1: saving with arbiter X selected makes taskArbiterRoster return [X]', async ({ page }) => {
+    await openEdit(page);
+    const option = page.locator(OPTIONS).filter({ hasNot: page.locator('input[value="reviewer_chen"]') }).first();
+    const chosen = await option.locator('input').getAttribute('value');
+    expect(chosen, 'precondition: a non-fallback arbiter option exists').toBeTruthy();
+    await option.locator('input').check();
+    await page.locator('#reviewSaveBtn').click();
+    await expect(page.locator('#reviewEditForm')).toHaveClass(/hidden/);
+
+    expect(await roster(page)).toEqual([chosen]);
+  });
+
+  test('M1: saving with no arbiter selected makes taskArbiterRoster return [] (not the reviewer_chen fallback)', async ({ page }) => {
+    await openEdit(page);
+    const boxes = page.locator(`${OPTIONS} input`);
+    for (let i = 0; i < (await boxes.count()); i += 1) await boxes.nth(i).uncheck();
+    await page.locator('#reviewSaveBtn').click();
+    await expect(page.locator('#reviewEditForm')).toHaveClass(/hidden/);
+    await expect(page.locator('#valueArbiterIdsControl')).toHaveText('未指定仲裁者');
+
+    expect(await roster(page)).toEqual([]);
+  });
+});
+
+test.describe('Leader adjudication rows follow the selected run type (review L1)', () => {
+  test('L1: rows carry data-run-type of the selected run; switching to 正式標記 re-renders them away and back restores them', async ({ page }) => {
+    // T014 seed: three awaiting-arbitration items in dry_run (pill R1), none in official_run.
+    await forceEmptyRoster(page);
+    await openProgressTab(page);
+    const rows = page.locator(`${SECTION} ${ROW}`);
+    await expect(rows).toHaveCount(3);
+    for (let i = 0; i < 3; i += 1) await expect(rows.nth(i)).toHaveAttribute('data-run-type', 'dry_run');
+
+    await page.locator('#progressRoundPills button', { hasText: '正式標記' }).click();
+    await expect(rows).toHaveCount(0);
+
+    await page.locator('#progressRoundPills button', { hasText: 'R1' }).click();
+    await expect(rows).toHaveCount(3);
+    for (let i = 0; i < 3; i += 1) await expect(rows.nth(i)).toHaveAttribute('data-run-type', 'dry_run');
   });
 });
