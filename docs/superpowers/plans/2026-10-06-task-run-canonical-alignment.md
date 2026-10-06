@@ -94,27 +94,27 @@
 
 ### Task 7: 013 OpenSpec delta
 
-**Files:** Create `openspec/changes/task-run-identity-contract/specs/task-management-013-task-new/spec.md`.
+**Files:** Create `openspec/changes/task-run-identity-contract/specs/task-management/013-task-new/spec.md`.
 
 **Interfaces:** 只鏡射 Task 3 已變更的正典條文與驗收情境，保留相同 FR／SC／AC ID。
 
-- [ ] 寫 ADDED/MODIFIED/REMOVED delta，`openspec validate task-run-identity-contract --strict`，提交。
+- [ ] 寫 ADDED/MODIFIED/REMOVED delta，以 `openspec validate task-run-identity-contract --type change` 驗證結構，提交。
 
 ### Task 8: 014 OpenSpec delta
 
-**Files:** Create `openspec/changes/task-run-identity-contract/specs/task-management-014-task-detail/spec.md`.
+**Files:** Create `openspec/changes/task-run-identity-contract/specs/task-management/014-task-detail/spec.md`.
 
 **Interfaces:** 只鏡射 Task 2 已變更的正典條文與驗收情境，保留相同 FR／SC／AC ID。
 
-- [ ] 寫 cycle、發布、指引、排除、名冊和版本來源 delta，`openspec validate task-run-identity-contract --strict`，提交。
+- [ ] 寫 cycle、發布、指引、排除、名冊和版本來源 delta，以 `openspec validate task-run-identity-contract --type change` 驗證結構，提交。
 
 ### Task 9: 015 OpenSpec delta
 
-**Files:** Create `openspec/changes/task-run-identity-contract/specs/annotation-015-annotation-workspace/spec.md`.
+**Files:** Create `openspec/changes/task-run-identity-contract/specs/annotation/015-annotation-workspace/spec.md`.
 
 **Interfaces:** 只鏡射 Task 4 已變更的正典條文與驗收情境，保留相同 FR／SC／AC ID。
 
-- [ ] 寫 run／assignment 身分、submission-derived review 與 run-pinned 指引來源 delta，`openspec validate task-run-identity-contract --strict`，提交。
+- [ ] 寫 run／assignment 身分、submission-derived review 與 run-pinned 指引來源 delta，以 `openspec validate task-run-identity-contract --type change` 驗證結構，提交。
 
 ### Task 10: OpenSpec execution record
 
