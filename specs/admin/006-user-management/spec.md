@@ -1,11 +1,15 @@
 ---
 功能分支: feat/admin/006-user-management
 建立日期: 2026-04-16
-版本: 1.1.0
+版本: 1.2.0
 狀態: Clarified
 ---
 
 # 功能規格：User Management — 使用者列表與帳號管理
+
+## 功能目標
+
+讓授權超管安全地管理平台帳號，並以可稽核、可重試的方式核發邀請連結及初始化首位超管；所有帳號異動均保留 active 超管與 seeder 保護。
 
 **需求來源**: IA v7 Spec 清單 #006 — 使用者列表與管理（`user-management`）
 
@@ -45,6 +49,7 @@
 - `MOBILE_BP = 767px`
 - `RWD_VIEWPORTS = 375px / 768px / 1440px`
 - `DEFAULT_SORT = created_at desc`
+- `INVITE_TOKEN_TTL_HOURS = 24`
 
 ## 流程圖
 
@@ -250,12 +255,15 @@ Super Admin 可在使用者管理頁新增帳號、更新帳號基本資訊，�
 - **FR-006**：系統必須支援新增使用者帳號。
 - **FR-006a**：新增使用者成功後，系統必須寄送設定密碼信至該使用者 Email；受邀帳號在設定密碼前的 `users.hashed_password = null` 表示沒有可用本地密碼，不得以空字串代替。
 - **FR-006b**：設定密碼信寄送失敗時，系統不得建立該使用者帳號，且必須顯示寄信失敗錯誤。
+- **FR-006c**：設定密碼連結自核發起 24 小時有效，僅能成功使用一次。重發同一使用者的邀請連結時，須先使原連結失效；過期或作廢的連結均回覆通用「連結無法使用」，不得顯示設定密碼成功。作廢時間與成功使用時間須分別記錄。
 - **FR-007**：系統必須支援編輯既有使用者帳號資訊；新增或修改 Email 時須依 account-020 FR-009 的 NFC＋casefold 識別與唯一性規則處理，管理員改 Email 成功時須依 account-020 FR-007 在同一交易增加 `credential_version`、撤銷該帳號全部 family，使舊 access JWT 下次請求失效。
 - **FR-008**：系統必須支援停用使用者帳號。
 - **FR-008a**：停用使用者成功後，系統必須立即撤銷該帳號所有未撤銷的 `account_token_family`；每次請求重讀 `users.is_active`，使已簽發 access JWT 下次請求即被拒絕。
 - **FR-008b**：系統必須支援重新啟用停用中的使用者帳號，但不得恢復停用前已撤銷的 family 或 token。
 - **FR-008c**：系統必須拒絕停用或降級 seeder 超管。
 - **FR-008d**：系統必須拒絕任何會導致沒有 active `super_admin` 的停用或降級操作。
+- **FR-008e**：首位 seeder `super_admin` 由明確執行的 bootstrap 指令建立**全新帳號**，不得提升既有非 seeder 帳號，也不由一般管理 API 或 schema migration 自動建立；指令不得內建預設密碼，必須由安全的外部輸入取得憑證。同一 seeder 身份重跑須保持冪等，指定既有非 seeder 或另一身份時須明確失敗；建立帳號、設定憑證、`role=super_admin`、`is_active=true` 與 `is_seeder=true` 須原子完成。
+- **FR-008f**：系統必須在 SQLite 與 PostgreSQL 都阻止清除 seeder 旗標、刪除 seeder，並在併發停用或降級時維持至少一位 active `super_admin`；此規則不得只依序執行「查數量、再更新」。
 - **FR-009**：本頁只可管理 system role（`user` / `super_admin`），不得指派任務角色。
 - **FR-010**：頁面必須提供「使用者管理」與「角色設定」兩個 admin tabs，預設停留於「使用者管理」tab；點擊「角色設定」必須導向 `role-settings.html`。
 - **FR-011**：無權限角色存取本頁時，系統必須拒絕並導回安全頁（未登入→`/login`，一般使用者→`/dashboard`）。
@@ -337,6 +345,13 @@ flowchart LR
 - **SC-010**：新增使用者時，設定密碼前帳號的 `hashed_password = null`；若設定密碼信寄送失敗，列表不新增該帳號，並顯示可理解的寄信失敗錯誤。
 - **SC-011**：點擊任一使用者列的 `異動紀錄` icon 時，drawer 只顯示該目標帳號的紀錄，包含時間、操作類型、操作者與 diff；無紀錄時顯示空狀態。
 - **SC-012**：異動紀錄 drawer 在 `RWD_VIEWPORTS` 下可開啟、關閉且內容不重疊；`<= MOBILE_BP` 時以下方 sheet 呈現。
+- **SC-013**：邀請連結在核發後 24 小時內只可成功使用一次；重發後原連結、已作廢連結與過期連結均不能設定密碼，也不顯示成功。
+- **SC-014**：bootstrap 同身份重跑不新增或改寫第二位 seeder；既有非 seeder 帳號與不同身份重跑均明確失敗，既有帳號的 session 不獲得升權。SQLite 與 PostgreSQL 的直接寫入與併發測試均無法清除 seeder 保護或移除最後一位 active `super_admin`。
+
+### 帳號生命週期驗收條件
+
+1. **AC-1.1**：核發邀請連結 24 小時後不得用其設定密碼；重發使舊連結失效，且作廢時間不被記為成功使用時間。
+2. **AC-1.2**：首位 seeder bootstrap 只建立新帳號；同身份重跑冪等、既有非 seeder 或不同身份失敗，舊帳號 session 不升權，且 SQLite 與 PostgreSQL 併發角色異動後至少保留一位 active `super_admin`。
 
 ---
 
@@ -374,6 +389,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.2.0 | 2026-10-06 | Issue #1160 D-2／D-7：邀請連結 24 小時、使用與作廢語意分離；明確定義冪等 seeder bootstrap 和跨 SQLite／PostgreSQL 最後超管保護。 |
 | 1.1.0 | 2026-10-06 | Issue #1160 對齊 account-020：受邀帳號可空密碼、Email canonicalization、管理員修改 Email 與停用後的 token-family 即時失效；PlatformUser 的畫面欄名明確對應 `users` 實體欄。 |
 | 1.0.9 | 2026-08-20 | Issue #261：新增 Prototype Traceability，界定 `user-management.html` 的頁面責任，並將 `role-settings.html` 限定為 admin tab 導覽交叉參照。 |
 | 1.0.8 | 2026-05-22 | Prototype 同步：補齊列內「異動紀錄」icon、目標帳號異動紀錄 drawer、空狀態、i18n 與行動版 bottom sheet 行為 |
