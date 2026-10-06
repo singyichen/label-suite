@@ -392,7 +392,7 @@ The following decisions include the original 2026-06-29 resolution and the 2026-
 - Annotator cognitive load increases with more output types per task — may need UX guardrails
 - Template design becomes combinatorial — cannot pre-build a template for every possible combination
 - Hierarchical option editing requires recursive validation, accessible tree navigation, search, and bounded rendering
-- Full config-schema v2 alignment and downstream consumer contracts must be completed before implementation
+- Downstream consumer contracts must be aligned with spec 013 before implementation (no config-schema v2 is planned; the v1 document is historical)
 
 ## Diagram
 
@@ -402,6 +402,6 @@ The following decisions include the original 2026-06-29 resolution and the 2026-
 
 - ADR-010 — Config-Driven Task Architecture (evolved, not superseded)
 - `docs/product/functional-map/task-type-taxonomy.md`
-- `docs/schema/config-schema.md` — legacy v1 reference pending a complete ADR-029-aligned v2 rewrite
+- `docs/schema/config-schema.md` — historical Legacy v1 document, not a current contract (no v2 rewrite planned; ADR-029 and 013 are the current authority)
 - `specs/task-management/013-task-new/spec.md`
 - `specs/_governance/constitution.md` — Principle 2: Generalization-First (reinforced)

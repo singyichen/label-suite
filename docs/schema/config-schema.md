@@ -1,22 +1,28 @@
 # Label Suite — Config Schema Reference
 
-> **狀態：Legacy v1（不可作為新功能的 canonical contract）**
+> **狀態：歷史文件（Historical，非現行契約）**
 >
-> 本文件仍描述 ADR-029 之前的五種固定 `task.type + annotation` 結構，尚未遷移至現行 `input_type + outputs[]` composition model。新的 Task Config 規劃應先依 [ADR-029 Output-Type Composition Model](../adr/029-output-type-composition.md) 與 [013 New Task spec](../../specs/task-management/013-task-new/spec.md)；在完整 v2 重寫完成前，不得只抽取本文件局部欄位與新契約混用。
+> 本文件保留 ADR-029 之前「五種固定 `task.type + annotation`」的 v1 結構，僅作為歷史背景，**不是現行 Task Config 契約**，也不會改寫成 v2。新功能、spec、後端 Pydantic 與前端型別一律不得引用本文件的欄位、枚舉或 § 6 驗證表；不得只抽取本文件局部欄位與現行契約混用。
 >
-> **後續工作：** v2 必須一次重寫頂層結構、八種 output fragment、metric registry 與 recursive `LabelOptionNode`／`LabelPath` 驗證；本次階層式多標籤規劃不以局部補丁假裝完成同步。
->
-> **關聯文件：** [ADR-010 Config-Driven Architecture](../adr/010-config-driven-architecture.md) · [ADR-029 Output-Type Composition Model](../adr/029-output-type-composition.md) · [Information Architecture](../product/ia/information-architecture.md)
->
-> **版本：** v1 Legacy（2026-04-04）
+> **版本：** v1 Legacy（2026-04-04）；2026-10-06 標為歷史文件（issue #1157）
+
+## 現行 Task Config 入口
+
+| 需要確認的事 | 現行權威 |
+|--------------|----------|
+| 任務組態結構（`input_type + outputs[] + field_role_map`）、八個 output key 與 registry | [ADR-029 Output-Type Composition Model](../adr/029-output-type-composition.md) · [013 New Task spec](../../specs/task-management/013-task-new/spec.md)（`OUTPUT_TYPE_REGISTRY`） |
+| 逐 output 型別的 IAA 指標與 threshold | [017 Dataset Analysis Detail spec](../../specs/dataset/017-dataset-analysis-detail/spec.md)（`OUTPUT_TYPE_IAA_REGISTRY`） |
+| config 驅動的設計理由 | [ADR-010 Config-Driven Architecture](../adr/010-config-driven-architecture.md) |
+
+以下 § 1～§ 6 皆為 v1 歷史內容；§ 2～§ 6 原文保留，§ 1 僅加註歷史說明。
 
 ---
 
 ## 1. 用途與使用方式
 
-本文件定義 Label Suite 五種 task_type 的完整 config JSON 結構。
+本文件記錄 2026-04 當時 Label Suite 五種 task_type 的 config JSON 結構（歷史內容，現行契約見上方「現行 Task Config 入口」）。
 
-**誰會用到這份文件：**
+**當時預期的使用者（現已不適用）：**
 
 | 使用者 | 使用方式 |
 |--------|---------|
