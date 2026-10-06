@@ -99,7 +99,7 @@
 
 **Interfaces:** 013 建立版本起點、014 定義 run、015 消費穩定 run/assignment；三份 proposal 各自指明相依 change 與共同 issue #1160，不複製第二套規格。
 
-- [ ] 三個 proposal 各恰有一條 `對應 Spec:`；每次只改一檔並提交，`scripts/check-sdd.sh` 不再報 `ACTIVE_CHANGE_SPEC`。
+- [x] 三個 proposal 各恰有一條 `對應 Spec:`；每次只改一檔並提交，`scripts/check-sdd.sh` 不再報 `ACTIVE_CHANGE_SPEC`。
 
 ### Task 6B: 補齊 013 與 015 的 OpenSpec design
 
