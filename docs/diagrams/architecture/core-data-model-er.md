@@ -3,7 +3,7 @@
 > 對應 issue #669。本圖整合多份 feature spec 的「關鍵實體」段落，供 migration 前檢查概念關聯。
 > **受眾為工程師與 migration 作者**，因此圖面一律保留 spec 的原始識別字（`sample_id`、`run_type`、`reviewer_ids` …），不做中文化——翻譯後就無法用 `grep` 回到正典條文。
 
-> **維護提示（2026-10-06）**：本圖部分實體細節仍是舊版規格快照，尤其圖 3、圖 4 與下方實體索引／待定表。現行 `task-management-014` 為 v5.2.2、`annotation-015` 為 v10.1.0、`dataset-017` 為 v3.1.0；寫 migration 前請先讀 [資料表盤點與 ERD 落地清單](./database-table-inventory.md)，並對照各 spec 現行「關鍵實體」。本圖是概念圖，**不得直接轉成資料表或外鍵**。
+> **維護提示（2026-10-06）**：本圖部分實體細節仍是舊版規格快照，尤其圖 3、圖 4 與下方實體索引／待定表。現行 `task-management-014` 為 v6.0.0、`annotation-015` 為 v11.0.1、`dataset-017` 為 v3.1.0；寫 migration 前請先讀 [資料表盤點與 ERD 落地清單](./database-table-inventory.md)，並對照各 spec 現行「關鍵實體」。本圖是概念圖，**不得直接轉成資料表或外鍵**。
 
 - **正典來源**：各 `specs/[module]/NNN-feature/spec.md` 的 `### 關鍵實體` 段落。本圖為**衍生視圖**，不是正典；spec 與本圖衝突時以 spec 為準。
 - **不歸屬任何單一 spec**，因此放在 `docs/diagrams/architecture/`，不隨任何 spec 進 `specs/_archive/`。
@@ -23,7 +23,7 @@
 
 兩個最容易踩雷的點：
 
-1. **`ReviewUnit` 沒有單一主鍵。** 它以 `sample_id × annotator_id × run_type` 三欄複合定址（`REVIEW_UNIT_DIMENSIONS`，annotation-015 FR-051）。同一樣本由 N 位標記員標記，就是 N 個各自獨立、狀態互不影響的審核單位。任何「給 ReviewUnit 一個自增 id」的設計都會讓這條不變式失守。
+1. **`ReviewUnit` 是推導實體，沒有獨立資料表。** 現行 `REVIEW_UNIT_DIMENSIONS` 為 `run_id × assignment_id`（annotation-015 v11.0.1 FR-051）；同一樣本由 N 位標記員標記，即為 N 個各自獨立的審核單位。舊版三欄 `sample_id × annotator_id × run_type` 無法區分不同 cycle 的同名回合，不得作為現行唯一鍵或 FK。
 2. **`DisputeItem` 是推導出來的，不是存下來的。** 它由 FR-052 的差異比對即時推導（015 FR-059 以審核單位內的 `outKey × 合併鍵` 識別爭議項，014 FR-010u(5) 的計數單位已於 v5.2.1 改引 015 FR-061 第 7 點，見 [#1150](https://github.com/singyichen/label-suite/issues/1150)；`DISPUTE_ITEM_SOURCE = derived-from-review-diffs`，annotation-015 FR-059）。**只有 `votes[]` 與 `finalized_value` / `finalized_by` 是真正的寫入狀態**，其餘欄位一旦落地就會與審核單位狀態機漂移。
 
 ---
@@ -43,7 +43,6 @@ erDiagram
     TaskDetail    ||--|| TaskGuidelineConfig : "任務說明設定"
     TaskDetail    ||--o{ TrialRound : "task_id"
     TaskDetail    ||--o{ SampleSnapshot : "task_id"
-    TaskDetail    ||--o{ ReviewAssignment : "task_id"
 
     TaskConfig    ||--|{ OutputConfig : "outputs 陣列"
     TaskConfig    ||--|| TaskProfile : "發布後凍結為唯讀投影"
@@ -59,7 +58,6 @@ erDiagram
     ReviewUnit  ||--o{ ReviewDecision : "一位審核員逐 output_type 決策，FR-092／FR-093"
     ReviewUnit  ||--o{ DisputeItem : "推導：每個審核單位 0..n 個爭議項，識別為 outKey × 合併鍵，FR-059"
 
-    ReviewUnit |o--o| ReviewAssignment : "三欄複合參照鍵 sample_id × annotator_id × run_type，official_run 每單位至多一位審核員（FR-093），#1165"
     ReviewUnit ||--o{ OutputTypeIAAReport : "逐輸出類型聚合"
     ReviewUnit ||--o{ AnnotatorModificationRateEntry : "modified_units 分子"
 ```
@@ -230,17 +228,6 @@ erDiagram
         datetime excluded_at
         string reason "不計入完成率、分布統計與 dry_run 的 IAA"
     }
-    ReviewAssignment {
-        string task_id FK
-        string reviewer_id FK
-        string sample_id FK "三欄複合 FK 指向 ReviewUnit，015 FR-051"
-        string annotator_id FK "同上"
-        string run_type FK "同上；dry_run 或 official_run"
-        datetime assigned_at
-        string assigned_by FK
-        string source "恆為 auto_rotation；014 v3.0.0"
-        string review_status "pending 或 done"
-    }
     WorkLogEntry {
         string user_id FK
         string task_role FK
@@ -278,8 +265,6 @@ erDiagram
     TaskDetail ||--o{ RunStateTransition : "狀態轉換紀錄"
     TaskDetail ||--o{ IsolationAuditLog : "資料隔離設定審計"
     TaskDetail ||--o{ ExcludedAnnotationAssignment : "task_id"
-    TaskDetail ||--o{ ReviewAssignment : "task_id"
-    ReviewUnit |o--o| ReviewAssignment : "三欄複合參照鍵，official_run 每單位至多一筆（FR-093），#1165"
     TaskConfig ||--|{ OutputConfig : "outputs 陣列"
     TaskGuidelineConfig ||--o{ TrialRound : "guideline_version 外鍵"
     TrialRound ||--o| SampleSnapshot : "trial_round"
@@ -334,6 +319,8 @@ erDiagram
         json payload "依 type 分派的 payload 欄位"
     }
     ReviewDecision {
+        string run_id "同審核單位之穩定 run，015 v11.0.1"
+        string assignment_id "同審核單位之穩定標記作業"
         string annotator_id "persisted：決策維度為標記員 x 輸出類型"
         string output_type
         string reviewer_id "每個審核單位恰一位審核員"
@@ -343,9 +330,8 @@ erDiagram
         datetime decided_at
     }
     ReviewUnit {
-        string sample_id PK "derived 定址：REVIEW_UNIT_DIMENSIONS 複合鍵 1 of 3"
-        string annotator_id PK "複合鍵 2 of 3，無單一自增 id"
-        string run_type PK "複合鍵 3 of 3，兩種 run_type 定址完全一致"
+        string run_id PK "derived 邏輯定址 1 of 2；非實體 PK"
+        string assignment_id PK "derived 邏輯定址 2 of 2；非實體 PK"
         string status "derived：REVIEW_UNIT_STATUS = pending 或 disputed 或 finalized"
         json reviewer_decisions "FR-093 令至多一筆，陣列形狀為相容保留"
         json diffs_by_output_type "依 FR-052 比對得出"
@@ -477,10 +463,11 @@ flowchart LR
 | `User`、`EmailChangeRequest`、`Session`、`NotificationPreference` | persisted | `specs/account/005-profile-settings/spec.md` | 1.2.10 |
 | `TaskSummary`、`TaskMembership`、`TaskListQuery` | persisted／view | `specs/task-management/010-task-list/spec.md` | 2.1.1 |
 | `TaskDraftInput`、`OutputConfig`、`TaskConfig`、`TaskGuidelineConfig`、`RunInitConfig` | persisted | `specs/task-management/013-task-new/spec.md` | 7.0.1 |
-| `TaskDetail`、`ReviewAssignment`、`TrialRound`、`SampleSnapshot`、`AnnotationListMaterialization`、`ExcludedAnnotationAssignment`、`WorkLogEntry`、`RunStateTransition`、`IsolationAuditLog` | persisted | `specs/task-management/014-task-detail/spec.md` | 5.2.1 |
-| `TaskProfile`、`GuidelineAsset` | projection | `specs/annotation/015-annotation-workspace/spec.md` | 10.1.0 |
-| `AnnotationListItem`、`AnnotationRecord`、`OutputAnswer`、`ReviewDecision`、`AnnotationHistoryItem` | persisted／embedded | `specs/annotation/015-annotation-workspace/spec.md` | 10.1.0 |
-| `ReviewUnit`、`DisputeItem` | **derived**；仲裁寫入狀態需另有落點 | `specs/annotation/015-annotation-workspace/spec.md` | 10.1.0 |
+| `TaskDetail`、`TrialRound`、`SampleSnapshot`、`AnnotationListMaterialization`、`ExcludedAnnotationAssignment`、`WorkLogEntry`、`RunStateTransition`、`IsolationAuditLog` | persisted candidate（圖仍為舊快照） | `specs/task-management/014-task-detail/spec.md` | 6.0.0 |
+| `ReviewAssignment` | **derived view**；不建立審核指派表 | `specs/task-management/014-task-detail/spec.md` | 6.0.0 |
+| `TaskProfile`、`GuidelineAsset` | projection | `specs/annotation/015-annotation-workspace/spec.md` | 11.0.1 |
+| `AnnotationListItem`、`AnnotationRecord`、`OutputAnswer`、`ReviewDecision`、`AnnotationHistoryItem` | persisted／embedded candidate | `specs/annotation/015-annotation-workspace/spec.md` | 11.0.1 |
+| `ReviewUnit`、`DisputeItem` | **derived**；仲裁寫入狀態需另有落點 | `specs/annotation/015-annotation-workspace/spec.md` | 11.0.1 |
 | `IAAStatusSummary`、`TaskSummaryRow` | projection | `specs/dataset/016-dataset-analysis-list/spec.md` | 2.1.2 |
 | `OutputTypeIAAReport`、`IAACompositeSummary`、`AnnotatorModificationRateEntry`、`AnnotatorRiskAssessment` | 報告／投影；儲存策略待設計 | `specs/dataset/017-dataset-analysis-detail/spec.md` | 3.1.0 |
 
@@ -492,15 +479,11 @@ flowchart LR
 
 ## 規格與實體層待定
 
-#688 已於 014 v3.0.0（`reviewer_ids`／`arbiter_ids` 取代 `min_reviewers` 等四欄位）與 015 v5.0.0（單人接力、`REVIEW_UNIT_STATUS` 三態）解決。015 FR-093 規定每個指派對象恰有一位審核員；FR-092 仍允許該審核員對多個 `output_type` 各寫一筆 `ReviewDecision`，因此圖 1／圖 4 的業務關聯為一對多。下列規格與實體層問題尚未定案，**本圖不裁定**（爭議項粒度已由 #1150、`ReviewAssignment` 指向審核單位的鍵已由 #1165 解決，見表後）：
-
-| 圖上位置 | 標記內容 | 未定點 |
-|---------|---------|-------|
-| 圖 3 | `ReviewAssignment` 於 `dry_run` 的指派粒度 | 015 FR-093 規定 `dry_run` 以樣本為指派單位（同一樣本各標記員之單位由同一位審核員審），`official_run` 以審核單位為單位；三欄複合 FK 在 `dry_run` 是否每個標記員一列、或另有樣本層落點，規格未寫明。FR-093(5) 另禁止存第二份黏住指派資料。**本圖不裁定**，見[資料表盤點 §5](./database-table-inventory.md#5-在第一批-migration-前要關閉的決策) |
+#688 已於 014 v3.0.0 與 015 v5.0.0 決定單人接力審核；現行審核身分與黏著範圍已由 014 v6.0.0／015 v11.0.1 改為 run 範圍。`ReviewAssignment` 只作非持久化審核負荷 view：Dry 以 `run_id × dataset_item_id`、Official 以 `run_id × assignment_id` 推導黏著，不建立指派表或指向 `ReviewUnit` 的 FK。圖 3 只保留較早版本的概念實體快照；實體層決策以[資料表盤點 §5](./database-table-inventory.md#5-在第一批-migration-前要關閉的決策)與現行正典為準。
 
 **已解決（#1150，2026-10-06）**：爭議項粒度以 015 FR-059 第 2、4 點與 FR-061 第 7 點為準（審核單位內 `outKey × 合併鍵`），014 FR-010u(5) 於 v5.2.1 改引該計數單位；`ReviewUnit` 與 `ReviewDecision` 到 `DisputeItem` 的基數已畫入圖 1、圖 4、圖 6。#1151（例外池以 outKey 為鍵）、#1146（arbiterIds 名冊）亦觸及同一塊資料模型，修完後須回頭核對。
 
-**已解決（#1165，2026-10-06）**：`ReviewAssignment` 以 `sample_id`、`annotator_id`、`run_type` 三欄複合外鍵指向審核單位（對齊 015 FR-051 `REVIEW_UNIT_DIMENSIONS`），014 關鍵實體於 v5.2.2 移除 `review_unit_id`；`ReviewUnit` 為推導實體、無單一主鍵，故該關聯為複合鍵參照（非資料庫層約束），`ReviewUnit → ReviewAssignment` 邊已畫入圖 1、圖 3。
+**歷史裁決（#1165，2026-10-06）**：014 v5.2.2 曾將舊版 `ReviewAssignment.review_unit_id` 改為 `sample_id`、`annotator_id`、`run_type` 三欄邏輯參照，並明示非資料庫 FK。014 v6.0.0 隨後退役持久化 `ReviewAssignment`；該三欄不是現行表形或唯一鍵，圖 1／圖 3 不再繪製其關聯。
 
 ---
 

@@ -6,6 +6,7 @@
 **Amended**: 2026-09-18 — `waiting_iaa_confirmation → dry_run_in_progress` transition added to support starting a new trial round from `waiting_iaa_confirmation` (issue #791)
 **Amended**: 2026-09-18 — IAA calculation moved off `dry_run_in_progress → waiting_iaa_confirmation` onto both transitions leaving `waiting_iaa_confirmation`, gated by the latest `TrialRound.iaa_computation_status = done` (issue #783)
 **Amended**: 2026-10-02 — `dry_run_in_progress → waiting_iaa_confirmation` guard extended to review, arbitration and the `dry_run` exception pool (issue #1120)
+**Amended**: 2026-10-06 — IAA rejection closes and preserves the current cycle; every published run owns an independent immutable snapshot (issue #1160)
 
 ## Context
 
@@ -89,13 +90,13 @@ Implement task state machine logic exclusively in the **service layer** (`app/se
 | `draft` | `dry_run_in_progress` | ≥ 2 annotators assigned; config validated; sample snapshot locked |
 | `dry_run_in_progress` | `waiting_iaa_confirmation` | Current round only, all of: no unassigned `dry_run` work; every active annotator has `assigned_count == completed_count`; every `dry_run` review unit is finalized; no `dry_run` review unit is disputed (required arbitration done); the `dry_run` exception pool is empty. IAA is advisory and not a guard (see Amendments 2026-09-18, issue #783, and 2026-10-02, issue #1120) |
 | `waiting_iaa_confirmation` | `official_run_in_progress` | Latest `TrialRound.iaa_computation_status = done`; project leader confirms IAA; `confirmed_by` recorded |
-| `waiting_iaa_confirmation` | `draft` | Project leader rejects IAA; `sample_snapshot_id` cleared to allow re-dry-run |
+| `waiting_iaa_confirmation` | `draft` | Project leader rejects IAA; close the current cycle as rejected and clear only `current_run_cycle_id`; preserve all published rounds, runs, snapshots and assignments; the next Dry publication opens a new cycle at R1 |
 | `waiting_iaa_confirmation` | `dry_run_in_progress` | Project leader starts a new trial round; `TrialRound` revision-note mandatory check (FR-017) passed; new round's independent trial list already created; latest `TrialRound.iaa_computation_status = done` (see Amendment 2026-09-18) |
 | `official_run_in_progress` | `completed` | All official-run annotations submitted; all required review units finalized; no unresolved disputes; all required arbitrations completed; final quality scores calculated (see Amendment 2026-08-19) |
 
 Reverse transitions (other than `waiting_iaa_confirmation → draft` and `waiting_iaa_confirmation → dry_run_in_progress`) are **not permitted**. Any attempt raises `InvalidTransitionError`.
 
-> **Design note — `dry_run_in_progress → draft` is intentionally excluded.** Allowing this transition would require cancelling all in-progress dry-run annotations and deciding how to handle already-submitted ones, which creates orphaned annotation data and complicates the cleanup path. The intended recovery flow for configuration errors discovered during a dry run is to have annotators complete (or abandon by submitting placeholder annotations) the current dry run, advance to `waiting_iaa_confirmation`, reject the IAA, and return to `draft` — at which point `sample_snapshot_id` is cleared and a fresh configuration and dry run can begin. This keeps cleanup logic in one transition (`waiting_iaa_confirmation → draft`) rather than two.
+> **Design note — `dry_run_in_progress → draft` is intentionally excluded.** Allowing this transition would require cancelling all in-progress dry-run annotations and deciding how to handle already-submitted ones, which creates orphaned annotation data and complicates the cleanup path. The intended recovery flow for configuration errors discovered during a dry run is to have annotators complete (or abandon by submitting placeholder annotations) the current dry run, advance to `waiting_iaa_confirmation`, reject the IAA, and return to `draft`. This closes the current cycle as rejected and clears only the task's current-cycle pointer, preserving all historical rounds, runs, snapshots and assignments. After configuration changes, the next Dry publication starts cycle N+1 at R1. This keeps cycle closure in one transition (`waiting_iaa_confirmation → draft`).
 
 ### Amendment (2026-08-19) — Strengthened `completed` Pre-conditions
 
@@ -161,7 +162,7 @@ ALLOWED_TRANSITIONS: dict[TaskStatus, set[TaskStatus]] = {
 
 ### `RunStateTransition` Audit Record
 
-Every successful transition writes to `run_state_transitions`:
+Every successful transition writes a `RunStateTransition` audit record. The plural task-domain table names (`run_state_transitions`, `tasks`) below are historical illustrative names, not approved physical schema names; future task-domain schema definitions follow foundation FR-105's singular naming convention. `users` is an explicit historical naming exception in FR-105.
 
 ```python
 class RunStateTransition(Base):
@@ -176,17 +177,15 @@ class RunStateTransition(Base):
     notes: str | None      # optional context (e.g., IAA rejection reason)
 ```
 
-### `sample_snapshot_id` Invariant
+### Cycle and Per-Run Snapshot Invariant
 
-`sample_snapshot_id` is set when first transitioning to `dry_run_in_progress` (if not already set) and is cleared when the task returns to `draft` from `waiting_iaa_confirmation` (IAA rejection). This allows the project leader to modify configuration or dataset before initiating a new dry run. The service layer enforces this:
+The task holds only `current_run_cycle_id` for its current publication cycle; the current run and its `sample_snapshot_id` are derived within that cycle. Every successful Dry or Official publication creates its own independent immutable snapshot, run, run items and assignments in the same transaction as the state transition and audit record. A snapshot belongs to exactly one published run and is never overwritten by a later publication.
 
-```python
-if target_status == TaskStatus.DRY_RUN_IN_PROGRESS and task.sample_snapshot_id is None:
-    task.sample_snapshot_id = await create_sample_snapshot(db, task)
+On `draft → dry_run_in_progress`, the service opens the next numbered cycle at R1 and pins the sealed eligible dataset version, validated config version, seed and sampling algorithm. R1 freezes that eligible pool and its own selected Dry item IDs; it does not freeze the final Official ID list. On `waiting_iaa_confirmation → dry_run_in_progress`, the service creates Rn within the same cycle, reuses the pinned pool and creates a new snapshot containing that round's selected IDs, excluding IDs already used by earlier Dry rounds in that cycle.
 
-if target_status == TaskStatus.DRAFT and from_status == TaskStatus.WAITING_IAA_CONFIRMATION:
-    task.sample_snapshot_id = None  # cleared so a new dry run generates a fresh snapshot
-```
+On `waiting_iaa_confirmation → official_run_in_progress`, the service freezes the then-remaining eligible IDs after subtracting all published Dry run items in the current cycle, rejects an empty remainder and creates an independent Official snapshot. Before that publication, the Official remainder is derived rather than an immutable manifest. The current state machine permits only one Official publication per task lifetime.
+
+On `waiting_iaa_confirmation → draft`, the service closes the current cycle as rejected and clears only `current_run_cycle_id`, atomically with the transition and audit record. All historical cycles, published rounds, runs, snapshots, assignments and exclusion evidence remain intact. A subsequent Dry publication opens cycle N+1 at R1, and may reuse items from rejected cycles. Round uniqueness is scoped to `(cycle_id, round_no)`; history and counts use stable `task_run_id` or `task_id × cycle_id × run_type × round_no` so repeated R1 publications cannot blend results.
 
 ## Consequences
 
@@ -194,7 +193,7 @@ if target_status == TaskStatus.DRAFT and from_status == TaskStatus.WAITING_IAA_C
 
 - State machine logic is unit-testable with a mock DB session and no HTTP client.
 - Audit trail (`RunStateTransition`) is always written in the same transaction as the status change — no partial updates.
-- `sample_snapshot_id` lifecycle (set on dry-run start, cleared on IAA rejection back to draft) is enforced in one place; no feature can bypass it.
+- Current-cycle closure and per-run snapshot immutability are enforced in one place; IAA rejection clears only the task's current pointer and preserves publication history.
 - Side effects (Celery dispatch, notifications) are isolated in `dispatch_side_effects` — can be swapped for test doubles in unit tests.
 - All routes that trigger transitions call the same service function — no duplicated validation logic.
 
