@@ -1,13 +1,13 @@
 # Label Suite — 產品需求文件（Product Requirements Document）
 
-**版本：** 1.2.1
+**版本：** 1.2.2
 **日期：** 2026-10-06
 **狀態：** Draft
 **撰寫者：** Team Lead（基於 Research Phase 綜合）
 **可追溯來源：**
 - `specs/_governance/constitution.md` v1.33.0
-- `docs/product/ia/information-architecture.md` v1.5.1
-- `docs/product/story-map/story-map.md` v1.5.0
+- `docs/product/ia/information-architecture.md` v1.5.2
+- `docs/product/story-map/story-map.md` v1.5.1
 - `docs/product/impact-map/impact-map.md` v1.3.0
 - `docs/product/functional-map/functional-map.md`（探索性輔助視圖，非行為權威）
 - `docs/product/functional-map/task-type-taxonomy.md`（輸出 taxonomy 導覽）
@@ -217,6 +217,7 @@ Foundation 提供可擴充、可觀測與安全的共同能力；API、資料模
 | FR-SH01 | 側邊欄 Navbar（Sidebar）提供 L0 主導覽：儀表板、任務管理、標記作業、資料集分析、系統管理、個人設定；角色可見性依系統角色與任務角色 gating | P0 | spec 008；IA §2.1 |
 | FR-SH02 | Desktop（> MOBILE_BP）採左側固定 Sidebar；Mobile（<= MOBILE_BP）採頂部品牌列 + 底部橫向主導覽 | P1 | spec 008；IA §2.1 |
 | FR-SH03 | 系統管理導覽項（`user-management`）僅 `super_admin` 可見 | P0 | IA §2.1 §C |
+| FR-SH04 | 登入後具 Sidebar 殼層的頁面於主內容區上方提供工作頁籤列與總覽選單（篩選、重開剛關閉的、全部關閉），讓使用者同時保留多頁檢視狀態；目前交付層為規格＋原型，`frontend/**` 實作待後續階段 | P2 | spec 019 FR-001、FR-023～025；IA §2.1 §E |
 
 ---
 
@@ -267,3 +268,4 @@ Foundation 提供可擴充、可觀測與安全的共同能力；API、資料模
 | 1.1.0 | 2026-08-19 | 同步審核員模型（逐標記員審核 + 當場直接修正 + 爭議池第三人仲裁，取代通過/退回聚合語意）、gold 語意（僅 Official Run 審核定案後產生）、輸出類型改為 `input_type` + `outputs[]` 組合模型（取代固定任務類型 enum）；依 issue #202 |
 | 1.2.0 | 2026-08-19 | 建立產品文件治理：將可變技術契約回鏈 feature specs／Constitution／ADR，校正組態、審核、資料安全與 IAA 摘要，新增 Agent Context Contract 與 decision log 入口 |
 | 1.2.1 | 2026-10-06 | 同步可追溯來源版本（constitution、IA、story map、impact map）；FR-D02 試標完成通知改對齊 014 FR-008a v5.0.0（issue #1157） |
+| 1.2.2 | 2026-10-06 | 新增 FR-SH04 工作頁籤導覽（spec 019 v1.2.0）；IA 參照改 v1.5.2、story map 參照改 v1.5.1（issue #1157） |
