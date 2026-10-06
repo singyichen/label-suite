@@ -274,7 +274,7 @@ erDiagram
 
 ---
 
-## 圖 4 — 標記與審核（annotation 015，v10.1.0）
+## 圖 4 — 標記與審核（annotation 015，v11.0.1）
 
 全 spec 最複雜的實體群。**`ReviewUnit` 的複合鍵與 `DisputeItem` 的推導性質是本圖的核心。**
 
