@@ -89,13 +89,13 @@ The catalog below is the initial registry. Adding entries is a registry change p
 - `task.status_changed` — before/after status; emitted alongside ADR-022's `RunStateTransition` in the same transaction
 - `task.iaa_confirmed` · `task.iaa_rejected` (rejection reason summary)
 - `task.member_added` · `task.member_removed` · `task.member_role_changed`
-- `task.review_settings_changed` (e.g., `reviewer_ids`, `arbiter_ids` — 014 v3.0.0 replaced the retired `min_reviewers`)
+- `task.review_settings_changed` (e.g., `min_reviewers`, `arbiter_ids`)
 - `task.exported` (export format and manifest reference)
 
 **annotation**
 
 - `annotation.submitted` · `annotation.resubmitted`
-- `review.verdict_recorded` (approve / modify / bypass per outKey decision, `REVIEW_DECISIONS` in 015 FR-092; `reject` was removed in 015 v5.0.0)
+- `review.verdict_recorded` (approve / reject / bypass per review unit)
 - `dispute.created` (system actor, from reviewer disagreement) · `dispute.assigned`
 - `arbitration.vote_cast` (chosen side, not annotation content)
 - `dispute.resolved`
