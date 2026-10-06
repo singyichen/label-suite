@@ -164,11 +164,68 @@ test('requiresPendingDecisionLabels', () => {
 test('parsesRealAccountAdminDictionary', () => {
   const markdown = readFileSync(new URL('../../docs/diagrams/architecture/account-admin-db-schema.md', import.meta.url), 'utf8');
   const source = parseAccountAdminSchema(markdown);
-  assert.equal(source.tables.length, 8);
+  assert.equal(source.tables.length, 9);
   assert.deepEqual(source.tables.find((table) => table.name === 'admin_role_permission').columns
     .filter((column) => column.pk).map((column) => column.name), [
     'role_type', 'role_key', 'permission_key',
   ]);
   assert.equal(source.tables.find((table) => table.name === 'audit_event').columns
     .find((column) => column.name === 'actor_user_id').fk, 'users');
+});
+
+test('realDictionaryModelsTokenFamiliesWithoutDuplicatingTheirOwnerOrStartTime', () => {
+  const markdown = readFileSync(new URL('../../docs/diagrams/architecture/account-admin-db-schema.md', import.meta.url), 'utf8');
+  const source = parseAccountAdminSchema(markdown);
+  const table = (name) => {
+    const found = source.tables.find((entry) => entry.name === name);
+    assert.ok(found, `Missing candidate table: ${name}`);
+    return found;
+  };
+  const column = (tableName, columnName) => {
+    const found = table(tableName).columns.find((entry) => entry.name === columnName);
+    assert.ok(found, `Missing column: ${tableName}.${columnName}`);
+    return found;
+  };
+
+  assert.deepEqual(column('users', 'credential_version'), {
+    name: 'credential_version', type: 'integer', nullable: false, pk: false,
+  });
+  assert.deepEqual(column('account_token_family', 'id'), {
+    name: 'id', type: 'uuid', nullable: false, pk: true,
+  });
+  assert.deepEqual(column('account_token_family', 'user_id'), {
+    name: 'user_id', type: 'uuid', nullable: false, pk: false, fk: 'users',
+  });
+  assert.deepEqual(column('account_token_family', 'started_at'), {
+    name: 'started_at', type: 'timestamptz', nullable: false, pk: false,
+  });
+  assert.equal(column('account_token_family', 'revoked_at').nullable, true);
+  assert.equal(column('refresh_tokens', 'family_id').fk, 'account_token_family');
+  assert.equal(column('refresh_tokens', 'grace_reissued_at').nullable, true);
+  assert.equal(table('refresh_tokens').columns.some((entry) => entry.name === 'user_id'), false);
+  assert.equal(table('refresh_tokens').columns.some((entry) => entry.name === 'session_started_at'), false);
+  assert.match(markdown, /users\s+\|\|--o\{\s+account_token_family/);
+  assert.match(markdown, /account_token_family\s+\|\|--o\{\s+refresh_tokens/);
+});
+
+test('noteCraftProjectionTracksTheCanonicalTokenFamilyDictionaryAndRejectsDrift', () => {
+  const markdown = readFileSync(new URL('../../docs/diagrams/architecture/account-admin-db-schema.md', import.meta.url), 'utf8');
+  const source = parseAccountAdminSchema(markdown);
+  const data = JSON.parse(readFileSync(new URL('../../docs/diagrams/architecture/database-schema.er.json', import.meta.url), 'utf8'));
+  const family = data.tables.find((table) => table.name === 'account_token_family');
+  assert.ok(family, 'NoteCraft must display account_token_family');
+  assert.deepEqual(validateErData(source, data), []);
+  assert.equal(family.columns.find((column) => column.name === 'id')?.pk, true);
+  assert.equal(family.columns.find((column) => column.name === 'user_id')?.fk, 'users');
+  assert.equal(data.tables.find((table) => table.name === 'refresh_tokens').columns
+    .find((column) => column.name === 'family_id')?.fk, 'account_token_family');
+
+  const missingFamily = structuredClone(data);
+  missingFamily.tables = missingFamily.tables.filter((table) => table.name !== 'account_token_family');
+  assert.match(validateErData(source, missingFamily).join('\n'), /Missing table: account_token_family/);
+
+  const detachedToken = structuredClone(data);
+  delete detachedToken.tables.find((table) => table.name === 'refresh_tokens').columns
+    .find((column) => column.name === 'family_id').fk;
+  assert.match(validateErData(source, detachedToken).join('\n'), /refresh_tokens\.family_id: FK/);
 });
