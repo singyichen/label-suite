@@ -158,6 +158,16 @@
 - [x] 記錄 Red：執行 `node scripts/gen-screen-inventory.mjs --check`，預期顯示 `design/system/screen-inventory.md is stale`。
 - [x] 只由 generator 重生該檔；執行 `node scripts/gen-screen-inventory.mjs --check`、`bash scripts/inventory-tests.sh`、`git diff --check`，檢視生成差異，單檔提交。
 
+### Task 12A: QA 情境缺口與命名審查回饋
+
+**Files:** 每項以單檔提交：`specs/task-management/013-task-new/spec.md`、`specs/task-management/014-task-detail/spec.md`、各自 OpenSpec delta；若引用或 SC 計數變動，再逐檔更新相依的 proposal／design／tasks、`specs/STATUS.md` 與 generator 產出的 `design/system/screen-inventory.md`。
+
+**Interfaces:** senior-qa 在 Task 13 前發現建立請求同 key 異內容未定義，以及 R3 累計抽樣未有獨立驗收情境。v8.3.0／v6.0.0 尚未合併，於同版 Changelog 記錄 QA 精化；任何新增 AC/SC 必須在 owning 正典先宣告，再由同 owner delta 鏡射。使用者另要求未來候選表採常見且語意清楚的命名；此切片的 task/run 候選名須由 DBA 檢查，實體字典與 auth 表更名留後續單獨切片。
+
+- [ ] 013 明定同一授權建立者／operation 的 key 與請求內容相符才重播，異內容拒絕且不回舊 task；新增獨立 AC，修正同版 Changelog，提交單檔。
+- [ ] 014 新增 R3 情境涵蓋兩個先前 Dry run、排除 item 不回池、最後一筆 Official 保留；修正 SC/Changelog，提交單檔。
+- [ ] 分別修訂 013／014 delta 並逐字比對，必要的 proposal／design／tasks 引用各以單檔任務同步；若 SC 計數變動只由 generator 重生 inventory。OpenSpec、SDD lint、Source-Verify 與 senior-qa scoped re-review 皆通過後，才進 Task 13。
+
 ### Task 13: Archive, verification, and delivery
 
 **Files:** Verification-only until `openspec archive` sequentially writes the three `openspec/specs/` derived views and moves `task-config-version-contract`、`task-run-identity-contract`、`annotation-run-identity-contract` into `openspec/changes/archive/`; archive is the required generated multi-file output.
