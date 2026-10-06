@@ -1,7 +1,7 @@
 ---
 功能分支: feat/foundation/000-foundation
 建立日期: 2026-05-29
-版本: 1.13.1
+版本: 1.13.2
 狀態: Draft
 ---
 
@@ -537,7 +537,7 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 - **FR-031**：系統必須讓測試環境使用真實 PostgreSQL 或與 production 行為一致的 DB 測試容器；不得以 mock 取代 ORM integration tests。
 - **FR-083**：系統必須讓所有 background job 的 DB write 使用 PostgreSQL 層級的 atomic UPSERT，即 SQLAlchemy `insert().on_conflict_do_update()` 或 `on_conflict_do_nothing()`；不得以 SQLAlchemy ORM `session.merge()`（底層為 SELECT + INSERT/UPDATE 兩步驟，高並發下可引發 `IntegrityError`）或 check-then-act pattern（先 SELECT 再 INSERT）替代，以確保 Celery retry 在任何 crash point 後重新執行時不產生 race condition 或重複資料。
 - **FR-104**：系統必須在 `app/db/base.py` 或等效 metadata 初始化處定義 SQLAlchemy naming convention，至少覆蓋 `ix`、`uq`、`ck`、`fk`、`pk`；migration 不得產生未命名 constraint。
-- **FR-105**：系統必須讓 DB table 與 column 使用 `lower_case_snake`；table name 預設使用 singular form，join table 或 module-owned table 應以前綴表達 domain ownership，例如 `task_assignment`、`dataset_item`、`account_token_family`。歷史契約 `users`、`refresh_tokens` 與欄名 `role`、`is_active` 為明示命名例外，不得據此擴張新表的命名例外。
+- **FR-105**：系統必須讓 DB table 與 column 使用 `lower_case_snake`；table name 預設使用 singular form，join table 或 module-owned table 應以前綴表達 domain ownership，例如 `task_assignment`、`dataset_item`、`account_token_family`。歷史契約 `users`、`refresh_tokens` 與欄名 `role`、`is_active` 為明示命名例外；ADR-032 的跨模組共用表 `audit_events` 是唯一新增的明示表名例外，不得據此擴張其他新表的命名例外。
 - **FR-106**：系統必須讓 datetime 欄位使用 `_at` suffix、date 欄位使用 `_date` suffix；外鍵欄位命名必須穩定一致，例如同一概念在各表使用相同 `{entity}_id`。
 - **FR-107**：系統必須在 `alembic.ini` 設定 human-readable migration file template（例如 `%%(year)d-%%(month).2d-%%(day).2d_%%(slug)s`）；migration slug 必須可讀並描述變更。
 
@@ -819,6 +819,7 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 - **SC-043**：non-CRUD workflow endpoint 必須在 feature spec 或 OpenAPI example 中標示使用 subresource、state-transition resource 或 command resource pattern；動詞式 URI 必須有明確豁免理由。
 - **SC-044**：feature-critical complex UI 必須有 interaction story、component test 或 Playwright component-equivalent coverage；review checklist 必須確認 Default、Loading、Error、Disabled 與至少一條主要互動路徑。
 - **SC-045**：local bootstrap verification 必須確認 `.env.example`、local service profile、seed data 策略、OpenAPI export / type generation command 與 one-command verification 或等效命令文件存在且可執行。CI 驗證以 `test -f .env.example && test -f docker-compose.yml` 或 `scripts/verify-bootstrap.sh` 等效 shell check 執行；bootstrap script 統一放於 `scripts/` 目錄，不得只依賴文件描述作為 CI 通過依據。
+- **SC-046**：資料表命名檢查須允許 `users`、`refresh_tokens` 與 ADR-032 共用的 `audit_events` 三個明示表名例外；任何其他新表仍須符合 FR-105 的單數與 domain ownership 預設，不能從例外推導出普遍的複數或無前綴規則。
 
 ---
 
@@ -849,6 +850,7 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.13.2 | 2026-10-06 | Issue #1160 D-4：FR-105 與 SC-046 明列 `audit_events` 跨模組共用表的單一命名例外；其餘新表仍遵守單數與 domain ownership 預設。 |
 | 1.13.1 | 2026-10-06 | 安全審查補強 FR-076：family absolute TTL 同時限制已認證請求與登入／refresh 核發的 access JWT 到期，避免最後核發的 JWT 在 family 期限後繼續通行；僅規劃契約，未實作 runtime。 |
 | 1.13.0 | 2026-10-06 | Issue #1160 auth/token-family 規劃契約：F-04 FR-016／075／076／077 改採真實 family FK、一次寬限重發、`sid`／`credential_version` 每請求失效；FR-105 列出四個既有命名例外。僅更新設計契約，尚無 ORM、migration 或 runtime。 |
 | 1.12.6 | 2026-09-07 | F-04 新增 Auth Token 生命週期序列圖連結（issue #674 剩餘缺口之一；圖檔為 issue #671 產出，歸屬 `specs/account/001-login-email-password/diagrams/auth-token-lifecycle.html`，隨 001 歸檔，本節為跨規格參照），以圖面呈現 JWT 簽發、refresh 與撤銷流程。**無 FR/SC 新增、移除或措辭變更**——僅新增衍生視圖連結，比照 v1.12.5（F-02）先例 |

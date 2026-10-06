@@ -1,7 +1,7 @@
 ---
 功能分支: feat/admin/006-user-management
 建立日期: 2026-04-16
-版本: 1.2.0
+版本: 1.2.1
 狀態: Clarified
 ---
 
@@ -268,7 +268,7 @@ Super Admin 可在使用者管理頁新增帳號、更新帳號基本資訊，�
 - **FR-010**：頁面必須提供「使用者管理」與「角色設定」兩個 admin tabs，預設停留於「使用者管理」tab；點擊「角色設定」必須導向 `role-settings.html`。
 - **FR-011**：無權限角色存取本頁時，系統必須拒絕並導回安全頁（未登入→`/login`，一般使用者→`/dashboard`）。
 - **FR-012**：頁面必須支援 `RWD_VIEWPORTS`，在 `<= MOBILE_BP` 時仍可完成查詢與帳號管理操作。
-- **FR-013**：新增、編輯、停用、啟用與 system role 變更皆必須保留審計紀錄（操作者、目標使用者、時間、操作類型、變更前後 diff）。
+- **FR-013**：新增、編輯、停用、啟用與 system role 變更皆必須以 ADR-032 的共用 `audit_events` 保留審計紀錄（操作者、目標使用者、時間、操作類型、變更前後的非敏感 diff），與帳號異動同交易寫入。紀錄的 `target_type='user'`、`target_id` 為目標使用者 ID；`member.updated` 表示一般欄位編輯。異動紀錄 drawer 只讀所選使用者的事件，且仍須通過 `super_admin` 守門；摘要不得包含密碼、token 或原始請求內容。
 - **FR-013a**：列表每列操作欄必須提供 `異動紀錄` icon-only button，並以可存取名稱標示其用途。
 - **FR-013b**：點擊 `異動紀錄` icon 必須開啟該目標帳號的 drawer，顯示目標帳號名稱、紀錄時間、操作類型、操作者與變更前後 diff。
 - **FR-013c**：異動紀錄 drawer 無資料時必須顯示空狀態；在 `<= MOBILE_BP` 時必須以下方 sheet 呈現且內容可讀。
@@ -300,7 +300,7 @@ flowchart LR
 - **PlatformUser**：平台使用者的管理畫面概念。關鍵欄位：`id`、`name`、`email`、`system_role`、`status`、`created_at`；實體層 `users.role` 對應 `system_role`、`users.is_active` 對應 `status`，不另建重複的角色或狀態欄。
 - **SystemRoleAssignment**：系統角色指派。允許值僅 `user`、`super_admin`。
 - **UserStatus**：帳號狀態。允許值：`active`、`disabled`。
-- **UserManagementAuditLog**：使用者管理異動紀錄。關鍵欄位：`actor_user_id`、`target_user_id`、`action_type`、`before`、`after`、`created_at`。
+- **UserManagementAuditLog**：使用者管理異動紀錄的讀取投影，來源為 ADR-032 共用 `audit_events`，不是另一張資料表。`actor_user_id`、`target_type='user'`、`target_id`、`action`、`payload_summary`、`occurred_at` 分別供操作者、目標、操作類型、allowlisted 前後 diff 與時間顯示；`target_id` 依所選使用者 ID 篩選。
 
 ---
 
@@ -344,7 +344,7 @@ flowchart LR
 - **SC-009**：每次帳號管理異動可查得審計紀錄（操作者、目標使用者、時間、操作類型、變更 diff）。
 - **SC-010**：新增使用者時，設定密碼前帳號的 `hashed_password = null`；若設定密碼信寄送失敗，列表不新增該帳號，並顯示可理解的寄信失敗錯誤。
 - **SC-011**：點擊任一使用者列的 `異動紀錄` icon 時，drawer 只顯示該目標帳號的紀錄，包含時間、操作類型、操作者與 diff；無紀錄時顯示空狀態。
-- **SC-012**：異動紀錄 drawer 在 `RWD_VIEWPORTS` 下可開啟、關閉且內容不重疊；`<= MOBILE_BP` 時以下方 sheet 呈現。
+- **SC-012**：異動紀錄 drawer 在 `RWD_VIEWPORTS` 下可開啟、關閉且內容不重疊；`<= MOBILE_BP` 時以下方 sheet 呈現。正式後端在帳號異動成功時同交易寫入共用事件，drawer 只回傳所選目標使用者的事件；其他使用者事件與敏感摘要不得混入。
 - **SC-013**：邀請連結在核發後 24 小時內只可成功使用一次；重發後原連結、已作廢連結與過期連結均不能設定密碼，也不顯示成功。
 - **SC-014**：bootstrap 同身份重跑不新增或改寫第二位 seeder；既有非 seeder 帳號與不同身份重跑均明確失敗，既有帳號的 session 不獲得升權。SQLite 與 PostgreSQL 的直接寫入與併發測試均無法清除 seeder 保護或移除最後一位 active `super_admin`。
 
@@ -389,6 +389,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.2.1 | 2026-10-06 | Issue #1160 D-4：FR-013／SC-012 與 `UserManagementAuditLog` 對齊 ADR-032 共用稽核事件，限定目標查詢及非敏感摘要；維持既有 drawer 行為。 |
 | 1.2.0 | 2026-10-06 | Issue #1160 D-2／D-7：邀請連結 24 小時、使用與作廢語意分離；明確定義冪等 seeder bootstrap 和跨 SQLite／PostgreSQL 最後超管保護。 |
 | 1.1.0 | 2026-10-06 | Issue #1160 對齊 account-020：受邀帳號可空密碼、Email canonicalization、管理員修改 Email 與停用後的 token-family 即時失效；PlatformUser 的畫面欄名明確對應 `users` 實體欄。 |
 | 1.0.9 | 2026-08-20 | Issue #261：新增 Prototype Traceability，界定 `user-management.html` 的頁面責任，並將 `role-settings.html` 限定為 admin tab 導覽交叉參照。 |

@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/SteveLin100132/notecraft/main/plugins/er-diagram-renderer/schema.json",
   "meta": {
     "title": "Label Suite 資料庫規劃 ER Diagram（account／admin）",
-    "description": "**規劃圖，並非已部署 Schema。** 目前已部署業務表：0；本頁顯示 account／admin 欄位字典中的 9 張候選表、62 欄與 6 個候選 FK，其中兩張權限矩陣表是否建立仍待 D-9 裁決。欄位、鍵與連線來自 [account/admin 實體層字典](/notes/diagrams/architecture/account-admin-db-schema) §2–§3；未決議題見該文件 §5。其餘 task／dataset／annotation 模組仍在 [資料表盤點總帳](/notes/diagrams/architecture/database-table-inventory)，不以假表加入此圖。\n\n**讀圖方式：** Wiki 逐表看欄位與決策狀態；Diagram 搜尋表名或欄名，點表聚焦已明列的候選 FK。圖中連線不代表 migration 已建立。",
+    "description": "**規劃圖，並非已部署 Schema。** 目前已部署業務表：0；本頁顯示 account／admin 欄位字典中的 9 張候選表、63 欄與 6 個候選 FK，其中兩張權限矩陣表是否建立仍待 D-9 裁決。共用稽核表的 D-4 已依 Accepted ADR-032 裁決；`task_id` 尚無 task FK。欄位、鍵與連線來自 [account/admin 實體層字典](/notes/diagrams/architecture/account-admin-db-schema) §2–§3；未決議題見該文件 §5。其餘 task／dataset／annotation 模組仍在 [資料表盤點總帳](/notes/diagrams/architecture/database-table-inventory)，不以假表加入此圖。\n\n**讀圖方式：** Wiki 逐表看欄位與決策狀態；Diagram 搜尋表名或欄名，點表聚焦已明列的候選 FK。圖中連線不代表 migration 已建立。",
     "source": "docs/diagrams/architecture/account-admin-db-schema.md §2–§3; docs/diagrams/architecture/database-table-inventory.md",
     "backTo": "/notes/diagrams/architecture/account-admin-db-schema"
   },
@@ -423,7 +423,7 @@
       "description": "**候選表／設計草案，尚未建立 migration。** 每位使用者、每種事件一列，複合主鍵為 `(user_id, event_key)`。缺列時兩頻道預設開啟；讀取不建列，儲存一次寫足六列。來源：account/admin §3.6、005 FR-013F。"
     },
     {
-      "name": "audit_event",
+      "name": "audit_events",
       "label": "操作稽核紀錄",
       "section": "3.7",
       "group": "admin",
@@ -438,8 +438,8 @@
         {
           "name": "actor_user_id",
           "type": "uuid",
-          "required": "required",
-          "note": "操作者；FK 為 RESTRICT，有稽核紀錄的帳號不可實體刪除。007 操作紀錄抽屜顯示的「操作者名稱」讀取時以此欄 join `users.name`（顯示目前名稱）；規則：A-01、A-04",
+          "required": "nullable",
+          "note": "人員事件的操作者；系統事件為 null。非空 FK 為 RESTRICT；actor 與 actor_role 互斥 CHECK；規則：A-01、A-04",
           "fk": "users"
         },
         {
@@ -453,6 +453,12 @@
           "type": "varchar",
           "required": "required",
           "note": "命名空間動詞，例如 `member.deactivated`；值由 registry 管理，DB 不加 CHECK"
+        },
+        {
+          "name": "task_id",
+          "type": "uuid",
+          "required": "nullable",
+          "note": "任務作用域候選鍵；任務表及 PK 定案前不加 FK；規則：A-07"
         },
         {
           "name": "target_type",
@@ -470,7 +476,7 @@
           "name": "payload_summary",
           "type": "jsonb",
           "required": "required",
-          "note": "變更前後摘要，只含 allowlist 欄位；規則：A-03"
+          "note": "只含 registry 允許的非敏感摘要；不得含密碼、token、原始聯絡資料、標記答案或測試集正解；規則：A-03"
         },
         {
           "name": "request_id",
@@ -485,7 +491,7 @@
           "note": "伺服器端發生時間（UTC）；規則：A-02"
         }
       ],
-      "description": "**候選表／設計草案，尚未建立 migration。** 管理操作只新增稽核紀錄；`actor_user_id` 參照 `users`，多型的 `target_id` 不加 FK。來源：account/admin §3.7、006 FR-013、007 FR-010。D-4 尚未裁決共用表形；ADR-032 仍為 Proposed，表名與 `task_id` 可能改變。"
+      "description": "**候選表／設計草案，尚未建立 migration。** D-4 已依 Accepted ADR-032 裁決為共用 `audit_events`。人員事件的 `actor_user_id` 參照 `users`；系統事件的 actor 為 null 且 `actor_role=system`。`task_id` 是可空 UUID 作用域，任務主表尚未定案，因此沒有 task FK；多型 `target_id` 也沒有 FK。事件只能新增，所有事件至少保存一個日曆年，無自動刪除。來源：account/admin §3.7、006 FR-013、007 FR-010、Accepted ADR-032。"
     },
     {
       "name": "admin_role_permission",

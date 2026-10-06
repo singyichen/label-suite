@@ -1,7 +1,8 @@
 # ADR-032: User-Action Audit Trail
 
-**Status**: Proposed
+**Status**: Accepted
 **Date**: 2026-08-19
+**Accepted amendment**: 2026-10-06 — issue #1160 D-4; SQLite/PG planning contract, system actor, retention, admin actions and naming exception.
 
 ## Context
 
@@ -40,7 +41,7 @@ One canonical table for all user actions, with a registry of allowed action name
 
 ## Decision
 
-Create a first-class **user-action audit trail** as a single append-only PostgreSQL table, `audit_events`, written from the service layer of the formal FastAPI backend. This ADR is canon for the event model and catalog; it intentionally does not prescribe migrations, ORM classes, or API routes.
+Create a first-class **user-action audit trail** as a single append-only table, `audit_events`, written from the service layer of the formal FastAPI backend. PostgreSQL 16 is the production database and SQLite is the Lite quick-start tier under ADR-024. This exact shared table name is an explicit exception to foundation FR-105's singular, module-prefixed default; it does not extend that exception to other tables. This ADR is canon for the event model and catalog; it intentionally does not prescribe migrations, ORM classes, or API routes.
 
 ### Scope Boundary vs ADR-019
 
@@ -56,23 +57,26 @@ Create a first-class **user-action audit trail** as a single append-only Postgre
 ```text
 audit_events
   id
-  actor_user_id        -- who (FK → users.id; system actions use a reserved system actor)
-  actor_role           -- role at the time of the action (roles change; the record must not)
+  actor_user_id        -- who (nullable FK → users.id; null only for system actions)
+  actor_role           -- role at the time of the action, or system for a non-human action
   action               -- namespaced verb from the action registry, e.g. task.status_changed
   target_type          -- entity kind, registry-driven (task, annotation, review_unit, user, export, ...)
   target_id            -- entity identifier
-  task_id              -- nullable scope key: set whenever the action occurs within a task
-  payload_summary      -- redacted JSONB: before/after for state changes, or a minimal summary
+  task_id              -- nullable UUID scope key: set whenever the action occurs within a task
+  payload_summary      -- redacted JSONB/SQLite JSON: before/after or a minimal summary
   request_id           -- correlation with API logs (and ai_run_id when applicable)
   occurred_at          -- UTC, server-side timestamp
 ```
 
 Rules:
 
-- **Append-only.** No updates or deletes; corrections are new events (same rule as ADR-019).
+- **Append-only.** Ordinary service writes only insert; updates and deletes are rejected in both database tiers. Corrections are new events (same rule as ADR-019). A future privileged archive/purge path requires a separately reviewed policy and may operate only after the minimum retention term.
 - **Same transaction.** The audit event is written in the same DB transaction as the domain mutation, in the service layer (the ADR-022 pattern). A failed mutation writes no event; a committed mutation always has one.
 - **Registry-driven.** `action` and `target_type` values come from a config registry. New task types or output types reuse existing actions (`annotation.submitted` carries the output-type composition in `payload_summary`); they never add code paths.
-- **Redaction.** `payload_summary` follows ADR-019's snapshot prohibitions: no gold answers, no credentials, no raw annotation text by default — store IDs, statuses, and before/after enum values, not content.
+- **Actor integrity.** Human actions have a non-null `actor_user_id` referencing `users.id` with delete `RESTRICT` and `actor_role != 'system'`. Non-human actions have `actor_user_id IS NULL` and `actor_role = 'system'`; a database CHECK makes the two forms equivalent. A synthetic login-capable system account is not created. Human actor ID and historical role snapshot come from the verified authentication/account flow, and system context comes only from a trusted internal job; neither may be accepted from a client request body. The runtime slice must reject forged system actors in tests.
+- **Scope and target integrity.** `task_id` is a nullable UUID candidate consistent with Accepted ADR-022. The task table/PK is not yet decided, so this ADR does not claim a physical task FK. `(target_type,target_id)` is a registry-validated polymorphic reference, not a physical FK; service writes validate the target kind and existence at insertion time, and identifiers are not reused after deletion. Historical target metadata needed for an audit read must be captured in an allowlisted summary rather than relying on a deleted target row.
+- **Redaction.** `payload_summary` has an action-scoped allowlist: IDs, state/role/version transitions and necessary non-sensitive metadata. It must never contain gold answers, credentials, tokens, raw annotation text or unrestricted request payloads. Annotation answer-history snapshots remain separate role-filtered domain records.
+- **Retention.** Every event must remain available for at least one calendar year. There is no automatic deletion. A separately approved archive/purge policy must preserve this minimum and the ability to reconstruct required history before any cleanup is implemented.
 
 ### Initial Event Catalog
 
@@ -103,7 +107,8 @@ The catalog below is the initial registry. Adding entries is a registry change p
 **admin**
 
 - `member.invited` · `member.activated` · `member.deactivated`
-- `member.platform_role_changed`
+- `member.platform_role_changed` · `member.updated` (ordinary account field edit)
+- `role_permissions.changed` (target type `role_permission_matrix`; emitted when the D-9 editable-matrix contract is implemented, with server-computed before/after cell diff and version transition)
 - `audit.exported` (exporting the audit trail is itself audited)
 
 ### Relationship to `RunStateTransition` (ADR-022)
@@ -112,15 +117,15 @@ The catalog below is the initial registry. Adding entries is a registry change p
 
 ### Storage, Query, and Access (high-level)
 
-- **Storage**: PostgreSQL table in the formal backend, indexed at minimum by `task_id`, `actor_user_id`, and `occurred_at`. This keeps the deferred observability decision (Foundation Spec) untouched — audit is domain data, not telemetry.
-- **Query**: lifecycle reconstruction is `SELECT ... WHERE task_id = ? ORDER BY occurred_at` — the exact query the node #15 E2E assertion will run through an admin-scoped API.
-- **Access**: role-scoped, mirroring ADR-019 — `super_admin` full; `project_leader` project-scoped; `reviewer`/`annotator` no audit access by default.
+- **Storage**: PostgreSQL JSONB/timestamptz in production and ADR-024's SQLite JSON/datetime variants in Lite. Candidate indexes follow actual reads: `(task_id, occurred_at, id)` for task chronology; `(target_type, target_id, occurred_at, id)` for target history; `(actor_user_id, occurred_at, id)` for actor history. Avoid redundant indexes. This keeps the deferred observability decision (Foundation Spec) untouched — audit is domain data, not telemetry.
+- **Query**: lifecycle reconstruction is `SELECT ... WHERE task_id = ? ORDER BY occurred_at, id` — the exact order the node #15 E2E assertion will use through an admin-scoped API. Admin-006's target history filters by `target_type='user'` and the chosen `target_id`; no other target's events enter that drawer.
+- **Access**: role-scoped, mirroring ADR-019 — `super_admin` full; `project_leader` project-scoped; `reviewer`/`annotator` no audit access by default. A project-scoped read fails closed when task/project ownership cannot be verified, including null or unknown `task_id`; nullable scope must not widen visibility. The runtime slice must test these denied reads before exposing an audit API.
 - **Metrics**: no `audit_event` IDs, user IDs, or task IDs as Prometheus labels (ADR-018/019 cardinality and privacy rules apply).
-- **Retention**: explicit retention rules required before production; exact periods deferred, as in ADR-019.
+- **Retention**: at least one calendar year for every event, including role-matrix changes required by admin-007 FR-010. No automatic deletion; any later privileged archive/purge mechanism needs a separately reviewed policy and verification.
 
 ### Prototype Layer Exemption
 
-The prototype (static HTML + localStorage, `design/prototype/`) is **exempt**: it implements no audit trail, and acceptance testing marks audit assertions **N/A at the prototype layer** (traceability matrix node #15). Audit assertions apply only to the formal FastAPI + PostgreSQL build; the formal E2E suite designs its "reconstruct the lifecycle" assertion against this ADR's event model and catalog. The work-log feature (spec 014) remains a productivity statistic and is not an audit source.
+The prototype (static HTML + localStorage, `design/prototype/`) is **exempt**: it implements no audit trail, and acceptance testing marks audit assertions **N/A at the prototype layer** (traceability matrix node #15). Audit assertions apply to the formal FastAPI backend on PostgreSQL and its SQLite Lite tier; the formal E2E suite designs its "reconstruct the lifecycle" assertion against this ADR's event model and catalog. The work-log feature (spec 014) remains a productivity statistic and is not an audit source.
 
 ## Consequences
 
@@ -136,11 +141,12 @@ The prototype (static HTML + localStorage, `design/prototype/`) is **exempt**: i
 - Every mutating service function must emit its audit event — a discipline enforced by review and by E2E lifecycle assertions, not by the type system.
 - One wide table serves many action shapes; `payload_summary` schemas per action need registry documentation to stay interpretable.
 - Redaction rules for `payload_summary` must be actively maintained, as with ADR-019 snapshots.
-- Table growth requires the deferred retention decision before production use.
+- Table growth must be monitored against the decided one-calendar-year minimum; any later archive or purge mechanism needs a separate reviewed policy before use.
 
 ## Deferred Decisions
 
-- Exact retention periods and archival strategy (align with ADR-019's retention decision).
+- Privileged archive/purge policy and implementation after the one-calendar-year minimum; no automatic deletion is approved here.
+- If D-9 keeps the editable role-permission matrix, define a stable non-empty `target_id` for `role_permissions.changed` before emitting that event; the singleton matrix identity is not decided by this ADR.
 - Whether `RunStateTransition` is eventually folded into `audit_events` (requires ADR-022 amendment).
 - Whether an admin-facing audit UI ships in the first formal release or audit stays API-only.
 - Partitioning strategy if event volume warrants it.
