@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-new-step1-field-role-hints
 建立日期: 2026-04-20
-版本: 8.2.0
+版本: 8.3.0
 狀態: Draft
 ---
 
@@ -468,6 +468,9 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 
 1. **AC-4.1**：**Given** 位於 Step 4，**When** 分別填寫標記員或審核員說明並完成建立，**Then** 任務保存對應角色的說明內容與附件。
 2. **AC-4.2**：**Given** 位於 Step 4，**When** 啟用 `開始標記前強制顯示`，**Then** 任務設定需紀錄此旗標供 annotation-workspace 讀取。
+3. **AC-4.3**（issue #1160）：**Given** 四步設定通過驗證（Step 4 可留空），**When** 成功建立任務，**Then** 同一交易建立 task、建立者的 `project_leader` membership、不可變 TaskConfig（`version_no = schema_version_no = 1`，含 `schema_digest` 與釘住且保留的 `schema_registry_version`）、初始指引版本及啟動設定；任一步失敗時全部回滾，不留下部分任務。
+4. **AC-4.4**（issue #1160）：**Given** 任務建立成功，**When** 以同一 `Idempotency-Key` 在 `IDEMPOTENCY_WINDOW_HOURS` 內重送，**Then** 回傳相同 `task_id`，不重複建立 membership、config 或指引版本，成功仍依既有流程導向 task-detail。
+5. **AC-4.5**（issue #1160）：**Given** 已建立 config/schema v1，**When** 依 014 FR-014 在 draft 成功儲存修改後的完整 config，**Then** 建立新不可變列且兩個版本號同步遞增；僅修改非 schema 設定時，正規化 outputs／field roles 與 registry version 相同可得到相同 digest，v1 內容及其 registry 定義仍可解析；驗證失敗不建立新版本。
 
 **行為規則**：
 
@@ -614,10 +617,10 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 - **FR-005b-1**：Step 4 必須提供兩組彼此獨立的附件上傳區塊：`標記員附件` 與 `審核員附件`；兩組皆支援多檔上傳、逐檔移除與各自獨立清單。
 - **FR-005c**：當 `force_guideline = true` 時，annotation-workspace 僅在同一使用者首次進入該任務時顯示說明彈窗；已確認閱讀後不得於每次 page load 重複顯示。
 - **FR-005d**：annotation-workspace 的「說明與檔案」面板中，點擊圖片檔案之 `預覽` 後，系統必須在檔案列表下方預覽區塊顯示該圖片。
-- **FR-006**：提交成功後，系統必須建立任務並導向 `/task-detail`。
-- **FR-006a**：任務建立成功時，系統必須自動建立一筆 `task_membership`，並將建立者設為 `project_leader`。
+- **FR-006**：提交成功後，系統必須建立任務並導向 `/task-detail`。第一次通過 registry 驗證的完整 TaskConfig 必須保存為同任務不可變版本，`version_no = schema_version_no = 1`；完整 config 與內嵌 label-schema snapshot 共用該列。後續依 `014-task-detail` FR-014 在 draft 成功儲存完整 config 時，每次建立新列並同步遞增兩個版本號，不覆寫歷史列；即使僅修改非 schema 設定亦遞增，`schema_digest` 可重複。schema digest 對釘住的 `schema_registry_version` 下 canonicalized outputs／field roles 計算，該 registry version 的驗證定義必須保留供歷史版本解析。
+- **FR-006a**：任務建立成功時，系統必須自動建立一筆 `task_membership`，並將建立者設為 `project_leader`。task、creator membership、初始 TaskConfig、初始 TaskGuidelineConfig 內容版本及 FR-006c 啟動設定必須在同一交易提交；任一步失敗全部回滾。
 - **FR-006c**：若 Step 3 已設定抽樣方式，系統必須於任務建立時一併保存。
-- **FR-006d**：建立任務 API 必須支援 `Idempotency-Key`；同一 key 在 `IDEMPOTENCY_WINDOW_HOURS` 內重送時回傳同一 `task_id`。
+- **FR-006d**：建立任務 API 必須支援 `Idempotency-Key`；同一 key 在 `IDEMPOTENCY_WINDOW_HOURS` 內重送時回傳同一 `task_id`，不重複建立 membership、config 或指引版本。
 - **FR-007**：取消建立流程時，系統必須導回 `/task-list` 且不寫入任務。
 - **FR-007a**：使用者在任一步驟已有未儲存變更時，離頁前必須顯示確認視窗（含取消建立、側欄跳頁、重新整理、關閉分頁）。
 - **FR-008**：頁面必須支援 `RWD_VIEWPORTS`，在 `<= MOBILE_BP` 仍可完成四步流程。
@@ -669,10 +672,10 @@ flowchart LR
 - **MultiLabelConfig**：欄位：`label_options: LabelOptionNode[]`、`max_selections: number`（`0` = 不限）、`allow_bypass: boolean`。selection policy 固定為 all-node independent selection，parent 不 cascade children；preview selected chip 只顯示被選節點名稱，不提供使用者 toggle。
 - **FieldRole**：`'evidence' | 'input' | 'output'`。
 - **OutputTypeRegistryItem**：輸出類型 registry 定義。欄位：`key`（`OUTPUT_TYPE_KEYS`）、`zh` / `en`（顯示名稱）、`source_output`（可選的組合來源 output type；只有來源同時被選取時才序列化至該 output config）、`rendersInputPreview`（可選 boolean、預設 `false`；表示專屬或整合預覽已完整呈現輸入內容）、`rendersEvidencePreview`（可選 boolean、預設 `false`；表示該輸出類型允許在輸入之前顯示 Step 1 指定的 Evidence）、`retiredConfigKeys`（可選 string array；序列化時必須移除的舊 config keys，`free_text` 包含 `show_reference` 與 `show_reference_to_annotator`）、`dimensionSettings`（可選的回歸設定呈現 metadata；宣告單張或多張模式及對應 config keys）、`fields[]`（schema 欄位定義，每項含 key / type〔含 `taxonomy-tree`〕/ zh / en / required / addLabel_zh / addLabel_en / options[] / defaultValue / defaultValue_zh / defaultValue_en / placeholder_zh / placeholder_en / hint_zh / hint_en）、`defaultConfig`（預設值物件）。`rendersInputPreview`、`rendersEvidencePreview`、`retiredConfigKeys` 與 `dimensionSettings` 均為 UI／migration metadata，不得序列化至 `outputs[]` config；Step 2 版面為頁面層級共通契約，不屬於 output type registry 欄位。
-- **TaskConfig**：提交時的完整設定，含 `input_type` + `outputs[]`（供 annotation/dataset 模組使用）。
+- **TaskConfig**：提交時的完整設定，含 `input_type` + `outputs[]` 與 `field_role_map`（供 annotation/dataset 模組使用）。持久化為同任務不可變 `task_config_version`，含 `config_version_id`、`task_id`、正整數 `version_no`／`schema_version_no`、`schema_digest` 與釘住且保留驗證定義的 `schema_registry_version`；完整 config 與內嵌 label-schema snapshot 共用該列。首次兩個版本號皆為 1，每次後續完整 config 成功儲存同步遞增，約束 `schema_version_no = version_no` 與 `(task_id, version_no)` 唯一。digest 對指定 registry 下 canonicalized outputs／field roles 計算，可跨版本重複；014 的 cycle 參照精確同任務版本。
 - **TaskMembership**：建立者自動加入的任務角色關係（`project_leader`）。
 - **RunInitConfig**：首次啟動設定。欄位：`sampling_value`（筆數，`>= 1` 且 `< dataset_total`）、`isolation_enabled`。
-- **TaskGuidelineConfig**：任務說明設定。欄位：`annotator_guideline_text`、`annotator_guideline_assets[]`、`reviewer_guideline_text`、`reviewer_guideline_assets[]`、`force_guideline`、`guideline_version`（指引內容版本標記；任務建立時系統自動初始化，形狀為遞增版本號或內容雜湊，具體形狀留待後端接上時定義；後續遞增規則與消費關係見 `014-task-detail` FR-017a）。
+- **TaskGuidelineConfig**：任務說明設定。四個內容欄位為 `annotator_guideline_text`、`annotator_guideline_assets[]`、`reviewer_guideline_text`、`reviewer_guideline_assets[]`，形成同任務不可變內容版本，含 `guideline_version_id`、`task_id` 與正整數 `guideline_version`（建立時初始化為 1，`(task_id, guideline_version)` 唯一）；Step 4 留空亦建立初始版本。`force_guideline` 為 task 顯示政策，不屬內容版本；後續遞增規則與 run／round 消費關係見 `014-task-detail` FR-017a。
 
 ---
 
@@ -794,6 +797,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 8.3.0 | 2026-10-06 | Issue #1160 T4：FR-006／FR-006a／FR-006d 與關鍵實體明定建立時不可變 config/schema v1、每次後續完整 config 儲存同步遞增、canonical schema digest 與釘住保留的 registry version；task、creator membership、config、指引及啟動設定同交易提交，維持既有 idempotency 時窗與導頁。對齊 014 v6.0.0 指引內容版本與顯示政策，新增 AC-4.3～4.5。 |
 | 8.2.0 | 2026-10-06 | Issue #1160 D-9：FR-001a／SC-006 依 ADR-037 加入 system 層 `task.create` 矩陣必要條件，維持建立者原有角色與 membership 邊界；僅更新規劃契約。 |
 | 8.1.1 | 2026-09-19 | **FR-003j 英文 toggle 引文對齊答案值單一來源（PATCH，issue #811，OpenSpec change `split-bypass-answer-and-decision-wording`）**：schema 設定面板 `allow_bypass` toggle 之 en 引文由 `Allow bypass (unable to determine)` 改為 `Allow "Unable to determine (Bypass)"`（維護者裁定 R2），使其與 015 FR-092 v6.8.0 所定答案值之唯一 i18n 來源（`shared/sidebar.js` `BYPASS_WORDING`）一致；zh 引文「允許無法判定 (Bypass)」本即一致、不變。欄位、預設值、行為與 `outputs[]` 契約皆不變，無 FR／AC 增刪——PATCH。 |
 | 8.1.0 | 2026-09-19 | **Step 1 資料集欄位角色 Input 欄名自動推測（MINOR，issue #755，OpenSpec change `task-new-step1-field-role-hints`）**：新增 FR-002c-8、AC-1.6、AC-1.7、SC-002h——嵌入式資料預覽表格為尚未指定過角色的欄位初始化時，欄名（不分大小寫）包含 `FIELD_ROLE_INPUT_NAME_HINTS` 七個關鍵字（`text`／`content`／`sentence`／`passage`／`document`／`body`／`context`）任一者，依出現順序自動預填 Input，至多至當下輸入類型所需數量（`single_item` 1、`item_pair` 2）；不覆寫使用者手動指定或資料列來源記憶還原的角色。**永久不對 Evidence／Output 自動推測**（Data Fairness：fixture 普遍含 `gold_*` 保留答案欄名）。FR-002c-1 預設值敘述補「（欄名命中 Input 線索之例外見 FR-002c-8）」交叉引用；此句刻意不進入 delta（delta 維持純 ADDED 以確保可套用至衍生檢視），衍生檢視就此句與正典存在已記錄之分歧。AC-1.4／AC-1.5／SC-002g 為 8.0.0 已撤銷編號，不重用 |
