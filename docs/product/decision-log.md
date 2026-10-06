@@ -1,12 +1,12 @@
 # 產品文件 Decision Log
 
-**基線：** `2328392f2fc50ca171c485582e26ab7d577be52b`
+**基線：** `2a27dc6793e1c3a6460dbf99e9c54c1dda0f9cf5`
 
-**盤點日期：** 2026-08-19；17 份現存 spec：foundation-000、account-001～005、admin-006～007、dashboard-012、shared-008／018、annotation-015、task-management-010／013／014、dataset-016／017。
+**盤點日期：** 2026-10-06；21 份現存 spec：foundation-000～002、account-001～005／020、admin-006～007、dashboard-012、shared-008／018／019、annotation-015、task-management-010／013／014、dataset-016／017。
 
 ## 任務閱讀順序
 
-依 [`agent-context-contract.md`](./agent-context-contract.md) 的 Required reading sequence：Constitution → applicable domain constitutions → Product Baseline → `specs/STATUS.md` → target spec → upstream/downstream specs → shared constants → prototype/design → approved plan/tasks。此處僅規定任務閱讀順序，不改變該契約的 Authority order；衝突仍依其正典權威階層處理。`STATUS.md` 是交付狀態來源，feature spec 是行為來源；產品文件不得反向覆蓋它們。
+依 [`agent-context-contract.md`](./agent-context-contract.md) 的 Required reading sequence：Constitution → applicable domain constitutions → Product Baseline → `specs/STATUS.md` → target spec → upstream/downstream specs → 涵蓋此模組的跨模組架構圖（若有）→ shared constants → prototype/design → approved plan/tasks。此處僅規定任務閱讀順序，不改變該契約的 Authority order；衝突仍依其正典權威階層處理。`STATUS.md` 是交付狀態來源，feature spec 是行為來源；產品文件不得反向覆蓋它們。
 
 ## 已採用的跨文件決策
 
