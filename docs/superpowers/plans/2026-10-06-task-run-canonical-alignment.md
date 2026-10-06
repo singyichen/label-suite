@@ -133,11 +133,11 @@
 
 - [ ] 只更新這三列及適用的註記；跑 Project SDD lint，提交。
 
-### Task 12: 修復現有 screen inventory 生成檔基線
+### Task 12: 同步 screen inventory 衍生檢視
 
 **Files:** Modify `design/system/screen-inventory.md` only through `node scripts/gen-screen-inventory.mjs`.
 
-**Interfaces:** 現行 `origin/main` 的 manifest、generator、生成檔三者在本分支皆未改變，但 `node scripts/gen-screen-inventory.mjs --check` 仍回報 stale，導致 Project SDD lint 的 `INVENTORY_FRESHNESS` error；這是交付 CI 的必要基線修復，與 014 行為無關。
+**Interfaces:** Task 2 的 014 正典新增四條 SC，generator 預期將 `screen-inventory.md` 的 014 列 SC 計數由 48 更新為 52；Task 3／4 若新增 SC，亦須同步更新 013／015 列。這是正典變更後的必要衍生檢視同步，完成後 Project SDD lint 的 `INVENTORY_FRESHNESS` 應消失。
 
 - [ ] 記錄 Red：執行 `node scripts/gen-screen-inventory.mjs --check`，預期顯示 `design/system/screen-inventory.md is stale`。
 - [ ] 只由 generator 重生該檔；執行 `node scripts/gen-screen-inventory.mjs --check`、`bash scripts/inventory-tests.sh`、`git diff --check`，檢視生成差異，單檔提交。
