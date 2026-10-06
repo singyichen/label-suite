@@ -54,7 +54,7 @@ flowchart TD
 
 **驗收情境**：
 
-1. **AC-1.1**：**Given** 建立者在 013 上傳兩個合法來源且選定紀錄路徑，**When** 匯入同一 `draft` 版本，**Then** 每個檔案形成一筆有序來源批次，每筆接受的來源紀錄形成一筆項目，並可沿 FK 追溯來源 checksum、紀錄路徑、來源行序、前處理版本及資料集版本。
+1. **AC-1.1**：**Given** 建立者在 013 上傳兩個合法來源且選定紀錄路徑，**When** 匯入同一 `draft` 版本，**Then** 每個檔案形成一筆有序來源批次並保存該檔的欄位分類 manifest，每筆接受的來源紀錄形成一筆項目，並可沿 FK 追溯來源 checksum、紀錄路徑、來源行序、前處理版本及資料集版本。
 2. **AC-1.2**：**Given** 同一來源批次的來源行序已匯入，**When** 重複寫入相同行序，**Then** 資料庫唯一約束拒絕第二筆；不同批次或後繼版本的相同來源 id／內容不被錯誤地視為全域重複。
 3. **AC-1.3**：**Given** 一個版本指定父版本，**When** 父版本屬於另一個 dataset 或形成自身／循環祖先，**Then** 拒絕；父版本僅提供血緣，不令子版本讀取父版本的可變資料列。
 
@@ -68,7 +68,7 @@ flowchart TD
 
 **驗收情境**：
 
-1. **AC-2.1**：**Given** 欄位分類缺失、不完整、與 `field_role_map` 的 Input／Evidence／Output 重疊，或 PII 審查未完成，**When** 嘗試封存版本，**Then** 保持 `draft` 並拒絕發布，不得根據 `answer`、`gold_label` 等名稱猜測受保護欄位。
+1. **AC-2.1**：**Given** 任一來源批次的分類 manifest 缺失、不完整、與 `field_role_map` 的 Input／Evidence／Output 重疊，或 PII 審查未完成，**When** 嘗試封存版本，**Then** 保持 `draft` 並拒絕發布，不得根據 `answer`、`gold_label` 等名稱猜測受保護欄位。
 2. **AC-2.2**：**Given** 欄位明確分類，**When** 建立 `dataset_item.public_payload`，**Then** 只存 allowlist 的可見欄位，明確選擇的 Output 可作可見預標記；受保護答案、split、來源位置及私有來源參照不在公開項目、標記者 payload 或其可推知 metadata。
 3. **AC-2.3**：**Given** 一筆接受的項目，**When** 私有伴隨列寫入，**Then** `dataset_item_private` 以同一項目 ID 作 PK/FK 且恰有一筆；沒有來源答案時該欄可為 null，但後續需要答案的測試集發布／計分不得默默接受空答案。
 4. **AC-2.4**：**Given** 有隱藏 test-set 答案與 split 的版本，**When** 標記者讀取任務、assignment、項目、提交、排行榜或狀態，**Then** 回應的巢狀資料、前端狀態、log、cache、trace 與 fixture 均不得包含答案、答案路徑、split 或可據以辨識 gold/test 的資訊；儲存後答案僅由授權 scoring worker 讀取。
@@ -94,12 +94,12 @@ flowchart TD
 
 - **FR-001**：候選表採 `dataset`、`dataset_version`、`dataset_import_batch`、`dataset_item`、`dataset_item_private` 五個單數、模組前綴名稱；每表均有非空且唯一主鍵。穩定 ID 使用 UUID；FK 與 datetime 命名符合 foundation FR-105／FR-106。每筆 item 的 version/source/preprocessing 身分由 `dataset_item → dataset_import_batch → dataset_version → dataset` 的 FK 鏈追溯，不在 item 複製這些值。
 - **FR-002**：`dataset` 保留 `created_by_user_id → users.id`；`dataset_version` 保留 `dataset_id → dataset.id`、同 dataset 範圍的 `parent_version_id` 自參照、正整數 `version_no`、`state`、manifest checksum 及建立／封存時間，唯一鍵為 `(dataset_id, version_no)`。首版本無父版本；禁止自參照、跨 dataset 父版本、祖先循環與非遞增的後繼版本號。
-- **FR-003**：每個已接受來源檔在版本內形成一筆 `dataset_import_batch`，有唯一 `(dataset_version_id, source_ordinal)`、來源名稱、SHA-256、受限不可變 `source_ref`、選定紀錄路徑與前處理版本。不可假設來源檔自帶的 id 全域唯一；批次來源與前處理版本不能由項目內容反推。
+- **FR-003**：每個已接受來源檔在版本內形成一筆 `dataset_import_batch`，有唯一 `(dataset_version_id, source_ordinal)`、來源名稱、SHA-256、受限不可變 `source_ref`、選定紀錄路徑、前處理版本與非空的受限 `classification_manifest` JSON。此 manifest 逐一保存該檔來源欄位路徑的公開／受保護分類與 PII 審查證據，不含答案值；各檔可有不同分類。JSONL 或根陣列的紀錄路徑以 `$` 表示，巢狀 JSON 使用 RFC 6901 JSON Pointer，來源紀錄序號自 1 起算。不可假設來源檔自帶的 id 全域唯一；批次來源與前處理版本不能由項目內容反推。
 - **FR-004**：每筆接受的來源紀錄形成一筆 `dataset_item`，含 `dataset_import_batch_id` FK、正整數 `source_row_no` 與經驗證的 JSON `public_payload`，唯一鍵為 `(dataset_import_batch_id, source_row_no)`；同一內容或來源 id 在不同批次／版本可各有身分。版本是完整快照，不能透過可變父版本內容計算當前項目集合。
 - **FR-005**：每個 item 須在同一交易建立恰一筆 `dataset_item_private`，以 `dataset_item_id` 作 PK/FK；`declared_split` 與 `hidden_answer` 可空，並只代表**來源宣告**，不代表後續 run 的實際抽樣／指派。隱藏答案與來源 artifact 需受獨立權限控制，儲存後只允許授權 scoring worker 讀取答案；不得進入標記者可讀的資料路徑。
-- **FR-006**：匯入前須由授權建立流程明確分類來源欄位、檢查 PII／敏感內容，並獨立於 `field_role_map` 記錄受保護欄位。只有 allowlist 可進入 `public_payload`；受保護欄位不得同時為 Input、Evidence 或可見 Output。分類缺漏／矛盾時不可 seal；匯入後不可透過一般預覽端點讀取受保護原始來源。
+- **FR-006**：匯入前須由授權建立流程明確分類來源欄位、檢查 PII／敏感內容，並獨立於 `field_role_map` 為每個來源批次保存版本化、經驗證且完整互斥的 `classification_manifest`。只有 manifest 的公開 allowlist 可進入 `public_payload`；受保護欄位不得同時為 Input、Evidence 或可見 Output。分類缺漏／矛盾時不可 seal；draft 修正 manifest 須原子重建受影響的公開／私有項目投影，sealed 後 manifest 不可改。匯入後不可透過一般預覽端點讀取受保護原始來源。
 - **FR-007**：標記者可見 API、frontend state、log、cache、trace、screenshot 及 fixture 不得包含 hidden answer、split、答案檔路徑、私有來源參照或可辨識 gold/test 的 metadata。回應模型須依公開欄位建構，不能靠 `SELECT *` 後刪欄；PostgreSQL 使用最小權限禁止標記者讀取角色查詢 private table，SQLite 以 repository／service 權限與回應 allowlist 保持同等隔離。
-- **FR-008**：`draft` 版本可由授權匯入服務更正來源與項目；封存前須驗證分類、來源 checksum、private row 完整性、正整數順序及完整快照 manifest。`draft → sealed` 於同一交易寫入 manifest digest、時間、狀態與稽核事件；重試冪等、競爭防衝突、失敗全回滾。`sealed` 版本不可原地改內容或解除封存，須建立新的完整快照版本。
+- **FR-008**：`draft` 版本可由授權匯入服務更正來源與項目；封存前須驗證每批分類 manifest、匯入時取得的來源 checksum 回執、private row 完整性、正整數順序及完整快照 manifest。封存不重新讀取含答案的已儲存原始 artifact；`draft → sealed` 於同一交易寫入含分類摘要的 manifest digest、時間、狀態與稽核事件；重試冪等、競爭防衝突、失敗全回滾。`sealed` 版本不可原地改內容或解除封存，須建立新的完整快照版本。
 - **FR-009**：共同路徑須兼容 SQLite quick start／PostgreSQL production：結構化 payload 在 SQLite 為 JSON storage、PostgreSQL 為 JSONB，時間以 UTC 表示；兩種方言都要驗證 FK、唯一鍵、正整數、seal 交易與公開／私有隔離。不得因 SQLite 缺 DB role 就降低答案保護；實際 migration／ORM 另立工作項實作。
 - **FR-010**：task/run、annotation、review、quality 與 export 的資料表不屬於本規格；後續契約須為任務綁定 `dataset_version_id`、為 run/snapshot 固定 item IDs 與 seeds、為標註／匯出保存 schema/config/version 條件，使用真實 FK 和交易驗證。不畫未定義的跨模組 FK，也不得把來源 `declared_split` 誤作 run 的切分結果。
 - **FR-011**：受限來源 artifact、公開資料及私有答案各須先定義保留、刪除／匿名化與派生資源處置；未定案前不得以無限制 cascade 刪除已封存版本或其被引用項目。cache 與匯出不能回傳已刪除／逾期資料。
@@ -110,7 +110,7 @@ flowchart TD
 |---|---|---|
 | `dataset` | UUID PK；建立者 FK；邏輯資料集身份 | 候選，未部署 |
 | `dataset_version` | UUID PK；dataset FK；同 dataset 的可空 parent FK；`version_no` 唯一於 dataset；`draft`／`sealed` 狀態與 manifest | 候選，未部署 |
-| `dataset_import_batch` | UUID PK；version FK；來源順序、checksum、受限來源參照、紀錄路徑與前處理版本 | 候選，未部署 |
+| `dataset_import_batch` | UUID PK；version FK；來源順序、checksum、受限來源參照、紀錄路徑、前處理版本及逐檔受限分類 manifest | 候選，未部署 |
 | `dataset_item` | UUID PK；batch FK；來源行序；只含 allowlist 投影的 `public_payload` | 候選，未部署 |
 | `dataset_item_private` | `dataset_item_id` 同時為 PK／FK；來源 split 與 hidden answer；不進標記者資料路徑 | 候選，未部署 |
 
