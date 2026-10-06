@@ -1,10 +1,11 @@
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
-const sourceUrl = new URL('../docs/diagrams/architecture/account-admin-db-schema.md', import.meta.url);
+const accountSourceUrl = new URL('../docs/diagrams/architecture/account-admin-db-schema.md', import.meta.url);
+const datasetSourceUrl = new URL('../docs/diagrams/architecture/dataset-db-schema.md', import.meta.url);
 const dataUrl = new URL('../docs/diagrams/architecture/database-schema.er.json', import.meta.url);
 
-export function parseAccountAdminSchema(markdown) {
+function parsePhysicalSchema(markdown) {
   const mermaid = markdown.match(/## 2\. ERD\s*\n[\s\S]*?```mermaid\s*\n([\s\S]*?)\n```/)?.[1];
   const dictionary = markdown.match(/## 3\. 欄位字典\s*\n([\s\S]*?)(?=\n## 4\.|$)/)?.[1];
   if (!mermaid || !dictionary) {
@@ -48,6 +49,22 @@ export function parseAccountAdminSchema(markdown) {
     tables.push({ name, columns });
   }
   if (tables.length === 0) throw new Error('No §3 dictionary tables found');
+  return { tables };
+}
+
+export const parseAccountAdminSchema = parsePhysicalSchema;
+export const parseDatasetSchema = parsePhysicalSchema;
+
+export function mergeSchemaSources(...sources) {
+  const tables = [];
+  const names = new Set();
+  for (const source of sources) {
+    for (const table of source.tables) {
+      if (names.has(table.name)) throw new Error(`Duplicate source table: ${table.name}`);
+      names.add(table.name);
+      tables.push(table);
+    }
+  }
   return { tables };
 }
 
@@ -115,6 +132,13 @@ export function validateErData(source, data) {
     if (!/(?:候選|candidate)/i.test(description) || !/(?:尚未|undeployed|not deployed)/i.test(description))
       errors.push(`${name}: candidate and undeployed table status must be explicit`);
   }
+  for (const name of ['dataset', 'dataset_version', 'dataset_import_batch', 'dataset_item', 'dataset_item_private']) {
+    const table = dataTables.get(name);
+    if (!table) continue;
+    const description = table.description ?? '';
+    if (!/(?:候選|candidate)/i.test(description) || !/(?:尚未|未部署|undeployed|not deployed)/i.test(description))
+      errors.push(`${name}: candidate and undeployed table status must be explicit`);
+  }
   return errors;
 }
 
@@ -122,7 +146,10 @@ async function main() {
   let source;
   let data;
   try {
-    source = parseAccountAdminSchema(await readFile(sourceUrl, 'utf8'));
+    source = mergeSchemaSources(
+      parseAccountAdminSchema(await readFile(accountSourceUrl, 'utf8')),
+      parseDatasetSchema(await readFile(datasetSourceUrl, 'utf8')),
+    );
     data = JSON.parse(await readFile(dataUrl, 'utf8'));
   } catch (error) {
     console.error(`Cannot read database schema source or ER data: ${error.message}`);
