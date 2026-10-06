@@ -1,7 +1,7 @@
 ---
 功能分支: feat/1141-quality-metrics-ready-signal
 建立日期: 2026-04-20
-版本: 5.2.1
+版本: 5.2.2
 狀態: Draft
 ---
 
@@ -758,7 +758,7 @@ flowchart LR
 - **TaskGuidelineConfig**：任務說明設定。欄位：`annotator_guideline_text`、`annotator_guideline_assets[]`、`reviewer_guideline_text`、`reviewer_guideline_assets[]`、`force_guideline`、`guideline_version`（指引內容版本標記；`OVERVIEW_EDITABLE_FIELDS` 中前四個內容欄位——`annotator_guideline_text`／`annotator_guideline_assets`／`reviewer_guideline_text`／`reviewer_guideline_assets`——任一異動並成功儲存時遞增，`force_guideline` 為顯示策略旗標、其異動不觸發遞增；形狀為遞增版本號或內容雜湊，具體形狀留待後端接上時定義，遞增規則見 FR-017a。供 `TrialRound.guideline_version`（FK，見關鍵實體）與 `annotation-015` FR-066 第 4 點指引閘門確認紀錄比對使用）。
 - **OutputConfig**：單一輸出類型的設定內容（`TaskConfig.outputs[].config`）。欄位由 `OUTPUT_TYPE_REGISTRY` 中該輸出類型的 fields 定義驅動（含共通欄位 `allow_bypass`）；不得為特定輸出類型在 task-detail 硬編第二份欄位定義（憲法：Generalization-First）。
 - **TaskMembership**：任務成員。欄位：`task_id`、`user_id`、`task_role`、`membership_status`。成員清單「審核負荷」欄顯示值由 `ReviewAssignment` 聚合推導，不儲存於 membership；仲裁身分來自 `TaskDetail.arbiter_ids`，非新的 `task_role`。
-- **ReviewAssignment**：審核指派，連結審核員與審核單位。欄位：`task_id`、`reviewer_id`、`review_unit_id`、`assigned_at`、`assigned_by`、`source`（**v3.0.0 修訂**，issue #688：恆為 `auto_rotation`——`manual`／`dispute_dispatch` 隨 FR-005j／FR-005k 之操作按鈕移除而失去消費端，值不再重用；仲裁改為具資格審核員自 `annotation-list` 認領，非本實體之 `source` 語意）、`review_status`（`pending | done`）。審核負荷統計（`assigned = pending + done`）由本實體聚合推導。
+- **ReviewAssignment**：審核指派，連結審核員與審核單位。欄位：`task_id`、`reviewer_id`、`sample_id`、`annotator_id`、`run_type`（**v5.2.2 修訂**，issue #1165：以三欄複合外鍵指向審核單位，對齊 `annotation/015-annotation-workspace` FR-051 之 `REVIEW_UNIT_DIMENSIONS`＝`sample_id × annotator_id × run_type`，**不另設 `review_unit_id`**——審核單位無單一主鍵；此為指向推導實體 `ReviewUnit` 之參照鍵，非資料庫層約束，`ReviewAssignment` 持久化與 015 FR-093(5) 之關係另案裁定）、`assigned_at`、`assigned_by`、`source`（**v3.0.0 修訂**，issue #688：恆為 `auto_rotation`——`manual`／`dispute_dispatch` 隨 FR-005j／FR-005k 之操作按鈕移除而失去消費端，值不再重用；仲裁改為具資格審核員自 `annotation-list` 認領，非本實體之 `source` 語意）、`review_status`（`pending | done`）。審核負荷統計（`assigned = pending + done`）由本實體聚合推導。
 - **RunStateTransition**：狀態轉換紀錄。欄位：`from_status`、`to_status`、`triggered_by`、`triggered_at`。
 - **WorkLogEntry**：工時紀錄。欄位：`user_id`、`task_role`、`date`、`login_at`、`logout_at`、`online_duration`、`duration`、`annotated_count`、`reviewed_count`、`arbitrated_count`（角色不適用的筆數欄位為 `null`）、`avg_speed`、`run_stage`。
 - **SampleSnapshot**：run 抽樣快照。欄位：`sample_snapshot_id`、`task_id`、`sampling_value`、`trial_round`、`target_agreement_overrides`、`min_annotators`、`locked_at`、`locked_by`、`selection_manifest_ref`（指向分片或外部清單，不直接內嵌大量 ids）。
@@ -860,6 +860,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 5.2.2 | 2026-10-06 | **釐清關鍵實體 `ReviewAssignment` 指向審核單位之欄位（issue #1165，Lightweight Path，PATCH）**：原列 `review_unit_id`，但 `annotation/015-annotation-workspace` FR-051 以 `REVIEW_UNIT_DIMENSIONS`（`sample_id × annotator_id × run_type`）三欄複合定址審核單位，無單一 id 可指。依維護者 2026-10-06 裁定，欄位改為 `sample_id`、`annotator_id`、`run_type` 三欄複合外鍵，不另設 `review_unit_id`。**未改動**：`source`、`review_status` 與審核負荷統計之推導語意。判定 PATCH：僅釐清關鍵實體欄位，不新增或移除任何 FR／AC，不涉及 API 契約。 |
 | 5.2.1 | 2026-10-06 | **釐清 FR-010u 第 (5) 項爭議項計數單位（issue #1150，Lightweight Path，PATCH）**：第 (5) 項括號原寫「爭議項（審核單位 × 輸出類型）」，較 `annotation/015-annotation-workspace` FR-059 第 2 點以 `outKey × 合併鍵` 識別爭議項、第 4 點依集合型／`sequence_tagging`／`multi_dim` 拆解之粒度為粗。依維護者裁定以 015 為準，括號改為引用 015 FR-061 第 7 點之計數單位（審核單位內之 `outKey × 合併鍵`，依 FR-059）。**未改動**：三個聚合層級不得相加、不得共用分母之規則本身，以及 AC-1.27、SC-050（二者僅稱「爭議項」，未重述粗粒度）。判定 PATCH：純釐清，不新增或移除任何 FR／AC。 |
 | 5.2.0 | 2026-10-06 | Issue #1160 D-9～D-11：依 ADR-037 定義詳情 view/edit、成員管理與匯出的矩陣必要條件；一人多 task role 的唯一鍵與角色別邀請／停用，並列出 V1 未涵蓋的生命週期命令，新增 FR-024／SC-052。只更新規劃契約。 |
 | 5.1.0 | 2026-10-06 | **品質指標就緒閘門（issue #1141，OpenSpec change `1141-task-detail-quality-metrics-gate`，MINOR）**：FR-008b 第 (5) 項「品質指標計算完成可用」原無任何規格定義其訊號，原型 `getCompletionSignals()` 從不傳入 `qualityMetricsReady`，第 (5) 項恆為放行（#1120 驗收 07(5) 延後項）。**修訂**：FR-008b 第 (5) 項改為依 `dataset/017-dataset-analysis-detail` 之 `QUALITY_METRICS_READY_RULE` 判定——最新一輪 IAA 計算 `pending`／`failed` 為未就緒並阻擋「標記完成」、顯示可見的繁體中文原因；`done`（含「無法計算」）與缺資料為就緒、不被第 (5) 項阻擋。原型僅於 `official_run` 傳入該訊號，`dry_run` 試標閘門不變。**未改動**：FR-008b 第 (1)–(4) 項與既有情境、FR-008a。判定 MINOR：FR-008b 第 (5) 項原本即為 MUST，本版補上可驗證的訊號來源，不新增或移除任何 FR／AC。 |
