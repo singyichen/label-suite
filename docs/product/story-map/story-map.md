@@ -1,6 +1,6 @@
 # User Story Map — Label Suite
 
-**版本**：1.5.0
+**版本**：1.5.1
 **最後驗證**：2026-08-19；Release 為規劃切片，非實作狀態。各 spec 狀態以 [`specs/STATUS.md`](../../../specs/STATUS.md) 為準。
 **閱讀方式**：橫軸 = 用戶活動流程（時序由左至右）；縱軸 = Release 切片（越上方越優先）
 
@@ -316,3 +316,4 @@
 | 015 | Annotation Workspace | R1 / R2 | 執行標記 / 審核品質 |
 | 016 | Dataset Analysis List | R2 | 查看統計 |
 | 017 | Dataset Analysis Detail | R3 | 審核品質 / 查看統計 |
+| 019 | Workspace Tabs（Shared） | 未排定（規格與原型階段；`specs/STATUS.md` 為 `in-progress`） | 跨模組共用導覽（頁籤層） |

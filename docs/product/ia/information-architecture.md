@@ -113,6 +113,7 @@
 | 可見資訊 | Logo、語言切換、L0 項目、使用者資訊、登出 | Logo、語言切換、使用者名稱、登出、L0 精簡主導覽 |
 | Active 呈現 | 左側 item 高亮 + `aria-current` | 底部 item 高亮 + `aria-current` |
 | 內容區避讓 | 內容區向右避讓 Sidebar 寬度 | 內容區需避讓頂部與底部導覽高度 |
+| 工作頁籤（`shared-019`） | 主內容區上方的頁籤列；右端為總覽選單觸發鈕（顯示頁籤數 N） | 頁籤列由同一總覽選單元件取代 |
 
 ### F. 模組導覽責任分工（資訊架構層）
 
@@ -124,6 +125,7 @@
 | annotation | 標記/審查入口（需任務上下文） | `annotation-list` 清單導向與 `annotation-workspace` 單筆作業提交路徑 |
 | dataset | 分析模組入口（`/dataset-analysis` 任務列表） | `?tab=stats` ↔ `?tab=quality` 雙 Tab 頁內切換（`/dataset-analysis-detail/:task_id`） |
 | admin | 平台管理入口（僅 super_admin） | `user-management.html` ↔ `role-settings.html` 透過 admin tabs 切換 |
+| shared（`shared-019`） | 不新增 L0 項 | 登入後所有具 Sidebar 殼層的頁面（含系統管理頁）於主內容區上方提供工作頁籤列，同時保留多頁檢視狀態；總覽選單提供篩選、重開剛關閉的頁籤與全部關閉（有未儲存變更的頁籤會被跳過並提示）；行為以 `specs/shared/019-workspace-tabs/spec.md` 為準 |
 
 ### G. 一致性原則（Navbar IA Contract）
 
@@ -682,6 +684,7 @@ specs/foundation/000-foundation/
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.5.2 | 2026-10-06 | §2.1 E 補入 `shared-019` 工作頁籤導覽層（頁籤列、總覽選單、重開剛關閉的、全部關閉；對齊 019 v1.2.0 FR-023／FR-024／FR-025，快捷鍵細節不列入 IA）；§2.1 F 補入共用殼層責任（issue #1157） |
 | 1.5.1 | 2026-10-06 | 試標完成通知措辭由「Dry Run 全員完成」改為對齊 014 FR-008a v5.0.0：標註、必要審核與必要仲裁皆完成且 `dry_run` 例外池已清空，IAA 不是完成條件（issue #1157） |
 | 1.5.0 | 2026-08-19 | 同步審核員模型（逐標記員審核 + 當場直接修正 + 爭議池第三人仲裁，取代通過/退回聚合語意，含旅程 C 序列圖）、`task-new` 任務類型敘述改為 `input_type` + `outputs[]` 組合模型（取代固定 `task_type` registry 語意，`dataset-analysis` 統計/品質章節不在本次調整範圍）；依 issue #202 |
 | 1.4.3 | 2026-05-29 | 補充 Foundation Spec 與 IA / SDD 的關係：Foundation 作為所有 feature spec 的上游工程基準，新增 P0 Foundation 開發批次與 `000-foundation` spec 條目 |

@@ -2,7 +2,7 @@
 
 **狀態：** Active
 
-**最後驗證：** 2026-08-19（17-spec inventory）
+**最後驗證：** 2026-10-06（21-spec inventory）
 
 ## Purpose and non-goals
 
