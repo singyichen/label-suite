@@ -254,3 +254,26 @@ test('dataset parser rejects duplicate dictionary table headings', () => {
   assert.throws(() => checker.parseDatasetSchema(duplicateDictionary),
     /duplicate.*dataset_item_private/i);
 });
+
+test('dataset parser rejects duplicate dictionary columns', () => {
+  const nameRow = '| `name` | varchar(120) | 否 | Name | Create | — |\n';
+  const duplicateColumn = datasetMarkdown.replace(nameRow, nameRow + nameRow);
+  assert.throws(() => checker.parseDatasetSchema(duplicateColumn),
+    /duplicate.*dataset\.name|dataset\.name.*duplicate/i);
+});
+
+test('dataset parser rejects an unquoted dictionary column name', () => {
+  const nameRow = '| `name` | varchar(120) | 否 | Name | Create | — |\n';
+  const unquotedColumn = datasetMarkdown.replace(nameRow,
+    `${nameRow}| orphan_field | varchar(80) | 否 | Undocumented syntax | Create | — |\n`);
+  assert.throws(() => checker.parseDatasetSchema(unquotedColumn),
+    /(?:backtick|invalid|unquoted).*orphan_field|orphan_field.*(?:backtick|invalid|unquoted)/i);
+});
+
+test('Mermaid quoted FK pending note does not declare a foreign key', () => {
+  const noteOnly = datasetMarkdown.replace('        varchar name\n',
+    '        varchar name "FK pending"\n');
+  const source = checker.parseDatasetSchema(noteOnly);
+  assert.equal(source.tables.find((table) => table.name === 'dataset').columns
+    .find((column) => column.name === 'name').fk, undefined);
+});
