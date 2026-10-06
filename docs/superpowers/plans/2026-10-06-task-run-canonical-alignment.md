@@ -46,14 +46,14 @@
 
 **Interfaces:** 014 FR-010f 系列與 FR-010u 為 task/run 行為正典；供後續物理字典導出 cycle、round、snapshot、run、item 與 assignment 的鍵。
 
-- [ ] 先列出 FR-010b/c/d/e/f/f-2/f-3/f-4、FR-010u、FR-010s-1、FR-010t、FR-005h、FR-014、FR-017a、FR-010i-1/i-2、FR-022、SC-005 及關鍵實體的現有原文；將設計 §6 T1～T12 對應到每條修訂。
-- [ ] 明定 `task_id × cycle_id × run_type × round_no` 或穩定 `run_id` 作計數作用域；R1 重啟不碰舊歷史，Dry round 在 cycle 內唯一，Official 每 task 生命週期最多一筆。
-- [ ] 明定 cycle 釘住 sealed dataset／不可變 config/schema 版本；`dataset_total` 為該 sealed version 的已接受 item 數。R1 只釘資格池、seed、演算法，每次 Dry 或 Official 發布才封存自己的 item 清單；Official 取當 cycle 扣除已發布 Dry 清單後的剩餘項目；每個 Rn 的要求筆數不得用盡 Official 最後一項。
-- [ ] 明定 `isolation_enabled=false` 仍不允許同 cycle 的 Dry／Official item ID 重疊；關閉只改變跨階段結果隔離保證並要求警告／稽核，不自動產生混合結果動作。以 cycle-scoped run-item 唯一鍵作後續物理約束。
-- [ ] 明定每個 run 的 guideline version 必填且不可變：Dry 等於 round 版本，Official 於發布交易選取目前版本；等待階段只開放四個指引內容欄編輯並產生新版本，其餘 config/dataset 仍 draft-only。
-- [ ] 明定 current reviewer/arbiter 名冊是正規化 task membership 投影，發布時凍結候選池但即時授權仍查 active membership；終局排除保留事件且不計入分母。
-- [ ] 明定發布的 idempotency、跨版本 item 拒絕、同交易 run/snapshot/items/assignment/transition，以及 schema/config 版本參照；新增／修訂 AC 與 SC 覆蓋 Review Focus 1～5，更新本檔版本及 Changelog。014 的 `ReviewAssignment` 實體須退役或重新定義為非持久化推導，與 015 FR-093(5) 一致。
-- [ ] 執行 Project SDD lint；用 `rg` 定位每個被修改的 FR／AC／SC 與 ADR 引用，提交此正典切片。
+- [x] 先列出 FR-010b/c/d/e/f/f-2/f-3/f-4、FR-010u、FR-010s-1、FR-010t、FR-005h、FR-014、FR-017a、FR-010i-1/i-2、FR-022、SC-005 及關鍵實體的現有原文；將設計 §6 T1～T12 對應到每條修訂。
+- [x] 明定 `task_id × cycle_id × run_type × round_no` 或穩定 `run_id` 作計數作用域；R1 重啟不碰舊歷史，Dry round 在 cycle 內唯一，Official 每 task 生命週期最多一筆。
+- [x] 明定 cycle 釘住 sealed dataset／不可變 config/schema 版本；`dataset_total` 為該 sealed version 的已接受 item 數。R1 只釘資格池、seed、演算法，每次 Dry 或 Official 發布才封存自己的 item 清單；Official 取當 cycle 扣除已發布 Dry 清單後的剩餘項目；每個 Rn 的要求筆數不得用盡 Official 最後一項。
+- [x] 明定 `isolation_enabled=false` 仍不允許同 cycle 的 Dry／Official item ID 重疊；關閉只改變跨階段結果隔離保證並要求警告／稽核，不自動產生混合結果動作。以 cycle-scoped run-item 唯一鍵作後續物理約束。
+- [x] 明定每個 run 的 guideline version 必填且不可變：Dry 等於 round 版本，Official 於發布交易選取目前版本；等待階段只開放四個指引內容欄編輯並產生新版本，其餘 config/dataset 仍 draft-only。
+- [x] 明定 current reviewer/arbiter 名冊是正規化 task membership 投影，發布時凍結候選池但即時授權仍查 active membership；終局排除保留事件且不計入分母。
+- [x] 明定發布的 idempotency、跨版本 item 拒絕、同交易 run/snapshot/items/assignment/transition，以及 schema/config 版本參照；新增／修訂 AC 與 SC 覆蓋 Review Focus 1～5，更新本檔版本及 Changelog。014 的 `ReviewAssignment` 實體須退役或重新定義為非持久化推導，與 015 FR-093(5) 一致。
+- [x] 執行 Project SDD lint；用 `rg` 定位每個被修改的 FR／AC／SC 與 ADR 引用，提交此正典切片。
 
 ### Task 3: 013 建立時 config/schema 起點
 
