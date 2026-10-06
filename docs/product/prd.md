@@ -87,9 +87,9 @@ Label Suite 的核心價值主張在於：研究人員以 `input_type + outputs[
 → 標記說明（Step 4 選填）
 → task-detail：成員管理 tab — 搜尋平台成員 / Email 邀請，指派 reviewer / annotator
 → 概覽 tab — 點擊「新增試標回合 R1」發布 Dry Run（鎖定樣本快照）
-→ 等待所有 annotator 完成試標
-→ Dashboard badge 通知：前往 dataset-analysis/quality tab 查看 IAA
-→ 依逐型 IAA 與目標確認是否發布 Official Run；未達條件時回到可調整狀態並再試標
+→ 本回合標註提交、必要審核與必要仲裁全部完成（含例外池清空）→ 自動進入 `waiting_iaa_confirmation`（014 FR-008a）
+→ Dashboard badge 通知：前往 dataset-analysis/quality tab 查看 IAA（IAA 計算就緒後才可開始正式標記或新增下一回合）
+→ 依逐型 IAA 與目標決定發布 Official Run 或新增下一試標回合（014 FR-013）；IAA 未達目標僅為顧問性警示，不阻擋任一選項
 → 等待 Official Run 全數提交
 → Reviewer 逐 review unit 審核；不一致時直接修正，爭議交由合格且非當事仲裁者處理
 → 所有 review unit 定案、無未解爭議、應仲裁項目完成且品質指標可用後，任務進入 `completed`
