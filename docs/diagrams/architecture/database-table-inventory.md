@@ -79,7 +79,7 @@ Label Suite 的對應做法：
 | `SampleSnapshot` → 抽樣快照表 | 需設計 | `sample_snapshot_id`、`task_id`；選樣 manifest | 014 關鍵實體；manifest 指向何處與樣本 FK 未定 |
 | `AnnotationListMaterialization` → run 發布紀錄 | 需設計 | `task_id`、`run_stage`、`trial_round?`、`sample_snapshot_id` | 014 關鍵實體；正式 run 的唯一鍵待定 |
 | `ExcludedAnnotationAssignment` → 排除紀錄表 | 需設計 | `assignment_id`、`task_id`、`sample_id` | 014 關鍵實體／FR-005h；assignment 本體的鍵與 FK 待定 |
-| `ReviewAssignment` → 審核指派資料落點 | 需裁決 | `task_id`、`reviewer_id`；指向審核單位的鍵未定 | 014 關鍵實體仍列 `ReviewAssignment.review_unit_id`，但 [015 FR-051／FR-093](../../../specs/annotation/015-annotation-workspace/spec.md) 以三欄複合定址，且 FR-093(5) 禁止另存第二份黏住指派資料；不能直接據此建表或 FK |
+| `ReviewAssignment` → 審核指派資料落點 | 部分裁決（#1165） | `task_id`、`reviewer_id`、`sample_id`、`annotator_id`、`run_type` | 維護者 2026-10-06 裁定：以三欄複合外鍵指向審核單位（[015 FR-051](../../../specs/annotation/015-annotation-workspace/spec.md) `REVIEW_UNIT_DIMENSIONS`），不設 `review_unit_id`；014 v5.2.2 已改關鍵實體。仍待釐清：`dry_run` per_sample 粒度（FR-093）的列形狀，以及 FR-093(5) 禁止另存第二份黏住指派資料 |
 | `WorkLogEntry` → 工時事件表 | 需設計 | `user_id`、`task_role`、`date`、`run_stage` | 014 關鍵實體；事件／日彙總與 PK 待定 |
 | `RunStateTransition` → 狀態歷程表 | 需設計 | `triggered_by`、時間、前後狀態 | 014 關鍵實體；任務 FK 應由 migration 設計確認 |
 | `IsolationAuditLog` → 隔離設定稽核表 | 需設計 | `task_id`、`changed_by`、時間 | 014 關鍵實體；與共用 `audit_events` 的事件語意和去重方式待 task 模組定案 |
@@ -107,7 +107,7 @@ Label Suite 的對應做法：
 | `TaskConfig` | `categories[]`, `input_types[]`, `outputs[]`, `field_role_map`, `dataset_file_name` | `outputs[]` JSONB 驗證與版本、資料集檔案的持久化參照 |
 | `TaskGuidelineConfig` | `annotator_guideline_text`, `annotator_guideline_assets[]`, `reviewer_guideline_text`, `reviewer_guideline_assets[]`, `force_guideline`, `guideline_version` | 歷史版本是否獨立保存；`TrialRound.guideline_version` 如何形成可約束的 FK |
 | `TaskMembership` | `task_id`, `user_id`, `task_role`, `membership_status` | 邏輯唯一鍵 `(task_id, user_id, task_role)` 已定；物理 task 表／FK、索引待設計 |
-| `ReviewAssignment` | `task_id`, `reviewer_id`, `review_unit_id`, `assigned_at`, `assigned_by`, `source`, `review_status` | `review_unit_id` 與 015 複合定址的映射；`source` 現行恆為 `auto_rotation` |
+| `ReviewAssignment` | `task_id`, `reviewer_id`, `sample_id`, `annotator_id`, `run_type`, `assigned_at`, `assigned_by`, `source`, `review_status` | `(sample_id, annotator_id, run_type)` 為指向 `ReviewUnit` 的複合 FK（`ReviewUnit` 為 derived、無實體表，故不建 DB 層 FK 約束）；`source` 現行恆為 `auto_rotation` |
 | `TrialRound` | `task_id`, `round`, `sampling_value`, `guideline_version`, `prior_round_findings`, `guideline_change_summary`, `no_change_reason?`, `iaa_computation_status`, `created_by`, `created_at` | `(task_id, round)` 的約束、指引版本參照及回合狀態 CHECK |
 | `SampleSnapshot` | `sample_snapshot_id`, `task_id`, `sampling_value`, `trial_round`, `target_agreement_overrides`, `min_annotators`, `locked_at`, `locked_by`, `selection_manifest_ref` | manifest 儲存位置與不可變性保證 |
 | `AnnotationListMaterialization` | `task_id`, `run_stage`, `trial_round?`, `sample_snapshot_id`, `source_sample_ids_ref`, `item_count`, `created_by`, `created_at` | Dry／Official run 的唯一鍵、發布冪等性 |
@@ -152,7 +152,7 @@ erDiagram
 |---|---|---|---|
 | 已裁決 | 通用稽核表形 | D-4 採 `audit_events`，所有事件至少留一個日曆年；`task_id` FK 仍待 task 表及 PK 定案 | Accepted ADR-032、account/admin §3.7／§4.6 |
 | 已裁決 | 角色權限矩陣如何參與授權 | 兩張表保留為未部署候選；42 列初始格、固定格、CAS 與稽核目標依 ADR-037；runtime 與 migration 另案實作 | Accepted ADR-037、admin-007 v1.2.0、account/admin §4.7 |
-| P0 | 標記資料的任務／run／round 唯一鍵與審核指派 FK | 014 `review_unit_id` 與 015 複合定址仍未一致；重複樣本會串錯決策 | 014／015 關鍵實體、015 FR-049／FR-051／FR-093 |
+| P0 | 標記資料的任務／run／round 唯一鍵與審核指派 FK | 審核指派指向審核單位的鍵已由 #1165 裁定為三欄複合（014 v5.2.2）；剩 `dry_run` per_sample 粒度與 FR-093(5) 的落點；重複樣本會串錯決策 | 014／015 關鍵實體、015 FR-049／FR-051／FR-093 |
 | 候選已定／實作前待驗 | dataset item、隱藏答案與 lineage 的五表邊界 | dataset-021 與字典已定逐檔分類、公開／私有分表及完整版本；manifest 編碼、保留政策、task/run 綁定與雙資料庫實測仍需後續工作 | dataset-021 FR-001～FR-011、[dataset 字典](./dataset-db-schema.md)；主憲法 III／XIV／XVI |
 | P1 | 設定／指引／IAA 報告是否獨立表與版本鍵 | 決定 `TaskConfig`、`TaskGuidelineConfig`、`OutputTypeIAAReport` 的持久化形狀 | 013／014／017 關鍵實體 |
 

@@ -3,7 +3,7 @@
 > 對應 issue #669。本圖整合多份 feature spec 的「關鍵實體」段落，供 migration 前檢查概念關聯。
 > **受眾為工程師與 migration 作者**，因此圖面一律保留 spec 的原始識別字（`sample_id`、`run_type`、`reviewer_ids` …），不做中文化——翻譯後就無法用 `grep` 回到正典條文。
 
-> **維護提示（2026-10-06）**：本圖部分實體細節仍是舊版規格快照，尤其圖 3、圖 4 與下方實體索引／待定表。現行 `task-management-014` 為 v5.2.1、`annotation-015` 為 v10.1.0、`dataset-017` 為 v3.1.0；寫 migration 前請先讀 [資料表盤點與 ERD 落地清單](./database-table-inventory.md)，並對照各 spec 現行「關鍵實體」。本圖是概念圖，**不得直接轉成資料表或外鍵**。
+> **維護提示（2026-10-06）**：本圖部分實體細節仍是舊版規格快照，尤其圖 3、圖 4 與下方實體索引／待定表。現行 `task-management-014` 為 v5.2.2、`annotation-015` 為 v10.1.0、`dataset-017` 為 v3.1.0；寫 migration 前請先讀 [資料表盤點與 ERD 落地清單](./database-table-inventory.md)，並對照各 spec 現行「關鍵實體」。本圖是概念圖，**不得直接轉成資料表或外鍵**。
 
 - **正典來源**：各 `specs/[module]/NNN-feature/spec.md` 的 `### 關鍵實體` 段落。本圖為**衍生視圖**，不是正典；spec 與本圖衝突時以 spec 為準。
 - **不歸屬任何單一 spec**，因此放在 `docs/diagrams/architecture/`，不隨任何 spec 進 `specs/_archive/`。
@@ -59,6 +59,7 @@ erDiagram
     ReviewUnit  ||--o{ ReviewDecision : "一位審核員逐 output_type 決策，FR-092／FR-093"
     ReviewUnit  ||--o{ DisputeItem : "推導：每個審核單位 0..n 個爭議項，識別為 outKey × 合併鍵，FR-059"
 
+    ReviewUnit |o--o| ReviewAssignment : "三欄複合參照鍵 sample_id × annotator_id × run_type，official_run 每單位至多一位審核員（FR-093），#1165"
     ReviewUnit ||--o{ OutputTypeIAAReport : "逐輸出類型聚合"
     ReviewUnit ||--o{ AnnotatorModificationRateEntry : "modified_units 分子"
 ```
@@ -232,7 +233,9 @@ erDiagram
     ReviewAssignment {
         string task_id FK
         string reviewer_id FK
-        string review_unit_id "014 保留此欄名；015 複合定址，實體 FK 待設計"
+        string sample_id FK "三欄複合 FK 指向 ReviewUnit，015 FR-051"
+        string annotator_id FK "同上"
+        string run_type FK "同上；dry_run 或 official_run"
         datetime assigned_at
         string assigned_by FK
         string source "恆為 auto_rotation；014 v3.0.0"
@@ -276,6 +279,7 @@ erDiagram
     TaskDetail ||--o{ IsolationAuditLog : "資料隔離設定審計"
     TaskDetail ||--o{ ExcludedAnnotationAssignment : "task_id"
     TaskDetail ||--o{ ReviewAssignment : "task_id"
+    ReviewUnit |o--o| ReviewAssignment : "三欄複合參照鍵，official_run 每單位至多一筆（FR-093），#1165"
     TaskConfig ||--|{ OutputConfig : "outputs 陣列"
     TaskGuidelineConfig ||--o{ TrialRound : "guideline_version 外鍵"
     TrialRound ||--o| SampleSnapshot : "trial_round"
@@ -488,13 +492,15 @@ flowchart LR
 
 ## 規格與實體層待定
 
-#688 已於 014 v3.0.0（`reviewer_ids`／`arbiter_ids` 取代 `min_reviewers` 等四欄位）與 015 v5.0.0（單人接力、`REVIEW_UNIT_STATUS` 三態）解決。015 FR-093 規定每個指派對象恰有一位審核員；FR-092 仍允許該審核員對多個 `output_type` 各寫一筆 `ReviewDecision`，因此圖 1／圖 4 的業務關聯為一對多。下列規格與實體層問題尚未定案，**本圖不裁定**（爭議項粒度已由 #1150 解決，見表後）：
+#688 已於 014 v3.0.0（`reviewer_ids`／`arbiter_ids` 取代 `min_reviewers` 等四欄位）與 015 v5.0.0（單人接力、`REVIEW_UNIT_STATUS` 三態）解決。015 FR-093 規定每個指派對象恰有一位審核員；FR-092 仍允許該審核員對多個 `output_type` 各寫一筆 `ReviewDecision`，因此圖 1／圖 4 的業務關聯為一對多。下列規格與實體層問題尚未定案，**本圖不裁定**（爭議項粒度已由 #1150、`ReviewAssignment` 指向審核單位的鍵已由 #1165 解決，見表後）：
 
 | 圖上位置 | 標記內容 | 未定點 |
 |---------|---------|-------|
-| 圖 1、圖 3 | `ReviewAssignment.review_unit_id` 與 `ReviewAssignment` 到 `ReviewUnit` 的關聯線 | 014 `ReviewAssignment` 仍列 `review_unit_id`，但 015 FR-051 的審核單位以 `sample_id × annotator_id × run_type` 複合定址，無單一 id 可指；015 FR-093(5) 又規定黏住須由提交推導，不得另存第二份指派資料。正典未統一（非 #1150 範圍），所以圖中不畫未定的實體 FK；見[資料表盤點 §5](./database-table-inventory.md#5-在第一批-migration-前要關閉的決策) |
+| 圖 3 | `ReviewAssignment` 於 `dry_run` 的指派粒度 | 015 FR-093 規定 `dry_run` 以樣本為指派單位（同一樣本各標記員之單位由同一位審核員審），`official_run` 以審核單位為單位；三欄複合 FK 在 `dry_run` 是否每個標記員一列、或另有樣本層落點，規格未寫明。FR-093(5) 另禁止存第二份黏住指派資料。**本圖不裁定**，見[資料表盤點 §5](./database-table-inventory.md#5-在第一批-migration-前要關閉的決策) |
 
 **已解決（#1150，2026-10-06）**：爭議項粒度以 015 FR-059 第 2、4 點與 FR-061 第 7 點為準（審核單位內 `outKey × 合併鍵`），014 FR-010u(5) 於 v5.2.1 改引該計數單位；`ReviewUnit` 與 `ReviewDecision` 到 `DisputeItem` 的基數已畫入圖 1、圖 4、圖 6。#1151（例外池以 outKey 為鍵）、#1146（arbiterIds 名冊）亦觸及同一塊資料模型，修完後須回頭核對。
+
+**已解決（#1165，2026-10-06）**：`ReviewAssignment` 以 `sample_id`、`annotator_id`、`run_type` 三欄複合外鍵指向審核單位（對齊 015 FR-051 `REVIEW_UNIT_DIMENSIONS`），014 關鍵實體於 v5.2.2 移除 `review_unit_id`；`ReviewUnit` 為推導實體、無單一主鍵，故該關聯為複合鍵參照（非資料庫層約束），`ReviewUnit → ReviewAssignment` 邊已畫入圖 1、圖 3。
 
 ---
 
