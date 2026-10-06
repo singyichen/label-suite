@@ -66,7 +66,7 @@ Label Suite 的對應做法：
 | `SampleSnapshot` → 抽樣快照表 | 需設計 | `sample_snapshot_id`、`task_id`；選樣 manifest | 014 關鍵實體；manifest 指向何處與樣本 FK 未定 |
 | `AnnotationListMaterialization` → run 發布紀錄 | 需設計 | `task_id`、`run_stage`、`trial_round?`、`sample_snapshot_id` | 014 關鍵實體；正式 run 的唯一鍵待定 |
 | `ExcludedAnnotationAssignment` → 排除紀錄表 | 需設計 | `assignment_id`、`task_id`、`sample_id` | 014 關鍵實體／FR-005h；assignment 本體的鍵與 FK 待定 |
-| `ReviewAssignment` → 審核指派表 | 需設計 | `task_id`、`reviewer_id`；需指向審核單位 | 014 關鍵實體與 [015 FR-051／FR-093](../../../specs/annotation/015-annotation-workspace/spec.md)；前者仍寫 `review_unit_id`，後者以三欄複合定址，不能直接據此建 FK |
+| `ReviewAssignment` → 審核指派資料落點 | 需裁決 | `task_id`、`reviewer_id`；指向審核單位的鍵未定 | 014 關鍵實體仍列 `ReviewAssignment.review_unit_id`，但 [015 FR-051／FR-093](../../../specs/annotation/015-annotation-workspace/spec.md) 以三欄複合定址，且 FR-093(5) 禁止另存第二份黏住指派資料；不能直接據此建表或 FK |
 | `WorkLogEntry` → 工時事件表 | 需設計 | `user_id`、`task_role`、`date`、`run_stage` | 014 關鍵實體；事件／日彙總與 PK 待定 |
 | `RunStateTransition` → 狀態歷程表 | 需設計 | `triggered_by`、時間、前後狀態 | 014 關鍵實體；任務 FK 應由 migration 設計確認 |
 | `IsolationAuditLog` → 隔離設定稽核表 | 需設計 | `task_id`、`changed_by`、時間 | 014 關鍵實體；與通用 `audit_event` 的分工待定 |
@@ -78,7 +78,7 @@ Label Suite 的對應做法：
 | `AnnotationListItem` → 清單項目表 | 需設計 | `task_id`、`sample_id`、`run_type`、`sample_snapshot_id` | [015 關鍵實體](../../../specs/annotation/015-annotation-workspace/spec.md#關鍵實體-必填)；run／round 鍵與樣本來源待定 |
 | `AnnotationRecord`、`OutputAnswer` → 標記提交 | 需設計／可內嵌 | `sample_id`、`annotator_id`；`answers[]` 是 config-driven payload | 015 關鍵實體／FR-049；答案可放受控 JSONB，但提交唯一鍵須含 task／run／round 等作用域並與規格對齊 |
 | `ReviewDecision` → 逐 output 決策 | 需設計 | `annotator_id`、`reviewer_id`、`output_type`；從審核單位讀取 | 015 關鍵實體／FR-051；`sample_id`、`run_type` 的實體 FK 與唯一鍵待定 |
-| `DisputeItem.votes[]`、`finalized_*` → 仲裁寫入狀態 | 需設計 | 以 `(sample_id, annotator_id, run_type)` 審核單位和 `output_type × item_key` 定址 | 015 FR-052／FR-061；分歧項本體由答案 diff 推導，不建完整 `DisputeItem` 表 |
+| `DisputeItem.votes[]`、`finalized_*` → 仲裁寫入狀態 | 需設計 | 審核單位以 `(sample_id, annotator_id, run_type)` 定址；爭議項粒度待 #1150 裁決 | 015 FR-052／FR-061；分歧項本體由答案 diff 推導，不建完整 `DisputeItem` 表；014 與 015 對爭議項粒度措辭不一致，見[概念圖的規格待定](./core-data-model-er.md#規格與實體層待定) |
 | `AnnotationHistoryItem` → 操作歷程 | 需設計 | `actor_id`、`action`、`at`；與樣本／任務的 FK 待定 | 015 關鍵實體／FR-086；事件 append-only 與稽核表分工待定 |
 | `OutputTypeIAAReport` → 品質計算結果 | 需裁決 | `output_type`、metric、threshold、`pass_state` | [017 關鍵實體](../../../specs/dataset/017-dataset-analysis-detail/spec.md#關鍵實體-必填)／FR-039；spec 稱抽象報告，是否持久化與版本鍵未定 |
 
@@ -105,7 +105,7 @@ Label Suite 的對應做法：
 | `AnnotationListItem` | `task_id`, `sample_id`, `run_type`, `trial_round?`, `sample_snapshot_id`, completion／lock 狀態 | `sample_id` 的 dataset 作用域與清單唯一鍵 |
 | `AnnotationRecord` | `sample_id`, `answers[]`, `note?`, `version`, `status`, `annotator_id`, `submitted_at?` | 規格尚未在此實體列出 task／run／round 鍵；答案 envelope 和版本併發控制 |
 | `ReviewDecision` | `annotator_id`, `output_type`, `decision`, `correction?`, `reason?`, `reviewer_id`, `decided_at` | 規格尚未在此實體列出 sample／run 鍵；每個 output 的唯一決策鍵 |
-| `DisputeItem` 寫入部分 | `votes[]?`, `finalized_value?`, `finalized_by?` | 用審核單位與 `output_type × item_key` 定址；不儲存由 FR-052 推導的 A/B 值 |
+| `DisputeItem` 寫入部分 | `votes[]?`, `finalized_value?`, `finalized_by?` | 審核單位鍵已知；爭議項鍵粒度待 #1150 裁決；不儲存由 FR-052 推導的 A/B 值 |
 | `AnnotationHistoryItem` | `action`, `role`, `actor_id`, `at`, `summary`, `result_snapshot`, `started_at`, `lead_time`, `reason` | 事件 PK／父記錄作用域；`HISTORY_ACTIONS` 現行八值 |
 | `OutputTypeIAAReport` | `output_type`, `primary_metric_name`, `primary_metric_value`, `threshold`, `pass_state`, `auxiliary_metrics[]` | 是否持久化與計算版本；`free_text` 無數值門檻 |
 

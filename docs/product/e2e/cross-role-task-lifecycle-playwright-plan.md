@@ -9,6 +9,8 @@
 > - [w6-resilience-a11y.md](issue-180/phase3-drafts/w6-resilience-a11y.md) — 錯誤邊界 32 情境 ＋ a11y/i18n/responsive
 > - [w7-iaa-research-review.md](issue-180/phase3-drafts/w7-iaa-research-review.md) — IAA／抽樣／仲裁方法論審查
 >
+> **歷史快照（2026-10-06，issue #1156）**：上列 `issue-180/phase3-drafts/` 四份附件（w4～w7）及 `issue-180/` 下 w1、w3 兩份分析（同樣含 `min_reviewers` 與五態敘述）皆是 2026-08 規劃時點的快照，內容未改動，仍以 `min_reviewers=2`、R01／R02 兩位審核員票決、五態 `approved`／`modified` 為前提；該模型已由 014 v3.0.0（`reviewer_ids`／`arbiter_ids`）與 015 v5.0.0（`REVIEW_UNIT_STATUS` 三態、FR-093 單人接力）取代。**本文 §2 的 fixture 與主線以現行正典為準，與附件衝突時以本文與正典為準**，附件不得再當作 fixture 依據。
+>
 > **交付狀態（2026-08-20）**：實作輪（#212）已完成——PR #247（fixture）／#265（XROLE-01~09）／#273（XROLE-10~25）／#277（w6 情境）全 merge。原子測試結算（🟢 22／🟡 3 以 `test.fail()` 標注待 #189/#190）、w6 落點與實作期新發現見 [finding-register.md §F](issue-180/finding-register.md)；本文以下內容維持規劃時點原貌，狀態以 §F 為準。
 
 ## 1. 正典依據與決策約束
@@ -25,7 +27,7 @@
 
 **分層聲明（驗收文件與測試註解皆須保留）**：issue #180 原文「各角色獨立 BrowserContext／storage state」的隔離語意，屬於未來**正式全端 E2E**（真 JWT session，`.claude/rules/testing-e2e.md` 的 `storageState` fixtures）的正確做法；prototype 層若照做反而製造假斷裂。本輪 `storageState` 僅允許用於情境開始前一次性植入 fixture，不用於角色隔離。「重新登入」在原型層只能以「相同身分參數重新導覽」近似（w6 §1 CONT-04 限制標注）。
 
-角色配置（w4 §1）：PL01（dashboard scenario 切換）、A01–A03（`annotator_id`）、R01/R02（`role=reviewer` + `reviewer_id`）、R03 仲裁者（`role=reviewer` + 獨立 `reviewer_id` + `can_arbitrate`，015 FR-060 兩條件）。**不存在 `role=arbiter`**（`_workspace-helpers.ts:11` 的 `Role` 僅 `annotator | reviewer`）。
+角色配置（w4 §1）：PL01（dashboard scenario 切換）、A01–A03（`annotator_id`）、R01/R02（`role=reviewer` + `reviewer_id`，皆在 `reviewer_ids`、不在 `arbiter_ids`，系統自動指派、每個審核單位恰一位，015 FR-093）、R03 仲裁者（`role=reviewer` + 獨立 `reviewer_id` + `can_arbitrate`，同時在 `reviewer_ids` 與 `arbiter_ids`——014 FR-010s-1 要求 `arbiter_ids` 為 `reviewer_ids` 子集合，FR-010s-1 v4.2.0 要求 `reviewer_ids - arbiter_ids` 至少一人；015 FR-060 兩條件）。**不存在 `role=arbiter`**（`_workspace-helpers.ts:11` 的 `Role` 僅 `annotator | reviewer`）。
 
 ## 3. 正典旅程（12 步主線）
 
@@ -38,9 +40,9 @@ flowchart LR
   S7 --> S8[8 正式標記] --> S9[9 審核] --> S10[10 Dispute/仲裁] --> S11[11 完成] --> S12[12 匯出]
 ```
 
-- Fixture 主參數（w4 §1.1／w5 §2）：`task_id = XROLE-{run_id}`、`single_label`（positive/negative/neutral）、5 筆記錄 `xrole-001..005`、`sampling_value=2`（試標 = `xrole-001/002` × 3 標記員）、`min_annotators=3`、`min_reviewers=2`、`arbitration_enabled=true` + 仲裁者 R03。
-- 分歧構造：`xrole-003`（A01 標 `positive`）→ R01 核准、R02 修正 `negative` → FR-051 判定 `disputed`，N=2 平手不收斂 → R03 仲裁選 B（`negative`）→ `finalized`。
-- 對照組：`xrole-004` 全數核准 → `finalized`；`xrole-005` 的「R01/R02 一致修正 → 多數收斂自動 `finalized`（不經仲裁）」情境**已退場**（issue #916）——單人接力模型下每審核單位恰一位審核員（FR-093，`specs/annotation/015-annotation-workspace/spec.md:1004`），無多數決路徑，`disputed` 僅能經仲裁（FR-061）或最終例外池（FR-095）轉為 `finalized`（FR-051，`spec.md:773`）。
+- Fixture 主參數（w4 §1.1／w5 §2）：`task_id = XROLE-{run_id}`、`single_label`（positive/negative/neutral）、5 筆記錄 `xrole-001..005`、`sampling_value=2`（試標 = `xrole-001/002` × 3 標記員）、`min_annotators=3`、`reviewer_ids=[R01,R02,R03]`、`arbiter_ids=[R03]`（014 v3.0.0 起取代 `min_reviewers`／`arbitration_enabled`）。
+- 分歧構造：`xrole-003`（A01 標 `positive`）→ 系統指派的那位審核員（R01 或 R02，FR-093）`modify` 為 `negative` → FR-051 判定 `disputed`（單人接力，無票數與平手概念）→ R03 仲裁選 B（`negative`，FR-061）→ `finalized`。
+- 對照組：`xrole-004` 該位審核員 `approve` 全數核准 → `finalized`；`xrole-005` 的「R01/R02 一致修正 → 多數收斂自動 `finalized`（不經仲裁）」情境**已退場**（issue #916）——單人接力模型下每審核單位恰一位審核員（FR-093，`specs/annotation/015-annotation-workspace/spec.md:1004`），無多數決路徑，`disputed` 僅能經仲裁（FR-061）或最終例外池（FR-095）轉為 `finalized`（FR-051，`spec.md:773`）。
 - 終點斷言：匯出 JSON 中 `xrole-003` 的值必須是**仲裁後定案值** `negative`，非 A01 原始答案（w4 步驟 12）。
 - 角色交接點 A–E 的跨頁數字對帳斷言見 w4 §3（矩陣節點 16 的具體落地）。
 

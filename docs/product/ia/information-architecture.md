@@ -386,8 +386,8 @@ flowchart TD
   - 達標條件 pills 至少承載 IAA、標準差、最少標記者；主操作按鈕需與達標條件位於同一操作列，desktop 右對齊，mobile 可換行但仍屬同一區塊
 - **執行控制按鈕規則：**
   - `draft`：顯示 `新增試標回合 R1`
-  - `dry_run_in_progress`：顯示 `新增試標回合 R{n}`，用於建立下一個獨立試標回合
-  - `waiting_iaa_confirmation`：顯示 `開始正式標記`
+  - `dry_run_in_progress`：`新增試標回合 R{n+1}` 維持可見但停用，並以可見文字說明「本回合的標註、必要審核與必要仲裁全部完成後才能新增下一回合」；點擊不建立回合（014 FR-013(1)）
+  - `waiting_iaa_confirmation`：同時顯示 `開始正式標記` 與 `新增試標回合 R{n+1}`，是唯一能新增下一回合的狀態；IAA 未達目標僅為顧問性警示、不停用任一按鈕，IAA 計算未完成（`pending`／`failed`）時兩者皆停用並說明原因（014 FR-013(2)、FR-010o-3、FR-010o-4）
   - `official_run_in_progress`：顯示 `標記完成`
   - `completed`：不提供推進狀態的主操作
   - 同一時間不得顯示語意衝突的執行操作；`reviewer` 一律只能看到唯讀/disabled 狀態
@@ -524,17 +524,17 @@ sequenceDiagram
   TD-->>AN: 取得任務角色（annotator / reviewer）
   PL->>TD: 發布 Dry Run（依抽樣設定鎖定共同樣本）
   Note over AW: 所有標記員標記相同樣本
-  AW-->>TD: 任務狀態切換 → 等待 IAA 確認
-  TD-->>PL: Dashboard 待處理事項 badge：「Dry Run 已全員完成」
+  AW-->>TD: 標註提交、審核與仲裁完成且例外池清空後，任務狀態切換 → 等待 IAA 確認（FR-008a）
+  TD-->>PL: Dashboard 待處理事項 badge：Dry Run 本回合已完成
   PL->>DQ: 從 badge 連結進入，查看 IAA 結果
-  alt 適用 outputs[] 的品質 gate 全數達標
+  alt PL 檢視 IAA 後決定開始正式標記（IAA 未達目標僅為顧問性警示，不阻擋）
     PL->>TD: 確認標記準則，發布 Official Run
     Note over AW: 各標記員分配不重疊資料
     AW-->>TD: 標記進度更新
     PL->>TD: 正式提交、review unit 定案、爭議與仲裁完成且品質可用後，完成任務並匯出 JSON / JSON-MIN
-  else 任一適用 output 未達 gate（free_text 為 not_applicable 且不納入）
+  else PL 檢視 IAA 後決定再試標（free_text 為 not_applicable 且不納入）
     PL->>DQ: 查看差異報告，召開討論修正準則
-    PL->>TD: 重新發布 Dry Run
+    PL->>TD: 新增試標回合 R{n+1}（僅 waiting_iaa_confirmation 可建立，FR-013）
   end
 ```
 

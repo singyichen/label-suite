@@ -5,6 +5,7 @@
 **Amended**:
 - 2026-07-22 — active output keys reduced to eight; `span`, `relation_triple`, and `token_class` migrated without aliases
 - 2026-07-24 — `multi_label` adopts a bounded recursive label taxonomy for Task Config and Task New Step 2
+- 2026-10-06 — `sequence_tagging` catalog row superseded by the character-offset span model (issue #581; canon: `specs/task-management/013-task-new` FR-003d-1, `specs/dataset/017-dataset-analysis-detail` FR-012L / FR-041); see the note under the catalog table. The original row is kept as the historical decision
 **Supersedes**: Partially evolves ADR-010 config schema (ADR-010 principles remain; schema structure changes)
 
 ## Context
@@ -112,6 +113,8 @@ Each output type is a self-contained unit with its own config fragment schema, a
 | `entity_recognition` | `entities[]` or `polarity_options[]`, `allow_overlapping`, `scheme` | Entity selection + label | entity_f1, span_f1 |
 | `relation_identification` | `relation_types[]`, `source_output` | Entity + relation drawing | triple_f1 |
 | `free_text` | `max_length` | Text area | ROUGE, BERTScore, BLEU |
+
+> **Amendment (2026-10-06) — `sequence_tagging` row.** The `sequence_tagging` row above records the original 2026-06-29 decision (token-level UI, `tagging_scheme`, `token_f1` / `token_accuracy`) and is kept for history. It is superseded: `tagging_scheme` and `tokenization` are no longer task config; the config is `entities[]`, `snap_unit`, `allow_bypass` (013 FR-003d-1), annotations are character-offset `spans[]` (015 FR-024A-3), the IAA primary metric is Krippendorff unitizing alpha (u-α) over spans (017 FR-012L), and BIO sequences are derived only at export time (017 FR-041). `token_f1` / `token_accuracy` are not current metrics. See also ADR-031 (Superseded).
 
 The retired keys `entity_relation` and `boundary` are not part of the catalog. The former keys `span`, `relation_triple`, and `token_class` are also invalid; active configs must use `entity_recognition`, `relation_identification`, and `sequence_tagging` respectively.
 
