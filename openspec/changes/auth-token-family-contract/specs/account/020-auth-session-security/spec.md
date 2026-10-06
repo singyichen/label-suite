@@ -62,7 +62,7 @@
 
 ### Requirement: FR-007 全量憑證事件與停用
 
-**FR-007**：email 驗證、密碼重設、已驗證 Google 連結須同一交易增加版本並撤銷全部 family；停用帳號立即拒絕認證／refresh 並撤銷全部 family。
+**FR-007**：email 驗證、管理員修改 email、密碼重設、已驗證 Google 連結須同一交易增加版本並撤銷全部 family；停用帳號立即拒絕認證／refresh 並撤銷全部 family。
 
 #### Scenario: 憑證事件
 

@@ -1,7 +1,7 @@
 ---
 功能分支: feat/admin/006-user-management
 建立日期: 2026-04-16
-版本: 1.0.9
+版本: 1.1.0
 狀態: Clarified
 ---
 
@@ -248,12 +248,12 @@ Super Admin 可在使用者管理頁新增帳號、更新帳號基本資訊，�
 - **FR-005a**：列表分頁必須預設 `PAGE_SIZE_DEFAULT`，並提供 `PAGE_SIZE_OPTIONS` 切換能力。
 - **FR-005b**：列表預設排序必須為 `DEFAULT_SORT`。
 - **FR-006**：系統必須支援新增使用者帳號。
-- **FR-006a**：新增使用者成功後，系統必須寄送設定密碼信至該使用者 Email。
+- **FR-006a**：新增使用者成功後，系統必須寄送設定密碼信至該使用者 Email；受邀帳號在設定密碼前的 `users.hashed_password = null` 表示沒有可用本地密碼，不得以空字串代替。
 - **FR-006b**：設定密碼信寄送失敗時，系統不得建立該使用者帳號，且必須顯示寄信失敗錯誤。
-- **FR-007**：系統必須支援編輯既有使用者帳號資訊。
+- **FR-007**：系統必須支援編輯既有使用者帳號資訊；新增或修改 Email 時須依 account-020 FR-009 的 NFC＋casefold 識別與唯一性規則處理，管理員改 Email 成功時須依 account-020 FR-007 在同一交易增加 `credential_version`、撤銷該帳號全部 family，使舊 access JWT 下次請求失效。
 - **FR-008**：系統必須支援停用使用者帳號。
-- **FR-008a**：停用使用者成功後，系統必須立即撤銷該帳號所有 active session/token。
-- **FR-008b**：系統必須支援重新啟用停用中的使用者帳號。
+- **FR-008a**：停用使用者成功後，系統必須立即撤銷該帳號所有未撤銷的 `account_token_family`；每次請求重讀 `users.is_active`，使已簽發 access JWT 下次請求即被拒絕。
+- **FR-008b**：系統必須支援重新啟用停用中的使用者帳號，但不得恢復停用前已撤銷的 family 或 token。
 - **FR-008c**：系統必須拒絕停用或降級 seeder 超管。
 - **FR-008d**：系統必須拒絕任何會導致沒有 active `super_admin` 的停用或降級操作。
 - **FR-009**：本頁只可管理 system role（`user` / `super_admin`），不得指派任務角色。
@@ -289,7 +289,7 @@ flowchart LR
 
 ### 關鍵實體
 
-- **PlatformUser**：平台使用者。關鍵欄位：`id`、`name`、`email`、`system_role`、`status`、`created_at`。
+- **PlatformUser**：平台使用者的管理畫面概念。關鍵欄位：`id`、`name`、`email`、`system_role`、`status`、`created_at`；實體層 `users.role` 對應 `system_role`、`users.is_active` 對應 `status`，不另建重複的角色或狀態欄。
 - **SystemRoleAssignment**：系統角色指派。允許值僅 `user`、`super_admin`。
 - **UserStatus**：帳號狀態。允許值：`active`、`disabled`。
 - **UserManagementAuditLog**：使用者管理異動紀錄。關鍵欄位：`actor_user_id`、`target_user_id`、`action_type`、`before`、`after`、`created_at`。
@@ -312,6 +312,7 @@ flowchart LR
 | 規格編號 | 功能 | 本規格需要的內容 |
 |---------|------|----------------|
 | 001 | Login — Email / Password | 已登入狀態與路由守門基礎 |
+| 020 | Authentication and Session Security | 受邀帳號可空密碼、Email canonicalization、family 撤銷與停用後每請求即時失效 |
 | 008 | Shared Sidebar Navbar | Sidebar `系統管理` 導覽與 active 狀態規範 |
 
 ### 下游（依賴本規格的規格）
@@ -331,9 +332,9 @@ flowchart LR
 - **SC-005**：頁面在 `RWD_VIEWPORTS` 下皆可完成核心操作且無版面重疊；其中 `<= MOBILE_BP` 需至少可完成搜尋、篩選、停用，新增/編輯可透過 modal 或次頁流程完成。
 - **SC-006**：本頁不提供任務角色指派入口，符合 IA 的 system role / task role 邊界。
 - **SC-007**：seeder 超管與最後一位 active `super_admin` 無法被停用或降級。
-- **SC-008**：`super_admin` 停用目前登入中的自己且不違反保護規則時，二次確認後目前 session/token 立即失效並導向 `/login`。
+- **SC-008**：`super_admin` 停用目前登入中的自己且不違反保護規則時，二次確認後其全部 family 被撤銷、舊 access JWT 下個請求被拒絕，並導向 `/login`；重新啟用不復活舊 token。
 - **SC-009**：每次帳號管理異動可查得審計紀錄（操作者、目標使用者、時間、操作類型、變更 diff）。
-- **SC-010**：新增使用者時若設定密碼信寄送失敗，列表不新增該帳號，並顯示可理解的寄信失敗錯誤。
+- **SC-010**：新增使用者時，設定密碼前帳號的 `hashed_password = null`；若設定密碼信寄送失敗，列表不新增該帳號，並顯示可理解的寄信失敗錯誤。
 - **SC-011**：點擊任一使用者列的 `異動紀錄` icon 時，drawer 只顯示該目標帳號的紀錄，包含時間、操作類型、操作者與 diff；無紀錄時顯示空狀態。
 - **SC-012**：異動紀錄 drawer 在 `RWD_VIEWPORTS` 下可開啟、關閉且內容不重疊；`<= MOBILE_BP` 時以下方 sheet 呈現。
 
@@ -373,6 +374,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.1.0 | 2026-10-06 | Issue #1160 對齊 account-020：受邀帳號可空密碼、Email canonicalization、管理員修改 Email 與停用後的 token-family 即時失效；PlatformUser 的畫面欄名明確對應 `users` 實體欄。 |
 | 1.0.9 | 2026-08-20 | Issue #261：新增 Prototype Traceability，界定 `user-management.html` 的頁面責任，並將 `role-settings.html` 限定為 admin tab 導覽交叉參照。 |
 | 1.0.8 | 2026-05-22 | Prototype 同步：補齊列內「異動紀錄」icon、目標帳號異動紀錄 drawer、空狀態、i18n 與行動版 bottom sheet 行為 |
 | 1.0.7 | 2026-05-22 | `/speckit.clarify` 回寫 5 項決議：啟用帳號、seeder/最後 active super_admin 保護、自停用導頁、帳號管理審計、設定密碼信寄送失敗不建立帳號；狀態更新為 Clarified |

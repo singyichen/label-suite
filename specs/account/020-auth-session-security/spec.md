@@ -62,7 +62,7 @@
 **驗收情境**：
 
 1. **AC-3.1**：**Given** A、B 兩個 family，**When** A 成功改密碼，**Then** 憑證版本增加、B 被撤銷；A 與 B 的舊 access JWT 下個請求均失效，但 A 可用保留的 family silent refresh 取得新版本 JWT，B 不可 refresh。
-2. **AC-3.2**：**Given** 任一已登入帳號，**When** 新 email 驗證成功、密碼重設成功或經驗證的 Google 帳號連結成功，**Then** 同一資料交易增加憑證版本並撤銷全部 family，所有舊 access JWT 下個請求失效；Google 連結另依 ADR-035 清除本地密碼 hash。
+2. **AC-3.2**：**Given** 任一已登入帳號，**When** 新 email 驗證成功、管理員修改 email 成功、密碼重設成功或經驗證的 Google 帳號連結成功，**Then** 同一資料交易增加憑證版本並撤銷全部 family，所有舊 access JWT 下個請求失效；Google 連結另依 ADR-035 清除本地密碼 hash。
 3. **AC-3.3**：**Given** AC-3.1 或 AC-3.2 的任何交易步驟失敗，**When** 交易回滾，**Then** 密碼、email、版本與 family 撤銷均不部分生效。
 
 ### 使用者故事 4 — 一致的 Email 識別（優先級：P1）
@@ -88,7 +88,7 @@
 - **FR-004**：只有以 `rotated` 撤銷且在 30 秒寬限期內的舊 token 可額外重發一次；須以 `grace_reissued_at IS NULL` 的原子條件占用資格。第三次使用回 `409`，不核發 token、不全量撤銷；寬限期外 reuse 則撤銷該使用者全部有效 family。
 - **FR-005**：前端收到 FR-004 的 `409` 時，至多等 2 秒接收同來源其他分頁的成功 refresh 訊號，再重試原請求一次；若仍 401，最多再 refresh 一次；失敗或逾時且無成功訊號時導向登入。重試必須有界，不能形成循環。
 - **FR-006**：改密碼須同一交易更新 hash、增加 `credential_version` 並撤銷其他 family，保留目前 family；目前裝置舊 access JWT 先失效，再以保留的 family refresh 取得新版本 JWT。`hashed_password = null` 可依 account-005 FR-008 設定新密碼。
-- **FR-007**：新 email 驗證成功、密碼重設成功或已驗證 Google 連結成功時，須同一交易增加 `credential_version` 並撤銷全部 family；Google 連結另須清除 `hashed_password`。停用帳號須令認證與 refresh 立即失敗，撤銷全部 family；重新啟用不得恢復舊 token。
+- **FR-007**：新 email 驗證成功、管理員修改 email 成功、密碼重設成功或已驗證 Google 連結成功時，須同一交易增加 `credential_version` 並撤銷全部 family；Google 連結另須清除 `hashed_password`。停用帳號須令認證與 refresh 立即失敗，撤銷全部 family；重新啟用不得恢復舊 token。
 - **FR-008**：單一裝置登出只撤銷該 `sid` family，不增加 user-wide `credential_version`；該裝置既有 access JWT 下個請求失效，其餘 family 繼續有效。無效憑證依既有認證失敗語意處理；只有 FR-004 的競爭情境回 `409`，錯誤不得洩漏 token 原值或其他裝置資訊。
 - **FR-009**：登入、註冊、邀請與 email 變更必須在寫入及比較前執行 Unicode NFC 加 casefold，對結果檢查 `varchar(254)` 長度；`users.email` 儲存該 canonical 值，DB 設 `lower(email)` 唯一表達式索引作第二層防線。SQLite 與 PostgreSQL 對合法應用層寫入必須產生相同識別結果。
 - **FR-010**：`users.credential_version` 必須為非空整數，僅高風險憑證事件遞增；角色變更和停用狀態不以版本取代每請求 DB 檢查。`users.hashed_password` 可為 null，表示沒有可用的本地密碼。
@@ -119,7 +119,7 @@
 - **SC-002**：兩個競爭 refresh 至多一次額外寬限重發；第三次回 `409` 且不核發 token、不撤銷其他 family；寬限期外 reuse 使所有 family 失效。
 - **SC-003**：前端在 `409` 後的等待不超過 2 秒，原請求只重試一次，後續 refresh 最多一次；無訊號或再次失敗時終止並導向登入。
 - **SC-004**：A 改密碼後，A 與 B 舊 access 均在下個請求失效；A 以原 family refresh 後維持登入，B refresh 失敗。
-- **SC-005**：email 變更驗證、重設密碼及已驗證 Google 連結各使所有舊 access/refresh 失效；任何交易失敗時版本、密碼／email 和 family 均維持原狀。
+- **SC-005**：使用者 email 變更驗證、管理員修改 email、重設密碼及已驗證 Google 連結各使所有舊 access/refresh 失效；任何交易失敗時版本、密碼／email 和 family 均維持原狀。
 - **SC-006**：停用帳號後舊 access、refresh 與 Google callback 均不可取得有效 session；重新啟用不復活舊 family。
 - **SC-007**：ASCII、非 ASCII 與 NFC 等價 email 在 SQLite／PostgreSQL 的合法應用層寫入皆有相同唯一性結果；正規化後超過 254 字元會被拒絕。
 - **SC-008**：每張規劃表均有非空且唯一 PK；family 與 token 的 FK、token hash UNIQUE、`lower(email)` UNIQUE 及 nullable 欄位語意可由後續 SQLite／PostgreSQL migration 測試逐項驗證，規劃圖不得標示已部署。
