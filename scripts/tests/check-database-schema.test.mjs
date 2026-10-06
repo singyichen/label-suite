@@ -209,6 +209,24 @@ test('realDictionaryModelsTokenFamiliesWithoutDuplicatingTheirOwnerOrStartTime',
   assert.match(markdown, /account_token_family\s+\|\|--o\{\s+refresh_tokens/);
 });
 
+test('passwordTokenInvalidationTimeAppearsInDictionaryAndNoteCraftProjection', () => {
+  const markdown = readFileSync(new URL('../../docs/diagrams/architecture/account-admin-db-schema.md', import.meta.url), 'utf8');
+  const source = parseAccountAdminSchema(markdown);
+  const data = JSON.parse(readFileSync(new URL('../../docs/diagrams/architecture/database-schema.er.json', import.meta.url), 'utf8'));
+  const sourceToken = source.tables.find((table) => table.name === 'account_password_token');
+  const projectedToken = data.tables.find((table) => table.name === 'account_password_token');
+
+  assert.ok(sourceToken, 'Missing dictionary table: account_password_token');
+  assert.ok(projectedToken, 'Missing NoteCraft table: account_password_token');
+  assert.deepEqual(sourceToken.columns.find((column) => column.name === 'invalidated_at'), {
+    name: 'invalidated_at', type: 'timestamptz', nullable: true, pk: false,
+  });
+  const projectedInvalidation = projectedToken.columns.find((column) => column.name === 'invalidated_at');
+  assert.ok(projectedInvalidation, 'Missing NoteCraft column: account_password_token.invalidated_at');
+  assert.equal(projectedInvalidation.type, 'timestamptz');
+  assert.equal(projectedInvalidation.required, 'nullable');
+});
+
 test('noteCraftProjectionTracksTheCanonicalTokenFamilyDictionaryAndRejectsDrift', () => {
   const markdown = readFileSync(new URL('../../docs/diagrams/architecture/account-admin-db-schema.md', import.meta.url), 'utf8');
   const source = parseAccountAdminSchema(markdown);
