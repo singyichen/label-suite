@@ -4,7 +4,7 @@
 
 **Goal:** 將 issue #1160 的 task／run 身分、封存時點與權限邊界回寫既有正典，使後續實體欄位字典可只畫有來源的 FK。
 
-**Architecture:** 以 task-management-014 為 run 行為 owner，013 擁有建立時設定、015 擁有標記／審核身分，Accepted ADR-022 擁有狀態機。選定 task_run_cycle、每次發布一份不可變 snapshot、run-item 真實 membership、每個 run 釘住 guideline 版本；本計畫先完成正典／ADR 對齊，不建立 ORM、migration、API 或 ER 投影。
+**Architecture:** 以 task-management-014 為 run 行為 owner，013 擁有建立時設定、015 擁有標記／審核身分，Accepted ADR-022 擁有狀態機。選定 task_run_cycle、每次發布一份不可變 snapshot、run-item 真實 membership、每個 run 釘住 guideline 版本。Project SDD lint 要求一個 active OpenSpec change 恰對應一份正典，因此用三個相依 change 分別承載 013、014、015 的 delta；本計畫不建立 ORM、migration、API 或 ER 投影。
 
 **Tech Stack:** Markdown canonical specs、Accepted ADR、OpenSpec delta、Project SDD lint、Source-Verify。
 
@@ -17,7 +17,7 @@
 - SQLite Lite 與 PostgreSQL production 的 FK、UNIQUE、CHECK、交易語意都需在後續 migration 切片實測；本計畫不宣稱已通過。
 - `task-management-014`、`task-management-013`、`annotation-015` 和 ADR-022 的既有行為必須以局部條文修訂，不複製第二套產品規格。
 - 每張未來資料表有 PK；單欄與複合 FK 只在定義完欄位、型別、目標後才投影到 ER JSON。
-- 修改正典版本與 Changelog，OpenSpec archive 後逐條檢查 derived view 引用定位；PR issue/body 使用繁體中文。
+- 修改正典版本與 Changelog；013、014、015 各有獨立 OpenSpec proposal／design／tasks／delta，proposal 只有一個 `對應 Spec:`。三者 archive 後逐條檢查 derived view 引用定位；PR issue/body 使用繁體中文。
 
 ## Review Focus
 
@@ -93,9 +93,25 @@
 
 - [ ] 記錄 cycle、run、snapshot、version、reviewer candidate、assignment 的決策與 SQLite／PG 留待實測限制；此檔獨立提交。
 
+### Task 6A: 將 OpenSpec owner 拆成三個 change
+
+**Files:** 分成三個單檔任務：(1) 修訂 `openspec/changes/task-run-identity-contract/proposal.md`，只宣告 014；(2) 建立 `openspec/changes/task-config-version-contract/proposal.md`，只宣告 013；(3) 建立 `openspec/changes/annotation-run-identity-contract/proposal.md`，只宣告 015。
+
+**Interfaces:** 013 建立版本起點、014 定義 run、015 消費穩定 run/assignment；三份 proposal 各自指明相依 change 與共同 issue #1160，不複製第二套規格。
+
+- [ ] 三個 proposal 各恰有一條 `對應 Spec:`；每次只改一檔並提交，`scripts/check-sdd.sh` 不再報 `ACTIVE_CHANGE_SPEC`。
+
+### Task 6B: 補齊 013 與 015 的 OpenSpec design
+
+**Files:** 分成兩個單檔任務：`openspec/changes/task-config-version-contract/design.md` 與 `openspec/changes/annotation-run-identity-contract/design.md`。
+
+**Interfaces:** 兩份設計各描述自己的 owning contract、上游 014／dataset 相依與未部署限制；不重複 014 的完整 14 表表形。
+
+- [ ] 各檔獨立提交並審查來源定位。
+
 ### Task 7: 013 OpenSpec delta
 
-**Files:** Create `openspec/changes/task-run-identity-contract/specs/task-management/013-task-new/spec.md`.
+**Files:** Create `openspec/changes/task-config-version-contract/specs/task-management/013-task-new/spec.md`.
 
 **Interfaces:** 只鏡射 Task 3 已變更的正典條文與驗收情境，保留相同 FR／SC／AC ID。
 
@@ -111,7 +127,7 @@
 
 ### Task 9: 015 OpenSpec delta
 
-**Files:** Create `openspec/changes/task-run-identity-contract/specs/annotation/015-annotation-workspace/spec.md`.
+**Files:** Create `openspec/changes/annotation-run-identity-contract/specs/annotation/015-annotation-workspace/spec.md`.
 
 **Interfaces:** 只鏡射 Task 4 已變更的正典條文與驗收情境，保留相同 FR／SC／AC ID。
 
@@ -119,11 +135,11 @@
 
 ### Task 10: OpenSpec execution record
 
-**Files:** Create `openspec/changes/task-run-identity-contract/tasks.md`.
+**Files:** 分成三個單檔任務：`openspec/changes/task-config-version-contract/tasks.md`、`openspec/changes/task-run-identity-contract/tasks.md`、`openspec/changes/annotation-run-identity-contract/tasks.md`。
 
 **Interfaces:** 逐項記錄 Task 1～9 的真實驗證證據，不把未建 migration／API 當完成。
 
-- [ ] 每個 artifact-producing task 對應一個檔案且尾綴唯一 `[@agent-name]` 派工標籤；明列依賴／平行標記。命令驗證 task 標明 exact command/result；每個 User Story phase 有正典 SC-ID `**故事目標**`；提交。
+- [ ] 每個 change 的 task 只記其 owning spec 與相依 change；每個 artifact-producing task 對應一個檔案且尾綴唯一 `[@agent-name]` 派工標籤；明列依賴／平行標記。命令驗證 task 標明 exact command/result；每個 User Story phase 有正典 SC-ID `**故事目標**`；各檔獨立提交。
 
 ### Task 11: Status registry
 
@@ -144,10 +160,10 @@
 
 ### Task 13: Archive, verification, and delivery
 
-**Files:** Verification-only until `openspec archive` writes the specified `openspec/specs/` derived view and moves `openspec/changes/task-run-identity-contract/` into `openspec/changes/archive/`; archive is the required generated multi-file output.
+**Files:** Verification-only until `openspec archive` sequentially writes the three `openspec/specs/` derived views and moves `task-config-version-contract`、`task-run-identity-contract`、`annotation-run-identity-contract` into `openspec/changes/archive/`; archive is the required generated multi-file output.
 
 **Interfaces:** archive 不得取代正典 Source-Verify；delta 只鏡射既有正典 FR／SC／AC，衍生 view 的每條正典引用都要定位。
 
-- [ ] 完成 OpenSpec schema validation、Project SDD lint、senior-dba／architect／QA scenario／security／code-review 審查；記錄命令與結果。
-- [ ] 所有 tasks 已驗證後 archive/write-back；逐條以 `rg` 驗證 archived delta／derived view 的 FR／AC／SC、ADR、檔案與原文子句可定位。此 archive 是 `governance-propagation` 例外：生成工具必須同時移動 change 並更新 derived view；完整檔案清單以 archive 執行輸出與 `git status` 確認。
+- [ ] 三個 change 各自完成 OpenSpec schema validation、Project SDD lint、senior-dba／architect／QA scenario／security／code-review 審查；記錄命令與結果。
+- [ ] 所有 tasks 已驗證後依 013→014→015 順序 archive/write-back；逐條以 `rg` 驗證三份 archived delta／derived view 的 FR／AC／SC、ADR、檔案與原文子句可定位。各 archive 是 `governance-propagation` 例外：生成工具必須同時移動 change 並更新 derived view；完整檔案清單以 archive 執行輸出與 `git status` 確認。
 - [ ] 建立繁體中文 PR，等待所有 CI job（包括非 required 的 Prototype Playwright）完成且成功後合併；只勾選 issue #1160 真正完成的 task/run 正典決策，物理字典／ER 仍待下一計畫。
