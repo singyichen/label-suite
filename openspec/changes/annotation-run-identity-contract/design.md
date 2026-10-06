@@ -14,7 +14,7 @@ Issue #1160 的標記／審核資料須在同一 task 退回 draft、關閉舊 c
 
 依 015 FR-051 及關鍵實體，AnnotationListItem 在 run 發布後才形成，包含 `task_id`、`cycle_id`、`run_id`、`assignment_id`、`dataset_item_id` 與呈現用 `sample_id`。AnnotationRecord 的持久化身分含 `task_id`、`run_id`、`assignment_id`；受派 annotator 和 item 必須與 assignment 一致。ReviewUnit 為一位 annotator 的該筆提交所形成的**推導單位**，身分為 `run_id × assignment_id`，其 `pending | disputed | finalized` 狀態由標記提交、審核決策及爭議處置推導，不另以狀態寫入代替來源紀錄。
 
-因此審核決策、歷程、回饋、仲裁／例外處置及 Official gold 追溯都必須解析同一 `run_id × assignment_id`。015 FR-014S 的未送出 reviewer 決策草稿再加 `reviewer_id`，以 `run_id × assignment_id × reviewer_id` 隔離；送出後清除草稿，其他 reviewer 不能觀察其存在。FR-059／FR-061 的爭議項由該審核單位下 `outKey × 合併鍵` 推導，仲裁寫入和待仲裁分子／分母不得跨 run 或 assignment 聚合；已解決與未解決的判斷仍由 015 原條文負責。
+因此審核決策、歷程、回饋、仲裁／例外處置及 Official gold 追溯都必須解析同一 `run_id × assignment_id`。015 FR-014S 的未送出 reviewer 三向決策草稿再加 `reviewer_id`，以 `run_id × assignment_id × reviewer_id` 隔離；送出後清除草稿，其他 reviewer 不能觀察其存在。FR-059／FR-061 的爭議項由該審核單位下 `outKey × 合併鍵` 推導，仲裁寫入和待仲裁分子／分母不得跨 run 或 assignment 聚合；已解決與未解決的判斷仍由 015 原條文負責。FR-072 的正式審核摘要只聚合所選 run；目前工作從 task 目前 cycle 解析 run，歷史需顯式選 run，舊 `task_id × run_type` helper 僅供 prototype。
 
 來源 sample ID 與顯示 round 不是持久化唯一鍵。依 AC-7.1，cycle 1 的 R1 與 cycle 2 的 R1 即使含同一來源 ID、同一 annotator，仍是不同 run／assignment，舊提交、草稿、審核、仲裁與分母不進新 run；舊歷史仍可由原 run 找回。同一 run 的不同 batch 也可能有相同來源 ID，須以不同 `dataset_item_id` 保持 item 身分。此設計只確認邏輯一致性；annotation／review 實體 FK 與複合唯一鍵留待其 owning schema slice 裁決。
 
@@ -36,7 +36,7 @@ AC-7.3 驗證已確認 Dry v1、等待階段另存 v2、直接發布 Official �
 
 本 change 沒有 ORM、migration、API、資料搬遷、ER 投影或已部署 Schema。後續 annotation／review 物理字典須以 014 的 run／assignment 明確設計 FK、唯一性、索引、刪除／保留策略與跨 task 一致性；SQLite Lite 與 PostgreSQL production 各自驗證 FK 啟用、交易、併發及查詢計畫，migration 另立 PR。審核員改判後仲裁一致性與 `sequence_tagging` span 爭議合併鍵仍是後續 owning slice 的待決事項，不能在此 design 臆定。
 
-本次文件驗證以 015 FR-014S／FR-051／FR-059／FR-061／FR-066／FR-093／FR-104、AC-7.1～AC-7.3、SC-013／SC-014 的來源定位及 OpenSpec／Project SDD 結構檢查為限。後續實作先用獨立 Red tests 證明跨 cycle／同源 ID 隔離、草稿盲審、Dry 黏著、停用即時撤權、版本確認及遞迴答案洩漏阻擋，再進 Green；文件檢查不能代替 runtime 證據。archive 後依 `docs/sdd-workflow.md` §6.2 核對衍生 view 的每一條正典引用可定位。
+本次文件驗證以 015 FR-014S／FR-051／FR-059／FR-061／FR-066／FR-072／FR-093／FR-104、AC-7.1～AC-7.3、SC-013／SC-014 的來源定位及 OpenSpec／Project SDD 結構檢查為限。後續實作先用獨立 Red tests 證明跨 cycle／同源 ID 隔離、草稿盲審、Dry 黏著、停用即時撤權、版本確認及遞迴答案洩漏阻擋，再進 Green；文件檢查不能代替 runtime 證據。archive 後依 `docs/sdd-workflow.md` §6.2 核對衍生 view 的每一條正典引用可定位。
 
 ## Risks and rollback
 
