@@ -72,10 +72,10 @@
 
 **Interfaces:** 015 仍擁有 AnnotationRecord、ReviewUnit 與 submission-derived reviewer stickiness；它們以穩定 run/assignment 身分消費 014，不在此 change 創建物理 FK。
 
-- [ ] 讀 FR-051、FR-066、FR-093 與 AnnotationListItem／AnnotationRecord／ReviewUnit／TaskProfile 定義及退役段落，保留目前兩種 run type 的 UI 行為。
-- [ ] 把 run_id 與 assignment_id（或明確同等的 cycle-qualified key）加入新持久化標記／審核身份契約；歷史兩次 R1 與相同 sample ID 不共用提交或 review unit。
-- [ ] FR-066 的指引確認根據 run 釘住的 guideline version；submission-derived reviewer stickiness 保留，014 的 ReviewAssignment 實體說明同步退役或改為非持久化推導。
-- [ ] 增加重啟 R1、停用 reviewer、Official 指引差異情境，更新本檔版本及 Changelog，跑 SDD lint 與引用定位，提交。
+- [x] 讀 FR-051、FR-066、FR-093 與 AnnotationListItem／AnnotationRecord／ReviewUnit／TaskProfile 定義及退役段落，保留目前兩種 run type 的 UI 行為。
+- [x] 把 run_id 與 assignment_id（或明確同等的 cycle-qualified key）加入新持久化標記／審核身份契約；歷史兩次 R1 與相同 sample ID 不共用提交或 review unit。
+- [x] FR-066 的指引確認根據 run 釘住的 guideline version；submission-derived reviewer stickiness 保留，014 的 ReviewAssignment 實體說明同步退役或改為非持久化推導。
+- [x] 增加重啟 R1、停用 reviewer、Official 指引差異情境，更新本檔版本及 Changelog，跑 SDD lint 與引用定位，提交。
 
 ### Task 5: OpenSpec proposal
 
