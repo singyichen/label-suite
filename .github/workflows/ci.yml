@@ -138,8 +138,15 @@ jobs:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '20'
       - name: Check project SDD governance
         run: scripts/check-sdd.sh
+      - name: Check NoteCraft database projection
+        run: |
+          node --test scripts/tests/check-database-schema.test.mjs
+          node scripts/check-database-schema.mjs
 
   speckit-tests:
     name: Speckit Helper Scripts — Regression Tests

@@ -1,6 +1,6 @@
 # 圖表工具鏈分工
 
-`docs/diagrams/` 底下存在三套圖表工具鏈。它們各自解決不同問題，不互相取代。本文說明何時用哪一套、產出放哪裡。
+`docs/diagrams/` 使用四套圖表工具鏈。它們各自解決不同問題。本文說明何時用哪一套、產出放哪裡。
 
 ## 分工表
 
@@ -9,6 +9,7 @@
 | **`flowchart` skill** | `.claude/skills/flowchart/` | Mermaid（`.mmd`）+ `.png` | 開發者導向的系統流程、狀態機、時序圖 |
 | **`diagram-design` skill** | 全域 `~/.claude/skills/diagram-design/`（見下） | 自包含 `.html` + inline SVG | 給非工程受眾看的流程圖，需套用 Label Suite 品牌樣式 |
 | **`archify` skill** | `.claude/skills/archify/` | 成對的 `.json`（IR 原始檔）+ 自包含 `.html` | 跨模組的系統架構、資料流、時序、狀態機圖，需與實際程式碼結構對得上 |
+| **NoteCraft `er-diagram-renderer`** | `.notecraft/plugins/er-diagram-renderer/` | `.er.json` → Wiki／Diagram | 有逐欄來源字典的候選或已落地資料表，需逐表查看欄位與 FK；須明示草案狀態 |
 
 ## 怎麼選
 
@@ -16,11 +17,12 @@
 
 - **受眾是工程師或 code reviewer** → `flowchart` skill。Mermaid 純文字、diff 友善、GitHub 原生渲染，改一行就看得出改了什麼。缺點是版面與配色不可控。
 - **受眾是產品使用者（標記員、審核員）、教授或 Demo Paper 讀者** → `diagram-design`。它是唯一能套用專案 design token 的一套，圖面顏色會跟實際產品畫面一致；且輸出為單一 HTML 檔，直接用瀏覽器開就能看，不需要任何 renderer。
-- **受眾是要理解系統結構的工程師，且圖必須反映真實程式碼** → `archify`。它把圖表拆成「JSON 原始檔（IR）＋算繪後 HTML」兩份成對檔案：JSON 是純文字、可逐行 diff、可被 schema 驗證，HTML 是可直接開啟的互動成品。這是三套裡唯一同時滿足「diff 友善」與「不需 renderer 即可閱讀」的一套，代價是 HTML 檔約 700 KB。
+- **受眾是要理解系統結構的工程師，且圖必須反映真實程式碼** → `archify`。它把圖表拆成「JSON 原始檔（IR）＋算繪後 HTML」兩份成對檔案：JSON 是純文字、可逐行 diff、可被 schema 驗證，HTML 是可直接開啟的互動成品。它同時滿足「diff 友善」與「不需 renderer 即可閱讀」，代價是 HTML 檔約 700 KB。
+- **受眾要逐表核對資料庫欄位與關聯** → NoteCraft `er-diagram-renderer`。`*.er.json` 是可 diff 的檢視資料，`fk` 欄位形成連線；先有可追溯的實體層欄位字典，再收進 Wiki／Diagram。NoteCraft 頁面須由 CLI／app 算繪。
 
-**再問要不要進版控做逐行比對。** 需要 → Mermaid（原始碼是純文字）或 `archify`（JSON IR 是純文字）。不需要、重點是視覺成品 → `diagram-design`。
+**再問要不要進版控做逐行比對。** 需要 → Mermaid（原始碼是純文字）、`archify`（JSON IR 是純文字）或 NoteCraft（`.er.json` 是純文字）。不需要、重點是視覺成品 → `diagram-design`。
 
-**最後確認目標圖型是否被支援。** `archify` 只有五種圖型 schema：`architecture`、`dataflow`、`lifecycle`、`sequence`、`workflow`（另有 `common.schema.json`，只是共用 `$defs` 片段，不是可選圖型）。**`archify` 沒有 ER／資料模型（data model）圖型**——需要畫資料庫實體關聯時請改用 `diagram-design`（它支援 ER/data model）或 Mermaid `erDiagram`（見下方 ER 圖工具取捨），不要為了遷就工具把 ER 硬塞進 `architecture` schema。
+**最後確認目標圖型是否被支援。** `archify` 只有五種圖型 schema：`architecture`、`dataflow`、`lifecycle`、`sequence`、`workflow`（另有 `common.schema.json`，只是共用 `$defs` 片段，不是可選圖型）。**`archify` 沒有 ER／資料模型（data model）圖型**——概念層資料模型可用 Mermaid `erDiagram`；有完整欄位字典的實體層表可用 NoteCraft Wiki／Diagram；小型靜態 ER 圖可用 `diagram-design`。不要為了遷就工具把 ER 硬塞進 `architecture` schema。
 
 ## 產出位置慣例
 
@@ -42,12 +44,16 @@
 | [`architecture/config-driven-task-engine-data-flow.html`](./architecture/config-driven-task-engine-data-flow.html) | `dataflow` | `archify` | Config-Driven 任務引擎資料流（issue #668） |
 | [`architecture/core-data-model-er.md`](./architecture/core-data-model-er.md) | `er` | Mermaid `erDiagram` | 核心資料模型 ER 圖，整合各 spec 的關鍵實體（issue #669） |
 | [`architecture/account-admin-db-schema.md`](./architecture/account-admin-db-schema.md) | `er` | Mermaid `erDiagram` | account 001～005＋admin-006／007 實體層 DB schema：ERD、欄位字典、限制清單、待裁決事項 |
+| [`architecture/database-table-inventory.md`](./architecture/database-table-inventory.md) | `er` | Mermaid `erDiagram` | 資料表盤點方法、已落地／候選表狀態、跨模組關聯骨架與 migration 前待決事項 |
+| [`architecture/database-schema.er.json`](./architecture/database-schema.er.json) | `er` | NoteCraft Wiki／Diagram | account/admin 8 張候選表的逐欄規劃檢視（2 張受 D-9 裁決；已落地業務表 0）；開啟 `/view/diagrams/architecture/database-schema.er` |
 
 `archify` 要**同時提交 `.json` 與 `.html`**：`.json` 是唯一可 diff、可驗證的原始檔，`.html` 是唯一不需工具鏈即可閱讀的成品，缺任一邊都會讓圖變成不可維護的黑盒。改圖時改 `.json` 再重跑 `deliver` 重生 `.html`，不要手改 `.html`。
 
 Mermaid 以**獨立 `.mmd` 檔**提交時要**同時附上算繪後的 `.png`**，否則沒有 renderer 的讀者看不到內容。**例外：Mermaid 直接內嵌在 `.md` 的 ` ```mermaid ` 圍欄裡時不附 PNG**——GitHub 與 VS Code 原生算繪圍欄內容，讀者本來就看得到，此時額外產一份 PNG 只會製造原始碼與圖檔雙份維護。`diagram-design` 的 HTML 本身即成品，不需要另附圖檔；spec.md 內以相對路徑連結 HTML 即可，不另出 PNG（issue #528 決議 Q4）。
 
-ER／資料模型圖另有一項工具取捨：`diagram-design` 雖支援 ER 圖型，但其複雜度預算上限為 **8 個實體**；跨模組整合圖遠超此上限，且它要求手算正交折線座標，故 `docs/diagrams/architecture/core-data-model-er.md` 改用 Mermaid `erDiagram`（原生 ER 語法、版面自動計算、逐行可 diff）。單一模組、8 個實體以內的 ER 圖仍優先用 `diagram-design`。
+ER／資料模型圖另有一項工具取捨：`diagram-design` 雖支援 ER 圖型，但其複雜度預算上限為 **8 個實體**；跨模組整合圖遠超此上限，且它要求手算正交折線座標，故 `docs/diagrams/architecture/core-data-model-er.md` 改用 Mermaid `erDiagram`（原生 ER 語法、版面自動計算、逐行可 diff）。8 個實體以內、需要靜態品牌樣式的 ER 圖可用 `diagram-design`；需要逐欄導覽與 FK 跳轉的規劃表用 NoteCraft。
+
+NoteCraft 檢視資料使用 `.notecraft/plugins/er-diagram-renderer/schema.json` 驗證，並以 `node scripts/check-database-schema.mjs` 比對 account/admin 欄位字典的表、欄、型別、可空性、PK 與 FK。圖中的候選表不是已建立的 PostgreSQL schema；跨模組的實體層欄位尚未定案時，先留在盤點文件與 Mermaid 概念圖。
 
 > 專案先前另有一套 D2 工具鏈（`.d2` 原始檔 + `.png`，用於 thesis 章節架構圖），因無人引用且無建置接線而移除，見 PR #474。若日後需要，可自 git 歷史取回。
 

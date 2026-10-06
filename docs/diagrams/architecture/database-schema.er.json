@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/SteveLin100132/notecraft/main/plugins/er-diagram-renderer/schema.json",
   "meta": {
     "title": "Label Suite 資料庫規劃 ER Diagram（account／admin）",
-    "description": "**規劃圖，並非已部署 Schema。** 目前已部署業務表：0；本頁顯示 account／admin 的 8 張候選表，其中 2 張權限矩陣表是否建立仍待 D-9 裁決。欄位、鍵與連線來自 [account/admin 實體層字典](/notes/diagrams/architecture/account-admin-db-schema) §2–§3；未決議題見該文件 §5。其餘 task／dataset／annotation 模組仍在 [資料表盤點總帳](/notes/diagrams/architecture/database-table-inventory)，不以假表加入此圖。\n\n**讀圖方式：** Wiki 逐表看欄位與決策狀態；Diagram 搜尋表名或欄名，點表聚焦已明列的候選 FK。圖中連線不代表 migration 已建立。",
+    "description": "**規劃圖，並非已部署 Schema。** 目前已部署業務表：0；本頁只顯示 account／admin 欄位字典中的候選表，其中兩張權限矩陣表是否建立仍待 D-9 裁決。表、欄位與 FK 數量由 NoteCraft 從資料檔計算。欄位、鍵與連線來自 [account/admin 實體層字典](/notes/diagrams/architecture/account-admin-db-schema) §2–§3；未決議題見該文件 §5。其餘 task／dataset／annotation 模組仍在 [資料表盤點總帳](/notes/diagrams/architecture/database-table-inventory)，不以假表加入此圖。\n\n**讀圖方式：** Wiki 逐表看欄位與決策狀態；Diagram 搜尋表名或欄名，點表聚焦已明列的候選 FK。圖中連線不代表 migration 已建立。",
     "source": "docs/diagrams/architecture/account-admin-db-schema.md §2–§3; docs/diagrams/architecture/database-table-inventory.md",
     "backTo": "/notes/diagrams/architecture/account-admin-db-schema"
   },
@@ -61,12 +61,12 @@
     {
       "key": "account",
       "label": "帳號與登入",
-      "description": "5 張候選表：帳號、session、一次性連結、email 變更、通知偏好。所有表尚未 migration。"
+      "description": "候選表涵蓋帳號、session、一次性連結、email 變更與通知偏好。所有表尚未 migration。"
     },
     {
       "key": "admin",
       "label": "管理與稽核",
-      "description": "3 張候選表：操作稽核，以及 D-9 尚未決定是否建立的兩張權限矩陣表。所有表尚未 migration。"
+      "description": "候選表涵蓋操作稽核，以及 D-9 尚未決定是否建立的兩張權限矩陣表。所有表尚未 migration。"
     }
   ],
   "layout": {

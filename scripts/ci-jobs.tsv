@@ -19,6 +19,7 @@ prototype-node-tests	pnpm test:node	-
 prototype-playwright	pnpm playwright test	-
 prototype-typecheck	pnpm typecheck	-
 sdd-lint	scripts/check-sdd.sh	check-sdd.sh
+sdd-lint	scripts/check-sdd.sh	check-database-schema.mjs
 speckit-tests	scripts/speckit-tests.sh	speckit-tests.sh
 user-path-map-freshness	node scripts/check-user-path-map-freshness.mjs	check-user-path-map-freshness.mjs
 validate	bash scripts/verify-bootstrap.sh	verify-bootstrap.sh
