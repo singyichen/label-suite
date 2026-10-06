@@ -9,7 +9,7 @@
 **故事目標**：task-management-014 SC-053／SC-054 — 重啟 R1 保留歷史，run item 互斥且發布身分、冪等與交易邊界可追溯。
 
 - [ ] 1.1 修訂 `docs/adr/022-task-state-machine-location.md`，釐清退回 draft 關閉目前 cycle、保留歷史，以及每次發布各自擁有 snapshot；依 DBA 裁決核對狀態轉換表與不變式。 [@main]
-- [ ] 1.2 修訂 `specs/task-management/014-task-detail/spec.md` 至 v6.0.0，寫入 FR-005h、FR-010b～f、FR-010f-2～f-6、FR-010u、FR-014／017a、FR-022 與 AC-3.40～3.45／SC-053～056；核對 sealed dataset、Official 保留額度、版本釘選、候選名冊、終局排除及 Changelog。 [@main]
+- [ ] 1.2 修訂 `specs/task-management/014-task-detail/spec.md` 至 v6.0.0，寫入 FR-005h、FR-010b～f、FR-010f-2～f-6、FR-010u、FR-014／017a、FR-022 與 AC-3.40～3.46／SC-053～056；核對 sealed dataset、Official 保留額度、版本釘選、候選名冊、終局排除及 Changelog。 [@main]
 
 ## 2. 014 OpenSpec 四件套
 
@@ -40,7 +40,7 @@
 <!-- parallel:start -->
 - [ ] 4.1 senior-dba 審查 014 與 ADR-022 的 cycle、Official 唯一性、sealed-version 餘額及 SQLite／PostgreSQL 候選約束；不改檔，回報阻擋項。 [@senior-dba]
 - [ ] 4.2 senior-code-reviewer 審查 source ownership、013／014／015 相依、OpenSpec delta 與 design 一致性；不改檔，回報阻擋項。 [@senior-code-reviewer]
-- [ ] 4.3 senior-qa 依 014 AC-3.40～3.45／SC-053～056 核對 delta Scenario 的 Given／When／Then、舊 Scenario 保存及後續雙資料庫測試缺口；不改檔，回報驗收結果。 [@senior-qa]
+- [ ] 4.3 senior-qa 依 014 AC-3.40～3.46／SC-053～056 核對 delta Scenario 的 Given／When／Then、舊 Scenario 保存及後續雙資料庫測試缺口；不改檔，回報驗收結果。 [@senior-qa]
 - [ ] 4.4 senior-security 審查 private answer／declared_split 隔離、停用 membership 即時撤權與 reviewer 候選快照界線；不改檔，回報阻擋項。 [@senior-security]
 <!-- parallel:end -->
 
@@ -55,5 +55,5 @@
 **故事目標**：task-management-014 SC-053～SC-056 — 衍生需求與正典可定位且交付結果清楚標示規劃範圍。
 
 - [ ] 5.1 執行 `openspec archive task-run-identity-contract --yes` 並核對工具輸出；Exception: governance-propagation; Files: `openspec/changes/task-run-identity-contract/proposal.md`, `openspec/changes/task-run-identity-contract/design.md`, `openspec/changes/task-run-identity-contract/tasks.md`, `openspec/changes/task-run-identity-contract/specs/task-management/014-task-detail/spec.md`, `openspec/changes/archive/2026-10-06-task-run-identity-contract/proposal.md`, `openspec/changes/archive/2026-10-06-task-run-identity-contract/design.md`, `openspec/changes/archive/2026-10-06-task-run-identity-contract/tasks.md`, `openspec/changes/archive/2026-10-06-task-run-identity-contract/specs/task-management/014-task-detail/spec.md`, `openspec/specs/task-management/014-task-detail/spec.md`; Reason: OpenSpec archive 必須原子搬移 change 四件套並回寫 014 derived view，無法以單檔任務完成。 [@main]
-- [ ] 5.2 驗證任務（不改檔）：核對 4.5 留存的 archive 前 `openspec validate task-run-identity-contract --type change` exit 0 證據；active change 已移入 archive，不對舊名稱重跑。於 repo root 執行 `for source in specs/task-management/014-task-detail/spec.md openspec/changes/archive/2026-10-06-task-run-identity-contract/specs/task-management/014-task-detail/spec.md openspec/specs/task-management/014-task-detail/spec.md; do for id in FR-005h FR-010b FR-010c FR-010d FR-010e FR-010f FR-010f-2 FR-010f-3 FR-010f-4 FR-010f-5 FR-010f-6 FR-010i-1 FR-010i-2 FR-010s-1 FR-010t FR-010u FR-014 FR-017a FR-018 FR-021 FR-022 AC-1.26 AC-3.40 AC-3.41 AC-3.42 AC-3.43 AC-3.44 AC-3.45 SC-005 SC-011 SC-050 SC-053 SC-054 SC-055 SC-056; do rg -n -F -e "$id" "$source" || exit 1; done; done`，預期三檔的全部 35 個變更 ID 均可定位；另人工核對 014 v6.0.0、Changelog、ADR-022 與原文措辭一致，記錄 Source-Verify/write-back 證據。 [@main]
+- [ ] 5.2 驗證任務（不改檔）：核對 4.5 留存的 archive 前 `openspec validate task-run-identity-contract --type change` exit 0 證據；active change 已移入 archive，不對舊名稱重跑。於 repo root 執行 `for source in specs/task-management/014-task-detail/spec.md openspec/changes/archive/2026-10-06-task-run-identity-contract/specs/task-management/014-task-detail/spec.md openspec/specs/task-management/014-task-detail/spec.md; do for id in FR-005h FR-010b FR-010c FR-010d FR-010e FR-010f FR-010f-2 FR-010f-3 FR-010f-4 FR-010f-5 FR-010f-6 FR-010i-1 FR-010i-2 FR-010s-1 FR-010t FR-010u FR-014 FR-017a FR-018 FR-021 FR-022 AC-1.26 AC-3.40 AC-3.41 AC-3.42 AC-3.43 AC-3.44 AC-3.45 AC-3.46 SC-005 SC-011 SC-050 SC-053 SC-054 SC-055 SC-056; do rg -n -F -e "$id" "$source" || exit 1; done; done`，預期三檔的全部 36 個變更 ID 均可定位；另人工核對 014 v6.0.0、Changelog、ADR-022 與原文措辭一致，記錄 Source-Verify/write-back 證據。 [@main]
 - [ ] 5.3 建立繁體中文 PR；所有 CI job（含非 required 的 Prototype Playwright）完成且成功後合併，並只勾選 issue #1160 已驗證的 014 正典規劃項；物理欄位字典、NoteCraft ER 與 runtime 保留後續工作。 [@main]
