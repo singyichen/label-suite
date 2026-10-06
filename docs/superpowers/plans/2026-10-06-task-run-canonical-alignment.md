@@ -91,7 +91,7 @@
 
 **Interfaces:** 對齊設計規格的 14 張候選表之身份契約，但不重複未核准的物理欄位字典。
 
-- [ ] 記錄 cycle、run、snapshot、version、reviewer candidate、assignment 的決策與 SQLite／PG 留待實測限制；此檔獨立提交。
+- [x] 記錄 cycle、run、snapshot、version、reviewer candidate、assignment 的決策與 SQLite／PG 留待實測限制；此檔獨立提交。
 
 ### Task 6A: 將 OpenSpec owner 拆成三個 change
 
