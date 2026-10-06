@@ -9,10 +9,10 @@
 | 層級 | 目前可用資料 | 用法 |
 |---|---|---|
 | 實際 schema | Alembic revision／ORM：0 張業務表 | 日後以 migration 和資料庫 metadata 反查已落地狀態 |
-| 實體層草案 | [account/admin schema](./account-admin-db-schema.md)：9 張候選表、63 欄、6 個候選 FK；D-9～D-13 已裁決 | 仍須另開獨立 migration 與雙資料庫驗證；本草案不是已部署 schema |
+| 實體層草案 | [account/admin schema](./account-admin-db-schema.md)：9 張候選表、63 欄、6 個候選 FK；[dataset schema](./dataset-db-schema.md)：5 張候選表、31 欄、6 個候選 FK | 兩份字典合計 14 張候選表、94 欄、12 個候選 FK；仍須獨立 migration 與雙資料庫驗證，均非已部署 schema |
 | 概念層 | [跨模組 ER 圖](./core-data-model-er.md)：規格實體、推導值與投影 | 用於發現缺表與錯誤的關聯假設，不能直接當 DDL |
 
-**NoteCraft 規劃檢視**：[`database-schema.er.json`](./database-schema.er.json) 會顯示在 `/view/diagrams/architecture/database-schema.er` 的 Wiki／Diagram。第一階段只收錄 account/admin 欄位字典中的 **9 張候選表、63 欄與 6 個候選 FK**；共用稽核表 D-4 與兩張權限矩陣候選表 D-9～D-13 均已裁決，**已落地業務表仍為 0**。task／dataset／annotation 等模組在下方總帳保留缺口，待實體層欄位字典與鍵形狀定案後逐步加入。修改 §3 字典或此 JSON 時執行 `node scripts/check-database-schema.mjs`；欄位與 FK 計數由檢查器重新計算。
+**NoteCraft 規劃檢視**：[`database-schema.er.json`](./database-schema.er.json) 會顯示在 `/view/diagrams/architecture/database-schema.er` 的 Wiki／Diagram。目前收錄 account/admin 與 dataset 的 **14 張候選表、94 欄與 12 個候選 FK**；其中 dataset 的 5 張表依 [dataset-021](../../../specs/dataset/021-dataset-ingestion-and-lineage/spec.md) 與[實體字典](./dataset-db-schema.md)描述完整版本、來源批次、可見 item 與私有答案。**已落地業務表仍為 0**。task／run／annotation／review／quality 的表形與跨模組 FK 在下方總帳保留待決，不以假線加入圖。修改任一 §3 字典或 JSON 時執行 `node scripts/check-database-schema.mjs`；欄位與 FK 計數由檢查器重新計算。
 
 ## 2. 盤點方法：沿用 TrendMile 的「盤點 → Schema → 投影」
 
@@ -32,7 +32,7 @@ Label Suite 的對應做法：
 
 1. **盤點現況**：以 Alembic／ORM 確認「已建表」，以各 `spec.md` 的「關鍵實體」與 FR 確認「需要保存的資料」。逐個操作流程反查：建立任務、上傳資料、發布 run、標記、審核、仲裁、品質計算、匯出、稽核。
 2. **判斷資料性質**：只有獨立寫入且需要跨請求保存的資料才列為候選表。`OutputConfig`、`OutputAnswer` 這類嵌入設定或答案，與 `ReviewUnit.status`、列表統計這類推導值，不因有「實體」名稱就建表。
-3. **逐模組定實體 schema**：一表一列記名稱、owner、PK／唯一鍵、FK、欄位型別／nullability、CHECK／索引、寫入者、生命週期、規格來源與決策狀態。account/admin 已有範例；其餘模組應各有同等深度的實體層文件。
+3. **逐模組定實體 schema**：一表一列記名稱、owner、PK／唯一鍵、FK、欄位型別／nullability、CHECK／索引、寫入者、生命週期、規格來源與決策狀態。account/admin 與 dataset 已有候選字典；其餘模組應各有同等深度的實體層文件。
 4. **由欄位清單產 ER 圖**：實體層 ERD 的 FK 線只能來自已選定的 FK 欄位；現階段的概念關聯圖則必須明示「規劃關聯」，不得冒充資料庫 FK。尚未決定鍵形狀的關聯標為待定。圖的摘要數字由來源計算。
 5. **雙向查漏**：每個 spec 的持久化需求要能定位到表／欄位或明確標為待決；每張候選表要能回指規格或 Accepted ADR。當實體層欄位字典與機器可讀圖資料都齊備時，再比對表、欄、PK、FK 目標與型別，並檢查手寫摘要。每次上游改版同步更新盤點與 ER 圖。
 
@@ -55,6 +55,18 @@ Label Suite 的對應做法：
 | `audit_events` | 實體草案 | `id` PK；人員事件的 `actor_user_id → users`、系統事件 actor 為 null；`task_id` 可空 UUID，尚無 task FK | account/admin §3.7；Accepted ADR-032，D-4 已裁決 |
 | `admin_role_permission` | 實體草案 | `(role_type, role_key, permission_key)` 非空複合 PK；V1 僅 42 列適用格 | account/admin §3.8／§4.7；Accepted ADR-037；尚未 migration |
 | `admin_role_permission_version` | 實體草案 | `id = 1` 的候選單列版本，缺列拒絕 | account/admin §3.9／§4.7；Accepted ADR-037；尚未 migration |
+
+### 資料集與來源
+
+五張表均為**實體草案、尚未部署**；物理欄位、同資料集父版本複合 FK、分類 manifest、讀寫邊界及索引見 [dataset 實體字典](./dataset-db-schema.md) §3～§6。來源為 [dataset-021](../../../specs/dataset/021-dataset-ingestion-and-lineage/spec.md) FR-001～FR-011；`dataset-016/017` 只消費分析投影。
+
+| 候選表 | 狀態 | 已知識別／關聯 | 正典與待決 |
+|---|---|---|---|
+| `dataset` | 實體草案 | `id` PK；`created_by_user_id → users` | dataset-021 FR-001／FR-002；名稱非唯一身分，建立者 FK 依 account 表落地 |
+| `dataset_version` | 實體草案 | `id` PK；`dataset_id → dataset`；`parent_version_id → dataset_version`，同 dataset 的複合 FK；`(dataset_id, version_no)` 唯一 | dataset-021 FR-002／FR-008；`draft → sealed` 完整快照，manifest 編碼與保留政策待 runtime 前定義 |
+| `dataset_import_batch` | 實體草案 | `id` PK；`dataset_version_id → dataset_version`；`(dataset_version_id, source_ordinal)` 唯一 | dataset-021 FR-003／FR-006；逐檔來源、前處理與受限 `classification_manifest`，artifact 讀取須隔離 |
+| `dataset_item` | 實體草案 | `id` PK；`dataset_import_batch_id → dataset_import_batch`；`(dataset_import_batch_id, source_row_no)` 唯一 | dataset-021 FR-004／FR-007；`public_payload` 僅公開 allowlist，task/run item membership 待下游 |
+| `dataset_item_private` | 實體草案 | `dataset_item_id` 同時 PK／FK → `dataset_item` | dataset-021 FR-005～FR-007；來源 split／hidden answer 隔離，儲存後只授權 scoring worker 讀答案 |
 
 ### 任務與 run
 
@@ -83,7 +95,7 @@ Label Suite 的對應做法：
 | `AnnotationHistoryItem` → 操作歷程 | 需設計 | `actor_id`、`action`、`at`；與樣本／任務的 FK 待定 | 015 關鍵實體／FR-086；事件 append-only 與稽核表分工待定 |
 | `OutputTypeIAAReport` → 品質計算結果 | 需裁決 | `output_type`、metric、threshold、`pass_state` | [017 關鍵實體](../../../specs/dataset/017-dataset-analysis-detail/spec.md#關鍵實體-必填)／FR-039；spec 稱抽象報告，是否持久化與版本鍵未定 |
 
-另需盤點但**尚無可直接引用的實體表形**：匯入來源／批次／預處理版本與 `dataset_item`（[主憲法 XIV](../../../specs/_governance/constitution.md)）、測試集答案隔離（主憲法 III、backend constitution VI）、匯出紀錄與產物版本（主憲法 XVI）。這些是資料落點缺口，不應直接憑本清單發明欄位。
+另需盤點但**尚無可直接引用的實體表形**：匯出紀錄與產物版本（[主憲法 XVI](../../../specs/_governance/constitution.md)）。來源／批次／項目與私有答案已在 dataset 候選字典有表形；task/run、annotation/review/quality 的外鍵和寫入作用域仍待各 owning spec 裁決，不應直接憑概念圖發明欄位。
 
 ### 已在規格明列的欄位（尚未指派 SQL 型別）
 
@@ -141,7 +153,7 @@ erDiagram
 | 已裁決 | 通用稽核表形 | D-4 採 `audit_events`，所有事件至少留一個日曆年；`task_id` FK 仍待 task 表及 PK 定案 | Accepted ADR-032、account/admin §3.7／§4.6 |
 | 已裁決 | 角色權限矩陣如何參與授權 | 兩張表保留為未部署候選；42 列初始格、固定格、CAS 與稽核目標依 ADR-037；runtime 與 migration 另案實作 | Accepted ADR-037、admin-007 v1.2.0、account/admin §4.7 |
 | P0 | 標記資料的任務／run／round 唯一鍵與審核指派 FK | 014 `review_unit_id` 與 015 複合定址仍未一致；重複樣本會串錯決策 | 014／015 關鍵實體、015 FR-049／FR-051／FR-093 |
-| P0 | dataset item、隱藏答案與 lineage 的儲存邊界 | 影響抽樣 FK、答案隔離及匯出可重現性 | 主憲法 III／XIV／XVI、backend constitution VI |
+| 候選已定／實作前待驗 | dataset item、隱藏答案與 lineage 的五表邊界 | dataset-021 與字典已定逐檔分類、公開／私有分表及完整版本；manifest 編碼、保留政策、task/run 綁定與雙資料庫實測仍需後續工作 | dataset-021 FR-001～FR-011、[dataset 字典](./dataset-db-schema.md)；主憲法 III／XIV／XVI |
 | P1 | 設定／指引／IAA 報告是否獨立表與版本鍵 | 決定 `TaskConfig`、`TaskGuidelineConfig`、`OutputTypeIAAReport` 的持久化形狀 | 013／014／017 關鍵實體 |
 
 每項定案後，先更新對應 spec／ADR，再填實體層的欄位字典與限制清單，最後更新本總帳和 ERD。這遵循 [SDD 工作流程](../../sdd-workflow.md) 的 Source-Verify／write-back 原則；未完成前本文件不能當作可執行 migration 規格。

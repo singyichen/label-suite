@@ -151,7 +151,7 @@ jobs:
           node-version: '20'
       - name: Check NoteCraft database projection
         run: |
-          node --test scripts/tests/check-database-schema.test.mjs
+          node --test scripts/tests/check-database-schema.test.mjs scripts/tests/check-database-dataset.test.mjs
           node scripts/check-database-schema.mjs
 
   speckit-tests:

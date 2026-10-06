@@ -1,16 +1,16 @@
 {
   "$schema": "https://raw.githubusercontent.com/SteveLin100132/notecraft/main/plugins/er-diagram-renderer/schema.json",
   "meta": {
-    "title": "Label Suite 資料庫規劃 ER Diagram（account／admin）",
-    "description": "**規劃圖，並非已部署 Schema。** 目前已部署業務表：0；本頁顯示 account／admin 欄位字典中的 9 張候選表、63 欄與 6 個候選 FK。共用稽核表依 Accepted ADR-032，兩張可編輯權限矩陣候選表依 Accepted ADR-037 保留；V1 矩陣種子為 42 列適用格，尚未建立 migration。`task_id` 尚無 task FK。欄位、鍵與連線來自 [account/admin 實體層字典](/notes/diagrams/architecture/account-admin-db-schema) §2–§3；各項限制見該文件 §4。其餘 task／dataset／annotation 模組仍在 [資料表盤點總帳](/notes/diagrams/architecture/database-table-inventory)，不以假表加入此圖。\n\n**讀圖方式：** Wiki 逐表看欄位與決策狀態；Diagram 搜尋表名或欄名，點表聚焦已明列的候選 FK。圖中連線不代表 migration 已建立。",
-    "source": "docs/diagrams/architecture/account-admin-db-schema.md §2–§3; docs/diagrams/architecture/database-table-inventory.md",
-    "backTo": "/notes/diagrams/architecture/account-admin-db-schema"
+    "title": "Label Suite 資料庫規劃 ER Diagram（account／admin／dataset）",
+    "description": "**規劃圖，並非已部署 Schema。** 目前已部署業務表：0；本頁顯示 account／admin 的 9 張候選表、63 欄、6 個候選 FK，加上 dataset 的 5 張候選表、31 欄、6 個候選 FK，合計 **14 張表、94 欄、12 個候選 FK**。dataset 版本、批次、可見 item 與私有答案的邊界依 [dataset 實體層字典](/notes/diagrams/architecture/dataset-db-schema) §2–§7，所有表仍未建立 migration。task／run／annotation／review／quality 的物理鍵與表形仍列在 [資料表盤點總帳](/notes/diagrams/architecture/database-table-inventory)，沒有以假 FK 畫入。\n\n**讀圖方式：** Wiki 逐表看欄位、候選狀態與受限資料邊界；Diagram 搜尋表名或欄名，點表聚焦已列出的候選單欄 FK。圖中連線不代表 migration、複合約束或資料庫權限已建立。",
+    "source": "docs/diagrams/architecture/account-admin-db-schema.md §2–§3; docs/diagrams/architecture/dataset-db-schema.md §2–§3; specs/dataset/021-dataset-ingestion-and-lineage/spec.md",
+    "backTo": "/notes/diagrams/architecture/database-table-inventory"
   },
   "options": {
     "defaultRows": 6,
     "sectionPrefix": "§",
     "hint": "規劃圖：點表聚焦候選 FK；Wiki 可查看逐表欄位與待裁決事項。",
-    "searchPlaceholder": "搜尋候選表或欄位（例：users、actor_user_id）"
+    "searchPlaceholder": "搜尋候選表或欄位（例：users、dataset_item、source_row_no）"
   },
   "requirement": [
     {
@@ -61,6 +61,11 @@
       "key": "admin",
       "label": "管理與稽核",
       "description": "候選表涵蓋操作稽核與 ADR-037 已裁決保留的兩張權限矩陣表。所有表尚未 migration。"
+    },
+    {
+      "key": "dataset",
+      "label": "資料集與來源",
+      "description": "五張候選表描述完整版本、逐檔匯入、公開 item 與私有答案。隱藏答案與原始來源匯入後僅由授權 scoring worker 讀取；task/run FK 尚待下游定案。"
     }
   ],
   "layout": {
@@ -75,6 +80,12 @@
         "key": "admin",
         "groups": [
           "admin"
+        ]
+      },
+      {
+        "key": "dataset",
+        "groups": [
+          "dataset"
         ]
       }
     ]
@@ -562,6 +573,248 @@
         }
       ],
       "description": "**候選表／設計草案，尚未建立 migration。** ADR-037 已裁決保留 `id = 1` 的矩陣版本單列；migration 種入，缺列拒絕。每次儲存含空變更均核對預期版本；有實際差異才 CAS 遞增並與格子及 `role_permissions.changed` 稽核同交易。目標穩定為 `role_permission_matrix`／`1`。來源：account/admin §3.9／§4.7、admin-007 FR-005b／FR-010、Accepted ADR-037。"
+    },
+    {
+      "name": "dataset",
+      "label": "邏輯資料集",
+      "section": "3.1",
+      "group": "dataset",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "required": "system",
+          "note": "應用程式產生的穩定資料集身分（PK）；規則：D-01",
+          "pk": true
+        },
+        {
+          "name": "created_by_user_id",
+          "type": "uuid",
+          "required": "required",
+          "note": "授權建立者帳號；規則：D-01、S-01",
+          "fk": "users"
+        },
+        {
+          "name": "name",
+          "type": "varchar",
+          "required": "required",
+          "note": "建立者指定名稱，不作全域唯一身分；規則：D-02"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "required": "system",
+          "note": "建立時間（UTC）；規則：X-01"
+        }
+      ],
+      "description": "**候選表／尚未部署。** 一列是一個邏輯資料集；建立者連至 users。名稱不是唯一身分，項目數不冗餘保存。來源：dataset-021 FR-001／FR-002；dataset 實體字典 §3.1。"
+    },
+    {
+      "name": "dataset_version",
+      "label": "完整資料集快照",
+      "section": "3.2",
+      "group": "dataset",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "required": "system",
+          "note": "版本身分（PK）；規則：V-01",
+          "pk": true
+        },
+        {
+          "name": "dataset_id",
+          "type": "uuid",
+          "required": "required",
+          "note": "所屬邏輯資料集；規則：V-01、V-02",
+          "fk": "dataset"
+        },
+        {
+          "name": "version_no",
+          "type": "integer",
+          "required": "required",
+          "note": "同 dataset 內正整數版本號；規則：V-02、V-03"
+        },
+        {
+          "name": "parent_version_id",
+          "type": "uuid",
+          "required": "nullable",
+          "note": "同 dataset 的直接父版本；首版為 null；規則：V-03、V-04",
+          "fk": "dataset_version"
+        },
+        {
+          "name": "state",
+          "type": "varchar(16)",
+          "required": "required",
+          "note": "`draft` 或 `sealed`；規則：V-05、V-06"
+        },
+        {
+          "name": "manifest_sha256",
+          "type": "char(64)",
+          "required": "nullable",
+          "note": "有序完整快照 manifest 摘要；draft 為 null；規則：V-05、V-06"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "required": "system",
+          "note": "版本建立時間（UTC）；規則：X-01"
+        },
+        {
+          "name": "sealed_at",
+          "type": "timestamptz",
+          "required": "nullable",
+          "note": "成功封存時間（UTC）；draft 為 null；規則：V-05、X-01"
+        }
+      ],
+      "description": "**候選表／尚未部署。** 一列是一個完整版本快照；同 dataset 版本號唯一。父版本同 dataset 的複合 FK、draft→sealed 原子封存與不可變性見字典 §4。NoteCraft 自參照線只顯示單欄父表，不代表複合約束已落地。來源：dataset-021 FR-002／FR-008；字典 §3.2。"
+    },
+    {
+      "name": "dataset_import_batch",
+      "label": "單一來源檔批次",
+      "section": "3.3",
+      "group": "dataset",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "required": "system",
+          "note": "來源批次身分（PK）；規則：B-01",
+          "pk": true
+        },
+        {
+          "name": "dataset_version_id",
+          "type": "uuid",
+          "required": "required",
+          "note": "所屬完整快照；規則：B-01、V-06",
+          "fk": "dataset_version"
+        },
+        {
+          "name": "source_ordinal",
+          "type": "integer",
+          "required": "required",
+          "note": "多檔中的正整數順序；規則：B-02"
+        },
+        {
+          "name": "source_name",
+          "type": "varchar",
+          "required": "required",
+          "note": "來源檔名稱；受限 metadata；規則：B-03、S-01"
+        },
+        {
+          "name": "source_sha256",
+          "type": "char(64)",
+          "required": "required",
+          "note": "匯入串流的 SHA-256，對應受限不可變 artifact；規則：B-03、V-06"
+        },
+        {
+          "name": "source_ref",
+          "type": "text",
+          "required": "required",
+          "note": "受限不可變 artifact 的內部位置，不是下載 URL；規則：B-03、S-01"
+        },
+        {
+          "name": "record_path",
+          "type": "text",
+          "required": "required",
+          "note": "紀錄集合位置：JSONL／根陣列用 `$`，巢狀 JSON 用 RFC 6901 JSON Pointer（如 `/data/items`）；規則：B-03"
+        },
+        {
+          "name": "preprocessing_version",
+          "type": "varchar(80)",
+          "required": "required",
+          "note": "此批次使用的前處理版本；不得由 item 內容猜測；規則：B-03、N-01"
+        },
+        {
+          "name": "classification_manifest",
+          "type": "json",
+          "required": "required",
+          "note": "此檔全部來源欄位路徑的公開／受保護分類與 PII 審查證據；不含答案值；規則：B-04、I-03、S-01"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "required": "system",
+          "note": "批次接受時間（UTC）；規則：X-01"
+        }
+      ],
+      "description": "**候選表／尚未部署。** 一列是一個已接受來源檔；逐檔保存來源順序、checksum、record path、前處理版本及受限 classification_manifest。原始來源 ref 與分類資料不進標記者回應。來源：dataset-021 FR-003／FR-006；字典 §3.3。"
+    },
+    {
+      "name": "dataset_item",
+      "label": "可下發項目",
+      "section": "3.4",
+      "group": "dataset",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "required": "system",
+          "note": "穩定項目身分（PK）；規則：I-01",
+          "pk": true
+        },
+        {
+          "name": "dataset_import_batch_id",
+          "type": "uuid",
+          "required": "required",
+          "note": "來源批次；經此 FK 追到來源、前處理與版本；規則：I-01、N-01",
+          "fk": "dataset_import_batch"
+        },
+        {
+          "name": "source_row_no",
+          "type": "integer",
+          "required": "required",
+          "note": "一基來源位置：JSONL 為實際行號，JSON 陣列為元素序號；不以來源自帶 `id` 取代；規則：I-02"
+        },
+        {
+          "name": "public_payload",
+          "type": "json",
+          "required": "required",
+          "note": "經驗證的可見欄位 JSON 投影；可含建立者明選的 Output 預標記；規則：I-03、S-01"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "required": "system",
+          "note": "項目接受時間（UTC）；規則：X-01"
+        }
+      ],
+      "description": "**候選表／尚未部署。** 一列是一筆可下發來源紀錄；public_payload 僅有經逐檔分類 allowlist 驗證的可見欄位，版本／來源／前處理均經 batch FK 追溯。來源：dataset-021 FR-004／FR-007；字典 §3.4。"
+    },
+    {
+      "name": "dataset_item_private",
+      "label": "來源 split 與隱藏答案",
+      "section": "3.5",
+      "group": "dataset",
+      "columns": [
+        {
+          "name": "dataset_item_id",
+          "type": "uuid",
+          "required": "required",
+          "note": "項目 ID；同時為 PK 與 FK；規則：P-01、P-02",
+          "pk": true,
+          "fk": "dataset_item"
+        },
+        {
+          "name": "declared_split",
+          "type": "varchar(16)",
+          "required": "nullable",
+          "note": "**來源宣告**的 split；不是 run 的抽樣結果；規則：P-03、S-01"
+        },
+        {
+          "name": "hidden_answer",
+          "type": "json",
+          "required": "nullable",
+          "note": "受保護答案 envelope；null＝來源未提供；規則：P-03、S-01"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "required": "system",
+          "note": "私有列建立時間（UTC）；規則：X-01"
+        }
+      ],
+      "description": "**候選表／尚未部署。** 與 item 一對一，保存來源宣告 split 與 hidden answer；儲存後答案僅授權 scoring worker 可讀。欄位名稱與型別可見於規劃圖，不包含任何答案值。來源：dataset-021 FR-005／FR-007；字典 §3.5。"
     }
   ]
 }
