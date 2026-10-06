@@ -83,7 +83,7 @@
 
 **Interfaces:** 提案敘述 013／014／015 正典衝突與 ADR-022 修訂原因，明示只做規劃文件。
 
-- [ ] 參照相鄰已封存 change 的繁體中文格式，保留 OpenSpec 必須完全相同的 `## Why`／`## What Changes` heading，frontmatter 列出三份對應正典 Spec；寫出 problem、scope、non-goals、source ownership、風險與回滾方式；此檔獨立提交。
+- [x] 參照相鄰已封存 change 的繁體中文格式，保留 OpenSpec 必須完全相同的 `## Why`／`## What Changes` heading，frontmatter 列出三份對應正典 Spec；寫出 problem、scope、non-goals、source ownership、風險與回滾方式；此檔獨立提交。
 
 ### Task 6: OpenSpec design
 
