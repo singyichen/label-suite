@@ -8,7 +8,7 @@
 
 Issue #1160 盤點 task/run 與標記／審核資料時，發現只用 `task_id × run_type × sample_id × annotator_id` 定址，無法區分退回 draft 後再次發布的 R1；同一來源 sample ID 也可能對應不同 dataset item。若提交、草稿、審核單位或仲裁紀錄沿用這些顯示用值，新舊 run 的責任鏈與統計會混合。另一方面，若把 reviewer 指派另存為持久化 `ReviewAssignment`，會與 015 FR-093 依已提交審核推導黏著的規則衝突；若工作區讀取 task 的目前指引，歷史 run 的指引確認也無法重現。
 
-015 v11.0.1 已在 FR-014S、FR-051、FR-059、FR-061、FR-066、FR-072、FR-093、AC-7.1～AC-7.3 與 SC-014 裁定上述下游身分邊界。本 change 僅承載 015 owning spec 的 OpenSpec delta，不重定義上游建立、發布或抽樣規則。
+015 v11.0.1 已在 FR-014S、FR-049、FR-051、FR-059、FR-061、FR-066、FR-072、FR-073、FR-093、AC-1.3／AC-1.16／AC-1.23、AC-7.1～AC-7.3 與 SC-014 裁定上述下游身分邊界。本 change 僅承載 015 owning spec 的 OpenSpec delta，不重定義上游建立、發布或抽樣規則。
 
 ## Goal
 
@@ -18,6 +18,7 @@ Issue #1160 盤點 task/run 與標記／審核資料時，發現只用 `task_id 
 
 - 對齊 015 FR-051、FR-014S 與關鍵實體：AnnotationListItem、AnnotationRecord、ReviewUnit，以及審核草稿、歷程、仲裁／例外處置與 gold 追溯，均以確切 run／assignment 限定範圍；來源 sample ID、R1 顯示序號與 prototype route/bucket 不能充當跨 cycle 的持久化唯一鍵。
 - 對齊 015 FR-072：正式審核摘要以選定的 `run_id` 計數，目前工作從任務目前 cycle 解析 run，歷史檢視顯式選 run；既有 task／run_type helper 只供 prototype，不混算重啟後兩次 R1。
+- 對齊 015 FR-049／FR-073 與 AC-1.3／AC-1.16／AC-1.23：正式清單及快速入口攜帶或唯一解析 `run_id × assignment_id`，服務端核對 task／item／annotator；舊 URL 參數保留為 prototype 契約，不作正式持久化定位。
 - 對齊 015 FR-093：Dry 的同一 run／`dataset_item_id` 形成 per-sample 黏著群組，Official 以審核單位分派；已提交審核推導 reviewer 黏著，未提交草稿不構成黏著，不建立第二份持久化 ReviewAssignment。歷史責任鏈保留，但下一次讀取或寫入仍依目前有效 membership、角色、矩陣與資料範圍授權。
 - 對齊 015 FR-066：工作區的 modal 與側欄讀取同一 run 釘住的不可變 `guideline_version_id`；確認紀錄比對 task 與該版本。Dry 對應其 round 指引，Official 於發布時鎖定當時 current 指引，日後編輯不改寫舊 run。
 - 以 AC-7.1～AC-7.3／SC-014 追蹤重啟 R1、相同來源 ID 的不同 item、停用 reviewer 與 Official 指引版本差異的驗收邊界；FR-059／FR-061 的爭議寫入與逐項計數沿用審核單位身分。
