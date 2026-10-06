@@ -83,7 +83,7 @@
 
 **Interfaces:** 提案敘述 013／014／015 正典衝突與 ADR-022 修訂原因，明示只做規劃文件。
 
-- [ ] 參照相鄰已封存 change 的繁體中文格式，寫出 problem、scope、non-goals、source ownership、風險與回滾方式；此檔獨立提交。
+- [ ] 參照相鄰已封存 change 的繁體中文格式，保留 OpenSpec 必須完全相同的 `## Why`／`## What Changes` heading，frontmatter 列出三份對應正典 Spec；寫出 problem、scope、non-goals、source ownership、風險與回滾方式；此檔獨立提交。
 
 ### Task 6: OpenSpec design
 
@@ -123,7 +123,7 @@
 
 **Interfaces:** 逐項記錄 Task 1～9 的真實驗證證據，不把未建 migration／API 當完成。
 
-- [ ] 每個 artifact-producing task 對應一個檔案；命令驗證 task 標明 exact command/result；每個 User Story phase 有正典 SC-ID `**故事目標**`；提交。
+- [ ] 每個 artifact-producing task 對應一個檔案且尾綴唯一 `[@agent-name]` 派工標籤；明列依賴／平行標記。命令驗證 task 標明 exact command/result；每個 User Story phase 有正典 SC-ID `**故事目標**`；提交。
 
 ### Task 11: Status registry
 
