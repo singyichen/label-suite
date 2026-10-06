@@ -1,5 +1,5 @@
 ---
-功能分支: feat/1120-task-lifecycle-alignment
+功能分支: feat/1141-quality-metrics-ready-signal
 建立日期: 2026-04-20
 版本: 5.0.0
 狀態: Draft

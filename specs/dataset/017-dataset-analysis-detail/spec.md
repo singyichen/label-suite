@@ -1,5 +1,5 @@
 ---
-功能分支: docs/783-iaa-precondition-017-values-on-main
+功能分支: feat/1141-quality-metrics-ready-signal
 建立日期: 2026-04-24
 版本: 3.0.1
 狀態: Draft
