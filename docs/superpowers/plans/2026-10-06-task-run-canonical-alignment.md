@@ -61,10 +61,10 @@
 
 **Interfaces:** 013 建立成功時提交的 TaskConfig 形成不可變 version 1，後續 014 draft 儲存建立新版本；設定輸出依 registry 驗證。
 
-- [ ] 讀 013 FR-006／FR-006a／FR-006d 與 TaskConfig、TaskGuidelineConfig 關鍵實體，確認與 014 建立交易及現有 UI 語意。
-- [ ] 局部補述第一次 config/schema 版本號皆為 1；每次成功修改完整 config 建立新 immutable row，schema digest 對 canonical outputs/field roles 與保留的 registry version 計算；version marker 可隨非 schema 變更遞增但 digest 相同。
-- [ ] 補述 creator 的 project_leader membership 與 task/config/guideline 建立同交易；保持原 Idempotency-Key 時窗及前端行為。
-- [ ] 新增驗收情境，更新本檔版本及 Changelog，跑 SDD lint 與來源定位，提交。
+- [x] 讀 013 FR-006／FR-006a／FR-006d 與 TaskConfig、TaskGuidelineConfig 關鍵實體，確認與 014 建立交易及現有 UI 語意。
+- [x] 局部補述第一次 config/schema 版本號皆為 1；每次成功修改完整 config 建立新 immutable row，schema digest 對 canonical outputs/field roles 與保留的 registry version 計算；version marker 可隨非 schema 變更遞增但 digest 相同。
+- [x] 補述 creator 的 project_leader membership 與 task/config/guideline 建立同交易；保持原 Idempotency-Key 時窗及前端行為。
+- [x] 新增驗收情境，更新本檔版本及 Changelog，跑 SDD lint 與來源定位，提交。
 
 ### Task 4: 015 標記／審核下游身分對齊
 
