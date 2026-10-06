@@ -101,13 +101,14 @@ erDiagram
         boolean in_app_enabled
         boolean email_enabled
     }
-    UserManagementAuditLog {
-        string actor_user_id FK
-        string target_user_id FK
-        string action_type
-        json before
-        json after
-        datetime created_at
+    AuditEvents {
+        string actor_user_id FK "人員事件；系統事件為空"
+        string target_type "user 等 registry 值"
+        string target_id "多型識別，不是 FK"
+        string task_id "可空作用域；task FK 待定"
+        string action "命名空間動詞"
+        json payload_summary "只含非敏感摘要"
+        datetime occurred_at
     }
     SystemRole {
         string role_key PK "user 或 super_admin"
@@ -130,14 +131,14 @@ erDiagram
     PlatformUser ||--o{ EmailChangeRequest : "user_id"
     PlatformUser ||--o{ Session : "user_id"
     PlatformUser ||--o{ NotificationPreference : "user_id"
-    PlatformUser ||--o{ UserManagementAuditLog : "actor_user_id 與 target_user_id"
+    PlatformUser |o--o{ AuditEvents : "人員 actor_user_id"
     SystemRole   ||--o{ RolePermissionMatrix : "role_type = system"
     TaskRole     ||--o{ RolePermissionMatrix : "role_type = task"
     RolePermissionMatrix ||--|| RolePermissionVersion : "樂觀鎖版本欄"
 ```
 
 
-> 本圖是概念層。account 001～005＋admin-006／007 的實體層（欄位型別、限制、索引、待裁決事項）見 [`account-admin-db-schema.md`](./account-admin-db-schema.md)。
+> 本圖是概念層。`UserManagementAuditLog` 是依 `target_type='user'`、`target_id` 篩選共用 `audit_events` 的讀取投影，不另建表或 target FK；系統事件的 `actor_user_id` 為空。account 001～005＋admin-006／007 的實體層（欄位型別、限制、索引、待裁決事項）見 [`account-admin-db-schema.md`](./account-admin-db-schema.md)。
 
 ---
 
@@ -465,8 +466,10 @@ flowchart LR
 
 | 實體 | 性質 | 來源 spec | 版本 |
 |------|------|----------|------|
-| `PlatformUser`、`SystemRoleAssignment`、`UserStatus`、`UserManagementAuditLog` | persisted | `specs/admin/006-user-management/spec.md` | 1.0.9 |
-| `RolePermissionMatrix`、`RolePermissionVersion`、`SystemRole`、`TaskRole` | persisted | `specs/admin/007-role-settings/spec.md` | 1.1.13 |
+| `PlatformUser`、`SystemRoleAssignment`、`UserStatus` | persisted／domain state | `specs/admin/006-user-management/spec.md` | 1.2.1 |
+| `UserManagementAuditLog` | projection：從 `audit_events` 依目標使用者篩選，不另建表 | `specs/admin/006-user-management/spec.md` FR-013 | 1.2.1 |
+| `AuditEvents` | persisted candidate：共用 `audit_events`；task FK 待定 | ADR-032、`specs/admin/006-user-management/spec.md` FR-013 | 1.2.1 |
+| `RolePermissionMatrix`、`RolePermissionVersion`、`SystemRole`、`TaskRole` | persisted | `specs/admin/007-role-settings/spec.md` | 1.1.14 |
 | `User`、`EmailChangeRequest`、`Session`、`NotificationPreference` | persisted | `specs/account/005-profile-settings/spec.md` | 1.2.10 |
 | `TaskSummary`、`TaskMembership`、`TaskListQuery` | persisted／view | `specs/task-management/010-task-list/spec.md` | 2.1.1 |
 | `TaskDraftInput`、`OutputConfig`、`TaskConfig`、`TaskGuidelineConfig`、`RunInitConfig` | persisted | `specs/task-management/013-task-new/spec.md` | 7.0.1 |

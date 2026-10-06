@@ -9,10 +9,10 @@
 | 層級 | 目前可用資料 | 用法 |
 |---|---|---|
 | 實際 schema | Alembic revision／ORM：0 張業務表 | 日後以 migration 和資料庫 metadata 反查已落地狀態 |
-| 實體層草案 | [account/admin schema](./account-admin-db-schema.md)：9 張候選表、62 欄、6 個候選 FK、限制與待裁決 | 該文件 §5 的其餘阻擋項結案後，才能作為 migration 依據 |
+| 實體層草案 | [account/admin schema](./account-admin-db-schema.md)：9 張候選表、63 欄、6 個候選 FK、限制與待裁決 | 該文件 §5 的其餘阻擋項結案後，才能作為 migration 依據 |
 | 概念層 | [跨模組 ER 圖](./core-data-model-er.md)：規格實體、推導值與投影 | 用於發現缺表與錯誤的關聯假設，不能直接當 DDL |
 
-**NoteCraft 規劃檢視**：[`database-schema.er.json`](./database-schema.er.json) 會顯示在 `/view/diagrams/architecture/database-schema.er` 的 Wiki／Diagram。第一階段只收錄 account/admin 欄位字典中的 **9 張候選表、62 欄與 6 個候選 FK**；兩張權限矩陣表受 D-9 裁決，**已落地業務表仍為 0**。task／dataset／annotation 等模組在下方總帳保留缺口，待實體層欄位字典與鍵形狀定案後逐步加入。修改 §3 字典或此 JSON 時執行 `node scripts/check-database-schema.mjs`；欄位與 FK 計數由檢查器重新計算。
+**NoteCraft 規劃檢視**：[`database-schema.er.json`](./database-schema.er.json) 會顯示在 `/view/diagrams/architecture/database-schema.er` 的 Wiki／Diagram。第一階段只收錄 account/admin 欄位字典中的 **9 張候選表、63 欄與 6 個候選 FK**；共用稽核表 D-4 已裁決，兩張權限矩陣表受 D-9 裁決，**已落地業務表仍為 0**。task／dataset／annotation 等模組在下方總帳保留缺口，待實體層欄位字典與鍵形狀定案後逐步加入。修改 §3 字典或此 JSON 時執行 `node scripts/check-database-schema.mjs`；欄位與 FK 計數由檢查器重新計算。
 
 ## 2. 盤點方法：沿用 TrendMile 的「盤點 → Schema → 投影」
 
@@ -52,7 +52,7 @@ Label Suite 的對應做法：
 | `account_password_token` | 實體草案 | `id` PK；`user_id → users` | account/admin §3.4 |
 | `account_email_change_request` | 實體草案 | `id` PK；`user_id → users` | account/admin §3.5 |
 | `account_notification_preference` | 實體草案 | `(user_id, event_key)` PK；`user_id → users` | account/admin §3.6 |
-| `audit_event` | 實體草案 | `id` PK；`actor_user_id → users` | account/admin §3.7；ADR-032 仍 Proposed，D-4 阻擋 |
+| `audit_events` | 實體草案 | `id` PK；人員事件的 `actor_user_id → users`、系統事件 actor 為 null；`task_id` 可空 UUID，尚無 task FK | account/admin §3.7；Accepted ADR-032，D-4 已裁決 |
 | `admin_role_permission` | 實體草案／有條件 | `(role_type, role_key, permission_key)` PK | account/admin §3.8；是否存在取決於 D-9 |
 | `admin_role_permission_version` | 實體草案／有條件 | `id = 1` 的單列版本 | account/admin §3.9；是否存在取決於 D-9 |
 
@@ -70,7 +70,7 @@ Label Suite 的對應做法：
 | `ReviewAssignment` → 審核指派資料落點 | 需裁決 | `task_id`、`reviewer_id`；指向審核單位的鍵未定 | 014 關鍵實體仍列 `ReviewAssignment.review_unit_id`，但 [015 FR-051／FR-093](../../../specs/annotation/015-annotation-workspace/spec.md) 以三欄複合定址，且 FR-093(5) 禁止另存第二份黏住指派資料；不能直接據此建表或 FK |
 | `WorkLogEntry` → 工時事件表 | 需設計 | `user_id`、`task_role`、`date`、`run_stage` | 014 關鍵實體；事件／日彙總與 PK 待定 |
 | `RunStateTransition` → 狀態歷程表 | 需設計 | `triggered_by`、時間、前後狀態 | 014 關鍵實體；任務 FK 應由 migration 設計確認 |
-| `IsolationAuditLog` → 隔離設定稽核表 | 需設計 | `task_id`、`changed_by`、時間 | 014 關鍵實體；與通用 `audit_event` 的分工待定 |
+| `IsolationAuditLog` → 隔離設定稽核表 | 需設計 | `task_id`、`changed_by`、時間 | 014 關鍵實體；與共用 `audit_events` 的事件語意和去重方式待 task 模組定案 |
 
 ### 標記、審核與品質
 
@@ -138,7 +138,7 @@ erDiagram
 
 | 優先 | 問題 | 為何阻擋 | 來源 |
 |---|---|---|---|
-| P0 | 通用稽核表形 | 決定 audit 表名、欄位與保存規則；auth 表的 N-1／D-1／D-3／D-6／D-8 已裁決 | account/admin §5 D-4；account-020、ADR-021 |
+| 已裁決 | 通用稽核表形 | D-4 採 `audit_events`，所有事件至少留一個日曆年；`task_id` FK 仍待 task 表及 PK 定案 | Accepted ADR-032、account/admin §3.7／§4.6 |
 | P0 | 角色權限矩陣是否參與授權？ | 決定兩張 admin 表是否存在，不能在未裁決時宣稱共有 9 張確定表 | account/admin §5 D-9／D-10 |
 | P0 | 標記資料的任務／run／round 唯一鍵與審核指派 FK | 014 `review_unit_id` 與 015 複合定址仍未一致；重複樣本會串錯決策 | 014／015 關鍵實體、015 FR-049／FR-051／FR-093 |
 | P0 | dataset item、隱藏答案與 lineage 的儲存邊界 | 影響抽樣 FK、答案隔離及匯出可重現性 | 主憲法 III／XIV／XVI、backend constitution VI |
