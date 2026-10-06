@@ -69,3 +69,9 @@
 - **GIVEN** 正式服務端收到本需求作用域內的請求
 - **WHEN** 使用者執行本需求描述的操作
 - **THEN** 不合格角色或格遭拒，同一冪等鍵時窗內不重複建立（SC-006）
+
+#### Scenario: SC-006 冪等重送前權限已撤銷
+
+- **GIVEN** 建立者先前以某個 `Idempotency-Key` 成功建立任務，之後其角色或 `task.create` 矩陣權限已撤銷，仍在 `IDEMPOTENCY_WINDOW_HOURS` 內
+- **WHEN** 同一建立者以相同 key 與相同的經驗證與正規化請求內容重送
+- **THEN** 服務端依目前權限拒絕請求，不回傳原 `task_id` 作為成功結果，且不建立或修改 task、membership、config 或指引版本（SC-006；FR-006d）
