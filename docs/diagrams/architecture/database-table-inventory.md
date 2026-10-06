@@ -73,13 +73,13 @@ Label Suite 的對應做法：
 | 規格實體 → 候選資料落點 | 狀態 | 已知識別／關聯 | 正典與待決 |
 |---|---|---|---|
 | `TaskDetail` → 任務主表 | 需設計 | `task_id`；建立者與使用者關聯 | [013 關鍵實體](../../../specs/task-management/013-task-new/spec.md#關鍵實體)、[014 關鍵實體](../../../specs/task-management/014-task-detail/spec.md#關鍵實體)；表名、config 版本與資料集 FK 未定 |
-| `TaskConfig`、`OutputConfig`、`TaskGuidelineConfig` → 任務設定／版本 | 可內嵌 | `outputs[]` 由 registry 驗證；`guideline_version` 被 trial round 引用 | 013／014 關鍵實體；須決定 JSONB 快照與指引歷史的保存邊界 |
+| `TaskConfig`、`OutputConfig`、`TaskGuidelineConfig` → 任務設定／版本 | 版本契約已定；SQL 型別待設計 | `TaskConfig` 以 `(task_id, version_no)` 唯一、schema 同列版本；`TaskGuidelineConfig` 以 `(task_id, guideline_version)` 唯一；`OutputConfig` 由 registry 驗證並隨 config 版本內嵌 | 013 v8.3.0／014 v6.0.0；不可變版本由 cycle/run 精確參照，實體 JSON 型別與索引待欄位字典設計 |
 | `TaskMembership` → 成員關聯表 | 需設計 | `(task_id, user_id, task_role)` 為邏輯唯一識別；一人可在同一任務持多角色 | 014 關鍵實體、Accepted ADR-037；物理 PK、task FK 與 user-leading 查詢索引待 task 模組定案 |
-| `TrialRound` → 試標回合表 | 需設計 | `(task_id, round)`；`guideline_version` | 014 關鍵實體；`iaa_computation_status` 為現行欄位 |
-| `SampleSnapshot` → 抽樣快照表 | 需設計 | `sample_snapshot_id`、`task_id`；選樣 manifest | 014 關鍵實體；manifest 指向何處與樣本 FK 未定 |
-| `AnnotationListMaterialization` → run 發布紀錄 | 需設計 | `task_id`、`run_stage`、`trial_round?`、`sample_snapshot_id` | 014 關鍵實體；正式 run 的唯一鍵待定 |
-| `ExcludedAnnotationAssignment` → 排除紀錄表 | 需設計 | `assignment_id`、`task_id`、`sample_id` | 014 關鍵實體／FR-005h；assignment 本體的鍵與 FK 待定 |
-| `ReviewAssignment` → 審核指派資料落點 | 需裁決 | `task_id`、`reviewer_id`；指向審核單位的鍵未定 | 014 關鍵實體仍列 `ReviewAssignment.review_unit_id`，但 [015 FR-051／FR-093](../../../specs/annotation/015-annotation-workspace/spec.md) 以三欄複合定址，且 FR-093(5) 禁止另存第二份黏住指派資料；不能直接據此建表或 FK |
+| `TrialRound` → 試標回合表 | 身分契約已定；SQL 型別待設計 | `trial_round_id`、`cycle_id`、`round_no`；`(cycle_id, round_no)` 唯一 | 014 v6.0.0；指引以同 task 不可變 `guideline_version_id` 參照，IAA 狀態語意見 FR-010o-4 |
+| `SampleSnapshot` → 抽樣快照表 | 身分契約已定；manifest 編碼待設計 | `sample_snapshot_id`、`cycle_id`；每個 run 專屬不可變快照 | 014 v6.0.0；seed／演算法版本、有序 ID digest 與外部 manifest 回執保留，不能內嵌私有答案 |
+| `AnnotationListMaterialization` → run 發布紀錄 | 身分契約已定；SQL 型別待設計 | 穩定 `run_id`、`task_id`、`cycle_id`、`run_type`、`trial_round_id?`、`sample_snapshot_id`；Dry round 與 snapshot 各只對應一個 run，Official 每 task 生命週期最多一筆 | 014 v6.0.0；同 task 的指引版本、發布冪等與 item 數由 FR-010f 系列定義 |
+| `ExcludedAnnotationAssignment` → 排除紀錄表 | 身分契約已定；SQL 型別待設計 | `assignment_id` 唯一且指向穩定 slot；`run_id`／`cycle_id` 由 assignment 解析 | 014 v6.0.0 FR-005h；append-only，排除不回補當前池，實體 FK 與型別待欄位字典設計 |
+| `ReviewAssignment` → 審核負荷 view | 已裁決為非持久化（014 v6.0.0） | Dry 黏著 `run_id × dataset_item_id`；Official 黏著 `run_id × assignment_id` | 依 015 FR-051／FR-093(5) 的 submission、run 候選快照與即時資格推導；不建立第二份指派表或 FK。#1165 於 014 v5.2.2 的三欄邏輯參照僅為舊版候選沿革，已被 v6.0.0 取代 |
 | `WorkLogEntry` → 工時事件表 | 需設計 | `user_id`、`task_role`、`date`、`run_stage` | 014 關鍵實體；事件／日彙總與 PK 待定 |
 | `RunStateTransition` → 狀態歷程表 | 需設計 | `triggered_by`、時間、前後狀態 | 014 關鍵實體；任務 FK 應由 migration 設計確認 |
 | `IsolationAuditLog` → 隔離設定稽核表 | 需設計 | `task_id`、`changed_by`、時間 | 014 關鍵實體；與共用 `audit_events` 的事件語意和去重方式待 task 模組定案 |
@@ -88,10 +88,10 @@ Label Suite 的對應做法：
 
 | 規格實體 → 候選資料落點 | 狀態 | 已知識別／關聯 | 正典與待決 |
 |---|---|---|---|
-| `AnnotationListItem` → 清單項目表 | 需設計 | `task_id`、`sample_id`、`run_type`、`sample_snapshot_id` | [015 關鍵實體](../../../specs/annotation/015-annotation-workspace/spec.md#關鍵實體-必填)；run／round 鍵與樣本來源待定 |
-| `AnnotationRecord`、`OutputAnswer` → 標記提交 | 需設計／可內嵌 | `sample_id`、`annotator_id`；`answers[]` 是 config-driven payload | 015 關鍵實體／FR-049；答案可放受控 JSONB，但提交唯一鍵須含 task／run／round 等作用域並與規格對齊 |
-| `ReviewDecision` → 逐 output 決策 | 需設計 | `annotator_id`、`reviewer_id`、`output_type`；從審核單位讀取 | 015 關鍵實體／FR-051；`sample_id`、`run_type` 的實體 FK 與唯一鍵待定 |
-| `DisputeItem.votes[]`、`finalized_*` → 仲裁寫入狀態 | 需設計 | 審核單位以 `(sample_id, annotator_id, run_type)` 定址；爭議項以審核單位內 `outKey × 合併鍵` 識別（015 FR-059，#1150 已裁定） | 015 FR-052／FR-059／FR-061；分歧項本體由答案 diff 推導，不建完整 `DisputeItem` 表；014 FR-010u(5) 於 v5.2.1 改引 015 FR-061 第 7 點的計數單位 |
+| `AnnotationListItem` → 清單項目 | 身分契約已定；SQL 型別待設計 | `run_id × dataset_item_id` 為 RunItem；標記工作用穩定 `assignment_id` | [014 v6.0.0](../../../specs/task-management/014-task-detail/spec.md)、015 v11.0.1；清單投影不得只用樣本 ID 或回合顯示文字查找 |
+| `AnnotationRecord`、`OutputAnswer` → 標記提交 | 身分契約已定；SQL 型別待設計 | 以 `run_id × assignment_id` 定址；`answers[]` 是 config-driven payload | 015 FR-049／FR-051；答案 JSON 欄型、唯一鍵、實體 FK 與私有答案隔離待逐表設計 |
+| `ReviewDecision` → 逐 output 決策 | 身分契約已定；SQL 型別待設計 | 同一 `run_id × assignment_id` 審核單位內逐 output 記錄 reviewer 決策 | 015 FR-051／FR-093；實體 FK、唯一鍵與仲裁寫入落點待逐表設計 |
+| `DisputeItem.votes[]`、`finalized_*` → 仲裁寫入狀態 | 需設計 | 審核單位以 `run_id × assignment_id` 定址；爭議項以該單位內 `outKey × 合併鍵` 識別（015 FR-059，#1150 已裁定） | 015 FR-051／FR-052／FR-059／FR-061；分歧項本體由答案 diff 推導，不建完整 `DisputeItem` 表；014 FR-010u(5) 引用 015 FR-061 第 7 點的計數單位 |
 | `AnnotationHistoryItem` → 操作歷程 | 需設計 | `actor_id`、`action`、`at`；與樣本／任務的 FK 待定 | 015 關鍵實體／FR-086；事件 append-only 與稽核表分工待定 |
 | `OutputTypeIAAReport` → 品質計算結果 | 需裁決 | `output_type`、metric、threshold、`pass_state` | [017 關鍵實體](../../../specs/dataset/017-dataset-analysis-detail/spec.md#關鍵實體-必填)／FR-039；spec 稱抽象報告，是否持久化與版本鍵未定 |
 
@@ -99,19 +99,19 @@ Label Suite 的對應做法：
 
 ### 已在規格明列的欄位（尚未指派 SQL 型別）
 
-以下是逐字欄位清單，不是 `CREATE TABLE`。`[]`／`?` 沿用來源規格的陣列／選填寫法；需要資料庫約束的 nullability、長度與 FK 仍須在實體層設計。帳號與管理模組的完整型別和限制已在 [account/admin §3](./account-admin-db-schema.md#3-欄位字典)，此處不複製。
+以下是規格欄位與身分摘要，不是 `CREATE TABLE`；`TaskDetail` 的呈現投影亦不等於實體欄位。`[]`／`?` 沿用來源規格的陣列／選填寫法；nullability、長度與實體 FK 仍須逐表設計。帳號與管理模組的完整型別和限制已在 [account/admin §3](./account-admin-db-schema.md#3-欄位字典)，此處不複製。
 
 | 規格實體 | 來源明列欄位 | 尚缺的資料庫決定 |
 |---|---|---|
 | `TaskDetail` | `task_id`, `task_name`, `task_type`, `status`, `run_stage`, `settings`, `sampling_value`, `trial_round`, `target_agreement_overrides`, `min_annotators`, `isolation_enabled`, `reviewer_ids[]`, `arbiter_ids[]`, `sample_snapshot_id` | `settings`、config 與 `trial_round` 中哪些是儲存、哪些是讀取投影；dataset 識別 |
-| `TaskConfig` | `categories[]`, `input_types[]`, `outputs[]`, `field_role_map`, `dataset_file_name` | `outputs[]` JSONB 驗證與版本、資料集檔案的持久化參照 |
-| `TaskGuidelineConfig` | `annotator_guideline_text`, `annotator_guideline_assets[]`, `reviewer_guideline_text`, `reviewer_guideline_assets[]`, `force_guideline`, `guideline_version` | 歷史版本是否獨立保存；`TrialRound.guideline_version` 如何形成可約束的 FK |
+| `TaskConfig` | `config_version_id`, `task_id`, `version_no`, `schema_version_no`, `schema_digest`, `schema_registry_version`, `categories[]`, `input_types[]`, `outputs[]`, `field_role_map`, `dataset_file_name` | 同任務不可變版本與 schema 同列；內容 JSON 型別、檢查及資料集參照待設計 |
+| `TaskGuidelineConfig` | `guideline_version_id`, `task_id`, `guideline_version`, `annotator_guideline_text`, `annotator_guideline_assets[]`, `reviewer_guideline_text`, `reviewer_guideline_assets[]`, digest、建立時間 | 同任務不可變內容版本；`force_guideline` 是 task 顯示政策，不屬內容版本 |
 | `TaskMembership` | `task_id`, `user_id`, `task_role`, `membership_status` | 邏輯唯一鍵 `(task_id, user_id, task_role)` 已定；物理 task 表／FK、索引待設計 |
-| `ReviewAssignment` | `task_id`, `reviewer_id`, `review_unit_id`, `assigned_at`, `assigned_by`, `source`, `review_status` | `review_unit_id` 與 015 複合定址的映射；`source` 現行恆為 `auto_rotation` |
-| `TrialRound` | `task_id`, `round`, `sampling_value`, `guideline_version`, `prior_round_findings`, `guideline_change_summary`, `no_change_reason?`, `iaa_computation_status`, `created_by`, `created_at` | `(task_id, round)` 的約束、指引版本參照及回合狀態 CHECK |
-| `SampleSnapshot` | `sample_snapshot_id`, `task_id`, `sampling_value`, `trial_round`, `target_agreement_overrides`, `min_annotators`, `locked_at`, `locked_by`, `selection_manifest_ref` | manifest 儲存位置與不可變性保證 |
-| `AnnotationListMaterialization` | `task_id`, `run_stage`, `trial_round?`, `sample_snapshot_id`, `source_sample_ids_ref`, `item_count`, `created_by`, `created_at` | Dry／Official run 的唯一鍵、發布冪等性 |
-| `ExcludedAnnotationAssignment` | `task_id`, `run_stage`, `trial_round?`, `assignment_id`, `sample_id`, `excluded_by`, `excluded_at`, `reason` | `assignment_id` 指向哪個持久化作業、排除紀錄唯一鍵 |
+| `ReviewAssignment`（非持久化 view） | `run_id`, `assignment_id`, `reviewer_id`, `pending`, `done`, `assigned`（由來源推導，非 SQL 欄位） | 不建立表、PK 或 FK；Dry 黏著以同 run 的 dataset item 為單位，Official 以 assignment 為單位；發布候選快照保存選人輸入，不保存第二份 sticky 指派 |
+| `TrialRound` | `trial_round_id`, `task_id`, `cycle_id`, `round_no`, `sampling_value`, `guideline_version_id`, `prior_round_findings`, `guideline_change_summary`, `no_change_reason?`, `iaa_computation_status`, `created_by`, `created_at` | `(cycle_id, round_no)` 唯一；指引須同 task，SQL CHECK 與 FK 待設計 |
+| `SampleSnapshot` | `sample_snapshot_id`, `cycle_id`, seed、演算法版本、`requested_sampling_value`, `target_agreement_overrides`, `min_annotators`, `locked_at`, `locked_by`, 有序 ID digest、`selection_manifest_ref` | 每 run 專屬且不可變；manifest 儲存與完整性保證待設計 |
+| `AnnotationListMaterialization` | `run_id`, `task_id`, `cycle_id`, `run_type`, `trial_round_id?`, `sample_snapshot_id`, `guideline_version_id`, `item_count`, idempotency key、`created_by`, `created_at` | Dry round／snapshot 一對一、Official 每 task 最多一筆；實體唯一鍵、FK 與型別待設計 |
+| `ExcludedAnnotationAssignment` | `assignment_id`, `excluded_by`, `excluded_at`, `reason`；`run_id`／`cycle_id`／樣本由 assignment 解析 | `assignment_id` 唯一；證據 append-only，FK、敏感度與 retention 待設計 |
 | `WorkLogEntry` | `user_id`, `task_role`, `date`, `login_at`, `logout_at`, `online_duration`, `duration`, `annotated_count`, `reviewed_count`, `arbitrated_count`, `avg_speed`, `run_stage` | 原始登入／登出事件與統計值是否分表 |
 | `RunStateTransition` | `from_status`, `to_status`, `triggered_by`, `triggered_at` | `task_id`、事件 PK 與狀態機稽核約束尚未明列 |
 | `IsolationAuditLog` | `task_id`, `from_isolation_enabled`, `to_isolation_enabled`, `changed_by`, `changed_at`, `reason` | 與通用稽核事件去重或引用 |
@@ -122,11 +122,11 @@ Label Suite 的對應做法：
 | `AnnotationHistoryItem` | `action`, `role`, `actor_id`, `at`, `summary`, `result_snapshot`, `started_at`, `lead_time`, `reason` | 事件 PK／父記錄作用域；`HISTORY_ACTIONS` 現行八值 |
 | `OutputTypeIAAReport` | `output_type`, `primary_metric_name`, `primary_metric_value`, `threshold`, `pass_state`, `auxiliary_metrics[]` | 是否持久化與計算版本；`free_text` 無數值門檻 |
 
-這份清單也暴露「畫圖前要先補規格」的三個缺口：`RunStateTransition` 沒列 `task_id`，`AnnotationRecord` 沒列 run 作用域，`ReviewDecision` 沒列 sample／run 作用域。它們不是說系統一定缺這些資料，而是目前的**關鍵實體欄位段落不足以定義可約束的 FK**。
+014／015 已補上 run 與 assignment 作用域；`RunStateTransition` 仍需從歷史規格名稱收斂到候選 `task_status_transition`，annotation／review 的 SQL 欄型、複合 FK 與索引仍待實體字典裁決。規格身分已定，不代表 migration 可直接產生。
 
 ## 4. ER 圖：目前可確認的關聯骨架
 
-下圖使用規格實體名稱，表示**規劃關聯**；不是實際資料庫表名或已建立的 FK。帳號實體層的完整欄位與 ERD 見 [account/admin §2](./account-admin-db-schema.md#2-erd)。未定鍵形狀的 `ReviewAssignment → ReviewUnit` 刻意不畫。
+下圖使用規格實體名稱，表示**規劃關聯**；不是實際資料庫表名或已建立的 FK。帳號實體層的完整欄位與 ERD 見 [account/admin §2](./account-admin-db-schema.md#2-erd)。`ReviewAssignment` 是非持久化 view，因此不畫成資料表或 FK。
 
 ```mermaid
 erDiagram
@@ -139,8 +139,6 @@ erDiagram
     AnnotationListMaterialization ||--o{ AnnotationListItem : run_publication
     AnnotationListItem ||--o{ AnnotationRecord : sample_and_run
     AnnotationRecord ||--o{ ReviewDecision : review_unit_dimensions
-    TaskDetail ||--o{ ReviewAssignment : task_id
-    PlatformUser ||--o{ ReviewAssignment : reviewer_id
     AnnotationRecord ||--o{ AnnotationHistoryItem : sample_history
 ```
 
@@ -152,7 +150,7 @@ erDiagram
 |---|---|---|---|
 | 已裁決 | 通用稽核表形 | D-4 採 `audit_events`，所有事件至少留一個日曆年；`task_id` FK 仍待 task 表及 PK 定案 | Accepted ADR-032、account/admin §3.7／§4.6 |
 | 已裁決 | 角色權限矩陣如何參與授權 | 兩張表保留為未部署候選；42 列初始格、固定格、CAS 與稽核目標依 ADR-037；runtime 與 migration 另案實作 | Accepted ADR-037、admin-007 v1.2.0、account/admin §4.7 |
-| P0 | 標記資料的任務／run／round 唯一鍵與審核指派 FK | 014 `review_unit_id` 與 015 複合定址仍未一致；重複樣本會串錯決策 | 014／015 關鍵實體、015 FR-049／FR-051／FR-093 |
+| 候選已定／實作前待驗 | 標記與審核的 run 身分及黏著推導 | 014 v6.0.0／015 v11.0.1 已定 `run_id × assignment_id` 審核單位，Dry `run_id × dataset_item_id`、Official `run_id × assignment_id` 推導黏著；不得建立 `ReviewAssignment` 表或將 #1165 三欄舊邏輯參照轉成 FK。物理 annotation／review 欄位型別與 FK 尚待逐表設計 | 014／015 關鍵實體、015 FR-049／FR-051／FR-093 |
 | 候選已定／實作前待驗 | dataset item、隱藏答案與 lineage 的五表邊界 | dataset-021 與字典已定逐檔分類、公開／私有分表及完整版本；manifest 編碼、保留政策、task/run 綁定與雙資料庫實測仍需後續工作 | dataset-021 FR-001～FR-011、[dataset 字典](./dataset-db-schema.md)；主憲法 III／XIV／XVI |
 | P1 | 設定／指引／IAA 報告是否獨立表與版本鍵 | 決定 `TaskConfig`、`TaskGuidelineConfig`、`OutputTypeIAAReport` 的持久化形狀 | 013／014／017 關鍵實體 |
 
