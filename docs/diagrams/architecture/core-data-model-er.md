@@ -381,7 +381,7 @@ erDiagram
     AnnotationRecord ||--o| ReviewUnit : "推導：標記員未提交則不成立"
     ReviewUnit ||--o{ ReviewDecision : "同一審核員逐 output_type 決策，FR-092／FR-093"
     ReviewUnit ||--o{ DisputeItem : "推導：每個審核單位 0..n 個爭議項，FR-059"
-    ReviewDecision ||--o{ DisputeItem : "推導：與標記員一致者不得出現，一筆決策對應 0..n 個爭議項，FR-059 第 3 點"
+    ReviewDecision ||--o{ DisputeItem : "推導：與標記員一致者不得出現，一筆決策對應 0..n 個爭議項，FR-059 第 2、3、4 點"
     ReviewDecision ||--o{ AnnotationHistoryItem : "審核動作寫入歷程"
 ```
 
@@ -473,7 +473,7 @@ flowchart LR
 | `User`、`EmailChangeRequest`、`Session`、`NotificationPreference` | persisted | `specs/account/005-profile-settings/spec.md` | 1.2.10 |
 | `TaskSummary`、`TaskMembership`、`TaskListQuery` | persisted／view | `specs/task-management/010-task-list/spec.md` | 2.1.1 |
 | `TaskDraftInput`、`OutputConfig`、`TaskConfig`、`TaskGuidelineConfig`、`RunInitConfig` | persisted | `specs/task-management/013-task-new/spec.md` | 7.0.1 |
-| `TaskDetail`、`ReviewAssignment`、`TrialRound`、`SampleSnapshot`、`AnnotationListMaterialization`、`ExcludedAnnotationAssignment`、`WorkLogEntry`、`RunStateTransition`、`IsolationAuditLog` | persisted | `specs/task-management/014-task-detail/spec.md` | 5.1.0 |
+| `TaskDetail`、`ReviewAssignment`、`TrialRound`、`SampleSnapshot`、`AnnotationListMaterialization`、`ExcludedAnnotationAssignment`、`WorkLogEntry`、`RunStateTransition`、`IsolationAuditLog` | persisted | `specs/task-management/014-task-detail/spec.md` | 5.2.1 |
 | `TaskProfile`、`GuidelineAsset` | projection | `specs/annotation/015-annotation-workspace/spec.md` | 10.1.0 |
 | `AnnotationListItem`、`AnnotationRecord`、`OutputAnswer`、`ReviewDecision`、`AnnotationHistoryItem` | persisted／embedded | `specs/annotation/015-annotation-workspace/spec.md` | 10.1.0 |
 | `ReviewUnit`、`DisputeItem` | **derived**；仲裁寫入狀態需另有落點 | `specs/annotation/015-annotation-workspace/spec.md` | 10.1.0 |
