@@ -31,7 +31,7 @@
 | `task_run_item` | run 的有序 item membership；同 cycle 各 run item 集合互斥。 |
 | `task_annotation_assignment` | 同 run／item 的穩定工作 slot；更換受派者不更換 slot 身分。 |
 | `task_annotation_exclusion` | 某 assignment slot 的終局排除證據。 |
-| `task_run_state_transition` | 與狀態變更同交易保存的稽核事件。 |
+| `task_status_transition` | 與任務狀態變更同交易保存的稽核事件。 |
 
 同 task 的版本／membership、同 cycle 的 round／snapshot、同 run 的 item／assignment 必須一致。DBA 提議用 scoped composite FK、UNIQUE 與必要的冗餘 scope key 表達可由 DB 保證的關係；實際欄位、約束及 migration 留待下一階段。sealed 狀態、item 經 batch 所屬版本、當下 active role、合法轉換與完整集合計數仍需 service 交易驗證，不能宣稱單一 FK 已涵蓋全部規則。
 
