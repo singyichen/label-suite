@@ -1,5 +1,5 @@
 ---
-對應 Spec: specs/task-management/013-task-new/spec.md, specs/task-management/014-task-detail/spec.md, specs/annotation/015-annotation-workspace/spec.md
+對應 Spec: specs/task-management/014-task-detail/spec.md
 ---
 
 # Design: task-run-identity-contract
@@ -7,6 +7,8 @@
 ## Goal
 
 以 `specs/task-management/013-task-new/spec.md` v8.3.0、`specs/task-management/014-task-detail/spec.md` v6.0.0、`specs/annotation/015-annotation-workspace/spec.md` v11.0.1 與 Accepted `docs/adr/022-task-state-machine-location.md` 的 2026-10-06 修訂，對齊 issue #1160 的 cycle、run、snapshot、版本及工作身分，使退回 draft 後再次發布 R1 仍可重現歷史且不混算。本 change 是正典規劃對齊，沒有 ORM、migration、API、資料搬遷或已部署 Schema。
+
+本 change 僅擁有 `task-management/014-task-detail` 的 delta；013 的 config 版本契約由獨立相依 change `task-config-version-contract` 承載，015 的 annotation/review 身分契約由獨立相依 change `annotation-run-identity-contract` 承載。本設計保留這兩份跨規格依賴作為完整身分鏈的技術背景，不將其 delta 納入本 change 的 ownership。
 
 `docs/superpowers/specs/2026-10-06-task-run-identity-design.md` §2–§7 與 T1–T12 ledger 提供 DBA 裁決背景；其中「待修訂」及舊版行號應依上述正典重新定位。本文件保留候選關聯模型的決策理由，不核准或重複其物理欄位字典、FK、索引、型別或刪除策略。後續實體設計須獨立確認，annotation/review、IAA 與 export 的物理關聯仍由各 owning domain 定義。
 
