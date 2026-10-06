@@ -1,7 +1,7 @@
 ---
 功能分支: feat/admin/006-user-management
 建立日期: 2026-04-16
-版本: 1.2.1
+版本: 1.3.0
 狀態: Clarified
 ---
 
@@ -245,7 +245,7 @@ Super Admin 可在使用者管理頁新增帳號、更新帳號基本資訊，�
 ### 功能需求
 
 - **FR-001**：系統必須提供 `/user-management` 頁面供平台級使用者管理。
-- **FR-002**：只有 `super_admin` 可以存取 `/user-management`。
+- **FR-002**：只有當前 active `super_admin` 且 `admin.user_management.view` 已啟用並允許時可以存取 `/user-management`；新增、編輯、停用、啟用與 system role 變更另需 `admin.user_management.manage`，每個命令仍須通過本規格的 seeder／最後超管等資源限制。矩陣格不可授權 `user` 越過 system role 硬邊界（ADR-037）。
 - **FR-003**：系統必須顯示全平台使用者列表，包含姓名、Email、system role、帳號狀態。
 - **FR-004**：系統必須支援依關鍵字搜尋使用者。
 - **FR-004a**：關鍵字搜尋比對方式必須為 `contains` 且不分大小寫，並同時作用於 `name` 與 `email`。
@@ -268,7 +268,7 @@ Super Admin 可在使用者管理頁新增帳號、更新帳號基本資訊，�
 - **FR-010**：頁面必須提供「使用者管理」與「角色設定」兩個 admin tabs，預設停留於「使用者管理」tab；點擊「角色設定」必須導向 `role-settings.html`。
 - **FR-011**：無權限角色存取本頁時，系統必須拒絕並導回安全頁（未登入→`/login`，一般使用者→`/dashboard`）。
 - **FR-012**：頁面必須支援 `RWD_VIEWPORTS`，在 `<= MOBILE_BP` 時仍可完成查詢與帳號管理操作。
-- **FR-013**：新增、編輯、停用、啟用與 system role 變更皆必須以 ADR-032 的共用 `audit_events` 保留審計紀錄（操作者、目標使用者、時間、操作類型、變更前後的非敏感 diff），與帳號異動同交易寫入。紀錄的 `target_type='user'`、`target_id` 為目標使用者 ID；`member.updated` 表示一般欄位編輯。異動紀錄 drawer 只讀所選使用者的事件，且仍須通過 `super_admin` 守門；摘要不得包含密碼、token 或原始請求內容。
+- **FR-013**：新增、編輯、停用、啟用與 system role 變更皆必須以 ADR-032 的共用 `audit_events` 保留審計紀錄（操作者、目標使用者、時間、操作類型、變更前後的非敏感 diff），與帳號異動同交易寫入。紀錄的 `target_type='user'`、`target_id` 為目標使用者 ID；`member.updated` 表示一般欄位編輯。異動紀錄 drawer 只讀所選使用者的事件，且仍須通過當前 `super_admin` 與 `admin.user_management.view` 守門；摘要不得包含密碼、token 或原始請求內容。
 - **FR-013a**：列表每列操作欄必須提供 `異動紀錄` icon-only button，並以可存取名稱標示其用途。
 - **FR-013b**：點擊 `異動紀錄` icon 必須開啟該目標帳號的 drawer，顯示目標帳號名稱、紀錄時間、操作類型、操作者與變更前後 diff。
 - **FR-013c**：異動紀錄 drawer 無資料時必須顯示空狀態；在 `<= MOBILE_BP` 時必須以下方 sheet 呈現且內容可讀。
@@ -322,6 +322,7 @@ flowchart LR
 | 001 | Login — Email / Password | 已登入狀態與路由守門基礎 |
 | 020 | Authentication and Session Security | 受邀帳號可空密碼、Email canonicalization、family 撤銷與停用後每請求即時失效 |
 | 008 | Shared Sidebar Navbar | Sidebar `系統管理` 導覽與 active 狀態規範 |
+| 007／ADR-037 | Role & Permission Settings／Permission Matrix Authorization | `admin.user_management.view/manage` 的已啟用格與現行超管硬邊界 |
 
 ### 下游（依賴本規格的規格）
 
@@ -347,6 +348,7 @@ flowchart LR
 - **SC-012**：異動紀錄 drawer 在 `RWD_VIEWPORTS` 下可開啟、關閉且內容不重疊；`<= MOBILE_BP` 時以下方 sheet 呈現。正式後端在帳號異動成功時同交易寫入共用事件，drawer 只回傳所選目標使用者的事件；其他使用者事件與敏感摘要不得混入。
 - **SC-013**：邀請連結在核發後 24 小時內只可成功使用一次；重發後原連結、已作廢連結與過期連結均不能設定密碼，也不顯示成功。
 - **SC-014**：bootstrap 同身份重跑不新增或改寫第二位 seeder；既有非 seeder 帳號與不同身份重跑均明確失敗，既有帳號的 session 不獲得升權。SQLite 與 PostgreSQL 的直接寫入與併發測試均無法清除 seeder 保護或移除最後一位 active `super_admin`。
+- **SC-015**：當前 `super_admin` 通過對應矩陣格後才可讀取或修改帳號；一般 `user` 即使偽造 admin 格請求也被拒絕。矩陣變更後的下一個請求立即依新格判斷，而 seeder 與最後超管保護仍生效。
 
 ### 帳號生命週期驗收條件
 
@@ -389,6 +391,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.3.0 | 2026-10-06 | Issue #1160 D-9：依 ADR-037 將 `admin.user_management.view/manage` 加入現有超管硬邊界；帳號異動與稽核抽屜仍受原有資源及敏感資料限制，新增 SC-015。規劃契約尚未實作 API。 |
 | 1.2.1 | 2026-10-06 | Issue #1160 D-4：FR-013／SC-012 與 `UserManagementAuditLog` 對齊 ADR-032 共用稽核事件，限定目標查詢及非敏感摘要；維持既有 drawer 行為。 |
 | 1.2.0 | 2026-10-06 | Issue #1160 D-2／D-7：邀請連結 24 小時、使用與作廢語意分離；明確定義冪等 seeder bootstrap 和跨 SQLite／PostgreSQL 最後超管保護。 |
 | 1.1.0 | 2026-10-06 | Issue #1160 對齊 account-020：受邀帳號可空密碼、Email canonicalization、管理員修改 Email 與停用後的 token-family 即時失效；PlatformUser 的畫面欄名明確對應 `users` 實體欄。 |

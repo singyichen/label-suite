@@ -3,6 +3,7 @@
 **Status**: Accepted
 **Date**: 2026-05-29
 **Amended**: 2026-09-17 — the JWT `role` claim is display-only; authorization reads current role and active status from the database (issue #779)
+**Amended**: 2026-10-06 — ADR-037 makes the current role check one input to permission-matrix authorization (issue #1160 D-9)
 **Amended**: 2026-10-06 — issue #1160 token-family 3NF, per-request `sid`/credential checks, bounded grace reissue, and cross-database email identity
 
 ## Context
@@ -67,6 +68,8 @@ The check lives in two layers so that no endpoint can skip it:
 
 - `get_current_user` verifies JWT signature/expiry and decodes `sub`, `sid`, and `credential_version`; it loads `users` and `account_token_family` and raises `401` (`auth.token_invalid`) when the user is missing/inactive, version mismatches, family is missing/revoked/absolutely expired, or family owner differs from `sub`. Every authenticated endpoint depends on it, so logout, disabled accounts, high-risk credential changes, and the absolute deadline take effect on the next request.
 - `require_role` builds on `get_current_user` and compares the freshly loaded `role` against the allowed set.
+
+ADR-037 adds a stored role-permission matrix as a necessary input for operations with an activated key. The `require_role` factory below remains the current-role **hard gate**, including the `super_admin` boundary for admin routes; it is not a complete authorization decision. The server also checks the applicable current matrix cell and each operation's task/resource conditions. Unknown keys, absent rows and inactive task memberships deny. JWT and frontend role state never supply those facts.
 
 ```python
 # app/core/deps.py
@@ -156,7 +159,7 @@ Email is canonicalized with Unicode NFC and casefold before registration, invite
 - CORS configuration must include `credentials: true`; frontend `fetch`/`axios` calls must set `credentials: 'include'`.
 - In local development, backend and frontend run on different ports — requires `SameSite=None; Secure` with HTTPS or a dev proxy (Vite proxy to same origin is the recommended approach).
 - Refresh token reuse detection requires careful concurrency handling. **Chosen strategy (FR-075): bounded grace period.** A token revoked as `rotated` may issue one additional token within 30 seconds through an atomic claim; further in-window reuse returns `409`, while reuse after grace revokes all user families. The mutex strategy (`SELECT ... FOR UPDATE`) was considered but rejected because it adds waiting latency; the conditional claim and cross-database tests are required to bound the chosen grace strategy.
-- Every authenticated endpoint pays one primary-key DB read per request (`get_current_user` in Amendment 2026-09-17, issue #779); route handlers must use `require_role`, not a JWT-decoded `role`, for any privileged check.
+- Every authenticated endpoint pays one primary-key DB read per request (`get_current_user` in Amendment 2026-09-17, issue #779); privileged route handlers use the current-role hard gate plus ADR-037's matrix and resource checks, never a JWT-decoded `role` alone.
 
 ## Referenced by
 

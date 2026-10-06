@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-new-step1-field-role-hints
 建立日期: 2026-04-20
-版本: 8.1.1
+版本: 8.2.0
 狀態: Draft
 ---
 
@@ -540,7 +540,7 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 ### 功能需求
 
 - **FR-001**：系統必須提供 `/task-new` 四步驟建立流程（Step 1/2/3/4）。
-- **FR-001a**：僅 `TASK_CREATOR_SYSTEM_ROLES` 可進入 `/task-new` 與呼叫建立任務 API。
+- **FR-001a**：僅當前角色屬 `TASK_CREATOR_SYSTEM_ROLES` 且已啟用的 system 層 `task.create` 矩陣格允許者可進入 `/task-new` 與呼叫建立任務 API；服務端依 ADR-037 重新檢查，不信任 JWT role 或前端按鈕。建立後仍須原子建立 creator 的 `project_leader` membership。
 - **FR-002**：Step 1 必須要求任務名稱、至少一個資料集檔案、至少一個輸出類型；未上傳任何資料集時不得進入下一步。三組 chip 的狀態分別為大分類 `selected_categories[]`、單一輸入類型 `input_type`、以及依大分類 cascade 過濾且跨組可多選的 `selectedOutputTypes[]`；不得另行推導或儲存單一固定 `task_type`。
 - **FR-002e**：Step 1 輸出組合選擇器必須由 `OUTPUT_TYPE_REGISTRY` 與 taxonomy metadata 動態萃取三組 chip。選擇語意如下：`大分類`（寫入 `selected_categories[]`，可多選，`role="checkbox"`）、`輸入類型`（寫入 `input_type`，單選，`role="radio"`，同一組互斥）、`輸出類型`（寫入 `selectedOutputTypes[]`，依大分類 cascade 過濾且跨組可多選）。每個大分類必須以 taxonomy 的 `outputSelection` 宣告輸出選擇模式，不得在 selector 核心流程依大分類 key 硬編分支：`classification` 與 `regression` 為 `single`，其 chip 使用 `role="radio"` 且同組互斥；`sequence` 與 `generation` 為 `multiple`，其 chip 使用 `role="checkbox"` 且可保留同組多個選項。大分類與輸入類型始終可見；未選任何大分類時，輸出類型區塊顯示灰色提示「請先選擇大分類」且不顯示任何 chip；選擇 1 個大分類時，直接顯示該分類對應輸出類型（不加分組標題）；選擇 2 個以上大分類時，輸出類型依已選大分類分組顯示並加分類名稱子標題；取消某個大分類時，該組輸出類型消失且已選項自動取消。chip 標籤必須依 `state.lang` 顯示 zh/en 文案，語言切換時即時更新。`entity_relation`、`boundary`、`span`、`relation_triple` 與 `token_class` 不得出現在 taxonomy 或 registry 產生的選項中。
 - **FR-002a**：每個資料集檔案必須為 `.json` 格式（`DATASET_UPLOAD_FORMATS = json`），且符合 `DATASET_MAX_FILE_SIZE_MB`；非 JSON 格式的檔案須個別顯示錯誤並阻擋加入；已通過驗證的其他檔案不受影響。`.json` 檔內容為 JSON Lines（逐行 JSON object）時，系統必須可解析為紀錄集合。
@@ -695,6 +695,7 @@ flowchart LR
 | 010 | Task List | 新增任務入口與導覽關係 |
 | 001 | Login — Email / Password | 已登入狀態與身份識別 |
 | 008 | Shared Sidebar Navbar | L0 active 與跨頁導覽一致性 |
+| admin-007／ADR-037 | Permission Matrix Authorization | system 層 `task.create` 與當前角色守門 |
 
 ### 下游（依賴本規格的規格）
 
@@ -783,7 +784,7 @@ flowchart LR
 - **SC-004d**：切換 zh/en 時，新增任務頁 sidebar 與 Step 2 預設模板 labels 皆可正確切換語系。
 - **SC-005**：在 `375px`、`768px`、`1440px` 下皆可完成：Step 1 填寫與驗證、Step 2 預覽/設定/code 驗證、Step 3 抽樣與資料隔離設定、Step 4 上傳或略過、建立成功導頁、取消返回，且驗證錯誤可被清楚定位。
 - **SC-005b**：在 mobile viewport 中，即使 annotation-workspace 右側說明區塊為收合狀態，主內容區仍維持單欄滿寬顯示，且無水平擠壓或異常留白。
-- **SC-006**：非 `TASK_CREATOR_SYSTEM_ROLES` 不可建立任務；同一 `Idempotency-Key` 於 `IDEMPOTENCY_WINDOW_HOURS` 內重送不會重複建立任務。
+- **SC-006**：非 `TASK_CREATOR_SYSTEM_ROLES` 或 `task.create` 格不允許者不可建立任務；角色／矩陣格變更後下一次請求即套用新權限。同一 `Idempotency-Key` 於 `IDEMPOTENCY_WINDOW_HOURS` 內重送不會重複建立任務。
 - **SC-006a**：啟用 `開始標記前強制顯示` 的任務中，同一使用者首次進入 annotation-workspace 會看到任務說明彈窗；完成確認後重新整理或再次進入不會重複彈出。
 - **SC-006b**：annotation-workspace 於「說明與檔案」點擊圖片檔案 `預覽` 後，可在檔案列表下方預覽區塊看到對應圖片。
 
@@ -793,6 +794,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 8.2.0 | 2026-10-06 | Issue #1160 D-9：FR-001a／SC-006 依 ADR-037 加入 system 層 `task.create` 矩陣必要條件，維持建立者原有角色與 membership 邊界；僅更新規劃契約。 |
 | 8.1.1 | 2026-09-19 | **FR-003j 英文 toggle 引文對齊答案值單一來源（PATCH，issue #811，OpenSpec change `split-bypass-answer-and-decision-wording`）**：schema 設定面板 `allow_bypass` toggle 之 en 引文由 `Allow bypass (unable to determine)` 改為 `Allow "Unable to determine (Bypass)"`（維護者裁定 R2），使其與 015 FR-092 v6.8.0 所定答案值之唯一 i18n 來源（`shared/sidebar.js` `BYPASS_WORDING`）一致；zh 引文「允許無法判定 (Bypass)」本即一致、不變。欄位、預設值、行為與 `outputs[]` 契約皆不變，無 FR／AC 增刪——PATCH。 |
 | 8.1.0 | 2026-09-19 | **Step 1 資料集欄位角色 Input 欄名自動推測（MINOR，issue #755，OpenSpec change `task-new-step1-field-role-hints`）**：新增 FR-002c-8、AC-1.6、AC-1.7、SC-002h——嵌入式資料預覽表格為尚未指定過角色的欄位初始化時，欄名（不分大小寫）包含 `FIELD_ROLE_INPUT_NAME_HINTS` 七個關鍵字（`text`／`content`／`sentence`／`passage`／`document`／`body`／`context`）任一者，依出現順序自動預填 Input，至多至當下輸入類型所需數量（`single_item` 1、`item_pair` 2）；不覆寫使用者手動指定或資料列來源記憶還原的角色。**永久不對 Evidence／Output 自動推測**（Data Fairness：fixture 普遍含 `gold_*` 保留答案欄名）。FR-002c-1 預設值敘述補「（欄名命中 Input 線索之例外見 FR-002c-8）」交叉引用；此句刻意不進入 delta（delta 維持純 ADDED 以確保可套用至衍生檢視），衍生檢視就此句與正典存在已記錄之分歧。AC-1.4／AC-1.5／SC-002g 為 8.0.0 已撤銷編號，不重用 |
 | 8.0.0 | 2026-09-16 | **移除 Step 1 常用組合一鍵預設（破壞性，issue #724，OpenSpec change `remove-task-new-step1-type-preset`）**：移除 FR-002f、AC-1.4、AC-1.5、SC-002g 與對應邊界情況。本版預設清單僅 1 筆，卻佔據 Step 1「任務類型」欄位最上方一整列的視覺權重，並在三組 chip 之外多加一層使用者必須先理解的介面概念，投報率不成立。任務類型選擇回到 FR-002／FR-002a–FR-002e 之三段式模型；選擇語意、cascade（`rebuildOutputChips()`）、`deriveTaskType()` 推導、`validateStep1()` 必填判斷與提交 payload 形狀皆不變。issue #724 之欄位角色批次動作與必填項合理預設兩個方向仍由 issue #755 追蹤。 |

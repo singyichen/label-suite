@@ -1,7 +1,7 @@
 ---
 功能分支: feat/1141-quality-metrics-ready-signal
 建立日期: 2026-04-20
-版本: 5.1.0
+版本: 5.2.0
 狀態: Draft
 ---
 
@@ -575,24 +575,24 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 ### 功能需求
 
 - **FR-001**：系統必須提供 `/task-detail` 並以 `task_id` 建立任務上下文。
-- **FR-002**：僅 `project_leader` 與 `reviewer` 可進入 `/task-detail`。
+- **FR-002**：僅持有目標任務 active `project_leader` 或 `reviewer` membership、且其 active task role 的 `task.detail.view` 格允許者可進入 `/task-detail`；同一人在同一任務有多個 active role 時，非 workspace 詳情頁可用允許權限聯集，但仍須通過 task_id、任務狀態與各項資源條件（ADR-037）。
 - **FR-002a**：無權限角色（含 `annotator`）造訪 `/task-detail` 時，系統必須導回 `TASK_DETAIL_UNAUTHORIZED_REDIRECT` 並顯示無權限提示。
 - **FR-003**：頁面必須提供五個 tabs：`overview`、`member-management`、`annotation-progress`、`annotation-results`、`work-log`，且預設為 `overview`。
 - **FR-004**：tab 切換必須為頁內行為，不觸發路由跳轉。
-- **FR-005**：`project_leader` 必須可於 `member-management` 執行成員新增、移除/停用；新加入時可指派角色。
+- **FR-005**：持有目標任務 active `project_leader` membership 且 `task.members.manage` 格允許者，必須可於 `member-management` 執行成員新增、移除/停用；新加入時可指派角色。此格不免除對目標成員、任務狀態與未完成作業的檢查。
 - **FR-005a**：`member-management` 必須先顯示任務既有成員（至少包含由 `task-new` 建立時帶入的 `project_leader` membership）；既有成員角色為唯讀，若需變更必須移除後重新加入。
 - **FR-005b**：成員新增入口必須拆分為「搜尋平台成員」與「Email 邀請」兩種方式，不得提供可直接瀏覽全部候選成員的靜態名單。
 - **FR-005c**：搜尋平台成員功能必須支援以 `帳號 / 姓名 / Email` 查詢；未輸入查詢關鍵字前不得顯示任何平台成員資料。
-- **FR-005d**：搜尋結果必須排除已在當前任務中的成員，且加入後需立即自搜尋結果消失。
-- **FR-005e**：Email 邀請必須驗證 email 格式並阻擋重複；寄送成功後該成員需以 `invited` 狀態出現在目前成員清單。
-- **FR-005f**：移除仍有未完成作業的成員時，系統必須顯示二次確認；確認後保留該成員已完成提交與歷史統計，並將未完成標記作業改為未指派狀態，等待 `project_leader` 手動重新指派或處理。
+- **FR-005d**：搜尋結果僅排除已持有當前任務中「本次選定 task role」membership 的人；同一人仍可被加入另一個 task role，加入後才從該角色的候選結果消失。membership 的邏輯唯一鍵為 `(task_id,user_id,task_role)`，停用／移除只作用於所選角色列，不得連帶改變此人的其他任務角色。
+- **FR-005e**：Email 邀請必須驗證 email 格式並阻擋同一任務、同一 email 與本次選定 task role 的重複邀請；既有其他 task role 不構成重複。寄送成功後該角色 membership 需以 `invited` 狀態出現在目前成員清單，不得覆寫另一角色的狀態。
+- **FR-005f**：移除仍有未完成作業的**選定角色 membership** 時，系統必須顯示二次確認；確認後保留該角色已完成提交與歷史統計。移除 annotator membership 時只把該角色未完成標記作業改為未指派，等待 `project_leader` 手動重新指派或處理；移除 reviewer membership 的 pending 審核依 FR-005j 退回分派池。此人其他仍有效的 task role、提交與指派不得被連帶停用或清空。
 - **FR-005g**：`project_leader` 必須可在 `annotation-progress` 查看 Dry Run 與 Official Run 的未指派標記作業，並將其重新指派給啟用中的標記員（`membership_status = active` 且 `task_role = annotator`）。
 - **FR-005h**：`project_leader` 明確排除未指派標記作業時，系統必須保存排除者、排除時間、排除原因、run stage 與原作業識別資訊；被排除作業不得計入完成率或標記分布統計，Dry Run 排除作業亦不得計入 IAA。
 - **FR-005i**：成員清單必須在「任務角色」與「狀態」欄之間提供「審核負荷」欄：`task_role = annotator` 顯示 `—`；`task_role = reviewer` 顯示 `{assigned} 筆 · {pending} 待審`，其中 `assigned` 恆為 `pending + done` 的推導值，不得獨立儲存。
 - **FR-005j**（**v3.0.0 修訂，BREAKING**，對應 AC-1.6，issue #688）：`member-management` 必須在成員清單之後提供「審核指派」區塊：顯示未指派審核筆數，並為每位啟用中審核員（`membership_status = active AND task_role = reviewer`）呈現已指派／待審／已完成三欄；被勾選為仲裁者（`can_arbitrate = true`）的審核員必須顯示「仲裁」標籤。自 v3.0.0 起本區塊必須恆為唯讀——審核指派一律由系統自動執行（`015` FR-093：試標以樣本為單位、正式標記平均分派給被勾選的審核員），不得出現「自動補齊」「指派…」或任何逐列操作按鈕；`review_assignment_mode` 已移除，不得再依模式分流呈現。移除或停用仍有待審負荷的審核員時，其 `pending` 筆數必須退回未指派池並由系統重新分派，`done` 保留為歷史統計（比照 FR-005f 對標記員的規則）。
 - **FR-005k**（**v3.0.0 修訂，BREAKING**，對應 AC-1.6，issue #688）：審核指派區塊底部必須顯示爭議池列 `{n} 項待仲裁`，其後必須顯示最終例外池列 `{m} 項待處置`（`m` = 仲裁裁定為「兩者皆非」而落入最終例外池、尚未由專案負責人收尾的項目數，見 FR-018）。兩列皆必須恆為唯讀資訊列：仲裁資格由系統依 `ARBITER_CANDIDATE_RULE` 與 `015` FR-060 之非當事人條件自動判定，具資格者自 `annotation-list` 進入認領；例外池處置由專案負責人自標記進度進入（FR-018）。本區塊不得提供「分派給仲裁者」或任何分派按鈕；`arbitration_enabled` 已移除，不得再以該開關停用任何呈現。
 - **FR-005l**：停用 `task_role = annotator` 的成員時：(1) 其已提交之標記（試標與正式皆然）必須全數保留，繼續計入歷史統計與 IAA，既有 review unit 不受影響；(2) 其尚未提交的已指派標記作業（含草稿）必須改為未指派狀態退回未指派池，等待 `project_leader` 依 FR-005g 重新指派或依 FR-005h 排除（比照 FR-005j 對審核員 `pending` 退回的規則）；(3) 停用期間該成員不得成為新指派對象，亦不得提交任何標記；(4) 重新啟用僅恢復可被指派資格，不自動取回先前退回的作業。停用操作本身不受 FR-010t 阻擋，但若停用後 active 標記員人數 `< min_annotators`，二次確認 modal 必須加註後續發布將被 FR-010t 阻擋的警告。
-- **FR-006**：`reviewer` 不可見 `member-management` tab；若以直連方式進入，系統必須導回 `overview` 並提示無權限。
+- **FR-006**：只有 `reviewer` membership、沒有通過 `task.members.manage` 的 active `project_leader` membership 者，不可見 `member-management` tab；若以直連方式進入，系統必須導回 `overview` 並提示無權限。同時有兩種角色者只能經由實際有效的 leader membership 與矩陣格取得管理能力，不能由 reviewer role 本身推導。
 - **FR-007**：`reviewer` 的 `work-log` 僅可查看自己的資料。
 - **FR-007a**：`工時明細表` 底部必須提供與 `task-list` 一致的 footer pagination，至少包含總筆數 / 目前頁數、每頁筆數切換與上一頁 / 下一頁 / 頁碼按鈕；其 `page` / `pageSize` 狀態（`wlPage` / `wlPageSize`）必須獨立，不得與其他 tab 分頁狀態共用；篩選條件變更時 `wlPage` 必須重設為 `1`；匯總卡片與異常提醒區塊必須依據完整篩選結果計算，不得僅計算當前頁資料。
 - **FR-007b**：`工時明細表` 的完成筆數必須拆分為 `標記筆數`、`審核筆數`、`仲裁筆數` 三欄；角色不適用的欄位顯示 `—`（標記員僅有標記筆數；審核員僅有審核筆數與仲裁筆數）。匯總卡片必須為 `總工時`、`總標記筆數`、`總審核筆數`、`加權平均速度` 四張，且 `加權平均速度` 卡片附「每筆平均耗時」次要說明列；逐列平均速度、匯總與異常提醒計算需以三類筆數總和為分子。
@@ -723,6 +723,8 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 - **FR-022**（**v5.0.0 新增**，對應 AC-3.25～AC-3.28、SC-049，issue #1120）：發布 `開始正式標記` 前，系統必須驗證剩餘正式標記池筆數大於 `0`。剩餘筆數之推導一律沿用 FR-010f-3 之既有推導式，本條不得複製或另建第二份推導式。(1) **發布阻擋**：剩餘正式標記池筆數為 `0` 時，系統必須阻擋 `開始正式標記` 發布，任務狀態必須維持 `waiting_iaa_confirmation`，且不得建立任何正式標記清單或 assignment。(2) **與 IAA 語意分列**：資料池不足之原因必須與 IAA 相關狀態分列呈現：不得以「IAA 未達標」或「IAA 計算中／計算失敗」表述資料池不足，亦不得因資料池不足而改變最新試標回合之 `iaa_computation_status`。最新回合 `iaa_computation_status = done`（含「無法計算」記為 `done`）且 IAA 已達標時，本條之阻擋必須仍然生效——此阻擋依據為資料池筆數，與 IAA 達標與否及計算是否結束皆無關，不構成 FR-010o-3 所禁止之「因 IAA 未達標而停用」，亦不改變 FR-010o-4 之既有停用規則。(3) **`draft` 階段提前揭露**：任務處於 `draft` 且目前 `sampling_value` 與既有回合設定會使剩餘正式標記池為 `0` 時，系統必須於發布前即顯示原因，並必須以停用狀態呈現對應的執行控制 CTA。此提前揭露不得取代 FR-010t 之成員人數檢查，兩者各自獨立逐項呈現。(4) **handler 同樣驗證**：本條之驗證必須在操作 handler 內執行：直接呼叫發布 handler（繞過停用的按鈕）必須同樣失敗，不得改變任務狀態或建立任何清單資料。(5) **可取得性**：阻擋原因不得僅以 hover 或顏色傳達；原因文字必須為可見文字，且必須可由鍵盤操作與螢幕閱讀器取得。
 - **FR-023**（**v5.0.0 新增**，對應 AC-3.29～AC-3.31、AC-3.39、SC-051，issue #1120）：任務之 `arbiter_ids` 為空時，`project_leader` 必須能對該任務的爭議項做最終裁定，其裁定必須與仲裁者裁定等效地使該爭議項視為已解決。本條是試標完成條件（FR-008a）與結案條件（FR-008b）納入「必要仲裁完成」後的唯一出口，避免未指定仲裁者的任務永遠無法完成。(1) **觸發條件**：本通道必須僅在 `arbiter_ids` 為空時對 `project_leader` 開放。`arbiter_ids` 非空時不得提供此通道——該情形的爭議仍須由具仲裁資格者依 `annotation/015-annotation-workspace` FR-060 之非當事人條件處理，`project_leader` 不得藉本條繞過仲裁者。(2) **裁定選項與效果**：`project_leader` 之裁定選項必須與仲裁者相同（`annotation/015-annotation-workspace` FR-061 之 `ARBITRATION_OUTCOMES`：採標記員答案／採審核員答案／兩者皆非）。裁定為「兩者皆非」時，該項必須依既有規則落入最終例外池由 `project_leader` 逐筆收尾（FR-018、`annotation/015-annotation-workspace` FR-095），不得因裁定者本身即為 `project_leader` 而跳過例外池。`dry_run` 之例外池收尾動作不得提供 `custom_answer`——依 `annotation/015-annotation-workspace` FR-095 第 (3) 點該動作僅適用 `official_run`。(3) **可追溯性**：裁定必須記錄裁定者帳號、裁定時間與理由，且必須可與仲裁者所做的裁定區分——畫面與匯出必須標明該筆定案來源為「負責人裁定（無指定仲裁者）」，不得呈現為一般仲裁者裁定。「兩者皆非」之理由必須為必填，與 `annotation/015-annotation-workspace` FR-061 第 3 點一致。(4) **不改變盲審隔離**：本通道不得使 `project_leader` 看到任何尚未提交的審核判斷，`annotation/015-annotation-workspace` FR-062 之盲審隔離規則不因本條放寬。
 
+- **FR-024**（issue #1160 D-9～D-11）：正式服務端須依 ADR-037 以當前 active membership 與已啟用矩陣格判斷：詳情讀取用 `task.detail.view`，Overview 的 `OVERVIEW_EDITABLE_FIELDS` 儲存用 `task.detail.edit`，成員操作用 `task.members.manage`，資料匯出用 `dataset.export`，並保留各自任務狀態、資料範圍、blind review 與答案隔離限制。reviewer 有 view 而無 edit；一人多角色時非 workspace 可用 active 角色權限聯集，狀態與移除只作用於選定 membership。發布、結案、仲裁與其他生命週期命令尚無完整 V1 專用鍵，不得借用上述鍵或只憑矩陣放行，須在 runtime 轉換前另行核准操作鍵、種子資料與安全測試。Prototype 的 URL `task_role` 僅保留檢視上下文，不可當作正式授權身分。
+
 ### 使用者流程與導頁
 
 ```mermaid
@@ -777,6 +779,7 @@ flowchart LR
 | 013 | New Task | 任務初始設定、建立者 membership、自動導頁、task_type registry/schema、`sequence_labeling.subtype = aspect_list` 與 `sentence_pairs` 的 config 欄位、預設值、預覽與驗證規則 |
 | 012 | Dashboard | 待處理提醒顯示與導覽語意 |
 | 017 | Dataset Analysis Detail | IAA 計算方式、逐輸出類型達標判定規則與門檻語意之正典定義（FR-039）；本規格僅顯示 `OUTPUT_TYPE_IAA_REGISTRY` 唯讀指標與使用者可覆寫門檻，不重新定義計算規則；`sequence_tagging` 匯出序列推導契約（FR-041）、詞級 tokenizer metadata 與對齊擴張報告（FR-042），以及 `EXPORT_TAGGING_SCHEMES`／`EXPORT_DEFAULT_TAGGING_SCHEME`／`EXPORT_TOKEN_UNITS`／`EXPORT_DEFAULT_TOKEN_UNIT` 四個規格常數之正典定義；本規格 FR-020 僅承接匯出對話框與匯出檔欄位呈現，不重新定義推導規則 |
+| admin-007／ADR-037 | Permission Matrix Authorization | 任務層 view/edit/manage/export 格、一人多角色與資源條件 |
 
 ### 下游（依賴本規格的規格）
 
@@ -849,12 +852,15 @@ flowchart LR
 - **SC-050**（**v5.0.0 新增**，issue #1120）：對同一任務依序檢視五個頁籤時，由同一 `task_id × run_type × round` 推導之計數在各頁籤間完全一致，且無任一數字由標記 assignment、審核單位、爭議項三種單位相加而得；該任務無工時或匯出紀錄時兩區塊皆呈現空狀態，不出現其他任務的通用資料（FR-010u）。
 - **SC-051**（**v5.0.0 新增**，issue #1120）：`arbiter_ids` 為空且存在爭議項的任務，`project_leader` 可逐項完成裁定並使該任務具備試標完成與結案資格，成功率 100%；裁定來源在畫面與匯出中皆可與仲裁者裁定區分；`arbiter_ids` 非空的任務中，此通道對 `project_leader` 的開放次數為 `0`（FR-023）。
 
+- **SC-052**：同一人在同一任務可同時有 reviewer 與 project_leader membership，但不得有重複 `(task_id,user_id,task_role)`；成員搜尋與 Email 邀請只對同角色判重，移除其中一個角色不影響另一個。reviewer 單獨可讀詳情、不能編輯或管理成員；其矩陣格或 membership 失效後下一請求立即拒絕，且無法以 URL 角色參數升權。
+
 ---
 
 ## Changelog
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 5.2.0 | 2026-10-06 | Issue #1160 D-9～D-11：依 ADR-037 定義詳情 view/edit、成員管理與匯出的矩陣必要條件；一人多 task role 的唯一鍵與角色別邀請／停用，並列出 V1 未涵蓋的生命週期命令，新增 FR-024／SC-052。只更新規劃契約。 |
 | 5.1.0 | 2026-10-06 | **品質指標就緒閘門（issue #1141，OpenSpec change `1141-task-detail-quality-metrics-gate`，MINOR）**：FR-008b 第 (5) 項「品質指標計算完成可用」原無任何規格定義其訊號，原型 `getCompletionSignals()` 從不傳入 `qualityMetricsReady`，第 (5) 項恆為放行（#1120 驗收 07(5) 延後項）。**修訂**：FR-008b 第 (5) 項改為依 `dataset/017-dataset-analysis-detail` 之 `QUALITY_METRICS_READY_RULE` 判定——最新一輪 IAA 計算 `pending`／`failed` 為未就緒並阻擋「標記完成」、顯示可見的繁體中文原因；`done`（含「無法計算」）與缺資料為就緒、不被第 (5) 項阻擋。原型僅於 `official_run` 傳入該訊號，`dry_run` 試標閘門不變。**未改動**：FR-008b 第 (1)–(4) 項與既有情境、FR-008a。判定 MINOR：FR-008b 第 (5) 項原本即為 MUST，本版補上可驗證的訊號來源，不新增或移除任何 FR／AC。 |
 | 5.0.0 | 2026-10-05 | **BREAKING：試標完成條件涵蓋標註、必要審核與必要仲裁，並對齊跨頁籤的衍生計數（issue #1120，OpenSpec change `1120-task-lifecycle-alignment`，MAJOR）**：v4.x 之 `DRY_RUN_COMPLETION_RULE` 與 FR-008a 僅以全員標註提交即自動轉入 `waiting_iaa_confirmation`，使審核與仲裁尚未完成的試標回合即可進入決策點；本版收回此既有行為（維護者 2026-10-02 經主 session 問答裁示屬 BREAKING，並授權 014 升 5.0.0）。**修訂**：規格常數 `DRY_RUN_COMPLETION_RULE` 與 FR-008a 原地改寫為「無未指派作業＋active 標記員全數完成＋`dry_run` 審核單位全數定稿＋無爭議中單位＋`dry_run` 最終例外池已清空」，未滿足時逐項列出帶單位的剩餘數；AC-3.2 之 Then 子句、AC-3.16 之充分性敘述與 SC-004 同步改為新規則（ID 不變）；FR-013 第 (1) 點、AC-3.14 與 Prototype 互動規格按鈕列之停用原因文字自「本回合全部提交並完成 IAA 後才能新增下一回合」改為「本回合的標註、必要審核與必要仲裁全部完成後才能新增下一回合」，並補 v5.0.0 修訂段；FR-018 第 (5) 點補 v5.0.0 修訂段——`dry_run` 待處置例外項計入試標完成閘門、`official_run` 者計入結案閘門，兩者不相加；FR-010t 補 v5.0.0 修訂段——`arbiter_ids` 為空時的發布警示改指向 FR-023 負責人裁定，不再聲稱任務將無法結案。**新增**：**FR-022**（剩餘正式標記池為 `0` 時阻擋 `開始正式標記`，與 IAA 語意分列、`draft` 提前揭露、handler 同樣驗證、可取得性）、**FR-010u**（五個頁籤之衍生計數共用 `task_id × run_type × round` 查詢上下文；`已提交` 分子分母、`已完成輪次` 不計進行中回合、三種聚合單位不得相加、時間語意、資料分配與工作完成分離）、**FR-023**（`arbiter_ids` 為空時由 `project_leader` 裁定爭議，選項同 015 FR-061，「兩者皆非」仍經最終例外池、`dry_run` 不提供 `custom_answer`、裁定來源可區分、不放寬 015 FR-062 盲審隔離）；AC-1.26～AC-1.27、AC-3.25～AC-3.39；SC-049～SC-051。**未變更**：`TASK_STATUSES` 五態、FR-010o-3 與 FR-010o-4 文字、FR-008b 前置條件、FR-010t 成員人數檢查第 (1)(2) 點。狀態機來源 `docs/adr/022-task-state-machine-location.md` 之 Transition Table `dry_run_in_progress → waiting_iaa_confirmation` 列已於本 change 同步修訂並新增 Amendment。「仲裁輸出項目」可計數單位另以 `annotation/015-annotation-workspace` 之獨立 delta 定義，不在本版。 |
 | 4.3.0 | 2026-10-02 | **工時篩選列日期區間改為單一日期區間選擇器（issue #1101，OpenSpec change `1101-work-log-date-range-picker`，MINOR）**：`work-log` tab 的工時篩選列原以兩個獨立 `<input type="date">`（起始日期／結束日期）呈現日期區間，使用者截圖要求改為單一日期區間選擇器——點擊後於同一日曆介面框選起訖日期，已選範圍即時高亮，控制項顯示 `YYYY-MM-DD ～ YYYY-MM-DD` 或未選時的提示文字。**新增**：**FR-007c** 全條——單一控制項與高亮、不完整選取不套用、反向選取正規化、包含邊界與清除、與任務階段／成員篩選組合維持既有分頁重置規則（FR-007a）、`wl_from`／`wl_to` URL 同步與單邊相容（FR-019 文字不變）、鍵盤操作與焦點回復、不改變 reviewer 權限邊界（FR-007）；新增 AC-1.20～AC-1.25（使用者故事 1）。Tab E「工時篩選列」介面描述補一句呈現方式說明（非 FR 錨點）。**未變更**：`state.workLogDateFrom`／`state.workLogDateTo`、`wl_from`／`wl_to` 網址參數、既有日期篩選的包含邊界比較邏輯（FR-019、FR-007、FR-007a、FR-007b 文字不變），未新增或移除任何既有 FR／AC。Prototype 新增共用元件 `design/prototype/pages/shared/date-range-picker.{js,css}`（`window.DateRangePicker.mount/setValue/setLang/destroy`，在 `components-showcase.html` 展示），並整合進 `work-log.html`／`task-detail.html`，新增回歸測試 `tests/shared/date-range-picker.spec.ts`、`tests/task-management/task-detail-work-log-date-range.spec.ts`，並有意義地更新 `task-detail-work-log-i18n.spec.ts`、`issue-726-url-view-state.spec.ts`。 |

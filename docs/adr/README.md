@@ -55,3 +55,4 @@ Each ADR follows this structure:
 | [034](034-formal-e2e-directory-location.md) | Formal E2E Test Directory — Root `e2e/[module]/` | Accepted | 2026-08-24 |
 | [035](035-google-oidc-no-external-idp.md) | Google SSO via Direct OIDC Integration — No External IdP | Accepted | 2026-09-08 |
 | [036](036-oss-repository-split.md) | Open-Source Development in a New `label-suite` Organization Repository — Spec Canon Stays Here | Proposed | 2026-09-17 |
+| [037](037-permission-matrix-authorization.md) | Permission Matrix as Authorization Input | Accepted | 2026-10-06 |
