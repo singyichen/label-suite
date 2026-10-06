@@ -101,7 +101,7 @@ flowchart LR
   n235 --> n236["進度指示器"]
   n235 --> n237["儲存及提交"]
   n235 --> n238["標記審核"]
-  n238 --> review_unit["review unit：sample × annotator × run；pending / approved / modified / disputed / finalized；合格且非當事 reviewer 仲裁"]
+  n238 --> review_unit["review unit：sample × annotator × run；pending / disputed / finalized（三態，單人接力）；合格且非當事 reviewer 仲裁"]
   n234 --> n239["說明與檔案"]
   n234 --> n240["標記清單"]
   n0 --> n241["帳號模組"]

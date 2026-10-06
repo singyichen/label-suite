@@ -28,7 +28,7 @@
 
 - **任務建立與輸出**：四步建立流程目前只接受 JSON 資料集；任務由 `input_type + outputs[] + field_role_map` 組成。八個 output key 為 `sequence_tagging`、`entity_recognition`、`relation_identification`、`single_label`、`multi_label`、`single_dim`、`multi_dim`、`free_text`，正典見 [ADR-029](../adr/029-output-type-composition.md) 與 [013](../../specs/task-management/013-task-new/spec.md)。
 - **生命週期**：`draft → dry_run_in_progress → waiting_iaa_confirmation → official_run_in_progress → completed`。試標回合須標註提交、必要審核與必要仲裁皆完成（含例外池清空）才進入 `waiting_iaa_confirmation`，IAA 未達目標僅為顧問性警示、不是完成條件；只有在 `waiting_iaa_confirmation` 才能新增下一試標回合（014 FR-008a／FR-013）。完成前需正式標記全數提交、應完成 review unit 全數定案、無未解爭議、應仲裁項目完成，且品質指標可用；正典見 [ADR-022](../adr/022-task-state-machine-location.md) 與 [014](../../specs/task-management/014-task-detail/spec.md)。
-- **審核與仲裁**：`ReviewUnit = sample × annotator × run`，狀態為 `pending | approved | modified | disputed | finalized`；差異形成 `DisputeItem`，由合格且非當事人的 arbiter 仲裁。隱藏的 test-set ground truth 不得提供給 annotator 或 reviewer；正典見 [015](../../specs/annotation/015-annotation-workspace/spec.md)。
+- **審核與仲裁**：`ReviewUnit = sample × annotator × run`，狀態為 `pending | disputed | finalized` 三態；每個審核單位由系統自動指派恰一位審核員（單人接力，名冊為 014 `reviewer_ids`／`arbiter_ids`）；審核員修正或無法裁決所形成的差異成為 `DisputeItem`，由合格且非當事人的 arbiter 仲裁（爭議項粒度待 [#1150](https://github.com/singyichen/label-suite/issues/1150) 裁定）。隱藏的 test-set ground truth 不得提供給 annotator 或 reviewer；正典見 [015](../../specs/annotation/015-annotation-workspace/spec.md)。
 - **品質分析**：依 `outputs[].type` 逐型統計與計算 IAA，複合任務逐型呈現；`free_text = not_applicable`，不計自動 IAA。指標與 threshold 只引用 [017 `OUTPUT_TYPE_IAA_REGISTRY`](../../specs/dataset/017-dataset-analysis-detail/spec.md)，本頁不複製技術表。
 - **交付輸出**：Task Detail 匯出為 JSON／JSON-MIN；review、dispute、arbitration 與 lifecycle gate 都必須保留可追溯證據。
 
