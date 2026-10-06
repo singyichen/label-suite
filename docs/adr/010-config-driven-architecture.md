@@ -46,7 +46,7 @@ Every task type is defined by a configuration object stored in the database (`JS
 
 ### Config Schema
 
-> **Current architecture:** [ADR-029 Output-Type Composition Model](029-output-type-composition.md) and [013 New Task spec](../../specs/task-management/013-task-new/spec.md) define the composable `input_type + outputs[]` model. [`docs/schema/config-schema.md`](../schema/config-schema.md) remains a Legacy v1 reference pending a complete v2 rewrite. The fixed `task.type + annotation` example below is retained only as historical context and is not a canonical contract.
+> **Current architecture:** [ADR-029 Output-Type Composition Model](029-output-type-composition.md) and [013 New Task spec](../../specs/task-management/013-task-new/spec.md) define the composable `input_type + outputs[]` model. [`docs/schema/config-schema.md`](../schema/config-schema.md) is retained as a historical (non-current) Legacy v1 document; no v2 rewrite is planned. The fixed `task.type + annotation` example below is retained only as historical context and is not a canonical contract.
 
 ```yaml
 # example task config

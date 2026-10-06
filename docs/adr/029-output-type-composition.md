@@ -402,6 +402,6 @@ The following decisions include the original 2026-06-29 resolution and the 2026-
 
 - ADR-010 — Config-Driven Task Architecture (evolved, not superseded)
 - `docs/product/functional-map/task-type-taxonomy.md`
-- `docs/schema/config-schema.md` — legacy v1 reference pending a complete ADR-029-aligned v2 rewrite
+- `docs/schema/config-schema.md` — historical Legacy v1 document, not a current contract (no v2 rewrite planned; ADR-029 and 013 are the current authority)
 - `specs/task-management/013-task-new/spec.md`
 - `specs/_governance/constitution.md` — Principle 2: Generalization-First (reinforced)
