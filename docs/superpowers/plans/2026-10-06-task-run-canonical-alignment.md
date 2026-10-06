@@ -115,7 +115,7 @@
 
 **Interfaces:** 只鏡射 Task 3 已變更的正典條文與驗收情境，保留相同 FR／SC／AC ID。
 
-- [ ] 寫 ADDED/MODIFIED/REMOVED delta，以 `openspec validate task-run-identity-contract --type change` 驗證結構，提交。
+- [x] 寫 ADDED/MODIFIED/REMOVED delta，以 `openspec validate task-config-version-contract --type change` 驗證結構，提交。
 
 ### Task 8: 014 OpenSpec delta
 
@@ -147,7 +147,7 @@
 
 **Interfaces:** 013／014／015 版本與 Task 2／3／4 正典檔頭一致；active change 的 STATUS stage／branch 必須符合 Project SDD lint（015 不能仍是 `done`，013 STATUS branch 須與其正典 frontmatter 一致），不誤稱 runtime 已完成。
 
-- [ ] 只更新這三列及適用的註記；013、014、015 active change 均使用真實規劃進度而非已部署狀態，跑 Project SDD lint，提交。
+- [x] 只更新這三列及適用的註記；013、014、015 active change 均使用真實規劃進度而非已部署狀態，跑 Project SDD lint，提交。
 
 ### Task 12: 同步 screen inventory 衍生檢視
 
