@@ -3,6 +3,7 @@
 **Status**: Accepted
 **Date**: 2026-09-08
 **Amended**: 2026-09-17 — account linking discards the local password and revokes all refresh tokens
+**Amended**: 2026-10-06 — linking increments credential version and revokes all token families under ADR-021
 
 ## Context
 
@@ -27,7 +28,7 @@ A repository-wide search for every major IdP name returns **zero real hits** —
 
 **SaaS IdP** (Auth0, Okta, Clerk): rejected for the same proportionality reason, plus an added concern specific to this project: it is a research tool, and routing annotator/participant identity data through a third-party SaaS raises data-residency questions that a self-issued JWT does not.
 
-**Direct Google OIDC integration** (selected): Google is treated purely as an identity assertion source — it returns a verified `sub` + `email` + `email_verified` and nothing else joins the trust boundary. Every downstream step (user upsert, session issuance) reuses the existing ADR-021 flow unchanged.
+**Direct Google OIDC integration** (selected): Google is treated purely as an identity assertion source — it returns a verified `sub` + `email` + `email_verified` and nothing else joins the trust boundary. Every downstream step (user upsert, session issuance) follows the current ADR-021 token-family flow.
 
 ## Decision
 
@@ -36,7 +37,7 @@ Label Suite does **not** adopt an external identity platform. Google SSO is impl
 ```text
 Google OIDC → callback: verify id_token
             → upsert users row
-            → issue self-owned httpOnly access + refresh cookies   ← ADR-021 unchanged
+            → issue self-owned httpOnly access + refresh cookies   ← ADR-021 token family
 ```
 
 ### Optional-integration guarantee
@@ -45,12 +46,12 @@ When `GOOGLE_CLIENT_ID` is not configured, the button falls back to the existing
 
 ### Account-linking strategy
 
-If a Google login's email already has an existing Email/Password account, the two are **auto-linked only when Google reports `email_verified: true`**; otherwise the login is rejected. This avoids account takeover via an unverified email address while not requiring a manual linking flow for the common case.
+If a Google login's email already has an existing Email/Password account, the two are **auto-linked only when Google reports `email_verified: true`**; otherwise the login is rejected. The verified email is canonicalized with Unicode NFC and casefold before lookup under `specs/account/020-auth-session-security/spec.md` FR-009. This avoids account takeover via an unverified email address while not requiring a manual linking flow for the common case.
 
 Google's verification proves control of the mailbox; the existing local account proves nothing, because `account-003` registration does not verify email ownership. Linking therefore treats Google as the owner and discards every credential the local account was holding. In the same transaction as the link:
 
 1. Set the account's `hashed_password` to `null`, making it a Google SSO account as defined by `account-005` FR-008. The owner can set a new password afterwards through `account-005` or `account-004`.
-2. Revoke all of the user's refresh tokens (`revoked_at` in ADR-021's `refresh_tokens` table), so no session issued before the link survives it.
+2. Increment `users.credential_version` and revoke all of the user's `account_token_family` rows, so neither refresh tokens nor already-issued access JWTs survive the link on the next request. A failure in any link step rolls back the whole transaction.
 
 ### Reversal trigger
 
@@ -62,7 +63,7 @@ If a faculty advisor requires institutional-account login (SAML/Shibboleth), thi
 
 - No new deployable service, no new admin console, no new data store to operate or secure.
 - ADR-024's zero-prerequisite Quick Start is untouched — Google SSO is additive and silently degrades when unconfigured.
-- ADR-021's session model (httpOnly JWT + `refresh_tokens` table) is reused verbatim; there is exactly one identity hub, not two.
+- ADR-021's session model (httpOnly JWT + `account_token_family` and `refresh_tokens`) is reused; there is exactly one identity hub, not two.
 - No RBAC duplication — the dual-layer role model keeps authorization decisions in one place.
 
 ### Harder
@@ -77,7 +78,7 @@ Implementing the callback itself is blocked on `account-001` (Login — Email/Pa
 ## Referenced by
 
 - [Issue #735](https://github.com/singyichen/label-suite/issues/735) — tracking issue for the Google SSO upgrade from no-op to real OIDC integration
-- [ADR-021](021-jwt-refresh-token-auth.md) — session/identity hub this ADR builds on unchanged
+- [ADR-021](021-jwt-refresh-token-auth.md) — current session/identity hub and token-family invalidation contract
 - [ADR-024](024-database-quickstart-sqlite-tiered.md) — zero-prerequisite Quick Start contract this ADR preserves
 - `specs/account/002-login-google-sso/spec.md` — canonical spec whose no-op scope this ADR will eventually extend
 - [Issue #688](https://github.com/singyichen/label-suite/issues/688) — pre-existing identity-namespace fragmentation this ADR avoids compounding

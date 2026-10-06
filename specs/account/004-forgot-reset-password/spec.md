@@ -1,7 +1,7 @@
 ---
 功能分支: feat/account/004-forgot-reset-password
 建立日期: 2026-04-05
-版本: 1.1.5
+版本: 1.1.6
 狀態: Clarified
 ---
 
@@ -88,6 +88,8 @@ sequenceDiagram
 - [重設密碼 Token 流程：請求 / 寄送 / 驗證 / 設定新密碼](./diagrams/password-reset-token-flow.html)（`archify` `sequence` 圖，成對 `.json` IR + 自包含 `.html`）
 
 該圖內容全數引自 [ADR-013](../../../docs/adr/013-email-service-resend.md) 的 Password Reset Flow 與本規格 FR-001–FR-010，**不新增、不修改任何 FR/AC**；ADR-013 未擇一或本規格未涵蓋之處（例如 token 存放於資料表或 Redis TTL key）皆在圖上標示為「規格未定義」，實作前須先補條文，不得以圖面作為裁定依據。
+
+密碼重設**成功後的登入 session 結果**另由 account-020 FR-007／SC-005 定義：憑證版本增加、全部 family 撤銷，舊 access JWT 下次請求即失效。本原型與上述技術序列圖未呈現這個後續步驟，不得用圖面省略推定舊 session 仍有效。
 
 ---
 
@@ -256,6 +258,7 @@ flowchart LR
 | 規格編號 | 功能 | 本規格需要的內容 |
 |---------|------|----------------|
 | 001 | Login — Email / Password + 頁面 UI | 忘記密碼入口連結與語言切換一致性 |
+| 020 | Authentication and Session Security | 真實密碼重設成功後的憑證版本與全部 family 撤銷；本規格仍只涵蓋原型頁 |
 | 008 | Shared Sidebar Navbar | 全站語言持久化契約（跨頁維持同語系） |
 
 ### 下游（依賴本規格的規格）
@@ -313,6 +316,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.1.6 | 2026-10-06 | 補列 account-020 對真實密碼重設後 session 的權威契約；原型 FR／SC 與頁面行為不變。 |
 | 1.1.5 | 2026-09-07 | Issue #671：於 流程圖 新增「重設密碼 token 技術序列圖」小節，連結置於本規格 `diagrams/` 的 `password-reset-token-flow.html`（`archify` `sequence` 圖），補上原型層狀態切換之外的後端 token 序列（Resend 寄送、`valid` / `expired` / `used` 三種驗證結果、作廢 token）；圖面內容引自 ADR-013 與本規格 FR-001–FR-010，未定義處標示為「規格未定義」而不自行裁定。純參考資料補充，未新增、修改或移除任何 FR/AC，走 Lightweight Path。 |
 | 1.1.4 | 2026-08-20 | Issue #261：新增 Prototype Traceability，分別對應 forgot 與 reset 原型、全頁 loading lock、可選 wireframe 參考及兩個設計層驗證檔；本規格維持多頁擁有權。 |
 | 1.1.3 | 2026-05-22 | 釐清 forgot/reset 送出後 loading 期間全頁不可互動，並同步更新流程、FR、狀態模型與成功標準 |

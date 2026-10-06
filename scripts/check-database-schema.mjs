@@ -99,15 +99,9 @@ export function validateErData(source, data) {
       if (actual.fk !== expected.fk) errors.push(`${path}: FK ${actual.fk ?? 'none'} != ${expected.fk ?? 'none'}`);
       if (actual.fk && !dataTables.has(actual.fk)) errors.push(`${path}: FK parent ${actual.fk} does not exist`);
 
-      if (path === 'users.hashed_password') {
-        if (actual.required !== 'pending' || !/D-1/.test(actual.note ?? '')) {
-          errors.push(`${path}: D-1 pending nullability must be explicit`);
-        }
-      } else {
-        const permitted = expected.nullable ? ['nullable'] : ['required', 'system'];
-        if (!permitted.includes(actual.required)) {
-          errors.push(`${path}: required ${actual.required} conflicts with dictionary nullability`);
-        }
+      const permitted = expected.nullable ? ['nullable'] : ['required', 'system'];
+      if (!permitted.includes(actual.required)) {
+        errors.push(`${path}: required ${actual.required} conflicts with dictionary nullability`);
       }
     }
   }

@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/SteveLin100132/notecraft/main/plugins/er-diagram-renderer/schema.json",
   "meta": {
     "title": "Label Suite 資料庫規劃 ER Diagram（account／admin）",
-    "description": "**規劃圖，並非已部署 Schema。** 目前已部署業務表：0；本頁只顯示 account／admin 欄位字典中的候選表，其中兩張權限矩陣表是否建立仍待 D-9 裁決。表、欄位與 FK 數量由 NoteCraft 從資料檔計算。欄位、鍵與連線來自 [account/admin 實體層字典](/notes/diagrams/architecture/account-admin-db-schema) §2–§3；未決議題見該文件 §5。其餘 task／dataset／annotation 模組仍在 [資料表盤點總帳](/notes/diagrams/architecture/database-table-inventory)，不以假表加入此圖。\n\n**讀圖方式：** Wiki 逐表看欄位與決策狀態；Diagram 搜尋表名或欄名，點表聚焦已明列的候選 FK。圖中連線不代表 migration 已建立。",
+    "description": "**規劃圖，並非已部署 Schema。** 目前已部署業務表：0；本頁顯示 account／admin 欄位字典中的 9 張候選表、61 欄與 6 個候選 FK，其中兩張權限矩陣表是否建立仍待 D-9 裁決。欄位、鍵與連線來自 [account/admin 實體層字典](/notes/diagrams/architecture/account-admin-db-schema) §2–§3；未決議題見該文件 §5。其餘 task／dataset／annotation 模組仍在 [資料表盤點總帳](/notes/diagrams/architecture/database-table-inventory)，不以假表加入此圖。\n\n**讀圖方式：** Wiki 逐表看欄位與決策狀態；Diagram 搜尋表名或欄名，點表聚焦已明列的候選 FK。圖中連線不代表 migration 已建立。",
     "source": "docs/diagrams/architecture/account-admin-db-schema.md §2–§3; docs/diagrams/architecture/database-table-inventory.md",
     "backTo": "/notes/diagrams/architecture/account-admin-db-schema"
   },
@@ -28,12 +28,6 @@
       "label": "系統",
       "marker": "muted",
       "title": "由應用程式或資料庫產生；非空"
-    },
-    {
-      "key": "pending",
-      "label": "待裁決",
-      "marker": "half",
-      "title": "D-1 nullability 尚未正典裁決"
     }
   ],
   "flags": [
@@ -61,7 +55,7 @@
     {
       "key": "account",
       "label": "帳號與登入",
-      "description": "候選表涵蓋帳號、session、一次性連結、email 變更與通知偏好。所有表尚未 migration。"
+      "description": "候選表涵蓋帳號、token family、輪替 token、一次性連結、email 變更與通知偏好。所有表尚未 migration。"
     },
     {
       "key": "admin",
@@ -103,7 +97,7 @@
           "name": "email",
           "type": "varchar(254)",
           "required": "required",
-          "note": "登入帳號，也是寄信地址；規則：U-01、U-02、E-06、E-08"
+          "note": "NFC＋casefold 後的登入帳號，也是寄信地址；UNIQUE lower(email)；規則：U-01、U-02、E-06、E-08"
         },
         {
           "name": "name",
@@ -127,8 +121,8 @@
         {
           "name": "hashed_password",
           "type": "varchar",
-          "required": "pending",
-          "note": "密碼雜湊。**null 有業務意義**：帳號沒有可用密碼（Google 帳號或尚未設密碼的受邀帳號），改密碼時不需輸入舊密碼；規則：U-09、U-10；D-1：nullability 與 001 plan 衝突，待正典裁決。"
+          "required": "nullable",
+          "note": "密碼雜湊。null＝沒有可用的本地密碼（Google 或尚未設密碼的受邀帳號）；規則：U-09、U-10。原 D-1 已裁決。"
         },
         {
           "name": "google_subject",
@@ -156,6 +150,13 @@
           "note": "系統初始化時建立的超管，不可停用或降級；全表最多一位；規則：U-05–U-07"
         },
         {
+          "name": "credential_version",
+          "type": "integer",
+          "required": "required",
+          "default": "1",
+          "note": "高風險憑證事件遞增，CHECK >= 1；JWT 版本與當前值比對；規則：U-16"
+        },
+        {
           "name": "created_at",
           "type": "timestamptz",
           "required": "required",
@@ -168,12 +169,47 @@
           "note": "最後修改時間；規則：X-02"
         }
       ],
-      "description": "**候選表／設計草案，尚未建立 migration。** 一列代表一位可登入使用者。來源：account/admin 實體層字典 §3.1、001／003／005／006 規格與 ADR-021／ADR-035。N-1 表名及角色欄名、D-1 密碼 nullability、D-6 高風險 token 作廢機制、D-8 email 大小寫唯一索引仍待裁決。圖中的 `hashed_password` 特別標為待裁決。"
+      "description": "**候選表／設計草案，尚未建立 migration。** 一列代表一位可登入使用者。`hashed_password` 可空；`credential_version` 使高風險憑證事件的舊 JWT 立即失效；email 先 NFC＋casefold 再保存。來源：account/admin §3.1、account-020、ADR-021／ADR-035。N-1／D-1／D-6／D-8 已裁決。"
+    },
+    {
+      "name": "account_token_family",
+      "label": "一次登入的 token 家族",
+      "section": "3.2",
+      "group": "account",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "required": "system",
+          "note": "一次登入的內部識別碼；規則：F-01",
+          "pk": true
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "required": "required",
+          "note": "這次登入的帳號；CASCADE FK 與 B-tree 索引；規則：F-01、F-02",
+          "fk": "users"
+        },
+        {
+          "name": "started_at",
+          "type": "timestamptz",
+          "required": "required",
+          "note": "最初登入時間；absolute TTL 的唯一基準；規則：F-01、F-03"
+        },
+        {
+          "name": "revoked_at",
+          "type": "timestamptz",
+          "required": "nullable",
+          "note": "整個登入家族的撤銷時間；null＝未撤銷；規則：F-02、F-04"
+        }
+      ],
+      "description": "**候選表／設計草案，尚未建立 migration。** 一列代表一次登入／一個裝置的 session；此表擁有使用者與開始時間。來源：account/admin §3.2、account-020 FR-001／FR-003、ADR-021。"
     },
     {
       "name": "refresh_tokens",
-      "label": "登入 session",
-      "section": "3.2",
+      "label": "輪替 refresh token",
+      "section": "3.3",
       "group": "account",
       "columns": [
         {
@@ -184,17 +220,11 @@
           "pk": true
         },
         {
-          "name": "user_id",
-          "type": "uuid",
-          "required": "required",
-          "note": "所屬帳號（CASCADE）",
-          "fk": "users"
-        },
-        {
           "name": "family_id",
           "type": "uuid",
           "required": "required",
-          "note": "同一次登入（同一裝置）的輪替 token 共用此值；用於「改密碼保留目前裝置、登出其他裝置」；規則：R-04、R-08"
+          "note": "所屬登入家族；CASCADE FK 與 B-tree 索引；規則：R-04、R-08",
+          "fk": "account_token_family"
         },
         {
           "name": "token_hash",
@@ -210,12 +240,6 @@
           "note": "到期時間；規則：R-07"
         },
         {
-          "name": "session_started_at",
-          "type": "timestamptz",
-          "required": "required",
-          "note": "這次登入最初的時間，輪替時不變；用於強制登入最長存續時間；規則：R-04、R-07"
-        },
-        {
           "name": "revoked_at",
           "type": "timestamptz",
           "required": "nullable",
@@ -228,18 +252,24 @@
           "note": "撤銷原因；**只有 `rotated` 可進入寬限期重發**；規則：R-01、R-02、R-05"
         },
         {
+          "name": "grace_reissued_at",
+          "type": "timestamptz",
+          "required": "nullable",
+          "note": "已輪替 token 額外一次寬限重發時間；原子占用；規則：R-06"
+        },
+        {
           "name": "created_at",
           "type": "timestamptz",
           "required": "required",
           "note": "發行時間"
         }
       ],
-      "description": "**候選表／設計草案，尚未建立 migration。** 一列代表一張 refresh token；`family_id` 串聯一次登入的輪替紀錄。來源：account/admin §3.2、001 plan v2.1.0 與 005 FR-010。D-3 寬限期重發上限可能增加欄位，尚未裁決。只保存 `token_hash`，不保存 token 原值。"
+      "description": "**候選表／設計草案，尚未建立 migration。** 一列代表一張 refresh token；真實 FK 指向 family，不重複保存使用者或登入時間。`grace_reissued_at` 最多容許一次寬限重發。來源：account/admin §3.3、account-020 FR-001／FR-004、ADR-021。只保存 `token_hash`，不保存 token 原值。"
     },
     {
       "name": "account_password_token",
       "label": "密碼重設與邀請連結",
-      "section": "3.3",
+      "section": "3.4",
       "group": "account",
       "columns": [
         {
@@ -288,12 +318,12 @@
           "note": "寄出時間"
         }
       ],
-      "description": "**候選表／設計草案，尚未建立 migration。** 重設密碼與受邀設定密碼共用一次性連結表。來源：account/admin §3.3、004 與 006 FR-006a。D-2 邀請期限與作廢顯示仍待裁決；只保存雜湊。"
+      "description": "**候選表／設計草案，尚未建立 migration。** 重設密碼與受邀設定密碼共用一次性連結表。來源：account/admin §3.4、004 與 006 FR-006a。D-2 邀請期限與作廢顯示仍待裁決；只保存雜湊。"
     },
     {
       "name": "account_email_change_request",
       "label": "Email 變更申請",
-      "section": "3.4",
+      "section": "3.5",
       "group": "account",
       "columns": [
         {
@@ -348,12 +378,12 @@
           "note": "申請時間"
         }
       ],
-      "description": "**候選表／設計草案，尚未建立 migration。** 驗證成功前仍以舊 email 登入。來源：account/admin §3.4、005 FR-004C–FR-004M。`token_hash` 驗證後清為 null；email 唯一索引形狀受 D-8 影響。"
+      "description": "**候選表／設計草案，尚未建立 migration。** 驗證成功前仍以舊 email 登入。來源：account/admin §3.5、005 FR-004C–FR-004M。`token_hash` 驗證後清為 null；email 在寫入前依 account-020 正規化。"
     },
     {
       "name": "account_notification_preference",
       "label": "通知開關",
-      "section": "3.5",
+      "section": "3.6",
       "group": "account",
       "columns": [
         {
@@ -384,12 +414,12 @@
           "note": "是否寄 email；規則：N-03"
         }
       ],
-      "description": "**候選表／設計草案，尚未建立 migration。** 每位使用者、每種事件一列，複合主鍵為 `(user_id, event_key)`。來源：account/admin §3.5、005 FR-013B–FR-013E。D-5 無資料列時的預設開關仍待裁決。"
+      "description": "**候選表／設計草案，尚未建立 migration。** 每位使用者、每種事件一列，複合主鍵為 `(user_id, event_key)`。來源：account/admin §3.6、005 FR-013B–FR-013E。D-5 無資料列時的預設開關仍待裁決。"
     },
     {
       "name": "audit_event",
       "label": "操作稽核紀錄",
-      "section": "3.6",
+      "section": "3.7",
       "group": "admin",
       "columns": [
         {
@@ -449,12 +479,12 @@
           "note": "伺服器端發生時間（UTC）；規則：A-02"
         }
       ],
-      "description": "**候選表／設計草案，尚未建立 migration。** 管理操作只新增稽核紀錄；`actor_user_id` 參照 `users`，多型的 `target_id` 不加 FK。來源：account/admin §3.6、006 FR-013、007 FR-010。D-4 尚未裁決共用表形；ADR-032 仍為 Proposed，表名與 `task_id` 可能改變。"
+      "description": "**候選表／設計草案，尚未建立 migration。** 管理操作只新增稽核紀錄；`actor_user_id` 參照 `users`，多型的 `target_id` 不加 FK。來源：account/admin §3.7、006 FR-013、007 FR-010。D-4 尚未裁決共用表形；ADR-032 仍為 Proposed，表名與 `task_id` 可能改變。"
     },
     {
       "name": "admin_role_permission",
       "label": "角色權限矩陣",
-      "section": "3.7",
+      "section": "3.8",
       "group": "admin",
       "columns": [
         {
@@ -491,12 +521,12 @@
           "note": "最後一次被改變的時間；規則：X-02"
         }
       ],
-      "description": "**有條件候選表／設計草案，尚未建立 migration。D-9 決定是否建立此表。** 目前草案一列為角色 × 權限鍵的一格。來源：account/admin §3.7、007 草案。若 D-9 改為唯讀矩陣，這張表將不建立；若保留編輯，D-10 還須裁決 `allowed` 能否用 boolean 表達唯讀。"
+      "description": "**有條件候選表／設計草案，尚未建立 migration。D-9 決定是否建立此表。** 目前草案一列為角色 × 權限鍵的一格。來源：account/admin §3.8、007 草案。若 D-9 改為唯讀矩陣，這張表將不建立；若保留編輯，D-10 還須裁決 `allowed` 能否用 boolean 表達唯讀。"
     },
     {
       "name": "admin_role_permission_version",
       "label": "矩陣版本號",
-      "section": "3.8",
+      "section": "3.9",
       "group": "admin",
       "columns": [
         {
@@ -519,7 +549,7 @@
           "note": "最後一次儲存時間；規則：X-02"
         }
       ],
-      "description": "**有條件候選表／設計草案，尚未建立 migration。D-9 決定是否建立此表。** 目前草案只有 `id = 1` 的單列，記整份矩陣的樂觀鎖版本。來源：account/admin §3.8、007 FR-005b；D-9 若取消可編輯矩陣，這張表將不建立。"
+      "description": "**有條件候選表／設計草案，尚未建立 migration。D-9 決定是否建立此表。** 目前草案只有 `id = 1` 的單列，記整份矩陣的樂觀鎖版本。來源：account/admin §3.9、007 FR-005b；D-9 若取消可編輯矩陣，這張表將不建立。"
     }
   ]
 }

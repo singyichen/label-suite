@@ -1,7 +1,7 @@
 ---
 功能分支: feat/account/005-profile-settings
 建立日期: 2026-04-05
-版本: 1.2.10
+版本: 1.3.0
 狀態: Clarified
 ---
 
@@ -375,7 +375,7 @@ sequenceDiagram
 - **FR-004E**：使用者點擊有效驗證連結後，系統必須將 `email` 更新為 `pending_email` 並清除 pending/token。
 - **FR-004F**：Email 驗證成功後，僅新 Email 可用於登入；舊 Email 不得再登入。
 - **FR-004G**：驗證 token 失效或無效時，系統必須拒絕更新 Email 並提供重新寄送驗證信機制。
-- **FR-004K**：Email 驗證成功後，系統必須失效該使用者所有既有 sessions，並導向 `/login` 要求以新 Email 重新登入。
+- **FR-004K**：Email 驗證成功後，系統必須在同一交易增加 `users.credential_version` 並撤銷該使用者所有 `account_token_family`（包含目前裝置），使舊 access JWT 在下一次請求失效，並導向 `/login` 要求以新 Email 重新登入；具體認證機制依 account-020 FR-002／FR-007。
 - **FR-004L**：重新寄送 Email 驗證信必須套用 `EMAIL_VERIFICATION_RESEND_COOLDOWN_SECONDS`；cooldown 未結束前，系統不得再次寄送並必須顯示剩餘等待時間。
 - **FR-004M**：每位使用者同時間只能有一筆 pending Email 變更請求；新的合法變更請求必須覆蓋舊 `pending_email`、token 與期限，舊 token 必須立即失效。
 - **FR-005**：`/profile` 必須提供密碼修改區塊，依帳號類型顯示對應欄位。
@@ -383,7 +383,7 @@ sequenceDiagram
 - **FR-007**：新密碼必須以 bcrypt 雜湊儲存，並符合 `PASSWORD_MIN_LENGTH` 與 `PASSWORD_RULE`。
 - **FR-008**：Google SSO 帳號（`hashed_password = null`）不得顯示「現有密碼」欄位，且可直接設定新密碼。
 - **FR-009**：密碼驗證失敗時，系統必須回傳 401 與「現有密碼錯誤」，且不啟用鎖定或節流機制。
-- **FR-010**：密碼更新成功後，必須保留目前裝置 session，並失效其他裝置既有 sessions。
+- **FR-010**：密碼更新成功後，必須在同一交易增加 `users.credential_version`、保留目前裝置的 `account_token_family` 並撤銷其他裝置 family。所有舊 access JWT 下個請求先失效；目前裝置可由保留 family silent refresh 取得新版本 JWT 並維持登入，其他裝置 refresh 失敗。此條不預設密碼更新 API 回應另含新 token，機制依 account-020 FR-006。
 - **FR-011**：僅已登入使用者可存取 `/profile`；未登入存取必須導向 `/login`。
 - **FR-011A**：`/profile` 必須具備響應式設計，至少支援 `RWD_VIEWPORTS`。
 - **FR-011B**：在 `<= MOBILE_BP` 時，兩個主要區塊（個人資料 / 密碼）必須單欄堆疊，避免欄位或按鈕被截斷。
@@ -501,6 +501,7 @@ flowchart LR
 |---------|------|----------------|
 | 001 | Login — Email / Password + 頁面 UI | `/profile` 需以已登入狀態存取；未登入導向 `/login` |
 | 002 | Login — Google SSO | 需識別 Google SSO 帳號（`hashed_password = null`）以切換「設定密碼」流程 |
+| 020 | Authentication and Session Security | FR-002／FR-006／FR-007 的憑證版本、family 撤銷與目前裝置 silent refresh 契約 |
 | 012 | Dashboard | Navbar 使用者頭像作為 `/profile` 入口|
 | 008 | Shared Sidebar Navbar | 全站語言持久化契約（跨頁維持同語系） |
 
@@ -518,12 +519,12 @@ flowchart LR
 - **SC-001**：個人資料更新成功後，Navbar 名稱必須在同頁即時更新，無需重新整理。
 - **SC-001A**：頭像更新或移除成功後，`/profile` 與 Navbar 頭像必須在同頁即時更新，無需重新整理；不合法檔案不得送出。
 - **SC-002**：密碼更新後，舊密碼登入失敗且新密碼登入成功。
-- **SC-003**：密碼更新成功後，目前裝置維持登入；其他裝置在下一次 API 請求時被拒絕並要求重新登入。
+- **SC-003**：密碼更新成功後，A、B 兩裝置舊 access JWT 在下一次 API 請求均被拒絕；目前裝置 A 以保留 family silent refresh 後維持登入，其他裝置 B 的 refresh 失敗並要求重新登入。
 - **SC-004**：所有密碼欄位皆以 `password input type` 呈現，不得明文顯示。
 - **SC-005**：在 `RWD_VIEWPORTS` 下，`/profile` 無破版、無遮擋、無水平捲軸。
 - **SC-006**：新 Email 驗證成功後，使用者可用新 Email 登入，舊 Email 登入必須失敗。
 - **SC-007**：新 Email 未驗證或驗證 token 失效時，系統不得更新帳號主 Email。
-- **SC-007A**：新 Email 驗證成功後，該使用者所有既有 sessions 在下一次受保護頁面載入或 API 請求時必須被拒絕，並要求重新登入。
+- **SC-007A**：新 Email 驗證成功後，該使用者 `credential_version` 增加且所有 family 撤銷；所有舊 access／refresh 在下一次受保護頁面載入或 API 請求時被拒絕，並要求以新 Email 重新登入。
 - **SC-007B**：重新寄送驗證信在 cooldown 未結束時不得發送新郵件，且畫面必須顯示剩餘等待時間；cooldown 結束後可再次寄送。
 - **SC-007C**：使用者提交新的 pending Email 後，舊 pending Email 的驗證連結即使仍在 TTL 內也必須驗證失敗，且不得更新帳號主 Email。
 - **SC-008**：`/profile` 切換語言後導向 `/dashboard` 或 account 其他頁再返回，語系需保持一致。
@@ -567,6 +568,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.3.0 | 2026-10-06 | Issue #1160 對齊 account-020：FR-010／SC-003 明確定義改密碼後目前裝置先失效、再 silent refresh；FR-004K／SC-007A 定義改 Email 的憑證版本增加與全部 family 撤銷。 |
 | 1.2.10 | 2026-08-20 | Issue #261：新增 Prototype Traceability，將 `profile.html` 定義為現行 UI baseline，並明確標示 `profile.pen` 缺失且非現行 artifact。 |
 | 1.2.9 | 2026-05-22 | `/speckit.clarify` 補齊五項決策：頭像上傳納入本版、通知設定後端持久化、Email 驗證成功後失效所有 sessions、驗證信重送 cooldown、單一 pending Email 覆蓋規則 |
 | 1.2.8 | 2026-05-21 | 補充輸入與產生規則、已釐清事項、審查清單與執行狀態；同步功能分支格式 |

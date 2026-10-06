@@ -1,7 +1,7 @@
 ---
 功能分支: feat/foundation/000-foundation
 建立日期: 2026-05-29
-版本: 1.12.6
+版本: 1.13.1
 狀態: Draft
 ---
 
@@ -430,10 +430,10 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 **約束情境 1 — JWT 與 Refresh Token**：
 
 1. **Given** 登入成功，**When** 系統核發 token，**Then** 系統必須以 `httpOnly; Secure; SameSite=Lax` cookie 傳送 access token 與 refresh token。
-2. **Given** JWT payload 被建立，**When** 系統寫入 claims，**Then** payload 只能包含認證必要 claims，例如 `sub`、system-level `role`、`iat`、`exp`；不得包含 resource-scoped permission 或 module-specific role。
-3. **Given** refresh token 使用一次，**When** `/auth/refresh` 成功，**Then** 系統必須旋轉 refresh token、立即作廢舊 token，並依 `REFRESH_TOKEN_TTL` 延長新 refresh token 的 `expires_at`。
-4. **Given** refresh token reuse 被偵測，**When** 已作廢 token 再次被使用，**Then** 系統必須撤銷該使用者仍有效的 refresh tokens。
-5. **Given** 系統需要立即撤銷尚未過期的 access token，**When** 發生強制登出、帳號停權、credential rotation 或高風險安全事件，**Then** 系統必須定義 `jti` deny list、token version 或等效 access-token invalidation mechanism；不得把 access token 在 `ACCESS_TOKEN_TTL` 內仍有效作為永久豁免。
+2. **Given** JWT payload 被建立，**When** 系統寫入 claims，**Then** payload 必須包含 `sub`、`sid`、`credential_version`、`iat`、`exp` 等認證必要 claims；system-level `role` 若保留僅供顯示，不得包含 resource-scoped permission 或 module-specific role。
+3. **Given** refresh token 使用一次，**When** `/auth/refresh` 成功，**Then** 系統必須在同一交易輪替 token、作廢舊列，並以 `REFRESH_TOKEN_TTL` 和 family 的 absolute max 兩者較早者設定新 `expires_at`。
+4. **Given** `rotated` token 在 30 秒寬限期內被重用，**When** 一次額外重發資格尚未占用，**Then** 可以原子方式占用；該資格已占用時回 `409` 且不全量撤銷；超過寬限期的 reuse 才撤銷該使用者所有有效 family。
+5. **Given** 需要立即撤銷尚未過期的 access token，**When** 發生登出、帳號停用或高風險憑證事件，**Then** 系統必須在每次已認證請求核對 `sid` family、現行使用者狀態與 `credential_version`；不得讓舊 access token 依剩餘 TTL 繼續通行。
 6. **Given** 系統以 cookie 傳送 session credential，**When** production 環境處理 protected unsafe method，**Then** 系統必須執行 CSRF 防護，驗證 `Origin` / `Referer` 或使用 CSRF token。
 
 **約束情境 2 — Permission Boundary**：
@@ -445,13 +445,13 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 
 ### 功能需求
 
-- **FR-016**：系統必須維護 `refresh_tokens` 資料表或等效 persistence，欄位至少包含 `user_id`、`token_hash`、`expires_at`、`revoked_at`；每次 refresh 成功必須寫入新 token row，並以當下時間加上 `REFRESH_TOKEN_TTL` 計算新的 `expires_at`。
+- **FR-016**：系統必須維護 `account_token_family` 與 `refresh_tokens` persistence：family 至少有 `id`、`user_id` FK、`started_at`、`revoked_at`；token 至少有 `id`、`family_id` FK、唯一 `token_hash`、`expires_at`、`revoked_at`、`revoked_reason`、`grace_reissued_at`。token 列不得重複 family 的 `user_id` 或 `started_at`；每次 refresh 成功須在同一交易輪替並寫入新 token row，`expires_at` 取當下時間加 `REFRESH_TOKEN_TTL` 與 family absolute max 之較早者。
 - **FR-017**：系統必須讓 frontend auth store 僅保存非敏感 session state；不得將 raw token 持久化至 localStorage。
 - **FR-018**：系統必須讓 resource permission checks 位於 route dependency 或 service 層；repository / query helper 不得內嵌權限邏輯。
 - **FR-019**：系統必須對 unauthorized、forbidden、resource-hidden 三種情境撰寫測試。
-- **FR-075**：系統必須明確定義 refresh token concurrent refresh 的處理策略，擇一實作：（A）grace period 策略：已 revoke 但在 `REFRESH_TOKEN_GRACE_PERIOD` 內的 token 可視為有效並重新核發，不觸發全量撤銷；（B）mutex 策略：使用 `SELECT ... FOR UPDATE`（不加 `SKIP LOCKED`）鎖定 token row，確保 concurrent Transaction B 等待 Transaction A commit 後讀取已更新狀態（revoked/rotated），再安全回傳 `409 Conflict` 或觸發 reuse 偵測；不得使用 `SKIP LOCKED`，否則 concurrent request 將因 row 被跳過而得到空結果集，導致誤判為 401/404 而非 409。所選策略必須在 ADR-021 記錄，並補充 concurrent refresh 情境的測試。
-- **FR-076**：系統必須讓 sliding refresh token 受 `REFRESH_TOKEN_ABSOLUTE_MAX_TTL` 約束；session 自首次登入起超過 absolute max 後必須強制重新登入，不得無限 sliding 延期；若安全策略允許不同上限，須在 ADR 明確說明理由。
-- **FR-077**：系統必須讓高風險安全事件能立即作廢尚未過期的 access token，透過 jti deny list（儲存於 Redis，entry TTL 等於剩餘 `ACCESS_TOKEN_TTL`）或 token_version bump 實作；auth/security owning spec 必須指定 `app/core/security.py` 中的具體實作並補充測試。
+- **FR-075**：系統必須對 refresh token concurrent refresh 採 ADR-021 的有界 grace 策略：僅 `revoked_reason='rotated'` 且在 30 秒內的 token 可透過 `grace_reissued_at IS NULL` 原子條件額外重發一次；資格已占用時回 `409 Conflict`，不核發也不全量撤銷；超過寬限期 reuse 才撤銷所有有效 family。SQLite 與 PostgreSQL 的競爭測試必須驗證最多一次額外重發，不得以 `SKIP LOCKED` 或無界重發取代。
+- **FR-076**：系統必須讓 sliding refresh token 與 access JWT 受 `REFRESH_TOKEN_ABSOLUTE_MAX_TTL` 約束；每次 refresh（含寬限重發）及每個已認證請求以 family 的 `started_at` 作首次登入基準，達 absolute max 後強制重新登入，登入與 refresh 核發的新 token 到期不得超過此上限。
+- **FR-077**：系統必須以 `users.credential_version` 與 JWT 同名 claim 在每次已認證請求比對，使改密碼、改 email、重設密碼、Google 連結等高風險憑證事件立即作廢舊 access JWT；每次請求另須核對 `sid` 指向未撤銷 family 且 `family.user_id = sub`，以支援單一裝置登出。角色與停用仍重讀 `users.role`／`is_active`，不得用版本代替。具體實作與跨資料庫測試由 `specs/account/020-auth-session-security/spec.md` 承接。
 - **FR-078**：若系統部署環境包含同一 eTLD+1 的多個 subdomain（如 `api.lab.edu` 與 `app.lab.edu`），系統必須把 `Origin` / `Referer` 驗證視為 `SameSite=Lax` 不覆蓋 same-site subdomain 的補充 CSRF 防護；feature spec 的 security review 必須顯式評估此風險並記錄豁免或啟用決定。（FR-078 為多 subdomain 部署的補充評估要求；FR-117 為所有 production endpoint 的通用強制基準，兩者並存。）
 
 ---
@@ -537,7 +537,7 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 - **FR-031**：系統必須讓測試環境使用真實 PostgreSQL 或與 production 行為一致的 DB 測試容器；不得以 mock 取代 ORM integration tests。
 - **FR-083**：系統必須讓所有 background job 的 DB write 使用 PostgreSQL 層級的 atomic UPSERT，即 SQLAlchemy `insert().on_conflict_do_update()` 或 `on_conflict_do_nothing()`；不得以 SQLAlchemy ORM `session.merge()`（底層為 SELECT + INSERT/UPDATE 兩步驟，高並發下可引發 `IntegrityError`）或 check-then-act pattern（先 SELECT 再 INSERT）替代，以確保 Celery retry 在任何 crash point 後重新執行時不產生 race condition 或重複資料。
 - **FR-104**：系統必須在 `app/db/base.py` 或等效 metadata 初始化處定義 SQLAlchemy naming convention，至少覆蓋 `ix`、`uq`、`ck`、`fk`、`pk`；migration 不得產生未命名 constraint。
-- **FR-105**：系統必須讓 DB table 與 column 使用 `lower_case_snake`；table name 預設使用 singular form，join table 或 module-owned table 應以前綴表達 domain ownership，例如 `task_assignment`、`dataset_item`。
+- **FR-105**：系統必須讓 DB table 與 column 使用 `lower_case_snake`；table name 預設使用 singular form，join table 或 module-owned table 應以前綴表達 domain ownership，例如 `task_assignment`、`dataset_item`、`account_token_family`。歷史契約 `users`、`refresh_tokens` 與欄名 `role`、`is_active` 為明示命名例外，不得據此擴張新表的命名例外。
 - **FR-106**：系統必須讓 datetime 欄位使用 `_at` suffix、date 欄位使用 `_date` suffix；外鍵欄位命名必須穩定一致，例如同一概念在各表使用相同 `{entity}_id`。
 - **FR-107**：系統必須在 `alembic.ini` 設定 human-readable migration file template（例如 `%%(year)d-%%(month).2d-%%(day).2d_%%(slug)s`）；migration slug 必須可讀並描述變更。
 
@@ -849,6 +849,8 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.13.1 | 2026-10-06 | 安全審查補強 FR-076：family absolute TTL 同時限制已認證請求與登入／refresh 核發的 access JWT 到期，避免最後核發的 JWT 在 family 期限後繼續通行；僅規劃契約，未實作 runtime。 |
+| 1.13.0 | 2026-10-06 | Issue #1160 auth/token-family 規劃契約：F-04 FR-016／075／076／077 改採真實 family FK、一次寬限重發、`sid`／`credential_version` 每請求失效；FR-105 列出四個既有命名例外。僅更新設計契約，尚無 ORM、migration 或 runtime。 |
 | 1.12.6 | 2026-09-07 | F-04 新增 Auth Token 生命週期序列圖連結（issue #674 剩餘缺口之一；圖檔為 issue #671 產出，歸屬 `specs/account/001-login-email-password/diagrams/auth-token-lifecycle.html`，隨 001 歸檔，本節為跨規格參照），以圖面呈現 JWT 簽發、refresh 與撤銷流程。**無 FR/SC 新增、移除或措辭變更**——僅新增衍生視圖連結，比照 v1.12.5（F-02）先例 |
 | 1.12.5 | 2026-09-07 | F-02 新增 Backend 分層契約圖連結（issue #670，`specs/foundation/000-foundation/diagrams/backend-layering-and-celery-boundary.html`，依 `docs/diagrams/README.md`「隸屬單一 spec 的圖放該 spec 的 `diagrams/`、隨 spec 一起歸檔」置於本規格目錄），以圖面呈現 Router → Service → Repository/ORM 的責任邊界、依賴方向與 F-12 的 Celery 任務邊界。**無 FR/SC 新增、移除或措辭變更**——僅新增衍生視圖連結。繪製時盤點出四項既有條文未涵蓋的分層問題（service 是否可直接組 query／操作 ORM、ORM→response schema 轉換責任歸屬、Celery task 可否重用 module service／repository、FR-101 允許的「公開 dependency/service interface」置放路徑），已在圖上標示為「規格未定義」，待維護者裁決是否補條文；本次不代為裁定。另記錄一項與上游 ADR 的落差：`docs/adr/007-async-tasks-celery.md` 的整合範例在 route handler 內直接呼叫 `.delay()`，與 FR-009「service 為 side effect dispatch 唯一入口」及 F-02 約束情境 1.1 不一致，圖面依本規格繪製並標註該落差 |
 | 1.12.4 | 2026-08-25 | OpenSpec change `implement-foundation-core`（issue #356 Phase 4 pilot）歸檔回寫：Foundation-Core 範圍（plan.md v2.0.0 的 F-01–F-10、F-13、F-16、F-18）已由 9 個 stacked PR（#374、#378、#381、#379、#388、#389、#390、#391、#392）落地於 `backend/` 與 `frontend/`。**無 FR/SC 新增、移除或措辭變更**——本次為實作回寫，非需求變更。三項實作與正典文字的落差，依維護者裁決記錄於此而不改動需求原文：<br>(a) **FR-021 的實作比字面更嚴格**：原文僅要求「`ALLOWED_ORIGINS=*` 在 production 視為 CI 或 startup failure」，實作（`backend/app/core/config.py`）在**所有環境**無條件拒絕萬用字元。維護者裁決保留 FR-021 原文，因為更嚴格的實作不違反該需求，且與 CLAUDE.md Prohibitions 的 `allow_origins=["*"]` 禁令一致。<br>(b) **SC-020 僅完成第一子句**：`QueryClient` 的 401 不重試單元測試已落地（`frontend/src/shared/services/__tests__/query-client.test.ts`）；第二子句要求的「`api-client.ts` 的 401 interceptor 於 refresh 失敗情境的整合測試」尚無對應實作——Foundation-Core 沒有認證端點，refresh 流程隨 account/001 進場，該整合測試一併延後至 account/001。<br>(c) **SC-045 僅完成 bootstrap 契約部分**：`.env.example`、local service profile（`docker-compose.yml` 的 `ci` profile）、seed data 策略（`scripts/seed.sh`）、one-command verification（`scripts/verify-bootstrap.sh`）與 CI shell check 皆已落地；但 SC-045 同一條列出的「OpenAPI export / type generation command」**未實作**，該項實際歸屬 FR-071 與 SC-018，本變更範圍不含，目前全專案無對應任務。SC-045 不得被讀作已完全滿足。<br>另：F-17 Observability（FR-091–FR-100、SC-021–SC-028）與 Celery 相關需求依 plan.md 延後，不在本次實作範圍 |

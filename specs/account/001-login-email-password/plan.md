@@ -1,13 +1,15 @@
 ---
 功能分支: feat/account/001-login-email-password
 建立日期: 2026-05-28
-版本: 2.1.1
+版本: 2.2.1
 狀態: plan-ready
 ---
 
 # 實作計畫：登入 — Email / Password + 頁面 UI
 
 **規格**: [specs/account/001-login-email-password/spec.md](spec.md)
+
+> 本計畫的早期 backend 設計僅供追溯；真實認證、session 與資料形狀以 `specs/account/020-auth-session-security/spec.md`、Accepted ADR-021 和 foundation F-04 為準。account-001 的 `spec.md` 仍只定義登入原型 UI；本計畫不是新 API 或 migration 的正典。
 
 ## 功能目標
 
@@ -269,29 +271,41 @@ sequenceDiagram
 
 ### 1. 實體與資料模型 → `data-model.md`
 
-> 實體層 schema（account 001～005＋admin-006 共用的欄位字典、限制清單、待裁決事項）見 [`account-admin-db-schema.md`](../../../docs/diagrams/architecture/account-admin-db-schema.md)。本節欄位與該文件不一致時，以該文件 §5 的裁決結果回寫本節；例如 `hashed_password` 的 NOT NULL 與 005 SSO 帳號（`hashed_password` 為 null）衝突，待該文件 D-1 裁決。
+> 實體層候選 schema 見 [`account-admin-db-schema.md`](../../../docs/diagrams/architecture/account-admin-db-schema.md)；其欄位由 account-020、ADR-021、foundation 與相依 feature spec 決定，不由本計畫反向裁決。D-1 已決定 `hashed_password` 可為 null；圖與欄位字典仍是未部署的規劃視圖。
 
 **User 實體**：
 
 | 欄位 | 型別 | 說明 |
 |------|------|------|
 | `id` | `UUID` PK | 主鍵（server-side generated） |
-| `email` | `String(254)` UNIQUE NOT NULL | 登入識別 |
-| `hashed_password` | `String` NOT NULL | bcrypt hash；不得出現於任何 response schema |
+| `email` | `String(254)` NOT NULL；`lower(email)` UNIQUE | NFC＋casefold 後的登入識別；不得出現大小寫重複 |
+| `hashed_password` | `String` NULL | bcrypt hash；null 代表沒有可用本地密碼；不得出現於任何 response schema |
+| `credential_version` | `Integer` NOT NULL | 高風險憑證事件增加；access JWT 每請求核對 |
 | `role` | `Enum('user', 'super_admin')` DEFAULT `'user'` | 系統角色 |
 | `is_active` | `Boolean` DEFAULT `True` | 帳號啟用狀態 |
 | `created_at` | `DateTime(timezone=True)` | 建立時間（auto `func.now()`，timezone-aware） |
 | `updated_at` | `DateTime(timezone=True)` | 更新時間（auto `func.now()` onupdate，timezone-aware） |
 
-**RefreshToken 實體**（ADR-021）：
+**TokenFamily 實體**（ADR-021；一列一次登入）：
+
+| 欄位 | 型別 | 說明 |
+|------|------|------|
+| `id` | `UUID` PK | access JWT `sid`；一次登入識別 |
+| `user_id` | `UUID` FK → `users.id` NOT NULL | 擁有者；JWT `sub` 必須相符 |
+| `started_at` | `DateTime(timezone=True)` NOT NULL | refresh absolute TTL 的基準 |
+| `revoked_at` | `DateTime(timezone=True)` NULL | 整個 family 的撤銷時間 |
+
+**RefreshToken 實體**（ADR-021；一列一次核發）：
 
 | 欄位 | 型別 | 說明 |
 |------|------|------|
 | `id` | `UUID` PK | 主鍵（server-side generated） |
-| `user_id` | `UUID` FK → `users.id` NOT NULL | 擁有者 |
+| `family_id` | `UUID` FK → `account_token_family.id` NOT NULL | 所屬登入；不複製 family 的 `user_id`／`started_at` |
 | `token_hash` | `String` UNIQUE NOT NULL | refresh token（不透明 UUID）的雜湊；原值只存在 cookie，不落 DB |
 | `expires_at` | `DateTime(timezone=True)` NOT NULL | 7 天滑動到期時間 |
 | `revoked_at` | `DateTime(timezone=True)` NULL | 輪替或登出時寫入（soft delete）；NULL＝有效 |
+| `revoked_reason` | `String` NULL | 只有 `rotated` 可用 30 秒寬限 |
+| `grace_reissued_at` | `DateTime(timezone=True)` NULL | 原子占用一次額外重發資格 |
 | `created_at` | `DateTime(timezone=True)` | 核發時間（auto `func.now()`） |
 
 **狀態轉換**：User `is_active` 僅 True/False，由 admin-006 管理，不在本 spec 範圍。RefreshToken 只有「有效 → 已撤銷」單向轉換（輪替、登出、重用偵測），不可回復。
@@ -300,10 +314,10 @@ sequenceDiagram
 
 | 查詢 | 篩選欄位 | Index 策略 | Loading Strategy | 風險 |
 |------|---------|-----------|-----------------|------|
-| 登入查詢 | `email` | `UNIQUE INDEX users(email)` | 直接查詢，無 relationship | — |
-| JWT 驗證（每次認證請求） | `id` | Primary key（UUID） | 直接查詢，無 relationship | — |
+| 登入查詢 | `lower(email)` | `UNIQUE INDEX users(lower(email))`，應用層仍先 NFC＋casefold | 直接查詢 | SQLite／PG 非 ASCII 行為須由跨 DB 測試驗證 |
+| JWT 驗證（每次認證請求） | `users.id`、`account_token_family.id` | 各表 Primary key（UUID） | 讀取 user 與 `sid` family | 每次核對 owner／版本／撤銷狀態的 P95 成本待量測 |
 | Refresh token 查找 | `token_hash` | `UNIQUE INDEX refresh_tokens(token_hash)` | 直接查詢 | — |
-| 撤銷使用者全部 refresh token | `user_id` | `INDEX refresh_tokens(user_id)` | 批次 UPDATE `revoked_at` | — |
+| 撤銷使用者全部登入 | `account_token_family.user_id` | FK 查詢索引候選，依 `EXPLAIN` 決定 | 批次撤銷 family | 不直接用 token 表的使用者欄位 |
 
 > `lazy="raise"` 設於所有 relationship（本 model 目前無 relationship），防止未來新增欄位後產生隱性 N+1。
 
@@ -314,13 +328,13 @@ sequenceDiagram
 | Method | Path | System Role | Task Role | Auth Dependency | 說明 | Bruno 檔案 |
 |--------|------|-------------|-----------|----------------|------|-----------|
 | POST | `/api/v1/auth/login` | 無（公開） | 無 | 無 | Email/password 驗證，以 cookie 核發 access + refresh token，body 回傳 `{user_id, role}` | `backend/bruno/account/001-login-email-password/post-auth-login.bru` |
-| POST | `/api/v1/auth/refresh` | 無（憑 refresh cookie） | 無 | 無 | 檢查 `is_active` 後輪替 refresh token、重發 access token，body 回傳 `{user_id, role}` | `backend/bruno/account/001-login-email-password/post-auth-refresh.bru` |
-| POST | `/api/v1/auth/logout` | 無（憑 refresh cookie） | 無 | 無 | 撤銷 refresh token（設 `revoked_at`）並清除 cookie | `backend/bruno/account/001-login-email-password/post-auth-logout.bru` |
+| POST | `/api/v1/auth/refresh` | 無（憑 refresh cookie） | 無 | 無 | 核對 active user／family／absolute TTL，輪替 token 並重發 access；寬限競爭依 account-020 回 `409` | `backend/bruno/account/001-login-email-password/post-auth-refresh.bru` |
+| POST | `/api/v1/auth/logout` | 無（憑有效 access 或 refresh cookie） | 無 | 無 | 優先以已驗證 access JWT `sid` 撤銷目前 family；access 缺失或過期才用有效 refresh token 定位；兩者皆不可驗證時僅清除 cookies，不宣稱已撤銷伺服器 session | `backend/bruno/account/001-login-email-password/post-auth-logout.bru` |
 | GET | `/api/v1/auth/me` | user / super_admin | 無 | `get_current_user` | 取得目前登入用戶資訊（role 與 profile 讀 DB） | `backend/bruno/account/001-login-email-password/get-auth-me.bru` |
 
 完整契約 → `contracts/auth-login.md`
 
-**事務邊界設計**：`GET /auth/me` 為單一 DB 讀取。`POST /auth/login` 在驗證成功後寫入一筆 `refresh_tokens`；`POST /auth/refresh` 的「撤銷舊 row＋寫入新 row」必須在同一交易內完成；`POST /auth/logout` 為單筆 UPDATE。
+**事務邊界設計**：`GET /auth/me` 需核對 user、`sid` family 與 absolute TTL。`POST /auth/login` 在同一交易建立 family 與第一張 refresh token；`POST /auth/refresh` 的「撤銷舊 row＋寫入新 row」同交易完成，並核對 family absolute TTL。登入及 refresh 核發的 access JWT `exp` 均不得超過 family deadline。`POST /auth/logout` 在 access-only／refresh-only 憑證情境均須定位並撤銷目前 family。這些為 account-020 的未實作契約。
 
 ---
 
@@ -593,6 +607,8 @@ Loading 策略（對應 TanStack Query 狀態欄位）：
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.2.1 | 2026-10-06 | 安全審查補充：登出優先以有效 access JWT `sid` 定位，refresh cookie 缺失時仍能撤銷 family；每請求檢查 family absolute TTL，登入與 refresh 的 access JWT 到期不得超過 family 上限。仍為未實作的歷史計畫。 |
+| 2.2.0 | 2026-10-06 | 對齊 account-020／ADR-021：`hashed_password` 可空、email canonicalization、family 真實 FK、`credential_version` 與有界寬限；標明此 plan 不建立真實 auth 正典或已部署 schema。 |
 | 2.1.1 | 2026-09-17 | 「實體與資料模型」段落加入實體層 schema 文件 `docs/diagrams/architecture/account-admin-db-schema.md` 的連結，並註記 `hashed_password` NOT NULL 與 005 SSO 帳號的衝突待該文件 D-1 裁決；欄位定義本身未改 |
 | 2.1.0 | 2026-09-17 | 對齊 ADR-021（issue #790）：token 改存 `httpOnly` cookie（移除 localStorage token 方案與其複雜度追蹤列）、access token 30→15 分鐘、補 refresh token（7 天滑動輪替、`refresh_tokens` 表、grace period）與 `/auth/refresh`、`/auth/logout` 端點；`TokenResponse` 改為 `AuthSessionResponse {user_id, role}`；`authStore` 改僅記憶體；授權一律重讀 DB `role`／`is_active`（ADR-021 修訂、issue #779）；補 `auth.forbidden` i18n key 與對應測試情境。語言狀態 `labelsuite.lang` 仍存 localStorage（spec FR-003／FR-004A），不受影響 |
 | 2.0.0 | 2026-06-09 | 完整對齊 plan-template v1.13.6：補齊 功能目標、技術方向、DB index 分析、狀態轉換、Pydantic 2b schema 表、切版分析（Stories/ARIA/響應式欄）、畫面狀態轉換、畫面×API 對應、前端技術決策、後端/前端 i18n key 清單；系統流程圖改為 module-first 架構（app/modules/auth/）含 Repository 層；Exception 設計表使用 i18n key；安全測試情境新增；憲章更新至 v1.31.0（補齊 IX、XI 檢查項；領域憲章載入節） |
