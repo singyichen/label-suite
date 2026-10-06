@@ -1,7 +1,7 @@
 ---
 功能分支: feat/account/001-login-email-password
 建立日期: 2026-05-28
-版本: 2.2.0
+版本: 2.2.1
 狀態: plan-ready
 ---
 
@@ -329,12 +329,12 @@ sequenceDiagram
 |--------|------|-------------|-----------|----------------|------|-----------|
 | POST | `/api/v1/auth/login` | 無（公開） | 無 | 無 | Email/password 驗證，以 cookie 核發 access + refresh token，body 回傳 `{user_id, role}` | `backend/bruno/account/001-login-email-password/post-auth-login.bru` |
 | POST | `/api/v1/auth/refresh` | 無（憑 refresh cookie） | 無 | 無 | 核對 active user／family／absolute TTL，輪替 token 並重發 access；寬限競爭依 account-020 回 `409` | `backend/bruno/account/001-login-email-password/post-auth-refresh.bru` |
-| POST | `/api/v1/auth/logout` | 無（憑 refresh cookie） | 無 | 無 | 撤銷目前 `sid` family 並清除 cookie；其他裝置不受影響 | `backend/bruno/account/001-login-email-password/post-auth-logout.bru` |
+| POST | `/api/v1/auth/logout` | 無（憑有效 access 或 refresh cookie） | 無 | 無 | 優先以已驗證 access JWT `sid` 撤銷目前 family；access 缺失或過期才用有效 refresh token 定位；兩者皆不可驗證時僅清除 cookies，不宣稱已撤銷伺服器 session | `backend/bruno/account/001-login-email-password/post-auth-logout.bru` |
 | GET | `/api/v1/auth/me` | user / super_admin | 無 | `get_current_user` | 取得目前登入用戶資訊（role 與 profile 讀 DB） | `backend/bruno/account/001-login-email-password/get-auth-me.bru` |
 
 完整契約 → `contracts/auth-login.md`
 
-**事務邊界設計**：`GET /auth/me` 需核對 user 與 `sid` family。`POST /auth/login` 在同一交易建立 family 與第一張 refresh token；`POST /auth/refresh` 的「撤銷舊 row＋寫入新 row」同交易完成，並核對 family absolute TTL；`POST /auth/logout` 撤銷目前 family。這些為 account-020 的未實作契約。
+**事務邊界設計**：`GET /auth/me` 需核對 user、`sid` family 與 absolute TTL。`POST /auth/login` 在同一交易建立 family 與第一張 refresh token；`POST /auth/refresh` 的「撤銷舊 row＋寫入新 row」同交易完成，並核對 family absolute TTL。登入及 refresh 核發的 access JWT `exp` 均不得超過 family deadline。`POST /auth/logout` 在 access-only／refresh-only 憑證情境均須定位並撤銷目前 family。這些為 account-020 的未實作契約。
 
 ---
 
@@ -607,6 +607,7 @@ Loading 策略（對應 TanStack Query 狀態欄位）：
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.2.1 | 2026-10-06 | 安全審查補充：登出優先以有效 access JWT `sid` 定位，refresh cookie 缺失時仍能撤銷 family；每請求檢查 family absolute TTL，登入與 refresh 的 access JWT 到期不得超過 family 上限。仍為未實作的歷史計畫。 |
 | 2.2.0 | 2026-10-06 | 對齊 account-020／ADR-021：`hashed_password` 可空、email canonicalization、family 真實 FK、`credential_version` 與有界寬限；標明此 plan 不建立真實 auth 正典或已部署 schema。 |
 | 2.1.1 | 2026-09-17 | 「實體與資料模型」段落加入實體層 schema 文件 `docs/diagrams/architecture/account-admin-db-schema.md` 的連結，並註記 `hashed_password` NOT NULL 與 005 SSO 帳號的衝突待該文件 D-1 裁決；欄位定義本身未改 |
 | 2.1.0 | 2026-09-17 | 對齊 ADR-021（issue #790）：token 改存 `httpOnly` cookie（移除 localStorage token 方案與其複雜度追蹤列）、access token 30→15 分鐘、補 refresh token（7 天滑動輪替、`refresh_tokens` 表、grace period）與 `/auth/refresh`、`/auth/logout` 端點；`TokenResponse` 改為 `AuthSessionResponse {user_id, role}`；`authStore` 改僅記憶體；授權一律重讀 DB `role`／`is_active`（ADR-021 修訂、issue #779）；補 `auth.forbidden` i18n key 與對應測試情境。語言狀態 `labelsuite.lang` 仍存 localStorage（spec FR-003／FR-004A），不受影響 |

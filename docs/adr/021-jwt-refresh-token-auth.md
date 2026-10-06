@@ -61,11 +61,11 @@ Task role is **not** included in the JWT. The frontend fetches task membership v
 
 Issue #779 identified a gap: the `role` claim above is encoded at login and stays valid for the full 15-minute access-token TTL. If an authorization check trusted that claim directly, a `super_admin` demoted to `user` — or an account disabled mid-session — would keep the old privileges (or continued access) on any request made with an already-issued access token, for up to 15 minutes. This violates Constitution Principle XV: "access must be revoked immediately on role removal" (`specs/_governance/constitution.md:196`).
 
-**Decision (maintainer, 2026-09-17; extended 2026-10-06):** every authenticated request MUST re-read the caller's `role`, `is_active`, and `credential_version` from `users`, and the `sid` family row from `account_token_family`. The family must be unrevoked and its `user_id` must equal JWT `sub`. The JWT `role` claim is kept for **frontend display only** and MUST NOT be treated as authoritative by any backend authorization dependency.
+**Decision (maintainer, 2026-09-17; extended 2026-10-06):** every authenticated request MUST re-read the caller's `role`, `is_active`, and `credential_version` from `users`, and the `sid` family row from `account_token_family`. The family must be unrevoked, its `user_id` must equal JWT `sub`, and its absolute lifetime must not have elapsed. Access JWT `exp` issued at login or refresh is capped at that same deadline. The JWT `role` claim is kept for **frontend display only** and MUST NOT be treated as authoritative by any backend authorization dependency.
 
 The check lives in two layers so that no endpoint can skip it:
 
-- `get_current_user` verifies JWT signature/expiry and decodes `sub`, `sid`, and `credential_version`; it loads `users` and `account_token_family` and raises `401` (`auth.token_invalid`) when the user is missing/inactive, version mismatches, family is missing/revoked, or family owner differs from `sub`. Every authenticated endpoint depends on it, so logout, disabled accounts, and high-risk credential changes take effect on the next request.
+- `get_current_user` verifies JWT signature/expiry and decodes `sub`, `sid`, and `credential_version`; it loads `users` and `account_token_family` and raises `401` (`auth.token_invalid`) when the user is missing/inactive, version mismatches, family is missing/revoked/absolutely expired, or family owner differs from `sub`. Every authenticated endpoint depends on it, so logout, disabled accounts, high-risk credential changes, and the absolute deadline take effect on the next request.
 - `require_role` builds on `get_current_user` and compares the freshly loaded `role` against the allowed set.
 
 ```python
@@ -80,7 +80,8 @@ async def get_current_user(
     if (user is None or not user.is_active
             or user.credential_version != claims.credential_version
             or family is None or family.revoked_at is not None
-            or family.user_id != user.id):
+            or family.user_id != user.id
+            or now_utc() >= family.started_at + REFRESH_TOKEN_ABSOLUTE_MAX_TTL):
         raise HTTPException(401, "auth.token_invalid")
     return user
 
@@ -115,6 +116,8 @@ These records are required in both SQLite quick-start and PostgreSQL production.
 - Audit trail for security incidents.
 
 Every refresh, including a grace reissue, resolves the family through `family_id` and checks owner active, family not revoked, token unexpired, and `now < started_at + REFRESH_TOKEN_ABSOLUTE_MAX_TTL`. New token expiry is capped by that family limit; rotation and issuance are atomic. A token may use grace only if `revoked_reason='rotated'` and it is within 30 seconds of `revoked_at`. A conditional update requiring `grace_reissued_at IS NULL` grants exactly one extra issuance; a further in-window attempt returns `409 Conflict` without issuing a token or revoking other families. Other revocation reasons never have grace. The frontend waits at most 2 seconds for another tab's successful refresh signal, retries the original request once, and after a further 401 attempts refresh at most once more before redirecting to login.
+
+Login and refresh also cap access JWT `exp` at the family absolute deadline. `get_current_user` checks that deadline on every request, including when a signed access JWT has not reached its own `exp`. Logout first uses a valid access JWT `sid` to revoke the current family; if the access cookie is absent or expired, it may use a valid refresh token's `family_id`. If neither credential is verifiable, it clears cookies without claiming that a server-side session was revoked. This preserves immediate single-device logout when the refresh cookie is missing but access remains valid.
 
 Password change atomically changes the hash, increments `credential_version`, and revokes other families, retaining the current one. The current device's old access JWT fails until silent refresh obtains a new-version JWT. Verified user email change, administrator email edit, successful password reset, and verified Google account linking atomically increment the version and revoke **all** families; Google linking also clears the local password hash per ADR-035. Single-device logout revokes only its family without incrementing the user-wide version. A failed transaction changes none of these facts.
 

@@ -1,7 +1,7 @@
 ---
 功能分支: feat/foundation/000-foundation
 建立日期: 2026-05-29
-版本: 1.13.0
+版本: 1.13.1
 狀態: Draft
 ---
 
@@ -450,7 +450,7 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 - **FR-018**：系統必須讓 resource permission checks 位於 route dependency 或 service 層；repository / query helper 不得內嵌權限邏輯。
 - **FR-019**：系統必須對 unauthorized、forbidden、resource-hidden 三種情境撰寫測試。
 - **FR-075**：系統必須對 refresh token concurrent refresh 採 ADR-021 的有界 grace 策略：僅 `revoked_reason='rotated'` 且在 30 秒內的 token 可透過 `grace_reissued_at IS NULL` 原子條件額外重發一次；資格已占用時回 `409 Conflict`，不核發也不全量撤銷；超過寬限期 reuse 才撤銷所有有效 family。SQLite 與 PostgreSQL 的競爭測試必須驗證最多一次額外重發，不得以 `SKIP LOCKED` 或無界重發取代。
-- **FR-076**：系統必須讓 sliding refresh token 受 `REFRESH_TOKEN_ABSOLUTE_MAX_TTL` 約束；每次 refresh（含寬限重發）以 family 的 `started_at` 作首次登入基準，超過 absolute max 後強制重新登入，新 token 到期不得超過此上限。
+- **FR-076**：系統必須讓 sliding refresh token 與 access JWT 受 `REFRESH_TOKEN_ABSOLUTE_MAX_TTL` 約束；每次 refresh（含寬限重發）及每個已認證請求以 family 的 `started_at` 作首次登入基準，達 absolute max 後強制重新登入，登入與 refresh 核發的新 token 到期不得超過此上限。
 - **FR-077**：系統必須以 `users.credential_version` 與 JWT 同名 claim 在每次已認證請求比對，使改密碼、改 email、重設密碼、Google 連結等高風險憑證事件立即作廢舊 access JWT；每次請求另須核對 `sid` 指向未撤銷 family 且 `family.user_id = sub`，以支援單一裝置登出。角色與停用仍重讀 `users.role`／`is_active`，不得用版本代替。具體實作與跨資料庫測試由 `specs/account/020-auth-session-security/spec.md` 承接。
 - **FR-078**：若系統部署環境包含同一 eTLD+1 的多個 subdomain（如 `api.lab.edu` 與 `app.lab.edu`），系統必須把 `Origin` / `Referer` 驗證視為 `SameSite=Lax` 不覆蓋 same-site subdomain 的補充 CSRF 防護；feature spec 的 security review 必須顯式評估此風險並記錄豁免或啟用決定。（FR-078 為多 subdomain 部署的補充評估要求；FR-117 為所有 production endpoint 的通用強制基準，兩者並存。）
 
@@ -849,6 +849,7 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.13.1 | 2026-10-06 | 安全審查補強 FR-076：family absolute TTL 同時限制已認證請求與登入／refresh 核發的 access JWT 到期，避免最後核發的 JWT 在 family 期限後繼續通行；僅規劃契約，未實作 runtime。 |
 | 1.13.0 | 2026-10-06 | Issue #1160 auth/token-family 規劃契約：F-04 FR-016／075／076／077 改採真實 family FK、一次寬限重發、`sid`／`credential_version` 每請求失效；FR-105 列出四個既有命名例外。僅更新設計契約，尚無 ORM、migration 或 runtime。 |
 | 1.12.6 | 2026-09-07 | F-04 新增 Auth Token 生命週期序列圖連結（issue #674 剩餘缺口之一；圖檔為 issue #671 產出，歸屬 `specs/account/001-login-email-password/diagrams/auth-token-lifecycle.html`，隨 001 歸檔，本節為跨規格參照），以圖面呈現 JWT 簽發、refresh 與撤銷流程。**無 FR/SC 新增、移除或措辭變更**——僅新增衍生視圖連結，比照 v1.12.5（F-02）先例 |
 | 1.12.5 | 2026-09-07 | F-02 新增 Backend 分層契約圖連結（issue #670，`specs/foundation/000-foundation/diagrams/backend-layering-and-celery-boundary.html`，依 `docs/diagrams/README.md`「隸屬單一 spec 的圖放該 spec 的 `diagrams/`、隨 spec 一起歸檔」置於本規格目錄），以圖面呈現 Router → Service → Repository/ORM 的責任邊界、依賴方向與 F-12 的 Celery 任務邊界。**無 FR/SC 新增、移除或措辭變更**——僅新增衍生視圖連結。繪製時盤點出四項既有條文未涵蓋的分層問題（service 是否可直接組 query／操作 ORM、ORM→response schema 轉換責任歸屬、Celery task 可否重用 module service／repository、FR-101 允許的「公開 dependency/service interface」置放路徑），已在圖上標示為「規格未定義」，待維護者裁決是否補條文；本次不代為裁定。另記錄一項與上游 ADR 的落差：`docs/adr/007-async-tasks-celery.md` 的整合範例在 route handler 內直接呼叫 `.delay()`，與 FR-009「service 為 side effect dispatch 唯一入口」及 F-02 約束情境 1.1 不一致，圖面依本規格繪製並標註該落差 |
