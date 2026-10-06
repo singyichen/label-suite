@@ -225,3 +225,32 @@ test('dataset projection requires candidate and undeployed status on every table
       new RegExp(`${name}.*(?:candidate|undeployed)`, 'i'), `${name} status`);
   }
 });
+
+test('dataset parser rejects a Mermaid table without a dictionary entry', () => {
+  const extraMermaidTable = datasetMarkdown.replace('erDiagram\n', `erDiagram
+    dataset_ghost {
+        uuid id PK
+    }
+`);
+  assert.throws(() => checker.parseDatasetSchema(extraMermaidTable),
+    /dataset_ghost.*(?:dictionary|§3)|(?:dictionary|§3).*dataset_ghost/i);
+});
+
+test('dataset parser rejects a Mermaid column absent from the dictionary', () => {
+  const extraMermaidColumn = datasetMarkdown.replace(
+    '        varchar name\n', '        varchar name\n        text undocumented_field\n');
+  assert.throws(() => checker.parseDatasetSchema(extraMermaidColumn),
+    /dataset\.undocumented_field.*(?:dictionary|§3)|(?:dictionary|§3).*dataset\.undocumented_field/i);
+});
+
+test('dataset parser rejects duplicate dictionary table headings', () => {
+  const duplicateDictionary = datasetMarkdown.replace('## 4. Constraints', `### 3.6 dataset_item_private：duplicate
+
+| 欄位 | 型別 | 可空 | 代表什麼 | 何時寫入／改變 | 規則 |
+|---|---|---|---|---|---|
+| \`dataset_item_id\` | uuid → dataset_item | 否 | Item | Create | PK and FK |
+
+## 4. Constraints`);
+  assert.throws(() => checker.parseDatasetSchema(duplicateDictionary),
+    /duplicate.*dataset_item_private/i);
+});
