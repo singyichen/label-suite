@@ -6,7 +6,7 @@
 
 ## Why
 
-Issue #1160 的 task/run 資料表盤點需要能追溯任務建立時的完整設定與 schema。若初始設定只保留可覆寫的目前值，後續 draft 修改將失去版本起點，run 也無法精確引用當時驗證過的設定。013 v8.3.0 已在 FR-006、FR-006a、FR-006d 與 AC-4.3～AC-4.5 裁定建立交易、不可變版本及冪等重送；本 change 將該 owning spec 的既有決策交由 OpenSpec delta 追蹤。
+Issue #1160 的 task/run 資料表盤點需要能追溯任務建立時的完整設定與 schema。若初始設定只保留可覆寫的目前值，後續 draft 修改將失去版本起點，run 也無法精確引用當時驗證過的設定。013 v8.3.0 已在 FR-006、FR-006a、FR-006d 與 AC-4.3～AC-4.6 裁定建立交易、不可變版本及冪等重送；本 change 將該 owning spec 的既有決策交由 OpenSpec delta 追蹤。
 
 ## Goal
 
@@ -17,7 +17,7 @@ Issue #1160 的 task/run 資料表盤點需要能追溯任務建立時的完整�
 - 對齊 013 FR-006 與 `TaskConfig`：第一次通過 registry 驗證的完整 config 與內嵌 label-schema snapshot 共用不可變 `task_config_version` v1，`version_no = schema_version_no = 1`；保存 canonicalized outputs／field roles 的 `schema_digest`，並釘住可供歷史解析的 `schema_registry_version`。
 - 對齊 013 FR-006 與 AC-4.5：後續 draft 每次成功儲存完整 config 都新增版本並同步遞增兩個版本號，不覆寫歷史；非 schema 修改可產生相同 digest，驗證失敗不產生新版本。後續編輯與 cycle 釘選的行為由 014 FR-014 及 `task-run-identity-contract` 擁有。
 - 對齊 013 FR-006a、FR-006c 與 AC-4.3：task、creator 的 `project_leader` membership、初始 config、初始指引內容版本及啟動設定在同一交易提交；任一步失敗時全部回滾。
-- 對齊 013 FR-006d、AC-4.4 與 SC-006：同一 `Idempotency-Key` 於既有時窗內重送，回傳相同 `task_id`，不重複建立 membership、config 或指引版本；建立成功後的導頁行為維持既有 013 契約。
+- 對齊 013 FR-006d、AC-4.4／AC-4.6 與 SC-006：同一授權建立者對 `task.create` 在既有時窗內以相同 `Idempotency-Key` 和相同正規化請求內容重送，回傳相同 `task_id`，不重複建立 membership、config 或指引版本；同 key 異內容回報衝突，建立成功後的導頁行為維持既有 013 契約。
 
 ## Capabilities
 
