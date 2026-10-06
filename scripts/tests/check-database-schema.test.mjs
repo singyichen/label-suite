@@ -170,8 +170,43 @@ test('parsesRealAccountAdminDictionary', () => {
     .filter((column) => column.pk).map((column) => column.name), [
     'role_type', 'role_key', 'permission_key',
   ]);
-  assert.equal(source.tables.find((table) => table.name === 'audit_event').columns
-    .find((column) => column.name === 'actor_user_id').fk, 'users');
+  const audit = source.tables.find((table) => table.name === 'audit_events');
+  assert.ok(audit, 'Missing dictionary table: audit_events');
+  assert.equal(audit.columns.find((column) => column.name === 'actor_user_id').fk, 'users');
+});
+
+test('realDictionaryAndNoteCraftProjectSharedAuditEventsWithoutInventedTaskFk', () => {
+  const markdown = readFileSync(new URL('../../docs/diagrams/architecture/account-admin-db-schema.md', import.meta.url), 'utf8');
+  const source = parseAccountAdminSchema(markdown);
+  const data = JSON.parse(readFileSync(new URL('../../docs/diagrams/architecture/database-schema.er.json', import.meta.url), 'utf8'));
+
+  for (const [label, tables] of [['dictionary', source.tables], ['NoteCraft', data.tables]]) {
+    assert.equal(tables.length, 9, `${label} table count`);
+    assert.equal(tables.some((table) => table.name === 'audit_event'), false, `${label} retains singular audit_event`);
+    const audit = tables.find((table) => table.name === 'audit_events');
+    assert.ok(audit, `${label} missing shared audit_events`);
+    assert.equal(audit.columns.length, 10, `${label} audit_events column count`);
+    const actor = audit.columns.find((column) => column.name === 'actor_user_id');
+    assert.ok(actor, `${label} missing audit_events.actor_user_id`);
+    assert.equal(actor.fk, 'users', `${label} actor FK`);
+    const task = audit.columns.find((column) => column.name === 'task_id');
+    assert.ok(task, `${label} missing audit_events.task_id`);
+    assert.equal(task.type, 'uuid', `${label} task_id type`);
+    assert.equal(task.fk, undefined, `${label} must not invent task FK`);
+  }
+
+  const sourceAudit = source.tables.find((table) => table.name === 'audit_events');
+  assert.equal(sourceAudit.columns.find((column) => column.name === 'actor_user_id').nullable, true);
+  assert.equal(sourceAudit.columns.find((column) => column.name === 'task_id').nullable, true);
+  const projectedAudit = data.tables.find((table) => table.name === 'audit_events');
+  assert.equal(projectedAudit.columns.find((column) => column.name === 'actor_user_id').required, 'nullable');
+  assert.equal(projectedAudit.columns.find((column) => column.name === 'task_id').required, 'nullable');
+
+  assert.equal(source.tables.reduce((count, table) => count + table.columns.length, 0), 63);
+  assert.equal(data.tables.reduce((count, table) => count + table.columns.length, 0), 63);
+  assert.equal(source.tables.reduce((count, table) => count + table.columns.filter((column) => column.fk).length, 0), 6);
+  assert.equal(data.tables.reduce((count, table) => count + table.columns.filter((column) => column.fk).length, 0), 6);
+  assert.deepEqual(validateErData(source, data), []);
 });
 
 test('realDictionaryModelsTokenFamiliesWithoutDuplicatingTheirOwnerOrStartTime', () => {
