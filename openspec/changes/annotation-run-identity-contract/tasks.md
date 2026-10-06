@@ -8,7 +8,7 @@
 
 > 依賴：senior-dba 的 issue #1160 裁決及上游 013／014 正典版本先定案；以下依正典 → proposal → design 順序執行。各 artifact 任務僅修改所列單檔。
 
-- [ ] 1.1 修訂 `specs/annotation/015-annotation-workspace/spec.md` 至 v11.0.1，對齊 FR-014S／FR-051／FR-059／FR-061／FR-066／FR-072／FR-093、AC-7.1～AC-7.3、SC-013／SC-014 與 Changelog；保持 prototype route/bucket 與正式持久化身分的區別。 [@senior-sa]
+- [ ] 1.1 修訂 `specs/annotation/015-annotation-workspace/spec.md` 至 v11.0.1，對齊 FR-014S／FR-049／FR-051／FR-059／FR-061／FR-066／FR-072／FR-073／FR-093、AC-1.3／AC-1.16／AC-1.23、AC-7.1～AC-7.3、SC-013／SC-014 與 Changelog；保持 prototype route/bucket 與正式持久化身分的區別。 [@senior-sa]
 - [ ] 1.2 建立 `openspec/changes/annotation-run-identity-contract/proposal.md`，只宣告 015 owning spec，界定 013／014 相依、候選未部署與回滾範圍。 [@main]
 - [ ] 1.3 建立 `openspec/changes/annotation-run-identity-contract/design.md`，記錄 run／assignment、submission-derived reviewer 黏著、即時權限、run-pinned 指引與隱藏答案隔離；物理 FK 留給後續 owning slice。 [@senior-dba]
 
@@ -37,7 +37,7 @@
 
 - [ ] 3.5 驗證任務（不改檔）：執行 `openspec validate annotation-run-identity-contract --type change`，預期輸出 `Change 'annotation-run-identity-contract' is valid`；執行 `git diff --check`，預期無 whitespace error。 [@main]
 - [ ] 3.6 驗證任務（不改檔）：執行 `bash scripts/check-sdd.sh`、`node scripts/gen-screen-inventory.mjs --check`、`bash scripts/inventory-tests.sh`，預期均 exit 0；若 inventory stale，先完成共享生成檔同步，不以 OpenSpec 通過代替 Project SDD lint。 [@main]
-- [ ] 3.7 Source-Verify 任務（不改檔）：執行 `for source in specs/annotation/015-annotation-workspace/spec.md openspec/changes/annotation-run-identity-contract/specs/annotation/015-annotation-workspace/spec.md; do for id in FR-014S FR-051 FR-059 FR-061 FR-066 FR-072 FR-093 AC-7.1 AC-7.2 AC-7.3 SC-013 SC-014; do rg -n -F "$id" "$source" >/dev/null || exit 1; done; done`，預期各 delta 引用皆可在 015 v11.0.1 定位；逐段比較原文、版本與 Changelog，另確認 013／014 引用可在各自正典定位。 [@main]
+- [ ] 3.7 Source-Verify 任務（不改檔）：執行 `for source in specs/annotation/015-annotation-workspace/spec.md openspec/changes/annotation-run-identity-contract/specs/annotation/015-annotation-workspace/spec.md; do for id in FR-014S FR-049 FR-051 FR-059 FR-061 FR-066 FR-072 FR-073 FR-093 AC-1.3 AC-1.16 AC-1.23 AC-7.1 AC-7.2 AC-7.3 SC-013 SC-014; do rg -n -F "$id" "$source" >/dev/null || exit 1; done; done`，預期各 delta 引用皆可在 015 v11.0.1 定位；逐段比較原文、版本與 Changelog，另確認 013／014 引用可在各自正典定位。 [@main]
 
 ## 4. Archive 與交付
 
@@ -46,5 +46,5 @@
 > 依賴：3.1～3.7 通過且主 session 留存審查、OpenSpec、Project SDD、Source-Verify 證據。Archive 為工具原子產生的多檔輸出，完成後須再核對衍生 view；PR 須等所有 CI job 成功。
 
 - [ ] 4.1 執行 `openspec archive annotation-run-identity-contract --yes` 並核對工具輸出；Exception: governance-propagation; Files: `openspec/changes/annotation-run-identity-contract/proposal.md`, `openspec/changes/annotation-run-identity-contract/design.md`, `openspec/changes/annotation-run-identity-contract/tasks.md`, `openspec/changes/annotation-run-identity-contract/specs/annotation/015-annotation-workspace/spec.md`, `openspec/changes/archive/2026-10-06-annotation-run-identity-contract/proposal.md`, `openspec/changes/archive/2026-10-06-annotation-run-identity-contract/design.md`, `openspec/changes/archive/2026-10-06-annotation-run-identity-contract/tasks.md`, `openspec/changes/archive/2026-10-06-annotation-run-identity-contract/specs/annotation/015-annotation-workspace/spec.md`, `openspec/specs/annotation/015-annotation-workspace/spec.md`; Reason: OpenSpec archive 必須原子搬移 change 四件套並回寫 015 derived view，無法由單檔任務完成。 [@main]
-- [ ] 4.2 驗證任務（不改檔）：執行 `for source in openspec/specs/annotation/015-annotation-workspace/spec.md specs/annotation/015-annotation-workspace/spec.md; do for id in FR-014S FR-051 FR-059 FR-061 FR-066 FR-072 FR-093 AC-7.1 AC-7.2 AC-7.3 SC-013 SC-014; do rg -n -F "$id" "$source" >/dev/null || exit 1; done; done`，預期 archive 後衍生 view 每條 015 正典引用均可定位；再核對 archive 前 `openspec validate annotation-run-identity-contract --type change` 的成功紀錄、正典 v11.0.1 與 Changelog。 [@main]
+- [ ] 4.2 驗證任務（不改檔）：執行 `for source in openspec/specs/annotation/015-annotation-workspace/spec.md specs/annotation/015-annotation-workspace/spec.md; do for id in FR-014S FR-049 FR-051 FR-059 FR-061 FR-066 FR-072 FR-073 FR-093 AC-1.3 AC-1.16 AC-1.23 AC-7.1 AC-7.2 AC-7.3 SC-013 SC-014; do rg -n -F "$id" "$source" >/dev/null || exit 1; done; done`，預期 archive 後衍生 view 每條 015 正典引用均可定位；再核對 archive 前 `openspec validate annotation-run-identity-contract --type change` 的成功紀錄、正典 v11.0.1 與 Changelog。 [@main]
 - [ ] 4.3 建立繁體中文 PR；所有 CI job（含非 required 的 Prototype Playwright）完成且成功後合併，並只勾選 issue #1160 已驗證的 015 正典規劃項；物理 annotation／review 欄位字典、NoteCraft ER 與 runtime 測試仍屬後續工作。 [@main]
