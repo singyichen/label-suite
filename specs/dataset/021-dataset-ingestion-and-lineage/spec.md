@@ -1,7 +1,7 @@
 ---
 功能分支: feat/database-dataset-lineage
 建立日期: 2026-10-06
-版本: 1.0.0
+版本: 1.1.0
 狀態: Draft
 ---
 
@@ -151,4 +151,5 @@ flowchart TD
 
 | 版本 | 日期 | 變更 |
 |---|---|---|
+| 1.1.0 | 2026-10-06 | issue #1160：完成五張候選表字典與 NoteCraft 投影、逐檔分類 manifest 及封存來源回執的正典對齊；OpenSpec change `dataset-lineage-schema-planning` archive/write-back。所有表仍未部署。 |
 | 1.0.0 | 2026-10-06 | issue #1160：建立 dataset 匯入、完整版本快照與隱藏答案隔離的 owning spec 草案；五張資料表均為規劃候選，task/run FK、ORM、migration、API 與 runtime 尚未實作。 |

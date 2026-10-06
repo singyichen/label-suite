@@ -30,8 +30,8 @@
 
 - [x] 3.1 更新 `docs/diagrams/architecture/database-table-inventory.md`，把 dataset 缺口改為有字典候選並保留 task/run、annotation/export 待決。 [@main]
 - [x] 3.2 更新 `docs/diagrams/architecture/account-admin-db-schema.md` 的 NoteCraft 摘要，使它仍明確區分本文件九表與全圖計數。 [@main]
-- [ ] 3.3 建立 `openspec/changes/dataset-lineage-schema-planning/specs/dataset/021-dataset-ingestion-and-lineage/spec.md` 的 FR／SC delta，驗證 OpenSpec schema，完成 archive/write-back 與正典版本／Changelog。 [@main]
+- [x] 3.3 建立 `openspec/changes/dataset-lineage-schema-planning/specs/dataset/021-dataset-ingestion-and-lineage/spec.md` 的 FR／SC delta，確認 17 條需求與正典逐字一致，且 OpenSpec schema 驗證通過。 [@main]
 - [x] 3.4 執行 Project SDD lint、27 項 Node 測試、來源檢查、NoteCraft JSON Schema/build 與實際 Wiki／Diagram 驗收；記錄 14 表／94 欄／12 FK，全部明示候選未部署。 [@main]
-- [ ] 3.5 完成 senior-code-reviewer、senior-qa Scenario 及 senior-security 審查，並在 archive 後逐條驗證正典引用可定位。 [@main]
+- [x] 3.5 完成 senior-code-reviewer、senior-qa Scenario 及 senior-security 審查；code review 發現的 CI 缺口已由 2.7／2.8 修正，後續 archive 再逐條驗證正典引用。 [@main]
 
-完成 3.3～3.5 後再建立繁體中文 PR、等待 required CI 成功才合併，並只勾選 issue #1160 已驗證的規劃切片；PR 與 issue 更新不屬 OpenSpec change 內的實作任務。
+完成 3.3～3.5 後執行 archive/write-back、正典版本／Changelog 及引用定位；再建立繁體中文 PR、等待 required CI 成功才合併，並只勾選 issue #1160 已驗證的規劃切片。archive、PR 與 issue 更新是本清單完成後的交付閘門。
