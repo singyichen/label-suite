@@ -16,7 +16,7 @@ Issue #1160 需要讓後續 run 能追溯任務建立時通過驗證的完整 co
 
 依 013 FR-006a／FR-006c 與 AC-4.3，task、建立者的 `project_leader` membership、初始 TaskConfig、初始 TaskGuidelineConfig 內容版本，以及 Step 3 啟動設定在同一交易提交；Step 4 留空仍建立初始指引版本。任一步失敗時全部回滾，不能留下孤兒 task 或缺少 leader／config 的任務。`force_guideline` 是顯示政策，不是指引內容版本，後續版本觸發規則屬 014 FR-017a。
 
-依 013 FR-006d、AC-4.4、SC-006，相同 `Idempotency-Key` 在 `IDEMPOTENCY_WINDOW_HOURS` 內重送回傳原 `task_id`，不新增 membership、config 或指引版本；原有 task.create 權限判定仍由 013 FR-001a 管轄。這裡記錄設計不變量，不新增 API payload、儲存形狀或錯誤 envelope。
+依 013 FR-006d、AC-4.4／AC-4.6、SC-006，同一建立者對 `task.create` 在 `IDEMPOTENCY_WINDOW_HOURS` 內以相同 `Idempotency-Key` 和相同正規化請求內容重送，經目前授權檢查後回傳原 `task_id`，不新增 membership、config 或指引版本；同 key 異內容回報衝突，不能將原 task 當作此次請求的成功結果。原有 task.create 權限判定仍由 013 FR-001a 管轄。這裡記錄設計不變量，不新增 API payload、儲存形狀或錯誤 envelope。
 
 ## Cross-change contracts
 
@@ -32,7 +32,7 @@ Issue #1160 需要讓後續 run 能追溯任務建立時通過驗證的完整 co
 
 本次只做文件與來源定位，沒有 ORM、migration、API、資料搬遷、ER 投影或已部署 Schema。後續資料庫切片需以獨立 Red／Green 證據在 SQLite Lite 與 PostgreSQL production 各自驗證：版本號正整數與同 task 唯一、`schema_version_no = version_no`、同 task 版本參照、建立交易全成或全退、冪等重送與併發競爭、registry 定義保留及 digest 重現。SQLite 每連線 FK 啟用、PostgreSQL 鎖與交易衝突、JSON/JSONB 差異均不能由純文件檢查代替。migration 的 upgrade、downgrade、roundtrip 與 API 安全測試須另立實作任務。
 
-本 change 的驗證先確認 013 FR-006／FR-006a／FR-006c／FR-006d、AC-4.3～4.5、SC-006、`TaskConfig`／`TaskGuidelineConfig` 均可在 v8.3.0 正典定位，OpenSpec delta 只鏡射這些條文；再分別執行 OpenSpec schema validation、Project SDD lint 與適用 code/test gate。archive 前完成 Source-Verify，archive 後逐條核對 derived view 的正典引用可定位。文件完成不代表資料庫行為已測或 change 已封存。
+本 change 的驗證先確認 013 FR-006／FR-006a／FR-006c／FR-006d、AC-4.3～4.6、SC-006、`TaskConfig`／`TaskGuidelineConfig` 均可在 v8.3.0 正典定位，OpenSpec delta 只鏡射這些條文；再分別執行 OpenSpec schema validation、Project SDD lint 與適用 code/test gate。archive 前完成 Source-Verify，archive 後逐條核對 derived view 的正典引用可定位。文件完成不代表資料庫行為已測或 change 已封存。
 
 ## Risks and rollback
 
