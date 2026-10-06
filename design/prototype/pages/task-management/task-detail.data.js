@@ -1640,10 +1640,9 @@
    * Counts (reviewUnfinalizedCount, disputedUnitCount) are passthrough
    * display data for the caller's messages.
    *
-   * Pending (issue #1120): condition 5 (quality metrics ready) has no data
-   * source defined in any spec yet and awaits a maintainer ruling, so it
-   * keeps its previous behaviour -- it only blocks when the caller passes
-   * `qualityMetricsReady === false`, which no caller does today. */
+   * Condition 5 (issue #1141): quality metrics ready only blocks when the
+   * caller passes `qualityMetricsReady === false`; task-detail.html derives it
+   * for the official run from the latest trial round's computation status. */
   function getTaskCompletionBlockers(context) {
     context = context || {};
     var blockers = [];
