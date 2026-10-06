@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-detail-config-sync
 建立日期: 2026-04-20
-版本: 2.2.0
+版本: 2.3.0
 狀態: In Progress
 ---
 
@@ -230,7 +230,7 @@ sequenceDiagram
 ### 功能需求
 
 - **FR-001**：系統必須提供 `/task-list` 作為 task-management 模組 Landing。
-- **FR-002**：`user` 在 `/task-list` 只可看見自己有 `task_membership` 的任務。
+- **FR-002**：當前 `user` 只有在 system 層 `task.list.view` 格允許時可進入 `/task-list`，且只可看見自己有 active `task_membership` 的任務；矩陣格不得擴大到其他人的任務。`super_admin` 也須通過當前 `task.list.view` 格，才可使用 FR-003 的全平台視角（ADR-037）。
 - **FR-003**：`super_admin` 在 `/task-list` 必須預設載入全平台任務，且不得提供「我的任務 / 全平台任務」切換。
 - **FR-004**：系統必須支援任務列表搜尋（所有欄位）、輸出類型篩選、標記階段篩選、狀態篩選與分頁。
 - **FR-004a**：搜尋需為 `contains` 且不分大小寫，作用於列表所有欄位。
@@ -260,7 +260,7 @@ sequenceDiagram
 - **FR-010b**：點擊 `刪除` 時，系統必須執行軟刪除（設定 `deleted_at` 與刪除操作者），且不得物理刪除資料。
 - **FR-010c**：軟刪除任務不得出現在預設 `/task-list` 結果中。
 - **FR-010d**：刪除確認流程必須使用 task-management 共用 modal 樣式，不得使用瀏覽器原生 `confirm`。
-- **FR-010e**：刪除任務僅允許 `project_leader` 與 `super_admin`；其他角色不得看到可用刪除操作，且直接觸發刪除時必須被拒絕並顯示無權限提示。
+- **FR-010e**：刪除任務僅允許該任務 active `project_leader` 或當前 `super_admin`，且仍受 draft 狀態與原有資源限制；其他角色不得看到可用刪除操作，且直接觸發刪除時必須被拒絕並顯示無權限提示。V1 矩陣尚無 `task.delete` 專用鍵，實作不得借用 `task.detail.edit` 或 `task.members.manage`，亦不得宣稱 42 列 V1 種子已覆蓋刪除；轉換此命令的矩陣授權前需依 ADR-037 核准增鍵、完整種子與安全測試。
 - **FR-010f**：刪除任務僅允許 `status = draft`；非 `draft` 任務不得看到可用刪除操作，且直接觸發刪除時必須被拒絕並顯示狀態不允許刪除的提示。
 - **FR-011**：任務列表必須將每筆任務的 `outputs[].type` 逐項呈現為唯讀 tag；複合任務顯示多個 tag，且不得硬編固定組合名稱或渲染分支。
 - **FR-011a**：輸出類型 tag 必須依 `OUTPUT_TYPE_REGISTRY` 顯示 zh/en 文案，並以可見文字與可存取名稱傳達類型，不得只依賴顏色。
@@ -350,6 +350,7 @@ flowchart LR
 | 008 | Shared Sidebar Navbar | L0 導覽、active 狀態與 RWD 導覽規範 |
 | 012 | Dashboard | 從 dashboard 進入 task-management 的入口語意 |
 | 013 | New Task | `OUTPUT_TYPE_REGISTRY`、8 個 `OUTPUT_TYPE_KEYS` 與 `outputs[]` producer contract |
+| admin-007／ADR-037 | Permission Matrix Authorization | `task.list.view` 與未涵蓋的 task.delete 增鍵程序 |
 
 ### 下游（依賴本規格的規格）
 
@@ -382,6 +383,7 @@ flowchart LR
 - **SC-013**：於示例基線之外再新增一筆具有任意合法 `outputs[]` 組合的任務後，列表與對應 `output_type` 篩選可直接呈現該任務，不需新增任務名稱、輸出組合或 renderer/filter 分支。
 - **SC-014**：任務列表及其可供 annotator 存取的資料不得出現任何示例 fixture 的 gold、reference、answer、ground truth 或等價答案內容。
 - **SC-015**：本版新增或修改的 prototype 驗收情境皆有對應 Playwright 測試，涵蓋 16 筆基線、8 個篩選器選項與命中數、複合 tag、額外合成任務泛化及三個 `RWD_VIEWPORTS`。
+- **SC-016**：`task.list.view` 缺列或被關閉時不得取得列表；一般 `user` 的列表不含非自己 active membership 的任務，`super_admin` 的全平台視角仍需通過對應格；任務刪除維持 FR-010e 硬邊界，不能被其他 V1 鍵間接授權。
 
 ---
 
@@ -419,6 +421,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.3.0 | 2026-10-06 | Issue #1160 D-9：依 ADR-037 加入 `task.list.view` 矩陣條件，保留 membership／全平台資料範圍；明列任務刪除尚無 V1 專用鍵，不能借用其他鍵，新增 SC-016。規劃契約尚未實作 runtime。 |
 | 2.2.0 | 2026-09-18 | Issue #815（OpenSpec change `retire-stale-review-demo-fixtures`，上游 015 v6.6.0 之下游同步）：平手示範任務 T017 之種子形狀只能由已廢止之多數決規則產生，其 fixture `review-flow-official-tie.json` 已自 `docs/product/example-data/` 與 prototype 移除。示例基線表移除該列，基線筆數 17 → 16（功能目標、SC-010、SC-015 同步），`single_label` 命中數 6 → 5，其餘輸出類型命中數不變；審核流程示範 seed 範圍改為 T014–T016。未新增或移除 FR／AC；v2.1.0 列所述「擴充至 17 筆」為當時沿革，不改寫。**分級理由**：驗收基線之筆數與命中數改變——MINOR（對齊 v2.1.0 擴充基線之分級先例）。 |
 | 2.1.2 | 2026-09-08 | Issue #721：釐清 FR-005a 涵蓋範圍——無權限提示的觸發時機不限於 `/task-list` 內點擊任務列的攔截，亦涵蓋 `/task-detail` 因角色檢查導回 `/task-list` 的情境（原本 `?unauthorized=` 導頁參數從未被讀取，使用者無從得知返回原因）；未新增或移除 FR/AC，僅釐清既有 FR-005a 的適用範圍。 |
 | 2.1.1 | 2026-08-24 | Issue #261：新增 Prototype Traceability，明確對應 task-list 原型頁面、prototype 資料層與設計層參考的責任邊界；規格條文未變。 |

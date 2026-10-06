@@ -1,7 +1,7 @@
 ---
 功能分支: docs/1120-015-arbitration-output-unit
 建立日期: 2026-04-23
-版本: 10.1.0
+版本: 10.2.0
 狀態: Draft
 ---
 
@@ -1042,6 +1042,8 @@ Reviewer 在 `run_type = official_run` 的工作區中，針對「目前標記�
 
 > **v2.0.0 移除項目**：原 `FR-004D`（保留次分類路由參數）與原 `FR-025`（任務分類 localStorage fallback 機制）隨 taxonomy 遷移一併移除，不再適用；詳見 Changelog。
 
+- **FR-104**（issue #1160 D-9／D-11）：正式後端的標記／審核 workspace 必須依 ADR-037 以當前帳號、目標任務 active membership、使用者明確選定的 active task role、對應 `annotation.workspace.annotate`／`annotation.workspace.review` 格、實際 assignment／reviewer roster 及盲審與答案隔離條件逐次授權；多角色使用者的其他 task role 不得以聯集提升本次寫入權限。路由中的 `role`、`annotator_id`、`reviewer_id` 僅作檢視／定址上下文，不得作為正式後端的操作者身分或指派證據；正式身分由受驗證帳號與任務資料決定。FR-049 的 prototype 路由預設身分與示範 bucket 行為仍只屬 prototype，不得直接移植為後端授權來源；被拒絕的呼叫不得讀出測試集答案或其他審核員未提交內容。
+
 ### 使用者流程與導頁 *(必填)*
 
 ```mermaid
@@ -1123,6 +1125,7 @@ flowchart LR
 | dashboard-012 | Dashboard | Annotator/Reviewer 進入標記清單入口與待辦卡；依 `outputs[].type` 呈現一至多個 registry-driven tag |
 | task-management-013 | New Task | `outputs[]` config 與 `OUTPUT_TYPE_REGISTRY`（8 種輸出類型 schema）、`field_role_map`、`item_pair_labels`、`sequence_tagging` 的 span 契約（`entities`／`snap_unit`／`allow_bypass`、`spans[]` 半開區間與 `SPAN_OVERLAP_POLICY_BY_OUTPUT_TYPE`，見 013 FR-003d-1）、說明檔案、初始成員與 run 初始化 |
 | task-management-014 | Task Detail | Dry/Official 狀態管理、`sample_snapshot_id` 凍結與發布流程、`TaskProfile`（`outputs[]` + `field_role_map` + `item_pair_labels`）凍結與摘要 |
+| admin-007／ADR-037 | Permission Matrix Authorization | active task role、annotate/review 格與當前 membership 守門 |
 
 ### 下游（依賴本規格的規格）
 
@@ -1177,6 +1180,7 @@ flowchart LR
 - **SC-010**（v6.15.0 新增，issue #868）: 任一任務中，尚未黏住的新審核單位指派給 `arbiter_ids` 成員的比例為 0%；非仲裁審核員之新分派筆數差距維持不超過 1；指定仲裁者對自己未參與的既有爭議列之 `list-arbitrate-entry` 可達率為 100%；task profile 與全域示範旗標不一致時，仲裁資格判定仍 100% 以 task profile 為準。review-flow v4 migration 任一必要 seed 寫入失敗時，v4 完成 marker 寫入率為 0%；下次載入重試並驗證全部必要 seed 後完成率為 100%（AC-4.62～AC-4.68、FR-060、FR-073、FR-093、FR-099）。
 - **SC-011**（v6.16.0 新增，issue #907）: 專案負責人於任一有待處置例外項之 `task_id × run_type` 開啟最終例外處置畫面時，左側清單筆數與該任務該回合之待處置例外項數不一致的次數為 0；該清單中屬一般標記樣本、或帶有標記進度狀態（待標記／已儲存／已提交）之列為 0 筆；畫面上「已提交」之標記提交進度文案與可見之自動儲存狀態列各為 0 個；未同時呈現仲裁者與仲裁理由之待處置項為 0 筆；`exclude_from_dataset` 以外之處置動作帶有危險樣式者為 0 個；左側佇列與任務詳情頁例外池計數所讀取的待處置例外項列舉實作恰為 1 份（AC-4.69、FR-095）。
 - **SC-012**（v7.0.0 新增，issue #920）：最終例外處置畫面中，理由欄位為空時仍成功寫入例外池紀錄（即 `resolveExceptionPoolItem()` 被呼叫但 `reason` 為空字串）之次數為 0；「確認處置」按鈕在未選取任一處置或理由欄位為空時仍呈現非停用（可點擊）狀態之次數為 0；`adopt_annotator`／`adopt_reviewer` 寫入之例外池紀錄中 `reason` 欄位為空字串之次數為 0（AC-4.72、AC-4.75、FR-095）。
+- **SC-013**：正式後端在 active role 為 reviewer 時不能提交 annotator 動作，反之亦然；停用 membership、撤銷矩陣格、跨任務或偽造 URL 身分的下一次請求都被拒絕，且回應不含隱藏答案或其他審核員未提交內容。prototype 的路由示範資料不作為正式授權證據。
 - **SC-005**: 在 `375px / 768px / 1440px` 下，翻筆後 `說明與檔案` 內容維持，Desktop 可收合/展開且 Mobile 抽屜開合可用。
 - **SC-005B**: 點擊右欄圖片檔後，會開啟圖片預覽 modal 並顯示對應大圖；使用者可透過關閉按鈕、遮罩背景或 `Esc` 成功關閉。
 - **SC-005C**（v4.21.0 新增）: 點擊右欄 PDF 檔後，會於頁面內開啟 PDF 預覽 modal 並內嵌顯示該檔案，且不產生新分頁；使用者可透過關閉按鈕、遮罩背景或 `Esc` 成功關閉（AC-5.3、FR-020C）。
@@ -1206,6 +1210,7 @@ flowchart LR
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 10.2.0 | 2026-10-06 | Issue #1160 D-9／D-11：依 ADR-037 新增 FR-104／SC-013，明確區分 prototype 路由定址與正式後端授權；workspace 寫入只使用當前 active role、membership、對應矩陣格、指派及資料隔離條件。規劃契約尚未實作 runtime。 |
 | 10.1.0 | 2026-10-05 | **仲裁輸出項目之計數單位未明文**（issue #1120，OpenSpec change `1120-015-arbitration-output-unit`，**MINOR**：新增必須條文與新 AC，未移除或取代任何 FR／AC）：FR-061 定義了逐爭議項裁定與 `ARBITRATION_OUTCOMES`，FR-059 定義了爭議項之推導與識別，但沒有任何條文說明仲裁進度計數以什麼為一筆；`task-management/014-task-detail` FR-010u 第 (4) 點要求 014 讀取 015 之既有定義、不得另建第二份，第 (5) 點則把「爭議項」列為不得與其他單位相加之聚合層級，issue #1120 OpenSpec change `1120-task-lifecycle-alignment` 因此將此定義列為 015 擁有之跨 owner 待辦。**修訂 FR-061**：新增第 7 點，以 FR-059 之爭議項（審核單位內 `outKey × 合併鍵`，粒度依 FR-059 第 4 點）為聚合單位，定義分子（最新裁定為 `reject` 或已有合法仲裁定案之爭議項數）、分母（查詢範圍內爭議項總數）與 `待仲裁`（尚未解決且最新裁定不是 `reject`），明文不得以審核單位或輸出類型合併、不得與審核單位數或標記 assignment 數相加或共用分母。該 change `design.md` D2 以「審核單位 × 輸出類型」描述此單位，較 FR-059 粗，本版以 FR-059 為準。**新增 AC-4.83**（同一 `multi_label` 輸出內兩個合併鍵差異時 `待仲裁` 為 2 而非 1；一項 `adopt_a`、一項 `兩者皆非` 送出後 `待仲裁` 為 0、`最終例外待處置` 為 1）。原型已依 `outKey × 合併鍵` 逐項計數（`listReviewPoolItems()`，`design/prototype/pages/annotation/annotation-workspace.data.js`），本版無產品程式變更；以 `design/prototype/tests/task-management/issue-1120-arbitration-output-unit.spec.ts` 釘住並以突變探針確認其抓得到「每個 outKey 一筆」之退化。 |
 | 10.0.0 | 2026-10-02 | **標記員「跳過」整組移除，理由必填承接方改為既有「無法判定 (Bypass)」勾選項**（issue #1082，OpenSpec change `1082-bypass-reason-remove-skip`，**MAJOR／BREAKING**，maintainer 於 issue 本文已裁示 MAJOR）：底部工作列「跳過」控件（`#wsSkipGroup`、`handleSkip()`、`markSampleSkipped()`）整組移除，不提供任何替代之略過機制；標記員理由必填的承接方改為既有之「無法判定 (Bypass)」勾選項——勾選該項時，理由欄位於同一提交流程內必填，理由隨既有「提交」路徑一併送出並寫入該筆 `submitted` 歷程事件之 `reason`（逐 outKey），不另立獨立送出動作或歷程事件。**修訂 FR-089**：下列四個動作之列舉原末項「標記員跳過（`skipped`）」與其「跳過動作本身之定義」整段，隨跳過功能移除；**AC-2.20 本體文字直接取代**為「Bypass 理由必填，未填阻擋送出、填寫後理由進入 submitted 事件」情境（沿用 AC-2.20 id，不新增編號）；新增 **AC-2.29**（Bypass 理由欄位之展開／收起與驗證時機，依 `design/system/ux-conventions.md` UXC-04／UXC-05）。**修訂 FR-086**：`HISTORY_ACTIONS` 自九值改為**八值**（`draft_saved | submitted | modified | accepted | bypassed | adjudicated | exception_resolved | excluded`，移除 `skipped`）；`ACTION_LABEL`（`design/prototype/pages/shared/annotation-history.js`）同步移除「已跳過」鍵，不比照 `rejected`／`saved` 保留中文標籤；既有（本次變更以前寫入）之 `skipped` 歷程事件依既有「集合外值以中性徽章呈現」通則處理，原樣保留、不遷移不改寫；**AC-2.16** 列舉數同步改為八。**修訂 FR-101**：鎖定生效時之作答控制段落，原列舉三個既有控件（`wsSkipBtn`、`wsSaveBtn`、`wsSubmitBtn`）因 `wsSkipBtn` 隨跳過功能移除而改為兩個既有控件（`wsSaveBtn`、`wsSubmitBtn`）；**AC-2.27** 同步修訂。**修訂 FR-092**：審核卡／仲裁版面顯示標記員 Bypass 答案值之處（`ws-review-original-answer`），新增於該 chip 旁顯示標記員所填 Bypass 理由，理由來源為 FR-089 v10.0.0 新持久化路徑；本次變更以前寫入、不具理由欄位之舊 Bypass 答案不顯示理由文字、不報錯、不補寫推估理由；新增 **AC-3.66**。**變更內容**：`design/prototype/pages/annotation/annotation-workspace.html`、`annotation-workspace.config.js`、`shared/annotation-history.js` 移除跳過相關標記與邏輯，新增 `.ws-bypass-reason-group`／`.ws-bypass-reason-error`／`.ws-bypass-reason-helper` 樣式與對應理由欄位邏輯；`buildHistorySummary()` 延伸納入 Bypass 理由逐 outKey 組字串。**獨立審查**：PR #1088（G2a，移除跳過控件）、PR #1089（G2b，新增 Bypass 理由欄位）皆經 fresh `senior-code-reviewer` 覆核後 **APPROVE** 並已併入 `main`（805c1eab）；本 G3（archive）之 Source-Verify 覆核與正典回寫另見本 PR 審查紀錄。**分級理由**：移除既有可見互動路徑（跳過控件）且不提供替代機制，使依賴該控件之既有自動化／整合失效，maintainer 已於 issue #1082 本文明確裁示本次變更為 MAJOR——MAJOR／BREAKING。 |
 | 9.1.1 | 2026-09-30 | **AC-6.13 之「驗證」指向已不存在之測試檔**（issue #1059，Lightweight Path；未新增、未移除、未修改任何 FR／AC 條文，僅更正一個驗證指標路徑）：AC-6.13（v6.6.0 新增，對應 FR-044 雙份副本一致性，issue #815）原以 `design/prototype/tests/annotation/issue-815-demo-data-parity.spec.ts` 作為其驗證指標。issue #1059 group 2 執行 prototype 測試分層收斂時，該檔全部 5 個案例皆屬「不開瀏覽器」類（以 `node:child_process` spawn `scripts/check-demo-data-parity.sh`，全程無 `page`／`browser` fixture），依 `design/prototype/README.md` Test Policy 第 2 點自 Playwright browser gate 遷入 `pnpm test:node` 閘門，原檔因案例全數搬離而刪除，該引用隨之懸空。**變更內容**：AC-6.13 句尾之「驗證：」路徑改為 `design/prototype/tests-node/demo-data-parity.test.mjs`；同一條 AC 之 Given／When／Then、`scripts/check-demo-data-parity.sh` 之引用、以及「須同時登錄於 CLAUDE.md 本機驗證指令與 `.github/workflows/ci.yml` CI job 並於 `scripts/ci-jobs.tsv` 宣告對應」一句皆逐字未動——三者於遷移後仍全數成立（`pnpm test:node` 已列於 CLAUDE.md Verification Commands 之 Prototype 區塊，對應 CI job `prototype-node-tests`，`scripts/ci-jobs.tsv` 已宣告，`CI_JOB_PARITY` 不回報缺口）。**被驗證的行為完全未變**：5 個案例之斷言語意逐一保留（`toBe`→`assert.strictEqual`、`toContain`→具名 `assert.ok(...includes...)`），案例標題逐字保留，且每一案皆以「變異被守護的 artifact」證明仍會失敗（改壞 `scripts/check-demo-data-parity.sh` 使其恆 exit 0 → 4 案轉紅；在真實樹漂移 `docs/product/example-data/review-flow-official-multi.json` 之 record id → parity 案轉紅；變異後皆還原並以 sha256 驗證 byte-identical）。**分級理由**：僅更正一個驗證指標之檔案路徑，未新增或移除任何 FR／AC 編號，亦未改動任何需求語意——PATCH。 |

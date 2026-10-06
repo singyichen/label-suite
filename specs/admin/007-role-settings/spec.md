@@ -1,13 +1,17 @@
 ---
 功能分支: feat/admin/007-role-settings
 建立日期: 2026-04-16
-版本: 1.1.14
+版本: 1.2.0
 狀態: Draft
 ---
 
 # 功能規格：Role & Permission Settings — 角色權限矩陣設定
 
 **需求來源**: IA v7 Spec 清單 #007 — 角色權限設定（`role-settings`）
+
+## 功能目標
+
+讓當前 Super Admin 安全檢視、修改與稽核跨模組的角色權限矩陣，並使已啟用格成為正式後端授權的必要條件；角色、任務成員身分與各資源限制仍須獨立驗證。
 
 ## 輸入與生成規則
 
@@ -200,10 +204,11 @@ Super Admin 可調整角色權限後儲存，並讓新配置成為平台後續�
 1. **Given** `system role = user`，**When** 直接開啟 `user-management.html` 或 `role-settings.html`，**Then** 系統拒絕存取並導回 `/dashboard`。
 2. **Given** 未登入，**When** 開啟 `user-management.html` 或 `role-settings.html`，**Then** 系統導向 `/login`。
 3. **Given** `super_admin`，**When** 點擊「角色設定」tab，**Then** 顯示可編輯權限矩陣。
+4. **AC-3.4**：**Given** 一個 `user` 直接呼叫 admin API，或任一當前角色所需的已啟用權限格缺列，**When** 服務端判斷授權，**Then** 前者無法越過 Super Admin 硬邊界、後者一律拒絕；不得因 JWT 舊 role、前端按鈕或錯層格而放行。
 
 **行為規則**：
 
-- `user-management.html` 與 `role-settings.html` 必須都有 RoleGuard，僅允許 `super_admin`；兩頁同屬 admin 模組且 L0 active 皆為「系統管理」。
+- `user-management.html` 與 `role-settings.html` 的頁面入口與正式 API 都必須檢查當前 `super_admin` 硬邊界及對應 `admin.*` 格；兩頁同屬 admin 模組且 L0 active 皆為「系統管理」。
 - 無權限使用者不得讀取權限矩陣資料 API 回應。
 - 頁面入口與保存操作都必須在服務端再次驗證角色，不能只靠前端控制。
 - `super_admin` 的所有 `admin.*` 權限必須保持啟用，不得在角色權限矩陣中關閉。
@@ -234,6 +239,7 @@ Super Admin 可調整角色權限後儲存，並讓新配置成為平台後續�
 | task-management | `task.list.view` | 檢視任務列表 |
 | task-management | `task.create` | 建立新任務 |
 | task-management | `task.detail.view` | 檢視任務詳情 |
+| task-management | `task.detail.edit` | 編輯任務詳情中允許修改的內容；仍受任務狀態與欄位規則限制 |
 | task-management | `task.members.manage` | 管理任務成員與任務角色 |
 | annotation | `annotation.workspace.annotate` | 以 annotator 模式執行標記 |
 | annotation | `annotation.workspace.review` | 以 reviewer 模式執行審核 |
@@ -257,6 +263,7 @@ Super Admin 可調整角色權限後儲存，並讓新配置成為平台後續�
 | `task.list.view` | ✅ | ✅ |
 | `task.create` | ✅ | ✅ |
 | `task.detail.view` | ⛔（需 task role） | ⛔（需 task role） |
+| `task.detail.edit` | ⛔（需 task role） | ⛔（需 task role） |
 | `task.members.manage` | ⛔（需 task role） | ⛔（需 task role） |
 | `annotation.workspace.annotate` | ⛔（需 task role） | ⛔（需 task role） |
 | `annotation.workspace.review` | ⛔（需 task role） | ⛔（需 task role） |
@@ -272,7 +279,8 @@ Super Admin 可調整角色權限後儲存，並讓新配置成為平台後續�
 
 | permission_key | `project_leader` | `reviewer` | `annotator` |
 |----------------|------------------|------------|-------------|
-| `task.detail.view` | ✅ | ✅（唯讀） | ❌ |
+| `task.detail.view` | ✅ | ✅ | ❌ |
+| `task.detail.edit` | ✅ | ❌ | ❌ |
 | `task.members.manage` | ✅ | ❌ | ❌ |
 | `annotation.workspace.annotate` | ❌ | ❌ | ✅ |
 | `annotation.workspace.review` | ❌ | ✅ | ❌ |
@@ -282,15 +290,18 @@ Super Admin 可調整角色權限後儲存，並讓新配置成為平台後續�
 
 #### 授權判斷規則
 
-- 平台頁面先檢查 system role；任務頁面再依 `task_membership(task_id, user_id, task_role)` 檢查 task role。
+- 依 Accepted ADR-037，伺服器先驗證當前帳號與 token family，再讀取當前 system role／任務內 active membership，檢查操作對應的已啟用 `permission_key` 與適用角色的 `allowed=true` 格，最後檢查任務擁有權、狀態、指派與答案隔離等資源條件；未知鍵、缺列、錯層或失效 membership 均拒絕。矩陣格不單獨賦予角色或資源存取權。
 - system role 與 task role 為雙層模型，不可互相推導或繼承。
-- 同一使用者可在同一任務同時具多個 task role；任務頁面權限以該任務下「可用權限聯集」判斷。
-- 進入 annotation workspace 時必須選定 active task role；workspace 內的標記或審核動作僅依 active task role 判斷，不因其他 task role 的權限聯集而放寬（例如 active role 為 `reviewer` 時不可執行 annotator 動作）。
+- 同一使用者可在同一任務同時具多個 task role；membership 的邏輯唯一鍵為 `(task_id,user_id,task_role)`。非 workspace 任務頁面可取該任務 active membership 的允許權限聯集，但每個操作仍需滿足本身的資源條件。
+- 進入 annotation workspace 時必須選定 active task role；標記或審核寫入只依該 active role 的當前 active membership 與對應格判斷，不因其他 task role 聯集而放寬；URL 的 role／人員參數不能建立身分或指派。
+- V1 有 9 個平台鍵 × 2 個 system role、8 個任務鍵 × 3 個 task role，合計 **42 列適用格**；表格中的 ⛔ 是錯層、不儲存資料列。`allowed` 維持 boolean，唯讀由 `task.detail.view=true` 且 `task.detail.edit=false` 表達。
+- `super_admin` 存取 admin 頁與管理命令仍須當前 `super_admin` 角色及對應 `admin.*` 格，`user` 的格不得提升為管理員。`super_admin × admin.*` 固定啟用、`user × admin.*` 固定關閉，兩種 system role 的 `dashboard.view` 固定啟用。
+- 新鍵的可配置適用格預設 `false`，且未經審查完成層級、操作映射、完整種子資料與安全測試前不得啟用；新 `admin.*` 鍵啟用時，其固定格原子建立為超管 `true`、一般使用者 `false`。缺列或未知鍵一律拒絕。任務刪除及部分生命週期命令尚無 V1 專用鍵，不可借用其他鍵；轉為矩陣授權前必須另行核准增鍵。
 
 ### 功能需求
 
 - **FR-001**：系統必須提供 `/role-settings` 角色權限矩陣設定頁。
-- **FR-002**：只有 `super_admin` 可以存取與編輯 `/role-settings`。
+- **FR-002**：只有當前 active `super_admin` 且對應 `admin.role_settings.view`／`admin.role_settings.manage` 格允許時，才可分別存取與編輯 `/role-settings`；矩陣不可授權 `user` 繞過 system role 硬邊界。
 - **FR-003**：頁面必須顯示 system roles（`user`、`super_admin`）與 task roles（`project_leader`、`reviewer`、`annotator`）。
 - **FR-003a**：`permission_key` 清單必須由後端白名單提供，前端不得接受白名單外權限鍵。
 - **FR-003b**：系統必須提供並顯示本規格「權限鍵白名單（V1）」中的全部 `permission_key`。
@@ -299,14 +310,15 @@ Super Admin 可調整角色權限後儲存，並讓新配置成為平台後續�
 - **FR-004**：系統必須允許 `super_admin` 點擊「編輯」進入編輯模式後調整角色權限並儲存；儲存成功後自動回到閱覽模式。
 - **FR-005**：系統必須支援取消未儲存變更並回復已儲存版本；有未儲存變更時，點擊「取消」須先彈出確認對話框，確認放棄後才回到閱覽模式。
 - **FR-005a**：取消未儲存變更後，系統必須維持在 `/role-settings`（不自動導頁）。
-- **FR-005b**：儲存必須使用 `version` 或 `etag` 樂觀鎖驗證；版本不一致時必須拒絕並提示衝突。
+- **FR-005b**：每次儲存（含無變更）必須使用 `version` 或 `etag` 樂觀鎖驗證；版本不一致或單列版本資料不存在時必須拒絕並提示衝突，不可覆蓋其他人的變更。
 - **FR-006**：角色設定必須由 `role-settings.html` 承載；`user-management.html` 與 `role-settings.html` 以 admin tabs 互相連結。儲存成功後維持在 `role-settings.html`，使用者可透過點擊「使用者管理」tab 返回 `user-management.html`。
 - **FR-007**：無權限存取 `user-management.html` 或 `role-settings.html` 時，系統必須拒絕存取並導向安全頁（未登入→`/login`，一般使用者→`/dashboard`）。
-- **FR-008**：系統必須在服務端驗證角色權限，避免僅前端控管。
-- **FR-008a**：系統必須保護 `super_admin` 的所有 `admin.*` 權限，這些權限不可被配置為關閉。
+- **FR-008**：系統必須在服務端依 ADR-037 驗證當前角色／membership、已啟用的對應矩陣格與各操作的資源條件；前端能力提示不得代替服務端授權。
+- **FR-008a**：系統必須保護 `super_admin` 的所有 `admin.*` 權限，這些格不可被配置為關閉；`user` 的 `admin.*` 格固定關閉，兩種 system role 的 `dashboard.view` 格固定啟用。⛔ 錯層格不儲存。
 - **FR-008b**：系統初次建立的超級管理員（seeder 建置帳號）永遠不可被移除（刪除/停用/降級）。
 - **FR-009**：頁面必須支援 `RWD_VIEWPORTS`；在 `<= MOBILE_BP` 時需依角色類型或模組分段呈現，使用者可完整檢視與編輯矩陣，且主要操作不依賴橫向捲動。
-- **FR-010**：角色權限矩陣儲存且實際有變更後，系統必須與矩陣及版本更新同交易寫入 ADR-032 共用 `audit_events` 的 `role_permissions.changed` 事件（目標為 `role_permission_matrix`），保存操作者、時間、版本前後值及伺服器依已儲存列計算的變更前後格子 diff；不得直接信任前端提交的 diff，審計紀錄至少保留 1 個曆年。此共用事件契約不提前裁決 D-9 的授權判斷方式。
+- **FR-010**：角色權限矩陣儲存且實際有變更後，系統必須與矩陣及版本更新同交易寫入 ADR-032 共用 `audit_events` 的 `role_permissions.changed` 事件（`target_type=role_permission_matrix`、穩定 `target_id=1`），保存操作者、時間、版本前後值及伺服器依已儲存列計算的變更前後格子 diff；不得直接信任前端提交的 diff，審計紀錄至少保留 1 個曆年。無變更也須先檢查預期版本；版本列不存在則拒絕，無變更不遞增版本或產生事件。
+- **FR-011**：矩陣儲存必須拒絕非白名單鍵、錯層、多列、缺列及違反固定格的內容；每個已啟用鍵須有全部適用角色列，⛔ 錯層格不儲存。新增鍵遵守授權判斷規則的預設拒絕與固定格啟用程序。
 - **FR-010a**：`/role-settings` 頁面必須提供「操作紀錄」入口按鈕；點擊後開啟右側抽屜，列出所有歷史變更紀錄（時間、操作者、diff）；抽屜可隨時關閉，不影響矩陣編輯狀態。
 
 ### 使用者流程與導頁
@@ -358,12 +370,13 @@ flowchart LR
 |---------|------|----------------|
 | 001 | Login — Email / Password | 已登入狀態與路由守門基礎 |
 | 006 | User Management | `user-management.html` 與 `role-settings.html` 的 admin tab 導航脈絡 |
+| ADR-037 | Permission Matrix as Authorization Input | 當前角色、矩陣格、資源條件與固定格的授權組合 |
 
 ### 下游（依賴本規格的規格）
 
 | 規格編號 | 功能 | 依賴本規格的內容 |
 |---------|------|----------------|
-| — | — | — |
+| 010／013／014／015 | Task List／Task New／Task Detail／Annotation Workspace | 操作鍵、task membership 與 active workspace role |
 
 ---
 
@@ -375,10 +388,11 @@ flowchart LR
 - **SC-004**：取消未儲存變更後，矩陣回復至最後已儲存狀態，且維持在 `role-settings.html`。
 - **SC-005**：`user` 與未登入使用者無法存取角色設定內容。
 - **SC-006**：頁面在 `RWD_VIEWPORTS` 下可完整檢視矩陣且無內容重疊；`<= MOBILE_BP` 以分段呈現完成主要檢視與編輯操作，不依賴橫向捲動。
-- **SC-007**：多人同時編輯時，版本衝突儲存會被拒絕並提示重新載入，不發生靜默覆蓋。
+- **SC-007**：多人同時編輯時，版本衝突儲存（含無變更提交）會被拒絕並提示重新載入，不發生靜默覆蓋；真正無變更且版本相同時不遞增版本、不寫稽核事件。
 - **SC-008**：系統初次建立的超級管理員（seeder 建置帳號）無法被刪除、停用或降級。
 - **SC-009**：`permission_key` 白名單與角色矩陣可完整載入、儲存、重整後一致，且白名單外 key 會被拒絕。
 - **SC-010**：每次有實際格子變更的儲存均可在共用稽核事件查得操作者、時間、版本與由伺服器計算的 diff；失敗或無變更的儲存不產生該事件。至少 1 個曆年內的紀錄可供追蹤；`/role-settings` 頁面的「操作紀錄」抽屜可正確列出歷史紀錄，每筆包含時間、操作者、diff。
+- **SC-011**：V1 只儲存 42 列適用 boolean 格；reviewer 可以檢視任務詳情但不能取得編輯權。未知鍵、缺列、錯層與失效 membership 均拒絕；固定 admin／dashboard 格不能被改變，一般使用者即使提交 admin 格也不能進入管理頁。
 
 ---
 
@@ -416,6 +430,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.2.0 | 2026-10-06 | Issue #1160 D-9～D-13：Accepted ADR-037 確立矩陣是授權必要輸入；新增 `task.detail.edit`、42 列適用格、固定 admin／dashboard 格、新鍵預設拒絕與完整啟用程序；明定一人多 task role、workspace active role、CAS 空變更及穩定稽核目標，新增 FR-011／AC-3.4／SC-011 與功能目標。此版只更新規劃契約，未建立 runtime。 |
 | 1.1.14 | 2026-10-06 | Issue #1160 D-4：FR-010／SC-010 對齊 ADR-032 共用 `role_permissions.changed` 事件、伺服器計算 diff 與至少一個曆年保存；D-9 授權語意另行裁決。 |
 | 1.1.13 | 2026-08-24 | Issue #261 drift 修正：v1.1.7 記錄「移除頂部有未儲存變更 banner，改以取消確認對話框」，但核實 git 歷程與現行 `role-settings.html`／`role-settings.spec.ts`，banner 已於 PR #50 review 後（`524dfbd`）刻意加回並持續維護、有 6 個既有 Playwright 斷言鎖定其顯示/隱藏行為，且具 `role="alert"` 可及性語意；取消確認對話框（區塊 E）亦確認已正確實作（`cancelEdit()` 有未儲存變更時呼叫 `showDirtyModal()`），並非 issue 原始核實所述的直接放棄。banner 與確認對話框為互補關係非互斥，新增區塊 G（未儲存變更 Banner）補齊此前缺漏的介面定義，不修改任何 prototype 程式碼或測試；v1.1.7 歷史記錄保留不變，本次以新增條目方式修正認知落差。 |
 | 1.1.12 | 2026-08-20 | Issue #261：新增 Prototype Traceability，界定 `role-settings.html` 的頁面責任，並將 `user-management.html` 限定為 admin tab 導覽交叉參照。 |

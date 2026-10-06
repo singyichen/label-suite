@@ -3,6 +3,7 @@
 **Status**: Accepted
 **Date**: 2026-08-19
 **Accepted amendment**: 2026-10-06 — issue #1160 D-4; SQLite/PG planning contract, system actor, retention, admin actions and naming exception.
+**Accepted amendment**: 2026-10-06 — issue #1160 D-9; matrix event target identity fixed by ADR-037.
 
 ## Context
 
@@ -108,7 +109,7 @@ The catalog below is the initial registry. Adding entries is a registry change p
 
 - `member.invited` · `member.activated` · `member.deactivated`
 - `member.platform_role_changed` · `member.updated` (ordinary account field edit)
-- `role_permissions.changed` (target type `role_permission_matrix`; emitted when the D-9 editable-matrix contract is implemented, with server-computed before/after cell diff and version transition)
+- `role_permissions.changed` (target type `role_permission_matrix`, stable target ID string `1` matching the version singleton; emitted for a real editable-matrix change, with server-computed before/after cell diff and version transition; see ADR-037)
 - `audit.exported` (exporting the audit trail is itself audited)
 
 ### Relationship to `RunStateTransition` (ADR-022)
@@ -146,7 +147,7 @@ The prototype (static HTML + localStorage, `design/prototype/`) is **exempt**: i
 ## Deferred Decisions
 
 - Privileged archive/purge policy and implementation after the one-calendar-year minimum; no automatic deletion is approved here.
-- If D-9 keeps the editable role-permission matrix, define a stable non-empty `target_id` for `role_permissions.changed` before emitting that event; the singleton matrix identity is not decided by this ADR.
+- The editable matrix's audit target is now decided by ADR-037. Runtime implementation and retention enforcement remain separate work.
 - Whether `RunStateTransition` is eventually folded into `audit_events` (requires ADR-022 amendment).
 - Whether an admin-facing audit UI ships in the first formal release or audit stays API-only.
 - Partitioning strategy if event volume warrants it.
@@ -156,4 +157,5 @@ The prototype (static HTML + localStorage, `design/prototype/`) is **exempt**: i
 - [ADR-010](010-config-driven-architecture.md): action/target registries must stay config-driven; no task-type-specific audit code.
 - [ADR-019](019-ai-traceability-audit-logging.md): AI-workflow traceability; ADR-032 covers human actions and correlates via `request_id`/`ai_run_id`.
 - [ADR-022](022-task-state-machine-location.md): audit events are emitted from the service layer in the same transaction as domain mutations; `RunStateTransition` is unchanged.
+- [ADR-037](037-permission-matrix-authorization.md): fixes the role-matrix change event target identity and atomic version/diff boundary.
 - [ADR-018](018-observability-prometheus-grafana.md): audit identifiers never become metric labels.
