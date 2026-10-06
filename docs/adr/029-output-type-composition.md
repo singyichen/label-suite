@@ -392,7 +392,7 @@ The following decisions include the original 2026-06-29 resolution and the 2026-
 - Annotator cognitive load increases with more output types per task — may need UX guardrails
 - Template design becomes combinatorial — cannot pre-build a template for every possible combination
 - Hierarchical option editing requires recursive validation, accessible tree navigation, search, and bounded rendering
-- Full config-schema v2 alignment and downstream consumer contracts must be completed before implementation
+- Downstream consumer contracts must be aligned with spec 013 before implementation (no config-schema v2 is planned; the v1 document is historical)
 
 ## Diagram
 

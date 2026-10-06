@@ -14,7 +14,7 @@
 | 逐 output 型別的 IAA 指標與 threshold | [017 Dataset Analysis Detail spec](../../specs/dataset/017-dataset-analysis-detail/spec.md)（`OUTPUT_TYPE_IAA_REGISTRY`） |
 | config 驅動的設計理由 | [ADR-010 Config-Driven Architecture](../adr/010-config-driven-architecture.md) |
 
-以下 § 1～§ 6 皆為 v1 歷史內容，原文保留。
+以下 § 1～§ 6 皆為 v1 歷史內容；§ 2～§ 6 原文保留，§ 1 僅加註歷史說明。
 
 ---
 
