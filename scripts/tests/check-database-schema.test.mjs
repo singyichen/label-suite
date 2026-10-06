@@ -2,7 +2,9 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 
-import { parseAccountAdminSchema, validateErData } from '../check-database-schema.mjs';
+import {
+  mergeSchemaSources, parseAccountAdminSchema, parseDatasetSchema, validateErData,
+} from '../check-database-schema.mjs';
 
 const sourceMarkdown = `# account 與 admin 資料庫 schema
 
@@ -86,6 +88,10 @@ const validData = {
 
 const cloneData = () => structuredClone(validData);
 const errorsFor = (data) => validateErData(parseAccountAdminSchema(sourceMarkdown), data);
+const accountData = (source, data) => {
+  const names = new Set(source.tables.map((table) => table.name));
+  return { ...data, tables: data.tables.filter((table) => names.has(table.name)) };
+};
 
 test('parsesDictionaryAndMermaidKeys', () => {
   const source = parseAccountAdminSchema(sourceMarkdown);
@@ -216,7 +222,8 @@ test('dictionaryAndNoteCraftResolveD9ThroughD13WithoutChangingPhysicalCounts', (
     assert.match(resolved, new RegExp(decision), `${decision} resolution`);
   assert.doesNotMatch(markdown, /^\| D-(?:9|10|11|12|13) \|/gm, 'decisions no longer pending');
 
-  for (const [label, tables] of [['dictionary', source.tables], ['NoteCraft', data.tables]]) {
+  const projectedAccount = accountData(source, data);
+  for (const [label, tables] of [['dictionary', source.tables], ['NoteCraft', projectedAccount.tables]]) {
     assert.equal(tables.length, 9, `${label} table count`);
     assert.equal(tables.reduce((sum, table) => sum + table.columns.length, 0), 63, `${label} column count`);
     assert.equal(tables.reduce((sum, table) => sum + table.columns.filter((column) => column.fk).length, 0), 6, `${label} FK count`);
@@ -237,7 +244,7 @@ test('dictionaryAndNoteCraftResolveD9ThroughD13WithoutChangingPhysicalCounts', (
   assert.equal(projectedMatrix.columns.find((column) => column.name === 'allowed').required, 'required');
   assert.equal(source.tables.find((table) => table.name === 'audit_events').columns
     .find((column) => column.name === 'task_id').fk, undefined);
-  assert.deepEqual(validateErData(source, data), []);
+  assert.deepEqual(validateErData(source, projectedAccount), []);
 });
 
 test('parsesRealAccountAdminDictionary', () => {
@@ -258,7 +265,8 @@ test('realDictionaryAndNoteCraftProjectSharedAuditEventsWithoutInventedTaskFk', 
   const source = parseAccountAdminSchema(markdown);
   const data = JSON.parse(readFileSync(new URL('../../docs/diagrams/architecture/database-schema.er.json', import.meta.url), 'utf8'));
 
-  for (const [label, tables] of [['dictionary', source.tables], ['NoteCraft', data.tables]]) {
+  const projectedAccount = accountData(source, data);
+  for (const [label, tables] of [['dictionary', source.tables], ['NoteCraft', projectedAccount.tables]]) {
     assert.equal(tables.length, 9, `${label} table count`);
     assert.equal(tables.some((table) => table.name === 'audit_event'), false, `${label} retains singular audit_event`);
     const audit = tables.find((table) => table.name === 'audit_events');
@@ -281,10 +289,10 @@ test('realDictionaryAndNoteCraftProjectSharedAuditEventsWithoutInventedTaskFk', 
   assert.equal(projectedAudit.columns.find((column) => column.name === 'task_id').required, 'nullable');
 
   assert.equal(source.tables.reduce((count, table) => count + table.columns.length, 0), 63);
-  assert.equal(data.tables.reduce((count, table) => count + table.columns.length, 0), 63);
+  assert.equal(projectedAccount.tables.reduce((count, table) => count + table.columns.length, 0), 63);
   assert.equal(source.tables.reduce((count, table) => count + table.columns.filter((column) => column.fk).length, 0), 6);
-  assert.equal(data.tables.reduce((count, table) => count + table.columns.filter((column) => column.fk).length, 0), 6);
-  assert.deepEqual(validateErData(source, data), []);
+  assert.equal(projectedAccount.tables.reduce((count, table) => count + table.columns.filter((column) => column.fk).length, 0), 6);
+  assert.deepEqual(validateErData(source, projectedAccount), []);
 });
 
 test('realDictionaryModelsTokenFamiliesWithoutDuplicatingTheirOwnerOrStartTime', () => {
@@ -346,7 +354,7 @@ test('noteCraftProjectionTracksTheCanonicalTokenFamilyDictionaryAndRejectsDrift'
   const data = JSON.parse(readFileSync(new URL('../../docs/diagrams/architecture/database-schema.er.json', import.meta.url), 'utf8'));
   const family = data.tables.find((table) => table.name === 'account_token_family');
   assert.ok(family, 'NoteCraft must display account_token_family');
-  assert.deepEqual(validateErData(source, data), []);
+  assert.deepEqual(validateErData(source, accountData(source, data)), []);
   assert.equal(family.columns.find((column) => column.name === 'id')?.pk, true);
   assert.equal(family.columns.find((column) => column.name === 'user_id')?.fk, 'users');
   assert.equal(data.tables.find((table) => table.name === 'refresh_tokens').columns
@@ -354,10 +362,27 @@ test('noteCraftProjectionTracksTheCanonicalTokenFamilyDictionaryAndRejectsDrift'
 
   const missingFamily = structuredClone(data);
   missingFamily.tables = missingFamily.tables.filter((table) => table.name !== 'account_token_family');
-  assert.match(validateErData(source, missingFamily).join('\n'), /Missing table: account_token_family/);
+  assert.match(validateErData(source, accountData(source, missingFamily)).join('\n'), /Missing table: account_token_family/);
 
   const detachedToken = structuredClone(data);
   delete detachedToken.tables.find((table) => table.name === 'refresh_tokens').columns
     .find((column) => column.name === 'family_id').fk;
-  assert.match(validateErData(source, detachedToken).join('\n'), /refresh_tokens\.family_id: FK/);
+  assert.match(validateErData(source, accountData(source, detachedToken)).join('\n'), /refresh_tokens\.family_id: FK/);
+});
+
+test('realAccountAndDatasetDictionariesMatchCompleteNoteCraftProjection', () => {
+  const account = parseAccountAdminSchema(readFileSync(
+    new URL('../../docs/diagrams/architecture/account-admin-db-schema.md', import.meta.url), 'utf8'));
+  const dataset = parseDatasetSchema(readFileSync(
+    new URL('../../docs/diagrams/architecture/dataset-db-schema.md', import.meta.url), 'utf8'));
+  const data = JSON.parse(readFileSync(
+    new URL('../../docs/diagrams/architecture/database-schema.er.json', import.meta.url), 'utf8'));
+  const expectedDatasetNames = [
+    'dataset', 'dataset_version', 'dataset_import_batch', 'dataset_item', 'dataset_item_private',
+  ];
+
+  assert.deepEqual(dataset.tables.map((table) => table.name), expectedDatasetNames);
+  assert.deepEqual(validateErData(mergeSchemaSources(account, dataset), data), []);
+  assert.deepEqual(data.tables.filter((table) => expectedDatasetNames.includes(table.name))
+    .map((table) => table.name), expectedDatasetNames);
 });
