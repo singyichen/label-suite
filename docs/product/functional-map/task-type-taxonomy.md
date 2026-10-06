@@ -107,7 +107,7 @@ max_selections: 0
 
 - 標記結果為 `spans[]`（`{ start, end, label }`，字元 offset、半開區間、不得相交）；payload 不含 `tokens[]`、`tags[]`、`scheme`、`unit`，BIO 不出現於儲存值。
 - BIO／BIOES／IOB2 與字元級／詞級單位屬**匯出層**選項，於匯出時才自 `spans[]` 推導，不屬任務設定；詞級匯出須寫入 tokenizer engine 與 version metadata（匯出時的 tokenizer 版本與選取時的 `snap_unit` 是兩件事，前者不是儲存座標系）。
-- 歷史：v6.3.0 以前的 `tagging_scheme`、`tokenization`（含 `SINGLE`）與 [ADR-031](../../adr/031-sequence-tagging-tokenization-contract.md) 的 token 座標系契約已由 issue #581 取代（ADR-031 狀態為 Superseded），不再是現行設定。
+- 歷史：013 v6.2.0–v6.4.0 建立、v7.0.0 移除的 `tagging_scheme`、`tokenization`（含 `SINGLE`）與 [ADR-031](../../adr/031-sequence-tagging-tokenization-contract.md) 的 token 座標系契約已由 issue #581 取代（ADR-031 狀態為 Superseded），不再是現行設定。
 - 現行正典：`task-management/013-task-new` FR-003d-1（v8.1.1）、`annotation/015-annotation-workspace` FR-024A-3（v10.1.0）、`dataset/017-dataset-analysis-detail` FR-012L（IAA 為 span 單位 u-α）與 FR-041／FR-042（匯出層 BIO 推導與詞級 tokenizer metadata，v3.1.0）。
 
 #### Entity Recognition（`entity_recognition`）Config 說明
