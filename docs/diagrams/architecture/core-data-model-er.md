@@ -1,7 +1,9 @@
 # 核心資料模型 ER 圖（跨模組）
 
-> 對應 issue #669。本圖整合 11 份 feature spec 的「關鍵實體」段落，是動工寫 migration 前的唯一整合視圖。
+> 對應 issue #669。本圖整合多份 feature spec 的「關鍵實體」段落，供 migration 前檢查概念關聯。
 > **受眾為工程師與 migration 作者**，因此圖面一律保留 spec 的原始識別字（`sample_id`、`run_type`、`reviewer_ids` …），不做中文化——翻譯後就無法用 `grep` 回到正典條文。
+
+> **維護提示（2026-10-06）**：本圖部分實體細節仍是舊版規格快照，尤其圖 3、圖 4 與下方實體索引／待定表。現行 `task-management-014` 為 v5.1.0、`annotation-015` 為 v10.1.0、`dataset-017` 為 v3.1.0；寫 migration 前請先讀 [資料表盤點與 ERD 落地清單](./database-table-inventory.md)，並對照各 spec 現行「關鍵實體」。本圖是概念圖，**不得直接轉成資料表或外鍵**。
 
 - **正典來源**：各 `specs/[module]/NNN-feature/spec.md` 的 `### 關鍵實體` 段落。本圖為**衍生視圖**，不是正典；spec 與本圖衝突時以 spec 為準。
 - **不歸屬任何單一 spec**，因此放在 `docs/diagrams/architecture/`，不隨任何 spec 進 `specs/_archive/`。
@@ -54,9 +56,8 @@ erDiagram
     AnnotationRecord   ||--|{ OutputAnswer : "answers 陣列"
 
     AnnotationRecord ||--o| ReviewUnit : "推導：未提交即不成立審核單位"
-    ReviewUnit  ||--o| ReviewDecision : "至多一筆，015 FR-093"
+    ReviewUnit  ||--o{ ReviewDecision : "一位審核員逐 output_type 決策，FR-092／FR-093"
     ReviewUnit  ||--o{ DisputeItem : "推導；基數待 #1150 裁定"
-    ReviewAssignment }o--|| ReviewUnit : "review_unit_id 待釐清，見規格待定"
 
     ReviewUnit ||--o{ OutputTypeIAAReport : "逐輸出類型聚合"
     ReviewUnit ||--o{ AnnotatorModificationRateEntry : "modified_units 分子"
@@ -194,6 +195,7 @@ erDiagram
         string prior_round_findings "round 大於等於 2 時必填"
         string guideline_change_summary "允許值含 no_change"
         string no_change_reason "guideline_change_summary 為 no_change 時必填"
+        string iaa_computation_status "pending、done、failed；014 v4.1.0"
     }
     SampleSnapshot {
         string sample_snapshot_id PK
@@ -229,10 +231,10 @@ erDiagram
     ReviewAssignment {
         string task_id FK
         string reviewer_id FK
-        string review_unit_id FK "待釐清：014 仍列單一 id，015 FR-051 為三欄複合鍵"
+        string review_unit_id "014 保留此欄名；015 複合定址，實體 FK 待設計"
         datetime assigned_at
         string assigned_by FK
-        string source "恆為 auto_rotation，014 v3.0.0"
+        string source "恆為 auto_rotation；014 v3.0.0"
         string review_status "pending 或 done"
     }
     WorkLogEntry {
@@ -327,9 +329,9 @@ erDiagram
         json payload "依 type 分派的 payload 欄位"
     }
     ReviewDecision {
-        string annotator_id PK "persisted：決策維度為標記員 x 輸出類型"
-        string output_type PK
-        string reviewer_id PK
+        string annotator_id "persisted：決策維度為標記員 x 輸出類型"
+        string output_type
+        string reviewer_id "每個審核單位恰一位審核員"
         string decision "REVIEW_DECISIONS = approve 或 modify 或 bypass"
         json correction "八型全支援，含修正後結果與 diff"
         string reason "decision 為 modify 或 bypass 時必填"
@@ -353,7 +355,7 @@ erDiagram
         string finalized_by "WRITE：定案者"
     }
     AnnotationHistoryItem {
-        string action PK "HISTORY_ACTIONS 九值，見 FR-086"
+        string action "HISTORY_ACTIONS 八值，見 FR-086；非單獨主鍵"
         string role "TASK_ROLES"
         string actor_id "真實操作者 ID，見 FR-050"
         datetime at
@@ -376,7 +378,7 @@ erDiagram
     AnnotationListItem ||--o{ AnnotationHistoryItem : "樣本歷程事件"
     AnnotationRecord ||--|{ OutputAnswer : "answers 陣列，一至多筆"
     AnnotationRecord ||--o| ReviewUnit : "推導：標記員未提交則不成立"
-    ReviewUnit ||--o| ReviewDecision : "reviewer_decisions 至多一筆，FR-093"
+    ReviewUnit ||--o{ ReviewDecision : "同一審核員逐 output_type 決策，FR-092／FR-093"
     ReviewUnit ||--o{ DisputeItem : "推導；基數待 #1150 裁定"
     ReviewDecision ||--o{ DisputeItem : "推導：與標記員一致者不得出現；基數待 #1150 裁定"
     ReviewDecision ||--o{ AnnotationHistoryItem : "審核動作寫入歷程"
@@ -393,7 +395,7 @@ erDiagram
         string iaa_status "含 not_applicable；只供列表徽章顯示"
     }
     OutputTypeIAAReport {
-        string output_type PK "persisted 報告"
+        string output_type "報告抽象型別；是否持久化待設計"
         string primary_metric_name
         number primary_metric_value
         number threshold
@@ -427,7 +429,7 @@ erDiagram
     AnnotatorModificationRateEntry }o--|| AnnotatorRiskAssessment : "同一 annotator_id"
 ```
 
-跨模組銜接：`AnnotatorModificationRateEntry.modified_units` 的分子取自 annotation-015 FR-052 的差異比對結果，**不是**審核單位狀態欄——017 明載其「非 `REVIEW_UNIT_STATUS.MODIFIED`」。
+跨模組銜接：`AnnotatorModificationRateEntry.modified_units` 的分子取自 annotation-015 FR-052 的差異比對結果，**不是**審核單位狀態欄；現行 `REVIEW_UNIT_STATUS` 只有 `pending | disputed | finalized`。
 
 ---
 
@@ -470,10 +472,10 @@ flowchart LR
 | `TaskDraftInput`、`OutputConfig`、`TaskConfig`、`TaskGuidelineConfig`、`RunInitConfig` | persisted | `specs/task-management/013-task-new/spec.md` | 7.0.1 |
 | `TaskDetail`、`ReviewAssignment`、`TrialRound`、`SampleSnapshot`、`AnnotationListMaterialization`、`ExcludedAnnotationAssignment`、`WorkLogEntry`、`RunStateTransition`、`IsolationAuditLog` | persisted | `specs/task-management/014-task-detail/spec.md` | 5.1.0 |
 | `TaskProfile`、`GuidelineAsset` | projection | `specs/annotation/015-annotation-workspace/spec.md` | 10.1.0 |
-| `AnnotationListItem`、`AnnotationRecord`、`OutputAnswer`、`ReviewDecision`、`AnnotationHistoryItem` | persisted | `specs/annotation/015-annotation-workspace/spec.md` | 10.1.0 |
-| `ReviewUnit`、`DisputeItem` | **derived** | `specs/annotation/015-annotation-workspace/spec.md` | 10.1.0 |
+| `AnnotationListItem`、`AnnotationRecord`、`OutputAnswer`、`ReviewDecision`、`AnnotationHistoryItem` | persisted／embedded | `specs/annotation/015-annotation-workspace/spec.md` | 10.1.0 |
+| `ReviewUnit`、`DisputeItem` | **derived**；仲裁寫入狀態需另有落點 | `specs/annotation/015-annotation-workspace/spec.md` | 10.1.0 |
 | `IAAStatusSummary`、`TaskSummaryRow` | projection | `specs/dataset/016-dataset-analysis-list/spec.md` | 2.1.2 |
-| `OutputTypeIAAReport`、`IAACompositeSummary`、`AnnotatorModificationRateEntry`、`AnnotatorRiskAssessment` | persisted／projection | `specs/dataset/017-dataset-analysis-detail/spec.md` | 2.2.1 |
+| `OutputTypeIAAReport`、`IAACompositeSummary`、`AnnotatorModificationRateEntry`、`AnnotatorRiskAssessment` | 報告／投影；儲存策略待設計 | `specs/dataset/017-dataset-analysis-detail/spec.md` | 3.1.0 |
 
 已廢止、名稱保留不重用（**不得重新啟用**）：`AdjudicationItem`、`GoldRecord`（annotation-015 v4.0.0 廢止，見 FR-053）。
 
@@ -481,14 +483,14 @@ flowchart LR
 
 ---
 
-## 規格待定
+## 規格與實體層待定
 
-#688 已於 014 v3.0.0（`reviewer_ids`／`arbiter_ids` 取代 `min_reviewers` 等四欄位，見 `TaskDetail` 關鍵實體）與 015 v5.0.0（單人接力、`REVIEW_UNIT_STATUS` 三態）解決，本圖已據此改畫，不再標 `待定 issue 688`。目前仍未定的只有以下兩項，**本圖不裁定**：
+#688 已於 014 v3.0.0（`reviewer_ids`／`arbiter_ids` 取代 `min_reviewers` 等四欄位）與 015 v5.0.0（單人接力、`REVIEW_UNIT_STATUS` 三態）解決。015 FR-093 規定每個指派對象恰有一位審核員；FR-092 仍允許該審核員對多個 `output_type` 各寫一筆 `ReviewDecision`，因此圖 1／圖 4 的業務關聯為一對多。下列規格與實體層問題尚未定案，**本圖不裁定**：
 
 | 圖上位置 | 標記內容 | 未定點 |
 |---------|---------|-------|
 | 圖 1、圖 4、圖 6 | `ReviewUnit` 到 `DisputeItem`、`ReviewDecision` 到 `DisputeItem` 的關聯基數，以及 `DisputeItem` 的 `output_type`／`item_key` 粒度 | **待 [#1150](https://github.com/singyichen/label-suite/issues/1150) 裁定**：014 FR-010u(5) 括號寫「爭議項（審核單位 × 輸出類型）」，015 FR-059 第 2、4 點與 FR-061 第 7 點則以 `outKey × 合併鍵` 為爭議項單位並禁止合併計數；兩處措辭不一致（015 FR-061 第 7 點自稱為該計數單位之定義），尚無裁定，本圖不選邊 |
-| 圖 1、圖 3 | `ReviewAssignment.review_unit_id` 與 `ReviewAssignment` 到 `ReviewUnit` 的關聯線 | 014 `ReviewAssignment` 仍列 `review_unit_id`，但 015 FR-051 的審核單位是三欄複合鍵，無單一 id 可指；正典未統一（非 #1150 範圍） |
+| 圖 1、圖 3 | `ReviewAssignment.review_unit_id` 與 `ReviewAssignment` 到 `ReviewUnit` 的關聯線 | 014 `ReviewAssignment` 仍列 `review_unit_id`，但 015 FR-051 的審核單位以 `sample_id × annotator_id × run_type` 複合定址，無單一 id 可指；015 FR-093(5) 又規定黏住須由提交推導，不得另存第二份指派資料。正典未統一（非 #1150 範圍），所以圖中不畫未定的實體 FK；見[資料表盤點 §5](./database-table-inventory.md#5-在第一批-migration-前要關閉的決策) |
 
 #1150 定案後另開單回頭補本圖；#1151（例外池以 outKey 為鍵）、#1146（arbiterIds 名冊）亦觸及同一塊資料模型，修完後須回頭核對。
 

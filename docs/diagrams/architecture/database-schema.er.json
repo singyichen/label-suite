@@ -1,0 +1,525 @@
+{
+  "$schema": "https://raw.githubusercontent.com/SteveLin100132/notecraft/main/plugins/er-diagram-renderer/schema.json",
+  "meta": {
+    "title": "Label Suite 資料庫規劃 ER Diagram（account／admin）",
+    "description": "**規劃圖，並非已部署 Schema。** 目前已部署業務表：0；本頁只顯示 account／admin 欄位字典中的候選表，其中兩張權限矩陣表是否建立仍待 D-9 裁決。表、欄位與 FK 數量由 NoteCraft 從資料檔計算。欄位、鍵與連線來自 [account/admin 實體層字典](/notes/diagrams/architecture/account-admin-db-schema) §2–§3；未決議題見該文件 §5。其餘 task／dataset／annotation 模組仍在 [資料表盤點總帳](/notes/diagrams/architecture/database-table-inventory)，不以假表加入此圖。\n\n**讀圖方式：** Wiki 逐表看欄位與決策狀態；Diagram 搜尋表名或欄名，點表聚焦已明列的候選 FK。圖中連線不代表 migration 已建立。",
+    "source": "docs/diagrams/architecture/account-admin-db-schema.md §2–§3; docs/diagrams/architecture/database-table-inventory.md",
+    "backTo": "/notes/diagrams/architecture/account-admin-db-schema"
+  },
+  "options": {
+    "defaultRows": 6,
+    "sectionPrefix": "§",
+    "hint": "規劃圖：點表聚焦候選 FK；Wiki 可查看逐表欄位與待裁決事項。",
+    "searchPlaceholder": "搜尋候選表或欄位（例：users、actor_user_id）"
+  },
+  "requirement": [
+    {
+      "key": "required",
+      "label": "必填",
+      "marker": "solid"
+    },
+    {
+      "key": "nullable",
+      "label": "可空",
+      "marker": "hollow"
+    },
+    {
+      "key": "system",
+      "label": "系統",
+      "marker": "muted",
+      "title": "由應用程式或資料庫產生；非空"
+    },
+    {
+      "key": "pending",
+      "label": "待裁決",
+      "marker": "half",
+      "title": "D-1 nullability 尚未正典裁決"
+    }
+  ],
+  "flags": [
+    {
+      "key": "pk",
+      "badge": "PK",
+      "tone": "danger",
+      "label": "候選主鍵"
+    },
+    {
+      "key": "fk",
+      "badge": "FK",
+      "tone": "info",
+      "label": "候選外鍵"
+    },
+    {
+      "key": "unique",
+      "badge": "UQ",
+      "tone": "success",
+      "label": "候選唯一約束"
+    }
+  ],
+  "derivations": [],
+  "groups": [
+    {
+      "key": "account",
+      "label": "帳號與登入",
+      "description": "候選表涵蓋帳號、session、一次性連結、email 變更與通知偏好。所有表尚未 migration。"
+    },
+    {
+      "key": "admin",
+      "label": "管理與稽核",
+      "description": "候選表涵蓋操作稽核，以及 D-9 尚未決定是否建立的兩張權限矩陣表。所有表尚未 migration。"
+    }
+  ],
+  "layout": {
+    "columns": [
+      {
+        "key": "account",
+        "groups": [
+          "account"
+        ]
+      },
+      {
+        "key": "admin",
+        "groups": [
+          "admin"
+        ]
+      }
+    ]
+  },
+  "tables": [
+    {
+      "name": "users",
+      "label": "平台帳號",
+      "section": "3.1",
+      "group": "account",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "required": "system",
+          "note": "帳號的內部識別碼，由應用程式產生；規則：X-04",
+          "pk": true
+        },
+        {
+          "name": "email",
+          "type": "varchar(254)",
+          "required": "required",
+          "note": "登入帳號，也是寄信地址；規則：U-01、U-02、E-06、E-08"
+        },
+        {
+          "name": "name",
+          "type": "varchar",
+          "required": "required",
+          "note": "顯示名稱；規則：U-03"
+        },
+        {
+          "name": "contact_info",
+          "type": "varchar(255)",
+          "required": "required",
+          "note": "使用者自填的聯絡方式文字，可為空字串；規則：005 FR-003",
+          "default": "''"
+        },
+        {
+          "name": "avatar_url",
+          "type": "text",
+          "required": "nullable",
+          "note": "頭像位置；null＝未上傳，顯示預設頭像；規則：005 FR-004H–FR-004J"
+        },
+        {
+          "name": "hashed_password",
+          "type": "varchar",
+          "required": "pending",
+          "note": "密碼雜湊。**null 有業務意義**：帳號沒有可用密碼（Google 帳號或尚未設密碼的受邀帳號），改密碼時不需輸入舊密碼；規則：U-09、U-10；D-1：nullability 與 001 plan 衝突，待正典裁決。"
+        },
+        {
+          "name": "google_subject",
+          "type": "varchar",
+          "required": "nullable",
+          "note": "Google 帳號的固定識別碼（OIDC `sub`）；Google 端 email 可變，因此以此識別；規則：U-10、U-11",
+          "unique": true
+        },
+        {
+          "name": "role",
+          "type": "varchar",
+          "required": "required",
+          "note": "平台層級角色 `user`／`super_admin`；**不是**任務內角色；規則：U-04、U-08、U-12"
+        },
+        {
+          "name": "is_active",
+          "type": "boolean",
+          "required": "required",
+          "note": "false＝已停用：不能登入、不能 refresh，既有 access token 下個請求即 401；規則：U-12–U-15"
+        },
+        {
+          "name": "is_seeder",
+          "type": "boolean",
+          "required": "required",
+          "note": "系統初始化時建立的超管，不可停用或降級；全表最多一位；規則：U-05–U-07"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "required": "required",
+          "note": "建立時間（UTC）；規則：X-02"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "required": "required",
+          "note": "最後修改時間；規則：X-02"
+        }
+      ],
+      "description": "**候選表／設計草案，尚未建立 migration。** 一列代表一位可登入使用者。來源：account/admin 實體層字典 §3.1、001／003／005／006 規格與 ADR-021／ADR-035。N-1 表名及角色欄名、D-1 密碼 nullability、D-6 高風險 token 作廢機制、D-8 email 大小寫唯一索引仍待裁決。圖中的 `hashed_password` 特別標為待裁決。"
+    },
+    {
+      "name": "refresh_tokens",
+      "label": "登入 session",
+      "section": "3.2",
+      "group": "account",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "required": "system",
+          "note": "token 識別碼",
+          "pk": true
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "required": "required",
+          "note": "所屬帳號（CASCADE）",
+          "fk": "users"
+        },
+        {
+          "name": "family_id",
+          "type": "uuid",
+          "required": "required",
+          "note": "同一次登入（同一裝置）的輪替 token 共用此值；用於「改密碼保留目前裝置、登出其他裝置」；規則：R-04、R-08"
+        },
+        {
+          "name": "token_hash",
+          "type": "char(64)",
+          "required": "required",
+          "note": "token 的 SHA-256 雜湊；DB 不存 token 原值",
+          "unique": true
+        },
+        {
+          "name": "expires_at",
+          "type": "timestamptz",
+          "required": "required",
+          "note": "到期時間；規則：R-07"
+        },
+        {
+          "name": "session_started_at",
+          "type": "timestamptz",
+          "required": "required",
+          "note": "這次登入最初的時間，輪替時不變；用於強制登入最長存續時間；規則：R-04、R-07"
+        },
+        {
+          "name": "revoked_at",
+          "type": "timestamptz",
+          "required": "nullable",
+          "note": "撤銷時間；null＝未撤銷；規則：R-01、R-03"
+        },
+        {
+          "name": "revoked_reason",
+          "type": "varchar",
+          "required": "nullable",
+          "note": "撤銷原因；**只有 `rotated` 可進入寬限期重發**；規則：R-01、R-02、R-05"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "required": "required",
+          "note": "發行時間"
+        }
+      ],
+      "description": "**候選表／設計草案，尚未建立 migration。** 一列代表一張 refresh token；`family_id` 串聯一次登入的輪替紀錄。來源：account/admin §3.2、001 plan v2.1.0 與 005 FR-010。D-3 寬限期重發上限可能增加欄位，尚未裁決。只保存 `token_hash`，不保存 token 原值。"
+    },
+    {
+      "name": "account_password_token",
+      "label": "密碼重設與邀請連結",
+      "section": "3.3",
+      "group": "account",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "required": "system",
+          "note": "流水號",
+          "pk": true
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "required": "required",
+          "note": "連結所屬帳號（CASCADE）",
+          "fk": "users"
+        },
+        {
+          "name": "purpose",
+          "type": "varchar",
+          "required": "required",
+          "note": "`reset`＝忘記密碼；`invite`＝受邀帳號首次設定密碼；規則：P-03、P-06"
+        },
+        {
+          "name": "token_hash",
+          "type": "char(64)",
+          "required": "required",
+          "note": "連結 token 的雜湊",
+          "unique": true
+        },
+        {
+          "name": "expires_at",
+          "type": "timestamptz",
+          "required": "required",
+          "note": "到期時間；規則：P-01、P-06"
+        },
+        {
+          "name": "used_at",
+          "type": "timestamptz",
+          "required": "nullable",
+          "note": "使用或作廢時間；null＝未使用。**不另存狀態欄**：有效／已使用／已過期由 `used_at` 與 `expires_at` 推導；規則：P-01、P-02、P-05"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "required": "required",
+          "note": "寄出時間"
+        }
+      ],
+      "description": "**候選表／設計草案，尚未建立 migration。** 重設密碼與受邀設定密碼共用一次性連結表。來源：account/admin §3.3、004 與 006 FR-006a。D-2 邀請期限與作廢顯示仍待裁決；只保存雜湊。"
+    },
+    {
+      "name": "account_email_change_request",
+      "label": "Email 變更申請",
+      "section": "3.4",
+      "group": "account",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "required": "system",
+          "note": "流水號",
+          "pk": true
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "required": "required",
+          "note": "申請人；規則：E-02",
+          "fk": "users"
+        },
+        {
+          "name": "pending_email",
+          "type": "varchar(254)",
+          "required": "required",
+          "note": "欲變更成的新 email，尚未生效；規則：E-03"
+        },
+        {
+          "name": "token_hash",
+          "type": "char(64)",
+          "required": "nullable",
+          "note": "驗證連結 token 的雜湊；驗證成功後清為 null，因此非 null＝等待驗證中；規則：E-01、E-04",
+          "unique": true
+        },
+        {
+          "name": "expires_at",
+          "type": "timestamptz",
+          "required": "required",
+          "note": "驗證連結到期時間；規則：E-04"
+        },
+        {
+          "name": "last_sent_at",
+          "type": "timestamptz",
+          "required": "required",
+          "note": "最後一次寄出驗證信的時間，用於重送冷卻；規則：E-05"
+        },
+        {
+          "name": "verified_at",
+          "type": "timestamptz",
+          "required": "nullable",
+          "note": "驗證完成時間；null＝未完成；規則：E-01、E-02、E-07"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "required": "required",
+          "note": "申請時間"
+        }
+      ],
+      "description": "**候選表／設計草案，尚未建立 migration。** 驗證成功前仍以舊 email 登入。來源：account/admin §3.4、005 FR-004C–FR-004M。`token_hash` 驗證後清為 null；email 唯一索引形狀受 D-8 影響。"
+    },
+    {
+      "name": "account_notification_preference",
+      "label": "通知開關",
+      "section": "3.5",
+      "group": "account",
+      "columns": [
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "required": "required",
+          "note": "設定所屬帳號（主鍵之一）",
+          "pk": true,
+          "fk": "users"
+        },
+        {
+          "name": "event_key",
+          "type": "varchar",
+          "required": "required",
+          "note": "通知事件（主鍵之一），限 005 定義的 6 個：`annotation_complete`、`review_complete`、`dry_run_all_done`、`formal_annotation_all_done`、`assignment_created_annotator`、`assignment_created_reviewer`；規則：N-01",
+          "pk": true
+        },
+        {
+          "name": "in_app_enabled",
+          "type": "boolean",
+          "required": "required",
+          "note": "是否發站內通知；規則：N-03"
+        },
+        {
+          "name": "email_enabled",
+          "type": "boolean",
+          "required": "required",
+          "note": "是否寄 email；規則：N-03"
+        }
+      ],
+      "description": "**候選表／設計草案，尚未建立 migration。** 每位使用者、每種事件一列，複合主鍵為 `(user_id, event_key)`。來源：account/admin §3.5、005 FR-013B–FR-013E。D-5 無資料列時的預設開關仍待裁決。"
+    },
+    {
+      "name": "audit_event",
+      "label": "操作稽核紀錄",
+      "section": "3.6",
+      "group": "admin",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "required": "system",
+          "note": "流水號",
+          "pk": true
+        },
+        {
+          "name": "actor_user_id",
+          "type": "uuid",
+          "required": "required",
+          "note": "操作者；FK 為 RESTRICT，有稽核紀錄的帳號不可實體刪除。007 操作紀錄抽屜顯示的「操作者名稱」讀取時以此欄 join `users.name`（顯示目前名稱）；規則：A-01、A-04",
+          "fk": "users"
+        },
+        {
+          "name": "actor_role",
+          "type": "varchar",
+          "required": "required",
+          "note": "操作**當下**的角色快照（ADR-032）"
+        },
+        {
+          "name": "action",
+          "type": "varchar",
+          "required": "required",
+          "note": "命名空間動詞，例如 `member.deactivated`；值由 registry 管理，DB 不加 CHECK"
+        },
+        {
+          "name": "target_type",
+          "type": "varchar",
+          "required": "required",
+          "note": "操作對象種類，例如 `user`"
+        },
+        {
+          "name": "target_id",
+          "type": "varchar",
+          "required": "required",
+          "note": "操作對象識別碼；對象可能在任何表，不加 FK；規則：X-04"
+        },
+        {
+          "name": "payload_summary",
+          "type": "jsonb",
+          "required": "required",
+          "note": "變更前後摘要，只含 allowlist 欄位；規則：A-03"
+        },
+        {
+          "name": "request_id",
+          "type": "varchar",
+          "required": "nullable",
+          "note": "對應 API log 的請求 ID"
+        },
+        {
+          "name": "occurred_at",
+          "type": "timestamptz",
+          "required": "required",
+          "note": "伺服器端發生時間（UTC）；規則：A-02"
+        }
+      ],
+      "description": "**候選表／設計草案，尚未建立 migration。** 管理操作只新增稽核紀錄；`actor_user_id` 參照 `users`，多型的 `target_id` 不加 FK。來源：account/admin §3.6、006 FR-013、007 FR-010。D-4 尚未裁決共用表形；ADR-032 仍為 Proposed，表名與 `task_id` 可能改變。"
+    },
+    {
+      "name": "admin_role_permission",
+      "label": "角色權限矩陣",
+      "section": "3.7",
+      "group": "admin",
+      "columns": [
+        {
+          "name": "role_type",
+          "type": "varchar",
+          "required": "required",
+          "note": "`system`＝平台層級角色；`task`＝任務內角色。兩層不可互相推導（007 授權判斷規則）；規則：M-01",
+          "pk": true
+        },
+        {
+          "name": "role_key",
+          "type": "varchar",
+          "required": "required",
+          "note": "`role_type='system'` 時為 `user`／`super_admin`；`task` 時為 `project_leader`／`reviewer`／`annotator`；規則：M-01",
+          "pk": true
+        },
+        {
+          "name": "permission_key",
+          "type": "varchar",
+          "required": "required",
+          "note": "007「權限鍵白名單（V1）」中的鍵，例如 `task.create`；白名單在後端程式，DB 不加 CHECK；規則：M-02、M-08",
+          "pk": true
+        },
+        {
+          "name": "allowed",
+          "type": "boolean",
+          "required": "required",
+          "note": "是否允許。**注意**：007 預設矩陣中 reviewer 的 `task.detail.view` 標為「✅（唯讀）」，boolean 表達不了，見 §5 D-10；規則：M-03、M-04"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "required": "required",
+          "note": "最後一次被改變的時間；規則：X-02"
+        }
+      ],
+      "description": "**有條件候選表／設計草案，尚未建立 migration。D-9 決定是否建立此表。** 目前草案一列為角色 × 權限鍵的一格。來源：account/admin §3.7、007 草案。若 D-9 改為唯讀矩陣，這張表將不建立；若保留編輯，D-10 還須裁決 `allowed` 能否用 boolean 表達唯讀。"
+    },
+    {
+      "name": "admin_role_permission_version",
+      "label": "矩陣版本號",
+      "section": "3.8",
+      "group": "admin",
+      "columns": [
+        {
+          "name": "id",
+          "type": "smallint",
+          "required": "system",
+          "note": "固定為 1，保證單列；規則：M-06",
+          "pk": true
+        },
+        {
+          "name": "version",
+          "type": "integer",
+          "required": "required",
+          "note": "目前矩陣版本，初始為 1；前端讀取時一併取得，儲存時送回；規則：M-06、M-07"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "required": "required",
+          "note": "最後一次儲存時間；規則：X-02"
+        }
+      ],
+      "description": "**有條件候選表／設計草案，尚未建立 migration。D-9 決定是否建立此表。** 目前草案只有 `id = 1` 的單列，記整份矩陣的樂觀鎖版本。來源：account/admin §3.8、007 FR-005b；D-9 若取消可編輯矩陣，這張表將不建立。"
+    }
+  ]
+}
