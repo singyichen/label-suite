@@ -33,7 +33,7 @@ erDiagram
 | 欄位 | 型別 | 可空 | 代表什麼 | 何時寫入／改變 | 規則 |
 |---|---|---|---|---|---|
 | \`id\` | uuid | 否 | ID | 建立時 | — |
-| \`hashed_password\` | varchar | **是** | 密碼；D-1 待裁決 | 建立時 | — |
+| \`hashed_password\` | varchar | **是** | Password hash; null means no local credential | 建立時 | — |
 
 ### 3.2 account_notification_preference：通知開關
 
@@ -60,9 +60,9 @@ erDiagram
 const validData = {
   tables: [
     {
-      name: 'users', description: 'Draft; D-1 pending', columns: [
+      name: 'users', description: 'Draft; password nullability resolved', columns: [
         { name: 'id', type: 'uuid', required: 'system', pk: true },
-        { name: 'hashed_password', type: 'varchar', required: 'pending', note: 'D-1 pending' },
+        { name: 'hashed_password', type: 'varchar', required: 'nullable' },
       ],
     },
     {
@@ -145,14 +145,15 @@ test('rejectsDuplicatesAndDanglingFk', () => {
   assert.match(errorsFor(dangling).join('\n'), /account_notification_preference\.user_id.*missing_parent/);
 });
 
-test('requiresPendingDecisionLabels', () => {
-  const decidedPassword = cloneData();
-  decidedPassword.tables[0].columns[1].required = 'nullable';
-  assert.match(errorsFor(decidedPassword).join('\n'), /users\.hashed_password.*D-1/);
+test('requiresResolvedPasswordNullabilityAndConditionalTableLabels', () => {
+  const stalePassword = cloneData();
+  stalePassword.tables[0].columns[1].required = 'pending';
+  stalePassword.tables[0].columns[1].note = 'D-1 pending';
+  assert.match(errorsFor(stalePassword).join('\n'), /users\.hashed_password/);
 
-  const missingPasswordNote = cloneData();
-  delete missingPasswordNote.tables[0].columns[1].note;
-  assert.match(errorsFor(missingPasswordNote).join('\n'), /users\.hashed_password.*D-1/);
+  const nonnullablePassword = cloneData();
+  nonnullablePassword.tables[0].columns[1].required = 'required';
+  assert.match(errorsFor(nonnullablePassword).join('\n'), /users\.hashed_password/);
 
   for (const name of ['admin_role_permission', 'admin_role_permission_version']) {
     const data = cloneData();
