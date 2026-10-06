@@ -12,27 +12,44 @@ function parsePhysicalSchema(markdown) {
     throw new Error('Source must contain §2 Mermaid ERD and §3 column dictionary');
   }
 
-  const primaryKeys = new Map();
+  const mermaidTables = new Map();
   for (const match of mermaid.matchAll(/^\s{4}([A-Za-z_]\w*)\s*\{\s*\n([\s\S]*?)^\s{4}\}/gm)) {
-    const keys = new Set();
+    const name = match[1];
+    if (mermaidTables.has(name)) throw new Error(`Duplicate Mermaid table: ${name}`);
+    const columns = new Map();
     for (const line of match[2].split('\n')) {
-      const column = line.match(/^\s+\S+\s+([A-Za-z_]\w*)\s+(.+)$/);
-      if (column && /\bPK\b/.test(column[2])) keys.add(column[1]);
+      const column = line.match(/^\s+\S+\s+([A-Za-z_]\w*)(?:\s+([A-Za-z_,]+))?(?:\s+"[^"]*")?\s*$/);
+      if (!column) {
+        if (line.trim()) throw new Error(`Invalid Mermaid column: ${name}: ${line.trim()}`);
+        continue;
+      }
+      if (columns.has(column[1])) throw new Error(`Duplicate Mermaid column: ${name}.${column[1]}`);
+      columns.set(column[1], /(?:^|,)PK(?:,|$)/.test(column[2] ?? ''));
     }
-    primaryKeys.set(match[1], keys);
+    mermaidTables.set(name, columns);
   }
 
   const tables = [];
+  const dictionaryNames = new Set();
   for (const match of dictionary.matchAll(/^### 3\.\d+\s+([A-Za-z_]\w*)[^\n]*\n([\s\S]*?)(?=^### 3\.\d+\s+|(?![\s\S]))/gm)) {
     const name = match[1];
-    const keys = primaryKeys.get(name);
-    if (!keys) throw new Error(`Missing Mermaid table: ${name}`);
+    if (dictionaryNames.has(name)) throw new Error(`Duplicate dictionary table: ${name}`);
+    dictionaryNames.add(name);
+    const mermaidColumns = mermaidTables.get(name);
+    if (!mermaidColumns) throw new Error(`Missing Mermaid table: ${name}`);
     const columns = [];
+    const columnNames = new Set();
     for (const line of match[2].split('\n')) {
       const cells = line.split('|').slice(1, -1).map((cell) => cell.trim());
       const columnName = cells[0]?.match(/^`([A-Za-z_]\w*)`$/)?.[1];
-      if (!columnName) continue;
+      if (!columnName) {
+        if (cells.length === 6 && /^[A-Za-z_]\w*$/.test(cells[0] ?? ''))
+          throw new Error(`Unquoted dictionary column: ${name}.${cells[0]}`);
+        continue;
+      }
       if (cells.length !== 6) throw new Error(`Invalid dictionary row: ${name}.${columnName}`);
+      if (columnNames.has(columnName)) throw new Error(`Duplicate dictionary column: ${name}.${columnName}`);
+      columnNames.add(columnName);
       const nullableText = cells[2].replace(/\*/g, '');
       if (!/^(是|否)/.test(nullableText)) throw new Error(`Unknown nullability: ${name}.${columnName}`);
       const typeMatch = cells[1].match(/^(.+?)(?:\s*→\s*([A-Za-z_]\w*))?$/);
@@ -41,14 +58,25 @@ function parsePhysicalSchema(markdown) {
         name: columnName,
         type: typeMatch[1].trim(),
         nullable: nullableText.startsWith('是'),
-        pk: keys.has(columnName),
+        pk: mermaidColumns.get(columnName) ?? false,
         ...(typeMatch[2] ? { fk: typeMatch[2] } : {}),
       });
     }
     if (columns.length === 0) throw new Error(`No dictionary columns: ${name}`);
+    for (const columnName of mermaidColumns.keys()) {
+      if (!columnNames.has(columnName))
+        throw new Error(`Mermaid column missing from dictionary: ${name}.${columnName}`);
+    }
+    for (const columnName of columnNames) {
+      if (!mermaidColumns.has(columnName))
+        throw new Error(`Dictionary column missing from Mermaid: ${name}.${columnName}`);
+    }
     tables.push({ name, columns });
   }
   if (tables.length === 0) throw new Error('No §3 dictionary tables found');
+  for (const name of mermaidTables.keys()) {
+    if (!dictionaryNames.has(name)) throw new Error(`Mermaid table missing from dictionary: ${name}`);
+  }
   return { tables };
 }
 
