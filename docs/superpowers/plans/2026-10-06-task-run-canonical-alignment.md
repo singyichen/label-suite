@@ -107,7 +107,7 @@
 
 **Interfaces:** 兩份設計各描述自己的 owning contract、上游 014／dataset 相依與未部署限制；不重複 014 的完整 14 表表形。
 
-- [ ] 各檔獨立提交並審查來源定位。
+- [x] 各檔獨立提交並審查來源定位。
 
 ### Task 7: 013 OpenSpec delta
 
