@@ -133,7 +133,16 @@
 
 - [ ] 只更新這三列及適用的註記；跑 Project SDD lint，提交。
 
-### Task 12: Archive, verification, and delivery
+### Task 12: 修復現有 screen inventory 生成檔基線
+
+**Files:** Modify `design/system/screen-inventory.md` only through `node scripts/gen-screen-inventory.mjs`.
+
+**Interfaces:** 現行 `origin/main` 的 manifest、generator、生成檔三者在本分支皆未改變，但 `node scripts/gen-screen-inventory.mjs --check` 仍回報 stale，導致 Project SDD lint 的 `INVENTORY_FRESHNESS` error；這是交付 CI 的必要基線修復，與 014 行為無關。
+
+- [ ] 記錄 Red：執行 `node scripts/gen-screen-inventory.mjs --check`，預期顯示 `design/system/screen-inventory.md is stale`。
+- [ ] 只由 generator 重生該檔；執行 `node scripts/gen-screen-inventory.mjs --check`、`bash scripts/inventory-tests.sh`、`git diff --check`，檢視生成差異，單檔提交。
+
+### Task 13: Archive, verification, and delivery
 
 **Files:** Verification-only until `openspec archive` writes the specified `openspec/specs/` derived view and moves `openspec/changes/task-run-identity-contract/` into `openspec/changes/archive/`; archive is the required generated multi-file output.
 
