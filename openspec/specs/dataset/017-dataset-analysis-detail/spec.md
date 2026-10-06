@@ -1,7 +1,7 @@
 # dataset/017-dataset-analysis-detail Specification
 
 ## Purpose
-Dataset Analysis Detail（統計總覽 + 品質監控雙 Tab，Project Leader／Reviewer）的 derived view。正典為 `specs/dataset/017-dataset-analysis-detail/spec.md`（v3.0.1）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR/AC ID，不改動其正典措辭。收錄 change `seq-tagging-span-export-metrics`（issue #581）之 FR-009L／FR-012L／FR-013／FR-024A／FR-035／FR-036／FR-039（修訂）；change `dataset-quality-entity-value-alignment`（issue #783）之 FR-008／FR-025（新收錄，實體欄位與常數值域對齊）與 FR-039（修訂，IAA 計算未結束不是 IAA 結果）；此七條於該 change archive 前以正典 v2.2.2 原文建立基線，使 MODIFIED 有可比對的前值，archive 後基線內容即被完整取代。基線的 scenario 標題刻意採用 delta 的新標題——`openspec archive` 以標題比對判定 MODIFIED 是否丟失既有 scenario，標題不一致即中止；標題以下的條文仍為 v2.2.2 原文。
+Dataset Analysis Detail（統計總覽 + 品質監控雙 Tab，Project Leader／Reviewer）的 derived view。正典為 `specs/dataset/017-dataset-analysis-detail/spec.md`（v3.1.0）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR/AC ID，不改動其正典措辭。收錄 change `1141-dataset-quality-metrics-ready-signal`（issue #1141）之 FR-044（新增，品質指標就緒訊號）；另收錄 change `seq-tagging-span-export-metrics`（issue #581）之 FR-009L／FR-012L／FR-013／FR-024A／FR-035／FR-036／FR-039（修訂）；change `dataset-quality-entity-value-alignment`（issue #783）之 FR-008／FR-025（新收錄，實體欄位與常數值域對齊）與 FR-039（修訂，IAA 計算未結束不是 IAA 結果）；此七條於該 change archive 前以正典 v2.2.2 原文建立基線，使 MODIFIED 有可比對的前值，archive 後基線內容即被完整取代。基線的 scenario 標題刻意採用 delta 的新標題——`openspec archive` 以標題比對判定 MODIFIED 是否丟失既有 scenario，標題不一致即中止；標題以下的條文仍為 v2.2.2 原文。
 
 ## Requirements
 
@@ -237,3 +237,22 @@ u-α 的計算輸入沿用 FR-039 的既有規則不變：僅標記員原始標�
 - **WHEN** 系統產生兩人的風險評估
 - **THEN** 前者 `insufficient_data` 為 false，`risk_level` 為 `normal`、`watch`、`high_risk` 其中之一，畫面顯示對應風險等級
 - **AND** 後者 `insufficient_data` 為 true、`risk_level` 為 null，畫面顯示「資料不足，暫不評估」且不顯示任何風險等級
+
+### Requirement: FR-044 品質指標就緒訊號
+
+系統 MUST 為每個任務推導布林訊號 `quality_metrics_ready`，供 `task-management/014-task-detail` FR-008b 第 5 項「品質指標計算完成可用」判定結案前置條件。推導規則以常數 `QUALITY_METRICS_READY_RULE` 為唯一定義：
+
+1. 訊號 MUST 由該任務**最新一輪**試標回合的 `iaa_computation_status`（`task-management/014-task-detail` FR-010o-4 第 1 點）推導：`done` 為就緒（`true`）；`pending` 與 `failed` 為未就緒（`false`）。
+2. 「無法計算」（`De = 0`，FR-039 第 4 點）依 FR-010o-4 已記為 `done`，因此 MUST 為就緒；MUST NOT 因任一輸出類型無法計算而判為未就緒。
+3. 缺少試標回合紀錄、或紀錄缺少 `iaa_computation_status` 時，MUST 視為就緒（`true`），MUST NOT 阻擋。
+4. 本訊號只描述「IAA 計算是否已結束」，MUST NOT 描述 IAA 是否達門檻；達標與否不影響本訊號，與 FR-039 第 1 點的非阻擋語意一致。
+5. 被修改率（FR-040）由審核差異即時推導、沒有非同步計算狀態，MUST NOT 作為本訊號的輸入。
+6. 本訊號的唯一消費者為 `task-management/014-task-detail` FR-008b 第 5 項；MUST NOT 被用於阻擋 `dry_run` 試標完成或 `開始正式標記`（兩者各有其前置條件）。
+
+#### Scenario: 品質指標就緒訊號依最新回合的計算狀態推導
+
+- **GIVEN** 一個 `official_run_in_progress` 任務，最新試標回合的 `iaa_computation_status` 為 `pending` 或 `failed`
+- **WHEN** 系統推導 `quality_metrics_ready`
+- **THEN** 訊號為 `false`
+- **AND** 最新回合的 `iaa_computation_status` 為 `done` 時訊號為 `true`，即使其中某輸出類型因 `De = 0` 為「無法計算」
+- **AND** 該任務沒有試標回合紀錄或紀錄缺 `iaa_computation_status` 時訊號為 `true`

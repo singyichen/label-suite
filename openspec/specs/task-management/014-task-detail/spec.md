@@ -2,7 +2,7 @@
 
 ## Purpose
 
-任務詳情頁（`task-detail`）是專案負責人設定審核模型、監看審核進度並判定任務可否結案的單一控制面。正典為 `specs/task-management/014-task-detail/spec.md`（v4.2.0）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR ID，不改動其正典措辭。目前收錄：change `align-014-review-model`（issue #688）之 FR-005j／FR-005k／FR-008b／FR-010s／FR-010s-1／FR-010s-2／FR-010t（修訂，issue #596 單人接力審核模型對齊）、FR-018（新增，最終例外池）；change `task-detail-url-view-state`（issue #726）之 FR-019（新增，頁籤與清單檢視狀態的網址同步）；change `task-detail-seq-tagging-export-dialog`（issue #742）之 FR-020（新增，`sequence_tagging` 匯出對話框與序列匯出欄位）；change `task-detail-export-history-redownload`（issue #772）之 FR-021（新增，匯出記錄重新下載依條件快照重建且不新增紀錄）；change `task-detail-trial-round-from-waiting`（issue #791）之 FR-013（首次收錄修訂後全文，新增試標回合僅自待 IAA 確認狀態發起）；change `task-detail-iaa-precondition-and-override-scope`（issue #783）之 FR-010o-1（修訂，門檻覆寫排除未校準型別）、FR-010o-4（新增，待 IAA 確認頁顯示 IAA 計算狀態）；以及 change `validate-reviewer-arbiter-role-separation`（issue #868）之 FR-010s-1／FR-010t（修訂）。
+任務詳情頁（`task-detail`）是專案負責人設定審核模型、監看審核進度並判定任務可否結案的單一控制面。正典為 `specs/task-management/014-task-detail/spec.md`（v5.1.0）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR ID，不改動其正典措辭。目前收錄：change `align-014-review-model`（issue #688）之 FR-005j／FR-005k／FR-008b／FR-010s／FR-010s-1／FR-010s-2／FR-010t（修訂，issue #596 單人接力審核模型對齊）、FR-018（新增，最終例外池）；change `task-detail-url-view-state`（issue #726）之 FR-019（新增，頁籤與清單檢視狀態的網址同步）；change `task-detail-seq-tagging-export-dialog`（issue #742）之 FR-020（新增，`sequence_tagging` 匯出對話框與序列匯出欄位）；change `task-detail-export-history-redownload`（issue #772）之 FR-021（新增，匯出記錄重新下載依條件快照重建且不新增紀錄）；change `task-detail-trial-round-from-waiting`（issue #791）之 FR-013（首次收錄修訂後全文，新增試標回合僅自待 IAA 確認狀態發起）；change `task-detail-iaa-precondition-and-override-scope`（issue #783）之 FR-010o-1（修訂，門檻覆寫排除未校準型別）、FR-010o-4（新增，待 IAA 確認頁顯示 IAA 計算狀態）；以及 change `validate-reviewer-arbiter-role-separation`（issue #868）之 FR-010s-1／FR-010t（修訂）；以及 change `1141-task-detail-quality-metrics-gate`（issue #1141）之 FR-008b（修訂，第 5 項引用品質指標就緒訊號）。
 
 ## Requirements
 
@@ -40,9 +40,9 @@
 2. 全部審核單位（`annotation/015-annotation-workspace` FR-051）皆推導為 `已定稿`，或經最終例外池「自資料集排除」處置；
 3. 不存在狀態為 `爭議中` 的審核單位；
 4. **最終例外池已清空**——不存在待處置的 `official_run` 例外項目（FR-018）；
-5. 品質指標計算完成可用。
+5. **品質指標就緒**——依 `dataset/017-dataset-analysis-detail` 之 `QUALITY_METRICS_READY_RULE` 推導的 `quality_metrics_ready` 為就緒。最新一輪 IAA 計算尚在進行（`pending`）或失敗（`failed`）時為未就緒；`done` 為就緒，含因 `De = 0` 而「無法計算」者；缺少訊號時視為就緒。
 
-任一條件不符時，系統 MUST 阻擋轉換並逐項列出未滿足的具體原因，MUST NOT 僅以「全部標記已提交」作為完成依據。
+任一條件不符時，系統 MUST 阻擋轉換並逐項列出未滿足的具體原因，MUST NOT 僅以「全部標記已提交」作為完成依據。第 5 項未就緒時，原因 MUST 為可見的繁體中文文字（說明品質指標尚在計算或計算失敗），MUST NOT 僅以 hover 或顏色呈現。
 
 **v3.0.0 修訂**：原第 (2) 項之「依生效審核設定（`min_reviewers`）應完成的 review unit 全數定案」改為上列第 2 項——`min_reviewers` 已移除，審核單位恆有一位審核員；原第 (4) 項「應仲裁項目全數完成仲裁」由上列第 3、4 項取代——仲裁完成不再等於結案就緒，仲裁裁定為「兩者皆非」者仍須經例外池收尾。
 
@@ -51,6 +51,17 @@
 - **WHEN** 專案負責人點擊 `標記完成`
 - **THEN** 轉換被阻擋，並逐項列出「最終例外池尚有 2 項待處置」作為未滿足原因
 - **AND** 例外池清空後再次點擊即可轉為 `completed`
+
+#### Scenario: 品質指標未就緒時阻擋結案並顯示原因
+- **GIVEN** 某 `official_run_in_progress` 任務第 1 至 4 項皆已滿足，但最新一輪試標回合的 `iaa_computation_status` 為 `pending` 或 `failed`
+- **WHEN** 專案負責人檢視 `標記完成`
+- **THEN** `標記完成` 為停用狀態，並顯示可見的品質指標未就緒原因，任務狀態維持 `official_run_in_progress`
+- **AND** 直接呼叫完成 handler 同樣失敗，狀態不變
+
+#### Scenario: 品質指標就緒時不被第 5 項阻擋
+- **GIVEN** 某 `official_run_in_progress` 任務第 1 至 4 項皆已滿足，且最新一輪 `iaa_computation_status` 為 `done`（含某輸出類型「無法計算」），或該任務沒有品質指標訊號
+- **WHEN** 專案負責人點擊 `標記完成`
+- **THEN** 轉換不因第 5 項被阻擋，任務轉為 `completed`
 
 ### Requirement: FR-010s Overview 審核設定區塊（檢視模式）
 
