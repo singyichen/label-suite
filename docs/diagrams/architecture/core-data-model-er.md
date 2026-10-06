@@ -3,7 +3,7 @@
 > 對應 issue #669。本圖整合多份 feature spec 的「關鍵實體」段落，供 migration 前檢查概念關聯。
 > **受眾為工程師與 migration 作者**，因此圖面一律保留 spec 的原始識別字（`sample_id`、`run_type`、`reviewer_ids` …），不做中文化——翻譯後就無法用 `grep` 回到正典條文。
 
-> **維護提示（2026-10-06）**：本圖部分實體細節仍是舊版規格快照，尤其圖 3、圖 4 與下方實體索引／待定表。現行 `task-management-014` 為 v5.1.0、`annotation-015` 為 v10.1.0、`dataset-017` 為 v3.1.0；寫 migration 前請先讀 [資料表盤點與 ERD 落地清單](./database-table-inventory.md)，並對照各 spec 現行「關鍵實體」。本圖是概念圖，**不得直接轉成資料表或外鍵**。
+> **維護提示（2026-10-06）**：本圖部分實體細節仍是舊版規格快照，尤其圖 3、圖 4 與下方實體索引／待定表。現行 `task-management-014` 為 v5.2.1、`annotation-015` 為 v10.1.0、`dataset-017` 為 v3.1.0；寫 migration 前請先讀 [資料表盤點與 ERD 落地清單](./database-table-inventory.md)，並對照各 spec 現行「關鍵實體」。本圖是概念圖，**不得直接轉成資料表或外鍵**。
 
 - **正典來源**：各 `specs/[module]/NNN-feature/spec.md` 的 `### 關鍵實體` 段落。本圖為**衍生視圖**，不是正典；spec 與本圖衝突時以 spec 為準。
 - **不歸屬任何單一 spec**，因此放在 `docs/diagrams/architecture/`，不隨任何 spec 進 `specs/_archive/`。
@@ -24,7 +24,7 @@
 兩個最容易踩雷的點：
 
 1. **`ReviewUnit` 沒有單一主鍵。** 它以 `sample_id × annotator_id × run_type` 三欄複合定址（`REVIEW_UNIT_DIMENSIONS`，annotation-015 FR-051）。同一樣本由 N 位標記員標記，就是 N 個各自獨立、狀態互不影響的審核單位。任何「給 ReviewUnit 一個自增 id」的設計都會讓這條不變式失守。
-2. **`DisputeItem` 是推導出來的，不是存下來的。** 它由 FR-052 的差異比對即時推導（015 FR-059 以 `outKey × 合併鍵` 識別，但爭議項粒度與 014 FR-010u(5) 的措辭不一致，**待 [#1150](https://github.com/singyichen/label-suite/issues/1150) 裁定**，本圖不選邊；`DISPUTE_ITEM_SOURCE = derived-from-review-diffs`，annotation-015 FR-059）。**只有 `votes[]` 與 `finalized_value` / `finalized_by` 是真正的寫入狀態**，其餘欄位一旦落地就會與審核單位狀態機漂移。
+2. **`DisputeItem` 是推導出來的，不是存下來的。** 它由 FR-052 的差異比對即時推導（015 FR-059 以審核單位內的 `outKey × 合併鍵` 識別爭議項，014 FR-010u(5) 的計數單位已於 v5.2.1 改引 015 FR-061 第 7 點，見 [#1150](https://github.com/singyichen/label-suite/issues/1150)；`DISPUTE_ITEM_SOURCE = derived-from-review-diffs`，annotation-015 FR-059）。**只有 `votes[]` 與 `finalized_value` / `finalized_by` 是真正的寫入狀態**，其餘欄位一旦落地就會與審核單位狀態機漂移。
 
 ---
 
@@ -57,7 +57,7 @@ erDiagram
 
     AnnotationRecord ||--o| ReviewUnit : "推導：未提交即不成立審核單位"
     ReviewUnit  ||--o{ ReviewDecision : "一位審核員逐 output_type 決策，FR-092／FR-093"
-    ReviewUnit  ||--o{ DisputeItem : "推導；基數待 #1150 裁定"
+    ReviewUnit  ||--o{ DisputeItem : "推導：每個審核單位 0..n 個爭議項，識別為 outKey × 合併鍵，FR-059"
 
     ReviewUnit ||--o{ OutputTypeIAAReport : "逐輸出類型聚合"
     ReviewUnit ||--o{ AnnotatorModificationRateEntry : "modified_units 分子"
@@ -289,7 +289,7 @@ erDiagram
 
 全 spec 最複雜的實體群。**`ReviewUnit` 的複合鍵與 `DisputeItem` 的推導性質是本圖的核心。**
 
-> `DisputeItem` 相關的關聯線與主鍵（`output_type`＋`item_key`）沿用 #1150 裁定前的既有畫法，僅表示「一個審核單位可有多個爭議項」，不代表已選定爭議項粒度，見文末「規格待定」。
+> `DisputeItem` 相關的關聯線與主鍵（`output_type`＋`item_key`）的粒度依 015 FR-059：識別為審核單位內的 `outKey × 合併鍵`；集合型輸出逐合併鍵各一項、`sequence_tagging` 逐 token 位置、`multi_dim` 逐維度，其餘輸出型別整個 outKey 至多一項。下方 ER 以 `output_type`＋`item_key` 兩欄表示此識別，`item_key` 為各拆解粒度下的合併鍵／token 位置／維度。
 
 ```mermaid
 erDiagram
@@ -347,8 +347,8 @@ erDiagram
         json diffs_by_output_type "依 FR-052 比對得出"
     }
     DisputeItem {
-        string output_type PK "derived：DISPUTE_ITEM_SOURCE；粒度待 #1150 裁定"
-        string item_key PK "合併鍵，取自 FR-052 差異項的 key；粒度待 #1150 裁定"
+        string output_type PK "derived：DISPUTE_ITEM_SOURCE；FR-059 第 2 點 outKey"
+        string item_key PK "合併鍵，取自 FR-052 差異項的 key；拆解粒度依 FR-059 第 4 點"
         json annotator_value "derived：僅存在於審核員側者為空值"
         json reviewer_values "Record 以 reviewer_id 為鍵，FR-093 令至多一筆"
         json votes "WRITE：仲裁裁定 arbiter_id、choice、voted_at"
@@ -380,8 +380,8 @@ erDiagram
     AnnotationRecord ||--|{ OutputAnswer : "answers 陣列，一至多筆"
     AnnotationRecord ||--o| ReviewUnit : "推導：標記員未提交則不成立"
     ReviewUnit ||--o{ ReviewDecision : "同一審核員逐 output_type 決策，FR-092／FR-093"
-    ReviewUnit ||--o{ DisputeItem : "推導；基數待 #1150 裁定"
-    ReviewDecision ||--o{ DisputeItem : "推導：與標記員一致者不得出現；基數待 #1150 裁定"
+    ReviewUnit ||--o{ DisputeItem : "推導：每個審核單位 0..n 個爭議項，FR-059"
+    ReviewDecision ||--o{ DisputeItem : "推導：與標記員一致者不得出現，一筆決策對應 0..n 個爭議項，FR-059 第 3 點"
     ReviewDecision ||--o{ AnnotationHistoryItem : "審核動作寫入歷程"
 ```
 
@@ -444,7 +444,7 @@ flowchart LR
     RD["ReviewDecision<br/>審核員逐 outKey 決策<br/>persisted"]
     DIFF["FR-052 差異比對<br/>CompactAnswer 共通形狀<br/>合併鍵順序無關集合比對"]
     RU["ReviewUnit.status<br/>derived：pending / disputed / finalized"]
-    DI["DisputeItem<br/>derived：粒度待 #1150 裁定"]
+    DI["DisputeItem<br/>derived：outKey × 合併鍵，FR-059"]
     W["votes 與 finalized_value / finalized_by<br/>persisted：以審核單位定址儲存"]
 
     AR --> DIFF
@@ -488,14 +488,13 @@ flowchart LR
 
 ## 規格與實體層待定
 
-#688 已於 014 v3.0.0（`reviewer_ids`／`arbiter_ids` 取代 `min_reviewers` 等四欄位）與 015 v5.0.0（單人接力、`REVIEW_UNIT_STATUS` 三態）解決。015 FR-093 規定每個指派對象恰有一位審核員；FR-092 仍允許該審核員對多個 `output_type` 各寫一筆 `ReviewDecision`，因此圖 1／圖 4 的業務關聯為一對多。下列規格與實體層問題尚未定案，**本圖不裁定**：
+#688 已於 014 v3.0.0（`reviewer_ids`／`arbiter_ids` 取代 `min_reviewers` 等四欄位）與 015 v5.0.0（單人接力、`REVIEW_UNIT_STATUS` 三態）解決。015 FR-093 規定每個指派對象恰有一位審核員；FR-092 仍允許該審核員對多個 `output_type` 各寫一筆 `ReviewDecision`，因此圖 1／圖 4 的業務關聯為一對多。下列規格與實體層問題尚未定案，**本圖不裁定**（爭議項粒度已由 #1150 解決，見表後）：
 
 | 圖上位置 | 標記內容 | 未定點 |
 |---------|---------|-------|
-| 圖 1、圖 4、圖 6 | `ReviewUnit` 到 `DisputeItem`、`ReviewDecision` 到 `DisputeItem` 的關聯基數，以及 `DisputeItem` 的 `output_type`／`item_key` 粒度 | **待 [#1150](https://github.com/singyichen/label-suite/issues/1150) 裁定**：014 FR-010u(5) 括號寫「爭議項（審核單位 × 輸出類型）」，015 FR-059 第 2、4 點與 FR-061 第 7 點則以 `outKey × 合併鍵` 為爭議項單位並禁止合併計數；兩處措辭不一致（015 FR-061 第 7 點自稱為該計數單位之定義），尚無裁定，本圖不選邊 |
 | 圖 1、圖 3 | `ReviewAssignment.review_unit_id` 與 `ReviewAssignment` 到 `ReviewUnit` 的關聯線 | 014 `ReviewAssignment` 仍列 `review_unit_id`，但 015 FR-051 的審核單位以 `sample_id × annotator_id × run_type` 複合定址，無單一 id 可指；015 FR-093(5) 又規定黏住須由提交推導，不得另存第二份指派資料。正典未統一（非 #1150 範圍），所以圖中不畫未定的實體 FK；見[資料表盤點 §5](./database-table-inventory.md#5-在第一批-migration-前要關閉的決策) |
 
-#1150 定案後另開單回頭補本圖；#1151（例外池以 outKey 為鍵）、#1146（arbiterIds 名冊）亦觸及同一塊資料模型，修完後須回頭核對。
+**已解決（#1150，2026-10-06）**：爭議項粒度以 015 FR-059 第 2、4 點與 FR-061 第 7 點為準（審核單位內 `outKey × 合併鍵`），014 FR-010u(5) 於 v5.2.1 改引該計數單位；`ReviewUnit` 與 `ReviewDecision` 到 `DisputeItem` 的基數已畫入圖 1、圖 4、圖 6。#1151（例外池以 outKey 為鍵）、#1146（arbiterIds 名冊）亦觸及同一塊資料模型，修完後須回頭核對。
 
 ---
 
