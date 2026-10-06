@@ -36,7 +36,7 @@
 | 多標籤（ `multi_label` ） | 從階層標籤樹獨立選取一個或多個節點 | MLTC（多標籤文本分類） | S1:「這家餐廳環境很好，服務親切。」 S2:「這間咖啡廳氣氛舒適，店員熱情。」 | `comparison / topic / similar`、`comparison / sentiment / same` | `label_options[]: LabelOptionNode` |
 
 > `entity_markers` 定義預標記實體的起訖標記，例如 `{ start: "[", end: "]" }`；也可用 XML tag、括號或其他明確成對標記格式。
-> `entities` 的 `color` 為必填，因 span 與 token 標記需視覺區分；`relation_types` 為語意類型標籤的純字串陣列（ tag-list ），不支援 `color`——關係觸發詞由標記者從文本中反白選取，不在 config 中預定義；`label_options`、`polarity_options` 的 `color` 為選填。
+> `entities` 的 `color` 為必填，因 span 標記需視覺區分；`relation_types` 為語意類型標籤的純字串陣列（ tag-list ），不支援 `color`——關係觸發詞由標記者從文本中反白選取，不在 config 中預定義；`label_options`、`polarity_options` 的 `color` 為選填。
 
 #### Multi-label Label Taxonomy
 
@@ -93,7 +93,7 @@ max_selections: 0
 
 | 輸出類型（ output_type ） | 說明 | 典型任務 | 範例輸入 | 範例輸出 | Config 設定 |
 |------------------------|------|----------|----------|----------|-------------|
-| Sequence Tagging 序列標註（ `sequence_tagging` ） | Token 級標籤；標記單位可選字或詞 | POS tagging、Chunking、token-level NER | 「台積電在 Taipei。」 | 字模式：台/B-ORG、積/I-ORG、電/I-ORG；詞模式：Taipei/B-LOC | `entities[]: { name, color }`、`tokenization.unit: character\|word`、`tagging_scheme: BIO\|BIOES\|IOB2\|SINGLE` |
+| Sequence Tagging 序列標註（ `sequence_tagging` ） | 在未切分的原始文本上拖曳圈選字元 offset span（不重疊）；儲存值為 `spans[]`，BIO 序列僅於匯出時推導 | POS tagging、Chunking、token-level NER（以不重疊 span 標註；序列標記為匯出格式） | 「台積電在 Taipei。」 | 儲存：`{ start: 0, end: 3, label: ORG }`、`{ start: 4, end: 10, label: LOC }`；匯出字元級 BIO：台/B-ORG、積/I-ORG、電/I-ORG | `entities[]: { name, color }`、`snap_unit: character\|word`、`allow_bypass` |
 | Entity Recognition 實體辨識（ `entity_recognition` ） | 選取文字起訖位置，可搭配類型標籤或極性標籤 | NER（ span-level ）、Aspect Term Extraction、Keyword Extraction、ABSA | 「這家餐廳服務很差，但環境不錯。」 | [服務, 環境] 或 [(服務, 負面), (環境, 正面)] | 見下方 `entity_recognition` Config 說明 |
 | Relation Identification 關係識別（ `relation_identification` ） | 以既有實體建立關係觸發詞、語意類型與 Triple；與 `entity_recognition` 組合時可同時編輯實體 | OpenIE、Relation Extraction、NER+RE（組合模式） | 「台積電供應晶片給輝達。」 | (台積電, 供應, 輝達) type:supplier | `relation_types[]: string`（語意類型標籤） |
 
@@ -101,17 +101,14 @@ max_selections: 0
 
 | Config 欄位 | 型別 | 說明 |
 |------------|------|------|
-| `entities[]` | `{ name, color }[]` | 可套用到 Token 的標籤類型。 |
-| `tagging_scheme` | `BIO \| BIOES \| IOB2 \| SINGLE` | 決定可用完整 tag。`SINGLE` 為不含位置前綴的 Token label。 |
-| `tokenization` | `{ unit, mode, punctuation, version }` | versioned language-aware tokenization，目前為 v1；`unit` 可選 `character` 或 `word`。 |
+| `entities[]` | `{ name, color }[]` | 可套用到圈選 span 的標籤類型。 |
+| `snap_unit` | `character \| word` | 選取吸附：只影響拖曳落點，不影響儲存值；預設 `character`（不吸附）。詞界由前端 `Intl.Segmenter` 提供，切換不會使既有標記失效。 |
 | `allow_bypass` | `bool` | 是否允許標記者選擇無法判定。 |
 
-- `BIO`：使用 `B-X / I-X / O`。
-- `BIOES`：使用 `B-X / I-X / O / E-X / S-X`，其中 `S-X` 明確表示單一 Token 實體。
-- `IOB2`：使用 `B-X / I-X / O`，且每個實體起點一律為 `B-X`；即使相鄰實體類型相同，也必須重新以 `B-X` 開始。
-- `SINGLE`：每個 Token 直接使用 `ORG / PER / ... / O`，不表達實體內的位置或邊界。
-
-標記單位與標記方案是兩個獨立設定。Task New 的 sequence token preview 屬 producer 合約；正式 tokenization 仍須依 [ADR-031](../../adr/031-sequence-tagging-tokenization-contract.md) 由後端正典整合，word-mode production engine 尚未選定。
+- 標記結果為 `spans[]`（`{ start, end, label }`，字元 offset、半開區間、不得相交）；payload 不含 `tokens[]`、`tags[]`、`scheme`、`unit`，BIO 不出現於儲存值。
+- BIO／BIOES／IOB2 與字元級／詞級單位屬**匯出層**選項，於匯出時才自 `spans[]` 推導，不屬任務設定；詞級匯出須寫入 tokenizer engine 與 version metadata（匯出時的 tokenizer 版本與選取時的 `snap_unit` 是兩件事，前者不是儲存座標系）。
+- 歷史：013 v6.2.0–v6.4.0 建立、v7.0.0 移除的 `tagging_scheme`、`tokenization`（含 `SINGLE`）與 [ADR-031](../../adr/031-sequence-tagging-tokenization-contract.md) 的 token 座標系契約已由 issue #581 取代（ADR-031 狀態為 Superseded），不再是現行設定。
+- 現行正典：`task-management/013-task-new` FR-003d-1（v8.1.1）、`annotation/015-annotation-workspace` FR-024A-3（v10.1.0）、`dataset/017-dataset-analysis-detail` FR-012L（IAA 為 span 單位 u-α）與 FR-041／FR-042（匯出層 BIO 推導與詞級 tokenizer metadata，v3.1.0）。
 
 #### Entity Recognition（`entity_recognition`）Config 說明
 
@@ -199,7 +196,7 @@ max_selections: 0
 | 回歸（ regression ） | 單一項目（ single_item ） | 多維度（ multi_dim ） | 情感維度評估（ Valence-Arousal ）、多維度品質評估 | `va_dimensions[]: { name, min, max, step }` |
 | 回歸（ regression ） | 項目對（ item_pair ） | 單維度（ single_dim ） | 語義相似度（ STS ）、文本相關性評分 | `va_dimensions[]: { name, min, max, step }`（單一元素） |
 | 回歸（ regression ） | 項目對（ item_pair ） | 多維度（ multi_dim ） | 語義相似度 + 句法相似度 + 主題一致性評估 | `va_dimensions[]: { name, min, max, step }` |
-| 序列（ sequence ） | 單一項目（ single_item ） | Sequence Tagging 序列標註（ `sequence_tagging` ） | POS tagging、Chunking、token-level NER | `entities[]: { name, color }`、`tokenization.unit: character\|word`、`tagging_scheme: BIO\|BIOES\|IOB2\|SINGLE` |
+| 序列（ sequence ） | 單一項目（ single_item ） | Sequence Tagging 序列標註（ `sequence_tagging` ） | POS tagging、Chunking、token-level NER（以不重疊 span 標註；序列標記為匯出格式） | `entities[]: { name, color }`、`snap_unit: character\|word`、`allow_bypass` |
 | 序列（ sequence ） | 單一項目（ single_item ） | Entity Recognition 實體辨識（ `entity_recognition` ） | NER（ span-level ）、Aspect Term Extraction、Keyword Extraction、ABSA | `entities[]: { name, color }` 或 `polarity_options[]: { name, color? }`（ 見 `entity_recognition` Config 說明 ） |
 | 序列（ sequence ） | 單一項目（ single_item ） | Relation Identification 關係識別（ `relation_identification` ） | OpenIE、Relation Extraction | `relation_types[]: string`（語意類型標籤） |
 | 生成（ generation ） | 單一項目（ single_item ） | 自由文字（ free_text ） | Summarization、Question Answering、Translation、Paraphrase | `input_instruction`、`output_instruction`、`max_length` |
