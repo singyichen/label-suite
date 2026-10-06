@@ -22,9 +22,9 @@ Issue #1160 需要讓後續 run 能追溯任務建立時通過驗證的完整 co
 
 | 相依 change／正典 | 本設計交出的契約 |
 |---|---|
-| `task-run-identity-contract`／014 FR-010f、FR-014 | 014 可在 draft 另存完整 config；首次 Dry 開啟 cycle 時釘住同 task 的確切不可變 `config_version_id`。已發布 run 不改讀 task 目前版本。 |
-| `annotation-run-identity-contract`／015 FR-051、FR-066、FR-093 | 015 以穩定 run／assignment 消費 014 的版本與指引釘選；013 不定義其提交、審核或權限投影。 |
-| dataset-021 FR-005／FR-010 | dataset 公開 item、私有答案與 sealed version 的邊界由 dataset owner 管理；013 config 不攜入 hidden answer 或私有 `declared_split`。 |
+| `task-run-identity-contract`／`specs/task-management/014-task-detail/spec.md` FR-010f、FR-014 | 014 可在 draft 另存完整 config；首次 Dry 開啟 cycle 時釘住同 task 的確切不可變 `config_version_id`。已發布 run 不改讀 task 目前版本。 |
+| `annotation-run-identity-contract`／`specs/annotation/015-annotation-workspace/spec.md` FR-051、FR-066、FR-093 | 015 以穩定 run／assignment 消費 014 的版本與指引釘選；013 不定義其提交、審核或權限投影。 |
+| `specs/dataset/021-dataset-ingestion-and-lineage/spec.md` FR-005／FR-010 | dataset 公開 item、私有答案與 sealed version 的邊界由 dataset owner 管理；013 config 不攜入 hidden answer 或私有 `declared_split`。 |
 
 這三份 OpenSpec change 分別只鏡射一份 owning spec；013 的初始版本先於 014 的 run 釘選，015 再消費該身分鏈。Accepted ADR-022 擁有 task 狀態轉換。`docs/superpowers/specs/2026-10-06-task-run-identity-design.md` 是 DBA 裁決背景，不凌駕正典。
 
