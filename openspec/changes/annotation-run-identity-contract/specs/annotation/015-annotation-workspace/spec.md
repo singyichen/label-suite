@@ -2,6 +2,36 @@
 
 ## ADDED Requirements
 
+### Requirement: AC-1.3 清單列導頁保留正式作業身分
+
+3. **AC-1.3**：**Given** 使用者於清單點擊任一筆資料列（Annotator 視圖）或該列 `編輯` 按鈕（兩種視圖皆適用），**When** 觸發導頁，**Then** 導向 `annotation-workspace` 並帶入 `task_id/sample_id/run_type/role`，且工作區初始化後必須停留在該 `sample_id` 對應的樣本。**v4.2.0 修訂**：Reviewer 視圖下資料列已無可展開內容（一列即一個審核單位，見 FR-055），點擊資料列本身改為與 `編輯` 相同的導頁動作，並額外帶出該列的 `annotator_id`（見 AC-1.16）。 **v11.0.1 正式身分補述（issue #1160）**：上述顯示用 query 參數沿用 prototype；正式清單導頁須依 FR-049 攜帶或唯一解析該列的 `run_id × assignment_id`，服務端驗證所屬 task／item／annotator；同名 sample 無法唯一解析時不得載入其他 cycle 的作業。
+
+#### Scenario: AC-1.3 清單列導頁保留正式作業身分
+
+- **GIVEN** 兩個 cycle 的 R1 有相同顯示 sample 與 annotator
+- **WHEN** annotator 或 reviewer 點擊 cycle 2 清單列進入工作區
+- **THEN** 正式路徑以 cycle 2 的 `run_id × assignment_id` 定位並驗證 task／item／annotator；只帶 prototype 顯示參數且無法唯一解析時拒絕（AC-1.3；FR-049）
+
+### Requirement: AC-1.16 reviewer 清單列導頁保留審核單位身分
+
+16. **AC-1.16（v4.2.0 新增，對應 FR-055）**：**Given** `role = reviewer` 於清單點擊任一列的 `編輯` 按鈕或資料列本身，**When** 觸發導頁，**Then** 導向 `annotation-workspace` 並帶入 `task_id/sample_id/run_type/role` 與**該列的 `annotator_id`**（沿用 FR-049 身分參數傳遞規則），使工作區審核卡開在同一個審核單位上；**And** 清單不得提供任何逐列或批次的決策控件（**v5.0.0 修訂**，issue #596：原列舉為 `通過` / `退回`，決策語彙已改為 `REVIEW_DECISIONS`；本條「清單零決策」之結論不變），亦不得提供 `送出審核` 按鈕——兩種 `run_type` 皆然。 **v11.0.1 正式身分補述（issue #1160）**：上述 query 參數沿用 prototype；正式 reviewer 清單列須依 FR-049 指向該列的 `run_id × assignment_id` 並核對 task／item／annotator，不能僅憑同名 sample 與 annotator 開啟另一個 cycle 的審核單位。
+
+#### Scenario: AC-1.16 reviewer 清單列導頁保留審核單位身分
+
+- **GIVEN** 兩個 R1 的 reviewer 清單有相同 sample 與 annotator
+- **WHEN** reviewer 點擊 cycle 2 審核單位列
+- **THEN** 正式路徑開啟 cycle 2 的 `run_id × assignment_id`，不得回退到 cycle 1 的審核單位（AC-1.16；FR-049）
+
+### Requirement: AC-1.23 快速審核只進入目前 run 的作業
+
+23. **AC-1.23（v4.28.0 新增，對應 FR-073，issue #449；v6.1.1 補正 v5.0.0 回寫遺漏，issue #748）**：**Given** `role = reviewer`，**When** 自 dashboard 任務卡的 `快速審核` 進入，**Then** 導頁目標必須是 `findNextActionableReviewUnit(task_id, run_type, reviewer_id)` 依 `REVIEW_UNIT_ACTION_PRIORITY` 選出的審核單位，且網址同時攜帶 `task_id`、`sample_id`、`annotator_id`、`reviewer_id`、`run_type` 五項參數；**And** 任務存在待審單位時（如 T014 `dry_run`：第一筆樣本三個單位皆已定稿，第二筆樣本依序為 已定稿／爭議中／待審）必須開啟該待審單位（`dry-02-one-divergent` × `tony0950127`），即使排序在前的單位為爭議中；**And** 任務無待審單位但存在該審核員具仲裁資格之爭議單位時（如 T016 `official_run`：待審 0、爭議 3），必須依優先序開啟第一個該審核員可仲裁之爭議單位（`ofm-03-awaiting-arbitration`）〔**v6.6.0 修訂**，issue #815；原文：「待審 0、爭議 1」「必須開啟該爭議單位（`ofm-05-all-divergent`）」——v5.0.0 後 T016 未定稿單位皆推導為爭議中，該樣本亦於本版前更名〕；**And** 已參與該爭議審核的審核員（如 `reviewer_wang`）不得被導向該單位——其於 T016 無任何可處理單位；**And** 該審核員於此任務無任何可處理單位時，必須導向 `annotation-list`（不帶 `sample_id`）並顯示空狀態說明（`list-no-actionable-notice`，zh／en 同步），不得改為開啟任何已定稿唯讀單位。 **v11.0.1 正式身分補述（issue #1160）**：上述五項網址參數沿用 prototype；正式快速審核須依 FR-049 由目前 cycle 與選中的審核單位取得 `run_id × assignment_id`，服務端核對 task／item／annotator，歷史 run 須顯式選定，無目前 run 或無法唯一解析時不得以舊 R1 作為預設。
+
+#### Scenario: AC-1.23 快速審核只進入目前 run 的作業
+
+- **GIVEN** 舊 cycle 的 R1 留有歷史審核單位，新 cycle 有相同 sample 與 annotator
+- **WHEN** reviewer 從 dashboard 啟動快速審核
+- **THEN** 由目前 cycle 選中單位的 `run_id × assignment_id` 定位並驗證範圍；若無目前 run，不得預設進入舊 R1（AC-1.23；FR-049／FR-073）
+
 ### Requirement: FR-014S 審核決策草稿持久化身分
 
 - **FR-014S**（v4.15.0 新增，issue #196、CONT-03，對應 AC-6.10）：工作區 reviewer 視圖的逐筆 `REVIEW_DECISIONS = approve | modify | bypass` 三向決策（FR-014B／FR-092；`A`／`B` 可依 FR-054 設定整單位的通過／無法裁決，`R` 不產生決策，修正不綁快捷鍵）在「送出審核」之前，每次變更皆必須即時寫入一個與提交紀錄分離的草稿儲存區——不得寫入 `SUBMISSION_BUCKET_DIMENSIONS`（FR-049）定址的提交 bucket，亦不得產生任何歷程事件——使審核員在完成送出前重新整理頁面時，尚未送出的逐列決策仍能還原，與標記員儲存草稿的既有行為（FR-013）維持角色對稱（issue #196 現況調查所建議的產品決策）。草稿儲存區的正式持久化鍵為 `run_id × assignment_id × reviewer_id`（v11.0.1，沿用 FR-051 審核單位與 FR-049 審核員隔離）；舊 `sample_id × annotator_id × run_type × reviewer_id` 僅為 prototype bucket，不得用於正式跨 cycle 的草稿還原，一位審核員的草稿不得外溢至另一位審核員或另一位受審標記員。送出審核成功後，該審核單位的草稿必須清除，不得殘留舊決策供下次進入時誤還原。草稿本身不得構成 FR-062 所稱的盲審污染——不得以任何形式（含「已有動作」的事實）對其他審核員可見；本條涵蓋逐列三向決策及其取消狀態，不涵蓋直接修正控件內尚未送出的文字/數值編輯（該部分沿用既有的記憶體內狀態，reload 遺失，不在本次範圍）。
@@ -21,6 +51,7 @@
 ### Requirement: FR-049 提交 bucket 與正式持久化身分
 
 - **FR-049**（v3.8.0 新增，v4.53.0 修訂，對應 AC-4.5、AC-4.6、AC-4.43）：標記與審核的提交紀錄必須以 `SUBMISSION_BUCKET_DIMENSIONS`（`task_id × role × run_type × annotator_id × reviewer_id`）定址（此為 prototype bucket；正式持久化另須 FR-051 的 `run_id × assignment_id` 範圍），不得僅以 `task_id × role × run_type` 定址。`role = annotator` 之紀錄沒有審核員維度，該維度以固定佔位值填充以維持鍵值一致長度。身分來源為 `ANNOTATION_IDENTITY_SOURCE`：`annotation-list` 與 `annotation-workspace` 皆自路由參數解析 `annotator_id` / `reviewer_id`，缺值套用預設值；清單導向工作區時必須將自身收到的身分參數原樣帶出（未帶入者維持不帶，兩頁回退到同一組預設值）。〔**v4.53.0 修訂**，issue #545：本項自本版起為**雙向**——工作區返回清單時亦必須將自身收到的身分參數原樣帶回，缺值同樣維持不帶。原文只寫了清單→工作區一個方向，實作亦只做了該方向：工作區的 `buildListReturnUrl()` 自行重建 query 而未轉發身分參數，使非預設身分的訪客一返回清單即回退為預設身分，清單遂以他人的 bucket 計算各列狀態與進度分母（FR-055 第 2 點）。身分維度既為提交紀錄的定址依據，其在往返路徑上任一段落遺失，兩頁即不再定址到同一筆紀錄——本條之目的因此在單向實作下不成立。「未帶入者維持不帶」於回程同等適用，不得以寫入已解析之預設身分（`ANNOTATION_IDENTITY_SOURCE` 之回退值）代替轉發，否則兩頁對「缺值＝套用預設」的共識即被一方單方面消滅〕此定址是「一式 N 份」審核（多位審核員審同一筆標記）的前置條件——在此之前兩位審核員會寫入同一筆紀錄而互相覆寫。本條僅定義身分維度與儲存定址，不改變任何版面呈現，亦不引入權限判斷。
+  **v11.0.1 正式導頁與查詢邊界（issue #1160）**：正式的清單列、dashboard 快速入口、審核快速入口與歷史入口在讀取或寫入既有作業前，必須攜帶或由明確選定的目前／歷史 run 解析穩定的 `run_id × assignment_id`；服務端須驗證 assignment 屬於該 run 與 task，並與顯示的 dataset item、標記員及登入者即時授權範圍一致，不符或無法唯一解析時拒絕，不得回退至同名 sample 的另一個 cycle。`task_id`、`sample_id`、`run_type`、`annotator_id`、`reviewer_id` 及其缺值回退規則僅是既有 prototype 導頁／bucket 契約，不能單獨選取正式持久化紀錄；任務尚無目前 run 時快速入口不得以舊 cycle 推定新作業。
 
 #### Scenario: AC-7.1 正式提交不沿用 prototype bucket
 
@@ -74,7 +105,7 @@
 
 - **SC-014**：AC-7.1～AC-7.3 全數通過；重複 R1 的提交／審核串用次數為 0，停用 reviewer 的後續授權成功次數為 0，modal 與側欄 run-pinned 指引版本一致率為 100%。
 
-- **AC-7.1**：**Given** cycle 1 的 R1 與退回 draft 後 cycle 2 的 R1 含相同 sample 與 annotator，**When** 載入、儲存或審核 cycle 2 的工作，**Then** 使用不同 `run_id × assignment_id`，cycle 1 的提交、未送出審核草稿、歷程、定稿狀態、仲裁紀錄／爭議項計數、Dry per-sample 黏著與回饋分母均不混入，且原歷史仍可由其 run 定位；同一 run 內兩個 batch 即使使用相同來源 sample ID，其不同 `dataset_item_id` 仍形成各自獨立的 Dry 黏著群組，不得只因來源 id 相同而合併（FR-014S／FR-051／FR-061／FR-093）。
+- **AC-7.1**：**Given** cycle 1 的 R1 與退回 draft 後 cycle 2 的 R1 含相同 sample 與 annotator，**When** 從清單或 dashboard 正式入口導向並載入、儲存或審核 cycle 2 的工作，**Then** 導頁或查詢以 cycle 2 的 `run_id × assignment_id` 定位，並驗證 task／item／annotator 一致；只有相同顯示參數或跨 run 的 assignment 時不得讀取或寫入，且使用不同 `run_id × assignment_id`，cycle 1 的提交、未送出審核草稿、歷程、定稿狀態、仲裁紀錄／爭議項計數、Dry per-sample 黏著與回饋分母均不混入，且原歷史仍可由其 run 定位；同一 run 內兩個 batch 即使使用相同來源 sample ID，其不同 `dataset_item_id` 仍形成各自獨立的 Dry 黏著群組，不得只因來源 id 相同而合併（FR-014S／FR-051／FR-061／FR-093）。
 
 - **AC-7.2**：**Given** run 凍結的 reviewer 候選已提交審核而黏住單位，**When** 該 membership 停用，**Then** 舊提交、候選與責任鏈保留，但下一次讀取、提交、仲裁均拒絕；未黏住單位不得分配給該人；不得為繞過停用而改派已黏住單位或新增持久化 ReviewAssignment（FR-093／SC-013）。
 
@@ -85,6 +116,12 @@
 - **GIVEN** cycle 1 與 cycle 2 的 R1 有相同 sample 與 annotator，同一 run 另有兩個 batch 重複來源 sample ID
 - **WHEN** 載入、儲存、審核及統計 cycle 2 工作
 - **THEN** 各 cycle 及不同 `dataset_item_id` 的提交、草稿、爭議、黏著和分母皆不混用，歷史仍可追溯（AC-7.1）
+
+#### Scenario: AC-7.1 同名 R1 正式導頁使用穩定作業身分
+
+- **GIVEN** cycle 1 與 cycle 2 的 R1 有相同顯示 sample 與 annotator，但各有不同 run 與 assignment
+- **WHEN** 從 cycle 2 清單或 dashboard 快速入口開啟作業，或以 cycle 1 的 `run_id` 配上 cycle 2 的 `assignment_id` 查詢
+- **THEN** 合法入口只定位 cycle 2 的 `run_id × assignment_id`，跨 run 配對及無法唯一解析的顯示參數請求均拒絕，不得載入 cycle 1 的提交或審核資料（FR-049／FR-073；AC-7.1）
 
 #### Scenario: AC-7.2 停用即時撤權
 
@@ -237,7 +274,7 @@
      - `3` —（**v5.0.0 移除**，issue #596）~~`approved` 或 `modified`（未達 `min_reviewers` 定稿門檻）且該審核員尚未於該單位提交過審核~~——`approved`／`modified` 兩個中間狀態隨 `REVIEW_UNIT_STATUS` 收斂為三態而消失，且 FR-093 令每單位恰有一位系統指派的審核員，「同一單位再補一位審核員」的情境不再存在；本順位因此無適用對象，順位編號保留不重用
      - 不可處理 — `finalized`（終態）、以及該審核員無仲裁資格之 `disputed`（**v5.0.0 修訂**，issue #596：原另列之「已提交過審核之 `approved`／`modified`」隨該兩狀態移除而失效）
   3. **身分為判定要素**：可處理與否必須以登入審核員身分推導，已參與該爭議審核的審核員不得被導向自己無資格仲裁的單位（沿用 FR-060 盲審與利益迴避）。
-  4. **導頁參數**：導向工作區時必須完整攜帶 `task_id`、`sample_id`、`annotator_id`、`reviewer_id`、`run_type`。`annotator_id` 為必要項——prototype 導頁呈現維度為 `sample_id × annotator_id × run_type`（正式身分仍為 `run_id × assignment_id`）（FR-051），缺少該參數時工作區會依 FR-049 回退為預設標記員身分而開啟另一個單位。
+  4. **導頁參數**：導向工作區時必須完整攜帶 `task_id`、`sample_id`、`annotator_id`、`reviewer_id`、`run_type`。上述五項為 prototype 導頁參數，`annotator_id` 在 prototype 必填——其呈現維度為 `sample_id × annotator_id × run_type`；缺少時工作區會依 FR-049 回退為預設標記員身分而開啟另一個單位。正式快速入口另須依 FR-049 攜帶或唯一解析 `run_id × assignment_id`，於服務端驗證 run／task／item／annotator 範圍；只有五項顯示參數時不得猜測跨 cycle 的審核單位（FR-051）。
   5. **無可處理項目時的空狀態**：推導結果為空時必須導向 `annotation-list`（不帶 `sample_id`）並顯示明確空狀態說明（testid `list-no-actionable-notice`，zh／en 同步），不得回退為開啟任務第一筆或任何其他已定稿唯讀單位。
   6. **不得硬編任務 ID**（Generalization-First）：優先序與資格判定僅得讀取審核單位狀態與審核員身分，不得對 T014–T017 或任何任務 ID 分流。
 
