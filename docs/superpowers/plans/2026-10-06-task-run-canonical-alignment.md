@@ -123,7 +123,7 @@
 
 **Interfaces:** 只鏡射 Task 2 已變更的正典條文與驗收情境，保留相同 FR／SC／AC ID。
 
-- [ ] 寫 cycle、發布、指引、排除、名冊和版本來源 delta，以 `openspec validate task-run-identity-contract --type change` 驗證結構，提交。
+- [x] 寫 cycle、發布、指引、排除、名冊和版本來源 delta，以 `openspec validate task-run-identity-contract --type change` 驗證結構，提交。
 
 ### Task 9: 015 OpenSpec delta
 
