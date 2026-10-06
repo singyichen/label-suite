@@ -222,6 +222,16 @@
 - **WHEN** 重播同 cycle seed／演算法與版本的抽樣並取得標記者資料
 - **THEN** run 清單由公開資格池可重現，與私有 split 無關，回應與 manifest 均無答案、gold/test 標記或受限來源（FR-010f）。（AC-3.45；AC-3.45）
 
+### Requirement: AC-3.46 驗收情境
+
+46. **AC-3.46**（v6.0.0，issue #1160）：**Given** 同一 cycle 綁定的 sealed dataset version 有 12 個已接受 item，已發布 R1 實際使用 3 個、R2 實際使用 4 個，其中一筆 R1 assignment 後來被終局排除，**When** 發布要求 4 個的 R3，**Then** R3 精確取得 4 個不屬於 R1／R2 的新 item ID，已排除 assignment 對應的 item ID 不得重新出現在 R3，並保留 1 個 item 供 Official 發布時凍結；若改為要求 5 個的 R3，則整次拒絕且不建立 run／snapshot／assignment，不得因 R1 assignment 排除而回補可用池（FR-010d／FR-010e／FR-010f-2）。
+
+#### Scenario: AC-3.46 排除 assignment 不回補已用 item
+
+- **GIVEN** 同一 cycle 綁定的 sealed dataset version 有 12 個已接受 item，已發布 R1 實際使用 3 個、R2 實際使用 4 個，其中一筆 R1 assignment 後來被終局排除
+- **WHEN** 發布要求 4 個的 R3
+- **THEN** R3 精確取得 4 個不屬於 R1／R2 的新 item ID，已排除 assignment 對應的 item ID 不得重新出現在 R3，並保留 1 個 item 供 Official 發布時凍結；若改為要求 5 個的 R3，則整次拒絕且不建立 run／snapshot／assignment，不得因 R1 assignment 排除而回補可用池（FR-010d／FR-010e／FR-010f-2）。
+
 ### Requirement: SC-005 成功標準
 
 - **SC-005**：`isolation_enabled = true` 時匯出與查詢結果中 Dry／Official 不混入；`false` 時揭露風險並保存確認與審計證據，但不自動產生混合結果動作。兩種值皆須拒絕同 cycle 任何 Dry／Official item ID 重疊；只允許 draft 退回後的新 cycle 再使用舊 cycle item（AC-3.40／AC-3.41）。
@@ -254,13 +264,19 @@
 
 ### Requirement: SC-053 成功標準
 
-- **SC-053**：通過 AC-3.40／AC-3.41：新舊 cycle R1 可同時追溯且互不計數，兩種隔離值下 item 集合皆不重疊，sealed-version 累計上限在每輪保留至少一筆 Official。
+- **SC-053**：通過 AC-3.40／AC-3.41／AC-3.46：新舊 cycle R1 可同時追溯且互不計數，兩種隔離值下 item 集合皆不重疊；即使先前 Dry assignment 被排除，sealed-version 累計上限仍依已發布 Dry run 的實際 item_count 計算，每輪保留至少一筆 Official。
 
 #### Scenario: SC-053 對應 AC-3.40
 
 - **GIVEN** cycle 1 的 R1 已發布後退回 draft
 - **WHEN** 重綁版本並再次發布 R1
 - **THEN** cycle 2／run／snapshot 身分皆不同，cycle 1 的 assignment 與排除證據保留；切換兩個 R1 的計數與完成閘門互不混入（FR-010f-5／FR-010u）。（SC-053；AC-3.40）
+
+#### Scenario: SC-053 對應 AC-3.46
+
+- **GIVEN** 同一 cycle 綁定的 sealed dataset version 有 12 個已接受 item，已發布 R1 實際使用 3 個、R2 實際使用 4 個，其中一筆 R1 assignment 後來被終局排除
+- **WHEN** 發布要求 4 個的 R3
+- **THEN** R3 精確取得 4 個不屬於 R1／R2 的新 item ID，已排除 assignment 對應的 item ID 不得重新出現在 R3，並保留 1 個 item 供 Official 發布時凍結；若改為要求 5 個的 R3，則整次拒絕且不建立 run／snapshot／assignment，不得因 R1 assignment 排除而回補可用池（FR-010d／FR-010e／FR-010f-2）。
 
 ### Requirement: SC-054 成功標準
 
