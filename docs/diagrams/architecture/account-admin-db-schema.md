@@ -7,7 +7,7 @@
 - **範圍**：account 001–005、account-020、admin-006、admin-007。admin-007 規格仍為 **Draft**，且其表是否需要建立取決於 §5 D-9。
 - **不歸屬任何單一 spec**：同一張 `users` 表被 001、003、005、006 共同修改，因此放在 `docs/diagrams/architecture/`，不隨任何 spec 進 `specs/_archive/`。各 spec 的 plan.md「實體與資料模型」段落應連結本文件，不各自複製欄位表。
 - **狀態：草稿**。§5 仍有阻擋性待裁決，定案前不得據以產生 migration。
-- **NoteCraft 規劃檢視**：[`database-schema.er.json`](./database-schema.er.json) 對應 `/view/diagrams/architecture/database-schema.er` 的 Wiki／Diagram。它只投影本文件 §3 的 9 張候選表（61 欄、6 個候選 FK），當中 2 張是否存在取決於 D-9；目前已落地業務表為 0，其他模組留在[盤點總帳](./database-table-inventory.md)。改動欄位字典後執行 `node scripts/check-database-schema.mjs` 檢查投影差異。
+- **NoteCraft 規劃檢視**：[`database-schema.er.json`](./database-schema.er.json) 對應 `/view/diagrams/architecture/database-schema.er` 的 Wiki／Diagram。它只投影本文件 §3 的 9 張候選表（62 欄、6 個候選 FK），當中 2 張是否存在取決於 D-9；目前已落地業務表為 0，其他模組留在[盤點總帳](./database-table-inventory.md)。改動欄位字典後執行 `node scripts/check-database-schema.mjs` 檢查投影差異。
 - **驗證方式**：本文件不執行 SQL。每條限制的正確性在實作時由 Alembic migration 的 upgrade／downgrade／roundtrip 測試，以及 §4 指定的測試驗證。
 
 ## 1. 關鍵設計決定
@@ -27,6 +27,9 @@
 | 角色權限矩陣表形 | 逐格一列（`admin_role_permission`）＋整份矩陣一個版本號（`admin_role_permission_version`，單列表） | 007 關鍵實體 RolePermissionMatrix、RolePermissionVersion |
 | 矩陣樂觀鎖粒度 | 整份矩陣共用一個版本號，不逐格加版本 | 007 FR-005b、區塊 D（衝突時整頁重新載入） |
 | `permission_key` 白名單 | 放在後端程式常數，不建權限鍵表 | 007 `PERMISSION_KEYS_SOURCE = backend_whitelist`、FR-003a |
+| 邀請連結與作廢 | invite 有效 24 小時；成功使用記 `used_at`，作廢記 `invalidated_at`；重發先作廢舊連結 | 006 FR-006c、004 FR-009A；原 D-2 已裁決 |
+| 通知偏好缺列 | 六項事件的兩種頻道均視為開啟；讀取不建列，儲存一次寫足六列 | 005 FR-013F；原 D-5 已裁決 |
+| seeder 建立與保護 | 明確、冪等 bootstrap 指令只建立新帳號，拒絕提升既有非 seeder；SQLite／PG 均禁止清除或刪除 seeder，角色異動交易序列化後核對最後一位 active 超管 | 006 FR-008e／FR-008f；原 D-7 已裁決 |
 | 約束命名 | 交給 `NAMING_CONVENTION`（`column_0_N_name`），不逐一手寫 `name=` | `backend/app/db/base.py` |
 
 ## 2. ERD
@@ -71,6 +74,7 @@ erDiagram
         char token_hash UK
         timestamptz expires_at
         timestamptz used_at "nullable"
+        timestamptz invalidated_at "nullable; distinct from used"
         timestamptz created_at
     }
     account_email_change_request {
@@ -133,7 +137,7 @@ erDiagram
 | `account_token_family`／`refresh_tokens.family_id` | ADR-021、account-020 FR-001／FR-002、005 FR-010 |
 | `account_token_family.started_at` | foundation FR-076、account-020 FR-002 |
 | `refresh_tokens.grace_reissued_at`／`revoked_reason` | foundation FR-075、account-020 FR-003／FR-004 |
-| `account_password_token` | 004；006 FR-006a；ADR-013（reset token 存於 DB） |
+| `account_password_token` | 004 FR-009A；006 FR-006a／FR-006c；ADR-013（reset token 存於 DB） |
 | `account_email_change_request` | 005 FR-004C–FR-004M |
 | `account_notification_preference` | 005 FR-013B–FR-013E |
 | `audit_event` | 006 FR-013、007 FR-010；表形依 ADR-032（**Proposed**，見 §5 D-4） |
@@ -201,7 +205,8 @@ erDiagram
 | `purpose` | varchar | 否 | `reset`＝忘記密碼；`invite`＝受邀帳號首次設定密碼 | 建立時 | P-03、P-06 |
 | `token_hash` | char(64) | 否 | 連結 token 的雜湊 | 建立時 | — |
 | `expires_at` | timestamptz | 否 | 到期時間 | 建立時 | P-01、P-06 |
-| `used_at` | timestamptz | 是 | 使用或作廢時間；null＝未使用。**不另存狀態欄**：有效／已使用／已過期由 `used_at` 與 `expires_at` 推導 | 使用成功，或因改密碼、改 email、停用而作廢時 | P-01、P-02、P-05 |
+| `used_at` | timestamptz | 是 | 成功設定密碼的時間；null＝尚未成功使用，不代表仍有效 | 一次性連結成功使用時 | P-01、P-02、P-08 |
+| `invalidated_at` | timestamptz | 是 | 連結作廢時間；null＝未作廢，仍須核對期限與 `used_at` | 重發、改密碼、改 email 或停用時 | P-01、P-03、P-05、P-08、P-09 |
 | `created_at` | timestamptz | 否 | 寄出時間 | 建立時 | — |
 
 ### 3.5 account_email_change_request：email 變更申請
@@ -284,8 +289,8 @@ erDiagram
 | U-04 | CK | `role IN ('user','super_admin')` | DB | DB：未知值失敗 | 006 PlatformUser、ADR-021 |
 | U-05 | CK | seeder 必定是 active super_admin：`NOT is_seeder OR (role='super_admin' AND is_active)` | DB | DB：seeder 列停用或降級各失敗 | 006 FR-008c；007 FR-008b |
 | U-06 | CK | 最多一位 seeder | DB 部分唯一索引 `WHERE is_seeder` | DB：第二筆失敗；M：downgrade 後索引消失 | 006 FR-008c |
-| U-07 | SM | `is_seeder` 只能在初始化時設為 true，之後不可改回 false 或移轉；seeder 列不可刪除。U-05 只檢查單列當下狀態，不涵蓋旗標本身的變更，因此需另外保證 | 應用層不提供此路徑＋PG trigger | SVC：清除旗標被拒；PG：直接 UPDATE 旗標或 DELETE seeder 列被 trigger 擋下 | 006 FR-008c；007 FR-008b（含刪除） |
-| U-08 | CC | 任何時刻至少一位 active super_admin，**併發**停用或降級時也必須成立。不得採「先查數量、再更新」的兩步寫法（SQLite 驅動延遲開始交易，兩步之間沒有鎖） | 單一條件式 UPDATE（條件內含 active super_admin 數量 > 1），依 rowcount 判定；或 SQLite 改用 `BEGIN IMMEDIATE` | SVC（SQLite）與 PG：兩個連線同時停用彼此 → 恰一個成功，active super_admin ≥ 1 | 006 FR-008d |
+| U-07 | SM | `is_seeder` 只能由明確的冪等 bootstrap 建立新帳號時設為 true，不得把既有非 seeder 列升權；之後不可改回 false 或移轉，seeder 列不可刪除。U-05 只檢查單列當下狀態，不涵蓋旗標本身變更 | 應用層不提供此路徑＋SQLite／PG 各自的 trigger | SQLite 與 PG：直接 UPDATE 旗標或 DELETE seeder 列均被擋下；bootstrap 同身份重跑無副作用，既有非 seeder 或不同身份失敗且舊 session 權限不變 | 006 FR-008e／FR-008f；007 FR-008b |
+| U-08 | CC | 任何時刻至少一位 active super_admin，併發停用或降級時亦須成立。PostgreSQL 對不同目標列執行「單一條件式 UPDATE（內含 COUNT）」仍可能 write skew，不得視為安全 | PG：同一交易先取得固定鍵 `pg_advisory_xact_lock`，再重讀數量並變更；SQLite：在讀取／變更前 `BEGIN IMMEDIATE`；所有角色／狀態寫入路徑共用此協定 | SVC（SQLite 與 PG）：正常有 seeder 時併發停用兩位非 seeder 可均成功且仍保有 seeder；恰兩位 active、無 seeder 的遷移前測試資料中，併發停用最多一個成功，最後仍有 active super_admin | 006 FR-008d／FR-008f |
 | U-09 | CD | `hashed_password` 為 null 時可免舊密碼設定密碼；判定條件不得改為 `google_subject IS NOT NULL`，否則已設密碼又連結 Google 的帳號會被免除舊密碼驗證 | 應用層 | API：有密碼且有 `google_subject` 的帳號改密碼時缺 `current_password` → 拒絕 | 005 FR-006、FR-008 |
 | U-10 | XT | Google 連結（canonical email 相符且 `email_verified=true`）時同一交易：寫入 `google_subject`、`hashed_password=null`、`credential_version+1`、撤銷全部 family；`email_verified` 非 true → 拒絕，不寫任何列 | 應用層單一交易 | SVC：連結後密碼為 null、版本增加、family 全撤銷；`email_verified=false` → 無任何寫入；中途失敗 → 全部回滾 | ADR-035、account-020 FR-007 |
 | U-11 | CD | `google_subject` 唯一，且允許多筆 null | DB | DB：兩筆 null 成功、兩筆相同值失敗（SQLite＋PG） | ADR-035 |
@@ -322,13 +327,15 @@ erDiagram
 
 | ID | 類型 | 規則 | 執行位置 | 實作時驗證 | 來源 |
 |---|---|---|---|---|---|
-| P-01 | SM | 狀態由資料推導：`used_at` 非 null → used；否則 `now > expires_at` → expired；否則 valid | 應用層 | SVC：三種狀態各一 | 004 FR-009 |
-| P-02 | CC | 一次性使用：`UPDATE ... SET used_at=now WHERE id=:id AND used_at IS NULL AND expires_at > now`，rowcount=0 視為失效 | 條件式 UPDATE | SQLite 與 PG：同一 token 兩個連線同時使用 → 恰一個成功 | ADR-013（one-time token） |
-| P-03 | CK | 同一使用者同一 `purpose` 最多一筆未使用 token | DB 部分唯一索引 `(user_id, purpose) WHERE used_at IS NULL` | DB：第二筆未使用失敗；M：PG 與 SQLite 的部分索引都生效 | 設計建議 |
+| P-01 | SM | 內部狀態由資料推導：`used_at` 非 null → used；`invalidated_at` 非 null → invalidated；否則 `now >= expires_at` → expired；其餘 valid。invalidated／expired 對外均回「連結無法使用」，不可冒稱已使用或成功 | 應用層 | SVC：四種內部狀態與通用不可用回應；作廢列無成功結果 | 004 FR-009A、006 FR-006c |
+| P-02 | CC | 一次性使用：`UPDATE ... SET used_at=now WHERE id=:id AND used_at IS NULL AND invalidated_at IS NULL AND expires_at > now`，rowcount=0 視為失效 | 條件式 UPDATE | SQLite 與 PG：同一 token 兩個連線同時使用 → 恰一個成功；作廢列無法使用 | ADR-013、004 FR-009A |
+| P-03 | CK | 同一使用者同一 `purpose` 最多一筆未使用且未作廢 token；過期但未作廢的列仍占名額，重新核發前必須明確作廢 | DB 部分唯一索引 `(user_id, purpose) WHERE used_at IS NULL AND invalidated_at IS NULL` | DB：第二筆未使用且未作廢失敗；M：PG 與 SQLite 的部分索引都生效；SVC：過期舊列可於作廢後替換 | 006 FR-006c；設計建議 |
 | P-04 | CC | 同一 email 併發的忘記密碼請求觸發 P-03 衝突時，回應必須與一般情況相同 | 應用層處理 `IntegrityError` | API：並發兩請求，兩個回應的 status 與 body 相同，且與不存在的 email 相同 | 004 FR-004 |
-| P-05 | XT | 改密碼成功、email 驗證成功、停用帳號時，作廢該使用者全部未使用 token | 應用層同一交易 | SVC：改 email 後，舊信箱中的重設連結失效 | 設計建議（延伸 005 FR-004K、006 FR-008a 的撤銷範圍） |
-| P-06 | CD | `purpose='invite'` 的有效期限 | — | 待 §5 D-2 | 006 FR-006a |
+| P-05 | XT | 改密碼成功、使用者 email 驗證成功、**管理員改 email 成功**或停用帳號時，以 `invalidated_at` 作廢該使用者全部未使用且未作廢 token；不得寫 `used_at` | 應用層與原帳號異動同一交易 | SVC：使用者驗證 email 或管理員改 email 後，舊重設／邀請連結均失效，`used_at` 仍為 null；任一步失敗全部回滾 | 004 FR-009A、006 FR-006c；延伸 005 FR-004K、006 FR-007 |
+| P-06 | CD | `purpose='invite'` 有效期限為核發後 24 小時；`reset` 仍依 ADR-013 的 30 分鐘 | 應用層發行時計算 `expires_at` | SVC：invite 在 24 小時前可用、達 24 小時拒絕；reset 保持 30 分鐘 | 006 FR-006c、ADR-013 |
 | P-07 | XT | 006 新增使用者＝建立帳號＋建立 invite token＋寄信；寄信失敗不得留下使用者列。不得在持有 DB 寫入鎖時呼叫外部寄信服務 | 應用層 | SVC：模擬寄信失敗 → `users` 無此 email；API：回應顯示寄信錯誤 | 006 FR-006b |
+| P-08 | CK | `used_at` 與 `invalidated_at` 不可同時非 null，成功使用與作廢互斥 | DB CHECK | SQLite 與 PG：兩時間均有值時直接 INSERT／UPDATE 失敗 | 004 FR-009A、006 FR-006c |
+| P-09 | CC | 重發 reset／invite 時，在同一交易先作廢同一 `(user_id, purpose)` 未使用且未作廢的舊列，再建立新列；不得以到期時間作部分索引條件 | 應用層交易＋P-03 唯一索引 | SQLite 與 PG：兩個重發競爭時，最後至多一筆未作廢列；過期舊列不阻擋替換 | 006 FR-006c、004 FR-009A |
 
 ### 4.4 account_email_change_request
 
@@ -341,14 +348,14 @@ erDiagram
 | E-05 | CC | 重送冷卻：`WHERE last_sent_at <= now - cooldown` 條件式 UPDATE | 應用層 | API：冷卻時間內連點兩次 → 只寄一封 | 005 FR-004L |
 | E-06 | XT | 驗證時新 email 已被他人使用 → 觸發 U-01，回「Email 已被使用」，本列不變 | DB＋應用層 | API：兩人申請同一 email，先驗證者成功，後者得到可理解的錯誤 | 005 邊界情況 |
 | E-07 | XT | 驗證成功同一交易：更新 canonical `users.email`、清除 token、`credential_version+1`、撤銷全部 family（R-09）、作廢 password token（P-05） | 應用層 | SVC：任一步失敗 → 全部回滾；舊 access／refresh 均失效 | 005 FR-004E／FR-004F／FR-004K、account-020 FR-007／FR-009 |
-| E-08 | XT | 管理員在 006 修改 email 時，同一交易寫 canonical email、`credential_version+1`、撤銷全部 family 並清除待驗證變更申請，避免舊連結覆蓋管理員修改 | 應用層 | SVC：使用者申請 x → 管理員改為 y → 舊連結失效，email 維持 y，舊 JWT 失效 | 006 FR-007、account-020 FR-007／FR-009 |
+| E-08 | XT | 管理員在 006 修改 email 時，同一交易寫 canonical email、`credential_version+1`、撤銷全部 family、依 P-05 作廢未使用的 reset／invite 連結，並清除待驗證變更申請，避免舊連結覆蓋管理員修改 | 應用層 | SVC：使用者申請 x → 管理員改為 y → 舊驗證／重設／邀請連結皆失效，email 維持 y，舊 JWT 失效；失敗全部回滾 | 006 FR-007、004 FR-009A、account-020 FR-007／FR-009 |
 
 ### 4.5 account_notification_preference
 
 | ID | 類型 | 規則 | 執行位置 | 實作時驗證 | 來源 |
 |---|---|---|---|---|---|
 | N-01 | CK | `event_key` 限 005 定義的 6 個值 | DB＋Pydantic `Literal` | DB：未知值失敗；M：downgrade 移除 CHECK | 005 FR-013E |
-| N-02 | CD | 沒有資料列時的預設值 | — | 待 §5 D-5 | 005 |
+| N-02 | CD | 沒有資料列時，該事件的站內與 email 兩頻道均視為 true；讀取不建列 | 應用層讀取投影 | SVC：新帳號六事件全開且讀取後仍為 0 列 | 005 FR-013F／SC-011A |
 | N-03 | XT | 儲存為整份覆蓋：同一交易 upsert 6 列 | 應用層 | SVC：連續儲存兩次結果一致，列數恆為 6 | 005 FR-013E |
 
 ### 4.6 audit_event
@@ -406,17 +413,14 @@ erDiagram
 
 | ID | 題目 | 選項 | 建議 | 阻擋 migration |
 |---|---|---|---|---|
-| D-2 | invite token 有效期限（006 未定義）；被作廢的 token 在 004 三種狀態中顯示為哪一種 | 沿用 reset 的期限或另訂；作廢顯示為 used | 補 006 條文 | 否 |
 | D-4 | 稽核依 Proposed ADR-032 建共用表，或 006 自建表；另外 ADR-032 事件模型含 `task_id`、表名為 `audit_events`，本文件兩者皆未採用 | (a) ADR-032 先轉 Accepted，表形完全依 ADR (b) 006 自建 `admin_user_audit_log`。另外 ADR-032 的 admin 動作清單沒有矩陣儲存的動作，保存期限也未訂，而 007 FR-010 要求至少 1 年（A-05） | (a)，`task_id` 保留為可空欄以供後續模組使用；ADR-032 補矩陣儲存動作與保存期限 | **是** |
-| D-5 | 通知偏好沒有資料列時的預設值 | 全開／全關 | 補 005 條文 | 否 |
-| D-7 | seeder 由誰、何時建立 | bootstrap 指令／data migration／環境變數指定首位 super_admin | bootstrap 指令 | 否 |
 | D-9 | 矩陣是否真的參與授權判斷。007 使用者故事 2 寫「新配置成為平台後續授權判斷基準」，但 ADR-021 的 `require_role` 以程式內的角色集合判斷、007 使用者故事 3 要求 admin 兩頁用 RoleGuard 僅允許 `super_admin`、014 AC-2.2／AC-2.4 以固定的 task role 決定能否進入頁面，且沒有任何其他 spec 或 ADR 引用 `permission_key` | (a) 矩陣為授權依據：所有守門改查 `permission_key`，需新 ADR，並改寫 006、014、015 以鍵描述權限；每次請求讀矩陣或依 foundation FR-054 快取 (b) 矩陣可編輯並留稽核，但守門仍依角色，007 需改寫使用者故事 2 並在畫面上說明 (c) V1 矩陣改為唯讀展示，刪除編輯、樂觀鎖、稽核需求（007 MAJOR 改版），不建 §3.8、§3.9 兩張表 | 需維護者依論文需求裁決；技術面傾向 (c)：沒有下游使用者，且 (a) 無法表達 014／015 中「reviewer 唯讀」「只看自己的工時」這類規則 | **是**（決定兩張表是否存在） |
 | D-10 | reviewer 的 `task.detail.view` 在預設矩陣標為「✅（唯讀）」，但 `allowed` 是 boolean；白名單也沒有「編輯任務詳情」的鍵 | (a) 新增鍵 `task.detail.edit`，`allowed` 維持 boolean (b) `allowed` 改為三值（不允許／唯讀／完整） | (a) | **是**（D-9 選 (a)、(b) 時；決定欄位型別或列數） |
 | D-11 | 007 授權判斷規則允許同一人在同一任務同時有多個 task role，但 014 FR-005d 在新增成員時排除已在任務中的人，`TaskMembership` 每列只有一個 `task_role` | (a) 允許多角色，`task_membership` 唯一鍵為 `(task_id, user_id, task_role)`，014 補條文 (b) 一人一角色，唯一鍵為 `(task_id, user_id)`，007 刪除多角色條文 | 屬 task-management 盤點範圍，於該模組盤點時裁決 | 否（不影響本文件的表） |
 | D-12 | 白名單新增鍵時的預設值（M-08） | (a) 取 V1 預設矩陣，未列者為 false (b) 一律 false (c) 一律 true | (a) | 否 |
 | D-13 | 除了 M-03、M-04，是否還有不可變更的格。例如 `user` 的 `dashboard.view` 若可關閉，007 FR-007 的無權限導向目標 `/dashboard` 本身就不可進入；「⛔（需 task role）」的格是否完全不存 | 列出固定格清單並補 007 條文；⛔ 格不存 | 固定 `dashboard.view`；⛔ 格不存 | 否（不改表形，只改 CHECK 與種子資料） |
 
-**已裁決**：N-1 採既有 auth 命名例外與新表模組前綴（ADR-021、foundation FR-105）；D-1 密碼可空（001 plan v2.2.0、account-020 FR-010）；D-3 最多一次寬限重發（account-020 FR-004）；D-6 以每請求 `credential_version` 比對實現高風險事件立即失效（ADR-021、account-020 FR-002／FR-007）；D-8 採 canonical email 與 `lower(email)` 唯一索引（account-020 FR-009）。這些不再列為 migration 阻擋；D-4／D-9／D-10 等仍未決。
+**已裁決**：N-1 採既有 auth 命名例外與新表模組前綴（ADR-021、foundation FR-105）；D-1 密碼可空（001 plan v2.2.0、account-020 FR-010）；D-2 invite 24 小時且 `invalidated_at` 區別作廢（006 FR-006c、004 FR-009A）；D-3 最多一次寬限重發（account-020 FR-004）；D-5 缺列通知全開（005 FR-013F）；D-6 以每請求 `credential_version` 比對實現高風險事件立即失效（ADR-021、account-020 FR-002／FR-007）；D-7 冪等 bootstrap（006 FR-008e／FR-008f）；D-8 採 canonical email 與 `lower(email)` 唯一索引（account-020 FR-009）。這些不再列為 migration 阻擋；D-4／D-9／D-10 等仍未決。
 
 ## 6. 刻意不做
 

@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/SteveLin100132/notecraft/main/plugins/er-diagram-renderer/schema.json",
   "meta": {
     "title": "Label Suite 資料庫規劃 ER Diagram（account／admin）",
-    "description": "**規劃圖，並非已部署 Schema。** 目前已部署業務表：0；本頁顯示 account／admin 欄位字典中的 9 張候選表、61 欄與 6 個候選 FK，其中兩張權限矩陣表是否建立仍待 D-9 裁決。欄位、鍵與連線來自 [account/admin 實體層字典](/notes/diagrams/architecture/account-admin-db-schema) §2–§3；未決議題見該文件 §5。其餘 task／dataset／annotation 模組仍在 [資料表盤點總帳](/notes/diagrams/architecture/database-table-inventory)，不以假表加入此圖。\n\n**讀圖方式：** Wiki 逐表看欄位與決策狀態；Diagram 搜尋表名或欄名，點表聚焦已明列的候選 FK。圖中連線不代表 migration 已建立。",
+    "description": "**規劃圖，並非已部署 Schema。** 目前已部署業務表：0；本頁顯示 account／admin 欄位字典中的 9 張候選表、62 欄與 6 個候選 FK，其中兩張權限矩陣表是否建立仍待 D-9 裁決。欄位、鍵與連線來自 [account/admin 實體層字典](/notes/diagrams/architecture/account-admin-db-schema) §2–§3；未決議題見該文件 §5。其餘 task／dataset／annotation 模組仍在 [資料表盤點總帳](/notes/diagrams/architecture/database-table-inventory)，不以假表加入此圖。\n\n**讀圖方式：** Wiki 逐表看欄位與決策狀態；Diagram 搜尋表名或欄名，點表聚焦已明列的候選 FK。圖中連線不代表 migration 已建立。",
     "source": "docs/diagrams/architecture/account-admin-db-schema.md §2–§3; docs/diagrams/architecture/database-table-inventory.md",
     "backTo": "/notes/diagrams/architecture/account-admin-db-schema"
   },
@@ -309,7 +309,13 @@
           "name": "used_at",
           "type": "timestamptz",
           "required": "nullable",
-          "note": "使用或作廢時間；null＝未使用。**不另存狀態欄**：有效／已使用／已過期由 `used_at` 與 `expires_at` 推導；規則：P-01、P-02、P-05"
+          "note": "成功設定密碼的時間；null＝尚未成功使用，不代表仍有效；規則：P-01、P-02、P-08"
+        },
+        {
+          "name": "invalidated_at",
+          "type": "timestamptz",
+          "required": "nullable",
+          "note": "連結作廢時間；null＝未作廢，仍須核對期限與 `used_at`；規則：P-01、P-03、P-05、P-08、P-09"
         },
         {
           "name": "created_at",
@@ -318,7 +324,7 @@
           "note": "寄出時間"
         }
       ],
-      "description": "**候選表／設計草案，尚未建立 migration。** 重設密碼與受邀設定密碼共用一次性連結表。來源：account/admin §3.4、004 與 006 FR-006a。D-2 邀請期限與作廢顯示仍待裁決；只保存雜湊。"
+      "description": "**候選表／設計草案，尚未建立 migration。** 重設密碼與受邀設定密碼共用一次性連結表。invite 有效 24 小時，`used_at` 僅記成功使用，`invalidated_at` 記作廢；作廢或過期對外回通用不可使用結果。來源：account/admin §3.4、004 FR-009A、006 FR-006c；只保存雜湊。"
     },
     {
       "name": "account_email_change_request",
@@ -414,7 +420,7 @@
           "note": "是否寄 email；規則：N-03"
         }
       ],
-      "description": "**候選表／設計草案，尚未建立 migration。** 每位使用者、每種事件一列，複合主鍵為 `(user_id, event_key)`。來源：account/admin §3.6、005 FR-013B–FR-013E。D-5 無資料列時的預設開關仍待裁決。"
+      "description": "**候選表／設計草案，尚未建立 migration。** 每位使用者、每種事件一列，複合主鍵為 `(user_id, event_key)`。缺列時兩頻道預設開啟；讀取不建列，儲存一次寫足六列。來源：account/admin §3.6、005 FR-013F。"
     },
     {
       "name": "audit_event",
