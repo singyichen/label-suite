@@ -20,7 +20,7 @@ Issue #1160 的標記／審核資料須在同一 task 退回 draft、關閉舊 c
 
 ## Reviewer derivation and live authorization
 
-015 FR-093 保留單人接力：Dry 以 `run_id × dataset_item_id` 為 per-sample 指派／黏著群組，該 item 的多個 ReviewUnit 由同一 reviewer 審；Official 以 `run_id × assignment_id` 為單位。已儲存的**審核提交**推導 sticky reviewer；未送出草稿不黏著，未黏住單位從 014 FR-010t 的當次 run 凍結候選快照中，選取目前仍符合資格的人員。凍結候選快照記錄當時輸入，不是持久化 `ReviewAssignment`，也不授予永久操作權。014 的同名概念僅為唯讀推導投影，不可成為第二份可與提交分歧的真相。
+015 FR-093 保留單人接力：Dry 以 `run_id × dataset_item_id` 為 per-sample 指派／黏著群組，該 item 的多個 ReviewUnit 由同一 reviewer 審；Official 以 `run_id × assignment_id` 為單位。已儲存的**審核提交**推導 sticky reviewer；未送出草稿不黏著，未黏住單位從 `specs/task-management/014-task-detail/spec.md` FR-010t 的當次 run 凍結候選快照中，選取目前仍符合資格的人員。凍結候選快照記錄當時輸入，不是持久化 `ReviewAssignment`，也不授予永久操作權。014 的同名概念僅為唯讀推導投影，不可成為第二份可與提交分歧的真相。
 
 歷史黏著與提交、候選及責任鏈保留；停用 membership 或撤銷權限不刪除它們，也不能為了繞過停用而改派已黏住單位。每次正式讀取、提交、仲裁或未黏住分派，仍須依 015 FR-104、SC-013 與 ADR-037 重新驗證目前帳號、明選 active task role、active membership、對應矩陣格、assignment／reviewer 資格及資料可見範圍；路由的 `role`／使用者 ID 不能建立權限。AC-7.2 的停用情境須拒絕下一次讀取與寫入，歷史紀錄則保持可追溯。
 
