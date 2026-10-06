@@ -1,8 +1,8 @@
 # Label Suite — 里程碑規劃（Milestone Plan）
 
-**版本：** 2.0.0
+**版本：** 2.1.0
 
-**最後驗證：** 2026-08-19（17-spec inventory）
+**最後驗證：** 2026-10-06（21-spec inventory）
 
 **文件定位：** Navigation；產品里程碑目標，不是 feature 行為或實作狀態正典
 
@@ -11,18 +11,18 @@
 
 ---
 
-## 2026-08-19 交付狀態摘要
+## 2026-10-06 交付狀態摘要
 
-本次直接核對 `STATUS.md` 的 17 份現存 spec：
+本次直接核對 `STATUS.md` 的 21 份現存 spec：
 
 | Pipeline 狀態 | 數量 | Spec |
 |---|---:|---|
-| `plan-ready` | 2 | foundation-000、account-001 |
-| `in-progress` | 5 | dashboard-012、task-management-010／013／014、dataset-016 |
-| `spec-ready` | 9 | account-002～005、admin-006～007、shared-008、annotation-015、dataset-017 |
+| `done` | 2 | foundation-000、annotation-015 |
+| `in-progress` | 12 | foundation-001～002、account-020、admin-006、dashboard-012、shared-008／019、task-management-010／013／014、dataset-016～017 |
+| `spec-ready` | 6 | account-001～005、admin-007 |
 | `deferred` | 1 | shared-018；不屬目前交付能力 |
 
-規格成熟度表示 spec／plan／tasks／實作流程走到哪裡；產品里程碑表示希望可展示的能力與依賴。兩者不可互相推導。Foundation 目前是 `plan-ready`，而不是已完成的產品功能。
+規格成熟度表示 spec／plan／tasks／實作流程走到哪裡；產品里程碑表示希望可展示的能力與依賴。兩者不可互相推導。`done` 只代表該列流程已合併至 `main`、尚未封存，不代表正式系統已交付：annotation-015 目前為 prototype 實作先行、無產品碼變更，foundation-000 的 F-17 Observability 與 Celery 相關需求仍延後（`STATUS.md` 對應列）。
 
 ## 現行產品契約
 
@@ -38,8 +38,8 @@
 
 | 里程碑 | 可展示成果 | Owner spec | 依賴與驗收證據 | 主要風險 |
 |---|---|---|---|---|
-| **M0** 工程基準 | 跨模組可依共同約束建置與驗證 | foundation-000 | Foundation plan 與成功標準 | 上游約束變動影響全線 |
-| **M1** 帳號與導覽 | Email／Password 入口、共用導覽與角色 gating | 001、008 | 角色邊界與 zh/en、RWD 驗收 | 002 仍只是 Google SSO no-op 入口 |
+| **M0** 工程基準 | 跨模組可依共同約束建置與驗證 | foundation-000～002 | Foundation plan 與成功標準 | 上游約束變動影響全線 |
+| **M1** 帳號與導覽 | Email／Password 入口、共用導覽與角色 gating | 001、008、020 | 角色邊界與 zh/en、RWD 驗收 | 002 仍只是 Google SSO no-op 入口 |
 | **M2** 任務入口 | 角色化 Dashboard 與任務列表 | 012、010 | membership、搜尋、篩選與多 output 標籤 | 依賴任務與成員資料一致性 |
 | **M3** 任務建立 | 四步精靈建立可組合 output 任務 | 013 | JSON upload、8-key registry、config 驗證 | producer 與 consumer 同步漂移 |
 | **M4** 標記作業 | 依 `outputs[]` 執行試標與正式標記 | 015 | 逐型作答、保存、提交與資料公平驗收 | 複合輸出；詞級匯出的 tokenizer 版本與對齊（017 FR-042） |
@@ -51,7 +51,7 @@
 ## 歷史附件：2026-06 技術實作計畫（Frozen）
 
 > [!WARNING]
-> 以下 v1.0.1 內容只保留作為當時的規劃與決策背景，**不是現行需求、實作狀態、開發指令或驗收清單**。其中 endpoint、store、hook、資料表、library、coverage、日期、舊型別與簡寫狀態均已被上方現行摘要及 owner specs 取代；不得用來判定 feature 已交付。
+> 以下 v1.0.1 內容只保留作為當時的規劃與決策背景，**不是現行需求、實作狀態、開發指令或驗收清單**。其中所列 spec 版本與 `spec-ready`／`plan-ready` 標示為 2026-06 當時快照、「五種 task_type」已由 `input_type + outputs[]` 與八個 output key 取代（ADR-029、013），endpoint、store、hook、資料表、library、coverage、日期、舊型別與簡寫狀態均已被上方現行摘要及 owner specs 取代；不得用來判定 feature 已交付。
 
 ### 歷史 Milestone Details（里程碑詳述）
 
@@ -137,7 +137,7 @@
 
 - [ ] Dashboard 依 `system_role` → `task_membership` 動態分流，顯示對應視角
 - [ ] 五種 Dashboard 視圖均有對應後端 API（`GET /api/v1/dashboard/summary`）
-- [ ] Dry Run 全員完成時 Dashboard badge 通知邏輯（即使在 M5 才有完整狀態機，此處先以 mock 示範）
+- [ ] 試標回合完成（標註、必要審核與必要仲裁皆完成，且例外池已清空；IAA 不是完成條件，014 FR-008a v5.0.0）時 Dashboard badge 通知邏輯（即使在 M5 才有完整狀態機，此處先以 mock 示範）
 - [ ] 任務列表：`GET /api/v1/tasks`（含分頁、狀態篩選、關鍵字搜尋）
 - [ ] `user`（系統角色）只看自己有成員資格的任務；`super_admin` 看全平台
 - [ ] 任務刪除（軟刪除）：`DELETE /api/v1/tasks/{task_id}`（僅 `project_leader` 與 `super_admin` 可執行；僅允許 `status = draft` 的任務；非 `draft` 或無權限的直接呼叫必須被拒絕）

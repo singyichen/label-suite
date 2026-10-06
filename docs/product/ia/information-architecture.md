@@ -192,7 +192,7 @@ flowchart TD
   TDETAIL -->|指派 Dry Run| ALIST
   TDETAIL -->|指派 Official Run| ALIST
   ALIST -->|點擊單筆資料| ANNOT
-  ANNOT -->|Dry Run 全員完成\n→ Dashboard badge 通知| DASH
+  ANNOT -->|試標回合完成（標註＋必要審核＋必要仲裁）\n→ Dashboard badge 通知| DASH
   ANNOT -->|Official Run 全員完成\n→ 通知 project_leader| TDETAIL
 
   USERS -->|Admin tab| ROLES
@@ -239,7 +239,7 @@ flowchart TD
   - **偏好設定：** 外觀三態切換（跟隨系統 / 淺色 / 深色）
   - **密碼設定：** Email / Password 帳號顯示現有密碼 + 新密碼 + 確認密碼；Google SSO 帳號顯示設定密碼流程
   - **通知設定：** 以表格列出通知事件，欄位為 `事件` / `站內通知` / `電子郵件`，每個事件各有兩個 toggle
-- **通知事件：** `標記員完成標記作業`、`審核員完成審核`、`試標全員完成`、`正式標記全員完成`、`你被分配標記清單`、`你被分配審核清單`
+- **通知事件：** `標記員完成標記作業`、`審核員完成審核`、`試標完成`（標註、必要審核與必要仲裁皆完成，014 FR-008a）、`正式標記全員完成`、`你被分配標記清單`、`你被分配審核清單`
 - **Email 變更：** 留在 `/profile`，以 `emailChangeState` / `emailSentState` 呈現輸入新 Email 與寄送驗證信狀態
 - **語言切換：** 導覽列語言按鈕採單一語言代碼顯示（`ZH` 或 `EN`），切換後即時更新文案與 `aria-label`
 - **離開方式：** 儲存成功 → 停留；Navbar Logo → `dashboard`；Email 驗證成功 → `login`
@@ -374,7 +374,7 @@ flowchart TD
 - **任務狀態轉換：**
   - 系統狀態機：`draft` → `dry_run_in_progress` → `waiting_iaa_confirmation` → `official_run_in_progress` → `completed`
   - IA 顯示階段：stepper 維持 `draft` → `trial stage` → `official_run_in_progress` → `completed`；`dry_run_in_progress` 與 `waiting_iaa_confirmation` 皆屬 `trial stage`
-  - **Dry Run 完成通知：** 僅當任務內每位 `active annotator` 都滿足 `assigned_count == completed_count`，系統才可自動切換至 `waiting_iaa_confirmation`，並在 Dashboard 待處理事項區新增 badge 提醒任務 `project_leader`
+  - **Dry Run 完成通知：** 僅當任務內每位 `active annotator` 都滿足 `assigned_count == completed_count`，且全部 `dry_run` 審核單位已定稿、無爭議中單位、`dry_run` 例外池已清空（014 FR-008a v5.0.0；IAA 不是條件），系統才可自動切換至 `waiting_iaa_confirmation`，並在 Dashboard 待處理事項區新增 badge 提醒任務 `project_leader`
   - **Official Run 完成 gate：** 正式標記全數提交後，仍須所有應完成 review unit 定案、無未解爭議、應仲裁項目完成且品質指標可用，才可切換至 `completed`；狀態轉換需可追溯，紀錄契約以 active 014 spec 為準
 - **任務狀態與執行控制（Overview 區塊）：**
   - 頂層階段只由 stepper 表示，不另以 `草稿` / `已隔離` badge 或 stage meta pills 重複呈現
@@ -682,6 +682,7 @@ specs/foundation/000-foundation/
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.5.1 | 2026-10-06 | 試標完成通知措辭由「Dry Run 全員完成」改為對齊 014 FR-008a v5.0.0：標註、必要審核與必要仲裁皆完成且 `dry_run` 例外池已清空，IAA 不是完成條件（issue #1157） |
 | 1.5.0 | 2026-08-19 | 同步審核員模型（逐標記員審核 + 當場直接修正 + 爭議池第三人仲裁，取代通過/退回聚合語意，含旅程 C 序列圖）、`task-new` 任務類型敘述改為 `input_type` + `outputs[]` 組合模型（取代固定 `task_type` registry 語意，`dataset-analysis` 統計/品質章節不在本次調整範圍）；依 issue #202 |
 | 1.4.3 | 2026-05-29 | 補充 Foundation Spec 與 IA / SDD 的關係：Foundation 作為所有 feature spec 的上游工程基準，新增 P0 Foundation 開發批次與 `000-foundation` spec 條目 |
 | 1.4.2 | 2026-05-19 | 同步通知設定 IA：`profile` 納入通知設定區塊，通知欄位改為「電子郵件」，事件增為六項並新增「正式標記全員完成」；Official Run 全員完成時通知 `project_leader` |

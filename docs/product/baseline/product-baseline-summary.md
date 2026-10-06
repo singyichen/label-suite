@@ -1,8 +1,8 @@
 # Label Suite — 產品基線摘要
 
-**版本**：1.2.0
-**基線 SHA**：`2328392f2fc50ca171c485582e26ab7d577be52b`
-**盤點日期**：2026-08-19（17 份現存 spec；`shared/018-help-button` 為 deferred，不是目前交付能力）
+**版本**：1.2.1
+**基線 SHA**：`2a27dc6793e1c3a6460dbf99e9c54c1dda0f9cf5`
+**盤點日期**：2026-10-06（21 份現存 spec；`shared/018-help-button` 為 deferred，不是目前交付能力）
 **用途**：供 Agent 快速導覽產品全景；不是 feature 行為 SSOT。閱讀順序與權威邊界見 [README 的 Agent Context Contract](../agent-context-contract.md)，交付實作狀態只以 [`specs/STATUS.md`](../../../specs/STATUS.md) 為準。
 **基礎來源**：[`information-architecture.md`](../ia/information-architecture.md) · [`impact-map.md`](../impact-map/impact-map.md) · [`story-map.md`](../story-map/story-map.md)
 
@@ -84,7 +84,7 @@ Label Suite 是一套**可配置、通用型 NLP 標記與自動評估平台**�
 ### 協作流程
 
 1. `project_leader` 以四步驟建立任務：taxonomy、可組合 outputs、啟動設定與 guidelines；資料集上傳只接受 JSON
-2. 在 Task Detail 的成員 tab 指派 `annotator` / `reviewer`，發布試標並由相同樣本產生 IAA gate
+2. 在 Task Detail 的成員 tab 指派 `annotator` / `reviewer`，發布試標；試標回合的標註、必要審核與必要仲裁皆完成後（014 FR-008a），由相同樣本產生 IAA 供確認，IAA 未達標僅為顧問性警示（014 FR-010o-3）
 3. IAA 確認後發布正式標記，標記員提交資料；審核員以每個 `sample × annotator × run` 的 review unit 逐筆定案
 4. 不一致可直接修正；無法決定的項目交由合格且非當事人的 arbiter 仲裁
 5. 所有正式提交、必要 review unit 與仲裁完成，沒有未解爭議且品質指標可用後，任務才進入 `completed`

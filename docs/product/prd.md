@@ -1,14 +1,14 @@
 # Label Suite — 產品需求文件（Product Requirements Document）
 
-**版本：** 1.2.0
-**日期：** 2026-08-19
+**版本：** 1.2.1
+**日期：** 2026-10-06
 **狀態：** Draft
 **撰寫者：** Team Lead（基於 Research Phase 綜合）
 **可追溯來源：**
-- `specs/_governance/constitution.md` v1.31.0
-- `docs/product/ia/information-architecture.md` v1.5.0
-- `docs/product/story-map/story-map.md` v1.4.0
-- `docs/product/impact-map/impact-map.md` v1.2.0
+- `specs/_governance/constitution.md` v1.33.0
+- `docs/product/ia/information-architecture.md` v1.5.1
+- `docs/product/story-map/story-map.md` v1.5.0
+- `docs/product/impact-map/impact-map.md` v1.3.0
 - `docs/product/functional-map/functional-map.md`（探索性輔助視圖，非行為權威）
 - `docs/product/functional-map/task-type-taxonomy.md`（輸出 taxonomy 導覽）
 - `docs/product/baseline/product-baseline-summary.md`（Agent 快速導覽，非 feature SSOT）
@@ -157,7 +157,7 @@ Foundation 提供可擴充、可觀測與安全的共同能力；API、資料模
 | FR-ID | 描述 | 優先級 | Spec 來源 |
 |-------|------|--------|-----------|
 | FR-D01 | 儀表板依使用者系統角色與任務角色動態顯示對應視圖（一般使用者 / Project Leader / Annotator / Reviewer / Super Admin 共 5 種） | P0 | spec 012 |
-| FR-D02 | Dry Run 全員完成時，Dashboard 待處理事項區顯示 badge 提醒 `project_leader` | P1 | spec 012；IA §4 |
+| FR-D02 | 試標回合完成（標註、必要審核與必要仲裁皆完成，且 `dry_run` 例外池已清空；IAA 不是完成條件）時，Dashboard 待處理事項區顯示 badge 提醒 `project_leader` | P1 | spec 012；spec 014 FR-008a；IA §4 |
 | FR-D03 | Super Admin 視圖顯示平台使用者統計（總用戶、PL/Annotator/Reviewer 數量）及全平台任務概況 | P2 | spec 012 |
 | FR-D04 | 語言切換（ZH / EN）於所有登入後頁面即時生效，不重新載入頁面 | P1 | spec 012；IA §2.1 |
 
@@ -266,3 +266,4 @@ Foundation 提供可擴充、可觀測與安全的共同能力；API、資料模
 | 1.0.0 | 2026-06-02 | 初始版本；依 research phase 綜合結果建立，彙整產品目標、使用者旅程、功能需求、非功能需求、架構約束、範疇外與開放問題 |
 | 1.1.0 | 2026-08-19 | 同步審核員模型（逐標記員審核 + 當場直接修正 + 爭議池第三人仲裁，取代通過/退回聚合語意）、gold 語意（僅 Official Run 審核定案後產生）、輸出類型改為 `input_type` + `outputs[]` 組合模型（取代固定任務類型 enum）；依 issue #202 |
 | 1.2.0 | 2026-08-19 | 建立產品文件治理：將可變技術契約回鏈 feature specs／Constitution／ADR，校正組態、審核、資料安全與 IAA 摘要，新增 Agent Context Contract 與 decision log 入口 |
+| 1.2.1 | 2026-10-06 | 同步可追溯來源版本（constitution、IA、story map、impact map）；FR-D02 試標完成通知改對齊 014 FR-008a v5.0.0（issue #1157） |
