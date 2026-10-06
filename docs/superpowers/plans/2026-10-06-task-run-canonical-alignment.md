@@ -155,8 +155,8 @@
 
 **Interfaces:** Task 2 的 014 正典新增四條 SC，generator 預期將 `screen-inventory.md` 的 014 列 SC 計數由 48 更新為 52；Task 3／4 若新增 SC，亦須同步更新 013／015 列。這是正典變更後的必要衍生檢視同步，完成後 Project SDD lint 的 `INVENTORY_FRESHNESS` 應消失。
 
-- [ ] 記錄 Red：執行 `node scripts/gen-screen-inventory.mjs --check`，預期顯示 `design/system/screen-inventory.md is stale`。
-- [ ] 只由 generator 重生該檔；執行 `node scripts/gen-screen-inventory.mjs --check`、`bash scripts/inventory-tests.sh`、`git diff --check`，檢視生成差異，單檔提交。
+- [x] 記錄 Red：執行 `node scripts/gen-screen-inventory.mjs --check`，預期顯示 `design/system/screen-inventory.md is stale`。
+- [x] 只由 generator 重生該檔；執行 `node scripts/gen-screen-inventory.mjs --check`、`bash scripts/inventory-tests.sh`、`git diff --check`，檢視生成差異，單檔提交。
 
 ### Task 13: Archive, verification, and delivery
 
