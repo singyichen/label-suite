@@ -45,7 +45,7 @@
 | [`architecture/core-data-model-er.md`](./architecture/core-data-model-er.md) | `er` | Mermaid `erDiagram` | 核心資料模型 ER 圖，整合各 spec 的關鍵實體（issue #669） |
 | [`architecture/account-admin-db-schema.md`](./architecture/account-admin-db-schema.md) | `er` | Mermaid `erDiagram` | account 001～005＋admin-006／007 實體層 DB schema：ERD、欄位字典、限制清單、待裁決事項 |
 | [`architecture/database-table-inventory.md`](./architecture/database-table-inventory.md) | `er` | Mermaid `erDiagram` | 資料表盤點方法、已落地／候選表狀態、跨模組關聯骨架與 migration 前待決事項 |
-| [`architecture/database-schema.er.json`](./architecture/database-schema.er.json) | `er` | NoteCraft Wiki／Diagram | account/admin 8 張候選表的逐欄規劃檢視（2 張受 D-9 裁決；已落地業務表 0）；開啟 `/view/diagrams/architecture/database-schema.er` |
+| [`architecture/database-schema.er.json`](./architecture/database-schema.er.json) | `er` | NoteCraft Wiki／Diagram | account/admin 9 張候選表、61 欄與 6 個候選 FK 的逐欄規劃檢視（2 張受 D-9 裁決；已落地業務表 0）；開啟 `/view/diagrams/architecture/database-schema.er` |
 
 `archify` 要**同時提交 `.json` 與 `.html`**：`.json` 是唯一可 diff、可驗證的原始檔，`.html` 是唯一不需工具鏈即可閱讀的成品，缺任一邊都會讓圖變成不可維護的黑盒。改圖時改 `.json` 再重跑 `deliver` 重生 `.html`，不要手改 `.html`。
 

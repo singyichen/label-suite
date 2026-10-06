@@ -9,10 +9,10 @@
 | 層級 | 目前可用資料 | 用法 |
 |---|---|---|
 | 實際 schema | Alembic revision／ORM：0 張業務表 | 日後以 migration 和資料庫 metadata 反查已落地狀態 |
-| 實體層草案 | [account/admin schema](./account-admin-db-schema.md)：8 張候選表、欄位字典、限制、待裁決 | 該文件 §5 的阻擋項結案後，才能作為 migration 依據 |
+| 實體層草案 | [account/admin schema](./account-admin-db-schema.md)：9 張候選表、61 欄、6 個候選 FK、限制與待裁決 | 該文件 §5 的其餘阻擋項結案後，才能作為 migration 依據 |
 | 概念層 | [跨模組 ER 圖](./core-data-model-er.md)：規格實體、推導值與投影 | 用於發現缺表與錯誤的關聯假設，不能直接當 DDL |
 
-**NoteCraft 規劃檢視**：[`database-schema.er.json`](./database-schema.er.json) 會顯示在 `/view/diagrams/architecture/database-schema.er` 的 Wiki／Diagram。第一階段只收錄 account/admin 欄位字典中的 **8 張候選表**；兩張權限矩陣表受 D-9 裁決，**已落地業務表仍為 0**。task／dataset／annotation 等模組在下方總帳保留缺口，待實體層欄位字典與鍵形狀定案後逐步加入。修改 §3 字典或此 JSON 時執行 `node scripts/check-database-schema.mjs`；欄位與 FK 計數由檢查器重新計算。
+**NoteCraft 規劃檢視**：[`database-schema.er.json`](./database-schema.er.json) 會顯示在 `/view/diagrams/architecture/database-schema.er` 的 Wiki／Diagram。第一階段只收錄 account/admin 欄位字典中的 **9 張候選表、61 欄與 6 個候選 FK**；兩張權限矩陣表受 D-9 裁決，**已落地業務表仍為 0**。task／dataset／annotation 等模組在下方總帳保留缺口，待實體層欄位字典與鍵形狀定案後逐步加入。修改 §3 字典或此 JSON 時執行 `node scripts/check-database-schema.mjs`；欄位與 FK 計數由檢查器重新計算。
 
 ## 2. 盤點方法：沿用 TrendMile 的「盤點 → Schema → 投影」
 
@@ -46,14 +46,15 @@ Label Suite 的對應做法：
 
 | 候選表 | 狀態 | 已知識別／關聯 | 正典與待決 |
 |---|---|---|---|
-| `users` | 實體草案 | `id` PK；email 唯一性待決 | [account/admin §3.1](./account-admin-db-schema.md#31-users平台帳號)；命名與密碼 nullability 見 §5 N-1／D-1 |
-| `refresh_tokens` | 實體草案 | `id` PK；`user_id → users` | account/admin §3.2；寬限期重發上限 D-3 |
-| `account_password_token` | 實體草案 | `id` PK；`user_id → users` | account/admin §3.3 |
-| `account_email_change_request` | 實體草案 | `id` PK；`user_id → users` | account/admin §3.4 |
-| `account_notification_preference` | 實體草案 | `(user_id, event_key)` PK；`user_id → users` | account/admin §3.5 |
-| `audit_event` | 實體草案 | `id` PK；`actor_user_id → users` | account/admin §3.6；ADR-032 仍 Proposed，D-4 阻擋 |
-| `admin_role_permission` | 實體草案／有條件 | `(role_type, role_key, permission_key)` PK | account/admin §3.7；是否存在取決於 D-9 |
-| `admin_role_permission_version` | 實體草案／有條件 | `id = 1` 的單列版本 | account/admin §3.8；是否存在取決於 D-9 |
+| `users` | 實體草案 | `id` PK；canonical email 以 `lower(email)` 唯一；`hashed_password` 可空；`credential_version` 非空 | [account/admin §3.1](./account-admin-db-schema.md#31-users平台帳號)、account-020；N-1／D-1／D-6／D-8 已裁決 |
+| `account_token_family` | 實體草案 | `id` PK；`user_id → users`；`started_at` 為 session 起點 | [account/admin §3.2](./account-admin-db-schema.md#32-account_token_family一次登入的-token-家族)、account-020 FR-001／FR-003 |
+| `refresh_tokens` | 實體草案 | `id` PK；`family_id → account_token_family`；不重複保存 user／登入起點 | account/admin §3.3、account-020 FR-001／FR-004；D-3 已裁決 |
+| `account_password_token` | 實體草案 | `id` PK；`user_id → users` | account/admin §3.4 |
+| `account_email_change_request` | 實體草案 | `id` PK；`user_id → users` | account/admin §3.5 |
+| `account_notification_preference` | 實體草案 | `(user_id, event_key)` PK；`user_id → users` | account/admin §3.6 |
+| `audit_event` | 實體草案 | `id` PK；`actor_user_id → users` | account/admin §3.7；ADR-032 仍 Proposed，D-4 阻擋 |
+| `admin_role_permission` | 實體草案／有條件 | `(role_type, role_key, permission_key)` PK | account/admin §3.8；是否存在取決於 D-9 |
+| `admin_role_permission_version` | 實體草案／有條件 | `id = 1` 的單列版本 | account/admin §3.9；是否存在取決於 D-9 |
 
 ### 任務與 run
 
@@ -137,9 +138,8 @@ erDiagram
 
 | 優先 | 問題 | 為何阻擋 | 來源 |
 |---|---|---|---|
-| P0 | 表名採 singular/module prefix，還是 account 舊 plan 的複數名？ | 同一資料庫不能同時用兩套命名契約產生 FK 與 repository | [foundation FR-105](../../../specs/foundation/000-foundation/spec.md)、account/admin §5 N-1 |
-| P0 | `users` 的密碼可空、token 寬限期與通用稽核表形 | 直接決定欄位 nullability、索引與表是否存在 | account/admin §5 D-1／D-3／D-4／D-6 |
-| P0 | 角色權限矩陣是否參與授權？ | 決定兩張 admin 表是否存在，不能在未裁決時宣稱共有 8 張確定表 | account/admin §5 D-9／D-10 |
+| P0 | 通用稽核表形 | 決定 audit 表名、欄位與保存規則；auth 表的 N-1／D-1／D-3／D-6／D-8 已裁決 | account/admin §5 D-4；account-020、ADR-021 |
+| P0 | 角色權限矩陣是否參與授權？ | 決定兩張 admin 表是否存在，不能在未裁決時宣稱共有 9 張確定表 | account/admin §5 D-9／D-10 |
 | P0 | 標記資料的任務／run／round 唯一鍵與審核指派 FK | 014 `review_unit_id` 與 015 複合定址仍未一致；重複樣本會串錯決策 | 014／015 關鍵實體、015 FR-049／FR-051／FR-093 |
 | P0 | dataset item、隱藏答案與 lineage 的儲存邊界 | 影響抽樣 FK、答案隔離及匯出可重現性 | 主憲法 III／XIV／XVI、backend constitution VI |
 | P1 | 設定／指引／IAA 報告是否獨立表與版本鍵 | 決定 `TaskConfig`、`TaskGuidelineConfig`、`OutputTypeIAAReport` 的持久化形狀 | 013／014／017 關鍵實體 |
