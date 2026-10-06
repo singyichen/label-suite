@@ -9,10 +9,10 @@
 | 層級 | 目前可用資料 | 用法 |
 |---|---|---|
 | 實際 schema | Alembic revision／ORM：0 張業務表 | 日後以 migration 和資料庫 metadata 反查已落地狀態 |
-| 實體層草案 | [account/admin schema](./account-admin-db-schema.md)：9 張候選表、61 欄、6 個候選 FK、限制與待裁決 | 該文件 §5 的其餘阻擋項結案後，才能作為 migration 依據 |
+| 實體層草案 | [account/admin schema](./account-admin-db-schema.md)：9 張候選表、62 欄、6 個候選 FK、限制與待裁決 | 該文件 §5 的其餘阻擋項結案後，才能作為 migration 依據 |
 | 概念層 | [跨模組 ER 圖](./core-data-model-er.md)：規格實體、推導值與投影 | 用於發現缺表與錯誤的關聯假設，不能直接當 DDL |
 
-**NoteCraft 規劃檢視**：[`database-schema.er.json`](./database-schema.er.json) 會顯示在 `/view/diagrams/architecture/database-schema.er` 的 Wiki／Diagram。第一階段只收錄 account/admin 欄位字典中的 **9 張候選表、61 欄與 6 個候選 FK**；兩張權限矩陣表受 D-9 裁決，**已落地業務表仍為 0**。task／dataset／annotation 等模組在下方總帳保留缺口，待實體層欄位字典與鍵形狀定案後逐步加入。修改 §3 字典或此 JSON 時執行 `node scripts/check-database-schema.mjs`；欄位與 FK 計數由檢查器重新計算。
+**NoteCraft 規劃檢視**：[`database-schema.er.json`](./database-schema.er.json) 會顯示在 `/view/diagrams/architecture/database-schema.er` 的 Wiki／Diagram。第一階段只收錄 account/admin 欄位字典中的 **9 張候選表、62 欄與 6 個候選 FK**；兩張權限矩陣表受 D-9 裁決，**已落地業務表仍為 0**。task／dataset／annotation 等模組在下方總帳保留缺口，待實體層欄位字典與鍵形狀定案後逐步加入。修改 §3 字典或此 JSON 時執行 `node scripts/check-database-schema.mjs`；欄位與 FK 計數由檢查器重新計算。
 
 ## 2. 盤點方法：沿用 TrendMile 的「盤點 → Schema → 投影」
 

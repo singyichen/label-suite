@@ -1,7 +1,7 @@
 ---
 功能分支: feat/account/004-forgot-reset-password
 建立日期: 2026-04-05
-版本: 1.1.6
+版本: 1.2.0
 狀態: Clarified
 ---
 
@@ -197,6 +197,7 @@ forgot/reset 頁在手機與桌機均需可讀可操作。
 - **FR-007**：reset 在 `valid` 狀態下，送出前必須驗證新密碼與確認密碼必填且一致。
 - **FR-008**：reset 在 `valid` 狀態送出成功後，必須進入 loading，loading 期間全頁不可互動，並於約 `1200ms` 顯示成功面板。
 - **FR-009**：reset 在 `expired` / `used` 狀態時，必須隱藏表單並顯示 token 錯誤面板。
+- **FR-009A**：真實後端連結若因重發、改密碼、Email 變更或帳號停用而作廢，必須與成功使用的連結區分；作廢連結不可設定密碼，回覆通用「連結無法使用」，不得顯示「已使用」或重設成功。`RESET_TOKEN_STATES` 仍只描述目前 prototype 的三種手動展示狀態。
 - **FR-010**：token 錯誤面板中的「重新申請」連結必須導向 `./forgot-password.html`。
 - **FR-011**：forgot/reset 頁面必須支援 `zh` / `en` 即時切換，並同步更新 `document.title` 與 `aria-label`。
 - **FR-011A**：語言狀態必須跨頁持久化；forgot/reset 與 login 間導頁後需沿用同語系。
@@ -275,6 +276,7 @@ flowchart LR
 - **SC-002**：forgot 成功文案保持不揭露帳號存在性的通用訊息。
 - **SC-003**：reset 在 `valid` 狀態可完成送出並顯示成功面板。
 - **SC-004**：reset 在 `expired` / `used` 狀態可正確顯示對應 token 錯誤文案。
+- **SC-004A**：後端作廢但未使用的 reset 連結不會設定密碼，也不會被顯示成成功使用；使用者收到通用不可使用結果。
 - **SC-005**：`zh` / `en` 切換可在 1 秒內更新主要文案與 `aria-label`。
 - **SC-005A**：切換語言後由 forgot/reset 導向 login 或互相切頁時，語系需維持一致。
 - **SC-006**：forgot/reset 送出後的 `1200ms` loading 期間，全頁互動元素不可被操作。
@@ -316,6 +318,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.2.0 | 2026-10-06 | Issue #1160 D-2：區分後端 token 作廢與真正使用，作廢連結回通用不可使用結果；保留 prototype 三狀態展示。 |
 | 1.1.6 | 2026-10-06 | 補列 account-020 對真實密碼重設後 session 的權威契約；原型 FR／SC 與頁面行為不變。 |
 | 1.1.5 | 2026-09-07 | Issue #671：於 流程圖 新增「重設密碼 token 技術序列圖」小節，連結置於本規格 `diagrams/` 的 `password-reset-token-flow.html`（`archify` `sequence` 圖），補上原型層狀態切換之外的後端 token 序列（Resend 寄送、`valid` / `expired` / `used` 三種驗證結果、作廢 token）；圖面內容引自 ADR-013 與本規格 FR-001–FR-010，未定義處標示為「規格未定義」而不自行裁定。純參考資料補充，未新增、修改或移除任何 FR/AC，走 Lightweight Path。 |
 | 1.1.4 | 2026-08-20 | Issue #261：新增 Prototype Traceability，分別對應 forgot 與 reset 原型、全頁 loading lock、可選 wireframe 參考及兩個設計層驗證檔；本規格維持多頁擁有權。 |
