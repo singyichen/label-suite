@@ -4,9 +4,9 @@
 
 ## 1. 正典來源
 
-**故事目標**：SC-001～SC-008 — 對每種失效／競爭結果建立可定位契約。
+**故事目標**：SC-001～SC-009 — 對每種失效／競爭結果建立可定位契約。
 
-- [x] 1.1 建立 `specs/account/020-auth-session-security/spec.md`，定義 FR-001～FR-010、AC-1.1～AC-4.2、SC-001～SC-008；已以 Project SDD lint 驗證。 [@main]
+- [x] 1.1 建立 `specs/account/020-auth-session-security/spec.md`，定義 FR-001～FR-010、AC-1.1～AC-4.2、SC-001～SC-009；已以 Project SDD lint 驗證。 [@main]
 - [x] 1.2 更新 `specs/STATUS.md`，登錄 account-020 為 `spec-ready`；容器建立後改 `change-open`。 [@main]
 - [x] 1.3 修訂 `docs/adr/021-jwt-refresh-token-auth.md`，使 token-family、立即失效、一次寬限與 `409` 成為 Accepted 決策。 [@main]
 - [x] 1.4 修訂 `specs/foundation/000-foundation/spec.md` 的 F-04／命名條款與對應情境，更新版本及 Changelog。 [@main]
@@ -27,9 +27,9 @@
 
 ## 3. 四層驗證與回寫
 
-**故事目標**：SC-001～SC-008 — OpenSpec、SDD、source checker 和 Source-Verify 各有獨立證據。
+**故事目標**：SC-001～SC-009 — OpenSpec、SDD、source checker 和 Source-Verify 各有獨立證據。
 
 - [x] 3.1 執行 `openspec validate auth-token-family-contract --type change`、`bash scripts/check-sdd.sh`、`node --test scripts/tests/check-database-schema.test.mjs`、`node scripts/check-database-schema.mjs` 和 NoteCraft schema 驗證；每個命令預期 exit `0`。 [@main]
 - [x] 3.2 檢查 NoteCraft Wiki／Diagram 實際畫面；若 local server 未啟動，先啟動對應 workspace 再驗證。 [@main]
-- [ ] 3.3 Source-Verify 每個 delta FR／SC、正典版本與 Changelog；完成 `openspec archive auth-token-family-contract` 後逐條核對 derived view 的正典引用，預期全部可定位。 [@main]
+- [x] 3.3 Source-Verify 每個 delta FR／SC、正典版本與 Changelog；完成 `openspec archive auth-token-family-contract` 後逐條核對 derived view 的正典引用，預期全部可定位。 [@main]
 - [ ] 3.4 完成 review、PR、CI 與 issue #1160 已驗證勾選；其他模組未驗證前不得勾。 [@main]
