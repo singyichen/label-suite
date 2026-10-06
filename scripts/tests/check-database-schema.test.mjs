@@ -72,12 +72,12 @@ const validData = {
       ],
     },
     {
-      name: 'admin_role_permission', description: 'Conditional on D-9', columns: [
+      name: 'admin_role_permission', description: 'Candidate draft; not deployed', columns: [
         { name: 'role_type', type: 'varchar', required: 'required', pk: true },
       ],
     },
     {
-      name: 'admin_role_permission_version', description: 'Conditional on D-9', columns: [
+      name: 'admin_role_permission_version', description: 'Candidate draft; not deployed', columns: [
         { name: 'id', type: 'smallint', required: 'system', pk: true },
       ],
     },
@@ -145,7 +145,7 @@ test('rejectsDuplicatesAndDanglingFk', () => {
   assert.match(errorsFor(dangling).join('\n'), /account_notification_preference\.user_id.*missing_parent/);
 });
 
-test('requiresResolvedPasswordNullabilityAndConditionalTableLabels', () => {
+test('requiresResolvedPasswordNullabilityAndCandidateTableLabels', () => {
   const stalePassword = cloneData();
   stalePassword.tables[0].columns[1].required = 'pending';
   stalePassword.tables[0].columns[1].note = 'D-1 pending';
@@ -157,9 +157,87 @@ test('requiresResolvedPasswordNullabilityAndConditionalTableLabels', () => {
 
   for (const name of ['admin_role_permission', 'admin_role_permission_version']) {
     const data = cloneData();
-    data.tables.find((table) => table.name === name).description = 'Draft';
-    assert.match(errorsFor(data).join('\n'), new RegExp(`${name}.*D-9`));
+    data.tables.find((table) => table.name === name).description = 'Conditional on D-9';
+    assert.match(errorsFor(data).join('\n'), new RegExp(`${name}.*(?:conditional|D-9)`, 'i'));
   }
+});
+
+test('admin007Enumerates42ApplicableBooleanCellsAndFixedGrants', () => {
+  const spec = readFileSync(new URL('../../specs/admin/007-role-settings/spec.md', import.meta.url), 'utf8');
+  const between = (start, end) => {
+    const from = spec.indexOf(start);
+    assert.notEqual(from, -1, `Missing admin-007 heading: ${start}`);
+    const to = spec.indexOf(end, from + start.length);
+    assert.notEqual(to, -1, `Missing admin-007 heading: ${end}`);
+    return spec.slice(from + start.length, to);
+  };
+  const keys = [...between('### 權限鍵白名單（V1）', '### 角色 × 權限預設矩陣（V1）')
+    .matchAll(/^\|[^\n]*\|\s*`([^`]+)`\s*\|/gm)].map((match) => match[1]);
+  const matrixRows = (start, end) => [...between(start, end)
+    .matchAll(/^\|\s*`([^`]+)`\s*\|([^\n]+)$/gm)]
+    .map((match) => [match[1], match[2].split('|').slice(0, -1).map((cell) => cell.trim())]);
+  const system = new Map(matrixRows('#### 系統角色（平台層級）', '#### 任務角色（任務層級）'));
+  const task = new Map(matrixRows('#### 任務角色（任務層級）', '#### 授權判斷規則'));
+
+  assert.equal(keys.length, 17, 'V1 has nine system keys and eight task keys');
+  assert.deepEqual(new Set([...system.keys(), ...task.keys()]), new Set(keys));
+  assert.deepEqual(task.get('task.detail.view'), ['✅', '✅', '❌']);
+  assert.deepEqual(task.get('task.detail.edit'), ['✅', '❌', '❌']);
+  assert.ok([...task.values()].flat().every((cell) => !cell.includes('⛔')));
+  assert.deepEqual(system.get('dashboard.view'), ['✅', '✅']);
+  for (const [key, cells] of system) {
+    if (task.has(key)) assert.ok(cells.every((cell) => cell.includes('⛔')), `${key} has no system-role rows`);
+    if (key.startsWith('admin.')) assert.deepEqual(cells, ['❌', '✅'], `${key} is fixed`);
+  }
+  assert.equal([...system.values()].flat().filter((cell) => !cell.includes('⛔')).length, 18);
+  assert.equal([...task.values()].flat().length, 24);
+  assert.equal([...system.values()].flat().filter((cell) => !cell.includes('⛔')).length
+    + [...task.values()].flat().length, 42);
+  assert.match(spec, /42\s*(?:列|格)/);
+});
+
+test('dictionaryAndNoteCraftResolveD9ThroughD13WithoutChangingPhysicalCounts', () => {
+  const markdown = readFileSync(new URL('../../docs/diagrams/architecture/account-admin-db-schema.md', import.meta.url), 'utf8');
+  const source = parseAccountAdminSchema(markdown);
+  const data = JSON.parse(readFileSync(new URL('../../docs/diagrams/architecture/database-schema.er.json', import.meta.url), 'utf8'));
+  const matrix = markdown.match(/### 3\.8 admin_role_permission[^\n]*\n([\s\S]*?)(?=\n### 3\.9)/)?.[1];
+  const rules = markdown.match(/### 4\.7 admin_role_permission[^\n]*\n([\s\S]*?)(?=\n### 4\.8)/)?.[1];
+  assert.ok(matrix, 'Missing matrix dictionary');
+  assert.ok(rules, 'Missing matrix constraints');
+  assert.match(matrix, /42\s*列/);
+  assert.match(matrix, /`allowed`\s*\|\s*boolean/);
+  assert.doesNotMatch(matrix, /boolean 表達不了|D-10.*(?:待|見 §5)/);
+  assert.match(rules, /dashboard\.view/);
+  assert.match(rules, /dashboard\.view[^\n]*(?:true|允許|開啟)/);
+  assert.match(rules, /(?:缺列|查不到列|不存在的格).*(?:拒絕|不允許)/);
+  assert.match(markdown, /\(task_id,\s*user_id,\s*task_role\)/);
+  const resolved = markdown.slice(markdown.indexOf('**已裁決**'));
+  for (const decision of ['D-9', 'D-10', 'D-11', 'D-12', 'D-13'])
+    assert.match(resolved, new RegExp(decision), `${decision} resolution`);
+  assert.doesNotMatch(markdown, /^\| D-(?:9|10|11|12|13) \|/gm, 'decisions no longer pending');
+
+  for (const [label, tables] of [['dictionary', source.tables], ['NoteCraft', data.tables]]) {
+    assert.equal(tables.length, 9, `${label} table count`);
+    assert.equal(tables.reduce((sum, table) => sum + table.columns.length, 0), 63, `${label} column count`);
+    assert.equal(tables.reduce((sum, table) => sum + table.columns.filter((column) => column.fk).length, 0), 6, `${label} FK count`);
+    for (const name of ['admin_role_permission', 'admin_role_permission_version']) {
+      const table = tables.find((entry) => entry.name === name);
+      assert.ok(table, `${label} retains ${name}`);
+      if (label === 'NoteCraft') {
+        assert.match(table.description, /候選/);
+        assert.match(table.description, /尚未/);
+        assert.doesNotMatch(table.description, /有條件候選|D-9.*(?:決定是否|若取消|尚未)/);
+      }
+    }
+  }
+  const projectedMatrix = data.tables.find((table) => table.name === 'admin_role_permission');
+  assert.deepEqual(projectedMatrix.columns.filter((column) => column.pk).map((column) => column.name),
+    ['role_type', 'role_key', 'permission_key']);
+  assert.equal(projectedMatrix.columns.find((column) => column.name === 'allowed').type, 'boolean');
+  assert.equal(projectedMatrix.columns.find((column) => column.name === 'allowed').required, 'required');
+  assert.equal(source.tables.find((table) => table.name === 'audit_events').columns
+    .find((column) => column.name === 'task_id').fk, undefined);
+  assert.deepEqual(validateErData(source, data), []);
 });
 
 test('parsesRealAccountAdminDictionary', () => {
