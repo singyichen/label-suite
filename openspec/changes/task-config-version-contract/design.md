@@ -32,7 +32,7 @@ Issue #1160 需要讓後續 run 能追溯任務建立時通過驗證的完整 co
 
 本次只做文件與來源定位，沒有 ORM、migration、API、資料搬遷、ER 投影或已部署 Schema。後續資料庫切片需以獨立 Red／Green 證據在 SQLite Lite 與 PostgreSQL production 各自驗證：版本號正整數與同 task 唯一、`schema_version_no = version_no`、同 task 版本參照、建立交易全成或全退、冪等重送與併發競爭、registry 定義保留及 digest 重現。SQLite 每連線 FK 啟用、PostgreSQL 鎖與交易衝突、JSON/JSONB 差異均不能由純文件檢查代替。migration 的 upgrade、downgrade、roundtrip 與 API 安全測試須另立實作任務。
 
-本 change 的驗證先確認 013 FR-006／FR-006a／FR-006c／FR-006d、AC-4.3～4.5、SC-006、`TaskConfig`／`TaskGuidelineConfig` 均可在 v8.3.0 正典定位，OpenSpec delta 只鏡射這些條文；再分別執行 OpenSpec schema validation、Project SDD lint、適用 code/test gate 與 archive 後 Source-Verify。文件完成不代表資料庫行為已測或 change 已封存。
+本 change 的驗證先確認 013 FR-006／FR-006a／FR-006c／FR-006d、AC-4.3～4.5、SC-006、`TaskConfig`／`TaskGuidelineConfig` 均可在 v8.3.0 正典定位，OpenSpec delta 只鏡射這些條文；再分別執行 OpenSpec schema validation、Project SDD lint 與適用 code/test gate。archive 前完成 Source-Verify，archive 後逐條核對 derived view 的正典引用可定位。文件完成不代表資料庫行為已測或 change 已封存。
 
 ## Risks and rollback
 
