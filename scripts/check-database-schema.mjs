@@ -108,9 +108,12 @@ export function validateErData(source, data) {
 
   for (const name of ['admin_role_permission', 'admin_role_permission_version']) {
     const table = dataTables.get(name);
-    if (table && !/D-9/.test(table.description ?? '')) {
-      errors.push(`${name}: D-9 conditional table status must be explicit`);
-    }
+    if (!table) continue;
+    const description = table.description ?? '';
+    if (/(?:有條件候選|conditional|D-9.*(?:決定是否|若取消|尚未))/i.test(description))
+      errors.push(`${name}: stale D-9 conditional table status`);
+    if (!/(?:候選|candidate)/i.test(description) || !/(?:尚未|undeployed|not deployed)/i.test(description))
+      errors.push(`${name}: candidate and undeployed table status must be explicit`);
   }
   return errors;
 }

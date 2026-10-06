@@ -9,10 +9,10 @@
 | 層級 | 目前可用資料 | 用法 |
 |---|---|---|
 | 實際 schema | Alembic revision／ORM：0 張業務表 | 日後以 migration 和資料庫 metadata 反查已落地狀態 |
-| 實體層草案 | [account/admin schema](./account-admin-db-schema.md)：9 張候選表、63 欄、6 個候選 FK、限制與待裁決 | 該文件 §5 的其餘阻擋項結案後，才能作為 migration 依據 |
+| 實體層草案 | [account/admin schema](./account-admin-db-schema.md)：9 張候選表、63 欄、6 個候選 FK；D-9～D-13 已裁決 | 仍須另開獨立 migration 與雙資料庫驗證；本草案不是已部署 schema |
 | 概念層 | [跨模組 ER 圖](./core-data-model-er.md)：規格實體、推導值與投影 | 用於發現缺表與錯誤的關聯假設，不能直接當 DDL |
 
-**NoteCraft 規劃檢視**：[`database-schema.er.json`](./database-schema.er.json) 會顯示在 `/view/diagrams/architecture/database-schema.er` 的 Wiki／Diagram。第一階段只收錄 account/admin 欄位字典中的 **9 張候選表、63 欄與 6 個候選 FK**；共用稽核表 D-4 已裁決，兩張權限矩陣表受 D-9 裁決，**已落地業務表仍為 0**。task／dataset／annotation 等模組在下方總帳保留缺口，待實體層欄位字典與鍵形狀定案後逐步加入。修改 §3 字典或此 JSON 時執行 `node scripts/check-database-schema.mjs`；欄位與 FK 計數由檢查器重新計算。
+**NoteCraft 規劃檢視**：[`database-schema.er.json`](./database-schema.er.json) 會顯示在 `/view/diagrams/architecture/database-schema.er` 的 Wiki／Diagram。第一階段只收錄 account/admin 欄位字典中的 **9 張候選表、63 欄與 6 個候選 FK**；共用稽核表 D-4 與兩張權限矩陣候選表 D-9～D-13 均已裁決，**已落地業務表仍為 0**。task／dataset／annotation 等模組在下方總帳保留缺口，待實體層欄位字典與鍵形狀定案後逐步加入。修改 §3 字典或此 JSON 時執行 `node scripts/check-database-schema.mjs`；欄位與 FK 計數由檢查器重新計算。
 
 ## 2. 盤點方法：沿用 TrendMile 的「盤點 → Schema → 投影」
 
@@ -53,8 +53,8 @@ Label Suite 的對應做法：
 | `account_email_change_request` | 實體草案 | `id` PK；`user_id → users` | account/admin §3.5 |
 | `account_notification_preference` | 實體草案 | `(user_id, event_key)` PK；`user_id → users` | account/admin §3.6 |
 | `audit_events` | 實體草案 | `id` PK；人員事件的 `actor_user_id → users`、系統事件 actor 為 null；`task_id` 可空 UUID，尚無 task FK | account/admin §3.7；Accepted ADR-032，D-4 已裁決 |
-| `admin_role_permission` | 實體草案／有條件 | `(role_type, role_key, permission_key)` PK | account/admin §3.8；是否存在取決於 D-9 |
-| `admin_role_permission_version` | 實體草案／有條件 | `id = 1` 的單列版本 | account/admin §3.9；是否存在取決於 D-9 |
+| `admin_role_permission` | 實體草案 | `(role_type, role_key, permission_key)` 非空複合 PK；V1 僅 42 列適用格 | account/admin §3.8／§4.7；Accepted ADR-037；尚未 migration |
+| `admin_role_permission_version` | 實體草案 | `id = 1` 的候選單列版本，缺列拒絕 | account/admin §3.9／§4.7；Accepted ADR-037；尚未 migration |
 
 ### 任務與 run
 
@@ -62,7 +62,7 @@ Label Suite 的對應做法：
 |---|---|---|---|
 | `TaskDetail` → 任務主表 | 需設計 | `task_id`；建立者與使用者關聯 | [013 關鍵實體](../../../specs/task-management/013-task-new/spec.md#關鍵實體)、[014 關鍵實體](../../../specs/task-management/014-task-detail/spec.md#關鍵實體)；表名、config 版本與資料集 FK 未定 |
 | `TaskConfig`、`OutputConfig`、`TaskGuidelineConfig` → 任務設定／版本 | 可內嵌 | `outputs[]` 由 registry 驗證；`guideline_version` 被 trial round 引用 | 013／014 關鍵實體；須決定 JSONB 快照與指引歷史的保存邊界 |
-| `TaskMembership` → 成員關聯表 | 需設計 | `task_id`、`user_id`；task role | 014 關鍵實體；一人多角色與唯一鍵仍有 [D-11](./account-admin-db-schema.md#5-待裁決影響-migration) 衝突 |
+| `TaskMembership` → 成員關聯表 | 需設計 | `(task_id, user_id, task_role)` 為邏輯唯一識別；一人可在同一任務持多角色 | 014 關鍵實體、Accepted ADR-037；物理 PK、task FK 與 user-leading 查詢索引待 task 模組定案 |
 | `TrialRound` → 試標回合表 | 需設計 | `(task_id, round)`；`guideline_version` | 014 關鍵實體；`iaa_computation_status` 為現行欄位 |
 | `SampleSnapshot` → 抽樣快照表 | 需設計 | `sample_snapshot_id`、`task_id`；選樣 manifest | 014 關鍵實體；manifest 指向何處與樣本 FK 未定 |
 | `AnnotationListMaterialization` → run 發布紀錄 | 需設計 | `task_id`、`run_stage`、`trial_round?`、`sample_snapshot_id` | 014 關鍵實體；正式 run 的唯一鍵待定 |
@@ -94,7 +94,7 @@ Label Suite 的對應做法：
 | `TaskDetail` | `task_id`, `task_name`, `task_type`, `status`, `run_stage`, `settings`, `sampling_value`, `trial_round`, `target_agreement_overrides`, `min_annotators`, `isolation_enabled`, `reviewer_ids[]`, `arbiter_ids[]`, `sample_snapshot_id` | `settings`、config 與 `trial_round` 中哪些是儲存、哪些是讀取投影；dataset 識別 |
 | `TaskConfig` | `categories[]`, `input_types[]`, `outputs[]`, `field_role_map`, `dataset_file_name` | `outputs[]` JSONB 驗證與版本、資料集檔案的持久化參照 |
 | `TaskGuidelineConfig` | `annotator_guideline_text`, `annotator_guideline_assets[]`, `reviewer_guideline_text`, `reviewer_guideline_assets[]`, `force_guideline`, `guideline_version` | 歷史版本是否獨立保存；`TrialRound.guideline_version` 如何形成可約束的 FK |
-| `TaskMembership` | `task_id`, `user_id`, `task_role`, `membership_status` | 一人一角色或一人多角色的唯一鍵 |
+| `TaskMembership` | `task_id`, `user_id`, `task_role`, `membership_status` | 邏輯唯一鍵 `(task_id, user_id, task_role)` 已定；物理 task 表／FK、索引待設計 |
 | `ReviewAssignment` | `task_id`, `reviewer_id`, `review_unit_id`, `assigned_at`, `assigned_by`, `source`, `review_status` | `review_unit_id` 與 015 複合定址的映射；`source` 現行恆為 `auto_rotation` |
 | `TrialRound` | `task_id`, `round`, `sampling_value`, `guideline_version`, `prior_round_findings`, `guideline_change_summary`, `no_change_reason?`, `iaa_computation_status`, `created_by`, `created_at` | `(task_id, round)` 的約束、指引版本參照及回合狀態 CHECK |
 | `SampleSnapshot` | `sample_snapshot_id`, `task_id`, `sampling_value`, `trial_round`, `target_agreement_overrides`, `min_annotators`, `locked_at`, `locked_by`, `selection_manifest_ref` | manifest 儲存位置與不可變性保證 |
@@ -139,7 +139,7 @@ erDiagram
 | 優先 | 問題 | 為何阻擋 | 來源 |
 |---|---|---|---|
 | 已裁決 | 通用稽核表形 | D-4 採 `audit_events`，所有事件至少留一個日曆年；`task_id` FK 仍待 task 表及 PK 定案 | Accepted ADR-032、account/admin §3.7／§4.6 |
-| P0 | 角色權限矩陣是否參與授權？ | 決定兩張 admin 表是否存在，不能在未裁決時宣稱共有 9 張確定表 | account/admin §5 D-9／D-10 |
+| 已裁決 | 角色權限矩陣如何參與授權 | 兩張表保留為未部署候選；42 列初始格、固定格、CAS 與稽核目標依 ADR-037；runtime 與 migration 另案實作 | Accepted ADR-037、admin-007 v1.2.0、account/admin §4.7 |
 | P0 | 標記資料的任務／run／round 唯一鍵與審核指派 FK | 014 `review_unit_id` 與 015 複合定址仍未一致；重複樣本會串錯決策 | 014／015 關鍵實體、015 FR-049／FR-051／FR-093 |
 | P0 | dataset item、隱藏答案與 lineage 的儲存邊界 | 影響抽樣 FK、答案隔離及匯出可重現性 | 主憲法 III／XIV／XVI、backend constitution VI |
 | P1 | 設定／指引／IAA 報告是否獨立表與版本鍵 | 決定 `TaskConfig`、`TaskGuidelineConfig`、`OutputTypeIAAReport` 的持久化形狀 | 013／014／017 關鍵實體 |
