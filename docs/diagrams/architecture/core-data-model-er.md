@@ -286,6 +286,8 @@ erDiagram
 
 全 spec 最複雜的實體群。**`ReviewUnit` 的複合鍵與 `DisputeItem` 的推導性質是本圖的核心。**
 
+> `DisputeItem` 相關的關聯線與主鍵（`output_type`＋`item_key`）沿用 #1150 裁定前的既有畫法，僅表示「一個審核單位可有多個爭議項」，不代表已選定爭議項粒度，見文末「規格待定」。
+
 ```mermaid
 erDiagram
     TaskProfile {
@@ -485,7 +487,7 @@ flowchart LR
 
 | 圖上位置 | 標記內容 | 未定點 |
 |---------|---------|-------|
-| 圖 1、圖 4、圖 6 | `ReviewUnit` 到 `DisputeItem`、`ReviewDecision` 到 `DisputeItem` 的關聯基數，以及 `DisputeItem` 的 `output_type`／`item_key` 粒度 | **待 [#1150](https://github.com/singyichen/label-suite/issues/1150) 裁定**：014 FR-010u(5) 括號寫「爭議項（審核單位 × 輸出類型）」，015 FR-059 第 2、4 點與 FR-061 第 7 點則以 `outKey × 合併鍵` 為爭議項單位並禁止合併計數；兩處措辭不一致，尚無裁定，本圖不選邊 |
+| 圖 1、圖 4、圖 6 | `ReviewUnit` 到 `DisputeItem`、`ReviewDecision` 到 `DisputeItem` 的關聯基數，以及 `DisputeItem` 的 `output_type`／`item_key` 粒度 | **待 [#1150](https://github.com/singyichen/label-suite/issues/1150) 裁定**：014 FR-010u(5) 括號寫「爭議項（審核單位 × 輸出類型）」，015 FR-059 第 2、4 點與 FR-061 第 7 點則以 `outKey × 合併鍵` 為爭議項單位並禁止合併計數；兩處措辭不一致（015 FR-061 第 7 點自稱為該計數單位之定義），尚無裁定，本圖不選邊 |
 | 圖 1、圖 3 | `ReviewAssignment.review_unit_id` 與 `ReviewAssignment` 到 `ReviewUnit` 的關聯線 | 014 `ReviewAssignment` 仍列 `review_unit_id`，但 015 FR-051 的審核單位是三欄複合鍵，無單一 id 可指；正典未統一（非 #1150 範圍） |
 
 #1150 定案後另開單回頭補本圖；#1151（例外池以 outKey 為鍵）、#1146（arbiterIds 名冊）亦觸及同一塊資料模型，修完後須回頭核對。

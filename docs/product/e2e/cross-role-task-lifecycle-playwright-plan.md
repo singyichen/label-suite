@@ -9,7 +9,7 @@
 > - [w6-resilience-a11y.md](issue-180/phase3-drafts/w6-resilience-a11y.md) — 錯誤邊界 32 情境 ＋ a11y/i18n/responsive
 > - [w7-iaa-research-review.md](issue-180/phase3-drafts/w7-iaa-research-review.md) — IAA／抽樣／仲裁方法論審查
 >
-> **歷史快照（2026-10-06，issue #1156）**：上列 `issue-180/phase3-drafts/` 四份附件（w4～w7）是 2026-08 規劃時點的快照，內容未改動，仍以 `min_reviewers=2`、R01／R02 兩位審核員票決、五態 `approved`／`modified` 為前提；該模型已由 014 v3.0.0（`reviewer_ids`／`arbiter_ids`）與 015 v5.0.0（`REVIEW_UNIT_STATUS` 三態、FR-093 單人接力）取代。**本文 §2 的 fixture 與主線以現行正典為準，與附件衝突時以本文與正典為準**，附件不得再當作 fixture 依據。
+> **歷史快照（2026-10-06，issue #1156）**：上列 `issue-180/phase3-drafts/` 四份附件（w4～w7）及 `issue-180/` 下 w1、w3 兩份分析（同樣含 `min_reviewers` 與五態敘述）皆是 2026-08 規劃時點的快照，內容未改動，仍以 `min_reviewers=2`、R01／R02 兩位審核員票決、五態 `approved`／`modified` 為前提；該模型已由 014 v3.0.0（`reviewer_ids`／`arbiter_ids`）與 015 v5.0.0（`REVIEW_UNIT_STATUS` 三態、FR-093 單人接力）取代。**本文 §2 的 fixture 與主線以現行正典為準，與附件衝突時以本文與正典為準**，附件不得再當作 fixture 依據。
 >
 > **交付狀態（2026-08-20）**：實作輪（#212）已完成——PR #247（fixture）／#265（XROLE-01~09）／#273（XROLE-10~25）／#277（w6 情境）全 merge。原子測試結算（🟢 22／🟡 3 以 `test.fail()` 標注待 #189/#190）、w6 落點與實作期新發現見 [finding-register.md §F](issue-180/finding-register.md)；本文以下內容維持規劃時點原貌，狀態以 §F 為準。
 
