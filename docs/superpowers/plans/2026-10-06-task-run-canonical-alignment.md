@@ -139,7 +139,7 @@
 
 **Interfaces:** 逐項記錄 Task 1～9 的真實驗證證據，不把未建 migration／API 當完成。
 
-- [ ] 每個 change 的 task 只記其 owning spec 與相依 change；每個 artifact-producing task 對應一個檔案且尾綴唯一 `[@agent-name]` 派工標籤；明列依賴／平行標記。命令驗證 task 標明 exact command/result；每個 User Story phase 有正典 SC-ID `**故事目標**`；各檔獨立提交。
+- [x] 每個 change 的 task 只記其 owning spec 與相依 change；每個 artifact-producing task 對應一個檔案且尾綴唯一 `[@agent-name]` 派工標籤；明列依賴／平行標記。命令驗證 task 標明 exact command/result；每個 User Story phase 有正典 SC-ID `**故事目標**`；各檔獨立提交。
 
 ### Task 11: Status registry
 
@@ -164,9 +164,9 @@
 
 **Interfaces:** senior-qa 在 Task 13 前發現建立請求同 key 異內容未定義，以及 R3 累計抽樣未有獨立驗收情境。v8.3.0／v6.0.0 尚未合併，於同版 Changelog 記錄 QA 精化；任何新增 AC/SC 必須在 owning 正典先宣告，再由同 owner delta 鏡射。使用者另要求未來候選表採常見且語意清楚的命名；此切片的 task/run 候選名須由 DBA 檢查，實體字典與 auth 表更名留後續單獨切片。
 
-- [ ] 013 明定同一授權建立者／operation 的 key 與請求內容相符才重播，異內容拒絕且不回舊 task；新增獨立 AC，修正同版 Changelog，提交單檔。
-- [ ] 014 新增 R3 情境涵蓋兩個先前 Dry run、排除 item 不回池、最後一筆 Official 保留；修正 SC/Changelog，提交單檔。
-- [ ] 分別修訂 013／014 delta 並逐字比對，必要的 proposal／design／tasks 引用各以單檔任務同步；若 SC 計數變動只由 generator 重生 inventory。OpenSpec、SDD lint、Source-Verify 與 senior-qa scoped re-review 皆通過後，才進 Task 13。
+- [x] 013 明定同一授權建立者／operation 的 key 與請求內容相符才重播，異內容拒絕且不回舊 task；新增獨立 AC，修正同版 Changelog，提交單檔。
+- [x] 014 新增 R3 情境涵蓋兩個先前 Dry run、排除 item 不回池、最後一筆 Official 保留；修正 SC/Changelog，提交單檔。
+- [x] 分別修訂 013／014 delta 並逐字比對，必要的 proposal／design／tasks 引用各以單檔任務同步；若 SC 計數變動只由 generator 重生 inventory。OpenSpec、SDD lint、Source-Verify 與 senior-qa scoped re-review 皆通過後，才進 Task 13。
 
 ### Task 13: Archive, verification, and delivery
 
@@ -174,6 +174,6 @@
 
 **Interfaces:** archive 不得取代正典 Source-Verify；delta 只鏡射既有正典 FR／SC／AC，衍生 view 的每條正典引用都要定位。
 
-- [ ] 三個 change 各自完成 OpenSpec schema validation、Project SDD lint、senior-dba／architect／QA scenario／security／code-review 審查；記錄命令與結果。
+- [x] 三個 change 各自完成 OpenSpec schema validation、Project SDD lint、senior-dba／architect／QA scenario／security／code-review 審查；記錄命令與結果。
 - [ ] 所有 tasks 已驗證後依 013→014→015 順序 archive/write-back；逐條以 `rg` 驗證三份 archived delta／derived view 的 FR／AC／SC、ADR、檔案與原文子句可定位。各 archive 是 `governance-propagation` 例外：生成工具必須同時移動 change 並更新 derived view；完整檔案清單以 archive 執行輸出與 `git status` 確認。
 - [ ] 建立繁體中文 PR，等待所有 CI job（包括非 required 的 Prototype Playwright）完成且成功後合併；只勾選 issue #1160 真正完成的 task/run 正典決策，物理字典／ER 仍待下一計畫。
