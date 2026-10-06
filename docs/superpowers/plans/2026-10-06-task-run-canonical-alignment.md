@@ -131,7 +131,7 @@
 
 **Interfaces:** 只鏡射 Task 4 已變更的正典條文與驗收情境，保留相同 FR／SC／AC ID。
 
-- [ ] 寫 run／assignment 身分、submission-derived review 與 run-pinned 指引來源 delta，以 `openspec validate task-run-identity-contract --type change` 驗證結構，提交。
+- [x] 寫 run／assignment 身分、submission-derived review 與 run-pinned 指引來源 delta，以 `openspec validate annotation-run-identity-contract --type change` 驗證結構，提交。
 
 ### Task 10: OpenSpec execution record
 
