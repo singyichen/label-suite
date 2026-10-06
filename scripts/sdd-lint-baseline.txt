@@ -3,7 +3,6 @@ LEGACY_SPEC_HEADING	specs/account/002-login-google-sso/spec.md	missing:## 功能
 LEGACY_SPEC_HEADING	specs/account/003-register-email-password/spec.md	missing:## 功能目標
 LEGACY_SPEC_HEADING	specs/account/004-forgot-reset-password/spec.md	missing:## 功能目標
 LEGACY_SPEC_HEADING	specs/account/005-profile-settings/spec.md	missing:## 功能目標
-LEGACY_SPEC_HEADING	specs/admin/007-role-settings/spec.md	missing:## 功能目標
 LEGACY_SPEC_HEADING	specs/shared/018-help-button/spec.md	missing:## Prototype Traceability
 LEGACY_SPEC_HEADING	specs/shared/018-help-button/spec.md	missing:## 功能目標
 LEGACY_SPEC_HEADING	specs/shared/018-help-button/spec.md	missing:## 規格相依性
