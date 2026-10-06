@@ -102,7 +102,7 @@ Reverse transitions (other than `waiting_iaa_confirmation → draft` and `waitin
 Issue #180's cross-role lifecycle review found that the original `official_run_in_progress → completed` pre-condition ("All official-run annotations submitted; final scores calculated") ignored the review pipeline: a task could reach `completed` while review units were still open, disputes were unresolved, or arbitrations were pending. Per user decision D2 (issue #190; decision record: `docs/product/e2e/issue-180/phase2-decision-list.md`), the transition now requires **all** of the following:
 
 1. All official-run annotations submitted (excluded assignments do not count) — unchanged.
-2. All required review units finalized under the effective review settings (`min_reviewers`).
+2. All required review units finalized under the effective review settings (`min_reviewers`; **superseded** — 014 v3.0.0 and 015 v5.0.0 retired `min_reviewers` for single-person relay review, so each review unit needs exactly one assigned reviewer and finalizes when `REVIEW_UNIT_STATUS = finalized`; the amendment text is kept as the 2026-08-19 historical record).
 3. No unresolved disputes remain.
 4. All required arbitrations completed.
 5. Final quality scores calculated and available — unchanged.
