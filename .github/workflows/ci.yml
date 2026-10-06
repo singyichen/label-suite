@@ -138,11 +138,17 @@ jobs:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
+      - name: Check project SDD governance
+        run: scripts/check-sdd.sh
+
+  database-schema:
+    name: NoteCraft Database Schema — Projection Check
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with:
           node-version: '20'
-      - name: Check project SDD governance
-        run: scripts/check-sdd.sh
       - name: Check NoteCraft database projection
         run: |
           node --test scripts/tests/check-database-schema.test.mjs

@@ -155,6 +155,10 @@ Run after every change. Task is NOT complete until all pass.
 scripts/check-sdd.sh
 scripts/speckit-tests.sh
 
+# NoteCraft database projection (run from project root)
+node --test scripts/tests/check-database-schema.test.mjs
+node scripts/check-database-schema.mjs
+
 # User path map freshness — production check against the real artifact (run from project root)
 # (scripts/speckit-tests.sh above is only the checker's regression harness on fixtures)
 node scripts/check-user-path-map-freshness.mjs
