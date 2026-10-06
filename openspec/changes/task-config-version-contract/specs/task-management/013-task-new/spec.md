@@ -1,4 +1,4 @@
-> 正典：`specs/task-management/013-task-new/spec.md` v8.3.0；以下 FR 與關鍵實體條文鏡射該版本。AC-4.3～AC-4.5 保留正典 ID，既有 SC-006 由已封存的 permission-matrix change 承載。
+> 正典：`specs/task-management/013-task-new/spec.md` v8.3.0；以下 FR 與關鍵實體條文鏡射該版本。AC-4.3～AC-4.6 保留正典 ID；既有 SC-006 由已封存的 permission-matrix change 建立，本次依正典修訂。
 
 ## ADDED Requirements
 
@@ -24,13 +24,19 @@
 
 ### Requirement: FR-006d 建立請求冪等性
 
-- **FR-006d**：建立任務 API 必須支援 `Idempotency-Key`；同一 key 在 `IDEMPOTENCY_WINDOW_HOURS` 內重送時回傳同一 `task_id`，不重複建立 membership、config 或指引版本。
+- **FR-006d**：建立任務 API 必須支援 `Idempotency-Key`，其比對範圍為已驗證的建立者與 `task.create` 操作；每次重送仍須依 FR-001a 檢查當下權限。同一範圍內，同一 key 在 `IDEMPOTENCY_WINDOW_HOURS` 內搭配相同的經驗證與正規化請求內容重送，才回傳原 `task_id`，不重複建立 membership、config 或指引版本；同 key 搭配不同內容須回報衝突，不建立任務，亦不得將原 `task_id` 當作此次請求的成功結果。
 
 #### Scenario: AC-4.4 同一建立請求不重複建立關聯版本
 
-- **Given** 任務建立成功
-- **When** 以同一 `Idempotency-Key` 在 `IDEMPOTENCY_WINDOW_HOURS` 內重送
-- **Then** 回傳相同 `task_id`，不重複建立 membership、config 或指引版本，成功仍依既有流程導向 task-detail（AC-4.4）
+- **Given** 任務建立成功，且建立者仍有 `task.create` 權限
+- **When** 同一已驗證建立者對 `task.create` 以同一 `Idempotency-Key`、相同的經驗證與正規化請求內容在 `IDEMPOTENCY_WINDOW_HOURS` 內重送
+- **Then** 回傳原 `task_id`，不重複建立 membership、config 或指引版本，成功仍依既有流程導向 task-detail（AC-4.4）
+
+#### Scenario: AC-4.6 同 key 異內容回報衝突
+
+- **Given** 同一已驗證建立者已用 `Idempotency-Key` 成功建立任務，且仍有 `task.create` 權限
+- **When** 在 `IDEMPOTENCY_WINDOW_HOURS` 內以相同 key 重送不同的經驗證與正規化請求內容
+- **Then** 回報衝突，不建立新任務，也不把原 `task_id` 當作此次請求的成功結果（AC-4.6）
 
 ### Requirement: TaskConfig 不可變版本實體
 
@@ -51,3 +57,15 @@
 - **Given** Step 4 留空且其餘建立設定通過驗證
 - **When** 任務建立交易成功
 - **Then** 建立同任務不可變的指引內容版本 1，`force_guideline` 留在 task 顯示政策中（TaskGuidelineConfig；AC-4.3）
+
+## MODIFIED Requirements
+
+### Requirement: SC-006 授權契約
+
+- **SC-006**：非 `TASK_CREATOR_SYSTEM_ROLES` 或 `task.create` 格不允許者不可建立任務；角色／矩陣格變更後下一次請求即套用新權限，含冪等重送。同一已驗證建立者對 `task.create` 於 `IDEMPOTENCY_WINDOW_HOURS` 內以同一 `Idempotency-Key` 重送相同的經驗證與正規化請求內容，僅取得原 `task_id`，不重複建立任務；同 key 異內容回報衝突，不建立新任務或將舊 `task_id` 作為成功結果。
+
+#### Scenario: SC-006 主要驗收
+
+- **GIVEN** 正式服務端收到本需求作用域內的請求
+- **WHEN** 使用者執行本需求描述的操作
+- **THEN** 不合格角色或格遭拒，同一冪等鍵時窗內不重複建立（SC-006）
