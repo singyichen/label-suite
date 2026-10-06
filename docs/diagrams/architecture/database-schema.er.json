@@ -28,12 +28,6 @@
       "label": "系統",
       "marker": "muted",
       "title": "由應用程式或資料庫產生；非空"
-    },
-    {
-      "key": "pending",
-      "label": "待裁決",
-      "marker": "half",
-      "title": "此欄位尚待正典裁決"
     }
   ],
   "flags": [

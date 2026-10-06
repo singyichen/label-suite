@@ -7,8 +7,8 @@
 ## Decision
 
 1. `users`、`refresh_tokens`、`role`、`is_active` 作明示命名例外；新 `account_token_family` 依 `specs/foundation/000-foundation/spec.md` FR-105 採單數模組前綴。family 擁有 `user_id` 與 `started_at`；token 只以 `family_id` FK 指向它，避免遞移重複。
-2. Access JWT 加 `sid`、`credential_version`，每次受保護請求核對 active user、現行 role、family 未撤銷且 `family.user_id = sub`。角色／停用仍直接查 DB，不使用版本代替；使用者或管理員修改 email 等高風險憑證事件增加版本並依事件撤銷 family。
-3. 原子條件更新 `grace_reissued_at IS NULL` 限制每張 rotated token 在 30 秒內額外重發一次；其後競爭回 `409`，前端最多等待 2 秒並有界重試。family 起點提供 refresh absolute TTL；不得以跨表 CHECK 假裝已保證。
+2. Access JWT 加 `sid`、`credential_version`，每次受保護請求核對 active user、現行 role、family 未撤銷、`family.user_id = sub` 且 family 未達 absolute TTL；登入與 refresh 核發的 access `exp` 亦受同一 deadline 限制。角色／停用仍直接查 DB，不使用版本代替；使用者或管理員修改 email 等高風險憑證事件增加版本並依事件撤銷 family。
+3. 原子條件更新 `grace_reissued_at IS NULL` 限制每張 rotated token 在 30 秒內額外重發一次；其後競爭回 `409`，前端最多等待 2 秒並有界重試。family 起點提供 refresh／access absolute TTL；不得以跨表 CHECK 假裝已保證。登出優先使用有效 access JWT `sid`，缺失或過期時以有效 refresh token 定位；兩者皆無效時僅清除 cookies。
 4. Email 寫入與查找用 Unicode NFC 加 casefold，對 canonical 值檢查 254 字元，DB `lower(email)` 唯一表達式索引作第二層防線。合法寫入須經同一應用層規則；SQLite `lower()` 的 ASCII 行為不能單獨代表 PostgreSQL。
 5. `users.hashed_password` 可為 null，表示沒有本地密碼；`credential_version` 為非空整數。NULL 保留真正的業務語意，不以空字串代替。
 

@@ -129,7 +129,7 @@ Email is canonicalized with Unicode NFC and casefold before registration, invite
 |----------|--------|-------------|
 | `/api/v1/auth/login` | POST | Issue access + refresh tokens via cookies |
 | `/api/v1/auth/refresh` | POST | Rotate refresh token, reissue access token |
-| `/api/v1/auth/logout` | POST | Revoke refresh token, clear cookies |
+| `/api/v1/auth/logout` | POST | Revoke the current token family using valid access `sid` or refresh `family_id`, then clear cookies |
 | `/api/v1/auth/me` | GET | Return current user profile (identity from JWT `sub`; `role` and profile read from the database — Amendment 2026-09-17) |
 
 ### Frontend Behavior

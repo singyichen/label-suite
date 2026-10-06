@@ -14,7 +14,7 @@
 
 | 項目 | 決定 | 依據 |
 |---|---|---|
-| 權限判定與憑證作廢 | 每個已認證請求重讀 `users.role`／`is_active`／`credential_version`；JWT 的 `cv` 不符即拒絕。`credential_version` 僅處理憑證失效，不承載角色版本 | ADR-021、account-020 FR-001／FR-006 |
+| 權限判定與憑證作廢 | 每個已認證請求重讀 `users.role`／`is_active`／`credential_version`；JWT 的 `credential_version` 不符即拒絕。`credential_version` 僅處理憑證失效，不承載角色版本 | ADR-021、account-020 FR-002／FR-010 |
 | 表名與角色、狀態欄名 | 沿用既有契約 `users`、`refresh_tokens`、`role`、`is_active`；新表採 `account_token_family`。這是 FR-105 對既有 auth 表的明確例外 | ADR-021、foundation FR-105、account-020；原 N-1 已裁決 |
 | Google SSO 帳號的判定 | 維持 `hashed_password = null`，不改用 `google_subject IS NOT NULL` | 005 FR-008；ADR-035 修訂 |
 | Google 連結時的既有密碼 | 同一交易清空 `hashed_password` 並撤銷該使用者全部 refresh token | ADR-035 修訂 |
@@ -127,7 +127,7 @@ erDiagram
 |---|---|
 | `users.name`／`contact_info`／`avatar_url` | 005 實體 User；006 PlatformUser |
 | `users.hashed_password` 可為 null | ADR-035、005 FR-008、006 FR-006a、001 plan v2.2.0；原 D-1 已裁決 |
-| `users.credential_version` | ADR-021、account-020 FR-001／FR-006 |
+| `users.credential_version` | ADR-021、account-020 FR-002／FR-010 |
 | `users.google_subject` | ADR-035 |
 | `users.is_seeder` | 006 FR-008c；007 FR-008b |
 | `account_token_family`／`refresh_tokens.family_id` | ADR-021、account-020 FR-001／FR-002、005 FR-010 |
@@ -160,7 +160,7 @@ erDiagram
 | `role` | varchar | 否 | 平台層級角色 `user`／`super_admin`；**不是**任務內角色 | 建立時 `user`；006 升降級 | U-04、U-08、U-12 |
 | `is_active` | boolean | 否 | false＝已停用：不能登入、不能 refresh，既有 access token 下個請求即 401 | 006 停用／啟用 | U-12–U-15 |
 | `is_seeder` | boolean | 否 | 系統初始化時建立的超管，不可停用或降級；全表最多一位 | 只在初始化時設為 true | U-05–U-07 |
-| `credential_version` | integer | 否（預設 `1`） | 憑證世代，必須 ≥ 1；access JWT `cv` 與之比對，高風險事件遞增 | 建帳時為 1；改密碼、重設密碼、email 變更、Google 連結、管理員改 email 等事件遞增 | U-16 |
+| `credential_version` | integer | 否（預設 `1`） | 憑證世代，必須 ≥ 1；access JWT `credential_version` 與之比對，高風險事件遞增 | 建帳時為 1；改密碼、重設密碼、email 變更、Google 連結、管理員改 email 等事件遞增 | U-16 |
 | `created_at` | timestamptz | 否 | 建立時間（UTC） | 建立時 | X-02 |
 | `updated_at` | timestamptz | 否 | 最後修改時間 | 每次 UPDATE | X-02 |
 
@@ -301,7 +301,7 @@ erDiagram
 |---|---|---|---|---|---|
 | F-01 | CK | `id` 為非空唯一 UUID PK；`user_id` 為非空 FK 至 `users.id`，`started_at` 非空且以 UTC 保存 | DB | DB：不存在的 user FK 及 null 值失敗；M：SQLite＋PG roundtrip | account-020 FR-001 |
 | F-02 | XT | `user_id` 建 B-tree 索引以支援帳號層級撤銷；單裝置登出只撤銷對應 `sid` family，全部登出以 `user_id` 找到有效 family | DB 索引＋應用層同一交易 | SVC：登出 A 不影響 B；DB：可用該索引按 user 查 family | account-020 FR-007／FR-008 |
-| F-03 | XT | `started_at` 是絕對存續上限的唯一來源；refresh 必須查到未撤銷 family、active user，並檢查 `now < started_at + REFRESH_TOKEN_ABSOLUTE_MAX_TTL` | 應用層；跨表和設定值不能由 token 列 CHECK | SVC：接近上限輪替不延長；超過上限拒絕 | account-020 FR-003、foundation FR-076 |
+| F-03 | XT | `started_at` 是絕對存續上限的唯一來源；每個已認證請求與 refresh 都必須查到未撤銷 family、active user，並檢查 `now < started_at + REFRESH_TOKEN_ABSOLUTE_MAX_TTL`；登入及 refresh 核發的 access JWT `exp` 亦不得超過此上限 | 應用層；跨表和設定值不能由 token 列 CHECK | API：即使 JWT 自身未到期，family 超過上限仍拒絕；SVC：接近上限輪替不延長 | account-020 FR-002／FR-003／SC-009、foundation FR-076 |
 | F-04 | SM | `revoked_at` 一旦設定不可回復；單裝置 logout、密碼修改、email 變更、停用或逾期重用依 FR-004／FR-006／FR-007 範圍設定 | 應用層 | SVC：重新啟用不恢復 family；逾期重用撤銷全部使用者 family | account-020 FR-004／FR-006／FR-007／FR-008 |
 
 ### 4.3 refresh_tokens
@@ -314,7 +314,7 @@ erDiagram
 | R-04 | XT | 輪替：舊列標 `rotated`＋新增同一 `family_id` 的新列，兩者在同一交易；`family_id` 為非空真實 FK 並建 B-tree 索引 | DB＋應用層 | DB：不存在的 family FK 失敗；SVC：新增失敗則舊列仍有效 | account-020 FR-001／FR-003、foundation FR-016 |
 | R-05 | CC | 寬限期重發僅限 `revoked_reason='rotated'` 且 `now - revoked_at <= 30s`；其他撤銷原因拒絕。寬限期外重用須撤銷同一使用者全部有效 family | 應用層（時間比較在 SQL 端） | API：並發首次 refresh 與一次寬限重發成功；登出 token 重用 → 401；逾期重用 → 全部 family 撤銷 | account-020 FR-004、ADR-021 |
 | R-06 | CC | 寬限資格只可再用一次：條件式 UPDATE `grace_reissued_at=now WHERE grace_reissued_at IS NULL` 與新 token 發行同一交易；第三次在寬限期內使用回 409，不核發、不撤銷其他 family | 應用層，以 rowcount 判定原子占用 | SQLite＋PG 多連線：最多一次額外成功；第三次 409 且 family 不變 | account-020 FR-004；原 D-3 已裁決 |
-| R-07 | XT | token 本列 `expires_at` 必須晚於 `created_at`；發行／輪替前查 family `started_at`，將到期時間限制在絕對存續上限內。跨表 TTL 不能用 token 列 CHECK | DB（本列時間）＋應用層（跨表上限） | DB：本列倒置時間失敗；SVC：接近 family 上限時不延長超過上限 | account-020 FR-003、foundation FR-076 |
+| R-07 | XT | token 本列 `expires_at` 必須晚於 `created_at`；發行／輪替前查 family `started_at`，將 refresh 與 access JWT 到期時間限制在絕對存續上限內。跨表 TTL 不能用 token 列 CHECK | DB（本列時間）＋應用層（跨表上限） | DB：本列倒置時間失敗；SVC：接近 family 上限時兩種 token 均不延長超過上限 | account-020 FR-003、foundation FR-076 |
 | R-08 | XT | 改密碼成功：更新 hash、`credential_version+1`、撤銷同一使用者其他 family，保留目前 `sid` family；目前裝置以原 family refresh 取得新版 JWT | 應用層同一交易 | API：兩裝置登入，A 改密碼 → B refresh 401、A refresh 成功；兩者舊 JWT 均失效 | account-020 FR-006、005 FR-010 |
 | R-09 | XT | email 驗證成功、管理員改 email、密碼重設及 Google 連結：`credential_version+1` 並撤銷全部 family（含目前裝置） | 應用層同一交易 | API：事件後全部舊 access／refresh 失效 | account-020 FR-007 |
 
