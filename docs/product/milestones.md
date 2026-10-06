@@ -42,7 +42,7 @@
 | **M1** 帳號與導覽 | Email／Password 入口、共用導覽與角色 gating | 001、008 | 角色邊界與 zh/en、RWD 驗收 | 002 仍只是 Google SSO no-op 入口 |
 | **M2** 任務入口 | 角色化 Dashboard 與任務列表 | 012、010 | membership、搜尋、篩選與多 output 標籤 | 依賴任務與成員資料一致性 |
 | **M3** 任務建立 | 四步精靈建立可組合 output 任務 | 013 | JSON upload、8-key registry、config 驗證 | producer 與 consumer 同步漂移 |
-| **M4** 標記作業 | 依 `outputs[]` 執行試標與正式標記 | 015 | 逐型作答、保存、提交與資料公平驗收 | 複合輸出與 tokenization 整合 |
+| **M4** 標記作業 | 依 `outputs[]` 執行試標與正式標記 | 015 | 逐型作答、保存、提交與資料公平驗收 | 複合輸出；詞級匯出的 tokenizer 版本與對齊（017 FR-042） |
 | **M5** 任務協作 | 五 Tab、成員、完整 lifecycle、審核設定與匯出 | 014 | 五態轉換、完成 gate、JSON／JSON-MIN | 跨角色 gate 缺一不可完成 |
 | **M6** 分析與品質 | 列表入口、逐 output 統計與 IAA | 016、017 | `x/y` gate、`free_text` 不適用、低一致樣本 | 小樣本與逐型指標誤讀 |
 | **M7** 審核與管理 | ReviewUnit 審核、爭議仲裁、帳號與 Admin | 015、002～007 | DisputeItem、RBAC 與審計證據 | 仲裁資格與隱藏答案隔離 |

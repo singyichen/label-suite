@@ -24,8 +24,8 @@
 |------|------------|
 | shared constants aliases | 同值 alias 尚未收斂；只能引用 `specs/_shared/constants.md` 正名，待 owner spec 升版處理。 |
 | 014 legacy 013 dependency | 014 仍有 legacy 013 相依與相容欄位；不得由產品文件宣告其已完成遷移。 |
-| 013 tokenization consumers | 013 的 tokenization producer 描述需限縮至已同步 consumer；不要將候選 engine 或 prototype 行為寫成全產品契約。 |
+| 013 tokenization consumers | **已解（2026-10-06，沿革保留）**：`sequence_tagging` 已於 issue #581 改為字元 offset `spans[]`，013 v7.0.0 起不再有 `tokenization` 任務設定，僅餘 `snap_unit`（選取落點，FR-003d-1）；原「限縮至已同步 consumer」的保守處理不再適用。原記載：「013 的 tokenization producer 描述需限縮至已同步 consumer；不要將候選 engine 或 prototype 行為寫成全產品契約。」 |
 | 017 legacy divergent arbitration | 017 尚有與現行仲裁模型不一致的 legacy 引用；現行行為回鏈 014／015／017，衝突由相關 spec/ADR 處理。 |
-| ADR-031 word-mode engine | production word-mode engine 未決；不得宣告 `Intl.Segmenter`、Jieba、CKIP、PyICU 或其他候選為正典。 |
+| ADR-031 word-mode engine | **原決策已被取代（2026-10-06，沿革保留）**：ADR-031 已 `Superseded`，選取時詞界改由前端 `Intl.Segmenter`（`snap_unit`，013 FR-003d-1，僅影響落點、不是資料座標系）。仍未決的只剩**匯出時**詞級 BIO 的 production tokenizer engine：017 FR-042 僅要求匯出 metadata 寫入 `tokenizer.engine`／`tokenizer.version` 並以擴張對齊；不得宣告 Jieba、CKIP、PyICU 或其他候選為正典。原記載：「production word-mode engine 未決；不得宣告 `Intl.Segmenter`、Jieba、CKIP、PyICU 或其他候選為正典。」 |
 
 新增衝突時，記錄來源、影響範圍與 owner；在較高階正典未解決前，產品文件只標示衝突，不自行選值。
