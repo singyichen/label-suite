@@ -35,10 +35,10 @@
 
 **Interfaces:** ADR-022 提供 014 可引用的權威狀態轉換與副作用；保留歷史 run/snapshot，只清除目前 cycle 指標。
 
-- [ ] 讀 ADR-022 的 transition table、sample_snapshot invariant、illustrative table 命名，對照設計 §6 T1/T3/T10。
-- [ ] 修正 `waiting_iaa_confirmation → draft`：關閉並保留舊 cycle 與所有已發布 round／snapshot／assignment；下一次 Dry 開新 cycle 並從 R1 起算。任務的目前指標可清除，歷史不可刪。
-- [ ] 將每次發布擁有獨立不可變 snapshot 寫成狀態機副作用；ADR 範例若用複數舊表名，明示只是舊例或改為符合 foundation FR-105 的候選單數名稱。
-- [ ] 以 `rg` 確認 ADR 不再宣稱「清空唯一 task snapshot 即清除歷史」，記錄修訂依據與本地 commit。
+- [x] 讀 ADR-022 的 transition table、sample_snapshot invariant、illustrative table 命名，對照設計 §6 T1/T3/T10。
+- [x] 修正 `waiting_iaa_confirmation → draft`：關閉並保留舊 cycle 與所有已發布 round／snapshot／assignment；下一次 Dry 開新 cycle 並從 R1 起算。任務的目前指標可清除，歷史不可刪。
+- [x] 將每次發布擁有獨立不可變 snapshot 寫成狀態機副作用；ADR 範例若用複數舊表名，明示只是舊例或改為符合 foundation FR-105 的候選單數名稱。
+- [x] 以 `rg` 確認 ADR 不再宣稱「清空唯一 task snapshot 即清除歷史」，記錄修訂依據與本地 commit。
 
 ### Task 2: 014 run、抽樣及版本身分
 
