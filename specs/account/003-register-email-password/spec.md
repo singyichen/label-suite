@@ -1,7 +1,7 @@
 ---
 功能分支: feat/account/003-register-email-password
 建立日期: 2026-04-05
-版本: 1.2.7
+版本: 1.2.8
 狀態: Clarified
 ---
 
@@ -176,6 +176,7 @@ sequenceDiagram
 - Email 前後有空白字元？→ 送出前會 `trim()` 後再驗證。
 - 成功送出後是否可再編輯欄位？→ 成功後輸入欄位會被 disabled，等待導頁。
 - 目前原型是否已串接真實 `/auth/register` API？→ 尚未；僅模擬前端驗證與結果。
+- 真實註冊時 Email 如何判斷重複？→ 由 account-020 FR-009／AC-4.1～AC-4.2 定義：應用層先 Unicode NFC＋casefold、再檢查正規化後 254 字元與唯一性；本頁 `taken@example.com` 仍只是原型示範值，不代表正式資料庫規則。
 
 ---
 
@@ -250,6 +251,7 @@ flowchart LR
 | 規格編號 | 功能 | 本規格需要的內容 |
 |---------|------|----------------|
 | 001 | Login — Email / Password + 頁面 UI | 從登入頁導流至註冊頁的入口連結與 i18n 一致性 |
+| 020 | Authentication and Session Security | 真實註冊與後續登入的 Email canonicalization、大小寫唯一性及跨 SQLite／PostgreSQL 結果；本原型只提供輸入 UI |
 | 008 | Shared Sidebar Navbar | 全站語言持久化契約（跨頁維持同語系） |
 
 ### 下游（依賴本規格的規格）
@@ -307,6 +309,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.2.8 | 2026-10-06 | 補列 account-020 的真實 Email 識別契約與原型模擬邊界；本頁 FR／SC 和原型行為不變。 |
 | 1.2.7 | 2026-08-20 | Issue #261：新增 Prototype Traceability，對應註冊原型的表單、驗證、送出／成功、導頁、i18n、RWD、可選 wireframe 參考與設計層驗證。 |
 | 1.2.6 | 2026-05-22 | 釐清錯誤 banner 關閉行為：新增 FR-011A（重新輸入自動清除）與 US-3 驗收情境 5 |
 | 1.2.5 | 2026-05-22 | 釐清 isSubmitting 按鈕行為：新增 FR-010A（disabled 防重複送出）與 US-3 驗收情境 4 |
