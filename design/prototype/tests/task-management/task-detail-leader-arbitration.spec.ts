@@ -415,6 +415,8 @@ test.describe('Leader adjudication when arbiter_ids is empty (FR-023)', () => {
 
 test.describe('Empty arbiter roster publish warning (FR-010t revision)', () => {
   async function openPublishWarning(page: Page, language: 'zh' | 'en') {
+    // issue #1146: T001 seeds arbiterIds explicitly, so declare it empty here.
+    await forceEmptyRoster(page, 'T001');
     await page.goto(`${TASK_DETAIL_URL}?task_id=T001&status=draft`);
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: 15000 });
     if (language === 'en') await page.getByTestId('lang-toggle').click();
@@ -608,6 +610,8 @@ test.describe('Review-settings save keeps both roster sources in sync (review M1
 
   test('M1: saving with arbiter X selected makes taskArbiterRoster return [X]', async ({ page }) => {
     await openEdit(page);
+    // issue #1146: T013 seeds reviewer_chen explicitly; clear it so X is the only arbiter.
+    await page.locator(`${OPTIONS} input[value="reviewer_chen"]`).uncheck();
     const option = page.locator(OPTIONS).filter({ hasNot: page.locator('input[value="reviewer_chen"]') }).first();
     const chosen = await option.locator('input').getAttribute('value');
     expect(chosen, 'precondition: a non-fallback arbiter option exists').toBeTruthy();

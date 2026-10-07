@@ -58,6 +58,16 @@ test.describe('Task detail review settings', () => {
   });
 
   test('drops arbiters that are no longer active reviewer members', async ({ page }) => {
+    // issue #1146: T001 now seeds arbiterIds explicitly; patch the served
+    // profile data to an empty roster so this test keeps its "no arbiter" start.
+    await page.route('**/task-management/task-detail.data.js*', async (route) => {
+      const response = await route.fetch();
+      const body = await response.text();
+      await route.fulfill({
+        response,
+        body: `${body}\n;window.LabelSuiteTaskDetailData.profiles['T001'].arbiterIds = [];\n`,
+      });
+    });
     await page.goto(TASK_DETAIL_URL);
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
     await page.locator('#reviewEditBtn').click();
@@ -81,6 +91,16 @@ test.describe('Task detail review settings', () => {
   });
 
   test('translates review settings labels and values to English', async ({ page }) => {
+    // issue #1146: T001 now seeds arbiterIds explicitly; patch the served
+    // profile data to an empty roster so this test keeps its "no arbiter" start.
+    await page.route('**/task-management/task-detail.data.js*', async (route) => {
+      const response = await route.fetch();
+      const body = await response.text();
+      await route.fulfill({
+        response,
+        body: `${body}\n;window.LabelSuiteTaskDetailData.profiles['T001'].arbiterIds = [];\n`,
+      });
+    });
     await page.goto(TASK_DETAIL_URL);
 
     // Wait for the async panel render before toggling language (same
