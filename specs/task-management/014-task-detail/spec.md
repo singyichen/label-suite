@@ -1,7 +1,7 @@
 ---
 功能分支: feat/1141-quality-metrics-ready-signal
 建立日期: 2026-04-20
-版本: 6.0.0
+版本: 7.0.0
 狀態: Draft
 ---
 
@@ -494,6 +494,7 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 44. **AC-3.44**（v6.0.0，issue #1160）：**Given** run 已凍結 reviewer 候選並建立 annotator 工作 slot，**When** reviewer membership 停用，或 annotator membership 停用使未提交 slot 退回後由 PL 重指派／終局排除，**Then** 候選歷史不變但停用者即時失權，slot ID 不變，排除保留唯一不可撤回證據並從提交分子分母移除；審核黏著只依 015 FR-093(5) 推導（FR-005h／FR-010t）。
 45. **AC-3.45**（v6.0.0，issue #1160）：**Given** item 的 private row 含 hidden answer 或 declared_split，**When** 重播同 cycle seed／演算法與版本的抽樣並取得標記者資料，**Then** run 清單由公開資格池可重現，與私有 split 無關，回應與 manifest 均無答案、gold/test 標記或受限來源（FR-010f）。
 46. **AC-3.46**（v6.0.0，issue #1160）：**Given** 同一 cycle 綁定的 sealed dataset version 有 12 個已接受 item，已發布 R1 實際使用 3 個、R2 實際使用 4 個，其中一筆 R1 assignment 後來被終局排除，**When** 發布要求 4 個的 R3，**Then** R3 精確取得 4 個不屬於 R1／R2 的新 item ID，已排除 assignment 對應的 item ID 不得重新出現在 R3，並保留 1 個 item 供 Official 發布時凍結；若改為要求 5 個的 R3，則整次拒絕且不建立 run／snapshot／assignment，不得因 R1 assignment 排除而回補可用池（FR-010d／FR-010e／FR-010f-2）。
+47. **AC-3.47**（v7.0.0，issue #1160）：**Given** 同一穩定 assignment 有原標記員已儲存但未提交的草稿，且可能另有已提交紀錄，**When** membership 停用、移除或 PL 明確重派給新受派者，稍後原成員再啟用，**Then** 舊草稿轉 `abandoned` 並只供原作者受限歷史查閱，繼任者看不到舊草稿並從空紀錄開始；原作者不自動取回 slot 或寫權，已提交紀錄與責任鏈保持不變（FR-005f／FR-005l／FR-010f-4）。
 
 **行為規則**：
 
@@ -593,13 +594,13 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 - **FR-005c**：搜尋平台成員功能必須支援以 `帳號 / 姓名 / Email` 查詢；未輸入查詢關鍵字前不得顯示任何平台成員資料。
 - **FR-005d**：搜尋結果僅排除已持有當前任務中「本次選定 task role」membership 的人；同一人仍可被加入另一個 task role，加入後才從該角色的候選結果消失。membership 的邏輯唯一鍵為 `(task_id,user_id,task_role)`，停用／移除只作用於所選角色列，不得連帶改變此人的其他任務角色。
 - **FR-005e**：Email 邀請必須驗證 email 格式並阻擋同一任務、同一 email 與本次選定 task role 的重複邀請；既有其他 task role 不構成重複。寄送成功後該角色 membership 需以 `invited` 狀態出現在目前成員清單，不得覆寫另一角色的狀態。
-- **FR-005f**：移除仍有未完成作業的**選定角色 membership** 時，系統必須顯示二次確認；確認後保留該角色已完成提交與歷史統計。移除 annotator membership 時只把該角色未完成標記作業改為未指派，等待 `project_leader` 手動重新指派或處理；移除 reviewer membership 的 pending 審核依 FR-005j 退回分派池。此人其他仍有效的 task role、提交與指派不得被連帶停用或清空。
+- **FR-005f**：移除仍有未完成作業的**選定角色 membership** 時，系統必須顯示二次確認；確認後保留該角色已完成提交與歷史統計。移除 annotator membership 時只把該角色未完成標記作業改為未指派，等待 `project_leader` 手動重新指派或處理；移除 reviewer membership 的 pending 審核依 FR-005j 退回分派池。此人其他仍有效的 task role、提交與指派不得被連帶停用或清空。 **V1 草稿退回**：未提交標記草稿於 slot 退回時同交易轉 `abandoned`，保留原作者與內容供受限追溯；繼任者不得讀取或繼承，須從自己的空白紀錄開始。已提交紀錄不得轉 `abandoned`。
 - **FR-005g**：`project_leader` 必須可在 `annotation-progress` 查看 Dry Run 與 Official Run 的未指派標記作業，並將其重新指派給啟用中的標記員（`membership_status = active` 且 `task_role = annotator`）。
 - **FR-005h**：`project_leader` 明確排除未指派標記作業時，系統必須保存排除者、排除時間、排除原因、run stage 與原作業識別資訊；被排除作業不得計入完成率或標記分布統計，Dry Run 排除作業亦不得計入 IAA。 V1 排除為穩定 `assignment_id` 的終局事件，每個 slot 最多一筆不可刪除／撤回的證據；退回 draft 不清除此證據，未指派不等於排除。日後修正須另訂補償流程。
 - **FR-005i**：成員清單必須在「任務角色」與「狀態」欄之間提供「審核負荷」欄：`task_role = annotator` 顯示 `—`；`task_role = reviewer` 顯示 `{assigned} 筆 · {pending} 待審`，其中 `assigned` 恆為 `pending + done` 的推導值，不得獨立儲存。
 - **FR-005j**（**v3.0.0 修訂，BREAKING**，對應 AC-1.6，issue #688）：`member-management` 必須在成員清單之後提供「審核指派」區塊：顯示未指派審核筆數，並為每位啟用中審核員（`membership_status = active AND task_role = reviewer`）呈現已指派／待審／已完成三欄；被勾選為仲裁者（`can_arbitrate = true`）的審核員必須顯示「仲裁」標籤。自 v3.0.0 起本區塊必須恆為唯讀——審核指派一律由系統自動執行（`015` FR-093：試標以樣本為單位、正式標記平均分派給被勾選的審核員），不得出現「自動補齊」「指派…」或任何逐列操作按鈕；`review_assignment_mode` 已移除，不得再依模式分流呈現。移除或停用仍有待審負荷的審核員時，其 `pending` 筆數必須退回未指派池並由系統重新分派，`done` 保留為歷史統計（比照 FR-005f 對標記員的規則）。
 - **FR-005k**（**v3.0.0 修訂，BREAKING**，對應 AC-1.6，issue #688）：審核指派區塊底部必須顯示爭議池列 `{n} 項待仲裁`，其後必須顯示最終例外池列 `{m} 項待處置`（`m` = 仲裁裁定為「兩者皆非」而落入最終例外池、尚未由專案負責人收尾的項目數，見 FR-018）。兩列皆必須恆為唯讀資訊列：仲裁資格由系統依 `ARBITER_CANDIDATE_RULE` 與 `015` FR-060 之非當事人條件自動判定，具資格者自 `annotation-list` 進入認領；例外池處置由專案負責人自標記進度進入（FR-018）。本區塊不得提供「分派給仲裁者」或任何分派按鈕；`arbitration_enabled` 已移除，不得再以該開關停用任何呈現。
-- **FR-005l**：停用 `task_role = annotator` 的成員時：(1) 其已提交之標記（試標與正式皆然）必須全數保留，繼續計入歷史統計與 IAA，既有 review unit 不受影響；(2) 其尚未提交的已指派標記作業（含草稿）必須改為未指派狀態退回未指派池，等待 `project_leader` 依 FR-005g 重新指派或依 FR-005h 排除（比照 FR-005j 對審核員 `pending` 退回的規則）；(3) 停用期間該成員不得成為新指派對象，亦不得提交任何標記；(4) 重新啟用僅恢復可被指派資格，不自動取回先前退回的作業。停用操作本身不受 FR-010t 阻擋，但若停用後 active 標記員人數 `< min_annotators`，二次確認 modal 必須加註後續發布將被 FR-010t 阻擋的警告。
+- **FR-005l**：停用 `task_role = annotator` 的成員時：(1) 其已提交之標記（試標與正式皆然）必須全數保留，繼續計入歷史統計與 IAA，既有 review unit 不受影響；(2) 其尚未提交的已指派標記作業（含草稿）必須改為未指派狀態退回未指派池，等待 `project_leader` 依 FR-005g 重新指派或依 FR-005h 排除（比照 FR-005j 對審核員 `pending` 退回的規則）；(3) 停用期間該成員不得成為新指派對象，亦不得提交任何標記；(4) 重新啟用僅恢復可被指派資格，不自動取回先前退回的作業。停用操作本身不受 FR-010t 阻擋，但若停用後 active 標記員人數 `< min_annotators`，二次確認 modal 必須加註後續發布將被 FR-010t 阻擋的警告。 **V1 草稿隔離**：第 (2) 點退回時，舊未提交草稿同交易轉 `abandoned`；重派者看不到前任答案，原成員重新啟用不自動恢復舊草稿或 slot 寫權。
 - **FR-006**：只有 `reviewer` membership、沒有通過 `task.members.manage` 的 active `project_leader` membership 者，不可見 `member-management` tab；若以直連方式進入，系統必須導回 `overview` 並提示無權限。同時有兩種角色者只能經由實際有效的 leader membership 與矩陣格取得管理能力，不能由 reviewer role 本身推導。
 - **FR-007**：`reviewer` 的 `work-log` 僅可查看自己的資料。
 - **FR-007a**：`工時明細表` 底部必須提供與 `task-list` 一致的 footer pagination，至少包含總筆數 / 目前頁數、每頁筆數切換與上一頁 / 下一頁 / 頁碼按鈕；其 `page` / `pageSize` 狀態（`wlPage` / `wlPageSize`）必須獨立，不得與其他 tab 分頁狀態共用；篩選條件變更時 `wlPage` 必須重設為 `1`；匯總卡片與異常提醒區塊必須依據完整篩選結果計算，不得僅計算當前頁資料。
@@ -879,6 +880,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 7.0.0 | 2026-10-07 | **未提交草稿重派隔離（issue #1160，MAJOR）**：FR-005f／FR-005l 補上舊 annotator 草稿轉 `abandoned`、保留原作者且不交給繼任者；已提交歷史不失效。新增 AC-3.47。實體表仍為未部署候選。 |
 | 6.0.0 | 2026-10-06 | **Issue #1160 task/run 正典對齊（MAJOR）**：採 DBA T1～T12 裁決與 ADR-022，修訂 FR-010b～f 系列、FR-010u、FR-010s-1／t、FR-005h、FR-014／017a、FR-010i-1／i-2、FR-018／022、SC-005／011／050 與實體；新增 FR-010f-5／f-6、AC-3.40～3.46、SC-053～056。cycle 保留舊 R1、每 run snapshot、Official 生命週期唯一；隔離關閉仍禁止同 cycle item 重疊，每輪 sealed-version 上限保留正式池；AC-3.46 明列排除 assignment 不回補池的 R3 累計案例；精確 config/schema 與 run 指引版本、等待階段指引四欄位編輯、候選名冊及即時授權、終局排除與發布原子冪等。退役 ReviewAssignment 持久化語意；#1165 v5.2.2 的三欄舊版邏輯參照由 run-scoped submission-derived 契約取代。同版本 DBA 複審修正 FR-010u 爭議項粒度為 run 內 review unit × outKey × 合併鍵，並統一 FR-010i-2／FR-021 與介面定義的重建條件／顯示 metadata 分界。僅更新正典規劃契約，無 ORM／API／migration 實作。 |
 | 5.2.2 | 2026-10-06 | **釐清關鍵實體 `ReviewAssignment` 指向審核單位之欄位（issue #1165，Lightweight Path，PATCH）**：原列 `review_unit_id`，但 `annotation/015-annotation-workspace` FR-051 以 `REVIEW_UNIT_DIMENSIONS`（`sample_id × annotator_id × run_type`）三欄複合定址審核單位，無單一 id 可指。依維護者 2026-10-06 裁定，欄位改為 `sample_id`、`annotator_id`、`run_type` 三欄複合外鍵，不另設 `review_unit_id`。**未改動**：`source`、`review_status` 與審核負荷統計之推導語意。判定 PATCH：僅釐清關鍵實體欄位，不新增或移除任何 FR／AC，不涉及 API 契約。 |
 | 5.2.1 | 2026-10-06 | **釐清 FR-010u 第 (5) 項爭議項計數單位（issue #1150，Lightweight Path，PATCH）**：第 (5) 項括號原寫「爭議項（審核單位 × 輸出類型）」，較 `annotation/015-annotation-workspace` FR-059 第 2 點以 `outKey × 合併鍵` 識別爭議項、第 4 點依集合型／`sequence_tagging`／`multi_dim` 拆解之粒度為粗。依維護者裁定以 015 為準，括號改為引用 015 FR-061 第 7 點之計數單位（審核單位內之 `outKey × 合併鍵`，依 FR-059）。**未改動**：三個聚合層級不得相加、不得共用分母之規則本身，以及 AC-1.27、SC-050（二者僅稱「爭議項」，未重述粗粒度）。判定 PATCH：純釐清，不新增或移除任何 FR／AC。 |

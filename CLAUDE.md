@@ -156,7 +156,7 @@ scripts/check-sdd.sh
 scripts/speckit-tests.sh
 
 # NoteCraft database projection (run from project root)
-node --test scripts/tests/check-database-schema.test.mjs scripts/tests/check-database-dataset.test.mjs
+node --test scripts/tests/check-database-schema.test.mjs scripts/tests/check-database-dataset.test.mjs scripts/tests/check-database-task-run.test.mjs scripts/tests/check-annotation-review-canonical.test.mjs scripts/tests/check-database-annotation-review.test.mjs
 node scripts/check-database-schema.mjs
 
 # User path map freshness — production check against the real artifact (run from project root)
