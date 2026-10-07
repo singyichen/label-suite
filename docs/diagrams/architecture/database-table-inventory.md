@@ -183,3 +183,15 @@ erDiagram
 | P1 | IAA 報告是否獨立表與版本鍵 | `TaskConfig`／`TaskGuidelineConfig` 已有候選版本表；`OutputTypeIAAReport` 的持久化與版本鍵仍待 資料集／品質負責模組裁決 | 013／014／017 關鍵實體、任務／執行字典 §3 |
 
 每項定案後，先更新對應 spec／ADR，再填實體層的欄位字典與限制清單，最後更新本總帳和 ERD。這遵循 [SDD 工作流程](../../sdd-workflow.md) 的 Source-Verify／write-back 原則；未完成前本文件不能當作可執行資料庫遷移規格。
+
+## 6. 下一批盤點：品質、工時與匯出
+
+以下是對 #1160 尚未畫入 NoteCraft 的三組資料所做的來源核對。表名與切分方式是**待寫回正典的設計候選**，不是已定欄位字典，也不是已部署資料表；因此本批不增加 §1 的 35 張表、288 欄與 41 條單欄 FK。每組先關閉來源規格的身分、版本與保留問題，再依 §2 的順序加入字典和圖。
+
+| 主題 | 現行規格已確定 | 候選落點與尚待正典裁決 | 完成條件 |
+|---|---|---|---|
+| 品質／IAA | [017 FR-039](../../../specs/dataset/017-dataset-analysis-detail/spec.md) 規定只用單一試標回合的標記員原始答案，排除明確排除作業與 bypass；[014 FR-010o-4](../../../specs/task-management/014-task-detail/spec.md) 將計算狀態放在試標回合，失敗可同回合重試。`free_text` 不計自動 IAA，`sequence_tagging` 可計分但沒有門檻；「無法計算」與計算失敗不同。 | `task_iaa_result` 可作為每回合、每輸出類型一筆的不可變結果候選；任務 `x/y`、`quality_metrics_ready` 應從回合狀態與結果推導。須由 017／014 定案是否持久化、輸出鍵唯一性、演算法／輸入摘要版本、重算政策、數值精度、保留期。017 的 `SampleDivergenceFlag` 明言分開儲存，`LowConsistencySampleList` 也提到寫入路徑；兩者**不可先歸為純即時計算**。 | 先回寫 017／014 的儲存與版本契約，再出六欄字典、FK／CHECK／索引、SQLite／PostgreSQL 驗收與 NoteCraft 投影；檢查 `De = 0`、未校準及只有 `free_text` 的回合。 |
+| 工時 | [014 工時頁籤及 `WorkLogEntry`](../../../specs/task-management/014-task-detail/spec.md) 要依任務、階段及角色顯示登入／登出、實際工作時間和數量；FR-010u 要避免混入其他任務或發布週期。 | 安全登入 session 只代表憑證生命週期，不能代替任務工作時間；通用 `audit_events` 是責任稽核，亦不能代替工時。需在 014 定義任務工作區間的開始／暫停／結束來源、跨日與缺少登出時的處理、`task_id × run_id` 歸屬、角色快照與修正方式；時長、數量及平均速度先視為推導值。 | 正典先定事件或區間的粒度與保留期，再設計帶真實 task／run FK 的原始紀錄；以重複 R1、跨日、離線與換角色情境驗證。 |
+| 匯出 | [014 FR-010i-1／2、FR-020／021](../../../specs/task-management/014-task-detail/spec.md) 要保存匯出條件快照、逐 run 的版本身分，重新下載不新增歷史列；詞級序列匯出要保存切詞引擎及版本。 | `task_export` 歷史列加逐 run 範圍紀錄是候選。014 的單數版本 metadata 與跨 run 匯出須先統一成每個 run 的 manifest；若原始標記可能改變，僅有篩選快照不足以保證重新下載逐字元相同，需定案不可變結果版本或保留原始產物。背景產物的參照、校驗值、到期與失效下載，以及保留期仍未定。 | 先回寫 014 的跨 run manifest、可重現與產物生命週期契約，再設計歷史列／外部產物參照與 FK；驗證同檔重下載、過期拒絕及不讀私有答案。 |
+
+完成上述三組後，仍須回到 §5 的循環建立次序、抽樣清單回執、assignment 狀態與刪除保留政策，並執行 issue #1160 的全模組「正典需求 ↔ 欄位字典 ↔ ER JSON」雙向驗收。真正的 ORM／migration／API 與 SQLite／PostgreSQL 約束測試屬獨立實作階段；不能因 NoteCraft 可顯示候選表便勾選其部署驗收。
