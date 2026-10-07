@@ -53,7 +53,7 @@
 
 - **FR-065**（v4.15.0 新增；V1 修訂，issue #1160）：同一 `run_id × assignment_id` 的全部目前爭議項由合格仲裁者在單一 batch 原子裁定；每個 `outKey × item_key` 在此單位最多一張不可變票，不因尚有其他未解決項而允許改票。
   1. **唯一與原子**：提交時驗證全部當前爭議鍵、來源 revision／digest、非當事資格與即時權限；任何一項失敗都不留部分票。資料庫 UNIQUE 防止同鍵第二票，`votes[]` 在 V1 讀取形狀為零或一筆。
-  2. **冪等重送**：`decision_batch_id` 及完整正規化內容 digest 相同，回傳原 batch 結果；同 key 異內容、不同 key 的第二 batch 或已存在票的改投均拒絕，不能以既有 idempotent PUT 覆寫語意改寫。正式 API 若提供此操作，其契約須區分相同重送與衝突，不以此規劃宣稱端點已實作。
+  2. **冪等重送**：`decision_batch_id` 及完整正規化內容 digest 相同，回傳原 batch 結果；同 key 異內容、不同 key 的第二 batch 或已存在票的改投均拒絕，相同重送不可轉成更新既有票的操作。正式 API 若提供此操作，其契約須區分相同重送與衝突，不以此規劃宣稱端點已實作。
   3. **留痕**：`voted_at`、來源 revision、決定者及歷程事件於首次成功提交時固定，不得更新時間或抹除原票；`reject` 的後續收尾寫 FR-095 的獨立 resolution。
   4. **讀取推導**：`ReviewUnit.status` 與定案值仍由唯一票及可能的唯一例外 resolution 讀取時計算；不存在「最新一票」選取、改票觸發快取重算或刪票解鎖。未來若需重新仲裁，須另立明示補償與版本契約。
 
@@ -111,7 +111,7 @@
 
 ### Requirement: AC-7.4 span 爭議鍵不碰撞
 
-span 爭議鍵不碰撞 以正式 run／assignment 身分為準。
+同一輸出類型的 `sequence_tagging` span 爭議鍵使用 `(start,end,label)` 與編碼版本；相同文字但不同 offset 不合併，改 label 產生舊項移除與新項新增，不把整段文字或 token 位置當作權威鍵。
 
 #### Scenario: AC-7.4 span 爭議鍵不碰撞
 
@@ -121,7 +121,7 @@ span 爭議鍵不碰撞 以正式 run／assignment 身分為準。
 
 ### Requirement: AC-7.5 來源提交與改判競爭
 
-來源提交與改判競爭 以正式 run／assignment 身分為準。
+同一 assignment 上的 annotator／reviewer 提交競爭、reviewer revision／仲裁首票競爭，依同一交易鎖與版本檢查序列化；首審凍結標記來源，首票凍結審核 revision，落敗寫入回衝突且不得留下指錯來源的票。
 
 #### Scenario: AC-7.5 來源提交與改判競爭
 
@@ -131,7 +131,7 @@ span 爭議鍵不碰撞 以正式 run／assignment 身分為準。
 
 ### Requirement: AC-7.6 仲裁只有一次完整 batch
 
-仲裁只有一次完整 batch 以正式 run／assignment 身分為準。
+同一單位的全部爭議鍵只接受一次完整仲裁 batch；每鍵唯一票與不可變時間由同交易保證，相同 `decision_batch_id`／digest 重送冪等回原結果，異內容或半套 batch 拒絕。
 
 #### Scenario: AC-7.6 仲裁只有一次完整 batch
 
@@ -141,7 +141,7 @@ span 爭議鍵不碰撞 以正式 run／assignment 身分為準。
 
 ### Requirement: AC-7.7 reject 例外一次收尾
 
-reject 例外一次收尾 以正式 run／assignment 身分為準。
+唯一 `reject` 票只可有一筆已確認 resolution；同內容重送回既有紀錄，異內容拒絕。`exclude_from_dataset` 排除該輸出項目而不刪公開 item 或 assignment。
 
 #### Scenario: AC-7.7 reject 例外一次收尾
 
@@ -151,7 +151,7 @@ reject 例外一次收尾 以正式 run／assignment 身分為準。
 
 ### Requirement: AC-7.8 失權草稿不可跨人還原
 
-失權草稿不可跨人還原 以正式 run／assignment 身分為準。
+未提交 annotator 草稿在重派時轉 `abandoned` 並保留前任責任；繼任者不可讀且從空紀錄開始。失權 reviewer 的私有草稿失效，重新獲權不自動還原，其他角色不得看到其存在。
 
 #### Scenario: AC-7.8 失權草稿不可跨人還原
 
