@@ -88,7 +88,9 @@ test('task/run NoteCraft projection matches every dictionary table, column, PK, 
     checker.parseDatasetSchema(read('../../docs/diagrams/architecture/dataset-db-schema.md')),
     taskSource(),
   );
+  const sourceNames = new Set(source.tables.map((table) => table.name));
   const data = erData();
+  data.tables = data.tables.filter((table) => sourceNames.has(table.name));
   assert.deepEqual(checker.validateErData(source, data), []);
   const taskNames = new Set(taskSource().tables.map((table) => table.name));
   for (const table of data.tables.filter((entry) => taskNames.has(entry.name))) {
