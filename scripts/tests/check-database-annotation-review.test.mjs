@@ -82,6 +82,48 @@ test('history events reference the immutable reviewer revision rather than its m
     'An event must not point only to the mutable reviewer head');
 });
 
+test('every arbitration choice stores a non-null reason', () => {
+  const vote = annotationSource().tables.find((table) => table.name === 'annotation_arbitration_vote');
+  assert.ok(vote, 'Expected annotation_arbitration_vote');
+  assert.deepEqual(vote.columns.find((column) => column.name === 'reason'), {
+    name: 'reason', type: 'text', nullable: false, pk: false,
+  }, 'FR-089 requires a reason for every adjudicated choice');
+});
+
+test('arbitration reason constraint rejects blank text for every choice', () => {
+  const rule = annotationMarkdown().split('\n').find((line) => line.startsWith('| V-05 |'));
+  assert.ok(rule, 'Expected V-05 arbitration rule');
+  assert.match(rule, /(?:所有|全部|每(?:筆|張)|三種)[^|]*(?:choice|選項|裁定|票)[^|]*(?:reason|理由)|(?:reason|理由)[^|]*(?:所有|全部|每(?:筆|張)|三種)[^|]*(?:choice|選項|裁定|票)/,
+    'V-05 must cover adopt_a, adopt_b and reject, not reject alone');
+  assert.match(rule, /CHECK[^|]*trim\s*\(\s*reason\s*\)[^|]*(?:<>|!=|>|非空白)/i,
+    'V-05 must specify a database CHECK that rejects a blank reason');
+});
+
+test('one reviewer submission records its timing pair exactly once across per-key history events', () => {
+  const rule = annotationMarkdown().split('\n').find((line) => line.startsWith('| H-04 |'));
+  assert.ok(rule, 'Expected H-04 history rule');
+  assert.match(rule, /review_revision_id/,
+    'FR-088 timing must be scoped to one immutable reviewer submission revision');
+  assert.match(rule, /(?:第一筆|首筆|first)[^|]*(?:started_at)[^|]*(?:lead_time_ms)|(?:started_at)[^|]*(?:lead_time_ms)[^|]*(?:第一筆|首筆|first)/i,
+    'The first per-key decision event must carry both timing fields');
+  assert.match(rule, /(?:其餘|其他|後續|sibling)[^|]*(?:started_at|lead_time_ms)[^|]*NULL/i,
+    'Sibling per-key decision events must leave both timing fields NULL');
+});
+
+test('answer-changing history actions keep a complete private-data-free output snapshot', () => {
+  const rule = annotationMarkdown().split('\n').find((line) => line.startsWith('| H-04 |'));
+  assert.ok(rule, 'Expected H-04 history rule');
+  for (const action of ['submitted', 'modified', 'adjudicated']) {
+    assert.match(rule, new RegExp(`\\b${action}\\b`), `${action} must require a result snapshot`);
+  }
+  assert.match(rule, /result_snapshot[^|]*(?:非空|必填|NOT NULL)|(?:非空|必填|NOT NULL)[^|]*result_snapshot/i,
+    'FR-087 requires a non-null result_snapshot for answer-changing actions');
+  assert.match(rule, /(?:完整|full)[^|]*outputs\[\]|outputs\[\][^|]*(?:完整|full)/i,
+    'The snapshot must contain the complete outputs[]');
+  assert.match(rule, /(?:排除|不得包含|exclude)[^|]*(?:原始文本|input text|資料集欄位|dataset fields)/i,
+    'The snapshot must exclude input text and dataset fields');
+});
+
 test('annotation/review parser rejects a fake edge from the private answer table', () => {
   const markdown = annotationMarkdown();
   const edge = '    annotation_review_submission ||--o{ annotation_review_decision : review_submission_id';
