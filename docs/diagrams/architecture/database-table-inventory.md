@@ -1,131 +1,145 @@
 # 資料表盤點與 ERD 落地清單
 
-> 2026-10-07 盤點快照。用途是讓 migration 作者從現行規格追到資料表、欄位與關聯；這是衍生視圖，不新增產品需求。衝突依 [`SDD 權威矩陣`](../../sdd-workflow.md#0-權威矩陣與衝突裁決) 裁決：主憲法 → 適用的 domain constitution → Accepted ADR → canonical feature spec；Proposed ADR 不改變現行規則。
+> 2026-10-07 盤點快照。用途是讓資料庫遷移作者從現行規格追到資料表、欄位與關聯；這是衍生視圖，不新增產品需求。衝突依 [`SDD 權威矩陣`](../../sdd-workflow.md#0-權威矩陣與衝突裁決) 裁決：主憲法 → 適用的 domain constitution → Accepted ADR → canonical feature spec；Proposed ADR 不改變現行規則。
 
 ## 1. 目前資料庫狀態
 
-`backend/alembic/versions/` 只有 `.gitkeep`，`backend/app/` 尚無 ORM model。因此目前**沒有可由程式碼證實已建立的業務表**。下列名稱是 migration 前的規劃，不是已部署 schema；也不能把 prototype 的 `localStorage` 或 fixture 當作 PostgreSQL 表。
+`backend/alembic/versions/` 只有 `.gitkeep`，`backend/app/` 尚無 ORM model。因此目前**沒有可由程式碼證實已建立的業務表**。下列名稱是資料庫遷移前的規劃，不是已部署資料結構；也不能把 prototype 的 `localStorage` 或 fixture 當作 PostgreSQL 表。
 
 | 層級 | 目前可用資料 | 用法 |
 |---|---|---|
-| 實際 schema | Alembic revision／ORM：0 張業務表 | 日後以 migration 和資料庫 metadata 反查已落地狀態 |
-| 實體層草案 | [account/admin schema](./account-admin-db-schema.md)：9 張／63 欄／6 單欄 FK；[dataset schema](./dataset-db-schema.md)：5 張／31 欄／6 單欄 FK；[task/run schema](./task-run-db-schema.md)：13 張／112 欄／15 單欄 FK；[annotation/review schema](./annotation-review-db-schema.md)：8 張／82 欄／14 單欄 FK | 四份字典合計 35 張候選表、288 欄、41 個單欄 FK；複合 FK 另見各字典 §4。仍須獨立 migration 與雙資料庫驗證，均非已部署 schema |
+| 實際資料結構 | Alembic revision／ORM：0 張業務表 | 日後以資料庫遷移和資料庫 metadata 反查已落地狀態 |
+| 實體層草案 | [帳號／管理資料結構](./account-admin-db-schema.md)：9 張／63 欄／6 單欄 FK；[資料集資料結構](./dataset-db-schema.md)：5 張／31 欄／6 單欄 FK；[任務／執行資料結構](./task-run-db-schema.md)：13 張／112 欄／15 單欄 FK；[標記／審核資料結構](./annotation-review-db-schema.md)：8 張／82 欄／14 單欄 FK | 四份字典合計 35 張候選表、288 欄、41 個單欄 FK；複合 FK 另見各字典 §4。仍須獨立資料庫遷移與雙資料庫驗證，均非已部署資料結構 |
 | 概念層 | [跨模組 ER 圖](./core-data-model-er.md)：規格實體、推導值與投影 | 用於發現缺表與錯誤的關聯假設，不能直接當 DDL |
 
-**NoteCraft 規劃檢視**：[`database-schema.er.json`](./database-schema.er.json) 會顯示在 `/view/diagrams/architecture/database-schema.er` 的 Wiki／Diagram。目前收錄 account/admin、dataset、task/run、annotation/review 的 **35 張候選表、288 欄與 41 個候選單欄 FK**。annotation/review 的 8 張表依[實體字典](./annotation-review-db-schema.md)展示標記、審核草稿／提交、修訂、仲裁、例外與歷程；六組 assignment 複合 FK、私有答案隔離、保留政策及待決約束見字典 §4–§7。**已落地業務表仍為 0**。quality／IAA、工時與匯出仍待逐表設計，不以假線加入圖。修改任一 §3 字典或 JSON 時執行 `node scripts/check-database-schema.mjs`；欄位與 FK 計數由檢查器重新計算。
+**NoteCraft 規劃檢視**：[開啟 Wiki／Diagram](/view/diagrams/architecture/database-schema.er)（來源資料：`database-schema.er.json`）。目前收錄帳號／管理、資料集、任務／執行、標記／審核的 **35 張候選表、288 欄與 41 個候選單欄 FK**。標記／審核的 8 張表依[實體字典](./annotation-review-db-schema.md)展示標記、審核草稿／提交、修訂、仲裁、例外與歷程；六組 assignment 複合 FK、私有答案隔離、保留政策及待決約束見字典 §4–§7。**已落地業務表仍為 0**。品質／IAA、工時與匯出仍待逐表設計，不以假線加入圖。修改任一 §3 字典或 JSON 時執行 `node scripts/check-database-schema.mjs`；欄位與 FK 計數由檢查器重新計算。
 
-## 2. 盤點方法：沿用 TrendMile 的「盤點 → Schema → 投影」
+## 名詞說明：任務發布與執行
+
+資料表名稱與欄位名稱沿用英文識別碼，供程式和資料庫精確引用；以下是閱讀 Wiki／Diagram 與本總帳時使用的中文意思。
+
+| 識別碼／術語 | 中文意思 | 資料表中的位置 |
+|---|---|---|
+| `run` | **一次執行或發布**：將某個任務的一批公開資料項目發布為一次試標或正式標記。每發布一次就新增一筆執行紀錄；草稿階段尚未發布，所以沒有對應的執行紀錄。 | `task_run` 保存發布類型、所屬週期、所用指引與發布時間。 |
+| `cycle` | **一輪發布週期**：在首次試標發布時建立，固定該輪資料集版本、任務設定、抽樣種子與演算法；同輪可有多次試標，最後可發布正式標記。若退回草稿，舊週期只關閉、不刪除；再次試標時另開新週期。 | `task_run_cycle` 保存這輪固定版本與開關時間。 |
+| `trial round` | **一次試標回合**：同一發布週期內第 1、2… 次試標，各回合可記錄不同指引版本與試標發現。 | `task_trial_round` 保存回合序號；該次發布另有一筆 `task_run`。 |
+| `draft`／`dry_run`／`official_run` | **草稿／試標／正式標記**。草稿可編輯；試標用來演練與檢查；正式標記是該任務對外使用的標記批次。 | `task_run.run_type` 的值保留 `dry_run` 或 `official_run`，畫面說明使用中文。 |
+| `PK`／`FK` | **主鍵／外鍵**。主鍵識別本表一筆資料；外鍵指向另一張表，避免引用不存在的資料。 | 圖上的標記表示候選設計，尚未在資料庫建立。 |
+
+例如一個任務可先有第 1 輪發布週期，其中先發布第 1 次試標、再發布第 2 次試標，最後發布正式標記。這是同一個發布週期、兩個試標回合、三筆執行紀錄。
+
+## 2. 盤點方法：沿用 TrendMile 的「盤點 → 資料結構 → 投影」
 
 已核對本機 TrendMile 的 `docs/notification-and-spec-skeleton` 分支與 git 歷史。它的 ER 圖不是先畫出來再補欄位，而是逐步形成：
 
 | 時間與證據 | 當時做的事 | 對 Label Suite 的借鏡 |
 |---|---|---|
 | 2026-08-12，`f51b117` | 同批建立 [PRD](https://github.com/trendlink/trendmile/blob/docs/notification-and-spec-skeleton/docs/00-prd.mdx)、[欄位盤點](https://github.com/trendlink/trendmile/blob/docs/notification-and-spec-skeleton/docs/80-field-inventory.mdx)、[待釐清問題](https://github.com/trendlink/trendmile/blob/docs/notification-and-spec-skeleton/docs/90-open-questions.mdx) | 一開始就同時保留需求、資料現況與未決事項，不讓圖先替未決事項拍板 |
-| 盤點表 §1～§4 | 從 Notion 匯出的 173 欄扣掉 27 欄棄用項，將 146 欄對應至業務模組；再用 PRD §6 流程反查，找出 Notion 沒有的七張表。每個模組並列「原始資料表」與六欄的「系統 Schema」（欄位、型別、必填、預設、鍵／限制、說明），並附 DDL 與結構決議 | 同時走「既有資料 → 新表」和「操作流程 → 缺表」兩個方向；記下正規化與推導值決定 |
+| 盤點表 §1～§4 | 從 Notion 匯出的 173 欄扣掉 27 欄棄用項，將 146 欄對應至業務模組；再用 PRD §6 流程反查，找出 Notion 沒有的七張表。每個模組並列「原始資料表」與六欄的「系統資料結構」（欄位、型別、必填、預設、鍵／限制、說明），並附 DDL 與結構決議 | 同時走「既有資料 → 新表」和「操作流程 → 缺表」兩個方向；記下正規化與推導值決定 |
 | [模組規格撰寫順序](https://github.com/trendlink/trendmile/blob/docs/notification-and-spec-skeleton/docs/specs/00-writing-order.mdx) §「一份規格的撰寫流程」 | 模組 spec 先與 PRD、盤點表對齊，逐題裁決未決事項，最後才產視覺化元件；TrendMile 明訂盤點表 §2 是表結構權威，spec 負責業務語意 | Label Suite 仍遵守自己的權威矩陣：feature／foundation spec 與 Accepted ADR 在上，實體層文件及 ER 圖是衍生視圖，不直接照搬 TrendMile 的權威順序 |
-| 2026-09-18，`2618b74`；2026-09-29，`4e5ad98` | 將 ER 資料收斂至 [`81-schema-er-diagram.er.json`](https://github.com/trendlink/trendmile/blob/docs/notification-and-spec-skeleton/docs/81-schema-er-diagram.er.json)，由 [plugin](https://github.com/trendlink/trendmile/blob/docs/notification-and-spec-skeleton/.notecraft/plugins/er-diagram-renderer/derive.ts) 推導連線、父子表和導覽樹；再依四個 PostgreSQL schema 分組。`/view/81-schema-er-diagram.er` 是此 JSON 的檢視頁，沒有同名 `.er` 原始檔 | 圖形資料要能追溯到欄位字典；關聯從欄位的 FK 指向推導，不另維護邊清單 |
+| 2026-09-18，`2618b74`；2026-09-29，`4e5ad98` | 將 ER 資料收斂至 [`81-schema-er-diagram.er.json`](https://github.com/trendlink/trendmile/blob/docs/notification-and-spec-skeleton/docs/81-schema-er-diagram.er.json)，由 [plugin](https://github.com/trendlink/trendmile/blob/docs/notification-and-spec-skeleton/.notecraft/plugins/er-diagram-renderer/derive.ts) 推導連線、父子表和導覽樹；再依四個 PostgreSQL 資料結構分組。`/view/81-schema-er-diagram.er` 是此 JSON 的檢視頁，沒有同名 `.er` 原始檔 | 圖形資料要能追溯到欄位字典；關聯從欄位的 FK 指向推導，不另維護邊清單 |
 | [`check-prd.mjs`](https://github.com/trendlink/trendmile/blob/docs/notification-and-spec-skeleton/.claude/skills/prd-writing/scripts/check-prd.mjs) §14 | 比對盤點表與 ER JSON 的表、欄、PK、FK 目標；結構差異報 error，型別字串差異報 warn | Label Suite 日後若有實體層圖形資料源，也要做雙向一致性檢查；不能只驗證圖能渲染 |
 
 本機執行 TrendMile 的 `node .claude/skills/prd-writing/scripts/check-prd.mjs` 得到 **0 error、7 warn**。另直接計算 ER JSON 為 **37 張表、72 個帶 `fk` 的欄位**；檔內手寫摘要仍寫 36／69。現行檢查器沒有檢查這類摘要數字，所以 Label Suite 不應手填可計算的統計值。
 
 Label Suite 的對應做法：
 
-1. **盤點現況**：以 Alembic／ORM 確認「已建表」，以各 `spec.md` 的「關鍵實體」與 FR 確認「需要保存的資料」。逐個操作流程反查：建立任務、上傳資料、發布 run、標記、審核、仲裁、品質計算、匯出、稽核。
+1. **盤點現況**：以 Alembic／ORM 確認「已建表」，以各 `spec.md` 的「關鍵實體」與 FR 確認「需要保存的資料」。逐個操作流程反查：建立任務、上傳資料、發布試標或正式標記、標記、審核、仲裁、品質計算、匯出、稽核。
 2. **判斷資料性質**：只有獨立寫入且需要跨請求保存的資料才列為候選表。`OutputConfig`、`OutputAnswer` 這類嵌入設定或答案，與 `ReviewUnit.status`、列表統計這類推導值，不因有「實體」名稱就建表。
-3. **逐模組定實體 schema**：一表一列記名稱、owner、PK／唯一鍵、FK、欄位型別／nullability、CHECK／索引、寫入者、生命週期、規格來源與決策狀態。account/admin、dataset、task/run、annotation/review 已有候選字典；quality／IAA、工時與匯出仍需同等深度的文件。
+3. **逐模組定實體資料結構**：一表一列記名稱、負責模組、PK／唯一鍵、FK、欄位型別／可空性、CHECK／索引、寫入者、生命週期、規格來源與決策狀態。帳號／管理、資料集、任務／執行、標記／審核已有候選字典；品質／IAA、工時與匯出仍需同等深度的文件。
 4. **由欄位清單產 ER 圖**：實體層 ERD 的 FK 線只能來自已選定的 FK 欄位；現階段的概念關聯圖則必須明示「規劃關聯」，不得冒充資料庫 FK。尚未決定鍵形狀的關聯標為待定。圖的摘要數字由來源計算。
 5. **雙向查漏**：每個 spec 的持久化需求要能定位到表／欄位或明確標為待決；每張候選表要能回指規格或 Accepted ADR。當實體層欄位字典與機器可讀圖資料都齊備時，再比對表、欄、PK、FK 目標與型別，並檢查手寫摘要。每次上游改版同步更新盤點與 ER 圖。
 
-本專案的概念層跨模組圖依 [圖表工具規範](../README.md) 使用 Markdown 內嵌 Mermaid；有完整欄位字典的實體層候選表再投影到 NoteCraft Wiki／Diagram。兩種圖都可逐行 diff。`archify` 沒有 ER schema，`diagram-design` 的單圖上限不足以容納全域表數。
+本專案的概念層跨模組圖依 [圖表工具規範](../README.md) 使用 Markdown 內嵌 Mermaid；有完整欄位字典的實體層候選表再投影到 NoteCraft Wiki／Diagram。兩種圖都可逐行 diff。`archify` 沒有 ER 資料結構，`diagram-design` 的單圖上限不足以容納全域表數。
 
 ## 3. 候選資料表總帳
 
-**狀態語彙**：「實體草案」＝已有欄位字典，但尚未 migration；「需設計」＝規格要求可保存資料，尚未決定完整表形；「可內嵌」＝需保存但未必獨立建表；「推導／投影」＝不因本身而建表。下表只記來源直接支持的鍵與關聯，不把 `task_id` 等上下文欄位補成已決定的主鍵。
+**狀態語彙**：「實體草案」＝已有欄位字典，但尚未資料庫遷移；「需設計」＝規格要求可保存資料，尚未決定完整表形；「可內嵌」＝需保存但未必獨立建表；「推導／投影」＝不因本身而建表。下表只記來源直接支持的鍵與關聯，不把 `task_id` 等上下文欄位補成已決定的主鍵。
 
 ### 帳號與管理
 
 | 候選表 | 狀態 | 已知識別／關聯 | 正典與待決 |
 |---|---|---|---|
-| `users` | 實體草案 | `id` PK；canonical email 以 `lower(email)` 唯一；`hashed_password` 可空；`credential_version` 非空 | [account/admin §3.1](./account-admin-db-schema.md#31-users平台帳號)、account-020；N-1／D-1／D-6／D-8 已裁決 |
-| `account_token_family` | 實體草案 | `id` PK；`user_id → users`；`started_at` 為 session 起點 | [account/admin §3.2](./account-admin-db-schema.md#32-account_token_family一次登入的-token-家族)、account-020 FR-001／FR-003 |
-| `refresh_tokens` | 實體草案 | `id` PK；`family_id → account_token_family`；不重複保存 user／登入起點 | account/admin §3.3、account-020 FR-001／FR-004；D-3 已裁決 |
-| `account_password_token` | 實體草案 | `id` PK；`user_id → users` | account/admin §3.4 |
-| `account_email_change_request` | 實體草案 | `id` PK；`user_id → users` | account/admin §3.5 |
-| `account_notification_preference` | 實體草案 | `(user_id, event_key)` PK；`user_id → users` | account/admin §3.6 |
-| `audit_events` | 實體草案 | `id` PK；人員事件的 `actor_user_id → users`、系統事件 actor 為 null；`task_id` 可空 UUID，尚無 task FK | account/admin §3.7；Accepted ADR-032，D-4 已裁決 |
-| `admin_role_permission` | 實體草案 | `(role_type, role_key, permission_key)` 非空複合 PK；V1 僅 42 列適用格 | account/admin §3.8／§4.7；Accepted ADR-037；尚未 migration |
-| `admin_role_permission_version` | 實體草案 | `id = 1` 的候選單列版本，缺列拒絕 | account/admin §3.9／§4.7；Accepted ADR-037；尚未 migration |
+| `users` | 實體草案 | `id` PK；canonical email 以 `lower(email)` 唯一；`hashed_password` 可空；`credential_version` 非空 | [帳號／管理 §3.1](./account-admin-db-schema.md#31-users平台帳號)、account-020；N-1／D-1／D-6／D-8 已裁決 |
+| `account_token_family` | 實體草案 | `id` PK；`user_id → users`；`started_at` 為 session 起點 | [帳號／管理 §3.2](./account-admin-db-schema.md#32-account_token_family一次登入的-token-家族)、account-020 FR-001／FR-003 |
+| `refresh_tokens` | 實體草案 | `id` PK；`family_id → account_token_family`；不重複保存 user／登入起點 | 帳號／管理 §3.3、account-020 FR-001／FR-004；D-3 已裁決 |
+| `account_password_token` | 實體草案 | `id` PK；`user_id → users` | 帳號／管理 §3.4 |
+| `account_email_change_request` | 實體草案 | `id` PK；`user_id → users` | 帳號／管理 §3.5 |
+| `account_notification_preference` | 實體草案 | `(user_id, event_key)` PK；`user_id → users` | 帳號／管理 §3.6 |
+| `audit_events` | 實體草案 | `id` PK；人員事件的 `actor_user_id → users`、系統事件 actor 為 null；`task_id` 可空 UUID，尚無 task FK | 帳號／管理 §3.7；Accepted ADR-032，D-4 已裁決 |
+| `admin_role_permission` | 實體草案 | `(role_type, role_key, permission_key)` 非空複合 PK；V1 僅 42 列適用格 | 帳號／管理 §3.8／§4.7；Accepted ADR-037；尚未資料庫遷移 |
+| `admin_role_permission_version` | 實體草案 | `id = 1` 的候選單列版本，缺列拒絕 | 帳號／管理 §3.9／§4.7；Accepted ADR-037；尚未資料庫遷移 |
 
 ### 資料集與來源
 
-五張表均為**實體草案、尚未部署**；物理欄位、同資料集父版本複合 FK、分類 manifest、讀寫邊界及索引見 [dataset 實體字典](./dataset-db-schema.md) §3～§6。來源為 [dataset-021](../../../specs/dataset/021-dataset-ingestion-and-lineage/spec.md) FR-001～FR-011；`dataset-016/017` 只消費分析投影。
+五張表均為**實體草案、尚未部署**；物理欄位、同資料集父版本複合 FK、分類清單、讀寫邊界及索引見 [資料集實體字典](./dataset-db-schema.md) §3～§6。來源為 [dataset-021](../../../specs/dataset/021-dataset-ingestion-and-lineage/spec.md) FR-001～FR-011；`dataset-016/017` 只消費分析投影。
 
 | 候選表 | 狀態 | 已知識別／關聯 | 正典與待決 |
 |---|---|---|---|
 | `dataset` | 實體草案 | `id` PK；`created_by_user_id → users` | dataset-021 FR-001／FR-002；名稱非唯一身分，建立者 FK 依 account 表落地 |
-| `dataset_version` | 實體草案 | `id` PK；`dataset_id → dataset`；`parent_version_id → dataset_version`，同 dataset 的複合 FK；`(dataset_id, version_no)` 唯一 | dataset-021 FR-002／FR-008；`draft → sealed` 完整快照，manifest 編碼與保留政策待 runtime 前定義 |
-| `dataset_import_batch` | 實體草案 | `id` PK；`dataset_version_id → dataset_version`；`(dataset_version_id, source_ordinal)` 唯一 | dataset-021 FR-003／FR-006；逐檔來源、前處理與受限 `classification_manifest`，artifact 讀取須隔離 |
-| `dataset_item` | 實體草案 | `id` PK；`dataset_import_batch_id → dataset_import_batch`；`(dataset_import_batch_id, source_row_no)` 唯一 | dataset-021 FR-004／FR-007；`public_payload` 僅公開 allowlist，發布成員由 `task_run_item` 候選表保存 |
-| `dataset_item_private` | 實體草案 | `dataset_item_id` 同時 PK／FK → `dataset_item` | dataset-021 FR-005～FR-007；來源 split／hidden answer 隔離，儲存後只授權 scoring worker 讀答案 |
+| `dataset_version` | 實體草案 | `id` PK；`dataset_id → dataset`；`parent_version_id → dataset_version`，同 dataset 的複合 FK；`(dataset_id, version_no)` 唯一 | dataset-021 FR-002／FR-008；`draft → sealed` 完整快照，清單編碼與保留政策待執行階段前定義 |
+| `dataset_import_batch` | 實體草案 | `id` PK；`dataset_version_id → dataset_version`；`(dataset_version_id, source_ordinal)` 唯一 | dataset-021 FR-003／FR-006；逐檔來源、前處理與受限 `classification_manifest`，產物讀取須隔離 |
+| `dataset_item` | 實體草案 | `id` PK；`dataset_import_batch_id → dataset_import_batch`；`(dataset_import_batch_id, source_row_no)` 唯一 | dataset-021 FR-004／FR-007；`public_payload` 僅公開允許清單，發布成員由 `task_run_item` 候選表保存 |
+| `dataset_item_private` | 實體草案 | `dataset_item_id` 同時 PK／FK → `dataset_item` | dataset-021 FR-005～FR-007；來源 split／hidden answer 隔離，儲存後只授權計分處理程序讀答案 |
 
-### 任務與 run
+### 任務、發布週期與執行
 
-以下 13 張表均為**實體草案、尚未部署**；六欄字典、複合 FK、索引及待決見 [task/run 實體字典](./task-run-db-schema.md) §3～§7。身分契約來自 013 v8.3.0、014 v7.0.0、015 v12.0.0、ADR-022／037；SQL 型別與保留政策仍須獨立 migration 切片驗證。
+以下 13 張表均為**實體草案、尚未部署**；六欄字典、複合 FK、索引及待決見 [任務／執行實體字典](./task-run-db-schema.md) §3～§7。身分契約來自 013 v8.3.0、014 v7.0.0、015 v12.0.0、ADR-022／037；SQL 型別與保留政策仍須獨立資料庫遷移切片驗證。
 
 | 規格實體 → 候選資料落點 | 狀態 | 已知識別／關聯 | 正典與待決 |
 |---|---|---|---|
-| `TaskDetail` → `task` | 實體草案 | `id` PK；建立者與當前 `dataset_version` 單欄 FK；當前 config／guideline／cycle 指標需同 task 複合 FK | 013／014；歷史版本只由不可變 cycle/run 追溯，初建循環參照待 migration 決策 |
-| `TaskConfig` → `task_config_version`；`OutputConfig` 內嵌 | 實體草案／內嵌 | `id` PK、`(task_id,version_no)` 唯一、`schema_version_no=version_no`；完整 config 為經驗證 JSON | 013／014；registry 定義與 canonical bytes 保留政策待 runtime 定案 |
+| `TaskDetail` → `task` | 實體草案 | `id` PK；建立者與當前 `dataset_version` 單欄 FK；當前設定／guideline／發布週期指標需同 task 複合 FK | 013／014；歷史版本只由不可變發布週期/執行追溯，初建循環參照待資料庫遷移決策 |
+| `TaskConfig` → `task_config_version`；`OutputConfig` 內嵌 | 實體草案／內嵌 | `id` PK、`(task_id,version_no)` 唯一、`schema_version_no=version_no`；完整設定為經驗證 JSON | 013／014；registry 定義與 canonical bytes 保留政策待執行階段定案 |
 | `TaskGuidelineConfig` → `task_guideline_version` | 實體草案 | `id` PK、`(task_id,version_no)` 唯一；四個內容欄位與資產參照同列不可變 | 013／014 FR-017a；`force_guideline` 留在 `task`，資產生命週期待決 |
 | `TaskMembership` → `task_membership` | 實體草案 | `id` PK、`(task_id,user_id,task_role)` 唯一；task／user 單欄 FK | ADR-037、014；一人可多角色，active 狀態須即時查 |
-| reviewer／arbiter 名冊 → `task_reviewer_roster_member` | 實體草案 | `(task_id,reviewer_membership_id)` 複合 PK／FK；`can_arbitrate` 為 reviewer 子集合 | 014 FR-010s-1／FR-010t；建立 run 時凍結候選排序 |
-| run 生命週期 → `task_run_cycle` | 實體草案 | `id` PK、`(task_id,cycle_no)` 唯一；封存 dataset/config；每 task 同時最多一個 open cycle | 014 FR-010f、ADR-022；seed／演算法版本須可重播 |
+| 審核員／仲裁員名冊 → `task_reviewer_roster_member` | 實體草案 | `(task_id,reviewer_membership_id)` 複合 PK／FK；`can_arbitrate` 為審核員子集合 | 014 FR-010s-1／FR-010t；建立執行時凍結候選排序 |
+| 執行生命週期 → `task_run_cycle` | 實體草案 | `id` PK、`(task_id,cycle_no)` 唯一；封存 dataset/設定；每個任務同時最多一個未關閉的發布週期 | 014 FR-010f、ADR-022；隨機種子／演算法版本須可重播 |
 | `TrialRound` → `task_trial_round` | 實體草案 | `id` PK、`(task_run_cycle_id,round_no)` 唯一；同 task 指引版本複合 FK | 014 FR-017a；IAA 計算狀態不代表達標 |
-| `SampleSnapshot` → `task_sample_snapshot` | 實體草案 | `id` PK；同 cycle run 一對一，記錄 seed、manifest 參照與 digest | 014 FR-010f；manifest 編碼／回執待決，不得含私有答案 |
-| `AnnotationListMaterialization` → `task_run` | 實體草案 | `id` PK；Dry 指向同 cycle round，Official 的 round 為 null；每 task 一生最多一筆 Official | 014 FR-010f；同 task guideline、冪等 key 與 item_count 候選約束見字典 §4 |
-| 發布時審核候選 → `task_run_reviewer_candidate` | 實體草案 | `(task_run_id,reviewer_membership_id)` 複合 PK；保存當時候選及順序 | 014 FR-010t、015 FR-093；不是 sticky reviewer assignment |
-| `AnnotationListItem` 公開成員 → `task_run_item` | 實體草案 | `(task_run_id,dataset_item_id)` 複合 PK；`(task_run_cycle_id,dataset_item_id)` 唯一 | 014 FR-010b／FR-010f；同 cycle 不重選，item 所屬版本由服務交易驗證 |
-| `AnnotationAssignment` → `task_annotation_assignment` | 實體草案 | `id` PK；同 run-item／task-membership 複合 FK；每 item 的 slot_no 唯一 | 014 FR-010f-4；受派者可空不代表排除，狀態值域待決 |
-| `ExcludedAnnotationAssignment` → `task_annotation_exclusion` | 實體草案 | `id` PK；`assignment_id` 唯一且 FK 指向穩定 slot | 014 FR-005h；append-only，`run_id`／`cycle_id` 由 assignment 解析 |
-| `ReviewAssignment` → 審核負荷 view | 已裁決為非持久化（014 v6.0.0） | Dry 黏著 `run_id × dataset_item_id`；Official 黏著 `run_id × assignment_id` | 依 015 FR-051／FR-093(5) 的 submission、run 候選快照與即時資格推導；不建立第二份指派表或 FK。#1165 於 014 v5.2.2 的三欄邏輯參照僅為舊版候選沿革，已被 v6.0.0 取代 |
+| `SampleSnapshot` → `task_sample_snapshot` | 實體草案 | `id` PK；同發布週期執行一對一，記錄隨機種子、清單參照與 digest | 014 FR-010f；清單編碼／回執待決，不得含私有答案 |
+| `AnnotationListMaterialization` → `task_run` | 實體草案 | `id` PK；試標指向同發布週期回合，正式標記的回合為 null；每個任務最多發布一次正式標記 | 014 FR-010f；同 task guideline、冪等 key 與 item_count 候選約束見字典 §4 |
+| 發布時審核候選 → `task_run_reviewer_candidate` | 實體草案 | `(task_run_id,reviewer_membership_id)` 複合 PK；保存當時候選及順序 | 014 FR-010t、015 FR-093；不是審核員固定歸屬的紀錄 |
+| `AnnotationListItem` 公開成員 → `task_run_item` | 實體草案 | `(task_run_id,dataset_item_id)` 複合 PK；`(task_run_cycle_id,dataset_item_id)` 唯一 | 014 FR-010b／FR-010f；同發布週期不重選，資料項目所屬版本由服務交易驗證 |
+| `AnnotationAssignment` → `task_annotation_assignment` | 實體草案 | `id` PK；對同一次執行的資料項目，以及同任務的成員資格，建立複合 FK；每資料項目的 slot_no 唯一 | 014 FR-010f-4；受派者可空不代表排除，狀態值域待決 |
+| `ExcludedAnnotationAssignment` → `task_annotation_exclusion` | 實體草案 | `id` PK；`assignment_id` 唯一且 FK 指向穩定工作位 | 014 FR-005h；append-only，`run_id`／`cycle_id` 由 assignment 解析 |
+| `ReviewAssignment` → 審核負荷查詢視圖 | 已裁決為非持久化（014 v6.0.0） | 試標黏著 `run_id × dataset_item_id`；正式標記黏著 `run_id × assignment_id` | 依 015 FR-051／FR-093(5) 的 submission、執行候選快照與即時資格推導；不建立第二份指派表或 FK。#1165 於 014 v5.2.2 的三欄邏輯參照僅為舊版候選沿革，已被 v6.0.0 取代 |
 | `WorkLogEntry` → 工時事件表 | 需設計 | `user_id`、`task_role`、`date`、`run_stage` | 014 關鍵實體；事件／日彙總與 PK 待定 |
 | `RunStateTransition` → `task_status_transition` 候選 | 需設計 | `task_id`、操作者、時間、前後狀態 | 014／ADR-022；與 `audit_events` 的事件分工及表形待裁決，未列入本批 13 表 |
 | `IsolationAuditLog` → 隔離設定稽核表 | 需設計 | `task_id`、`changed_by`、時間 | 014 關鍵實體；與共用 `audit_events` 的事件語意和去重方式待 task 模組定案 |
 
 ### 標記、審核與品質
 
-annotation/review 八張表均為**實體草案、尚未部署**；六欄字典、六組 assignment 複合 FK、索引與待決見 [annotation/review 實體字典](./annotation-review-db-schema.md) §3～§7。014 v7.0.0／015 v12.0.0 已規劃來源凍結、一次仲裁與草稿隔離；尚無 ORM、migration 或 API。quality／IAA 仍待 owner 裁決。
+標記／審核八張表均為**實體草案、尚未部署**；六欄字典、六組 assignment 複合 FK、索引與待決見 [標記／審核實體字典](./annotation-review-db-schema.md) §3～§7。014 v7.0.0／015 v12.0.0 已規劃來源凍結、一次仲裁與草稿隔離；尚無 ORM、資料庫遷移或 API。品質／IAA 仍待負責模組裁決。
 
 | 規格實體 → 候選資料落點 | 狀態 | 已知識別／關聯 | 正典與待決 |
 |---|---|---|---|
-| `AnnotationListItem` → `task_run_item`／assignment 投影 | 推導／投影 | run item 為 `(task_run_id,dataset_item_id)`；標記工作以穩定 assignment ID 定址 | 014／015；不另建清單表 |
-| `AnnotationRecord` → `annotation_record` | 實體草案 | `id` PK、`run_id × assignment_id` 複合 FK、作者 membership 單欄 FK；有效列部分唯一 | 015 FR-049／FR-105；答案為釘住 config 驗證的 JSON，重派前舊草稿轉 abandoned |
-| 未提交 reviewer 決策 → `annotation_review_draft` | 實體草案 | `id` PK、單位複合 FK、reviewer membership FK；有效草稿部分唯一 | 015 FR-014S；只本人可見，失權即失效 |
+| `AnnotationListItem` → `task_run_item`／assignment 投影 | 推導／投影 | 執行資料項目為 `(task_run_id,dataset_item_id)`；標記工作以穩定 assignment ID 定址 | 014／015；不另建清單表 |
+| `AnnotationRecord` → `annotation_record` | 實體草案 | `id` PK、`run_id × assignment_id` 複合 FK、作者成員資格單欄 FK；有效列部分唯一 | 015 FR-049／FR-105；答案為釘住設定驗證的 JSON，重派前舊草稿轉 abandoned |
+| 未提交審核員決策 → `annotation_review_draft` | 實體草案 | `id` PK、單位複合 FK、審核員成員資格 FK；有效草稿部分唯一 | 015 FR-014S；只本人可見，失權即失效 |
 | 正式 `ReviewDecision` → `annotation_review_submission`／`annotation_review_decision`／`annotation_review_submission_revision` | 實體草案 | 單位唯一 head、逐 outKey 唯一決策、不可變 revision | 015 FR-093／FR-103／FR-105；首票後凍結改判，提交必須完整且同交易 |
 | `DisputeItem` → 推導值；寫入票 → `annotation_arbitration_vote` | 推導／實體草案 | `run_id × assignment_id × output_key × item_key` 唯一票；指向不可變 review revision | 015 FR-052／FR-059／FR-061／FR-065；爭議 A/B 由來源推導，不建 `DisputeItem` 表 |
-| `reject` 收尾 → `annotation_exception_resolution` | 實體草案 | 同爭議鍵與 vote 各最多一筆 resolution；PL membership FK | 015 FR-095；exclude 只排除輸出項目，不刪公開 item |
+| `reject` 收尾 → `annotation_exception_resolution` | 實體草案 | 同爭議鍵與 vote 各最多一筆 resolution；PL 成員資格 FK | 015 FR-095；exclude 只排除輸出項目，不刪公開資料項目 |
 | `AnnotationHistoryItem` → `annotation_history_event` | 實體草案 | 單位內 `event_no` 唯一；審核事件指向不可變 revision | 015 FR-086～FR-091／FR-097；append-only，敏感快照須按角色遮蔽 |
 | `OutputTypeIAAReport` → 品質計算結果 | 需裁決 | `output_type`、metric、threshold、`pass_state` | dataset-017 FR-039；是否持久化與版本鍵未定 |
 
-另需盤點但**尚無可直接引用的實體表形**：匯出紀錄與產物版本（[主憲法 XVI](../../../specs/_governance/constitution.md)）。來源／批次／項目與私有答案已在 dataset 候選字典有表形；task/run 已有候選型別及單欄／複合 FK 方案，但保留政策與跨表資格待驗；annotation/review 已有候選型別與 FK，但 quality／IAA、工時及匯出的實體落點仍待各 owning spec 裁決，不應直接憑概念圖發明欄位。
+另需盤點但**尚無可直接引用的實體表形**：匯出紀錄與產物版本（[主憲法 XVI](../../../specs/_governance/constitution.md)）。來源／批次／項目與私有答案已在 dataset 候選字典有表形；任務／執行已有候選型別及單欄／複合 FK 方案，但保留政策與跨表資格待驗；標記／審核已有候選型別與 FK，但 品質／IAA、工時及匯出的實體落點仍待各 owning spec 裁決，不應直接憑概念圖發明欄位。
 
 ### 尚待實體字典承接的規格欄位
 
-以下項目尚未有完整物理字典；account/admin、dataset、task/run、annotation/review 的欄位及可空性以各自 §3 字典為準，不在本總帳維護第二份欄位清單。
+以下項目尚未有完整物理字典；帳號／管理、資料集、任務／執行、標記／審核的欄位及可空性以各自 §3 字典為準，不在本總帳維護第二份欄位清單。
 
 | 規格實體 | 來源明列欄位 | 尚缺的資料庫決定 |
 |---|---|---|
-| `ReviewAssignment`（非持久化 view） | `run_id`, `assignment_id`, `reviewer_id`, `pending`, `done`, `assigned`（由來源推導，非 SQL 欄位） | 不建立表、PK 或 FK；Dry 黏著以同 run 的 dataset item 為單位，Official 以 assignment 為單位 |
+| `ReviewAssignment`（非持久化查詢視圖） | `run_id`, `assignment_id`, `reviewer_id`, `pending`, `done`, `assigned`（由來源推導，非 SQL 欄位） | 不建立表、PK 或 FK；試標黏著以同執行的 dataset 資料項目為單位，正式標記以 assignment 為單位 |
 | `WorkLogEntry` | `user_id`, `task_role`, `date`, `login_at`, `logout_at`, `online_duration`, `duration`, `annotated_count`, `reviewed_count`, `arbitrated_count`, `avg_speed`, `run_stage` | 原始事件、歸屬及統計值是否分表 |
 | `RunStateTransition` | `from_status`, `to_status`, `triggered_by`, `triggered_at` | `task_id`、事件 PK 與 `audit_events` 去重仍待裁決 |
 | `IsolationAuditLog` | `task_id`, `from_isolation_enabled`, `to_isolation_enabled`, `changed_by`, `changed_at`, `reason` | 與通用稽核事件的寫入責任與去重 |
 | `OutputTypeIAAReport` | `output_type`, `primary_metric_name`, `primary_metric_value`, `threshold`, `pass_state`, `auxiliary_metrics[]` | 是否持久化與計算版本；`free_text` 無數值門檻 |
 
-014／015 已補 run／assignment 作用域，annotation/review 的八表亦有候選 SQL 欄型與 FK；仍須先定爭議鍵編碼、保留與例外排除分母，再做獨立 migration／雙庫測試。`RunStateTransition` 與共用稽核的分工尚未裁決。
+014／015 已補執行／assignment 作用域，標記／審核的八表亦有候選 SQL 欄型與 FK；仍須先定爭議鍵編碼、保留與例外排除分母，再做獨立資料庫遷移／雙庫測試。`RunStateTransition` 與共用稽核的分工尚未裁決。
 
 ## 4. ER 圖：目前可確認的關聯骨架
 
-下圖使用已列在六欄字典的候選表名，**只表示候選單欄 FK**；同 task／同 cycle／同 run 的複合 FK 另見 [task/run 字典 §4](./task-run-db-schema.md#4-限制清單)及 [annotation/review 字典 §4](./annotation-review-db-schema.md#4-pkunique-fk-與-check-候選)。這不是已部署約束。完整欄位與互動圖見 [NoteCraft Wiki／Diagram](./database-schema.er.json)。`ReviewAssignment` 是非持久化 view，因此不畫成資料表或 FK。
+下圖使用已列在六欄字典的候選表名，**只表示候選單欄 FK**；同 task／同發布週期／同執行的複合 FK 另見 [任務／執行字典 §4](./task-run-db-schema.md#4-限制清單)及 [標記／審核字典 §4](./annotation-review-db-schema.md#4-pkunique-fk-與-check-候選)。這不是已部署約束。完整欄位與互動圖見 [NoteCraft Wiki／Diagram](/view/diagrams/architecture/database-schema.er)。`ReviewAssignment` 是非持久化查詢視圖，因此不畫成資料表或 FK。
 
 ```mermaid
 erDiagram
@@ -158,14 +172,14 @@ erDiagram
 
 `task_run_item → task_run`、`task_run → task_sample_snapshot`、`task_annotation_assignment → task_run_item` 等同作用域關聯由複合 FK 候選約束表達，不能在這裡畫成單欄線。`annotation_record` 等六表到 assignment 的同單位關聯為複合 FK，不畫成單欄線；`ReviewUnit` 與 `DisputeItem` 仍為推導值。
 
-## 5. 在第一批 migration 前要關閉的決策
+## 5. 在第一批資料庫遷移前要關閉的決策
 
 | 優先 | 問題 | 為何阻擋 | 來源 |
 |---|---|---|---|
-| 已裁決／實作前待驗 | 通用稽核表形 | D-4 採 `audit_events`，所有事件至少留一個日曆年；`task.id` 已有 UUID 候選，但 audit 的 `task_id` 真實 FK、刪除保留與遷移順序仍待正典及 migration 裁決，不從候選表推定已落地 | Accepted ADR-032、account/admin §3.7／§4.6、task/run §3.1 |
-| 已裁決 | 角色權限矩陣如何參與授權 | 兩張表保留為未部署候選；42 列初始格、固定格、CAS 與稽核目標依 ADR-037；runtime 與 migration 另案實作 | Accepted ADR-037、admin-007 v1.2.0、account/admin §4.7 |
-| 候選已定／實作前待驗 | 標記與審核的 run 身分及黏著推導 | 014 v7.0.0／015 v12.0.0 已定 `run_id × assignment_id` 審核單位，Dry `run_id × dataset_item_id`、Official `run_id × assignment_id` 推導黏著；不得建立 `ReviewAssignment` 表或將 #1165 三欄舊邏輯參照轉成 FK。八張 annotation／review 候選表及 14 個單欄 FK 已列字典；仍待 migration、爭議鍵編碼、保留政策與雙庫實測 | 014／015 關鍵實體、015 FR-049／FR-051／FR-093 |
-| 候選已定／實作前待驗 | dataset item、隱藏答案與 lineage 的五表邊界 | dataset-021 與字典已定逐檔分類、公開／私有分表及完整版本；manifest 編碼、保留政策、task/run 綁定與雙資料庫實測仍需後續工作 | dataset-021 FR-001～FR-011、[dataset 字典](./dataset-db-schema.md)；主憲法 III／XIV／XVI |
-| P1 | IAA 報告是否獨立表與版本鍵 | `TaskConfig`／`TaskGuidelineConfig` 已有候選版本表；`OutputTypeIAAReport` 的持久化與版本鍵仍待 dataset／quality owner 裁決 | 013／014／017 關鍵實體、task/run 字典 §3 |
+| 已裁決／實作前待驗 | 通用稽核表形 | D-4 採 `audit_events`，所有事件至少留一個日曆年；`task.id` 已有 UUID 候選，但 audit 的 `task_id` 真實 FK、刪除保留與遷移順序仍待正典及資料庫遷移裁決，不從候選表推定已落地 | Accepted ADR-032、帳號／管理 §3.7／§4.6、任務／執行 §3.1 |
+| 已裁決 | 角色權限矩陣如何參與授權 | 兩張表保留為未部署候選；42 列初始格、固定格、CAS 與稽核目標依 ADR-037；執行階段與資料庫遷移另案實作 | Accepted ADR-037、admin-007 v1.2.0、帳號／管理 §4.7 |
+| 候選已定／實作前待驗 | 標記與審核的執行身分及黏著推導 | 014 v7.0.0／015 v12.0.0 已定 `run_id × assignment_id` 審核單位，試標 `run_id × dataset_item_id`、正式標記 `run_id × assignment_id` 推導黏著；不得建立 `ReviewAssignment` 表或將 #1165 三欄舊邏輯參照轉成 FK。八張 annotation／review 候選表及 14 個單欄 FK 已列字典；仍待資料庫遷移、爭議鍵編碼、保留政策與雙庫實測 | 014／015 關鍵實體、015 FR-049／FR-051／FR-093 |
+| 候選已定／實作前待驗 | 資料項目、隱藏答案與來源沿革的五表邊界 | dataset-021 與字典已定逐檔分類、公開／私有分表及完整版本；清單編碼、保留政策、任務／執行綁定與雙資料庫實測仍需後續工作 | dataset-021 FR-001～FR-011、[資料集字典](./dataset-db-schema.md)；主憲法 III／XIV／XVI |
+| P1 | IAA 報告是否獨立表與版本鍵 | `TaskConfig`／`TaskGuidelineConfig` 已有候選版本表；`OutputTypeIAAReport` 的持久化與版本鍵仍待 資料集／品質負責模組裁決 | 013／014／017 關鍵實體、任務／執行字典 §3 |
 
-每項定案後，先更新對應 spec／ADR，再填實體層的欄位字典與限制清單，最後更新本總帳和 ERD。這遵循 [SDD 工作流程](../../sdd-workflow.md) 的 Source-Verify／write-back 原則；未完成前本文件不能當作可執行 migration 規格。
+每項定案後，先更新對應 spec／ADR，再填實體層的欄位字典與限制清單，最後更新本總帳和 ERD。這遵循 [SDD 工作流程](../../sdd-workflow.md) 的 Source-Verify／write-back 原則；未完成前本文件不能當作可執行資料庫遷移規格。
