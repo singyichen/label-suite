@@ -158,4 +158,3 @@
 - **GIVEN** 前任 annotator／reviewer 有未提交草稿
 - **WHEN** membership 失權、slot 重派或 reviewer 候選變動
 - **THEN** 繼任者看不到前任草稿，重新獲權不自動恢復，其他角色看不到 reviewer 草稿存在
-

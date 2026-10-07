@@ -494,7 +494,7 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 44. **AC-3.44**（v6.0.0，issue #1160）：**Given** run 已凍結 reviewer 候選並建立 annotator 工作 slot，**When** reviewer membership 停用，或 annotator membership 停用使未提交 slot 退回後由 PL 重指派／終局排除，**Then** 候選歷史不變但停用者即時失權，slot ID 不變，排除保留唯一不可撤回證據並從提交分子分母移除；審核黏著只依 015 FR-093(5) 推導（FR-005h／FR-010t）。
 45. **AC-3.45**（v6.0.0，issue #1160）：**Given** item 的 private row 含 hidden answer 或 declared_split，**When** 重播同 cycle seed／演算法與版本的抽樣並取得標記者資料，**Then** run 清單由公開資格池可重現，與私有 split 無關，回應與 manifest 均無答案、gold/test 標記或受限來源（FR-010f）。
 46. **AC-3.46**（v6.0.0，issue #1160）：**Given** 同一 cycle 綁定的 sealed dataset version 有 12 個已接受 item，已發布 R1 實際使用 3 個、R2 實際使用 4 個，其中一筆 R1 assignment 後來被終局排除，**When** 發布要求 4 個的 R3，**Then** R3 精確取得 4 個不屬於 R1／R2 的新 item ID，已排除 assignment 對應的 item ID 不得重新出現在 R3，並保留 1 個 item 供 Official 發布時凍結；若改為要求 5 個的 R3，則整次拒絕且不建立 run／snapshot／assignment，不得因 R1 assignment 排除而回補可用池（FR-010d／FR-010e／FR-010f-2）。
-同一穩定 assignment ID 的受派者異動不改寫前任草稿或責任鏈。
+47. **AC-3.47**（v7.0.0，issue #1160）：**Given** 同一穩定 assignment 有原標記員已儲存但未提交的草稿，且可能另有已提交紀錄，**When** membership 停用、移除或 PL 明確重派給新受派者，稍後原成員再啟用，**Then** 舊草稿轉 `abandoned` 並只供原作者受限歷史查閱，繼任者看不到舊草稿並從空紀錄開始；原作者不自動取回 slot 或寫權，已提交紀錄與責任鏈保持不變（FR-005f／FR-005l／FR-010f-4）。
 
 **行為規則**：
 

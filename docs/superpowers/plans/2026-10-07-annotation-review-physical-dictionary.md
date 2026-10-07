@@ -54,4 +54,4 @@
 
 ## Status
 
-Design committed at `9b5c4584`; no canonical rule or annotation/review table has been changed yet. The user previously authorized direct execution and senior-DBA resolution without repeated approval questions. Implementation will continue after this plan's self-review.
+Canonical 014 v7.0.0／015 v12.0.0 and OpenSpec delta are committed. The senior-DBA dictionary ruling uses `annotation_history_event.review_revision_id` to reference the immutable reviewer revision. Eight undeployed annotation/review candidates now project into NoteCraft, bringing the graph to 35 tables／288 columns／41 single-column FKs. Source, 57 Node tests, OpenSpec validation, Project SDD lint, NoteCraft build, and actual Wiki／Diagram navigation passed on 2026-10-07. Independent review, final-group archive/Source-Verify, CI, PR merge, and issue write-back remain.
