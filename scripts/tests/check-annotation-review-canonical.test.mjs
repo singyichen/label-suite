@@ -5,6 +5,7 @@ import { test } from 'node:test';
 const read = (path) => readFileSync(new URL(path, import.meta.url), 'utf8');
 const annotation = read('../../specs/annotation/015-annotation-workspace/spec.md');
 const task = read('../../specs/task-management/014-task-detail/spec.md');
+const annotationDelta = read('../../openspec/changes/annotation-review-physical-contract/specs/annotation/015-annotation-workspace/spec.md');
 
 const liveRequirements = (source) => {
   const requirements = source.match(/^### 功能需求\n([\s\S]*?)(?=^### |^## )/m)?.[1];
@@ -104,4 +105,86 @@ test('reassignment keeps the old unsent draft private and starts a clean success
     'The annotation record must distinguish an abandoned draft from an active one');
   assert.match(annotationRules, /(?:新受派者|繼任者|重新指派)[^\n]*?(?:空|新)[^\n]*?(?:草稿|紀錄|記錄)/,
     'A successor must begin with an empty annotation record');
+});
+
+test('live FR-105 names the transaction and privacy contract', () => {
+  const writeContract = requirement(annotation, 'FR-105');
+  assert.match(writeContract, /(?:config|釘住)[\s\S]*?(?:OutputAnswer|outKey)|(?:OutputAnswer|outKey)[\s\S]*?(?:config|驗證)/,
+    'The answer and review payload must be validated against pinned configuration');
+  assert.match(writeContract, /(?:revision|版本)[\s\S]*?(?:凍結|不可變|衝突)/,
+    'Submission and arbitration must protect immutable source revisions');
+  assert.match(writeContract, /(?:active membership|有效成員)[\s\S]*?(?:task role|任務角色|assignment|指派)/,
+    'Every write must validate current membership and task authority');
+  assert.match(writeContract, /(?:dataset_item_private|gold\/test|隱藏答案)[\s\S]*?(?:不讀|不外洩|不得揭露)|(?:不讀|不外洩|不得揭露)[\s\S]*?(?:dataset_item_private|gold\/test|隱藏答案)/,
+    'Ordinary paths must protect hidden answers and private dataset fields');
+});
+
+const acceptanceCases = [
+  {
+    id: 'AC-7.4',
+    given: /(?:offset|位移)[^\n]*?(?:不同|相同)|(?:不同|相同)[^\n]*?(?:offset|位移)/,
+    when: /(?:推導|比對)[^\n]*?(?:鍵|差異)|(?:鍵|差異)[^\n]*?(?:推導|比對)/,
+    then: /(?:不合併|不碰撞|獨立)[^\n]*?(?:label|標籤|新增|移除)|(?:label|標籤|新增|移除)[^\n]*?(?:不合併|不碰撞|獨立)/,
+    summary: /(?:offset|位移)[\s\S]*?(?:label|標籤)|(?:label|標籤)[\s\S]*?(?:offset|位移)/,
+  },
+  {
+    id: 'AC-7.5',
+    given: /(?:annotator|reviewer|標記員|審核員)[^\n]*?(?:同時|競爭|並發)|(?:同時|競爭|並發)[^\n]*?(?:annotator|reviewer|標記員|審核員)/,
+    when: /(?:交易|提交|寫入|commit)/,
+    then: /(?:版本|衝突|revision|凍結)[^\n]*?(?:票|來源|提交)|(?:票|來源|提交)[^\n]*?(?:版本|衝突|revision|凍結)/,
+    summary: /(?:競爭|並發)[\s\S]*?(?:版本|revision|凍結|衝突)/,
+  },
+  {
+    id: 'AC-7.6',
+    given: /(?:全部|多個)[^\n]*?(?:爭議|鍵|key)|(?:爭議|鍵|key)[^\n]*?(?:全部|多個)/,
+    when: /(?:batch|批次)[^\n]*?(?:提交|重送|retry)|(?:提交|重送|retry)[^\n]*?(?:batch|批次)/,
+    then: /(?:一票|唯一|一次)[^\n]*?(?:部分|冪等|原子|拒絕)|(?:部分|冪等|原子|拒絕)[^\n]*?(?:一票|唯一|一次)/,
+    summary: /(?:batch|批次)[\s\S]*?(?:冪等|部分|重送|一票|原子)/,
+  },
+  {
+    id: 'AC-7.7',
+    given: /(?:reject|駁回)[^\n]*?(?:票|vote)|(?:票|vote)[^\n]*?(?:reject|駁回)/,
+    when: /(?:處置|resolution)[^\n]*?(?:重送|再次|retry)|(?:重送|再次|retry)[^\n]*?(?:處置|resolution)/,
+    then: /(?:同內容|相同|冪等)[^\n]*?(?:異內容|不同|衝突|拒絕)[^\n]*?(?:公開|保留|不刪)/,
+    summary: /(?:reject|駁回)[\s\S]*?(?:resolution|重送|排除|公開|保留)/,
+  },
+  {
+    id: 'AC-7.8',
+    given: /(?:前任|原|舊)[^\n]*?(?:草稿|draft)|(?:草稿|draft)[^\n]*?(?:前任|原|舊)/,
+    when: /(?:失權|重派|候選|停用)/,
+    then: /(?:繼任|新任|新受派|他人)[^\n]*?(?:看不到|不可|不得|拒絕|不[^\n]*?讀)[^\n]*?(?:還原|恢復|自動)/,
+    summary: /(?:草稿|draft)[\s\S]*?(?:繼任|新受派|前任)[\s\S]*?(?:還原|恢復|私有|隱私|不可讀)/,
+  },
+];
+
+test('live AC-7.4 through AC-7.8 contain case-specific Given/When/Then acceptance lines', () => {
+  const currentCases = annotation.match(/^## run／assignment 身分驗收情境[^\n]*\n([\s\S]*?)(?=^## )/m)?.[1];
+  assert.ok(currentCases, 'Expected the current run and assignment acceptance section');
+
+  for (const { id, given, when, then } of acceptanceCases) {
+    const line = currentCases.split('\n').find((value) => value.startsWith(`- **${id}**：`) || value.startsWith(`- **${id}**:`));
+    assert.ok(line, `Expected a current ${id} acceptance line`);
+    const parts = line.match(/^-[^\n]*?\*\*Given\*\*([^\n]*?)\*\*When\*\*([^\n]*?)\*\*Then\*\*([^\n]*)$/);
+    assert.ok(parts, `${id} must state Given, When and Then on its current acceptance line`);
+    assert.match(parts[1], given, `${id} Given must identify the case's starting state`);
+    assert.match(parts[2], when, `${id} When must identify the case's operation`);
+    assert.match(parts[3], then, `${id} Then must identify the case's expected result`);
+  }
+});
+
+test('OpenSpec AC-7.4 through AC-7.8 define concrete requirements and distinct scenarios', () => {
+  for (const { id, given, when, then, summary } of acceptanceCases) {
+    const escapedId = id.replace('.', '\\.');
+    const block = annotationDelta.match(new RegExp(`^### Requirement: ${escapedId}[^\\n]*\\n([\\s\\S]*?)(?=^### Requirement:|^## )`, 'm'))?.[1];
+    assert.ok(block, `Expected OpenSpec ${id} requirement`);
+    const [description, scenario] = block.split(/^#### Scenario:/m);
+    assert.ok(scenario, `Expected OpenSpec ${id} scenario`);
+    assert.match(description, summary, `${id} requirement must describe its concrete rule, beyond a shared identity qualifier`);
+
+    for (const [step, expected] of [['GIVEN', given], ['WHEN', when], ['THEN', then]]) {
+      const line = scenario.split('\n').find((value) => value.startsWith(`- **${step}**`));
+      assert.ok(line, `Expected OpenSpec ${id} ${step} step`);
+      assert.match(line, expected, `${id} ${step} must describe the case-specific condition or outcome`);
+    }
+  }
 });
