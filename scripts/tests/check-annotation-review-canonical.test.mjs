@@ -175,7 +175,7 @@ test('live AC-7.4 through AC-7.8 contain case-specific Given/When/Then acceptanc
 test('OpenSpec AC-7.4 through AC-7.8 define concrete requirements and distinct scenarios', () => {
   for (const { id, given, when, then, summary } of acceptanceCases) {
     const escapedId = id.replace('.', '\\.');
-    const block = annotationDelta.match(new RegExp(`^### Requirement: ${escapedId}[^\\n]*\\n([\\s\\S]*?)(?=^### Requirement:|^## )`, 'm'))?.[1];
+    const block = annotationDelta.match(new RegExp(`^### Requirement: ${escapedId}[^\\n]*\\n([\\s\\S]*?)(?=^### Requirement:|^## |(?![\\s\\S]))`, 'm'))?.[1];
     assert.ok(block, `Expected OpenSpec ${id} requirement`);
     const [description, scenario] = block.split(/^#### Scenario:/m);
     assert.ok(scenario, `Expected OpenSpec ${id} scenario`);
