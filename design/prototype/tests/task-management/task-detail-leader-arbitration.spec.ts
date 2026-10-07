@@ -618,9 +618,9 @@ test.describe('Review-settings save keeps both roster sources in sync (review M1
     expect(await roster(page)).toEqual([chosen]);
   });
 
-  test('M1: saving with no arbiter selected makes taskArbiterRoster return [] (not the reviewer_chen fallback)', async ({ page }) => {
-    // T014 is not a draft (review editing is disabled), and no draft profile seeds arbiterIds. T013 is a
-    // legacy profile whose UI shows no arbiter, so first make a real selection, save, then reopen and clear it.
+  test('M1: saving with no arbiter selected makes taskArbiterRoster return [] (no demo fallback)', async ({ page }) => {
+    // T014 is not a draft (review editing is disabled), and T013 is a
+    // draft profile seeding only reviewer_chen, so first make a real selection, save, then reopen and clear it.
     await openEdit(page);
     await page.locator(OPTIONS).first().locator('input').check();
     await page.locator('#reviewSaveBtn').click();
@@ -641,10 +641,12 @@ test.describe('Review-settings save keeps both roster sources in sync (review M1
     expect(await roster(page)).toEqual([]);
   });
 
-  test('M1 (legacy): a reviewer-only save on a profile without arbiterIds leaves the arbiter roster fallback untouched (issue-761 AC-1.6)', async ({ page }) => {
+  test('M1 (legacy): a reviewer-only save keeps the explicitly seeded arbiter roster untouched (issue-761 AC-1.6, issue #1146)', async ({ page }) => {
+    // issue #1146: T001 now seeds arbiterIds explicitly; there is no demo
+    // fallback, so a reviewer-only save must neither add nor drop arbiters.
     await openEdit(page, 'T001');
     const rosterBefore = await roster(page, 'T001');
-    expect(rosterBefore, 'precondition: legacy fallback roster contains reviewer_chen').toContain('reviewer_chen');
+    expect(rosterBefore, 'precondition: T001 seeds reviewer_chen as its arbiter').toEqual(['reviewer_chen']);
 
     const option = page
       .locator('#reviewerOptionList .reviewer-option')
@@ -657,7 +659,7 @@ test.describe('Review-settings save keeps both roster sources in sync (review M1
     const profileArbiterIds = await page.evaluate(
       () => (window as any).LabelSuiteTaskDetailData.profiles.T001.arbiterIds,
     );
-    expect(profileArbiterIds).toBeUndefined();
+    expect(profileArbiterIds).toEqual(['reviewer_chen']);
     expect(await roster(page, 'T001')).toEqual(rosterBefore);
   });
 });
