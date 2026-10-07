@@ -6970,7 +6970,7 @@ function getTaskTypeLabel() {
     TASK_DATA.reviewerIds = state.reviewDraft.reviewerIds.slice();
     var arbitersChanged = TASK_DATA.arbiterIds.join('|') !== state.reviewDraft.arbiterIds.join('|');
     TASK_DATA.arbiterIds = state.reviewDraft.arbiterIds.slice();
-    /* Sync the profile only on change: legacy profiles without arbiterIds keep the roster fallback (#1146). */
+    /* Sync the profile only on change; a profile without arbiterIds means no arbiter (#1146). */
     var savedProfile = window.LabelSuiteTaskDetailData && window.LabelSuiteTaskDetailData.profiles &&
       window.LabelSuiteTaskDetailData.profiles[TASK_DATA.taskId];
     if (savedProfile && arbitersChanged) savedProfile.arbiterIds = TASK_DATA.arbiterIds.slice();
