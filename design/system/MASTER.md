@@ -20,7 +20,7 @@
 
 ## Contents
 
-**Foundation** — [Color Palette](#color-palette) · [Semantic State Colors](#semantic-state-colors) · [Dark Mode Tokens](#dark-mode-tokens) · [Typography](#typography) · [Bilingual Typography](#bilingual-typography) · [Spacing](#spacing-variables) · [Border Radius](#border-radius-scale) · [Z-index](#z-index-scale) · [Shadows](#shadow-depths)
+**Foundation** — [Brand Baseline](#brand-baseline-finalized) · [Color Palette](#color-palette) · [Semantic State Colors](#semantic-state-colors) · [Dark Mode Tokens](#dark-mode-tokens) · [Typography](#typography) · [Bilingual Typography](#bilingual-typography) · [Spacing](#spacing-variables) · [Border Radius](#border-radius-scale) · [Z-index](#z-index-scale) · [Shadows](#shadow-depths)
 
 **Components** — [Buttons](#buttons) · [Cards](#cards) · [Inputs](#inputs) · [Modals](#modals) · [Status Badges](#status-badges) · [Alert Banner](#error--alert-banner) · [Toast](#toast) · [Navbar](#navbar) · [Sidebar](#sidebar) · [Workspace Tabs](#workspace-tabs) · [Desktop Content Tabs](#desktop-content-tabs) · [Table](#table) · [Avatar](#avatar) · [Tooltip](#tooltip) · [Mobile Tab Bar](#mobile-bottom-tab-bar) · [State Panel](#state-panel) · [Prototype Switcher](#prototype-only-state-switcher) · [Divider](#divider) · [List](#list-activity-list) · [Link](#link) · [Toolbar](#toolbar) · [Step Indicator](#step-indicator) · [Upload Zone](#upload-zone) · [Tag Input](#tag-input--tag-pill) · [Toggle Switch](#toggle-switch) · [Code Editor](#code-editor-schema)
 
@@ -31,6 +31,19 @@
 ---
 
 ## Global Rules
+
+### Brand Baseline (finalized)
+
+Maintainer decision 2026-10-07 (issue #935): the current brand is final, not a placeholder awaiting React scaffolding or the #936 review. The React Tailwind translation (ADR-016) carries these values over unchanged.
+
+| Element | Final value |
+|---------|-------------|
+| Brand primary | `#6366F1` (`--color-primary`) |
+| UI font | Inter (`--font-sans`) |
+| Logo | Lucide `tag` glyph in white on a `#6366F1` rounded square, wordmark in Crimson Pro — `design/prototype/assets/logo/` |
+| Shape and type scale | Current radius tokens and the Typography scale below stay as-is |
+
+No custom logo design or full corporate identity system; logo usage rules are tracked in issue #1187.
 
 ### Color Palette
 
@@ -2888,3 +2901,4 @@ Before delivering any UI code, verify:
 | v1.23 | 2026-10-02 | **Standalone auth pages light `--color-ink-muted` WCAG AA fix (issue #1069)** — the four standalone auth pages (`login`/`register`/`forgot-password`/`reset-password`, none of which import `tokens.css`) still declared light `--color-ink-muted: #94A3B8` (2.564:1 for `.card-subtitle` on the white card), the same pre-#973 value `tokens.css` raised to `#64748B` (4.759:1) — the #973 fix never reached these pages because they define their own local `:root` tokens. Light value raised to `#64748B` to match; dark (`#9CA3AF`, already AA-compliant) left unchanged. Rule 9's ✅ list updated to state both theme values. |
 | v1.24 | 2026-10-02 | **Workspace Tabs component spec, visual-alignment rework (issue #1099 G1)** — added the §Workspace Tabs subsection (and its Components index anchor) the v1.22 terminology note referenced but never backed with an actual spec: `--workspace-tab-width` (180px, both themes), new neutral semantic tokens `--color-tab-active-bg` (light `#F8FAFC` / dark `#1F1F28`, aliasing `--color-slate-50`) and `--color-tab-hover-bg` (light `#F1F5F9` aliasing `--color-border-muted`; dark `#2A2A35` aliasing `--color-border` instead, because `--color-border-muted` collides with `--color-slate-50`'s dark value and would make hover indistinguishable from active), replacing the former `.workspace-tab.active` Violet-50 `--color-surface` background plus full `border-color` ring the maintainer judged too jarring; per-page-kind tab icons reusing the six L0 sidebar nav icons (`workspaceTabIconFor()`). Stage badge text colors (`--color-warning`/`--color-primary`) unaffected. |
 | v1.25 | 2026-10-05 | **Workspace Tabs bar spacing flush (issue #1143)** — added a "Bar spacing" row to §Workspace Tabs: `.workspace-tab-bar` `gap: 0` / `padding: 0` (was `--space-xs` gap and `--space-md` side padding) and a 1px `var(--color-border)` right divider on every tab (previously transparent), NoteCraft style; tab width, active/hover backgrounds, and tokens unchanged |
+| v1.26 | 2026-10-07 | **Brand baseline finalized (issue #935, maintainer decision 2026-10-07)** — added §Brand Baseline under Global Rules: `#6366F1` primary, Inter UI font, the existing Lucide `tag` logo in `design/prototype/assets/logo/`, and the current radius/type scale are final and carry into the React Tailwind translation unchanged. Supersedes the 2026-09-26 "decide at React scaffolding" and 2026-09-28 "wait for #936" triggers; the v1.21 row's "still-undecided" wording is kept as history. |
