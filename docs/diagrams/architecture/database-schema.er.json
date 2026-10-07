@@ -1,16 +1,16 @@
 {
   "$schema": "https://raw.githubusercontent.com/SteveLin100132/notecraft/main/plugins/er-diagram-renderer/schema.json",
   "meta": {
-    "title": "Label Suite 資料庫規劃 ER Diagram（account／admin／dataset／task／run）",
-    "description": "**規劃圖，並非已部署 Schema。** 已部署業務表：0；本頁顯示 **27 張候選表、206 欄、27 個候選單欄 FK**。account／admin、dataset 及 task／run 的逐表型別與關聯來自[資料表盤點總帳](/notes/diagrams/architecture/database-table-inventory)所連的實體層字典。task/run 的複合 FK、同 cycle 唯一鍵、資料版本資格與保留政策見 [task/run 字典](/notes/diagrams/architecture/task-run-db-schema) §4–§7。annotation／review／quality 的物理欄位仍在[盤點總帳](/notes/diagrams/architecture/database-table-inventory)待逐表設計；不以虛構 FK 畫入。\n\n**讀圖方式：** Wiki 逐表看候選欄位、來源與待決；Diagram 搜尋表名或欄名，點表聚焦已列的候選單欄 FK。圖中連線不代表 migration、複合約束或 DB 權限已建立。",
-    "source": "docs/diagrams/architecture/account-admin-db-schema.md §2–§3; docs/diagrams/architecture/dataset-db-schema.md §2–§3; docs/diagrams/architecture/task-run-db-schema.md §2–§3; specs/task-management/013-task-new/spec.md; specs/task-management/014-task-detail/spec.md",
+    "title": "Label Suite 資料庫規劃 ER Diagram（account／admin／dataset／task／run／annotation／review）",
+    "description": "**規劃圖，並非已部署 Schema。** 已部署業務表：0；本頁顯示 **35 張候選表、288 欄、41 個候選單欄 FK**。account／admin、dataset、task／run 與 annotation／review 的逐表型別和關聯來自[資料表盤點總帳](/notes/diagrams/architecture/database-table-inventory)所連的四份實體層字典。annotation／review 的 8 張表均未 migration；六組 assignment 複合 FK、來源 revision、retention 與私有答案讀權須讀 [annotation／review 字典](/notes/diagrams/architecture/annotation-review-db-schema) §4–§7。quality／IAA、工時與匯出仍在[盤點總帳](/notes/diagrams/architecture/database-table-inventory)待決。\n\n**讀圖方式：** Wiki 逐表看候選欄位、來源與待決；Diagram 搜尋表名或欄名，點表聚焦已列的候選單欄 FK。圖中連線不代表 migration、複合約束或 DB 權限已建立。",
+    "source": "docs/diagrams/architecture/account-admin-db-schema.md §2–§3; docs/diagrams/architecture/dataset-db-schema.md §2–§3; docs/diagrams/architecture/task-run-db-schema.md §2–§3; specs/task-management/013-task-new/spec.md; specs/task-management/014-task-detail/spec.md; docs/diagrams/architecture/annotation-review-db-schema.md §2–§3; specs/annotation/015-annotation-workspace/spec.md",
     "backTo": "/notes/diagrams/architecture/database-table-inventory"
   },
   "options": {
     "defaultRows": 6,
     "sectionPrefix": "§",
     "hint": "規劃圖：點表聚焦候選 FK；Wiki 可查看逐表欄位與待裁決事項。",
-    "searchPlaceholder": "搜尋候選表或欄位（例：task_run、task_annotation_assignment、dataset_item）"
+    "searchPlaceholder": "搜尋候選表或欄位（例：task_run、annotation_record、annotation_review_submission_revision）"
   },
   "requirement": [
     {
@@ -76,6 +76,16 @@
       "key": "run",
       "label": "Run 與發布",
       "description": "八張未部署候選表保存 cycle、round、snapshot、run、公開 item membership、工作 slot、發布時審核候選與終局排除。ReviewAssignment 是非持久化 view。"
+    },
+    {
+      "key": "annotation",
+      "label": "標記與責任歷程",
+      "description": "標記嘗試與跨角色責任事件的未部署候選表；敏感快照須依角色遮蔽。"
+    },
+    {
+      "key": "review",
+      "label": "審核、仲裁與例外",
+      "description": "私有草稿、單位唯一正式審核、逐輸出決策、不可變修訂、一次性仲裁與例外收尾。複合 assignment FK 見字典；ReviewAssignment、ReviewUnit、DisputeItem 不建表。"
     }
   ],
   "layout": {
@@ -108,6 +118,18 @@
         "key": "run",
         "groups": [
           "run"
+        ]
+      },
+      {
+        "key": "annotation",
+        "groups": [
+          "annotation"
+        ]
+      },
+      {
+        "key": "review",
+        "groups": [
+          "review"
         ]
       }
     ]
@@ -1659,6 +1681,160 @@
         }
       ],
       "description": "**實體候選，尚未部署。** 每 assignment 最多一筆，V1 不撤銷、不刪除，與原 slot 分離避免 null assignee 被誤判排除。來源：014 FR-005h／`ExcludedAnnotationAssignment`。\n\n來源：[task/run 實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.13；複合 FK、CHECK、UNIQUE 與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。"
+    },
+    {
+      "name": "annotation_record",
+      "label": "標記草稿與提交嘗試",
+      "section": "3.1",
+      "group": "annotation",
+      "columns": [
+        {"name": "id", "type": "uuid", "required": "required", "note": "此次草稿／提交嘗試的 PK；首次儲存；不改；規則：R-01", "pk": true},
+        {"name": "run_id", "type": "uuid", "required": "required", "note": "所在發布 run，複合單位鍵；首次儲存；不改；規則：X-01"},
+        {"name": "assignment_id", "type": "uuid", "required": "required", "note": "穩定工作 slot，複合單位鍵；首次儲存；不改；規則：X-01"},
+        {"name": "author_membership_id", "type": "uuid", "required": "required", "note": "當時受派 annotator membership；首次儲存；不改；規則：R-02", "fk": "task_membership"},
+        {"name": "answer_payload", "type": "json", "required": "required", "note": "版本化 `OutputAnswer[]`，依釘住 config 驗證；儲存／提交前可更新；規則：R-03"},
+        {"name": "note", "type": "text", "required": "nullable", "note": "受派者備註；缺值是真正未提供；儲存／提交前可更新；規則：R-03"},
+        {"name": "version", "type": "integer", "required": "required", "note": "正整數樂觀鎖版本；每次成功寫入 +1；規則：X-02"},
+        {"name": "status", "type": "varchar(16)", "required": "required", "note": "`saved`／`submitted`／`abandoned`；儲存、提交或未提交重派；規則：R-04"},
+        {"name": "saved_at", "type": "timestamptz", "required": "required", "note": "最近一次成功保存 UTC 時間；建立／儲存／提交；規則：X-03"},
+        {"name": "submitted_at", "type": "timestamptz", "required": "nullable", "note": "正式提交 UTC 時間；提交一次；規則：R-04"},
+        {"name": "abandoned_at", "type": "timestamptz", "required": "nullable", "note": "舊草稿退役 UTC 時間；未提交重派時一次；規則：R-04"}
+      ],
+      "description": "**實體候選，尚未部署。** 同一 assignment 的未儲存 `pending` 由缺列推導。受派者重派前，舊 `saved` 轉 `abandoned` 並保留作者與答案；新受派者另建一列。reviewer 首次提交後凍結標記來源已由 015 FR-105 納入規劃契約；資料庫交易與約束尚未實作。來源：015 FR-049／FR-051／`AnnotationRecord`、014 FR-005l。\n\n來源：[annotation／review 實體候選字典](/notes/diagrams/architecture/annotation-review-db-schema) §3.1；複合 assignment FK、UNIQUE、CHECK、權限與 migration 前待決見 §4–§7。圖中只畫已列的單欄 FK；線條不表示 ORM、migration 或 DB 權限已建立。"
+    },
+    {
+      "name": "annotation_review_draft",
+      "label": "審核員私有草稿",
+      "section": "3.2",
+      "group": "review",
+      "columns": [
+        {"name": "id", "type": "uuid", "required": "required", "note": "私有草稿 PK；第一次草稿寫入；不改；規則：D-01", "pk": true},
+        {"name": "run_id", "type": "uuid", "required": "required", "note": "所在 run，複合單位鍵；建立；不改；規則：X-01"},
+        {"name": "assignment_id", "type": "uuid", "required": "required", "note": "受審 slot，複合單位鍵；建立；不改；規則：X-01"},
+        {"name": "reviewer_membership_id", "type": "uuid", "required": "required", "note": "唯一可讀寫此草稿的 reviewer；建立；不改；規則：D-02", "fk": "task_membership"},
+        {"name": "decision_payload", "type": "json", "required": "required", "note": "未提交的逐 outKey 三向決策與理由；本人編輯時更新；規則：D-03"},
+        {"name": "version", "type": "integer", "required": "required", "note": "草稿樂觀鎖版本；每次成功寫入 +1；規則：X-02"},
+        {"name": "updated_at", "type": "timestamptz", "required": "required", "note": "最近成功寫入 UTC 時間；建立／更新；規則：X-03"},
+        {"name": "invalidated_at", "type": "timestamptz", "required": "nullable", "note": "提交、失權或指派變更後的失效時間；失效時一次；規則：D-04"}
+      ],
+      "description": "**實體候選，尚未部署。** 一列僅屬同一 reviewer 與同一審核單位。`decision_payload` 僅保存 FR-014S 承諾的逐 outKey 決策與理由，不擴充為修正控件內未提交的文字／數值編輯。送出後清除有效草稿；因稽核留存而保留舊列時，應以 `invalidated_at` 失效並排除還原。草稿的**存在與否**亦不得向其他 reviewer 或 annotator 洩漏。來源：015 FR-014S／FR-062／FR-093。\n\n來源：[annotation／review 實體候選字典](/notes/diagrams/architecture/annotation-review-db-schema) §3.2；複合 assignment FK、UNIQUE、CHECK、權限與 migration 前待決見 §4–§7。圖中只畫已列的單欄 FK；線條不表示 ORM、migration 或 DB 權限已建立。"
+    },
+    {
+      "name": "annotation_review_submission",
+      "label": "已提交審核主檔",
+      "section": "3.3",
+      "group": "review",
+      "columns": [
+        {"name": "id", "type": "uuid", "required": "required", "note": "目前提交 head PK；首次正式提交；不改；規則：S-01", "pk": true},
+        {"name": "run_id", "type": "uuid", "required": "required", "note": "所在 run，複合單位鍵；首次提交；不改；規則：X-01"},
+        {"name": "assignment_id", "type": "uuid", "required": "required", "note": "受審 slot，複合單位鍵；首次提交；不改；規則：X-01"},
+        {"name": "reviewer_membership_id", "type": "uuid", "required": "required", "note": "唯一正式提交者；首次提交；不改；規則：S-02", "fk": "task_membership"},
+        {"name": "version", "type": "integer", "required": "required", "note": "已提交修訂的正整數序號／樂觀鎖；每次合法改判 +1；規則：S-03"},
+        {"name": "submitted_at", "type": "timestamptz", "required": "required", "note": "首次提交 UTC 時間；首次提交；不改；規則：X-03"},
+        {"name": "updated_at", "type": "timestamptz", "required": "required", "note": "最新合法改判 UTC 時間；每次提交；規則：X-03"}
+      ],
+      "description": "**實體候選，尚未部署。** UNIQUE 單位鍵阻擋兩位 reviewer 並列正式提交。首次提交者的 sticky 身分由此列推導；再次明示提交僅能由同一 reviewer 更新 head，舊版存到 §3.8 的不可變 revision。首票後禁止改判已由 015 FR-103／FR-105 納入規劃契約；資料庫交易尚未實作。來源：015 FR-051／FR-093／FR-103。\n\n來源：[annotation／review 實體候選字典](/notes/diagrams/architecture/annotation-review-db-schema) §3.3；複合 assignment FK、UNIQUE、CHECK、權限與 migration 前待決見 §4–§7。圖中只畫已列的單欄 FK；線條不表示 ORM、migration 或 DB 權限已建立。"
+    },
+    {
+      "name": "annotation_review_decision",
+      "label": "逐輸出審核決策",
+      "section": "3.4",
+      "group": "review",
+      "columns": [
+        {"name": "id", "type": "uuid", "required": "required", "note": "逐輸出決策 PK；正式提交時建立；規則：J-01", "pk": true},
+        {"name": "review_submission_id", "type": "uuid", "required": "required", "note": "所屬已提交 head；建立；不改；規則：J-01", "fk": "annotation_review_submission"},
+        {"name": "output_key", "type": "varchar(120)", "required": "required", "note": "釘住 config 的一個 outKey；建立；改判時換子列；規則：J-02"},
+        {"name": "decision", "type": "varchar(16)", "required": "required", "note": "`approve`／`modify`／`bypass`；提交／改判時寫；規則：J-03"},
+        {"name": "corrected_answer", "type": "json", "required": "nullable", "note": "`modify` 的已驗證修正值；SQL NULL 表示不適用；`modify` 時寫；規則：J-03"},
+        {"name": "reason", "type": "text", "required": "nullable", "note": "`modify`／`bypass` 的理由；提交／改判時寫；規則：J-03"},
+        {"name": "decided_at", "type": "timestamptz", "required": "required", "note": "該決策本次提交 UTC 時間；提交／改判時寫；規則：X-03"}
+      ],
+      "description": "**實體候選，尚未部署。** 一列只保存 head 中一個 `output_key` 的目前決策；完整性（每個釘住的 `outputs[]` 恰一次）由提交交易核對。修正值有合法 JSON null 的可能，不能以 SQL NULL 是否存在取代 registry 驗證。來源：015 FR-014S／FR-092／FR-103。\n\n來源：[annotation／review 實體候選字典](/notes/diagrams/architecture/annotation-review-db-schema) §3.4；複合 assignment FK、UNIQUE、CHECK、權限與 migration 前待決見 §4–§7。圖中只畫已列的單欄 FK；線條不表示 ORM、migration 或 DB 權限已建立。"
+    },
+    {
+      "name": "annotation_arbitration_vote",
+      "label": "逐爭議鍵仲裁票",
+      "section": "3.5",
+      "group": "review",
+      "columns": [
+        {"name": "id", "type": "uuid", "required": "required", "note": "不可變票 PK；仲裁交易建立；不改；規則：V-01", "pk": true},
+        {"name": "run_id", "type": "uuid", "required": "required", "note": "所在 run，複合單位鍵；建立；不改；規則：X-01"},
+        {"name": "assignment_id", "type": "uuid", "required": "required", "note": "受審 slot，複合單位鍵；建立；不改；規則：X-01"},
+        {"name": "output_key", "type": "varchar(120)", "required": "required", "note": "爭議的 outKey；建立；不改；規則：V-02"},
+        {"name": "item_key", "type": "text", "required": "required", "note": "型別化、無碰撞的推導子項鍵；建立；不改；規則：V-02"},
+        {"name": "arbiter_membership_id", "type": "uuid", "required": "required", "note": "當次合格且非當事的仲裁者；建立；不改；規則：V-03", "fk": "task_membership"},
+        {"name": "review_revision_id", "type": "uuid", "required": "required", "note": "投票所見的不可變 reviewer 版本；建立；不改；規則：V-04", "fk": "annotation_review_submission_revision"},
+        {"name": "choice", "type": "varchar(16)", "required": "required", "note": "`adopt_a`／`adopt_b`／`reject`；建立；不改；規則：V-05"},
+        {"name": "reason", "type": "text", "required": "required", "note": "每張仲裁票的裁定理由；三種 choice 都必填且非空白；建立；不改；規則：V-05"},
+        {"name": "has_finalized_value", "type": "boolean", "required": "required", "note": "本票是否產生定案值；區分合法 JSON null；建立；不改；規則：V-06"},
+        {"name": "finalized_value", "type": "json", "required": "nullable", "note": "A／B 的定案值；SQL NULL 表示沒有值；建立；不改；規則：V-06"},
+        {"name": "source_digest", "type": "char(64)", "required": "required", "note": "標記提交與 reviewer revision 的來源摘要；建立；不改；規則：V-04"},
+        {"name": "voted_at", "type": "timestamptz", "required": "required", "note": "投票 UTC 時間；建立；不改；規則：X-03"},
+        {"name": "decision_batch_id", "type": "uuid", "required": "required", "note": "同一次原子仲裁請求的冪等 ID；建立；不改；規則：V-07"},
+        {"name": "decision_batch_digest", "type": "char(64)", "required": "required", "note": "該 batch 完整 canonical 內容摘要；建立；不改；規則：V-07"}
+      ],
+      "description": "**實體候選，尚未部署。** `DisputeItem` 由標記來源與 reviewer revision 推導，這張表僅保存對其鍵的票。`item_key` 用型別化 canonical encoding 表示 FR-052 粒度；`sequence_tagging` 的 span 粒度已由 015 FR-059／FR-061 收斂；`item_key` 的精確編碼、版本及碰撞測試仍待 migration 前固定，不能宣稱鍵已可落地。一次 batch 提交全部爭議鍵、每鍵最多一票已納入 015 的 V1 規劃契約，尚未實作。來源：015 FR-052／FR-059／FR-061／FR-062。\n\n來源：[annotation／review 實體候選字典](/notes/diagrams/architecture/annotation-review-db-schema) §3.5；複合 assignment FK、UNIQUE、CHECK、權限與 migration 前待決見 §4–§7。圖中只畫已列的單欄 FK；線條不表示 ORM、migration 或 DB 權限已建立。"
+    },
+    {
+      "name": "annotation_exception_resolution",
+      "label": "拒絕票例外收尾",
+      "section": "3.6",
+      "group": "review",
+      "columns": [
+        {"name": "id", "type": "uuid", "required": "required", "note": "不可變收尾 PK；確認交易建立；不改；規則：E-01", "pk": true},
+        {"name": "run_id", "type": "uuid", "required": "required", "note": "所在 run，複合單位鍵；建立；不改；規則：X-01"},
+        {"name": "assignment_id", "type": "uuid", "required": "required", "note": "受審 slot，複合單位鍵；建立；不改；規則：X-01"},
+        {"name": "output_key", "type": "varchar(120)", "required": "required", "note": "被收尾的爭議 outKey；建立；不改；規則：E-02"},
+        {"name": "item_key", "type": "text", "required": "required", "note": "被收尾的型別化爭議子項鍵；建立；不改；規則：E-02"},
+        {"name": "arbitration_vote_id", "type": "uuid", "required": "required", "note": "唯一 `reject` 票；建立；不改；規則：E-03", "fk": "annotation_arbitration_vote", "unique": true},
+        {"name": "resolved_by_membership_id", "type": "uuid", "required": "required", "note": "確認的 project leader membership；建立；不改；規則：E-04", "fk": "task_membership"},
+        {"name": "action", "type": "varchar(32)", "required": "required", "note": "四種 `EXCEPTION_POOL_ACTIONS` 之一；建立；不改；規則：E-05"},
+        {"name": "reason", "type": "text", "required": "required", "note": "非空白的收尾理由；建立；不改；規則：E-05"},
+        {"name": "has_finalized_value", "type": "boolean", "required": "required", "note": "是否有定案值；合法 JSON null 仍可為 true；建立；不改；規則：E-06"},
+        {"name": "finalized_value", "type": "json", "required": "nullable", "note": "採用／自訂的已驗證答案；排除時 SQL NULL；建立；不改；規則：E-06"},
+        {"name": "resolved_at", "type": "timestamptz", "required": "required", "note": "確認 UTC 時間；建立；不改；規則：X-03"}
+      ],
+      "description": "**實體候選，尚未部署。** 只在 PL 明示確認後新增。`exclude_from_dataset` 排除**爭議輸出項目**，不是刪 `dataset_item`、run item 或 assignment。`custom_answer` 僅 Official；其與整個 assignment 排除／完成分母的關係仍待 014／015 正典對齊。來源：015 FR-095、014 FR-018。\n\n來源：[annotation／review 實體候選字典](/notes/diagrams/architecture/annotation-review-db-schema) §3.6；複合 assignment FK、UNIQUE、CHECK、權限與 migration 前待決見 §4–§7。圖中只畫已列的單欄 FK；線條不表示 ORM、migration 或 DB 權限已建立。"
+    },
+    {
+      "name": "annotation_history_event",
+      "label": "標記審核責任歷程",
+      "section": "3.7",
+      "group": "annotation",
+      "columns": [
+        {"name": "id", "type": "uuid", "required": "required", "note": "append-only 事件 PK；動作交易建立；不改；規則：H-01", "pk": true},
+        {"name": "run_id", "type": "uuid", "required": "required", "note": "所在 run，複合單位鍵；建立；不改；規則：X-01"},
+        {"name": "assignment_id", "type": "uuid", "required": "required", "note": "發生動作的 slot，複合單位鍵；建立；不改；規則：X-01"},
+        {"name": "event_no", "type": "integer", "required": "required", "note": "單位內正整數單調序號；動作交易分配；不改；規則：H-01"},
+        {"name": "actor_membership_id", "type": "uuid", "required": "required", "note": "當次真實操作者；建立；不改；規則：H-02", "fk": "task_membership"},
+        {"name": "actor_task_role", "type": "varchar(24)", "required": "required", "note": "當次選用任務角色快照；建立；不改；規則：H-02"},
+        {"name": "action", "type": "varchar(24)", "required": "required", "note": "FR-086 八個目前有效動作之一；建立；不改；規則：H-03"},
+        {"name": "output_key", "type": "varchar(120)", "required": "nullable", "note": "動作所涉 outKey；整單位動作可空；建立；不改；規則：H-03"},
+        {"name": "reason", "type": "text", "required": "nullable", "note": "當次理由；依 action 驗必填；建立；不改；規則：H-03"},
+        {"name": "result_snapshot", "type": "json", "required": "nullable", "note": "submitted／modified／adjudicated 必填完整 outputs[]，排除原始文本與資料集欄位；建立；不改；規則：H-04"},
+        {"name": "started_at", "type": "timestamptz", "required": "nullable", "note": "同次作業恰一筆事件承載；review revision 第一筆決策事件帶值，其餘 SQL NULL；規則：H-04"},
+        {"name": "lead_time_ms", "type": "integer", "required": "nullable", "note": "非負可見耗時；與 started_at 成對且同次作業恰一筆事件承載；規則：H-04"},
+        {"name": "occurred_at", "type": "timestamptz", "required": "required", "note": "動作完成 UTC 時間；建立；不改；規則：X-03"},
+        {"name": "annotation_record_id", "type": "uuid", "required": "nullable", "note": "由標記草稿／提交產生時的來源；建立；不改；規則：H-05", "fk": "annotation_record"},
+        {"name": "review_revision_id", "type": "uuid", "required": "nullable", "note": "正式審核事件所依不可變修訂；可由修訂回查 submission head；建立；不改；規則：H-05", "fk": "annotation_review_submission_revision"},
+        {"name": "arbitration_vote_id", "type": "uuid", "required": "nullable", "note": "由仲裁票產生時的來源；建立；不改；規則：H-05", "fk": "annotation_arbitration_vote"},
+        {"name": "exception_resolution_id", "type": "uuid", "required": "nullable", "note": "由例外收尾產生時的來源；建立；不改；規則：H-05", "fk": "annotation_exception_resolution"}
+      ],
+      "description": "**實體候選，尚未部署。** 一列是一個單位的一次動作；不同 outKey 的 reviewer 決策各寫一列。`event_no` 保證同時間戳仍有總排序，清單時間與耗時由事件推導。未提交 reviewer 草稿**不產生對其他角色可見的事件**；本設計按 FR-014S 不為其寫 history。快照與理由可能含敏感答案，須在資料供給層遮蔽。來源：015 FR-016B／FR-086～FR-091／FR-097。\n\n來源：[annotation／review 實體候選字典](/notes/diagrams/architecture/annotation-review-db-schema) §3.7；複合 assignment FK、UNIQUE、CHECK、權限與 migration 前待決見 §4–§7。圖中只畫已列的單欄 FK；線條不表示 ORM、migration 或 DB 權限已建立。"
+    },
+    {
+      "name": "annotation_review_submission_revision",
+      "label": "審核提交修訂",
+      "section": "3.8",
+      "group": "review",
+      "columns": [
+        {"name": "id", "type": "uuid", "required": "required", "note": "不可變修訂 PK；每次正式提交建立；不改；規則：N-01", "pk": true},
+        {"name": "review_submission_id", "type": "uuid", "required": "required", "note": "所屬唯一 reviewer head；建立；不改；規則：N-01", "fk": "annotation_review_submission"},
+        {"name": "version", "type": "integer", "required": "required", "note": "與 head 本次版本一致的正整數；建立；不改；規則：N-02"},
+        {"name": "decision_payload", "type": "json", "required": "required", "note": "本次全部 outKey、修正值和理由快照；建立；不改；規則：N-03"},
+        {"name": "submitted_at", "type": "timestamptz", "required": "required", "note": "本次修訂 UTC 提交時間；建立；不改；規則：X-03"}
+      ],
+      "description": "**實體候選，尚未部署。** 每次正式提交一個完整、已驗證的 outKey 決策快照；不代表第二位 reviewer，也不另建指派。仲裁票參照投票時的 revision，避免後續改判把來源改掉。015 FR-103／FR-105 已規劃首票後不可改判；此表與交易尚未落地。來源：015 FR-103／FR-052、DBA 設計「持久化切分」。\n\n來源：[annotation／review 實體候選字典](/notes/diagrams/architecture/annotation-review-db-schema) §3.8；複合 assignment FK、UNIQUE、CHECK、權限與 migration 前待決見 §4–§7。圖中只畫已列的單欄 FK；線條不表示 ORM、migration 或 DB 權限已建立。"
     }
   ]
 }
