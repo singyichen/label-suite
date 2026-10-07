@@ -65,6 +65,23 @@ test('task/run parser rejects a Mermaid edge labeled with a non-FK column', () =
     /(?:Mermaid|FK|relationship|edge).*task_config_version|task_config_version.*(?:Mermaid|FK|relationship|edge)/i);
 });
 
+test('task/run parser rejects a missing Mermaid edge for a declared single-column FK', () => {
+  const markdown = read('../../docs/diagrams/architecture/task-run-db-schema.md');
+  const validEdge = '    task ||--o{ task_config_version : task_id\n';
+  assert.ok(markdown.includes(validEdge), 'Expected task config FK edge');
+  const mutated = markdown.replace(validEdge, '');
+  assert.throws(() => checker.parseTaskRunSchema(mutated), /task_config_version/i);
+});
+
+test('task/run parser rejects a missing Mermaid FK marker for a dictionary FK', () => {
+  const markdown = read('../../docs/diagrams/architecture/task-run-db-schema.md');
+  const declaredColumn = '    task_config_version {\n        uuid id PK\n        uuid task_id FK';
+  assert.ok(markdown.includes(declaredColumn), 'Expected task config FK marker');
+  const mutated = markdown.replace(declaredColumn,
+    '    task_config_version {\n        uuid id PK\n        uuid task_id');
+  assert.throws(() => checker.parseTaskRunSchema(mutated), /task_config_version\.task_id/i);
+});
+
 test('task/run NoteCraft projection matches every dictionary table, column, PK, FK and type', () => {
   const source = checker.mergeSchemaSources(
     checker.parseAccountAdminSchema(read('../../docs/diagrams/architecture/account-admin-db-schema.md')),
