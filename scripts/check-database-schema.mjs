@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 const accountSourceUrl = new URL('../docs/diagrams/architecture/account-admin-db-schema.md', import.meta.url);
 const datasetSourceUrl = new URL('../docs/diagrams/architecture/dataset-db-schema.md', import.meta.url);
 const taskRunSourceUrl = new URL('../docs/diagrams/architecture/task-run-db-schema.md', import.meta.url);
+const annotationReviewSourceUrl = new URL('../docs/diagrams/architecture/annotation-review-db-schema.md', import.meta.url);
 const dataUrl = new URL('../docs/diagrams/architecture/database-schema.er.json', import.meta.url);
 const inventoryUrl = new URL('../docs/diagrams/architecture/database-table-inventory.md', import.meta.url);
 
@@ -20,14 +21,14 @@ function parsePhysicalSchema(markdown, { strictEdges = false } = {}) {
     if (mermaidTables.has(name)) throw new Error(`Duplicate Mermaid table: ${name}`);
     const columns = new Map();
     for (const line of match[2].split('\n')) {
-      const column = line.match(/^\s+\S+\s+([A-Za-z_]\w*)(?:\s+([A-Za-z_,]+))?(?:\s+"[^"]*")?\s*$/);
+      const column = line.match(/^\s+(\S+)\s+([A-Za-z_]\w*)(?:\s+([A-Za-z_,]+))?(?:\s+"[^"]*")?\s*$/);
       if (!column) {
         if (line.trim()) throw new Error(`Invalid Mermaid column: ${name}: ${line.trim()}`);
         continue;
       }
-      if (columns.has(column[1])) throw new Error(`Duplicate Mermaid column: ${name}.${column[1]}`);
-      const markers = (column[2] ?? '').split(',');
-      columns.set(column[1], { pk: markers.includes('PK'), fk: markers.includes('FK') });
+      if (columns.has(column[2])) throw new Error(`Duplicate Mermaid column: ${name}.${column[2]}`);
+      const markers = (column[3] ?? '').split(',');
+      columns.set(column[2], { type: column[1], pk: markers.includes('PK'), fk: markers.includes('FK') });
     }
     mermaidTables.set(name, columns);
   }
@@ -58,6 +59,14 @@ function parsePhysicalSchema(markdown, { strictEdges = false } = {}) {
       const typeMatch = cells[1].match(/^(.+?)(?:\s*→\s*([A-Za-z_]\w*))?$/);
       if (!typeMatch) throw new Error(`Invalid type: ${name}.${columnName}`);
       const mermaidColumn = mermaidColumns.get(columnName);
+      if (strictEdges && mermaidColumn) {
+        const diagramType = mermaidColumn.type.toLowerCase();
+        const dictionaryType = typeMatch[1].trim().toLowerCase();
+        const expectedType = diagramType.includes('(') ? dictionaryType : dictionaryType.replace(/\(.*\)$/, '');
+        if (diagramType !== expectedType) {
+          throw new Error(`Mermaid type mismatch: ${name}.${columnName}: ${diagramType} != ${dictionaryType}`);
+        }
+      }
       if (strictEdges && mermaidColumn && mermaidColumn.fk !== Boolean(typeMatch[2])) {
         throw new Error(`Mermaid FK marker mismatch: ${name}.${columnName}`);
       }
@@ -113,6 +122,7 @@ function parsePhysicalSchema(markdown, { strictEdges = false } = {}) {
 export const parseAccountAdminSchema = parsePhysicalSchema;
 export const parseDatasetSchema = parsePhysicalSchema;
 export const parseTaskRunSchema = (markdown) => parsePhysicalSchema(markdown, { strictEdges: true });
+export const parseAnnotationReviewSchema = (markdown) => parsePhysicalSchema(markdown, { strictEdges: true });
 
 export function mergeSchemaSources(...sources) {
   const tables = [];
@@ -234,6 +244,7 @@ async function main() {
       parseAccountAdminSchema(await readFile(accountSourceUrl, 'utf8')),
       parseDatasetSchema(await readFile(datasetSourceUrl, 'utf8')),
       parseTaskRunSchema(await readFile(taskRunSourceUrl, 'utf8')),
+      parseAnnotationReviewSchema(await readFile(annotationReviewSourceUrl, 'utf8')),
     );
     data = JSON.parse(await readFile(dataUrl, 'utf8'));
     inventory = await readFile(inventoryUrl, 'utf8');
