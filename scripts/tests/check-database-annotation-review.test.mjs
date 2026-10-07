@@ -117,6 +117,17 @@ test('annotation/review parser rejects a missing Mermaid FK marker', () => {
   assert.throws(() => annotationSource(mutated), /annotation_review_decision\.review_submission_id/i);
 });
 
+test('annotation/review parser rejects a Mermaid datatype that contradicts the dictionary', () => {
+  const markdown = annotationMarkdown();
+  const mutated = markdown.replace(
+    /(    annotation_history_event \{\n[\s\S]*?)(        uuid review_revision_id FK)/,
+    '$1        text review_revision_id FK',
+  );
+  assert.notEqual(mutated, markdown, 'Expected to mutate the history revision Mermaid datatype');
+  assert.throws(() => annotationSource(mutated),
+    /annotation_history_event\.review_revision_id|Mermaid.*type|type.*mismatch/i);
+});
+
 test('NoteCraft projection matches every source table, column, type, nullability, PK and FK', () => {
   const source = mergedSource();
   const data = erData();

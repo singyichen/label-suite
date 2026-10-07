@@ -6,6 +6,7 @@ const read = (path) => readFileSync(new URL(path, import.meta.url), 'utf8');
 const annotation = read('../../specs/annotation/015-annotation-workspace/spec.md');
 const task = read('../../specs/task-management/014-task-detail/spec.md');
 const annotationDelta = read('../../openspec/changes/annotation-review-physical-contract/specs/annotation/015-annotation-workspace/spec.md');
+const taskDelta = read('../../openspec/changes/annotation-review-physical-contract/specs/task-management/014-task-detail/spec.md');
 
 const liveRequirements = (source) => {
   const requirements = source.match(/^### 功能需求\n([\s\S]*?)(?=^### |^## )/m)?.[1];
@@ -105,6 +106,31 @@ test('reassignment keeps the old unsent draft private and starts a clean success
     'The annotation record must distinguish an abandoned draft from an active one');
   assert.match(annotationRules, /(?:新受派者|繼任者|重新指派)[^\n]*?(?:空|新)[^\n]*?(?:草稿|紀錄|記錄)/,
     'A successor must begin with an empty annotation record');
+});
+
+test('live task AC-3.47 accepts draft reassignment without revealing or restoring the old draft', () => {
+  const delta = taskDelta.match(/^### Requirement: AC-3\.47[^\n]*\n([\s\S]*?)(?=^### Requirement:|^## |(?![\s\S]))/m)?.[1];
+  assert.ok(delta, 'Expected the OpenSpec AC-3.47 requirement');
+  assert.match(delta, /- \*\*GIVEN\*\*[^\n]*未提交草稿/);
+  assert.match(delta, /- \*\*WHEN\*\*[^\n]*(?:停用|移除|重派)/);
+  assert.match(delta, /- \*\*THEN\*\*[^\n]*abandoned[^\n]*(?:繼任者|新受派者)/);
+
+  const acceptance = task.match(/^### 使用者故事 3[^\n]*\n[\s\S]*?^\*\*驗收情境\*\*：\n([\s\S]*?)(?=^\*\*行為規則\*\*：)/m)?.[1];
+  assert.ok(acceptance, 'Expected the current task-management User Story 3 acceptance list');
+  const line = acceptance.split('\n').find((value) => /^47\.\s+\*\*AC-3\.47\*\*/.test(value));
+  assert.ok(line, 'Expected a numbered current AC-3.47 acceptance line');
+  const parts = line.match(/\*\*Given\*\*([^\n]*?)\*\*When\*\*([^\n]*?)\*\*Then\*\*([^\n]*)/);
+  assert.ok(parts, 'AC-3.47 must state Given, When and Then');
+  assert.match(parts[1], /(?:未提交[^\n]*?草稿|草稿[^\n]*?未提交)/,
+    'Given must identify an unsent draft');
+  assert.match(parts[2], /(?:停用|移除|重派)/,
+    'When must identify membership loss or reassignment');
+  assert.match(parts[3], /abandoned/,
+    'Then must retire the old draft');
+  assert.match(parts[3], /(?:繼任者|新受派者)[^\n]*?(?:空白|空紀錄|看不到|不可|不得|無法)/,
+    'Then must keep the successor separate from the previous draft');
+  assert.match(parts[3], /已提交[^\n]*?(?:保留|不變)|(?:保留|不變)[^\n]*?已提交/,
+    'Then must preserve submitted history');
 });
 
 test('live FR-105 names the transaction and privacy contract', () => {
