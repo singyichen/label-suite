@@ -3,7 +3,7 @@
 > **受眾**：後續 ORM、migration、repository 與安全測試作者。這是 issue #1160 的規劃字典，不是已部署 schema；目前 `backend/alembic/versions/` 沒有業務 migration，`backend/app/` 沒有 dataset ORM。
 
 - **權威與範圍**：主憲法 III／XIV／XVI、backend／testing constitution、Accepted ADR-005／ADR-024、[dataset-021 Draft 正典規格](../../../specs/dataset/021-dataset-ingestion-and-lineage/spec.md) 及 foundation FR-105／FR-106 優先於本衍生文件。本文件只描述 `dataset` 擁有的五張候選表；`users` 是 account 候選父表。`dataset-016/017` 的分析投影不是匯入表。
-- **設計定位**：[設計候選](../../superpowers/specs/2026-10-06-dataset-lineage-design.md)比較了私有伴隨表、混合 JSON 與檔案唯一儲存。依 dataset-021 FR-001～FR-011，本字典採公開 item＋1:1 私有列＋受限原始來源 artifact。跨模組 task/run、annotation、export 的實體 FK 尚待其 owning spec 定義，圖中沒有推測線。
+- **設計定位**：[設計候選](../../superpowers/specs/2026-10-06-dataset-lineage-design.md)比較了私有伴隨表、混合 JSON 與檔案唯一儲存。依 dataset-021 FR-001～FR-011，本字典採公開 item＋1:1 私有列＋受限原始來源 artifact。task/run 的候選跨模組 FK 已在 [task/run 字典](./task-run-db-schema.md) 描述；annotation、export 的實體 FK 仍待 owning spec 定義。本文件不反向畫未定的線。
 - **狀態**：五張表全為**候選、尚未部署**。欄位及限制須經 SDD、Red 測試、獨立 ORM／migration PR、SQLite＋真實 PostgreSQL roundtrip 後才能稱為實際 schema；NoteCraft `.er.json` 只能投影本字典已列欄位與單欄 FK。
 
 ## 1. 設計決定與資料責任
@@ -206,7 +206,7 @@ erDiagram
 
 ## 7. 待下游承接及維護
 
-- **task/run FK 待定**：dataset-021 FR-010 只要求後續任務綁 `sealed dataset_version_id`，run snapshot 固定 item IDs 與 seed。task 表、run 表及 `sample_snapshot_id` 的 PK／FK／唯一鍵仍由 task-013/014 的後續實體契約決定；本文件不畫、不宣稱任何跨模組 FK。
+- **task/run 候選 FK 已另列**：dataset-021 FR-010 要求任務綁 `sealed dataset_version_id`，run snapshot 固定 item IDs 與 seed。[task/run 實體字典](./task-run-db-schema.md)列出 `task`／`task_run_cycle` 對本文件 `dataset_version` 的候選單欄 FK，以及 `task_run_item` 對公開 `dataset_item` 的候選單欄 FK。跨表 sealed 與 item 所屬版本資格仍由發布交易驗證；本文件不反向複製子表欄位，也不宣稱 FK 已部署。
 - **annotation/export 待定**：annotation 的 schema version 及 export 的 dataset／schema／config version、時間與條件快照須由其 owning spec 決定；dataset-016/017 的唯讀摘要或 IAA 報告不因名稱而建表。
 - **runtime 前仍需定義**：manifest canonical bytes 與私有摘要處理、split 詞彙、hidden-answer envelope、保留／刪除政策、完整版本複製與併發封存策略。這些不由 ER renderer 代決。
 - **投影順序**：先以正典 spec／ADR 裁決以上項目，再更新本欄位字典與限制；最後同步盤點總帳與 NoteCraft JSON，執行雙向一致性檢查。本文的 PK/FK 線在 ORM、migration 與雙資料庫測試完成前始終只代表候選設計。

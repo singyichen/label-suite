@@ -382,16 +382,20 @@ test('realAccountAndDatasetDictionariesMatchCompleteNoteCraftProjection', () => 
   ];
 
   assert.deepEqual(dataset.tables.map((table) => table.name), expectedDatasetNames);
-  assert.deepEqual(validateErData(mergeSchemaSources(account, dataset), data), []);
+  const existingModules = mergeSchemaSources(account, dataset);
+  assert.deepEqual(validateErData(existingModules, accountData(existingModules, data)), []);
   assert.deepEqual(data.tables.filter((table) => expectedDatasetNames.includes(table.name))
     .map((table) => table.name), expectedDatasetNames);
 });
 
-test('NoteCraft CI runs both account and dataset schema regressions', () => {
+test('NoteCraft CI runs account, dataset and task/run schema regressions', () => {
   const workflow = readFileSync(new URL('../../.github/workflows/ci.yml', import.meta.url), 'utf8');
   const job = workflow.match(/^  database-schema:\n([\s\S]*?)(?=^  [a-z][\w-]*:\n|(?![\s\S]))/m)?.[1];
   assert.ok(job, 'Missing database-schema CI job');
-  for (const file of ['check-database-schema.test.mjs', 'check-database-dataset.test.mjs']) {
+  for (const file of [
+    'check-database-schema.test.mjs', 'check-database-dataset.test.mjs',
+    'check-database-task-run.test.mjs',
+  ]) {
     assert.match(job, new RegExp(`node --test[^\\n]*scripts/tests/${file.replaceAll('.', '\\.')}\\b`),
       `NoteCraft CI must execute ${file}`);
   }

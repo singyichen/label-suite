@@ -3,9 +3,11 @@ import { fileURLToPath } from 'node:url';
 
 const accountSourceUrl = new URL('../docs/diagrams/architecture/account-admin-db-schema.md', import.meta.url);
 const datasetSourceUrl = new URL('../docs/diagrams/architecture/dataset-db-schema.md', import.meta.url);
+const taskRunSourceUrl = new URL('../docs/diagrams/architecture/task-run-db-schema.md', import.meta.url);
 const dataUrl = new URL('../docs/diagrams/architecture/database-schema.er.json', import.meta.url);
+const inventoryUrl = new URL('../docs/diagrams/architecture/database-table-inventory.md', import.meta.url);
 
-function parsePhysicalSchema(markdown) {
+function parsePhysicalSchema(markdown, { strictEdges = false } = {}) {
   const mermaid = markdown.match(/## 2\. ERD\s*\n[\s\S]*?```mermaid\s*\n([\s\S]*?)\n```/)?.[1];
   const dictionary = markdown.match(/## 3\. 欄位字典\s*\n([\s\S]*?)(?=\n## 4\.|$)/)?.[1];
   if (!mermaid || !dictionary) {
@@ -24,7 +26,8 @@ function parsePhysicalSchema(markdown) {
         continue;
       }
       if (columns.has(column[1])) throw new Error(`Duplicate Mermaid column: ${name}.${column[1]}`);
-      columns.set(column[1], /(?:^|,)PK(?:,|$)/.test(column[2] ?? ''));
+      const markers = (column[2] ?? '').split(',');
+      columns.set(column[1], { pk: markers.includes('PK'), fk: markers.includes('FK') });
     }
     mermaidTables.set(name, columns);
   }
@@ -54,11 +57,15 @@ function parsePhysicalSchema(markdown) {
       if (!/^(是|否)/.test(nullableText)) throw new Error(`Unknown nullability: ${name}.${columnName}`);
       const typeMatch = cells[1].match(/^(.+?)(?:\s*→\s*([A-Za-z_]\w*))?$/);
       if (!typeMatch) throw new Error(`Invalid type: ${name}.${columnName}`);
+      const mermaidColumn = mermaidColumns.get(columnName);
+      if (strictEdges && mermaidColumn && mermaidColumn.fk !== Boolean(typeMatch[2])) {
+        throw new Error(`Mermaid FK marker mismatch: ${name}.${columnName}`);
+      }
       columns.push({
         name: columnName,
         type: typeMatch[1].trim(),
         nullable: nullableText.startsWith('是'),
-        pk: mermaidColumns.get(columnName) ?? false,
+        pk: mermaidColumn?.pk ?? false,
         ...(typeMatch[2] ? { fk: typeMatch[2] } : {}),
       });
     }
@@ -77,11 +84,35 @@ function parsePhysicalSchema(markdown) {
   for (const name of mermaidTables.keys()) {
     if (!dictionaryNames.has(name)) throw new Error(`Mermaid table missing from dictionary: ${name}`);
   }
+  if (strictEdges) {
+    const tableColumns = new Map(tables.map((table) => [
+      table.name, new Map(table.columns.map((column) => [column.name, column])),
+    ]));
+    const diagramEdges = new Set();
+    for (const match of mermaid.matchAll(/^\s{4}([A-Za-z_]\w*)\s+\S+--\S+\s+([A-Za-z_]\w*)\s*:\s*([A-Za-z_]\w*)\s*$/gm)) {
+      const [, parent, child, columnName] = match;
+      const column = tableColumns.get(child)?.get(columnName);
+      if (!mermaidTables.has(parent) || !column || column.fk !== parent) {
+        throw new Error(`Invalid Mermaid FK edge: ${parent} -> ${child}.${columnName}`);
+      }
+      const edge = `${child}.${columnName}`;
+      if (diagramEdges.has(edge)) throw new Error(`Duplicate Mermaid FK edge: ${edge}`);
+      diagramEdges.add(edge);
+    }
+    for (const table of tables) {
+      for (const column of table.columns) {
+        if (column.fk && mermaidTables.has(column.fk) && !diagramEdges.has(`${table.name}.${column.name}`)) {
+          throw new Error(`Missing Mermaid FK edge: ${table.name}.${column.name} -> ${column.fk}`);
+        }
+      }
+    }
+  }
   return { tables };
 }
 
 export const parseAccountAdminSchema = parsePhysicalSchema;
 export const parseDatasetSchema = parsePhysicalSchema;
+export const parseTaskRunSchema = (markdown) => parsePhysicalSchema(markdown, { strictEdges: true });
 
 export function mergeSchemaSources(...sources) {
   const tables = [];
@@ -170,21 +201,51 @@ export function validateErData(source, data) {
   return errors;
 }
 
+export function validateSchemaSummary(data, inventoryMarkdown) {
+  const errors = [];
+  const counts = [
+    [data.tables.length, /(?:^|\D)(\d+)\s*張候選表/, 'tables'],
+    [data.tables.reduce((total, table) => total + table.columns.length, 0),
+      /(?:^|\D)(\d+)\s*欄/, 'columns'],
+    [data.tables.reduce((total, table) => total + table.columns.filter((column) => column.fk).length, 0),
+      /(?:^|\D)(\d+)\s*個候選單欄 FK/, 'FKs'],
+  ];
+  const summaries = [
+    ['NoteCraft metadata', data.meta?.description ?? ''],
+    ['inventory NoteCraft summary', inventoryMarkdown.split('\n')
+      .find((line) => line.startsWith('**NoteCraft 規劃檢視**')) ?? ''],
+  ];
+  for (const [label, summary] of summaries) {
+    for (const [actual, pattern, unit] of counts) {
+      const stated = summary.match(pattern)?.[1];
+      if (stated === undefined) errors.push(`${label}: missing ${unit} count`);
+      else if (Number(stated) !== actual) errors.push(`${label}: ${unit} count ${stated} != ${actual}`);
+    }
+  }
+  return errors;
+}
+
 async function main() {
   let source;
   let data;
+  let inventory;
   try {
     source = mergeSchemaSources(
       parseAccountAdminSchema(await readFile(accountSourceUrl, 'utf8')),
       parseDatasetSchema(await readFile(datasetSourceUrl, 'utf8')),
+      parseTaskRunSchema(await readFile(taskRunSourceUrl, 'utf8')),
     );
     data = JSON.parse(await readFile(dataUrl, 'utf8'));
+    inventory = await readFile(inventoryUrl, 'utf8');
   } catch (error) {
     console.error(`Cannot read database schema source or ER data: ${error.message}`);
     process.exitCode = 2;
     return;
   }
-  const errors = validateErData(source, data);
+  const errors = [
+    ...validateErData(source, data),
+    ...validateSchemaSummary(data, inventory),
+  ];
   if (errors.length) {
     for (const error of errors) console.error(error);
     process.exitCode = 1;
