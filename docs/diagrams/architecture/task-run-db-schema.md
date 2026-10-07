@@ -1,16 +1,18 @@
-# task／run 資料庫 schema（實體候選）
+# 任務／執行資料庫資料結構（實體候選）
 
-> 本文件是 issue #1160 的衍生欄位字典。13 張表均為**未部署候選**，不是 Alembic migration、ORM 或可直接套用的 DDL。正典為 [013](../../../specs/task-management/013-task-new/spec.md)、[014](../../../specs/task-management/014-task-detail/spec.md)、[015](../../../specs/annotation/015-annotation-workspace/spec.md)、[ADR-022](../../adr/022-task-state-machine-location.md) 與 [ADR-037](../../adr/037-permission-matrix-authorization.md)；資料來源表形見 [dataset 字典](./dataset-db-schema.md)。[設計裁決](../../superpowers/specs/2026-10-06-task-run-identity-design.md)已被上述正典採納，但本字典的 SQL 型別、索引與刪除規則仍須在獨立 migration 工作驗證。
+> 本文件是 issue #1160 的衍生欄位字典。13 張表均為**未部署候選**，不是 Alembic 資料庫遷移、ORM 或可直接套用的 DDL。正典為 [013](../../../specs/task-management/013-task-new/spec.md)、[014](../../../specs/task-management/014-task-detail/spec.md)、[015](../../../specs/annotation/015-annotation-workspace/spec.md)、[ADR-022](../../adr/022-task-state-machine-location.md) 與 [ADR-037](../../adr/037-permission-matrix-authorization.md)；資料來源表形見 [資料集字典](./dataset-db-schema.md)。[設計裁決](../../superpowers/specs/2026-10-06-task-run-identity-design.md)已被上述正典採納，但本字典的 SQL 型別、索引與刪除規則仍須在獨立資料庫遷移工作驗證。
 
 ## 1. 範圍與狀態
 
-一列 `task` 是可編輯的當前任務；每個 `task_run_cycle` 固定一個 sealed dataset 與不可變 config 版本；每次發布各有獨立 `task_sample_snapshot` 與 `task_run`。`task_run_item` 是被選中的公開 item 成員正典，`task_annotation_assignment` 是穩定工作 slot。退回 draft 後保留舊 cycle、run、assignment，再從新 cycle 的 R1 開始。表名採 foundation FR-105 的單數、模組前綴；`users` 為既有例外。
+閱讀用語：`task_run` 是**一次試標或正式標記的執行紀錄**；`task_run_cycle` 是**一輪發布週期**；`task_trial_round` 是**週期內的一次試標回合**。英文名稱是資料庫識別碼，中文說明與例子見[資料表盤點總帳](./database-table-inventory.md#名詞說明任務發布與執行)。
 
-`TaskDetail`、`AnnotationListItem`、`ReviewUnit`、`ReviewAssignment` 是讀取投影或推導單位；其中 `ReviewAssignment` 已明定**不持久化**。`OutputConfig` 包在不可變 config 版本中。annotation submission、review decision、仲裁、IAA 與 export 的實體表不屬此批；不得替它們預畫 FK。所有下列型別和限制標為「候選」，沒有一項宣稱已在 SQLite／PostgreSQL 執行。
+一列 `task` 是可編輯的當前任務；每個 `task_run_cycle` 固定一個已封存的資料集版本與不可變設定版本；每次發布各有獨立 `task_sample_snapshot` 與 `task_run`。`task_run_item` 保存當次選中的公開資料項目，`task_annotation_assignment` 是固定的標記工作位。退回草稿後保留舊發布週期、執行、工作指派，再從新發布週期的 R1 開始。表名採 foundation FR-105 的單數、模組前綴；`users` 為既有例外。
+
+`TaskDetail`、`AnnotationListItem`、`ReviewUnit`、`ReviewAssignment` 是讀取投影或推導單位；其中 `ReviewAssignment` 已明定**不持久化**。`OutputConfig` 包在不可變設定版本中。標記提交、審核決策、仲裁、標記一致性計算與匯出 的實體表不屬此批；不得替它們預畫外鍵。所有下列型別和限制標為「候選」，沒有一項宣稱已在 SQLite／PostgreSQL 執行。
 
 ## 2. ERD
 
-下圖列出 13 張候選表的全部欄位，線只畫**本批表之間的單欄 FK**。指向外部 `users`、`dataset_version`、`dataset_item` 的單欄 FK 在字典標明；同 task、同 cycle、同 run 的複合 FK 見 §4。ERD 線不表示表已建立。`dataset_item_private` 不接入發布路徑。
+下圖列出 13 張候選表的全部欄位，線只畫**本批表之間的單欄外鍵**。指向外部 `users`、`dataset_version`、`dataset_item` 的單欄外鍵在字典標明；同任務、同發布週期、同執行的複合外鍵見 §4。ERD 線不表示表已建立。`dataset_item_private` 不接入發布路徑。
 
 ```mermaid
 erDiagram
@@ -163,57 +165,57 @@ erDiagram
 
 ## 3. 欄位字典
 
-六欄中的「規則」參照 §4。`uuid`、`json`、`timestamptz` 是 PostgreSQL 表示法；SQLite 對應見 §6。`?` 不作型別或空值定案。未明列預設值的欄位**沒有候選 DB 預設**；建立者與時間由服務於交易中寫入。所有 FK 與 PK 都仍是規劃約束。
+六欄中的「規則」參照 §4。`uuid`、`json`、`timestamptz` 是 PostgreSQL 表示法；SQLite 對應見 §6。`?` 不作型別或空值定案。未明列預設值的欄位**沒有候選 DB 預設**；建立者與時間由服務於交易中寫入。所有外鍵與主鍵都仍是規劃約束。
 
 ### 3.1 task：當前任務
 
-一列只保存當前可變設定及版本指標，不複製歷史 run 的 dataset/config/guideline。建立者為有 `task.create` 權限的使用者；後續編輯仍須查即時 membership、矩陣及狀態。來源：013 關鍵實體、014 FR-014／關鍵實體、ADR-037。
+一列只保存當前可變設定及版本指標，不複製歷史執行的資料集、設定與指引。建立者為有 `task.create` 權限的使用者；後續編輯仍須查即時成員資格、矩陣及狀態。來源：013 關鍵實體、014 FR-014／關鍵實體、ADR-037。
 
 | 欄位 | 型別 | 可空 | 代表什麼 | 何時寫入／改變 | 規則 |
 |---|---|---|---|---|---|
-| `id` | uuid | 否 | 穩定 task PK | 建立；不改 | T-01 |
+| `id` | uuid | 否 | 穩定任務主鍵 | 建立；不改 | T-01 |
 | `created_by_user_id` | uuid → users | 否 | 建立者 | 建立；不改 | T-01 |
-| `dataset_version_id` | uuid → dataset_version | 否 | 當前綁定的 sealed 完整版本 | 建立；draft 可重綁 | T-02 |
-| `current_config_version_id` | uuid | 是* | 當前不可變 config 版本 | 建立交易補齊；draft 儲存更新 | T-03 |
-| `current_guideline_version_id` | uuid | 是* | 當前不可變指引內容版本 | 建立交易補齊；draft／waiting 指引內容儲存更新 | T-03 |
-| `current_run_cycle_id` | uuid | 是 | 當前開啟 cycle；無 run 時為 null | 首次 Dry 發布／退回 draft／結案 | T-04 |
-| `name` | varchar | 否 | 任務名稱；非身份鍵 | 建立；draft 編輯 | T-01 |
-| `status` | varchar(32) | 否 | ADR-022 任務狀態 | 建立為 draft；合法轉換更新 | T-05 |
-| `sampling_value` | integer | 否 | 下一次 Dry 的要求筆數 | 建立；允許階段編輯 | T-06 |
-| `target_agreement_overrides` | json | 否 | config-driven IAA 目標覆寫；候選空物件預設 | 建立／允許階段編輯 | T-06 |
-| `min_annotators` | integer | 否 | Dry 重疊標記及發布檢查下限 | 建立／允許階段編輯 | T-06 |
-| `isolation_enabled` | boolean | 否 | 隔離顯示政策；候選 true 預設 | 建立／draft 編輯 | T-06 |
-| `force_guideline` | boolean | 否 | 指引顯示政策；不屬內容版本 | 建立／draft 編輯 | T-06 |
+| `dataset_version_id` | uuid → dataset_version | 否 | 當前綁定的已封存完整版本 | 建立；草稿可重綁 | T-02 |
+| `current_config_version_id` | uuid | 是* | 當前不可變設定版本 | 建立交易補齊；草稿儲存更新 | T-03 |
+| `current_guideline_version_id` | uuid | 是* | 當前不可變指引內容版本 | 建立交易補齊；草稿／waiting 指引內容儲存更新 | T-03 |
+| `current_run_cycle_id` | uuid | 是 | 當前開啟發布週期；無執行時為空值 | 首次試標發布／退回草稿／結案 | T-04 |
+| `name` | varchar | 否 | 任務名稱；非身份鍵 | 建立；草稿編輯 | T-01 |
+| `status` | varchar(32) | 否 | ADR-022 任務狀態 | 建立為草稿；合法轉換更新 | T-05 |
+| `sampling_value` | integer | 否 | 下一次試標的要求筆數 | 建立；允許階段編輯 | T-06 |
+| `target_agreement_overrides` | json | 否 | 由設定驅動的 IAA 目標覆寫；候選空物件預設 | 建立／允許階段編輯 | T-06 |
+| `min_annotators` | integer | 否 | 試標重疊標記及發布檢查下限 | 建立／允許階段編輯 | T-06 |
+| `isolation_enabled` | boolean | 否 | 隔離顯示政策；候選 true 預設 | 建立／草稿編輯 | T-06 |
+| `force_guideline` | boolean | 否 | 指引顯示政策；不屬內容版本 | 建立／草稿編輯 | T-06 |
 | `created_at` | timestamptz | 否 | 建立時間 UTC | 建立 | X-01 |
 | `updated_at` | timestamptz | 否 | 當前任務最後修改時間 UTC | 修改 | X-01 |
 
-`*`：兩個 current version 指標為處理 task↔version 建立時的循環參照而暫列可空；**已提交任務不得缺值**。正式 DDL 的 NOT NULL 建立次序仍待 §7 決定。`task_type`、`trial_round`、`sample_snapshot_id`、`reviewer_ids[]`、`arbiter_ids[]` 均由版本／run／名冊投影，不加第二份欄位（014 關鍵實體）。
+`*`：兩個當前版本指標為處理任務與版本表 建立時的循環參照而暫列可空；**已提交任務不得缺值**。正式 DDL 的 NOT NULL建立次序仍待 §7 決定。`task_type`、`trial_round`、`sample_snapshot_id`、`reviewer_ids[]`、`arbiter_ids[]` 均由版本／執行／名冊投影，不加第二份欄位（014 關鍵實體）。
 
-### 3.2 task_config_version：不可變 config 與 schema
+### 3.2 task_config_version：不可變的任務設定與資料結構
 
-一列是同任務的一個完整 config/schema 版本，`outputs[]`、`field_role_map` 和內嵌 schema snapshot 共存；輸出類型不另建硬編表。來源：013／014 `TaskConfig`。
+一列是同任務的一個完整設定與資料結構版本，`outputs[]`、`field_role_map` 和內嵌資料結構快照共存；輸出類型不另建硬編表。來源：013／014 `TaskConfig`。
 
 | 欄位 | 型別 | 可空 | 代表什麼 | 何時寫入／改變 | 規則 |
 |---|---|---|---|---|---|
-| `id` | uuid | 否 | config 版本 PK | 成功儲存時；不改 | C-01 |
+| `id` | uuid | 否 | 設定版本主鍵 | 成功儲存時；不改 | C-01 |
 | `task_id` | uuid → task | 否 | 擁有任務 | 建立；不改 | C-01 |
-| `version_no` | integer | 否 | 同 task 正整數版本 | 每次完整儲存 +1 | C-02 |
-| `schema_version_no` | integer | 否 | 同列 schema 版本，等於 `version_no` | 同次儲存 | C-02 |
+| `version_no` | integer | 否 | 同任務正整數版本 | 每次完整儲存 +1 | C-02 |
+| `schema_version_no` | integer | 否 | 同列資料結構版本，等於 `version_no` | 同次儲存 | C-02 |
 | `schema_digest` | char(64) | 否 | 規格化 outputs／field roles SHA-256；可跨版相同 | 建立；不改 | C-03 |
 | `schema_registry_version` | varchar | 否 | 可追溯、保留的驗證定義版本 | 建立；不改 | C-03 |
-| `config_payload` | json | 否 | 經 registry 驗證的完整 config 與 schema snapshot | 建立；不改 | C-03 |
+| `config_payload` | json | 否 | 經 registry 驗證的完整設定與資料結構快照 | 建立；不改 | C-03 |
 | `content_digest` | char(64) | 否 | 完整版本內容摘要；候選算法待核定 | 建立；不改 | C-03 |
 | `created_at` | timestamptz | 否 | 建立時間 UTC | 建立；不改 | X-01 |
 
 ### 3.3 task_guideline_version：不可變指引內容
 
-即使 Step 4 留空也建立 v1；`force_guideline` 留在 task。資產欄存受控參照清單，不存原始檔案位元組。來源：013 `TaskGuidelineConfig`、014 FR-017a。
+即使 Step 4 留空也建立 v1；`force_guideline` 留在任務。資產欄存受控參照清單，不存原始檔案位元組。來源：013 `TaskGuidelineConfig`、014 FR-017a。
 
 | 欄位 | 型別 | 可空 | 代表什麼 | 何時寫入／改變 | 規則 |
 |---|---|---|---|---|---|
-| `id` | uuid | 否 | 指引版本 PK | 建立；不改 | G-01 |
+| `id` | uuid | 否 | 指引版本主鍵 | 建立；不改 | G-01 |
 | `task_id` | uuid → task | 否 | 擁有任務 | 建立；不改 | G-01 |
-| `version_no` | integer | 否 | 同 task 正整數內容版本 | 內容實變時 +1 | G-02 |
+| `version_no` | integer | 否 | 同任務正整數內容版本 | 內容實變時 +1 | G-02 |
 | `annotator_guideline_text` | text | 否 | 標記員說明文字；空字串代表留空 | 建立；不改 | G-03 |
 | `annotator_guideline_assets` | json | 否 | 標記員附件參照清單；候選空陣列預設 | 建立；不改 | G-03 |
 | `reviewer_guideline_text` | text | 否 | 審核員說明文字；空字串代表留空 | 建立；不改 | G-03 |
@@ -223,11 +225,11 @@ erDiagram
 
 ### 3.4 task_membership：一人於一任務的一個角色
 
-同一人可同時持有多個 task role；停用一列不移除另一角色，也不刪歷史。來源：ADR-037、014 `TaskMembership`／FR-005l。
+同一人可在同一任務持有多個角色；停用一列不移除另一角色，也不刪歷史。來源：ADR-037、014 `TaskMembership`／FR-005l。
 
 | 欄位 | 型別 | 可空 | 代表什麼 | 何時寫入／改變 | 規則 |
 |---|---|---|---|---|---|
-| `id` | uuid | 否 | 穩定 membership PK | 建立；不改 | M-01 |
+| `id` | uuid | 否 | 穩定成員資格主鍵 | 建立；不改 | M-01 |
 | `task_id` | uuid → task | 否 | 任務作用域 | 建立；不改 | M-01 |
 | `user_id` | uuid → users | 否 | 真實使用者 | 建立；不改 | M-01 |
 | `task_role` | varchar(24) | 否 | `project_leader`／`annotator`／`reviewer` | 建立；不改 | M-02 |
@@ -237,83 +239,83 @@ erDiagram
 
 ### 3.5 task_reviewer_roster_member：當前審核名冊
 
-一列是一個當前選入審核名冊的 reviewer membership；`can_arbitrate` 令仲裁名冊自然為子集合。發布時凍結到 candidate 表，當前名冊變更不改舊 run。來源：014 FR-010s-1／FR-010t、ADR-037。
+一列是一個當前選入審核名冊的審核員成員資格；`can_arbitrate` 令仲裁名冊自然為子集合。發布時凍結到候選表，當前名冊變更不改舊執行。來源：014 FR-010s-1／FR-010t、ADR-037。
 
 | 欄位 | 型別 | 可空 | 代表什麼 | 何時寫入／改變 | 規則 |
 |---|---|---|---|---|---|
-| `task_id` | uuid | 否 | 複合 PK 一部分；同 task 範圍 | 勾選加入；不改 | R-01 |
-| `reviewer_membership_id` | uuid | 否 | 複合 PK 一部分；reviewer 成員 | 勾選加入；不改 | R-01 |
+| `task_id` | uuid | 否 | 複合主鍵一部分；同任務範圍 | 勾選加入；不改 | R-01 |
+| `reviewer_membership_id` | uuid | 否 | 複合主鍵一部分；審核員成員 | 勾選加入；不改 | R-01 |
 | `can_arbitrate` | boolean | 否 | 同一名冊內的仲裁資格；候選 false 預設 | 編輯名冊 | R-02 |
 | `sort_order` | integer | 否 | 可重現選人順序 | 編輯名冊 | R-03 |
 
-### 3.6 task_run_cycle：一輪 draft→Dry→Official 的版本邊界
+### 3.6 task_run_cycle：一輪草稿、試標與正式標記的版本邊界
 
-一個 cycle 釘住 sealed dataset、同任務 config/schema、seed 和演算法；退回 draft 僅關閉、不刪除。來源：014 FR-010f／FR-010f-5、ADR-022。
+一輪發布週期固定已封存資料集、同任務設定與資料結構、隨機種子和演算法；退回草稿僅關閉、不刪除。來源：014 FR-010f／FR-010f-5、ADR-022。
 
 | 欄位 | 型別 | 可空 | 代表什麼 | 何時寫入／改變 | 規則 |
 |---|---|---|---|---|---|
-| `id` | uuid | 否 | cycle PK | R1 發布；不改 | Y-01 |
+| `id` | uuid | 否 | 發布週期主鍵 | R1 發布；不改 | Y-01 |
 | `task_id` | uuid → task | 否 | 擁有任務 | R1 發布；不改 | Y-01 |
-| `cycle_no` | integer | 否 | 同 task 正整數序號 | R1 發布；不改 | Y-02 |
-| `dataset_version_id` | uuid → dataset_version | 否 | sealed 完整資料版本 | R1 發布；不改 | Y-03 |
-| `config_version_id` | uuid | 否 | 同 task 的不可變 config/schema | R1 發布；不改 | Y-03 |
-| `selection_seed` | varchar | 否 | 此 cycle 抽樣重播 seed | R1 發布；不改 | Y-04 |
+| `cycle_no` | integer | 否 | 同任務正整數序號 | R1 發布；不改 | Y-02 |
+| `dataset_version_id` | uuid → dataset_version | 否 | 已封存完整資料版本 | R1 發布；不改 | Y-03 |
+| `config_version_id` | uuid | 否 | 同任務的不可變設定與資料結構 | R1 發布；不改 | Y-03 |
+| `selection_seed` | varchar | 否 | 此發布週期抽樣重播隨機種子 | R1 發布；不改 | Y-04 |
 | `selection_algorithm_version` | varchar | 否 | 抽樣演算法版本 | R1 發布；不改 | Y-04 |
-| `opened_at` | timestamptz | 否 | cycle 開啟 UTC 時間 | R1 發布 | X-01 |
-| `closed_at` | timestamptz | 是 | 退回 draft 或 Official 完結時間 | cycle 關閉一次 | Y-02 |
-| `close_reason` | varchar | 是 | 關閉原因；退回時有明確拒絕原因 | cycle 關閉一次 | Y-02 |
+| `opened_at` | timestamptz | 否 | 發布週期開啟 UTC 時間 | R1 發布 | X-01 |
+| `closed_at` | timestamptz | 是 | 退回草稿或正式標記完結時間 | 發布週期關閉一次 | Y-02 |
+| `close_reason` | varchar | 是 | 關閉原因；退回時有明確拒絕原因 | 發布週期關閉一次 | Y-02 |
 
-### 3.7 task_trial_round：cycle 內的一個 Dry 回合
+### 3.7 task_trial_round：發布週期內的一次試標回合
 
-R1 與 Rn 的序號只在 cycle 內唯一；`sampling_value` 保存實際 item 數。來源：014 FR-010f-2／FR-010o-4／`TrialRound`。
+R1 與 Rn 的序號只在發布週期內唯一；`sampling_value` 保存實際資料項目數。來源：014 FR-010f-2／FR-010o-4／`TrialRound`。
 
 | 欄位 | 型別 | 可空 | 代表什麼 | 何時寫入／改變 | 規則 |
 |---|---|---|---|---|---|
-| `id` | uuid | 否 | round PK | Dry 發布；不改 | Q-01 |
-| `task_id` | uuid | 否 | 同 task 複合參照作用域 | Dry 發布；不改 | Q-01 |
-| `task_run_cycle_id` | uuid | 否 | 所屬 cycle | Dry 發布；不改 | Q-01 |
-| `round_no` | integer | 否 | cycle 內正整數序號 | Dry 發布；不改 | Q-02 |
-| `guideline_version_id` | uuid | 否 | 發布時同 task 的指引版本 | Dry 發布；不改 | Q-03 |
-| `sampling_value` | integer | 否 | 該回合實際 item 數 | Dry 發布；不改 | Q-04 |
-| `prior_round_findings` | text | 是 | 上輪問題；R1 可空 | Dry 發布；不改 | Q-05 |
-| `guideline_change_summary` | text | 是 | 本輪指引修訂摘要；R1 可空 | Dry 發布；不改 | Q-05 |
-| `no_change_reason` | text | 是 | 指引無變化時原因 | Dry 發布；不改 | Q-05 |
+| `id` | uuid | 否 | 回合主鍵 | 試標發布；不改 | Q-01 |
+| `task_id` | uuid | 否 | 同任務複合參照作用域 | 試標發布；不改 | Q-01 |
+| `task_run_cycle_id` | uuid | 否 | 所屬發布週期 | 試標發布；不改 | Q-01 |
+| `round_no` | integer | 否 | 發布週期內正整數序號 | 試標發布；不改 | Q-02 |
+| `guideline_version_id` | uuid | 否 | 發布時同任務的指引版本 | 試標發布；不改 | Q-03 |
+| `sampling_value` | integer | 否 | 該回合實際資料項目數 | 試標發布；不改 | Q-04 |
+| `prior_round_findings` | text | 是 | 上輪問題；R1 可空 | 試標發布；不改 | Q-05 |
+| `guideline_change_summary` | text | 是 | 本輪指引修訂摘要；R1 可空 | 試標發布；不改 | Q-05 |
+| `no_change_reason` | text | 是 | 指引無變化時原因 | 試標發布；不改 | Q-05 |
 | `iaa_computation_status` | varchar(16) | 否 | `pending`／`done`／`failed`；候選 pending 預設 | 發布；計算結果更新 | Q-06 |
-| `created_by_user_id` | uuid → users | 否 | 發布者 | Dry 發布；不改 | Q-01 |
-| `created_at` | timestamptz | 否 | 發布時間 UTC | Dry 發布 | X-01 |
+| `created_by_user_id` | uuid → users | 否 | 發布者 | 試標發布；不改 | Q-01 |
+| `created_at` | timestamptz | 否 | 發布時間 UTC | 試標發布 | X-01 |
 
 ### 3.8 task_sample_snapshot：單次發布的不可變抽樣回執
 
-每 run 一份，保存 seed、演算法、digest 和外部有序清單回執；真正成員仍由 `task_run_item` 決定。來源：014 FR-010f／`SampleSnapshot`。
+每執行一份，保存隨機種子、演算法、摘要值和外部有序清單回執；真正成員仍由 `task_run_item` 決定。來源：014 FR-010f／`SampleSnapshot`。
 
 | 欄位 | 型別 | 可空 | 代表什麼 | 何時寫入／改變 | 規則 |
 |---|---|---|---|---|---|
-| `id` | uuid | 否 | snapshot PK | 發布；不改 | S-01 |
-| `task_run_cycle_id` | uuid → task_run_cycle | 否 | 所屬 cycle | 發布；不改 | S-01 |
-| `selection_seed` | varchar | 否 | 該次選取使用的 seed | 發布；不改 | S-02 |
+| `id` | uuid | 否 | 快照主鍵 | 發布；不改 | S-01 |
+| `task_run_cycle_id` | uuid → task_run_cycle | 否 | 所屬發布週期 | 發布；不改 | S-01 |
+| `selection_seed` | varchar | 否 | 該次選取使用的隨機種子 | 發布；不改 | S-02 |
 | `selection_algorithm_version` | varchar | 否 | 該次演算法版本 | 發布；不改 | S-02 |
-| `requested_sampling_value` | integer | 是 | Dry 要求筆數；Official 為 null | 發布；不改 | S-03 |
+| `requested_sampling_value` | integer | 是 | 試標要求筆數；正式標記為空值 | 發布；不改 | S-03 |
 | `target_agreement_overrides` | json | 否 | 發布時採用的 IAA 覆寫快照；候選空物件 | 發布；不改 | S-03 |
-| `min_annotators` | integer | 否 | 發布時使用的 Dry 人數下限 | 發布；不改 | S-03 |
+| `min_annotators` | integer | 否 | 發布時使用的試標人數下限 | 發布；不改 | S-03 |
 | `selection_manifest_ref` | text | 否 | 不含答案的外部有序清單審計回執 | 發布；不改 | S-04 |
 | `selected_item_digest` | char(64) | 否 | 有序 `dataset_item_id` 清單摘要 | 發布；不改 | S-04 |
 | `locked_at` | timestamptz | 否 | 鎖定時間 UTC | 發布 | X-01 |
 | `locked_by_user_id` | uuid → users | 否 | 執行發布者 | 發布；不改 | S-01 |
 
-### 3.9 task_run：一次 Dry 或 Official 發布
+### 3.9 task_run：一次試標或正式標記的發布
 
-Dry 有同 cycle round，Official 無 round；每 task 生命週期至多一筆 Official。run 釘住指引，不能以 task 的當前指標重建歷史。來源：014 FR-010f-2／f-3／f-6／`AnnotationListMaterialization`。
+試標有同發布週期回合，正式標記無回合；每任務生命週期至多一筆正式標記。執行釘住指引，不能以任務的當前指標重建歷史。來源：014 FR-010f-2／f-3／f-6／`AnnotationListMaterialization`。
 
 | 欄位 | 型別 | 可空 | 代表什麼 | 何時寫入／改變 | 規則 |
 |---|---|---|---|---|---|
-| `id` | uuid | 否 | 穩定 run PK | 發布；不改 | U-01 |
-| `task_id` | uuid | 否 | 同 task 複合參照作用域 | 發布；不改 | U-01 |
-| `task_run_cycle_id` | uuid | 否 | 本次 cycle | 發布；不改 | U-01 |
+| `id` | uuid | 否 | 穩定執行主鍵 | 發布；不改 | U-01 |
+| `task_id` | uuid | 否 | 同任務複合參照作用域 | 發布；不改 | U-01 |
+| `task_run_cycle_id` | uuid | 否 | 本次發布週期 | 發布；不改 | U-01 |
 | `run_type` | varchar(16) | 否 | `dry_run`／`official_run` | 發布；不改 | U-02 |
-| `trial_round_id` | uuid | 是 | Dry 同 cycle round；Official 必為 null | 發布；不改 | U-02 |
-| `sample_snapshot_id` | uuid | 否 | 本次專屬 snapshot | 發布；不改 | U-03 |
-| `guideline_version_id` | uuid | 否 | 同 task 指引；Dry 須與 round 一致 | 發布；不改 | U-04 |
-| `item_count` | integer | 否 | 與實際 run item 數一致 | 發布；不改 | U-05 |
+| `trial_round_id` | uuid | 是 | 試標同發布週期回合；正式標記必為空值 | 發布；不改 | U-02 |
+| `sample_snapshot_id` | uuid | 否 | 本次專屬快照 | 發布；不改 | U-03 |
+| `guideline_version_id` | uuid | 否 | 同任務指引；試標須與回合一致 | 發布；不改 | U-04 |
+| `item_count` | integer | 否 | 與實際執行資料項目數一致 | 發布；不改 | U-05 |
 | `publication_idempotency_key` | varchar | 否 | 任務作用域發布重試鍵 | 發布；不改 | U-06 |
 | `publication_request_digest` | char(64) | 否 | 相同 key 的請求內容比對摘要 | 發布；不改 | U-06 |
 | `created_by_user_id` | uuid → users | 否 | 發布者 | 發布；不改 | U-01 |
@@ -321,51 +323,51 @@ Dry 有同 cycle round，Official 無 round；每 task 生命週期至多一筆 
 
 ### 3.10 task_run_reviewer_candidate：發布時候選名冊快照
 
-此表只凍結審核分派輸入，不保存實際審核員黏著或授權。即時資格每次重新查 current membership 與矩陣；已提交 reviewer 由 015 FR-093(5) 推導。來源：014 FR-010t／關鍵實體、015 FR-093。
+此表只凍結審核分派輸入，不保存實際審核員黏著或授權。即時資格每次重新查 current 成員資格與矩陣；已提交審核員由 015 FR-093(5) 推導。來源：014 FR-010t／關鍵實體、015 FR-093。
 
 | 欄位 | 型別 | 可空 | 代表什麼 | 何時寫入／改變 | 規則 |
 |---|---|---|---|---|---|
-| `task_id` | uuid | 否 | 同 task 複合參照作用域 | 發布；不改 | V-01 |
-| `task_run_id` | uuid | 否 | 複合 PK 的 run | 發布；不改 | V-01 |
-| `reviewer_membership_id` | uuid | 否 | 複合 PK 的 reviewer membership | 發布；不改 | V-01 |
+| `task_id` | uuid | 否 | 同任務複合參照作用域 | 發布；不改 | V-01 |
+| `task_run_id` | uuid | 否 | 複合主鍵的執行 | 發布；不改 | V-01 |
+| `reviewer_membership_id` | uuid | 否 | 複合主鍵的審核員成員資格 | 發布；不改 | V-01 |
 | `can_arbitrate_at_publish` | boolean | 否 | 發布當時資格快照，非當前授權 | 發布；不改 | V-02 |
 | `sort_order_at_publish` | integer | 否 | 發布當時穩定排序 | 發布；不改 | V-02 |
 
-### 3.11 task_run_item：有序公開 item 成員
+### 3.11 task_run_item：依序納入執行的公開資料項目
 
-一列是一個 run 選中的 `dataset_item`。同 cycle 所有 Dry／Official run 不能重複選同 item；外部 manifest 只是這些列的回執。來源：014 FR-010b／FR-010f／`RunItem`。
-
-| 欄位 | 型別 | 可空 | 代表什麼 | 何時寫入／改變 | 規則 |
-|---|---|---|---|---|---|
-| `task_run_id` | uuid | 否 | 複合 PK 的 run | 發布；不改 | I-01 |
-| `dataset_item_id` | uuid → dataset_item | 否 | 複合 PK 的公開 item | 發布；不改 | I-01 |
-| `task_run_cycle_id` | uuid | 否 | 經 parent run 約束的 cycle；防重選 | 發布；不改 | I-02 |
-| `list_position` | integer | 否 | run 內正整數排序 | 發布；不改 | I-03 |
-
-### 3.12 task_annotation_assignment：穩定標記工作 slot
-
-一個 assignment ID 不因停用、退回未指派池或重指派而改變；受派者可空不表示已排除。正式 run 每 item 恰一 slot，Dry 按重疊人數建立。來源：014 FR-005l／FR-010f-4／`AnnotationAssignment`；015 的 submission 後續以此 ID 定址。
+一列是一個執行選中的 `dataset_item`。同發布週期所有試標／正式標記執行不能重複選同資料項目；外部清單只是這些列的回執。來源：014 FR-010b／FR-010f／`RunItem`。
 
 | 欄位 | 型別 | 可空 | 代表什麼 | 何時寫入／改變 | 規則 |
 |---|---|---|---|---|---|
-| `id` | uuid | 否 | 穩定工作 slot PK | 發布；不改 | A-01 |
-| `task_id` | uuid | 否 | 同 task 複合參照作用域 | 發布；不改 | A-01 |
-| `task_run_id` | uuid | 否 | 所屬 run | 發布；不改 | A-01 |
-| `dataset_item_id` | uuid | 否 | 該 run 內的公開 item | 發布；不改 | A-01 |
-| `slot_no` | integer | 否 | 同 run item 的正整數 slot 序 | 發布；不改 | A-02 |
-| `assignee_membership_id` | uuid | 是 | 目前受派 annotator；null＝待重派 | 發布／停用退回／重派 | A-03 |
-| `status` | varchar(16) | 否 | 工作 slot 狀態；精確值域待 §7 | 發布／工作進度更新 | A-04 |
+| `task_run_id` | uuid | 否 | 複合主鍵的執行 | 發布；不改 | I-01 |
+| `dataset_item_id` | uuid → dataset_item | 否 | 複合主鍵的公開資料項目 | 發布；不改 | I-01 |
+| `task_run_cycle_id` | uuid | 否 | 經 parent 執行約束的發布週期；防重選 | 發布；不改 | I-02 |
+| `list_position` | integer | 否 | 執行內正整數排序 | 發布；不改 | I-03 |
+
+### 3.12 task_annotation_assignment：固定的標記工作位
+
+一個工作指派 ID 不因停用、退回未指派池或重指派而改變；受派者可空不表示已排除。正式執行每資料項目恰一工作位，試標按重疊人數建立。來源：014 FR-005l／FR-010f-4／`AnnotationAssignment`；015 的 submission 後續以此 ID 定址。
+
+| 欄位 | 型別 | 可空 | 代表什麼 | 何時寫入／改變 | 規則 |
+|---|---|---|---|---|---|
+| `id` | uuid | 否 | 固定的標記工作位主鍵 | 發布；不改 | A-01 |
+| `task_id` | uuid | 否 | 同任務複合參照作用域 | 發布；不改 | A-01 |
+| `task_run_id` | uuid | 否 | 所屬執行 | 發布；不改 | A-01 |
+| `dataset_item_id` | uuid | 否 | 該執行內的公開資料項目 | 發布；不改 | A-01 |
+| `slot_no` | integer | 否 | 同執行資料項目的正整數工作位序 | 發布；不改 | A-02 |
+| `assignee_membership_id` | uuid | 是 | 目前受派 annotator；空值＝待重派 | 發布／停用退回／重派 | A-03 |
+| `status` | varchar(16) | 否 | 標記工作位狀態；精確值域待 §7 | 發布／工作進度更新 | A-04 |
 | `created_at` | timestamptz | 否 | 建立時間 UTC | 發布 | X-01 |
 | `updated_at` | timestamptz | 否 | 最後改動 UTC | 修改 | X-01 |
 
 ### 3.13 task_annotation_exclusion：終局排除證據
 
-每 assignment 最多一筆，V1 不撤銷、不刪除，與原 slot 分離避免 null assignee 被誤判排除。來源：014 FR-005h／`ExcludedAnnotationAssignment`。
+每工作指派最多一筆，V1 不撤銷、不刪除，與原工作位分離避免空值 assignee 被誤判排除。來源：014 FR-005h／`ExcludedAnnotationAssignment`。
 
 | 欄位 | 型別 | 可空 | 代表什麼 | 何時寫入／改變 | 規則 |
 |---|---|---|---|---|---|
-| `id` | uuid | 否 | 排除證據 PK | 排除時；不改 | E-01 |
-| `assignment_id` | uuid → task_annotation_assignment | 否 | 被排除的穩定 slot | 排除時；不改 | E-01 |
+| `id` | uuid | 否 | 排除證據主鍵 | 排除時；不改 | E-01 |
+| `assignment_id` | uuid → task_annotation_assignment | 否 | 被排除的穩定工作位 | 排除時；不改 | E-01 |
 | `excluded_by_user_id` | uuid → users | 否 | 執行排除的 project leader | 排除時；不改 | E-02 |
 | `excluded_at` | timestamptz | 否 | 排除時間 UTC | 排除時；不改 | X-01 |
 | `reason` | text | 否 | 必填原因 | 排除時；不改 | E-02 |
