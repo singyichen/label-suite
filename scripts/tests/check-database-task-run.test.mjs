@@ -44,6 +44,27 @@ test('task/run dictionary contains physical candidates with no derived review as
     !['hidden_answer', 'declared_split'].includes(column.name))));
 });
 
+test('task/run parser rejects a Mermaid edge from the private answer table', () => {
+  const markdown = read('../../docs/diagrams/architecture/task-run-db-schema.md');
+  assert.ok(checker.parseTaskRunSchema(markdown).tables.length > 0,
+    'The real task/run dictionary must parse');
+  const finalEdge = '    task_annotation_assignment ||--o| task_annotation_exclusion : assignment_id';
+  assert.ok(markdown.includes(finalEdge), 'Expected the real task/run edge list');
+  const mutated = markdown.replace(finalEdge,
+    `    dataset_item_private ||--o{ task_run_item : hidden_answer\n${finalEdge}`);
+  assert.throws(() => checker.parseTaskRunSchema(mutated),
+    /(?:Mermaid|FK|relationship|edge).*dataset_item_private|dataset_item_private.*(?:Mermaid|FK|relationship|edge)/i);
+});
+
+test('task/run parser rejects a Mermaid edge labeled with a non-FK column', () => {
+  const markdown = read('../../docs/diagrams/architecture/task-run-db-schema.md');
+  const validEdge = '    task ||--o{ task_config_version : task_id';
+  assert.ok(markdown.includes(validEdge), 'Expected task config FK edge');
+  const mutated = markdown.replace(validEdge, '    task ||--o{ task_config_version : id');
+  assert.throws(() => checker.parseTaskRunSchema(mutated),
+    /(?:Mermaid|FK|relationship|edge).*task_config_version|task_config_version.*(?:Mermaid|FK|relationship|edge)/i);
+});
+
 test('task/run NoteCraft projection matches every dictionary table, column, PK, FK and type', () => {
   const source = checker.mergeSchemaSources(
     checker.parseAccountAdminSchema(read('../../docs/diagrams/architecture/account-admin-db-schema.md')),
