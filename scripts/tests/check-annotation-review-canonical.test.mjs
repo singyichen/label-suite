@@ -1,12 +1,15 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { test } from 'node:test';
 
 const read = (path) => readFileSync(new URL(path, import.meta.url), 'utf8');
 const annotation = read('../../specs/annotation/015-annotation-workspace/spec.md');
 const task = read('../../specs/task-management/014-task-detail/spec.md');
-const annotationDelta = read('../../openspec/changes/annotation-review-physical-contract/specs/annotation/015-annotation-workspace/spec.md');
-const taskDelta = read('../../openspec/changes/annotation-review-physical-contract/specs/task-management/014-task-detail/spec.md');
+const openChange = '../../openspec/changes/annotation-review-physical-contract';
+const archivedChange = '../../openspec/changes/archive/2026-10-07-annotation-review-physical-contract';
+const change = existsSync(new URL(`${openChange}/.openspec.yaml`, import.meta.url)) ? openChange : archivedChange;
+const annotationDelta = read(`${change}/specs/annotation/015-annotation-workspace/spec.md`);
+const taskDelta = read(`${change}/specs/task-management/014-task-detail/spec.md`);
 
 const liveRequirements = (source) => {
   const requirements = source.match(/^### 功能需求\n([\s\S]*?)(?=^### |^## )/m)?.[1];

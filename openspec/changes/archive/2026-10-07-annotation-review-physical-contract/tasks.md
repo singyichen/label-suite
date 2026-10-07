@@ -41,5 +41,5 @@
 > 依賴：前三群組通過。主 session 依序處理 review、archive、PR 與 issue；未定的 retention、gold、quality/export 保持未完成。
 
 - [x] 4.1 請 senior-code-reviewer、senior-qa 與 senior-security 依 delta 情境及答案隔離邊界審查，記錄阻擋項修正與殘餘 migration 風險。 [@main]
-- [ ] 4.2 在最終 PR 前執行 Source-Verify、正典版本／Changelog 回寫與 `openspec archive annotation-review-physical-contract --yes`；逐條定位 derived view 的 FR／AC／SC 引用，確認無 delta heading。 [@main]
+- [x] 4.2 在最終 PR 前執行 Source-Verify、正典版本／Changelog 回寫與 `openspec archive annotation-review-physical-contract --yes`；逐條定位 derived view 的 FR／AC／SC 引用，確認無 delta heading。 [@main]
 - [ ] 4.3 建立繁體中文 PR，待所有 CI 通過及 review thread 歸零後依既有授權合併，再更新 issue #1160 的已驗證勾選；保留後續 quality/export/worklog 與 migration 待決。 [@main]
