@@ -12,6 +12,22 @@ const taskSource = () => {
   return checker.parseTaskRunSchema(read(path));
 };
 const erData = () => JSON.parse(read('../../docs/diagrams/architecture/database-schema.er.json'));
+const inventory = () => read('../../docs/diagrams/architecture/database-table-inventory.md');
+const summaryErrors = (data, markdown) => {
+  assert.equal(typeof checker.validateSchemaSummary, 'function', 'Schema summary checker is required');
+  return checker.validateSchemaSummary(data, markdown);
+};
+const countsFor = (data) => [
+  [data.tables.length, '張候選表'],
+  [data.tables.reduce((count, table) => count + table.columns.length, 0), '欄'],
+  [data.tables.reduce((count, table) => count + table.columns.filter((column) => column.fk).length, 0),
+    '個候選單欄 FK'],
+];
+const incrementCount = (text, count, unit) => {
+  const mutated = text.replace(new RegExp(`\\b${count}(?= ${unit})`), String(count + 1));
+  assert.notEqual(mutated, text, `Expected a ${unit} count in the summary`);
+  return mutated;
+};
 
 test('task/run dictionary contains physical candidates with no derived review assignment table', () => {
   const source = taskSource();
@@ -62,4 +78,35 @@ test('NoteCraft CI runs the task/run schema regression', () => {
   assert.ok(job, 'Missing database-schema CI job');
   assert.match(job, /node --test[^\n]*scripts\/tests\/check-database-task-run\.test\.mjs\b/,
     'NoteCraft CI must execute check-database-task-run.test.mjs');
+});
+
+test('schema summaries match counts derived from the NoteCraft tables', () => {
+  assert.deepEqual(summaryErrors(erData(), inventory()), []);
+});
+
+test('schema summary checker rejects drift in each NoteCraft metadata count', () => {
+  const data = erData();
+  const markdown = inventory();
+  const mutations = countsFor(data).map(([count, unit]) => {
+    const mutated = structuredClone(data);
+    mutated.meta.description = incrementCount(mutated.meta.description, count, unit);
+    return [unit, mutated];
+  });
+  for (const [unit, mutated] of mutations) {
+    assert.notDeepEqual(summaryErrors(mutated, markdown), [], `Stale metadata ${unit} count must fail`);
+  }
+});
+
+test('schema summary checker rejects drift in each inventory NoteCraft count', () => {
+  const data = erData();
+  const markdown = inventory();
+  const summary = markdown.split('\n').find((line) => line.startsWith('**NoteCraft 規劃檢視**'));
+  assert.ok(summary, 'Inventory NoteCraft summary is required');
+  const mutations = countsFor(data).map(([count, unit]) => {
+    const mutatedSummary = incrementCount(summary, count, unit);
+    return [unit, markdown.replace(summary, mutatedSummary)];
+  });
+  for (const [unit, mutated] of mutations) {
+    assert.notDeepEqual(summaryErrors(data, mutated), [], `Stale inventory ${unit} count must fail`);
+  }
 });
