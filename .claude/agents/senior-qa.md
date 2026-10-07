@@ -55,6 +55,7 @@ For stage-gated deliverables — traceability matrix, regression suite planning,
 ### Phase A — TDD Red
 
 - [ ] Read the spec item and acceptance criteria
+- [ ] For UI-heavy work (`team-lead.md` → UX Decision Record), read the UX decision record in the dispatch prompt and cover its observable success signals in the Red contract
 - [ ] Write failing test(s) that capture expected behavior
 - [ ] Verify tests fail for the right reason (not import/syntax errors)
 - [ ] Report: failing tests confirmed, ready for Phase B implementation

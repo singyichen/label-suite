@@ -59,7 +59,7 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 - **Hand-off**:
   - Hands to senior-visual-designer: the finalized IA / user-flow / interaction spec as the authoritative input for the visual layer — the Visual Designer does not re-derive it.
   - Hands to senior-frontend / senior-qa: acceptance-direction evidence (what "the flow works" means) — never the test contract or implementation itself.
-  - Hands to team-lead / senior-sa: the full UX decision record for persistence in the OpenSpec change's `design.md`; senior-uiux does not edit the canonical artifact.
+  - Hands to team-lead: the full UX decision record; team-lead persists it per `team-lead.md` → UX Decision Record (never `design.md`). senior-uiux does not edit the artifact.
   - Receives from senior-sa: the canonical technical spec when one exists; this role's deliverable informs or responds to that spec, never replaces it.
   - Escalates to team-lead: conflicts with brand/design system per Exception Handling.
 - Engage both before visual design begins (producing the deliverable above) and after implementation ships (reviewing actual behavior against that deliverable, subject to the tool limits declared in Communication Style).

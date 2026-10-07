@@ -54,9 +54,19 @@ When planning a teammate dispatch for the main session to execute, include in th
 4. Quality gate command to run after completing each task
 5. For a Green implementation task: the committed Red task ID, commit, contract, and expected-failure evidence it must preserve
 6. Reminder to report the completed task ID and required evidence to Team Lead after the quality gate completes
-7. For every UI-heavy Red or Green task: the full accepted UX decision record and its stable `design.md` section. The record is accepted only when the user confirms the post-`/opsx:propose` `design.md` and `tasks.md` gate; a research-phase chat summary alone is not the implementation contract.
+7. For every UI-heavy Red or Green task: the full accepted UX decision record and where it is persisted (see UX Decision Record below). In the full OpenSpec flow the record is accepted only when the user confirms the post-`/opsx:propose` gate; a research-phase chat summary alone is not the implementation contract.
 
 `senior-qa` must commit and run every separate Red task before the main session dispatches its paired Green task per Team Lead's plan. Team Lead verifies the committed expected failure reason before that dispatch. Implementation agents consume the Red contract, must not weaken or rewrite it to pass, and return the specified Green evidence. The main session/Team Lead is the sole writer of `tasks.md` checkboxes: it records a Red checkbox only after verifying the committed expected failure, and a Green checkbox only after verifying its required exit-0 evidence. Do not ask parallel teammates to edit `tasks.md`; that shared file is outside their ownership boundary during implementation.
+
+### UX Decision Record
+
+This section is the single definition other agent files reference.
+
+- **UI-heavy** — the change touches a user-visible flow under `frontend/src/features/**` or `design/prototype/pages/**`, or adds or changes the entry point or after-completion destination of a page, panel, or dialog. Style-only or copy-only changes are not UI-heavy.
+- **Where the record lives** — `docs/sdd-workflow.md` reserves `design.md` for technical design, so the record never goes there:
+  - Full OpenSpec flow: the body of `proposal.md`'s `## Why` (heading text unchanged), presented at the post-`/opsx:propose` user gate.
+  - Lightweight Path or prototype-stage work (no change container): the issue comment or PR body that scopes the work.
+- **Carrier** — Team Lead copies the full record into the QA Red and frontend Green dispatch prompts; senior-uiux produces it but does not write it into any artifact.
 
 ### File Ownership (enforce strictly to prevent git conflicts)
 
@@ -177,7 +187,7 @@ Research Phase (read-only, parallel):
   for UI-heavy work, senior-uiux returns the target role/value, testing goal, covered UX levels,
   user/business/data-flow tensions, evidence limits, observable success signals, and next validation method;
   user-researcher returns findings only from supplied authentic evidence, otherwise a research plan/instrument
-  → senior-sa/team-lead carries the UX decision record forward and inserts it into the change's design.md during /opsx:propose; do not ask senior-uiux to write the canonical artifact
+  → Team Lead carries the UX decision record forward and writes it into the change's proposal.md `## Why` body during /opsx:propose (see UX Decision Record); do not ask senior-uiux to write the canonical artifact
   senior-sa returns a business flow chart, senior-sd returns class/sequence diagrams —
   both as Mermaid text in findings; the diagrams feed into /opsx:propose and are written
   into design.md's diagram sections when the change is drafted (design.md does not exist earlier)
@@ -205,8 +215,7 @@ Phase C — sequential (after senior-backend models confirmed):
 
 Phase D — Per-PR-group review and scenario acceptance (after all paired Green tasks in that PR group complete):
   senior-code-reviewer Code Review
-  → senior-qa validates WHEN/THEN and FR/AC scenarios
-  → senior-uiux reviews UI-heavy groups against the accepted UX decision record and reports which success signals remain unmeasured
+  → senior-qa validates WHEN/THEN and FR/AC scenarios; for UI-heavy groups it also reports which UX decision record success signals remain unmeasured
   → senior-security reviews every PR group
   → senior-performance reviews when milestone or scope rules apply
   → Team Lead reports the ordered evidence → ⚠️ User explicitly confirms the PR group
@@ -229,8 +238,8 @@ Phase D — Per-PR-group review and scenario acceptance (after all paired Green 
 - File Ownership boundaries stated in every dispatch prompt
 - `tasks.md` checkboxes updated serially by the main session/Team Lead only
 - The four gates are recorded separately: OpenSpec schema validation, Project SDD lint, code/test gates, and Source-Verify + final archive/write-back
-- Every PR group follows Code Review → QA Scenario acceptance → conditional senior-uiux validation for UI-heavy work → senior-security (always) → applicable senior-performance review → explicit user confirmation before `/pr-flow`
-- UI-heavy work has a UX decision record persisted in `design.md`, accepted at the post-`/opsx:propose` user gate, and copied in full into both QA Red and frontend Green dispatches; Phase D checks the implementation against it without presenting expert review as user behavior.
+- Every PR group follows Code Review → QA Scenario acceptance → senior-security (always) → applicable senior-performance review → explicit user confirmation before `/pr-flow`
+- UI-heavy work has a UX decision record persisted where UX Decision Record specifies (never `design.md`), copied in full into both QA Red and frontend Green dispatches; QA scenario acceptance reports unmeasured success signals without presenting expert review as user behavior.
 - All user checkpoints honored — never proceed past a ⚠️ without confirmation
 
 ## Output Format

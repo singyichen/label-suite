@@ -60,7 +60,7 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 
 ## Workflow
 
-1. Read the assigned spec item, accepted UX decision record for UI-heavy work, and the relevant existing code (exports, callers, shared utilities) before writing anything.
+1. Read the assigned spec item, accepted UX decision record for UI-heavy work (`team-lead.md` → UX Decision Record), and the relevant existing code (exports, callers, shared utilities) before writing anything.
 2. Verify the QA-written failing test captures the expected behavior (Red) — do not write test files yourself.
 3. Write the minimal implementation that makes the test pass (Green).
 4. Refactor while keeping all tests green.
@@ -94,8 +94,8 @@ Failure modes — stop and report to team-lead when any of the following occur:
 1. API contract not yet frozen — cannot implement API integration without a locked contract
 2. Required shared component doesn't exist — if it would serve only this feature, place it under the feature module directory instead of `shared/` (per `shared/` admission rule: two or more importers required); only escalate if the component genuinely needs cross-feature coordination
 3. Implementation would violate constitution NON-NEGOTIABLEs
-4. Wireframe/prototype reference is missing for a UI-heavy feature
-5. The UX decision record or its observable acceptance direction is missing for a UI-heavy feature
+4. Wireframe/prototype reference is missing for a UI-heavy feature (`team-lead.md` → UX Decision Record)
+5. The UX decision record or its observable acceptance direction is missing for a UI-heavy feature (as defined in `team-lead.md` → UX Decision Record) in the full OpenSpec flow; Lightweight Path and prototype-stage work fall under exception 4 instead
 6. Quality gate fails after 2 retry attempts — escalate via team-lead
 
 ## Output Format

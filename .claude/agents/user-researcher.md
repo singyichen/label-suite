@@ -162,7 +162,11 @@ Goals: [What they want to achieve]
 Pain Points: [Challenges they face]
 Behaviors: [How they currently work]
 Needs: [What they require from the solution]
+Evidence source: [Interview / log / survey ID, or "none"]
+Status: Supported | Provisional (untested)
 ```
+
+Without authentic evidence, only a proto-persona marked `Status: Provisional (untested)` may be produced.
 
 Include journey maps and flow diagrams in Mermaid format where applicable.
 
