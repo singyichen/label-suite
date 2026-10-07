@@ -26,6 +26,7 @@
 
   var profiles = {
     T001: {
+      arbiterIds: ['reviewer_chen'],
       taskCategories: ['classification'],
       taskInputTypes: ['single_item'],
       outputs: [
@@ -72,6 +73,7 @@
     },
 
     T002: {
+      arbiterIds: ['reviewer_chen'],
       taskCategories: ['classification'],
       taskInputTypes: ['single_item'],
       outputs: [
@@ -122,6 +124,7 @@
     },
 
     T003: {
+      arbiterIds: ['reviewer_chen'],
       taskCategories: ['classification'],
       taskInputTypes: ['single_item'],
       outputs: [
@@ -227,6 +230,7 @@
     },
 
     T004: {
+      arbiterIds: ['reviewer_chen'],
       taskCategories: ['regression'],
       taskInputTypes: ['single_item'],
       outputs: [
@@ -277,6 +281,7 @@
     },
 
     T005: {
+      arbiterIds: ['reviewer_chen'],
       taskCategories: ['regression'],
       taskInputTypes: ['single_item'],
       outputs: [
@@ -331,6 +336,7 @@
     },
 
     T006: {
+      arbiterIds: ['reviewer_chen'],
       taskCategories: ['sequence'],
       taskInputTypes: ['single_item'],
       outputs: [
@@ -375,6 +381,7 @@
     },
 
     T007: {
+      arbiterIds: ['reviewer_chen'],
       taskCategories: ['sequence'],
       taskInputTypes: ['single_item'],
       outputs: [
@@ -433,6 +440,7 @@
     },
 
     T008: {
+      arbiterIds: ['reviewer_chen'],
       taskCategories: ['sequence'],
       taskInputTypes: ['single_item'],
       outputs: [
@@ -567,6 +575,7 @@
     },
 
     T009: {
+      arbiterIds: ['reviewer_chen'],
       taskCategories: ['generation'],
       taskInputTypes: ['single_item'],
       outputs: [
@@ -605,6 +614,7 @@
     },
 
     T010: {
+      arbiterIds: ['reviewer_chen'],
       taskCategories: ['sequence'],
       taskInputTypes: ['single_item'],
       outputs: [
@@ -806,6 +816,7 @@
     },
 
     T011: {
+      arbiterIds: ['reviewer_chen'],
       taskCategories: ['classification'],
       taskInputTypes: ['item_pair'],
       outputs: [
@@ -865,6 +876,7 @@
     },
 
     T012: {
+      arbiterIds: ['reviewer_chen'],
       taskCategories: ['generation'],
       taskInputTypes: ['single_item'],
       outputs: [
@@ -915,6 +927,7 @@
     },
 
     T013: {
+      arbiterIds: ['reviewer_chen'],
       taskCategories: ['sequence', 'regression'],
       taskInputTypes: ['single_item'],
       outputs: [

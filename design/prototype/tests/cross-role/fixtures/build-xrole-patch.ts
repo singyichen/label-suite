@@ -191,6 +191,9 @@ export function buildXRoleSeedPatch(taskId: string): string {
       window.LabelSuiteTaskDetailData.profiles[${id}] = {
         taskCategories: ['classification'],
         taskInputTypes: ['single_item'],
+        /* issue #1146: arbiter eligibility comes only from the task's own
+         * arbiterIds (no REVIEWER_ROSTER.can_arbitrate fallback). */
+        arbiterIds: [${arbiterId}],
         outputs: [{
           type: 'single_label',
           config: {

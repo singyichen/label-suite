@@ -43,7 +43,7 @@
  *       MUST hard-block publish and surface "審核員還差 1 位" through the
  *       existing #toastMsg (existing memberGapReviewerTpl pattern, reused
  *       from FR-010t's issue-505 predecessor test).
- *     - arbiter_ids empty (T001's seeded DEFAULT_TASK_DATA.arbiterIds = [])
+ *     - arbiter_ids empty (T001's profile arbiterIds patched to [] by the test)
  *       MUST NOT block publish (the trial round is still created), but MUST
  *       show a persistent, non-auto-dismissing warning through a BRAND NEW
  *       #publishArbiterWarning element. Issue #1120 (FR-010t revision) replaced
@@ -132,9 +132,18 @@ test.describe('Review assignment read-only + publish gate (issue #596)', () => {
   // FR-010t: arbiter_ids empty does not block publish, but a persistent
   // warning must be shown.
   test('does not block publish but shows a persistent arbiter-gap warning when arbiter_ids is empty', async ({ page }) => {
-    // T001 seeds a full reviewer_ids roster but an empty arbiter_ids
-    // (DEFAULT_TASK_DATA.arbiterIds = []), so only the soft-warning branch
-    // fires here -- the reviewer_ids hard gate above stays satisfied.
+    // T001 seeds a full reviewer_ids roster and (issue #1146) an explicit
+    // arbiter_ids, so the served profile data is patched to an empty roster
+    // here: only the soft-warning branch fires -- the reviewer_ids hard gate
+    // above stays satisfied.
+    await page.route('**/task-management/task-detail.data.js*', async (route) => {
+      const response = await route.fetch();
+      const body = await response.text();
+      await route.fulfill({
+        response,
+        body: `${body}\n;window.LabelSuiteTaskDetailData.profiles['T001'].arbiterIds = [];\n`,
+      });
+    });
     await page.goto(TASK_DETAIL_URL + '?task_id=T001&status=draft');
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
 

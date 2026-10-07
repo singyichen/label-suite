@@ -6970,7 +6970,7 @@ function getTaskTypeLabel() {
     TASK_DATA.reviewerIds = state.reviewDraft.reviewerIds.slice();
     var arbitersChanged = TASK_DATA.arbiterIds.join('|') !== state.reviewDraft.arbiterIds.join('|');
     TASK_DATA.arbiterIds = state.reviewDraft.arbiterIds.slice();
-    /* Sync the profile only on change: legacy profiles without arbiterIds keep the roster fallback (#1146). */
+    /* Sync the profile only on change; a profile without arbiterIds means no arbiter (#1146). */
     var savedProfile = window.LabelSuiteTaskDetailData && window.LabelSuiteTaskDetailData.profiles &&
       window.LabelSuiteTaskDetailData.profiles[TASK_DATA.taskId];
     if (savedProfile && arbitersChanged) savedProfile.arbiterIds = TASK_DATA.arbiterIds.slice();
@@ -8830,16 +8830,17 @@ function getTaskTypeLabel() {
   }
 
   /* FR-023: leader adjudication entry point. Shown only to the project leader
-     and only while the task's arbiter roster is empty -- decided from the
-     workspace data layer's taskArbiterRoster(), the same source that guards
-     submitLeaderAdjudication(). One row per awaiting-arbitration item. */
+     and only while the task has no EFFECTIVE arbiter -- taskArbiterRoster()
+     ids filtered through getEffectiveArbiterIds(), because the workspace data
+     layer cannot see member status (a disabled/removed arbiter loses authority
+     immediately, 014 FR-010t). One row per awaiting-arbitration item. */
   function renderLeaderAdjudicationSection() {
     var section = document.getElementById('leaderAdjudicationSection');
     var list = document.getElementById('leaderAdjudicationList');
     if (!section || !list) return;
     var wsData = window.LabelSuiteAnnotationWorkspaceData;
     var active = state.taskRole === 'project_leader' && !!wsData && !!wsData.submitLeaderAdjudication &&
-      wsData.taskArbiterRoster(TASK_DATA.taskId).length === 0;
+      getEffectiveArbiterIds(wsData.taskArbiterRoster(TASK_DATA.taskId)).length === 0;
     section.classList.toggle('hidden', !active);
     if (!active) return;
 

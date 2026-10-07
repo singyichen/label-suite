@@ -2527,16 +2527,17 @@
       : REVIEWER_ROSTER.map(function (r) { return r.id; });
   }
 
-  /* issue #868 (FR-060): arbiter eligibility belongs to the task's own
-     `arbiter_ids`, not the global demo roster. An explicitly empty array is
-     meaningful (the PL chose no arbiter), so only a missing legacy field
-     falls back to REVIEWER_ROSTER.can_arbitrate. */
+  /* issue #868 / #1146 (FR-060): arbiter eligibility belongs only to the
+     task's own `arbiter_ids`. A missing field or a task with no profile means
+     no arbiter (the global demo roster is never consulted), and an explicitly
+     empty array is the PL choosing no arbiter. Ids no longer in
+     REVIEWER_ROSTER (stale / removed members) are dropped. */
+  // ponytail: workspace cannot see member status (TASK_MEMBERS lives only in task-detail.html memory), so the disabled-member authority check is left to the backend (015 AC-7.2); task-detail filters through getEffectiveArbiterIds
   function taskArbiterRoster(taskId) {
     var profile = findTaskDetailProfile(taskId);
-    if (profile && Array.isArray(profile.arbiterIds)) return profile.arbiterIds.slice();
-    return REVIEWER_ROSTER
-      .filter(function (reviewer) { return reviewer.can_arbitrate; })
-      .map(function (reviewer) { return reviewer.id; });
+    if (!profile || !Array.isArray(profile.arbiterIds)) return [];
+    var known = REVIEWER_ROSTER.map(function (reviewer) { return reviewer.id; });
+    return profile.arbiterIds.filter(function (id) { return known.indexOf(id) >= 0; });
   }
 
   /* issue #868 (FR-093): every designated arbiter is reserved from NEW
