@@ -102,3 +102,66 @@ test('T001: task-detail and workspace agree on the arbiter roster and the summar
   expect(workspace).toEqual(detail);
   expect(workspace).toEqual(['reviewer_chen']);
 });
+
+/*
+ * Disabled / removed arbiter (014 FR-010t, FR-010s-1, FR-005j; 015 AC-7.2):
+ * a stored arbiter id whose member was disabled or removed no longer counts.
+ * The review-settings summary already says 未指定仲裁者, so the FR-023 project
+ * leader arbitration entry (#leaderAdjudicationSection) must appear too.
+ */
+const LEADER_SECTION = '#leaderAdjudicationSection';
+
+async function openT001MemberTab(page: Page): Promise<void> {
+  await page.goto(`${TASK_DETAIL_URL}?task_id=T001`);
+  await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: 15000 });
+  await page.locator('#tabMemberManagement').click();
+  await expect(page.locator('#memberManagementPanel')).not.toHaveClass(/hidden/);
+}
+
+function chenRow(page: Page) {
+  return page.locator('#memberTableBody tr').filter({ hasText: '陳美玲' });
+}
+
+async function confirmMemberAction(page: Page): Promise<void> {
+  await page.locator('#memberActionConfirmBtn').click();
+  await expect(page.locator('#memberActionModal')).not.toHaveClass(/show/);
+}
+
+async function expectNoArbiterSummaryAndLeaderEntry(page: Page): Promise<void> {
+  await page.locator('#tabOverview').click();
+  await expect(page.locator('#valueArbiterIdsControl')).toHaveText('未指定仲裁者');
+  await page.locator('#tabAnnotationProgress').click();
+  await expect(page.locator('#annotationProgressPanel')).not.toHaveClass(/hidden/);
+  await expect(page.locator(LEADER_SECTION)).toBeVisible();
+}
+
+test.describe('disabled / removed arbiter loses authority (FR-010t, FR-010s-1)', () => {
+  test('(f) disabling reviewer_chen shows 未指定仲裁者 and exposes the FR-023 leader arbitration entry', async ({ page }) => {
+    await openT001MemberTab(page);
+    await chenRow(page).locator('button:has-text("停用")').click();
+    await confirmMemberAction(page);
+    await expect(chenRow(page)).toContainText('停用');
+    await expectNoArbiterSummaryAndLeaderEntry(page);
+  });
+
+  test('(g) removing reviewer_chen shows 未指定仲裁者 and exposes the FR-023 leader arbitration entry', async ({ page }) => {
+    await openT001MemberTab(page);
+    await chenRow(page).locator('button:has-text("移除")').click();
+    await confirmMemberAction(page);
+    await expect(chenRow(page)).toHaveCount(0);
+    await expectNoArbiterSummaryAndLeaderEntry(page);
+  });
+
+  test('(h) control: re-enabling reviewer_chen restores the arbiter and hides the leader arbitration entry', async ({ page }) => {
+    await openT001MemberTab(page);
+    await chenRow(page).locator('button:has-text("停用")').click();
+    await confirmMemberAction(page);
+    await chenRow(page).locator('button:has-text("啟用")').click();
+    await confirmMemberAction(page);
+    await page.locator('#tabOverview').click();
+    await expect(page.locator('#valueArbiterIdsControl')).not.toHaveText('未指定仲裁者');
+    await page.locator('#tabAnnotationProgress').click();
+    await expect(page.locator('#annotationProgressPanel')).not.toHaveClass(/hidden/);
+    await expect(page.locator(LEADER_SECTION)).toBeHidden();
+  });
+});
