@@ -1230,6 +1230,435 @@
         }
       ],
       "description": "**實體候選，尚未部署。** 一個 cycle 釘住 sealed dataset、同任務 config/schema、seed 和演算法；退回 draft 僅關閉、不刪除。來源：014 FR-010f／FR-010f-5、ADR-022。\n\n來源：[task/run 實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.6；複合 FK、CHECK、UNIQUE 與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。"
+    },
+    {
+      "name": "task_trial_round",
+      "label": "cycle 內的一個 Dry 回合",
+      "section": "3.7",
+      "group": "run",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "required": "required",
+          "note": "round PK；Dry 發布；不改；規則：Q-01",
+          "pk": true
+        },
+        {
+          "name": "task_id",
+          "type": "uuid",
+          "required": "required",
+          "note": "同 task 複合參照作用域；Dry 發布；不改；規則：Q-01"
+        },
+        {
+          "name": "task_run_cycle_id",
+          "type": "uuid",
+          "required": "required",
+          "note": "所屬 cycle；Dry 發布；不改；規則：Q-01"
+        },
+        {
+          "name": "round_no",
+          "type": "integer",
+          "required": "required",
+          "note": "cycle 內正整數序號；Dry 發布；不改；規則：Q-02"
+        },
+        {
+          "name": "guideline_version_id",
+          "type": "uuid",
+          "required": "required",
+          "note": "發布時同 task 的指引版本；Dry 發布；不改；規則：Q-03"
+        },
+        {
+          "name": "sampling_value",
+          "type": "integer",
+          "required": "required",
+          "note": "該回合實際 item 數；Dry 發布；不改；規則：Q-04"
+        },
+        {
+          "name": "prior_round_findings",
+          "type": "text",
+          "required": "nullable",
+          "note": "上輪問題；R1 可空；Dry 發布；不改；規則：Q-05"
+        },
+        {
+          "name": "guideline_change_summary",
+          "type": "text",
+          "required": "nullable",
+          "note": "本輪指引修訂摘要；R1 可空；Dry 發布；不改；規則：Q-05"
+        },
+        {
+          "name": "no_change_reason",
+          "type": "text",
+          "required": "nullable",
+          "note": "指引無變化時原因；Dry 發布；不改；規則：Q-05"
+        },
+        {
+          "name": "iaa_computation_status",
+          "type": "varchar(16)",
+          "required": "required",
+          "note": "`pending`／`done`／`failed`；候選 pending 預設；發布；計算結果更新；規則：Q-06"
+        },
+        {
+          "name": "created_by_user_id",
+          "type": "uuid",
+          "required": "required",
+          "note": "發布者；Dry 發布；不改；規則：Q-01",
+          "fk": "users"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "required": "required",
+          "note": "發布時間 UTC；Dry 發布；規則：X-01"
+        }
+      ],
+      "description": "**實體候選，尚未部署。** R1 與 Rn 的序號只在 cycle 內唯一；`sampling_value` 保存實際 item 數。來源：014 FR-010f-2／FR-010o-4／`TrialRound`。\n\n來源：[task/run 實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.7；複合 FK、CHECK、UNIQUE 與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。"
+    },
+    {
+      "name": "task_sample_snapshot",
+      "label": "單次發布的不可變抽樣回執",
+      "section": "3.8",
+      "group": "run",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "required": "required",
+          "note": "snapshot PK；發布；不改；規則：S-01",
+          "pk": true
+        },
+        {
+          "name": "task_run_cycle_id",
+          "type": "uuid",
+          "required": "required",
+          "note": "所屬 cycle；發布；不改；規則：S-01",
+          "fk": "task_run_cycle"
+        },
+        {
+          "name": "selection_seed",
+          "type": "varchar",
+          "required": "required",
+          "note": "該次選取使用的 seed；發布；不改；規則：S-02"
+        },
+        {
+          "name": "selection_algorithm_version",
+          "type": "varchar",
+          "required": "required",
+          "note": "該次演算法版本；發布；不改；規則：S-02"
+        },
+        {
+          "name": "requested_sampling_value",
+          "type": "integer",
+          "required": "nullable",
+          "note": "Dry 要求筆數；Official 為 null；發布；不改；規則：S-03"
+        },
+        {
+          "name": "target_agreement_overrides",
+          "type": "json",
+          "required": "required",
+          "note": "發布時採用的 IAA 覆寫快照；候選空物件；發布；不改；規則：S-03"
+        },
+        {
+          "name": "min_annotators",
+          "type": "integer",
+          "required": "required",
+          "note": "發布時使用的 Dry 人數下限；發布；不改；規則：S-03"
+        },
+        {
+          "name": "selection_manifest_ref",
+          "type": "text",
+          "required": "required",
+          "note": "不含答案的外部有序清單審計回執；發布；不改；規則：S-04"
+        },
+        {
+          "name": "selected_item_digest",
+          "type": "char(64)",
+          "required": "required",
+          "note": "有序 `dataset_item_id` 清單摘要；發布；不改；規則：S-04"
+        },
+        {
+          "name": "locked_at",
+          "type": "timestamptz",
+          "required": "required",
+          "note": "鎖定時間 UTC；發布；規則：X-01"
+        },
+        {
+          "name": "locked_by_user_id",
+          "type": "uuid",
+          "required": "required",
+          "note": "執行發布者；發布；不改；規則：S-01",
+          "fk": "users"
+        }
+      ],
+      "description": "**實體候選，尚未部署。** 每 run 一份，保存 seed、演算法、digest 和外部有序清單回執；真正成員仍由 `task_run_item` 決定。來源：014 FR-010f／`SampleSnapshot`。\n\n來源：[task/run 實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.8；複合 FK、CHECK、UNIQUE 與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。"
+    },
+    {
+      "name": "task_run",
+      "label": "一次 Dry 或 Official 發布",
+      "section": "3.9",
+      "group": "run",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "required": "required",
+          "note": "穩定 run PK；發布；不改；規則：U-01",
+          "pk": true
+        },
+        {
+          "name": "task_id",
+          "type": "uuid",
+          "required": "required",
+          "note": "同 task 複合參照作用域；發布；不改；規則：U-01"
+        },
+        {
+          "name": "task_run_cycle_id",
+          "type": "uuid",
+          "required": "required",
+          "note": "本次 cycle；發布；不改；規則：U-01"
+        },
+        {
+          "name": "run_type",
+          "type": "varchar(16)",
+          "required": "required",
+          "note": "`dry_run`／`official_run`；發布；不改；規則：U-02"
+        },
+        {
+          "name": "trial_round_id",
+          "type": "uuid",
+          "required": "nullable",
+          "note": "Dry 同 cycle round；Official 必為 null；發布；不改；規則：U-02"
+        },
+        {
+          "name": "sample_snapshot_id",
+          "type": "uuid",
+          "required": "required",
+          "note": "本次專屬 snapshot；發布；不改；規則：U-03",
+          "unique": true
+        },
+        {
+          "name": "guideline_version_id",
+          "type": "uuid",
+          "required": "required",
+          "note": "同 task 指引；Dry 須與 round 一致；發布；不改；規則：U-04"
+        },
+        {
+          "name": "item_count",
+          "type": "integer",
+          "required": "required",
+          "note": "與實際 run item 數一致；發布；不改；規則：U-05"
+        },
+        {
+          "name": "publication_idempotency_key",
+          "type": "varchar",
+          "required": "required",
+          "note": "任務作用域發布重試鍵；發布；不改；規則：U-06"
+        },
+        {
+          "name": "publication_request_digest",
+          "type": "char(64)",
+          "required": "required",
+          "note": "相同 key 的請求內容比對摘要；發布；不改；規則：U-06"
+        },
+        {
+          "name": "created_by_user_id",
+          "type": "uuid",
+          "required": "required",
+          "note": "發布者；發布；不改；規則：U-01",
+          "fk": "users"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "required": "required",
+          "note": "發布時間 UTC；發布；不改；規則：X-01"
+        }
+      ],
+      "description": "**實體候選，尚未部署。** Dry 有同 cycle round，Official 無 round；每 task 生命週期至多一筆 Official。run 釘住指引，不能以 task 的當前指標重建歷史。來源：014 FR-010f-2／f-3／f-6／`AnnotationListMaterialization`。\n\n來源：[task/run 實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.9；複合 FK、CHECK、UNIQUE 與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。"
+    },
+    {
+      "name": "task_run_reviewer_candidate",
+      "label": "發布時候選名冊快照",
+      "section": "3.10",
+      "group": "run",
+      "columns": [
+        {
+          "name": "task_id",
+          "type": "uuid",
+          "required": "required",
+          "note": "同 task 複合參照作用域；發布；不改；規則：V-01"
+        },
+        {
+          "name": "task_run_id",
+          "type": "uuid",
+          "required": "required",
+          "note": "複合 PK 的 run；發布；不改；規則：V-01",
+          "pk": true
+        },
+        {
+          "name": "reviewer_membership_id",
+          "type": "uuid",
+          "required": "required",
+          "note": "複合 PK 的 reviewer membership；發布；不改；規則：V-01",
+          "pk": true
+        },
+        {
+          "name": "can_arbitrate_at_publish",
+          "type": "boolean",
+          "required": "required",
+          "note": "發布當時資格快照，非當前授權；發布；不改；規則：V-02"
+        },
+        {
+          "name": "sort_order_at_publish",
+          "type": "integer",
+          "required": "required",
+          "note": "發布當時穩定排序；發布；不改；規則：V-02"
+        }
+      ],
+      "description": "**實體候選，尚未部署。** 此表只凍結審核分派輸入，不保存實際審核員黏著或授權。即時資格每次重新查 current membership 與矩陣；已提交 reviewer 由 015 FR-093(5) 推導。來源：014 FR-010t／關鍵實體、015 FR-093。\n\n來源：[task/run 實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.10；複合 FK、CHECK、UNIQUE 與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。"
+    },
+    {
+      "name": "task_run_item",
+      "label": "有序公開 item 成員",
+      "section": "3.11",
+      "group": "run",
+      "columns": [
+        {
+          "name": "task_run_id",
+          "type": "uuid",
+          "required": "required",
+          "note": "複合 PK 的 run；發布；不改；規則：I-01",
+          "pk": true
+        },
+        {
+          "name": "dataset_item_id",
+          "type": "uuid",
+          "required": "required",
+          "note": "複合 PK 的公開 item；發布；不改；規則：I-01",
+          "pk": true,
+          "fk": "dataset_item"
+        },
+        {
+          "name": "task_run_cycle_id",
+          "type": "uuid",
+          "required": "required",
+          "note": "經 parent run 約束的 cycle；防重選；發布；不改；規則：I-02"
+        },
+        {
+          "name": "list_position",
+          "type": "integer",
+          "required": "required",
+          "note": "run 內正整數排序；發布；不改；規則：I-03"
+        }
+      ],
+      "description": "**實體候選，尚未部署。** 一列是一個 run 選中的 `dataset_item`。同 cycle 所有 Dry／Official run 不能重複選同 item；外部 manifest 只是這些列的回執。來源：014 FR-010b／FR-010f／`RunItem`。\n\n來源：[task/run 實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.11；複合 FK、CHECK、UNIQUE 與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。"
+    },
+    {
+      "name": "task_annotation_assignment",
+      "label": "穩定標記工作 slot",
+      "section": "3.12",
+      "group": "run",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "required": "required",
+          "note": "穩定工作 slot PK；發布；不改；規則：A-01",
+          "pk": true
+        },
+        {
+          "name": "task_id",
+          "type": "uuid",
+          "required": "required",
+          "note": "同 task 複合參照作用域；發布；不改；規則：A-01"
+        },
+        {
+          "name": "task_run_id",
+          "type": "uuid",
+          "required": "required",
+          "note": "所屬 run；發布；不改；規則：A-01"
+        },
+        {
+          "name": "dataset_item_id",
+          "type": "uuid",
+          "required": "required",
+          "note": "該 run 內的公開 item；發布；不改；規則：A-01"
+        },
+        {
+          "name": "slot_no",
+          "type": "integer",
+          "required": "required",
+          "note": "同 run item 的正整數 slot 序；發布；不改；規則：A-02"
+        },
+        {
+          "name": "assignee_membership_id",
+          "type": "uuid",
+          "required": "nullable",
+          "note": "目前受派 annotator；null＝待重派；發布／停用退回／重派；規則：A-03"
+        },
+        {
+          "name": "status",
+          "type": "varchar(16)",
+          "required": "required",
+          "note": "工作 slot 狀態；精確值域待 §7；發布／工作進度更新；規則：A-04"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "required": "required",
+          "note": "建立時間 UTC；發布；規則：X-01"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "required": "required",
+          "note": "最後改動 UTC；修改；規則：X-01"
+        }
+      ],
+      "description": "**實體候選，尚未部署。** 一個 assignment ID 不因停用、退回未指派池或重指派而改變；受派者可空不表示已排除。正式 run 每 item 恰一 slot，Dry 按重疊人數建立。來源：014 FR-005l／FR-010f-4／`AnnotationAssignment`；015 的 submission 後續以此 ID 定址。\n\n來源：[task/run 實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.12；複合 FK、CHECK、UNIQUE 與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。"
+    },
+    {
+      "name": "task_annotation_exclusion",
+      "label": "終局排除證據",
+      "section": "3.13",
+      "group": "run",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "required": "required",
+          "note": "排除證據 PK；排除時；不改；規則：E-01",
+          "pk": true
+        },
+        {
+          "name": "assignment_id",
+          "type": "uuid",
+          "required": "required",
+          "note": "被排除的穩定 slot；排除時；不改；規則：E-01",
+          "fk": "task_annotation_assignment",
+          "unique": true
+        },
+        {
+          "name": "excluded_by_user_id",
+          "type": "uuid",
+          "required": "required",
+          "note": "執行排除的 project leader；排除時；不改；規則：E-02",
+          "fk": "users"
+        },
+        {
+          "name": "excluded_at",
+          "type": "timestamptz",
+          "required": "required",
+          "note": "排除時間 UTC；排除時；不改；規則：X-01"
+        },
+        {
+          "name": "reason",
+          "type": "text",
+          "required": "required",
+          "note": "必填原因；排除時；不改；規則：E-02"
+        }
+      ],
+      "description": "**實體候選，尚未部署。** 每 assignment 最多一筆，V1 不撤銷、不刪除，與原 slot 分離避免 null assignee 被誤判排除。來源：014 FR-005h／`ExcludedAnnotationAssignment`。\n\n來源：[task/run 實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.13；複合 FK、CHECK、UNIQUE 與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。"
     }
   ]
 }
