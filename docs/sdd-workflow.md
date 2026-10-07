@@ -143,7 +143,7 @@ Page-scoped feature 在進入 `/opsx:propose` 前必須逐項通過下列檢查�
 3. route 與 exact role allowlist 已定義。
 4. loading、empty、error/retry、disabled、read-only、permission-denied states 已覆蓋。
 5. prototype test 與 React implementation 共用穩定 `data-testid` selector contract。
-6. API/OpenAPI、enum 與 request/response shape 足以支援畫面。
+6. 畫面需要的欄位、enum、必填規則與錯誤情境，已在正典 spec 與 prototype 種子資料中確定。API 契約（endpoint、request/response shape）不在此檢查：它寫在 `/opsx:propose` 產出的 `design.md`，由 [5] 的出口條件檢查是否涵蓋本項列出的內容。
 7. RWD、WCAG 2.1 AA 與 zh-TW/en i18n 要求已列出。
 8. feature/shared ownership 與 Storybook scope 已決定。
 9. 本畫面每個主要目標皆有已定義的完成後去向（終點頁面或明確下一步）；若 `design/system/user-path-map.html` 已涵蓋此畫面，對應目標須無 F3／F4 命中，或已附命中後的修正 issue 編號。
@@ -218,7 +218,7 @@ Page-scoped feature 在進入 `/opsx:propose` 前必須逐項通過下列檢查�
 | [3] prototype | 🗣️ | 主 agent + `senior-qa` Red／實作 agent Green（+ senior-uiux 選用） | static shell + Red/Green Playwright 證據 + page design | shell 後先有已提交的預期 Red；Green 全綠；data-testid 契約建立；MASTER.md 遵循 |
 | [4] clarify（選用） | 🗣️ | 主 agent | 釐清問答 + spec 回修 | prototype/page design 暴露模糊點時回寫正典 spec，並重走受影響的 Gate |
 | [3d] Frontend Ready Gate | ⚙️ | 主 agent | page readiness evidence | [4] clarify 已完成或不適用後，九項 page-scoped 檢查均通過，或明示 N/A 與理由 |
-| [5] propose | 🗣️ | 主 agent | change 四件套（繁中） | OpenSpec schema validation 與 Project SDD lint 分別通過；派工標籤齊備；憲章檢查段落存在 |
+| [5] propose | 🗣️ | 主 agent | change 四件套（繁中） | OpenSpec schema validation 與 Project SDD lint 分別通過；派工標籤齊備；憲章檢查段落存在；page-scoped feature 的 `design.md` API 契約涵蓋 Frontend Ready Gate 第 6 項列出的欄位、enum 與錯誤情境 |
 | [6] apply | 🗣️ | 主 agent 派工 + 實作/品質 subagents | 分離的 Red/Green task、程式、測試與 `[x]` | Red 預期失敗與 Green 驗證均有證據；每 PR 群組過 ③a–e 審查並取得使用者明確確認 |
 | [7] archive | 🗣️ | 主 agent（final PR group） | derived view + 正典回寫 | 第 1–3 層與 Source-Verify evidence 先完成；僅 final PR 內成功 write-back 後才完成第 4 層 |
 | [8] pr-flow | 🗣️ | 主 agent | intermediate 或 final PR → merge | intermediate PR 不 archive；final PR merge 後更新 STATUS 並將 spec 移至 `_archive/` |
