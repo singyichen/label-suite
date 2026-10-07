@@ -47,11 +47,13 @@ test('task/run NoteCraft projection matches every dictionary table, column, PK, 
 test('task/run dictionary records cross-table rules that one-column diagram links cannot express', () => {
   taskSource();
   const markdown = read('../../docs/diagrams/architecture/task-run-db-schema.md');
+  const normalizedMarkdown = markdown.replace(/\s*,\s*/g, ',');
   for (const token of [
     '(task_id, user_id, task_role)', '(task_id, cycle_no)',
     '(task_run_cycle_id, round_no)', '(task_run_cycle_id, dataset_item_id)',
     '(task_run_id, dataset_item_id)', 'ReviewAssignment', 'SQLite', 'PostgreSQL',
-  ]) assert.ok(markdown.includes(token), `Missing task/run constraint or caveat: ${token}`);
+  ]) assert.ok(normalizedMarkdown.includes(token.replace(/\s*,\s*/g, ',')),
+    `Missing task/run constraint or caveat: ${token}`);
 });
 
 test('NoteCraft CI runs the task/run schema regression', () => {
