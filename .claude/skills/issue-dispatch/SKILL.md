@@ -262,6 +262,8 @@ Merge only when the independent review passed and all four hold, checked with `g
 - the check count is greater than 0
 - every check passed
 
+Also apply the issue checklist gate in `.claude/commands/pr-flow.md` Step 8: every `- [ ]` in the issue body is ticked or marked withdrawn before merge.
+
 `gh pr checks --watch` exiting 0 is not sufficient alone — it also exits 0 when the PR has zero checks (the `CONFLICTING` gap that nearly merged #940), and separately when the only registered check is an external app while this repo's own workflow run is still `queued` — PR #1026, head `0860ef12`: `checks=1` was `Amazon Q Developer` passing in 33s while `CI` sat `queued`, though the identical single-file edit type registered 17 checks in #990/#1008.
 
 These four conditions are necessary but not sufficient — they can all hold before this repo's own CI run has registered a single check. Before merging, also confirm no workflow run for the head SHA is still `queued` or `in_progress`, and that the two unconditional jobs are present and `SUCCESS`:
