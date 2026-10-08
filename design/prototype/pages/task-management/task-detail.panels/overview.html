@@ -1,80 +1,47 @@
 <div id="overviewPanel" class="hidden" aria-live="polite">
-  <!-- ② 執行控制面板 -->
-  <section class="panel" aria-labelledby="executionTitle">
-    <div class="panel-head-row">
-      <h2 class="panel-title" id="executionTitle">任務狀態與執行控制</h2>
-    </div>
+  <!-- FR-027: verdict row, numbers row, sample split, trial-round table, flow stepper (top to bottom) -->
+  <section class="ov-flat" aria-labelledby="executionTitle">
+    <h2 class="ov-sr" id="executionTitle">任務狀態與執行控制</h2>
 
-    <!-- 狀態步驟流程器 -->
     <div id="runControlExecutionPanel">
-      <div class="status-stepper-wrap" aria-hidden="true">
-        <div class="status-stepper" id="statusStepper">
-          <div class="step" data-step="draft">
-            <span class="step-label-wrap" id="statusStepDraft">草稿</span>
-          </div>
-          <div class="step-connector"></div>
-          <div class="step" data-step="trial_stage">
-            <span class="step-label-wrap" id="statusStepTrialStage">試標階段</span>
-          </div>
-          <div class="step-connector"></div>
-          <div class="step" data-step="official_run_in_progress">
-            <span class="step-label-wrap" id="statusStepOfficialRun">正式標記中</span>
-          </div>
-          <div class="step-connector"></div>
-          <div class="step" data-step="completed">
-            <span class="step-label-wrap" id="statusStepCompleted">已完成</span>
-          </div>
+      <!-- (1) Verdict row: title + description on the left, the single primary CTA on the right -->
+      <div class="ov-verdict">
+        <div class="exec-stage-decision" aria-live="polite">
+          <strong class="exec-stage-decision-title" id="trialDecisionTitle">R2 已達標，可啟動正式標記</strong>
+          <p class="exec-stage-decision-desc" id="trialDecisionDesc">系統將以尚未進入試標的剩餘樣本建立正式標記池，避免與前兩回合混用。</p>
+        </div>
+        <div class="ov-verdict-cta">
+          <div class="action-row" id="publishActionRow" style="margin:0;"></div>
         </div>
       </div>
 
-      <div class="exec-stage-banner">
-        <div class="exec-stage-copy">
-          <div class="exec-stage-decision" aria-live="polite">
-            <strong class="exec-stage-decision-title" id="trialDecisionTitle">R2 已達標，可啟動正式標記</strong>
-            <p class="exec-stage-decision-desc" id="trialDecisionDesc">系統將以尚未進入試標的剩餘樣本建立正式標記池，避免與前兩回合混用。</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="exec-round-grid">
-        <div class="exec-round-item">
-          <span class="exec-round-key" id="trialRoundLabel">目前回合</span>
+      <!-- (2) Numbers row: exactly four metrics -->
+      <div class="ov-metrics" data-testid="overview-metrics">
+        <div class="ov-metric" data-testid="overview-metric">
+          <span class="exec-round-key" id="trialRoundLabel" data-testid="overview-metric-label">目前回合</span>
           <strong class="exec-round-value" id="trialRoundValue">R2</strong>
         </div>
-        <div class="exec-round-item">
-          <span class="exec-round-key" id="trialRoundsUsedLabel">已完成試標回合</span>
-          <strong class="exec-round-value" id="trialRoundsUsedValue">2</strong>
-        </div>
-        <div class="exec-round-item">
-          <span class="exec-round-key" id="currentAgreementLabel">最新回合 IAA</span>
+        <div class="ov-metric" data-testid="overview-metric">
+          <span class="exec-round-key" id="currentAgreementLabel" data-testid="overview-metric-label">最新 IAA</span>
           <strong class="exec-round-value" id="currentAgreementValue">0.81</strong>
         </div>
-        <div class="exec-round-item">
-          <span class="exec-round-key" id="officialPoolLabel">正式標記池</span>
+        <div class="ov-metric" data-testid="overview-metric">
+          <span class="exec-round-key" id="trialUsedLabel" data-testid="overview-metric-label">已用試標</span>
+          <strong class="exec-round-value" id="trialUsedValue">20 / 100</strong>
+        </div>
+        <div class="ov-metric" data-testid="overview-metric">
+          <span class="exec-round-key" id="officialPoolLabel" data-testid="overview-metric-label">正式標記池</span>
           <strong class="exec-round-value" id="officialPoolValue">80</strong>
         </div>
       </div>
 
-      <div class="data-split-viz exec-data-split-viz">
+      <!-- (3) Sample split -->
+      <div class="data-split-viz exec-data-split-viz ov-section">
         <div class="split-viz-head">
           <span class="status-hint" id="executionSplitTitle">樣本池分配</span>
         </div>
         <div class="split-bar" id="dataSplitBar" role="img" aria-label="資料分配比例"></div>
         <div class="split-legend split-legend-dynamic" id="splitLegendDynamic"></div>
-      </div>
-
-      <div class="exec-stop-row" id="execStopRow">
-        <div class="exec-stop-main">
-          <span class="status-hint" id="stopConditionTitle">達標條件</span>
-          <div class="exec-stop-pills" id="execStopPills">
-            <span class="stop-pill" id="stopAgreementPill">IAA ≥ 0.80</span>
-            <span class="stop-pill" id="stopStdPill">Std ≤ 0.10</span>
-            <span class="stop-pill" id="stopAnnotatorPill">至少 3 位標記者</span>
-          </div>
-        </div>
-        <div class="exec-stop-actions">
-          <div class="action-row" id="publishActionRow" style="margin:0;"></div>
-        </div>
       </div>
 
       <div class="exec-control-row">
@@ -86,16 +53,49 @@
         </div>
       </div>
 
-      <section class="round-history-panel" aria-labelledby="roundHistoryTitle">
+      <!-- (4) Trial-round table; stop conditions are plain text on the right of the heading row -->
+      <section class="ov-section" aria-labelledby="roundHistoryTitle">
         <div class="round-history-head">
           <div>
             <h3 class="sub-panel-title" id="roundHistoryTitle">試標回合歷程</h3>
             <p class="status-hint" id="roundHistoryHint">每個回合使用新的抽樣樣本；通過的回合會解鎖正式標記。</p>
           </div>
-          <span class="round-history-summary" id="roundHistorySummary">已用 20 / 100 筆試標</span>
+          <div class="ov-stop" id="execStopRow">
+            <span class="status-hint" id="stopConditionTitle">達標條件</span>
+            <span class="ov-stop-items" id="execStopPills">
+              <span class="stop-pill" id="stopAgreementPill">IAA ≥ 0.80</span>
+              <span class="stop-pill" id="stopStdPill">Std ≤ 0.10</span>
+              <span class="stop-pill" id="stopAnnotatorPill">至少 3 位標記者</span>
+            </span>
+          </div>
         </div>
         <div class="round-timeline" id="trialRoundTimeline"></div>
       </section>
+
+      <!-- Flow stepper: illustration only (SC-019), text plus a thin line -->
+      <div class="status-stepper-wrap ov-section" aria-hidden="true">
+        <div class="status-stepper" id="statusStepper">
+          <div class="step" data-step="draft">
+            <div class="step-node"></div>
+            <span class="step-label-wrap" id="statusStepDraft">草稿</span>
+          </div>
+          <div class="step-connector"></div>
+          <div class="step" data-step="trial_stage">
+            <div class="step-node"></div>
+            <span class="step-label-wrap" id="statusStepTrialStage">試標階段</span>
+          </div>
+          <div class="step-connector"></div>
+          <div class="step" data-step="official_run_in_progress">
+            <div class="step-node"></div>
+            <span class="step-label-wrap" id="statusStepOfficialRun">正式標記中</span>
+          </div>
+          <div class="step-connector"></div>
+          <div class="step" data-step="completed">
+            <div class="step-node"></div>
+            <span class="step-label-wrap" id="statusStepCompleted">已完成</span>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 </div>

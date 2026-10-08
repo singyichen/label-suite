@@ -219,8 +219,6 @@
     .btn-primary:hover:not(:disabled) { opacity: 0.9; }
     .btn-cta { color: var(--color-on-cta); background: var(--color-cta); border-color: var(--color-cta); }
     .btn-cta:hover:not(:disabled) { opacity: 0.9; }
-    /* FR-027: the overview CTA is --color-primary; .btn-primary elsewhere (modals, settings) stays on --color-cta. */
-    #publishActionRow .btn-primary { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-on-cta); }
     .btn-secondary { color: var(--color-ink); background: var(--color-white); border-color: var(--color-border); }
     .btn-secondary:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); }
 
@@ -1766,137 +1764,42 @@
     .run-control-tab:hover {
       color: var(--color-primary);
     }
-    .exec-round-grid {
+    /* FR-027: single-column overview separated by 1px dividers, no cards / pills / coloured boxes */
+    .ov-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+    .ov-section { padding: var(--space-md) 0; border-top: 1px solid var(--color-border); }
+    .ov-verdict {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      padding-bottom: var(--space-md);
+    }
+    .ov-verdict-cta { display: flex; justify-content: flex-end; flex-shrink: 0; }
+    /* The overview CTA is --color-primary; .btn-primary elsewhere (modals, settings) stays on --color-cta. */
+    #publishActionRow .btn-primary { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-on-cta); }
+    .exec-stage-decision { display: flex; flex-direction: column; gap: 4px; max-width: 760px; }
+    .exec-stage-decision-title { font-size: 18px; line-height: 1.25; color: var(--color-ink); }
+    .exec-stage-decision-desc { font-size: 13px; line-height: 1.6; color: var(--color-text-soft); max-width: 720px; }
+    .ov-metrics {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 10px;
-      margin-bottom: 12px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      padding: var(--space-md) 0;
+      border-top: 1px solid var(--color-border);
     }
-    .exec-stage-banner {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 12px;
-      padding: 14px 16px;
-      border: 1px solid rgba(99,102,241,0.18);
-      border-radius: var(--radius-lg);
-      background:
-        radial-gradient(circle at top right, rgba(99,102,241,0.12), transparent 42%),
-        var(--color-white);
-    }
-    .exec-stage-copy {
+    .ov-metric {
       display: flex;
       flex-direction: column;
       gap: 4px;
-      min-width: 0;
+      padding: 0 var(--space-md);
+      border-left: 1px solid var(--color-border);
     }
-    .exec-stage-decision-desc {
-      font-size: 13px;
-      line-height: 1.6;
-      color: var(--color-text-soft);
-      max-width: 720px;
-    }
-    .exec-stage-decision {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      max-width: 760px;
-    }
-    .exec-stage-decision-title {
-      font-size: 18px;
-      line-height: 1.25;
-      color: var(--color-ink);
-    }
-    .round-history-summary {
-      display: inline-flex;
-      align-items: center;
-      padding: 6px 10px;
-      border-radius: 999px;
-      border: 1px solid var(--color-border);
-      background: var(--color-white);
-      color: var(--color-text-soft);
-      font-size: 12px;
-      font-weight: 600;
-      white-space: nowrap;
-    }
-    .exec-round-item {
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      background: var(--color-slate-50);
-      padding: 10px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    .exec-round-key {
-      font-size: 12px;
-      color: var(--color-text-soft);
-    }
-    .exec-round-value {
-      font-size: 20px;
-      line-height: 1.15;
-      color: var(--color-ink);
-    }
-    .exec-stop-row {
-      margin-bottom: var(--space-md);
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-    .exec-stop-main {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      min-width: 0;
-      flex: 1;
-    }
-    .exec-stop-pills {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-    .exec-stop-actions {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      flex-shrink: 0;
-    }
-    .stop-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 10px;
-      border-radius: 999px;
-      border: 1px solid var(--color-border);
-      color: var(--color-text-soft);
-      background: var(--color-white);
-      font-size: 12px;
-      font-weight: 600;
-    }
-    .stop-pill.passed {
-      border-color: var(--color-success-border);
-      color: var(--color-success);
-      background: var(--color-success-bg);
-    }
-    /* issue #491: a third, distinct state for "not enough marked data to
-       compute IAA yet" -- must never look like the default (which already
-       reads as "not met") or like .passed, or a viewer would misread
-       "cannot compute" as one of those two states. */
-    .stop-pill.not-computable {
-      border-color: var(--color-warning-border);
-      color: var(--color-warning);
-      background: var(--color-warning-bg);
-    }
-    .round-history-panel {
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg);
-      background: var(--color-white);
-      padding: 16px;
-      margin-bottom: var(--space-md);
-    }
+    .ov-metric:first-child { padding-left: 0; border-left: 0; }
+    .exec-round-key { font-size: 12px; color: var(--color-text-soft); }
+    .exec-round-value { font-size: 20px; line-height: 1.15; color: var(--color-ink); font-variant-numeric: tabular-nums; }
+    .ov-stop { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; }
+    .ov-stop-items { display: flex; flex-wrap: wrap; gap: 12px; }
+    .stop-pill { font-size: 12px; color: var(--color-text-soft); }
     .round-history-head {
       display: flex;
       align-items: flex-start;
@@ -1905,122 +1808,16 @@
       margin-bottom: 14px;
       flex-wrap: wrap;
     }
-    .round-timeline {
-      display: grid;
-      gap: 12px;
-    }
-    .round-timeline-item {
-      position: relative;
-      display: grid;
-      grid-template-columns: 118px minmax(0, 1fr) auto;
-      gap: 14px;
-      align-items: start;
-      padding: 14px;
-      border-radius: var(--radius-md);
-      border: 1px solid var(--color-border);
-      background: var(--color-white);
-    }
-    .round-timeline-index,
-    .round-timeline-body,
-    .round-timeline-side {
-      position: relative;
-      z-index: 1;
-    }
-    .round-timeline-index {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .round-timeline-dot {
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      border: 3px solid var(--color-white);
-      box-shadow: 0 0 0 2px rgba(99,102,241,0.16);
-      background: var(--color-primary);
-      flex-shrink: 0;
-    }
-    .round-timeline-dot.failed {
-      background: var(--color-error);
-      box-shadow: 0 0 0 2px rgba(185,28,28,0.12);
-    }
-    .round-timeline-dot.passed {
-      background: var(--color-success);
-      box-shadow: 0 0 0 2px rgba(21,128,61,0.14);
-    }
-    .round-timeline-label {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-    .round-timeline-round {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--color-ink);
-    }
-    .round-timeline-date {
-      font-size: 11px;
-      color: var(--color-text-soft);
-      white-space: nowrap;
-    }
-    .round-timeline-body {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      min-width: 0;
-    }
-    .round-timeline-metrics {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-    .round-metric-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 8px;
-      border-radius: 999px;
-      background: var(--color-white);
-      border: 1px solid var(--color-border);
-      color: var(--color-text-soft);
-      font-size: 12px;
-      font-weight: 600;
-    }
-    .round-timeline-note {
-      font-size: 13px;
-      color: var(--color-ink);
-      line-height: 1.6;
-    }
-    .round-timeline-side {
-      display: flex;
-      justify-content: flex-end;
-    }
-    .round-status-badge {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 6px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 700;
-      white-space: nowrap;
-      border: 1px solid transparent;
-    }
-    .round-status-badge.failed {
-      color: var(--color-error);
-      background: var(--color-error-bg);
-      border-color: var(--color-error-border);
-    }
-    .round-status-badge.passed {
-      color: var(--color-success);
-      background: var(--color-success-bg);
-      border-color: var(--color-success-border);
-    }
-    .round-status-badge.in-progress {
-      color: var(--color-primary);
-      background: var(--color-primary-soft-bg);
-      border-color: var(--color-primary-border);
-    }
+    .round-timeline { overflow-x: auto; }
+    .round-table { width: 100%; min-width: 560px; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+    .round-table th, .round-table td { padding: 8px 12px 8px 0; text-align: left; border-bottom: 1px solid var(--color-border); }
+    .round-table th { font-size: 12px; font-weight: 600; color: var(--color-text-soft); white-space: nowrap; }
+    .round-table td { color: var(--color-ink); }
+    /* Result is conveyed by text colour only: no fill, border or radius. */
+    .round-status-badge { font-weight: 700; white-space: nowrap; background: transparent; border: 0; border-radius: 0; padding: 0; }
+    .round-status-badge.failed { color: var(--color-error); }
+    .round-status-badge.passed { color: var(--color-success); }
+    .round-status-badge.in-progress { color: var(--color-text-soft); }
     .panel-divider {
       border: none;
       border-top: 1px solid var(--color-border-muted);
@@ -2096,13 +1893,7 @@
     .strategy-seed { font-size: 11px; color: var(--color-ink-muted); }
 
     .data-split-viz { margin-bottom: var(--space-sm); }
-    .exec-data-split-viz {
-      padding: 14px 16px;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg);
-      background: var(--color-white);
-      margin-bottom: var(--space-md);
-    }
+    .exec-data-split-viz { margin-bottom: 0; }
     .split-viz-head {
       display: flex;
       align-items: center;
@@ -2162,13 +1953,8 @@
       .member-entry-row .mini-btn { width: 100%; }
       .sampling-fields { grid-template-columns: 1fr; }
       .sampling-fields-advanced { grid-template-columns: 1fr; }
-      .exec-stage-banner { flex-direction: column; }
-      .round-timeline-side { justify-content: flex-start; }
-      .exec-stop-row,
-      .exec-stop-actions { align-items: flex-start; }
-      .round-timeline-item {
-        grid-template-columns: 1fr;
-      }
+      .ov-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: var(--space-md); }
+      .ov-metric:nth-child(odd) { padding-left: 0; border-left: 0; }
       .exec-control-row { flex-direction: column; }
       .exec-actions { align-items: flex-start; }
       .run-control-tabs { width: 100%; justify-content: flex-start; overflow-x: auto; }
@@ -2504,10 +2290,10 @@
       reviewLeaveConfirm: '你有尚未儲存的審核設定變更，確定要離開編輯模式嗎？',
       reviewReadonlyRoleOnly: '目前為唯讀角色，僅 project leader 可編輯審核設定。',
       reviewSaveSuccess: '審核設定已更新',
-      trialRoundLabel: '試標回合',
-      trialRoundsUsedLabel: '已完成試標回合',
+      metricRoundLabel: '目前回合',
+      metricTrialUsedLabel: '已用試標',
       targetAgreementLabel: '目標 IAA',
-      currentAgreementLabel: '最新回合 IAA',
+      currentAgreementLabel: '最新 IAA',
       currentStdLabel: '目前標準差',
       officialPoolLabel: '正式標記池',
       stopConditionTitle: '達標條件',
@@ -2604,7 +2390,6 @@
       samplingValueCountTpl: '每回合 {value} 筆',
       roundHistoryTitle: '試標回合歷程',
       roundHistoryHint: '每個回合使用新的抽樣樣本；通過的回合會解鎖正式標記。',
-      roundHistorySummaryTpl: '已用 {used} / {total} 筆試標',
       roundDecisionTitlePassedTpl: 'R{round} 已達標，可啟動正式標記',
       roundDecisionTitleFailedTpl: 'R{round} 未達標，可開始正式標記或新增試標回合',
       roundDecisionTitleRoundActiveTpl: 'R{round} 進行中，全員完成後進入待 IAA 確認',
@@ -2621,10 +2406,13 @@
       roundDecisionDescOfficialTpl: '正式標記池已從未參與試標的剩餘樣本建立，持續完成後即可結束任務。',
       roundDecisionTitleCompletedTpl: '正式標記已完成，共 {count} 筆',
       roundDecisionDescCompletedTpl: '此任務已走完整個草稿、試標、正式標記流程，可回顧所有回合與正式標記結果。',
-      roundMetricSampleTpl: '{count} 筆樣本',
-      roundMetricIaaTpl: 'IAA {value}',
-      roundMetricAnnotatorsTpl: '{count} 位標記者',
-      roundMetricStdTpl: 'Std {value}',
+      roundColRound: '回合',
+      roundColCount: '筆數',
+      roundColAnnotators: '標記者',
+      roundColIaa: 'IAA',
+      roundColStd: 'Std',
+      roundColResult: '結果',
+      roundColDate: '完成時間',
       roundStatusPassed: '已通過',
       roundStatusFailed: '未通過',
       roundStatusInProgress: '進行中',
@@ -3046,10 +2834,10 @@
       reviewLeaveConfirm: 'You have unsaved review-setting changes. Leave edit mode?',
       reviewReadonlyRoleOnly: 'Read-only role. Only project leader can edit review settings.',
       reviewSaveSuccess: 'Review settings updated',
-      trialRoundLabel: 'Trial round',
-      trialRoundsUsedLabel: 'Trial rounds used',
+      metricRoundLabel: 'Current round',
+      metricTrialUsedLabel: 'Trial used',
       targetAgreementLabel: 'Target IAA',
-      currentAgreementLabel: 'Latest round IAA',
+      currentAgreementLabel: 'Latest IAA',
       currentStdLabel: 'Current standard deviation',
       officialPoolLabel: 'Official pool',
       stopConditionTitle: 'Stop conditions',
@@ -3146,7 +2934,6 @@
       samplingValueCountTpl: '{value} items',
       roundHistoryTitle: 'Trial round history',
       roundHistoryHint: 'Each round uses a fresh sample slice. A passed round unlocks official work.',
-      roundHistorySummaryTpl: '{used} / {total} items used in trial',
       roundDecisionTitlePassedTpl: 'R{round} passed and official work can start',
       roundDecisionTitleFailedTpl: 'R{round} did not pass. Start official work or add another round',
       roundDecisionTitleRoundActiveTpl: 'R{round} is in progress. It moves to IAA confirmation once everyone finishes',
@@ -3163,10 +2950,13 @@
       roundDecisionDescOfficialTpl: 'The official pool was created from the remaining items that never entered a trial round.',
       roundDecisionTitleCompletedTpl: 'Official run completed with {count} items',
       roundDecisionDescCompletedTpl: 'This task has completed the full draft, trial, and official flow. Review the rounds and final output as needed.',
-      roundMetricSampleTpl: '{count} items',
-      roundMetricIaaTpl: 'IAA {value}',
-      roundMetricAnnotatorsTpl: '{count} annotators',
-      roundMetricStdTpl: 'Std {value}',
+      roundColRound: 'Round',
+      roundColCount: 'Items',
+      roundColAnnotators: 'Annotators',
+      roundColIaa: 'IAA',
+      roundColStd: 'Std',
+      roundColResult: 'Result',
+      roundColDate: 'Completed',
       roundStatusPassed: 'Passed',
       roundStatusFailed: 'Failed',
       roundStatusInProgress: 'In progress',
@@ -5414,8 +5204,8 @@ function interpolate(template, payload) {
     setText('samplingEditBtn', t('samplingEditBtn'));
     setText('samplingSaveBtn', t('samplingSaveBtn'));
     setText('samplingCancelBtn', t('samplingCancelBtn'));
-    setText('trialRoundLabel', t('trialRoundLabel'));
-    setText('trialRoundsUsedLabel', t('trialRoundsUsedLabel'));
+    setText('trialRoundLabel', t('metricRoundLabel'));
+    setText('trialUsedLabel', t('metricTrialUsedLabel'));
     setText('targetAgreementLabel', t('targetAgreementLabel'));
     setText('currentAgreementLabel', t('currentAgreementLabel'));
     setText('currentStdLabel', t('currentStdLabel'));
@@ -5780,14 +5570,6 @@ function interpolate(template, payload) {
     }];
   }
 
-  /* issue #1120 (FR-010u (3)): "rounds used" counts completed history
-     only -- while the task is in dry_run_in_progress the latest round is
-     the active one and is listed separately, never accumulated. */
-  function getCompletedTrialRoundCount() {
-    var count = getTrialRounds().length;
-    return TASK_DATA.status === 'dry_run_in_progress' ? Math.max(count - 1, 0) : count;
-  }
-
   function getCurrentTrialRound() {
     var rounds = getTrialRounds();
     return rounds.length ? rounds[rounds.length - 1] : null;
@@ -5958,63 +5740,47 @@ function interpolate(template, payload) {
       return;
     }
 
-    rounds.forEach(function(round) {
-      var item = document.createElement('article');
-      item.className = 'round-timeline-item';
-      item.style.setProperty('--round-accent', getRoundColor(round.round));
-
-      var index = document.createElement('div');
-      index.className = 'round-timeline-index';
-      var dot = document.createElement('span');
-      dot.className = 'round-timeline-dot ' + (round.result === 'passed' ? 'passed' : round.result === 'failed' ? 'failed' : '');
-      dot.style.background = getRoundColor(round.round);
-      index.appendChild(dot);
-      var label = document.createElement('div');
-      label.className = 'round-timeline-label';
-      var roundName = document.createElement('strong');
-      roundName.className = 'round-timeline-round';
-      roundName.textContent = 'R' + round.round;
-      var date = document.createElement('span');
-      date.className = 'round-timeline-date';
-      date.textContent = round.date || '-';
-      label.appendChild(roundName);
-      label.appendChild(date);
-      index.appendChild(label);
-
-      var body = document.createElement('div');
-      body.className = 'round-timeline-body';
-      var metrics = document.createElement('div');
-      metrics.className = 'round-timeline-metrics';
-      [
-        interpolate(t('roundMetricSampleTpl'), { count: round.sampleCount }),
-        interpolate(t('roundMetricIaaTpl'), { value: formatIaaValue(round.agreement) }),
-        interpolate(t('roundMetricAnnotatorsTpl'), { count: round.annotators }),
-        interpolate(t('roundMetricStdTpl'), { value: Number(round.std || 0).toFixed(2) })
-      ].forEach(function(text) {
-        var chip = document.createElement('span');
-        chip.className = 'round-metric-chip';
-        chip.textContent = text;
-        metrics.appendChild(chip);
-      });
-      var note = document.createElement('p');
-      note.className = 'round-timeline-note';
-      note.textContent = state.lang === 'zh' ? (round.noteZh || '') : (round.noteEn || '');
-      body.appendChild(metrics);
-      body.appendChild(note);
-
-      var side = document.createElement('div');
-      side.className = 'round-timeline-side';
-      var badge = document.createElement('span');
-      var statusKey = round.result === 'passed' ? 'Passed' : round.result === 'failed' ? 'Failed' : 'InProgress';
-      badge.className = 'round-status-badge ' + (round.result === 'passed' ? 'passed' : round.result === 'failed' ? 'failed' : 'in-progress');
-      badge.textContent = t('roundStatus' + statusKey);
-      side.appendChild(badge);
-
-      item.appendChild(index);
-      item.appendChild(body);
-      item.appendChild(side);
-      mount.appendChild(item);
+    var table = document.createElement('table');
+    table.className = 'round-table';
+    table.setAttribute('data-testid', 'trial-round-table');
+    var headRow = document.createElement('tr');
+    ['roundColRound', 'roundColCount', 'roundColAnnotators', 'roundColIaa', 'roundColStd', 'roundColResult', 'roundColDate'].forEach(function(key) {
+      var th = document.createElement('th');
+      th.scope = 'col';
+      th.textContent = t(key);
+      headRow.appendChild(th);
     });
+    var thead = document.createElement('thead');
+    thead.appendChild(headRow);
+    table.appendChild(thead);
+    var tbody = document.createElement('tbody');
+    rounds.forEach(function(round) {
+      var row = document.createElement('tr');
+      row.className = 'round-timeline-item';
+      row.setAttribute('data-testid', 'trial-round-row');
+      var statusKey = round.result === 'passed' ? 'Passed' : round.result === 'failed' ? 'Failed' : 'InProgress';
+      var result = document.createElement('span');
+      result.className = 'round-status-badge ' + (round.result === 'passed' ? 'passed' : round.result === 'failed' ? 'failed' : 'in-progress');
+      result.setAttribute('data-testid', 'trial-round-result');
+      result.textContent = t('roundStatus' + statusKey);
+      [
+        'R' + round.round,
+        String(round.sampleCount),
+        String(round.annotators),
+        formatIaaValue(round.agreement),
+        Number(round.std || 0).toFixed(2),
+        result,
+        round.date || '-'
+      ].forEach(function(value) {
+        var td = document.createElement('td');
+        if (typeof value === 'string') td.textContent = value;
+        else td.appendChild(value);
+        row.appendChild(td);
+      });
+      tbody.appendChild(row);
+    });
+    table.appendChild(tbody);
+    mount.appendChild(table);
   }
 
 
@@ -6136,7 +5902,7 @@ function interpolate(template, payload) {
     );
 
     setText('trialRoundValue', currentRound ? 'R' + currentRound.round : '-');
-    setText('trialRoundsUsedValue', String(getCompletedTrialRoundCount()));
+    setText('trialUsedValue', usedTrialCount + ' / ' + TASK_DATA.datasetTotal);
     setText('targetAgreementValue', Number(getPrimaryTargetAgreement()).toFixed(2));
     /* issue #491: formatIaaValue() renders "cannot compute" instead of
        coercing null/undefined to 0 -- the exact bug this issue reports. */
@@ -6144,7 +5910,6 @@ function interpolate(template, payload) {
     setText('officialPoolValue', String(reserveCount));
     setText('roundHistoryTitle', t('roundHistoryTitle'));
     setText('roundHistoryHint', t('roundHistoryHint'));
-    setText('roundHistorySummary', interpolate(t('roundHistorySummaryTpl'), { used: usedTrialCount, total: TASK_DATA.datasetTotal }));
     if (taskStageKey === 'official') {
       setText('trialDecisionTitle', interpolate(t('roundDecisionTitleOfficialTpl'), { count: getOfficialRunCount() }));
       setText('trialDecisionDesc', t('roundDecisionDescOfficialTpl'));
