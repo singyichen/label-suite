@@ -463,3 +463,41 @@ test('dataset dictionary deletion-and-retention paragraph follows ADR-038 and FR
   }
   assert.ok(!line.includes('須先依 dataset-021 FR-011 補齊'), 'Obsolete 補齊 wording must be removed');
 });
+
+// Issue #1223 G3: dataset medium/low design fixes.
+const datasetRules = () => datasetSchemaDoc.split('\n').filter((line) => /^\| [A-Z]-\d+ \|/.test(line));
+
+test('dataset rule bars annotator-facing order and cursors from source_row_no and import batch', () => {
+  const rows = datasetRules().filter((row) => /(?:排序|游標|cursor)/i.test(row)
+    && row.includes('source_row_no') && row.includes('dataset_import_batch'));
+  assert.equal(rows.length, 1, 'Exactly one rule must bar annotator ordering/cursors from import provenance');
+  const [row] = rows;
+  assert.match(row, /(?:標記者|標記端)/, 'The rule must target the annotator-facing side');
+  assert.match(row, /(?:不得|禁止)[^|]*(?:source_row_no|dataset_import_batch)|(?:source_row_no|dataset_import_batch)[^|]*(?:不得|禁止)/,
+    'The rule must forbid using import provenance');
+  assert.match(row, /task_run_item\.list_position/, 'The rule must point to task_run_item.list_position');
+});
+
+test('dataset rule revokes dataset_import_batch from the annotator role and allowlists public columns', () => {
+  const rows = datasetRules().filter((row) => /REVOKE/.test(row) && row.includes('dataset_import_batch'));
+  assert.equal(rows.length, 1, 'Exactly one rule must define the REVOKE on dataset_import_batch');
+  const [row] = rows;
+  assert.match(row, /標記者/, 'The rule must name the annotator role');
+  assert.match(row, /REVOKE (?:ALL|SELECT)/, 'The rule must state an explicit REVOKE ALL or REVOKE SELECT');
+  assert.match(row, /(?:default privileges|預設權限)/i, 'The rule must forbid default privileges re-granting access');
+  assert.match(row, /(?:allowlist|白名單)[^|]*(?:public_payload|公開欄位)|(?:public_payload|公開欄位)[^|]*(?:allowlist|白名單)/i,
+    'The annotator read path must use only allowlisted public columns');
+  assert.match(row, /SQLite[^|]*(?:allowlist|白名單|service|服務|repository)/i,
+    'The SQLite counterpart must be a service-layer allowlist with no direct table access');
+});
+
+test('every dataset note on a composite-key table states composite keys are not drawn and points to section 4', () => {
+  // Composite UNIQUE/FK in the dictionary: V-01/V-03 (version), B-02 (batch), I-02 (item).
+  const compositeSentence = /複合[^。\n]*(?:不畫|未畫|不繪|未繪|不會畫|不會繪)[^。\n]*§4/;
+  for (const name of ['dataset_version', 'dataset_import_batch', 'dataset_item']) {
+    const table = erData.tables.find((candidate) => candidate.name === name);
+    assert.ok(table, `Expected ${name} in database-schema.er.json`);
+    assert.match(table.description, compositeSentence,
+      `${name} note needs the "複合鍵與複合 FK 未畫在圖上，見各實體字典 §4" sentence`);
+  }
+});
