@@ -133,16 +133,16 @@ Label Suite 的對應做法：
 | `AnnotationHistoryItem` → `annotation_history_event` | 實體草案 | 單位內 `event_no` 唯一；審核事件指向不可變 revision；可空 `account_session_id → account_session` | 015 v12.1.0 FR-086～FR-091／FR-097；僅寫可驗證 session，舊事件與系統動作可空，敏感快照須按角色遮蔽 |
 | `OutputTypeIAAReport` → 品質計算結果 | 需裁決 | `output_type`、metric、threshold、`pass_state` | dataset-017 FR-039；是否持久化與版本鍵未定 |
 
-工時、狀態轉換與隔離設定稽核仍待完整實體表形；匯出請求與原始產物已有[匯出候選字典](./task-export-db-schema.md)。來源／批次／項目與私有答案已在 dataset 候選字典有表形；任務／執行及標記／審核已有候選型別與 FK，但保留政策、跨表資格、爭議鍵及工時來源仍待逐項驗證。
+工時原始區間已有[工時候選字典](./task-work-db-schema.md)，匯出請求與原始產物已有[匯出候選字典](./task-export-db-schema.md)；狀態轉換與隔離設定稽核仍待完整實體表形。來源／批次／項目與私有答案已在 dataset 候選字典有表形；任務／執行及標記／審核已有候選型別與 FK。保留政策、跨表資格、爭議鍵與工時執行期約束仍待資料庫遷移及雙庫驗證。
 
-### 尚待實體字典承接的規格欄位
+### 非持久化投影與尚待實體字典承接的規格欄位
 
-以下項目尚未有完整物理字典；帳號／管理、資料集、任務／執行、標記／審核的欄位及可空性以各自 §3 字典為準，不在本總帳維護第二份欄位清單。
+以下包含不建表的查詢投影及仍待完整物理字典的項目；已規劃的欄位及可空性以六份 §3 字典為準，不在本總帳維護第二份欄位清單。
 
 | 規格實體 | 來源明列欄位 | 尚缺的資料庫決定 |
 |---|---|---|
 | `ReviewAssignment`（非持久化查詢視圖） | `run_id`, `assignment_id`, `reviewer_id`, `pending`, `done`, `assigned`（由來源推導，非 SQL 欄位） | 不建立表、PK 或 FK；試標黏著以同執行的 dataset 資料項目為單位，正式標記以 assignment 為單位 |
-| `WorkLogEntry`（非持久化查詢投影） | `user_id`, `task_role`, `date`, `login_at`, `logout_at`, `online_duration`, `duration`, `annotated_count`, `reviewed_count`, `arbitrated_count`, `avg_speed`, `run_stage` | 原始前景工作區間已由 `task_work_interval` 承接；各完成數與逐類速度按 014 v9.0.0 推導，不建立日彙總表 |
+| `WorkLogEntry`（非持久化查詢投影） | `account_session_id`, `task_id`, `run_id`, `membership_id`, `work_kind`, `report_date` 為列鍵；顯示 `user_id`, `task_role`, `run_stage`, `login_at`, `logout_at`, `online_duration`, `duration`, `annotated_count`, `reviewed_count`, `arbitrated_count` 與逐類單位的速度 | 原始前景工作區間已由 `task_work_interval` 承接；各完成數與逐類速度按 014 v9.0.0 推導，不建立日彙總表 |
 | `RunStateTransition` | `from_status`, `to_status`, `triggered_by`, `triggered_at` | `task_id`、事件 PK 與 `audit_events` 去重仍待裁決 |
 | `IsolationAuditLog` | `task_id`, `from_isolation_enabled`, `to_isolation_enabled`, `changed_by`, `changed_at`, `reason` | 與通用稽核事件的寫入責任與去重 |
 | `OutputTypeIAAReport` | `output_type`, `primary_metric_name`, `primary_metric_value`, `threshold`, `pass_state`, `auxiliary_metrics[]` | 是否持久化與計算版本；`free_text` 無數值門檻 |
@@ -151,7 +151,7 @@ Label Suite 的對應做法：
 
 ## 4. ER 圖：目前可確認的關聯骨架
 
-下圖使用已列在六份欄位字典的候選表名，**只表示候選單欄 FK**；同 task／同發布週期／同執行與工時歸屬的複合 FK 另見 [任務／執行字典 §4](./task-run-db-schema.md#4-限制清單)、[工時字典 §4](./task-work-db-schema.md#4-鍵限制與索引候選)、[標記／審核字典 §4](./annotation-review-db-schema.md#4-pkunique-fk-與-check-候選)及[匯出字典 §4](./task-export-db-schema.md#4-鍵限制與生命週期)。這不是已部署約束。完整欄位與互動圖見 [NoteCraft Wiki／Diagram](/view/diagrams/architecture/database-schema.er)。`ReviewAssignment` 與 `WorkLogEntry` 是非持久化查詢視圖，因此不畫成資料表或 FK。
+下圖使用已列在六份欄位字典的候選表名，**只表示候選單欄 FK**；同 task／同發布週期／同執行與工時歸屬的複合 FK 另見 [任務／執行字典 §4](./task-run-db-schema.md#4-限制清單)、[工時字典 §4](./task-work-db-schema.md#4-主鍵複合外鍵與工作邊界)、[標記／審核字典 §4](./annotation-review-db-schema.md#4-pkunique-fk-與-check-候選)及[匯出字典 §4](./task-export-db-schema.md#4-鍵限制與生命週期)。這不是已部署約束。完整欄位與互動圖見 [NoteCraft Wiki／Diagram](/view/diagrams/architecture/database-schema.er)。`ReviewAssignment` 與 `WorkLogEntry` 是非持久化查詢視圖，因此不畫成資料表或 FK。
 
 ```mermaid
 erDiagram
