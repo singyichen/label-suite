@@ -151,6 +151,20 @@ test('account/admin NoteCraft summary includes every projected group and the exp
     'Export dictionary must contribute two tables');
 });
 
+test('task/run pending-items note points to decided annotation and export table dictionaries', () => {
+  const section = read('../../docs/diagrams/architecture/task-run-db-schema.md')
+    .split('## 7. 待決與不得推測事項')[1];
+  assert.ok(section, 'Task/run pending-items section is required');
+  const item = section.split('\n').find((line) => line.startsWith('4. '));
+  assert.ok(item, 'Task/run pending item 4 is required');
+  for (const dictionary of ['annotation-review-db-schema.md', 'task-export-db-schema.md']) {
+    assert.ok(item.includes(`(./${dictionary})`), `${dictionary} cross-reference`);
+  }
+  assert.doesNotMatch(item,
+    /(?:annotation[／/]review|標記[／/]審核|export|匯出)[^。；\n]*表形[^。；\n]*(?:另行裁決|待(?:裁決|定案|決定)|尚未(?:裁決|定案|決定))/i,
+    'Annotation/review and export table shapes have candidate dictionaries');
+});
+
 test('NoteCraft CI runs export dictionary regression tests', () => {
   const workflow = read('../../.github/workflows/ci.yml');
   const job = workflow.match(/^  database-schema:\n([\s\S]*?)(?=^  [a-z][\w-]*:\n|(?![\s\S]))/m)?.[1];
