@@ -6660,6 +6660,7 @@ function getTaskTypeLabel() {
 
     if (!saveBtn || !cancelBtn || !form || !hint || !basicView) return;
 
+    var enteringEdit = form.classList.contains('hidden');
     if (editBtn) editBtn.disabled = !editable;
     if (editBtn) editBtn.classList.toggle('hidden', state.overviewEditMode);
     saveBtn.classList.toggle('hidden', !state.overviewEditMode);
@@ -6676,7 +6677,12 @@ function getTaskTypeLabel() {
 
     if (state.overviewEditMode) {
       var taskNameInput = document.getElementById('editTaskNameInput');
-      if (taskNameInput) taskNameInput.value = state.lang === 'zh' ? TASK_DATA.taskNameZh : TASK_DATA.taskNameEn;
+      /* Seed the name only on entering edit mode or a language switch; later re-renders
+         (e.g. the post-skeleton renderOverview) must not overwrite what the user typed. */
+      if (taskNameInput && (enteringEdit || taskNameInput.dataset.seedLang !== state.lang)) {
+        taskNameInput.value = state.lang === 'zh' ? TASK_DATA.taskNameZh : TASK_DATA.taskNameEn;
+        taskNameInput.dataset.seedLang = state.lang;
+      }
       setOverviewEditError('');
       ensureTaskConfigSeeded();
       initTaskTypeChips();
