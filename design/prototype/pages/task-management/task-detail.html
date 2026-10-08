@@ -1708,23 +1708,68 @@
       word-break: break-word;
     }
 
-    .status-stepper-wrap { overflow-x: auto; }
+    .status-stepper-wrap {
+      overflow-x: auto;
+      margin-bottom: var(--space-md);
+    }
     .status-stepper {
       display: flex;
-      align-items: center;
-      gap: 12px;
+      align-items: flex-start;
       min-width: 420px;
     }
-    .step { display: flex; align-items: center; }
+    .step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .step-node {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid var(--color-border);
+      background: var(--color-white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: border-color var(--dur-fast), background var(--dur-fast), box-shadow var(--dur-fast);
+    }
+    .step-node::after {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: transparent;
+      transition: background var(--dur-fast);
+    }
     .step-label-wrap {
-      font-size: 12px;
+      font-size: 11px;
       color: var(--color-ink-muted);
       white-space: nowrap;
+      text-align: center;
       line-height: 1.3;
+      transition: color var(--dur-fast), font-weight var(--dur-fast);
     }
-    .step-connector { flex: 1; height: 1px; min-width: 24px; background: var(--color-border); }
-    .step.step-done .step-label-wrap { color: var(--color-text-soft); }
-    .step.step-current .step-label-wrap { color: var(--color-ink); font-weight: 700; }
+    .step-connector {
+      flex: 1;
+      height: 2px;
+      background: var(--color-border);
+      margin-top: 10px;
+      min-width: 24px;
+      transition: background var(--dur-fast);
+    }
+    .step.step-done .step-node { border-color: var(--color-primary); background: var(--color-primary); }
+    .step.step-done .step-node::after { background: var(--color-white); }
+    .step.step-done .step-label-wrap { color: var(--color-primary); }
+    .step-connector.connector-done { background: var(--color-primary); }
+    .step.step-current .step-node {
+      border-color: var(--color-primary);
+      background: var(--color-primary-soft-bg);
+      box-shadow: 0 0 0 4px var(--color-primary-soft-bg);
+    }
+    .step.step-current .step-node::after { background: var(--color-primary); }
+    .step.step-current .step-label-wrap { color: var(--color-primary); font-weight: 700; }
 
     .exec-control-row {
       display: flex;
@@ -1764,42 +1809,83 @@
     .run-control-tab:hover {
       color: var(--color-primary);
     }
-    /* FR-027: single-column overview separated by 1px dividers, no cards / pills / coloured boxes */
-    .ov-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
-    .ov-section { padding: var(--space-md) 0; border-top: 1px solid var(--color-border); }
-    .ov-verdict {
+    /* FR-027: the overview keeps the original card look (2026-10-08 ruling); colours come from tokens only. */
+    .exec-stage-banner {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 12px;
+      padding: 14px 16px;
+      border: 1px solid var(--color-primary-border);
+      border-radius: var(--radius-lg);
+      background: var(--color-primary-soft-bg);
+    }
+    .exec-stage-copy { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+    .exec-stage-decision { display: flex; flex-direction: column; gap: 4px; max-width: 760px; }
+    .exec-stage-decision-title { font-size: 18px; line-height: 1.25; color: var(--color-ink); }
+    .exec-stage-decision-desc { font-size: 13px; line-height: 1.6; color: var(--color-text-soft); max-width: 720px; }
+    .exec-round-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .exec-round-item {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-slate-50);
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .exec-round-key { font-size: 12px; color: var(--color-text-soft); }
+    .exec-round-value { font-size: 20px; line-height: 1.15; color: var(--color-ink); font-variant-numeric: tabular-nums; }
+    .exec-stop-row {
+      margin-bottom: var(--space-md);
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
       gap: 16px;
       flex-wrap: wrap;
-      padding-bottom: var(--space-md);
     }
-    .ov-verdict-cta { display: flex; justify-content: flex-end; flex-shrink: 0; }
-    /* The overview CTA is --color-primary; .btn-primary elsewhere (modals, settings) stays on --color-cta. */
-    #publishActionRow .btn-primary { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-on-cta); }
-    .exec-stage-decision { display: flex; flex-direction: column; gap: 4px; max-width: 760px; }
-    .exec-stage-decision-title { font-size: 18px; line-height: 1.25; color: var(--color-ink); }
-    .exec-stage-decision-desc { font-size: 13px; line-height: 1.6; color: var(--color-text-soft); max-width: 720px; }
-    .ov-metrics {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      padding: var(--space-md) 0;
-      border-top: 1px solid var(--color-border);
+    .exec-stop-main { display: flex; flex-direction: column; gap: 8px; min-width: 0; flex: 1; }
+    .exec-stop-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+    .exec-stop-actions { display: flex; align-items: center; justify-content: flex-end; flex-shrink: 0; }
+    .stop-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--color-border);
+      color: var(--color-text-soft);
+      background: var(--color-white);
+      font-size: 12px;
+      font-weight: 600;
     }
-    .ov-metric {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      padding: 0 var(--space-md);
-      border-left: 1px solid var(--color-border);
+    .stop-pill.passed {
+      border-color: var(--color-success-border);
+      color: var(--color-success);
+      background: var(--color-success-bg);
     }
-    .ov-metric:first-child { padding-left: 0; border-left: 0; }
-    .exec-round-key { font-size: 12px; color: var(--color-text-soft); }
-    .exec-round-value { font-size: 20px; line-height: 1.15; color: var(--color-ink); font-variant-numeric: tabular-nums; }
-    .ov-stop { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; }
-    .ov-stop-items { display: flex; flex-wrap: wrap; gap: 12px; }
-    .stop-pill { font-size: 12px; color: var(--color-text-soft); }
+    /* issue #491: a third, distinct state for "not enough marked data to
+       compute IAA yet" -- must never look like the default (which already
+       reads as "not met") or like .passed, or a viewer would misread
+       "cannot compute" as one of those two states. */
+    .stop-pill.not-computable {
+      border-color: var(--color-warning-border);
+      color: var(--color-warning);
+      background: var(--color-warning-bg);
+    }
+    .round-history-panel {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      background: var(--color-white);
+      padding: 16px;
+      margin-bottom: var(--space-md);
+    }
     .round-history-head {
       display: flex;
       align-items: flex-start;
@@ -1813,11 +1899,10 @@
     .round-table th, .round-table td { padding: 8px 12px 8px 0; text-align: left; border-bottom: 1px solid var(--color-border); }
     .round-table th { font-size: 12px; font-weight: 600; color: var(--color-text-soft); white-space: nowrap; }
     .round-table td { color: var(--color-ink); }
-    /* Result is conveyed by text colour only: no fill, border or radius. */
-    .round-status-badge { font-weight: 700; white-space: nowrap; background: transparent; border: 0; border-radius: 0; padding: 0; }
+    .round-status-badge { font-weight: 700; white-space: nowrap; }
     .round-status-badge.failed { color: var(--color-error); }
     .round-status-badge.passed { color: var(--color-success); }
-    .round-status-badge.in-progress { color: var(--color-text-soft); }
+    .round-status-badge.in-progress { color: var(--color-primary); }
     .panel-divider {
       border: none;
       border-top: 1px solid var(--color-border-muted);
@@ -1893,7 +1978,13 @@
     .strategy-seed { font-size: 11px; color: var(--color-ink-muted); }
 
     .data-split-viz { margin-bottom: var(--space-sm); }
-    .exec-data-split-viz { margin-bottom: 0; }
+    .exec-data-split-viz {
+      padding: 14px 16px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      background: var(--color-white);
+      margin-bottom: var(--space-md);
+    }
     .split-viz-head {
       display: flex;
       align-items: center;
@@ -1953,8 +2044,9 @@
       .member-entry-row .mini-btn { width: 100%; }
       .sampling-fields { grid-template-columns: 1fr; }
       .sampling-fields-advanced { grid-template-columns: 1fr; }
-      .ov-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: var(--space-md); }
-      .ov-metric:nth-child(odd) { padding-left: 0; border-left: 0; }
+      .exec-stage-banner { flex-direction: column; }
+      .exec-stop-row,
+      .exec-stop-actions { align-items: flex-start; }
       .exec-control-row { flex-direction: column; }
       .exec-actions { align-items: flex-start; }
       .run-control-tabs { width: 100%; justify-content: flex-start; overflow-x: auto; }
