@@ -20,4 +20,4 @@
 **故事目標**：dataset-021 SC-003 — 閘門與 archive 後的衍生檢視保留 `protected_payload` 契約。
 
 - [x] 3.1 執行 OpenSpec schema 驗證、Project SDD lint、檢查器測試與 `check-database-schema.mjs`。 [@main]
-- [ ] 3.2 Source-Verify 預掃後 archive 並核對衍生檢視 FR／AC 引用、版本與 Changelog，更新 `specs/STATUS.md`。 [@main]
+- [x] 3.2 Source-Verify 預掃後 archive 並核對衍生檢視 FR／AC 引用、版本與 Changelog，更新 `specs/STATUS.md`。 [@main]
