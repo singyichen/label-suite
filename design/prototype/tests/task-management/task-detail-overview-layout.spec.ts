@@ -12,11 +12,15 @@
  *   4. A `draft` task renders no round rows.
  *   5. The sampling section view (settings tab) no longer shows 試標回合 / 目前判定 / 已用試標 / 可進正式.
  *   6. `reviewer`: the run control is disabled and carries a tooltip.
+ *   2b. The four labels read 目前回合 / 最新 IAA / 已用試標 / 正式標記池; with several publish
+ *       buttons, only publishOfficialRunBtn resolves to --color-primary (main-session ruling).
  *   7. Dark mode: CTA text on CTA background reaches a contrast ratio >= 4.5.
  *
  * Selectors introduced for the Green implementer (task 3.3 / 3.4) -- these do not exist yet:
  *   [data-testid="overview-metrics"]       container of the numbers row
  *   [data-testid="overview-metric"]        one per column inside the numbers row (exactly four)
+ *   [data-testid="overview-metric-label"]  the label element inside each metric; its text is
+ *                                          exactly 目前回合 / 最新 IAA / 已用試標 / 正式標記池 (zh default)
  *   [data-testid="trial-round-table"]      the trial-round table (a real <table>)
  *   [data-testid="trial-round-row"]        one per round in the table body
  *   [data-testid="trial-round-result"]     the element inside each row's 結果 cell that carries the
@@ -39,6 +43,7 @@ import { openSettingsSection } from './_task-detail-settings-helpers';
 const BASE = '/pages/task-management/task-detail.html';
 const DRAFT_URL = `${BASE}?task_id=T013&task_role=project_leader`;
 const ROUNDS_URL = `${BASE}?task_id=T016&task_role=project_leader`;
+const WAITING_URL = `${BASE}?task_id=T001&task_role=project_leader&status=waiting_iaa_confirmation`;
 const REVIEWER_URL = `${BASE}?task_id=T013&task_role=reviewer`;
 
 async function open(page: Page, url: string, theme: 'light' | 'dark' = 'light') {
@@ -111,6 +116,26 @@ test.describe('task-detail overview layout (FR-027)', () => {
     await open(page, ROUNDS_URL);
     await expect(page.locator('[data-testid="overview-metrics"]')).toBeVisible();
     await expect(page.locator('[data-testid="overview-metrics"] [data-testid="overview-metric"]')).toHaveCount(4);
+  });
+
+  test('numbers row labels are exactly 目前回合 / 最新 IAA / 已用試標 / 正式標記池, in order', async ({ page }) => {
+    await open(page, ROUNDS_URL);
+    await expect(
+      page.locator('[data-testid="overview-metrics"] [data-testid="overview-metric-label"]'),
+    ).toHaveText(['目前回合', '最新 IAA', '已用試標', '正式標記池']);
+  });
+
+  test('waiting_iaa_confirmation: exactly one button in the publish row is --color-primary (publishOfficialRunBtn)', async ({ page }) => {
+    await open(page, WAITING_URL);
+    const primary = await resolveColor(page, '--color-primary');
+    const buttons = page.locator('#publishActionRow button');
+    await expect(page.locator('#publishOfficialRunBtn')).toBeVisible();
+    expect(await buttons.count(), 'publish row has several buttons').toBeGreaterThan(1);
+    const bgs = await buttons.evaluateAll((els) =>
+      els.map((el) => ({ id: el.id, bg: getComputedStyle(el).backgroundColor })),
+    );
+    const primaries = bgs.filter((b) => b.bg === primary).map((b) => b.id);
+    expect(primaries, `buttons on --color-primary: ${JSON.stringify(bgs)}`).toEqual(['publishOfficialRunBtn']);
   });
 
   test('「已完成試標回合」 is gone from the overview', async ({ page }) => {
