@@ -101,10 +101,11 @@ test('session OpenSpec delta classifies renamed and newly derived requirements',
 });
 
 // Issue #1224: ADR-021 defers to ADR-038 for token cleanup.
-test('ADR-021 cites ADR-038 and the TBD (#1224) token cleanup, without the old pending-order wording', () => {
+test('ADR-021 cites ADR-038 and the TBD (#1244) token cleanup, without the old pending-order wording', () => {
   const paragraph = adr.split('\n').find((line) => line.includes('per ADR-038 (#1224)'));
   assert.ok(paragraph, 'ADR-021 cleanup paragraph must cite per ADR-038 (#1224)');
-  assert.ok(paragraph.includes('TBD (#1224)'), 'ADR-021 cleanup paragraph must mention TBD (#1224)');
+  // Issue #1242 follow-up: remaining cleanup cadence points at #1244.
+  assert.ok(paragraph.includes('TBD (#1244)'), 'ADR-021 cleanup paragraph must mention TBD (#1244)');
   assert.match(paragraph, /expires_at/);
   assert.doesNotMatch(adr, /privacy deletion order must be settled/);
 });

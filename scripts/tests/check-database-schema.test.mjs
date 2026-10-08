@@ -749,3 +749,40 @@ test('every line describing session cleanup deletion also states token expiry', 
   }
   assert.ok(matched >= 5, `Matcher too narrow, only ${matched} lines`);
 });
+
+// Issue #1242 follow-up: pending-decision pointers after ADR-038 landed.
+const docsRoot = new URL('../../docs/', import.meta.url);
+const adr038Path = 'adr/038-data-retention-deletion-anonymization.md';
+const walkDocs = (dirUrl, prefix = '') => readdirSync(dirUrl, { withFileTypes: true }).flatMap((entry) => {
+  const rel = `${prefix}${entry.name}`;
+  if (entry.isDirectory()) return walkDocs(new URL(`${entry.name}/`, dirUrl), `${rel}/`);
+  return /\.(md|json|html)$/.test(entry.name) && rel !== adr038Path ? [rel] : [];
+});
+
+test('no docs file outside ADR-038 still carries a TBD (#1224) or 待定（#1224） pointer', () => {
+  const offenders = [];
+  for (const rel of walkDocs(docsRoot)) {
+    readFileSync(new URL(rel, docsRoot), 'utf8').split('\n').forEach((line, index) => {
+      if (line.includes('TBD (#1224)') || line.includes('待定（#1224）')) offenders.push(`docs/${rel}:${index + 1}`);
+    });
+  }
+  assert.deepEqual(offenders, [], `Stale #1224 pending pointers:\n${offenders.join('\n')}`);
+});
+
+test('account-admin A-05 lists task.iaa_rejected rejection reason free text in the PII anonymization scope', () => {
+  const markdown = readFileSync(new URL('../../docs/diagrams/architecture/account-admin-db-schema.md', import.meta.url), 'utf8');
+  const row = markdown.split('\n').find((line) => line.startsWith('| A-05 |'));
+  assert.ok(row, 'Missing A-05 row');
+  assert.ok(row.includes('task.iaa_rejected'), 'A-05 must mention task.iaa_rejected rejection reason free text');
+});
+
+test('dataset P-04 and S-01 name the dataset-021 authorization-role fix and keep 只寫不讀', () => {
+  const markdown = readFileSync(new URL('../../docs/diagrams/architecture/dataset-db-schema.md', import.meta.url), 'utf8');
+  for (const id of ['P-04', 'S-01']) {
+    const row = markdown.split('\n').find((line) => line.startsWith(`| ${id} |`));
+    assert.ok(row, `Missing ${id} row`);
+    assert.ok(row.includes('須先修正 dataset-021 新增授權角色'), `${id} must contain 須先修正 dataset-021 新增授權角色`);
+    assert.ok(row.includes('只寫不讀'), `${id} must keep 只寫不讀`);
+    assert.ok(!row.includes('新增授權角色（dataset-021 授權角色）'), `${id} must drop the redundant （dataset-021 授權角色） parenthetical`);
+  }
+});
