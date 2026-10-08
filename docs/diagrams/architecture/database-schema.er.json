@@ -1,9 +1,9 @@
 {
   "$schema": "https://raw.githubusercontent.com/SteveLin100132/notecraft/main/plugins/er-diagram-renderer/schema.json",
   "meta": {
-    "title": "Label Suite 資料庫規劃 ER 圖（帳號、管理、資料集、任務執行、標記與審核）",
-    "description": "**規劃圖，尚未部署資料結構。** 已部署業務表：0；本頁顯示 **35 張候選表、288 欄、41 個候選單欄 FK（外鍵）**。帳號／管理、資料集、任務／執行與標記／審核的逐表型別和關聯，來自[資料表盤點總帳](/notes/diagrams/architecture/database-table-inventory)所連的四份實體層字典。標記／審核的 8 張表均尚未進行資料庫遷移；六組工作指派複合外鍵、來源修訂版本、保存期限與私有答案讀取權限，詳見[標記／審核字典](/notes/diagrams/architecture/annotation-review-db-schema) §4–§7。品質／IAA、工時與匯出仍列在[盤點總帳](/notes/diagrams/architecture/database-table-inventory)待決。\n\n**讀圖方式：** Wiki 可逐表查看候選欄位、來源與待決事項；Diagram 可搜尋表名或欄名，點選表後會聚焦已列出的候選單欄外鍵。圖中連線不代表資料庫遷移、複合約束或資料庫權限已建立。",
-    "source": "docs/diagrams/architecture/account-admin-db-schema.md §2–§3; docs/diagrams/architecture/dataset-db-schema.md §2–§3; docs/diagrams/architecture/task-run-db-schema.md §2–§3; specs/task-management/013-task-new/spec.md; specs/task-management/014-task-detail/spec.md; docs/diagrams/architecture/annotation-review-db-schema.md §2–§3; specs/annotation/015-annotation-workspace/spec.md",
+    "title": "Label Suite 資料庫規劃 ER 圖（帳號、管理、資料集、任務執行、標記、審核與匯出）",
+    "description": "**規劃圖，尚未部署資料結構。** 已部署業務表：0；本頁顯示 **37 張候選表、314 欄、43 個候選單欄 FK（外鍵）**。帳號／管理、資料集、任務／執行、標記／審核與匯出的逐表型別和關聯，來自[資料表盤點總帳](/notes/diagrams/architecture/database-table-inventory)所連的五份實體層字典。兩張匯出候選表保存一次請求、原始產物與有序執行範圍；同任務複合外鍵、產物保留／撤銷及授權見[匯出字典](/notes/diagrams/architecture/task-export-db-schema) §4–§7。資料集分析專用表延後至 MVP 後；工時仍待正典與欄位字典裁決。\n\n**讀圖方式：** Wiki 可逐表查看候選欄位、來源與待決事項；Diagram 可搜尋表名或欄名，點選表後會聚焦已列出的候選單欄外鍵。圖中連線不代表資料庫遷移、複合約束或資料庫權限已建立。",
+    "source": "docs/diagrams/architecture/account-admin-db-schema.md §2–§3; docs/diagrams/architecture/dataset-db-schema.md §2–§3; docs/diagrams/architecture/task-run-db-schema.md §2–§3; docs/diagrams/architecture/annotation-review-db-schema.md §2–§3; docs/diagrams/architecture/task-export-db-schema.md §2–§3; specs/task-management/014-task-detail/spec.md v8.0.0; specs/annotation/015-annotation-workspace/spec.md",
     "backTo": "/notes/diagrams/architecture/database-table-inventory"
   },
   "options": {
@@ -86,6 +86,11 @@
       "key": "review",
       "label": "審核、仲裁與例外",
       "description": "私有草稿、每個審核單位唯一的正式提交、逐輸出決策、不可變修訂、一次性仲裁與例外收尾。工作指派的複合外鍵見實體字典；`ReviewAssignment`、`ReviewUnit`、`DisputeItem` 為推導值，不另建表。"
+    },
+    {
+      "key": "export",
+      "label": "匯出紀錄與原始產物",
+      "description": "兩張未部署候選表記錄每次匯出的請求、不可變原始檔案與納入的執行順序；同任務複合外鍵、下載授權及保存期限見匯出實體字典。"
     }
   ],
   "layout": {
@@ -130,6 +135,12 @@
         "key": "review",
         "groups": [
           "review"
+        ]
+      },
+      {
+        "key": "export",
+        "groups": [
+          "export"
         ]
       }
     ]
@@ -1835,6 +1846,185 @@
         {"name": "submitted_at", "type": "timestamptz", "required": "required", "note": "本次修訂 UTC 提交時間；建立；不改；規則：X-03"}
       ],
       "description": "**實體候選，尚未部署。** 每次正式提交一個完整、已驗證的 outKey 決策快照；不代表第二位審核員，也不另建指派。仲裁票參照投票時的修訂版本，避免後續改判把來源改掉。015 FR-103／FR-105 已規劃首票後不可改判；此表與交易尚未落地。來源：015 FR-103／FR-052、DBA 設計「持久化切分」。\n\n來源：[標記／審核實體候選字典](/notes/diagrams/architecture/annotation-review-db-schema) §3.8；複合工作指派 FK、唯一限制、檢查限制、權限與資料庫遷移前待決見 §4–§7。圖中只畫已列的單欄 FK；線條不表示 ORM、資料庫遷移或 DB 權限已建立。"
+    },
+    {
+      "name": "task_export",
+      "label": "任務匯出請求與原始檔案",
+      "section": "3.1",
+      "group": "export",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "required": "required",
+          "note": "匯出請求主鍵；接受請求時建立，不改；規則：E-01",
+          "pk": true
+        },
+        {
+          "name": "task_id",
+          "type": "uuid",
+          "required": "required",
+          "note": "所屬任務；接受請求時固定；規則：E-01",
+          "fk": "task"
+        },
+        {
+          "name": "requested_by_user_id",
+          "type": "uuid",
+          "required": "required",
+          "note": "原始請求人；下載仍需重新授權；規則：E-01、E-08",
+          "fk": "users"
+        },
+        {
+          "name": "requested_at",
+          "type": "timestamptz",
+          "required": "required",
+          "note": "固定匯出 UTC 時間，也是 manifest 的 exported_at；規則：E-02"
+        },
+        {
+          "name": "completed_at",
+          "type": "timestamptz",
+          "required": "nullable",
+          "note": "原始產物驗證完成並可下載的 UTC 時間；規則：E-04"
+        },
+        {
+          "name": "status",
+          "type": "varchar(16)",
+          "required": "required",
+          "note": "pending／processing／ready／failed；規則：E-04"
+        },
+        {
+          "name": "export_format",
+          "type": "varchar(16)",
+          "required": "required",
+          "note": "json／json-min；規則：E-03"
+        },
+        {
+          "name": "export_format_version",
+          "type": "integer",
+          "required": "required",
+          "note": "檔案格式版本；新 json-min 為 2；規則：E-03"
+        },
+        {
+          "name": "conditions_version",
+          "type": "integer",
+          "required": "required",
+          "note": "條件快照的驗證規格版本；規則：E-03"
+        },
+        {
+          "name": "conditions_snapshot",
+          "type": "json",
+          "required": "required",
+          "note": "有序 selected_runs[] 逐次記階段與固定版本／快照；共用篩選、語言及序列選項另列；規則：E-03、E-07"
+        },
+        {
+          "name": "scope_label",
+          "type": "varchar(120)",
+          "required": "required",
+          "note": "歷史列顯示的任務範圍文案；規則：E-03"
+        },
+        {
+          "name": "export_type",
+          "type": "varchar(24)",
+          "required": "required",
+          "note": "歷史列顯示全部或篩選匯出的類型；規則：E-03"
+        },
+        {
+          "name": "request_idempotency_key",
+          "type": "varchar(120)",
+          "required": "required",
+          "note": "同任務、同請求人的客戶端匯出重試鍵；規則：E-05"
+        },
+        {
+          "name": "request_digest",
+          "type": "char(64)",
+          "required": "required",
+          "note": "任務、請求人、格式、有序執行與篩選選項的規範化請求 SHA-256；規則：E-05"
+        },
+        {
+          "name": "row_count",
+          "type": "integer",
+          "required": "nullable",
+          "note": "實際輸出列數；零列仍須保存 manifest；規則：E-04"
+        },
+        {
+          "name": "original_filename",
+          "type": "varchar(255)",
+          "required": "nullable",
+          "note": "首次下載所用檔名，之後不改；規則：E-04、E-06"
+        },
+        {
+          "name": "artifact_ref",
+          "type": "varchar(1024)",
+          "required": "nullable",
+          "note": "受限儲存中的內部物件鍵，並非下載網址；規則：E-06、E-08"
+        },
+        {
+          "name": "artifact_sha256",
+          "type": "char(64)",
+          "required": "nullable",
+          "note": "原始檔案位元組的 SHA-256；規則：E-06"
+        },
+        {
+          "name": "artifact_size_bytes",
+          "type": "bigint",
+          "required": "nullable",
+          "note": "原始檔案大小（byte）；規則：E-06"
+        },
+        {
+          "name": "expires_at",
+          "type": "timestamptz",
+          "required": "nullable",
+          "note": "完成後 30 日的原檔下載期限 UTC；規則：E-06、E-09"
+        },
+        {
+          "name": "revoked_at",
+          "type": "timestamptz",
+          "required": "nullable",
+          "note": "來源刪除或政策撤銷後停止下載的時間；規則：E-08、E-09"
+        },
+        {
+          "name": "failure_code",
+          "type": "varchar(64)",
+          "required": "nullable",
+          "note": "安全失敗代碼，不存內部路徑或答案；規則：E-04、E-08"
+        }
+      ],
+      "description": "**實體候選，尚未部署。** 一列代表一次請求與一份不可變原始產物。重新下載讀相同 bytes，須核對摘要、期限、撤銷狀態與目前權限；30 日後不提供檔案，歷史資訊保留一年。來源：[任務匯出實體候選字典](/notes/diagrams/architecture/task-export-db-schema) §3.1；同任務複合外鍵、索引、安全及遷移前待驗見 §4–§7。圖中只畫真單欄 FK；線條不表示資料庫遷移或權限已建立。"
+    },
+    {
+      "name": "task_export_run",
+      "label": "匯出納入的執行與順序",
+      "section": "3.2",
+      "group": "export",
+      "columns": [
+        {
+          "name": "export_id",
+          "type": "uuid",
+          "required": "required",
+          "note": "所屬匯出，與 run_id 共同構成主鍵；規則：R-01",
+          "pk": true
+        },
+        {
+          "name": "run_id",
+          "type": "uuid",
+          "required": "required",
+          "note": "納入的執行，與 export_id 共同構成主鍵；規則：R-01",
+          "pk": true
+        },
+        {
+          "name": "task_id",
+          "type": "uuid",
+          "required": "required",
+          "note": "同任務複合外鍵作用域；規則：R-02"
+        },
+        {
+          "name": "position",
+          "type": "integer",
+          "required": "required",
+          "note": "manifest 中從 1 開始的執行順序；規則：R-03"
+        }
+      ],
+      "description": "**實體候選，尚未部署。** 以複合主鍵保存每份匯出納入的執行；task_id 是受同任務複合外鍵約束的冗餘，確保匯出與執行屬同一任務。版本身分取自固定的執行／發布週期 並寫入原始產物的有序 manifest。來源：[任務匯出實體候選字典](/notes/diagrams/architecture/task-export-db-schema) §3.2；兩組複合外鍵與順序限制見 §4，圖中不把複合外鍵畫成單欄線。"
     }
   ]
 }
