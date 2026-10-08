@@ -4840,7 +4840,14 @@
         var wrapper = document.createElement('div');
         wrapper.innerHTML = html.trim();
         while (wrapper.firstChild) {
-          mount.appendChild(wrapper.firstChild);
+          var root = wrapper.firstChild;
+          /* Tab ARIA wiring: the static aria-controls on the top-level tabs is the only tab/panel map. */
+          var owner = root.id && document.querySelector('.admin-tabs [aria-controls="' + root.id + '"]');
+          if (owner) {
+            root.setAttribute('role', 'tabpanel');
+            root.setAttribute('aria-labelledby', owner.id);
+          }
+          mount.appendChild(root);
         }
       });
   }
