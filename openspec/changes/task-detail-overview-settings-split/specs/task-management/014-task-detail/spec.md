@@ -1,6 +1,6 @@
 > 正典：`specs/task-management/014-task-detail/spec.md`（v7.0.0 → v8.0.0，**MAJOR**，版本判定理由見 proposal.md Impact 節）。issue #1199：`task-detail` 拆為共用任務標頭、概覽與設定兩個分頁。2026-10-08 維護者裁定（issue #1199 留言）為本 delta 的約束來源，與 issue 內文衝突處以裁定為準。
 >
-> **delta 形式**：衍生檢視 `openspec/specs/task-management/014-task-detail/spec.md` 僅收錄 FR-019、FR-006 等少數條文，**尚未收錄** FR-003 與 SC-019。依 archive 的標題比對規則，這兩條與全新的 FR-028、FR-026、FR-027 置於 `## ADDED Requirements`（回寫正典時 FR-003、SC-019 仍為原地改寫）；已收錄於衍生檢視的 FR-019、FR-006 置於 `## MODIFIED Requirements`，標題與衍生檢視逐字一致，並完整保留既有 scenario。
+> **delta 形式**：衍生檢視 `openspec/specs/task-management/014-task-detail/spec.md` 僅收錄 FR-019、FR-006 等少數條文，**尚未收錄** FR-003 與 SC-019。依 archive 的標題比對規則，這兩條與 FR-014i（僅改固定欄位標籤）、全新的 FR-028、FR-026、FR-027 置於 `## ADDED Requirements`（回寫正典時 FR-003、SC-019、FR-014i 仍為原地改寫；FR-014i 僅將固定欄位「設定檔版本」改為「設定檔」以與 FR-026 (3) 一致，其餘文字維持原文）；已收錄於衍生檢視的 FR-019、FR-006 置於 `## MODIFIED Requirements`，標題與衍生檢視逐字一致，並完整保留既有 scenario。
 >
 > **AC 編號**：本 delta 新增的驗收情境一律不預先編號，AC 編號於 gate 4 回寫正典時依使用者故事現有序號續編；MODIFIED 區塊內既有的 AC-1.8、AC-1.9、SC-044、AC-2.5 scenario 標題原樣保留。
 >
@@ -189,6 +189,17 @@
 - **GIVEN** `task_role = reviewer`
 - **WHEN** 開啟概覽分頁
 - **THEN** 執行按鈕為 disabled 並附 tooltip「僅 project leader 可操作」
+
+
+### Requirement: FR-014i 標記設定摘要依 outputs 動態顯示
+
+Overview「標記設定」摘要區塊必須依當前 outputs[] 動態顯示摘要列：每個輸出類型一列，key 為該輸出類型的 registry 顯示名稱，value 為該輸出 config 的欄位摘要（由 registry 欄位定義推導，不含 `allow_bypass`）；除 `設定檔`、`標記類型` 外，不得固定顯示與當前 outputs 組合無關的欄位，亦不得顯示抽樣相關欄位（抽樣屬「抽樣設定」區塊）。
+
+#### Scenario: 固定欄位標籤為設定檔
+
+- **GIVEN** 任務已設定 outputs[]
+- **WHEN** 檢視「標記設定」區塊的檢視狀態
+- **THEN** 固定欄位為「設定檔」與「標記類型」，其餘摘要列依 outputs[] 動態產生
 
 ## MODIFIED Requirements
 

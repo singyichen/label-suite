@@ -39,7 +39,7 @@
 
 ### Modified Capabilities
 
-- `task-management/014-task-detail`：新增 FR-028、FR-026、FR-027，原地改寫 FR-003、SC-019，修訂 FR-019、FR-006；其餘條文（含 FR-010p、FR-013）維持原文。
+- `task-management/014-task-detail`：新增 FR-028、FR-026、FR-027，原地改寫 FR-003、SC-019、FR-014i（僅固定欄位標籤「設定檔版本」改「設定檔」，維護者 2026-10-08 裁定併入），修訂 FR-019、FR-006；其餘條文（含 FR-010p、FR-013）維持原文。
 
 ## Impact
 
