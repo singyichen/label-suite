@@ -38,7 +38,9 @@ test.describe('Task detail not-found state (issue #200)', () => {
   test('a valid task_id still renders the task overview normally', async ({ page }) => {
     await page.goto(`${TASK_DETAIL_URL}?task_id=T001`);
 
-    await expect(page.locator('#bcCurrent')).toHaveText('醫療文本情感分類', { timeout: 15000 });
+    // FR-025: the task name lives in the H1; the breadcrumb tail is the task id.
+    await expect(page.locator('#pageTitle')).toHaveText('醫療文本情感分類', { timeout: 15000 });
+    await expect(page.locator('#bcCurrent')).toHaveText('T001');
     await expect(page.locator('#overviewPanel')).toBeVisible();
     await expect(page.locator('#taskNotFound')).toBeHidden();
   });

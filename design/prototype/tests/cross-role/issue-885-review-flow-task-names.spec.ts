@@ -132,7 +132,9 @@ test('dataset detail derives its review-flow title from the loaded task catalog'
 for (const task of TASKS) {
   test(`${task.id} task detail uses the same visible name in zh and en`, async ({ page }) => {
     await page.goto(`/pages/task-management/task-detail.html?task_id=${task.id}`);
-    await expectTaskName(page.locator('#bcCurrent'), task.zh, task.en, page);
+    // FR-025: the task name lives in the H1; the breadcrumb tail is the task id.
+    await expectTaskName(page.locator('#pageTitle'), task.zh, task.en, page);
+    await expect(page.locator('#bcCurrent')).toHaveText(task.id);
   });
 
   test(`${task.id} annotation list and workspace use the same visible name in zh and en`, async ({ page }) => {
