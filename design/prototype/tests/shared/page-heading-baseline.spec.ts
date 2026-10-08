@@ -23,45 +23,56 @@ const pagesWithTopHeading = [
   '/pages/account/profile.html',
 ];
 
+// FR-025 (014-task-detail) removed the subtitle from task-detail: its H1 is
+// followed by the inline stage status, not a subtitle. FR-017 / SC-010 only
+// require subtitle metrics on pages that have one, so task-detail keeps the
+// title checks and skips the subtitle ones.
+const pagesWithoutSubtitle = ['/pages/task-management/task-detail.html'];
+
 type HeadingMetrics = {
   titleX: number;
   titleY: number;
   titleFontSize: string;
   titleLineHeight: string;
   titleMarginBottom: string;
-  subtitleX: number;
-  subtitleY: number;
-  subtitleFontSize: string;
-  subtitleLineHeight: string;
+  subtitleX?: number;
+  subtitleY?: number;
+  subtitleFontSize?: string;
+  subtitleLineHeight?: string;
 };
 
 async function readHeadingMetrics(page: Page, pageUrl: string): Promise<HeadingMetrics> {
   await page.goto(pageUrl);
+  const expectSubtitle = !pagesWithoutSubtitle.includes(pageUrl);
 
-  return page.evaluate(() => {
+  return page.evaluate((expectSubtitle) => {
     const title = document.querySelector<HTMLElement>('h1');
     if (!title) throw new Error('Missing top-level page title');
 
-    const subtitle = title.nextElementSibling instanceof HTMLElement ? title.nextElementSibling : null;
-    if (!subtitle) throw new Error('Missing top-level page subtitle');
-
     const titleRect = title.getBoundingClientRect();
-    const subtitleRect = subtitle.getBoundingClientRect();
     const titleStyle = window.getComputedStyle(title);
-    const subtitleStyle = window.getComputedStyle(subtitle);
-
-    return {
+    const titleMetrics = {
       titleX: Math.round(titleRect.left),
       titleY: Math.round(titleRect.top),
       titleFontSize: titleStyle.fontSize,
       titleLineHeight: titleStyle.lineHeight,
       titleMarginBottom: titleStyle.marginBottom,
+    };
+    if (!expectSubtitle) return titleMetrics;
+
+    const subtitle = title.nextElementSibling instanceof HTMLElement ? title.nextElementSibling : null;
+    if (!subtitle) throw new Error('Missing top-level page subtitle');
+    const subtitleRect = subtitle.getBoundingClientRect();
+    const subtitleStyle = window.getComputedStyle(subtitle);
+
+    return {
+      ...titleMetrics,
       subtitleX: Math.round(subtitleRect.left),
       subtitleY: Math.round(subtitleRect.top),
       subtitleFontSize: subtitleStyle.fontSize,
       subtitleLineHeight: subtitleStyle.lineHeight,
     };
-  });
+  }, expectSubtitle);
 }
 
 test.describe('Shared page heading baseline', () => {
@@ -71,7 +82,12 @@ test.describe('Shared page heading baseline', () => {
 
     for (const pageUrl of pagesWithTopHeading) {
       const metrics = await readHeadingMetrics(page, pageUrl);
-      expect(metrics, pageUrl).toEqual(baseline);
+      if (pagesWithoutSubtitle.includes(pageUrl)) {
+        const { titleX, titleY, titleFontSize, titleLineHeight, titleMarginBottom } = baseline;
+        expect(metrics, pageUrl).toEqual({ titleX, titleY, titleFontSize, titleLineHeight, titleMarginBottom });
+      } else {
+        expect(metrics, pageUrl).toEqual(baseline);
+      }
     }
   });
 });
