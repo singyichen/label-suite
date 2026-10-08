@@ -7,7 +7,7 @@
  *   - the Code panel button is labelled 套用 and the panel has no other save button
  *   - 套用 only backfills Code -> Visual; the task's persisted settings are written only by the
  *     section header 儲存 (observable: cancelling edit restores the old summary)
- *   - parse error: #codeErrorBar visible, 套用 disabled, Visual keeps the last valid config
+ *   - parse or schema error (AC-3.62): #codeErrorBar visible, 套用 disabled, Visual keeps the last valid config
  *   - view-state key #labelConfigVersion reads 設定檔 (value stays the config file name)
  *
  * Expected on current code: label, live validation, toast text, unapplied-save hint, English strings
@@ -103,6 +103,42 @@ test.describe('task-detail Code 套用 (FR-026 (3))', () => {
     await expect(page.locator('#codeErrorBar')).toHaveClass(/hidden/);
     await expect(applyBtn).toBeEnabled();
   });
+
+  // AC-3.62: schema errors (not only syntax errors) must surface live, without clicking 套用.
+  const schemaInvalidCases: Array<{ name: string; mutate: (parsed: any) => void }> = [
+    {
+      name: 'input_type mismatching Step 1',
+      mutate: (parsed) => { parsed.input_type = parsed.input_type === 'item_pair' ? 'single_item' : 'item_pair'; },
+    },
+    {
+      name: 'an output selected in Step 1 missing from the content',
+      mutate: (parsed) => { parsed.outputs = []; },
+    },
+  ];
+  for (const { name, mutate } of schemaInvalidCases) {
+    test(`typing syntactically valid but schema-invalid content (${name}) shows the error bar live and disables 套用; fixing it restores both (no click)`, async ({ page }) => {
+      await openLabelingEdit(page);
+      await expect(page.locator('#annotationPreview')).toContainText('positive');
+      await page.locator('#formatJsonBtn').click();
+      const validContent = await page.locator('#codeEditor').inputValue();
+      const parsed = JSON.parse(validContent);
+      mutate(parsed);
+      const applyBtn = codePanel(page).getByRole('button', { name: /^(套用|儲存)$/ });
+
+      await page.locator('#codeEditor').fill(JSON.stringify(parsed, null, 2));
+
+      // debounce is 250ms; the web-first assertions poll well past it without any click
+      await expect(page.locator('#codeErrorBar')).not.toHaveClass(/hidden/);
+      await expect(applyBtn).toBeDisabled();
+      await expect(page.locator('#annotationPreview')).toContainText('positive');
+      await expect(page.locator('#settingsEditForm')).not.toHaveClass(/hidden/);
+
+      await page.locator('#codeEditor').fill(validContent);
+
+      await expect(page.locator('#codeErrorBar')).toHaveClass(/hidden/);
+      await expect(applyBtn).toBeEnabled();
+    });
+  }
 
   test('successful 套用 toasts that nothing is submitted yet', async ({ page }) => {
     await openLabelingEdit(page);
