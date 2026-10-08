@@ -11,7 +11,7 @@
 | 決定 | 結果 | 來源 |
 |---|---|---|
 | 命名 | 五張單數 `dataset` 前綴表；UUID 身分由應用程式產生；時間欄用 `_at` | foundation FR-105／FR-106；dataset-021 FR-001 |
-| 版本 | `dataset_version` 為完整快照；`draft → sealed` 後不可原地修改，父版本只記 lineage | dataset-021 FR-002／FR-008、AC-3.1／3.2 |
+| 版本 | `dataset_version` 為完整快照；`draft → sealed` 後不可原地修改，父版本只記 lineage；sealed 不可變由 DB trigger 強制（V-07／V-08） | dataset-021 FR-002／FR-008、AC-3.1／3.2；ADR-024 增補 |
 | 來源與分類 | 每個已接受檔案一個有序 batch，該 batch 保存欄位分類 manifest；item 的版本、來源及 preprocessing 由 item→batch→version FK 鏈取得 | dataset-021 FR-003／FR-004／FR-006、AC-1.1／1.2／2.1 |
 | 資料公平性 | `dataset_item.public_payload` 僅含明確允許的可見欄位；`dataset_item_private` 裝來源宣告的 split 與 hidden answer | 主憲法 III；ADR-005；dataset-021 FR-005～FR-007 |
 | 原始 JSON | 建立者只於匯入前以本機所選檔案預覽；匯入後 `source_ref` 指向受限、不可變來源 artifact，一般 API 不重現受保護原始檔 | task-013 FR-002b／FR-003g-5；dataset-021 AC-2.5 |
@@ -96,7 +96,7 @@ erDiagram
 | `dataset_id` | uuid → dataset | 否 | 所屬邏輯資料集 | 建立時；不改 | V-01、V-02 |
 | `version_no` | integer | 否 | 同 dataset 內正整數版本號 | 建立時；不改 | V-02、V-03 |
 | `parent_version_id` | uuid → dataset_version | 是 | 同 dataset 的直接父版本；首版為 null | 建立後繼版本時；不改 | V-03、V-04 |
-| `state` | varchar(16) | 否 | `draft` 或 `sealed` | 建立時為 draft；成功封存時改 sealed | V-05、V-06 |
+| `state` | varchar(16) | 否 | `draft` 或 `sealed` | 建立時為 draft；成功封存時改 sealed | V-05、V-06、V-07 |
 | `manifest_sha256` | char(64) | 是 | 有序完整快照 manifest 摘要；draft 為 null | 封存交易一次寫入 | V-05、V-06 |
 | `created_at` | timestamptz | 否 | 版本建立時間（UTC） | 建立時；不改 | X-01 |
 | `sealed_at` | timestamptz | 是 | 成功封存時間（UTC）；draft 為 null | 封存交易一次寫入 | V-05、X-01 |
@@ -154,7 +154,9 @@ erDiagram
 | V-03 | DB | `parent_version_id` 可空；複合 FK (`parent_version_id`, `dataset_id`) → `dataset_version(id, dataset_id)`；CHECK (`parent_version_id IS NULL OR parent_version_id <> id`)。Mermaid 單欄線不能替代複合 FK | dataset-021 FR-002、AC-1.3 |
 | V-04 | SVC | 父版本鏈不得成環，後繼 `version_no` 必須大於父版本；封存前在交易內核對，並行建立時由唯一鍵與明確衝突處理保護 | dataset-021 FR-002、SC-002 |
 | V-05 | DB | `state IN ('draft','sealed')`；draft 時 `manifest_sha256` 與 `sealed_at` 同為 null，sealed 時同為非 null；SHA-256 固定 64 個 hex 字元（值格式於 Pydantic 與 DB 一致驗證） | dataset-021 FR-008、AC-3.1 |
-| V-06 | SVC | `draft → sealed` 同一交易驗每批分類 manifest 與 PII 審查、匯入時取得的來源 digest 證據、每 item 私有列、有序 manifest（含各批分類 manifest 摘要），再寫 digest、時間、狀態及 audit event；重試冪等、競爭衝突、失敗回滾。seal 不為 checksum 重新讀取含答案的已儲存原始 artifact；sealed 後 batch/item/private/source 不可原地改，需新完整版本 | dataset-021 FR-008、AC-3.1／3.2；backend constitution XII |
+| V-06 | SVC | `draft → sealed` 同一交易驗每批分類 manifest 與 PII 審查、匯入時取得的來源 digest 證據、每 item 私有列、有序 manifest（含各批分類 manifest 摘要），再寫 digest、時間、狀態及 audit event；重試冪等（已 sealed 時先讀後回，不送出 no-op UPDATE，否則會被 V-07 拒絕）、競爭衝突（seal 交易讀 item 與算 digest 前先以 `FOR UPDATE` 鎖版本列）、失敗回滾。seal 不為 checksum 重新讀取含答案的已儲存原始 artifact；sealed 後 batch/item/private/source 不可原地改，需新完整版本（DB 強制見 V-07／V-08） | dataset-021 FR-008、AC-3.1／3.2；backend constitution XII |
+| V-07 | DB | `dataset_version` 各掛一個 `BEFORE UPDATE`／`BEFORE DELETE` trigger（SQLite 與 PostgreSQL 各一份）：`OLD.state='sealed'` 時拒絕任何 UPDATE（含 `sealed → draft`）與 DELETE；draft 編修與 `draft → sealed` 轉換允許；另掛 `BEFORE INSERT` trigger，拒絕直接以 `sealed` 新增的列（版本一律先建 draft，封存須經 FR-008 驗證交易；種子與還原同樣先建 draft 再 seal）；app role 無 `TRUNCATE` | dataset-021 FR-008、AC-3.2；ADR-024 增補 (2026-10-08) |
+| V-08 | DB | `dataset_import_batch`／`dataset_item`／`dataset_item_private` 各掛 `BEFORE INSERT`／`BEFORE UPDATE`／`BEFORE DELETE` trigger：所屬版本（item → batch → version）為 sealed 時拒絕；UPDATE 同時檢查 `OLD` 與 `NEW` 所屬版本以擋改掛；PostgreSQL 以 `FOR SHARE` 讀版本列與並行 seal 序列化；app role 無 `TRUNCATE` | dataset-021 FR-008、AC-3.2、FR-011；ADR-024 增補 (2026-10-08) |
 | B-01 | DB | batch PK、非空 version FK；來源檔必須屬於一個確定版本 | dataset-021 FR-003 |
 | B-02 | DB | UNIQUE (`dataset_version_id`, `source_ordinal`) 與 `source_ordinal > 0`；同版來源順序不可重複 | dataset-021 FR-003、AC-1.2 |
 | B-03 | DB＋SVC | `source_sha256` 為 64 hex；`source_name`、`source_ref`、`record_path`、`preprocessing_version` 非空白。匯入程序在來源尚未成為已儲存 artifact 前，串流計算 SHA-256、驗證內容並取得不可變儲存回執；seal 核對受信回執／digest 與 batch 值，不從一般維護路徑重讀 artifact。`record_path='$'` 代表 JSONL／根 JSON 陣列；巢狀 JSON 用有效 RFC 6901 Pointer | dataset-021 FR-003／FR-008、AC-1.1 |

@@ -293,7 +293,7 @@ UNIQUE 單位鍵阻擋兩位 reviewer 並列正式提交。首次提交者的 st
 | V-02 | SVC | `output_key × item_key` 由 FR-052 差異推導；item_key 用型別化 canonical encoding、含版本且無分隔碰撞；sequence_tagging 粒度已由 015 收斂；entity_recognition 位置落差及精確鍵編碼待 §7 裁決 | 015 FR-052／FR-059 |
 | V-03 | DB＋SVC | arbiter membership 真 FK；服務驗 active、可仲裁名冊、非當事與 ADR-037 資源條件；project leader 的 FR-023 fallback 同樣需服務授權 | 015 FR-060、014 FR-023 |
 | V-04 | DB＋SVC | `review_revision_id` 真 FK；來源摘要包含該 revision、對應標記提交版本與 canonical A/B，讀寫驗 digest 未漂移；服務驗 revision 與票同單位 | 015 FR-052／FR-061、DBA 設計 |
-| V-05 | DB＋SVC | CHECK choice `adopt_a/adopt_b/reject`；所有三種 choice 的 reason 均 NOT NULL，CHECK trim(reason) <> ''；`adjudicated` history event 同交易帶入該票理由；票不可 UPDATE/DELETE 的實施方式待 migration 決定 | 015 FR-061／FR-089 |
+| V-05 | DB＋SVC | CHECK choice `adopt_a/adopt_b/reject`；所有三種 choice 的 reason 均 NOT NULL，CHECK trim(reason) <> ''；`adjudicated` history event 同交易帶入該票理由；票不可 UPDATE/DELETE 由 A-01 強制 | 015 FR-061／FR-089 |
 | V-06 | DB＋SVC | `reject` 時 `has_finalized_value=false` 且 `finalized_value` 為 SQL NULL；`adopt_a/b` 時 flag=true、JSON 值有效，**JSON null** 可為合法 B 值；SQLite／PG 序列化不得把 JSON null 轉成 SQL NULL | 015 FR-061、DBA 設計 |
 | V-07 | DB＋SVC | 同 batch 票共用 `decision_batch_id`／digest；`decision_batch_digest` 逐票重複是明示的不可變反正規化，SVC 同交易核對同 `(run_id,assignment_id,decision_batch_id)` 的所有票 digest 完全一致，否則整批拒絕／回滾。按此三欄查重送，完整同內容回原票，異內容拒絕；全部目前爭議鍵同交易一票為 V1 候選 | DBA 設計 V1 單次裁定 |
 | E-01 | DB | resolution PK、UNIQUE `(run_id,assignment_id,output_key,item_key)` 與 UNIQUE `(arbitration_vote_id)`；同 reject 票及同鍵只可確認一次 | 015 FR-095 |
@@ -302,15 +302,16 @@ UNIQUE 單位鍵阻擋兩位 reviewer 並列正式提交。首次提交者的 st
 | E-04 | DB＋SVC | resolved_by membership 真 FK；服務驗同 task、active project_leader 與當前權限 | 015 FR-095、ADR-037 |
 | E-05 | DB＋SVC | CHECK `action IN ('adopt_annotator','adopt_reviewer','custom_answer','exclude_from_dataset')`、trim(reason) 非空；`custom_answer` 僅 Official，run_type 經 run 解析後由 SVC 驗 | 015 FR-095 |
 | E-06 | DB＋SVC | `exclude_from_dataset` 時 flag=false 且 SQL 值 NULL；其他動作有已驗證定案值，`custom_answer` 不得為 JSON null；`adopt_reviewer` 的合法 JSON null 依 output schema 驗證 | 015 FR-095、DBA 設計 |
-| H-01 | DB＋SVC | event PK、UNIQUE `(run_id,assignment_id,event_no)`、CHECK `event_no>0`；序號與業務寫入同交易分配，事件 append-only | 015 FR-016B／FR-097 |
+| H-01 | DB＋SVC | event PK、UNIQUE `(run_id,assignment_id,event_no)`、CHECK `event_no>0`；序號與業務寫入同交易分配，事件 append-only（A-01） | 015 FR-016B／FR-097 |
 | H-02 | DB＋SVC | actor membership 真 FK；當次角色快照與 membership、權限矩陣同 task 驗證，不依事件中的角色快照賦予現時權限 | 015 FR-050、ADR-037 |
 | H-03 | DB＋SVC | CHECK action 僅 `draft_saved/submitted/modified/accepted/bypassed/adjudicated/exception_resolved/excluded`；另 CHECK `action <> 'draft_saved' OR actor_task_role = 'annotator'`，`draft_saved` 只屬標記員（事件已有當次角色快照欄，故以 DB 限制而非僅靠服務）；審核員草稿不寫任何 history 事件（SVC 規則，D-03 草稿存於 `annotation_review_draft`，不得產生 `draft_saved`，否則違反盲審隔離）；outKey、reason 是否必需按 action／FR-089 驗，歷史舊值若日後遷入需另有相容策略 | 015 FR-086／FR-089、FR-014S／FR-062 |
 | H-04 | DB＋SVC＋SEC | `submitted`／`modified`／`adjudicated` 的 `result_snapshot` 必填非空，含完整 `outputs[]`，排除原始文本與資料集欄位；寫入前依 registry 驗證。CHECK `lead_time_ms IS NULL OR lead_time_ms>=0`；同一次作業的 `started_at` 與 `lead_time_ms` 恰寫一次：多筆 reviewer 決策事件共用 `review_revision_id` 時，僅第一筆事件（最小 `event_no`）帶 `started_at` 與 `lead_time_ms`，其餘事件的 `started_at` 與 `lead_time_ms` 均為 SQL NULL；單事件作業兩欄成對寫入，由 SVC 同交易驗證，舊版重複事件保留原樣。FR-090 在資料供給層先排除其他標記員的整筆事件（含列、摘要及計數），再按角色遮蔽允許事件的快照、理由與耗時 | 015 FR-087～FR-091、主憲法 III |
 | H-05 | DB＋SVC | 四個來源 ID 為各來源表的可空真 FK；審核來源指向不可變 `annotation_review_submission_revision.id`，經 revision → submission 回查 head，避免舊事件隨 head 改判而失去版本身分。由 SVC 在同一交易先建立 revision 再寫事件，核對 revision 與事件的 `(run_id,assignment_id)` 及 action 適用性；既有事件無 revision 的回填／可空相容策略待 migration 裁決 | 015 FR-097／FR-103 |
 | H-06 | DB＋SVC＋SEC | `account_session_id` 是可空真 FK → `account_session.id`，ON DELETE RESTRICT；舊／系統事件可空，新認證使用者動作須在同一交易從已驗證 `sid` 寫入，拒絕客戶端自報 ID。SVC 核對 session 的 `user_id` 等於 actor membership 所屬使用者；無法證實者不得猜測 session 歸屬。事件查詢以授權投影隔離其他人的工作階段與敏感答案，標記者 API 不下發跨人 session ID | 015 FR-088、FR-097；014 FR-007d |
-| N-01 | DB | revision PK、FK → submission；與 head 不同的 immutable 行 | 015 FR-103、DBA 設計 |
+| N-01 | DB | revision PK、FK → submission；與 head 不同的 immutable 行（append-only 見 A-01） | 015 FR-103、DBA 設計 |
 | N-02 | DB | UNIQUE `(review_submission_id,version)`、CHECK `version>0`；head.version 與最新 revision.version 在交易中對齊 | 015 FR-103 |
 | N-03 | SVC＋SEC | `decision_payload` 是當次所有 outKey 已驗證快照；不可原地更新，查詢受同 reviewer／仲裁資格與答案遮蔽限制 | 015 FR-052／FR-062／FR-103 |
+| A-01 | DB | `annotation_history_event`、`annotation_arbitration_vote`、`annotation_review_submission_revision` 完全 append-only：SQLite 與 PostgreSQL 各掛一個 `BEFORE UPDATE`／`BEFORE DELETE` trigger；PostgreSQL 對 app role `REVOKE UPDATE, DELETE, TRUNCATE`（只授予 SELECT／INSERT，PUBLIC 與 default privileges 不得再授）；更正一律新增列，無執行期更正路徑 | 015 FR-097／FR-105；ADR-024 增補 (2026-10-08) |
 
 ## 5. 候選索引與查詢對應
 
@@ -341,6 +342,6 @@ UNIQUE 單位鍵阻擋兩位 reviewer 並列正式提交。首次提交者的 st
 1. **爭議鍵落地前決策**：015 v12.0.0 已將 FR-059(4)、FR-061(7)(a) 與 `OutputAnswer` 對齊 `{start,end,label}` span，並以 AC-7.4 規劃不碰撞驗收。仍須在 migration 前固定 `item_key` 的型別化 canonical encoding、版本與實際無碰撞測試；`entity_recognition` CompactAnswer 的位置落差尚待獨立裁決。§3.5 目前只定候選型別。
 2. **V1 規劃契約與實作界線**：首次 reviewer 提交後凍結 annotator 來源、首票後凍結 reviewer 改判、同單位全爭議鍵一次 batch／每鍵一票、未提交草稿重派保留舊嘗試，已回寫 014 v7.0.0／015 v12.0.0 的 FR／AC／SC；本文件仍只是未部署候選字典，尚無 ORM、migration、API 或雙資料庫並發證據。未來重啟仲裁須另立明示流程，不能暗藏多票／覆寫規則。
 3. **父端與完成語意**：`task_annotation_assignment` 的完整 status 值域、未指派／排除轉換仍待 task/run 字典 §7 收斂；`exclude_from_dataset` 是輸出項目層級，與整個 assignment 的 `task_annotation_exclusion`、run 完成分母及導出語意須在 014／015 對齊。不可由此新增 GoldRecord、IAA、品質或 export 表。
-4. **稽核與保留**：`annotation_history_event` 和共用 `audit_events` 的寫入責任及去重、舊值事件 migration 相容、答案／理由／個資留存期限、帳號刪除與匿名化、各 FK `ON DELETE` 需先有政策。工時候選先以一年為最低保留期，session 與事件引用採 RESTRICT，不設自動清除；確切最長期間與匿名化順序須在 migration 前裁決。append-only 的 DB trigger 與受限稽核讀權在 migration PR 決定。
+4. **稽核與保留**：`annotation_history_event` 和共用 `audit_events` 的寫入責任及去重、舊值事件 migration 相容、答案／理由／個資留存期限、帳號刪除與匿名化、各 FK `ON DELETE` 需先有政策。工時候選先以一年為最低保留期，session 與事件引用採 RESTRICT，不設自動清除；確切最長期間與匿名化順序須在 migration 前裁決。append-only 強制已由 A-01／ADR-024 增補 (2026-10-08) 定案，受限稽核讀權仍在 migration PR 決定。
 
 **交付狀態：8 張未部署候選表、83 欄；單欄 FK 15 個，另有 6 組 assignment 複合 FK。** 數量與限制是審查基線，須經來源一致性檢查、OpenSpec Source-Verify 與未來雙資料庫 Red／Green 才能作為落地參考，NoteCraft 投影也不等於已部署 Schema。
