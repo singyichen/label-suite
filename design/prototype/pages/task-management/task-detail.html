@@ -1141,8 +1141,18 @@
     .btn-view-detail { padding: 2px 10px; font-size: 12px; border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-surface); color: var(--color-primary); cursor: pointer; white-space: nowrap; }
     .btn-view-detail:hover { background: var(--color-surface-raised); }
 
+    /* FR-026 (1): settings tab = left section nav + one visible section. */
+    .settings-layout { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 28px; align-items: start; }
+    .settings-section-nav { display: flex; flex-direction: column; gap: var(--space-xs); overflow-x: auto; }
+    .settings-nav-item { padding: var(--space-sm) var(--space-md); border: 0; border-radius: 4px; background: transparent; color: var(--color-ink-muted); font: inherit; text-align: left; cursor: pointer; }
+    .settings-nav-item[aria-selected="true"] { background: var(--color-slate-50); color: var(--color-ink); font-weight: 600; }
+    .settings-section.panel { border: 0; box-shadow: none; border-radius: 0; background: transparent; padding: 0; margin-bottom: 0; }
+
     @media (max-width: 768px) {
       .layout { padding: var(--space-md) var(--space-md) var(--space-xl); }
+      .settings-layout { grid-template-columns: minmax(0, 1fr); gap: var(--space-md); }
+      .settings-section-nav { flex-direction: row; }
+      .settings-nav-item { flex: 0 0 auto; white-space: nowrap; }
       .admin-tabs { overflow-x: auto; flex-wrap: wrap; }
       .kv-grid { grid-template-columns: 1fr; }
       .sampling-grid { grid-template-columns: 1fr; }
@@ -2255,12 +2265,12 @@
       </header>
 
       <div class="admin-tabs" role="tablist" aria-label="Task detail tabs">
-        <button class="admin-tab active" id="tabOverview" type="button" role="tab" aria-selected="true" tabindex="0">概覽</button>
-        <button class="admin-tab" id="tabSettings" type="button" role="tab" aria-selected="false" tabindex="-1">設定</button>
-        <button class="admin-tab" id="tabMemberManagement" type="button" role="tab" aria-selected="false">成員管理</button>
-        <button class="admin-tab" id="tabAnnotationProgress" type="button" role="tab" aria-selected="false">標記進度</button>
-        <button class="admin-tab" id="tabAnnotationResults" type="button" role="tab" aria-selected="false">標記結果</button>
-        <button class="admin-tab" id="tabWorkLog" type="button" role="tab" aria-selected="false">工時紀錄</button>
+        <button class="admin-tab active" id="tabOverview" type="button" role="tab" aria-controls="overviewPanel" aria-selected="true" tabindex="0">概覽</button>
+        <button class="admin-tab" id="tabSettings" type="button" role="tab" aria-controls="settingsPanel" aria-selected="false" tabindex="-1">設定</button>
+        <button class="admin-tab" id="tabMemberManagement" type="button" role="tab" aria-controls="memberManagementPanel" aria-selected="false">成員管理</button>
+        <button class="admin-tab" id="tabAnnotationProgress" type="button" role="tab" aria-controls="annotationProgressPanel" aria-selected="false">標記進度</button>
+        <button class="admin-tab" id="tabAnnotationResults" type="button" role="tab" aria-controls="annotationResultsPanel" aria-selected="false">標記結果</button>
+        <button class="admin-tab" id="tabWorkLog" type="button" role="tab" aria-controls="workLogPanel" aria-selected="false">工時紀錄</button>
       </div>
 
       <div id="loadingSkeleton" class="skeleton-stack" aria-live="polite" aria-busy="true">
@@ -2329,6 +2339,18 @@
     <div class="modal-actions">
       <button class="btn btn-secondary" type="button" id="riskCancelBtn">取消</button>
       <button class="btn btn-primary" type="button" id="riskConfirmBtn">確認停用並發布</button>
+    </div>
+  </div>
+</div>
+
+<!-- FR-026 (2): unsaved settings changes on section / tab switch. -->
+<div class="modal-overlay" id="settingsLeaveModal" aria-hidden="true" role="alertdialog" aria-modal="true" aria-labelledby="settingsLeaveTitle">
+  <div class="modal">
+    <h2 id="settingsLeaveTitle">放棄未儲存的變更？</h2>
+    <p id="settingsLeaveBody">目前區段有尚未儲存的變更，離開後這些變更將會遺失。</p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" type="button" id="settingsLeaveCancelBtn">取消</button>
+      <button class="btn btn-primary" type="button" id="settingsLeaveConfirmBtn">放棄變更</button>
     </div>
   </div>
 </div>
@@ -2413,6 +2435,11 @@
       tabAnnotationProgress: '標記進度',
       tabWorkLog: '工時紀錄',
       tabMemberManagement: '成員管理',
+      settingsSectionNavLabel: '設定區段',
+      settingsLeaveTitle: '放棄未儲存的變更？',
+      settingsLeaveBody: '目前區段有尚未儲存的變更，離開後這些變更將會遺失。',
+      settingsLeaveCancelBtn: '取消',
+      settingsLeaveConfirmBtn: '放棄變更',
       basicInfoTitle: '基本資料',
       settingsSummaryTitle: '標記設定',
       guidelineSectionTitle: '標記說明',
@@ -2959,6 +2986,11 @@
       tabAnnotationProgress: 'Annotation progress',
       tabWorkLog: 'Work log',
       tabMemberManagement: 'Member management',
+      settingsSectionNavLabel: 'Settings sections',
+      settingsLeaveTitle: 'Discard unsaved changes?',
+      settingsLeaveBody: 'This section has unsaved changes that will be lost if you leave.',
+      settingsLeaveCancelBtn: 'Cancel',
+      settingsLeaveConfirmBtn: 'Discard changes',
       basicInfoTitle: 'Task basics',
       settingsSummaryTitle: 'Label settings',
       guidelineSectionTitle: 'Annotation guideline',
@@ -3826,6 +3858,7 @@
     lang: 'zh',
     taskRole: 'project_leader',
     activeTab: 'overview',
+    settingsSection: 'basic',
     activeRunControlTab: 'execution',
     progressStage: 'r2',
     progressSort: 'completed_desc',
@@ -5064,9 +5097,25 @@ function interpolate(template, payload) {
     return function() { return value; };
   }
 
+  /* FR-026 (1) / FR-019 (4): the ONE list of settings sections. The nav, the
+     panel lookup (by DOM order inside #settingsPanel), the URL `section`
+     values and the unsaved-change check are all derived from it. `stateKey`
+     prefixes the existing <key>EditMode / <key>Dirty flags; `cancel` is the
+     section's existing cancel function. */
+  var SETTINGS_SECTIONS = [
+    { slug: 'basic', labelKey: 'basicInfoTitle', stateKey: 'overview', cancel: cancelOverviewEdit },
+    { slug: 'labeling', labelKey: 'settingsSummaryTitle', stateKey: 'settings', cancel: cancelSettingsEdit },
+    { slug: 'guideline', labelKey: 'guidelineSectionTitle', stateKey: 'guideline', cancel: cancelGuidelineEdit },
+    { slug: 'sampling', labelKey: 'samplingTitle', stateKey: 'sampling', cancel: cancelSamplingEdit },
+    { slug: 'review', labelKey: 'reviewSettingsTitle', stateKey: 'review', cancel: cancelReviewEdit }
+  ];
+
   var URL_VIEW_STATE = [
     { param: 'tab', field: 'activeTab', type: 'enum', restore: false,
       values: null, def: constantDefault('overview') },
+    { param: 'section', field: 'settingsSection', type: 'enum', onlyTab: 'settings',
+      values: function() { return SETTINGS_SECTIONS.map(function(section) { return section.slug; }); },
+      def: constantDefault('basic') },
     { param: 'ap_stage', field: 'progressStage', type: 'enum',
       values: getProgressStageValues, def: getDefaultProgressStage },
     { param: 'ap_sort', field: 'progressSort', type: 'enum',
@@ -5151,7 +5200,7 @@ function interpolate(template, payload) {
   function syncUrlToViewState() {
     var params = new URLSearchParams(window.location.search);
     URL_VIEW_STATE.forEach(function(entry) {
-      if (state[entry.field] === entry.def()) {
+      if (state[entry.field] === entry.def() || (entry.onlyTab && state.activeTab !== entry.onlyTab)) {
         params.delete(entry.param);
       } else {
         params.set(entry.param, String(state[entry.field]));
@@ -5441,6 +5490,10 @@ function interpolate(template, payload) {
     setText('reviewerSelectLabel', t('reviewerSelectLabel'));
     setText('arbiterSelectLabel', t('arbiterSelectLabel'));
     setText('arbiterSelectHint', t('arbiterSelectHint'));
+    setText('settingsLeaveTitle', t('settingsLeaveTitle'));
+    setText('settingsLeaveBody', t('settingsLeaveBody'));
+    setText('settingsLeaveCancelBtn', t('settingsLeaveCancelBtn'));
+    setText('settingsLeaveConfirmBtn', t('settingsLeaveConfirmBtn'));
     setText('riskModalTitle', t('riskModalTitle'));
     setText('riskModalBody', t('riskModalBody'));
     setText('riskCancelBtn', t('riskCancelBtn'));
@@ -6570,19 +6623,30 @@ function getTaskTypeLabel() {
     showFieldError('overviewEditError', Boolean(message), message);
   }
 
+  /* FR-026 (5): a reviewer's settings view has no edit entry point at all, so
+     the button is removed from the DOM rather than merely disabled. */
+  function getSettingsEditBtn(id) {
+    var btn = document.getElementById(id);
+    if (btn && state.taskRole === 'reviewer') {
+      btn.remove();
+      return null;
+    }
+    return btn;
+  }
+
   function renderOverviewEditState() {
     var editable = isOverviewEditable();
-    var editBtn = document.getElementById('overviewEditBtn');
+    var editBtn = getSettingsEditBtn('overviewEditBtn');
     var saveBtn = document.getElementById('overviewSaveBtn');
     var cancelBtn = document.getElementById('overviewCancelBtn');
     var form = document.getElementById('overviewEditForm');
     var basicView = document.getElementById('basicInfoView');
     var hint = document.getElementById('overviewReadonlyHint');
 
-    if (!editBtn || !saveBtn || !cancelBtn || !form || !hint || !basicView) return;
+    if (!saveBtn || !cancelBtn || !form || !hint || !basicView) return;
 
-    editBtn.disabled = !editable;
-    editBtn.classList.toggle('hidden', state.overviewEditMode);
+    if (editBtn) editBtn.disabled = !editable;
+    if (editBtn) editBtn.classList.toggle('hidden', state.overviewEditMode);
     saveBtn.classList.toggle('hidden', !state.overviewEditMode);
     cancelBtn.classList.toggle('hidden', !state.overviewEditMode);
     form.classList.toggle('hidden', !state.overviewEditMode);
@@ -6697,16 +6761,16 @@ function getTaskTypeLabel() {
 
   function renderSamplingEditState() {
     var editable = isSamplingEditable();
-    var editBtn = document.getElementById('samplingEditBtn');
+    var editBtn = getSettingsEditBtn('samplingEditBtn');
     var saveBtn = document.getElementById('samplingSaveBtn');
     var cancelBtn = document.getElementById('samplingCancelBtn');
     var form = document.getElementById('samplingEditForm');
     var view = document.getElementById('samplingSummaryView');
     var hint = document.getElementById('samplingReadonlyHint');
 
-    if (!editBtn || !saveBtn || !cancelBtn || !form || !view || !hint) return;
-    editBtn.disabled = !editable;
-    editBtn.classList.toggle('hidden', state.samplingEditMode);
+    if (!saveBtn || !cancelBtn || !form || !view || !hint) return;
+    if (editBtn) editBtn.disabled = !editable;
+    if (editBtn) editBtn.classList.toggle('hidden', state.samplingEditMode);
     saveBtn.classList.toggle('hidden', !state.samplingEditMode);
     cancelBtn.classList.toggle('hidden', !state.samplingEditMode);
     form.classList.toggle('hidden', !state.samplingEditMode);
@@ -6919,16 +6983,16 @@ function getTaskTypeLabel() {
 
   function renderReviewEditState() {
     var editable = isReviewEditable();
-    var editBtn = document.getElementById('reviewEditBtn');
+    var editBtn = getSettingsEditBtn('reviewEditBtn');
     var saveBtn = document.getElementById('reviewSaveBtn');
     var cancelBtn = document.getElementById('reviewCancelBtn');
     var form = document.getElementById('reviewEditForm');
     var view = document.getElementById('reviewSummaryView');
     var hint = document.getElementById('reviewReadonlyHint');
 
-    if (!editBtn || !saveBtn || !cancelBtn || !form || !view || !hint) return;
-    editBtn.disabled = !editable;
-    editBtn.classList.toggle('hidden', state.reviewEditMode);
+    if (!saveBtn || !cancelBtn || !form || !view || !hint) return;
+    if (editBtn) editBtn.disabled = !editable;
+    if (editBtn) editBtn.classList.toggle('hidden', state.reviewEditMode);
     saveBtn.classList.toggle('hidden', !state.reviewEditMode);
     cancelBtn.classList.toggle('hidden', !state.reviewEditMode);
     form.classList.toggle('hidden', !state.reviewEditMode);
@@ -7160,16 +7224,16 @@ function getTaskTypeLabel() {
 
   function renderGuidelineEditState() {
     var editable = isGuidelineEditable();
-    var editBtn = document.getElementById('guidelineEditBtn');
+    var editBtn = getSettingsEditBtn('guidelineEditBtn');
     var saveBtn = document.getElementById('guidelineSaveBtn');
     var cancelBtn = document.getElementById('guidelineCancelBtn');
     var form = document.getElementById('guidelineEditForm');
     var view = document.getElementById('guidelineSummaryView');
     var hint = document.getElementById('guidelineReadonlyHint');
-    if (!editBtn || !saveBtn || !cancelBtn || !form || !view || !hint) return;
+    if (!saveBtn || !cancelBtn || !form || !view || !hint) return;
 
-    editBtn.disabled = !editable;
-    editBtn.classList.toggle('hidden', state.guidelineEditMode);
+    if (editBtn) editBtn.disabled = !editable;
+    if (editBtn) editBtn.classList.toggle('hidden', state.guidelineEditMode);
     saveBtn.classList.toggle('hidden', !state.guidelineEditMode);
     cancelBtn.classList.toggle('hidden', !state.guidelineEditMode);
     form.classList.toggle('hidden', !state.guidelineEditMode);
@@ -7341,16 +7405,16 @@ function getTaskTypeLabel() {
 
   function renderSettingsEditState() {
     var editable = isSettingsEditable();
-    var editBtn = document.getElementById('settingsEditBtn');
+    var editBtn = getSettingsEditBtn('settingsEditBtn');
     var saveBtn = document.getElementById('settingsSaveBtn');
     var cancelBtn = document.getElementById('settingsCancelBtn');
     var form = document.getElementById('settingsEditForm');
     var view = document.getElementById('settingsConfigView');
     var hint = document.getElementById('settingsReadonlyHint');
 
-    if (!editBtn || !saveBtn || !cancelBtn || !form || !view || !hint) return;
-    editBtn.disabled = !editable;
-    editBtn.classList.toggle('hidden', state.settingsEditMode);
+    if (!saveBtn || !cancelBtn || !form || !view || !hint) return;
+    if (editBtn) editBtn.disabled = !editable;
+    if (editBtn) editBtn.classList.toggle('hidden', state.settingsEditMode);
     saveBtn.classList.toggle('hidden', !state.settingsEditMode);
     cancelBtn.classList.toggle('hidden', !state.settingsEditMode);
     form.classList.toggle('hidden', !state.settingsEditMode);
@@ -7522,8 +7586,15 @@ function getTaskTypeLabel() {
     if (tabName === 'annotation-results') nextTab = 'annotation-results';
     if (tabName === 'annotation-progress') nextTab = 'annotation-progress';
     if (tabName === 'work-log') nextTab = 'work-log';
-    if (!silent && state.activeTab === 'overview' && nextTab !== 'overview') {
-      if (!cancelOverviewInlineEdits(false)) return false;
+    if (!silent && state.activeTab === 'settings' && nextTab !== 'settings') {
+      if (SETTINGS_SECTIONS.some(isSettingsSectionDirty)) {
+        openSettingsLeaveConfirm(function() {
+          cancelOverviewInlineEdits(true);
+          document.getElementById(TAB_BUTTON_IDS[nextTab]).click();
+        });
+        return false;
+      }
+      cancelOverviewInlineEdits(true);
     }
     if (state.taskRole === 'reviewer' && nextTab === 'member-management') {
       state.activeTab = 'overview';
@@ -7535,6 +7606,88 @@ function getTaskTypeLabel() {
     }
     state.activeTab = nextTab;
     syncUrlToViewState();
+    return true;
+  }
+
+  var TAB_BUTTON_IDS = {
+    overview: 'tabOverview',
+    settings: 'tabSettings',
+    'member-management': 'tabMemberManagement',
+    'annotation-progress': 'tabAnnotationProgress',
+    'annotation-results': 'tabAnnotationResults',
+    'work-log': 'tabWorkLog'
+  };
+  var pendingSettingsLeave = null;
+
+  function isSettingsSectionDirty(section) {
+    return Boolean(state[section.stateKey + 'EditMode'] && state[section.stateKey + 'Dirty']);
+  }
+
+  function openSettingsLeaveConfirm(onConfirm) {
+    pendingSettingsLeave = onConfirm;
+    var modal = document.getElementById('settingsLeaveModal');
+    modal.classList.add('show');
+    modal.setAttribute('aria-hidden', 'false');
+    if (window.LabelSuiteModalFocus) {
+      window.LabelSuiteModalFocus.open(modal, { trigger: document.activeElement, onClose: closeSettingsLeaveConfirm });
+    }
+  }
+
+  function closeSettingsLeaveConfirm() {
+    var modal = document.getElementById('settingsLeaveModal');
+    modal.classList.remove('show');
+    modal.setAttribute('aria-hidden', 'true');
+    pendingSettingsLeave = null;
+    if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(modal);
+  }
+
+  function renderSettingsSectionNav() {
+    var nav = document.getElementById('settingsSectionNav');
+    var panels = document.querySelectorAll('#settingsPanel .settings-section');
+    if (!nav) return;
+    nav.setAttribute('aria-label', t('settingsSectionNavLabel'));
+    SETTINGS_SECTIONS.forEach(function(section, index) {
+      var tab = document.getElementById('settingsTab-' + section.slug);
+      if (!tab) {
+        tab = document.createElement('button');
+        tab.type = 'button';
+        tab.id = 'settingsTab-' + section.slug;
+        tab.className = 'settings-nav-item';
+        tab.setAttribute('role', 'tab');
+        tab.dataset.section = section.slug;
+        nav.appendChild(tab);
+        if (panels[index]) {
+          panels[index].id = 'settingsSection-' + section.slug;
+          panels[index].setAttribute('role', 'tabpanel');
+          panels[index].setAttribute('aria-labelledby', tab.id);
+          tab.setAttribute('aria-controls', panels[index].id);
+        }
+      }
+      var selected = section.slug === state.settingsSection;
+      tab.textContent = t(section.labelKey);
+      tab.setAttribute('aria-selected', selected ? 'true' : 'false');
+      tab.setAttribute('tabindex', selected ? '0' : '-1');
+      if (panels[index]) panels[index].classList.toggle('hidden', !selected);
+    });
+  }
+
+  function selectSettingsSection(slug) {
+    if (slug === state.settingsSection) return true;
+    var current = SETTINGS_SECTIONS.filter(function(section) { return section.slug === state.settingsSection; })[0];
+    function commit() {
+      if (current) current.cancel(true);
+      state.settingsSection = slug;
+      syncUrlToViewState();
+      renderSettingsSectionNav();
+    }
+    if (current && isSettingsSectionDirty(current)) {
+      openSettingsLeaveConfirm(function() {
+        commit();
+        document.getElementById('settingsTab-' + slug).focus();
+      });
+      return false;
+    }
+    commit();
     return true;
   }
 
@@ -7588,6 +7741,7 @@ function getTaskTypeLabel() {
     /* FR-022(3): member changes made in the members tab must show up in the
        overview action row (member gap) when returning to it. */
     if (overviewActive) renderPublishActions();
+    renderSettingsSectionNav();
   }
 
   function renderMemberTable() {
@@ -11442,6 +11596,28 @@ function getTaskTypeLabel() {
       if (e.target.id === 'retryIaaComputationBtn') {
         retryIaaComputation();
       }
+    });
+
+    document.getElementById('settingsSectionNav').addEventListener('click', function(e) {
+      var tab = e.target.closest('[role="tab"]');
+      if (tab) selectSettingsSection(tab.dataset.section);
+    });
+
+    document.getElementById('settingsSectionNav').addEventListener('keydown', function(e) {
+      var step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+      if (!step || e.altKey || e.ctrlKey || e.metaKey) return;
+      var index = SETTINGS_SECTIONS.findIndex(function(section) { return section.slug === state.settingsSection; });
+      var next = SETTINGS_SECTIONS[(index + step + SETTINGS_SECTIONS.length) % SETTINGS_SECTIONS.length];
+      e.preventDefault();
+      if (selectSettingsSection(next.slug)) document.getElementById('settingsTab-' + next.slug).focus();
+    });
+
+    document.getElementById('settingsLeaveCancelBtn').addEventListener('click', closeSettingsLeaveConfirm);
+
+    document.getElementById('settingsLeaveConfirmBtn').addEventListener('click', function() {
+      var proceed = pendingSettingsLeave;
+      closeSettingsLeaveConfirm();
+      if (proceed) proceed();
     });
 
     document.getElementById('riskCancelBtn').addEventListener('click', function() {
