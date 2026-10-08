@@ -18,6 +18,7 @@ import {
   OFFICIAL_RUN_ASSIGNMENTS,
   OFFICIAL_RUN_RECORD_IDS,
 } from './fixtures/build-xrole-patch';
+import { openSettingsSection } from '../task-management/_task-detail-settings-helpers';
 
 /* Cross-role canonical journey (issue #212, PR-B1 + PR-B2).
  *
@@ -340,6 +341,7 @@ test('XROLE-03: guideline uploaded by the project leader is readable in the anno
   await plPage.goto(`/pages/task-management/task-detail.html?task_role=project_leader&task_id=${fixtureTaskId}`);
   await plPage.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
 
+  await openSettingsSection(plPage, 'guideline');
   await plPage.evaluate(() => (document.getElementById('guidelineEditBtn') as HTMLButtonElement | null)?.click());
   await expect(plPage.locator('#guidelineEditForm')).not.toHaveClass(/hidden/);
 
@@ -396,12 +398,14 @@ test.describe('XROLE-04: min_annotators is not enforced against actual active me
     await page.goto(`/pages/task-management/task-detail.html?task_role=project_leader&task_id=${gapTaskId}`);
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
 
+    await openSettingsSection(page, 'sampling');
     await page.locator('#samplingEditBtn').click();
     await page.fill('#samplingValue', SAMPLING_VALUE);
     await page.fill('#minAnnotatorsInput', '3');
     await page.locator('#samplingSaveBtn').click();
 
     await expect(page.locator('#statusBadge')).toHaveText('草稿');
+    await page.locator('#tabOverview').click();
     await page.locator('#publishDryRunBtn').click();
     // Desired behavior: publish should be blocked (only 2 active annotators
     // exist for a minAnnotators=3 requirement). Actual behavior: no such
@@ -448,13 +452,14 @@ test('XROLE-06: project leader disables an existing member (w4 §2 step 5 -- cov
 });
 
 test('XROLE-07: project leader publishes the dry run round (checkpoint A: annotation-list count reconciles with sampling settings)', async () => {
-  await plPage.locator('#tabOverview').click();
+  await openSettingsSection(plPage, 'sampling');
   await plPage.locator('#samplingEditBtn').click();
   await plPage.fill('#samplingValue', SAMPLING_VALUE);
   await plPage.fill('#minAnnotatorsInput', ACTIVE_ANNOTATOR_COUNT);
   await plPage.locator('#samplingSaveBtn').click();
 
   await expect(plPage.locator('#statusBadge')).toHaveText('草稿');
+  await plPage.locator('#tabOverview').click();
   await plPage.locator('#publishDryRunBtn').click();
   // Round 1 is deterministically 'failed' (getTrialRoundScenario(),
   // task-detail.html:4832-4869 scenarios array) -- status therefore moves

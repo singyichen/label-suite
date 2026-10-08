@@ -3,6 +3,7 @@
  *   SC-007
  */
 import { test, expect } from '@playwright/test';
+import { openSettingsSection } from './_task-detail-settings-helpers';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html?task_id=T001';
 
@@ -98,6 +99,7 @@ test.describe('Member management and review settings at mobile width (RESP-03)',
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
     await page.locator('#loadingSkeleton').waitFor({ state: 'hidden', timeout: PANEL_LOAD_TIMEOUT });
 
+    await openSettingsSection(page, 'review');
     await page.locator('#reviewEditBtn').click();
 
     // Roster model (issue #596): the 審核員 / 仲裁者 checklists replace the

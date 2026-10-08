@@ -3,6 +3,7 @@
  *   FR-010o, FR-010o-1, FR-010q, FR-014a, SC-018
  */
 import { test, expect } from '@playwright/test';
+import { openSettingsSection } from './_task-detail-settings-helpers';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 
@@ -13,6 +14,7 @@ test.describe('Task detail sampling edit state', () => {
     await expect(page.locator('#executionTitle')).toHaveText('任務狀態與執行控制');
     await expect(page.locator('#samplingTitle')).toHaveText('抽樣設定');
 
+    await openSettingsSection(page, 'sampling');
     const editBtn = page.locator('#samplingEditBtn');
     const saveBtn = page.locator('#samplingSaveBtn');
     const cancelBtn = page.locator('#samplingCancelBtn');
@@ -80,6 +82,7 @@ test.describe('Task detail sampling edit state', () => {
     await expect(summaryRows.nth(1)).toContainText('Triple F1');
     await expect(summaryRows.nth(1)).toContainText('0.75');
 
+    await openSettingsSection(page, 'sampling');
     await page.locator('#samplingEditBtn').click();
 
     const iaaRows = page.locator('#samplingIaaEditRows .sampling-iaa-type-row');
@@ -98,6 +101,7 @@ test.describe('Task detail sampling edit state', () => {
     await expect(summaryRows).toHaveCount(1);
     await expect(summaryRows.nth(0)).toContainText('不適用');
 
+    await openSettingsSection(page, 'sampling');
     await page.locator('#samplingEditBtn').click();
 
     const iaaRows = page.locator('#samplingIaaEditRows .sampling-iaa-type-row');
@@ -108,6 +112,7 @@ test.describe('Task detail sampling edit state', () => {
 
   test('edits per-output-type target agreement override, validates 0..1 bounds, and persists on save', async ({ page }) => {
     await page.goto(`${TASK_DETAIL_URL}?task_id=T001`);
+    await openSettingsSection(page, 'sampling');
     await page.locator('#samplingEditBtn').click();
 
     const overrideInput = page.locator('#samplingIaaEditRows .iaa-override-input').first();
@@ -136,6 +141,7 @@ test.describe('Task detail sampling edit state', () => {
 
     await expect(page.locator('#samplingIaaSummaryList .kv-dl-row').first()).toContainText('Not applicable');
 
+    await openSettingsSection(page, 'sampling');
     await page.locator('#samplingEditBtn').click();
     await expect(page.locator('#samplingIaaEditRows .sampling-iaa-type-row').first()).toContainText('Not applicable');
   });
@@ -171,6 +177,7 @@ test.describe('Task detail sampling edit state', () => {
 
   test('leaves the target-agreement override input empty for sequence_tagging in the sampling edit form (FR-012L, FR-043 §2)', async ({ page }) => {
     await page.goto(`${TASK_DETAIL_URL}?task_id=T006`);
+    await openSettingsSection(page, 'sampling');
     await page.locator('#samplingEditBtn').click();
 
     const iaaRows = page.locator('#samplingIaaEditRows .sampling-iaa-type-row');
@@ -199,6 +206,7 @@ test.describe('Task detail sampling edit state', () => {
   // expected to fail against the current markup/CSS.
   test('sampling edit isolation block has a single border layer with no extra divider', async ({ page }) => {
     await page.goto(`${TASK_DETAIL_URL}?task_id=T001`);
+    await openSettingsSection(page, 'sampling');
     await page.locator('#samplingEditBtn').click();
 
     // #reviewEditForm has its own, in-scope `<hr class="panel-divider">`
@@ -237,6 +245,7 @@ test.describe('Task detail sampling edit state', () => {
 
   test('sampling edit isolation block keeps a single border layer and a visible risk message after disabling isolation', async ({ page }) => {
     await page.goto(`${TASK_DETAIL_URL}?task_id=T001`);
+    await openSettingsSection(page, 'sampling');
     await page.locator('#samplingEditBtn').click();
     await expect(page.locator('#isolationToggle')).toBeChecked();
 
@@ -267,6 +276,7 @@ test.describe('Task detail sampling edit state', () => {
   test('sampling edit isolation block has a single border layer with no horizontal overflow at a narrow viewport', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 800 });
     await page.goto(`${TASK_DETAIL_URL}?task_id=T001`);
+    await openSettingsSection(page, 'sampling');
     await page.locator('#samplingEditBtn').click();
 
     const isolationWrap = page.locator('.isolation-wrap');

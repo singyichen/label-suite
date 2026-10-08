@@ -3,6 +3,7 @@
  *   FR-014, FR-014b, FR-014k, FR-014l, FR-014l-1, FR-014l-2, SC-011
  */
 import { test, expect } from '@playwright/test';
+import { openSettingsSection } from './_task-detail-settings-helpers';
 import path from 'path';
 
 /**
@@ -23,6 +24,7 @@ const PANEL_LOAD_TIMEOUT = 15000;
 
 async function openOverviewEdit(page: import('@playwright/test').Page, taskId: string) {
   await page.goto(`${TASK_DETAIL_URL}?task_id=${taskId}`);
+  await openSettingsSection(page, 'basic');
   const editBtn = page.locator('#overviewEditBtn');
   await expect(editBtn).toBeEnabled({ timeout: PANEL_LOAD_TIMEOUT });
   await editBtn.click();
@@ -31,6 +33,7 @@ async function openOverviewEdit(page: import('@playwright/test').Page, taskId: s
 
 async function openSettingsEdit(page: import('@playwright/test').Page, taskId: string) {
   await page.goto(`${TASK_DETAIL_URL}?task_id=${taskId}`);
+  await openSettingsSection(page, 'labeling');
   const editBtn = page.locator('#settingsEditBtn');
   await expect(editBtn).toBeEnabled({ timeout: PANEL_LOAD_TIMEOUT });
   await editBtn.click();
@@ -44,7 +47,9 @@ test.describe('Task detail config parity with task-new Step 1/2', () => {
     await expect(page.locator('#pageTitle')).toHaveText('醫療實體與關係辨識', { timeout: PANEL_LOAD_TIMEOUT });
     await expect(page.locator('#bcCurrent')).toHaveText('T010');
     await expect(page.locator('#statusBadge')).toContainText('草稿');
+    await openSettingsSection(page, 'basic');
     await expect(page.locator('#overviewEditBtn')).toBeEnabled();
+    await openSettingsSection(page, 'labeling');
     await expect(page.locator('#settingsEditBtn')).toBeEnabled();
   });
 
@@ -132,6 +137,7 @@ test.describe('Task detail config parity with task-new Step 1/2', () => {
     await page.goto(`${TASK_DETAIL_URL}?task_id=T001`);
     await expect(page.locator('html')).toHaveAttribute('lang', 'en', { timeout: PANEL_LOAD_TIMEOUT });
 
+    await openSettingsSection(page, 'basic');
     const editBtn = page.locator('#overviewEditBtn');
     await expect(editBtn).toBeEnabled();
     await editBtn.click();
@@ -146,7 +152,9 @@ test.describe('Task detail config parity with task-new Step 1/2', () => {
 
   test('non-draft status keeps both surfaces read-only (T001)', async ({ page }) => {
     await page.goto(`${TASK_DETAIL_URL}?task_id=T001&status=official_run_in_progress`);
+    await openSettingsSection(page, 'basic');
     await expect(page.locator('#overviewEditBtn')).toBeDisabled({ timeout: PANEL_LOAD_TIMEOUT });
+    await openSettingsSection(page, 'labeling');
     await expect(page.locator('#settingsEditBtn')).toBeDisabled();
     await expect(page.locator('#overviewEditForm')).toHaveClass(/hidden/);
     await expect(page.locator('#settingsEditForm')).toHaveClass(/hidden/);

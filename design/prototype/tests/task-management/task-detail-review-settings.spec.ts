@@ -11,6 +11,7 @@
  * stale-arbiter cleanup on member disable, and the language toggle.
  */
 import { test, expect } from '@playwright/test';
+import { openSettingsSection } from './_task-detail-settings-helpers';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 const PANEL_LOAD_TIMEOUT = 15000;
@@ -18,6 +19,7 @@ const PANEL_LOAD_TIMEOUT = 15000;
 test.describe('Task detail review settings', () => {
   test('cancel with a dirty draft asks for confirmation and discards changes', async ({ page }) => {
     await page.goto(TASK_DETAIL_URL);
+    await openSettingsSection(page, 'review');
     await page.locator('#reviewEditBtn').click();
 
     await page
@@ -35,6 +37,7 @@ test.describe('Task detail review settings', () => {
   test('guards tab switches against unsaved review-setting changes', async ({ page }) => {
     await page.goto(TASK_DETAIL_URL);
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
+    await openSettingsSection(page, 'review');
     await page.locator('#reviewEditBtn').click();
     await page
       .locator('#reviewerOptionList .reviewer-option', { hasText: '王小明' })
@@ -70,6 +73,7 @@ test.describe('Task detail review settings', () => {
     });
     await page.goto(TASK_DETAIL_URL);
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
+    await openSettingsSection(page, 'review');
     await page.locator('#reviewEditBtn').click();
     await page
       .locator('#arbiterOptionList .arbiter-option', { hasText: '王小明' })

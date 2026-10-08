@@ -38,6 +38,7 @@
  * refuses a unit whose reviewer has not submitted (pending).
  */
 import { test, expect, type Page } from '@playwright/test';
+import { openSettingsSection } from './_task-detail-settings-helpers';
 import { promises as fs } from 'node:fs';
 import { buildWorkspaceUrl, skipGuidelineModal } from '../annotation/_workspace-helpers';
 import {
@@ -599,6 +600,7 @@ test.describe('Review-settings save keeps both roster sources in sync (review M1
   async function openEdit(page: Page, taskId = 'T013') {
     await page.goto(`${TASK_DETAIL_URL}?task_id=${taskId}`);
     await expect(page.locator('#statusBadge')).toBeAttached();
+    await openSettingsSection(page, 'review');
     await page.locator('#reviewEditBtn').click();
     await expect(page.locator('#reviewEditForm')).not.toHaveClass(/hidden/);
   }
@@ -629,6 +631,7 @@ test.describe('Review-settings save keeps both roster sources in sync (review M1
     await page.locator(OPTIONS).first().locator('input').check();
     await page.locator('#reviewSaveBtn').click();
     await expect(page.locator('#reviewEditForm')).toHaveClass(/hidden/);
+    await openSettingsSection(page, 'review');
     await page.locator('#reviewEditBtn').click();
     await expect(page.locator('#reviewEditForm')).not.toHaveClass(/hidden/);
     const boxes = page.locator(`${OPTIONS} input`);

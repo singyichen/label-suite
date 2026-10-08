@@ -3,12 +3,14 @@
  *   FR-014a, FR-014i, FR-014l, FR-014l-1, FR-014l-2, FR-014m
  */
 import { test, expect } from '@playwright/test';
+import { openSettingsSection } from './_task-detail-settings-helpers';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 const PANEL_LOAD_TIMEOUT = 15000;
 
 async function openSettingsEdit(page: import('@playwright/test').Page, taskId: string) {
   await page.goto(`${TASK_DETAIL_URL}?task_id=${taskId}`);
+  await openSettingsSection(page, 'labeling');
   const editBtn = page.locator('#settingsEditBtn');
   await expect(editBtn).toBeEnabled({ timeout: PANEL_LOAD_TIMEOUT });
   await editBtn.click();
@@ -39,6 +41,7 @@ test.describe('Task detail settings edit state', () => {
     await page.goto(`${TASK_DETAIL_URL}?task_id=T001`);
     await expect(page.locator('html')).toHaveAttribute('lang', 'en', { timeout: PANEL_LOAD_TIMEOUT });
 
+    await openSettingsSection(page, 'labeling');
     const editBtn = page.locator('#settingsEditBtn');
     await expect(editBtn).toBeEnabled();
     await editBtn.click();

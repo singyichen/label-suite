@@ -43,6 +43,7 @@
  * ---------------------------------------------------------------------
  */
 import { test, expect, type Page } from '@playwright/test';
+import { openSettingsSection } from './_task-detail-settings-helpers';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 const PANEL_LOAD_TIMEOUT = 15000;
@@ -58,6 +59,7 @@ async function getTaskMembers(page: Page): Promise<TaskMember[]> {
 
 async function openReviewEdit(page: Page) {
   await page.goto(TASK_DETAIL_URL);
+  await openSettingsSection(page, 'review');
   await page.locator('#reviewEditBtn').click();
 }
 
@@ -289,6 +291,7 @@ test.describe('Task detail reviewer identity format — opaque user id, not Emai
 
     await page.locator('#tabOverview').click();
     await expect(page.locator('#overviewPanel')).not.toHaveClass(/hidden/);
+    await openSettingsSection(page, 'review');
     await page.locator('#reviewEditBtn').click();
 
     const alexOption = page.locator('#reviewerOptionList .reviewer-option', { hasText: 'Alex Wang' });

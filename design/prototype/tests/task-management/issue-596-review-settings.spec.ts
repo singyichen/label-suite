@@ -53,11 +53,13 @@
  * ---------------------------------------------------------------------
  */
 import { test, expect } from '@playwright/test';
+import { openSettingsSection } from './_task-detail-settings-helpers';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 
 async function openReviewEdit(page: import('@playwright/test').Page) {
   await page.goto(TASK_DETAIL_URL);
+  await openSettingsSection(page, 'review');
   await page.locator('#reviewEditBtn').click();
 }
 
@@ -65,6 +67,7 @@ test.describe('Task detail review settings — single-owner relay roster (issue 
   // FR-010s: view mode shows exactly two fields, 審核員 and 仲裁者.
   test('view mode shows exactly two fields: 審核員 and 仲裁者', async ({ page }) => {
     await page.goto(TASK_DETAIL_URL);
+    await openSettingsSection(page, 'review');
 
     await expect(page.locator('#reviewSummaryView .kv-dl-row')).toHaveCount(2);
 
@@ -226,6 +229,7 @@ test.describe('Task detail review settings — single-owner relay roster (issue 
     await expect(page.locator('#valueArbiterIdsControl')).not.toContainText('停用');
 
     // Re-enter edit mode and clear all arbiters to hit the empty-state text.
+    await openSettingsSection(page, 'review');
     await page.locator('#reviewEditBtn').click();
     const arbiterCheckboxes = page.locator('#arbiterOptionList .arbiter-option input');
     const arbiterCount = await arbiterCheckboxes.count();
