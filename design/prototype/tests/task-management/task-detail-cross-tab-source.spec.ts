@@ -60,14 +60,15 @@ async function openWorkLogTab(page: Page, taskId: string) {
   await page.locator('#tabWorkLog').click();
 }
 
-/* Extracts the "已用 X / Y" pair from Overview's round-history summary
- * (#roundHistorySummary, task-detail.panels/overview.html:501) -- the
- * surface design.md D1 names as reading a disconnected generic default. */
+/* Extracts the "used / total" pair from Overview's 已用試標 metric
+ * (#trialUsedValue, FR-027(2); it replaced the old #roundHistorySummary
+ * "已用 X / Y 筆試標" line) -- the surface design.md D1 names as reading a
+ * disconnected generic default. */
 async function readOverviewUsedTrialCount(page: Page): Promise<number> {
-  const text = (await page.locator('#roundHistorySummary').textContent()) || '';
-  const match = text.match(/已用\s*(\d+)\s*\/\s*(\d+)/);
+  const text = (await page.locator('#trialUsedValue').textContent()) || '';
+  const match = text.match(/^\s*(\d+)\s*\/\s*(\d+)\s*$/);
   if (!match) {
-    throw new Error(`readOverviewUsedTrialCount: could not parse "已用 X / Y" out of "${text}"`);
+    throw new Error(`readOverviewUsedTrialCount: could not parse "X / Y" out of "${text}"`);
   }
   return Number(match[1]);
 }

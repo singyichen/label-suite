@@ -53,8 +53,12 @@ async function expectTrialHistoryWithFiveOfficialItems(
   await expect(page.locator('#trialRoundTimeline')).toContainText('R1');
 
   await expect(page.locator('#trialRoundValue')).toHaveText(currentRound);
-  await expect(page.locator('#trialRoundsUsedValue')).toHaveText(String(rounds));
-  await expect(page.locator('#roundHistorySummary')).toHaveText(`已用 ${rounds} / ${total} 筆試標`);
+  // FR-027(2) drops the 已完成試標回合 metric: every history round is a completed
+  // (non-進行中) row of the round table, and 已用試標 reads "used / total" samples.
+  await expect(
+    page.locator('#trialRoundTimeline .round-timeline-item').filter({ hasNotText: '進行中' }),
+  ).toHaveCount(rounds);
+  await expect(page.locator('#trialUsedValue')).toHaveText(`${rounds} / ${total}`);
   await expect(page.locator('#officialPoolValue')).toHaveText('5');
   await expect(page.locator('#splitLegendDynamic')).not.toContainText('R1');
   await expect(page.locator('#splitLegendDynamic')).toContainText('正式 5筆');
@@ -104,12 +108,15 @@ test.describe('Issue #887 / #1120 — official-run fixtures keep the pool and of
     await openTaskDetail(page, 'T016');
     await page.locator('#langToggle').click();
 
-    await expect(page.locator('#trialRoundLabel')).toHaveText('Trial round');
-    await expect(page.locator('#trialRoundsUsedLabel')).toHaveText('Trial rounds used');
+    await expect(page.locator('#trialRoundLabel')).toHaveText('Current round');
+    await expect(page.locator('#trialUsedLabel')).toHaveText('Trial used');
     await expect(page.locator('#officialPoolLabel')).toHaveText('Official pool');
     await expect(page.locator('#trialRoundValue')).toHaveText('R2');
-    await expect(page.locator('#trialRoundsUsedValue')).toHaveText('2');
-    await expect(page.locator('#roundHistorySummary')).toHaveText('2 / 7 items used in trial');
+    // FR-027(2): no 已完成試標回合 metric; both history rounds stay completed rows.
+    await expect(
+      page.locator('#trialRoundTimeline .round-timeline-item').filter({ hasNotText: 'In progress' }),
+    ).toHaveCount(2);
+    await expect(page.locator('#trialUsedValue')).toHaveText('2 / 7');
     await expect(page.locator('#officialPoolValue')).toHaveText('5');
     await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(2);
   });
@@ -125,8 +132,9 @@ test.describe('Issue #887 / #1120 — official-run fixtures keep the pool and of
     await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(1);
     await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toContainText('R1');
     await expect(page.locator('#trialRoundValue')).toHaveText('R1');
-    await expect(page.locator('#trialRoundsUsedValue')).toHaveText('1');
-    await expect(page.locator('#roundHistorySummary')).toHaveText('已用 1 / 5 筆試標');
+    // FR-027(2): no 已完成試標回合 metric. The fallback R1 is the single round-table row and
+    // 已用試標 reads its one sample out of the five-item dataset.
+    await expect(page.locator('#trialUsedValue')).toHaveText('1 / 5');
     await expect(page.locator('#officialPoolValue')).toHaveText('4');
   });
 });

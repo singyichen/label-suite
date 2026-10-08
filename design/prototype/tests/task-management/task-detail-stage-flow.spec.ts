@@ -68,20 +68,21 @@ test('keeps the 4-stage stepper while showing R1 into a waiting-confirmation-gat
   await expect(page.locator('#trialDecisionCard')).toHaveCount(0);
   await expect(page.locator('#executionStageTitle')).toHaveCount(0);
   await expect(page.locator('#executionStageDesc')).toHaveCount(0);
-  await expect(page.locator('.exec-stage-banner #trialDecisionTitle')).toHaveText('尚未建立試標回合');
-  await expect(page.locator('.exec-stage-banner #trialDecisionDesc')).toHaveText('先建立第一個試標回合，確認一致性門檻是否合理，再決定是否進入正式標記。');
+  await expect(page.locator('.ov-verdict #trialDecisionTitle')).toHaveText('尚未建立試標回合');
+  await expect(page.locator('.ov-verdict #trialDecisionDesc')).toHaveText('先建立第一個試標回合，確認一致性門檻是否合理，再決定是否進入正式標記。');
 
-  const stopRow = page.locator('#execStopRow');
+  const verdictCta = page.locator('.ov-verdict .ov-verdict-cta');
   const dryRunBtn = page.locator('#publishDryRunBtn');
   await expect(dryRunBtn).toHaveText('新增試標回合 R1');
-  await expect(stopRow.locator('#publishDryRunBtn')).toHaveText('新增試標回合 R1');
+  // FR-027(1): the CTA lives in the verdict row (it used to sit in the stop-conditions row).
+  await expect(verdictCta.locator('#publishDryRunBtn')).toHaveText('新增試標回合 R1');
 
   await publishDryRunRound(page);
 
   await expect(page.locator('#statusStepper .step-current .step-label-wrap')).toHaveText('試標階段');
   // FR-013(1)/D2: dry_run_in_progress no longer suggests adding the next
   // round -- that action is disabled until this round finishes.
-  await expect(page.locator('.exec-stage-banner #trialDecisionTitle')).not.toHaveText('R1 未達標，建議新增下一個試標回合');
+  await expect(page.locator('.ov-verdict #trialDecisionTitle')).not.toHaveText('R1 未達標，建議新增下一個試標回合');
   await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(1);
   await expect(page.locator('#trialRoundTimeline .round-timeline-item').first()).toContainText('R1');
   // D2: the round record is written at publish time with only round
@@ -93,9 +94,10 @@ test('keeps the 4-stage stepper while showing R1 into a waiting-confirmation-gat
   await expect(r1Badge).toHaveText('進行中');
   await expect(r1Badge).not.toHaveText('未通過');
   await expect(r1Badge).not.toHaveText('已通過');
+  // FR-027(4): the old "IAA 無法計算" metrics chip is now the round table's IAA column.
   await expect(
-    page.locator('#trialRoundTimeline .round-timeline-item').first().locator('.round-timeline-metrics')
-  ).toContainText('IAA 無法計算');
+    page.locator('#trialRoundTimeline .round-timeline-item').first().locator('td').nth(3)
+  ).toHaveText('無法計算');
   await expect(page.locator('#splitLegendDynamic')).toContainText('R1 1筆');
   await expect(page.locator('#splitLegendDynamic')).toContainText('正式 4筆');
 

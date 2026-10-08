@@ -34,9 +34,11 @@ test('run control stepper and metric labels translate to english', async ({ page
     'Official run in progress',
     'Completed',
   ]);
-  await expect(page.locator('#trialRoundLabel')).toHaveText('Trial round');
-  await expect(page.locator('#trialRoundsUsedLabel')).toHaveText('Trial rounds used');
-  await expect(page.locator('#currentAgreementLabel')).toHaveText('Latest round IAA');
+  await expect(page.locator('#trialRoundLabel')).toHaveText('Current round');
+  // FR-027(2): the 已完成試標回合 metric is gone, 已用試標 takes its slot in the row.
+  await expect(page.locator('#trialRoundsUsedLabel')).toHaveCount(0);
+  await expect(page.locator('#trialUsedLabel')).toHaveText('Trial used');
+  await expect(page.locator('#currentAgreementLabel')).toHaveText('Latest IAA');
   await expect(page.locator('#officialPoolLabel')).toHaveText('Official pool');
   await expect(page.locator('#stopConditionTitle')).toHaveText('Stop conditions');
 });
