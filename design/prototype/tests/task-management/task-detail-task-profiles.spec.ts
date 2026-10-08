@@ -414,6 +414,11 @@ test.describe('Task detail profile mapping', () => {
       path.join(__dirname, 'three-column-dataset.json'),
     );
     await expect(page.locator('#datasetFileList .upload-file-name')).toContainText('three-column-dataset.json');
+    /* Save-then-rederive path: FR-026 (2) forbids carrying an unsaved basic-info
+       edit into another section, so the replaced dataset is saved first and the
+       labels must be re-derived from it when 標記設定 opens for editing. */
+    await page.locator('#overviewSaveBtn').click();
+    await expect(page.locator('#overviewEditForm')).toHaveClass(/hidden/);
 
     /* FR-002c-8 auto-infers sentence_a/sentence_b as Input on load (name-hint
        match on "sentence"), so the generic-name fallback ("句子 A") no longer
