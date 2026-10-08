@@ -1,7 +1,7 @@
 ---
 功能分支: feat/database-mvp-worklog-export
 建立日期: 2026-04-20
-版本: 8.0.1
+版本: 9.0.0
 狀態: Draft
 ---
 
@@ -177,6 +177,10 @@ Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、�
 25. **AC-1.25**（**v4.3.0 新增**，issue #1101）：**Given** 日曆介面已透過鍵盤開啟（trigger 上按 Enter 或 Space），**When** 使用者以方向鍵移動日期焦點、以 Enter 完成起訖選取，**Then** 選取完成後控制項顯示新區間，焦點送回觸發元件；**When** 使用者改以 Esc 關閉日曆介面，**Then** 尚未完成的選取被捨棄、不套用任何變更，焦點送回觸發元件（FR-007c）。
 26. **AC-1.26**（**v5.0.0 新增**，issue #1120）：**Given** 一個任務同時存在已結束的試標回合與一個進行中的回合，**When** `project_leader` 依序檢視概覽、成員、進度、結果、工時五個頁籤，**Then** 各頁籤呈現的計數皆由同一組 `task_id × cycle_id × run_type × round_no` 推導、數值彼此一致，畫面不出現其他任務的回合、樣本數、工時或匯出歷史紀錄；該任務無工時或匯出紀錄時，對應區塊呈現空狀態而非其他任務的示範資料（FR-010u）。
 27. **AC-1.27**（**v5.0.0 新增**，issue #1120）：**Given** 一個任務之標記 assignment、審核單位與爭議項三者數量互不相等，**When** `project_leader` 檢視進度與結果頁籤，**Then** 提交進度與定案進度分別命名呈現、各自的分子分母可辨識其單位，畫面不存在將標記 assignment 數、審核單位數與爭議項數相加後的單一數字，且歷史回合與當前回合的計數分列呈現、未交叉累計（FR-010u）。
+28. **AC-1.28**（v9.0.0，issue #1160）：**Given** 同一成員同日在同一任務登入兩次，且第一次登入含兩個不同 run 的工作區間，**When** 負責人檢視工時紀錄，**Then** `account_session_id × task_id × run_id × membership_id × work_kind × report_date` 各自成列，同日兩次登入與不同 run 均不合併；只有可信區間才提供工作時長（FR-007d、FR-010u）。
+29. **AC-1.29**（v9.0.0，issue #1160）：**Given** 一段可觀測工作區間跨日且登入工作階段未能明確登出，**When** 以 `Asia/Taipei` 日期篩選工時，**Then** 原始 UTC 區間不拆列，報表於當地午夜裁切至兩日；登出及上線時長顯示「未知」，不得由 `revoked_at` 推估（FR-007d）。
+30. **AC-1.30**（v9.0.0，issue #1160）：**Given** 工作頁面失焦或心跳失聯，**When** 服務結束工作區間，**Then** 失聯段以最後有效 `last_seen_at` 關閉，未觀測等待時間不計入工時；有合法完成事件但無可信區間時筆數保留、工作時長與速度顯示「未知」（FR-007d、FR-007b）。
+31. **AC-1.31**（v9.0.0，issue #1160）：**Given** 一次審核送出產生多個 outKey 決策與後續修訂，**When** 計算該 session/run 的完成筆數，**Then** 同一審核 submission head 只算一個審核單位，仲裁依終局爭議鍵去重，標記 assignment 另算；三類數量不得相加為單一速度（FR-007b、FR-010u）。
 
 **介面定義（需與 IA 導覽語意一致）**：
 
@@ -338,15 +342,15 @@ Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、�
     - 篩選：日期區間（以單一日期區間選擇器呈現，見 FR-007c）、標記階段（Annotation stage：Dry Run / Official Run）
     - `project_leader` 額外可用：成員篩選
   - 區塊 2：`工時明細表`
-    - 版面順序：匯總卡片（總工時、總標記筆數、總審核筆數、加權平均速度）固定顯示於明細表上方；`加權平均速度` 卡片附「每筆平均耗時」次要說明列
+    - 版面順序：匯總卡片（總工時、總標記筆數、總審核筆數、各類工作速度）固定顯示於明細表上方；速度須逐類顯示單位，不提供跨類別單一平均
     - 欄位：日期、成員、角色（標記員/審核員）、登入／登出時間、上線時長、工作時長、標記筆數、審核筆數、仲裁筆數、平均速度、標記階段
     - 筆數三欄依角色適用性顯示：`標記筆數` 僅適用標記員；`審核筆數` 與 `仲裁筆數` 僅適用審核員；角色不適用的欄位顯示 `—`
-    - `登入／登出時間`：顯示實際登入時間與實際登出時間
-    - `上線時長`：由實際登入時間與實際登出時間計算出的時間差，使用「小時 + 分」呈現（例如：`3 小時 12 分`）
-    - `工作時長`：計算實際標記總時數，使用「小時 + 分」呈現（例如：`3 小時 12 分`）
+    - `登入／登出時間`：登入取 `account_session.started_at`；登出只取可驗證明確登出的 `logged_out_at`，無值顯示「未知」，不得以安全作廢時間代替
+    - `上線時長`：僅有明確登出時，以該 session 的登入至登出差按報表日期切割並以「小時 + 分」呈現；它不是實際連線或工作證據，同一 session 在多個任務或 run 列展示時不得相加；無明確登出顯示「未知」
+    - `工作時長`：由可觀測前景工作區間按 `Asia/Taipei` 日期裁切後計算，使用「小時 + 分」呈現；完成事件無可信區間時顯示「未知」
     - 角色顯示：以 badge 呈現任務角色，`reviewer`（審核員）使用靛藍色（`role-badge-reviewer`：`color-primary` / `color-primary-soft-bg` / `color-primary-border`），`annotator`（標記員）使用綠色（`role-badge-annotator`：`color-success` / `color-success-bg` / `color-success-border`）；兩色須明確可區分，成員管理與工時明細表沿用同一套 CSS class
     - 標記階段顯示：以 badge 呈現，樣式對齊 task-list「標記階段」badge（`試標` / `正式標記`；英文：`Dry Run` / `Official Run`）
-    - 匯總：當前篩選條件下總工時、總標記筆數、總審核筆數、加權平均速度與每筆平均耗時；其中 `總工時` 顯示格式需與 `工作時長` / `上線時長` 一致，使用「小時 + 分」呈現；加權平均速度與每筆平均耗時以三類筆數總和計算
+    - 匯總：當前篩選條件下總工時、總標記筆數、總審核筆數與各類工作速度；總工時只加總互不重疊的可信區間，以「小時 + 分」呈現；標記件／時、審核單位／時與仲裁項／時分開計算，無可信分母顯示「—」
   - 區塊 3：`異常提醒`
     - 顯示：速度異常（過快/過慢）
   - 角色可見性：
@@ -604,8 +608,9 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 - **FR-006**：只有 `reviewer` membership、沒有通過 `task.members.manage` 的 active `project_leader` membership 者，不可見 `member-management` tab；若以直連方式進入，系統必須導回 `overview` 並提示無權限。同時有兩種角色者只能經由實際有效的 leader membership 與矩陣格取得管理能力，不能由 reviewer role 本身推導。
 - **FR-007**：`reviewer` 的 `work-log` 僅可查看自己的資料。
 - **FR-007a**：`工時明細表` 底部必須提供與 `task-list` 一致的 footer pagination，至少包含總筆數 / 目前頁數、每頁筆數切換與上一頁 / 下一頁 / 頁碼按鈕；其 `page` / `pageSize` 狀態（`wlPage` / `wlPageSize`）必須獨立，不得與其他 tab 分頁狀態共用；篩選條件變更時 `wlPage` 必須重設為 `1`；匯總卡片與異常提醒區塊必須依據完整篩選結果計算，不得僅計算當前頁資料。
-- **FR-007b**：`工時明細表` 的完成筆數必須拆分為 `標記筆數`、`審核筆數`、`仲裁筆數` 三欄；角色不適用的欄位顯示 `—`（標記員僅有標記筆數；審核員僅有審核筆數與仲裁筆數）。匯總卡片必須為 `總工時`、`總標記筆數`、`總審核筆數`、`加權平均速度` 四張，且 `加權平均速度` 卡片附「每筆平均耗時」次要說明列；逐列平均速度、匯總與異常提醒計算需以三類筆數總和為分子。
+- **FR-007b**（**v9.0.0 修訂，BREAKING**，issue #1160）：`工時明細表` 的完成筆數必須拆分為 `標記筆數`、`審核筆數`、`仲裁筆數` 三欄；角色不適用的欄位顯示 `—`（標記員僅有標記筆數；審核員僅有審核筆數與仲裁筆數）。匯總卡片為 `總工時`、`總標記筆數`、`總審核筆數`、`各類工作速度` 四張。速度只逐類顯示 `標記件/時`、`審核單位/時`、`仲裁項/時`，各以對應種類之完成筆數及可信工作時長計算；無可信時長或分母為零時顯示 `—`。審核送出按 `annotation_review_submission.id` 去重，逐 outKey 決策及後續修訂不增加審核單位；標記按 run 內完成 assignment 去重，仲裁按終局爭議鍵去重。異常提醒亦須按同種類與同單位比較，不得混合三類完成筆數。
 - **FR-007c**（**v4.3.0 新增**，對應 AC-1.20～AC-1.25，issue #1101）：工時篩選列的日期區間輸入必須以單一日期區間選擇器呈現，不得使用兩個獨立的日期欄位。(1) **單一控制項與高亮**：控制項必須於同一日曆介面框選起訖日期；已選範圍必須即時高亮，起訖日與其間的日期需可視覺區分；控制項必須顯示已選範圍（格式 `YYYY-MM-DD ～ YYYY-MM-DD`），未選取時必須顯示適當提示文字。(2) **不完整選取不套用**：只完成起點、尚未選取終點前，不得套用不完整的新區間——工時明細表與匯總必須維持套用前的結果。(3) **反向選取正規化**：允許使用者先點選時間較晚的日期，系統必須將任何起訖點選順序正規化為有效的 `from <= to` 區間，不得因點選順序產生無效篩選結果。(4) **包含邊界與清除**：完成區間選取後，必須套用含起日與迄日的篩選結果（既有排除式比較不變）；控制項必須提供「清除」操作，清除後必須恢復不限制日期的結果。(5) **與其他篩選組合**：日期區間必須可與任務階段、成員篩選（`project_leader`）組合使用，明細與匯總需依組合後的條件一致計算；篩選變更時的分頁重置規則（FR-007a）不變。(6) **URL 同步與單邊相容**：控制項必須讀寫既有 `state.workLogDateFrom`／`state.workLogDateTo` 與 `wl_from`／`wl_to` 網址參數（FR-019 文字不變）；既有僅帶 `wl_from` 或僅帶 `wl_to` 的單邊網址必須保留原篩選語意，並在單一控制項中呈現為開放式區間。(7) **鍵盤操作與焦點**：控制項必須可用鍵盤完整操作——方向鍵移動日期焦點、Enter／Space 選取聚焦日期、Esc 關閉控制項並捨棄尚未完成的選取，焦點必須送回觸發元件。(8) **不改變權限邊界**：`reviewer` 的 `work-log` 篩選維度（FR-007：僅日期區間與任務階段，不含成員篩選）不受本控制項影響。
+- **FR-007d**（v9.0.0 新增，issue #1160）：工時原始來源為未部署候選 `task_work_interval`，每列限定同一 `account_session_id`、`task_id`、`run_id`、`membership_id`、`work_kind` 的一段可觀測前景工作；`work_kind = annotation | review | arbitration`，後端依有效身分及 membership 角色驗證。服務端以 UTC 記錄 `started_at`、`last_seen_at`、可空 `ended_at`，工作區可見且聚焦時開始，候選心跳每 30 秒；10 分鐘無互動視為閒置，失焦、背景、切換任務/run/種類、登出或安全撤銷皆結束區間。失聯 90 秒時只以最後有效 `last_seen_at` 關閉，不以等待時間或客戶端時鐘補工時；同一使用者至多一筆未結束區間，跨裝置競爭須由交易與部分唯一約束防重。原始 UTC 區間不拆列；報表固定 `Asia/Taipei`，跨日於查詢時計算當地午夜裁切，按 session × task × run × membership × work kind × 報表日期分組。同一 session 可跨任務/run，登入不等於工作；`annotation_history_event.lead_time_ms` 亦不得當工時。合法完成事件即使沒有可信區間仍可計數，該列工作時長與速度顯示「未知」；僅有可信區間但無完成事件時筆數可為 0。`login_at` 只取 `account_session.started_at`；`logout_at` 只取可驗證明確登出的 `logged_out_at`，無值及上線時長顯示「未知」，不得由 `revoked_at` 推估。上線時長僅代表該 session 登入到明確登出的當日切片，非網路連線證據；同 session 跨多列展示不得相加。標記完成按 run × assignment 去重，審核完成按 submission head 去重，仲裁完成按終局爭議鍵去重；無可驗證 session 的舊事件不猜測歸屬。`WorkLogEntry` 為唯讀查詢投影，不建立同名表。
 - **FR-008**：任務狀態轉換必須遵守 `TASK_STATUSES` 狀態機。
 - **FR-008a**（**v5.0.0 修訂，BREAKING**，對應 AC-3.2、AC-3.16、AC-3.32～AC-3.36，issue #1120）：當任務本回合滿足修訂後之 `DRY_RUN_COMPLETION_RULE` 全部條件——沒有未指派 Dry Run 標記作業、每一位 `membership_status = active` 的 `annotator` 皆滿足 `assigned_count == completed_count`（完成各自被指派的全部試標內容）、全部 `dry_run` 審核單位皆推導為「已定稿」、不存在推導為「爭議中」的 `dry_run` 審核單位、`dry_run` 最終例外池已清空——時，系統必須自動轉為 `waiting_iaa_confirmation` 並建立提醒。任一條件不符時，系統必須維持 `dry_run_in_progress`，並以可見文字逐項列出未滿足的條件與其帶單位的剩餘數。本條之評估以「當前回合」為範圍，與 AC-3.16 既有語意一致：新建立的回合在其本身的標註、審核與仲裁完成前不得轉回 `waiting_iaa_confirmation`。轉換前置條件之狀態機來源仍為 `docs/adr/022-task-state-machine-location.md` Transition Table。原條文「僅以全員標註提交即自動轉換」改為上述規則（維護者 2026-10-02 裁示屬 BREAKING）。本條新增之前置條件與 IAA 達標與否、計算是否結束皆無關，不得被表述為 IAA 問題；`TASK_STATUSES` 五態不變。
 - **FR-008b**（**v3.0.0 修訂，BREAKING**，對應 AC-3.9，issue #688）：任務狀態由 `official_run_in_progress` 轉為 `completed` 前，系統必須驗證下列全部前置條件（issue #180 完整條件；ADR-022 2026-08-19 修訂版轉換表）：(1) 正式標記作業全數提交（已排除作業不計入）；(2) 全部審核單位（`015` FR-051）皆推導為「已定稿」，或經最終例外池「自資料集排除」處置；(3) 不存在狀態為「爭議中」的審核單位；(4) 最終例外池已清空——不存在待處置的 `official_run` 例外項目（FR-018）；(5) **品質指標就緒**（**v5.1.0 修訂**，issue #1141）——依 `dataset/017-dataset-analysis-detail` 之 `QUALITY_METRICS_READY_RULE` 推導的 `quality_metrics_ready` 為就緒：最新一輪 IAA 計算尚在進行（`pending`）或失敗（`failed`）時為未就緒；`done` 為就緒，含因 `De = 0` 而「無法計算」者；缺少訊號時視為就緒。任一條件不符時，系統必須阻擋轉換並逐項列出未滿足的具體原因，不得僅以「全部標記已提交」作為完成依據；第 (5) 項未就緒時，原因必須為可見的繁體中文文字（說明品質指標尚在計算或計算失敗），不得僅以 hover 或顏色呈現。原第 (2) 項之「依生效審核設定（`min_reviewers`）應完成的 review unit 全數定案」改為上列第 (2) 項——`min_reviewers` 已移除，審核單位恆有一位審核員；原第 (4) 項「應仲裁項目全數完成仲裁」由上列第 (3)、(4) 項取代——仲裁完成不再等於結案就緒，仲裁裁定為「兩者皆非」者仍須經例外池收尾。
@@ -661,7 +666,7 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
   **v4.2.0 修訂**（issue #868，對應 AC-3.24、SC-048）：發布前除上述人數檢查外，`membership_status = active` 的有效分派池 `reviewer_ids - arbiter_ids` 亦必須至少一人；此檢查必須在每次發布時以當下成員狀態重算，避免設定儲存後的停用或移除使分派池歸零。有效分派池為空時必須阻擋發布、顯示可修正訊息「至少需 1 位未被指定為仲裁者的啟用中審核員」，且不得建立回合或改變任務狀態。`arbiter_ids = []` 仍依既有規則合法。
 
   **v5.0.0 修訂**（issue #1120，對應 AC-3.39、SC-051）：`arbiter_ids` 為空時的發布警示文案必須更新。`arbiter_ids` 為空仍不得阻擋發布，但警示文字必須改為說明爭議項將由 `project_leader` 依 FR-023 自行裁定，不得再聲稱「任務將無法結案」——該敘述在 FR-023 生效後已不成立。成員人數檢查第 (1)(2) 點與其「還差 N 位」缺口訊息文字不變。
-- **FR-010u**（**v5.0.0 新增**，對應 AC-1.26、AC-1.27、SC-050，issue #1120）：`task-detail` 五個頁籤（`TASK_TABS`）呈現的衍生計數必須以同一組查詢上下文推導，並必須依既有正典定義之聚合單位計數。(1) **共用查詢上下文**：任務、cycle、`run_type` 與回合為共用查詢上下文，概覽、成員、進度、結果四個頁籤之計數必須由同一組 `task_id × cycle_id × run_type × round_no` 推導；選取某一回合時不得混入其他回合或其他任務的資料。工時與匯出歷史必須依當前任務篩選；該任務無對應紀錄時必須呈現真實空狀態，不得呈現其他任務的通用示範資料。(2) **`已提交` 的分子分母**：分子為該 `task_id × cycle_id × run_type × round_no` 範圍內已提交之標記 assignment 數；分母為同範圍內未排除之標記工作 slot 數（含退回未指派的 slot）。依 FR-005h 被 `project_leader` 明確排除之標記作業不得計入分子或分母，與 FR-005h 既有的「不計入完成率或標記分布統計」一致。(3) **`已完成輪次` 的分子**：分子為已結束之試標回合數；當前進行中之回合不得計入。歷史回合與當前回合必須分列呈現，兩者之計數與決策不得交叉累計。「已結束」之判定依既有試標完成規則（FR-008a），本條不另定義該規則。(4) **既有定義不得重複**：`已定案 review unit` 之判定式與聚合單位（穩定 run／assignment 範圍內之樣本／標記員維度）以 `annotation/015-annotation-workspace` FR-051 為正典；`最終例外輸出項目` 之來源與逐筆收尾動作以 `annotation/015-annotation-workspace` FR-095 為正典，其分 `run_type` 獨立計數規則沿用本規格 FR-018 第 (5) 點。本規格必須讀取該兩處既有定義，不得另建第二份判定式、分母或狀態清單。(5) **單位不得相加**：標記 assignment、審核單位、爭議項（同一 run 範圍，以 `annotation/015-annotation-workspace` FR-061 第 7 點為計數單位：審核單位內之 `outKey × 合併鍵`，依 FR-059）分屬三個不同聚合層級，不得相加為單一數字，亦不得共用同一分母。畫面呈現必須使每個計數的單位可辨識；提交進度與定案進度必須分別命名，不得以同一標題涵蓋兩者。(6) **時間語意**：已提交時間不得被呈現為審核完成或仲裁完成時間；各階段時間必須取自其各自的事件來源。(7) **資料分配與工作完成分離**：樣本池分配的視覺呈現（FR-010p）必須附明確的「資料分配」語意說明；分配比例達滿不得被表述為標記或審核工作已完成。 上述範圍等價於穩定 `run_id`；重複 R1 不得合併 cycle。提交分母為同 run 未排除工作 slot 數（含退回未指派者），重指派不增分母；舊 cycle 回合不納入目前閘門。
+- **FR-010u**（**v5.0.0 新增**，對應 AC-1.26、AC-1.27、SC-050，issue #1120）：`task-detail` 五個頁籤（`TASK_TABS`）呈現的衍生計數必須以同一組查詢上下文推導，並必須依既有正典定義之聚合單位計數。(1) **共用查詢上下文**：任務、cycle、`run_type` 與回合為共用查詢上下文，概覽、成員、進度、結果四個頁籤之計數必須由同一組 `task_id × cycle_id × run_type × round_no` 推導；選取某一回合時不得混入其他回合或其他任務的資料。工時與匯出歷史必須依當前任務篩選；該任務無對應紀錄時必須呈現真實空狀態，不得呈現其他任務的通用示範資料。(2) **`已提交` 的分子分母**：分子為該 `task_id × cycle_id × run_type × round_no` 範圍內已提交之標記 assignment 數；分母為同範圍內未排除之標記工作 slot 數（含退回未指派的 slot）。依 FR-005h 被 `project_leader` 明確排除之標記作業不得計入分子或分母，與 FR-005h 既有的「不計入完成率或標記分布統計」一致。(3) **`已完成輪次` 的分子**：分子為已結束之試標回合數；當前進行中之回合不得計入。歷史回合與當前回合必須分列呈現，兩者之計數與決策不得交叉累計。「已結束」之判定依既有試標完成規則（FR-008a），本條不另定義該規則。(4) **既有定義不得重複**：`已定案 review unit` 之判定式與聚合單位（穩定 run／assignment 範圍內之樣本／標記員維度）以 `annotation/015-annotation-workspace` FR-051 為正典；`最終例外輸出項目` 之來源與逐筆收尾動作以 `annotation/015-annotation-workspace` FR-095 為正典，其分 `run_type` 獨立計數規則沿用本規格 FR-018 第 (5) 點。本規格必須讀取該兩處既有定義，不得另建第二份判定式、分母或狀態清單。(5) **單位不得相加**：標記 assignment、審核單位、爭議項（同一 run 範圍，以 `annotation/015-annotation-workspace` FR-061 第 7 點為計數單位：審核單位內之 `outKey × 合併鍵`，依 FR-059）分屬三個不同聚合層級，不得相加為單一數字，亦不得共用同一分母。畫面呈現必須使每個計數的單位可辨識；提交進度與定案進度必須分別命名，不得以同一標題涵蓋兩者。(6) **時間語意**：已提交時間不得被呈現為審核完成或仲裁完成時間；各階段時間必須取自其各自的事件來源。(7) **資料分配與工作完成分離**：樣本池分配的視覺呈現（FR-010p）必須附明確的「資料分配」語意說明；分配比例達滿不得被表述為標記或審核工作已完成。 上述範圍等價於穩定 `run_id`；重複 R1 不得合併 cycle。提交分母為同 run 未排除工作 slot 數（含退回未指派者），重指派不增分母；舊 cycle 回合不納入目前閘門。 **v9.0.0 工時補充**：工時與完成事件須依 `account_session_id × task_id × run_id × membership_id × work_kind × report_date` 分組；相同 task 的不同 session、cycle、run 不得合併。工時速度逐類顯示，標記 assignment、審核單位與爭議項不得相加；同一審核 submission head 的多筆 outKey 決策與修訂只計一次。
 - **FR-011**：頁面必須支援 `RWD_VIEWPORTS`，在 `<= MOBILE_BP` 仍可完成核心查看與操作。
 - **FR-011a**：在 `375px`、`768px`、`1440px` 三個 viewport，必須可完成：進入詳情、tab 切換、run 發布權限顯示、`project_leader` 成員管理、`work-log` 篩選、匯出操作，且不得資訊重疊。
 - **FR-012**：Prototype 必須提供三類畫面狀態：`loading`、`empty`、`error`，且各 tab 至少有一組可展示案例。
@@ -775,7 +780,7 @@ flowchart LR
 - **TaskMembership**：任務成員。欄位：`task_id`、`user_id`、`task_role`、`membership_status`。成員清單「審核負荷」欄顯示值由 `ReviewAssignment` 聚合推導，不儲存於 membership；仲裁身分來自 `TaskDetail.arbiter_ids`，非新的 `task_role`。
 - **ReviewAssignment**：（**v6.0.0 退役持久化模型，名稱保留**）僅為審核負荷的非持久化 view，依 annotation-015 FR-051／FR-093(5) 的 run 範圍、submission 黏著與即時有效候選推導 `pending`／`done`／`assigned`。不得建立第二份 sticky assignment 表、虛構 `review_unit_id` FK 或獨立保存 `assigned_by`／`source`；發布候選快照只保存選人輸入。
 - **RunStateTransition**：狀態轉換紀錄。欄位：`from_status`、`to_status`、`triggered_by`、`triggered_at`。
-- **WorkLogEntry**：工時紀錄。欄位：`user_id`、`task_role`、`date`、`login_at`、`logout_at`、`online_duration`、`duration`、`annotated_count`、`reviewed_count`、`arbitrated_count`（角色不適用的筆數欄位為 `null`）、`avg_speed`、`run_stage`。
+- **WorkLogEntry**：工時紀錄唯讀查詢投影，不建資料表；一列以 `account_session_id`、`task_id`、`run_id`、`membership_id`、`work_kind`、`report_date`（`Asia/Taipei`）定址。顯示 `user_id`、由 membership 讀取的 `task_role`、由 run 讀取的 `run_stage`、`login_at`（session.started_at）、`logout_at`（僅 session.`logged_out_at`）、`online_duration`、`duration`、`annotated_count`、`reviewed_count`、`arbitrated_count` 與逐類單位的速度。無明確登出時登出與上線時長為「未知」；無可信區間時工作時長與速度為「未知」，合法完成筆數仍保留；角色不適用的筆數為 `null`。安全撤銷時間與單次歷程耗時都不是本投影的時間來源。
 - **SampleSnapshot**：每次發布專屬不可變快照，含 `sample_snapshot_id`、`cycle_id`、seed／演算法版本、Dry `requested_sampling_value`、`target_agreement_overrides`、`min_annotators`、`locked_at`／`locked_by`、有序 ID digest 及 `selection_manifest_ref`（外部清單審計回執，不含私有資料）。dataset／config／schema 經不可變 cycle 解析；snapshot 與 run 一對一，鎖定時機見 FR-010f。
 - **AnnotationListMaterialization**：具有穩定 `run_id` 的發布紀錄，含 `task_id`、`cycle_id`、`run_type`、`trial_round_id?`、`sample_snapshot_id`、非空 `guideline_version_id`、`item_count`、idempotency key、`created_by`／`created_at`。Dry 必有同 cycle round，round／snapshot 各只對應一個 run；Official 無 round，task 生命週期最多一筆。guideline 屬同 task，Dry 另與 round 相等。`item_count` 驗證自 RunItem，Dry 等於要求筆數，Official 等於本 cycle 剩餘筆數。
 - **TrialRound**：試標回合紀錄（issue #492 A4/A5）。欄位：`task_id`、`round`、`sampling_value`（該回合實際抽樣筆數；建立完成後恆等於對應 `AnnotationListMaterialization.item_count`，見 FR-010f-2）、`guideline_version`（FK → `TaskGuidelineConfig.guideline_version`；建立當下寫入，不隨後續指引異動回填）、`prior_round_findings`（上一輪觀察到的問題；`round = 1` 為 `null`，`round >= 2` 必填，見 FR-017）、`guideline_change_summary`（本輪指引調整內容；`round = 1` 非必填，`round >= 2` 必填，允許值含 `no_change`，見 FR-017）、`no_change_reason?`（`guideline_change_summary = no_change` 時必填）、`iaa_computation_status`（**v4.1.0 新增**，issue #783）（`pending | done | failed`；回合建立時為 `pending`，只描述 IAA 計算是否結束、不承載達標與否，「無法計算」記為 `done`，見 FR-010o-4）、`created_by`、`created_at`。 另含 `trial_round_id`、`cycle_id`；`round` 為 `round_no` 顯示投影，正整數且 `(cycle_id, round_no)` 唯一；`guideline_version` 須解析至同 task 不可變 `guideline_version_id`，不以裸版本號 FK。
@@ -851,7 +856,7 @@ flowchart LR
 - **SC-033**：Overview「審核設定」區塊於 `draft` + `project_leader` 可完成兩份名冊勾選流程（審核員／仲裁者），`reviewer_ids` 為空時被阻擋並顯示可修正錯誤，儲存後兩個摘要欄位（含 FR-010s-2 仲裁摘要值規則）即時反映且雙語一致。
 - **SC-034**：成員管理「審核指派」區塊恆為唯讀，每位啟用中審核員的已指派／待審／已完成三欄、爭議池待仲裁數與最終例外池待處置數皆不含任何操作按鈕，且與成員清單「審核負荷」欄即時一致；全區文案雙語一致。
 - **SC-035**：`annotation-results` 展開列可完整呈現「標記員 → 審核員 → 仲裁」縮排時間軸（含具名人員、決策與時間），同一樣本多位標記員時逐標記員各自成段；審核狀態 badge 採 `AR_REVIEW_STATUS` 三態語彙；審核員與審核狀態兩個新篩選可實際過濾樣本列，且全部文案雙語一致。
-- **SC-036**：`work-log` 工時明細表以 `標記筆數`／`審核筆數`／`仲裁筆數` 三欄呈現完成筆數，角色不適用欄位顯示 `—`；匯總列呈現 `總工時`、`總標記筆數`、`總審核筆數`、`加權平均速度` 四卡與「每筆平均耗時」次要說明列，且全部文案雙語一致。
+- **SC-036**（v9.0.0 修訂，BREAKING）：`work-log` 工時明細表以 `標記筆數`／`審核筆數`／`仲裁筆數` 三欄呈現完成筆數，角色不適用欄位顯示 `—`；匯總列呈現 `總工時`、`總標記筆數`、`總審核筆數`、`各類工作速度` 四卡。速度分別標示標記件／時、審核單位／時、仲裁項／時，沒有可信工時顯示「未知」；文案雙語一致。
 - **SC-037**：任務僅在正式標記全數提交、全部審核單位皆已定稿或經例外池排除、無爭議中單位、最終例外池已清空且品質指標可用時，才可由 `official_run_in_progress` 轉為 `completed`；任一條件不符時轉換被阻擋，並逐項顯示未滿足的具體原因。
 - **SC-038**：實際啟用成員人數不足（active 標記員 `< min_annotators` 或被勾選為審核員的 active 人數 `= 0`）時，試標回合與正式標記發布皆被阻擋，且介面逐角色顯示「還差 N 位」缺口訊息；補足人數後方可發布；`arbiter_ids` 為空不阻擋發布，僅顯示無仲裁者警示。
 - **SC-039**：`開始正式標記` 成功後，每筆正式標記樣本恰有一位啟用中標記員的 assignment，不存在未指派或重複指派的樣本，且任兩位標記員的分派筆數差距不超過 1。
@@ -873,6 +878,8 @@ flowchart LR
 - **SC-054**：通過 AC-3.42：SQLite／PostgreSQL 後續實作驗證須涵蓋並行冪等、同 task Official 生命週期唯一、跨版本拒絕及交易失敗零部分寫入。
 - **SC-055**：通過 AC-3.43：run／round 指引 equality、等待階段四欄位界線、config/schema 同步版本與歷史匯出版本皆可追溯，無任何歷史記錄改讀目前版本。
 - **SC-056**：通過 AC-3.44／AC-3.45：候選快照不授予已停用 membership 權限，終局排除不計分母，無第二份持久化 ReviewAssignment，抽樣／manifest／標記者路徑不讀或暴露私有答案。
+- **SC-057**（v9.0.0，issue #1160）：SQLite 與 PostgreSQL 的候選約束驗證均須證實同一 user 雙裝置同時開工時至多一筆未結束 open 區間；失聯只以最後有效 `last_seen_at` 關閉，UTC 區間按台北日期裁切後同日多次登入與不同 run 不合併。規劃圖通過文件驗證不等於雙庫 migration 已通過，正式實作階段須補兩庫交易測試。
+- **SC-058**（v9.0.0，issue #1160）：同 run 的標記 assignment、審核 submission head、終局爭議鍵各自去重；多 outKey 審核決策及後續修訂不重複算審核單位。缺可信時間仍保留合法筆數但速度未知；標記員回應不得包含他人的 session、私有答案或 gold/test 答案。
 
 ---
 
@@ -880,6 +887,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 9.0.0 | 2026-10-08 | **MVP 可觀測工時來源與逐類速度（issue #1160，MAJOR）**：FR-007b／SC-036 移除混合不同單位的加權速度，改為各類工作速度；新增 FR-007d、AC-1.28～1.31、SC-057～058，明定 `task_work_interval` 候選、登入與工時來源、心跳／失聯、台北日界、session/run 隔離及完成事件去重；`WorkLogEntry` 為唯讀投影。僅規劃契約，無 ORM／API／migration。 |
 | 8.0.1 | 2026-10-08 | **MVP 匯出快照時間與跨 run 隔離釐清（issue #1160，PATCH）**：FR-010i-1／FR-010i-2／FR-021 明定 `requested_at` 為請求接受時間，`conditions_snapshot` 接受時不可變且不含 `exported_at`；可空 `task_export.exported_at` 取成功原檔實際結果讀取快照時間，與原始位元組及檔名於 `ready` 原子固定。未 ready 重試可讀較晚快照，ready 後重試返回相同原檔。FR-010b／FR-010c／SC-005 釐清隔離開啟時仍可明確選取 Dry 與 Official run 同檔封裝，但每 run 結果分離、逐列保留 run 身分，不跨 run 合併、聚合或去重。僅修訂規劃契約，未部署 ORM／API／migration。 |
 | 8.0.0 | 2026-10-08 | **MVP 匯出原始產物契約（issue #1160，MAJOR）**：FR-009a／FR-010i／FR-010i-1／FR-010i-2／FR-015e／FR-015h／FR-020／FR-021／FR-024 與 AC-1.14～1.16／SC-046 改為首次原子保存不可變原始位元組及檔名，歷史下載重驗當前權限、期限、撤銷與 SHA-256 後讀原檔；同次匯出可明確選取 Dry Run 與 Official Run，多 run 依固定順序逐一釘住階段、版本與快照，混合階段快照頂層標為 `all`；冪等鍵按任務與請求人限定、以不含生成資料的正規化命令摘要辨識重試，`json-min` v2 以 `{manifest,rows[]}` 保留零列 metadata。原始產物 30 日、歷史 metadata 一年；舊版原檔不改寫。僅修訂規劃契約，無 ORM／API／migration。 |
 | 7.0.0 | 2026-10-07 | **未提交草稿重派隔離（issue #1160，MAJOR）**：FR-005f／FR-005l 補上舊 annotator 草稿轉 `abandoned`、保留原作者且不交給繼任者；已提交歷史不失效。新增 AC-3.47。實體表仍為未部署候選。 |
