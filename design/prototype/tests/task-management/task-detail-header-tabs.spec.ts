@@ -1,6 +1,6 @@
 /*
  * Traceability: specs/task-management/014-task-detail/spec.md
- *   FR-003, FR-025, SC-019, FR-006
+ *   FR-003, FR-028, SC-019, FR-006
  *   (openspec/changes/task-detail-overview-settings-split, tasks.md 1.1 + 1.2, issue #1199)
  *
  * TDD Red for G1. Stable ids the implementer must provide (everything else is
@@ -30,7 +30,7 @@ async function visibleTabNames(page: Page): Promise<string[]> {
   return (await tabs.allInnerTexts()).map((s) => s.trim());
 }
 
-test.describe('task-detail header and six-tab bar (FR-003, FR-025, SC-019)', () => {
+test.describe('task-detail header and six-tab bar (FR-003, FR-028, SC-019)', () => {
   test('header shows breadcrumb, task-name H1 and plain-text status on all six tabs', async ({ page }) => {
     await openDetail(page, `task_id=${TASK_ID}&status=official_run_in_progress`);
     const header = page.locator('#taskHeader');
@@ -120,7 +120,7 @@ test.describe('task-detail header and six-tab bar (FR-003, FR-025, SC-019)', () 
     await expect(tab('標記進度')).toHaveAttribute('aria-selected', 'true');
   });
 
-  /* FR-025 / SC-019: the header status carries the trial round and derives it from
+  /* FR-028 / SC-019: the header status carries the trial round and derives it from
    * the same current-round source as the overview (getCurrentTrialRound ->
    * #trialRoundValue "R{n}", trialDecisionTitle "R{n} ..."). */
   // T001 shows R1; T016 seeds R1 failed + R2 so the overview shows R2 (SC-019 scenario).

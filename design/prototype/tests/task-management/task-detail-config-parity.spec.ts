@@ -43,7 +43,7 @@ async function openSettingsEdit(page: import('@playwright/test').Page, taskId: s
 test.describe('Task detail config parity with task-new Step 1/2', () => {
   test('unifies seed name and status with task-list data (T010)', async ({ page }) => {
     await page.goto(`${TASK_DETAIL_URL}?task_id=T010`);
-    // FR-025: the task name lives in the H1; the breadcrumb tail is the task id.
+    // FR-028: the task name lives in the H1; the breadcrumb tail is the task id.
     await expect(page.locator('#pageTitle')).toHaveText('醫療實體與關係辨識', { timeout: PANEL_LOAD_TIMEOUT });
     await expect(page.locator('#bcCurrent')).toHaveText('T010');
     await expect(page.locator('#statusBadge')).toContainText('草稿');

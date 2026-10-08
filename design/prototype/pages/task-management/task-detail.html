@@ -4843,7 +4843,7 @@ function interpolate(template, payload) {
     if (profile && profile.trialRounds) TASK_DATA.trialRounds = cloneData(profile.trialRounds);
   }
 
-  /* FR-025: not-found / forbidden keep the header with a fixed title; the task
+  /* FR-028: not-found / forbidden keep the header with a fixed title; the task
      name, task-id crumb and stage status are never rendered. */
   function renderTaskHeaderFallback(titleKey) {
     setText('bcRoot', t('bcRoot'));
@@ -6334,7 +6334,7 @@ function interpolate(template, payload) {
     return state.lang === 'zh' ? TASK_DATA.taskNameZh : TASK_DATA.taskNameEn;
   }
 
-  /* FR-025: breadcrumb / H1 / status text shared by all six tabs. The status
+  /* FR-028: breadcrumb / H1 / status text shared by all six tabs. The status
      text reuses statusStepLabel -- the same table the overview stepper labels
      (renderStatusStepperLabels) read -- so there is no second stage mapping. */
   function renderBreadcrumbCurrent() {

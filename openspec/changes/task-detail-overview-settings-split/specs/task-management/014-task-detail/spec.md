@@ -1,6 +1,6 @@
 > 正典：`specs/task-management/014-task-detail/spec.md`（v7.0.0 → v8.0.0，**MAJOR**，版本判定理由見 proposal.md Impact 節）。issue #1199：`task-detail` 拆為共用任務標頭、概覽與設定兩個分頁。2026-10-08 維護者裁定（issue #1199 留言）為本 delta 的約束來源，與 issue 內文衝突處以裁定為準。
 >
-> **delta 形式**：衍生檢視 `openspec/specs/task-management/014-task-detail/spec.md` 僅收錄 FR-019、FR-006 等少數條文，**尚未收錄** FR-003 與 SC-019。依 archive 的標題比對規則，這兩條與全新的 FR-025、FR-026、FR-027 置於 `## ADDED Requirements`（回寫正典時 FR-003、SC-019 仍為原地改寫）；已收錄於衍生檢視的 FR-019、FR-006 置於 `## MODIFIED Requirements`，標題與衍生檢視逐字一致，並完整保留既有 scenario。
+> **delta 形式**：衍生檢視 `openspec/specs/task-management/014-task-detail/spec.md` 僅收錄 FR-019、FR-006 等少數條文，**尚未收錄** FR-003 與 SC-019。依 archive 的標題比對規則，這兩條與全新的 FR-028、FR-026、FR-027 置於 `## ADDED Requirements`（回寫正典時 FR-003、SC-019 仍為原地改寫）；已收錄於衍生檢視的 FR-019、FR-006 置於 `## MODIFIED Requirements`，標題與衍生檢視逐字一致，並完整保留既有 scenario。
 >
 > **AC 編號**：本 delta 新增的驗收情境一律不預先編號，AC 編號於 gate 4 回寫正典時依使用者故事現有序號續編；MODIFIED 區塊內既有的 AC-1.8、AC-1.9、SC-044、AC-2.5 scenario 標題原樣保留。
 >
@@ -27,7 +27,7 @@
 
 ### Requirement: SC-019 任務階段文字標示由標頭狀態承載，stepper 僅作流程示意
 
-任務標頭的狀態文字（FR-025，例如「試標階段 · 第 2 回合」）MUST 是畫面上唯一的任務階段文字標示。概覽分頁的任務層級 stage flow MUST 維持 `draft → 試標階段 → 正式標記中 → 已完成`，但 stepper 僅作流程示意（沿用原圓點加連接線樣式），MUST NOT 被視為目前階段的權威標示。
+任務標頭的狀態文字（FR-028，例如「試標階段 · 第 2 回合」）MUST 是畫面上唯一的任務階段文字標示。概覽分頁的任務層級 stage flow MUST 維持 `draft → 試標階段 → 正式標記中 → 已完成`，但 stepper 僅作流程示意（沿用原圓點加連接線樣式），MUST NOT 被視為目前階段的權威標示。
 
 單一執行判定區塊 MUST 僅顯示最近回合或正式標記的判定標題與下一步說明，MUST NOT 顯示額外的「目前任務階段」標題或描述，也 MUST NOT 再出現獨立的「正式標記判定」卡。`試標階段` 內需逐步呈現例如 `R1 未通過 → R2 通過 → 開始正式標記` 的回合歷程（判定標題為顧問性警示標籤，不代表狀態轉換被阻擋，見 FR-010o-3）。樣本池分配需隨回合動態調整且不同回合以不同顏色區隔（FR-010p）；執行控制區 MUST NOT 顯示額外狀態 badge 或 stage meta pills。stepper 的無障礙處理（issue #1126）MUST 以本條「stepper 僅作流程示意」為前提設計。
 
@@ -45,7 +45,7 @@
 - **THEN** 其以原圓點加連接線樣式呈現 `draft → 試標階段 → 正式標記中 → 已完成` 的流程，不另加狀態徽章
 - **AND** 標頭狀態文字與 stepper 的階段若需對照，以標頭狀態文字為準
 
-### Requirement: FR-025 任務標頭為六個分頁共用且不放主要動作
+### Requirement: FR-028 任務標頭為六個分頁共用且不放主要動作
 
 `task-detail` MUST 在分頁列上方提供六個分頁共用的任務標頭：(1) **麵包屑**顯示 `任務管理 / {task_id}`；(2) **H1** 顯示任務名稱，取代固定的「任務詳情」標題與副標；(3) **狀態文字**在 H1 右側以一般文字顯示當前任務階段（例如「試標階段 · 第 2 回合」），MUST NOT 使用 pill 徽章；(4) 標頭 MUST NOT 放置任何主要動作（CTA）。標頭狀態文字 MUST 與概覽的判定資料同源推導，MUST NOT 另建第二份階段判定。任務不存在時沿用既有的找不到任務呈現（issue #200），標頭不顯示不存在任務的名稱。
 

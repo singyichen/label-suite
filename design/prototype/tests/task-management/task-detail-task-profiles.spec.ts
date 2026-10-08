@@ -279,7 +279,7 @@ test.describe('Task detail profile mapping', () => {
     test(`renders task-specific overview for ${task.id}`, async ({ page }) => {
       await page.goto(`${TASK_DETAIL_URL}?task_id=${task.id}`);
 
-      // FR-025: the task name lives in the H1; the breadcrumb tail is the task id.
+      // FR-028: the task name lives in the H1; the breadcrumb tail is the task id.
       await expect(page.locator('#pageTitle')).toHaveText(task.name, { timeout: PANEL_LOAD_TIMEOUT });
       await expect(page.locator('#bcCurrent')).toHaveText(task.id);
 
