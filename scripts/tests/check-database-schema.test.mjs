@@ -237,9 +237,9 @@ test('dictionaryAndNoteCraftResolveD9ThroughD13WithoutChangingPhysicalCounts', (
 
   const projectedAccount = accountData(source, data);
   for (const [label, tables] of [['dictionary', source.tables], ['NoteCraft', projectedAccount.tables]]) {
-    assert.equal(tables.length, 9, `${label} table count`);
-    assert.equal(tables.reduce((sum, table) => sum + table.columns.length, 0), 64, `${label} column count`);
-    assert.equal(tables.reduce((sum, table) => sum + table.columns.filter((column) => column.fk).length, 0), 7, `${label} FK count`);
+    assert.equal(tables.length, 10, `${label} table count`);
+    assert.equal(tables.reduce((sum, table) => sum + table.columns.length, 0), 73, `${label} column count`);
+    assert.equal(tables.reduce((sum, table) => sum + table.columns.filter((column) => column.fk).length, 0), 8, `${label} FK count`);
     for (const name of ['admin_role_permission', 'admin_role_permission_version']) {
       const table = tables.find((entry) => entry.name === name);
       assert.ok(table, `${label} retains ${name}`);
@@ -263,7 +263,7 @@ test('dictionaryAndNoteCraftResolveD9ThroughD13WithoutChangingPhysicalCounts', (
 test('parsesRealAccountAdminDictionary', () => {
   const markdown = readFileSync(new URL('../../docs/diagrams/architecture/account-admin-db-schema.md', import.meta.url), 'utf8');
   const source = parseAccountAdminSchema(markdown);
-  assert.equal(source.tables.length, 9);
+  assert.equal(source.tables.length, 10);
   assert.deepEqual(source.tables.find((table) => table.name === 'admin_role_permission').columns
     .filter((column) => column.pk).map((column) => column.name), [
     'role_type', 'role_key', 'permission_key',
@@ -280,7 +280,7 @@ test('realDictionaryAndNoteCraftProjectSharedAuditEventsWithTaskFk', () => {
 
   const projectedAccount = accountData(source, data);
   for (const [label, tables] of [['dictionary', source.tables], ['NoteCraft', projectedAccount.tables]]) {
-    assert.equal(tables.length, 9, `${label} table count`);
+    assert.equal(tables.length, 10, `${label} table count`);
     assert.equal(tables.some((table) => table.name === 'audit_event'), false, `${label} retains singular audit_event`);
     const audit = tables.find((table) => table.name === 'audit_events');
     assert.ok(audit, `${label} missing shared audit_events`);
@@ -301,10 +301,10 @@ test('realDictionaryAndNoteCraftProjectSharedAuditEventsWithTaskFk', () => {
   assert.equal(projectedAudit.columns.find((column) => column.name === 'actor_user_id').required, 'nullable');
   assert.equal(projectedAudit.columns.find((column) => column.name === 'task_id').required, 'nullable');
 
-  assert.equal(source.tables.reduce((count, table) => count + table.columns.length, 0), 64);
-  assert.equal(projectedAccount.tables.reduce((count, table) => count + table.columns.length, 0), 64);
-  assert.equal(source.tables.reduce((count, table) => count + table.columns.filter((column) => column.fk).length, 0), 7);
-  assert.equal(projectedAccount.tables.reduce((count, table) => count + table.columns.filter((column) => column.fk).length, 0), 7);
+  assert.equal(source.tables.reduce((count, table) => count + table.columns.length, 0), 73);
+  assert.equal(projectedAccount.tables.reduce((count, table) => count + table.columns.length, 0), 73);
+  assert.equal(source.tables.reduce((count, table) => count + table.columns.filter((column) => column.fk).length, 0), 8);
+  assert.equal(projectedAccount.tables.reduce((count, table) => count + table.columns.filter((column) => column.fk).length, 0), 8);
   assert.deepEqual(validateWithTaskParents(source, data), []);
 });
 
@@ -397,14 +397,14 @@ test('noteCraftProjectionTracksTheCanonicalAccountSessionDictionaryAndRejectsDri
   assert.match(validateWithTaskParents(source, detachedToken).join('\n'), /refresh_tokens\.session_id: FK/);
 });
 
-test('noteCraftProjectionKeepsThe39Table46FkShapeWith333Columns', () => {
+test('noteCraftProjectionKeepsThe40Table47FkShapeWith342Columns', () => {
   const data = JSON.parse(readFileSync(
     new URL('../../docs/diagrams/architecture/database-schema.er.json', import.meta.url), 'utf8'));
   assert.deepEqual({
     tables: data.tables.length,
     columns: data.tables.reduce((count, table) => count + table.columns.length, 0),
     fks: data.tables.reduce((count, table) => count + table.columns.filter((column) => column.fk).length, 0),
-  }, { tables: 39, columns: 333, fks: 46 });
+  }, { tables: 40, columns: 342, fks: 47 });
 });
 
 test('realAccountAndDatasetDictionariesMatchCompleteNoteCraftProjection', () => {
@@ -436,4 +436,61 @@ test('NoteCraft CI runs account, dataset and task/run schema regressions', () =>
     assert.match(job, new RegExp(`node --test[^\\n]*scripts/tests/${file.replaceAll('.', '\\.')}\\b`),
       `NoteCraft CI must execute ${file}`);
   }
+});
+
+test('realDictionaryAndNoteCraftProjectSharedIdempotencyRecordWithNineColumnsAndActorFk', () => {
+  const markdown = readFileSync(new URL('../../docs/diagrams/architecture/account-admin-db-schema.md', import.meta.url), 'utf8');
+  const source = parseAccountAdminSchema(markdown);
+  const data = JSON.parse(readFileSync(new URL('../../docs/diagrams/architecture/database-schema.er.json', import.meta.url), 'utf8'));
+  const expected = [
+    ['id', 'uuid', false, true],
+    ['scope', 'varchar(64)', false, false],
+    ['actor_user_id', 'uuid', false, false],
+    ['idempotency_key', 'varchar(120)', false, false],
+    ['request_digest', 'char(64)', false, false],
+    ['result_resource_type', 'varchar(64)', false, false],
+    ['result_resource_id', 'uuid', false, false],
+    ['created_at', 'timestamptz', false, false],
+    ['expires_at', 'timestamptz', false, false],
+  ];
+
+  const sourceTable = source.tables.find((table) => table.name === 'shared_idempotency_record');
+  assert.ok(sourceTable, 'Missing dictionary table: shared_idempotency_record');
+  assert.deepEqual(sourceTable.columns.map((column) => [column.name, column.type, column.nullable, Boolean(column.pk)]), expected);
+  assert.equal(sourceTable.columns.find((column) => column.name === 'actor_user_id').fk, 'users');
+  assert.equal(sourceTable.columns.filter((column) => column.fk).length, 1);
+
+  const projected = data.tables.find((table) => table.name === 'shared_idempotency_record');
+  assert.ok(projected, 'Missing NoteCraft table: shared_idempotency_record');
+  assert.equal(projected.group, 'admin');
+  assert.equal(projected.section, '3.10');
+  assert.deepEqual(projected.columns.map((column) => [column.name, column.type, Boolean(column.pk)]),
+    expected.map(([name, type, , pk]) => [name, type, pk]));
+  assert.ok(projected.columns.every((column) => column.required === 'required' || column.required === 'system'),
+    'Every shared_idempotency_record column is non-null');
+  assert.equal(projected.columns.find((column) => column.name === 'actor_user_id').fk, 'users');
+  assert.match(projected.description, /候選/);
+  assert.match(projected.description, /尚未/);
+
+  const names = data.tables.map((table) => table.name);
+  assert.equal(names.indexOf('shared_idempotency_record'), names.indexOf('admin_role_permission_version') + 1,
+    'shared_idempotency_record is the last admin table, right after admin_role_permission_version');
+  assert.deepEqual(validateWithTaskParents(source, data), []);
+});
+
+test('accountAdminDictionaryDocumentsIdempotencyUniqueRuleAndCitations', () => {
+  const markdown = readFileSync(new URL('../../docs/diagrams/architecture/account-admin-db-schema.md', import.meta.url), 'utf8');
+  assert.match(markdown, /### 3\.10 shared_idempotency_record/);
+  const rules = markdown.split(/^## 4\. /m)[1];
+  assert.ok(rules, 'Missing dictionary section 4');
+  const line = rules.split('\n').find((entry) => /UNIQUE\s*\(\s*scope,\s*actor_user_id,\s*idempotency_key\s*\)/.test(entry));
+  assert.ok(line, 'Section 4 must carry UNIQUE (scope, actor_user_id, idempotency_key)');
+  assert.match(line, /expires_at/);
+  assert.match(line, /SQLite/);
+  assert.match(line, /PostgreSQL/);
+  assert.match(markdown, /IDEMPOTENCY_WINDOW_HOURS/);
+  assert.match(markdown, /request_digest/);
+  const summary = markdown.split('\n').find((entry) => entry.startsWith('- **NoteCraft 規劃檢視**'));
+  assert.match(summary, /10 張候選表（73 欄、8 個候選單欄 FK）/);
+  assert.match(summary, /40 張候選表／342 欄／47 個候選單欄 FK/);
 });

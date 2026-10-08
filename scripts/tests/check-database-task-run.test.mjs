@@ -316,15 +316,15 @@ test('assignment display status is derived in exclusion, submission, empty, save
     'Annotation record keeps its own lifecycle states');
 });
 
-test('NoteCraft and inventory project 39 tables with 333 columns and no assignment status', () => {
+test('NoteCraft and inventory project 40 tables with 342 columns and no assignment status', () => {
   const data = erData();
   const assignment = data.tables.find((table) => table.name === 'task_annotation_assignment');
   assert.equal(assignment.columns.some((column) => column.name === 'status'), false);
-  assert.equal(data.tables.length, 39);
-  assert.equal(data.tables.reduce((sum, table) => sum + table.columns.length, 0), 333);
-  assert.equal(data.tables.reduce((sum, table) => sum + table.columns.filter((column) => column.fk).length, 0), 46);
-  assert.match(data.meta.description, /39 張候選表、333 欄、46 個候選單欄 FK/);
-  assert.match(inventory(), /39 張候選表、333 欄與 46 個候選單欄 FK/);
+  assert.equal(data.tables.length, 40);
+  assert.equal(data.tables.reduce((sum, table) => sum + table.columns.length, 0), 342);
+  assert.equal(data.tables.reduce((sum, table) => sum + table.columns.filter((column) => column.fk).length, 0), 47);
+  assert.match(data.meta.description, /40 張候選表、342 欄、47 個候選單欄 FK/);
+  assert.match(inventory(), /40 張候選表、342 欄與 47 個候選單欄 FK/);
   assert.match(inventory(), /任務／執行資料結構[^\n]*14 張／117 欄／16 單欄 FK/);
 });
 

@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/SteveLin100132/notecraft/main/plugins/er-diagram-renderer/schema.json",
   "meta": {
     "title": "Label Suite 資料庫規劃 ER 圖（帳號、管理、資料集、任務執行、工時、標記、審核與匯出）",
-    "description": "**規劃圖，尚未部署資料結構。** 已部署業務表：0；本頁顯示 **39 張候選表、333 欄、46 個候選單欄 FK（外鍵）**。帳號／管理、資料集、任務／執行、工時、標記／審核與匯出的逐表型別和關聯，來自[資料表盤點總帳](/notes/diagrams/architecture/database-table-inventory)所連的六份實體層字典。`task_trial_iaa_result` 保存 MVP 試標完成閘門的逐回合結果；資料集分析專用報告表延後至 MVP 後。`task_work_interval` 保存可觀測前景工作區間；`WorkLogEntry`、`RunStateTransition` 與 `IsolationAuditLog` 是查詢投影，不另建表。標記責任歷程可選擇關聯已驗證的登入工作階段。同任務與同使用者的複合外鍵見各實體字典 §4。\n\n**讀圖方式：** Wiki 可逐表查看候選欄位、來源與待決事項；Diagram 可搜尋表名或欄名，點選表後會聚焦已列出的候選單欄外鍵。圖中連線不代表資料庫遷移、複合約束或資料庫權限已建立。",
+    "description": "**規劃圖，尚未部署資料結構。** 已部署業務表：0；本頁顯示 **40 張候選表、342 欄、47 個候選單欄 FK（外鍵）**。帳號／管理、資料集、任務／執行、工時、標記／審核與匯出的逐表型別和關聯，來自[資料表盤點總帳](/notes/diagrams/architecture/database-table-inventory)所連的六份實體層字典。`task_trial_iaa_result` 保存 MVP 試標完成閘門的逐回合結果；資料集分析專用報告表延後至 MVP 後。`task_work_interval` 保存可觀測前景工作區間；`WorkLogEntry`、`RunStateTransition` 與 `IsolationAuditLog` 是查詢投影，不另建表。標記責任歷程可選擇關聯已驗證的登入工作階段。同任務與同使用者的複合外鍵見各實體字典 §4。\n\n**讀圖方式：** Wiki 可逐表查看候選欄位、來源與待決事項；Diagram 可搜尋表名或欄名，點選表後會聚焦已列出的候選單欄外鍵。圖中連線不代表資料庫遷移、複合約束或資料庫權限已建立。",
     "source": "docs/diagrams/architecture/account-admin-db-schema.md §2–§3; docs/diagrams/architecture/dataset-db-schema.md §2–§3; docs/diagrams/architecture/task-run-db-schema.md §2–§3; docs/diagrams/architecture/task-work-db-schema.md §2–§3; docs/diagrams/architecture/annotation-review-db-schema.md §2–§3; docs/diagrams/architecture/task-export-db-schema.md §2–§3; specs/task-management/014-task-detail/spec.md v11.0.0; specs/annotation/015-annotation-workspace/spec.md v12.1.0; specs/account/020-auth-session-security/spec.md v1.3.0",
     "backTo": "/notes/diagrams/architecture/database-table-inventory"
   },
@@ -60,7 +60,7 @@
     {
       "key": "admin",
       "label": "管理與稽核",
-      "description": "候選表涵蓋操作稽核與 ADR-037 已裁決保留的兩張權限矩陣表。所有表都尚未進行資料庫遷移。"
+      "description": "候選表涵蓋操作稽核、共用冪等紀錄與 ADR-037 已裁決保留的兩張權限矩陣表。所有表都尚未進行資料庫遷移。"
     },
     {
       "key": "dataset",
@@ -646,6 +646,71 @@
         }
       ],
       "description": "**候選表／設計草案，尚未執行資料庫遷移。** ADR-037 已裁決保留 `id = 1` 的矩陣版本單列；資料庫遷移種入，缺列拒絕。每次儲存含空變更均核對預期版本；有實際差異才 CAS 遞增並與格子及 `role_permissions.changed` 稽核同交易。目標穩定為 `role_permission_matrix`／`1`。來源：帳號／管理 §3.9／§4.7、admin-007 FR-005b／FR-010、Accepted ADR-037。"
+    },
+    {
+      "name": "shared_idempotency_record",
+      "label": "共用冪等紀錄",
+      "section": "3.10",
+      "group": "admin",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "required": "system",
+          "note": "應用程式產生的紀錄識別碼（主鍵）；規則：X-04",
+          "pk": true
+        },
+        {
+          "name": "scope",
+          "type": "varchar(64)",
+          "required": "required",
+          "note": "冪等範圍的操作名稱，例如 `task.create`；registry 管理，不加檢查限制；規則：I-01"
+        },
+        {
+          "name": "actor_user_id",
+          "type": "uuid",
+          "required": "required",
+          "note": "已驗證的操作者；FK 為 RESTRICT；規則：I-01、I-06",
+          "fk": "users"
+        },
+        {
+          "name": "idempotency_key",
+          "type": "varchar(120)",
+          "required": "required",
+          "note": "用戶端送的 `Idempotency-Key` 原值；規則：I-01"
+        },
+        {
+          "name": "request_digest",
+          "type": "char(64)",
+          "required": "required",
+          "note": "經驗證與正規化請求內容的 SHA-256 十六進位摘要，用來區分同 key 同內容與異內容；規則：I-02、I-03"
+        },
+        {
+          "name": "result_resource_type",
+          "type": "varchar(64)",
+          "required": "required",
+          "note": "結果資源種類，例如 `task`；規則：I-02"
+        },
+        {
+          "name": "result_resource_id",
+          "type": "uuid",
+          "required": "required",
+          "note": "結果資源識別碼，例如原 `task_id`；不加多型 FK；規則：I-02、X-04"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "required": "required",
+          "note": "首次成功的伺服器時間（UTC）；規則：X-02"
+        },
+        {
+          "name": "expires_at",
+          "type": "timestamptz",
+          "required": "required",
+          "note": "重播有效期限，寫入時固定為 created_at + IDEMPOTENCY_WINDOW_HOURS；到期視為不存在，清理工作以此欄分批刪除；規則：I-04、I-05"
+        }
+      ],
+      "description": "**候選表／設計草案，尚未執行資料庫遷移。** 採獨立通用冪等表是衍生設計決策（D-14，依維護者 2026-10-08 於 issue #1216／#1219 的裁決，非 spec FR），表名採 FR-105 列舉的 `shared` 模組前綴；首個使用者為 013 FR-006d 建立任務。以 `UNIQUE (scope, actor_user_id, idempotency_key)` 定位，僅在首次請求成功時與業務寫入同交易寫入，結果欄必填、無 pending 狀態。同 key 同 `request_digest` 於 `IDEMPOTENCY_WINDOW_HOURS` 內回傳原結果，異內容回報衝突；每次重送仍須重新檢查當下權限。發布與匯出的冪等沿用各自欄位，不在此表。來源：帳號／管理 §3.10／§4.7A、013 FR-006d、AC-4.4、AC-4.6。"
     },
     {
       "name": "dataset",

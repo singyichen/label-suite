@@ -11,10 +11,10 @@
 | 層級 | 目前可用資料 | 用法 |
 |---|---|---|
 | 實際資料結構 | Alembic revision／ORM：0 張業務表 | 日後以資料庫遷移和資料庫 metadata 反查已落地狀態 |
-| 實體層草案 | [帳號／管理資料結構](./account-admin-db-schema.md)：9 張／64 欄／7 單欄 FK；[資料集資料結構](./dataset-db-schema.md)：5 張／31 欄／6 單欄 FK；[任務／執行資料結構](./task-run-db-schema.md)：14 張／117 欄／16 單欄 FK；[工時資料結構](./task-work-db-schema.md)：1 張／11 欄／0 單欄 FK；[標記／審核資料結構](./annotation-review-db-schema.md)：8 張／83 欄／15 單欄 FK；[任務匯出資料結構](./task-export-db-schema.md)：2 張／27 欄／2 單欄 FK | 六份字典合計 39 張候選表、333 欄、46 個單欄 FK；複合 FK 另見各字典 §4。仍須獨立資料庫遷移與雙資料庫驗證，均非已部署資料結構 |
+| 實體層草案 | [帳號／管理資料結構](./account-admin-db-schema.md)：10 張／73 欄／8 單欄 FK；[資料集資料結構](./dataset-db-schema.md)：5 張／31 欄／6 單欄 FK；[任務／執行資料結構](./task-run-db-schema.md)：14 張／117 欄／16 單欄 FK；[工時資料結構](./task-work-db-schema.md)：1 張／11 欄／0 單欄 FK；[標記／審核資料結構](./annotation-review-db-schema.md)：8 張／83 欄／15 單欄 FK；[任務匯出資料結構](./task-export-db-schema.md)：2 張／27 欄／2 單欄 FK | 六份字典合計 40 張候選表、342 欄、47 個單欄 FK；複合 FK 另見各字典 §4。仍須獨立資料庫遷移與雙資料庫驗證，均非已部署資料結構 |
 | 概念層 | [跨模組 ER 圖](./core-data-model-er.md)：規格實體、推導值與投影 | 用於發現缺表與錯誤的關聯假設，不能直接當 DDL |
 
-**NoteCraft 規劃檢視**：[開啟 Wiki／Diagram](/view/diagrams/architecture/database-schema.er)（來源資料：`database-schema.er.json`）。目前收錄帳號／管理、資料集、任務／執行、工時、標記／審核與匯出的 **39 張候選表、333 欄與 46 個候選單欄 FK**。`task_trial_iaa_result` 是 MVP 試標閘門的逐回合結果證據；資料集分析專用報告表另於 MVP 後規劃。標記／審核的 8 張表依[實體字典](./annotation-review-db-schema.md)展示標記、審核草稿／提交、修訂、仲裁、例外與歷程；歷程可選擇關聯已驗證的登入工作階段。兩張匯出表保存請求原檔與有序執行範圍；`requested_at` 與內容快照 `exported_at` 分開。工時原始區間、複合 FK 與日投影見[工時實體字典](./task-work-db-schema.md) §3–§7；**已落地業務表仍為 0**。修改任一 §3 字典或 JSON 時執行 `node scripts/check-database-schema.mjs`；欄位與 FK 計數由檢查器重新計算。
+**NoteCraft 規劃檢視**：[開啟 Wiki／Diagram](/view/diagrams/architecture/database-schema.er)（來源資料：`database-schema.er.json`）。目前收錄帳號／管理、資料集、任務／執行、工時、標記／審核與匯出的 **40 張候選表、342 欄與 47 個候選單欄 FK**。`task_trial_iaa_result` 是 MVP 試標閘門的逐回合結果證據；資料集分析專用報告表另於 MVP 後規劃。標記／審核的 8 張表依[實體字典](./annotation-review-db-schema.md)展示標記、審核草稿／提交、修訂、仲裁、例外與歷程；歷程可選擇關聯已驗證的登入工作階段。兩張匯出表保存請求原檔與有序執行範圍；`requested_at` 與內容快照 `exported_at` 分開。工時原始區間、複合 FK 與日投影見[工時實體字典](./task-work-db-schema.md) §3–§7；**已落地業務表仍為 0**。修改任一 §3 字典或 JSON 時執行 `node scripts/check-database-schema.mjs`；欄位與 FK 計數由檢查器重新計算。
 
 ## 名詞說明：任務發布與執行
 
@@ -71,6 +71,7 @@ Label Suite 的對應做法：
 | `audit_events` | 實體草案 | `id` PK；人員事件的 `actor_user_id → users`、系統事件 actor 為 null；`task_id` 可空，非空時真實 FK → `task.id`；多型 target 由服務驗證 | 帳號／管理 §3.7；Accepted ADR-032、014 FR-025，D-4 已裁決；仍未部署 |
 | `admin_role_permission` | 實體草案 | `(role_type, role_key, permission_key)` 非空複合 PK；V1 僅 42 列適用格 | 帳號／管理 §3.8／§4.7；Accepted ADR-037；尚未資料庫遷移 |
 | `admin_role_permission_version` | 實體草案 | `id = 1` 的候選單列版本，缺列拒絕 | 帳號／管理 §3.9／§4.7；Accepted ADR-037；尚未資料庫遷移 |
+| `shared_idempotency_record` | 實體草案 | `id` PK；`actor_user_id → users`；`UNIQUE (scope, actor_user_id, idempotency_key)`；結果以 `result_resource_type`／`result_resource_id` 指向資源，不加多型 FK | 帳號／管理 §3.10／§4.7A；013 FR-006d、AC-4.4、AC-4.6；D-14 衍生設計決策（依 issue #1216／#1219 裁決）；`shared` 模組前綴；尚未資料庫遷移 |
 
 ### 資料集與來源
 
