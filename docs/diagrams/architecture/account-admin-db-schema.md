@@ -8,7 +8,7 @@
 - **不歸屬任何單一 spec**：同一張 `users` 表被 001、003、005、006 共同修改，因此放在 `docs/diagrams/architecture/`，不隨任何 spec 進 `specs/_archive/`。各 spec 的 plan.md「實體與資料模型」段落應連結本文件，不各自複製欄位表。
 - **狀態：草稿**。十張表均為候選，尚未建立 migration；其他模組的實體鍵與 FK 仍需另行設計，不得據此宣稱已部署。
 - **NoteCraft 規劃檢視**：[`database-schema.er.json`](./database-schema.er.json) 對應 `/view/diagrams/architecture/database-schema.er` 的 Wiki／Diagram。本文件 §3 供應其中 account/admin 的 10 張候選表（73 欄、8 個候選單欄 FK）；[dataset 字典](./dataset-db-schema.md)另供應 5 張／32 欄／6 FK，[task/run 字典](./task-run-db-schema.md)供應 14 張／117 欄／16 FK，[annotation/review 字典](./annotation-review-db-schema.md)供應 8 張／91 欄／2 FK，[匯出字典](./task-export-db-schema.md)供應 2 張候選表／27 欄／2 個候選單欄 FK，[工時字典](./task-work-db-schema.md)供應 1 張／11 欄／0 個單欄 FK（另有三組複合 FK），全圖合計 40 張候選表／351 欄／34 個候選單欄 FK。兩張權限矩陣表已由 ADR-037 確認保留為候選，目前已落地業務表仍為 0。資料集分析的品質／IAA 專用表依 MVP 範圍延後；014 試標閘門所需 `task_trial_iaa_result` 為任務候選表。改動任一欄位字典後執行 `node scripts/check-database-schema.mjs` 檢查投影差異。
-- **型別慣例**：本文件與 ER 圖一律使用邏輯型別 `json`，在 PostgreSQL 對應 JSONB；理由是字典只記錄與資料庫無關的語意，實體型別留給 ORM adapter 決定。
+- **型別慣例**：本文件一律使用邏輯型別 `json`，在 PostgreSQL 對應 JSONB；理由是字典只記錄與資料庫無關的語意，實體型別留給 ORM adapter 決定。
 - **驗證方式**：本文件不執行 SQL。每條限制的正確性在實作時由 Alembic migration 的 upgrade／downgrade／roundtrip 測試，以及 §4 指定的測試驗證。
 
 ## 1. 關鍵設計決定
@@ -265,7 +265,7 @@ erDiagram
 |---|---|---|---|---|---|
 | `id` | bigint | 否 | 流水號 | 寫入時 | — |
 | `actor_user_id` | uuid → users | 是 | 人員事件的操作者；系統事件為 null。FK 為 RESTRICT，有人員稽核紀錄的帳號不可實體刪除。007 抽屜的人員操作者名稱讀取時 join `users.name`（目前名稱） | 與被稽核操作同一交易 | A-01、A-04 |
-| `actor_role` | varchar | 否 | 操作**當下**的角色快照（ADR-032）：寫入後不可變，不隨使用者日後改角色而變；系統事件固定為 `system`；不是即時 JOIN `users.role`（否則歷史事件會被改寫，且使用者刪除後無從還原） | 同上 | — |
+| `actor_role` | varchar | 否 | 操作**當下**的角色快照（ADR-032）：寫入後不可變，不隨使用者日後改角色而變；系統事件固定為 `system`；不是即時 JOIN `users.role`（否則歷史事件會被改寫） | 同上 | — |
 | `action` | varchar | 否 | 命名空間動詞，例如 `member.deactivated`；值由 registry 管理，DB 不加 CHECK | 同上 | — |
 | `task_id` | uuid → task | 是 | 非空時是真實任務作用域 FK；全域事件可空；普通刪除先採 RESTRICT | 有任務作用域的事件寫入時 | A-07 |
 | `target_type` | varchar | 否 | 操作對象種類，例如 `user` | 同上 | — |
@@ -366,7 +366,7 @@ migration 種入唯一允許的 `id = 1` 列。PK 與 CHECK 只能保證最多�
 | R-08 | XT | 改密碼成功：更新 hash、`credential_version+1`、撤銷同一使用者其他工作階段，保留目前 `sid` 工作階段；目前裝置以原工作階段的更新權杖取得新版 JWT | 應用層同一交易 | API：兩裝置登入，A 改密碼 → B refresh 401、A refresh 成功；兩者舊 JWT 均失效 | account-020 FR-006、005 FR-010 |
 | R-09 | XT | email 驗證成功、管理員改 email、密碼重設及 Google 連結：`credential_version+1` 並撤銷全部工作階段（含目前裝置） | 應用層同一交易 | API：事件後全部舊 access／refresh 失效 | account-020 FR-007 |
 | R-10 | CD | 清理工作於列自身 `expires_at` 過後實體刪除 token 列；已撤銷與 `rotated` 列保留至到期，以維持重用偵測；清理週期 待定（#1224） | 應用層清理工作 | SVC：到期前的已撤銷列仍可判定重用；到期後被刪除 | ADR-038；account-020 FR-004；R-05 |
-| R-11 | XT | 權杖原值為 256-bit CSPRNG 隨機值，只保存 SHA-256 `token_hash`，不存明文（高熵故不需加鹽或慢雜湊，且 `UNIQUE token_hash` 可直接定位）；使用（refresh）時，同一交易內須重讀使用者的 `is_active` 與 `credential_version`（取自 `users`）：帳號已停用或版本不符即拒絕並不輪替，避免停用／改密碼與 refresh 競態後仍核發新權杖 | 應用層同一交易 | SVC：停用帳號或 `credential_version` 已遞增後，以有效 token 呼叫 refresh 回 401 且不新增 token 列；資料庫只存雜湊 | ADR-021；account-020 FR-002／FR-006／FR-007 |
+| R-11 | XT | 字典層設計要求，尚未寫入 ADR-021：權杖原值為 256-bit CSPRNG 隨機值，只保存 SHA-256 `token_hash`，不存明文（高熵故不需加鹽或慢雜湊，且 `UNIQUE token_hash` 可直接定位；ADR-021 僅規定 `token_hash` 唯一）。使用（refresh）時，同一交易內須重讀 `users` 的 `is_active` 與 `credential_version`，並確認 `account_session` 未撤銷、權杖未過期，再輪替；但 refresh token 為不透明值，權杖列與 `account_session` 皆無已簽發版本欄，因此不存在權杖層的版本比對基準：`credential_version` 的比對對象是 access JWT claim（ADR-021、account-020 FR-002），refresh 的防線是高風險憑證事件已撤銷相關 `account_session`（account-020 FR-006／FR-007）。refresh 新簽發的 JWT 取當下 `users.credential_version`。待決：是否需要在 session 儲存簽發版本（新欄位）尚未裁決，不在本文件虛構欄位 | 應用層同一交易 | SVC：停用帳號或 session 已因憑證事件撤銷後，以有效 token 呼叫 refresh 回 401 且不新增 token 列；refresh 後的新 JWT 帶當前 `credential_version`；資料庫只存雜湊 | 字典層設計要求（256-bit／CSPRNG／SHA-256／同一交易重讀）；ADR-021（`token_hash` 唯一、is_active 檢查）；account-020 FR-002／FR-006／FR-007 |
 
 ### 4.3 account_password_token
 
