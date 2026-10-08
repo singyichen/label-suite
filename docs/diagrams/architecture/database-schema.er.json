@@ -1502,7 +1502,7 @@
           "name": "publication_idempotency_key",
           "type": "varchar",
           "required": "required",
-          "note": "任務作用域發布重試鍵；發布；不改；規則：U-06"
+          "note": "同任務、同發布目標的重試鍵；不同試標回合可重用；發布；不改；規則：U-06"
         },
         {
           "name": "publication_request_digest",
@@ -1524,7 +1524,7 @@
           "note": "發布時間 UTC；發布；不改；規則：X-01"
         }
       ],
-      "description": "**實體候選，尚未部署。** 試標有同發布週期回合，正式標記無回合；每個任務最多發布一次正式標記。每次執行固定當時的指引版本，不能以任務的當前指標重建歷史。來源：014 FR-010f-2／f-3／f-6／`AnnotationListMaterialization`。\n\n來源：[任務／執行實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.9；複合 FK、檢查限制、唯一限制與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。"
+      "description": "**實體候選，尚未部署。** 試標有同發布週期回合，正式標記無回合；每個任務最多發布一次正式標記。每次執行固定當時的指引版本，不能以任務的當前指標重建歷史。發布重試鍵在同一試標回合內唯一，不同回合可重用；正式發布另以同任務和重試鍵唯一。來源：014 FR-010f-2／f-3／f-6／`AnnotationListMaterialization`。\n\n來源：[任務／執行實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.9；複合 FK、檢查限制、唯一限制與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。"
     },
     {
       "name": "task_run_reviewer_candidate",

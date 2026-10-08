@@ -315,7 +315,7 @@ R1 與 Rn 的序號只在發布週期內唯一；`sampling_value` 保存實際�
 | `sample_snapshot_id` | uuid | 否 | 本次專屬快照 | 發布；不改 | U-03 |
 | `guideline_version_id` | uuid | 否 | 同任務指引；試標須與回合一致 | 發布；不改 | U-04 |
 | `item_count` | integer | 否 | 與實際執行資料項目數一致 | 發布；不改 | U-05 |
-| `publication_idempotency_key` | varchar | 否 | 任務作用域發布重試鍵 | 發布；不改 | U-06 |
+| `publication_idempotency_key` | varchar | 否 | 同任務、同發布目標的重試鍵；不同回合可重用 | 發布；不改 | U-06 |
 | `publication_request_digest` | char(64) | 否 | 相同 key 的請求內容比對摘要 | 發布；不改 | U-06 |
 | `created_by_user_id` | uuid → users | 否 | 發布者 | 發布；不改 | U-01 |
 | `created_at` | timestamptz | 否 | 發布時間 UTC | 發布；不改 | X-01 |
@@ -413,7 +413,7 @@ R1 與 Rn 的序號只在發布週期內唯一；`sampling_value` 保存實際�
 | U-03 | DB | `(task_run_cycle_id,sample_snapshot_id)`→snapshot `(task_run_cycle_id,id)`，UNIQUE `sample_snapshot_id`；每 run 專屬 snapshot | 014 FR-010f、ADR-022 |
 | U-04 | DB | `(task_id,guideline_version_id)`→guideline `(task_id,id)`；Dry 再用 `(trial_round_id,guideline_version_id)`→round `(id,guideline_version_id)` 限相等 | 014 FR-010f-2／f-3、FR-017a |
 | U-05 | DB＋SVC | DB CHECK `item_count > 0`；提交前由服務驗證其等於實際 run-item 列數，Official 取當 cycle 剩餘且必須 >0 | 014 FR-010f-3／f-6 |
-| U-06 | DB＋SVC | UNIQUE `(task_id,publication_idempotency_key)`；鎖定 task／版本後先以 task、發布目標與 key 查已提交 run，相同正規化命令摘要回原 run／snapshot 且重試不重新抽樣，異摘要或同 round 異 key 拒絕；並發受唯一鍵與交易保護，提交結果不明先查 DB 冪等鍵 | 014 FR-010f-6 |
+| U-06 | DB＋SVC | Dry 部分 UNIQUE `(task_id,trial_round_id,publication_idempotency_key)` WHERE run_type = 'dry_run'；Official 部分 UNIQUE `(task_id,publication_idempotency_key)` WHERE run_type = 'official_run'；不得另建涵蓋所有 run 的 task／key 唯一鍵。發布目標先穩定定址：Dry 以同任務 `(cycle_no,round_no)` 解析既有或預配置且跨重試不變的 `trial_round_id`，Official 以該任務唯一正式發布定址；狀態門檻與重新抽樣前先按目標與 key 查已提交 run。相同正規化命令摘要回原 run／snapshot，異摘要或同目標異 key 拒絕；不同 Dry 回合可重用 key。並發受 U-02 的單一目標約束、兩個部分唯一索引及交易保護，提交結果不明先查同目標 DB 冪等鍵 | 014 FR-010f-6 |
 | V-01 | DB | candidate 複合 PK `(task_run_id,reviewer_membership_id)`；`(task_id,task_run_id)`→run `(task_id,id)`、`(task_id,reviewer_membership_id)`→membership `(task_id,id)` | 014 `RunReviewerCandidate` |
 | V-02 | DB＋SVC | UNIQUE `(task_run_id,sort_order_at_publish)`；快照不賦予停用者當前權限，也不產生 sticky 指派列 | 014 FR-010t、015 FR-093(5) |
 | I-01 | DB | run-item 複合 PK `(task_run_id,dataset_item_id)`；公開 `dataset_item_id` 真 FK | 014 `RunItem` |
@@ -437,7 +437,7 @@ R1 與 Rn 的序號只在發布週期內唯一；`sampling_value` 保存實際�
 | 同任務 config／指引版本 | UNIQUE `(task_id,version_no)` 各一 | 同時覆蓋 task FK 前綴；不另加 task_id 索引 |
 | 當前 reviewer 名冊 | PK `(task_id,reviewer_membership_id)`、UNIQUE `(task_id,sort_order)` | 同 task 名冊與排序；membership 反查另評估 `(reviewer_membership_id,task_id)` |
 | cycle 歷史與開啟唯一 | UNIQUE `(task_id,cycle_no)`、部分 UNIQUE `(task_id) WHERE closed_at IS NULL` | 防並行雙開；額外部分索引小而必要 |
-| run 歷史及重試 | `(task_run_cycle_id,run_type,created_at,id)`、UNIQUE `(task_id,publication_idempotency_key)` | 第一個支援有界歷程；第二個擋重試衝突；兩者增加發布成本 |
+| run 歷史及重試 | `(task_run_cycle_id,run_type,created_at,id)`；Dry 部分 UNIQUE `(task_id,trial_round_id,publication_idempotency_key)` WHERE run_type = 'dry_run'；Official 部分 UNIQUE `(task_id,publication_idempotency_key)` WHERE run_type = 'official_run' | 歷程索引支援有界查詢；兩個部分索引分別約束試標回合與正式發布，允許跨回合重用 key；增加發布成本 |
 | 當 cycle 已用 item | UNIQUE `(task_run_cycle_id,dataset_item_id)` | 防重選並加速剩餘池反查；PK `(task_run_id,dataset_item_id)` 已支援單 run item |
 | run 清單順序 | UNIQUE `(task_run_id,list_position)` | 避免全表排序；重複 run_id 單欄索引無益 |
 | 標記／審核子表的工作位參照 | UNIQUE `(task_run_id,id)` | 六張子表以同序複合 FK 指向工作位；此鍵左側前綴亦覆蓋 run 反查，不另建重複的 `task_run_id` 單欄索引 |

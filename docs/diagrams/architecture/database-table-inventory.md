@@ -98,7 +98,7 @@ Label Suite 的對應做法：
 | 執行生命週期 → `task_run_cycle` | 實體草案 | `id` PK、`(task_id,cycle_no)` 唯一；封存 dataset/設定；每個任務同時最多一個未關閉的發布週期 | 014 FR-010f、ADR-022；隨機種子／演算法版本須可重播 |
 | `TrialRound` → `task_trial_round` | 實體草案 | `id` PK、`(task_run_cycle_id,round_no)` 唯一；同 task 指引版本複合 FK | 014 FR-017a；IAA 計算狀態不代表達標 |
 | `SampleSnapshot` → `task_sample_snapshot` | 實體草案 | `id` PK；同發布週期執行一對一，記錄隨機種子、私有不可變清單回執與 SHA-256 digest | 014 FR-010f／FR-010f-6；只含規範排序的公開 UUID，寫入並驗證後由 DB 交易保存引用；不得含私有答案 |
-| `AnnotationListMaterialization` → `task_run` | 實體草案 | `id` PK；試標指向同發布週期回合，正式標記的回合為 null；每個任務最多發布一次正式標記 | 014 FR-010f；同 task guideline、冪等 key 與 item_count 候選約束見字典 §4 |
+| `AnnotationListMaterialization` → `task_run` | 實體草案 | `id` PK；試標指向同發布週期回合，正式標記的回合為 null；每個任務最多發布一次正式標記 | 014 FR-010f；冪等鍵按同任務的試標回合或正式發布目標分別唯一，不同試標回合可重用 key；同 task guideline、item_count 與索引見字典 §4–§5 |
 | 發布時審核候選 → `task_run_reviewer_candidate` | 實體草案 | `(task_run_id,reviewer_membership_id)` 複合 PK；保存當時候選及順序 | 014 FR-010t、015 FR-093；不是審核員固定歸屬的紀錄 |
 | `AnnotationListItem` 公開成員 → `task_run_item` | 實體草案 | `(task_run_id,dataset_item_id)` 複合 PK；`(task_run_cycle_id,dataset_item_id)` 唯一 | 014 FR-010b／FR-010f；同發布週期不重選，資料項目所屬版本由服務交易驗證 |
 | `AnnotationAssignment` → `task_annotation_assignment` | 實體草案 | `id` PK；對同一次執行的資料項目，以及同任務的成員資格，建立複合 FK；每資料項目的 slot_no 唯一 | 014 FR-010f-4／FR-010f-7；不另存工作位 `status`，顯示狀態由終局排除、目前標記紀錄及受派者推導 |

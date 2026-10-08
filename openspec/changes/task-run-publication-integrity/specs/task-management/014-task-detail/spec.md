@@ -21,8 +21,8 @@
 
 ### Requirement: FR-010f-6 發布交易、冪等與失敗恢復
 
-- **FR-010f-6**（**v10.0.0 修訂，BREAKING**，issue #1160）：發布服務須鎖定任務／目前版本並驗證狀態、權限、sealed version、每個來源批次的公開／受保護欄位對映、成員與回合前置條件。每個選中 item 須經 batch 確認屬於 cycle 版本；任一跨版本 item 即整次拒絕。新發布先依 FR-010f 規範位元組寫入私有、不可覆寫的內容定址回執物件，讀回驗證完整位元組、`selected_item_digest` 摘要與持久性，之後才在**同一資料庫交易**提交 cycle（R1）、round（Dry）、snapshot 的 `selection_manifest_ref` 與 digest、run、run items、候選審核名冊、assignment、狀態轉換及稽核事件；提交前驗證 `item_count` 等於實際 run-item 數。外部物件寫入與資料庫提交不是同一 ACID 交易；回執寫入或讀回驗證失敗時 DB 不提交，DB 回滾可留下無引用物件，但不得留下可見的部分發布。資料庫提交後才可宣稱發布成功。
-  - 發布 idempotency key 以 task、發布目標與 key 定址，另保存正規化請求內容摘要。相同 key 與摘要的重試或並行重送回傳原 run／snapshot，不重新抽樣、不增加 assignment 或事件；同 key 異摘要／異內容拒絕為衝突，異 key 對同 round 重複發布或第二次 Official 亦拒絕。提交結果不明時先以資料庫冪等鍵查已提交 run，不重抽；既存回執缺失或摘要不符時拒絕讀取並告警，只能由 run-item SQL 正典重建相同位元組作受控修復，不能靜默換清單。清理無引用回執須超過交易／重試保護期、確認無活躍寫入租約且 DB 無引用；已引用物件不得刪除。並行請求須由資料庫交易與唯一性約束保證相同結果，SQLite 與 PostgreSQL 語意一致。
+- **FR-010f-6**（**v10.0.0 修訂，BREAKING**，issue #1160）：發布服務須先驗證身分與權限、鎖定任務，按固定發布目標查已提交重試；若尚未提交，才驗證目前版本、狀態、sealed version、每個來源批次的公開／受保護欄位對映、成員與回合前置條件。每個選中 item 須經 batch 確認屬於 cycle 版本；任一跨版本 item 即整次拒絕。新發布先依 FR-010f 規範位元組寫入私有、不可覆寫的內容定址回執物件，讀回驗證完整位元組、`selected_item_digest` 摘要與持久性，之後才在**同一資料庫交易**提交 cycle（R1）、round（Dry）、snapshot 的 `selection_manifest_ref` 與 digest、run、run items、候選審核名冊、assignment、狀態轉換及稽核事件；提交前驗證 `item_count` 等於實際 run-item 數。外部物件寫入與資料庫提交不是同一 ACID 交易；回執寫入或讀回驗證失敗時 DB 不提交，DB 回滾可留下無引用物件，但不得留下可見的部分發布。資料庫提交後才可宣稱發布成功。
+  - 發布 idempotency key 以 task、發布目標與 key 定址，另保存正規化請求內容摘要。發布命令須在首次嘗試前固定可跨重試辨識的目標：Dry 用同任務 `(cycle_no,round_no)` 唯一定位其 `trial_round_id`，Official 用 task 的單一正式發布定位；提交結果不明時沿用同一目標，不得新配回合身分。須先查已提交目標與 key，再執行會因首次發布而改變的狀態門檻或重新抽樣。Dry 以 `(task_id,trial_round_id,key)`、Official 以 `(task_id,key)` 分別約束冪等鍵，允許不同 Dry 回合重用同一 key。相同 key 與摘要的重試或並行重送回傳原 run／snapshot，不重新抽樣、不增加 assignment 或事件；同 key 異摘要／異內容拒絕為衝突，異 key 對同 round 重複發布或第二次 Official 亦拒絕。提交結果不明時先以資料庫冪等鍵查已提交 run，不重抽；既存回執缺失或摘要不符時拒絕讀取並告警，只能由 run-item SQL 正典重建相同位元組作受控修復，不能靜默換清單。清理無引用回執須超過交易／重試保護期、確認無活躍寫入租約且 DB 無引用；已引用物件不得刪除。並行請求須由資料庫交易與唯一性約束保證相同結果，SQLite 與 PostgreSQL 語意一致。
 
 #### Scenario: FR-010f-6 對應 AC-3.42
 

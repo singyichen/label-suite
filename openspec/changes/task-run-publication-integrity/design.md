@@ -12,7 +12,7 @@
 
 `task_run_item` 的 `(run_id,list_position)` 是順序正典。規範位元組固定以 UTF-8 寫 `label-suite-run-items-v1\n`，其後每個小寫帶連字號 UUID 加 `\n`；`selected_item_digest` 為完整位元組 SHA-256 十六進位。`selection_manifest_ref` 是私有、不可覆寫的內容定址物件鍵，不是客戶端 URL，回執不含答案、split、受限來源或 gold/test 標記。
 
-服務先驗證權限、狀態與版本，並依 task、發布目標及 key 檢查已提交請求。新發布寫入回執後讀回驗證位元組、摘要及持久性，再於單一 DB 交易寫入 cycle／round、snapshot 引用、run、run-item、候選 reviewer、assignment、狀態轉換與稽核。外部物件寫入不屬 DB ACID 交易；回執失敗不提交 DB，DB 回滾可留無引用物件但不可留下可見 run。
+服務先驗證權限並固定發布目標：Dry 以同任務 `(cycle_no,round_no)` 定址且重試沿用相同 `trial_round_id`，Official 以該任務唯一正式發布定址。依目標及 key 查已提交請求須先於會因首次發布而改變的狀態門檻與抽樣；新發布才驗證狀態與版本。Dry 的部分唯一索引是 `(task_id,trial_round_id,key)`，Official 是 `(task_id,key)`，不同 Dry 回合可重用 key。新發布寫入回執後讀回驗證位元組、摘要及持久性，再於單一 DB 交易寫入 cycle／round、snapshot 引用、run、run-item、候選 reviewer、assignment、狀態轉換與稽核。外部物件寫入不屬 DB ACID 交易；回執失敗不提交 DB，DB 回滾可留無引用物件但不可留下可見 run。
 
 相同 key 與正規化命令摘要回原 run／snapshot，不重新抽樣；異摘要拒絕。提交結果不明時先查 DB 冪等鍵，已提交回執缺失或摘要不符則拒絕讀取並告警；只能由 SQL 清單重建相同位元組進行受控修復。無引用物件清理須超過交易與重試保護期、無活躍寫入租約且 DB 確認無引用；不可刪已引用物件。
 

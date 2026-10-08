@@ -22,7 +22,7 @@ MVP 的任務建立與 Dry／Official 發布需留下可重現且相互一致的
 
 公開清單的規範位元組版本為 `label-suite-run-items-v1`：UTF-8、第一行固定為 `label-suite-run-items-v1\n`，之後按 `task_run_item.list_position` 逐行寫小寫帶連字號的 UUID 與 `\n`，沒有其他空白或欄位。`selected_item_digest` 是這份完整位元組的 SHA-256 十六進位字串，`selection_manifest_ref` 是私有 content-addressed 物件鍵而非客戶端可取用 URL。回執不得包含 hidden answer、gold/test 標記、`declared_split` 或受限 `source_ref`。
 
-授權服務鎖定 task／目前版本後，先以 task、發布目標與 key 查已提交發布：相同正規化命令摘要回原 run／snapshot，異摘要拒絕；不能由重試重新抽樣。新發布依正典選出公開 ID 並先寫 write-once 回執，讀回驗證位元組、摘要與持久性；再由同一 DB 交易建立 cycle／round（視情況）、snapshot 引用、run、run-item、候選 reviewer、assignment、狀態轉換及稽核事件。資料庫提交後才對請求宣稱成功。回執寫入失敗則 DB 不提交；DB 回滾可能留下無引用物件。清理工作僅在超過交易／重試保護期、確認無活躍寫入租約且 DB 無引用時刪除；不得刪任何已引用物件。提交結果不明時先查 DB 冪等鍵，既存回執缺失或摘要不符時拒絕讀取並告警，由 SQL 正典重建相同位元組作受控修復，不能靜默換清單。
+授權服務先固定發布目標：Dry 用同任務 `(cycle_no,round_no)` 定位，Official 用任務的唯一正式發布定位；首次嘗試與結果不明後的重試須沿用同一目標，不得另配回合 ID。鎖定 task／目前版本後，先以目標與 key 查已提交發布，再檢查會隨首次發布改變的狀態門檻：相同正規化命令摘要回原 run／snapshot，異摘要拒絕；不能由重試重新抽樣。Dry 以 `(task_id,trial_round_id,key)` 部分唯一，Official 以 `(task_id,key)` 部分唯一；不同 Dry 回合可重用 key，單一空值複合唯一鍵不能保護 Official。新發布依正典選出公開 ID 並先寫 write-once 回執，讀回驗證位元組、摘要與持久性；再由同一 DB 交易建立 cycle／round（視情況）、snapshot 引用、run、run-item、候選 reviewer、assignment、狀態轉換及稽核事件。資料庫提交後才對請求宣稱成功。回執寫入失敗則 DB 不提交；DB 回滾可能留下無引用物件。清理工作僅在超過交易／重試保護期、確認無活躍寫入租約且 DB 無引用時刪除；不得刪任何已引用物件。提交結果不明時先查同目標 DB 冪等鍵，既存回執缺失或摘要不符時拒絕讀取並告警，由 SQL 正典重建相同位元組作受控修復，不能靜默換清單。
 
 ## Assignment 唯讀狀態
 
