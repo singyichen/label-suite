@@ -2,7 +2,7 @@
 
 ### Requirement: FR-005 dataset lineage 契約
 
-- **FR-005**：每個 item 須在同一交易建立恰一筆 `dataset_item_private`，以 `dataset_item_id` 作 PK/FK；`declared_split`、`hidden_answer` 與 `protected_payload` 可空，其中 `declared_split` 與 `hidden_answer` 只代表**來源宣告**，不代表後續 run 的實際抽樣／指派。`protected_payload` 為 JSON，只存該 item 所屬批次 `classification_manifest` 受保護集合中的非答案欄位值，鍵名一律取自 manifest、不得以欄名猜測或寫死，也不得存放 `hidden_answer` 的答案 envelope。隱藏答案、`protected_payload` 與來源 artifact 需受獨立權限控制，且 `protected_payload` 的讀取權與 `hidden_answer` 分開授權；儲存後只允許授權 scoring worker 讀取答案，標記者、一般建立者與一般 API 皆不可讀這些欄位，也不得為此新增可讀角色；不得進入標記者可讀的資料路徑。
+- **FR-005**：每個 item 須在同一交易建立恰一筆 `dataset_item_private`，以 `dataset_item_id` 作 PK/FK；`declared_split`、`hidden_answer` 與 `protected_payload` 可空，其中 `declared_split` 與 `hidden_answer` 只代表**來源宣告**，不代表後續 run 的實際抽樣／指派。`protected_payload` 為 JSON，只存該 item 所屬批次 `classification_manifest` 受保護集合中的非答案欄位值，鍵名一律取自 manifest、不得以欄名猜測或寫死，也不得存放 `hidden_answer` 的答案 envelope。隱藏答案、`protected_payload` 與來源 artifact 需受獨立權限控制，且 `protected_payload` 的讀取權與 `hidden_answer` 分開授權；儲存後只允許授權 scoring worker 讀取答案，標記者、一般建立者與一般 API 皆不可讀這些欄位，也不得為此新增可讀角色；scoring worker 不因可讀答案而自動取得 `protected_payload` 的讀取權，本規格不指定任何 `protected_payload` 讀取角色；不得進入標記者可讀的資料路徑。
 
 #### Scenario: FR-005 主要驗收
 

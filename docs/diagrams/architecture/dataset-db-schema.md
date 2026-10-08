@@ -170,7 +170,7 @@ erDiagram
 | P-02 | SVC | item 與 private 在同一交易建立；封存前檢查每 item 恰有一列。單向 FK 無法獨力保證每 item 至少一列 | dataset-021 FR-005／FR-008 |
 | P-03 | SVC | null 只表示來源未宣告；實際 test 集若需要答案而為 null，由後續 scoring／publish 契約拒絕。來源 split 不等於 run split；合法 split 詞彙與答案 JSON shape 待 runtime 前正典定案 | dataset-021 FR-005、FR-010 |
 | P-04 | SVC | `protected_payload` 只存該批 `classification_manifest` 受保護集合內、非答案的欄位值，鍵完全由 manifest 驅動、不寫死欄名；不存 `hidden_answer` 答案，兩者分欄；null＝該 item 無此類欄位。讀取權與 `hidden_answer` 分開授權，不新增讀取角色；公開改受保護時，值由 `public_payload` 搬入並同步移除公開投影 | dataset-021 FR-005、FR-006、AC-2.6 |
-| S-01 | DB 權限＋SVC＋SEC | PostgreSQL 的標記者服務讀取角色不能 `SELECT` private 表（含 `protected_payload`）或受限來源；SQLite 由 repository／response allowlist 隔離。匯入程序只在來源尚未儲存時讀取上傳串流並寫入受限資料；**儲存後任何含答案內容只允許授權 scoring-worker 路徑讀取**，一般維護、建立者與預覽路徑不可讀 raw artifact 或 private 答案；draft 修正 manifest 同樣不讀取已儲存的含答案資料，也不新增任何可讀答案的角色；`protected_payload` 走同一受限私有路徑，讀取權與 `hidden_answer` 分開授權，不新增讀取角色。所有標記者 response、state、log、cache、trace、fixture 不含 split、答案或來源位置 | 主憲法 III；backend constitution III／VI／VII；testing constitution VIII；dataset-021 FR-005～FR-007、AC-2.6 |
+| S-01 | DB 權限＋SVC＋SEC | PostgreSQL 的標記者服務讀取角色不能 `SELECT` private 表（含 `protected_payload`）或受限來源；SQLite 由 repository／response allowlist 隔離。匯入程序只在來源尚未儲存時讀取上傳串流並寫入受限資料；**儲存後任何含答案內容只允許授權 scoring-worker 路徑讀取**，一般維護、建立者與預覽路徑不可讀 raw artifact 或 private 答案；draft 修正 manifest 同樣不讀取已儲存的含答案資料，也不新增任何可讀答案的角色；`protected_payload` 走同一受限私有路徑，讀取權與 `hidden_answer` 分開授權，scoring worker 不因可讀答案而自動取得此欄讀取權，不新增讀取角色。所有標記者 response、state、log、cache、trace、fixture 不含 split、答案或來源位置 | 主憲法 III；backend constitution III／VI／VII；testing constitution VIII；dataset-021 FR-005～FR-007、AC-2.6 |
 | X-01 | SVC | 時間以 UTC 正規化；PostgreSQL 用 `TIMESTAMPTZ`，SQLite 以應用層正規化讀寫，不能假定 SQLite 保存時區資訊 | ADR-024；dataset-021 FR-009 |
 
 **刪除與保留**：外鍵先採 `RESTRICT` 候選，禁止無限制 cascade 消除 sealed 版本或被引用 item。受限來源、公開項目、私有答案及派生資源的保留／刪除／匿名化政策須先依 dataset-021 FR-011 補齊，再訂正式 `ON DELETE` 與資料遷移策略。
@@ -205,7 +205,7 @@ erDiagram
 | `dataset`、`dataset_version` | 受角色保護的管理 metadata | 授權匯入／封存服務寫；具任務資格的管理服務讀。封存後版本內容不可變；不要把內部版本狀態做為 gold/test 標記 |
 | `dataset_import_batch` 與來源 artifact | 高敏感；檔名、路徑、分類及原始 JSON 可含答案或 PII | 匯入程序在**儲存前**讀來源串流並寫入；seal 讀 metadata 與匯入 digest 回執，不重讀原始內容。儲存後原始 artifact 若需讀取，只能走授權 scoring-worker 路徑；一般維護、建立者及標記者不可讀；來源 ref 不進一般 API |
 | `dataset_item.public_payload` | 經分類後可供已指派標記者使用 | 匯入服務於 draft 寫；授權任務／assignment 讀取端只取允許欄位；sealed 後不改 |
-| `dataset_item_private` | 最高敏感；split、hidden answer、受保護欄位值（`protected_payload`，讀取權與 hidden answer 分開授權） | 匯入程序僅寫入／draft 修正；儲存後答案**只有授權 scoring worker 讀取**；無標記者、一般建立者或通用 API 讀取權；sealed 後不改 |
+| `dataset_item_private` | 最高敏感；split、hidden answer、受保護欄位值（`protected_payload`，讀取權與 hidden answer 分開授權；scoring worker 不因讀答案而自動可讀此欄，不指定讀取角色） | 匯入程序僅寫入／draft 修正；儲存後答案**只有授權 scoring worker 讀取**；無標記者、一般建立者或通用 API 讀取權；sealed 後不改 |
 
 **3NF 路徑**：`dataset_item.dataset_import_batch_id` 決定 batch，batch 的 `dataset_version_id` 決定 version，version 的 `dataset_id` 決定 dataset。`source_name`、`source_sha256`、`record_path`、`preprocessing_version` 與該來源的 `classification_manifest` 只在 batch 保存一次；item 不重複 version、source、preprocessing 或分類欄位。`dataset_version.parent_version_id` 只表祖先關係，不讓子版本動態引用父版本的 item 集合；完整後繼版本建立自己的 batch/item 快照。私有答案與來源 split 因 1:1 item PK 獨立於公開 payload。`manifest_sha256` 是封存時固定的完整性證據，不能取代來源與 item FK。
 
