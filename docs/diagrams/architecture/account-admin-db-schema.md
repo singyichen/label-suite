@@ -403,7 +403,7 @@ migration 種入唯一允許的 `id = 1` 列。PK 與 CHECK 只能保證最多�
 | ID | 類型 | 規則 | 執行位置 | 實作時驗證 | 來源 |
 |---|---|---|---|---|---|
 | A-01 | XT | 與被稽核的異動同一交易寫入；任一方失敗則兩者皆不留 | 應用層 | SVC：模擬稽核寫入失敗 → 使用者列不變 | 006 FR-013；ADR-032 |
-| A-02 | SM | 只能新增，禁止一般路徑 UPDATE／DELETE；後續若需清理，須另行審核保留政策與特權程序 | 應用層＋DB trigger（兩種 DB 各一份） | SQLite 與 PG：直接 UPDATE／DELETE 均被 trigger 擋下；M：downgrade 移除 trigger | Accepted ADR-032 |
+| A-02 | SM | 只能新增，禁止一般路徑 UPDATE／DELETE；後續若需清理，須另行審核保留政策與特權程序 | 應用層＋DB trigger（兩種 DB 各一份）；PostgreSQL 另對 app role `REVOKE UPDATE, DELETE, TRUNCATE` | SQLite 與 PG：直接 UPDATE／DELETE 均被 trigger 擋下；PG：app role 的 UPDATE／DELETE／TRUNCATE 回 privilege denied；M：downgrade 移除 trigger | Accepted ADR-032；ADR-024 增補 (2026-10-08) |
 | A-03 | CD | `payload_summary` 僅含事件 registry 明列的非敏感欄位與變更摘要；不得含密碼、token、原始聯絡資料、標記答案、測試集正解或其快照 | 應用層 allowlist | SVC：密碼、聯絡資料及標記相關事件不會把敏感值寫入摘要 | 006 FR-013；Accepted ADR-032 |
 | A-04 | CK | `((actor_user_id IS NULL AND actor_role = 'system') OR (actor_user_id IS NOT NULL AND actor_role <> 'system'))`；非空 actor FK 為 RESTRICT | DB CHECK＋FK | SQLite 與 PG：角色／actor 不一致失敗；刪除有稽核紀錄的使用者失敗（SQLite 依賴 X-01） | Accepted ADR-032 |
 | A-05 | CD | **所有**稽核事件至少保存一個日曆年，不設自動刪除；未來的保留或清理政策須另行審核，不能透過一般寫入路徑刪除 | 應用層與維運政策 | SVC：無自動刪除路徑；DB：一般 DELETE 被 A-02 擋下 | 007 FR-010；Accepted ADR-032 |
