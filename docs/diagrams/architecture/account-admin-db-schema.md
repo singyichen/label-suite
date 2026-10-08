@@ -6,8 +6,8 @@
 - **衍生視圖，不是正典**：依 [`SDD 權威矩陣`](../../sdd-workflow.md#0-權威矩陣與衝突裁決)，衝突裁決順序為主憲法 → 適用的 domain constitution → Accepted ADR → canonical feature spec → 衍生視圖；Proposed ADR 不改變現行規則。發現衝突時須回到正典裁決並修正本文件。
 - **範圍**：account 001–005、account-020、admin-006、admin-007。admin-007 規格仍為 **Draft**；Accepted ADR-037 已裁決保留兩張可編輯矩陣候選表。
 - **不歸屬任何單一 spec**：同一張 `users` 表被 001、003、005、006 共同修改，因此放在 `docs/diagrams/architecture/`，不隨任何 spec 進 `specs/_archive/`。各 spec 的 plan.md「實體與資料模型」段落應連結本文件，不各自複製欄位表。
-- **狀態：草稿**。九張表均為候選，尚未建立 migration；其他模組的實體鍵與 FK 仍需另行設計，不得據此宣稱已部署。
-- **NoteCraft 規劃檢視**：[`database-schema.er.json`](./database-schema.er.json) 對應 `/view/diagrams/architecture/database-schema.er` 的 Wiki／Diagram。本文件 §3 供應其中 account/admin 的 9 張候選表（64 欄、7 個候選單欄 FK）；[dataset 字典](./dataset-db-schema.md)另供應 5 張／31 欄／6 FK，[task/run 字典](./task-run-db-schema.md)供應 14 張／117 欄／16 FK，[annotation/review 字典](./annotation-review-db-schema.md)供應 8 張／83 欄／15 FK，[匯出字典](./task-export-db-schema.md)供應 2 張候選表／27 欄／2 個候選單欄 FK，[工時字典](./task-work-db-schema.md)供應 1 張／11 欄／0 個單欄 FK（另有三組複合 FK），全圖合計 39 張候選表／333 欄／46 個候選單欄 FK。兩張權限矩陣表已由 ADR-037 確認保留為候選，目前已落地業務表仍為 0。資料集分析的品質／IAA 專用表依 MVP 範圍延後；014 試標閘門所需 `task_trial_iaa_result` 為任務候選表。改動任一欄位字典後執行 `node scripts/check-database-schema.mjs` 檢查投影差異。
+- **狀態：草稿**。十張表均為候選，尚未建立 migration；其他模組的實體鍵與 FK 仍需另行設計，不得據此宣稱已部署。
+- **NoteCraft 規劃檢視**：[`database-schema.er.json`](./database-schema.er.json) 對應 `/view/diagrams/architecture/database-schema.er` 的 Wiki／Diagram。本文件 §3 供應其中 account/admin 的 10 張候選表（73 欄、8 個候選單欄 FK）；[dataset 字典](./dataset-db-schema.md)另供應 5 張／31 欄／6 FK，[task/run 字典](./task-run-db-schema.md)供應 14 張／117 欄／16 FK，[annotation/review 字典](./annotation-review-db-schema.md)供應 8 張／83 欄／15 FK，[匯出字典](./task-export-db-schema.md)供應 2 張候選表／27 欄／2 個候選單欄 FK，[工時字典](./task-work-db-schema.md)供應 1 張／11 欄／0 個單欄 FK（另有三組複合 FK），全圖合計 40 張候選表／342 欄／47 個候選單欄 FK。兩張權限矩陣表已由 ADR-037 確認保留為候選，目前已落地業務表仍為 0。資料集分析的品質／IAA 專用表依 MVP 範圍延後；014 試標閘門所需 `task_trial_iaa_result` 為任務候選表。改動任一欄位字典後執行 `node scripts/check-database-schema.mjs` 檢查投影差異。
 - **驗證方式**：本文件不執行 SQL。每條限制的正確性在實作時由 Alembic migration 的 upgrade／downgrade／roundtrip 測試，以及 §4 指定的測試驗證。
 
 ## 1. 關鍵設計決定
@@ -16,7 +16,8 @@
 |---|---|---|
 | 權限判定與憑證作廢 | 每個已認證請求重讀 `users.role`／`is_active`／`credential_version`；JWT 的 `credential_version` 不符即拒絕。`credential_version` 僅處理憑證失效，不承載角色版本 | ADR-021、account-020 FR-002／FR-010 |
 | 表名與角色、狀態欄名 | 沿用既有契約 `users`、`refresh_tokens`、`role`、`is_active`；登入工作階段表採 `account_session`；既有 auth 表名仍依正典契約保留。例外均由 FR-105 明列 | ADR-021、foundation FR-105、account-020；原 N-1 已裁決 |
-| 共用稽核表 | 唯一共用候選表名為 `audit_events`，作為 FR-105 的明列例外；人員事件以 `actor_user_id → users` 留參照，系統事件的 actor 為 null；`task_id` 可空且非空時真實 FK → `task.id`；`RunStateTransition` 與 `IsolationAuditLog` 由 `task.status_changed`／`task.isolation_changed` 事件投影，不另建表 | Accepted ADR-032、foundation FR-105、006 FR-013、007 FR-010、014 FR-025、ADR-022；原 D-4 已裁決 |
+| 共用稽核表 | 共用且不加模組前綴的候選表名有兩個：`audit_events` 與 `idempotency_record`（見下一列），均為 FR-105 的明列例外；`audit_events` 人員事件以 `actor_user_id → users` 留參照，系統事件的 actor 為 null；`task_id` 可空且非空時真實 FK → `task.id`；`RunStateTransition` 與 `IsolationAuditLog` 由 `task.status_changed`／`task.isolation_changed` 事件投影，不另建表 | Accepted ADR-032、foundation FR-105、006 FR-013、007 FR-010、014 FR-025、ADR-022；原 D-4 已裁決 |
+| 共用冪等紀錄 | 新增共用候選表 `idempotency_record`（不加模組前綴，因為跨模組使用；首個使用者為 013 FR-006d 建立任務）。以 `UNIQUE (scope, actor_user_id, idempotency_key)` 定位；只在首次請求成功時、與業務寫入同一交易寫一列，故結果欄必填、不設 pending 狀態。維護者於 2026-10-08 裁決採獨立通用表（issue #1219／母單 #1216，D-14） | 013 FR-006d、AC-4.4、AC-4.6；ADR-024；原 D-14 已裁決 |
 | Google SSO 帳號的判定 | 維持 `hashed_password = null`，不改用 `google_subject IS NOT NULL` | 005 FR-008；ADR-035 修訂 |
 | Google 連結時的既有密碼 | 同一交易清空 `hashed_password` 並撤銷該使用者全部 refresh token | ADR-035 修訂 |
 | refresh token 重用偵測的撤銷範圍 | 寬限期內最多一次重發；逾期重用撤銷該使用者全部有效工作階段，並拒絕請求 | ADR-021、account-020 FR-003／FR-004 |
@@ -120,6 +121,18 @@ erDiagram
         timestamptz updated_at
     }
 
+    idempotency_record {
+        uuid id PK
+        varchar scope "operation, e.g. task.create"
+        uuid actor_user_id FK "RESTRICT"
+        varchar idempotency_key "client key; len<=120"
+        varchar request_digest "digest of normalized request"
+        varchar result_resource_type "polymorphic, no FK"
+        uuid result_resource_id "polymorphic, no FK"
+        timestamptz created_at
+        timestamptz expires_at "created_at + IDEMPOTENCY_WINDOW_HOURS"
+    }
+
     users ||--o{ account_session : "登入（保留歷程；刪除受限）"
     account_session ||--o{ refresh_tokens : "輪替（連動刪除）"
     users ||--o{ account_password_token : "reset / invite (CASCADE)"
@@ -127,6 +140,7 @@ erDiagram
     users ||--o{ account_notification_preference : "preferences (<=6)"
     users |o--o{ audit_events : "human actor (RESTRICT)"
     task |o--o{ audit_events : "task scope (nullable; RESTRICT)"
+    users ||--o{ idempotency_record : "actor (RESTRICT)"
 ```
 
 **表的來源**（001 plan v2.2.0、account-020 與 ADR-021 定義登入表形；以下列跨規格來源）：
@@ -146,6 +160,7 @@ erDiagram
 | `account_email_change_request` | 005 FR-004C–FR-004M |
 | `account_notification_preference` | 005 FR-013B–FR-013E |
 | `audit_events` | 006 FR-013、007 FR-010、014 FR-025；表形依 Accepted ADR-032；非空 `task_id` 真實參照 `task.id` |
+| `idempotency_record` | 013 FR-006d、AC-4.4、AC-4.6（`IDEMPOTENCY_WINDOW_HOURS = 24`）；維護者裁決 D-14（issue #1219） |
 | `admin_role_permission` | 007 關鍵實體 RolePermissionMatrix、「角色 × 權限預設矩陣（V1）」 |
 | `admin_role_permission_version` | 007 關鍵實體 RolePermissionVersion、FR-005b |
 
@@ -280,6 +295,22 @@ migration 種入唯一允許的 `id = 1` 列。PK 與 CHECK 只能保證最多�
 | `version` | integer | 否 | 目前矩陣版本，初始為 1；前端讀取時一併取得，儲存時送回 | 每次有實際變更的儲存 +1 | M-06、M-07 |
 | `updated_at` | timestamptz | 否 | 最後一次儲存時間 | 與 `version` 同時 | X-02 |
 
+### 3.10 idempotency_record：共用冪等紀錄
+
+一列＝某位已驗證操作者，對某個操作（`scope`）以某個 `Idempotency-Key` **已成功完成**的結果。`scope` 是操作名稱，例如 `task.create`（013 FR-006d 的首個使用者）；結果以 `result_resource_type`／`result_resource_id` 指向被建立的資源（例如 `task`／`task_id`），不設多型 FK，與 `audit_events.target_id` 同理。列只在首次請求**成功**時，與業務寫入在同一交易內寫入；因此結果欄必填，沒有 pending 狀態，失敗或回滾的請求不留列。同一範圍內的重送只依此列重播結果，不重新執行業務寫入。
+
+| 欄位 | 型別 | 可空 | 代表什麼 | 何時寫入／改變 | 規則 |
+|---|---|---|---|---|---|
+| `id` | uuid | 否 | 紀錄識別碼，由應用程式產生 | 寫入時 | X-04 |
+| `scope` | varchar(64) | 否 | 冪等範圍的操作名稱，例如 `task.create`；值由各使用者模組的 registry 管理，DB 不加 CHECK | 寫入時 | I-01 |
+| `actor_user_id` | uuid → users | 否 | 已驗證的操作者。FK 為 RESTRICT，有冪等紀錄的帳號不可實體刪除（本來也只能停用） | 同上 | I-01、I-06 |
+| `idempotency_key` | varchar(120) | 否 | 用戶端送的 `Idempotency-Key` 原值 | 同上 | I-01 |
+| `request_digest` | varchar(64) | 否 | 經驗證與正規化請求內容的摘要（固定長度十六進位字串）；用來區分「同 key 同內容」與「同 key 異內容」 | 同上 | I-02、I-03 |
+| `result_resource_type` | varchar(64) | 否 | 結果資源種類，例如 `task` | 同上 | I-02 |
+| `result_resource_id` | uuid | 否 | 結果資源識別碼，例如原 `task_id`；對象可能在任何表，不加 FK | 同上 | I-02、X-04 |
+| `created_at` | timestamptz | 否 | 首次成功的伺服器時間（UTC） | 同上 | X-02 |
+| `expires_at` | timestamptz | 否 | 重播有效期限，寫入時固定為 `created_at + IDEMPOTENCY_WINDOW_HOURS`；之後調整常數不改寫歷史列 | 同上 | I-04、I-05 |
+
 ## 4. 限制清單（ERD 表達不了的規則）
 
 類型：**CK**＝CHECK 與欄位互動／**SM**＝狀態轉換／**CC**＝併發保護／**CD**＝條件式必填或禁填／**XT**＝跨表連動（同一交易）／**PT**＝跨方言可攜性。
@@ -398,6 +429,19 @@ Accepted ADR-037 已確認保留兩張可編輯矩陣候選表。以下是後續
 | M-10 | CK | 兩個 system role 的 `dashboard.view` 格固定 true | DB CHECK：`role_type <> 'system' OR permission_key <> 'dashboard.view' OR allowed` | SQLite 與 PG：任一 system role 的 dashboard 格改 false 失敗 | Accepted ADR-037、007 FR-008a |
 | M-11 | CK | `allowed` 非空；SQLite 額外 `CHECK(allowed IN (0,1))` 防止 boolean affinity 接受其他整數，PostgreSQL 原生 boolean | DB | DB：SQLite 寫入 2 失敗；兩種 DB 寫入 NULL 失敗 | Accepted ADR-037 |
 
+### 4.7A idempotency_record
+
+以下是後續獨立 migration／runtime slice 的待驗證規則，不表示目前已有資料表。
+
+| ID | 類型 | 規則 | 執行位置 | 實作時驗證 | 來源 |
+|---|---|---|---|---|---|
+| I-01 | CC | `UNIQUE (scope, actor_user_id, idempotency_key)`：比對範圍為已驗證操作者與操作（`task.create`）。併發的同 key 請求以此約束收斂：PostgreSQL 用 `INSERT ... ON CONFLICT` 並對衝突列 `SELECT ... FOR UPDATE` 後依 `request_digest` 判定重播或衝突，時間欄為 timestamptz；SQLite 無 `SELECT FOR UPDATE`，以 `BEGIN IMMEDIATE` 序列化寫入交易，`expires_at` 以 UTC 文字儲存，須在應用層或正規化後比較（X-02）。`expires_at` 到期與否只是查詢過濾條件，見 I-04 | DB 唯一約束＋應用層 | DB（SQLite 與 PG）：重複三元鍵失敗；CC（SQLite 與 PG 各跑一次）：兩個同 key 請求同時送出，恰建立一個資源，另一個得到同一結果或衝突 | 013 FR-006d；ADR-024 |
+| I-02 | XT | 列與業務寫入（建立任務、creator membership、config、指引版本）在同一交易；首次請求失敗則兩者皆不留。結果欄均必填，不設 pending 狀態 | 應用層單一交易 | SVC：模擬業務寫入失敗 → 無 `idempotency_record`；寫入紀錄失敗 → 任務不留 | 013 FR-006d |
+| I-03 | CD | 013 FR-006d：「比對範圍為已驗證的建立者與 `task.create` 操作」。同一範圍內，同 key 在 `IDEMPOTENCY_WINDOW_HOURS` 內搭配相同 `request_digest`（即「經驗證與正規化請求內容」的摘要）重送，才回傳原 `task_id`，不重複建立 membership、config 或指引版本（AC-4.4）；同 key 搭配不同 `request_digest` 須回報衝突，不建立任務，亦不得將原 `task_id` 當作此次請求的成功結果（AC-4.6）。`IDEMPOTENCY_WINDOW_HOURS = 24` 定義於 013 spec | 應用層 | API：同 key 同內容回原 `task_id` 且 membership／config／指引版本計數不變；同 key 異內容回衝突、任務數不變、回應不含原 `task_id` 作為成功結果 | 013 FR-006d、AC-4.4、AC-4.6 |
+| I-04 | CD | `expires_at = created_at + IDEMPOTENCY_WINDOW_HOURS`，寫入時固定。`expires_at <= now` 的列視為不存在；到期後的第一個請求必須在同一交易內取代（或先刪除）舊列，否則 I-01 的唯一約束會擋下新請求。另有定期清理工作，以 `expires_at` 索引分批刪除過期列；清理不影響正確性，只回收空間 | 應用層查詢過濾＋排程清理 | SVC：到期前重播、到期後視為新請求且舊列被取代；清理分批刪除過期列、不動未過期列；跳過清理時行為不變 | 013 FR-006d |
+| I-05 | CD | 每次重送仍須先依 FR-001a 重新檢查當下 `task.create` 權限，通過後才可回傳已存放結果；權限被撤銷後重送被拒絕，不洩漏舊結果 | 應用層 | API：建立後撤銷 `task.create` 格，同 key 重送被拒絕且回應不含 `task_id` | 013 FR-006d、FR-001a、SC-006 |
+| I-06 | FK | `actor_user_id` 為真實 FK → `users.id`，RESTRICT；索引見 §4.9 | DB | SQLite 與 PG：不存在的 actor 被拒；刪除有紀錄的使用者失敗（SQLite 依賴 X-01） | 013 FR-006d |
+
 ### 4.8 跨表與基礎設施
 
 | ID | 類型 | 規則 | 執行位置 | 實作時驗證 | 來源 |
@@ -421,6 +465,9 @@ Accepted ADR-037 已確認保留兩張可編輯矩陣候選表。以下是後續
 | 使用者／角色抽屜讀取目標歷程 | `audit_events(target_type, target_id, occurred_at DESC, id DESC)` | 以目標識別與穩定的倒序鍵分頁；`target_id` 為多型字串，不虛構目標 FK |
 | 任務內稽核事件時間線及 task FK 反查 | `audit_events(task_id, occurred_at, id)` | 任務作用域查詢與穩定升序；索引以 `task_id` 起首，覆蓋真實 FK 參照檢查，不另加單欄索引 |
 | 依操作者讀取事件與 actor FK 參照動作 | `audit_events(actor_user_id, occurred_at DESC, id DESC)` | 前導 actor 欄涵蓋 FK 查找，不再另建單欄索引 |
+| 冪等重播／衝突判定 | `UNIQUE (scope, actor_user_id, idempotency_key)` | 單列定位；同時作為 `SELECT ... FOR UPDATE`／`ON CONFLICT` 的衝突目標 |
+| `idempotency_record.actor_user_id` FK 反查（RESTRICT 檢查） | `idempotency_record(actor_user_id)` B-tree | 唯一索引以 `scope` 起首，不覆蓋 actor FK；專案標準要求每個 FK 有索引，故另建單欄索引。表受 24 小時視窗與清理限制而很小，成本低 |
+| 過期列分批清理 | `idempotency_record(expires_at)` B-tree | 清理工作以 `WHERE expires_at <= now` 加 `LIMIT` 分批刪除，避免全表掃描；僅供清理，重播正確性不依賴它 |
 | 通知設定按 user 查找 | `account_notification_preference(user_id, event_key)` 複合 PK | 前導欄已涵蓋 user FK，無需重複單欄索引 |
 | 依角色、層級與鍵判斷權限 | `admin_role_permission(role_type, role_key, permission_key)` 複合 PK | 三元定位由 PK 涵蓋；V1 僅 42 列，整份矩陣讀取無需額外索引 |
 | 檢查矩陣版本 | `admin_role_permission_version.id` PK | `id=1` 單列 CAS；`version` 無需單欄索引 |
@@ -433,7 +480,7 @@ Accepted ADR-037 已確認保留兩張可編輯矩陣候選表。以下是後續
 |---|---|---|---|---|
 | — | account/admin 範圍內 D-9～D-13 已依 Accepted ADR-037 裁決 | 後續 task／dataset 實體鍵與 FK 在各模組盤點 | — | 不再阻擋本範圍表形 |
 
-**已裁決**：N-1 採既有 auth 命名例外與新表模組前綴（ADR-021、foundation FR-105）；D-1 密碼可空（001 plan v2.2.0、account-020 FR-010）；D-2 invite 24 小時且 `invalidated_at` 區別作廢（006 FR-006c、004 FR-009A）；D-3 最多一次寬限重發（account-020 FR-004）；D-4 共用 `audit_events`（Accepted ADR-032）；D-5 缺列通知全開（005 FR-013F）；D-6 以每請求 `credential_version` 比對實現高風險事件立即失效（ADR-021）；D-7 冪等 bootstrap（006 FR-008e／FR-008f）；D-8 採 canonical email 與 `lower(email)` 唯一索引（account-020 FR-009）。D-9 矩陣為必要授權輸入並保留兩表，稽核目標固定 `role_permission_matrix`／`1`；D-10 加入 `task.detail.edit`，維持 boolean；D-11 同一任務可有多角色，邏輯識別為 `(task_id, user_id, task_role)`，物理 task FK 與索引留在 task 模組；D-12 新鍵可配置格預設 false，完成審核與完整種子後方啟用；D-13 固定 admin／dashboard 格，⛔ 錯層格不儲存（Accepted ADR-037、admin-007 v1.2.0）。上述皆為規劃裁決，尚未實作 migration 或 runtime。
+**已裁決**：D-14 新增獨立通用 `idempotency_record` 表供跨模組冪等使用，首個使用者為 013 FR-006d（維護者裁決 2026-10-08，issue #1219／母單 #1216）；N-1 採既有 auth 命名例外與新表模組前綴（ADR-021、foundation FR-105）；D-1 密碼可空（001 plan v2.2.0、account-020 FR-010）；D-2 invite 24 小時且 `invalidated_at` 區別作廢（006 FR-006c、004 FR-009A）；D-3 最多一次寬限重發（account-020 FR-004）；D-4 共用 `audit_events`（Accepted ADR-032）；D-5 缺列通知全開（005 FR-013F）；D-6 以每請求 `credential_version` 比對實現高風險事件立即失效（ADR-021）；D-7 冪等 bootstrap（006 FR-008e／FR-008f）；D-8 採 canonical email 與 `lower(email)` 唯一索引（account-020 FR-009）。D-9 矩陣為必要授權輸入並保留兩表，稽核目標固定 `role_permission_matrix`／`1`；D-10 加入 `task.detail.edit`，維持 boolean；D-11 同一任務可有多角色，邏輯識別為 `(task_id, user_id, task_role)`，物理 task FK 與索引留在 task 模組；D-12 新鍵可配置格預設 false，完成審核與完整種子後方啟用；D-13 固定 admin／dashboard 格，⛔ 錯層格不儲存（Accepted ADR-037、admin-007 v1.2.0）。上述皆為規劃裁決，尚未實作 migration 或 runtime。
 
 ## 6. 刻意不做
 
@@ -443,6 +490,7 @@ Accepted ADR-037 已確認保留兩張可編輯矩陣候選表。以下是後續
 - 不建角色／狀態用 `token_version`；高風險憑證事件使用 `credential_version`，仍每請求重讀角色與啟用狀態（ADR-021、account-020 FR-002／FR-010）。
 - 不提供使用者實體刪除，只能停用。
 - 不建權限鍵表：白名單以後端程式常數為唯一來源（007 `PERMISSION_KEYS_SOURCE`）。
+- 不搬移既有冪等設計：發布（`task_run` U-06，見 [task-run-db-schema.md](./task-run-db-schema.md)）與匯出（`task_export` E-05，見 [task-export-db-schema.md](./task-export-db-schema.md)）的冪等仍使用各自的欄位與唯一約束，不受本表影響；兩者日後**可以**評估以不同 `scope` 改用 `idempotency_record`，那是另一個獨立裁決。
 - 不在矩陣表存操作者：操作者與變更內容只記在 `audit_events`，避免兩處不一致。
 
 ## 7. 維護方式
