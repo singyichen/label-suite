@@ -1,6 +1,6 @@
 # 任務匯出資料庫資料結構（實體候選）
 
-> 本文件是 issue #1160 的衍生欄位字典。下列兩張表皆為**未部署候選**，不是 ORM、Alembic migration 或可直接執行的 DDL。正典為 [014 任務詳情 v8.0.0](../../../specs/task-management/014-task-detail/spec.md) FR-009a、FR-010i、FR-015e／g／h、FR-020／021／024，以及[主憲法 XVI、XXII](../../../specs/_governance/constitution.md)；[設計裁決](../../superpowers/specs/2026-10-08-mvp-export-record-design.md)說明原始產物方案。任務與執行的現有候選鍵見[任務／執行字典](./task-run-db-schema.md)。
+> 本文件是 issue #1160 的衍生欄位字典。下列兩張表皆為**未部署候選**，不是 ORM、Alembic migration 或可直接執行的 DDL。正典為 [014 任務詳情 v8.0.1](../../../specs/task-management/014-task-detail/spec.md) FR-009a、FR-010i、FR-015e／g／h、FR-020／021／024，以及[主憲法 XVI、XXII](../../../specs/_governance/constitution.md)；[設計裁決](../../superpowers/specs/2026-10-08-mvp-export-record-design.md)說明原始產物方案。任務與執行的現有候選鍵見[任務／執行字典](./task-run-db-schema.md)。
 
 ## 1. 範圍與狀態
 
@@ -19,6 +19,7 @@ erDiagram
         uuid task_id FK
         uuid requested_by_user_id FK
         timestamptz requested_at
+        timestamptz exported_at
         timestamptz completed_at
         varchar status
         varchar export_format
@@ -53,20 +54,21 @@ erDiagram
 
 ### 3.1 task_export：一次請求與一份不可變產物
 
-`requested_at` 是請求獲接受時固定的完整精度 UTC 時間，也作為 manifest 與條件快照的 `exported_at`；`completed_at` 記錄產物通過驗證並可下載的時間。這兩個時間的用途不同，不以背景工作的完成時間改寫已固定的匯出時間。來源：014 FR-010i-1／2、FR-021。
+`requested_at` 是請求獲接受時固定的完整精度 UTC 時間；`exported_at` 是背景工作真正讀取結果時的一致性快照時間，只有產物校驗成功並轉為 `ready` 才固定，供 manifest 與檔名共用。`completed_at` 另記產物可下載的時間。三者分別表示接受、內容快照與完成，不能互相代替。來源：014 FR-010i-1／2、FR-021。
 
 | 欄位 | 型別 | 可空 | 代表什麼 | 何時寫入／改變 | 規則 |
 |---|---|---|---|---|---|
 | `id` | uuid | 否 | 匯出主鍵 | 接受請求；不改 | E-01 |
 | `task_id` | uuid → task | 否 | 所屬任務 | 接受請求；不改 | E-01 |
 | `requested_by_user_id` | uuid → users | 否 | 原始請求人；不代表日後下載權 | 接受請求；不改 | E-01、E-08 |
-| `requested_at` | timestamptz | 否 | 固定的匯出時間 UTC；投影為 `exported_at` | 接受請求；不改 | E-02 |
+| `requested_at` | timestamptz | 否 | 請求接受時間 UTC，供歷史排序 | 接受請求；不改 | E-02 |
+| `exported_at` | timestamptz | 是 | 實際結果讀取快照時間 UTC；未完成時為空 | 原檔校驗成功並轉 `ready` 時與產物一併固定 | E-02、E-04 |
 | `completed_at` | timestamptz | 是 | 原檔完成且校驗通過的時間 UTC | 轉 `ready` 時寫入 | E-04 |
 | `status` | varchar(16) | 否 | `pending`／`processing`／`ready`／`failed` | 接受請求及合法轉換 | E-04 |
 | `export_format` | varchar(16) | 否 | `json`／`json-min` | 接受請求；不改 | E-03 |
 | `export_format_version` | integer | 否 | 檔案格式版本；新 `json-min` 為 2 | 接受請求；不改 | E-03 |
 | `conditions_version` | integer | 否 | 條件快照的驗證規格版本 | 接受請求；不改 | E-03 |
-| `conditions_snapshot` | json | 否 | 經驗證的有序 `selected_runs[]`、共用篩選、語言及序列選項 | 接受請求；不改 | E-03、E-07 |
+| `conditions_snapshot` | json | 否 | 經驗證的有序 `selected_runs[]`、共用篩選、語言及序列選項；不含結果快照時間 | 接受請求；不改 | E-03、E-07 |
 | `scope_label` | varchar(120) | 否 | 歷史列的任務範圍文案 | 接受請求；不改 | E-03 |
 | `export_type` | varchar(24) | 否 | 歷史列的全部／篩選匯出類型 | 接受請求；不改 | E-03 |
 | `request_idempotency_key` | varchar(120) | 否 | 同任務、同請求人的匯出重試鍵 | 接受請求；不改 | E-05 |
@@ -80,7 +82,7 @@ erDiagram
 | `revoked_at` | timestamptz | 是 | 來源刪除或政策撤銷後停止下載的時間 | 撤銷時寫入；不清空 | E-08、E-09 |
 | `failure_code` | varchar(64) | 是 | 失敗原因的安全代碼，不存內部路徑或答案 | 轉 `failed` 時寫入 | E-04、E-08 |
 
-`scope_label`／`export_type` 只供歷史列顯示，不混入 `conditions_snapshot` 的重製條件。`conditions_snapshot` 的有序 `selected_runs[]` 每項記錄 `run_id`、`run_stage`、`cycle_id`、`dataset_version_id`、`config_version_id`、`schema_version`、`guideline_version_id`、`sample_snapshot_id`；共用 `filters` 記錄提交狀態、標記員範圍、審核員及審核狀態等條件，並保存格式、語言、序列／切詞選項、完整精度 `exported_at` 與原請求人。混合 Dry／Official 匯出的頂層 `run_stage` 必須為 `all`，每個 run 的實際階段仍以 `selected_runs[]` 為準。快照不作重新下載時的資料查詢指令。
+`scope_label`／`export_type` 只供歷史列顯示，不混入 `conditions_snapshot` 的重製條件。`conditions_snapshot` 在接受時固定，有序 `selected_runs[]` 每項記錄 `run_id`、`run_stage`、`cycle_id`、`dataset_version_id`、`config_version_id`、`schema_version`、`guideline_version_id`、`sample_snapshot_id`；共用 `filters` 記錄提交狀態、標記員範圍、審核員及審核狀態等條件，並保存格式、語言、序列／切詞選項與原請求人。`conditions_snapshot` 不含 `exported_at`；內容快照時間取同列欄位，供重製驗證，不作重新下載時的資料查詢指令。混合 Dry／Official 匯出的頂層 `run_stage` 必須為 `all`，每個 run 的結果保持分開，不跨 run 合併或去重，實際階段以 `selected_runs[]` 為準。
 
 ### 3.2 task_export_run：匯出納入的執行與順序
 
@@ -100,11 +102,11 @@ erDiagram
 | ID | 執行位置 | 候選限制與驗證方向 | 來源 |
 |---|---|---|---|
 | E-01 | DB | `task_export.id` PK；`task_id → task.id`、`requested_by_user_id → users.id` 真單欄 FK；UNIQUE `(task_id,id)` 供同任務子參照 | 014 FR-010i-2 |
-| E-02 | SVC | `requested_at` UTC 完整精度且不可改；manifest 與快照的 `exported_at` 取同一值，檔名使用同一固定時間 | 014 FR-010i-1／2、FR-021 |
+| E-02 | SVC | `requested_at` 為請求接受時間；`exported_at` 取實際結果讀取快照的 UTC 完整精度時間，manifest 與檔名共用此值；不得把接受時間冒充內容時間 | 014 FR-010i-1／2、FR-021 |
 | E-03 | DB＋SVC | 格式只允許 `json`／`json-min`；格式與條件版本均 >0；版本化 JSON 須經對應 schema 驗證；新 `json-min` 用版本 2 的 `{manifest,rows[]}` | 014 FR-010i-2、FR-015h |
-| E-04 | DB＋SVC | `pending → processing → ready` 或 `pending/processing → failed`；`ready` 必須有 `completed_at`、`row_count >= 0`、檔名、參照、摘要、大小與到期時間；其他狀態不得開放下載。跨欄空值條件可用 CHECK，轉換順序由服務保護 | 014 FR-015e、FR-021；後端憲法 XII |
-| E-05 | DB＋SVC | UNIQUE `(task_id,requested_by_user_id,request_idempotency_key)`，避免兩位已授權請求人同 key 互相衝突或誤取他人紀錄。先驗當前授權，再依三欄查重；同人同 key 同 digest 回原紀錄，異 digest 拒絕。digest 取規範化原始命令，納入 task、請求人、格式／版本、有序 run、共用篩選、語言、序列／切詞選項；排除伺服器產生的 `requested_at`／`exported_at`、完成時間與產物資訊。worker 重試只依 `export.id`，不得以 worker 帳號建立另一列 | 014 FR-010i-2／FR-021、設計裁決 |
-| E-06 | SVC＋STORAGE | 原檔先寫暫存、驗內容與 SHA-256、大小，再原子發布物件及 `ready` 列；部分失敗清理暫存並留下可追溯失敗。重新下載核對摘要與大小，交付原始 bytes 和原檔名 | 014 FR-021、主憲法 XVI |
+| E-04 | DB＋SVC | `pending → processing → ready` 或 `pending/processing → failed`；`ready` 必須有 `exported_at`、`completed_at`、`row_count >= 0`、檔名、參照、摘要、大小與到期時間，並在同一交易原子固定不可變原始產物的 metadata；未 `ready` 的 `exported_at` 必須為空，其他狀態不得開放下載。跨欄空值條件可用 CHECK，轉換順序由服務保護 | 014 FR-015e、FR-021；後端憲法 XII |
+| E-05 | DB＋SVC | UNIQUE `(task_id,requested_by_user_id,request_idempotency_key)`，避免兩位已授權請求人同 key 互相衝突或誤取他人紀錄。先驗當前授權，再依三欄查重；同人同 key 同 digest 回原紀錄，異 digest 拒絕。digest 取規範化原始命令，納入 task、請求人、格式／版本、有序 run、共用篩選、語言、序列／切詞選項；排除伺服器產生的 `requested_at`／`exported_at`、完成時間與產物資訊。尚未 `ready` 的 worker 重試可在較晚結果快照重新執行，只依 `export.id` 沿用原列；`ready` 後冪等重試只回同一原始產物，不得以 worker 帳號建立另一列 | 014 FR-010i-2／FR-021、設計裁決 |
+| E-06 | SVC＋STORAGE | 在同一一致性讀取快照內擷取內容，原檔先寫受限暫存、驗內容與 SHA-256、大小，再原子發布物件及 `ready` 列；部分失敗清理暫存並留下可追溯失敗。重新下載核對摘要與大小，交付原始 bytes 和原檔名 | 014 FR-021、主憲法 XVI |
 | E-07 | SVC | 快照 `selected_runs[]`、有序 `task_export_run` 與產物 `manifest.runs[]` 逐項同序同身分；每 run 自帶階段與固定版本，共用 `filters` 對所選 run 一致套用。歷史列「試標／正式／兩者」由所選階段集合推導；空結果仍有完整 manifest。版本從不可變 run／cycle 鏈解析，不讀 task 當前指標 | 014 FR-009a／FR-010i／FR-015h |
 | E-08 | SEC | 每次下載重驗目前 `dataset.export`、active membership、任務範圍與來源有效性；不得回傳 `artifact_ref`、私有答案或未提交審核草稿 | 014 FR-021／024、主憲法 III |
 | E-09 | SVC＋STORAGE | 原檔自完成起保存 30 日；`now >= expires_at`、`revoked_at` 非空、來源刪除、物件缺失或校驗失敗均拒絕下載；歷史 metadata 保存一年，到期不延長原檔期限 | 014 FR-021、主憲法 XXII |
@@ -133,6 +135,7 @@ erDiagram
 - **雙資料庫**：ADR-024 規劃 SQLite Lite 與 PostgreSQL 正式機。UUID 用適配型別；`json` 在 PostgreSQL 對應 JSONB、SQLite 對應 JSON／文字並由應用層執行版本化 schema 驗證；時間一律 UTC，SQLite 讀回須補回時區語意。SHA-256 用 64 字元十六進位字串；大小為非負 `bigint`。不依賴 PostgreSQL 專有 `TINYINT`。
 - **複合 FK**：SQLite 每連線啟用 `PRAGMA foreign_keys=ON`；父端同序 UNIQUE 必須先建，否則子表可能在寫入時發生 `foreign key mismatch`。兩種資料庫均測跨任務 run 關聯被拒、同一匯出重複 run／順序被拒。
 - **原子產物**：資料庫交易與檔案／物件儲存不能假裝為同一個 ACID 交易。實作須採暫存物件、驗證、發布與補償清理；只有可讀且摘要吻合的原檔才可標 `ready`。SQLite Lite 可用受限本地檔案，正式機用受限物件儲存；資料庫只保存內部物件鍵，不保存長效公開 URL。
+- **結果快照**：PostgreSQL 在一致的讀交易中擷取全部輸出來源，SQLite 在建立讀快照後同樣以單一讀交易擷取；`exported_at` 是該次快照的時間標記，不是事後可用時間戳重放的嚴格 commit 截點。大檔串流的 PostgreSQL 長交易與 SQLite 讀鎖成本須於 runtime 階段量測。未通過校驗不得標 `ready`，也不得固定 `exported_at`。
 - **即時授權與公平性**：`requested_by_user_id` 只供責任追溯，下載權取自當前 active membership、`dataset.export` 矩陣格與 task 資源範圍；角色停用或來源刪除即拒絕。產物產生路徑只讀可公開的 `dataset_item.public_payload` 與獲准的已提交標記／審核結果，不 join `dataset_item_private`，不輸出 hidden answer、test/gold 分類、未提交審核草稿或受限來源位置。
 - **內容完整性**：重新下載每次驗 SHA-256 與大小；檢查失敗只能回繁體中文可理解原因及受控錯誤碼，不傳內部儲存路徑。已保存的有效詞級匯出不因切詞引擎後續不可用而失敗；新匯出仍依 FR-020 阻擋缺版本引擎。
 
