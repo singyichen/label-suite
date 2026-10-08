@@ -469,3 +469,81 @@ test('section 7 audit-and-retention item and A-01 follow ADR-038', () => {
   assert.ok(a01, 'Missing A-01 row');
   assert.ok(a01.includes('ADR-038'), 'A-01 must mention ADR-038');
 });
+
+// Issue #1223 G3: review/dataset medium-low design fixes.
+const annotationRules = () => annotationMarkdown().split('\n').filter((line) => /^\| [A-Z]-\d+ \|/.test(line));
+const erTable = (name) => {
+  const table = erData().tables.find((candidate) => candidate.name === name);
+  assert.ok(table, `Expected ${name} in database-schema.er.json`);
+  return table;
+};
+const compositeSentence = /複合[^。\n]*(?:不畫|未畫|不繪|未繪|不會畫|不會繪)[^。\n]*§4/;
+
+test('one rule names the revision decision_payload as the sole authoritative record of a submitted decision', () => {
+  const rows = annotationRules().filter((row) => /annotation_review_submission_revision/.test(row)
+    && /annotation_review_draft/.test(row) && /decision_payload/.test(row));
+  assert.equal(rows.length, 1, 'Exactly one rule must state the draft/revision single source of truth');
+  const [row] = rows;
+  assert.match(row, /(?:未提交|unsubmitted)[^|]*annotation_review_draft|annotation_review_draft[^|]*(?:未提交|unsubmitted)/,
+    'The draft must be stated to hold only unsubmitted state');
+  assert.match(row, /(?:提交|送出|submit)[^|]*(?:清除|失效|invalidat|clear)|(?:清除|失效|invalidat|clear)[^|]*(?:提交|送出|submit)/i,
+    'The draft must be cleared or invalidated on submit');
+  assert.match(row, /(?:唯一|sole)[^|]*(?:權威|authoritative|source of truth)/i,
+    'The revision decision_payload must be the sole authoritative record');
+  assert.match(row, /annotation_review_decision[^|]*(?:投影|派生|derived|projection)|(?:投影|派生|derived|projection)[^|]*annotation_review_decision/i,
+    'annotation_review_decision (decision/corrected_answer/reason) must be a projection of the payload, not a second copy');
+  assert.match(row, /(?:不得|不可|禁止)[^|]*(?:第二份|獨立副本|second copy)|(?:第二份|獨立副本|second copy)[^|]*(?:不得|不可|禁止)/i,
+    'The rule must forbid a second authoritative copy');
+});
+
+test('the dictionary tables point at the single-source-of-truth rule', () => {
+  const markdown = annotationMarkdown();
+  const section = (heading) => markdown.split(/^### /m).find((part) => part.startsWith(heading));
+  const ruleId = annotationRules().find((row) => /(?:唯一|sole)[^|]*(?:權威|authoritative)/i.test(row)
+    && /annotation_review_draft/.test(row))?.match(/^\| ([A-Z]-\d+) \|/)?.[1];
+  assert.ok(ruleId, 'Expected the single-source-of-truth rule id');
+  for (const heading of ['3.2 annotation_review_draft', '3.4 annotation_review_decision',
+    '3.8 annotation_review_submission_revision']) {
+    const part = section(heading);
+    assert.ok(part, `Expected section ${heading}`);
+    assert.match(part, new RegExp(`\\b${ruleId}\\b`), `${heading} must cite ${ruleId}`);
+  }
+});
+
+test('NoteCraft notes for draft and revision state the single source of truth', () => {
+  const revision = erTable('annotation_review_submission_revision').description;
+  assert.match(revision, /decision_payload[^。\n]*(?:唯一|sole)[^。\n]*(?:權威|authoritative)|(?:唯一|sole)[^。\n]*(?:權威|authoritative)[^。\n]*decision_payload/i,
+    'Revision note must call decision_payload the sole authoritative record');
+  assert.match(revision, /annotation_review_decision[^。\n]*(?:投影|派生|derived|projection)/i,
+    'Revision note must say the decision rows are a projection');
+  const draft = erTable('annotation_review_draft').description;
+  assert.match(draft, /未提交[^。\n]*(?:清除|失效)|(?:清除|失效)[^。\n]*未提交/,
+    'Draft note must say it holds only unsubmitted state and is cleared or invalidated on submit');
+  assert.match(draft, /annotation_review_submission_revision/,
+    'Draft note must point to the revision as the submitted record');
+});
+
+test('annotation/review dictionary names JSONB at most once and keeps logical json column types', () => {
+  const lines = annotationMarkdown().split('\n').filter((line) => /jsonb/i.test(line));
+  assert.ok(lines.length <= 1, `Expected at most one jsonb line, got ${lines.length}`);
+  assert.equal(lines.length, 1, 'One sentence must state that json maps to PostgreSQL JSONB');
+  assert.match(lines[0], /`json`[^。\n]*(?:對應|映射|maps? to)[^。\n]*JSONB/i);
+  assert.equal(annotationMarkdown().split('\n').some((line) => /^\s+jsonb /.test(line) || /^\| `[^`]+` \| jsonb /i.test(line)),
+    false, 'Column types must stay logical json');
+});
+
+test('NoteCraft column order for annotation_history_event equals the dictionary order', () => {
+  const dictionary = annotationSource().tables.find((table) => table.name === 'annotation_history_event');
+  assert.ok(dictionary, 'Expected annotation_history_event in the dictionary');
+  assert.deepEqual(
+    erTable('annotation_history_event').columns.map((column) => column.name),
+    dictionary.columns.map((column) => column.name),
+  );
+});
+
+test('every annotation/review note states that composite keys are not drawn and points to section 4', () => {
+  for (const name of annotationNames) {
+    assert.match(erTable(name).description, compositeSentence,
+      `${name} note needs the "複合鍵與複合 FK 未畫在圖上，見各實體字典 §4" sentence`);
+  }
+});
