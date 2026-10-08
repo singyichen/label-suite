@@ -1665,7 +1665,7 @@
           "note": "最後改動 UTC；修改；規則：X-01"
         }
       ],
-      "description": "**實體候選，尚未部署。** 每筆工作指派的 ID 不因停用、退回未指派池或重指派而改變；受派者可空不表示已排除。正式標記每個資料項目恰有一個工作位，試標按重疊人數建立。來源：014 FR-005l／FR-010f-4／`AnnotationAssignment`；015 的提交後續以此 ID 定址。\n\n來源：[任務／執行實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.12；複合 FK、檢查限制、唯一限制與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。"
+      "description": "**實體候選，尚未部署。** 每筆工作指派的 ID 不因停用、退回未指派池或重指派而改變；受派者可空不表示已排除。正式標記每個資料項目恰有一個工作位，試標按重疊人數建立。候選 UNIQUE `(task_run_id,id)` 是標記／審核六張子表 `(run_id,assignment_id)` 複合 FK 所需的同序父鍵，尚未在資料庫建立。來源：014 FR-005l／FR-010f-4／`AnnotationAssignment`；015 的提交後續以此 ID 定址。\n\n來源：[任務／執行實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.12；複合 FK、檢查限制、唯一限制與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。"
     },
     {
       "name": "task_annotation_exclusion",

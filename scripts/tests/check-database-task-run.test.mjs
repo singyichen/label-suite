@@ -112,6 +112,27 @@ test('task/run dictionary records cross-table rules that one-column diagram link
     `Missing task/run constraint or caveat: ${token}`);
 });
 
+test('assignment A-01 declares the parent candidate key for six annotation/review FKs', () => {
+  const taskMarkdown = read('../../docs/diagrams/architecture/task-run-db-schema.md');
+  const constraints = taskMarkdown.split('## 4. 限制清單')[1]?.split('## 5.')[0];
+  assert.ok(constraints, 'Task/run §4 constraints are required');
+  const assignmentRule = constraints.split('\n').find((line) => /^\| A-01 \|/.test(line));
+  assert.ok(assignmentRule, 'Task/run §4 A-01 is required');
+  assert.match(assignmentRule, /UNIQUE\s*`\(task_run_id,\s*id\)`/,
+    'A-01 must declare the same-order parent candidate key');
+  assert.match(assignmentRule, /六張.*`\(run_id,\s*assignment_id\)`.*複合 FK/,
+    'A-01 must explain why the six annotation/review child FKs need that key');
+});
+
+test('NoteCraft assignment Wiki discloses the undeployed parent candidate key', () => {
+  const assignment = erData().tables.find((table) => table.name === 'task_annotation_assignment');
+  assert.ok(assignment, 'NoteCraft assignment projection is required');
+  assert.match(assignment.description, /候選.*尚未部署/s,
+    'NoteCraft must identify this as an undeployed candidate');
+  assert.match(assignment.description, /UNIQUE\s*`\(task_run_id,\s*id\)`/,
+    'NoteCraft must disclose the assignment parent candidate key');
+});
+
 test('NoteCraft CI runs the task/run schema regression', () => {
   const workflow = read('../../.github/workflows/ci.yml');
   const job = workflow.match(/^  database-schema:\n([\s\S]*?)(?=^  [a-z][\w-]*:\n|(?![\s\S]))/m)?.[1];
