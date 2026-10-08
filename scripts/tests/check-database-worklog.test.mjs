@@ -172,3 +172,13 @@ test('NoteCraft CI includes the WorkLog physical contract test', () => {
   assert.match(read('../../.github/workflows/ci.yml'),
     /node --test[^\n]*scripts\/tests\/check-database-worklog\.test\.mjs/);
 });
+
+// Issue #1224: work-interval retention follows ADR-038.
+test('work dictionary retention paragraph follows ADR-038 and leaves the window TBD', () => {
+  const line = workDictionary().split('\n').find((l) => l.startsWith('- **保留**'));
+  assert.ok(line, 'Missing 保留 paragraph');
+  for (const token of ['ADR-038', '待定', '#1224']) {
+    assert.ok(line.includes(token), `保留 must mention ${token}`);
+  }
+  assert.ok(!line.includes('尚待產品隱私政策'), 'Obsolete 尚待產品隱私政策 wording must be removed');
+});

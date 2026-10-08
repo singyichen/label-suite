@@ -321,7 +321,7 @@ UNIQUE 單位鍵阻擋兩位 reviewer 並列正式提交。首次提交者的 st
 | N-01 | DB | revision PK；`(run_id,assignment_id,review_submission_id)` 複合 FK → `annotation_review_submission(run_id,assignment_id,id)`，故 revision 與 head 同單位；另設 UNIQUE `(run_id,assignment_id,id)` 作 V-04 與 H-05 的父鍵。與 head 不同的 immutable 行（append-only 見 A-01） | 015 FR-103、DBA 設計 |
 | N-02 | DB | UNIQUE `(review_submission_id,version)`、CHECK `version>0`；head.version 與最新 revision.version 在交易中對齊 | 015 FR-103 |
 | N-03 | SVC＋SEC | `decision_payload` 是當次所有 outKey 已驗證快照；不可原地更新，查詢受同 reviewer／仲裁資格與答案遮蔽限制 | 015 FR-052／FR-062／FR-103 |
-| A-01 | DB | `annotation_history_event`、`annotation_arbitration_vote`、`annotation_review_submission_revision` 完全 append-only：SQLite 與 PostgreSQL 各掛一個 `BEFORE UPDATE`／`BEFORE DELETE` trigger；PostgreSQL 對 app role `REVOKE UPDATE, DELETE, TRUNCATE`（只授予 SELECT／INSERT，PUBLIC 與 default privileges 不得再授）；更正一律新增列，無執行期更正路徑 | 015 FR-097／FR-105；ADR-024 增補 (2026-10-08) |
+| A-01 | DB | `annotation_history_event`、`annotation_arbitration_vote`、`annotation_review_submission_revision` 完全 append-only：SQLite 與 PostgreSQL 各掛一個 `BEFORE UPDATE`／`BEFORE DELETE` trigger；PostgreSQL 對 app role `REVOKE UPDATE, DELETE, TRUNCATE`（只授予 SELECT／INSERT，PUBLIC 與 default privileges 不得再授）；更正一律新增列，無執行期更正路徑；更正路徑之外，唯一允許的 UPDATE 是 ADR-038 特權匿名化，由 migration role 執行 | 015 FR-097／FR-105；ADR-024 增補 (2026-10-08)；ADR-038 |
 
 ## 5. 候選索引與查詢對應
 
@@ -353,6 +353,6 @@ UNIQUE 單位鍵阻擋兩位 reviewer 並列正式提交。首次提交者的 st
 1. **爭議鍵落地前決策**：015 v12.0.0 已將 FR-059(4)、FR-061(7)(a) 與 `OutputAnswer` 對齊 `{start,end,label}` span，並以 AC-7.4 規劃不碰撞驗收。仍須在 migration 前固定 `item_key` 的型別化 canonical encoding、版本與實際無碰撞測試；`entity_recognition` CompactAnswer 的位置落差尚待獨立裁決。§3.5 目前只定候選型別。
 2. **V1 規劃契約與實作界線**：首次 reviewer 提交後凍結 annotator 來源、首票後凍結 reviewer 改判、同單位全爭議鍵一次 batch／每鍵一票、未提交草稿重派保留舊嘗試，已回寫 014 v7.0.0／015 v12.0.0 的 FR／AC／SC；本文件仍只是未部署候選字典，尚無 ORM、migration、API 或雙資料庫並發證據。未來重啟仲裁須另立明示流程，不能暗藏多票／覆寫規則。
 3. **父端與完成語意**：`task_annotation_assignment` 的完整 status 值域、未指派／排除轉換仍待 task/run 字典 §7 收斂；`exclude_from_dataset` 是輸出項目層級，與整個 assignment 的 `task_annotation_exclusion`、run 完成分母及導出語意須在 014／015 對齊。不可由此新增 GoldRecord、IAA、品質或 export 表。
-4. **稽核與保留**：`annotation_history_event` 和共用 `audit_events` 的寫入責任及去重、舊值事件 migration 相容、答案／理由／個資留存期限、帳號刪除與匿名化、各 FK `ON DELETE` 需先有政策。工時候選先以一年為最低保留期，session 與事件引用採 RESTRICT，不設自動清除；確切最長期間與匿名化順序須在 migration 前裁決。append-only 強制已由 A-01／ADR-024 增補 (2026-10-08) 定案，受限稽核讀權仍在 migration PR 決定。
+4. **稽核與保留**：保存、刪除與匿名化依 ADR-038 定案。`annotation_history_event` 和共用 `audit_events` 的寫入責任及去重、舊值事件 migration 相容仍於實作時確認。事件列不刪，append-only 強制依 A-01；`reason` 為 PII 欄位，一個日曆年後可經特權路徑（migration role）匿名化。`result_snapshot`、`decision_payload` 與仲裁票 payload 隨 dataset 版本／run 保存，版本下架程序與期限 待定（#1224）。工時候選先以一年為最低保留期，session 與事件引用採 RESTRICT，無引用、已撤銷或逾上限，且其 token 皆已到期（expires_at）的 session 由清理工作刪除；各期限上限與執行週期 待定（#1224）。
 
 **交付狀態：8 張未部署候選表、91 欄；單欄 FK 2 個，另有 20 組複合 FK。** 數量與限制是審查基線，須經來源一致性檢查、OpenSpec Source-Verify 與未來雙資料庫 Red／Green 才能作為落地參考，NoteCraft 投影也不等於已部署 Schema。

@@ -109,7 +109,7 @@ erDiagram
 | E-06 | SVC＋STORAGE | 在同一一致性讀取快照內擷取內容，原檔先寫受限暫存、驗內容與 SHA-256、大小，再原子發布物件及 `ready` 列；部分失敗清理暫存並留下可追溯失敗；若重試需清除 `failure_code`，先將該次失敗持久記為受限稽核／作業事件，實作階段確定既有事件儲存與保留期。重新下載核對摘要與大小，交付原始 bytes 和原檔名 | 014 FR-021、主憲法 XVI |
 | E-07 | SVC | 快照 `selected_runs[]`、有序 `task_export_run` 與產物 `manifest.runs[]` 逐項同序同身分；每 run 自帶階段與固定版本，共用 `filters` 對所選 run 一致套用。歷史列「試標／正式／兩者」由所選階段集合推導；空結果仍有完整 manifest。版本從不可變 run／cycle 鏈解析，不讀 task 當前指標 | 014 FR-009a／FR-010i／FR-015h |
 | E-08 | SEC | 每次下載重驗目前 `dataset.export`、active membership、任務範圍與來源有效性；不得回傳 `artifact_ref`、私有答案或未提交審核草稿 | 014 FR-021／024、主憲法 III |
-| E-09 | SVC＋STORAGE | 原檔自完成起保存 30 日；`now >= expires_at`、`revoked_at` 非空、來源刪除、物件缺失或校驗失敗均拒絕下載；歷史 metadata 保存一年，到期不延長原檔期限 | 014 FR-021、主憲法 XXII |
+| E-09 | SVC＋STORAGE | 原檔自完成起保存 30 日；`now >= expires_at`、`revoked_at` 非空、來源刪除、物件缺失或校驗失敗均拒絕下載；歷史 metadata 保存一年，到期不延長原檔期限。依 ADR-038：原檔 30 日後實體刪除；`task_export` metadata 與 `task_export_run` manifest 一年後實體刪除，子（`task_export_run`）先於父、同一交易；清理週期 待定（#1224） | 014 FR-021、主憲法 XXII；ADR-038 |
 | R-01 | DB | 複合 PK `(export_id,run_id)`；兩欄皆 NOT NULL，沒有第二份序號主鍵 | 014 FR-010i-2 |
 | R-02 | DB | 父端先建 UNIQUE `task_export(task_id,id)` 與 `task_run(task_id,id)`；子端 `(task_id,export_id)`、`(task_id,run_id)` 分別建立複合 FK，防止跨任務關聯 | 014 FR-010i-1；任務／執行字典 U-01 |
 | R-03 | DB＋SVC | CHECK `position > 0`、UNIQUE `(export_id,position)`；至少一個 run 且位置連續、manifest 順序一致由完成交易驗證 | 014 FR-009a／FR-010i-1 |
@@ -143,5 +143,5 @@ erDiagram
 
 1. 兩表型別、長度、CHECK、複合 FK、索引及儲存介面都需在獨立 ORM／Alembic migration PR 驗證 upgrade、downgrade 與 SQLite／真實 PostgreSQL roundtrip；本文件不能替代部署測試。
 2. `pending`／`processing`／`failed` 的重試與安全錯誤碼、檔案暫存清理、物件發布失敗補償、worker 併發及跨服務儲存權限須在 runtime 規格與測試落地。`ready` 的跨欄完整性應先測試，不能只靠 UI 控制。
-3. 資料集或任務刪除時的原檔撤銷、物件清理、歷史 metadata 刪除或匿名化，以及引用中的 run／版本保留順序須與總體資料保留政策協調；不得以 `ON DELETE CASCADE` 靜默抹除一年內的匯出歷史。舊版僅有條件快照而無有效原檔的紀錄不能憑目前結果補建。
+3. 資料集或任務刪除時的原檔撤銷、物件清理、歷史 metadata 刪除或匿名化，以及引用中的 run／版本保留順序依 ADR-038 處理：原檔 30 日後實體刪除、metadata 與 manifest 一年後實體刪除，來源資料集或任務的刪除順序遵循 dataset-021 FR-011；清理週期 待定（#1224）。不得以 `ON DELETE CASCADE` 靜默抹除一年內的匯出歷史。舊版僅有條件快照而無有效原檔的紀錄不能憑目前結果補建。
 4. 將本候選字典投影到 NoteCraft 時，只能畫真單欄 FK；複合約束、權限、到期與物件校驗仍須在 Wiki 文字顯示。完成來源一致性檢查與雙資料庫實測前，只能稱為**候選資料結構**。

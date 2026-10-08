@@ -173,7 +173,7 @@ erDiagram
 | S-01 | DB 權限＋SVC＋SEC | PostgreSQL 的標記者服務讀取角色不能 `SELECT` private 表（含 `protected_payload`）或受限來源；SQLite 由 repository／response allowlist 隔離。匯入程序只在來源尚未儲存時讀取上傳串流並寫入受限資料；**儲存後任何含答案內容只允許授權 scoring-worker 路徑讀取**，一般維護、建立者與預覽路徑不可讀 raw artifact 或 private 答案；draft 修正 manifest 同樣不讀取已儲存的含答案資料，也不新增任何可讀答案的角色；`protected_payload` 走同一受限私有路徑，讀取權與 `hidden_answer` 分開授權，scoring worker 不因可讀答案而自動取得此欄讀取權，不新增讀取角色。所有標記者 response、state、log、cache、trace、fixture 不含 split、答案或來源位置 | 主憲法 III；backend constitution III／VI／VII；testing constitution VIII；dataset-021 FR-005～FR-007、AC-2.6 |
 | X-01 | SVC | 時間以 UTC 正規化；PostgreSQL 用 `TIMESTAMPTZ`，SQLite 以應用層正規化讀寫，不能假定 SQLite 保存時區資訊 | ADR-024；dataset-021 FR-009 |
 
-**刪除與保留**：外鍵先採 `RESTRICT` 候選，禁止無限制 cascade 消除 sealed 版本或被引用 item。受限來源、公開項目、私有答案及派生資源的保留／刪除／匿名化政策須先依 dataset-021 FR-011 補齊，再訂正式 `ON DELETE` 與資料遷移策略。
+**刪除與保留**：外鍵先採 `RESTRICT` 候選，禁止無限制 cascade 消除 sealed 版本或被引用 item。保留／刪除／匿名化依 ADR-038 與 dataset-021 FR-011：受限來源、公開項目、私有答案及派生資源在已封存版本或 run 仍引用時一律 RESTRICT；僅未封存草稿（draft）丟棄時，才於同一交易依子→父順序實體刪除，不經 CASCADE 穿過已封存版本。版本下架程序與期限 待定（#1224）。
 
 ## 5. 索引與查詢成本
 

@@ -455,3 +455,17 @@ test('section 5 index contract covers the X-01 reverse lookup and the composite 
     'section 5 must require an index led by (task_id,run_id,assignment_id)');
   assert.doesNotMatch(markdown, /單欄 vote FK/, 'the single-column vote FK wording is obsolete');
 });
+
+// Issue #1224: audit retention follows ADR-038.
+test('section 7 audit-and-retention item and A-01 follow ADR-038', () => {
+  const markdown = annotationMarkdown();
+  const item = markdown.split('\n').find((line) => line.startsWith('4. **稽核與保留**'));
+  assert.ok(item, 'Missing section 7 item 4');
+  for (const token of ['ADR-038', 'A-01', '待定', '#1224']) {
+    assert.ok(item.includes(token), `Section 7 item 4 must mention ${token}`);
+  }
+  assert.doesNotMatch(item, /需先有政策|須在 migration 前裁決/);
+  const a01 = markdown.split('\n').find((line) => line.startsWith('| A-01 |'));
+  assert.ok(a01, 'Missing A-01 row');
+  assert.ok(a01.includes('ADR-038'), 'A-01 must mention ADR-038');
+});

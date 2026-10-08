@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { test } from 'node:test';
 
 import {
@@ -537,4 +537,215 @@ test('account dictionary A-02 cites REVOKE, TRUNCATE and the ADR-024 amendment a
   for (const token of ['REVOKE', 'TRUNCATE', 'ADR-024', 'ADR-032']) {
     assert.ok(row.includes(token), `A-02 must mention ${token}`);
   }
+});
+
+// Issue #1224: ADR-038 retention, deletion and anonymization policy write-back.
+const r1224 = (path) => {
+  try {
+    return readFileSync(new URL(`../../${path}`, import.meta.url), 'utf8');
+  } catch (error) {
+    assert.fail(`Missing or unreadable ${path}: ${error.code ?? error.message}`);
+  }
+};
+const adr038 = () => r1224('docs/adr/038-data-retention-deletion-anonymization.md');
+const r1224Section = (text, heading) => {
+  const lines = text.split('\n');
+  const start = lines.findIndex((line) => line.startsWith(heading));
+  assert.ok(start >= 0, `Missing heading ${heading}`);
+  const rel = lines.slice(start + 1).findIndex((line) => /^#{2,3} /.test(line));
+  return lines.slice(start, rel >= 0 ? start + 1 + rel : undefined).join('\n');
+};
+const r1224Row = (text, prefix) => {
+  const row = text.split('\n').find((line) => line.startsWith(prefix));
+  assert.ok(row, `Missing line starting with ${prefix}`);
+  return row;
+};
+const r1224Includes = (haystack, tokens, label) => {
+  for (const token of tokens) assert.ok(haystack.includes(token), `${label} must mention ${token}`);
+};
+
+test('ADR-038 exists, is Accepted, cites #1224 and names the six data classes and cross-references', () => {
+  const text = adr038();
+  r1224Includes(text, ['**Status**: Accepted', '#1224',
+    'pending_email', 'audit_events', 'annotation_history_event', 'result_snapshot',
+    'dataset_item_private', 'protected_payload', 'refresh_tokens', 'account_session',
+    'task_work_interval', 'task_export', 'task_export_run',
+    'ADR-021', 'ADR-024', 'ADR-032', 'FR-011', 'FR-021', 'FR-063', 'FR-004', 'TBD (#1224)'], 'ADR-038');
+  assert.match(text, /migration role/);
+  assert.match(text, /application code path/i);
+  assert.match(text, /anonymi[sz]/i);
+});
+
+test('ADR-038 duration guard allows only 30 days and one calendar year', () => {
+  const text = adr038();
+  for (const m of text.matchAll(/\b(\d+)\s*-?\s*(?:calendar\s+)?(days?|months?|years?)\b/gi)) {
+    assert.ok(m[1] === '30' && /^days?$/i.test(m[2]), `Disallowed numeric duration in ADR-038: "${m[0]}"`);
+  }
+  assert.doesNotMatch(text,
+    /\b(?:two|three|four|five|six|seven|eight|nine|ten|twelve|eighteen|twenty)\s*-?\s*(?:calendar\s+)?(?:days?|months?|years?)\b/i);
+});
+
+test('ADR-024 amendment now points at ADR-038 instead of leaving retention pending in #1224', () => {
+  const text = adr024();
+  const start = text.indexOf(amendmentHeading);
+  assert.ok(start >= 0, 'Missing exact amendment heading');
+  const rest = text.slice(start + amendmentHeading.length);
+  const next = rest.search(/^## /m);
+  const section = next >= 0 ? rest.slice(0, next) : rest;
+  assert.ok(section.includes('#1224'), 'Amendment must still cite #1224');
+  assert.ok(section.includes('ADR-038'), 'Amendment must cite ADR-038');
+  assert.doesNotMatch(section, /still pending in #1224/);
+});
+
+test('ADR-032 cites ADR-038 and the anonymization boundary', () => {
+  const text = r1224('docs/adr/032-user-action-audit-trail.md');
+  assert.ok(text.includes('ADR-038'), 'ADR-032 must mention ADR-038');
+  assert.match(text, /anonymi[sz]/i);
+});
+
+test('ADR README indexes ADR-038 as Accepted', () => {
+  const row = r1224Row(r1224('docs/adr/README.md'), '| [038](038-data-retention-deletion-anonymization.md) |');
+  assert.ok(row.includes('Accepted'), 'ADR-038 index row must be Accepted');
+});
+
+test('inventory section 5.2 is a decided retention policy with only 30 days and one calendar year', () => {
+  const markdown = r1224('docs/diagrams/architecture/database-table-inventory.md');
+  assert.ok(!markdown.includes('待決矩陣'), 'Inventory must no longer call the retention matrix 待決');
+  const section = r1224Section(markdown, '### 5.2 保存、刪除與匿名化政策');
+  r1224Includes(section, ['ADR-038', '待定', '#1224', '30 日', '一個日曆年'], 'Inventory section 5.2');
+  assert.ok(!section.includes('待產品／隱私'), 'Section 5.2 must not defer to 待產品／隱私');
+  for (const m of section.matchAll(/(\d+)\s*(?:日|天|個月|年)/g)) {
+    assert.ok(m[1] === '30' && /[日天]$/.test(m[0]), `Disallowed numeric duration in section 5.2: "${m[0]}"`);
+  }
+  assert.doesNotMatch(section, /[二兩三四五六七八九十]+\s*(?:個)?(?:年|月)/);
+});
+
+test('account dictionary U-17, F-07, R-10 and A-05 carry the ADR-038 retention rules', () => {
+  const markdown = r1224('docs/diagrams/architecture/account-admin-db-schema.md');
+  r1224Includes(r1224Row(markdown, '| U-17 |'),
+    ['ADR-038', 'account_email_change_request', 'google_subject', 'hashed_password', 'is_active', '待定'], 'U-17');
+  r1224Includes(r1224Row(markdown, '| F-07 |'),
+    ['ADR-038', 'RESTRICT', 'task_work_interval', 'annotation_history_event', 'revoked_at'], 'F-07');
+  r1224Includes(r1224Row(markdown, '| R-10 |'), ['ADR-038', 'expires_at', 'FR-004'], 'R-10');
+  const a05 = r1224Row(markdown, '| A-05 |');
+  assert.ok(a05.includes('ADR-038'), 'A-05 must mention ADR-038');
+  assert.match(a05, /匿名化/);
+  assert.ok(r1224Row(markdown, '- 不提供使用者實體刪除').includes('U-17'), 'Section 6 deletion line must cite U-17');
+});
+
+// Issue #1224 review fixes.
+test('F-07 and ADR-038 condition revoked-session deletion on token expires_at (R-10, account-020 FR-004)', () => {
+  const markdown = r1224('docs/diagrams/architecture/account-admin-db-schema.md');
+  assert.ok(r1224Row(markdown, '| F-07 |').includes('expires_at'), 'F-07 must condition session deletion on token expires_at');
+  const line = adr038().split('\n').find((l) => l.includes('`account_session`: deleted once'));
+  assert.ok(line, 'Missing ADR-038 account_session cleanup line');
+  assert.ok(line.includes('expires_at'), 'ADR-038 session cleanup line must mention token expires_at');
+});
+
+test('U-17 references the U-05 seeder and U-08 last-active-super_admin preconditions as rejected or TBD', () => {
+  const row = r1224Row(r1224('docs/diagrams/architecture/account-admin-db-schema.md'), '| U-17 |');
+  r1224Includes(row, ['U-05', 'U-08'], 'U-17');
+  assert.match(row, /拒絕|待定（#1224）/);
+});
+
+test('A-02 and ADR-032 body point at ADR-038 instead of deferring retention review', () => {
+  const markdown = r1224('docs/diagrams/architecture/account-admin-db-schema.md');
+  const a02 = r1224Row(markdown, '| A-02 |');
+  assert.ok(!a02.includes('須另行審核保留政策'), 'A-02 must drop the 另行審核保留政策 wording');
+  assert.ok(a02.includes('ADR-038'), 'A-02 must mention ADR-038');
+  const bullet = r1224('docs/adr/032-user-action-audit-trail.md').split('\n').find((l) => l.startsWith('- **Append-only.**'));
+  assert.ok(bullet, 'Missing ADR-032 Append-only body bullet');
+  assert.ok(bullet.includes('ADR-038'), 'ADR-032 append-only statement must mention ADR-038');
+});
+
+test('ADR-038 payload_summary has no personal keys today and marking them is TBD (#1224); A-05 drops registry claim', () => {
+  const sentences = adr038().split('\n').filter((l) => l.includes('payload_summary')).flatMap((l) => l.split(/\.\s/))
+    .filter((s) => s.includes('payload_summary'));
+  assert.ok(sentences.length > 0, 'ADR-038 must discuss payload_summary');
+  for (const sentence of sentences) {
+    assert.ok(sentence.includes('TBD (#1224)'), `payload_summary sentence must mark personal keys TBD (#1224): ${sentence}`);
+    assert.ok(!sentence.includes('keys the event registry marks as personal'), 'ADR-038 must not claim registry-marked personal keys');
+  }
+  assert.match(sentences.join(' '), /no personal/i);
+  const a05 = r1224Row(r1224('docs/diagrams/architecture/account-admin-db-schema.md'), '| A-05 |');
+  assert.ok(!a05.includes('registry 標為個人'), 'A-05 must not claim registry-marked personal keys');
+});
+
+test('inventory carries no leftover deferred-retention wording', () => {
+  const markdown = r1224('docs/diagrams/architecture/database-table-inventory.md');
+  for (const phrase of ['保留政策待執行階段前定義', '保留政策待執行階段定案', '保留政策仍須', '仍需後續工作']) {
+    assert.ok(!markdown.includes(phrase), `Inventory must not contain "${phrase}"`);
+  }
+  assert.doesNotMatch(markdown, /保留政策[^。；|\n]*?仍待/);
+});
+
+test('retention changed docs use only 30 days and one calendar year as durations', () => {
+  const arch = 'docs/diagrams/architecture/';
+  const lineOf = (text, prefix) => r1224Row(text, prefix);
+  const account = r1224(`${arch}account-admin-db-schema.md`);
+  const dataset = r1224('specs/dataset/021-dataset-ingestion-and-lineage/spec.md');
+  const units = {
+    'ADR-038': adr038(),
+    'dataset-021 FR-011': lineOf(dataset, '- **FR-011**'),
+    'dataset-021 Changelog 1.4.0': lineOf(dataset, '| 1.4.0 |'),
+    'U-17': lineOf(account, '| U-17 |'),
+    'F-07': lineOf(account, '| F-07 |'),
+    'R-10': lineOf(account, '| R-10 |'),
+    'A-05': lineOf(account, '| A-05 |'),
+    'E-09': lineOf(r1224(`${arch}task-export-db-schema.md`), '| E-09 |'),
+    'task-export section 7 item 3': lineOf(r1224(`${arch}task-export-db-schema.md`), '3. '),
+    'task-work 保留': lineOf(r1224(`${arch}task-work-db-schema.md`), '- **保留**'),
+    'annotation-review section 7 item 4': lineOf(r1224(`${arch}annotation-review-db-schema.md`), '4. **稽核與保留**'),
+    'dataset 刪除與保留': lineOf(r1224(`${arch}dataset-db-schema.md`), '**刪除與保留**'),
+    'task-run section 7 item 1': lineOf(r1224(`${arch}task-run-db-schema.md`), '1. **migration 可用性**'),
+    'inventory 5.2': r1224Section(r1224(`${arch}database-table-inventory.md`), '### 5.2 保存、刪除與匿名化政策'),
+  };
+  const allowed = [/30\s*日/g, /一個日曆年/g, /一年/g, /30 days?/gi, /one calendar years?/gi, /one years?/gi];
+  for (const [label, text] of Object.entries(units)) {
+    let rest = text;
+    for (const re of allowed) rest = rest.replace(re, ' ');
+    if (text.includes('FR-004')) rest = rest.replace(/30\s*-?\s*(?:秒|seconds?)/gi, ' ');
+    const zh = rest.match(/[0-9０-９]+\s*(?:個)?(?:日|天|週|周|月|年|小時)|[一二兩三四五六七八九十百]+\s*(?:個)?(?:日|天|週|周|月|年|小時)/g);
+    assert.equal(zh, null, `${label}: disallowed Chinese duration ${zh}`);
+    const cadence = rest.match(/每日|每週|每月|\b(?:daily|weekly|monthly|nightly)\b/gi);
+    assert.equal(cadence, null, `${label}: disallowed cadence word ${cadence}`);
+    const en = rest.match(/\b\d+\s*-?\s*(?:days?|weeks?|months?|years?|hours?)\b/gi);
+    assert.equal(en, null, `${label}: disallowed English duration ${en}`);
+  }
+});
+
+// Issue #1224 review fixes, round 2: session cleanup wording must agree everywhere.
+test('inventory 5.2 account_session row conditions deletion on token expiry', () => {
+  const section = r1224Section(r1224('docs/diagrams/architecture/database-table-inventory.md'), '### 5.2 保存、刪除與匿名化政策');
+  const row = r1224Row(section, '| `account_session` |');
+  assert.match(row, /expires_at|到期/, 'account_session row must state the token-expiry condition');
+});
+
+test('inventory 5.2 audit row has no registry-marked personal keys claim and marks them 待定（#1224）', () => {
+  const section = r1224Section(r1224('docs/diagrams/architecture/database-table-inventory.md'), '### 5.2 保存、刪除與匿名化政策');
+  const row = r1224Row(section, '| 共用 `audit_events` 與 `annotation_history_event`');
+  assert.ok(!row.includes('registry 標為個人'), 'Audit row must not claim registry-marked personal keys');
+  assert.ok(row.includes('待定（#1224）'), 'Audit row must mark personal payload_summary keys 待定（#1224）');
+});
+
+test('every line describing session cleanup deletion also states token expiry', () => {
+  const dir = new URL('../../docs/diagrams/architecture/', import.meta.url);
+  const files = [
+    ...readdirSync(dir).filter((name) => name.endsWith('-db-schema.md')).map((name) => `docs/diagrams/architecture/${name}`),
+    'docs/diagrams/architecture/database-table-inventory.md',
+    ...readdirSync(new URL('../../docs/adr/', import.meta.url))
+      .filter((name) => /^(038|021)-.*\.md$/.test(name)).map((name) => `docs/adr/${name}`),
+  ];
+  assert.ok(files.length >= 8, `Expected dictionaries, inventory and two ADRs, got ${files.length}`);
+  const isCleanup = (line) => /session/i.test(line)
+    && /清理工作刪除|清理刪除|實體刪除|deleted once|`account_session` is deleted/.test(line);
+  let matched = 0;
+  for (const file of files) {
+    for (const line of r1224(file).split('\n')) {
+      if (!isCleanup(line)) continue;
+      matched += 1;
+      assert.match(line, /expires_at|到期/, `${file}: session cleanup line lacks token expiry: ${line.slice(0, 80)}`);
+    }
+  }
+  assert.ok(matched >= 5, `Matcher too narrow, only ${matched} lines`);
 });

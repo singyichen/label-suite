@@ -6,6 +6,7 @@
 **Amends**: ADR-001 — root `docker-compose.yml` no longer starts PostgreSQL by default; the ADR-001 single-compose full-stack model is preserved in `docker-compose.prod.yml`
 **Amends**: ADR-008 — local `docker-compose.yml` default changes from PostgreSQL to SQLite; `docker-compose.prod.yml` preserves the ADR-008 full PostgreSQL stack
 **Amended**: 2026-10-08 — issue #1221 database-enforced immutability for append-only and sealed tables (planning contract only)
+**Accepted amendment**: 2026-10-08 — issue #1224; the ADR-038 privileged anonymization runs through the migration role, never the app role, and event rows are never deleted.
 
 ## Context
 
@@ -92,7 +93,7 @@ END $$ LANGUAGE plpgsql;
 | Role isolation | None: anyone with file access can drop triggers. Acceptable for the single-user Lite tier; the repository layer and tests are its boundary | `REVOKE` from the application role; migration role owns objects |
 | TRUNCATE | Does not exist | Revoked from the application role on guarded tables |
 
-**Emergency correction decision.** There is no runtime correction path. Corrections are compensating writes: a new history event, a new arbitration flow per spec, or a new complete dataset version. Any purge, anonymization or data fix of guarded rows is only a separately reviewed migration executed by the migration role, tied to the retention/deletion policy still pending in #1224; it never adds an application code path. Downgrading the migration drops the triggers.
+**Emergency correction decision.** There is no runtime correction path. Corrections are compensating writes: a new history event, a new arbitration flow per spec, or a new complete dataset version. Any purge, anonymization or data fix of guarded rows is only a separately reviewed migration executed by the migration role, governed by the retention, deletion and anonymization policy decided in ADR-038 (#1224); it never adds an application code path. Downgrading the migration drops the triggers.
 
 **Out of scope.** The `annotation_review_submission` head freeze after the first vote (015 FR-105) and `annotation_exception_resolution` remain service-enforced in this amendment; `task_annotation_exclusion` (task-run E-01) stays deferred to its dictionary section 7.
 

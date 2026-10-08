@@ -239,3 +239,16 @@ test('NoteCraft CI runs export dictionary regression tests', () => {
   assert.ok(job, 'Missing database-schema CI job');
   assert.match(job, /node --test[^\n]*scripts\/tests\/check-database-task-export\.test\.mjs\b/);
 });
+
+// Issue #1224: export retention follows ADR-038.
+test('export dictionary E-09 and section 7 item 3 follow ADR-038', () => {
+  const markdown = exportMarkdown();
+  const e09 = markdown.split('\n').find((line) => line.startsWith('| E-09 |'));
+  assert.ok(e09, 'Missing E-09 row');
+  assert.ok(e09.includes('ADR-038'), 'E-09 must mention ADR-038');
+  assert.ok(e09.includes('實體刪除'), 'E-09 must mention 實體刪除');
+  const item = markdown.split('\n').find((line) => line.startsWith('3. '));
+  assert.ok(item, 'Missing section 7 item 3');
+  assert.ok(item.includes('ADR-038'), 'Section 7 item 3 must mention ADR-038');
+  assert.ok(!item.includes('總體資料保留政策協調'), 'Obsolete 協調 wording must be removed');
+});
