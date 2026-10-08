@@ -2555,10 +2555,7 @@
       officialPoolLabel: '正式標記池',
       stopConditionTitle: '達標條件',
       labelSamplingValueControl: '每回合抽樣筆數',
-      labelTrialRoundControl: '試標回合',
-      labelRoundOutcomeControl: '目前判定',
       labelMinAnnotatorsControl: '最少標記者數',
-      labelSplitControl: '已用試標 / 可進正式',
       totalSamplesLabel: '總筆數',
       labelIsolationControl: '資料隔離狀態',
       labelIsolationAuditControl: '隔離異動',
@@ -2648,10 +2645,6 @@
       guidelineFilesNone: '無附件',
       guidelineContentEmpty: '尚無說明內容',
       samplingValueCountTpl: '每回合 {value} 筆',
-      splitSummaryTpl: '已用試標 {sample} / 可進正式 {reserve} / 總筆數 {total}',
-      roundOutcomePassed: '已有回合達標，可進入正式標記',
-      roundOutcomeFailed: '最近回合未達標，建議追加下一回合試標',
-      roundOutcomeInProgress: '目前回合進行中，待所有標記員完成後再判定',
       roundHistoryTitle: '試標回合歷程',
       roundHistoryHint: '每個回合使用新的抽樣樣本；通過的回合會解鎖正式標記。',
       roundHistorySummaryTpl: '已用 {used} / {total} 筆試標',
@@ -3104,10 +3097,7 @@
       officialPoolLabel: 'Official pool',
       stopConditionTitle: 'Stop conditions',
       labelSamplingValueControl: 'Per-round sample count',
-      labelTrialRoundControl: 'Trial round',
-      labelRoundOutcomeControl: 'Current decision',
       labelMinAnnotatorsControl: 'Minimum annotators',
-      labelSplitControl: 'Used in trial / Ready for official',
       totalSamplesLabel: 'Total',
       labelIsolationControl: 'Data isolation status',
       labelIsolationAuditControl: 'Isolation changed at',
@@ -3197,10 +3187,6 @@
       guidelineFilesNone: 'No attachments',
       guidelineContentEmpty: 'No guideline text',
       samplingValueCountTpl: '{value} items',
-      splitSummaryTpl: 'Used in trial {sample} / Ready for official {reserve} / Total {total}',
-      roundOutcomePassed: 'A trial round has passed and official work can start',
-      roundOutcomeFailed: 'The latest round did not pass. Consider creating the next trial round',
-      roundOutcomeInProgress: 'The current round is still in progress and awaits completion',
       roundHistoryTitle: 'Trial round history',
       roundHistoryHint: 'Each round uses a fresh sample slice. A passed round unlocks official work.',
       roundHistorySummaryTpl: '{used} / {total} items used in trial',
@@ -5480,10 +5466,7 @@ function interpolate(template, payload) {
     setText('stopConditionTitle', t('stopConditionTitle'));
     renderStatusStepperLabels();
     setText('labelSamplingValueControl', t('labelSamplingValueControl'));
-    setText('labelTrialRoundControl', t('labelTrialRoundControl'));
-    setText('labelRoundOutcomeControl', t('labelRoundOutcomeControl'));
     setText('labelMinAnnotatorsControl', t('labelMinAnnotatorsControl'));
-    setText('labelSplitControl', t('labelSplitControl'));
     setText('totalSamplesLabel', t('totalSamplesLabel'));
     setText('labelIsolationControl', t('labelIsolationControl'));
     setText('labelIsolationAuditControl', t('labelIsolationAuditControl'));
@@ -5906,14 +5889,6 @@ function interpolate(template, payload) {
     return (round && round.iaaComputationStatus) || 'done';
   }
 
-  function getRoundOutcomeKey() {
-    var currentRound = getCurrentTrialRound();
-    if (!currentRound) return 'in_progress';
-    if (currentRound.result === 'passed') return 'passed';
-    if (currentRound.result === 'failed') return 'failed';
-    return 'in_progress';
-  }
-
   /* issue #489/#491: "publish trial round" simulator for the demo Publish
      button. The narrative scaffolding (date / noteZh / noteEn) has no
      computeIaaAlpha() equivalent and stays useful demo copy describing a
@@ -6188,21 +6163,12 @@ function interpolate(template, payload) {
     var usedTrialCount = getUsedTrialSampleCount();
     var reserveCount = getOfficialPoolCount();
     var unitText = state.lang === 'zh' ? '筆' : ' items';
-    var splitSummaryText = interpolate(t('splitSummaryTpl'), {
-      total: TASK_DATA.datasetTotal + unitText,
-      sample: usedTrialCount + unitText,
-      reserve: reserveCount + unitText,
-    });
     var currentRound = getCurrentTrialRound();
     var taskStageKey = getTaskStageKey();
-    var roundOutcomeKey = getRoundOutcomeKey();
 
     setText('valueSamplingValueControl', interpolate(t('samplingValueCountTpl'), { value: TASK_DATA.samplingValue }));
-    setText('valueTrialRoundControl', currentRound ? 'R' + currentRound.round : '-');
-    setText('valueRoundOutcomeControl', t('roundOutcome' + (roundOutcomeKey === 'passed' ? 'Passed' : roundOutcomeKey === 'failed' ? 'Failed' : 'InProgress')));
     renderSamplingIaaSummaryList();
     setText('valueMinAnnotatorsControl', String(TASK_DATA.minAnnotators));
-    setText('valueSplitControl', splitSummaryText);
     setText('valueIsolationControl', TASK_DATA.isolationEnabled ? t('isolationOn') : t('isolationOff'));
     setText(
       'valueIsolationAuditControl',
