@@ -197,7 +197,10 @@ test.describe('Issue #1120 -- trial-rounds-used excludes the in-progress round (
     await expect(timelineItems(page).first()).toContainText('R1');
     // FR-027(2): no 已完成試標回合 metric. The "R1 is still active" fact is carried by the
     // task status plus 目前回合 = R1 (the seeded R1 row keeps its scripted result, as before).
-    await expect(page.locator('#statusBadge')).toContainText('試標進行中');
+    // Visible signals only: the header status text (FR-025) and the 目前回合 row.
+    await expect(page.locator('#taskHeaderStatus')).toContainText('試標階段');
+    await expect(page.locator('#taskHeaderStatus')).toContainText('第 1 回合');
+    await expect(page.locator('#trialRoundValue')).toBeVisible();
     await expect(page.locator('#trialRoundValue')).toHaveText('R1');
     await expect(page.locator('#officialPoolValue')).toHaveText('0');
   });

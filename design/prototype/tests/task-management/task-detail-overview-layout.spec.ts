@@ -146,6 +146,12 @@ test.describe('task-detail overview layout (FR-027)', () => {
     await expect(page.locator('#overviewPanel')).not.toContainText('已完成試標回合');
   });
 
+  test('SC-019: overview shows no 目前任務階段 text and no visible stage badge / meta pills', async ({ page }) => {
+    await open(page, ROUNDS_URL);
+    await expect(page.locator('#overviewPanel')).not.toContainText('目前任務階段');
+    await expect(page.locator('#overviewPanel .exec-badges')).not.toBeVisible();
+  });
+
   test('trial-round table has seven columns in the FR-027 (4) order', async ({ page }) => {
     await open(page, ROUNDS_URL);
     const table = page.locator('[data-testid="trial-round-table"]');
