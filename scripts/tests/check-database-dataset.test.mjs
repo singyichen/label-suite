@@ -384,8 +384,7 @@ test('dataset-021 FR-006 and AC-2.6 land moved values in protected_payload', () 
   assert.match(specLine(datasetSpec, 'AC-2\\.6'), /protected_payload/);
 });
 
-test('dataset-021 is versioned 1.3.0 with a Changelog row citing #1228', () => {
-  assert.match(datasetSpec, /^版本: 1\.3\.0$/m);
+test('dataset-021 keeps the 1.3.0 Changelog row citing #1228', () => {
   const row = datasetSpec.split('\n').find((candidate) => candidate.startsWith('| 1.3.0 |'));
   assert.ok(row, 'Missing 1.3.0 Changelog row');
   assert.match(row, /#1228/);
