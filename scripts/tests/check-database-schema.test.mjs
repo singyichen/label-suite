@@ -225,7 +225,7 @@ test('dictionaryAndNoteCraftResolveD9ThroughD13WithoutChangingPhysicalCounts', (
   const projectedAccount = accountData(source, data);
   for (const [label, tables] of [['dictionary', source.tables], ['NoteCraft', projectedAccount.tables]]) {
     assert.equal(tables.length, 9, `${label} table count`);
-    assert.equal(tables.reduce((sum, table) => sum + table.columns.length, 0), 63, `${label} column count`);
+    assert.equal(tables.reduce((sum, table) => sum + table.columns.length, 0), 64, `${label} column count`);
     assert.equal(tables.reduce((sum, table) => sum + table.columns.filter((column) => column.fk).length, 0), 6, `${label} FK count`);
     for (const name of ['admin_role_permission', 'admin_role_permission_version']) {
       const table = tables.find((entry) => entry.name === name);
@@ -288,14 +288,14 @@ test('realDictionaryAndNoteCraftProjectSharedAuditEventsWithoutInventedTaskFk', 
   assert.equal(projectedAudit.columns.find((column) => column.name === 'actor_user_id').required, 'nullable');
   assert.equal(projectedAudit.columns.find((column) => column.name === 'task_id').required, 'nullable');
 
-  assert.equal(source.tables.reduce((count, table) => count + table.columns.length, 0), 63);
-  assert.equal(projectedAccount.tables.reduce((count, table) => count + table.columns.length, 0), 63);
+  assert.equal(source.tables.reduce((count, table) => count + table.columns.length, 0), 64);
+  assert.equal(projectedAccount.tables.reduce((count, table) => count + table.columns.length, 0), 64);
   assert.equal(source.tables.reduce((count, table) => count + table.columns.filter((column) => column.fk).length, 0), 6);
   assert.equal(projectedAccount.tables.reduce((count, table) => count + table.columns.filter((column) => column.fk).length, 0), 6);
   assert.deepEqual(validateErData(source, projectedAccount), []);
 });
 
-test('realDictionaryModelsTokenFamiliesWithoutDuplicatingTheirOwnerOrStartTime', () => {
+test('realDictionaryModelsAccountSessionsWithoutDuplicatingTheirOwnerOrStartTime', () => {
   const markdown = readFileSync(new URL('../../docs/diagrams/architecture/account-admin-db-schema.md', import.meta.url), 'utf8');
   const source = parseAccountAdminSchema(markdown);
   const table = (name) => {
@@ -312,22 +312,29 @@ test('realDictionaryModelsTokenFamiliesWithoutDuplicatingTheirOwnerOrStartTime',
   assert.deepEqual(column('users', 'credential_version'), {
     name: 'credential_version', type: 'integer', nullable: false, pk: false,
   });
-  assert.deepEqual(column('account_token_family', 'id'), {
+  assert.deepEqual(column('account_session', 'id'), {
     name: 'id', type: 'uuid', nullable: false, pk: true,
   });
-  assert.deepEqual(column('account_token_family', 'user_id'), {
+  assert.deepEqual(column('account_session', 'user_id'), {
     name: 'user_id', type: 'uuid', nullable: false, pk: false, fk: 'users',
   });
-  assert.deepEqual(column('account_token_family', 'started_at'), {
+  assert.deepEqual(column('account_session', 'started_at'), {
     name: 'started_at', type: 'timestamptz', nullable: false, pk: false,
   });
-  assert.equal(column('account_token_family', 'revoked_at').nullable, true);
-  assert.equal(column('refresh_tokens', 'family_id').fk, 'account_token_family');
+  assert.equal(column('account_session', 'revoked_at').nullable, true);
+  assert.deepEqual(column('account_session', 'logged_out_at'), {
+    name: 'logged_out_at', type: 'timestamptz', nullable: true, pk: false,
+  });
+  assert.deepEqual(column('refresh_tokens', 'session_id'), {
+    name: 'session_id', type: 'uuid', nullable: false, pk: false, fk: 'account_session',
+  });
+  assert.equal(source.tables.some((entry) => entry.name === 'account_token_family'), false);
+  assert.equal(table('refresh_tokens').columns.some((entry) => entry.name === 'family_id'), false);
   assert.equal(column('refresh_tokens', 'grace_reissued_at').nullable, true);
   assert.equal(table('refresh_tokens').columns.some((entry) => entry.name === 'user_id'), false);
   assert.equal(table('refresh_tokens').columns.some((entry) => entry.name === 'session_started_at'), false);
-  assert.match(markdown, /users\s+\|\|--o\{\s+account_token_family/);
-  assert.match(markdown, /account_token_family\s+\|\|--o\{\s+refresh_tokens/);
+  assert.match(markdown, /users\s+\|\|--o\{\s+account_session/);
+  assert.match(markdown, /account_session\s+\|\|--o\{\s+refresh_tokens/);
 });
 
 test('passwordTokenInvalidationTimeAppearsInDictionaryAndNoteCraftProjection', () => {
@@ -348,26 +355,43 @@ test('passwordTokenInvalidationTimeAppearsInDictionaryAndNoteCraftProjection', (
   assert.equal(projectedInvalidation.required, 'nullable');
 });
 
-test('noteCraftProjectionTracksTheCanonicalTokenFamilyDictionaryAndRejectsDrift', () => {
+test('noteCraftProjectionTracksTheCanonicalAccountSessionDictionaryAndRejectsDrift', () => {
   const markdown = readFileSync(new URL('../../docs/diagrams/architecture/account-admin-db-schema.md', import.meta.url), 'utf8');
   const source = parseAccountAdminSchema(markdown);
   const data = JSON.parse(readFileSync(new URL('../../docs/diagrams/architecture/database-schema.er.json', import.meta.url), 'utf8'));
-  const family = data.tables.find((table) => table.name === 'account_token_family');
-  assert.ok(family, 'NoteCraft must display account_token_family');
+  const session = data.tables.find((table) => table.name === 'account_session');
+  assert.ok(session, 'NoteCraft must display account_session');
   assert.deepEqual(validateErData(source, accountData(source, data)), []);
-  assert.equal(family.columns.find((column) => column.name === 'id')?.pk, true);
-  assert.equal(family.columns.find((column) => column.name === 'user_id')?.fk, 'users');
+  assert.equal(data.tables.some((table) => table.name === 'account_token_family'), false);
+  assert.equal(session.columns.find((column) => column.name === 'id')?.pk, true);
+  assert.equal(session.columns.find((column) => column.name === 'user_id')?.fk, 'users');
+  const logout = session.columns.find((column) => column.name === 'logged_out_at');
+  assert.ok(logout, 'NoteCraft must display account_session.logged_out_at');
+  assert.equal(logout.type, 'timestamptz');
+  assert.equal(logout.required, 'nullable');
   assert.equal(data.tables.find((table) => table.name === 'refresh_tokens').columns
-    .find((column) => column.name === 'family_id')?.fk, 'account_token_family');
+    .find((column) => column.name === 'session_id')?.fk, 'account_session');
+  assert.equal(data.tables.find((table) => table.name === 'refresh_tokens').columns
+    .some((column) => column.name === 'family_id'), false);
 
-  const missingFamily = structuredClone(data);
-  missingFamily.tables = missingFamily.tables.filter((table) => table.name !== 'account_token_family');
-  assert.match(validateErData(source, accountData(source, missingFamily)).join('\n'), /Missing table: account_token_family/);
+  const missingSession = structuredClone(data);
+  missingSession.tables = missingSession.tables.filter((table) => table.name !== 'account_session');
+  assert.match(validateErData(source, accountData(source, missingSession)).join('\n'), /Missing table: account_session/);
 
   const detachedToken = structuredClone(data);
   delete detachedToken.tables.find((table) => table.name === 'refresh_tokens').columns
-    .find((column) => column.name === 'family_id').fk;
-  assert.match(validateErData(source, accountData(source, detachedToken)).join('\n'), /refresh_tokens\.family_id: FK/);
+    .find((column) => column.name === 'session_id').fk;
+  assert.match(validateErData(source, accountData(source, detachedToken)).join('\n'), /refresh_tokens\.session_id: FK/);
+});
+
+test('noteCraftProjectionKeepsThe37Table43FkShapeWith315Columns', () => {
+  const data = JSON.parse(readFileSync(
+    new URL('../../docs/diagrams/architecture/database-schema.er.json', import.meta.url), 'utf8'));
+  assert.deepEqual({
+    tables: data.tables.length,
+    columns: data.tables.reduce((count, table) => count + table.columns.length, 0),
+    fks: data.tables.reduce((count, table) => count + table.columns.filter((column) => column.fk).length, 0),
+  }, { tables: 37, columns: 315, fks: 43 });
 });
 
 test('realAccountAndDatasetDictionariesMatchCompleteNoteCraftProjection', () => {
