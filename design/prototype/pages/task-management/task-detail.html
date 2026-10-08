@@ -1147,7 +1147,6 @@
     .settings-nav-item { padding: var(--space-sm) var(--space-md); border: 0; border-radius: 4px; background: transparent; color: var(--color-ink-muted); font: inherit; text-align: left; cursor: pointer; }
     .settings-nav-item[aria-selected="true"] { background: var(--color-slate-50); color: var(--color-ink); font-weight: 600; }
     .settings-section.panel { border: 0; box-shadow: none; border-radius: 0; background: transparent; padding: 0; margin-bottom: 0; }
-
     @media (max-width: 768px) {
       .layout { padding: var(--space-md) var(--space-md) var(--space-xl); }
       .settings-layout { grid-template-columns: minmax(0, 1fr); gap: var(--space-md); }
@@ -2344,7 +2343,7 @@
 </div>
 
 <!-- FR-026 (2): unsaved settings changes on section / tab switch. -->
-<div class="modal-overlay" id="settingsLeaveModal" aria-hidden="true" role="alertdialog" aria-modal="true" aria-labelledby="settingsLeaveTitle">
+<div class="modal-overlay" id="settingsLeaveModal" aria-hidden="true" role="alertdialog" aria-modal="true" aria-labelledby="settingsLeaveTitle" aria-describedby="settingsLeaveBody">
   <div class="modal">
     <h2 id="settingsLeaveTitle">放棄未儲存的變更？</h2>
     <p id="settingsLeaveBody">目前區段有尚未儲存的變更，離開後這些變更將會遺失。</p>
@@ -5191,6 +5190,7 @@ function interpolate(template, payload) {
     URL_VIEW_STATE.forEach(function(entry) {
       if (entry.restore === false) return;
       if (rejectedPrefix && entry.param.indexOf(rejectedPrefix) === 0) return;
+      if (entry.onlyTab && entry.onlyTab !== state.activeTab) return;
       var raw = params.get(entry.param);
       if (raw === null) return;
       var parsed = parseViewStateParam(entry, raw);
