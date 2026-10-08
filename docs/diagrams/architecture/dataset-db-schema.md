@@ -166,6 +166,8 @@ erDiagram
 | I-01 | DB | item PK、非空 batch FK；不複製 version/source/preprocessing 至 item | dataset-021 FR-001／FR-004 |
 | I-02 | DB | UNIQUE (`dataset_import_batch_id`, `source_row_no`) 與 `source_row_no > 0`；來源自帶 `id` 不全域去重 | dataset-021 FR-004、AC-1.2 |
 | I-03 | SVC＋SEC | `public_payload` 只接受所屬 batch `classification_manifest` 的公開欄位 allowlist；protected 與 Input／Evidence／Output 不得重疊，分類或 PII 審查缺漏則不能 seal。用任意名稱與巢狀合成答案測漏，不以 `gold_*` 名稱猜測 | dataset-021 FR-006／FR-007、AC-2.1／2.2；task-013 FR-002c-8／FR-003g-5 |
+| I-04 | SVC＋SEC | 字典層設計要求：標記者端的項目排序與分頁游標一律不得使用 `source_row_no` 或 `dataset_import_batch`（含 `source_ordinal`、批次 ID）；排序與游標只能依 `task_run_item.list_position`，因 `source_row_no` 與批次序暴露來源位置，違反 S-01「標記者 response 不含來源位置」 | 字典層設計要求；對照 S-01 |
+| I-05 | DB 權限＋SVC＋SEC | 字典層設計要求：PostgreSQL 標記者 app role 對 `dataset_import_batch` 明示 `REVOKE ALL`，不依賴 default privileges 授權（亦不得由 default privileges 重新授予），標記者讀取路徑只經僅含公開欄位的 allowlist（`dataset_item.public_payload` 與任務層下發欄位）；SQLite 無 role 機制，對應做法是 service／repository 層 allowlist，不提供標記者路徑直接存取該表 | 字典層設計要求；對照 S-01 |
 | P-01 | DB | `dataset_item_id` 同時為 PK／FK；同一 item 最多一筆 private 列，無孤兒 private | dataset-021 FR-005、AC-2.3 |
 | P-02 | SVC | item 與 private 在同一交易建立；封存前檢查每 item 恰有一列。單向 FK 無法獨力保證每 item 至少一列 | dataset-021 FR-005／FR-008 |
 | P-03 | SVC | null 只表示來源未宣告；實際 test 集若需要答案而為 null，由後續 scoring／publish 契約拒絕。來源 split 不等於 run split；合法 split 詞彙與答案 JSON shape 待 runtime 前正典定案 | dataset-021 FR-005、FR-010 |

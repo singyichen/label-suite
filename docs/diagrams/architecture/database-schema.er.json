@@ -805,7 +805,7 @@
           "note": "成功封存時間（UTC）；草稿為空值；規則：V-05、X-01"
         }
       ],
-      "description": "**候選表／尚未部署。** 一列是一個完整版本快照；同資料集版本號唯一。父版本同資料集的複合 FK、草稿→已封存原子封存與不可變性見字典 §4。NoteCraft 自參照線只顯示單欄父表，不代表複合約束已落地。來源：資料集-021 FR-002／FR-008；字典 §3.2。"
+      "description": "**候選表／尚未部署。** 一列是一個完整版本快照；同資料集版本號唯一。父版本同資料集的複合 FK、草稿→已封存原子封存與不可變性見字典 §4。NoteCraft 自參照線只顯示單欄父表，不代表複合約束已落地。複合鍵與複合 FK 未畫在圖上，見各實體字典 §4。來源：資料集-021 FR-002／FR-008；字典 §3.2。"
     },
     {
       "name": "dataset_import_batch",
@@ -876,7 +876,7 @@
           "note": "批次接受時間（UTC）；規則：X-01"
         }
       ],
-      "description": "**候選表／尚未部署。** 一列是一個已接受來源檔；逐檔保存來源順序、checksum、record path、前處理版本及受限 classification_manifest。原始來源 ref 與分類資料不進標記者回應。來源：資料集-021 FR-003／FR-006；字典 §3.3。"
+      "description": "**候選表／尚未部署。** 一列是一個已接受來源檔；逐檔保存來源順序、checksum、record path、前處理版本及受限 classification_manifest。原始來源 ref 與分類資料不進標記者回應。複合鍵與複合 FK 未畫在圖上，見各實體字典 §4。來源：資料集-021 FR-003／FR-006；字典 §3.3。"
     },
     {
       "name": "dataset_item",
@@ -917,7 +917,7 @@
           "note": "項目接受時間（UTC）；規則：X-01"
         }
       ],
-      "description": "**候選表／尚未部署。** 一列是一筆可下發來源紀錄；public_payload 僅有經逐檔分類 allowlist 驗證的可見欄位，版本／來源／前處理均經批次 FK 追溯。來源：資料集-021 FR-004／FR-007；字典 §3.4。"
+      "description": "**候選表／尚未部署。** 一列是一筆可下發來源紀錄；public_payload 僅有經逐檔分類 allowlist 驗證的可見欄位，版本／來源／前處理均經批次 FK 追溯。複合鍵與複合 FK 未畫在圖上，見各實體字典 §4。來源：資料集-021 FR-004／FR-007；字典 §3.4。"
     },
     {
       "name": "dataset_item_private",
@@ -1842,7 +1842,7 @@
         {"name": "submitted_at", "type": "timestamptz", "required": "nullable", "note": "正式提交 UTC 時間；提交一次；規則：R-04"},
         {"name": "abandoned_at", "type": "timestamptz", "required": "nullable", "note": "舊草稿退役 UTC 時間；未提交重派時一次；規則：R-04"}
       ],
-      "description": "**實體候選，尚未部署。** 同一工作指派的未儲存 `pending` 由缺列推導。受派者重派前，舊 `saved` 轉 `abandoned` 並保留作者與答案；新受派者另建一列。審核員首次提交後凍結標記來源已由 015 FR-105 納入規劃契約；資料庫交易與約束尚未實作。來源：015 FR-049／FR-051／`AnnotationRecord`、014 FR-005l。\n\n來源：[標記／審核實體候選字典](/notes/diagrams/architecture/annotation-review-db-schema) §3.1；複合工作指派 FK、唯一限制、檢查限制、權限與資料庫遷移前待決見 §4–§7。圖中只畫已列的單欄 FK；線條不表示 ORM、資料庫遷移或 DB 權限已建立。"
+      "description": "**實體候選，尚未部署。** 同一工作指派的未儲存 `pending` 由缺列推導。受派者重派前，舊 `saved` 轉 `abandoned` 並保留作者與答案；新受派者另建一列。審核員首次提交後凍結標記來源已由 015 FR-105 納入規劃契約；資料庫交易與約束尚未實作。來源：015 FR-049／FR-051／`AnnotationRecord`、014 FR-005l。\n\n來源：[標記／審核實體候選字典](/notes/diagrams/architecture/annotation-review-db-schema) §3.1；複合工作指派 FK、唯一限制、檢查限制、權限與資料庫遷移前待決見 §4–§7。複合鍵與複合 FK 未畫在圖上，見各實體字典 §4。圖中只畫已列的單欄 FK；線條不表示 ORM、資料庫遷移或 DB 權限已建立。"
     },
     {
       "name": "annotation_review_draft",
@@ -1860,7 +1860,7 @@
         {"name": "updated_at", "type": "timestamptz", "required": "required", "note": "最近成功寫入 UTC 時間；建立／更新；規則：X-03"},
         {"name": "invalidated_at", "type": "timestamptz", "required": "nullable", "note": "提交、失權或指派變更後的失效時間；失效時一次；規則：D-04"}
       ],
-      "description": "**實體候選，尚未部署。** 一列僅屬同一審核員與同一審核單位。`decision_payload` 僅保存 FR-014S 承諾的逐 outKey 決策與理由，不擴充為修正控件內未提交的文字／數值編輯。送出後清除有效草稿；因稽核留存而保留舊列時，應以 `invalidated_at` 失效並排除還原。草稿的**存在與否**亦不得向其他審核員或標記員洩漏。來源：015 FR-014S／FR-062／FR-093。\n\n來源：[標記／審核實體候選字典](/notes/diagrams/architecture/annotation-review-db-schema) §3.2；複合工作指派 FK、唯一限制、檢查限制、權限與資料庫遷移前待決見 §4–§7。圖中只畫已列的單欄 FK；線條不表示 ORM、資料庫遷移或 DB 權限已建立。"
+      "description": "**實體候選，尚未部署。** 一列僅屬同一審核員與同一審核單位。`decision_payload` 僅保存 FR-014S 承諾的逐 outKey 決策與理由，不擴充為修正控件內未提交的文字／數值編輯。送出後清除有效草稿；因稽核留存而保留舊列時，應以 `invalidated_at` 失效並排除還原。草稿的**存在與否**亦不得向其他審核員或標記員洩漏。本表只保存未提交狀態，提交時同交易清除或失效；已提交決策的唯一權威紀錄見 annotation_review_submission_revision（N-04）。來源：015 FR-014S／FR-062／FR-093。\n\n來源：[標記／審核實體候選字典](/notes/diagrams/architecture/annotation-review-db-schema) §3.2；複合工作指派 FK、唯一限制、檢查限制、權限與資料庫遷移前待決見 §4–§7。複合鍵與複合 FK 未畫在圖上，見各實體字典 §4。圖中只畫已列的單欄 FK；線條不表示 ORM、資料庫遷移或 DB 權限已建立。"
     },
     {
       "name": "annotation_review_submission",
@@ -1877,7 +1877,7 @@
         {"name": "submitted_at", "type": "timestamptz", "required": "required", "note": "首次提交 UTC 時間；首次提交；不改；規則：X-03"},
         {"name": "updated_at", "type": "timestamptz", "required": "required", "note": "最新合法改判 UTC 時間；每次提交；規則：X-03"}
       ],
-      "description": "**實體候選，尚未部署。** 唯一限制以審核單位為鍵阻擋兩位審核員並列正式提交。首次提交者的固定歸屬身分由此列推導；再次明示提交僅能由同一審核員更新目前版本；舊版存到 §3.8 的不可變修訂版本。首票後禁止改判已由 015 FR-103／FR-105 納入規劃契約；資料庫交易尚未實作。來源：015 FR-051／FR-093／FR-103。\n\n來源：[標記／審核實體候選字典](/notes/diagrams/architecture/annotation-review-db-schema) §3.3；複合工作指派 FK、唯一限制、檢查限制、權限與資料庫遷移前待決見 §4–§7。圖中只畫已列的單欄 FK；線條不表示 ORM、資料庫遷移或 DB 權限已建立。"
+      "description": "**實體候選，尚未部署。** 唯一限制以審核單位為鍵阻擋兩位審核員並列正式提交。首次提交者的固定歸屬身分由此列推導；再次明示提交僅能由同一審核員更新目前版本；舊版存到 §3.8 的不可變修訂版本。首票後禁止改判已由 015 FR-103／FR-105 納入規劃契約；資料庫交易尚未實作。來源：015 FR-051／FR-093／FR-103。\n\n來源：[標記／審核實體候選字典](/notes/diagrams/architecture/annotation-review-db-schema) §3.3；複合工作指派 FK、唯一限制、檢查限制、權限與資料庫遷移前待決見 §4–§7。複合鍵與複合 FK 未畫在圖上，見各實體字典 §4。圖中只畫已列的單欄 FK；線條不表示 ORM、資料庫遷移或 DB 權限已建立。"
     },
     {
       "name": "annotation_review_decision",
@@ -1893,7 +1893,7 @@
         {"name": "reason", "type": "text", "required": "nullable", "note": "`modify`／`bypass` 的理由；提交／改判時寫；規則：J-03"},
         {"name": "decided_at", "type": "timestamptz", "required": "required", "note": "該決策本次提交 UTC 時間；提交／改判時寫；規則：X-03"}
       ],
-      "description": "**實體候選，尚未部署。** 一列只保存目前版本中一個 `output_key` 的目前決策；完整性（每個釘住的 `outputs[]` 恰一次）由提交交易核對。修正值有合法 JSON 空值的可能，不能以 SQL NULL（空值）是否存在取代設定登錄規則驗證。來源：015 FR-014S／FR-092／FR-103。\n\n來源：[標記／審核實體候選字典](/notes/diagrams/architecture/annotation-review-db-schema) §3.4；複合工作指派 FK、唯一限制、檢查限制、權限與資料庫遷移前待決見 §4–§7。圖中只畫已列的單欄 FK；線條不表示 ORM、資料庫遷移或 DB 權限已建立。"
+      "description": "**實體候選，尚未部署。** 一列只保存目前版本中一個 `output_key` 的目前決策；完整性（每個釘住的 `outputs[]` 恰一次）由提交交易核對。修正值有合法 JSON 空值的可能，不能以 SQL NULL（空值）是否存在取代設定登錄規則驗證。本表是最新修訂 decision_payload 的逐 outKey 投影，不是第二份權威副本（N-04）。來源：015 FR-014S／FR-092／FR-103。\n\n來源：[標記／審核實體候選字典](/notes/diagrams/architecture/annotation-review-db-schema) §3.4；複合工作指派 FK、唯一限制、檢查限制、權限與資料庫遷移前待決見 §4–§7。複合鍵與複合 FK 未畫在圖上，見各實體字典 §4。圖中只畫已列的單欄 FK；線條不表示 ORM、資料庫遷移或 DB 權限已建立。"
     },
     {
       "name": "annotation_arbitration_vote",
@@ -1918,7 +1918,7 @@
         {"name": "decision_batch_id", "type": "uuid", "required": "required", "note": "同一次原子仲裁請求的冪等 ID；建立；不改；規則：V-07"},
         {"name": "decision_batch_digest", "type": "char(64)", "required": "required", "note": "該批次完整 canonical 內容摘要；建立；不改；規則：V-07"}
       ],
-      "description": "**實體候選，尚未部署。** `DisputeItem` 由標記來源與審核員修訂版本推導，這張表僅保存對其鍵的票。`item_key` 用型別化 canonical encoding 表示 FR-052 粒度；`sequence_tagging` 的 span 粒度已由 015 FR-059／FR-061 收斂；`item_key` 的精確編碼、版本及碰撞測試仍待資料庫遷移前固定，不能宣稱鍵已可落地。一次批次提交全部爭議鍵、每鍵最多一票已納入 015 的 V1 規劃契約，尚未實作。來源：015 FR-052／FR-059／FR-061／FR-062。\n\n來源：[標記／審核實體候選字典](/notes/diagrams/architecture/annotation-review-db-schema) §3.5；複合工作指派 FK、唯一限制、檢查限制、權限與資料庫遷移前待決見 §4–§7。圖中只畫已列的單欄 FK；線條不表示 ORM、資料庫遷移或 DB 權限已建立。"
+      "description": "**實體候選，尚未部署。** `DisputeItem` 由標記來源與審核員修訂版本推導，這張表僅保存對其鍵的票。`item_key` 用型別化 canonical encoding 表示 FR-052 粒度；`sequence_tagging` 的 span 粒度已由 015 FR-059／FR-061 收斂；`item_key` 的精確編碼、版本及碰撞測試仍待資料庫遷移前固定，不能宣稱鍵已可落地。一次批次提交全部爭議鍵、每鍵最多一票已納入 015 的 V1 規劃契約，尚未實作。來源：015 FR-052／FR-059／FR-061／FR-062。\n\n來源：[標記／審核實體候選字典](/notes/diagrams/architecture/annotation-review-db-schema) §3.5；複合工作指派 FK、唯一限制、檢查限制、權限與資料庫遷移前待決見 §4–§7。複合鍵與複合 FK 未畫在圖上，見各實體字典 §4。圖中只畫已列的單欄 FK；線條不表示 ORM、資料庫遷移或 DB 權限已建立。"
     },
     {
       "name": "annotation_exception_resolution",
@@ -1940,7 +1940,7 @@
         {"name": "finalized_value", "type": "json", "required": "nullable", "note": "採用／自訂的已驗證答案；排除時 SQL NULL（空值）；建立；不改；規則：E-06"},
         {"name": "resolved_at", "type": "timestamptz", "required": "required", "note": "確認 UTC 時間；建立；不改；規則：X-03"}
       ],
-      "description": "**實體候選，尚未部署。** 只在 PL 明示確認後新增。`exclude_from_dataset` 排除**爭議輸出項目**，不是刪 `dataset_item`、執行資料項目或工作指派。`custom_answer` 僅正式標記；其與整個工作指派排除／完成分母的關係仍待 014／015 正典對齊。來源：015 FR-095、014 FR-018。\n\n來源：[標記／審核實體候選字典](/notes/diagrams/architecture/annotation-review-db-schema) §3.6；複合工作指派 FK、唯一限制、檢查限制、權限與資料庫遷移前待決見 §4–§7。圖中只畫已列的單欄 FK；線條不表示 ORM、資料庫遷移或 DB 權限已建立。"
+      "description": "**實體候選，尚未部署。** 只在 PL 明示確認後新增。`exclude_from_dataset` 排除**爭議輸出項目**，不是刪 `dataset_item`、執行資料項目或工作指派。`custom_answer` 僅正式標記；其與整個工作指派排除／完成分母的關係仍待 014／015 正典對齊。來源：015 FR-095、014 FR-018。\n\n來源：[標記／審核實體候選字典](/notes/diagrams/architecture/annotation-review-db-schema) §3.6；複合工作指派 FK、唯一限制、檢查限制、權限與資料庫遷移前待決見 §4–§7。複合鍵與複合 FK 未畫在圖上，見各實體字典 §4。圖中只畫已列的單欄 FK；線條不表示 ORM、資料庫遷移或 DB 權限已建立。"
     },
     {
       "name": "annotation_history_event",
@@ -1954,8 +1954,8 @@
         {"name": "assignment_id", "type": "uuid", "required": "required", "note": "發生動作的工作位，複合單位鍵；建立；不改；規則：X-01"},
         {"name": "event_no", "type": "integer", "required": "required", "note": "單位內正整數單調序號；動作交易分配；不改；規則：H-01"},
         {"name": "actor_membership_id", "type": "uuid", "required": "required", "note": "當次真實操作者；建立；不改；規則：X-04"},
-        {"name": "account_session_id", "type": "uuid", "required": "nullable", "note": "可驗證的當次登入工作階段；舊資料或系統動作可空；不得由操作者或時間猜測補值；規則：H-06", "fk": "account_session"},
         {"name": "actor_task_role", "type": "varchar(24)", "required": "required", "note": "當次選用任務角色快照；建立；不改；規則：H-02"},
+        {"name": "account_session_id", "type": "uuid", "required": "nullable", "note": "可驗證的當次登入工作階段；舊資料或系統動作可空；不得由操作者或時間猜測補值；規則：H-06", "fk": "account_session"},
         {"name": "action", "type": "varchar(24)", "required": "required", "note": "FR-086 八個目前有效動作之一；建立；不改；規則：H-03"},
         {"name": "output_key", "type": "varchar(120)", "required": "nullable", "note": "動作所涉 outKey；整單位動作可空；建立；不改；規則：H-03"},
         {"name": "reason", "type": "text", "required": "nullable", "note": "當次理由；依 action 驗必填；建立；不改；規則：H-03"},
@@ -1968,7 +1968,7 @@
         {"name": "arbitration_vote_id", "type": "uuid", "required": "nullable", "note": "由仲裁票產生時的來源；建立；不改；規則：H-05"},
         {"name": "exception_resolution_id", "type": "uuid", "required": "nullable", "note": "由例外收尾產生時的來源；建立；不改；規則：H-05"}
       ],
-      "description": "**實體候選，尚未部署。** 一列是一個單位的一次動作；不同 outKey 的審核員決策各寫一列。`event_no` 保證同時間戳仍有總排序，清單時間與耗時由事件推導。`account_session_id` 僅在工作階段可驗證時寫入；舊事件與系統動作可空，不能用 `lead_time_ms` 代替工時。未提交審核員草稿**不產生對其他角色可見的事件**；本設計按 FR-014S 不為其寫 history。快照與理由可能含敏感答案，須在資料供給層遮蔽。來源：015 FR-016B／FR-086～FR-091／FR-097。\n\n來源：[標記／審核實體候選字典](/notes/diagrams/architecture/annotation-review-db-schema) §3.7；複合工作指派 FK、唯一限制、檢查限制、權限與資料庫遷移前待決見 §4–§7。圖中只畫已列的單欄 FK；線條不表示 ORM、資料庫遷移或 DB 權限已建立。"
+      "description": "**實體候選，尚未部署。** 一列是一個單位的一次動作；不同 outKey 的審核員決策各寫一列。`event_no` 保證同時間戳仍有總排序，清單時間與耗時由事件推導。`account_session_id` 僅在工作階段可驗證時寫入；舊事件與系統動作可空，不能用 `lead_time_ms` 代替工時。未提交審核員草稿**不產生對其他角色可見的事件**；本設計按 FR-014S 不為其寫 history。快照與理由可能含敏感答案，須在資料供給層遮蔽。來源：015 FR-016B／FR-086～FR-091／FR-097。\n\n來源：[標記／審核實體候選字典](/notes/diagrams/architecture/annotation-review-db-schema) §3.7；複合工作指派 FK、唯一限制、檢查限制、權限與資料庫遷移前待決見 §4–§7。複合鍵與複合 FK 未畫在圖上，見各實體字典 §4。圖中只畫已列的單欄 FK；線條不表示 ORM、資料庫遷移或 DB 權限已建立。"
     },
     {
       "name": "annotation_review_submission_revision",
@@ -1984,7 +1984,7 @@
         {"name": "decision_payload", "type": "json", "required": "required", "note": "本次全部 outKey、修正值和理由快照；建立；不改；規則：N-03"},
         {"name": "submitted_at", "type": "timestamptz", "required": "required", "note": "本次修訂 UTC 提交時間；建立；不改；規則：X-03"}
       ],
-      "description": "**實體候選，尚未部署。** 每次正式提交一個完整、已驗證的 outKey 決策快照；不代表第二位審核員，也不另建指派。仲裁票參照投票時的修訂版本，避免後續改判把來源改掉。015 FR-103／FR-105 已規劃首票後不可改判；此表與交易尚未落地。來源：015 FR-103／FR-052、DBA 設計「持久化切分」。\n\n來源：[標記／審核實體候選字典](/notes/diagrams/architecture/annotation-review-db-schema) §3.8；複合工作指派 FK、唯一限制、檢查限制、權限與資料庫遷移前待決見 §4–§7。圖中只畫已列的單欄 FK；線條不表示 ORM、資料庫遷移或 DB 權限已建立。"
+      "description": "**實體候選，尚未部署。** 每次正式提交一個完整、已驗證的 outKey 決策快照；不代表第二位審核員，也不另建指派。仲裁票參照投票時的修訂版本，避免後續改判把來源改掉。decision_payload 是已提交決策的唯一權威紀錄，annotation_review_decision 是其投影（N-04）。015 FR-103／FR-105 已規劃首票後不可改判；此表與交易尚未落地。來源：015 FR-103／FR-052、DBA 設計「持久化切分」。\n\n來源：[標記／審核實體候選字典](/notes/diagrams/architecture/annotation-review-db-schema) §3.8；複合工作指派 FK、唯一限制、檢查限制、權限與資料庫遷移前待決見 §4–§7。複合鍵與複合 FK 未畫在圖上，見各實體字典 §4。圖中只畫已列的單欄 FK；線條不表示 ORM、資料庫遷移或 DB 權限已建立。"
     },
     {
       "name": "task_export",

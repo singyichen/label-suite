@@ -149,7 +149,7 @@ erDiagram
 
 ### 3.2 annotation_review_draft：reviewer 私有未提交草稿
 
-一列僅屬同一 reviewer 與同一審核單位。`decision_payload` 僅保存 FR-014S 承諾的逐 outKey 決策與理由，不擴充為修正控件內未提交的文字／數值編輯。送出後清除有效草稿；因稽核留存而保留舊列時，應以 `invalidated_at` 失效並排除還原。草稿的**存在與否**亦不得向其他 reviewer 或 annotator 洩漏。來源：015 FR-014S／FR-062／FR-093。
+一列僅屬同一 reviewer 與同一審核單位。`decision_payload` 僅保存 FR-014S 承諾的逐 outKey 決策與理由，不擴充為修正控件內未提交的文字／數值編輯。送出後清除有效草稿；因稽核留存而保留舊列時，應以 `invalidated_at` 失效並排除還原。草稿的**存在與否**亦不得向其他 reviewer 或 annotator 洩漏。草稿只保存未提交狀態；已提交決策的唯一權威紀錄是 §3.8 revision 的 `decision_payload`，見 N-04。來源：015 FR-014S／FR-062／FR-093。
 
 | 欄位 | 型別 | 可空 | 代表什麼 | 何時寫入／改變 | 規則 |
 |---|---|---|---|---|---|
@@ -158,7 +158,7 @@ erDiagram
 | `run_id` | uuid | 否 | 所在 run，複合單位鍵 | 建立；不改 | X-01 |
 | `assignment_id` | uuid | 否 | 受審 slot，複合單位鍵 | 建立；不改 | X-01 |
 | `reviewer_membership_id` | uuid | 否 | 唯一可讀寫此草稿的 reviewer | 建立；不改 | X-04 |
-| `decision_payload` | json | 否 | 未提交的逐 outKey 三向決策與理由 | 本人編輯時更新 | D-03 |
+| `decision_payload` | json | 否 | 未提交的逐 outKey 三向決策與理由 | 本人編輯時更新 | D-03／N-04 |
 | `version` | integer | 否 | 草稿樂觀鎖版本 | 每次成功寫入 +1 | X-02 |
 | `updated_at` | timestamptz | 否 | 最近成功寫入 UTC 時間 | 建立／更新 | X-03 |
 | `invalidated_at` | timestamptz | 是 | 提交、失權或指派變更後的失效時間 | 失效時一次 | D-04 |
@@ -180,7 +180,7 @@ UNIQUE 單位鍵阻擋兩位 reviewer 並列正式提交。首次提交者的 st
 
 ### 3.4 annotation_review_decision：每個 outKey 的目前決策
 
-一列只保存 head 中一個 `output_key` 的目前決策；完整性（每個釘住的 `outputs[]` 恰一次）由提交交易核對。修正值有合法 JSON null 的可能，不能以 SQL NULL 是否存在取代 registry 驗證。來源：015 FR-014S／FR-092／FR-103。
+一列只保存 head 中一個 `output_key` 的目前決策；完整性（每個釘住的 `outputs[]` 恰一次）由提交交易核對。修正值有合法 JSON null 的可能，不能以 SQL NULL 是否存在取代 registry 驗證。本表是最新 revision `decision_payload` 的逐 outKey 投影（目前檢視），不是第二份權威副本，見 N-04。來源：015 FR-014S／FR-092／FR-103。
 
 | 欄位 | 型別 | 可空 | 代表什麼 | 何時寫入／改變 | 規則 |
 |---|---|---|---|---|---|
@@ -263,7 +263,7 @@ UNIQUE 單位鍵阻擋兩位 reviewer 並列正式提交。首次提交者的 st
 
 ### 3.8 annotation_review_submission_revision：不可變審核修訂
 
-每次正式提交一個完整、已驗證的 outKey 決策快照；不代表第二位 reviewer，也不另建指派。仲裁票參照投票時的 revision，避免後續改判把來源改掉。015 FR-103／FR-105 已規劃首票後不可改判；此表與交易尚未落地。來源：015 FR-103／FR-052、DBA 設計「持久化切分」。
+每次正式提交一個完整、已驗證的 outKey 決策快照；不代表第二位 reviewer，也不另建指派。仲裁票參照投票時的 revision，避免後續改判把來源改掉。`decision_payload` 是已提交決策的唯一權威紀錄，見 N-04。015 FR-103／FR-105 已規劃首票後不可改判；此表與交易尚未落地。來源：015 FR-103／FR-052、DBA 設計「持久化切分」。
 
 | 欄位 | 型別 | 可空 | 代表什麼 | 何時寫入／改變 | 規則 |
 |---|---|---|---|---|---|
@@ -272,7 +272,7 @@ UNIQUE 單位鍵阻擋兩位 reviewer 並列正式提交。首次提交者的 st
 | `assignment_id` | uuid | 否 | 所屬 head 的 slot，同單位複合鍵 | 建立；不改 | N-01 |
 | `review_submission_id` | uuid | 否 | 所屬唯一 reviewer head | 建立；不改 | N-01 |
 | `version` | integer | 否 | 與 head 本次版本一致的正整數 | 建立；不改 | N-02 |
-| `decision_payload` | json | 否 | 本次全部 outKey、修正值和理由快照 | 建立；不改 | N-03 |
+| `decision_payload` | json | 否 | 本次全部 outKey、修正值和理由快照 | 建立；不改 | N-03／N-04 |
 | `submitted_at` | timestamptz | 否 | 本次修訂 UTC 提交時間 | 建立；不改 | X-03 |
 
 ## 4. PK、UNIQUE、FK 與 CHECK 候選
@@ -321,11 +321,12 @@ UNIQUE 單位鍵阻擋兩位 reviewer 並列正式提交。首次提交者的 st
 | N-01 | DB | revision PK；`(run_id,assignment_id,review_submission_id)` 複合 FK → `annotation_review_submission(run_id,assignment_id,id)`，故 revision 與 head 同單位；另設 UNIQUE `(run_id,assignment_id,id)` 作 V-04 與 H-05 的父鍵。與 head 不同的 immutable 行（append-only 見 A-01） | 015 FR-103、DBA 設計 |
 | N-02 | DB | UNIQUE `(review_submission_id,version)`、CHECK `version>0`；head.version 與最新 revision.version 在交易中對齊 | 015 FR-103 |
 | N-03 | SVC＋SEC | `decision_payload` 是當次所有 outKey 已驗證快照；不可原地更新，查詢受同 reviewer／仲裁資格與答案遮蔽限制 | 015 FR-052／FR-062／FR-103 |
+| N-04 | DB＋SVC | 字典層設計要求：已提交決策的唯一權威紀錄是 `annotation_review_submission_revision.decision_payload`（不可變、每次提交一份完整快照）。`annotation_review_draft` 只保存未提交狀態，提交同交易清除或失效（D-04），提交後不得再當決策來源。`annotation_review_decision` 的 `decision`／`corrected_answer`／`reason` 是由最新 revision 的 `decision_payload` 逐 outKey 投影而成的目前檢視，S-03 的改判同交易重寫；不得成為第二份獨立權威副本，也不得新增繞過 revision 的寫入路徑，兩者不一致時以 revision 為準並重建投影 | DBA 設計（字典層設計要求）；關聯 D-04、S-03、N-03 |
 | A-01 | DB | `annotation_history_event`、`annotation_arbitration_vote`、`annotation_review_submission_revision` 完全 append-only：SQLite 與 PostgreSQL 各掛一個 `BEFORE UPDATE`／`BEFORE DELETE` trigger；PostgreSQL 對 app role `REVOKE UPDATE, DELETE, TRUNCATE`（只授予 SELECT／INSERT，PUBLIC 與 default privileges 不得再授）；更正一律新增列，無執行期更正路徑；更正路徑之外，唯一允許的 UPDATE 是 ADR-038 特權匿名化，由 migration role 執行 | 015 FR-097／FR-105；ADR-024 增補 (2026-10-08)；ADR-038 |
 
 ## 5. 候選索引與查詢對應
 
-先用 PK／UNIQUE 的左側前綴，僅為尚未覆蓋的 FK 反查或實際清單 predicate 加索引。各索引會增加草稿、審核與歷程寫入成本；落地前以 SQLite 查詢計畫及 PostgreSQL `EXPLAIN` 驗證，不因 JSONB 存在就預建 GIN。
+先用 PK／UNIQUE 的左側前綴，僅為尚未覆蓋的 FK 反查或實際清單 predicate 加索引。各索引會增加草稿、審核與歷程寫入成本；落地前以 SQLite 查詢計畫及 PostgreSQL `EXPLAIN` 驗證，不因 JSON 欄位存在就預建 GIN。
 
 | 查詢／參照 | 候選索引 | 覆蓋與成本 |
 |---|---|---|
@@ -342,7 +343,7 @@ UNIQUE 單位鍵阻擋兩位 reviewer 並列正式提交。首次提交者的 st
 
 ## 6. SQLite／PostgreSQL、交易與資料隔離
 
-- **雙庫型別**：PostgreSQL 使用 `uuid`、`jsonb`、`timestamptz`；SQLite Lite 透過同一 ORM adapter 映射 UUID／JSON／UTC 時間。SQLite 無 PostgreSQL `TINYINT` 或 `SELECT FOR UPDATE` 語意；`varchar(n)` 長度上限在 SQLite 須另以 CHECK／應用驗證。`json` 的 SQL NULL 與合法 JSON null 務必可區分，且用 `has_finalized_value` 明示存在性。每個 SQLite 連線啟用 `PRAGMA foreign_keys=ON`，PG／SQLite 均驗複合 FK、部分唯一與 CHECK。
+- **雙庫型別**：PostgreSQL 使用 `uuid`、`timestamptz`，字典的邏輯型別 `json` 對應 PostgreSQL JSONB（欄位型別一律維持寫 `json`）；SQLite Lite 透過同一 ORM adapter 映射 UUID／JSON／UTC 時間。SQLite 無 PostgreSQL `TINYINT` 或 `SELECT FOR UPDATE` 語意；`varchar(n)` 長度上限在 SQLite 須另以 CHECK／應用驗證。`json` 的 SQL NULL 與合法 JSON null 務必可區分，且用 `has_finalized_value` 明示存在性。每個 SQLite 連線啟用 `PRAGMA foreign_keys=ON`，PG／SQLite 均驗複合 FK、部分唯一與 CHECK。
 - **交易競爭**：標記寫入、reviewer 提交／改判、仲裁與例外確認均鎖同一 assignment；PG 可鎖該行，SQLite 以序列化寫交易／條件更新及 UNIQUE 作最後防線。標記 `version` CAS，review head、decision、revision、history 和草稿失效同交易；batch 全爭議項票與事件同交易；例外 resolution 與事件同交易。不能靠時間戳判定衝突或靠前端 disabled 取代伺服器檢查。
 - **即時授權**：每條讀寫路徑重新核 active membership、所選 task role、ADR-037 權限矩陣、assignment、run candidate／roster 及資源條件。歷史 membership／reviewer 黏著保留責任，不授予當前讀權。未提交 reviewer 草稿只由本人讀寫且不能在他人 API 的行數、摘要或事件中洩漏。
 - **答案隔離**：八表不存 `dataset_item_private.hidden_answer`、`declared_split`、gold/test 旗標，也不連私有答案 FK。`answer_payload`、審核修正、仲裁定案、例外理由與 history snapshot 仍可能含敏感答案；annotator API 使用 allowlist 投影並依 FR-062／FR-090 遮蔽。PostgreSQL 對私有表另設 DB 角色讀取隔離；SQLite 由 repository 邊界與洩漏測試保證，不能把共用 `audit_events` 的查詢權套到本批敏感表。
