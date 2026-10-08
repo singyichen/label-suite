@@ -12,8 +12,8 @@
 
 **故事目標**：dataset-021 SC-006 — 正典、ADR 與字典對六類資料的保存政策一致。
 
-- [ ] 2.1 新增 ADR-038 並補 ADR-021、ADR-024、ADR-032 的增補與 ADR 索引，回寫 `specs/dataset/021-dataset-ingestion-and-lineage/spec.md` 的 FR-011、版本 1.4.0 與 Changelog。Exception: governance-propagation; Files: `docs/adr/038-data-retention-deletion-anonymization.md`, `docs/adr/021-jwt-refresh-token-auth.md`, `docs/adr/024-database-quickstart-sqlite-tiered.md`, `docs/adr/032-user-action-audit-trail.md`, `docs/adr/README.md`; Reason: 政策正典與三份 ADR 的指向必須同一任務落地，否則引用斷裂。 [@senior-sa]
-- [ ] 2.2 同步各字典的 `ON DELETE`、清理與匿名化規則，Red 測試轉綠。Exception: governance-propagation; Files: `docs/diagrams/architecture/account-admin-db-schema.md`, `docs/diagrams/architecture/annotation-review-db-schema.md`, `docs/diagrams/architecture/database-table-inventory.md`, `docs/diagrams/architecture/task-work-db-schema.md`, `docs/diagrams/architecture/task-export-db-schema.md`, `docs/diagrams/architecture/dataset-db-schema.md`, `docs/diagrams/architecture/task-run-db-schema.md`; Reason: 七份字典引用同一政策，須同一任務同步，否則字典間互相矛盾。 [@senior-dba]
+- [x] 2.1 新增 ADR-038 並補 ADR-021、ADR-024、ADR-032 的增補與 ADR 索引，回寫 `specs/dataset/021-dataset-ingestion-and-lineage/spec.md` 的 FR-011、版本 1.4.0 與 Changelog。Exception: governance-propagation; Files: `docs/adr/038-data-retention-deletion-anonymization.md`, `docs/adr/021-jwt-refresh-token-auth.md`, `docs/adr/024-database-quickstart-sqlite-tiered.md`, `docs/adr/032-user-action-audit-trail.md`, `docs/adr/README.md`; Reason: 政策正典與三份 ADR 的指向必須同一任務落地，否則引用斷裂。 [@senior-sa]
+- [x] 2.2 同步各字典的 `ON DELETE`、清理與匿名化規則，Red 測試轉綠。Exception: governance-propagation; Files: `docs/diagrams/architecture/account-admin-db-schema.md`, `docs/diagrams/architecture/annotation-review-db-schema.md`, `docs/diagrams/architecture/database-table-inventory.md`, `docs/diagrams/architecture/task-work-db-schema.md`, `docs/diagrams/architecture/task-export-db-schema.md`, `docs/diagrams/architecture/dataset-db-schema.md`, `docs/diagrams/architecture/task-run-db-schema.md`; Reason: 七份字典引用同一政策，須同一任務同步，否則字典間互相矛盾。 [@senior-dba]
 
 ## 3. 驗證與歸檔
 
