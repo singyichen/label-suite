@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { test } from 'node:test';
 
 const account = readFileSync(new URL('../../specs/account/020-auth-session-security/spec.md', import.meta.url), 'utf8');
@@ -66,4 +66,36 @@ test('ADR-021 keeps the JWT sid claim bound to the renamed session UUID', () => 
   assert.ok(Object.hasOwn(claims, 'sid'));
   assert.equal(Object.hasOwn(claims, 'session_id'), false);
   assert.equal(claims.sid, '<account_session.id>');
+});
+
+test('auth lifecycle diagram uses account_session and distinguishes explicit logout', () => {
+  const diagram = JSON.parse(readFileSync(new URL('../../specs/account/001-login-email-password/diagrams/auth-token-lifecycle.json', import.meta.url), 'utf8'));
+  const visible = JSON.stringify(diagram);
+  assert.match(visible, /account_session/);
+  assert.match(visible, /refresh_tokens\(session_id\)/);
+  assert.match(visible, /logged_out_at/);
+  assert.doesNotMatch(visible, /account_token_family|family_id|familyStore/);
+  const logout = diagram.messages.find((message) => message.id === 'logout-session');
+  assert.ok(logout, 'Explicit logout step must be documented');
+  assert.match(logout.note, /logged_out_at/);
+  assert.match(logout.note, /(?:無有效憑證|兩種憑證皆不可驗證)/);
+});
+
+test('session OpenSpec delta classifies renamed and newly derived requirements', () => {
+  const active = new URL('../../openspec/changes/account-session-naming-contract/', import.meta.url);
+  const archiveRoot = new URL('../../openspec/changes/archive/', import.meta.url);
+  const archiveName = existsSync(active) ? null : readdirSync(archiveRoot).find((name) => name.endsWith('-account-session-naming-contract'));
+  assert.ok(existsSync(active) || archiveName, 'Active or archived session change is required');
+  const change = archiveName ? new URL(archiveName + '/', archiveRoot) : active;
+  const accountDelta = readFileSync(new URL('specs/account/020-auth-session-security/spec.md', change), 'utf8');
+  const foundationDelta = readFileSync(new URL('specs/foundation/000-foundation/spec.md', change), 'utf8');
+  assert.match(accountDelta, /## RENAMED Requirements/);
+  for (const id of ['FR-001','FR-002','FR-003','FR-006','FR-007','FR-008']) {
+    assert.match(accountDelta, new RegExp('FROM: \`### Requirement: '+id+' '));
+    assert.match(accountDelta, new RegExp('TO: \`### Requirement: '+id+' '));
+  }
+  assert.match(foundationDelta, /## ADDED Requirements/);
+  const added = foundationDelta.split('## ADDED Requirements')[1]?.split('## MODIFIED Requirements')[0] ?? '';
+  for (const id of ['FR-016','FR-076','FR-077']) assert.match(added, new RegExp('### Requirement: '+id+' '));
+  assert.match(foundationDelta, /## RENAMED Requirements/);
 });

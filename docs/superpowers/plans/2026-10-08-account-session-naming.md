@@ -83,7 +83,7 @@
 - Consumes: Task 2 正典、Task 3 表名；Archify editable JSON。
 - Produces: 配對圖與可定位的歸檔條文。
 
-- [ ] Step 1: 先改可編輯 JSON，從 `.claude/skills/archify/` 執行 `node bin/archify.mjs deliver lifecycle <absolute-json> <absolute-html> --quality showcase --json`；檢查 delivery 結果，再核對 HTML 文字。
+- [ ] Step 1: 先改可編輯 JSON，從 `.claude/skills/archify/` 執行 `node bin/archify.mjs deliver sequence <absolute-json> <absolute-html> --quality showcase --json`；檢查 delivery 結果，再核對 HTML 文字。
 - [ ] Step 2: 驗證 change；執行 `openspec archive account-session-naming-contract --yes`；再次驗證兩份 derived spec。
 - [ ] Step 3: Source-Verify：抽取 archive delta 的 FR/AC/SC ID，逐一在現行 canonical 找到，核對版本/Changelog、ADR 和字典路徑；執行 `git diff --check` 與 SDD lint；提交歸檔。
 

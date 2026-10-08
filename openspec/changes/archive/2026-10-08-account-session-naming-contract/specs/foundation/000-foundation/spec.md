@@ -1,4 +1,4 @@
-## MODIFIED Requirements
+## ADDED Requirements
 
 ### Requirement: FR-016 Session persistence
 
@@ -32,9 +32,22 @@
 - **WHEN** JWT `sid` 指向他人或已撤銷 session，或版本過時
 - **THEN** 下一次已認證請求拒絕；角色與停用仍讀 DB 現值
 
+## RENAMED Requirements
+
+- FROM: `### Requirement: FR-105 資料表與欄位命名`
+- TO: `### Requirement: FR-105 資料表命名`
+
+## MODIFIED Requirements
+
 ### Requirement: FR-105 資料表命名
 
 **FR-105**：系統必須讓 DB table 與 column 使用 `lower_case_snake`；table name 預設使用 singular form，join table 或 module-owned table 應以前綴表達 domain ownership，例如 `task_assignment`、`dataset_item`、`account_session`。歷史契約 `users`、`refresh_tokens` 與欄名 `role`、`is_active` 為明示命名例外；ADR-032 的跨模組共用表 `audit_events` 是唯一新增的明示表名例外，不得據此擴張其他新表的命名例外。
+
+#### Scenario: SC-046 唯一新增表名例外
+
+- **GIVEN** 後續 migration 新增 DB table
+- **WHEN** 檢查表名與 domain ownership
+- **THEN** `users`、`refresh_tokens`、`audit_events` 是明示表名例外，其餘新表仍使用 FR-105 預設的單數與 ownership 規則（SC-046）
 
 #### Scenario: 候選表命名
 
