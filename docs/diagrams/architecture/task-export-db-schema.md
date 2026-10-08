@@ -66,11 +66,11 @@ erDiagram
 | `export_format` | varchar(16) | 否 | `json`／`json-min` | 接受請求；不改 | E-03 |
 | `export_format_version` | integer | 否 | 檔案格式版本；新 `json-min` 為 2 | 接受請求；不改 | E-03 |
 | `conditions_version` | integer | 否 | 條件快照的驗證規格版本 | 接受請求；不改 | E-03 |
-| `conditions_snapshot` | json | 否 | 經驗證的完整篩選、語言、序列選項與逐 run 版本條件 | 接受請求；不改 | E-03、E-07 |
+| `conditions_snapshot` | json | 否 | 經驗證的有序 `selected_runs[]`、共用篩選、語言及序列選項 | 接受請求；不改 | E-03、E-07 |
 | `scope_label` | varchar(120) | 否 | 歷史列的任務範圍文案 | 接受請求；不改 | E-03 |
 | `export_type` | varchar(24) | 否 | 歷史列的全部／篩選匯出類型 | 接受請求；不改 | E-03 |
-| `request_idempotency_key` | varchar(120) | 否 | 同任務匯出重試鍵 | 接受請求；不改 | E-05 |
-| `request_digest` | char(64) | 否 | 同 key 的規範化請求內容 SHA-256 | 接受請求；不改 | E-05 |
+| `request_idempotency_key` | varchar(120) | 否 | 同任務、同請求人的匯出重試鍵 | 接受請求；不改 | E-05 |
+| `request_digest` | char(64) | 否 | 包含請求人與匯出選項的規範化請求 SHA-256 | 接受請求；不改 | E-05 |
 | `row_count` | integer | 是 | 實際輸出結果列數；零列仍有 manifest | 轉 `ready` 時寫入 | E-04 |
 | `original_filename` | varchar(255) | 是 | 首次下載所用檔名 | 轉 `ready` 時寫入；不改 | E-04、E-06 |
 | `artifact_ref` | varchar(1024) | 是 | 受限儲存中的**內部物件鍵**，不是下載網址 | 原檔保存成功後寫入 | E-06、E-08 |
@@ -80,7 +80,7 @@ erDiagram
 | `revoked_at` | timestamptz | 是 | 來源刪除或政策撤銷後停止下載的時間 | 撤銷時寫入；不清空 | E-08、E-09 |
 | `failure_code` | varchar(64) | 是 | 失敗原因的安全代碼，不存內部路徑或答案 | 轉 `failed` 時寫入 | E-04、E-08 |
 
-`scope_label`／`export_type` 只供歷史列顯示，不混入 `conditions_snapshot` 的重製條件。`conditions_snapshot` 至少包含 014 FR-010i-2 指定的格式、階段、提交與人員／審核篩選、語言、完整精度時間、請求人、序列選項、逐 run 身分；它不作重新下載時的資料查詢指令。
+`scope_label`／`export_type` 只供歷史列顯示，不混入 `conditions_snapshot` 的重製條件。`conditions_snapshot` 的有序 `selected_runs[]` 每項記錄 `run_id`、`run_stage`、`cycle_id`、`dataset_version_id`、`config_version_id`、`schema_version`、`guideline_version_id`、`sample_snapshot_id`；共用 `filters` 記錄提交狀態、標記員範圍、審核員及審核狀態等條件，並保存格式、語言、序列／切詞選項、完整精度 `exported_at` 與原請求人。混合 Dry／Official 匯出不得以單一 `run_stage` 代表實際範圍；舊式頂層純量只能省略或顯示 `all`，每個 run 的階段仍以 `selected_runs[]` 為準。快照不作重新下載時的資料查詢指令。
 
 ### 3.2 task_export_run：匯出納入的執行與順序
 
@@ -103,9 +103,9 @@ erDiagram
 | E-02 | SVC | `requested_at` UTC 完整精度且不可改；manifest 與快照的 `exported_at` 取同一值，檔名使用同一固定時間 | 014 FR-010i-1／2、FR-021 |
 | E-03 | DB＋SVC | 格式只允許 `json`／`json-min`；格式與條件版本均 >0；版本化 JSON 須經對應 schema 驗證；新 `json-min` 用版本 2 的 `{manifest,rows[]}` | 014 FR-010i-2、FR-015h |
 | E-04 | DB＋SVC | `pending → processing → ready` 或 `pending/processing → failed`；`ready` 必須有 `completed_at`、`row_count >= 0`、檔名、參照、摘要、大小與到期時間；其他狀態不得開放下載。跨欄空值條件可用 CHECK，轉換順序由服務保護 | 014 FR-015e、FR-021；後端憲法 XII |
-| E-05 | DB＋SVC | UNIQUE `(task_id,request_idempotency_key)`；同 key 同 digest 的重試回原紀錄，異 digest 拒絕；worker 重送不得多建歷史列或多份有效產物 | 014 FR-021、設計裁決 |
+| E-05 | DB＋SVC | UNIQUE `(task_id,requested_by_user_id,request_idempotency_key)`，避免兩位已授權請求人同 key 互相衝突或誤取他人紀錄。先驗當前授權，再依三欄查重；同人同 key 同 digest 回原紀錄，異 digest 拒絕。digest 取規範化原始命令，納入 task、請求人、格式／版本、有序 run、共用篩選、語言、序列／切詞選項；排除伺服器產生的 `requested_at`／`exported_at`、完成時間與產物資訊。worker 重試只依 `export.id`，不得以 worker 帳號建立另一列 | 014 FR-010i-2／FR-021、設計裁決 |
 | E-06 | SVC＋STORAGE | 原檔先寫暫存、驗內容與 SHA-256、大小，再原子發布物件及 `ready` 列；部分失敗清理暫存並留下可追溯失敗。重新下載核對摘要與大小，交付原始 bytes 和原檔名 | 014 FR-021、主憲法 XVI |
-| E-07 | SVC | `conditions_snapshot` 與有序 `task_export_run`、產物 `manifest.runs[]` 一致；空結果仍有完整 manifest。版本值從不可變 run／cycle 鏈解析，不讀 task 當前指標 | 014 FR-010i／FR-015h |
+| E-07 | SVC | 快照 `selected_runs[]`、有序 `task_export_run` 與產物 `manifest.runs[]` 逐項同序同身分；每 run 自帶階段與固定版本，共用 `filters` 對所選 run 一致套用。歷史列「試標／正式／兩者」由所選階段集合推導；空結果仍有完整 manifest。版本從不可變 run／cycle 鏈解析，不讀 task 當前指標 | 014 FR-009a／FR-010i／FR-015h |
 | E-08 | SEC | 每次下載重驗目前 `dataset.export`、active membership、任務範圍與來源有效性；不得回傳 `artifact_ref`、私有答案或未提交審核草稿 | 014 FR-021／024、主憲法 III |
 | E-09 | SVC＋STORAGE | 原檔自完成起保存 30 日；`now >= expires_at`、`revoked_at` 非空、來源刪除、物件缺失或校驗失敗均拒絕下載；歷史 metadata 保存一年，到期不延長原檔期限 | 014 FR-021、主憲法 XXII |
 | R-01 | DB | 複合 PK `(export_id,run_id)`；兩欄皆 NOT NULL，沒有第二份序號主鍵 | 014 FR-010i-2 |
@@ -121,7 +121,7 @@ erDiagram
 | 查詢／參照 | 候選索引 | 理由與成本 |
 |---|---|---|
 | 任務匯出歷史與分頁 | `task_export(task_id,requested_at DESC,id DESC)` | 支援同任務新到舊排序與穩定游標；增加一次匯出寫入成本 |
-| 冪等重試 | UNIQUE `task_export(task_id,request_idempotency_key)` | 擋並發重送；左前綴亦覆蓋 task FK 反查 |
+| 同請求人冪等重試 | UNIQUE `task_export(task_id,requested_by_user_id,request_idempotency_key)` | 擋同人同任務並發重送，容許不同請求人使用相同 key；左前綴亦覆蓋 task FK 反查 |
 | 匯出內 run 與順序 | PK `task_export_run(export_id,run_id)`、UNIQUE `(export_id,position)` | 覆蓋由 export 查 run 及排序；不另加 `export_id` 索引 |
 | run 的匯出歷史反查 | `task_export_run(run_id,export_id)` | 反向查與父 run 刪除限制；PK 不覆蓋 run 起首查詢 |
 | 請求人 FK 反查 | `task_export(requested_by_user_id)` | 使用者封存／刪除與審計查詢；按實際操作頻率驗證 |
