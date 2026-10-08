@@ -28,5 +28,7 @@
 
 - [x] 3.1 執行 `node --test scripts/tests/check-database-*.test.mjs scripts/tests/check-mvp-export-canonical.test.mjs`、`node scripts/check-database-schema.mjs`、NoteCraft plugin JSON Schema/build、`bash scripts/check-sdd.sh`、`git diff --check`；預期 exit 0，並實開 Wiki／Diagram 核對兩表。 [@main]
 - [x] 3.2 由 `senior-code-reviewer` 與 `senior-security` 檢查版本追溯、授權、答案隔離和受限物件參照；阻擋問題修正後重驗。 [@main]
-- [ ] 3.3 執行 Source-Verify，archive 後逐條確認 derived view 的正典 FR／AC／SC 均可定位，版本與 Changelog 已回寫。 [@main]
-- [ ] 3.4 建立繁體中文 PR，CI 全綠後依既有授權合併；更新 issue #1160 的已驗證規劃進度，工時與 runtime 項維持未完成。 [@main]
+- [x] 3.3 在 archive 前執行 Source-Verify：delta 的 15 個 FR／AC／SC ID 逐條可於正典定位，014 版本 8.0.0 與 Changelog 均已回寫，ADR／來源檔案路徑存在。 [@main]
+- [x] 3.4 已建立繁體中文 PR #1201；本地三層閘門、相關 NoteCraft／SDD CI 及程式碼／安全審查已通過，備妥 final PR 的 archive/write-back。全量 CI 對歸檔後的最終提交再驗，通過後才合併。 [@main]
+
+全部任務打勾後，在同一 final PR 執行 archive/write-back 與 §6.2 的衍生視圖逐條引用核對；隨後依既有授權合併並更新 issue #1160，工時與 runtime 項仍維持未完成。

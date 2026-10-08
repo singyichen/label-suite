@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { test } from 'node:test';
 
 const spec = readFileSync(
@@ -18,6 +18,133 @@ function constantLine(name) {
   assert.ok(line, `Missing canonical ${name} constant`);
   return line;
 }
+
+function exportDeltaState() {
+  const active = new URL('../../openspec/changes/mvp-export-record-contract/', import.meta.url);
+  const archive = new URL('../../openspec/changes/archive/', import.meta.url);
+  const beforeArchive = existsSync(active);
+  const archivedName = beforeArchive ? undefined : readdirSync(archive)
+    .find((name) => name.endsWith('-mvp-export-record-contract'));
+  if (!beforeArchive) assert.ok(archivedName, 'Archived export change is required');
+  const change = beforeArchive ? active : new URL(`${archivedName}/`, archive);
+  const delta = readFileSync(new URL('specs/task-management/014-task-detail/spec.md', change), 'utf8');
+  const derived = readFileSync(
+    new URL('../../openspec/specs/task-management/014-task-detail/spec.md', import.meta.url), 'utf8');
+  const currentHeaders = new Set([...derived.matchAll(/^### Requirement: (.+)$/gm)]
+    .map((match) => match[1]));
+  return { delta, derived, currentHeaders, beforeArchive };
+}
+
+function renamedHeaders(delta) {
+  const section = delta.split('## RENAMED Requirements\n')[1]?.split(/^## /m)[0] ?? '';
+  return new Map([...section.matchAll(/^- FROM: `### Requirement: (.+)`\n- TO: `### Requirement: (.+)`$/gm)]
+    .map((match) => [match[2], match[1]]));
+}
+
+test('export OpenSpec delta classifies requirement headers against the current derived spec', () => {
+  const { delta, currentHeaders, beforeArchive } = exportDeltaState();
+  const renames = renamedHeaders(delta);
+  const changed = { MODIFIED: [], ADDED: [] };
+  let section;
+  for (const line of delta.split('\n')) {
+    const category = line.match(/^## (MODIFIED|ADDED) Requirements$/)?.[1];
+    if (category) section = category;
+    else if (line.startsWith('## ')) section = undefined;
+    const heading = line.match(/^### Requirement: (.+)$/)?.[1];
+    if (heading && section) changed[section].push(heading);
+  }
+  assert.ok(changed.MODIFIED.length + changed.ADDED.length > 0, 'Export delta needs requirements');
+  for (const header of changed.MODIFIED) {
+    assert.ok(currentHeaders.has(header) || (beforeArchive && currentHeaders.has(renames.get(header))),
+      `MODIFIED header missing from derived spec or RENAMED FROM: ${header}`);
+  }
+  for (const header of changed.ADDED) {
+    assert.equal(currentHeaders.has(header), !beforeArchive,
+      `ADDED header has incorrect ${beforeArchive ? 'pre-archive' : 'archived'} presence: ${header}`);
+  }
+});
+
+test('FR-021 delta renames the old requirement and archived scenarios use the new contract', () => {
+  const { delta, derived, currentHeaders, beforeArchive } = exportDeltaState();
+  const oldHeader = 'FR-021 匯出記錄重新下載依條件快照重建且不新增紀錄';
+  const newHeader = 'FR-021 歷史重新下載原始位元組';
+  assert.equal(renamedHeaders(delta).get(newHeader), oldHeader,
+    'FR-021 needs an explicit old-to-new OpenSpec rename');
+  assert.equal(currentHeaders.has(oldHeader), beforeArchive,
+    'Old FR-021 header must exist only before archive');
+  assert.equal(currentHeaders.has(newHeader), !beforeArchive,
+    'New FR-021 header must exist only after archive');
+
+  const fr21Delta = delta.match(/^### Requirement: FR-021[^\n]*\n([\s\S]*?)(?=^### Requirement:|^## |(?![\s\S]))/m)?.[1];
+  assert.ok(fr21Delta, 'FR-021 delta requirement is required');
+  for (const id of ['AC-1.15', 'AC-1.16']) {
+    assert.match(fr21Delta, new RegExp(`^#### Scenario: ${id}[^\\n]*$`, 'm'),
+      `FR-021 ${id} delta scenario is required`);
+  }
+  if (!beforeArchive) {
+    const fr21Derived = derived.match(/^### Requirement: FR-021[^\n]*\n([\s\S]*?)(?=^### Requirement:|^## |(?![\s\S]))/m)?.[1];
+    assert.ok(fr21Derived, 'Archived FR-021 derived requirement is required');
+    for (const id of ['AC-1.15', 'AC-1.16']) {
+      const title = fr21Derived.match(new RegExp(`^#### Scenario: ${id}[^\\n]*$`, 'm'))?.[0];
+      assert.ok(title, `Archived FR-021 ${id} scenario title is required`);
+      assert.doesNotMatch(title,
+        /快照[^\n]*(?:重建|為準)|切詞引擎不可用[^\n]*(?:不產檔|阻擋|拒絕)/,
+        `${id} title must describe the current original-artifact contract`);
+    }
+  }
+});
+
+test('derived OpenSpec Purpose describes canonical v8 and immutable FR-021 downloads', () => {
+  const { derived } = exportDeltaState();
+  const purpose = derived.match(/^## Purpose\s*\n([\s\S]*?)(?=^## |(?![\s\S]))/m)?.[1];
+  assert.ok(purpose, 'Derived task-detail Purpose is required');
+  assert.match(purpose, /正典為[^。；\n]*v8\.0\.0/,
+    'Purpose must cite canonical task-detail v8.0.0');
+  const fr21 = purpose.match(/FR-021[^；。\n]*/)?.[0];
+  assert.ok(fr21, 'Purpose must summarize current FR-021');
+  for (const term of [/下載/, /不可變/, /原始/, /(?:產物|檔案|位元組)/]) {
+    assert.match(fr21, term, 'Purpose must describe an immutable original artifact download');
+  }
+  assert.doesNotMatch(fr21, /快照[^；。\n]*(?:重建|為準)|依條件快照/,
+    'Purpose must not describe snapshot reconstruction as current FR-021 behavior');
+});
+
+test('derived FR-021 AC-1.15 and AC-1.16 retain their canonical export coverage', () => {
+  const { derived, beforeArchive } = exportDeltaState();
+  if (beforeArchive) return;
+  const fr21 = derived.match(/^### Requirement: FR-021[^\n]*\n([\s\S]*?)(?=^### Requirement:|^## |(?![\s\S]))/m)?.[1];
+  assert.ok(fr21, 'Derived FR-021 requirement is required');
+  const scenario = (id) => {
+    const body = fr21.match(new RegExp(
+      `^#### Scenario: ${id}[^\\n]*\\n([\\s\\S]*?)(?=^#### Scenario:|(?![\\s\\S]))`, 'm'))?.[1];
+    assert.ok(body, `Derived FR-021 ${id} body is required`);
+    return body;
+  };
+
+  const mixed = scenario('AC-1.15');
+  for (const [name, pattern] of [
+    ['mixed Dry and Official scope', /Dry Run[^\n]*Official Run|Official Run[^\n]*Dry Run/],
+    ['zero result rows', /零筆|0\s*筆/],
+    ['versioned JSON-MIN envelope', /(?:版本\s*2|v2)/i],
+    ['manifest run identities', /manifest\.runs\[\]/],
+    ['empty rows collection', /rows\[\]/],
+    ['matching original bytes', /(?:原始|原檔)[^\n]*位元組[^\n]*相同|位元組[^\n]*相同/],
+    ['matching filename', /檔名[^\n]*相同/],
+  ]) assert.match(mixed, pattern, `AC-1.15 must cover ${name}`);
+
+  const invalid = scenario('AC-1.16');
+  for (const [name, pattern] of [
+    ['expiry', /到期|過期/],
+    ['revocation', /撤銷|註銷/],
+    ['source deletion', /來源(?:已)?刪除/],
+    ['integrity mismatch', /SHA-256[^\n]*不符|校驗[^\n]*不符/],
+    ['current permission', /dataset\.export/],
+    ['current task scope', /任務範圍/],
+    ['valid word artifact', /(?:word|詞級)[^\n]*(?:原檔|產物)/i],
+    ['tokenizer unavailable', /切詞引擎[^\n]*不可用/],
+    ['valid artifact still downloads', /(?:仍|照)[^\n]*(?:下載|交付)/],
+  ]) assert.match(invalid, pattern, `AC-1.16 must cover ${name}`);
+});
 
 test('export history redownload serves immutable original bytes without querying current results', () => {
   const contract = contractLine('FR-021');

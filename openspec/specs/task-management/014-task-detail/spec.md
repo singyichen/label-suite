@@ -2,7 +2,7 @@
 
 ## Purpose
 
-任務詳情頁（`task-detail`）是專案負責人設定審核模型、監看審核進度並判定任務可否結案的單一控制面。正典為 `specs/task-management/014-task-detail/spec.md`（v5.1.0）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR ID，不改動其正典措辭。目前收錄：change `align-014-review-model`（issue #688）之 FR-005j／FR-005k／FR-008b／FR-010s／FR-010s-1／FR-010s-2／FR-010t（修訂，issue #596 單人接力審核模型對齊）、FR-018（新增，最終例外池）；change `task-detail-url-view-state`（issue #726）之 FR-019（新增，頁籤與清單檢視狀態的網址同步）；change `task-detail-seq-tagging-export-dialog`（issue #742）之 FR-020（新增，`sequence_tagging` 匯出對話框與序列匯出欄位）；change `task-detail-export-history-redownload`（issue #772）之 FR-021（新增，匯出記錄重新下載依條件快照重建且不新增紀錄）；change `task-detail-trial-round-from-waiting`（issue #791）之 FR-013（首次收錄修訂後全文，新增試標回合僅自待 IAA 確認狀態發起）；change `task-detail-iaa-precondition-and-override-scope`（issue #783）之 FR-010o-1（修訂，門檻覆寫排除未校準型別）、FR-010o-4（新增，待 IAA 確認頁顯示 IAA 計算狀態）；以及 change `validate-reviewer-arbiter-role-separation`（issue #868）之 FR-010s-1／FR-010t（修訂）；以及 change `1141-task-detail-quality-metrics-gate`（issue #1141）之 FR-008b（修訂，第 5 項引用品質指標就緒訊號）。
+任務詳情頁（`task-detail`）是專案負責人設定審核模型、監看審核進度並判定任務可否結案的單一控制面。正典為 `specs/task-management/014-task-detail/spec.md`（v8.0.0）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR ID，不改動其正典措辭。目前收錄：change `align-014-review-model`（issue #688）之 FR-005j／FR-005k／FR-008b／FR-010s／FR-010s-1／FR-010s-2／FR-010t（修訂，issue #596 單人接力審核模型對齊）、FR-018（新增，最終例外池）；change `task-detail-url-view-state`（issue #726）之 FR-019（新增，頁籤與清單檢視狀態的網址同步）；change `task-detail-seq-tagging-export-dialog`（issue #742）之 FR-020（新增，`sequence_tagging` 匯出對話框與序列匯出欄位）；change `task-detail-export-history-redownload`（issue #772）之 FR-021（原新增條文，v8.0.0 已修訂為重新下載不可變原始產物）；change `task-detail-trial-round-from-waiting`（issue #791）之 FR-013（首次收錄修訂後全文，新增試標回合僅自待 IAA 確認狀態發起）；change `task-detail-iaa-precondition-and-override-scope`（issue #783）之 FR-010o-1（修訂，門檻覆寫排除未校準型別）、FR-010o-4（新增，待 IAA 確認頁顯示 IAA 計算狀態）；以及 change `validate-reviewer-arbiter-role-separation`（issue #868）之 FR-010s-1／FR-010t（修訂）；以及 change `1141-task-detail-quality-metrics-gate`（issue #1141）之 FR-008b（修訂，第 5 項引用品質指標就緒訊號）；以及 change `mvp-export-record-contract`（issue #1160）之 FR-009a／FR-010i／FR-015e／FR-015h（首次收錄）與 FR-010i-1／FR-010i-2／FR-020／FR-021／FR-024（修訂原檔下載與逐 run 追溯契約）。
 
 ## Requirements
 
@@ -286,7 +286,7 @@ Overview MUST 在「抽樣設定」之後提供獨立「審核設定」區塊。
 
 標註方案的選擇 MUST NOT 被寫回任務 config：依 `dataset/017` FR-041 第 3 點，方案屬於匯出當下的輸出格式選項，同一份標記結果 MUST 可用不同方案重複匯出而不需重新標記，且任務設定 MUST NOT 因一次匯出而改變。
 
-匯出記錄（FR-010i-2 之條件快照）MUST 一併保存本次的標註方案、詞元單位與（詞級時）切詞引擎識別，使重新下載重建出的檔案與原檔逐字元相同。
+匯出記錄（FR-010i-2 之條件快照）MUST 一併保存本次的標註方案、詞元單位與（詞級時）切詞引擎識別，供原始產物的版本追溯與重製驗證；重新下載只讀已保存的原始產物，不重新推導序列。
 
 **(4) 對齊擴張摘要**。`token_unit = word` 的匯出完成後，畫面 MUST 顯示「N 段標記因對齊被擴張」摘要，`N` 取自模組回傳的擴張筆數；`N = 0` 時 MUST NOT 顯示該摘要。摘要 MUST 可展開，展開後逐筆列出原始標記文字、擴張後文字與起訖 offset 差值，三項皆直接取自模組回傳的擴張清單，本頁 MUST NOT 重算。`token_unit = character` 時 MUST NOT 顯示該摘要（字元級不可能發生擴張）。
 
@@ -300,7 +300,7 @@ Overview MUST 在「抽樣設定」之後提供獨立「審核設定」區塊。
 
 反向亦然：FR-015i-3 所稱的實體型結果 MUST NOT 被理解為涵蓋 `spans[]`——`LEGACY_TASK_TYPE_EXPORT_ENUM` 不含 `sequence_tagging`，其匯出檔的 `task_type` 欄位雖同樣落在 `sequence_labeling`，結果欄位分流仍依 FR-015i 所定「依標記結果實際結構決定」，而 `spans[]` 的結果欄位由本需求承接。
 
-其餘六種輸出類型的匯出欄位、兩種格式的結構、匯出記錄表與重新下載語意皆 MUST 維持不變。
+其餘輸出類型的匯出欄位與欄位分流規則皆 MUST 維持不變；格式版本與重新下載依 FR-015h、FR-021 的 v8.0.0 修訂。
 
 #### Scenario: AC-1.10 字元級匯出記錄方案與單位且不動任務設定
 
@@ -347,42 +347,11 @@ Overview MUST 在「抽樣設定」之後提供獨立「審核設定」區塊。
 - **AND** 匯出結果仍逐欄位包含 `entities[]`，每個 entity 保留 `text`、`label` 與 span/offset 語意
 - **AND** `JSON-MIN` 的扁平化欄位仍為 `entities_summary`
 
-### Requirement: FR-021 匯出記錄重新下載依條件快照重建且不新增紀錄
+#### Scenario: 新匯出缺切詞器版本但舊原檔有效
 
-- **FR-021**（**v3.3.0 新增**，對應 AC-1.14、AC-1.15、AC-1.16、SC-046，issue #772）：`annotation-results` 匯出記錄表每一列「操作」欄的「下載」必須以該列保存的條件快照（FR-010i-2）為唯一依據重建匯出結果並觸發下載。本條是 FR-010i-2 與 FR-020 第 (3) 項的讀取側；依兩者所定的重建條件與顯示 metadata 分界，補上重新下載的行為與快照為達成逐字元相同所需的最小欄位。(1) **唯一依據**：重新下載不得讀取使用者當前畫面上的任何篩選狀態（標記階段、提交狀態、標記員、審核員、審核狀態）、不得讀取 FR-020 匯出對話框目前的選項（標註方案、詞元單位、切詞引擎），且不得開啟匯出對話框；畫面篩選與對話框選項在重新下載前後必須維持原值，重新下載不得回寫它們。(2) **不新增匯出記錄**：重新下載不得在匯出記錄表新增任何一列，不得改變既有各列的內容與排列順序；使用者故事 1 介面定義「匯出記錄表」區塊所述「新記錄即時插入表格最前列」只適用於匯出按鈕觸發的匯出，不適用於重新下載。(3) **快照最小欄位**：為使重建結果不受重新下載當下的畫面狀態影響，每筆匯出記錄的條件快照除 FR-010i-2 列舉之欄位與 FR-020 第 (3) 項之序列欄位外，必須另外保存：審核員篩選值與審核狀態篩選值（兩者都會改變匯出的樣本集合，屬使用者故事 1 介面定義「匯出記錄表」區塊所要求保存之「任何會影響匯出結果集合的條件」）、匯出時間（完整精度；FR-010i-1 要求 metadata 含 `exported_at`，且下載檔名由匯出時間組成）、匯出人（FR-010i-1 要求 metadata 含 `exported_by`；重新下載者不取代原匯出人）、匯出當下的介面語言（匯出檔的任務名稱依介面語言取值，切換語言後重建會得到不同的檔案）。同一次匯出內，metadata 的匯出時間與下載檔名所用的匯出時間必須為同一個值。(4) **逐字元相同**：在該任務的標記結果與切詞引擎資料皆未變動的前提下，重新下載產生的檔案內容必須與該筆紀錄原始下載的檔案逐字元相同，下載檔名必須與原始檔名相同；此要求適用所有任務類型與 `EXPORT_FORMATS` 兩種格式，`sequence_tagging` 任務（FR-020）之方案、單位、切詞引擎 metadata 與序列內容亦在此列。(5) **單一產生路徑**：重新下載必須沿用匯出按鈕所用的同一組匯出內容產生邏輯，只把條件來源由畫面狀態換成快照，不得另建第二份匯出內容組裝程式碼；`sequence_tagging` 的序列產生入口仍受 FR-020 第 (1) 項與 SC-045 約束，頁面內推導函式的呼叫點不因重新下載而增加。重新下載不得顯示 FR-020 第 (4) 項的對齊擴張摘要——摘要屬於匯出對話框內的當次匯出回饋。(6) **無法重建時**：以下兩種情況不得產生任何檔案、不得新增匯出記錄，且不得以預設值或當前畫面狀態補齊缺漏條件——其一，該列沒有條件快照，或快照缺少重建檔案內容所需的任一欄位——即第 (3) 項所列全部欄位，以及 FR-010i-2 所列欄位中會影響匯出結果集合與檔案內容者（`export_format`、`run_stage`、`submission_status`、`annotator_scope`，以及 FR-010i-1／FR-010i-2 的精確 dataset／config／schema／guideline／run／cycle／snapshot 識別）；`scope_label` 與 `export_type` 僅保存於歷史列的顯示 metadata，依 issue #772 change 之 `design.md` D2／Q6 定案不保存於重建快照，故不屬本項必要欄位（例如本條生效前留下的紀錄）：該列的「下載」必須呈停用狀態，並以可理解的中文說明此筆紀錄缺少重建所需的匯出條件；其二，快照的詞元單位為 `word`，而快照所記錄的切詞引擎在重新下載當下已不可用或未提供版本資訊：重新下載必須被阻擋並顯示可理解的中文原因，明確指出缺的是該切詞引擎；阻擋與否必須以共用推導模組的回傳值為準（FR-020 第 (1) 項），本頁不得自行判斷引擎欄位是否齊全。
-
-#### Scenario: AC-1.14 `sequence_tagging` 重新下載不受當前篩選與對話框選項影響且不新增紀錄
-
-- **WHEN** `project_leader` 於 `sequence_tagging` 任務選定一組頁面篩選、於匯出對話框選擇標註方案 `BIOES`、詞元單位 `word` 與一個具版本資訊的切詞引擎並完成一次 `JSON` 匯出，隨後改變頁面篩選、於匯出對話框改選其他方案與單位後取消，再按下該筆匯出記錄列的「下載」
-- **THEN** 下載的檔案內容與第一次匯出的檔案逐字元相同，檔名亦相同
-- **AND** 檔案 metadata 的標註方案、詞元單位與切詞引擎仍為第一次匯出時的值
-- **AND** 匯出記錄表的列數與按下「下載」之前相同，匯出對話框未被開啟，畫面未出現對齊擴張摘要
-- **AND** 頁面篩選維持使用者改變後的值
-
-#### Scenario: AC-1.15 非序列任務重新下載同樣以快照為準（含審核篩選與介面語言）
-
-- **WHEN** `project_leader` 於一個非 `sequence_tagging` 任務套用審核員與審核狀態篩選後完成一次 `JSON-MIN` 匯出，隨後清除全部篩選、切換介面語言，再按下該筆匯出記錄列的「下載」
-- **THEN** 下載的檔案內容與原始匯出逐字元相同，檔名亦相同
-- **AND** 匯出記錄表的列數不變
-
-#### Scenario: AC-1.16 缺少快照或切詞引擎不可用時不產檔
-
-- **WHEN** 匯出記錄表中存在一筆沒有條件快照的既有紀錄
-- **THEN** 該列的「下載」為停用狀態並附中文說明，點擊不產生任何檔案
-- **WHEN** 一筆 `word` 單位的 `sequence_tagging` 匯出紀錄所記錄的切詞引擎於重新下載當下已不可用，使用者按下該列的「下載」
-- **THEN** 畫面顯示指出該切詞引擎不可用的中文原因，沒有任何檔案被產生
-- **AND** 匯出記錄表的列數不變
-
-#### Scenario: SC-046 重新下載可重現性
-
-- **WHEN** 以 Playwright 對同一筆匯出記錄，在變更頁面篩選、匯出對話框選項與介面語言之後執行重新下載
-- **THEN** 重建檔與原始下載檔逐字元相同的比率為 100%，且每次重新下載後匯出記錄表列數增量為 0
-
-#### Scenario: FR-021 對應 AC-3.43
-
-- **GIVEN** Dry R1 釘住指引 v1 且已進入等待階段
-- **WHEN** PL 修改四個指引內容欄位之一為 v2 並發布 R2 或 Official
-- **THEN** 新 run 釘住 v2，Dry 同 round 版本；舊 run 仍讀 v1。等待階段修改 dataset／config／force_guideline 被拒絕；draft 另存 config 同步增加 config／schema 版本，歷史匯出仍引用原精確版本（FR-014／FR-017a／FR-010i-1）。（FR-021；AC-3.43）
+- **GIVEN** 切詞器版本資訊已不可用，先前詞級匯出仍有有效原檔
+- **WHEN** 使用者分別新建詞級匯出及下載舊檔
+- **THEN** 新建匯出被阻擋，舊檔通過 FR-021 檢查後按原位元組交付且不重新切詞
 
 ### Requirement: FR-013 執行控制按鈕依任務狀態顯示，新增試標回合僅自待 IAA 確認狀態發起
 
@@ -823,13 +792,21 @@ FR-008a MUST 原地改寫為：當任務本回合滿足 `DRY_RUN_COMPLETION_RULE
 
 ### Requirement: FR-024 授權契約
 
-- **FR-024**（issue #1160 D-9～D-11）：正式服務端須依 ADR-037 以當前 active membership 與已啟用矩陣格判斷：詳情讀取用 `task.detail.view`，Overview 的 `OVERVIEW_EDITABLE_FIELDS` 儲存用 `task.detail.edit`，成員操作用 `task.members.manage`，資料匯出用 `dataset.export`，並保留各自任務狀態、資料範圍、blind review 與答案隔離限制。reviewer 有 view 而無 edit；一人多角色時非 workspace 可用 active 角色權限聯集，狀態與移除只作用於選定 membership。發布、結案、仲裁與其他生命週期命令尚無完整 V1 專用鍵，不得借用上述鍵或只憑矩陣放行，須在 runtime 轉換前另行核准操作鍵、種子資料與安全測試。Prototype 的 URL `task_role` 僅保留檢視上下文，不可當作正式授權身分。
+正式服務端 MUST 依下列授權契約檢查每次請求。
+
+正式服務端須依 ADR-037 以當前 active membership 與已啟用矩陣格判斷：詳情讀取用 `task.detail.view`，Overview 的 `OVERVIEW_EDITABLE_FIELDS` 儲存用 `task.detail.edit`，成員操作用 `task.members.manage`，資料匯出用 `dataset.export`，並保留各自任務狀態、資料範圍、blind review 與答案隔離限制。reviewer 有 view 而無 edit；一人多角色時非 workspace 可用 active 角色權限聯集，狀態與移除只作用於選定 membership。發布、結案、仲裁與其他生命週期命令尚無完整 V1 專用鍵，不得借用上述鍵或只憑矩陣放行，須在 runtime 轉換前另行核准操作鍵、種子資料與安全測試。標記者不得透過匯出檔、條件快照或歷史列取得私有答案、測試集答案或未提交審核草稿；公開回應亦不得暴露受限物件參照。Prototype 的 URL `task_role` 僅保留檢視上下文，不可當作正式授權身分。
 
 #### Scenario: FR-024 主要驗收
 
 - **GIVEN** 正式服務端收到本需求作用域內的請求
 - **WHEN** 使用者執行本需求描述的操作
 - **THEN** 詳情檢視、儲存、成員管理與匯出各用專屬鍵，其他命令不得借鍵（FR-024）
+
+#### Scenario: 標記者無法透過匯出歷史取得隱藏資料
+
+- **GIVEN** 標記者知道一筆歷史 ID，但沒有當前任務的匯出權限或資料範圍
+- **WHEN** 其讀取歷史列、快照或原檔
+- **THEN** 授權拒絕，回應不含私有答案、測試集答案、審核草稿或受限物件參照
 
 ### Requirement: SC-052 授權契約
 
@@ -953,7 +930,13 @@ FR-008a MUST 原地改寫為：當任務本回合滿足 `DRY_RUN_COMPLETION_RULE
 
 ### Requirement: FR-010i-1 task/run 身分契約
 
-- **FR-010i-1**：所有匯出結果檔 metadata 必須額外包含 `export_format`、`exported_at`、`exported_by`、`schema_version` 與 `applied_filters`，以支援審計與下游解析。 `schema_version` 取自 run 的 cycle 所釘住 config 版本的 `schema_version_no`，另保存 `config_version_id`、`dataset_version_id`、`run_id`、`cycle_id`、`guideline_version_id` 與 snapshot 身分，不得以任務目前版本代替。
+所有匯出檔的 `manifest` MUST 包含 `export_format`、`export_format_version`、`exported_at`、`exported_by`、`applied_filters` 及有序 `manifest.runs[]`。每個 run 須保留 `run_stage`、`run_id`、`cycle_id`、`dataset_version_id`、`config_version_id`、`schema_version`、`guideline_version_id`、`sample_snapshot_id`；`schema_version` 由該 run 的 cycle 已釘住 config 的 `schema_version_no` 取得。FR-010i 的隔離、抽樣、IAA、排除摘要仍須保留；零筆結果也有完整 manifest。跨 run 匯出不得用單一版本或任務目前版本冒充，每筆結果 MUST 保留來源 `run_id` 和 `run_stage`。
+
+#### Scenario: AC-1.15 多 run 與零筆結果仍可追溯
+
+- **GIVEN** 一次匯出納入兩個版本不同的 run
+- **WHEN** 原始檔案生成，即使結果列為零筆
+- **THEN** `manifest.runs[]` 依順序列出各 run 七項釘住的身分，並有格式版本與請求人
 
 #### Scenario: FR-010i-1 對應 AC-3.43
 
@@ -963,7 +946,20 @@ FR-008a MUST 原地改寫為：當任務本回合滿足 `DRY_RUN_COMPLETION_RULE
 
 ### Requirement: FR-010i-2 task/run 身分契約
 
-- **FR-010i-2**：匯出記錄表中的每筆紀錄必須保存 `re-download` 所需的條件快照；重新下載時必須以該快照為唯一依據重建匯出結果，不得讀取使用者當前頁面 filter state。條件快照至少包含 `export_format`、`run_stage`、`submission_status`、`annotator_scope`，以及任何會改變結果集合的版本/快照識別資訊。`scope_label` 與 `export_type` 只供歷史列表顯示，必須另存於匯出歷史列的顯示 metadata，排除於重建條件快照及其完整性檢查之外（FR-021 第 (6) 項）。版本條件須含 FR-010i-1 的精確版本／run／cycle／snapshot 識別；跨 run 匯出逐 run 保存，不得以目前版本冒充歷史內容。
+每筆歷史列 MUST 對應一次請求及一份不可變原檔。已驗證、版本化的條件快照把共享篩選條件和逐 run 身分分開保存：共通條件含 `export_format`、`export_format_version`、`submission_status`、`annotator_scope`、審核員／審核狀態及其他已驗證 filters、匯出語言、序列／切詞選項、完整精度 `exported_at` 與原請求人 `exported_by`。有序 `selected_runs[]` 中每項含 `run_id`、`selected_runs[].run_stage`、`cycle_id`、`dataset_version_id`、`config_version_id`、`schema_version`、`guideline_version_id`、`sample_snapshot_id`。混合 Dry／Official 時頂層 `run_stage = all`，不得冒稱單一階段；單階段可保留該階段值。每個 run 的納入關聯及輸出順序獨立保存，對應 `manifest.runs[]`；每筆結果亦含來源 `run_id` 與 `run_stage`。快照僅供審計及重製驗證，MUST NOT 作為重新下載時查詢目前結果的指令。`scope_label` 和 `export_type` 僅為另存的顯示資料，不參與原檔完整性驗證。
+
+#### Scenario: 混合階段快照沒有假單一階段
+
+- **GIVEN** 同一匯出選取 Dry R2 與 Official Run，兩者釘住不同版本及快照
+- **WHEN** 首次請求保存條件快照並產出結果
+- **THEN** `selected_runs[]` 逐項保存階段與釘住身分，頂層 `run_stage` 為 `all`，每筆結果標明來源 run
+- **AND** 共享篩選條件只保存一份，輸出順序與 `manifest.runs[]` 一致
+
+#### Scenario: 變更目前任務版本不改寫歷史匯出
+
+- **GIVEN** 匯出後任務發布新版本且頁面篩選改變
+- **WHEN** 使用者查閱歷史與下載
+- **THEN** 逐 run 快照仍指向原版本，下載也不查詢目前結果
 
 #### Scenario: FR-010i-2 對應 AC-3.43
 
@@ -1166,3 +1162,104 @@ FR-008a MUST 原地改寫為：當任務本回合滿足 `DRY_RUN_COMPLETION_RULE
 - **GIVEN** 一個已儲存未提交草稿的 assignment
 - **WHEN** membership 停用、移除或 PL 明確重派
 - **THEN** 前任草稿標記 `abandoned` 且受限保存；繼任者無法讀取，原受派者失去寫權，已提交紀錄保持不變
+
+### Requirement: FR-021 歷史重新下載原始位元組
+
+歷史「下載」 MUST 依下列 v8.0.0 原檔契約交付。
+
+匯出歷史列的「下載」須提供首次匯出原子保存的不可變原始檔案位元組與原始檔名，不得以該列條件快照重新查詢或重算目前結果，也不得重新呼叫切詞引擎。(1) **建立與保存**：首次匯出通過資料完整性及答案隔離驗證後，保存原始產物、檔名、SHA-256、位元組數及受限物件參照；歷史列記錄原請求人與建立時間。條件快照用於審計／重製驗證，不作為重新下載資料來源；後續標記或審核變更不影響既有原檔。(2) **目前授權**：每次下載都重新檢查 `dataset.export` 的當前 active membership 與當前 task 範圍，並遵守 FR-024 的角色、資料可見性與答案隔離；歷史請求人身分不構成授權。不得讀取或覆寫目前頁面篩選及對話框選項，也不得開啟對話框。(3) **可下載條件**：產物完成並處於 `ready`、來源及任務有效、未到期且未撤銷、受限物件存在並通過 SHA-256 驗證時才提供原始位元組；到期須拒絕下載，撤銷須拒絕下載，來源刪除或 SHA-256 不符亦須拒絕下載。拒絕時提供可理解的繁體中文原因，內部物件儲存路徑不得回傳，私有答案亦不得暴露。(4) **同一歷史列**：重新下載不得新增匯出記錄，不改變歷史列內容或排序，不產生新檔案、不重新序列化，也不顯示當次匯出對話框的對齊擴張摘要。原始檔名與首次下載相同；對所有任務類型和 `EXPORT_FORMATS` 適用，即使標記或審核後續修改、畫面語言改變或原切詞引擎停用，仍交付相同位元組。(5) **保留與舊版**：原始產物保存 30 日，匯出歷史 metadata 保存一年；期限屆滿或撤銷立即停止下載，歷史列可顯示「已過期」但不得延長原產物期限。只有條件快照、缺少有效原始產物的舊版列不得由目前結果重建，須停用下載並說明原因；有效的舊版原檔仍按其原格式位元組下載，不升版改寫。(6) **切詞邊界**：新建 `word` 匯出仍須由 FR-020 驗證 `tokenizer.engine`／`tokenizer.version`；有效的原始產物重新下載不需切詞引擎，不因引擎之後不可用而失敗。
+
+#### Scenario: AC-1.14 `sequence_tagging` 重新下載不受當前篩選與對話框選項影響且不新增紀錄
+
+- **GIVEN** 原始檔案有效，後續標記、審核、畫面條件、語言或切詞器狀態已改變
+- **WHEN** 有權限使用者重新下載
+- **THEN** 位元組和檔名與首次下載完全相同，不重算結果、不開對話框、不新增歷史列
+- **AND** 原始方案、詞元單位及切詞器 metadata 保持不變；目前篩選與對話框選項保持原值，不顯示對齊擴張摘要
+
+#### Scenario: AC-1.15 跨階段與零筆匯出的原檔重新下載保持一致
+
+- **GIVEN** 一次匯出同時選取 Dry Run 與 Official Run，`JSON-MIN` v2 的結果為零筆且原始檔案有效
+- **WHEN** 有權限使用者首次下載，切換介面語言後再按歷史列「下載」
+- **THEN** `{manifest,rows[]}` 的 `rows[]` 仍為空，`manifest.runs[]` 依原順序保存每個 run 的精確版本、快照與請求人
+- **AND** 重新下載的原檔位元組與檔名完全相同，不讀任務目前版本，頁面條件保持原值且歷史列數不變
+
+#### Scenario: AC-1.16 原檔失效或失權時拒絕，仍允許有效詞級原檔
+
+- **GIVEN** 舊歷史列只有條件快照而沒有有效原檔，或產物到期、撤銷、來源刪除、SHA-256 不符，或使用者失去目前 `dataset.export` 與任務範圍權限
+- **WHEN** 使用者檢視或按下載
+- **THEN** 停用或拒絕並以不洩露內部物件路徑的繁體中文說明，不能以快照補算檔案或新增歷史列
+- **AND** 已保存且有效的 `word` 詞級原檔即使切詞引擎後來不可用，仍按原位元組下載且不重新切詞；新的詞級匯出缺引擎或版本時依 FR-020 阻擋
+
+#### Scenario: 失權或失效時拒絕
+
+- **GIVEN** 使用者失權，或原檔缺失、到期、撤銷、來源刪除、SHA-256 不符
+- **WHEN** 使用者檢視或按下載
+- **THEN** 停用或拒絕，說明原因，不重建檔案或新增歷史列
+- **AND** 不洩露內部物件路徑、私有答案或未提交審核草稿
+
+#### Scenario: SC-046 重新下載可重現性
+
+- **GIVEN** 跨 run、空結果 `json-min` v2 和上述後續變化與失效情形
+- **WHEN** 自動化檢查首次與歷史下載
+- **THEN** 有效原檔的位元組與檔名相同比率為 100%，新增歷史列為 0
+- **AND** 失權、刪除、到期、撤銷、缺檔及校驗不符的下載成功次數皆為 0
+
+#### Scenario: FR-021 對應 AC-3.43
+
+- **GIVEN** Dry R1 釘住指引 v1 且已進入等待階段
+- **WHEN** PL 修改四個指引內容欄位之一為 v2 並發布 R2 或 Official
+- **THEN** 新 run 釘住 v2，Dry 同 round 版本；舊 run 仍讀 v1。等待階段修改 dataset／config／force_guideline 被拒絕；draft 另存 config 同步增加 config／schema 版本，歷史匯出仍引用原精確版本（FR-014／FR-017a／FR-010i-1）。（FR-021；AC-3.43）
+
+### Requirement: FR-009a 首次匯出保存不可變原始產物
+
+首次匯出 MUST 明確選取同任務一個或多個 run；同一次匯出可同時選取 Dry Run 與 Official Run，並凍結所選 run 的順序與各自階段，不得從目前頁面階段推定或合併 run。依 `EXPORT_SYNC_MAX_ROWS` 選同步回應或背景工作。內容與答案隔離驗證通過後 MUST 原子保存不可變原始位元組、原檔名、格式版本及 SHA-256，才將歷史列設為可下載；失敗不可留下可下載的部分產物。服務端 MUST 在身分、`dataset.export` 和任務範圍授權後才查詢冪等鍵。冪等鍵作用範圍是 `(task_id, requested_by_user_id, client_idempotency_key)`；服務端計算正規化命令摘要，輸入包括任務、請求人、格式及格式版本、有序 run ID、已驗證的共享篩選、語言、序列方案／單位與切詞器引擎／版本。摘要 MUST 排除生成時間及產物資料（包括 bytes、檔名、原檔 SHA-256）。同鍵同摘要重送或工作重試回傳／續用原歷史列；同鍵不同摘要拒絕為衝突，MUST NOT 覆寫或建立第二筆。生命週期為 `pending → processing → ready | failed`；到期、撤銷另由時間記錄判定。
+
+#### Scenario: 首次匯出和重試只產生一份完整原檔
+
+- **GIVEN** 使用者有目前任務的匯出權限且匯出內容通過驗證
+- **WHEN** 匯出成功或背景工作對同一請求重試
+- **THEN** 只有一筆歷史列及一份不可變原檔，含檔名、格式版本、SHA-256
+- **AND** 驗證失敗時沒有可下載的部分檔案
+
+#### Scenario: 冪等鍵作用範圍與內容衝突
+
+- **GIVEN** 任務 A 的請求人 U 已用鍵 K 建立匯出，命令摘要已保存
+- **WHEN** U 在任務 A 以鍵 K 重送相同命令，或以鍵 K 送出不同 run 順序／篩選／格式／語言／序列選項
+- **THEN** 相同命令續用原歷史列；不同命令回傳衝突且不改寫原列
+- **AND** 任務 B 或另一請求人不能藉 K 探測 A／U 的請求，因為查鍵前須先通過目前授權
+
+#### Scenario: 同次匯出選取 Dry 與 Official
+
+- **GIVEN** 同一任務已有 Dry Run R1、R2 及 Official Run
+- **WHEN** 使用者明確選取 Dry R2 與 Official Run 建立一次匯出
+- **THEN** 只建立一筆歷史列，所選 run 的身分、階段與選取順序固定，manifest 不含未選取的 Dry R1
+
+### Requirement: FR-010i 每個 run 的匯出 metadata
+
+匯出結果檔 metadata MUST 逐 run 記錄 `run_stage`、`isolation_enabled`、`sampling_value`、`applied_iaa_metrics`、`sample_snapshot_id` 和該 run 範圍內已排除標記作業的摘要。跨 run 不能以單一 snapshot 或版本值覆蓋各 run 的值，細目依 FR-010i-1。
+
+#### Scenario: 不同 run 的抽樣快照分開呈現
+
+- **GIVEN** 同一匯出納入兩個各有不可變 snapshot 的 run
+- **WHEN** 使用者查閱原始匯出檔
+- **THEN** 每個 run 的抽樣及排除摘要各自對應原快照，互不覆寫
+
+### Requirement: FR-015e 匯出入口支援明確的跨階段選取
+
+`annotation-results` MUST 提供 `EXPORT_FORMATS` 所列格式及同任務 run 選取。同一次匯出可同時選取 Dry Run 與 Official Run；選取後的固定順序與每個 run 的階段、結果身分須分別顯示及保存，跨階段呈現在同一原檔不代表解除資料隔離。結果列數不超過 `EXPORT_SYNC_MAX_ROWS` 同步回應，超過門檻改為背景工作與通知；metadata 依 FR-010i／FR-010i-1。
+
+#### Scenario: 結果介面顯示跨階段匯出範圍
+
+- **GIVEN** 同任務有可選的 Dry Run 和 Official Run
+- **WHEN** 使用者在 `annotation-results` 明確選取兩階段的 run 匯出
+- **THEN** 介面與原檔按固定順序呈現各 run，結果仍標明所屬 run 和階段且互不混用
+
+### Requirement: FR-015h JSON-MIN v2 envelope
+
+`JSON-MIN` MUST 採 `EXPORT_JSON_MIN_SHAPE = {manifest,rows[]}`，格式版本 2；`rows[]` 每列仍是含共通欄、標記最小欄及任務結果摘要的 flat row。零筆時 `rows[]` 為空陣列，`manifest` 仍含格式版本、請求人及逐 run 身分。有效舊版原始檔案照原位元組交付，不以 v2 序列化器改寫。
+
+#### Scenario: AC-1.15 空結果仍有版本 metadata
+
+- **GIVEN** 篩選沒有任何可輸出的結果列
+- **WHEN** 建立 `json-min` 匯出
+- **THEN** 檔案為格式版本 2 的 `{manifest,rows[]}`，`rows[]` 為空且 manifest 含請求人與逐 run 身分

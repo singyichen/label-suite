@@ -48,5 +48,5 @@
 
 - [x] 執行 `node --test scripts/tests/check-database-*.test.mjs scripts/tests/check-mvp-export-canonical.test.mjs`、`node scripts/check-database-schema.mjs`、plugin JSON Schema/build、`bash scripts/check-sdd.sh`、`git diff --check`；實際開啟 NoteCraft Wiki／Diagram 驗兩表及跳轉。
 - [x] 依 `senior-code-reviewer`／`senior-security` 檢查資料隔離、授權和版本追溯；只處理阻擋缺陷。
-- [ ] 對照正典每條引用完成 Source-Verify；archive change 後再次核對 derived view 的 ID／版本／Changelog。
+- [x] 對照正典每條引用完成 Source-Verify；archive change 後再次核對 derived view 的 ID／版本／Changelog：26 個 FR／AC／SC 識別字均可定位於 014／017 正典，014 為 v8.0.0 且有 2026-10-08 Changelog，ADR-024／029／037 與引用檔案均存在；歸檔後修正兩個過時情境標題及 Purpose。
 - [ ] 建立繁體中文 PR，CI 全綠及 review thread 清空後依既有授權合併；只將 #1160 真正完成的規劃項打勾，保留工時及 runtime 約束為待辦。
