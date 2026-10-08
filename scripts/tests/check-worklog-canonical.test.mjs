@@ -121,19 +121,23 @@ test('account-020 and ADR-021 retain history without reviving revoked credential
   assert.match(adr, /(?:retention|retained)[^\n]*?(?:not|never)[^\n]*?(?:valid|authorization|reviv)|(?:not|never)[^\n]*?(?:valid|authorization|reviv)[^\n]*?(?:retention|retained)/i);
 });
 
-test('WorkLog OpenSpec delta carries canonical task, annotation and account anchors', () => {
-  const active = new URL('../../openspec/changes/worklog-observable-interval-contract/', import.meta.url);
+test('each WorkLog OpenSpec change carries its owning canonical requirement anchors', () => {
   const archiveRoot = new URL('../../openspec/changes/archive/', import.meta.url);
-  const archivedName = existsSync(active) ? undefined : readdirSync(archiveRoot)
-    .find((name) => name.endsWith('-worklog-observable-interval-contract'));
-  assert.ok(existsSync(active) || archivedName, 'Active or archived WorkLog change is required');
-  const change = archivedName ? new URL(`${archivedName}/`, archiveRoot) : active;
-  for (const [path, ids] of [
-    ['task-management/014-task-detail', ['FR-007b', 'FR-007d', 'FR-010u', 'AC-1.28', 'SC-057']],
-    ['annotation/015-annotation-workspace', ['FR-088']],
-    ['account/020-auth-session-security', ['FR-001', 'FR-008']],
+  for (const [name, path, ids] of [
+    ['worklog-observable-interval-contract', 'task-management/014-task-detail',
+      ['FR-007b', 'FR-007d', 'FR-010u', 'AC-1.28', 'SC-057']],
+    ['worklog-history-session-attribution', 'annotation/015-annotation-workspace', ['FR-088']],
+    ['worklog-account-session-retention', 'account/020-auth-session-security', ['FR-001', 'FR-008']],
   ]) {
+    const active = new URL(`../../openspec/changes/${name}/`, import.meta.url);
+    const archivedName = existsSync(active) ? undefined : readdirSync(archiveRoot)
+      .find((candidate) => candidate.endsWith(`-${name}`));
+    assert.ok(existsSync(active) || archivedName, `Active or archived ${name} change is required`);
+    const change = archivedName ? new URL(`${archivedName}/`, archiveRoot) : active;
     const delta = readFileSync(new URL(`specs/${path}/spec.md`, change), 'utf8');
-    for (const id of ids) assert.match(delta, new RegExp(`^### Requirement: ${id}\\b`, 'm'));
+    for (const id of ids) {
+      assert.match(delta, new RegExp(`^### Requirement: ${id}\\b`, 'm'),
+        `${name} must carry ${id} in its owning canonical delta`);
+    }
   }
 });
