@@ -87,6 +87,61 @@ test('export parser rejects an edge from the private answer table', () => {
   /(?:Mermaid|FK|relationship|edge).*dataset_item_private|dataset_item_private.*(?:Mermaid|FK|relationship|edge)/i);
 });
 
+test('export parser rejects an existing but out-of-scope FK target without an edge', () => {
+  const markdown = exportMarkdown();
+  const dictionaryColumn = '| `task_id` | uuid → task |';
+  const edge = '    task ||--o{ task_export : task_id\n';
+  assert.ok(markdown.includes(dictionaryColumn), 'Expected the task_id dictionary FK');
+  assert.ok(markdown.includes(edge), 'Expected the task_id Mermaid FK edge');
+  assert.ok(allSources().tables.some((table) => table.name === 'dataset'),
+    'dataset is a real parent elsewhere, not an allowed export parent');
+  const invalid = markdown.replace(dictionaryColumn, '| `task_id` | uuid → dataset |')
+    .replace(edge, '');
+  assert.throws(() => exportSource(invalid), /task_export\.task_id.*dataset|dataset.*task_export\.task_id/i);
+});
+
+test('export dictionary separates request acceptance from the finalized result time', () => {
+  const markdown = exportMarkdown();
+  const source = exportSource();
+  const record = source.tables.find((table) => table.name === 'task_export');
+  assert.ok(record, 'Missing task_export dictionary table');
+  assert.deepEqual(record.columns.find((column) => column.name === 'requested_at'), {
+    name: 'requested_at', type: 'timestamptz', nullable: false, pk: false,
+  });
+  assert.deepEqual(record.columns.find((column) => column.name === 'exported_at'), {
+    name: 'exported_at', type: 'timestamptz', nullable: true, pk: false,
+  });
+  const row = (name) => markdown.split('\n').find((line) => line.startsWith(`| \`${name}\` |`));
+  assert.match(row('requested_at'), /(?:接受|請求)/);
+  assert.doesNotMatch(row('requested_at'), /`exported_at`/,
+    'The request timestamp must not be projected as result time');
+  assert.match(row('exported_at'), /(?:結果|資料)(?:讀取)?快照/,
+    'The persisted result timestamp must describe the actual snapshot');
+  const e02 = markdown.split('\n').find((line) => line.startsWith('| E-02 |'));
+  assert.match(e02, /`exported_at`/);
+  assert.match(e02, /(?:結果|資料)(?:讀取)?快照/);
+  assert.match(e02, /(?:manifest|檔名)/);
+  const e04 = markdown.split('\n').find((line) => line.startsWith('| E-04 |'));
+  assert.match(e04, /`ready`[^|]*`exported_at`|`exported_at`[^|]*`ready`/);
+  assert.match(e04, /(?:原子|同一交易)[^|]*(?:原始|不可變)[^|]*(?:產物|檔案)/);
+  const e05 = markdown.split('\n').find((line) => line.startsWith('| E-05 |'));
+  assert.match(e05, /(?:未|尚未)[^|]*`ready`[^|]*(?:重試|重新執行)[^|]*(?:較晚|新的|重新)[^|]*(?:結果|資料)快照/);
+  assert.match(e05, /`ready`[^|]*(?:重試|冪等)[^|]*(?:原始|同一|既有)[^|]*(?:產物|檔案)/);
+  assert.match(markdown, /`conditions_snapshot`[^。；\n]*?(?:不含|排除|不寫入)[^。；\n]*?`exported_at`/,
+    'Accepted conditions must not embed the later result timestamp');
+});
+
+test('NoteCraft records exported_at while preserving the 37 table and 43 FK shape', () => {
+  const data = erData();
+  const record = data.tables.find((table) => table.name === 'task_export');
+  assert.ok(record, 'Missing task_export projection');
+  const exportedAt = record.columns.find((column) => column.name === 'exported_at');
+  assert.ok(exportedAt, 'NoteCraft must show task_export.exported_at');
+  assert.equal(exportedAt.type, 'timestamptz');
+  assert.equal(exportedAt.required, 'nullable');
+  assert.deepEqual(summaryCounts(data).map(([count]) => count), [37, 315, 43]);
+});
+
 test('NoteCraft projection matches export dictionary tables, columns, types and keys', () => {
   const source = allSources();
   const data = erData();

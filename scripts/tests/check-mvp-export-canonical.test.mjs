@@ -248,3 +248,45 @@ test('export artifacts require permission, integrity, expiry and revocation chec
   assert.match(download, /(?:內部|原始)[^。；]*?(?:物件|儲存)[^。；]*?(?:路徑|位置)[^。；]*?(?:不得|不回傳|隱藏)/,
     'Download responses must not expose an internal object-storage path');
 });
+
+test('FR-010i-2 fixes exported_at at the result snapshot used by the ready artifact', () => {
+  const contract = contractLine('FR-010i-2');
+  assert.match(contract, /`requested_at`/);
+  assert.match(contract, /`exported_at`/);
+  assert.match(contract, /(?:結果|資料)(?:讀取)?快照[^。；]*?(?:產生|生成|建立|讀取)[^。；]*?`exported_at`|`exported_at`[^。；]*?(?:結果|資料)(?:讀取)?快照[^。；]*?(?:產生|生成|建立|讀取)/,
+    'exported_at must identify the actual result snapshot, not request acceptance');
+  assert.match(contract, /(?:ready|可下載)[^。；]*?(?:原子|同一交易)[^。；]*?(?:`exported_at`|不可變原始產物)|(?:`exported_at`|不可變原始產物)[^。；]*?(?:原子|同一交易)[^。；]*?(?:ready|可下載)/i,
+    'The ready transition must finalize exported_at with the immutable artifact');
+  assert.doesNotMatch(contract, /`requested_at`[^。；]*?(?:等於|作為|投影為|固定為)[^。；]*?`exported_at`/,
+    'Request acceptance time cannot claim to be the result snapshot time');
+});
+
+test('FR-010i-2 keeps acceptance conditions immutable across later worker retries', () => {
+  const contract = contractLine('FR-010i-2');
+  assert.match(contract, /`conditions_snapshot`[^。；]*?(?:接受|請求)[^。；]*?(?:不可變|不改)|(?:接受|請求)[^。；]*?`conditions_snapshot`[^。；]*?(?:不可變|不改)/,
+    'The accepted command snapshot must stay fixed');
+  assert.match(contract, /`conditions_snapshot`[^。；]*?(?:不含|不得.*(?:包含|寫入))[^。；]*?`exported_at`|`exported_at`[^。；]*?(?:不(?:寫入|放入)|排除)[^。；]*?`conditions_snapshot`/,
+    'The accepted conditions snapshot must not embed the later result time');
+  assert.match(contract, /(?:未|尚未)[^。；]*?`ready`[^。；]*?(?:重試|重新執行)[^。；]*?(?:較晚|新的|重新)[^。；]*?(?:結果|資料)快照/,
+    'A pre-ready worker retry may generate a later result snapshot');
+  assert.match(contract, /`ready`[^。；]*?(?:冪等|重試)[^。；]*?(?:原始|同一|既有)[^。；]*?(?:產物|檔案)/,
+    'A retry after ready must return the original immutable artifact');
+});
+
+test('FR-010b/c and SC-005 allow mixed-run packaging without cross-run mixing', () => {
+  const mixed = /(?:同一(?:次|筆|份)?匯出|同檔封裝)[^。；]*?(?:Dry(?: Run)?|試標)[^。；]*?(?:Official(?: Run)?|正式標記)|(?:同一(?:次|筆|份)?匯出|同檔封裝)[^。；]*?(?:Official(?: Run)?|正式標記)[^。；]*?(?:Dry(?: Run)?|試標)/i;
+  const isolationOn = /`isolation_enabled`[^。；]*?(?:true|啟用)[^。；]*?(?:不需|無須|不必)[^。；]*?(?:關閉|停用)|(?:不需|無須|不必)[^。；]*?(?:關閉|停用)[^。；]*?`isolation_enabled`/i;
+  const perRun = /(?:每|逐)[^。；]*?run[^。；]*?(?:不得|禁止)[^。；]*?(?:混入|混用)[^。；]*?(?:其他|不同)[^。；]*?run/i;
+  const fr010b = contractLine('FR-010b');
+  const fr010c = contractLine('FR-010c');
+  const sc005 = contractLine('SC-005');
+  for (const [id, contract] of [['FR-010b', fr010b], ['FR-010c', fr010c], ['SC-005', sc005]]) {
+    assert.match(contract, mixed, `${id} must allow an explicitly selected mixed-run export`);
+  }
+  assert.match(fr010b, perRun, 'FR-010b must preserve isolation inside each run');
+  assert.match(sc005, perRun, 'SC-005 must reject a result from another run within the selected run');
+  assert.match(sc005, /(?:每|逐)[^。；]*?run[^。；]*?(?:身分|識別|run_id)/i,
+    'SC-005 must retain each selected run identity');
+  assert.match(fr010c, isolationOn,
+    'FR-010c must permit mixed packaging without disabling isolation');
+});
