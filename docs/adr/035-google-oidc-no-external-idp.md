@@ -4,6 +4,7 @@
 **Date**: 2026-09-08
 **Amended**: 2026-09-17 — account linking discards the local password and revokes all refresh tokens
 **Amended**: 2026-10-06 — linking increments credential version and revokes all token families under ADR-021
+**Amended**: 2026-10-08 — align session table name and distinguish security revocation from explicit logout
 
 ## Context
 
@@ -51,7 +52,7 @@ If a Google login's email already has an existing Email/Password account, the tw
 Google's verification proves control of the mailbox; the existing local account proves nothing, because `account-003` registration does not verify email ownership. Linking therefore treats Google as the owner and discards every credential the local account was holding. In the same transaction as the link:
 
 1. Set the account's `hashed_password` to `null`, making it a Google SSO account as defined by `account-005` FR-008. The owner can set a new password afterwards through `account-005` or `account-004`.
-2. Increment `users.credential_version` and revoke all of the user's `account_token_family` rows, so neither refresh tokens nor already-issued access JWTs survive the link on the next request. A failure in any link step rolls back the whole transaction.
+2. Increment `users.credential_version` and revoke all of the user's `account_session` rows without writing `logged_out_at`, so neither refresh tokens nor already-issued access JWTs survive the link on the next request. A failure in any link step rolls back the whole transaction.
 
 ### Reversal trigger
 
@@ -63,7 +64,7 @@ If a faculty advisor requires institutional-account login (SAML/Shibboleth), thi
 
 - No new deployable service, no new admin console, no new data store to operate or secure.
 - ADR-024's zero-prerequisite Quick Start is untouched — Google SSO is additive and silently degrades when unconfigured.
-- ADR-021's session model (httpOnly JWT + `account_token_family` and `refresh_tokens`) is reused; there is exactly one identity hub, not two.
+- ADR-021's session model (httpOnly JWT + `account_session` and `refresh_tokens`) is reused; there is exactly one identity hub, not two.
 - No RBAC duplication — the dual-layer role model keeps authorization decisions in one place.
 
 ### Harder

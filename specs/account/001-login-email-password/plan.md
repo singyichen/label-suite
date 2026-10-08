@@ -1,7 +1,7 @@
 ---
 功能分支: feat/account/001-login-email-password
 建立日期: 2026-05-28
-版本: 2.2.1
+版本: 2.2.2
 狀態: plan-ready
 ---
 
@@ -286,21 +286,22 @@ sequenceDiagram
 | `created_at` | `DateTime(timezone=True)` | 建立時間（auto `func.now()`，timezone-aware） |
 | `updated_at` | `DateTime(timezone=True)` | 更新時間（auto `func.now()` onupdate，timezone-aware） |
 
-**TokenFamily 實體**（ADR-021；一列一次登入）：
+**AccountSession 實體**（ADR-021；一列一次登入）：
 
 | 欄位 | 型別 | 說明 |
 |------|------|------|
 | `id` | `UUID` PK | access JWT `sid`；一次登入識別 |
 | `user_id` | `UUID` FK → `users.id` NOT NULL | 擁有者；JWT `sub` 必須相符 |
 | `started_at` | `DateTime(timezone=True)` NOT NULL | refresh absolute TTL 的基準 |
-| `revoked_at` | `DateTime(timezone=True)` NULL | 整個 family 的撤銷時間 |
+| `revoked_at` | `DateTime(timezone=True)` NULL | 任意原因使 session 失效的時間 |
+| `logged_out_at` | `DateTime(timezone=True)` NULL | 僅可驗證明確登出成功才與 `revoked_at` 同交易寫入；安全撤銷／到期／僅清 cookie 保持空值 |
 
 **RefreshToken 實體**（ADR-021；一列一次核發）：
 
 | 欄位 | 型別 | 說明 |
 |------|------|------|
 | `id` | `UUID` PK | 主鍵（server-side generated） |
-| `family_id` | `UUID` FK → `account_token_family.id` NOT NULL | 所屬登入；不複製 family 的 `user_id`／`started_at` |
+| `session_id` | `UUID` FK → `account_session.id` NOT NULL | 所屬登入；不複製 family 的 `user_id`／`started_at` |
 | `token_hash` | `String` UNIQUE NOT NULL | refresh token（不透明 UUID）的雜湊；原值只存在 cookie，不落 DB |
 | `expires_at` | `DateTime(timezone=True)` NOT NULL | 7 天滑動到期時間 |
 | `revoked_at` | `DateTime(timezone=True)` NULL | 輪替或登出時寫入（soft delete）；NULL＝有效 |
@@ -315,9 +316,9 @@ sequenceDiagram
 | 查詢 | 篩選欄位 | Index 策略 | Loading Strategy | 風險 |
 |------|---------|-----------|-----------------|------|
 | 登入查詢 | `lower(email)` | `UNIQUE INDEX users(lower(email))`，應用層仍先 NFC＋casefold | 直接查詢 | SQLite／PG 非 ASCII 行為須由跨 DB 測試驗證 |
-| JWT 驗證（每次認證請求） | `users.id`、`account_token_family.id` | 各表 Primary key（UUID） | 讀取 user 與 `sid` family | 每次核對 owner／版本／撤銷狀態的 P95 成本待量測 |
+| JWT 驗證（每次認證請求） | `users.id`、`account_session.id` | 各表 Primary key（UUID） | 讀取 user 與 `sid` family | 每次核對 owner／版本／撤銷狀態的 P95 成本待量測 |
 | Refresh token 查找 | `token_hash` | `UNIQUE INDEX refresh_tokens(token_hash)` | 直接查詢 | — |
-| 撤銷使用者全部登入 | `account_token_family.user_id` | FK 查詢索引候選，依 `EXPLAIN` 決定 | 批次撤銷 family | 不直接用 token 表的使用者欄位 |
+| 撤銷使用者全部登入 | `account_session.user_id` | FK 查詢索引候選，依 `EXPLAIN` 決定 | 批次撤銷 family | 不直接用 token 表的使用者欄位 |
 
 > `lazy="raise"` 設於所有 relationship（本 model 目前無 relationship），防止未來新增欄位後產生隱性 N+1。
 
@@ -334,7 +335,7 @@ sequenceDiagram
 
 完整契約 → `contracts/auth-login.md`
 
-**事務邊界設計**：`GET /auth/me` 需核對 user、`sid` family 與 absolute TTL。`POST /auth/login` 在同一交易建立 family 與第一張 refresh token；`POST /auth/refresh` 的「撤銷舊 row＋寫入新 row」同交易完成，並核對 family absolute TTL。登入及 refresh 核發的 access JWT `exp` 均不得超過 family deadline。`POST /auth/logout` 在 access-only／refresh-only 憑證情境均須定位並撤銷目前 family。這些為 account-020 的未實作契約。
+**事務邊界設計**：`GET /auth/me` 需核對 user、`sid` family 與 absolute TTL。`POST /auth/login` 在同一交易建立 family 與第一張 refresh token；`POST /auth/refresh` 的「撤銷舊 row＋寫入新 row」同交易完成，並核對 family absolute TTL。登入及 refresh 核發的 access JWT `exp` 均不得超過 family deadline。`POST /auth/logout` 在 access-only／refresh-only 憑證情境均須定位並撤銷目前 session，同交易寫入 `revoked_at` 與 `logged_out_at`；兩種憑證均無效時僅清除 cookies，不記錄登出。這些為 account-020 的未實作契約。
 
 ---
 
@@ -607,6 +608,7 @@ Loading 策略（對應 TanStack Query 狀態欄位）：
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.2.2 | 2026-10-08 | Issue #1160：規劃實體對齊 `account_session`／`refresh_tokens.session_id`，明確登出才記 `logged_out_at`；仍無已部署 auth schema。 |
 | 2.2.1 | 2026-10-06 | 安全審查補充：登出優先以有效 access JWT `sid` 定位，refresh cookie 缺失時仍能撤銷 family；每請求檢查 family absolute TTL，登入與 refresh 的 access JWT 到期不得超過 family 上限。仍為未實作的歷史計畫。 |
 | 2.2.0 | 2026-10-06 | 對齊 account-020／ADR-021：`hashed_password` 可空、email canonicalization、family 真實 FK、`credential_version` 與有界寬限；標明此 plan 不建立真實 auth 正典或已部署 schema。 |
 | 2.1.1 | 2026-09-17 | 「實體與資料模型」段落加入實體層 schema 文件 `docs/diagrams/architecture/account-admin-db-schema.md` 的連結，並註記 `hashed_password` NOT NULL 與 005 SSO 帳號的衝突待該文件 D-1 裁決；欄位定義本身未改 |

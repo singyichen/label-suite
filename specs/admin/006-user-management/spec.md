@@ -1,7 +1,7 @@
 ---
 功能分支: feat/admin/006-user-management
 建立日期: 2026-04-16
-版本: 1.3.0
+版本: 1.3.1
 狀態: Clarified
 ---
 
@@ -258,7 +258,7 @@ Super Admin 可在使用者管理頁新增帳號、更新帳號基本資訊，�
 - **FR-006c**：設定密碼連結自核發起 24 小時有效，僅能成功使用一次。重發同一使用者的邀請連結時，須先使原連結失效；過期或作廢的連結均回覆通用「連結無法使用」，不得顯示設定密碼成功。作廢時間與成功使用時間須分別記錄。
 - **FR-007**：系統必須支援編輯既有使用者帳號資訊；新增或修改 Email 時須依 account-020 FR-009 的 NFC＋casefold 識別與唯一性規則處理，管理員改 Email 成功時須依 account-020 FR-007 在同一交易增加 `credential_version`、撤銷該帳號全部 family，使舊 access JWT 下次請求失效。
 - **FR-008**：系統必須支援停用使用者帳號。
-- **FR-008a**：停用使用者成功後，系統必須立即撤銷該帳號所有未撤銷的 `account_token_family`；每次請求重讀 `users.is_active`，使已簽發 access JWT 下次請求即被拒絕。
+- **FR-008a**：停用使用者成功後，系統必須立即撤銷該帳號所有未撤銷的 `account_session`，但不得將安全撤銷記入 `logged_out_at`；每次請求重讀 `users.is_active`，使已簽發 access JWT 下次請求即被拒絕。
 - **FR-008b**：系統必須支援重新啟用停用中的使用者帳號，但不得恢復停用前已撤銷的 family 或 token。
 - **FR-008c**：系統必須拒絕停用或降級 seeder 超管。
 - **FR-008d**：系統必須拒絕任何會導致沒有 active `super_admin` 的停用或降級操作。
@@ -391,6 +391,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.3.1 | 2026-10-08 | Issue #1160：停用帳號改引用 `account_session`，安全撤銷不記 `logged_out_at`。 |
 | 1.3.0 | 2026-10-06 | Issue #1160 D-9：依 ADR-037 將 `admin.user_management.view/manage` 加入現有超管硬邊界；帳號異動與稽核抽屜仍受原有資源及敏感資料限制，新增 SC-015。規劃契約尚未實作 API。 |
 | 1.2.1 | 2026-10-06 | Issue #1160 D-4：FR-013／SC-012 與 `UserManagementAuditLog` 對齊 ADR-032 共用稽核事件，限定目標查詢及非敏感摘要；維持既有 drawer 行為。 |
 | 1.2.0 | 2026-10-06 | Issue #1160 D-2／D-7：邀請連結 24 小時、使用與作廢語意分離；明確定義冪等 seeder bootstrap 和跨 SQLite／PostgreSQL 最後超管保護。 |
