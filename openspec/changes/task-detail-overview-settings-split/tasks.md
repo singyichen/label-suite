@@ -8,13 +8,13 @@
 
 > 預期產品檔案：`task-detail.html`（標頭、分頁列、路由）、`task-detail.panels/settings.html`（空殼）。
 
-- [ ] 1.1 以 `design/prototype/tests/task-management/task-detail-header-tabs.spec.ts` 建立 Red 測試：標頭顯示麵包屑、任務名稱 H1 與文字狀態且六個分頁皆可見、標頭內無按鈕；分頁列順序為 概覽／設定／成員管理／標記進度／標記結果／工時紀錄且不再有「任務概覽」；`reviewer` 可見「設定」、不可見「成員管理」；方向鍵移動分頁。commit 並記錄預期失敗輸出。[@senior-qa]
-- [ ] 1.2 於 `design/prototype/tests/inventory.csv` 以同一 commit 新增 1.1 對應列（LF only），並以 npx playwright test --list task-detail-header-tabs.spec.ts 核對案例數與新增列數一致。[@senior-qa]
-- [ ] 1.3 建立 `design/prototype/pages/task-management/task-detail.panels/settings.html` 空殼，讓設定分頁可被選取。[@senior-frontend]
-- [ ] 1.4 修改 `design/prototype/pages/task-management/task-detail.html`：新增任務標頭（麵包屑、H1、文字狀態，狀態推導與概覽判定共用）、分頁列改為六個與新名稱順序、方向鍵支援，使 1.1 的案例轉為 Green 並維持既有分頁測試家族不回歸。[@senior-frontend]
-- [ ] 1.5 執行：同一 commit 內以 `node scripts/gen-screen-inventory.mjs` 重新產生 `design/system/screen-inventory.md`（若有內容異動）。[@senior-frontend]
-- [ ] 1.6 執行：`npx -p @fission-ai/openspec openspec validate --changes --no-interactive`、`bash scripts/check-sdd.sh`，以及於 `design/prototype/` 內 `pnpm typecheck`、`pnpm test:node`、`PW_PORT=8983 pnpm playwright test`（全量，含既有 task-detail 家族）；預期全數 exit 0。[@main]
-- [ ] 1.7 派未參與實作之 `senior-code-reviewer` 獨立審查 `git diff origin/main...HEAD`，對照 FR-003、FR-025 與 issue #1199 的 A、B 兩節逐項核對，結論原文貼進檢查點留言；PR 以 `Part of #1199` 開啟。[@senior-code-reviewer]
+- [x] 1.1 以 `design/prototype/tests/task-management/task-detail-header-tabs.spec.ts` 建立 Red 測試：標頭顯示麵包屑、任務名稱 H1 與文字狀態且六個分頁皆可見、標頭內無按鈕；分頁列順序為 概覽／設定／成員管理／標記進度／標記結果／工時紀錄且不再有「任務概覽」；`reviewer` 可見「設定」、不可見「成員管理」；方向鍵移動分頁。commit 並記錄預期失敗輸出。[@senior-qa]
+- [x] 1.2 於 `design/prototype/tests/inventory.csv` 以同一 commit 新增 1.1 對應列（LF only），並以 npx playwright test --list task-detail-header-tabs.spec.ts 核對案例數與新增列數一致。[@senior-qa]
+- [x] 1.3 建立 `design/prototype/pages/task-management/task-detail.panels/settings.html` 空殼，讓設定分頁可被選取。[@senior-frontend]
+- [x] 1.4 修改 `design/prototype/pages/task-management/task-detail.html`：新增任務標頭（麵包屑、H1、文字狀態，狀態推導與概覽判定共用）、分頁列改為六個與新名稱順序、方向鍵支援，使 1.1 的案例轉為 Green 並維持既有分頁測試家族不回歸。[@senior-frontend]
+- [x] 1.5 執行：同一 commit 內以 `node scripts/gen-screen-inventory.mjs` 重新產生 `design/system/screen-inventory.md`（若有內容異動）。[@senior-frontend]
+- [x] 1.6 執行：`npx -p @fission-ai/openspec openspec validate --changes --no-interactive`、`bash scripts/check-sdd.sh`，以及於 `design/prototype/` 內 `pnpm typecheck`、`pnpm test:node`、`PW_PORT=8983 pnpm playwright test`（全量，含既有 task-detail 家族）；預期全數 exit 0。[@main]
+- [x] 1.7 派未參與實作之 `senior-code-reviewer` 獨立審查 `git diff origin/main...HEAD`，對照 FR-003、FR-025 與 issue #1199 的 A、B 兩節逐項核對，結論原文貼進檢查點留言；PR 以 `Part of #1199` 開啟。[@senior-code-reviewer]
 
 ## 2. G2 設定分頁搬移
 
