@@ -71,7 +71,7 @@ Label Suite 的對應做法：
 | `audit_events` | 實體草案 | `id` PK；人員事件的 `actor_user_id → users`、系統事件 actor 為 null；`task_id` 可空，非空時真實 FK → `task.id`；多型 target 由服務驗證 | 帳號／管理 §3.7；Accepted ADR-032、014 FR-025，D-4 已裁決；仍未部署 |
 | `admin_role_permission` | 實體草案 | `(role_type, role_key, permission_key)` 非空複合 PK；V1 僅 42 列適用格 | 帳號／管理 §3.8／§4.7；Accepted ADR-037；尚未資料庫遷移 |
 | `admin_role_permission_version` | 實體草案 | `id = 1` 的候選單列版本，缺列拒絕 | 帳號／管理 §3.9／§4.7；Accepted ADR-037；尚未資料庫遷移 |
-| `idempotency_record` | 實體草案 | `id` PK；`actor_user_id → users`；`UNIQUE (scope, actor_user_id, idempotency_key)`；結果以 `result_resource_type`／`result_resource_id` 指向資源，不加多型 FK | 帳號／管理 §3.10／§4.7A；013 FR-006d、AC-4.4、AC-4.6；D-14 已裁決；尚未資料庫遷移 |
+| `shared_idempotency_record` | 實體草案 | `id` PK；`actor_user_id → users`；`UNIQUE (scope, actor_user_id, idempotency_key)`；結果以 `result_resource_type`／`result_resource_id` 指向資源，不加多型 FK | 帳號／管理 §3.10／§4.7A；013 FR-006d、AC-4.4、AC-4.6；D-14 衍生設計決策（依 issue #1216／#1219 裁決）；`shared` 模組前綴；尚未資料庫遷移 |
 
 ### 資料集與來源
 

@@ -648,7 +648,7 @@
       "description": "**候選表／設計草案，尚未執行資料庫遷移。** ADR-037 已裁決保留 `id = 1` 的矩陣版本單列；資料庫遷移種入，缺列拒絕。每次儲存含空變更均核對預期版本；有實際差異才 CAS 遞增並與格子及 `role_permissions.changed` 稽核同交易。目標穩定為 `role_permission_matrix`／`1`。來源：帳號／管理 §3.9／§4.7、admin-007 FR-005b／FR-010、Accepted ADR-037。"
     },
     {
-      "name": "idempotency_record",
+      "name": "shared_idempotency_record",
       "label": "共用冪等紀錄",
       "section": "3.10",
       "group": "admin",
@@ -681,9 +681,9 @@
         },
         {
           "name": "request_digest",
-          "type": "varchar(64)",
+          "type": "char(64)",
           "required": "required",
-          "note": "經驗證與正規化請求內容的摘要，用來區分同 key 同內容與異內容；規則：I-02、I-03"
+          "note": "經驗證與正規化請求內容的 SHA-256 十六進位摘要，用來區分同 key 同內容與異內容；規則：I-02、I-03"
         },
         {
           "name": "result_resource_type",
@@ -710,7 +710,7 @@
           "note": "重播有效期限，寫入時固定為 created_at + IDEMPOTENCY_WINDOW_HOURS；到期視為不存在，清理工作以此欄分批刪除；規則：I-04、I-05"
         }
       ],
-      "description": "**候選表／設計草案，尚未執行資料庫遷移。** 維護者於 2026-10-08 裁決新增獨立通用冪等表（D-14，issue #1219）；首個使用者為 013 FR-006d 建立任務。以 `UNIQUE (scope, actor_user_id, idempotency_key)` 定位，僅在首次請求成功時與業務寫入同交易寫入，結果欄必填、無 pending 狀態。同 key 同 `request_digest` 於 `IDEMPOTENCY_WINDOW_HOURS` 內回傳原結果，異內容回報衝突；每次重送仍須重新檢查當下權限。發布與匯出的冪等沿用各自欄位，不在此表。來源：帳號／管理 §3.10／§4.7A、013 FR-006d、AC-4.4、AC-4.6。"
+      "description": "**候選表／設計草案，尚未執行資料庫遷移。** 採獨立通用冪等表是衍生設計決策（D-14，依維護者 2026-10-08 於 issue #1216／#1219 的裁決，非 spec FR），表名採 FR-105 列舉的 `shared` 模組前綴；首個使用者為 013 FR-006d 建立任務。以 `UNIQUE (scope, actor_user_id, idempotency_key)` 定位，僅在首次請求成功時與業務寫入同交易寫入，結果欄必填、無 pending 狀態。同 key 同 `request_digest` 於 `IDEMPOTENCY_WINDOW_HOURS` 內回傳原結果，異內容回報衝突；每次重送仍須重新檢查當下權限。發布與匯出的冪等沿用各自欄位，不在此表。來源：帳號／管理 §3.10／§4.7A、013 FR-006d、AC-4.4、AC-4.6。"
     },
     {
       "name": "dataset",
