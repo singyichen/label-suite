@@ -1,10 +1,10 @@
-> 正典：`specs/task-management/014-task-detail/spec.md`（v7.0.0 → v8.0.0，MAJOR）。本 delta 修訂 FR-009a、FR-010i／FR-010i-1／2、FR-015h、FR-020、FR-021、FR-024 與 AC-1.14～1.16、SC-046；僅為規劃契約，沒有部署 ORM、migration 或 API。來源：issue #1160、ADR-024、ADR-037。
+> 正典：`specs/task-management/014-task-detail/spec.md`（v7.0.0 → v8.0.0，MAJOR）。本 delta 修訂 FR-009a、FR-010i／FR-010i-1／2、FR-015e／FR-015h、FR-020、FR-021、FR-024 與 AC-1.14～1.16、SC-046；僅為規劃契約，沒有部署 ORM、migration 或 API。來源：issue #1160、ADR-024、ADR-037。
 
 ## MODIFIED Requirements
 
 ### Requirement: FR-009a 首次匯出保存不可變原始產物
 
-首次匯出 MUST 指定 Dry Run 或 Official Run，依 `EXPORT_SYNC_MAX_ROWS` 選同步回應或背景工作。內容與答案隔離驗證通過後 MUST 原子保存不可變原始位元組、原檔名、格式版本及 SHA-256，才將歷史列設為可下載；失敗不可留下可下載的部分產物。重送與工作重試依同一請求冪等識別處理，不得重複建立歷史列。生命週期為 `pending → processing → ready | failed`；到期、撤銷另由時間記錄判定。
+首次匯出 MUST 明確選取同任務一個或多個 run；同一次匯出可同時選取 Dry Run 與 Official Run，並凍結所選 run 的順序與各自階段，不得從目前頁面階段推定或合併 run。依 `EXPORT_SYNC_MAX_ROWS` 選同步回應或背景工作。內容與答案隔離驗證通過後 MUST 原子保存不可變原始位元組、原檔名、格式版本及 SHA-256，才將歷史列設為可下載；失敗不可留下可下載的部分產物。重送與工作重試依同一請求冪等識別處理，不得重複建立歷史列。生命週期為 `pending → processing → ready | failed`；到期、撤銷另由時間記錄判定。
 
 #### Scenario: 首次匯出和重試只產生一份完整原檔
 
@@ -12,6 +12,12 @@
 - **WHEN** 匯出成功或背景工作對同一請求重試
 - **THEN** 只有一筆歷史列及一份不可變原檔，含檔名、格式版本、SHA-256
 - **AND** 驗證失敗時沒有可下載的部分檔案
+
+#### Scenario: 同次匯出選取 Dry 與 Official
+
+- **GIVEN** 同一任務已有 Dry Run R1、R2 及 Official Run
+- **WHEN** 使用者明確選取 Dry R2 與 Official Run 建立一次匯出
+- **THEN** 只建立一筆歷史列，所選 run 的身分、階段與選取順序固定，manifest 不含未選取的 Dry R1
 
 ### Requirement: FR-010i 每個 run 的匯出 metadata
 
@@ -42,6 +48,16 @@
 - **GIVEN** 匯出後任務發布新版本且頁面篩選改變
 - **WHEN** 使用者查閱歷史與下載
 - **THEN** 逐 run 快照仍指向原版本，下載也不查詢目前結果
+
+### Requirement: FR-015e 匯出入口支援明確的跨階段選取
+
+`annotation-results` MUST 提供 `EXPORT_FORMATS` 所列格式及同任務 run 選取。同一次匯出可同時選取 Dry Run 與 Official Run；選取後的固定順序與每個 run 的階段、結果身分須分別顯示及保存，跨階段呈現在同一原檔不代表解除資料隔離。結果列數不超過 `EXPORT_SYNC_MAX_ROWS` 同步回應，超過門檻改為背景工作與通知；metadata 依 FR-010i／FR-010i-1。
+
+#### Scenario: 結果介面顯示跨階段匯出範圍
+
+- **GIVEN** 同任務有可選的 Dry Run 和 Official Run
+- **WHEN** 使用者在 `annotation-results` 明確選取兩階段的 run 匯出
+- **THEN** 介面與原檔按固定順序呈現各 run，結果仍標明所屬 run 和階段且互不混用
 
 ### Requirement: FR-015h JSON-MIN v2 envelope
 
