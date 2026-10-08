@@ -384,14 +384,14 @@ test('noteCraftProjectionTracksTheCanonicalAccountSessionDictionaryAndRejectsDri
   assert.match(validateErData(source, accountData(source, detachedToken)).join('\n'), /refresh_tokens\.session_id: FK/);
 });
 
-test('noteCraftProjectionKeepsThe37Table43FkShapeWith315Columns', () => {
+test('noteCraftProjectionKeepsThe37Table43FkShapeWith316Columns', () => {
   const data = JSON.parse(readFileSync(
     new URL('../../docs/diagrams/architecture/database-schema.er.json', import.meta.url), 'utf8'));
   assert.deepEqual({
     tables: data.tables.length,
     columns: data.tables.reduce((count, table) => count + table.columns.length, 0),
     fks: data.tables.reduce((count, table) => count + table.columns.filter((column) => column.fk).length, 0),
-  }, { tables: 37, columns: 315, fks: 43 });
+  }, { tables: 37, columns: 316, fks: 43 });
 });
 
 test('realAccountAndDatasetDictionariesMatchCompleteNoteCraftProjection', () => {
@@ -418,7 +418,7 @@ test('NoteCraft CI runs account, dataset and task/run schema regressions', () =>
   assert.ok(job, 'Missing database-schema CI job');
   for (const file of [
     'check-database-schema.test.mjs', 'check-database-dataset.test.mjs',
-    'check-database-task-run.test.mjs',
+    'check-database-task-run.test.mjs', 'check-account-session-canonical.test.mjs',
   ]) {
     assert.match(job, new RegExp(`node --test[^\\n]*scripts/tests/${file.replaceAll('.', '\\.')}\\b`),
       `NoteCraft CI must execute ${file}`);

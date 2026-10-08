@@ -9,7 +9,9 @@ const taskExportSourceUrl = new URL('../docs/diagrams/architecture/task-export-d
 const dataUrl = new URL('../docs/diagrams/architecture/database-schema.er.json', import.meta.url);
 const inventoryUrl = new URL('../docs/diagrams/architecture/database-table-inventory.md', import.meta.url);
 
-function parsePhysicalSchema(markdown, { strictEdges = false, externalParents = [] } = {}) {
+function parsePhysicalSchema(markdown, {
+  strictEdges = false, externalParents = [], undrawnParents = [],
+} = {}) {
   const mermaid = markdown.match(/## 2\. ERD\s*\n[\s\S]*?```mermaid\s*\n([\s\S]*?)\n```/)?.[1];
   const dictionary = markdown.match(/## 3\. 欄位字典\s*\n([\s\S]*?)(?=\n## 4\.|$)/)?.[1];
   if (!mermaid || !dictionary) {
@@ -95,7 +97,8 @@ function parsePhysicalSchema(markdown, { strictEdges = false, externalParents = 
     if (!dictionaryNames.has(name)) throw new Error(`Mermaid table missing from dictionary: ${name}`);
   }
   if (strictEdges) {
-    const allowedParents = new Set([...mermaidTables.keys(), ...externalParents]);
+    const edgeParents = new Set([...mermaidTables.keys(), ...externalParents]);
+    const allowedParents = new Set([...edgeParents, ...undrawnParents]);
     const tableColumns = new Map(tables.map((table) => [
       table.name, new Map(table.columns.map((column) => [column.name, column])),
     ]));
@@ -103,7 +106,7 @@ function parsePhysicalSchema(markdown, { strictEdges = false, externalParents = 
     for (const match of mermaid.matchAll(/^\s{4}([A-Za-z_]\w*)\s+\S+--\S+\s+([A-Za-z_]\w*)\s*:\s*([A-Za-z_]\w*)\s*$/gm)) {
       const [, parent, child, columnName] = match;
       const column = tableColumns.get(child)?.get(columnName);
-      if (!allowedParents.has(parent) || !column || column.fk !== parent) {
+      if (!edgeParents.has(parent) || !column || column.fk !== parent) {
         throw new Error(`Invalid Mermaid FK edge: ${parent} -> ${child}.${columnName}`);
       }
       const edge = `${child}.${columnName}`;
@@ -112,7 +115,10 @@ function parsePhysicalSchema(markdown, { strictEdges = false, externalParents = 
     }
     for (const table of tables) {
       for (const column of table.columns) {
-        if (column.fk && allowedParents.has(column.fk) && !diagramEdges.has(`${table.name}.${column.name}`)) {
+        if (column.fk && !allowedParents.has(column.fk)) {
+          throw new Error(`Disallowed FK target: ${table.name}.${column.name} -> ${column.fk}`);
+        }
+        if (column.fk && edgeParents.has(column.fk) && !diagramEdges.has(`${table.name}.${column.name}`)) {
           throw new Error(`Missing Mermaid FK edge: ${table.name}.${column.name} -> ${column.fk}`);
         }
       }
@@ -123,8 +129,14 @@ function parsePhysicalSchema(markdown, { strictEdges = false, externalParents = 
 
 export const parseAccountAdminSchema = parsePhysicalSchema;
 export const parseDatasetSchema = parsePhysicalSchema;
-export const parseTaskRunSchema = (markdown) => parsePhysicalSchema(markdown, { strictEdges: true });
-export const parseAnnotationReviewSchema = (markdown) => parsePhysicalSchema(markdown, { strictEdges: true });
+export const parseTaskRunSchema = (markdown) => parsePhysicalSchema(markdown, {
+  strictEdges: true,
+  undrawnParents: ['users', 'dataset_version', 'dataset_item'],
+});
+export const parseAnnotationReviewSchema = (markdown) => parsePhysicalSchema(markdown, {
+  strictEdges: true,
+  undrawnParents: ['task_membership'],
+});
 export const parseTaskExportSchema = (markdown) => parsePhysicalSchema(markdown, {
   strictEdges: true,
   externalParents: ['task', 'users'],

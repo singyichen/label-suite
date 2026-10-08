@@ -46,9 +46,9 @@
 | [`architecture/account-admin-db-schema.md`](./architecture/account-admin-db-schema.md) | `er` | Mermaid `erDiagram` | account 001～005＋admin-006／007 實體層 DB schema：ERD、欄位字典、限制清單、待裁決事項 |
 | [`architecture/dataset-db-schema.md`](./architecture/dataset-db-schema.md) | `er` | Mermaid `erDiagram` | dataset-021 的五張候選表：完整版本、來源批次、公開項目與私有答案；含分類 manifest、限制、索引與雙資料庫型別對應 |
 | [`architecture/annotation-review-db-schema.md`](./architecture/annotation-review-db-schema.md) | `er` | Mermaid `erDiagram` | annotation／review 的 8 張未部署候選表、82 欄與 14 個單欄 FK；含逐欄字典、複合 FK、索引及待決約束 |
-| [`architecture/task-export-db-schema.md`](./architecture/task-export-db-schema.md) | `er` | Mermaid `erDiagram` | 任務匯出的 2 張未部署候選表、26 欄與 2 個單欄 FK；含不可變產物、同任務複合 FK 與保留期限 |
+| [`architecture/task-export-db-schema.md`](./architecture/task-export-db-schema.md) | `er` | Mermaid `erDiagram` | 任務匯出的 2 張未部署候選表、27 欄與 2 個單欄 FK；含不可變產物、同任務複合 FK 與保留期限 |
 | [`architecture/database-table-inventory.md`](./architecture/database-table-inventory.md) | `er` | Mermaid `erDiagram` | 資料表盤點方法、已落地／候選表狀態、跨模組關聯骨架與 migration 前待決事項 |
-| [`architecture/database-schema.er.json`](./architecture/database-schema.er.json) | `er` | NoteCraft Wiki／Diagram | 帳號／管理、資料集、任務／執行、標記／審核與匯出共 37 張候選表、315 欄、43 個候選單欄 FK 的逐欄規劃檢視（已落地業務表 0）；開啟 `/view/diagrams/architecture/database-schema.er` |
+| [`architecture/database-schema.er.json`](./architecture/database-schema.er.json) | `er` | NoteCraft Wiki／Diagram | 帳號／管理、資料集、任務／執行、標記／審核與匯出共 37 張候選表、316 欄、43 個候選單欄 FK 的逐欄規劃檢視（已落地業務表 0）；開啟 `/view/diagrams/architecture/database-schema.er` |
 
 `archify` 要**同時提交 `.json` 與 `.html`**：`.json` 是唯一可 diff、可驗證的原始檔，`.html` 是唯一不需工具鏈即可閱讀的成品，缺任一邊都會讓圖變成不可維護的黑盒。改圖時改 `.json` 再重跑 `deliver` 重生 `.html`，不要手改 `.html`。
 
