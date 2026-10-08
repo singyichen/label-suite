@@ -50,6 +50,19 @@ test('multi-run export manifest records each run and its pinned versions', () =>
     'FR-010i-2 must retain each selected run rather than one task-level version');
 });
 
+test('one export may select Dry and Official runs in manifest order', () => {
+  for (const id of ['FR-009a', 'FR-015e']) {
+    assert.match(contractLine(id),
+      /(?:同一(?:次|筆|份)?匯出|同時|混合)[^。；]*?(?:Dry Run|試標)[^。；]*?(?:Official Run|正式標記)/i,
+      `${id} must explicitly allow Dry and Official runs in one export`);
+  }
+
+  assert.match(contractLine('FR-010i-1'), /有序的\s*`?manifest\.runs\[\]`?/,
+    'The manifest must preserve the order of selected runs');
+  assert.match(contractLine('FR-010i-2'), /每個 run 的納入關聯及輸出順序須獨立保存/,
+    'Each selected run must keep its own membership and output position');
+});
+
 test('JSON-MIN v2 uses a versioned envelope even for zero result rows', () => {
   const shape = constantLine('EXPORT_JSON_MIN_SHAPE');
   const exportRule = contractLine('FR-015h');
