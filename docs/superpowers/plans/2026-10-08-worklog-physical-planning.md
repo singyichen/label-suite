@@ -51,7 +51,7 @@
 - Modify: `specs/annotation/015-annotation-workspace/spec.md`
 - Modify: `specs/account/020-auth-session-security/spec.md`
 - Modify: `docs/adr/021-jwt-refresh-token-auth.md`
-- Create: `openspec/changes/worklog-observable-interval-contract/{proposal.md,design.md,tasks.md,specs/**/spec.md}`
+- Create: `openspec/changes/worklog-observable-interval-contract/**`、`openspec/changes/worklog-history-session-attribution/**`、`openspec/changes/worklog-account-session-retention/**`
 - Test: `scripts/tests/check-worklog-canonical.test.mjs`
 
 **Interfaces:**
@@ -60,7 +60,7 @@
 
 - [ ] **Step 1: 最小修改 014。** FR-007b 改逐類速度，新增 FR-007d；FR-010u 補同 session/run/day 聚合；Tab E 和 `WorkLogEntry` 明列投影與未知值；新增 AC-1.28～1.31、SC-057／058；版本及 Changelog 與變更類型一致。
 - [ ] **Step 2: 最小修改 015、account-020 與 ADR-021。** 015 FR-088 補歷程 session 真 FK 來源、舊／系統事件可空和遮蔽；account/ADR 補 session 歷史保留不代表 token 有效、普通刪除不得 cascade 歷程。保留原有安全撤銷與 JWT `sid`。
-- [ ] **Step 3: 建 OpenSpec change 並驗。** `openspec validate worklog-observable-interval-contract --type change` 預期 valid；`scripts/check-sdd.sh` 預期 0 errors。
+- [ ] **Step 3: 建三個 owning OpenSpec change 並驗。** Project SDD lint 要求每個 active change 恰對應一份正典，故 014、015、account-020 分別使用 `worklog-observable-interval-contract`、`worklog-history-session-attribution`、`worklog-account-session-retention`；三個 `openspec validate ... --type change` 預期 valid，`scripts/check-sdd.sh` 預期 0 errors。
 - [ ] **Step 4: 跑 Green 與 commit。** `node --test scripts/tests/check-worklog-canonical.test.mjs` 預期全通過；commit `docs: define observable worklog contract`，body 使用 **Define**／**Align** bullets。
 
 ### Task 3: 候選欄位與 NoteCraft Red
@@ -99,14 +99,14 @@
 
 **Files:**
 - Modify: `openspec/changes/worklog-observable-interval-contract/tasks.md`
-- Generate: `openspec/changes/archive/2026-10-08-worklog-observable-interval-contract/**` 與 `openspec/specs/**` derived views
+- Generate: 三個 owning change 的 `openspec/changes/archive/2026-10-08-worklog-*/**` 與 `openspec/specs/**` derived views
 - Test: 上述 Node 測試及正典／字典來源引用
 
 **Interfaces:**
 - Consumes: Tasks 1–4 的正典、delta、字典和圖。
 - Produces: 可追溯歸檔、經驗證的 NoteCraft Wiki／Diagram 及繁體中文 PR。
 
-- [ ] **Step 1: 跑四個 gate。** OpenSpec change validate；Project SDD lint；全套相關 Node 與 checker；歸檔後逐一比對 FR／AC／SC canonical ID、版本、Changelog 與 derived view 引用，不能只信 `openspec archive`。
+- [ ] **Step 1: 跑四個 gate。** 三個 OpenSpec change validate；Project SDD lint；全套相關 Node 與 checker；三個 owning change 歸檔後逐一比對 FR／AC／SC canonical ID、版本、Changelog 與 derived view 引用，不能只信 `openspec archive`。
 - [ ] **Step 2: NoteCraft build／畫面檢查。** 本機已安裝 1.7.0 CLI build `docs`；實際 Wiki 查逐表中文說明、可空欄與來源，Diagram 搜尋／聚焦真實 FK；確認標示未部署。plugin build 不取代資料庫約束測試。
 - [ ] **Step 3: 獨立 DBA／程式碼／安全審查。** 只修阻擋問題，重跑相關 gate；核對可見投影不含私有答案與跨人 session。
 - [ ] **Step 4: 開 PR、等待 CI、合併與 issue 回寫。** 先待上游 #1201／#1204 合併後以 `main` 為 base；PR／issue body 用繁體中文。CI 全綠且 review 無阻擋後依使用者授權自動合併；#1160 僅勾選已驗證的 MVP 文件項目，保留 migration／雙庫執行及尚未裁決的最大保留期為未完成。
