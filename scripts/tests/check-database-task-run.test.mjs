@@ -15,6 +15,8 @@ const erData = () => JSON.parse(read('../../docs/diagrams/architecture/database-
 const inventory = () => read('../../docs/diagrams/architecture/database-table-inventory.md');
 const taskDetailSpec = () => read('../../specs/task-management/014-task-detail/spec.md');
 const taskNewSpec = () => read('../../specs/task-management/013-task-new/spec.md');
+const accountSource = () => checker.parseAccountAdminSchema(
+  read('../../docs/diagrams/architecture/account-admin-db-schema.md'));
 const summaryErrors = (data, markdown) => {
   assert.equal(typeof checker.validateSchemaSummary, 'function', 'Schema summary checker is required');
   return checker.validateSchemaSummary(data, markdown);
@@ -36,7 +38,7 @@ test('task/run dictionary contains physical candidates with no derived review as
   assert.deepEqual(source.tables.map((table) => table.name), [
     'task', 'task_config_version', 'task_guideline_version', 'task_membership',
     'task_reviewer_roster_member', 'task_run_cycle', 'task_trial_round',
-    'task_sample_snapshot', 'task_run', 'task_run_reviewer_candidate',
+    'task_trial_iaa_result', 'task_sample_snapshot', 'task_run', 'task_run_reviewer_candidate',
     'task_run_item', 'task_annotation_assignment', 'task_annotation_exclusion',
   ]);
   assert.ok(source.tables.every((table) => table.columns.some((column) => column.pk)),
@@ -44,6 +46,71 @@ test('task/run dictionary contains physical candidates with no derived review as
   assert.equal(source.tables.some((table) => table.name === 'review_assignment'), false);
   assert.ok(source.tables.every((table) => table.columns.every((column) =>
     !['hidden_answer', 'declared_split'].includes(column.name))));
+});
+
+test('trial IAA result has one complete six-column candidate per trial round', () => {
+  const result = taskSource().tables.find((table) => table.name === 'task_trial_iaa_result');
+  assert.ok(result, 'Each completed trial round needs durable IAA result evidence');
+  assert.deepEqual(result.columns.map((column) => column.name), [
+    'trial_round_id', 'result_schema_version', 'algorithm_version',
+    'input_digest', 'result_payload', 'computed_at',
+  ]);
+  assert.deepEqual(result.columns.filter((column) => column.pk).map((column) => column.name),
+    ['trial_round_id']);
+  assert.equal(result.columns.find((column) => column.name === 'trial_round_id')?.fk,
+    'task_trial_round');
+  assert.ok(result.columns.every((column) => !column.nullable),
+    'A successful IAA result cannot leave provenance or a required result missing');
+  assert.match(result.columns.find((column) => column.name === 'result_payload')?.type ?? '',
+    /^jsonb?$/i, 'Per-output results must use a validated JSON payload');
+});
+
+test('trial IAA done requires a complete durable result in the same transaction', () => {
+  const spec = taskDetailSpec();
+  const requirement = spec.split('- **FR-010o-5**')[1]?.split('\n- **FR-')[0];
+  assert.ok(requirement, 'FR-010o-5 must own durable per-round IAA evidence');
+  for (const token of ['task_trial_iaa_result', 'IAA_GATE_EXCLUDED_TYPES', 'De = 0',
+    'pending', 'failed', 'done']) {
+    assert.ok(requirement.includes(token), `FR-010o-5 must cover ${token}`);
+  }
+  assert.match(requirement, /(?:同一|單一)[^\n]*(?:DB|資料庫)[^\n]*交易/,
+    'Writing the complete result and changing the status to done must be atomic');
+  assert.match(requirement, /(?:開始正式標記|正式發布)[^\n]*(?:新增試標回合|下一試標回合)/,
+    'Both outgoing transition gates must verify the result, not just a done flag');
+  const markdown = read('../../docs/diagrams/architecture/task-run-db-schema.md');
+  const rule = markdown.split('\n').find((line) => /^\| Q-06 \|/.test(line));
+  assert.match(rule ?? '', /task_trial_iaa_result/,
+    'The physical candidate must describe the done-to-result integrity rule');
+});
+
+test('task state and isolation history are projections of typed shared audit events', () => {
+  const spec = taskDetailSpec();
+  const requirement = spec.split('- **FR-025**')[1]?.split('\n- **FR-')[0];
+  assert.ok(requirement, 'FR-025 must own the task audit event contract');
+  for (const token of ['audit_events', 'task.status_changed', 'task.isolation_changed',
+    'RunStateTransition', 'IsolationAuditLog']) {
+    assert.ok(requirement.includes(token), `FR-025 must define ${token}`);
+  }
+  assert.match(requirement, /(?:同一|單一)[^\n]*(?:DB|資料庫)[^\n]*交易/,
+    'A changed task and its one audit event must commit atomically');
+  assert.match(requirement, /(?:無變更|值未變)[^\n]*(?:不|不得)[^\n]*(?:事件|稽核)/,
+    'A no-op must not create an audit event');
+  const taskTables = taskSource().tables.map((table) => table.name);
+  assert.equal(taskTables.includes('task_status_transition'), false,
+    'The audit timeline must not duplicate persisted state-transition rows');
+  assert.equal(taskTables.includes('task_isolation_audit_log'), false,
+    'The isolation timeline must not duplicate persisted audit rows');
+});
+
+test('task-scoped audit events use a nullable real task FK', () => {
+  const audit = accountSource().tables.find((table) => table.name === 'audit_events');
+  const taskId = audit?.columns.find((column) => column.name === 'task_id');
+  assert.equal(taskId?.type, 'uuid');
+  assert.equal(taskId?.nullable, true, 'System-wide audit events may have no task');
+  assert.equal(taskId?.fk, 'task', 'A non-null task scope must reference a real task');
+  const erTaskId = erData().tables.find((table) => table.name === 'audit_events')
+    ?.columns.find((column) => column.name === 'task_id');
+  assert.equal(erTaskId?.fk, 'task', 'NoteCraft must draw the same real task FK');
 });
 
 test('task/run parser rejects a Mermaid edge from the private answer table', () => {
@@ -201,15 +268,16 @@ test('assignment display status is derived in exclusion, submission, empty, save
     'Annotation record keeps its own lifecycle states');
 });
 
-test('NoteCraft and inventory project 38 tables with 327 columns and no assignment status', () => {
+test('NoteCraft and inventory project 39 tables with 333 columns and no assignment status', () => {
   const data = erData();
   const assignment = data.tables.find((table) => table.name === 'task_annotation_assignment');
   assert.equal(assignment.columns.some((column) => column.name === 'status'), false);
-  assert.equal(data.tables.length, 38);
-  assert.equal(data.tables.reduce((sum, table) => sum + table.columns.length, 0), 327);
-  assert.match(data.meta.description, /38 張候選表、327 欄、44 個候選單欄 FK/);
-  assert.match(inventory(), /38 張候選表、327 欄與 44 個候選單欄 FK/);
-  assert.match(inventory(), /任務／執行資料結構[^\n]*13 張／111 欄／15 單欄 FK/);
+  assert.equal(data.tables.length, 39);
+  assert.equal(data.tables.reduce((sum, table) => sum + table.columns.length, 0), 333);
+  assert.equal(data.tables.reduce((sum, table) => sum + table.columns.filter((column) => column.fk).length, 0), 46);
+  assert.match(data.meta.description, /39 張候選表、333 欄、46 個候選單欄 FK/);
+  assert.match(inventory(), /39 張候選表、333 欄與 46 個候選單欄 FK/);
+  assert.match(inventory(), /任務／執行資料結構[^\n]*14 張／117 欄／16 單欄 FK/);
 });
 
 test('assignment A-01 declares the parent candidate key for six annotation/review FKs', () => {
