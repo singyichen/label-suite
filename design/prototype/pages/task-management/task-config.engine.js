@@ -4790,6 +4790,71 @@ function parseCodeDraft(raw) {
   return { parsed: parsed };
 }
 
+/* Pure schema check for an outputs[] code payload (ADR-029). Returns
+   { error } or { imported } (normalized configs keyed by output type); never
+   writes state or DOM, so live validation and saveCodeToVisual share it. */
+function validateCodeOutputsSchema(parsed) {
+  var currentInputType = (state.taskInputTypes && state.taskInputTypes[0]) || 'single_item';
+  if (parsed.input_type && parsed.input_type !== currentInputType) {
+    return { error: state.lang === 'en' ? 'input_type must match Step 1.' : 'input_type 必須與第一步設定一致。' };
+  }
+  if (parsed.item_pair_labels !== undefined) {
+    var pairLabelsValid = currentInputType === 'item_pair'
+      && Array.isArray(parsed.item_pair_labels)
+      && parsed.item_pair_labels.length === 2
+      && parsed.item_pair_labels.every(function(v) { return typeof v === 'string'; });
+    if (!pairLabelsValid) {
+      return { error: state.lang === 'en'
+        ? 'item_pair_labels must be an array of exactly 2 strings and requires the item_pair input type.'
+        : 'item_pair_labels 必須是恰好 2 個字串的陣列，且輸入類型須為項目對。' };
+    }
+  }
+  var imported = {};
+  var unifiedError = '';
+  parsed.outputs.forEach(function(output) {
+    if (unifiedError) return;
+    if (!output || typeof output !== 'object' || Array.isArray(output) || !OUTPUT_TYPE_REGISTRY[output.type]) {
+      unifiedError = state.lang === 'en' ? 'Every output needs a supported type.' : '每個 output 都必須指定支援的 type。';
+      return;
+    }
+    if (imported[output.type]) {
+      unifiedError = state.lang === 'en' ? 'Output types cannot be duplicated.' : 'output type 不可重複。';
+      return;
+    }
+    if (!output.config || typeof output.config !== 'object' || Array.isArray(output.config)) {
+      unifiedError = state.lang === 'en' ? 'Every output needs a config object.' : '每個 output 都必須包含 config 物件。';
+      return;
+    }
+    /* Registry-declared config invariants (FR-003d-1). Checked on the raw
+       payload so a rejected key cannot be normalized away first. */
+    var outConfigError = typeof OUTPUT_TYPE_REGISTRY[output.type].validateConfig === 'function'
+      ? OUTPUT_TYPE_REGISTRY[output.type].validateConfig(output.config, state.lang)
+      : '';
+    if (outConfigError) {
+      unifiedError = outConfigError;
+      return;
+    }
+    imported[output.type] = normalizeOutputConfig(output.type, output.config, state.lang);
+  });
+  state.selectedOutputTypes.forEach(function(type) {
+    if (!imported[type] && !unifiedError) unifiedError = state.lang === 'en'
+      ? 'The code must include every output selected in Step 1.'
+      : '程式碼必須包含第一步選取的所有輸出類型。';
+  });
+  Object.keys(imported).forEach(function(type) {
+    if (state.selectedOutputTypes.indexOf(type) === -1 && !unifiedError) unifiedError = state.lang === 'en'
+      ? 'The code contains an output not selected in Step 1.'
+      : '程式碼包含第一步未選取的輸出類型。';
+  });
+  if (!unifiedError && imported.multi_label) {
+    imported.multi_label.label_options = normalizeTaxonomyNodes(imported.multi_label.label_options);
+    var importedTaxonomy = validateTaxonomyNodes(imported.multi_label.label_options);
+    if (!importedTaxonomy.valid) unifiedError = importedTaxonomy.error;
+  }
+  if (unifiedError) return { error: unifiedError };
+  return { imported: imported };
+}
+
 function saveCodeToVisual(showSuccessToast) {
   var schema = state.taskType ? REGISTRY[state.taskType] : null;
   if (!schema) return false;
@@ -4805,71 +4870,13 @@ function saveCodeToVisual(showSuccessToast) {
      Step 1, but replace each config atomically after the whole payload passes. */
   if (Array.isArray(parsed.outputs)) {
     var currentInputType = (state.taskInputTypes && state.taskInputTypes[0]) || 'single_item';
-    if (parsed.input_type && parsed.input_type !== currentInputType) {
+    var checked = validateCodeOutputsSchema(parsed);
+    if (checked.error) {
       el('codeErrorBar').classList.remove('hidden');
-      setText('codeErrorMsg', state.lang === 'en' ? 'input_type must match Step 1.' : 'input_type 必須與第一步設定一致。');
+      setText('codeErrorMsg', checked.error);
       return false;
     }
-    if (parsed.item_pair_labels !== undefined) {
-      var pairLabelsValid = currentInputType === 'item_pair'
-        && Array.isArray(parsed.item_pair_labels)
-        && parsed.item_pair_labels.length === 2
-        && parsed.item_pair_labels.every(function(v) { return typeof v === 'string'; });
-      if (!pairLabelsValid) {
-        el('codeErrorBar').classList.remove('hidden');
-        setText('codeErrorMsg', state.lang === 'en'
-          ? 'item_pair_labels must be an array of exactly 2 strings and requires the item_pair input type.'
-          : 'item_pair_labels 必須是恰好 2 個字串的陣列，且輸入類型須為項目對。');
-        return false;
-      }
-    }
-    var imported = {};
-    var unifiedError = '';
-    parsed.outputs.forEach(function(output) {
-      if (unifiedError) return;
-      if (!output || typeof output !== 'object' || Array.isArray(output) || !OUTPUT_TYPE_REGISTRY[output.type]) {
-        unifiedError = state.lang === 'en' ? 'Every output needs a supported type.' : '每個 output 都必須指定支援的 type。';
-        return;
-      }
-      if (imported[output.type]) {
-        unifiedError = state.lang === 'en' ? 'Output types cannot be duplicated.' : 'output type 不可重複。';
-        return;
-      }
-      if (!output.config || typeof output.config !== 'object' || Array.isArray(output.config)) {
-        unifiedError = state.lang === 'en' ? 'Every output needs a config object.' : '每個 output 都必須包含 config 物件。';
-        return;
-      }
-      /* Registry-declared config invariants (FR-003d-1). Checked on the raw
-         payload so a rejected key cannot be normalized away first. */
-      var outConfigError = typeof OUTPUT_TYPE_REGISTRY[output.type].validateConfig === 'function'
-        ? OUTPUT_TYPE_REGISTRY[output.type].validateConfig(output.config, state.lang)
-        : '';
-      if (outConfigError) {
-        unifiedError = outConfigError;
-        return;
-      }
-      imported[output.type] = normalizeOutputConfig(output.type, output.config, state.lang);
-    });
-    state.selectedOutputTypes.forEach(function(type) {
-      if (!imported[type] && !unifiedError) unifiedError = state.lang === 'en'
-        ? 'The code must include every output selected in Step 1.'
-        : '程式碼必須包含第一步選取的所有輸出類型。';
-    });
-    Object.keys(imported).forEach(function(type) {
-      if (state.selectedOutputTypes.indexOf(type) === -1 && !unifiedError) unifiedError = state.lang === 'en'
-        ? 'The code contains an output not selected in Step 1.'
-        : '程式碼包含第一步未選取的輸出類型。';
-    });
-    if (!unifiedError && imported.multi_label) {
-      imported.multi_label.label_options = normalizeTaxonomyNodes(imported.multi_label.label_options);
-      var importedTaxonomy = validateTaxonomyNodes(imported.multi_label.label_options);
-      if (!importedTaxonomy.valid) unifiedError = importedTaxonomy.error;
-    }
-    if (unifiedError) {
-      el('codeErrorBar').classList.remove('hidden');
-      setText('codeErrorMsg', unifiedError);
-      return false;
-    }
+    var imported = checked.imported;
     state.selectedOutputTypes.forEach(function(type) {
       imported[type]._autoPopulated = true;
       state.outputConfigs[type] = imported[type];

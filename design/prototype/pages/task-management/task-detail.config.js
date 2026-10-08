@@ -224,6 +224,11 @@ function summarizeOutputConfigForDisplay(outKey, config) {
 /* ── Event bindings for the Step 1 / Step 2 parity surfaces ────
    Called once from task-detail.html's init(), after the overview panel
    partial has been fetched into the DOM (see loadAllTabPanels()). */
+var codeValidateTimer = null;
+/* Drop a pending debounce so a stale run cannot re-enable 套用 after the Code
+   panel is reset (settings edit cancelled). */
+function cancelCodeValidation() { clearTimeout(codeValidateTimer); }
+
 function bindTaskConfigEvents() {
   el('datasetUploadZone').addEventListener('click', function() { el('datasetFileInput').click(); });
   el('datasetUploadZone').addEventListener('keydown', function(e) {
@@ -263,11 +268,14 @@ function bindTaskConfigEvents() {
   });
   /* #formatYamlBtn / #formatJsonBtn call setCodeFormat() via inline onclick
      in overview.html's markup, matching task-new.html's pattern. */
-  var codeValidateTimer = null;
-  /* Live validation (FR-026 (3)): parse-only, so Visual keeps the last valid
-     config while the draft is invalid; 套用 stays disabled until it parses. */
+  /* Live validation (FR-026 (3), AC-3.62): syntax and schema checks without
+     touching state, so Visual keeps the last valid config while the draft is
+     invalid; 套用 stays disabled until it passes. */
   function validateCodeDraft() {
-    var message = parseCodeDraft(el('codeEditor').value).message || '';
+    var draft = parseCodeDraft(el('codeEditor').value);
+    var message = draft.message
+      || (Array.isArray(draft.parsed.outputs) ? validateCodeOutputsSchema(draft.parsed).error : '')
+      || '';
     el('codeErrorBar').classList.toggle('hidden', !message);
     if (message) setText('codeErrorMsg', message);
     el('saveCodeBtn').disabled = Boolean(message);

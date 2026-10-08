@@ -7247,6 +7247,7 @@ function getTaskTypeLabel() {
     state.settingsEditMode = false;
     state.settingsDirty = false;
     state.codeDraftDirty = false;
+    cancelCodeValidation();
     resetTaskConfigSeedGuard();
     renderSettingsEditState();
     return true;
