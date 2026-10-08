@@ -1003,7 +1003,7 @@
           "name": "current_run_cycle_id",
           "type": "uuid",
           "required": "nullable",
-          "note": "當前開啟發布週期；無執行時為空值；首次試標發布／退回草稿／結案；規則：T-04"
+          "note": "task 側指向當前發布週期的指標：進行中指向開啟週期；`completed` 後保留指向最終已關閉週期（候選，待 ADR-022 補述）；尚未發布或退回草稿後為空值；首次試標發布／退回草稿／結案；規則：T-04"
         },
         {
           "name": "name",
@@ -1021,7 +1021,7 @@
           "name": "sampling_value",
           "type": "integer",
           "required": "required",
-          "note": "下一次試標的要求筆數；建立；允許階段編輯；規則：T-06"
+          "note": "下一次試標的要求筆數；建立；允許階段編輯；規則：T-06、T-07"
         },
         {
           "name": "target_agreement_overrides",
@@ -1060,7 +1060,7 @@
           "note": "當前任務最後修改時間 UTC；修改；規則：X-01"
         }
       ],
-      "description": "**實體候選，尚未部署。** 一列只保存當前可變設定及版本指標，不複製歷史執行的資料集、設定與指引。建立者為有 `task.create` 權限的使用者；後續編輯仍須查即時成員資格、矩陣及狀態。來源：013 關鍵實體、014 FR-014／關鍵實體、ADR-037。\n\n來源：[任務／執行實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.1；複合 FK、檢查限制、唯一限制與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。"
+      "description": "**實體候選，尚未部署。** 一列只保存當前可變設定及版本指標，不複製歷史執行的資料集、設定與指引。建立者為有 `task.create` 權限的使用者；後續編輯仍須查即時成員資格、矩陣及狀態。來源：013 關鍵實體、014 FR-014／關鍵實體、ADR-037。\n\n來源：[任務／執行實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.1；複合 FK、檢查限制、唯一限制與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。複合鍵與複合 FK 未畫在圖上，見各實體字典 §4。"
     },
     {
       "name": "task_config_version",
@@ -1229,7 +1229,7 @@
           "name": "membership_status",
           "type": "varchar(16)",
           "required": "required",
-          "note": "當前成員狀態；建立／停用／復用；規則：M-03"
+          "note": "當前成員狀態，值域 `active`／`disabled`；建立／停用／復用；規則：M-03"
         },
         {
           "name": "created_at",
@@ -1276,10 +1276,10 @@
           "name": "sort_order",
           "type": "integer",
           "required": "required",
-          "note": "可重現選人順序；編輯名冊；規則：R-03"
+          "note": "可重現選人順序；同值時依 `reviewer_membership_id` 決定；編輯名冊；規則：R-03"
         }
       ],
-      "description": "**實體候選，尚未部署。** 一列是一個當前選入審核名冊的審核員成員資格；`can_arbitrate` 令仲裁名冊自然為子集合。發布時凍結到 candidate 表，當前名冊變更不改舊執行。來源：014 FR-010s-1／FR-010t、ADR-037。\n\n來源：[任務／執行實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.5；複合 FK、檢查限制、唯一限制與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。"
+      "description": "**實體候選，尚未部署。** 一列是一個當前選入審核名冊的審核員成員資格；`can_arbitrate` 令仲裁名冊自然為子集合。發布時凍結到 candidate 表，當前名冊變更不改舊執行。來源：014 FR-010s-1／FR-010t、ADR-037。\n\n來源：[任務／執行實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.5；複合 FK、檢查限制、唯一限制與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。複合鍵與複合 FK 未畫在圖上，見各實體字典 §4。"
     },
     {
       "name": "task_run_cycle",
@@ -1346,12 +1346,12 @@
         },
         {
           "name": "close_reason",
-          "type": "varchar",
+          "type": "varchar(16)",
           "required": "nullable",
-          "note": "關閉原因；退回時有明確拒絕原因；發布週期關閉一次；規則：Y-02"
+          "note": "關閉原因代碼 `rejected`（退回草稿）／`completed`（正式標記完結）；開啟中為空值；發布週期關閉一次；規則：Y-02、Y-05"
         }
       ],
-      "description": "**實體候選，尚未部署。** 一輪發布週期固定已封存資料集、同任務設定與資料結構、隨機種子和演算法；退回草稿僅關閉、不刪除。來源：014 FR-010f／FR-010f-5、ADR-022。\n\n來源：[任務／執行實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.6；複合 FK、檢查限制、唯一限制與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。"
+      "description": "**實體候選，尚未部署。** 一輪發布週期固定已封存資料集、同任務設定與資料結構、隨機種子和演算法；退回草稿僅關閉、不刪除。來源：014 FR-010f／FR-010f-5、ADR-022。\n\n來源：[任務／執行實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.6；複合 FK、檢查限制、唯一限制與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。複合鍵與複合 FK 未畫在圖上，見各實體字典 §4。"
     },
     {
       "name": "task_trial_round",
@@ -1394,7 +1394,7 @@
           "name": "sampling_value",
           "type": "integer",
           "required": "required",
-          "note": "該回合實際資料項目數；試標發布；不改；規則：Q-04"
+          "note": "該回合實際資料項目數；試標發布；不改；規則：Q-04、T-07"
         },
         {
           "name": "prior_round_findings",
@@ -1434,7 +1434,7 @@
           "note": "發布時間 UTC；試標發布；規則：X-01"
         }
       ],
-      "description": "**實體候選，尚未部署。** 第 1 輪與後續試標的序號只在發布週期內唯一；`sampling_value` 保存實際資料項目數。來源：014 FR-010f-2／FR-010o-4／`TrialRound`。\n\n來源：[任務／執行實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.7；複合 FK、檢查限制、唯一限制與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。"
+      "description": "**實體候選，尚未部署。** 第 1 輪與後續試標的序號只在發布週期內唯一；`sampling_value` 保存實際資料項目數。來源：014 FR-010f-2／FR-010o-4／`TrialRound`。\n\n來源：[任務／執行實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.7；複合 FK、檢查限制、唯一限制與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。複合鍵與複合 FK 未畫在圖上，見各實體字典 §4。"
     },
     {
       "name": "task_trial_iaa_result",
@@ -1519,7 +1519,7 @@
           "name": "requested_sampling_value",
           "type": "integer",
           "required": "nullable",
-          "note": "試標要求筆數；正式標記為空值；發布；不改；規則：S-03"
+          "note": "試標要求筆數；正式標記為空值；發布；不改；規則：S-03、T-07"
         },
         {
           "name": "target_agreement_overrides",
@@ -1643,7 +1643,7 @@
           "note": "發布時間 UTC；發布；不改；規則：X-01"
         }
       ],
-      "description": "**實體候選，尚未部署。** 試標有同發布週期回合，正式標記無回合；每個任務最多發布一次正式標記。每次執行固定當時的指引版本，不能以任務的當前指標重建歷史。發布重試鍵在同一試標回合內唯一，不同回合可重用；正式發布另以同任務和重試鍵唯一。來源：014 FR-010f-2／f-3／f-6／`AnnotationListMaterialization`。\n\n來源：[任務／執行實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.10；複合 FK、檢查限制、唯一限制與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。"
+      "description": "**實體候選，尚未部署。** 試標有同發布週期回合，正式標記無回合；每個任務最多發布一次正式標記。每次執行固定當時的指引版本，不能以任務的當前指標重建歷史。發布重試鍵在同一試標回合內唯一，不同回合可重用；正式發布另以同任務和重試鍵唯一。來源：014 FR-010f-2／f-3／f-6／`AnnotationListMaterialization`。\n\n來源：[任務／執行實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.10；複合 FK、檢查限制、唯一限制與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。複合鍵與複合 FK 未畫在圖上，見各實體字典 §4。"
     },
     {
       "name": "task_run_reviewer_candidate",
@@ -1684,7 +1684,7 @@
           "note": "發布當時穩定排序；發布；不改；規則：V-02"
         }
       ],
-      "description": "**實體候選，尚未部署。** 此表只凍結審核分派輸入，不保存實際審核員黏著或授權。即時資格每次重新查 目前有效的成員資格與矩陣；已提交審核員由 015 FR-093(5) 推導。來源：014 FR-010t／關鍵實體、015 FR-093。\n\n來源：[任務／執行實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.11；複合 FK、檢查限制、唯一限制與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。"
+      "description": "**實體候選，尚未部署。** 此表只凍結審核分派輸入，不保存實際審核員黏著或授權。即時資格每次重新查 目前有效的成員資格與矩陣；已提交審核員由 015 FR-093(5) 推導。來源：014 FR-010t／關鍵實體、015 FR-093。\n\n來源：[任務／執行實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.11；複合 FK、檢查限制、唯一限制與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。複合鍵與複合 FK 未畫在圖上，見各實體字典 §4。"
     },
     {
       "name": "task_run_item",
@@ -1720,7 +1720,7 @@
           "note": "執行內正整數排序；發布；不改；規則：I-03"
         }
       ],
-      "description": "**實體候選，尚未部署。** 一列是一個執行選中的 `dataset_item`。同一發布週期中的試標及正式標記不得重複選取同一資料項目；外部清單只是這些列的回執。來源：014 FR-010b／FR-010f／`RunItem`。\n\n來源：[任務／執行實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.12；複合 FK、檢查限制、唯一限制與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。"
+      "description": "**實體候選，尚未部署。** 一列是一個執行選中的 `dataset_item`。同一發布週期中的試標及正式標記不得重複選取同一資料項目；外部清單只是這些列的回執。來源：014 FR-010b／FR-010f／`RunItem`。\n\n來源：[任務／執行實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.12；複合 FK、檢查限制、唯一限制與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。複合鍵與複合 FK 未畫在圖上，見各實體字典 §4。"
     },
     {
       "name": "task_annotation_assignment",
@@ -1778,7 +1778,7 @@
           "note": "最後改動 UTC；修改；規則：X-01"
         }
       ],
-      "description": "**實體候選，尚未部署。** 每筆工作指派的 ID 不因停用、退回未指派池或重指派而改變；受派者可空不表示已排除。工作位顯示狀態由終局排除、目前已提交或儲存的標記紀錄及受派者依序推導，不另存一個 `status` 欄。正式標記每個資料項目恰有一個工作位，試標按重疊人數建立。候選 UNIQUE `(task_id,task_run_id,id)` 是標記／審核六張子表 `(task_id,run_id,assignment_id)` 複合 FK 所需的同序父鍵，尚未在資料庫建立。來源：014 FR-005l／FR-010f-4／FR-010f-7／`AnnotationAssignment`；015 的提交後續以此 ID 定址。\n\n來源：[任務／執行實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.13；複合 FK、檢查限制、唯一限制與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。"
+      "description": "**實體候選，尚未部署。** 每筆工作指派的 ID 不因停用、退回未指派池或重指派而改變；受派者可空不表示已排除。工作位顯示狀態由終局排除、目前已提交或儲存的標記紀錄及受派者依序推導，不另存一個 `status` 欄。正式標記每個資料項目恰有一個工作位，試標按重疊人數建立。候選 UNIQUE `(task_id,task_run_id,id)` 是標記／審核六張子表 `(task_id,run_id,assignment_id)` 複合 FK 所需的同序父鍵，尚未在資料庫建立。來源：014 FR-005l／FR-010f-4／FR-010f-7／`AnnotationAssignment`；015 的提交後續以此 ID 定址。\n\n來源：[任務／執行實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.13；複合 FK、檢查限制、唯一限制與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。複合鍵與複合 FK 未畫在圖上，見各實體字典 §4。"
     },
     {
       "name": "task_annotation_exclusion",

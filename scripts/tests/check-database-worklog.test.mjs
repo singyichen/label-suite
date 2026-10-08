@@ -182,3 +182,13 @@ test('work dictionary retention paragraph follows ADR-038 and leaves the window 
   }
   assert.ok(!line.includes('尚待產品隱私政策'), 'Obsolete 尚待產品隱私政策 wording must be removed');
 });
+
+// Issue #1223: interval close_reason needs a documented CHECK value domain.
+test('work dictionary documents a close_reason CHECK value domain paired with ended_at', () => {
+  const rows = workDictionary().split('## 4.')[1].split('## 5.')[0].split('\n')
+    .filter((line) => /^\| W-0[45] \|/.test(line));
+  const domain = rows.find((line) => line.includes('close_reason') && /CHECK/i.test(line)
+    && /(?:值域|IN\s*\()/.test(line));
+  assert.ok(domain, 'W-04 or W-05 must document the close_reason CHECK value domain');
+  assert.match(domain, /成對/, 'ended_at and close_reason stay paired');
+});
