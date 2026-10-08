@@ -1,5 +1,5 @@
 ---
-功能分支: feat/1141-quality-metrics-ready-signal
+功能分支: feat/task-detail-overview-settings-1199
 建立日期: 2026-04-20
 版本: 7.0.0
 狀態: Draft
