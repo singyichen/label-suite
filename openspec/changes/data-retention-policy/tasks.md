@@ -6,7 +6,7 @@
 
 **故事目標**：dataset-021 SC-006 — 規劃文件對保存、刪除與匿名化政策的描述與維護者裁決一致，且不出現正典以外的期限。
 
-- [ ] 1.1 先提交檢查器測試的獨立 Red：在既有檢查器測試斷言 ADR-038 的六類政策與期限護欄、ADR-021／ADR-024／ADR-032 增補與 ADR 索引、正典 FR-011 v1.4.0 與 Changelog，以及各字典保存段落（U-17、F-07、R-10、A-05、§5.2、§7），觀察預期失敗。Exception: governance-propagation; Files: `scripts/tests/check-database-schema.test.mjs`, `scripts/tests/check-account-session-canonical.test.mjs`, `scripts/tests/check-database-annotation-review.test.mjs`, `scripts/tests/check-database-dataset.test.mjs`, `scripts/tests/check-database-task-export.test.mjs`, `scripts/tests/check-database-worklog.test.mjs`, `scripts/tests/check-database-task-run.test.mjs`; Reason: Node test 檔由 senior-qa 獨立擁有，Project SDD lint 的 scripts ownership pattern 僅識別 shell tests。 [@senior-qa]
+- [x] 1.1 先提交檢查器測試的獨立 Red：在既有檢查器測試斷言 ADR-038 的六類政策與期限護欄、ADR-021／ADR-024／ADR-032 增補與 ADR 索引、正典 FR-011 v1.4.0 與 Changelog，以及各字典保存段落（U-17、F-07、R-10、A-05、§5.2、§7），觀察預期失敗。Exception: governance-propagation; Files: `scripts/tests/check-database-schema.test.mjs`, `scripts/tests/check-account-session-canonical.test.mjs`, `scripts/tests/check-database-annotation-review.test.mjs`, `scripts/tests/check-database-dataset.test.mjs`, `scripts/tests/check-database-task-export.test.mjs`, `scripts/tests/check-database-worklog.test.mjs`, `scripts/tests/check-database-task-run.test.mjs`; Reason: Node test 檔由 senior-qa 獨立擁有，Project SDD lint 的 scripts ownership pattern 僅識別 shell tests。 [@senior-qa]
 
 ## 2. Green 回寫
 
