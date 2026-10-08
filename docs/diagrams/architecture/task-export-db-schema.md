@@ -1,6 +1,6 @@
 # 任務匯出資料庫資料結構（實體候選）
 
-> 本文件是 issue #1160 的衍生欄位字典。下列兩張表皆為**未部署候選**，不是 ORM、Alembic migration 或可直接執行的 DDL。正典為 [014 任務詳情 v8.0.1](../../../specs/task-management/014-task-detail/spec.md) FR-009a、FR-010i、FR-015e／g／h、FR-020／021／024，以及[主憲法 XVI、XXII](../../../specs/_governance/constitution.md)；[設計裁決](../../superpowers/specs/2026-10-08-mvp-export-record-design.md)說明原始產物方案。任務與執行的現有候選鍵見[任務／執行字典](./task-run-db-schema.md)。
+> 本文件是 issue #1160 的衍生欄位字典。下列兩張表皆為**未部署候選**，不是 ORM、Alembic migration 或可直接執行的 DDL。正典為 [014 任務詳情](../../../specs/task-management/014-task-detail/spec.md)（版本以正典 Changelog 為準）FR-009a、FR-010i、FR-015e／g／h、FR-020／021／024，以及[主憲法 XVI、XXII](../../../specs/_governance/constitution.md)；[設計裁決](../../superpowers/specs/2026-10-08-mvp-export-record-design.md)說明原始產物方案。任務與執行的現有候選鍵見[任務／執行字典](./task-run-db-schema.md)。
 
 ## 1. 範圍與狀態
 
@@ -110,6 +110,7 @@ erDiagram
 | E-07 | SVC | 快照 `selected_runs[]`、有序 `task_export_run` 與產物 `manifest.runs[]` 逐項同序同身分；每 run 自帶階段與固定版本，共用 `filters` 對所選 run 一致套用。歷史列「試標／正式／兩者」由所選階段集合推導；空結果仍有完整 manifest。版本從不可變 run／cycle 鏈解析，不讀 task 當前指標 | 014 FR-009a／FR-010i／FR-015h |
 | E-08 | SEC | 每次下載重驗目前 `dataset.export`、active membership、任務範圍與來源有效性；不得回傳 `artifact_ref`、私有答案或未提交審核草稿 | 014 FR-021／024、主憲法 III |
 | E-09 | SVC＋STORAGE | 原檔自完成起保存 30 日；`now >= expires_at`、`revoked_at` 非空、來源刪除、物件缺失或校驗失敗均拒絕下載；歷史 metadata 保存一年，到期不延長原檔期限。依 ADR-038：原檔 30 日後實體刪除；`task_export` metadata 與 `task_export_run` manifest 一年後實體刪除，子（`task_export_run`）先於父、同一交易；清理週期 待定（#1224） | 014 FR-021、主憲法 XXII；ADR-038 |
+| E-10 | SVC＋STORAGE | 到期清掃：掃描狀態為 `ready` 且 `now >= expires_at`（`expires_at` 已過）的列，實體刪除原始物件（該列拒絕下載的事實不變）；孤兒物件對帳以 `artifact_ref` 為鍵雙向比對：物件存在但無列（無列孤兒，常見於發布後 `ready` 交易失敗）則刪物件，列的 `artifact_ref` 指向的物件缺失（無物件）則該列維持拒絕下載並留可追溯事件，兩向皆不得改寫已 `ready` 的 metadata。清掃與對帳的週期與時限不在本文件決定，沿用 E-09，待 ADR-038／#1224 | 應用層清理工作 | SVC：過期 `ready` 列的物件被清除、無列物件被偵測、缺物件的列被標示且不可下載 | 014 FR-021；E-06、E-09；ADR-038 |
 | R-01 | DB | 複合 PK `(export_id,run_id)`；兩欄皆 NOT NULL，沒有第二份序號主鍵 | 014 FR-010i-2 |
 | R-02 | DB | 父端先建 UNIQUE `task_export(task_id,id)` 與 `task_run(task_id,id)`；子端 `(task_id,export_id)`、`(task_id,run_id)` 分別建立複合 FK，防止跨任務關聯 | 014 FR-010i-1；任務／執行字典 U-01 |
 | R-03 | DB＋SVC | CHECK `position > 0`、UNIQUE `(export_id,position)`；至少一個 run 且位置連續、manifest 順序一致由完成交易驗證 | 014 FR-009a／FR-010i-1 |
@@ -127,6 +128,8 @@ erDiagram
 | 匯出內 run 與順序 | PK `task_export_run(export_id,run_id)`、UNIQUE `(export_id,position)` | 覆蓋由 export 查 run 及排序；不另加 `export_id` 索引 |
 | run 的匯出歷史反查 | `task_export_run(run_id,export_id)` | 反向查與父 run 刪除限制；PK 不覆蓋 run 起首查詢 |
 | 請求人 FK 反查 | `task_export(requested_by_user_id)` | 使用者封存／刪除與審計查詢；按實際操作頻率驗證 |
+| 到期清掃 | `task_export(status,expires_at)` | 清掃只掃 `ready` 且已過期的列，免全表掃描；多一個索引的寫入成本只在轉 `ready` 與狀態變更時 |
+| 孤兒物件對帳 | `task_export(artifact_ref)` | 由物件鍵反查是否有列（無列孤兒），以及驗證列所指物件；物件鍵多為唯一，是否宣告 UNIQUE 於實作時依 E-06 發布流程決定 |
 
 不預建條件 JSON 的 PostgreSQL GIN 索引；目前查詢以任務和時間定位歷史，快照供單列追溯與重製驗證。若未來需要按 JSON key 搜尋，再用實際查詢與執行計畫證明成本。
 
