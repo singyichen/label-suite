@@ -24,8 +24,14 @@ test.describe('Task detail sampling edit state', () => {
     await expect(saveBtn).toBeHidden();
     await expect(cancelBtn).toBeHidden();
     await expect(page.locator('#samplingSummaryView')).toBeVisible();
-    await expect(page.locator('#labelTrialRoundControl')).toHaveText('試標回合');
-    await expect(page.locator('#valueTrialRoundControl')).not.toBeEmpty();
+    // FR-026(4): the 試標回合 / 目前判定 / 已用試標 rows moved to the overview and MUST NOT
+    // reappear in the sampling summary view.
+    await expect(page.locator('#labelTrialRoundControl')).toHaveCount(0);
+    await expect(page.locator('#valueTrialRoundControl')).toHaveCount(0);
+    await expect(page.locator('#samplingSummaryView')).not.toContainText('試標回合');
+    await expect(page.locator('#samplingSummaryView')).not.toContainText('目前判定');
+    await expect(page.locator('#samplingSummaryView')).not.toContainText('已用試標');
+    await expect(page.locator('#valueSamplingValueControl')).not.toBeEmpty();
     await expect(page.locator('#samplingEditForm')).toHaveClass(/hidden/);
 
     // IAA_METHOD_ENUM dropdown removed (task-management-014 IAA strategy v2).

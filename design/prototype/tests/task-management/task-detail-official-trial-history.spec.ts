@@ -17,7 +17,8 @@
  *   docs/product/example-data stays at 5 rows and datasetRecords stay 5, so
  *   the official list / workspace still show 5 items.
  *   T014 -- dry_run_in_progress with only the active R1, no R2.
- * Scope expansion (i): #trialRoundsUsedValue never counts the active round.
+ * Scope expansion (i): the active round is never a completed round (FR-027(2) removed
+ *   #trialRoundsUsedValue; completed = round-table rows that are not 進行中).
  * Scope expansion (ii): getDefaultProgressStage() lands on `official` while
  *   the official run is in progress.
  *
@@ -25,7 +26,7 @@
  * from workspace dry_run seeds, out of budget) and T014's review-unit
  * pending count (two contradictory sources, owned by group 4).
  */
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 import { buildListUrl } from '../annotation/_workspace-helpers';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
@@ -45,6 +46,10 @@ async function openProgress(page: Page, taskId: string, apStage?: string): Promi
 }
 
 const timelineItems = (page: Page) => page.locator('#trialRoundTimeline .round-timeline-item');
+const completedRows = (page: Page, inProgressText = '進行中') =>
+  timelineItems(page).filter({ hasNotText: inProgressText });
+// FR-027(4): round-table columns 回合／筆數／標記者／IAA／Std／結果／完成時間.
+const cell = (row: Locator, index: number) => row.locator('td').nth(index);
 const pills = (page: Page) => page.locator('#progressRoundPills .stage-btn');
 
 test.describe('Issue #1120 -- official-run tasks carry a verifiable trial history', () => {
@@ -55,12 +60,13 @@ test.describe('Issue #1120 -- official-run tasks carry a verifiable trial histor
 
     await expect(timelineItems(page)).toHaveCount(1);
     await expect(timelineItems(page).first()).toContainText('R1');
-    await expect(timelineItems(page).first()).toContainText('1 筆樣本');
-    await expect(timelineItems(page).first()).toContainText('IAA 0.62');
-    await expect(timelineItems(page).first()).toContainText('未通過');
+    // 筆數 / IAA / 結果 columns replace the old "1 筆樣本" / "IAA 0.62" chips.
+    await expect(cell(timelineItems(page).first(), 1)).toHaveText('1');
+    await expect(cell(timelineItems(page).first(), 3)).toHaveText('0.62');
+    await expect(cell(timelineItems(page).first(), 5)).toHaveText('未通過');
 
-    await expect(page.locator('#trialRoundsUsedValue')).toHaveText('1');
-    await expect(page.locator('#roundHistorySummary')).toHaveText('已用 1 / 6 筆試標');
+    await expect(completedRows(page)).toHaveCount(1);
+    await expect(page.locator('#trialUsedValue')).toHaveText('1 / 6');
     await expect(page.locator('#officialPoolValue')).toHaveText('5');
     await expect(page.locator('#splitLegendDynamic')).toContainText('正式 5筆');
     await expect(page.locator('#valueSamplingValueControl')).toHaveText('每回合 1 筆');
@@ -73,14 +79,14 @@ test.describe('Issue #1120 -- official-run tasks carry a verifiable trial histor
 
     await expect(timelineItems(page)).toHaveCount(2);
     await expect(timelineItems(page).nth(0)).toContainText('R1');
-    await expect(timelineItems(page).nth(0)).toContainText('未通過');
-    await expect(timelineItems(page).nth(0)).toContainText('1 筆樣本');
+    await expect(cell(timelineItems(page).nth(0), 5)).toHaveText('未通過');
+    await expect(cell(timelineItems(page).nth(0), 1)).toHaveText('1');
     await expect(timelineItems(page).nth(1)).toContainText('R2');
-    await expect(timelineItems(page).nth(1)).toContainText('已通過');
-    await expect(timelineItems(page).nth(1)).toContainText('1 筆樣本');
+    await expect(cell(timelineItems(page).nth(1), 5)).toHaveText('已通過');
+    await expect(cell(timelineItems(page).nth(1), 1)).toHaveText('1');
 
-    await expect(page.locator('#trialRoundsUsedValue')).toHaveText('2');
-    await expect(page.locator('#roundHistorySummary')).toHaveText('已用 2 / 7 筆試標');
+    await expect(completedRows(page)).toHaveCount(2);
+    await expect(page.locator('#trialUsedValue')).toHaveText('2 / 7');
     await expect(page.locator('#officialPoolValue')).toHaveText('5');
     await expect(page.locator('#splitLegendDynamic')).toContainText('正式 5筆');
     await expect(page.locator('#valueSamplingValueControl')).toHaveText('每回合 1 筆');
@@ -90,8 +96,8 @@ test.describe('Issue #1120 -- official-run tasks carry a verifiable trial histor
     await openOverview(page, 'T016');
     await page.locator('#langToggle').click();
 
-    await expect(page.locator('#roundHistorySummary')).toHaveText('2 / 7 items used in trial');
-    await expect(page.locator('#trialRoundsUsedValue')).toHaveText('2');
+    await expect(page.locator('#trialUsedValue')).toHaveText('2 / 7');
+    await expect(completedRows(page, 'In progress')).toHaveCount(2);
     await expect(page.locator('#officialPoolValue')).toHaveText('5');
     await expect(timelineItems(page)).toHaveCount(2);
   });
@@ -189,7 +195,13 @@ test.describe('Issue #1120 -- trial-rounds-used excludes the in-progress round (
 
     await expect(timelineItems(page)).toHaveCount(1);
     await expect(timelineItems(page).first()).toContainText('R1');
-    await expect(page.locator('#trialRoundsUsedValue')).toHaveText('0');
+    // FR-027(2): no 已完成試標回合 metric. The "R1 is still active" fact is carried by the
+    // task status plus 目前回合 = R1 (the seeded R1 row keeps its scripted result, as before).
+    // Visible signals only: the header status text (FR-025) and the 目前回合 row.
+    await expect(page.locator('#taskHeaderStatus')).toContainText('試標階段');
+    await expect(page.locator('#taskHeaderStatus')).toContainText('第 1 回合');
+    await expect(page.locator('#trialRoundValue')).toBeVisible();
+    await expect(page.locator('#trialRoundValue')).toHaveText('R1');
     await expect(page.locator('#officialPoolValue')).toHaveText('0');
   });
 

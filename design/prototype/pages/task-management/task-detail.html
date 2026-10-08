@@ -1766,7 +1766,7 @@
     .step.step-current .step-node {
       border-color: var(--color-primary);
       background: var(--color-primary-soft-bg);
-      box-shadow: 0 0 0 4px rgba(99,102,241,0.14);
+      box-shadow: 0 0 0 4px var(--color-primary-soft-bg);
     }
     .step.step-current .step-node::after { background: var(--color-primary); }
     .step.step-current .step-label-wrap { color: var(--color-primary); font-weight: 700; }
@@ -1809,12 +1809,7 @@
     .run-control-tab:hover {
       color: var(--color-primary);
     }
-    .exec-round-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 10px;
-      margin-bottom: 12px;
-    }
+    /* FR-027: the overview keeps the original card look (2026-10-08 ruling); colours come from tokens only. */
     .exec-stage-banner {
       display: flex;
       align-items: flex-start;
@@ -1822,46 +1817,19 @@
       gap: 16px;
       margin-bottom: 12px;
       padding: 14px 16px;
-      border: 1px solid rgba(99,102,241,0.18);
+      border: 1px solid var(--color-primary-border);
       border-radius: var(--radius-lg);
-      background:
-        radial-gradient(circle at top right, rgba(99,102,241,0.12), transparent 42%),
-        var(--color-white);
+      background: var(--color-primary-soft-bg);
     }
-    .exec-stage-copy {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      min-width: 0;
-    }
-    .exec-stage-decision-desc {
-      font-size: 13px;
-      line-height: 1.6;
-      color: var(--color-text-soft);
-      max-width: 720px;
-    }
-    .exec-stage-decision {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      max-width: 760px;
-    }
-    .exec-stage-decision-title {
-      font-size: 18px;
-      line-height: 1.25;
-      color: var(--color-ink);
-    }
-    .round-history-summary {
-      display: inline-flex;
-      align-items: center;
-      padding: 6px 10px;
-      border-radius: 999px;
-      border: 1px solid var(--color-border);
-      background: var(--color-white);
-      color: var(--color-text-soft);
-      font-size: 12px;
-      font-weight: 600;
-      white-space: nowrap;
+    .exec-stage-copy { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+    .exec-stage-decision { display: flex; flex-direction: column; gap: 4px; max-width: 760px; }
+    .exec-stage-decision-title { font-size: 18px; line-height: 1.25; color: var(--color-ink); }
+    .exec-stage-decision-desc { font-size: 13px; line-height: 1.6; color: var(--color-text-soft); max-width: 720px; }
+    .exec-round-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
     }
     .exec-round-item {
       border: 1px solid var(--color-border);
@@ -1872,15 +1840,8 @@
       flex-direction: column;
       gap: 4px;
     }
-    .exec-round-key {
-      font-size: 12px;
-      color: var(--color-text-soft);
-    }
-    .exec-round-value {
-      font-size: 20px;
-      line-height: 1.15;
-      color: var(--color-ink);
-    }
+    .exec-round-key { font-size: 12px; color: var(--color-text-soft); }
+    .exec-round-value { font-size: 20px; line-height: 1.15; color: var(--color-ink); font-variant-numeric: tabular-nums; }
     .exec-stop-row {
       margin-bottom: var(--space-md);
       display: flex;
@@ -1889,24 +1850,9 @@
       gap: 16px;
       flex-wrap: wrap;
     }
-    .exec-stop-main {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      min-width: 0;
-      flex: 1;
-    }
-    .exec-stop-pills {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-    .exec-stop-actions {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      flex-shrink: 0;
-    }
+    .exec-stop-main { display: flex; flex-direction: column; gap: 8px; min-width: 0; flex: 1; }
+    .exec-stop-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+    .exec-stop-actions { display: flex; align-items: center; justify-content: flex-end; flex-shrink: 0; }
     .stop-pill {
       display: inline-flex;
       align-items: center;
@@ -1948,122 +1894,15 @@
       margin-bottom: 14px;
       flex-wrap: wrap;
     }
-    .round-timeline {
-      display: grid;
-      gap: 12px;
-    }
-    .round-timeline-item {
-      position: relative;
-      display: grid;
-      grid-template-columns: 118px minmax(0, 1fr) auto;
-      gap: 14px;
-      align-items: start;
-      padding: 14px;
-      border-radius: var(--radius-md);
-      border: 1px solid var(--color-border);
-      background: var(--color-white);
-    }
-    .round-timeline-index,
-    .round-timeline-body,
-    .round-timeline-side {
-      position: relative;
-      z-index: 1;
-    }
-    .round-timeline-index {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .round-timeline-dot {
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      border: 3px solid var(--color-white);
-      box-shadow: 0 0 0 2px rgba(99,102,241,0.16);
-      background: var(--color-primary);
-      flex-shrink: 0;
-    }
-    .round-timeline-dot.failed {
-      background: var(--color-error);
-      box-shadow: 0 0 0 2px rgba(185,28,28,0.12);
-    }
-    .round-timeline-dot.passed {
-      background: var(--color-success);
-      box-shadow: 0 0 0 2px rgba(21,128,61,0.14);
-    }
-    .round-timeline-label {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-    .round-timeline-round {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--color-ink);
-    }
-    .round-timeline-date {
-      font-size: 11px;
-      color: var(--color-text-soft);
-      white-space: nowrap;
-    }
-    .round-timeline-body {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      min-width: 0;
-    }
-    .round-timeline-metrics {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-    .round-metric-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 8px;
-      border-radius: 999px;
-      background: var(--color-white);
-      border: 1px solid var(--color-border);
-      color: var(--color-text-soft);
-      font-size: 12px;
-      font-weight: 600;
-    }
-    .round-timeline-note {
-      font-size: 13px;
-      color: var(--color-ink);
-      line-height: 1.6;
-    }
-    .round-timeline-side {
-      display: flex;
-      justify-content: flex-end;
-    }
-    .round-status-badge {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 6px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 700;
-      white-space: nowrap;
-      border: 1px solid transparent;
-    }
-    .round-status-badge.failed {
-      color: var(--color-error);
-      background: var(--color-error-bg);
-      border-color: var(--color-error-border);
-    }
-    .round-status-badge.passed {
-      color: var(--color-success);
-      background: var(--color-success-bg);
-      border-color: var(--color-success-border);
-    }
-    .round-status-badge.in-progress {
-      color: var(--color-primary);
-      background: var(--color-primary-soft-bg);
-      border-color: var(--color-primary-border);
-    }
+    .round-timeline { overflow-x: auto; }
+    .round-table { width: 100%; min-width: 560px; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+    .round-table th, .round-table td { padding: 8px 12px 8px 0; text-align: left; border-bottom: 1px solid var(--color-border); }
+    .round-table th { font-size: 12px; font-weight: 600; color: var(--color-text-soft); white-space: nowrap; }
+    .round-table td { color: var(--color-ink); }
+    .round-status-badge { font-weight: 700; white-space: nowrap; }
+    .round-status-badge.failed { color: var(--color-error); }
+    .round-status-badge.passed { color: var(--color-success); }
+    .round-status-badge.in-progress { color: var(--color-primary); }
     .panel-divider {
       border: none;
       border-top: 1px solid var(--color-border-muted);
@@ -2206,12 +2045,8 @@
       .sampling-fields { grid-template-columns: 1fr; }
       .sampling-fields-advanced { grid-template-columns: 1fr; }
       .exec-stage-banner { flex-direction: column; }
-      .round-timeline-side { justify-content: flex-start; }
       .exec-stop-row,
       .exec-stop-actions { align-items: flex-start; }
-      .round-timeline-item {
-        grid-template-columns: 1fr;
-      }
       .exec-control-row { flex-direction: column; }
       .exec-actions { align-items: flex-start; }
       .run-control-tabs { width: 100%; justify-content: flex-start; overflow-x: auto; }
@@ -2547,18 +2382,15 @@
       reviewLeaveConfirm: '你有尚未儲存的審核設定變更，確定要離開編輯模式嗎？',
       reviewReadonlyRoleOnly: '目前為唯讀角色，僅 project leader 可編輯審核設定。',
       reviewSaveSuccess: '審核設定已更新',
-      trialRoundLabel: '試標回合',
-      trialRoundsUsedLabel: '已完成試標回合',
+      metricRoundLabel: '目前回合',
+      metricTrialUsedLabel: '已用試標',
       targetAgreementLabel: '目標 IAA',
-      currentAgreementLabel: '最新回合 IAA',
+      currentAgreementLabel: '最新 IAA',
       currentStdLabel: '目前標準差',
       officialPoolLabel: '正式標記池',
       stopConditionTitle: '達標條件',
       labelSamplingValueControl: '每回合抽樣筆數',
-      labelTrialRoundControl: '試標回合',
-      labelRoundOutcomeControl: '目前判定',
       labelMinAnnotatorsControl: '最少標記者數',
-      labelSplitControl: '已用試標 / 可進正式',
       totalSamplesLabel: '總筆數',
       labelIsolationControl: '資料隔離狀態',
       labelIsolationAuditControl: '隔離異動',
@@ -2648,13 +2480,8 @@
       guidelineFilesNone: '無附件',
       guidelineContentEmpty: '尚無說明內容',
       samplingValueCountTpl: '每回合 {value} 筆',
-      splitSummaryTpl: '已用試標 {sample} / 可進正式 {reserve} / 總筆數 {total}',
-      roundOutcomePassed: '已有回合達標，可進入正式標記',
-      roundOutcomeFailed: '最近回合未達標，建議追加下一回合試標',
-      roundOutcomeInProgress: '目前回合進行中，待所有標記員完成後再判定',
       roundHistoryTitle: '試標回合歷程',
       roundHistoryHint: '每個回合使用新的抽樣樣本；通過的回合會解鎖正式標記。',
-      roundHistorySummaryTpl: '已用 {used} / {total} 筆試標',
       roundDecisionTitlePassedTpl: 'R{round} 已達標，可啟動正式標記',
       roundDecisionTitleFailedTpl: 'R{round} 未達標，可開始正式標記或新增試標回合',
       roundDecisionTitleRoundActiveTpl: 'R{round} 進行中，全員完成後進入待 IAA 確認',
@@ -2671,10 +2498,13 @@
       roundDecisionDescOfficialTpl: '正式標記池已從未參與試標的剩餘樣本建立，持續完成後即可結束任務。',
       roundDecisionTitleCompletedTpl: '正式標記已完成，共 {count} 筆',
       roundDecisionDescCompletedTpl: '此任務已走完整個草稿、試標、正式標記流程，可回顧所有回合與正式標記結果。',
-      roundMetricSampleTpl: '{count} 筆樣本',
-      roundMetricIaaTpl: 'IAA {value}',
-      roundMetricAnnotatorsTpl: '{count} 位標記者',
-      roundMetricStdTpl: 'Std {value}',
+      roundColRound: '回合',
+      roundColCount: '筆數',
+      roundColAnnotators: '標記者',
+      roundColIaa: 'IAA',
+      roundColStd: 'Std',
+      roundColResult: '結果',
+      roundColDate: '完成時間',
       roundStatusPassed: '已通過',
       roundStatusFailed: '未通過',
       roundStatusInProgress: '進行中',
@@ -3096,18 +2926,15 @@
       reviewLeaveConfirm: 'You have unsaved review-setting changes. Leave edit mode?',
       reviewReadonlyRoleOnly: 'Read-only role. Only project leader can edit review settings.',
       reviewSaveSuccess: 'Review settings updated',
-      trialRoundLabel: 'Trial round',
-      trialRoundsUsedLabel: 'Trial rounds used',
+      metricRoundLabel: 'Current round',
+      metricTrialUsedLabel: 'Trial used',
       targetAgreementLabel: 'Target IAA',
-      currentAgreementLabel: 'Latest round IAA',
+      currentAgreementLabel: 'Latest IAA',
       currentStdLabel: 'Current standard deviation',
       officialPoolLabel: 'Official pool',
       stopConditionTitle: 'Stop conditions',
       labelSamplingValueControl: 'Per-round sample count',
-      labelTrialRoundControl: 'Trial round',
-      labelRoundOutcomeControl: 'Current decision',
       labelMinAnnotatorsControl: 'Minimum annotators',
-      labelSplitControl: 'Used in trial / Ready for official',
       totalSamplesLabel: 'Total',
       labelIsolationControl: 'Data isolation status',
       labelIsolationAuditControl: 'Isolation changed at',
@@ -3197,13 +3024,8 @@
       guidelineFilesNone: 'No attachments',
       guidelineContentEmpty: 'No guideline text',
       samplingValueCountTpl: '{value} items',
-      splitSummaryTpl: 'Used in trial {sample} / Ready for official {reserve} / Total {total}',
-      roundOutcomePassed: 'A trial round has passed and official work can start',
-      roundOutcomeFailed: 'The latest round did not pass. Consider creating the next trial round',
-      roundOutcomeInProgress: 'The current round is still in progress and awaits completion',
       roundHistoryTitle: 'Trial round history',
       roundHistoryHint: 'Each round uses a fresh sample slice. A passed round unlocks official work.',
-      roundHistorySummaryTpl: '{used} / {total} items used in trial',
       roundDecisionTitlePassedTpl: 'R{round} passed and official work can start',
       roundDecisionTitleFailedTpl: 'R{round} did not pass. Start official work or add another round',
       roundDecisionTitleRoundActiveTpl: 'R{round} is in progress. It moves to IAA confirmation once everyone finishes',
@@ -3220,10 +3042,13 @@
       roundDecisionDescOfficialTpl: 'The official pool was created from the remaining items that never entered a trial round.',
       roundDecisionTitleCompletedTpl: 'Official run completed with {count} items',
       roundDecisionDescCompletedTpl: 'This task has completed the full draft, trial, and official flow. Review the rounds and final output as needed.',
-      roundMetricSampleTpl: '{count} items',
-      roundMetricIaaTpl: 'IAA {value}',
-      roundMetricAnnotatorsTpl: '{count} annotators',
-      roundMetricStdTpl: 'Std {value}',
+      roundColRound: 'Round',
+      roundColCount: 'Items',
+      roundColAnnotators: 'Annotators',
+      roundColIaa: 'IAA',
+      roundColStd: 'Std',
+      roundColResult: 'Result',
+      roundColDate: 'Completed',
       roundStatusPassed: 'Passed',
       roundStatusFailed: 'Failed',
       roundStatusInProgress: 'In progress',
@@ -5471,8 +5296,8 @@ function interpolate(template, payload) {
     setText('samplingEditBtn', t('samplingEditBtn'));
     setText('samplingSaveBtn', t('samplingSaveBtn'));
     setText('samplingCancelBtn', t('samplingCancelBtn'));
-    setText('trialRoundLabel', t('trialRoundLabel'));
-    setText('trialRoundsUsedLabel', t('trialRoundsUsedLabel'));
+    setText('trialRoundLabel', t('metricRoundLabel'));
+    setText('trialUsedLabel', t('metricTrialUsedLabel'));
     setText('targetAgreementLabel', t('targetAgreementLabel'));
     setText('currentAgreementLabel', t('currentAgreementLabel'));
     setText('currentStdLabel', t('currentStdLabel'));
@@ -5480,10 +5305,7 @@ function interpolate(template, payload) {
     setText('stopConditionTitle', t('stopConditionTitle'));
     renderStatusStepperLabels();
     setText('labelSamplingValueControl', t('labelSamplingValueControl'));
-    setText('labelTrialRoundControl', t('labelTrialRoundControl'));
-    setText('labelRoundOutcomeControl', t('labelRoundOutcomeControl'));
     setText('labelMinAnnotatorsControl', t('labelMinAnnotatorsControl'));
-    setText('labelSplitControl', t('labelSplitControl'));
     setText('totalSamplesLabel', t('totalSamplesLabel'));
     setText('labelIsolationControl', t('labelIsolationControl'));
     setText('labelIsolationAuditControl', t('labelIsolationAuditControl'));
@@ -5830,22 +5652,8 @@ function interpolate(template, payload) {
       std: Number(TASK_DATA.currentStd) || 0,
       result: result,
       usedSamples: syntheticSampleCount,
-      date: TASK_DATA.updatedAt ? String(TASK_DATA.updatedAt).slice(0, 10) : '',
-      noteZh: iaa.computable
-        ? '此回合一致性由 computeIaaAlpha() 依實際標記結果即時推導。'
-        : '目前尚無足夠標記資料可計算一致性。',
-      noteEn: iaa.computable
-        ? 'This round\'s agreement is derived live from computeIaaAlpha() using the actual marks.'
-        : 'Not enough marked data yet to compute agreement.'
+      date: TASK_DATA.updatedAt ? String(TASK_DATA.updatedAt).slice(0, 10) : ''
     }];
-  }
-
-  /* issue #1120 (FR-010u (3)): "rounds used" counts completed history
-     only -- while the task is in dry_run_in_progress the latest round is
-     the active one and is listed separately, never accumulated. */
-  function getCompletedTrialRoundCount() {
-    var count = getTrialRounds().length;
-    return TASK_DATA.status === 'dry_run_in_progress' ? Math.max(count - 1, 0) : count;
   }
 
   function getCurrentTrialRound() {
@@ -5906,18 +5714,9 @@ function interpolate(template, payload) {
     return (round && round.iaaComputationStatus) || 'done';
   }
 
-  function getRoundOutcomeKey() {
-    var currentRound = getCurrentTrialRound();
-    if (!currentRound) return 'in_progress';
-    if (currentRound.result === 'passed') return 'passed';
-    if (currentRound.result === 'failed') return 'failed';
-    return 'in_progress';
-  }
-
   /* issue #489/#491: "publish trial round" simulator for the demo Publish
-     button. The narrative scaffolding (date / noteZh / noteEn) has no
-     computeIaaAlpha() equivalent and stays useful demo copy describing a
-     specific story beat, so it is kept verbatim. Only the NUMBERS
+     button. The scripted date has no computeIaaAlpha() equivalent
+     and is kept verbatim. Only the NUMBERS
      (agreement, result) are replaced -- and only when computeIaaAlpha()
      actually has real annotator data for this task (T014-T016; every other
      seed task has no seeded dry_run submissions, so computeIaaAlpha()
@@ -5931,26 +5730,20 @@ function interpolate(template, payload) {
         agreement: 0.68,
         std: 0.15,
         result: 'failed',
-        date: '2026-05-01',
-        noteZh: '第一回合在情緒界線案例分歧較大，未達正式啟動門檻。',
-        noteEn: 'Round 1 showed larger disagreement on borderline cases and did not pass.'
+        date: '2026-05-01'
       },
       {
         agreement: 0.81,
         std: 0.08,
         result: 'passed',
-        date: '2026-05-03',
-        noteZh: '第二回合調整說明後達標，可用剩餘樣本進入正式標記。',
-        noteEn: 'Round 2 passed after guideline refinement and unlocks the remaining pool for official work.'
+        date: '2026-05-03'
       }
     ];
     var scenario = scenarios[roundNumber - 1] || {
       agreement: Number(getPrimaryTargetAgreement() || 0.8),
       std: 0.08,
       result: 'passed',
-      date: '2026-05-05',
-      noteZh: '此回合已達標，可直接沿用剩餘樣本進入正式標記。',
-      noteEn: 'This round passed and the remaining sample pool is ready for official work.'
+      date: '2026-05-05'
     };
     var iaa = getPrimaryIaaResult();
     if (iaa.computable) {
@@ -6026,63 +5819,47 @@ function interpolate(template, payload) {
       return;
     }
 
-    rounds.forEach(function(round) {
-      var item = document.createElement('article');
-      item.className = 'round-timeline-item';
-      item.style.setProperty('--round-accent', getRoundColor(round.round));
-
-      var index = document.createElement('div');
-      index.className = 'round-timeline-index';
-      var dot = document.createElement('span');
-      dot.className = 'round-timeline-dot ' + (round.result === 'passed' ? 'passed' : round.result === 'failed' ? 'failed' : '');
-      dot.style.background = getRoundColor(round.round);
-      index.appendChild(dot);
-      var label = document.createElement('div');
-      label.className = 'round-timeline-label';
-      var roundName = document.createElement('strong');
-      roundName.className = 'round-timeline-round';
-      roundName.textContent = 'R' + round.round;
-      var date = document.createElement('span');
-      date.className = 'round-timeline-date';
-      date.textContent = round.date || '-';
-      label.appendChild(roundName);
-      label.appendChild(date);
-      index.appendChild(label);
-
-      var body = document.createElement('div');
-      body.className = 'round-timeline-body';
-      var metrics = document.createElement('div');
-      metrics.className = 'round-timeline-metrics';
-      [
-        interpolate(t('roundMetricSampleTpl'), { count: round.sampleCount }),
-        interpolate(t('roundMetricIaaTpl'), { value: formatIaaValue(round.agreement) }),
-        interpolate(t('roundMetricAnnotatorsTpl'), { count: round.annotators }),
-        interpolate(t('roundMetricStdTpl'), { value: Number(round.std || 0).toFixed(2) })
-      ].forEach(function(text) {
-        var chip = document.createElement('span');
-        chip.className = 'round-metric-chip';
-        chip.textContent = text;
-        metrics.appendChild(chip);
-      });
-      var note = document.createElement('p');
-      note.className = 'round-timeline-note';
-      note.textContent = state.lang === 'zh' ? (round.noteZh || '') : (round.noteEn || '');
-      body.appendChild(metrics);
-      body.appendChild(note);
-
-      var side = document.createElement('div');
-      side.className = 'round-timeline-side';
-      var badge = document.createElement('span');
-      var statusKey = round.result === 'passed' ? 'Passed' : round.result === 'failed' ? 'Failed' : 'InProgress';
-      badge.className = 'round-status-badge ' + (round.result === 'passed' ? 'passed' : round.result === 'failed' ? 'failed' : 'in-progress');
-      badge.textContent = t('roundStatus' + statusKey);
-      side.appendChild(badge);
-
-      item.appendChild(index);
-      item.appendChild(body);
-      item.appendChild(side);
-      mount.appendChild(item);
+    var table = document.createElement('table');
+    table.className = 'round-table';
+    table.setAttribute('data-testid', 'trial-round-table');
+    var headRow = document.createElement('tr');
+    ['roundColRound', 'roundColCount', 'roundColAnnotators', 'roundColIaa', 'roundColStd', 'roundColResult', 'roundColDate'].forEach(function(key) {
+      var th = document.createElement('th');
+      th.scope = 'col';
+      th.textContent = t(key);
+      headRow.appendChild(th);
     });
+    var thead = document.createElement('thead');
+    thead.appendChild(headRow);
+    table.appendChild(thead);
+    var tbody = document.createElement('tbody');
+    rounds.forEach(function(round) {
+      var row = document.createElement('tr');
+      row.className = 'round-timeline-item';
+      row.setAttribute('data-testid', 'trial-round-row');
+      var statusKey = round.result === 'passed' ? 'Passed' : round.result === 'failed' ? 'Failed' : 'InProgress';
+      var result = document.createElement('span');
+      result.className = 'round-status-badge ' + (round.result === 'passed' ? 'passed' : round.result === 'failed' ? 'failed' : 'in-progress');
+      result.setAttribute('data-testid', 'trial-round-result');
+      result.textContent = t('roundStatus' + statusKey);
+      [
+        'R' + round.round,
+        String(round.sampleCount),
+        String(round.annotators),
+        formatIaaValue(round.agreement),
+        Number(round.std || 0).toFixed(2),
+        result,
+        round.date || '-'
+      ].forEach(function(value) {
+        var td = document.createElement('td');
+        if (typeof value === 'string') td.textContent = value;
+        else td.appendChild(value);
+        row.appendChild(td);
+      });
+      tbody.appendChild(row);
+    });
+    table.appendChild(tbody);
+    mount.appendChild(table);
   }
 
 
@@ -6188,21 +5965,12 @@ function interpolate(template, payload) {
     var usedTrialCount = getUsedTrialSampleCount();
     var reserveCount = getOfficialPoolCount();
     var unitText = state.lang === 'zh' ? '筆' : ' items';
-    var splitSummaryText = interpolate(t('splitSummaryTpl'), {
-      total: TASK_DATA.datasetTotal + unitText,
-      sample: usedTrialCount + unitText,
-      reserve: reserveCount + unitText,
-    });
     var currentRound = getCurrentTrialRound();
     var taskStageKey = getTaskStageKey();
-    var roundOutcomeKey = getRoundOutcomeKey();
 
     setText('valueSamplingValueControl', interpolate(t('samplingValueCountTpl'), { value: TASK_DATA.samplingValue }));
-    setText('valueTrialRoundControl', currentRound ? 'R' + currentRound.round : '-');
-    setText('valueRoundOutcomeControl', t('roundOutcome' + (roundOutcomeKey === 'passed' ? 'Passed' : roundOutcomeKey === 'failed' ? 'Failed' : 'InProgress')));
     renderSamplingIaaSummaryList();
     setText('valueMinAnnotatorsControl', String(TASK_DATA.minAnnotators));
-    setText('valueSplitControl', splitSummaryText);
     setText('valueIsolationControl', TASK_DATA.isolationEnabled ? t('isolationOn') : t('isolationOff'));
     setText(
       'valueIsolationAuditControl',
@@ -6213,7 +5981,7 @@ function interpolate(template, payload) {
     );
 
     setText('trialRoundValue', currentRound ? 'R' + currentRound.round : '-');
-    setText('trialRoundsUsedValue', String(getCompletedTrialRoundCount()));
+    setText('trialUsedValue', usedTrialCount + ' / ' + TASK_DATA.datasetTotal);
     setText('targetAgreementValue', Number(getPrimaryTargetAgreement()).toFixed(2));
     /* issue #491: formatIaaValue() renders "cannot compute" instead of
        coercing null/undefined to 0 -- the exact bug this issue reports. */
@@ -6221,7 +5989,6 @@ function interpolate(template, payload) {
     setText('officialPoolValue', String(reserveCount));
     setText('roundHistoryTitle', t('roundHistoryTitle'));
     setText('roundHistoryHint', t('roundHistoryHint'));
-    setText('roundHistorySummary', interpolate(t('roundHistorySummaryTpl'), { used: usedTrialCount, total: TASK_DATA.datasetTotal }));
     if (taskStageKey === 'official') {
       setText('trialDecisionTitle', interpolate(t('roundDecisionTitleOfficialTpl'), { count: getOfficialRunCount() }));
       setText('trialDecisionDesc', t('roundDecisionDescOfficialTpl'));
@@ -6461,7 +6228,7 @@ function interpolate(template, payload) {
     var nextRound = getTrialRounds().length + 1;
 
     if (state.taskRole === 'reviewer') {
-      actionRow.innerHTML = '<button class="btn btn-cta" type="button" disabled title="' + t('reviewerHint') + '">' + t('dryRunDisabled') + '</button>';
+      actionRow.innerHTML = '<button class="btn btn-primary" type="button" disabled title="' + t('reviewerHint') + '">' + t('dryRunDisabled') + '</button>';
       return;
     }
 
@@ -6474,15 +6241,15 @@ function interpolate(template, payload) {
         ? '<span class="status-hint" id="publishMemberGapReason">' + t('toastPublishBlockedMembers') + draftGaps.join(t('memberGapJoiner')) + '</span>'
         : '';
       actionRow.innerHTML = draftPoolKey
-        ? '<button class="btn btn-cta" type="button" id="publishDryRunBtn" disabled aria-describedby="' + draftDescribedBy + '">' + t('publishDryRun') + ' R1</button>' + poolReasonHtml(draftPoolKey) + draftGapHtml
-        : '<button class="btn btn-cta" type="button" id="publishDryRunBtn">' + t('publishDryRun') + ' R1</button>';
+        ? '<button class="btn btn-primary" type="button" id="publishDryRunBtn" disabled aria-describedby="' + draftDescribedBy + '">' + t('publishDryRun') + ' R1</button>' + poolReasonHtml(draftPoolKey) + draftGapHtml
+        : '<button class="btn btn-primary" type="button" id="publishDryRunBtn">' + t('publishDryRun') + ' R1</button>';
       return;
     }
 
     if (TASK_DATA.status === 'dry_run_in_progress') {
       /* FR-013(1) / FR-008a: one visible reason per unmet condition; the fallback keeps the legacy hint. */
       var trialReasons = getDryRunCompletionBlockerMessages();
-      var trialHtml = '<button class="btn btn-cta" type="button" id="publishDryRunBtn" disabled' + (trialReasons.length ? ' aria-describedby="publishDryRunReasons"' : '') + '>' + t('publishDryRun') + ' R' + nextRound + '</button>' +
+      var trialHtml = '<button class="btn btn-primary" type="button" id="publishDryRunBtn" disabled' + (trialReasons.length ? ' aria-describedby="publishDryRunReasons"' : '') + '>' + t('publishDryRun') + ' R' + nextRound + '</button>' +
         '<span class="status-hint">' + t('dryRunNextRoundReason') + '</span>' +
         (trialReasons.length
           ? '<ul class="status-hint" id="publishDryRunReasons">' + trialReasons.map(function(reason) { return '<li>' + reason + '</li>'; }).join('') + '</ul>'
@@ -6510,13 +6277,13 @@ function interpolate(template, payload) {
         actionRow.innerHTML =
           '<button class="btn btn-primary" type="button" id="publishOfficialRunBtn" disabled' + officialPoolAttr + '>' + t('publishOfficialRun') + '</button>' +
           '<span class="status-hint">' + t(isPending ? 'iaaComputationPendingOfficialReason' : 'iaaComputationFailedReason') + '</span>' + officialPoolHint +
-          '<button class="btn btn-cta" type="button" id="publishDryRunBtn" disabled>' + t('publishDryRun') + ' R' + nextRound + '</button>' +
+          '<button class="btn btn-secondary" type="button" id="publishDryRunBtn" disabled>' + t('publishDryRun') + ' R' + nextRound + '</button>' +
           '<span class="status-hint">' + t(isPending ? 'iaaComputationPendingDryRunReason' : 'iaaComputationFailedReason') + '</span>' +
           (isPending ? '' : '<button class="btn btn-secondary" type="button" id="retryIaaComputationBtn">' + t('retryIaaComputation') + '</button>');
         return;
       }
       actionRow.innerHTML = '<button class="btn btn-primary" type="button" id="publishOfficialRunBtn"' + (officialPoolKey ? ' disabled' : '') + officialPoolAttr + '>' + t('publishOfficialRun') + '</button>' + officialPoolHint +
-        '<button class="btn btn-cta" type="button" id="publishDryRunBtn">' + t('publishDryRun') + ' R' + nextRound + '</button>';
+        '<button class="btn btn-secondary" type="button" id="publishDryRunBtn">' + t('publishDryRun') + ' R' + nextRound + '</button>';
       return;
     }
 
@@ -11082,8 +10849,6 @@ function getTaskTypeLabel() {
       result: null,
       usedSamples: Number(TASK_DATA.samplingValue) || 0,
       date: scenario.date,
-      noteZh: scenario.noteZh,
-      noteEn: scenario.noteEn,
       priorRoundFindings: revisionNote ? revisionNote.priorRoundFindings : null,
       guidelineChangeSummary: revisionNote ? revisionNote.guidelineChangeSummary : null,
       noChangeReason: revisionNote ? revisionNote.noChangeReason : null

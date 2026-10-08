@@ -33,8 +33,11 @@ test.describe('Publish actions are keyboard-operable (A11Y-03)', () => {
     await page.keyboard.press('Enter');
 
     await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(1);
-    // FR-010u (3): the just-published R1 is still active, so it is not a completed round.
-    await expect(page.locator('#trialRoundsUsedValue')).toHaveText('0');
+    // FR-010u (3) / FR-027(2): the overview no longer has a 已完成試標回合 metric; the
+    // just-published R1 is still active, so the round table shows it as 進行中 and no
+    // row is a completed (passed/failed) round.
+    await expect(page.locator('#trialRoundTimeline .round-timeline-item').first()).toContainText('進行中');
+    await expect(page.locator('#trialRoundTimeline .round-timeline-item').filter({ hasNotText: '進行中' })).toHaveCount(0);
   });
 
   test('Space on the focused 開始正式標記 button starts the official run', async ({ page }) => {

@@ -540,9 +540,9 @@ test('XROLE-09: IAA gate banner is readable and the project leader can proceed o
   // round from status alone when trialRounds is empty and
   // status === 'waiting_iaa_confirmation' -- no numeric IAA validation is
   // asserted here, per this suite's minimal-gate scope.
-  await expect(plPage.locator('.exec-stage-banner #trialDecisionTitle')).toBeVisible();
-  await expect(plPage.locator('.exec-stage-banner #trialDecisionTitle')).not.toBeEmpty();
-  await expect(plPage.locator('.exec-stage-banner #trialDecisionDesc')).not.toBeEmpty();
+  await expect(plPage.locator('#trialDecisionTitle')).toBeVisible();
+  await expect(plPage.locator('#trialDecisionTitle')).not.toBeEmpty();
+  await expect(plPage.locator('#trialDecisionDesc')).not.toBeEmpty();
 
   // Proceed affordance (not clicked -- moving into official_run is PR-B2
   // scope) and return affordance both exist from this gate state.
@@ -712,7 +712,7 @@ test('XROLE-10: project leader publishes the official run and the assigned annot
    * records: the two numbers come from unrelated sources (sampling math vs
    * the run_type-scoped seed) and the prototype has no bridge between them.
    * Asserting 4 pins that decoupling honestly instead of papering over it. */
-  await expect(plPage.locator('.exec-stage-banner #trialDecisionTitle')).toHaveText('正式標記進行中，共 4 筆');
+  await expect(plPage.locator('#trialDecisionTitle')).toHaveText('正式標記進行中，共 4 筆');
 
   /* Checkpoint C, annotator side: w4 assumed "3 筆剩餘資料已分配" as 1
    * record per annotator, but no per-annotator assignment concept exists in

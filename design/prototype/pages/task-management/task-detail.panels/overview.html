@@ -1,12 +1,12 @@
 <div id="overviewPanel" class="hidden" aria-live="polite">
-  <!-- ② 執行控制面板 -->
+  <!-- FR-027: stepper, verdict box, four metric cards, sample split, stop conditions + CTA, trial-round table (top to bottom) -->
   <section class="panel" aria-labelledby="executionTitle">
     <div class="panel-head-row">
       <h2 class="panel-title" id="executionTitle">任務狀態與執行控制</h2>
     </div>
 
-    <!-- 狀態步驟流程器 -->
     <div id="runControlExecutionPanel">
+      <!-- Flow stepper: illustration only (SC-019) -->
       <div class="status-stepper-wrap" aria-hidden="true">
         <div class="status-stepper" id="statusStepper">
           <div class="step" data-step="draft">
@@ -40,21 +40,22 @@
         </div>
       </div>
 
-      <div class="exec-round-grid">
-        <div class="exec-round-item">
-          <span class="exec-round-key" id="trialRoundLabel">目前回合</span>
+      <!-- Exactly four metrics -->
+      <div class="exec-round-grid" data-testid="overview-metrics">
+        <div class="exec-round-item" data-testid="overview-metric">
+          <span class="exec-round-key" id="trialRoundLabel" data-testid="overview-metric-label">目前回合</span>
           <strong class="exec-round-value" id="trialRoundValue">R2</strong>
         </div>
-        <div class="exec-round-item">
-          <span class="exec-round-key" id="trialRoundsUsedLabel">已完成試標回合</span>
-          <strong class="exec-round-value" id="trialRoundsUsedValue">2</strong>
-        </div>
-        <div class="exec-round-item">
-          <span class="exec-round-key" id="currentAgreementLabel">最新回合 IAA</span>
+        <div class="exec-round-item" data-testid="overview-metric">
+          <span class="exec-round-key" id="currentAgreementLabel" data-testid="overview-metric-label">最新 IAA</span>
           <strong class="exec-round-value" id="currentAgreementValue">0.81</strong>
         </div>
-        <div class="exec-round-item">
-          <span class="exec-round-key" id="officialPoolLabel">正式標記池</span>
+        <div class="exec-round-item" data-testid="overview-metric">
+          <span class="exec-round-key" id="trialUsedLabel" data-testid="overview-metric-label">已用試標</span>
+          <strong class="exec-round-value" id="trialUsedValue">20 / 100</strong>
+        </div>
+        <div class="exec-round-item" data-testid="overview-metric">
+          <span class="exec-round-key" id="officialPoolLabel" data-testid="overview-metric-label">正式標記池</span>
           <strong class="exec-round-value" id="officialPoolValue">80</strong>
         </div>
       </div>
@@ -96,7 +97,6 @@
             <h3 class="sub-panel-title" id="roundHistoryTitle">試標回合歷程</h3>
             <p class="status-hint" id="roundHistoryHint">每個回合使用新的抽樣樣本；通過的回合會解鎖正式標記。</p>
           </div>
-          <span class="round-history-summary" id="roundHistorySummary">已用 20 / 100 筆試標</span>
         </div>
         <div class="round-timeline" id="trialRoundTimeline"></div>
       </section>

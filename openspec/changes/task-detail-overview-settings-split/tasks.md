@@ -38,18 +38,20 @@
 
 ## 3. G3 概覽重排
 
-**故事目標**：SC-019 — 概覽分頁 1440×900 首屏可見判定列與 `btn-primary` CTA、四欄數字列不含「已完成試標回合」、七欄試標回合表，且抽樣設定檢視不再重複概覽資訊（FR-027、FR-026 (4)）。
+**故事目標**：SC-019 — 概覽分頁沿用原區塊樣式，達標條件列右側為唯一 `btn-primary`（`--color-cta`）CTA、四張數字卡不含「已完成試標回合」、七欄試標回合表，且抽樣設定檢視不再重複概覽資訊（FR-027、FR-026 (4)）。
 
-> 預期產品檔案：`task-detail.panels/overview.html`（判定列、數字列、樣本分配、回合表、stepper 去裝飾）、`task-detail.html`（render 與 i18n 鍵）。
+> 預期產品檔案：`task-detail.panels/overview.html`（判定框、數字卡、樣本分配、達標條件與 CTA、回合表，沿用原樣式）、`task-detail.html`（render 與 i18n 鍵）。
 
-- [ ] 3.1 以 `design/prototype/tests/task-management/task-detail-overview-layout.spec.ts` 建立 Red 測試：1440×900 首屏可見判定列與 CTA 且 CTA 背景為 `--color-primary`；數字列僅四欄、無「已完成試標回合」；試標回合表七欄、結果欄文字色；`draft` 無回合列；抽樣設定檢視無「試標回合」「目前判定」「已用試標 / 可進正式」三列；`reviewer` 的執行按鈕 disabled 並附 tooltip；深色模式 CTA 與文字對比可讀。commit 並記錄預期失敗輸出。[@senior-qa]
-- [ ] 3.2 於 `design/prototype/tests/inventory.csv` 以同一 commit 新增 3.1 對應列（LF only），並核對 npx playwright test --list task-detail-overview-layout.spec.ts 的案例數。[@senior-qa]
-- [ ] 3.3 修改 `design/prototype/pages/task-management/task-detail.panels/overview.html`：重排為判定列、四欄數字列、樣本分配、試標回合表與去裝飾 stepper，移除彩色框與 pill。[@senior-frontend]
-- [ ] 3.4 修改 `design/prototype/pages/task-management/task-detail.html`：回合表渲染、移除抽樣設定檢視的三列、補 i18n 鍵與 `btn-primary` CTA 接線，使 3.1 的案例轉為 Green 並保持 FR-010p 配色與 issue #198 防連點行為不回歸。[@senior-frontend]
-- [ ] 3.5 更新既有 `design/prototype/tests/task-management/task-detail-stage-flow.spec.ts` 等因版面重排而失效的斷言，不弱化斷言，並於 commit message 說明取代關係。[@senior-qa]
-- [ ] 3.6 執行：同一 commit 內以 `node scripts/gen-screen-inventory.mjs` 重新產生 `design/system/screen-inventory.md`（若有內容異動）。[@senior-frontend]
-- [ ] 3.7 執行：Gate 1／Gate 2 與 Gate 3 同 2.8 之命令；預期全數 exit 0。[@main]
-- [ ] 3.8 派未參與實作之 `senior-code-reviewer` 獨立審查，對照 FR-027、SC-019 與 issue #1199 的 C、E 兩節逐項核對（無 pill、無彩色框、綠色僅用於結果文字、只用 token），結論原文貼進檢查點留言；PR 以 `Part of #1199` 開啟。[@senior-code-reviewer]
+- [x] 3.1 以 `design/prototype/tests/task-management/task-detail-overview-layout.spec.ts` 建立 Red 測試：1440×900 首屏可見判定列與 CTA 且 CTA 背景為 `--color-primary`；數字列僅四欄、無「已完成試標回合」；試標回合表七欄、結果欄文字色；`draft` 無回合列；抽樣設定檢視無「試標回合」「目前判定」「已用試標 / 可進正式」三列；`reviewer` 的執行按鈕 disabled 並附 tooltip；深色模式 CTA 與文字對比可讀。commit 並記錄預期失敗輸出。[@senior-qa]
+- [x] 3.2 於 `design/prototype/tests/inventory.csv` 以同一 commit 新增 3.1 對應列（LF only），並核對 npx playwright test --list task-detail-overview-layout.spec.ts 的案例數。[@senior-qa]
+- [x] 3.3 修改 `design/prototype/pages/task-management/task-detail.panels/overview.html`：重排為判定列、四欄數字列、樣本分配、試標回合表與去裝飾 stepper，移除彩色框與 pill。[@senior-frontend]
+- [x] 3.4 修改 `design/prototype/pages/task-management/task-detail.html`：回合表渲染、移除抽樣設定檢視的三列、補 i18n 鍵與 `btn-primary` CTA 接線，使 3.1 的案例轉為 Green 並保持 FR-010p 配色與 issue #198 防連點行為不回歸。[@senior-frontend]
+- [x] 3.4a 依 2026-10-08 外觀還原裁定，改寫 `task-detail-overview-layout.spec.ts` 中與新版視覺綁定的斷言（CTA 改斷言 `--color-cta` 且與達標條件同列、移除首屏與 1px／無 pill 斷言），並 commit 其預期失敗。[@senior-qa]
+- [x] 3.4b 將 `task-detail.panels/overview.html` 的版面與其所用樣式還原為原區塊樣式（白卡片、圓點 stepper、判定框、數字卡、圖例 chip、達標條件 pill＋右側 CTA），維持 FR-027 內容，使 3.4a 轉綠。[@senior-frontend]
+- [x] 3.5 更新既有 `design/prototype/tests/task-management/task-detail-stage-flow.spec.ts` 等因版面重排而失效的斷言，不弱化斷言，並於 commit message 說明取代關係。[@senior-qa]
+- [x] 3.6 執行：同一 commit 內以 `node scripts/gen-screen-inventory.mjs` 重新產生 `design/system/screen-inventory.md`（若有內容異動）。[@senior-frontend]
+- [x] 3.7 執行：Gate 1／Gate 2 與 Gate 3 同 2.8 之命令；預期全數 exit 0。[@main]
+- [x] 3.8 派未參與實作之 `senior-code-reviewer` 獨立審查，對照 FR-027、SC-019 與 issue #1199 的 C、E 兩節（含 2026-10-08 外觀還原裁定）逐項核對（沿用原區塊樣式、單一主要 CTA、只用 token），結論原文貼進檢查點留言；PR 以 `Part of #1199` 開啟。[@senior-code-reviewer]
 
 ## 4. G4 Code 套用按鈕、Source-Verify 與回寫
 
