@@ -438,7 +438,7 @@ test('NoteCraft CI runs account, dataset and task/run schema regressions', () =>
   }
 });
 
-test('realDictionaryAndNoteCraftProjectIdempotencyRecordWithNineColumnsAndActorFk', () => {
+test('realDictionaryAndNoteCraftProjectSharedIdempotencyRecordWithNineColumnsAndActorFk', () => {
   const markdown = readFileSync(new URL('../../docs/diagrams/architecture/account-admin-db-schema.md', import.meta.url), 'utf8');
   const source = parseAccountAdminSchema(markdown);
   const data = JSON.parse(readFileSync(new URL('../../docs/diagrams/architecture/database-schema.er.json', import.meta.url), 'utf8'));
@@ -447,40 +447,40 @@ test('realDictionaryAndNoteCraftProjectIdempotencyRecordWithNineColumnsAndActorF
     ['scope', 'varchar(64)', false, false],
     ['actor_user_id', 'uuid', false, false],
     ['idempotency_key', 'varchar(120)', false, false],
-    ['request_digest', 'varchar(64)', false, false],
+    ['request_digest', 'char(64)', false, false],
     ['result_resource_type', 'varchar(64)', false, false],
     ['result_resource_id', 'uuid', false, false],
     ['created_at', 'timestamptz', false, false],
     ['expires_at', 'timestamptz', false, false],
   ];
 
-  const sourceTable = source.tables.find((table) => table.name === 'idempotency_record');
-  assert.ok(sourceTable, 'Missing dictionary table: idempotency_record');
+  const sourceTable = source.tables.find((table) => table.name === 'shared_idempotency_record');
+  assert.ok(sourceTable, 'Missing dictionary table: shared_idempotency_record');
   assert.deepEqual(sourceTable.columns.map((column) => [column.name, column.type, column.nullable, Boolean(column.pk)]), expected);
   assert.equal(sourceTable.columns.find((column) => column.name === 'actor_user_id').fk, 'users');
   assert.equal(sourceTable.columns.filter((column) => column.fk).length, 1);
 
-  const projected = data.tables.find((table) => table.name === 'idempotency_record');
-  assert.ok(projected, 'Missing NoteCraft table: idempotency_record');
+  const projected = data.tables.find((table) => table.name === 'shared_idempotency_record');
+  assert.ok(projected, 'Missing NoteCraft table: shared_idempotency_record');
   assert.equal(projected.group, 'admin');
   assert.equal(projected.section, '3.10');
   assert.deepEqual(projected.columns.map((column) => [column.name, column.type, Boolean(column.pk)]),
     expected.map(([name, type, , pk]) => [name, type, pk]));
   assert.ok(projected.columns.every((column) => column.required === 'required' || column.required === 'system'),
-    'Every idempotency_record column is non-null');
+    'Every shared_idempotency_record column is non-null');
   assert.equal(projected.columns.find((column) => column.name === 'actor_user_id').fk, 'users');
   assert.match(projected.description, /候選/);
   assert.match(projected.description, /尚未/);
 
   const names = data.tables.map((table) => table.name);
-  assert.equal(names.indexOf('idempotency_record'), names.indexOf('admin_role_permission_version') + 1,
-    'idempotency_record is the last admin table, right after admin_role_permission_version');
+  assert.equal(names.indexOf('shared_idempotency_record'), names.indexOf('admin_role_permission_version') + 1,
+    'shared_idempotency_record is the last admin table, right after admin_role_permission_version');
   assert.deepEqual(validateWithTaskParents(source, data), []);
 });
 
 test('accountAdminDictionaryDocumentsIdempotencyUniqueRuleAndCitations', () => {
   const markdown = readFileSync(new URL('../../docs/diagrams/architecture/account-admin-db-schema.md', import.meta.url), 'utf8');
-  assert.match(markdown, /### 3\.10 idempotency_record/);
+  assert.match(markdown, /### 3\.10 shared_idempotency_record/);
   const rules = markdown.split(/^## 4\. /m)[1];
   assert.ok(rules, 'Missing dictionary section 4');
   const line = rules.split('\n').find((entry) => /UNIQUE\s*\(\s*scope,\s*actor_user_id,\s*idempotency_key\s*\)/.test(entry));
