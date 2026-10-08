@@ -552,5 +552,10 @@ else
         [ -n "$suite" ] || continue
         grep -Fxq "$suite" "$ci_covered" || add_error CI_JOB_PARITY "scripts/$suite" "script is not declared in $ci_registry; add its CI job, or an exemption row stating why it is not a gate"
     done < <(ls -1 "$repo_root/scripts" 2>/dev/null | grep -E '[.](sh|mjs)$' | LC_ALL=C sort)
+    # Issue #1222: every `node --test` command in CI must appear verbatim in CLAUDE.md,
+    # so a test file added to one list cannot silently miss the other.
+    while IFS= read -r node_test; do
+        grep -Fxq "$node_test" "$ci_section" || add_error CI_JOB_PARITY "$ci_workflow" "node --test command in CI is absent from the CLAUDE.md Verification Commands block: $node_test"
+    done < <(sed -E 's/^[[:space:]]*(-[[:space:]]+run:[[:space:]]*)?//' "$repo_root/$ci_workflow" | grep -E '^node --test' || :)
 fi
 finish
