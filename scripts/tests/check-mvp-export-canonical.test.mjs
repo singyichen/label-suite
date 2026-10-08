@@ -63,6 +63,33 @@ test('one export may select Dry and Official runs in manifest order', () => {
     'Each selected run must keep its own membership and output position');
 });
 
+test('mixed-stage conditions snapshot records each run stage without a false scalar stage', () => {
+  const snapshot = contractLine('FR-010i-2');
+  assert.match(snapshot, /runs\[\]\.run_stage/,
+    'Each selected run must carry its own Dry or Official stage in the snapshot');
+  assert.match(snapshot, /(?:混合|同時[^。；]*?(?:試標|Dry Run)[^。；]*?(?:正式標記|Official Run))[^。；]*?run_stage[^。；]*?(?:all|省略|不填)|run_stage[^。；]*?(?:all|省略|不填)[^。；]*?混合/i,
+    'A mixed-stage export must use all or omit scalar run_stage instead of claiming one stage');
+});
+
+test('export idempotency key is requester-scoped and hashes a stable canonical command', () => {
+  const contract = `${contractLine('FR-009a')} ${contractLine('FR-010i-2')}`;
+  assert.match(contract, /(?:冪等(?:鍵|識別)|idempotency)[^。；]*?(?:task_id|任務)[^。；]*?(?:requester|請求者|請求人|requested_by)/i,
+    'The same client key must be scoped by task and requester');
+  assert.match(contract, /(?:canonical|正規化)[^。；]*?(?:command|命令)[^。；]*?(?:digest|雜湊|摘要)|(?:digest|雜湊|摘要)[^。；]*?(?:canonical|正規化)[^。；]*?(?:command|命令)/i,
+    'Retries must compare a digest of the canonical request command');
+  for (const field of [
+    /task_id|任務/, /requester|請求者|請求人|requested_by/i,
+    /export_format|格式/, /export_format_version|格式版本/,
+    /(?:有序|順序|排序)[^。；]*?run_id|run_id[^。；]*?(?:有序|順序|排序)/i,
+    /filters?|篩選/i, /language|語言/i,
+    /(?:tagging_scheme|token_unit|序列)[^。；]*?(?:tokenizer|切詞)|(?:tokenizer|切詞)[^。；]*?(?:tagging_scheme|token_unit|序列)/i,
+  ]) assert.match(contract, field, `Canonical command lacks ${field}`);
+  assert.match(contract, /(?:排除|不含|不納入)[^。；]*?(?:生成|產生)[^。；]*?(?:時間|timestamp)/i,
+    'Generated timestamps must not change the idempotency digest');
+  assert.match(contract, /(?:排除|不含|不納入)[^。；]*?(?:產物|artifact|檔案)(?:資料|bytes|內容)?/i,
+    'Generated artifact data must not change the idempotency digest');
+});
+
 test('JSON-MIN v2 uses a versioned envelope even for zero result rows', () => {
   const shape = constantLine('EXPORT_JSON_MIN_SHAPE');
   const exportRule = contractLine('FR-015h');
