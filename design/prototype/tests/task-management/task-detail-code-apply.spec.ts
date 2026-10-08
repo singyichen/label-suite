@@ -119,7 +119,8 @@ test.describe('task-detail Code 套用 (FR-026 (3))', () => {
     await page.locator('#settingsSaveBtn').click();
 
     await expect(page.locator('#settingsEditForm')).not.toHaveClass(/hidden/);
-    await expect(page.locator('#toastMsg')).toContainText('請先套用');
+    await expect(page.locator('#settingsEditError')).toBeVisible();
+    await expect(page.locator('#settingsEditError')).toContainText('請先套用');
     await expect(page.locator('#settingsConfigView')).not.toContainText('excellent');
   });
 
