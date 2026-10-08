@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 
 import * as checker from '../check-database-schema.mjs';
@@ -276,4 +277,62 @@ test('Mermaid quoted FK pending note does not declare a foreign key', () => {
   const source = checker.parseDatasetSchema(noteOnly);
   assert.equal(source.tables.find((table) => table.name === 'dataset').columns
     .find((column) => column.name === 'name').fk, undefined);
+});
+
+// Issue #1217: draft manifest correction is limited to public -> protected.
+const readCanonical = (path) => readFileSync(new URL(path, import.meta.url), 'utf8');
+const datasetSpec = readCanonical('../../specs/dataset/021-dataset-ingestion-and-lineage/spec.md');
+const datasetSchemaDoc = readCanonical('../../docs/diagrams/architecture/dataset-db-schema.md');
+
+function specLine(source, id) {
+  const result = source.split('\n').find((candidate) =>
+    new RegExp(`^(?:- |\\d+\\. )\\*\\*${id}\\*\\*`).test(candidate));
+  assert.ok(result, `Missing current ${id} contract`);
+  return result;
+}
+
+function tableRow(source, firstCell) {
+  const result = source.split('\n').find((candidate) => candidate.startsWith(`| ${firstCell} |`));
+  assert.ok(result, `Missing table row ${firstCell}`);
+  return result;
+}
+
+test('dataset-021 FR-006 limits draft manifest correction to public-to-protected', () => {
+  const rule = specLine(datasetSpec, 'FR-006');
+  assert.match(rule, /公開改(?:為)?受保護/);
+  assert.match(rule, /重新上傳/);
+  assert.match(rule, /串流匯入器/);
+  assert.doesNotMatch(rule, /draft 修正 manifest 須原子重建/);
+});
+
+test('dataset-021 AC-2.6 covers the direction limit and re-upload', () => {
+  const ac = specLine(datasetSpec, 'AC-2\\.6');
+  assert.match(ac, /公開改(?:為)?受保護/);
+  assert.match(ac, /重新上傳/);
+});
+
+test('dataset-021 is versioned 1.2.0 with a Changelog row citing #1217', () => {
+  assert.match(datasetSpec, /^版本: 1\.2\.0$/m);
+  const row = datasetSpec.split('\n').find((candidate) => candidate.startsWith('| 1.2.0 |'));
+  assert.ok(row, 'Missing 1.2.0 Changelog row');
+  assert.match(row, /#1217/);
+  assert.match(row, /維護者\s*裁決/);
+});
+
+test('dataset schema doc B-04 states the direction limit and re-upload', () => {
+  const row = tableRow(datasetSchemaDoc, 'B-04');
+  assert.match(row, /公開改(?:為)?受保護/);
+  assert.match(row, /重新上傳/);
+  assert.doesNotMatch(row, /draft 修正時原子重建受影響的 public\/private 列/);
+});
+
+test('dataset schema doc S-01 keeps scoring-worker-only reads and forbids manifest correction reads', () => {
+  const row = tableRow(datasetSchemaDoc, 'S-01');
+  assert.match(row, /儲存後任何含答案內容只允許授權 scoring-worker 路徑讀取/);
+  assert.match(row, /不讀取已儲存/);
+});
+
+test('dataset schema doc classification_manifest row no longer claims unconditional rebuild', () => {
+  const row = tableRow(datasetSchemaDoc, '`classification_manifest`');
+  assert.doesNotMatch(row, /draft 修正後重建投影/);
 });
