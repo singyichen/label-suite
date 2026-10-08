@@ -501,8 +501,8 @@ test('task_membership.membership_status and cycle close_reason have documented C
   const membership = constraintRows().find((line) => /^\| [A-Z]-\d+ \|/.test(line)
     && line.includes('membership_status') && /CHECK/i.test(line));
   assert.ok(membership, 'A rule must document the membership_status CHECK');
-  assert.ok(membership.includes('active') && membership.includes('disabled'),
-    'membership_status domain is active and disabled (014 FR-005l / prototype)');
+  assert.ok(membership.includes('invited') && membership.includes('active') && membership.includes('disabled'),
+    'membership_status domain is invited, active and disabled (014 FR-005e / FR-005l / prototype)');
   const closed = constraintRows().find((line) => /^\| Y-\d+ \|/.test(line)
     && line.includes('close_reason') && /CHECK/i.test(line) && /(?:值域|IN\s*\()/.test(line));
   assert.ok(closed, 'A Y-rule must document the close_reason CHECK value domain');
@@ -533,4 +533,96 @@ test('NoteCraft task/run tables with composite FKs disclose that composite keys 
     assert.match(description, /複合[^。\n]*(?:不畫|未畫|不繪|未繪|不會畫|不會繪)[^。\n]*§4/,
       `${name} description must say composite keys/FKs are not drawn and point to dictionary §4`);
   }
+});
+
+// Issue #1242: maintainer rulings (2026-10-08) close the task/run pending decisions.
+const adrText = (name) => read(`../../docs/adr/${name}`);
+const adr022 = () => adrText('022-task-state-machine-location.md');
+const dictionaryItem = (prefix) => {
+  const item = taskRunMarkdown().split('\n').find((line) => line.startsWith(prefix));
+  assert.ok(item, `Missing section 7 item ${prefix}`);
+  return item;
+};
+const unresolvedWording = /候選|待 ADR-022/;
+const decidedWording = /已定案|ADR-022[^|]*(?:Amendment|增補)/;
+
+test('ADR-022 header and Amendment record that completed keeps the final closed cycle pointer (#1242)', () => {
+  const text = adr022();
+  const header = text.split('\n').find((line) => line.startsWith('**Amended**: 2026-10-08') && line.includes('#1242'));
+  assert.ok(header, 'ADR-022 needs its own **Amended**: 2026-10-08 header line citing issue #1242');
+  const section = text.split('\n### Amendment (2026-10-08, issue #1242)')[1]?.split('\n### ')[0];
+  assert.ok(section, 'ADR-022 needs an "### Amendment (2026-10-08, issue #1242)" section');
+  assert.ok(section.includes('official_run_in_progress → completed'));
+  assert.match(section, /close_reason\s*=\s*`?completed`?/);
+  assert.ok(section.includes('task.current_run_cycle_id'));
+  assert.match(section, /final[^.\n]*closed[^.\n]*cycle|final[^.\n]*cycle/i,
+    'The pointer must keep pointing at the final closed cycle');
+});
+
+test('task/run T-04, current_run_cycle_id row and NoteCraft note record the retention rule as decided (#1242)', () => {
+  const t04 = constraintRule('T-04');
+  const row = taskRunMarkdown().split('\n').find((line) => line.startsWith('| `current_run_cycle_id`'));
+  const note = erTable('task').columns.find((column) => column.name === 'current_run_cycle_id')?.note ?? '';
+  for (const [label, text] of [['T-04', t04], ['dictionary row', row ?? ''], ['NoteCraft note', note]]) {
+    assert.ok(text, `${label} is required`);
+    assert.doesNotMatch(text, unresolvedWording, `${label} must not call the retention rule a candidate`);
+    assert.match(text, decidedWording, `${label} must cite the decided ADR-022 retention rule`);
+  }
+});
+
+test('Y-05 lands the rejection free text in the task.iaa_rejected audit summary, not a column (#1242)', () => {
+  const rule = constraintRule('Y-05');
+  assert.ok(rule, 'Y-05 is required');
+  assert.doesNotMatch(rule, unresolvedWording, 'Y-05 must not keep candidate or pending wording');
+  assert.match(rule, decidedWording);
+  assert.ok(rule.includes('task.iaa_rejected'), 'Y-05 must name the task.iaa_rejected audit event');
+  assert.ok(rule.includes('ADR-032'), 'Y-05 must cite ADR-032');
+  assert.match(rule, /不新增欄位|不另設欄位|不存於(?:任何)?欄位|不記於此欄/,
+    'Y-05 must say the free text is not stored in a column');
+  assert.match(rule, /A-08[^|]*task\.status_changed[^|]*(?:只|僅)|(?:只|僅)[^|]*task\.status_changed[^|]*A-08/,
+    'A-08 code-only restriction must be scoped to task.status_changed only');
+});
+
+test('task/run section 7 item 6 marks both (a) and (b) as decided (#1242)', () => {
+  const item = dictionaryItem('6. **cycle 結案語意');
+  assert.doesNotMatch(item, /待決|候選|待 ADR-022|落點待/, 'Item 6 must carry no pending wording');
+  assert.match(item, /（a）[^（]*已定案/, 'Item 6(a) must be marked 已定案');
+  assert.match(item, /（b）[\s\S]*已定案/, 'Item 6(b) must be marked 已定案');
+});
+
+test('membership_status persists invited across M-03, dictionary row, NoteCraft note and section 7 (#1242)', () => {
+  const m03 = constraintRule('M-03');
+  assert.ok(m03, 'M-03 is required');
+  assert.ok(compact(m03).includes("IN('invited','active','disabled')"),
+    "M-03 CHECK domain must be IN ('invited','active','disabled')");
+  assert.ok(!compact(m03).includes("IN('active','disabled')"), 'M-03 must drop the two-value domain');
+  assert.match(m03, /(?:不可|不得)(?:被)?指派/, 'invited members cannot be assigned');
+  assert.match(m03, /(?:不可|不得)提交/, 'invited members cannot submit');
+  assert.match(m03, /(?:只能|僅能|只可)移除/, 'invited members can only be removed');
+  assert.match(m03, /帳號啟用[^|]*active|active[^|]*帳號啟用/, 'Account activation moves invited to active');
+  assert.match(m03, /不在[^|]*account\s*規格/, 'Account-creation path is out of scope pending account specs');
+  const row = taskRunMarkdown().split('\n').find((line) => line.startsWith('| `membership_status`'));
+  assert.ok(row?.includes('invited'), 'membership_status dictionary row must list invited');
+  const note = erTable('task_membership').columns.find((column) => column.name === 'membership_status')?.note ?? '';
+  assert.ok(note.includes('invited'), 'NoteCraft membership_status note must list invited');
+  const item = dictionaryItem('7. **成員');
+  assert.match(item, /已定案/, 'Section 7 item 7 must be decided');
+  assert.match(item, /持久化/, 'Section 7 item 7 must state invited is persisted');
+  assert.doesNotMatch(item, /暫不含/, 'Section 7 item 7 must drop the provisional domain wording');
+});
+
+test('ADR-038 open items cite #1244 and the iaa_rejected free text is in anonymization scope (#1242)', () => {
+  const text = adrText('038-data-retention-deletion-anonymization.md');
+  assert.ok(!text.includes('TBD (#1224)'), 'ADR-038 must not keep TBD (#1224)');
+  assert.ok(!text.includes('待定（#1224）'), 'ADR-038 must not keep 待定（#1224）');
+  assert.doesNotMatch(text, /TBD(?!\s*\(#1244\))/, 'Every remaining TBD must cite #1244');
+  const open = text.split('## Open items')[1]?.split('\n## ')[0] ?? '';
+  const bullets = open.split('\n').filter((line) => line.startsWith('- '));
+  assert.ok(bullets.length > 0, 'ADR-038 Open items are required');
+  for (const bullet of bullets) assert.ok(bullet.includes('#1244'), `Open item must cite #1244: ${bullet}`);
+  assert.ok(text.includes('task.iaa_rejected'), 'ADR-038 must scope the task.iaa_rejected rejection text');
+});
+
+test('table inventory no longer pins the 014 v8.0.1 version (#1242)', () => {
+  assert.ok(!inventory().includes('014 v8.0.1'), 'Inventory must not pin 014 v8.0.1');
 });
