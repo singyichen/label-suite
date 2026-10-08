@@ -119,4 +119,56 @@ test.describe('task-detail header and six-tab bar (FR-003, FR-025, SC-019)', () 
     await expect(tab('標記進度')).toBeFocused();
     await expect(tab('標記進度')).toHaveAttribute('aria-selected', 'true');
   });
+
+  /* FR-025 / SC-019: the header status carries the trial round and derives it from
+   * the same current-round source as the overview (getCurrentTrialRound ->
+   * #trialRoundValue "R{n}", trialDecisionTitle "R{n} ..."). */
+  // T001 shows R1; T016 seeds R1 failed + R2 so the overview shows R2 (SC-019 scenario).
+  const TRIAL_CASES = [
+    { taskId: 'T001', status: 'dry_run_in_progress', round: '1' },
+    { taskId: 'T001', status: 'waiting_iaa_confirmation', round: '1' },
+    { taskId: 'T016', status: 'dry_run_in_progress', round: '2' },
+    { taskId: 'T016', status: 'waiting_iaa_confirmation', round: '2' },
+  ];
+  for (const { taskId, status, round } of TRIAL_CASES) {
+    test(`trial-stage header status includes the round shown by the overview (${taskId} ${status})`, async ({ page }) => {
+      await openDetail(page, `task_id=${taskId}&status=${status}`);
+      const shown = (await page.locator('#trialRoundValue').innerText()).trim();
+      const m = /^R(\d+)$/.exec(shown);
+      expect(m, `overview round value "${shown}" should look like R{n}`).not.toBeNull();
+      const n = m![1];
+      expect(n).toBe(round);
+      await expect(page.locator('#taskHeaderStatus')).toContainText('試標階段');
+      await expect(page.locator('#taskHeaderStatus')).toContainText(`第 ${n} 回合`);
+    });
+  }
+
+  test('official-run header status has no round suffix', async ({ page }) => {
+    for (const taskId of [TASK_ID, 'T016']) {
+      await openDetail(page, `task_id=${taskId}&status=official_run_in_progress`);
+      await expect(page.locator('#taskHeaderStatus')).toContainText('正式標記');
+      await expect(page.locator('#taskHeaderStatus')).not.toContainText('回合');
+    }
+  });
+
+  test('not-found task keeps breadcrumb root and an H1 but shows no task name or status', async ({ page }) => {
+    await page.goto(`${TASK_DETAIL_URL}?task_id=T999-DOES-NOT-EXIST`);
+    await expect(page.locator('#taskNotFound')).toBeVisible();
+    const header = page.locator('#taskHeader');
+    await expect(header.getByRole('navigation', { name: 'breadcrumb' })).toContainText('任務管理');
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    await expect(page.locator('body')).not.toContainText('醫療文本情感分類');
+    await expect(page.locator('#taskHeaderStatus')).not.toBeVisible();
+  });
+
+  for (const modifier of ['Alt', 'Control', 'Meta']) {
+    test(`${modifier}+ArrowRight on a focused tab does not change the selected tab`, async ({ page }) => {
+      await openDetail(page, `task_id=${TASK_ID}`);
+      const overview = page.getByRole('tab', { name: '概覽', exact: true });
+      await overview.focus();
+      await page.keyboard.press(`${modifier}+ArrowRight`);
+      await expect(overview).toHaveAttribute('aria-selected', 'true');
+      await expect(page.getByRole('tab', { name: '設定', exact: true })).toHaveAttribute('aria-selected', 'false');
+    });
+  }
 });
