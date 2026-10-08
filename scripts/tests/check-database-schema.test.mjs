@@ -397,14 +397,14 @@ test('noteCraftProjectionTracksTheCanonicalAccountSessionDictionaryAndRejectsDri
   assert.match(validateWithTaskParents(source, detachedToken).join('\n'), /refresh_tokens\.session_id: FK/);
 });
 
-test('noteCraftProjectionKeepsThe40Table47FkShapeWith342Columns', () => {
+test('noteCraftProjectionKeepsThe40Table34FkShapeWith351Columns', () => {
   const data = JSON.parse(readFileSync(
     new URL('../../docs/diagrams/architecture/database-schema.er.json', import.meta.url), 'utf8'));
   assert.deepEqual({
     tables: data.tables.length,
     columns: data.tables.reduce((count, table) => count + table.columns.length, 0),
     fks: data.tables.reduce((count, table) => count + table.columns.filter((column) => column.fk).length, 0),
-  }, { tables: 40, columns: 342, fks: 47 });
+  }, { tables: 40, columns: 351, fks: 34 });
 });
 
 test('realAccountAndDatasetDictionariesMatchCompleteNoteCraftProjection', () => {
@@ -492,5 +492,49 @@ test('accountAdminDictionaryDocumentsIdempotencyUniqueRuleAndCitations', () => {
   assert.match(markdown, /request_digest/);
   const summary = markdown.split('\n').find((entry) => entry.startsWith('- **NoteCraft 規劃檢視**'));
   assert.match(summary, /10 張候選表（73 欄、8 個候選單欄 FK）/);
-  assert.match(summary, /40 張候選表／342 欄／47 個候選單欄 FK/);
+  assert.match(summary, /40 張候選表／351 欄／34 個候選單欄 FK/);
+  assert.match(summary, /annotation\/review 字典\]\(\.\/annotation-review-db-schema\.md\)供應 8 張／91 欄／2 FK/);
+});
+
+// Issue #1221: ADR-024 amendment for database-enforced immutability.
+const adr024 = () => readFileSync(new URL('../../docs/adr/024-database-quickstart-sqlite-tiered.md', import.meta.url), 'utf8');
+const amendmentHeading = '### Amendment (2026-10-08, issue #1221) — Database-Enforced Immutability for Append-Only and Sealed Tables';
+
+test('ADR-024 header records the 2026-10-08 issue #1221 amendment', () => {
+  assert.match(adr024(), /^\*\*Amended\*\*: 2026-10-08 — issue #1221/m);
+});
+
+test('ADR-024 amendment section precedes Repo Directory Structure', () => {
+  const text = adr024();
+  const start = text.indexOf(amendmentHeading);
+  assert.ok(start >= 0, 'Missing exact amendment heading');
+  const repo = text.indexOf('## Repo Directory Structure');
+  assert.ok(repo > start, 'Amendment must be located before ## Repo Directory Structure');
+});
+
+test('ADR-024 amendment names guarded tables, trigger forms and the correction decision', () => {
+  const text = adr024();
+  const start = text.indexOf(amendmentHeading);
+  assert.ok(start >= 0, 'Missing exact amendment heading');
+  const rest = text.slice(start + amendmentHeading.length);
+  const next = rest.search(/^## /m);
+  const section = next >= 0 ? rest.slice(0, next) : rest;
+  for (const token of ['annotation_history_event', 'annotation_arbitration_vote',
+    'annotation_review_submission_revision', 'dataset_version', 'dataset_import_batch',
+    'dataset_item', 'dataset_item_private', 'audit_events', 'BEFORE UPDATE', 'BEFORE DELETE',
+    'BEFORE INSERT', 'RAISE(ABORT', 'RAISE EXCEPTION', 'REVOKE UPDATE, DELETE, TRUNCATE',
+    'PRAGMA foreign_keys', 'FOR SHARE', 'GLOB', '#1224', 'FR-008', 'FR-105']) {
+    assert.ok(section.includes(token), `Amendment section must mention ${token}`);
+  }
+  assert.match(section, /draft\s*→\s*sealed/, 'Amendment must allow draft → sealed');
+  assert.match(section, /sealed\s*→\s*draft/, 'Amendment must reject sealed → draft');
+});
+
+test('account dictionary A-02 cites REVOKE, TRUNCATE and the ADR-024 amendment alongside ADR-032', () => {
+  const markdown = readFileSync(new URL('../../docs/diagrams/architecture/account-admin-db-schema.md', import.meta.url), 'utf8');
+  const row = markdown.split('\n').find((line) => line.startsWith('| A-02 |'));
+  assert.ok(row, 'Expected A-02 audit append-only row');
+  for (const token of ['REVOKE', 'TRUNCATE', 'ADR-024', 'ADR-032']) {
+    assert.ok(row.includes(token), `A-02 must mention ${token}`);
+  }
 });

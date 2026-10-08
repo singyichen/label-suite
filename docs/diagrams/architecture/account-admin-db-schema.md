@@ -7,7 +7,7 @@
 - **範圍**：account 001–005、account-020、admin-006、admin-007。admin-007 規格仍為 **Draft**；Accepted ADR-037 已裁決保留兩張可編輯矩陣候選表。
 - **不歸屬任何單一 spec**：同一張 `users` 表被 001、003、005、006 共同修改，因此放在 `docs/diagrams/architecture/`，不隨任何 spec 進 `specs/_archive/`。各 spec 的 plan.md「實體與資料模型」段落應連結本文件，不各自複製欄位表。
 - **狀態：草稿**。十張表均為候選，尚未建立 migration；其他模組的實體鍵與 FK 仍需另行設計，不得據此宣稱已部署。
-- **NoteCraft 規劃檢視**：[`database-schema.er.json`](./database-schema.er.json) 對應 `/view/diagrams/architecture/database-schema.er` 的 Wiki／Diagram。本文件 §3 供應其中 account/admin 的 10 張候選表（73 欄、8 個候選單欄 FK）；[dataset 字典](./dataset-db-schema.md)另供應 5 張／31 欄／6 FK，[task/run 字典](./task-run-db-schema.md)供應 14 張／117 欄／16 FK，[annotation/review 字典](./annotation-review-db-schema.md)供應 8 張／83 欄／15 FK，[匯出字典](./task-export-db-schema.md)供應 2 張候選表／27 欄／2 個候選單欄 FK，[工時字典](./task-work-db-schema.md)供應 1 張／11 欄／0 個單欄 FK（另有三組複合 FK），全圖合計 40 張候選表／342 欄／47 個候選單欄 FK。兩張權限矩陣表已由 ADR-037 確認保留為候選，目前已落地業務表仍為 0。資料集分析的品質／IAA 專用表依 MVP 範圍延後；014 試標閘門所需 `task_trial_iaa_result` 為任務候選表。改動任一欄位字典後執行 `node scripts/check-database-schema.mjs` 檢查投影差異。
+- **NoteCraft 規劃檢視**：[`database-schema.er.json`](./database-schema.er.json) 對應 `/view/diagrams/architecture/database-schema.er` 的 Wiki／Diagram。本文件 §3 供應其中 account/admin 的 10 張候選表（73 欄、8 個候選單欄 FK）；[dataset 字典](./dataset-db-schema.md)另供應 5 張／32 欄／6 FK，[task/run 字典](./task-run-db-schema.md)供應 14 張／117 欄／16 FK，[annotation/review 字典](./annotation-review-db-schema.md)供應 8 張／91 欄／2 FK，[匯出字典](./task-export-db-schema.md)供應 2 張候選表／27 欄／2 個候選單欄 FK，[工時字典](./task-work-db-schema.md)供應 1 張／11 欄／0 個單欄 FK（另有三組複合 FK），全圖合計 40 張候選表／351 欄／34 個候選單欄 FK。兩張權限矩陣表已由 ADR-037 確認保留為候選，目前已落地業務表仍為 0。資料集分析的品質／IAA 專用表依 MVP 範圍延後；014 試標閘門所需 `task_trial_iaa_result` 為任務候選表。改動任一欄位字典後執行 `node scripts/check-database-schema.mjs` 檢查投影差異。
 - **驗證方式**：本文件不執行 SQL。每條限制的正確性在實作時由 Alembic migration 的 upgrade／downgrade／roundtrip 測試，以及 §4 指定的測試驗證。
 
 ## 1. 關鍵設計決定
@@ -403,7 +403,7 @@ migration 種入唯一允許的 `id = 1` 列。PK 與 CHECK 只能保證最多�
 | ID | 類型 | 規則 | 執行位置 | 實作時驗證 | 來源 |
 |---|---|---|---|---|---|
 | A-01 | XT | 與被稽核的異動同一交易寫入；任一方失敗則兩者皆不留 | 應用層 | SVC：模擬稽核寫入失敗 → 使用者列不變 | 006 FR-013；ADR-032 |
-| A-02 | SM | 只能新增，禁止一般路徑 UPDATE／DELETE；後續若需清理，須另行審核保留政策與特權程序 | 應用層＋DB trigger（兩種 DB 各一份） | SQLite 與 PG：直接 UPDATE／DELETE 均被 trigger 擋下；M：downgrade 移除 trigger | Accepted ADR-032 |
+| A-02 | SM | 只能新增，禁止一般路徑 UPDATE／DELETE；後續若需清理，須另行審核保留政策與特權程序 | 應用層＋DB trigger（兩種 DB 各一份）；PostgreSQL 另對 app role `REVOKE UPDATE, DELETE, TRUNCATE` | SQLite 與 PG：直接 UPDATE／DELETE 均被 trigger 擋下；PG：app role 的 UPDATE／DELETE／TRUNCATE 回 privilege denied；M：downgrade 移除 trigger | Accepted ADR-032；ADR-024 增補 (2026-10-08) |
 | A-03 | CD | `payload_summary` 僅含事件 registry 明列的非敏感欄位與變更摘要；不得含密碼、token、原始聯絡資料、標記答案、測試集正解或其快照 | 應用層 allowlist | SVC：密碼、聯絡資料及標記相關事件不會把敏感值寫入摘要 | 006 FR-013；Accepted ADR-032 |
 | A-04 | CK | `((actor_user_id IS NULL AND actor_role = 'system') OR (actor_user_id IS NOT NULL AND actor_role <> 'system'))`；非空 actor FK 為 RESTRICT | DB CHECK＋FK | SQLite 與 PG：角色／actor 不一致失敗；刪除有稽核紀錄的使用者失敗（SQLite 依賴 X-01） | Accepted ADR-032 |
 | A-05 | CD | **所有**稽核事件至少保存一個日曆年，不設自動刪除；未來的保留或清理政策須另行審核，不能透過一般寫入路徑刪除 | 應用層與維運政策 | SVC：無自動刪除路徑；DB：一般 DELETE 被 A-02 擋下 | 007 FR-010；Accepted ADR-032 |

@@ -5,6 +5,7 @@
 **Amends**: ADR-005 — quick-start scope only; ADR-005 PostgreSQL requirement remains binding for production deployments
 **Amends**: ADR-001 — root `docker-compose.yml` no longer starts PostgreSQL by default; the ADR-001 single-compose full-stack model is preserved in `docker-compose.prod.yml`
 **Amends**: ADR-008 — local `docker-compose.yml` default changes from PostgreSQL to SQLite; `docker-compose.prod.yml` preserves the ADR-008 full PostgreSQL stack
+**Amended**: 2026-10-08 — issue #1221 database-enforced immutability for append-only and sealed tables (planning contract only)
 
 ## Context
 
@@ -46,6 +47,54 @@ Implementation PRs must add the required runtime drivers with the database confi
 `docker-compose.yml` will ship with SQLite as default (to be created in the implementation PR). A separate `docker-compose.prod.yml` will provide the full PostgreSQL stack with managed volumes and PostgreSQL monitoring (postgres-exporter, saturation alerts per foundation spec). The SQLite quick-start compose file substitutes a filesystem health check for the database — PostgreSQL monitoring requirements from the foundation spec apply to the production profile (`docker-compose.prod.yml`) only.
 
 `.env.example` will document both options with inline comments (to be updated in the implementation PR alongside `docker-compose.yml`).
+
+### Amendment (2026-10-08, issue #1221) — Database-Enforced Immutability for Append-Only and Sealed Tables
+
+**Context.** The MVP schema review (parent #1216, finding High-2) found that only `audit_events` (ADR-032) had a database mechanism for immutability. A CHECK alone cannot protect a sealed `dataset_version`: one `UPDATE ... SET state='draft'` would unseal it, contradicting dataset-021 FR-008 / AC-3.2 (a sealed version cannot be changed in place or unsealed) and FR-011 (no unrestricted cascade delete of sealed versions). Append-only histories in 015 (FR-097 history chain, FR-105 immutable revisions and frozen votes) were likewise service-enforced only. This amendment is a **planning contract only**: no migration or ORM code exists yet; dual-database Red/Green tests land with the first migration PR.
+
+**Guard classes.**
+
+| Class | Tables | Rule |
+|-------|--------|------|
+| Append-only | `annotation_history_event`, `annotation_arbitration_vote`, `annotation_review_submission_revision`; `audit_events` already follows it (ADR-032, the reference pattern) | Every UPDATE and DELETE is rejected; corrections are new rows |
+| Sealed-snapshot guard | `dataset_version`, `dataset_import_batch`, `dataset_item`, `dataset_item_private` | Frozen once the owning version is sealed; draft stays editable |
+
+**Mechanism.** Each guarded table gets one `BEFORE UPDATE` and one `BEFORE DELETE` trigger in each dialect (SQLite: `RAISE(ABORT, ...)`; PostgreSQL: PL/pgSQL trigger function with `RAISE EXCEPTION` and a SQLSTATE). On PostgreSQL the application role additionally has `REVOKE UPDATE, DELETE, TRUNCATE` on the append-only tables (it is granted only SELECT and INSERT there, and neither `PUBLIC` nor default privileges may re-grant the revoked rights); on sealed-guard tables it keeps UPDATE/DELETE (drafts are editable) but gets no `TRUNCATE`.
+
+- `dataset_version`: UPDATE is allowed while `OLD.state = 'draft'`, including `draft → sealed`; any UPDATE when `OLD.state = 'sealed'` is rejected, so `sealed → draft` fails; DELETE of a sealed version is rejected. A `BEFORE INSERT` trigger rejects a row inserted directly as `sealed`: versions are created as draft, and sealing must pass the FR-008 validation transaction; seed and restore code likewise create a draft and then seal it. Because a no-op `sealed → sealed` UPDATE is also rejected, an idempotent seal retry reads the state first and returns without writing.
+- `dataset_import_batch` / `dataset_item` / `dataset_item_private`: `BEFORE INSERT`, `BEFORE UPDATE` and `BEFORE DELETE` reject the write when the owning version (item → batch → version) is sealed. UPDATE checks both the OLD and NEW owning version, blocking re-parenting into or out of a sealed version.
+- PostgreSQL concurrency: the child trigger reads the owning `dataset_version` row with `FOR SHARE`, serializing against a concurrent seal (which updates that row). The seal transaction itself locks that row with `SELECT ... FOR UPDATE` before reading items and computing the manifest digest, so a child write that commits first cannot be left out of a sealed manifest. SQLite single-writer transactions serialize it already.
+- Ownership: tables and trigger functions are owned by the migration role, not the application role (owners bypass privilege checks and may disable triggers).
+
+Illustrative sketch only (not migration code):
+
+```sql
+-- SQLite
+CREATE TRIGGER dataset_version_no_update BEFORE UPDATE ON dataset_version
+WHEN OLD.state = 'sealed' BEGIN SELECT RAISE(ABORT, 'dataset_version is sealed'); END;
+-- PostgreSQL
+CREATE FUNCTION dataset_version_guard() RETURNS trigger AS $$
+BEGIN
+  IF OLD.state = 'sealed' THEN
+    RAISE EXCEPTION 'dataset_version is sealed' USING ERRCODE = 'integrity_constraint_violation';
+  END IF;
+  RETURN CASE TG_OP WHEN 'DELETE' THEN OLD ELSE NEW END;
+END $$ LANGUAGE plpgsql;
+```
+
+**Dialect differences.**
+
+| Topic | SQLite | PostgreSQL |
+|-------|--------|------------|
+| Foreign keys | `PRAGMA foreign_keys=ON` must be set on every connection | Always enforced |
+| CHECK | No subqueries or cross-table checks; cross-row state goes to triggers. 64-hex digest via `length()` + `GLOB` | Same limitation; digest via regex `~` |
+| Trigger syntax | `RAISE(ABORT, ...)` inside trigger body | PL/pgSQL function with `RAISE EXCEPTION` and a SQLSTATE |
+| Role isolation | None: anyone with file access can drop triggers. Acceptable for the single-user Lite tier; the repository layer and tests are its boundary | `REVOKE` from the application role; migration role owns objects |
+| TRUNCATE | Does not exist | Revoked from the application role on guarded tables |
+
+**Emergency correction decision.** There is no runtime correction path. Corrections are compensating writes: a new history event, a new arbitration flow per spec, or a new complete dataset version. Any purge, anonymization or data fix of guarded rows is only a separately reviewed migration executed by the migration role, tied to the retention/deletion policy still pending in #1224; it never adds an application code path. Downgrading the migration drops the triggers.
+
+**Out of scope.** The `annotation_review_submission` head freeze after the first vote (015 FR-105) and `annotation_exception_resolution` remain service-enforced in this amendment; `task_annotation_exclusion` (task-run E-01) stays deferred to its dictionary section 7.
 
 ## Repo Directory Structure
 

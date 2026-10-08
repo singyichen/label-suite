@@ -316,15 +316,15 @@ test('assignment display status is derived in exclusion, submission, empty, save
     'Annotation record keeps its own lifecycle states');
 });
 
-test('NoteCraft and inventory project 40 tables with 342 columns and no assignment status', () => {
+test('NoteCraft and inventory project 40 tables with 351 columns and no assignment status', () => {
   const data = erData();
   const assignment = data.tables.find((table) => table.name === 'task_annotation_assignment');
   assert.equal(assignment.columns.some((column) => column.name === 'status'), false);
   assert.equal(data.tables.length, 40);
-  assert.equal(data.tables.reduce((sum, table) => sum + table.columns.length, 0), 342);
-  assert.equal(data.tables.reduce((sum, table) => sum + table.columns.filter((column) => column.fk).length, 0), 47);
-  assert.match(data.meta.description, /40 張候選表、342 欄、47 個候選單欄 FK/);
-  assert.match(inventory(), /40 張候選表、342 欄與 47 個候選單欄 FK/);
+  assert.equal(data.tables.reduce((sum, table) => sum + table.columns.length, 0), 351);
+  assert.equal(data.tables.reduce((sum, table) => sum + table.columns.filter((column) => column.fk).length, 0), 34);
+  assert.match(data.meta.description, /40 張候選表、351 欄、34 個候選單欄 FK/);
+  assert.match(inventory(), /40 張候選表、351 欄與 34 個候選單欄 FK/);
   assert.match(inventory(), /任務／執行資料結構[^\n]*14 張／117 欄／16 單欄 FK/);
 });
 
@@ -334,8 +334,10 @@ test('assignment A-01 declares the parent candidate key for six annotation/revie
   assert.ok(constraints, 'Task/run §4 constraints are required');
   const assignmentRule = constraints.split('\n').find((line) => /^\| A-01 \|/.test(line));
   assert.ok(assignmentRule, 'Task/run §4 A-01 is required');
-  assert.match(assignmentRule, /UNIQUE\s*`\(task_run_id,\s*id\)`/,
+  assert.match(assignmentRule, /UNIQUE\s*`\(task_id,\s*task_run_id,\s*id\)`/,
     'A-01 must declare the same-order parent candidate key');
+  assert.doesNotMatch(assignmentRule, /UNIQUE\s*`\(task_run_id,\s*id\)`/,
+    'A-01 must not keep the old two-column parent key');
   assert.match(assignmentRule, /六張.*`\(run_id,\s*assignment_id\)`.*複合 FK/,
     'A-01 must explain why the six annotation/review child FKs need that key');
 });
@@ -345,8 +347,33 @@ test('NoteCraft assignment Wiki discloses the undeployed parent candidate key', 
   assert.ok(assignment, 'NoteCraft assignment projection is required');
   assert.match(assignment.description, /候選.*尚未部署/s,
     'NoteCraft must identify this as an undeployed candidate');
-  assert.match(assignment.description, /UNIQUE\s*`\(task_run_id,\s*id\)`/,
+  assert.match(assignment.description, /UNIQUE\s*`\(task_id,\s*task_run_id,\s*id\)`/,
     'NoteCraft must disclose the assignment parent candidate key');
+});
+
+test('assignment section 5 index row discloses the three-column parent key for child references', () => {
+  const taskMarkdown = read('../../docs/diagrams/architecture/task-run-db-schema.md');
+  const row = taskMarkdown.split('\n').find((line) => line.includes('標記／審核子表的工作位參照'));
+  assert.ok(row, 'Task/run section 5 child-reference index row is required');
+  assert.match(row, /UNIQUE\s*`?\(task_id,\s*task_run_id,\s*id\)`?/,
+    'The index row must name UNIQUE (task_id,task_run_id,id)');
+  assert.doesNotMatch(row, /UNIQUE\s*`?\(task_run_id,\s*id\)`?/,
+    'The index row must not keep the old two-column key');
+});
+
+test('reviewer candidate keeps PK order task_run_id then reviewer_membership_id for the submission FK', () => {
+  const table = taskSource().tables.find((entry) => entry.name === 'task_run_reviewer_candidate');
+  assert.ok(table, 'Expected task_run_reviewer_candidate');
+  assert.deepEqual(table.columns.filter((column) => column.pk).map((column) => column.name),
+    ['task_run_id', 'reviewer_membership_id']);
+  const markdown = read('../../docs/diagrams/architecture/task-run-db-schema.md');
+  const block = markdown.match(/task_run_reviewer_candidate \{\n([\s\S]*?)\n    \}/)?.[1];
+  assert.ok(block, 'Expected the candidate Mermaid block');
+  const pks = block.split('\n').filter((line) => /\bPK\b/.test(line)).map((line) => line.trim().split(/\s+/)[1]);
+  assert.deepEqual(pks, ['task_run_id', 'reviewer_membership_id']);
+  const rows = markdown.split('### 3.11')[1].split('### 3.12')[0].split('\n');
+  const order = ['task_run_id', 'reviewer_membership_id'].map((name) => rows.findIndex((line) => line.startsWith(`| \`${name}\``)));
+  assert.ok(order[0] > 0 && order[1] > order[0], 'Dictionary rows must list task_run_id before reviewer_membership_id');
 });
 
 test('NoteCraft CI runs the task/run schema regression', () => {

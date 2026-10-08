@@ -135,7 +135,7 @@ test('all six dictionaries and NoteCraft agree on every projected table and summ
     data.tables.length,
     data.tables.reduce((count, table) => count + table.columns.length, 0),
     data.tables.reduce((count, table) => count + table.columns.filter((column) => column.fk).length, 0),
-  ], [40, 342, 47]);
+  ], [40, 351, 34]);
   assert.match(data.meta.source, /task-work-db-schema\.md/);
   assert.match(data.meta.description, /工作區間|工時/);
   assert.match(inventory(), /task-work-db-schema\.md/);
@@ -163,7 +163,7 @@ test('summary checker rejects one-table and one-FK drift', () => {
   staleTables.meta.description = staleTables.meta.description.replace('40 張候選表', '39 張候選表');
   assert.match(checker.validateSchemaSummary(staleTables, inventory()).join('\n'),
     /NoteCraft metadata: tables count/);
-  const staleInventory = inventory().replace('47 個候選單欄 FK', '46 個候選單欄 FK');
+  const staleInventory = inventory().replace('34 個候選單欄 FK', '33 個候選單欄 FK');
   assert.match(checker.validateSchemaSummary(data, staleInventory).join('\n'),
     /inventory NoteCraft summary: FKs count/);
 });

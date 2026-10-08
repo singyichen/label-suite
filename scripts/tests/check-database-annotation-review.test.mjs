@@ -23,6 +23,13 @@ const forbiddenAnswerColumns = new Set([
   'hidden_answer', 'declared_split', 'gold_answer', 'is_gold', 'is_test', 'test_split',
 ]);
 
+// Issue #1221: append-only enforcement is fixed by A-01 / ADR-024 amendment.
+const annotationRow = (id) => {
+  const row = annotationMarkdown().split('\n').find((line) => line.startsWith(`| ${id} |`));
+  assert.ok(row, `Expected ${id} rule row`);
+  return row;
+};
+
 function annotationSource(markdown = annotationMarkdown()) {
   assert.equal(typeof checker.parseAnnotationReviewSchema, 'function',
     'A strict annotation/review schema parser is required');
@@ -57,8 +64,8 @@ function incrementCount(text, count, unit) {
 test('annotation/review dictionary has exactly eight physical tables and one non-null UUID PK each', () => {
   const source = annotationSource();
   assert.deepEqual(source.tables.map((table) => table.name), annotationNames);
-  assert.equal(source.tables.reduce((count, table) => count + table.columns.length, 0), 83);
-  assert.equal(source.tables.reduce((count, table) => count + table.columns.filter((column) => column.fk).length, 0), 15);
+  assert.equal(source.tables.reduce((count, table) => count + table.columns.length, 0), 91);
+  assert.equal(source.tables.reduce((count, table) => count + table.columns.filter((column) => column.fk).length, 0), 2);
   for (const table of source.tables) {
     assert.deepEqual(table.columns.filter((column) => column.pk), [
       { name: 'id', type: 'uuid', nullable: false, pk: true },
@@ -73,15 +80,18 @@ test('annotation/review dictionary has exactly eight physical tables and one non
   }
 });
 
-test('history events reference the immutable reviewer revision rather than its mutable head', () => {
+test('history events reference the immutable reviewer revision through a same-unit composite FK', () => {
   const history = annotationSource().tables.find((table) => table.name === 'annotation_history_event');
   assert.ok(history, 'Expected annotation_history_event');
   assert.deepEqual(history.columns.find((column) => column.name === 'review_revision_id'), {
     name: 'review_revision_id', type: 'uuid', nullable: true, pk: false,
-    fk: 'annotation_review_submission_revision',
-  });
+  }, 'review_revision_id is a composite FK participant: nullable uuid with no single-column FK');
   assert.equal(history.columns.some((column) => column.name === 'review_submission_id'), false,
     'An event must not point only to the mutable reviewer head');
+  const row = annotationRow('H-05');
+  assert.match(row, /annotation_review_submission_revision/, 'H-05 must name the immutable revision table');
+  assert.match(row, /\(run_id,\s*assignment_id,\s*review_revision_id\)/,
+    'H-05 must declare the same-unit composite (run_id,assignment_id,review_revision_id)');
 });
 
 test('every arbitration choice stores a non-null reason', () => {
@@ -164,18 +174,18 @@ test('annotation/review parser rejects a missing Mermaid FK marker', () => {
 test('annotation/review parser rejects a Mermaid datatype that contradicts the dictionary', () => {
   const markdown = annotationMarkdown();
   const mutated = markdown.replace(
-    /(    annotation_history_event \{\n[\s\S]*?)(        uuid review_revision_id FK)/,
-    '$1        text review_revision_id FK',
+    /(    annotation_history_event \{\n[\s\S]*?)(        uuid account_session_id FK)/,
+    '$1        text account_session_id FK',
   );
-  assert.notEqual(mutated, markdown, 'Expected to mutate the history revision Mermaid datatype');
+  assert.notEqual(mutated, markdown, 'Expected to mutate the history session Mermaid datatype');
   assert.throws(() => annotationSource(mutated),
-    /annotation_history_event\.review_revision_id|Mermaid.*type|type.*mismatch/i);
+    /annotation_history_event\.account_session_id|Mermaid.*type|type.*mismatch/i);
 });
 
 test('NoteCraft projection matches every source table, column, type, nullability, PK and FK', () => {
   const source = mergedSource();
   const data = erData();
-  assert.deepEqual(countProjection(data), { tables: 40, columns: 342, fks: 47 });
+  assert.deepEqual(countProjection(data), { tables: 40, columns: 351, fks: 34 });
   assert.deepEqual(checker.validateErData(source, data), []);
   const projected = data.tables.filter((table) => annotationNames.includes(table.name));
   assert.deepEqual(projected.map((table) => table.name), annotationNames);
@@ -200,7 +210,7 @@ test('projection checker rejects annotation column, type, nullability, PK and FK
     ['type drift', (copy) => { copy.tables.find((table) => table.name === 'annotation_record').columns.find((column) => column.name === 'version').type = 'bigint'; }],
     ['nullability drift', (copy) => { copy.tables.find((table) => table.name === 'annotation_record').columns.find((column) => column.name === 'note').required = 'required'; }],
     ['PK drift', (copy) => { copy.tables.find((table) => table.name === 'annotation_record').columns.find((column) => column.name === 'id').pk = false; }],
-    ['FK drift', (copy) => { copy.tables.find((table) => table.name === 'annotation_history_event').columns.find((column) => column.name === 'review_revision_id').fk = 'annotation_review_submission'; }],
+    ['FK drift', (copy) => { copy.tables.find((table) => table.name === 'annotation_history_event').columns.find((column) => column.name === 'account_session_id').fk = 'annotation_record'; }],
   ];
   for (const [name, mutate] of mutations) {
     const copy = structuredClone(data);
@@ -212,11 +222,11 @@ test('projection checker rejects annotation column, type, nullability, PK and FK
 test('schema summary checker rejects stale metadata and inventory counts after annotation projection', () => {
   const data = erData();
   const markdown = inventory();
-  assert.deepEqual(countProjection(data), { tables: 40, columns: 342, fks: 47 });
+  assert.deepEqual(countProjection(data), { tables: 40, columns: 351, fks: 34 });
   assert.deepEqual(checker.validateSchemaSummary(data, markdown), []);
   const summary = markdown.split('\n').find((line) => line.startsWith('**NoteCraft 規劃檢視**'));
   assert.ok(summary, 'Expected a NoteCraft inventory summary');
-  for (const [count, unit] of [[40, '張候選表'], [342, '欄'], [47, '個候選單欄 FK']]) {
+  for (const [count, unit] of [[40, '張候選表'], [351, '欄'], [34, '個候選單欄 FK']]) {
     const staleData = structuredClone(data);
     staleData.meta.description = incrementCount(staleData.meta.description, count, unit);
     assert.notDeepEqual(checker.validateSchemaSummary(staleData, markdown), [],
@@ -235,6 +245,40 @@ test('NoteCraft CI runs the annotation/review schema regression', () => {
     'NoteCraft CI must execute check-database-annotation-review.test.mjs');
 });
 
+// Issue #1221: append-only enforcement is fixed by A-01 / ADR-024 amendment.
+
+test('annotation dictionary A-01 is the last section 4 row and defines append-only triggers', () => {
+  const lines = annotationMarkdown().split('\n');
+  const index = lines.findIndex((line) => line.startsWith('| A-01 |'));
+  assert.ok(index >= 0, 'Expected A-01 append-only rule row');
+  assert.ok(!(lines[index + 1] ?? '').startsWith('|'), 'A-01 must be the last row of the section 4 table');
+  const row = lines[index];
+  assert.equal(row.split('|').map((cell) => cell.trim())[2], 'DB', 'A-01 position cell must be DB');
+  for (const token of ['annotation_history_event', 'annotation_arbitration_vote',
+    'annotation_review_submission_revision', 'BEFORE UPDATE', 'BEFORE DELETE', 'SQLite',
+    'PostgreSQL', 'REVOKE UPDATE, DELETE, TRUNCATE', 'ADR-024']) {
+    assert.ok(row.includes(token), `A-01 must mention ${token}`);
+  }
+});
+
+test('annotation dictionary V-05 delegates vote immutability to A-01', () => {
+  const row = annotationRow('V-05');
+  assert.doesNotMatch(row, /待 migration 決定/, 'V-05 must not defer immutability to the migration');
+  assert.match(row, /A-01/, 'V-05 must reference A-01');
+});
+
+test('annotation dictionary H-01 and N-01 reference A-01', () => {
+  assert.match(annotationRow('H-01'), /A-01/, 'H-01 must reference A-01');
+  assert.match(annotationRow('N-01'), /A-01/, 'N-01 must reference A-01');
+});
+
+test('annotation dictionary section 7 item 4 no longer defers append-only triggers', () => {
+  const item = annotationMarkdown().split('\n').find((line) => line.startsWith('4. **稽核與保留**'));
+  assert.ok(item, 'Expected section 7 item 4');
+  assert.doesNotMatch(item, /append-only 的 DB trigger[^\n]*migration PR 決定/);
+  assert.match(item, /A-01/, 'Item 4 must reference A-01');
+});
+
 test('annotation history H-03 ties draft_saved to annotators and writes no event for reviewer drafts', () => {
   const row = annotationMarkdown().split('\n').find((line) => line.startsWith('| H-03 |'));
   assert.ok(row, 'Expected the H-03 row');
@@ -244,4 +288,170 @@ test('annotation history H-03 ties draft_saved to annotators and writes no event
   assert.match(row, /審核員草稿[^|]*(?:不寫|不得產生|不產生)[^|]*(?:事件|history)/,
     'H-03 must state reviewer drafts write no history event');
   assert.match(row, /FR-014S/, 'H-03 must cite FR-014S');
+});
+
+// Issue #1220: composite same-task / same-unit FKs.
+const tableOf = (name) => {
+  const table = annotationSource().tables.find((entry) => entry.name === name);
+  assert.ok(table, `Expected ${name}`);
+  return table;
+};
+const columnOf = (table, name) => {
+  const column = tableOf(table).columns.find((entry) => entry.name === name);
+  assert.ok(column, `Expected ${table}.${name}`);
+  return column;
+};
+const unitTables = [
+  'annotation_record', 'annotation_review_draft', 'annotation_review_submission',
+  'annotation_arbitration_vote', 'annotation_exception_resolution', 'annotation_history_event',
+];
+
+test('six unit tables carry a non-PK NOT NULL uuid task_id with no single-column FK', () => {
+  for (const name of unitTables) {
+    assert.deepEqual(columnOf(name, 'task_id'),
+      { name: 'task_id', type: 'uuid', nullable: false, pk: false }, `${name}.task_id`);
+  }
+});
+
+test('reviewer revision carries run_id and assignment_id as NOT NULL uuid composite-FK participants', () => {
+  for (const name of ['run_id', 'assignment_id']) {
+    assert.deepEqual(columnOf('annotation_review_submission_revision', name),
+      { name, type: 'uuid', nullable: false, pk: false }, `revision.${name}`);
+  }
+});
+
+test('only two single-column FKs remain and composite participants carry no arrow or Mermaid marker', () => {
+  const fks = annotationSource().tables.flatMap((table) => table.columns
+    .filter((column) => column.fk).map((column) => `${table.name}.${column.name}->${column.fk}`));
+  assert.deepEqual(fks.sort(), [
+    'annotation_history_event.account_session_id->account_session',
+    'annotation_review_decision.review_submission_id->annotation_review_submission',
+  ]);
+  const markdown = annotationMarkdown();
+  const dropped = [
+    ['annotation_record', 'author_membership_id'], ['annotation_review_draft', 'reviewer_membership_id'],
+    ['annotation_review_submission', 'reviewer_membership_id'], ['annotation_arbitration_vote', 'arbiter_membership_id'],
+    ['annotation_arbitration_vote', 'review_revision_id'], ['annotation_exception_resolution', 'resolved_by_membership_id'],
+    ['annotation_exception_resolution', 'arbitration_vote_id'], ['annotation_history_event', 'actor_membership_id'],
+    ['annotation_history_event', 'annotation_record_id'], ['annotation_history_event', 'review_revision_id'],
+    ['annotation_history_event', 'arbitration_vote_id'], ['annotation_history_event', 'exception_resolution_id'],
+    ['annotation_review_submission_revision', 'review_submission_id'],
+  ];
+  for (const [table, column] of dropped) {
+    assert.equal(columnOf(table, column).fk, undefined, `${table}.${column} must lose its single-column FK`);
+    const block = markdown.match(new RegExp(`    ${table} \\{\\n([\\s\\S]*?)\\n    \\}`))?.[1] ?? '';
+    assert.doesNotMatch(block, new RegExp(`\\b${column} FK\\b`), `${table}.${column} must lose its Mermaid FK marker`);
+    const edge = markdown.split('\n').find((line) => line.trim().endsWith(`--o{ ${table} : ${column}`));
+    assert.equal(edge, undefined, `${table}.${column} must lose its Mermaid edge`);
+  }
+  const arrowRows = markdown.split('\n').filter((line) => /^\| `(?:author_membership_id|actor_membership_id|arbiter_membership_id|resolved_by_membership_id|reviewer_membership_id|review_revision_id|arbitration_vote_id|annotation_record_id|exception_resolution_id|review_submission_id)` \|/.test(line));
+  assert.equal(arrowRows.length, 14, 'Expected exactly the 14 dictionary rows of the composite participants');
+  const remaining = arrowRows.filter((line) => line.includes('→'));
+  assert.equal(remaining.length, 1, `Only decision.review_submission_id keeps an arrow, got: ${remaining.join('\n')}`);
+  assert.match(remaining[0], /annotation_review_submission(?!_revision)/);
+});
+
+test('X-01 declares the three-column task/run/assignment composite FK on the six unit tables', () => {
+  const row = annotationRow('X-01');
+  assert.match(row, /\(task_id,\s*run_id,\s*assignment_id\)/);
+  assert.match(row, /task_annotation_assignment\(task_id,\s*task_run_id,\s*id\)/);
+  assert.match(row, /UNIQUE\s*`?\(task_id,\s*task_run_id,\s*id\)`?/, 'X-01 must declare the parent UNIQUE');
+  assert.match(row, /RESTRICT/);
+  assert.doesNotMatch(row, /task_annotation_assignment\(task_run_id,\s*id\)/, 'old two-column target must be gone');
+});
+
+test('X-04 sits between X-03 and R-01 and declares six same-task membership composite FKs', () => {
+  const ids = annotationMarkdown().split('\n').map((line) => line.match(/^\| ([A-Z]-\d\d) \|/)?.[1]).filter(Boolean);
+  const x04 = ids.indexOf('X-04');
+  assert.ok(x04 > 0, 'Expected X-04');
+  assert.equal(ids[x04 - 1], 'X-03');
+  assert.equal(ids[x04 + 1], 'R-01');
+  const row = annotationRow('X-04');
+  assert.match(row, /task_membership\(task_id,\s*id\)/);
+  assert.match(row, /UNIQUE\s*`?\(task_id,\s*id\)`?/);
+  assert.match(row, /RESTRICT/);
+  for (const column of ['author_membership_id', 'reviewer_membership_id', 'arbiter_membership_id',
+    'resolved_by_membership_id', 'actor_membership_id']) {
+    assert.match(row, new RegExp(`\\(task_id,\\s*${column}\\)`), `X-04 must cover (task_id,${column})`);
+  }
+});
+
+test('A-01 stays the last section 4 row after X-04 is added', () => {
+  const lines = annotationMarkdown().split('\n');
+  const index = lines.findIndex((line) => line.startsWith('| A-01 |'));
+  assert.ok(index > 0);
+  assert.ok(!(lines[index + 1] ?? '').startsWith('|'));
+});
+
+test('S-01 declares the (run_id,assignment_id,id) parent key and S-02 adds the candidate roster FK', () => {
+  assert.match(annotationRow('S-01'), /UNIQUE\s*`?\(run_id,\s*assignment_id,\s*id\)`?/);
+  const s02 = annotationRow('S-02');
+  assert.match(s02, /\(run_id,\s*reviewer_membership_id\)/);
+  assert.match(s02, /task_run_reviewer_candidate\(task_run_id,\s*reviewer_membership_id\)/);
+});
+
+test('V-03 exempts arbiters from the candidate roster FK', () => {
+  const row = annotationRow('V-03');
+  assert.match(row, /(?:豁免|不適用|exempt|不加|不設)[^|]*(?:候選|candidate)|(?:候選|candidate)[^|]*(?:豁免|不適用|exempt|不加|不設)/i);
+  assert.match(row, /project[_ ]leader/);
+  assert.match(row, /FR-023/);
+});
+
+test('V-04 and N-01 chain the vote to the revision to the head on the same unit', () => {
+  const v04 = annotationRow('V-04');
+  assert.match(v04, /\(run_id,\s*assignment_id,\s*review_revision_id\)/);
+  assert.match(v04, /annotation_review_submission_revision\(run_id,\s*assignment_id,\s*id\)/);
+  assert.match(annotationRow('N-01'), /\(run_id,\s*assignment_id,\s*review_submission_id\)/);
+  assert.match(annotationRow('N-01'), /annotation_review_submission\(run_id,\s*assignment_id,\s*id\)/);
+  assert.match(annotationRow('N-01'), /UNIQUE\s*`?\(run_id,\s*assignment_id,\s*id\)`?/, 'N-01 must declare the vote/history parent key');
+});
+
+test('V-01, R-01 and E-01 declare the same-unit parent keys; E-02 binds the vote key tuple', () => {
+  const sameUnit = /UNIQUE\s*`?\(run_id,\s*assignment_id,\s*id\)`?/;
+  assert.match(annotationRow('V-01'), sameUnit);
+  assert.match(annotationRow('V-01'), /UNIQUE\s*`?\(run_id,\s*assignment_id,\s*output_key,\s*item_key,\s*id\)`?/);
+  assert.match(annotationRow('R-01'), sameUnit);
+  assert.match(annotationRow('E-01'), sameUnit);
+  const e02 = annotationRow('E-02');
+  assert.match(e02, /\(run_id,\s*assignment_id,\s*output_key,\s*item_key,\s*arbitration_vote_id\)/);
+  assert.match(e02, /annotation_arbitration_vote\(run_id,\s*assignment_id,\s*output_key,\s*item_key,\s*id\)/);
+  assert.doesNotMatch(e02, /若不加 vote 複合候選鍵／FK/, 'E-02 must no longer be conditional');
+});
+
+test('H-05 declares four same-unit composite FKs and an exactly-one-source CHECK', () => {
+  const row = annotationRow('H-05');
+  for (const [column, parent] of [['annotation_record_id', 'annotation_record'],
+    ['review_revision_id', 'annotation_review_submission_revision'],
+    ['arbitration_vote_id', 'annotation_arbitration_vote'],
+    ['exception_resolution_id', 'annotation_exception_resolution']]) {
+    assert.match(row, new RegExp(`\\(run_id,\\s*assignment_id,\\s*${column}\\)`), `H-05 composite for ${column}`);
+    assert.match(row, new RegExp(`${parent}\\(run_id,\\s*assignment_id,\\s*id\\)`), `H-05 target ${parent}`);
+  }
+  assert.match(row, /MATCH SIMPLE/);
+  assert.match(row, /CHECK/);
+  assert.match(row, /恰有一個|exactly one/i);
+  assert.doesNotMatch(row, /num_nonnulls/, 'SQLite has no num_nonnulls; the CHECK must be portable (AR §6, ADR-024)');
+  for (const column of ['annotation_record_id', 'review_revision_id', 'arbitration_vote_id', 'exception_resolution_id']) {
+    assert.match(row, new RegExp(`\\(${column} IS NOT NULL\\)`), `H-05 CHECK must test ${column} IS NOT NULL`);
+  }
+  assert.doesNotMatch(row, /回填／可空相容策略待 migration 裁決/);
+});
+
+test('annotation dictionary footer states 91 columns, 2 single-column FKs and 20 composite FKs', () => {
+  const footer = annotationMarkdown().split('\n').find((line) => line.startsWith('**交付狀態'));
+  assert.ok(footer, 'Expected the delivery-status footer');
+  assert.match(footer, /8 張未部署候選表、91 欄；單欄 FK 2 個，另有 20 組複合 FK/);
+});
+
+test('D-02 explains why the draft reviewer has only the X-04 same-task FK and no roster FK', () => {
+  const row = annotationRow('D-02');
+  assert.match(row, /草稿[^|]*不綁名冊|roster/, 'D-02 must state the draft is not bound to the roster');
+  assert.match(row, /S-02/, 'D-02 must point to S-02 where the roster binding is enforced at submission');
+});
+
+test('section 5 index contract covers the X-01 reverse lookup and the composite E-02 vote lookup', () => {
+  const markdown = annotationMarkdown();
+  assert.match(markdown, /X-01[^\n]*\(task_id,\s*run_id,\s*assignment_id\)[^\n]*起首|\(task_id,\s*run_id,\s*assignment_id\)\s*起首/,
+    'section 5 must require an index led by (task_id,run_id,assignment_id)');
+  assert.doesNotMatch(markdown, /單欄 vote FK/, 'the single-column vote FK wording is obsolete');
 });
