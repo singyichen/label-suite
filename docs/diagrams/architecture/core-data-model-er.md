@@ -152,7 +152,7 @@ erDiagram
         string status
         string run_stage "dry_run 或 official_run"
         json settings
-        number sampling_value "每回合抽樣筆數"
+        number sampling_value "每回合抽樣筆數；三種語意見 task-run-db-schema T-07"
         json trial_round "唯讀 round 狀態資訊"
         json target_agreement_overrides "逐輸出類型目標 IAA 覆寫"
         number min_annotators
@@ -190,7 +190,7 @@ erDiagram
     TrialRound {
         string task_id PK
         number round PK
-        number sampling_value "恆等於對應 materialization 的 item_count"
+        number sampling_value "恆等於對應 materialization 的 item_count；見 task-run-db-schema T-07"
         string guideline_version FK "建立當下寫入，不隨後續指引異動回填"
         string prior_round_findings "round 大於等於 2 時必填"
         string guideline_change_summary "允許值含 no_change"
@@ -200,7 +200,7 @@ erDiagram
     SampleSnapshot {
         string sample_snapshot_id PK
         string task_id FK
-        number sampling_value
+        number sampling_value "對應 requested_sampling_value，見 task-run-db-schema T-07"
         number trial_round
         json target_agreement_overrides
         number min_annotators
@@ -214,7 +214,7 @@ erDiagram
         number trial_round
         string sample_snapshot_id FK
         string source_sample_ids_ref
-        number item_count "dry_run 等於 sampling_value"
+        number item_count "dry_run 等於 sampling_value，見 task-run-db-schema T-07"
         string created_by FK
         datetime created_at
     }

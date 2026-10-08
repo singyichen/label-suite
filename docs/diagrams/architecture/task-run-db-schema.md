@@ -186,10 +186,10 @@ erDiagram
 | `dataset_version_id` | uuid → dataset_version | 否 | 當前綁定的已封存完整版本 | 建立；草稿可重綁 | T-02 |
 | `current_config_version_id` | uuid | 否 | 當前不可變設定版本 | 建立時預配置 UUID；草稿儲存更新 | T-03 |
 | `current_guideline_version_id` | uuid | 否 | 當前不可變指引內容版本 | 建立時預配置 UUID；草稿／waiting 指引內容儲存更新 | T-03 |
-| `current_run_cycle_id` | uuid | 是 | 當前開啟發布週期；無執行時為空值 | 首次試標發布／退回草稿／結案 | T-04 |
+| `current_run_cycle_id` | uuid | 是 | task 側唯一的發布週期指標：進行中指向開啟週期；`completed` 後保留指向最終已關閉週期；尚未發布或退回草稿後為空值 | 首次試標發布／退回草稿／結案 | T-04 |
 | `name` | varchar | 否 | 任務名稱；非身份鍵 | 建立；草稿編輯 | T-01 |
 | `status` | varchar(32) | 否 | ADR-022 任務狀態 | 建立為草稿；合法轉換更新 | T-05 |
-| `sampling_value` | integer | 否 | 下一次試標的要求筆數 | 建立；允許階段編輯 | T-06 |
+| `sampling_value` | integer | 否 | 下一次試標的要求筆數 | 建立；允許階段編輯 | T-06、T-07 |
 | `target_agreement_overrides` | json | 否 | 由設定驅動的 IAA 目標覆寫；候選空物件預設 | 建立／允許階段編輯 | T-06 |
 | `min_annotators` | integer | 否 | 試標重疊標記及發布檢查下限 | 建立／允許階段編輯 | T-06 |
 | `isolation_enabled` | boolean | 否 | 隔離顯示政策；候選 true 預設 | 建立／草稿編輯 | T-06 |
@@ -241,7 +241,7 @@ erDiagram
 | `task_id` | uuid → task | 否 | 任務作用域 | 建立；不改 | M-01 |
 | `user_id` | uuid → users | 否 | 真實使用者 | 建立；不改 | M-01 |
 | `task_role` | varchar(24) | 否 | `project_leader`／`annotator`／`reviewer` | 建立；不改 | M-02 |
-| `membership_status` | varchar(16) | 否 | 當前成員狀態 | 建立／停用／復用 | M-03 |
+| `membership_status` | varchar(16) | 否 | 當前成員狀態，值域 `active`／`disabled` | 建立／停用／復用 | M-03 |
 | `created_at` | timestamptz | 否 | 加入時間 UTC | 建立 | X-01 |
 | `updated_at` | timestamptz | 否 | 最後狀態變更 UTC | 修改 | X-01 |
 
@@ -254,7 +254,7 @@ erDiagram
 | `task_id` | uuid | 否 | 複合主鍵一部分；同任務範圍 | 勾選加入；不改 | R-01 |
 | `reviewer_membership_id` | uuid | 否 | 複合主鍵一部分；審核員成員 | 勾選加入；不改 | R-01 |
 | `can_arbitrate` | boolean | 否 | 同一名冊內的仲裁資格；候選 false 預設 | 編輯名冊 | R-02 |
-| `sort_order` | integer | 否 | 可重現選人順序 | 編輯名冊 | R-03 |
+| `sort_order` | integer | 否 | 可重現選人順序；同值時依 `reviewer_membership_id` 決定 | 編輯名冊 | R-03 |
 
 ### 3.6 task_run_cycle：一輪草稿、試標與正式標記的版本邊界
 
@@ -271,11 +271,11 @@ erDiagram
 | `selection_algorithm_version` | varchar | 否 | 抽樣演算法版本 | R1 發布；不改 | Y-04 |
 | `opened_at` | timestamptz | 否 | 發布週期開啟 UTC 時間 | R1 發布 | X-01 |
 | `closed_at` | timestamptz | 是 | 退回草稿或正式標記完結時間 | 發布週期關閉一次 | Y-02 |
-| `close_reason` | varchar | 是 | 關閉原因；退回時有明確拒絕原因 | 發布週期關閉一次 | Y-02 |
+| `close_reason` | varchar(16) | 是 | 關閉原因代碼 `rejected`（退回草稿）／`completed`（正式標記完結）；開啟中為空值 | 發布週期關閉一次 | Y-02 |
 
 ### 3.7 task_trial_round：發布週期內的一次試標回合
 
-R1 與 Rn 的序號只在發布週期內唯一；`sampling_value` 保存實際資料項目數。來源：014 FR-010f-2／FR-010o-4／`TrialRound`。
+R1 與 Rn 的序號只在發布週期內唯一；`sampling_value` 保存實際資料項目數（三種筆數語意見 T-07）。來源：014 FR-010f-2／FR-010o-4／`TrialRound`。
 
 | 欄位 | 型別 | 可空 | 代表什麼 | 何時寫入／改變 | 規則 |
 |---|---|---|---|---|---|
@@ -284,7 +284,7 @@ R1 與 Rn 的序號只在發布週期內唯一；`sampling_value` 保存實際�
 | `task_run_cycle_id` | uuid | 否 | 所屬發布週期 | 試標發布；不改 | Q-01 |
 | `round_no` | integer | 否 | 發布週期內正整數序號 | 試標發布；不改 | Q-02 |
 | `guideline_version_id` | uuid | 否 | 發布時同任務的指引版本 | 試標發布；不改 | Q-03 |
-| `sampling_value` | integer | 否 | 該回合實際資料項目數 | 試標發布；不改 | Q-04 |
+| `sampling_value` | integer | 否 | 該回合實際資料項目數 | 試標發布；不改 | Q-04、T-07 |
 | `prior_round_findings` | text | 是 | 上輪問題；R1 可空 | 試標發布；不改 | Q-05 |
 | `guideline_change_summary` | text | 是 | 本輪指引修訂摘要；R1 可空 | 試標發布；不改 | Q-05 |
 | `no_change_reason` | text | 是 | 指引無變化時原因 | 試標發布；不改 | Q-05 |
@@ -315,7 +315,7 @@ R1 與 Rn 的序號只在發布週期內唯一；`sampling_value` 保存實際�
 | `task_run_cycle_id` | uuid → task_run_cycle | 否 | 所屬發布週期 | 發布；不改 | S-01 |
 | `selection_seed` | varchar | 否 | 該次選取使用的隨機種子 | 發布；不改 | S-02 |
 | `selection_algorithm_version` | varchar | 否 | 該次演算法版本 | 發布；不改 | S-02 |
-| `requested_sampling_value` | integer | 是 | 試標要求筆數；正式標記為空值 | 發布；不改 | S-03 |
+| `requested_sampling_value` | integer | 是 | 試標要求筆數；正式標記為空值 | 發布；不改 | S-03、T-07 |
 | `target_agreement_overrides` | json | 否 | 發布時採用的 IAA 覆寫快照；候選空物件 | 發布；不改 | S-03 |
 | `min_annotators` | integer | 否 | 發布時使用的試標人數下限 | 發布；不改 | S-03 |
 | `selection_manifest_ref` | text | 否 | 不含答案的私有、不可覆寫內容定址清單回執鍵 | 發布；不改 | S-04 |
@@ -401,9 +401,10 @@ R1 與 Rn 的序號只在發布週期內唯一；`sampling_value` 保存實際�
 | T-01 | DB | `task.id` PK；`created_by_user_id → users.id`、`dataset_version_id → dataset_version.id` 真 FK；名稱非空白在服務驗證 | 013 建立、014 `TaskDetail` |
 | T-02 | SVC | task 建立／draft 重綁與發布只接受 sealed `dataset_version`；舊 cycle 永遠追其原版 | dataset-021 FR-008／FR-010、014 FR-010f |
 | T-03 | DB＋SVC | 兩指標 NOT NULL；`(task.id,current_config_version_id) → task_config_version(task_id,id)`、`(task.id,current_guideline_version_id) → task_guideline_version(task_id,id)` 均為同任務 `DEFERRABLE INITIALLY DEFERRED` 複合 FK；預配置 task 與兩版本 UUID，同交易插入 task、兩版本及建立者 membership，提交時拒絕缺列或跨 task 參照 | 013 FR-006a、014 FR-017a |
-| T-04 | DB＋SVC | `(task.id,current_run_cycle_id) → task_run_cycle(task_id,id)`；退回 draft 清指標且關閉 cycle；沒有 task 級 current snapshot | ADR-022、014 FR-010f-5 |
+| T-04 | DB＋SVC | `(task.id,current_run_cycle_id) → task_run_cycle(task_id,id)`；`current_run_cycle_id` 是 task 側唯一指標，不另設「開啟中」旗標，且不單靠它保證單一開啟週期（至多一個開啟 cycle 由 Y-02 部分唯一索引負責）。退回 draft 時關閉 cycle（`close_reason = rejected`）並清除指標；`official_run_in_progress → completed` 時關閉 cycle（`close_reason = completed`）但保留指標指向該最終已關閉 cycle，使完成任務仍可推導其 run；上述皆與狀態轉換、稽核事件同交易。沒有 task 級 current snapshot | ADR-022、014 FR-010f-5 |
 | T-05 | DB＋SVC | 狀態值域限 ADR-022 現行五態；轉換與 side effects 同交易，CHECK 無法判前後合法轉換 | ADR-022 Transition Table |
 | T-06 | DB＋SVC | `sampling_value >= 1`、`min_annotators >= 2`；boolean NOT NULL；目標覆寫由 config/IAA registry 驗證，NULL/空物件不混淆 | 013 `RunInitConfig`、014 FR-010q |
+| T-07 | DB＋SVC | `sampling_value` 有三種語意，各以一個欄位為單一真實來源：`task.sampling_value` 是下一次試標的要求筆數（可編輯，只代表意圖）；`task_sample_snapshot.requested_sampling_value` 在試標發布時由前者凍結，之後不改（S-03）；`task_trial_round.sampling_value` 是實際選出的筆數，等於 `task_run.item_count = COUNT(task_run_item)`（Q-04、U-05）。三者不互相推導或回寫；唯讀投影（如 `TaskDetail.sampling_value`）須指明取哪一個，歷史比對一律用凍結值與實際值，不用可編輯的 task 欄位 | 013 `RunInitConfig`、014 FR-010f-2／FR-010q |
 | C-01 | DB | config PK、`task_id` FK；UNIQUE `(task_id,id)` 為同 task 子參照目標 | 013／014 `TaskConfig` |
 | C-02 | DB | `version_no > 0`、`schema_version_no = version_no`、UNIQUE `(task_id,version_no)`；digest 可跨版本重複 | 013 `TaskConfig` |
 | C-03 | SVC | `config_payload` 為已驗證不可變 JSON，registry 定義可重播；摘要按 canonical bytes 計算，不能用任意 JSON 欄位代替主鍵 | 013 `TaskConfig`、主憲法 II |
@@ -412,12 +413,13 @@ R1 與 Rn 的序號只在發布週期內唯一；`sampling_value` 保存實際�
 | G-03 | SVC | 四內容欄保留 immutable；資產 JSON 驗證、digest 與檔案保留政策須一致；`force_guideline` 不觸發新版本 | 013 `TaskGuidelineConfig`、014 FR-017a |
 | M-01 | DB | membership PK、task/user 真 FK；UNIQUE `(task_id,id)` 供受派者與 roster 複合 FK；另建同序 UNIQUE `(task_id,id,user_id)` 供工時區間驗證同一任務、成員與使用者，防跨人掛載 | ADR-037、014 `TaskMembership`／FR-007d；[工時字典](./task-work-db-schema.md) W-02 |
 | M-02 | DB | UNIQUE `(task_id,user_id,task_role)`；一人多角色是多列，角色限現行 `TASK_ROLES` | ADR-037 §Boundaries、014 `TaskMembership` |
-| M-03 | SVC | 停用後即時失權，已提交歷史保留；未提交 slot 退回池但不更換 assignment ID | ADR-037 §Persistence、014 FR-005l |
+| M-03 | DB＋SVC | CHECK `membership_status IN ('active','disabled')`（014 FR-005l／成員清單狀態）；`invited` 屬邀請流程顯示態，邀請持久化未在本批定案，不放進此值域，日後擴充須經 migration。停用後即時失權，已提交歷史保留；未提交 slot 退回池但不更換 assignment ID | ADR-037 §Persistence、014 FR-005l |
 | R-01 | DB＋SVC | roster 複合 PK `(task_id,reviewer_membership_id)`、FK → membership `(task_id,id)`；服務另驗角色 reviewer 與 active | 014 FR-010s-1 |
 | R-02 | SVC | `can_arbitrate=true` 只表示已選 reviewer 子集合；仲裁仍需非當事人及即時授權 | 014 FR-010s-1、015 FR-060 |
-| R-03 | DB | `sort_order > 0`；UNIQUE `(task_id,sort_order)` | 014 FR-010t、015 FR-093 |
+| R-03 | DB | `sort_order > 0`；不採唯一約束（非唯一）：SQLite 無法延後唯一檢查，重排名冊時中途必撞號。改建非唯一索引 `(task_id,sort_order,reviewer_membership_id)`，排序先依 `sort_order` 再依 `reviewer_membership_id`，同值時仍可決定性重現；重排在單一交易內整批更新 | 014 FR-010t、015 FR-093 |
 | Y-01 | DB | cycle PK、task/version FK；UNIQUE `(task_id,id)`；`(task_id,config_version_id)` 複合 FK → config `(task_id,id)` | 014 `RunCycle` |
-| Y-02 | DB＋SVC | `cycle_no > 0`、UNIQUE `(task_id,cycle_no)`、部分唯一 `(task_id) WHERE closed_at IS NULL`；關閉原因與指標原子更新 | 014 FR-010f-5、ADR-022 |
+| Y-02 | DB＋SVC | `cycle_no > 0`、UNIQUE `(task_id,cycle_no)`、部分唯一 `(task_id) WHERE closed_at IS NULL`，為同 task 至多一個開啟 cycle 的唯一保證；關閉欄位、指標處理（T-04）與狀態轉換同交易 | 014 FR-010f-5、ADR-022 |
+| Y-05 | DB | CHECK `close_reason IS NULL OR close_reason IN ('rejected','completed')`（值域）：`rejected` 對應 `waiting_iaa_confirmation → draft`，`completed` 對應 `official_run_in_progress → completed`（ADR-022）。`closed_at` 與 `close_reason` 成對：同為 NULL（開啟中）或同為非 NULL（已關閉），寫入後不改；本欄只存代碼，不存自由文字 | ADR-022、014 FR-010f-5 |
 | Y-03 | SVC | 發布時驗 dataset sealed、config 同 task 且不可變；cycle 不能轉移已釘版本 | 014 FR-010f／FR-014 |
 | Y-04 | SVC | seed/演算法版本能重播同一公開資格池；不以 `declared_split` 或答案影響選取 | 014 FR-010f |
 | Q-01 | DB | round PK、actor user FK；`(task_id,task_run_cycle_id)`→cycle `(task_id,id)`；UNIQUE `(task_run_cycle_id,id)` 與 `(id,guideline_version_id)` 供子參照 | 014 `TrialRound` |
@@ -425,7 +427,7 @@ R1 與 Rn 的序號只在發布週期內唯一；`sampling_value` 保存實際�
 | Q-03 | DB | `(task_id,guideline_version_id)`→guideline `(task_id,id)`，不得用裸版本號連到他人 task | 014 FR-017a／`TrialRound` |
 | Q-04 | SVC | round `sampling_value = task_run.item_count = COUNT(task_run_item)`；CHECK 不能跨表計數 | 014 FR-010f-2／f-6 |
 | Q-05 | SVC | Rn 修訂記錄與 `no_change` 原因依 FR-017 驗證；R1 可空不是偽造空字串 | 014 FR-017 |
-| Q-06 | DB＋SVC | IAA 狀態僅 `pending/done/failed`；回合建立時為 `pending` 且無 `task_trial_iaa_result`，失敗時為 `failed` 且不留可誤認為成功的結果。只有在同一資料庫交易寫入完整結果列並核對所有應計算輸出後才改為 `done`；`De = 0` 的「無法計算」亦屬確定結果而非失敗，不表示達標。開始正式標記與新增試標回合均須核對最新回合的 `done` 及結果列 | 014 FR-010o-4／FR-010o-5、ADR-022 |
+| Q-06 | DB＋SVC | IAA 狀態僅 `pending/done/failed`；一致性機制用條件式 UPDATE（SQLite 與 PostgreSQL 皆可，不需新欄位）：`UPDATE task_trial_round SET iaa_computation_status='done' WHERE id=:id AND iaa_computation_status='pending' AND EXISTS (SELECT 1 FROM task_trial_iaa_result WHERE trial_round_id=:id)`，須與結果列 INSERT 同一交易，影響列數為 0 即回滾；`failed → pending` 重試以 `WHERE iaa_computation_status='failed' AND NOT EXISTS (結果列)` 條件更新。`done` 列不可變：沒有任何寫入路徑以 `done` 為來源狀態，結果列僅 INSERT（PK 防重），不 UPDATE／DELETE，DB trigger 加固待 §7 核定。回合建立時為 `pending` 且無 `task_trial_iaa_result`，失敗時為 `failed` 且不留可誤認為成功的結果。只有在同一資料庫交易寫入完整結果列並核對所有應計算輸出後才改為 `done`；`De = 0` 的「無法計算」亦屬確定結果而非失敗，不表示達標。開始正式標記與新增試標回合均須核對最新回合的 `done` 及結果列 | 014 FR-010o-4／FR-010o-5、ADR-022 |
 | Q-07 | DB | `task_trial_iaa_result.trial_round_id` 同時為非空 PK 與真實 FK → `task_trial_round.id`，一回合至多一列；主鍵已覆蓋外鍵反查，不加重複索引；普通刪除先採 RESTRICT 候選 | 014 FR-010o-5 |
 | Q-08 | DB＋SVC＋SEC | DB CHECK `result_schema_version > 0`、`algorithm_version` 非空白及 `input_digest` 為 64 位十六進位；`result_payload` 由釘住的 task config／IAA registry 驗證，逐一涵蓋 `IAA_GATE_EXCLUDED_TYPES` 以外的輸出鍵，只有確定數值或 `De = 0` 原因，不存原始標記答案、hidden answer、gold/test 身分或受限來源。結果與輸入版本摘要成功後不可覆寫；精確 JSON schema、摘要位元組規範及演算法版本詞彙在 runtime 前定案 | 014 FR-010o-5、dataset-017 FR-039、主憲法 III |
 | S-01 | DB | snapshot PK、cycle/locked_by user FK；UNIQUE `(task_run_cycle_id,id)` 供同 cycle run 參照 | 014 `SampleSnapshot` |
@@ -459,7 +461,7 @@ R1 與 Rn 的序號只在發布週期內唯一；`sampling_value` 保存實際�
 |---|---|---|
 | 我的任務與 user FK | `task_membership(user_id,membership_status,task_id)` | user 起首查詢；增加成員變更寫入成本；ADR-037 要求 |
 | 同任務 config／指引版本 | UNIQUE `(task_id,version_no)` 各一 | 同時覆蓋 task FK 前綴；不另加 task_id 索引 |
-| 當前 reviewer 名冊 | PK `(task_id,reviewer_membership_id)`、UNIQUE `(task_id,sort_order)` | 同 task 名冊與排序；membership 反查另評估 `(reviewer_membership_id,task_id)` |
+| 當前 reviewer 名冊 | PK `(task_id,reviewer_membership_id)`、非唯一 `(task_id,sort_order,reviewer_membership_id)` | 同 task 名冊與決定性排序；不用 UNIQUE 以容許重排（R-03）；membership 反查另評估 `(reviewer_membership_id,task_id)` |
 | cycle 歷史與開啟唯一 | UNIQUE `(task_id,cycle_no)`、部分 UNIQUE `(task_id) WHERE closed_at IS NULL` | 防並行雙開；額外部分索引小而必要 |
 | 試標 IAA 完整結果 | `task_trial_iaa_result(trial_round_id)` PK／FK | 一回合最多一份不可變結果並以主鍵定位；不重複建立單欄索引 |
 | run 歷史及重試 | `(task_run_cycle_id,run_type,created_at,id)`；Dry 部分 UNIQUE `(task_id,trial_round_id,publication_idempotency_key)` WHERE run_type = 'dry_run'；Official 部分 UNIQUE `(task_id,publication_idempotency_key)` WHERE run_type = 'official_run' | 歷程索引支援有界查詢；兩個部分索引分別約束試標回合與正式發布，允許跨回合重用 key；增加發布成本 |
@@ -467,7 +469,7 @@ R1 與 Rn 的序號只在發布週期內唯一；`sampling_value` 保存實際�
 | run 清單順序 | UNIQUE `(task_run_id,list_position)` | 避免全表排序；重複 run_id 單欄索引無益 |
 | 標記／審核子表的工作位參照 | UNIQUE `(task_id,task_run_id,id)` | 六張子表以同序複合 FK 指向工作位；此鍵左側前綴亦覆蓋 task 與 run 反查，不另建重複的 `task_id`／`task_run_id` 單欄索引 |
 | 受派者待辦 | `(assignee_membership_id,task_run_id,id)` | PK/slot 唯一鍵無法覆蓋 assignee 起首查詢；依待辦實測調整 |
-| FK 反查 | `task(created_by_user_id)`、`task(dataset_version_id)`、`task_run_cycle(dataset_version_id)`、`task_run_item(dataset_item_id)`、`task_annotation_exclusion(excluded_by_user_id)` | 父刪除檢查或業務反查；若複合索引左前綴已涵蓋則移除重複項 |
+| FK 反查 | `task(created_by_user_id)`、`task(dataset_version_id)`、`task_run_cycle(dataset_version_id)`、`task_run_item(dataset_item_id)`、`task_annotation_exclusion(excluded_by_user_id)` | 父刪除檢查或業務反查；若複合索引左前綴已涵蓋則移除重複項 || 無左前綴的 FK 反查 | `task_run_cycle(task_id,config_version_id)`、`task_trial_round(task_id,guideline_version_id)`、`task_trial_round(created_by_user_id)`、`task_sample_snapshot(locked_by_user_id)`、`task_run(task_id,guideline_version_id)`、`task_run(task_run_cycle_id,trial_round_id)`、`task_run(created_by_user_id)`、`task_run_reviewer_candidate(task_id,reviewer_membership_id)` | 這些 FK 子端欄位不在任何 PK／UNIQUE 的左前綴，父列刪除檢查與反查會掃表；索引小，增加發布寫入成本 |
 
 JSON config 與覆寫不先建 GIN；只有實際 JSON key predicate 與執行計畫證明需要時才加入 PostgreSQL 專用索引，SQLite Lite 仍須可運作。
 
