@@ -80,19 +80,19 @@ Label Suite 的對應做法：
 | 候選表 | 狀態 | 已知識別／關聯 | 正典與待決 |
 |---|---|---|---|
 | `dataset` | 實體草案 | `id` PK；`created_by_user_id → users` | dataset-021 FR-001／FR-002；名稱非唯一身分，建立者 FK 依 account 表落地 |
-| `dataset_version` | 實體草案 | `id` PK；`dataset_id → dataset`；`parent_version_id → dataset_version`，同 dataset 的複合 FK；`(dataset_id, version_no)` 唯一 | dataset-021 FR-002／FR-008；`draft → sealed` 完整快照，清單編碼待執行階段前定義；保留與匿名化見 ADR-038／§5.2，週期與上限 待定（#1224） |
+| `dataset_version` | 實體草案 | `id` PK；`dataset_id → dataset`；`parent_version_id → dataset_version`，同 dataset 的複合 FK；`(dataset_id, version_no)` 唯一 | dataset-021 FR-002／FR-008；`draft → sealed` 完整快照，清單編碼待執行階段前定義；保留與匿名化見 ADR-038／§5.2，週期與上限 待定（#1244） |
 | `dataset_import_batch` | 實體草案 | `id` PK；`dataset_version_id → dataset_version`；`(dataset_version_id, source_ordinal)` 唯一 | dataset-021 FR-003／FR-006；逐檔來源、前處理與受限 `classification_manifest`，產物讀取須隔離 |
 | `dataset_item` | 實體草案 | `id` PK；`dataset_import_batch_id → dataset_import_batch`；`(dataset_import_batch_id, source_row_no)` 唯一 | dataset-021 FR-004／FR-007；`public_payload` 僅公開允許清單，發布成員由 `task_run_item` 候選表保存 |
 | `dataset_item_private` | 實體草案 | `dataset_item_id` 同時 PK／FK → `dataset_item` | dataset-021 FR-005～FR-007；來源 split／hidden answer 隔離，儲存後只授權計分處理程序讀答案 |
 
 ### 任務、發布週期與執行
 
-以下 14 張表均為**實體草案、尚未部署**；六欄字典、複合 FK、索引及待決見 [任務／執行實體字典](./task-run-db-schema.md) §3～§7。身分契約來自 013 v8.3.1、014 v11.0.0、015 v12.1.0、ADR-022／032／037；SQL 型別仍須獨立資料庫遷移切片驗證；保留政策見 ADR-038／§5.2，週期與上限 待定（#1224）。
+以下 14 張表均為**實體草案、尚未部署**；六欄字典、複合 FK、索引及待決見 [任務／執行實體字典](./task-run-db-schema.md) §3～§7。身分契約來自 013 v8.3.1、014 v11.0.0、015 v12.1.0、ADR-022／032／037；SQL 型別仍須獨立資料庫遷移切片驗證；保留政策見 ADR-038／§5.2，週期與上限 待定（#1244）。
 
 | 規格實體 → 候選資料落點 | 狀態 | 已知識別／關聯 | 正典與待決 |
 |---|---|---|---|
 | `TaskDetail` → `task` | 實體草案 | `id` PK；建立者與當前 `dataset_version` 單欄 FK；當前設定／guideline 非空，須以同 task 延後複合 FK 在交易提交時驗證 | 013／014；歷史版本只由不可變發布週期/執行追溯，初建預配置 task、config、guideline UUID 並同交易建立；循環 FK 的 SQLite／PostgreSQL migration 尚待實測 |
-| `TaskConfig` → `task_config_version`；`OutputConfig` 內嵌 | 實體草案／內嵌 | `id` PK、`(task_id,version_no)` 唯一、`schema_version_no=version_no`；完整設定為經驗證 JSON | 013／014；registry 定義與 canonical bytes 待執行階段定案；保留政策見 ADR-038／§5.2，週期與上限 待定（#1224） |
+| `TaskConfig` → `task_config_version`；`OutputConfig` 內嵌 | 實體草案／內嵌 | `id` PK、`(task_id,version_no)` 唯一、`schema_version_no=version_no`；完整設定為經驗證 JSON | 013／014；registry 定義與 canonical bytes 待執行階段定案；保留政策見 ADR-038／§5.2，週期與上限 待定（#1244） |
 | `TaskGuidelineConfig` → `task_guideline_version` | 實體草案 | `id` PK、`(task_id,version_no)` 唯一；四個內容欄位與資產參照同列不可變 | 013／014 FR-017a；`force_guideline` 留在 `task`，資產生命週期待決 |
 | `TaskMembership` → `task_membership` | 實體草案 | `id` PK、`(task_id,user_id,task_role)` 唯一；task／user 單欄 FK | ADR-037、014；一人可多角色，active 狀態須即時查 |
 | 審核員／仲裁員名冊 → `task_reviewer_roster_member` | 實體草案 | `(task_id,reviewer_membership_id)` 複合 PK／FK；`can_arbitrate` 為審核員子集合 | 014 FR-010s-1／FR-010t；建立執行時凍結候選排序 |
@@ -113,7 +113,7 @@ Label Suite 的對應做法：
 
 ### 匯出紀錄與原始產物
 
-兩張表均為**實體草案、尚未部署**；欄位型別、主鍵、真單欄 FK、同任務複合 FK、索引、保存期限與安全邊界見[任務匯出實體字典](./task-export-db-schema.md) §3～§7。正典來源為 014 v8.0.1，背景產物與資料庫交易須在獨立實作中驗證。
+兩張表均為**實體草案、尚未部署**；欄位型別、主鍵、真單欄 FK、同任務複合 FK、索引、保存期限與安全邊界見[任務匯出實體字典](./task-export-db-schema.md) §3～§7。正典來源為 014，背景產物與資料庫交易須在獨立實作中驗證。
 
 | 規格實體 → 候選資料落點 | 狀態 | 已知識別／關聯 | 正典與待決 |
 |---|---|---|---|
@@ -122,7 +122,7 @@ Label Suite 的對應做法：
 
 ### 標記、審核與品質
 
-標記／審核八張表均為**實體草案、尚未部署**；六欄字典、六組 assignment 複合 FK、索引與待決見 [標記／審核實體字典](./annotation-review-db-schema.md) §3～§7。014 v8.0.1／015 v12.0.0 已規劃來源凍結、一次仲裁與草稿隔離；尚無 ORM、資料庫遷移或 API。品質／IAA 專用表留待資料集分析模組正式開發。
+標記／審核八張表均為**實體草案、尚未部署**；六欄字典、六組 assignment 複合 FK、索引與待決見 [標記／審核實體字典](./annotation-review-db-schema.md) §3～§7。014／015 已規劃來源凍結、一次仲裁與草稿隔離；尚無 ORM、資料庫遷移或 API。品質／IAA 專用表留待資料集分析模組正式開發。
 
 | 規格實體 → 候選資料落點 | 狀態 | 已知識別／關聯 | 正典與待決 |
 |---|---|---|---|
@@ -135,7 +135,7 @@ Label Suite 的對應做法：
 | `AnnotationHistoryItem` → `annotation_history_event` | 實體草案 | 單位內 `event_no` 唯一；審核事件指向不可變 revision；可空 `account_session_id → account_session` | 015 v12.1.0 FR-086～FR-091／FR-097；僅寫可驗證 session，舊事件與系統動作可空，敏感快照須按角色遮蔽 |
 | `OutputTypeIAAReport` → MVP 後品質分析報告 | MVP 後裁決 | `output_type`、metric、threshold、`pass_state` | dataset-017 FR-039；與 MVP 閘門證據 `task_trial_iaa_result` 分開，分析報告是否持久化與版本鍵留待 016／017 開發時裁決 |
 
-工時原始區間已有[工時候選字典](./task-work-db-schema.md)，匯出請求與原始產物已有[匯出候選字典](./task-export-db-schema.md)；狀態轉換與隔離設定稽核已裁決由 `audit_events` 投影。來源／批次／項目與私有答案已在 dataset 候選字典有表形；任務／執行及標記／審核已有候選型別與 FK。跨表資格、爭議鍵與工時執行期約束仍待資料庫遷移及雙庫驗證；保留政策見 ADR-038／§5.2，週期與上限 待定（#1224）。
+工時原始區間已有[工時候選字典](./task-work-db-schema.md)，匯出請求與原始產物已有[匯出候選字典](./task-export-db-schema.md)；狀態轉換與隔離設定稽核已裁決由 `audit_events` 投影。來源／批次／項目與私有答案已在 dataset 候選字典有表形；任務／執行及標記／審核已有候選型別與 FK。跨表資格、爭議鍵與工時執行期約束仍待資料庫遷移及雙庫驗證；保留政策見 ADR-038／§5.2，週期與上限 待定（#1244）。
 
 ### 非持久化投影與尚待實體字典承接的規格欄位
 
@@ -185,7 +185,7 @@ erDiagram
 | 已裁決／實作前待驗 | 通用稽核表形 | D-4 採 `audit_events`，所有事件至少留一個日曆年；`task_id` 已列可空真實 FK 候選，狀態與隔離時間線由兩種 typed action 投影。刪除與匿名化政策、建表順序及 SQLite／PostgreSQL 驗證仍待獨立實作；不得從候選表推定已落地 | Accepted ADR-032、014 FR-025、帳號／管理 §3.7／§4.6、任務／執行 §3.1 |
 | 已裁決 | 角色權限矩陣如何參與授權 | 兩張表保留為未部署候選；42 列初始格、固定格、CAS 與稽核目標依 ADR-037；執行階段與資料庫遷移另案實作 | Accepted ADR-037、admin-007 v1.2.0、帳號／管理 §4.7 |
 | 候選已定／實作前待驗 | 標記與審核的執行身分及黏著推導 | 014 v9.0.0／015 v12.1.0 已定 `run_id × assignment_id` 審核單位，試標 `run_id × dataset_item_id`、正式標記 `run_id × assignment_id` 推導黏著；不得建立 `ReviewAssignment` 表或將 #1165 三欄舊邏輯參照轉成 FK。八張標記／審核候選表、2 個單欄 FK 及 20 組複合 FK 已列字典；仍待資料庫遷移、爭議鍵編碼與雙庫實測 | 014／015 關鍵實體、015 FR-049／FR-051／FR-093 |
-| 候選已定／實作前待驗 | 資料項目、隱藏答案與來源沿革的五表邊界 | dataset-021 與字典已定逐檔分類、公開／私有分表及完整版本；清單編碼、任務／執行綁定與雙資料庫實測仍待後續工作；保留政策見 ADR-038／§5.2，週期與上限 待定（#1224） | dataset-021 FR-001～FR-011、[資料集字典](./dataset-db-schema.md)；主憲法 III／XIV／XVI |
+| 候選已定／實作前待驗 | 資料項目、隱藏答案與來源沿革的五表邊界 | dataset-021 與字典已定逐檔分類、公開／私有分表及完整版本；清單編碼、任務／執行綁定與雙資料庫實測仍待後續工作；保留政策見 ADR-038／§5.2，週期與上限 待定（#1244） | dataset-021 FR-001～FR-011、[資料集字典](./dataset-db-schema.md)；主憲法 III／XIV／XVI |
 | 候選已定／實作前待驗 | MVP 試標完成證據 | `task_trial_iaa_result` 已有一回合一列的六欄候選；`done` 與完整結果同交易，兩個離開試標的閘門均查結果。演算法、registry、交易與兩庫實測仍屬後續實作 | 014 FR-010o-5、任務／執行字典 §3.8／Q-06～08 |
 | MVP 後 | 資料集分析報告是否另有表與版本鍵 | `TaskConfig`／`TaskGuidelineConfig` 已有候選版本表；016／017 的 `OutputTypeIAAReport`、品質排名及異常偵測專用表留待模組正式開發時裁決，不與 MVP 閘門結果混為一張報告表 | 013／014／017 關鍵實體、任務／執行字典 §3.8 |
 
@@ -209,12 +209,12 @@ erDiagram
 
 ### 5.2 保存、刪除與匿名化政策（ADR-038）
 
-保存、刪除與匿名化已由 [ADR-038](../../adr/038-data-retention-deletion-anonymization.md) 依 issue #1224 的維護者裁決定案。本節只引用既有正典下限：稽核事件與工時歷程至少一個日曆年（ADR-032、ADR-021）、匯出原檔 30 日與歷史 metadata 一年（014 FR-021）；其餘最長期限、清理週期與下架程序一律標 `待定（#1224）`，不自行寫成數字。事件列從不刪除，`RESTRICT` 仍是被引用資料的預設。
+保存、刪除與匿名化已由 [ADR-038](../../adr/038-data-retention-deletion-anonymization.md) 依 issue #1224 的維護者裁決定案。本節只引用既有正典下限：稽核事件與工時歷程至少一個日曆年（ADR-032、ADR-021）、匯出原檔 30 日與歷史 metadata 一年（014 FR-021）；其餘最長期限、清理週期與下架程序一律標 `待定（#1244）`，不自行寫成數字。事件列從不刪除，`RESTRICT` 仍是被引用資料的預設。
 
-| 資料類別 | 裁決 | 既有下限 | 刪除／匿名化方式 | 待定（#1224） |
+| 資料類別 | 裁決 | 既有下限 | 刪除／匿名化方式 | 待定（#1244） |
 |---|---|---|---|---|
 | `users` 與 `account_email_change_request.pending_email` | 原地匿名化 | 無；由資料主體刪除請求觸發 | 同一列匿名化，FK 不改指：停用、email 改唯一不可投遞墓碑值、`name` 改墓碑標籤、清除個人欄位與憑證、撤銷全部工作階段，並刪除密碼 token 與全部 email 變更申請；不可逆（account-020 FR-007） | 匿名化狀態的持久化形式；匿名化後稽核顯示身分遺失是否可接受 |
-| 共用 `audit_events` 與 `annotation_history_event` 的 PII 欄位 | 下限後匿名化 | 一個日曆年（ADR-032） | 事件列不刪；一個日曆年後只經 migration role 特權路徑匿名化 `reason` 自由文字；`payload_summary` 現無個人鍵（ADR-032 allowlist 排除），標記個人鍵 待定（#1224）；ID 欄保留 | 執行週期與最長期限 |
+| 共用 `audit_events` 與 `annotation_history_event` 的 PII 欄位 | 下限後匿名化 | 一個日曆年（ADR-032） | 事件列不刪；一個日曆年後只經 migration role 特權路徑匿名化 `reason` 自由文字；`payload_summary` 現無個人鍵（ADR-032 allowlist 排除），標記個人鍵 待定（#1244）；ID 欄保留 | 執行週期與最長期限 |
 | 含答案的歷程 JSON（`result_snapshot`、`decision_payload`、仲裁票 payload） | 隨版本／run 保存 | 無統一期限 | 該 dataset 版本或 run 存在期間保存，不做 PII 欄位匿名化（015 FR-063 研究可重現） | 版本下架程序與期限；下架前不刪 |
 | 受限來源檔、私有答案（`dataset_item_private`）與 `protected_payload` | 被引用時 RESTRICT | 無 | 已封存版本或 run 引用時拒絕；僅未封存、未被任何 run 引用的草稿丟棄時，同交易依子→父實體刪除，不經 CASCADE 穿過已封存版本（dataset-021 FR-011） | 版本下架 |
 | 任務、版本、發布週期、試標結果、抽樣回執、工作位及排除 | 先採 RESTRICT | 舊週期退回後保留；IAA 結果與 `done` 證據不先於引用消失 | 不以 CASCADE 抹除責任鏈；刪除順序遵循上列兩類資料集規則 | 各類最長期限與任務刪除順序 |
@@ -235,6 +235,6 @@ erDiagram
 | 試標 IAA 閘門（MVP） | [014 FR-010o-5](../../../specs/task-management/014-task-detail/spec.md) 要求逐回合完整結果、來源摘要、演算法與格式版本；`pending`／`failed` 不得充作 `done`，`De = 0` 是有明確原因的無法計算。 | `task_trial_round.iaa_computation_status` 與一對一 `task_trial_iaa_result` 在同一資料庫交易更新；兩種離開試標的轉換都核對狀態與結果。這不是資料集分析專用報告表。 | 正典、字典與 NoteCraft 已規劃；實際計算服務、交易、registry 與 SQLite／PostgreSQL 約束測試另案驗證。 |
 | 資料集分析／品質報告（MVP 後） | [017 FR-039](../../../specs/dataset/017-dataset-analysis-detail/spec.md) 規定單一回合的原始答案來源與排除規則；`free_text` 不計自動 IAA，`sequence_tagging` 可計分但無門檻。 | `OutputTypeIAAReport` 的持久化與版本鍵留待 016／017 正式開發時裁決，**本輪不建立分析報告字典或加入 NoteCraft**。`SampleDivergenceFlag` 明言分開儲存，`LowConsistencySampleList` 也提到寫入路徑；不能先歸為純即時計算。 | 正式開發 016／017 時回寫儲存與版本契約，再出欄位字典、FK／CHECK／索引、雙庫驗收與 NoteCraft 投影。 |
 | 工時 | 014 v9.0.0 已定前景工作區間、逐類完成數／速度、台北日期切割、失聯與未知值；015 v12.1.0 明確區分歷程耗時與工時。 | `task_work_interval` 為原始來源；`WorkLogEntry` 只做唯讀投影。`account_session` 保留可驗證登入／登出時間，標記歷程可空關聯已驗證的 session。詳見[工時實體字典](./task-work-db-schema.md)。 | 正典、字典與 NoteCraft 投影已完成；ORM／migration、並發約束、心跳服務、跨日投影、隱私保留與 SQLite／PostgreSQL 實測仍待獨立實作。 |
-| 匯出 | [014 v8.0.1 FR-009a／FR-010i-1／2、FR-020／021](../../../specs/task-management/014-task-detail/spec.md) 已定一次請求一份不可變原始產物、逐 run 有序 manifest、重新下載相同 bytes；`json-min` v2 零列仍有 manifest。 | [匯出候選字典](./task-export-db-schema.md) 的 `task_export`／`task_export_run` 共 27 欄、2 個真單欄 FK；同 task 關聯是兩組複合 FK，不畫假線。接受時間 `requested_at` 與內容快照 `exported_at` 分離；原檔保存 30 日，歷史 metadata 一年；下載需驗目前權限、期限與 SHA-256。 | 正典、字典與 NoteCraft 投影已完成；ORM／migration、受限儲存、跨庫複合 FK、下載授權、原檔校驗與保留刪除仍待獨立實作驗證。 |
+| 匯出 | [014 FR-009a／FR-010i-1／2、FR-020／021](../../../specs/task-management/014-task-detail/spec.md) 已定一次請求一份不可變原始產物、逐 run 有序 manifest、重新下載相同 bytes；`json-min` v2 零列仍有 manifest。 | [匯出候選字典](./task-export-db-schema.md) 的 `task_export`／`task_export_run` 共 27 欄、2 個真單欄 FK；同 task 關聯是兩組複合 FK，不畫假線。接受時間 `requested_at` 與內容快照 `exported_at` 分離；原檔保存 30 日，歷史 metadata 一年；下載需驗目前權限、期限與 SHA-256。 | 正典、字典與 NoteCraft 投影已完成；ORM／migration、受限儲存、跨庫複合 FK、下載授權、原檔校驗與保留刪除仍待獨立實作驗證。 |
 
 循環建立次序、抽樣清單回執、assignment 顯示狀態與任務稽核落點已有規劃裁決；仍需在相關實作前依 §5.2 已裁決的保存政策（ADR-038）確認資料格式及執行期驗證。資料集分析專用表另於 M6 開發時盤點；真正的 ORM／migration／API 與 SQLite／PostgreSQL 約束測試屬獨立實作階段，不能因 NoteCraft 可顯示候選表便勾選其部署驗收。

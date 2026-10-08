@@ -501,3 +501,18 @@ test('every dataset note on a composite-key table states composite keys are not 
       `${name} note needs the "複合鍵與複合 FK 未畫在圖上，見各實體字典 §4" sentence`);
   }
 });
+
+// Issue #1242: protected_payload has no MVP read path.
+test('protected_payload is write-only in MVP across P-04, S-01 and the sensitivity table (#1242)', () => {
+  const rows = [
+    ['P-04', tableRow(datasetSchemaDoc, 'P-04')],
+    ['S-01', tableRow(datasetSchemaDoc, 'S-01')],
+    ['sensitivity', datasetSchemaDoc.split('\n').find((line) => line.startsWith('| `dataset_item_private` | 最高敏感')) ?? ''],
+  ];
+  for (const [label, row] of rows) {
+    assert.ok(row, `${label} row is required`);
+    assert.ok(row.includes('只寫不讀'), `${label} must say protected_payload is 只寫不讀 in MVP`);
+    assert.match(row, /dataset-021[^|]*(?:授權角色|讀取角色)/,
+      `${label} must require amending dataset-021 to add an authorized role before any read`);
+  }
+});
