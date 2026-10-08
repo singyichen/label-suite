@@ -5652,13 +5652,7 @@ function interpolate(template, payload) {
       std: Number(TASK_DATA.currentStd) || 0,
       result: result,
       usedSamples: syntheticSampleCount,
-      date: TASK_DATA.updatedAt ? String(TASK_DATA.updatedAt).slice(0, 10) : '',
-      noteZh: iaa.computable
-        ? '此回合一致性由 computeIaaAlpha() 依實際標記結果即時推導。'
-        : '目前尚無足夠標記資料可計算一致性。',
-      noteEn: iaa.computable
-        ? 'This round\'s agreement is derived live from computeIaaAlpha() using the actual marks.'
-        : 'Not enough marked data yet to compute agreement.'
+      date: TASK_DATA.updatedAt ? String(TASK_DATA.updatedAt).slice(0, 10) : ''
     }];
   }
 
@@ -5721,9 +5715,8 @@ function interpolate(template, payload) {
   }
 
   /* issue #489/#491: "publish trial round" simulator for the demo Publish
-     button. The narrative scaffolding (date / noteZh / noteEn) has no
-     computeIaaAlpha() equivalent and stays useful demo copy describing a
-     specific story beat, so it is kept verbatim. Only the NUMBERS
+     button. The scripted date has no computeIaaAlpha() equivalent
+     and is kept verbatim. Only the NUMBERS
      (agreement, result) are replaced -- and only when computeIaaAlpha()
      actually has real annotator data for this task (T014-T016; every other
      seed task has no seeded dry_run submissions, so computeIaaAlpha()
@@ -5737,26 +5730,20 @@ function interpolate(template, payload) {
         agreement: 0.68,
         std: 0.15,
         result: 'failed',
-        date: '2026-05-01',
-        noteZh: '第一回合在情緒界線案例分歧較大，未達正式啟動門檻。',
-        noteEn: 'Round 1 showed larger disagreement on borderline cases and did not pass.'
+        date: '2026-05-01'
       },
       {
         agreement: 0.81,
         std: 0.08,
         result: 'passed',
-        date: '2026-05-03',
-        noteZh: '第二回合調整說明後達標，可用剩餘樣本進入正式標記。',
-        noteEn: 'Round 2 passed after guideline refinement and unlocks the remaining pool for official work.'
+        date: '2026-05-03'
       }
     ];
     var scenario = scenarios[roundNumber - 1] || {
       agreement: Number(getPrimaryTargetAgreement() || 0.8),
       std: 0.08,
       result: 'passed',
-      date: '2026-05-05',
-      noteZh: '此回合已達標，可直接沿用剩餘樣本進入正式標記。',
-      noteEn: 'This round passed and the remaining sample pool is ready for official work.'
+      date: '2026-05-05'
     };
     var iaa = getPrimaryIaaResult();
     if (iaa.computable) {
@@ -10862,8 +10849,6 @@ function getTaskTypeLabel() {
       result: null,
       usedSamples: Number(TASK_DATA.samplingValue) || 0,
       date: scenario.date,
-      noteZh: scenario.noteZh,
-      noteEn: scenario.noteEn,
       priorRoundFindings: revisionNote ? revisionNote.priorRoundFindings : null,
       guidelineChangeSummary: revisionNote ? revisionNote.guidelineChangeSummary : null,
       noChangeReason: revisionNote ? revisionNote.noChangeReason : null
