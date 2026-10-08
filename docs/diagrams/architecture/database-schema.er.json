@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/SteveLin100132/notecraft/main/plugins/er-diagram-renderer/schema.json",
   "meta": {
     "title": "Label Suite 資料庫規劃 ER 圖（帳號、管理、資料集、任務執行、工時、標記、審核與匯出）",
-    "description": "**規劃圖，尚未部署資料結構。** 已部署業務表：0；本頁顯示 **40 張候選表、342 欄、47 個候選單欄 FK（外鍵）**。帳號／管理、資料集、任務／執行、工時、標記／審核與匯出的逐表型別和關聯，來自[資料表盤點總帳](/notes/diagrams/architecture/database-table-inventory)所連的六份實體層字典。`task_trial_iaa_result` 保存 MVP 試標完成閘門的逐回合結果；資料集分析專用報告表延後至 MVP 後。`task_work_interval` 保存可觀測前景工作區間；`WorkLogEntry`、`RunStateTransition` 與 `IsolationAuditLog` 是查詢投影，不另建表。標記責任歷程可選擇關聯已驗證的登入工作階段。同任務與同使用者的複合外鍵見各實體字典 §4。\n\n**讀圖方式：** Wiki 可逐表查看候選欄位、來源與待決事項；Diagram 可搜尋表名或欄名，點選表後會聚焦已列出的候選單欄外鍵。圖中連線不代表資料庫遷移、複合約束或資料庫權限已建立。",
+    "description": "**規劃圖，尚未部署資料結構。** 已部署業務表：0；本頁顯示 **40 張候選表、350 欄、34 個候選單欄 FK（外鍵）**。帳號／管理、資料集、任務／執行、工時、標記／審核與匯出的逐表型別和關聯，來自[資料表盤點總帳](/notes/diagrams/architecture/database-table-inventory)所連的六份實體層字典。`task_trial_iaa_result` 保存 MVP 試標完成閘門的逐回合結果；資料集分析專用報告表延後至 MVP 後。`task_work_interval` 保存可觀測前景工作區間；`WorkLogEntry`、`RunStateTransition` 與 `IsolationAuditLog` 是查詢投影，不另建表。標記責任歷程可選擇關聯已驗證的登入工作階段。同任務與同使用者的複合外鍵見各實體字典 §4。\n\n**讀圖方式：** Wiki 可逐表查看候選欄位、來源與待決事項；Diagram 可搜尋表名或欄名，點選表後會聚焦已列出的候選單欄外鍵。圖中連線不代表資料庫遷移、複合約束或資料庫權限已建立。",
     "source": "docs/diagrams/architecture/account-admin-db-schema.md §2–§3; docs/diagrams/architecture/dataset-db-schema.md §2–§3; docs/diagrams/architecture/task-run-db-schema.md §2–§3; docs/diagrams/architecture/task-work-db-schema.md §2–§3; docs/diagrams/architecture/annotation-review-db-schema.md §2–§3; docs/diagrams/architecture/task-export-db-schema.md §2–§3; specs/task-management/014-task-detail/spec.md v11.0.0; specs/annotation/015-annotation-workspace/spec.md v12.1.0; specs/account/020-auth-session-security/spec.md v1.3.0",
     "backTo": "/notes/diagrams/architecture/database-table-inventory"
   },
@@ -1772,7 +1772,7 @@
           "note": "最後改動 UTC；修改；規則：X-01"
         }
       ],
-      "description": "**實體候選，尚未部署。** 每筆工作指派的 ID 不因停用、退回未指派池或重指派而改變；受派者可空不表示已排除。工作位顯示狀態由終局排除、目前已提交或儲存的標記紀錄及受派者依序推導，不另存一個 `status` 欄。正式標記每個資料項目恰有一個工作位，試標按重疊人數建立。候選 UNIQUE `(task_run_id,id)` 是標記／審核六張子表 `(run_id,assignment_id)` 複合 FK 所需的同序父鍵，尚未在資料庫建立。來源：014 FR-005l／FR-010f-4／FR-010f-7／`AnnotationAssignment`；015 的提交後續以此 ID 定址。\n\n來源：[任務／執行實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.13；複合 FK、檢查限制、唯一限制與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。"
+      "description": "**實體候選，尚未部署。** 每筆工作指派的 ID 不因停用、退回未指派池或重指派而改變；受派者可空不表示已排除。工作位顯示狀態由終局排除、目前已提交或儲存的標記紀錄及受派者依序推導，不另存一個 `status` 欄。正式標記每個資料項目恰有一個工作位，試標按重疊人數建立。候選 UNIQUE `(task_id,task_run_id,id)` 是標記／審核六張子表 `(task_id,run_id,assignment_id)` 複合 FK 所需的同序父鍵，尚未在資料庫建立。來源：014 FR-005l／FR-010f-4／FR-010f-7／`AnnotationAssignment`；015 的提交後續以此 ID 定址。\n\n來源：[任務／執行實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.13；複合 FK、檢查限制、唯一限制與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。"
     },
     {
       "name": "task_annotation_exclusion",
@@ -1824,9 +1824,10 @@
       "group": "annotation",
       "columns": [
         {"name": "id", "type": "uuid", "required": "required", "note": "此次草稿／提交嘗試的主鍵；首次儲存；不改；規則：R-01", "pk": true},
+        {"name": "task_id", "type": "uuid", "required": "required", "note": "所屬任務，複合單位鍵與成員資格鍵；建立；不改；規則：X-01"},
         {"name": "run_id", "type": "uuid", "required": "required", "note": "所屬執行，複合單位鍵；首次儲存；不改；規則：X-01"},
         {"name": "assignment_id", "type": "uuid", "required": "required", "note": "穩定標記工作位，複合單位鍵；首次儲存；不改；規則：X-01"},
-        {"name": "author_membership_id", "type": "uuid", "required": "required", "note": "當時受派標記員成員資格；首次儲存；不改；規則：R-02", "fk": "task_membership"},
+        {"name": "author_membership_id", "type": "uuid", "required": "required", "note": "當時受派標記員成員資格；首次儲存；不改；規則：X-04"},
         {"name": "answer_payload", "type": "json", "required": "required", "note": "版本化 `OutputAnswer[]`，依釘住設定驗證；儲存／提交前可更新；規則：R-03"},
         {"name": "note", "type": "text", "required": "nullable", "note": "受派者備註；缺值是真正未提供；儲存／提交前可更新；規則：R-03"},
         {"name": "version", "type": "integer", "required": "required", "note": "正整數樂觀鎖版本；每次成功寫入 +1；規則：X-02"},
@@ -1844,9 +1845,10 @@
       "group": "review",
       "columns": [
         {"name": "id", "type": "uuid", "required": "required", "note": "私有草稿主鍵；第一次草稿寫入；不改；規則：D-01", "pk": true},
+        {"name": "task_id", "type": "uuid", "required": "required", "note": "所屬任務，複合單位鍵與成員資格鍵；建立；不改；規則：X-01"},
         {"name": "run_id", "type": "uuid", "required": "required", "note": "所在執行，複合單位鍵；建立；不改；規則：X-01"},
         {"name": "assignment_id", "type": "uuid", "required": "required", "note": "受審工作位，複合單位鍵；建立；不改；規則：X-01"},
-        {"name": "reviewer_membership_id", "type": "uuid", "required": "required", "note": "唯一可讀寫此草稿的審核員；建立；不改；規則：D-02", "fk": "task_membership"},
+        {"name": "reviewer_membership_id", "type": "uuid", "required": "required", "note": "唯一可讀寫此草稿的審核員；建立；不改；規則：X-04"},
         {"name": "decision_payload", "type": "json", "required": "required", "note": "未提交的逐 outKey 三向決策與理由；本人編輯時更新；規則：D-03"},
         {"name": "version", "type": "integer", "required": "required", "note": "草稿樂觀鎖版本；每次成功寫入 +1；規則：X-02"},
         {"name": "updated_at", "type": "timestamptz", "required": "required", "note": "最近成功寫入 UTC 時間；建立／更新；規則：X-03"},
@@ -1861,9 +1863,10 @@
       "group": "review",
       "columns": [
         {"name": "id", "type": "uuid", "required": "required", "note": "目前提交目前版本主鍵；首次正式提交；不改；規則：S-01", "pk": true},
+        {"name": "task_id", "type": "uuid", "required": "required", "note": "所屬任務，複合單位鍵與成員資格鍵；建立；不改；規則：X-01"},
         {"name": "run_id", "type": "uuid", "required": "required", "note": "所在執行，複合單位鍵；首次提交；不改；規則：X-01"},
         {"name": "assignment_id", "type": "uuid", "required": "required", "note": "受審工作位，複合單位鍵；首次提交；不改；規則：X-01"},
-        {"name": "reviewer_membership_id", "type": "uuid", "required": "required", "note": "唯一正式提交者；首次提交；不改；規則：S-02", "fk": "task_membership"},
+        {"name": "reviewer_membership_id", "type": "uuid", "required": "required", "note": "唯一正式提交者；首次提交；不改；規則：X-04"},
         {"name": "version", "type": "integer", "required": "required", "note": "已提交修訂的正整數序號／樂觀鎖；每次合法改判 +1；規則：S-03"},
         {"name": "submitted_at", "type": "timestamptz", "required": "required", "note": "首次提交 UTC 時間；首次提交；不改；規則：X-03"},
         {"name": "updated_at", "type": "timestamptz", "required": "required", "note": "最新合法改判 UTC 時間；每次提交；規則：X-03"}
@@ -1893,12 +1896,13 @@
       "group": "review",
       "columns": [
         {"name": "id", "type": "uuid", "required": "required", "note": "不可變票主鍵；仲裁交易建立；不改；規則：V-01", "pk": true},
+        {"name": "task_id", "type": "uuid", "required": "required", "note": "所屬任務，複合單位鍵與成員資格鍵；建立；不改；規則：X-01"},
         {"name": "run_id", "type": "uuid", "required": "required", "note": "所在執行，複合單位鍵；建立；不改；規則：X-01"},
         {"name": "assignment_id", "type": "uuid", "required": "required", "note": "受審工作位，複合單位鍵；建立；不改；規則：X-01"},
         {"name": "output_key", "type": "varchar(120)", "required": "required", "note": "爭議的 outKey；建立；不改；規則：V-02"},
         {"name": "item_key", "type": "text", "required": "required", "note": "型別化、無碰撞的推導子項鍵；建立；不改；規則：V-02"},
-        {"name": "arbiter_membership_id", "type": "uuid", "required": "required", "note": "當次合格且非當事的仲裁者；建立；不改；規則：V-03", "fk": "task_membership"},
-        {"name": "review_revision_id", "type": "uuid", "required": "required", "note": "投票所見的不可變審核員版本；建立；不改；規則：V-04", "fk": "annotation_review_submission_revision"},
+        {"name": "arbiter_membership_id", "type": "uuid", "required": "required", "note": "當次合格且非當事的仲裁者；建立；不改；規則：X-04"},
+        {"name": "review_revision_id", "type": "uuid", "required": "required", "note": "投票所見的不可變審核員版本；建立；不改；規則：V-04"},
         {"name": "choice", "type": "varchar(16)", "required": "required", "note": "`adopt_a`／`adopt_b`／`reject`；建立；不改；規則：V-05"},
         {"name": "reason", "type": "text", "required": "required", "note": "每張仲裁票的裁定理由；三種 choice 都必填且非空白；建立；不改；規則：V-05"},
         {"name": "has_finalized_value", "type": "boolean", "required": "required", "note": "本票是否產生定案值；區分合法 JSON 空值；建立；不改；規則：V-06"},
@@ -1917,12 +1921,13 @@
       "group": "review",
       "columns": [
         {"name": "id", "type": "uuid", "required": "required", "note": "不可變收尾主鍵；確認交易建立；不改；規則：E-01", "pk": true},
+        {"name": "task_id", "type": "uuid", "required": "required", "note": "所屬任務，複合單位鍵與成員資格鍵；建立；不改；規則：X-01"},
         {"name": "run_id", "type": "uuid", "required": "required", "note": "所在執行，複合單位鍵；建立；不改；規則：X-01"},
         {"name": "assignment_id", "type": "uuid", "required": "required", "note": "受審工作位，複合單位鍵；建立；不改；規則：X-01"},
         {"name": "output_key", "type": "varchar(120)", "required": "required", "note": "被收尾的爭議 outKey；建立；不改；規則：E-02"},
         {"name": "item_key", "type": "text", "required": "required", "note": "被收尾的型別化爭議子項鍵；建立；不改；規則：E-02"},
-        {"name": "arbitration_vote_id", "type": "uuid", "required": "required", "note": "唯一 `reject` 票；建立；不改；規則：E-03", "fk": "annotation_arbitration_vote", "unique": true},
-        {"name": "resolved_by_membership_id", "type": "uuid", "required": "required", "note": "確認的 project leader 成員資格；建立；不改；規則：E-04", "fk": "task_membership"},
+        {"name": "arbitration_vote_id", "type": "uuid", "required": "required", "note": "唯一 `reject` 票；建立；不改；規則：E-03", "unique": true},
+        {"name": "resolved_by_membership_id", "type": "uuid", "required": "required", "note": "確認的 project leader 成員資格；建立；不改；規則：X-04"},
         {"name": "action", "type": "varchar(32)", "required": "required", "note": "四種 `EXCEPTION_POOL_ACTIONS` 之一；建立；不改；規則：E-05"},
         {"name": "reason", "type": "text", "required": "required", "note": "非空白的收尾理由；建立；不改；規則：E-05"},
         {"name": "has_finalized_value", "type": "boolean", "required": "required", "note": "是否有定案值；合法 JSON 空值仍可為 true；建立；不改；規則：E-06"},
@@ -1938,10 +1943,11 @@
       "group": "annotation",
       "columns": [
         {"name": "id", "type": "uuid", "required": "required", "note": "append-only 事件主鍵；動作交易建立；不改；規則：H-01", "pk": true},
+        {"name": "task_id", "type": "uuid", "required": "required", "note": "所屬任務，複合單位鍵與成員資格鍵；建立；不改；規則：X-01"},
         {"name": "run_id", "type": "uuid", "required": "required", "note": "所在執行，複合單位鍵；建立；不改；規則：X-01"},
         {"name": "assignment_id", "type": "uuid", "required": "required", "note": "發生動作的工作位，複合單位鍵；建立；不改；規則：X-01"},
         {"name": "event_no", "type": "integer", "required": "required", "note": "單位內正整數單調序號；動作交易分配；不改；規則：H-01"},
-        {"name": "actor_membership_id", "type": "uuid", "required": "required", "note": "當次真實操作者；建立；不改；規則：H-02", "fk": "task_membership"},
+        {"name": "actor_membership_id", "type": "uuid", "required": "required", "note": "當次真實操作者；建立；不改；規則：X-04"},
         {"name": "account_session_id", "type": "uuid", "required": "nullable", "note": "可驗證的當次登入工作階段；舊資料或系統動作可空；不得由操作者或時間猜測補值；規則：H-06", "fk": "account_session"},
         {"name": "actor_task_role", "type": "varchar(24)", "required": "required", "note": "當次選用任務角色快照；建立；不改；規則：H-02"},
         {"name": "action", "type": "varchar(24)", "required": "required", "note": "FR-086 八個目前有效動作之一；建立；不改；規則：H-03"},
@@ -1951,10 +1957,10 @@
         {"name": "started_at", "type": "timestamptz", "required": "nullable", "note": "同次作業恰一筆事件承載；review 修訂版本第一筆決策事件帶值，其餘 SQL NULL（空值）；規則：H-04"},
         {"name": "lead_time_ms", "type": "integer", "required": "nullable", "note": "非負可見耗時；與 started_at 成對且同次作業恰一筆事件承載；規則：H-04"},
         {"name": "occurred_at", "type": "timestamptz", "required": "required", "note": "動作完成 UTC 時間；建立；不改；規則：X-03"},
-        {"name": "annotation_record_id", "type": "uuid", "required": "nullable", "note": "由標記草稿／提交產生時的來源；建立；不改；規則：H-05", "fk": "annotation_record"},
-        {"name": "review_revision_id", "type": "uuid", "required": "nullable", "note": "正式審核事件所依不可變修訂；可由修訂回查提交目前版本；建立；不改；規則：H-05", "fk": "annotation_review_submission_revision"},
-        {"name": "arbitration_vote_id", "type": "uuid", "required": "nullable", "note": "由仲裁票產生時的來源；建立；不改；規則：H-05", "fk": "annotation_arbitration_vote"},
-        {"name": "exception_resolution_id", "type": "uuid", "required": "nullable", "note": "由例外收尾產生時的來源；建立；不改；規則：H-05", "fk": "annotation_exception_resolution"}
+        {"name": "annotation_record_id", "type": "uuid", "required": "nullable", "note": "由標記草稿／提交產生時的來源；建立；不改；規則：H-05"},
+        {"name": "review_revision_id", "type": "uuid", "required": "nullable", "note": "正式審核事件所依不可變修訂；可由修訂回查提交目前版本；建立；不改；規則：H-05"},
+        {"name": "arbitration_vote_id", "type": "uuid", "required": "nullable", "note": "由仲裁票產生時的來源；建立；不改；規則：H-05"},
+        {"name": "exception_resolution_id", "type": "uuid", "required": "nullable", "note": "由例外收尾產生時的來源；建立；不改；規則：H-05"}
       ],
       "description": "**實體候選，尚未部署。** 一列是一個單位的一次動作；不同 outKey 的審核員決策各寫一列。`event_no` 保證同時間戳仍有總排序，清單時間與耗時由事件推導。`account_session_id` 僅在工作階段可驗證時寫入；舊事件與系統動作可空，不能用 `lead_time_ms` 代替工時。未提交審核員草稿**不產生對其他角色可見的事件**；本設計按 FR-014S 不為其寫 history。快照與理由可能含敏感答案，須在資料供給層遮蔽。來源：015 FR-016B／FR-086～FR-091／FR-097。\n\n來源：[標記／審核實體候選字典](/notes/diagrams/architecture/annotation-review-db-schema) §3.7；複合工作指派 FK、唯一限制、檢查限制、權限與資料庫遷移前待決見 §4–§7。圖中只畫已列的單欄 FK；線條不表示 ORM、資料庫遷移或 DB 權限已建立。"
     },
@@ -1965,7 +1971,9 @@
       "group": "review",
       "columns": [
         {"name": "id", "type": "uuid", "required": "required", "note": "不可變修訂主鍵；每次正式提交建立；不改；規則：N-01", "pk": true},
-        {"name": "review_submission_id", "type": "uuid", "required": "required", "note": "所屬唯一審核員目前版本；建立；不改；規則：N-01", "fk": "annotation_review_submission"},
+        {"name": "run_id", "type": "uuid", "required": "required", "note": "所屬目前版本的執行，同單位複合鍵；建立；不改；規則：N-01"},
+        {"name": "assignment_id", "type": "uuid", "required": "required", "note": "所屬目前版本的標記工作位，同單位複合鍵；建立；不改；規則：N-01"},
+        {"name": "review_submission_id", "type": "uuid", "required": "required", "note": "所屬唯一審核員目前版本；建立；不改；規則：N-01"},
         {"name": "version", "type": "integer", "required": "required", "note": "與目前版本本次版本一致的正整數；建立；不改；規則：N-02"},
         {"name": "decision_payload", "type": "json", "required": "required", "note": "本次全部 outKey、修正值和理由快照；建立；不改；規則：N-03"},
         {"name": "submitted_at", "type": "timestamptz", "required": "required", "note": "本次修訂 UTC 提交時間；建立；不改；規則：X-03"}
