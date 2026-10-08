@@ -7,7 +7,7 @@
 - **範圍**：account 001–005、account-020、admin-006、admin-007。admin-007 規格仍為 **Draft**；Accepted ADR-037 已裁決保留兩張可編輯矩陣候選表。
 - **不歸屬任何單一 spec**：同一張 `users` 表被 001、003、005、006 共同修改，因此放在 `docs/diagrams/architecture/`，不隨任何 spec 進 `specs/_archive/`。各 spec 的 plan.md「實體與資料模型」段落應連結本文件，不各自複製欄位表。
 - **狀態：草稿**。九張表均為候選，尚未建立 migration；其他模組的實體鍵與 FK 仍需另行設計，不得據此宣稱已部署。
-- **NoteCraft 規劃檢視**：[`database-schema.er.json`](./database-schema.er.json) 對應 `/view/diagrams/architecture/database-schema.er` 的 Wiki／Diagram。本文件 §3 供應其中 account/admin 的 9 張候選表（63 欄、6 個候選單欄 FK）；[dataset 字典](./dataset-db-schema.md)另供應 5 張／31 欄／6 FK，[task/run 字典](./task-run-db-schema.md)供應 13 張／112 欄／15 FK，[annotation/review 字典](./annotation-review-db-schema.md)供應 8 張／82 欄／14 FK，[匯出字典](./task-export-db-schema.md)供應 2 張候選表／26 欄／2 個候選單欄 FK，全圖合計 37 張候選表／314 欄／43 個候選單欄 FK。兩張權限矩陣表已由 ADR-037 確認保留為候選，目前已落地業務表仍為 0。quality／IAA 專用表依 MVP 範圍延後，工時仍在[盤點總帳](./database-table-inventory.md)待逐表設計。改動任一欄位字典後執行 `node scripts/check-database-schema.mjs` 檢查投影差異。
+- **NoteCraft 規劃檢視**：[`database-schema.er.json`](./database-schema.er.json) 對應 `/view/diagrams/architecture/database-schema.er` 的 Wiki／Diagram。本文件 §3 供應其中 account/admin 的 9 張候選表（64 欄、6 個候選單欄 FK）；[dataset 字典](./dataset-db-schema.md)另供應 5 張／31 欄／6 FK，[task/run 字典](./task-run-db-schema.md)供應 13 張／112 欄／15 FK，[annotation/review 字典](./annotation-review-db-schema.md)供應 8 張／82 欄／14 FK，[匯出字典](./task-export-db-schema.md)供應 2 張候選表／26 欄／2 個候選單欄 FK，全圖合計 37 張候選表／315 欄／43 個候選單欄 FK。兩張權限矩陣表已由 ADR-037 確認保留為候選，目前已落地業務表仍為 0。quality／IAA 專用表依 MVP 範圍延後，工時仍在[盤點總帳](./database-table-inventory.md)待逐表設計。改動任一欄位字典後執行 `node scripts/check-database-schema.mjs` 檢查投影差異。
 - **驗證方式**：本文件不執行 SQL。每條限制的正確性在實作時由 Alembic migration 的 upgrade／downgrade／roundtrip 測試，以及 §4 指定的測試驗證。
 
 ## 1. 關鍵設計決定
@@ -15,12 +15,12 @@
 | 項目 | 決定 | 依據 |
 |---|---|---|
 | 權限判定與憑證作廢 | 每個已認證請求重讀 `users.role`／`is_active`／`credential_version`；JWT 的 `credential_version` 不符即拒絕。`credential_version` 僅處理憑證失效，不承載角色版本 | ADR-021、account-020 FR-002／FR-010 |
-| 表名與角色、狀態欄名 | 沿用既有契約 `users`、`refresh_tokens`、`role`、`is_active`；新表採 `account_token_family`。這是 FR-105 對既有 auth 表的明確例外 | ADR-021、foundation FR-105、account-020；原 N-1 已裁決 |
+| 表名與角色、狀態欄名 | 沿用既有契約 `users`、`refresh_tokens`、`role`、`is_active`；登入工作階段表採 `account_session`；既有 auth 表名仍依正典契約保留。例外均由 FR-105 明列 | ADR-021、foundation FR-105、account-020；原 N-1 已裁決 |
 | 共用稽核表 | 唯一共用候選表名為 `audit_events`，作為 FR-105 的明列例外；人員事件以 `actor_user_id → users` 留參照，系統事件的 actor 為 null；`task_id` 先保留可空 UUID 作用域，不虛構尚未定案的 task FK | Accepted ADR-032、foundation FR-105、006 FR-013、007 FR-010；原 D-4 已裁決 |
 | Google SSO 帳號的判定 | 維持 `hashed_password = null`，不改用 `google_subject IS NOT NULL` | 005 FR-008；ADR-035 修訂 |
 | Google 連結時的既有密碼 | 同一交易清空 `hashed_password` 並撤銷該使用者全部 refresh token | ADR-035 修訂 |
-| refresh token 重用偵測的撤銷範圍 | 寬限期內最多一次重發；逾期重用撤銷該使用者全部有效 family，並拒絕請求 | ADR-021、account-020 FR-003／FR-004 |
-| session 表形 | 一次登入一列 `account_token_family`；輪替 token 只持有 `family_id`，使用者與開始時間由 family 取得 | ADR-021、account-020 FR-001／FR-002 |
+| refresh token 重用偵測的撤銷範圍 | 寬限期內最多一次重發；逾期重用撤銷該使用者全部有效工作階段，並拒絕請求 | ADR-021、account-020 FR-003／FR-004 |
+| session 表形 | 一次登入一列 `account_session`；輪替權杖只持有 `session_id`，使用者與開始時間由登入工作階段取得；`logged_out_at` 僅記錄可驗證的明確登出成功，`revoked_at` 記錄任何原因造成的失效 | ADR-021、account-020 FR-001／FR-002 |
 | email 識別 | 寫入前以 NFC＋casefold 正規化，DB 保留 `lower(email)` 唯一表達式索引 | account-020 FR-009；原 D-8 已裁決 |
 | `users.name` 長度 | 不加上限 | 003 Clarifications（「不加長度上限」） |
 | `users.email` 長度 | 254 | 001 plan v2.2.0 `String(254)`；account-020 FR-009 |
@@ -52,15 +52,16 @@ erDiagram
         timestamptz created_at
         timestamptz updated_at
     }
-    account_token_family {
+    account_session {
         uuid id PK
         uuid user_id FK "indexed; CASCADE"
-        timestamptz started_at "absolute session anchor"
+        timestamptz started_at "登入起點"
         timestamptz revoked_at "nullable"
+        timestamptz logged_out_at "可空；僅明確登出"
     }
     refresh_tokens {
         uuid id PK
-        uuid family_id FK "indexed"
+        uuid session_id FK "indexed"
         char token_hash UK "sha256 hex"
         timestamptz expires_at
         timestamptz revoked_at "nullable"
@@ -119,8 +120,8 @@ erDiagram
         timestamptz updated_at
     }
 
-    users ||--o{ account_token_family : "logins (CASCADE)"
-    account_token_family ||--o{ refresh_tokens : "rotation (CASCADE)"
+    users ||--o{ account_session : "登入（連動刪除）"
+    account_session ||--o{ refresh_tokens : "輪替（連動刪除）"
     users ||--o{ account_password_token : "reset / invite (CASCADE)"
     users ||--o{ account_email_change_request : "email change (<=1 pending)"
     users ||--o{ account_notification_preference : "preferences (<=6)"
@@ -136,8 +137,9 @@ erDiagram
 | `users.credential_version` | ADR-021、account-020 FR-002／FR-010 |
 | `users.google_subject` | ADR-035 |
 | `users.is_seeder` | 006 FR-008c；007 FR-008b |
-| `account_token_family`／`refresh_tokens.family_id` | ADR-021、account-020 FR-001／FR-002、005 FR-010 |
-| `account_token_family.started_at` | foundation FR-076、account-020 FR-002 |
+| `account_session`／`refresh_tokens.session_id` | ADR-021、account-020 FR-001／FR-002、005 FR-010 |
+| `account_session.started_at` | foundation FR-076、account-020 FR-002 |
+| `account_session.logged_out_at` | account-020 FR-001／FR-008、ADR-021；僅明確登出成功時寫入 |
 | `refresh_tokens.grace_reissued_at`／`revoked_reason` | foundation FR-075、account-020 FR-003／FR-004 |
 | `account_password_token` | 004 FR-009A；006 FR-006a／FR-006c；ADR-013（reset token 存於 DB） |
 | `account_email_change_request` | 005 FR-004C–FR-004M |
@@ -170,25 +172,26 @@ erDiagram
 | `created_at` | timestamptz | 否 | 建立時間（UTC） | 建立時 | X-02 |
 | `updated_at` | timestamptz | 否 | 最後修改時間 | 每次 UPDATE | X-02 |
 
-### 3.2 account_token_family：一次登入的 token 家族
+### 3.2 account_session：一次登入的工作階段
 
-一列＝一次登入／一個裝置的 session。使用者與最初登入時間只存在這張表，所有輪替 token 以外鍵指向它；撤銷整個 session 時寫 `revoked_at`，不逐張 token 重複保存家族狀態。
+一列＝一次登入／一個裝置的工作階段。使用者與最初登入時間只存在這張表，所有輪替權杖以外鍵指向它。`revoked_at` 記錄任何原因造成的工作階段失效；`logged_out_at` 只在可驗證的明確登出成功時記錄，不得從權杖輪替、到期、作廢或前端關閉頁面推定。
 
 | 欄位 | 型別 | 可空 | 代表什麼 | 何時寫入／改變 | 規則 |
 |---|---|---|---|---|---|
 | `id` | uuid | 否 | 一次登入的內部識別碼，由應用程式產生 | 建立 session 時 | F-01 |
 | `user_id` | uuid → users | 否 | 這次登入所屬帳號；FK 採 CASCADE，另建 B-tree 索引 | 登入時 | F-01、F-02 |
 | `started_at` | timestamptz | 否 | 最初登入時間，為 refresh token 絕對最長存續時間的唯一基準 | 登入時 | F-01、F-03 |
-| `revoked_at` | timestamptz | 是 | 整個家族撤銷時間；null＝未撤銷 | 登出、跨裝置作廢、高風險事件或重用偵測時 | F-02、F-04 |
+| `revoked_at` | timestamptz | 是 | 工作階段因任何原因失效的時間；null＝未撤銷，不能單獨證明明確登出 | 明確登出、跨裝置作廢、高風險事件或重用偵測時 | F-02、F-04、F-05 |
+| `logged_out_at` | timestamptz | 是 | 可驗證的明確登出成功時間；null＝未證實明確登出 | 明確登出成功且與 `revoked_at` 同一交易寫入時 | F-05 |
 
-### 3.3 refresh_tokens：家族中的一張輪替 token
+### 3.3 refresh_tokens：登入工作階段的輪替權杖
 
-一列＝一張 refresh token。每次 refresh 換發新的一張、舊的標為已輪替；同一次登入的使用者與開始時間只從 `account_token_family` 取得。
+一列＝一張更新權杖。每次更新換發新的一張、舊的標為已輪替；同一次登入的使用者與開始時間只從 `account_session` 取得。
 
 | 欄位 | 型別 | 可空 | 代表什麼 | 何時寫入／改變 | 規則 |
 |---|---|---|---|---|---|
 | `id` | uuid | 否 | token 識別碼 | 發行時 | — |
-| `family_id` | uuid → account_token_family | 否 | 所屬登入家族；FK 採 CASCADE，另建 B-tree 索引 | 發行時沿用 family 的 id | R-04、R-08 |
+| `session_id` | uuid → account_session | 否 | 所屬登入工作階段；FK 採 CASCADE，另建 B-tree 索引 | 發行時沿用工作階段的 id | R-04、R-08 |
 | `token_hash` | char(64) | 否 | token 的 SHA-256 雜湊；DB 不存 token 原值 | 發行時 | — |
 | `expires_at` | timestamptz | 否 | 到期時間 | 發行時 | R-07 |
 | `revoked_at` | timestamptz | 是 | 撤銷時間；null＝未撤銷 | 輪替、登出、改密碼、停用等事件 | R-01、R-03 |
@@ -295,22 +298,23 @@ migration 種入唯一允許的 `id = 1` 列。PK 與 CHECK 只能保證最多�
 | U-07 | SM | `is_seeder` 只能由明確的冪等 bootstrap 建立新帳號時設為 true，不得把既有非 seeder 列升權；之後不可改回 false 或移轉，seeder 列不可刪除。U-05 只檢查單列當下狀態，不涵蓋旗標本身變更 | 應用層不提供此路徑＋SQLite／PG 各自的 trigger | SQLite 與 PG：直接 UPDATE 旗標或 DELETE seeder 列均被擋下；bootstrap 同身份重跑無副作用，既有非 seeder 或不同身份失敗且舊 session 權限不變 | 006 FR-008e／FR-008f；007 FR-008b |
 | U-08 | CC | 任何時刻至少一位 active super_admin，併發停用或降級時亦須成立。PostgreSQL 對不同目標列執行「單一條件式 UPDATE（內含 COUNT）」仍可能 write skew，不得視為安全 | PG：同一交易先取得固定鍵 `pg_advisory_xact_lock`，再重讀數量並變更；SQLite：在讀取／變更前 `BEGIN IMMEDIATE`；所有角色／狀態寫入路徑共用此協定 | SVC（SQLite 與 PG）：正常有 seeder 時併發停用兩位非 seeder 可均成功且仍保有 seeder；恰兩位 active、無 seeder 的遷移前測試資料中，併發停用最多一個成功，最後仍有 active super_admin | 006 FR-008d／FR-008f |
 | U-09 | CD | `hashed_password` 為 null 時可免舊密碼設定密碼；判定條件不得改為 `google_subject IS NOT NULL`，否則已設密碼又連結 Google 的帳號會被免除舊密碼驗證 | 應用層 | API：有密碼且有 `google_subject` 的帳號改密碼時缺 `current_password` → 拒絕 | 005 FR-006、FR-008 |
-| U-10 | XT | Google 連結（canonical email 相符且 `email_verified=true`）時同一交易：寫入 `google_subject`、`hashed_password=null`、`credential_version+1`、撤銷全部 family；`email_verified` 非 true → 拒絕，不寫任何列 | 應用層單一交易 | SVC：連結後密碼為 null、版本增加、family 全撤銷；`email_verified=false` → 無任何寫入；中途失敗 → 全部回滾 | ADR-035、account-020 FR-007 |
+| U-10 | XT | Google 連結（canonical email 相符且 `email_verified=true`）時同一交易：寫入 `google_subject`、`hashed_password=null`、`credential_version+1`、撤銷全部工作階段；`email_verified` 非 true → 拒絕，不寫任何列 | 應用層單一交易 | SVC：連結後密碼為 null、版本增加、工作階段全撤銷；`email_verified=false` → 無任何寫入；中途失敗 → 全部回滾 | ADR-035、account-020 FR-007 |
 | U-11 | CD | `google_subject` 唯一，且允許多筆 null | DB | DB：兩筆 null 成功、兩筆相同值失敗（SQLite＋PG） | ADR-035 |
 | U-12 | SM | 停用與降級立即生效：每個已認證請求重讀 `role`、`is_active`；停用 → 401、降級 → 403；`/auth/refresh` 也檢查 `is_active` | 應用層（`get_current_user`、`require_role`） | API：停用後同一 access token → 401；降級後打 super_admin 端點 → 403；停用後 refresh → 401 | ADR-021 修訂 |
-| U-13 | XT | 停用時同一交易：`is_active=false`、撤銷全部 family、作廢未使用的 password token、清除 pending email 變更申請 | 應用層單一交易 | SVC：停用前發出的邀請連結與 email 驗證連結皆失效 | 006 FR-008a、account-020 FR-007；password token 與 email 申請的作廢為設計建議 |
+| U-13 | XT | 停用時同一交易：`is_active=false`、撤銷全部工作階段、作廢未使用的 password token、清除 pending email 變更申請 | 應用層單一交易 | SVC：停用前發出的邀請連結與 email 驗證連結皆失效 | 006 FR-008a、account-020 FR-007；password token 與 email 申請的作廢為設計建議 |
 | U-14 | XT | 重新啟用不恢復任何已撤銷的 token | 應用層 | SVC：停用→啟用後，舊 refresh token 仍 401 | 006 FR-008b；001 plan（refresh token 單向轉換） |
-| U-15 | CC | Google callback 也檢查 `is_active`；停用帳號不得取得 session | 應用層 | API：停用帳號走 callback → 拒絕，不寫 family 或 refresh token | ADR-021、account-020 FR-007 |
-| U-16 | CK／XT | `credential_version >= 1`，非空且預設 1；高風險憑證事件在原資料寫入交易內遞增。每個已認證請求比對 JWT claim、當前使用者及 family owner／撤銷狀態；角色和停用仍讀 DB | DB CHECK＋應用層 | DB：0 與 null 不可寫；API：舊版本或 `sid` 與 `sub` 不符拒絕；SVC：事件失敗時版本不變 | account-020 FR-002／FR-006／FR-007／FR-010 |
+| U-15 | CC | Google callback 也檢查 `is_active`；停用帳號不得取得 session | 應用層 | API：停用帳號走 callback → 拒絕，不寫入工作階段或更新權杖 | ADR-021、account-020 FR-007 |
+| U-16 | CK／XT | `credential_version >= 1`，非空且預設 1；高風險憑證事件在原資料寫入交易內遞增。每個已認證請求比對 JWT claim、當前使用者及工作階段所屬帳號／撤銷狀態；角色和停用仍讀 DB | DB CHECK＋應用層 | DB：0 與 null 不可寫；API：舊版本或 `sid` 與 `sub` 不符拒絕；SVC：事件失敗時版本不變 | account-020 FR-002／FR-006／FR-007／FR-010 |
 
-### 4.2 account_token_family
+### 4.2 account_session
 
 | ID | 類型 | 規則 | 執行位置 | 實作時驗證 | 來源 |
 |---|---|---|---|---|---|
 | F-01 | CK | `id` 為非空唯一 UUID PK；`user_id` 為非空 FK 至 `users.id`，`started_at` 非空且以 UTC 保存 | DB | DB：不存在的 user FK 及 null 值失敗；M：SQLite＋PG roundtrip | account-020 FR-001 |
-| F-02 | XT | `user_id` 建 B-tree 索引以支援帳號層級撤銷；單裝置登出只撤銷對應 `sid` family，全部登出以 `user_id` 找到有效 family | DB 索引＋應用層同一交易 | SVC：登出 A 不影響 B；DB：可用該索引按 user 查 family | account-020 FR-007／FR-008 |
-| F-03 | XT | `started_at` 是絕對存續上限的唯一來源；每個已認證請求與 refresh 都必須查到未撤銷 family、active user，並檢查 `now < started_at + REFRESH_TOKEN_ABSOLUTE_MAX_TTL`；登入及 refresh 核發的 access JWT `exp` 亦不得超過此上限 | 應用層；跨表和設定值不能由 token 列 CHECK | API：即使 JWT 自身未到期，family 超過上限仍拒絕；SVC：接近上限輪替不延長 | account-020 FR-002／FR-003／SC-009、foundation FR-076 |
-| F-04 | SM | `revoked_at` 一旦設定不可回復；單裝置 logout、密碼修改、email 變更、停用或逾期重用依 FR-004／FR-006／FR-007 範圍設定 | 應用層 | SVC：重新啟用不恢復 family；逾期重用撤銷全部使用者 family | account-020 FR-004／FR-006／FR-007／FR-008 |
+| F-02 | XT | `user_id` 建 B-tree 索引以支援帳號層級撤銷；單裝置登出只撤銷對應 `sid` 工作階段，全部登出以 `user_id` 找到有效工作階段 | DB 索引＋應用層同一交易 | SVC：登出 A 不影響 B；DB：可用該索引按使用者查工作階段 | account-020 FR-007／FR-008 |
+| F-03 | XT | `started_at` 是絕對存續上限的唯一來源；每個已認證請求與 refresh 都必須查到未撤銷的工作階段、啟用的使用者，並檢查 `now < started_at + REFRESH_TOKEN_ABSOLUTE_MAX_TTL`；登入及 refresh 核發的 access JWT `exp` 亦不得超過此上限 | 應用層；跨表和設定值不能由 token 列 CHECK | API：即使 JWT 自身未到期，工作階段超過上限仍拒絕；SVC：接近上限輪替不延長 | account-020 FR-002／FR-003／SC-009、foundation FR-076 |
+| F-04 | SM | `revoked_at` 一旦設定不可回復；單裝置明確登出、密碼修改、email 變更、停用或逾期重用依 FR-004／FR-006／FR-007 範圍設定 | 應用層 | SVC：重新啟用不恢復工作階段；逾期重用撤銷使用者全部工作階段 | account-020 FR-004／FR-006／FR-007／FR-008 |
+| F-05 | CK／XT | `logged_out_at` 只在可驗證的明確登出成功時與 `revoked_at` 同交易寫入；資料庫檢查 `logged_out_at IS NULL OR (revoked_at IS NOT NULL AND logged_out_at <= revoked_at)`。僅以 cookie 登出、權杖到期或安全撤銷時維持 null；資料庫檢查無法判定事件原因 | DB CHECK＋應用層單一交易 | DB：有登出時間卻無撤銷時間，或登出時間晚於撤銷時間均失敗；SVC：明確登出同時寫入兩欄，其他失效原因不寫登出時間 | account-020 FR-001／FR-008、ADR-021 |
 
 ### 4.3 refresh_tokens
 
@@ -319,12 +323,12 @@ migration 種入唯一允許的 `id = 1` 列。PK 與 CHECK 只能保證最多�
 | R-01 | CK | `revoked_at` 與 `revoked_reason` 同時為 null 或同時非 null；`grace_reissued_at` 非 null 時必須已以 `rotated` 撤銷 | DB | DB：只填撤銷配對其中一欄或未輪替卻填 grace 時失敗 | account-020 FR-004；設計建議 |
 | R-02 | CK | `revoked_reason IN ('rotated','logout','password_changed','email_changed','password_reset','user_disabled','reuse_detected','account_linked')` | DB | DB：未知值失敗 | 005 FR-010、FR-004K；006 FR-008a；ADR-021；ADR-035 |
 | R-03 | SM | 只能由有效轉為已撤銷，不可回復 | 應用層（repository 不提供回復方法）；R-01 擋下只清一欄 | SVC：repository 無回復方法；同時清兩欄在 DB 層仍可寫，列為已知限制 | 001 plan 狀態轉換 |
-| R-04 | XT | 輪替：舊列標 `rotated`＋新增同一 `family_id` 的新列，兩者在同一交易；`family_id` 為非空真實 FK 並建 B-tree 索引 | DB＋應用層 | DB：不存在的 family FK 失敗；SVC：新增失敗則舊列仍有效 | account-020 FR-001／FR-003、foundation FR-016 |
-| R-05 | CC | 寬限期重發僅限 `revoked_reason='rotated'` 且 `now - revoked_at <= 30s`；其他撤銷原因拒絕。寬限期外重用須撤銷同一使用者全部有效 family | 應用層（時間比較在 SQL 端） | API：並發首次 refresh 與一次寬限重發成功；登出 token 重用 → 401；逾期重用 → 全部 family 撤銷 | account-020 FR-004、ADR-021 |
-| R-06 | CC | 寬限資格只可再用一次：條件式 UPDATE `grace_reissued_at=now WHERE grace_reissued_at IS NULL` 與新 token 發行同一交易；第三次在寬限期內使用回 409，不核發、不撤銷其他 family | 應用層，以 rowcount 判定原子占用 | SQLite＋PG 多連線：最多一次額外成功；第三次 409 且 family 不變 | account-020 FR-004；原 D-3 已裁決 |
-| R-07 | XT | token 本列 `expires_at` 必須晚於 `created_at`；發行／輪替前查 family `started_at`，將 refresh 與 access JWT 到期時間限制在絕對存續上限內。跨表 TTL 不能用 token 列 CHECK | DB（本列時間）＋應用層（跨表上限） | DB：本列倒置時間失敗；SVC：接近 family 上限時兩種 token 均不延長超過上限 | account-020 FR-003、foundation FR-076 |
-| R-08 | XT | 改密碼成功：更新 hash、`credential_version+1`、撤銷同一使用者其他 family，保留目前 `sid` family；目前裝置以原 family refresh 取得新版 JWT | 應用層同一交易 | API：兩裝置登入，A 改密碼 → B refresh 401、A refresh 成功；兩者舊 JWT 均失效 | account-020 FR-006、005 FR-010 |
-| R-09 | XT | email 驗證成功、管理員改 email、密碼重設及 Google 連結：`credential_version+1` 並撤銷全部 family（含目前裝置） | 應用層同一交易 | API：事件後全部舊 access／refresh 失效 | account-020 FR-007 |
+| R-04 | XT | 輪替：舊列標 `rotated`＋新增同一 `session_id` 的新列，兩者在同一交易；`session_id` 為非空真實 FK 並建 B-tree 索引 | DB＋應用層 | DB：不存在的工作階段 FK 失敗；SVC：新增失敗則舊列仍有效 | account-020 FR-001／FR-003、foundation FR-016 |
+| R-05 | CC | 寬限期重發僅限 `revoked_reason='rotated'` 且 `now - revoked_at <= 30s`；其他撤銷原因拒絕。寬限期外重用須撤銷同一使用者全部有效工作階段 | 應用層（時間比較在 SQL 端） | API：並發首次 refresh 與一次寬限重發成功；登出 token 重用 → 401；逾期重用 → 全部工作階段撤銷 | account-020 FR-004、ADR-021 |
+| R-06 | CC | 寬限資格只可再用一次：條件式 UPDATE `grace_reissued_at=now WHERE grace_reissued_at IS NULL` 與新 token 發行同一交易；第三次在寬限期內使用回 409，不核發、不撤銷其他工作階段 | 應用層，以 rowcount 判定原子占用 | SQLite＋PG 多連線：最多一次額外成功；第三次 409 且工作階段不變 | account-020 FR-004；原 D-3 已裁決 |
+| R-07 | XT | token 本列 `expires_at` 必須晚於 `created_at`；發行／輪替前查 `account_session.started_at`，將 refresh 與 access JWT 到期時間限制在絕對存續上限內。跨表 TTL 不能用 token 列 CHECK | DB（本列時間）＋應用層（跨表上限） | DB：本列倒置時間失敗；SVC：接近工作階段上限時兩種 token 均不延長超過上限 | account-020 FR-003、foundation FR-076 |
+| R-08 | XT | 改密碼成功：更新 hash、`credential_version+1`、撤銷同一使用者其他工作階段，保留目前 `sid` 工作階段；目前裝置以原工作階段的更新權杖取得新版 JWT | 應用層同一交易 | API：兩裝置登入，A 改密碼 → B refresh 401、A refresh 成功；兩者舊 JWT 均失效 | account-020 FR-006、005 FR-010 |
+| R-09 | XT | email 驗證成功、管理員改 email、密碼重設及 Google 連結：`credential_version+1` 並撤銷全部工作階段（含目前裝置） | 應用層同一交易 | API：事件後全部舊 access／refresh 失效 | account-020 FR-007 |
 
 ### 4.3 account_password_token
 
@@ -350,8 +354,8 @@ migration 種入唯一允許的 `id = 1` 列。PK 與 CHECK 只能保證最多�
 | E-04 | CC | 驗證以條件式 UPDATE 完成：`SET verified_at=now, token_hash=NULL WHERE id=:id AND token_hash=:h AND verified_at IS NULL AND expires_at > now`，rowcount=1 才更新 `users.email` | 條件式 UPDATE | PG：驗證舊連結與送出新申請同時發生 → 不得以舊的 `pending_email` 寫入 | 005 FR-004M |
 | E-05 | CC | 重送冷卻：`WHERE last_sent_at <= now - cooldown` 條件式 UPDATE | 應用層 | API：冷卻時間內連點兩次 → 只寄一封 | 005 FR-004L |
 | E-06 | XT | 驗證時新 email 已被他人使用 → 觸發 U-01，回「Email 已被使用」，本列不變 | DB＋應用層 | API：兩人申請同一 email，先驗證者成功，後者得到可理解的錯誤 | 005 邊界情況 |
-| E-07 | XT | 驗證成功同一交易：更新 canonical `users.email`、清除 token、`credential_version+1`、撤銷全部 family（R-09）、作廢 password token（P-05） | 應用層 | SVC：任一步失敗 → 全部回滾；舊 access／refresh 均失效 | 005 FR-004E／FR-004F／FR-004K、account-020 FR-007／FR-009 |
-| E-08 | XT | 管理員在 006 修改 email 時，同一交易寫 canonical email、`credential_version+1`、撤銷全部 family、依 P-05 作廢未使用的 reset／invite 連結，並清除待驗證變更申請，避免舊連結覆蓋管理員修改 | 應用層 | SVC：使用者申請 x → 管理員改為 y → 舊驗證／重設／邀請連結皆失效，email 維持 y，舊 JWT 失效；失敗全部回滾 | 006 FR-007、004 FR-009A、account-020 FR-007／FR-009 |
+| E-07 | XT | 驗證成功同一交易：更新 canonical `users.email`、清除 token、`credential_version+1`、撤銷全部工作階段（R-09）、作廢 password token（P-05） | 應用層 | SVC：任一步失敗 → 全部回滾；舊 access／refresh 均失效 | 005 FR-004E／FR-004F／FR-004K、account-020 FR-007／FR-009 |
+| E-08 | XT | 管理員在 006 修改 email 時，同一交易寫 canonical email、`credential_version+1`、撤銷全部工作階段、依 P-05 作廢未使用的 reset／invite 連結，並清除待驗證變更申請，避免舊連結覆蓋管理員修改 | 應用層 | SVC：使用者申請 x → 管理員改為 y → 舊驗證／重設／邀請連結皆失效，email 維持 y，舊 JWT 失效；失敗全部回滾 | 006 FR-007、004 FR-009A、account-020 FR-007／FR-009 |
 
 ### 4.5 account_notification_preference
 
@@ -405,11 +409,11 @@ Accepted ADR-037 已確認保留兩張可編輯矩陣候選表。以下是後續
 
 | 查詢／寫入路徑 | 索引或鍵 | 理由與界線 |
 |---|---|---|
-| 每請求驗證 `sub`／`sid`、單列 refresh | `users.id`、`account_token_family.id`、`refresh_tokens.id` 的 PK | 按主鍵定位；`credential_version` 只在定位後比對，不另建索引 |
+| 每請求驗證 `sub`／`sid`、單列 refresh | `users.id`、`account_session.id`、`refresh_tokens.id` 的 PK | 按主鍵定位；`credential_version` 只在定位後比對，不另建索引 |
 | 註冊／邀請／登入／改 email 比對帳號 | `UNIQUE lower(users.email)` | canonical 值的第二層唯一防線；Unicode 識別仍以應用層 NFC＋casefold 為準 |
 | 依 token 原值雜湊查找 | `UNIQUE refresh_tokens.token_hash` | 唯一定位；不存明文 token |
-| 使用者全裝置撤銷與列出 family | `account_token_family.user_id` B-tree | FK 並作 `WHERE user_id = ?`；全帳號作廢要能尋得所有家族 |
-| 輪替／刪除 family 時查找 token | `refresh_tokens.family_id` B-tree | FK 並作 `WHERE family_id = ?`；避免 family→token 全表掃描 |
+| 使用者全裝置撤銷與列出工作階段 | `account_session.user_id` B-tree | FK 並作 `WHERE user_id = ?`；全帳號作廢要能尋得所有工作階段 |
+| 輪替／刪除工作階段時查找 token | `refresh_tokens.session_id` B-tree | FK 並作 `WHERE session_id = ?`；避免工作階段至權杖 全表掃描 |
 | 密碼／邀請 token、email 變更依 user 查找 | `account_password_token.user_id`、`account_email_change_request.user_id` B-tree | 各 FK 查詢及參照動作；部分唯一索引只涵蓋 pending 列，不取代全 FK 索引 |
 | 使用者／角色抽屜讀取目標歷程 | `audit_events(target_type, target_id, occurred_at DESC, id DESC)` | 以目標識別與穩定的倒序鍵分頁；`target_id` 為多型字串，不虛構目標 FK |
 | 任務內稽核事件時間線 | `audit_events(task_id, occurred_at, id)` | 任務作用域查詢與穩定升序；`task_id` 目前只是候選欄，仍無 task FK |
