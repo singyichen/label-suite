@@ -1,16 +1,16 @@
 {
   "$schema": "https://raw.githubusercontent.com/SteveLin100132/notecraft/main/plugins/er-diagram-renderer/schema.json",
   "meta": {
-    "title": "Label Suite 資料庫規劃 ER 圖（帳號、管理、資料集、任務執行、標記、審核與匯出）",
-    "description": "**規劃圖，尚未部署資料結構。** 已部署業務表：0；本頁顯示 **37 張候選表、316 欄、43 個候選單欄 FK（外鍵）**。帳號／管理、資料集、任務／執行、標記／審核與匯出的逐表型別和關聯，來自[資料表盤點總帳](/notes/diagrams/architecture/database-table-inventory)所連的五份實體層字典。兩張匯出候選表保存一次請求、原始產物與有序執行範圍；同任務複合外鍵、產物保留／撤銷及授權見[匯出字典](/notes/diagrams/architecture/task-export-db-schema) §4–§7。資料集分析專用表延後至 MVP 後；工時仍待正典與欄位字典裁決。\n\n**讀圖方式：** Wiki 可逐表查看候選欄位、來源與待決事項；Diagram 可搜尋表名或欄名，點選表後會聚焦已列出的候選單欄外鍵。圖中連線不代表資料庫遷移、複合約束或資料庫權限已建立。",
-    "source": "docs/diagrams/architecture/account-admin-db-schema.md §2–§3; docs/diagrams/architecture/dataset-db-schema.md §2–§3; docs/diagrams/architecture/task-run-db-schema.md §2–§3; docs/diagrams/architecture/annotation-review-db-schema.md §2–§3; docs/diagrams/architecture/task-export-db-schema.md §2–§3; specs/task-management/014-task-detail/spec.md v8.0.1; specs/annotation/015-annotation-workspace/spec.md",
+    "title": "Label Suite 資料庫規劃 ER 圖（帳號、管理、資料集、任務執行、工時、標記、審核與匯出）",
+    "description": "**規劃圖，尚未部署資料結構。** 已部署業務表：0；本頁顯示 **38 張候選表、328 欄、44 個候選單欄 FK（外鍵）**。帳號／管理、資料集、任務／執行、工時、標記／審核與匯出的逐表型別和關聯，來自[資料表盤點總帳](/notes/diagrams/architecture/database-table-inventory)所連的六份實體層字典。`task_work_interval` 保存可觀測前景工作區間；`WorkLogEntry` 是查詢投影，不另建表。標記責任歷程可選擇關聯已驗證的登入工作階段。同任務與同使用者的複合外鍵見[工時字典](/notes/diagrams/architecture/task-work-db-schema) §4。資料集分析專用表延後至 MVP 後。\n\n**讀圖方式：** Wiki 可逐表查看候選欄位、來源與待決事項；Diagram 可搜尋表名或欄名，點選表後會聚焦已列出的候選單欄外鍵。圖中連線不代表資料庫遷移、複合約束或資料庫權限已建立。",
+    "source": "docs/diagrams/architecture/account-admin-db-schema.md §2–§3; docs/diagrams/architecture/dataset-db-schema.md §2–§3; docs/diagrams/architecture/task-run-db-schema.md §2–§3; docs/diagrams/architecture/task-work-db-schema.md §2–§3; docs/diagrams/architecture/annotation-review-db-schema.md §2–§3; docs/diagrams/architecture/task-export-db-schema.md §2–§3; specs/task-management/014-task-detail/spec.md v9.0.0; specs/annotation/015-annotation-workspace/spec.md v12.1.0; specs/account/020-account-settings/spec.md v1.3.0",
     "backTo": "/notes/diagrams/architecture/database-table-inventory"
   },
   "options": {
     "defaultRows": 6,
     "sectionPrefix": "§",
     "hint": "規劃圖：點表聚焦候選 FK；Wiki 可查看逐表欄位與待裁決事項。",
-    "searchPlaceholder": "搜尋候選表或欄位（例：task_run、annotation_record、annotation_review_submission_revision）"
+    "searchPlaceholder": "搜尋候選表或欄位（例：task_run、task_work_interval、annotation_record）"
   },
   "requirement": [
     {
@@ -55,7 +55,7 @@
     {
       "key": "account",
       "label": "帳號與登入",
-      "description": "候選表涵蓋帳號、同次登入的憑證群組、輪替用的更新權杖、一次性連結、電子郵件地址變更與通知偏好。所有表都尚未進行資料庫遷移。"
+      "description": "候選表涵蓋帳號、一次登入的工作階段、輪替用的更新權杖、一次性連結、電子郵件地址變更與通知偏好。所有表都尚未進行資料庫遷移。"
     },
     {
       "key": "admin",
@@ -76,6 +76,11 @@
       "key": "run",
       "label": "任務執行與發布",
       "description": "八張未部署候選表記錄發布週期、試標回合、抽樣快照、每次執行、公開資料項目、固定標記工作位、發布時的審核候選名冊，以及終局排除。`ReviewAssignment` 是依資料推導的查詢視圖，不另建表。"
+    },
+    {
+      "key": "work",
+      "label": "工時與工作區間",
+      "description": "一張未部署候選表保存可觀測的前景工作區間；任務、執行、成員與登入工作階段以複合外鍵核對。每日工時、完成數及速度為查詢投影，不另建表。"
     },
     {
       "key": "annotation",
@@ -123,6 +128,12 @@
         "key": "run",
         "groups": [
           "run"
+        ]
+      },
+      {
+        "key": "work",
+        "groups": [
+          "work"
         ]
       },
       {
@@ -254,7 +265,7 @@
           "name": "user_id",
           "type": "uuid",
           "required": "required",
-          "note": "這次登入的帳號；CASCADE FK 與 B-tree 索引；規則：F-01、F-02",
+          "note": "這次登入的帳號；RESTRICT FK 與 B-tree 索引，歷史工作區間與責任歷程須可追溯；(user_id,id) 提供複合 FK 父鍵；規則：F-01、F-02",
           "fk": "users"
         },
         {
@@ -276,7 +287,7 @@
           "note": "僅記錄可驗證的明確登出成功時間；空值＝未證實明確登出；與 revoked_at 同交易寫入且不得晚於它；規則：F-05"
         }
       ],
-      "description": "**候選表／設計草案，尚未執行資料庫遷移。** 一列代表一次登入／一個裝置的工作階段；此表保存使用者、開始時間、任何原因造成的失效時間，以及可驗證的明確登出成功時間。來源：帳號／管理 §3.2、account-020 FR-001／FR-008、ADR-021。"
+      "description": "**候選表／設計草案，尚未執行資料庫遷移。** 一列代表一次登入／一個裝置的工作階段；此表保存使用者、開始時間、任何原因造成的失效時間，以及可驗證的明確登出成功時間。`user_id` 採 RESTRICT 候選，避免刪除歷史證據；`(user_id,id)` 供工時區間複合外鍵核對。最低保留一年；確切硬刪與匿名化政策待遷移前裁決。來源：帳號／管理 §3.2、account-020 FR-001／FR-008、ADR-021。"
     },
     {
       "name": "refresh_tokens",
@@ -1824,6 +1835,7 @@
         {"name": "assignment_id", "type": "uuid", "required": "required", "note": "發生動作的工作位，複合單位鍵；建立；不改；規則：X-01"},
         {"name": "event_no", "type": "integer", "required": "required", "note": "單位內正整數單調序號；動作交易分配；不改；規則：H-01"},
         {"name": "actor_membership_id", "type": "uuid", "required": "required", "note": "當次真實操作者；建立；不改；規則：H-02", "fk": "task_membership"},
+        {"name": "account_session_id", "type": "uuid", "required": "nullable", "note": "可驗證的當次登入工作階段；舊資料或系統動作可空；不得由操作者或時間猜測補值；規則：H-02", "fk": "account_session"},
         {"name": "actor_task_role", "type": "varchar(24)", "required": "required", "note": "當次選用任務角色快照；建立；不改；規則：H-02"},
         {"name": "action", "type": "varchar(24)", "required": "required", "note": "FR-086 八個目前有效動作之一；建立；不改；規則：H-03"},
         {"name": "output_key", "type": "varchar(120)", "required": "nullable", "note": "動作所涉 outKey；整單位動作可空；建立；不改；規則：H-03"},
@@ -1837,7 +1849,7 @@
         {"name": "arbitration_vote_id", "type": "uuid", "required": "nullable", "note": "由仲裁票產生時的來源；建立；不改；規則：H-05", "fk": "annotation_arbitration_vote"},
         {"name": "exception_resolution_id", "type": "uuid", "required": "nullable", "note": "由例外收尾產生時的來源；建立；不改；規則：H-05", "fk": "annotation_exception_resolution"}
       ],
-      "description": "**實體候選，尚未部署。** 一列是一個單位的一次動作；不同 outKey 的審核員決策各寫一列。`event_no` 保證同時間戳仍有總排序，清單時間與耗時由事件推導。未提交審核員草稿**不產生對其他角色可見的事件**；本設計按 FR-014S 不為其寫 history。快照與理由可能含敏感答案，須在資料供給層遮蔽。來源：015 FR-016B／FR-086～FR-091／FR-097。\n\n來源：[標記／審核實體候選字典](/notes/diagrams/architecture/annotation-review-db-schema) §3.7；複合工作指派 FK、唯一限制、檢查限制、權限與資料庫遷移前待決見 §4–§7。圖中只畫已列的單欄 FK；線條不表示 ORM、資料庫遷移或 DB 權限已建立。"
+      "description": "**實體候選，尚未部署。** 一列是一個單位的一次動作；不同 outKey 的審核員決策各寫一列。`event_no` 保證同時間戳仍有總排序，清單時間與耗時由事件推導。`account_session_id` 僅在工作階段可驗證時寫入；舊事件與系統動作可空，不能用 `lead_time_ms` 代替工時。未提交審核員草稿**不產生對其他角色可見的事件**；本設計按 FR-014S 不為其寫 history。快照與理由可能含敏感答案，須在資料供給層遮蔽。來源：015 FR-016B／FR-086～FR-091／FR-097。\n\n來源：[標記／審核實體候選字典](/notes/diagrams/architecture/annotation-review-db-schema) §3.7；複合工作指派 FK、唯一限制、檢查限制、權限與資料庫遷移前待決見 §4–§7。圖中只畫已列的單欄 FK；線條不表示 ORM、資料庫遷移或 DB 權限已建立。"
     },
     {
       "name": "annotation_review_submission_revision",
@@ -2037,6 +2049,26 @@
         }
       ],
       "description": "**實體候選，尚未部署。** 以複合主鍵保存每份匯出納入的執行；task_id 是受同任務複合外鍵約束的冗餘，確保匯出與執行屬同一任務。版本身分取自固定的執行／發布週期 並寫入原始產物的有序 manifest。來源：[任務匯出實體候選字典](/notes/diagrams/architecture/task-export-db-schema) §3.2；兩組複合外鍵與順序限制見 §4，圖中不把複合外鍵畫成單欄線。"
+    },
+    {
+      "name": "task_work_interval",
+      "label": "任務前景工作區間",
+      "section": "3.1",
+      "group": "work",
+      "columns": [
+        {"name": "id", "type": "uuid", "required": "system", "note": "工作區間主鍵，由服務端產生；規則：W-01", "pk": true},
+        {"name": "user_id", "type": "uuid", "required": "required", "note": "工作者帳號；與 account_session_id、membership_id 一起核對同一使用者；規則：W-02"},
+        {"name": "account_session_id", "type": "uuid", "required": "required", "note": "可驗證的登入工作階段；透過 (user_id,account_session_id) 複合 FK 核對，不畫單欄假線；規則：W-02"},
+        {"name": "task_id", "type": "uuid", "required": "required", "note": "所屬任務；與 run_id、membership_id 一起核對同一任務；規則：W-02"},
+        {"name": "run_id", "type": "uuid", "required": "required", "note": "所屬試標或正式執行；透過 (task_id,run_id) 複合 FK 核對；規則：W-02"},
+        {"name": "membership_id", "type": "uuid", "required": "required", "note": "當次任務成員資格；透過 (task_id,membership_id,user_id) 複合 FK 核對；規則：W-02"},
+        {"name": "work_kind", "type": "varchar(16)", "required": "required", "note": "工作種類：annotation、review 或 arbitration；與成員角色由服務共同驗證；規則：W-03"},
+        {"name": "started_at", "type": "timestamptz", "required": "required", "note": "服務端記錄的前景工作開始 UTC 時間；規則：W-04"},
+        {"name": "last_seen_at", "type": "timestamptz", "required": "required", "note": "最後收到有效前景心跳的 UTC 時間；失聯時以此關閉，不補計等待時間；規則：W-04"},
+        {"name": "ended_at", "type": "timestamptz", "required": "nullable", "note": "工作區間結束 UTC 時間；開啟時可空，關閉時與 close_reason 同時寫入；規則：W-04"},
+        {"name": "close_reason", "type": "varchar(32)", "required": "nullable", "note": "結束原因；與 ended_at 同有同無；規則：W-04"}
+      ],
+      "description": "**實體候選，尚未部署。** 一列是一人在同一任務、執行、成員資格、登入工作階段與工作種類中的一段可觀測前景工作區間。只記錄原始時間與歸屬，不存累計工時、完成數、速度或日報。每位使用者同時最多一段未結束區間；30 秒心跳、10 分鐘閒置與 90 秒失聯關閉為 MVP 候選。三組複合外鍵與部分唯一索引見[工時候選字典](/notes/diagrams/architecture/task-work-db-schema) §4；圖上不畫複合 FK 假線。`WorkLogEntry` 為唯讀日投影，不另建表。來源：014 FR-007b／FR-007d／FR-010u、ADR-021、工時字典 §3.1。"
     }
   ]
 }
