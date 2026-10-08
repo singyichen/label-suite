@@ -11,10 +11,10 @@
 | 層級 | 目前可用資料 | 用法 |
 |---|---|---|
 | 實際資料結構 | Alembic revision／ORM：0 張業務表 | 日後以資料庫遷移和資料庫 metadata 反查已落地狀態 |
-| 實體層草案 | [帳號／管理資料結構](./account-admin-db-schema.md)：10 張／73 欄／8 單欄 FK；[資料集資料結構](./dataset-db-schema.md)：5 張／31 欄／6 單欄 FK；[任務／執行資料結構](./task-run-db-schema.md)：14 張／117 欄／16 單欄 FK；[工時資料結構](./task-work-db-schema.md)：1 張／11 欄／0 單欄 FK；[標記／審核資料結構](./annotation-review-db-schema.md)：8 張／91 欄／2 單欄 FK；[任務匯出資料結構](./task-export-db-schema.md)：2 張／27 欄／2 單欄 FK | 六份字典合計 40 張候選表、350 欄、34 個單欄 FK；複合 FK 另見各字典 §4。仍須獨立資料庫遷移與雙資料庫驗證，均非已部署資料結構 |
+| 實體層草案 | [帳號／管理資料結構](./account-admin-db-schema.md)：10 張／73 欄／8 單欄 FK；[資料集資料結構](./dataset-db-schema.md)：5 張／32 欄／6 單欄 FK；[任務／執行資料結構](./task-run-db-schema.md)：14 張／117 欄／16 單欄 FK；[工時資料結構](./task-work-db-schema.md)：1 張／11 欄／0 單欄 FK；[標記／審核資料結構](./annotation-review-db-schema.md)：8 張／91 欄／2 單欄 FK；[任務匯出資料結構](./task-export-db-schema.md)：2 張／27 欄／2 單欄 FK | 六份字典合計 40 張候選表、351 欄、34 個單欄 FK；複合 FK 另見各字典 §4。仍須獨立資料庫遷移與雙資料庫驗證，均非已部署資料結構 |
 | 概念層 | [跨模組 ER 圖](./core-data-model-er.md)：規格實體、推導值與投影 | 用於發現缺表與錯誤的關聯假設，不能直接當 DDL |
 
-**NoteCraft 規劃檢視**：[開啟 Wiki／Diagram](/view/diagrams/architecture/database-schema.er)（來源資料：`database-schema.er.json`）。目前收錄帳號／管理、資料集、任務／執行、工時、標記／審核與匯出的 **40 張候選表、350 欄與 34 個候選單欄 FK**。`task_trial_iaa_result` 是 MVP 試標閘門的逐回合結果證據；資料集分析專用報告表另於 MVP 後規劃。標記／審核的 8 張表依[實體字典](./annotation-review-db-schema.md)展示標記、審核草稿／提交、修訂、仲裁、例外與歷程；歷程可選擇關聯已驗證的登入工作階段。兩張匯出表保存請求原檔與有序執行範圍；`requested_at` 與內容快照 `exported_at` 分開。工時原始區間、複合 FK 與日投影見[工時實體字典](./task-work-db-schema.md) §3–§7；**已落地業務表仍為 0**。修改任一 §3 字典或 JSON 時執行 `node scripts/check-database-schema.mjs`；欄位與 FK 計數由檢查器重新計算。
+**NoteCraft 規劃檢視**：[開啟 Wiki／Diagram](/view/diagrams/architecture/database-schema.er)（來源資料：`database-schema.er.json`）。目前收錄帳號／管理、資料集、任務／執行、工時、標記／審核與匯出的 **40 張候選表、351 欄與 34 個候選單欄 FK**。`task_trial_iaa_result` 是 MVP 試標閘門的逐回合結果證據；資料集分析專用報告表另於 MVP 後規劃。標記／審核的 8 張表依[實體字典](./annotation-review-db-schema.md)展示標記、審核草稿／提交、修訂、仲裁、例外與歷程；歷程可選擇關聯已驗證的登入工作階段。兩張匯出表保存請求原檔與有序執行範圍；`requested_at` 與內容快照 `exported_at` 分開。工時原始區間、複合 FK 與日投影見[工時實體字典](./task-work-db-schema.md) §3–§7；**已落地業務表仍為 0**。修改任一 §3 字典或 JSON 時執行 `node scripts/check-database-schema.mjs`；欄位與 FK 計數由檢查器重新計算。
 
 ## 名詞說明：任務發布與執行
 
