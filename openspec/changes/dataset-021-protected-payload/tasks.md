@@ -13,7 +13,7 @@
 **故事目標**：dataset-021 SC-006 — 正典、字典、ER JSON 與總帳對 `protected_payload` 與欄位總數的描述一致。
 
 - [ ] 2.1 回寫 `specs/dataset/021-dataset-ingestion-and-lineage/spec.md` 的 FR-005、FR-006、AC-2.6、版本 1.3.0 與 Changelog。 [@senior-sa]
-- [ ] 2.2 同步 `docs/diagrams/architecture/dataset-db-schema.md`、`database-schema.er.json`、`database-table-inventory.md` 與欄位總數（351 欄），Red 測試轉綠。Exception: governance-propagation; Files: `docs/diagrams/architecture/dataset-db-schema.md`, `docs/diagrams/architecture/database-schema.er.json`, `docs/diagrams/architecture/database-table-inventory.md`; Reason: 字典、ER JSON 與總帳由檢查器互相比對，必須在同一任務同步，否則投影差異閘門紅。 [@senior-dba]
+- [ ] 2.2 同步 `docs/diagrams/architecture/dataset-db-schema.md`、`docs/diagrams/architecture/database-schema.er.json`、`docs/diagrams/architecture/database-table-inventory.md` 與欄位總數（351 欄），Red 測試轉綠。Exception: governance-propagation; Files: `docs/diagrams/architecture/dataset-db-schema.md`, `docs/diagrams/architecture/database-schema.er.json`, `docs/diagrams/architecture/database-table-inventory.md`; Reason: 字典、ER JSON 與總帳由檢查器互相比對，必須在同一任務同步，否則投影差異閘門紅。 [@senior-dba]
 
 ## 3. 驗證與歸檔
 
