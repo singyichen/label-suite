@@ -234,3 +234,14 @@ test('NoteCraft CI runs the annotation/review schema regression', () => {
   assert.match(job, /node --test[^\n]*scripts\/tests\/check-database-annotation-review\.test\.mjs\b/,
     'NoteCraft CI must execute check-database-annotation-review.test.mjs');
 });
+
+test('annotation history H-03 ties draft_saved to annotators and writes no event for reviewer drafts', () => {
+  const row = annotationMarkdown().split('\n').find((line) => line.startsWith('| H-03 |'));
+  assert.ok(row, 'Expected the H-03 row');
+  assert.match(row,
+    /draft_saved[^|]*actor_task_role[^|]*annotator|actor_task_role[^|]*annotator[^|]*draft_saved/,
+    'H-03 must CHECK draft_saved against the annotator actor_task_role snapshot');
+  assert.match(row, /審核員草稿[^|]*(?:不寫|不得產生|不產生)[^|]*(?:事件|history)/,
+    'H-03 must state reviewer drafts write no history event');
+  assert.match(row, /FR-014S/, 'H-03 must cite FR-014S');
+});
