@@ -82,11 +82,11 @@ erDiagram
 
 - **雙庫約束**：SQLite Lite 每個連線啟用 `PRAGMA foreign_keys=ON`；複合外鍵的父表必須有同欄序 UNIQUE，否則寫入時可能報 `foreign key mismatch`。同一 ORM adapter 映射 UUID 與 UTC 時間；SQLite 的 `varchar(n)` 不保證長度，應用驗證或 CHECK 補齊。PostgreSQL 使用原生 UUID／`timestamptz`。兩庫都要驗 CHECK、部分唯一索引、刪除受限及跨使用者、跨任務插入拒絕。
 - **並發**：PostgreSQL 在同一交易鎖定使用者目前開啟區間並執行條件式關閉；SQLite 於開始讀取／修改前使用 `BEGIN IMMEDIATE`，再靠部分唯一索引擋競爭。心跳只在同一開啟列及有效 session 下前進，失聯恢復另建段，不把離線空白回填。
-- **保留**：`task_work_interval`、受其引用的 `account_session` 及帶 session 歸屬的 `annotation_history_event` 先以一年為最低候選保留期；資料主體刪除／匿名化與最長期限尚待產品隱私政策。普通硬刪先採 RESTRICT，不設自動清理；refresh token 可按安全政策清理，但歷史 session 在仍受合法引用時保留。
+- **保留**：`task_work_interval`、受其引用的 `account_session` 及帶 session 歸屬的 `annotation_history_event` 先以一年為最低候選保留期；資料主體請求依 ADR-038 以帳號原地匿名化處理。普通硬刪採 RESTRICT；ADR-038 的清理工作只刪除已撤銷或逾絕對上限且無 `task_work_interval`／`annotation_history_event` 引用的 session，受引用者保留至引用消失；refresh token 於自身 `expires_at` 過後清理。最長期限與清理週期 待定（#1224）。
 - **資料隔離**：本表只存身分及時間，仍屬個人活動資料。報表須重驗目前 membership 與資源權限，限制可讀範圍、分頁及期間；標記者 API 不提供其他成員的 session／工時，也不從標記歷程洩露私有答案、其他人的事件或 test-set 正解。
 
 ## 7. 後續落地驗證
 
-獨立 migration PR 須先用 Red 測試建立 SQLite／PostgreSQL upgrade、downgrade、roundtrip、三組複合 FK、同序父 UNIQUE、部分唯一、CHECK 與 RESTRICT；再驗多裝置競爭、失聯與明確登出、跨午夜、同日多次登入、無工時但有提交、審核多 outKey 去重、仲裁去重及權限隔離。文件與 NoteCraft 僅供審閱，不能代替執行期證據。心跳門檻與確切個資保留期限在正式落地前仍須依正典與政策審核。
+獨立 migration PR 須先用 Red 測試建立 SQLite／PostgreSQL upgrade、downgrade、roundtrip、三組複合 FK、同序父 UNIQUE、部分唯一、CHECK 與 RESTRICT；再驗多裝置競爭、失聯與明確登出、跨午夜、同日多次登入、無工時但有提交、審核多 outKey 去重、仲裁去重及權限隔離。文件與 NoteCraft 僅供審閱，不能代替執行期證據。心跳門檻在正式落地前仍須依正典審核，個資保留依 ADR-038。
 
 **交付狀態：1 張未部署候選表、11 欄、0 個單欄 FK，另有 3 組真複合 FK。**

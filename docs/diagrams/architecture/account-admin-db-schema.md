@@ -337,6 +337,7 @@ migration 種入唯一允許的 `id = 1` 列。PK 與 CHECK 只能保證最多�
 | U-14 | XT | 重新啟用不恢復任何已撤銷的 token | 應用層 | SVC：停用→啟用後，舊 refresh token 仍 401 | 006 FR-008b；001 plan（refresh token 單向轉換） |
 | U-15 | CC | Google callback 也檢查 `is_active`；停用帳號不得取得 session | 應用層 | API：停用帳號走 callback → 拒絕，不寫入工作階段或更新權杖 | ADR-021、account-020 FR-007 |
 | U-16 | CK／XT | `credential_version >= 1`，非空且預設 1；高風險憑證事件在原資料寫入交易內遞增。每個已認證請求比對 JWT claim、當前使用者及工作階段所屬帳號／撤銷狀態；角色和停用仍讀 DB | DB CHECK＋應用層 | DB：0 與 null 不可寫；API：舊版本或 `sid` 與 `sub` 不符拒絕；SVC：事件失敗時版本不變 | account-020 FR-002／FR-006／FR-007／FR-010 |
+| U-17 | XT | 帳號匿名化（ADR-038 類別一，資料主體刪除請求）：同一 `users` 列原地匿名化，FK 不改指；同一交易 `is_active=false`、`email` 改為由使用者 id 衍生的唯一不可投遞墓碑值、`name` 改為固定墓碑標籤、清除 `contact_info`／`avatar_url`／`hashed_password`／`google_subject`、`credential_version+1`、撤銷全部工作階段，並刪除該使用者的 `account_password_token` 與全部 `account_email_change_request`（含已驗證列的 `pending_email`）。不可逆：006 重新啟用與改 email 須拒絕匿名化帳號；匿名化狀態的持久化形式 待定（#1224） | 應用層單一交易，由審核過的維運程序執行，不新增產品介面 | SVC：匿名化後 email 唯一且不可投遞、PII 欄位已清空、舊 token 全失效、兩類申請列已刪；重新啟用與改 email 均被拒；稽核事件列與 `actor_user_id` 保留 | ADR-038；account-020 FR-007；ADR-032 |
 
 ### 4.2 account_session
 
@@ -348,6 +349,7 @@ migration 種入唯一允許的 `id = 1` 列。PK 與 CHECK 只能保證最多�
 | F-04 | SM | `revoked_at` 一旦設定不可回復；單裝置明確登出、密碼修改、email 變更、停用或逾期重用依 FR-004／FR-006／FR-007 範圍設定 | 應用層 | SVC：重新啟用不恢復工作階段；逾期重用撤銷使用者全部工作階段 | account-020 FR-004／FR-006／FR-007／FR-008 |
 | F-05 | CK／XT | `logged_out_at` 只在可驗證的明確登出成功時與 `revoked_at` 同交易寫入；資料庫檢查 `logged_out_at IS NULL OR (revoked_at IS NOT NULL AND logged_out_at <= revoked_at)`。僅以 cookie 登出、權杖到期或安全撤銷時維持 null；資料庫檢查無法判定事件原因 | DB CHECK＋應用層單一交易 | DB：有登出時間卻無撤銷時間，或登出時間晚於撤銷時間均失敗；SVC：明確登出同時寫入兩欄，其他失效原因不寫登出時間 | account-020 FR-001／FR-008、ADR-021 |
 | F-06 | CK | UNIQUE `(user_id,id)` 是 `task_work_interval(user_id,account_session_id)` 複合 FK 的同序父鍵；登入工作階段及其歷程刪除均採 RESTRICT 候選，不因 refresh token 清理而刪除 session | DB | SQLite／PostgreSQL：跨使用者工作區間寫入失敗；清理 token 後歷史 session 仍可供報表追溯 | 014 FR-007d、account-020 FR-008；[工時字典](./task-work-db-schema.md) W-02 |
+| F-07 | XT | 清理工作實體刪除 session：已設定 `revoked_at`，或逾絕對上限，且沒有 `task_work_interval`／`annotation_history_event` 引用時才刪；RESTRICT 不變，受引用者保留至引用消失；刪除時連帶 CASCADE 剩餘 token 列；清理週期 待定（#1224） | 應用層清理工作 | SVC：被引用的 session 不刪；無引用且已撤銷或逾上限者刪除，其 token 列一併消失 | ADR-038；ADR-021；F-01、F-06 |
 
 ### 4.3 refresh_tokens
 
@@ -362,6 +364,7 @@ migration 種入唯一允許的 `id = 1` 列。PK 與 CHECK 只能保證最多�
 | R-07 | XT | token 本列 `expires_at` 必須晚於 `created_at`；發行／輪替前查 `account_session.started_at`，將 refresh 與 access JWT 到期時間限制在絕對存續上限內。跨表 TTL 不能用 token 列 CHECK | DB（本列時間）＋應用層（跨表上限） | DB：本列倒置時間失敗；SVC：接近工作階段上限時兩種 token 均不延長超過上限 | account-020 FR-003、foundation FR-076 |
 | R-08 | XT | 改密碼成功：更新 hash、`credential_version+1`、撤銷同一使用者其他工作階段，保留目前 `sid` 工作階段；目前裝置以原工作階段的更新權杖取得新版 JWT | 應用層同一交易 | API：兩裝置登入，A 改密碼 → B refresh 401、A refresh 成功；兩者舊 JWT 均失效 | account-020 FR-006、005 FR-010 |
 | R-09 | XT | email 驗證成功、管理員改 email、密碼重設及 Google 連結：`credential_version+1` 並撤銷全部工作階段（含目前裝置） | 應用層同一交易 | API：事件後全部舊 access／refresh 失效 | account-020 FR-007 |
+| R-10 | CD | 清理工作於列自身 `expires_at` 過後實體刪除 token 列；已撤銷與 `rotated` 列保留至到期，以維持重用偵測；清理週期 待定（#1224） | 應用層清理工作 | SVC：到期前的已撤銷列仍可判定重用；到期後被刪除 | ADR-038；account-020 FR-004；R-05 |
 
 ### 4.3 account_password_token
 
@@ -406,7 +409,7 @@ migration 種入唯一允許的 `id = 1` 列。PK 與 CHECK 只能保證最多�
 | A-02 | SM | 只能新增，禁止一般路徑 UPDATE／DELETE；後續若需清理，須另行審核保留政策與特權程序 | 應用層＋DB trigger（兩種 DB 各一份）；PostgreSQL 另對 app role `REVOKE UPDATE, DELETE, TRUNCATE` | SQLite 與 PG：直接 UPDATE／DELETE 均被 trigger 擋下；PG：app role 的 UPDATE／DELETE／TRUNCATE 回 privilege denied；M：downgrade 移除 trigger | Accepted ADR-032；ADR-024 增補 (2026-10-08) |
 | A-03 | CD | `payload_summary` 僅含事件 registry 明列的非敏感欄位與變更摘要；不得含密碼、token、原始聯絡資料、標記答案、測試集正解或其快照 | 應用層 allowlist | SVC：密碼、聯絡資料及標記相關事件不會把敏感值寫入摘要 | 006 FR-013；Accepted ADR-032 |
 | A-04 | CK | `((actor_user_id IS NULL AND actor_role = 'system') OR (actor_user_id IS NOT NULL AND actor_role <> 'system'))`；非空 actor FK 為 RESTRICT | DB CHECK＋FK | SQLite 與 PG：角色／actor 不一致失敗；刪除有稽核紀錄的使用者失敗（SQLite 依賴 X-01） | Accepted ADR-032 |
-| A-05 | CD | **所有**稽核事件至少保存一個日曆年，不設自動刪除；未來的保留或清理政策須另行審核，不能透過一般寫入路徑刪除 | 應用層與維運政策 | SVC：無自動刪除路徑；DB：一般 DELETE 被 A-02 擋下 | 007 FR-010；Accepted ADR-032 |
+| A-05 | CD | **所有**稽核事件至少保存一個日曆年，不設自動刪除；一個日曆年下限後，只可經 ADR-024 migration role 特權路徑匿名化 PII 欄位（事件 registry 標為個人的 `payload_summary` 鍵），事件列不刪，不能透過一般寫入路徑刪除；執行週期與上限 待定（#1224） | 應用層與維運政策 | SVC：無自動刪除路徑；DB：一般 DELETE 被 A-02 擋下 | 007 FR-010；Accepted ADR-032；ADR-038 |
 | A-06 | CD | 矩陣事件固定 `action='role_permissions.changed'`、`target_type='role_permission_matrix'`、`target_id='1'`，不設多型目標 FK；`payload_summary` 記版本前後值及各變更格的 `role_type`、`role_key`、`permission_key`、前後值。diff 由伺服器比對已儲存列，不採前端提供值 | 應用層 | SVC：目標穩定為字串 `1`；前端 diff 不符時以資料庫觀察值為準 | Accepted ADR-032／ADR-037、007 FR-010 |
 | A-07 | FK | `task_id` 是可空 UUID 真實 FK → `task.id`；非空值須指向已存在任務，普通刪除先採 RESTRICT。共用稽核表與 task 表的建表順序及兩庫參照完整性在獨立 migration 驗證；`audit_events(task_id,occurred_at,id)` 索引以左前綴覆蓋 FK 反查 | DB＋後續 migration | SQLite／PG：無效 task ID 被拒、全域事件可空；任務內時間線依索引定位，刪除有事件任務受限 | Accepted ADR-032、ADR-022、014 FR-025 |
 | A-08 | XT＋CD | `task.status_changed` 與 `task.isolation_changed` 均要求非空 `task_id`、`target_type='task'`，且 `target_id` 正規化成小寫連字號 UUID 後與 `task_id` 相等；兩個有效但不同的任務也須拒絕。前者摘要只收前後狀態、觸發來源及必要原因碼；後者只收前後布林值：關閉隔離須驗證二次確認及其受控原因碼，重新啟用採獨立固定原因碼且不要求二次確認。操作者、任務、時間由既有欄承接；實際變更與恰一筆事件同一資料庫交易，無變更不建事件；兩種歷程由此表授權投影，不另存重複列 | 應用層交易＋事件 allowlist | SQLite／PG：錯配任務 target 與 scope 均拒絕，兩者有效仍拒絕；SVC：稽核失敗則任務變更回滾，無變更無事件；每次實際變更僅一筆且摘要不含答案或敏感內容 | Accepted ADR-032、ADR-022、014 FR-025 |
@@ -488,7 +491,7 @@ Accepted ADR-037 已確認保留兩張可編輯矩陣候選表。以下是後續
 - 不建登入失敗計數或鎖定欄位：005 FR-009 明文不啟用鎖定或節流。
 - 不為 `role`、`is_active`、`created_at` 建索引：目前規模不需要。
 - 不建角色／狀態用 `token_version`；高風險憑證事件使用 `credential_version`，仍每請求重讀角色與啟用狀態（ADR-021、account-020 FR-002／FR-010）。
-- 不提供使用者實體刪除，只能停用。
+- 不提供使用者實體刪除，只能停用；資料主體刪除請求改用 U-17 匿名化（ADR-038），同一列原地保留。
 - 不建權限鍵表：白名單以後端程式常數為唯一來源（007 `PERMISSION_KEYS_SOURCE`）。
 - 不搬移既有冪等設計：發布（`task_run` U-06，見 [task-run-db-schema.md](./task-run-db-schema.md)）與匯出（`task_export` E-05，見 [task-export-db-schema.md](./task-export-db-schema.md)）的冪等仍使用各自的欄位與唯一約束，不受本表影響；兩者日後**可以**評估以不同 `scope` 改用 `shared_idempotency_record`，那是另一個獨立裁決。
 - 不在矩陣表存操作者：操作者與變更內容只記在 `audit_events`，避免兩處不一致。

@@ -481,7 +481,7 @@ JSON config 與覆寫不先建 GIN；只有實際 JSON key predicate 與執行�
 
 ## 7. 待決與不得推測事項
 
-1. **migration 可用性**：14 張表的 SQL 長度、部分預設、append-only DB trigger、索引精確成本與 migration 順序仍是候選。初建 task 的兩個當前版本指標已選非空及延後同任務複合 FK；SQLite／PostgreSQL 循環建表、提交檢查與 downgrade 尚待獨立實測。普通刪除採 RESTRICT／等效拒絕的候選方向；資料類別保存期限、刪除／匿名化請求、受限資產與被引用物件的清理順序須由產品／隱私政策另行裁決。ADR-032 稽核事件至少一曆年的下限，不自動成為全部 task/run、答案或檔案的保存上限；RESTRICT 也不是無限保存許可。
+1. **migration 可用性**：14 張表的 SQL 長度、部分預設、append-only DB trigger、索引精確成本與 migration 順序仍是候選。初建 task 的兩個當前版本指標已選非空及延後同任務複合 FK；SQLite／PostgreSQL 循環建表、提交檢查與 downgrade 尚待獨立實測。普通刪除採 RESTRICT／等效拒絕的候選方向；保存、刪除與匿名化依 ADR-038（RESTRICT 方向不變），各類期限上限與清理週期 待定（#1224）。ADR-032 稽核事件至少一曆年的下限，不自動成為全部 task/run、答案或檔案的保存上限；RESTRICT 也不是無限保存許可。
 2. **其他規格內容編碼**：`config_payload`／guideline 資產 JSON 的 canonical bytes、registry 保留與檔案生命週期，以及 seed／演算法版本型別與重播策略仍須在 runtime 前定義。公開 item manifest 的版本化規範位元組、摘要及私有回執協定已於 §3.9／§6 定義；物件儲存故障、清理與受控修復仍待獨立實測。
 3. **工作 slot 實作**：assignment 顯示狀態已定為衍生投影，不另存 enum；未提交草稿退役與受派者變更的交易競爭，以及 Official「每 item 恰一 slot」的服務／DB 驗證仍待實測。本字典不憑原型狀態增設第二份持久化值域。
 4. **其他實體**：`RunStateTransition` 與 `IsolationAuditLog` 是由 `audit_events` 的 `task.status_changed`／`task.isolation_changed` 事件授權查詢的投影；狀態／隔離設定變更與恰一筆事件同交易，不建立第二份領域稽核表。`WorkLogEntry` 為來源事件與日報表的唯讀投影；IAA 專用分析報告表依 MVP 範圍延後，但 `task_trial_iaa_result` 為試標閘門的必要結果證據。[標記／審核／仲裁字典](./annotation-review-db-schema.md)與[匯出字典](./task-export-db-schema.md)已有未部署候選表形，不算入本文件 14 張。
