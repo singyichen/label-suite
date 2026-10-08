@@ -234,3 +234,42 @@ test('NoteCraft CI runs the annotation/review schema regression', () => {
   assert.match(job, /node --test[^\n]*scripts\/tests\/check-database-annotation-review\.test\.mjs\b/,
     'NoteCraft CI must execute check-database-annotation-review.test.mjs');
 });
+
+// Issue #1221: append-only enforcement is fixed by A-01 / ADR-024 amendment.
+const annotationRow = (id) => {
+  const row = annotationMarkdown().split('\n').find((line) => line.startsWith(`| ${id} |`));
+  assert.ok(row, `Expected ${id} rule row`);
+  return row;
+};
+
+test('annotation dictionary A-01 is the last section 4 row and defines append-only triggers', () => {
+  const lines = annotationMarkdown().split('\n');
+  const index = lines.findIndex((line) => line.startsWith('| A-01 |'));
+  assert.ok(index >= 0, 'Expected A-01 append-only rule row');
+  assert.ok(!(lines[index + 1] ?? '').startsWith('|'), 'A-01 must be the last row of the section 4 table');
+  const row = lines[index];
+  assert.equal(row.split('|').map((cell) => cell.trim())[2], 'DB', 'A-01 position cell must be DB');
+  for (const token of ['annotation_history_event', 'annotation_arbitration_vote',
+    'annotation_review_submission_revision', 'BEFORE UPDATE', 'BEFORE DELETE', 'SQLite',
+    'PostgreSQL', 'REVOKE UPDATE, DELETE, TRUNCATE', 'ADR-024']) {
+    assert.ok(row.includes(token), `A-01 must mention ${token}`);
+  }
+});
+
+test('annotation dictionary V-05 delegates vote immutability to A-01', () => {
+  const row = annotationRow('V-05');
+  assert.doesNotMatch(row, /待 migration 決定/, 'V-05 must not defer immutability to the migration');
+  assert.match(row, /A-01/, 'V-05 must reference A-01');
+});
+
+test('annotation dictionary H-01 and N-01 reference A-01', () => {
+  assert.match(annotationRow('H-01'), /A-01/, 'H-01 must reference A-01');
+  assert.match(annotationRow('N-01'), /A-01/, 'N-01 must reference A-01');
+});
+
+test('annotation dictionary section 7 item 4 no longer defers append-only triggers', () => {
+  const item = annotationMarkdown().split('\n').find((line) => line.startsWith('4. **稽核與保留**'));
+  assert.ok(item, 'Expected section 7 item 4');
+  assert.doesNotMatch(item, /append-only 的 DB trigger[^\n]*migration PR 決定/);
+  assert.match(item, /A-01/, 'Item 4 must reference A-01');
+});

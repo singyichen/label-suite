@@ -336,3 +336,32 @@ test('dataset schema doc classification_manifest row no longer claims unconditio
   const row = tableRow(datasetSchemaDoc, '`classification_manifest`');
   assert.doesNotMatch(row, /draft 修正後重建投影/);
 });
+
+// Issue #1221: sealed dataset versions are DB-enforced immutable (ADR-024 amendment).
+test('dataset schema doc V-07 defines dataset_version immutability triggers', () => {
+  const row = tableRow(datasetSchemaDoc, 'V-07');
+  const cells = row.split('|').map((cell) => cell.trim());
+  assert.equal(cells[2], 'DB', 'V-07 position cell must be DB');
+  for (const token of ['BEFORE UPDATE', 'BEFORE DELETE', 'SQLite', 'PostgreSQL', 'FR-008']) {
+    assert.ok(row.includes(token), `V-07 must mention ${token}`);
+  }
+  assert.match(row, /draft\s*→\s*sealed/, 'V-07 must allow draft → sealed');
+  assert.match(row, /sealed\s*→\s*draft/, 'V-07 must reject sealed → draft');
+});
+
+test('dataset schema doc V-08 defines sealed-version child table guards', () => {
+  const row = tableRow(datasetSchemaDoc, 'V-08');
+  const cells = row.split('|').map((cell) => cell.trim());
+  assert.equal(cells[2], 'DB', 'V-08 position cell must be DB');
+  for (const token of ['dataset_import_batch', 'dataset_item', 'dataset_item_private',
+    'BEFORE INSERT', 'OLD', 'NEW', 'FOR SHARE', 'TRUNCATE', 'FR-008']) {
+    assert.ok(row.includes(token), `V-08 must mention ${token}`);
+  }
+});
+
+test('dataset schema doc V-06 and the state field rule point at V-07 as DB enforcement', () => {
+  assert.match(tableRow(datasetSchemaDoc, 'V-06'), /V-07/, 'V-06 must reference V-07');
+  const state = datasetSchemaDoc.split('\n').find((line) => line.startsWith('| `state` |'));
+  assert.ok(state, 'Missing state field row');
+  assert.match(state, /V-07/, 'state field rule cell must cite V-07');
+});
