@@ -1,6 +1,6 @@
 > 正典：`specs/task-management/014-task-detail/spec.md`（v7.0.0 → v8.0.0，**MAJOR**，版本判定理由見 proposal.md Impact 節）。issue #1199：`task-detail` 拆為共用任務標頭、概覽與設定兩個分頁。2026-10-08 維護者裁定（issue #1199 留言）為本 delta 的約束來源，與 issue 內文衝突處以裁定為準。
 >
-> **delta 形式**：衍生檢視 `openspec/specs/task-management/014-task-detail/spec.md` 僅收錄 FR-019、FR-006 等少數條文，**尚未收錄** FR-003 與 SC-019。依 archive 的標題比對規則，這兩條與全新的 FR-025、FR-026、FR-027 置於 `## ADDED Requirements`（回寫正典時 FR-003、SC-019 仍為原地改寫）；已收錄於衍生檢視的 FR-019、FR-006 置於 `## MODIFIED Requirements`，標題與衍生檢視逐字一致，並完整保留既有 scenario。
+> **delta 形式**：衍生檢視 `openspec/specs/task-management/014-task-detail/spec.md` 僅收錄 FR-019、FR-006 等少數條文，**尚未收錄** FR-003 與 SC-019。依 archive 的標題比對規則，這兩條與 FR-014i（僅改固定欄位標籤）、全新的 FR-028、FR-026、FR-027 置於 `## ADDED Requirements`（回寫正典時 FR-003、SC-019、FR-014i 仍為原地改寫；FR-014i 僅將固定欄位「設定檔版本」改為「設定檔」以與 FR-026 (3) 一致，其餘文字維持原文）；已收錄於衍生檢視的 FR-019、FR-006 置於 `## MODIFIED Requirements`，標題與衍生檢視逐字一致，並完整保留既有 scenario。
 >
 > **AC 編號**：本 delta 新增的驗收情境一律不預先編號，AC 編號於 gate 4 回寫正典時依使用者故事現有序號續編；MODIFIED 區塊內既有的 AC-1.8、AC-1.9、SC-044、AC-2.5 scenario 標題原樣保留。
 >
@@ -27,7 +27,7 @@
 
 ### Requirement: SC-019 任務階段文字標示由標頭狀態承載，stepper 僅作流程示意
 
-任務標頭的狀態文字（FR-025，例如「試標階段 · 第 2 回合」）MUST 是畫面上唯一的任務階段文字標示。概覽分頁的任務層級 stage flow MUST 維持 `draft → 試標階段 → 正式標記中 → 已完成`，但 stepper 僅作流程示意（沿用原圓點加連接線樣式），MUST NOT 被視為目前階段的權威標示。
+任務標頭的狀態文字（FR-028，例如「試標階段 · 第 2 回合」）MUST 是畫面上唯一的任務階段文字標示。概覽分頁的任務層級 stage flow MUST 維持 `draft → 試標階段 → 正式標記中 → 已完成`，但 stepper 僅作流程示意（沿用原圓點加連接線樣式），MUST NOT 被視為目前階段的權威標示。
 
 單一執行判定區塊 MUST 僅顯示最近回合或正式標記的判定標題與下一步說明，MUST NOT 顯示額外的「目前任務階段」標題或描述，也 MUST NOT 再出現獨立的「正式標記判定」卡。`試標階段` 內需逐步呈現例如 `R1 未通過 → R2 通過 → 開始正式標記` 的回合歷程（判定標題為顧問性警示標籤，不代表狀態轉換被阻擋，見 FR-010o-3）。樣本池分配需隨回合動態調整且不同回合以不同顏色區隔（FR-010p）；執行控制區 MUST NOT 顯示額外狀態 badge 或 stage meta pills。stepper 的無障礙處理（issue #1126）MUST 以本條「stepper 僅作流程示意」為前提設計。
 
@@ -45,7 +45,7 @@
 - **THEN** 其以原圓點加連接線樣式呈現 `draft → 試標階段 → 正式標記中 → 已完成` 的流程，不另加狀態徽章
 - **AND** 標頭狀態文字與 stepper 的階段若需對照，以標頭狀態文字為準
 
-### Requirement: FR-025 任務標頭為六個分頁共用且不放主要動作
+### Requirement: FR-028 任務標頭為六個分頁共用且不放主要動作
 
 `task-detail` MUST 在分頁列上方提供六個分頁共用的任務標頭：(1) **麵包屑**顯示 `任務管理 / {task_id}`；(2) **H1** 顯示任務名稱，取代固定的「任務詳情」標題與副標；(3) **狀態文字**在 H1 右側以一般文字顯示當前任務階段（例如「試標階段 · 第 2 回合」），MUST NOT 使用 pill 徽章；(4) 標頭 MUST NOT 放置任何主要動作（CTA）。標頭狀態文字 MUST 與概覽的判定資料同源推導，MUST NOT 另建第二份階段判定。任務不存在時沿用既有的找不到任務呈現（issue #200），標頭不顯示不存在任務的名稱。
 
@@ -70,7 +70,7 @@
 
 **(2) URL 與未儲存確認**。目前區塊 MUST 依 FR-019 同步至網址 `section` 參數並於重新整理後還原。區塊處於有未儲存變更的編輯狀態時，切換區塊或切換分頁 MUST 先經確認對話框（`modal-focus.js`）；使用者取消時 MUST 留在原區塊且網址不變。
 
-**(3) 標記設定**。Code 模式 MUST 保留明確的套用動作：按鈕標籤為「套用」，僅負責將 Code 解析結果回填至 Visual 設定（Code→Visual），其行為與 `task-new` 的 Code 回填一致（`task-management/013-task-new` FR-003k 之 Code 回填驗證與 AC-2.25 之「保留最後一份有效 config」）；唯一的送出入口 MUST 是區塊標題列的「儲存」，Code 面板 MUST NOT 再提供自己的儲存按鈕。解析錯誤時 MUST 沿用 `codeErrorBar` 顯示錯誤、停用「套用」，並保留最後一份有效設定。檢視狀態標籤「設定檔版本」MUST 改為「設定檔」，值仍為使用者上傳的 config 檔名（未上傳時為空字串）。
+**(3) 標記設定**。Code 模式 MUST 保留明確的套用動作：按鈕標籤為「套用」，僅負責將 Code 解析結果回填至 Visual 設定（Code→Visual），其行為與 `task-new` 的 Code 回填一致（`task-management/013-task-new` FR-003k 之 Code 回填驗證與 AC-2.25 之「保留最後一份有效 config」）；唯一的送出入口 MUST 是區塊標題列的「儲存」，Code 面板 MUST NOT 再提供自己的儲存按鈕。Code 內容 MUST 於輸入時即時檢查（允許短暫 debounce，不需點擊「套用」）：解析錯誤時 MUST 沿用 `codeErrorBar` 顯示錯誤、停用「套用」，並保留最後一份有效設定；內容修正為合法後 MUST 隱藏錯誤並恢復「套用」。「套用」成功後 MUST 以提示訊息「已套用至 Visual，請按儲存送出」告知尚未送出。Code 有尚未套用的修改時，點擊區塊標題列「儲存」MUST 被擋下且不送出，並顯示含「請先套用」的提示。檢視狀態標籤「設定檔版本」MUST 改為「設定檔」，值仍為使用者上傳的 config 檔名（未上傳時為空字串）。
 
 **(4) 抽樣設定**。檢視狀態 MUST NOT 再顯示「試標回合」「目前判定」「已用試標 / 可進正式」三列（已於概覽顯示）；仍須顯示每回合抽樣筆數、逐輸出類型 IAA 指標清單（含目標門檻）、最少標記者數、資料隔離狀態與隔離異動資訊；編輯表單與驗證規則不變。
 
@@ -101,10 +101,24 @@
 
 #### Scenario: Code 解析錯誤時停用套用並保留有效設定
 
-- **GIVEN** Code 模式的內容含有語法或 schema 錯誤
-- **WHEN** 檢視 Code 面板
+- **GIVEN** `project_leader` 在 Code 模式輸入含有語法或 schema 錯誤的內容
+- **WHEN** 停止輸入（未點擊「套用」）
 - **THEN** `codeErrorBar` 顯示錯誤，「套用」為停用
 - **AND** Visual 設定維持最後一份有效 config
+- **AND** 將內容修正為合法後，錯誤隱藏且「套用」恢復可用
+
+#### Scenario: 套用後提示尚未送出
+
+- **GIVEN** `project_leader` 在 Code 模式修改合法的 YAML
+- **WHEN** 點擊「套用」
+- **THEN** 顯示提示訊息「已套用至 Visual，請按儲存送出」
+
+#### Scenario: 有未套用的 Code 修改時儲存被擋下
+
+- **GIVEN** `project_leader` 在 Code 模式修改內容但尚未點擊「套用」
+- **WHEN** 點擊區塊標題列的「儲存」
+- **THEN** 任務設定不被送出，仍停留在編輯狀態
+- **AND** 顯示含「請先套用」的提示
 
 #### Scenario: 設定檔標籤改名
 
@@ -175,6 +189,17 @@
 - **GIVEN** `task_role = reviewer`
 - **WHEN** 開啟概覽分頁
 - **THEN** 執行按鈕為 disabled 並附 tooltip「僅 project leader 可操作」
+
+
+### Requirement: FR-014i 標記設定摘要依 outputs 動態顯示
+
+Overview「標記設定」摘要區塊必須依當前 outputs[] 動態顯示摘要列：每個輸出類型一列，key 為該輸出類型的 registry 顯示名稱，value 為該輸出 config 的欄位摘要（由 registry 欄位定義推導，不含 `allow_bypass`）；除 `設定檔`、`標記類型` 外，不得固定顯示與當前 outputs 組合無關的欄位，亦不得顯示抽樣相關欄位（抽樣屬「抽樣設定」區塊）。
+
+#### Scenario: 固定欄位標籤為設定檔
+
+- **GIVEN** 任務已設定 outputs[]
+- **WHEN** 檢視「標記設定」區塊的檢視狀態
+- **THEN** 固定欄位為「設定檔」與「標記類型」，其餘摘要列依 outputs[] 動態產生
 
 ## MODIFIED Requirements
 

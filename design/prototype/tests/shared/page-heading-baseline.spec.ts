@@ -23,7 +23,7 @@ const pagesWithTopHeading = [
   '/pages/account/profile.html',
 ];
 
-// FR-025 (014-task-detail) removed the subtitle from task-detail: its H1 is
+// FR-028 (014-task-detail) removed the subtitle from task-detail: its H1 is
 // followed by the inline stage status, not a subtitle. FR-017 / SC-010 only
 // require subtitle metrics on pages that have one, so task-detail keeps the
 // title checks and skips the subtitle ones.

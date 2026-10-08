@@ -67,6 +67,11 @@ function markDirty() {
    field change to refresh a "next" button's disabled state. No-op here. */
 function revalidateCurrentStep() {}
 
+/* saveCodeToVisual() calls this on the outputs[] path; task-new defines the
+   step validator, task-detail has none, so an undefined call aborted 套用
+   after the backfill but before it could report success. */
+function validateStep2() {}
+
 function track(event, extra) {
   trackEvent(event, extra);
 }
@@ -219,6 +224,11 @@ function summarizeOutputConfigForDisplay(outKey, config) {
 /* ── Event bindings for the Step 1 / Step 2 parity surfaces ────
    Called once from task-detail.html's init(), after the overview panel
    partial has been fetched into the DOM (see loadAllTabPanels()). */
+var codeValidateTimer = null;
+/* Drop a pending debounce so a stale run cannot re-enable 套用 after the Code
+   panel is reset (settings edit cancelled). */
+function cancelCodeValidation() { clearTimeout(codeValidateTimer); }
+
 function bindTaskConfigEvents() {
   el('datasetUploadZone').addEventListener('click', function() { el('datasetFileInput').click(); });
   el('datasetUploadZone').addEventListener('keydown', function(e) {
@@ -258,11 +268,29 @@ function bindTaskConfigEvents() {
   });
   /* #formatYamlBtn / #formatJsonBtn call setCodeFormat() via inline onclick
      in overview.html's markup, matching task-new.html's pattern. */
+  /* Live validation (FR-026 (3), AC-3.62): syntax and schema checks without
+     touching state, so Visual keeps the last valid config while the draft is
+     invalid; 套用 stays disabled until it passes. */
+  function validateCodeDraft() {
+    var draft = parseCodeDraft(el('codeEditor').value);
+    var message = draft.message
+      || (Array.isArray(draft.parsed.outputs) ? validateCodeOutputsSchema(draft.parsed).error : '')
+      || '';
+    el('codeErrorBar').classList.toggle('hidden', !message);
+    if (message) setText('codeErrorMsg', message);
+    el('saveCodeBtn').disabled = Boolean(message);
+  }
   el('codeEditor').addEventListener('input', function() {
     state.codeDraftDirty = true;
     markDirty();
     el('saveCodeBtn').disabled = false;
-    el('codeErrorBar').classList.add('hidden');
+    clearTimeout(codeValidateTimer);
+    codeValidateTimer = setTimeout(validateCodeDraft, 250);
   });
-  el('saveCodeBtn').addEventListener('click', function() { saveCodeToVisual(true); });
+  el('saveCodeBtn').addEventListener('click', function() {
+    clearTimeout(codeValidateTimer);
+    /* Applying only backfills Visual; header 儲存 is the sole submit, so use
+       the task-detail toast instead of the shared (task-new) toastCodeSaved. */
+    if (saveCodeToVisual(false)) showToast(t('settingsCodeAppliedToast'));
+  });
 }

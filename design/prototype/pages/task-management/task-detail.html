@@ -2294,7 +2294,7 @@
       labelCreatedAt: '建立時間',
       labelUpdatedAt: '最近更新',
       labelDatasetSummary: '資料集',
-      labelConfigVersion: '設定檔版本',
+      labelConfigVersion: '設定檔',
       labelConfigTaskType: '標記類型',
       labelConfigLabels: '標籤清單',
       labelConfigAllowMultiple: '允許多選',
@@ -2346,10 +2346,11 @@
       settingsTemplateSectionTitle: '從範本開始或者上傳設定檔',
       settingsUploadConfigBtn: '上傳設定檔（YAML / JSON）',
       settingsCodeLabel: 'CODE',
-      settingsSaveCodeBtnLabel: '儲存',
+      settingsSaveCodeBtnLabel: '套用',
+      settingsCodeAppliedToast: '已套用至 Visual，請按儲存送出',
       settingsSaveSuccess: '標記設定已更新',
       settingsLeaveConfirm: '你有尚未儲存的標記設定變更，確定要離開編輯模式嗎？',
-      settingsCodeUnsaved: '請先按「儲存」同步設定碼後再儲存變更。',
+      settingsCodeUnsaved: '請先套用 Code 的修改再儲存。',
       editTaskNameLabel: '任務名稱',
       editTaskTypeLabel: '任務類型',
       editDatasetLabel: '資料集',
@@ -2840,7 +2841,7 @@
       labelCreatedAt: 'Created at',
       labelUpdatedAt: 'Last updated',
       labelDatasetSummary: 'Dataset',
-      labelConfigVersion: 'Config version',
+      labelConfigVersion: 'Config file',
       labelConfigTaskType: 'Task type',
       labelConfigLabels: 'Labels',
       labelConfigAllowMultiple: 'Allow multiple labels',
@@ -2890,10 +2891,11 @@
       settingsTemplateSectionTitle: 'Start from template or upload config',
       settingsUploadConfigBtn: 'Upload config (YAML / JSON)',
       settingsCodeLabel: 'CODE',
-      settingsSaveCodeBtnLabel: 'Save',
+      settingsSaveCodeBtnLabel: 'Apply',
+      settingsCodeAppliedToast: 'Applied to Visual. Click Save to submit.',
       settingsSaveSuccess: 'Label settings updated',
       settingsLeaveConfirm: 'You have unsaved label settings changes. Leave edit mode?',
-      settingsCodeUnsaved: 'Please click "Save" to sync code before saving changes.',
+      settingsCodeUnsaved: 'Apply your Code changes before saving.',
       editTaskNameLabel: 'Task name',
       editTaskTypeLabel: 'Task type',
       editDatasetLabel: 'Dataset',
@@ -4843,7 +4845,7 @@ function interpolate(template, payload) {
     if (profile && profile.trialRounds) TASK_DATA.trialRounds = cloneData(profile.trialRounds);
   }
 
-  /* FR-025: not-found / forbidden keep the header with a fixed title; the task
+  /* FR-028: not-found / forbidden keep the header with a fixed title; the task
      name, task-id crumb and stage status are never rendered. */
   function renderTaskHeaderFallback(titleKey) {
     setText('bcRoot', t('bcRoot'));
@@ -6334,7 +6336,7 @@ function interpolate(template, payload) {
     return state.lang === 'zh' ? TASK_DATA.taskNameZh : TASK_DATA.taskNameEn;
   }
 
-  /* FR-025: breadcrumb / H1 / status text shared by all six tabs. The status
+  /* FR-028: breadcrumb / H1 / status text shared by all six tabs. The status
      text reuses statusStepLabel -- the same table the overview stepper labels
      (renderStatusStepperLabels) read -- so there is no second stage mapping. */
   function renderBreadcrumbCurrent() {
@@ -7245,6 +7247,7 @@ function getTaskTypeLabel() {
     state.settingsEditMode = false;
     state.settingsDirty = false;
     state.codeDraftDirty = false;
+    cancelCodeValidation();
     resetTaskConfigSeedGuard();
     renderSettingsEditState();
     return true;

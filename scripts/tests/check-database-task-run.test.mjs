@@ -93,7 +93,7 @@ test('task state and isolation history are projections of typed shared audit eve
     'RunStateTransition', 'IsolationAuditLog']) {
     assert.ok(requirement.includes(token), `FR-025 must define ${token}`);
   }
-  assert.match(requirement, /(?:同一|單一)[^\n]*(?:DB|資料庫)[^\n]*交易/,
+  assert.match(requirement, /(?:同一|單一|相同)[^\n]*(?:DB|資料庫)[^\n]*交易/,
     'A changed task and its one audit event must commit atomically');
   assert.match(requirement, /(?:無變更|值未變)[^\n]*(?:不|不得)[^\n]*(?:事件|稽核)/,
     'A no-op must not create an audit event');
