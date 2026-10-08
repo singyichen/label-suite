@@ -1144,9 +1144,9 @@
     /* FR-026 (1): settings tab = left section nav + one visible section. */
     .settings-layout { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 28px; align-items: start; }
     .settings-section-nav { display: flex; flex-direction: column; gap: var(--space-xs); overflow-x: auto; }
-    .settings-nav-item { padding: var(--space-sm) var(--space-md); border: 0; border-radius: 4px; background: transparent; color: var(--color-ink-muted); font: inherit; text-align: left; cursor: pointer; }
-    .settings-nav-item[aria-selected="true"] { background: var(--color-slate-50); color: var(--color-ink); font-weight: 600; }
-    .settings-section.panel { border: 0; box-shadow: none; border-radius: 0; background: transparent; padding: 0; margin-bottom: 0; }
+    .settings-nav-item { padding: var(--space-sm) var(--space-md); border: 0; border-radius: 4px; background: transparent; color: var(--color-ink-muted); font: inherit; font-size: 14px; text-align: center; cursor: pointer; }
+    .settings-nav-item[aria-selected="true"] { background: var(--color-white); color: var(--color-ink); font-weight: 600; }
+    .settings-section.panel { border: 1px solid var(--color-border); box-shadow: none; border-radius: var(--radius-lg); background: var(--color-white); margin-bottom: 0; }
     /* FR-026 (1) / design.md: section title, text-link edit, divided definition list. Scoped to the settings tab only. */
     .settings-section .panel-title { font-size: 16px; font-weight: 600; }
     .settings-section [id$="EditBtn"] { border: 0; background: transparent; color: var(--color-primary); padding: 0 var(--space-xs); box-shadow: none; }
