@@ -41,14 +41,14 @@
     .breadcrumb a:hover{text-decoration:underline}
     .breadcrumb-sep{color:var(--color-ink-muted);font-size:11px}
 
-    .page-header {
+    .task-header { margin-bottom: var(--space-lg); }
+    .task-header-row {
       display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
+      align-items: baseline;
       gap: var(--space-md);
-      margin-bottom: var(--space-lg);
       flex-wrap: wrap;
     }
+    .task-header-status { font-size: 14px; color: var(--color-text-soft); margin: 0; }
     .page-main-title {
       font-family: var(--font-serif-display);
       font-size: 28px;
@@ -56,12 +56,6 @@
       font-weight: 700;
       color: var(--color-ink);
       margin: 0 0 4px;
-    }
-    .page-main-subtitle {
-      font-size: 14px;
-      line-height: 1.8;
-      color: var(--color-text-soft);
-      margin: 0;
     }
 
     .admin-tabs {
@@ -2248,22 +2242,21 @@
 <main>
   <div class="layout">
     <section>
-      <header class="page-header">
-        <div>
-          <h1 class="page-main-title" id="pageTitle">任務詳情</h1>
-          <p class="page-main-subtitle" id="pageSubtitle">檢視任務概覽、執行控制與匯出結果</p>
+      <header class="task-header" id="taskHeader">
+        <nav class="breadcrumb" aria-label="breadcrumb">
+          <a href="./task-list.html" id="bcRoot">任務管理</a>
+          <span class="breadcrumb-sep" aria-hidden="true">/</span>
+          <span id="bcCurrent"></span>
+        </nav>
+        <div class="task-header-row">
+          <h1 class="page-main-title" id="pageTitle"></h1>
+          <p class="task-header-status" id="taskHeaderStatus"></p>
         </div>
       </header>
 
-      <!-- Breadcrumb -->
-      <nav class="breadcrumb" aria-label="breadcrumb">
-        <a href="./task-list.html" id="bcRoot">任務管理</a>
-        <span class="breadcrumb-sep" aria-hidden="true">›</span>
-        <span id="bcCurrent">任務詳情</span>
-      </nav>
-
       <div class="admin-tabs" role="tablist" aria-label="Task detail tabs">
-        <button class="admin-tab active" id="tabOverview" type="button" role="tab" aria-selected="true">任務概覽</button>
+        <button class="admin-tab active" id="tabOverview" type="button" role="tab" aria-selected="true" tabindex="0">概覽</button>
+        <button class="admin-tab" id="tabSettings" type="button" role="tab" aria-selected="false" tabindex="-1">設定</button>
         <button class="admin-tab" id="tabMemberManagement" type="button" role="tab" aria-selected="false">成員管理</button>
         <button class="admin-tab" id="tabAnnotationProgress" type="button" role="tab" aria-selected="false">標記進度</button>
         <button class="admin-tab" id="tabAnnotationResults" type="button" role="tab" aria-selected="false">標記結果</button>
@@ -2407,16 +2400,14 @@
     zh: {
       docTitle: '任務詳情 — Label Suite（原型）',
       bcRoot: '任務管理',
-      bcCurrent: '任務詳情',
       notFoundTitle: '找不到任務',
       notFoundMessageTpl: '任務代碼 {taskId} 不存在，請確認網址或回到任務列表重新選擇任務。',
       notFoundBackBtn: '回任務列表',
       forbiddenTitle: '無權限檢視此任務',
       forbiddenMessageTpl: '您目前無權限檢視任務代碼 {taskId}，請回到任務列表或聯絡管理員。',
       forbiddenBackBtn: '回任務列表',
-      pageTitle: '任務詳情',
-      pageSubtitle: '檢視任務概覽與執行控制',
-      tabOverview: '任務概覽',
+      tabOverview: '概覽',
+      tabSettings: '設定',
       tabAnnotationResults: '標記結果',
       tabAnnotationProgress: '標記進度',
       tabWorkLog: '工時紀錄',
@@ -2954,16 +2945,14 @@
     en: {
       docTitle: 'Task Detail — Label Suite (Prototype)',
       bcRoot: 'Task Management',
-      bcCurrent: 'Task Detail',
       notFoundTitle: 'Task not found',
       notFoundMessageTpl: 'Task {taskId} does not exist. Please check the URL or return to the task list to pick another task.',
       notFoundBackBtn: 'Back to task list',
       forbiddenTitle: 'You are not allowed to view this task',
       forbiddenMessageTpl: 'You do not have permission to view task {taskId}. Please return to the task list or contact an administrator.',
       forbiddenBackBtn: 'Back to task list',
-      pageTitle: 'Task detail',
-      pageSubtitle: 'Review overview and run control',
-      tabOverview: 'Task overview',
+      tabOverview: 'Overview',
+      tabSettings: 'Settings',
       tabAnnotationResults: 'Annotation results',
       tabAnnotationProgress: 'Annotation progress',
       tabWorkLog: 'Work log',
@@ -4728,6 +4717,7 @@
 
   var TAB_PANEL_PATHS = {
     overview: './task-detail.panels/overview.html',
+    settings: './task-detail.panels/settings.html',
     'annotation-results': './task-detail.panels/annotation-results.html',
     'annotation-progress': './task-detail.panels/annotation-progress.html',
     'work-log': './task-detail.panels/work-log.html',
@@ -4825,7 +4815,7 @@
     if (!mount) return Promise.resolve(false);
     mount.innerHTML = '';
 
-    var order = ['overview', 'member-management', 'annotation-progress', 'annotation-results', 'work-log'];
+    var order = ['overview', 'settings', 'member-management', 'annotation-progress', 'annotation-results', 'work-log'];
     return order.reduce(function(promise, tabName) {
       return promise.then(function() {
         return appendPanelPartial(TAB_PANEL_PATHS[tabName]);
@@ -4985,6 +4975,8 @@ function interpolate(template, payload) {
   function renderTaskNotFoundState() {
     var tabsBar = document.querySelector('.admin-tabs');
     if (tabsBar) tabsBar.classList.add('hidden');
+    var taskHeader = document.getElementById('taskHeader');
+    if (taskHeader) taskHeader.classList.add('hidden');
     var skeleton = document.getElementById('loadingSkeleton');
     if (skeleton) skeleton.classList.add('hidden');
     var mount = document.getElementById('tabPanelMount');
@@ -5007,6 +4999,8 @@ function interpolate(template, payload) {
   function renderTaskForbiddenState() {
     var tabsBar = document.querySelector('.admin-tabs');
     if (tabsBar) tabsBar.classList.add('hidden');
+    var taskHeader = document.getElementById('taskHeader');
+    if (taskHeader) taskHeader.classList.add('hidden');
     var skeleton = document.getElementById('loadingSkeleton');
     if (skeleton) skeleton.classList.add('hidden');
     var mount = document.getElementById('tabPanelMount');
@@ -5192,6 +5186,7 @@ function interpolate(template, payload) {
     }
 
     var resolvedTab = 'overview';
+    if (tab === 'settings') resolvedTab = 'settings';
     if (tab === 'annotation-results') resolvedTab = 'annotation-results';
     if (tab === 'member-management') resolvedTab = 'member-management';
     if (tab === 'annotation-progress') resolvedTab = 'annotation-progress';
@@ -5322,9 +5317,8 @@ function interpolate(template, payload) {
 
     setText('bcRoot', t('bcRoot'));
     renderBreadcrumbCurrent();
-    setText('pageTitle', t('pageTitle'));
-    setText('pageSubtitle', t('pageSubtitle'));
     setText('tabOverview', t('tabOverview'));
+    setText('tabSettings', t('tabSettings'));
     setText('tabAnnotationResults', t('tabAnnotationResults'));
     setText('tabAnnotationProgress', t('tabAnnotationProgress'));
     setText('tabWorkLog', t('tabWorkLog'));
@@ -6494,8 +6488,14 @@ function interpolate(template, payload) {
     return state.lang === 'zh' ? TASK_DATA.taskNameZh : TASK_DATA.taskNameEn;
   }
 
+  /* FR-025: breadcrumb / H1 / status text shared by all six tabs. The status
+     text reuses statusStepLabel -- the same table the overview stepper labels
+     (renderStatusStepperLabels) read -- so there is no second stage mapping. */
   function renderBreadcrumbCurrent() {
-    setText('bcCurrent', getCurrentTaskName());
+    var stepLabels = I18N[state.lang].statusStepLabel || I18N.zh.statusStepLabel || {};
+    setText('bcCurrent', TASK_DATA.taskId);
+    setText('pageTitle', getCurrentTaskName());
+    setText('taskHeaderStatus', stepLabels[TASK_DATA.status] || TASK_DATA.status);
   }
 
   function renderStatusStepperLabels() {
@@ -6532,6 +6532,7 @@ function interpolate(template, payload) {
       statusBadge.textContent = (I18N[state.lang].statusLabel || I18N.zh.statusLabel)[TASK_DATA.status] || TASK_DATA.status;
     }
     setText('statusHint', getStatusHint());
+    renderBreadcrumbCurrent();
     updateStatusStepper();
   }
 
@@ -7499,6 +7500,7 @@ function getTaskTypeLabel() {
 
   function setTabByRole(tabName, silent) {
     var nextTab = 'overview';
+    if (tabName === 'settings') nextTab = 'settings';
     if (tabName === 'member-management') nextTab = 'member-management';
     if (tabName === 'annotation-results') nextTab = 'annotation-results';
     if (tabName === 'annotation-progress') nextTab = 'annotation-progress';
@@ -7521,6 +7523,8 @@ function getTaskTypeLabel() {
 
   function renderTabs() {
     var tabOverview = document.getElementById('tabOverview');
+    var tabSettings = document.getElementById('tabSettings');
+    var settingsPanel = document.getElementById('settingsPanel');
     var tabAnnotationResults = document.getElementById('tabAnnotationResults');
     var tabAnnotationProgress = document.getElementById('tabAnnotationProgress');
     var tabWorkLog = document.getElementById('tabWorkLog');
@@ -7540,8 +7544,11 @@ function getTaskTypeLabel() {
     var workLogActive = state.activeTab === 'work-log';
     var memberActive = state.activeTab === 'member-management' && !reviewer;
 
+    var settingsActive = state.activeTab === 'settings';
     tabOverview.classList.toggle('active', overviewActive);
     tabOverview.setAttribute('aria-selected', overviewActive ? 'true' : 'false');
+    tabSettings.classList.toggle('active', settingsActive);
+    tabSettings.setAttribute('aria-selected', settingsActive ? 'true' : 'false');
     tabAnnotationResults.classList.toggle('active', arActive);
     tabAnnotationResults.setAttribute('aria-selected', arActive ? 'true' : 'false');
     tabAnnotationProgress.classList.toggle('active', annotationActive);
@@ -7552,6 +7559,11 @@ function getTaskTypeLabel() {
     tabMemberManagement.setAttribute('aria-selected', memberActive ? 'true' : 'false');
 
     overviewPanel.classList.toggle('hidden', !overviewActive);
+    settingsPanel.classList.toggle('hidden', !settingsActive);
+    /* FR-003: roving tabindex -- only the selected tab is in the Tab order. */
+    document.querySelectorAll('.admin-tabs [role="tab"]').forEach(function(tabEl) {
+      tabEl.setAttribute('tabindex', tabEl.classList.contains('active') ? '0' : '-1');
+    });
     annotationResultsPanel.classList.toggle('hidden', !arActive);
     annotationProgressPanel.classList.toggle('hidden', !annotationActive);
     workLogPanel.classList.toggle('hidden', !workLogActive);
@@ -11123,6 +11135,27 @@ function getTaskTypeLabel() {
       setTabByRole('overview');
       renderTabs();
       trackEvent('prototype_tab_switched', { tab: 'overview' });
+    });
+
+    document.getElementById('tabSettings').addEventListener('click', function() {
+      if (!setTabByRole('settings')) return;
+      renderTabs();
+      trackEvent('prototype_tab_switched', { tab: 'settings' });
+    });
+
+    /* FR-003: ArrowLeft/ArrowRight move between visible tabs, wrapping. */
+    document.querySelector('.admin-tabs').addEventListener('keydown', function(e) {
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      var visible = Array.prototype.filter.call(
+        document.querySelectorAll('.admin-tabs [role="tab"]'),
+        function(el) { return !el.classList.contains('hidden'); }
+      );
+      var idx = visible.indexOf(document.activeElement);
+      if (idx < 0) return;
+      e.preventDefault();
+      var next = visible[(idx + (e.key === 'ArrowRight' ? 1 : visible.length - 1)) % visible.length];
+      next.focus();
+      next.click();
     });
 
     document.getElementById('tabAnnotationResults').addEventListener('click', function() {
