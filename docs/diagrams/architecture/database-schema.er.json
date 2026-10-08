@@ -3,7 +3,7 @@
   "meta": {
     "title": "Label Suite 資料庫規劃 ER 圖（帳號、管理、資料集、任務執行、標記、審核與匯出）",
     "description": "**規劃圖，尚未部署資料結構。** 已部署業務表：0；本頁顯示 **37 張候選表、315 欄、43 個候選單欄 FK（外鍵）**。帳號／管理、資料集、任務／執行、標記／審核與匯出的逐表型別和關聯，來自[資料表盤點總帳](/notes/diagrams/architecture/database-table-inventory)所連的五份實體層字典。兩張匯出候選表保存一次請求、原始產物與有序執行範圍；同任務複合外鍵、產物保留／撤銷及授權見[匯出字典](/notes/diagrams/architecture/task-export-db-schema) §4–§7。資料集分析專用表延後至 MVP 後；工時仍待正典與欄位字典裁決。\n\n**讀圖方式：** Wiki 可逐表查看候選欄位、來源與待決事項；Diagram 可搜尋表名或欄名，點選表後會聚焦已列出的候選單欄外鍵。圖中連線不代表資料庫遷移、複合約束或資料庫權限已建立。",
-    "source": "docs/diagrams/architecture/account-admin-db-schema.md §2–§3; docs/diagrams/architecture/dataset-db-schema.md §2–§3; docs/diagrams/architecture/task-run-db-schema.md §2–§3; docs/diagrams/architecture/annotation-review-db-schema.md §2–§3; docs/diagrams/architecture/task-export-db-schema.md §2–§3; specs/task-management/014-task-detail/spec.md v8.0.0; specs/annotation/015-annotation-workspace/spec.md",
+    "source": "docs/diagrams/architecture/account-admin-db-schema.md §2–§3; docs/diagrams/architecture/dataset-db-schema.md §2–§3; docs/diagrams/architecture/task-run-db-schema.md §2–§3; docs/diagrams/architecture/annotation-review-db-schema.md §2–§3; docs/diagrams/architecture/task-export-db-schema.md §2–§3; specs/task-management/014-task-detail/spec.md v8.0.1; specs/annotation/015-annotation-workspace/spec.md",
     "backTo": "/notes/diagrams/architecture/database-table-inventory"
   },
   "options": {

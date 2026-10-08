@@ -220,6 +220,17 @@ test('task/run pending-items note points to decided annotation and export table 
     'Annotation/review and export table shapes have candidate dictionaries');
 });
 
+test('retryable failed export reuses its row and preserves the accepted command', () => {
+  const dictionary = readFileSync(new URL('../../docs/diagrams/architecture/task-export-db-schema.md', import.meta.url), 'utf8');
+  const e04 = dictionary.match(/^\| E-04 \|[^\n]*$/m)?.[0];
+  const e05 = dictionary.match(/^\| E-05 \|[^\n]*$/m)?.[0];
+  assert.ok(e04 && e05, 'Export lifecycle and idempotency rules are required');
+  assert.match(e04, /failed → processing/);
+  assert.match(e04, /ready.*(?:終態|不可逆)/);
+  assert.match(e04, /failure_code/);
+  assert.match(e05, /conditions_snapshot/);
+});
+
 test('NoteCraft CI runs export dictionary regression tests', () => {
   const workflow = read('../../.github/workflows/ci.yml');
   const job = workflow.match(/^  database-schema:\n([\s\S]*?)(?=^  [a-z][\w-]*:\n|(?![\s\S]))/m)?.[1];

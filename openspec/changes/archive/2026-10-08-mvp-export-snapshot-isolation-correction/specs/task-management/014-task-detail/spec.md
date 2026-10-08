@@ -146,3 +146,19 @@
 - **WHEN** worker 首次將完整產物設為 `ready`，其後使用者重新下載或同鍵重試
 - **THEN** 原始位元組、檔名與 `exported_at` 共同固定，歷史下載及 `ready` 重試交付完全相同的原檔
 - **AND** 不以 `requested_at` 重建檔案、查詢目前結果或延長既有產物期限
+
+### Requirement: SC-005 成功標準
+
+- **SC-005**（**v8.0.1 釐清**，issue #1160）：`isolation_enabled = true` 時每個 run 的查詢與匯出結果不得混入其他 run；同一次匯出可明確選取 Dry Run 與 Official Run 並同檔封裝，逐 run 保留身分 `run_id`、階段 `run_stage` 與獨立結果，不跨 run 合併、聚合或去重。`false` 時揭露風險並保存確認與審計證據，但不自動產生混合結果動作。兩種值皆須拒絕同 cycle 任何 Dry／Official item ID 重疊；只允許 draft 退回後的新 cycle 再使用舊 cycle item（AC-3.40／AC-3.41）。
+
+#### Scenario: SC-005 對應 AC-3.41
+
+- **GIVEN** sealed version 有 10 個已接受 item、R1 已用 3 個
+- **WHEN** 在隔離開啟或關閉兩種設定下發布要求 6 個的 R2
+- **THEN** R2 精確取得不同的 6 個、Official 發布時才凍結剩餘 1 個；要求 7 個的 R2 整次被拒絕，不能縮減或耗盡正式池（FR-010b～FR-010f-3）。（SC-005；AC-3.41）
+
+#### Scenario: 隔離開啟時的明確混合匯出
+
+- **GIVEN** 資料隔離開啟，使用者明確選取一個 Dry Run 與一個 Official Run 匯出
+- **WHEN** 系統建立同一份匯出檔
+- **THEN** 兩個 run 的結果分別保留來源 `run_id`、`run_stage` 與各自版本，不跨 run 合併、聚合或去重；隔離開關維持啟用

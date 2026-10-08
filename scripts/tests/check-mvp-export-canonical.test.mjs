@@ -94,12 +94,22 @@ test('FR-021 delta renames the old requirement and archived scenarios use the ne
   }
 });
 
+test('archived SC-005 matches canonical mixed-run isolation rule', () => {
+  const { derived } = exportDeltaState();
+  const canonical = readFileSync(new URL('../../specs/task-management/014-task-detail/spec.md', import.meta.url), 'utf8');
+  const canonicalSc = canonical.match(/^- \*\*SC-005\*\*[^\n]*$/m)?.[0];
+  const derivedSc = derived.match(/^- \*\*SC-005\*\*[^\n]*$/m)?.[0];
+  assert.ok(canonicalSc && derivedSc, 'SC-005 must be in both canonical and derived specs');
+  assert.equal(derivedSc, canonicalSc, 'Derived SC-005 must match the current canonical contract');
+  assert.match(derived, /#### Scenario: 隔離開啟時的明確混合匯出/);
+});
+
 test('derived OpenSpec Purpose describes canonical v8 and immutable FR-021 downloads', () => {
   const { derived } = exportDeltaState();
   const purpose = derived.match(/^## Purpose\s*\n([\s\S]*?)(?=^## |(?![\s\S]))/m)?.[1];
   assert.ok(purpose, 'Derived task-detail Purpose is required');
-  assert.match(purpose, /正典為[^。；\n]*v8\.0\.0/,
-    'Purpose must cite canonical task-detail v8.0.0');
+  assert.match(purpose, /正典為[^。；\n]*v8\.0\.1/,
+    'Purpose must cite canonical task-detail v8.0.1');
   const fr21 = purpose.match(/FR-021[^；。\n]*/)?.[0];
   assert.ok(fr21, 'Purpose must summarize current FR-021');
   for (const term of [/下載/, /不可變/, /原始/, /(?:產物|檔案|位元組)/]) {
