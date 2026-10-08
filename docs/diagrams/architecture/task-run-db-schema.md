@@ -1,6 +1,6 @@
 # 任務／執行資料庫資料結構（實體候選）
 
-> 本文件是 issue #1160 的衍生欄位字典。13 張表均為**未部署候選**，不是 Alembic 資料庫遷移、ORM 或可直接套用的 DDL。正典為 [013](../../../specs/task-management/013-task-new/spec.md)、[014](../../../specs/task-management/014-task-detail/spec.md)、[015](../../../specs/annotation/015-annotation-workspace/spec.md)、[ADR-022](../../adr/022-task-state-machine-location.md) 與 [ADR-037](../../adr/037-permission-matrix-authorization.md)；資料來源表形見 [資料集字典](./dataset-db-schema.md)。[設計裁決](../../superpowers/specs/2026-10-06-task-run-identity-design.md)已被上述正典採納，但本字典的 SQL 型別、索引與刪除規則仍須在獨立資料庫遷移工作驗證。
+> 本文件是 issue #1160 的衍生欄位字典。14 張表均為**未部署候選**，不是 Alembic 資料庫遷移、ORM 或可直接套用的 DDL。正典為 [013](../../../specs/task-management/013-task-new/spec.md)、[014](../../../specs/task-management/014-task-detail/spec.md)、[015](../../../specs/annotation/015-annotation-workspace/spec.md)、[ADR-022](../../adr/022-task-state-machine-location.md)、[ADR-032](../../adr/032-user-action-audit-trail.md) 與 [ADR-037](../../adr/037-permission-matrix-authorization.md)；資料來源表形見 [資料集字典](./dataset-db-schema.md)。[設計裁決](../../superpowers/specs/2026-10-06-task-run-identity-design.md)已被上述正典採納，但本字典的 SQL 型別、索引與刪除規則仍須在獨立資料庫遷移工作驗證。
 
 ## 1. 範圍與狀態
 
@@ -8,11 +8,11 @@
 
 一列 `task` 是可編輯的當前任務；每個 `task_run_cycle` 固定一個已封存的資料集版本與不可變設定版本；每次發布各有獨立 `task_sample_snapshot` 與 `task_run`。`task_run_item` 保存當次選中的公開資料項目，`task_annotation_assignment` 是固定的標記工作位。退回草稿後保留舊發布週期、執行、工作指派，再從新發布週期的 R1 開始。表名採 foundation FR-105 的單數、模組前綴；`users` 為既有例外。
 
-`TaskDetail`、`AnnotationListItem`、`ReviewUnit`、`ReviewAssignment` 是讀取投影或推導單位；其中 `ReviewAssignment` 已明定**不持久化**。`OutputConfig` 包在不可變設定版本中。標記提交、審核決策、仲裁、標記一致性計算與匯出 的實體表不屬此批；不得替它們預畫外鍵。所有下列型別和限制標為「候選」，沒有一項宣稱已在 SQLite／PostgreSQL 執行。
+`TaskDetail`、`AnnotationListItem`、`ReviewUnit`、`ReviewAssignment` 是讀取投影或推導單位；其中 `ReviewAssignment` 已明定**不持久化**。`OutputConfig` 包在不可變設定版本中。標記提交、審核決策、仲裁、資料集分析專用報告與匯出的實體表不屬此批；MVP 試標完成閘門所需的每回合 IAA 結果由 `task_trial_iaa_result` 保存。`RunStateTransition` 與 `IsolationAuditLog` 由共用 `audit_events` 查詢投影，不另建兩張重複的實體表。所有下列型別和限制標為「候選」，沒有一項宣稱已在 SQLite／PostgreSQL 執行。
 
 ## 2. ERD
 
-下圖列出 13 張候選表的全部欄位，線只畫**本批表之間的單欄外鍵**。指向外部 `users`、`dataset_version`、`dataset_item` 的單欄外鍵在字典標明；同任務、同發布週期、同執行的複合外鍵見 §4。ERD 線不表示表已建立。`dataset_item_private` 不接入發布路徑。
+下圖列出 14 張候選表的全部欄位，線只畫**本批表之間的單欄外鍵**。指向外部 `users`、`dataset_version`、`dataset_item` 的單欄外鍵在字典標明；同任務、同發布週期、同執行的複合外鍵見 §4。ERD 線不表示表已建立。`dataset_item_private` 不接入發布路徑。
 
 ```mermaid
 erDiagram
@@ -96,6 +96,14 @@ erDiagram
         uuid created_by_user_id FK
         timestamptz created_at
     }
+    task_trial_iaa_result {
+        uuid trial_round_id PK,FK
+        integer result_schema_version
+        varchar algorithm_version
+        char input_digest
+        json result_payload
+        timestamptz computed_at
+    }
     task_sample_snapshot {
         uuid id PK
         uuid task_run_cycle_id FK
@@ -158,6 +166,7 @@ erDiagram
     task ||--o{ task_guideline_version : task_id
     task ||--o{ task_membership : task_id
     task ||--o{ task_run_cycle : task_id
+    task_trial_round ||--o| task_trial_iaa_result : trial_round_id
     task_run_cycle ||--o{ task_sample_snapshot : task_run_cycle_id
     task_annotation_assignment ||--o| task_annotation_exclusion : assignment_id
 ```
@@ -283,7 +292,20 @@ R1 與 Rn 的序號只在發布週期內唯一；`sampling_value` 保存實際�
 | `created_by_user_id` | uuid → users | 否 | 發布者 | 試標發布；不改 | Q-01 |
 | `created_at` | timestamptz | 否 | 發布時間 UTC | 試標發布 | X-01 |
 
-### 3.8 task_sample_snapshot：單次發布的不可變抽樣回執
+### 3.8 task_trial_iaa_result：一次試標回合的完整計算結果
+
+一列＝一個試標回合已完成的 IAA 計算證據；`trial_round_id` 同時是主鍵和指向 `task_trial_round` 的真實外鍵，不另存第二份計算狀態。`result_payload` 按該回合釘住設定的輸出鍵保存經 registry 驗證的指標結果：每個需要計算的輸出都須有確定數值或 `De = 0` 的「無法計算」原因；`IAA_GATE_EXCLUDED_TYPES` 不列入。此表不是延後的資料集分析報告表。輸入摘要只識別版本化的標記來源集合與排除規則，不含原始答案、`hidden_answer`、test/gold 身分或受限來源。來源：014 FR-010o-5、dataset-017 FR-039。
+
+| 欄位 | 型別 | 可空 | 代表什麼 | 何時寫入／改變 | 規則 |
+|---|---|---|---|---|---|
+| `trial_round_id` | uuid → task_trial_round | 否 | 試標回合主鍵與外鍵；每回合最多一份結果 | 成功完成計算；不改 | Q-07 |
+| `result_schema_version` | integer | 否 | 受控 JSON 結果格式的正整數版本 | 成功完成計算；不改 | Q-08 |
+| `algorithm_version` | varchar | 否 | 可重現計算的演算法版本 | 成功完成計算；不改 | Q-08 |
+| `input_digest` | char(64) | 否 | 當次標記來源集合與排除規則的版本化輸入摘要 | 成功完成計算；不改 | Q-08 |
+| `result_payload` | json | 否 | 逐輸出型別的確定指標數值或 `De = 0` 無法計算原因；經 registry 驗證 | 成功完成計算；不改 | Q-08 |
+| `computed_at` | timestamptz | 否 | 計算完成的 UTC 時間 | 成功完成計算；不改 | Q-08 |
+
+### 3.9 task_sample_snapshot：單次發布的不可變抽樣回執
 
 每執行一份，保存隨機種子、演算法、摘要值和外部有序清單回執；真正成員仍由 `task_run_item` 決定。清單規範位元組版本為 `label-suite-run-items-v1`：UTF-8 第一行固定 `label-suite-run-items-v1\n`，其後按 `task_run_item.list_position` 逐行寫小寫帶連字號 UUID 與 `\n`，沒有其他空白或欄位；`selected_item_digest` 是完整位元組的 SHA-256 十六進位摘要。`selection_manifest_ref` 為私有、不可覆寫的內容定址物件鍵，不是客戶端 URL。來源：014 FR-010f／`SampleSnapshot`。
 
@@ -301,7 +323,7 @@ R1 與 Rn 的序號只在發布週期內唯一；`sampling_value` 保存實際�
 | `locked_at` | timestamptz | 否 | 鎖定時間 UTC | 發布 | X-01 |
 | `locked_by_user_id` | uuid → users | 否 | 執行發布者 | 發布；不改 | S-01 |
 
-### 3.9 task_run：一次試標或正式標記的發布
+### 3.10 task_run：一次試標或正式標記的發布
 
 試標有同發布週期回合，正式標記無回合；每任務生命週期至多一筆正式標記。執行釘住指引，不能以任務的當前指標重建歷史。來源：014 FR-010f-2／f-3／f-6／`AnnotationListMaterialization`。
 
@@ -320,7 +342,7 @@ R1 與 Rn 的序號只在發布週期內唯一；`sampling_value` 保存實際�
 | `created_by_user_id` | uuid → users | 否 | 發布者 | 發布；不改 | U-01 |
 | `created_at` | timestamptz | 否 | 發布時間 UTC | 發布；不改 | X-01 |
 
-### 3.10 task_run_reviewer_candidate：發布時候選名冊快照
+### 3.11 task_run_reviewer_candidate：發布時候選名冊快照
 
 此表只凍結審核分派輸入，不保存實際審核員黏著或授權。即時資格每次重新查 current 成員資格與矩陣；已提交審核員由 015 FR-093(5) 推導。來源：014 FR-010t／關鍵實體、015 FR-093。
 
@@ -332,7 +354,7 @@ R1 與 Rn 的序號只在發布週期內唯一；`sampling_value` 保存實際�
 | `can_arbitrate_at_publish` | boolean | 否 | 發布當時資格快照，非當前授權 | 發布；不改 | V-02 |
 | `sort_order_at_publish` | integer | 否 | 發布當時穩定排序 | 發布；不改 | V-02 |
 
-### 3.11 task_run_item：依序納入執行的公開資料項目
+### 3.12 task_run_item：依序納入執行的公開資料項目
 
 一列是一個執行選中的 `dataset_item`。同發布週期所有試標／正式標記執行不能重複選同資料項目；外部清單只是這些列的回執。來源：014 FR-010b／FR-010f／`RunItem`。
 
@@ -343,7 +365,7 @@ R1 與 Rn 的序號只在發布週期內唯一；`sampling_value` 保存實際�
 | `task_run_cycle_id` | uuid | 否 | 經 parent 執行約束的發布週期；防重選 | 發布；不改 | I-02 |
 | `list_position` | integer | 否 | 執行內正整數排序 | 發布；不改 | I-03 |
 
-### 3.12 task_annotation_assignment：固定的標記工作位
+### 3.13 task_annotation_assignment：固定的標記工作位
 
 一個工作指派 ID 不因停用、退回未指派池或重指派而改變；受派者可空不表示已排除。正式執行每資料項目恰一工作位，試標按重疊人數建立。工作位不另存可變 `status`；顯示狀態依終局排除、目前已提交標記、空受派者、目前已儲存草稿、其餘已指派工作位之順序推導。來源：014 FR-005l／FR-010f-4／`AnnotationAssignment`；015 的 submission 後續以此 ID 定址。
 
@@ -358,7 +380,7 @@ R1 與 Rn 的序號只在發布週期內唯一；`sampling_value` 保存實際�
 | `created_at` | timestamptz | 否 | 建立時間 UTC | 發布 | X-01 |
 | `updated_at` | timestamptz | 否 | 最後改動 UTC | 修改 | X-01 |
 
-### 3.13 task_annotation_exclusion：終局排除證據
+### 3.14 task_annotation_exclusion：終局排除證據
 
 每工作指派最多一筆，V1 不撤銷、不刪除，與原工作位分離避免空值 assignee 被誤判排除。來源：014 FR-005h／`ExcludedAnnotationAssignment`。
 
@@ -403,7 +425,9 @@ R1 與 Rn 的序號只在發布週期內唯一；`sampling_value` 保存實際�
 | Q-03 | DB | `(task_id,guideline_version_id)`→guideline `(task_id,id)`，不得用裸版本號連到他人 task | 014 FR-017a／`TrialRound` |
 | Q-04 | SVC | round `sampling_value = task_run.item_count = COUNT(task_run_item)`；CHECK 不能跨表計數 | 014 FR-010f-2／f-6 |
 | Q-05 | SVC | Rn 修訂記錄與 `no_change` 原因依 FR-017 驗證；R1 可空不是偽造空字串 | 014 FR-017 |
-| Q-06 | DB＋SVC | IAA 狀態僅 `pending/done/failed`；`done` 含數學上無法計算但已結束，不表示達標 | 014 FR-010o-4 |
+| Q-06 | DB＋SVC | IAA 狀態僅 `pending/done/failed`；回合建立時為 `pending` 且無 `task_trial_iaa_result`，失敗時為 `failed` 且不留可誤認為成功的結果。只有在同一資料庫交易寫入完整結果列並核對所有應計算輸出後才改為 `done`；`De = 0` 的「無法計算」亦屬確定結果而非失敗，不表示達標。開始正式標記與新增試標回合均須核對最新回合的 `done` 及結果列 | 014 FR-010o-4／FR-010o-5、ADR-022 |
+| Q-07 | DB | `task_trial_iaa_result.trial_round_id` 同時為非空 PK 與真實 FK → `task_trial_round.id`，一回合至多一列；主鍵已覆蓋外鍵反查，不加重複索引；普通刪除先採 RESTRICT 候選 | 014 FR-010o-5 |
+| Q-08 | DB＋SVC＋SEC | DB CHECK `result_schema_version > 0`、`algorithm_version` 非空白及 `input_digest` 為 64 位十六進位；`result_payload` 由釘住的 task config／IAA registry 驗證，逐一涵蓋 `IAA_GATE_EXCLUDED_TYPES` 以外的輸出鍵，只有確定數值或 `De = 0` 原因，不存原始標記答案、hidden answer、gold/test 身分或受限來源。結果與輸入版本摘要成功後不可覆寫；精確 JSON schema、摘要位元組規範及演算法版本詞彙在 runtime 前定案 | 014 FR-010o-5、dataset-017 FR-039、主憲法 III |
 | S-01 | DB | snapshot PK、cycle/locked_by user FK；UNIQUE `(task_run_cycle_id,id)` 供同 cycle run 參照 | 014 `SampleSnapshot` |
 | S-02 | SVC | snapshot 一旦發布不可覆寫；R1 不預先寫 Official ID 清單 | 014 FR-010f、ADR-022 |
 | S-03 | DB＋SVC | DB 只驗 `requested_sampling_value IS NULL OR requested_sampling_value > 0`；snapshot 沒有 `run_type`，所以 Dry 必填、Official 必為 null 須在發布交易由 SVC 對 run 驗證。threshold JSON 的 output type 也由 SVC 依釘住 config 驗證；snapshot 保存發布當下值 | 014 `SampleSnapshot`／FR-010o-1 |
@@ -437,6 +461,7 @@ R1 與 Rn 的序號只在發布週期內唯一；`sampling_value` 保存實際�
 | 同任務 config／指引版本 | UNIQUE `(task_id,version_no)` 各一 | 同時覆蓋 task FK 前綴；不另加 task_id 索引 |
 | 當前 reviewer 名冊 | PK `(task_id,reviewer_membership_id)`、UNIQUE `(task_id,sort_order)` | 同 task 名冊與排序；membership 反查另評估 `(reviewer_membership_id,task_id)` |
 | cycle 歷史與開啟唯一 | UNIQUE `(task_id,cycle_no)`、部分 UNIQUE `(task_id) WHERE closed_at IS NULL` | 防並行雙開；額外部分索引小而必要 |
+| 試標 IAA 完整結果 | `task_trial_iaa_result(trial_round_id)` PK／FK | 一回合最多一份不可變結果並以主鍵定位；不重複建立單欄索引 |
 | run 歷史及重試 | `(task_run_cycle_id,run_type,created_at,id)`；Dry 部分 UNIQUE `(task_id,trial_round_id,publication_idempotency_key)` WHERE run_type = 'dry_run'；Official 部分 UNIQUE `(task_id,publication_idempotency_key)` WHERE run_type = 'official_run' | 歷程索引支援有界查詢；兩個部分索引分別約束試標回合與正式發布，允許跨回合重用 key；增加發布成本 |
 | 當 cycle 已用 item | UNIQUE `(task_run_cycle_id,dataset_item_id)` | 防重選並加速剩餘池反查；PK `(task_run_id,dataset_item_id)` 已支援單 run item |
 | run 清單順序 | UNIQUE `(task_run_id,list_position)` | 避免全表排序；重複 run_id 單欄索引無益 |
@@ -456,10 +481,10 @@ JSON config 與覆寫不先建 GIN；只有實際 JSON key predicate 與執行�
 
 ## 7. 待決與不得推測事項
 
-1. **migration 可用性**：13 張表的 SQL 長度、部分預設、append-only DB trigger、索引精確成本與 migration 順序仍是候選。初建 task 的兩個當前版本指標已選非空及延後同任務複合 FK；SQLite／PostgreSQL 循環建表、提交檢查與 downgrade 尚待獨立實測。普通刪除採 RESTRICT／等效拒絕的候選方向；資料類別保存期限、刪除／匿名化請求、受限資產與被引用物件的清理順序須由產品／隱私政策另行裁決。ADR-032 稽核事件至少一曆年的下限，不自動成為全部 task/run、答案或檔案的保存上限；RESTRICT 也不是無限保存許可。
-2. **其他規格內容編碼**：`config_payload`／guideline 資產 JSON 的 canonical bytes、registry 保留與檔案生命週期，以及 seed／演算法版本型別與重播策略仍須在 runtime 前定義。公開 item manifest 的版本化規範位元組、摘要及私有回執協定已於 §3.8／§6 定義；物件儲存故障、清理與受控修復仍待獨立實測。
+1. **migration 可用性**：14 張表的 SQL 長度、部分預設、append-only DB trigger、索引精確成本與 migration 順序仍是候選。初建 task 的兩個當前版本指標已選非空及延後同任務複合 FK；SQLite／PostgreSQL 循環建表、提交檢查與 downgrade 尚待獨立實測。普通刪除採 RESTRICT／等效拒絕的候選方向；資料類別保存期限、刪除／匿名化請求、受限資產與被引用物件的清理順序須由產品／隱私政策另行裁決。ADR-032 稽核事件至少一曆年的下限，不自動成為全部 task/run、答案或檔案的保存上限；RESTRICT 也不是無限保存許可。
+2. **其他規格內容編碼**：`config_payload`／guideline 資產 JSON 的 canonical bytes、registry 保留與檔案生命週期，以及 seed／演算法版本型別與重播策略仍須在 runtime 前定義。公開 item manifest 的版本化規範位元組、摘要及私有回執協定已於 §3.9／§6 定義；物件儲存故障、清理與受控修復仍待獨立實測。
 3. **工作 slot 實作**：assignment 顯示狀態已定為衍生投影，不另存 enum；未提交草稿退役與受派者變更的交易競爭，以及 Official「每 item 恰一 slot」的服務／DB 驗證仍待實測。本字典不憑原型狀態增設第二份持久化值域。
-4. **其他實體**：`task_status_transition` 的獨立歷程與 `audit_events` 去重方式、`WorkLogEntry` 原始事件與日彙總、`IsolationAuditLog` 仍待裁決；IAA 專用報告表依 MVP 範圍延後。[標記／審核／仲裁字典](./annotation-review-db-schema.md)與[匯出字典](./task-export-db-schema.md)已有未部署候選表形，不算入本文件 13 張。ADR-022 的 `run_state_transitions` 是明示歷史示例；若另建狀態歷程，候選名為 `task_status_transition`。
+4. **其他實體**：`RunStateTransition` 與 `IsolationAuditLog` 是由 `audit_events` 的 `task.status_changed`／`task.isolation_changed` 事件授權查詢的投影；狀態／隔離設定變更與恰一筆事件同交易，不建立第二份領域稽核表。`WorkLogEntry` 為來源事件與日報表的唯讀投影；IAA 專用分析報告表依 MVP 範圍延後，但 `task_trial_iaa_result` 為試標閘門的必要結果證據。[標記／審核／仲裁字典](./annotation-review-db-schema.md)與[匯出字典](./task-export-db-schema.md)已有未部署候選表形，不算入本文件 14 張。
 5. **跨模組 FK**：dataset 字典的 item 版本經 `dataset_item → dataset_import_batch → dataset_version` 取得；本批不能捏造 `dataset_item.dataset_version_id` 或只靠 item FK 宣稱已保證同 cycle 版本。annotation/review 的 `run_id × assignment_id` 複合約束須由其 owning spec 的實體字典決定。
 
-**交付狀態：候選 13 表，已投影到 [NoteCraft Wiki／Diagram](./database-schema.er.json)，尚無業務 ORM／Alembic migration。** 上述待決事項關閉且雙資料庫測試通過後，才能稱為可執行 schema。
+**交付狀態：候選 14 表，已投影到 [NoteCraft Wiki／Diagram](./database-schema.er.json)，尚無業務 ORM／Alembic migration。** 上述待決事項關閉且雙資料庫測試通過後，才能稱為可執行 schema。
