@@ -101,10 +101,11 @@ test('session OpenSpec delta classifies renamed and newly derived requirements',
 });
 
 // Issue #1224: ADR-021 defers to ADR-038 for token cleanup.
-test('ADR-021 cites ADR-038 and the TBD (#1224) token cleanup, without the old pending-order wording', () => {
+test('ADR-021 cites ADR-038 and the TBD (#1244) token cleanup, without the old pending-order wording', () => {
   const paragraph = adr.split('\n').find((line) => line.includes('per ADR-038 (#1224)'));
   assert.ok(paragraph, 'ADR-021 cleanup paragraph must cite per ADR-038 (#1224)');
-  assert.ok(paragraph.includes('TBD (#1224)'), 'ADR-021 cleanup paragraph must mention TBD (#1224)');
+  // Issue #1242 follow-up: remaining cleanup cadence points at #1244.
+  assert.ok(paragraph.includes('TBD (#1244)'), 'ADR-021 cleanup paragraph must mention TBD (#1244)');
   assert.match(paragraph, /expires_at/);
   assert.doesNotMatch(adr, /privacy deletion order must be settled/);
 });
@@ -161,4 +162,16 @@ test('audit_events.actor_role is an immutable snapshot, system for system events
     assert.match(text, /系統事件[^|]*`system`/, `${where}: system events use 'system'`);
     assert.match(text, /(?:不是|非|不做)[^|；。]*(?:即時|live)[^|；。]*(?:join|JOIN|關聯)/, `${where}: not a live join`);
   }
+});
+
+// Issue #1242: R-11 credential_version comparison on refresh is decided (no new column).
+test('R-11 decides not to store an issued credential_version in the session, citing R-08 (#1242)', () => {
+  const row = dictionary.split('\n').find((line) => line.startsWith('| R-11 |'));
+  assert.ok(row, 'Missing R-11');
+  assert.doesNotMatch(row, /待決|尚未裁決/, 'R-11 must no longer be pending');
+  assert.match(row, /不新增(?:任何)?欄位/, 'R-11 must state no column is added');
+  assert.match(row, /R-08/, 'R-11 must cite R-08 as the reason');
+  const note = erTables.find((table) => table.name === 'refresh_tokens');
+  assert.ok(note, 'Missing refresh_tokens in the ER JSON');
+  assert.doesNotMatch(note.description, /待決/, 'ER refresh_tokens description must not stay pending');
 });

@@ -347,7 +347,7 @@
           "note": "發行時間"
         }
       ],
-      "description": "**候選表／設計草案，尚未執行資料庫遷移。** 一列代表一張更新權杖；真實 FK 指向憑證群組，不重複保存使用者或登入時間。`grace_reissued_at` 最多容許一次寬限重發。來源：帳號／管理 §3.3、account-020 FR-001／FR-004、ADR-021。字典層設計要求，尚未寫入 ADR-021：權杖原值為 256-bit CSPRNG 隨機值，只保存 `token_hash`（SHA-256），不保存明文（ADR-021 僅規定 `token_hash` 唯一）。使用時同一交易重讀 `users` 的 `is_active` 與 `credential_version` 並確認 session 未撤銷；權杖列與 session 無已簽發版本欄，`credential_version` 的比對對象是 access JWT claim（account-020 FR-002），refresh 的防線是憑證事件已撤銷 session。是否在 session 儲存簽發版本為待決事項。"
+      "description": "**候選表／設計草案，尚未執行資料庫遷移。** 一列代表一張更新權杖；真實 FK 指向憑證群組，不重複保存使用者或登入時間。`grace_reissued_at` 最多容許一次寬限重發。來源：帳號／管理 §3.3、account-020 FR-001／FR-004、ADR-021。字典層設計要求，尚未寫入 ADR-021：權杖原值為 256-bit CSPRNG 隨機值，只保存 `token_hash`（SHA-256），不保存明文（ADR-021 僅規定 `token_hash` 唯一）。使用時同一交易重讀 `users` 的 `is_active` 與 `credential_version` 並確認 session 未撤銷；權杖列與 session 無已簽發版本欄，`credential_version` 的比對對象是 access JWT claim（account-020 FR-002），refresh 的防線是憑證事件已撤銷 session。已定案（issue #1242）：不新增欄位儲存簽發版本；若存版本會與 R-08（改密碼保留目前 session、refresh 取得新 JWT）衝突。"
     },
     {
       "name": "account_password_token",
@@ -1003,7 +1003,7 @@
           "name": "current_run_cycle_id",
           "type": "uuid",
           "required": "nullable",
-          "note": "task 側指向當前發布週期的指標：進行中指向開啟週期；`completed` 後保留指向最終已關閉週期（候選，待 ADR-022 補述）；尚未發布或退回草稿後為空值；首次試標發布／退回草稿／結案；規則：T-04"
+          "note": "task 側指向當前發布週期的指標：進行中指向開啟週期；`completed` 後保留指向最終已關閉週期（已定案，ADR-022 Amendment 2026-10-08）；尚未發布或退回草稿後為空值；首次試標發布／退回草稿／結案；規則：T-04"
         },
         {
           "name": "name",
@@ -1229,7 +1229,7 @@
           "name": "membership_status",
           "type": "varchar(16)",
           "required": "required",
-          "note": "當前成員狀態，值域 `active`／`disabled`；建立／停用／復用；規則：M-03"
+          "note": "當前成員狀態，值域 `invited`／`active`／`disabled`；建立／停用／復用；規則：M-03"
         },
         {
           "name": "created_at",
