@@ -214,12 +214,12 @@ erDiagram
 | 資料類別 | 裁決 | 既有下限 | 刪除／匿名化方式 | 待定（#1224） |
 |---|---|---|---|---|
 | `users` 與 `account_email_change_request.pending_email` | 原地匿名化 | 無；由資料主體刪除請求觸發 | 同一列匿名化，FK 不改指：停用、email 改唯一不可投遞墓碑值、`name` 改墓碑標籤、清除個人欄位與憑證、撤銷全部工作階段，並刪除密碼 token 與全部 email 變更申請；不可逆（account-020 FR-007） | 匿名化狀態的持久化形式；匿名化後稽核顯示身分遺失是否可接受 |
-| 共用 `audit_events` 與 `annotation_history_event` 的 PII 欄位 | 下限後匿名化 | 一個日曆年（ADR-032） | 事件列不刪；一個日曆年後只經 migration role 特權路徑匿名化 registry 標為個人的 `payload_summary` 鍵與 `reason` 自由文字；ID 欄保留 | 執行週期與最長期限 |
+| 共用 `audit_events` 與 `annotation_history_event` 的 PII 欄位 | 下限後匿名化 | 一個日曆年（ADR-032） | 事件列不刪；一個日曆年後只經 migration role 特權路徑匿名化 `reason` 自由文字；`payload_summary` 現無個人鍵（ADR-032 allowlist 排除），標記個人鍵 待定（#1224）；ID 欄保留 | 執行週期與最長期限 |
 | 含答案的歷程 JSON（`result_snapshot`、`decision_payload`、仲裁票 payload） | 隨版本／run 保存 | 無統一期限 | 該 dataset 版本或 run 存在期間保存，不做 PII 欄位匿名化（015 FR-063 研究可重現） | 版本下架程序與期限；下架前不刪 |
 | 受限來源檔、私有答案（`dataset_item_private`）與 `protected_payload` | 被引用時 RESTRICT | 無 | 已封存版本或 run 引用時拒絕；僅未封存、未被任何 run 引用的草稿丟棄時，同交易依子→父實體刪除，不經 CASCADE 穿過已封存版本（dataset-021 FR-011） | 版本下架 |
 | 任務、版本、發布週期、試標結果、抽樣回執、工作位及排除 | 先採 RESTRICT | 舊週期退回後保留；IAA 結果與 `done` 證據不先於引用消失 | 不以 CASCADE 抹除責任鏈；刪除順序遵循上列兩類資料集規則 | 各類最長期限與任務刪除順序 |
 | `refresh_tokens` | 清理工作實體刪除 | 無 | 列自身 `expires_at` 過後刪除；已撤銷與 `rotated` 列保留至到期以維持重用偵測（account-020 FR-004） | 清理週期 |
-| `account_session` | 清理工作實體刪除（僅無引用者） | 一年（被工時與歷程引用時） | 已撤銷或逾絕對上限，且無 `task_work_interval`／`annotation_history_event` 引用時刪除；RESTRICT 不變，連帶 CASCADE 剩餘 token | 引用中 session 的最長期限與清理週期 |
+| `account_session` | 清理工作實體刪除（僅無引用者） | 一年（被工時與歷程引用時） | 須該 session 每一筆 token 均已逾其自身 `expires_at`，或 session 已逾絕對上限（`REFRESH_TOKEN_ABSOLUTE_MAX_TTL`），且無 `task_work_interval`／`annotation_history_event` 引用時刪除；RESTRICT 不變，連帶 CASCADE 的剩餘 token 此時均已過期 | 引用中 session 的最長期限與清理週期 |
 | `task_work_interval` | 先採 RESTRICT | 一個日曆年最低候選保留期（ADR-021） | 引用 session 時兩者皆保留；到期處理跟隨 ADR-038 的 session 規則 | 最長期限與清理週期 |
 | 匯出原檔 | 到期實體刪除 | 30 日 | `expires_at` 起拒絕下載；原檔 30 日後實體刪除（014 FR-021） | 清理週期 |
 | `task_export` metadata 與 `task_export_run` manifest | 到期實體刪除 | 一年 | 一年後實體刪除，先刪 `task_export_run` 再刪 `task_export`、同一交易；不以 CASCADE 靜默刪除一年內歷史 | 清理週期 |
