@@ -4,6 +4,7 @@
 **Date**: 2026-08-19
 **Accepted amendment**: 2026-10-06 — issue #1160 D-4; SQLite/PG planning contract, system actor, retention, admin actions and naming exception.
 **Accepted amendment**: 2026-10-06 — issue #1160 D-9; matrix event target identity fixed by ADR-037.
+**Accepted amendment**: 2026-10-08 — issue #1160 final planning; typed task state/isolation events replace duplicate domain audit tables, and non-null task scope gains a candidate FK.
 
 ## Context
 
@@ -11,7 +12,7 @@ ADR-019 established audit logging for **AI-assisted workflows**: every AI run cr
 
 Issue #180's cross-role lifecycle review exposed the gap (traceability matrix node #15, `docs/product/e2e/issue-180/traceability-matrix.md`): the acceptance requirement "reconstruct the full task lifecycle from the audit log" has no canonical contract to assert against. Related findings:
 
-- **ADR-022** already defines one specialized audit record, `RunStateTransition`, written in the same transaction as a task status change. It covers exactly one action family (task state transitions) and nothing else.
+- **ADR-022** originally sketched a specialized `RunStateTransition` record; its 2026-10-08 amendment makes this a query projection of the single typed task status audit event.
 - **Spec 014's work-log** (工時紀錄) records login/logout time, online duration, and per-role completion counts. It is a **productivity statistic**, not an audit trail: it has no per-action records, no targets, no before/after state, and is aggregated for reporting.
 - The **prototype** (static HTML + localStorage) has no audit concept anywhere.
 
@@ -38,7 +39,7 @@ One dedicated table per action family: `run_state_transitions`, `annotation_subm
 
 #### Option C — Single append-only `audit_events` table with a config-driven action registry (selected)
 
-One canonical table for all user actions, with a registry of allowed action names (mirroring ADR-019's `workflow_type` registry approach). Domain records such as `RunStateTransition` continue to exist per ADR-022; the audit event is emitted in the same service-layer transaction.
+One canonical table for all user actions, with a registry of allowed action names (mirroring ADR-019's `workflow_type` registry approach). `RunStateTransition` and `IsolationAuditLog` are authorized query projections of typed events after the 2026-10-08 amendment to ADR-022 and 014; each task change emits one event in the same service-layer transaction, without a duplicate domain audit table.
 
 ## Decision
 
@@ -73,9 +74,10 @@ Rules:
 
 - **Append-only.** Ordinary service writes only insert; updates and deletes are rejected in both database tiers. Corrections are new events (same rule as ADR-019). A future privileged archive/purge path requires a separately reviewed policy and may operate only after the minimum retention term.
 - **Same transaction.** The audit event is written in the same DB transaction as the domain mutation, in the service layer (the ADR-022 pattern). A failed mutation writes no event; a committed mutation always has one.
+- **Task change uniqueness.** Each real task status transition emits exactly one `task.status_changed`; each real `isolation_enabled` change emits exactly one `task.isolation_changed`. For both `task.status_changed` and `task.isolation_changed`, `target_type` must equal `task`, and `target_id` normalized as a lowercase hyphenated UUID must match `task_id`; reject a different valid task target rather than misattribute the history. A no-op, rolled-back mutation or idempotent replay emits none. Action-specific allowlists store only before/after status or booleans, trigger source and a necessary reason code. Disabling isolation requires verified second confirmation and its controlled reason code; re-enabling uses a distinct fixed reason without second confirmation. The `RunStateTransition` and `IsolationAuditLog` histories read these rows under authorization; they are not second persisted stores.
 - **Registry-driven.** `action` and `target_type` values come from a config registry. New task types or output types reuse existing actions (`annotation.submitted` carries the output-type composition in `payload_summary`); they never add code paths.
 - **Actor integrity.** Human actions have a non-null `actor_user_id` referencing `users.id` with delete `RESTRICT` and `actor_role != 'system'`. Non-human actions have `actor_user_id IS NULL` and `actor_role = 'system'`; a database CHECK makes the two forms equivalent. A synthetic login-capable system account is not created. Human actor ID and historical role snapshot come from the verified authentication/account flow, and system context comes only from a trusted internal job; neither may be accepted from a client request body. The runtime slice must reject forged system actors in tests.
-- **Scope and target integrity.** `task_id` is a nullable UUID candidate consistent with Accepted ADR-022. The task table/PK is not yet decided, so this ADR does not claim a physical task FK. `(target_type,target_id)` is a registry-validated polymorphic reference, not a physical FK; service writes validate the target kind and existence at insertion time, and identifiers are not reused after deletion. Historical target metadata needed for an audit read must be captured in an allowlisted summary rather than relying on a deleted target row.
+- **Scope and target integrity.** `task_id` remains nullable for events outside a task. The task table now has a UUID PK candidate, so non-null `audit_events.task_id` has a candidate true FK to `task.id` with an index for task chronology; it is not deployed until a standalone migration and both database tiers are tested. Ordinary hard deletion is restricted pending the data-retention policy. `(target_type,target_id)` is a registry-validated polymorphic reference, not a physical FK; service writes validate the target kind and existence at insertion time, and identifiers are not reused after deletion. Historical target metadata needed for an audit read must be captured in an allowlisted summary rather than relying on a deleted target row.
 - **Redaction.** `payload_summary` has an action-scoped allowlist: IDs, state/role/version transitions and necessary non-sensitive metadata. It must never contain gold answers, credentials, tokens, raw annotation text or unrestricted request payloads. Annotation answer-history snapshots remain separate role-filtered domain records.
 - **Retention.** Every event must remain available for at least one calendar year. There is no automatic deletion. A separately approved archive/purge policy must preserve this minimum and the ability to reconstruct required history before any cleanup is implemented.
 
@@ -91,7 +93,8 @@ The catalog below is the initial registry. Adding entries is a registry change p
 **task-management**
 
 - `task.created` · `task.config_updated` (config version/hash in payload, not full config)
-- `task.status_changed` — before/after status; emitted alongside ADR-022's `RunStateTransition` in the same transaction
+- `task.status_changed` — before/after status; sole persisted source for the `RunStateTransition` projection
+- `task.isolation_changed` — before/after `isolation_enabled`; disabling records the verified second-confirmation reason code, and re-enabling records its distinct fixed reason without second confirmation; sole persisted source for the `IsolationAuditLog` projection
 - `task.iaa_confirmed` · `task.iaa_rejected` (rejection reason summary)
 - `task.member_added` · `task.member_removed` · `task.member_role_changed`
 - `task.review_settings_changed` (e.g., `reviewer_ids`, `arbiter_ids` — 014 v3.0.0 replaced the retired `min_reviewers`)
@@ -112,9 +115,9 @@ The catalog below is the initial registry. Adding entries is a registry change p
 - `role_permissions.changed` (target type `role_permission_matrix`, stable target ID string `1` matching the version singleton; emitted for a real editable-matrix change, with server-computed before/after cell diff and version transition; see ADR-037)
 - `audit.exported` (exporting the audit trail is itself audited)
 
-### Relationship to `RunStateTransition` (ADR-022)
+### Relationship to Task Audit Projections (ADR-022, 014)
 
-`RunStateTransition` remains the state machine's domain record and is unchanged by this ADR. `task.status_changed` audit events reference the transition row from `payload_summary`. Whether to later fold `RunStateTransition` into `audit_events` is deferred; doing so would require amending ADR-022 and is not needed for correctness because both rows share one transaction.
+The 2026-10-08 ADR-022 and 014 amendments define `RunStateTransition` and `IsolationAuditLog` as authorized views of `task.status_changed` and `task.isolation_changed`. Each change has only the typed `audit_events` row as a persisted audit fact; a second transition or isolation audit table must not be built from historical sketches. Status, actor, task and time come from validated event data. The same transaction commits the domain mutation and its one audit event, or neither.
 
 ### Storage, Query, and Access (high-level)
 
@@ -148,7 +151,7 @@ The prototype (static HTML + localStorage, `design/prototype/`) is **exempt**: i
 
 - Privileged archive/purge policy and implementation after the one-calendar-year minimum; no automatic deletion is approved here.
 - The editable matrix's audit target is now decided by ADR-037. Runtime implementation and retention enforcement remain separate work.
-- Whether `RunStateTransition` is eventually folded into `audit_events` (requires ADR-022 amendment).
+- The 2026-10-08 ADR-022 amendment completed the `RunStateTransition` projection decision; no separate task transition audit table remains planned.
 - Whether an admin-facing audit UI ships in the first formal release or audit stays API-only.
 - Partitioning strategy if event volume warrants it.
 
@@ -156,6 +159,6 @@ The prototype (static HTML + localStorage, `design/prototype/`) is **exempt**: i
 
 - [ADR-010](010-config-driven-architecture.md): action/target registries must stay config-driven; no task-type-specific audit code.
 - [ADR-019](019-ai-traceability-audit-logging.md): AI-workflow traceability; ADR-032 covers human actions and correlates via `request_id`/`ai_run_id`.
-- [ADR-022](022-task-state-machine-location.md): audit events are emitted from the service layer in the same transaction as domain mutations; `RunStateTransition` is unchanged.
+- [ADR-022](022-task-state-machine-location.md): audit events are emitted from the service layer in the same transaction as domain mutations; `RunStateTransition` is now their authorized query projection.
 - [ADR-037](037-permission-matrix-authorization.md): fixes the role-matrix change event target identity and atomic version/diff boundary.
 - [ADR-018](018-observability-prometheus-grafana.md): audit identifiers never become metric labels.

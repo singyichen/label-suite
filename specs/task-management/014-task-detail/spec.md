@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-detail-overview-settings-1199
 建立日期: 2026-04-20
-版本: 10.0.0
+版本: 11.0.0
 狀態: Draft
 ---
 
@@ -502,6 +502,8 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 48. **AC-3.48**（v10.0.0，issue #1160）：**Given** 同一 sealed version 和 seed 選出一組公開 item ID，**When** 發布 Dry 或 Official run，**Then** `task_run_item.list_position` 的有序 UUID 清單形成 `label-suite-run-items-v1` UTF-8 規範位元組，`selected_item_digest` 為完整位元組的 SHA-256 十六進位，私有不可覆寫 `selection_manifest_ref` 回執讀回與 SQL 清單逐位元一致；回執與標記者資料均無 hidden answer、`declared_split`、受限 `source_ref` 或 gold/test 標記（FR-010f）。
 49. **AC-3.49**（v10.0.0，issue #1160）：**Given** 合法發布命令與固定冪等鍵，**When** 同 key／同摘要重送、物件寫入或讀回驗證失敗、DB 回滾、提交結果不明，或已提交回執後來缺失／摘要不符，**Then** 已提交重送只回原 run／snapshot 且不重新抽樣，異摘要拒絕；物件失敗不提交 DB，回滾不留下可見的部分發布；不明提交先查 DB 冪等鍵，壞回執拒絕讀取並告警，無引用殘留物只在租約與引用檢查後清理（FR-010f-6）。
 50. **AC-3.50**（v10.0.0，issue #1160）：**Given** 同一 assignment 曾有已儲存草稿、已提交紀錄、空受派者或終局排除的不同組合，**When** 查詢工作位顯示狀態，**Then** 依排除 → 已提交 → 未指派 → 目前受派者草稿 → 已指派待處理的順序得出唯一狀態，assignment 無獨立 `status`；重派會將舊未提交草稿轉 `abandoned`，不改已提交或排除證據（FR-010f-7）。
+51. **AC-3.51**（v11.0.0，issue #1160）：**Given** 最新試標回合須計算的每個輸出有數值或 `De = 0` 結果，**When** 計算服務提交結果，**Then** 單一版本化結果來源與 `done` 同交易保存；缺任一輸出、結果缺失或回滾時仍不可開始 Official 或下一回合，`De = 0` 不算計算失敗（FR-010o-5）。
+52. **AC-3.52**（v11.0.0，issue #1160）：**Given** 任務狀態或隔離開關實際改變，**When** 變更與稽核交易提交，**Then** `audit_events` 各新增恰一筆相應 typed action，保存可驗證的前後值、actor、task、UTC 時間與必要原因碼；回滾或冪等重送不重複，`RunStateTransition`／`IsolationAuditLog` 由此投影而不另建表（FR-025）。
 
 **行為規則**：
 
@@ -658,6 +660,7 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
   - **(4) 計算未結束不是 IAA 未達標**：`pending` 與 `failed` 不得以 IAA 未達標的方式呈現（不得使用未達標警示樣式、不得顯示「R{n} 未通過」類判定標題），亦不得被任何邏輯當作未達標處理。FR-010o-3 的顧問性警示只適用於 `done` 且得到數值的結果。
   - **(5) 開始正式標記的前置條件**：最新回合不為 `done` 時，`開始正式標記` 必須以停用狀態顯示，並於按鈕旁以可見文字說明原因（計算中或計算失敗），系統不得執行 `waiting_iaa_confirmation → official_run_in_progress`。最新回合為 `done` 後，`開始正式標記` 依 FR-010o-3 不因 IAA 未達標而停用；此處的停用依據是「計算尚未結束」，不屬於 FR-010o-3 所禁止的「因 IAA 未達標停用」。
   - **(6) 新增試標回合的前置條件**：最新回合不為 `done` 時，`waiting_iaa_confirmation` 狀態下的 `新增試標回合 R{trial_round+1}` 同樣必須以停用狀態顯示，並於按鈕旁以可見文字說明原因（計算中或計算失敗）；系統不得執行 `waiting_iaa_confirmation → dry_run_in_progress`。停用依據同樣是「計算尚未結束」，與 IAA 是否達標無關；最新回合為 `done` 後，該按鈕依 FR-013 第 (2) 點可點擊。
+- **FR-010o-5**（**v11.0.0 新增**，issue #1160）：每個 `TrialRound` 的 IAA 結果須有單一、可持久驗證的來源。候選 `task_trial_iaa_result` 以 `trial_round_id` 一對一保存結果格式版本、演算法版本、釘住的輸入摘要、經驗證的逐輸出結果及計算時間；結果不得包含 hidden answer、來源 split、原始私有內容或可讓標記者推知 test 身分的欄位。`result_payload` 對回合釘住的 task config 每個非 `IAA_GATE_EXCLUDED_TYPES` 輸出恰有一個確定結果：數值，或 dataset-017 FR-039 第 4 點的 `De = 0`「無法計算」。在同一資料庫交易驗完完整性、保存結果並把該回合 `iaa_computation_status` 轉為 `done`；狀態為 `pending`／`failed` 或結果缺失／不完整時，不得視為完成；「開始正式標記」與「新增試標回合」兩個轉換都須核對完整結果，不能只看狀態字串。失敗重試只讓同一回合 `failed → pending`，不產生新回合或舊版成功結果；`done` 的結果不可原地覆寫。指標與門檻計算仍僅依 dataset-017 FR-039。
 - **FR-010p**：Overview「任務狀態與執行控制」必須顯示 `總筆數 / 已用試標 / 可進正式` 的樣本池分配摘要，並與當前回合歷程即時同步；每個試標回合必須有獨立色塊與圖例，正式標記池使用另一組獨立顏色，且任一回合的配色不得與正式標記池混淆。
 - **FR-010p-1**：Overview「試標回合歷程」中的每筆回合 item 之間不得使用垂直連接線；日期必須維持單行顯示，不得因欄寬不足換成兩行。
 - **FR-010q**：抽樣欄位驗證規則必須明確：`sampling_value >= 1 且 < dataset_total`、`target_agreement_overrides` 中任一已填寫值範圍為 `0..1`、`min_annotators >= 2`；不符時阻擋儲存並顯示可修正錯誤訊息。`target_agreement_overrides` 的 key 只能是 FR-010o-1 第 (1) 點允許覆寫的輸出類型，否則依該條第 (3) 點拒絕整筆儲存（**v4.1.0 修訂**，issue #783）。
@@ -747,6 +750,8 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 
 - **FR-024**（issue #1160 D-9～D-11）：正式服務端須依 ADR-037 以當前 active membership 與已啟用矩陣格判斷：詳情讀取用 `task.detail.view`，Overview 的 `OVERVIEW_EDITABLE_FIELDS` 儲存用 `task.detail.edit`，成員操作用 `task.members.manage`，資料匯出用 `dataset.export`，並保留各自任務狀態、資料範圍、blind review 與答案隔離限制。reviewer 有 view 而無 edit；一人多角色時非 workspace 可用 active 角色權限聯集，狀態與移除只作用於選定 membership。發布、結案、仲裁與其他生命週期命令尚無完整 V1 專用鍵，不得借用上述鍵或只憑矩陣放行，須在 runtime 轉換前另行核准操作鍵、種子資料與安全測試。標記者不得透過匯出檔、條件快照或歷史列取得私有答案、測試集答案或未提交審核草稿；公開回應亦不得暴露受限物件參照。Prototype 的 URL `task_role` 僅保留檢視上下文，不可當作正式授權身分。
 
+- **FR-025**（**v11.0.0 新增，BREAKING**，issue #1160）：`RunStateTransition` 與 `IsolationAuditLog` 是受授權讀取 `audit_events` 的邏輯投影，不建立同義持久化表。每一次成功的 task 狀態變化在相同資料庫交易寫恰一筆 `task.status_changed`，其受控摘要保存 `from_status`、`to_status`、觸發來源與必要的原因碼；每一次 `isolation_enabled` 實際變化在相同交易寫恰一筆 `task.isolation_changed`，受控摘要保存前後布林值與原因碼；關閉隔離須驗證二次確認並記其受控原因碼，重新啟用隔離採獨立固定原因碼，不需二次確認。`audit_events` 本身保存事件 ID、非空 task 作用域、驗證過的人員 actor 或受信系統 actor、UTC 時間及 request 關聯；非空 `task_id` 為候選 FK 指向 `task.id`。對 `task.status_changed` 與 `task.isolation_changed`，`target_type` 必須為 `task`，`target_id` 正規化為小寫連字號 UUID 後必須相等於 `task_id`；即使兩個 ID 分別指向有效任務，錯配也須拒絕。值未變時不得建立稽核事件；交易失敗或冪等重送也不得多建事件。讀權、敏感摘要 allowlist、最低保留期與多型 target 驗證依 Accepted ADR-032。不得從用戶端接收自稱 system actor，也不得在摘要寫入答案、token、原始標記或未受控理由文字。
+
 ### 使用者流程與導頁
 
 ```mermaid
@@ -785,13 +790,14 @@ flowchart LR
 - **OutputConfig**：單一輸出類型的設定內容（`TaskConfig.outputs[].config`）。欄位由 `OUTPUT_TYPE_REGISTRY` 中該輸出類型的 fields 定義驅動（含共通欄位 `allow_bypass`）；不得為特定輸出類型在 task-detail 硬編第二份欄位定義（憲法：Generalization-First）。
 - **TaskMembership**：任務成員。欄位：`task_id`、`user_id`、`task_role`、`membership_status`。成員清單「審核負荷」欄顯示值由 `ReviewAssignment` 聚合推導，不儲存於 membership；仲裁身分來自 `TaskDetail.arbiter_ids`，非新的 `task_role`。
 - **ReviewAssignment**：（**v6.0.0 退役持久化模型，名稱保留**）僅為審核負荷的非持久化 view，依 annotation-015 FR-051／FR-093(5) 的 run 範圍、submission 黏著與即時有效候選推導 `pending`／`done`／`assigned`。不得建立第二份 sticky assignment 表、虛構 `review_unit_id` FK 或獨立保存 `assigned_by`／`source`；發布候選快照只保存選人輸入。
-- **RunStateTransition**：狀態轉換紀錄。欄位：`from_status`、`to_status`、`triggered_by`、`triggered_at`。
+- **RunStateTransition**：由 `audit_events.action = task.status_changed` 讀取的狀態轉換投影，不另建同義持久化表。`from_status`／`to_status`、觸發來源與原因碼來自經驗證摘要，`triggered_by`／`triggered_at` 來自事件 actor／時間；每次成功轉換恰有一筆同交易事件（FR-025、Accepted ADR-022／032）。
 - **WorkLogEntry**：工時紀錄唯讀查詢投影，不建資料表；一列以 `account_session_id`、`task_id`、`run_id`、`membership_id`、`work_kind`、`report_date`（`Asia/Taipei`）定址。顯示 `user_id`、由 membership 讀取的 `task_role`、由 run 讀取的 `run_stage`、`login_at`（session.started_at）、`logout_at`（僅 session.`logged_out_at`）、`online_duration`、`duration`、`annotated_count`、`reviewed_count`、`arbitrated_count` 與逐類單位的速度。無明確登出時登出與上線時長為「未知」；無可信區間時工作時長與速度為「未知」，合法完成筆數仍保留；角色不適用的筆數為 `null`。安全撤銷時間與單次歷程耗時都不是本投影的時間來源。
 - **SampleSnapshot**：每次發布專屬不可變快照，含 `sample_snapshot_id`、`cycle_id`、seed／演算法版本、Dry `requested_sampling_value`、`target_agreement_overrides`、`min_annotators`、`locked_at`／`locked_by`、`selected_item_digest`（完整規範位元組的 SHA-256 十六進位）及 `selection_manifest_ref`（私有不可覆寫內容定址回執物件鍵，非客戶端 URL）。dataset／config／schema 經不可變 cycle 解析；snapshot 與 run 一對一，鎖定時機見 FR-010f。
 - **AnnotationListMaterialization**：具有穩定 `run_id` 的發布紀錄，含 `task_id`、`cycle_id`、`run_type`、`trial_round_id?`、`sample_snapshot_id`、非空 `guideline_version_id`、`item_count`、idempotency key、`created_by`／`created_at`。Dry 必有同 cycle round，round／snapshot 各只對應一個 run；Official 無 round，task 生命週期最多一筆。guideline 屬同 task，Dry 另與 round 相等。`item_count` 驗證自 RunItem，Dry 等於要求筆數，Official 等於本 cycle 剩餘筆數。
 - **TrialRound**：試標回合紀錄（issue #492 A4/A5）。欄位：`task_id`、`round`、`sampling_value`（該回合實際抽樣筆數；建立完成後恆等於對應 `AnnotationListMaterialization.item_count`，見 FR-010f-2）、`guideline_version`（FK → `TaskGuidelineConfig.guideline_version`；建立當下寫入，不隨後續指引異動回填）、`prior_round_findings`（上一輪觀察到的問題；`round = 1` 為 `null`，`round >= 2` 必填，見 FR-017）、`guideline_change_summary`（本輪指引調整內容；`round = 1` 非必填，`round >= 2` 必填，允許值含 `no_change`，見 FR-017）、`no_change_reason?`（`guideline_change_summary = no_change` 時必填）、`iaa_computation_status`（**v4.1.0 新增**，issue #783）（`pending | done | failed`；回合建立時為 `pending`，只描述 IAA 計算是否結束、不承載達標與否，「無法計算」記為 `done`，見 FR-010o-4）、`created_by`、`created_at`。 另含 `trial_round_id`、`cycle_id`；`round` 為 `round_no` 顯示投影，正整數且 `(cycle_id, round_no)` 唯一；`guideline_version` 須解析至同 task 不可變 `guideline_version_id`，不以裸版本號 FK。
 - **ExcludedAnnotationAssignment**：被明確排除的標記作業紀錄。欄位：`task_id`、`run_stage`（`dry_run` / `official_run`）、`trial_round?`、`assignment_id`、`sample_id`、`excluded_by`、`excluded_at`、`reason`。排除紀錄僅供完成條件解除、metadata 與審計追溯使用，不計入完成率、標記分布統計或一般匯出結果列；`run_stage = dry_run` 時亦不計入 IAA。 `assignment_id` 唯一且指向穩定 slot；`run_id`／`cycle_id` 經 assignment 解析，其餘識別欄位為投影。證據 append-only，V1 不撤回／刪除，重啟 cycle 不清空。
-- **IsolationAuditLog**：資料隔離設定審計。欄位：`task_id`、`from_isolation_enabled`、`to_isolation_enabled`、`changed_by`、`changed_at`、`reason`。
+- **TrialIAAResult**：一個試標回合的一份不可變完成證據，候選落點 `task_trial_iaa_result`。以 `trial_round_id` 一對一保存結果格式版本、演算法版本、輸入摘要、經驗證的逐輸出結果及計算時間；`done` 與完整結果同交易，計算規則只依 dataset-017 FR-039（FR-010o-5）。
+- **IsolationAuditLog**：由 `audit_events.action = task.isolation_changed` 讀取的隔離設定稽核投影，不另建同義持久化表。`task_id`／`changed_by`／`changed_at` 來自事件欄位，前後布林值與原因碼來自受控摘要；關閉隔離須有經驗證的二次確認原因碼，重新啟用則記錄獨立固定原因碼（FR-025、Accepted ADR-032）。
 
 ---
 
@@ -889,6 +895,8 @@ flowchart LR
 - **SC-059**（v10.0.0，issue #1160）：通過 AC-3.48：同一有序公開 item 清單的 `label-suite-run-items-v1` 規範位元組、`selected_item_digest` 與私有回執讀回 100% 相同；抽樣、回執與標記者回應的 hidden answer／split／受限來源洩漏數為 0。
 - **SC-060**（v10.0.0，issue #1160）：通過 AC-3.49：相同 key／摘要的重送新增 run、snapshot、assignment、transition 數皆為 0；物件失敗、跨版本或 DB 回滾後可見部分發布數為 0；不明提交不重抽，壞回執拒絕讀取並告警，清理不刪除已引用物件。SQLite／PostgreSQL 與物件儲存實作須另以失敗注入驗證，本次文件檢查不等於實測通過。
 - **SC-061**（v10.0.0，issue #1160）：通過 AC-3.50：排除、已提交、未指派、已儲存草稿、已指派待處理五類交錯輸入皆得到唯一且按優先序一致的顯示狀態；assignment 持久化 `status` 欄數為 0，已提交／排除證據於重派後遺失數為 0。
+- **SC-062**（v11.0.0，issue #1160）：最新試標回合的 `done` 與完整、版本化逐輸出結果不一致之已提交狀態數為 0；`De = 0` 誤記為計算失敗數為 0。
+- **SC-063**（v11.0.0，issue #1160）：成功的任務狀態／隔離設定異動缺少或重複 typed `audit_events` 的數量為 0；交易失敗與冪等重送新增事件數為 0。
 
 ---
 
@@ -896,6 +904,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 11.0.0 | 2026-10-08 | **MVP 試標結果與任務稽核落點（issue #1160，MAJOR）**：新增 FR-010o-5／AC-3.51／SC-062，`done` 須有同交易的單一版本化逐輸出 IAA 結果，缺列或缺輸出時兩個離開待確認狀態的命令都須拒絕；`De = 0` 仍屬已完成。新增 FR-025／AC-3.52／SC-063，`RunStateTransition`、`IsolationAuditLog` 改由同交易的 typed `audit_events` 唯一投影，不另建領域稽核表，配合 Accepted ADR-022／032 修訂。僅規劃未部署候選，無 ORM／API／migration；資料保存上限與雙庫實測另案。 |
 | 10.0.0 | 2026-10-08 | **Task/run 發布回執與工作位狀態正典（issue #1160，MAJOR）**：FR-010f／FR-010f-6 明定 `label-suite-run-items-v1` 規範位元組、完整 SHA-256、私有不可覆寫內容定址回執與外部物件／單一 DB 交易的邊界，涵蓋讀回、冪等、提交不明、修復與清理；新增 FR-010f-7 以排除／提交／受派者／草稿事實推導 assignment 顯示狀態，不保存第二份 `status`；新增 AC-3.48～3.50、SC-059～061，並同步關鍵實體。僅更新未部署候選契約，無 ORM／API／migration；雙庫與物件失敗路徑尚待獨立實作測試。 |
 | 9.0.0 | 2026-10-08 | **MVP 可觀測工時來源與逐類速度（issue #1160，MAJOR）**：FR-007b／SC-036 移除混合不同單位的加權速度，改為各類工作速度；新增 FR-007d、AC-1.28～1.31、SC-057～058，明定 `task_work_interval` 候選、登入與工時來源、心跳／失聯、台北日界、session/run 隔離及完成事件去重；`WorkLogEntry` 為唯讀投影。僅規劃契約，無 ORM／API／migration。 |
 | 8.0.1 | 2026-10-08 | **MVP 匯出快照時間與跨 run 隔離釐清（issue #1160，PATCH）**：FR-010i-1／FR-010i-2／FR-021 明定 `requested_at` 為請求接受時間，`conditions_snapshot` 接受時不可變且不含 `exported_at`；可空 `task_export.exported_at` 取成功原檔實際結果讀取快照時間，與原始位元組及檔名於 `ready` 原子固定。未 ready 重試可讀較晚快照，ready 後重試返回相同原檔。FR-010b／FR-010c／SC-005 釐清隔離開啟時仍可明確選取 Dry 與 Official run 同檔封裝，但每 run 結果分離、逐列保留 run 身分，不跨 run 合併、聚合或去重。僅修訂規劃契約，未部署 ORM／API／migration。 |

@@ -378,7 +378,7 @@ migration 種入唯一允許的 `id = 1` 列。PK 與 CHECK 只能保證最多�
 | A-05 | CD | **所有**稽核事件至少保存一個日曆年，不設自動刪除；未來的保留或清理政策須另行審核，不能透過一般寫入路徑刪除 | 應用層與維運政策 | SVC：無自動刪除路徑；DB：一般 DELETE 被 A-02 擋下 | 007 FR-010；Accepted ADR-032 |
 | A-06 | CD | 矩陣事件固定 `action='role_permissions.changed'`、`target_type='role_permission_matrix'`、`target_id='1'`，不設多型目標 FK；`payload_summary` 記版本前後值及各變更格的 `role_type`、`role_key`、`permission_key`、前後值。diff 由伺服器比對已儲存列，不採前端提供值 | 應用層 | SVC：目標穩定為字串 `1`；前端 diff 不符時以資料庫觀察值為準 | Accepted ADR-032／ADR-037、007 FR-010 |
 | A-07 | FK | `task_id` 是可空 UUID 真實 FK → `task.id`；非空值須指向已存在任務，普通刪除先採 RESTRICT。共用稽核表與 task 表的建表順序及兩庫參照完整性在獨立 migration 驗證；`audit_events(task_id,occurred_at,id)` 索引以左前綴覆蓋 FK 反查 | DB＋後續 migration | SQLite／PG：無效 task ID 被拒、全域事件可空；任務內時間線依索引定位，刪除有事件任務受限 | Accepted ADR-032、ADR-022、014 FR-025 |
-| A-08 | XT＋CD | `task.status_changed` 摘要只收前後狀態、觸發來源及必要原因碼；`task.isolation_changed` 摘要只收前後布林值及固定確認原因碼。操作者、任務、時間由既有欄承接；實際變更與恰一筆事件同一資料庫交易，無變更不建事件；兩種歷程由此表授權投影，不另存重複列 | 應用層交易＋事件 allowlist | SVC：稽核失敗則任務變更回滾；無變更無事件；每次實際變更僅一筆且摘要不含答案或敏感內容 | Accepted ADR-032、ADR-022、014 FR-025 |
+| A-08 | XT＋CD | `task.status_changed` 與 `task.isolation_changed` 均要求非空 `task_id`、`target_type='task'`，且 `target_id` 正規化成小寫連字號 UUID 後與 `task_id` 相等；兩個有效但不同的任務也須拒絕。前者摘要只收前後狀態、觸發來源及必要原因碼；後者只收前後布林值：關閉隔離須驗證二次確認及其受控原因碼，重新啟用採獨立固定原因碼且不要求二次確認。操作者、任務、時間由既有欄承接；實際變更與恰一筆事件同一資料庫交易，無變更不建事件；兩種歷程由此表授權投影，不另存重複列 | 應用層交易＋事件 allowlist | SQLite／PG：錯配任務 target 與 scope 均拒絕，兩者有效仍拒絕；SVC：稽核失敗則任務變更回滾，無變更無事件；每次實際變更僅一筆且摘要不含答案或敏感內容 | Accepted ADR-032、ADR-022、014 FR-025 |
 
 ### 4.7 admin_role_permission 與 admin_role_permission_version
 
