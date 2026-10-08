@@ -2677,6 +2677,24 @@ test_check_sdd_accepts_reasoned_ci_job_exemption() {
     assert_command_succeeds "$repo" --not-rule "CI_JOB_PARITY"
 }
 
+test_check_sdd_fails_for_ci_node_test_command_absent_from_claude_md() {
+    local repo
+
+    repo="$(make_sdd_repo)"
+    printf '      - run: node --test scripts/tests/a.test.mjs\n' >> "$repo/.github/workflows/ci.yml"
+    assert_command_fails_with "$repo" 1 "CI_JOB_PARITY" ".github/workflows/ci.yml"
+}
+
+test_check_sdd_accepts_ci_node_test_command_listed_in_claude_md() {
+    local repo
+
+    repo="$(make_sdd_repo)"
+    printf '      - run: node --test scripts/tests/a.test.mjs\n' >> "$repo/.github/workflows/ci.yml"
+    sed -i.bak 's#^scripts/check-sdd.sh$#scripts/check-sdd.sh\nnode --test scripts/tests/a.test.mjs#' "$repo/CLAUDE.md"
+    rm -f "$repo/CLAUDE.md.bak"
+    assert_command_succeeds "$repo" --not-rule "CI_JOB_PARITY"
+}
+
 test_check_sdd_accepts_ac_id_referenced_in_prose_after_single_definition() {
     local repo spec_file
 
@@ -3426,6 +3444,8 @@ test_check_sdd_fails_for_registry_job_absent_from_ci
 test_check_sdd_fails_for_local_command_absent_from_claude_md
 test_check_sdd_fails_for_exempt_row_without_reason
 test_check_sdd_accepts_reasoned_ci_job_exemption
+test_check_sdd_fails_for_ci_node_test_command_absent_from_claude_md
+test_check_sdd_accepts_ci_node_test_command_listed_in_claude_md
 test_check_sdd_accepts_ac_id_referenced_in_prose_after_single_definition
 test_check_sdd_accepts_same_ac_id_in_two_different_spec_files
 test_check_sdd_fails_for_duplicate_ac_id
