@@ -95,11 +95,11 @@ test.describe('task-detail settings tab section nav (FR-026 (1))', () => {
     await expectSection(page, 'reviewSettingsTitle');
   });
 
-  test('active nav item uses the resolved --color-slate-50 background and font-weight 600', async ({ page }) => {
+  test('active nav item uses the resolved --color-white background and font-weight 600', async ({ page }) => {
     await openSettings(page);
     const expected = await page.evaluate(() => {
       const probe = document.createElement('div');
-      probe.style.backgroundColor = 'var(--color-slate-50)';
+      probe.style.backgroundColor = 'var(--color-white)';
       document.body.appendChild(probe);
       const c = getComputedStyle(probe).backgroundColor;
       probe.remove();
@@ -117,8 +117,17 @@ test.describe('task-detail settings tab section nav (FR-026 (1))', () => {
     expect(inactive).not.toBe(expected);
   });
 
-  test('section panels have no box-shadow and no card border (FR-026 (6))', async ({ page }) => {
+  test('section panels are 1px --color-border cards with --radius-lg and no box-shadow (FR-026 (6))', async ({ page }) => {
     await openSettings(page);
+    const expected = await page.evaluate(() => {
+      const probe = document.createElement('div');
+      probe.style.cssText = 'position:absolute;border:1px solid var(--color-border);border-radius:var(--radius-lg)';
+      document.body.appendChild(probe);
+      const cs = getComputedStyle(probe);
+      const r = { border: cs.borderTopColor, radius: cs.borderTopLeftRadius };
+      probe.remove();
+      return r;
+    });
     for (const s of SECTIONS) {
       await sectionTab(page, s.name).click();
       const panel = visiblePanels(page);
@@ -128,10 +137,14 @@ test.describe('task-detail settings tab section nav (FR-026 (1))', () => {
         return {
           shadow: cs.boxShadow,
           widths: [cs.borderTopWidth, cs.borderRightWidth, cs.borderBottomWidth, cs.borderLeftWidth],
+          color: cs.borderTopColor,
+          radius: cs.borderTopLeftRadius,
         };
       });
       expect(style.shadow, s.name).toBe('none');
-      expect(style.widths, s.name).toEqual(['0px', '0px', '0px', '0px']);
+      expect(style.widths, s.name).toEqual(['1px', '1px', '1px', '1px']);
+      expect(style.color, s.name).toBe(expected.border);
+      expect(style.radius, s.name).toBe(expected.radius);
     }
   });
 
