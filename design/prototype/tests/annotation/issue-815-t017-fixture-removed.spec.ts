@@ -128,9 +128,11 @@ test.describe('T017 review-flow demo fixture is fully removed (issue #815, tasks
   test('requirement 3b: T014 task-detail profile still resolves 5 records after T017 removal', async ({ page }) => {
     await page.goto(`${TASK_DETAIL_URL}?task_id=T014`);
 
-    await expect(page.locator('#bcCurrent')).toHaveText('審核流程示範：試標', {
+    // FR-025: the task name lives in the H1; the breadcrumb tail is the task id.
+    await expect(page.locator('#pageTitle')).toHaveText('審核流程示範：試標', {
       timeout: PANEL_LOAD_TIMEOUT,
     });
+    await expect(page.locator('#bcCurrent')).toHaveText('T014');
     await expect(page.locator('#valueTaskType')).toHaveText('單一標籤');
     await expect(page.locator('#valueDatasetSummary')).toHaveText('5 筆');
   });

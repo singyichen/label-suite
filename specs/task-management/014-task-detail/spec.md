@@ -1,5 +1,5 @@
 ---
-功能分支: feat/database-mvp-worklog-export
+功能分支: feat/task-detail-overview-settings-1199
 建立日期: 2026-04-20
 版本: 8.0.1
 狀態: Draft
