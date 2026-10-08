@@ -117,3 +117,48 @@ test('ADR-021 session deletion sentence conditions on every refresh token having
   const clause = paragraph.slice(start).split(/\.\s/)[0];
   assert.match(clause, /expires_at|expired/, 'Session deletion clause must require the session tokens to have expired');
 });
+
+// Issue #1223 G2: refresh-token and audit actor_role dictionary wording.
+const dictionary = readFileSync(new URL('../../docs/diagrams/architecture/account-admin-db-schema.md', import.meta.url), 'utf8');
+const erTables = JSON.parse(readFileSync(new URL('../../docs/diagrams/architecture/database-schema.er.json', import.meta.url), 'utf8')).tables;
+const erTable = (name) => {
+  const table = erTables.find((candidate) => candidate.name === name);
+  assert.ok(table, `Missing ER table ${name}`);
+  return table;
+};
+const dictionarySection = (heading) => {
+  const start = dictionary.indexOf(heading);
+  assert.ok(start >= 0, `Missing dictionary heading ${heading}`);
+  return dictionary.slice(start).split(/\n### |\n## /)[0];
+};
+const refreshTokenText = () => `${dictionarySection('### 3.3 refresh_tokens')}\n${dictionarySection('### 4.3 refresh_tokens')}`;
+
+test('refresh_tokens dictionary states 256-bit CSPRNG, hash-only storage and the use-time user checks', () => {
+  const text = refreshTokenText();
+  assert.match(text, /256[- ]?bit/i);
+  assert.match(text, /CSPRNG/);
+  assert.match(text, /(?:不存|不保存)[^|\n]*明文/);
+  const useCheck = text.split('\n').find((line) => /同一交易/.test(line) && /`is_active`/.test(line) && /`credential_version`/.test(line));
+  assert.ok(useCheck, 'A refresh_tokens rule must say the use-time transaction checks `is_active` and `credential_version`');
+});
+
+test('ER refresh_tokens note carries the CSPRNG, hash-only and use-time check wording', () => {
+  const description = erTable('refresh_tokens').description;
+  assert.match(description, /256[- ]?bit/i);
+  assert.match(description, /CSPRNG/);
+  assert.match(description, /明文/);
+  assert.match(description, /`is_active`/);
+  assert.match(description, /`credential_version`/);
+});
+
+test('audit_events.actor_role is an immutable snapshot, system for system events, not a live join', () => {
+  const dictionaryRow = dictionarySection('### 3.7 audit_events').split('\n').find((line) => line.startsWith('| `actor_role`'));
+  assert.ok(dictionaryRow, 'Missing actor_role dictionary row');
+  const erNote = erTable('audit_events').columns.find((column) => column.name === 'actor_role').note;
+  for (const [where, text] of [['dictionary', dictionaryRow], ['ER note', erNote]]) {
+    assert.match(text, /快照/, `${where}: snapshot`);
+    assert.match(text, /不可變/, `${where}: immutable`);
+    assert.match(text, /系統事件[^|]*`system`/, `${where}: system events use 'system'`);
+    assert.match(text, /(?:不是|非|不做)[^|；。]*(?:即時|live)[^|；。]*(?:join|JOIN|關聯)/, `${where}: not a live join`);
+  }
+});

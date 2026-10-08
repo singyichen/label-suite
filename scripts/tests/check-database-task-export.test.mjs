@@ -252,3 +252,67 @@ test('export dictionary E-09 and section 7 item 3 follow ADR-038', () => {
   assert.ok(item.includes('ADR-038'), 'Section 7 item 3 must mention ADR-038');
   assert.ok(!item.includes('總體資料保留政策協調'), 'Obsolete 協調 wording must be removed');
 });
+
+// Issue #1223 G2: export index coverage, header version drift, json convention, composite-key notes.
+const accountMarkdown = () => read('../../docs/diagrams/architecture/account-admin-db-schema.md');
+const section = (markdown, from, to) => {
+  const start = markdown.indexOf(from);
+  assert.ok(start >= 0, `Missing ${from}`);
+  const end = markdown.indexOf(to, start + from.length);
+  return markdown.slice(start, end < 0 ? undefined : end);
+};
+
+test('export indexes cover the expiry sweep and orphan-object reconciliation without pinning a cadence', () => {
+  const indexes = section(exportMarkdown(), '## 5. 索引與查詢成本', '\n## 6.');
+  const rows = indexes.split('\n').filter((line) => line.startsWith('|'));
+  assert.ok(rows.some((row) => /`task_export\(\s*(?:status\s*,\s*)?expires_at/.test(row)),
+    'Missing task_export expires_at covering index for the expiry sweep');
+  assert.ok(rows.some((row) => /`task_export\(\s*artifact_ref/.test(row)),
+    'Missing task_export artifact_ref covering index for orphan-object reconciliation');
+});
+
+test('export rules describe the expiry sweep and orphan-object reconciliation without a cadence', () => {
+  const rules = section(exportMarkdown(), '## 4. 鍵、限制與生命週期', '\n## 5.');
+  const sweep = rules.split('\n').find((line) => /(?:清掃|掃描)/.test(line) && /`expires_at`/.test(line) && /`ready`/.test(line));
+  assert.ok(sweep, 'Missing expiry sweep rule mentioning `ready` rows past `expires_at`');
+  const orphan = rules.split('\n').find((line) => /孤兒/.test(line) && /對帳/.test(line) && /`artifact_ref`/.test(line));
+  assert.ok(orphan, 'Missing orphan-object reconciliation rule mentioning `artifact_ref`');
+  assert.match(orphan, /(?:無列|沒有列|缺列)/, 'Reconciliation must cover objects without a row');
+  assert.match(orphan, /(?:無物件|缺物件|物件缺失)/, 'Reconciliation must cover rows without an object');
+  for (const line of [sweep, orphan]) assert.doesNotMatch(line, /\d+\s*(?:秒|分鐘|小時)/, 'Do not pin a cadence');
+});
+
+test('export dictionary header does not pin a stale 014 version', () => {
+  const header = exportMarkdown().split('\n')[2];
+  const spec = read('../../specs/task-management/014-task-detail/spec.md');
+  const current = spec.match(/^版本: (\d+\.\d+\.\d+)/m)?.[1];
+  assert.ok(current, 'Expected 014 spec version');
+  for (const [, version] of header.matchAll(/v(\d+\.\d+\.\d+)/g)) {
+    assert.equal(version, current, `Header pins stale 014 version v${version}`);
+  }
+  assert.match(header, /(?:以正典 Changelog 為準|目前版本)/);
+});
+
+test('audit payload_summary uses the logical json type everywhere, with PostgreSQL JSONB mapping stated once', () => {
+  const markdown = accountMarkdown();
+  const dictionaryType = checker.parseAccountAdminSchema(markdown).tables
+    .find((table) => table.name === 'audit_events').columns.find((column) => column.name === 'payload_summary').type;
+  const erType = erData().tables.find((table) => table.name === 'audit_events')
+    .columns.find((column) => column.name === 'payload_summary').type;
+  assert.equal(dictionaryType, 'json');
+  assert.equal(erType, dictionaryType);
+  assert.match(markdown, /^\s+json payload_summary/m);
+  const mapping = /`json`[^。\n]*PostgreSQL[^。\n]*JSONB/;
+  const jsonbLines = markdown.split('\n').filter((line) => /jsonb/i.test(line));
+  assert.equal(jsonbLines.length, 1, 'JSONB is named only in the single shared mapping sentence');
+  assert.match(jsonbLines[0], mapping);
+});
+
+test('composite-key tables in account-admin and export domains disclose unplotted composite keys in the ER description', () => {
+  const tables = erData().tables;
+  for (const name of ['account_session', 'account_notification_preference', 'admin_role_permission', 'task_export', 'task_export_run']) {
+    const table = tables.find((candidate) => candidate.name === name);
+    assert.ok(table, `Missing ${name}`);
+    assert.match(table.description, /複合[^。\n]*(?:不畫|未畫|不繪|未繪|不會畫|不會繪)[^。\n]*§4/, `${name} description needs the composite-not-drawn sentence`);
+  }
+});
