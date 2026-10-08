@@ -185,7 +185,7 @@ test('annotation/review parser rejects a Mermaid datatype that contradicts the d
 test('NoteCraft projection matches every source table, column, type, nullability, PK and FK', () => {
   const source = mergedSource();
   const data = erData();
-  assert.deepEqual(countProjection(data), { tables: 40, columns: 350, fks: 34 });
+  assert.deepEqual(countProjection(data), { tables: 40, columns: 351, fks: 34 });
   assert.deepEqual(checker.validateErData(source, data), []);
   const projected = data.tables.filter((table) => annotationNames.includes(table.name));
   assert.deepEqual(projected.map((table) => table.name), annotationNames);
@@ -222,11 +222,11 @@ test('projection checker rejects annotation column, type, nullability, PK and FK
 test('schema summary checker rejects stale metadata and inventory counts after annotation projection', () => {
   const data = erData();
   const markdown = inventory();
-  assert.deepEqual(countProjection(data), { tables: 40, columns: 350, fks: 34 });
+  assert.deepEqual(countProjection(data), { tables: 40, columns: 351, fks: 34 });
   assert.deepEqual(checker.validateSchemaSummary(data, markdown), []);
   const summary = markdown.split('\n').find((line) => line.startsWith('**NoteCraft 規劃檢視**'));
   assert.ok(summary, 'Expected a NoteCraft inventory summary');
-  for (const [count, unit] of [[40, '張候選表'], [350, '欄'], [34, '個候選單欄 FK']]) {
+  for (const [count, unit] of [[40, '張候選表'], [351, '欄'], [34, '個候選單欄 FK']]) {
     const staleData = structuredClone(data);
     staleData.meta.description = incrementCount(staleData.meta.description, count, unit);
     assert.notDeepEqual(checker.validateSchemaSummary(staleData, markdown), [],

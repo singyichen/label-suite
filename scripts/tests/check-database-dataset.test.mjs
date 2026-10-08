@@ -311,8 +311,7 @@ test('dataset-021 AC-2.6 covers the direction limit and re-upload', () => {
   assert.match(ac, /重新上傳/);
 });
 
-test('dataset-021 is versioned 1.2.0 with a Changelog row citing #1217', () => {
-  assert.match(datasetSpec, /^版本: 1\.2\.0$/m);
+test('dataset-021 keeps the 1.2.0 Changelog row citing #1217 as history', () => {
   const row = datasetSpec.split('\n').find((candidate) => candidate.startsWith('| 1.2.0 |'));
   assert.ok(row, 'Missing 1.2.0 Changelog row');
   assert.match(row, /#1217/);
@@ -364,4 +363,79 @@ test('dataset schema doc V-06 and the state field rule point at V-07 as DB enfor
   const state = datasetSchemaDoc.split('\n').find((line) => line.startsWith('| `state` |'));
   assert.ok(state, 'Missing state field row');
   assert.match(state, /V-07/, 'state field rule cell must cite V-07');
+});
+
+// Issue #1228: dataset_item_private gains a nullable protected_payload JSON column.
+const inventoryDoc = readCanonical('../../docs/diagrams/architecture/database-table-inventory.md');
+const diagramsReadme = readCanonical('../../docs/diagrams/README.md');
+const accountAdminDoc = readCanonical('../../docs/diagrams/architecture/account-admin-db-schema.md');
+const erData = JSON.parse(readCanonical('../../docs/diagrams/architecture/database-schema.er.json'));
+
+test('dataset-021 FR-005 defines protected_payload separately from hidden_answer', () => {
+  const rule = specLine(datasetSpec, 'FR-005');
+  assert.match(rule, /protected_payload/);
+  assert.match(rule, /classification_manifest/);
+  assert.match(rule, /讀取權與 `hidden_answer` 分開授權/);
+  assert.match(rule, /儲存後只允許授權 scoring worker 讀取答案/);
+});
+
+test('dataset-021 FR-006 and AC-2.6 land moved values in protected_payload', () => {
+  assert.match(specLine(datasetSpec, 'FR-006'), /protected_payload/);
+  assert.match(specLine(datasetSpec, 'AC-2\\.6'), /protected_payload/);
+});
+
+test('dataset-021 is versioned 1.3.0 with a Changelog row citing #1228', () => {
+  assert.match(datasetSpec, /^版本: 1\.3\.0$/m);
+  const row = datasetSpec.split('\n').find((candidate) => candidate.startsWith('| 1.3.0 |'));
+  assert.ok(row, 'Missing 1.3.0 Changelog row');
+  assert.match(row, /#1228/);
+  assert.match(row, /維護者\s*裁決/);
+});
+
+test('dataset schema doc Mermaid and 3.5 dictionary declare protected_payload', () => {
+  const mermaid = datasetSchemaDoc.match(/dataset_item_private \{[^}]*\}/);
+  assert.ok(mermaid, 'Missing dataset_item_private Mermaid block');
+  assert.match(mermaid[0], /^\s*json protected_payload\b/m);
+  const row = tableRow(datasetSchemaDoc, '`protected_payload` | json | 是');
+  assert.match(row, /P-04/);
+  assert.match(row, /S-01/);
+});
+
+test('dataset schema doc P-04 binds protected_payload to classification_manifest, apart from hidden_answer', () => {
+  const row = tableRow(datasetSchemaDoc, 'P-04');
+  for (const token of ['protected_payload', 'classification_manifest', 'hidden_answer']) {
+    assert.ok(row.includes(token), `P-04 must mention ${token}`);
+  }
+});
+
+test('dataset schema doc B-04, S-01, fairness and permission rows mention protected_payload', () => {
+  assert.match(tableRow(datasetSchemaDoc, 'B-04'), /protected_payload/);
+  assert.match(tableRow(datasetSchemaDoc, 'S-01'), /protected_payload/);
+  assert.match(tableRow(datasetSchemaDoc, '資料公平性'), /protected_payload/);
+  assert.match(tableRow(datasetSchemaDoc, '`dataset_item_private`'), /protected_payload/);
+});
+
+test('dataset schema doc V-08 still guards dataset_item_private so no new trigger row is needed', () => {
+  assert.ok(tableRow(datasetSchemaDoc, 'V-08').includes('dataset_item_private'));
+});
+
+test('NoteCraft projection shows protected_payload after hidden_answer and 32 dataset columns', () => {
+  const table = erData.tables.find((candidate) => candidate.name === 'dataset_item_private');
+  const names = table.columns.map((column) => column.name);
+  const column = table.columns.find((candidate) => candidate.name === 'protected_payload');
+  assert.ok(column, 'Missing protected_payload in database-schema.er.json');
+  assert.equal(column.type, 'json');
+  assert.equal(column.required, 'nullable');
+  assert.equal(names.indexOf('protected_payload'), names.indexOf('hidden_answer') + 1);
+  const datasetColumns = erData.tables.filter((candidate) => candidate.group === 'dataset')
+    .reduce((sum, candidate) => sum + candidate.columns.length, 0);
+  assert.equal(datasetColumns, 32);
+});
+
+test('inventory, README and account-admin doc carry the 351-column totals', () => {
+  assert.ok(inventoryDoc.includes('資料集資料結構](./dataset-db-schema.md)：5 張／32 欄／6 單欄 FK'));
+  assert.ok(inventoryDoc.includes('351 欄'));
+  assert.ok(diagramsReadme.includes('351 欄'));
+  assert.ok(accountAdminDoc.includes('351 欄'));
+  assert.ok(accountAdminDoc.includes('5 張／32 欄／6 FK'));
 });

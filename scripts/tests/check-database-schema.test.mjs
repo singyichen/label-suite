@@ -397,14 +397,14 @@ test('noteCraftProjectionTracksTheCanonicalAccountSessionDictionaryAndRejectsDri
   assert.match(validateWithTaskParents(source, detachedToken).join('\n'), /refresh_tokens\.session_id: FK/);
 });
 
-test('noteCraftProjectionKeepsThe40Table34FkShapeWith350Columns', () => {
+test('noteCraftProjectionKeepsThe40Table34FkShapeWith351Columns', () => {
   const data = JSON.parse(readFileSync(
     new URL('../../docs/diagrams/architecture/database-schema.er.json', import.meta.url), 'utf8'));
   assert.deepEqual({
     tables: data.tables.length,
     columns: data.tables.reduce((count, table) => count + table.columns.length, 0),
     fks: data.tables.reduce((count, table) => count + table.columns.filter((column) => column.fk).length, 0),
-  }, { tables: 40, columns: 350, fks: 34 });
+  }, { tables: 40, columns: 351, fks: 34 });
 });
 
 test('realAccountAndDatasetDictionariesMatchCompleteNoteCraftProjection', () => {
@@ -492,7 +492,7 @@ test('accountAdminDictionaryDocumentsIdempotencyUniqueRuleAndCitations', () => {
   assert.match(markdown, /request_digest/);
   const summary = markdown.split('\n').find((entry) => entry.startsWith('- **NoteCraft 規劃檢視**'));
   assert.match(summary, /10 張候選表（73 欄、8 個候選單欄 FK）/);
-  assert.match(summary, /40 張候選表／350 欄／34 個候選單欄 FK/);
+  assert.match(summary, /40 張候選表／351 欄／34 個候選單欄 FK/);
   assert.match(summary, /annotation\/review 字典\]\(\.\/annotation-review-db-schema\.md\)供應 8 張／91 欄／2 FK/);
 });
 
