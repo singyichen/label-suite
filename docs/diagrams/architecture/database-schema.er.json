@@ -1440,7 +1440,7 @@
           "fk": "users"
         }
       ],
-      "description": "**實體候選，尚未部署。** 每執行一份，保存隨機種子、演算法、摘要值和私有不可變清單回執；真正成員仍由 `task_run_item` 決定。回執只含按位置排序的公開 UUID，須在 DB 交易前寫入並驗證；DB 同交易提交其參照、run 和項目，交易失敗留下的無引用物件受控清理。來源：014 FR-010f／FR-010f-6／`SampleSnapshot`。\n\n來源：[任務／執行實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.8；複合 FK、檢查限制、唯一限制與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。"
+      "description": "**實體候選，尚未部署。** 每執行一份，保存隨機種子、演算法、摘要值和私有不可變清單回執；真正成員仍由 `task_run_item` 決定。回執只含按位置排序的公開 UUID，須在 DB 交易前寫入並驗證；DB 同交易提交其參照、執行紀錄和資料項目，交易失敗留下的無引用物件受控清理。來源：014 FR-010f／FR-010f-6／`SampleSnapshot`。\n\n來源：[任務／執行實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.8；複合 FK、檢查限制、唯一限制與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。"
     },
     {
       "name": "task_run",
