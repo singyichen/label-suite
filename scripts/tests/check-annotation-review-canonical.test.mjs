@@ -217,3 +217,12 @@ test('OpenSpec AC-7.4 through AC-7.8 define concrete requirements and distinct s
     }
   }
 });
+
+test('live FR-086 limits draft_saved to annotators and defers reviewer drafts to FR-014S', () => {
+  const history = requirement(annotation, 'FR-086');
+  assert.match(history, /`draft_saved`（?僅標記員/, 'FR-086 must describe draft_saved as annotator-only');
+  assert.doesNotMatch(history, /標記員或審核員儲存草稿/, 'FR-086 must not keep the old annotator-or-reviewer draft phrase');
+  assert.match(history, /審核員草稿[^。]*(?:不寫|不得產生|不產生)[^。]*(?:事件|history)/,
+    'FR-086 must state reviewer drafts produce no history event');
+  assert.match(history, /FR-014S/, 'FR-086 must reference FR-014S for reviewer drafts');
+});

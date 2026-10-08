@@ -273,3 +273,14 @@ test('annotation dictionary section 7 item 4 no longer defers append-only trigge
   assert.doesNotMatch(item, /append-only 的 DB trigger[^\n]*migration PR 決定/);
   assert.match(item, /A-01/, 'Item 4 must reference A-01');
 });
+
+test('annotation history H-03 ties draft_saved to annotators and writes no event for reviewer drafts', () => {
+  const row = annotationMarkdown().split('\n').find((line) => line.startsWith('| H-03 |'));
+  assert.ok(row, 'Expected the H-03 row');
+  assert.match(row,
+    /draft_saved[^|]*actor_task_role[^|]*annotator|actor_task_role[^|]*annotator[^|]*draft_saved/,
+    'H-03 must CHECK draft_saved against the annotator actor_task_role snapshot');
+  assert.match(row, /審核員草稿[^|]*(?:不寫|不得產生|不產生)[^|]*(?:事件|history)/,
+    'H-03 must state reviewer drafts write no history event');
+  assert.match(row, /FR-014S/, 'H-03 must cite FR-014S');
+});
