@@ -113,7 +113,7 @@ Label Suite 的對應做法：
 
 ### 匯出紀錄與原始產物
 
-兩張表均為**實體草案、尚未部署**；欄位型別、主鍵、真單欄 FK、同任務複合 FK、索引、保存期限與安全邊界見[任務匯出實體字典](./task-export-db-schema.md) §3～§7。正典來源為 014 v8.0.1，背景產物與資料庫交易須在獨立實作中驗證。
+兩張表均為**實體草案、尚未部署**；欄位型別、主鍵、真單欄 FK、同任務複合 FK、索引、保存期限與安全邊界見[任務匯出實體字典](./task-export-db-schema.md) §3～§7。正典來源為 014，背景產物與資料庫交易須在獨立實作中驗證。
 
 | 規格實體 → 候選資料落點 | 狀態 | 已知識別／關聯 | 正典與待決 |
 |---|---|---|---|
@@ -122,7 +122,7 @@ Label Suite 的對應做法：
 
 ### 標記、審核與品質
 
-標記／審核八張表均為**實體草案、尚未部署**；六欄字典、六組 assignment 複合 FK、索引與待決見 [標記／審核實體字典](./annotation-review-db-schema.md) §3～§7。014 v8.0.1／015 v12.0.0 已規劃來源凍結、一次仲裁與草稿隔離；尚無 ORM、資料庫遷移或 API。品質／IAA 專用表留待資料集分析模組正式開發。
+標記／審核八張表均為**實體草案、尚未部署**；六欄字典、六組 assignment 複合 FK、索引與待決見 [標記／審核實體字典](./annotation-review-db-schema.md) §3～§7。014／015 已規劃來源凍結、一次仲裁與草稿隔離；尚無 ORM、資料庫遷移或 API。品質／IAA 專用表留待資料集分析模組正式開發。
 
 | 規格實體 → 候選資料落點 | 狀態 | 已知識別／關聯 | 正典與待決 |
 |---|---|---|---|
@@ -235,6 +235,6 @@ erDiagram
 | 試標 IAA 閘門（MVP） | [014 FR-010o-5](../../../specs/task-management/014-task-detail/spec.md) 要求逐回合完整結果、來源摘要、演算法與格式版本；`pending`／`failed` 不得充作 `done`，`De = 0` 是有明確原因的無法計算。 | `task_trial_round.iaa_computation_status` 與一對一 `task_trial_iaa_result` 在同一資料庫交易更新；兩種離開試標的轉換都核對狀態與結果。這不是資料集分析專用報告表。 | 正典、字典與 NoteCraft 已規劃；實際計算服務、交易、registry 與 SQLite／PostgreSQL 約束測試另案驗證。 |
 | 資料集分析／品質報告（MVP 後） | [017 FR-039](../../../specs/dataset/017-dataset-analysis-detail/spec.md) 規定單一回合的原始答案來源與排除規則；`free_text` 不計自動 IAA，`sequence_tagging` 可計分但無門檻。 | `OutputTypeIAAReport` 的持久化與版本鍵留待 016／017 正式開發時裁決，**本輪不建立分析報告字典或加入 NoteCraft**。`SampleDivergenceFlag` 明言分開儲存，`LowConsistencySampleList` 也提到寫入路徑；不能先歸為純即時計算。 | 正式開發 016／017 時回寫儲存與版本契約，再出欄位字典、FK／CHECK／索引、雙庫驗收與 NoteCraft 投影。 |
 | 工時 | 014 v9.0.0 已定前景工作區間、逐類完成數／速度、台北日期切割、失聯與未知值；015 v12.1.0 明確區分歷程耗時與工時。 | `task_work_interval` 為原始來源；`WorkLogEntry` 只做唯讀投影。`account_session` 保留可驗證登入／登出時間，標記歷程可空關聯已驗證的 session。詳見[工時實體字典](./task-work-db-schema.md)。 | 正典、字典與 NoteCraft 投影已完成；ORM／migration、並發約束、心跳服務、跨日投影、隱私保留與 SQLite／PostgreSQL 實測仍待獨立實作。 |
-| 匯出 | [014 v8.0.1 FR-009a／FR-010i-1／2、FR-020／021](../../../specs/task-management/014-task-detail/spec.md) 已定一次請求一份不可變原始產物、逐 run 有序 manifest、重新下載相同 bytes；`json-min` v2 零列仍有 manifest。 | [匯出候選字典](./task-export-db-schema.md) 的 `task_export`／`task_export_run` 共 27 欄、2 個真單欄 FK；同 task 關聯是兩組複合 FK，不畫假線。接受時間 `requested_at` 與內容快照 `exported_at` 分離；原檔保存 30 日，歷史 metadata 一年；下載需驗目前權限、期限與 SHA-256。 | 正典、字典與 NoteCraft 投影已完成；ORM／migration、受限儲存、跨庫複合 FK、下載授權、原檔校驗與保留刪除仍待獨立實作驗證。 |
+| 匯出 | [014 FR-009a／FR-010i-1／2、FR-020／021](../../../specs/task-management/014-task-detail/spec.md) 已定一次請求一份不可變原始產物、逐 run 有序 manifest、重新下載相同 bytes；`json-min` v2 零列仍有 manifest。 | [匯出候選字典](./task-export-db-schema.md) 的 `task_export`／`task_export_run` 共 27 欄、2 個真單欄 FK；同 task 關聯是兩組複合 FK，不畫假線。接受時間 `requested_at` 與內容快照 `exported_at` 分離；原檔保存 30 日，歷史 metadata 一年；下載需驗目前權限、期限與 SHA-256。 | 正典、字典與 NoteCraft 投影已完成；ORM／migration、受限儲存、跨庫複合 FK、下載授權、原檔校驗與保留刪除仍待獨立實作驗證。 |
 
 循環建立次序、抽樣清單回執、assignment 顯示狀態與任務稽核落點已有規劃裁決；仍需在相關實作前依 §5.2 已裁決的保存政策（ADR-038）確認資料格式及執行期驗證。資料集分析專用表另於 M6 開發時盤點；真正的 ORM／migration／API 與 SQLite／PostgreSQL 約束測試屬獨立實作階段，不能因 NoteCraft 可顯示候選表便勾選其部署驗收。

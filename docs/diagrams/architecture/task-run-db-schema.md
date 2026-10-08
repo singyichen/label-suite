@@ -186,7 +186,7 @@ erDiagram
 | `dataset_version_id` | uuid → dataset_version | 否 | 當前綁定的已封存完整版本 | 建立；草稿可重綁 | T-02 |
 | `current_config_version_id` | uuid | 否 | 當前不可變設定版本 | 建立時預配置 UUID；草稿儲存更新 | T-03 |
 | `current_guideline_version_id` | uuid | 否 | 當前不可變指引內容版本 | 建立時預配置 UUID；草稿／waiting 指引內容儲存更新 | T-03 |
-| `current_run_cycle_id` | uuid | 是 | task 側指向當前發布週期的指標：進行中指向開啟週期；`completed` 後保留指向最終已關閉週期（此保留規則為候選，待 ADR-022 補述，見 §7）；尚未發布或退回草稿後為空值 | 首次試標發布／退回草稿／結案 | T-04 |
+| `current_run_cycle_id` | uuid | 是 | task 側指向當前發布週期的指標：進行中指向開啟週期；`completed` 後保留指向最終已關閉週期（已定案，ADR-022 Amendment 2026-10-08，issue #1242）；尚未發布或退回草稿後為空值 | 首次試標發布／退回草稿／結案 | T-04 |
 | `name` | varchar | 否 | 任務名稱；非身份鍵 | 建立；草稿編輯 | T-01 |
 | `status` | varchar(32) | 否 | ADR-022 任務狀態 | 建立為草稿；合法轉換更新 | T-05 |
 | `sampling_value` | integer | 否 | 下一次試標的要求筆數 | 建立；允許階段編輯 | T-06、T-07 |
@@ -241,7 +241,7 @@ erDiagram
 | `task_id` | uuid → task | 否 | 任務作用域 | 建立；不改 | M-01 |
 | `user_id` | uuid → users | 否 | 真實使用者 | 建立；不改 | M-01 |
 | `task_role` | varchar(24) | 否 | `project_leader`／`annotator`／`reviewer` | 建立；不改 | M-02 |
-| `membership_status` | varchar(16) | 否 | 當前成員狀態，值域 `active`／`disabled` | 建立／停用／復用 | M-03 |
+| `membership_status` | varchar(16) | 否 | 當前成員狀態，值域 `invited`／`active`／`disabled` | 建立／停用／復用 | M-03 |
 | `created_at` | timestamptz | 否 | 加入時間 UTC | 建立 | X-01 |
 | `updated_at` | timestamptz | 否 | 最後狀態變更 UTC | 修改 | X-01 |
 
@@ -401,7 +401,7 @@ R1 與 Rn 的序號只在發布週期內唯一；`sampling_value` 保存實際�
 | T-01 | DB | `task.id` PK；`created_by_user_id → users.id`、`dataset_version_id → dataset_version.id` 真 FK；名稱非空白在服務驗證 | 013 建立、014 `TaskDetail` |
 | T-02 | SVC | task 建立／draft 重綁與發布只接受 sealed `dataset_version`；舊 cycle 永遠追其原版 | dataset-021 FR-008／FR-010、014 FR-010f |
 | T-03 | DB＋SVC | 兩指標 NOT NULL；`(task.id,current_config_version_id) → task_config_version(task_id,id)`、`(task.id,current_guideline_version_id) → task_guideline_version(task_id,id)` 均為同任務 `DEFERRABLE INITIALLY DEFERRED` 複合 FK；預配置 task 與兩版本 UUID，同交易插入 task、兩版本及建立者 membership，提交時拒絕缺列或跨 task 參照 | 013 FR-006a、014 FR-017a |
-| T-04 | DB＋SVC | `(task.id,current_run_cycle_id) → task_run_cycle(task_id,id)`；`current_run_cycle_id` 是 task 側指向當前週期的指標，不另設「開啟中」旗標，且不單靠它保證單一開啟週期（至多一個開啟 cycle 由 Y-02 部分唯一索引負責）。退回 draft 時關閉 cycle（`close_reason = rejected`）並清除指標；`official_run_in_progress → completed` 時關閉 cycle（`close_reason = completed`）但保留指標指向該最終已關閉 cycle，使完成任務仍可推導其 run（「`completed` 關閉週期但保留指標」為候選，待 ADR-022 補述；ADR-022 與 014 FR-010f-5 現僅明文規定退回時關閉並清除指標、完成 Official 時關閉 cycle）；上述皆與狀態轉換、稽核事件同交易。沒有 task 級 current snapshot | ADR-022、014 FR-010f-5 |
+| T-04 | DB＋SVC | `(task.id,current_run_cycle_id) → task_run_cycle(task_id,id)`；`current_run_cycle_id` 是 task 側指向當前週期的指標，不另設「開啟中」旗標，且不單靠它保證單一開啟週期（至多一個開啟 cycle 由 Y-02 部分唯一索引負責）。退回 draft 時關閉 cycle（`close_reason = rejected`）並清除指標；`official_run_in_progress → completed` 時關閉 cycle（`close_reason = completed`）但保留指標指向該最終已關閉 cycle，使完成任務仍可推導其 run（已定案：ADR-022 Amendment 2026-10-08 明文「`completed` 關閉週期但保留指標」，issue #1242）；上述皆與狀態轉換、稽核事件同交易。沒有 task 級 current snapshot | ADR-022、014 FR-010f-5 |
 | T-05 | DB＋SVC | 狀態值域限 ADR-022 現行五態；轉換與 side effects 同交易，CHECK 無法判前後合法轉換 | ADR-022 Transition Table |
 | T-06 | DB＋SVC | `sampling_value >= 1`、`min_annotators >= 2`；boolean NOT NULL；目標覆寫由 config/IAA registry 驗證，NULL/空物件不混淆 | 013 `RunInitConfig`、014 FR-010q |
 | T-07 | DB＋SVC | `sampling_value` 有三種語意，各以一個欄位為單一真實來源：`task.sampling_value` 是下一次試標的要求筆數（可編輯，只代表意圖）；`task_sample_snapshot.requested_sampling_value` 在試標發布時由前者凍結，之後不改（S-03）；`task_trial_round.sampling_value` 是實際選出的筆數，等於 `task_run.item_count = COUNT(task_run_item)`（Q-04、U-05）。三者不互相推導或回寫；唯讀投影（如 `TaskDetail.sampling_value`）須指明取哪一個，歷史比對一律用凍結值與實際值，不用可編輯的 task 欄位 | 013 `RunInitConfig`、014 FR-010f-2／FR-010q |
@@ -413,13 +413,13 @@ R1 與 Rn 的序號只在發布週期內唯一；`sampling_value` 保存實際�
 | G-03 | SVC | 四內容欄保留 immutable；資產 JSON 驗證、digest 與檔案保留政策須一致；`force_guideline` 不觸發新版本 | 013 `TaskGuidelineConfig`、014 FR-017a |
 | M-01 | DB | membership PK、task/user 真 FK；UNIQUE `(task_id,id)` 供受派者與 roster 複合 FK；另建同序 UNIQUE `(task_id,id,user_id)` 供工時區間驗證同一任務、成員與使用者，防跨人掛載 | ADR-037、014 `TaskMembership`／FR-007d；[工時字典](./task-work-db-schema.md) W-02 |
 | M-02 | DB | UNIQUE `(task_id,user_id,task_role)`；一人多角色是多列，角色限現行 `TASK_ROLES` | ADR-037 §Boundaries、014 `TaskMembership` |
-| M-03 | DB＋SVC | CHECK `membership_status IN ('active','disabled')`（014 FR-005l／成員清單狀態）；`invited` 屬邀請流程顯示態，邀請持久化未在本批定案，不放進此值域，日後擴充須經 migration。`invited` 在 014 成員清單僅為顯示態（非持久化值域），其來源待 §7 第 7 項核定。停用後即時失權，已提交歷史保留；未提交 slot 退回池但不更換 assignment ID | ADR-037 §Persistence、014 FR-005l |
+| M-03 | DB＋SVC | CHECK `membership_status IN ('invited','active','disabled')`（014 FR-005e／FR-005l／成員清單狀態；issue #1242 裁定 `invited` 持久化）。受邀者完成帳號啟用後轉為 `active`；`invited` 成員不可被指派、不可提交，只能移除。未註冊 email 的帳號建立路徑不在本裁定範圍，待 account 規格定案，本字典不虛構。停用後即時失權，已提交歷史保留；未提交 slot 退回池但不更換 assignment ID | ADR-037 §Persistence、014 FR-005l |
 | R-01 | DB＋SVC | roster 複合 PK `(task_id,reviewer_membership_id)`、FK → membership `(task_id,id)`；服務另驗角色 reviewer 與 active | 014 FR-010s-1 |
 | R-02 | SVC | `can_arbitrate=true` 只表示已選 reviewer 子集合；仲裁仍需非當事人及即時授權 | 014 FR-010s-1、015 FR-060 |
 | R-03 | DB | `sort_order > 0`；不採唯一約束（非唯一）：SQLite 無法延後唯一檢查，重排名冊時中途必撞號。改建非唯一索引 `(task_id,sort_order,reviewer_membership_id)`，排序先依 `sort_order` 再依 `reviewer_membership_id`，同值時仍可決定性重現；重排在單一交易內整批更新。此理由針對 SQLite／PostgreSQL 雙資料庫基線：SQLite 無法延後 UNIQUE，PostgreSQL 雖可用 DEFERRABLE 仍須與基線一致。V-02 的凍結快照不受重排影響，發布時由服務對候選名冊依 `(sort_order, reviewer_membership_id)` 排序，賦予稠密排名 1..n 寫入 `sort_order_at_publish` | 014 FR-010t、015 FR-093 |
 | Y-01 | DB | cycle PK、task/version FK；UNIQUE `(task_id,id)`；`(task_id,config_version_id)` 複合 FK → config `(task_id,id)` | 014 `RunCycle` |
 | Y-02 | DB＋SVC | `cycle_no > 0`、UNIQUE `(task_id,cycle_no)`、部分唯一 `(task_id) WHERE closed_at IS NULL`，為同 task 至多一個開啟 cycle 的唯一保證；關閉欄位、指標處理（T-04）與狀態轉換同交易 | 014 FR-010f-5、ADR-022 |
-| Y-05 | DB | CHECK `close_reason IS NULL OR close_reason IN ('rejected','completed')`（值域）：`rejected` 對應 `waiting_iaa_confirmation → draft`，`completed` 對應 `official_run_in_progress → completed`（ADR-022）。`closed_at` 與 `close_reason` 成對：同為 NULL（開啟中）或同為非 NULL（已關閉），寫入後不改；`completed` 為候選值，隨 §7 第 6 項核定；本欄只存代碼，不存自由文字。014 FR-010f-5 要求的拒絕原因自由文字不記於此欄；ADR-032 A-08 現規定 `task.status_changed` 摘要只收前後狀態、觸發來源及必要原因碼，不容納自由文字，故其落點列為 §7 第 6 項待決，不在此虛構 | ADR-022、014 FR-010f-5 |
+| Y-05 | DB | CHECK `close_reason IS NULL OR close_reason IN ('rejected','completed')`（值域）：`rejected` 對應 `waiting_iaa_confirmation → draft`，`completed` 對應 `official_run_in_progress → completed`（ADR-022）。`closed_at` 與 `close_reason` 成對：同為 NULL（開啟中）或同為非 NULL（已關閉），寫入後不改；`completed` 已定案（ADR-022 Amendment 2026-10-08，issue #1242）；本欄只存代碼，不存自由文字。014 FR-010f-5 要求的拒絕原因自由文字不記於此欄，也不新增欄位：已定案落在 `task.iaa_rejected` 稽核事件的摘要（ADR-032）；ADR-032 A-08 規定 `task.status_changed` 摘要只收原因碼，此限制僅適用於該事件 | ADR-022、014 FR-010f-5 |
 | Y-03 | SVC | 發布時驗 dataset sealed、config 同 task 且不可變；cycle 不能轉移已釘版本 | 014 FR-010f／FR-014 |
 | Y-04 | SVC | seed/演算法版本能重播同一公開資格池；不以 `declared_split` 或答案影響選取 | 014 FR-010f |
 | Q-01 | DB | round PK、actor user FK；`(task_id,task_run_cycle_id)`→cycle `(task_id,id)`；UNIQUE `(task_run_cycle_id,id)` 與 `(id,guideline_version_id)` 供子參照 | 014 `TrialRound` |
@@ -490,7 +490,7 @@ JSON config 與覆寫不先建 GIN；只有實際 JSON key predicate 與執行�
 4. **其他實體**：`RunStateTransition` 與 `IsolationAuditLog` 是由 `audit_events` 的 `task.status_changed`／`task.isolation_changed` 事件授權查詢的投影；狀態／隔離設定變更與恰一筆事件同交易，不建立第二份領域稽核表。`WorkLogEntry` 為來源事件與日報表的唯讀投影；IAA 專用分析報告表依 MVP 範圍延後，但 `task_trial_iaa_result` 為試標閘門的必要結果證據。[標記／審核／仲裁字典](./annotation-review-db-schema.md)與[匯出字典](./task-export-db-schema.md)已有未部署候選表形，不算入本文件 14 張。
 5. **跨模組 FK**：dataset 字典的 item 版本經 `dataset_item → dataset_import_batch → dataset_version` 取得；本批不能捏造 `dataset_item.dataset_version_id` 或只靠 item FK 宣稱已保證同 cycle 版本。annotation/review 的 `run_id × assignment_id` 複合約束須由其 owning spec 的實體字典決定。
 
-6. **cycle 結案語意與拒絕原因落點**：（a）`completed` 關閉週期但保留 `current_run_cycle_id`、`close_reason = completed` 為候選，ADR-022 與 014 FR-010f-5 未明文，待 ADR-022 補述；（b）FR-010f-5 要求記錄的拒絕原因自由文字，`task.status_changed` 摘要依 ADR-032 A-08 僅收原因碼，無合適欄位，落點待決，本字典不虛構。
-7. **成員 `invited` 顯示態**：014 成員清單的 `invited` 為顯示態，邀請是否持久化、由何處推導（例如帳號邀請表）待 account 字典核定；`membership_status` 值域暫不含 `invited`。
+6. **cycle 結案語意與拒絕原因落點**：（a）已定案：`completed` 關閉週期、`close_reason = completed`，並保留 `current_run_cycle_id` 指向最終已關閉週期，見 ADR-022 Amendment 2026-10-08（issue #1242）；（b）已定案：FR-010f-5 的拒絕原因自由文字落在 `task.iaa_rejected` 稽核事件摘要（ADR-032），不新增欄位；A-08 只收原因碼的限制僅適用於 `task.status_changed`；該文字可能含個人資料，納入 ADR-038 稽核摘要匿名化範圍。
+7. **成員 `invited` 狀態**：已定案，持久化（issue #1242）。014 FR-005e 明文要求該角色 membership 以 `invited` 狀態出現，故 `membership_status` 值域為 `invited`／`active`／`disabled`；受邀者完成帳號啟用後轉 `active`，`invited` 成員不可被指派或提交、只能移除。未註冊 email 的帳號建立路徑不在本裁定範圍，待 account 規格。
 
 **交付狀態：候選 14 表，已投影到 [NoteCraft Wiki／Diagram](./database-schema.er.json)，尚無業務 ORM／Alembic migration。** 上述待決事項關閉且雙資料庫測試通過後，才能稱為可執行 schema。

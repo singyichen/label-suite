@@ -8,6 +8,7 @@
 **Amended**: 2026-10-02 — `dry_run_in_progress → waiting_iaa_confirmation` guard extended to review, arbitration and the `dry_run` exception pool (issue #1120)
 **Amended**: 2026-10-06 — IAA rejection closes and preserves the current cycle; every published run owns an independent immutable snapshot (issue #1160)
 **Amended**: 2026-10-08 — `RunStateTransition` becomes a typed `audit_events` query projection rather than a duplicate persisted table (issue #1160, 014 FR-025)
+**Amended**: 2026-10-08 — completing the Official run closes the cycle but keeps `task.current_run_cycle_id` on the final closed cycle (issue #1242)
 
 ## Context
 
@@ -174,6 +175,12 @@ On `draft → dry_run_in_progress`, the service opens the next numbered cycle at
 On `waiting_iaa_confirmation → official_run_in_progress`, the service freezes the then-remaining eligible IDs after subtracting all published Dry run items in the current cycle, rejects an empty remainder and creates an independent Official snapshot. Before that publication, the Official remainder is derived rather than an immutable manifest. The current state machine permits only one Official publication per task lifetime.
 
 On `waiting_iaa_confirmation → draft`, the service closes the current cycle as rejected and clears only `current_run_cycle_id`, atomically with the transition and audit record. All historical cycles, published rounds, runs, snapshots, assignments and exclusion evidence remain intact. A subsequent Dry publication opens cycle N+1 at R1, and may reuse items from rejected cycles. Round uniqueness is scoped to `(cycle_id, round_no)`; history and counts use stable `task_run_id` or `task_id × cycle_id × run_type × round_no` so repeated R1 publications cannot blend results.
+
+### Amendment (2026-10-08, issue #1242)
+
+On `official_run_in_progress → completed`, the service closes the current cycle with `close_reason = completed`, atomically with the transition and audit record. `task.current_run_cycle_id` is not cleared: it keeps pointing at that final closed cycle, so a completed task can still derive its run and snapshot. Returning to draft is unchanged: `waiting_iaa_confirmation → draft` closes the cycle with `close_reason = rejected` and clears the pointer. Task-level "current" therefore means the open cycle while the task is in progress, and the final closed cycle once it is completed.
+
+The rejection reason free text required by 014 FR-010f-5 is recorded in the summary of the `task.iaa_rejected` audit event (ADR-032), not in a cycle column. The ADR-032 A-08 code-only summary restriction applies only to `task.status_changed`.
 
 ## Consequences
 

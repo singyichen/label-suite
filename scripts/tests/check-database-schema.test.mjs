@@ -570,7 +570,7 @@ test('ADR-038 exists, is Accepted, cites #1224 and names the six data classes an
     'pending_email', 'audit_events', 'annotation_history_event', 'result_snapshot',
     'dataset_item_private', 'protected_payload', 'refresh_tokens', 'account_session',
     'task_work_interval', 'task_export', 'task_export_run',
-    'ADR-021', 'ADR-024', 'ADR-032', 'FR-011', 'FR-021', 'FR-063', 'FR-004', 'TBD (#1224)'], 'ADR-038');
+    'ADR-021', 'ADR-024', 'ADR-032', 'FR-011', 'FR-021', 'FR-063', 'FR-004', 'TBD (#1244)'], 'ADR-038');
   assert.match(text, /migration role/);
   assert.match(text, /application code path/i);
   assert.match(text, /anonymi[sz]/i);
@@ -658,12 +658,12 @@ test('A-02 and ADR-032 body point at ADR-038 instead of deferring retention revi
   assert.ok(bullet.includes('ADR-038'), 'ADR-032 append-only statement must mention ADR-038');
 });
 
-test('ADR-038 payload_summary has no personal keys today and marking them is TBD (#1224); A-05 drops registry claim', () => {
+test('ADR-038 payload_summary has no personal keys today and marking them is TBD (#1244); A-05 drops registry claim', () => {
   const sentences = adr038().split('\n').filter((l) => l.includes('payload_summary')).flatMap((l) => l.split(/\.\s/))
     .filter((s) => s.includes('payload_summary'));
   assert.ok(sentences.length > 0, 'ADR-038 must discuss payload_summary');
   for (const sentence of sentences) {
-    assert.ok(sentence.includes('TBD (#1224)'), `payload_summary sentence must mark personal keys TBD (#1224): ${sentence}`);
+    assert.ok(sentence.includes('TBD (#1244)'), `payload_summary sentence must mark personal keys TBD (#1244): ${sentence}`);
     assert.ok(!sentence.includes('keys the event registry marks as personal'), 'ADR-038 must not claim registry-marked personal keys');
   }
   assert.match(sentences.join(' '), /no personal/i);
