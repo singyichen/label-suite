@@ -135,7 +135,7 @@ test('all six dictionaries and NoteCraft agree on every projected table and summ
     data.tables.length,
     data.tables.reduce((count, table) => count + table.columns.length, 0),
     data.tables.reduce((count, table) => count + table.columns.filter((column) => column.fk).length, 0),
-  ], [40, 350, 34]);
+  ], [40, 351, 34]);
   assert.match(data.meta.source, /task-work-db-schema\.md/);
   assert.match(data.meta.description, /工作區間|工時/);
   assert.match(inventory(), /task-work-db-schema\.md/);

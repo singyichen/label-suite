@@ -1,7 +1,7 @@
 ---
 功能分支: feat/database-dataset-lineage
 建立日期: 2026-10-06
-版本: 1.2.0
+版本: 1.3.0
 狀態: Draft
 ---
 
@@ -73,7 +73,7 @@ flowchart TD
 3. **AC-2.3**：**Given** 一筆接受的項目，**When** 私有伴隨列寫入，**Then** `dataset_item_private` 以同一項目 ID 作 PK/FK 且恰有一筆；沒有來源答案時該欄可為 null，但後續需要答案的測試集發布／計分不得默默接受空答案。
 4. **AC-2.4**：**Given** 有隱藏 test-set 答案與 split 的版本，**When** 標記者讀取任務、assignment、項目、提交、排行榜或狀態，**Then** 回應的巢狀資料、前端狀態、log、cache、trace 與 fixture 均不得包含答案、答案路徑、split 或可據以辨識 gold/test 的資訊；儲存後答案僅由授權 scoring worker 讀取。
 5. **AC-2.5**：**Given** 建立者在匯入前使用 013 的原始 JSON 預覽，**When** 匯入完成，**Then** 一般建立者／標記者路徑不得以預覽功能再讀受限原始來源或 private table；匯入程序與 scoring worker 使用的受限來源須有獨立存取控制。
-6. **AC-2.6**：**Given** 來源批次處於 `draft` 且建立者要修正分類 manifest，**When** 修正方向為公開改受保護，**Then** 系統只刪除該欄位的公開投影並把該欄位已存於 `public_payload` 的公開值（非答案）搬入私有列，過程不讀取已儲存的含答案資料；**When** 修正方向為受保護改公開或為尚未分類的欄位新增分類，**Then** 修正被拒絕並要求重新上傳該批來源、走串流匯入器重建，且任何角色都不因此取得讀取答案的權限。
+6. **AC-2.6**：**Given** 來源批次處於 `draft` 且建立者要修正分類 manifest，**When** 修正方向為公開改受保護，**Then** 系統只刪除該欄位的公開投影並把該欄位已存於 `public_payload` 的公開值（非答案）搬入私有列的 `protected_payload`，過程不讀取已儲存的含答案資料；**When** 修正方向為受保護改公開或為尚未分類的欄位新增分類，**Then** 修正被拒絕並要求重新上傳該批來源、走串流匯入器重建，且任何角色都不因此取得讀取答案的權限。
 
 ### 使用者故事 3 — 封存可重現版本（優先級：P1）
 
@@ -97,8 +97,8 @@ flowchart TD
 - **FR-002**：`dataset` 保留 `created_by_user_id → users.id`；`dataset_version` 保留 `dataset_id → dataset.id`、同 dataset 範圍的 `parent_version_id` 自參照、正整數 `version_no`、`state`、manifest checksum 及建立／封存時間，唯一鍵為 `(dataset_id, version_no)`。首版本無父版本；禁止自參照、跨 dataset 父版本、祖先循環與非遞增的後繼版本號。
 - **FR-003**：每個已接受來源檔在版本內形成一筆 `dataset_import_batch`，有唯一 `(dataset_version_id, source_ordinal)`、來源名稱、SHA-256、受限不可變 `source_ref`、選定紀錄路徑、前處理版本與非空的受限 `classification_manifest` JSON。此 manifest 逐一保存該檔來源欄位路徑的公開／受保護分類與 PII 審查證據，不含答案值；各檔可有不同分類。JSONL 或根陣列的紀錄路徑以 `$` 表示，巢狀 JSON 使用 RFC 6901 JSON Pointer，來源紀錄序號自 1 起算。不可假設來源檔自帶的 id 全域唯一；批次來源與前處理版本不能由項目內容反推。
 - **FR-004**：每筆接受的來源紀錄形成一筆 `dataset_item`，含 `dataset_import_batch_id` FK、正整數 `source_row_no` 與經驗證的 JSON `public_payload`，唯一鍵為 `(dataset_import_batch_id, source_row_no)`；同一內容或來源 id 在不同批次／版本可各有身分。版本是完整快照，不能透過可變父版本內容計算當前項目集合。
-- **FR-005**：每個 item 須在同一交易建立恰一筆 `dataset_item_private`，以 `dataset_item_id` 作 PK/FK；`declared_split` 與 `hidden_answer` 可空，並只代表**來源宣告**，不代表後續 run 的實際抽樣／指派。隱藏答案與來源 artifact 需受獨立權限控制，儲存後只允許授權 scoring worker 讀取答案；不得進入標記者可讀的資料路徑。
-- **FR-006**：匯入前須由授權建立流程明確分類來源欄位、檢查 PII／敏感內容，並獨立於 `field_role_map` 為每個來源批次保存版本化、經驗證且完整互斥的 `classification_manifest`。只有 manifest 的公開 allowlist 可進入 `public_payload`；受保護欄位不得同時為 Input、Evidence 或可見 Output。分類缺漏／矛盾時不可 seal；sealed 後 manifest 不可改。draft 修正 manifest 僅允許將欄位由公開改為受保護，系統只刪除該欄位的公開投影並把該欄位已存於 `public_payload` 的公開值（非答案）搬入私有列，不讀取已儲存的含答案資料；其他方向（受保護改公開、為尚未分類的欄位新增分類）一律須重新上傳該批來源並走串流匯入器重建，不得以修正 manifest 原地重建，也不得為此新增可讀答案的角色。匯入後不可透過一般預覽端點讀取受保護原始來源。
+- **FR-005**：每個 item 須在同一交易建立恰一筆 `dataset_item_private`，以 `dataset_item_id` 作 PK/FK；`declared_split`、`hidden_answer` 與 `protected_payload` 可空，其中 `declared_split` 與 `hidden_answer` 只代表**來源宣告**，不代表後續 run 的實際抽樣／指派。`protected_payload` 為 JSON，只存該 item 所屬批次 `classification_manifest` 受保護集合中的非答案欄位值，鍵名一律取自 manifest、不得以欄名猜測或寫死，也不得存放 `hidden_answer` 的答案 envelope。隱藏答案、`protected_payload` 與來源 artifact 需受獨立權限控制，且 `protected_payload` 的讀取權與 `hidden_answer` 分開授權；儲存後只允許授權 scoring worker 讀取答案，標記者、一般建立者與一般 API 皆不可讀這些欄位，也不得為此新增可讀角色；scoring worker 不因可讀答案而自動取得 `protected_payload` 的讀取權，本規格不指定任何 `protected_payload` 讀取角色；不得進入標記者可讀的資料路徑。
+- **FR-006**：匯入前須由授權建立流程明確分類來源欄位、檢查 PII／敏感內容，並獨立於 `field_role_map` 為每個來源批次保存版本化、經驗證且完整互斥的 `classification_manifest`。只有 manifest 的公開 allowlist 可進入 `public_payload`；受保護欄位不得同時為 Input、Evidence 或可見 Output。分類缺漏／矛盾時不可 seal；sealed 後 manifest 不可改。draft 修正 manifest 僅允許將欄位由公開改為受保護，系統只刪除該欄位的公開投影並把該欄位已存於 `public_payload` 的公開值（非答案）搬入私有列的 `protected_payload`，不讀取已儲存的含答案資料；其他方向（受保護改公開、為尚未分類的欄位新增分類）一律須重新上傳該批來源並走串流匯入器重建，不得以修正 manifest 原地重建，也不得為此新增可讀答案的角色。匯入後不可透過一般預覽端點讀取受保護原始來源。
 - **FR-007**：標記者可見 API、frontend state、log、cache、trace、screenshot 及 fixture 不得包含 hidden answer、split、答案檔路徑、私有來源參照或可辨識 gold/test 的 metadata。回應模型須依公開欄位建構，不能靠 `SELECT *` 後刪欄；PostgreSQL 使用最小權限禁止標記者讀取角色查詢 private table，SQLite 以 repository／service 權限與回應 allowlist 保持同等隔離。
 - **FR-008**：`draft` 版本可由授權匯入服務更正來源與項目；封存前須驗證每批分類 manifest、匯入時取得的來源 checksum 回執、private row 完整性、正整數順序及完整快照 manifest。封存不重新讀取含答案的已儲存原始 artifact；`draft → sealed` 於同一交易寫入含分類摘要的 manifest digest、時間、狀態與稽核事件；重試冪等、競爭防衝突、失敗全回滾。`sealed` 版本不可原地改內容或解除封存，須建立新的完整快照版本。
 - **FR-009**：共同路徑須兼容 SQLite quick start／PostgreSQL production：結構化 payload 在 SQLite 為 JSON storage、PostgreSQL 為 JSONB，時間以 UTC 表示；兩種方言都要驗證 FK、唯一鍵、正整數、seal 交易與公開／私有隔離。不得因 SQLite 缺 DB role 就降低答案保護；實際 migration／ORM 另立工作項實作。
@@ -152,6 +152,7 @@ flowchart TD
 
 | 版本 | 日期 | 變更 |
 |---|---|---|
+| 1.3.0 | 2026-10-08 | issue #1228：依維護者裁決（2026-10-08，#1217），`dataset_item_private` 新增可空 JSON 欄 `protected_payload`，存放受保護但非答案的值，依 `classification_manifest` 驅動、不寫死欄名，與 `hidden_answer` 分開授權；FR-005 增列該欄、FR-006／AC-2.6 搬移落點明定為 `protected_payload`；封存不可變由既有 V-08 涵蓋、不訂保存期限（#1224）。屬 MINOR：未部署候選契約，未移除其他需求。OpenSpec change `dataset-021-protected-payload`。 |
 | 1.2.0 | 2026-10-08 | issue #1217：依維護者裁決（2026-10-08，#1216／#1217，限定方向）將 FR-006 的 draft manifest 修正限縮為僅允許公開改為受保護（刪除公開投影、把該欄位已存於 `public_payload` 的公開值（非答案）搬入私有列、不讀取已儲存的含答案資料），其他方向須重新上傳該批來源並走串流匯入器；新增 AC-2.6；FR-005 不變。屬 MINOR：dataset-021 為尚未部署的候選契約，且未移除其他需求。OpenSpec change `dataset-021-draft-reclassify-direction`。 |
 | 1.1.0 | 2026-10-06 | issue #1160：完成五張候選表字典與 NoteCraft 投影、逐檔分類 manifest 及封存來源回執的正典對齊；OpenSpec change `dataset-lineage-schema-planning` archive/write-back。所有表仍未部署。 |
 | 1.0.0 | 2026-10-06 | issue #1160：建立 dataset 匯入、完整版本快照與隱藏答案隔離的 owning spec 草案；五張資料表均為規劃候選，task/run FK、ORM、migration、API 與 runtime 尚未實作。 |

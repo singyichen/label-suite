@@ -316,15 +316,15 @@ test('assignment display status is derived in exclusion, submission, empty, save
     'Annotation record keeps its own lifecycle states');
 });
 
-test('NoteCraft and inventory project 40 tables with 350 columns and no assignment status', () => {
+test('NoteCraft and inventory project 40 tables with 351 columns and no assignment status', () => {
   const data = erData();
   const assignment = data.tables.find((table) => table.name === 'task_annotation_assignment');
   assert.equal(assignment.columns.some((column) => column.name === 'status'), false);
   assert.equal(data.tables.length, 40);
-  assert.equal(data.tables.reduce((sum, table) => sum + table.columns.length, 0), 350);
+  assert.equal(data.tables.reduce((sum, table) => sum + table.columns.length, 0), 351);
   assert.equal(data.tables.reduce((sum, table) => sum + table.columns.filter((column) => column.fk).length, 0), 34);
-  assert.match(data.meta.description, /40 張候選表、350 欄、34 個候選單欄 FK/);
-  assert.match(inventory(), /40 張候選表、350 欄與 34 個候選單欄 FK/);
+  assert.match(data.meta.description, /40 張候選表、351 欄、34 個候選單欄 FK/);
+  assert.match(inventory(), /40 張候選表、351 欄與 34 個候選單欄 FK/);
   assert.match(inventory(), /任務／執行資料結構[^\n]*14 張／117 欄／16 單欄 FK/);
 });
 

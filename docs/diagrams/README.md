@@ -49,7 +49,7 @@
 | [`architecture/task-work-db-schema.md`](./architecture/task-work-db-schema.md) | `er` | Mermaid `erDiagram` | 任務工時的 1 張未部署候選表、11 欄與 3 組複合 FK；保存可觀測前景工作區間，日報表為查詢投影 |
 | [`architecture/task-export-db-schema.md`](./architecture/task-export-db-schema.md) | `er` | Mermaid `erDiagram` | 任務匯出的 2 張未部署候選表、27 欄與 2 個單欄 FK；含不可變產物、同任務複合 FK 與保留期限 |
 | [`architecture/database-table-inventory.md`](./architecture/database-table-inventory.md) | `er` | Mermaid `erDiagram` | 資料表盤點方法、已落地／候選表狀態、跨模組關聯骨架與 migration 前待決事項 |
-| [`architecture/database-schema.er.json`](./architecture/database-schema.er.json) | `er` | NoteCraft Wiki／Diagram | 帳號／管理、資料集、任務／執行、工時、標記／審核與匯出共 40 張候選表、350 欄、34 個候選單欄 FK 的逐欄規劃檢視（已落地業務表 0）；開啟 `/view/diagrams/architecture/database-schema.er` |
+| [`architecture/database-schema.er.json`](./architecture/database-schema.er.json) | `er` | NoteCraft Wiki／Diagram | 帳號／管理、資料集、任務／執行、工時、標記／審核與匯出共 40 張候選表、351 欄、34 個候選單欄 FK 的逐欄規劃檢視（已落地業務表 0）；開啟 `/view/diagrams/architecture/database-schema.er` |
 
 `archify` 要**同時提交 `.json` 與 `.html`**：`.json` 是唯一可 diff、可驗證的原始檔，`.html` 是唯一不需工具鏈即可閱讀的成品，缺任一邊都會讓圖變成不可維護的黑盒。改圖時改 `.json` 再重跑 `deliver` 重生 `.html`，不要手改 `.html`。
 
