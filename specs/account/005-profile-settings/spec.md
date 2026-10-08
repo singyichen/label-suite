@@ -1,7 +1,7 @@
 ---
 功能分支: feat/account/005-profile-settings
 建立日期: 2026-04-05
-版本: 1.4.0
+版本: 1.4.1
 狀態: Clarified
 ---
 
@@ -376,7 +376,7 @@ sequenceDiagram
 - **FR-004E**：使用者點擊有效驗證連結後，系統必須將 `email` 更新為 `pending_email` 並清除 pending/token。
 - **FR-004F**：Email 驗證成功後，僅新 Email 可用於登入；舊 Email 不得再登入。
 - **FR-004G**：驗證 token 失效或無效時，系統必須拒絕更新 Email 並提供重新寄送驗證信機制。
-- **FR-004K**：Email 驗證成功後，系統必須在同一交易增加 `users.credential_version` 並撤銷該使用者所有 `account_token_family`（包含目前裝置），使舊 access JWT 在下一次請求失效，並導向 `/login` 要求以新 Email 重新登入；具體認證機制依 account-020 FR-002／FR-007。
+- **FR-004K**：Email 驗證成功後，系統必須在同一交易增加 `users.credential_version` 並撤銷該使用者所有 `account_session`（包含目前裝置；安全撤銷不寫入 `logged_out_at`），使舊 access JWT 在下一次請求失效，並導向 `/login` 要求以新 Email 重新登入；具體認證機制依 account-020 FR-002／FR-007。
 - **FR-004L**：重新寄送 Email 驗證信必須套用 `EMAIL_VERIFICATION_RESEND_COOLDOWN_SECONDS`；cooldown 未結束前，系統不得再次寄送並必須顯示剩餘等待時間。
 - **FR-004M**：每位使用者同時間只能有一筆 pending Email 變更請求；新的合法變更請求必須覆蓋舊 `pending_email`、token 與期限，舊 token 必須立即失效。
 - **FR-005**：`/profile` 必須提供密碼修改區塊，依帳號類型顯示對應欄位。
@@ -384,7 +384,7 @@ sequenceDiagram
 - **FR-007**：新密碼必須以 bcrypt 雜湊儲存，並符合 `PASSWORD_MIN_LENGTH` 與 `PASSWORD_RULE`。
 - **FR-008**：Google SSO 帳號（`hashed_password = null`）不得顯示「現有密碼」欄位，且可直接設定新密碼。
 - **FR-009**：密碼驗證失敗時，系統必須回傳 401 與「現有密碼錯誤」，且不啟用鎖定或節流機制。
-- **FR-010**：密碼更新成功後，必須在同一交易增加 `users.credential_version`、保留目前裝置的 `account_token_family` 並撤銷其他裝置 family。所有舊 access JWT 下個請求先失效；目前裝置可由保留 family silent refresh 取得新版本 JWT 並維持登入，其他裝置 refresh 失敗。此條不預設密碼更新 API 回應另含新 token，機制依 account-020 FR-006。
+- **FR-010**：密碼更新成功後，必須在同一交易增加 `users.credential_version`、保留目前裝置的 `account_session` 並撤銷其他裝置 session（不寫入 `logged_out_at`）。所有舊 access JWT 下個請求先失效；目前裝置可由保留 family silent refresh 取得新版本 JWT 並維持登入，其他裝置 refresh 失敗。此條不預設密碼更新 API 回應另含新 token，機制依 account-020 FR-006。
 - **FR-011**：僅已登入使用者可存取 `/profile`；未登入存取必須導向 `/login`。
 - **FR-011A**：`/profile` 必須具備響應式設計，至少支援 `RWD_VIEWPORTS`。
 - **FR-011B**：在 `<= MOBILE_BP` 時，兩個主要區塊（個人資料 / 密碼）必須單欄堆疊，避免欄位或按鈕被截斷。
@@ -571,6 +571,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.4.1 | 2026-10-08 | Issue #1160：對齊 `account_session` 命名；Email／密碼安全撤銷不得記為明確登出。 |
 | 1.4.0 | 2026-10-06 | Issue #1160 D-5：定義通知偏好缺列時六項事件兩頻道預設開啟，讀取不寫入，儲存完整六列。 |
 | 1.3.0 | 2026-10-06 | Issue #1160 對齊 account-020：FR-010／SC-003 明確定義改密碼後目前裝置先失效、再 silent refresh；FR-004K／SC-007A 定義改 Email 的憑證版本增加與全部 family 撤銷。 |
 | 1.2.10 | 2026-08-20 | Issue #261：新增 Prototype Traceability，將 `profile.html` 定義為現行 UI baseline，並明確標示 `profile.pen` 缺失且非現行 artifact。 |

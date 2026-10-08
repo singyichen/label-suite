@@ -1,50 +1,24 @@
-# account/020-auth-session-security Specification
+## RENAMED Requirements
 
-## Purpose
+- FROM: `### Requirement: FR-001 Token family identity`
+- TO: `### Requirement: FR-001 一次登入 session 身份`
 
-定義認證與跨裝置 session 的規劃契約：一次登入紀錄、JWT 每次請求核對、refresh 輪替、登出及憑證變更後的失效結果。此衍生檢視對應 `specs/account/020-auth-session-security/spec.md` v1.2.0；目前尚無 ORM、migration 或 API 實作。
+- FROM: `### Requirement: FR-002 每次請求的 JWT 與 family 核對`
+- TO: `### Requirement: FR-002 JWT 與 session 核對`
 
-## Requirements
+- FROM: `### Requirement: FR-003 Refresh 與 absolute TTL`
+- TO: `### Requirement: FR-003 Refresh 與絕對期限`
 
-### Requirement: FR-004 有界寬限重發
+- FROM: `### Requirement: FR-006 改密碼保留目前 family`
+- TO: `### Requirement: FR-006 改密碼保留目前 session`
 
-**FR-004**：只有以 `rotated` 撤銷且在 30 秒寬限期內的舊 token 可額外重發一次；須以 `grace_reissued_at IS NULL` 的原子條件占用資格。第三次使用回 `409`，不核發 token、不全量撤銷；寬限期外 reuse 則撤銷該使用者全部有效 family。
+- FROM: `### Requirement: FR-007 全量憑證事件與停用`
+- TO: `### Requirement: FR-007 憑證事件與停用`
 
-#### Scenario: 第三次使用
+- FROM: `### Requirement: FR-008 單一裝置登出`
+- TO: `### Requirement: FR-008 單一裝置明確登出`
 
-- **GIVEN** 舊 token 已輪替且其一次寬限資格已被占用
-- **WHEN** 寬限期內再次 refresh
-- **THEN** 回 `409`、不核發 token、不全量撤銷（SC-002）
-
-### Requirement: FR-005 前端競爭協調
-
-**FR-005**：前端收到 FR-004 的 `409` 時，至多等 2 秒接收同來源其他分頁的成功 refresh 訊號，再重試原請求一次；若仍 401，最多再 refresh 一次；失敗或逾時且無成功訊號時導向登入。重試必須有界，不能形成循環。
-
-#### Scenario: 競爭未恢復
-
-- **GIVEN** 前端收到上述 `409` 且沒有成功訊號
-- **WHEN** 等待逾 2 秒
-- **THEN** 終止流程並導向登入，不循環重試（SC-003）
-
-### Requirement: FR-009 Email canonicalization
-
-**FR-009**：登入、註冊、邀請與 email 變更必須在寫入及比較前執行 Unicode NFC 加 casefold，對結果檢查 `varchar(254)` 長度；`users.email` 儲存該 canonical 值，DB 設 `lower(email)` 唯一表達式索引作第二層防線。SQLite 與 PostgreSQL 對合法應用層寫入必須產生相同識別結果。
-
-#### Scenario: 跨資料庫同一識別
-
-- **GIVEN** 兩個大小寫或 NFC 正規化後相同的 email
-- **WHEN** 在 SQLite 與 PostgreSQL 經合法應用層註冊
-- **THEN** 第二筆均被拒絕（SC-007）
-
-### Requirement: FR-010 使用者憑證欄位
-
-**FR-010**：`users.credential_version` 必須為非空整數，僅高風險憑證事件遞增；角色變更和停用狀態不以版本取代每請求 DB 檢查。`users.hashed_password` 可為 null，表示沒有可用的本地密碼。
-
-#### Scenario: 沒有本地密碼
-
-- **GIVEN** Google 或受邀帳號尚無本地密碼
-- **WHEN** 建立該帳號
-- **THEN** `hashed_password = null` 有明確語意，不能以空字串代替
+## MODIFIED Requirements
 
 ### Requirement: FR-001 一次登入 session 身份
 

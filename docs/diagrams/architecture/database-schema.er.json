@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/SteveLin100132/notecraft/main/plugins/er-diagram-renderer/schema.json",
   "meta": {
     "title": "Label Suite 資料庫規劃 ER 圖（帳號、管理、資料集、任務執行、標記、審核與匯出）",
-    "description": "**規劃圖，尚未部署資料結構。** 已部署業務表：0；本頁顯示 **37 張候選表、315 欄、43 個候選單欄 FK（外鍵）**。帳號／管理、資料集、任務／執行、標記／審核與匯出的逐表型別和關聯，來自[資料表盤點總帳](/notes/diagrams/architecture/database-table-inventory)所連的五份實體層字典。兩張匯出候選表保存一次請求、原始產物與有序執行範圍；同任務複合外鍵、產物保留／撤銷及授權見[匯出字典](/notes/diagrams/architecture/task-export-db-schema) §4–§7。資料集分析專用表延後至 MVP 後；工時仍待正典與欄位字典裁決。\n\n**讀圖方式：** Wiki 可逐表查看候選欄位、來源與待決事項；Diagram 可搜尋表名或欄名，點選表後會聚焦已列出的候選單欄外鍵。圖中連線不代表資料庫遷移、複合約束或資料庫權限已建立。",
+    "description": "**規劃圖，尚未部署資料結構。** 已部署業務表：0；本頁顯示 **37 張候選表、316 欄、43 個候選單欄 FK（外鍵）**。帳號／管理、資料集、任務／執行、標記／審核與匯出的逐表型別和關聯，來自[資料表盤點總帳](/notes/diagrams/architecture/database-table-inventory)所連的五份實體層字典。兩張匯出候選表保存一次請求、原始產物與有序執行範圍；同任務複合外鍵、產物保留／撤銷及授權見[匯出字典](/notes/diagrams/architecture/task-export-db-schema) §4–§7。資料集分析專用表延後至 MVP 後；工時仍待正典與欄位字典裁決。\n\n**讀圖方式：** Wiki 可逐表查看候選欄位、來源與待決事項；Diagram 可搜尋表名或欄名，點選表後會聚焦已列出的候選單欄外鍵。圖中連線不代表資料庫遷移、複合約束或資料庫權限已建立。",
     "source": "docs/diagrams/architecture/account-admin-db-schema.md §2–§3; docs/diagrams/architecture/dataset-db-schema.md §2–§3; docs/diagrams/architecture/task-run-db-schema.md §2–§3; docs/diagrams/architecture/annotation-review-db-schema.md §2–§3; docs/diagrams/architecture/task-export-db-schema.md §2–§3; specs/task-management/014-task-detail/spec.md v8.0.1; specs/annotation/015-annotation-workspace/spec.md",
     "backTo": "/notes/diagrams/architecture/database-table-inventory"
   },
@@ -238,8 +238,8 @@
       "description": "**候選表／設計草案，尚未執行資料庫遷移。** 一列代表一位可登入使用者。`hashed_password` 可空；`credential_version` 使高風險憑證事件的舊 JWT 立即失效；電子郵件地址先 NFC＋casefold 再保存。來源：帳號／管理 §3.1、account-020、ADR-021／ADR-035。N-1／D-1／D-6／D-8 已裁決。"
     },
     {
-      "name": "account_token_family",
-      "label": "同次登入的憑證群組",
+      "name": "account_session",
+      "label": "一次登入的工作階段",
       "section": "3.2",
       "group": "account",
       "columns": [
@@ -267,10 +267,16 @@
           "name": "revoked_at",
           "type": "timestamptz",
           "required": "nullable",
-          "note": "整個登入家族的撤銷時間；空值＝未撤銷；規則：F-02、F-04"
+          "note": "工作階段因任何原因失效的時間；空值＝未撤銷；即使有值亦不能單獨證明明確登出；規則：F-02、F-04、F-05"
+        },
+        {
+          "name": "logged_out_at",
+          "type": "timestamptz",
+          "required": "nullable",
+          "note": "僅記錄可驗證的明確登出成功時間；空值＝未證實明確登出；與 revoked_at 同交易寫入且不得晚於它；規則：F-05"
         }
       ],
-      "description": "**候選表／設計草案，尚未執行資料庫遷移。** 一列代表一次登入／一個裝置的 登入工作階段；此表擁有使用者與開始時間。來源：帳號／管理 §3.2、account-020 FR-001／FR-003、ADR-021。"
+      "description": "**候選表／設計草案，尚未執行資料庫遷移。** 一列代表一次登入／一個裝置的工作階段；此表保存使用者、開始時間、任何原因造成的失效時間，以及可驗證的明確登出成功時間。來源：帳號／管理 §3.2、account-020 FR-001／FR-008、ADR-021。"
     },
     {
       "name": "refresh_tokens",
@@ -286,11 +292,11 @@
           "pk": true
         },
         {
-          "name": "family_id",
+          "name": "session_id",
           "type": "uuid",
           "required": "required",
-          "note": "所屬登入家族；CASCADE FK 與 B-tree 索引；規則：R-04、R-08",
-          "fk": "account_token_family"
+          "note": "所屬登入工作階段；CASCADE FK 與 B-tree 索引；規則：R-04、R-08",
+          "fk": "account_session"
         },
         {
           "name": "token_hash",

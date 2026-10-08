@@ -1,7 +1,7 @@
 ---
 功能分支: feat/foundation/000-foundation
 建立日期: 2026-05-29
-版本: 1.13.2
+版本: 1.14.0
 狀態: Draft
 ---
 
@@ -433,7 +433,7 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 2. **Given** JWT payload 被建立，**When** 系統寫入 claims，**Then** payload 必須包含 `sub`、`sid`、`credential_version`、`iat`、`exp` 等認證必要 claims；system-level `role` 若保留僅供顯示，不得包含 resource-scoped permission 或 module-specific role。
 3. **Given** refresh token 使用一次，**When** `/auth/refresh` 成功，**Then** 系統必須在同一交易輪替 token、作廢舊列，並以 `REFRESH_TOKEN_TTL` 和 family 的 absolute max 兩者較早者設定新 `expires_at`。
 4. **Given** `rotated` token 在 30 秒寬限期內被重用，**When** 一次額外重發資格尚未占用，**Then** 可以原子方式占用；該資格已占用時回 `409` 且不全量撤銷；超過寬限期的 reuse 才撤銷該使用者所有有效 family。
-5. **Given** 需要立即撤銷尚未過期的 access token，**When** 發生登出、帳號停用或高風險憑證事件，**Then** 系統必須在每次已認證請求核對 `sid` family、現行使用者狀態與 `credential_version`；不得讓舊 access token 依剩餘 TTL 繼續通行。
+5. **Given** 需要立即撤銷尚未過期的 access token，**When** 發生登出、帳號停用或高風險憑證事件，**Then** 系統必須在每次已認證請求核對 `sid` 所指 `account_session`、現行使用者狀態與 `credential_version`；不得讓舊 access token 依剩餘 TTL 繼續通行。
 6. **Given** 系統以 cookie 傳送 session credential，**When** production 環境處理 protected unsafe method，**Then** 系統必須執行 CSRF 防護，驗證 `Origin` / `Referer` 或使用 CSRF token。
 
 **約束情境 2 — Permission Boundary**：
@@ -445,13 +445,13 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 
 ### 功能需求
 
-- **FR-016**：系統必須維護 `account_token_family` 與 `refresh_tokens` persistence：family 至少有 `id`、`user_id` FK、`started_at`、`revoked_at`；token 至少有 `id`、`family_id` FK、唯一 `token_hash`、`expires_at`、`revoked_at`、`revoked_reason`、`grace_reissued_at`。token 列不得重複 family 的 `user_id` 或 `started_at`；每次 refresh 成功須在同一交易輪替並寫入新 token row，`expires_at` 取當下時間加 `REFRESH_TOKEN_TTL` 與 family absolute max 之較早者。
+- **FR-016**：系統必須維護 `account_session` 與 `refresh_tokens` persistence：session 一列代表一次登入，至少有 `id`、`user_id` FK、非空 `started_at`、可空 `revoked_at` 與可空 `logged_out_at`；token 至少有 `id`、指向 `account_session.id` 的 `session_id` 真實 FK、唯一 `token_hash`、`expires_at`、`revoked_at`、`revoked_reason`、`grace_reissued_at`。token 列不得重複 session 的 `user_id` 或 `started_at`；`logged_out_at` 僅在可驗證明確登出成功時與 `revoked_at` 同交易寫入且不得晚於它；安全撤銷、自然到期或僅清 cookie 均不得填入；每次 refresh 成功須在同一交易輪替並寫入新 token row，`expires_at` 取當下時間加 `REFRESH_TOKEN_TTL` 與 session absolute max 之較早者。
 - **FR-017**：系統必須讓 frontend auth store 僅保存非敏感 session state；不得將 raw token 持久化至 localStorage。
 - **FR-018**：系統必須讓 resource permission checks 位於 route dependency 或 service 層；repository / query helper 不得內嵌權限邏輯。
 - **FR-019**：系統必須對 unauthorized、forbidden、resource-hidden 三種情境撰寫測試。
 - **FR-075**：系統必須對 refresh token concurrent refresh 採 ADR-021 的有界 grace 策略：僅 `revoked_reason='rotated'` 且在 30 秒內的 token 可透過 `grace_reissued_at IS NULL` 原子條件額外重發一次；資格已占用時回 `409 Conflict`，不核發也不全量撤銷；超過寬限期 reuse 才撤銷所有有效 family。SQLite 與 PostgreSQL 的競爭測試必須驗證最多一次額外重發，不得以 `SKIP LOCKED` 或無界重發取代。
-- **FR-076**：系統必須讓 sliding refresh token 與 access JWT 受 `REFRESH_TOKEN_ABSOLUTE_MAX_TTL` 約束；每次 refresh（含寬限重發）及每個已認證請求以 family 的 `started_at` 作首次登入基準，達 absolute max 後強制重新登入，登入與 refresh 核發的新 token 到期不得超過此上限。
-- **FR-077**：系統必須以 `users.credential_version` 與 JWT 同名 claim 在每次已認證請求比對，使改密碼、改 email、重設密碼、Google 連結等高風險憑證事件立即作廢舊 access JWT；每次請求另須核對 `sid` 指向未撤銷 family 且 `family.user_id = sub`，以支援單一裝置登出。角色與停用仍重讀 `users.role`／`is_active`，不得用版本代替。具體實作與跨資料庫測試由 `specs/account/020-auth-session-security/spec.md` 承接。
+- **FR-076**：系統必須讓 sliding refresh token 與 access JWT 受 `REFRESH_TOKEN_ABSOLUTE_MAX_TTL` 約束；每次 refresh（含寬限重發）及每個已認證請求以 `account_session.started_at` 作首次登入基準，達 absolute max 後強制重新登入，登入與 refresh 核發的新 token 到期不得超過此上限。
+- **FR-077**：系統必須以 `users.credential_version` 與 JWT 同名 claim 在每次已認證請求比對，使改密碼、改 email、重設密碼、Google 連結等高風險憑證事件立即作廢舊 access JWT；每次請求另須核對 `sid` 指向未撤銷 `account_session` 且 `account_session.user_id = sub`，以支援單一裝置登出。角色與停用仍重讀 `users.role`／`is_active`，不得用版本代替。具體實作與跨資料庫測試由 `specs/account/020-auth-session-security/spec.md` 承接。
 - **FR-078**：若系統部署環境包含同一 eTLD+1 的多個 subdomain（如 `api.lab.edu` 與 `app.lab.edu`），系統必須把 `Origin` / `Referer` 驗證視為 `SameSite=Lax` 不覆蓋 same-site subdomain 的補充 CSRF 防護；feature spec 的 security review 必須顯式評估此風險並記錄豁免或啟用決定。（FR-078 為多 subdomain 部署的補充評估要求；FR-117 為所有 production endpoint 的通用強制基準，兩者並存。）
 
 ---
@@ -537,7 +537,7 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 - **FR-031**：系統必須讓測試環境使用真實 PostgreSQL 或與 production 行為一致的 DB 測試容器；不得以 mock 取代 ORM integration tests。
 - **FR-083**：系統必須讓所有 background job 的 DB write 使用 PostgreSQL 層級的 atomic UPSERT，即 SQLAlchemy `insert().on_conflict_do_update()` 或 `on_conflict_do_nothing()`；不得以 SQLAlchemy ORM `session.merge()`（底層為 SELECT + INSERT/UPDATE 兩步驟，高並發下可引發 `IntegrityError`）或 check-then-act pattern（先 SELECT 再 INSERT）替代，以確保 Celery retry 在任何 crash point 後重新執行時不產生 race condition 或重複資料。
 - **FR-104**：系統必須在 `app/db/base.py` 或等效 metadata 初始化處定義 SQLAlchemy naming convention，至少覆蓋 `ix`、`uq`、`ck`、`fk`、`pk`；migration 不得產生未命名 constraint。
-- **FR-105**：系統必須讓 DB table 與 column 使用 `lower_case_snake`；table name 預設使用 singular form，join table 或 module-owned table 應以前綴表達 domain ownership，例如 `task_assignment`、`dataset_item`、`account_token_family`。歷史契約 `users`、`refresh_tokens` 與欄名 `role`、`is_active` 為明示命名例外；ADR-032 的跨模組共用表 `audit_events` 是唯一新增的明示表名例外，不得據此擴張其他新表的命名例外。
+- **FR-105**：系統必須讓 DB table 與 column 使用 `lower_case_snake`；table name 預設使用 singular form，join table 或 module-owned table 應以前綴表達 domain ownership，例如 `task_assignment`、`dataset_item`、`account_session`。歷史契約 `users`、`refresh_tokens` 與欄名 `role`、`is_active` 為明示命名例外；ADR-032 的跨模組共用表 `audit_events` 是唯一新增的明示表名例外，不得據此擴張其他新表的命名例外。
 - **FR-106**：系統必須讓 datetime 欄位使用 `_at` suffix、date 欄位使用 `_date` suffix；外鍵欄位命名必須穩定一致，例如同一概念在各表使用相同 `{entity}_id`。
 - **FR-107**：系統必須在 `alembic.ini` 設定 human-readable migration file template（例如 `%%(year)d-%%(month).2d-%%(day).2d_%%(slug)s`）；migration slug 必須可讀並描述變更。
 
@@ -850,6 +850,7 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.14.0 | 2026-10-08 | Issue #1160：F-04 將一次登入候選表與 refresh FK 定名 `account_session`／`session_id`，新增僅代表明確登出成功的可空 `logged_out_at`；JWT `sid`、失效與輪替規則不變，尚無 runtime／migration。 |
 | 1.13.2 | 2026-10-06 | Issue #1160 D-4：FR-105 與 SC-046 明列 `audit_events` 跨模組共用表的單一命名例外；其餘新表仍遵守單數與 domain ownership 預設。 |
 | 1.13.1 | 2026-10-06 | 安全審查補強 FR-076：family absolute TTL 同時限制已認證請求與登入／refresh 核發的 access JWT 到期，避免最後核發的 JWT 在 family 期限後繼續通行；僅規劃契約，未實作 runtime。 |
 | 1.13.0 | 2026-10-06 | Issue #1160 auth/token-family 規劃契約：F-04 FR-016／075／076／077 改採真實 family FK、一次寬限重發、`sid`／`credential_version` 每請求失效；FR-105 列出四個既有命名例外。僅更新設計契約，尚無 ORM、migration 或 runtime。 |

@@ -139,7 +139,7 @@ test('NoteCraft records exported_at while preserving the 37 table and 43 FK shap
   assert.ok(exportedAt, 'NoteCraft must show task_export.exported_at');
   assert.equal(exportedAt.type, 'timestamptz');
   assert.equal(exportedAt.required, 'nullable');
-  assert.deepEqual(summaryCounts(data).map(([count]) => count), [37, 315, 43]);
+  assert.deepEqual(summaryCounts(data).map(([count]) => count), [37, 316, 43]);
 });
 
 test('NoteCraft projection matches export dictionary tables, columns, types and keys', () => {
