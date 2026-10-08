@@ -1147,6 +1147,14 @@
     .settings-nav-item { padding: var(--space-sm) var(--space-md); border: 0; border-radius: 4px; background: transparent; color: var(--color-ink-muted); font: inherit; text-align: left; cursor: pointer; }
     .settings-nav-item[aria-selected="true"] { background: var(--color-slate-50); color: var(--color-ink); font-weight: 600; }
     .settings-section.panel { border: 0; box-shadow: none; border-radius: 0; background: transparent; padding: 0; margin-bottom: 0; }
+    /* FR-026 (1) / design.md: section title, text-link edit, divided definition list. Scoped to the settings tab only. */
+    .settings-section .panel-title { font-size: 16px; font-weight: 600; }
+    .settings-section [id$="EditBtn"] { border: 0; background: transparent; color: var(--color-primary); padding: 0 var(--space-xs); box-shadow: none; }
+    .settings-section [id$="EditBtn"]:hover { background: transparent; text-decoration: underline; }
+    .settings-section .kv-dl { grid-template-columns: 160px minmax(0, 1fr); gap: 10px 0; }
+    .settings-section .kv-dl-key { padding: 0 16px 10px 0; border-bottom: 1px solid var(--color-border-muted); }
+    .settings-section .kv-dl-value { padding-bottom: 10px; border-bottom: 1px solid var(--color-border-muted); }
+
     @media (max-width: 768px) {
       .layout { padding: var(--space-md) var(--space-md) var(--space-xl); }
       .settings-layout { grid-template-columns: minmax(0, 1fr); gap: var(--space-md); }
