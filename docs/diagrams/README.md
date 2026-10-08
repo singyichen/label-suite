@@ -45,10 +45,11 @@
 | [`architecture/core-data-model-er.md`](./architecture/core-data-model-er.md) | `er` | Mermaid `erDiagram` | 核心資料模型 ER 圖，整合各 spec 的關鍵實體（issue #669） |
 | [`architecture/account-admin-db-schema.md`](./architecture/account-admin-db-schema.md) | `er` | Mermaid `erDiagram` | account 001～005＋admin-006／007 實體層 DB schema：ERD、欄位字典、限制清單、待裁決事項 |
 | [`architecture/dataset-db-schema.md`](./architecture/dataset-db-schema.md) | `er` | Mermaid `erDiagram` | dataset-021 的五張候選表：完整版本、來源批次、公開項目與私有答案；含分類 manifest、限制、索引與雙資料庫型別對應 |
-| [`architecture/annotation-review-db-schema.md`](./architecture/annotation-review-db-schema.md) | `er` | Mermaid `erDiagram` | annotation／review 的 8 張未部署候選表、82 欄與 14 個單欄 FK；含逐欄字典、複合 FK、索引及待決約束 |
+| [`architecture/annotation-review-db-schema.md`](./architecture/annotation-review-db-schema.md) | `er` | Mermaid `erDiagram` | 標記／審核的 8 張未部署候選表、83 欄與 15 個單欄 FK；含登入工作階段歸屬、複合 FK、索引及待決約束 |
+| [`architecture/task-work-db-schema.md`](./architecture/task-work-db-schema.md) | `er` | Mermaid `erDiagram` | 任務工時的 1 張未部署候選表、11 欄與 3 組複合 FK；保存可觀測前景工作區間，日報表為查詢投影 |
 | [`architecture/task-export-db-schema.md`](./architecture/task-export-db-schema.md) | `er` | Mermaid `erDiagram` | 任務匯出的 2 張未部署候選表、27 欄與 2 個單欄 FK；含不可變產物、同任務複合 FK 與保留期限 |
 | [`architecture/database-table-inventory.md`](./architecture/database-table-inventory.md) | `er` | Mermaid `erDiagram` | 資料表盤點方法、已落地／候選表狀態、跨模組關聯骨架與 migration 前待決事項 |
-| [`architecture/database-schema.er.json`](./architecture/database-schema.er.json) | `er` | NoteCraft Wiki／Diagram | 帳號／管理、資料集、任務／執行、標記／審核與匯出共 37 張候選表、316 欄、43 個候選單欄 FK 的逐欄規劃檢視（已落地業務表 0）；開啟 `/view/diagrams/architecture/database-schema.er` |
+| [`architecture/database-schema.er.json`](./architecture/database-schema.er.json) | `er` | NoteCraft Wiki／Diagram | 帳號／管理、資料集、任務／執行、工時、標記／審核與匯出共 38 張候選表、328 欄、44 個候選單欄 FK 的逐欄規劃檢視（已落地業務表 0）；開啟 `/view/diagrams/architecture/database-schema.er` |
 
 `archify` 要**同時提交 `.json` 與 `.html`**：`.json` 是唯一可 diff、可驗證的原始檔，`.html` 是唯一不需工具鏈即可閱讀的成品，缺任一邊都會讓圖變成不可維護的黑盒。改圖時改 `.json` 再重跑 `deliver` 重生 `.html`，不要手改 `.html`。
 
@@ -56,7 +57,7 @@ Mermaid 以**獨立 `.mmd` 檔**提交時要**同時附上算繪後的 `.png`**�
 
 ER／資料模型圖另有一項工具取捨：`diagram-design` 雖支援 ER 圖型，但其複雜度預算上限為 **8 個實體**；跨模組整合圖遠超此上限，且它要求手算正交折線座標，故 `docs/diagrams/architecture/core-data-model-er.md` 改用 Mermaid `erDiagram`（原生 ER 語法、版面自動計算、逐行可 diff）。8 個實體以內、需要靜態品牌樣式的 ER 圖可用 `diagram-design`；需要逐欄導覽與 FK 跳轉的規劃表用 NoteCraft。
 
-NoteCraft 檢視資料使用 `.notecraft/plugins/er-diagram-renderer/schema.json` 驗證，並以 `node scripts/check-database-schema.mjs` 合併比對帳號／管理、資料集、任務／執行、標記／審核與匯出五份欄位字典的表、欄、型別、可空性、PK 與 FK。圖中的候選表不是已建立的 PostgreSQL 資料表；資料集分析的品質／IAA 專用表與工時仍留在盤點文件，待正典定案後再設計實體字典。
+NoteCraft 檢視資料使用 `.notecraft/plugins/er-diagram-renderer/schema.json` 驗證，並以 `node scripts/check-database-schema.mjs` 合併比對帳號／管理、資料集、任務／執行、工時、標記／審核與匯出六份欄位字典的表、欄、型別、可空性、PK 與 FK。圖中的候選表不是已建立的 PostgreSQL 資料表；資料集分析的品質／IAA 專用表依 MVP 範圍裁決延後規劃。
 
 > 專案先前另有一套 D2 工具鏈（`.d2` 原始檔 + `.png`，用於 thesis 章節架構圖），因無人引用且無建置接線而移除，見 PR #474。若日後需要，可自 git 歷史取回。
 

@@ -1,6 +1,6 @@
 # annotation／review 資料庫 schema（實體候選）
 
-> Issue #1160 的衍生物理欄位字典。以下 **8 張表、82 個欄位均為未部署候選**；不是 ORM、migration、已建立的 SQLite／PostgreSQL schema，也不是新產品需求。業務正典為 [014](../../../specs/task-management/014-task-detail/spec.md)、[015](../../../specs/annotation/015-annotation-workspace/spec.md)、[ADR-024](../../adr/024-database-quickstart-sqlite-tiered.md)、[ADR-037](../../adr/037-permission-matrix-authorization.md)；候選寫入邊界見 [DBA 設計](../../superpowers/specs/2026-10-07-annotation-review-physical-design.md)。父端身分見 [task／run 字典](./task-run-db-schema.md)，公開資料與私有答案分界見 [dataset 字典](./dataset-db-schema.md)。
+> Issue #1160 的衍生物理欄位字典。以下 **8 張表、83 個欄位均為未部署候選**；不是 ORM、migration、已建立的 SQLite／PostgreSQL schema，也不是新產品需求。業務正典為 [014](../../../specs/task-management/014-task-detail/spec.md)、[015](../../../specs/annotation/015-annotation-workspace/spec.md)、[ADR-024](../../adr/024-database-quickstart-sqlite-tiered.md)、[ADR-037](../../adr/037-permission-matrix-authorization.md)；候選寫入邊界見 [DBA 設計](../../superpowers/specs/2026-10-07-annotation-review-physical-design.md)。父端身分見 [task／run 字典](./task-run-db-schema.md)，公開資料與私有答案分界見 [dataset 字典](./dataset-db-schema.md)。
 
 ## 1. 範圍與狀態
 
@@ -91,6 +91,7 @@ erDiagram
         integer event_no
         uuid actor_membership_id FK
         varchar actor_task_role
+        uuid account_session_id FK "nullable；舊或系統事件"
         varchar action
         varchar output_key
         text reason
@@ -119,6 +120,7 @@ erDiagram
     annotation_review_submission_revision ||--o{ annotation_history_event : review_revision_id
     annotation_arbitration_vote ||--o{ annotation_history_event : arbitration_vote_id
     annotation_exception_resolution ||--o{ annotation_history_event : exception_resolution_id
+    account_session ||--o{ annotation_history_event : account_session_id
 ```
 
 ## 3. 欄位字典
@@ -239,6 +241,7 @@ UNIQUE 單位鍵阻擋兩位 reviewer 並列正式提交。首次提交者的 st
 | `event_no` | integer | 否 | 單位內正整數單調序號 | 動作交易分配；不改 | H-01 |
 | `actor_membership_id` | uuid → task_membership | 否 | 當次真實操作者 | 建立；不改 | H-02 |
 | `actor_task_role` | varchar(24) | 否 | 當次選用任務角色快照 | 建立；不改 | H-02 |
+| `account_session_id` | uuid → account_session | 是 | 從已驗證 JWT `sid` 取得的實際登入工作階段；舊／系統事件可空，不以其他人的 session 補值 | 新認證動作交易必填；建立後不改 | H-06 |
 | `action` | varchar(24) | 否 | FR-086 八個目前有效動作之一 | 建立；不改 | H-03 |
 | `output_key` | varchar(120) | 是 | 動作所涉 outKey；整單位動作可空 | 建立；不改 | H-03 |
 | `reason` | text | 是 | 當次理由；依 action 驗必填 | 建立；不改 | H-03 |
@@ -304,6 +307,7 @@ UNIQUE 單位鍵阻擋兩位 reviewer 並列正式提交。首次提交者的 st
 | H-03 | DB＋SVC | CHECK action 僅 `draft_saved/submitted/modified/accepted/bypassed/adjudicated/exception_resolved/excluded`；outKey、reason 是否必需按 action／FR-089 驗，歷史舊值若日後遷入需另有相容策略 | 015 FR-086／FR-089 |
 | H-04 | DB＋SVC＋SEC | `submitted`／`modified`／`adjudicated` 的 `result_snapshot` 必填非空，含完整 `outputs[]`，排除原始文本與資料集欄位；寫入前依 registry 驗證。CHECK `lead_time_ms IS NULL OR lead_time_ms>=0`；同一次作業的 `started_at` 與 `lead_time_ms` 恰寫一次：多筆 reviewer 決策事件共用 `review_revision_id` 時，僅第一筆事件（最小 `event_no`）帶 `started_at` 與 `lead_time_ms`，其餘事件的 `started_at` 與 `lead_time_ms` 均為 SQL NULL；單事件作業兩欄成對寫入，由 SVC 同交易驗證，舊版重複事件保留原樣。FR-090 在資料供給層先排除其他標記員的整筆事件（含列、摘要及計數），再按角色遮蔽允許事件的快照、理由與耗時 | 015 FR-087～FR-091、主憲法 III |
 | H-05 | DB＋SVC | 四個來源 ID 為各來源表的可空真 FK；審核來源指向不可變 `annotation_review_submission_revision.id`，經 revision → submission 回查 head，避免舊事件隨 head 改判而失去版本身分。由 SVC 在同一交易先建立 revision 再寫事件，核對 revision 與事件的 `(run_id,assignment_id)` 及 action 適用性；既有事件無 revision 的回填／可空相容策略待 migration 裁決 | 015 FR-097／FR-103 |
+| H-06 | DB＋SVC＋SEC | `account_session_id` 是可空真 FK → `account_session.id`，ON DELETE RESTRICT；舊／系統事件可空，新認證使用者動作須在同一交易從已驗證 `sid` 寫入，拒絕客戶端自報 ID。SVC 核對 session 的 `user_id` 等於 actor membership 所屬使用者；無法證實者不得猜測 session 歸屬。事件查詢以授權投影隔離其他人的工作階段與敏感答案，標記者 API 不下發跨人 session ID | 015 FR-088、FR-097；014 FR-007d |
 | N-01 | DB | revision PK、FK → submission；與 head 不同的 immutable 行 | 015 FR-103、DBA 設計 |
 | N-02 | DB | UNIQUE `(review_submission_id,version)`、CHECK `version>0`；head.version 與最新 revision.version 在交易中對齊 | 015 FR-103 |
 | N-03 | SVC＋SEC | `decision_payload` 是當次所有 outKey 已驗證快照；不可原地更新，查詢受同 reviewer／仲裁資格與答案遮蔽限制 | 015 FR-052／FR-062／FR-103 |
@@ -321,7 +325,8 @@ UNIQUE 單位鍵阻擋兩位 reviewer 並列正式提交。首次提交者的 st
 | 爭議鍵與冪等 batch | UNIQUE `annotation_arbitration_vote(run_id,assignment_id,output_key,item_key)`；`(run_id,assignment_id,decision_batch_id)` | 第一個擋重投，第二個找重送；若真實請求能由第一個覆蓋再評估成本 |
 | 例外待辦與票反查 | UNIQUE `annotation_exception_resolution(run_id,assignment_id,output_key,item_key)`、UNIQUE `(arbitration_vote_id)` | 待辦用 reject 票 LEFT JOIN resolution；單欄 vote FK 已由唯一索引覆蓋 |
 | 單位責任歷程 | UNIQUE `annotation_history_event(run_id,assignment_id,event_no)`；如 DESC 排序實測不足再建 `(run_id,assignment_id,event_no DESC)` | 同單位最新事件可倒讀唯一索引；避免先預建重複 DESC 索引 |
-| membership／來源 FK 反查 | 六個 membership FK 各以該欄起首的完整索引；`annotation_history_event` 四個來源 FK（含 `review_revision_id`）各有單欄索引；`annotation_arbitration_vote(review_revision_id)` | FK 反查須涵蓋歷史／失效列，不能只靠部分索引；submission reviewer 的既列複合索引已覆蓋，draft 的本人部分索引仍需 reviewer 完整索引。實作時刪除任何被查詢計畫證明重複的索引 |
+| 工時完成事件歸屬 | `annotation_history_event(account_session_id,run_id,occurred_at,id)` | 依真實 session、run 與報表日掃描已提交事件；左前綴覆蓋 session FK 反查，不另建同欄索引；舊／系統空值列不可推定 session |
+| membership／來源 FK 反查 | 六個 membership FK 各以該欄起首的完整索引；`annotation_history_event` 四個來源 FK（含 `review_revision_id`）各有單欄索引；`annotation_arbitration_vote(review_revision_id)` | FK 反查須涵蓋歷史／失效列，不能只靠部分索引；session FK 已由上列索引左前綴覆蓋；submission reviewer 的既列複合索引已覆蓋，draft 的本人部分索引仍需 reviewer 完整索引。實作時刪除任何被查詢計畫證明重複的索引 |
 
 ## 6. SQLite／PostgreSQL、交易與資料隔離
 
@@ -336,6 +341,6 @@ UNIQUE 單位鍵阻擋兩位 reviewer 並列正式提交。首次提交者的 st
 1. **爭議鍵落地前決策**：015 v12.0.0 已將 FR-059(4)、FR-061(7)(a) 與 `OutputAnswer` 對齊 `{start,end,label}` span，並以 AC-7.4 規劃不碰撞驗收。仍須在 migration 前固定 `item_key` 的型別化 canonical encoding、版本與實際無碰撞測試；`entity_recognition` CompactAnswer 的位置落差尚待獨立裁決。§3.5 目前只定候選型別。
 2. **V1 規劃契約與實作界線**：首次 reviewer 提交後凍結 annotator 來源、首票後凍結 reviewer 改判、同單位全爭議鍵一次 batch／每鍵一票、未提交草稿重派保留舊嘗試，已回寫 014 v7.0.0／015 v12.0.0 的 FR／AC／SC；本文件仍只是未部署候選字典，尚無 ORM、migration、API 或雙資料庫並發證據。未來重啟仲裁須另立明示流程，不能暗藏多票／覆寫規則。
 3. **父端與完成語意**：`task_annotation_assignment` 的完整 status 值域、未指派／排除轉換仍待 task/run 字典 §7 收斂；`exclude_from_dataset` 是輸出項目層級，與整個 assignment 的 `task_annotation_exclusion`、run 完成分母及導出語意須在 014／015 對齊。不可由此新增 GoldRecord、IAA、品質或 export 表。
-4. **稽核與保留**：`annotation_history_event` 和共用 `audit_events` 的寫入責任及去重、舊值事件 migration 相容、答案／理由／個資留存期限、帳號刪除與匿名化、各 FK `ON DELETE` 需先有政策。暫以 RESTRICT 保留證據，未授權 cascade；append-only 的 DB trigger 與受限稽核讀權在 migration PR 決定。
+4. **稽核與保留**：`annotation_history_event` 和共用 `audit_events` 的寫入責任及去重、舊值事件 migration 相容、答案／理由／個資留存期限、帳號刪除與匿名化、各 FK `ON DELETE` 需先有政策。工時候選先以一年為最低保留期，session 與事件引用採 RESTRICT，不設自動清除；確切最長期間與匿名化順序須在 migration 前裁決。append-only 的 DB trigger 與受限稽核讀權在 migration PR 決定。
 
-**交付狀態：8 張未部署候選表、82 欄；單欄 FK 14 個，另有 6 組 assignment 複合 FK。** 數量與限制是審查基線，須經來源一致性檢查、OpenSpec Source-Verify 與未來雙資料庫 Red／Green 才能作為落地參考，NoteCraft 投影也不等於已部署 Schema。
+**交付狀態：8 張未部署候選表、83 欄；單欄 FK 15 個，另有 6 組 assignment 複合 FK。** 數量與限制是審查基線，須經來源一致性檢查、OpenSpec Source-Verify 與未來雙資料庫 Red／Green 才能作為落地參考，NoteCraft 投影也不等於已部署 Schema。

@@ -6,6 +6,7 @@
 **Amended**: 2026-10-06 — ADR-037 makes the current role check one input to permission-matrix authorization (issue #1160 D-9)
 **Amended**: 2026-10-06 — issue #1160 token-family 3NF, per-request `sid`/credential checks, bounded grace reissue, and cross-database email identity
 **Amended**: 2026-10-08 — issue #1160 session table/FK naming and explicit logout timestamp (planning contract only)
+**Amended**: 2026-10-08 — issue #1160 historical work interval retention and session foreign-key ownership (planning contract only)
 
 ## Context
 
@@ -112,6 +113,8 @@ def require_role(*allowed: UserRole) -> Callable[..., Awaitable[User]]:
 ### Refresh Token Store
 
 `account_session` stores one login session: UUID `id`, `user_id` FK to `users`, non-null UTC `started_at`, nullable `revoked_at`, and nullable `logged_out_at`. `revoked_at` records invalidation for any reason. `logged_out_at` records only verifiable explicit logout, is written in the same transaction as `revoked_at`, and must not be later than it. `refresh_tokens` stores one issued token: UUID `id`, `session_id` FK to `account_session.id`, unique `token_hash`, `expires_at`, `revoked_at`, `revoked_reason`, and nullable `grace_reissued_at`. It does **not** duplicate session `user_id` or `started_at`. `users.credential_version` is a non-null integer; `users.hashed_password` may be null when no local password exists. `users` and `refresh_tokens`, and columns `role` and `is_active`, are explicit legacy naming exceptions to foundation FR-105; new tables use singular module-prefixed names.
+
+Historical retention for authenticated work intervals and annotation events requires retaining their `account_session` parent after a token is revoked. The candidate `users → account_session` delete rule is RESTRICT rather than CASCADE; a normal hard delete cannot erase work or audit history. Retention does not make a revoked session valid and never revives an access JWT or refresh token. The one-year minimum is provisional; maximum retention and privacy deletion order must be settled before migration. `logged_out_at` remains null when only a security revocation or unverifiable cookie cleanup occurred; `revoked_at` is not an inferred logout or online-duration endpoint.
 
 These records are a planning contract for both SQLite quick-start and PostgreSQL production; no auth session table is deployed yet. This enables:
 

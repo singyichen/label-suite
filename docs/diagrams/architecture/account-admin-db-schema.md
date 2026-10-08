@@ -7,7 +7,7 @@
 - **範圍**：account 001–005、account-020、admin-006、admin-007。admin-007 規格仍為 **Draft**；Accepted ADR-037 已裁決保留兩張可編輯矩陣候選表。
 - **不歸屬任何單一 spec**：同一張 `users` 表被 001、003、005、006 共同修改，因此放在 `docs/diagrams/architecture/`，不隨任何 spec 進 `specs/_archive/`。各 spec 的 plan.md「實體與資料模型」段落應連結本文件，不各自複製欄位表。
 - **狀態：草稿**。九張表均為候選，尚未建立 migration；其他模組的實體鍵與 FK 仍需另行設計，不得據此宣稱已部署。
-- **NoteCraft 規劃檢視**：[`database-schema.er.json`](./database-schema.er.json) 對應 `/view/diagrams/architecture/database-schema.er` 的 Wiki／Diagram。本文件 §3 供應其中 account/admin 的 9 張候選表（64 欄、6 個候選單欄 FK）；[dataset 字典](./dataset-db-schema.md)另供應 5 張／31 欄／6 FK，[task/run 字典](./task-run-db-schema.md)供應 13 張／112 欄／15 FK，[annotation/review 字典](./annotation-review-db-schema.md)供應 8 張／82 欄／14 FK，[匯出字典](./task-export-db-schema.md)供應 2 張候選表／27 欄／2 個候選單欄 FK，全圖合計 37 張候選表／316 欄／43 個候選單欄 FK。兩張權限矩陣表已由 ADR-037 確認保留為候選，目前已落地業務表仍為 0。quality／IAA 專用表依 MVP 範圍延後，工時仍在[盤點總帳](./database-table-inventory.md)待逐表設計。改動任一欄位字典後執行 `node scripts/check-database-schema.mjs` 檢查投影差異。
+- **NoteCraft 規劃檢視**：[`database-schema.er.json`](./database-schema.er.json) 對應 `/view/diagrams/architecture/database-schema.er` 的 Wiki／Diagram。本文件 §3 供應其中 account/admin 的 9 張候選表（64 欄、6 個候選單欄 FK）；[dataset 字典](./dataset-db-schema.md)另供應 5 張／31 欄／6 FK，[task/run 字典](./task-run-db-schema.md)供應 13 張／112 欄／15 FK，[annotation/review 字典](./annotation-review-db-schema.md)供應 8 張／83 欄／15 FK，[匯出字典](./task-export-db-schema.md)供應 2 張候選表／27 欄／2 個候選單欄 FK，[工時字典](./task-work-db-schema.md)供應 1 張／11 欄／0 個單欄 FK（另有三組複合 FK），全圖合計 38 張候選表／328 欄／44 個候選單欄 FK。兩張權限矩陣表已由 ADR-037 確認保留為候選，目前已落地業務表仍為 0。quality／IAA 專用表依 MVP 範圍延後。改動任一欄位字典後執行 `node scripts/check-database-schema.mjs` 檢查投影差異。
 - **驗證方式**：本文件不執行 SQL。每條限制的正確性在實作時由 Alembic migration 的 upgrade／downgrade／roundtrip 測試，以及 §4 指定的測試驗證。
 
 ## 1. 關鍵設計決定
@@ -54,7 +54,7 @@ erDiagram
     }
     account_session {
         uuid id PK
-        uuid user_id FK "indexed; CASCADE"
+        uuid user_id FK "indexed; RESTRICT"
         timestamptz started_at "登入起點"
         timestamptz revoked_at "nullable"
         timestamptz logged_out_at "可空；僅明確登出"
@@ -120,7 +120,7 @@ erDiagram
         timestamptz updated_at
     }
 
-    users ||--o{ account_session : "登入（連動刪除）"
+    users ||--o{ account_session : "登入（保留歷程；刪除受限）"
     account_session ||--o{ refresh_tokens : "輪替（連動刪除）"
     users ||--o{ account_password_token : "reset / invite (CASCADE)"
     users ||--o{ account_email_change_request : "email change (<=1 pending)"
@@ -179,7 +179,7 @@ erDiagram
 | 欄位 | 型別 | 可空 | 代表什麼 | 何時寫入／改變 | 規則 |
 |---|---|---|---|---|---|
 | `id` | uuid | 否 | 一次登入的內部識別碼，由應用程式產生 | 建立 session 時 | F-01 |
-| `user_id` | uuid → users | 否 | 這次登入所屬帳號；FK 採 CASCADE，另建 B-tree 索引 | 登入時 | F-01、F-02 |
+| `user_id` | uuid → users | 否 | 這次登入所屬帳號；為保留工時與責任歷程，FK 採 ON DELETE RESTRICT | 登入時 | F-01、F-02、F-06 |
 | `started_at` | timestamptz | 否 | 最初登入時間，為 refresh token 絕對最長存續時間的唯一基準 | 登入時 | F-01、F-03 |
 | `revoked_at` | timestamptz | 是 | 工作階段因任何原因失效的時間；null＝未撤銷，不能單獨證明明確登出 | 明確登出、跨裝置作廢、高風險事件或重用偵測時 | F-02、F-04、F-05 |
 | `logged_out_at` | timestamptz | 是 | 可驗證的明確登出成功時間；null＝未證實明確登出 | 明確登出成功且與 `revoked_at` 同一交易寫入時 | F-05 |
@@ -310,11 +310,12 @@ migration 種入唯一允許的 `id = 1` 列。PK 與 CHECK 只能保證最多�
 
 | ID | 類型 | 規則 | 執行位置 | 實作時驗證 | 來源 |
 |---|---|---|---|---|---|
-| F-01 | CK | `id` 為非空唯一 UUID PK；`user_id` 為非空 FK 至 `users.id`，`started_at` 非空且以 UTC 保存 | DB | DB：不存在的 user FK 及 null 值失敗；M：SQLite＋PG roundtrip | account-020 FR-001 |
-| F-02 | XT | `user_id` 建 B-tree 索引以支援帳號層級撤銷；單裝置登出只撤銷對應 `sid` 工作階段，全部登出以 `user_id` 找到有效工作階段 | DB 索引＋應用層同一交易 | SVC：登出 A 不影響 B；DB：可用該索引按使用者查工作階段 | account-020 FR-007／FR-008 |
+| F-01 | CK | `id` 為非空唯一 UUID PK；`user_id` 為非空 FK 至 `users.id`，採 ON DELETE RESTRICT 保留已被工時與責任歷程引用的登入工作階段；`started_at` 非空且以 UTC 保存 | DB | DB：不存在的 user FK 及 null 值失敗；有 session 的 user 不可硬刪；M：SQLite＋PG roundtrip | account-020 FR-001、FR-008；014 FR-007d |
+| F-02 | XT | `user_id` 以 UNIQUE `(user_id,id)` 的左前綴支援帳號層級撤銷；單裝置登出只撤銷對應 `sid` 工作階段，全部登出以 `user_id` 找到有效工作階段 | DB 唯一鍵＋應用層同一交易 | SVC：登出 A 不影響 B；DB：按使用者查工作階段可使用該唯一鍵 | account-020 FR-007／FR-008 |
 | F-03 | XT | `started_at` 是絕對存續上限的唯一來源；每個已認證請求與 refresh 都必須查到未撤銷的工作階段、啟用的使用者，並檢查 `now < started_at + REFRESH_TOKEN_ABSOLUTE_MAX_TTL`；登入及 refresh 核發的 access JWT `exp` 亦不得超過此上限 | 應用層；跨表和設定值不能由 token 列 CHECK | API：即使 JWT 自身未到期，工作階段超過上限仍拒絕；SVC：接近上限輪替不延長 | account-020 FR-002／FR-003／SC-009、foundation FR-076 |
 | F-04 | SM | `revoked_at` 一旦設定不可回復；單裝置明確登出、密碼修改、email 變更、停用或逾期重用依 FR-004／FR-006／FR-007 範圍設定 | 應用層 | SVC：重新啟用不恢復工作階段；逾期重用撤銷使用者全部工作階段 | account-020 FR-004／FR-006／FR-007／FR-008 |
 | F-05 | CK／XT | `logged_out_at` 只在可驗證的明確登出成功時與 `revoked_at` 同交易寫入；資料庫檢查 `logged_out_at IS NULL OR (revoked_at IS NOT NULL AND logged_out_at <= revoked_at)`。僅以 cookie 登出、權杖到期或安全撤銷時維持 null；資料庫檢查無法判定事件原因 | DB CHECK＋應用層單一交易 | DB：有登出時間卻無撤銷時間，或登出時間晚於撤銷時間均失敗；SVC：明確登出同時寫入兩欄，其他失效原因不寫登出時間 | account-020 FR-001／FR-008、ADR-021 |
+| F-06 | CK | UNIQUE `(user_id,id)` 是 `task_work_interval(user_id,account_session_id)` 複合 FK 的同序父鍵；登入工作階段及其歷程刪除均採 RESTRICT 候選，不因 refresh token 清理而刪除 session | DB | SQLite／PostgreSQL：跨使用者工作區間寫入失敗；清理 token 後歷史 session 仍可供報表追溯 | 014 FR-007d、account-020 FR-008；[工時字典](./task-work-db-schema.md) W-02 |
 
 ### 4.3 refresh_tokens
 
@@ -412,7 +413,7 @@ Accepted ADR-037 已確認保留兩張可編輯矩陣候選表。以下是後續
 | 每請求驗證 `sub`／`sid`、單列 refresh | `users.id`、`account_session.id`、`refresh_tokens.id` 的 PK | 按主鍵定位；`credential_version` 只在定位後比對，不另建索引 |
 | 註冊／邀請／登入／改 email 比對帳號 | `UNIQUE lower(users.email)` | canonical 值的第二層唯一防線；Unicode 識別仍以應用層 NFC＋casefold 為準 |
 | 依 token 原值雜湊查找 | `UNIQUE refresh_tokens.token_hash` | 唯一定位；不存明文 token |
-| 使用者全裝置撤銷與列出工作階段 | `account_session.user_id` B-tree | FK 並作 `WHERE user_id = ?`；全帳號作廢要能尋得所有工作階段 |
+| 使用者全裝置撤銷與列出工作階段 | UNIQUE `account_session(user_id,id)` | 左前綴覆蓋 `WHERE user_id = ?` 與父端複合 FK；先不另建重複的單欄索引 |
 | 輪替／刪除工作階段時查找 token | `refresh_tokens.session_id` B-tree | FK 並作 `WHERE session_id = ?`；避免工作階段至權杖 全表掃描 |
 | 密碼／邀請 token、email 變更依 user 查找 | `account_password_token.user_id`、`account_email_change_request.user_id` B-tree | 各 FK 查詢及參照動作；部分唯一索引只涵蓋 pending 列，不取代全 FK 索引 |
 | 使用者／角色抽屜讀取目標歷程 | `audit_events(target_type, target_id, occurred_at DESC, id DESC)` | 以目標識別與穩定的倒序鍵分頁；`target_id` 為多型字串，不虛構目標 FK |

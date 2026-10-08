@@ -390,7 +390,7 @@ R1 與 Rn 的序號只在發布週期內唯一；`sampling_value` 保存實際�
 | G-01 | DB | guideline PK、`task_id` FK；UNIQUE `(task_id,id)` 為同 task 版本參照目標 | 013 `TaskGuidelineConfig` |
 | G-02 | DB | `version_no > 0`、UNIQUE `(task_id,version_no)`；四內容欄任一真實變更才新增版本 | 014 FR-017a |
 | G-03 | SVC | 四內容欄保留 immutable；資產 JSON 驗證、digest 與檔案保留政策須一致；`force_guideline` 不觸發新版本 | 013 `TaskGuidelineConfig`、014 FR-017a |
-| M-01 | DB | membership PK、task/user 真 FK；UNIQUE `(task_id,id)` 供受派者與 roster 複合 FK | ADR-037、014 `TaskMembership` |
+| M-01 | DB | membership PK、task/user 真 FK；UNIQUE `(task_id,id)` 供受派者與 roster 複合 FK；另建同序 UNIQUE `(task_id,id,user_id)` 供工時區間驗證同一任務、成員與使用者，防跨人掛載 | ADR-037、014 `TaskMembership`／FR-007d；[工時字典](./task-work-db-schema.md) W-02 |
 | M-02 | DB | UNIQUE `(task_id,user_id,task_role)`；一人多角色是多列，角色限現行 `TASK_ROLES` | ADR-037 §Boundaries、014 `TaskMembership` |
 | M-03 | SVC | 停用後即時失權，已提交歷史保留；未提交 slot 退回池但不更換 assignment ID | ADR-037 §Persistence、014 FR-005l |
 | R-01 | DB＋SVC | roster 複合 PK `(task_id,reviewer_membership_id)`、FK → membership `(task_id,id)`；服務另驗角色 reviewer 與 active | 014 FR-010s-1 |
