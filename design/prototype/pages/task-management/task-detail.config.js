@@ -267,16 +267,7 @@ function bindTaskConfigEvents() {
   /* Live validation (FR-026 (3)): parse-only, so Visual keeps the last valid
      config while the draft is invalid; 套用 stays disabled until it parses. */
   function validateCodeDraft() {
-    var raw = el('codeEditor').value;
-    var message = '';
-    try {
-      var parsed = (state.codeFormat === 'json' || raw.trim().startsWith('{') || raw.trim().startsWith('['))
-        ? JSON.parse(raw)
-        : parseYamlSubset(raw);
-      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) message = t('errCodeInvalid');
-    } catch (err) {
-      message = err.message || t('errCodeInvalid');
-    }
+    var message = parseCodeDraft(el('codeEditor').value).message || '';
     el('codeErrorBar').classList.toggle('hidden', !message);
     if (message) setText('codeErrorMsg', message);
     el('saveCodeBtn').disabled = Boolean(message);

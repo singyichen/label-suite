@@ -4771,10 +4771,9 @@ function loadConfigFile(file) {
   reader.readAsText(file);
 }
 
-function saveCodeToVisual(showSuccessToast) {
-  var schema = state.taskType ? REGISTRY[state.taskType] : null;
-  if (!schema) return false;
-  var raw = el('codeEditor').value;
+/* Parse the Code editor content. Returns { parsed } on success or { message }
+   on a syntax / shape error; shared by saveCodeToVisual and host live validation. */
+function parseCodeDraft(raw) {
   var parsed;
   try {
     if (state.codeFormat === 'json' || raw.trim().startsWith('{') || raw.trim().startsWith('[')) {
@@ -4783,15 +4782,24 @@ function saveCodeToVisual(showSuccessToast) {
       parsed = parseYamlSubset(raw);
     }
   } catch (err) {
-    el('codeErrorBar').classList.remove('hidden');
-    setText('codeErrorMsg', err.message || t('errCodeInvalid'));
-    return false;
+    return { message: err.message || t('errCodeInvalid') };
   }
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    return { message: t('errCodeInvalid') };
+  }
+  return { parsed: parsed };
+}
+
+function saveCodeToVisual(showSuccessToast) {
+  var schema = state.taskType ? REGISTRY[state.taskType] : null;
+  if (!schema) return false;
+  var draft = parseCodeDraft(el('codeEditor').value);
+  if (draft.message) {
     el('codeErrorBar').classList.remove('hidden');
-    setText('codeErrorMsg', t('errCodeInvalid'));
+    setText('codeErrorMsg', draft.message);
     return false;
   }
+  var parsed = draft.parsed;
 
   /* ADR-029 unified output composition. Keep the selected output order from
      Step 1, but replace each config atomically after the whole payload passes. */
