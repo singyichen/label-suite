@@ -421,7 +421,7 @@ R1 與 Rn 的序號只在發布週期內唯一；`sampling_value` 保存實際�
 | I-01 | DB | run-item 複合 PK `(task_run_id,dataset_item_id)`；公開 `dataset_item_id` 真 FK | 014 `RunItem` |
 | I-02 | DB＋SVC | `(task_run_cycle_id,task_run_id)`→run `(task_run_cycle_id,id)`；UNIQUE `(task_run_cycle_id,dataset_item_id)` 阻擋當 cycle 任兩 run 重選；item→batch→version 與 sealed 資格需發布交易驗證 | 014 FR-010b／FR-010f-6、dataset 字典 §4 I-01 |
 | I-03 | DB | `list_position > 0`、UNIQUE `(task_run_id,list_position)`；順序與 manifest digest 一致由服務驗 | 014 `RunItem` |
-| A-01 | DB | assignment PK；`(task_id,task_run_id)`→run `(task_id,id)`、`(task_run_id,dataset_item_id)`→run item 複合 FK、`(task_id,assignee_membership_id)`→membership `(task_id,id)` | 014 `AnnotationAssignment` |
+| A-01 | DB | assignment PK；UNIQUE `(task_run_id,id)` 為標記／審核六張子表的 `(run_id,assignment_id)` 複合 FK 提供同序父鍵；`(task_id,task_run_id)`→run `(task_id,id)`、`(task_run_id,dataset_item_id)`→run item 複合 FK、`(task_id,assignee_membership_id)`→membership `(task_id,id)` | 014 `AnnotationAssignment`、標記／審核字典 X-01 |
 | A-02 | DB＋SVC | `slot_no > 0`、UNIQUE `(task_run_id,dataset_item_id,slot_no)`；Official 每 item 只一 slot、Dry 依活躍標記員數為服務交易規則 | 014 FR-010f-4 |
 | A-03 | DB＋SVC | 非空 assignee 的部分 UNIQUE `(task_run_id,dataset_item_id,assignee_membership_id)`；active annotator 角色及重指派資格由服務當次驗 | 014 FR-005l／FR-010f-4 |
 | A-04 | SVC | 空 assignee 不是排除；提交與排除不混算，已提交不可因停用被抹除；狀態值域待 §7 | 014 FR-005h／FR-005l／FR-010u |
@@ -442,6 +442,7 @@ R1 與 Rn 的序號只在發布週期內唯一；`sampling_value` 保存實際�
 | run 歷史及重試 | `(task_run_cycle_id,run_type,created_at,id)`、UNIQUE `(task_id,publication_idempotency_key)` | 第一個支援有界歷程；第二個擋重試衝突；兩者增加發布成本 |
 | 當 cycle 已用 item | UNIQUE `(task_run_cycle_id,dataset_item_id)` | 防重選並加速剩餘池反查；PK `(task_run_id,dataset_item_id)` 已支援單 run item |
 | run 清單順序 | UNIQUE `(task_run_id,list_position)` | 避免全表排序；重複 run_id 單欄索引無益 |
+| 標記／審核子表的工作位參照 | UNIQUE `(task_run_id,id)` | 六張子表以同序複合 FK 指向工作位；此鍵左側前綴亦覆蓋 run 反查，不另建重複的 `task_run_id` 單欄索引 |
 | 受派者待辦 | `(assignee_membership_id,task_run_id,id)` | PK/slot 唯一鍵無法覆蓋 assignee 起首查詢；依待辦實測調整 |
 | FK 反查 | `task(created_by_user_id)`、`task(dataset_version_id)`、`task_run_cycle(dataset_version_id)`、`task_run_item(dataset_item_id)`、`task_annotation_exclusion(excluded_by_user_id)` | 父刪除檢查或業務反查；若複合索引左前綴已涵蓋則移除重複項 |
 
