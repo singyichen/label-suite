@@ -19,5 +19,5 @@
 
 **故事目標**：dataset-021 SC-006 — 閘門與 archive 後的衍生檢視保留 FR-011 政策。
 
-- [ ] 3.1 執行 OpenSpec schema 驗證、Project SDD lint、檢查器測試與 `check-database-schema.mjs`。 [@main]
-- [ ] 3.2 Source-Verify 預掃後 archive 並核對衍生檢視 FR 引用、版本與 Changelog，更新 `specs/STATUS.md`。 [@main]
+- [x] 3.1 執行 OpenSpec schema 驗證、Project SDD lint、檢查器測試與 `check-database-schema.mjs`。 [@main]
+- [x] 3.2 Source-Verify 預掃後 archive 並核對衍生檢視 FR 引用、版本與 Changelog，更新 `specs/STATUS.md`。 [@main]
