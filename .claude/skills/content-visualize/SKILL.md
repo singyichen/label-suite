@@ -99,6 +99,7 @@ status: pending | generated | locked | failed
   - 樣式使用 Tailwind utility classes；除非動畫需要，否則不要寫原生 CSS
   - 純 SVG 元件請設定 `viewBox` 並用 `width="100%"` 讓它可縮放；挑一個合理的長寬比
   - motion 元件預設動畫保持節制（200–400ms、ease-out）；並透過 `motion/react` 的 `useReducedMotion()` 尊重 `prefers-reduced-motion`
+  - **SSR 就要輸出最終的版面高度**：`client:visible` 的元件在伺服器端先渲染一次，hydrate 時若高度改變，會把下方內文往下推。**不要**用 `inView && <X />`、`mounted && <X />` 這類條件讓內容「進入視窗或掛載後才出現」；內容一律 render，只把進場動畫的 `animate` 狀態綁在 `useInView` 上（例：`animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}`）。需要量測容器寬度才能畫的部分（`ResizeObserver`），容器本身先以固定比例或 `min-height` 佔好位置。`useReducedMotion()` 在伺服器端恆為 `false`，不要用它切換「顯示哪些內容」，只用它切換動畫參數
 - 目標是讓元件看起來像「一位用心的設計師寫出來的」，而不是「程式生成的產物」。具體的顏色與間距，永遠勝過通用的灰色方塊。
 
 ### 4. 驗證
