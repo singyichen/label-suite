@@ -140,7 +140,7 @@ test('NoteCraft records exported_at within the complete 40-table projection', ()
   assert.ok(exportedAt, 'NoteCraft must show task_export.exported_at');
   assert.equal(exportedAt.type, 'timestamptz');
   assert.equal(exportedAt.required, 'nullable');
-  assert.deepEqual(summaryCounts(data).map(([count]) => count), [40, 342, 47]);
+  assert.deepEqual(summaryCounts(data).map(([count]) => count), [40, 350, 34]);
 });
 
 test('NoteCraft projection matches export dictionary tables, columns, types and keys', () => {

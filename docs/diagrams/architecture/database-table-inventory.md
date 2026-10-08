@@ -11,10 +11,10 @@
 | 層級 | 目前可用資料 | 用法 |
 |---|---|---|
 | 實際資料結構 | Alembic revision／ORM：0 張業務表 | 日後以資料庫遷移和資料庫 metadata 反查已落地狀態 |
-| 實體層草案 | [帳號／管理資料結構](./account-admin-db-schema.md)：10 張／73 欄／8 單欄 FK；[資料集資料結構](./dataset-db-schema.md)：5 張／31 欄／6 單欄 FK；[任務／執行資料結構](./task-run-db-schema.md)：14 張／117 欄／16 單欄 FK；[工時資料結構](./task-work-db-schema.md)：1 張／11 欄／0 單欄 FK；[標記／審核資料結構](./annotation-review-db-schema.md)：8 張／83 欄／15 單欄 FK；[任務匯出資料結構](./task-export-db-schema.md)：2 張／27 欄／2 單欄 FK | 六份字典合計 40 張候選表、342 欄、47 個單欄 FK；複合 FK 另見各字典 §4。仍須獨立資料庫遷移與雙資料庫驗證，均非已部署資料結構 |
+| 實體層草案 | [帳號／管理資料結構](./account-admin-db-schema.md)：10 張／73 欄／8 單欄 FK；[資料集資料結構](./dataset-db-schema.md)：5 張／31 欄／6 單欄 FK；[任務／執行資料結構](./task-run-db-schema.md)：14 張／117 欄／16 單欄 FK；[工時資料結構](./task-work-db-schema.md)：1 張／11 欄／0 單欄 FK；[標記／審核資料結構](./annotation-review-db-schema.md)：8 張／91 欄／2 單欄 FK；[任務匯出資料結構](./task-export-db-schema.md)：2 張／27 欄／2 單欄 FK | 六份字典合計 40 張候選表、350 欄、34 個單欄 FK；複合 FK 另見各字典 §4。仍須獨立資料庫遷移與雙資料庫驗證，均非已部署資料結構 |
 | 概念層 | [跨模組 ER 圖](./core-data-model-er.md)：規格實體、推導值與投影 | 用於發現缺表與錯誤的關聯假設，不能直接當 DDL |
 
-**NoteCraft 規劃檢視**：[開啟 Wiki／Diagram](/view/diagrams/architecture/database-schema.er)（來源資料：`database-schema.er.json`）。目前收錄帳號／管理、資料集、任務／執行、工時、標記／審核與匯出的 **40 張候選表、342 欄與 47 個候選單欄 FK**。`task_trial_iaa_result` 是 MVP 試標閘門的逐回合結果證據；資料集分析專用報告表另於 MVP 後規劃。標記／審核的 8 張表依[實體字典](./annotation-review-db-schema.md)展示標記、審核草稿／提交、修訂、仲裁、例外與歷程；歷程可選擇關聯已驗證的登入工作階段。兩張匯出表保存請求原檔與有序執行範圍；`requested_at` 與內容快照 `exported_at` 分開。工時原始區間、複合 FK 與日投影見[工時實體字典](./task-work-db-schema.md) §3–§7；**已落地業務表仍為 0**。修改任一 §3 字典或 JSON 時執行 `node scripts/check-database-schema.mjs`；欄位與 FK 計數由檢查器重新計算。
+**NoteCraft 規劃檢視**：[開啟 Wiki／Diagram](/view/diagrams/architecture/database-schema.er)（來源資料：`database-schema.er.json`）。目前收錄帳號／管理、資料集、任務／執行、工時、標記／審核與匯出的 **40 張候選表、350 欄與 34 個候選單欄 FK**。`task_trial_iaa_result` 是 MVP 試標閘門的逐回合結果證據；資料集分析專用報告表另於 MVP 後規劃。標記／審核的 8 張表依[實體字典](./annotation-review-db-schema.md)展示標記、審核草稿／提交、修訂、仲裁、例外與歷程；歷程可選擇關聯已驗證的登入工作階段。兩張匯出表保存請求原檔與有序執行範圍；`requested_at` 與內容快照 `exported_at` 分開。工時原始區間、複合 FK 與日投影見[工時實體字典](./task-work-db-schema.md) §3–§7；**已落地業務表仍為 0**。修改任一 §3 字典或 JSON 時執行 `node scripts/check-database-schema.mjs`；欄位與 FK 計數由檢查器重新計算。
 
 ## 名詞說明：任務發布與執行
 
@@ -127,11 +127,11 @@ Label Suite 的對應做法：
 | 規格實體 → 候選資料落點 | 狀態 | 已知識別／關聯 | 正典與待決 |
 |---|---|---|---|
 | `AnnotationListItem` → `task_run_item`／assignment 投影 | 推導／投影 | 執行資料項目為 `(task_run_id,dataset_item_id)`；標記工作以穩定 assignment ID 定址 | 014／015；不另建清單表 |
-| `AnnotationRecord` → `annotation_record` | 實體草案 | `id` PK、`run_id × assignment_id` 複合 FK、作者成員資格單欄 FK；有效列部分唯一 | 015 FR-049／FR-105；答案為釘住設定驗證的 JSON，重派前舊草稿轉 abandoned |
-| 未提交審核員決策 → `annotation_review_draft` | 實體草案 | `id` PK、單位複合 FK、審核員成員資格 FK；有效草稿部分唯一 | 015 FR-014S；只本人可見，失權即失效 |
+| `AnnotationRecord` → `annotation_record` | 實體草案 | `id` PK、`task_id × run_id × assignment_id` 複合 FK、作者成員資格同任務複合 FK；有效列部分唯一 | 015 FR-049／FR-105；答案為釘住設定驗證的 JSON，重派前舊草稿轉 abandoned |
+| 未提交審核員決策 → `annotation_review_draft` | 實體草案 | `id` PK、單位複合 FK、審核員成員資格同任務複合 FK；有效草稿部分唯一 | 015 FR-014S；只本人可見，失權即失效 |
 | 正式 `ReviewDecision` → `annotation_review_submission`／`annotation_review_decision`／`annotation_review_submission_revision` | 實體草案 | 單位唯一 head、逐 outKey 唯一決策、不可變 revision | 015 FR-093／FR-103／FR-105；首票後凍結改判，提交必須完整且同交易 |
 | `DisputeItem` → 推導值；寫入票 → `annotation_arbitration_vote` | 推導／實體草案 | `run_id × assignment_id × output_key × item_key` 唯一票；指向不可變 review revision | 015 FR-052／FR-059／FR-061／FR-065；爭議 A/B 由來源推導，不建 `DisputeItem` 表 |
-| `reject` 收尾 → `annotation_exception_resolution` | 實體草案 | 同爭議鍵與 vote 各最多一筆 resolution；PL 成員資格 FK | 015 FR-095；exclude 只排除輸出項目，不刪公開資料項目 |
+| `reject` 收尾 → `annotation_exception_resolution` | 實體草案 | 同爭議鍵與 vote 各最多一筆 resolution；與 vote 為同鍵複合 FK；PL 成員資格同任務複合 FK | 015 FR-095；exclude 只排除輸出項目，不刪公開資料項目 |
 | `AnnotationHistoryItem` → `annotation_history_event` | 實體草案 | 單位內 `event_no` 唯一；審核事件指向不可變 revision；可空 `account_session_id → account_session` | 015 v12.1.0 FR-086～FR-091／FR-097；僅寫可驗證 session，舊事件與系統動作可空，敏感快照須按角色遮蔽 |
 | `OutputTypeIAAReport` → MVP 後品質分析報告 | MVP 後裁決 | `output_type`、metric、threshold、`pass_state` | dataset-017 FR-039；與 MVP 閘門證據 `task_trial_iaa_result` 分開，分析報告是否持久化與版本鍵留待 016／017 開發時裁決 |
 
@@ -170,26 +170,13 @@ erDiagram
     task_run_cycle ||--o{ task_sample_snapshot : task_run_cycle_id
     dataset_item ||--o{ task_run_item : dataset_item_id
     task_annotation_assignment ||--o| task_annotation_exclusion : assignment_id
-    task_membership ||--o{ annotation_record : author_membership_id
-    task_membership ||--o{ annotation_review_draft : reviewer_membership_id
-    task_membership ||--o{ annotation_review_submission : reviewer_membership_id
     annotation_review_submission ||--o{ annotation_review_decision : review_submission_id
-    annotation_review_submission ||--o{ annotation_review_submission_revision : review_submission_id
-    task_membership ||--o{ annotation_arbitration_vote : arbiter_membership_id
-    annotation_review_submission_revision ||--o{ annotation_arbitration_vote : review_revision_id
-    annotation_arbitration_vote ||--o| annotation_exception_resolution : arbitration_vote_id
-    task_membership ||--o{ annotation_exception_resolution : resolved_by_membership_id
-    task_membership ||--o{ annotation_history_event : actor_membership_id
     account_session ||--o{ annotation_history_event : account_session_id
-    annotation_record ||--o{ annotation_history_event : annotation_record_id
-    annotation_review_submission_revision ||--o{ annotation_history_event : review_revision_id
-    annotation_arbitration_vote ||--o{ annotation_history_event : arbitration_vote_id
-    annotation_exception_resolution ||--o{ annotation_history_event : exception_resolution_id
     task ||--o{ task_export : task_id
     users ||--o{ task_export : requested_by_user_id
 ```
 
-`task_work_interval` 的任務／執行／成員／登入工作階段關聯，以及 `task_run_item → task_run`、`task_run → task_sample_snapshot`、`task_annotation_assignment → task_run_item` 等同作用域關聯由複合 FK 候選約束表達，不能在這裡畫成單欄線。`annotation_record` 等六表到 assignment 的同單位關聯為複合 FK，不畫成單欄線；`ReviewUnit` 與 `DisputeItem` 仍為推導值。
+`task_work_interval` 的任務／執行／成員／登入工作階段關聯，以及 `task_run_item → task_run`、`task_run → task_sample_snapshot`、`task_annotation_assignment → task_run_item` 等同作用域關聯由複合 FK 候選約束表達，不能在這裡畫成單欄線。`annotation_record` 等六表到 assignment 的同單位關聯，以及這批表到 `task_membership`、候選名冊、revision、vote、resolution 與 history 來源的同任務／同單位關聯，皆為複合 FK，不畫成單欄線；`ReviewUnit` 與 `DisputeItem` 仍為推導值。
 
 ## 5. 在第一批資料庫遷移前要關閉的決策
 
@@ -197,7 +184,7 @@ erDiagram
 |---|---|---|---|
 | 已裁決／實作前待驗 | 通用稽核表形 | D-4 採 `audit_events`，所有事件至少留一個日曆年；`task_id` 已列可空真實 FK 候選，狀態與隔離時間線由兩種 typed action 投影。刪除與匿名化政策、建表順序及 SQLite／PostgreSQL 驗證仍待獨立實作；不得從候選表推定已落地 | Accepted ADR-032、014 FR-025、帳號／管理 §3.7／§4.6、任務／執行 §3.1 |
 | 已裁決 | 角色權限矩陣如何參與授權 | 兩張表保留為未部署候選；42 列初始格、固定格、CAS 與稽核目標依 ADR-037；執行階段與資料庫遷移另案實作 | Accepted ADR-037、admin-007 v1.2.0、帳號／管理 §4.7 |
-| 候選已定／實作前待驗 | 標記與審核的執行身分及黏著推導 | 014 v9.0.0／015 v12.1.0 已定 `run_id × assignment_id` 審核單位，試標 `run_id × dataset_item_id`、正式標記 `run_id × assignment_id` 推導黏著；不得建立 `ReviewAssignment` 表或將 #1165 三欄舊邏輯參照轉成 FK。八張標記／審核候選表及 15 個單欄 FK 已列字典；仍待資料庫遷移、爭議鍵編碼、保留政策與雙庫實測 | 014／015 關鍵實體、015 FR-049／FR-051／FR-093 |
+| 候選已定／實作前待驗 | 標記與審核的執行身分及黏著推導 | 014 v9.0.0／015 v12.1.0 已定 `run_id × assignment_id` 審核單位，試標 `run_id × dataset_item_id`、正式標記 `run_id × assignment_id` 推導黏著；不得建立 `ReviewAssignment` 表或將 #1165 三欄舊邏輯參照轉成 FK。八張標記／審核候選表、2 個單欄 FK 及 20 組複合 FK 已列字典；仍待資料庫遷移、爭議鍵編碼、保留政策與雙庫實測 | 014／015 關鍵實體、015 FR-049／FR-051／FR-093 |
 | 候選已定／實作前待驗 | 資料項目、隱藏答案與來源沿革的五表邊界 | dataset-021 與字典已定逐檔分類、公開／私有分表及完整版本；清單編碼、保留政策、任務／執行綁定與雙資料庫實測仍需後續工作 | dataset-021 FR-001～FR-011、[資料集字典](./dataset-db-schema.md)；主憲法 III／XIV／XVI |
 | 候選已定／實作前待驗 | MVP 試標完成證據 | `task_trial_iaa_result` 已有一回合一列的六欄候選；`done` 與完整結果同交易，兩個離開試標的閘門均查結果。演算法、registry、交易與兩庫實測仍屬後續實作 | 014 FR-010o-5、任務／執行字典 §3.8／Q-06～08 |
 | MVP 後 | 資料集分析報告是否另有表與版本鍵 | `TaskConfig`／`TaskGuidelineConfig` 已有候選版本表；016／017 的 `OutputTypeIAAReport`、品質排名及異常偵測專用表留待模組正式開發時裁決，不與 MVP 閘門結果混為一張報告表 | 013／014／017 關鍵實體、任務／執行字典 §3.8 |
