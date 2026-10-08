@@ -460,7 +460,7 @@ JSON config 與覆寫不先建 GIN；只有實際 JSON key predicate 與執行�
 1. **migration 可用性**：13 張表的 SQL 長度、部分預設、append-only DB trigger、FK `ON DELETE`、索引精確成本與 migration 順序仍是候選；`task` ↔ config/guideline 的初建循環如何達成提交時 NOT NULL 尚需決策。這些不由可渲染 ERD 代替。
 2. **規格內容編碼**：`config_payload`／guideline 資產 JSON 的 canonical bytes、registry 保留與檔案生命週期；snapshot `selection_manifest_ref`、有序 ID digest 與原子外部回執格式；seed／演算法版本型別及重播策略需在 runtime 前定義。
 3. **工作 slot**：`task_annotation_assignment.status` 精確值域、狀態轉換、未提交草稿與受派者異動的競爭控制，及 Official「每 item 恰一 slot」的服務／DB 驗證策略；本字典不憑原型狀態猜 enum。
-4. **其他實體**：`task_status_transition` 的獨立歷程與 `audit_events` 去重方式、`WorkLogEntry` 原始事件與日彙總、`IsolationAuditLog`、IAA 報告、annotation／review／仲裁及 export 表形另行裁決。ADR-022 的 `run_state_transitions` 是明示歷史示例；若另建狀態歷程，候選名為 `task_status_transition`，不算入本文件 13 張。
+4. **其他實體**：`task_status_transition` 的獨立歷程與 `audit_events` 去重方式、`WorkLogEntry` 原始事件與日彙總、`IsolationAuditLog` 仍待裁決；IAA 專用報告表依 MVP 範圍延後。[標記／審核／仲裁字典](./annotation-review-db-schema.md)與[匯出字典](./task-export-db-schema.md)已有未部署候選表形，不算入本文件 13 張。ADR-022 的 `run_state_transitions` 是明示歷史示例；若另建狀態歷程，候選名為 `task_status_transition`。
 5. **跨模組 FK**：dataset 字典的 item 版本經 `dataset_item → dataset_import_batch → dataset_version` 取得；本批不能捏造 `dataset_item.dataset_version_id` 或只靠 item FK 宣稱已保證同 cycle 版本。annotation/review 的 `run_id × assignment_id` 複合約束須由其 owning spec 的實體字典決定。
 
 **交付狀態：候選 13 表，已投影到 [NoteCraft Wiki／Diagram](./database-schema.er.json)，尚無業務 ORM／Alembic migration。** 上述待決事項關閉且雙資料庫測試通過後，才能稱為可執行 schema。
