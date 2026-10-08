@@ -461,7 +461,7 @@ test('section 7 audit-and-retention item and A-01 follow ADR-038', () => {
   const markdown = annotationMarkdown();
   const item = markdown.split('\n').find((line) => line.startsWith('4. **稽核與保留**'));
   assert.ok(item, 'Missing section 7 item 4');
-  for (const token of ['ADR-038', 'A-01', '待定', '#1224']) {
+  for (const token of ['ADR-038', 'A-01', '待定', '#1244']) {
     assert.ok(item.includes(token), `Section 7 item 4 must mention ${token}`);
   }
   assert.doesNotMatch(item, /需先有政策|須在 migration 前裁決/);

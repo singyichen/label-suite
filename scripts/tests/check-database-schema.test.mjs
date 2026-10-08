@@ -612,7 +612,7 @@ test('inventory section 5.2 is a decided retention policy with only 30 days and 
   const markdown = r1224('docs/diagrams/architecture/database-table-inventory.md');
   assert.ok(!markdown.includes('待決矩陣'), 'Inventory must no longer call the retention matrix 待決');
   const section = r1224Section(markdown, '### 5.2 保存、刪除與匿名化政策');
-  r1224Includes(section, ['ADR-038', '待定', '#1224', '30 日', '一個日曆年'], 'Inventory section 5.2');
+  r1224Includes(section, ['ADR-038', '待定', '#1244', '30 日', '一個日曆年'], 'Inventory section 5.2');
   assert.ok(!section.includes('待產品／隱私'), 'Section 5.2 must not defer to 待產品／隱私');
   for (const m of section.matchAll(/(\d+)\s*(?:日|天|個月|年)/g)) {
     assert.ok(m[1] === '30' && /[日天]$/.test(m[0]), `Disallowed numeric duration in section 5.2: "${m[0]}"`);
@@ -645,7 +645,7 @@ test('F-07 and ADR-038 condition revoked-session deletion on token expires_at (R
 test('U-17 references the U-05 seeder and U-08 last-active-super_admin preconditions as rejected or TBD', () => {
   const row = r1224Row(r1224('docs/diagrams/architecture/account-admin-db-schema.md'), '| U-17 |');
   r1224Includes(row, ['U-05', 'U-08'], 'U-17');
-  assert.match(row, /拒絕|待定（#1224）/);
+  assert.match(row, /拒絕|待定（#1244）/);
 });
 
 test('A-02 and ADR-032 body point at ADR-038 instead of deferring retention review', () => {
@@ -721,11 +721,11 @@ test('inventory 5.2 account_session row conditions deletion on token expiry', ()
   assert.match(row, /expires_at|到期/, 'account_session row must state the token-expiry condition');
 });
 
-test('inventory 5.2 audit row has no registry-marked personal keys claim and marks them 待定（#1224）', () => {
+test('inventory 5.2 audit row has no registry-marked personal keys claim and marks them 待定（#1244）', () => {
   const section = r1224Section(r1224('docs/diagrams/architecture/database-table-inventory.md'), '### 5.2 保存、刪除與匿名化政策');
   const row = r1224Row(section, '| 共用 `audit_events` 與 `annotation_history_event`');
   assert.ok(!row.includes('registry 標為個人'), 'Audit row must not claim registry-marked personal keys');
-  assert.ok(row.includes('待定（#1224）'), 'Audit row must mark personal payload_summary keys 待定（#1224）');
+  assert.ok(row.includes('待定（#1244）'), 'Audit row must mark personal payload_summary keys 待定（#1244）');
 });
 
 test('every line describing session cleanup deletion also states token expiry', () => {

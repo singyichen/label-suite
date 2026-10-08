@@ -150,7 +150,7 @@ The prototype (static HTML + localStorage, `design/prototype/`) is **exempt**: i
 
 ## Deferred Decisions
 
-- Decided by ADR-038 (#1224): after the one-calendar-year minimum only PII columns may be anonymized by the privileged migration-role path; events are never deleted and no automatic deletion is approved. Cadence and maximum retention remain TBD (#1224).
+- Decided by ADR-038 (#1224): after the one-calendar-year minimum only PII columns may be anonymized by the privileged migration-role path; events are never deleted and no automatic deletion is approved. Cadence and maximum retention remain TBD (#1244).
 - The editable matrix's audit target is now decided by ADR-037. Runtime implementation and retention enforcement remain separate work.
 - The 2026-10-08 ADR-022 amendment completed the `RunStateTransition` projection decision; no separate task transition audit table remains planned.
 - Whether an admin-facing audit UI ships in the first formal release or audit stays API-only.
