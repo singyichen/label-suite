@@ -3,6 +3,7 @@
  *   FR-010d
  */
 import { test, expect } from '@playwright/test';
+import { openSettingsSection } from './_task-detail-settings-helpers';
 
 /* Issue #195 / F-11 (WCAG 2.1 AA 2.4.3), A11Y-02 follow-up to the A11Y-01
  * fix already shipped for annotation-workspace's guideline modals (see
@@ -16,11 +17,13 @@ test.describe('Risk confirm modal keyboard focus management (A11Y-02, #riskModal
   async function openRiskModal(page: import('@playwright/test').Page) {
     await page.goto('/pages/task-management/task-detail.html?task_id=T001&status=draft');
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: 15000 });
+    await openSettingsSection(page, 'sampling');
     await page.locator('#samplingEditBtn').click();
     await page.locator('label[for="isolationToggle"]').click();
     await expect(page.locator('#isolationToggle')).not.toBeChecked();
     await page.locator('#samplingSaveBtn').click();
     await expect(page.locator('#samplingEditForm')).toHaveClass(/hidden/);
+    await page.locator('#tabOverview').click();
     await page.locator('#publishDryRunBtn').click();
     await expect(page.locator('#riskModal')).toHaveClass(/show/);
   }

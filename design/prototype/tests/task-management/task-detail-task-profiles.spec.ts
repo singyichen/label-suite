@@ -3,6 +3,7 @@
  *   FR-001, FR-013, FR-014, FR-014i, FR-014l, FR-014l-3, SC-011
  */
 import { test, expect } from '@playwright/test';
+import { openSettingsSection } from './_task-detail-settings-helpers';
 import path from 'path';
 
 const TASK_LIST_URL = '/pages/task-management/task-list.html?task_role=project_leader';
@@ -282,7 +283,7 @@ test.describe('Task detail profile mapping', () => {
       await expect(page.locator('#pageTitle')).toHaveText(task.name, { timeout: PANEL_LOAD_TIMEOUT });
       await expect(page.locator('#bcCurrent')).toHaveText(task.id);
 
-      const overview = page.locator('#overviewPanel');
+      const overview = page.locator('#settingsPanel');
       await expect(overview).toContainText(task.name);
       await expect(page.locator('#valueTaskType')).toHaveText(task.type);
       await expect(page.locator('#valueDatasetSummary')).toHaveText(task.datasetSummary);
@@ -349,6 +350,7 @@ test.describe('Task detail profile mapping', () => {
     test(`opens the settings edit form with one accordion per output for ${task.id}`, async ({ page }) => {
       await page.goto(`${TASK_DETAIL_URL}?task_id=${task.id}`);
 
+      await openSettingsSection(page, 'labeling');
       const editBtn = page.locator('#settingsEditBtn');
       await expect(page.locator('#statusBadge')).toContainText('草稿', { timeout: PANEL_LOAD_TIMEOUT });
       await expect(editBtn).toBeEnabled();
@@ -364,6 +366,7 @@ test.describe('Task detail profile mapping', () => {
     await page.goto(`${TASK_DETAIL_URL}?task_id=T003`);
 
     await expect(page.locator('#statusBadge')).toContainText('正式標記進行中', { timeout: PANEL_LOAD_TIMEOUT });
+    await openSettingsSection(page, 'labeling');
     await expect(page.locator('#settingsEditBtn')).toBeDisabled();
   });
 
@@ -371,12 +374,14 @@ test.describe('Task detail profile mapping', () => {
     await page.goto(`${TASK_DETAIL_URL}?task_id=T002`);
 
     await expect(page.locator('#statusBadge')).toContainText('待 IAA 確認', { timeout: PANEL_LOAD_TIMEOUT });
+    await openSettingsSection(page, 'labeling');
     await expect(page.locator('#settingsEditBtn')).toBeDisabled();
   });
 
   test('persists edited item pair labels across settings edit sessions for T011', async ({ page }) => {
     await page.goto(`${TASK_DETAIL_URL}?task_id=T011`);
 
+    await openSettingsSection(page, 'labeling');
     const editBtn = page.locator('#settingsEditBtn');
     await expect(page.locator('#statusBadge')).toContainText('草稿', { timeout: PANEL_LOAD_TIMEOUT });
     await editBtn.click();
@@ -395,6 +400,7 @@ test.describe('Task detail profile mapping', () => {
     await page.goto(`${TASK_DETAIL_URL}?task_id=T011`);
 
     /* Save custom labels first so the stale-pending path has a saved value */
+    await openSettingsSection(page, 'labeling');
     const settingsEditBtn = page.locator('#settingsEditBtn');
     await expect(page.locator('#statusBadge')).toContainText('草稿', { timeout: PANEL_LOAD_TIMEOUT });
     await settingsEditBtn.click();
@@ -402,11 +408,17 @@ test.describe('Task detail profile mapping', () => {
     await page.locator('#settingsSaveBtn').click();
     await expect(page.locator('#settingsEditForm')).toHaveClass(/hidden/);
 
+    await openSettingsSection(page, 'basic');
     await page.locator('#overviewEditBtn').click();
     await page.locator('#datasetFileInput').setInputFiles(
       path.join(__dirname, 'three-column-dataset.json'),
     );
     await expect(page.locator('#datasetFileList .upload-file-name')).toContainText('three-column-dataset.json');
+    /* Save-then-rederive path: FR-026 (2) forbids carrying an unsaved basic-info
+       edit into another section, so the replaced dataset is saved first and the
+       labels must be re-derived from it when 標記設定 opens for editing. */
+    await page.locator('#overviewSaveBtn').click();
+    await expect(page.locator('#overviewEditForm')).toHaveClass(/hidden/);
 
     /* FR-002c-8 auto-infers sentence_a/sentence_b as Input on load (name-hint
        match on "sentence"), so the generic-name fallback ("句子 A") no longer
@@ -414,6 +426,7 @@ test.describe('Task detail profile mapping', () => {
        With an Input assigned, getItemPairLabels() derives the label from the
        dataset column name instead. The saved NLI label must still not leak
        through regardless of which default path is taken. */
+    await openSettingsSection(page, 'labeling');
     await settingsEditBtn.click();
     await expect(page.getByTestId('item-pair-label-input-1')).toHaveValue('sentence_a');
     await expect(page.getByTestId('item-pair-label-input-1')).not.toHaveValue('前提');

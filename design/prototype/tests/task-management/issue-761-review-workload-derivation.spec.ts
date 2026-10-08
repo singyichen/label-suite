@@ -27,6 +27,7 @@
  * Overview does not redistribute anything.
  */
 import { test, expect, type Page } from '@playwright/test';
+import { openSettingsSection } from './_task-detail-settings-helpers';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 
@@ -111,6 +112,7 @@ test.describe('Issue #761 review workload derivation', () => {
     expect(linAssignedBefore).toBeGreaterThan(0);
 
     await page.locator('#tabOverview').click();
+    await openSettingsSection(page, 'review');
     await page.locator('#reviewEditBtn').click();
     await page
       .locator('#reviewerOptionList .reviewer-option', { hasText: '林佳蓉' })

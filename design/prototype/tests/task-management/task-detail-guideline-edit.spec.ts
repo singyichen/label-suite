@@ -3,6 +3,7 @@
  *   FR-014f-1, SC-013a
  */
 import { test, expect } from '@playwright/test';
+import { openSettingsSection } from './_task-detail-settings-helpers';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html?task_role=project_leader&task_id=T001';
 
@@ -17,6 +18,7 @@ test.describe('Task detail guideline edit state', () => {
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
     await expect(page.locator('#guidelineSectionTitle')).toHaveText('標記說明');
 
+    await openSettingsSection(page, 'guideline');
     const editBtn = page.locator('#guidelineEditBtn');
     const saveBtn = page.locator('#guidelineSaveBtn');
     const cancelBtn = page.locator('#guidelineCancelBtn');
@@ -46,6 +48,7 @@ test.describe('Task detail guideline edit state', () => {
     await page.goto(TASK_DETAIL_URL);
 
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
+    await openSettingsSection(page, 'guideline');
     await expect(page.locator('#guidelineEditBtn')).toBeEnabled();
 
     await page.evaluate(() => {

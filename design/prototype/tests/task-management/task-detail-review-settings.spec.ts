@@ -11,6 +11,7 @@
  * stale-arbiter cleanup on member disable, and the language toggle.
  */
 import { test, expect } from '@playwright/test';
+import { openSettingsSection } from './_task-detail-settings-helpers';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 const PANEL_LOAD_TIMEOUT = 15000;
@@ -18,6 +19,7 @@ const PANEL_LOAD_TIMEOUT = 15000;
 test.describe('Task detail review settings', () => {
   test('cancel with a dirty draft asks for confirmation and discards changes', async ({ page }) => {
     await page.goto(TASK_DETAIL_URL);
+    await openSettingsSection(page, 'review');
     await page.locator('#reviewEditBtn').click();
 
     await page
@@ -32,23 +34,21 @@ test.describe('Task detail review settings', () => {
     await expect(page.locator('#valueReviewerIdsControl')).toHaveText('已勾選 4 人');
   });
 
-  test('guards tab switches against unsaved review-setting changes', async ({ page }) => {
+  test('guards tab switches against unsaved review-setting changes via the leave modal', async ({ page }) => {
     await page.goto(TASK_DETAIL_URL);
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
+    await openSettingsSection(page, 'review');
     await page.locator('#reviewEditBtn').click();
     await page
       .locator('#reviewerOptionList .reviewer-option', { hasText: '王小明' })
       .locator('input')
       .uncheck();
 
-    let dialogSeen = false;
-    page.on('dialog', (dialog) => {
-      dialogSeen = true;
-      void dialog.accept();
-    });
+    // FR-026 (2): the leave confirmation is the in-page modal, not window.confirm.
     await page.locator('#tabMemberManagement').click();
+    await expect(page.locator('#settingsLeaveModal')).toBeVisible();
+    await page.locator('#settingsLeaveConfirmBtn').click();
     await expect(page.locator('#memberManagementPanel')).not.toHaveClass(/hidden/);
-    expect(dialogSeen).toBe(true);
 
     // Accepting the leave confirmation discards the draft, so returning to
     // the overview shows the summary view again (not a stale edit form).
@@ -70,6 +70,7 @@ test.describe('Task detail review settings', () => {
     });
     await page.goto(TASK_DETAIL_URL);
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
+    await openSettingsSection(page, 'review');
     await page.locator('#reviewEditBtn').click();
     await page
       .locator('#arbiterOptionList .arbiter-option', { hasText: '王小明' })

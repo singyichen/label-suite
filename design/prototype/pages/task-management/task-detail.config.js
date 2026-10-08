@@ -260,6 +260,7 @@ function bindTaskConfigEvents() {
      in overview.html's markup, matching task-new.html's pattern. */
   el('codeEditor').addEventListener('input', function() {
     state.codeDraftDirty = true;
+    markDirty();
     el('saveCodeBtn').disabled = false;
     el('codeErrorBar').classList.add('hidden');
   });

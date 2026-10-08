@@ -3,6 +3,7 @@
  *   FR-010b, FR-010c
  */
 import { test, expect, type Page } from '@playwright/test';
+import { openSettingsSection } from './_task-detail-settings-helpers';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html?task_id=T001';
 
@@ -27,6 +28,7 @@ const PANEL_LOAD_TIMEOUT = 15000;
 
 async function disableIsolation(page: Page) {
   await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
+  await openSettingsSection(page, 'sampling');
   await page.locator('#samplingEditBtn').click();
   // The real checkbox is visually hidden inside the toggle-switch, so click
   // its label wrapper instead of uncheck() (same pattern as the
@@ -35,6 +37,7 @@ async function disableIsolation(page: Page) {
   await expect(page.locator('#isolationToggle')).not.toBeChecked();
   await page.locator('#samplingSaveBtn').click();
   await expect(page.locator('#samplingEditForm')).toHaveClass(/hidden/);
+  await page.locator('#tabOverview').click();
 }
 
 test.describe('Publish risk-confirm modal with isolation disabled (DUP-06)', () => {

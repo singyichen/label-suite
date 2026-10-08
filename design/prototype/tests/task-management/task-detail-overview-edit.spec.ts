@@ -3,6 +3,7 @@
  *   FR-014a, FR-014g, FR-014h, FR-014j
  */
 import { test, expect } from '@playwright/test';
+import { openSettingsSection } from './_task-detail-settings-helpers';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html?task_id=T001';
 
@@ -10,13 +11,14 @@ test.describe('Task detail overview edit state', () => {
   test('hides draft-only hint text and uses simplified edit mode layout', async ({ page }) => {
     await page.goto(TASK_DETAIL_URL);
 
+    await openSettingsSection(page, 'basic');
     const editBtn = page.locator('#overviewEditBtn');
     const saveBtn = page.locator('#overviewSaveBtn');
     const cancelBtn = page.locator('#overviewCancelBtn');
 
     await expect(editBtn).toBeEnabled();
     await expect(saveBtn).toHaveText('儲存');
-    await expect(page.locator('#overviewPanel')).not.toContainText('僅 draft 狀態可編輯');
+    await expect(page.locator('#settingsPanel')).not.toContainText('僅 draft 狀態可編輯');
     await expect(page.locator('#labelTaskName .required')).toHaveText('*');
     await expect(page.locator('#labelTaskType .required')).toHaveText('*');
     await expect(page.locator('#labelDatasetSummary .required')).toHaveText('*');

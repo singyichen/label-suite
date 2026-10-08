@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { openSettingsSection } from './_task-detail-settings-helpers';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 
@@ -31,6 +32,7 @@ async function openMemberTab(page: Page) {
  * disable-driven pool release, and the i18n toggle.
  */
 async function checkArbiter(page: Page, name: string) {
+  await openSettingsSection(page, 'review');
   await page.locator('#reviewEditBtn').click();
   await page
     .locator('#arbiterOptionList .arbiter-option', { hasText: name })
