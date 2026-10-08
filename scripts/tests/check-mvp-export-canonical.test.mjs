@@ -104,12 +104,15 @@ test('archived SC-005 matches canonical mixed-run isolation rule', () => {
   assert.match(derived, /#### Scenario: 隔離開啟時的明確混合匯出/);
 });
 
-test('derived OpenSpec Purpose describes canonical v8 and immutable FR-021 downloads', () => {
+test('derived OpenSpec Purpose cites the current canonical version and immutable FR-021 downloads', () => {
   const { derived } = exportDeltaState();
   const purpose = derived.match(/^## Purpose\s*\n([\s\S]*?)(?=^## |(?![\s\S]))/m)?.[1];
   assert.ok(purpose, 'Derived task-detail Purpose is required');
-  assert.match(purpose, /正典為[^。；\n]*v8\.0\.1/,
-    'Purpose must cite canonical task-detail v8.0.1');
+  const canonicalVersion = spec.match(/^版本:\s*(\d+\.\d+\.\d+)\s*$/m)?.[1];
+  assert.ok(canonicalVersion, 'Canonical task-detail version is required');
+  const citedVersion = purpose.match(/正典為[^。；\n]*[（(]v(\d+\.\d+\.\d+)[）)]/)?.[1];
+  assert.equal(citedVersion, canonicalVersion,
+    'Purpose must cite the current canonical task-detail version');
   const fr21 = purpose.match(/FR-021[^；。\n]*/)?.[0];
   assert.ok(fr21, 'Purpose must summarize current FR-021');
   for (const term of [/下載/, /不可變/, /原始/, /(?:產物|檔案|位元組)/]) {

@@ -2,9 +2,13 @@
 
 ## Purpose
 
-任務詳情頁（`task-detail`）是專案負責人設定審核模型、監看審核進度並判定任務可否結案的單一控制面。正典為 `specs/task-management/014-task-detail/spec.md`（v8.0.1）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR ID，不改動其正典措辭。目前收錄：change `align-014-review-model`（issue #688）之 FR-005j／FR-005k／FR-008b／FR-010s／FR-010s-1／FR-010s-2／FR-010t（修訂，issue #596 單人接力審核模型對齊）、FR-018（新增，最終例外池）；change `task-detail-url-view-state`（issue #726）之 FR-019（新增，頁籤與清單檢視狀態的網址同步）；change `task-detail-seq-tagging-export-dialog`（issue #742）之 FR-020（新增，`sequence_tagging` 匯出對話框與序列匯出欄位）；change `task-detail-export-history-redownload`（issue #772）之 FR-021（原新增條文，v8.0.0 已修訂為重新下載不可變原始產物）；change `task-detail-trial-round-from-waiting`（issue #791）之 FR-013（首次收錄修訂後全文，新增試標回合僅自待 IAA 確認狀態發起）；change `task-detail-iaa-precondition-and-override-scope`（issue #783）之 FR-010o-1（修訂，門檻覆寫排除未校準型別）、FR-010o-4（新增，待 IAA 確認頁顯示 IAA 計算狀態）；以及 change `validate-reviewer-arbiter-role-separation`（issue #868）之 FR-010s-1／FR-010t（修訂）；以及 change `1141-task-detail-quality-metrics-gate`（issue #1141）之 FR-008b（修訂，第 5 項引用品質指標就緒訊號）；以及 change `mvp-export-record-contract`（issue #1160）之 FR-009a／FR-010i／FR-015e／FR-015h（首次收錄）與 FR-010i-1／FR-010i-2／FR-020／FR-021／FR-024（修訂原檔下載與逐 run 追溯契約）。
+任務詳情頁（`task-detail`）是專案負責人設定審核模型、監看審核進度並判定任務可否結案的單一控制面。正典為 `specs/task-management/014-task-detail/spec.md`（v11.0.0）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR ID，不改動其正典措辭。目前收錄：change `align-014-review-model`（issue #688）之 FR-005j／FR-005k／FR-008b／FR-010s／FR-010s-1／FR-010s-2／FR-010t（修訂，issue #596 單人接力審核模型對齊）、FR-018（新增，最終例外池）；change `task-detail-url-view-state`（issue #726）之 FR-019（新增，頁籤與清單檢視狀態的網址同步）；change `task-detail-seq-tagging-export-dialog`（issue #742）之 FR-020（新增，`sequence_tagging` 匯出對話框與序列匯出欄位）；change `task-detail-export-history-redownload`（issue #772）之 FR-021（原新增條文，v8.0.0 已修訂為重新下載不可變原始產物）；change `task-detail-trial-round-from-waiting`（issue #791）之 FR-013（首次收錄修訂後全文，新增試標回合僅自待 IAA 確認狀態發起）；change `task-detail-iaa-precondition-and-override-scope`（issue #783）之 FR-010o-1（修訂，門檻覆寫排除未校準型別）、FR-010o-4（新增，待 IAA 確認頁顯示 IAA 計算狀態）；以及 change `validate-reviewer-arbiter-role-separation`（issue #868）之 FR-010s-1／FR-010t（修訂）；以及 change `1141-task-detail-quality-metrics-gate`（issue #1141）之 FR-008b（修訂，第 5 項引用品質指標就緒訊號）；以及 change `mvp-export-record-contract`（issue #1160）之 FR-009a／FR-010i／FR-015e／FR-015h（首次收錄）與 FR-010i-1／FR-010i-2／FR-020／FR-021／FR-024（修訂原檔下載與逐 run 追溯契約）。
 
 change `mvp-export-snapshot-isolation-correction`（issue #1160）補充 FR-010b／FR-010c 的跨 run 隔離語意，以及 FR-010i-1／FR-010i-2／FR-021 的請求接受時間與結果快照時間契約。
+
+change `task-run-publication-integrity`（issue #1160）修訂 FR-010f／FR-010f-6 的公開清單回執、發布交易與目標作用域冪等契約，新增 FR-010f-7、AC-3.48～AC-3.50 與 SC-059～SC-061 的工作位唯讀狀態及失敗恢復規則；正典版本為 v10.0.0。這些資料表仍是未部署候選。
+
+change `database-final-audit`（issue #1160）新增 FR-010o-5／FR-025、AC-3.51～AC-3.52 與 SC-062～SC-063：試標回合的完整 IAA 結果與 `done` 同交易保存，任務狀態及隔離異動以 `audit_events` 單一事件來源追溯；正典版本為 v11.0.0，資料表仍為未部署候選。
 
 ## Requirements
 
@@ -606,7 +610,7 @@ IAA 為非同步計算。任務依 FR-008a 進入 `waiting_iaa_confirmation` 時
 
 ### Requirement: FR-010u 跨頁籤衍生計數的共用查詢上下文與聚合單位（成功標準 SC-050）
 
-- **FR-010u**（**v5.0.0 新增**，對應 AC-1.26、AC-1.27、SC-050，issue #1120）：`task-detail` 五個頁籤（`TASK_TABS`）呈現的衍生計數必須以同一組查詢上下文推導，並必須依既有正典定義之聚合單位計數。(1) **共用查詢上下文**：任務、cycle、`run_type` 與回合為共用查詢上下文，概覽、成員、進度、結果四個頁籤之計數必須由同一組 `task_id × cycle_id × run_type × round_no` 推導；選取某一回合時不得混入其他回合或其他任務的資料。工時與匯出歷史必須依當前任務篩選；該任務無對應紀錄時必須呈現真實空狀態，不得呈現其他任務的通用示範資料。(2) **`已提交` 的分子分母**：分子為該 `task_id × cycle_id × run_type × round_no` 範圍內已提交之標記 assignment 數；分母為同範圍內未排除之標記工作 slot 數（含退回未指派的 slot）。依 FR-005h 被 `project_leader` 明確排除之標記作業不得計入分子或分母，與 FR-005h 既有的「不計入完成率或標記分布統計」一致。(3) **`已完成輪次` 的分子**：分子為已結束之試標回合數；當前進行中之回合不得計入。歷史回合與當前回合必須分列呈現，兩者之計數與決策不得交叉累計。「已結束」之判定依既有試標完成規則（FR-008a），本條不另定義該規則。(4) **既有定義不得重複**：`已定案 review unit` 之判定式與聚合單位（穩定 run／assignment 範圍內之樣本／標記員維度）以 `annotation/015-annotation-workspace` FR-051 為正典；`最終例外輸出項目` 之來源與逐筆收尾動作以 `annotation/015-annotation-workspace` FR-095 為正典，其分 `run_type` 獨立計數規則沿用本規格 FR-018 第 (5) 點。本規格必須讀取該兩處既有定義，不得另建第二份判定式、分母或狀態清單。(5) **單位不得相加**：標記 assignment、審核單位、爭議項（同一 run 範圍，以 `annotation/015-annotation-workspace` FR-061 第 7 點為計數單位：審核單位內之 `outKey × 合併鍵`，依 FR-059）分屬三個不同聚合層級，不得相加為單一數字，亦不得共用同一分母。畫面呈現必須使每個計數的單位可辨識；提交進度與定案進度必須分別命名，不得以同一標題涵蓋兩者。(6) **時間語意**：已提交時間不得被呈現為審核完成或仲裁完成時間；各階段時間必須取自其各自的事件來源。(7) **資料分配與工作完成分離**：樣本池分配的視覺呈現（FR-010p）必須附明確的「資料分配」語意說明；分配比例達滿不得被表述為標記或審核工作已完成。 上述範圍等價於穩定 `run_id`；重複 R1 不得合併 cycle。提交分母為同 run 未排除工作 slot 數（含退回未指派者），重指派不增分母；舊 cycle 回合不納入目前閘門。
+- **FR-010u**（**v5.0.0 新增**，對應 AC-1.26、AC-1.27、SC-050，issue #1120）：`task-detail` 五個頁籤（`TASK_TABS`）呈現的衍生計數必須以同一組查詢上下文推導，並必須依既有正典定義之聚合單位計數。(1) **共用查詢上下文**：任務、cycle、`run_type` 與回合為共用查詢上下文，概覽、成員、進度、結果四個頁籤之計數必須由同一組 `task_id × cycle_id × run_type × round_no` 推導；選取某一回合時不得混入其他回合或其他任務的資料。工時與匯出歷史必須依當前任務篩選；該任務無對應紀錄時必須呈現真實空狀態，不得呈現其他任務的通用示範資料。(2) **`已提交` 的分子分母**：分子為該 `task_id × cycle_id × run_type × round_no` 範圍內已提交之標記 assignment 數；分母為同範圍內未排除之標記工作 slot 數（含退回未指派的 slot）。依 FR-005h 被 `project_leader` 明確排除之標記作業不得計入分子或分母，與 FR-005h 既有的「不計入完成率或標記分布統計」一致。(3) **`已完成輪次` 的分子**：分子為已結束之試標回合數；當前進行中之回合不得計入。歷史回合與當前回合必須分列呈現，兩者之計數與決策不得交叉累計。「已結束」之判定依既有試標完成規則（FR-008a），本條不另定義該規則。(4) **既有定義不得重複**：`已定案 review unit` 之判定式與聚合單位（穩定 run／assignment 範圍內之樣本／標記員維度）以 `annotation/015-annotation-workspace` FR-051 為正典；`最終例外輸出項目` 之來源與逐筆收尾動作以 `annotation/015-annotation-workspace` FR-095 為正典，其分 `run_type` 獨立計數規則沿用本規格 FR-018 第 (5) 點。本規格必須讀取該兩處既有定義，不得另建第二份判定式、分母或狀態清單。(5) **單位不得相加**：標記 assignment、審核單位、爭議項（同一 run 範圍，以 `annotation/015-annotation-workspace` FR-061 第 7 點為計數單位：審核單位內之 `outKey × 合併鍵`，依 FR-059）分屬三個不同聚合層級，不得相加為單一數字，亦不得共用同一分母。畫面呈現必須使每個計數的單位可辨識；提交進度與定案進度必須分別命名，不得以同一標題涵蓋兩者。(6) **時間語意**：已提交時間不得被呈現為審核完成或仲裁完成時間；各階段時間必須取自其各自的事件來源。(7) **資料分配與工作完成分離**：樣本池分配的視覺呈現（FR-010p）必須附明確的「資料分配」語意說明；分配比例達滿不得被表述為標記或審核工作已完成。 上述範圍等價於穩定 `run_id`；重複 R1 不得合併 cycle。提交分母為同 run 未排除工作 slot 數（含退回未指派者），重指派不增分母；舊 cycle 回合不納入目前閘門。 **v9.0.0 工時補充**：工時與完成事件須依 `account_session_id × task_id × run_id × membership_id × work_kind × report_date` 分組；相同 task 的不同 session、cycle、run 不得合併。工時速度逐類顯示，標記 assignment、審核單位與爭議項不得相加；同一審核 submission head 的多筆 outKey 決策與修訂只計一次。
 
 #### Scenario: 五個頁籤的計數同源且不混入其他任務或回合
 
@@ -887,12 +891,19 @@ FR-008a MUST 原地改寫為：當任務本回合滿足 `DRY_RUN_COMPLETION_RULE
 ### Requirement: FR-010f task/run 身分契約
 
 - **FR-010f**（**v6.0.0 修訂，BREAKING**，issue #1160）：首次 Dry 發布開啟不可變身分的 `RunCycle`，釘住同任務 sealed `dataset_version_id`、不可變 `config_version_id`（含 schema）、資格池、seed 與演算法版本。資格池為該版本全部已接受 item；抽樣只讀公開 item 身分與 payload，不讀 `dataset_item_private`、`declared_split`、hidden answer 或受限 `source_ref`，亦不得在 run item／manifest 中加入 gold/test 標記。每次 Dry 或 Official 發布各自建立一份不可變 `sample_snapshot_id`，只凍結該次 run 的有序 item 清單、seed／演算法與 digest；R1 不預先封存 Official 清單，發布前的剩餘池只是推導值。關聯 run-item 清單為成員身分正典，外部 `selection_manifest_ref` 為相同清單的審計回執，digest 必須一致。
+  - **v10.0.0 規範回執位元組**：公開清單按 `task_run_item.list_position` 排序，規範格式為 UTF-8；第一行固定為 `label-suite-run-items-v1\n`，其後每個 item 的小寫帶連字號 UUID 各佔一行、各以 `\n` 結尾，無額外空白或欄位。`selected_item_digest` 為這份完整位元組的 SHA-256 十六進位字串。`selection_manifest_ref` 是私有、不可覆寫的 content-addressed（內容定址）物件鍵，不是客戶端可取得的 URL。manifest／清單不得包含 hidden answer／答案、`declared_split`／split 或受限 `source_ref`，亦不得從私有欄位推導 gold/test 標記。
 
 #### Scenario: FR-010f 對應 AC-3.45
 
 - **GIVEN** item 的 private row 含 hidden answer 或 declared_split
 - **WHEN** 重播同 cycle seed／演算法與版本的抽樣並取得標記者資料
 - **THEN** run 清單由公開資格池可重現，與私有 split 無關，回應與 manifest 均無答案、gold/test 標記或受限來源（FR-010f）。（FR-010f；AC-3.45）
+
+#### Scenario: AC-3.48 規範位元組與私有資料隔離
+
+- **GIVEN** 同一 sealed version 和 seed 選出一組公開 item ID
+- **WHEN** 發布 Dry 或 Official run
+- **THEN** 規範位元組、SHA-256、私有回執及 SQL 清單逐位元一致，且不暴露答案、split、受限來源或 gold/test 標記
 
 ### Requirement: FR-010f-2 task/run 身分契約
 
@@ -936,13 +947,20 @@ FR-008a MUST 原地改寫為：當任務本回合滿足 `DRY_RUN_COMPLETION_RULE
 
 ### Requirement: FR-010f-6 task/run 身分契約
 
-- **FR-010f-6**（**v6.0.0 新增**，issue #1160）：發布須在同一交易鎖定任務／目前版本並驗證狀態、權限、sealed version、每個來源批次的公開／受保護欄位對映、成員與回合前置條件。每個選中 item 須經 batch 確認屬於 cycle 版本；任一跨版本 item 即整次拒絕。cycle（R1）、round（Dry）、snapshot／manifest 回執、run、run items、候選審核名冊、assignment 與狀態轉換事件須全部提交或全部回滾；提交前驗證 `item_count` 等於實際 run-item 數。發布 idempotency key 綁定 task、發布目標及請求內容：相同 key／相同內容重試回傳原 run 與 snapshot，不重抽、不增加指派或事件；同 key 異內容、不同 key 對同 round 重複發布或第二次 Official 發布均回報衝突。並行請求亦須由交易及唯一性約束保證相同結果，SQLite 與 PostgreSQL 語意一致。
+- **FR-010f-6**（**v10.0.0 修訂，BREAKING**，issue #1160）：發布服務須先驗證身分與權限、鎖定任務，按固定發布目標查已提交重試；若尚未提交，才驗證目前版本、狀態、sealed version、每個來源批次的公開／受保護欄位對映、成員與回合前置條件。每個選中 item 須經 batch 確認屬於 cycle 版本；任一跨版本 item 即整次拒絕。新發布先依 FR-010f 規範位元組寫入私有、不可覆寫的內容定址回執物件，讀回驗證完整位元組、`selected_item_digest` 摘要與持久性，之後才在**同一資料庫交易**提交 cycle（R1）、round（Dry）、snapshot 的 `selection_manifest_ref` 與 digest、run、run items、候選審核名冊、assignment、狀態轉換及稽核事件；提交前驗證 `item_count` 等於實際 run-item 數。外部物件寫入與資料庫提交不是同一 ACID 交易；回執寫入或讀回驗證失敗時 DB 不提交，DB 回滾可留下無引用物件，但不得留下可見的部分發布。資料庫提交後才可宣稱發布成功。
+  - 發布 idempotency key 以 task、發布目標與 key 定址，另保存正規化請求內容摘要。發布命令須在首次嘗試前固定可跨重試辨識的目標：Dry 用同任務 `(cycle_no,round_no)` 唯一定位其 `trial_round_id`，Official 用 task 的單一正式發布定位；提交結果不明時沿用同一目標，不得新配回合身分。須先查已提交目標與 key，再執行會因首次發布而改變的狀態門檻或重新抽樣。Dry 以 `(task_id,trial_round_id,key)`、Official 以 `(task_id,key)` 分別約束冪等鍵，允許不同 Dry 回合重用同一 key。相同 key 與摘要的重試或並行重送回傳原 run／snapshot，不重新抽樣、不增加 assignment 或事件；同 key 異摘要／異內容拒絕為衝突，異 key 對同 round 重複發布或第二次 Official 亦拒絕。提交結果不明時先以資料庫冪等鍵查已提交 run，不重抽；既存回執缺失或摘要不符時拒絕讀取並告警，只能由 run-item SQL 正典重建相同位元組作受控修復，不能靜默換清單。清理無引用回執須超過交易／重試保護期、確認無活躍寫入租約且 DB 無引用；已引用物件不得刪除。並行請求須由資料庫交易與唯一性約束保證相同結果，SQLite 與 PostgreSQL 語意一致。
 
 #### Scenario: FR-010f-6 對應 AC-3.42
 
 - **GIVEN** 合法 Dry 或 Official 發布請求
 - **WHEN** 相同 key／內容重送或並行重送
 - **THEN** 只回傳原 run／snapshot，無額外 assignment／transition；異內容同 key、同 round 異 key 或第二筆 Official 被拒絕。注入跨版本 item 或交易中途失敗時所有發布寫入回滾（FR-010f-6）。（FR-010f-6；AC-3.42）
+
+#### Scenario: AC-3.49 失敗與重試不產生第二份發布
+
+- **GIVEN** 合法發布命令與固定冪等鍵
+- **WHEN** 同 key／摘要重送、回執驗證失敗、DB 回滾、提交結果不明或既存回執損壞
+- **THEN** 同命令只回原 run，失敗不產生可見半套資料，不明提交先查 DB，壞回執拒絕讀取並告警
 
 ### Requirement: FR-010i-1 task/run 身分契約
 
@@ -1310,3 +1328,217 @@ FR-008a MUST 原地改寫為：當任務本回合滿足 `DRY_RUN_COMPLETION_RULE
 - **GIVEN** 篩選沒有任何可輸出的結果列
 - **WHEN** 建立 `json-min` 匯出
 - **THEN** 檔案為格式版本 2 的 `{manifest,rows[]}`，`rows[]` 為空且 manifest 含請求人與逐 run 身分
+
+### Requirement: FR-007b 各類工作速度與完成單位
+
+- **FR-007b**（**v9.0.0 修訂，BREAKING**，issue #1160）：`工時明細表` 的完成筆數必須拆分為 `標記筆數`、`審核筆數`、`仲裁筆數` 三欄；角色不適用的欄位顯示 `—`（標記員僅有標記筆數；審核員僅有審核筆數與仲裁筆數）。匯總卡片為 `總工時`、`總標記筆數`、`總審核筆數`、`各類工作速度` 四張。速度只逐類顯示 `標記件/時`、`審核單位/時`、`仲裁項/時`，各以對應種類之完成筆數及可信工作時長計算；無可信時長或分母為零時顯示 `—`。審核送出按 `annotation_review_submission.id` 去重，逐 outKey 決策及後續修訂不增加審核單位；標記按 run 內完成 assignment 去重，仲裁按終局爭議鍵去重。異常提醒亦須按同種類與同單位比較，不得混合三類完成筆數。
+
+#### Scenario: 各類速度不混單位
+
+- **WHEN** 標記、審核與仲裁完成筆數同時存在
+- **THEN** 三類速度以各自筆數與可信工作時長計算，不能相加；無分母顯示未知
+
+### Requirement: FR-007d 可觀測工作區間與日報表
+
+- **FR-007d**（v9.0.0 新增，issue #1160）：工時原始來源為未部署候選 `task_work_interval`，每列限定同一 `account_session_id`、`task_id`、`run_id`、`membership_id`、`work_kind` 的一段可觀測前景工作；`work_kind = annotation | review | arbitration`，後端依有效身分及 membership 角色驗證。服務端以 UTC 記錄 `started_at`、`last_seen_at`、可空 `ended_at`，工作區可見且聚焦時開始，候選心跳每 30 秒；10 分鐘無互動視為閒置，失焦、背景、切換任務/run/種類、登出或安全撤銷皆結束區間。失聯 90 秒時只以最後有效 `last_seen_at` 關閉，不以等待時間或客戶端時鐘補工時；同一使用者至多一筆未結束區間，跨裝置競爭須由交易與部分唯一約束防重。原始 UTC 區間不拆列；報表固定 `Asia/Taipei`，跨日於查詢時計算當地午夜裁切，按 session × task × run × membership × work kind × 報表日期分組。同一 session 可跨任務/run，登入不等於工作；`annotation_history_event.lead_time_ms` 亦不得當工時。合法完成事件即使沒有可信區間仍可計數，該列工作時長與速度顯示「未知」；僅有可信區間但無完成事件時筆數可為 0。`login_at` 只取 `account_session.started_at`；`logout_at` 只取可驗證明確登出的 `logged_out_at`，無值及上線時長顯示「未知」，不得由 `revoked_at` 推估。上線時長僅代表該 session 登入到明確登出的當日切片，非網路連線證據；同 session 跨多列展示不得相加。標記完成按 run × assignment 去重，審核完成按 submission head 去重，仲裁完成按終局爭議鍵去重；無可驗證 session 的舊事件不猜測歸屬。`WorkLogEntry` 為唯讀查詢投影，不建立同名表。
+
+#### Scenario: 失聯與跨日報表
+
+- **WHEN** 可觀測區間跨台北午夜且後續失聯
+- **THEN** 原始 UTC 區間不拆列，只按當地日界投影，失聯以最後有效 `last_seen_at` 關閉
+
+### Requirement: AC-1.28 同日兩次登入與跨 run 隔離
+
+28. **AC-1.28**（v9.0.0，issue #1160）：**Given** 同一成員同日在同一任務登入兩次，且第一次登入含兩個不同 run 的工作區間，**When** 負責人檢視工時紀錄，**Then** `account_session_id × task_id × run_id × membership_id × work_kind × report_date` 各自成列，同日兩次登入與不同 run 均不合併；只有可信區間才提供工作時長（FR-007d、FR-010u）。
+
+#### Scenario: 同日登入分列
+
+- **WHEN** 同一成員同日兩次登入並在不同 run 開工
+- **THEN** session 與 run 分列，不重複或跨列合併
+
+### Requirement: AC-1.29 跨日與登出未知
+
+29. **AC-1.29**（v9.0.0，issue #1160）：**Given** 一段可觀測工作區間跨日且登入工作階段未能明確登出，**When** 以 `Asia/Taipei` 日期篩選工時，**Then** 原始 UTC 區間不拆列，報表於當地午夜裁切至兩日；登出及上線時長顯示「未知」，不得由 `revoked_at` 推估（FR-007d）。
+
+#### Scenario: 無明確登出與跨日
+
+- **WHEN** 工作區間跨日而 session 無 `logged_out_at`
+- **THEN** 報表按台北午夜裁切，登出與上線時長未知
+
+### Requirement: AC-1.30 失聯關閉與時間未知
+
+30. **AC-1.30**（v9.0.0，issue #1160）：**Given** 工作頁面失焦或心跳失聯，**When** 服務結束工作區間，**Then** 失聯段以最後有效 `last_seen_at` 關閉，未觀測等待時間不計入工時；有合法完成事件但無可信區間時筆數保留、工作時長與速度顯示「未知」（FR-007d、FR-007b）。
+
+#### Scenario: 失聯及合法完成事件
+
+- **WHEN** 心跳失聯或頁面失焦，但已有合法完成事件
+- **THEN** 工時只算可信區間，完成筆數保留，無可信時長則速度未知
+
+### Requirement: AC-1.31 完成事件按來源去重
+
+31. **AC-1.31**（v9.0.0，issue #1160）：**Given** 一次審核送出產生多個 outKey 決策與後續修訂，**When** 計算該 session/run 的完成筆數，**Then** 同一審核 submission head 只算一個審核單位，仲裁依終局爭議鍵去重，標記 assignment 另算；三類數量不得相加為單一速度（FR-007b、FR-010u）。
+
+#### Scenario: 多 outKey 審核去重
+
+- **WHEN** 同次審核多個 outKey 並有後續改判
+- **THEN** 審核 submission head 只計一個審核單位
+
+### Requirement: SC-057 雙庫開啟區間唯一性
+
+- **SC-057**（v9.0.0，issue #1160）：SQLite 與 PostgreSQL 的候選約束驗證均須證實同一 user 雙裝置同時開工時至多一筆未結束 open 區間；失聯只以最後有效 `last_seen_at` 關閉，UTC 區間按台北日期裁切後同日多次登入與不同 run 不合併。規劃圖通過文件驗證不等於雙庫 migration 已通過，正式實作階段須補兩庫交易測試。
+
+#### Scenario: SQLite 與 PostgreSQL 開段競爭
+
+- **WHEN** 同一 user 雙裝置同時開工
+- **THEN** SQLite 與 PostgreSQL 均須由候選部分唯一約束及服務交易保證至多一筆 open 區間
+
+### Requirement: SC-058 完成筆數隔離與答案保護
+
+- **SC-058**（v9.0.0，issue #1160）：同 run 的標記 assignment、審核 submission head、終局爭議鍵各自去重；多 outKey 審核決策及後續修訂不重複算審核單位。缺可信時間仍保留合法筆數但速度未知；標記員回應不得包含他人的 session、私有答案或 gold/test 答案。
+
+#### Scenario: 完成數與答案隔離
+
+- **WHEN** 同 run 有多 outKey 決策與仲裁事件
+- **THEN** 各類完成筆數依不同單位去重，標記員回應不含他人 session 或私有答案
+
+### Requirement: FR-010f-7 工作位唯讀狀態投影
+
+- **FR-010f-7**（**v10.0.0 新增**，issue #1160）：`task_annotation_assignment` 僅保存穩定 slot、run/item 與可空的目前 `assignee_membership_id`，不得保存第二份 `status`。唯讀顯示狀態按此優先順序由同 run 的事實推導：存在終局排除證據 → 已排除；存在目前有效已提交 `annotation_record` → 已完成；受派者空值 → 未指派；存在目前受派者已儲存但未提交的草稿 → 草稿中；其餘 → 已指派待處理。`annotation_record` 自身生命週期仍為 `saved | submitted | abandoned`；舊草稿在停用、移除或重派的同一資料庫交易轉 `abandoned`，已提交紀錄保留，排除證據終局且不以空受派者代替。API／前端只接收此查詢投影，寫入與授權仍按即時 membership、run 和 slot 判定。
+
+#### Scenario: AC-3.50 狀態優先序與草稿隔離
+
+- **GIVEN** 同一 assignment 存在草稿、已提交紀錄、空受派者或終局排除的組合
+- **WHEN** 查詢工作位顯示狀態或重派 slot
+- **THEN** 依排除、提交、未指派、目前草稿與待處理的順序推導唯一狀態，舊草稿成為 abandoned，已提交與排除證據保留
+
+### Requirement: AC-3.48 回執逐位元一致
+
+48. **AC-3.48**（v10.0.0，issue #1160）：**Given** 同一 sealed version 和 seed 選出一組公開 item ID，**When** 發布 Dry 或 Official run，**Then** `task_run_item.list_position` 的有序 UUID 清單形成 `label-suite-run-items-v1` UTF-8 規範位元組，`selected_item_digest` 為完整位元組的 SHA-256 十六進位，私有不可覆寫 `selection_manifest_ref` 回執讀回與 SQL 清單逐位元一致；回執與標記者資料均無 hidden answer、`declared_split`、受限 `source_ref` 或 gold/test 標記（FR-010f）。
+
+#### Scenario: AC-3.48 逐位元回執
+
+- **GIVEN** 已知公開 item 清單與順序
+- **WHEN** 發布並讀回回執
+- **THEN** 位元組和 SHA-256 與 SQL 清單一致，私有資料不存在於回執
+
+### Requirement: AC-3.49 重試與失敗恢復
+
+49. **AC-3.49**（v10.0.0，issue #1160）：**Given** 合法發布命令與固定冪等鍵，**When** 同 key／同摘要重送、物件寫入或讀回驗證失敗、DB 回滾、提交結果不明，或已提交回執後來缺失／摘要不符，**Then** 已提交重送只回原 run／snapshot 且不重新抽樣，異摘要拒絕；物件失敗不提交 DB，回滾不留下可見的部分發布；不明提交先查 DB 冪等鍵，壞回執拒絕讀取並告警，無引用殘留物只在租約與引用檢查後清理（FR-010f-6）。
+
+#### Scenario: AC-3.49 安全重試
+
+- **GIVEN** 發布命令可能重送或在提交附近故障
+- **WHEN** 同 key 重送、外部物件失敗或提交結果不明
+- **THEN** 依正典冪等鍵回原 run 或拒絕，無可見半套資料或靜默回執替換
+
+### Requirement: AC-3.50 唯讀狀態優先序
+
+50. **AC-3.50**（v10.0.0，issue #1160）：**Given** 同一 assignment 曾有已儲存草稿、已提交紀錄、空受派者或終局排除的不同組合，**When** 查詢工作位顯示狀態，**Then** 依排除 → 已提交 → 未指派 → 目前受派者草稿 → 已指派待處理的順序得出唯一狀態，assignment 無獨立 `status`；重派會將舊未提交草稿轉 `abandoned`，不改已提交或排除證據（FR-010f-7）。
+
+#### Scenario: AC-3.50 終局排除優先
+
+- **GIVEN** 工作位有終局排除且受派者為空
+- **WHEN** 查詢顯示狀態
+- **THEN** 顯示已排除而非未指派，且沒有持久化 assignment status
+
+### Requirement: SC-059 清單一致與資料隔離
+
+- **SC-059**（v10.0.0，issue #1160）：通過 AC-3.48：同一有序公開 item 清單的 `label-suite-run-items-v1` 規範位元組、`selected_item_digest` 與私有回執讀回 100% 相同；抽樣、回執與標記者回應的 hidden answer／split／受限來源洩漏數為 0。
+
+#### Scenario: SC-059 驗證回執與隱私
+
+- **GIVEN** 一組公開 item 清單
+- **WHEN** 比對 SQL、回執與標記者回應
+- **THEN** 規範位元組一致且私有資料洩漏數為零
+
+### Requirement: SC-060 發布失敗與冪等
+
+- **SC-060**（v10.0.0，issue #1160）：通過 AC-3.49：相同 key／摘要的重送新增 run、snapshot、assignment、transition 數皆為 0；物件失敗、跨版本或 DB 回滾後可見部分發布數為 0；不明提交不重抽，壞回執拒絕讀取並告警，清理不刪除已引用物件。SQLite／PostgreSQL 與物件儲存實作須另以失敗注入驗證，本次文件檢查不等於實測通過。
+
+#### Scenario: SC-060 故障不宣稱成功
+
+- **GIVEN** 並行重試、回執失敗或資料庫故障
+- **WHEN** 執行發布與恢復
+- **THEN** 不建立重複或部分發布，壞回執拒絕讀取
+
+### Requirement: SC-061 工作位狀態正典
+
+- **SC-061**（v10.0.0，issue #1160）：通過 AC-3.50：排除、已提交、未指派、已儲存草稿、已指派待處理五類交錯輸入皆得到唯一且按優先序一致的顯示狀態；assignment 持久化 `status` 欄數為 0，已提交／排除證據於重派後遺失數為 0。
+
+#### Scenario: SC-061 狀態只由事實推導
+
+- **GIVEN** 五類交錯工作位事實
+- **WHEN** 查詢狀態並重派受派者
+- **THEN** 每個 slot 只有唯一正確狀態，且無獨立持久化 status
+
+### Requirement: FR-010o-5 試標 IAA 完成證據
+
+- **FR-010o-5**（**v11.0.0 新增**，issue #1160）：每個 `TrialRound` 的 IAA 結果須有單一、可持久驗證的來源。候選 `task_trial_iaa_result` 以 `trial_round_id` 一對一保存結果格式版本、演算法版本、釘住的輸入摘要、經驗證的逐輸出結果及計算時間；結果不得包含 hidden answer、來源 split、原始私有內容或可讓標記者推知 test 身分的欄位。`result_payload` 對回合釘住的 task config 每個非 `IAA_GATE_EXCLUDED_TYPES` 輸出恰有一個確定結果：數值，或 dataset-017 FR-039 第 4 點的 `De = 0`「無法計算」。在同一資料庫交易驗完完整性、保存結果並把該回合 `iaa_computation_status` 轉為 `done`；狀態為 `pending`／`failed` 或結果缺失／不完整時，不得視為完成；「開始正式標記」與「新增試標回合」兩個轉換都須核對完整結果，不能只看狀態字串。失敗重試只讓同一回合 `failed → pending`，不產生新回合或舊版成功結果；`done` 的結果不可原地覆寫。指標與門檻計算仍僅依 dataset-017 FR-039。
+
+#### Scenario: AC-3.51 完整結果與狀態同交易
+
+- **GIVEN** 最新試標回合有多個需計算輸出，其中一個可能是 `De = 0`
+- **WHEN** 非同步計算完成或部分輸出缺失
+- **THEN** 只有逐輸出完整且結果列與狀態同交易提交時才為 `done`；缺列、缺輸出或回滾保持不可發布，`De = 0` 不誤標為 `failed`
+
+### Requirement: FR-025 任務稽核事件唯一落點
+
+- **FR-025**（**v11.0.0 新增，BREAKING**，issue #1160）：`RunStateTransition` 與 `IsolationAuditLog` 是受授權讀取 `audit_events` 的邏輯投影，不建立同義持久化表。每一次成功的 task 狀態變化在相同資料庫交易寫恰一筆 `task.status_changed`，其受控摘要保存 `from_status`、`to_status`、觸發來源與必要的原因碼；每一次 `isolation_enabled` 實際變化在相同交易寫恰一筆 `task.isolation_changed`，受控摘要保存前後布林值與原因碼；關閉隔離須驗證二次確認並記其受控原因碼，重新啟用隔離採獨立固定原因碼，不需二次確認。`audit_events` 本身保存事件 ID、非空 task 作用域、驗證過的人員 actor 或受信系統 actor、UTC 時間及 request 關聯；非空 `task_id` 為候選 FK 指向 `task.id`。對 `task.status_changed` 與 `task.isolation_changed`，`target_type` 必須為 `task`，`target_id` 正規化為小寫連字號 UUID 後必須相等於 `task_id`；即使兩個 ID 分別指向有效任務，錯配也須拒絕。值未變時不得建立稽核事件；交易失敗或冪等重送也不得多建事件。讀權、敏感摘要 allowlist、最低保留期與多型 target 驗證依 Accepted ADR-032。不得從用戶端接收自稱 system actor，也不得在摘要寫入答案、token、原始標記或未受控理由文字。
+
+#### Scenario: AC-3.52 同交易且無重複的任務稽核
+
+- **GIVEN** 狀態或隔離設定的合法變更與相同命令重送
+- **WHEN** 變更成功、資料庫回滾或重送
+- **THEN** 成功變更各有一筆可按 task 查詢的相應 typed audit event；回滾沒有事件，重送不重複，邏輯歷程不依賴第二張表
+
+#### Scenario: AC-3.52 任務目標與作用域錯配
+
+- **GIVEN** 兩個分別存在的任務 A 與 B
+- **WHEN** `task.status_changed` 或 `task.isolation_changed` 的 `task_id` 指向 A，而 `target_id` 指向 B，或 `target_type` 不是 `task`
+- **THEN** 拒絕整個交易，不變更任務狀態或隔離值，也不寫入稽核事件；兩個 ID 各自有效不能取代兩者相等的驗證
+
+#### Scenario: AC-3.52 隔離關閉與重新啟用的確認條件
+
+- **GIVEN** 有權變更隔離設定的操作者與已存在的任務
+- **WHEN** 關閉隔離但未通過二次確認，或重新啟用隔離
+- **THEN** 未確認的關閉遭拒且不產生事件；重新啟用不要求二次確認，使用獨立固定原因碼，成功的實際變更在同一交易恰寫一筆 `task.isolation_changed`
+
+### Requirement: AC-3.51 IAA 結果證據
+
+51. **AC-3.51**（v11.0.0，issue #1160）：**Given** 最新試標回合須計算的每個輸出有數值或 `De = 0` 結果，**When** 計算服務提交結果，**Then** 單一版本化結果來源與 `done` 同交易保存；缺任一輸出、結果缺失或回滾時仍不可開始 Official 或下一回合，`De = 0` 不算計算失敗（FR-010o-5）。
+
+#### Scenario: AC-3.51 缺失結果不通過閘門
+
+- **GIVEN** round 標示 `done` 但結果列缺失或不完整
+- **WHEN** 請求開始 Official 或下一試標回合
+- **THEN** 服務拒絕，不能以狀態字串代替完整結果證據
+
+### Requirement: AC-3.52 任務稽核單一事實來源
+
+52. **AC-3.52**（v11.0.0，issue #1160）：**Given** 任務狀態或隔離開關實際改變，**When** 變更與稽核交易提交，**Then** `audit_events` 各新增恰一筆相應 typed action，保存可驗證的前後值、actor、task、UTC 時間與必要原因碼；回滾或冪等重送不重複，`RunStateTransition`／`IsolationAuditLog` 由此投影而不另建表（FR-025）。
+
+#### Scenario: AC-3.52 變更與事件不可分離
+
+- **GIVEN** 任務變更交易中途失敗
+- **WHEN** 交易回滾
+- **THEN** 狀態或隔離值及相應事件均不提交
+
+### Requirement: SC-062 IAA 完成證據一致性
+
+- **SC-062**（v11.0.0，issue #1160）：最新試標回合的 `done` 與完整、版本化逐輸出結果不一致之已提交狀態數為 0；`De = 0` 誤記為計算失敗數為 0。
+
+#### Scenario: SC-062 結果與狀態一致
+
+- **GIVEN** 完成、失敗與回滾的合成試標計算
+- **WHEN** 核對每回合狀態與結果來源
+- **THEN** 不存在 `done` 無完整結果或 `pending`／`failed` 被當作已完成
+
+### Requirement: SC-063 任務稽核與狀態一致性
+
+- **SC-063**（v11.0.0，issue #1160）：成功的任務狀態／隔離設定異動缺少或重複 typed `audit_events` 的數量為 0；交易失敗與冪等重送新增事件數為 0。
+
+#### Scenario: SC-063 稽核唯一
+
+- **GIVEN** 成功、失敗與重送的任務變更
+- **WHEN** 依 task、action 和變更身分核對稽核歷程
+- **THEN** 每個成功變更恰有一筆事件，失敗與重送沒有額外事件

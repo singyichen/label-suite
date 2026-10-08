@@ -48,6 +48,7 @@ model: sonnet
 - 樣式採 Tailwind utility class；色彩、間距、圓角等優先使用 `trendlink-design` 提供的 token 或 class
 - SVG 設定 `viewBox` 與 `width="100%"`
 - motion 元件套用 `useReducedMotion()`，預設動畫 200–400ms ease-out
+- **SSR 輸出最終高度**：不要用 `inView && …`／`mounted && …` 讓內容晚出現（hydrate 時會推動下方內文）；內容一律 render，只把 `animate` 狀態綁在 `useInView`。`useReducedMotion()` 只切換動畫參數、不切換顯示內容（伺服器端恆為 false）。寫完可用 `scripts/fixtures/viz-height-audit.mjs` 比對 SSR 與 hydrate 後的高度（差距應 ≤ 8px）
 - **元件本體不得自帶外框卡片**：根（最外層）元素禁止加上 `border`／`shadow-*`／大圓角 `rounded-*` 卡片／白底（`bg-white`）等卡片化樣式，也不要自畫左上類型標籤、右上 `generated/<id>.tsx` 來源標頭、或外層 padding。這些外框、陰影、來源標頭、底部 caption 一律由系統元件 `GeneratedFrame` 在寫回時統一提供（mdx-writer 負責），元件自帶會造成**雙層外框**。根元素只應是透明版型容器（`flex`／`grid`／`space-y-*`）加必要的 `max-w-*`／`mx-auto`／`not-prose`。**禁止 import 任何自製 `Figure` 之類的外框包裝元件**——外框唯一來源是 `GeneratedFrame`。（內部子卡片、面板、表格圓角屬內容結構，不在此限。）
 
 ## 輸出格式

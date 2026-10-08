@@ -151,7 +151,7 @@ jobs:
           node-version: '20'
       - name: Check NoteCraft database projection
         run: |
-          node --test scripts/tests/check-database-schema.test.mjs scripts/tests/check-database-dataset.test.mjs scripts/tests/check-database-task-run.test.mjs scripts/tests/check-account-session-canonical.test.mjs scripts/tests/check-annotation-review-canonical.test.mjs scripts/tests/check-database-annotation-review.test.mjs scripts/tests/check-mvp-export-canonical.test.mjs scripts/tests/check-database-task-export.test.mjs
+          node --test scripts/tests/check-database-schema.test.mjs scripts/tests/check-database-dataset.test.mjs scripts/tests/check-database-task-run.test.mjs scripts/tests/check-account-session-canonical.test.mjs scripts/tests/check-annotation-review-canonical.test.mjs scripts/tests/check-database-annotation-review.test.mjs scripts/tests/check-mvp-export-canonical.test.mjs scripts/tests/check-database-task-export.test.mjs scripts/tests/check-worklog-canonical.test.mjs scripts/tests/check-database-worklog.test.mjs
           node scripts/check-database-schema.mjs
 
   speckit-tests:

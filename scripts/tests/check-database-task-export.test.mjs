@@ -19,6 +19,7 @@ const allSources = () => checker.mergeSchemaSources(
   checker.parseTaskRunSchema(read('../../docs/diagrams/architecture/task-run-db-schema.md')),
   checker.parseAnnotationReviewSchema(read('../../docs/diagrams/architecture/annotation-review-db-schema.md')),
   exportSource(),
+  checker.parseTaskWorkSchema(read('../../docs/diagrams/architecture/task-work-db-schema.md')),
 );
 const summaryCounts = (data) => [
   [data.tables.length, '張候選表'],
@@ -131,7 +132,7 @@ test('export dictionary separates request acceptance from the finalized result t
     'Accepted conditions must not embed the later result timestamp');
 });
 
-test('NoteCraft records exported_at while preserving the 37 table and 43 FK shape', () => {
+test('NoteCraft records exported_at within the complete 39-table projection', () => {
   const data = erData();
   const record = data.tables.find((table) => table.name === 'task_export');
   assert.ok(record, 'Missing task_export projection');
@@ -139,7 +140,7 @@ test('NoteCraft records exported_at while preserving the 37 table and 43 FK shap
   assert.ok(exportedAt, 'NoteCraft must show task_export.exported_at');
   assert.equal(exportedAt.type, 'timestamptz');
   assert.equal(exportedAt.required, 'nullable');
-  assert.deepEqual(summaryCounts(data).map(([count]) => count), [37, 316, 43]);
+  assert.deepEqual(summaryCounts(data).map(([count]) => count), [39, 333, 46]);
 });
 
 test('NoteCraft projection matches export dictionary tables, columns, types and keys', () => {
@@ -189,7 +190,7 @@ test('account/admin NoteCraft summary includes every projected group and the exp
   assert.ok(summary, 'Account/admin NoteCraft summary is required');
 
   const data = erData();
-  assert.equal(data.tables.length, 37);
+  assert.equal(data.tables.length, 39);
   for (const [count, unit] of summaryCounts(data)) {
     const unitPattern = unit === '張候選表' ? '張(?:候選)?表?' :
       unit === '個候選單欄 FK' ? '(?:個)?候選單欄 FK' : unit;
@@ -199,6 +200,7 @@ test('account/admin NoteCraft summary includes every projected group and the exp
   assert.match(summary, /account\/admin|帳號[／/]管理/, 'Account/admin group must appear');
   for (const dictionary of [
     'dataset-db-schema.md', 'task-run-db-schema.md', 'annotation-review-db-schema.md',
+    'task-work-db-schema.md',
   ]) assert.ok(summary.includes(dictionary), `${dictionary} link`);
   assert.match(summary, /\[[^\]]*匯出[^\]]*\]\(\.\/task-export-db-schema\.md\)/,
     'Export dictionary link must appear in the NoteCraft summary');

@@ -61,6 +61,7 @@ model: haiku
      - `GeneratedFrame` 為純展示外框，`client:visible` 仍掛在被包住的生成元件上、**不要**掛在 `GeneratedFrame` 上。
      - 外框只由 `GeneratedFrame` 提供。**不要**改用、也不要保留任何自製的 `Figure` 之類外框包裝；若發現生成元件本體自帶外框（border / shadow / 卡片）或重複的來源標頭，回報主 Agent（這屬 component-generator 的瑕疵），不要在 MDX 端補包第二層。
      - `GeneratedFrame` 的 import 每個檔案只需一次；若該檔已 import 過則不要重複插入。
+     - **標記在 `::::define{id="…"}` 定義區塊裡時，`import` 一律插在檔案開頭（frontmatter 之後、既有 import 旁），不可放進定義區塊**：define 內出現 `import`／`export` 會讓 build 失敗（docs/notecraft-workbench-define-ref.md §2.4）。`<GeneratedFrame>…</GeneratedFrame>` 本身照常插在標記下方（仍在 define 內）。
      - `prompt` 以 `JSON.stringify(prompt)` 的結果作為 JSX 屬性值（`prompt={"...\n..."}`），安全處理換行 / 引號 / 反引號；外框會以此提供「複製提示詞」按鈕。
 5. 若標記區塊上下方已有同名的 import，請 in-place 更新而非重複插入
 6. 若 `newStatus` 為 `failed`，則只更新 status，不插入 import / JSX

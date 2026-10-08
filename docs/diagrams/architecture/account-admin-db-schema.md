@@ -7,7 +7,7 @@
 - **範圍**：account 001–005、account-020、admin-006、admin-007。admin-007 規格仍為 **Draft**；Accepted ADR-037 已裁決保留兩張可編輯矩陣候選表。
 - **不歸屬任何單一 spec**：同一張 `users` 表被 001、003、005、006 共同修改，因此放在 `docs/diagrams/architecture/`，不隨任何 spec 進 `specs/_archive/`。各 spec 的 plan.md「實體與資料模型」段落應連結本文件，不各自複製欄位表。
 - **狀態：草稿**。九張表均為候選，尚未建立 migration；其他模組的實體鍵與 FK 仍需另行設計，不得據此宣稱已部署。
-- **NoteCraft 規劃檢視**：[`database-schema.er.json`](./database-schema.er.json) 對應 `/view/diagrams/architecture/database-schema.er` 的 Wiki／Diagram。本文件 §3 供應其中 account/admin 的 9 張候選表（64 欄、6 個候選單欄 FK）；[dataset 字典](./dataset-db-schema.md)另供應 5 張／31 欄／6 FK，[task/run 字典](./task-run-db-schema.md)供應 13 張／112 欄／15 FK，[annotation/review 字典](./annotation-review-db-schema.md)供應 8 張／82 欄／14 FK，[匯出字典](./task-export-db-schema.md)供應 2 張候選表／27 欄／2 個候選單欄 FK，全圖合計 37 張候選表／316 欄／43 個候選單欄 FK。兩張權限矩陣表已由 ADR-037 確認保留為候選，目前已落地業務表仍為 0。quality／IAA 專用表依 MVP 範圍延後，工時仍在[盤點總帳](./database-table-inventory.md)待逐表設計。改動任一欄位字典後執行 `node scripts/check-database-schema.mjs` 檢查投影差異。
+- **NoteCraft 規劃檢視**：[`database-schema.er.json`](./database-schema.er.json) 對應 `/view/diagrams/architecture/database-schema.er` 的 Wiki／Diagram。本文件 §3 供應其中 account/admin 的 9 張候選表（64 欄、7 個候選單欄 FK）；[dataset 字典](./dataset-db-schema.md)另供應 5 張／31 欄／6 FK，[task/run 字典](./task-run-db-schema.md)供應 14 張／117 欄／16 FK，[annotation/review 字典](./annotation-review-db-schema.md)供應 8 張／83 欄／15 FK，[匯出字典](./task-export-db-schema.md)供應 2 張候選表／27 欄／2 個候選單欄 FK，[工時字典](./task-work-db-schema.md)供應 1 張／11 欄／0 個單欄 FK（另有三組複合 FK），全圖合計 39 張候選表／333 欄／46 個候選單欄 FK。兩張權限矩陣表已由 ADR-037 確認保留為候選，目前已落地業務表仍為 0。資料集分析的品質／IAA 專用表依 MVP 範圍延後；014 試標閘門所需 `task_trial_iaa_result` 為任務候選表。改動任一欄位字典後執行 `node scripts/check-database-schema.mjs` 檢查投影差異。
 - **驗證方式**：本文件不執行 SQL。每條限制的正確性在實作時由 Alembic migration 的 upgrade／downgrade／roundtrip 測試，以及 §4 指定的測試驗證。
 
 ## 1. 關鍵設計決定
@@ -16,7 +16,7 @@
 |---|---|---|
 | 權限判定與憑證作廢 | 每個已認證請求重讀 `users.role`／`is_active`／`credential_version`；JWT 的 `credential_version` 不符即拒絕。`credential_version` 僅處理憑證失效，不承載角色版本 | ADR-021、account-020 FR-002／FR-010 |
 | 表名與角色、狀態欄名 | 沿用既有契約 `users`、`refresh_tokens`、`role`、`is_active`；登入工作階段表採 `account_session`；既有 auth 表名仍依正典契約保留。例外均由 FR-105 明列 | ADR-021、foundation FR-105、account-020；原 N-1 已裁決 |
-| 共用稽核表 | 唯一共用候選表名為 `audit_events`，作為 FR-105 的明列例外；人員事件以 `actor_user_id → users` 留參照，系統事件的 actor 為 null；`task_id` 先保留可空 UUID 作用域，不虛構尚未定案的 task FK | Accepted ADR-032、foundation FR-105、006 FR-013、007 FR-010；原 D-4 已裁決 |
+| 共用稽核表 | 唯一共用候選表名為 `audit_events`，作為 FR-105 的明列例外；人員事件以 `actor_user_id → users` 留參照，系統事件的 actor 為 null；`task_id` 可空且非空時真實 FK → `task.id`；`RunStateTransition` 與 `IsolationAuditLog` 由 `task.status_changed`／`task.isolation_changed` 事件投影，不另建表 | Accepted ADR-032、foundation FR-105、006 FR-013、007 FR-010、014 FR-025、ADR-022；原 D-4 已裁決 |
 | Google SSO 帳號的判定 | 維持 `hashed_password = null`，不改用 `google_subject IS NOT NULL` | 005 FR-008；ADR-035 修訂 |
 | Google 連結時的既有密碼 | 同一交易清空 `hashed_password` 並撤銷該使用者全部 refresh token | ADR-035 修訂 |
 | refresh token 重用偵測的撤銷範圍 | 寬限期內最多一次重發；逾期重用撤銷該使用者全部有效工作階段，並拒絕請求 | ADR-021、account-020 FR-003／FR-004 |
@@ -54,7 +54,7 @@ erDiagram
     }
     account_session {
         uuid id PK
-        uuid user_id FK "indexed; CASCADE"
+        uuid user_id FK "indexed; RESTRICT"
         timestamptz started_at "登入起點"
         timestamptz revoked_at "nullable"
         timestamptz logged_out_at "可空；僅明確登出"
@@ -100,7 +100,7 @@ erDiagram
         uuid actor_user_id FK "nullable for system; RESTRICT"
         varchar actor_role
         varchar action "registry, no CK"
-        uuid task_id "nullable; task FK pending"
+        uuid task_id FK "nullable; RESTRICT"
         varchar target_type "registry, no CK"
         varchar target_id "polymorphic, no FK"
         jsonb payload_summary "before/after allowlist"
@@ -120,12 +120,13 @@ erDiagram
         timestamptz updated_at
     }
 
-    users ||--o{ account_session : "登入（連動刪除）"
+    users ||--o{ account_session : "登入（保留歷程；刪除受限）"
     account_session ||--o{ refresh_tokens : "輪替（連動刪除）"
     users ||--o{ account_password_token : "reset / invite (CASCADE)"
     users ||--o{ account_email_change_request : "email change (<=1 pending)"
     users ||--o{ account_notification_preference : "preferences (<=6)"
     users |o--o{ audit_events : "human actor (RESTRICT)"
+    task |o--o{ audit_events : "task scope (nullable; RESTRICT)"
 ```
 
 **表的來源**（001 plan v2.2.0、account-020 與 ADR-021 定義登入表形；以下列跨規格來源）：
@@ -144,7 +145,7 @@ erDiagram
 | `account_password_token` | 004 FR-009A；006 FR-006a／FR-006c；ADR-013（reset token 存於 DB） |
 | `account_email_change_request` | 005 FR-004C–FR-004M |
 | `account_notification_preference` | 005 FR-013B–FR-013E |
-| `audit_events` | 006 FR-013、007 FR-010；表形依 Accepted ADR-032；`task_id` 只表示作用域，尚無 task FK |
+| `audit_events` | 006 FR-013、007 FR-010、014 FR-025；表形依 Accepted ADR-032；非空 `task_id` 真實參照 `task.id` |
 | `admin_role_permission` | 007 關鍵實體 RolePermissionMatrix、「角色 × 權限預設矩陣（V1）」 |
 | `admin_role_permission_version` | 007 關鍵實體 RolePermissionVersion、FR-005b |
 
@@ -179,7 +180,7 @@ erDiagram
 | 欄位 | 型別 | 可空 | 代表什麼 | 何時寫入／改變 | 規則 |
 |---|---|---|---|---|---|
 | `id` | uuid | 否 | 一次登入的內部識別碼，由應用程式產生 | 建立 session 時 | F-01 |
-| `user_id` | uuid → users | 否 | 這次登入所屬帳號；FK 採 CASCADE，另建 B-tree 索引 | 登入時 | F-01、F-02 |
+| `user_id` | uuid → users | 否 | 這次登入所屬帳號；為保留工時與責任歷程，FK 採 ON DELETE RESTRICT | 登入時 | F-01、F-02、F-06 |
 | `started_at` | timestamptz | 否 | 最初登入時間，為 refresh token 絕對最長存續時間的唯一基準 | 登入時 | F-01、F-03 |
 | `revoked_at` | timestamptz | 是 | 工作階段因任何原因失效的時間；null＝未撤銷，不能單獨證明明確登出 | 明確登出、跨裝置作廢、高風險事件或重用偵測時 | F-02、F-04、F-05 |
 | `logged_out_at` | timestamptz | 是 | 可驗證的明確登出成功時間；null＝未證實明確登出 | 明確登出成功且與 `revoked_at` 同一交易寫入時 | F-05 |
@@ -242,7 +243,7 @@ erDiagram
 
 ### 3.7 audit_events：共用操作稽核紀錄
 
-一列＝一次需留紀錄的操作（006 FR-013：新增、編輯、停用、啟用、角色變更；007 FR-010：角色權限矩陣儲存）。只能新增。
+一列＝一次需留紀錄的操作（006 FR-013：新增、編輯、停用、啟用、角色變更；007 FR-010：角色權限矩陣儲存；014 FR-025：任務狀態或隔離設定實際變更）。只能新增。任務狀態與隔離歷程分別從 `task.status_changed`、`task.isolation_changed` 事件投影；同一次變更恰寫一筆事件，不另建立第二份領域稽核列。
 
 | 欄位 | 型別 | 可空 | 代表什麼 | 何時寫入／改變 | 規則 |
 |---|---|---|---|---|---|
@@ -250,7 +251,7 @@ erDiagram
 | `actor_user_id` | uuid → users | 是 | 人員事件的操作者；系統事件為 null。FK 為 RESTRICT，有人員稽核紀錄的帳號不可實體刪除。007 抽屜的人員操作者名稱讀取時 join `users.name`（目前名稱） | 與被稽核操作同一交易 | A-01、A-04 |
 | `actor_role` | varchar | 否 | 操作**當下**的角色快照（ADR-032） | 同上 | — |
 | `action` | varchar | 否 | 命名空間動詞，例如 `member.deactivated`；值由 registry 管理，DB 不加 CHECK | 同上 | — |
-| `task_id` | uuid | 是 | 事件所屬任務；跨模組作用域的候選鍵，任務表及 PK 定案前不加 FK | 有任務作用域的事件寫入時 | A-07 |
+| `task_id` | uuid → task | 是 | 非空時是真實任務作用域 FK；全域事件可空；普通刪除先採 RESTRICT | 有任務作用域的事件寫入時 | A-07 |
 | `target_type` | varchar | 否 | 操作對象種類，例如 `user` | 同上 | — |
 | `target_id` | varchar | 否 | 操作對象識別碼；對象可能在任何表，不加 FK | 同上 | X-04 |
 | `payload_summary` | jsonb | 否 | 變更前後摘要，只含 allowlist 欄位 | 同上 | A-03 |
@@ -310,11 +311,12 @@ migration 種入唯一允許的 `id = 1` 列。PK 與 CHECK 只能保證最多�
 
 | ID | 類型 | 規則 | 執行位置 | 實作時驗證 | 來源 |
 |---|---|---|---|---|---|
-| F-01 | CK | `id` 為非空唯一 UUID PK；`user_id` 為非空 FK 至 `users.id`，`started_at` 非空且以 UTC 保存 | DB | DB：不存在的 user FK 及 null 值失敗；M：SQLite＋PG roundtrip | account-020 FR-001 |
-| F-02 | XT | `user_id` 建 B-tree 索引以支援帳號層級撤銷；單裝置登出只撤銷對應 `sid` 工作階段，全部登出以 `user_id` 找到有效工作階段 | DB 索引＋應用層同一交易 | SVC：登出 A 不影響 B；DB：可用該索引按使用者查工作階段 | account-020 FR-007／FR-008 |
+| F-01 | CK | `id` 為非空唯一 UUID PK；`user_id` 為非空 FK 至 `users.id`，採 ON DELETE RESTRICT 保留已被工時與責任歷程引用的登入工作階段；`started_at` 非空且以 UTC 保存 | DB | DB：不存在的 user FK 及 null 值失敗；有 session 的 user 不可硬刪；M：SQLite＋PG roundtrip | account-020 FR-001、FR-008；014 FR-007d |
+| F-02 | XT | `user_id` 以 UNIQUE `(user_id,id)` 的左前綴支援帳號層級撤銷；單裝置登出只撤銷對應 `sid` 工作階段，全部登出以 `user_id` 找到有效工作階段 | DB 唯一鍵＋應用層同一交易 | SVC：登出 A 不影響 B；DB：按使用者查工作階段可使用該唯一鍵 | account-020 FR-007／FR-008 |
 | F-03 | XT | `started_at` 是絕對存續上限的唯一來源；每個已認證請求與 refresh 都必須查到未撤銷的工作階段、啟用的使用者，並檢查 `now < started_at + REFRESH_TOKEN_ABSOLUTE_MAX_TTL`；登入及 refresh 核發的 access JWT `exp` 亦不得超過此上限 | 應用層；跨表和設定值不能由 token 列 CHECK | API：即使 JWT 自身未到期，工作階段超過上限仍拒絕；SVC：接近上限輪替不延長 | account-020 FR-002／FR-003／SC-009、foundation FR-076 |
 | F-04 | SM | `revoked_at` 一旦設定不可回復；單裝置明確登出、密碼修改、email 變更、停用或逾期重用依 FR-004／FR-006／FR-007 範圍設定 | 應用層 | SVC：重新啟用不恢復工作階段；逾期重用撤銷使用者全部工作階段 | account-020 FR-004／FR-006／FR-007／FR-008 |
 | F-05 | CK／XT | `logged_out_at` 只在可驗證的明確登出成功時與 `revoked_at` 同交易寫入；資料庫檢查 `logged_out_at IS NULL OR (revoked_at IS NOT NULL AND logged_out_at <= revoked_at)`。僅以 cookie 登出、權杖到期或安全撤銷時維持 null；資料庫檢查無法判定事件原因 | DB CHECK＋應用層單一交易 | DB：有登出時間卻無撤銷時間，或登出時間晚於撤銷時間均失敗；SVC：明確登出同時寫入兩欄，其他失效原因不寫登出時間 | account-020 FR-001／FR-008、ADR-021 |
+| F-06 | CK | UNIQUE `(user_id,id)` 是 `task_work_interval(user_id,account_session_id)` 複合 FK 的同序父鍵；登入工作階段及其歷程刪除均採 RESTRICT 候選，不因 refresh token 清理而刪除 session | DB | SQLite／PostgreSQL：跨使用者工作區間寫入失敗；清理 token 後歷史 session 仍可供報表追溯 | 014 FR-007d、account-020 FR-008；[工時字典](./task-work-db-schema.md) W-02 |
 
 ### 4.3 refresh_tokens
 
@@ -375,7 +377,8 @@ migration 種入唯一允許的 `id = 1` 列。PK 與 CHECK 只能保證最多�
 | A-04 | CK | `((actor_user_id IS NULL AND actor_role = 'system') OR (actor_user_id IS NOT NULL AND actor_role <> 'system'))`；非空 actor FK 為 RESTRICT | DB CHECK＋FK | SQLite 與 PG：角色／actor 不一致失敗；刪除有稽核紀錄的使用者失敗（SQLite 依賴 X-01） | Accepted ADR-032 |
 | A-05 | CD | **所有**稽核事件至少保存一個日曆年，不設自動刪除；未來的保留或清理政策須另行審核，不能透過一般寫入路徑刪除 | 應用層與維運政策 | SVC：無自動刪除路徑；DB：一般 DELETE 被 A-02 擋下 | 007 FR-010；Accepted ADR-032 |
 | A-06 | CD | 矩陣事件固定 `action='role_permissions.changed'`、`target_type='role_permission_matrix'`、`target_id='1'`，不設多型目標 FK；`payload_summary` 記版本前後值及各變更格的 `role_type`、`role_key`、`permission_key`、前後值。diff 由伺服器比對已儲存列，不採前端提供值 | 應用層 | SVC：目標穩定為字串 `1`；前端 diff 不符時以資料庫觀察值為準 | Accepted ADR-032／ADR-037、007 FR-010 |
-| A-07 | PT | `task_id` 是可空 UUID 候選作用域；任務表及 PK 定案前不建立 task FK。建立該 FK 必須由任務模組後續設計與 migration 驗證 | 實體層／後續 migration | Source：`task_id` 無 FK；後續 task 設計核定後再驗證參照完整性 | Accepted ADR-032；任務實體層待定 |
+| A-07 | FK | `task_id` 是可空 UUID 真實 FK → `task.id`；非空值須指向已存在任務，普通刪除先採 RESTRICT。共用稽核表與 task 表的建表順序及兩庫參照完整性在獨立 migration 驗證；`audit_events(task_id,occurred_at,id)` 索引以左前綴覆蓋 FK 反查 | DB＋後續 migration | SQLite／PG：無效 task ID 被拒、全域事件可空；任務內時間線依索引定位，刪除有事件任務受限 | Accepted ADR-032、ADR-022、014 FR-025 |
+| A-08 | XT＋CD | `task.status_changed` 與 `task.isolation_changed` 均要求非空 `task_id`、`target_type='task'`，且 `target_id` 正規化成小寫連字號 UUID 後與 `task_id` 相等；兩個有效但不同的任務也須拒絕。前者摘要只收前後狀態、觸發來源及必要原因碼；後者只收前後布林值：關閉隔離須驗證二次確認及其受控原因碼，重新啟用採獨立固定原因碼且不要求二次確認。操作者、任務、時間由既有欄承接；實際變更與恰一筆事件同一資料庫交易，無變更不建事件；兩種歷程由此表授權投影，不另存重複列 | 應用層交易＋事件 allowlist | SQLite／PG：錯配任務 target 與 scope 均拒絕，兩者有效仍拒絕；SVC：稽核失敗則任務變更回滾，無變更無事件；每次實際變更僅一筆且摘要不含答案或敏感內容 | Accepted ADR-032、ADR-022、014 FR-025 |
 
 ### 4.7 admin_role_permission 與 admin_role_permission_version
 
@@ -412,11 +415,11 @@ Accepted ADR-037 已確認保留兩張可編輯矩陣候選表。以下是後續
 | 每請求驗證 `sub`／`sid`、單列 refresh | `users.id`、`account_session.id`、`refresh_tokens.id` 的 PK | 按主鍵定位；`credential_version` 只在定位後比對，不另建索引 |
 | 註冊／邀請／登入／改 email 比對帳號 | `UNIQUE lower(users.email)` | canonical 值的第二層唯一防線；Unicode 識別仍以應用層 NFC＋casefold 為準 |
 | 依 token 原值雜湊查找 | `UNIQUE refresh_tokens.token_hash` | 唯一定位；不存明文 token |
-| 使用者全裝置撤銷與列出工作階段 | `account_session.user_id` B-tree | FK 並作 `WHERE user_id = ?`；全帳號作廢要能尋得所有工作階段 |
+| 使用者全裝置撤銷與列出工作階段 | UNIQUE `account_session(user_id,id)` | 左前綴覆蓋 `WHERE user_id = ?` 與父端複合 FK；先不另建重複的單欄索引 |
 | 輪替／刪除工作階段時查找 token | `refresh_tokens.session_id` B-tree | FK 並作 `WHERE session_id = ?`；避免工作階段至權杖 全表掃描 |
 | 密碼／邀請 token、email 變更依 user 查找 | `account_password_token.user_id`、`account_email_change_request.user_id` B-tree | 各 FK 查詢及參照動作；部分唯一索引只涵蓋 pending 列，不取代全 FK 索引 |
 | 使用者／角色抽屜讀取目標歷程 | `audit_events(target_type, target_id, occurred_at DESC, id DESC)` | 以目標識別與穩定的倒序鍵分頁；`target_id` 為多型字串，不虛構目標 FK |
-| 任務內稽核事件時間線 | `audit_events(task_id, occurred_at, id)` | 任務作用域查詢與穩定升序；`task_id` 目前只是候選欄，仍無 task FK |
+| 任務內稽核事件時間線及 task FK 反查 | `audit_events(task_id, occurred_at, id)` | 任務作用域查詢與穩定升序；索引以 `task_id` 起首，覆蓋真實 FK 參照檢查，不另加單欄索引 |
 | 依操作者讀取事件與 actor FK 參照動作 | `audit_events(actor_user_id, occurred_at DESC, id DESC)` | 前導 actor 欄涵蓋 FK 查找，不再另建單欄索引 |
 | 通知設定按 user 查找 | `account_notification_preference(user_id, event_key)` 複合 PK | 前導欄已涵蓋 user FK，無需重複單欄索引 |
 | 依角色、層級與鍵判斷權限 | `admin_role_permission(role_type, role_key, permission_key)` 複合 PK | 三元定位由 PK 涵蓋；V1 僅 42 列，整份矩陣讀取無需額外索引 |

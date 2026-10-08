@@ -3,7 +3,8 @@ import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 
 import {
-  mergeSchemaSources, parseAccountAdminSchema, parseDatasetSchema, validateErData,
+  mergeSchemaSources, parseAccountAdminSchema, parseDatasetSchema, parseTaskRunSchema,
+  validateErData,
 } from '../check-database-schema.mjs';
 
 const sourceMarkdown = `# account 與 admin 資料庫 schema
@@ -91,6 +92,18 @@ const errorsFor = (data) => validateErData(parseAccountAdminSchema(sourceMarkdow
 const accountData = (source, data) => {
   const names = new Set(source.tables.map((table) => table.name));
   return { ...data, tables: data.tables.filter((table) => names.has(table.name)) };
+};
+const validateWithTaskParents = (source, data) => {
+  const dataset = parseDatasetSchema(readFileSync(
+    new URL('../../docs/diagrams/architecture/dataset-db-schema.md', import.meta.url), 'utf8'));
+  const task = parseTaskRunSchema(readFileSync(
+    new URL('../../docs/diagrams/architecture/task-run-db-schema.md', import.meta.url), 'utf8'))
+    .tables.find((table) => table.name === 'task');
+  assert.ok(task, 'Task scope parent is required for the audit FK');
+  const sourceTables = new Map([...source.tables, ...dataset.tables, task]
+    .map((table) => [table.name, table]));
+  const withParents = { tables: [...sourceTables.values()] };
+  return validateErData(withParents, accountData(withParents, data));
 };
 
 test('parsesDictionaryAndMermaidKeys', () => {
@@ -226,7 +239,7 @@ test('dictionaryAndNoteCraftResolveD9ThroughD13WithoutChangingPhysicalCounts', (
   for (const [label, tables] of [['dictionary', source.tables], ['NoteCraft', projectedAccount.tables]]) {
     assert.equal(tables.length, 9, `${label} table count`);
     assert.equal(tables.reduce((sum, table) => sum + table.columns.length, 0), 64, `${label} column count`);
-    assert.equal(tables.reduce((sum, table) => sum + table.columns.filter((column) => column.fk).length, 0), 6, `${label} FK count`);
+    assert.equal(tables.reduce((sum, table) => sum + table.columns.filter((column) => column.fk).length, 0), 7, `${label} FK count`);
     for (const name of ['admin_role_permission', 'admin_role_permission_version']) {
       const table = tables.find((entry) => entry.name === name);
       assert.ok(table, `${label} retains ${name}`);
@@ -243,8 +256,8 @@ test('dictionaryAndNoteCraftResolveD9ThroughD13WithoutChangingPhysicalCounts', (
   assert.equal(projectedMatrix.columns.find((column) => column.name === 'allowed').type, 'boolean');
   assert.equal(projectedMatrix.columns.find((column) => column.name === 'allowed').required, 'required');
   assert.equal(source.tables.find((table) => table.name === 'audit_events').columns
-    .find((column) => column.name === 'task_id').fk, undefined);
-  assert.deepEqual(validateErData(source, projectedAccount), []);
+    .find((column) => column.name === 'task_id').fk, 'task');
+  assert.deepEqual(validateWithTaskParents(source, data), []);
 });
 
 test('parsesRealAccountAdminDictionary', () => {
@@ -260,7 +273,7 @@ test('parsesRealAccountAdminDictionary', () => {
   assert.equal(audit.columns.find((column) => column.name === 'actor_user_id').fk, 'users');
 });
 
-test('realDictionaryAndNoteCraftProjectSharedAuditEventsWithoutInventedTaskFk', () => {
+test('realDictionaryAndNoteCraftProjectSharedAuditEventsWithTaskFk', () => {
   const markdown = readFileSync(new URL('../../docs/diagrams/architecture/account-admin-db-schema.md', import.meta.url), 'utf8');
   const source = parseAccountAdminSchema(markdown);
   const data = JSON.parse(readFileSync(new URL('../../docs/diagrams/architecture/database-schema.er.json', import.meta.url), 'utf8'));
@@ -278,7 +291,7 @@ test('realDictionaryAndNoteCraftProjectSharedAuditEventsWithoutInventedTaskFk', 
     const task = audit.columns.find((column) => column.name === 'task_id');
     assert.ok(task, `${label} missing audit_events.task_id`);
     assert.equal(task.type, 'uuid', `${label} task_id type`);
-    assert.equal(task.fk, undefined, `${label} must not invent task FK`);
+    assert.equal(task.fk, 'task', `${label} must reference task for non-null scopes`);
   }
 
   const sourceAudit = source.tables.find((table) => table.name === 'audit_events');
@@ -290,9 +303,9 @@ test('realDictionaryAndNoteCraftProjectSharedAuditEventsWithoutInventedTaskFk', 
 
   assert.equal(source.tables.reduce((count, table) => count + table.columns.length, 0), 64);
   assert.equal(projectedAccount.tables.reduce((count, table) => count + table.columns.length, 0), 64);
-  assert.equal(source.tables.reduce((count, table) => count + table.columns.filter((column) => column.fk).length, 0), 6);
-  assert.equal(projectedAccount.tables.reduce((count, table) => count + table.columns.filter((column) => column.fk).length, 0), 6);
-  assert.deepEqual(validateErData(source, projectedAccount), []);
+  assert.equal(source.tables.reduce((count, table) => count + table.columns.filter((column) => column.fk).length, 0), 7);
+  assert.equal(projectedAccount.tables.reduce((count, table) => count + table.columns.filter((column) => column.fk).length, 0), 7);
+  assert.deepEqual(validateWithTaskParents(source, data), []);
 });
 
 test('realDictionaryModelsAccountSessionsWithoutDuplicatingTheirOwnerOrStartTime', () => {
@@ -361,7 +374,7 @@ test('noteCraftProjectionTracksTheCanonicalAccountSessionDictionaryAndRejectsDri
   const data = JSON.parse(readFileSync(new URL('../../docs/diagrams/architecture/database-schema.er.json', import.meta.url), 'utf8'));
   const session = data.tables.find((table) => table.name === 'account_session');
   assert.ok(session, 'NoteCraft must display account_session');
-  assert.deepEqual(validateErData(source, accountData(source, data)), []);
+  assert.deepEqual(validateWithTaskParents(source, data), []);
   assert.equal(data.tables.some((table) => table.name === 'account_token_family'), false);
   assert.equal(session.columns.find((column) => column.name === 'id')?.pk, true);
   assert.equal(session.columns.find((column) => column.name === 'user_id')?.fk, 'users');
@@ -376,22 +389,22 @@ test('noteCraftProjectionTracksTheCanonicalAccountSessionDictionaryAndRejectsDri
 
   const missingSession = structuredClone(data);
   missingSession.tables = missingSession.tables.filter((table) => table.name !== 'account_session');
-  assert.match(validateErData(source, accountData(source, missingSession)).join('\n'), /Missing table: account_session/);
+  assert.match(validateWithTaskParents(source, missingSession).join('\n'), /Missing table: account_session/);
 
   const detachedToken = structuredClone(data);
   delete detachedToken.tables.find((table) => table.name === 'refresh_tokens').columns
     .find((column) => column.name === 'session_id').fk;
-  assert.match(validateErData(source, accountData(source, detachedToken)).join('\n'), /refresh_tokens\.session_id: FK/);
+  assert.match(validateWithTaskParents(source, detachedToken).join('\n'), /refresh_tokens\.session_id: FK/);
 });
 
-test('noteCraftProjectionKeepsThe37Table43FkShapeWith316Columns', () => {
+test('noteCraftProjectionKeepsThe39Table46FkShapeWith333Columns', () => {
   const data = JSON.parse(readFileSync(
     new URL('../../docs/diagrams/architecture/database-schema.er.json', import.meta.url), 'utf8'));
   assert.deepEqual({
     tables: data.tables.length,
     columns: data.tables.reduce((count, table) => count + table.columns.length, 0),
     fks: data.tables.reduce((count, table) => count + table.columns.filter((column) => column.fk).length, 0),
-  }, { tables: 37, columns: 316, fks: 43 });
+  }, { tables: 39, columns: 333, fks: 46 });
 });
 
 test('realAccountAndDatasetDictionariesMatchCompleteNoteCraftProjection', () => {
@@ -407,7 +420,7 @@ test('realAccountAndDatasetDictionariesMatchCompleteNoteCraftProjection', () => 
 
   assert.deepEqual(dataset.tables.map((table) => table.name), expectedDatasetNames);
   const existingModules = mergeSchemaSources(account, dataset);
-  assert.deepEqual(validateErData(existingModules, accountData(existingModules, data)), []);
+  assert.deepEqual(validateWithTaskParents(existingModules, data), []);
   assert.deepEqual(data.tables.filter((table) => expectedDatasetNames.includes(table.name))
     .map((table) => table.name), expectedDatasetNames);
 });
