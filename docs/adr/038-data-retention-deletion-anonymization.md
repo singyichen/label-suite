@@ -20,11 +20,11 @@ A data-subject deletion request anonymizes the same `users` row; foreign keys ar
 - revoke all sessions through the `account/020-auth-session-security` FR-007 path;
 - delete the user's `account_password_token` rows and all `account_email_change_request` rows, including verified rows that carry the old `pending_email`.
 
-The operation is irreversible: account re-enable and email edits must refuse an anonymized account. How the anonymized state is persisted (dedicated column or reserved tombstone value) is TBD (#1224) and decided in the first migration. It runs as a reviewed maintenance operation; no product UI is added. Because ADR-032 joins the actor name from `users.name` at read time, audit and history then display the tombstone label; event rows and `actor_user_id` remain.
+The operation is irreversible: account re-enable and email edits must refuse an anonymized account. Anonymization is refused while the target is the seeder (U-05/U-07) or the last active super_admin (U-08), because it would break those invariants; handling is TBD (#1224). How the anonymized state is persisted (dedicated column or reserved tombstone value) is TBD (#1224) and decided in the first migration. It runs as a reviewed maintenance operation; no product UI is added. Because ADR-032 joins the actor name from `users.name` at read time, audit and history then display the tombstone label; event rows and `actor_user_id` remain.
 
 ### PII inside audit and history events: anonymize after the minimum
 
-Event rows are never deleted. After the ADR-032 minimum (one calendar year from `occurred_at`), only PII columns may be tombstoned: the `audit_events.payload_summary` keys the event registry marks as personal, and the `annotation_history_event.reason` free text. Identifiers (`actor_user_id`, `target_id`, `account_session_id`) stay; identity removal happens through the users class above. Cadence and maximum retention are TBD (#1224).
+Event rows are never deleted. After the ADR-032 minimum (one calendar year from `occurred_at`), only PII columns may be tombstoned: the `annotation_history_event.reason` free text, and any `audit_events.payload_summary` key later marked personal (`audit_events.payload_summary` carries no personal keys today because the ADR-032 allowlist excludes personal and contact data; marking any key as personal is TBD (#1224)). Identifiers (`actor_user_id`, `target_id`, `account_session_id`) stay; identity removal happens through the users class above. Cadence and maximum retention are TBD (#1224).
 
 ### Answer-bearing history JSON: keep with its dataset version or run
 
@@ -37,7 +37,7 @@ The restricted source artifact, `dataset_item_private.hidden_answer`, `declared_
 ### Sessions and refresh tokens: physical delete by cleanup job
 
 - `refresh_tokens`: a cleanup job deletes a row once its own `expires_at` has passed. Revoked (including rotated) tokens are kept until then so `account/020-auth-session-security` FR-004 reuse detection keeps working.
-- `account_session`: deleted once revoked or past its absolute maximum lifetime, and only when no `task_work_interval` or `annotation_history_event` references it. The RESTRICT foreign keys stay; a referenced session is kept as long as the reference exists (one-year minimum, maximum TBD (#1224)). Deleting a session cascades its remaining token rows.
+- `account_session`: deleted once every refresh token of the session has passed its own `expires_at` (or the session has passed its absolute maximum, `REFRESH_TOKEN_ABSOLUTE_MAX_TTL`), and only when no `task_work_interval` or `annotation_history_event` references it; this keeps R-10 and `account/020-auth-session-security` FR-004 reuse detection intact. The RESTRICT foreign keys stay; a referenced session is kept as long as the reference exists (one-year minimum, maximum TBD (#1224)). Deleting a session cascades its remaining token rows, all of which are expired by then.
 
 Cleanup cadence is TBD (#1224).
 

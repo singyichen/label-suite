@@ -6,6 +6,7 @@
 **Amends**: ADR-001 — root `docker-compose.yml` no longer starts PostgreSQL by default; the ADR-001 single-compose full-stack model is preserved in `docker-compose.prod.yml`
 **Amends**: ADR-008 — local `docker-compose.yml` default changes from PostgreSQL to SQLite; `docker-compose.prod.yml` preserves the ADR-008 full PostgreSQL stack
 **Amended**: 2026-10-08 — issue #1221 database-enforced immutability for append-only and sealed tables (planning contract only)
+**Accepted amendment**: 2026-10-08 — issue #1224; the ADR-038 privileged anonymization runs through the migration role, never the app role, and event rows are never deleted.
 
 ## Context
 
