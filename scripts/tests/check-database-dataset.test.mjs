@@ -439,3 +439,28 @@ test('inventory, README and account-admin doc carry the 351-column totals', () =
   assert.ok(accountAdminDoc.includes('351 欄'));
   assert.ok(accountAdminDoc.includes('5 張／32 欄／6 FK'));
 });
+
+// Issue #1224: dataset-021 FR-011 v1.4.0 and dictionary deletion wording.
+test('dataset-021 canonical FR-011 is defined by ADR-038 at version 1.4.0', () => {
+  const spec = readFileSync(new URL('../../specs/dataset/021-dataset-ingestion-and-lineage/spec.md', import.meta.url), 'utf8');
+  assert.match(spec, /^版本: 1\.4\.0$/m);
+  const fr = spec.split('\n').find((line) => line.startsWith('- **FR-011**'));
+  assert.ok(fr, 'Missing FR-011');
+  for (const token of ['ADR-038', 'RESTRICT', 'sealed', 'draft', 'protected_payload', '#1224']) {
+    assert.ok(fr.includes(token), `FR-011 must mention ${token}`);
+  }
+  assert.ok(!fr.includes('未定案前不得以無限制 cascade'), 'FR-011 must drop the undecided-cascade wording');
+  const changelog = spec.split('\n').find((line) => line.startsWith('| 1.4.0 |'));
+  assert.ok(changelog, 'Missing 1.4.0 Changelog row');
+  assert.ok(changelog.includes('#1224'), 'Changelog 1.4.0 must cite #1224');
+});
+
+test('dataset dictionary deletion-and-retention paragraph follows ADR-038 and FR-011', () => {
+  const md = readFileSync(new URL('../../docs/diagrams/architecture/dataset-db-schema.md', import.meta.url), 'utf8');
+  const line = md.split('\n').find((l) => l.startsWith('**刪除與保留**'));
+  assert.ok(line, 'Missing 刪除與保留 paragraph');
+  for (const token of ['ADR-038', 'FR-011', 'draft']) {
+    assert.ok(line.includes(token), `刪除與保留 must mention ${token}`);
+  }
+  assert.ok(!line.includes('須先依 dataset-021 FR-011 補齊'), 'Obsolete 補齊 wording must be removed');
+});

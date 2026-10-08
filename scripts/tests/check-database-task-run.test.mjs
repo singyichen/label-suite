@@ -414,3 +414,12 @@ test('schema summary checker rejects drift in each inventory NoteCraft count', (
     assert.notDeepEqual(summaryErrors(data, mutated), [], `Stale inventory ${unit} count must fail`);
   }
 });
+
+// Issue #1224: task/run migration availability follows ADR-038.
+test('task/run section 7 migration-availability item cites ADR-038', () => {
+  const md = read('../../docs/diagrams/architecture/task-run-db-schema.md');
+  const item = md.split('\n').find((line) => line.startsWith('1. **migration 可用性**'));
+  assert.ok(item, 'Missing migration availability item');
+  assert.ok(item.includes('ADR-038'), 'Item must mention ADR-038');
+  assert.ok(!item.includes('須由產品／隱私政策另行裁決'), 'Obsolete 另行裁決 wording must be removed');
+});

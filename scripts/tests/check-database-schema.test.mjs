@@ -538,3 +538,97 @@ test('account dictionary A-02 cites REVOKE, TRUNCATE and the ADR-024 amendment a
     assert.ok(row.includes(token), `A-02 must mention ${token}`);
   }
 });
+
+// Issue #1224: ADR-038 retention, deletion and anonymization policy write-back.
+const r1224 = (path) => {
+  try {
+    return readFileSync(new URL(`../../${path}`, import.meta.url), 'utf8');
+  } catch (error) {
+    assert.fail(`Missing or unreadable ${path}: ${error.code ?? error.message}`);
+  }
+};
+const adr038 = () => r1224('docs/adr/038-data-retention-deletion-anonymization.md');
+const r1224Section = (text, heading) => {
+  const lines = text.split('\n');
+  const start = lines.findIndex((line) => line.startsWith(heading));
+  assert.ok(start >= 0, `Missing heading ${heading}`);
+  const rel = lines.slice(start + 1).findIndex((line) => /^#{2,3} /.test(line));
+  return lines.slice(start, rel >= 0 ? start + 1 + rel : undefined).join('\n');
+};
+const r1224Row = (text, prefix) => {
+  const row = text.split('\n').find((line) => line.startsWith(prefix));
+  assert.ok(row, `Missing line starting with ${prefix}`);
+  return row;
+};
+const r1224Includes = (haystack, tokens, label) => {
+  for (const token of tokens) assert.ok(haystack.includes(token), `${label} must mention ${token}`);
+};
+
+test('ADR-038 exists, is Accepted, cites #1224 and names the six data classes and cross-references', () => {
+  const text = adr038();
+  r1224Includes(text, ['**Status**: Accepted', '#1224',
+    'pending_email', 'audit_events', 'annotation_history_event', 'result_snapshot',
+    'dataset_item_private', 'protected_payload', 'refresh_tokens', 'account_session',
+    'task_work_interval', 'task_export', 'task_export_run',
+    'ADR-021', 'ADR-024', 'ADR-032', 'FR-011', 'FR-021', 'FR-063', 'FR-004', 'TBD (#1224)'], 'ADR-038');
+  assert.match(text, /migration role/);
+  assert.match(text, /application code path/i);
+  assert.match(text, /anonymi[sz]/i);
+});
+
+test('ADR-038 duration guard allows only 30 days and one calendar year', () => {
+  const text = adr038();
+  for (const m of text.matchAll(/\b(\d+)\s*-?\s*(?:calendar\s+)?(days?|months?|years?)\b/gi)) {
+    assert.ok(m[1] === '30' && /^days?$/i.test(m[2]), `Disallowed numeric duration in ADR-038: "${m[0]}"`);
+  }
+  assert.doesNotMatch(text,
+    /\b(?:two|three|four|five|six|seven|eight|nine|ten|twelve|eighteen|twenty)\s*-?\s*(?:calendar\s+)?(?:days?|months?|years?)\b/i);
+});
+
+test('ADR-024 amendment now points at ADR-038 instead of leaving retention pending in #1224', () => {
+  const text = adr024();
+  const start = text.indexOf(amendmentHeading);
+  assert.ok(start >= 0, 'Missing exact amendment heading');
+  const rest = text.slice(start + amendmentHeading.length);
+  const next = rest.search(/^## /m);
+  const section = next >= 0 ? rest.slice(0, next) : rest;
+  assert.ok(section.includes('#1224'), 'Amendment must still cite #1224');
+  assert.ok(section.includes('ADR-038'), 'Amendment must cite ADR-038');
+  assert.doesNotMatch(section, /still pending in #1224/);
+});
+
+test('ADR-032 cites ADR-038 and the anonymization boundary', () => {
+  const text = r1224('docs/adr/032-user-action-audit-trail.md');
+  assert.ok(text.includes('ADR-038'), 'ADR-032 must mention ADR-038');
+  assert.match(text, /anonymi[sz]/i);
+});
+
+test('ADR README indexes ADR-038 as Accepted', () => {
+  const row = r1224Row(r1224('docs/adr/README.md'), '| [038](038-data-retention-deletion-anonymization.md) |');
+  assert.ok(row.includes('Accepted'), 'ADR-038 index row must be Accepted');
+});
+
+test('inventory section 5.2 is a decided retention policy with only 30 days and one calendar year', () => {
+  const markdown = r1224('docs/diagrams/architecture/database-table-inventory.md');
+  assert.ok(!markdown.includes('待決矩陣'), 'Inventory must no longer call the retention matrix 待決');
+  const section = r1224Section(markdown, '### 5.2 保存、刪除與匿名化政策');
+  r1224Includes(section, ['ADR-038', '待定', '#1224', '30 日', '一個日曆年'], 'Inventory section 5.2');
+  assert.ok(!section.includes('待產品／隱私'), 'Section 5.2 must not defer to 待產品／隱私');
+  for (const m of section.matchAll(/(\d+)\s*(?:日|天|個月|年)/g)) {
+    assert.ok(m[1] === '30' && /[日天]$/.test(m[0]), `Disallowed numeric duration in section 5.2: "${m[0]}"`);
+  }
+  assert.doesNotMatch(section, /[二兩三四五六七八九十]+\s*(?:個)?(?:年|月)/);
+});
+
+test('account dictionary U-17, F-07, R-10 and A-05 carry the ADR-038 retention rules', () => {
+  const markdown = r1224('docs/diagrams/architecture/account-admin-db-schema.md');
+  r1224Includes(r1224Row(markdown, '| U-17 |'),
+    ['ADR-038', 'account_email_change_request', 'google_subject', 'hashed_password', 'is_active', '待定'], 'U-17');
+  r1224Includes(r1224Row(markdown, '| F-07 |'),
+    ['ADR-038', 'RESTRICT', 'task_work_interval', 'annotation_history_event', 'revoked_at'], 'F-07');
+  r1224Includes(r1224Row(markdown, '| R-10 |'), ['ADR-038', 'expires_at', 'FR-004'], 'R-10');
+  const a05 = r1224Row(markdown, '| A-05 |');
+  assert.ok(a05.includes('ADR-038'), 'A-05 must mention ADR-038');
+  assert.match(a05, /匿名化/);
+  assert.ok(r1224Row(markdown, '- 不提供使用者實體刪除').includes('U-17'), 'Section 6 deletion line must cite U-17');
+});

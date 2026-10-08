@@ -99,3 +99,11 @@ test('session OpenSpec delta classifies renamed and newly derived requirements',
   for (const id of ['FR-016','FR-076','FR-077']) assert.match(added, new RegExp('### Requirement: '+id+' '));
   assert.match(foundationDelta, /## RENAMED Requirements/);
 });
+
+// Issue #1224: ADR-021 defers to ADR-038 for token cleanup.
+test('ADR-021 cites ADR-038 and the TBD (#1224) token cleanup, without the old pending-order wording', () => {
+  assert.ok(adr.includes('ADR-038'), 'ADR-021 must mention ADR-038');
+  assert.ok(adr.includes('TBD (#1224)'), 'ADR-021 must mention TBD (#1224)');
+  assert.match(adr, /expires_at/);
+  assert.doesNotMatch(adr, /privacy deletion order must be settled/);
+});
