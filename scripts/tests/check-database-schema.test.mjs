@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { test } from 'node:test';
 
 import {
@@ -712,4 +712,40 @@ test('retention changed docs use only 30 days and one calendar year as durations
     const en = rest.match(/\b\d+\s*-?\s*(?:days?|weeks?|months?|years?|hours?)\b/gi);
     assert.equal(en, null, `${label}: disallowed English duration ${en}`);
   }
+});
+
+// Issue #1224 review fixes, round 2: session cleanup wording must agree everywhere.
+test('inventory 5.2 account_session row conditions deletion on token expiry', () => {
+  const section = r1224Section(r1224('docs/diagrams/architecture/database-table-inventory.md'), '### 5.2 保存、刪除與匿名化政策');
+  const row = r1224Row(section, '| `account_session` |');
+  assert.match(row, /expires_at|到期/, 'account_session row must state the token-expiry condition');
+});
+
+test('inventory 5.2 audit row has no registry-marked personal keys claim and marks them 待定（#1224）', () => {
+  const section = r1224Section(r1224('docs/diagrams/architecture/database-table-inventory.md'), '### 5.2 保存、刪除與匿名化政策');
+  const row = r1224Row(section, '| 共用 `audit_events` 與 `annotation_history_event`');
+  assert.ok(!row.includes('registry 標為個人'), 'Audit row must not claim registry-marked personal keys');
+  assert.ok(row.includes('待定（#1224）'), 'Audit row must mark personal payload_summary keys 待定（#1224）');
+});
+
+test('every line describing session cleanup deletion also states token expiry', () => {
+  const dir = new URL('../../docs/diagrams/architecture/', import.meta.url);
+  const files = [
+    ...readdirSync(dir).filter((name) => name.endsWith('-db-schema.md')).map((name) => `docs/diagrams/architecture/${name}`),
+    'docs/diagrams/architecture/database-table-inventory.md',
+    ...readdirSync(new URL('../../docs/adr/', import.meta.url))
+      .filter((name) => /^(038|021)-.*\.md$/.test(name)).map((name) => `docs/adr/${name}`),
+  ];
+  assert.ok(files.length >= 8, `Expected dictionaries, inventory and two ADRs, got ${files.length}`);
+  const isCleanup = (line) => /session/i.test(line)
+    && /清理工作刪除|清理刪除|實體刪除|deleted once|`account_session` is deleted/.test(line);
+  let matched = 0;
+  for (const file of files) {
+    for (const line of r1224(file).split('\n')) {
+      if (!isCleanup(line)) continue;
+      matched += 1;
+      assert.match(line, /expires_at|到期/, `${file}: session cleanup line lacks token expiry: ${line.slice(0, 80)}`);
+    }
+  }
+  assert.ok(matched >= 5, `Matcher too narrow, only ${matched} lines`);
 });
