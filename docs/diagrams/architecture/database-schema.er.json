@@ -2,8 +2,8 @@
   "$schema": "https://raw.githubusercontent.com/SteveLin100132/notecraft/main/plugins/er-diagram-renderer/schema.json",
   "meta": {
     "title": "Label Suite 資料庫規劃 ER 圖（帳號、管理、資料集、任務執行、工時、標記、審核與匯出）",
-    "description": "**規劃圖，尚未部署資料結構。** 已部署業務表：0；本頁顯示 **38 張候選表、328 欄、44 個候選單欄 FK（外鍵）**。帳號／管理、資料集、任務／執行、工時、標記／審核與匯出的逐表型別和關聯，來自[資料表盤點總帳](/notes/diagrams/architecture/database-table-inventory)所連的六份實體層字典。`task_work_interval` 保存可觀測前景工作區間；`WorkLogEntry` 是查詢投影，不另建表。標記責任歷程可選擇關聯已驗證的登入工作階段。同任務與同使用者的複合外鍵見[工時字典](/notes/diagrams/architecture/task-work-db-schema) §4。資料集分析專用表延後至 MVP 後。\n\n**讀圖方式：** Wiki 可逐表查看候選欄位、來源與待決事項；Diagram 可搜尋表名或欄名，點選表後會聚焦已列出的候選單欄外鍵。圖中連線不代表資料庫遷移、複合約束或資料庫權限已建立。",
-    "source": "docs/diagrams/architecture/account-admin-db-schema.md §2–§3; docs/diagrams/architecture/dataset-db-schema.md §2–§3; docs/diagrams/architecture/task-run-db-schema.md §2–§3; docs/diagrams/architecture/task-work-db-schema.md §2–§3; docs/diagrams/architecture/annotation-review-db-schema.md §2–§3; docs/diagrams/architecture/task-export-db-schema.md §2–§3; specs/task-management/014-task-detail/spec.md v9.0.0; specs/annotation/015-annotation-workspace/spec.md v12.1.0; specs/account/020-auth-session-security/spec.md v1.3.0",
+    "description": "**規劃圖，尚未部署資料結構。** 已部署業務表：0；本頁顯示 **38 張候選表、327 欄、44 個候選單欄 FK（外鍵）**。帳號／管理、資料集、任務／執行、工時、標記／審核與匯出的逐表型別和關聯，來自[資料表盤點總帳](/notes/diagrams/architecture/database-table-inventory)所連的六份實體層字典。`task_work_interval` 保存可觀測前景工作區間；`WorkLogEntry` 是查詢投影，不另建表。標記責任歷程可選擇關聯已驗證的登入工作階段。同任務與同使用者的複合外鍵見[工時字典](/notes/diagrams/architecture/task-work-db-schema) §4。資料集分析專用表延後至 MVP 後。\n\n**讀圖方式：** Wiki 可逐表查看候選欄位、來源與待決事項；Diagram 可搜尋表名或欄名，點選表後會聚焦已列出的候選單欄外鍵。圖中連線不代表資料庫遷移、複合約束或資料庫權限已建立。",
+    "source": "docs/diagrams/architecture/account-admin-db-schema.md §2–§3; docs/diagrams/architecture/dataset-db-schema.md §2–§3; docs/diagrams/architecture/task-run-db-schema.md §2–§3; docs/diagrams/architecture/task-work-db-schema.md §2–§3; docs/diagrams/architecture/annotation-review-db-schema.md §2–§3; docs/diagrams/architecture/task-export-db-schema.md §2–§3; specs/task-management/014-task-detail/spec.md v10.0.0; specs/annotation/015-annotation-workspace/spec.md v12.1.0; specs/account/020-auth-session-security/spec.md v1.3.0",
     "backTo": "/notes/diagrams/architecture/database-table-inventory"
   },
   "options": {
@@ -918,14 +918,14 @@
         {
           "name": "current_config_version_id",
           "type": "uuid",
-          "required": "nullable",
-          "note": "當前不可變設定版本；建立交易補齊；草稿儲存更新；規則：T-03"
+          "required": "required",
+          "note": "當前不可變設定版本；預配置 UUID 並在同交易建立，提交時驗證同任務延後複合 FK；草稿儲存更新；規則：T-03"
         },
         {
           "name": "current_guideline_version_id",
           "type": "uuid",
-          "required": "nullable",
-          "note": "當前不可變指引內容版本；建立交易補齊；草稿／waiting 指引內容儲存更新；規則：T-03"
+          "required": "required",
+          "note": "當前不可變指引內容版本；預配置 UUID 並在同交易建立，提交時驗證同任務延後複合 FK；草稿／waiting 指引內容儲存更新；規則：T-03"
         },
         {
           "name": "current_run_cycle_id",
@@ -1418,13 +1418,13 @@
           "name": "selection_manifest_ref",
           "type": "text",
           "required": "required",
-          "note": "不含答案的外部有序清單審計回執；發布；不改；規則：S-04"
+          "note": "私有、不可覆寫且以內容定址的公開 UUID 清單回執；發布前寫入驗證，DB 交易保存參照；不改；規則：S-04"
         },
         {
           "name": "selected_item_digest",
           "type": "char(64)",
           "required": "required",
-          "note": "有序 `dataset_item_id` 清單摘要；發布；不改；規則：S-04"
+          "note": "規範 UTF-8 有序公開 UUID 清單完整位元組的 SHA-256；發布；不改；規則：S-04"
         },
         {
           "name": "locked_at",
@@ -1440,7 +1440,7 @@
           "fk": "users"
         }
       ],
-      "description": "**實體候選，尚未部署。** 每執行一份，保存隨機種子、演算法、摘要值和外部有序清單回執；真正成員仍由 `task_run_item` 決定。來源：014 FR-010f／`SampleSnapshot`。\n\n來源：[任務／執行實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.8；複合 FK、檢查限制、唯一限制與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。"
+      "description": "**實體候選，尚未部署。** 每執行一份，保存隨機種子、演算法、摘要值和私有不可變清單回執；真正成員仍由 `task_run_item` 決定。回執只含按位置排序的公開 UUID，須在 DB 交易前寫入並驗證；DB 同交易提交其參照、run 和項目，交易失敗留下的無引用物件受控清理。來源：014 FR-010f／FR-010f-6／`SampleSnapshot`。\n\n來源：[任務／執行實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.8；複合 FK、檢查限制、唯一限制與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。"
     },
     {
       "name": "task_run",
@@ -1647,12 +1647,6 @@
           "note": "目前受派標記員；空值＝待重派；發布／停用退回／重派；規則：A-03"
         },
         {
-          "name": "status",
-          "type": "varchar(16)",
-          "required": "required",
-          "note": "標記工作位狀態；精確值域待 §7；發布／工作進度更新；規則：A-04"
-        },
-        {
           "name": "created_at",
           "type": "timestamptz",
           "required": "required",
@@ -1665,7 +1659,7 @@
           "note": "最後改動 UTC；修改；規則：X-01"
         }
       ],
-      "description": "**實體候選，尚未部署。** 每筆工作指派的 ID 不因停用、退回未指派池或重指派而改變；受派者可空不表示已排除。正式標記每個資料項目恰有一個工作位，試標按重疊人數建立。候選 UNIQUE `(task_run_id,id)` 是標記／審核六張子表 `(run_id,assignment_id)` 複合 FK 所需的同序父鍵，尚未在資料庫建立。來源：014 FR-005l／FR-010f-4／`AnnotationAssignment`；015 的提交後續以此 ID 定址。\n\n來源：[任務／執行實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.12；複合 FK、檢查限制、唯一限制與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。"
+      "description": "**實體候選，尚未部署。** 每筆工作指派的 ID 不因停用、退回未指派池或重指派而改變；受派者可空不表示已排除。工作位顯示狀態由終局排除、目前已提交或儲存的標記紀錄及受派者依序推導，不另存一個 `status` 欄。正式標記每個資料項目恰有一個工作位，試標按重疊人數建立。候選 UNIQUE `(task_run_id,id)` 是標記／審核六張子表 `(run_id,assignment_id)` 複合 FK 所需的同序父鍵，尚未在資料庫建立。來源：014 FR-005l／FR-010f-4／FR-010f-7／`AnnotationAssignment`；015 的提交後續以此 ID 定址。\n\n來源：[任務／執行實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.12；複合 FK、檢查限制、唯一限制與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。"
     },
     {
       "name": "task_annotation_exclusion",

@@ -384,14 +384,14 @@ test('noteCraftProjectionTracksTheCanonicalAccountSessionDictionaryAndRejectsDri
   assert.match(validateErData(source, accountData(source, detachedToken)).join('\n'), /refresh_tokens\.session_id: FK/);
 });
 
-test('noteCraftProjectionKeepsThe38Table44FkShapeWith328Columns', () => {
+test('noteCraftProjectionKeepsThe38Table44FkShapeWith327Columns', () => {
   const data = JSON.parse(readFileSync(
     new URL('../../docs/diagrams/architecture/database-schema.er.json', import.meta.url), 'utf8'));
   assert.deepEqual({
     tables: data.tables.length,
     columns: data.tables.reduce((count, table) => count + table.columns.length, 0),
     fks: data.tables.reduce((count, table) => count + table.columns.filter((column) => column.fk).length, 0),
-  }, { tables: 38, columns: 328, fks: 44 });
+  }, { tables: 38, columns: 327, fks: 44 });
 });
 
 test('realAccountAndDatasetDictionariesMatchCompleteNoteCraftProjection', () => {
