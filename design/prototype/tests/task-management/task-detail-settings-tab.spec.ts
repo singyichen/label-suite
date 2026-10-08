@@ -421,6 +421,8 @@ test.describe('task-detail settings tab narrow viewport (FR-026 (1), issue #406)
   test('375px: nav sits above content, scrolls horizontally, page does not overflow', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 800 });
     await openSettings(page);
+    /* The 560ms loading skeleton pushes the layout down; compare boxes only after it hides. */
+    await expect(page.locator('#loadingSkeleton')).toBeHidden();
     const nav = sectionNav(page);
     await expect(nav).toBeVisible();
     const navBox = await nav.boundingBox();
