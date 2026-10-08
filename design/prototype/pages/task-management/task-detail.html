@@ -6732,6 +6732,9 @@ function getTaskTypeLabel() {
       return { type: outKey, config: state.outputConfigs[outKey] || {} };
     });
     TASK_DATA.fieldRoleMap = Object.assign({}, state.fieldRoleMap);
+    /* A replaced dataset only bumps _datasetVersion; the pair-label reset lives in
+       renderSchemaFields, so run it before reading labels to avoid persisting stale ones */
+    renderSchemaFields();
     if (state.taskInputTypes[0] === 'item_pair') TASK_DATA.itemPairLabels = getItemPairLabels();
     else delete TASK_DATA.itemPairLabels;
     TASK_DATA.datasetFileName = (state.datasetFiles[0] && state.datasetFiles[0].name) || TASK_DATA.datasetFileName;
