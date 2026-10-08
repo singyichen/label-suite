@@ -155,7 +155,7 @@ erDiagram
 | V-04 | SVC | 父版本鏈不得成環，後繼 `version_no` 必須大於父版本；封存前在交易內核對，並行建立時由唯一鍵與明確衝突處理保護 | dataset-021 FR-002、SC-002 |
 | V-05 | DB | `state IN ('draft','sealed')`；draft 時 `manifest_sha256` 與 `sealed_at` 同為 null，sealed 時同為非 null；SHA-256 固定 64 個 hex 字元（值格式於 Pydantic 與 DB 一致驗證） | dataset-021 FR-008、AC-3.1 |
 | V-06 | SVC | `draft → sealed` 同一交易驗每批分類 manifest 與 PII 審查、匯入時取得的來源 digest 證據、每 item 私有列、有序 manifest（含各批分類 manifest 摘要），再寫 digest、時間、狀態及 audit event；重試冪等、競爭衝突、失敗回滾。seal 不為 checksum 重新讀取含答案的已儲存原始 artifact；sealed 後 batch/item/private/source 不可原地改，需新完整版本（DB 強制見 V-07／V-08） | dataset-021 FR-008、AC-3.1／3.2；backend constitution XII |
-| V-07 | DB | `dataset_version` 各掛一個 `BEFORE UPDATE`／`BEFORE DELETE` trigger（SQLite 與 PostgreSQL 各一份）：`OLD.state='sealed'` 時拒絕任何 UPDATE（含 `sealed → draft`）與 DELETE；draft 編修與 `draft → sealed` 轉換允許 | dataset-021 FR-008、AC-3.2；ADR-024 增補 (2026-10-08) |
+| V-07 | DB | `dataset_version` 各掛一個 `BEFORE UPDATE`／`BEFORE DELETE` trigger（SQLite 與 PostgreSQL 各一份）：`OLD.state='sealed'` 時拒絕任何 UPDATE（含 `sealed → draft`）與 DELETE；draft 編修與 `draft → sealed` 轉換允許；另掛 `BEFORE INSERT` trigger，拒絕直接以 `sealed` 新增的列（版本一律先建 draft，封存須經 FR-008 驗證交易） | dataset-021 FR-008、AC-3.2；ADR-024 增補 (2026-10-08) |
 | V-08 | DB | `dataset_import_batch`／`dataset_item`／`dataset_item_private` 各掛 `BEFORE INSERT`／`BEFORE UPDATE`／`BEFORE DELETE` trigger：所屬版本（item → batch → version）為 sealed 時拒絕；UPDATE 同時檢查 `OLD` 與 `NEW` 所屬版本以擋改掛；PostgreSQL 以 `FOR SHARE` 讀版本列與並行 seal 序列化；app role 無 `TRUNCATE` | dataset-021 FR-008、AC-3.2、FR-011；ADR-024 增補 (2026-10-08) |
 | B-01 | DB | batch PK、非空 version FK；來源檔必須屬於一個確定版本 | dataset-021 FR-003 |
 | B-02 | DB | UNIQUE (`dataset_version_id`, `source_ordinal`) 與 `source_ordinal > 0`；同版來源順序不可重複 | dataset-021 FR-003、AC-1.2 |
