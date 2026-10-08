@@ -128,6 +128,29 @@ test('NoteCraft and inventory counts include export tables and reject stale summ
   }
 });
 
+test('account/admin NoteCraft summary includes every projected group and the export dictionary', () => {
+  const summary = read('../../docs/diagrams/architecture/account-admin-db-schema.md')
+    .split('\n').find((line) => line.startsWith('- **NoteCraft 規劃檢視**'));
+  assert.ok(summary, 'Account/admin NoteCraft summary is required');
+
+  const data = erData();
+  assert.equal(data.tables.length, 37);
+  for (const [count, unit] of summaryCounts(data)) {
+    const unitPattern = unit === '張候選表' ? '張(?:候選)?表?' :
+      unit === '個候選單欄 FK' ? '(?:個)?候選單欄 FK' : unit;
+    assert.match(summary, new RegExp(`${count}\\s*${unitPattern}`),
+      `Account/admin NoteCraft summary must report ${count} ${unit}`);
+  }
+  assert.match(summary, /account\/admin|帳號[／/]管理/, 'Account/admin group must appear');
+  for (const dictionary of [
+    'dataset-db-schema.md', 'task-run-db-schema.md', 'annotation-review-db-schema.md',
+  ]) assert.ok(summary.includes(dictionary), `${dictionary} link`);
+  assert.match(summary, /\[[^\]]*匯出[^\]]*\]\(\.\/task-export-db-schema\.md\)/,
+    'Export dictionary link must appear in the NoteCraft summary');
+  assert.match(summary, /\b2\s*張(?:候選)?表?/,
+    'Export dictionary must contribute two tables');
+});
+
 test('NoteCraft CI runs export dictionary regression tests', () => {
   const workflow = read('../../.github/workflows/ci.yml');
   const job = workflow.match(/^  database-schema:\n([\s\S]*?)(?=^  [a-z][\w-]*:\n|(?![\s\S]))/m)?.[1];
