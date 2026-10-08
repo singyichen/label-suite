@@ -80,7 +80,7 @@ erDiagram
 | `revoked_at` | timestamptz | 是 | 來源刪除或政策撤銷後停止下載的時間 | 撤銷時寫入；不清空 | E-08、E-09 |
 | `failure_code` | varchar(64) | 是 | 失敗原因的安全代碼，不存內部路徑或答案 | 轉 `failed` 時寫入 | E-04、E-08 |
 
-`scope_label`／`export_type` 只供歷史列顯示，不混入 `conditions_snapshot` 的重製條件。`conditions_snapshot` 的有序 `selected_runs[]` 每項記錄 `run_id`、`run_stage`、`cycle_id`、`dataset_version_id`、`config_version_id`、`schema_version`、`guideline_version_id`、`sample_snapshot_id`；共用 `filters` 記錄提交狀態、標記員範圍、審核員及審核狀態等條件，並保存格式、語言、序列／切詞選項、完整精度 `exported_at` 與原請求人。混合 Dry／Official 匯出不得以單一 `run_stage` 代表實際範圍；舊式頂層純量只能省略或顯示 `all`，每個 run 的階段仍以 `selected_runs[]` 為準。快照不作重新下載時的資料查詢指令。
+`scope_label`／`export_type` 只供歷史列顯示，不混入 `conditions_snapshot` 的重製條件。`conditions_snapshot` 的有序 `selected_runs[]` 每項記錄 `run_id`、`run_stage`、`cycle_id`、`dataset_version_id`、`config_version_id`、`schema_version`、`guideline_version_id`、`sample_snapshot_id`；共用 `filters` 記錄提交狀態、標記員範圍、審核員及審核狀態等條件，並保存格式、語言、序列／切詞選項、完整精度 `exported_at` 與原請求人。混合 Dry／Official 匯出的頂層 `run_stage` 必須為 `all`，每個 run 的實際階段仍以 `selected_runs[]` 為準。快照不作重新下載時的資料查詢指令。
 
 ### 3.2 task_export_run：匯出納入的執行與順序
 
