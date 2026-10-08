@@ -158,7 +158,7 @@ erDiagram
 | B-01 | DB | batch PK、非空 version FK；來源檔必須屬於一個確定版本 | dataset-021 FR-003 |
 | B-02 | DB | UNIQUE (`dataset_version_id`, `source_ordinal`) 與 `source_ordinal > 0`；同版來源順序不可重複 | dataset-021 FR-003、AC-1.2 |
 | B-03 | DB＋SVC | `source_sha256` 為 64 hex；`source_name`、`source_ref`、`record_path`、`preprocessing_version` 非空白。匯入程序在來源尚未成為已儲存 artifact 前，串流計算 SHA-256、驗證內容並取得不可變儲存回執；seal 核對受信回執／digest 與 batch 值，不從一般維護路徑重讀 artifact。`record_path='$'` 代表 JSONL／根 JSON 陣列；巢狀 JSON 用有效 RFC 6901 Pointer | dataset-021 FR-003／FR-008、AC-1.1 |
-| B-04 | SVC | `classification_manifest` 為非空、版本化且經 Pydantic 驗證的 JSON：每個來源欄位路徑恰分類為公開或受保護，兩集合互斥，並記錄 PII 審查完成證據；不得把答案值寫入 manifest。每批獨立持久化，對照該批實際欄位與 `field_role_map` 後才產生 item 投影；draft 修正 manifest 僅允許公開改為受保護：只刪除該欄位的公開投影，並把匯入時已持有的值搬入私有列，不讀取已儲存的含答案資料；受保護改公開或為尚未分類的欄位新增分類，一律須重新上傳該批來源並走串流匯入器重建，不得原地重建 | dataset-021 FR-006、AC-2.1／2.2／2.6 |
+| B-04 | SVC | `classification_manifest` 為非空、版本化且經 Pydantic 驗證的 JSON：每個來源欄位路徑恰分類為公開或受保護，兩集合互斥，並記錄 PII 審查完成證據；不得把答案值寫入 manifest。每批獨立持久化，對照該批實際欄位與 `field_role_map` 後才產生 item 投影；draft 修正 manifest 僅允許公開改為受保護：只刪除該欄位的公開投影，並把該欄位已存於 `public_payload` 的公開值（非答案）搬入私有列，不讀取已儲存的含答案資料；受保護改公開或為尚未分類的欄位新增分類，一律須重新上傳該批來源並走串流匯入器重建，不得原地重建 | dataset-021 FR-006、AC-2.1／2.2／2.6 |
 | I-01 | DB | item PK、非空 batch FK；不複製 version/source/preprocessing 至 item | dataset-021 FR-001／FR-004 |
 | I-02 | DB | UNIQUE (`dataset_import_batch_id`, `source_row_no`) 與 `source_row_no > 0`；來源自帶 `id` 不全域去重 | dataset-021 FR-004、AC-1.2 |
 | I-03 | SVC＋SEC | `public_payload` 只接受所屬 batch `classification_manifest` 的公開欄位 allowlist；protected 與 Input／Evidence／Output 不得重疊，分類或 PII 審查缺漏則不能 seal。用任意名稱與巢狀合成答案測漏，不以 `gold_*` 名稱猜測 | dataset-021 FR-006／FR-007、AC-2.1／2.2；task-013 FR-002c-8／FR-003g-5 |
