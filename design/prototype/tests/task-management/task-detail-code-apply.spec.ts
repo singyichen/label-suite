@@ -10,8 +10,8 @@
  *   - parse error: #codeErrorBar visible, 套用 disabled, Visual keeps the last valid config
  *   - view-state key #labelConfigVersion reads 設定檔 (value stays the config file name)
  *
- * Expected on current code: the label, the "no other save button" and the disabled-on-error
- * cases and the 設定檔 label fail; the backfill / not-persisted / header-save cases already pass.
+ * Expected on current code: label, live validation, toast text, unapplied-save hint, English strings
+ * and the 設定檔 label fail; the backfill / not-persisted / header-save cases already pass.
  */
 import { test, expect, type Page } from '@playwright/test';
 import { openSettingsSection } from './_task-detail-settings-helpers';
@@ -84,18 +84,54 @@ test.describe('task-detail Code 套用 (FR-026 (3))', () => {
     await expect(page.locator('#settingsConfigView')).toContainText('excellent');
   });
 
-  test('parse error shows the error bar, disables 套用 and keeps the last valid Visual config', async ({ page }) => {
+  test('typing invalid content live shows the error bar and disables 套用; fixing it restores both (no click)', async ({ page }) => {
     await openLabelingEdit(page);
     await expect(page.locator('#annotationPreview')).toContainText('positive');
+    const validContent = await page.locator('#codeEditor').inputValue();
+    const applyBtn = codePanel(page).getByRole('button', { name: /^(套用|儲存)$/ });
 
     // a leading '{' routes through JSON.parse, the deterministic error path (YAML subset is lenient)
     await page.locator('#codeEditor').fill('{ this is not valid json');
-    await codePanel(page).getByRole('button', { name: /^(套用|儲存)$/ }).click();
 
-    await expect(page.locator('#codeErrorBar')).not.toHaveClass(/hidden/); // visible part passes on current code
-    await expect(codePanel(page).getByRole('button', { name: '套用', exact: true })).toBeDisabled();
+    await expect(page.locator('#codeErrorBar')).not.toHaveClass(/hidden/);
+    await expect(applyBtn).toBeDisabled();
     await expect(page.locator('#annotationPreview')).toContainText('positive');
     await expect(page.locator('#settingsEditForm')).not.toHaveClass(/hidden/);
+
+    await page.locator('#codeEditor').fill(validContent);
+
+    await expect(page.locator('#codeErrorBar')).toHaveClass(/hidden/);
+    await expect(applyBtn).toBeEnabled();
+  });
+
+  test('successful 套用 toasts that nothing is submitted yet', async ({ page }) => {
+    await openLabelingEdit(page);
+    await editCodeLabel(page, 'excellent');
+    await codePanel(page).getByRole('button', { name: /^(套用|儲存)$/ }).click();
+
+    await expect(page.locator('#toastMsg')).toHaveText('已套用至 Visual，請按儲存送出');
+  });
+
+  test('header 儲存 is blocked while Code has an unapplied draft and hints 請先套用', async ({ page }) => {
+    await openLabelingEdit(page);
+    await editCodeLabel(page, 'excellent');
+
+    await page.locator('#settingsSaveBtn').click();
+
+    await expect(page.locator('#settingsEditForm')).not.toHaveClass(/hidden/);
+    await expect(page.locator('#toastMsg')).toContainText('請先套用');
+    await expect(page.locator('#settingsConfigView')).not.toContainText('excellent');
+  });
+
+  test('English mode: Code button reads Apply and the config-file label reads Config file', async ({ page }) => {
+    await page.addInitScript(() => window.localStorage.setItem('labelsuite.lang', 'en'));
+    await openLabelingEdit(page);
+
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+    await expect(page.locator('#saveCodeBtnLabel')).toHaveText('Apply');
+    await expect(page.locator('#settingsCancelBtn')).toBeVisible();
+    await page.locator('#settingsCancelBtn').click();
+    await expect(page.locator('#labelConfigVersion')).toHaveText('Config file');
   });
 
   test('view-state key reads 設定檔 and the value stays the config file name', async ({ page }) => {
