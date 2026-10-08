@@ -286,6 +286,105 @@ test.describe('task-detail settings tab unsaved-change confirm (FR-026 (2))', ()
   });
 });
 
+test.describe('task-detail settings tab G2 review follow-ups (FR-026 (1)(2), FR-019, issue #1199)', () => {
+  async function tokenValue(page: Page, prop: string, token: string) {
+    return page.evaluate(([p, t]) => {
+      const probe = document.createElement('div');
+      (probe.style as unknown as Record<string, string>)[p] = `var(${t})`;
+      document.body.appendChild(probe);
+      const v = getComputedStyle(probe).getPropertyValue(p.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`));
+      probe.remove();
+      return v;
+    }, [prop, token]);
+  }
+
+  test('section title plus edit link plus definition list follow the FR-026 (1) appearance via tokens', async ({ page }) => {
+    await openSettings(page);
+    const title = page.locator('#basicInfoTitle');
+    const titleStyle = await title.evaluate((el) => {
+      const cs = getComputedStyle(el);
+      return { size: cs.fontSize, weight: cs.fontWeight };
+    });
+    expect(titleStyle).toEqual({ size: '16px', weight: '600' });
+
+    const edit = page.locator('#overviewEditBtn');
+    const editStyle = await edit.evaluate((el) => {
+      const cs = getComputedStyle(el);
+      return { bg: cs.backgroundColor, borders: [cs.borderTopWidth, cs.borderRightWidth, cs.borderBottomWidth, cs.borderLeftWidth] };
+    });
+    expect(editStyle.borders, 'edit link has no button border').toEqual(['0px', '0px', '0px', '0px']);
+    expect(editStyle.bg, 'edit link has no filled background').toBe('rgba(0, 0, 0, 0)');
+
+    const dl = page.locator('#basicInfoView');
+    const cols = await dl.evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(' ')[0]);
+    expect(cols).toBe('160px');
+    const rowGap = await dl.evaluate((el) => getComputedStyle(el).rowGap);
+    expect(rowGap).toBe('10px');
+
+    const muted = await tokenValue(page, 'borderTopColor', '--color-border-muted');
+    const sep = await page.locator('#basicInfoView .kv-dl-row .kv-dl-key').first().evaluate((el) => {
+      const cs = getComputedStyle(el);
+      return { width: cs.borderBottomWidth, color: cs.borderBottomColor };
+    });
+    expect(sep.width, 'row separator is 1px').toBe('1px');
+    expect(sep.color, 'row separator uses --color-border-muted').toBe(muted);
+  });
+
+  test('a dirty Code panel draft counts as unsaved: section switch opens the leave modal and cancel keeps section and URL', async ({ page }) => {
+    await openSettings(page, '&section=labeling');
+    await page.locator('#settingsEditBtn').click();
+    await expect(page.locator('#settingsEditForm')).toBeVisible();
+    await page.locator('#codeEditor').fill('outputs: []\n');
+    const urlBefore = page.url();
+
+    await sectionTab(page, '抽樣設定').click();
+    await expect(confirmDialog(page)).toHaveCount(1);
+    await confirmDialog(page).getByRole('button', { name: '取消' }).click();
+    await expect(confirmDialog(page)).toHaveCount(0);
+    await expectSection(page, 'settingsSummaryTitle');
+    await expect(page.locator('#codeEditor')).toHaveValue('outputs: []\n');
+    expect(page.url()).toBe(urlBefore);
+  });
+
+  test('a dirty Code panel draft also guards the top-level tab switch to 概覽', async ({ page }) => {
+    await openSettings(page, '&section=labeling');
+    await page.locator('#settingsEditBtn').click();
+    await expect(page.locator('#settingsEditForm')).toBeVisible();
+    await page.locator('#codeEditor').fill('outputs: []\n');
+    const urlBefore = page.url();
+
+    await page.getByRole('tab', { name: '概覽', exact: true }).click();
+    await expect(confirmDialog(page)).toHaveCount(1);
+    await confirmDialog(page).getByRole('button', { name: '取消' }).click();
+    await expect(page.getByRole('tab', { name: '設定', exact: true })).toHaveAttribute('aria-selected', 'true');
+    await expect(page.locator('#settingsEditForm')).toBeVisible();
+    expect(page.url()).toBe(urlBefore);
+  });
+
+  test('section is restored only on the settings tab: tab=work-log&section=review drops section', async ({ page }) => {
+    await openDetail(page, `task_id=${TASK_ID}&tab=work-log&section=review`);
+    await expect(page.getByRole('tab', { name: '工時紀錄', exact: true })).toHaveAttribute('aria-selected', 'true');
+    await expect.poll(() => params(page).has('section')).toBe(false);
+    expect(params(page).get('tab')).toBe('work-log');
+    await page.getByRole('tab', { name: '設定', exact: true }).click();
+    await expect(sectionTab(page, '基本資料')).toHaveAttribute('aria-selected', 'true');
+  });
+
+  test('section without tab (default overview) is dropped from the URL', async ({ page }) => {
+    await openDetail(page, `task_id=${TASK_ID}&section=review`);
+    await expect.poll(() => params(page).has('section')).toBe(false);
+    await expect(page.locator('#settingsPanel')).toBeHidden();
+  });
+
+  test('the leave alertdialog is described by its body text (aria-describedby -> #settingsLeaveBody)', async ({ page }) => {
+    const modal = page.locator('#settingsLeaveModal');
+    await openSettings(page);
+    await expect(modal).toHaveAttribute('role', 'alertdialog');
+    await expect(modal).toHaveAttribute('aria-describedby', 'settingsLeaveBody');
+    await expect(page.locator('#settingsLeaveBody')).toHaveCount(1);
+  });
+});
+
 test.describe('task-detail settings tab reviewer is read-only (FR-026 (5), FR-006)', () => {
   test('reviewer sees 設定, no 編輯 link in any section, and cannot enter edit mode', async ({ page }) => {
     await openDetail(page, `task_id=${TASK_ID}&task_role=reviewer`);
