@@ -70,7 +70,7 @@
 
 **(2) URL 與未儲存確認**。目前區塊 MUST 依 FR-019 同步至網址 `section` 參數並於重新整理後還原。區塊處於有未儲存變更的編輯狀態時，切換區塊或切換分頁 MUST 先經確認對話框（`modal-focus.js`）；使用者取消時 MUST 留在原區塊且網址不變。
 
-**(3) 標記設定**。Code 模式 MUST 保留明確的套用動作：按鈕標籤為「套用」，僅負責將 Code 解析結果回填至 Visual 設定（Code→Visual），其行為與 `task-new` 的 Code 回填一致（`task-management/013-task-new` FR-003k 之 Code 回填驗證與 AC-2.25 之「保留最後一份有效 config」）；唯一的送出入口 MUST 是區塊標題列的「儲存」，Code 面板 MUST NOT 再提供自己的儲存按鈕。解析錯誤時 MUST 沿用 `codeErrorBar` 顯示錯誤、停用「套用」，並保留最後一份有效設定。檢視狀態標籤「設定檔版本」MUST 改為「設定檔」，值仍為使用者上傳的 config 檔名（未上傳時為空字串）。
+**(3) 標記設定**。Code 模式 MUST 保留明確的套用動作：按鈕標籤為「套用」，僅負責將 Code 解析結果回填至 Visual 設定（Code→Visual），其行為與 `task-new` 的 Code 回填一致（`task-management/013-task-new` FR-003k 之 Code 回填驗證與 AC-2.25 之「保留最後一份有效 config」）；唯一的送出入口 MUST 是區塊標題列的「儲存」，Code 面板 MUST NOT 再提供自己的儲存按鈕。Code 內容 MUST 於輸入時即時檢查（允許短暫 debounce，不需點擊「套用」）：解析錯誤時 MUST 沿用 `codeErrorBar` 顯示錯誤、停用「套用」，並保留最後一份有效設定；內容修正為合法後 MUST 隱藏錯誤並恢復「套用」。「套用」成功後 MUST 以提示訊息「已套用至 Visual，請按儲存送出」告知尚未送出。Code 有尚未套用的修改時，點擊區塊標題列「儲存」MUST 被擋下且不送出，並顯示含「請先套用」的提示。檢視狀態標籤「設定檔版本」MUST 改為「設定檔」，值仍為使用者上傳的 config 檔名（未上傳時為空字串）。
 
 **(4) 抽樣設定**。檢視狀態 MUST NOT 再顯示「試標回合」「目前判定」「已用試標 / 可進正式」三列（已於概覽顯示）；仍須顯示每回合抽樣筆數、逐輸出類型 IAA 指標清單（含目標門檻）、最少標記者數、資料隔離狀態與隔離異動資訊；編輯表單與驗證規則不變。
 
@@ -101,10 +101,24 @@
 
 #### Scenario: Code 解析錯誤時停用套用並保留有效設定
 
-- **GIVEN** Code 模式的內容含有語法或 schema 錯誤
-- **WHEN** 檢視 Code 面板
+- **GIVEN** `project_leader` 在 Code 模式輸入含有語法或 schema 錯誤的內容
+- **WHEN** 停止輸入（未點擊「套用」）
 - **THEN** `codeErrorBar` 顯示錯誤，「套用」為停用
 - **AND** Visual 設定維持最後一份有效 config
+- **AND** 將內容修正為合法後，錯誤隱藏且「套用」恢復可用
+
+#### Scenario: 套用後提示尚未送出
+
+- **GIVEN** `project_leader` 在 Code 模式修改合法的 YAML
+- **WHEN** 點擊「套用」
+- **THEN** 顯示提示訊息「已套用至 Visual，請按儲存送出」
+
+#### Scenario: 有未套用的 Code 修改時儲存被擋下
+
+- **GIVEN** `project_leader` 在 Code 模式修改內容但尚未點擊「套用」
+- **WHEN** 點擊區塊標題列的「儲存」
+- **THEN** 任務設定不被送出，仍停留在編輯狀態
+- **AND** 顯示含「請先套用」的提示
 
 #### Scenario: 設定檔標籤改名
 

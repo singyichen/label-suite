@@ -59,10 +59,10 @@
 
 > 預期產品檔案：`task-detail.panels/settings.html`（Code 按鈕）、`task-detail.html`（套用與錯誤停用邏輯）；回寫另含 `design/system/pages/task-detail.md`、`specs/**`、`openspec/**`。**只有本組執行 archive。**
 
-- [ ] 4.1 以 `design/prototype/tests/task-management/task-detail-code-apply.spec.ts` 建立 Red 測試：Code 面板按鈕標籤為「套用」且面板內無另一個儲存按鈕；套用只更新 Visual 而不寫入任務設定；只有標題列「儲存」才送出；解析錯誤時 `codeErrorBar` 顯示、「套用」停用且 Visual 保留最後有效設定；檢視標籤為「設定檔」而非「設定檔版本」。commit 並記錄預期失敗輸出。[@senior-qa]
+- [ ] 4.1 以 `design/prototype/tests/task-management/task-detail-code-apply.spec.ts` 建立 Red 測試：Code 面板按鈕標籤為「套用」且面板內無另一個儲存按鈕；套用只更新 Visual 而不寫入任務設定；只有標題列「儲存」才送出；輸入時即時檢查（不點套用）：解析錯誤時 `codeErrorBar` 顯示、「套用」停用且 Visual 保留最後有效設定，修正後恢復；套用後提示「已套用至 Visual，請按儲存送出」；有未套用修改時標題列「儲存」被擋下並提示含「請先套用」；英文模式按鈕為 Apply、標籤為 Config file；檢視標籤為「設定檔」而非「設定檔版本」。commit 並記錄預期失敗輸出。[@senior-qa]
 - [ ] 4.2 於 `design/prototype/tests/inventory.csv` 以同一 commit 新增 4.1 對應列（LF only），並核對 npx playwright test --list task-detail-code-apply.spec.ts 的案例數。[@senior-qa]
 - [ ] 4.3 修改 `design/prototype/pages/task-management/task-detail.panels/settings.html`：`saveCodeBtn` 的標籤改為「套用」、標籤「設定檔版本」改為「設定檔」。[@senior-frontend]
-- [ ] 4.4 修改 `design/prototype/pages/task-management/task-detail.html`：套用僅執行 Code→Visual 回填（驗證規則對齊 013 的 Code 回填）、解析錯誤時停用套用並保留最後有效設定、移除 Code 面板的送出路徑，使 4.1 的案例轉為 Green。[@senior-frontend]
+- [ ] 4.4 修改 `design/prototype/pages/task-management/task-detail.html`：套用僅執行 Code→Visual 回填（驗證規則對齊 013 的 Code 回填）、輸入時即時檢查並於解析錯誤時停用套用、保留最後有效設定、套用後提示與未套用時擋下儲存的提示文案（含英文）、移除 Code 面板的送出路徑，使 4.1 的案例轉為 Green。[@senior-frontend]
 - [ ] 4.5 更新 `design/system/pages/task-detail.md`：標頭、設定分頁導覽、概覽版面、Code 套用按鈕與 `btn-primary` CTA 的頁面專屬規格。[@senior-visual-designer]
 - [ ] 4.6 執行：同一 commit 內以 `node scripts/gen-screen-inventory.mjs` 重新產生 `design/system/screen-inventory.md`（若有內容異動）。[@senior-frontend]
 - [ ] 4.7 執行：Source-Verify 預掃，對本 change 的 FR-003、FR-006、FR-019、FR-028、FR-026、FR-027、SC-019、FR-010p、FR-013 逐一以 `rg -n -F` 確認可在正典或 delta 定位，並確認 `specs/task-management/014-task-detail/spec.md` 的第 194 行與第 398 行仍是要改的原文；預期每個 ID 皆命中。[@main]
