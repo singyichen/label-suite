@@ -311,7 +311,7 @@ UNIQUE 單位鍵阻擋兩位 reviewer 並列正式提交。首次提交者的 st
 | N-01 | DB | revision PK、FK → submission；與 head 不同的 immutable 行（append-only 見 A-01） | 015 FR-103、DBA 設計 |
 | N-02 | DB | UNIQUE `(review_submission_id,version)`、CHECK `version>0`；head.version 與最新 revision.version 在交易中對齊 | 015 FR-103 |
 | N-03 | SVC＋SEC | `decision_payload` 是當次所有 outKey 已驗證快照；不可原地更新，查詢受同 reviewer／仲裁資格與答案遮蔽限制 | 015 FR-052／FR-062／FR-103 |
-| A-01 | DB | `annotation_history_event`、`annotation_arbitration_vote`、`annotation_review_submission_revision` 完全 append-only：SQLite 與 PostgreSQL 各掛一個 `BEFORE UPDATE`／`BEFORE DELETE` trigger；PostgreSQL 對 app role `REVOKE UPDATE, DELETE, TRUNCATE`；更正一律新增列，無執行期更正路徑 | 015 FR-097／FR-105；ADR-024 增補 (2026-10-08) |
+| A-01 | DB | `annotation_history_event`、`annotation_arbitration_vote`、`annotation_review_submission_revision` 完全 append-only：SQLite 與 PostgreSQL 各掛一個 `BEFORE UPDATE`／`BEFORE DELETE` trigger；PostgreSQL 對 app role `REVOKE UPDATE, DELETE, TRUNCATE`（只授予 SELECT／INSERT，PUBLIC 與 default privileges 不得再授）；更正一律新增列，無執行期更正路徑 | 015 FR-097／FR-105；ADR-024 增補 (2026-10-08) |
 
 ## 5. 候選索引與查詢對應
 
