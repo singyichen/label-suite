@@ -48,7 +48,7 @@
       gap: var(--space-md);
       flex-wrap: wrap;
     }
-    .task-header-status { font-size: 14px; color: var(--color-text-soft); margin: 0; }
+    .task-header-status { font-size: 13px; color: var(--color-text-soft); margin: 0; }
     .page-main-title {
       font-family: var(--font-serif-display);
       font-size: 28px;
@@ -2400,6 +2400,7 @@
     zh: {
       docTitle: '任務詳情 — Label Suite（原型）',
       bcRoot: '任務管理',
+      headerRoundSuffixTpl: ' · 第 {n} 回合',
       notFoundTitle: '找不到任務',
       notFoundMessageTpl: '任務代碼 {taskId} 不存在，請確認網址或回到任務列表重新選擇任務。',
       notFoundBackBtn: '回任務列表',
@@ -2945,6 +2946,7 @@
     en: {
       docTitle: 'Task Detail — Label Suite (Prototype)',
       bcRoot: 'Task Management',
+      headerRoundSuffixTpl: ' · Round {n}',
       notFoundTitle: 'Task not found',
       notFoundMessageTpl: 'Task {taskId} does not exist. Please check the URL or return to the task list to pick another task.',
       notFoundBackBtn: 'Back to task list',
@@ -4969,14 +4971,23 @@ function interpolate(template, payload) {
     if (profile && profile.trialRounds) TASK_DATA.trialRounds = cloneData(profile.trialRounds);
   }
 
+  /* FR-025: not-found / forbidden keep the header with a fixed title; the task
+     name, task-id crumb and stage status are never rendered. */
+  function renderTaskHeaderFallback(titleKey) {
+    setText('bcRoot', t('bcRoot'));
+    setText('bcCurrent', '');
+    var sep = document.querySelector('#taskHeader .breadcrumb-sep');
+    if (sep) sep.classList.add('hidden');
+    setText('pageTitle', t(titleKey));
+    setText('taskHeaderStatus', '');
+  }
+
   /* Issue #200: renders the not-found state (mirrors annotation-list's
      issue #154 fix) in place of the tabs/skeleton/panel content when the
      requested task_id does not resolve to a known task. */
   function renderTaskNotFoundState() {
     var tabsBar = document.querySelector('.admin-tabs');
     if (tabsBar) tabsBar.classList.add('hidden');
-    var taskHeader = document.getElementById('taskHeader');
-    if (taskHeader) taskHeader.classList.add('hidden');
     var skeleton = document.getElementById('loadingSkeleton');
     if (skeleton) skeleton.classList.add('hidden');
     var mount = document.getElementById('tabPanelMount');
@@ -4986,6 +4997,7 @@ function interpolate(template, payload) {
       ? window.LabelSuiteSharedSidebar.getStoredLang()
       : 'zh';
 
+    renderTaskHeaderFallback('notFoundTitle');
     var notFound = document.getElementById('taskNotFound');
     if (!notFound) return;
     notFound.classList.remove('hidden');
@@ -4999,8 +5011,6 @@ function interpolate(template, payload) {
   function renderTaskForbiddenState() {
     var tabsBar = document.querySelector('.admin-tabs');
     if (tabsBar) tabsBar.classList.add('hidden');
-    var taskHeader = document.getElementById('taskHeader');
-    if (taskHeader) taskHeader.classList.add('hidden');
     var skeleton = document.getElementById('loadingSkeleton');
     if (skeleton) skeleton.classList.add('hidden');
     var mount = document.getElementById('tabPanelMount');
@@ -5010,6 +5020,7 @@ function interpolate(template, payload) {
       ? window.LabelSuiteSharedSidebar.getStoredLang()
       : 'zh';
 
+    renderTaskHeaderFallback('forbiddenTitle');
     var forbidden = document.getElementById('taskForbidden');
     if (!forbidden) return;
     forbidden.classList.remove('hidden');
@@ -6495,7 +6506,13 @@ function interpolate(template, payload) {
     var stepLabels = I18N[state.lang].statusStepLabel || I18N.zh.statusStepLabel || {};
     setText('bcCurrent', TASK_DATA.taskId);
     setText('pageTitle', getCurrentTaskName());
-    setText('taskHeaderStatus', stepLabels[TASK_DATA.status] || TASK_DATA.status);
+    var statusText = stepLabels[TASK_DATA.status] || TASK_DATA.status;
+    if (TASK_DATA.status === 'dry_run_in_progress' || TASK_DATA.status === 'waiting_iaa_confirmation') {
+      /* Same helper as the overview's #trialRoundValue -- no second derivation. */
+      var currentRound = getCurrentTrialRound();
+      if (currentRound) statusText += interpolate(t('headerRoundSuffixTpl'), { n: currentRound.round });
+    }
+    setText('taskHeaderStatus', statusText);
   }
 
   function renderStatusStepperLabels() {
@@ -11146,6 +11163,7 @@ function getTaskTypeLabel() {
     /* FR-003: ArrowLeft/ArrowRight move between visible tabs, wrapping. */
     document.querySelector('.admin-tabs').addEventListener('keydown', function(e) {
       if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      if (e.altKey || e.ctrlKey || e.metaKey) return;
       var visible = Array.prototype.filter.call(
         document.querySelectorAll('.admin-tabs [role="tab"]'),
         function(el) { return !el.classList.contains('hidden'); }
@@ -11154,8 +11172,10 @@ function getTaskTypeLabel() {
       if (idx < 0) return;
       e.preventDefault();
       var next = visible[(idx + (e.key === 'ArrowRight' ? 1 : visible.length - 1)) % visible.length];
-      next.focus();
+      var before = document.querySelector('.admin-tabs [role="tab"].active');
       next.click();
+      /* Move focus only if the switch was accepted (e.g. not blocked by unsaved edits). */
+      if (document.querySelector('.admin-tabs [role="tab"].active') !== before) next.focus();
     });
 
     document.getElementById('tabAnnotationResults').addEventListener('click', function() {
