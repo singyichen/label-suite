@@ -174,6 +174,21 @@ test('publication retries reuse the committed run and protect receipts during fa
     'Cleanup must wait for lease expiry and confirm the object is unreferenced');
 });
 
+test('publication idempotency is unique per Dry round and per Official task', () => {
+  const markdown = read('../../docs/diagrams/architecture/task-run-db-schema.md');
+  const rule = markdown.split('\n').find((line) => /^\| U-06 \|/.test(line));
+  assert.ok(rule, 'U-06 must define publication idempotency uniqueness');
+  assert.match(rule,
+    /UNIQUE\s*`?\(task_id,\s*trial_round_id,\s*publication_idempotency_key\)`?[^|]*WHERE\s+run_type\s*=\s*['`]?dry_run['`]?/i,
+    'Dry retries must address one task and one trial round');
+  assert.match(rule,
+    /UNIQUE\s*`?\(task_id,\s*publication_idempotency_key\)`?[^|]*WHERE\s+run_type\s*=\s*['`]?official_run['`]?/i,
+    'Official retries must address the task-wide singleton publication');
+  assert.doesNotMatch(rule,
+    /UNIQUE\s*`?\(task_id,\s*publication_idempotency_key\)`?\s*[；;]/i,
+    'A blanket task/key UNIQUE would reject a valid Dry key reused in another round');
+});
+
 test('assignment display status is derived in exclusion, submission, empty, saved, assigned order', () => {
   const assignment = taskSource().tables.find((table) => table.name === 'task_annotation_assignment');
   assert.equal(assignment.columns.some((column) => column.name === 'status'), false,
