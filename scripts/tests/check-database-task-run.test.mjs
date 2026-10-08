@@ -15,6 +15,8 @@ const erData = () => JSON.parse(read('../../docs/diagrams/architecture/database-
 const inventory = () => read('../../docs/diagrams/architecture/database-table-inventory.md');
 const taskDetailSpec = () => read('../../specs/task-management/014-task-detail/spec.md');
 const taskNewSpec = () => read('../../specs/task-management/013-task-new/spec.md');
+const taskAuditRequirement = () => taskDetailSpec().split('- **FR-025**')[1]
+  ?.split('\n### 使用者流程')[0];
 const accountSource = () => checker.parseAccountAdminSchema(
   read('../../docs/diagrams/architecture/account-admin-db-schema.md'));
 const summaryErrors = (data, markdown) => {
@@ -111,6 +113,52 @@ test('task-scoped audit events use a nullable real task FK', () => {
   const erTaskId = erData().tables.find((table) => table.name === 'audit_events')
     ?.columns.find((column) => column.name === 'task_id');
   assert.equal(erTaskId?.fk, 'task', 'NoteCraft must draw the same real task FK');
+});
+
+test('typed task audit target must identify the same task as the scoped FK', () => {
+  const requirement = taskAuditRequirement();
+  assert.ok(requirement, 'FR-025 is required');
+  for (const token of ['task.status_changed', 'task.isolation_changed',
+    'target_type', 'target_id', 'task_id']) {
+    assert.ok(requirement.includes(token), `FR-025 must bind ${token}`);
+  }
+  assert.ok(/target_type[^\n]*['`]?task['`]?/.test(requirement),
+    'Both typed task actions must target task objects');
+  assert.ok(/target_id[^\n]*(?:正規化|標準化)[^\n]*(?:相等|一致)[^\n]*task_id|target_id[^\n]*task_id[^\n]*(?:正規化|標準化)[^\n]*(?:相等|一致)/.test(requirement),
+    'A valid but different task target must be rejected after UUID normalization');
+
+  const adr = read('../../docs/adr/032-user-action-audit-trail.md');
+  assert.ok(/task\.status_changed[^\n]*task\.isolation_changed[^\n]*(?:target_type|target_id)|(?:target_type|target_id)[^\n]*task\.status_changed[^\n]*task\.isolation_changed/.test(adr),
+    'ADR-032 must make the target/scope invariant action-specific');
+  assert.ok(/target_id[^\n]*(?:normali[sz]ed|canonical)[^\n]*(?:equal|match)[^\n]*task_id|target_id[^\n]*task_id[^\n]*(?:normali[sz]ed|canonical)[^\n]*(?:equal|match)/i.test(adr),
+    'ADR-032 must reject a cross-task target after UUID normalization');
+
+  const account = read('../../docs/diagrams/architecture/account-admin-db-schema.md');
+  const rule = account.split('\n').find((line) => /^\| A-08 \|/.test(line));
+  assert.ok(rule, 'A-08 must cover typed task audit writes');
+  assert.ok(/target_type[^\n]*target_id[^\n]*task_id/.test(rule),
+    'The physical candidate must connect both target fields to task scope');
+  assert.ok(/SQLite[^\n]*PG[^\n]*(?:錯配|不一致|不同)[^\n]*(?:拒絕|失敗)|(?:錯配|不一致|不同)[^\n]*(?:拒絕|失敗)[^\n]*SQLite[^\n]*PG/.test(rule),
+    'The future SQLite and PostgreSQL runtime plan must reject mismatched task IDs');
+});
+
+test('isolation audit requires second confirmation only for disabling', () => {
+  const requirement = taskAuditRequirement();
+  assert.ok(requirement, 'FR-025 is required');
+  assert.ok(/(?:關閉|停用)[^。\n]*(?:二次確認|第二次確認)/.test(requirement),
+    'Disabling isolation must keep the verified second confirmation');
+  assert.ok(/(?:重新啟用|啟用|重新開啟)[^。\n]*(?:固定|獨立)[^。\n]*原因碼/.test(requirement),
+    'Re-enabling isolation needs its distinct fixed reason code');
+  assert.ok(/(?:重新啟用|啟用|重新開啟)[^。\n]*(?:不需|無需|不要求)[^。\n]*(?:二次確認|第二次確認)/.test(requirement),
+    'Re-enabling must not inherit the disable-only confirmation gate');
+
+  const adr = read('../../docs/adr/032-user-action-audit-trail.md');
+  assert.ok(/disabl[^\n]*(?:second.confirm|second confirm)/i.test(adr),
+    'ADR-032 must bind second confirmation to disabling only');
+  assert.ok(/(?:re.enabl|enabl)[^\n]*(?:distinct|separate)[^\n]*fixed reason/i.test(adr),
+    'ADR-032 must give re-enabling a distinct fixed reason');
+  assert.ok(/(?:re.enabl|enabl)[^\n]*(?:without|no|does not require)[^\n]*(?:second.confirm|second confirm)/i.test(adr),
+    'ADR-032 must avoid a new confirmation prompt on re-enable');
 });
 
 test('task/run parser rejects a Mermaid edge from the private answer table', () => {
