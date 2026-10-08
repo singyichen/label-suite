@@ -49,7 +49,7 @@ erDiagram
     users ||--o{ task_export : requested_by_user_id
 ```
 
-## 3. 逐表六欄字典
+## 3. 欄位字典
 
 ### 3.1 task_export：一次請求與一份不可變產物
 
