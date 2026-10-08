@@ -423,3 +423,114 @@ test('task/run section 7 migration-availability item cites ADR-038', () => {
   assert.ok(item.includes('ADR-038'), 'Item must mention ADR-038');
   assert.ok(!item.includes('須由產品／隱私政策另行裁決'), 'Obsolete 另行裁決 wording must be removed');
 });
+
+// Issue #1223: medium/low design fixes pinned for the task/run dictionary.
+const taskRunMarkdown = () => read('../../docs/diagrams/architecture/task-run-db-schema.md');
+const constraintRows = () => taskRunMarkdown().split('## 4. 限制清單')[1].split('## 5.')[0].split('\n');
+const constraintRule = (id) => constraintRows().find((line) => line.startsWith(`| ${id} |`)) ?? '';
+const indexSection = () => taskRunMarkdown().split('## 5. 索引與查詢成本')[1].split('## 6.')[0];
+const erTable = (name) => erData().tables.find((table) => table.name === name);
+const compact = (text) => text.replace(/\s+/g, '');
+
+test('reviewer roster sort_order is a non-unique deterministic index, not UNIQUE (task_id, sort_order)', () => {
+  const rule = constraintRule('R-03');
+  assert.ok(rule, 'R-03 is required');
+  assert.doesNotMatch(compact(rule), /UNIQUE`?\(task_id,sort_order\)/,
+    'SQLite cannot defer uniqueness, so reordering would collide');
+  assert.match(compact(rule), /\(task_id,sort_order,reviewer_membership_id\)/,
+    'R-03 must name the deterministic composite ordering key');
+  assert.match(rule, /非唯一|不唯一|不加\s*UNIQUE|NOT UNIQUE/i, 'R-03 must say the index is non-unique');
+  assert.match(rule, /sort_order[^|]*(?:再|然後|其次|次序)[^|]*reviewer_membership_id/,
+    'R-03 must order by sort_order then reviewer_membership_id');
+  assert.doesNotMatch(compact(indexSection()), /UNIQUE`?\(task_id,sort_order\)/,
+    'Section 5 must not keep the old roster UNIQUE');
+  assert.match(compact(indexSection()), /\(task_id,sort_order,reviewer_membership_id\)/,
+    'Section 5 must list the non-unique roster ordering index');
+  const roster = JSON.stringify(erTable('task_reviewer_roster_member'));
+  assert.doesNotMatch(compact(roster), /UNIQUE`?\(task_id,sort_order\)/,
+    'NoteCraft must not project the old roster UNIQUE');
+});
+
+test('current_run_cycle_id has one documented source of truth across draft return and completed', () => {
+  const t04 = constraintRule('T-04');
+  const y02 = constraintRule('Y-02');
+  assert.ok(t04 && y02, 'T-04 and Y-02 are required');
+  assert.match(t04 + y02, /部分唯一[^|]*(?:至多|最多)[^|]*(?:一個|1)[^|]*(?:開啟|未關閉)/,
+    'The partial unique index must be named as the open-cycle guarantee');
+  assert.match(t04, /completed[^|]*關閉[^|]*(?:close_reason|關閉原因)|關閉[^|]*completed/,
+    'T-04 must close the cycle with a reason on completed');
+  assert.match(t04, /completed[^|]*(?:保留|維持)[^|]*(?:指向|指標)|(?:保留|維持)[^|]*指標[^|]*completed/,
+    'T-04 must keep the pointer on the final closed cycle when completed');
+  assert.match(t04, /退回[^|]*(?:清除|清空)[^|]*指標|(?:清除|清空)[^|]*指標[^|]*退回/,
+    'T-04 must clear the pointer on return to draft');
+  const row = taskRunMarkdown().split('\n').find((line) => line.startsWith('| `current_run_cycle_id`'));
+  assert.ok(row, 'current_run_cycle_id dictionary row is required');
+  assert.match(row, /completed|完成/, 'Column description must acknowledge the completed case');
+  const erNote = erTable('task').columns.find((column) => column.name === 'current_run_cycle_id')?.note ?? '';
+  assert.match(erNote, /completed|完成/, 'NoteCraft column note must acknowledge the completed case');
+});
+
+test('Q-06 states a DB-enforced status/result consistency mechanism', () => {
+  const rule = constraintRule('Q-06');
+  assert.ok(rule, 'Q-06 is required');
+  assert.match(rule, /複合\s*FK|條件式\s*UPDATE/, 'Q-06 must name a composite FK or conditional UPDATE');
+  assert.match(rule, /iaa_computation_status/, 'Q-06 must name the status column');
+  assert.match(rule, /task_trial_iaa_result/, 'Q-06 must name the result table');
+  assert.match(rule, /(?:不可變|不可改|不得改)/, 'done rows must be immutable');
+});
+
+test('sampling_value meanings have one explicit source-of-truth rule and no divergent restatement', () => {
+  const rule = constraintRows().find((line) => /^\| [A-Z]-\d+ \|/.test(line)
+    && line.includes('requested_sampling_value') && line.includes('task_trial_round.sampling_value')
+    && line.includes('task.sampling_value'));
+  assert.ok(rule, 'A rule must define task.sampling_value, requested_sampling_value and task_trial_round.sampling_value together');
+  assert.match(rule, /(?:單一|唯一)[^|]*(?:來源|真實)/, 'The rule must name a single source of truth');
+  assert.match(rule, /task\.sampling_value[^|]*(?:下一|要求)/, 'task.sampling_value is the next requested count');
+  assert.match(rule, /requested_sampling_value[^|]*(?:凍結|發布)/, 'requested_sampling_value is frozen at publish');
+  assert.match(rule, /task_trial_round\.sampling_value[^|]*實際/, 'round sampling_value is the actual selected count');
+  const lines = read('../../docs/diagrams/architecture/core-data-model-er.md').split('\n')
+    .filter((line) => line.includes('sampling_value'));
+  assert.ok(lines.length > 0, 'core-data-model-er.md mentions sampling_value');
+  for (const line of lines) {
+    assert.ok(line.includes('task-run-db-schema'),
+      `core-data-model-er.md must point sampling_value at the dictionary rule: ${line.trim()}`);
+  }
+});
+
+test('task_membership.membership_status and cycle close_reason have documented CHECK domains', () => {
+  const membership = constraintRows().find((line) => /^\| [A-Z]-\d+ \|/.test(line)
+    && line.includes('membership_status') && /CHECK/i.test(line));
+  assert.ok(membership, 'A rule must document the membership_status CHECK');
+  assert.ok(membership.includes('active') && membership.includes('disabled'),
+    'membership_status domain is active and disabled (014 FR-005l / prototype)');
+  const closed = constraintRows().find((line) => /^\| Y-\d+ \|/.test(line)
+    && line.includes('close_reason') && /CHECK/i.test(line) && /(?:值域|IN\s*\()/.test(line));
+  assert.ok(closed, 'A Y-rule must document the close_reason CHECK value domain');
+  assert.match(closed, /成對/, 'closed_at and close_reason must be a paired CHECK');
+  assert.match(closed, /closed_at[^|]*close_reason|close_reason[^|]*closed_at/);
+  assert.match(closed, /(?:同為\s*NULL|同時為\s*NULL|皆為\s*NULL|同有同無|都為\s*NULL)/,
+    'Pairing means both NULL or both NOT NULL');
+});
+
+test('section 5 indexes every task/run FK column that lacks a PK/UNIQUE left prefix', () => {
+  const index = compact(indexSection());
+  for (const signature of [
+    'task_run_cycle(task_id,config_version_id)',
+    'task_trial_round(task_id,guideline_version_id)',
+    'task_trial_round(created_by_user_id)',
+    'task_sample_snapshot(locked_by_user_id)',
+    'task_run(task_id,guideline_version_id)',
+    'task_run(task_run_cycle_id,trial_round_id)',
+    'task_run(created_by_user_id)',
+    'task_run_reviewer_candidate(task_id,reviewer_membership_id)',
+  ]) assert.ok(index.includes(signature), `Section 5 must list a covering index ${signature}`);
+});
+
+test('NoteCraft task/run tables with composite FKs disclose that composite keys are not drawn', () => {
+  for (const name of ['task', 'task_reviewer_roster_member', 'task_run_cycle', 'task_trial_round',
+    'task_run', 'task_run_reviewer_candidate', 'task_run_item', 'task_annotation_assignment']) {
+    const description = erTable(name)?.description ?? '';
+    assert.match(description, /複合[^。\n]*(?:不畫|未畫|不繪|未繪|不會畫|不會繪)[^。\n]*§4/,
+      `${name} description must say composite keys/FKs are not drawn and point to dictionary §4`);
+  }
+});
