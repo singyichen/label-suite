@@ -66,7 +66,7 @@
 
 `設定` 分頁 MUST 承載由概覽搬移而來的五個區塊：`基本資料`、`標記設定`、`標記說明`、`抽樣設定`、`審核設定`；各區塊的欄位、編輯表單、儲存／取消行為與既有 element id MUST 維持原樣，唯下列各點為規定的變更。
 
-**(1) 版面與導覽**。左側為純文字區塊導覽，右側一次只顯示一個區塊；導覽 MUST 使用 `role="tablist"`／`tab` 並支援方向鍵，active 項目以 token `--color-slate-50` 為底並加粗字重。區塊 MUST 以標題列（區塊名稱＋右側「編輯」文字連結）加 label／值定義清單呈現。viewport 寬度小於 768px 時，導覽 MUST 改為頂部水平捲動列，頁面 MUST NOT 水平溢出。
+**(1) 版面與導覽**。左側為純文字區塊導覽，右側一次只顯示一個區塊；導覽 MUST 使用 `role="tablist"`／`tab` 並支援方向鍵，導覽項目文字 MUST 為 14px 並水平置中，active 項目以 token `--color-white` 為底並加粗字重。區塊 MUST 以標題列（區塊名稱＋右側「編輯」文字連結）加 label／值定義清單呈現。viewport 寬度小於 768px 時，導覽 MUST 改為頂部水平捲動列，頁面 MUST NOT 水平溢出。
 
 **(2) URL 與未儲存確認**。目前區塊 MUST 依 FR-019 同步至網址 `section` 參數並於重新整理後還原。區塊處於有未儲存變更的編輯狀態時，切換區塊或切換分頁 MUST 先經確認對話框（`modal-focus.js`）；使用者取消時 MUST 留在原區塊且網址不變。
 
@@ -76,7 +76,7 @@
 
 **(5) 權限**。`project_leader` 在 `task_status = draft` 時可編輯各區塊（沿用既有進入編輯條件）。`reviewer` 可檢視設定分頁但為唯讀：所有區塊 MUST NOT 出現「編輯」連結，也 MUST NOT 能進入編輯狀態（承 FR-006 的精神）。
 
-**(6) 視覺規則**。區塊 MUST NOT 使用 pill 徽章、彩色提示框、eyebrow 小標、emoji 或卡片外框與陰影；僅使用 `tokens.css` token，深色模式 MUST 正常。
+**(6) 視覺規則**。區塊 MUST 呈現於白色卡片（`--color-white` 底、1px `--color-border` 外框、`--radius-lg` 圓角），檢視與編輯狀態外觀一致；區塊 MUST NOT 使用 pill 徽章、彩色提示框、eyebrow 小標、emoji 或陰影；僅使用 `tokens.css` token，深色模式 MUST 正常。
 
 #### Scenario: 五個區塊可切換且網址同步
 

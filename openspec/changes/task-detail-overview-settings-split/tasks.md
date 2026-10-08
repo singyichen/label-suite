@@ -31,6 +31,10 @@
 - [ ] 2.7 執行：同一 commit 內以 `node scripts/gen-screen-inventory.mjs` 重新產生 `design/system/screen-inventory.md`（若有內容異動）。[@senior-frontend]
 - [ ] 2.8 執行：Gate 1／Gate 2（`openspec validate --changes --no-interactive`、`bash scripts/check-sdd.sh`）與 Gate 3（`pnpm typecheck`、`pnpm test:node`、`PW_PORT=8983 pnpm playwright test` 全量，時序敏感案例加 `--workers=1 --repeat-each=5`）；預期全數 exit 0。[@main]
 - [ ] 2.9 派未參與實作之 `senior-code-reviewer` 獨立審查，對照 FR-026 (1)(2)(5)(6)、FR-019 與 issue #1199 的 D、F 兩節逐項核對，結論原文貼進檢查點留言；PR 以 `Part of #1199` 開啟。[@senior-code-reviewer]
+- [ ] 2.10 以 `design/prototype/tests/task-management/task-detail-settings-visual.spec.ts` 建立 Red 測試（2026-10-08 維護者裁定方案 B）：設定區塊於檢視狀態呈白色卡片（背景 `--color-white`、1px `--color-border` 外框、`--radius-lg` 圓角、無陰影）且與編輯狀態外觀一致；導覽項目文字 14px、水平置中；active 導覽項目底色為 `--color-white`；深色模式同樣取 token 值。commit 並記錄預期失敗輸出。[@senior-qa]
+- [ ] 2.11 於 `design/prototype/tests/inventory.csv` 以同一 commit 新增 2.10 對應列（LF only），並核對 npx playwright test --list task-detail-settings-visual.spec.ts 的案例數。[@senior-qa]
+- [ ] 2.12 修改 `design/prototype/pages/task-management/task-detail.html` 設定分頁 CSS：區塊改用既有 panel 白色卡片外觀、導覽 14px 置中、active 底色 `--color-white`，使 2.10 的案例轉為 Green；完成後重跑 2.8 全部閘門。[@senior-frontend]
+- [ ] 2.13 執行：同一 commit 內以 `node scripts/gen-screen-inventory.mjs` 重新產生 `design/system/screen-inventory.md`（若有內容異動）。[@senior-frontend]
 
 ## 3. G3 概覽重排
 

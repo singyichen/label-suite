@@ -10,8 +10,8 @@
 
 ## D2. 設定分頁（G2）
 
-- 版面：grid `140px minmax(0,1fr)`、gap 28px。左側純文字導覽（active 底色 `--color-slate-50`、600、radius 4px）；`tokens.css` 中 `--color-slate-50` 淺色為 `#F8FAFC`、深色為 `#1F1F28`，故深色模式可自動翻轉。issue 原文的 `#F1F5F9` 實為 slate-100（即 `--color-border-muted`），與 token 不符，以 token 為準。
-- 右側一次一個區塊：標題列（16px／600）加右側「編輯」文字連結；內容為 label／值定義清單，每列 `160px 1fr`、上下 10px、1px `--color-border-muted` 分隔。
+- 版面：grid `140px minmax(0,1fr)`、gap 28px。左側純文字導覽（14px、水平置中；active 底色 `--color-white`、600、radius 4px）。原定 active 底色 `--color-slate-50`（淺色 `#F8FAFC`）落在頁面背景 `--color-surface`（`#F5F3FF`）上幾乎無法辨識，2026-10-08 維護者看過模擬圖後裁定改採方案 B：區塊改為白色卡片、active 底色改為 `--color-white`（深色 `#16161F`，可自動翻轉）。
+- 右側一次一個區塊，呈現於白色卡片（沿用 `.panel` 的 `--color-white` 底、1px `--color-border`、`--radius-lg`，不加陰影），檢視與編輯狀態外觀一致：標題列（16px／600）加右側「編輯」文字連結；內容為 label／值定義清單，每列 `160px 1fr`、上下 10px、1px `--color-border-muted` 分隔。
 - 搬移來源為 `overview.html` 前五個 panel，保留所有 element id、編輯／取消／儲存行為與編輯表單，因此既有以 id 為鍵的測試只需更新導覽步驟（先切到設定分頁與對應區塊）。
 - `section` 合法值：`basic`／`labeling`／`guideline`／`sampling`／`review`，預設 `basic` 不寫入網址。slug 為 propose 階段的命名決定（維護者只指定了 `sampling` 一例）。合法值集合必須由區塊清單推導，不另寫第二份清單（FR-019 (4)）。
 - 未儲存確認：區塊在編輯且有變更時，切換區塊或分頁先開 `modal-focus.js` 確認；取消則留在原區塊且網址不變。`modal-focus.js` 路徑：`design/prototype/pages/shared/modal-focus.js`。
