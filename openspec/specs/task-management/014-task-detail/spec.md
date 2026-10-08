@@ -2,11 +2,13 @@
 
 ## Purpose
 
-任務詳情頁（`task-detail`）是專案負責人設定審核模型、監看審核進度並判定任務可否結案的單一控制面。正典為 `specs/task-management/014-task-detail/spec.md`（v10.0.0）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR ID，不改動其正典措辭。目前收錄：change `align-014-review-model`（issue #688）之 FR-005j／FR-005k／FR-008b／FR-010s／FR-010s-1／FR-010s-2／FR-010t（修訂，issue #596 單人接力審核模型對齊）、FR-018（新增，最終例外池）；change `task-detail-url-view-state`（issue #726）之 FR-019（新增，頁籤與清單檢視狀態的網址同步）；change `task-detail-seq-tagging-export-dialog`（issue #742）之 FR-020（新增，`sequence_tagging` 匯出對話框與序列匯出欄位）；change `task-detail-export-history-redownload`（issue #772）之 FR-021（原新增條文，v8.0.0 已修訂為重新下載不可變原始產物）；change `task-detail-trial-round-from-waiting`（issue #791）之 FR-013（首次收錄修訂後全文，新增試標回合僅自待 IAA 確認狀態發起）；change `task-detail-iaa-precondition-and-override-scope`（issue #783）之 FR-010o-1（修訂，門檻覆寫排除未校準型別）、FR-010o-4（新增，待 IAA 確認頁顯示 IAA 計算狀態）；以及 change `validate-reviewer-arbiter-role-separation`（issue #868）之 FR-010s-1／FR-010t（修訂）；以及 change `1141-task-detail-quality-metrics-gate`（issue #1141）之 FR-008b（修訂，第 5 項引用品質指標就緒訊號）；以及 change `mvp-export-record-contract`（issue #1160）之 FR-009a／FR-010i／FR-015e／FR-015h（首次收錄）與 FR-010i-1／FR-010i-2／FR-020／FR-021／FR-024（修訂原檔下載與逐 run 追溯契約）。
+任務詳情頁（`task-detail`）是專案負責人設定審核模型、監看審核進度並判定任務可否結案的單一控制面。正典為 `specs/task-management/014-task-detail/spec.md`（v11.0.0）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR ID，不改動其正典措辭。目前收錄：change `align-014-review-model`（issue #688）之 FR-005j／FR-005k／FR-008b／FR-010s／FR-010s-1／FR-010s-2／FR-010t（修訂，issue #596 單人接力審核模型對齊）、FR-018（新增，最終例外池）；change `task-detail-url-view-state`（issue #726）之 FR-019（新增，頁籤與清單檢視狀態的網址同步）；change `task-detail-seq-tagging-export-dialog`（issue #742）之 FR-020（新增，`sequence_tagging` 匯出對話框與序列匯出欄位）；change `task-detail-export-history-redownload`（issue #772）之 FR-021（原新增條文，v8.0.0 已修訂為重新下載不可變原始產物）；change `task-detail-trial-round-from-waiting`（issue #791）之 FR-013（首次收錄修訂後全文，新增試標回合僅自待 IAA 確認狀態發起）；change `task-detail-iaa-precondition-and-override-scope`（issue #783）之 FR-010o-1（修訂，門檻覆寫排除未校準型別）、FR-010o-4（新增，待 IAA 確認頁顯示 IAA 計算狀態）；以及 change `validate-reviewer-arbiter-role-separation`（issue #868）之 FR-010s-1／FR-010t（修訂）；以及 change `1141-task-detail-quality-metrics-gate`（issue #1141）之 FR-008b（修訂，第 5 項引用品質指標就緒訊號）；以及 change `mvp-export-record-contract`（issue #1160）之 FR-009a／FR-010i／FR-015e／FR-015h（首次收錄）與 FR-010i-1／FR-010i-2／FR-020／FR-021／FR-024（修訂原檔下載與逐 run 追溯契約）。
 
 change `mvp-export-snapshot-isolation-correction`（issue #1160）補充 FR-010b／FR-010c 的跨 run 隔離語意，以及 FR-010i-1／FR-010i-2／FR-021 的請求接受時間與結果快照時間契約。
 
 change `task-run-publication-integrity`（issue #1160）修訂 FR-010f／FR-010f-6 的公開清單回執、發布交易與目標作用域冪等契約，新增 FR-010f-7、AC-3.48～AC-3.50 與 SC-059～SC-061 的工作位唯讀狀態及失敗恢復規則；正典版本為 v10.0.0。這些資料表仍是未部署候選。
+
+change `database-final-audit`（issue #1160）新增 FR-010o-5／FR-025、AC-3.51～AC-3.52 與 SC-062～SC-063：試標回合的完整 IAA 結果與 `done` 同交易保存，任務狀態及隔離異動以 `audit_events` 單一事件來源追溯；正典版本為 v11.0.0，資料表仍為未部署候選。
 
 ## Requirements
 
@@ -1468,3 +1470,75 @@ FR-008a MUST 原地改寫為：當任務本回合滿足 `DRY_RUN_COMPLETION_RULE
 - **GIVEN** 五類交錯工作位事實
 - **WHEN** 查詢狀態並重派受派者
 - **THEN** 每個 slot 只有唯一正確狀態，且無獨立持久化 status
+
+### Requirement: FR-010o-5 試標 IAA 完成證據
+
+- **FR-010o-5**（**v11.0.0 新增**，issue #1160）：每個 `TrialRound` 的 IAA 結果須有單一、可持久驗證的來源。候選 `task_trial_iaa_result` 以 `trial_round_id` 一對一保存結果格式版本、演算法版本、釘住的輸入摘要、經驗證的逐輸出結果及計算時間；結果不得包含 hidden answer、來源 split、原始私有內容或可讓標記者推知 test 身分的欄位。`result_payload` 對回合釘住的 task config 每個非 `IAA_GATE_EXCLUDED_TYPES` 輸出恰有一個確定結果：數值，或 dataset-017 FR-039 第 4 點的 `De = 0`「無法計算」。在同一資料庫交易驗完完整性、保存結果並把該回合 `iaa_computation_status` 轉為 `done`；狀態為 `pending`／`failed` 或結果缺失／不完整時，不得視為完成；「開始正式標記」與「新增試標回合」兩個轉換都須核對完整結果，不能只看狀態字串。失敗重試只讓同一回合 `failed → pending`，不產生新回合或舊版成功結果；`done` 的結果不可原地覆寫。指標與門檻計算仍僅依 dataset-017 FR-039。
+
+#### Scenario: AC-3.51 完整結果與狀態同交易
+
+- **GIVEN** 最新試標回合有多個需計算輸出，其中一個可能是 `De = 0`
+- **WHEN** 非同步計算完成或部分輸出缺失
+- **THEN** 只有逐輸出完整且結果列與狀態同交易提交時才為 `done`；缺列、缺輸出或回滾保持不可發布，`De = 0` 不誤標為 `failed`
+
+### Requirement: FR-025 任務稽核事件唯一落點
+
+- **FR-025**（**v11.0.0 新增，BREAKING**，issue #1160）：`RunStateTransition` 與 `IsolationAuditLog` 是受授權讀取 `audit_events` 的邏輯投影，不建立同義持久化表。每一次成功的 task 狀態變化在相同資料庫交易寫恰一筆 `task.status_changed`，其受控摘要保存 `from_status`、`to_status`、觸發來源與必要的原因碼；每一次 `isolation_enabled` 實際變化在相同交易寫恰一筆 `task.isolation_changed`，受控摘要保存前後布林值與原因碼；關閉隔離須驗證二次確認並記其受控原因碼，重新啟用隔離採獨立固定原因碼，不需二次確認。`audit_events` 本身保存事件 ID、非空 task 作用域、驗證過的人員 actor 或受信系統 actor、UTC 時間及 request 關聯；非空 `task_id` 為候選 FK 指向 `task.id`。對 `task.status_changed` 與 `task.isolation_changed`，`target_type` 必須為 `task`，`target_id` 正規化為小寫連字號 UUID 後必須相等於 `task_id`；即使兩個 ID 分別指向有效任務，錯配也須拒絕。值未變時不得建立稽核事件；交易失敗或冪等重送也不得多建事件。讀權、敏感摘要 allowlist、最低保留期與多型 target 驗證依 Accepted ADR-032。不得從用戶端接收自稱 system actor，也不得在摘要寫入答案、token、原始標記或未受控理由文字。
+
+#### Scenario: AC-3.52 同交易且無重複的任務稽核
+
+- **GIVEN** 狀態或隔離設定的合法變更與相同命令重送
+- **WHEN** 變更成功、資料庫回滾或重送
+- **THEN** 成功變更各有一筆可按 task 查詢的相應 typed audit event；回滾沒有事件，重送不重複，邏輯歷程不依賴第二張表
+
+#### Scenario: AC-3.52 任務目標與作用域錯配
+
+- **GIVEN** 兩個分別存在的任務 A 與 B
+- **WHEN** `task.status_changed` 或 `task.isolation_changed` 的 `task_id` 指向 A，而 `target_id` 指向 B，或 `target_type` 不是 `task`
+- **THEN** 拒絕整個交易，不變更任務狀態或隔離值，也不寫入稽核事件；兩個 ID 各自有效不能取代兩者相等的驗證
+
+#### Scenario: AC-3.52 隔離關閉與重新啟用的確認條件
+
+- **GIVEN** 有權變更隔離設定的操作者與已存在的任務
+- **WHEN** 關閉隔離但未通過二次確認，或重新啟用隔離
+- **THEN** 未確認的關閉遭拒且不產生事件；重新啟用不要求二次確認，使用獨立固定原因碼，成功的實際變更在同一交易恰寫一筆 `task.isolation_changed`
+
+### Requirement: AC-3.51 IAA 結果證據
+
+51. **AC-3.51**（v11.0.0，issue #1160）：**Given** 最新試標回合須計算的每個輸出有數值或 `De = 0` 結果，**When** 計算服務提交結果，**Then** 單一版本化結果來源與 `done` 同交易保存；缺任一輸出、結果缺失或回滾時仍不可開始 Official 或下一回合，`De = 0` 不算計算失敗（FR-010o-5）。
+
+#### Scenario: AC-3.51 缺失結果不通過閘門
+
+- **GIVEN** round 標示 `done` 但結果列缺失或不完整
+- **WHEN** 請求開始 Official 或下一試標回合
+- **THEN** 服務拒絕，不能以狀態字串代替完整結果證據
+
+### Requirement: AC-3.52 任務稽核單一事實來源
+
+52. **AC-3.52**（v11.0.0，issue #1160）：**Given** 任務狀態或隔離開關實際改變，**When** 變更與稽核交易提交，**Then** `audit_events` 各新增恰一筆相應 typed action，保存可驗證的前後值、actor、task、UTC 時間與必要原因碼；回滾或冪等重送不重複，`RunStateTransition`／`IsolationAuditLog` 由此投影而不另建表（FR-025）。
+
+#### Scenario: AC-3.52 變更與事件不可分離
+
+- **GIVEN** 任務變更交易中途失敗
+- **WHEN** 交易回滾
+- **THEN** 狀態或隔離值及相應事件均不提交
+
+### Requirement: SC-062 IAA 完成證據一致性
+
+- **SC-062**（v11.0.0，issue #1160）：最新試標回合的 `done` 與完整、版本化逐輸出結果不一致之已提交狀態數為 0；`De = 0` 誤記為計算失敗數為 0。
+
+#### Scenario: SC-062 結果與狀態一致
+
+- **GIVEN** 完成、失敗與回滾的合成試標計算
+- **WHEN** 核對每回合狀態與結果來源
+- **THEN** 不存在 `done` 無完整結果或 `pending`／`failed` 被當作已完成
+
+### Requirement: SC-063 任務稽核與狀態一致性
+
+- **SC-063**（v11.0.0，issue #1160）：成功的任務狀態／隔離設定異動缺少或重複 typed `audit_events` 的數量為 0；交易失敗與冪等重送新增事件數為 0。
+
+#### Scenario: SC-063 稽核唯一
+
+- **GIVEN** 成功、失敗與重送的任務變更
+- **WHEN** 依 task、action 和變更身分核對稽核歷程
+- **THEN** 每個成功變更恰有一筆事件，失敗與重送沒有額外事件

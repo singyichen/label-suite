@@ -2,8 +2,8 @@
   "$schema": "https://raw.githubusercontent.com/SteveLin100132/notecraft/main/plugins/er-diagram-renderer/schema.json",
   "meta": {
     "title": "Label Suite 資料庫規劃 ER 圖（帳號、管理、資料集、任務執行、工時、標記、審核與匯出）",
-    "description": "**規劃圖，尚未部署資料結構。** 已部署業務表：0；本頁顯示 **38 張候選表、327 欄、44 個候選單欄 FK（外鍵）**。帳號／管理、資料集、任務／執行、工時、標記／審核與匯出的逐表型別和關聯，來自[資料表盤點總帳](/notes/diagrams/architecture/database-table-inventory)所連的六份實體層字典。`task_work_interval` 保存可觀測前景工作區間；`WorkLogEntry` 是查詢投影，不另建表。標記責任歷程可選擇關聯已驗證的登入工作階段。同任務與同使用者的複合外鍵見[工時字典](/notes/diagrams/architecture/task-work-db-schema) §4。資料集分析專用表延後至 MVP 後。\n\n**讀圖方式：** Wiki 可逐表查看候選欄位、來源與待決事項；Diagram 可搜尋表名或欄名，點選表後會聚焦已列出的候選單欄外鍵。圖中連線不代表資料庫遷移、複合約束或資料庫權限已建立。",
-    "source": "docs/diagrams/architecture/account-admin-db-schema.md §2–§3; docs/diagrams/architecture/dataset-db-schema.md §2–§3; docs/diagrams/architecture/task-run-db-schema.md §2–§3; docs/diagrams/architecture/task-work-db-schema.md §2–§3; docs/diagrams/architecture/annotation-review-db-schema.md §2–§3; docs/diagrams/architecture/task-export-db-schema.md §2–§3; specs/task-management/014-task-detail/spec.md v10.0.0; specs/annotation/015-annotation-workspace/spec.md v12.1.0; specs/account/020-auth-session-security/spec.md v1.3.0",
+    "description": "**規劃圖，尚未部署資料結構。** 已部署業務表：0；本頁顯示 **39 張候選表、333 欄、46 個候選單欄 FK（外鍵）**。帳號／管理、資料集、任務／執行、工時、標記／審核與匯出的逐表型別和關聯，來自[資料表盤點總帳](/notes/diagrams/architecture/database-table-inventory)所連的六份實體層字典。`task_trial_iaa_result` 保存 MVP 試標完成閘門的逐回合結果；資料集分析專用報告表延後至 MVP 後。`task_work_interval` 保存可觀測前景工作區間；`WorkLogEntry`、`RunStateTransition` 與 `IsolationAuditLog` 是查詢投影，不另建表。標記責任歷程可選擇關聯已驗證的登入工作階段。同任務與同使用者的複合外鍵見各實體字典 §4。\n\n**讀圖方式：** Wiki 可逐表查看候選欄位、來源與待決事項；Diagram 可搜尋表名或欄名，點選表後會聚焦已列出的候選單欄外鍵。圖中連線不代表資料庫遷移、複合約束或資料庫權限已建立。",
+    "source": "docs/diagrams/architecture/account-admin-db-schema.md §2–§3; docs/diagrams/architecture/dataset-db-schema.md §2–§3; docs/diagrams/architecture/task-run-db-schema.md §2–§3; docs/diagrams/architecture/task-work-db-schema.md §2–§3; docs/diagrams/architecture/annotation-review-db-schema.md §2–§3; docs/diagrams/architecture/task-export-db-schema.md §2–§3; specs/task-management/014-task-detail/spec.md v11.0.0; specs/annotation/015-annotation-workspace/spec.md v12.1.0; specs/account/020-auth-session-security/spec.md v1.3.0",
     "backTo": "/notes/diagrams/architecture/database-table-inventory"
   },
   "options": {
@@ -75,7 +75,7 @@
     {
       "key": "run",
       "label": "任務執行與發布",
-      "description": "八張未部署候選表記錄發布週期、試標回合、抽樣快照、每次執行、公開資料項目、固定標記工作位、發布時的審核候選名冊，以及終局排除。`ReviewAssignment` 是依資料推導的查詢視圖，不另建表。"
+      "description": "九張未部署候選表記錄發布週期、試標回合、逐回合 IAA 完整結果、抽樣快照、每次執行、公開資料項目、固定標記工作位、發布時的審核候選名冊，以及終局排除。`ReviewAssignment` 是依資料推導的查詢視圖，不另建表。"
     },
     {
       "key": "work",
@@ -541,7 +541,8 @@
           "name": "task_id",
           "type": "uuid",
           "required": "nullable",
-          "note": "任務作用域候選鍵；任務表及主鍵定案前不加 FK；規則：A-07"
+          "note": "任務作用域；可空，非空時真實 FK 指向 task.id，普通刪除先採 RESTRICT；規則：A-07",
+          "fk": "task"
         },
         {
           "name": "target_type",
@@ -574,7 +575,7 @@
           "note": "伺服器端發生時間（UTC）；規則：A-02"
         }
       ],
-      "description": "**候選表／設計草案，尚未執行資料庫遷移。** D-4 已依 Accepted ADR-032 裁決為共用 `audit_events`。人員事件的 `actor_user_id` 參照 `users`；系統事件的 actor 為空值且 `actor_role=system`。`task_id` 是可空 UUID 作用域，任務主表尚未定案，因此沒有任務 FK；多型 `target_id` 也沒有 FK。事件只能新增，所有事件至少保存一個日曆年，無自動刪除。來源：帳號／管理 §3.7、006 FR-013、007 FR-010、Accepted ADR-032。"
+      "description": "**候選表／設計草案，尚未執行資料庫遷移。** D-4 已依 Accepted ADR-032 裁決為共用 `audit_events`。人員事件的 `actor_user_id` 參照 `users`；系統事件的 actor 為空值且 `actor_role=system`。`task_id` 是可空 UUID 作用域，非空時候選真實 FK 指向 `task.id`；多型 `target_id` 依種類由服務驗證，不加多型 FK。`task.status_changed` 與 `task.isolation_changed` 分別供任務狀態與隔離歷程投影，不另建重複表。事件只能新增，所有事件至少保存一個日曆年，無自動刪除。來源：帳號／管理 §3.7、014 FR-025、006 FR-013、007 FR-010、Accepted ADR-032。"
     },
     {
       "name": "admin_role_permission",
@@ -1365,9 +1366,56 @@
       "description": "**實體候選，尚未部署。** 第 1 輪與後續試標的序號只在發布週期內唯一；`sampling_value` 保存實際資料項目數。來源：014 FR-010f-2／FR-010o-4／`TrialRound`。\n\n來源：[任務／執行實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.7；複合 FK、檢查限制、唯一限制與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。"
     },
     {
+      "name": "task_trial_iaa_result",
+      "label": "一次試標回合的完整計算結果",
+      "section": "3.8",
+      "group": "run",
+      "columns": [
+        {
+          "name": "trial_round_id",
+          "type": "uuid",
+          "required": "required",
+          "note": "試標回合主鍵與外鍵；每回合最多一份結果；規則：Q-07",
+          "pk": true,
+          "fk": "task_trial_round"
+        },
+        {
+          "name": "result_schema_version",
+          "type": "integer",
+          "required": "required",
+          "note": "受控 JSON 結果格式的正整數版本；規則：Q-08"
+        },
+        {
+          "name": "algorithm_version",
+          "type": "varchar",
+          "required": "required",
+          "note": "可重現計算的演算法版本；規則：Q-08"
+        },
+        {
+          "name": "input_digest",
+          "type": "char(64)",
+          "required": "required",
+          "note": "標記來源集合與排除規則的版本化輸入摘要；不含答案；規則：Q-08"
+        },
+        {
+          "name": "result_payload",
+          "type": "json",
+          "required": "required",
+          "note": "逐輸出的確定指標或 De = 0 無法計算原因，須經 registry 驗證；規則：Q-08"
+        },
+        {
+          "name": "computed_at",
+          "type": "timestamptz",
+          "required": "required",
+          "note": "計算完成的 UTC 時間；規則：Q-08"
+        }
+      ],
+      "description": "**實體候選，尚未部署。** 一列保存一次試標回合完成 IAA 計算所需的完整、可追溯結果；結果與回合 `done` 狀態在同一資料庫交易提交。`De = 0` 記錄無法計算的原因，不誤判為達標。這是 MVP 試標閘門證據，資料集分析專用報告表仍延後。來源：014 FR-010o-5、dataset-017 FR-039。\n\n來源：[任務／執行實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.8；跨表規則、索引與保留待決見 §4–§7。"
+    },
+    {
       "name": "task_sample_snapshot",
       "label": "單次發布的不可變抽樣回執",
-      "section": "3.8",
+      "section": "3.9",
       "group": "run",
       "columns": [
         {
@@ -1440,12 +1488,12 @@
           "fk": "users"
         }
       ],
-      "description": "**實體候選，尚未部署。** 每執行一份，保存隨機種子、演算法、摘要值和私有不可變清單回執；真正成員仍由 `task_run_item` 決定。回執只含按位置排序的公開 UUID，須在 DB 交易前寫入並驗證；DB 同交易提交其參照、執行紀錄和資料項目，交易失敗留下的無引用物件受控清理。來源：014 FR-010f／FR-010f-6／`SampleSnapshot`。\n\n來源：[任務／執行實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.8；複合 FK、檢查限制、唯一限制與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。"
+      "description": "**實體候選，尚未部署。** 每執行一份，保存隨機種子、演算法、摘要值和私有不可變清單回執；真正成員仍由 `task_run_item` 決定。回執只含按位置排序的公開 UUID，須在 DB 交易前寫入並驗證；DB 同交易提交其參照、執行紀錄和資料項目，交易失敗留下的無引用物件受控清理。來源：014 FR-010f／FR-010f-6／`SampleSnapshot`。\n\n來源：[任務／執行實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.9；複合 FK、檢查限制、唯一限制與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。"
     },
     {
       "name": "task_run",
       "label": "一次試標或正式標記的發布",
-      "section": "3.9",
+      "section": "3.10",
       "group": "run",
       "columns": [
         {
@@ -1524,12 +1572,12 @@
           "note": "發布時間 UTC；發布；不改；規則：X-01"
         }
       ],
-      "description": "**實體候選，尚未部署。** 試標有同發布週期回合，正式標記無回合；每個任務最多發布一次正式標記。每次執行固定當時的指引版本，不能以任務的當前指標重建歷史。發布重試鍵在同一試標回合內唯一，不同回合可重用；正式發布另以同任務和重試鍵唯一。來源：014 FR-010f-2／f-3／f-6／`AnnotationListMaterialization`。\n\n來源：[任務／執行實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.9；複合 FK、檢查限制、唯一限制與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。"
+      "description": "**實體候選，尚未部署。** 試標有同發布週期回合，正式標記無回合；每個任務最多發布一次正式標記。每次執行固定當時的指引版本，不能以任務的當前指標重建歷史。發布重試鍵在同一試標回合內唯一，不同回合可重用；正式發布另以同任務和重試鍵唯一。來源：014 FR-010f-2／f-3／f-6／`AnnotationListMaterialization`。\n\n來源：[任務／執行實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.10；複合 FK、檢查限制、唯一限制與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。"
     },
     {
       "name": "task_run_reviewer_candidate",
       "label": "發布時候選名冊快照",
-      "section": "3.10",
+      "section": "3.11",
       "group": "run",
       "columns": [
         {
@@ -1565,12 +1613,12 @@
           "note": "發布當時穩定排序；發布；不改；規則：V-02"
         }
       ],
-      "description": "**實體候選，尚未部署。** 此表只凍結審核分派輸入，不保存實際審核員黏著或授權。即時資格每次重新查 目前有效的成員資格與矩陣；已提交審核員由 015 FR-093(5) 推導。來源：014 FR-010t／關鍵實體、015 FR-093。\n\n來源：[任務／執行實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.10；複合 FK、檢查限制、唯一限制與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。"
+      "description": "**實體候選，尚未部署。** 此表只凍結審核分派輸入，不保存實際審核員黏著或授權。即時資格每次重新查 目前有效的成員資格與矩陣；已提交審核員由 015 FR-093(5) 推導。來源：014 FR-010t／關鍵實體、015 FR-093。\n\n來源：[任務／執行實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.11；複合 FK、檢查限制、唯一限制與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。"
     },
     {
       "name": "task_run_item",
       "label": "依序納入執行的公開資料項目",
-      "section": "3.11",
+      "section": "3.12",
       "group": "run",
       "columns": [
         {
@@ -1601,12 +1649,12 @@
           "note": "執行內正整數排序；發布；不改；規則：I-03"
         }
       ],
-      "description": "**實體候選，尚未部署。** 一列是一個執行選中的 `dataset_item`。同一發布週期中的試標及正式標記不得重複選取同一資料項目；外部清單只是這些列的回執。來源：014 FR-010b／FR-010f／`RunItem`。\n\n來源：[任務／執行實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.11；複合 FK、檢查限制、唯一限制與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。"
+      "description": "**實體候選，尚未部署。** 一列是一個執行選中的 `dataset_item`。同一發布週期中的試標及正式標記不得重複選取同一資料項目；外部清單只是這些列的回執。來源：014 FR-010b／FR-010f／`RunItem`。\n\n來源：[任務／執行實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.12；複合 FK、檢查限制、唯一限制與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。"
     },
     {
       "name": "task_annotation_assignment",
       "label": "固定的標記工作位",
-      "section": "3.12",
+      "section": "3.13",
       "group": "run",
       "columns": [
         {
@@ -1659,12 +1707,12 @@
           "note": "最後改動 UTC；修改；規則：X-01"
         }
       ],
-      "description": "**實體候選，尚未部署。** 每筆工作指派的 ID 不因停用、退回未指派池或重指派而改變；受派者可空不表示已排除。工作位顯示狀態由終局排除、目前已提交或儲存的標記紀錄及受派者依序推導，不另存一個 `status` 欄。正式標記每個資料項目恰有一個工作位，試標按重疊人數建立。候選 UNIQUE `(task_run_id,id)` 是標記／審核六張子表 `(run_id,assignment_id)` 複合 FK 所需的同序父鍵，尚未在資料庫建立。來源：014 FR-005l／FR-010f-4／FR-010f-7／`AnnotationAssignment`；015 的提交後續以此 ID 定址。\n\n來源：[任務／執行實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.12；複合 FK、檢查限制、唯一限制與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。"
+      "description": "**實體候選，尚未部署。** 每筆工作指派的 ID 不因停用、退回未指派池或重指派而改變；受派者可空不表示已排除。工作位顯示狀態由終局排除、目前已提交或儲存的標記紀錄及受派者依序推導，不另存一個 `status` 欄。正式標記每個資料項目恰有一個工作位，試標按重疊人數建立。候選 UNIQUE `(task_run_id,id)` 是標記／審核六張子表 `(run_id,assignment_id)` 複合 FK 所需的同序父鍵，尚未在資料庫建立。來源：014 FR-005l／FR-010f-4／FR-010f-7／`AnnotationAssignment`；015 的提交後續以此 ID 定址。\n\n來源：[任務／執行實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.13；複合 FK、檢查限制、唯一限制與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。"
     },
     {
       "name": "task_annotation_exclusion",
       "label": "終局排除證據",
-      "section": "3.13",
+      "section": "3.14",
       "group": "run",
       "columns": [
         {
@@ -1702,7 +1750,7 @@
           "note": "必填原因；排除時；不改；規則：E-02"
         }
       ],
-      "description": "**實體候選，尚未部署。** 每工作指派最多一筆，V1 不撤銷、不刪除，與原工作位分離避免空值 assignee 被誤判排除。來源：014 FR-005h／`ExcludedAnnotationAssignment`。\n\n來源：[任務／執行實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.13；複合 FK、檢查限制、唯一限制與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。"
+      "description": "**實體候選，尚未部署。** 每工作指派最多一筆，V1 不撤銷、不刪除，與原工作位分離避免空值 assignee 被誤判排除。來源：014 FR-005h／`ExcludedAnnotationAssignment`。\n\n來源：[任務／執行實體候選字典](/notes/diagrams/architecture/task-run-db-schema) §3.14；複合 FK、檢查限制、唯一限制與保留待決見 §4–§7。圖中只畫單欄 FK；其他關聯不得從線條推定已落地。"
     },
     {
       "name": "annotation_record",

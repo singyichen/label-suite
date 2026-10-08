@@ -135,7 +135,7 @@ test('all six dictionaries and NoteCraft agree on every projected table and summ
     data.tables.length,
     data.tables.reduce((count, table) => count + table.columns.length, 0),
     data.tables.reduce((count, table) => count + table.columns.filter((column) => column.fk).length, 0),
-  ], [38, 327, 44]);
+  ], [39, 333, 46]);
   assert.match(data.meta.source, /task-work-db-schema\.md/);
   assert.match(data.meta.description, /工作區間|工時/);
   assert.match(inventory(), /task-work-db-schema\.md/);
@@ -160,10 +160,10 @@ test('projection checker rejects interval omission and the history session FK dr
 test('summary checker rejects one-table and one-FK drift', () => {
   const data = erData();
   const staleTables = structuredClone(data);
-  staleTables.meta.description = staleTables.meta.description.replace('38 張候選表', '37 張候選表');
+  staleTables.meta.description = staleTables.meta.description.replace('39 張候選表', '38 張候選表');
   assert.match(checker.validateSchemaSummary(staleTables, inventory()).join('\n'),
     /NoteCraft metadata: tables count/);
-  const staleInventory = inventory().replace('44 個候選單欄 FK', '43 個候選單欄 FK');
+  const staleInventory = inventory().replace('46 個候選單欄 FK', '45 個候選單欄 FK');
   assert.match(checker.validateSchemaSummary(data, staleInventory).join('\n'),
     /inventory NoteCraft summary: FKs count/);
 });

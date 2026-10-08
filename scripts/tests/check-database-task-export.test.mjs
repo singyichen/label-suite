@@ -132,7 +132,7 @@ test('export dictionary separates request acceptance from the finalized result t
     'Accepted conditions must not embed the later result timestamp');
 });
 
-test('NoteCraft records exported_at within the complete 38-table projection', () => {
+test('NoteCraft records exported_at within the complete 39-table projection', () => {
   const data = erData();
   const record = data.tables.find((table) => table.name === 'task_export');
   assert.ok(record, 'Missing task_export projection');
@@ -140,7 +140,7 @@ test('NoteCraft records exported_at within the complete 38-table projection', ()
   assert.ok(exportedAt, 'NoteCraft must show task_export.exported_at');
   assert.equal(exportedAt.type, 'timestamptz');
   assert.equal(exportedAt.required, 'nullable');
-  assert.deepEqual(summaryCounts(data).map(([count]) => count), [38, 327, 44]);
+  assert.deepEqual(summaryCounts(data).map(([count]) => count), [39, 333, 46]);
 });
 
 test('NoteCraft projection matches export dictionary tables, columns, types and keys', () => {
@@ -190,7 +190,7 @@ test('account/admin NoteCraft summary includes every projected group and the exp
   assert.ok(summary, 'Account/admin NoteCraft summary is required');
 
   const data = erData();
-  assert.equal(data.tables.length, 38);
+  assert.equal(data.tables.length, 39);
   for (const [count, unit] of summaryCounts(data)) {
     const unitPattern = unit === '張候選表' ? '張(?:候選)?表?' :
       unit === '個候選單欄 FK' ? '(?:個)?候選單欄 FK' : unit;
