@@ -4,7 +4,7 @@
 
 ### Requirement: FR-009a 首次匯出保存不可變原始產物
 
-首次匯出 MUST 明確選取同任務一個或多個 run；同一次匯出可同時選取 Dry Run 與 Official Run，並凍結所選 run 的順序與各自階段，不得從目前頁面階段推定或合併 run。依 `EXPORT_SYNC_MAX_ROWS` 選同步回應或背景工作。內容與答案隔離驗證通過後 MUST 原子保存不可變原始位元組、原檔名、格式版本及 SHA-256，才將歷史列設為可下載；失敗不可留下可下載的部分產物。重送與工作重試依同一請求冪等識別處理，不得重複建立歷史列。生命週期為 `pending → processing → ready | failed`；到期、撤銷另由時間記錄判定。
+首次匯出 MUST 明確選取同任務一個或多個 run；同一次匯出可同時選取 Dry Run 與 Official Run，並凍結所選 run 的順序與各自階段，不得從目前頁面階段推定或合併 run。依 `EXPORT_SYNC_MAX_ROWS` 選同步回應或背景工作。內容與答案隔離驗證通過後 MUST 原子保存不可變原始位元組、原檔名、格式版本及 SHA-256，才將歷史列設為可下載；失敗不可留下可下載的部分產物。服務端 MUST 在身分、`dataset.export` 和任務範圍授權後才查詢冪等鍵。冪等鍵作用範圍是 `(task_id, requested_by_user_id, client_idempotency_key)`；服務端計算正規化命令摘要，輸入包括任務、請求人、格式及格式版本、有序 run ID、已驗證的共享篩選、語言、序列方案／單位與切詞器引擎／版本。摘要 MUST 排除生成時間及產物資料（包括 bytes、檔名、原檔 SHA-256）。同鍵同摘要重送或工作重試回傳／續用原歷史列；同鍵不同摘要拒絕為衝突，MUST NOT 覆寫或建立第二筆。生命週期為 `pending → processing → ready | failed`；到期、撤銷另由時間記錄判定。
 
 #### Scenario: 首次匯出和重試只產生一份完整原檔
 
@@ -12,6 +12,13 @@
 - **WHEN** 匯出成功或背景工作對同一請求重試
 - **THEN** 只有一筆歷史列及一份不可變原檔，含檔名、格式版本、SHA-256
 - **AND** 驗證失敗時沒有可下載的部分檔案
+
+#### Scenario: 冪等鍵作用範圍與內容衝突
+
+- **GIVEN** 任務 A 的請求人 U 已用鍵 K 建立匯出，命令摘要已保存
+- **WHEN** U 在任務 A 以鍵 K 重送相同命令，或以鍵 K 送出不同 run 順序／篩選／格式／語言／序列選項
+- **THEN** 相同命令續用原歷史列；不同命令回傳衝突且不改寫原列
+- **AND** 任務 B 或另一請求人不能藉 K 探測 A／U 的請求，因為查鍵前須先通過目前授權
 
 #### Scenario: 同次匯出選取 Dry 與 Official
 
@@ -31,7 +38,7 @@
 
 ### Requirement: FR-010i-1 逐 run manifest
 
-所有匯出檔的 `manifest` MUST 包含 `export_format`、`export_format_version`、`exported_at`、`exported_by`、`applied_filters` 及有序 `manifest.runs[]`。每個 run 須保留 `run_id`、`cycle_id`、`dataset_version_id`、`config_version_id`、`schema_version`、`guideline_version_id`、`sample_snapshot_id`；`schema_version` 由該 run 的 cycle 已釘住 config 的 `schema_version_no` 取得。FR-010i 的階段、隔離、抽樣、IAA、排除摘要仍須保留；零筆結果也有完整 manifest。跨 run 匯出不得用單一版本或任務目前版本冒充。
+所有匯出檔的 `manifest` MUST 包含 `export_format`、`export_format_version`、`exported_at`、`exported_by`、`applied_filters` 及有序 `manifest.runs[]`。每個 run 須保留 `run_stage`、`run_id`、`cycle_id`、`dataset_version_id`、`config_version_id`、`schema_version`、`guideline_version_id`、`sample_snapshot_id`；`schema_version` 由該 run 的 cycle 已釘住 config 的 `schema_version_no` 取得。FR-010i 的隔離、抽樣、IAA、排除摘要仍須保留；零筆結果也有完整 manifest。跨 run 匯出不得用單一版本或任務目前版本冒充，每筆結果 MUST 保留來源 `run_id` 和 `run_stage`。
 
 #### Scenario: AC-1.15 多 run 與零筆結果仍可追溯
 
@@ -41,7 +48,14 @@
 
 ### Requirement: FR-010i-2 條件快照與原始檔案分離
 
-每筆歷史列 MUST 對應一次請求及一份不可變原檔。已驗證、版本化的條件快照保存 `export_format`、`run_stage`、`submission_status`、`annotator_scope`、審核員／審核狀態及其他篩選、匯出語言、序列選項、完整精度 `exported_at`、原請求人 `exported_by` 與逐 run 版本／快照。每個 run 的納入關聯及輸出順序獨立保存，對應 `manifest.runs[]`。快照僅供審計及重製驗證，MUST NOT 作為重新下載時查詢目前結果的指令。`scope_label` 和 `export_type` 僅為另存的顯示資料，不參與原檔完整性驗證。
+每筆歷史列 MUST 對應一次請求及一份不可變原檔。已驗證、版本化的條件快照把共享篩選條件和逐 run 身分分開保存：共通條件含 `export_format`、`export_format_version`、`submission_status`、`annotator_scope`、審核員／審核狀態及其他已驗證 filters、匯出語言、序列／切詞選項、完整精度 `exported_at` 與原請求人 `exported_by`。有序 `selected_runs[]` 中每項含 `run_id`、`selected_runs[].run_stage`、`cycle_id`、`dataset_version_id`、`config_version_id`、`schema_version`、`guideline_version_id`、`sample_snapshot_id`。混合 Dry／Official 時頂層 `run_stage = all`，不得冒稱單一階段；單階段可保留該階段值。每個 run 的納入關聯及輸出順序獨立保存，對應 `manifest.runs[]`；每筆結果亦含來源 `run_id` 與 `run_stage`。快照僅供審計及重製驗證，MUST NOT 作為重新下載時查詢目前結果的指令。`scope_label` 和 `export_type` 僅為另存的顯示資料，不參與原檔完整性驗證。
+
+#### Scenario: 混合階段快照沒有假單一階段
+
+- **GIVEN** 同一匯出選取 Dry R2 與 Official Run，兩者釘住不同版本及快照
+- **WHEN** 首次請求保存條件快照並產出結果
+- **THEN** `selected_runs[]` 逐項保存階段與釘住身分，頂層 `run_stage` 為 `all`，每筆結果標明來源 run
+- **AND** 共享篩選條件只保存一份，輸出順序與 `manifest.runs[]` 一致
 
 #### Scenario: 變更目前任務版本不改寫歷史匯出
 
