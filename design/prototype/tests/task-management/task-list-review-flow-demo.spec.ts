@@ -66,9 +66,11 @@ test.describe('Review-flow demo seeds (T014-T016)', () => {
   }) => {
     await page.goto(`${TASK_DETAIL_URL}?task_id=T014`);
 
-    await expect(page.locator('#bcCurrent')).toHaveText('審核流程示範：試標', {
+    // FR-025: the task name lives in the H1; the breadcrumb tail is the task id.
+    await expect(page.locator('#pageTitle')).toHaveText('審核流程示範：試標', {
       timeout: PANEL_LOAD_TIMEOUT,
     });
+    await expect(page.locator('#bcCurrent')).toHaveText('T014');
     await expect(page.locator('#valueTaskType')).toHaveText('單一標籤');
     await expect(page.locator('#valueDatasetSummary')).toHaveText('5 筆');
     await expect(page.locator('#settingsConfigView')).toContainText(
