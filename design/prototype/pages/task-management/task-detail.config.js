@@ -67,6 +67,11 @@ function markDirty() {
    field change to refresh a "next" button's disabled state. No-op here. */
 function revalidateCurrentStep() {}
 
+/* saveCodeToVisual() calls this on the outputs[] path; task-new defines the
+   step validator, task-detail has none, so an undefined call aborted 套用
+   after the backfill but before it could report success. */
+function validateStep2() {}
+
 function track(event, extra) {
   trackEvent(event, extra);
 }
@@ -258,11 +263,35 @@ function bindTaskConfigEvents() {
   });
   /* #formatYamlBtn / #formatJsonBtn call setCodeFormat() via inline onclick
      in overview.html's markup, matching task-new.html's pattern. */
+  var codeValidateTimer = null;
+  /* Live validation (FR-026 (3)): parse-only, so Visual keeps the last valid
+     config while the draft is invalid; 套用 stays disabled until it parses. */
+  function validateCodeDraft() {
+    var raw = el('codeEditor').value;
+    var message = '';
+    try {
+      var parsed = (state.codeFormat === 'json' || raw.trim().startsWith('{') || raw.trim().startsWith('['))
+        ? JSON.parse(raw)
+        : parseYamlSubset(raw);
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) message = t('errCodeInvalid');
+    } catch (err) {
+      message = err.message || t('errCodeInvalid');
+    }
+    el('codeErrorBar').classList.toggle('hidden', !message);
+    if (message) setText('codeErrorMsg', message);
+    el('saveCodeBtn').disabled = Boolean(message);
+  }
   el('codeEditor').addEventListener('input', function() {
     state.codeDraftDirty = true;
     markDirty();
     el('saveCodeBtn').disabled = false;
-    el('codeErrorBar').classList.add('hidden');
+    clearTimeout(codeValidateTimer);
+    codeValidateTimer = setTimeout(validateCodeDraft, 250);
   });
-  el('saveCodeBtn').addEventListener('click', function() { saveCodeToVisual(true); });
+  el('saveCodeBtn').addEventListener('click', function() {
+    clearTimeout(codeValidateTimer);
+    /* Applying only backfills Visual; header 儲存 is the sole submit, so use
+       the task-detail toast instead of the shared (task-new) toastCodeSaved. */
+    if (saveCodeToVisual(false)) showToast(t('settingsCodeAppliedToast'));
+  });
 }
