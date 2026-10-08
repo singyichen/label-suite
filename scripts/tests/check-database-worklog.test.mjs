@@ -10,6 +10,7 @@ const annotationDictionary = () => read('../../docs/diagrams/architecture/annota
 const accountDictionary = () => read('../../docs/diagrams/architecture/account-admin-db-schema.md');
 const erData = () => JSON.parse(read('../../docs/diagrams/architecture/database-schema.er.json'));
 const inventory = () => read('../../docs/diagrams/architecture/database-table-inventory.md');
+const derivedOrPrivateColumn = /(?:^|_)(?:duration|count|speed|answer|split|payload|role|stage)(?:_|$)/i;
 
 function workSource(markdown = workDictionary()) {
   assert.equal(typeof checker.parseTaskWorkSchema, 'function',
@@ -53,7 +54,7 @@ test('work dictionary has one 11-column candidate interval and no report-summary
   assert.deepEqual(columns.filter((column) => column.fk), [],
     'Composite relationships must not be projected as false one-column FKs');
   assert.ok(columns.every((column) =>
-    !/(?:duration|count|speed|answer|split|payload|role|stage)/i.test(column.name)),
+    !derivedOrPrivateColumn.test(column.name)),
   'The source stores observable intervals, not derived metrics or private answers');
 });
 
@@ -123,7 +124,7 @@ test('NoteCraft projects the interval and history FK without derived or private 
     'nullable');
   assert.equal(data.tables.some((table) => table.name === 'WorkLogEntry'), false);
   assert.ok(interval.columns.every((column) =>
-    !/(?:duration|count|speed|answer|split|payload|role|stage)/i.test(column.name)));
+    !derivedOrPrivateColumn.test(column.name)));
 });
 
 test('all six dictionaries and NoteCraft agree on every projected table and summary', () => {

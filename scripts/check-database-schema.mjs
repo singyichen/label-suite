@@ -6,6 +6,7 @@ const datasetSourceUrl = new URL('../docs/diagrams/architecture/dataset-db-schem
 const taskRunSourceUrl = new URL('../docs/diagrams/architecture/task-run-db-schema.md', import.meta.url);
 const annotationReviewSourceUrl = new URL('../docs/diagrams/architecture/annotation-review-db-schema.md', import.meta.url);
 const taskExportSourceUrl = new URL('../docs/diagrams/architecture/task-export-db-schema.md', import.meta.url);
+const taskWorkSourceUrl = new URL('../docs/diagrams/architecture/task-work-db-schema.md', import.meta.url);
 const dataUrl = new URL('../docs/diagrams/architecture/database-schema.er.json', import.meta.url);
 const inventoryUrl = new URL('../docs/diagrams/architecture/database-table-inventory.md', import.meta.url);
 
@@ -135,11 +136,15 @@ export const parseTaskRunSchema = (markdown) => parsePhysicalSchema(markdown, {
 });
 export const parseAnnotationReviewSchema = (markdown) => parsePhysicalSchema(markdown, {
   strictEdges: true,
+  externalParents: ['account_session'],
   undrawnParents: ['task_membership'],
 });
 export const parseTaskExportSchema = (markdown) => parsePhysicalSchema(markdown, {
   strictEdges: true,
   externalParents: ['task', 'users'],
+});
+export const parseTaskWorkSchema = (markdown) => parsePhysicalSchema(markdown, {
+  strictEdges: true,
 });
 
 export function mergeSchemaSources(...sources) {
@@ -226,6 +231,13 @@ export function validateErData(source, data) {
     if (!/(?:候選|candidate)/i.test(description) || !/(?:尚未|未部署|undeployed|not deployed)/i.test(description))
       errors.push(`${name}: candidate and undeployed table status must be explicit`);
   }
+  for (const name of ['task_work_interval']) {
+    const table = dataTables.get(name);
+    if (!table) continue;
+    const description = table.description ?? '';
+    if (!/(?:候選|candidate)/i.test(description) || !/(?:尚未|未部署|undeployed|not deployed)/i.test(description))
+      errors.push(`${name}: candidate and undeployed table status must be explicit`);
+  }
   return errors;
 }
 
@@ -264,6 +276,7 @@ async function main() {
       parseTaskRunSchema(await readFile(taskRunSourceUrl, 'utf8')),
       parseAnnotationReviewSchema(await readFile(annotationReviewSourceUrl, 'utf8')),
       parseTaskExportSchema(await readFile(taskExportSourceUrl, 'utf8')),
+      parseTaskWorkSchema(await readFile(taskWorkSourceUrl, 'utf8')),
     );
     data = JSON.parse(await readFile(dataUrl, 'utf8'));
     inventory = await readFile(inventoryUrl, 'utf8');

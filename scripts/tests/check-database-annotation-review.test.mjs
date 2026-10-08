@@ -36,6 +36,7 @@ function mergedSource() {
     checker.parseTaskRunSchema(read('../../docs/diagrams/architecture/task-run-db-schema.md')),
     annotationSource(),
     checker.parseTaskExportSchema(read('../../docs/diagrams/architecture/task-export-db-schema.md')),
+    checker.parseTaskWorkSchema(read('../../docs/diagrams/architecture/task-work-db-schema.md')),
   );
 }
 
@@ -56,8 +57,8 @@ function incrementCount(text, count, unit) {
 test('annotation/review dictionary has exactly eight physical tables and one non-null UUID PK each', () => {
   const source = annotationSource();
   assert.deepEqual(source.tables.map((table) => table.name), annotationNames);
-  assert.equal(source.tables.reduce((count, table) => count + table.columns.length, 0), 82);
-  assert.equal(source.tables.reduce((count, table) => count + table.columns.filter((column) => column.fk).length, 0), 14);
+  assert.equal(source.tables.reduce((count, table) => count + table.columns.length, 0), 83);
+  assert.equal(source.tables.reduce((count, table) => count + table.columns.filter((column) => column.fk).length, 0), 15);
   for (const table of source.tables) {
     assert.deepEqual(table.columns.filter((column) => column.pk), [
       { name: 'id', type: 'uuid', nullable: false, pk: true },
@@ -174,7 +175,7 @@ test('annotation/review parser rejects a Mermaid datatype that contradicts the d
 test('NoteCraft projection matches every source table, column, type, nullability, PK and FK', () => {
   const source = mergedSource();
   const data = erData();
-  assert.deepEqual(countProjection(data), { tables: 37, columns: 316, fks: 43 });
+  assert.deepEqual(countProjection(data), { tables: 38, columns: 328, fks: 44 });
   assert.deepEqual(checker.validateErData(source, data), []);
   const projected = data.tables.filter((table) => annotationNames.includes(table.name));
   assert.deepEqual(projected.map((table) => table.name), annotationNames);
@@ -211,11 +212,11 @@ test('projection checker rejects annotation column, type, nullability, PK and FK
 test('schema summary checker rejects stale metadata and inventory counts after annotation projection', () => {
   const data = erData();
   const markdown = inventory();
-  assert.deepEqual(countProjection(data), { tables: 37, columns: 316, fks: 43 });
+  assert.deepEqual(countProjection(data), { tables: 38, columns: 328, fks: 44 });
   assert.deepEqual(checker.validateSchemaSummary(data, markdown), []);
   const summary = markdown.split('\n').find((line) => line.startsWith('**NoteCraft 規劃檢視**'));
   assert.ok(summary, 'Expected a NoteCraft inventory summary');
-  for (const [count, unit] of [[37, '張候選表'], [316, '欄'], [43, '個候選單欄 FK']]) {
+  for (const [count, unit] of [[38, '張候選表'], [328, '欄'], [44, '個候選單欄 FK']]) {
     const staleData = structuredClone(data);
     staleData.meta.description = incrementCount(staleData.meta.description, count, unit);
     assert.notDeepEqual(checker.validateSchemaSummary(staleData, markdown), [],
