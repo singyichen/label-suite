@@ -1,7 +1,7 @@
 ---
 功能分支: feat/database-dataset-lineage
 建立日期: 2026-10-06
-版本: 1.3.0
+版本: 1.4.0
 狀態: Draft
 ---
 
@@ -103,7 +103,7 @@ flowchart TD
 - **FR-008**：`draft` 版本可由授權匯入服務更正來源與項目；封存前須驗證每批分類 manifest、匯入時取得的來源 checksum 回執、private row 完整性、正整數順序及完整快照 manifest。封存不重新讀取含答案的已儲存原始 artifact；`draft → sealed` 於同一交易寫入含分類摘要的 manifest digest、時間、狀態與稽核事件；重試冪等、競爭防衝突、失敗全回滾。`sealed` 版本不可原地改內容或解除封存，須建立新的完整快照版本。
 - **FR-009**：共同路徑須兼容 SQLite quick start／PostgreSQL production：結構化 payload 在 SQLite 為 JSON storage、PostgreSQL 為 JSONB，時間以 UTC 表示；兩種方言都要驗證 FK、唯一鍵、正整數、seal 交易與公開／私有隔離。不得因 SQLite 缺 DB role 就降低答案保護；實際 migration／ORM 另立工作項實作。
 - **FR-010**：task/run、annotation、review、quality 與 export 的資料表不屬於本規格；後續契約須為任務綁定 `dataset_version_id`、為 run/snapshot 固定 item IDs 與 seeds、為標註／匯出保存 schema/config/version 條件，使用真實 FK 和交易驗證。不畫未定義的跨模組 FK，也不得把來源 `declared_split` 誤作 run 的切分結果。
-- **FR-011**：受限來源 artifact、公開資料及私有答案各須先定義保留、刪除／匿名化與派生資源處置；未定案前不得以無限制 cascade 刪除已封存版本或其被引用項目。cache 與匯出不能回傳已刪除／逾期資料。
+- **FR-011**：dataset 各類資料依 ADR-038（維護者 2026-10-08 於 #1224 的裁決）分級保存：(1) 受限來源 artifact、`dataset_item_private` 的私有答案與 `protected_payload`，只要仍有 sealed 版本或 run 引用，即以 RESTRICT 保留，不得刪除、匿名化或以無限制 cascade 移除；(2) 只有未封存的 draft 版本被丟棄時，才可在同一交易依服務順序實體刪除其 item、私有伴隨列、批次與受限 artifact；sealed 版本及被 run 引用的項目一律拒絕刪除；(3) 以該版本為來源的派生資源（含答案的歷程 JSON、匯出 metadata）隨其版本與 run 保存，版本整體下架的程序與期限待定（#1224），未定案前不得刪除；(4) cache 與匯出不能回傳已刪除／逾期資料。除既有正典下限外，本規格不訂任何保存期限。
 
 ### 關鍵實體 *(必填)*
 
@@ -152,6 +152,7 @@ flowchart TD
 
 | 版本 | 日期 | 變更 |
 |---|---|---|
+| 1.4.0 | 2026-10-08 | issue #1224：依維護者裁決（2026-10-08 於 #1224 裁決），FR-011 由「待補保留與刪除政策」改為已裁決政策，依 ADR-038 分級：受限來源 artifact、私有答案與 `protected_payload` 在仍被 sealed 版本或 run 引用時 RESTRICT，僅未封存 draft 丟棄時依服務順序實體刪除，派生歷程 JSON 與匯出 metadata 隨版本與 run 保存，版本整體下架程序與期限待定（#1224）。屬 MINOR：未部署候選契約，FR-011 由待補改為已裁決政策，未移除或推翻任何 FR／AC，未新增期限。OpenSpec change `data-retention-policy`。 |
 | 1.3.0 | 2026-10-08 | issue #1228：依維護者裁決（2026-10-08，#1217），`dataset_item_private` 新增可空 JSON 欄 `protected_payload`，存放受保護但非答案的值，依 `classification_manifest` 驅動、不寫死欄名，與 `hidden_answer` 分開授權；FR-005 增列該欄、FR-006／AC-2.6 搬移落點明定為 `protected_payload`；封存不可變由既有 V-08 涵蓋、不訂保存期限（#1224）。屬 MINOR：未部署候選契約，未移除其他需求。OpenSpec change `dataset-021-protected-payload`。 |
 | 1.2.0 | 2026-10-08 | issue #1217：依維護者裁決（2026-10-08，#1216／#1217，限定方向）將 FR-006 的 draft manifest 修正限縮為僅允許公開改為受保護（刪除公開投影、把該欄位已存於 `public_payload` 的公開值（非答案）搬入私有列、不讀取已儲存的含答案資料），其他方向須重新上傳該批來源並走串流匯入器；新增 AC-2.6；FR-005 不變。屬 MINOR：dataset-021 為尚未部署的候選契約，且未移除其他需求。OpenSpec change `dataset-021-draft-reclassify-direction`。 |
 | 1.1.0 | 2026-10-06 | issue #1160：完成五張候選表字典與 NoteCraft 投影、逐檔分類 manifest 及封存來源回執的正典對齊；OpenSpec change `dataset-lineage-schema-planning` archive/write-back。所有表仍未部署。 |

@@ -56,3 +56,4 @@ Each ADR follows this structure:
 | [035](035-google-oidc-no-external-idp.md) | Google SSO via Direct OIDC Integration — No External IdP | Accepted | 2026-09-08 |
 | [036](036-oss-repository-split.md) | Open-Source Development in a New `label-suite` Organization Repository — Spec Canon Stays Here | Proposed | 2026-09-17 |
 | [037](037-permission-matrix-authorization.md) | Permission Matrix as Authorization Input | Accepted | 2026-10-06 |
+| [038](038-data-retention-deletion-anonymization.md) | Data Retention, Deletion and Anonymization Policy | Accepted | 2026-10-08 |

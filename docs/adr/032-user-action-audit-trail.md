@@ -4,6 +4,7 @@
 **Date**: 2026-08-19
 **Accepted amendment**: 2026-10-06 — issue #1160 D-4; SQLite/PG planning contract, system actor, retention, admin actions and naming exception.
 **Accepted amendment**: 2026-10-06 — issue #1160 D-9; matrix event target identity fixed by ADR-037.
+**Accepted amendment**: 2026-10-08 — issue #1224; the future privileged archive/purge path is ADR-038: after the one-calendar-year minimum only PII columns may be anonymized through the ADR-024 migration-role path, and events are never deleted.
 **Accepted amendment**: 2026-10-08 — issue #1160 final planning; typed task state/isolation events replace duplicate domain audit tables, and non-null task scope gains a candidate FK.
 
 ## Context
@@ -149,7 +150,7 @@ The prototype (static HTML + localStorage, `design/prototype/`) is **exempt**: i
 
 ## Deferred Decisions
 
-- Privileged archive/purge policy and implementation after the one-calendar-year minimum; no automatic deletion is approved here.
+- Decided by ADR-038 (#1224): after the one-calendar-year minimum only PII columns may be anonymized by the privileged migration-role path; events are never deleted and no automatic deletion is approved. Cadence and maximum retention remain TBD (#1224).
 - The editable matrix's audit target is now decided by ADR-037. Runtime implementation and retention enforcement remain separate work.
 - The 2026-10-08 ADR-022 amendment completed the `RunStateTransition` projection decision; no separate task transition audit table remains planned.
 - Whether an admin-facing audit UI ships in the first formal release or audit stays API-only.
