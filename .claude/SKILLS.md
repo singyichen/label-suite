@@ -23,7 +23,6 @@ This document provides a comprehensive overview of all available Spec-Kit Comman
 ├── skills/                      # Knowledge-Domain Skills (flat — Claude Code only discovers `.claude/skills/<name>/SKILL.md` one level deep)
 │   │                            # Spec-Driven Development
 │   ├── sdd-workflow/
-│   ├── spec-to-plan/
 │   ├── spec-review/
 │   ├── spec-format/                 # frontmatter name: speckit-spec-format
 │   │                            # Requirements Engineering
@@ -122,7 +121,6 @@ Skills for the SDD workflow — writing, reviewing, and transforming spec artifa
 | Skill | Purpose | Example Usage |
 |-------|---------|---------------|
 | `/sdd-workflow` | Full SDD workflow guide (specify → checklist) | `/sdd-workflow` |
-| `/spec-to-plan` | Transform a `spec.md` into a detailed `plan.md` | `/spec-to-plan specs/annotation/001-annotation-submission/spec.md` |
 | `/spec-review` | Review spec completeness and Constitution compliance | `/spec-review specs/annotation/001-annotation-submission/spec.md` |
 
 ### Requirements Engineering (3 skills)
@@ -232,7 +230,7 @@ Skills for quality gates, defect management, traceability, and reporting.
 
 | Domain | Count | Skills |
 |--------|-------|--------|
-| Spec-Driven Development | 3 | sdd-workflow, spec-to-plan, spec-review |
+| Spec-Driven Development | 2 | sdd-workflow, spec-review |
 | Requirements Engineering | 3 | user-story, functional-req, acceptance-criteria |
 | System Design | 5 | api-spec, backend-spec, frontend-spec, data-model, flowchart |
 | Code Quality | 5 | code-review-deep, code-review-checklist, pr-review, code-smell, git-branch |
@@ -267,7 +265,7 @@ For the Label Suite project, these skills enforce additional constraints for the
 | Phase | Recommended Skills |
 |-------|--------------------|
 | 1. Requirements | `/user-story` → `/functional-req` → `/acceptance-criteria` |
-| 2. SDD Spec | `/speckit.specify` → `/spec-review` → `/spec-to-plan` |
+| 2. SDD Spec | `/speckit.specify` → `/spec-review` → `/opsx:propose` (design.md) |
 | 3. Design | `/api-spec` → `/backend-spec` → `/frontend-spec` → `/data-model` → `/flowchart` |
 | 3b. UI Design | `/ui-ux-pro-max` (design system) → `/frontend-spec` (component spec) |
 | 4. Implementation | `/opsx:propose` → `/opsx:apply` → `/opsx:archive` (ADR-033) |
