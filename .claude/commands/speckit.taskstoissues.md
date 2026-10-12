@@ -26,8 +26,8 @@ You **MUST** consider the user input before proceeding (if not empty).
    - Load `specs/[module]/NNN-feature/plan.md` for technical context (if available)
 
 4. **For each task in tasks.md, prepare a GitHub Issue**:
-   - **Title**: concise task description (from tasks.md)
-   - **Body** includes:
+   - **Title**: `[Task] <scope>: <中文描述>` (English prefix, Traditional Chinese description derived from tasks.md)
+   - **Body**: Traditional Chinese, technical terms stay in English; fill the matching template in `.github/issue-templates.md`. It includes:
      - User Story reference (e.g., `Implements US-01 (P1)`)
      - Spec reference: `specs/[module]/NNN-feature/spec.md`
      - Task ID from tasks.md (e.g., `TASK-003`)

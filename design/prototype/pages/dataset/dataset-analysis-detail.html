@@ -307,7 +307,7 @@
       </div>
       <p class="stats-empty-title" id="statsEmptyTitle">尚無標記資料</p>
       <p class="stats-empty-desc" id="statsEmptyDesc">標記員提交後，系統將自動計算統計資料。請先完成 Dry Run 並等待標記員提交。</p>
-      <a href="../task-management/task-detail.html" class="btn btn-secondary btn-sm" id="statsEmptyBtn">前往任務詳情</a>
+      <a href="../task-management/task-detail.html?task_role=project_leader" class="btn btn-secondary btn-sm" id="statsEmptyBtn">前往任務詳情</a>
     </div>
     <!-- Ready state -->
     <div id="statsReady">
@@ -360,7 +360,7 @@
       <p class="quality-empty-title" id="emptyTitle">IAA 報告將在 Dry Run 完成後產生</p>
       <p class="quality-empty-desc" id="emptyDesc">請先完成 Dry Run，系統將自動計算 IAA 並產生品質報告。</p>
       <div class="quality-pending-badge-row"><span class="badge iaa-summary-badge badge-neutral" id="qualityPendingBadge"></span></div>
-      <a href="../task-management/task-detail.html" class="btn btn-secondary btn-sm" id="emptyBtn">前往任務詳情</a>
+      <a href="../task-management/task-detail.html?task_role=project_leader" class="btn btn-secondary btn-sm" id="emptyBtn">前往任務詳情</a>
     </div>
 
     <!-- Ready state -->
@@ -654,13 +654,13 @@ var I18N = {
       sample1Detail: '「散熱表現優異」span 邊界標記在 3 位標記員間出現分歧，pairwise F1（strict）為 0.71',
       sample2Detail: '「退換貨流程」與「繁瑣」是否合併為單一 span 意見分歧，pairwise F1（strict）為 0.58',
       rankMetricName: '與合併聚合參考值 F1',
-      boundaryExampleDetail: 'Gold: 「散熱表現優異」｜Annotator: 「散熱表現優異，長時間高負載運作」（多標 6 tokens，span_too_long）',
+      boundaryExampleDetail: '參考值: 「散熱表現優異」｜Annotator: 「散熱表現優異，長時間高負載運作」（多標 6 tokens，span_too_long）',
     },
     entityRecognitionListRank: {
       sample1Detail: '「台大醫院」實體邊界標記不一致（ORG vs LOC 類型分歧）',
       sample2Detail: '「神經內科」span 起訖位置在 2 位標記員間相差 2 個字元',
       rankMetricName: '與合併聚合參考值 F1',
-      boundaryExampleDetail: 'Gold: 「台大醫院」｜Annotator: 「台大」（少標 2 字元，span_too_short）',
+      boundaryExampleDetail: '參考值: 「台大醫院」｜Annotator: 「台大」（少標 2 字元，span_too_short）',
     },
     singleLabelListRank: {
       sample1Detail: '樣本 #212：3 位標記員對「服務態度不佳但問題已解決」句子分別標為「負向」「中立」「正向」，情緒判斷分歧',
@@ -1012,13 +1012,13 @@ var I18N = {
       sample1Detail: 'The "thermal performance is excellent" span boundary diverges across 3 annotators; pairwise F1 (strict) = 0.71',
       sample2Detail: 'Disagreement on whether "return process" and "tedious" should be merged into a single span; pairwise F1 (strict) = 0.58',
       rankMetricName: 'F1 vs. merged aggregate reference',
-      boundaryExampleDetail: 'Gold: "thermal performance is excellent" | Annotator: "thermal performance is excellent and stays cool under sustained heavy load" (6 extra tokens, span_too_long)',
+      boundaryExampleDetail: 'Reference: "thermal performance is excellent" | Annotator: "thermal performance is excellent and stays cool under sustained heavy load" (6 extra tokens, span_too_long)',
     },
     entityRecognitionListRank: {
       sample1Detail: 'Inconsistent entity boundary for "NTU Hospital" (ORG vs LOC type disagreement)',
       sample2Detail: 'The "Neurology" span start/end offsets differ by 2 characters between 2 annotators',
       rankMetricName: 'F1 vs. merged aggregate reference',
-      boundaryExampleDetail: 'Gold: "NTU Hospital" | Annotator: "NTU" (2 characters short, span_too_short)',
+      boundaryExampleDetail: 'Reference: "NTU Hospital" | Annotator: "NTU" (2 characters short, span_too_short)',
     },
     singleLabelListRank: {
       sample1Detail: 'Sample #212: 3 annotators labeled the sentence "service attitude was poor but the issue was resolved" as negative/neutral/positive — sentiment judgment disagreement',
@@ -1180,6 +1180,8 @@ var OUTPUT_TYPE_LABELS = {
  * T014–T016 are the review-flow demo tasks (task-list.data.js, issue #302);
  * like T101–T109 they have no host row in the list's 13-task registry and
  * are reachable only by direct task_id URL (issue #490). */
+/* Roles allowed on this page: specs/_shared/constants.md TASK_ROLES_ALLOWED (017 AC-1.4). */
+var TASK_ROLES_ALLOWED = ['project_leader', 'reviewer'];
 var TASK_META = {
   T001: {
     outputs: ['single_label'],
@@ -1437,7 +1439,7 @@ function loadStatsPanel() {
 
 function updateStatsEmptyBtn() {
   var btn = document.getElementById('statsEmptyBtn');
-  if (btn) btn.href = '../task-management/task-detail.html?task_id=' + encodeURIComponent(S_ROUTE.taskId);
+  if (btn) btn.href = taskDetailUrl();
 }
 
 function applyStatsState() {
@@ -1481,6 +1483,13 @@ function currentMembershipRole() {
   return taskMeta.membershipRole || 'reviewer';
 }
 
+/* Single builder for every task-detail.html link: always carries task_role so
+ * the target page does not fall back to its own default role (issue #1267). */
+function taskDetailUrl(extra) {
+  return '../task-management/task-detail.html?task_id=' + encodeURIComponent(S_ROUTE.taskId)
+    + '&task_role=' + encodeURIComponent(currentMembershipRole()) + (extra || '');
+}
+
 function syncRoleUi() {
   var role = currentMembershipRole();
   Array.prototype.forEach.call(document.querySelectorAll('[data-risk-level]'), function(el) {
@@ -1511,14 +1520,14 @@ document.addEventListener('click', function(e) {
   if (!btn || btn.disabled) return;
   var isAdjust = (btn.getAttribute('data-i18n') || '').indexOf('ctionAdjust') !== -1;
   window.location.href = isAdjust
-    ? '../task-management/task-detail.html?task_id=' + encodeURIComponent(S_ROUTE.taskId) + '&tab=member-management'
+    ? taskDetailUrl('&tab=member-management')
     : '../annotation/annotation-list.html?task_id=' + encodeURIComponent(S_ROUTE.taskId) + '&role=reviewer&run_type=dry_run';
 });
 
 function updateTaskDetailHref() {
   var emptyBtn = document.getElementById('emptyBtn');
   if (!emptyBtn) return;
-  emptyBtn.href = '../task-management/task-detail.html?task_id=' + encodeURIComponent(S_ROUTE.taskId);
+  emptyBtn.href = taskDetailUrl();
 }
 
 /* ── Apply language ─────────────────────────────────────────────── */
@@ -2112,7 +2121,9 @@ function applyRouteTask(taskId) {
   try {
     params = new URLSearchParams(window.location.search);
     var routeTaskId = params.get('task_id');
-    if (!routeTaskId || !TASK_META[routeTaskId]) {
+    if (!routeTaskId || !TASK_META[routeTaskId] ||
+        TASK_ROLES_ALLOWED.indexOf(TASK_META[routeTaskId].membershipRole) === -1) {
+      /* Role gate (#1267): raw membershipRole, fail closed on annotator/unknown/missing. */
       /* FR-002 / INVALID_TASK_TRIGGER: unknown or missing task_id must redirect
          to the list with an error toast, not silently fall back to a default
          task (issue #261 drift). */
