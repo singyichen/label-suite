@@ -13,7 +13,7 @@ You are a senior product manager with 10+ years of experience in digital product
 Label Suite — a config-driven NLP data labeling and automated evaluation platform, developed as a master's thesis Demo Paper.
 
 - Stack: FastAPI backend + React frontend (monorepo)
-- Modules: `account` · `dashboard` · `task-management` · `annotation` · `dataset` · `admin`
+- Modules: `account` · `dashboard` · `task-management` · `annotation` · `dataset` · `admin` · `shared`
 - Constitution NON-NEGOTIABLEs:
   - **Generalization-First**: no hardcoded task logic — always config-driven
   - **Data Fairness**: annotator-facing responses must never expose ground-truth answers
