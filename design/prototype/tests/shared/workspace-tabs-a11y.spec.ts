@@ -31,7 +31,7 @@
  * text -- same convention as this suite's own prior judgment calls (e.g.
  * workspace-tabs-mobile.spec.ts's EN wording choice).
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import {
   tabBar,
   workspaceTabs,

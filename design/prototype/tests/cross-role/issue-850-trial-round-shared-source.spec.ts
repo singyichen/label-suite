@@ -25,7 +25,8 @@
  * Green picks the storage/sharing mechanism; this file asserts only
  * observable UI/state, never a specific localStorage key name.
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { buildListUrl, patchDataFile } from '../annotation/_workspace-helpers';
 import { openGateSatisfiedT016 } from '../task-management/_completion-gate-helpers';
 import {

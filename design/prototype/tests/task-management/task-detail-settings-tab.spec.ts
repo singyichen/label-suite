@@ -13,7 +13,8 @@
  *   window.confirm) with a 取消 button and a confirm button named 確認／放棄／離開／確定.
  * The five moved sections keep their existing element ids (see MOVED_IDS).
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 const PANEL_LOAD_TIMEOUT = 15000;

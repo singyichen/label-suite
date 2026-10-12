@@ -15,7 +15,7 @@
  * are expected to FAIL until a later G2b Green task adds all three. AC-2.3
  * is a partial exception -- see that describe block's own header comment.
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import {
   workspaceTabs,
   readWorkspaceTabState,

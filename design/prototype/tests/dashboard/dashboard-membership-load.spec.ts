@@ -8,7 +8,7 @@
  * `?view=error` convention on task-list.html) to force each state
  * deterministically instead of racing a real timer.
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 const DASHBOARD_URL = '/pages/dashboard/dashboard.html';
 

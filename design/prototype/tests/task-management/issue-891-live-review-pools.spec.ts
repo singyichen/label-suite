@@ -7,7 +7,8 @@
  * Annotation Progress exception table so arbitration and disposition writes
  * cannot leave any surface behind on a hand-authored number.
  */
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test } from '../fixtures';
+import type { Page } from '@playwright/test';
 import {
   buildWorkspaceUrl,
   fillArbitrationReasons,

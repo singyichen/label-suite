@@ -16,7 +16,7 @@
  *   - US1  No token created / no email sent for unregistered addresses
  *   - Already-logged-in user redirected to /dashboard
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 const FORGOT_URL = '/pages/account/forgot-password.html';
 

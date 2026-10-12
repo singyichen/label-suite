@@ -1,4 +1,5 @@
-import { test, expect, type Page, type BrowserContext } from '@playwright/test';
+import { test, expect, disableMotion } from '../fixtures';
+import type { Page, BrowserContext } from '@playwright/test';
 import { readFile } from 'fs/promises';
 import path from 'path';
 import {
@@ -180,6 +181,7 @@ let pageErrorsByRole: Record<string, Error[]> = {};
 
 test.beforeAll(async ({ browser }, testInfo) => {
   context = await browser.newContext();
+  await disableMotion(context);
   plPage = await context.newPage();
   a01Page = await context.newPage();
   a02Page = await context.newPage();

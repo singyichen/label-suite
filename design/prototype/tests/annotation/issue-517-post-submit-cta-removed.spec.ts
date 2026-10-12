@@ -19,7 +19,8 @@
  * Each test anchors on something the page still renders, so none of them can
  * pass merely because the workspace failed to load.
  */
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test } from '../fixtures';
+import type { Page } from '@playwright/test';
 import {
   buildReviewerWorkspaceUrl,
   buildWorkspaceUrl,

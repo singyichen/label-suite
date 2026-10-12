@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
 
 /* The address bar tracks the displayed review unit (issue #151).

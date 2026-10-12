@@ -27,7 +27,8 @@
  * exists to prevent -- it only manifests when two task-detail tabs share a
  * stage and must be told apart by task name alone.
  */
-import { test, expect, type Locator, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Locator, Page } from '@playwright/test';
 import { workspaceTabs, setDesktopViewport, TAB_STORAGE_KEY } from './_workspace-tabs-helpers';
 
 const TASK_DETAIL_T001_R1_URL = '/pages/task-management/task-detail.html?task_id=T001&ap_stage=r1';

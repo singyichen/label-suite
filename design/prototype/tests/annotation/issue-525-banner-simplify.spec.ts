@@ -22,7 +22,8 @@
  * Out of PR-B's scope, deliberately not asserted here: rendering only the
  * min_reviewers-reachable nodes inside the drawer (PR-C).
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
 
 /* Parallel workers hammering the static server occasionally drop a

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { buildWorkspaceUrl, patchDataFile, skipGuidelineModal } from './_workspace-helpers';
 
 /* issue #545 — the identity half of the workspace's "back to the list" URL.

@@ -11,7 +11,7 @@
  * FAIL until a later G2a-1 Green task adds one matching the selector
  * contract documented in `_workspace-tabs-helpers.ts`.
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { tabBar, workspaceTabs, readWorkspaceTabState, setDesktopViewport } from './_workspace-tabs-helpers';
 
 const DASHBOARD_URL = '/pages/dashboard/dashboard.html';

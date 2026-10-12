@@ -2,7 +2,8 @@
  * Traceability: issue #890; annotation-015 FR-070 and FR-092.
  * Reviewer guidance must describe the current three-way decision model.
  */
-import { expect, test, type Locator } from '@playwright/test';
+import { expect, test } from '../fixtures';
+import type { Locator } from '@playwright/test';
 import { openSettingsSection } from './_task-detail-settings-helpers';
 
 const TASK_NEW_URL = '/pages/task-management/task-new.html';

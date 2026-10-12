@@ -4,7 +4,8 @@
  * suite that edits or reads one of them first has to open it. This helper does exactly that
  * through the user-facing controls; it never changes what a test asserts.
  */
-import { expect, type Page } from '@playwright/test';
+import { expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 
 export type SettingsSlug = 'basic' | 'labeling' | 'guideline' | 'sampling' | 'review';
 

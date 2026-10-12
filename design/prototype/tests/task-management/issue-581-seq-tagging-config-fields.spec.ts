@@ -1,4 +1,5 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import path from 'path';
 
 /* issue #581 / OpenSpec change seq-tagging-span-config, FR-003d-1.

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { buildListUrl, patchDataFile } from './_workspace-helpers';
 
 /* Task info card progress summary (spec 015 FR-007C/FR-007D): the card must

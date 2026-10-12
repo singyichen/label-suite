@@ -59,7 +59,8 @@
  *   Implementation Rules > "9. Standalone auth pages (no tokens.css)".
  *   No feature-spec FR.
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 
 const AUTH_PAGES = [
   { name: 'login', url: '/pages/account/login.html' },

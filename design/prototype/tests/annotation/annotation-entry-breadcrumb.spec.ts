@@ -23,7 +23,8 @@
  * Component contract: design/system/MASTER.md §Breadcrumb (three levels are
  * allowed on the reviewer path only).
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { buildListUrl, buildReviewerWorkspaceUrl, buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
 
 const DASHBOARD_URL = '/pages/dashboard/dashboard.html';

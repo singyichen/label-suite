@@ -6,7 +6,8 @@
  * annotation list both resolve everything from `task_id` -> TaskProfile.
  * `task_type` / `sub_type` query params no longer exist.
  */
-import { expect, type Locator, type Page } from '@playwright/test';
+import { expect } from '../fixtures';
+import type { Locator, Page } from '@playwright/test';
 
 export type Role = 'annotator' | 'reviewer';
 export type RunType = 'dry_run' | 'official_run';

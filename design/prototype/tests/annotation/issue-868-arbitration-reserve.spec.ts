@@ -9,7 +9,8 @@
  * These are prototype contracts. They do not exercise production frontend,
  * backend, or root E2E code.
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { buildListUrl } from './_workspace-helpers';
 
 type Unit = { sample_id: string; annotator_id: string };

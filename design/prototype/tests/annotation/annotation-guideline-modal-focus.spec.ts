@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { buildWorkspaceUrl, dismissGuidelineModal, patchDataFile } from './_workspace-helpers';
 
 /* Issue #195 / F-11 (WCAG 2.1 AA 2.4.3): role="dialog" modals never moved

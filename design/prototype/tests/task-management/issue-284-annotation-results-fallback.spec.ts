@@ -3,7 +3,8 @@
  *   FR-015f, FR-015g, FR-015h
  */
 import fs from 'node:fs/promises';
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { patchDataFile } from '../annotation/_workspace-helpers';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';

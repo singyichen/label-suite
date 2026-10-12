@@ -19,7 +19,7 @@
  * not-yet-written `shared-008` MODIFIED change (spec 019 FR-009 / Q7) --
  * see that describe block for how this suite stays forward-compatible.
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { workspaceTabs, closeButton, setDesktopViewport } from './_workspace-tabs-helpers';
 
 const DASHBOARD_URL = '/pages/dashboard/dashboard.html';

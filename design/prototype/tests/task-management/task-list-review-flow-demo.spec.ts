@@ -2,7 +2,7 @@
  * Traceability: specs/task-management/010-task-list/spec.md
  *   FR-011b, SC-010
  */
-import { expect, test } from '@playwright/test';
+import { expect, test } from '../fixtures';
 
 const TASK_LIST_URL =
   '/pages/task-management/task-list.html?task_role=super_admin';

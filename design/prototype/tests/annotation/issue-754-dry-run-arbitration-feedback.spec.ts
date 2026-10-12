@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { buildListUrl, patchDataFile, skipGuidelineModal } from './_workspace-helpers';
 
 /* issue #754 (found during PR #752 / issue #750 code review): submitArbitration()

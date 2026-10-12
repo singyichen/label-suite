@@ -22,7 +22,8 @@
  *               is ROLE_SELF_EMAIL.reviewer, so a `reviewer` session only
  *               ever sees this one row.
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 
 declare global {
   interface Window {

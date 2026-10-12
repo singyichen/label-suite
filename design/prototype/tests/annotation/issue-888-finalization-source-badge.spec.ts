@@ -1,4 +1,5 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { buildListUrl, skipGuidelineModal } from './_workspace-helpers';
 
 // FR-061/094/095/097: the list names the source of each settled outcome.

@@ -9,7 +9,8 @@
  * The dry-run progress flag is written last, exactly as the workspace page would, so the
  * page's init-time transition check is the thing under test.
  */
-import { expect, type Page } from '@playwright/test';
+import { expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 
 export const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 export const DRY_RUN_PROGRESS_KEY = 'labelsuite.prototypeDryRunProgress';

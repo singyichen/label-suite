@@ -26,7 +26,8 @@
  * path strips the `disabled` attribute then clicks, which reaches the delegated
  * click handler.
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 const TRIAL_RUN_STATE_KEY = 'labelsuite.trialRunState';

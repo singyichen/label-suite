@@ -17,7 +17,8 @@
  * center to the button's content-box center (padding is symmetrical in the product CSS, so
  * border-box center is used); tolerance 2px. Geometry is robust to text-align vs flex centering.
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { openSettingsSection, type SettingsSlug } from './_task-detail-settings-helpers';
 
 const URL = '/pages/task-management/task-detail.html?task_id=T013&task_role=project_leader';

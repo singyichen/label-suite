@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { buildWorkspaceUrl, skipGuidelineModal } from '../annotation/_workspace-helpers';
 import { applyDryRunState, expectStillInProgress, TASK_DETAIL_URL } from './_dry-run-completion-helpers';
 

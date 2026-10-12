@@ -25,7 +25,7 @@
  * config.js's existing `renderEntryBreadcrumb()`), so this test still
  * requires the h1 text to concretely name the task or the sample.
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
 
 /** T016 -- official_run, reviewer path (same fixture as annotation-entry-breadcrumb.spec.ts). */

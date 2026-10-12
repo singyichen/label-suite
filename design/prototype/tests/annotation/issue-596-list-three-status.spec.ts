@@ -1,4 +1,5 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { buildListUrl, patchDataFile } from './_workspace-helpers';
 
 /* annotation-list 三態狀態篩選與仲裁入口 (spec 015 v5.0.0, issue #596 群組 4).

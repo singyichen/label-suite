@@ -117,7 +117,8 @@
  * i18n key name and full sentence are Green's choice).
  */
 import { promises as fsp } from 'node:fs';
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 
 declare global {
   interface Window {

@@ -26,7 +26,7 @@
  * of FR-093's assignment granularity rather than a reviewer head count,
  * and (c) none of the retired vocabulary.
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 

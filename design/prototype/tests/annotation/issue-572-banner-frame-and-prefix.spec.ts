@@ -11,7 +11,8 @@
  * at T016 ofm-05-final-exception, its same-shape migrated successor (both
  * disputed · awaiting arbitration) -- T017 itself is retired.
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
 
 function banner(page: Page) {

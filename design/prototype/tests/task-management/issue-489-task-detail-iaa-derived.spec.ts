@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 /*
  * Issue #489/#491 regression cover for task-detail.

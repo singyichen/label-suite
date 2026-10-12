@@ -39,7 +39,7 @@
  * mobile dropdown's own rendering of 403/404 tabs, and any role-based
  * access control beyond the simulated `sim_403=1` flag -- per task brief).
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { workspaceTabs, closeButton, readWorkspaceTabState, setDesktopViewport } from './_workspace-tabs-helpers';
 
 const DASHBOARD_URL = '/pages/dashboard/dashboard.html';

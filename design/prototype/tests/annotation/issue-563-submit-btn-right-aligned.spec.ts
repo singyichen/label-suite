@@ -15,7 +15,8 @@
  * within the row's right padding, and its left edge must be past the row's
  * midpoint, so a full-width or centred button cannot pass by accident.
  */
-import { expect, test, type Locator, type Page } from '@playwright/test';
+import { expect, test } from '../fixtures';
+import type { Locator, Page } from '@playwright/test';
 import { buildWorkspaceUrl, dismissGuidelineModal, gotoReviewerWorkspace, skipGuidelineModal } from './_workspace-helpers';
 
 /* Widest gap the right padding of either container may leave between the

@@ -13,7 +13,7 @@
  * Traceability: design/system/MASTER.md
  *   §Color Dot, §Divider, §Accordion, §Progress Bar, §Metric KPI Tile
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 const SHOWCASE_URL = '/components-showcase.html';
 

@@ -13,7 +13,7 @@
  *
  * Traceability: specs/task-management/010-task-list/spec.md FR-005a
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 test.describe('FR-005a — unauthorized redirect from task-detail shows a toast on task-list', () => {
   test('landing on task-list with ?unauthorized=annotator shows the no-permission toast and strips the param', async ({ page }) => {

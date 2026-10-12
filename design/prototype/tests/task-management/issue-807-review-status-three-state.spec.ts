@@ -14,7 +14,7 @@
  * derived from a constant" -- that mechanism was already correct and is
  * exactly why the existing gates didn't catch a wrong constant VALUE).
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 const PANEL_LOAD_TIMEOUT = 15000;

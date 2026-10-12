@@ -18,7 +18,8 @@
  * paths -- see annotation-review-flow-demo-seed.spec.ts's header for the
  * full path description.
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 
 const WORKSPACE_URL = '/pages/annotation/annotation-workspace.html';
 

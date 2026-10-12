@@ -30,7 +30,7 @@
  * every load, never persisted) and the gate only runs at init, so no public write path can put
  * that state in front of the gate. Green must expose a persisted source before that can be tested.
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import {
   TASK_DETAIL_URL,
   WAITING_BADGE,

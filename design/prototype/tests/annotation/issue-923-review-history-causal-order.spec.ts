@@ -45,7 +45,7 @@
  * timestamp collision under test is the real one the seeder produces, not a
  * simulated one.
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 const WORKSPACE_URL = '/pages/annotation/annotation-workspace.html';
 

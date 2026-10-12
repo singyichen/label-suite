@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { gotoReviewerWorkspace, skipGuidelineModal } from './_workspace-helpers';
 
 /* Review unit status consistency on an "orphan" unit (issue #910).
