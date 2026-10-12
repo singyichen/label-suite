@@ -66,7 +66,7 @@ Generate a structured Functional Requirements specification to be used as input 
 **Business Rules**:
 - [Rule 1]
 - [Rule 2]
-**Acceptance Criteria**: AC-01, AC-02
+**Acceptance Criteria**: AC-1.1, AC-1.2
 **Notes**: [Implementation considerations]
 
 ### FR-02: [Requirement Title]
@@ -122,7 +122,7 @@ Generate a structured Functional Requirements specification to be used as input 
 |------------|-------------|
 | Tech Stack | FastAPI (backend), React + TypeScript (frontend), PostgreSQL, Redis, Celery |
 | Config Format | Task configuration defined in YAML or JSON; no code change required to add new tasks |
-| Open Source | All code and docs in English; no proprietary dependencies |
+| Open Source | Code, comments, and API contracts in English (constitution VI; Traditional Chinese is allowed in `docs/` and `specs/`); no proprietary dependencies |
 
 ---
 
@@ -158,6 +158,6 @@ Generate a structured Functional Requirements specification to be used as input 
 
 | FR ID | User Story | AC | Spec Section |
 |-------|------------|-----|-------------|
-| FR-01 | US-01 | AC-01, AC-02 | spec.md §3 |
-| FR-02 | US-02 | AC-03, AC-04 | spec.md §4 |
+| FR-01 | US-01 | AC-1.1, AC-1.2 | spec.md §3 |
+| FR-02 | US-02 | AC-1.3, AC-1.4 | spec.md §4 |
 ```
