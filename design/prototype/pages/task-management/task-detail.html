@@ -6242,9 +6242,6 @@ function interpolate(template, payload) {
   function renderPublishActions() {
     var actionRow = document.getElementById('publishActionRow');
     if (!actionRow) return;
-    /* Skip while the skeleton hides the overview panel: renderOverview() re-renders once it is visible,
-       so the row never exists in a zero-size (display:none) panel. */
-    if (state.showSkeleton) return;
     renderPublishArbiterWarning();
     var nextRound = getTrialRounds().length + 1;
 
