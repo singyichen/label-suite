@@ -46,7 +46,7 @@ They add no key and change no cell. The first, second and fourth rules make expl
 
 ### Amendment (issue #1270, 2026-10-13)
 
-The maintainer adopted five keys proposed in issue #1270 and ruled that they start disabled. Admin-007 v1.3.0 registers them; the text above stays as written and is read with the changes below.
+The maintainer adopted five keys proposed in issue #1270 and ruled that they are registered but pending activation. Admin-007 v1.3.0 registers them; the text above stays as written and is read with the changes below.
 
 - **Registry and seed.** The task-layer keys `task.lifecycle.manage`, `task.delete`, `annotation.exception.resolve` and `annotation.dispute.adjudicate` have the seed `project_leader` true, `reviewer` false, `annotator` false; all three cells are configurable. The platform key `admin.platform_overview.view` follows the fixed `admin.*` rule: `super_admin` true and `user` false. The registry becomes 10 platform keys and 12 task keys, and the applicable seed becomes `10 × 2 + 12 × 3 = 56` rows. The statement above that the initial V1 seed has 42 rows describes v1.2.x.
 - **Reviewed seed versus default false.** The default-false rule for configurable cells applies when a reviewed change states no seed for a cell. Issue #1270 states the seed for the four task keys, so their `project_leader` cells start true.
