@@ -1,7 +1,7 @@
 ---
 功能分支: feat/shared/008-sidebar-navbar-shared
 建立日期: 2026-04-16
-版本: 2.3.0
+版本: 2.3.1
 狀態: Clarified
 ---
 
@@ -362,6 +362,7 @@ Desktop 使用者可將左側 Sidebar 收合為 icon-only，以增加主內容�
 - **FR-001**：登入後頁面必須使用同一份 Sidebar Navbar contract；`userIds` 中的 `userAvatar`（見「關鍵實體」`SharedNavbarContract`）必須顯示與同列 `userName` 一致、由目前使用者姓名推導出的縮寫，在所有 `SUPPORTED_PAGES` 皆同（issue #932 澄清：不得停留在未依頁面覆寫的預設佔位文字）。
 - **FR-002**：L0 導覽項與順序必須符合 IA：`儀表板 / 任務管理 / 標記作業 / 資料集分析 / 系統管理(條件顯示) / 個人設定`。
 - **FR-003**：`系統管理` 僅 `super_admin` 可見，不得渲染給 `user`。
+  **v2.3.1 補述（issue #1269，操作 → 權限鍵）**：「`super_admin`」指伺服器依 ADR-037 判定的當前 DB system role，MUST NOT 取自 `localStorage`、網址參數或其他前端狀態；前端只可依伺服器回傳的能力提示決定是否渲染。`系統管理` 的落地頁與次選單子項分別對應 `admin.user_management.view`（`user-management`）與 `admin.role_settings.view`（`role-settings`）。其餘 L0 落地頁對應：`儀表板` → `dashboard.view`、`任務管理` → `task.list.view`、`個人設定` → `account.profile.view`；`標記作業` 與 `資料集分析` 的列表內容依任務層鍵過濾（`annotation.workspace.annotate`／`annotation.workspace.review`，以及 `dataset/016-dataset-analysis-list` FR-002）。Sidebar 的渲染只是顯示提示，進入每個頁面與每個命令都由伺服器重新授權。本補述只對應鍵，不改 FR-002／FR-003A 的 L0 項目、順序與數量。
 - **FR-003A**：`user` 的 L0 可見項目數必須為 `5`；`super_admin` 的 L0 可見項目數必須為 `6`（多出 `系統管理`）。
 - **FR-004**：`task-new`、`task-detail` 必須映射為 `任務管理` active。
 - **FR-005**：`dataset-analysis-list` 與 `dataset-analysis-detail` 必須映射為 `資料集分析` active。
@@ -605,6 +606,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.3.1 | 2026-10-12 | Issue #1269（Lightweight，PATCH）：FR-003 補述操作 → 權限鍵對應——`系統管理` 依伺服器判定的當前 system role 渲染，不取自 `localStorage`；落地頁與次選單對應 `admin.user_management.view`／`admin.role_settings.view`，其餘 L0 落地頁對應 `dashboard.view`、`task.list.view`、`account.profile.view`。只對應鍵，不改 L0 項目、順序與數量。 |
 | 2.3.0 | 2026-10-05 | Issue #1099（OpenSpec change `1099-workspace-tabs-overview-menu`，MINOR，最終堆疊 PR 群組回寫）：`FR-016H` 快捷鍵總覽「頁籤」section 由兩列擴為三列，新增 `Alt+Shift+T`（重開剛關閉的頁籤），獨立成列、獨立 keycap、緊湊密度，觸發行為由 `specs/shared/019-workspace-tabs/spec.md` 之 FR-024A、AC-024A.1、AC-024A.2 定義，本條僅規範顯示內容（對應 019 之 FR-024B、AC-024B.1）；既有 `Alt+1…8`／`Alt+W` 兩列逐字不動，未推翻任何既有 FR/AC（MINOR 邊界）。OpenSpec 衍生檢視 `FR-016H` 已 MODIFIED。 |
 | 2.2.0 | 2026-10-02 | Issue #1075（OpenSpec change `1075-workspace-tabs-shared-008`，MINOR，G3——issue #1075 的第 10 個、最終堆疊 PR 群組）：新增使用者故事 10、FR-022、FR-016H。`specs/shared/019-workspace-tabs/spec.md`（workspace tabs，v1.0.0，9 個使用者故事、FR-001～022、SC-001～016）已於 G1～G2g 共 9 個先行 PR 群組實作工作頁籤列完整行為，其中 FR-009／Q7 明文將「關閉作用中頁籤後的焦點移動規則」委由本規格定義——**FR-022** 正式承接此規則（優先移至右鄰、若為最右側則移至左鄰），規則本身逐字對應該規格之 AC-1.5，行為已於原型 G2a-2（PR #1080）落地為 `closeWorkspaceTab()` 之既有邏輯，本次純為規格補述，未異動任何程式碼。**FR-016H** 為既有 FR-016 群（快捷鍵總覽）新增之頁籤 section（比照既有 FR-016G 之加列慣例），列出 `Alt+1…8`（切換頁籤）與 `Alt+W`（關閉作用中頁籤）兩列；此二快捷鍵之實際觸發與抑制行為仍由 `specs/shared/019-workspace-tabs/spec.md` FR-013、AC-5.1 至 AC-5.4 擁有，本條不重複定義，僅規範總覽顯示內容與格式——此項已依 TDD（Red→Green）於 `design/prototype/pages/shared/sidebar.js` 新增對應 section markup（手寫 production 18 行）。既有 FR-001～FR-021 群（含 FR-016～FR-016G）、SC-001～SC-014 逐字不動，未推翻任何既有 FR/AC（MINOR 邊界）。OpenSpec 衍生檢視 `openspec/specs/shared/008-sidebar-navbar-shared/` 已合併本次 2 個新增 Requirement（`added: 2, modified: 0, removed: 0`）。 |
 | 2.1.0 | 2026-09-28 | Issue #1041（OpenSpec change `fix-1041-sidebar-nav-i18n`，MINOR，4 個 stacked PR 群組：PR #1049／#1050／#1052／本次）：新增 FR-021、SC-014——Shared Sidebar 六個 L0 標籤（`navDashboard`／`navTaskManagement`／`navAnnotation`／`navDataset`／`navAdmin`／`navProfile`）全面語言感知，於元件內部解析並隨每次 `applyGlobalLanguage()` 呼叫重新解析（不只掛載當下一次）；`navAnnotation` 之 `annotator`/else 分支補上此前未定義的英文變體 `Annotation`（沿用全站既有消費頁一致採用之既有慣例字面值，非新創）。**issue body 前提已於派工前更正**：原描述「六個標籤從未國際化」不成立——11 個消費頁面中 10 個本來就各自以頁面級 `applyLang` 覆寫達成語言切換（只是違反 FR-020），真實的使用者可見缺陷僅兩處：`annotation-list.html` 的 `#navAnnotation`（`annotator`/無角色情境，issue #1023 移除覆寫後暴露的英文缺失）與 `annotation-workspace.html`（deep-link 情境下五中一英混雜）。**四組拆分**：第一組（PR #1049）修好上述兩處真實缺陷；第二至四組依模組批次移除其餘 10 個頁面已成死碼或持續生效覆寫（`admin/user-management.html`、`admin/role-settings.html`、`dashboard/dashboard.i18n.js`、`dataset/dataset-analysis-detail.html`、`dataset/dataset-analysis-list.js`＋`.i18n.js`、`account/profile.html`、`task-management/task-detail.html`／`task-list.html`／`task-new.html`），純屬 FR-020 合規與 DRY，非缺陷修復；逐檔核實覆寫與 `applyGlobalLanguage()` 之相對時序後發現並非全部同型——`annotation-list.html`／`admin` 兩頁／`dashboard.i18n.js`／`account/profile.html`／`dataset-analysis-detail.html`／`task-detail.html` 為持續生效之覆寫（移除前後渲染結果不變，是因字面值與元件逐字相同，非因覆寫已失效），`dataset-analysis-list.js`／`task-list.html`／`task-new.html` 之覆寫執行於 `applyGlobalLanguage()` **之前**、元件隨後蓋回，屬真正的無害死碼，兩者於各自 PR body 分開陳述。**SC-014 建模方式**：比照 issue #1018 已查證並裁定之既有模式——`specs/shared/008` 之成功標準（`SC-001`–`SC-013A`）從未透過 OpenSpec delta 的 `### Requirement:` 宣告產生，衍生檢視 `openspec/specs/shared/008-…` 僅含 FR 項目、零個 SC；SC-014 因此比照辦理，delta 僅宣告 FR-021 一個 Requirement，SC-014 於本次 archive 直接手寫進正典本節，未經過衍生檢視。既有 FR-020／FR-020A／FR-019 群／FR-002／FR-003A 等條文逐字不動，未推翻任何既有 FR/AC。 |

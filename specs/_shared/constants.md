@@ -1,5 +1,5 @@
 ---
-版本: 1.2.0
+版本: 1.2.1
 建立日期: 2026-07-21
 狀態: Active
 ---
@@ -24,7 +24,7 @@
 | 常數 | 值 | 引用 spec |
 |------|-----|----------|
 | `SYSTEM_ROLES` | `user \| super_admin` | 010, 013, 006, 007（4 份） |
-| `TASK_ROLES` | `project_leader \| reviewer \| annotator` | 010, 013, 014, 007, 015（5 份）⚠ 見衝突註記 |
+| `TASK_ROLES` | `project_leader \| reviewer \| annotator` | 010, 013, 014, 007, 015（5 份） |
 | `TASK_ROLES_ALLOWED` | `project_leader \| reviewer` | 016, 017（2 份；dataset-analysis 存取角色） |
 
 ### 任務模型
@@ -75,7 +75,7 @@
 
 | 常數 | 本文件採用值 | 差異 spec 與值 |
 |------|-------------|---------------|
-| `TASK_ROLES` | `project_leader \| reviewer \| annotator`（4/5 多數） | 015 定義為 `annotator \| reviewer`（該 spec 僅涉及此二角色，屬子集；仍應改為引用本文件並於情境中限縮） |
+| （目前無） | — | — |
 
 > `DEFAULT_SORT` 曾評估上收：010 為 `updated_at desc`、006 為 `created_at desc`，值因情境而異、無法統一，
 > 屬 spec 特有常數，不納入本文件（值相異的常數不得上收，避免與 /speckit.analyze 重複定義檢查矛盾）。
@@ -86,6 +86,7 @@
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.2.1 | 2026-10-12 | 同步 annotation-015 v12.3.0（issue #1269）：015 的 `TASK_ROLES` 已改為引用本文件三角色值，並在情境中限縮 workspace active role；移除 `TASK_ROLES` 衝突註記列與表格的 ⚠ 標記。常數值不變。 |
 | 1.2.0 | 2026-08-12 | 同步 dataset-017 v2.0.0 IAA 策略 v2 遷移：`IAA_BADGE_STATES` 新增 `not_applicable`（供 `outputs[]` 僅含 IAA 排除類型如 `free_text` 的任務使用）；移除 017 作為 `TASK_TYPE_ENUM` 消費者的過時引用（017 已完全改用 `OUTPUT_TYPE_KEYS`）；`SENTENCE_PAIRS_MODES`／`SENTENCE_PAIRS_RESPONSE_FORMATS` 移除 017 作為消費者（僅剩 014，1 份，低於 2 份上收門檻，留待下次相關 spec 改版一併檢視是否改列 014 專屬常數）；同值異名清單移除已淘汰的 `TASK_TYPE_KEYS`（017）項目 |
 | 1.1.0 | 2026-08-07 | 同步 annotation-015 v2.0.0 taxonomy 遷移：移除 015 作為 `TASK_TYPE_ENUM`／`SEQUENCE_LABELING_SUBTYPES`／`SENTENCE_PAIRS_MODES`／`SENTENCE_PAIRS_RESPONSE_FORMATS`／`ACTIVE_TASK_TYPE_STORAGE_KEY` 消費者的過時引用；新增 `OUTPUT_TYPE_KEYS`（013 定義，015 引用）。`SEQUENCE_LABELING_SUBTYPES` 現僅剩 014 消費，低於 2 份上收門檻，是否應改列 014 專屬常數留待下次相關 spec 改版一併檢視 |
 | 1.0.0 | 2026-07-21 | 初版：自 16 份 spec 萃取共用常數 |

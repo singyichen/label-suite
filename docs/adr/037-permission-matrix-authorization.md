@@ -35,6 +35,15 @@ When a later permission key is proposed, its configurable applicable cells defau
 
 The first runtime implementation reads current roles, memberships and matrix rows for each relevant decision. A later cache needs a separately verified invalidation protocol that makes role removal, membership removal and matrix edits effective on the next request in both SQLite Lite and PostgreSQL. Frontend capabilities are server-derived, task-scoped display hints with private/no-store caching; every command is rechecked at the server. They contain no hidden answer data.
 
+### Clarifications (issue #1269, 2026-10-12)
+
+These four rules make explicit what the decision above already implies. They add no key and change no cell.
+
+- **Client state is never an authorization source.** `localStorage`, `sessionStorage`, cookies the server did not issue for authentication, cached capabilities, URL parameters and any other frontend state never establish a system role, task role, membership, assignment or scope. The frontend may use them only to decide what to render; the server decides every read and command from current DB state as in steps 1–4.
+- **An `invited` membership is not active.** A membership whose status is `invited` (or any status other than active) counts as missing in step 2 and is denied for every task-scoped key, including view keys. It joins the union of non-workspace keys only after it becomes active.
+- **Denial audit scope.** A denied request for a high-risk write — any `admin.*` command, `dataset.export`, exception-pool resolution (annotation-015 FR-095) and task lifecycle commands — records an ADR-032 audit event naming the actor, the operation and the denial reason. Other denials, including ordinary page or data views, go to the application log only and create no audit event. Neither path records hidden answer data.
+- **Arbitration reuses the review key.** `arbiter_ids` is a subset of `reviewer_ids`, not a task role. An arbitration write needs the active `reviewer` role, its current active membership and an allowed `annotation.workspace.review` cell, plus the resource conditions that the reviewer is listed in the task's `arbiter_ids` and did not take part in the disputed unit (annotation-015 FR-060, FR-104). No separate arbitration key exists; an unregistered arbitration key is denied like any unknown key.
+
 ## Consequences
 
 The two admin matrix tables remain candidate schema in the planning diagram. This ADR creates no ORM, migration, API route or deployed table. Before runtime adoption, security tests must cover demotion, missing/unknown cells, cross-task access, role-specific workspace writes, reviewer view/edit, admin hard gates, atomic save/audit and answer isolation. Task membership's physical PK/FK and indexes wait for the task-table identity decision; a user-leading lookup index will be needed for “my tasks” if that logical triple is adopted physically.
