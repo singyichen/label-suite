@@ -221,7 +221,7 @@ test.describe('issue #811: 決策值一律等於共用側欄匯出之決策值�
   const PANEL_LOAD_TIMEOUT = 15000;
 
   test('zh: task-detail arbitration history bypass decision reads 無法裁決', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T016&tab=annotation-results`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T016&tab=annotation-results`);
     await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 
     const row = page.locator('#arResultTableBody tr.ar-summary-row').filter({ hasText: 'ofm-04-reviewer-bypass' });
@@ -232,7 +232,7 @@ test.describe('issue #811: 決策值一律等於共用側欄匯出之決策值�
 
   test('en: task-detail arbitration history bypass decision reads Cannot adjudicate', async ({ page }) => {
     await setLangEn(page);
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T016&tab=annotation-results`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T016&tab=annotation-results`);
     await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 
     const row = page.locator('#arResultTableBody tr.ar-summary-row').filter({ hasText: 'ofm-04-reviewer-bypass' });

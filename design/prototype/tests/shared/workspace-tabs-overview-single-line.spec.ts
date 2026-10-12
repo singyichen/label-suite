@@ -29,7 +29,7 @@ const TASK_LIST_URL = '/pages/task-management/task-list.html';
 // T001 (task-list.data.js) with ap_stage=r1: the task-detail tab whose title
 // ("... Medical Text Sentiment Classification") is long and does NOT contain
 // its own page-kind name ("Task Detail" / "任務詳情").
-const TASK_DETAIL_T001_R1_URL = '/pages/task-management/task-detail.html?task_id=T001&ap_stage=r1';
+const TASK_DETAIL_T001_R1_URL = '/pages/task-management/task-detail.html?task_role=project_leader&task_id=T001&ap_stage=r1';
 
 type Lang = 'zh-TW' | 'en';
 type Viewport = 'desktop' | 'mobile';

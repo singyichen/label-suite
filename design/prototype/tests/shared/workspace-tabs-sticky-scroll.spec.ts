@@ -17,7 +17,7 @@ import { tabBar, workspaceTabs, setDesktopViewport } from './_workspace-tabs-hel
 const TOLERANCE_PX = 1;
 const SCROLL_Y = 400;
 const DASHBOARD_URL = '/pages/dashboard/dashboard.html';
-const TASK_DETAIL_URL = '/pages/task-management/task-detail.html?task_id=T001&tab=work-log&ap_stage=r1';
+const TASK_DETAIL_URL = '/pages/task-management/task-detail.html?task_role=project_leader&task_id=T001&tab=work-log&ap_stage=r1';
 const TASK_LIST_URL = '/pages/task-management/task-list.html';
 
 // Wait until async panels have rendered and the document is tall enough to scroll SCROLL_Y.

@@ -56,7 +56,7 @@ test.describe('T016 demo sample ids carry no retired review-state word (issue #6
   });
 
   test('task-detail annotation results: the renamed ids list as T016 summary rows', async ({ page }) => {
-    await page.goto('/pages/task-management/task-detail.html?task_id=T016&tab=annotation-results');
+    await page.goto('/pages/task-management/task-detail.html?task_role=project_leader&task_id=T016&tab=annotation-results');
     const summaryRows = page.locator('#arResultTableBody tr.ar-summary-row');
     await expect(summaryRows.first()).toBeVisible({ timeout: 15000 });
     const texts = await summaryRows.allInnerTexts();

@@ -19,8 +19,8 @@ import { workspaceTabs, readWorkspaceTabState, setDesktopViewport, waitForTaskDe
 // URL_VIEW_STATE validator for the 'tab' and 'ap_stage' params; ap_stage is
 // held constant across A/B so the ONLY varying dedupe-key component is
 // `tab` itself (task-detail dedupes by full normalized URL, spec 019 Q16).
-const TASK_DETAIL_OVERVIEW_URL = '/pages/task-management/task-detail.html?task_id=T001&tab=overview&ap_stage=r1';
-const TASK_DETAIL_WORKLOG_URL = '/pages/task-management/task-detail.html?task_id=T001&tab=work-log&ap_stage=r1';
+const TASK_DETAIL_OVERVIEW_URL = '/pages/task-management/task-detail.html?task_role=project_leader&task_id=T001&tab=overview&ap_stage=r1';
+const TASK_DETAIL_WORKLOG_URL = '/pages/task-management/task-detail.html?task_role=project_leader&task_id=T001&tab=work-log&ap_stage=r1';
 
 test.describe('Workspace tabs — AC-3.5 in-page URL change re-keys into an existing tab', () => {
   test.beforeEach(async ({ page }) => {

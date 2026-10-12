@@ -77,7 +77,7 @@ const USER_MANAGEMENT_URL = '/pages/admin/user-management.html';
 const TASK_NEW_URL = '/pages/task-management/task-new.html';
 // T001 (task-list.data.js): nameEn 'Medical Text Sentiment Classification',
 // valid ap_stage=r1 per task-detail.html's own URL_VIEW_STATE validator.
-const TASK_DETAIL_T001_R1_URL = '/pages/task-management/task-detail.html?task_id=T001&ap_stage=r1';
+const TASK_DETAIL_T001_R1_URL = '/pages/task-management/task-detail.html?task_role=project_leader&task_id=T001&ap_stage=r1';
 
 // Locator helpers mirror G2a's pinned `workspace-tabs-overview-menu.spec.ts`
 // exactly (same data-testid contract G2a already established); redefined

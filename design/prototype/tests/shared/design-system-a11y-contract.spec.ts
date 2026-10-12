@@ -371,7 +371,7 @@ const CONTRAST_CONTRACT: ContrastPageContract[] = [
     // second load's click rewrites the bare URL onto the first load's stored
     // workspace-tab key and the page reloads itself (sidebar.js dedupe
     // collision, FR-007/AC-3.5) -- the reload destroys the measuring context.
-    url: `${TASK_DETAIL_URL}?tab=member-management`,
+    url: `${TASK_DETAIL_URL}?task_role=project_leader&tab=member-management`,
     // The panels arrive as fetched partials — wait for the last partial
     // before asserting, matching task-detail-member-management-add.spec.ts.
     reveal: async (page) => {

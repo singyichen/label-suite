@@ -32,14 +32,14 @@ import { workspaceTabs, readWorkspaceTabState, setDesktopViewport, waitForTaskDe
 // Tab A: task-detail T001. ap_stage held constant so tab A's own in-page
 // sub-tab switch (overview -> work-log, below) is the only thing that
 // changes its dedupe key.
-const TASK_A_OVERVIEW_URL = '/pages/task-management/task-detail.html?task_id=T001&tab=overview&ap_stage=r1';
+const TASK_A_OVERVIEW_URL = '/pages/task-management/task-detail.html?task_role=project_leader&task_id=T001&tab=overview&ap_stage=r1';
 
 // Tab B: task-detail T002 -- a DIFFERENT task id, so its dedupe key can
 // never collide with tab A's own URL regardless of which sub-tab tab A is
 // on. Distinct from workspace-tabs-rekey.spec.ts's tab B, which is the SAME
 // task id at a different `tab=` value specifically to construct a collision
 // -- the opposite of what this suite needs.
-const TASK_B_OVERVIEW_URL = '/pages/task-management/task-detail.html?task_id=T002&tab=overview&ap_stage=r1';
+const TASK_B_OVERVIEW_URL = '/pages/task-management/task-detail.html?task_role=project_leader&task_id=T002&tab=overview&ap_stage=r1';
 
 // Second case's pages: task-list.html has no bootstrap-settle noise of its
 // own (confirmed by a throwaway probe against this branch, since reverted;

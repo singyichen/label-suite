@@ -71,7 +71,7 @@ async function openDashboardScenario(page: Page, scenario: 'annotator' | 'review
 
 test.describe('T017 review-flow demo fixture is fully removed (issue #815, tasks.md 2.1)', () => {
   test('requirement 1: the review-flow demo task set in task-list.data.js is exactly T014-T016', async ({ page }) => {
-    await page.goto(TASK_DETAIL_URL + '?task_id=T014');
+    await page.goto(TASK_DETAIL_URL + '?task_role=project_leader&task_id=T014');
 
     const demoTaskIds = await page.evaluate(() => {
       const tasks = (window as unknown as { LabelSuiteTaskListData: { tasks: TaskListTask[] } })
@@ -127,7 +127,7 @@ test.describe('T017 review-flow demo fixture is fully removed (issue #815, tasks
   });
 
   test('requirement 3b: T014 task-detail profile still resolves 5 records after T017 removal', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T014`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T014`);
 
     // FR-028: the task name lives in the H1; the breadcrumb tail is the task id.
     await expect(page.locator('#pageTitle')).toHaveText('審核流程示範：試標', {

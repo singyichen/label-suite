@@ -88,7 +88,7 @@ async function expectStableHover(page: Page, button: Locator) {
 
 test.describe('.btn hover hit area (issue #1252)', () => {
   test('task-detail: #reviewEditBtn keeps :hover on its bottom edge (issue #1252)', async ({ page }) => {
-    await page.goto('/pages/task-management/task-detail.html');
+    await page.goto('/pages/task-management/task-detail.html?task_role=project_leader');
     await page.locator('#tabSettings').click();
     await page.locator('#settingsTab-review').click();
     await expectStableHover(page, page.locator('#reviewEditBtn'));
