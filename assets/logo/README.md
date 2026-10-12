@@ -11,11 +11,12 @@ This directory contains the official Label Suite logo and brand assets.
 | `icon.svg` | Tag icon only (monochrome) | Favicon, small icons |
 | `icon-colored.svg` | Icon with primary color background (48×48) | App icon, profile picture |
 | `logo-horizontal.svg` | Icon + "Label Suite" text | Header, documentation |
+| `banner.svg` | Icon + "Label Suite" + "NLP Annotation Portal" on white (1280×200) | README header |
 | `social-preview.svg` | GitHub social preview (1280×640) | GitHub repository preview |
 
 ### PNG (Raster)
 
-Generate PNG files from SVG using the commands below.
+`social-preview.png` is committed. Generate other PNG files from SVG using the commands below.
 
 ## Design Tokens
 
@@ -26,6 +27,40 @@ Generate PNG files from SVG using the commands below.
 - **Fonts:**
   - Heading: Crimson Pro
   - Body: Atkinson Hyperlegible
+
+`design/system/MASTER.md` is the source of truth for these values. The logo is the Lucide `tag` glyph in white on a `#6366F1` rounded square, with the wordmark in Crimson Pro; there is no custom logo design.
+
+## Logo Usage Guideline
+
+### 1. Which version to use
+
+| Version | File | Use it when |
+|---------|------|-------------|
+| Icon only, colored | `icon-colored.svg` | The space is square or very small: app icon, profile picture, favicon source |
+| Icon only, monochrome | `icon.svg` | The icon must inherit surrounding text colour (`currentColor`), for example inline in UI |
+| Horizontal lockup | `logo-horizontal.svg` | There is room for the name: page header, documentation, slides |
+| Banner | `banner.svg` | Wide README or document header (1280×200) |
+| Social preview | `social-preview.svg` / `social-preview.png` | GitHub repository social preview only (1280×640) |
+
+Use the horizontal lockup whenever the name should be readable; fall back to the icon only when width is the constraint.
+
+### 2. Minimum size and clear space
+
+- **Minimum size:** the icon is not shown smaller than 16 px (the smallest size generated below); the horizontal lockup is not shown narrower than 100 px, which keeps the wordmark at 12 px (the SVG sets it at 24 in a 200-wide viewBox).
+- **Clear space:** keep an empty margin of at least 12 units on every side, measured in the SVG viewBox. That equals the icon's corner radius (`rx="12"`) and one quarter of the 48-unit icon height, so it scales with the logo (for example, 24 px on a 96 px-tall icon).
+
+### 3. Do not
+
+- Do not stretch, skew, rotate or crop the logo; scale it proportionally only.
+- Do not recolour it outside the tokens above: background `#6366F1`, glyph `white`, wordmark `#1E1B4B`. Only `icon.svg` takes the surrounding colour.
+- Do not replace Crimson Pro in the wordmark, retype "Label Suite" in another font, or change the spacing between icon and text.
+- Do not add effects (shadow, gradient, outline, glow), or place the logo on a busy background with poor contrast.
+
+### 4. Licensing boundary
+
+- **Today:** this repository's `LICENSE` is the "All rights reserved" research preview notice. The logo and the name "Label Suite" fall under it and are not licensed separately.
+- **After the open-source split (ADR-036):** the open-source licence covers **code only**. The "Label Suite" name and logo are **not** licensed. Forks and derivative projects must rename the project and replace the logo, and may only credit the origin descriptively, for example "based on Label Suite".
+- **Follow-up:** the open-source repository's `LICENSE` or `NOTICE` will carry a name and trademark reservation statement. That repository does not exist yet, so the statement is not part of this repository.
 
 ## Generate PNG from SVG
 
@@ -132,4 +167,4 @@ Then add to your HTML:
 
 ## License
 
-These assets are part of the Label Suite project. See the project's main LICENSE file for details.
+These assets are part of the Label Suite project and covered by the project's main LICENSE file. See [Licensing boundary](#4-licensing-boundary) for how the name and logo are treated after the open-source split.
