@@ -217,6 +217,15 @@ test.describe('issue #1266 -- maskHistoryForViewer: missing viewer is masked lik
     expect(actions).toContain('exception_resolved');
   });
 
+  for (const role of ['Annotator', 'user', 'bogus']) {
+    test(`viewer role "${role}" (unknown value): masked like an annotator`, async ({ page }) => {
+      const events = await readHistory(page, { kind: 'viewer', role, actorId: 'someone' });
+      const foreign = events.filter((e) => e.role !== 'annotator');
+      expect(foreign.map((e) => `${e.role}:${e.action}`)).toEqual([]);
+      expect(JSON.stringify(events)).not.toContain(ARB_MARKER);
+    });
+  }
+
   for (const kind of ['undefined', 'null', 'empty'] as const) {
     test(`viewer ${kind}: no reviewer / adjudicated / exception_resolved event and no peer markers leak`, async ({ page }) => {
       const events = await readHistory(page, { kind });
