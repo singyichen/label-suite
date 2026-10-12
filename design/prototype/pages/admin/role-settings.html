@@ -213,6 +213,9 @@
       border-radius: var(--radius-full); padding: 3px 8px; white-space: nowrap;
     }
 
+    /* Read-only annotation */
+    .readonly-note { display: block; font-size: var(--text-label); color: var(--color-ink-muted); margin-top: 2px; white-space: nowrap; }
+
     /* N/A cells */
     .na-cell {
       text-align: center; padding: var(--space-sm);
@@ -221,8 +224,6 @@
     }
     .na-cell.last-col { border-right: none; }
 
-    /* Read-only annotation */
-    .readonly-note { display: block; font-size: var(--text-label); color: var(--color-ink-muted); margin-top: 2px; white-space: nowrap; }
 
     /* ── Toast (top-center, UXC-07 / MASTER §Toast) ─────────────── */
     .toast-container {
@@ -508,11 +509,8 @@
                 <td class="check-cell sys-bg">
                   <input type="checkbox" class="matrix-checkbox" data-key="account.profile.view" data-role="user" checked onchange="onCheckboxChange()" aria-label="user - account.profile.view" />
                 </td>
-                <td class="check-cell sys-bg sa-col locked-cell" title="super_admin 基礎權限不可更改">
-                  <div class="locked-wrapper">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                  </div>
+                <td class="check-cell sys-bg sa-col">
+                  <input type="checkbox" class="matrix-checkbox" data-key="account.profile.view" data-role="super_admin" checked onchange="onCheckboxChange()" aria-label="super_admin - account.profile.view" />
                 </td>
                 <td class="na-cell">—</td>
                 <td class="na-cell">—</td>
@@ -526,11 +524,8 @@
                 <td class="check-cell sys-bg">
                   <input type="checkbox" class="matrix-checkbox" data-key="account.profile.edit" data-role="user" checked onchange="onCheckboxChange()" aria-label="user - account.profile.edit" />
                 </td>
-                <td class="check-cell sys-bg sa-col locked-cell" title="super_admin 基礎權限不可更改">
-                  <div class="locked-wrapper">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                  </div>
+                <td class="check-cell sys-bg sa-col">
+                  <input type="checkbox" class="matrix-checkbox" data-key="account.profile.edit" data-role="super_admin" checked onchange="onCheckboxChange()" aria-label="super_admin - account.profile.edit" />
                 </td>
                 <td class="na-cell">—</td>
                 <td class="na-cell">—</td>
@@ -547,11 +542,11 @@
                   <span class="perm-desc" id="permDesc_dashboard_view">檢視儀表板</span>
                 </td>
                 <td class="check-cell sys-bg">
-                  <input type="checkbox" class="matrix-checkbox" data-key="dashboard.view" data-role="user" checked onchange="onCheckboxChange()" aria-label="user - dashboard.view" />
+                  <input type="checkbox" class="matrix-checkbox" data-key="dashboard.view" data-role="user" data-fixed="true" checked onchange="onCheckboxChange()" aria-label="user - dashboard.view" />
                 </td>
                 <td class="check-cell sys-bg sa-col locked-cell" title="super_admin 基礎權限不可更改">
                   <div class="locked-wrapper">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                    <input type="checkbox" class="matrix-checkbox" data-key="dashboard.view" data-role="super_admin" data-fixed="true" checked onchange="onCheckboxChange()" aria-label="super_admin - dashboard.view" />
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                   </div>
                 </td>
@@ -572,11 +567,8 @@
                 <td class="check-cell sys-bg">
                   <input type="checkbox" class="matrix-checkbox" data-key="task.list.view" data-role="user" checked onchange="onCheckboxChange()" aria-label="user - task.list.view" />
                 </td>
-                <td class="check-cell sys-bg sa-col locked-cell" title="super_admin 基礎權限不可更改">
-                  <div class="locked-wrapper">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                  </div>
+                <td class="check-cell sys-bg sa-col">
+                  <input type="checkbox" class="matrix-checkbox" data-key="task.list.view" data-role="super_admin" checked onchange="onCheckboxChange()" aria-label="super_admin - task.list.view" />
                 </td>
                 <td class="na-cell">—</td>
                 <td class="na-cell">—</td>
@@ -590,11 +582,8 @@
                 <td class="check-cell sys-bg">
                   <input type="checkbox" class="matrix-checkbox" data-key="task.create" data-role="user" checked onchange="onCheckboxChange()" aria-label="user - task.create" />
                 </td>
-                <td class="check-cell sys-bg sa-col locked-cell" title="super_admin 基礎權限不可更改">
-                  <div class="locked-wrapper">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                  </div>
+                <td class="check-cell sys-bg sa-col">
+                  <input type="checkbox" class="matrix-checkbox" data-key="task.create" data-role="super_admin" checked onchange="onCheckboxChange()" aria-label="super_admin - task.create" />
                 </td>
                 <td class="na-cell">—</td>
                 <td class="na-cell">—</td>
@@ -620,6 +609,27 @@
                 </td>
                 <td class="check-cell task-bg last-col">
                   <input type="checkbox" class="matrix-checkbox task-check" data-key="task.detail.view" data-role="annotator" onchange="onCheckboxChange()" aria-label="annotator - task.detail.view" />
+                </td>
+              </tr>
+              <tr class="perm-row">
+                <td class="perm-cell">
+                  <code class="perm-key">task.detail.edit</code>
+                  <span class="perm-desc" id="permDesc_task_detail_edit">編輯任務設定</span>
+                </td>
+                <td class="check-cell sys-bg">
+                  <span class="task-role-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg><span class="trb-text">需任務角色</span></span>
+                </td>
+                <td class="check-cell sys-bg sa-col">
+                  <span class="task-role-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg><span class="trb-text">需任務角色</span></span>
+                </td>
+                <td class="check-cell task-bg">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="task.detail.edit" data-role="project_leader" checked onchange="onCheckboxChange()" aria-label="project_leader - task.detail.edit" />
+                </td>
+                <td class="check-cell task-bg">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="task.detail.edit" data-role="reviewer" onchange="onCheckboxChange()" aria-label="reviewer - task.detail.edit" />
+                </td>
+                <td class="check-cell task-bg last-col">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="task.detail.edit" data-role="annotator" onchange="onCheckboxChange()" aria-label="annotator - task.detail.edit" />
                 </td>
               </tr>
               <tr class="perm-row">
@@ -769,11 +779,11 @@
                   <span class="perm-desc" id="permDesc_admin_user_management_view">進入使用者管理頁</span>
                 </td>
                 <td class="check-cell sys-bg">
-                  <input type="checkbox" class="matrix-checkbox" data-key="admin.user_management.view" data-role="user" onchange="onCheckboxChange()" aria-label="user - admin.user_management.view" />
+                  <input type="checkbox" class="matrix-checkbox" data-key="admin.user_management.view" data-role="user" data-fixed="true" onchange="onCheckboxChange()" aria-label="user - admin.user_management.view" />
                 </td>
                 <td class="check-cell sys-bg sa-col admin-locked-cell" title="核心管理權限不可關閉（FR-008a）">
                   <div class="admin-locked-wrapper">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                    <input type="checkbox" class="matrix-checkbox" data-key="admin.user_management.view" data-role="super_admin" data-fixed="true" checked onchange="onCheckboxChange()" aria-label="super_admin - admin.user_management.view" />
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                   </div>
                 </td>
@@ -787,11 +797,11 @@
                   <span class="perm-desc" id="permDesc_admin_user_management_manage">新增/編輯/停用使用者、指派 system role</span>
                 </td>
                 <td class="check-cell sys-bg">
-                  <input type="checkbox" class="matrix-checkbox" data-key="admin.user_management.manage" data-role="user" onchange="onCheckboxChange()" aria-label="user - admin.user_management.manage" />
+                  <input type="checkbox" class="matrix-checkbox" data-key="admin.user_management.manage" data-role="user" data-fixed="true" onchange="onCheckboxChange()" aria-label="user - admin.user_management.manage" />
                 </td>
                 <td class="check-cell sys-bg sa-col admin-locked-cell" title="核心管理權限不可關閉（FR-008a）">
                   <div class="admin-locked-wrapper">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                    <input type="checkbox" class="matrix-checkbox" data-key="admin.user_management.manage" data-role="super_admin" data-fixed="true" checked onchange="onCheckboxChange()" aria-label="super_admin - admin.user_management.manage" />
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                   </div>
                 </td>
@@ -805,11 +815,11 @@
                   <span class="perm-desc" id="permDesc_admin_role_settings_view">進入角色權限設定頁</span>
                 </td>
                 <td class="check-cell sys-bg">
-                  <input type="checkbox" class="matrix-checkbox" data-key="admin.role_settings.view" data-role="user" onchange="onCheckboxChange()" aria-label="user - admin.role_settings.view" />
+                  <input type="checkbox" class="matrix-checkbox" data-key="admin.role_settings.view" data-role="user" data-fixed="true" onchange="onCheckboxChange()" aria-label="user - admin.role_settings.view" />
                 </td>
                 <td class="check-cell sys-bg sa-col admin-locked-cell" title="核心管理權限不可關閉（FR-008a）">
                   <div class="admin-locked-wrapper">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                    <input type="checkbox" class="matrix-checkbox" data-key="admin.role_settings.view" data-role="super_admin" data-fixed="true" checked onchange="onCheckboxChange()" aria-label="super_admin - admin.role_settings.view" />
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                   </div>
                 </td>
@@ -823,11 +833,11 @@
                   <span class="perm-desc" id="permDesc_admin_role_settings_manage">編輯並儲存角色權限矩陣</span>
                 </td>
                 <td class="check-cell sys-bg">
-                  <input type="checkbox" class="matrix-checkbox" data-key="admin.role_settings.manage" data-role="user" onchange="onCheckboxChange()" aria-label="user - admin.role_settings.manage" />
+                  <input type="checkbox" class="matrix-checkbox" data-key="admin.role_settings.manage" data-role="user" data-fixed="true" onchange="onCheckboxChange()" aria-label="user - admin.role_settings.manage" />
                 </td>
                 <td class="check-cell sys-bg sa-col admin-locked-cell" title="核心管理權限不可關閉（FR-008a）">
                   <div class="admin-locked-wrapper">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                    <input type="checkbox" class="matrix-checkbox" data-key="admin.role_settings.manage" data-role="super_admin" data-fixed="true" checked onchange="onCheckboxChange()" aria-label="super_admin - admin.role_settings.manage" />
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                   </div>
                 </td>
@@ -953,6 +963,7 @@
         reloadBtnLabel:          '重新載入',
         toastSaved:              '角色權限設定已儲存',
         toastConflict:           '版本衝突，請重新載入最新設定',
+        toastStoredInvalid:      '儲存的矩陣含未知或違反固定格的權限鍵，已拒絕並還原預設值',
         readonlyNote:            '（唯讀）',
         langToggleAria:          '切換語言',
         moduleHeader_account:    '帳號（Account）',
@@ -967,6 +978,7 @@
         permDesc_task_list_view:                    '檢視任務列表',
         permDesc_task_create:                       '建立新任務',
         permDesc_task_detail_view:                  '檢視任務詳情',
+        permDesc_task_detail_edit:                  '編輯任務設定',
         permDesc_task_members_manage:               '管理任務成員與任務角色',
         permDesc_annotation_workspace_annotate:     '以 annotator 模式執行標記',
         permDesc_annotation_workspace_review:       '以 reviewer 模式執行審核',
@@ -1016,6 +1028,7 @@
         reloadBtnLabel:          'Reload',
         toastSaved:              'Role permissions saved',
         toastConflict:           'Version conflict. Reload latest settings',
+        toastStoredInvalid:      'Stored matrix has unknown keys or violates fixed cells; rejected and defaults restored',
         readonlyNote:            '(read-only)',
         langToggleAria:          'Switch language',
         moduleHeader_account:    'Account',
@@ -1030,6 +1043,7 @@
         permDesc_task_list_view:                    'View task list',
         permDesc_task_create:                       'Create new task',
         permDesc_task_detail_view:                  'View task details',
+        permDesc_task_detail_edit:                  'Edit task settings',
         permDesc_task_members_manage:               'Manage task members and roles',
         permDesc_annotation_workspace_annotate:     'Annotate in annotator mode',
         permDesc_annotation_workspace_review:       'Review in reviewer mode',
@@ -1065,6 +1079,8 @@
       'dataset.export__project_leader': true, 'dataset.export__reviewer': false, 'dataset.export__annotator': false,
       'admin.user_management.view__user': false, 'admin.user_management.manage__user': false,
       'admin.role_settings.view__user': false, 'admin.role_settings.manage__user': false,
+      'task.detail.edit__project_leader': true, 'task.detail.edit__reviewer': false, 'task.detail.edit__annotator': false,
+      'account.profile.view__super_admin': true, 'account.profile.edit__super_admin': true, 'dashboard.view__super_admin': true, 'task.list.view__super_admin': true, 'task.create__super_admin': true, 'admin.user_management.view__super_admin': true, 'admin.user_management.manage__super_admin': true, 'admin.role_settings.view__super_admin': true, 'admin.role_settings.manage__super_admin': true,
     };
 
     const ROLE_AUDIT_LOGS = [
@@ -1104,7 +1120,7 @@
       'moduleHeader_annotation', 'moduleHeader_dataset', 'moduleHeader_admin',
       'permDesc_account_profile_view', 'permDesc_account_profile_edit',
       'permDesc_dashboard_view', 'permDesc_task_list_view', 'permDesc_task_create',
-      'permDesc_task_detail_view', 'permDesc_task_members_manage',
+      'permDesc_task_detail_view', 'permDesc_task_detail_edit', 'permDesc_task_members_manage',
       'permDesc_annotation_workspace_annotate', 'permDesc_annotation_workspace_review',
       'permDesc_dataset_stats_view', 'permDesc_dataset_quality_view', 'permDesc_dataset_export',
       'permDesc_admin_user_management_view', 'permDesc_admin_user_management_manage',
@@ -1154,7 +1170,7 @@
       document.getElementById('editBtn').classList.add('hidden');
       document.getElementById('cancelBtn').classList.remove('hidden');
       document.getElementById('saveBtn').classList.remove('hidden');
-      document.querySelectorAll('.matrix-checkbox').forEach(cb => { cb.disabled = false; });
+      document.querySelectorAll('.matrix-checkbox').forEach(cb => { cb.disabled = cb.dataset.fixed === 'true'; });
       window.LabelSuiteAnalytics && window.LabelSuiteAnalytics.track('prototype_role_settings_enter_edit', { page: 'role-settings' });
     }
 
@@ -1192,18 +1208,35 @@
       });
     }
 
+    /* FR-011: reject the whole stored payload on unknown/layer-mismatched keys,
+       non-boolean values, or values that contradict a fixed cell. */
+    function isValidStoredMatrix(state) {
+      if (state === null || typeof state !== 'object' || Array.isArray(state)) return false;
+      const cells = {};
+      document.querySelectorAll('.matrix-checkbox').forEach(cb => { cells[getCheckboxKey(cb)] = cb; });
+      return Object.keys(state).every(k => {
+        const cb = cells[k];
+        if (!cb || typeof state[k] !== 'boolean') return false;
+        return cb.dataset.fixed !== 'true' || state[k] === DEFAULT_MATRIX[k];
+      });
+    }
+
     function getStoredMatrixState() {
+      let state = {};
       try {
-        return JSON.parse(window.localStorage.getItem(MATRIX_STORAGE_KEY) || '{}');
+        state = JSON.parse(window.localStorage.getItem(MATRIX_STORAGE_KEY) || '{}');
       } catch (_error) {
-        return {};
+        return { valid: false, state: {} };
       }
+      return isValidStoredMatrix(state) ? { valid: true, state } : { valid: false, state: {} };
     }
 
     function loadPersistedMatrix() {
       applyMatrixState(DEFAULT_MATRIX);
-      applyMatrixState(getStoredMatrixState());
+      const stored = getStoredMatrixState();
+      applyMatrixState(stored.state);
       matrixVersion = getStorageVersion();
+      return stored.valid;
     }
 
     function captureOriginalState() {
@@ -1296,6 +1329,11 @@
       }
 
       const diff = buildDiff();
+      if (diff === '—') {
+        setDirty(false);
+        exitEditMode();
+        return;
+      }
       const nextVersion = matrixVersion + 1;
       window.localStorage.setItem(MATRIX_STORAGE_KEY, JSON.stringify(getCurrentMatrixState()));
       window.localStorage.setItem(MATRIX_VERSION_KEY, String(nextVersion));
@@ -1317,7 +1355,8 @@
 
     /* ── Reload (conflict resolution) ──────────────────────────────── */
     function reloadMatrix() {
-      loadPersistedMatrix();
+      if (!loadPersistedMatrix()) showToast('error', i18n[lang].toastStoredInvalid);
+
       captureOriginalState();
       setDirty(false);
       document.getElementById('conflictBanner').classList.add('hidden');
@@ -1468,11 +1507,12 @@
 
     /* ── Init ──────────────────────────────────────────────────────── */
     document.addEventListener('DOMContentLoaded', () => {
-      loadPersistedMatrix();
+      const storedValid = loadPersistedMatrix();
       captureOriginalState();
       document.querySelectorAll('.matrix-checkbox').forEach(cb => { cb.disabled = true; });
       initSidebar();
       applyLang(lang);
+      if (!storedValid) showToast('error', i18n[lang].toastStoredInvalid);
       wireLangToggle('mobileLangToggle');
 
       if (window.LabelSuiteAnalytics) {
