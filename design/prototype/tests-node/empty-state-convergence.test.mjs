@@ -150,6 +150,34 @@ const BATCHES = [
     literals: { 'pages/dashboard/dashboard.js': ['data-testid="task-list-empty"'] },
     manifestRemoved: ['empty', 'list-empty', 'notif-empty'],
   },
+  {
+    name: 'batch 4 (workspace history, audit drawers)',
+    classContext: true,
+    markers: {},
+    html: [
+      'pages/annotation/annotation-workspace.html',
+      'pages/admin/user-management.html',
+      'pages/admin/role-settings.html',
+    ],
+    js: ['pages/annotation/annotation-workspace.config.js'],
+    legacyByFile: {
+      'pages/annotation/annotation-workspace.html': ['history-empty'],
+      'pages/annotation/annotation-workspace.config.js': ['history-empty'],
+      'pages/admin/user-management.html': ['audit-drawer-empty'],
+      'pages/admin/role-settings.html': ['audit-drawer-empty'],
+    },
+    classMarkers: {
+      'pages/annotation/annotation-workspace.config.js': ['empty-state', 'empty-state-compact'],
+      'pages/admin/user-management.html': ['empty-state', 'empty-state-compact'],
+      'pages/admin/role-settings.html': ['empty-state', 'empty-state-compact'],
+    },
+    // Audit drawer keeps its ids (JS toggles #auditDrawerEmpty, writes #auditDrawerEmptyText).
+    literals: {
+      'pages/admin/user-management.html': ['id="auditDrawerEmpty"', 'id="auditDrawerEmptyText"'],
+      'pages/admin/role-settings.html': ['id="auditDrawerEmpty"', 'id="auditDrawerEmptyText"'],
+    },
+    manifestRemoved: ['history-empty', 'audit-drawer-empty'],
+  },
 ];
 
 describe('empty-state shared stylesheet', () => {
