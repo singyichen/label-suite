@@ -755,7 +755,12 @@
       trackAnalytics('prototype_task_row_clicked', { allowed: true, task_id: task.id, source: source || 'row' });
       showToast(t('toastNavigating'), false);
       window.setTimeout(function () {
-        window.location.href = './task-detail.html?task_id=' + encodeURIComponent(task.id) + '&task_role=project_leader';
+        /* issue #1266: only a project leader / super admin viewer carries
+           project_leader on; anyone else sends no role and task-detail fails
+           closed. ponytail: per-task role resolution (member data) is a follow-up. */
+        var viewerRole = getDisplayedTaskRole();
+        var roleQuery = viewerRole === 'project_leader' || viewerRole === 'super_admin' ? '&task_role=project_leader' : '';
+        window.location.href = './task-detail.html?task_id=' + encodeURIComponent(task.id) + roleQuery;
       }, 220);
     } else {
       trackAnalytics('prototype_task_row_clicked', { allowed: false, task_id: task.id, source: source || 'row' });
