@@ -1,126 +1,44 @@
 ---
 name: test-report
-description: Generate test execution reports for sprint summary, release readiness, or regression runs.
+description: Generate a test execution report for a feature, release, regression run, or leakage-prevention audit from real command output.
 ---
 
 # Test Report
 
-Generate structured test reports summarizing test execution results, coverage, and quality metrics.
+Summarize actual test results. Every number must come from a command run (CLAUDE.md Verification Commands); do not estimate or carry over figures.
 
 ## Usage
 
 ```
-/test-report sprint      # Sprint test summary
-/test-report release     # Release readiness report
-/test-report regression  # Regression test report
-/test-report security    # Security-focused test report (leakage prevention)
+/test-report release     # Release readiness
+/test-report regression  # Regression run (see /regression-suite)
+/test-report security    # Leakage-prevention and RBAC audit
 ```
 
-## Sprint Test Summary Report
+## Release / Regression Report
 
 ```markdown
-# Sprint Test Summary Report
-
-**Sprint**: Sprint N
-**Period**: YYYY-MM-DD to YYYY-MM-DD
-**Prepared By**: senior-qa
-
----
-
-## Executive Summary
-
-| Metric | Value |
-|--------|-------|
-| Total Test Cases | N |
-| Passed | N (N%) |
-| Failed | N (N%) |
-| Skipped | N (N%) |
-| New Tests Added | N |
-| Defects Found | N |
-| Defects Fixed | N |
-
-**Status**: ✅ On Track | ⚠️ At Risk | ❌ Off Track
-
----
-
-## Test Execution by Type
-
-| Type | Total | Passed | Failed | Coverage |
-|------|-------|--------|--------|----------|
-| pytest unit | N | N | N | N% |
-| pytest integration | N | N | N | N% |
-| Playwright E2E | N | N | N | P1 flows |
-| Security (leakage) | N | N | N | All endpoints |
-
----
-
-## Coverage by Module
-
-| Module | Coverage | Target | Status |
-|--------|----------|--------|--------|
-| scoring engine | N% | ≥90% | ✅/❌ |
-| API endpoints | N% | ≥80% | ✅/❌ |
-| frontend components | N% | ≥70% | ✅/❌ |
-| celery tasks | N% | ≥80% | ✅/❌ |
-
----
-
-## Defect Summary
-
-| Severity | Open | Fixed | Carry-over |
-|----------|------|-------|------------|
-| Critical | N | N | N |
-| High | N | N | N |
-| Medium | N | N | N |
-| Low | N | N | N |
-
----
-
-## Spec Traceability
-
-| Spec | ACs | Covered | Status |
-|------|-----|---------|--------|
-| specs/001-annotation-submission | N | N | ✅/❌ |
-| specs/002-leaderboard | N | N | ✅/❌ |
-
----
-
-## Risk Assessment
-
-[Any risk to next sprint or release based on test results]
-```
-
-## Security Test Report
-
-```markdown
-# Security Test Report — Test-Set Leakage Prevention
+# Test Report: [Scope]
 
 **Date**: YYYY-MM-DD
-**Scope**: All annotator-facing API endpoints + frontend
+**Prepared By**: senior-qa
 
----
+## Results
+| Layer | Command | Total | Passed | Failed | Coverage |
+|-------|---------|-------|--------|--------|----------|
+| backend | `uv run pytest` | N | N | N | N% (>= 80%; scoring >= 90%) |
+| frontend | `pnpm test` | N | N | N | — |
+| e2e / prototype | (as applicable) | N | N | N | — |
 
-## Leakage Prevention Results
+## Spec Traceability
+| Spec / FR | ACs | Covered | Status |
 
-| Test | Endpoint | Result | Notes |
-|------|----------|--------|-------|
-| `answer` field in GET /datasets response | GET /api/v1/datasets | ✅ Not exposed | |
-| `answer` field in GET /tasks response | GET /api/v1/tasks | ✅ Not exposed | |
-| `answer` field in GET /submissions/{id} | GET /api/v1/submissions/{id} | ✅ Not exposed | |
-| Direct DB query via annotator token | N/A | ✅ Blocked by RBAC | |
-| Celery task result pollable by annotator | GET /api/v1/tasks/{id}/status | ✅ Score only, no answer | |
-| Answer in application logs | Log scan | ✅ Not logged | |
-| Answer in error response | POST /api/v1/submissions (error) | ✅ Not exposed | |
+## Open Defects
+| Issue | Severity | Status |
 
-**Result**: ✅ All leakage tests PASS | ❌ [N] tests FAIL — IMMEDIATE FIX REQUIRED
-
----
-
-## RBAC Test Results
-
-| Endpoint | Admin Access | Annotator Access | Result |
-|----------|-------------|-----------------|--------|
-| GET /api/v1/admin/datasets | ✅ Allowed | ❌ Blocked (403) | ✅ |
-| DELETE /api/v1/tasks/{id} | ✅ Allowed | ❌ Blocked (403) | ✅ |
-| GET /api/v1/leaderboard | ✅ Allowed | ✅ Allowed | ✅ |
+## Risk Assessment
 ```
+
+## Security Report (Leakage Prevention)
+
+Enumerate every annotator-facing surface (API responses, error bodies, logs, Celery result polling, exports) and record pass/fail per surface for ground-truth exposure (constitution III), plus RBAC per role (constitution XV). Any failure is P0: stop and follow `.claude/rules/issue-reporting.md` (Critical/High security findings are escalated privately, never filed as public issues).

@@ -22,7 +22,7 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
   - **Generalization-First**: no hardcoded task logic — always config-driven
   - **Data Fairness**: annotator-facing responses must never expose ground-truth answers
 - Monorepo: `backend/` (uv + pytest) · `frontend/` (pnpm + Vitest) · `e2e/` (Playwright)
-- Review gate runs after Phase D, before /pr-flow
+- Review runs in Phase D (after all paired Green tasks of the PR group complete), before /pr-flow
 
 ## Core Responsibilities
 
