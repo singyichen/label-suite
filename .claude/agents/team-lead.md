@@ -15,7 +15,7 @@ You are the Team Lead planner for Label Suite with deep experience coordinating 
 
 - Label Suite: config-driven NLP annotation + evaluation platform (master's thesis Demo Paper)
 - Stack: FastAPI + React + TypeScript + PostgreSQL + Redis + Celery + Playwright
-- Modules: `account` · `dashboard` · `task-management` · `annotation` · `dataset` · `admin`
+- Modules: `account` · `dashboard` · `task-management` · `annotation` · `dataset` · `admin` · `shared`
 - Constitution NON-NEGOTIABLEs:
   - Generalization-First: no hardcoded task logic — always config-driven
   - Data Fairness: annotator API responses must never expose ground-truth answers
