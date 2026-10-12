@@ -175,6 +175,8 @@
       reviewCorrectedAnswerLabel: '審核員修正後答案：',
       toastReviewDecisionResetOnEdit: '直接修正的值已變更，對應的審核決策已重置，請重新確認後再送出',
       annotatorFinalizedNotice: '此標記結果已定稿，無法再修改或提交',
+      annotatorFinalizedNoticeTitle: '此標記結果已定稿',
+      annotatorFinalizedNoticeDesc: '作答內容已鎖定，無法再修改或提交。如需異動請聯絡審核員。',
       annotatorFinalizedToast: '此標記結果已定稿，無法再修改或提交',
       wsAutosaveFinalized: '已定稿，不再自動儲存',
       wsExceptionSampleGroupAria: '樣本 {sample}，{n} 項待處置例外',
@@ -343,6 +345,8 @@
       reviewCorrectedAnswerLabel: "Reviewer's corrected answer: ",
       toastReviewDecisionResetOnEdit: 'The direct correction changed, so the matching review decision was reset -- please re-confirm before submitting',
       annotatorFinalizedNotice: 'This annotation is finalized and can no longer be edited or submitted.',
+      annotatorFinalizedNoticeTitle: 'This annotation is finalized',
+      annotatorFinalizedNoticeDesc: 'Answers are locked and can no longer be edited or submitted. Contact a reviewer if a change is needed.',
       annotatorFinalizedToast: 'This annotation is finalized and can no longer be edited or submitted.',
       wsAutosaveFinalized: 'Finalized — autosave stopped.',
     },
@@ -1669,6 +1673,9 @@
     });
   }
 
+  /* Lucide `lock` (ADR-030); static markup, no user data interpolated. */
+  var LOCK_SVG = '<svg class="ws-lock-icon" width="{size}" height="{size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+
   function renderAnnotatorFinalizedLock() {
     var scroll = document.getElementById('contentScroll');
     var preview = document.getElementById('annotationPreview');
@@ -1679,10 +1686,12 @@
     if (locked && scroll && preview) {
       var notice = document.createElement('div');
       notice.setAttribute('data-testid', 'ws-annotator-finalized-notice');
-      notice.className = 'content-card';
-      notice.style.cssText = 'border-color:var(--color-info-border);'
-        + 'background:var(--color-info-bg);color:var(--color-info);';
-      notice.textContent = t('annotatorFinalizedNotice');
+      notice.className = 'content-card ws-finalized-notice';
+      notice.innerHTML = LOCK_SVG.replace(/\{size\}/g, '18')
+        + '<div><div class="ws-finalized-notice-title"></div>'
+        + '<div class="ws-finalized-notice-desc"></div></div>';
+      notice.querySelector('.ws-finalized-notice-title').textContent = t('annotatorFinalizedNoticeTitle');
+      notice.querySelector('.ws-finalized-notice-desc').textContent = t('annotatorFinalizedNoticeDesc');
       scroll.insertBefore(notice, preview);
     }
 
@@ -1966,11 +1975,17 @@
     if (statusEl) statusEl.classList.remove('hidden');
     var dot = document.getElementById('wsAutosaveDot');
     if (!dot) return;
+    /* issue #1247: the locked branch replaces the dot with a lock icon; any
+       other state must bring the dot back (navigating to an unlocked sample). */
+    var lockIcon = statusEl && statusEl.querySelector('.autosave-lock');
+    if (lockIcon) lockIcon.remove();
+    dot.classList.remove('hidden');
     /* FR-101 (issue #908): finalized takes precedence over dirty/saved/
        initial -- a locked sample never shows an "unsaved changes" or "saved
        at" state again, since no further write can land. */
     if (isCurrentSampleAnnotatorLocked()) {
-      dot.className = 'autosave-dot saved';
+      dot.className = 'autosave-dot hidden';
+      dot.insertAdjacentHTML('afterend', LOCK_SVG.replace(/\{size\}/g, '14').replace('class="ws-lock-icon"', 'class="autosave-lock"'));
       setText('wsAutosaveLabel', t('wsAutosaveFinalized'));
       return;
     }
@@ -2915,7 +2930,15 @@
       .join('\n');
   }
 
+  function isButtonLockDisabled(id) {
+    var el = document.getElementById(id);
+    return !!el && el.getAttribute('aria-disabled') === 'true';
+  }
+
   function handleSave() {
+    /* issue #1247: a click that reaches this handler while the lock owns the
+       button (aria-disabled) stays silent; only the shortcut explains it. */
+    if (isButtonLockDisabled('wsSaveBtn')) return;
     var saved = window.LabelSuiteAnnotationWorkspaceData.markSampleSaved(
       currentProfile.id,
       currentRole,
@@ -2958,6 +2981,9 @@
   }
 
   function handleSubmit() {
+    /* issue #1247: a click that reaches this handler while the lock owns the
+       button (aria-disabled) stays silent; only the shortcut explains it. */
+    if (isButtonLockDisabled('wsSubmitBtn')) return;
     /* Double-click guard (issue #201 / w6 DUP-01): a busy flag plus a
        temporary native disable so a rapid second click is inert instead of
        re-running the submit flow (backed by the appendHistoryEvent dedupe
@@ -3645,6 +3671,12 @@
       if (!id) return;
       e.preventDefault();
       var btn = document.getElementById(id);
+      /* issue #1247: direct clicks on a greyed-out button stay silent, so the
+         shortcut is the one path that explains the lock. */
+      if (btn && btn.disabled && (id === 'wsSaveBtn' || id === 'wsSubmitBtn') && isCurrentSampleAnnotatorLocked()) {
+        showToast(t('annotatorFinalizedToast'), 'warning');
+        return;
+      }
       if (btn && !btn.disabled && !btn.classList.contains('hidden')) btn.click();
     });
   }

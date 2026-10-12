@@ -10,6 +10,37 @@
 
 ---
 
+## 能力狀態判準 (Capability Status Convention)
+
+本大綱的每一項能力宣稱都標示三種層級之一。層級以撰寫當下的 repository 為準，不以預期的最終狀態為準。
+
+- **已實作 (Implemented)**：以正式程式碼（含測試）存在於 `frontend/` 或 `backend/`。只存在於 `design/prototype/` 的能力**不算**已實作，因為 prototype 是經驗證的設計產物，不是產品本身。
+- **規格已定 (Specified)**：已由 `specs/` 下的正典規格定義（附 FR 編號），且視情況已有 `design/prototype/` 示範，但尚未在 `frontend/` 或 `backend/` 建置。以下引用的正典規格目前皆為 `Draft`。
+- **研究規劃 (Planned)**：研究方向，尚無正典 FR，既未訂規格也未建置。
+
+撰寫當下，`frontend/` 與 `backend/` 僅有工程骨架與 health-check 切片，因此「已實作」只有技術基線。第三、四章描述的產品能力全部屬於「規格已定」，在建置並於第五章評估前，不得寫成經實驗驗證的成果。
+
+第一、三、四章中未附行內標示的產品能力敘述，沿用本表對應列的層級。
+
+| 能力 | 層級 | 來源 |
+|---|---|---|
+| React + TypeScript + Vite 前端、FastAPI 後端、health-check 切片（4.1） | 已實作 | `frontend/src/features/health/`、`backend/app/modules/health/`；基線見 `foundation/000`（無 FR） |
+| 可組合任務模型：`outputs[]` 搭配 8 種輸出類型（`sequence_tagging`、`entity_recognition`、`relation_identification`、`single_label`、`multi_label`、`single_dim`、`multi_dim`、`free_text`）與 2 種輸入類型（`single_item`、`item_pair`）（2.1、3.1、4.3） | 規格已定 | `task-management/013` FR-002e、FR-003d、`TASK_INPUT_TYPES`；ADR-029 |
+| 配置驅動建立任務、YAML/JSON 設定檔編輯與上傳（3.1、3.2） | 規格已定 | `task-management/013` FR-001、FR-003、FR-003e、FR-003h |
+| 由 `outputs[]` 驅動的標記工作區（3.3、4.3） | 規格已定 | `annotation/015` FR-024、FR-013 |
+| 任務層級角色與成員管理（3.2） | 規格已定 | `task-management/014` FR-005、FR-005l、FR-006 |
+| Dry Run / Official Run 機制與資料隔離（3.3、4.3） | 規格已定 | `task-management/014` FR-008a、FR-010b |
+| 資料集統計：#Sentence、#Token、各輸出類型的分布（3.4、4.3） | 規格已定 | `dataset/017` FR-008、FR-009F 至 FR-009M |
+| 標記品質監控：逐輸出類型 IAA（Krippendorff alpha／ICC／span F1／單位化 alpha），`single_label` 另以 Cohen's／Fleiss' Kappa 為輔助指標（3.4、6.3） | 規格已定 | `dataset/017` FR-012、FR-012F、`OUTPUT_TYPE_IAA_REGISTRY` |
+| 匯出 `JSON` 與 `JSON-MIN`（4.4、6.3） | 規格已定 | `task-management/014` FR-009、FR-015e、FR-015h |
+| `sequence_tagging` 匯出為 BIO／BIOES／IOB2 詞元序列（預設字元級，詞級為選項）（6.3） | 規格已定 | `dataset/017` FR-041、FR-042；`task-management/014` FR-020 |
+| 匯出 CoNLL 或 JSON-L 檔 | 研究規劃 | 無正典 FR。規格中 JSON Lines 僅作為上傳格式出現（`task-management/013` FR-002a、`dataset/021` FR-003） |
+| LLM 輔助標記、邊緣案例發現（6.3） | 研究規劃 | 無正典 FR |
+| 大規模並發壓力測試（6.2） | 研究規劃 | 無正典 FR |
+| 與 Label Studio 的對照評估及實驗室使用者研究（5.2、5.3） | 研究規劃 | 研究活動，無 FR |
+
+---
+
 ## 摘要 (Abstract)
 
 ---
@@ -48,7 +79,7 @@
 
 ### 2.1 NLP 任務背景知識 (NLP Task Background Knowledge)
 
-- **NLP 任務類型 (NLP Task Types)：** 本系統依輸入格式與標記需求，支援四類 NLP 任務範本：**單一句子 (Single Sentence)**——針對單一文字輸入進行分類或數值評分；**句子對 (Sentence Pairs)**——比較兩段文字的語義關係（如相似度、蘊含關係）；**序列標記 (Sequence Labeling)**——於文字序列中逐一標記詞性、命名實體等結構；**生成標記 (Generative Labeling)**——評估模型生成文字的品質或進行人工撰寫。理解上述任務類型是設計通用標記介面的基礎前提。
+- **NLP 任務類型 (NLP Task Types)：** 為說明方便，NLP 標記任務依輸入格式與標記需求可分為四類經典類型（平台本身不把它們寫死成範本，而是由 `outputs[]` 組合而成——**規格已定**，`task-management/013` FR-003d）：**單一句子 (Single Sentence)**——針對單一文字輸入進行分類或數值評分；**句子對 (Sentence Pairs)**——比較兩段文字的語義關係（如相似度、蘊含關係）；**序列標記 (Sequence Labeling)**——於文字序列中逐一標記詞性、命名實體等結構；**生成標記 (Generative Labeling)**——評估模型生成文字的品質或進行人工撰寫。單一句子通常對應 `single_item` 加上標籤或維度輸出，句子對對應 `item_pair`，序列標記對應 `sequence_tagging`／`entity_recognition`／`relation_identification`，生成標記對應 `free_text`。理解上述任務類型是設計通用標記介面的基礎前提。
 - **標記資料的重要性 (Importance of Labeled Data)：** NLP 模型的訓練高度依賴人工標記的資料集。標記品質直接影響模型的泛化能力與評測可靠性，因此建立一套系統化、可重現的標記流程，對於推動 NLP 研究具有根本性意義。
 - **標記品質基礎指標 (Basic Annotation Quality Metrics)：** 資料品質的核心指標包含標籤一致性、標記員間一致程度（Inter-Annotator Agreement）與標籤分布平衡性。這些指標引導資料集分析模組的設計，並在標記過程中提供品質監控依據。
 
@@ -75,7 +106,7 @@
 ### 3.1 一般化設計理念 (Generalization Design Philosophy)
 
 - **配置驅動架構 (Config-driven Architecture)：** 系統核心採用「配置取代程式碼 (Config over Code)」的理念。使用者僅需撰寫簡單的 YAML 或 JSON 設定檔，即可定義不同類型的 NLP 任務，實現快速部署與公板化。
-- **多任務支援 (Multi-task Support)：** 支援四類通用 NLP 任務範本：單一句子 (Single Sentence)、句子對 (Sentence Pairs)、序列標記 (Sequence Labeling)、生成標記 (Generative Labeling)，以滿足不同領域與不同輸入格式的研究需求。
+- **多任務支援 (Multi-task Support)（規格已定）：** 不採四個固定範本，任務是由一至多種輸出類型（共 8 種）搭配單項或項目對輸入組合而成（`task-management/013` FR-002e、FR-003d、FR-003c），因此 2.1 的四類經典類型及其混合都能涵蓋，且不必修改核心流程。
 
 ### 3.2 任務管理模組 (Task Management Module)
 
@@ -112,7 +143,7 @@
 ### 4.3 核心模組實作 (Implementation of Core Modules)
 
 - **任務管理實作 (Task Management Implementation)：** 說明任務生命週期、任務成員指派、角色權限執行與執行狀態控制。
-- **動態標記介面生成 (Dynamic Annotation Interface Generation)：** 說明系統如何解析上傳的 Config 檔，動態渲染 NLP 標記模板（單一句子、句子對、序列標記、生成標記）。
+- **動態標記介面生成 (Dynamic Annotation Interface Generation)：** 說明系統如何解析上傳的 Config 檔，依 `outputs[]` 動態渲染各輸出類型的標記介面（**規格已定**，`annotation/015` FR-024）。
 - **Dry Run / Official Run 資料隔離 (Dry Run / Official Run Data Isolation)：** 詳述資料分區策略，確保 Dry Run 資料不污染 Official Run 資料集。
 - **資料集統計管線 (Dataset Statistics Pipeline)：** 說明 #Sentence、#Token 與 #Label 統計如何即時計算並呈現。
 
@@ -153,15 +184,15 @@
 
 ### 6.2 研究限制 (Research Limitations) (New Section)
 
-- **生成標記介面之複雜性 (Complexity of Generative Labeling Interface)：** 生成標記任務的介面設計與品質監控較其他任務類型複雜，目前僅提供基礎支援，尚未針對所有生成式場景進行完整優化。
+- **生成標記介面之複雜性 (Complexity of Generative Labeling Interface)：** 生成標記任務的介面設計與品質監控較其他任務類型複雜，`free_text` 輸出類型已有規格（`task-management/013` FR-003d-10），但產品尚未建置，亦未針對所有生成式場景優化。
 - **使用者研究規模 (Small-scale User Study)：** 受限於樣本數，目前 User Study 的參與者主要來自特定實驗室，可能存在場景侷限性。
 - **系統壓力測試 (Lack of Stress Testing)：** 系統尚未在大規模高並發（Large-scale concurrent usage）的環境下進行效能壓力測試。
 
 ### 6.3 未來展望 (Future Work)
 
 - **整合 AI 輔助標記 (AI-Assisted Labeling)：** 借鑑 **Co-DETECT** 模式，引入 LLM 輔助發現標記邊緣案例並優化標記規則。
-- **標記者一致性分析 (Inter-Annotator Agreement, IAA)：** 新增 Cohen's Kappa 與 Fleiss' Kappa 等指標計算，量化多位標記員間的標記一致程度。
-- **標準格式資料匯出 (Data Export in Standard Formats)：** 支援將標記完成的資料集匯出為 NLP 標準格式（如 CoNLL、BIO、JSON-L），可直接用於下游模型訓練管線。
+- **標記者一致性分析 (Inter-Annotator Agreement, IAA)（規格已定、尚未建置）：** 品質監控規格已定義逐輸出類型的 IAA，`single_label` 以 Krippendorff's alpha 為主要指標、Cohen's／Fleiss' Kappa 為輔助指標（`dataset/017` FR-012F）。未來工作是建置並驗證。
+- **標準格式資料匯出 (Data Export in Standard Formats)：** `JSON` 與 `JSON-MIN` 匯出為規格已定（`task-management/014` FR-009、FR-015h）；`sequence_tagging` 的 BIO／BIOES／IOB2 序列匯出為規格已定（`dataset/017` FR-041、FR-042；`task-management/014` FR-020）；兩者皆尚未建置。CoNLL 與 JSON-L 檔屬**研究規劃**、無正典 FR，不得寫成已支援。
 
 ---
 
