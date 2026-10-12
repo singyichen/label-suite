@@ -20,9 +20,9 @@ Generate a detailed backend service specification covering architecture, data mo
 ```markdown
 # Backend Service Specification: [ServiceName]
 
-**Module**: `backend/app/services/[service_name].py`
+**Module**: `backend/app/modules/[module]/`
 **Date**: YYYY-MM-DD
-**Spec Reference**: specs/NNN-feature/spec.md
+**Spec Reference**: specs/[module]/NNN-feature/spec.md
 
 ---
 
