@@ -16,7 +16,7 @@ Add to `~/.claude/settings.json`:
 
 ## Canonical Flow
 
-`docs/sdd-workflow.md` is the authority for SDD orchestration. Proposed ADRs do not change this command; in particular, formal frontend E2E placement remains path-neutral while ADR-034 is Proposed. Each task must name its exact test file, and the applicable Accepted ADR plus the testing constitution decide formal E2E placement.
+`docs/sdd-workflow.md` is the authority for SDD orchestration. Proposed ADRs do not change this command. Formal full-stack E2E tests live in root `e2e/[module]/` (ADR-034, Accepted); each task must name its exact test file.
 
 ```text
 /superpowers:brainstorm

@@ -51,7 +51,7 @@ Skip spec-internal machinery (輸入與生成規則, 審查與驗收清單, 執�
 1. Load the `artifact-design` skill, then build the page in the **session scratchpad** (never inside the repo) as an Artifact-ready fragment: no `<!DOCTYPE>`/`<html>`/`<head>`/`<body>` wrapper, inline `<title>` and `<style>`, light/dark theme via CSS custom properties (same token pattern as pr-flow Step 7).
 2. **Header block (mandatory):** feature name · module · `本文件由 spec.md v<版本> 產生（<狀態>）· 以 spec 為準` · generation date. This line is what keeps the export honest — never omit it.
 3. Style: design-doc look — white background, dark-gray text, one accent color, monospace only for paths/identifiers, generous whitespace.
-4. Publish with the Artifact tool (favicon suggestion: 📋) and give the user the URL. On revision requests, edit the same file and republish — same path keeps the same URL.
+4. Publish with the Artifact tool (`icon`: one generic English word, e.g. `document`) and give the user the URL. On revision requests, edit the same file and republish — same path keeps the same URL.
 
 ## Step 5 — Report
 

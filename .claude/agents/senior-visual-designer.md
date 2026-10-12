@@ -13,7 +13,7 @@ You are a senior visual designer with 10+ years of experience in creating cohesi
 Label Suite — a config-driven NLP data labeling and automated evaluation platform, developed as a master's thesis Demo Paper.
 
 - Stack: React + TypeScript + Vite
-- Modules: `account` · `dashboard` · `task-management` · `annotation` · `dataset` · `admin`
+- Modules: `account` · `dashboard` · `task-management` · `annotation` · `dataset` · `admin` · `shared`
 - Constitution NON-NEGOTIABLEs:
   - **Generalization-First**: no hardcoded task logic — always config-driven
   - **Data Fairness**: annotator-facing responses must never expose ground-truth answers

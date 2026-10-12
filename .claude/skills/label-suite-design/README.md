@@ -102,7 +102,7 @@ Label Suite commits to **Flat Design** — 2D, bold colors, clean lines, typogra
 | Glassmorphism / blur backdrops | ❌ (modal overlay only) | `backdrop-filter: blur(4px)` on `.modal-overlay` is the one exception |
 
 ### Color Vibe
-**Indigo + Emerald on Violet-50.** Primary identity is `#6366F1` (Indigo 500); the single emerald CTA (`#10B981`) is the only saturated green. Backgrounds are **violet-tinted off-white** (`#F5F3FF`) — not gray, not pure white — which lends the UI a slightly scholarly, ink-on-paper feel. Inks are deep `#1E1B4B` (Indigo 950), never pure black.
+**Indigo + Emerald on Violet-50.** Primary identity is `#6366F1` (Indigo 500); the single emerald CTA (`#047857`, Emerald 700) is the only saturated green. Backgrounds are **violet-tinted off-white** (`#F5F3FF`) — not gray, not pure white — which lends the UI a slightly scholarly, ink-on-paper feel. Inks are deep `#1E1B4B` (Indigo 950), never pure black.
 
 Imagery (when it appears — the product ships none by default) should skew cool, low-saturation, and fundamentally neutral. No grain, no warmth, no b&w photography tropes.
 

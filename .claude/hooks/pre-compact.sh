@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# pre-compact.sh — Warn Claude to persist context entries before conversation compaction.
+# pre-compact.sh — PreCompact hook placeholder (allows compaction).
 #
 # Trigger:
 #   Registered as a PreCompact hook in .claude/settings.json; fires before /compact.
@@ -10,8 +10,6 @@
 #   Exit 0 = allow compaction to proceed; exit 2 = block compaction.
 #
 # How it works:
-#   Writes a warning to stderr reminding the agent to update relevant memory/ entries
-#   before the context window is compressed and prior messages are summarised.
-echo "⚠️  Pre-compact: update any relevant entries in memory/ before context is compressed." >&2
-echo "⚠️  Generator phase rule: if currently implementing a spec item, use /clear (full reset) instead of /compact — summaries corrupt Generator context." >&2
+#   Currently a no-op that allows compaction. The Generator-phase /clear rule lives in
+#   CLAUDE.md § Context management; the repo has no memory/ directory to remind about.
 exit 0

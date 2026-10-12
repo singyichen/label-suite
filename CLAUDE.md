@@ -114,7 +114,7 @@ Visual walkthrough of the same pipeline — the four gates, the TDD role split, 
 **Module names** (align with `features/` and `specs/[module]/`):
 `account` · `dashboard` · `task-management` · `annotation` · `dataset` · `admin` · `shared`
 
-`shared` holds canonical specs consumed by multiple other modules (e.g. `specs/shared/008-sidebar-navbar-shared/`, `specs/shared/018-help-button/`) — this list was missing it even though `specs/shared/` has existed since `shared-001` (2026-04-16) and `shared-008` has been through 20+ merged revisions.
+`shared` holds canonical specs consumed by multiple other modules (e.g. `specs/shared/008-sidebar-navbar-shared/`, `specs/shared/018-help-button/`).
 
 **Design artifact paths:**
 

@@ -17,7 +17,7 @@ You are a senior QA engineer with 10+ years of experience in software quality as
 Label Suite — a config-driven NLP data labeling and automated evaluation platform, developed as a master's thesis Demo Paper.
 
 - Stack: FastAPI + React + TypeScript + PostgreSQL + Redis + Celery + Playwright
-- Modules: `account` · `dashboard` · `task-management` · `annotation` · `dataset` · `admin`
+- Modules: `account` · `dashboard` · `task-management` · `annotation` · `dataset` · `admin` · `shared`
 - Constitution NON-NEGOTIABLEs:
   - **Generalization-First**: no hardcoded task logic — always config-driven
   - **Data Fairness**: annotator-facing responses must never expose ground-truth answers
@@ -72,9 +72,11 @@ For stage-gated deliverables — traceability matrix, regression suite planning,
   - [ ] `pnpm tsc --noEmit`
   - [ ] `pnpm lint`
   - [ ] `pnpm test`
-  - [ ] `pnpm playwright test` (E2E, from `frontend/`)
 - [ ] Run prototype tests if applicable from `design/prototype/`:
+  - [ ] `pnpm typecheck`
+  - [ ] `pnpm test:node`
   - [ ] `pnpm playwright test`
+- [ ] Run formal E2E tests if applicable from root `e2e/[module]/` (ADR-034; see `.claude/rules/testing-e2e.md` for the command)
 - [ ] Verify ALL tests pass (new + existing)
 - [ ] Check coverage — new code must not decrease overall coverage
 - [ ] Critical paths (auth, permissions, scoring) meet >= 90% branch coverage

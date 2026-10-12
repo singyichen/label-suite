@@ -1,6 +1,6 @@
 # Label Suite — Agent Rules
 
-> Full context: [CLAUDE.md](CLAUDE.md) · Constitution: [.specify/memory/constitution.md](.specify/memory/constitution.md)
+> Full context: [CLAUDE.md](CLAUDE.md) · Constitution: [specs/_governance/constitution.md](specs/_governance/constitution.md)
 
 ## Architecture Boundaries
 
@@ -12,7 +12,7 @@ design/wireframes/pages/[module]/  ← Pencil wireframes (.pen files; frozen 202
 design/prototype/pages/[module]/   ← HTML prototypes
 ```
 
-**Feature modules**: `account` · `dashboard` · `task-management` · `annotation` · `dataset` · `admin`
+**Feature modules**: `account` · `dashboard` · `task-management` · `annotation` · `dataset` · `admin` · `shared`
 
 **Architecture diagrams** — read the one covering your module before changing cross-module wiring. Each is a standalone HTML file (open it directly in a browser); the paired `.json` is the editable source, so change the `.json` and regenerate, never hand-edit the HTML.
 
@@ -142,7 +142,7 @@ uv run mypy .
 
 Do not modify without explicit instruction:
 - `CLAUDE.md`, `AGENTS.md` — project rule files
-- `.specify/memory/constitution.md` — use `/speckit.constitution` to amend
+- `specs/_governance/constitution.md` — use `/speckit.constitution` to amend
 
 ## Sub-agents
 

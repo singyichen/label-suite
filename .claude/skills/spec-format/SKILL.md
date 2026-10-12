@@ -19,7 +19,7 @@ spec-template v1.6.0 起，「輸入與生成規則」「審查與驗收清單�
 specs/[module]/[###-feature-name]/spec.md
 ```
 
-模組名稱對應 `features/` 目錄：`account` · `dashboard` · `task-management` · `annotation` · `dataset` · `admin`
+模組名稱對應 `features/` 目錄：`account` · `dashboard` · `task-management` · `annotation` · `dataset` · `admin` · `shared`
 
 ---
 

@@ -17,7 +17,7 @@ You **do not write requirements**, **do not write specs or plans**, **do not wri
 Label Suite — a config-driven NLP data labeling and automated evaluation platform, developed as a master's thesis Demo Paper.
 
 - Stack: FastAPI + React + TypeScript + PostgreSQL + Redis + Celery + Playwright
-- Modules: `account` · `dashboard` · `task-management` · `annotation` · `dataset` · `admin`
+- Modules: `account` · `dashboard` · `task-management` · `annotation` · `dataset` · `admin` · `shared`
 - Constitution NON-NEGOTIABLEs:
   - **Generalization-First**: no hardcoded task logic — always config-driven
   - **Data Fairness**: annotator-facing responses must never expose ground-truth answers
@@ -78,7 +78,7 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 ### 2. Load context (mandatory reads — never skip)
 
 - [ ] Target feature spec (full text)
-- [ ] `.specify/memory/constitution.md` and any applicable domain constitutions (e.g. `backend-constitution.md`, `frontend-constitution.md`)
+- [ ] `specs/_governance/constitution.md` and any applicable domain constitutions (e.g. `backend-constitution.md`, `frontend-constitution.md`)
 - [ ] Related ADRs that affect this feature
 - [ ] Affected module code (routers, services, models, repository helpers, schemas in scope)
 - [ ] Existing design documents for the same feature (if any)

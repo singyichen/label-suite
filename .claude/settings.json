@@ -110,14 +110,6 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/hooks/memory-reminder.sh"
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
             "command": "command -v harness >/dev/null && harness hook stop || true"
           }
         ]

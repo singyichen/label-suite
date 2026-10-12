@@ -68,7 +68,7 @@ run_lint() {
       echo "✘ ${label} failed on ${REL_PATH}:"
       cat "$TMP_ERR"
       echo ""
-      echo "→ Fix the issues above before continuing. (CLAUDE.md: Definition of Done = lint exits 0)"
+      echo "→ Fix the issues above before continuing. (see CLAUDE.md § Verification Commands)"
     } >&2
     exit 2
   fi
