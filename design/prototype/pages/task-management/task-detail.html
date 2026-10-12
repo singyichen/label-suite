@@ -10159,7 +10159,14 @@ function getTaskTypeLabel() {
   /* Both export buttons ran byte-identical bodies apart from the format
      string, the history label and the toast key; the duplication made any
      change to export-history bookkeeping a two-place edit. */
+  // Export is project_leader only (014 FR-024 / FR-009a; admin-007 dataset.export).
+  // Strict equality: any other role value means no export (#1265).
+  function canExportResults() {
+    return state.taskRole === 'project_leader';
+  }
+
   function performArExport(format, seqOptions) {
+    if (!canExportResults()) return;
     var conditions = buildArConditionsFromState();
     var samples = getArFilteredSamples(conditions);
     var exportedAt = downloadArExport(format, conditions, seqOptions);
@@ -10198,7 +10205,7 @@ function getTaskTypeLabel() {
       stage: conditions.runStage,
       count: samples.length,
       scope: conditions.annotatorScope === 'all' ? '__all__' : conditions.annotatorScope,
-      exportedBy: 'Mandy',
+      exportedBy: getExportedByName(),
       format: format === 'json' ? 'JSON' : 'JSON-MIN',
       conditionsSnapshot: conditionsSnapshot
     });
@@ -10324,6 +10331,7 @@ function getTaskTypeLabel() {
      default scheme/unit (BIO/character) rather than remembering the last
      selection, per issue #742 task 1.6 spec. */
   function openArSeqExportModal(format, triggerEl) {
+    if (!canExportResults()) return;
     state.arSeqExportFormat = format;
     renderArSeqExportOptions();
     updateArSeqExportTokenizerVisibility();
@@ -10611,6 +10619,8 @@ function getTaskTypeLabel() {
   }
 
   function renderAnnotationResults() {
+    var arExportSection = document.getElementById('arExportSection');
+    if (arExportSection) arExportSection.classList.toggle('hidden', !canExportResults());
     var arStageSelect = document.getElementById('arStageSelect');
     var arStatusSelect = document.getElementById('arStatusSelect');
     if (arStageSelect) arStageSelect.value = state.arStage;
@@ -11602,11 +11612,13 @@ document.getElementById('memberProgressSort').addEventListener('change', functio
     });
 
     document.getElementById('arExportJsonBtn').addEventListener('click', function(e) {
+      if (!canExportResults()) return;
       if (taskHasSequenceTaggingOutput()) { openArSeqExportModal('json', e.currentTarget); return; }
       performArExport('json');
     });
 
     document.getElementById('arExportJsonMinBtn').addEventListener('click', function(e) {
+      if (!canExportResults()) return;
       if (taskHasSequenceTaggingOutput()) { openArSeqExportModal('json-min', e.currentTarget); return; }
       performArExport('json-min');
     });
