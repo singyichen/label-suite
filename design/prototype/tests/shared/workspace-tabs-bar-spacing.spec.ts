@@ -14,7 +14,8 @@
  * tab width, overview trigger placement/clickability, 375px) already hold
  * today and must stay green.
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { tabBar, workspaceTabs, setDesktopViewport } from './_workspace-tabs-helpers';
 
 const TOLERANCE_PX = 1;

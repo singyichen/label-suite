@@ -1,4 +1,5 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { skipGuidelineModal } from './_workspace-helpers';
 
 /* issue #922: on the project-leader final-exception-disposition screen of

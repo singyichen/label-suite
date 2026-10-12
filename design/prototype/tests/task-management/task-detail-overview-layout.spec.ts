@@ -25,7 +25,8 @@
  *
  * Every geometry / visibility check waits for #loadingSkeleton to be hidden first.
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { openSettingsSection } from './_task-detail-settings-helpers';
 
 const BASE = '/pages/task-management/task-detail.html';

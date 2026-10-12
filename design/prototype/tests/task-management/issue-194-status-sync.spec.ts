@@ -4,7 +4,7 @@
  * Traceability: specs/task-management/014-task-detail/spec.md
  *   SC-019
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 /* Issue #194: T003 is seeded as an in-progress official run in the
  * dashboard's annotator/reviewer assignment seeds

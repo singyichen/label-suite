@@ -19,7 +19,7 @@
  * a page just to reach it from a test would add a product file the task does
  * not own.
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import type { Page } from '@playwright/test';
 
 const HOST_URL = '/pages/dataset/dataset-analysis-detail.html?task_id=T006&tab=stats';

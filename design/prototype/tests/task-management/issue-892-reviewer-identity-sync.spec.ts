@@ -5,7 +5,8 @@
  * These are hand-checked public demo outcomes, not expectations computed by
  * the task-detail builder under test.
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { buildListUrl, patchDataFile } from '../annotation/_workspace-helpers';
 
 const DETAIL_URL = '/pages/task-management/task-detail.html?task_id=T016&tab=annotation-results';

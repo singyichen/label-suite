@@ -60,7 +60,7 @@
  * already captured via `pagehide`, without this suite having to drive a
  * real confirm dialog during setup.
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { workspaceTabs, closeButton, readWorkspaceTabState, setDesktopViewport } from './_workspace-tabs-helpers';
 import { buildWorkspaceUrl, gotoReviewerWorkspace, skipGuidelineModal } from '../annotation/_workspace-helpers';
 

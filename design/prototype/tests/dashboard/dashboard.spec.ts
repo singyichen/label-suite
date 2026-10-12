@@ -8,7 +8,8 @@
  *   - Language toggle updates the document language state
  *   - Responsive rendering at 375px / 768px / 1440px
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 
 const DASHBOARD_URL = '/pages/dashboard/dashboard.html';
 

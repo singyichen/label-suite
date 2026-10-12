@@ -26,7 +26,8 @@
  * anywhere in the assignment table, and toggling `reviewer_ids` from
  * Overview does not redistribute anything.
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { openSettingsSection } from './_task-detail-settings-helpers';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';

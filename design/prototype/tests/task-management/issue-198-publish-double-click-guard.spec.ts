@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html?task_id=T001';
 

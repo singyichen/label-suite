@@ -1,4 +1,5 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 
 /* Issue #815 (OpenSpec change retire-stale-review-demo-fixtures) task 2.1,
  * PR-815-B. tasks.md 2.1 pins three things about the review-flow demo task

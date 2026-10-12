@@ -61,7 +61,8 @@
  *     project's "not a silent deletion" convention for modifying a locked
  *     Red/Green contract, not duplicated here.
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { workspaceTabs, closeButton, readWorkspaceTabState, setDesktopViewport } from './_workspace-tabs-helpers';
 import { buildWorkspaceUrl, skipGuidelineModal } from '../annotation/_workspace-helpers';
 

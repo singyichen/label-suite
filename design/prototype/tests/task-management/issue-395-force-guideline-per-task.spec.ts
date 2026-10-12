@@ -20,7 +20,7 @@
  * for that task (it reads the same field from the same file), which is out
  * of scope for this task-management-only fix.
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { patchDataFile } from '../annotation/_workspace-helpers';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';

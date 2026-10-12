@@ -13,7 +13,7 @@
  * sibling container -- not nested inside `.preview-bypass-row` -- while the
  * actual answer Bypass chip stays exactly where it is.
  */
-import { expect, test } from '@playwright/test';
+import { expect, test } from '../fixtures';
 import { dismissGuidelineModal, gotoReviewerWorkspace, skipGuidelineModal } from './_workspace-helpers';
 
 test.beforeEach(async ({ page }) => {

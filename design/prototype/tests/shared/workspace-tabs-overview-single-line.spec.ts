@@ -19,7 +19,8 @@
  * `title` attribute today; the row label is checked for real truncation by
  * scrollWidth > clientWidth instead.
  */
-import { test, expect, type Locator, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Locator, Page } from '@playwright/test';
 import { workspaceTabs, setDesktopViewport } from './_workspace-tabs-helpers';
 import { buildWorkspaceUrl } from '../annotation/_workspace-helpers';
 

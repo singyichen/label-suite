@@ -57,7 +57,7 @@
  * strings in this test file, so the comparison is against whatever the list
  * page actually displays today, not a copy that could itself drift.
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { buildListUrl } from './_workspace-helpers';
 
 interface ReviewUnit {

@@ -54,7 +54,7 @@
  *   `ws-review-not-assigned`, mirrors the existing OFF_ROSTER branch's
  *   `ws-review-off-roster`).
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { buildWorkspaceUrl, skipGuidelineModal, trackPageErrors, assertNoPageErrors } from './_workspace-helpers';
 
 /* Same known static-server <script src> flake guard as the sibling

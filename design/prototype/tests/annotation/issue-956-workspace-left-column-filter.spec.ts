@@ -28,7 +28,8 @@
  * column still shows the full unfiltered unit set instead of exactly the one
  * unit chen may arbitrate (c).
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import {
   buildWorkspaceUrl,
   skipGuidelineModal,

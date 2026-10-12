@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { buildListUrl } from './_workspace-helpers';
 
 /* Text snippet clamp + expand toggle (issue #188, spec 015 FR-007I).

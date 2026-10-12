@@ -1,4 +1,5 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import path from 'path';
 
 /* issue #811 (RED), group 2 (tasks.md 2.1): task-config.data.js `BYPASS_FIELD`,

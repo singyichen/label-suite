@@ -40,7 +40,7 @@
  * its own task/run_type/reviewer scenario from the full demo dataset via
  * page.evaluate(), so which task the page happens to open on is irrelevant.
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { buildListUrl } from './_workspace-helpers';
 
 interface ReviewUnit {

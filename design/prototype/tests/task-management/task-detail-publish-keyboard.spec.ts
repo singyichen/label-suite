@@ -2,7 +2,7 @@
  * Traceability: specs/task-management/014-task-detail/spec.md
  *   FR-008, FR-013
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { openGateSatisfiedT016 } from './_completion-gate-helpers';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html?task_id=T001';

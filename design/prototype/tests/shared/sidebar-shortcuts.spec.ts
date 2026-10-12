@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 test.describe('Shared sidebar shortcut entry', () => {
   test('shows a desktop utility keyboard button that opens page shortcuts', async ({ page }) => {

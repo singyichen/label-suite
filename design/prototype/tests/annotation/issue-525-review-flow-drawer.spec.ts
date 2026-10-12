@@ -23,7 +23,8 @@
  * moves nothing -- is unchanged; only the node list and the fixtures the
  * banner/card assertions read had to follow.
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { buildWorkspaceUrl, gotoReviewerWorkspace, skipGuidelineModal } from './_workspace-helpers';
 
 /** T016: official_run, annotator kioleemg12. issue #596: ofm-02's sole

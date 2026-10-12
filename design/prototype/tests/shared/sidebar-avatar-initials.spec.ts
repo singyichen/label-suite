@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 test.describe('Shared sidebar avatar initials', () => {
   test('shows initials of the current user name instead of the hardcoded "U" default', async ({ page }) => {

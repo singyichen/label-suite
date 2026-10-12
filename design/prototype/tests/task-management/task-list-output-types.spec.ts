@@ -3,7 +3,7 @@
  *   FR-004aa, FR-004aaa, FR-004aae, FR-008c, FR-011, FR-011a, FR-011c,
  *   SC-010, SC-011, SC-012, SC-013
  */
-import { expect, test } from '@playwright/test';
+import { expect, test } from '../fixtures';
 
 const TASK_LIST_URL =
   '/pages/task-management/task-list.html?task_role=super_admin';

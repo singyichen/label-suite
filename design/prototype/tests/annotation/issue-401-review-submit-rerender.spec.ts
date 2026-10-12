@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { gotoReviewerWorkspace, skipGuidelineModal } from './_workspace-helpers';
 
 /* Reviewer submit re-render (issue #401, RV-06).

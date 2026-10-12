@@ -56,7 +56,8 @@
  * assertions exist in this file -- all G2b. `workspace-tabs-mobile.spec.ts`
  * is untouched and keeps covering the mobile dropdown unmodified.
  */
-import { test, expect, type Locator, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Locator, Page } from '@playwright/test';
 import { tabBar, readWorkspaceTabState, setDesktopViewport } from './_workspace-tabs-helpers';
 import { buildWorkspaceUrl, skipGuidelineModal } from '../annotation/_workspace-helpers';
 

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 /**
  * Red test for openspec/changes/1075-workspace-tabs-shared-008 FR-016H,

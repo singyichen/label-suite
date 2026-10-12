@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 test.describe('Shared sidebar userName escaping (issue #946)', () => {
   test('renders a malicious userName as literal text instead of parsing it as markup on initial mount', async ({ page }) => {

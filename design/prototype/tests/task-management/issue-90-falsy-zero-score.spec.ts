@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 /**
  * Issue #90: `score_min || 1` / `score_step || 1` / `score_max || 1` treat an

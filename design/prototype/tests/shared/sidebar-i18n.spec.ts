@@ -76,7 +76,8 @@
  *   FR-009, FR-009A, FR-009B, FR-020, FR-020A, FR-021,
  *   SC-006, SC-006A, SC-013, SC-013A, SC-014
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { buildListUrl, buildWorkspaceUrl, skipGuidelineModal } from '../annotation/_workspace-helpers';
 
 type Lang = 'zh' | 'en';

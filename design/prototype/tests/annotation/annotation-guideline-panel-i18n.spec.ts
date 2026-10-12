@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { buildWorkspaceUrl, dismissGuidelineModal } from './_workspace-helpers';
 
 /* w6-resilience-a11y.md I18N-02: the guideline area's UI chrome -- the two

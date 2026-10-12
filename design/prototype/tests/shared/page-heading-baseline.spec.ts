@@ -7,7 +7,8 @@
  * Traceability: specs/shared/008-sidebar-navbar-shared/spec.md
  *   FR-017, SC-010
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 
 const BASELINE_URL = '/pages/dashboard/dashboard.html';
 

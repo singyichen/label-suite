@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { buildWorkspaceUrl, dismissGuidelineModal, skipGuidelineModal } from '../annotation/_workspace-helpers';
 
 /* w6-resilience-a11y.md I18N-01: the global language choice is stored under

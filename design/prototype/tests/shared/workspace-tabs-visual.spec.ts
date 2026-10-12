@@ -45,7 +45,8 @@
  *     brief (tasks.md 1.5/1.7), not dropped; each has its own comment
  *     explaining why it is a guard rather than new Red content.
  */
-import { test, expect, type Locator } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Locator } from '@playwright/test';
 import { workspaceTabs, setDesktopViewport } from './_workspace-tabs-helpers';
 import { buildWorkspaceUrl, skipGuidelineModal } from '../annotation/_workspace-helpers';
 

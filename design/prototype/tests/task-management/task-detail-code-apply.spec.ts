@@ -13,7 +13,8 @@
  * Expected on current code: label, live validation, toast text, unapplied-save hint, English strings
  * and the 設定檔 label fail; the backfill / not-persisted / header-save cases already pass.
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { openSettingsSection } from './_task-detail-settings-helpers';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';

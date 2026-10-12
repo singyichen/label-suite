@@ -2,7 +2,7 @@
  * Traceability: specs/task-management/013-task-new/spec.md
  *   FR-002c-2
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import path from 'path';
 
 const TASK_NEW_URL = '/pages/task-management/task-new.html';

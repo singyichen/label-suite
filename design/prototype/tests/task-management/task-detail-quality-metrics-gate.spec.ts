@@ -23,7 +23,8 @@
  * pending/failed cases are expected RED (button enabled, no reason) while the done / no-status
  * cases are regression guards that already pass.
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 const TRIAL_RUN_STATE_KEY = 'labelsuite.trialRunState';

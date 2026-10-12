@@ -3,7 +3,8 @@
  * are different measures. Keep FR-072/FR-076's shared reviewer summary while
  * making the surrounding Dashboard and Task Detail UI name each measure.
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { patchDataFile } from '../annotation/_workspace-helpers';
 
 const DASHBOARD_URL = '/pages/dashboard/dashboard.html?scenario=reviewer';

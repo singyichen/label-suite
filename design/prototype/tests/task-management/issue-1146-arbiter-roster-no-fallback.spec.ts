@@ -13,7 +13,8 @@
  * (only task-detail's member table does), so stale-id filtering is pinned
  * against REVIEWER_ROSTER membership.
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { buildListUrl } from '../annotation/_workspace-helpers';
 import { TASK_DETAIL_URL } from './_dry-run-completion-helpers';
 

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { buildListUrl, buildWorkspaceUrl, fillArbitrationReasons, skipGuidelineModal } from './_workspace-helpers';
 
 type WorkspaceData = {
