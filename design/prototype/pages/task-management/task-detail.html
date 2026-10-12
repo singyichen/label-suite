@@ -2314,6 +2314,7 @@
       guidelineSaveBtn: '儲存',
       guidelineCancelBtn: '取消',
       guidelineReadonlyRoleOnly: '目前為唯讀角色，僅 project leader 可編輯標記說明。',
+      guidelineReadonlyStatusOnly: '任務已離開草稿狀態，無法再編輯標記說明。',
       guidelineOptionalNoticeText: '此步驟為選填。不上傳說明，仍可完成任務建立。',
       annotatorGuidelineUploadLabel: '上傳檔案',
       reviewerGuidelineUploadLabel: '上傳檔案',
@@ -2335,6 +2336,7 @@
       overviewCancelBtn: '取消',
       overviewEditHint: '',
       overviewReadonlyRoleOnly: '目前為唯讀角色，僅 project leader 可編輯基本資料。',
+      overviewReadonlyStatusOnly: '任務已離開草稿狀態，無法再編輯基本資料。',
       overviewReadonlyDraftOnly: '',
       overviewSaveSuccess: '基本資料已更新',
       overviewLeaveConfirm: '你有尚未儲存的基本資訊變更，確定要離開編輯模式嗎？',
@@ -2345,6 +2347,7 @@
       settingsSaveBtn: '儲存',
       settingsCancelBtn: '取消',
       settingsReadonlyRoleOnly: '目前為唯讀角色，僅 project leader 可編輯標記設定。',
+      settingsReadonlyStatusOnly: '任務已離開草稿狀態，無法再編輯標記設定。',
       settingsAnnotationPreviewLabel: '標記預覽',
       settingsTemplateSectionTitle: '從範本開始或者上傳設定檔',
       settingsUploadConfigBtn: '上傳設定檔（YAML / JSON）',
@@ -2366,6 +2369,7 @@
       samplingSaveBtn: '儲存',
       samplingCancelBtn: '取消',
       samplingReadonlyRoleOnly: '目前為唯讀角色，僅 project leader 可編輯抽樣設定。',
+      samplingReadonlyStatusOnly: '任務已離開草稿狀態，無法再編輯抽樣設定。',
       samplingSaveSuccess: '抽樣設定已更新',
       samplingLeaveConfirm: '你有尚未儲存的抽樣設定變更，確定要離開編輯模式嗎？',
       reviewSettingsTitle: '審核設定',
@@ -2385,6 +2389,7 @@
       reviewSettingsErrorNoAssignableReviewer: '請至少保留一位未被指定為仲裁者的審核員。',
       reviewLeaveConfirm: '你有尚未儲存的審核設定變更，確定要離開編輯模式嗎？',
       reviewReadonlyRoleOnly: '目前為唯讀角色，僅 project leader 可編輯審核設定。',
+      reviewReadonlyStatusOnly: '任務已離開草稿狀態，無法再編輯審核設定。',
       reviewSaveSuccess: '審核設定已更新',
       metricRoundLabel: '目前回合',
       metricTrialUsedLabel: '已用試標',
@@ -2861,6 +2866,7 @@
       guidelineSaveBtn: 'Save',
       guidelineCancelBtn: 'Cancel',
       guidelineReadonlyRoleOnly: 'Read-only role. Only project leader can edit guideline.',
+      guidelineReadonlyStatusOnly: 'Task is no longer in draft. Guideline can no longer be edited.',
       guidelineOptionalNoticeText: 'This step is optional. You can create the task without uploading guidelines.',
       annotatorGuidelineUploadLabel: 'Upload files',
       reviewerGuidelineUploadLabel: 'Upload files',
@@ -2882,6 +2888,7 @@
       overviewCancelBtn: 'Cancel',
       overviewEditHint: '',
       overviewReadonlyRoleOnly: 'Read-only role. Only project leader can edit task basics.',
+      overviewReadonlyStatusOnly: 'Task is no longer in draft. Task basics can no longer be edited.',
       overviewReadonlyDraftOnly: '',
       overviewSaveSuccess: 'Task basics updated',
       overviewLeaveConfirm: 'You have unsaved task basics changes. Leave edit mode?',
@@ -2890,6 +2897,7 @@
       settingsSaveBtn: 'Save',
       settingsCancelBtn: 'Cancel',
       settingsReadonlyRoleOnly: 'Read-only role. Only project leader can edit label settings.',
+      settingsReadonlyStatusOnly: 'Task is no longer in draft. Label settings can no longer be edited.',
       settingsAnnotationPreviewLabel: 'Annotation preview',
       settingsTemplateSectionTitle: 'Start from template or upload config',
       settingsUploadConfigBtn: 'Upload config (YAML / JSON)',
@@ -2911,6 +2919,7 @@
       samplingSaveBtn: 'Save',
       samplingCancelBtn: 'Cancel',
       samplingReadonlyRoleOnly: 'Read-only role. Only project leader can edit sampling settings.',
+      samplingReadonlyStatusOnly: 'Task is no longer in draft. Sampling settings can no longer be edited.',
       samplingSaveSuccess: 'Sampling settings updated',
       samplingLeaveConfirm: 'You have unsaved sampling changes. Leave edit mode?',
       reviewSettingsTitle: 'Review Settings',
@@ -2930,6 +2939,7 @@
       reviewSettingsErrorNoAssignableReviewer: 'Keep at least one reviewer who is not designated as an arbiter.',
       reviewLeaveConfirm: 'You have unsaved review-setting changes. Leave edit mode?',
       reviewReadonlyRoleOnly: 'Read-only role. Only project leader can edit review settings.',
+      reviewReadonlyStatusOnly: 'Task is no longer in draft. Review settings can no longer be edited.',
       reviewSaveSuccess: 'Review settings updated',
       metricRoundLabel: 'Current round',
       metricTrialUsedLabel: 'Trial used',
@@ -6445,6 +6455,8 @@ function getTaskTypeLabel() {
 
     if (!editable && state.taskRole !== 'project_leader') {
       hint.textContent = t('overviewReadonlyRoleOnly');
+    } else if (!editable) {
+      hint.textContent = t('overviewReadonlyStatusOnly');
     } else {
       hint.textContent = '';
     }
@@ -6587,6 +6599,11 @@ function getTaskTypeLabel() {
     if (!editable && state.taskRole !== 'project_leader') {
       hint.classList.remove('hidden');
       hint.textContent = t('samplingReadonlyRoleOnly');
+      return;
+    }
+    if (!editable) {
+      hint.classList.remove('hidden');
+      hint.textContent = t('samplingReadonlyStatusOnly');
       return;
     }
     hint.classList.add('hidden');
@@ -6809,6 +6826,11 @@ function getTaskTypeLabel() {
     if (!editable && state.taskRole !== 'project_leader') {
       hint.classList.remove('hidden');
       hint.textContent = t('reviewReadonlyRoleOnly');
+      return;
+    }
+    if (!editable) {
+      hint.classList.remove('hidden');
+      hint.textContent = t('reviewReadonlyStatusOnly');
       return;
     }
     hint.classList.add('hidden');
@@ -7049,6 +7071,11 @@ function getTaskTypeLabel() {
       hint.textContent = t('guidelineReadonlyRoleOnly');
       return;
     }
+    if (!editable) {
+      hint.classList.remove('hidden');
+      hint.textContent = t('guidelineReadonlyStatusOnly');
+      return;
+    }
     hint.classList.add('hidden');
     hint.textContent = '';
   }
@@ -7231,6 +7258,11 @@ function getTaskTypeLabel() {
     if (!editable && state.taskRole !== 'project_leader') {
       hint.classList.remove('hidden');
       hint.textContent = t('settingsReadonlyRoleOnly');
+      return;
+    }
+    if (!editable) {
+      hint.classList.remove('hidden');
+      hint.textContent = t('settingsReadonlyStatusOnly');
       return;
     }
     hint.classList.add('hidden');
