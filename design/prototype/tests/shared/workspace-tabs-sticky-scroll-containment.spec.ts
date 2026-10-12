@@ -11,7 +11,7 @@
  * the contract itself (containment) and is acceptable here because the
  * contract IS the containment.
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { tabBar, setDesktopViewport } from './_workspace-tabs-helpers';
 
 const WORKSPACE_URL =

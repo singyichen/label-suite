@@ -10,7 +10,8 @@
  *
  * Behaviour assertions only: bar viewport geometry and window.scrollY.
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { tabBar, workspaceTabs, setDesktopViewport } from './_workspace-tabs-helpers';
 
 const TOLERANCE_PX = 1;
