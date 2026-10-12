@@ -10,7 +10,7 @@ Map requirements through the SDD artifact chain: User Story → Acceptance Crite
 ## Usage
 
 ```
-/traceability-matrix specs/001-annotation-submission/
+/traceability-matrix specs/annotation/001-annotation-submission/
 /traceability-matrix --all    # Full project traceability
 ```
 
@@ -19,7 +19,7 @@ Map requirements through the SDD artifact chain: User Story → Acceptance Crite
 ```markdown
 # Requirements Traceability Matrix
 
-**Scope**: specs/NNN-feature/
+**Scope**: specs/[module]/NNN-feature/
 **Date**: YYYY-MM-DD
 
 ---
@@ -28,10 +28,10 @@ Map requirements through the SDD artifact chain: User Story → Acceptance Crite
 
 | US ID | AC ID | Spec File | Implementation File | Test File | Test Type | Status |
 |-------|-------|-----------|---------------------|-----------|-----------|--------|
-| US-01 | AC-01 | spec.md | routers/submissions.py:45 | test_submissions.py:23 | pytest | ✅ |
-| US-01 | AC-02 | spec.md | services/scoring.py:67 | test_scoring.py:89 | pytest | ✅ |
-| US-02 | AC-03 | spec.md | components/TaskForm.tsx:34 | annotation.spec.ts:12 | Playwright | ✅ |
-| US-02 | AC-04 | spec.md | components/TaskForm.tsx:78 | annotation.spec.ts:45 | Playwright | ❌ MISSING |
+| US-01 | AC-1.1 | spec.md | routers/submissions.py:45 | test_submissions.py:23 | pytest | ✅ |
+| US-01 | AC-1.2 | spec.md | services/scoring.py:67 | test_scoring.py:89 | pytest | ✅ |
+| US-02 | AC-1.3 | spec.md | components/TaskForm.tsx:34 | annotation.spec.ts:12 | Playwright | ✅ |
+| US-02 | AC-1.4 | spec.md | components/TaskForm.tsx:78 | annotation.spec.ts:45 | Playwright | ❌ MISSING |
 
 ---
 
@@ -39,8 +39,8 @@ Map requirements through the SDD artifact chain: User Story → Acceptance Crite
 
 | Test File | Test Name | AC ID | US ID |
 |-----------|-----------|-------|-------|
-| test_scoring.py:89 | `test_f1_score_binary` | AC-02 | US-01 |
-| annotation.spec.ts:12 | `annotator can submit predictions` | AC-03 | US-02 |
+| test_scoring.py:89 | `test_f1_score_binary` | AC-1.2 | US-01 |
+| annotation.spec.ts:12 | `annotator can submit predictions` | AC-1.3 | US-02 |
 
 ---
 
@@ -56,8 +56,8 @@ Map requirements through the SDD artifact chain: User Story → Acceptance Crite
 
 | AC ID | Description | Priority | Missing Test |
 |-------|-------------|----------|-------------|
-| AC-04 | Annotator sees confirmation after submission | P1 | Playwright E2E |
-| AC-05 | Scoring completes within 30 seconds | P1 | Performance test |
+| AC-1.4 | Annotator sees confirmation after submission | P1 | Playwright E2E |
+| AC-1.5 | Scoring completes within 30 seconds | P1 | Performance test |
 
 ---
 
