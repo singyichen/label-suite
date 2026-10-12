@@ -17,6 +17,11 @@ test.describe('Risk confirm modal keyboard focus management (A11Y-02, #riskModal
   async function openRiskModal(page: import('@playwright/test').Page) {
     await page.goto('/pages/task-management/task-detail.html?task_id=T001&status=draft');
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: 15000 });
+    /* The page re-renders the overview (replacing #publishDryRunBtn) once its
+     * loading skeleton timer fires. Under parallel load that timer can fire after
+     * the modal opened, detaching the stored trigger so focus has nowhere to
+     * return to (#1234). Wait for the skeleton to finish first. */
+    await expect(page.locator('#loadingSkeleton')).toBeHidden();
     await openSettingsSection(page, 'sampling');
     await page.locator('#samplingEditBtn').click();
     await page.locator('label[for="isolationToggle"]').click();
