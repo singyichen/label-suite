@@ -65,7 +65,8 @@
  * declared MUST-verbatim strings, so this suite only asserts the LIVE
  * COUNT N appears, never exact wording.
  */
-import { test, expect, type Locator, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Locator, Page } from '@playwright/test';
 import { tabBar, readWorkspaceTabState, setDesktopViewport } from './_workspace-tabs-helpers';
 import { buildWorkspaceUrl, skipGuidelineModal } from '../annotation/_workspace-helpers';
 

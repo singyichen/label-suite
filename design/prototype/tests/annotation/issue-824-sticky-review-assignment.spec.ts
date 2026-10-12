@@ -34,7 +34,8 @@
  * still-pending T015 unit (bullets 2/3, which need real navigation through
  * annotation-list.html / annotation-workspace.html).
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import {
   buildListUrl,
   buildWorkspaceUrl,

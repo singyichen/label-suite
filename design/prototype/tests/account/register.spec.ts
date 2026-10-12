@@ -16,7 +16,7 @@
  *   - US1.2  Newly registered account can log in and reach /dashboard
  *   - US1.4  Already-logged-in user redirected to /dashboard
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 const REGISTER_URL = '/pages/account/register.html';
 

@@ -11,7 +11,7 @@
  * Traceability: specs/dashboard/012-dashboard/spec.md
  *   FR-007B, FR-008F, FR-009A1, SC-025
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 const DASHBOARD_URL = '/pages/dashboard/dashboard.html';
 

@@ -29,7 +29,8 @@
  *   design.md D3 — pure component-contract rules (roving tabindex, Esc
  *     discard, 375px RWD ceiling) not yet phrased as their own spec scenario.
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 
 const SHOWCASE_URL = '/components-showcase.html';
 const TRIGGER_ID = 'showcaseDateRangeTrigger';

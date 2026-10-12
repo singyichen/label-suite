@@ -10,7 +10,8 @@
  * loaded task catalog, or reintroduce the multi-reviewer vocabulary
  * (多數決 / 審核員人數 / min_reviewers) that the single-owner relay retired.
  */
-import { expect, test, type Locator, type Page } from '@playwright/test';
+import { expect, test } from '../fixtures';
+import type { Locator, Page } from '@playwright/test';
 
 const TASKS = [
   {

@@ -1,4 +1,5 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { buildReviewerWorkspaceUrl, buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
 
 /* The four workspace shortcuts the sidebar panel advertises (issue #152).

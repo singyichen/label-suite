@@ -33,7 +33,8 @@
  * to fix here: it reflects real current render state, and the geometry
  * test is this suite's authoritative proof for these two pages.
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { tabBar, setDesktopViewport } from './_workspace-tabs-helpers';
 
 // 0.5*10^0 would be the jest-style toBeCloseTo(_, 0) tolerance used

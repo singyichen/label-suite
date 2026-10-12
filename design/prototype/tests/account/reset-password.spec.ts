@@ -18,7 +18,7 @@
  *   - FR-006  bcrypt hash stored, old password invalid after reset
  *   - Already-logged-in user redirected to /dashboard
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 const RESET_URL = '/pages/account/reset-password.html';
 

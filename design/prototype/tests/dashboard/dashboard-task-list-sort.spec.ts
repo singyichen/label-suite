@@ -13,7 +13,7 @@
  * issue #815: T017 (review-flow-official-tie) is retired; the 100%-progress
  * annotator tie group below shrinks from [T014, T016, T017] to [T014, T016].
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 const DASHBOARD_URL = '/pages/dashboard/dashboard.html';
 

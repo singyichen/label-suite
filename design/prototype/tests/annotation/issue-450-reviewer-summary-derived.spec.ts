@@ -34,7 +34,8 @@
  * MATRIX and per-task numbers below are updated to the resulting counts --
  * this is the product's finished behavior, not a terminology-only rename.
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { buildListUrl, buildWorkspaceUrl, gotoReviewerWorkspace, skipGuidelineModal } from './_workspace-helpers';
 
 type Summary = {

@@ -14,7 +14,7 @@
  * (TDD Green). The three-group selector regression case is unchanged
  * capability and must stay green throughout.
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import path from 'path';
 
 const TASK_NEW_URL = '/pages/task-management/task-new.html';

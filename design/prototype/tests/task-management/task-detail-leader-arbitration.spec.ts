@@ -37,7 +37,8 @@
  * assertions are: the section lists exactly the awaitingArbitration set, and submitLeaderAdjudication
  * refuses a unit whose reviewer has not submitted (pending).
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { openSettingsSection } from './_task-detail-settings-helpers';
 import { promises as fs } from 'node:fs';
 import { buildWorkspaceUrl, skipGuidelineModal } from '../annotation/_workspace-helpers';

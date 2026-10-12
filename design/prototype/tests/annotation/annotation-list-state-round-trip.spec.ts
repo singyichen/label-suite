@@ -18,7 +18,8 @@
  * 5 records while the smallest page size is 20, so page 2 is unreachable
  * through the UI and only the deep-link case below exercises it.
  */
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { buildListUrl, buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
 
 const LIST = buildListUrl({ task_id: 'T014', role: 'annotator', run_type: 'dry_run' });

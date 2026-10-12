@@ -9,7 +9,7 @@
  *     (#B91C1C / #15803D / #FEE2E2 / #D1FAE5) that go near-invisible on
  *     their dark panel grounds; canonical tokens flip automatically
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 const AUTH_PAGES = [
   { name: 'login', url: '/pages/account/login.html' },

@@ -38,7 +38,7 @@
  *     while pending/failed (asserted here as "does not start with a digit",
  *     since the exact placeholder copy is Green's choice).
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 const T018_ID = 'T018';

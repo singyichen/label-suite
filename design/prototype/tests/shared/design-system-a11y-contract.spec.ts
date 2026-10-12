@@ -47,7 +47,8 @@
  *   - measureContrast() stops reading the live element and silently reports a
  *     stale ratio, which would make every contrast row above vacuous.
  */
-import { test, expect, type Locator, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Locator, Page } from '@playwright/test';
 import path from 'path';
 import { buildWorkspaceUrl, dismissGuidelineModal } from '../annotation/_workspace-helpers';
 

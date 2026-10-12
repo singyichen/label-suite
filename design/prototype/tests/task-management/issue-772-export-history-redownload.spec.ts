@@ -49,7 +49,8 @@
  * exported_at), which is a separate concern from the equality check.
  */
 import { promises as fsp } from 'node:fs';
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 
 declare global {
   interface Window {

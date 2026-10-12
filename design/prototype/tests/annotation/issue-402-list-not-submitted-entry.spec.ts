@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { buildListUrl } from './_workspace-helpers';
 
 /* Unreconciled sample count / missing entry for not-submitted units

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { buildListUrl } from './_workspace-helpers';
 
 /* Issue #489: the same T014 dry run reported four different hardcoded IAA

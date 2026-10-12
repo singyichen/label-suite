@@ -12,7 +12,7 @@
  * than the answer chip they sit beside (`ws-single-label-chip-positive`,
  * ~107.9x44.5px = ~4800px^2).
  */
-import { expect, test } from '@playwright/test';
+import { expect, test } from '../fixtures';
 import { dismissGuidelineModal, gotoReviewerWorkspace, skipGuidelineModal } from './_workspace-helpers';
 
 const DECISION_TESTIDS = ['ws-review-row-approve', 'ws-review-row-modify', 'ws-review-row-bypass'] as const;

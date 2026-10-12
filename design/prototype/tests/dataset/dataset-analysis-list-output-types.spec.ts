@@ -2,7 +2,8 @@
  * Traceability: specs/dataset/016-dataset-analysis-list/spec.md
  *   FR-003, FR-004B, FR-004C, FR-005A, FR-005D, FR-007, FR-008, SC-008
  */
-import { expect, test, type Locator } from '@playwright/test';
+import { expect, test } from '../fixtures';
+import type { Locator } from '@playwright/test';
 
 const DATASET_ANALYSIS_URL =
   '/pages/dataset/dataset-analysis-list.html';

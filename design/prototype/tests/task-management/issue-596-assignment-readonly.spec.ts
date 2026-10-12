@@ -54,7 +54,8 @@
  *       chosen so Green's warning does not need to race the toast timer.
  * ---------------------------------------------------------------------
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 

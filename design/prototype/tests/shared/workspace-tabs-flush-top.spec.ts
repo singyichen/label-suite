@@ -13,7 +13,8 @@
  * hold today (overview trigger geometry, 375px no horizontal scroll) are
  * kept as locked-in regression guards, not new Red content.
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { tabBar, workspaceTabs, setDesktopViewport } from './_workspace-tabs-helpers';
 
 const TOLERANCE_PX = 1;

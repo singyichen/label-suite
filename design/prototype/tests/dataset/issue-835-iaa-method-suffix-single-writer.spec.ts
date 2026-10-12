@@ -9,7 +9,7 @@
  * iaaMethodSuffix key. Delaying the stats partial makes that ordering
  * deterministic instead of load-dependent.
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 const DETAIL_URL = '/pages/dataset/dataset-analysis-detail.html?task_id=T103&tab=quality';
 const STATS_PARTIAL = '**/dataset-analysis-detail.partials/stats-sequence_tagging.html';

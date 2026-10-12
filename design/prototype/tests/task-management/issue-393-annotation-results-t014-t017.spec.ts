@@ -17,7 +17,7 @@
  * (patchDataFile) in the same commit, so the issue #284 regression stays
  * covered without colliding with this seed addition.
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 const PANEL_LOAD_TIMEOUT = 15000;

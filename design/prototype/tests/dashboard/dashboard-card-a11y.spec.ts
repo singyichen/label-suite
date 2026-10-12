@@ -9,7 +9,8 @@
  * carry the independent legacy `task_type` compatibility field
  * (annotationTaskType seed, never derived from outputs[]).
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 
 const DASHBOARD_URL = '/pages/dashboard/dashboard.html';
 

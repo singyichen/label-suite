@@ -7,7 +7,7 @@
  * panel's search-results table forces the whole page to scroll
  * horizontally instead of scrolling in its own contained widget.
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html?task_id=T016';
 const PANEL_LOAD_TIMEOUT = 15000;

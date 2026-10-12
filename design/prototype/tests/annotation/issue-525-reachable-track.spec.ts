@@ -24,7 +24,8 @@
  *        finalized through arbitration on the differing lane.
  *   T014 dry_run      -- dry-05 / annotator A disputed.
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
 
 const BYPASS_TASK = 'T001';

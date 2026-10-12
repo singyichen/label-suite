@@ -32,7 +32,8 @@
  * T001 seeds isolationEnabled: true, so the isolation risk modal never opens
  * here (see task-detail-publish-risk-confirm.spec.ts for that branch).
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html?task_id=T001';
 

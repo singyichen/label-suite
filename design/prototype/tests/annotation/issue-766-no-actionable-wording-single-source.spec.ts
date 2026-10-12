@@ -51,7 +51,7 @@
  * switching via `#langToggle`, rather than hardcoding either language's
  * strings in this test).
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import fs from 'node:fs';
 import path from 'node:path';
 import { buildListUrl } from './_workspace-helpers';

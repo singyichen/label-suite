@@ -16,7 +16,8 @@
  * reviewer_chen (can_arbitrate: true, not a participant) is FR-060 eligible
  * to arbitrate it.
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { buildWorkspaceUrl, fillArbitrationReasons, skipGuidelineModal } from './_workspace-helpers';
 
 const TASK = 'T001';

@@ -32,7 +32,7 @@
  * `issue-750-bypass-modify-dispute.spec.ts`, raised further here because
  * these tests do MORE navigations (8-9 vs those files' single flows).
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { workspaceTabs, readWorkspaceTabState, setDesktopViewport } from './_workspace-tabs-helpers';
 import { buildWorkspaceUrl, skipGuidelineModal } from '../annotation/_workspace-helpers';
 

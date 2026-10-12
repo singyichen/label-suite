@@ -5,7 +5,7 @@
  * Traceability: specs/account/005-profile-settings/spec.md
  *   FR-001, FR-004J, FR-005, FR-009, FR-013B
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 const PROFILE_URL = '/pages/account/profile.html';
 

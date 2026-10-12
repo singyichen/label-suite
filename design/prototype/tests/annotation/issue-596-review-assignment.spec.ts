@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { buildListUrl } from './_workspace-helpers';
 
 /* Issue #596 / FR-093 (specs/annotation/015-annotation-workspace/spec.md,

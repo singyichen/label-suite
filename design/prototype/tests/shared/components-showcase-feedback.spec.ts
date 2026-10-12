@@ -14,7 +14,7 @@
  *   §Semantic State Colors, §Status Badges, §Status Pill,
  *   §Error / Alert Banner, §Toast, §Skeleton
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 const SHOWCASE_URL = '/components-showcase.html';
 
@@ -141,6 +141,11 @@ test.describe('Components showcase — feedback batch', () => {
       .toBe(await toRgb(page, await computedToken(page, '--color-warning-bg')));
   });
 
+  // These two cases read `animation-name`/`animation-duration`: the animation is the
+  // subject, and the shared fixture's `animation: none !important` would hide it.
+  test.describe('skeleton animation declarations (motion kept)', () => {
+    test.use({ disableMotion: false });
+
   test('skeleton pulse lines use the border token and the canonical keyframes', async ({ page }) => {
     const line = page.locator('#comp-skeleton .skeleton-line').first();
     await expect(line).toBeVisible();
@@ -159,5 +164,6 @@ test.describe('Components showcase — feedback batch', () => {
     await expect(avatar).toHaveCSS('border-radius', '9999px');
     expect(await avatar.evaluate((el) => getComputedStyle(el).animationName)).toBe('skeleton-shimmer');
     expect(await avatar.evaluate((el) => getComputedStyle(el).animationDuration)).toBe('1.5s');
+  });
   });
 });

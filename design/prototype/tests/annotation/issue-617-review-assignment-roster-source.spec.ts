@@ -1,4 +1,5 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { buildListUrl } from './_workspace-helpers';
 
 /* issue #617: FR-093 (spec 015) says review assignment is distributed

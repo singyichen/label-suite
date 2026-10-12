@@ -52,7 +52,7 @@
  *       修正錯誤訊息" (message content not specified by the spec).
  * ---------------------------------------------------------------------
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { openSettingsSection } from './_task-detail-settings-helpers';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';

@@ -8,7 +8,7 @@
  * Traceability: specs/dataset/017-dataset-analysis-detail/spec.md
  *   FR-005, FR-006, FR-008A, FR-019, FR-022, FR-035
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import type { Page } from '@playwright/test';
 
 const DETAIL_URL = '/pages/dataset/dataset-analysis-detail.html';

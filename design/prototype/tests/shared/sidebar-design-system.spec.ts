@@ -9,7 +9,7 @@
  * Traceability: design/system/MASTER.md
  *   §Dark Mode Tokens, §Z-index Scale, §Sidebar, §Modals
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 const HOST_PAGE_URL = '/pages/dashboard/dashboard.html';
 

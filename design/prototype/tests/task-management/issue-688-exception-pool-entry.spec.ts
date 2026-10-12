@@ -56,7 +56,8 @@
  *     T016 / ofm-05-final-exception.
  * ---------------------------------------------------------------------
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 const PANEL_LOAD_TIMEOUT = 15000;

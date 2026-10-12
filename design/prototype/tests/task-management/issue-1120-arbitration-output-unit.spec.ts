@@ -8,7 +8,8 @@
  * Annotation Progress tab, and the final-exception count must follow the
  * per-item `reject` outcome.
  */
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { patchDataFile, skipGuidelineModal } from '../annotation/_workspace-helpers';
 
 const TASK_ID = 'T1120M';

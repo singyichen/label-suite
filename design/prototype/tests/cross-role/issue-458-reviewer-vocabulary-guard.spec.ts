@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { dismissGuidelineModal, gotoReviewerWorkspace, skipGuidelineModal } from '../annotation/_workspace-helpers';
 
 /* Issue #458 -- vocabulary regression guard: 審核 is the canonical zh-TW

@@ -17,7 +17,7 @@
  * inside `.action-bar` (locked by issue #563's
  * issue-563-submit-btn-right-aligned.spec.ts).
  */
-import { expect, test } from '@playwright/test';
+import { expect, test } from '../fixtures';
 import { dismissGuidelineModal, gotoReviewerWorkspace, skipGuidelineModal } from './_workspace-helpers';
 
 const SAMPLE = { task_id: 'T015', sample_id: 'ofs-04-pending-review', run_type: 'official_run' as const };

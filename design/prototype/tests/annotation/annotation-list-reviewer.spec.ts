@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { buildListUrl } from './_workspace-helpers';
 
 /* Reviewer rows on the annotation list (spec 015 v4.2.0, FR-055).

@@ -2,7 +2,7 @@
  * Traceability: specs/dataset/017-dataset-analysis-detail/spec.md
  *   FR-012L, FR-035, FR-036, FR-043 (AC-3.7, AC-3.18, AC-3.13, AC-3.14)
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import type { Page } from '@playwright/test';
 
 const DETAIL_URL = '/pages/dataset/dataset-analysis-detail.html?task_id=T103';

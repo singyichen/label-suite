@@ -11,7 +11,7 @@
  * Traceability: specs/shared/008-sidebar-navbar-shared/spec.md
  *   FR-019, FR-019A, FR-019B, FR-019C, FR-019D, FR-019E, SC-012, SC-012A, SC-012B
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 test.describe('Admin submenu direct shortcut to role-settings (issue #725)', () => {
   test('desktop expanded sidebar: clicking 系統管理 opens a submenu with two direct links without adding an L0 item', async ({ page }) => {

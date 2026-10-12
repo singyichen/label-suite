@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { buildWorkspaceUrl, dismissGuidelineModal } from './_workspace-helpers';
 
 /* Traceability: specs/annotation/015-annotation-workspace/spec.md

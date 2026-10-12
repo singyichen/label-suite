@@ -24,7 +24,8 @@
  * FR-095 (project_leader's final-exception-disposition screen must not
  * present itself as the annotator's own work area).
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { skipGuidelineModal } from './_workspace-helpers';
 
 const TASK = 'T016';

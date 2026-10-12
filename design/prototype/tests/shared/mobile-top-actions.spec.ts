@@ -7,7 +7,8 @@
  * Traceability: specs/shared/008-sidebar-navbar-shared/spec.md
  *   FR-011A, SC-005A
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 
 const BASELINE_URL = '/pages/task-management/task-list.html';
 

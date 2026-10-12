@@ -59,7 +59,8 @@
  *       `false` for every unit under wang's identity regardless of how the
  *       disjunct is scoped.
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import {
   buildWorkspaceUrl,
   skipGuidelineModal,

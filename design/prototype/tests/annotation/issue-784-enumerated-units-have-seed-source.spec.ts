@@ -22,7 +22,7 @@
  * (Generalization-First -- no task-id branch). This pins the clarified
  * wording; it passes today by design, since the change is spec-only.
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { buildListUrl } from './_workspace-helpers';
 
 interface ReviewUnit {

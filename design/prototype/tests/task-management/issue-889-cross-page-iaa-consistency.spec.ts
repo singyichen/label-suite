@@ -7,7 +7,8 @@
  * The seam case below changes that public result at the fixture boundary so
  * a replacement set of hardcoded task values cannot satisfy this contract.
  */
-import { expect, test, type Locator, type Page } from '@playwright/test';
+import { expect, test } from '../fixtures';
+import type { Locator, Page } from '@playwright/test';
 import {
   buildListUrl,
   patchDataFile,

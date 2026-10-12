@@ -7,7 +7,7 @@
  * Traceability: specs/dataset/016-dataset-analysis-list/spec.md
  *   FR-006
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 const LIST_URL = '/pages/dataset/dataset-analysis-list.html';
 

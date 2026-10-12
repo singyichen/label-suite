@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { buildWorkspaceUrl, dismissGuidelineModal, patchDataFile } from './_workspace-helpers';
 
 /* UI-chrome localization only (zh / en). The old TASK-015-* mock fixtures

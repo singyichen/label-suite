@@ -28,7 +28,7 @@
  * Traceability: design/system/MASTER.md §Breadcrumb, §Review Status Track
  *   · specs/annotation/015-annotation-workspace/spec.md FR-051
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 const SHOWCASE_URL = '/components-showcase.html';
 const CARD = '#comp-review-track';

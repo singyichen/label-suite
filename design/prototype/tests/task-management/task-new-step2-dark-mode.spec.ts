@@ -2,7 +2,8 @@
  * Traceability: specs/task-management/013-task-new/spec.md
  *   FR-008e
  */
-import { test, expect, type Locator, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Locator, Page } from '@playwright/test';
 
 const TASK_NEW_URL = '/pages/task-management/task-new.html';
 

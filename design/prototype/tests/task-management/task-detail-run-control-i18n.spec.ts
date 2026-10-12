@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 // task_id must be a seed task that actually exists (task-detail.data.js /
 // task-list.data.js only define T001-T013). This previously used the

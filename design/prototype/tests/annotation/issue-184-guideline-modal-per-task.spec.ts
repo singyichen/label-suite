@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { buildWorkspaceUrl, patchDataFile } from './_workspace-helpers';
 
 /* Issue #184: the first-visit guideline gate modal was hollow --

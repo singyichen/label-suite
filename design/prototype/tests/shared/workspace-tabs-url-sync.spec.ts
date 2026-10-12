@@ -26,7 +26,7 @@
  * (no in-page sub-tab change) stays covered by workspace-tabs-restore.spec.ts,
  * which is unaffected by either bug.
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { workspaceTabs, readWorkspaceTabState, setDesktopViewport } from './_workspace-tabs-helpers';
 
 // Tab A: task-detail T001. ap_stage held constant so tab A's own in-page

@@ -9,7 +9,8 @@
  * arbitration screen and the final exception pool call), so no app hook is
  * invented. The gate's own matrix lives in task-detail-completion-gate.spec.ts.
  */
-import { expect, type Page } from '@playwright/test';
+import { expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 
 const T016_ANNOTATOR_ID = 'kioleemg12';
 
