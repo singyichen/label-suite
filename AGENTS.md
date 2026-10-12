@@ -12,7 +12,7 @@ design/wireframes/pages/[module]/  ← Pencil wireframes (.pen files; frozen 202
 design/prototype/pages/[module]/   ← HTML prototypes
 ```
 
-**Feature modules**: `account` · `dashboard` · `task-management` · `annotation` · `dataset` · `admin`
+**Feature modules**: `account` · `dashboard` · `task-management` · `annotation` · `dataset` · `admin` · `shared`
 
 **Architecture diagrams** — read the one covering your module before changing cross-module wiring. Each is a standalone HTML file (open it directly in a browser); the paired `.json` is the editable source, so change the `.json` and regenerate, never hand-edit the HTML.
 
