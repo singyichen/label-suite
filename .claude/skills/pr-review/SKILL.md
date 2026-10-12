@@ -19,7 +19,7 @@ Comprehensive PR review covering description quality, change scope, security (te
 ```markdown
 # PR Review: #[number] — [PR Title]
 
-**Branch**: `feat/NNN-feature` → `main`
+**Branch**: `feat/<short-description>` → `main`
 **Author**: @username
 **Reviewer**: senior-code-reviewer
 **Date**: YYYY-MM-DD
@@ -34,7 +34,7 @@ Comprehensive PR review covering description quality, change scope, security (te
 | Files Changed | N |
 | Lines Added | +NNN |
 | Lines Removed | -NNN |
-| Spec Reference | specs/NNN-feature/ |
+| Spec Reference | specs/[module]/NNN-feature/ |
 | Related Issue | #N (if applicable) |
 
 ---
@@ -55,9 +55,9 @@ Comprehensive PR review covering description quality, change scope, security (te
 
 | AC | Implemented | Test Coverage |
 |----|-------------|---------------|
-| AC-01 | ✅ / ❌ | pytest / Playwright |
-| AC-02 | ✅ / ❌ | pytest / Playwright |
-| AC-03 | ✅ / ❌ | pytest / Playwright |
+| AC-1.1 | ✅ / ❌ | pytest / Playwright |
+| AC-1.2 | ✅ / ❌ | pytest / Playwright |
+| AC-1.3 | ✅ / ❌ | pytest / Playwright |
 
 **Orphaned code** (changes not traced to any AC): [list or none]
 

@@ -6,6 +6,16 @@ user-invocable: true
 
 # Label Suite Design Skill
 
+## Precedence over the vendored `ui-ux-pro-max` skill
+
+The vendored upstream skill `ui-ux-pro-max` (its `SKILL.md`) is not edited here. When it conflicts with this skill or `design/system/MASTER.md`, **this skill and `design/system/MASTER.md` win**. Known conflicts (line numbers refer to the vendored file):
+
+- **Source of truth.** `ui-ux-pro-max` :131-137 treats `design/wireframes/design-system.pen` as the component source of truth. Wireframes are frozen (`design/wireframes/README.md`); the source of truth is `design/prototype/assets/tokens.css`, `design/system/MASTER.md`, and `design/prototype/components-showcase.html`.
+- **Language toggle.** `applyLang('zh')` (:184, :192) is superseded by `getStoredLang()` / `applyGlobalLanguage()` below (shared-page conventions, item 2).
+- **Design-system generation.** "Always start with `--design-system` (REQUIRED)" (:261-263, :378) does not apply when `design/system/MASTER.md` exists; follow MASTER.md (as :129 and :141 of the vendored skill also say).
+- **Persisted master.** `--persist` (:282-303) creates a second `design/system/<project-slug>/MASTER.md`; do not use it. There is one MASTER.md.
+- **Colors.** The default `html-tailwind` stack and "use theme colors directly (`bg-primary`) not `var()`" (:323-325, :480) do not apply; use `var(--color-*)` tokens from `tokens.css`.
+
 Read `README.md` for the full brand context: product overview, voice/tone, visual foundations, iconography rules, and index of every file.
 
 ## Key files in this skill

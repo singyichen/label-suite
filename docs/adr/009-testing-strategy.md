@@ -120,7 +120,7 @@ async def test_submission_response_excludes_answers(client):
 - `httpx.AsyncClient` with `app=app` provides a real ASGI test client — no mocking of HTTP transport.
 - Playwright TypeScript tests co-locate with the frontend (`frontend/tests/`) and share type definitions. *(Superseded by [ADR-034](034-formal-e2e-directory-location.md): E2E lives in root `e2e/`; type sharing is a cross-package `tsconfig` reference rather than co-location.)*
 - Coverage reports (`pytest --cov`) integrate with CI to enforce thresholds per module.
-- The `@pytest.mark.security` convention makes leakage tests easily identifiable and runnable in isolation (`pytest -m security`).
+- The `@pytest.mark.security` convention makes authentication-security and response-leak tests (test-set answer-leakage tests, once they exist) easily identifiable and runnable in isolation (`pytest -m security`); the marker is registered with `--strict-markers`, and `-m security` exits 5 when no test carries it.
 - Playwright's `codegen` tool accelerates writing E2E tests for the annotation workflow.
 
 ### Harder
