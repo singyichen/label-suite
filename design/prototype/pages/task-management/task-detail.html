@@ -217,7 +217,7 @@
     .btn:hover { transform: translateY(-1px); }
     /* issue #1252: hover-only rectangle (border box + 2px below) keeps the hit area stable under the -1px lift, incl. the rounded corners */
     .btn:hover::after { content: ""; position: absolute; inset: -1px -1px -2px; }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; pointer-events: none; }
     .btn-primary { color: var(--color-on-cta); background: var(--color-cta); border-color: var(--color-cta); }
     .btn-primary:hover:not(:disabled) { opacity: 0.9; }
     .btn-cta { color: var(--color-on-cta); background: var(--color-cta); border-color: var(--color-cta); }
