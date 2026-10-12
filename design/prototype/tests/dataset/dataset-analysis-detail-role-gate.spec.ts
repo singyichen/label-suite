@@ -25,10 +25,20 @@ async function rewriteT001Role(page: Page, mode: string | null) {
   });
 }
 
+/* The list page deliberately strips invalid_task from the address bar after
+ * reading it (issue #261), so the marker is asserted on the redirect
+ * navigation request itself rather than on the settled URL. */
+function waitForInvalidTaskRedirect(page: Page) {
+  return page.waitForRequest(
+    (req) =>
+      req.isNavigationRequest() &&
+      /\/pages\/dataset\/dataset-analysis-list\.html\?(.*&)?invalid_task=1(&|$)/.test(req.url()),
+  );
+}
+
 async function expectRedirectedToListWithErrorToast(page: Page) {
   await expect(page).toHaveURL(/\/pages\/dataset\/dataset-analysis-list\.html/);
   await expect(page).not.toHaveURL(/dataset-analysis-detail\.html/);
-  await expect(page).toHaveURL(/invalid_task=1/);
   const toast = page.locator('#toast');
   await expect(toast).toHaveClass(/toast-error/);
   await expect(toast).toHaveClass(/visible/);
@@ -43,7 +53,9 @@ test.describe('dataset-analysis-detail role gate (issue #1267, AC-1.4 / FR-003)'
   ] as const) {
     test(`membershipRole ${label} is redirected to the list with an error toast`, async ({ page }) => {
       await rewriteT001Role(page, role);
+      const redirect = waitForInvalidTaskRedirect(page);
       await page.goto(`${DETAIL_URL}?task_id=T001`, { waitUntil: 'commit' });
+      await redirect;
       await expectRedirectedToListWithErrorToast(page);
     });
   }
