@@ -171,7 +171,12 @@ test.describe('Workspace tab bar mount geometry (issue #1098)', () => {
   // it has no visible page <h1> (`#wsPageHeading` is `.sr-only`, never
   // rendered on screen). There is therefore nothing for a sticky bar to
   // overlap on this page; its geometry is still covered by the loop above.
-  for (const pageCase of PAGES.filter((p): p is PageCase & { titleSelector: string } => p.titleSelector !== undefined)) {
+  const titledPages = PAGES.filter((p): p is PageCase & { titleSelector: string } => p.titleSelector !== undefined);
+
+  // <main>-scrolling pages: the bar sticks inside <main>'s own scroll box and
+  // the title never ends up underneath it, so the original post-scroll
+  // assertion still holds.
+  for (const pageCase of titledPages.filter((p) => p.scrollTarget === 'main')) {
     test(`sticky tab bar does not overlap the page title after scrolling on ${pageCase.label}`, async ({ page }) => {
       await page.goto(pageCase.url);
       await expect(tabBar(page)).toBeVisible();
@@ -186,6 +191,33 @@ test.describe('Workspace tab bar mount geometry (issue #1098)', () => {
       // The title's top edge must sit at or below the sticky bar's bottom
       // edge -- the title must never render underneath/behind the bar.
       expect(titleBox!.y).toBeGreaterThanOrEqual(barBox!.y + barBox!.height - TOLERANCE_PX);
+    });
+  }
+
+  // Window-scrolling pages: issue #1121 supersedes the original post-scroll
+  // "title stays below the bar" assertion. That only held because the bar
+  // wrongly scrolled away with the page; a working sticky bar (spec 019
+  // AC-2.1) stays pinned to the viewport top while the title legitimately
+  // scrolls up underneath it. The #1098 intent is preserved as two checks:
+  // in the initial layout the title sits at/below the bar (no overlap), and
+  // after scrolling the bar is still flush at the viewport top and visible.
+  for (const pageCase of titledPages.filter((p) => p.scrollTarget === 'window')) {
+    test(`tab bar clears the page title initially and stays stuck at the viewport top after scrolling on ${pageCase.label}`, async ({ page }) => {
+      await page.goto(pageCase.url);
+      await expect(tabBar(page)).toBeVisible();
+
+      const initialBar = await tabBar(page).boundingBox();
+      expect(initialBar).not.toBeNull();
+      const initialTitle = await page.locator(pageCase.titleSelector).boundingBox();
+      expect(initialTitle).not.toBeNull();
+      expect(initialTitle!.y).toBeGreaterThanOrEqual(initialBar!.y + initialBar!.height - TOLERANCE_PX);
+
+      await scrollPage(page, pageCase.scrollTarget);
+
+      await expect(tabBar(page)).toBeVisible();
+      const scrolledBar = await tabBar(page).boundingBox();
+      expect(scrolledBar).not.toBeNull();
+      expect(Math.abs(scrolledBar!.y)).toBeLessThanOrEqual(TOLERANCE_PX);
     });
   }
 });
