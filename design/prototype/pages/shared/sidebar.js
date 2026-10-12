@@ -1256,6 +1256,17 @@
         var loc = { pathname: window.location.pathname, search: window.location.search };
         var info = computeWorkspaceDedupeInfo(loc);
         var state = readWorkspaceTabState();
+        // issue #1202: activateWorkspaceTab()/closeWorkspaceTab() advance
+        // activeIndex to the destination BEFORE their async location.replace()
+        // lands, so a late replaceState on this still-alive OUTGOING page
+        // (task-detail's 560ms skeleton render) would see its OWN slot as
+        // "another open tab" and undo the user's switch. If the active slot
+        // is no longer the one this page mounted as, this page is leaving:
+        // neither re-key nor sync anything.
+        var ownerTab = state.tabs[state.activeIndex];
+        if (workspaceActiveTabDedupeKey !== null && (!ownerTab || ownerTab.dedupeKey !== workspaceActiveTabDedupeKey)) {
+          return;
+        }
         for (var i = 0; i < state.tabs.length; i++) {
           if (i !== state.activeIndex && state.tabs[i].dedupeKey === info.dedupeKey) {
             state.activeIndex = i;
