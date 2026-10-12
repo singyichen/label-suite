@@ -27,7 +27,7 @@
  * which is unaffected by either bug.
  */
 import { test, expect } from '../fixtures';
-import { workspaceTabs, readWorkspaceTabState, setDesktopViewport } from './_workspace-tabs-helpers';
+import { workspaceTabs, readWorkspaceTabState, setDesktopViewport, waitForTaskDetailReady } from './_workspace-tabs-helpers';
 
 // Tab A: task-detail T001. ap_stage held constant so tab A's own in-page
 // sub-tab switch (overview -> work-log, below) is the only thing that
@@ -73,6 +73,7 @@ test.describe('Workspace tabs — issue #1084 non-colliding in-page URL change m
     await tabs.nth(0).click();
     await expect(tabs.nth(0)).toHaveAttribute('aria-selected', 'true');
     await expect(page.locator('#tabOverview')).toHaveAttribute('aria-selected', 'true');
+    await waitForTaskDetailReady(page); // issue #1202
 
     // Trigger task-detail's OWN in-page sub-tab switch (replaceState, no
     // full reload) from 'overview' to 'work-log'. Tab B is a different task

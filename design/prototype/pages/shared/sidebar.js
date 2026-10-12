@@ -1246,8 +1246,16 @@
     var nativeWorkspaceReplaceState = window.history.replaceState.bind(window.history);
     var workspaceReplaceStateSettleTimer = null;
     window.history.replaceState = function (replaceStateData, title, url) {
+      var hrefBeforeReplaceState = window.location.href;
       nativeWorkspaceReplaceState(replaceStateData, title, url);
       if (!workspaceTabBarReady) return;
+      // issue #1202: a replaceState that leaves the address bar byte-for-byte
+      // unchanged (task-detail's skeleton render re-issues the current URL)
+      // is not an in-page change. Syncing it would overwrite the stored entry
+      // with the page's canonical form (default `tab=overview` stripped)
+      // and break FR-007's "keep the pre-switch state" before the user did
+      // anything.
+      if (window.location.href === hrefBeforeReplaceState) return;
       if (workspaceReplaceStateSettleTimer) {
         clearTimeout(workspaceReplaceStateSettleTimer);
       }
@@ -1256,6 +1264,17 @@
         var loc = { pathname: window.location.pathname, search: window.location.search };
         var info = computeWorkspaceDedupeInfo(loc);
         var state = readWorkspaceTabState();
+        // issue #1202: activateWorkspaceTab()/closeWorkspaceTab() advance
+        // activeIndex to the destination BEFORE their async location.replace()
+        // lands, so a late replaceState on this still-alive OUTGOING page
+        // (task-detail's 560ms skeleton render) would see its OWN slot as
+        // "another open tab" and undo the user's switch. If the active slot
+        // is no longer the one this page mounted as, this page is leaving:
+        // neither re-key nor sync anything.
+        var ownerTab = state.tabs[state.activeIndex];
+        if (workspaceActiveTabDedupeKey !== null && (!ownerTab || ownerTab.dedupeKey !== workspaceActiveTabDedupeKey)) {
+          return;
+        }
         for (var i = 0; i < state.tabs.length; i++) {
           if (i !== state.activeIndex && state.tabs[i].dedupeKey === info.dedupeKey) {
             state.activeIndex = i;

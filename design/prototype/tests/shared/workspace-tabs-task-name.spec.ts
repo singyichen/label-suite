@@ -29,7 +29,7 @@
  */
 import { test, expect } from '../fixtures';
 import type { Locator, Page } from '@playwright/test';
-import { workspaceTabs, setDesktopViewport, TAB_STORAGE_KEY } from './_workspace-tabs-helpers';
+import { workspaceTabs, setDesktopViewport, TAB_STORAGE_KEY, waitForTaskDetailReady } from './_workspace-tabs-helpers';
 
 const TASK_DETAIL_T001_R1_URL = '/pages/task-management/task-detail.html?task_id=T001&ap_stage=r1';
 const TASK_DETAIL_T002_R1_URL = '/pages/task-management/task-detail.html?task_id=T002&ap_stage=r1';
@@ -162,6 +162,7 @@ test.describe('Workspace tabs — FR-010/AC-1.6 task name translates through the
     // workspace-tabs-close-badge.spec.ts's own EN assertion: toggle while
     // still on a task-detail page, then navigate -- the destination page
     // mounts fresh already in English.
+    await waitForTaskDetailReady(page); // issue #1202: #langToggle is bound only after init
     await page.locator('#langToggle').click();
     await page.goto(PROFILE_URL);
 

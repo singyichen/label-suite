@@ -13,7 +13,7 @@
  * task adds that hook.
  */
 import { test, expect } from '../fixtures';
-import { workspaceTabs, readWorkspaceTabState, setDesktopViewport } from './_workspace-tabs-helpers';
+import { workspaceTabs, readWorkspaceTabState, setDesktopViewport, waitForTaskDetailReady } from './_workspace-tabs-helpers';
 
 // T001 (task-list.data.js): same task id matches task-detail.html's own
 // URL_VIEW_STATE validator for the 'tab' and 'ap_stage' params; ap_stage is
@@ -51,6 +51,7 @@ test.describe('Workspace tabs — AC-3.5 in-page URL change re-keys into an exis
     await tabs.nth(0).click();
     await expect(tabs.nth(0)).toHaveAttribute('aria-selected', 'true');
     await expect(page.locator('#tabOverview')).toHaveAttribute('aria-selected', 'true');
+    await waitForTaskDetailReady(page); // issue #1202
 
     // While on tab A, trigger task-detail's OWN in-page sub-tab switch
     // (task-management-014 FR-019: history.replaceState(), no full reload)
