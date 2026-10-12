@@ -77,7 +77,7 @@ async function openTaskDetailProgress(
   progressStage: string,
 ): Promise<void> {
   await page.goto(
-    `${TASK_DETAIL_URL}?task_id=${taskId}&tab=annotation-progress&ap_stage=${progressStage}`,
+    `${TASK_DETAIL_URL}?task_role=project_leader&task_id=${taskId}&tab=annotation-progress&ap_stage=${progressStage}`,
   );
   await page
     .locator('#workLogPanel')

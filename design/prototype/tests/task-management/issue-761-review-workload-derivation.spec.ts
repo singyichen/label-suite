@@ -64,7 +64,7 @@ function parseCount(text: string | null): number {
 
 test.describe('Issue #761 review workload derivation', () => {
   test('被勾選的審核員分掉全部審核單位，未勾選的顯示 0', async ({ page }) => {
-    await page.goto(TASK_DETAIL_URL);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader`);
     await openMemberTab(page);
 
     const rows = page.locator('#reviewAssignmentBody tr');
@@ -105,7 +105,7 @@ test.describe('Issue #761 review workload derivation', () => {
   });
 
   test('AC-1.6：Overview 取消勾選某審核員後，負荷分布即時反映', async ({ page }) => {
-    await page.goto(TASK_DETAIL_URL);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader`);
     await openMemberTab(page);
 
     const linRowBefore = page.locator('#reviewAssignmentBody tr').filter({ hasText: '林佳蓉' });
@@ -142,7 +142,7 @@ test.describe('Issue #761 review workload derivation', () => {
   });
 
   test('SC-034：成員清單「審核負荷」欄與審核指派表一致', async ({ page }) => {
-    await page.goto(TASK_DETAIL_URL);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader`);
     await openMemberTab(page);
 
     const reviewRow = page.locator('#reviewAssignmentBody tr').filter({ hasText: '王小明' });

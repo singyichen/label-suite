@@ -1,6 +1,6 @@
 import { test, expect } from '../fixtures';
 
-const TASK_DETAIL_WORK_LOG_URL = '/pages/task-management/task-detail.html?task_id=T001&tab=work-log';
+const TASK_DETAIL_WORK_LOG_URL = '/pages/task-management/task-detail.html?task_role=project_leader&task_id=T001&tab=work-log';
 
 /*
  * TDD Red update (issue #1101, tasks.md 2.2). The two independent

@@ -27,7 +27,7 @@ const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 
 test.describe('Task detail force-guideline reflects the per-task profile (issue #395)', () => {
   test('a task whose profile does not set forceShowGuideline shows "否", not the old hardcoded "是"', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T001`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T001`);
 
     await expect(page.locator('#valueForceGuideline')).toHaveText('否');
   });
@@ -36,7 +36,7 @@ test.describe('Task detail force-guideline reflects the per-task profile (issue 
     await patchDataFile(page, 'task-detail.data.js', `
       window.LabelSuiteTaskDetailData.profiles.T001.forceShowGuideline = true;
     `);
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T001`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T001`);
 
     await expect(page.locator('#valueForceGuideline')).toHaveText('是');
   });

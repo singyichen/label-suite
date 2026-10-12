@@ -51,7 +51,7 @@ async function pendingOf(page: Page, name: string): Promise<number> {
 
 test.describe('Task detail review assignment', () => {
   test('member list gains a review-load column between role and status', async ({ page }) => {
-    await page.goto(TASK_DETAIL_URL);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader`);
     await openMemberTab(page);
 
     const memberTable = page.locator('table[aria-label="Task members table"]');
@@ -68,7 +68,7 @@ test.describe('Task detail review assignment', () => {
   });
 
   test('renders the review assignment section with a derived workload and the dispute pool', async ({ page }) => {
-    await page.goto(TASK_DETAIL_URL);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader`);
     await openMemberTab(page);
 
     await expect(page.locator('#memberManagementPanel > section').nth(2).locator('h2')).toHaveText('審核指派');
@@ -94,7 +94,7 @@ test.describe('Task detail review assignment', () => {
   });
 
   test('designated arbiters get a tag in the review assignment table', async ({ page }) => {
-    await page.goto(TASK_DETAIL_URL);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader`);
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
     /* issue #617: the arbiter checklist offers only CHECKED reviewers
        (FR-010s-1), and the default task now checks the four spec 015 roster
@@ -107,7 +107,7 @@ test.describe('Task detail review assignment', () => {
   });
 
   test('disabling a reviewer returns their pending load to the unassigned pool', async ({ page }) => {
-    await page.goto(TASK_DETAIL_URL);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader`);
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
     await openMemberTab(page);
 
@@ -132,7 +132,7 @@ test.describe('Task detail review assignment', () => {
   });
 
   test('translates review-load column and assignment section to English', async ({ page }) => {
-    await page.goto(TASK_DETAIL_URL);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader`);
     await openMemberTab(page);
     await page.locator('#langToggle').click();
 

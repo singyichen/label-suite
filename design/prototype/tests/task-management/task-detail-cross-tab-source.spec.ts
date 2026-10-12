@@ -42,21 +42,21 @@ async function waitForBoot(page: Page) {
 }
 
 async function openProgressTab(page: Page, taskId: string) {
-  await page.goto(`${TASK_DETAIL_URL}?task_id=${taskId}`);
+  await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${taskId}`);
   await waitForBoot(page);
   await page.locator('#tabAnnotationProgress').click();
   await expect(page.locator('#annotationProgressPanel')).not.toHaveClass(/hidden/);
 }
 
 async function openResultsTab(page: Page, taskId: string) {
-  await page.goto(`${TASK_DETAIL_URL}?task_id=${taskId}`);
+  await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${taskId}`);
   await waitForBoot(page);
   await page.locator('#tabAnnotationResults').click();
   await expect(page.locator('#annotationResultsPanel')).not.toHaveClass(/hidden/);
 }
 
 async function openWorkLogTab(page: Page, taskId: string) {
-  await page.goto(`${TASK_DETAIL_URL}?task_id=${taskId}`);
+  await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${taskId}`);
   await waitForBoot(page);
   await page.locator('#tabWorkLog').click();
 }
@@ -131,7 +131,7 @@ test.describe('Task detail cross-tab derived counts share one query context (FR-
   }
 
   test("T014 overview's used-trial-sample figure matches the round total shown on annotation-progress (FR-010u (1), FR-010p)", async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T014`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T014`);
     await waitForBoot(page);
     const usedFromOverview = await readOverviewUsedTrialCount(page);
 
@@ -148,7 +148,7 @@ test.describe('Task detail cross-tab derived counts share one query context (FR-
   });
 
   test("T014 overview's used-trial-sample figure matches the trial-stage row count on annotation-results (FR-010u (1), issue §4 item 10)", async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T014`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T014`);
     await waitForBoot(page);
     const usedFromOverview = await readOverviewUsedTrialCount(page);
 
@@ -217,7 +217,7 @@ test.describe('Task detail cross-tab derived counts share one query context (FR-
   });
 
   test("the sample-pool allocation bar's accessible name carries an explicit 資料分配 (data allocation) meaning, not a completion claim (FR-010u (7))", async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T014`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T014`);
     await waitForBoot(page);
     const bar = page.locator('#dataSplitBar');
     await expect(bar).toHaveAttribute('role', 'img');

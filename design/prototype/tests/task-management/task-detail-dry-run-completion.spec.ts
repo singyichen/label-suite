@@ -56,7 +56,7 @@ test.describe('Review-aware dry-run completion gate (DRY_RUN_COMPLETION_RULE, FR
   test('T014 fixture facts: dry_run in progress, 15 review units = 7 finalized / 3 disputed / 5 pending, 3 awaiting arbitration, no pending exception', async ({
     page,
   }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK}`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${TASK}`);
     await expect(page.locator('#statusBadge')).toContainText(IN_PROGRESS_BADGE);
     const facts = await applyDryRunState(page, TASK, {});
     expect(facts.byStatus).toEqual({ finalized: 7, disputed: 3, pending: 5 });
@@ -196,7 +196,7 @@ test.describe('Review-aware dry-run completion gate (DRY_RUN_COMPLETION_RULE, FR
   }) => {
     // Only submission is outstanding: review and arbitration are closed, the round's progress flag
     // says 4 of 5 samples submitted. Wording pinned: 未全部提交 (zh) / "not all ... submitted" (en).
-    await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK}`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${TASK}`);
     await expect(page.locator('#statusBadge')).toBeAttached();
     const facts = await applyDryRunState(page, TASK, { review: true, arbitrate: 'all' });
     expect(facts.byStatus).toEqual({ finalized: 15 }); // precondition: review and arbitration are complete
@@ -226,7 +226,7 @@ test.describe('Review-aware dry-run completion gate (DRY_RUN_COMPLETION_RULE, FR
     expect(pick(await reasonTexts(page), POOL.accept)).toHaveLength(1);
 
     // Official gate on the same stored state: the dry_run item is NOT an official blocker.
-    await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK}&status=official_run_in_progress`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${TASK}&status=official_run_in_progress`);
     await expect(page.locator('#publishCompleteBtn')).toBeVisible();
     await expect(page.locator('#publishCompleteBtn')).toBeDisabled(); // other conditions are unmet, so reasons exist
     expect((await reasonTexts(page)).length).toBeGreaterThanOrEqual(1);

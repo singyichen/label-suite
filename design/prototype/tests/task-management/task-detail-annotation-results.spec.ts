@@ -72,7 +72,7 @@ test.describe('Task detail annotation results', () => {
     });
 
     for (const expectation of EN_RESULT_EXPECTATIONS) {
-      await page.goto(`${TASK_DETAIL_URL}?task_id=${expectation.taskId}&tab=annotation-results`);
+      await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${expectation.taskId}&tab=annotation-results`);
       await expect(page.locator('html')).toHaveAttribute('lang', 'en', { timeout: PANEL_LOAD_TIMEOUT });
       await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 
@@ -93,7 +93,7 @@ test.describe('Task detail annotation results', () => {
   });
 
   test('matches annotator select style with adjacent filter selects', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T005&tab=annotation-results`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T005&tab=annotation-results`);
     await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 
     const stageMetrics = await page.locator('#arStageSelect').evaluate((element) => {
@@ -136,7 +136,7 @@ test.describe('Task detail annotation results', () => {
       window.localStorage.setItem('label-suite-theme', 'dark');
     });
 
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T001&tab=annotation-results`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T001&tab=annotation-results`);
     await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
 
@@ -166,7 +166,7 @@ test.describe('Task detail annotation results', () => {
   });
 
   test('uses reviewer-style VA color coding for per-annotator result tags', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T005&tab=annotation-results`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T005&tab=annotation-results`);
     await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 
     const firstRow = page.locator('#arResultTableBody tr.ar-summary-row').first();
@@ -188,7 +188,7 @@ test.describe('Task detail annotation results', () => {
   });
 
   test('downloads full JSON export with manifest and VA task-specific fields', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T005&tab=annotation-results`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T005&tab=annotation-results`);
     await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 
     await page.locator('#arStageSelect').selectOption('official');
@@ -222,7 +222,7 @@ test.describe('Task detail annotation results', () => {
   });
 
   test('downloads JSON-MIN export with task-specific sequence fields', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T006&tab=annotation-results`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T006&tab=annotation-results`);
     await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 
     await page.locator('#arStageSelect').selectOption('official');
@@ -262,7 +262,7 @@ test.describe('Task detail annotation results', () => {
   });
 
   test('includes export stage metadata and success toasts for annotation result exports', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T005&tab=annotation-results`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T005&tab=annotation-results`);
     await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 
     await page.locator('#arStageSelect').selectOption('official');
@@ -279,7 +279,7 @@ test.describe('Task detail annotation results', () => {
   });
 
   test('parses negative VA ranges from stats summaries for color coding', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T005&tab=annotation-results`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T005&tab=annotation-results`);
     await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 
     const parsed = await page.evaluate(() => {
@@ -300,7 +300,7 @@ test.describe('Task detail annotation results', () => {
   });
 
   test('renders reviewer-style readonly rows for NER tasks with six samples', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T006&tab=annotation-results`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T006&tab=annotation-results`);
     await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 
     const table = page.locator('#arResultTable');
@@ -357,7 +357,7 @@ test.describe('Task detail annotation results', () => {
   });
 
   test('keeps review badge visible for VA tasks and avoids stale summary meta block spacing', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T005&tab=annotation-results`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T005&tab=annotation-results`);
     await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 
     const firstRow = page.locator('#arResultTableBody tr.ar-summary-row').first();
@@ -394,7 +394,7 @@ test.describe('Task detail annotation results', () => {
 
   test('checks summary and review-badge layout across every task type', async ({ page }) => {
     for (const expectation of TASK_RESULT_EXPECTATIONS) {
-      await page.goto(`${TASK_DETAIL_URL}?task_id=${expectation.taskId}&tab=annotation-results`);
+      await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${expectation.taskId}&tab=annotation-results`);
       await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 
       const firstRow = page.locator('#arResultTableBody tr.ar-summary-row').first();
@@ -445,7 +445,7 @@ test.describe('Task detail annotation results', () => {
 
   for (const expectation of TASK_RESULT_EXPECTATIONS) {
     test(`renders task-specific distribution summary for ${expectation.taskId}`, async ({ page }) => {
-      await page.goto(`${TASK_DETAIL_URL}?task_id=${expectation.taskId}&tab=annotation-results`);
+      await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${expectation.taskId}&tab=annotation-results`);
       await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
       const firstRow = page.locator('#arResultTableBody tr.ar-summary-row').first();
       for (const statText of expectation.statTexts) {

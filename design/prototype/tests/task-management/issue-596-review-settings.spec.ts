@@ -58,7 +58,7 @@ import { openSettingsSection } from './_task-detail-settings-helpers';
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 
 async function openReviewEdit(page: import('@playwright/test').Page) {
-  await page.goto(TASK_DETAIL_URL);
+  await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader`);
   await openSettingsSection(page, 'review');
   await page.locator('#reviewEditBtn').click();
 }
@@ -66,7 +66,7 @@ async function openReviewEdit(page: import('@playwright/test').Page) {
 test.describe('Task detail review settings — single-owner relay roster (issue #596)', () => {
   // FR-010s: view mode shows exactly two fields, 審核員 and 仲裁者.
   test('view mode shows exactly two fields: 審核員 and 仲裁者', async ({ page }) => {
-    await page.goto(TASK_DETAIL_URL);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader`);
     await openSettingsSection(page, 'review');
 
     await expect(page.locator('#reviewSummaryView .kv-dl-row')).toHaveCount(2);

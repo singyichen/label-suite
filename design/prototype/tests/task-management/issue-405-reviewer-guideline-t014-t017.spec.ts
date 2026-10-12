@@ -44,7 +44,7 @@ const BANNED_COPY = ['審核門檻', '定稿門檻', '多數決', 'min_reviewers
 test.describe('Task detail reviewer guideline content for T014-T016 (issue #405, #815)', () => {
   for (const { taskId, reviewModelMarker } of CASES) {
     test(`${taskId} overview shows reviewer guideline content, not the empty state`, async ({ page }) => {
-      await page.goto(`${TASK_DETAIL_URL}?task_id=${taskId}`);
+      await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${taskId}`);
 
       await expect(page.locator('#valueReviewerGuidelineStatus')).toHaveText('已上傳');
       await expect(page.locator('#valueReviewerGuidelineContentSummary')).toContainText('審核判準');
@@ -54,7 +54,7 @@ test.describe('Task detail reviewer guideline content for T014-T016 (issue #405,
     });
 
     test(`${taskId} reviewer guideline carries no vocabulary retired by 015 v5.0.0`, async ({ page }) => {
-      await page.goto(`${TASK_DETAIL_URL}?task_id=${taskId}`);
+      await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${taskId}`);
 
       const summary = page.locator('#valueReviewerGuidelineContentSummary');
       await expect(summary).toContainText('審核判準');

@@ -29,7 +29,7 @@ const T016_OFFICIAL_IDS = [
 ] as const;
 
 async function openTaskDetail(page: Page, taskId: string): Promise<void> {
-  await page.goto(`${TASK_DETAIL_URL}?task_id=${taskId}`);
+  await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${taskId}`);
   await expect(page.locator('#statusBadge')).toContainText('正式標記進行中', {
     timeout: PANEL_LOAD_TIMEOUT,
   });
@@ -125,7 +125,7 @@ test.describe('Issue #887 / #1120 — official-run fixtures keep the pool and of
   test('legacy T001 without an explicit empty-round profile retains the R1 fallback', async ({
     page,
   }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T001&status=official_run_in_progress`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T001&status=official_run_in_progress`);
     await expect(page.locator('#statusBadge')).toContainText('正式標記進行中', {
       timeout: PANEL_LOAD_TIMEOUT,
     });

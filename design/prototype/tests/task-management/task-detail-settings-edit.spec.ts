@@ -9,7 +9,7 @@ const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 const PANEL_LOAD_TIMEOUT = 15000;
 
 async function openSettingsEdit(page: import('@playwright/test').Page, taskId: string) {
-  await page.goto(`${TASK_DETAIL_URL}?task_id=${taskId}`);
+  await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${taskId}`);
   await openSettingsSection(page, 'labeling');
   const editBtn = page.locator('#settingsEditBtn');
   await expect(editBtn).toBeEnabled({ timeout: PANEL_LOAD_TIMEOUT });
@@ -19,7 +19,7 @@ async function openSettingsEdit(page: import('@playwright/test').Page, taskId: s
 
 test.describe('Task detail settings edit state', () => {
   test('renders the Step 2 style settings summary without sampling fields (T001)', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T001`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T001`);
 
     await expect(page.locator('#settingsSummaryTitle')).toHaveText('標記設定', { timeout: PANEL_LOAD_TIMEOUT });
     await expect(page.locator('#settingsConfigView')).not.toContainText('抽樣方式');
@@ -38,7 +38,7 @@ test.describe('Task detail settings edit state', () => {
     await page.addInitScript(() => {
       window.localStorage.setItem('labelsuite.lang', 'en');
     });
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T001`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T001`);
     await expect(page.locator('html')).toHaveAttribute('lang', 'en', { timeout: PANEL_LOAD_TIMEOUT });
 
     await openSettingsSection(page, 'labeling');

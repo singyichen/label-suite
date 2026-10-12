@@ -63,7 +63,7 @@ const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 const PANEL_LOAD_TIMEOUT = 15000;
 
 async function openAnnotationProgress(page: Page, query: string) {
-  await page.goto(TASK_DETAIL_URL + query);
+  await page.goto(TASK_DETAIL_URL + query + (/role=/.test(query) ? "" : "&task_role=project_leader"));
   await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
   await expect(page.locator('#annotationProgressPanel')).not.toHaveClass(/hidden/);
 }
@@ -131,7 +131,7 @@ test.describe('Final exception pool entry + completion gate (issue #688)', () =>
   // plus a visible reason list in #publishActionRow (not a click-time toast), so
   // the SC-043 "例外池尚有 N 項待處置" reason is asserted there.
   test('blocks 標記完成 and names the exception-pool reason when official_run pool is non-empty', async ({ page }) => {
-    await page.goto(TASK_DETAIL_URL + '?task_id=T016&status=official_run_in_progress');
+    await page.goto(TASK_DETAIL_URL + '?task_role=project_leader&task_id=T016&status=official_run_in_progress');
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
 
     await page.locator('#tabOverview').click();

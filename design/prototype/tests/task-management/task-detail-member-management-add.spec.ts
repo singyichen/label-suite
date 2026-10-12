@@ -12,7 +12,7 @@ const PANEL_LOAD_TIMEOUT = 15000;
 
 test.describe('Task detail member management add flows', () => {
   test('supports search-add and email invite instead of candidate list', async ({ page }) => {
-    await page.goto(TASK_DETAIL_URL);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader`);
 
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
     await page.locator('#tabMemberManagement').click();

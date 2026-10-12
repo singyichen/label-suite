@@ -17,7 +17,7 @@ const SAMPLE_ID = 'multi-label-dispute-unit';
 const ANNOTATOR_ID = 'fixture_annotator';
 const REVIEWER_ID = 'reviewer_wang';
 const ARBITER_ID = 'reviewer_chen';
-const PROGRESS_URL = `/pages/task-management/task-detail.html?task_id=${TASK_ID}&tab=annotation-progress&ap_stage=official`;
+const PROGRESS_URL = `/pages/task-management/task-detail.html?task_role=project_leader&task_id=${TASK_ID}&tab=annotation-progress&ap_stage=official`;
 const PANEL_LOAD_TIMEOUT = 15_000;
 
 type PoolItem = { outKey: string; key: string };
@@ -82,7 +82,7 @@ async function installMultiLabelFixture(page: Page): Promise<string[]> {
     profiles.${TASK_ID} = profile;
   `);
 
-  await page.goto(`/pages/task-management/task-detail.html?task_id=${TASK_ID}`);
+  await page.goto(`/pages/task-management/task-detail.html?task_role=project_leader&task_id=${TASK_ID}`);
   await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
   return page.evaluate(
     ({ taskId, sampleId, annotatorId, reviewerId }) => {

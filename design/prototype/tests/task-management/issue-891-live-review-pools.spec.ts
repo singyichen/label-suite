@@ -189,7 +189,7 @@ async function openMemberManagement(
   // key is a dedupe collision and the page `location.replace()`s itself
   // (sidebar.js, FR-007/AC-3.5) -- a full reload that races the assertion.
   await page.goto(
-    `${TASK_DETAIL_URL}?task_id=${taskId}&tab=member-management${stageQuery}`,
+    `${TASK_DETAIL_URL}?task_role=project_leader&task_id=${taskId}&tab=member-management${stageQuery}`,
   );
   await page
     .locator('#workLogPanel')
@@ -221,7 +221,7 @@ async function openAnnotationProgress(
   progressStage: string,
 ): Promise<void> {
   await page.goto(
-    `${TASK_DETAIL_URL}?task_id=${taskId}&tab=annotation-progress&ap_stage=${progressStage}`,
+    `${TASK_DETAIL_URL}?task_role=project_leader&task_id=${taskId}&tab=annotation-progress&ap_stage=${progressStage}`,
   );
   await page
     .locator('#workLogPanel')
@@ -348,7 +348,7 @@ async function installMultiOutputFixture(page: Page): Promise<void> {
     profiles.${MULTI_OUTPUT_TASK} = profile;
   `);
 
-  await page.goto(`${TASK_DETAIL_URL}?task_id=${MULTI_OUTPUT_TASK}`);
+  await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${MULTI_OUTPUT_TASK}`);
   await page
     .locator('#workLogPanel')
     .waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });

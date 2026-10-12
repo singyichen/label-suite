@@ -16,7 +16,7 @@ const T016_ANNOTATOR_ID = 'kioleemg12';
 
 /** Open T016 (official_run_in_progress), resolve every dispute, reload, and wait for an enabled 標記完成. */
 export async function openGateSatisfiedT016(page: Page, detailUrl: string) {
-  await page.goto(`${detailUrl}?task_id=T016`);
+  await page.goto(`${detailUrl}?task_role=project_leader&task_id=T016`);
   await expect(page.locator('#publishCompleteBtn')).toBeVisible();
   await page.evaluate((annotatorId) => {
     const ws = (window as any).LabelSuiteAnnotationWorkspaceData;

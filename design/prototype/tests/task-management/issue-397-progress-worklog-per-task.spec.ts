@@ -20,7 +20,7 @@ async function waitForBoot(page: Page) {
 
 test.describe('Task detail progress and work log are scoped per task (issue #397)', () => {
   test('T014 annotation-progress total sample count matches its own 5-record dataset, not the shared 124', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T014`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T014`);
     await waitForBoot(page);
     await page.locator('#tabAnnotationProgress').click();
 
@@ -29,7 +29,7 @@ test.describe('Task detail progress and work log are scoped per task (issue #397
   });
 
   test('T014 work-log summary total annotated count matches its own dataset, not the shared 270', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T014`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T014`);
     await waitForBoot(page);
     await page.locator('#tabWorkLog').click();
 

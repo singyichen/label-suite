@@ -144,7 +144,7 @@ export async function writeFullySubmittedFlag(
  * fully-submitted flag and reload, so the page's init-time gate sees the final state.
  */
 export async function openWithState(page: Page, taskId: string, samples: number, parts: DryRunParts = {}) {
-  await page.goto(`${TASK_DETAIL_URL}?task_id=${taskId}`);
+  await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${taskId}`);
   await expect(page.locator('#statusBadge')).toBeAttached();
   const facts = await applyDryRunState(page, taskId, parts);
   await writeFullySubmittedFlag(page, taskId, samples);

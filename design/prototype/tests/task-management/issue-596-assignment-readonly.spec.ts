@@ -83,7 +83,7 @@ test.describe('Review assignment read-only + publish gate (issue #596)', () => {
   // all, because review_assignment_mode (manual vs auto) has been retired --
   // assignment is always system-automatic.
   test('assignment section mounts no assign or auto-fill button', async ({ page }) => {
-    await page.goto(TASK_DETAIL_URL);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader`);
     await openMemberTab(page);
 
     await expect(page.locator('#reviewAssignmentBody button')).toHaveCount(0);
@@ -93,7 +93,7 @@ test.describe('Review assignment read-only + publish gate (issue #596)', () => {
   // FR-005k: both the dispute pool row and the final exception pool row are
   // read-only info rows with no dispatch button.
   test('dispute pool row and final exception pool row are read-only with no dispatch button', async ({ page }) => {
-    await page.goto(TASK_DETAIL_URL);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader`);
     await openMemberTab(page);
 
     await expect(page.locator('.dispute-pool-row button')).toHaveCount(0);
@@ -110,7 +110,7 @@ test.describe('Review assignment read-only + publish gate (issue #596)', () => {
   // reports the reviewer gap, same "還差 N 位" template as the pre-existing
   // annotator gap (issue #505).
   test('blocks publish and shows the reviewer gap when reviewer_ids has no active member', async ({ page }) => {
-    await page.goto(TASK_DETAIL_URL + '?task_id=T001&status=draft');
+    await page.goto(TASK_DETAIL_URL + '?task_role=project_leader&task_id=T001&status=draft');
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
 
     // issue #617: T001's default reviewer_ids seeds the four spec 015
@@ -145,7 +145,7 @@ test.describe('Review assignment read-only + publish gate (issue #596)', () => {
         body: `${body}\n;window.LabelSuiteTaskDetailData.profiles['T001'].arbiterIds = [];\n`,
       });
     });
-    await page.goto(TASK_DETAIL_URL + '?task_id=T001&status=draft');
+    await page.goto(TASK_DETAIL_URL + '?task_role=project_leader&task_id=T001&status=draft');
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
 
     await page.locator('#tabOverview').click();

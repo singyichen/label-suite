@@ -1,6 +1,6 @@
 import { test, expect } from '../fixtures';
 
-const TASK_DETAIL_URL = '/pages/task-management/task-detail.html?task_id=T001';
+const TASK_DETAIL_URL = '/pages/task-management/task-detail.html?task_role=project_leader&task_id=T001';
 
 /* Issue #198: when data isolation is enabled (T001's default -- see
  * task-detail.html's DEFAULT_TASK_DATA.isolationEnabled), the publish

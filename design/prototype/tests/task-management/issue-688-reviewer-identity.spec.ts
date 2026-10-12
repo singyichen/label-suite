@@ -59,7 +59,7 @@ async function getTaskMembers(page: Page): Promise<TaskMember[]> {
 }
 
 async function openReviewEdit(page: Page) {
-  await page.goto(TASK_DETAIL_URL);
+  await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader`);
   await openSettingsSection(page, 'review');
   await page.locator('#reviewEditBtn').click();
 }
@@ -105,7 +105,7 @@ test.describe('Task detail reviewer identity format — opaque user id, not Emai
   // FR-010s-1 REVIEWER_ID_FORMAT: every TASK_MEMBERS entry carries an `id`
   // shaped as a lowercase slug (no `@`, no whitespace) alongside `email`.
   test('TASK_MEMBERS entries carry a slug-shaped id, not just email', async ({ page }) => {
-    await page.goto(TASK_DETAIL_URL);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader`);
     const members = await getTaskMembers(page);
 
     expect(members).toHaveLength(11);
@@ -125,7 +125,7 @@ test.describe('Task detail reviewer identity format — opaque user id, not Emai
   test('reviewer_ids/arbiter_ids seeds hold member ids, not Email, and resolve into TASK_MEMBERS', async ({
     page,
   }) => {
-    await page.goto(TASK_DETAIL_URL);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader`);
 
     const members = await getTaskMembers(page);
     const idSet = new Set(members.map((m) => m.id));
@@ -207,13 +207,13 @@ test.describe('Task detail reviewer identity format — opaque user id, not Emai
   // own review units; the identity contract it has to satisfy is unchanged,
   // so the guard now reads the derivation each task actually renders.
   test('review workload aggregation (byReviewer) is keyed by member id, not Email', async ({ page }) => {
-    await page.goto(TASK_DETAIL_URL);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader`);
 
     const members = await getTaskMembers(page);
     const idSet = new Set(members.map((m) => m.id));
 
     for (const taskId of REVIEW_PROFILE_TASK_IDS) {
-      await page.goto(`${TASK_DETAIL_URL}?task_id=${taskId}`);
+      await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${taskId}`);
       // The derivation is refreshed by the render pass, so the member tab
       // has to be open before reading it.
       await openMemberTab(page);
@@ -239,7 +239,7 @@ test.describe('Task detail reviewer identity format — opaque user id, not Emai
   // human identification -- Email is a display-only attribute (FR-010s-1),
   // this must stay green through Green.
   test('member list still displays Email for every member', async ({ page }) => {
-    await page.goto(TASK_DETAIL_URL);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader`);
     await openMemberTab(page);
 
     const members = await getTaskMembers(page);
@@ -262,7 +262,7 @@ test.describe('Task detail reviewer identity format — opaque user id, not Emai
   // (byReviewer, reviewer_ids/arbiter_ids) silently disconnects from the
   // person who accrued it.
   test('member id survives remove-then-rejoin via search-add, unchanged from before removal', async ({ page }) => {
-    await page.goto(TASK_DETAIL_URL);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader`);
 
     const original = await removeAndRejoinMemberAsReviewer(page, 'Alex Wang');
 
@@ -286,7 +286,7 @@ test.describe('Task detail reviewer identity format — opaque user id, not Emai
   // `undefined` to the literal string "undefined", which can then be
   // written into reviewer_ids on save.
   test('reviewer checkbox for a rejoined member uses their id, not "undefined" or Email', async ({ page }) => {
-    await page.goto(TASK_DETAIL_URL);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader`);
 
     const original = await removeAndRejoinMemberAsReviewer(page, 'Alex Wang');
 

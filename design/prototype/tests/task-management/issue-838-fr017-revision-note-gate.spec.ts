@@ -35,7 +35,7 @@
 import { test, expect } from '../fixtures';
 import type { Page } from '@playwright/test';
 
-const TASK_DETAIL_URL = '/pages/task-management/task-detail.html?task_id=T001';
+const TASK_DETAIL_URL = '/pages/task-management/task-detail.html?task_role=project_leader&task_id=T001';
 
 type StoredRound = {
   round: number;

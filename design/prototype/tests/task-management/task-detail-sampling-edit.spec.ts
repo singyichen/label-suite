@@ -9,7 +9,7 @@ const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 
 test.describe('Task detail sampling edit state', () => {
   test('shows separated sampling section with view/edit mode', async ({ page }) => {
-    await page.goto(TASK_DETAIL_URL);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader`);
 
     await expect(page.locator('#executionTitle')).toHaveText('任務狀態與執行控制');
     await expect(page.locator('#samplingTitle')).toHaveText('抽樣設定');
@@ -79,7 +79,7 @@ test.describe('Task detail sampling edit state', () => {
 
   test('renders one read-only IAA metric row per output type, sourced from OUTPUT_TYPE_IAA_REGISTRY', async ({ page }) => {
     // T010 = entity_recognition + relation_identification.
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T010`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T010`);
 
     const summaryRows = page.locator('#samplingIaaSummaryList .kv-dl-row');
     await expect(summaryRows).toHaveCount(2);
@@ -101,7 +101,7 @@ test.describe('Task detail sampling edit state', () => {
 
   test('shows not-applicable IAA state for free_text outputs with no override input', async ({ page }) => {
     // T009 = free_text only (no automatic IAA metric).
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T009`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T009`);
 
     const summaryRows = page.locator('#samplingIaaSummaryList .kv-dl-row');
     await expect(summaryRows).toHaveCount(1);
@@ -117,7 +117,7 @@ test.describe('Task detail sampling edit state', () => {
   });
 
   test('edits per-output-type target agreement override, validates 0..1 bounds, and persists on save', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T001`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T001`);
     await openSettingsSection(page, 'sampling');
     await page.locator('#samplingEditBtn').click();
 
@@ -136,7 +136,7 @@ test.describe('Task detail sampling edit state', () => {
   });
 
   test('translates IAA metric labels and not-applicable text to English', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T009`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T009`);
 
     // #langToggle is in static markup but its listener binds only after every
     // tab panel fetch resolves; the summary row is rendered later still, so
@@ -164,7 +164,7 @@ test.describe('Task detail sampling edit state', () => {
   // single-output sequence_tagging task, so its sampling summary/edit rows are
   // driven by exactly one OUTPUT_TYPE_IAA_REGISTRY entry.
   test('registers sequence_tagging as span-unit u-alpha with no leaked threshold in the sampling summary (FR-012L, FR-043 §2)', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T006`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T006`);
 
     const summaryRows = page.locator('#samplingIaaSummaryList .kv-dl-row');
     await expect(summaryRows).toHaveCount(1);
@@ -182,7 +182,7 @@ test.describe('Task detail sampling edit state', () => {
   });
 
   test('leaves the target-agreement override input empty for sequence_tagging in the sampling edit form (FR-012L, FR-043 §2)', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T006`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T006`);
     await openSettingsSection(page, 'sampling');
     await page.locator('#samplingEditBtn').click();
 
@@ -211,7 +211,7 @@ test.describe('Task detail sampling edit state', () => {
   // rendering (single border layer, no extra divider, no overflow) and are
   // expected to fail against the current markup/CSS.
   test('sampling edit isolation block has a single border layer with no extra divider', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T001`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T001`);
     await openSettingsSection(page, 'sampling');
     await page.locator('#samplingEditBtn').click();
 
@@ -250,7 +250,7 @@ test.describe('Task detail sampling edit state', () => {
   });
 
   test('sampling edit isolation block keeps a single border layer and a visible risk message after disabling isolation', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T001`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T001`);
     await openSettingsSection(page, 'sampling');
     await page.locator('#samplingEditBtn').click();
     await expect(page.locator('#isolationToggle')).toBeChecked();
@@ -281,7 +281,7 @@ test.describe('Task detail sampling edit state', () => {
 
   test('sampling edit isolation block has a single border layer with no horizontal overflow at a narrow viewport', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 800 });
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T001`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T001`);
     await openSettingsSection(page, 'sampling');
     await page.locator('#samplingEditBtn').click();
 

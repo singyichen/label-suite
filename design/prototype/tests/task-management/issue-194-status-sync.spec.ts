@@ -49,7 +49,7 @@ test.describe('Issue #194: T003 status stays in sync', () => {
   });
 
   test('task detail shows a coherent non-draft state for T003', async ({ page }) => {
-    await page.goto('/pages/task-management/task-detail.html?task_id=T003');
+    await page.goto('/pages/task-management/task-detail.html?task_role=project_leader&task_id=T003');
 
     await expect(page.locator('#statusBadge')).toContainText('正式標記進行中');
     await expect(page.locator('#statusStepper .step-current .step-label-wrap')).toHaveText('正式標記中');

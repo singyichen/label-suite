@@ -38,7 +38,7 @@ const MOVED_IDS = [
 ];
 
 async function openDetail(page: Page, query: string) {
-  await page.goto(`${TASK_DETAIL_URL}?${query}`);
+  await page.goto(`${TASK_DETAIL_URL}?${query}${/role=/.test(query) ? "" : "&task_role=project_leader"}`);
   await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
 }
 

@@ -18,7 +18,7 @@ const PANEL_LOAD_TIMEOUT = 15000;
 
 test.describe('Task detail review settings', () => {
   test('cancel with a dirty draft asks for confirmation and discards changes', async ({ page }) => {
-    await page.goto(TASK_DETAIL_URL);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader`);
     await openSettingsSection(page, 'review');
     await page.locator('#reviewEditBtn').click();
 
@@ -35,7 +35,7 @@ test.describe('Task detail review settings', () => {
   });
 
   test('guards tab switches against unsaved review-setting changes via the leave modal', async ({ page }) => {
-    await page.goto(TASK_DETAIL_URL);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader`);
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
     await openSettingsSection(page, 'review');
     await page.locator('#reviewEditBtn').click();
@@ -68,7 +68,7 @@ test.describe('Task detail review settings', () => {
         body: `${body}\n;window.LabelSuiteTaskDetailData.profiles['T001'].arbiterIds = [];\n`,
       });
     });
-    await page.goto(TASK_DETAIL_URL);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader`);
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
     await openSettingsSection(page, 'review');
     await page.locator('#reviewEditBtn').click();
@@ -102,7 +102,7 @@ test.describe('Task detail review settings', () => {
         body: `${body}\n;window.LabelSuiteTaskDetailData.profiles['T001'].arbiterIds = [];\n`,
       });
     });
-    await page.goto(TASK_DETAIL_URL);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader`);
 
     // Wait for the async panel render before toggling language (same
     // click-before-bind race guard as the sampling spec).

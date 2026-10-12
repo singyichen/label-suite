@@ -32,7 +32,7 @@ async function publishDryRunRound(page: Page) {
 }
 
 test('publishing R1 from draft always lands in dry_run_in_progress regardless of the round outcome (FR-013(1), FR-010o-3)', async ({ page }) => {
-  await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}`);
+  await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${TASK_ID}`);
 
   await expect(page.locator('#statusBadge')).toContainText('草稿');
   await publishDryRunRound(page);
@@ -72,7 +72,7 @@ test('submission alone no longer moves the task into waiting_iaa_confirmation; o
 });
 
 test('creating R2 from waiting_iaa_confirmation lands in dry_run_in_progress, never straight back to waiting_iaa_confirmation (FR-013(2)-(3))', async ({ page }) => {
-  await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}&status=waiting_iaa_confirmation`);
+  await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${TASK_ID}&status=waiting_iaa_confirmation`);
   await expect(page.locator('#statusBadge')).toContainText('待 IAA 確認');
 
   await publishDryRunRound(page);
@@ -106,6 +106,6 @@ test('creating R2 from waiting_iaa_confirmation lands in dry_run_in_progress, ne
 
   // Reloading before any R2 progress is written must not auto-advance past
   // dry_run_in_progress (a fresh load with no progress key set stays put).
-  await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}&status=dry_run_in_progress`);
+  await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${TASK_ID}&status=dry_run_in_progress`);
   await expect(page.locator('#statusBadge')).toContainText('試標進行中');
 });

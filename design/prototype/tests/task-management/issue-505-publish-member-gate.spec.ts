@@ -32,7 +32,7 @@ async function disableMember(page: Page, name: string) {
 
 test.describe('Publish member-count gate (FR-010t, SC-038)', () => {
   test('blocks 新增試標回合 and shows the annotator gap when active annotators fall short', async ({ page }) => {
-    await page.goto(TASK_DETAIL_URL + '?task_id=T001');
+    await page.goto(TASK_DETAIL_URL + '?task_role=project_leader&task_id=T001');
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
 
     // Default T001 seed has exactly 3 active annotators (Alex Wang, Olivia
@@ -56,7 +56,7 @@ test.describe('Publish member-count gate (FR-010t, SC-038)', () => {
     // reviewers, so those four -- not the original three -- are the members
     // the gate counts, and every one of them must be disabled to drop the
     // active-inside-reviewer_ids count to 0 and open a gap of 1.
-    await page.goto(TASK_DETAIL_URL + '?task_id=T016&status=waiting_iaa_confirmation');
+    await page.goto(TASK_DETAIL_URL + '?task_role=project_leader&task_id=T016&status=waiting_iaa_confirmation');
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
 
     await disableMember(page, '王小明');
@@ -76,7 +76,7 @@ test.describe('Publish member-count gate (FR-010t, SC-038)', () => {
     // Same fixed-threshold-of-1 reviewer gate as above: all four members
     // inside T016's reviewer_ids must be disabled (not just one) to open the
     // reviewer gap alongside the annotator gap.
-    await page.goto(TASK_DETAIL_URL + '?task_id=T016&status=draft');
+    await page.goto(TASK_DETAIL_URL + '?task_role=project_leader&task_id=T016&status=draft');
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
 
     await disableMember(page, 'Alex Wang');

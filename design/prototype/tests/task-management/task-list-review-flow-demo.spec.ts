@@ -64,7 +64,7 @@ test.describe('Review-flow demo seeds (T014-T016)', () => {
   test('resolves the T014 task-detail profile with 5 records and single_label outputs', async ({
     page,
   }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T014`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T014`);
 
     // FR-028: the task name lives in the H1; the breadcrumb tail is the task id.
     await expect(page.locator('#pageTitle')).toHaveText('審核流程示範：試標', {

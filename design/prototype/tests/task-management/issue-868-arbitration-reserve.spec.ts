@@ -12,7 +12,7 @@ const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 const PANEL_LOAD_TIMEOUT = 15000;
 
 async function openReviewEdit(page: Page, language: 'zh' | 'en' = 'zh'): Promise<void> {
-  await page.goto(TASK_DETAIL_URL);
+  await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader`);
   if (language === 'en') await page.getByTestId('lang-toggle').click();
   await openSettingsSection(page, 'review');
   await page.locator('#reviewEditBtn').click();

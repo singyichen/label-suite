@@ -76,7 +76,7 @@ const TOKENIZER_ENGINE_WITH_VERSION = 'ckip-transformers';
 const TOKENIZER_ENGINE_VERSION = '0.3.4';
 
 async function gotoAnnotationResults(page: Page, taskId: string) {
-  await page.goto(`${TASK_DETAIL_URL}?task_id=${taskId}&tab=annotation-results`);
+  await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${taskId}&tab=annotation-results`);
   await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 }
 
