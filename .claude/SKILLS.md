@@ -58,7 +58,7 @@ This document provides a comprehensive overview of all available Spec-Kit Comman
 │   ├── xmind-import/                # Fetch XMind share URL → Mermaid
 │   ├── ui-ux-pro-max/               # UI/UX Design Intelligence
 │   └── react-best-practices/        # React/Next.js performance optimization (Vercel)
-├── agents/                      # AI Agent definitions (26 agents)
+├── agents/                      # AI Agent definitions (34 agents)
 └── SKILLS.md                    # This file
 ```
 
