@@ -2086,7 +2086,12 @@
    * still in dispute past IAA confirmation) -- callers drop those instead
    * of rendering a half row. */
   function buildDryRunFeedbackRow(taskId, runType, sampleId, entry, identity) {
-    var decisive = getSampleHistory(taskId, runType, sampleId, identity).filter(function (event) {
+    /* issue #1266: a missing viewer is now masked like an annotator, which
+     * would hide the very settling events this row summarises. This is an
+     * internal derivation, not a viewer read; the caller (getDryRunFeedback)
+     * has already applied the FR-090 / FR-096 disclosure gate, so it reads
+     * the unmasked trail with an explicit non-annotator viewer. */
+    var decisive = getSampleHistory(taskId, runType, sampleId, identity, { role: 'system' }).filter(function (event) {
       return DRY_RUN_FEEDBACK_SOURCE_ACTIONS[event.action];
     });
     if (!decisive.length) return null;
