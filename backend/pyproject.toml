@@ -40,8 +40,10 @@ plugins = ["pydantic.mypy"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+addopts = ["--strict-markers"]
 markers = [
     "integration: requires an external service (e.g. a live PostgreSQL server)",
+    "security: authentication / data-leak protection tests (run in isolation with `pytest -m security`)",
 ]
 
 [build-system]
