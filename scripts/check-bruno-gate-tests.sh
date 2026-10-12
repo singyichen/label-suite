@@ -362,6 +362,80 @@ test_no_changes_passes() {
     assert_exit_code 0 "$GATE_EXIT" "no relevant changes"
 }
 
+# 11. CI mode (--base): on a GitHub pull_request run, actions/checkout leaves
+#     HEAD at a synthetic merge commit ("Merge <head> into <base>"), so the
+#     exemption marker committed on the feature branch never reaches HEAD's
+#     own commit message. Corrected behaviour: the gate must scan every
+#     non-merge commit in <base>..HEAD, not just HEAD, so the marker commit
+#     inside the range still bypasses the gate.
+test_base_flag_detects_marker_in_merge_commit_range() {
+    local repo
+    repo="$(make_demo_repo)"
+
+    git -C "$repo" checkout -q -b feature
+    write_router_py "$repo/backend/app/modules/demo/router.py" v2
+    git -C "$repo" add backend/app/modules/demo/router.py
+    git -C "$repo" -c user.email="qa-test@example.com" -c user.name="QA Test" \
+        commit -q -m "feat: update route
+
+FR-131-exempt: skeleton-only route"
+
+    git -C "$repo" checkout -q main
+    git -C "$repo" checkout -q -b synthetic
+    git -C "$repo" -c user.email="qa-test@example.com" -c user.name="QA Test" \
+        merge -q --no-ff feature -m "Merge feature into main"
+
+    capture_gate "$repo" --base main
+    assert_exit_code 0 "$GATE_EXIT" "CI merge-commit exemption across range"
+    assert_output_contains "$GATE_OUTPUT" "Bypassing" "CI merge-commit exemption across range"
+}
+
+# 12. CI mode (--base): same synthetic-merge shape as (11), but no commit in
+#     the range carries the exemption marker. The gate must still fail — this
+#     guards against a fix for (11) that relaxes the marker requirement
+#     entirely instead of widening the scan to the whole range.
+test_base_flag_no_marker_in_range_fails() {
+    local repo
+    repo="$(make_demo_repo)"
+
+    git -C "$repo" checkout -q -b feature
+    write_router_py "$repo/backend/app/modules/demo/router.py" v2
+    git -C "$repo" add backend/app/modules/demo/router.py
+    git -C "$repo" -c user.email="qa-test@example.com" -c user.name="QA Test" \
+        commit -q -m "feat: update route"
+
+    git -C "$repo" checkout -q main
+    git -C "$repo" checkout -q -b synthetic
+    git -C "$repo" -c user.email="qa-test@example.com" -c user.name="QA Test" \
+        merge -q --no-ff feature -m "Merge feature into main"
+
+    capture_gate "$repo" --base main
+    assert_exit_code 1 "$GATE_EXIT" "CI merge-commit without marker still fails"
+    assert_output_contains "$GATE_OUTPUT" "FR-131 gate:" "CI merge-commit without marker still fails"
+}
+
+# 13. Local mode (no --base) must keep reading HEAD only: the exemption
+#     marker sits on an older commit, not HEAD, so a route change staged in
+#     the working tree still fails the gate.
+test_local_mode_marker_not_at_head_still_fails() {
+    local repo
+    repo="$(make_demo_repo)"
+
+    git -C "$repo" -c user.email="qa-test@example.com" -c user.name="QA Test" \
+        commit -q --allow-empty -m "chore: declare exemption
+
+FR-131-exempt: skeleton-only route"
+    git -C "$repo" -c user.email="qa-test@example.com" -c user.name="QA Test" \
+        commit -q --allow-empty -m "chore: unrelated follow-up"
+
+    write_router_py "$repo/backend/app/modules/demo/router.py" v2
+    git -C "$repo" add backend/app/modules/demo/router.py
+
+    capture_gate "$repo"
+    assert_exit_code 1 "$GATE_EXIT" "local mode marker not at HEAD"
+    assert_output_contains "$GATE_OUTPUT" "FR-131 gate:" "local mode marker not at HEAD"
+}
+
 test_route_change_without_bru_fails
 test_exemption_marker_bypasses_gate
 test_single_router_with_matching_bru_passes
@@ -372,5 +446,8 @@ test_bru_missing_structure_fails
 test_environments_bru_change_ignored
 test_base_flag_detects_committed_route_change
 test_no_changes_passes
+test_base_flag_detects_marker_in_merge_commit_range
+test_base_flag_no_marker_in_range_fails
+test_local_mode_marker_not_at_head_still_fails
 
 echo "check-bruno-gate script tests passed"
