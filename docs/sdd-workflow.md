@@ -270,7 +270,7 @@ archive 回寫 ──→ specs/[module]/NNN-feature/spec.md（版本升級 + Cha
 | 層級 | 唯一責任 | 指令類別 |
 |------|----------|----------|
 | 1. OpenSpec schema validation | OpenSpec schema、delta 與 scenario 結構 | `openspec validate <change> --type change` 或 `openspec validate --changes --no-interactive`；採 non-strict schema gate |
-| 2. Project SDD lint | 專案 headings、goal/status/ownership/retired-path 規則 | Project SDD lint 指令（後續工具落地前，依 workflow checklist 與 review evidence 執行） |
+| 2. Project SDD lint | 專案 headings、goal/status/ownership/retired-path 規則 | `scripts/check-sdd.sh [--strict] [repo-root]`（規格：`specs/foundation/001-project-sdd-lint/spec.md`；CI 對應 `Project SDD Lint` job，不取代 `openspec validate`） |
 | 3. Code/test gates | 受影響實作的 Red/Green evidence、type、unit、integration、E2E、security 與 lint，以及每個 PR 群組依序完成 Code Review、QA Scenario、安全、適用效能審查與使用者確認 | `uv run ...`、`pnpm ...`、prototype Playwright、CI 對應指令與 PR-group review evidence |
 | 4. Source-Verify + write-back/archive gate | archive-time 正典 ID、version 與 Changelog 完整性，**以及 derived view 每一條正典引用的可定位性** | 第 1–3 層與 Source-Verify evidence 是 `/opsx:archive` 的前提；archive 後須逐條 grep 驗證 derived view 的正典引用（見 §6.2）；final PR group 成功 write-back 才完成本層 |
 
