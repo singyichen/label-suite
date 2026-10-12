@@ -125,18 +125,18 @@
 
     function createEmptyRow(noResults) {
       var row = document.createElement('tr');
-      row.className = 'empty-row';
+      row.className = 'empty-state-row';
       var cell = document.createElement('td');
-      cell.className = 'empty-row-cell';
+      cell.className = 'empty-state-td empty-state-dense';
       cell.colSpan = 5;
       var wrap = document.createElement('div');
-      wrap.className = 'empty-row-wrap';
+      wrap.className = 'empty-state empty-state-cell';
       var title = document.createElement('p');
-      title.className = 'empty-title';
+      title.className = 'empty-state-title';
       title.id = 'emptyTitle';
       title.textContent = noResults ? t('emptyNoResultsTitle') : t('emptyTitle');
       var description = document.createElement('p');
-      description.className = 'empty-desc';
+      description.className = 'empty-state-desc';
       description.id = 'emptyDesc';
       description.textContent = noResults
         ? t('emptyNoResultsDesc')
@@ -153,10 +153,10 @@
       var row = document.createElement('tr');
       row.className = 'error-row';
       var cell = document.createElement('td');
-      cell.className = 'empty-row-cell';
+      cell.className = 'empty-state-td empty-state-dense';
       cell.colSpan = 5;
       var wrap = document.createElement('div');
-      wrap.className = 'empty-row-wrap';
+      wrap.className = 'empty-state empty-state-cell';
       var title = document.createElement('p');
       title.className = 'error-title';
       title.textContent = t('errorLoadTitle');

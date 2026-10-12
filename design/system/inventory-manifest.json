@@ -101,6 +101,7 @@
       "pagination": ["pagination", "page-btn", "page-size-select", "page-ellipsis"],
       "chip": ["cause-chip", "task-type-chip", "rv-unit-chip", "md-chip", "md-chips", "ar-va-chip", "ar-classif-chip", "round-metric-chip"],
       "toolbar": ["toolbar"],
+      "empty-state": ["empty-state"],
       "content-tabs": ["admin-tab", "admin-tabs"],
       "color-dot": ["entity-color-dot", "t-dot"],
       "divider": ["divider"],

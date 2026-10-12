@@ -10,7 +10,7 @@ auto-dismisses) — none of these are restated here.
 
 ## Empty State (UXC-09)
 
-The in-table empty row (`.empty-row` with `.empty-title` / `.empty-desc`)
+The in-table empty row (`.empty-state-row` with `.empty-state-title` / `.empty-state-desc`)
 renders two localized modes: first-use "no data yet" vs "filters matched
 nothing". Both are message-only: the page has no creation action (UXC-09's
 CTA clause is inapplicable, same stance as annotation-list), and for the

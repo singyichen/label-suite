@@ -204,7 +204,7 @@ test.describe('Dataset analysis list filters and pagination', () => {
   }) => {
     await page.goto(`${DATASET_ANALYSIS_URL}?view=empty`);
 
-    await expect(page.locator('#taskTableBody tr.empty-row')).toContainText(
+    await expect(page.locator('#taskTableBody tr.empty-state-row')).toContainText(
       '尚無可分析的任務',
     );
     await expect(page.locator('#taskTableBody tr.error-row')).toHaveCount(0);
@@ -225,7 +225,7 @@ test.describe('Dataset analysis list filters and pagination', () => {
 
     await page.goto(DATASET_ANALYSIS_URL);
 
-    await expect(page.locator('#taskTableBody tr.empty-row')).toContainText(
+    await expect(page.locator('#taskTableBody tr.empty-state-row')).toContainText(
       '尚無可分析的任務',
     );
     await expect(page.locator('#taskTableBody tr.error-row')).toHaveCount(0);
