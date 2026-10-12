@@ -741,7 +741,9 @@
   // this same page's own activateWorkspaceTab()/the AC-3.5 rekey hook
   // before the pagehide listener below actually runs).
   function captureWorkspaceTabScroll(dedupeKey) {
-    if (!dedupeKey) return;
+    // issue #1121: while a restore is still waiting for async content the live
+    // scrollY is a clamped value -- persisting it would overwrite the real one.
+    if (!dedupeKey || workspaceScrollRestorePending) return;
     var scrollState = readWorkspaceTabScrollState();
     scrollState[dedupeKey] = window.scrollY;
     writeWorkspaceTabScrollState(scrollState);
@@ -765,13 +767,18 @@
     }
   }
 
+  // True while restoreActiveWorkspaceTabScroll() is still retrying (issue #1121).
+  var workspaceScrollRestorePending = false;
+
   // Restores the now-active tab's own stored scroll position, if any.
   function restoreActiveWorkspaceTabScroll(state) {
     if (state.activeIndex < 0 || !state.tabs[state.activeIndex]) return;
     var dedupeKey = state.tabs[state.activeIndex].dedupeKey;
     var y = readWorkspaceTabScrollState()[dedupeKey];
     if (typeof y !== 'number') return;
-    window.scrollTo(0, y);
+    // behavior: 'instant' bypasses a page's own `scroll-behavior: smooth`.
+    function jump() { window.scrollTo({ left: 0, top: y, behavior: 'instant' }); }
+    jump();
     if (Math.abs(window.scrollY - y) <= 1) return;
 
     // issue #1121: async panels (task-detail etc.) grow the document after
@@ -785,6 +792,7 @@
     function stop() {
       if (done) return;
       done = true;
+      workspaceScrollRestorePending = false;
       if (observer) observer.disconnect();
       window.clearTimeout(timer);
       for (var i = 0; i < userEvents.length; i++) {
@@ -793,9 +801,10 @@
     }
     function retry() {
       if (done) return;
-      window.scrollTo(0, y);
+      jump();
       if (Math.abs(window.scrollY - y) <= 1) stop();
     }
+    workspaceScrollRestorePending = true;
     for (var i = 0; i < userEvents.length; i++) {
       window.addEventListener(userEvents[i], stop, { capture: true, passive: true });
     }

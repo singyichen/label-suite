@@ -948,6 +948,19 @@ body.sidebar-collapsed .notif-dropdown { left: 88px; }
   }
 }
 
+/* issue #1121: pages style `main { overflow-y: auto }`, which makes <main> the
+   sticky bar's scroll container; since <main> grows to content height the
+   window scrolls instead and the bar scrolls away. Keep <main> a non-scroller
+   so `position: sticky` resolves against the viewport. `overflow-x: clip`
+   (not hidden/auto, which would turn <main> back into a scroller) plus
+   `min-width: 0` keep the wide tab strip from stretching the page sideways.
+   annotation-workspace (`.workspace-root`, 100vh + overflow:hidden) is excluded. */
+main:has(> .workspace-tab-bar):not(.workspace-root) {
+  overflow-x: clip;
+  overflow-y: visible;
+  min-width: 0;
+}
+
 /* ── Workspace Tabs (issue #1075, specs/shared/019-workspace-tabs) ───────
    Shell-level tab strip mounted as the first child of each page's <main>
    by sidebar.js mountWorkspaceTabBar(). Distinct from a page's own in-page
@@ -955,18 +968,6 @@ body.sidebar-collapsed .notif-dropdown { left: 88px; }
    user-management.html) -- see design/system/MASTER.md's terminology note.
    Mobile (<=MOBILE_BP, 767px) dropdown replacement is a later sub-group
    (G2f, spec 019 FR-002/US6); hidden here instead of left broken. */
-/* issue #1121: pages style `main { overflow-y: auto }`, which makes <main> the
-   sticky bar's scroll container; since <main> grows to content height the
-   window scrolls instead and the bar scrolls away. Keep <main> a non-scroller
-   so `position: sticky` resolves against the viewport. `overflow-x: clip`
-   (not hidden/auto, which would turn <main> back into a scroller) plus
-   `min-width: 0` keep the wide tab strip from stretching the page sideways. */
-main:has(> .workspace-tab-bar) {
-  overflow-x: clip;
-  overflow-y: visible;
-  min-width: 0;
-}
-
 .workspace-tab-bar {
   display: flex;
   align-items: stretch;
