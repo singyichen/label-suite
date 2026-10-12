@@ -448,7 +448,7 @@
       <h3><span class="card-dot dot-accent"></span>四道閘門的唯一責任</h3>
       <ul>
         <li><b>閘門 1 OpenSpec schema validation</b> — 只驗 schema、delta 與 scenario 結構。採 non-strict schema gate（<code>openspec validate --changes --no-interactive</code>），<b>不</b>驗專案 headings、ownership、status 與 retired path。</li>
-        <li><b>閘門 2 Project SDD lint</b> — 專案 headings 與 goal／status／ownership／retired-path 規則。工具落地前依 workflow checklist 與 review evidence 執行。</li>
+        <li><b>閘門 2 Project SDD lint</b> — 專案 headings 與 goal／status／ownership／retired-path 規則。以 <code>scripts/check-sdd.sh</code> 執行（規格 <code>specs/foundation/001-project-sdd-lint/spec.md</code>），獨立於 <code>openspec validate</code>，不取代閘門 1。</li>
         <li><b>閘門 3 Code/test gates</b> — 受影響實作的 Red/Green evidence 與適用的 type、lint、unit、integration、prototype、E2E、security 指令，外加每個 PR 群組的審查證據。</li>
         <li><b>閘門 4 Source-Verify + write-back/archive</b> — archive-time 正典 ID、version 與 Changelog 完整性，以及 archive 後逐條 grep 驗證 derived view 的每一條正典引用。</li>
         <li><code>/opsx:verify</code> 可跑適用檢查，但<b>不取代任何一道閘門</b>；<code>openspec validate</code> 也只是閘門 1。</li>
