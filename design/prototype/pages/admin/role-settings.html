@@ -1212,7 +1212,7 @@
        non-boolean values, or values that contradict a fixed cell. */
     function isValidStoredMatrix(state) {
       if (state === null || typeof state !== 'object' || Array.isArray(state)) return false;
-      const cells = {};
+      const cells = Object.create(null);
       document.querySelectorAll('.matrix-checkbox').forEach(cb => { cells[getCheckboxKey(cb)] = cb; });
       return Object.keys(state).every(k => {
         const cb = cells[k];
