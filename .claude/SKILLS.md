@@ -93,7 +93,7 @@ OpenSpec is the implementation/change workflow layer; `specs/` remains the sole 
 
 ### Related Files
 
-- **Constitution**: `.specify/memory/constitution.md` (6 core principles)
+- **Constitution**: `specs/_governance/constitution.md`
 - **Templates**: `.specify/templates/` (spec, plan, tasks, checklist, agent-file, constitution templates)
 - **Specs**: `specs/` (feature specifications, organized as `specs/[module]/NNN-feature/`)
 
@@ -283,7 +283,7 @@ For the Label Suite project, these skills enforce additional constraints for the
 - **[CLAUDE.md](../CLAUDE.md)**: Project coding standards and conventions
 - **[AGENTS.md](../AGENTS.md)**: Reference for all 26 AI agents and agent team structure
 - **[CODE_REVIEW_GUIDE.md](skills/code-review-deep/CODE_REVIEW_GUIDE.md)**: Detailed code review usage guide
-- **[Constitution](./../.specify/memory/constitution.md)**: Six core development principles
+- **[Constitution](../specs/_governance/constitution.md)**: Core development principles
 
 ---
 

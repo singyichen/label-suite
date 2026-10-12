@@ -125,12 +125,12 @@ For each confirmed finding, update the spec:
 - **介面定義**: List UI elements with bullet points, describe what the user sees and can interact with
 - **行為規則**: Describe conditional behaviors using "When X, Then Y" or "若...則..." patterns
 - **Prototype 互動規格**: Describe the specific interaction — button states, validation triggers, enabled/disabled conditions
-- **FR entries**: Keep the `FR-NNN` numbering scheme; new FR items get the next available number
+- **FR entries**: Keep the `FR-NNN` numbering scheme; do NOT add new FR/AC items here: a new requirement must go through the OpenSpec change flow (`/opsx:propose`), so list it as a finding and stop
 - **邊界情況**: Describe what happens in edge/error scenarios
 
 ## Step 7 — Version Bump & Changelog
 
-1. **Bump the patch version** in spec frontmatter (e.g., `2.3.0` → `2.3.1`)
+1. **Bump the patch version** in spec frontmatter (e.g., `2.3.0` → `2.3.1`) — only when no FR/AC is added or removed (Lightweight Path, per CLAUDE.md); otherwise stop and route through `/opsx:propose`
 2. **Add a changelog entry** at the bottom of the spec (or in the existing changelog section):
 
 ```markdown
@@ -166,5 +166,5 @@ Output a final summary:
 - **Never auto-delete spec content** — REMOVED items must be flagged, not deleted
 - **Never add demo data to spec** — no hardcoded example values, sample text, or mock data
 - **Never introduce implementation language** — no CSS class names, JS function names, or HTML tag specifics in spec
-- **Preserve FR numbering** — when adding new FR items, find the next unused number in sequence
+- **Preserve FR numbering** — never renumber existing FR items; new FR/AC items are not added by this command (route them through `/opsx:propose`)
 - **One prototype = one spec update** — if multiple prototypes changed, process each pair independently and update each spec separately

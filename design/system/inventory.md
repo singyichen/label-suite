@@ -2,9 +2,12 @@
 
 > **用途：** 記錄所有 prototype 頁面中出現的 UI elements，對照 MASTER.md 的定義狀態，作為 design system 擴充的依據。
 >
-> **掃描範圍：** `design/prototype/` 所有頁面
-> **最後掃描：** 2026-07-10（⚠ 已知落後於 2026-08-25 後新增的工作區狀態，如 finalized card、review unit context、empty unit、PDF guideline modal；重新掃描待 issue #375 C 段 manifest/scanner 落地後由生成工具產生，見 [inventory-manifest.json](inventory-manifest.json)）
-> **掃描頁面：** account/login.html、account/register.html、account/forgot-password.html、account/reset-password.html、account/profile.html、dashboard/dashboard.html、admin/user-management.html、admin/role-settings.html、task-management/task-detail.html、task-management/task-list.html、task-management/task-new.html、task-management/task-detail.panels/*、annotation/annotation-list.html、annotation/annotation-workspace.html、dataset/dataset-analysis-list.html、dataset/dataset-analysis-detail.html、dataset/dataset-analysis-detail.partials/*
+> **維護方式（機器核對，非手動掃描日期）：**
+> - 元件清單以 [inventory-manifest.json](inventory-manifest.json) 的 `componentRegistry` 為唯一來源；本檔每個 `### <狀態 emoji> <名稱>` 標題，必須透過 manifest 的 `inventoryHeadings`（標題 → registry key）與 registry **一一對應**，多一個或少一個都會報紅。
+> - 本檔仍為手寫文件（變體表、出現頁面、MASTER.md 定義狀態）；不是產生檔。
+> - 「prototype 用了哪些元件」由 class 掃描閘門檢查：`design/prototype/pages/**/*.{html,js}` 使用的每個 class 都必須在 manifest `classScan` 登記（元件前綴、過渡例外或頁面專屬），未登記即 CI 失敗。
+> - 驗證指令：`node scripts/gen-screen-inventory.mjs --check`（以及回歸測試 `bash scripts/inventory-tests.sh`）。
+>
 > **Design Token 來源：** `design/prototype/assets/tokens.css`
 > **反向索引：** [screen-inventory.md](screen-inventory.md)（「頁面 → 元件」視角；該檔為 generated view，由 [inventory-manifest.json](inventory-manifest.json) 產生）
 
@@ -12,15 +15,16 @@
 
 ## 維護時機
 
-**本文件必須在 prototype 異動時同步更新。** 觸發條件：
+**本文件與 manifest 必須在 prototype 異動時同步更新，漏了會被 `--check` 擋下。** 觸發條件：
 
 | 觸發 | 動作 |
 |------|------|
-| Prototype 新增一個 MASTER.md 尚未定義的 UI 元件 | 在本文件加入該元件，狀態標為 ❌ 未定義 |
+| Prototype 使用了未登記的新 class | 在 manifest `classScan` 登記其前綴：屬於既有元件 → `componentClasses`；新元件 → 先加 `componentRegistry` 與 `inventoryHeadings`，再於本檔加標題；僅頁面專屬 → `pageLocalClasses`；否則 CI 紅燈（`unregistered component class`） |
+| Prototype 新增一個 MASTER.md 尚未定義的 UI 元件 | 在本文件加入該元件標題，狀態標為 ❌ 未定義（標題需同時登記進 `inventoryHeadings`） |
 | MASTER.md 補上該元件規格 | 狀態改為 ✅ 已定義 |
-| 既有元件出現在新頁面 | 更新該元件的「出現頁面」欄 |
-| 元件從所有 prototype 中移除 | 狀態改為 🔒 封存 |
-| 本文件重新掃描 | 同步更新 [inventory-manifest.json](inventory-manifest.json) 後執行 `node scripts/gen-screen-inventory.mjs` 重新產生 [screen-inventory.md](screen-inventory.md) |
+| 既有元件出現在新頁面 | 更新該元件的「出現頁面」欄，並更新 manifest 該畫面的 `components` |
+| 元件從所有 prototype 中移除 | 狀態改為 🔒 封存（標題保留，registry key 不刪） |
+| 修改 manifest 或本檔標題 | 執行 `node scripts/gen-screen-inventory.mjs` 重新產生 [screen-inventory.md](screen-inventory.md)，再跑 `--check` 與 `bash scripts/inventory-tests.sh` |
 
 > `/label-suite-design` skill 以條件式引用本文件：僅在引入新 UI 元件時讀取，不在每次生成頁面時讀取。
 
@@ -31,7 +35,7 @@
 | 步驟 | 文件 | 說明 |
 |------|------|------|
 | 1 | `design/system/MASTER.md` | 補充元件規格（結構、token、互動規則、a11y） |
-| 2 | `design/system/inventory.md` | 加入清單，狀態標為 ✅ 已定義，更新出現頁面與最後掃描日期 |
+| 2 | `design/system/inventory.md` + `design/system/inventory-manifest.json` | 本檔加入標題並標為 ✅ 已定義、更新出現頁面；manifest 加入 `componentRegistry`、`inventoryHeadings` 與 `classScan.componentClasses` 前綴（兩者標題／key 必須一一對應） |
 | 3 | `design/prototype/pages/` | 使用 `/label-suite-design` skill 產生 prototype HTML |
 | 4 | `design/prototype/assets/tokens.css` | 若有新 token，同步更新 CSS 變數 |
 
@@ -231,14 +235,14 @@
 
 ### ✅ Sidebar
 
-**MASTER.md 狀態：** 已定義（規格、nav item states、divider 用法）
+**MASTER.md 狀態：** 已定義（規格、nav item states、divider 用法、Admin Submenu 子規格）
 
 | 元素 | 說明 | MASTER.md |
 |------|------|-----------|
 | Section nav items | active / inactive 狀態 | ✅ |
 | Divider | 分組用 | ✅ |
 | 僅 Desktop 顯示 | `hidden md:flex` | ✅ |
-| Admin Submenu（issue #725） | 「系統管理」L0 項目的可展開次選單，觸發項 + `role="menu"` 容器 + 兩個 `role="menuitem"` 子項連結；Desktop 展開狀態限定，Mobile／收合 fallback 為既有單一連結 | ❌ 尚未定義 |
+| Admin Submenu（issue #725） | 「系統管理」L0 項目的可展開次選單，觸發項 + `role="menu"` 容器 + 兩個 `role="menuitem"` 子項連結；Desktop 展開狀態限定，Mobile／收合 fallback 為既有單一連結 | ✅（MASTER.md §Sidebar → Admin Submenu） |
 
 **Admin Submenu 出現頁面：** 所有登入後頁面（`design/prototype/pages/shared/sidebar.js` 共用元件；子項僅於 `system_role = super_admin` 可見）
 
@@ -475,6 +479,99 @@
 |------|------|----------|--------|
 | Pulse (card skeleton) | opacity 閃爍，card 佈局佔位 | task-detail | 1 |
 | Shimmer (form skeleton) | 水平漸層掃過，表單佈局佔位 | profile | 1 |
+
+---
+
+### ✅ Language Toggle
+
+**MASTER.md 狀態：** 已定義（MASTER.md §Buttons → Language Toggle Button，zh-TW / EN 切換）
+
+- class：`lang-toggle`、`mobile-lang-toggle`（navbar 右側固定；mobile 版收在 drawer）
+- 出現頁面：所有頁面（auth 頁面自帶 navbar；登入後頁面由 shared sidebar 提供）
+
+---
+
+### ✅ Mini Button
+
+**MASTER.md 狀態：** 已定義（MASTER.md §Buttons 密集列操作 `.mini-btn`，含 reviewer active 狀態）
+
+- class：`mini-btn`、`mini-btn-primary` / `-danger` / `-success` / `-warning` / `-icon` / `-log` / `-active-approve`
+- 出現頁面：task-list、task-detail、annotation-list、annotation-workspace、user-management、role-settings
+
+---
+
+### ✅ Task Type / Run Mode Badge
+
+**MASTER.md 狀態：** 已定義（MASTER.md §Status Badges → Task Type 與 Run Mode Badge Mapping）
+
+- class：`badge-task-type-*`、`badge-official`、`badge-dry-run`（多由 JS 組字串產生，掃描閘門以前綴 `badge-task-type` / `badge-official` / `badge-dry-run` 登記）
+- 出現頁面：task-list、task-detail、dataset-analysis-list
+
+---
+
+### ✅ Status Pill
+
+**MASTER.md 狀態：** 已定義（MASTER.md §Status Pill，無框軟底，用於樣本層級狀態）
+
+- class：`status-submitted`、`status-saved`、`status-pending-*`
+- 出現頁面：annotation-list、annotation-workspace
+- 與 Status Badge 的差異：Badge 有框、用於任務層級；Pill 無框、用於密集列
+
+---
+
+### ✅ Empty State
+
+**MASTER.md 狀態：** 已定義（MASTER.md §Empty State：icon／標題／說明／可選動作；table-cell、panel、full-page 三種尺寸；issue #1188）
+
+- **過渡狀態：** prototype 目前仍有約十餘套各頁自訂的空狀態 class（`empty-state*`、`empty-row-*`、`stats-empty*`、`quality-empty*`、`ar-empty-*`、`worklog-empty-*` 等），在掃描閘門列為 `transitionalClasses`，理由指向 issue #1189（class 統一另案處理）
+- 與 State Panel 的差異：State Panel 是「表單送出後整區取代表單」，Empty State 是「清單／表格／面板沒有資料」
+- 出現頁面：dashboard、task-list、task-detail、annotation-list、annotation-workspace、user-management、role-settings、dataset-analysis-list、dataset-analysis-detail、shared notification dropdown
+
+---
+
+### ✅ Workspace Tabs
+
+**MASTER.md 狀態：** 已定義（MASTER.md §Workspace Tabs，shell 層級頁籤列；與 Desktop Content Tabs 為不同元件）
+
+- class：`workspace-tab`、`workspace-tab-bar`、`workspace-tab-overview-*`
+- 出現頁面：所有登入後頁面（`shared/sidebar.js` 的 `mountWorkspaceTabBar()` 注入）
+
+---
+
+### ⚠️ Notification Bell
+
+**MASTER.md 狀態：** 部分定義（MASTER.md §Sidebar → Notification Bell + Badge + Dropdown 已有 badge、dropdown、未讀項數值；尚無獨立章節，鍵盤操作與空狀態行為未規格化）
+
+- class：`notif-*`、`mobile-notification-bell-btn`
+- 出現頁面：所有登入後頁面（`shared/sidebar.js` 共用 fragment）
+- 缺口：開合鍵盤行為、focus 管理、`notif-empty` 對應 Empty State 後的版式
+
+---
+
+### ✅ Progress Bar
+
+**MASTER.md 狀態：** 已定義（MASTER.md §Progress Bar，`role="progressbar"`、fill 固定 `var(--color-cta)`）
+
+- class：`progress`、`progress-track`、`progress-fill`、`progress-inline-*`
+- 出現頁面：dashboard、task-detail、annotation-list、annotation-workspace、dataset-analysis-list
+
+---
+
+### ✅ Metric KPI Tile
+
+**MASTER.md 狀態：** 已定義（MASTER.md §Metric KPI Tile，dashboard 指標卡）
+
+- class：`metric`
+- 出現頁面：dashboard
+
+---
+
+### ✅ Review Status Track
+
+**MASTER.md 狀態：** 已定義（MASTER.md §Review Status Track，雙車道狀態機軌道，與 Step Indicator 不同）
+
+- class：`review-track*`
+- 出現頁面：annotation-workspace
 
 ---
 

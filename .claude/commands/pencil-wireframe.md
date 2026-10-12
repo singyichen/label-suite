@@ -1,5 +1,7 @@
 # Pencil Wireframe Convention
 
+> **Frozen (2026-08-20, issue #183):** `design/wireframes/` is frozen; do not create or edit `.pen` files. Use HTML prototypes in `design/prototype/` instead (see `design/wireframes/README.md`). The conventions below apply only if the freeze is lifted.
+
 Draw wireframes for Label Suite pages using the Pencil MCP tool.
 
 ## File Location
@@ -12,8 +14,6 @@ Examples: `account/login.pen`, `task-management/task-new.pen`
 
 Module names mirror `frontend/src/features/`:
 `account` · `dashboard` · `task-management` · `annotation` · `dataset` · `admin`
-
-> `design/wireframes/index.pen` is for overview only — never place page frames inside it.
 
 ## Frame Layout (per Page)
 

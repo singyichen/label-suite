@@ -3,7 +3,7 @@
   "componentRegistry": {
     "language-toggle": "Language Toggle 語言切換",
     "button": "Button（CTA / Primary / Secondary / Ghost / Danger / OAuth / Icon-only）",
-    "sidebar": "Navbar / Sidebar（共用側欄）",
+    "sidebar": "Sidebar 側欄（共用）",
     "card": "Card 卡片",
     "table": "Table 表格",
     "input": "Input 輸入框",
@@ -32,7 +32,133 @@
     "toggle-switch": "Toggle Switch 開關",
     "code-editor": "Code Editor（Schema）",
     "accordion": "Accordion 手風琴",
-    "state-switcher": "State Switcher ⚠ prototype-only"
+    "state-switcher": "State Switcher ⚠ prototype-only",
+    "navbar": "Navbar 頂部導覽列",
+    "tooltip": "Tooltip 提示框",
+    "workspace-tab": "Workspace Tabs 工作區頁籤",
+    "notification-bell": "Notification Bell 通知鈴＋下拉",
+    "empty-state": "Empty State 空狀態",
+    "progress-bar": "Progress Bar 進度條",
+    "metric-kpi": "Metric KPI Tile 指標卡",
+    "bottom-tab-bar": "Mobile Bottom Tab Bar 行動版底部頁籤列",
+    "review-status-track": "Review Status Track 審核狀態軌"
+  },
+  "inventoryHeadings": {
+    "Button": "button",
+    "Input": "input",
+    "Card": "card",
+    "Status Badge": "status-badge",
+    "Modal": "modal",
+    "Error / Alert Banner": "alert-banner",
+    "Toast": "toast",
+    "Navbar / Header": "navbar",
+    "State Panel": "state-panel",
+    "Prototype-Only State Switcher": "state-switcher",
+    "Sidebar": "sidebar",
+    "Desktop Content Tabs": "content-tabs",
+    "Mobile Bottom Tab Bar": "bottom-tab-bar",
+    "Avatar": "avatar",
+    "Tooltip": "tooltip",
+    "Table": "table",
+    "List (Activity List)": "activity-list",
+    "Divider": "divider",
+    "Link": "link",
+    "Toolbar": "toolbar",
+    "Step Indicator": "step-indicator",
+    "Upload Zone": "upload-zone",
+    "Tag Input / Tag Pill": "tag-input",
+    "Toggle Switch": "toggle-switch",
+    "Code Editor (Schema)": "code-editor",
+    "Chip": "chip",
+    "Accordion": "accordion",
+    "Pagination": "pagination",
+    "Color Dot": "color-dot",
+    "Breadcrumb": "breadcrumb",
+    "Skeleton": "skeleton",
+    "Language Toggle": "language-toggle",
+    "Mini Button": "mini-button",
+    "Task Type / Run Mode Badge": "task-type-badge",
+    "Status Pill": "status-pill",
+    "Empty State": "empty-state",
+    "Workspace Tabs": "workspace-tab",
+    "Notification Bell": "notification-bell",
+    "Progress Bar": "progress-bar",
+    "Metric KPI Tile": "metric-kpi",
+    "Review Status Track": "review-status-track"
+  },
+  "classScan": {
+    "_comment": "Class-to-component mapping for the scan gate (scripts/gen-screen-inventory.mjs, issue #1188). A prefix p claims class c iff c === p, c starts with p- or p__. Every class used by design/prototype/pages/**/*.{html,js} must be claimed by at least one prefix in the sections below; when several prefixes claim a class, read it as the longest matching prefix (the gate does not enforce this). Known blind spots: a new class whose first segment is already a pageLocalClasses prefix (e.g. status-, panel-, item-, t-, is-), non-kebab class names (underscore or camelCase), and classes built via setAttribute('class', ...) or escaped quotes inside JS strings.",
+    "componentClasses": {
+      "button": ["btn", "sso-btn"],
+      "mini-button": ["mini-btn"],
+      "status-badge": ["badge"],
+      "task-type-badge": ["badge-task-type", "badge-official", "badge-dry-run"],
+      "status-pill": ["status-submitted", "status-saved", "status-pending"],
+      "card": ["card"],
+      "table": ["table"],
+      "input": ["input", "form-input"],
+      "modal": ["modal", "pdf-modal", "image-modal", "md-modal"],
+      "pagination": ["pagination", "page-btn", "page-size-select", "page-ellipsis"],
+      "chip": ["cause-chip", "task-type-chip", "rv-unit-chip", "md-chip", "md-chips", "ar-va-chip", "ar-classif-chip", "round-metric-chip"],
+      "toolbar": ["toolbar"],
+      "content-tabs": ["admin-tab", "admin-tabs"],
+      "color-dot": ["entity-color-dot", "t-dot"],
+      "divider": ["divider"],
+      "state-panel": ["success-panel", "token-error-panel"],
+      "breadcrumb": ["breadcrumb"],
+      "avatar": ["avatar"],
+      "skeleton": ["skeleton", "skel"],
+      "alert-banner": ["alert-banner", "banner", "info-banner", "error-banner", "dirty-banner", "conflict-banner", "exec-stage-banner"],
+      "toast": ["toast"],
+      "activity-list": ["list"],
+      "step-indicator": ["step"],
+      "upload-zone": ["upload"],
+      "tag-input": ["tag"],
+      "toggle-switch": ["toggle-switch", "toggle-slider"],
+      "code-editor": ["code-editor", "code-error-bar", "code-actions"],
+      "accordion": ["output-accordion"],
+      "state-switcher": ["proto", "scenario"],
+      "language-toggle": ["lang-toggle", "mobile-lang-toggle"],
+      "sidebar": ["sidebar", "nav"],
+      "navbar": ["navbar", "mobile-drawer", "mobile-top-logout", "mobile-theme-toggle-btn", "user-chip"],
+      "tooltip": ["tooltip", "field-help-tooltip"],
+      "workspace-tab": ["workspace-tab"],
+      "notification-bell": ["notif", "mobile-notification-bell-btn"],
+      "progress-bar": ["progress"],
+      "metric-kpi": ["metric"],
+      "review-status-track": ["review-track"]
+    },
+    "transitionalClasses": [
+      { "component": "empty-state", "classes": ["empty", "ar-empty", "ar-export-empty", "anomaly-empty", "audit-drawer-empty", "history-empty", "list-empty", "member-detail-empty", "member-search-empty", "progress-empty", "quality-empty", "stats-empty", "worklog-empty", "notif-empty", "annotation-preview-empty", "taxonomy-selector-empty"], "reason": "Empty-state class family kept per page until the prototype classes converge on the Empty State component (#1189); registered here so the scan gate does not block on them." }
+    ],
+    "pageLocalClasses": {
+      "reason": "Page- or feature-local layout/content class, or a generic state modifier (active, hidden, is-*, ...); no cross-page component spec exists for it.",
+      "classes": [
+        "absa", "action", "actions", "active", "add", "admin", "alt", "annotation", "annotator",
+        "anomaly", "appearance", "ar", "arbiter", "aspect", "audit", "autosave", "back", "body", "brand",
+        "cause", "char", "check", "clear", "col", "collapsed", "completion", "connector", "content",
+        "controls", "dark", "dashboard", "data", "date", "dirty", "disable", "dispute", "dragover",
+        "dry", "edit", "email", "enable", "entity", "error", "event", "exception", "exec", "execution",
+        "expanded", "eye", "fail", "field", "filter", "forgot", "form", "grid", "group", "guideline",
+        "has", "hidden", "hide", "high", "history", "iaa", "inactive", "initial", "inline",
+        "insufficient", "invite", "is", "isolation", "item", "kv", "last", "layout", "leader", "legend",
+        "loading", "locked", "login", "logout", "main", "match", "matrix", "md", "member", "metrics",
+        "mod", "module", "mono", "na", "normal", "not", "note", "notice", "open", "output", "overview",
+        "page", "panel", "pass", "passed", "perm", "phase", "preference", "preview", "quality", "re",
+        "readonly", "ready", "register", "regression", "rel", "required", "resend", "review", "reviewer",
+        "risk", "role", "round", "rv", "s2", "sa", "sample", "sampling", "saved", "schema", "search",
+        "section", "select", "selected", "sent", "settings", "short", "shortcut", "show", "slim",
+        "small", "sort", "speed", "spinner", "split", "sr", "stage", "startup", "stats", "status",
+        "stop", "sub", "submit", "success", "sys", "system", "t", "task", "taxonomy", "td", "template",
+        "text", "title", "toggle", "token", "trb", "updated", "user", "va", "view", "visible", "warn",
+        "warning", "watch", "workflow", "worklog", "workspace", "ws", "yaml", "progress-metric",
+        "progress-text"
+      ]
+    },
+    "classlessComponents": {
+      "link": "Link is styled by element selectors and per-page *-link classes (forgot-link, back-link, resend-link, ...); no shared Link class exists to scan.",
+      "bottom-tab-bar": "The mobile bottom bar is the shared .navbar restyled by sidebar.css under @media (max-width: 768px); it has no class of its own (covered by the navbar prefix)."
+    }
   },
   "entry": {
     "page": "index.html",
@@ -57,7 +183,7 @@
       "roles": ["未登入訪客"],
       "states": ["default", "驗證錯誤", "送出中", "登入失敗（Alert Banner）"],
       "reactOwnership": "features/account",
-      "components": ["card", "language-toggle", "input", "button", "alert-banner", "divider", "link"],
+      "components": ["card", "language-toggle", "input", "button", "alert-banner", "divider", "link", "navbar"],
       "note": "另有 Logo + Wordmark、Eye Toggle、Inline Field Error（auth family 專用，未進共用元件庫）"
     },
     {
@@ -72,7 +198,7 @@
       "roles": ["未登入訪客"],
       "states": ["default", "欄位提示", "驗證錯誤", "送出中"],
       "reactOwnership": "features/account",
-      "components": ["card", "language-toggle", "input", "button", "link"],
+      "components": ["card", "language-toggle", "input", "button", "link", "navbar"],
       "note": "另有 Field Hint、Required Indicator、Eye Toggle（auth family 專用）"
     },
     {
@@ -87,7 +213,7 @@
       "roles": ["未登入訪客"],
       "states": ["default", "驗證錯誤", "送出中", "寄送成功（State Panel）"],
       "reactOwnership": "features/account",
-      "components": ["card", "language-toggle", "input", "button", "state-panel", "link"],
+      "components": ["card", "language-toggle", "input", "button", "state-panel", "link", "navbar"],
       "note": "Loading Status 以 `aria-live` 播報"
     },
     {
@@ -102,7 +228,7 @@
       "roles": ["未登入訪客（持 reset token）"],
       "states": ["default", "驗證錯誤", "重設成功（State Panel）", "Token 失效（State Panel）"],
       "reactOwnership": "features/account",
-      "components": ["card", "language-toggle", "input", "button", "state-panel", "link"],
+      "components": ["card", "language-toggle", "input", "button", "state-panel", "link", "navbar"],
       "note": "State Panel 同時承載 Success 與 Token Error 兩種結果"
     },
     {
@@ -117,7 +243,7 @@
       "roles": ["全部已登入角色"],
       "states": ["default", "載入中（Skeleton）", "儲存成功（Toast）", "儲存失敗（Toast）", "唯讀欄位"],
       "reactOwnership": "features/account",
-      "components": ["sidebar", "card", "divider", "avatar", "status-badge", "input", "toast", "skeleton", "language-toggle", "button"],
+      "components": ["sidebar", "card", "divider", "avatar", "status-badge", "input", "toast", "skeleton", "language-toggle", "button", "navbar", "workspace-tab", "notification-bell", "bottom-tab-bar"],
       "note": "Avatar 為 Large（可上傳）變體；Role Badge 由 Status Badge 家族提供"
     },
     {
@@ -132,7 +258,7 @@
       "roles": ["super_admin", "project_leader", "annotator", "reviewer"],
       "states": ["default", "空狀態 CTA", "載入中（Skeleton）"],
       "reactOwnership": "features/dashboard",
-      "components": ["sidebar", "card", "table", "activity-list", "status-badge", "avatar", "modal", "state-switcher", "divider", "link", "language-toggle", "button"],
+      "components": ["sidebar", "card", "table", "activity-list", "status-badge", "avatar", "modal", "state-switcher", "divider", "link", "language-toggle", "button", "navbar", "workspace-tab", "notification-bell", "bottom-tab-bar", "metric-kpi", "progress-bar", "empty-state"],
       "note": "Summary Card 為 KPI 變體；另有 Mobile Bottom Tab Bar；Scenario Switcher 僅 prototype 使用"
     },
     {
@@ -147,7 +273,7 @@
       "roles": ["project_leader", "annotator", "reviewer"],
       "states": ["default", "空狀態", "載入失敗（`?view=error`）"],
       "reactOwnership": "features/task-management",
-      "components": ["sidebar", "toolbar", "table", "status-badge", "task-type-badge", "pagination", "modal", "mini-button", "language-toggle", "button"],
+      "components": ["sidebar", "toolbar", "table", "status-badge", "task-type-badge", "pagination", "modal", "mini-button", "language-toggle", "button", "navbar", "workspace-tab", "notification-bell", "bottom-tab-bar", "empty-state"],
       "note": "Badge 同時承載 Task Status、Task Type 與 Run Mode 三組語意"
     },
     {
@@ -162,7 +288,7 @@
       "roles": ["project_leader"],
       "states": ["Step 1 / Step 2 / Step 3", "草稿警告", "驗證錯誤"],
       "reactOwnership": "features/task-management",
-      "components": ["sidebar", "step-indicator", "upload-zone", "tag-input", "toggle-switch", "code-editor", "chip", "accordion", "color-dot", "input", "language-toggle", "button"],
+      "components": ["sidebar", "step-indicator", "upload-zone", "tag-input", "toggle-switch", "code-editor", "chip", "accordion", "color-dot", "input", "language-toggle", "button", "navbar", "workspace-tab", "notification-bell", "bottom-tab-bar", "tooltip"],
       "note": "Chip 兼作輸出型態選取與 Bypass 互斥開關；Step 1/2 設定與 task-detail 共用 task-config.* 引擎"
     },
     {
@@ -177,7 +303,7 @@
       "roles": ["project_leader", "reviewer"],
       "states": ["default", "載入中（Skeleton）", "找不到任務（TASK_NOT_FOUND）", "唯讀（reviewer）"],
       "reactOwnership": "features/task-management",
-      "components": ["sidebar", "breadcrumb", "content-tabs", "table", "pagination", "chip", "task-type-badge", "color-dot", "skeleton", "modal", "mini-button", "card", "status-badge", "language-toggle", "button"],
+      "components": ["sidebar", "breadcrumb", "content-tabs", "table", "pagination", "chip", "task-type-badge", "color-dot", "skeleton", "modal", "mini-button", "card", "status-badge", "language-toggle", "button", "navbar", "workspace-tab", "notification-bell", "bottom-tab-bar", "empty-state", "progress-bar", "tooltip"],
       "note": "5 個 fetch partials（task-detail.panels/）；Table 具 expandable rows"
     },
     {
@@ -192,7 +318,7 @@
       "roles": ["annotator", "reviewer"],
       "states": ["default", "空佇列", "未提交樣本"],
       "reactOwnership": "features/annotation",
-      "components": ["sidebar", "toolbar", "table", "status-pill", "pagination", "mini-button", "language-toggle", "button"],
+      "components": ["sidebar", "toolbar", "table", "status-pill", "pagination", "mini-button", "language-toggle", "button", "navbar", "workspace-tab", "notification-bell", "bottom-tab-bar", "progress-bar", "empty-state"],
       "note": "⚠ 尚無專屬正典 spec；行為目前只由 page design 與 prototype 測試定義（issue #375 追蹤）"
     },
     {
@@ -207,7 +333,7 @@
       "roles": ["annotator", "reviewer"],
       "states": ["default", "唯讀（已定稿）", "提交驗證錯誤", "空審核單元"],
       "reactOwnership": "features/annotation",
-      "components": ["sidebar", "chip", "mini-button", "modal", "language-toggle", "button"],
+      "components": ["sidebar", "chip", "mini-button", "modal", "language-toggle", "button", "navbar", "workspace-tab", "notification-bell", "bottom-tab-bar", "progress-bar", "empty-state", "tooltip", "review-status-track"],
       "note": "閱讀面板使用 Atkinson Hyperlegible；標記面板為 config-driven，涵蓋 8 種 output type（ADR-029）"
     },
     {
@@ -222,7 +348,7 @@
       "roles": ["super_admin"],
       "states": ["default", "空狀態"],
       "reactOwnership": "features/admin",
-      "components": ["sidebar", "content-tabs", "table", "status-badge", "pagination", "mini-button", "modal", "language-toggle", "button"],
+      "components": ["sidebar", "content-tabs", "table", "status-badge", "pagination", "mini-button", "modal", "language-toggle", "button", "navbar", "workspace-tab", "notification-bell", "bottom-tab-bar", "empty-state"],
       "note": "Mini Button 具 primary 與 danger 兩種列內變體"
     },
     {
@@ -237,7 +363,7 @@
       "roles": ["super_admin"],
       "states": ["default", "刪除確認（alertdialog）"],
       "reactOwnership": "features/admin",
-      "components": ["sidebar", "content-tabs", "table", "modal", "language-toggle", "button"],
+      "components": ["sidebar", "content-tabs", "table", "modal", "language-toggle", "button", "navbar", "workspace-tab", "notification-bell", "bottom-tab-bar", "empty-state"],
       "note": "刪除走 Modal/Destructive（`role=\"alertdialog\"`）＋ Button/Danger"
     },
     {
@@ -252,7 +378,7 @@
       "roles": ["project_leader", "super_admin"],
       "states": ["default", "空狀態", "Toast 提示"],
       "reactOwnership": "features/dataset",
-      "components": ["sidebar", "toolbar", "table", "task-type-badge", "pagination", "language-toggle", "button"],
+      "components": ["sidebar", "toolbar", "table", "task-type-badge", "pagination", "language-toggle", "button", "navbar", "workspace-tab", "notification-bell", "bottom-tab-bar", "progress-bar", "empty-state"],
       "note": "Toast 為 5 秒自動關閉（已知 e2e 競態，見 issue #180 finding register）"
     },
     {
@@ -267,7 +393,7 @@
       "roles": ["project_leader", "super_admin"],
       "states": ["default", "空狀態（`?s_state=empty`）", "IAA 未達標"],
       "reactOwnership": "features/dataset",
-      "components": ["sidebar", "breadcrumb", "color-dot", "chip", "table", "card", "language-toggle", "button"],
+      "components": ["sidebar", "breadcrumb", "color-dot", "chip", "table", "card", "language-toggle", "button", "navbar", "workspace-tab", "notification-bell", "bottom-tab-bar", "empty-state"],
       "note": "Stats / Quality partials 共 8 型態 × 2；Status Dot 由 Color Dot 家族提供；Cause Tag 由 Chip 家族提供"
     }
   ],

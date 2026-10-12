@@ -27,21 +27,12 @@ EOF
 ## Step 2 — Code Review
 
 Run a code review and fix all findings before proceeding:
-- Use `/speckit.checklist` or the `code-review` skill
+- Use the `code-review` skill
 - Fix issues, then re-commit
 
 ## Step 3 — Test Validation _(skip for docs-only)_
 
-```bash
-# Backend
-cd backend && uv run pytest
-
-# Frontend E2E
-cd frontend && pnpm playwright test
-
-# Prototype (when design/prototype/** changed)
-cd design/prototype && pnpm typecheck && pnpm playwright test
-```
+Run every applicable command listed in `CLAUDE.md` § Verification Commands for the paths this PR touched (backend, frontend, prototype, E2E under root `e2e/[module]/`, repository scripts).
 
 Fix failures, re-commit, and re-run until all tests pass.
 

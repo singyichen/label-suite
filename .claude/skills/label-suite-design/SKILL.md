@@ -127,7 +127,7 @@ Example row (pilot: task-detail, #1108), values grepped from live files, not inv
 
 | page | role | state | viewport | language | theme | URL params | fixture/demo data | screenshot | operation result | file:line | evidence class | matched issue |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| task-detail (`overview` tab) | project_leader | default | desktop | zh-TW | light | `?task_id=T001` | `task-detail.data.js` `T001`: `single_label`, label options `positive`/`neutral`/`negative` | pending (no browser tool available this run) | pending | `design/prototype/pages/task-management/task-detail.html:2288` `id="tabOverview"`; `specs/task-management/014-task-detail/spec.md:554` FR-001 | tool rule result (static grep only — not yet a live operation) | — |
+| task-detail (`overview` tab) | project_leader | default | desktop | zh-TW | light | `?task_id=T001` | `task-detail.data.js` `T001`: `single_label`, label options `positive`/`neutral`/`negative` | pending (no browser tool available this run) | pending | `design/prototype/pages/task-management/task-detail.html` `id="tabOverview"`; `specs/task-management/014-task-detail/spec.md` FR-001 | tool rule result (static grep only — not yet a live operation) | — |
 
 ### Re-verification rules
 
@@ -167,7 +167,7 @@ Artifacts run under a strict CSP that blocks **all** external requests — `@imp
 ```css
 /* Core palette */
 --color-primary:   #6366F1;   /* Indigo 500 */
---color-cta:       #10B981;   /* Emerald 500 */
+--color-cta:       #047857;   /* Emerald 700 (WCAG AA, issue #973) */
 --color-surface:   #F5F3FF;   /* Violet 50 page bg */
 --color-white:     #FFFFFF;
 --color-ink:       #1E1B4B;   /* Indigo 950 body */
