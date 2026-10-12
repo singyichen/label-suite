@@ -172,7 +172,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Check route-to-Bruno update parity
-        run: scripts/check-bruno-gate.sh --base origin/main
+        run: scripts/check-bruno-gate.sh --base "${{ github.event.pull_request.base.sha || 'origin/main' }}"
 
   bruno-gate-tests:
     name: FR-131 Bruno Gate — Regression Tests

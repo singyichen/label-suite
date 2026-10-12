@@ -11,8 +11,10 @@ if [[ "$#" -eq 0 ]]; then
         git diff --cached --name-only
         git diff --name-only
     } | LC_ALL=C sort -u)"
+    exemption_log_args=(-1)
 elif [[ "$#" -eq 2 && "$1" == "--base" ]]; then
     changed_files="$(git diff --name-only "$2"...HEAD)"
+    exemption_log_args=(--no-merges "$2..HEAD")
 else
     echo "FR-131 gate: usage: scripts/check-bruno-gate.sh [--base <ref>]" >&2
     exit 1
@@ -23,7 +25,7 @@ route_files="$(printf '%s\n' "$changed_files" | grep -E '^backend/app/modules/[^
 
 # FR-131: route changes must include a matching Bruno update for the same module.
 if [[ -n "$route_files" && -z "$bru_files" ]]; then
-    if git log -1 --pretty=%B 2>/dev/null | grep -qF "FR-131-exempt: skeleton-only route"; then
+    if git log "${exemption_log_args[@]}" --pretty=%B 2>/dev/null | grep -qF "FR-131-exempt: skeleton-only route"; then
         echo "FR-131 gate: Route changes detected without Bruno updates, but exemption marker found in commit message. Bypassing."
     else
         echo "FR-131 gate: route files changed without backend/bruno/ update. Add .bru update or include 'FR-131-exempt: skeleton-only route' in the commit message"
