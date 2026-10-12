@@ -59,7 +59,7 @@ Step 8: Code Review (peer or senior-code-reviewer agent)
 
 Step 9: Address review comments → new commits
 
-Step 10: Merge (merge commit; never squash — `main` integrates via merge commits so a Chinese PR title never becomes a commit subject)
+Step 10: Merge (merge commit per CLAUDE.md Communication — `main` merges with merge commits so a Chinese PR title never becomes a commit subject)
   Merge via GitHub UI
   git branch -d feat/annotation-submission
 ```

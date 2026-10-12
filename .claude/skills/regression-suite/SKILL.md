@@ -19,7 +19,7 @@ Choose the minimum verification tier for a change. The commands and CI jobs are 
 | Tier | When | Contents |
 |------|------|----------|
 | 1 Smoke | every commit | lint, type check, unit tests of the touched layer |
-| 2 Critical path | every PR | Tier 1 + auth / permission checks + P0 leakage tests (`uv run pytest -m security`) + affected E2E |
+| 2 Critical path | every PR | Tier 1 + auth / permission checks + the P0 leakage tests of the affected module (`uv run pytest tests/ -q`) + affected E2E |
 | 3 Full | before release | all CI gates in CLAUDE.md, plus every P1 AC of the affected specs |
 
 ## Impact Rules

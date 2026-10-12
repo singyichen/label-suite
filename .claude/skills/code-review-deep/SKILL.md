@@ -156,7 +156,7 @@ Review against the principles of `specs/_governance/constitution.md` that apply 
 - [ ] All Critical issues resolved
 - [ ] All High issues resolved or explicitly deferred with rationale
 - [ ] Test-Set Leakage Audit: all checks pass
-- [ ] Language boundary respected (constitution VI): code, comments, and commit messages in English; Traditional Chinese only where VI permits (`docs/`, `specs/`, `openspec/**`, PR/issue text)
+- [ ] Language boundary respected (constitution VI): code, comments, and commit messages in English; Traditional Chinese only where VI and CLAUDE.md Communication permit or require it
 - [ ] PR description references the spec (`specs/[module]/NNN-feature/`)
 ```
 

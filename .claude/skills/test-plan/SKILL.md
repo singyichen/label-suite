@@ -5,7 +5,7 @@ description: Generate a test plan for a Label Suite feature or OpenSpec change, 
 
 # Test Plan
 
-Generate a test plan for one feature or OpenSpec change. Do not add schedules, tool-version tables, or SLA tables; the project has no sprint or leaderboard concept in any canonical spec. Test strategy lives in `specs/_governance/testing-constitution.md`; follow it instead of restating it.
+Generate a test plan for one feature or OpenSpec change. Do not add schedules, tool-version tables, or SLA tables. Test strategy lives in `specs/_governance/testing-constitution.md`; follow it instead of restating it.
 
 ## Usage
 

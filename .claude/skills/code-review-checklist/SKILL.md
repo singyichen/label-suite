@@ -43,7 +43,7 @@ Generate a project-specific code review checklist tailored to the file type or m
 ### Documentation
 - [ ] Public functions have docstrings (Python) or JSDoc (TypeScript)
 - [ ] Complex logic has inline comments explaining "why", not "what"
-- [ ] Language boundary respected (constitution VI): code, comments, and commit messages in English; Traditional Chinese only in `docs/`, `specs/`, `openspec/**`, and PR/issue text
+- [ ] Language boundary respected (constitution VI): code, comments, and commit messages in English; Traditional Chinese only where constitution VI and CLAUDE.md Communication permit or require it
 
 ### Constitution
 - [ ] KISS: No over-engineering for hypothetical future requirements
