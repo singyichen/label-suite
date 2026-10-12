@@ -51,7 +51,7 @@ test('wizard-created task appears in the task list (draft) and opens in task-det
   await expect(page.locator('#step4Panel')).not.toHaveClass(/hidden/);
   await page.locator('#nextBtn').click();
 
-  await expect(page).toHaveURL(/\/pages\/task-management\/task-detail\.html\?task_id=[^&]+$/, {
+  await expect(page).toHaveURL(/\/pages\/task-management\/task-detail\.html\?task_id=[^&]+&task_role=project_leader$/, {
     timeout: 15000,
   });
   const taskId = new URL(page.url()).searchParams.get('task_id');

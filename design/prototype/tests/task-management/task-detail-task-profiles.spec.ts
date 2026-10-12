@@ -260,6 +260,9 @@ test.describe('Task detail profile mapping', () => {
 
   for (const sourceFile of EXAMPLE_SOURCE_FILES) {
     test(`super admin can open task detail from task row ${sourceFile}`, async ({ page }) => {
+      /* issue #1266: a ?task_role=super_admin query no longer raises the
+         stored system role, so the super_admin session is seeded explicitly. */
+      await page.addInitScript(() => localStorage.setItem('labelsuite.systemRole', 'super_admin'));
       await page.goto('/pages/task-management/task-list.html?task_role=super_admin');
 
       const row = page.locator(
