@@ -2,6 +2,8 @@ backend-ruff	uv run ruff check . && uv run ruff format --check .	-
 backend-security	uv run --no-dev --with pip-audit pip-audit --desc	-
 backend-test	uv run pytest --cov=app --cov-report=term-missing --cov-fail-under=80	-
 backend-type-check	uv run mypy .	-
+bruno-gate	scripts/check-bruno-gate.sh --base origin/main	check-bruno-gate.sh
+bruno-gate-tests	scripts/check-bruno-gate-tests.sh	check-bruno-gate-tests.sh
 database-schema	node scripts/check-database-schema.mjs	check-database-schema.mjs
 demo-data-parity	scripts/check-demo-data-parity.sh	check-demo-data-parity.sh
 frontend-lint	pnpm lint	-

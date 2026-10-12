@@ -164,6 +164,26 @@ jobs:
       - name: Run speckit helper script regression tests
         run: scripts/speckit-tests.sh
 
+  bruno-gate:
+    name: FR-131 Bruno Gate
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Check route-to-Bruno update parity
+        run: scripts/check-bruno-gate.sh --base "${{ github.event.pull_request.base.sha || 'origin/main' }}"
+
+  bruno-gate-tests:
+    name: FR-131 Bruno Gate — Regression Tests
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Run Bruno gate regression tests
+        run: scripts/check-bruno-gate-tests.sh
+
   user-path-map-freshness:
     name: User Path Map — Freshness Check
     runs-on: ubuntu-24.04
