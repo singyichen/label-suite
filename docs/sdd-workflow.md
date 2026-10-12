@@ -137,7 +137,7 @@
 
 ### Frontend Ready Gate
 
-Page-scoped feature 在進入 `/opsx:propose` 前必須逐項通過下列檢查；不適用項目必須明示 `N/A` 與理由：
+Page-scoped feature 在進入 `/opsx:propose` 前必須逐項通過下列檢查；不適用項目必須明示 `N/A` 與理由，尚未滿足的項目須記為缺口並附追蹤 issue 編號（缺口是否可帶入 propose 由主 agent 判斷，並在 `proposal.md` 載明）：
 
 1. canonical spec 已有 `## 功能目標`、FR/AC/SC 與依賴。
 2. spec 直接連到 page-scoped design、prototype 與 prototype tests。
@@ -149,7 +149,7 @@ Page-scoped feature 在進入 `/opsx:propose` 前必須逐項通過下列檢查�
 8. feature/shared ownership 與 Storybook scope 已決定。
 9. 本畫面每個主要目標皆有已定義的完成後去向（終點頁面或明確下一步）；若 `design/system/user-path-map.html` 已涵蓋此畫面，對應目標須無 F3／F4 命中，或已附命中後的修正 issue 編號。
 
-**檢查紀錄位置**：閘門通過後立刻執行 `/opsx:propose`，把九項結果寫在該 change 的 `openspec/changes/<change>/proposal.md`，置於 `## Why` 的內文（不另開檔案，隨 change 一起審查、一起 archive）。
+**檢查紀錄位置**：主 agent 執行 `/opsx:propose` 時彙整九項結果（任何缺口須先開好追蹤 issue），寫在該 change 的 `openspec/changes/<change>/proposal.md`，置於 `## Why` 的內文（不另開檔案，隨 change 一起審查、一起 archive）。
 
 - 九項逐項記錄，結果只有三種：「通過」、「`N/A`＋理由」、「缺口＋追蹤 issue 編號」。
 - `## Why`／`## What Changes` 標題必須維持原文，不得加中文註解或改名；OpenSpec CLI 逐字比對，`openspec archive` 遇到不同會警告。
@@ -225,7 +225,7 @@ Page-scoped feature 在進入 `/opsx:propose` 前必須逐項通過下列檢查�
 | [2] specify | 🗣️ | 主 agent | `specs/[module]/NNN-feature/spec.md` | Process/User Flow 齊備；FR/AC 有穩定 ID；STATUS.md → spec-ready |
 | [3] prototype | 🗣️ | 主 agent + `senior-qa` Red／實作 agent Green（+ senior-uiux 選用） | static shell + Red/Green Playwright 證據 + page design | shell 後先有已提交的預期 Red；Green 全綠；data-testid 契約建立；MASTER.md 遵循 |
 | [4] clarify（選用） | 🗣️ | 主 agent | 釐清問答 + spec 回修 | prototype/page design 暴露模糊點時回寫正典 spec，並重走受影響的 Gate |
-| [3d] Frontend Ready Gate | ⚙️ | 主 agent | page readiness evidence | [4] clarify 已完成或不適用後，九項 page-scoped 檢查均通過，或明示 N/A 與理由；紀錄寫入該 change 的 `proposal.md` `## Why`（見 Frontend Ready Gate） |
+| [3d] Frontend Ready Gate | ⚙️ | 主 agent | page readiness evidence | [4] clarify 已完成或不適用後，九項 page-scoped 檢查均通過、明示 N/A 與理由，或記為缺口並附追蹤 issue；紀錄寫入該 change 的 `proposal.md` `## Why`（見 Frontend Ready Gate） |
 | [5] propose | 🗣️ | 主 agent | change 四件套（繁中） | OpenSpec schema validation 與 Project SDD lint 分別通過；派工標籤齊備；憲章檢查段落存在；page-scoped feature 的 `design.md` API 契約涵蓋 Frontend Ready Gate 第 6 項列出的欄位、enum 與錯誤情境 |
 | [6] apply | 🗣️ | 主 agent 派工 + 實作/品質 subagents | 分離的 Red/Green task、程式、測試與 `[x]` | Red 預期失敗與 Green 驗證均有證據；每 PR 群組過 ③a–e 審查並取得使用者明確確認 |
 | [7] archive | 🗣️ | 主 agent（final PR group） | derived view + 正典回寫 | 第 1–3 層與 Source-Verify evidence 先完成；僅 final PR 內成功 write-back 後才完成第 4 層 |
