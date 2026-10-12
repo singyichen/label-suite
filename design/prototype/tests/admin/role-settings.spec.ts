@@ -1,7 +1,7 @@
 /**
  * Traceability: specs/admin/007-role-settings/spec.md
  *   FR-003, FR-003b, FR-003c, FR-003d, FR-004, FR-005, FR-005a, FR-005b,
- *   FR-006, FR-009, SC-003, SC-007
+ *   FR-006, FR-008a, FR-009, FR-010, FR-011, SC-003, SC-007, SC-011
  */
 import { test, expect } from '../fixtures';
 
@@ -14,6 +14,7 @@ const EXPECTED_PERMISSION_KEYS = [
   'task.list.view',
   'task.create',
   'task.detail.view',
+  'task.detail.edit',
   'task.members.manage',
   'annotation.workspace.annotate',
   'annotation.workspace.review',
@@ -110,7 +111,7 @@ test.describe('Admin role settings matrix behavior', () => {
     const roleKeys = await page.locator('.matrix-checkbox').evaluateAll((nodes) =>
       [...new Set(nodes.map((node) => (node as HTMLInputElement).dataset.role))].sort()
     );
-    expect(roleKeys).toEqual(['annotator', 'project_leader', 'reviewer', 'user']);
+    expect(roleKeys).toEqual(['annotator', 'project_leader', 'reviewer', 'super_admin', 'user']);
   });
 
   test('shows dirty state and cancel restores the saved matrix in place', async ({ page }) => {
@@ -266,5 +267,134 @@ test.describe('Admin role settings matrix behavior', () => {
     const wrapper = page.locator('.matrix-scroll-wrapper');
     await expect(wrapper).toHaveCSS('box-shadow', 'none');
     await expect(wrapper).toHaveCSS('border-top-width', '1px');
+  });
+});
+
+const SYSTEM_KEYS = EXPECTED_PERMISSION_KEYS.filter(
+  (k) =>
+    k.startsWith('account.') ||
+    k.startsWith('admin.') ||
+    ['dashboard.view', 'task.list.view', 'task.create'].includes(k)
+);
+const TASK_KEYS = EXPECTED_PERMISSION_KEYS.filter((k) => !SYSTEM_KEYS.includes(k));
+const ADMIN_KEYS = EXPECTED_PERMISSION_KEYS.filter((k) => k.startsWith('admin.'));
+const cell = (page: import('@playwright/test').Page, key: string, role: string) =>
+  page.locator(`.matrix-checkbox[data-key="${key}"][data-role="${role}"]`);
+
+test.describe('Admin role settings 17-key matrix sync (#1264)', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto(ROLE_SETTINGS_URL);
+  });
+
+  test('splits keys into 9 system and 8 task keys (layer sanity)', () => {
+    expect(SYSTEM_KEYS).toHaveLength(9);
+    expect(TASK_KEYS).toHaveLength(8);
+  });
+
+  test('renders exactly 42 applicable cells with no layer-mismatched checkbox (FR-008a)', async ({ page }) => {
+    await expect(page.locator('.matrix-checkbox')).toHaveCount(42);
+    for (const key of SYSTEM_KEYS) {
+      for (const role of ['user', 'super_admin']) await expect(cell(page, key, role)).toHaveCount(1);
+      for (const role of ['project_leader', 'reviewer', 'annotator']) await expect(cell(page, key, role)).toHaveCount(0);
+    }
+    for (const key of TASK_KEYS) {
+      for (const role of ['project_leader', 'reviewer', 'annotator']) await expect(cell(page, key, role)).toHaveCount(1);
+      for (const role of ['user', 'super_admin']) await expect(cell(page, key, role)).toHaveCount(0);
+    }
+  });
+
+  test('marks exactly 10 fixed cells that stay disabled in edit mode (FR-008a)', async ({ page }) => {
+    await expect(page.locator('.matrix-checkbox[data-fixed="true"]')).toHaveCount(10);
+
+    const fixed: Array<[string, string, boolean]> = [
+      ['dashboard.view', 'user', true],
+      ['dashboard.view', 'super_admin', true],
+      ...ADMIN_KEYS.map((k): [string, string, boolean] => [k, 'user', false]),
+      ...ADMIN_KEYS.map((k): [string, string, boolean] => [k, 'super_admin', true]),
+    ];
+    await page.locator('#editBtn').click();
+    for (const [key, role, checked] of fixed) {
+      const box = cell(page, key, role);
+      await expect(box).toHaveAttribute('data-fixed', 'true');
+      await expect(box).toBeDisabled();
+      if (checked) await expect(box).toBeChecked();
+      else await expect(box).not.toBeChecked();
+    }
+  });
+
+  test('enables the other 32 cells in edit mode and disables all 42 in view mode', async ({ page }) => {
+    await expect(page.locator('.matrix-checkbox:enabled')).toHaveCount(0);
+    await page.locator('#editBtn').click();
+    await expect(page.locator('.matrix-checkbox:enabled')).toHaveCount(32);
+    await expect(page.locator('.matrix-checkbox[data-fixed="true"]:enabled')).toHaveCount(0);
+  });
+
+  test('super_admin account/task-list cells are checked and editable (canon wins)', async ({ page }) => {
+    const keys = ['account.profile.view', 'account.profile.edit', 'task.list.view', 'task.create'];
+    await page.locator('#editBtn').click();
+    for (const key of keys) {
+      await expect(cell(page, key, 'super_admin')).toBeChecked();
+      await expect(cell(page, key, 'super_admin')).toBeEnabled();
+    }
+  });
+
+  test('task.detail.edit and task.detail.view defaults per task role', async ({ page }) => {
+    await expect(cell(page, 'task.detail.edit', 'project_leader')).toBeChecked();
+    await expect(cell(page, 'task.detail.edit', 'reviewer')).not.toBeChecked();
+    await expect(cell(page, 'task.detail.edit', 'annotator')).not.toBeChecked();
+    await expect(cell(page, 'task.detail.view', 'reviewer')).toBeChecked();
+  });
+
+  test('no-op save keeps version and audit log unchanged (FR-010)', async ({ page }) => {
+    await page.locator('#editBtn').click();
+    await page.locator('#saveBtn').click();
+
+    const version = await page.evaluate(() => Number(window.localStorage.getItem('labelsuite.roleSettings.version') || '1'));
+    expect(version).toBe(1);
+
+    await page.locator('#auditLogBtn').click();
+    await expect(page.locator('#auditLogList .audit-log-entry')).toHaveCount(3);
+  });
+
+  test('real save bumps version to 2 and appends one audit entry (FR-010)', async ({ page }) => {
+    await page.locator('#editBtn').click();
+    await cell(page, 'task.create', 'user').uncheck();
+    await page.locator('#saveBtn').click();
+
+    const version = await page.evaluate(() => Number(window.localStorage.getItem('labelsuite.roleSettings.version') || '1'));
+    expect(version).toBe(2);
+
+    await page.locator('#auditLogBtn').click();
+    await expect(page.locator('#auditLogList .audit-log-entry')).toHaveCount(4);
+  });
+});
+
+test.describe('Admin role settings stored payload validation (FR-011, SC-011)', () => {
+  test('rejects the whole payload when it contains an unknown key', async ({ page }) => {
+    await page.addInitScript(() => {
+      window.localStorage.setItem(
+        'labelsuite.roleSettings.matrix',
+        JSON.stringify({ 'bogus.key__user': true, 'task.create__user': false })
+      );
+    });
+    await page.goto(ROLE_SETTINGS_URL);
+
+    await expect(cell(page, 'task.create', 'user')).toBeChecked();
+    await expect(page.locator('#toast')).toBeVisible();
+    await expect(page.locator('#toast')).toHaveClass(/toast-error/);
+  });
+
+  test('rejects a stored payload that violates a fixed cell', async ({ page }) => {
+    await page.addInitScript(() => {
+      window.localStorage.setItem(
+        'labelsuite.roleSettings.matrix',
+        JSON.stringify({ 'admin.role_settings.manage__user': true })
+      );
+    });
+    await page.goto(ROLE_SETTINGS_URL);
+
+    await expect(cell(page, 'admin.role_settings.manage', 'user')).not.toBeChecked();
+    await expect(page.locator('#toast')).toBeVisible();
+    await expect(page.locator('#toast')).toHaveClass(/toast-error/);
   });
 });
