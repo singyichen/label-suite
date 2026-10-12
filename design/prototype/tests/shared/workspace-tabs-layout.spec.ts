@@ -49,50 +49,38 @@ interface PageCase {
   url: string;
   /** `<h1>`-equivalent page-title selector; undefined where the page has none. */
   titleSelector?: string;
-  /** Which element actually scrolls this page's content (see per-page CSS). */
-  scrollTarget: 'main' | 'window';
 }
 
 const PAGES: PageCase[] = [
   // Suspected BAD: content class (`.layout`/`.main-content`) lives directly
   // on `<main>` itself.
-  { label: 'dashboard', url: '/pages/dashboard/dashboard.html', titleSelector: '#dashboardMainTitle', scrollTarget: 'main' },
+  { label: 'dashboard', url: '/pages/dashboard/dashboard.html', titleSelector: '#dashboardMainTitle' },
   {
     label: 'annotation-list',
     url: '/pages/annotation/annotation-list.html?task_id=T001&role=annotator&run_type=official_run',
     titleSelector: '#pageTitle',
-    // annotation-list.html sets no `overflow` on <main>/body, so the page
-    // (window) itself is the scroll container, not <main>.
-    scrollTarget: 'window',
   },
   {
     label: 'profile',
     url: '/pages/account/profile.html',
     titleSelector: '#pageTitle',
-    // profile.html's `.main-content` sets only `overflow-x: hidden`; the
-    // window scrolls vertically.
-    scrollTarget: 'window',
   },
   {
     label: 'role-settings',
     url: '/pages/admin/role-settings.html',
     titleSelector: '#pageTitle',
-    // `.main-content` (on <main> itself here, distinct from the separate
-    // `.page-wrapper` div that wraps <main>) has `overflow-y: auto`.
-    scrollTarget: 'main',
   },
 
   // Suspected GOOD: bare `<main>`, content class is on an inner `<div>`.
-  { label: 'task-list', url: '/pages/task-management/task-list.html', titleSelector: '#pageTitle', scrollTarget: 'main' },
-  { label: 'user-management', url: '/pages/admin/user-management.html', titleSelector: '#pageTitle', scrollTarget: 'main' },
-  { label: 'dataset-analysis-list', url: '/pages/dataset/dataset-analysis-list.html', titleSelector: '#pageTitle', scrollTarget: 'main' },
+  { label: 'task-list', url: '/pages/task-management/task-list.html', titleSelector: '#pageTitle' },
+  { label: 'user-management', url: '/pages/admin/user-management.html', titleSelector: '#pageTitle' },
+  { label: 'dataset-analysis-list', url: '/pages/dataset/dataset-analysis-list.html', titleSelector: '#pageTitle' },
   {
     label: 'task-detail',
     url: '/pages/task-management/task-detail.html?task_id=T001&ap_stage=r1',
     titleSelector: '#pageTitle',
-    scrollTarget: 'main',
   },
-  { label: 'task-new', url: '/pages/task-management/task-new.html', titleSelector: '#pageTitle', scrollTarget: 'main' },
+  { label: 'task-new', url: '/pages/task-management/task-new.html', titleSelector: '#pageTitle' },
   {
     label: 'dataset-analysis-detail',
     // T104 + tab=quality: reused verbatim from
@@ -100,7 +88,6 @@ const PAGES: PageCase[] = [
     // existing spec covering this page's query-param contract.
     url: '/pages/dataset/dataset-analysis-detail.html?task_id=T104&tab=quality',
     titleSelector: '#pageTitle',
-    scrollTarget: 'main',
   },
 
   // Suspected already-passing (no padding/max-width on <main class="workspace-root">),
@@ -109,30 +96,18 @@ const PAGES: PageCase[] = [
   {
     label: 'annotation-workspace',
     url: '/pages/annotation/annotation-workspace.html?task_id=T001&sample_id=sent-001&role=annotator&run_type=official_run',
-    scrollTarget: 'main',
   },
 ];
 
-async function scrollPage(page: Page, target: PageCase['scrollTarget']): Promise<void> {
-  if (target === 'main') {
-    await page.locator('main').evaluate((el) => {
-      el.scrollTop = el.scrollHeight;
-    });
-  } else {
-    // behavior: 'instant' is required, not just tidy: profile.html sets
-    // `html { scroll-behavior: smooth }` (profile.html ~line 24), which
-    // makes a bare `window.scrollTo(x, y)` animate over several frames
-    // instead of jumping immediately. The very next lines read
-    // `tabBar()`/title `boundingBox()` with no wait for that animation to
-    // settle, so they landed on whatever scroll offset the animation
-    // happened to be at mid-flight -- reproduced via `--repeat-each=15`
-    // (2/15 failed, with `Received` varying wildly run to run: -216.6,
-    // 40.4, ... -- the signature of reading a moving scroll position, not
-    // a layout/content difference). `behavior: 'instant'` bypasses the
-    // CSS `scroll-behavior` entirely per the CSSOM View spec, so the jump
-    // is synchronous on every page regardless of its own CSS.
-    await page.evaluate(() => window.scrollTo({ left: 0, top: document.body.scrollHeight, behavior: 'instant' }));
-  }
+async function scrollPage(page: Page): Promise<void> {
+  // After #1121 `<main>` is no longer a scroller on any page except
+  // annotation-workspace (which has no titled scroll content), so the window
+  // is the only scroll container to exercise here.
+  // behavior: 'instant' is required: profile.html sets
+  // `html { scroll-behavior: smooth }`, which makes a bare
+  // `window.scrollTo(x, y)` animate; reading `boundingBox()` mid-animation
+  // is flaky. 'instant' bypasses the CSS property per the CSSOM View spec.
+  await page.evaluate(() => window.scrollTo({ left: 0, top: document.body.scrollHeight, behavior: 'instant' }));
 }
 
 test.describe('Workspace tab bar mount geometry (issue #1098)', () => {
@@ -172,21 +147,32 @@ test.describe('Workspace tab bar mount geometry (issue #1098)', () => {
   // it has no visible page <h1> (`#wsPageHeading` is `.sr-only`, never
   // rendered on screen). There is therefore nothing for a sticky bar to
   // overlap on this page; its geometry is still covered by the loop above.
-  for (const pageCase of PAGES.filter((p): p is PageCase & { titleSelector: string } => p.titleSelector !== undefined)) {
-    test(`sticky tab bar does not overlap the page title after scrolling on ${pageCase.label}`, async ({ page }) => {
+  const titledPages = PAGES.filter((p): p is PageCase & { titleSelector: string } => p.titleSelector !== undefined);
+
+  // issue #1121 supersedes the original post-scroll
+  // "title stays below the bar" assertion. That only held because the bar
+  // wrongly scrolled away with the page; a working sticky bar (spec 019
+  // AC-2.1) stays pinned to the viewport top while the title legitimately
+  // scrolls up underneath it. The #1098 intent is preserved as two checks:
+  // in the initial layout the title sits at/below the bar (no overlap), and
+  // after scrolling the bar is still flush at the viewport top and visible.
+  for (const pageCase of titledPages) {
+    test(`tab bar clears the page title initially and stays stuck at the viewport top after scrolling on ${pageCase.label}`, async ({ page }) => {
       await page.goto(pageCase.url);
       await expect(tabBar(page)).toBeVisible();
 
-      await scrollPage(page, pageCase.scrollTarget);
+      const initialBar = await tabBar(page).boundingBox();
+      expect(initialBar).not.toBeNull();
+      const initialTitle = await page.locator(pageCase.titleSelector).boundingBox();
+      expect(initialTitle).not.toBeNull();
+      expect(initialTitle!.y).toBeGreaterThanOrEqual(initialBar!.y + initialBar!.height - TOLERANCE_PX);
 
-      const barBox = await tabBar(page).boundingBox();
-      expect(barBox).not.toBeNull();
-      const titleBox = await page.locator(pageCase.titleSelector).boundingBox();
-      expect(titleBox).not.toBeNull();
+      await scrollPage(page);
 
-      // The title's top edge must sit at or below the sticky bar's bottom
-      // edge -- the title must never render underneath/behind the bar.
-      expect(titleBox!.y).toBeGreaterThanOrEqual(barBox!.y + barBox!.height - TOLERANCE_PX);
+      await expect(tabBar(page)).toBeVisible();
+      const scrolledBar = await tabBar(page).boundingBox();
+      expect(scrolledBar).not.toBeNull();
+      expect(Math.abs(scrolledBar!.y)).toBeLessThanOrEqual(TOLERANCE_PX);
     });
   }
 });
