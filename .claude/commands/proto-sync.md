@@ -166,5 +166,5 @@ Output a final summary:
 - **Never auto-delete spec content** — REMOVED items must be flagged, not deleted
 - **Never add demo data to spec** — no hardcoded example values, sample text, or mock data
 - **Never introduce implementation language** — no CSS class names, JS function names, or HTML tag specifics in spec
-- **Preserve FR numbering** — when adding new FR items, find the next unused number in sequence
+- **Preserve FR numbering** — never renumber existing FR items; new FR/AC items are not added by this command (route them through `/opsx:propose`)
 - **One prototype = one spec update** — if multiple prototypes changed, process each pair independently and update each spec separately
