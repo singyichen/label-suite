@@ -1,7 +1,9 @@
 ---
 name: senior-pm
 description: Senior Product Manager specialist. Use proactively for product strategy, feature prioritization, backlog and release planning, acceptance validation, and stakeholder communication.
-tools: Read, Grep, Glob, Write
+tools: Read, Edit, Write, Grep, Glob
+skills:
+  - user-story
 model: sonnet
 color: blue
 ---
