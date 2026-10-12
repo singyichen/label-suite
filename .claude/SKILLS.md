@@ -1,289 +1,61 @@
-# Claude Code Skills & Commands Directory
+# Claude Code Skills, Commands & Agents Index
 
-This document provides a comprehensive overview of all available Spec-Kit Commands and Knowledge-Domain Skills for the Label Suite project.
-
-## Directory Structure
+Pointer index. Each skill's purpose lives in its own `SKILL.md` frontmatter `description`; each command's in its file under `.claude/commands/`; each agent's in `.claude/agents/`. Counts below come from `ls` of those directories — re-count when adding or removing one.
 
 ```
 .claude/
-├── commands/                    # Spec-Kit Commands + Workflow Commands
-│   ├── speckit.specify.md       # Create feature spec
-│   ├── speckit.plan.md          # DEPRECATED (ADR-033) — use /opsx:propose (design.md)
-│   ├── speckit.tasks.md         # DEPRECATED (ADR-033) — use /opsx:propose (tasks.md)
-│   ├── speckit.implement.md     # DEPRECATED (ADR-033) — use /opsx:apply
-│   ├── speckit.clarify.md       # Clarify spec ambiguities
-│   ├── speckit.analyze.md       # DEPRECATED (ADR-033) — use /opsx:verify + Source-Verify gate
-│   ├── speckit.checklist.md     # Generate quality checklist
-│   ├── speckit.constitution.md  # Update project constitution
-│   ├── speckit.taskstoissues.md # Convert tasks to GitHub Issues
-│   ├── pencil-wireframe.md      # Draw 6-frame wireframes via Pencil MCP (frozen — see design/wireframes/README.md)
-│   ├── pr-flow.md               # Full PR flow (commit → review → test → merge)
-│   ├── review-resolve.md        # Fetch PR review threads, fix findings, resolve
-│   └── agent-team.md            # Multi-phase agent team workflow for new features
-├── skills/                      # Knowledge-Domain Skills (flat — Claude Code only discovers `.claude/skills/<name>/SKILL.md` one level deep)
-│   │                            # Spec-Driven Development
-│   ├── sdd-workflow/
-│   ├── spec-review/
-│   ├── spec-format/                 # frontmatter name: speckit-spec-format
-│   │                            # Requirements Engineering
-│   ├── user-story/
-│   ├── functional-req/
-│   ├── acceptance-criteria/
-│   │                            # System Design
-│   ├── api-spec/
-│   ├── backend-spec/
-│   ├── frontend-spec/
-│   ├── data-model/
-│   ├── flowchart/
-│   │                            # Code Quality
-│   ├── code-review-deep/            # incl. CODE_REVIEW_GUIDE.md (renamed from code-review to avoid clashing with the built-in /code-review command)
-│   ├── code-review-checklist/
-│   ├── pr-review/
-│   ├── code-smell/
-│   ├── git-branch/
-│   ├── independent-review/
-│   │                            # Test Engineering
-│   ├── test-plan/
-│   ├── test-coverage/
-│   ├── test-data-strategy/
-│   ├── test-tracking/
-│   ├── exploratory-testing/
-│   ├── regression-suite/
-│   │                            # Quality Assurance
-│   ├── quality-gate/
-│   ├── defect-report/
-│   ├── traceability-matrix/
-│   ├── test-report/
-│   │                            # Standalone
-│   ├── xmind-import/                # Fetch XMind share URL → Mermaid
-│   ├── ui-ux-pro-max/               # UI/UX Design Intelligence
-│   └── react-best-practices/        # React/Next.js performance optimization (Vercel)
-├── agents/                      # AI Agent definitions (34 agents)
-└── SKILLS.md                    # This file
+├── skills/      # 45 skills, flat (Claude Code discovers `.claude/skills/<name>/SKILL.md` one level deep)
+├── commands/    # 16 command files + 6 under opsx/
+├── agents/      # 34 agents
+└── SKILLS.md    # This file
 ```
 
----
+## Pipeline
 
-## Spec-Kit Commands
-
-Spec-Kit commands provide a Spec-Driven Development (SDD) workflow powered by [GitHub spec-kit](https://github.com/github/spec-kit). Specs are stored in `specs/[module]/NNN-feature/` directories.
-
-| Command | Purpose | Example Usage |
-|---------|---------|---------------|
-| `/speckit.specify` | Create or update feature spec from natural language | `/speckit.specify annotation submission with scoring` |
-| `/speckit.plan` | **DEPRECATED** (ADR-033) — technical design now in an OpenSpec change's `design.md` | `/opsx:propose` |
-| `/speckit.tasks` | **DEPRECATED** (ADR-033) — task breakdown now in an OpenSpec change's `tasks.md` | `/opsx:propose` |
-| `/speckit.implement` | **DEPRECATED** (ADR-033) — implementation now runs through OpenSpec apply | `/opsx:apply` |
-| `/speckit.clarify` | Identify and resolve spec ambiguities (max 5 questions) | `/speckit.clarify` |
-| `/speckit.analyze` | **DEPRECATED** (ADR-033) — use `/opsx:verify` (or `openspec validate`) + Source-Verify gate | `/opsx:verify` |
-| `/speckit.checklist` | Generate quality validation checklist | `/speckit.checklist security` |
-| `/speckit.constitution` | Create or update the project constitution | `/speckit.constitution` |
-| `/speckit.taskstoissues` | Convert tasks.md into GitHub Issues | `/speckit.taskstoissues` |
-
-### SDD Workflow
-
-OpenSpec is the implementation/change workflow layer; `specs/` remains the sole canon — see [ADR-033](../docs/adr/033-openspec-change-workflow.md).
+SDD pipeline stages and gates: [CLAUDE.md](../CLAUDE.md) and [docs/sdd-workflow.md](../docs/sdd-workflow.md); the OpenSpec decision is [ADR-033](../docs/adr/033-openspec-change-workflow.md). In short:
 
 ```
-/speckit.specify → /ui-ux-pro-max (prototype) → /pencil-wireframe (frozen) → /speckit.clarify → /spec-review
-                                                                                                     ↓
-                                                                          /opsx:propose → /opsx:apply → /opsx:archive → /pr-flow
+/speckit.specify → /label-suite-design (prototype) → /speckit.clarify → /spec-review
+  → /opsx:propose → /opsx:apply → /opsx:archive → /pr-flow
 ```
 
-### Related Files
+## Commands (`.claude/commands/`, 16 files + `opsx/`)
 
-- **Constitution**: `specs/_governance/constitution.md`
-- **Templates**: `.specify/templates/` (spec, plan, tasks, checklist, agent-file, constitution templates)
-- **Specs**: `specs/` (feature specifications, organized as `specs/[module]/NNN-feature/`)
+| Group | Commands |
+|-------|----------|
+| Spec-Kit (9; four are DEPRECATED by ADR-033: `plan`, `tasks`, `implement`, `analyze`) | `/speckit.specify` `/speckit.clarify` `/speckit.checklist` `/speckit.constitution` `/speckit.taskstoissues` `/speckit.plan` `/speckit.tasks` `/speckit.implement` `/speckit.analyze` |
+| OpenSpec (`opsx/`, 6; generated) | `/opsx:propose` `/opsx:apply` `/opsx:archive` `/opsx:explore` `/opsx:sync` `/opsx:update` |
+| Workflow (6) | `/pr-flow` `/review-resolve` `/agent-team` `/commit` `/proto-sync` `/prd-export` |
+| Design (1) | `/pencil-wireframe` (frozen 2026-08-20 — see design/wireframes/README.md) |
 
----
+## Skills (`.claude/skills/`, 45)
 
-## Workflow Commands
-
-Commands for broader development workflow tasks (PR management, wireframing, multi-agent orchestration).
-
-| Command | Purpose | Example Usage |
-|---------|---------|---------------|
-| `/ui-ux-pro-max` | Generate HTML prototype + design system before planning | `/ui-ux-pro-max Build dashboard page prototype` |
-| `/pencil-wireframe` | Draw 6-frame wireframes via Pencil MCP (frozen 2026-08-20 — see design/wireframes/README.md) | `/pencil-wireframe` |
-| `/pr-flow` | Full PR flow (commit → review → test → merge) | `/pr-flow` |
-| `/review-resolve` | Fetch PR review threads, fix all findings, resolve | `/review-resolve 21` |
-| `/agent-team` | Multi-phase agent team workflow for new features | `/agent-team` |
-
----
-
-## Knowledge-Domain Skills
-
-### Spec-Driven Development (3 skills)
-
-Skills for the SDD workflow — writing, reviewing, and transforming spec artifacts.
-
-| Skill | Purpose | Example Usage |
-|-------|---------|---------------|
-| `/sdd-workflow` | Full SDD workflow guide (specify → checklist) | `/sdd-workflow` |
-| `/spec-review` | Review spec completeness and Constitution compliance | `/spec-review specs/annotation/001-annotation-submission/spec.md` |
-
-### Requirements Engineering (3 skills)
-
-Skills for defining, converting, and validating requirements.
-
-| Skill | Purpose | Example Usage |
-|-------|---------|---------------|
-| `/user-story` | Create User Stories with AC and story points | `/user-story annotator submits predictions for text classification` |
-| `/functional-req` | Write functional and non-functional requirements | `/functional-req annotation submission and scoring pipeline` |
-| `/acceptance-criteria` | Generate comprehensive AC checklists | `/acceptance-criteria annotation submission feature` |
-
-### System Design (5 skills)
-
-Skills for designing APIs, services, data models, and architecture.
-
-| Skill | Purpose | Example Usage |
-|-------|---------|---------------|
-| `/api-spec` | Design RESTful API specifications (FastAPI) | `/api-spec submission and scoring endpoints` |
-| `/backend-spec` | Generate backend service architecture specs | `/backend-spec ScoringService — compute evaluation metrics` |
-| `/frontend-spec` | Generate frontend component specifications | `/frontend-spec AnnotationWorkspace component` |
-| `/data-model` | Design PostgreSQL schemas and ER diagrams | `/data-model annotation submission and leaderboard` |
-| `/flowchart` | Generate Mermaid flowcharts | `/flowchart annotation submission and async scoring flow` |
-
-### Diagramming (1 skill)
-
-| Skill | Purpose | Example Usage |
-|-------|---------|---------------|
-| `/xmind-import` | Fetch XMind share URL → parse JSON → output Mermaid `flowchart LR` | `/xmind-import https://app.xmind.com/share/PKjJEIHD docs/functional-map/functional-map.md` |
-
-### UI/UX Design (1 skill)
-
-Skills for UI design systems, component styling, and UX best practices.
-
-| Skill | Purpose | Example Usage |
-|-------|---------|---------------|
-| `/ui-ux-pro-max` | Generate complete design systems (style, color, typography, UX guidelines) for any product type | `/ui-ux-pro-max Build a dashboard for annotation analytics` |
-
-### React Best Practices (1 skill)
-
-70 React/Next.js performance optimization rules from Vercel Engineering, organized by impact priority.
-
-| Skill | Purpose | Example Usage |
-|-------|---------|---------------|
-| `/react-best-practices` | Apply React/Next.js performance patterns when writing, reviewing, or refactoring components | `/react-best-practices` |
-
-**Rule Categories:**
-
-- **CRITICAL**: Eliminating Waterfalls (`async-*`), Bundle Size (`bundle-*`)
-- **HIGH**: Server-Side Performance (`server-*`)
-- **MEDIUM**: Client-Side Data Fetching (`client-*`), Re-render Optimization (`rerender-*`), Rendering Performance (`rendering-*`)
-- **LOW**: JavaScript Performance (`js-*`), Advanced Patterns (`advanced-*`)
-
-**Source:** [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills/tree/main/skills/react-best-practices) — MIT License
-
-**Capabilities:**
-- 67 UI styles (Glassmorphism, Brutalism, Bento Grid, Minimalism, etc.)
-- 96 color palettes + 57 font pairings (Google Fonts)
-- 161 industry-specific design rules (SaaS, healthcare, fintech, etc.)
-- 25 chart type recommendations
-- 99 UX best practices (accessibility, touch targets, animation, etc.)
-- Supports 13 stacks: `html-tailwind` (default), `react`, `nextjs`, `vue`, `svelte`, `shadcn`, `swiftui`, `flutter`, `react-native`, and more
-
-**Source:** [nextlevelbuilder/ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) — installed via `uipro-cli`
-
-### Code Quality (5 skills)
-
-Skills for code review, PR evaluation, technical debt management, and git workflow.
-
-| Skill | Purpose | Example Usage |
-|-------|---------|---------------|
-| `/code-review-deep` | Comprehensive code review (quality, security, test-set leakage) | `/code-review-deep backend/app/services/scoring.py` |
-| `/code-review-checklist` | Generate project-specific review checklists | `/code-review-checklist scoring` |
-| `/pr-review` | Full PR review with spec traceability and leakage audit | `/pr-review #42` |
-| `/code-smell` | Detect code smells and suggest refactoring | `/code-smell backend/app/services/` |
-| `/git-branch` | Standardized git branch lifecycle | `/git-branch feat/001-annotation-submission` |
-
-See [CODE_REVIEW_GUIDE.md](skills/code-review-deep/CODE_REVIEW_GUIDE.md) for the detailed code review usage guide.
-
-### Test Engineering (6 skills)
-
-Skills for test planning, execution, data management, and coverage analysis.
-
-| Skill | Purpose | Example Usage |
-|-------|---------|---------------|
-| `/test-plan` | Create comprehensive test plans | `/test-plan specs/annotation/001-annotation-submission/spec.md` |
-| `/test-coverage` | Analyze test coverage with module-specific thresholds | `/test-coverage backend/app/services/scoring.py` |
-| `/test-data-strategy` | Define test data and fixture management | `/test-data-strategy annotation submission tests` |
-| `/test-tracking` | Track test execution progress with dashboards | `/test-tracking sprint` |
-| `/exploratory-testing` | Guide structured exploratory testing sessions | `/exploratory-testing test-set leakage surface area` |
-| `/regression-suite` | Plan risk-based regression testing | `/regression-suite release` |
-
-### Quality Assurance (4 skills)
-
-Skills for quality gates, defect management, traceability, and reporting.
-
-| Skill | Purpose | Example Usage |
-|-------|---------|---------------|
-| `/quality-gate` | Evaluate release readiness (Go/No-Go) | `/quality-gate production` |
-| `/defect-report` | Create standardized defect reports | `/defect-report scoring returns wrong F1 for multi-label` |
-| `/traceability-matrix` | Build User Story → AC → Spec → Code → Test traceability | `/traceability-matrix specs/annotation/001-annotation-submission/` |
-| `/test-report` | Generate Sprint/Release test reports | `/test-report sprint` |
-
----
-
-## Quick Reference
-
-| Domain | Count | Skills |
-|--------|-------|--------|
-| Spec-Driven Development | 2 | sdd-workflow, spec-review |
+| Category | Count | Skills |
+|----------|-------|--------|
+| Spec-Driven Development & OpenSpec | 9 | sdd-workflow, spec-review, spec-format, openspec-propose, openspec-apply-change, openspec-archive-change, openspec-explore, openspec-sync-specs, openspec-update-change |
 | Requirements Engineering | 3 | user-story, functional-req, acceptance-criteria |
 | System Design | 5 | api-spec, backend-spec, frontend-spec, data-model, flowchart |
-| Code Quality | 5 | code-review-deep, code-review-checklist, pr-review, code-smell, git-branch |
+| Code Quality & Review | 7 | code-review-deep, code-review-checklist, pr-review, code-smell, git-branch, independent-review, adversarial-review |
 | Test Engineering | 6 | test-plan, test-coverage, test-data-strategy, test-tracking, exploratory-testing, regression-suite |
 | Quality Assurance | 4 | quality-gate, defect-report, traceability-matrix, test-report |
-| UI/UX Design | 1 | ui-ux-pro-max |
-| Diagramming | 1 | xmind-import |
-| **Total** | **28** | |
+| Issue Workflow | 1 | issue-dispatch |
+| UI Design & Diagrams | 7 | label-suite-design, ui-ux-pro-max, trendlink-design, archify, figma-port, prototype-diagram-diff, xmind-import |
+| NoteCraft | 2 | content-visualize, content-present |
+| React | 1 | react-best-practices |
+| **Total** | **45** | |
 
----
+Notes:
 
-## Scoring & Security Special Requirements
+- `spec-format` has frontmatter name `speckit-spec-format`; `code-review-deep` was renamed from `code-review` to avoid clashing with the built-in `/code-review`. Its usage guide is [CODE_REVIEW_GUIDE.md](skills/code-review-deep/CODE_REVIEW_GUIDE.md).
+- `openspec-*` skills and `commands/opsx/` are generated by the OpenSpec CLI; do not hand-edit.
+- `adversarial-review` and `.claude/harness/protocol.md` are hash-pinned in `.claude/harness/manifest.json`.
+- `label-suite-design` is the project prototype/design skill. `ui-ux-pro-max` is a vendored upstream skill; where they conflict, `label-suite-design` and `design/system/MASTER.md` win (see the override in `label-suite-design/SKILL.md`).
 
-For the Label Suite project, these skills enforce additional constraints for the scoring engine and test-set leakage prevention:
+## Agents (`.claude/agents/`, 34)
 
-| Skill | Special Requirement |
-|-------|---------------------|
-| `/test-coverage` | Scoring engine requires ≥90% coverage (vs ≥80% general) |
-| `/code-review-deep` | Must audit every annotator-facing API response for `answer` field exposure |
-| `/code-review-checklist scoring` | Includes Celery task isolation and test-set answer access checks |
-| `/quality-gate` | Test-set leakage security checks are blocking — any failure = NO-GO |
-| `/test-report security` | Dedicated leakage prevention test report section |
-| `/traceability-matrix` | Maps security ACs (AC-S01 to AC-S06) to security test cases |
-| `/regression-suite` | Scoring module and `/api/v1/submissions` always require full regression |
-| `/defect-report` | Any test-set leakage defect is auto-classified as Critical (P0) |
-| `/exploratory-testing` | Includes LEAK heuristic: inspect all annotator API responses for answer data |
-
----
-
-## Skill Selection by Development Phase
-
-| Phase | Recommended Skills |
-|-------|--------------------|
-| 1. Requirements | `/user-story` → `/functional-req` → `/acceptance-criteria` |
-| 2. SDD Spec | `/speckit.specify` → `/spec-review` → `/opsx:propose` (design.md) |
-| 3. Design | `/api-spec` → `/backend-spec` → `/frontend-spec` → `/data-model` → `/flowchart` |
-| 3b. UI Design | `/ui-ux-pro-max` (design system) → `/frontend-spec` (component spec) |
-| 4. Implementation | `/opsx:propose` → `/opsx:apply` → `/opsx:archive` (ADR-033) |
-| 5. Testing | `/test-plan` → `/test-data-strategy` → `/test-coverage` |
-| 6. Code Review | `/code-review-checklist` → `/code-review-deep` → `/pr-review` |
-| 7. QA | `/quality-gate` → `/traceability-matrix` → `/test-report` |
-| 8. Bug Fix | `/defect-report` → `/exploratory-testing` → `/regression-suite` |
-
----
+Roster and the multi-agent workflow: [AGENTS.md](../AGENTS.md) and `/agent-team`.
 
 ## Related Documentation
 
-- **[CLAUDE.md](../CLAUDE.md)**: Project coding standards and conventions
-- **[AGENTS.md](../AGENTS.md)**: Reference for all 26 AI agents and agent team structure
-- **[CODE_REVIEW_GUIDE.md](skills/code-review-deep/CODE_REVIEW_GUIDE.md)**: Detailed code review usage guide
-- **[Constitution](../specs/_governance/constitution.md)**: Core development principles
-
----
-
-*Last Updated: 2026-08-25*
-*Total Skills: 30 | Spec-Kit Commands: 9 | Workflow Commands: 4*
+- [CLAUDE.md](../CLAUDE.md) — coding standards, SDD pipeline, verification commands
+- [Constitution](../specs/_governance/constitution.md) — core development principles
