@@ -635,7 +635,11 @@
   }
 
   function normalizeTaskRole(role) {
-    if (role === 'super_admin' || role === 'project_leader') return role;
+    /* issue #1266: the URL alone never grants super_admin; the claim counts
+       only when the stored system role agrees (ADR-037: a route query must
+       not create a role). */
+    if (role === 'super_admin') return getCurrentSystemRole() === 'super_admin' ? role : 'user';
+    if (role === 'project_leader') return role;
     return 'user';
   }
 
@@ -1304,9 +1308,6 @@
     var validRunStages = I18N.zh.runTypeOptions.map(function(item) { return item.value; });
     var validStatuses = I18N.zh.statusOptions.map(function(item) { return item.value; });
     state.loadFailed = view === 'error' || !TASK_LIST_DATA_READY;
-    if (window.LabelSuiteSharedSidebar) {
-      window.LabelSuiteSharedSidebar.setSystemRole(taskRole === 'super_admin' ? 'super_admin' : 'user');
-    }
     if (keyword) state.keyword = keyword;
     if (outputType && validOutputTypes.indexOf(outputType) !== -1) state.outputType = outputType;
     if (runStage && validRunStages.indexOf(runStage) !== -1) state.runType = runStage;
