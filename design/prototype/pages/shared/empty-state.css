@@ -1,0 +1,42 @@
+/* Shared Empty State component (issue #1189) -- spec: design/system/MASTER.md "Empty State".
+ * Anatomy: .empty-state > .empty-state-icon? + .empty-state-title + .empty-state-desc + .empty-state-action?
+ * Size modifiers: -cell (inside a td), -panel, -page. Table helpers: -td, -dense, -row. */
+.empty-state { text-align: center; }
+.empty-state-title { margin: 0 0 8px; }
+.empty-state-desc { margin: 0 0 16px; }
+/* Spacing under the description comes from .empty-state-desc margin-bottom. */
+.empty-state-action { align-self: center; }
+
+/* Table-cell size */
+.empty-state-cell { max-width: 520px; margin: 0 auto; }
+.empty-state-cell .empty-state-title { font-size: 20px; font-weight: 700; color: var(--color-ink); }
+.empty-state-cell .empty-state-desc { font-size: 14px; color: var(--color-text-soft); }
+.empty-state-td { padding: 40px 20px !important; }
+.empty-state-dense { padding: 48px 20px !important; }
+.empty-state-dense .empty-state-cell { max-width: 420px; }
+.empty-state-row,
+.error-row { cursor: default !important; }
+.empty-state-row:hover,
+.error-row:hover { background: transparent !important; }
+.error-row .empty-state-title { color: var(--color-error); }
+
+/* Panel size */
+.empty-state-panel {
+  padding: 20px;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-slate-50);
+}
+.empty-state-panel .empty-state-icon { width: 40px; height: 40px; color: var(--color-ink-muted); }
+.empty-state-panel .empty-state-title { font-size: 15px; font-weight: 700; }
+.empty-state-panel .empty-state-desc { font-size: 13px; color: var(--color-text-soft); max-width: 400px; margin-left: auto; margin-right: auto; }
+
+/* Full-page size */
+.empty-state-page { padding: var(--space-2xl) var(--space-lg); }
+.empty-state-page .empty-state-icon {
+  width: 48px; height: 48px; border-radius: 50%; background: var(--color-border-muted);
+  display: inline-flex; align-items: center; justify-content: center;
+  margin-bottom: var(--space-md); color: var(--color-ink-muted);
+}
+.empty-state-page .empty-state-title { font-weight: 600; font-size: 15px; margin-bottom: 6px; }
+.empty-state-page .empty-state-desc { font-size: 13px; color: var(--color-text-soft); margin-bottom: var(--space-lg); }
