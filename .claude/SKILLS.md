@@ -5,7 +5,7 @@ Pointer index. Each skill's purpose lives in its own `SKILL.md` frontmatter `des
 ```
 .claude/
 ├── skills/      # 45 skills, flat (Claude Code discovers `.claude/skills/<name>/SKILL.md` one level deep)
-├── commands/    # 15 command files + 6 under opsx/
+├── commands/    # 16 command files + 6 under opsx/
 ├── agents/      # 34 agents
 └── SKILLS.md    # This file
 ```
@@ -19,7 +19,7 @@ SDD pipeline stages and gates: [CLAUDE.md](../CLAUDE.md) and [docs/sdd-workflow.
   → /opsx:propose → /opsx:apply → /opsx:archive → /pr-flow
 ```
 
-## Commands (`.claude/commands/`, 15 files + `opsx/`)
+## Commands (`.claude/commands/`, 16 files + `opsx/`)
 
 | Group | Commands |
 |-------|----------|
