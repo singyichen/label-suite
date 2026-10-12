@@ -1,7 +1,7 @@
 ---
 功能分支: feat/admin/006-user-management
 建立日期: 2026-04-16
-版本: 1.3.1
+版本: 1.4.0
 狀態: Clarified
 ---
 
@@ -246,6 +246,7 @@ Super Admin 可在使用者管理頁新增帳號、更新帳號基本資訊，�
 
 - **FR-001**：系統必須提供 `/user-management` 頁面供平台級使用者管理。
 - **FR-002**：只有當前 active `super_admin` 且 `admin.user_management.view` 已啟用並允許時可以存取 `/user-management`；新增、編輯、停用、啟用與 system role 變更另需 `admin.user_management.manage`，每個命令仍須通過本規格的 seeder／最後超管等資源限制。矩陣格不可授權 `user` 越過 system role 硬邊界（ADR-037）。
+  **v1.4.0 修訂（issue #1269，降級即撤權，對應 AC-1.3）**：「當前」指每個請求當下的 DB `users.role`。`super_admin` 被降級為 `user` 後，該帳號的下一個 `/user-management` 讀取或管理命令 MUST 依 `account/020-auth-session-security` FR-002（權限依當前 DB `role` 判定，JWT `role` 僅供顯示）被拒絕（403）。仍在效期內、帶有舊 `role` claim 的 access JWT MUST NOT 延續管理權；被拒絕的請求 MUST NOT 回傳任何帳號列表、帳號詳情或異動紀錄。上文原文逐字保留。
 - **FR-003**：系統必須顯示全平台使用者列表，包含姓名、Email、system role、帳號狀態。
 - **FR-004**：系統必須支援依關鍵字搜尋使用者。
 - **FR-004a**：關鍵字搜尋比對方式必須為 `contains` 且不分大小寫，並同時作用於 `name` 與 `email`。
@@ -354,6 +355,7 @@ flowchart LR
 
 1. **AC-1.1**：核發邀請連結 24 小時後不得用其設定密碼；重發使舊連結失效，且作廢時間不被記為成功使用時間。
 2. **AC-1.2**：首位 seeder bootstrap 只建立新帳號；同身份重跑冪等、既有非 seeder 或不同身份失敗，舊帳號 session 不升權，且 SQLite 與 PostgreSQL 併發角色異動後至少保留一位 active `super_admin`。
+3. **AC-1.3**（v1.4.0 新增，對應 FR-002 修訂，issue #1269）：**Given** 超管 A 持有仍在效期內、`role` claim 為 `super_admin` 的 access JWT，且另一位超管已把 A 的 system role 降為 `user`，**When** A 以同一個 token 送出下一個 `/user-management` 讀取請求或任一管理命令（新增、編輯、停用、啟用、system role 變更），**Then** 服務端依當前 DB `role` 回 403，回應不含任何帳號資料；這次拒絕不需要等 token 到期，也不受 A 降級前已通過的矩陣格影響。
 
 ---
 
@@ -391,6 +393,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.4.0 | 2026-10-12 | Issue #1269（OpenSpec change `admin-demotion-revokes-admin-access`，MINOR）：FR-002 補降級即撤權修訂——降級後的下一個 `/user-management` 讀取或管理命令依當前 DB `role` 拒絕（403），舊 JWT `role` claim 不延續管理權；新增 AC-1.3。FR-002 原文逐字保留，沒有移除或推翻任何 FR／AC。 |
 | 1.3.1 | 2026-10-08 | Issue #1160：停用帳號改引用 `account_session`，安全撤銷不記 `logged_out_at`。 |
 | 1.3.0 | 2026-10-06 | Issue #1160 D-9：依 ADR-037 將 `admin.user_management.view/manage` 加入現有超管硬邊界；帳號異動與稽核抽屜仍受原有資源及敏感資料限制，新增 SC-015。規劃契約尚未實作 API。 |
 | 1.2.1 | 2026-10-06 | Issue #1160 D-4：FR-013／SC-012 與 `UserManagementAuditLog` 對齊 ADR-032 共用稽核事件，限定目標查詢及非敏感摘要；維持既有 drawer 行為。 |

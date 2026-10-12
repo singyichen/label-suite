@@ -1,7 +1,7 @@
 ---
 功能分支: fix/1003-demo-reviewer-entry
 建立日期: 2026-04-05
-版本: 2.13.0
+版本: 2.14.0
 狀態: In Progress
 ---
 
@@ -158,6 +158,7 @@ Super Admin 登入後看到平台層級總覽，用於掌握整體人員、任�
 1. **Given** `role = super_admin`，**When** 進入 `/dashboard`，**Then** 顯示平台使用者統計（總用戶、專案負責人、標記員、審核員）。
 2. **Given** `role = super_admin`，**When** 進入 `/dashboard`，**Then** 顯示任務概況（總任務、進行中、等待 IAA 確認、速度異常）。
 3. **Given** `role = super_admin`，**When** 檢視任務列表，**Then** 每列包含名稱、摘要、依 `outputs[].type` 順序呈現的一至多個輸出類型 tag、Annotation Stage badge、狀態 badge 與進度條。
+4. **Given** 當前 DB system role 為 `user` 的使用者只在部分任務具 active `task_membership`，**When** 直接開啟 `/task-list?task_role=super_admin&status=waiting_iaa_confirmation`，**Then** 回應只含其自身具 membership 且狀態為 `waiting_iaa_confirmation` 的任務，不含任何其他任務；當前 system role 為 `super_admin` 的使用者從「查看全部」進入 `/task-list`（不帶 `task_role`）時，仍得到全平台任務範圍（FR-008E／FR-008F v2.14.0 修訂，issue #1269）。
 
 **系統管理員介面定義（需與原型一致）**：
 
@@ -367,7 +368,9 @@ Super Admin 登入後看到平台層級總覽，用於掌握整體人員、任�
 - **FR-008C**：Super Admin Dashboard 的「最近提醒」必須以清單呈現，且每項包含提醒標題與提醒內容；清單為空時必須顯示 i18n 文字佔位（如「目前沒有提醒」），不得呈現空白區塊。
 - **FR-008D**：Super Admin Dashboard 的「任務列表」必須顯示「查看全部」按鈕，且每列包含名稱、摘要、一至多個輸出類型 tag、Annotation Stage／Status badge 與 progress bar。
 - **FR-008E**：Super Admin Dashboard 點擊「查看全部」時，系統必須導向 `/task-list`，並以 `super_admin` 權限顯示全平台任務。
+  **v2.14.0 修訂（issue #1269，範圍來源）**：「以 `super_admin` 權限」MUST 解讀為伺服器端依 ADR-037 判定的當前身分：當前 DB system role 為 `super_admin`，且平台層 `task.list.view` 格為 `allowed=true`（admin-007 鍵註冊表）。全平台範圍 MUST NOT 來自網址參數、`localStorage` 或其他前端狀態。上文原文逐字保留。
 - **FR-008F**：Super Admin Dashboard 的「等待 IAA 確認」指標卡數值必須為可執行待辦入口：以 `role="button"`、`tabindex="0"` 呈現，支援滑鼠點擊與鍵盤（Enter／Space）操作；觸發時導向 `/task-list?task_role=super_admin&status=waiting_iaa_confirmation`，並套用「待 IAA 確認」狀態篩選。
+  **v2.14.0 修訂（issue #1269，範圍來源）**：網址中的 `task_role=super_admin` 只是 prototype 的檢視上下文。`super_admin` 是 system role，不是 task role，因此這個參數 MUST NOT 作為正式後端授予全平台範圍的依據；全平台範圍 MUST 依 FR-008E 修訂段，由當前 `super_admin` system role 加平台層 `task.list.view` 格決定。當前 system role 不是 `super_admin` 的使用者帶這個參數時，MUST 只依其自身 active `task_membership` 的範圍回應。`status=waiting_iaa_confirmation` 篩選、指標卡互動與導向目的地不變。Prototype 的 `task-list.html` 已依 issue #1266 只在 stored system role 也是 `super_admin` 時採用這個參數。上文原文逐字保留。
 - **FR-009**：Project Leader Dashboard 必須包含：任務概況、任務列表。
 - **FR-009A**：Project Leader Dashboard 的「任務概況」必須包含 4 張指標卡：總任務（個）、進行中（個）、等待 IAA 確認（個）、速度異常（個）；各卡標籤顯示於數值上方。
 - **FR-009A1**：Project Leader Dashboard 的「等待 IAA 確認」指標卡數值必須為可執行待辦入口：以 `role="button"`、`tabindex="0"` 呈現，支援滑鼠點擊與鍵盤（Enter／Space）操作；觸發時導向 `/task-list?task_role=project_leader&status=waiting_iaa_confirmation`，並套用「待 IAA 確認」狀態篩選。
@@ -551,6 +554,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.14.0 | 2026-10-12 | **Super Admin 全平台任務範圍改由當前身分決定**（issue #1269，OpenSpec change `dashboard-admin-platform-scope-source`，MINOR）：FR-008E／FR-008F 各補一段修訂——全平台範圍由伺服器依當前 DB system role `super_admin` 加平台層 `task.list.view` 格決定；網址 `task_role=super_admin` 只是 prototype 檢視上下文，MUST NOT 授予範圍，非超管帶此參數只得到自身 membership 範圍（ADR-037）。使用者故事 2 驗收情境新增第 4 項（檔內驗收情境不賦 AC 編號）。兩條 FR 原文、導向目的地與「待 IAA 確認」篩選不變；prototype 不改（`task-list.html` 已依 issue #1266 fail closed）。**未新增或移除任何 FR／AC／SC 編號**。 |
 | 2.13.0 | 2026-09-27 | **審核流程示範任務入口身分分流**（issue #1003，OpenSpec change `fix-1003-demo-reviewer-entry`；**未新增或移除任何 FR／AC／SC 編號**）：issue #956（PR #999）把工作區左欄收斂為「annotation-015 FR-093 被指派單位 ∪ 同檔 FR-060 可仲裁之爭議單位」後，T014–T016 原本統一以 `reviewer_chen` 進入的示範入口（FR-011D），使 `reviewer_chen` 在 T014／T015 的 FR-093 指派單位數恆為 0，除爭議單位外的一切狀態（待審、已定稿）皆不可達；issue #1000 的永久黏著放寬（annotation-015 v7.5.0）雖使可見數各 +1，經現場重新量測仍不足以恢復主線可達性（propose 前實測：T014 15 單位中僅 4 個可見、T015 4 單位中僅 2 個可見，且皆缺待審狀態）。**變更內容**：**修訂 FR-011D**——示範入口身分不再三個任務統一指向 `reviewer_chen`：**T014 改為 `reviewer_li`**（實測被指派 6 個單位，待審 3／爭議 2／定稿 1，三態齊全）、**T015 改為 `reviewer_wang`**（實測被指派 2 個單位，待審 1／定稿 1，乾淨主線）、**T016 維持 `reviewer_chen`**（唯一可仲裁者，仲裁與最終例外示範本體不變）；經實測排除以 `reviewer_wang` 作為 T014 入口的候選——其於 T014 之 FR-093 指派單位全數已定稿，`findNextActionableReviewUnit()` 恆回傳 `null`，快速審核會直接落到空狀態。**未變更、亦未放寬** annotation-015 FR-060（仲裁者排除於 FR-093 新指派池外）與 FR-093 之工作區左欄／導覽指派過濾（issue #956/#1000 收斂邏輯）本身，也未變更任一示範任務的 `reviewerIds`／`arbiterIds` 名冊結構。**原型**：`dashboard.assignments.js`（1 個生產檔）T014／T015 的 `reviewWorkItem()` 呼叫之 `reviewerId` 引數字面值變更，並同步改寫上方過期註解。**既有測試修正**：`dashboard-card-a11y.spec.ts`（1 案，位移）、`dashboard-review-flow-demo.spec.ts`（2 案，位移）、`dashboard-quick-review-next-actionable.spec.ts`（2 案：1 位移＋1 前提消失——原「保留仲裁者略過待審、落到爭議」示範案例的前提隨 T014 換身分而消失，改寫為「已受派審核員的快速審核優先落在自己待審單位」之正向斷言，該一般性規則本身仍由同檔案 T016／`reviewer_chen` 案例逐字保留覆蓋，未刪除亦未弱化）。**新增測試**：`dashboard/issue-1003-demo-reviewer-entry.spec.ts`（T014／T015 示範可走性 2 案＋FR-060／FR-093 不變量 2 案）。**獨立審查**：`senior-code-reviewer` 逐項核實 (1) `reviewAssignmentRoster()`／`filterUnitsToAssigned()` 零改動且 #956／#1000 契約測試全過、(2) 獨立重新量測 T014/`reviewer_li`與T015/`reviewer_wang`之指派單位狀態分佈與 proposal.md 論證一致、(3) 既有測試修正之斷言數量零淨減少（`grep -c "expect("` before/after 32/32、25/25、29/29）、(4) `task-detail.data.js` 名冊結構 diff 為空，四項全數 PASS。**分級理由**：修訂既有 FR-011D 之具體指派值與理由句，未新增或移除任何 FR／AC／SC 編號——MINOR。 |
 | 2.12.0 | 2026-09-18 | **同步 annotation-015 v6.6.0：審核流程示範任務收斂為 T014–T016**（issue #815，OpenSpec change `retire-stale-review-demo-fixtures`；**未新增或移除任何 FR／SC 編號**）：平手示範任務 T017 之種子形狀只能由已廢止之多數決規則產生，已自 prototype 與 `docs/product/example-data/` 移除。**變更內容**：**FR-011D**、**FR-011E** 之示範任務範圍 T014–T017 → T014–T016（FR-011D「四種模型」同步改寫）；**SC-024** 快速操作數 17 → 16、範圍 T001–T016；同一事實之功能目標、已釐清事項、下游表 010 列、**SC-019**、**SC-020**、**SC-023** 之基線筆數 17 → 16 一併同步，避免條文自相矛盾。**逐字保留不改寫**：FR-011E 之 v2.6.0 修訂註記（「不再以示範任務清單（T014–T017）界定」為當時沿革）與本 Changelog 舊列。**刻意排除**：FR-011E 內 T016 之 `approved`／`modified` 計數例示為 issue #596（v5.0.0）遺留之語彙殘留，與本變更之 T017 移除無關，不在本版處理。**分級理由**：驗收基線筆數與快速操作數改變——MINOR（對齊 v2.1.0 擴充基線之分級先例）。 |
 | 2.11.1 | 2026-09-18 | **同步 annotation-015 v6.3.2：審查摘要不再附加「未達定稿門檻 {n} 個」**（issue #627 第 7 項，Lightweight Path；**未新增或移除任何 FR／SC 編號**，僅刪除 FR-022 中一項顯示文案）：FR-022 明文宣告文案「以 annotation-015 FR-076 為唯一來源」，卻同時逐字複述完整摘要格式。annotation-015 於 v6.3.2 補上 v5.0.0 的漏改、自 FR-076 第 1 點刪除 `未達定稿門檻 {n} 個`（`approved`／`modified` 兩個中間狀態移除後，該計數恆等於 `待審 + 爭議中`，且 `min_reviewers` 退場後「門檻」已無指涉對象），若本檔不同步，正典層會再次出現「015 說不顯示、012 說要顯示」的直接矛盾——即 015 v4.44.0 已記取的 issue #515 教訓「改了一層、另一層仍宣稱相反行為」。**變更內容**：FR-022 刪除該項並註記本版。**無程式碼變更**：兩個畫面共用 annotation-015 的同一個 `formatReviewSummary()`，行為已由該 PR 的 prototype 變更落地，本版僅補正典文字；`tests/dashboard/dashboard.spec.ts`、`tests/dashboard/issue-501-derived-reviewer-summary.spec.ts`、`tests/dashboard/dashboard-review-flow-demo.spec.ts` 之措辭斷言於同 PR 同步 retarget，未弱化任何斷言。**刻意排除**：FR-021 描述 `REVIEW_UNIT_ACTION_PRIORITY` 時仍含「未達定稿門檻且該審核員尚未提交之 `approved`／`modified`」，屬 v5.0.0 中間狀態移除之同源殘留，與本次顯示文案無關，不在本次範圍。 |

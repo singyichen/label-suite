@@ -1,7 +1,7 @@
 ---
 功能分支: feat/database-annotation-review-dictionary
 建立日期: 2026-04-23
-版本: 12.2.0
+版本: 12.3.0
 狀態: Draft
 ---
 
@@ -23,7 +23,7 @@
 
 ## 規格常數
 
-- `TASK_ROLES = annotator | reviewer`
+- `TASK_ROLES`：參照 `specs/_shared/constants.md`（三角色，與 admin-007 任務角色矩陣一致；v12.3.0 修訂，issue #1269：原為本檔自訂子集 `annotator | reviewer`）。Workspace 的 active role 限 `annotator`／`reviewer`；`project_leader` 只用於 FR-095 例外池處置與歷程呈現。
 - `RUN_TYPES = dry_run | official_run`
 - `TASK_INPUT_TYPES = single_item | item_pair`（source of truth：task-management-013）
 - `OUTPUT_TYPE_KEYS = sequence_tagging | entity_recognition | relation_identification | single_label | multi_label | single_dim | multi_dim | free_text`（source of truth：task-management-013 `OUTPUT_TYPE_REGISTRY`；本規格不重複定義各輸出類型的 schema 欄位，僅描述 workspace 標記/審查介面行為）
@@ -1050,6 +1050,7 @@ Reviewer 在 `run_type = official_run` 的工作區中，針對「目前標記�
 
 > **v2.0.0 移除項目**：原 `FR-004D`（保留次分類路由參數）與原 `FR-025`（任務分類 localStorage fallback 機制）隨 taxonomy 遷移一併移除，不再適用；詳見 Changelog。
 - **FR-104**（issue #1160 D-9／D-11）：正式後端的標記／審核 workspace 必須依 ADR-037 以當前帳號、目標任務 active membership、使用者明確選定的 active task role、對應 `annotation.workspace.annotate`／`annotation.workspace.review` 格、實際 assignment／reviewer roster 及盲審與答案隔離條件逐次授權；多角色使用者的其他 task role 不得以聯集提升本次寫入權限。路由中的 `role`、`annotator_id`、`reviewer_id` 僅作檢視／定址上下文，不得作為正式後端的操作者身分或指派證據；正式身分由受驗證帳號與任務資料決定。FR-049 的 prototype 路由預設身分與示範 bucket 行為仍只屬 prototype，不得直接移植為後端授權來源；被拒絕的呼叫不得讀出測試集答案或其他審核員未提交內容。
+  **v12.3.0 修訂（issue #1269，仲裁寫入的鍵與名冊，對應 AC-7.9）**：仲裁寫入（FR-061 仲裁版面、FR-065 仲裁票）MUST 沿用 `annotation.workspace.review`，不得另立仲裁專用權限鍵。授權條件為以下各項同時成立：(1) active task role 為 `reviewer`，且有該任務當前 active reviewer membership；(2) `reviewer × annotation.workspace.review` 格為 `allowed=true`；(3) 資源條件：該審核員在該任務的 `arbiter_ids` 中（FR-060 第 1 點），且於該審核單位沒有自己的審核提交（FR-060 第 2 點）。`arbiter_ids` MUST 是 `reviewer_ids` 的子集合，不是新的 task role，其成員資格依 `task-management/014-task-detail` 的 `ARBITER_CANDIDATE_RULE`。只通過第 (1)、(2) 項而不在 `arbiter_ids` 中的審核員，MUST NOT 寫入仲裁票。`arbiter_ids` 成員一旦失去 active reviewer membership，下一次仲裁請求即 MUST 拒絕，即使仍留在名冊中也一樣。上文原文逐字保留。
 
 - **FR-105**（v12.0.0 新增，issue #1160；V1 annotation／review 寫入完整性）：正式答案須依釘住 config 驗證 `OutputAnswer[]`；`sequence_tagging` payload 使用 `spans: [{start,end,label}]`、`snap_unit`、`bypass`、`version`，不用舊 `tokens/tags/scheme/unit`。審核提交全量驗證 outKey、保存不可變 revision／歷程並清除有效草稿。仲裁首票後 submission／revision 永久凍結，不得刪票解鎖。未提交標記 slot 退回時舊草稿轉 `abandoned` 並保留原作者，繼任者由空白紀錄開始；reviewer 失權草稿失效且不自動還原。所有讀寫驗 active membership、task role、assignment、roster／candidate 與資源條件；歷史 membership 不授權。一般路徑不讀或外洩 `dataset_item_private`、gold/test 旗標或隱藏答案。**v12.1.3 補述（ADR-038，issue #1241）**：不可變 revision 與凍結票的 append-only 不因本補述放寬；ADR-038 所列可匿名化的個資欄位不含這些 revision 與票據表，故其一律不得更新（FR-097 所述經 ADR-024 migration role 路徑的特權匿名化僅適用於 ADR-038 所列事件個資欄位），`decision_payload` 與仲裁票 payload 等含答案的歷程 JSON 不屬個資欄位匿名化範圍，隨其 dataset version 或 run 保存（FR-063），版本整體下架程序與期限待定（#1244）。此為規劃契約，不宣稱 ORM、migration、API 或雙庫測試已存在。
 
@@ -1159,6 +1160,7 @@ flowchart LR
 - **AC-7.6**：**Given** 同一審核單位的全部目前爭議鍵與合法來源 digest，**When** 合格仲裁者提交完整 batch 並以相同或不同內容重送，**Then** 成功時每鍵恰有一票且同交易留痕；相同 `decision_batch_id` 與內容回傳原結果，異內容或第二 batch 拒絕，任何驗證失敗均不留部分票或改寫原票時間（FR-061／FR-065）。
 - **AC-7.7**：**Given** 同一爭議鍵已有唯一待處置 `reject` 票，**When** PL 明示確認合法例外處置並重送相同或不同內容，**Then** 同內容回既有 resolution、異內容拒絕且終局紀錄不覆寫；`exclude_from_dataset` 只排除爭議輸出項，不刪公開 `dataset_item` 或 assignment（FR-095／FR-105）。
 - **AC-7.8**：**Given** 前任 annotator 有未提交草稿或 reviewer 有未提交私有草稿，**When** membership 停用、移除、slot 重派或 reviewer 候選變動，**Then** annotator 舊草稿同交易轉 `abandoned` 並保留原作者，繼任者不得讀前任草稿且從空紀錄開始；reviewer 草稿失效、其他角色連存在與否皆不可見，原成員重新獲權也不自動還原舊草稿，已提交歷史保留（FR-014S／FR-105、014 FR-005f／FR-005l）。
+- **AC-7.9**（v12.3.0 新增，對應 FR-104 修訂，issue #1269）：**Given** 某任務 `reviewer_ids = [W, L, C]`、`arbiter_ids = [C]`，`reviewer × annotation.workspace.review` 格允許，且某爭議單位 U 的當事審核員不含 C 與 L，**When** C 與 L 各自以 active role `reviewer` 對 U 提交仲裁票，**Then** C 的仲裁票通過、L 的仲裁票因不在 `arbiter_ids` 中被拒絕；C 的 reviewer membership 停用後，即使 `arbiter_ids` 仍含 C，C 下一次的仲裁請求也被拒絕；授權路徑不使用任何仲裁專用權限鍵（FR-060／FR-104）。
 
 ## 成功標準 *(必填)*
 
@@ -1233,6 +1235,7 @@ flowchart LR
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 12.3.0 | 2026-10-12 | **仲裁沿用審核權限鍵與任務角色常數對齊**（issue #1269，OpenSpec change `annotation-arbitration-review-key`，MINOR）：FR-104 補修訂段——仲裁寫入沿用 `annotation.workspace.review`，需 active reviewer membership 並在 `arbiter_ids` 中且符合 FR-060 非當事人條件；`arbiter_ids` 是 `reviewer_ids` 的子集合、不是新 task role（引用 `task-management/014-task-detail` `ARBITER_CANDIDATE_RULE`），不另立仲裁鍵。新增 AC-7.9。規格常數 `TASK_ROLES` 改為引用共用常數 `project_leader \| reviewer \| annotator`，並限縮 workspace active role 為 annotator／reviewer。FR-104 原文逐字保留，沒有移除或推翻任何 FR／AC。 |
 | 12.2.0 | 2026-10-12 | **FR-090 試標回合揭露前之歷程遮蔽**（issue #1268，OpenSpec change `annotation-history-mask-before-reveal`，MINOR，Data Fairness）：FR-090 第 (1) 點另加揭露時點閘門——`run_type=dry_run` 之樣本所屬回合尚未依 FR-096 揭露前，標記員之歷程輸出僅含本人事件，審核員、仲裁、例外池事件之事件列、`result_snapshot` 與 `reason` 皆遮蔽；揭露判定與 FR-096 試標歷史回饋共用同一判定（prototype `disclosedTrialRound()`），無回合戳記者於進行中 fail closed；回合揭露後與 `official_run` 維持原規則。新增 **AC-4.84**；FR-090 原文逐字保留為沿革。未移除任何 FR／AC，不影響 API 契約。 |
 | 12.1.3 | 2026-10-12 | **FR-097／FR-105 補述 ADR-038 特權匿名化例外**（issue #1241，Lightweight Path，PATCH）：FR-097 與 FR-105 的 append-only 條文原未提及 ADR-038 已定的例外；補述唯一例外為經 ADR-024 migration role 路徑、僅改寫已逾最短保存期事件列之個資欄位，一般寫入路徑的 append-only 不放寬，含答案的歷程 JSON 不在匿名化範圍。未新增或移除任何 FR／AC，不訂任何新期限（匿名化頻率與最長保存期維持待定，#1244）；不影響下游規格與 API 契約。 |
 | 12.1.2 | 2026-10-12 | **AC-2.27 標記員定稿鎖定補述視覺呈現**（issue #1247，Lightweight Path，PATCH）：FR-101／AC-2.27 原僅規範功能層（`disabled`／`aria-disabled`、寫入阻擋），原型的 chip 與儲存／提交按鈕鎖定後外觀不變，提示的說服力被抵銷。AC-2.27 補述視覺呈現：warning 語氣提示含鎖頭圖示與兩行文案、禁用控件降低不透明度與 `cursor: not-allowed` 且無 hover、狀態列以鎖頭取代綠點、直接點擊禁用控件不彈 toast（快捷鍵維持 toast）。未新增或移除任何 FR／AC，僅澄清 AC-2.27 之視覺呈現；不影響下游規格與 API 契約。**新增測試**：`design/prototype/tests/annotation/issue-1247-finalized-lock-disabled-style.spec.ts`。**分級理由**：純視覺層澄清，PATCH。 |

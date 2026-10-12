@@ -1,7 +1,7 @@
 ---
 功能分支: feat/dataset-analysis-output-types
 建立日期: 2026-04-24
-版本: 2.1.2
+版本: 2.1.3
 狀態: In Progress
 ---
 
@@ -171,6 +171,7 @@ Prototype 使用 task-management-010「Prototype 示例資料基線」所列的�
 
 - **FR-001**: 系統必須提供 `DATASET_ANALYSIS_LIST_ROUTE` 作為資料集分析模組入口。
 - **FR-002**: 僅具 `TASK_ROLES_ALLOWED` membership 的任務可出現在列表。
+  **v2.1.3 補述（issue #1269，操作 → 權限鍵）**：本條既有的 `TASK_ROLES_ALLOWED` membership 條件不變；正式後端依 ADR-037 步驟 2–3，另以該 membership 的任務層 `dataset.stats.view` 或 `dataset.quality.view` 格判定，兩者同時成立才列入（非 workspace 頁面可取 active membership 的允許聯集）。admin-007 V1 種子中這兩鍵只對 `project_leader`／`reviewer` 允許，所以 V1 下列表範圍與既有範圍相同。`invited` 或其他非 active 的 membership 依 ADR-037 視同不存在。列表只是入口，detail 頁各 tab 的授權依 `dataset/017-dataset-analysis-detail` FR-003。本補述只對應鍵，不改列表的既有可見範圍。
 - **FR-003**: 列表必須以 `LIST_VIEW_STATES` 互斥驅動 loading、ready、empty、error 呈現。
 - **FR-004**: 列表必須提供全欄位搜尋、輸出類型篩選、IAA 狀態篩選及 `limit`／`offset` 分頁。
 - **FR-004A**: IAA 徽章必須只顯示最新 quality 摘要，值限定於 `IAA_BADGE_STATES`；當任務 `outputs[]` 僅含 IAA 排除類型（如僅 `free_text`）時，徽章須顯示 `not_applicable`，不得顯示 `pass`／`fail`／`pending`／`not_started` 或空白。
@@ -267,6 +268,7 @@ flowchart LR
 
 | Version | Date | Change Summary |
 | --- | --- | --- |
+| 2.1.3 | 2026-10-12 | Issue #1269（Lightweight，PATCH）：FR-002 補述操作 → 權限鍵對應——在既有 `TASK_ROLES_ALLOWED` 條件之上，依 ADR-037 另以 `dataset.stats.view` 或 `dataset.quality.view` 格判定；V1 種子下範圍與既有相同，`invited` 等非 active membership 依 ADR-037 視同不存在。只對應鍵，不改既有可見範圍。 |
 | 2.1.2 | 2026-08-24 | Issue #261 drift 修正：更正「Prototype 示例資料基線」的 IAA 示意分布敘述——`pass = 6`／`not_started = 2` 為 v2.1.0 引入 `not_applicable` 徽章狀態前的舊值，未同步更新；實際 prototype fixture（`dataset-analysis-list.data.js`）與既有回歸測試（`dataset-analysis-list-filters-pagination.spec.ts` `IAA_FILTER_COUNTS`）皆為 `pass = 5`、`not_started = 1`、`not_applicable = 2`（2 筆 `free_text`-only 任務 T009／T012，依 FR-004A 顯示 `not_applicable`），純文字修正對齊既有正確行為，不改變任何 prototype 程式碼或測試。 |
 | 2.1.1 | 2026-08-24 | Issue #261：新增 Prototype Traceability，明確對應 dataset-analysis-list 原型頁面、資料層與設計層參考的責任邊界；規格條文未變。 |
 | 2.1.0 | 2026-08-12 | **同步 dataset-017 v2.0.0 IAA 策略 v2（minor）**：`IAA_BADGE_STATES` 新增 `not_applicable`（任務 `outputs[]` 僅含 IAA 排除類型如 `free_text` 時，徽章顯示 `not_applicable` 而非 `pass`／`fail`／`pending`／`not_started` 或空白），更新 FR-004A 與 `IAAStatusSummary` 實體；移除已過時的「v2.0.0 scope boundary（detail 待同步）」註記，改記錄 dataset-017 已完成 8-key `outputs[]` 遷移，detail 頁現支援全部 8 種輸出類型與複合組合。 |
