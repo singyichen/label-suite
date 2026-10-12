@@ -2225,7 +2225,7 @@
       while (notifList.firstChild) notifList.removeChild(notifList.firstChild);
       if (mockNotifs.length === 0) {
         var emptyDiv = document.createElement('div');
-        emptyDiv.className = 'notif-empty';
+        emptyDiv.className = 'empty-state empty-state-compact';
         emptyDiv.textContent = notificationI18n[normalizeLang(lang)].emptyText;
         notifList.appendChild(emptyDiv);
         return;
