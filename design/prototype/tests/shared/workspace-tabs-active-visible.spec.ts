@@ -57,7 +57,8 @@
  * `test.setTimeout(90_000)` follows this directory's existing precedent for
  * multi-navigation workspace-tab specs (workspace-tabs-cap.spec.ts).
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { tabBar, workspaceTabs, closeButton } from './_workspace-tabs-helpers';
 import { buildWorkspaceUrl, skipGuidelineModal } from '../annotation/_workspace-helpers';
 

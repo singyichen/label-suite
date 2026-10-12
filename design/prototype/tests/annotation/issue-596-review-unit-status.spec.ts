@@ -1,4 +1,5 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
 
 /* issue #596 (task 1.1, RED) -- REVIEW_UNIT_STATUS collapses from five states

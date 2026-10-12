@@ -6,7 +6,7 @@
  *   FR-010i-1, SC-027, SC-027b, SC-027c, SC-027d, SC-027e, SC-027f, SC-032
  */
 import fs from 'node:fs/promises';
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 /* First paint of the annotation-results panel can exceed the 5s expect default

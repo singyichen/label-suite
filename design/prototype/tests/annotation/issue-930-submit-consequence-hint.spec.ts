@@ -53,7 +53,7 @@
  * -- so the assertion stays correct against actual current/Green behavior
  * instead of embedding a claim today's code disproves.
  */
-import { expect, test } from '@playwright/test';
+import { expect, test } from '../fixtures';
 import { buildWorkspaceUrl, dismissGuidelineModal, gotoReviewerWorkspace, skipGuidelineModal } from './_workspace-helpers';
 
 const OFFICIAL_URL = buildWorkspaceUrl({

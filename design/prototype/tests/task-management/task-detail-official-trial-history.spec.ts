@@ -26,7 +26,8 @@
  * from workspace dry_run seeds, out of budget) and T014's review-unit
  * pending count (two contradictory sources, owned by group 4).
  */
-import { expect, test, type Locator, type Page } from '@playwright/test';
+import { expect, test } from '../fixtures';
+import type { Locator, Page } from '@playwright/test';
 import { buildListUrl } from '../annotation/_workspace-helpers';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';

@@ -2,7 +2,7 @@
  * Traceability: specs/task-management/014-task-detail/spec.md
  *   SC-007
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { openSettingsSection } from './_task-detail-settings-helpers';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html?task_id=T001';

@@ -9,7 +9,8 @@
  * Traceability: specs/account/005-profile-settings/spec.md
  *   FR-013, SC-009
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 
 const PROFILE_URL = '/pages/account/profile.html';
 

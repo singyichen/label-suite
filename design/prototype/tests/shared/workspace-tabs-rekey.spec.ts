@@ -12,7 +12,7 @@
  * and notice assertions below are expected to FAIL until a later G2b Green
  * task adds that hook.
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { workspaceTabs, readWorkspaceTabState, setDesktopViewport } from './_workspace-tabs-helpers';
 
 // T001 (task-list.data.js): same task id matches task-detail.html's own

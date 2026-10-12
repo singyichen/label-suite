@@ -10,7 +10,7 @@
  * does not cover -- unsaved-changes guards on cancel/tab-switch, the
  * stale-arbiter cleanup on member disable, and the language toggle.
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { openSettingsSection } from './_task-detail-settings-helpers';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';

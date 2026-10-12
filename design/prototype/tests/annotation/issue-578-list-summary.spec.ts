@@ -1,4 +1,5 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { buildListUrl } from './_workspace-helpers';
 
 /* FR-091 / AC-1.25: the annotation list carries a per-sample processing

@@ -8,7 +8,7 @@
  * (every review-flow demo task_id resolves without an invalid_task
  * redirect), so no coverage is lost.
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 const DETAIL_URL = '/pages/dataset/dataset-analysis-detail.html';
 

@@ -21,7 +21,7 @@
  * Traceability: specs/account/002-login-google-sso/spec.md
  *   FR-001, SC-001
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 const LOGIN_URL = '/pages/account/login.html';
 

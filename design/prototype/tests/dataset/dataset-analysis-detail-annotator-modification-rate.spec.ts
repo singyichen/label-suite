@@ -25,7 +25,7 @@
  * Traceability: specs/dataset/017-dataset-analysis-detail/spec.md
  *   FR-040, AC-3.17, Block A-5 (line 313-315).
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import type { Page } from '@playwright/test';
 
 const DETAIL_URL = '/pages/dataset/dataset-analysis-detail.html';

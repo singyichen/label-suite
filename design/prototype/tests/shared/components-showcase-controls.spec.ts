@@ -12,7 +12,7 @@
  * Traceability: design/system/MASTER.md
  *   §Buttons, §Inputs, §Toggle Switch
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 const SHOWCASE_URL = '/components-showcase.html';
 

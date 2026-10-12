@@ -9,7 +9,8 @@
  * work happens in task 1.3 (senior-frontend) and MUST NOT weaken any
  * assertion here to pass.
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 
 declare global {
   interface Window {

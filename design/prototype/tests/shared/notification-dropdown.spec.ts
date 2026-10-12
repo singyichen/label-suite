@@ -9,7 +9,7 @@
  * Traceability: specs/shared/008-sidebar-navbar-shared/spec.md
  *   FR-018C, FR-018C1, FR-018E
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 test.describe('Shared notification dropdown', () => {
   test('does not show a notification settings link', async ({ page }) => {

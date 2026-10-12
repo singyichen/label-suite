@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 /* Issue #153: the risk-table action buttons (審核標記 / 調整參與狀態) were
  * rendered across every quality-*.html partial with no click handler, so the

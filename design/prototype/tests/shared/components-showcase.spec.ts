@@ -13,7 +13,7 @@
  *   §Color Palette, §Semantic State Colors, §Typography, §Spacing Variables,
  *   §Border Radius Scale, §Z-index Scale
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 const SHOWCASE_URL = '/components-showcase.html';
 

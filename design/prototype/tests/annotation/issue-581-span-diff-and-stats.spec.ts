@@ -1,4 +1,5 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { buildListUrl, buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
 
 /* sequence_tagging review comparison and label-distribution stats over the

@@ -1,4 +1,5 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
 
 /* issue #578 / spec 015 FR-086: `action` used to be a free string, and

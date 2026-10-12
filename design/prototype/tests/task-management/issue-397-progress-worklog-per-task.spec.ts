@@ -8,7 +8,8 @@
  * count. T014-T016 each ship only 5 dataset records, so the shared figures
  * are an obvious scale mismatch with the task overview's own "總筆數 5 筆".
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 const PANEL_LOAD_TIMEOUT = 15000;

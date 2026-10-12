@@ -24,7 +24,8 @@
  * already submitted) and oft-01-final-exception -> ofm-05-final-exception
  * (disputed, arbitration-reject-to-exception-pool, migrated verbatim).
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { buildWorkspaceUrl, gotoReviewerWorkspace, skipGuidelineModal } from './_workspace-helpers';
 
 const HINT = 'ws-review-action-hint';

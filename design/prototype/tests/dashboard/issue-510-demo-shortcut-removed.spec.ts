@@ -21,7 +21,7 @@
  * path this removal relies on, and this guard fails instead of letting the
  * regression pass silently.
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 const DASHBOARD_URL = '/pages/dashboard/dashboard.html';
 const DEMO_SHORTCUT_NAME = /審核流程示範|Review Flow Demo/;

@@ -1,7 +1,7 @@
 ---
 功能分支: feat/database-auth-canonical
 建立日期: 2026-10-06
-版本: 1.3.0
+版本: 1.3.1
 狀態: Draft
 ---
 
@@ -84,7 +84,7 @@
 
 ### 功能需求
 
-- **FR-001**：每次登入必須建立一筆 `account_session`，其 UUID `id` 主鍵、`user_id` FK 與非空 `started_at` 識別一次登入，`revoked_at` 可空，`logged_out_at` 可空；`refresh_tokens.session_id` 必須為指向 `account_session.id` 的真實 FK。`refresh_tokens` 不得重複儲存 `user_id` 或 `started_at`。`revoked_at` 表示任何原因造成 session 失效；`logged_out_at` 僅表示可驗證的明確登出成功，且有值時必須同交易寫入 `revoked_at`，兩者均為 UTC 且 `logged_out_at <= revoked_at`。此表仍為未部署的規劃契約。 **v1.3.0 歷史保留補充（issue #1160）**：`account_session` 作為工時與責任歷程的被參照來源，歷史保留與 token 有效性分離；`users` 的普通硬刪不得以 CASCADE 刪除 session、工作區間或責任歷程，候選 FK 採 RESTRICT，合法清理順序及最長保留期在 migration 前另行裁決。
+- **FR-001**：每次登入必須建立一筆 `account_session`，其 UUID `id` 主鍵、`user_id` FK 與非空 `started_at` 識別一次登入，`revoked_at` 可空，`logged_out_at` 可空；`refresh_tokens.session_id` 必須為指向 `account_session.id` 的真實 FK。`refresh_tokens` 不得重複儲存 `user_id` 或 `started_at`。`revoked_at` 表示任何原因造成 session 失效；`logged_out_at` 僅表示可驗證的明確登出成功，且有值時必須同交易寫入 `revoked_at`，兩者均為 UTC 且 `logged_out_at <= revoked_at`。此表仍為未部署的規劃契約。 **v1.3.0 歷史保留補充（issue #1160）**：`account_session` 作為工時與責任歷程的被參照來源，歷史保留與 token 有效性分離；`users` 的普通硬刪不得以 CASCADE 刪除 session、工作區間或責任歷程，候選 FK 採 RESTRICT，合法清理順序及最長保留期在 migration 前另行裁決。**v1.3.1 ADR-038 補述（issue #1241）**：依 ADR-038，`refresh_tokens` 由清理工作在該列自身 `expires_at` 已過後實體刪除，已撤銷（含 rotated）token 保留至該時點以維持 FR-004 的 reuse 偵測；`account_session` 於其全部 refresh token 皆已過自身 `expires_at`（或 session 已逾 `REFRESH_TOKEN_ABSOLUTE_MAX_TTL`），且沒有 `task_work_interval` 或 `annotation_history_event` 參照時才由清理工作實體刪除，仍被參照者保留至參照消失（最短一年，最長期限待定，#1244），RESTRICT FK 不變。使用者資料主體刪除請求時，依 ADR-038 於同一交易以 FR-007 的撤銷路徑撤銷其全部 session，並刪除其 `account_password_token` 與 `account_email_change_request` 列。清理頻率待定（#1244）。
 - **FR-002**：access JWT 必須包含 `sub`、`sid`、`credential_version`、`iat`、`exp`。每個已認證請求必須確認簽章／效期、`sub` 使用者 active、JWT 版本等於目前 `users.credential_version`、`sid` 所指 `account_session` 未撤銷、其 `user_id = sub` 且 `now < account_session.started_at + REFRESH_TOKEN_ABSOLUTE_MAX_TTL`；權限依當前 DB `role` 與資源權威來源判定，JWT `role` 僅供顯示。
 - **FR-003**：每次 refresh（含寬限重發）必須由 token 的 `session_id` 載入未撤銷的 `account_session`，確認帳號 active、token 未過期與 `now < started_at + REFRESH_TOKEN_ABSOLUTE_MAX_TTL`，並將新 refresh token 及登入／refresh 核發的 access JWT 到期上限限制在該 session absolute max；輪替與新增 token 必須為同一交易。
 - **FR-004**：只有以 `rotated` 撤銷且在 30 秒寬限期內的舊 token 可額外重發一次；須以 `grace_reissued_at IS NULL` 的原子條件占用資格。第三次使用回 `409`，不核發 token、不全量撤銷；寬限期外 reuse 則撤銷該使用者全部有效 family。
@@ -131,6 +131,7 @@
 
 | 版本 | 日期 | 變更 |
 |---|---|---|
+| 1.3.1 | 2026-10-12 | Issue #1241：FR-001 保留條文補述引用 ADR-038——`refresh_tokens` 與 `account_session` 由清理工作實體刪除的條件、被參照 session 保留規則、使用者匿名化時的 session 撤銷與 token／email 變更請求刪除。Lightweight Path（PATCH）：未新增或移除任何 FR／AC，不訂新期限（清理頻率與最長保留期維持待定，#1244）。 |
 | 1.3.0 | 2026-10-08 | Issue #1160：FR-001／FR-008 補 session 稽核與工時歷程保留候選、普通硬刪 RESTRICT 及憑證撤銷獨立語意；明確登出以外不推定上線時長。無 runtime／migration。 |
 | 1.2.0 | 2026-10-08 | Issue #1160：將一次登入候選表定名 `account_session`、refresh FK 定名 `session_id`；新增僅限可驗證明確登出成功的 `logged_out_at`，區分安全撤銷與 cookie-only 清理。仍無 runtime／migration。 |
 | 1.1.0 | 2026-10-06 | Source-Verify／安全審查回寫：FR-002／FR-003 加入每請求 family absolute TTL 與 access JWT 到期上限；FR-008 定義 access-only 登出與 refresh fallback；新增 SC-009、補 AC-1.1／AC-1.3／AC-2.1。OpenSpec 規劃契約 archive，尚無 runtime／migration。 |

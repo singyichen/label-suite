@@ -1,4 +1,5 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { buildListUrl } from './_workspace-helpers';
 
 /* issue #606: the list's 累計耗時 multiplies a reviewer's time by the number

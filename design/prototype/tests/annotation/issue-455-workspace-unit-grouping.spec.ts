@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
 
 /* Workspace left-column review-unit grouping (issue #455).

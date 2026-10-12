@@ -440,9 +440,9 @@ test('inventory, README and account-admin doc carry the 351-column totals', () =
 });
 
 // Issue #1224: dataset-021 FR-011 v1.4.0 and dictionary deletion wording.
-test('dataset-021 canonical FR-011 is defined by ADR-038 at version 1.4.0', () => {
+test('dataset-021 canonical FR-011 is defined by ADR-038 since version 1.4.0', () => {
   const spec = readFileSync(new URL('../../specs/dataset/021-dataset-ingestion-and-lineage/spec.md', import.meta.url), 'utf8');
-  assert.match(spec, /^版本: 1\.4\.0$/m);
+  assert.match(spec, /^版本: 1\.4\.\d+$/m);
   const fr = spec.split('\n').find((line) => line.startsWith('- **FR-011**'));
   assert.ok(fr, 'Missing FR-011');
   for (const token of ['ADR-038', 'RESTRICT', 'sealed', 'draft', 'protected_payload', '#1224']) {

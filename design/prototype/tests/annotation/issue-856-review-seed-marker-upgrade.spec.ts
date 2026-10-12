@@ -1,4 +1,5 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, disableMotion } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { buildListUrl } from './_workspace-helpers';
 
 /* issue #856: seedReviewFlowDemo()'s "seed once" marker
@@ -199,6 +200,7 @@ test.describe('issue #856: review demo seed marker upgrade', () => {
     // Baseline: a genuinely fresh context/page, no marker at all -- measured
     // rather than hardcoded, so this test survives future seed-table edits.
     const freshContext = await browser.newContext();
+    await disableMotion(freshContext);
     const freshPage = await freshContext.newPage();
     await freshPage.goto(buildListUrl({ task_id: 'T014', role: 'reviewer', run_type: 'dry_run' }));
     const baseline = await countReviewFlowDemoState(freshPage);

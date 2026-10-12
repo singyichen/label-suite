@@ -4,7 +4,7 @@
  * Traceability: specs/annotation/015-annotation-workspace/spec.md
  *   FR-007C, AC-1.9
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { buildListUrl, buildWorkspaceUrl, patchDataFile, skipGuidelineModal } from '../annotation/_workspace-helpers';
 
 /* Materialized run context (spec 015): annotation list / workspace counts

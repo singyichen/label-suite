@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
 
 /* issue #931: reviewer-mode workspace shows two different names for the

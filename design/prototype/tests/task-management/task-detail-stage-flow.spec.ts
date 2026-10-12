@@ -28,7 +28,8 @@
  * TASK_DATA.trialRounds alongside R2 (FR-013), so the post-creation
  * assertions expect both R1 and R2 in the round history.
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { applyDryRunState, expectStillInProgress } from './_dry-run-completion-helpers';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html?task_id=T001';

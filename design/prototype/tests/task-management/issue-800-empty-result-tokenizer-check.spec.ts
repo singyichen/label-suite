@@ -28,7 +28,8 @@
  *     (issue-772-export-history-redownload.spec.ts:309-349)
  *   - ar_stage / ar_status URL view-state params (issue #726)
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 
 declare global {
   interface Window {

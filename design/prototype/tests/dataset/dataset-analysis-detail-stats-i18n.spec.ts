@@ -2,7 +2,7 @@
  * Traceability: specs/dataset/017-dataset-analysis-detail/spec.md
  *   FR-009, FR-009F, FR-009I, FR-019, FR-009L (AC-2.7)
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import type { Page } from '@playwright/test';
 
 const DETAIL_URL = '/pages/dataset/dataset-analysis-detail.html';

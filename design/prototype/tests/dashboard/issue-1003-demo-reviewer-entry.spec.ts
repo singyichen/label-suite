@@ -47,7 +47,8 @@
  *   tests MUST PASS -- neither one moves when dashboard.assignments.js's
  *   reviewerId argument changes.
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { skipGuidelineModal, trackPageErrors, assertNoPageErrors } from '../annotation/_workspace-helpers';
 
 /* Same known static-server <script src> flake guard as the sibling review-

@@ -18,7 +18,8 @@
  * output type has no nominal-alpha definition at all must say nothing about
  * IAA instead of claiming its agreement could not be computed.
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 
 const DASHBOARD_URL = '/pages/dashboard/dashboard.html';
 

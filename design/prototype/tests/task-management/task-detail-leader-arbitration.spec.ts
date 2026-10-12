@@ -37,7 +37,8 @@
  * assertions are: the section lists exactly the awaitingArbitration set, and submitLeaderAdjudication
  * refuses a unit whose reviewer has not submitted (pending).
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { openSettingsSection } from './_task-detail-settings-helpers';
 import { promises as fs } from 'node:fs';
 import { buildWorkspaceUrl, skipGuidelineModal } from '../annotation/_workspace-helpers';
@@ -632,6 +633,10 @@ test.describe('Review-settings save keeps both roster sources in sync (review M1
     await page.locator('#reviewSaveBtn').click();
     await expect(page.locator('#reviewEditForm')).toHaveClass(/hidden/);
     await openSettingsSection(page, 'review');
+    // Save and Edit share one spot and .btn:hover is translateY(-1px). With
+    // transitions off (shared fixture, #1071) a pointer parked on the button's
+    // lower edge flips hover every frame, so Playwright never sees it stable.
+    await page.mouse.move(0, 0);
     await page.locator('#reviewEditBtn').click();
     await expect(page.locator('#reviewEditForm')).not.toHaveClass(/hidden/);
     const boxes = page.locator(`${OPTIONS} input`);

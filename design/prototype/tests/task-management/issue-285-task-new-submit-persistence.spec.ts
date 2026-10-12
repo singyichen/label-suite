@@ -2,7 +2,7 @@
  * Traceability: specs/task-management/013-task-new/spec.md
  *   FR-006, FR-006a, SC-002
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import path from 'path';
 
 /* Issue #285: task-new.html's submitTask() (task-new.html:1398) generates a

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 const DETAIL_URL = '/pages/dataset/dataset-analysis-detail.html';
 

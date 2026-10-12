@@ -1,4 +1,5 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { buildListUrl } from './_workspace-helpers';
 
 /* issue #627 item 7 (RED) — the reviewer summary must stop rendering

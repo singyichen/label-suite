@@ -1,4 +1,5 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 
 /* issue #581 / OpenSpec change seq-tagging-span-config, FR-003d-2.
    `sequence_tagging` 的預標記改以 offset span 陣列載入：不再比對 token 與

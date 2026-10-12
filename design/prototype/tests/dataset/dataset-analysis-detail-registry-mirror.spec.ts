@@ -6,7 +6,7 @@
  * "醫療文本情感分類" opened as "新聞標題多標籤分類") and list-only ids
  * (T010–T013) silently fell back to the default task.
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 const LIST_URL = '/pages/dataset/dataset-analysis-list.html';
 const DETAIL_URL = '/pages/dataset/dataset-analysis-detail.html';

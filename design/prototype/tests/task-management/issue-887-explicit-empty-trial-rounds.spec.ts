@@ -13,7 +13,8 @@
  * sample per round), so the expectations below are the true history-derived
  * values. The five official items are unchanged.
  */
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { buildListUrl, buildWorkspaceUrl, skipGuidelineModal } from '../annotation/_workspace-helpers';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';

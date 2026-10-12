@@ -12,7 +12,7 @@
  * 4. register submit button: inline `style="margin-top: 6px"` moves into
  *    the .submit-btn rule (spacing itself is unchanged).
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 const AUTH_PAGES = [
   { name: 'login', url: '/pages/account/login.html', hasEyeToggle: true },

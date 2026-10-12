@@ -7,7 +7,7 @@
  * expected to FAIL until a later G2a Green task adds a tab bar matching the
  * selector contract in `_workspace-tabs-helpers.ts`.
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { workspaceTabs, setDesktopViewport } from './_workspace-tabs-helpers';
 import { buildWorkspaceUrl } from '../annotation/_workspace-helpers';
 

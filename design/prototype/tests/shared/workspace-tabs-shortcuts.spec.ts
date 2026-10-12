@@ -30,7 +30,7 @@
  * observe the implementation's internal `event.code` vs `event.key` choice
  * any more precisely than these already do.
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 import { workspaceTabs, readWorkspaceTabState, setDesktopViewport } from './_workspace-tabs-helpers';
 
 const DASHBOARD_URL = '/pages/dashboard/dashboard.html';

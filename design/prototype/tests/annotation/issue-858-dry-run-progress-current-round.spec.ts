@@ -31,7 +31,8 @@
  * already uses); this file asserts only the observable #wsProgressText
  * rendering, never a specific internal function name.
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
 
 const TASK_ID = 'T002';

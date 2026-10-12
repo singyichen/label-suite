@@ -1,4 +1,5 @@
-import { test, expect, type Locator, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Locator, Page } from '@playwright/test';
 import { buildListUrl, buildWorkspaceUrl, fillArbitrationReasons, patchDataFile, skipGuidelineModal } from './_workspace-helpers';
 
 /* FR-100 §1 / §4 / §7, AC-3.57, AC-3.58, SC-004Z (spec 015, issue #766) --

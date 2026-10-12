@@ -6,7 +6,8 @@
  * .action-bar, the card carries no submit button, and the existing click
  * behaviour (incomplete -> warning toast; complete -> finalized) is kept.
  */
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { buildWorkspaceUrl, dismissGuidelineModal, fillArbitrationReasons } from './_workspace-helpers';
 
 const ARBITER_URL = buildWorkspaceUrl({
