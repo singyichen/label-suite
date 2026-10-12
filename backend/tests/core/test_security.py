@@ -9,6 +9,8 @@ import pytest
 
 from app.core.security import MAX_PASSWORD_BYTES, hash_password, verify_password
 
+pytestmark = pytest.mark.security
+
 
 def test_hash_and_verify_round_trip() -> None:
     """A password verified against its own hash succeeds (往返驗證 scenario)."""
