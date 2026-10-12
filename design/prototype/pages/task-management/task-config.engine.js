@@ -1764,7 +1764,7 @@ function renderMultiDimPreview(container, config, outKey) {
   var dims = Array.isArray(config.dimensions) ? config.dimensions : (Array.isArray(config.va_dimensions) ? config.va_dimensions : []);
   if (dims.length === 0) {
     var empty = document.createElement('div');
-    empty.className = 'annotation-preview-empty';
+    empty.className = 'empty-state empty-state-compact';
     empty.textContent = state.lang === 'zh' ? '請先新增維度' : 'Add dimensions first';
     container.appendChild(empty);
     return;
@@ -2764,7 +2764,7 @@ function renderMultiLabelPreview(container, outKey) {
     renderLevel(nodes, [], [], 1, previewTree);
     if (!rendered) {
       var empty = document.createElement('div');
-      empty.className = 'taxonomy-selector-empty';
+      empty.className = 'empty-state empty-state-compact';
       empty.textContent = state.lang === 'en' ? 'No matching labels.' : '找不到符合的標籤。';
       previewTree.appendChild(empty);
     }
@@ -3347,7 +3347,7 @@ function renderOutputPreview(container, outKey) {
     case 'free_text': renderFreeTextPreview(container, outKey); break;
     default:
       var placeholder = document.createElement('div');
-      placeholder.className = 'annotation-preview-empty';
+      placeholder.className = 'empty-state empty-state-compact';
       placeholder.textContent = state.lang === 'zh' ? '（設定後顯示預覽）' : '(Preview updates after config)';
       container.appendChild(placeholder);
   }
@@ -3991,7 +3991,7 @@ function renderSentencePairsPreview(preview, config) {
     var labels = Array.isArray(config.label_options) ? config.label_options.filter(function(l) { return l && l.trim(); }) : [];
     if (labels.length === 0) {
       var empty = document.createElement('div');
-      empty.className = 'annotation-preview-empty';
+      empty.className = 'empty-state empty-state-compact';
       empty.textContent = t('previewEmpty');
       preview.appendChild(empty);
     } else {
@@ -4573,7 +4573,7 @@ function updateAnnotationPreview() {
 
     if (!options.length) {
       var emptyVa = document.createElement('div');
-      emptyVa.className = 'annotation-preview-empty';
+      emptyVa.className = 'empty-state empty-state-compact';
       emptyVa.textContent = t('previewEmpty');
       optionsWrap.appendChild(emptyVa);
     } else {
@@ -4590,7 +4590,7 @@ function updateAnnotationPreview() {
     var arousalOptions = buildScoreOptionsFromDimension(config.arousal);
     if (!arousalOptions.length) {
       var emptyArousal = document.createElement('div');
-      emptyArousal.className = 'annotation-preview-empty';
+      emptyArousal.className = 'empty-state empty-state-compact';
       emptyArousal.textContent = t('previewEmpty');
       arousalOptionsWrap.appendChild(emptyArousal);
     } else {
@@ -4598,7 +4598,7 @@ function updateAnnotationPreview() {
     }
   } else if (!options.length) {
     var empty = document.createElement('div');
-    empty.className = 'annotation-preview-empty';
+    empty.className = 'empty-state empty-state-compact';
     empty.textContent = t('previewEmpty');
     optionsWrap.appendChild(empty);
   } else {
