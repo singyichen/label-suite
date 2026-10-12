@@ -591,9 +591,10 @@
      see every event FR-062 admitted for the review unit they are on.
      `viewer` is optional: callers that predate it get the unmasked merge,
      matching the behavior they were written against. */
-  function maskHistoryForViewer(events, viewer) {
+  function maskHistoryForViewer(events, viewer, preReveal) {
     if (!viewer || viewer.role !== 'annotator') return events;
     return events.filter(function (event) {
+      if (preReveal) return event.role === 'annotator' && event.actorId === viewer.actorId;
       return event.role !== 'annotator' || event.actorId === viewer.actorId;
     });
   }
@@ -618,7 +619,16 @@
     merged.sort(function (a, b) {
       return String(a.at).localeCompare(String(b.at));
     });
-    return maskHistoryForViewer(merged, viewer);
+    /* Issue #1268 (FR-090 x FR-096): until the sample's dry-run round is
+       revealed, an annotator viewer keeps only their own events -- the
+       reviewer / arbiter / exception-pool trail and corrected answer
+       snapshots are the same data getDryRunFeedback() withholds. */
+    var preReveal = false;
+    if (viewer && viewer.role === 'annotator' && runType === 'dry_run') {
+      var own = readSubmissionBucket(annotatorKey)[sampleId];
+      preReveal = disclosedTrialRound(taskId, own && own.trialRound) === null;
+    }
+    return maskHistoryForViewer(merged, viewer, preReveal);
   }
 
   function getSubmittedSampleCount(taskId, role, runType, identity) {
@@ -2108,6 +2118,22 @@
     completed: 0,
   };
 
+  /* Single FR-096 reveal gate, shared by getDryRunFeedback() and the
+   * pre-reveal history mask (issue #1268). Returns the round an entry
+   * belongs to when that round is disclosed, else null. An entry without a
+   * round stamp (written before D1) is unrevealed while a round is in
+   * progress (fail closed) and attributed to the current round otherwise
+   * (design.md D4). */
+  function disclosedTrialRound(taskId, trialRound) {
+    var listEntry = findTaskListEntry(taskId);
+    if (!listEntry || !Object.prototype.hasOwnProperty.call(DISCLOSED_ROUND_OFFSET, listEntry.status)) return null;
+    var currentRound = currentTrialRound(taskId);
+    var maxRound = currentRound + DISCLOSED_ROUND_OFFSET[listEntry.status];
+    var inProgress = listEntry.status === 'dry_run_in_progress';
+    var round = trialRound >= 1 ? trialRound : inProgress ? null : currentRound;
+    return round !== null && round <= maxRound ? round : null;
+  }
+
   /* FR-096 試標歷史回饋 (Data Fairness NON-NEGOTIABLE): the annotator's own
    * dry-run feedback, gated PER ROUND IN THE DATA LAYER (issue #834) -- rows
    * of the in-progress round are never returned, not merely hidden by the
@@ -2124,18 +2150,14 @@
     if (runType !== 'dry_run') return [];
     var listEntry = findTaskListEntry(taskId);
     if (!listEntry || !Object.prototype.hasOwnProperty.call(DISCLOSED_ROUND_OFFSET, listEntry.status)) return [];
-    var currentRound = currentTrialRound(taskId);
-    var maxRound = currentRound + DISCLOSED_ROUND_OFFSET[listEntry.status];
-    if (maxRound < 1) return [];
-    var inProgress = listEntry.status === 'dry_run_in_progress';
     var scopedIdentity = { annotatorId: (identity && identity.annotatorId) || DEFAULT_ANNOTATOR_ID };
     var bucket = readSubmissionBucket(submissionBucketKey(taskId, 'annotator', runType, scopedIdentity));
     var rows = [];
     Object.keys(bucket).forEach(function (sampleId) {
       var entry = bucket[sampleId];
       if (entryStatus(entry) !== 'submitted') return;
-      var round = entry.trialRound >= 1 ? entry.trialRound : inProgress ? null : currentRound;
-      if (round === null || round > maxRound) return;
+      var round = disclosedTrialRound(taskId, entry.trialRound);
+      if (round === null) return;
       var row = buildDryRunFeedbackRow(taskId, runType, sampleId, entry, scopedIdentity);
       if (!row) return;
       row.round = round;
