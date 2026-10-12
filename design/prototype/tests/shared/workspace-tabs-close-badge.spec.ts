@@ -20,7 +20,7 @@
  * see that describe block for how this suite stays forward-compatible.
  */
 import { test, expect } from '../fixtures';
-import { workspaceTabs, closeButton, setDesktopViewport } from './_workspace-tabs-helpers';
+import { workspaceTabs, closeButton, setDesktopViewport, waitForTaskDetailReady } from './_workspace-tabs-helpers';
 
 const DASHBOARD_URL = '/pages/dashboard/dashboard.html';
 // T001 (task-list.data.js): nameZh '醫療文本情感分類', with dry-run round
@@ -97,6 +97,7 @@ test.describe('Workspace tabs — AC-1.6 task-detail stage badge', () => {
 
   test('en: stage badges translate through the shared language toggle (#langToggle)', async ({ page }) => {
     await page.goto(TASK_DETAIL_R1_URL);
+    await waitForTaskDetailReady(page); // issue #1202: #langToggle is bound only after init
     await page.locator('#langToggle').click();
     await page.goto(TASK_DETAIL_OFFICIAL_URL);
     const tabs = workspaceTabs(page);
