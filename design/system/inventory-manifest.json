@@ -87,7 +87,7 @@
     "Review Status Track": "review-status-track"
   },
   "classScan": {
-    "_comment": "Class-to-component mapping for the scan gate (scripts/gen-screen-inventory.mjs, issue #1188). A prefix p claims class c iff c === p, c starts with p- or p__. Every class used by design/prototype/pages/**/*.{html,js} must be claimed by exactly the sections below; the longest matching prefix wins when reading a mapping.",
+    "_comment": "Class-to-component mapping for the scan gate (scripts/gen-screen-inventory.mjs, issue #1188). A prefix p claims class c iff c === p, c starts with p- or p__. Every class used by design/prototype/pages/**/*.{html,js} must be claimed by at least one prefix in the sections below; when several prefixes claim a class, read it as the longest matching prefix (the gate does not enforce this). Known blind spots: a new class whose first segment is already a pageLocalClasses prefix (e.g. status-, panel-, item-, t-, is-), non-kebab class names (underscore or camelCase), and classes built via setAttribute('class', ...) or escaped quotes inside JS strings.",
     "componentClasses": {
       "button": ["btn", "sso-btn"],
       "mini-button": ["mini-btn"],

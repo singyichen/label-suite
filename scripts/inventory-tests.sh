@@ -281,7 +281,7 @@ need(m.classScan.transitionalClasses&&m.classScan.classlessComponents,"classScan
 delete m.classScan.componentClasses.button;
 delete m.classScan.classlessComponents.button;
 m.classScan.transitionalClasses=m.classScan.transitionalClasses.filter(t=>t.component!=="button");'
-expect_gate_failure "registry key without class coverage is rejected (issue #1188)" "button"
+expect_gate_failure "registry key without class coverage is rejected (issue #1188)" "registry key has no class coverage"
 patch_manifest '
 need(m.inventoryHeadings,"inventoryHeadings");
 m.componentRegistry["zz-new-component"]="Zz New Component";'
