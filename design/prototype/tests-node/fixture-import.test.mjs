@@ -17,9 +17,13 @@ const walk = (dir) =>
 it('no spec imports runtime values from @playwright/test directly', () => {
   const offenders = walk(testsDir)
     .filter((f) => !f.endsWith('/tests/fixtures.ts'))
-    .filter((f) =>
-      [...readFileSync(f, 'utf8').matchAll(/^import\s+(?!type\b)\{([^}]*)\}\s+from\s+'@playwright\/test'/gm)]
-        .some(([, names]) => names.split(',').some((n) => n.trim() && !n.trim().startsWith('type '))),
-    );
+    .filter((f) => {
+      const src = readFileSync(f, 'utf8');
+      // Any import clause (default, namespace or named) except a pure-type one.
+      const imports = [...src.matchAll(/import\s+(?!type\b)([^;]*?)\s+from\s+['"]@playwright\/test['"]/g)];
+      const exportsFrom = /export\s+[^;]*?\s+from\s+['"]@playwright\/test['"]/.test(src);
+      const runtime = imports.some(([, clause]) => !/^\{[^}]*\}$/.test(clause) || clause.replace(/[{}]/g, '').split(',').some((n) => n.trim() && !n.trim().startsWith('type ')));
+      return runtime || exportsFrom || /require\(\s*['"]@playwright\/test['"]/.test(src);
+    });
   assert.deepEqual(offenders, [], 'import { test, expect } from the relative tests/fixtures instead');
 });

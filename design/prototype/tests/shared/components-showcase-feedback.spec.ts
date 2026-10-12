@@ -146,24 +146,24 @@ test.describe('Components showcase — feedback batch', () => {
   test.describe('skeleton animation declarations (motion kept)', () => {
     test.use({ disableMotion: false });
 
-  test('skeleton pulse lines use the border token and the canonical keyframes', async ({ page }) => {
-    const line = page.locator('#comp-skeleton .skeleton-line').first();
-    await expect(line).toBeVisible();
-    expect(await line.evaluate((el) => getComputedStyle(el).backgroundColor))
-      .toBe(await toRgb(page, await computedToken(page, '--color-border')));
-    expect(await line.evaluate((el) => getComputedStyle(el).animationName)).toBe('skeleton-pulse');
-    await expect(page.locator('#comp-skeleton .skeleton-stack').first())
-      .toHaveAttribute('aria-busy', 'true');
-  });
+    test('skeleton pulse lines use the border token and the canonical keyframes', async ({ page }) => {
+      const line = page.locator('#comp-skeleton .skeleton-line').first();
+      await expect(line).toBeVisible();
+      expect(await line.evaluate((el) => getComputedStyle(el).backgroundColor))
+        .toBe(await toRgb(page, await computedToken(page, '--color-border')));
+      expect(await line.evaluate((el) => getComputedStyle(el).animationName)).toBe('skeleton-pulse');
+      await expect(page.locator('#comp-skeleton .skeleton-stack').first())
+        .toHaveAttribute('aria-busy', 'true');
+    });
 
-  test('skeleton shimmer avatar is the 72px circle with the 1.5s sweep', async ({ page }) => {
-    const avatar = page.locator('#comp-skeleton .skeleton.skel-avatar').first();
-    await expect(avatar).toBeVisible();
-    await expect(avatar).toHaveCSS('width', '72px');
-    await expect(avatar).toHaveCSS('height', '72px');
-    await expect(avatar).toHaveCSS('border-radius', '9999px');
-    expect(await avatar.evaluate((el) => getComputedStyle(el).animationName)).toBe('skeleton-shimmer');
-    expect(await avatar.evaluate((el) => getComputedStyle(el).animationDuration)).toBe('1.5s');
-  });
+    test('skeleton shimmer avatar is the 72px circle with the 1.5s sweep', async ({ page }) => {
+      const avatar = page.locator('#comp-skeleton .skeleton.skel-avatar').first();
+      await expect(avatar).toBeVisible();
+      await expect(avatar).toHaveCSS('width', '72px');
+      await expect(avatar).toHaveCSS('height', '72px');
+      await expect(avatar).toHaveCSS('border-radius', '9999px');
+      expect(await avatar.evaluate((el) => getComputedStyle(el).animationName)).toBe('skeleton-shimmer');
+      expect(await avatar.evaluate((el) => getComputedStyle(el).animationDuration)).toBe('1.5s');
+    });
   });
 });

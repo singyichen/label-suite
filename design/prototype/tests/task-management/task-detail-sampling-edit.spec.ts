@@ -127,6 +127,10 @@ test.describe('Task detail sampling edit state', () => {
 
     await expect(page.locator('#samplingIaaSummaryList .kv-dl-row').first()).toContainText('0.85');
 
+    // Save and Edit share one spot and .btn:hover is translateY(-1px). With
+    // transitions off (shared fixture, #1071) a pointer parked on the button's
+    // lower edge flips hover every frame, so Playwright never sees it stable.
+    await page.mouse.move(0, 0);
     await page.locator('#samplingEditBtn').click();
     await page.locator('#samplingIaaEditRows .iaa-override-input').first().fill('1.5');
     await page.locator('#samplingSaveBtn').click();

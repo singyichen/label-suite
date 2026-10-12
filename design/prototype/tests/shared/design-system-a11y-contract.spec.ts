@@ -191,37 +191,14 @@ async function loadWithTheme(page: Page, url: string, theme: Theme) {
   }, theme);
   await page.goto(url);
   await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
-  await page.addStyleTag({ content: NO_TRANSITION_CSS });
 }
 
-/**
- * Suppresses transitions and animations so a contrast row measures the
- * settled rendered colours rather than an in-flight interpolation.
- *
- * This is required, not cosmetic. `.step-circle` declares
- * `transition: all var(--dur-fast)` (task-new.html:38) and its `active` class
- * is applied by JS after load (task-new.html:912), so `getComputedStyle()`
- * returns the *animating* value if it runs inside that window.
- * The exposure is new, and it comes from this suite being faster.
- * `measureContrast()` resolves the selector and reads the style in one
- * `page.evaluate()` round trip; the migrated cases used `Locator.evaluate()`,
- * which resolves the handle and then makes a second round trip to read. That
- * second trip is structural, not luck, and it reliably landed after the
- * transition settled — so the old specs were not fragile, and this one would
- * be without the override. Measured here without it, dark
- * `.step-circle.active` has been seen mid-interpolation at 4.86:1
- * (color rgb(34, 31, 78) on rgb(126, 136, 241)) against a settled 5.36:1
- * (--color-on-cta on --color-primary in dark, tokens.css:157). That run did
- * not breach the 4.5 floor, so treat this as removing a known source of
- * variance rather than as a reproduced failure.
- *
- * A transition only affects intermediate values, never the end state, so the
- * settled measurement is the value the migrated cases were written to pin.
+/*
+ * Transitions/animations are disabled by the shared fixture (tests/fixtures.ts,
+ * issue #1071), so a contrast row reads the settled colours. History: without
+ * it, dark `.step-circle.active` (task-new.html:38, class added by JS after
+ * load) was seen mid-interpolation at 4.86:1 against a settled 5.36:1.
  */
-const NO_TRANSITION_CSS = `*, *::before, *::after {
-  transition: none !important;
-  animation: none !important;
-}`;
 
 /**
  * Reads the probe's rendered foreground and background and returns their
