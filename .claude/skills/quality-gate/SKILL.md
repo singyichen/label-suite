@@ -93,14 +93,12 @@ Evaluate the codebase against defined quality thresholds. Determines Go / No-Go 
 
 ## Constitution Compliance
 
+Check the principles of `specs/_governance/constitution.md` that apply to this release plus the matching domain constitution. NON-NEGOTIABLE: II (Generalization-First), III (Data Fairness), XI (Security & Privacy Baseline), XV (Role-Based Access Control); any violation is a blocker.
+
 | Principle | Status | Notes |
 |-----------|--------|-------|
-| I. Config-Driven: task types defined in config | ✅/❌ | |
-| II. Minimal Coupling: no circular imports | ✅/❌ | |
-| III. Security First: leakage prevention verified | ✅/❌ | |
-| IV. KISS/YAGNI: no unused abstractions | ✅/❌ | |
-| V. Test Coverage: thresholds met | ✅/❌ | |
-| VI. English First: no Chinese in non-README | ✅/❌ | |
+| [applicable principle] | ✅/❌ | |
+
 
 ---
 

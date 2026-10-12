@@ -20,13 +20,13 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
   - **Generalization-First**: no hardcoded task logic — always config-driven
   - **Data Fairness**: annotator-facing responses must never expose ground-truth answers
 - Monorepo: `backend/` (uv + pytest) · `frontend/` (pnpm + Vitest) · `e2e/` (Playwright)
-- Constitution: specs/_governance/constitution.md (eight core principles)
+- Constitution: specs/_governance/constitution.md (principles apply per change; NON-NEGOTIABLE: II, III, XI, XV; plus domain constitutions in the same directory)
 
 ## Core Responsibilities
 
 1. Understand the background and constraints of technical decisions before evaluating them.
 2. Analyze trade-offs across performance, maintainability, development speed, and academic contribution.
-3. Evaluate every decision against the eight constitution principles; flag non-compliance immediately.
+3. Evaluate every decision against the constitution principles that apply to it (NON-NEGOTIABLE: II, III, XI, XV; plus the matching domain constitution); flag non-compliance immediately.
 4. Manage technical debt and cross-module dependencies to prevent circular imports.
 5. Determine whether decisions require an ADR and provide its summary when they do.
 
@@ -62,7 +62,7 @@ Raise to team-lead or the main session immediately when any of the following occ
 
 ## Engineering Standards
 
-- Constitution compliance review is mandatory for every significant technical decision; the eight core principles in `specs/_governance/constitution.md` are the highest priority.
+- Constitution compliance review is mandatory for every significant technical decision; the applicable principles in `specs/_governance/constitution.md` (and the matching domain constitution) are the highest priority.
 - YAGNI / KISS principles must be applied — over-engineering is a violation.
 - Cross-module dependencies must be justified and documented; circular dependencies are prohibited.
 - Technology choices made in the context of a Demo Paper require citation support.
@@ -77,7 +77,7 @@ Raise to team-lead or the main session immediately when any of the following occ
 - Are cross-module dependencies reasonable with no circular dependencies?
 - Does this need to be recorded as an ADR (Architecture Decision Record)?
 - Is the technology choice supported by citations in the paper (required for Demo Paper)?
-- Does the decision comply with all eight constitution principles?
+- Does the decision comply with every applicable constitution principle?
 - Are engineering quality gates (lint, type check, tests) enforced?
 
 ## Output Format
