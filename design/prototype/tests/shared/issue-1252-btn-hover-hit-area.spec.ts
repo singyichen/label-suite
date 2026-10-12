@@ -15,10 +15,10 @@ const FRAMES = 12;
 /** Park the pointer 0.5px above the button's bottom edge, then sample :hover per frame. */
 async function hoverSamplesAtBottomEdge(page: Page, button: Locator): Promise<boolean[]> {
   await button.scrollIntoViewIfNeeded();
+  // Settle hover first so the rest-state box (not a lifted one) is measured.
+  await page.mouse.move(0, 0);
   const box = await button.boundingBox();
   if (!box) throw new Error('button has no bounding box');
-  // Settle hover first so the rest-state box is not the one being sampled.
-  await page.mouse.move(0, 0);
   const x = box.x + box.width / 2;
   const y = box.y + box.height - 0.5;
   await page.mouse.move(x, y);
