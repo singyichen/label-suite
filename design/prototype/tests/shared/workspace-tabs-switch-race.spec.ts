@@ -46,8 +46,12 @@ test.describe('Workspace tabs — outgoing page replaceState must not undo a tab
 
     await tabs.nth(0).click();
     // Late bootstrap render on the still-alive outgoing page.
+    // The query is reordered so the href really changes (a byte-identical
+    // replaceState is ignored as a no-op) while the normalized dedupe key
+    // stays this page's own.
     await page.evaluate(() => {
-      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      const reordered = [...new URLSearchParams(window.location.search).entries()].reverse();
+      window.history.replaceState(null, '', window.location.pathname + '?' + new URLSearchParams(reordered).toString());
     });
     // Negative assertion: the settle timer (0ms) has long fired by now, and
     // the delayed route guarantees the outgoing page is still the document.

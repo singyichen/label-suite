@@ -33,7 +33,7 @@
  *     each tab's scroll position, separately from TAB_STORAGE_KEY, and is
  *     also cleared on logout (AC-2.4 / FR-018).
  */
-import { type Locator, type Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 
 export const TAB_STORAGE_KEY = 'labelsuite.workspaceTabs';
 export const TAB_SCROLL_STORAGE_KEY = 'labelsuite.workspaceTabScroll';
@@ -59,4 +59,13 @@ export async function readWorkspaceTabState(page: Page): Promise<unknown> {
 
 export async function setDesktopViewport(page: Page): Promise<void> {
   await page.setViewportSize({ width: 1280, height: 900 });
+}
+
+/* task-detail.html binds its sub-tab click handlers only after its panels
+ * load, and re-renders the whole overview after a 560ms loading skeleton
+ * (issue #1202). A click or URL assertion made before the skeleton hides is
+ * either dropped (handler not bound yet) or overwritten by that render, so
+ * tests that drive task-detail's own sub-tabs wait for this first. */
+export async function waitForTaskDetailReady(page: Page): Promise<void> {
+  await expect(page.locator('#loadingSkeleton')).toBeHidden();
 }
