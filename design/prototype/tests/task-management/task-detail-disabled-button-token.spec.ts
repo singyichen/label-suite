@@ -70,7 +70,7 @@ test.describe('Task detail disabled .btn token (#1129)', () => {
   test('reviewer disabled CTA stays hoverable for its tooltip (AC-3.72): hit element or ancestor carries the button title', async ({ page }) => {
     await page.goto(`${TASK_DETAIL_URL}?task_id=T002&task_role=reviewer`);
     const btn = page.locator('#publishActionRow .btn:disabled').first();
-    await expect(btn).toBeAttached({ timeout: PANEL_LOAD_TIMEOUT });
+    await expect(btn).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 
     await btn.evaluate((el) => el.scrollIntoView({ block: 'center' }));
     const result = await btn.evaluate((el) => {
