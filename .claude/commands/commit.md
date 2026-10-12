@@ -81,18 +81,18 @@ Co-Authored-By: <model full name> <noreply@anthropic.com>
 
 Always append a blank line then the `Co-Authored-By` trailer, matching the current model:
 
-- Claude: `Co-Authored-By: <model full name> <noreply@anthropic.com>` (e.g. `Claude Opus 4.6 (1M context)`, `Claude Sonnet 5`)
+- Claude: `Co-Authored-By: <model full name> <noreply@anthropic.com>` (use the trailer the harness supplies)
 - OpenAI Codex: `Co-Authored-By: OpenAI Codex <model full name> <noreply@openai.com>`
 
 ## Examples
 
 ```text
-fix: prevent duplicate leave requests from causing false absent status
+fix: prevent duplicate annotation submissions from double-counting progress
 
-- **Add** time segment merging to consolidate overlapping leave records into one continuous range
-- **Fix** absent-status evaluation to avoid false positives when multiple consecutive leaves cover work hours
+- **Add** a unique constraint on (task_id, sample_id, annotator_id) so a repeated submit updates instead of inserting
+- **Fix** progress calculation to count each sample once per annotator
 
-Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>
+Co-Authored-By: <model full name> <noreply@anthropic.com>
 ```
 
 ```text
@@ -101,7 +101,7 @@ docs: archive user-management spec and sync deltas to main spec
 - **Move** user-management spec to archive — all 22 tasks completed with tests passing
 - **Update** main spec by applying 4 outstanding deltas from user-management change
 
-Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
+Co-Authored-By: <model full name> <noreply@anthropic.com>
 ```
 
 ```text
@@ -110,5 +110,5 @@ feat: add output type composition model with validation
 - **Replace** single output_type with outputs[] array to support multi-modal annotation
 - **Add** schema-level mutual exclusivity constraints between bypass-capable types
 
-Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+Co-Authored-By: <model full name> <noreply@anthropic.com>
 ```
