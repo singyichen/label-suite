@@ -27,6 +27,15 @@
  *   - every component key exists in the registry
  *   - the manifest screen set equals the screen files on disk
  *   - a non-null routeKey exists in frontend/src/routes/paths.ts
+ *   - every CSS class used by design/prototype/pages/**\/*.{html,js} (class="…",
+ *     classList.add/toggle/remove/contains('…'), className = '…') is claimed by a
+ *     manifest `classScan` prefix: componentClasses (a registry component),
+ *     transitionalClasses (reason must point at #1189) or pageLocalClasses;
+ *     an unclaimed class fails with `unregistered component class` (issue #1188)
+ *   - every registry key is covered by componentClasses, a transitional entry or
+ *     classlessComponents, and every exception carries a non-empty reason
+ *   - design/system/inventory.md `### <status emoji> <name>` headings are 1:1
+ *     with the registry through the manifest `inventoryHeadings` map
  */
 
 import crypto from 'node:crypto';
@@ -46,7 +55,12 @@ const SHARED_THRESHOLD = 6;
 /** Paths whose byte content defines "how fresh is this inventory" — never a commit. */
 const PROTOTYPE_SOURCES = ['design/prototype/pages', 'design/prototype/index.html'];
 
+/** Class tokens the scan accepts: kebab-case with optional BEM `__` parts. */
+const CLASS_TOKEN = /^[a-z][a-z0-9]*(?:-[a-z0-9]+|__[a-z0-9-]+)*$/;
+const INVENTORY_PATH = path.join(ROOT, 'design/system/inventory.md');
+
 const errors = [];
+let scanSummary = '';
 const fail = (message) => errors.push(message);
 const rel = (absolute) => path.relative(ROOT, absolute);
 
@@ -203,6 +217,97 @@ function prototypeContentHash() {
   return hash.digest('hex').slice(0, 12);
 }
 
+/** Distinct classes used by prototype pages -> first file (repo-relative) that uses one. */
+function scanPrototypeClasses() {
+  const found = new Map();
+  const add = (names, file) => {
+    for (const name of names.split(/\s+/)) {
+      if (CLASS_TOKEN.test(name) && !found.has(name)) found.set(name, rel(file));
+    }
+  };
+  const files = walkAllFiles(path.join(PROTOTYPE, 'pages')).filter((file) => /\.(html|js)$/.test(file));
+  for (const file of files) {
+    const text = readText(file);
+    for (const m of text.matchAll(/\bclass=(["'])([^"']*)\1/g)) add(m[2], file);
+    for (const m of text.matchAll(/classList\.(?:add|toggle|remove|contains)\(([^)]*)\)/g)) {
+      for (const literal of m[1].matchAll(/'([^']*)'|"([^"]*)"/g)) add(literal[1] ?? literal[2], file);
+    }
+    for (const m of text.matchAll(/className\s*\+?=\s*(['"])([^'"]*)\1/g)) add(m[2], file);
+  }
+  return found;
+}
+
+/** Prefix `p` claims class `c` iff c === p, or c starts with `p-` or `p__`. */
+const claims = (prefix, name) => name === prefix || name.startsWith(`${prefix}-`) || name.startsWith(`${prefix}__`);
+
+/** inventory.md component headings: `### <status emoji> <name>` (name = text after the emoji). */
+function inventoryHeadingNames() {
+  const names = [];
+  for (const m of readText(INVENTORY_PATH).matchAll(/^###\s+(?:✅|⚠️?|❌|🔒)\s+(.+?)\s*$/gm)) names.push(m[1]);
+  return names;
+}
+
+function validateClassScan(manifest) {
+  const registry = manifest.componentRegistry;
+  const { componentClasses, transitionalClasses, pageLocalClasses, classlessComponents } = manifest.classScan;
+  const covered = new Set();
+  const cover = (key, where) => {
+    if (key in registry) covered.add(key);
+    else fail(`${where}: unknown component key — ${key}`);
+  };
+  const needReason = (reason, where) => {
+    if (typeof reason !== 'string' || reason.trim() === '') fail(`${where}: reason must not be empty`);
+  };
+  const prefixes = [];
+  for (const [key, list] of Object.entries(componentClasses)) {
+    cover(key, 'classScan.componentClasses');
+    prefixes.push(...list);
+  }
+  for (const entry of transitionalClasses) {
+    const where = `classScan.transitionalClasses (${entry.component})`;
+    cover(entry.component, where);
+    needReason(entry.reason, where);
+    if (!String(entry.reason).includes('#1189')) fail(`${where}: reason must point at #1189`);
+    prefixes.push(...entry.classes);
+  }
+  needReason(pageLocalClasses.reason, 'classScan.pageLocalClasses');
+  prefixes.push(...pageLocalClasses.classes);
+  for (const [key, reason] of Object.entries(classlessComponents)) {
+    cover(key, 'classScan.classlessComponents');
+    needReason(reason, `classScan.classlessComponents.${key}`);
+  }
+  for (const key of Object.keys(registry)) {
+    if (!covered.has(key)) fail(`registry key has no class coverage (componentClasses / transitionalClasses / classlessComponents): ${key}`);
+  }
+  for (const prefix of prefixes.filter((p, i) => prefixes.indexOf(p) !== i)) fail(`classScan prefix is registered twice: ${prefix}`);
+
+  const used = scanPrototypeClasses();
+  let unregistered = 0;
+  for (const [name, file] of used) {
+    if (!prefixes.some((prefix) => claims(prefix, name))) {
+      unregistered += 1;
+      fail(`unregistered component class: ${name} (${file}) — register its prefix in manifest classScan`);
+    }
+  }
+  scanSummary = `component class scan: ${used.size} classes, ${unregistered === 0 ? 'all registered' : `${unregistered} unregistered`}`;
+
+  const headingKeys = new Set();
+  for (const [heading, key] of Object.entries(manifest.inventoryHeadings)) {
+    if (key in registry) headingKeys.add(key);
+    else fail(`inventoryHeadings.${heading}: unknown component key — ${key}`);
+  }
+  for (const key of Object.keys(registry)) {
+    if (!headingKeys.has(key)) fail(`registry key has no inventory.md heading (inventoryHeadings): ${key}`);
+  }
+  const headings = inventoryHeadingNames();
+  for (const heading of headings) {
+    if (!(heading in manifest.inventoryHeadings)) fail(`inventory.md heading is not in inventoryHeadings: ${heading}`);
+  }
+  for (const heading of Object.keys(manifest.inventoryHeadings)) {
+    if (!headings.includes(heading)) fail(`inventoryHeadings entry has no inventory.md heading: ${heading}`);
+  }
+}
+
 function validate(manifest) {
   const registry = manifest.componentRegistry;
   const seenIds = new Set();
@@ -252,6 +357,8 @@ function validate(manifest) {
   for (const page of listed) {
     if (!onDisk.has(page)) fail(`manifest lists a screen that is not on disk: ${page}`);
   }
+
+  validateClassScan(manifest);
 }
 
 function render(manifest) {
@@ -426,6 +533,7 @@ function main() {
       process.exit(1);
     }
     console.log(`${rel(OUTPUT_PATH)} is up to date.`);
+    console.log(scanSummary);
     return;
   }
   fs.writeFileSync(OUTPUT_PATH, rendered);
