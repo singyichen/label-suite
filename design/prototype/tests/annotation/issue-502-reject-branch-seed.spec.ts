@@ -53,7 +53,7 @@ interface WorkspaceData {
   getSampleStatus: (taskId: string, role: string, runType: string, sampleId: string, identity: Identity) => string;
   getSampleAnswers: (taskId: string, role: string, runType: string, sampleId: string, identity: Identity) => unknown;
   getSubmission: (taskId: string, role: string, runType: string, sampleId: string, identity: Identity) => unknown;
-  getSampleHistory: (taskId: string, runType: string, sampleId: string, identity: Identity) => HistoryEvent[];
+  getSampleHistory: (taskId: string, runType: string, sampleId: string, identity: Identity, viewer?: { role: string; actorId?: string }) => HistoryEvent[];
   getReviewUnitStatus: (
     taskId: string, runType: string, sampleId: string, identity: Identity, outKeys: string[], opts?: { minReviewers?: number }
   ) => string | null;
@@ -91,7 +91,7 @@ async function getSampleHistory(page: Page, taskId: string, runType: string, sam
   return page.evaluate(
     ([t, rt, s, id]) =>
       (window as unknown as { LabelSuiteAnnotationWorkspaceData: WorkspaceData }).LabelSuiteAnnotationWorkspaceData
-        .getSampleHistory(t, rt, s, id as Identity),
+        .getSampleHistory(t, rt, s, id as Identity, { role: 'project_leader', actorId: 'leader_probe' }),  // issue #1266: viewer-less reads fail closed (masked); this spec asserts the unmasked data-layer trail, so read as an explicit project_leader.
     [taskId, runType, sampleId, identity] as const
   );
 }

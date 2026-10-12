@@ -125,7 +125,9 @@ const foreign = (e: HistoryEvent) => e.role !== 'annotator' || e.actorId !== ME;
 /* The seed really carries every non-annotator origin; without this the
  * masking assertions could pass on an empty fixture. */
 async function expectFixtureHasForeignOrigins(page: Page, sampleId: string, arbMarker: string) {
-  const unmasked = await readHistory(page, sampleId);
+  /* issue #1266: a viewer-less read now fails closed (masked). The unmasked
+   * baseline is the data-layer fact, so ask as an explicit reviewer. */
+  const unmasked = await readHistory(page, sampleId, asReviewer);
   const actions = unmasked.filter(foreign).map((e) => e.action);
   expect(actions).toContain('adjudicated');
   expect(actions).toContain('exception_resolved');

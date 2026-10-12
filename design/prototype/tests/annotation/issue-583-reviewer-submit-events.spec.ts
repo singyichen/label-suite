@@ -56,7 +56,8 @@ type WorkspaceDataGlobal = {
     taskId: string,
     runType: string,
     sampleId: string,
-    identity: { annotatorId?: string; reviewerId?: string }
+    identity: { annotatorId?: string; reviewerId?: string },
+    viewer?: { role: string; actorId?: string }
   ) => Array<{
     action: string;
     role: string;
@@ -104,7 +105,7 @@ function readHistory(page: Page, identity: { annotatorId?: string; reviewerId?: 
   return page.evaluate(
     (a) =>
       (window as unknown as { LabelSuiteAnnotationWorkspaceData: WorkspaceDataGlobal })
-        .LabelSuiteAnnotationWorkspaceData.getSampleHistory(a.task, a.runType, a.sample, a.identity),
+        .LabelSuiteAnnotationWorkspaceData.getSampleHistory(a.task, a.runType, a.sample, a.identity, { role: 'project_leader', actorId: 'leader_probe' }),  // issue #1266: viewer-less reads fail closed (masked); this spec asserts the unmasked data-layer trail, so read as an explicit project_leader.
     { task: TASK, runType: RUN_TYPE, sample: SAMPLE, identity }
   );
 }

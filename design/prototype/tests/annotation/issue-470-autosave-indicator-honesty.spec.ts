@@ -78,14 +78,16 @@ async function lastPersistedSaveTime(page: Page, sampleId: string): Promise<stri
             taskId: string,
             runType: string,
             sampleId: string,
-            identity: Record<string, never>
+            identity: Record<string, never>,
+            viewer?: { role: string; actorId?: string }
           ) => Array<{ action: string; at: string }>;
         };
       }
     ).LabelSuiteAnnotationWorkspaceData;
+    // issue #1266: viewer-less reads fail closed (masked); this spec asserts the unmasked data-layer trail, so read as an explicit project_leader.
     /* renamed by issue #578 / FR-086: the draft-save action is `draft_saved` */
     const saved = data
-      .getSampleHistory('T001', 'official_run', sid, {})
+      .getSampleHistory('T001', 'official_run', sid, {}, { role: 'project_leader', actorId: 'leader_probe' })
       .filter((e) => e.action === 'draft_saved');
     return saved.length ? saved[saved.length - 1].at : null;
   }, sampleId);

@@ -58,7 +58,10 @@ function getSampleHistory(page: Page): Promise<HistoryEvent[]> {
   return page.evaluate(() =>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (window as any).LabelSuiteAnnotationWorkspaceData.getSampleHistory(
-      'T001', 'official_run', 'sent-001', { annotatorId: 'kioleemg12' }
+      'T001', 'official_run', 'sent-001', { annotatorId: 'kioleemg12' },
+      // issue #1266: a viewer-less read fails closed (masked); this spec checks the
+      // unmasked data-layer merge, so read as an explicit project_leader.
+      { role: 'project_leader', actorId: 'leader_probe' }
     )
   );
 }
