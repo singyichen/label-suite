@@ -239,11 +239,19 @@ expect_gate_failure() {
 
 expect_gate_success() {
     local name="$1" rc=0 err="$TMP_ROOT/err.txt"
-    node "$GEN" --check >/dev/null 2>"$err" || rc=$?
+    # --stdout runs the full validation (scan + headings) but skips the stale
+    # comparison: a stray page file legitimately changes the prototype content
+    # hash (issue #943), which would make --check report "stale" regardless.
+    node "$GEN" --stdout >/dev/null 2>"$err" || rc=$?
     if [[ $rc -ne 0 ]]; then
         local seen; seen="$(head -c 600 "$err")"
         gate_restore
-        fail "$name — --check exit $rc; stderr: $seen"
+        fail "$name — --stdout exit $rc; stderr: $seen"
+    fi
+    if /usr/bin/grep -qF -- "unregistered" "$err"; then
+        local seen; seen="$(head -c 600 "$err")"
+        gate_restore
+        fail "$name — stderr reports an unregistered class: $seen"
     fi
     gate_restore
     pass "$name"
