@@ -5085,7 +5085,12 @@
     function resolve(item, action, value, reason) {
       window.LabelSuiteAnnotationWorkspaceData.resolveExceptionPoolItem(
         currentProfile.id, currentRunType, currentSampleId, currentIdentity,
-        window.LabelSuiteAnnotationWorkspaceData.exceptionPoolKeyFor(item), action, value, reason
+        /* custom_answer carries the whole output's answer, so it is stored
+           under the bare outKey and settles every item of that output. */
+        action === 'custom_answer'
+          ? item.outKey
+          : window.LabelSuiteAnnotationWorkspaceData.exceptionPoolKeyFor(item),
+        action, value, reason
       );
       clearUnsaved();
       showToast(t('wsExceptionPoolResolveSuccess'));

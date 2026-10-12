@@ -2801,8 +2801,10 @@
    * resolution screen) lands in group 6; this only reads whatever is
    * already stored, addressed the same `task_id x run_type x annotator_id x
    * sample_id` way every other review-unit bucket is (matching
-   * arbitrationBucketKey()), as ONE blob per unit keyed by outKey:
-   * `{ [outKey]: { resolver_id, action, finalized_value?, reason,
+   * arbitrationBucketKey()), as ONE blob per unit keyed by itemId
+   * `outKey::key` (composite outputs) or bare outKey (scalar outputs,
+   * legacy records, whole-output custom_answer):
+   * `{ [key]: { resolver_id, action, finalized_value?, reason,
    * resolved_at } }`. */
   var EXCEPTION_POOL_KEY_PREFIX = 'labelsuite.wsExceptionPool.';
 
@@ -2865,7 +2867,8 @@
   /* Final exception pool WRITE path (FR-095, issue #596, task 6.2). The read
    * side above (getExceptionPool) and getReviewUnitStatus() already existed
    * and are untouched -- this is the only function that ever writes a
-   * poolRecord, one per dispute item (itemId `outKey::key`, or a bare outKey for the legacy whole-output shape), merged into the same blob getExceptionPool
+   * poolRecord, one per dispute item (itemId `outKey::key`, or a bare
+   * outKey for the legacy whole-output shape), merged into the same blob getExceptionPool
    * reads. Shape matches design.md D2 exactly: `finalized_value` is the
    * absent-field sentinel for `exclude_from_dataset` (FR-063 -- an excluded
    * item produces no gold value), never `null`.
