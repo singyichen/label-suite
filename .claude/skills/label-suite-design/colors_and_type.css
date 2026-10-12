@@ -9,8 +9,8 @@
   /* ── Core Palette ─────────────────────────────────────────── */
   --color-primary:      #6366F1;   /* Indigo 500 */
   --color-secondary:    #818CF8;   /* Indigo 400 */
-  --color-cta:          #10B981;   /* Emerald 500 */
-  --color-cta-hover:    #059669;   /* Emerald 600 */
+  --color-cta:          #047857;   /* Emerald 700 */
+  --color-cta-hover:    #065F46;   /* Emerald 800 */
   --color-surface:      #F5F3FF;   /* Violet 50 — page bg */
   --color-white:        #FFFFFF;   /* cards, panels */
   --color-ink:          #1E1B4B;   /* Indigo 950 — body text */
