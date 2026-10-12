@@ -6,6 +6,7 @@
   <title>Label Suite — 任務列表</title>
   <link rel="stylesheet" href="../../assets/tokens.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
+  <link rel="stylesheet" href="../shared/empty-state.css" />
   <script src="../../assets/theme-fouc.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -191,15 +192,6 @@
       gap: 10px;
       flex-wrap: wrap;
     }
-    .empty-row { cursor: default !important; }
-    .empty-row:hover { background: transparent !important; }
-    .error-row { cursor: default !important; }
-    .error-row:hover { background: transparent !important; }
-    .empty-row-cell { padding: 40px 20px !important; }
-    .empty-row-wrap { text-align: center; max-width: 520px; margin: 0 auto; }
-    .empty-row-title { font-size: 20px; font-weight: 700; color: var(--color-ink); margin: 0 0 8px; }
-    .empty-row-desc { font-size: 14px; color: var(--color-text-soft); margin: 0 0 16px; }
-    .error-row .empty-row-title { color: var(--color-error); }
 
     /* ── Badges ──────────────────────────────────────────────── */
     .badge {
@@ -934,21 +926,21 @@
 
   function createEmptyRow(isNoResults) {
     var tr = document.createElement('tr');
-    tr.className = 'empty-row';
+    tr.className = 'empty-state-row';
 
     var td = document.createElement('td');
-    td.className = 'empty-row-cell';
+    td.className = 'empty-state-td';
     td.colSpan = 6;
 
     var wrap = document.createElement('div');
-    wrap.className = 'empty-row-wrap';
+    wrap.className = 'empty-state empty-state-cell';
 
     var title = document.createElement('p');
-    title.className = 'empty-row-title';
+    title.className = 'empty-state-title';
     title.textContent = isNoResults ? t('emptyNoResultsTitle') : t('emptyNoTasksTitle');
 
     var desc = document.createElement('p');
-    desc.className = 'empty-row-desc';
+    desc.className = 'empty-state-desc';
     desc.textContent = isNoResults ? t('emptyNoResultsDesc') : t('emptyNoTasksDesc');
 
     wrap.appendChild(title);
@@ -972,18 +964,18 @@
     tr.className = 'error-row';
 
     var td = document.createElement('td');
-    td.className = 'empty-row-cell';
+    td.className = 'empty-state-td';
     td.colSpan = 6;
 
     var wrap = document.createElement('div');
-    wrap.className = 'empty-row-wrap';
+    wrap.className = 'empty-state empty-state-cell';
 
     var title = document.createElement('p');
-    title.className = 'empty-row-title';
+    title.className = 'empty-state-title';
     title.textContent = t('errorLoadTitle');
 
     var desc = document.createElement('p');
-    desc.className = 'empty-row-desc';
+    desc.className = 'empty-state-desc';
     desc.textContent = t('errorLoadDesc');
 
     var retryBtn = document.createElement('button');
