@@ -218,6 +218,7 @@
     /* issue #1252: hover-only rectangle (border box + 2px below) keeps the hit area stable under the -1px lift, incl. the rounded corners */
     .btn:hover::after { content: ""; position: absolute; inset: -1px -1px -2px; }
     .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; pointer-events: none; }
+    .btn-disabled-tip { display: inline-block; }
     .btn-primary { color: var(--color-on-cta); background: var(--color-cta); border-color: var(--color-cta); }
     .btn-primary:hover:not(:disabled) { opacity: 0.9; }
     .btn-cta { color: var(--color-on-cta); background: var(--color-cta); border-color: var(--color-cta); }
@@ -6241,11 +6242,14 @@ function interpolate(template, payload) {
   function renderPublishActions() {
     var actionRow = document.getElementById('publishActionRow');
     if (!actionRow) return;
+    /* Skip while the skeleton hides the overview panel: renderOverview() re-renders once it is visible,
+       so the row never exists in a zero-size (display:none) panel. */
+    if (state.showSkeleton) return;
     renderPublishArbiterWarning();
     var nextRound = getTrialRounds().length + 1;
 
     if (state.taskRole === 'reviewer') {
-      actionRow.innerHTML = '<button class="btn btn-primary" type="button" disabled title="' + t('reviewerHint') + '">' + t('dryRunDisabled') + '</button>';
+      actionRow.innerHTML = '<span class="btn-disabled-tip" title="' + t('reviewerHint') + '"><button class="btn btn-primary" type="button" disabled title="' + t('reviewerHint') + '">' + t('dryRunDisabled') + '</button></span>';
       return;
     }
 
