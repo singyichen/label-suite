@@ -90,7 +90,7 @@ Use SDD for a new feature, behavior change, breaking API/contract change, or arc
 Before advancing a stage, confirm that:
 
 - the canonical feature spec has a verifiable `## 功能目標`, FR/AC/SC, and dependencies;
-- the Frontend Ready Gate is satisfied (or each inapplicable item is explicitly `N/A` with a reason);
+- the Frontend Ready Gate is satisfied (each inapplicable item is explicitly `N/A` with a reason; each unmet item is a recorded gap with a tracking issue), and the nine-item record sits in the change's `proposal.md` inside the `## Why` body (headings `## Why` / `## What Changes` stay verbatim);
 - the Red contract was committed and failed for its stated reason before Green implementation;
 - the appropriate four-layer gates have evidence for the current stage; and
 - archive/write-back occurs only in the final PR, with canonical spec movement only after merge.

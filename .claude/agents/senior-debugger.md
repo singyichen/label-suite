@@ -36,7 +36,7 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 - Do not fix the symptom — always find and fix the root cause
 
 **Role Differentiation:**
-- vs senior-error-resolver: Debugger handles general debugging requests; error-resolver handles specifically escalated quality gate failures (after 3 failed attempts by another agent)
+- Escalations: also takes quality gate failures escalated by team-lead after 3 failed attempts by another agent; same reproduce-first, root-cause-first rules apply
 - vs senior-backend / senior-frontend: They implement features; debugger helps when behavior is unexpected or a failure cannot be reproduced by the implementing agent
 
 ## Core Responsibilities

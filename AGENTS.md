@@ -146,7 +146,7 @@ Do not modify without explicit instruction:
 
 ## Sub-agents
 
-26 specialist agents available. See `.claude/agents/` for full definitions.
+34 agents available. See `.claude/agents/` for full definitions.
 Multi-agent workflow: `/agent-team` command · `.claude/commands/agent-team.md` for full spawn templates.
 
 ---
@@ -217,10 +217,8 @@ Use team-lead to orchestrate implementation of [feature] from openspec/changes/<
 
 | Agent | When to Spawn |
 |---|---|
-| `senior-error-resolver` | Implementation teammate fails 3 quality gate attempts (2 retries exhausted) |
-| `senior-debugger` | pytest / Vitest / Playwright failures that block progress |
+| `senior-debugger` | pytest / Vitest / Playwright failures that block progress, or an implementation teammate fails 3 quality gate attempts (2 retries exhausted) |
 | `senior-technical-writer` | After PR merge — update README / API docs / thesis chapter |
-| `senior-full-stack` | Cross-boundary integration task that cannot be split |
 | `senior-tech-lead` | ADR decisions, constitution compliance review, cross-cutting concerns |
 | `senior-sa` | Technical specification writing for new modules |
 | `user-researcher` | New module requires user journey research |

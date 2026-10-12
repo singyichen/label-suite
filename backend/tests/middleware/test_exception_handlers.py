@@ -13,6 +13,7 @@ and by a later group's health-endpoint 422 test.
 
 from __future__ import annotations
 
+import pytest
 from fastapi import FastAPI, HTTPException
 from fastapi.testclient import TestClient
 from pydantic import BaseModel
@@ -132,6 +133,7 @@ def test_unregistered_exception_produces_error_response_envelope() -> None:
     ErrorResponse.model_validate(response.json())
 
 
+@pytest.mark.security
 def test_unregistered_exception_does_not_leak_internals() -> None:
     """The 500 envelope must not echo the exception message back to the client."""
     client = TestClient(_build_app(), raise_server_exceptions=False)

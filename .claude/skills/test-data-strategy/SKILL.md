@@ -190,7 +190,7 @@ async def db_session(engine):
 ## Playwright Test Data
 
 ```typescript
-// frontend/tests/fixtures.ts
+// e2e/ — shared Playwright fixtures (see .claude/rules/testing-e2e.md)
 import { test as base } from '@playwright/test';
 
 export const test = base.extend({
