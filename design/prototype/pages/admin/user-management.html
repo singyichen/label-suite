@@ -416,7 +416,6 @@
     window.LabelSuiteSharedSidebar.mountSidebar({
       mountId:       'sharedSidebarMount',
       activeNav:     'admin',
-      systemRole:    'super_admin',
       dashboardHref: '../dashboard/dashboard.html',
       taskHref:      '../task-management/task-list.html',
       profileHref:   '../account/profile.html',
@@ -1643,7 +1642,6 @@
       ], getCtx);
       window.LabelSuiteAnalytics.trackPageView('user-management', getCtx);
     }
-    window.LabelSuiteSharedSidebar.setSystemRole('super_admin');
     window.LabelSuiteSharedSidebar.updateUserChip({
       userName:    'Mandy Chen',
       roleLabel:   lang === 'zh' ? '系統管理員' : 'Super Admin',

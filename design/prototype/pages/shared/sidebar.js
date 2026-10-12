@@ -88,6 +88,21 @@
     }
   }
 
+  /* issue #1266 / ADR-037: fail closed. A missing system role resolves to the
+   * lowest privilege ('user'), never 'super_admin'. The legacy opts.hideAdmin
+   * flag is accepted but no longer changes the outcome. */
+  function resolveSystemRole(opts) {
+    return normalizeSystemRole(opts.systemRole || readStoredSystemRole() || 'user');
+  }
+
+  function clearStoredSystemRole() {
+    try {
+      window.localStorage.removeItem(SYSTEM_ROLE_STORAGE_KEY);
+    } catch (error) {
+      // Ignore storage errors in prototype mode.
+    }
+  }
+
   function persistSystemRole(systemRole) {
     try {
       window.localStorage.setItem(SYSTEM_ROLE_STORAGE_KEY, normalizeSystemRole(systemRole));
@@ -1798,9 +1813,7 @@
   function renderSidebar(options) {
     var opts = options || {};
     var activeNav = opts.activeNav || 'dashboard';
-    var systemRole = normalizeSystemRole(
-      opts.systemRole || readStoredSystemRole() || (opts.hideAdmin ? 'user' : 'super_admin')
-    );
+    var systemRole = resolveSystemRole(opts);
     var dashboardHref = opts.dashboardHref || '../dashboard/dashboard.html';
     var profileHref = opts.profileHref || '../account/profile.html';
 
@@ -2017,7 +2030,7 @@
     // innerHTML string above, so a malicious userName can't be parsed as
     // markup. Reuses updateUserChip()'s existing safe-write path (DRY).
     updateUserChip({ userName: resolveUserName(opts) });
-    applySystemRole(opts.systemRole || readStoredSystemRole() || (opts.hideAdmin ? 'user' : 'super_admin'));
+    applySystemRole(resolveSystemRole(opts));
     var initialCollapsed = typeof opts.sidebarCollapsed === 'boolean'
       ? opts.sidebarCollapsed
       : readStoredSidebarCollapsed();
@@ -2034,6 +2047,9 @@
       btn.addEventListener('click', function () {
         // AC-2.4 / FR-018: clear both keys so the next login starts blank.
         workspaceTabLoggingOut = true;
+        // shared-019 FR-018 / ADR-037: drop the stored system role so the next
+        // session cannot inherit the previous user's privilege.
+        clearStoredSystemRole();
         try {
           window.sessionStorage.removeItem(WORKSPACE_TAB_STORAGE_KEY);
           window.sessionStorage.removeItem(WORKSPACE_TAB_SCROLL_STORAGE_KEY);

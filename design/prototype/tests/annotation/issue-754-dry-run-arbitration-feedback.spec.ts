@@ -111,7 +111,7 @@ function readLastEventByAction(page: import('@playwright/test').Page, sampleId: 
   return page.evaluate(
     ({ taskId, sampleId: id, annotatorId, action: wantedAction }) => {
       const data = (window as any).LabelSuiteAnnotationWorkspaceData;
-      const history = data.getSampleHistory(taskId, 'dry_run', id, { annotatorId });
+      const history = data.getSampleHistory(taskId, 'dry_run', id, { annotatorId }, { role: 'project_leader', actorId: 'leader_probe' });
       const matches = history.filter((event: any) => event.action === wantedAction);
       return matches[matches.length - 1] || null;
     },

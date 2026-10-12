@@ -588,7 +588,7 @@ function readReviewerTrail(page: Page, runType: string, sampleId: string, annota
   return page.evaluate(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (a) => (window as any).LabelSuiteAnnotationWorkspaceData.getSampleHistory(
-      a.taskId, a.runType, a.sampleId, { annotatorId: a.annotatorId })
+      a.taskId, a.runType, a.sampleId, { annotatorId: a.annotatorId }, { role: 'project_leader', actorId: 'leader_probe' })
       .filter((event: { role: string }) => event.role === 'reviewer'),
     { taskId: fixtureTaskId, runType, sampleId, annotatorId }
   );
@@ -1107,7 +1107,7 @@ test.describe('XROLE-24: double-clicking submit records exactly one history even
     const submittedEvents = await page.evaluate(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (taskId) => (window as any).LabelSuiteAnnotationWorkspaceData.getSampleHistory(
-        taskId, 'official_run', 'xr-off-001', { annotatorId: 'A01' })
+        taskId, 'official_run', 'xr-off-001', { annotatorId: 'A01' }, { role: 'project_leader', actorId: 'leader_probe' })
         .filter((event: { action: string }) => event.action === 'submitted'),
       dupTaskId
     );

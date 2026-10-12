@@ -589,13 +589,19 @@
      only `result_snapshot` would still hand the peer's answer over, which
      is the Data Fairness leak XROLE-11 exists to prevent. Reviewer viewers
      see every event FR-062 admitted for the review unit they are on.
-     `viewer` is optional: callers that predate it get the unmasked merge,
-     matching the behavior they were written against. */
+     `viewer` is optional, but a missing viewer is masked like an annotator
+     (issue #1266), never handed the unmasked merge. */
   function maskHistoryForViewer(events, viewer, preReveal) {
-    if (!viewer || viewer.role !== 'annotator') return events;
+    /* issue #1266 fail closed (FR-062 / FR-090): a missing viewer or a viewer
+     * without a role is treated as an annotator and masked; only an explicit
+     * non-annotator role (reviewer, project_leader, ...) sees the full history. */
+    var role = viewer && viewer.role;
+    if (role && role !== 'annotator') return events;
+    var viewerId = viewer && viewer.actorId != null ? viewer.actorId : null;
+    function isOwn(event) { return viewerId !== null && event.actorId === viewerId; }
     return events.filter(function (event) {
-      if (preReveal) return event.role === 'annotator' && event.actorId === viewer.actorId;
-      return event.role !== 'annotator' || event.actorId === viewer.actorId;
+      if (preReveal) return event.role === 'annotator' && isOwn(event);
+      return event.role !== 'annotator' || isOwn(event);
     });
   }
 
@@ -624,7 +630,12 @@
        reviewer / arbiter / exception-pool trail and corrected answer
        snapshots are the same data getDryRunFeedback() withholds. */
     var preReveal = false;
-    if (viewer && viewer.role === 'annotator' && runType === 'dry_run') {
+    /* issue #1266 fail closed: a viewer with no role counts as an annotator,
+       and with no identity to look up a disclosed round it stays pre-reveal. */
+    var viewerRole = viewer && viewer.role;
+    if (!viewerRole && runType === 'dry_run') {
+      preReveal = true;
+    } else if (viewerRole === 'annotator' && runType === 'dry_run') {
       var own = readSubmissionBucket(annotatorKey)[sampleId];
       preReveal = disclosedTrialRound(taskId, own && own.trialRound) === null;
     }
@@ -2075,7 +2086,12 @@
    * still in dispute past IAA confirmation) -- callers drop those instead
    * of rendering a half row. */
   function buildDryRunFeedbackRow(taskId, runType, sampleId, entry, identity) {
-    var decisive = getSampleHistory(taskId, runType, sampleId, identity).filter(function (event) {
+    /* issue #1266: a missing viewer is now masked like an annotator, which
+     * would hide the very settling events this row summarises. This is an
+     * internal derivation, not a viewer read; the caller (getDryRunFeedback)
+     * has already applied the FR-090 / FR-096 disclosure gate, so it reads
+     * the unmasked trail with an explicit non-annotator viewer. */
+    var decisive = getSampleHistory(taskId, runType, sampleId, identity, { role: 'system' }).filter(function (event) {
       return DRY_RUN_FEEDBACK_SOURCE_ACTIONS[event.action];
     });
     if (!decisive.length) return null;

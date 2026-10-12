@@ -134,7 +134,8 @@ test('an existing v2 review-flow seed is upgraded so citation reasons reach retu
       'T014',
       'dry_run',
       'dry-04-dispute-resolved',
-      { annotatorId: '113450022' }
+      { annotatorId: '113450022' },
+      { role: 'project_leader', actorId: 'leader_probe' }
     );
     return {
       reasons: history.map((event: { reason?: string }) => event.reason || ''),

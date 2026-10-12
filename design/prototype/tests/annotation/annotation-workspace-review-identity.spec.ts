@@ -39,11 +39,13 @@ async function readTrail(
           taskId: string,
           runType: string,
           sampleId: string,
-          identity: { annotatorId: string }
+          identity: { annotatorId: string },
+          viewer?: { role: string; actorId?: string }
         ) => TrailEvent[];
       };
     }).LabelSuiteAnnotationWorkspaceData;
-    return data.getSampleHistory(a.taskId, a.runType, a.sampleId, { annotatorId: a.annotatorId });
+    // issue #1266: viewer-less reads fail closed (masked); this spec asserts the unmasked data-layer trail, so read as an explicit project_leader.
+    return data.getSampleHistory(a.taskId, a.runType, a.sampleId, { annotatorId: a.annotatorId }, { role: 'project_leader', actorId: 'leader_probe' });
   }, args);
 }
 
