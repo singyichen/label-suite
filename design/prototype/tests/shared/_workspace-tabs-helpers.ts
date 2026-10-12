@@ -33,7 +33,8 @@
  *     each tab's scroll position, separately from TAB_STORAGE_KEY, and is
  *     also cleared on logout (AC-2.4 / FR-018).
  */
-import { expect, type Locator, type Page } from '@playwright/test';
+import { type Locator, type Page } from '@playwright/test';
+import { expect } from '../fixtures';
 
 export const TAB_STORAGE_KEY = 'labelsuite.workspaceTabs';
 export const TAB_SCROLL_STORAGE_KEY = 'labelsuite.workspaceTabScroll';
