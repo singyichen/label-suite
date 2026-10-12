@@ -1,6 +1,6 @@
 # Label Suite — Agent Rules
 
-> Full context: [CLAUDE.md](CLAUDE.md) · Constitution: [.specify/memory/constitution.md](.specify/memory/constitution.md)
+> Full context: [CLAUDE.md](CLAUDE.md) · Constitution: [specs/_governance/constitution.md](specs/_governance/constitution.md)
 
 ## Architecture Boundaries
 
@@ -142,7 +142,7 @@ uv run mypy .
 
 Do not modify without explicit instruction:
 - `CLAUDE.md`, `AGENTS.md` — project rule files
-- `.specify/memory/constitution.md` — use `/speckit.constitution` to amend
+- `specs/_governance/constitution.md` — use `/speckit.constitution` to amend
 
 ## Sub-agents
 

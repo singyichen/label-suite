@@ -72,7 +72,7 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 
 - [ ] **Phase 2 — Load context (mandatory reads)**
   - [ ] Read the existing spec document (if present).
-  - [ ] Read `.specify/memory/constitution.md` and any applicable domain constitution (e.g. `backend-constitution.md`, `frontend-constitution.md`).
+  - [ ] Read `specs/_governance/constitution.md` and any applicable domain constitution (e.g. `backend-constitution.md`, `frontend-constitution.md`).
   - [ ] Read all ADRs that touch the affected module or cross-cutting concerns.
   - [ ] Read affected module source files to understand current implementation boundaries.
   - [ ] Note prototype or wireframe references at `design/wireframes/pages/[module]/[page].pen` (if applicable).

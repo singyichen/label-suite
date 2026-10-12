@@ -72,9 +72,11 @@ For stage-gated deliverables — traceability matrix, regression suite planning,
   - [ ] `pnpm tsc --noEmit`
   - [ ] `pnpm lint`
   - [ ] `pnpm test`
-  - [ ] `pnpm playwright test` (E2E, from `frontend/`)
 - [ ] Run prototype tests if applicable from `design/prototype/`:
+  - [ ] `pnpm typecheck`
+  - [ ] `pnpm test:node`
   - [ ] `pnpm playwright test`
+- [ ] Run formal E2E tests if applicable from root `e2e/[module]/` (ADR-034; see `.claude/rules/testing-e2e.md` for the command)
 - [ ] Verify ALL tests pass (new + existing)
 - [ ] Check coverage — new code must not decrease overall coverage
 - [ ] Critical paths (auth, permissions, scoring) meet >= 90% branch coverage

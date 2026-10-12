@@ -79,7 +79,7 @@ This section is the single definition other agent files reference.
 | `senior-qa` | Red contract files declared by the assigned task | application source files (non-test) and `tasks.md` checkboxes |
 | `senior-devops` | `docker-compose.yml`, `.github/workflows/`, `.env.example`, `scripts/` | `backend/`, `frontend/` |
 
-Formal frontend E2E path ownership remains path-neutral while ADR-034 is Proposed. Use the applicable Accepted ADR and testing constitution when it becomes binding; task ownership must name the exact test file rather than inferring an E2E directory here.
+Formal full-stack E2E tests live in root `e2e/[module]/` (ADR-034, Accepted); task ownership must still name the exact test file.
 
 ### SDD Verification Checkpoints
 
