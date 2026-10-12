@@ -362,7 +362,7 @@ Desktop 使用者可將左側 Sidebar 收合為 icon-only，以增加主內容�
 - **FR-001**：登入後頁面必須使用同一份 Sidebar Navbar contract；`userIds` 中的 `userAvatar`（見「關鍵實體」`SharedNavbarContract`）必須顯示與同列 `userName` 一致、由目前使用者姓名推導出的縮寫，在所有 `SUPPORTED_PAGES` 皆同（issue #932 澄清：不得停留在未依頁面覆寫的預設佔位文字）。
 - **FR-002**：L0 導覽項與順序必須符合 IA：`儀表板 / 任務管理 / 標記作業 / 資料集分析 / 系統管理(條件顯示) / 個人設定`。
 - **FR-003**：`系統管理` 僅 `super_admin` 可見，不得渲染給 `user`。
-  **v2.3.1 補述（issue #1269，操作 → 權限鍵）**：「`super_admin`」指伺服器依 ADR-037 判定的當前 DB system role，MUST NOT 取自 `localStorage`、網址參數或其他前端狀態；前端只可依伺服器回傳的能力提示決定是否渲染。`系統管理` 的落地頁與次選單子項分別對應 `admin.user_management.view`（`user-management`）與 `admin.role_settings.view`（`role-settings`）。其餘 L0 落地頁對應：`儀表板` → `dashboard.view`、`任務管理` → `task.list.view`、`個人設定` → `account.profile.view`；`標記作業` 與 `資料集分析` 的列表內容依任務層鍵過濾（`annotation.workspace.annotate`／`annotation.workspace.review`，以及 `dataset/016-dataset-analysis-list` FR-002）。Sidebar 的渲染只是顯示提示，進入每個頁面與每個命令都由伺服器重新授權。本補述只對應鍵，不改 FR-002／FR-003A 的 L0 項目、順序與數量。
+  **v2.3.1 補述（issue #1269，操作 → 權限鍵）**：「`super_admin`」指伺服器依 ADR-037 判定的當前 DB system role，依 ADR-037 不取自 `localStorage`、網址參數或其他前端狀態；前端依伺服器回傳的能力提示決定是否渲染。`系統管理` 的落地頁與次選單子項分別對應 `admin.user_management.view`（`user-management`）與 `admin.role_settings.view`（`role-settings`）。其餘 L0 落地頁對應：`儀表板` → `dashboard.view`、`任務管理` → `task.list.view`、`個人設定` → `account.profile.view`；`標記作業` 與 `資料集分析` 的列表內容依任務層鍵過濾（`annotation.workspace.annotate`／`annotation.workspace.review`，以及 `dataset/016-dataset-analysis-list` FR-002）。Sidebar 的渲染只是顯示提示，進入每個頁面與每個命令都由伺服器重新授權。本補述只對應鍵，不改 FR-002／FR-003A 的 L0 項目、順序與數量。
 - **FR-003A**：`user` 的 L0 可見項目數必須為 `5`；`super_admin` 的 L0 可見項目數必須為 `6`（多出 `系統管理`）。
 - **FR-004**：`task-new`、`task-detail` 必須映射為 `任務管理` active。
 - **FR-005**：`dataset-analysis-list` 與 `dataset-analysis-detail` 必須映射為 `資料集分析` active。

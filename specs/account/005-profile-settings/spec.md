@@ -386,7 +386,7 @@ sequenceDiagram
 - **FR-009**：密碼驗證失敗時，系統必須回傳 401 與「現有密碼錯誤」，且不啟用鎖定或節流機制。
 - **FR-010**：密碼更新成功後，必須在同一交易增加 `users.credential_version`、保留目前裝置的 `account_session` 並撤銷其他裝置 session（不寫入 `logged_out_at`）。所有舊 access JWT 下個請求先失效；目前裝置可由保留 family silent refresh 取得新版本 JWT 並維持登入，其他裝置 refresh 失敗。此條不預設密碼更新 API 回應另含新 token，機制依 account-020 FR-006。
 - **FR-011**：僅已登入使用者可存取 `/profile`；未登入存取必須導向 `/login`。
-  **v1.4.2 補述（issue #1269，操作 → 權限鍵）**：正式後端依 ADR-037 判定，「已登入」指 ADR-021 驗證的當前 active 帳號。檢視 `/profile` 對應平台層 `account.profile.view`；儲存個人資料（FR-001）、送出 Email 變更請求（FR-004C）、變更密碼（FR-010）對應平台層 `account.profile.edit`。兩鍵皆依當前 system role 的格判定（admin-007 V1 種子對 `user` 與 `super_admin` 皆允許），且只作用於本人帳號，不得用來讀寫其他使用者。新 Email 的驗證連結（FR-004F／FR-004G）由驗證 token 本身授權，不另對應權限鍵。本補述只對應鍵，不改本條與上列各條的既有行為。
+  **v1.4.2 補述（issue #1269，操作 → 權限鍵）**：正式後端依 ADR-037 判定，「已登入」指 ADR-021 驗證的當前 active 帳號。檢視 `/profile` 對應平台層 `account.profile.view`；儲存個人資料（FR-001）、送出 Email 變更請求（FR-004C）、變更密碼（FR-010）對應平台層 `account.profile.edit`。兩鍵皆依當前 system role 的格判定（admin-007 V1 種子對 `user` 與 `super_admin` 皆允許），作用範圍沿用本條既有的本人帳號範圍。新 Email 的驗證連結（FR-004F／FR-004G）由驗證 token 本身授權，不另對應權限鍵。本補述只對應鍵，不改本條與上列各條的既有行為。
 - **FR-011A**：`/profile` 必須具備響應式設計，至少支援 `RWD_VIEWPORTS`。
 - **FR-011B**：在 `<= MOBILE_BP` 時，兩個主要區塊（個人資料 / 密碼）必須單欄堆疊，避免欄位或按鈕被截斷。
 - **FR-011C**：在任一 `RWD_VIEWPORTS` 下，`/profile` 各狀態畫面（主表單 / 變更 Email / 已寄信提示）不得出現水平捲軸、文字重疊、按鈕遮擋或元件溢出容器。
@@ -572,7 +572,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
-| 1.4.2 | 2026-10-12 | Issue #1269（Lightweight，PATCH）：FR-011 補述操作 → 權限鍵對應——檢視 `/profile` 對應 `account.profile.view`，儲存個人資料、Email 變更請求與密碼變更對應 `account.profile.edit`，皆只作用於本人帳號；Email 驗證連結由 token 授權。只對應鍵，不改既有行為。 |
+| 1.4.2 | 2026-10-12 | Issue #1269（Lightweight，PATCH）：FR-011 補述操作 → 權限鍵對應——檢視 `/profile` 對應 `account.profile.view`，儲存個人資料、Email 變更請求與密碼變更對應 `account.profile.edit`，作用範圍沿用既有的本人帳號範圍；Email 驗證連結由 token 授權。只對應鍵，不改既有行為。 |
 | 1.4.1 | 2026-10-08 | Issue #1160：對齊 `account_session` 命名；Email／密碼安全撤銷不得記為明確登出。 |
 | 1.4.0 | 2026-10-06 | Issue #1160 D-5：定義通知偏好缺列時六項事件兩頻道預設開啟，讀取不寫入，儲存完整六列。 |
 | 1.3.0 | 2026-10-06 | Issue #1160 對齊 account-020：FR-010／SC-003 明確定義改密碼後目前裝置先失效、再 silent refresh；FR-004K／SC-007A 定義改 Email 的憑證版本增加與全部 family 撤銷。 |
