@@ -117,13 +117,13 @@ git diff --check -- .github/workflows/ docker-compose.yml docker-compose.yaml co
 
 If gate fails:
 - Teammate retries (max 2 attempts)
-- On 3rd failure → flag senior-error-resolver for the main session to dispatch, with exact error output
+- On 3rd failure → flag senior-debugger for the main session to dispatch, with exact error output
 
 ### Escalation Rules
 
 | Condition | Action |
 |---|---|
-| Teammate BLOCKED after retry | Flag senior-error-resolver for the main session to dispatch; report blocker to user |
+| Teammate BLOCKED after retry | Flag senior-debugger for the main session to dispatch; report blocker to user |
 | API contract conflict between agents | Pause all agents; surface conflict to user before any agent proceeds |
 | Security finding in review | Pause PR flow; report finding to user immediately |
 | DB schema or API contract change | Pause for the required user checkpoint before the affected implementation proceeds |
@@ -177,10 +177,6 @@ Phase D — Per-PR-group review and scenario acceptance (after all paired Green 
   → the final group additionally completes Source-Verify, runs archive/write-back in the final PR,
     then runs `/pr-flow`; move the canonical spec only after final merge
 ```
-
-### Issue Reporting Protocol
-
-@.claude/rules/issue-reporting.md
 
 ## Quality Checklist
 
