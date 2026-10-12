@@ -42,8 +42,7 @@ New feature development must follow this process:
 
 ```
 /speckit.specify <feature description>  → specs/[module]/NNN-feature/spec.md
-/ui-ux-pro-max                          → design/prototype/pages/[module]/[page].html + design/system/ (recommended, after specify)
-/pencil-wireframe                       → design/wireframes/pages/[module]/[page].pen (optional, after prototype)
+/label-suite-design (prototype)         → design/prototype/pages/[module]/[page].html + design/system/ (recommended, after specify)
 /speckit.clarify                        → clarify spec ambiguities (optional)
 /opsx:propose                           → openspec/changes/<change>/ (proposal.md, tasks.md, design.md when needed, specs/ delta)
 /opsx:apply                             → execute implementation (TDD)
