@@ -170,13 +170,3 @@ import <PascalCaseId> from '@notes/components/<id>'
 > - `<id-3>` —— 嘗試 3 次後失敗：<錯誤節錄>
 
 不要把生成的元件原始碼整段貼回對話 —— 檔案已經在磁碟上了。
-
-## 參考資料
-
-以下是函式庫專屬樣式與較長範例的參考檔，需要時再讀取（非預載）：
-
-- `references/svg-patterns.md` —— 常見 SVG 示意圖樣式（時序、流程、架構）
-- `references/motion-patterns.md` —— 嵌入筆記中的 Framer Motion 範例
-- `references/recharts-patterns.md` —— recharts 組合技巧與常見陷阱
-
-僅在當前任務符合對應主題時才讀取上述檔案。
