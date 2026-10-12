@@ -326,11 +326,38 @@
       cursor: pointer;
       transition: opacity var(--dur-fast), transform var(--dur-fast);
     }
-    .btn:hover { transform: translateY(-1px); }
+    .btn:hover:not(:disabled) { transform: translateY(-1px); }
+    /* issue #1247: unified disabled look (FR-101 lock keeps disabled +
+       aria-disabled; this is the visual layer only). Declared after the
+       variant :hover rules so the :not(:disabled) guards below win cleanly. */
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
     .btn-cta { background: var(--color-cta); color: var(--color-on-cta); border-color: var(--color-cta); }
-    .btn-cta:hover { background: var(--color-cta-hover); border-color: var(--color-cta-hover); }
+    .btn-cta:hover:not(:disabled) { background: var(--color-cta-hover); border-color: var(--color-cta-hover); }
     .btn-outline { background: var(--color-white); color: var(--color-ink); border-color: var(--color-border); }
     .btn-outline[aria-pressed="true"] { background: var(--color-primary); color: var(--color-white); border-color: var(--color-primary); }
+
+    /* ── Annotator finalized lock (issue #1247, FR-101 / AC-2.27) ──
+       Generic over every engine-rendered control: chips carry inline
+       cursor/background, hence !important. Selected answer keeps its hue
+       but is desaturated and stays more prominent than unselected ones. */
+    .ws-finalized-notice {
+      display: flex; align-items: flex-start; gap: 10px;
+      border-color: var(--color-warning-border);
+      background: var(--color-warning-bg);
+      color: var(--color-warning);
+    }
+    .ws-finalized-notice svg { flex-shrink: 0; margin-top: 2px; }
+    .ws-finalized-notice-title { font-weight: 700; font-size: 14px; }
+    .ws-finalized-notice-desc { font-size: 13px; margin-top: 2px; }
+    #annotationPreview button:disabled,
+    #annotationPreview input:disabled,
+    #annotationPreview select:disabled,
+    #annotationPreview textarea:disabled {
+      opacity: 0.45; cursor: not-allowed !important; transform: none !important;
+    }
+    #annotationPreview button:disabled[aria-pressed="true"] {
+      opacity: 0.8; filter: saturate(0.5);
+    }
 
     /* ── Reviewer mode: row-level direct correction (FR-024L/FR-024L-1) ── */
     .review-row-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
@@ -668,6 +695,8 @@
     .autosave-dot.initial { background: var(--color-border); }
     .autosave-dot.dirty { background: var(--color-warning); }
     .autosave-dot.saved { background: var(--color-cta); }
+    /* issue #1247: finalized lock swaps the dot for a lock icon. */
+    .autosave-lock { width: 14px; height: 14px; flex-shrink: 0; color: var(--color-warning); }
     /* issue #563: margin-left:auto keeps the buttons on the right even when
        renderAutosaveStatus() hides .autosave-status for reviewers -- with a
        single flex child, space-between alone would pin them to the left. */
