@@ -1246,8 +1246,16 @@
     var nativeWorkspaceReplaceState = window.history.replaceState.bind(window.history);
     var workspaceReplaceStateSettleTimer = null;
     window.history.replaceState = function (replaceStateData, title, url) {
+      var hrefBeforeReplaceState = window.location.href;
       nativeWorkspaceReplaceState(replaceStateData, title, url);
       if (!workspaceTabBarReady) return;
+      // issue #1202: a replaceState that leaves the address bar byte-for-byte
+      // unchanged (task-detail's skeleton render re-issues the current URL)
+      // is not an in-page change. Syncing it would overwrite the stored entry
+      // with the page's canonical form (default `tab=overview` stripped)
+      // and break FR-007's "keep the pre-switch state" before the user did
+      // anything.
+      if (window.location.href === hrefBeforeReplaceState) return;
       if (workspaceReplaceStateSettleTimer) {
         clearTimeout(workspaceReplaceStateSettleTimer);
       }
