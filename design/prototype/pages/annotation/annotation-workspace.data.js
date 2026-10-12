@@ -591,12 +591,19 @@
      see every event FR-062 admitted for the review unit they are on.
      `viewer` is optional, but a missing viewer is masked like an annotator
      (issue #1266), never handed the unmasked merge. */
+  /* issue #1266: allowlist, not denylist -- an unknown or mistyped role
+   * string must not unlock the unmasked trail. 'system' is the internal
+   * derivation viewer (buildDryRunFeedbackRow). */
+  var UNMASKED_HISTORY_ROLES = { reviewer: true, project_leader: true, system: true };
+  function seesUnmaskedHistory(viewer) {
+    return !!(viewer && UNMASKED_HISTORY_ROLES[viewer.role] === true);
+  }
+
   function maskHistoryForViewer(events, viewer, preReveal) {
     /* issue #1266 fail closed (FR-062 / FR-090): a missing viewer or a viewer
      * without a role is treated as an annotator and masked; only an explicit
      * non-annotator role (reviewer, project_leader, ...) sees the full history. */
-    var role = viewer && viewer.role;
-    if (role && role !== 'annotator') return events;
+    if (seesUnmaskedHistory(viewer)) return events;
     var viewerId = viewer && viewer.actorId != null ? viewer.actorId : null;
     function isOwn(event) { return viewerId !== null && event.actorId === viewerId; }
     return events.filter(function (event) {
@@ -632,12 +639,13 @@
     var preReveal = false;
     /* issue #1266 fail closed: a viewer with no role counts as an annotator,
        and with no identity to look up a disclosed round it stays pre-reveal. */
-    var viewerRole = viewer && viewer.role;
-    if (!viewerRole && runType === 'dry_run') {
-      preReveal = true;
-    } else if (viewerRole === 'annotator' && runType === 'dry_run') {
-      var own = readSubmissionBucket(annotatorKey)[sampleId];
-      preReveal = disclosedTrialRound(taskId, own && own.trialRound) === null;
+    if (runType === 'dry_run' && !seesUnmaskedHistory(viewer)) {
+      if (viewer && viewer.role === 'annotator') {
+        var own = readSubmissionBucket(annotatorKey)[sampleId];
+        preReveal = disclosedTrialRound(taskId, own && own.trialRound) === null;
+      } else {
+        preReveal = true;
+      }
     }
     return maskHistoryForViewer(merged, viewer, preReveal);
   }
