@@ -20,10 +20,10 @@ Generate a detailed frontend specification for React + TypeScript components inc
 ```markdown
 # Frontend Specification: [ComponentName]
 
-**Component**: `frontend/src/components/[ComponentName].tsx`
-**Page**: `frontend/src/pages/[PageName].tsx`
+**Component**: `frontend/src/features/[module]/components/[ComponentName].tsx`
+**Page**: `frontend/src/features/[module]/pages/[PageName].tsx`
 **Date**: YYYY-MM-DD
-**Spec Reference**: specs/NNN-feature/spec.md
+**Spec Reference**: specs/[module]/NNN-feature/spec.md
 
 ---
 

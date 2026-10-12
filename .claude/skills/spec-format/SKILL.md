@@ -88,7 +88,7 @@ specs/[module]/[###-feature-name]/spec.md
 - **FR 未指明角色**：凡有 RoleGuard 限制，FR 必須明確寫出允許角色
 - **驗收情境缺少 AC ID**：條目只有清單序號 → 應加上 `**AC-N.N**：` 前綴，否則 changelog 與 traceability matrix 無法穩定引用
 - **重複定義共用常數**：`SYSTEM_ROLES`、`MOBILE_BP` 等已在 `specs/_shared/constants.md` 定義 → 應引用，不得在 spec 內重新定義
-- **流程圖含系統層 participant**：sequenceDiagram 出現 API/Service/DB → 該層級屬 plan.md「系統流程與資料流」，spec 流程圖只保留業務層（角色/產品介面/系統規則/資料來源）
+- **流程圖含系統層 participant**：sequenceDiagram 出現 API/Service/DB → 該層級屬 OpenSpec change 的 `design.md`（`/opsx:propose`），spec 流程圖只保留業務層（角色/產品介面/系統規則/資料來源）
 
 ---
 

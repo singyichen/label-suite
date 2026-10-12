@@ -142,14 +142,12 @@ class DatasetResponse(BaseModel):
 
 ## Constitution Compliance
 
+Review against the principles of `specs/_governance/constitution.md` that apply to the change, plus the matching domain constitution (`backend-constitution.md` / `frontend-constitution.md` / `testing-constitution.md` in the same directory). NON-NEGOTIABLE: II (Generalization-First), III (Data Fairness), XI (Security & Privacy Baseline), XV (Role-Based Access Control).
+
 | Principle | Status | Notes |
 |-----------|--------|-------|
-| I. Config-Driven | ✅ / ⚠️ / ❌ | |
-| II. Minimal Coupling | ✅ / ⚠️ / ❌ | |
-| III. Security First | ✅ / ⚠️ / ❌ | |
-| IV. KISS / YAGNI | ✅ / ⚠️ / ❌ | |
-| V. Test Coverage | ✅ / ⚠️ / ❌ | |
-| VI. English First | ✅ / ⚠️ / ❌ | |
+| [applicable principle, e.g. II. Generalization-First] | ✅ / ⚠️ / ❌ | |
+
 
 ---
 
@@ -158,8 +156,8 @@ class DatasetResponse(BaseModel):
 - [ ] All Critical issues resolved
 - [ ] All High issues resolved or explicitly deferred with rationale
 - [ ] Test-Set Leakage Audit: all checks pass
-- [ ] No new Chinese strings in non-README files
-- [ ] PR description references the spec (`specs/NNN-feature/`)
+- [ ] Language boundary respected (constitution VI): code, comments, and commit messages in English; Traditional Chinese only where VI and CLAUDE.md Communication permit or require it
+- [ ] PR description references the spec (`specs/[module]/NNN-feature/`)
 ```
 
 ## Severity Definitions

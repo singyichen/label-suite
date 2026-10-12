@@ -36,7 +36,7 @@ Generate well-structured User Stories following the SDD spec format, targeting N
 
 ## Acceptance Criteria
 
-### AC-01: [Happy Path]
+### AC-1.1: [Happy Path]
 ```
 Given [precondition]
 When [action]
@@ -44,14 +44,14 @@ Then [expected outcome]
   And [additional outcome]
 ```
 
-### AC-02: [Error / Edge Case]
+### AC-1.2: [Error / Edge Case]
 ```
 Given [precondition]
 When [invalid action or edge case]
 Then [expected error handling]
 ```
 
-### AC-03: [Security / Access Control]
+### AC-1.3: [Security / Access Control]
 ```
 Given I am authenticated as an Annotator
 When I attempt to [admin-only action]
@@ -66,7 +66,7 @@ Then I receive a 403 Forbidden response
 - [ ] All ACs implemented and verified (pytest / Playwright)
 - [ ] Test coverage ≥ target threshold for affected modules
 - [ ] Code reviewed and approved (`/code-review-deep` + `/pr-review`)
-- [ ] No Chinese strings introduced outside README
+- [ ] Language boundary respected (constitution VI and CLAUDE.md Communication)
 - [ ] Security checklist passed (test-set leakage check if applicable)
 - [ ] Spec checklist completed (`/speckit.checklist`)
 - [ ] PR merged to `main`

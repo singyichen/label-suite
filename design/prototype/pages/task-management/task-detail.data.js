@@ -1110,6 +1110,26 @@
           text: '甜點是隱藏亮點，尤其是烤布蕾，外層焦糖的脆度恰到好處。',
           gold_label: 'positive'
         }
+      ],
+      /* issue #1232: T014 is dry_run_in_progress, so its latest (and only)
+         trial round is still open. Without an explicit seed the page
+         synthesizes the round from live IAA and prints 'failed' with a
+         date. This seed pins it as in_progress (no verdict, no completion
+         date). agreement/annotators mirror computeIaaAlpha('T014',
+         'dry_run', ...) (0.59, 3 raters) so the live IAA stays visible;
+         issue-489-task-detail-iaa-derived.spec.ts fails if they drift. The 5 records are the full dataset, so the official pool is
+         unchanged. */
+      trialRounds: [
+        {
+          round: 1,
+          sampleCount: 5,
+          agreement: 0.59,
+          annotators: 3,
+          std: null,
+          result: 'in_progress',
+          usedSamples: 5,
+          date: ''
+        }
       ]
     },
 
