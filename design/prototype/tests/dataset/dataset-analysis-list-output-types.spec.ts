@@ -279,7 +279,7 @@ test.describe('Dataset analysis list output-type model', () => {
     const errorRow = page.locator('#taskTableBody tr.error-row');
     await expect(errorRow).toContainText('資料集分析載入失敗');
     await expect(errorRow.getByRole('button', { name: '重試' })).toBeVisible();
-    await expect(page.locator('#taskTableBody tr.empty-row')).toHaveCount(0);
+    await expect(page.locator('#taskTableBody tr.empty-state-row')).toHaveCount(0);
     await expect(errorRow).not.toContainText('尚無可分析的任務');
     await expect(page.locator('#paginationBar')).toBeHidden();
   });
