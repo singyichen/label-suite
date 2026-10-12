@@ -182,11 +182,18 @@ async function openMemberManagement(
   progressStage?: 'official',
 ): Promise<void> {
   const stageQuery = progressStage ? `&ap_stage=${progressStage}` : '';
-  await page.goto(`${TASK_DETAIL_URL}?task_id=${taskId}${stageQuery}`);
+  // Deep-link straight to the tab instead of loading the bare URL and clicking
+  // it. This spec revisits one task many times in a single browser session, so
+  // the shared workspace tab bar already holds the `tab=member-management`
+  // entry from an earlier visit; a click that rewrites the bare URL onto that
+  // key is a dedupe collision and the page `location.replace()`s itself
+  // (sidebar.js, FR-007/AC-3.5) -- a full reload that races the assertion.
+  await page.goto(
+    `${TASK_DETAIL_URL}?task_id=${taskId}&tab=member-management${stageQuery}`,
+  );
   await page
     .locator('#workLogPanel')
     .waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
-  await page.locator('#tabMemberManagement').click();
   await expect(page.locator('#memberManagementPanel')).not.toHaveClass(/hidden/);
 }
 

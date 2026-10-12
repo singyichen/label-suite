@@ -366,13 +366,16 @@ const CONTRAST_CONTRACT: ContrastPageContract[] = [
   {
     scenario:
       'task-management/task-detail.html — .btn-cta and member pagination hold their contrast floor in both themes',
-    url: TASK_DETAIL_URL,
-    // The member-management pagination lives behind a tab click and the
-    // panels arrive as fetched partials — wait for the last partial before
-    // interacting, matching task-detail-member-management-add.spec.ts.
+    // Deep-link to the member-management tab rather than clicking it: the
+    // contract loads this page once per theme in one browser session, so the
+    // second load's click rewrites the bare URL onto the first load's stored
+    // workspace-tab key and the page reloads itself (sidebar.js dedupe
+    // collision, FR-007/AC-3.5) -- the reload destroys the measuring context.
+    url: `${TASK_DETAIL_URL}?tab=member-management`,
+    // The panels arrive as fetched partials — wait for the last partial
+    // before asserting, matching task-detail-member-management-add.spec.ts.
     reveal: async (page) => {
       await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
-      await page.locator('#tabMemberManagement').click();
       await expect(page.locator('#memberManagementPanel')).not.toHaveClass(/hidden/);
     },
     rows: [
