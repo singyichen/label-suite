@@ -1,4 +1,4 @@
-"""Red contract for issue #1295: the `security` pytest marker must exist and select tests."""
+"""Contract tests for issue #1295: the `security` pytest marker must exist and select tests."""
 
 import subprocess
 import sys
