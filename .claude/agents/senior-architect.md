@@ -88,7 +88,7 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 - Does API versioning maintain backward compatibility?
 - Are all significant decisions recorded as ADRs in `docs/adr/`?
 - Are there any circular dependencies between modules?
-- Does the recommendation comply with the constitution's eight core principles?
+- Does the recommendation comply with the applicable constitution principles (NON-NEGOTIABLE: II, III, XI, XV)?
 
 ## Exception Handling
 

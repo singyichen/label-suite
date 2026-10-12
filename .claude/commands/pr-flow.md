@@ -179,7 +179,7 @@ Runs **after all review findings are resolved and before merge**. Do NOT start t
 - Withdrawn by a maintainer ruling → leave it `- [ ]`, append `（已撤回：<ruling link>）`; never tick a withdrawn item as done.
 - Not done and not withdrawn → do not merge. Either finish it in this PR, or (for `Part of #N` PRs only) confirm the item is owned by a later PR and say which.
 
-Write the edited body back with `gh issue edit <N> --body-file <file>`. A `Closes #N` PR merges only when no item is left unticked without a withdrawal note — the issue closes on merge, so an open box afterwards is a requirement nobody tracks (#1134 and #1190 merged with every box still open).
+Write the edited body back with `gh issue edit <N> --body-file <file>`. A `Closes #N` PR merges only when no item is left unticked without a withdrawal note — the issue closes on merge, so an open box afterwards is a requirement nobody tracks.
 
 ```bash
 # Merge the PR

@@ -25,8 +25,8 @@
   /* ── Core palette (light) ─────────────────────────────────── */
   --color-primary:          #6366F1;
   --color-secondary:        #818CF8;
-  --color-cta:              #10B981;
-  --color-cta-hover:        #059669;
+  --color-cta:              #047857;
+  --color-cta-hover:        #065F46;
   --color-cta-on:           #FFFFFF;   /* text on CTA fills — dark mode uses slate-900 per MASTER.md §CTA button contrast */
   --color-surface:          #F5F3FF;   /* page bg */
   --color-white:            #FFFFFF;   /* card/panel bg — name kept for compatibility; goes dark in dark theme */
@@ -177,8 +177,8 @@
 :root[data-theme="light"] {
   --color-primary:          #6366F1;
   --color-secondary:        #818CF8;
-  --color-cta:              #10B981;
-  --color-cta-hover:        #059669;
+  --color-cta:              #047857;
+  --color-cta-hover:        #065F46;
   --color-cta-on:           #FFFFFF;
   --color-surface:          #F5F3FF;
   --color-white:            #FFFFFF;

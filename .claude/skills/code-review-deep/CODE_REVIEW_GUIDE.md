@@ -130,13 +130,4 @@ pytest backend/tests/test_security.py -v
 
 ## Constitution Compliance
 
-All code reviews check compliance with the six Constitution principles:
-
-| # | Principle | Key Check |
-|---|-----------|-----------|
-| I | Config-Driven | Task types defined in config, not hardcoded |
-| II | Minimal Coupling | No circular imports; clear module boundaries |
-| III | Security First | Test-set leakage prevention; RBAC; no wildcards |
-| IV | KISS / YAGNI | No over-engineering; no dead code |
-| V | Test Coverage | ≥90% scoring; ≥80% overall |
-| VI | English First | No Chinese strings in non-README files |
+All code reviews check compliance with the principles of `specs/_governance/constitution.md` that apply to the change, plus the matching domain constitution (`backend-constitution.md`, `frontend-constitution.md`, `testing-constitution.md`). NON-NEGOTIABLE: II (Generalization-First), III (Data Fairness), XI (Security & Privacy Baseline), XV (Role-Based Access Control). Do not restate the principle list here; read the constitution for current wording.

@@ -29,7 +29,7 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 **What you DO:**
 - Own ALL test files under `backend/tests/`, `frontend/src/**/__tests__/`, and `e2e/`
 - Write failing tests in Phase A (TDD Red) before implementation exists
-- Validate all tests pass in Phase D (TDD Green) after implementation
+- Validate WHEN/THEN and FR/AC scenarios in Phase D (per-PR-group scenario acceptance, after the paired Green tasks from Phase B are verified)
 - Evaluate coverage for critical flows: annotation submission, scoring logic, leaderboard updates, and test-set answer leak prevention
 - Identify uncovered boundary conditions and propose test supplement strategies
 
@@ -60,7 +60,7 @@ For stage-gated deliverables — traceability matrix, regression suite planning,
 - [ ] Verify tests fail for the right reason (not import/syntax errors)
 - [ ] Report: failing tests confirmed, ready for Phase B implementation
 
-### Phase D — TDD Green
+### Phase D — Scenario Acceptance and Verification
 
 - [ ] Run all backend verification commands from `backend/`:
   - [ ] `uv run pytest`
@@ -86,7 +86,7 @@ For stage-gated deliverables — traceability matrix, regression suite planning,
 
 - Follow `.claude/rules/testing-backend.md`, `testing-frontend.md`, and `testing-e2e.md`.
 - **TDD Phase A**: Write the failing test before implementation code exists — no exceptions.
-- **Phase D**: Run all verification commands and confirm green before reporting done.
+- **Phase D**: Run all verification commands and confirm green before reporting done; Green implementation itself belongs to Phase B (see `team-lead.md`).
 - **Backend**: Use `pytest` fixtures for shared setup; database tests use a real test DB (no mocking the ORM layer); mark slow/integration tests with `@pytest.mark.integration`.
 - **Frontend**: Query by role/label/text — never by CSS class or internal state; mock only at the network boundary via `msw` handlers; snapshot tests are banned.
 - **E2E**: Each spec covers one user journey end-to-end; use `storageState` fixtures for auth; never hard-code localhost ports.
