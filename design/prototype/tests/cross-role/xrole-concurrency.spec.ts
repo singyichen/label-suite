@@ -87,7 +87,7 @@ async function readSampleStatus(page: Page, annotatorId: string): Promise<string
  * reflects the disable, and the annotator's submission is durable. */
 test('a PL disabling a member does not clobber an annotator submission landing at the same time (CONC-02)', async ({ page, context }) => {
   const pl = page;
-  await pl.goto('/pages/task-management/task-detail.html?task_id=T001');
+  await pl.goto('/pages/task-management/task-detail.html?task_role=project_leader&task_id=T001');
   await pl.locator('#workLogPanel').waitFor({ state: 'attached', timeout: 15000 });
   await pl.locator('#tabMemberManagement').click();
   await expect(pl.locator('#memberManagementPanel')).not.toHaveClass(/hidden/);

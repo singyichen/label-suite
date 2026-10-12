@@ -24,7 +24,7 @@ const PANEL_LOAD_TIMEOUT = 15000;
 
 test.describe('Task detail annotation results for T014-T016 (issue #393)', () => {
   test('T014 (dry-run quorum demo) shows five result rows, not the empty state', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T014&tab=annotation-results`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T014&tab=annotation-results`);
 
     await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
     await expect(page.locator('#arEmptyState')).toBeHidden();
@@ -38,7 +38,7 @@ test.describe('Task detail annotation results for T014-T016 (issue #393)', () =>
      ofm-02-reviewer-accepts-a, T016's simplest still-finalized single-owner
      row (reviewer accepts the annotator's value -> finalizes on submit). */
   test('T016 (single-owner relay demo) shows a finalized row for the reviewer-accepted sample', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T016&tab=annotation-results`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T016&tab=annotation-results`);
 
     await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
     await expect(page.locator('.ar-expand-btn')).toHaveCount(5);
@@ -54,7 +54,7 @@ test.describe('Task detail annotation results for T014-T016 (issue #393)', () =>
      row T017's oft-01-final-exception was migrated into verbatim
      (arbitration rejects both sides -> still disputed). */
   test('T016 (single-owner relay demo) shows a disputed row for the arbitration-rejected sample', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T016&tab=annotation-results`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T016&tab=annotation-results`);
 
     await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
     await expect(page.locator('.ar-expand-btn')).toHaveCount(5);

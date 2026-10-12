@@ -30,7 +30,7 @@ const SINGLE_LINE_MAX_HEIGHT = 36;
 const FEP_ROW_SAMPLE_ID = 'ofm-05-final-exception';
 
 async function openAnnotationProgress(page: Page, query: string) {
-  await page.goto(TASK_DETAIL_URL + query);
+  await page.goto(TASK_DETAIL_URL + query + (/role=/.test(query) ? "" : "&task_role=project_leader"));
   await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
   await expect(page.locator('#annotationProgressPanel')).not.toHaveClass(/hidden/);
 }

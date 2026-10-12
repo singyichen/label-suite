@@ -21,7 +21,7 @@ const REVIEW_STATUS_OPTION_VALUES = ['all', 'pending', 'disputed', 'finalized'];
 
 test.describe('Task detail annotation results review history', () => {
   test('renders three-state review badges and a timeline line only for reviewed entries', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T001&tab=annotation-results`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T001&tab=annotation-results`);
     await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 
     const firstRow = page.locator('#arResultTableBody tr.ar-summary-row').filter({ hasText: 'CLS-001' });
@@ -44,7 +44,7 @@ test.describe('Task detail annotation results review history', () => {
   });
 
   test('shows corrected result on modified review lines', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T001&tab=annotation-results`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T001&tab=annotation-results`);
     await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 
     await page.locator('#arResultTableBody tr.ar-summary-row').filter({ hasText: 'CLS-002' }).click();
@@ -62,7 +62,7 @@ test.describe('Task detail annotation results review history', () => {
   });
 
   test('renders arbitration line after reviewer line for finalized entries', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T001&tab=annotation-results`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T001&tab=annotation-results`);
     await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 
     await page.locator('#arResultTableBody tr.ar-summary-row').filter({ hasText: 'CLS-004' }).click();
@@ -81,7 +81,7 @@ test.describe('Task detail annotation results review history', () => {
   });
 
   test('renders every review decision line for disputed entries', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T001&tab=annotation-results`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T001&tab=annotation-results`);
     await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 
     await page.locator('#arResultTableBody tr.ar-summary-row').filter({ hasText: 'CLS-006' }).click();
@@ -98,7 +98,7 @@ test.describe('Task detail annotation results review history', () => {
   });
 
   test('filters samples by reviewer including arbitration participation', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T001&tab=annotation-results`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T001&tab=annotation-results`);
     await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 
     const reviewerSelect = page.locator('#arReviewerSelect');
@@ -114,7 +114,7 @@ test.describe('Task detail annotation results review history', () => {
   });
 
   test('filters samples by three-state review status with constant-derived options', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T001&tab=annotation-results`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T001&tab=annotation-results`);
     await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 
     const statusSelect = page.locator('#arReviewStatusSelect');
@@ -136,7 +136,7 @@ test.describe('Task detail annotation results review history', () => {
   });
 
   test('combines reviewer and review-status filters with AND semantics', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T001&tab=annotation-results`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T001&tab=annotation-results`);
     await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 
     await page.locator('#arReviewerSelect').selectOption('wangxm88');
@@ -156,7 +156,7 @@ test.describe('Task detail annotation results review history', () => {
     await page.addInitScript(() => {
       window.localStorage.setItem('labelsuite.lang', 'en');
     });
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T001&tab=annotation-results`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T001&tab=annotation-results`);
     await expect(page.locator('html')).toHaveAttribute('lang', 'en', { timeout: PANEL_LOAD_TIMEOUT });
     await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 
@@ -175,7 +175,7 @@ test.describe('Task detail annotation results review history', () => {
   });
 
   test('drops the legacy three-state review vocabulary', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T001&tab=annotation-results`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T001&tab=annotation-results`);
     await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 
     await page.locator('#arResultTableBody tr.ar-summary-row').filter({ hasText: 'CLS-001' }).click();

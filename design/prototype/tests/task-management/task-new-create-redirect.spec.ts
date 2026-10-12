@@ -16,6 +16,6 @@ test.describe('Task new redirect', () => {
       submitTask();
     });
 
-    await expect(page).toHaveURL(/\/pages\/task-management\/task-detail\.html\?task_id=[^&]+$/);
+    await expect(page).toHaveURL(/\/pages\/task-management\/task-detail\.html\?task_id=[^&]+&task_role=project_leader$/);
   });
 });

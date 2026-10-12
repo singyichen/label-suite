@@ -67,7 +67,7 @@ const TASK_LIST_URL = '/pages/task-management/task-list.html';
 const DATASET_LIST_URL = '/pages/dataset/dataset-analysis-list.html';
 const USER_MANAGEMENT_URL = '/pages/admin/user-management.html';
 const TASK_NEW_URL = '/pages/task-management/task-new.html';
-const TASK_DETAIL_T001_R1_URL = '/pages/task-management/task-detail.html?task_id=T001&ap_stage=r1';
+const TASK_DETAIL_T001_R1_URL = '/pages/task-management/task-detail.html?task_role=project_leader&task_id=T001&ap_stage=r1';
 
 // See the file header comment for how these two widths were derived.
 const OVERFLOW_VIEWPORT = { width: 900, height: 900 };

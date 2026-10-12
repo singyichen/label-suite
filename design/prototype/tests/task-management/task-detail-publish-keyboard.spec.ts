@@ -5,7 +5,7 @@
 import { test, expect } from '../fixtures';
 import { openGateSatisfiedT016 } from './_completion-gate-helpers';
 
-const TASK_DETAIL_URL = '/pages/task-management/task-detail.html?task_id=T001';
+const TASK_DETAIL_URL = '/pages/task-management/task-detail.html?task_role=project_leader&task_id=T001';
 
 /* w6-resilience-a11y.md A11Y-03 (positive control group): the high-impact
  * publish actions (發布試標 / 發布正式標記 / 標記完成) are native

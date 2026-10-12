@@ -65,7 +65,7 @@ const ANNOTATION_WORKSPACE_URL = buildWorkspaceUrl({
 // ellipsizes against. ap_stage=official is always a valid URL_VIEW_STATE
 // value (task-detail.html getProgressStageValues()), independent of which
 // trial rounds a given task happens to have.
-const LONG_TITLE_URL = '/pages/task-management/task-detail.html?task_id=T016&ap_stage=official';
+const LONG_TITLE_URL = '/pages/task-management/task-detail.html?task_role=project_leader&task_id=T016&ap_stage=official';
 const LONG_TITLE_STAGE_TEXT_ZH = '正式';
 const LONG_TITLE_TASK_NAME_ZH = '審核流程示範：正式標記（輪派、仲裁與最終例外）';
 const LONG_TITLE_LABEL_ZH = LONG_TITLE_STAGE_TEXT_ZH + ' ' + LONG_TITLE_TASK_NAME_ZH;

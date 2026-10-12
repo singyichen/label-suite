@@ -5,7 +5,7 @@
 import { test, expect } from '../fixtures';
 import { openSettingsSection } from './_task-detail-settings-helpers';
 
-const TASK_DETAIL_URL = '/pages/task-management/task-detail.html?task_id=T001';
+const TASK_DETAIL_URL = '/pages/task-management/task-detail.html?task_role=project_leader&task_id=T001';
 
 test.describe('Task detail overview edit state', () => {
   test('hides draft-only hint text and uses simplified edit mode layout', async ({ page }) => {

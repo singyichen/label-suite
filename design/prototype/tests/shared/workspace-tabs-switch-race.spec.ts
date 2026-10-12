@@ -24,8 +24,8 @@
 import { test, expect } from '../fixtures';
 import { workspaceTabs, readWorkspaceTabState, setDesktopViewport } from './_workspace-tabs-helpers';
 
-const TAB_A_URL = '/pages/task-management/task-detail.html?task_id=T001&tab=overview&ap_stage=r1';
-const TAB_B_URL = '/pages/task-management/task-detail.html?task_id=T002&tab=overview&ap_stage=r1';
+const TAB_A_URL = '/pages/task-management/task-detail.html?task_role=project_leader&task_id=T001&tab=overview&ap_stage=r1';
+const TAB_B_URL = '/pages/task-management/task-detail.html?task_role=project_leader&task_id=T002&tab=overview&ap_stage=r1';
 const DESTINATION_DELAY_MS = 1500;
 const LATE_REPLACE_STATE_DELAY_MS = 200;
 const SETTLE_WINDOW_MS = 300;

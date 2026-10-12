@@ -31,8 +31,8 @@ import { test, expect } from '../fixtures';
 import type { Locator, Page } from '@playwright/test';
 import { workspaceTabs, setDesktopViewport, TAB_STORAGE_KEY, waitForTaskDetailReady } from './_workspace-tabs-helpers';
 
-const TASK_DETAIL_T001_R1_URL = '/pages/task-management/task-detail.html?task_id=T001&ap_stage=r1';
-const TASK_DETAIL_T002_R1_URL = '/pages/task-management/task-detail.html?task_id=T002&ap_stage=r1';
+const TASK_DETAIL_T001_R1_URL = '/pages/task-management/task-detail.html?task_role=project_leader&task_id=T001&ap_stage=r1';
+const TASK_DETAIL_T002_R1_URL = '/pages/task-management/task-detail.html?task_role=project_leader&task_id=T002&ap_stage=r1';
 const PROFILE_URL = '/pages/account/profile.html';
 
 // task-list.data.js (grep-verified): T001 / T002 names.
@@ -187,8 +187,8 @@ test.describe('Workspace tabs — FR-010/AC-1.6 safe fallback when a task name c
     const seededState = {
       tabs: [
         {
-          dedupeKey: '/pages/task-management/task-detail.html?ap_stage=r1&task_id=T901',
-          url: '/pages/task-management/task-detail.html?task_id=T901&ap_stage=r1',
+          dedupeKey: '/pages/task-management/task-detail.html?task_role=project_leader&ap_stage=r1&task_id=T901',
+          url: '/pages/task-management/task-detail.html?task_role=project_leader&task_id=T901&ap_stage=r1',
           pageKind: 'task-detail',
           taskId: 'T901',
           mode: null,
@@ -197,8 +197,8 @@ test.describe('Workspace tabs — FR-010/AC-1.6 safe fallback when a task name c
           lastActiveAt: 1,
         },
         {
-          dedupeKey: '/pages/task-management/task-detail.html?ap_stage=r1&task_id=T902',
-          url: '/pages/task-management/task-detail.html?task_id=T902&ap_stage=r1',
+          dedupeKey: '/pages/task-management/task-detail.html?task_role=project_leader&ap_stage=r1&task_id=T902',
+          url: '/pages/task-management/task-detail.html?task_role=project_leader&task_id=T902&ap_stage=r1',
           pageKind: 'task-detail',
           taskId: 'T902',
           mode: null,

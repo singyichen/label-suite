@@ -21,7 +21,7 @@ const PANEL_LOAD_TIMEOUT = 15000;
 
 test.describe('Task detail annotation-results review status is three-state (issue #807)', () => {
   test('review status filter dropdown offers exactly 全部 + 三態, not five legacy states', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T001&tab=annotation-results`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T001&tab=annotation-results`);
     await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 
     const select = page.locator('#arReviewStatusSelect');
@@ -40,7 +40,7 @@ test.describe('Task detail annotation-results review status is three-state (issu
     // CLS-001 (T001, first summary row): kioleemg12's annotation was reviewed
     // by a single reviewer with decision 'approved' and no arbitration --
     // under the single-relay model a lone approve closes the unit outright.
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T001&tab=annotation-results`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T001&tab=annotation-results`);
     await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 
     const firstRow = page.locator('#arResultTableBody tr.ar-summary-row').first();
@@ -57,7 +57,7 @@ test.describe('Task detail annotation-results review status is three-state (issu
     // reviewed by a single reviewer with decision 'modified' and no
     // arbitration -- an unresolved reviewer/annotator disagreement, same
     // pattern as the already-migrated ofs-02-modified-dispute seed.
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T001&tab=annotation-results`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T001&tab=annotation-results`);
     await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 
     const secondRow = page.locator('#arResultTableBody tr.ar-summary-row').nth(1);
@@ -76,7 +76,7 @@ test.describe('Task detail annotation-results review status is three-state (issu
     //   ofm-02-reviewer-accepts-a -> 已定稿, ofm-03-awaiting-arbitration -> 爭議中.
     // task-detail.html keeps its own REVIEW_FLOW_UNITS copy for the
     // annotation-results tab and must agree.
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T016&tab=annotation-results`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T016&tab=annotation-results`);
     await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 
     const approvedInterimRow = page.locator('#arResultTableBody tr.ar-summary-row').filter({ hasText: 'ofm-02-reviewer-accepts-a' });

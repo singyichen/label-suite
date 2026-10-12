@@ -32,7 +32,7 @@ async function openMemberTab(page: Page) {
 /* Sum of the 已指派 column across every reviewer row -- the whole workload
    this task hands out, which is what issue #396 needs to differ per task. */
 async function totalAssigned(page: Page, taskId: string): Promise<number> {
-  await page.goto(`${TASK_DETAIL_URL}?task_id=${taskId}`);
+  await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${taskId}`);
   await openMemberTab(page);
   const cells = await page.locator('#reviewAssignmentBody tr td:nth-child(2)').allTextContents();
   return cells.reduce((sum, cell) => sum + Number(cell), 0);
@@ -49,7 +49,7 @@ test.describe('Task detail review assignment workload is scoped per task (issue 
   });
 
   test('T014 (5 dataset records) shows a workload scale consistent with its own data, not the shared 40-item figure', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T014`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T014`);
     await openMemberTab(page);
 
     /* issue #617 put the four spec 015 roster reviewers in `reviewer_ids`,

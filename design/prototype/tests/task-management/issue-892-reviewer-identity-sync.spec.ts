@@ -9,7 +9,7 @@ import { test, expect } from '../fixtures';
 import type { Page } from '@playwright/test';
 import { buildListUrl, patchDataFile } from '../annotation/_workspace-helpers';
 
-const DETAIL_URL = '/pages/task-management/task-detail.html?task_id=T016&tab=annotation-results';
+const DETAIL_URL = '/pages/task-management/task-detail.html?task_role=project_leader&task_id=T016&tab=annotation-results';
 const SAMPLES = [
   { id: 'ofm-01-reviewer-corrects-b', reviewer: '王小明', arbitrated: true },
   { id: 'ofm-02-reviewer-accepts-a', reviewer: '李大華', arbitrated: false },
@@ -148,7 +148,7 @@ async function openMultiLabelFixture(page: Page): Promise<void> {
         value: items[0].reviewerValues.reviewer_wang, reason: 'Adopt correction' }]);
   `);
 
-  const response = await page.goto(`/pages/task-management/task-detail.html?task_id=${taskId}&tab=annotation-results`);
+  const response = await page.goto(`/pages/task-management/task-detail.html?task_role=project_leader&task_id=${taskId}&tab=annotation-results`);
   expect(response?.status()).toBe(200);
   await expect(page.locator('#arTableSection')).toBeVisible({ timeout: 15000 });
   const summary = page.locator('#arResultTableBody tr.ar-summary-row').filter({ hasText: sampleId });
@@ -220,7 +220,7 @@ async function openMixedOutputFixture(page: Page): Promise<void> {
       }));
   `);
 
-  const response = await page.goto(`/pages/task-management/task-detail.html?task_id=${taskId}&tab=annotation-results`);
+  const response = await page.goto(`/pages/task-management/task-detail.html?task_role=project_leader&task_id=${taskId}&tab=annotation-results`);
   expect(response?.status()).toBe(200);
   await expect(page.locator('#arTableSection')).toBeVisible({ timeout: 15000 });
   const summary = page.locator('#arResultTableBody tr.ar-summary-row').filter({ hasText: sampleId });

@@ -28,8 +28,8 @@ const DASHBOARD_URL = '/pages/dashboard/dashboard.html';
 // seed (task-detail.html's DEFAULT_ANNOTATION_PROGRESS, since T001 has no
 // ANNOTATION_PROGRESS_BY_TASK override) -- both ap_stage values below are
 // valid per task-detail.html's own URL_VIEW_STATE validator.
-const TASK_DETAIL_R1_URL = '/pages/task-management/task-detail.html?task_id=T001&ap_stage=r1';
-const TASK_DETAIL_OFFICIAL_URL = '/pages/task-management/task-detail.html?task_id=T001&ap_stage=official';
+const TASK_DETAIL_R1_URL = '/pages/task-management/task-detail.html?task_role=project_leader&task_id=T001&ap_stage=r1';
+const TASK_DETAIL_OFFICIAL_URL = '/pages/task-management/task-detail.html?task_role=project_leader&task_id=T001&ap_stage=official';
 const TASK_NAME_ZH = '醫療文本情感分類';
 
 test.describe('Workspace tabs — AC-1.5 closing the active tab moves focus', () => {

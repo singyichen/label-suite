@@ -11,7 +11,7 @@ import { test, expect } from '../fixtures';
    reviewer data. Prototype validates seed-driven rendering, per-role dash
    display, summary math, and bilingual vocabulary only. */
 
-const WORK_LOG_URL = '/pages/task-management/task-detail.html?task_id=T001&tab=work-log';
+const WORK_LOG_URL = '/pages/task-management/task-detail.html?task_role=project_leader&task_id=T001&tab=work-log';
 const PANEL_LOAD_TIMEOUT = 15000;
 
 /* Column order: date | member | role | login/logout | online | duration

@@ -15,7 +15,7 @@ import { openSettingsSection } from './_task-detail-settings-helpers';
 
 test.describe('Risk confirm modal keyboard focus management (A11Y-02, #riskModal)', () => {
   async function openRiskModal(page: import('@playwright/test').Page) {
-    await page.goto('/pages/task-management/task-detail.html?task_id=T001&status=draft');
+    await page.goto('/pages/task-management/task-detail.html?task_role=project_leader&task_id=T001&status=draft');
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: 15000 });
     /* The page re-renders the overview (replacing #publishDryRunBtn) once its
      * loading skeleton timer fires. Under parallel load that timer can fire after

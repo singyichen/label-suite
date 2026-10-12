@@ -8,7 +8,7 @@ import type { Page } from '@playwright/test';
 import { patchDataFile } from '../annotation/_workspace-helpers';
 
 const DASHBOARD_URL = '/pages/dashboard/dashboard.html?scenario=reviewer';
-const DETAIL_URL = '/pages/task-management/task-detail.html?task_id=T016&tab=annotation-progress&ap_stage=official';
+const DETAIL_URL = '/pages/task-management/task-detail.html?task_role=project_leader&task_id=T016&tab=annotation-progress&ap_stage=official';
 
 type Language = 'zh' | 'en';
 
@@ -175,7 +175,7 @@ for (const language of ['zh', 'en'] as const) {
       profiles.T886M = profile;
     `);
 
-    const url = '/pages/task-management/task-detail.html?task_id=T886M&tab=annotation-progress&ap_stage=official';
+    const url = '/pages/task-management/task-detail.html?task_role=project_leader&task_id=T886M&tab=annotation-progress&ap_stage=official';
     const response = await page.goto(url);
     expect(response?.status()).toBe(200);
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: 15000 });

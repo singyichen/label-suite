@@ -375,7 +375,7 @@ test.describe('issue #811: task-detail demo-guide sentences decision name (task-
 
   for (const taskId of TASK_IDS) {
     test(`zh: ${taskId} reviewer guideline drops 無法判定 for 無法裁決`, async ({ page }) => {
-      await page.goto(`${TASK_DETAIL_URL}?task_id=${taskId}`);
+      await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${taskId}`);
 
       const summary = page.locator('#valueReviewerGuidelineContentSummary');
       // design.md's own seed content always includes 審核判準 (issue #405) --

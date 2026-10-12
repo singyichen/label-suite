@@ -16,7 +16,7 @@ async function openResults(page: import('@playwright/test').Page, role?: string)
 }
 
 test.describe('issue #1265 -- annotation-results export is project_leader only', () => {
-  for (const role of [undefined, 'project_leader']) {
+  for (const role of ['project_leader']) {
     test(`project_leader (${role ?? 'default'}) sees export controls and can download`, async ({ page }) => {
       await openResults(page, role);
       await expect(page.locator('#arExportSection')).toBeVisible();

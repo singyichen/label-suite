@@ -3426,8 +3426,8 @@
       }
     ],
     exportHistory: [
-      { exportedAt: '2026-05-01 14:32', exportType: 'full', stage: 'official', count: 1240, scope: '__all__', exportedBy: 'Mandy', format: 'JSON' },
-      { exportedAt: '2026-05-01 10:15', exportType: 'filtered', stage: 'dry', count: 320, scope: 'ASP-001~010', exportedBy: 'Mandy', format: 'JSON-MIN' },
+      { exportedAt: '2026-05-01 14:32', exportType: 'full', stage: 'official', count: 1240, scope: '__all__', exportedBy: 'Mandy Chen', format: 'JSON' },
+      { exportedAt: '2026-05-01 10:15', exportType: 'filtered', stage: 'dry', count: 320, scope: 'ASP-001~010', exportedBy: 'Mandy Chen', format: 'JSON-MIN' },
       { exportedAt: '2026-04-30 18:20', exportType: 'full', stage: 'all', count: 1560, scope: '__all__', exportedBy: 'System', format: 'JSON' }
     ]
   };
@@ -3693,7 +3693,7 @@
 
   var state = {
     lang: 'zh',
-    taskRole: 'project_leader',
+    taskRole: 'annotator',
     activeTab: 'overview',
     settingsSection: 'basic',
     activeRunControlTab: 'execution',
@@ -5057,12 +5057,14 @@ function interpolate(template, payload) {
 
   function parseRole() {
     var params = new URLSearchParams(window.location.search);
-    var role = params.get('task_role') || params.get('role') || 'project_leader';
+    var role = params.get('task_role') || params.get('role') || 'annotator';
     var tab = params.get('tab') || 'overview';
     var urlStatus = params.get('status');
     var taskId = params.get('task_id');
+    /* issue #1266 fail closed: a missing or unknown role is the lowest
+       task role, never project_leader. */
     if (role !== 'project_leader' && role !== 'reviewer' && role !== 'annotator') {
-      role = 'project_leader';
+      role = 'annotator';
     }
     state.taskRole = role;
     resetTaskData(taskId && taskId.trim() ? taskId.trim() : '');
@@ -10386,6 +10388,7 @@ function getTaskTypeLabel() {
      renderArExportHistory) only wires this up when
      isArExportSnapshotComplete() is true. */
   function redownloadArExportRecord(record) {
+    if (!canExportResults()) return;
     var snapshot = record.conditionsSnapshot;
     var conditions = {
       runStage: snapshot.run_stage,

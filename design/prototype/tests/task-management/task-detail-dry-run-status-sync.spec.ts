@@ -32,7 +32,7 @@ test('moves task status to waiting IAA confirmation only after all 5 dry-run sam
 
   /* #1120 G4a: submission alone no longer completes the trial. Half 1: every sample submitted
      but review outstanding -> the task stays in progress. */
-  await page.goto(`${TASK_DETAIL_URL}?task_id=T001&status=dry_run_in_progress`);
+  await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T001&status=dry_run_in_progress`);
   await expect(page.locator('#statusBadge')).toBeAttached({ timeout: PANEL_LOAD_TIMEOUT });
   await expectStillInProgress(page, 'T001');
 

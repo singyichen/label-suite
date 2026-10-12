@@ -76,7 +76,7 @@ async function forceEmptyRoster(page: Page, taskId = TASK) {
 }
 
 async function openProgressTab(page: Page, taskId = TASK) {
-  await page.goto(`${TASK_DETAIL_URL}?task_id=${taskId}`);
+  await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${taskId}`);
   await expect(page.locator('#statusBadge')).toBeAttached();
   await page.locator('#tabAnnotationProgress').click();
   await expect(page.locator('#annotationProgressPanel')).not.toHaveClass(/hidden/);
@@ -85,7 +85,7 @@ async function openProgressTab(page: Page, taskId = TASK) {
 /** Reviews done (so only disputes remain), progress flag written, reload, then open the progress tab. */
 async function openReviewedWithEmptyRoster(page: Page) {
   await forceEmptyRoster(page);
-  await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK}`);
+  await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${TASK}`);
   await expect(page.locator('#statusBadge')).toBeAttached();
   expect(
     await page.evaluate((t) => (window as any).LabelSuiteAnnotationWorkspaceData.taskArbiterRoster(t), TASK),
@@ -419,7 +419,7 @@ test.describe('Empty arbiter roster publish warning (FR-010t revision)', () => {
   async function openPublishWarning(page: Page, language: 'zh' | 'en') {
     // issue #1146: T001 seeds arbiterIds explicitly, so declare it empty here.
     await forceEmptyRoster(page, 'T001');
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T001&status=draft`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T001&status=draft`);
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: 15000 });
     if (language === 'en') await page.getByTestId('lang-toggle').click();
     await page.locator('#tabOverview').click();
@@ -599,7 +599,7 @@ test.describe('Review-settings save keeps both roster sources in sync (review M1
   const OPTIONS = '#arbiterOptionList .arbiter-option';
 
   async function openEdit(page: Page, taskId = 'T013') {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=${taskId}`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${taskId}`);
     await expect(page.locator('#statusBadge')).toBeAttached();
     await openSettingsSection(page, 'review');
     await page.locator('#reviewEditBtn').click();

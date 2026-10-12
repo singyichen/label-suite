@@ -260,6 +260,9 @@ test.describe('Task detail profile mapping', () => {
 
   for (const sourceFile of EXAMPLE_SOURCE_FILES) {
     test(`super admin can open task detail from task row ${sourceFile}`, async ({ page }) => {
+      /* issue #1266: a ?task_role=super_admin query no longer raises the
+         stored system role, so the super_admin session is seeded explicitly. */
+      await page.addInitScript(() => localStorage.setItem('labelsuite.systemRole', 'super_admin'));
       await page.goto('/pages/task-management/task-list.html?task_role=super_admin');
 
       const row = page.locator(
@@ -277,7 +280,7 @@ test.describe('Task detail profile mapping', () => {
 
   for (const task of TASK_PROFILES) {
     test(`renders task-specific overview for ${task.id}`, async ({ page }) => {
-      await page.goto(`${TASK_DETAIL_URL}?task_id=${task.id}`);
+      await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${task.id}`);
 
       // FR-028: the task name lives in the H1; the breadcrumb tail is the task id.
       await expect(page.locator('#pageTitle')).toHaveText(task.name, { timeout: PANEL_LOAD_TIMEOUT });
@@ -300,7 +303,7 @@ test.describe('Task detail profile mapping', () => {
       await page.addInitScript(() => {
         window.localStorage.setItem('labelsuite.lang', 'en');
       });
-      await page.goto(`${TASK_DETAIL_URL}?task_id=${taskId}`);
+      await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${taskId}`);
 
       await expect(page.locator('#settingsSummaryTitle')).toHaveText('Label settings', { timeout: PANEL_LOAD_TIMEOUT });
       await expect(page.locator('#valueTaskType')).toHaveText(expected.type);
@@ -313,7 +316,7 @@ test.describe('Task detail profile mapping', () => {
   for (const rc of RUN_CONTROL_CASES) {
     test(`renders coherent run-control state for status ${rc.status || 'draft'}`, async ({ page }) => {
       const statusParam = rc.status ? `&status=${rc.status}` : '';
-      await page.goto(`${TASK_DETAIL_URL}?task_id=T001${statusParam}`);
+      await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T001${statusParam}`);
 
       await expect(page.locator('#statusBadge')).toContainText(rc.badge, { timeout: PANEL_LOAD_TIMEOUT });
       await expect(page.locator('#executionStageTitle')).toHaveCount(0);
@@ -348,7 +351,7 @@ test.describe('Task detail profile mapping', () => {
      draft-only edit-form loop below and covered by their own cases instead. */
   for (const task of TASK_PROFILES.filter((t) => t.id !== 'T002' && t.id !== 'T003')) {
     test(`opens the settings edit form with one accordion per output for ${task.id}`, async ({ page }) => {
-      await page.goto(`${TASK_DETAIL_URL}?task_id=${task.id}`);
+      await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${task.id}`);
 
       await openSettingsSection(page, 'labeling');
       const editBtn = page.locator('#settingsEditBtn');
@@ -363,7 +366,7 @@ test.describe('Task detail profile mapping', () => {
   }
 
   test('settings edit form is read-only for the in-progress official run T003 (issue #194)', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T003`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T003`);
 
     await expect(page.locator('#statusBadge')).toContainText('正式標記進行中', { timeout: PANEL_LOAD_TIMEOUT });
     await openSettingsSection(page, 'labeling');
@@ -371,7 +374,7 @@ test.describe('Task detail profile mapping', () => {
   });
 
   test('settings edit form is read-only for the waiting-IAA dry run T002 (issue #186)', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T002`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T002`);
 
     await expect(page.locator('#statusBadge')).toContainText('待 IAA 確認', { timeout: PANEL_LOAD_TIMEOUT });
     await openSettingsSection(page, 'labeling');
@@ -379,7 +382,7 @@ test.describe('Task detail profile mapping', () => {
   });
 
   test('persists edited item pair labels across settings edit sessions for T011', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T011`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T011`);
 
     await openSettingsSection(page, 'labeling');
     const editBtn = page.locator('#settingsEditBtn');
@@ -397,7 +400,7 @@ test.describe('Task detail profile mapping', () => {
   });
 
   test('re-derives item pair labels after replacing the dataset in overview edit for T011', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T011`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T011`);
 
     /* Save custom labels first so the stale-pending path has a saved value */
     await openSettingsSection(page, 'labeling');

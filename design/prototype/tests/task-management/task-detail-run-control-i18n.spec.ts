@@ -7,7 +7,7 @@ import { test, expect } from '../fixtures';
 // an unknown task_id renders the not-found state instead, this test uses
 // T001 directly -- the same task the old fallback resolved to, so the
 // asserted i18n content is unchanged.
-const TASK_DETAIL_URL = '/pages/task-management/task-detail.html?task_id=T001&status=dry_run_in_progress';
+const TASK_DETAIL_URL = '/pages/task-management/task-detail.html?task_role=project_leader&task_id=T001&status=dry_run_in_progress';
 
 test('run control stepper and metric labels translate to english', async ({ page }) => {
   await page.goto(TASK_DETAIL_URL);

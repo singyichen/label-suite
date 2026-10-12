@@ -63,7 +63,7 @@ async function seedUnseededTask(page: Page): Promise<void> {
 test.describe('Task detail annotation-results fallback (issue #284)', () => {
   test('a task with no AR seed entry shows the empty state, not T001 results', async ({ page }) => {
     await seedUnseededTask(page);
-    await page.goto(`${TASK_DETAIL_URL}?task_id=${UNSEEDED_TASK_ID}&tab=annotation-results`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${UNSEEDED_TASK_ID}&tab=annotation-results`);
 
     await expect(page.locator('#arEmptyState')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
     await expect(page.locator('#arTableSection')).toBeHidden();
@@ -76,7 +76,7 @@ test.describe('Task detail annotation-results fallback (issue #284)', () => {
 
   test('JSON export for a task with no AR seed entry contains no items, not T001 seed content', async ({ page }) => {
     await seedUnseededTask(page);
-    await page.goto(`${TASK_DETAIL_URL}?task_id=${UNSEEDED_TASK_ID}&tab=annotation-results`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${UNSEEDED_TASK_ID}&tab=annotation-results`);
     await expect(page.locator('#arEmptyState')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 
     const downloadPromise = page.waitForEvent('download');
@@ -95,7 +95,7 @@ test.describe('Task detail annotation-results fallback (issue #284)', () => {
 
   test('JSON-MIN export for a task with no AR seed entry contains no rows, not T001 seed content', async ({ page }) => {
     await seedUnseededTask(page);
-    await page.goto(`${TASK_DETAIL_URL}?task_id=${UNSEEDED_TASK_ID}&tab=annotation-results`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${UNSEEDED_TASK_ID}&tab=annotation-results`);
     await expect(page.locator('#arEmptyState')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 
     const downloadPromise = page.waitForEvent('download');

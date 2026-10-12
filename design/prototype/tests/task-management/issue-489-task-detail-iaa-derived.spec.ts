@@ -26,13 +26,13 @@ const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 
 test.describe('task-detail derives T014 IAA from marks (issue #489/#491)', () => {
   test('renders the derived 0.59, not the old hardcoded 0.00 or 0.68', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T014`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T014`);
     const value = page.locator('#currentAgreementValue');
     await expect(value).toHaveText('0.59');
   });
 
   test('agrees with computeIaaAlpha() rather than carrying its own number', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T014`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T014`);
     const alpha = await page.evaluate(() =>
       (window as any).LabelSuiteAnnotationWorkspaceData
         .computeIaaAlpha('T014', 'dry_run', 'single_label'),
@@ -43,7 +43,7 @@ test.describe('task-detail derives T014 IAA from marks (issue #489/#491)', () =>
   });
 
   test('marks the IAA pill not-met, and never as passed', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T014`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T014`);
     const pill = page.locator('#stopAgreementPill');
     await expect(pill).not.toHaveClass(/passed/);
     await expect(pill).not.toHaveClass(/not-computable/);
@@ -88,7 +88,7 @@ test.describe('task-detail derives T014 IAA from marks (issue #489/#491)', () =>
         },
       ],
     );
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T014&status=waiting_iaa_confirmation`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T014&status=waiting_iaa_confirmation`);
     await expect(page.locator('#currentAgreementValue')).toHaveText('0.59');
     await expect(page.locator('#stopAgreementPill')).not.toHaveClass(/passed/);
     const pool = Number(await page.locator('#officialPoolValue').textContent());
@@ -107,7 +107,7 @@ test.describe('task-detail derives T014 IAA from marks (issue #489/#491)', () =>
        dataset-017 FR-039 point 4 forbids falling back to any number here.
        T015 was the fixture until issue #1120 gave it a historical trial
        round R1 (IAA 0.62), so its field now correctly shows 0.62. */
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T003`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T003`);
     const value = page.locator('#currentAgreementValue');
     await expect(value).toHaveText('無法計算');
     await expect(value).not.toHaveText('0.00');

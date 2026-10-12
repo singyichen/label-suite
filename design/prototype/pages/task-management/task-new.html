@@ -1375,6 +1375,8 @@ function generateCreatedTaskId() {
 function redirectToTaskDetail(taskId) {
   var detailUrl = new URL('./task-detail.html', window.location.href);
   detailUrl.searchParams.set('task_id', taskId);
+  /* issue #1266: task-detail no longer defaults a missing role to project_leader */
+  detailUrl.searchParams.set('task_role', 'project_leader');
   window.location.assign(detailUrl.toString());
 }
 

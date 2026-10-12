@@ -62,7 +62,7 @@ async function openT018DonePassed(page: Page) {
     ([key, state]) => window.localStorage.setItem(key as string, JSON.stringify(state)),
     [TRIAL_RUN_STATE_KEY, T018_DONE_PASSED_STATE],
   );
-  await page.goto(`${TASK_DETAIL_URL}?task_id=T018`);
+  await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T018`);
   await expect(page.locator('#statusBadge')).toContainText('待 IAA 確認');
   await expect(page.locator('#publishOfficialRunBtn')).toBeVisible();
 }
@@ -79,7 +79,7 @@ test.describe('Official pool zero publish guard (FR-022, SC-049)', () => {
   test('draft task whose sampling leaves official pool 0 shows the reason before publishing and disables the CTA (FR-022(3))', async ({
     page,
   }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T013`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T013`);
     await expect(page.locator('#statusBadge')).toContainText('草稿');
     await expect(page.locator('#publishDryRunBtn')).toBeVisible();
 
@@ -90,7 +90,7 @@ test.describe('Official pool zero publish guard (FR-022, SC-049)', () => {
   test('the draft pool-zero reason is visible text wired to the CTA via aria-describedby, not hover-only (FR-022(5))', async ({
     page,
   }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T013`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T013`);
     const cta = page.locator('#publishDryRunBtn');
     await expect(cta).toBeVisible();
 
@@ -166,7 +166,7 @@ test.describe('Official pool zero publish guard (FR-022, SC-049)', () => {
   test('lock-in: draft direct publishDryRun() call with pool 0 does not create a trial round (FR-022(4))', async ({
     page,
   }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T013`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T013`);
     await expect(page.locator('#publishDryRunBtn')).toBeVisible();
 
     // Lock-in (passes today): canPublish() already blocks this call on the pool
@@ -199,7 +199,7 @@ test.describe('Official pool zero publish guard (FR-022, SC-049)', () => {
 const MEMBER_GAP = /標記員還差 1 位/;
 
 async function disableAnnotatorThenOpenOverview(page: Page, name: string) {
-  await page.goto(`${TASK_DETAIL_URL}?task_id=T013`);
+  await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T013`);
   await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: 15000 });
   await page.locator('#tabMemberManagement').click();
   await expect(page.locator('#memberManagementPanel')).not.toHaveClass(/hidden/);
@@ -250,7 +250,7 @@ test.describe('Pool reason and member gap are shown independently (FR-022(3), SC
   });
 
   test('control: pool 0 with no member gap shows no member-gap text (FR-022(3))', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T013`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T013`);
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: 15000 });
     await expect(page.locator('#publishActionRow')).toContainText(POOL_REASON);
     await expect(page.locator('#publishActionRow')).not.toContainText(/還差/);

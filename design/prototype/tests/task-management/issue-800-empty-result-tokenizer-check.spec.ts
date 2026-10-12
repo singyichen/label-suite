@@ -52,7 +52,7 @@ const TOKENIZER_ENGINE_WITH_VERSION = 'ckip-transformers';
 const ZERO_RESULT_QUERY = 'ar_stage=official&ar_status=pending';
 
 async function gotoZeroResultAnnotationResults(page: Page) {
-  await page.goto(`${TASK_DETAIL_URL}?task_id=${SEQ_TAGGING_TASK_ID}&tab=annotation-results&${ZERO_RESULT_QUERY}`);
+  await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${SEQ_TAGGING_TASK_ID}&tab=annotation-results&${ZERO_RESULT_QUERY}`);
   // #arTableSection (the results table) gets `.hidden` and #arEmptyState is
   // shown instead when the filter matches zero samples -- but #arExportSection
   // (export buttons + history table) is a sibling <section>, not a child, so

@@ -22,7 +22,7 @@ const LEADER_TABS = ['概覽', '設定', '成員管理', '標記進度', '標記
 const REVIEWER_TABS = ['概覽', '設定', '標記進度', '標記結果', '工時紀錄'];
 
 async function openDetail(page: Page, query: string) {
-  await page.goto(`${TASK_DETAIL_URL}?${query}`);
+  await page.goto(`${TASK_DETAIL_URL}?${query}${/role=/.test(query) ? "" : "&task_role=project_leader"}`);
   await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
 }
 
@@ -153,7 +153,7 @@ test.describe('task-detail header and six-tab bar (FR-003, FR-028, SC-019)', () 
   });
 
   test('not-found task keeps breadcrumb root and an H1 but shows no task name or status', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T999-DOES-NOT-EXIST`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T999-DOES-NOT-EXIST`);
     await expect(page.locator('#taskNotFound')).toBeVisible();
     const header = page.locator('#taskHeader');
     await expect(header.getByRole('navigation', { name: 'breadcrumb' })).toContainText('任務管理');

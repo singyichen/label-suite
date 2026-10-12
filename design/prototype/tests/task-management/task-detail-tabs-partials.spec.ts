@@ -8,7 +8,7 @@ const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 
 test.describe('Task detail tab partials', () => {
   test('loads all five tab panels from partial files and switches tabs', async ({ page }) => {
-    await page.goto(TASK_DETAIL_URL);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader`);
 
     await expect(page.locator('#tabPanelMount #overviewPanel')).toHaveCount(1);
     await expect(page.locator('#tabPanelMount #annotationProgressPanel')).toHaveCount(1);

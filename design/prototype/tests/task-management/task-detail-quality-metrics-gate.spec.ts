@@ -50,7 +50,7 @@ async function persistedStatus(page: Page) {
 
 /** Drive T016 to FR-008b conditions 1-4 satisfied, seed ONLY the latest round status, reload. */
 async function openReadyT016(page: Page, latest: LatestRound) {
-  await page.goto(`${TASK_DETAIL_URL}?task_id=T016`);
+  await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T016`);
   await expect(page.locator('#statusBadge')).toContainText(IN_PROGRESS_BADGE);
   const statuses = await page.evaluate(
     ({ identity, round }) => {

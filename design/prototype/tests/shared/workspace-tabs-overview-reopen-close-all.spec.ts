@@ -71,7 +71,7 @@ const TASK_LIST_URL = '/pages/task-management/task-list.html';
 const DATASET_LIST_URL = '/pages/dataset/dataset-analysis-list.html';
 const USER_MANAGEMENT_URL = '/pages/admin/user-management.html';
 const TASK_NEW_URL = '/pages/task-management/task-new.html';
-const TASK_DETAIL_T001_R1_URL = '/pages/task-management/task-detail.html?task_id=T001&ap_stage=r1';
+const TASK_DETAIL_T001_R1_URL = '/pages/task-management/task-detail.html?task_role=project_leader&task_id=T001&ap_stage=r1';
 
 const TAB_REOPEN_STORAGE_KEY = 'labelsuite.workspaceTabReopenStack';
 
@@ -181,7 +181,7 @@ test.describe('Workspace tabs overview menu (G3) — AC-024.3 reopen stack cap',
       DATASET_LIST_URL,
       USER_MANAGEMENT_URL,
       'task-new',
-      '/pages/task-management/task-detail.html?ap_stage=r1&task_id=T001',
+      '/pages/task-management/task-detail.html?ap_stage=r1&task_id=T001&task_role=project_leader',
     ];
     for (let i = 0; i < 6; i++) {
       closedKeys.push(`annotation-workspace:T00${i + 1}:annotate`);

@@ -49,7 +49,7 @@ test.describe('Issue #783 -- IAA computation status on waiting_iaa_confirmation 
   test('a failed computation shows retry, not a not-met verdict, and disables both publish actions (FR-010o-4(2)-(5))', async ({
     page,
   }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=${T018_ID}`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${T018_ID}`);
 
     await expect(page.locator('#statusBadge')).toContainText('待 IAA 確認');
 
@@ -71,7 +71,7 @@ test.describe('Issue #783 -- IAA computation status on waiting_iaa_confirmation 
   test('retrying a failed computation moves it back to pending without changing task status or round count (FR-010o-4(3))', async ({
     page,
   }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=${T018_ID}`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${T018_ID}`);
     await expect(page.locator('#retryIaaComputationBtn')).toBeVisible();
 
     const roundCountBefore = await page
@@ -117,7 +117,7 @@ test.describe('Issue #783 -- IAA computation status on waiting_iaa_confirmation 
     // issue-489-task-detail-iaa-derived.spec.ts; this override reuses that
     // same seed (design.md D7 -- no new fixture needed) purely to assert the
     // FR-010o-4 gate stays out of the way once the round is 'done'.
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T015&status=waiting_iaa_confirmation`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T015&status=waiting_iaa_confirmation`);
 
     await expect(page.locator('#retryIaaComputationBtn')).toHaveCount(0);
     await expect(page.locator('#trialDecisionTitle')).not.toContainText('計算中');

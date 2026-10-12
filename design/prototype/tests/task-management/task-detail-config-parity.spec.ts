@@ -23,7 +23,7 @@ const FIXTURE = path.resolve(__dirname, 'three-column-dataset.json');
 const PANEL_LOAD_TIMEOUT = 15000;
 
 async function openOverviewEdit(page: import('@playwright/test').Page, taskId: string) {
-  await page.goto(`${TASK_DETAIL_URL}?task_id=${taskId}`);
+  await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${taskId}`);
   await openSettingsSection(page, 'basic');
   const editBtn = page.locator('#overviewEditBtn');
   await expect(editBtn).toBeEnabled({ timeout: PANEL_LOAD_TIMEOUT });
@@ -32,7 +32,7 @@ async function openOverviewEdit(page: import('@playwright/test').Page, taskId: s
 }
 
 async function openSettingsEdit(page: import('@playwright/test').Page, taskId: string) {
-  await page.goto(`${TASK_DETAIL_URL}?task_id=${taskId}`);
+  await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${taskId}`);
   await openSettingsSection(page, 'labeling');
   const editBtn = page.locator('#settingsEditBtn');
   await expect(editBtn).toBeEnabled({ timeout: PANEL_LOAD_TIMEOUT });
@@ -42,7 +42,7 @@ async function openSettingsEdit(page: import('@playwright/test').Page, taskId: s
 
 test.describe('Task detail config parity with task-new Step 1/2', () => {
   test('unifies seed name and status with task-list data (T010)', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T010`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T010`);
     // FR-028: the task name lives in the H1; the breadcrumb tail is the task id.
     await expect(page.locator('#pageTitle')).toHaveText('醫療實體與關係辨識', { timeout: PANEL_LOAD_TIMEOUT });
     await expect(page.locator('#bcCurrent')).toHaveText('T010');
@@ -134,7 +134,7 @@ test.describe('Task detail config parity with task-new Step 1/2', () => {
     await page.addInitScript(() => {
       window.localStorage.setItem('labelsuite.lang', 'en');
     });
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T001`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T001`);
     await expect(page.locator('html')).toHaveAttribute('lang', 'en', { timeout: PANEL_LOAD_TIMEOUT });
 
     await openSettingsSection(page, 'basic');
@@ -151,7 +151,7 @@ test.describe('Task detail config parity with task-new Step 1/2', () => {
   });
 
   test('non-draft status keeps both surfaces read-only (T001)', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T001&status=official_run_in_progress`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T001&status=official_run_in_progress`);
     await openSettingsSection(page, 'basic');
     await expect(page.locator('#overviewEditBtn')).toBeDisabled({ timeout: PANEL_LOAD_TIMEOUT });
     await openSettingsSection(page, 'labeling');

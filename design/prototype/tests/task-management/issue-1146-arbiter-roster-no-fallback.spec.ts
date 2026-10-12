@@ -90,7 +90,7 @@ test('every seeded profile T001-T013 declares arbiterIds explicitly as [reviewer
 });
 
 test('T001: task-detail and workspace agree on the arbiter roster and the summary is not 未指定', async ({ page }) => {
-  await page.goto(`${TASK_DETAIL_URL}?task_id=T001`);
+  await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T001`);
   await expect(page.locator('#statusBadge')).toBeAttached();
   await expect(page.locator('#valueArbiterIdsControl')).not.toHaveText('未指定仲裁者');
   const { detail, workspace } = await page.evaluate(() => {
@@ -113,7 +113,7 @@ test('T001: task-detail and workspace agree on the arbiter roster and the summar
 const LEADER_SECTION = '#leaderAdjudicationSection';
 
 async function openT001MemberTab(page: Page): Promise<void> {
-  await page.goto(`${TASK_DETAIL_URL}?task_id=T001`);
+  await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T001`);
   await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: 15000 });
   await page.locator('#tabMemberManagement').click();
   await expect(page.locator('#memberManagementPanel')).not.toHaveClass(/hidden/);

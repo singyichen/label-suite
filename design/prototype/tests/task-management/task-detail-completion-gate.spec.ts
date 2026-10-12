@@ -81,7 +81,7 @@ const DISPUTED = { accept: /爭議/ };
 const POOL = { accept: /例外池/ };
 
 async function openTask(page: Page, taskId: string) {
-  await page.goto(`${TASK_DETAIL_URL}?task_id=${taskId}`);
+  await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${taskId}`);
   await expect(page.locator('#statusBadge')).toContainText(IN_PROGRESS_BADGE);
   await expect(page.locator('#publishCompleteBtn')).toBeVisible();
 }
@@ -328,7 +328,7 @@ test.describe('Official completion gate (FR-008b, AC-3.9, SC-037)', () => {
   test('missing data is not completion: T001 forced to official_run_in_progress has no review state and cannot be completed (FR-008b)', async ({
     page,
   }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T001&status=official_run_in_progress`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T001&status=official_run_in_progress`);
     await expect(page.locator('#statusBadge')).toContainText(IN_PROGRESS_BADGE);
     // sanity: no unit of T001 has an established review status.
     const units = await unitStatuses(page, 'T001');

@@ -15,8 +15,8 @@ import { buildWorkspaceUrl } from '../annotation/_workspace-helpers';
 // DEFAULT_ANNOTATION_PROGRESS seed has round 'r1' and an 'official' bucket,
 // so both ap_stage values below are valid per task-detail.html's own
 // URL_VIEW_STATE validator.
-const TASK_DETAIL_R1_URL = '/pages/task-management/task-detail.html?task_id=T001&ap_stage=r1';
-const TASK_DETAIL_OFFICIAL_URL = '/pages/task-management/task-detail.html?task_id=T001&ap_stage=official';
+const TASK_DETAIL_R1_URL = '/pages/task-management/task-detail.html?task_role=project_leader&task_id=T001&ap_stage=r1';
+const TASK_DETAIL_OFFICIAL_URL = '/pages/task-management/task-detail.html?task_role=project_leader&task_id=T001&ap_stage=official';
 
 test.describe('Workspace tabs — AC-3.1 annotation-workspace dedupes by task id + mode', () => {
   test.beforeEach(async ({ page }) => {

@@ -6,7 +6,7 @@ import { test, expect } from '../fixtures';
 import type { Page } from '@playwright/test';
 import { openSettingsSection } from './_task-detail-settings-helpers';
 
-const TASK_DETAIL_URL = '/pages/task-management/task-detail.html?task_id=T001';
+const TASK_DETAIL_URL = '/pages/task-management/task-detail.html?task_role=project_leader&task_id=T001';
 
 // Tab panels arrive via fetched partials and event bindings only attach after
 // the last partial (#workLogPanel) lands; wait for it before interacting.

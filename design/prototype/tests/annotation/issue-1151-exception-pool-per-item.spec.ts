@@ -110,7 +110,7 @@ function unitStatus(page: Page): Promise<string | null> {
 }
 
 async function exceptionPoolCountOnTaskDetail(page: Page): Promise<number> {
-  await page.goto(`/pages/task-management/task-detail.html?task_id=${TASK}&ap_stage=official`);
+  await page.goto(`/pages/task-management/task-detail.html?task_role=project_leader&task_id=${TASK}&ap_stage=official`);
   await page.locator('#workLogPanel').waitFor({ state: 'attached' });
   await page.locator('#tabMemberManagement').click();
   await expect(page.locator('#exceptionPoolText')).toHaveText(/\d+/);

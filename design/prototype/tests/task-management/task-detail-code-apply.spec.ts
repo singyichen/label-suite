@@ -21,7 +21,7 @@ const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 const PANEL_LOAD_TIMEOUT = 15000;
 
 async function openLabelingEdit(page: Page) {
-  await page.goto(`${TASK_DETAIL_URL}?task_id=T001`);
+  await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T001`);
   await openSettingsSection(page, 'labeling');
   const editBtn = page.locator('#settingsEditBtn');
   await expect(editBtn).toBeEnabled({ timeout: PANEL_LOAD_TIMEOUT });
@@ -173,7 +173,7 @@ test.describe('task-detail Code 套用 (FR-026 (3))', () => {
   });
 
   test('view-state key reads 設定檔 and the value stays the config file name', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T001`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T001`);
     await openSettingsSection(page, 'labeling');
 
     await expect(page.locator('#labelConfigVersion')).toHaveText('設定檔', { timeout: PANEL_LOAD_TIMEOUT });

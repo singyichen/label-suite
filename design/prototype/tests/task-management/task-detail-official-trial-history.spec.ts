@@ -34,7 +34,7 @@ const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 const PANEL_LOAD_TIMEOUT = 15_000;
 
 async function openOverview(page: Page, taskId: string): Promise<void> {
-  await page.goto(`${TASK_DETAIL_URL}?task_id=${taskId}`);
+  await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${taskId}`);
   await expect(page.locator('#statusBadge')).toContainText('進行中', {
     timeout: PANEL_LOAD_TIMEOUT,
   });
@@ -42,7 +42,7 @@ async function openOverview(page: Page, taskId: string): Promise<void> {
 
 async function openProgress(page: Page, taskId: string, apStage?: string): Promise<void> {
   const stageQuery = apStage ? `&ap_stage=${apStage}` : '';
-  await page.goto(`${TASK_DETAIL_URL}?task_id=${taskId}&tab=annotation-progress${stageQuery}`);
+  await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${taskId}&tab=annotation-progress${stageQuery}`);
   await expect(page.locator('#progressRoundPills')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 }
 
@@ -191,7 +191,7 @@ test.describe('Issue #1120 -- trial-rounds-used excludes the in-progress round (
   test('T014 (dry_run_in_progress, active R1 only) counts zero completed rounds', async ({
     page,
   }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T014`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T014`);
     await expect(page.locator('#trialRoundTimeline')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 
     await expect(timelineItems(page)).toHaveCount(1);
@@ -217,7 +217,7 @@ test.describe('Issue #1120 -- trial-rounds-used excludes the in-progress round (
 
 test.describe('Issue #1120 -- IAA computation pending is a T018 retry state, not a history round (acceptance 11)', () => {
   test('retrying T018 shows IAA computing and blocks both publish actions', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T018`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T018`);
     await expect(page.locator('#retryIaaComputationBtn')).toBeVisible({
       timeout: PANEL_LOAD_TIMEOUT,
     });
