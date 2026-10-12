@@ -178,6 +178,31 @@ const BATCHES = [
     },
     manifestRemoved: ['history-empty', 'audit-drawer-empty'],
   },
+  {
+    name: 'batch 5 (task-config engine, relation partial)',
+    classContext: true,
+    markers: {},
+    // No `html` entries: the per-html link loop must not apply to partials/js/css.
+    html: [],
+    js: ['pages/task-management/task-config.engine.js'],
+    legacyByFile: {
+      'pages/task-management/task-config.engine.js': ['annotation-preview-empty', 'taxonomy-selector-empty'],
+      'pages/task-management/task-config.css': ['annotation-preview-empty', 'taxonomy-selector-empty'],
+      'pages/dataset/dataset-analysis-detail.partials/quality-relation_identification.html': ['anomaly-empty'],
+      // Alias removed: the shared sheet must no longer carry the anomaly-empty selector.
+      'pages/shared/empty-state.css': ['anomaly-empty'],
+    },
+    classMarkers: {
+      'pages/task-management/task-config.engine.js': ['empty-state', 'empty-state-compact'],
+      'pages/dataset/dataset-analysis-detail.partials/quality-relation_identification.html': ['empty-state', 'empty-state-panel', 'empty-state-compact'],
+      'pages/shared/empty-state.css': ['empty-state-compact'],
+    },
+    // The outlier empty block keeps its id (JS toggles #anomRelOutlierEmpty).
+    literals: {
+      'pages/dataset/dataset-analysis-detail.partials/quality-relation_identification.html': ['id="anomRelOutlierEmpty"'],
+    },
+    manifestRemoved: ['anomaly-empty', 'annotation-preview-empty', 'taxonomy-selector-empty'],
+  },
 ];
 
 describe('empty-state shared stylesheet', () => {
