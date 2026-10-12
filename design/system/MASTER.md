@@ -1703,7 +1703,7 @@ Use existing tokens only; do not introduce an Empty-State-specific colour.
 - ❌ A transient confirmation → Toast
 - ❌ Content still loading → Skeleton
 
-> **Current prototype state:** the prototype still ships roughly a dozen per-page empty-state class families (`.empty-state*`, `.empty-row-*`, `.stats-empty*`, `.quality-empty*`, `.ar-empty-*`, `.worklog-empty-*`, `.progress-empty-*`, `.anomaly-empty`, `.list-empty`, `.member-detail-empty`, `.notif-empty`, ...) whose values differ slightly from the table above. They are registered as `transitionalClasses` in the manifest scan gate and converge on this spec in issue #1189 — until then the table above, not any one page, is the canonical target.
+> **Current prototype state:** the prototype still ships roughly a dozen per-page empty-state class families (`.empty-state*`, `.empty-row-*`, `.ar-empty-*`, `.worklog-empty-*`, `.progress-empty-*`, `.anomaly-empty`, `.list-empty`, `.member-detail-empty`, `.notif-empty`, ...) whose values differ slightly from the table above. They are registered as `transitionalClasses` in the manifest scan gate and converge on this spec in issue #1189 — until then the table above, not any one page, is the canonical target.
 
 ---
 

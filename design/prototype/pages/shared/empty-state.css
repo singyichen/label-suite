@@ -27,9 +27,15 @@
   border-radius: var(--radius-lg);
   background: var(--color-slate-50);
 }
-.empty-state-panel .empty-state-icon { width: 40px; height: 40px; color: var(--color-ink-muted); }
-.empty-state-panel .empty-state-title { font-size: 15px; font-weight: 700; }
-.empty-state-panel .empty-state-desc { font-size: 13px; color: var(--color-text-soft); max-width: 400px; margin-left: auto; margin-right: auto; }
+.empty-state-panel .empty-state-icon { width: 40px; height: 40px; margin: 0 auto 14px; color: var(--color-ink-muted); }
+.empty-state-panel .empty-state-title { font-size: 15px; font-weight: 700; color: var(--color-ink); }
+.empty-state-panel .empty-state-desc { font-size: 13px; color: var(--color-text-soft); max-width: 400px; margin: 0 auto 18px; line-height: 1.7; }
+/* Compact panel: description-only inline notice (e.g. anomaly lists). */
+.empty-state-compact,
+.anomaly-empty { /* .anomaly-empty: transitional, until the relation_identification partial migrates (#1189) */
+  padding: 14px; border: 1px dashed var(--color-border); border-radius: var(--radius-md);
+  background: var(--color-slate-50); font-size: 13px; color: var(--color-text-soft); text-align: center;
+}
 
 /* Full-page size */
 .empty-state-page { padding: var(--space-2xl) var(--space-lg); }
