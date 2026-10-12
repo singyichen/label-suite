@@ -18,16 +18,18 @@ Every capability claim in this outline carries one of three tiers. A tier is jud
 
 At the time of writing, `frontend/` and `backend/` contain only the engineering scaffold and a health-check slice, so the only Implemented items are the technology baseline. Every product capability described in Chapters 3–4 is Specified, and must not be presented as an experimentally validated result until it is built and evaluated (Chapter 5).
 
+Product-capability prose in Chapters 1, 3 and 4 that carries no inline tag inherits the tier of its matching row in this table.
+
 | Capability | Tier | Source |
 |---|---|---|
 | React + TypeScript + Vite frontend, FastAPI backend, health-check slice (4.1) | Implemented | `frontend/src/features/health/`, `backend/app/modules/health/`; baseline in `foundation/000` (no FR) |
-| Composable task model: `outputs[]` over 8 output types (`sequence_tagging`, `entity_recognition`, `relation_identification`, `single_label`, `multi_label`, `single_dim`, `multi_dim`, `free_text`) and 2 input types (`single_item`, `item_pair`) (2.1, 3.1, 4.3) | Specified | `task-management/013` FR-002e, FR-003d, FR-003c; ADR-029 |
+| Composable task model: `outputs[]` over 8 output types (`sequence_tagging`, `entity_recognition`, `relation_identification`, `single_label`, `multi_label`, `single_dim`, `multi_dim`, `free_text`) and 2 input types (`single_item`, `item_pair`) (2.1, 3.1, 4.3) | Specified | `task-management/013` FR-002e, FR-003d, `TASK_INPUT_TYPES`; ADR-029 |
 | Config-driven task creation, YAML/JSON config editing and upload (3.1, 3.2) | Specified | `task-management/013` FR-001, FR-003, FR-003e, FR-003h |
 | Config-driven annotation workspace rendered from `outputs[]` (3.3, 4.3) | Specified | `annotation/015` FR-024, FR-013 |
-| Task-level roles and member management (3.2) | Specified | `task-management/014` FR-002, FR-005, FR-007 |
+| Task-level roles and member management (3.2) | Specified | `task-management/014` FR-005, FR-005l, FR-006 |
 | Dry Run / Official Run mechanism with data isolation (3.3, 4.3) | Specified | `task-management/014` FR-008a, FR-010b |
-| Dataset statistics: #Sentence, #Token, per-type label distributions (3.4, 4.3) | Specified | `dataset/017` FR-008, FR-009F to FR-009M |
-| Annotation quality monitoring: per-type IAA (Krippendorff alpha / ICC / span F1 / unitizing alpha), with Cohen's and Fleiss' Kappa as auxiliary metrics for `single_label` (3.4, 6.3) | Specified | `dataset/017` FR-012, FR-012F, FR-039 |
+| Dataset statistics: #Sentence, #Token, per-type distributions (3.4, 4.3) | Specified | `dataset/017` FR-008, FR-009F to FR-009M |
+| Annotation quality monitoring: per-type IAA (Krippendorff alpha / ICC / span F1 / unitizing alpha), with Cohen's and Fleiss' Kappa as auxiliary metrics for `single_label` (3.4, 6.3) | Specified | `dataset/017` FR-012, FR-012F, `OUTPUT_TYPE_IAA_REGISTRY` |
 | Export as `JSON` and `JSON-MIN` (4.4, 6.3) | Specified | `task-management/014` FR-009, FR-015e, FR-015h |
 | Export of `sequence_tagging` as token sequences in BIO / BIOES / IOB2 (character-level by default, word-level optional) (6.3) | Specified | `dataset/017` FR-041, FR-042; `task-management/014` FR-020 |
 | Export as CoNLL or JSON-L files | Planned | No canonical FR. JSON Lines appears in the specs only as an upload format (`task-management/013` FR-002a, `dataset/021` FR-003) |
@@ -183,7 +185,7 @@ At the time of writing, `frontend/` and `backend/` contain only the engineering 
 ### 6.3 Future Work
 
 - **AI-Assisted Labeling:** Inspired by the Co-DETECT approach, introduce LLM assistance for discovering annotation edge cases and optimizing labeling guidelines.
-- **Inter-Annotator Agreement (IAA) — Specified, not built:** The quality-monitoring spec already defines per-output-type IAA, with Krippendorff's alpha as the primary metric for `single_label` and Cohen's / Fleiss' Kappa as auxiliary metrics (`dataset/017` FR-012F, FR-039). Future work is building and validating it.
+- **Inter-Annotator Agreement (IAA) — Specified, not built:** The quality-monitoring spec already defines per-output-type IAA, with Krippendorff's alpha as the primary metric for `single_label` and Cohen's / Fleiss' Kappa as auxiliary metrics (`dataset/017` FR-012F). Future work is building and validating it.
 - **Data Export in Standard Formats:** `JSON` and `JSON-MIN` export is Specified (`task-management/014` FR-009, FR-015h). BIO / BIOES / IOB2 sequence export for `sequence_tagging` is Specified (`dataset/017` FR-041, FR-042; `task-management/014` FR-020). Neither is built yet. CoNLL and JSON-L files are **Planned** with no canonical FR; they must not be described as supported.
 
 ---

@@ -20,16 +20,18 @@
 
 撰寫當下，`frontend/` 與 `backend/` 僅有工程骨架與 health-check 切片，因此「已實作」只有技術基線。第三、四章描述的產品能力全部屬於「規格已定」，在建置並於第五章評估前，不得寫成經實驗驗證的成果。
 
+第一、三、四章中未附行內標示的產品能力敘述，沿用本表對應列的層級。
+
 | 能力 | 層級 | 來源 |
 |---|---|---|
 | React + TypeScript + Vite 前端、FastAPI 後端、health-check 切片（4.1） | 已實作 | `frontend/src/features/health/`、`backend/app/modules/health/`；基線見 `foundation/000`（無 FR） |
-| 可組合任務模型：`outputs[]` 搭配 8 種輸出類型（`sequence_tagging`、`entity_recognition`、`relation_identification`、`single_label`、`multi_label`、`single_dim`、`multi_dim`、`free_text`）與 2 種輸入類型（`single_item`、`item_pair`）（2.1、3.1、4.3） | 規格已定 | `task-management/013` FR-002e、FR-003d、FR-003c；ADR-029 |
+| 可組合任務模型：`outputs[]` 搭配 8 種輸出類型（`sequence_tagging`、`entity_recognition`、`relation_identification`、`single_label`、`multi_label`、`single_dim`、`multi_dim`、`free_text`）與 2 種輸入類型（`single_item`、`item_pair`）（2.1、3.1、4.3） | 規格已定 | `task-management/013` FR-002e、FR-003d、`TASK_INPUT_TYPES`；ADR-029 |
 | 配置驅動建立任務、YAML/JSON 設定檔編輯與上傳（3.1、3.2） | 規格已定 | `task-management/013` FR-001、FR-003、FR-003e、FR-003h |
 | 由 `outputs[]` 驅動的標記工作區（3.3、4.3） | 規格已定 | `annotation/015` FR-024、FR-013 |
-| 任務層級角色與成員管理（3.2） | 規格已定 | `task-management/014` FR-002、FR-005、FR-007 |
+| 任務層級角色與成員管理（3.2） | 規格已定 | `task-management/014` FR-005、FR-005l、FR-006 |
 | Dry Run / Official Run 機制與資料隔離（3.3、4.3） | 規格已定 | `task-management/014` FR-008a、FR-010b |
-| 資料集統計：#Sentence、#Token、各輸出類型的標籤分布（3.4、4.3） | 規格已定 | `dataset/017` FR-008、FR-009F 至 FR-009M |
-| 標記品質監控：逐輸出類型 IAA（Krippendorff alpha／ICC／span F1／單位化 alpha），`single_label` 另以 Cohen's／Fleiss' Kappa 為輔助指標（3.4、6.3） | 規格已定 | `dataset/017` FR-012、FR-012F、FR-039 |
+| 資料集統計：#Sentence、#Token、各輸出類型的分布（3.4、4.3） | 規格已定 | `dataset/017` FR-008、FR-009F 至 FR-009M |
+| 標記品質監控：逐輸出類型 IAA（Krippendorff alpha／ICC／span F1／單位化 alpha），`single_label` 另以 Cohen's／Fleiss' Kappa 為輔助指標（3.4、6.3） | 規格已定 | `dataset/017` FR-012、FR-012F、`OUTPUT_TYPE_IAA_REGISTRY` |
 | 匯出 `JSON` 與 `JSON-MIN`（4.4、6.3） | 規格已定 | `task-management/014` FR-009、FR-015e、FR-015h |
 | `sequence_tagging` 匯出為 BIO／BIOES／IOB2 詞元序列（預設字元級，詞級為選項）（6.3） | 規格已定 | `dataset/017` FR-041、FR-042；`task-management/014` FR-020 |
 | 匯出 CoNLL 或 JSON-L 檔 | 研究規劃 | 無正典 FR。規格中 JSON Lines 僅作為上傳格式出現（`task-management/013` FR-002a、`dataset/021` FR-003） |
@@ -189,7 +191,7 @@
 ### 6.3 未來展望 (Future Work)
 
 - **整合 AI 輔助標記 (AI-Assisted Labeling)：** 借鑑 **Co-DETECT** 模式，引入 LLM 輔助發現標記邊緣案例並優化標記規則。
-- **標記者一致性分析 (Inter-Annotator Agreement, IAA)（規格已定、尚未建置）：** 品質監控規格已定義逐輸出類型的 IAA，`single_label` 以 Krippendorff's alpha 為主要指標、Cohen's／Fleiss' Kappa 為輔助指標（`dataset/017` FR-012F、FR-039）。未來工作是建置並驗證。
+- **標記者一致性分析 (Inter-Annotator Agreement, IAA)（規格已定、尚未建置）：** 品質監控規格已定義逐輸出類型的 IAA，`single_label` 以 Krippendorff's alpha 為主要指標、Cohen's／Fleiss' Kappa 為輔助指標（`dataset/017` FR-012F）。未來工作是建置並驗證。
 - **標準格式資料匯出 (Data Export in Standard Formats)：** `JSON` 與 `JSON-MIN` 匯出為規格已定（`task-management/014` FR-009、FR-015h）；`sequence_tagging` 的 BIO／BIOES／IOB2 序列匯出為規格已定（`dataset/017` FR-041、FR-042；`task-management/014` FR-020）；兩者皆尚未建置。CoNLL 與 JSON-L 檔屬**研究規劃**、無正典 FR，不得寫成已支援。
 
 ---
