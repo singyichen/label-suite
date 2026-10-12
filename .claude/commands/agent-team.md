@@ -119,7 +119,7 @@ Subagents do not spawn subagents and do not edit `tasks.md` checkboxes. Team Lea
 ## Escalation and Quality Checklist
 
 - Any Gate 1, Gate 2, Gate 3, or Gate 4 evidence gap stops its affected stage until that specific checkpoint is repaired and rerun.
-- A teammate may retry a failed task twice. On the third failure, Team Lead dispatches `senior-error-resolver` with the exact error output.
+- A teammate may retry a failed task twice. On the third failure, Team Lead dispatches `senior-debugger` with the exact error output.
 - An API contract conflict pauses affected agents for the required user decision.
 - A security finding pauses the PR flow and is reported immediately.
 - Never proceed beyond a DB schema or API contract checkpoint without user confirmation.
