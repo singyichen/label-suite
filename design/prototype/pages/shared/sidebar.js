@@ -770,7 +770,42 @@
     if (state.activeIndex < 0 || !state.tabs[state.activeIndex]) return;
     var dedupeKey = state.tabs[state.activeIndex].dedupeKey;
     var y = readWorkspaceTabScrollState()[dedupeKey];
-    if (typeof y === 'number') window.scrollTo(0, y);
+    if (typeof y !== 'number') return;
+    window.scrollTo(0, y);
+    if (Math.abs(window.scrollY - y) <= 1) return;
+
+    // issue #1121: async panels (task-detail etc.) grow the document after
+    // mount, so the first scrollTo is clamped short. Re-apply on every
+    // document resize until the target is reached, the user scrolls
+    // themselves, or the bounded timeout elapses -- never fights the user.
+    var done = false;
+    var observer = null;
+    var timer = 0;
+    var userEvents = ['wheel', 'touchstart', 'keydown', 'mousedown'];
+    function stop() {
+      if (done) return;
+      done = true;
+      if (observer) observer.disconnect();
+      window.clearTimeout(timer);
+      for (var i = 0; i < userEvents.length; i++) {
+        window.removeEventListener(userEvents[i], stop, true);
+      }
+    }
+    function retry() {
+      if (done) return;
+      window.scrollTo(0, y);
+      if (Math.abs(window.scrollY - y) <= 1) stop();
+    }
+    for (var i = 0; i < userEvents.length; i++) {
+      window.addEventListener(userEvents[i], stop, { capture: true, passive: true });
+    }
+    // ponytail: 5 s cap; a panel rendering slower than that is not restored.
+    timer = window.setTimeout(stop, 5000);
+    if (typeof ResizeObserver === 'function') {
+      observer = new ResizeObserver(retry);
+      observer.observe(document.documentElement);
+      if (document.body) observer.observe(document.body);
+    }
   }
 
   // FR-011 / AC-4.1: among `tabs`, the index of the tab with no unsaved
@@ -1291,18 +1326,10 @@
         // Restore the bare flex-container behavior task-list.html's own
         // separate `main { flex: 1; ...}` tag rule already gives it -- this
         // page's class no longer provides that now that it moved to the
-        // wrapper. `overflow-y: auto` is required, not cosmetic: without it
-        // <main> never establishes a scroll container for the sticky bar's
-        // `position: sticky` to resolve against, even though <main>'s own
-        // scrollHeight equals its clientHeight here (nothing overflows
-        // *inside* <main> -- the window/document is still what actually
-        // scrolls, confirmed empirically, issue #1098 PR body's
-        // scroll-measurement table). Removing this line reproduces the
-        // exact pre-fix bug numbers on annotation-list/profile.
+        // wrapper.
         mainEl.style.flex = '1';
         mainEl.style.display = 'flex';
         mainEl.style.flexDirection = 'column';
-        mainEl.style.overflowY = 'auto';
         mainEl.style.minWidth = '0';
       }
 
