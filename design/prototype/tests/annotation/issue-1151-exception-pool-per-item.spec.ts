@@ -1,4 +1,5 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '../fixtures';
+import type { Page } from '@playwright/test';
 import { buildWorkspaceUrl, skipGuidelineModal, fillArbitrationReasons } from './_workspace-helpers';
 
 /* issue #1151: the final exception pool must record a disposition PER DISPUTE
