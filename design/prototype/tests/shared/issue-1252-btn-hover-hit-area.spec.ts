@@ -12,11 +12,51 @@ import type { Locator, Page } from '@playwright/test';
 
 const FRAMES = 12;
 
+/**
+ * The page may reset scroll asynchronously after load, moving the button after
+ * it was measured (task-detail appends its tab panels via fetch, which shifts
+ * the page ~300ms after load in a single jump, so a frame count alone is not
+ * enough). Wait until the button's rect and window.scrollY hold for several
+ * consecutive frames AND a quiet window (bounded) so the pointer is parked on
+ * a final position.
+ */
+async function waitForLayoutSettled(button: Locator): Promise<void> {
+  await button.evaluate(
+    (el) =>
+      new Promise<void>((resolve, reject) => {
+        const STABLE_FRAMES = 5;
+        const QUIET_MS = 600;
+        const deadline = performance.now() + 3000;
+        const snap = () => {
+          const r = el.getBoundingClientRect();
+          return `${r.x},${r.y},${r.width},${r.height},${window.scrollY}`;
+        };
+        let prev = snap();
+        let stable = 0;
+        let since = performance.now();
+        const tick = () => {
+          const cur = snap();
+          if (cur === prev) stable += 1;
+          else {
+            stable = 0;
+            since = performance.now();
+          }
+          prev = cur;
+          if (stable >= STABLE_FRAMES && performance.now() - since >= QUIET_MS) resolve();
+          else if (performance.now() > deadline) reject(new Error('layout did not settle within 3s'));
+          else requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      }),
+  );
+}
+
 /** Park the pointer 0.5px above the button's bottom edge, then sample :hover per frame. */
 async function hoverSamplesAtBottomEdge(page: Page, button: Locator): Promise<boolean[]> {
   await button.scrollIntoViewIfNeeded();
   // Settle hover first so the rest-state box (not a lifted one) is measured.
   await page.mouse.move(0, 0);
+  await waitForLayoutSettled(button);
   const box = await button.boundingBox();
   if (!box) throw new Error('button has no bounding box');
   const x = box.x + box.width / 2;
