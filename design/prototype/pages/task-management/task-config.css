@@ -420,6 +420,7 @@
     .annotation-preview-divider { height: 1px; background: var(--color-border); }
     .annotation-preview-task-title { font-size: 14px; font-weight: 700; color: var(--color-ink); }
     .annotation-preview-options { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+    .annotation-preview-options > .empty-state { flex: 1 1 100%; }
     .annotation-preview-option { display: inline-flex; align-items: center; gap: 8px; min-height: 24px; font-size: 14px; color: var(--color-ink); white-space: nowrap; }
     .annotation-preview-option input { margin: 0; }
     .annotation-preview-color { width: 12px; height: 12px; border-radius: 3px; border: 1px solid rgba(0,0,0,0.12); flex-shrink: 0; }
