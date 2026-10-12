@@ -99,7 +99,8 @@ type WorkspaceData = {
     taskId: string,
     runType: string,
     sampleId: string,
-    identity: { annotatorId?: string }
+    identity: { annotatorId?: string },
+    viewer?: { role: string; actorId?: string }
   ) => HistoryEvent[];
   markSampleSubmitted: (
     taskId: string,
@@ -162,7 +163,9 @@ function readHistory(page: Page, sampleId: string = SAMPLE): Promise<HistoryEven
         taskId,
         'official_run',
         sampleId,
-        { annotatorId }
+        { annotatorId },
+        /* issue #1266: viewer-less reads fail closed (masked); this spec asserts the unmasked data-layer trail, so read as an explicit project_leader. */
+        { role: 'project_leader', actorId: 'leader_probe' }
       ),
     { taskId: TASK, sampleId, annotatorId: ANNOTATOR }
   );

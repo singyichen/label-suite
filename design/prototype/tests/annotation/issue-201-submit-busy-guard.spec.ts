@@ -29,11 +29,13 @@ async function readSubmittedEvents(page: Page): Promise<TrailEvent[]> {
           taskId: string,
           runType: string,
           sampleId: string,
-          identity: Record<string, never>
+          identity: Record<string, never>,
+          viewer?: { role: string; actorId?: string }
         ) => TrailEvent[];
       };
     }).LabelSuiteAnnotationWorkspaceData;
-    return data.getSampleHistory('T001', 'official_run', 'sent-001', {});
+    // issue #1266: viewer-less reads fail closed (masked); this spec asserts the unmasked data-layer trail, so read as an explicit project_leader.
+    return data.getSampleHistory('T001', 'official_run', 'sent-001', {}, { role: 'project_leader', actorId: 'leader_probe' });
   });
   return history.filter((e) => e.action === 'submitted');
 }

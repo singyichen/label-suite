@@ -14,6 +14,14 @@
 import { test, expect } from '../fixtures';
 
 test.describe('Admin submenu direct shortcut to role-settings (issue #725)', () => {
+  // issue #1266: a missing stored system role now resolves to `user` (fail
+  // closed) and admin pages no longer self-promote to super_admin, so a bare
+  // URL into role-settings.html / user-management.html hides the admin menu.
+  // These tests exercise the super_admin menu, so seed that role explicitly.
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => window.localStorage.setItem('labelsuite.systemRole', 'super_admin'));
+  });
+
   test('desktop expanded sidebar: clicking 系統管理 opens a submenu with two direct links without adding an L0 item', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/pages/dashboard/dashboard.html?scenario=super_admin_data');
