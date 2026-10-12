@@ -22,7 +22,7 @@
 
 **Foundation** — [Brand Baseline](#brand-baseline-finalized) · [Color Palette](#color-palette) · [Semantic State Colors](#semantic-state-colors) · [Dark Mode Tokens](#dark-mode-tokens) · [Typography](#typography) · [Bilingual Typography](#bilingual-typography) · [Spacing](#spacing-variables) · [Border Radius](#border-radius-scale) · [Z-index](#z-index-scale) · [Shadows](#shadow-depths)
 
-**Components** — [Buttons](#buttons) · [Cards](#cards) · [Inputs](#inputs) · [Modals](#modals) · [Status Badges](#status-badges) · [Alert Banner](#error--alert-banner) · [Toast](#toast) · [Navbar](#navbar) · [Sidebar](#sidebar) · [Workspace Tabs](#workspace-tabs) · [Desktop Content Tabs](#desktop-content-tabs) · [Table](#table) · [Avatar](#avatar) · [Tooltip](#tooltip) · [Mobile Tab Bar](#mobile-bottom-tab-bar) · [State Panel](#state-panel) · [Prototype Switcher](#prototype-only-state-switcher) · [Divider](#divider) · [List](#list-activity-list) · [Link](#link) · [Toolbar](#toolbar) · [Step Indicator](#step-indicator) · [Upload Zone](#upload-zone) · [Tag Input](#tag-input--tag-pill) · [Toggle Switch](#toggle-switch) · [Code Editor](#code-editor-schema)
+**Components** — [Buttons](#buttons) · [Cards](#cards) · [Inputs](#inputs) · [Modals](#modals) · [Status Badges](#status-badges) · [Alert Banner](#error--alert-banner) · [Toast](#toast) · [Navbar](#navbar) · [Sidebar](#sidebar) · [Workspace Tabs](#workspace-tabs) · [Desktop Content Tabs](#desktop-content-tabs) · [Table](#table) · [Avatar](#avatar) · [Tooltip](#tooltip) · [Mobile Tab Bar](#mobile-bottom-tab-bar) · [State Panel](#state-panel) · [Empty State](#empty-state) · [Prototype Switcher](#prototype-only-state-switcher) · [Divider](#divider) · [List](#list-activity-list) · [Link](#link) · [Toolbar](#toolbar) · [Step Indicator](#step-indicator) · [Upload Zone](#upload-zone) · [Tag Input](#tag-input--tag-pill) · [Toggle Switch](#toggle-switch) · [Code Editor](#code-editor-schema)
 
 **Guidelines** — [Style / Flat Design](#style-guidelines) · [Page Shells](#page-shell-patterns) · [Anti-Patterns](#anti-patterns-do-not-use) · [Pre-Delivery Checklist](#pre-delivery-checklist) · [Changelog](#changelog)
 
@@ -1207,6 +1207,42 @@ Left fixed navigation used in Pattern C (Profile and other multi-section pages).
 
 Host pages must define `--navbar-mobile-height` (84px) and `--navbar-mobile-top-height` (64px) in their own `:root`; `sidebar.css` consumes them for the mobile bottom bar (`padding-bottom: var(--navbar-mobile-height)`).
 
+#### Admin Submenu
+
+Sub-spec of the shared Sidebar (not a separate component and not a `componentRegistry` entry — it only exists inside `shared/sidebar.js`). Behaviour is canonical in `specs/shared/008-sidebar-navbar-shared/spec.md` FR-019 to FR-019E (issue #725); this section records the markup and visual contract.
+
+**Structure (`adminNavGroup()` in `sidebar.js`):**
+
+| Part | Contract |
+|------|----------|
+| Trigger | The "系統管理" `<button type="button" class="nav-link" id="navAdminTrigger">` with `aria-haspopup="true"` and `aria-expanded` kept in sync; carries `data-admin-href` (the `user-management` URL) and a trailing `.nav-caret` (12px Lucide `chevron-down`) |
+| Container | `<div class="nav-submenu" id="navAdminSubmenu" role="menu">`; `aria-hidden` is synced with the expanded state; hidden by default (`display: none`), shown as a column flex while `.open` |
+| Items | Exactly two `<a class="nav-sublink" role="menuitem">`: 使用者管理 (`user-management`) and 角色設定 (`role-settings`); the item matching the current page gets `aria-current="page"` plus `.current` |
+| Visibility | Only for `system_role = super_admin` (the whole group is hidden otherwise) |
+
+**Visual tokens (`sidebar.css`):**
+
+| Element | Value |
+|---------|-------|
+| `.nav-submenu` | `gap: var(--space-xs)`, `padding-left: var(--space-xl)`, `margin-top: var(--space-xs)` |
+| `.nav-sublink` | `min-height: 44px`, `padding: 0 var(--space-md)`, `var(--radius-md)`, `12px / 500`, `var(--color-ink-muted)` |
+| Hover | `var(--color-ink)` on `var(--color-slate-50)` |
+| Current item | `var(--color-primary)`, `font-weight: 600` |
+| Expanded signal | Caret colour only — `var(--color-ink-muted)` becomes `var(--color-primary)` while `aria-expanded="true"`; **no rotation** (rotation is not an approved animated transform) |
+| Reduced motion | Under `prefers-reduced-motion: reduce` the caret/sublink transitions drop to `0.01ms` |
+
+**Interaction:**
+- Click the trigger to open; click it again, click anywhere outside the group, or press `Esc` to close (FR-019A).
+- Collapsing the sidebar (`body.sidebar-collapsed`) force-closes an open submenu.
+
+**Fallback (submenu unavailable):** at viewport `<= 768px` (mobile layout) or while `body.sidebar-collapsed`, the submenu and caret are hidden (`display: none !important` in CSS, plus the `isAdminSubmenuAvailable()` guard in JS) and clicking the trigger navigates straight to `data-admin-href`, exactly as before the submenu existed (FR-019D). The JS guard uses the 769px desktop boundary so the trigger never toggles an invisible menu at exactly 768px.
+
+**Keyboard:**
+- The trigger is a native `<button>`: `Enter` / `Space` activate it like a click.
+- `Esc` closes the open submenu (document-level handler; it does not move focus).
+- When open, the two items are ordinary links reached in Tab order; when closed they are `display: none` and out of the tab order.
+- **Not implemented:** arrow-key roving between the menu items. `role="menu"` / `role="menuitem"` are used as required by FR-019B, but the composite-widget arrow-key pattern is not part of the shipped behaviour — do not document or test it as if it were.
+
 ---
 
 ### Workspace Tabs
@@ -1635,6 +1671,39 @@ Different from Alert Banner (inline message while form remains visible) and Toas
   <a href="forgot-password.html" class="mt-4 inline-flex text-sm font-medium text-primary hover:underline">Request new link</a>
 </section>
 ```
+
+---
+
+### Empty State
+
+Placeholder shown where a list, table, or panel has nothing to display yet (no rows, no results, no data collected). It is a **standalone component** — not a variant of State Panel — registered in `inventory-manifest.json` `componentRegistry` as `empty-state` (issue #1188).
+
+**Anatomy:** optional icon · title · description · optional action. Icon and action are optional; title and description are the minimum.
+
+**Sizes:**
+
+| Size | Where | Specs |
+|------|-------|-------|
+| Table-cell | A single `<td colspan>` row replacing the table body | Cell padding `40px 20px` (`48px 20px` on dense tables); content centred, `max-width: 420px`–`520px`; title `20px / 700` `var(--color-ink)`; description `14px` `var(--color-text-soft)`; no icon |
+| Panel | Inside a card / tab panel / drawer | `1px dashed var(--color-border)`, `var(--radius-lg)` (`--radius-md` in compact panels), `background: var(--color-slate-50)`, padding `20px`–`22px`, centred; icon `40px` `var(--color-ink-muted)`; title `15px / 700`; description `13px` `var(--color-text-soft)`, `max-width: 400px` |
+| Full-page | The page body has no content at all | Padding `var(--space-2xl) var(--space-lg)`, centred column; icon in a `48px` round `var(--color-border-muted)` disc, `var(--color-ink-muted)` glyph; title `15px–16px / 600`; description `13px` `var(--color-text-soft)` |
+
+Use existing tokens only; do not introduce an Empty-State-specific colour.
+
+**Action:** at most one, a Button (`btn-secondary` or `btn-cta` when creating the first item is the natural next step), placed under the description with `var(--space-lg)` spacing.
+
+**Accessibility:**
+- The decorative icon carries `aria-hidden="true"`; the title and description are the accessible content.
+- Add `role="status"` to the container only when the empty state **appears dynamically** (filter result, async load) so assistive tech announces it; a server-rendered empty state present at page load needs no live-region role.
+- An action is a real `<button>` / `<a>`, keyboard reachable in DOM order.
+
+**When NOT to use:**
+- ❌ Whole-region replacement after a form submit or invalid token → State Panel
+- ❌ A failure or warning the user must act on while the surrounding content stays visible → Alert Banner
+- ❌ A transient confirmation → Toast
+- ❌ Content still loading → Skeleton
+
+> **Current prototype state:** the prototype still ships roughly a dozen per-page empty-state class families (`.empty-state*`, `.empty-row-*`, `.stats-empty*`, `.quality-empty*`, `.ar-empty-*`, `.worklog-empty-*`, `.progress-empty-*`, `.anomaly-empty`, `.list-empty`, `.member-detail-empty`, `.notif-empty`, ...) whose values differ slightly from the table above. They are registered as `transitionalClasses` in the manifest scan gate and converge on this spec in issue #1189 — until then the table above, not any one page, is the canonical target.
 
 ---
 
@@ -2902,3 +2971,4 @@ Before delivering any UI code, verify:
 | v1.24 | 2026-10-02 | **Workspace Tabs component spec, visual-alignment rework (issue #1099 G1)** — added the §Workspace Tabs subsection (and its Components index anchor) the v1.22 terminology note referenced but never backed with an actual spec: `--workspace-tab-width` (180px, both themes), new neutral semantic tokens `--color-tab-active-bg` (light `#F8FAFC` / dark `#1F1F28`, aliasing `--color-slate-50`) and `--color-tab-hover-bg` (light `#F1F5F9` aliasing `--color-border-muted`; dark `#2A2A35` aliasing `--color-border` instead, because `--color-border-muted` collides with `--color-slate-50`'s dark value and would make hover indistinguishable from active), replacing the former `.workspace-tab.active` Violet-50 `--color-surface` background plus full `border-color` ring the maintainer judged too jarring; per-page-kind tab icons reusing the six L0 sidebar nav icons (`workspaceTabIconFor()`). Stage badge text colors (`--color-warning`/`--color-primary`) unaffected. |
 | v1.25 | 2026-10-05 | **Workspace Tabs bar spacing flush (issue #1143)** — added a "Bar spacing" row to §Workspace Tabs: `.workspace-tab-bar` `gap: 0` / `padding: 0` (was `--space-xs` gap and `--space-md` side padding) and a 1px `var(--color-border)` right divider on every tab (previously transparent), NoteCraft style; tab width, active/hover backgrounds, and tokens unchanged |
 | v1.26 | 2026-10-07 | **Brand baseline finalized (issue #935, maintainer decision 2026-10-07)** — added §Brand Baseline under Global Rules: `#6366F1` primary, Inter UI font, the existing Lucide `tag` logo in `design/prototype/assets/logo/`, and the current radius/type scale are final and carry into the React Tailwind translation unchanged. Supersedes the 2026-09-26 "decide at React scaffolding" and 2026-09-28 "wait for #936" triggers; the v1.21 row's "still-undecided" wording is kept as history. |
+| v1.27 | 2026-10-12 | **Empty State component and Admin Submenu sub-spec (issue #1188)** — added §Empty State as a standalone component (table-cell / panel / full-page sizes, optional icon and action, `role="status"` only when it appears dynamically, "When NOT to use" versus State Panel, Alert Banner, Toast and Skeleton), registered as `empty-state` in `inventory-manifest.json`; the per-page empty-state class families are scan-gate `transitionalClasses` until issue #1189 converges them. Added `#### Admin Submenu` under §Sidebar documenting the shipped issue #725 markup, tokens, open/close interaction, mobile and collapsed fallback and keyboard behaviour (no arrow-key roving) against `specs/shared/008-sidebar-navbar-shared/spec.md` FR-019 to FR-019E. No token or shipped-CSS value changed. |
