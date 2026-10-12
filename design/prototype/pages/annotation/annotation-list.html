@@ -1492,31 +1492,34 @@
     var arbState = data.getArbitrationState(profile.id, context.runType, recordId, identity);
     var exceptionPool = data.getExceptionPool(profile.id, context.runType, recordId, identity);
     var overwrites = null;
+    var wholeOutKeys = {};
     profile.outputTypes.forEach(function (outKey) {
-      var poolRecord = exceptionPool[outKey];
-      if (poolRecord && poolRecord.action !== 'exclude_from_dataset' &&
-          data.hasLegitimateFinalizedValue(poolRecord)) {
+      /* issue #1151: a bare-outKey record or a custom_answer settles the
+         whole output; an itemId-keyed adopt_* record settles one item. */
+      data.exceptionPoolEntries(exceptionPool, outKey).forEach(function (entry) {
+        var record = entry.record;
+        if (record.action === 'exclude_from_dataset' || !data.hasLegitimateFinalizedValue(record)) return;
+        if (entry.itemKey !== null && record.action !== 'custom_answer') return;
         overwrites = overwrites || {};
-        overwrites[outKey] = poolRecord.finalized_value;
-      }
+        overwrites[outKey] = record.finalized_value;
+        wholeOutKeys[outKey] = true;
+      });
     });
     items.forEach(function (item) {
-      var poolRecord = exceptionPool[item.outKey];
-      if (poolRecord && poolRecord.action !== 'exclude_from_dataset' &&
-          data.hasLegitimateFinalizedValue(poolRecord)) {
-        return;
-      }
+      if (wholeOutKeys[item.outKey]) return;
       var resolvedValue;
       var stored = arbState[item.outKey + '::' + item.key];
-      /* Arbitration is the only remaining source of a finalized value here:
-         the exception-pool branch above already returned for any outKey a
-         disposition supplied a legitimate value for. A unit that reaches
-         this point with no `finalized_by`, or an illegitimate
-         finalized_value (issue #914), has nothing legitimate to overwrite
-         with, so the row keeps the annotator's original answer (issue
-         #903). */
+      /* A whole-output disposition returned above; what is left is arbitration
+         or an itemId-keyed pool record (issue #1151). A unit with neither a
+         `finalized_by` nor a legitimate finalized_value (issue #914) has
+         nothing legitimate to overwrite with, so the row keeps the
+         annotator's original answer (issue #903). */
+      var poolRecord = data.exceptionPoolRecordFor(exceptionPool, item);
       if (stored && stored.finalized_by && data.hasLegitimateFinalizedValue(stored)) {
         resolvedValue = stored.finalized_value;
+      } else if (poolRecord && poolRecord.action !== 'exclude_from_dataset' &&
+          data.hasLegitimateFinalizedValue(poolRecord)) {
+        resolvedValue = poolRecord.finalized_value;
       }
       if (resolvedValue !== undefined) {
         overwrites = overwrites || {};
@@ -1541,15 +1544,19 @@
     };
     var sourceKeys = {};
     profile.outputTypes.forEach(function (outKey) {
-      var poolRecord = exceptionPool[outKey];
-      // issue #914: exclude_from_dataset deliberately carries no
-      // finalized_value (D2 sentinel) and always counts; the other three
-      // actions must additionally carry a legitimate value, or the badge
-      // would claim a disposition getFinalizedOverwrites() didn't apply.
-      if (poolRecord && exceptionSourceKeys[poolRecord.action] &&
-          (poolRecord.action === 'exclude_from_dataset' || data.hasLegitimateFinalizedValue(poolRecord))) {
-        sourceKeys[outKey] = exceptionSourceKeys[poolRecord.action];
-      }
+      // issue #1151: records may be keyed by bare outKey or itemId; the
+      // badge reports the first one that counts.
+      data.exceptionPoolEntries(exceptionPool, outKey).forEach(function (entry) {
+        var poolRecord = entry.record;
+        // issue #914: exclude_from_dataset deliberately carries no
+        // finalized_value (D2 sentinel) and always counts; the other three
+        // actions must additionally carry a legitimate value, or the badge
+        // would claim a disposition getFinalizedOverwrites() didn't apply.
+        if (!sourceKeys[outKey] && exceptionSourceKeys[poolRecord.action] &&
+            (poolRecord.action === 'exclude_from_dataset' || data.hasLegitimateFinalizedValue(poolRecord))) {
+          sourceKeys[outKey] = exceptionSourceKeys[poolRecord.action];
+        }
+      });
     });
     var arbState = data.getArbitrationState(profile.id, context.runType, recordId, identity);
     var itemIds = Object.keys(arbState);

@@ -2293,8 +2293,9 @@
     var keys = Array.isArray(outKeys) ? outKeys : [];
     var exceptionPool = getExceptionPool(taskId, runType, sampleId, identity);
     var hasExclusion = keys.some(function (outKey) {
-      var record = exceptionPool[outKey];
-      return !!record && record.action === 'exclude_from_dataset';
+      return exceptionPoolEntries(exceptionPool, outKey).some(function (entry) {
+        return entry.record.action === 'exclude_from_dataset';
+      });
     });
     if (hasExclusion) return REVIEW_UNIT_STATUS.DISPUTED;
 
@@ -2307,7 +2308,7 @@
     var allResolved = items.length > 0 && items.every(function (item) {
       var stored = arbState[item.outKey + '::' + item.key];
       if (stored && stored.finalized_by && hasLegitimateFinalizedValue(stored)) return true;
-      var poolRecord = exceptionPool[item.outKey];
+      var poolRecord = exceptionPoolRecordFor(exceptionPool, item);
       return !!poolRecord && poolRecord.action !== 'exclude_from_dataset' &&
         hasLegitimateFinalizedValue(poolRecord);
     });
@@ -2821,6 +2822,39 @@
     }
   }
 
+  /* issue #1151: a pool record settles ONE dispute item. It is keyed by the
+   * itemId `outKey::key` (a multi_label unit can carry several rejected
+   * items); a record keyed by the bare outKey is the legacy whole-output
+   * shape and still closes every item of that outKey. This is the single
+   * lookup every per-item consumer goes through. */
+  function exceptionPoolRecordFor(pool, item) {
+    return pool[exceptionPoolKeyFor(item)] || pool[item.outKey] || null;
+  }
+
+  /* The key a disposition for `item` is written under. An output with no
+   * merge-key concept (item.key === item.outKey: single_label, free_text, ...)
+   * has exactly one item, so it keeps the bare outKey and the legacy record
+   * shape; composite outputs get the itemId `outKey::key`. */
+  function exceptionPoolKeyFor(item) {
+    return item.key === item.outKey ? item.outKey : item.outKey + '::' + item.key;
+  }
+
+  /* All records that touch `outKey`: the bare legacy record plus every
+   * itemId-keyed one, as [{ poolKey, itemKey, record }]. itemKey is null for
+   * the bare record. For consumers that aggregate per output type. */
+  function exceptionPoolEntries(pool, outKey) {
+    var prefix = outKey + '::';
+    return Object.keys(pool).filter(function (poolKey) {
+      return !!pool[poolKey] && (poolKey === outKey || poolKey.indexOf(prefix) === 0);
+    }).map(function (poolKey) {
+      return {
+        poolKey: poolKey,
+        itemKey: poolKey === outKey ? null : poolKey.slice(prefix.length),
+        record: pool[poolKey],
+      };
+    });
+  }
+
   /* Demo identity for the one role this prototype never lets the visitor
    * pick via query params (task 6.2 does not extend resolveIdentity() --
    * no test or UI need names a second project leader): mirrors
@@ -2831,7 +2865,7 @@
   /* Final exception pool WRITE path (FR-095, issue #596, task 6.2). The read
    * side above (getExceptionPool) and getReviewUnitStatus() already existed
    * and are untouched -- this is the only function that ever writes a
-   * poolRecord, one per outKey, merged into the same blob getExceptionPool
+   * poolRecord, one per dispute item (itemId `outKey::key`, or a bare outKey for the legacy whole-output shape), merged into the same blob getExceptionPool
    * reads. Shape matches design.md D2 exactly: `finalized_value` is the
    * absent-field sentinel for `exclude_from_dataset` (FR-063 -- an excluded
    * item produces no gold value), never `null`.
@@ -2851,7 +2885,7 @@
    * practice. Kept permissive here rather than throwing, matching this
    * file's existing storage-layer stance of not re-validating what the UI
    * already gated. */
-  function resolveExceptionPoolItem(taskId, runType, sampleId, identity, outKey, action, value, reason) {
+  function resolveExceptionPoolItem(taskId, runType, sampleId, identity, key, action, value, reason) {
     var pool = getExceptionPool(taskId, runType, sampleId, identity);
     var record = {
       resolver_id: DEFAULT_PROJECT_LEADER_ID,
@@ -2860,7 +2894,7 @@
       resolved_at: new Date().toISOString(),
     };
     if (action !== 'exclude_from_dataset') record.finalized_value = value;
-    pool[outKey] = record;
+    pool[key] = record;
     try {
       global.localStorage.setItem(
         EXCEPTION_POOL_KEY_PREFIX + exceptionPoolKey(taskId, runType, sampleId, identity),
@@ -2881,7 +2915,7 @@
       entry,
       action === 'exclude_from_dataset' ? 'excluded' : 'exception_resolved',
       'project_leader',
-      'exception pool resolved: ' + outKey,
+      'exception pool resolved: ' + key,
       DEFAULT_PROJECT_LEADER_ID,
       { reason: reason || null }
     );
@@ -3013,7 +3047,7 @@
         return candidate.outKey + '::' + candidate.key === decision.itemId;
       })[0];
       var stored = getArbitrationState(taskId, runType, sampleId, identity)[decision.itemId];
-      if (!item || itemResolved(stored, getExceptionPool(taskId, runType, sampleId, identity)[item.outKey]) ||
+      if (!item || itemResolved(stored, exceptionPoolRecordFor(getExceptionPool(taskId, runType, sampleId, identity), item)) ||
         latestRejectVote(stored)) return false;
       var sub = ownerReviewerSubmission(taskId, runType, sampleId, identity);
       var value = decision.choice === 'adopt_a' ? item.annotatorValue : (sub ? item.reviewerValues[sub.reviewerId] : undefined);
@@ -3132,7 +3166,7 @@
       getDisputeItems(taskId, runType, unit.sampleId, identity, outKeys)
         .forEach(function (item) {
           var stored = arbitrationState[item.outKey + '::' + item.key];
-          var poolRecord = exceptionPool[item.outKey];
+          var poolRecord = exceptionPoolRecordFor(exceptionPool, item);
           /* Same predicate getReviewUnitStatus() uses (issue #914): a
              poolRecord counts as resolved either via exclude_from_dataset
              (D2's valueless sentinel) or a legitimate finalized_value; an
@@ -3995,6 +4029,9 @@
     getDryRunFeedback: getDryRunFeedback,
     getArbitrationState: getArbitrationState,
     getExceptionPool: getExceptionPool,
+    exceptionPoolRecordFor: exceptionPoolRecordFor,
+    exceptionPoolKeyFor: exceptionPoolKeyFor,
+    exceptionPoolEntries: exceptionPoolEntries,
     hasLegitimateFinalizedValue: hasLegitimateFinalizedValue,
     resolveExceptionPoolItem: resolveExceptionPoolItem,
     DEFAULT_PROJECT_LEADER_ID: DEFAULT_PROJECT_LEADER_ID,
