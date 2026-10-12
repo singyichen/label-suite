@@ -8,6 +8,37 @@
 
 ---
 
+## Capability Status Convention
+
+Every capability claim in this outline carries one of three tiers. A tier is judged against the repository at the time of writing, not against the intended end state.
+
+- **Implemented** — exists as production code (with tests) under `frontend/` or `backend/`. A capability that only exists in `design/prototype/` is **not** Implemented, because the prototype is a validated design artifact and not the product.
+- **Specified** — defined by a canonical spec under `specs/` (cited by FR ID) and, where applicable, demonstrated in `design/prototype/`, but not yet built in `frontend/` or `backend/`. All canonical specs cited below are still `Draft`.
+- **Planned** — research direction with no canonical FR yet; neither specified nor built.
+
+At the time of writing, `frontend/` and `backend/` contain only the engineering scaffold and a health-check slice, so the only Implemented items are the technology baseline. Every product capability described in Chapters 3–4 is Specified, and must not be presented as an experimentally validated result until it is built and evaluated (Chapter 5).
+
+Product-capability prose in Chapters 1, 3 and 4 that carries no inline tag inherits the tier of its matching row in this table.
+
+| Capability | Tier | Source |
+|---|---|---|
+| React + TypeScript + Vite frontend, FastAPI backend, health-check slice (4.1) | Implemented | `frontend/src/features/health/`, `backend/app/modules/health/`; baseline in `foundation/000` (no FR) |
+| Composable task model: `outputs[]` over 8 output types (`sequence_tagging`, `entity_recognition`, `relation_identification`, `single_label`, `multi_label`, `single_dim`, `multi_dim`, `free_text`) and 2 input types (`single_item`, `item_pair`) (2.1, 3.1, 4.3) | Specified | `task-management/013` FR-002e, FR-003d, `TASK_INPUT_TYPES`; ADR-029 |
+| Config-driven task creation, YAML/JSON config editing and upload (3.1, 3.2) | Specified | `task-management/013` FR-001, FR-003, FR-003e, FR-003h |
+| Config-driven annotation workspace rendered from `outputs[]` (3.3, 4.3) | Specified | `annotation/015` FR-024, FR-013 |
+| Task-level roles and member management (3.2) | Specified | `task-management/014` FR-005, FR-005l, FR-006 |
+| Dry Run / Official Run mechanism with data isolation (3.3, 4.3) | Specified | `task-management/014` FR-008a, FR-010b |
+| Dataset statistics: #Sentence, #Token, per-type distributions (3.4, 4.3) | Specified | `dataset/017` FR-008, FR-009F to FR-009M |
+| Annotation quality monitoring: per-type IAA (Krippendorff alpha / ICC / span F1 / unitizing alpha), with Cohen's and Fleiss' Kappa as auxiliary metrics for `single_label` (3.4, 6.3) | Specified | `dataset/017` FR-012, FR-012F, `OUTPUT_TYPE_IAA_REGISTRY` |
+| Export as `JSON` and `JSON-MIN` (4.4, 6.3) | Specified | `task-management/014` FR-009, FR-015e, FR-015h |
+| Export of `sequence_tagging` as token sequences in BIO / BIOES / IOB2 (character-level by default, word-level optional) (6.3) | Specified | `dataset/017` FR-041, FR-042; `task-management/014` FR-020 |
+| Export as CoNLL or JSON-L files | Planned | No canonical FR. JSON Lines appears in the specs only as an upload format (`task-management/013` FR-002a, `dataset/021` FR-003) |
+| LLM-assisted labeling, edge-case discovery (6.3) | Planned | No canonical FR |
+| Large-scale concurrency / stress testing (6.2) | Planned | No canonical FR |
+| Comparative evaluation against Label Studio and the lab user study (5.2, 5.3) | Planned | Research activity; no FR |
+
+---
+
 ## Chapter 1 — Introduction
 
 ### 1.1 Research Background
@@ -42,7 +73,7 @@
 
 ### 2.1 NLP Task Background Knowledge
 
-- **NLP Task Types:** The system supports four NLP task templates categorized by input format and annotation need: **Single Sentence** — classification or scoring of a single text input; **Sentence Pairs** — comparing semantic relationships between two texts (e.g., similarity, entailment); **Sequence Labeling** — token-level annotation of POS tags, named entities, etc.; **Generative Labeling** — collecting human-written outputs or rating model-generated text quality. Understanding these task types is the prerequisite for designing a general-purpose annotation interface.
+- **NLP Task Types:** For exposition, NLP annotation tasks fall into four classical categories by input format and annotation need (the platform itself does not hard-code these as templates; it composes them from `outputs[]` — **Specified**, `task-management/013` FR-003d): **Single Sentence** — classification or scoring of a single text input; **Sentence Pairs** — comparing semantic relationships between two texts (e.g., similarity, entailment); **Sequence Labeling** — token-level annotation of POS tags, named entities, etc.; **Generative Labeling** — collecting human-written outputs or rating model-generated text quality. Single Sentence typically maps to `single_item` plus label or dimension outputs, Sentence Pairs to `item_pair`, Sequence Labeling to `sequence_tagging` / `entity_recognition` / `relation_identification`, and Generative Labeling to `free_text`. Understanding these task types is the prerequisite for designing a general-purpose annotation interface.
 - **Importance of Labeled Data:** NLP model training heavily depends on human-annotated datasets. Annotation quality directly impacts model generalization and evaluation reliability, making a systematic and reproducible labeling workflow fundamentally important for advancing NLP research.
 - **Basic Annotation Quality Metrics:** Core data quality indicators include label consistency, inter-annotator agreement, and label distribution balance. These metrics guide the design of the Dataset Analysis Module and inform quality monitoring during the labeling process.
 
@@ -69,7 +100,7 @@
 ### 3.1 Generalization Design Philosophy
 
 - **Config-driven Architecture:** The system core adopts the "Config over Code" philosophy. Users only need to write simple YAML or JSON config files to define different types of NLP tasks, enabling rapid deployment and template reuse without engineering overhead.
-- **Multi-task Support:** Supports four general NLP task templates: Single Sentence, Sentence Pairs, Sequence Labeling, and Generative Labeling, to meet the research needs of different domains and input formats.
+- **Multi-task Support (Specified):** Instead of four fixed templates, a task is a composition of one or more of eight output types over a single-item or item-pair input (`task-management/013` FR-002e, FR-003d, FR-003c), so the four classical categories of Section 2.1 and their mixtures are covered without changing the core flow.
 
 ### 3.2 Task Management Module
 
@@ -106,7 +137,7 @@
 ### 4.3 Implementation of Core Modules
 
 - **Task Management Implementation:** Describes task lifecycle, task member assignment, role-based permission enforcement, and run-state control.
-- **Dynamic Annotation Interface Generation:** Explains how the system parses uploaded config files and dynamically renders NLP labeling templates (Single Sentence, Sentence Pairs, Sequence Labeling, Generative Labeling).
+- **Dynamic Annotation Interface Generation:** Explains how the system parses uploaded config files and dynamically renders the labeling interface for each output type in `outputs[]` (**Specified**, `annotation/015` FR-024).
 - **Dry Run / Official Run Data Isolation:** Details the data partitioning strategy ensuring Dry Run data never contaminates Official Run datasets.
 - **Dataset Statistics Pipeline:** Describes how #Sentence, #Token, and #Label statistics are computed and surfaced in real time.
 
@@ -147,15 +178,15 @@
 
 ### 6.2 Research Limitations (New Section)
 
-- **Complexity of Generative Labeling Interface:** The interface design and quality monitoring for generative labeling tasks are considerably more complex than other task types. The current implementation provides basic support but has not yet been fully optimized for all generative scenarios.
+- **Complexity of Generative Labeling Interface:** The interface design and quality monitoring for generative labeling tasks are considerably more complex than other task types. The `free_text` output type is Specified (`task-management/013` FR-003d-10) but not yet built in the product, and has not been optimized for all generative scenarios.
 - **Small-scale User Study:** Due to sample size constraints, user study participants are primarily from a specific lab, which may introduce scenario limitations.
 - **Lack of Stress Testing:** The system has not yet undergone performance stress testing under large-scale high-concurrency conditions.
 
 ### 6.3 Future Work
 
 - **AI-Assisted Labeling:** Inspired by the Co-DETECT approach, introduce LLM assistance for discovering annotation edge cases and optimizing labeling guidelines.
-- **Inter-Annotator Agreement (IAA):** Add support for computing Cohen's Kappa and Fleiss' Kappa to quantify annotation consistency across multiple annotators.
-- **Data Export in Standard Formats:** Support exporting annotated datasets in NLP-standard formats (e.g., CoNLL, BIO, JSON-L) for direct use in downstream model training pipelines.
+- **Inter-Annotator Agreement (IAA) — Specified, not built:** The quality-monitoring spec already defines per-output-type IAA, with Krippendorff's alpha as the primary metric for `single_label` and Cohen's / Fleiss' Kappa as auxiliary metrics (`dataset/017` FR-012F). Future work is building and validating it.
+- **Data Export in Standard Formats:** `JSON` and `JSON-MIN` export is Specified (`task-management/014` FR-009, FR-015h). BIO / BIOES / IOB2 sequence export for `sequence_tagging` is Specified (`dataset/017` FR-041, FR-042; `task-management/014` FR-020). Neither is built yet. CoNLL and JSON-L files are **Planned** with no canonical FR; they must not be described as supported.
 
 ---
 
