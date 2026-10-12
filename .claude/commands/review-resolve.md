@@ -73,7 +73,7 @@ For each unresolved thread:
 ```bash
 # Reply to a declined thread (commentId from Step 2 output)
 gh api repos/{owner}/{repo}/pulls/{number}/comments/{commentId}/replies \
-  -f body="Declining as non-blocking (Medium/Low per AGENTS.md Review Guidelines): <rationale>"
+  -f body="不修正，屬非阻擋項（依 AGENTS.md Review Guidelines 為 Medium/Low）：<理由，繁體中文>"
 ```
 
 If every finding in the round is declined (nothing to fix), skip Step 4 and go directly to Step 6.
@@ -164,9 +164,11 @@ Format:
 ## Review Resolutions
 
 ### Round N — YYYY-MM-DD
-- **`path/to/file`**: short description of what was fixed
-- **`path/to/file`**: declined (Medium, non-blocking) — short rationale
+- **`path/to/file`**: 已修正的內容簡述
+- **`path/to/file`**: 不修正（Medium，非阻擋）— 簡短理由
 ```
+
+Write the bullet text in Traditional Chinese; the `## Review Resolutions` and `### Round N` headings, file paths, and code identifiers stay in English.
 
 Apply the update:
 ```bash

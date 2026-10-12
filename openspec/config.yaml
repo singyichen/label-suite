@@ -24,7 +24,8 @@ context: |
 
   Governance: specs/_governance/constitution.md (all applicable principles;
   Generalization-First and Data Fairness are NON-NEGOTIABLE). Conversations in
-  Traditional Chinese; code, commits, and PR descriptions in English.
+  Traditional Chinese; code and commits in English; PR and issue bodies in
+  Traditional Chinese.
 
   Language (HARD RULE, 2026-08-25): every OpenSpec-produced artifact
   (proposal.md, spec deltas, design.md, tasks.md, derived views) MUST be
