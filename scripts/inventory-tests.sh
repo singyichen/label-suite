@@ -35,7 +35,14 @@ TMP_ROOT="$(cd "$TMP_ROOT" && pwd)"
 STRAY=""
 PERTURB_FILE=""
 PERTURB_BACKUP=""
+INVENTORY="$ROOT/design/system/inventory.md"
+GATE_STRAY="$ROOT/design/prototype/pages/shared/zz-inventory-test-stray.js"
+GATE_MANIFEST_BAK=""
+GATE_INV_BAK=""
 cleanup() {
+    [[ -f "$GATE_STRAY" ]] && rm -f "$GATE_STRAY"
+    [[ -n "$GATE_MANIFEST_BAK" && -f "$GATE_MANIFEST_BAK" ]] && cp "$GATE_MANIFEST_BAK" "$MANIFEST"
+    [[ -n "$GATE_INV_BAK" && -f "$GATE_INV_BAK" ]] && cp "$GATE_INV_BAK" "$INVENTORY"
     [[ -n "$STRAY" && -f "$STRAY" ]] && rm -f "$STRAY"
     [[ -n "$PERTURB_FILE" && -n "$PERTURB_BACKUP" && -f "$PERTURB_BACKUP" ]] && cp "$PERTURB_BACKUP" "$PERTURB_FILE"
     rm -rf "$TMP_ROOT"
@@ -168,6 +175,144 @@ expect_manifest_failure "unknown component key is rejected" \
 const fs=require("fs");const m=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));
 m.screens[0].components.push("no-such-component");
 process.stdout.write(JSON.stringify(m,null,2)+"\n");' "$MANIFEST")"
+
+# 8. issue #1188 — class-scan gate and inventory heading parity. Every case
+# mutates a real file temporarily; gate_restore() (and the EXIT trap) put the
+# manifest / inventory.md back and remove the stray scan file. Each failing
+# expectation asserts BOTH a non-zero exit AND a specific stderr marker, so a
+# generator that dies for an unrelated reason cannot satisfy the case.
+GATE_MANIFEST_BAK="$TMP_ROOT/manifest.gate.json"
+GATE_INV_BAK="$TMP_ROOT/inventory.gate.md"
+cp "$MANIFEST" "$GATE_MANIFEST_BAK"
+cp "$INVENTORY" "$GATE_INV_BAK"
+
+gate_restore() {
+    cp "$GATE_MANIFEST_BAK" "$MANIFEST"
+    cp "$GATE_INV_BAK" "$INVENTORY"
+    rm -f "$GATE_STRAY"
+}
+
+# Prints a manifest value (JS expression over `m`). Exits the harness when the
+# field is absent — a missing field must never degrade into an empty value that
+# lets a "must fail" case pass vacuously.
+manifest_value() {
+    local expr="$1" rc=0 out
+    out="$(node -e '
+const fs=require("fs");const m=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));
+let v;try{v=eval(process.argv[2]);}catch(e){v=undefined;}
+if(v===undefined||v===null||v===""){console.error("precondition: manifest field missing: "+process.argv[2]);process.exit(3);}
+process.stdout.write(String(v));' "$MANIFEST" "$expr")" || rc=$?
+    [[ $rc -eq 0 ]] || fail "precondition: manifest field missing or empty: $expr"
+    printf '%s' "$out"
+}
+
+# Applies a JS mutation body to the manifest (object `m`; need(cond,msg) exits 3
+# on a missing precondition) and writes the result back to the real manifest.
+patch_manifest() {
+    local body="$1" rc=0 out
+    out="$(node -e '
+const fs=require("fs");const m=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));
+function need(c,msg){if(!c){console.error("precondition: "+msg);process.exit(3);}}
+'"$body"'
+process.stdout.write(JSON.stringify(m,null,2)+"\n");' "$MANIFEST")" || rc=$?
+    [[ $rc -eq 0 ]] || fail "precondition: manifest patch could not be applied (field absent): $body"
+    printf '%s' "$out" > "$MANIFEST"
+}
+
+write_stray() { printf '%s\n' "$1" > "$GATE_STRAY"; }
+
+expect_gate_failure() {
+    local name="$1" marker="$2" rc=0 err="$TMP_ROOT/err.txt"
+    node "$GEN" --check >/dev/null 2>"$err" || rc=$?
+    if [[ $rc -eq 0 ]]; then
+        gate_restore
+        fail "$name — --check exited 0 (gate missing)"
+    fi
+    if ! /usr/bin/grep -qF -- "$marker" "$err"; then
+        local seen; seen="$(head -c 600 "$err")"
+        gate_restore
+        fail "$name — exit $rc but stderr lacks marker '$marker'; stderr: $seen"
+    fi
+    gate_restore
+    pass "$name"
+}
+
+expect_gate_success() {
+    local name="$1" rc=0 err="$TMP_ROOT/err.txt"
+    node "$GEN" --check >/dev/null 2>"$err" || rc=$?
+    if [[ $rc -ne 0 ]]; then
+        local seen; seen="$(head -c 600 "$err")"
+        gate_restore
+        fail "$name — --check exit $rc; stderr: $seen"
+    fi
+    gate_restore
+    pass "$name"
+}
+
+# 8a. A class used by a prototype page but registered nowhere fails the scan.
+write_stray "const x = '<div class=\"zzstray-widget\"></div>';"
+expect_gate_failure "unregistered class in a class attribute is rejected (issue #1188)" "zzstray-widget"
+write_stray "document.body.classList.add('zzstray-other');"
+expect_gate_failure "unregistered class in classList.add is rejected (issue #1188)" "zzstray-other"
+
+# 8b. Classes under a registered / transitional / page-local prefix still pass.
+BTN_PREFIX="$(manifest_value 'm.classScan.componentClasses.button[0]')"
+TRANS_PREFIX="$(manifest_value 'm.classScan.transitionalClasses[0].classes[0]')"
+PAGE_PREFIX="$(manifest_value 'm.classScan.pageLocalClasses.classes[0]')"
+write_stray "const x = '<div class=\"${BTN_PREFIX}-zz\"></div>';"
+expect_gate_success "class under a componentClasses prefix passes (issue #1188)"
+write_stray "const x = '<div class=\"${TRANS_PREFIX}-zz\"></div>';"
+expect_gate_success "class under a transitionalClasses prefix passes (issue #1188)"
+write_stray "const x = '<div class=\"${PAGE_PREFIX}-zz\"></div>';"
+expect_gate_success "class under a pageLocalClasses prefix passes (issue #1188)"
+
+# 8c. A registry key with no class coverage fails; a new key with no heading fails.
+patch_manifest '
+need(m.classScan&&m.classScan.componentClasses&&m.classScan.componentClasses.button,"classScan.componentClasses.button");
+need(m.classScan.transitionalClasses&&m.classScan.classlessComponents,"classScan.transitionalClasses/classlessComponents");
+delete m.classScan.componentClasses.button;
+delete m.classScan.classlessComponents.button;
+m.classScan.transitionalClasses=m.classScan.transitionalClasses.filter(t=>t.component!=="button");'
+expect_gate_failure "registry key without class coverage is rejected (issue #1188)" "button"
+patch_manifest '
+need(m.inventoryHeadings,"inventoryHeadings");
+m.componentRegistry["zz-new-component"]="Zz New Component";'
+expect_gate_failure "registry key without inventory heading is rejected (issue #1188)" "zz-new-component"
+
+# 8d. Exceptions must carry a reason; transitional ones must point at #1189.
+patch_manifest '
+need(m.classScan&&m.classScan.classlessComponents,"classScan.classlessComponents");
+const k=Object.keys(m.classScan.classlessComponents)[0];
+need(k,"classScan.classlessComponents has an entry");
+m.classScan.classlessComponents[k]="";'
+CLASSLESS_KEY="$(manifest_value 'Object.keys(m.classScan.classlessComponents)[0]')"
+expect_gate_failure "classlessComponents entry with empty reason is rejected (issue #1188)" "$CLASSLESS_KEY"
+patch_manifest '
+need(m.classScan&&m.classScan.transitionalClasses&&m.classScan.transitionalClasses[0],"classScan.transitionalClasses[0]");
+m.classScan.transitionalClasses[0].reason="no pointer";'
+expect_gate_failure "transitional reason without #1189 is rejected (issue #1188)" "#1189"
+
+# 8e. inventory.md headings must be 1:1 with the registry via inventoryHeadings.
+node -e '
+const fs=require("fs");const p=process.argv[1];
+const t=fs.readFileSync(p,"utf8");
+if(!t.includes("### ✅ Button\n")){console.error("precondition: heading ### ✅ Button not found");process.exit(3);}
+fs.writeFileSync(p,t.replace("### ✅ Button\n","### ✅ Buttonn\n"));' "$INVENTORY" || fail "precondition: inventory.md has no '### ✅ Button' heading"
+expect_gate_failure "renamed inventory heading is rejected (issue #1188)" "Buttonn"
+node -e '
+const fs=require("fs");const p=process.argv[1];
+const t=fs.readFileSync(p,"utf8");
+if(!/^### ✅ Skeleton\n/m.test(t)){console.error("precondition: heading ### ✅ Skeleton not found");process.exit(3);}
+fs.writeFileSync(p,t.replace(/^### ✅ Skeleton\n/m,""));' "$INVENTORY" || fail "precondition: inventory.md has no '### ✅ Skeleton' heading"
+expect_gate_failure "deleted inventory heading is rejected (issue #1188)" "Skeleton"
+printf '\n### ✅ Zz Extra Component\n' >> "$INVENTORY"
+expect_gate_failure "extra inventory heading is rejected (issue #1188)" "Zz Extra Component"
+patch_manifest '
+need(m.inventoryHeadings&&m.inventoryHeadings.Button,"inventoryHeadings.Button");
+m.inventoryHeadings.Button="no-such-registry-key";'
+expect_gate_failure "inventoryHeadings entry with unknown registry key is rejected (issue #1188)" "no-such-registry-key"
+
+# 8f. The unmodified repo passing --check is covered by step 1.
 
 echo
 echo "All inventory generator tests passed."
