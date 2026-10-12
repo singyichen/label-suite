@@ -2,7 +2,7 @@
 name: senior-architect
 description: Senior Software Architect specialist. Use proactively for system architecture design, technology selection, scalability planning, and architectural decision records.
 tools: Read, Edit, Write, Bash, Grep, Glob
-model: sonnet
+model: opus
 color: purple
 ---
 

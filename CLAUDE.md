@@ -31,13 +31,13 @@ Rules in `.claude/rules/` load per situation: files with `paths:` frontmatter lo
 
 ## Agent Execution Rules
 
-**Model selection** (by files touched): 0–1 → Haiku 4.5 · 2–9 → Sonnet 4.6 · 10+ → Sonnet + `advisor()` or Opus 4.7. Borderline: bias up.
+**Model selection** (by files touched): 0–1 → Haiku · 2–9 → Sonnet · 10+ → Sonnet + `advisor()` or Opus (latest of each tier). Borderline: bias up.
 
 **Escalation gates** — escalate one tier or surface to user when any triggers:
 
 - Same problem failed ≥ 3 attempts
 - Task touches ≥ 10 files
-- Task type ∈ {Architecture · Counter-factual · Security threat modeling} → Opus or `advisor()`
+- Task type ∈ {Architecture · Counter-factual · Security threat modeling} → Opus or `advisor()` (decides who produces the work; the adversarial review in `.claude/harness/protocol.md` §2 decides how the result is verified afterwards — the two coexist)
 - Unrequested code gen > 300 LoC → halt first
 - Single PR diff > 5 files or > 300 lines → halt, split into separate PRs before opening `[Principle: X]`. Both counts exclude tests, lockfiles, generated files, tool/project config files, empty or re-export-only `__init__.py`/`index.ts`, and `specs/**`/`openspec/**`
 

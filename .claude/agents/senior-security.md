@@ -4,7 +4,7 @@ description: Senior Security Engineer specialist. Use proactively for security a
 tools: Read, Edit, Write, Bash, Grep, Glob
 skills:
   - exploratory-testing
-model: sonnet
+model: opus
 color: orange
 ---
 

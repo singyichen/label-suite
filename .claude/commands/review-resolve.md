@@ -87,9 +87,11 @@ If every finding in the round is declined (nothing to fix), skip Step 4 and go d
 ```bash
 git add <changed files>
 git commit -m "$(cat <<'EOF'
-fix: address PR #{number} review findings
+fix: <what was fixed> (review round N)
 
-Co-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>
+- **<Action>** <finding and why>
+
+Co-Authored-By: <model full name> <noreply@anthropic.com>
 EOF
 )"
 git push origin <branch-name>

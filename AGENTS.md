@@ -192,10 +192,10 @@ Use team-lead to orchestrate implementation of [feature] from openspec/changes/<
 
 | Agent | Owns | Model |
 |---|---|---|
-| `senior-backend` | `backend/app/` | Sonnet 4.6 |
-| `senior-frontend` | `frontend/src/` | Sonnet 4.6 |
-| `senior-i18n` | `frontend/src/locales/` | Haiku 4.5 |
-| `senior-devops` _(optional)_ | `docker-compose.yml`, `.github/` | Haiku 4.5 |
+| `senior-backend` | `backend/app/` | Sonnet |
+| `senior-frontend` | `frontend/src/` | Sonnet |
+| `senior-i18n` | `frontend/src/locales/` | Haiku |
+| `senior-devops` _(optional)_ | `docker-compose.yml`, `.github/` | Haiku |
 
 > Implementation agents own only their paired Green tasks and must not weaken or rewrite the Red contract to make it pass. ⚠️ **User checkpoint required** before any DB schema or API contract change proceeds.
 
