@@ -8,9 +8,9 @@
 
 > 依賴：序列 1.1 → 1.2 → 1.3，沒有平行任務。純文件變更不適用 TDD Red／Green。
 
-- [ ] 1.1 撰寫 `openspec/changes/task-detail-lifecycle-roster-keys/specs/task-management/014-task-detail/spec.md`，以 `## MODIFIED Requirements` 收錄 FR-024、FR-023 的完整原文與既有情境，各補 v12.1.0 修訂段與一則不帶 ID 的新情境 [@main]
-- [ ] 1.2 執行 Gate 1 與 Gate 2，皆預期 exit 0：`openspec validate --changes --no-interactive`、`scripts/check-sdd.sh`、`scripts/speckit-tests.sh`，並在 scratchpad 乾跑 archive [@main]
-- [ ] 1.3 更新 `specs/task-management/014-task-detail/spec.md` 完成 gate 4 回寫：FR-024、FR-023 各補 v12.1.0 修訂段（原文逐字保留）、新增兩則 AC（編號接續使用者故事 3 現行最大者）、版號 12.0.4 → 12.1.0、Changelog 頂端加一列；不得改寫 Changelog 既有列 [@main]
+- [x] 1.1 撰寫 `openspec/changes/task-detail-lifecycle-roster-keys/specs/task-management/014-task-detail/spec.md`，以 `## MODIFIED Requirements` 收錄 FR-024、FR-023 的完整原文與既有情境，各補 v12.1.0 修訂段與一則不帶 ID 的新情境 [@main]
+- [x] 1.2 執行 Gate 1 與 Gate 2，皆預期 exit 0：`openspec validate --changes --no-interactive`、`scripts/check-sdd.sh`、`scripts/speckit-tests.sh`，並在 scratchpad 乾跑 archive [@main]
+- [x] 1.3 更新 `specs/task-management/014-task-detail/spec.md` 完成 gate 4 回寫：FR-024、FR-023 各補 v12.1.0 修訂段（原文逐字保留）、新增兩則 AC（編號接續使用者故事 3 現行最大者）、版號 12.0.4 → 12.1.0、Changelog 頂端加一列；不得改寫 Changelog 既有列 [@main]
 
 ## Pre-merge finalization（在 /opsx:apply 外，NON-CHECKBOX）
 
