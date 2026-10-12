@@ -155,6 +155,10 @@ Run after every change. Task is NOT complete until all pass.
 scripts/check-sdd.sh
 scripts/speckit-tests.sh
 
+# FR-131 Bruno gate and regression harness (run from project root)
+scripts/check-bruno-gate.sh --base origin/main
+scripts/check-bruno-gate-tests.sh
+
 # NoteCraft database projection (run from project root)
 node --test scripts/tests/check-database-schema.test.mjs scripts/tests/check-database-dataset.test.mjs scripts/tests/check-database-task-run.test.mjs scripts/tests/check-account-session-canonical.test.mjs scripts/tests/check-annotation-review-canonical.test.mjs scripts/tests/check-database-annotation-review.test.mjs scripts/tests/check-mvp-export-canonical.test.mjs scripts/tests/check-database-task-export.test.mjs scripts/tests/check-worklog-canonical.test.mjs scripts/tests/check-database-worklog.test.mjs scripts/tests/check-database-chinese-copy.test.mjs
 node scripts/check-database-schema.mjs
