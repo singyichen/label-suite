@@ -4599,19 +4599,29 @@
     var answers = {};
     state.selectedOutputTypes.forEach(function (outKey) {
       var answer = cloneCompactAnswer(data.convertSubmissionAnswer(outKey, submission));
-      var poolRecord = exceptionPool[outKey];
-      if (
-        poolRecord && poolRecord.action !== 'exclude_from_dataset'
-        && data.hasLegitimateFinalizedValue(poolRecord)
-      ) {
-        answers[outKey] = cloneCompactAnswer(poolRecord.finalized_value);
+      /* issue #1151: a bare-outKey record or a custom_answer settles the
+         whole output; an itemId-keyed adopt_* record settles one item. */
+      var wholeRecord = null;
+      data.exceptionPoolEntries(exceptionPool, outKey).forEach(function (entry) {
+        var record = entry.record;
+        if (record.action === 'exclude_from_dataset' || !data.hasLegitimateFinalizedValue(record)) return;
+        if (entry.itemKey === null || record.action === 'custom_answer') wholeRecord = record;
+      });
+      if (wholeRecord) {
+        answers[outKey] = cloneCompactAnswer(wholeRecord.finalized_value);
         return;
       }
       disputeItems.forEach(function (item) {
         if (item.outKey !== outKey) return;
         var stored = arbState[item.outKey + '::' + item.key];
-        if (!stored || !stored.finalized_by || !data.hasLegitimateFinalizedValue(stored)) return;
-        answer = applyFinalizedItem(outKey, answer, item, stored.finalized_value);
+        if (stored && stored.finalized_by && data.hasLegitimateFinalizedValue(stored)) {
+          answer = applyFinalizedItem(outKey, answer, item, stored.finalized_value);
+          return;
+        }
+        var poolRecord = data.exceptionPoolRecordFor(exceptionPool, item);
+        if (poolRecord && poolRecord.action !== 'exclude_from_dataset' && data.hasLegitimateFinalizedValue(poolRecord)) {
+          answer = applyFinalizedItem(outKey, answer, item, poolRecord.finalized_value);
+        }
       });
       answers[outKey] = answer;
     });
@@ -4816,7 +4826,7 @@
     );
     return items.filter(function (item) {
       var stored = arbState[disputeItemId(item)];
-      var poolRecord = pool[item.outKey];
+      var poolRecord = data.exceptionPoolRecordFor(pool, item);
       var disposed = !!poolRecord
         && (poolRecord.action === 'exclude_from_dataset' || data.hasLegitimateFinalizedValue(poolRecord));
       return !!(stored && !stored.finalized_by) && !disposed;
@@ -5075,7 +5085,12 @@
     function resolve(item, action, value, reason) {
       window.LabelSuiteAnnotationWorkspaceData.resolveExceptionPoolItem(
         currentProfile.id, currentRunType, currentSampleId, currentIdentity,
-        item.outKey, action, value, reason
+        /* custom_answer carries the whole output's answer, so it is stored
+           under the bare outKey and settles every item of that output. */
+        action === 'custom_answer'
+          ? item.outKey
+          : window.LabelSuiteAnnotationWorkspaceData.exceptionPoolKeyFor(item),
+        action, value, reason
       );
       clearUnsaved();
       showToast(t('wsExceptionPoolResolveSuccess'));
