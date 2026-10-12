@@ -1,7 +1,7 @@
 ---
 功能分支: feat/admin/007-role-settings
 建立日期: 2026-04-16
-版本: 1.2.0
+版本: 1.2.1
 狀態: Draft
 ---
 
@@ -357,7 +357,7 @@ flowchart LR
 
 | Artifact | Responsibility | Covered FR/SC | Verification | Status |
 |----------|----------------|---------------|--------------|--------|
-| [design/prototype/pages/admin/role-settings.html](../../../design/prototype/pages/admin/role-settings.html) | Role-matrix modes, discard confirmation, conflict, toast, audit, responsive, and other observable page states only; it does not define authorization, persistence, or permission-contract authority. | FR-001–FR-010a; SC-001–SC-010 | [design/prototype/tests/admin/role-settings.spec.ts](../../../design/prototype/tests/admin/role-settings.spec.ts) | Active |
+| [design/prototype/pages/admin/role-settings.html](../../../design/prototype/pages/admin/role-settings.html) | Role-matrix modes, discard confirmation, conflict, toast, audit, responsive, and other observable page states only; it does not define authorization, persistence, or permission-contract authority. | FR-001–FR-011（含 FR-008a 固定格、FR-010 無變更不升版）; SC-001–SC-011 | [design/prototype/tests/admin/role-settings.spec.ts](../../../design/prototype/tests/admin/role-settings.spec.ts) | Active |
 | [design/prototype/pages/admin/user-management.html](../../../design/prototype/pages/admin/user-management.html) | Admin-tab navigation cross-reference only; User Management behavior is owned by spec 006 and is not co-owned by this spec. | FR-006; SC-001 | [design/prototype/tests/admin/role-settings.spec.ts](../../../design/prototype/tests/admin/role-settings.spec.ts) | Active; navigation cross-reference only |
 
 ---
@@ -430,6 +430,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.2.1 | 2026-10-12 | Issue #1264：Prototype Traceability 對齊現況——`role-settings.html` 已同步 v1.2.0 矩陣（17 鍵／42 格、FR-008a 固定格不可勾、SA 帳號／任務清單四格可配置、無變更存檔不升版不寫稽核、讀回未知鍵或違反固定格內容時整份拒絕），Covered FR/SC 補列 FR-011／SC-011。條文未增減，純 PATCH。 |
 | 1.2.0 | 2026-10-06 | Issue #1160 D-9～D-13：Accepted ADR-037 確立矩陣是授權必要輸入；新增 `task.detail.edit`、42 列適用格、固定 admin／dashboard 格、新鍵預設拒絕與完整啟用程序；明定一人多 task role、workspace active role、CAS 空變更及穩定稽核目標，新增 FR-011／AC-3.4／SC-011 與功能目標。此版只更新規劃契約，未建立 runtime。 |
 | 1.1.14 | 2026-10-06 | Issue #1160 D-4：FR-010／SC-010 對齊 ADR-032 共用 `role_permissions.changed` 事件、伺服器計算 diff 與至少一個曆年保存；D-9 授權語意另行裁決。 |
 | 1.1.13 | 2026-08-24 | Issue #261 drift 修正：v1.1.7 記錄「移除頂部有未儲存變更 banner，改以取消確認對話框」，但核實 git 歷程與現行 `role-settings.html`／`role-settings.spec.ts`，banner 已於 PR #50 review 後（`524dfbd`）刻意加回並持續維護、有 6 個既有 Playwright 斷言鎖定其顯示/隱藏行為，且具 `role="alert"` 可及性語意；取消確認對話框（區塊 E）亦確認已正確實作（`cancelEdit()` 有未儲存變更時呼叫 `showDirtyModal()`），並非 issue 原始核實所述的直接放棄。banner 與確認對話框為互補關係非互斥，新增區塊 G（未儲存變更 Banner）補齊此前缺漏的介面定義，不修改任何 prototype 程式碼或測試；v1.1.7 歷史記錄保留不變，本次以新增條目方式修正認知落差。 |
