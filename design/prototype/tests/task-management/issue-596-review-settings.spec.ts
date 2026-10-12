@@ -230,10 +230,6 @@ test.describe('Task detail review settings — single-owner relay roster (issue 
 
     // Re-enter edit mode and clear all arbiters to hit the empty-state text.
     await openSettingsSection(page, 'review');
-    // Save and Edit share one spot and .btn:hover is translateY(-1px). With
-    // transitions off (shared fixture, #1071) a pointer parked on the button's
-    // lower edge flips hover every frame, so Playwright never sees it stable.
-    await page.mouse.move(0, 0);
     await page.locator('#reviewEditBtn').click();
     const arbiterCheckboxes = page.locator('#arbiterOptionList .arbiter-option input');
     const arbiterCount = await arbiterCheckboxes.count();
