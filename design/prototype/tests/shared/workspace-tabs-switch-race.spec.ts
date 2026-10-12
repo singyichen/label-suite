@@ -11,8 +11,15 @@
  * navigates to itself, undoing the user's switch.
  *
  * Determinism: the destination response is held for DESTINATION_DELAY_MS via
- * page.route, so the outgoing page is guaranteed alive while the late
- * replaceState (modelling the bootstrap render) is fired by hand.
+ * page.route, so the outgoing page is guaranteed alive. Playwright's click()
+ * waits for the triggered navigation to commit, so a page.evaluate() issued
+ * after it would run on the DESTINATION page. The late replaceState is
+ * therefore armed on the outgoing page BEFORE the click as a timer
+ * (LATE_REPLACE_STATE_DELAY_MS, well inside the delay window), and the page
+ * records where it fired in sessionStorage so the test can prove it ran on
+ * the outgoing document. The reordered-query replaceState changes the href
+ * (so the byte-identical-href early return does not apply) and keeps the
+ * normalized dedupe key, so the owner guard is what this spec depends on.
  */
 import { test, expect } from '../fixtures';
 import { workspaceTabs, readWorkspaceTabState, setDesktopViewport } from './_workspace-tabs-helpers';
@@ -20,7 +27,9 @@ import { workspaceTabs, readWorkspaceTabState, setDesktopViewport } from './_wor
 const TAB_A_URL = '/pages/task-management/task-detail.html?task_id=T001&tab=overview&ap_stage=r1';
 const TAB_B_URL = '/pages/task-management/task-detail.html?task_id=T002&tab=overview&ap_stage=r1';
 const DESTINATION_DELAY_MS = 1500;
+const LATE_REPLACE_STATE_DELAY_MS = 200;
 const SETTLE_WINDOW_MS = 300;
+const FIRED_ON_KEY = 'ls-test-late-replacestate-fired-on';
 
 test.describe('Workspace tabs — outgoing page replaceState must not undo a tab-bar switch (#1202)', () => {
   test.beforeEach(async ({ page }) => {
@@ -44,18 +53,27 @@ test.describe('Workspace tabs — outgoing page replaceState must not undo a tab
       },
     );
 
+    // Arm the late bootstrap render on the still-alive OUTGOING page. The
+    // query is reordered so the href really changes while the normalized
+    // dedupe key stays this page's own.
+    await page.evaluate(
+      ({ delay, key }) => {
+        window.setTimeout(() => {
+          window.sessionStorage.setItem(key, window.location.href);
+          const reordered = [...new URLSearchParams(window.location.search).entries()].reverse();
+          window.history.replaceState(null, '', window.location.pathname + '?' + new URLSearchParams(reordered).toString());
+        }, delay);
+      },
+      { delay: LATE_REPLACE_STATE_DELAY_MS, key: FIRED_ON_KEY },
+    );
     await tabs.nth(0).click();
-    // Late bootstrap render on the still-alive outgoing page.
-    // The query is reordered so the href really changes (a byte-identical
-    // replaceState is ignored as a no-op) while the normalized dedupe key
-    // stays this page's own.
-    await page.evaluate(() => {
-      const reordered = [...new URLSearchParams(window.location.search).entries()].reverse();
-      window.history.replaceState(null, '', window.location.pathname + '?' + new URLSearchParams(reordered).toString());
-    });
-    // Negative assertion: the settle timer (0ms) has long fired by now, and
-    // the delayed route guarantees the outgoing page is still the document.
-    await page.waitForTimeout(SETTLE_WINDOW_MS);
+    // Negative assertion: the timer (200ms) plus the settle timer (0ms) have
+    // fired by now, and the delayed route keeps the outgoing page the document.
+    await page.waitForTimeout(LATE_REPLACE_STATE_DELAY_MS + SETTLE_WINDOW_MS);
+
+    // Proof the replaceState ran on the outgoing page (tab B), not the destination.
+    const firedOn = await page.evaluate((key) => window.sessionStorage.getItem(key), FIRED_ON_KEY);
+    expect(firedOn).toContain('task_id=T002');
 
     const state = (await readWorkspaceTabState(page)) as { activeIndex: number };
     expect(state.activeIndex).toBe(0);
