@@ -13,7 +13,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 ## Steps
 
 1. **Read the task list**
-   - Load `specs/[module]/NNN-feature/tasks.md`
+   - Load `openspec/changes/<change>/tasks.md`
    - If tasks.md does not exist, ask the user to run `/opsx:propose` first
 
 2. **Get the GitHub remote**
@@ -23,7 +23,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 3. **Read supporting context**
    - Load `specs/[module]/NNN-feature/spec.md` for User Story descriptions
-   - Load `specs/[module]/NNN-feature/plan.md` for technical context (if available)
+   - Load `openspec/changes/<change>/design.md` for technical context (if available)
 
 4. **For each task in tasks.md, prepare a GitHub Issue**:
    - **Title**: `[Task] <scope>: <中文描述>` (English prefix, Traditional Chinese description derived from tasks.md)
@@ -32,8 +32,8 @@ You **MUST** consider the user input before proceeding (if not empty).
      - Spec reference: `specs/[module]/NNN-feature/spec.md`
      - Task ID from tasks.md (e.g., `TASK-003`)
      - Acceptance Criteria (from spec.md AC linked to this task)
-     - Technical notes (from plan.md if relevant)
-   - **Labels**: suggest `feat`, `backend`, `frontend`, `test`, or `chore` based on task type
+     - Technical notes (from design.md if relevant)
+   - **Labels**: use the issue-type label from `.claude/rules/issue-reporting.md` (e.g. `task`) plus the matching `scope:*` label (`scope:backend`, `scope:frontend`, `scope:e2e`, `scope:infra`)
    - **Milestone**: suggest the feature name as milestone
 
 5. **Create GitHub Issues using `gh` CLI**
