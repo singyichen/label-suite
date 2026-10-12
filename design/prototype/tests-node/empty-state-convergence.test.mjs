@@ -64,6 +64,42 @@ const BATCHES = [
       'pages/admin/user-management.html': ['empty-state-page'],
     },
   },
+  {
+    name: 'batch 2 (dataset-analysis-detail)',
+    html: [
+      'pages/dataset/dataset-analysis-detail.html',
+    ],
+    partials: [
+      'pages/dataset/dataset-analysis-detail.partials/quality-single_label.html',
+      'pages/dataset/dataset-analysis-detail.partials/quality-single_dim.html',
+      'pages/dataset/dataset-analysis-detail.partials/quality-multi_label.html',
+    ],
+    js: [],
+    legacy: [
+      'stats-empty',
+      'stats-empty-icon',
+      'stats-empty-title',
+      'stats-empty-desc',
+      'quality-empty',
+      'quality-empty-icon',
+      'quality-empty-title',
+      'quality-empty-desc',
+      'anomaly-empty',
+    ],
+    markers: {
+      'pages/dataset/dataset-analysis-detail.partials/quality-single_label.html': ['empty-state', 'empty-state-panel', 'empty-state-compact'],
+      'pages/dataset/dataset-analysis-detail.partials/quality-single_dim.html': ['empty-state', 'empty-state-panel', 'empty-state-compact'],
+      'pages/dataset/dataset-analysis-detail.partials/quality-multi_label.html': ['empty-state', 'empty-state-panel', 'empty-state-compact'],
+    },
+    // Page-level empty blocks: id -> inner element ids that must stay.
+    blocks: {
+      statsEmpty: ['statsEmptyTitle', 'statsEmptyDesc'],
+      qualityEmpty: ['emptyTitle', 'emptyDesc'],
+    },
+    blocksFile: 'pages/dataset/dataset-analysis-detail.html',
+    sharedExtra: ['empty-state-compact'],
+    manifestRemoved: ['stats-empty', 'quality-empty'],
+  },
 ];
 
 describe('empty-state shared stylesheet', () => {
@@ -87,8 +123,8 @@ for (const batch of BATCHES) {
         assert.match(read(file), /<link[^>]+href="\.\.\/shared\/empty-state\.css"/);
       });
     }
-    for (const file of [...batch.html, ...batch.js]) {
-      for (const token of LEGACY) {
+    for (const file of [...batch.html, ...(batch.partials ?? []), ...batch.js]) {
+      for (const token of batch.legacy ?? LEGACY) {
         it(`${file} has no legacy token ${token}`, () => {
           assert.doesNotMatch(read(file), legacyRe(token));
         });
@@ -100,6 +136,55 @@ for (const batch of BATCHES) {
           assert.match(read(file), new RegExp(`(?<![\\w-])${token}(?![\\w-])`));
         });
       }
+    }
+  });
+}
+
+for (const batch of BATCHES.filter((b) => b.blocks)) {
+  describe(`empty-state DOM contract: ${batch.name}`, () => {
+    // Slice from the element's opening tag to the next sibling-level block end
+    // (next id'd block or 600 chars) -- enough to see its icon/title/desc children.
+    const blockHtml = (html, id) => {
+      const i = html.indexOf(`id="${id}"`);
+      assert.notEqual(i, -1, `#${id} not found`);
+      const open = html.lastIndexOf('<', i);
+      return { tag: html.slice(open, html.indexOf('>', i) + 1), body: html.slice(i, i + 900) };
+    };
+    for (const [id, innerIds] of Object.entries(batch.blocks)) {
+      const cls = (re, tag) => assert.match(tag, re);
+      it(`#${id} carries classes empty-state and empty-state-panel`, () => {
+        const { tag } = blockHtml(read(batch.blocksFile), id);
+        const m = tag.match(/class="([^"]*)"/);
+        assert.ok(m, `#${id} has no class attribute`);
+        const classes = m[1].split(/\s+/);
+        assert.ok(classes.includes('empty-state'), `#${id} lacks empty-state`);
+        assert.ok(classes.includes('empty-state-panel'), `#${id} lacks empty-state-panel`);
+        cls(/id=/, tag);
+      });
+      for (const child of ['empty-state-icon', 'empty-state-title', 'empty-state-desc']) {
+        it(`#${id} contains .${child}`, () => {
+          const { body } = blockHtml(read(batch.blocksFile), id);
+          assert.match(body, new RegExp(`class="[^"]*(?<![\\w-])${child}(?![\\w-])`));
+        });
+      }
+      for (const inner of innerIds) {
+        it(`#${id} keeps inner id ${inner}`, () => {
+          assert.match(read(batch.blocksFile), new RegExp(`id="${inner}"`));
+        });
+      }
+    }
+    for (const name of batch.sharedExtra) {
+      it(`${SHARED_CSS} defines .${name}`, () => {
+        assert.ok(existsSync(join(ROOT, SHARED_CSS)), `${SHARED_CSS} is missing`);
+        assert.match(read(SHARED_CSS), new RegExp(`\\.${name}(?![\\w-])`));
+      });
+    }
+    for (const name of batch.manifestRemoved) {
+      it(`manifest transitionalClasses no longer lists ${name}`, () => {
+        const manifest = JSON.parse(readFileSync(MANIFEST, 'utf8'));
+        const listed = (manifest.classScan?.transitionalClasses ?? []).flatMap((t) => t.classes);
+        assert.ok(!listed.includes(name), `${name} still transitional`);
+      });
     }
   });
 }
