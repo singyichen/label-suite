@@ -377,10 +377,6 @@
     .audit-badge-enable     { background: var(--color-success-soft-bg); color: var(--color-success); border-color: var(--color-success-border); }
     .audit-badge-role_change { background: var(--color-primary-soft-bg); color: var(--color-primary); border-color: var(--color-primary-border); }
 
-    .audit-drawer-empty {
-      text-align: center; padding: var(--space-2xl) var(--space-lg);
-      color: var(--color-text-soft); font-size: 13px;
-    }
 
     @media (max-width: 767px) {
       .audit-drawer {
@@ -801,7 +797,7 @@
     </div>
     <div class="audit-drawer-body">
       <div id="auditLogList" class="audit-log-list" role="list"></div>
-      <div id="auditDrawerEmpty" class="audit-drawer-empty hidden">
+      <div id="auditDrawerEmpty" class="empty-state empty-state-compact hidden">
         <p id="auditDrawerEmptyText">尚無異動紀錄</p>
       </div>
     </div>
