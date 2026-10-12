@@ -730,6 +730,7 @@ html[data-theme="dark"] .shortcut-help-dialog {
   max-height: 320px;
   overflow-y: auto;
 }
+.notif-list > .empty-state-compact { margin: 12px; }
 
 .notif-item {
   display: flex;
