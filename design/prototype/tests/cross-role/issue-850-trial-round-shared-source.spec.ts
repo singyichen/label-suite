@@ -195,7 +195,7 @@ test.describe('issue #850: task-detail and annotation pages share no trial-round
 
     // T002 is seeded waiting_iaa_confirmation (task-list.data.js), so no
     // &status= URL override is needed -- this is the task's real seed state.
-    await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${TASK_ID}`);
     await expect(page.locator('#statusBadge')).toContainText('待 IAA 確認');
 
     await createRoundTwoFromWaiting(page);
@@ -232,7 +232,7 @@ test.describe('issue #850: task-detail and annotation pages share no trial-round
   test('status travels with the round: annotation-side task list resolves dry_run_in_progress, not waiting_iaa_confirmation', async ({
     page,
   }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${TASK_ID}`);
     await expect(page.locator('#statusBadge')).toContainText('待 IAA 確認');
 
     await createRoundTwoFromWaiting(page);
@@ -249,7 +249,7 @@ test.describe('issue #850: task-detail and annotation pages share no trial-round
   test('reload persistence, plus the synthetic-R1 trap: task-detail keeps R2 (and R1) across a reload instead of resetting to the seed', async ({
     page,
   }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${TASK_ID}`);
     await expect(page.locator('#statusBadge')).toContainText('待 IAA 確認');
 
     await createRoundTwoFromWaiting(page);
@@ -281,7 +281,7 @@ test.describe('issue #850: task-detail and annotation pages share no trial-round
     await emptyT002UnassignedPool(page);
 
     // T002 is seeded waiting_iaa_confirmation, so R2 can be created without a ?status= override.
-    await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${TASK_ID}`);
     await expect(page.locator('#statusBadge')).toContainText('待 IAA 確認');
 
     await createRoundTwoFromWaiting(page);
@@ -313,7 +313,7 @@ test.describe('issue #850: task-detail and annotation pages share no trial-round
 
     // T002 is seeded waiting_iaa_confirmation, so no ?status= override is needed; the stale 5/5 R1
     // flag written above is kept so the per-round count it must not satisfy still exists.
-    await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${TASK_ID}`);
     await expect(page.locator('#statusBadge')).toContainText('待 IAA 確認');
 
     await createRoundTwoFromWaiting(page);
@@ -347,7 +347,7 @@ test.describe('issue #850: task-detail and annotation pages share no trial-round
 
     // Gate-complete on everything but the per-round submission count (#1120 G4a): review and
     // arbitration closed, unassigned pool empty, so only "1 of 5 R2 samples" can hold the task.
-    await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${TASK_ID}`);
     await expect(page.locator('#statusBadge')).toContainText('試標進行中');
     await closeT002ReviewAndArbitration(page);
     await page.reload();
@@ -360,7 +360,7 @@ test.describe('issue #850: task-detail and annotation pages share no trial-round
   }) => {
     // No unassigned-pool patch here: T002 keeps the shared fixture's unassigned R2 row
     // (task-detail.html DEFAULT_UNASSIGNED_ANNOTATION_ASSIGNMENTS, ASP-041..044, roundId 'r2').
-    await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${TASK_ID}`);
     await expect(page.locator('#statusBadge')).toContainText('待 IAA 確認');
     await createRoundTwoFromWaiting(page);
     await expect(page.locator('#statusBadge')).toContainText('試標進行中');
@@ -397,7 +397,7 @@ test.describe('issue #850: task-detail and annotation pages share no trial-round
 
     // R1 -> waiting_iaa_confirmation -> create R2 from task-detail.
     // #1120 G4a: setup only -- load waiting_iaa_confirmation directly (the R1 5/5 flag stays in place).
-    await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}&status=waiting_iaa_confirmation`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${TASK_ID}&status=waiting_iaa_confirmation`);
     await expect(page.locator('#statusBadge')).toContainText('待 IAA 確認');
     await createRoundTwoFromWaiting(page);
     await expect(page.locator('#statusBadge')).toContainText('試標進行中');
@@ -429,7 +429,7 @@ test.describe('issue #850: task-detail and annotation pages share no trial-round
     );
 
     // Only 1/5 of R2 submitted so far -> R2 must not read as complete yet.
-    await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}&status=dry_run_in_progress`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${TASK_ID}&status=dry_run_in_progress`);
     await expect(page.locator('#statusBadge')).toContainText('試標進行中');
 
     // Resubmit the remaining 4 samples in R2, also with answers
@@ -469,7 +469,7 @@ test.describe('issue #850: task-detail and annotation pages share no trial-round
     // moves the task, so first prove the gate still holds on review, then close
     // review and arbitration through the public write paths -- the R2 round then
     // reads as complete, same as any other fully-submitted round.
-    await page.goto(`${TASK_DETAIL_URL}?task_id=${TASK_ID}&status=dry_run_in_progress`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=${TASK_ID}&status=dry_run_in_progress`);
     await expect(page.locator('#statusBadge')).toContainText('試標進行中');
     await applyDryRunState(page, TASK_ID, { outKey: 'multi_label', review: true, arbitrate: 'all' });
     await page.reload();
@@ -527,7 +527,7 @@ test.describe('issue #850: task-detail and annotation pages share no trial-round
     // waiting_iaa_confirmation -> revision-note -> R2 flow the rest of this
     // file already exercises for T002 is the only trialRunState-writing
     // action available for T004 without further seeding.
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T004&status=waiting_iaa_confirmation`);
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T004&status=waiting_iaa_confirmation`);
     await expect(page.locator('#statusBadge')).toContainText('待 IAA 確認');
     await createRoundTwoFromWaiting(page);
     await expect(page.locator('#statusBadge')).toContainText('試標進行中');

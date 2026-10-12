@@ -68,6 +68,8 @@ async function expectTaskName(name: Locator, zh: string, en: string, page: Page)
 }
 
 test('task list keeps demo source files and routes while naming each task in both languages', async ({ page }) => {
+  // issue #1266: the task_role=super_admin query only counts when the stored system role agrees.
+  await page.addInitScript(() => window.localStorage.setItem('labelsuite.systemRole', 'super_admin'));
   await page.goto('/pages/task-management/task-list.html?task_role=super_admin');
   for (const task of TASKS) {
     const row = page.locator(`#taskTableBody tr[data-source-file="${task.sourceFile}"]`);
@@ -132,7 +134,7 @@ test('dataset detail derives its review-flow title from the loaded task catalog'
 
 for (const task of TASKS) {
   test(`${task.id} task detail uses the same visible name in zh and en`, async ({ page }) => {
-    await page.goto(`/pages/task-management/task-detail.html?task_id=${task.id}`);
+    await page.goto(`/pages/task-management/task-detail.html?task_role=project_leader&task_id=${task.id}`);
     // FR-028: the task name lives in the H1; the breadcrumb tail is the task id.
     await expectTaskName(page.locator('#pageTitle'), task.zh, task.en, page);
     await expect(page.locator('#bcCurrent')).toHaveText(task.id);
