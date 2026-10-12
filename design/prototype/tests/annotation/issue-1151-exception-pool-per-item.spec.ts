@@ -112,6 +112,7 @@ async function exceptionPoolCountOnTaskDetail(page: Page): Promise<number> {
   await page.goto(`/pages/task-management/task-detail.html?task_id=${TASK}&ap_stage=official`);
   await page.locator('#workLogPanel').waitFor({ state: 'attached' });
   await page.locator('#tabMemberManagement').click();
+  await expect(page.locator('#exceptionPoolText')).toHaveText(/\d+/);
   const text = (await page.locator('#exceptionPoolText').textContent()) || '';
   const m = text.match(/(\d+)/);
   expect(m, `#exceptionPoolText must carry a number, got "${text}"`).not.toBeNull();
