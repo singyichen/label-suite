@@ -75,8 +75,6 @@
     if (state.iaaStatus) params.set('iaa_status', state.iaaStatus);
     if (state.limit !== 20) params.set('limit', String(state.limit));
     if (state.offset > 0) params.set('offset', String(state.offset));
-    /* Keep the redirect marker so the invalid-task state stays observable in the URL (issue #1267). */
-    if (new URLSearchParams(global.location.search).get('invalid_task') === '1') params.set('invalid_task', '1');
 
     var nextUrl = global.location.pathname;
     if (params.toString()) nextUrl += '?' + params.toString();
