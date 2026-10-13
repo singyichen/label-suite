@@ -642,6 +642,9 @@
     }
 
     var info = { pageKind: pageKind, dedupeKey: loc.pathname + normalizeWorkspaceSearch(loc.search) };
+    if (pageKind === 'dataset-analysis-detail') {
+      info.taskId = params.get('task_id') || '';
+    }
     if (pageKind === 'task-detail') {
       info.taskId = params.get('task_id') || '';
       // FR-010 / TAB_STAGE_BADGE: stage is a display-only concern, not part
@@ -875,7 +878,8 @@
     // account/profile.html) that provides no task-list data of its own.
     // Re-running this sync on every revisit/reload of the tab keeps the
     // snapshot fresh if the fixture name changes.
-    if (tabEntry.pageKind === 'task-detail' && tabEntry.taskId) {
+    // Issue #1280: the snapshot now covers every page kind that carries a taskId.
+    if (tabEntry.taskId) {
       var nameZh = resolveWorkspaceTaskName(tabEntry.taskId, 'zh');
       var nameEn = resolveWorkspaceTaskName(tabEntry.taskId, 'en');
       if (nameZh || nameEn) {
@@ -1011,40 +1015,57 @@
     return '';
   }
 
-  // FR-010 / TAB_STAGE_BADGE (spec 019 規格常數): a task-detail tab's title
-  // is its stage badge text plus the task name; every other page kind uses
-  // its nav/admin-submenu label, falling back to the raw pageKind for an
-  // unrecognized one instead of rendering nothing.
-  function computeWorkspaceTabLabel(tab, lang) {
+  // FR-010 / TAB_STAGE_BADGE (spec 019 規格常數): a tab's title is an optional
+  // kind chip (annotate/review/detail/stage/analysis) plus the target name
+  // (task name); kinds with no target use the page-kind name and no chip.
+  // computeWorkspaceTabParts returns { kind, tone, name }; `kind` is '' when
+  // there is no chip.
+  var workspaceKindChipI18n = {
+    zh: { annotate: '標記', review: '審核', detail: '詳情', official: '正式', analysis: '分析', dryRun: '試標 R' },
+    en: { annotate: 'Annotate', review: 'Review', detail: 'Detail', official: 'Official', analysis: 'Analysis', dryRun: 'Dry Run R' }
+  };
+
+  function resolveWorkspaceTabTaskName(tab, l) {
+    // FR-010/AC-1.6: live lookup against the CURRENT page's task-list data,
+    // then the name snapshot stored on the tab at sync time, then the bare
+    // taskId so unresolvable tabs of different tasks stay distinguishable.
+    var taskName = resolveWorkspaceTaskName(tab.taskId, l);
+    if (!taskName && tab.taskName) {
+      taskName = (l === 'zh' ? tab.taskName.zh : (tab.taskName.en || tab.taskName.zh)) || '';
+    }
+    return taskName || tab.taskId || '';
+  }
+
+  function computeWorkspaceTabParts(tab, lang) {
     var l = normalizeLang(lang);
+    var chips = workspaceKindChipI18n[l];
     if (tab.pageKind === 'task-detail') {
-      var stageText;
+      var kind = chips.detail;
+      var tone = 'neutral';
       if (tab.stageBadge === 'dry_run') {
-        stageText = (l === 'zh' ? '試標 R' : 'Dry Run R') + (tab.stageRound || '');
+        kind = chips.dryRun + (tab.stageRound || '');
+        tone = 'warning';
       } else if (tab.stageBadge === 'official_run') {
-        stageText = l === 'zh' ? '正式' : 'Official';
-      } else {
-        stageText = workspacePageKindI18n[l]['task-detail'];
+        kind = chips.official;
+        tone = 'primary';
       }
-      // FR-010/AC-1.6: prefer a live lookup against the CURRENT page's own
-      // task-list data (freshest when it happens to be available), then
-      // fall back to the name snapshot stored on the tab itself at sync
-      // time (so the name survives navigating to a page with no task-list
-      // data), then to the bare taskId so two otherwise-unresolvable tabs
-      // at the same stage are still distinguishable.
-      var taskName = resolveWorkspaceTaskName(tab.taskId, l);
-      if (!taskName && tab.taskName) {
-        taskName = (l === 'zh' ? tab.taskName.zh : (tab.taskName.en || tab.taskName.zh)) || '';
-      }
-      if (!taskName && tab.taskId) {
-        taskName = tab.taskId;
-      }
-      return taskName ? stageText + ' ' + taskName : stageText;
+      return { kind: kind, tone: tone, name: resolveWorkspaceTabTaskName(tab, l) };
     }
     if (tab.pageKind === 'annotation-workspace') {
-      return workspaceAnnotationModeI18n[l][tab.mode] || tab.pageKind;
+      var isReview = tab.mode === 'review';
+      return { kind: isReview ? chips.review : chips.annotate, tone: isReview ? 'review' : 'neutral', name: resolveWorkspaceTabTaskName(tab, l) };
     }
-    return workspacePageKindI18n[l][tab.pageKind] || tab.pageKind;
+    if (tab.pageKind === 'dataset-analysis-detail') {
+      return { kind: chips.analysis, tone: 'neutral', name: resolveWorkspaceTabTaskName(tab, l) };
+    }
+    return { kind: '', tone: 'neutral', name: workspacePageKindI18n[l][tab.pageKind] || tab.pageKind };
+  }
+
+  // Plain-text title ("chip name") for title, aria-label and overview/mobile menu rows.
+  function computeWorkspaceTabLabel(tab, lang) {
+    var parts = computeWorkspaceTabParts(tab, lang);
+    if (!parts.kind) return parts.name;
+    return parts.name ? parts.kind + ' ' + parts.name : parts.kind;
   }
 
   var workspaceTabRekeyNoticeI18n = {
@@ -1104,6 +1125,7 @@
     var lang = readStoredLang();
     state.tabs.forEach(function (tab, index) {
       var isActive = index === state.activeIndex;
+      var parts = computeWorkspaceTabParts(tab, lang);
       var label = computeWorkspaceTabLabel(tab, lang);
 
       var tabEl = document.createElement('div');
@@ -1135,9 +1157,16 @@
 
       tabEl.insertAdjacentHTML('beforeend', workspaceTabIconFor(tab.pageKind));
 
+      if (parts.kind) {
+        var kindSpan = document.createElement('span');
+        kindSpan.className = 'workspace-tab-kind workspace-tab-kind--' + parts.tone;
+        kindSpan.textContent = parts.kind;
+        tabEl.appendChild(kindSpan);
+      }
+
       var labelSpan = document.createElement('span');
       labelSpan.className = 'workspace-tab-label';
-      labelSpan.textContent = label;
+      labelSpan.textContent = parts.name;
       tabEl.appendChild(labelSpan);
 
       var closeBtn = document.createElement('button');

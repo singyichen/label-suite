@@ -980,10 +980,10 @@ main:has(> .workspace-tab-bar):not(.workspace-root) {
 .workspace-tab {
   display: flex;
   align-items: center;
-  gap: var(--space-xs);
-  padding: var(--space-sm) var(--space-md);
+  gap: 6px;
+  padding: 6px 10px;
   border-radius: 0;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--color-ink-muted);
   background: transparent;
@@ -992,8 +992,9 @@ main:has(> .workspace-tab-bar):not(.workspace-root) {
   border-bottom: none;
   cursor: pointer;
   white-space: nowrap;
-  width: var(--workspace-tab-width);
-  flex: 0 0 var(--workspace-tab-width);
+  flex: 1 1 0;
+  min-width: var(--workspace-tab-min-width);
+  max-width: var(--workspace-tab-max-width);
 }
 
 .workspace-tab.active {
@@ -1017,31 +1018,65 @@ main:has(> .workspace-tab-bar):not(.workspace-root) {
 }
 
 .workspace-tab-icon {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   flex-shrink: 0;
 }
 
-.workspace-tab[data-stage-badge="dry_run"] {
+/* issue #1280 / FR-010: the stage/mode colour lives on the kind chip, never
+   on the whole tab -- tab body text stays --color-ink-muted / --color-ink. */
+.workspace-tab-kind {
+  flex-shrink: 0;
+  padding: 1px 5px;
+  border-radius: var(--radius-sm);
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+  background: var(--color-border-muted);
+  color: var(--color-text-soft);
+}
+
+.workspace-tab-kind--warning {
+  background: var(--color-warning-bg);
   color: var(--color-warning);
 }
 
-.workspace-tab[data-stage-badge="official_run"] {
+.workspace-tab-kind--primary {
+  background: var(--color-primary-soft-bg);
   color: var(--color-primary);
+}
+
+.workspace-tab-kind--review {
+  background: var(--color-info-bg);
+  color: var(--color-info);
+}
+
+.workspace-tab-kind--neutral {
+  background: var(--color-border-muted);
+  color: var(--color-text-soft);
 }
 
 .workspace-tab-close {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   padding: 0;
   border: none;
   border-radius: var(--radius-sm);
   background: transparent;
   color: inherit;
   cursor: pointer;
+  /* issue #1280: visibility (not display) keeps the tab width stable. */
+  visibility: hidden;
+}
+
+.workspace-tab.active .workspace-tab-close,
+.workspace-tab:hover .workspace-tab-close,
+.workspace-tab:focus-within .workspace-tab-close {
+  visibility: visible;
 }
 
 .workspace-tab-close:hover {

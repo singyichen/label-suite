@@ -63,6 +63,16 @@ function mobileItems(page: Page): Locator {
   return mobileDropdown(page).getByTestId('workspace-tab-overview-item');
 }
 
+// Issue #1280 G2 (FR-010 delta): a tab's title is a kind chip
+// (`.workspace-tab-kind`) plus the target name (`.workspace-tab-label`).
+function kindOf(tab: Locator): Locator {
+  return tab.locator('.workspace-tab-kind');
+}
+
+function labelOf(tab: Locator): Locator {
+  return tab.locator('.workspace-tab-label');
+}
+
 test.describe('Workspace tabs — FR-010/AC-1.6 task name persists across pages (desktop, zh)', () => {
   test.beforeEach(async ({ page }) => {
     await setDesktopViewport(page);
@@ -95,8 +105,12 @@ test.describe('Workspace tabs — FR-010/AC-1.6 task name persists across pages 
     await expect(t001Tab).toHaveAttribute('aria-selected', 'false');
     await expect(t002Tab).toHaveAttribute('aria-selected', 'false');
 
-    await expect(t001Tab).toContainText(TASK_NAME_ZH_T001);
-    await expect(t002Tab).toContainText(TASK_NAME_ZH_T002);
+    // Issue #1280 G2: the stage lives in the chip, the task name alone in the
+    // label (was: one combined "試標 R1 <name>" label string).
+    await expect(kindOf(t001Tab)).toHaveText('試標 R1');
+    await expect(labelOf(t001Tab)).toHaveText(TASK_NAME_ZH_T001);
+    await expect(kindOf(t002Tab)).toHaveText('試標 R1');
+    await expect(labelOf(t002Tab)).toHaveText(TASK_NAME_ZH_T002);
 
     const t001Text = (await t001Tab.textContent()) ?? '';
     const t002Text = (await t002Tab.textContent()) ?? '';
@@ -125,8 +139,11 @@ test.describe('Workspace tabs — FR-010/AC-1.6 task name persistence, mobile dr
     const items = mobileItems(page);
     await expect(items).toHaveCount(3);
 
-    await expect(items.nth(0)).toContainText(TASK_NAME_ZH_T001);
-    await expect(items.nth(1)).toContainText(TASK_NAME_ZH_T002);
+    // Issue #1280 G2 (FR-010 point 3): menu rows are the plain-text title
+    // "<chip text> <name>" and render no chip DOM.
+    await expect(items.nth(0)).toHaveText(`試標 R1 ${TASK_NAME_ZH_T001}`);
+    await expect(items.nth(1)).toHaveText(`試標 R1 ${TASK_NAME_ZH_T002}`);
+    await expect(mobileDropdown(page).locator('.workspace-tab-kind')).toHaveCount(0);
   });
 });
 
@@ -145,8 +162,10 @@ test.describe('Workspace tabs — FR-010/AC-1.6 task name persists across a relo
     await page.reload();
 
     await expect(tabs).toHaveCount(3);
-    await expect(tabs.nth(0)).toContainText(TASK_NAME_ZH_T001);
-    await expect(tabs.nth(1)).toContainText(TASK_NAME_ZH_T002);
+    await expect(kindOf(tabs.nth(0))).toHaveText('試標 R1');
+    await expect(labelOf(tabs.nth(0))).toHaveText(TASK_NAME_ZH_T001);
+    await expect(kindOf(tabs.nth(1))).toHaveText('試標 R1');
+    await expect(labelOf(tabs.nth(1))).toHaveText(TASK_NAME_ZH_T002);
   });
 });
 
@@ -168,8 +187,10 @@ test.describe('Workspace tabs — FR-010/AC-1.6 task name translates through the
 
     const tabs = workspaceTabs(page);
     await expect(tabs).toHaveCount(3);
-    await expect(tabs.nth(0)).toContainText(TASK_NAME_EN_T001);
-    await expect(tabs.nth(1)).toContainText(TASK_NAME_EN_T002);
+    await expect(kindOf(tabs.nth(0))).toHaveText('Dry Run R1');
+    await expect(labelOf(tabs.nth(0))).toHaveText(TASK_NAME_EN_T001);
+    await expect(kindOf(tabs.nth(1))).toHaveText('Dry Run R1');
+    await expect(labelOf(tabs.nth(1))).toHaveText(TASK_NAME_EN_T002);
   });
 });
 
@@ -223,12 +244,12 @@ test.describe('Workspace tabs — FR-010/AC-1.6 safe fallback when a task name c
     const fakeT901Tab = tabs.nth(0);
     const fakeT902Tab = tabs.nth(1);
 
-    // The key assertion: the exact fallback format is not prescribed, but
-    // each tab's own taskId must appear somewhere in its label so two such
-    // tabs are not both rendered identically (currently both collapse to
-    // the same bare "試標 R1" text with no distinguishing content at all).
-    await expect(fakeT901Tab).toContainText('T901');
-    await expect(fakeT902Tab).toContainText('T902');
+    // Issue #1280 G2 (FR-010 point 2): the last fallback is the raw taskId
+    // and it is the whole name column; the stage stays in the chip.
+    await expect(kindOf(fakeT901Tab)).toHaveText('試標 R1');
+    await expect(labelOf(fakeT901Tab)).toHaveText('T901');
+    await expect(kindOf(fakeT902Tab)).toHaveText('試標 R1');
+    await expect(labelOf(fakeT902Tab)).toHaveText('T902');
 
     const fakeT901Text = (await fakeT901Tab.textContent()) ?? '';
     const fakeT902Text = (await fakeT902Tab.textContent()) ?? '';
