@@ -1870,6 +1870,7 @@
       font-size: 12px;
       font-weight: 600;
     }
+    .stop-pill-cue { width: 12px; height: 12px; flex-shrink: 0; }
     .stop-pill.passed {
       border-color: var(--color-success-border);
       color: var(--color-success);
@@ -2517,6 +2518,9 @@
       stopAgreementPillTpl: 'IAA ≥ {target}',
       stopStdPillTpl: '標準差 ≤ {target}',
       stopAnnotatorPillTpl: '標記者 ≥ {target}',
+      stopPillStateMet: '已達標',
+      stopPillStateUnmet: '未達標',
+      stopPillStateNotComputable: '尚無法計算',
       roleLabel: { project_leader: 'Project Leader', reviewer: 'Reviewer' },
       userName: { project_leader: 'Mandy Chen', reviewer: 'Avery Lin' },
       riskModalTitle: '確認停用資料隔離',
@@ -3062,6 +3066,9 @@
       stopAgreementPillTpl: 'IAA ≥ {target}',
       stopStdPillTpl: 'Std ≤ {target}',
       stopAnnotatorPillTpl: 'annotators ≥ {target}',
+      stopPillStateMet: 'Met',
+      stopPillStateUnmet: 'Not met',
+      stopPillStateNotComputable: 'Not computable yet',
       roleLabel: { project_leader: 'Project Leader', reviewer: 'Reviewer' },
       userName: { project_leader: 'Mandy Chen', reviewer: 'Avery Lin' },
       riskModalTitle: 'Confirm disabling data isolation',
@@ -6033,6 +6040,20 @@ function interpolate(template, payload) {
         : 'Create the first trial round to validate agreement before deciding whether to start official work.');
     }
 
+    var STOP_PILL_CUE_PATHS = {
+      'met': '<polyline points="20 6 9 17 4 12"/>',
+      'unmet': '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+      'not-computable': '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>'
+    };
+    var STOP_PILL_STATE_KEYS = { 'met': 'stopPillStateMet', 'unmet': 'stopPillStateUnmet', 'not-computable': 'stopPillStateNotComputable' };
+    function appendStopPillCue(pill, state) {
+      if (!pill) return;
+      pill.insertAdjacentHTML('beforeend',
+        '<svg class="stop-pill-cue" data-stop-pill-cue data-state="' + state + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + STOP_PILL_CUE_PATHS[state] + '</svg>' +
+        '<span class="stop-pill-state"></span>');
+      pill.querySelector('.stop-pill-state').textContent = t(STOP_PILL_STATE_KEYS[state]);
+    }
+
     setText('stopAgreementPill', interpolate(t('stopAgreementPillTpl'), { target: Number(getPrimaryTargetAgreement()).toFixed(2) }));
     setText('stopAnnotatorPill', interpolate(t('stopAnnotatorPillTpl'), { target: TASK_DATA.minAnnotators }));
 
@@ -6053,6 +6074,10 @@ function interpolate(template, payload) {
     }
     if (stopStdPill) stopStdPill.classList.add('hidden');
     if (stopAnnotatorPill) stopAnnotatorPill.classList.toggle('passed', Number(TASK_DATA.currentAnnotators) >= Number(TASK_DATA.minAnnotators));
+    /* issue #1127: non-colour cue (icon + state word) so met / unmet /
+       not-computable stay distinguishable without relying on colour. */
+    appendStopPillCue(stopAgreementPill, stopAgreementPill && (stopAgreementPill.classList.contains('not-computable') ? 'not-computable' : stopAgreementPill.classList.contains('passed') ? 'met' : 'unmet'));
+    appendStopPillCue(stopAnnotatorPill, stopAnnotatorPill && (stopAnnotatorPill.classList.contains('passed') ? 'met' : 'unmet'));
     renderSplitVisualization(
       (function() {
         var rounds = getTrialRounds();
