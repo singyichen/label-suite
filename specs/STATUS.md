@@ -60,6 +60,7 @@
 
 | 日期 | 更新內容 |
 |------|----------|
+| 2026-10-13 | issue #1348（`feat/1348-exec-action-column`，Lightweight，PATCH）：`task-management-014` 更新至 v12.2.4——FR-013 補第 (8) 項、FR-027(6) 補述，澄清概覽執行控制區改為直向動作欄的呈現方式；未新增或移除任何 FR／AC，按鈕啟用／停用條件與狀態轉移不變。 |
 | 2026-10-13 | issue #1305（`docs/1305-fr014f-tab-ownership`）：`task-management-014` 更新至 v12.2.0（OpenSpec change `task-detail-fr014f-tab-ownership` 已 archive，MINOR）：#1199 拆分後的三處矛盾對齊六分頁結構——FR-014f 補修訂段（設定分頁五區塊、`任務狀態與執行控制` 歸 FR-027）、`TASK_TABS` 補入 `settings`、FR-010u 改為「會呈現衍生計數的五個分頁」；未新增或移除任何 FR／AC。 |
 | 2026-10-13 | issue #1270（`docs/1270-permission-matrix-56`）：權限矩陣 42 → 56 格。`admin-007` 更新至 v1.3.0、`task-management-014` 更新至 v12.1.0、`annotation-015` 更新至 v12.4.0（三個 OpenSpec change `admin-permission-matrix-56-cells`、`task-detail-lifecycle-roster-keys`、`annotation-exception-resolve-key` 已 archive，MINOR）；`task-management-010` 更新至 v2.3.1、`dashboard-012` 更新至 v2.14.1（Lightweight Path，PATCH）。五個新鍵 `task.lifecycle.manage`、`task.delete`、`annotation.exception.resolve`、`annotation.dispute.adjudicate`、`admin.platform_overview.view` 已登錄、待啟用，啟用前依未知鍵拒絕；審核名冊改歸 `task.members.manage`。ADR-037 補 issue #1270 修訂段；DB 文件與 `role-settings.html` 同步 56 格。 |
 | 2026-10-12 | `dataset-021` 更新至 v1.4.1（`docs/1241-adr038-retention-spec-sync`，issue #1241，Lightweight Path，PATCH）：FR-011(3) 的「待定（#1224）」改指 #1244，未新增或移除任何 FR／AC，未新增期限。 |
