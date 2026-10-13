@@ -1,7 +1,7 @@
 ---
 功能分支: feat/1340-dialogue-fields
 建立日期: 2026-04-20
-版本: 8.5.0
+版本: 8.5.1
 狀態: Draft
 ---
 
@@ -172,7 +172,7 @@ sequenceDiagram
 4. **AC-1.6**：**Given** 已上傳資料集且其中一欄位名稱包含 `FIELD_ROLE_INPUT_NAME_HINTS` 命中線索（如欄名為 `text`）、其餘欄位皆未命中，**When** 嵌入式資料預覽表格完成初始化，**Then** 該命中欄位的角色下拉選單初始值已為 Input、無需使用者點擊即完成該欄位角色指定，**And** 使用者仍可再點擊改為其他角色或「不使用」（FR-002c-8）。
 5. **AC-1.7**：**Given** 使用者已於目前資料集手動指定至少一個欄位角色，**When** 使用者重新上傳資料集或移除目前資料集檔案，**Then** 所有欄位角色依 FR-002c-1 重設，但欄名命中 `FIELD_ROLE_INPUT_NAME_HINTS` 的欄位依 FR-002c-8 取得 Input 初始值，其餘欄位為「不使用」。
 6. **AC-1.8**：**Given** 已上傳資料集，其中一欄指定為 Input、一欄指定為 Output，**When** 使用者開啟「清單標題」下拉並選擇 Input 欄位，**Then** 選項只含「自動（依資料形狀）」、Input／Evidence 欄位與 `id`，不含 Output 欄位，**And** 「標記清單預覽」立即顯示前 3 筆該欄位的值（FR-002c-9）。
-7. **AC-1.9**：**Given** 「清單標題」已選擇某 Input 欄位，**When** 使用者將該欄位角色改為「不使用」或 Output（若所選為 `id`，僅改為 Output 才適用；`id` 改為「不使用」時維持原選擇），**Then** 「清單標題」回到「自動（依資料形狀）」並顯示說明原因的提示，**And** 預覽改以「自動」呈現（FR-002c-9）。
+7. **AC-1.9**：**Given** 「清單標題」已選擇某 Input 欄位，**When** 使用者將該欄位角色改為「不使用」或 Output（若所選為 `id`，僅改為 Output 才適用；`id` 改為「不使用」時維持原選擇），**Then** 「清單標題」回到「自動（依資料形狀）」並顯示說明原因的提示，**And** 預覽改以「自動」呈現，**And** 該提示持續顯示，直到使用者重新選擇「清單標題」，或移除／重新上傳資料集為止，期間的欄位角色變更與預覽重繪不得使其消失（FR-002c-9）。
 8. **AC-1.10**：**Given** 已上傳資料集，其中 `utterances` 欄為每則含字串 `speaker`、字串 `text` 與編號 `utt_id` 的物件陣列，且該欄角色為 Input，**When** 嵌入式資料預覽完成初始化，**Then** 欄位預覽下方出現對話串確認區，文字欄位預填 `text`、發言者欄位預填 `speaker`、發言編號欄位預填 `utt_id`，**And** 建立者可更改任一對應或取消提議（FR-002c-10）。
 9. **AC-1.11**：**Given** 已上傳資料集，Input 欄位為字串，或為元素非物件、元素缺少字串子欄位的陣列，**When** 嵌入式資料預覽完成初始化，**Then** 不顯示對話串確認區，且 `dialogue_fields` 為 `null`（FR-002c-10）。
 10. **AC-1.12**：**Given** Input 為已確認對話串對應的物件陣列欄位，另有一個角色為 Output 的字串欄位，**When** 使用者進入 Step 2，**Then** 標記預覽以每則一列呈現發言編號、發言者與文字，不出現 `[object Object]`，**And** 預覽文字來源不含 Output 欄位內容，且無 Input 欄位時不退回任何非 Input 欄位；未確認對話串時 Input 物件以 JSON 呈現（FR-002c-10）。
@@ -809,6 +809,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 8.5.1 | 2026-10-13 | **釐清 AC-1.9 回退提示的消失時機（PATCH，Lightweight，issue #1357）**：AC-1.9 補述回退提示持續顯示，直到使用者重新選擇「清單標題」或移除／重新上傳資料集；欄位角色變更與預覽重繪不得使其消失。原型原本只在回退當次渲染顯示、下一次重繪即消失，造成 `issue-1338-list-title-detail.spec.ts` 間歇失敗；本版僅釐清條文，未增刪任何 FR／AC，無 API 契約變更。 |
 | 8.5.0 | 2026-10-13 | **Step 1 對話串欄位偵測與確認，Step 2 預覽以對話串呈現（MINOR，issue #1340，OpenSpec change `task-new-dialogue-fields`）**：新增 FR-002c-10、AC-1.10、AC-1.11、AC-1.12、SC-002j——Input 欄位為物件陣列且含字串子欄位時，嵌入式資料預覽下方提議「對話串」並顯示確認區（文字必選、發言者與發言編號可選，名稱線索僅預填且僅作用於 Input 欄位），建立者可更改或取消；確認結果存為任務設定鍵 `dialogue_fields`（`{ text, speaker, utt_id }`，未採用時為 `null`），建立任務 payload 帶此鍵；Step 2 標記預覽以對話串呈現，Input 文字來源不再對物件取字串（不得出現 `[object Object]`），無 Input 欄位時不得退回任何非 Input 欄位作為文字來源（Data Fairness）；僅適用 `single_item`，task-detail 載入與儲存另案。 |
 | 8.4.0 | 2026-10-13 | **Step 1 清單標題欄位與標記清單預覽（MINOR，issue #1338，OpenSpec change `task-new-list-title-field`）**：新增 FR-002c-9、AC-1.8、AC-1.9、SC-002i——嵌入式資料預覽於資料列來源列下方新增「清單標題」下拉（任務設定鍵 `list_title_field`，`string | null`，`null` 為自動）與列出前 3 筆標題的「標記清單預覽」；選項為自動、Input／Evidence 欄位與非 Output 的 `id`，**永不列出 Output 欄位**（Data Fairness）；所選欄位失效時回退自動並提示，`id` 於角色為「不使用」時仍可選、僅改為 Output 或離開資料列來源才失效；建立任務 payload 帶 `list_title_field`，task-detail 設定›基本資料依 FR-014k 同構載入與儲存。「自動」的摘要規則由 issue #1339 另行定義，不在本版範圍。 |
 | 8.3.2 | 2026-10-13 | Issue #1316（Lightweight，PATCH）：Prototype Traceability 表『Covered FR/SC』欄由 `All FR/SC in this spec` 改列實際 FR/SC 範圍，來源僅取 `design/prototype/tests/**` 檔頭 Traceability 標註的 ID，並於表後補範圍記法說明；條文未增減，純追溯表精度修正，未新增或移除任何 FR／AC。 |
