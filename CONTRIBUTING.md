@@ -10,8 +10,6 @@ This repository is **not currently accepting external pull requests**.
   grants no inbound license and there is no Contributor License Agreement
   (CLA), so contributed code cannot be accepted on clear terms.
 
-Pull requests opened against this repository will be closed without review.
-
 ## What is welcome
 
 - **Issue reports** (bugs, questions, feedback) are still welcome.
