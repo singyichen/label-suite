@@ -20,7 +20,7 @@
  * see that describe block for how this suite stays forward-compatible.
  */
 import { test, expect } from '../fixtures';
-import { workspaceTabs, closeButton, setDesktopViewport, waitForTaskDetailReady } from './_workspace-tabs-helpers';
+import { workspaceTabs, closeTab, setDesktopViewport, waitForTaskDetailReady } from './_workspace-tabs-helpers';
 
 const DASHBOARD_URL = '/pages/dashboard/dashboard.html';
 // T001 (task-list.data.js): nameZh '醫療文本情感分類', with dry-run round
@@ -56,7 +56,7 @@ test.describe('Workspace tabs — AC-1.5 closing the active tab moves focus', ()
     // Re-activate the leftmost (non-rightmost) tab, then close it.
     await tabs.nth(0).click();
     await expect(tabs.nth(0)).toHaveAttribute('aria-selected', 'true');
-    await closeButton(tabs.nth(0)).click();
+    await closeTab(tabs.nth(0));
 
     await expect(tabs).toHaveCount(2); // [task-list, dataset-analysis]
     await expect(tabs.nth(0)).toHaveAttribute('aria-selected', 'true');
@@ -66,7 +66,7 @@ test.describe('Workspace tabs — AC-1.5 closing the active tab moves focus', ()
     // active first) tab: no tab to its right, so focus must move left.
     await tabs.nth(1).click();
     await expect(tabs.nth(1)).toHaveAttribute('aria-selected', 'true');
-    await closeButton(tabs.nth(1)).click();
+    await closeTab(tabs.nth(1));
 
     await expect(tabs).toHaveCount(1);
     await expect(tabs.nth(0)).toHaveAttribute('aria-selected', 'true');

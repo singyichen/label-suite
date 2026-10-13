@@ -51,6 +51,15 @@ export function closeButton(tab: Locator): Locator {
   return tab.getByRole('button');
 }
 
+/* Issue #1280 G1: a non-active tab's close button is `visibility: hidden`
+ * until its tab is hovered or focus-within, so a real click on it must hover
+ * the tab first (Playwright's actionability check waits for visible). Safe
+ * on the active tab too, whose close button is always visible. */
+export async function closeTab(tab: Locator): Promise<void> {
+  await tab.hover();
+  await closeButton(tab).click();
+}
+
 export async function readWorkspaceTabState(page: Page): Promise<unknown> {
   return page.evaluate((key) => {
     const raw = window.sessionStorage.getItem(key);

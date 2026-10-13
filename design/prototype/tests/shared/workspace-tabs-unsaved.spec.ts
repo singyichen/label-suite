@@ -61,7 +61,7 @@
  * real confirm dialog during setup.
  */
 import { test, expect } from '../fixtures';
-import { workspaceTabs, closeButton, readWorkspaceTabState, setDesktopViewport } from './_workspace-tabs-helpers';
+import { workspaceTabs, closeTab, readWorkspaceTabState, setDesktopViewport } from './_workspace-tabs-helpers';
 import { buildWorkspaceUrl, gotoReviewerWorkspace, skipGuidelineModal } from '../annotation/_workspace-helpers';
 
 const DASHBOARD_URL = '/pages/dashboard/dashboard.html';
@@ -91,7 +91,7 @@ test.describe('Workspace tabs — AC-4.3/FR-012 active-tab close reuses the exis
       dialog.dismiss(); // stay on the page -- this test only asserts the dialog FIRED
     });
 
-    await closeButton(workspaceTabs(page).nth(0)).click();
+    await closeTab(workspaceTabs(page).nth(0));
     // Exactly one dialog, of type beforeunload -- a second entry here would
     // mean a Green task added its own extra confirm()/alert(), which FR-012
     // forbids.
@@ -115,7 +115,7 @@ test.describe('Workspace tabs — AC-4.3 background tab close is blocked when it
     await expect(tabs.nth(1)).toHaveAttribute('aria-selected', 'true');
 
     // From tab B, close tab A's (background, dirty) tab via its own × button.
-    await closeButton(tabs.nth(0)).click();
+    await closeTab(tabs.nth(0));
 
     // Tab A must still be present: the minimal, non-invented signal for
     // "blocked" this suite picked (no new confirm/toast UI asserted here --
@@ -140,7 +140,7 @@ test.describe('Workspace tabs — AC-4.3 corollary: a clean background tab still
     const tabs = workspaceTabs(page);
     await expect(tabs).toHaveCount(2);
 
-    await closeButton(tabs.nth(0)).click();
+    await closeTab(tabs.nth(0));
     await expect(tabs).toHaveCount(1);
   });
 });
