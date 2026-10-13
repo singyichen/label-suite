@@ -993,10 +993,10 @@
   }
   renderAbsaUnifiedPreview = patchedRenderAbsaUnifiedPreview;
 
+  /* Same label the engine's relation builder writes into a triple (fmtRelSpan),
+     so cascade-delete matches dialogue spans ("詞 (#utt_id:start,end)") too. */
   function fmtEntityForTriple(ent) {
-    var entityLabel = ent.text || '?';
-    if (ent.start != null && ent.end != null) entityLabel += ' (' + ent.start + ',' + ent.end + ')';
-    return entityLabel;
+    return fmtRelSpan(ent);
   }
   function tripleReferencesEntity(triple, ent) {
     var label = fmtEntityForTriple(ent);
@@ -1489,20 +1489,23 @@
     /* getDatasetPreviewText() (engine.js) joins every 'input'-role column's
        String(value) into one preview-text blob. That's only meaningful for
        scalar (string-able) columns; an 'input'-role column whose value is
-       an array or object (e.g. sequence_tagging's sibling pre-tokenized
-       `tokens` column, kept alongside `text`) gets Array#toString()'d into
-       comma-joined garbage and silently corrupts the token count. Demote
-       any 'input' role whose first record's value isn't a scalar so it's
-       excluded from that join -- this is a generic guard (any non-scalar
-       input-role column, not just `tokens`), and it only affects
-       getFieldsByRole('input')/preview-text joining; datasetRawFirstRow and
-       datasetParsedColumns are unaffected. */
+       a plain object or a pure-value array (e.g. sequence_tagging's sibling
+       pre-tokenized `tokens` column, kept alongside `text`) gets
+       Array#toString()'d into comma-joined garbage and silently corrupts the
+       token count. Demote any 'input' role whose first record's value is
+       such a non-scalar so it's excluded from that join -- a generic guard
+       (not just `tokens`) affecting only getFieldsByRole('input')/preview-text
+       joining; datasetRawFirstRow and datasetParsedColumns are unaffected.
+       An object array (e.g. a dialogue's `utterances`) is exempt: the engine
+       renders it per element (dialogue thread or raw JSON, issue #1341 D6)
+       and its joined text comes from dialogueJoinedText, never String(). */
     var firstRawRow = state.datasetRawFirstRow || {};
     Object.keys(state.fieldRoleMap).forEach(function (col) {
       if (state.fieldRoleMap[col] !== 'input') return;
       var v = firstRawRow[col];
-      if (v !== null && typeof v === 'object') delete state.fieldRoleMap[col];
+      if (v !== null && typeof v === 'object' && !isObjectArrayValue(v)) delete state.fieldRoleMap[col];
     });
+    state.dialogueFields = profile.dialogueFields || null;
   }
 
   /*
@@ -3373,6 +3376,8 @@
      Fairness); an entity whose text no longer occurs stays position-less and
      simply does not highlight, exactly as before. */
   function placeCompactEntities(entities) {
+    var turns = getObjectArrayInput();
+    if (turns) return placeCompactEntitiesInTurns(entities, turns);
     var text = getDatasetPreviewText() || '';
     var placed = [];
     entities.forEach(function (entity) {
@@ -3384,6 +3389,33 @@
         var taken = placed.some(function (p) { return p.start != null && start <= p.end && end >= p.start; });
         if (!taken) { out.start = start; out.end = end; break; }
         from = start + 1;
+      }
+      placed.push(out);
+    });
+    return placed;
+  }
+
+  /* Dialogue-thread variant (issue #1341 D7): the first occurrence not yet taken,
+     searched turn by turn; coordinates are half-open [start,end) inside that
+     turn. Without a confirmed text sub-field there is nothing to place against. */
+  function placeCompactEntitiesInTurns(entities, turns) {
+    var cfg = state.dialogueFields;
+    var placed = [];
+    entities.forEach(function (entity) {
+      var out = { text: entity.text, type: entity.type };
+      for (var i = 0; cfg && cfg.text && entity.text && i < turns.length && out.start == null; i++) {
+        var uttText = turns[i] && typeof turns[i][cfg.text] === 'string' ? turns[i][cfg.text] : '';
+        var uttId = dialogueUttIdOf(turns[i], i, cfg);
+        for (var from = 0; ; ) {
+          var start = uttText.indexOf(entity.text, from);
+          if (start < 0) break;
+          var end = start + entity.text.length;
+          var taken = placed.some(function (p) {
+            return p.start != null && String(p.utt_id) === String(uttId) && start < p.end && end > p.start;
+          });
+          if (!taken) { out.utt_id = uttId; out.start = start; out.end = end; break; }
+          from = start + 1;
+        }
       }
       placed.push(out);
     });
@@ -4326,7 +4358,8 @@
     return inputKeys
       .map(function (key) {
         var value = record[key];
-        return typeof value === 'string' ? value : null;
+        if (typeof value === 'string') return value;
+        return isObjectArrayValue(value) ? dialogueJoinedText(value) : null;
       })
       .filter(Boolean)
       .join('\n\n');

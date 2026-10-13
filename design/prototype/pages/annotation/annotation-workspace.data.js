@@ -58,6 +58,7 @@
       nameEn: listEntry.nameEn,
       outputs: detail.outputs || [],
       fieldRoleMap: detail.fieldRoleMap || {},
+      dialogueFields: detail.dialogue_fields ?? null,
       listTitleField: detail.list_title_field ?? null,
       datasetRecords: detail.datasetRecords || [],
       datasetFileName: detail.datasetFileName || '',

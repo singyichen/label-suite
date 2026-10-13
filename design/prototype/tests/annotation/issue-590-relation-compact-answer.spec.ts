@@ -256,6 +256,16 @@ test.describe('FR-098 §4 — submitted CompactAnswer carries offsets and relTyp
 
 test.describe('FR-098 §4 — position-less source serializes offsets and relType as explicit null, not an omitted or undefined key (T013)', () => {
   test('the built-in ABSA demo triples serialize through convertSubmissionAnswer with four explicit offset nulls and an explicit relType null per triple', async ({ page }) => {
+    /* issue #1341: T013 now seeds a dialogue Input (utterances) and the dialogue panel does
+     * not seed flat-string ABSA triples from the output column. This test pins that flat
+     * shape's serialization, so run it on the pre-#1341 flat-text seed. */
+    await patchDataFile(
+      page,
+      'task-detail.data.js',
+      `var p = window.LabelSuiteTaskDetailData.profiles.T013;
+       p.fieldRoleMap.utterances = 'unused';
+       p.fieldRoleMap.text = 'input';`,
+    );
     await page.goto(buildWorkspaceUrl({ task_id: 'T013', sample_id: 'absa-001' }));
     await dismissGuidelineModal(page);
 

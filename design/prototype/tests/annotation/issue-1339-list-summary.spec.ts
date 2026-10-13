@@ -144,7 +144,10 @@ test.describe('issue #1339: shared list summary (FR-106)', () => {
   });
 
   test('SC-028: annotation-list and workspace render the same summary for the same list_title_field', async ({ page }) => {
-    await patchProfiles(page, { tasks: ['T013'], listTitleField: 'text' });
+    /* issue #1341: T013 seeds `text` as unused (the dialogue lives in utterances), and
+       list_title_field only applies to an Input field, so re-declare `text` as Input here
+       to keep exercising the explicit-list_title_field path. */
+    await patchProfiles(page, { tasks: ['T013'], listTitleField: 'text', body: "p.fieldRoleMap.text = 'input';" });
     const ws = await annotatorSnippet(page);
     const list = await listSnippet(page);
     expect(ws).toContain('@rottenrockteahouse:');

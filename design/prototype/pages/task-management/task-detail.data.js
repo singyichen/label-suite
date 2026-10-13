@@ -959,14 +959,16 @@
           }
         }
       ],
-      // "utterances" and "text" are two representations of the same
-      // cross-utterance dialogue input; both are shown to the annotator.
+      // "utterances" is the only Input: the workspace renders it as a dialogue
+      // thread via dialogue_fields. "text" is its flattened duplicate and stays
+      // unused so the annotator sees the dialogue once (issue #1341).
       fieldRoleMap: {
         utterances: 'input',
-        text: 'input',
+        text: 'unused',
         gold_triplets: 'output',
         incomplete_annotations: 'output'
       },
+      dialogue_fields: { text: 'text', speaker: 'speaker', utt_id: 'utt_id' },
       datasetFileName: 'absa-va.json',
       datasetRecords: [
         {

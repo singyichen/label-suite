@@ -245,6 +245,16 @@ test.describe('FR-098 §3, §7(a) — gold plain-string shape stays null (task-n
 
 test.describe('FR-098 §3, §7(b) — built-in demo string-concatenation shape stays null (T013/absa-001)', () => {
   test('the ABSA demo triples leave every offset field null', async ({ page }) => {
+    /* issue #1341: T013 now seeds a dialogue Input (utterances) and the dialogue panel does
+     * not seed flat-string ABSA triples from the output column. This test pins that flat
+     * shape's serialization, so run it on the pre-#1341 flat-text seed. */
+    await patchDataFile(
+      page,
+      'task-detail.data.js',
+      `var p = window.LabelSuiteTaskDetailData.profiles.T013;
+       p.fieldRoleMap.utterances = 'unused';
+       p.fieldRoleMap.text = 'input';`,
+    );
     await page.goto(buildWorkspaceUrl({ task_id: 'T013', sample_id: 'absa-001' }));
     await dismissGuidelineModal(page);
 
