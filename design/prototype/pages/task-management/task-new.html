@@ -747,7 +747,7 @@ Object.assign(I18N.en, TASK_CONFIG_I18N.en);
 /* ── State ───────────────────────────────────────────────────── */
 var state = {
   lang: 'zh', step: 1,
-  taskName: '', datasetFiles: [], fieldRoleMap: {},
+  taskName: '', datasetFiles: [], fieldRoleMap: {}, listTitleField: null,
   datasetParsedColumns: [], datasetParsedRows: [], datasetRawFirstRow: {}, datasetColumnUniqueValues: {},
   /* Record-source detection + field profile (dirty-JSON support) */
   _datasetRoots: [],           /* parsed JSON root per uploaded file (prototype-only cache) */
@@ -800,7 +800,7 @@ var PERSISTABLE_KEYS = [
   'step', 'taskName',
   'taskCategories', 'taskInputTypes', 'taskOutputTypes', 'taskType',
   'selectedOutputTypes', 'outputConfigs', 'columnOutputTypeMap',
-  'fieldRoleMap', 'datasetParsedColumns', 'datasetParsedRows', 'datasetRawFirstRow',
+  'fieldRoleMap', 'listTitleField', 'datasetParsedColumns', 'datasetParsedRows', 'datasetRawFirstRow',
   'datasetColumnUniqueValues', 'datasetTotalRecords', 'datasetFieldProfile',
   'datasetCandidates', 'datasetRecordPath', '_roleMapBySource',
   'datasetPreviewRawRows',
@@ -1417,6 +1417,7 @@ function persistCreatedTask(taskId) {
         return { type: outKey, config: state.outputConfigs[outKey] || {} };
       }),
       fieldRoleMap: Object.assign({}, state.fieldRoleMap),
+      list_title_field: state.listTitleField ?? null,
       datasetFileName: (state.datasetFiles[0] && state.datasetFiles[0].name) || '',
       datasetRecords: state.datasetPreviewRawRows.slice()
     });

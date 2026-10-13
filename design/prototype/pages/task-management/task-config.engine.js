@@ -4984,8 +4984,8 @@ function analyzeDataset() {
   var fp = buildFieldProfile(allRecords);
   state.datasetParsedColumns = fp.columns;
   state.datasetFieldProfile = fp.profile;
-  state.datasetPreviewRawRows = allRecords.slice(0, 2);
-  state.datasetParsedRows = state.datasetPreviewRawRows.map(function(row) {
+  state.datasetPreviewRawRows = allRecords.slice(0, 3);
+  state.datasetParsedRows = state.datasetPreviewRawRows.slice(0, 2).map(function(row) {
     return fp.columns.map(function(col) { return previewCellValue(row[col]); });
   });
   state.datasetRawFirstRow = allRecords[0] || {};
@@ -5341,6 +5341,103 @@ function makeFieldNote(col) {
   return note;
 }
 
+/* ── List title field (#1338): which field titles each item in the labeling list ──
+   Options = auto + Input/Evidence fields + id (never Output, Data Fairness).
+   undefined (hosts that do not seed the key yet) is treated as null = auto. */
+function isObjectArrayField(col) {
+  return state.datasetPreviewRawRows.some(function(r) {
+    var v = r[col];
+    return Array.isArray(v) && v.length > 0 && v[0] !== null && typeof v[0] === 'object';
+  });
+}
+
+function listTitleCandidates() {
+  return state.datasetParsedColumns.filter(function(col) {
+    var role = state.fieldRoleMap[col] || '';
+    return role === 'input' || role === 'evidence' || (col === 'id' && role !== 'output');
+  });
+}
+
+function listTitleText(rawRow, idx) {
+  var v = rawRow[state.listTitleField || 'id'];
+  if (Array.isArray(v) && v.length > 0 && v[0] !== null && typeof v[0] === 'object') {
+    var first = v[0];
+    v = typeof first.text === 'string' ? first.text : Object.keys(first).map(function(k) { return first[k]; })
+      .filter(function(x) { return typeof x === 'string'; })[0];
+  }
+  if (v === undefined || v === null || v === '') {
+    if (!state.listTitleField) return String(idx + 1);
+    return state.lang === 'en' ? '(empty)' : '（空白）';
+  }
+  var str = String(v);
+  return str.length > 40 ? str.slice(0, 40) + '…' : str;
+}
+
+function renderListTitleBlock() {
+  var bar = el('inlinePreviewSourceBar');
+  if (!bar) return;
+  var block = el('inlineListTitleBlock');
+  if (!block) {
+    block = document.createElement('div');
+    block.id = 'inlineListTitleBlock';
+    block.className = 'inline-list-title-block';
+    bar.parentNode.insertBefore(block, bar.nextSibling);
+  }
+  while (block.firstChild) block.removeChild(block.firstChild);
+
+  var cands = listTitleCandidates();
+  var reverted = false;
+  if (state.listTitleField && cands.indexOf(state.listTitleField) === -1) {
+    state.listTitleField = null;
+    reverted = true;
+    markDirty();
+  }
+
+  var lbl = document.createElement('label');
+  lbl.textContent = t('listTitleLabel');
+  var sel = document.createElement('select');
+  sel.setAttribute('data-testid', 'list-title-field-select');
+  var autoOpt = document.createElement('option');
+  autoOpt.value = '';
+  autoOpt.textContent = t('listTitleAutoOption');
+  sel.appendChild(autoOpt);
+  cands.forEach(function(col) {
+    var opt = document.createElement('option');
+    opt.value = col;
+    opt.textContent = isObjectArrayField(col) ? col + t('listTitleObjectArraySuffix') : col;
+    if (col === state.listTitleField) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  sel.addEventListener('change', function() {
+    state.listTitleField = sel.value || null;
+    renderInlineDatasetPreview();
+    markDirty();
+  });
+  lbl.appendChild(sel);
+  block.appendChild(lbl);
+
+  if (reverted) {
+    var notice = document.createElement('p');
+    notice.setAttribute('data-testid', 'list-title-revert-notice');
+    notice.setAttribute('role', 'status');
+    notice.textContent = t('listTitleRevertNotice');
+    block.appendChild(notice);
+  }
+
+  var preview = document.createElement('div');
+  preview.setAttribute('data-testid', 'list-title-preview');
+  var heading = document.createElement('div');
+  heading.textContent = t('listTitlePreviewHeading');
+  preview.appendChild(heading);
+  state.datasetPreviewRawRows.slice(0, 3).forEach(function(rawRow, i) {
+    var item = document.createElement('div');
+    item.setAttribute('data-testid', 'list-title-preview-item');
+    item.textContent = listTitleText(rawRow, i);
+    preview.appendChild(item);
+  });
+  block.appendChild(preview);
+}
+
 function renderInlineDatasetPreview() {
   var container = el('inlineDatasetPreview');
   if (!container) return;
@@ -5437,7 +5534,7 @@ function renderInlineDatasetPreview() {
   table.appendChild(thead);
 
   var tbody = document.createElement('tbody');
-  state.datasetPreviewRawRows.forEach(function(rawRow) {
+  state.datasetPreviewRawRows.slice(0, 2).forEach(function(rawRow) {
     var tr = document.createElement('tr');
     cols.forEach(function(col) {
       var td = document.createElement('td');
@@ -5455,6 +5552,7 @@ function renderInlineDatasetPreview() {
   });
   table.appendChild(tbody);
   wrap.appendChild(table);
+  renderListTitleBlock();
 }
 
 function resetInlinePreviewSelection() {
