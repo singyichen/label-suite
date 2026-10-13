@@ -41,9 +41,9 @@
 - [x] 2.8 Green：若 `design/prototype/pages/dataset/dataset-analysis-detail.html` 未載入 dataset-analysis-list.data.js，補上該 <script>（先 /usr/bin/grep 確認，已載入則為 no-op 並於 evidence 註明） [@senior-frontend]
 - [x] 2.9 更新 `design/system/MASTER.md` §Workspace Tabs：Stage badge 列改寫為作用於小標籤、新增 Kind chip 列，Changelog 補述 [@senior-frontend]
 - [x] 2.10 執行 code/test gate：於 `design/prototype/` 執行 typecheck、test:node 與帶 `PW_PORT=8980` 的受影響 Playwright 規格；於專案根目錄執行 `scripts/check-sdd.sh`、`scripts/speckit-tests.sh`、`openspec validate --changes --no-interactive`、`node scripts/check-user-path-map-freshness.mjs`、`scripts/check-spec-artifacts.sh`、`scripts/inventory-tests.sh`、`node scripts/gen-screen-inventory.mjs --check`，皆預期 exit 0 [@main]
-- [ ] 2.11 更新 `specs/shared/019-workspace-tabs/spec.md` 完成 gate 4 回寫：FR-010 組成規則、AC-1.6 修訂、新情境接續編號、TAB_STAGE_BADGE 註明作用於小標籤；版號 1.2.0 → 1.3.0 與 Changelog 一列（既有列不改寫）；specs/STATUS.md 同步 [@main]
+- [x] 2.11 更新 `specs/shared/019-workspace-tabs/spec.md` 完成 gate 4 回寫：FR-010 組成規則、AC-1.6 修訂、新情境接續編號、TAB_STAGE_BADGE 註明作用於小標籤；版號 1.2.0 → 1.3.0 與 Changelog 一列（既有列不改寫）；specs/STATUS.md 同步 [@main]
 
-- [ ] 2.12 更新 `specs/STATUS.md` shared-019 列至 1.3.0 [@main]
+- [x] 2.12 更新 `specs/STATUS.md` shared-019 列至 1.3.0 [@main]
 
 ## Pre-merge finalization（在 /opsx:apply 外，NON-CHECKBOX）
 
