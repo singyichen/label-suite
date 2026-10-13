@@ -1,7 +1,7 @@
 ---
 功能分支: feat/database-annotation-review-dictionary
 建立日期: 2026-04-23
-版本: 12.5.1
+版本: 12.6.0
 狀態: Draft
 ---
 
@@ -175,6 +175,9 @@ Annotator / Reviewer 進入標記模組時，支援兩種入口：dashboard 任�
 32. **AC-1.32（v6.12.0 新增，對應 FR-055 修訂，issue #866）**：**Given** 某任務某 `run_type` 下，一位標記員對該任務的樣本具已儲存提交，但不在任何樣本的示範標記員列中，**When** 檢視該任務該輸出類型的 IAA，**Then** 評分者數含該標記員，各該樣本的值集合含其答案；**And** α 依含該標記員之完整值集合計算。
 33. **AC-1.33（v6.13.0 新增，對應 FR-091 修訂，issue #864）**：**Given** 某樣本之歷程含同一審核員於同一次開啟寫入之兩筆事件（`started_at` 相同、`lead_time` 分別為 30 與 80）、同一審核員另一次開啟寫入之一筆事件（`started_at` 不同、`lead_time` 為 40）、以及一筆無 `started_at` 之舊事件（`lead_time` 為 25），**When** 以 `role=reviewer` 檢視 `annotation-list`，**Then** 該筆樣本之「累計耗時」為 `145`（同階段取 80、另一階段加 40、無 `started_at` 者獨立加 25），而非逐筆相加之 `175`，亦非全域最大值 `80`。
 34. **AC-1.34（v6.14.0 新增，對應 FR-096 修訂，issue #620）**：**Given** 某已結束試標回合中，標記員某筆標記被審核員修正，其理由原文含 `[[段落標題]]` 形式之指南段落引用，且該標題存在於該任務之指南中，**When** 該標記員檢視試標歷史回饋之該筆理由，**Then** 該引用呈現為可點擊連結，其目標為該樣本工作區網址加上該段落之錨點；**And** 點擊後進入工作區時開啟指南、定位至該段落並以可見方式標示之；**And** 若引用之標題不存在於該任務之指南中，該引用退化為純文字，不產生連結、亦不使該筆理由無法呈現。
+35. **AC-1.35（v12.6.0 新增，對應 FR-106，issue #1339）**：**Given** 任務 T013 的 Input 欄位 `utterances` 為物件陣列（每筆含 `speaker` 與 `text`）且 `list_title_field` 為 `null`，**When** 開啟 `annotation-workspace` 左欄標記員清單與 `annotation-list`，**Then** 每筆樣本的摘要為 `utterances` 第 1 筆的 `text`，且任何摘要皆不含 `[object Object]`。
+36. **AC-1.36（v12.6.0 新增，對應 FR-106，issue #1339）**：**Given** 任務設定 `list_title_field` 為某 Input 欄位，且資料中另有 Output 欄位含不同文字，**When** 開啟工作區左欄（標記員項目、reviewer 分組表頭、例外池分組表頭）與 `annotation-list`，**Then** 四處摘要皆為該指定欄位的值；當 `list_title_field` 指向角色為 Output 的欄位時，摘要改依自動規則產生，且任何摘要都不含該 Output 欄位的值。
+37. **AC-1.37（v12.6.0 新增，對應 FR-106，issue #1339）**：**Given** 某任務 Input 欄位的值為不含文字欄位的物件陣列（共 3 筆），**When** 渲染該樣本摘要，**Then** 摘要為 `3 筆資料`（英文介面為 `3 items`）；所有 Input 欄位皆為空時，摘要為該筆的 `id`。
 
 **介面定義（需與 IA 導覽語意一致）**：
 
@@ -1055,6 +1058,7 @@ Reviewer 在 `run_type = official_run` 的工作區中，針對「目前標記�
   **v12.3.0 修訂（issue #1269，仲裁寫入的鍵與名冊，對應 AC-7.9）**：仲裁寫入（FR-061 仲裁版面、FR-065 仲裁票）MUST 沿用 `annotation.workspace.review`，不得另立仲裁專用權限鍵。授權條件為以下各項同時成立：(1) active task role 為 `reviewer`，且有該任務當前 active reviewer membership；(2) `reviewer × annotation.workspace.review` 格為 `allowed=true`；(3) 資源條件：該審核員在該任務的 `arbiter_ids` 中（FR-060 第 1 點），且於該審核單位沒有自己的審核提交（FR-060 第 2 點）。`arbiter_ids` MUST 是 `reviewer_ids` 的子集合，不是新的 task role，其成員資格依 `task-management/014-task-detail` 的 `ARBITER_CANDIDATE_RULE`。只通過第 (1)、(2) 項而不在 `arbiter_ids` 中的審核員，MUST NOT 寫入仲裁票。`arbiter_ids` 成員一旦失去 active reviewer membership，下一次仲裁請求即 MUST 拒絕，即使仍留在名冊中也一樣。上文原文逐字保留。
 
 - **FR-105**（v12.0.0 新增，issue #1160；V1 annotation／review 寫入完整性）：正式答案須依釘住 config 驗證 `OutputAnswer[]`；`sequence_tagging` payload 使用 `spans: [{start,end,label}]`、`snap_unit`、`bypass`、`version`，不用舊 `tokens/tags/scheme/unit`。審核提交全量驗證 outKey、保存不可變 revision／歷程並清除有效草稿。仲裁首票後 submission／revision 永久凍結，不得刪票解鎖。未提交標記 slot 退回時舊草稿轉 `abandoned` 並保留原作者，繼任者由空白紀錄開始；reviewer 失權草稿失效且不自動還原。所有讀寫驗 active membership、task role、assignment、roster／candidate 與資源條件；歷史 membership 不授權。一般路徑不讀或外洩 `dataset_item_private`、gold/test 旗標或隱藏答案。**v12.1.3 補述（ADR-038，issue #1241）**：不可變 revision 與凍結票的 append-only 不因本補述放寬；ADR-038 所列可匿名化的個資欄位不含這些 revision 與票據表，故其一律不得更新（FR-097 所述經 ADR-024 migration role 路徑的特權匿名化僅適用於 ADR-038 所列事件個資欄位），`decision_payload` 與仲裁票 payload 等含答案的歷程 JSON 不屬個資欄位匿名化範圍，隨其 dataset version 或 run 保存（FR-063），版本整體下架程序與期限待定（#1244）。此為規劃契約，不宣稱 ORM、migration、API 或雙庫測試已存在。
+- **FR-106**（v12.6.0 新增，對應 AC-1.35 ~ AC-1.37、SC-028，issue #1339）：**標記清單樣本摘要**。工作區左欄標記清單（標記員項目、reviewer 分組表頭、例外池分組表頭，見 FR-013A、FR-071 第 2 點）與 `annotation-list` 資料表文本摘要（FR-007、FR-007I）MUST 共用同一個摘要 helper（`LabelSuiteAnnotationWorkspaceData.getRecordSummaryText`），不得各自實作。規則依序：(1) 任務設定 `list_title_field` 非 `null`，且該欄位角色為 Input 或 Evidence、或欄位名稱為 `id` 且角色不是 Output（specs/task-management/013-task-new/spec.md FR-002c-9 的選項集合）時，取該欄位的值；不在此集合時視同 `null`，不得讀取。(2) `list_title_field` 為 `null`（自動）時，依 `fieldRoleMap` 宣告順序取第一個角色為 Input、且能產生摘要文字的欄位。(3) 依值的形狀產生文字：字串、數字或布林值為其字串值；每一筆皆為物件且皆有文字欄位（`text` 為字串時取 `text`，否則取第一個字串值）的陣列，取第 1 筆的文字；其他非空陣列為「`{n} 筆資料`」（英文 `{n} items`）；非空的純物件為「`{k} 個欄位`」（英文 `{k} fields`）。(4) 欄位值為空或第 1 筆文字為空時視為無法產生文字；指定欄位無法產生文字時改以第 2 點補位；仍無任何文字時退回該筆的 `id`；無 `id`（或 `id` 角色為 Output）時為空字串，呼叫端自行顯示占位符。(5) 摘要 MUST NOT 含 `[object Object]`；MUST NOT 讀取角色為 Output 的欄位值（Data Fairness，對應 FR-023、FR-024M-1）；截斷與展開沿用 FR-007I 與 CSS 截斷，helper 不另行截斷。`annotation-list` 文本摘要自本條起為單一欄位摘要，不再串接多個 Input 欄位。本條不規範發言者前綴、對話串渲染與中央整合預覽（另案）。
 
 ### 使用者流程與導頁 *(必填)*
 
@@ -1210,6 +1214,7 @@ flowchart LR
 - **SC-011**（v6.16.0 新增，issue #907）: 專案負責人於任一有待處置例外項之 `task_id × run_type` 開啟最終例外處置畫面時，左側清單筆數與該任務該回合之待處置例外項數不一致的次數為 0；該清單中屬一般標記樣本、或帶有標記進度狀態（待標記／已儲存／已提交）之列為 0 筆；畫面上「已提交」之標記提交進度文案與可見之自動儲存狀態列各為 0 個；未同時呈現仲裁者與仲裁理由之待處置項為 0 筆；`exclude_from_dataset` 以外之處置動作帶有危險樣式者為 0 個；左側佇列與任務詳情頁例外池計數所讀取的待處置例外項列舉實作恰為 1 份（AC-4.69、FR-095）。
 - **SC-012**（v7.0.0 新增，issue #920）：最終例外處置畫面中，理由欄位為空時仍成功寫入例外池紀錄（即 `resolveExceptionPoolItem()` 被呼叫但 `reason` 為空字串）之次數為 0；「確認處置」按鈕在未選取任一處置或理由欄位為空時仍呈現非停用（可點擊）狀態之次數為 0；`adopt_annotator`／`adopt_reviewer` 寫入之例外池紀錄中 `reason` 欄位為空字串之次數為 0（AC-4.72、AC-4.75、FR-095）。
 - **SC-013**：正式後端在 active role 為 reviewer 時不能提交 annotator 動作，反之亦然；停用 membership、撤銷矩陣格、跨任務或偽造 URL 身分的下一次請求都被拒絕，且回應不含隱藏答案或其他審核員未提交內容。prototype 的路由示範資料不作為正式授權證據。
+- **SC-028**（v12.6.0 新增，issue #1339）: 同一任務、同一筆樣本、相同的 `list_title_field` 下，`annotation-list` 文本摘要與工作區左欄取得的摘要文字完全相同，且兩頁皆經由 `LabelSuiteAnnotationWorkspaceData` 的同一個 helper 產生（FR-106、AC-1.35 ~ AC-1.37）。
 - **SC-005**: 在 `375px / 768px / 1440px` 下，翻筆後 `說明與檔案` 內容維持，Desktop 可收合/展開且 Mobile 抽屜開合可用。
 - **SC-005B**: 點擊右欄圖片檔後，會開啟圖片預覽 modal 並顯示對應大圖；使用者可透過關閉按鈕、遮罩背景或 `Esc` 成功關閉。
 - **SC-005C**（v4.21.0 新增）: 點擊右欄 PDF 檔後，會於頁面內開啟 PDF 預覽 modal 並內嵌顯示該檔案，且不產生新分頁；使用者可透過關閉按鈕、遮罩背景或 `Esc` 成功關閉（AC-5.3、FR-020C）。
@@ -1239,6 +1244,7 @@ flowchart LR
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 12.6.0 | 2026-10-13 | **標記清單樣本摘要共用 helper**（issue #1339，OpenSpec change `annotation-list-summary-shared`，MINOR）：新增 FR-106，工作區左欄三處與 `annotation-list` 文本摘要共用單一 helper，讀取任務設定 `list_title_field`（specs/task-management/013-task-new/spec.md FR-002c-9），自動模式依資料形狀產生文字、不輸出 `[object Object]`、永不讀取 Output 欄位；新增 AC-1.35、AC-1.36、AC-1.37、SC-028。`annotation-list` 文本摘要由串接多個 Input 改為單一欄位摘要。 |
 | 12.5.1 | 2026-10-13 | **AC-2.30／FR-101 不揭露句範圍釐清**（issue #1334，Lightweight，PATCH）：釐清 AC-2.30 之「畫面不得出現「爭議中」、「等待仲裁」、「例外池」字樣，亦不得呈現審核員之決策類型、理由或身分」與 FR-101「審核中鎖之標記員呈現」段之「本呈現不得透露…審核員身分」兩句，其約束範圍僅及鎖定提示 `ws-annotator-finalized-notice` 與自動儲存狀態列 `ws-autosave-status`；`歷程` 頁籤之可見範圍仍由 FR-090 擁有，本次不改變 FR-090。兩處皆以「v12.5.1 釐清」附註補述，未改寫既有文字；未增刪任何 FR/AC，未新增快捷鍵 toast 之約束，不含 `design/prototype/**` 變更。 |
 | 12.5.0 | 2026-10-13 | **標記員 V1 來源完整性鎖之正典對齊**（issue #1328，OpenSpec change `annotation-v1-source-lock-presentation`，MINOR）：新增 AC-2.30（審核中鎖之標記員呈現：`ws-annotator-finalized-notice` 帶 `data-lock-reason="under_review"`，標題「此標記已進入審核」、說明、狀態列「審核中，不再自動儲存」、提醒色 `--color-warning*`，不得透露爭議中／等待仲裁／例外池或審核員決策內容，英文文案成對補齊；兩鎖並存時顯示 finalized）。修訂 FR-101：「範圍限定」改為僅定稿終態鎖限 `official_run`，`dry_run` 不觸發定稿終態鎖但仍受 V1 來源完整性鎖約束（Dry／Official 同樣適用，不同 Dry run 互不影響）；呈現段補不得採 warning 色階與 `data-lock-reason` 屬性，並新增審核中鎖呈現條文（對應 AC-2.30）。修訂 AC-2.27：視覺呈現由「warning 語氣」更正為資訊色 `--color-info*`（更正 12.1.2 之措辭，12.1.2 列原文保留）並帶 `data-lock-reason="finalized"`；`dry_run` 子句由「不受任何額外阻擋」改為「Dry 不觸發定稿終態鎖，但仍受 V1 來源完整性鎖約束」。原型段由 issue #1330 承接，本版不含 `design/prototype/**` 變更。 |
 | 12.4.1 | 2026-10-13 | Issue #1316（Lightweight，PATCH）：Prototype Traceability 表『Covered FR/SC』欄由 `All FR/SC in this spec` 改列實際 FR/SC 範圍，來源僅取 `design/prototype/tests/**` 檔頭 Traceability 標註的 ID，並於表後補範圍記法說明；條文未增減，純追溯表精度修正，未新增或移除任何 FR／AC。 |

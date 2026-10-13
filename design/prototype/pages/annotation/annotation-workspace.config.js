@@ -4314,8 +4314,8 @@
      v2.0.0 US3 行為規則: "Reviewer 與 Annotator 共用相同樣本來源契約與導覽
      骨架，避免視圖不一致") -- the reviewer must also see the original
      source text, not only the review rows. Data Fairness still applies:
-     only fieldRoleMap 'input' fields are ever surfaced here (mirrors
-     annotation-list.html's getRecordSnippet()); non-string input-role
+     only fieldRoleMap 'input' fields are ever surfaced here (same Input-only
+     rule as getRecordSummaryText in annotation-workspace.data.js); non-string input-role
      fields (e.g. absa_va's structured `utterances` column) are skipped in
      favor of their scalar sibling ('text'), same generalized rule 裁決6
      applied to the dashboard test helper. */
