@@ -4944,7 +4944,7 @@ function interpolate(template, payload) {
   }
 
   /* FR-026 (1) / FR-019 (4): the ONE list of settings sections. The nav, the
-     panel lookup (by DOM order inside #settingsPanel), the URL `section`
+     panel lookup (by `data-section` inside #settingsPanel), the URL `section`
      values and the unsaved-change check are all derived from it. `stateKey`
      prefixes the existing <key>EditMode / <key>Dirty flags; `cancel` is the
      section's existing cancel function. */
@@ -7492,10 +7492,10 @@ function getTaskTypeLabel() {
 
   function renderSettingsSectionNav() {
     var nav = document.getElementById('settingsSectionNav');
-    var panels = document.querySelectorAll('#settingsPanel .settings-section');
     if (!nav) return;
     nav.setAttribute('aria-label', t('settingsSectionNavLabel'));
-    SETTINGS_SECTIONS.forEach(function(section, index) {
+    SETTINGS_SECTIONS.forEach(function(section) {
+      var panel = document.querySelector('#settingsPanel .settings-section[data-section="' + section.slug + '"]');
       var tab = document.getElementById('settingsTab-' + section.slug);
       if (!tab) {
         tab = document.createElement('button');
@@ -7505,18 +7505,18 @@ function getTaskTypeLabel() {
         tab.setAttribute('role', 'tab');
         tab.dataset.section = section.slug;
         nav.appendChild(tab);
-        if (panels[index]) {
-          panels[index].id = 'settingsSection-' + section.slug;
-          panels[index].setAttribute('role', 'tabpanel');
-          panels[index].setAttribute('aria-labelledby', tab.id);
-          tab.setAttribute('aria-controls', panels[index].id);
+        if (panel) {
+          panel.id = 'settingsSection-' + section.slug;
+          panel.setAttribute('role', 'tabpanel');
+          panel.setAttribute('aria-labelledby', tab.id);
+          tab.setAttribute('aria-controls', panel.id);
         }
       }
       var selected = section.slug === state.settingsSection;
       tab.textContent = t(section.labelKey);
       tab.setAttribute('aria-selected', selected ? 'true' : 'false');
       tab.setAttribute('tabindex', selected ? '0' : '-1');
-      if (panels[index]) panels[index].classList.toggle('hidden', !selected);
+      if (panel) panel.classList.toggle('hidden', !selected);
     });
   }
 
