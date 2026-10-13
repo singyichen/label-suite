@@ -404,7 +404,7 @@ test.describe('Issue #1340 — getDatasetPreviewText() text source (AC-1.12)', (
     expect(out).toBeNull();
   });
 
-  test('(d) no Input: fallback picks the unassigned column, never Output / Evidence', async ({
+  test('(d) no Input: returns null, never an unassigned / Output / Evidence column', async ({
     page,
   }) => {
     const out = await previewText(page, {
@@ -416,7 +416,7 @@ test.describe('Issue #1340 — getDatasetPreviewText() text source (AC-1.12)', (
         free: 'unassigned',
       },
     });
-    expect(out).toBe('unassigned');
+    expect(out).toBeNull();
   });
 
   test('(d) only Output / Evidence string columns -> null', async ({ page }) => {
