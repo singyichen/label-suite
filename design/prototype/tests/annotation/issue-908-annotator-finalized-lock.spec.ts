@@ -382,10 +382,8 @@ test.describe('issue #908 -- annotator finalized-lock (FR-101 / AC-2.27)', () =>
 
     // No finalized terminal lock: the notice, if present, is the V1 under_review one.
     const notice = page.getByTestId('ws-annotator-finalized-notice');
-    if (await notice.count()) {
-      await expect(notice).not.toHaveAttribute('data-lock-reason', 'finalized');
-      await expect(notice).toHaveAttribute('data-lock-reason', 'under_review');
-    }
+    await expect(notice).toHaveCount(1);
+    await expect(notice).toHaveAttribute('data-lock-reason', 'under_review');
     await expect(page.locator('[data-lock-reason="finalized"]')).toHaveCount(0);
     await expect(page.getByTestId('ws-autosave-status')).not.toContainText('已定稿');
   });

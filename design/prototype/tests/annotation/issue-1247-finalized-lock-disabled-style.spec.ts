@@ -184,10 +184,9 @@ test.describe('issue #1247 -- finalized lock visual disabled styling', () => {
     await openFinalizedSample(page, 'dry_run', 'test_annotator_1247f');
     await expect(page.locator('[data-lock-reason="finalized"]')).toHaveCount(0);
     const notice = page.getByTestId('ws-annotator-finalized-notice');
-    if (await notice.count()) {
-      await expect(notice).toHaveAttribute('data-lock-reason', 'under_review');
-      await expect(notice).not.toContainText(FINALIZED_NOTICE_TITLE);
-    }
+    await expect(notice).toHaveCount(1);
+    await expect(notice).toHaveAttribute('data-lock-reason', 'under_review');
+    await expect(notice).not.toContainText(FINALIZED_NOTICE_TITLE);
     await expect(page.getByTestId('ws-autosave-status')).not.toContainText(AUTOSAVE_FINALIZED_TEXT);
   });
 });

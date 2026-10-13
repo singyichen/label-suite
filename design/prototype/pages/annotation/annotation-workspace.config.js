@@ -1630,11 +1630,11 @@
   }
 
   /* FR-101 (issue #908): reused by both the lock banner/control-disable
-     render below and renderAutosaveStatus()'s finalized branch, so the two
+     render below and renderAutosaveStatus()'s locked branch, so the two
      never risk drifting apart from re-deriving the same four-argument call
-     independently. Mirrors data.js's own isAnnotatorWriteLocked() scope
-     guard at the UI layer (belt and suspenders) so a future status shape
-     coincidence can never render the notice for dry_run. */
+     independently. Delegates to data.js getAnnotatorLockReason() (issue
+     #1330): 'finalized' (official_run terminal lock) or 'under_review'
+     (V1 source-integrity lock, dry_run included), else null. */
   function getCurrentSampleLockReason() {
     return window.LabelSuiteAnnotationWorkspaceData.getAnnotatorLockReason(
       currentProfile.id, currentRunType, currentSampleId, currentIdentity
