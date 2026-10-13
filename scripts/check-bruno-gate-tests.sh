@@ -436,6 +436,72 @@ FR-131-exempt: skeleton-only route"
     assert_output_contains "$GATE_OUTPUT" "FR-131 gate:" "local mode marker not at HEAD"
 }
 
+# 14. Issue #1289: the health module's Bruno file lives under
+#     backend/bruno/foundation/000-foundation/ (plan.md section 2), not
+#     backend/bruno/health/. Router + get-health.bru changed together passes.
+make_health_repo() {
+    local repo
+    repo="$(mktemp -d "$TMP_ROOT/repo.XXXXXX")"
+    mkdir -p "$repo/backend/app/modules/health" \
+        "$repo/backend/bruno/foundation/000-foundation"
+
+    git -C "$repo" init -q
+    git -C "$repo" checkout -q -b main
+
+    write_router_py "$repo/backend/app/modules/health/router.py" v1
+    write_valid_bru "$repo/backend/bruno/foundation/000-foundation/get-health.bru" v1
+
+    git -C "$repo" add .
+    git -C "$repo" -c user.email="qa-test@example.com" -c user.name="QA Test" \
+        commit -q -m "chore: seed health fixture"
+    echo "$repo"
+}
+
+test_health_route_with_foundation_bru_passes() {
+    local repo
+    repo="$(make_health_repo)"
+
+    write_router_py "$repo/backend/app/modules/health/router.py" v2
+    write_valid_bru "$repo/backend/bruno/foundation/000-foundation/get-health.bru" v2
+    git -C "$repo" add .
+
+    capture_gate "$repo"
+    assert_exit_code 0 "$GATE_EXIT" "health route with foundation get-health.bru"
+}
+
+# 15. Counter-case: the health mapping must not loosen the gate. A health
+#     route change without any .bru update still fails.
+test_health_route_without_bru_fails() {
+    local repo
+    repo="$(make_health_repo)"
+
+    write_router_py "$repo/backend/app/modules/health/router.py" v2
+    git -C "$repo" add .
+
+    capture_gate "$repo"
+    assert_exit_code 1 "$GATE_EXIT" "health route without .bru update"
+    assert_output_contains "$GATE_OUTPUT" "FR-131 gate:" "health route without .bru update"
+}
+
+# 16. Counter-case: an unrelated module's .bru does not satisfy the health route.
+test_health_route_with_unrelated_bru_fails() {
+    local repo
+    repo="$(make_health_repo)"
+    mkdir -p "$repo/backend/bruno/demo/create"
+    write_valid_bru "$repo/backend/bruno/demo/create/create.bru" v1
+    git -C "$repo" add .
+    git -C "$repo" -c user.email="qa-test@example.com" -c user.name="QA Test" \
+        commit -q -m "chore: add unrelated bru"
+
+    write_router_py "$repo/backend/app/modules/health/router.py" v2
+    write_valid_bru "$repo/backend/bruno/demo/create/create.bru" v2
+    git -C "$repo" add .
+
+    capture_gate "$repo"
+    assert_exit_code 1 "$GATE_EXIT" "health route with unrelated .bru"
+    assert_output_contains "$GATE_OUTPUT" "FR-131 gate:" "health route with unrelated .bru"
+}
+
 test_route_change_without_bru_fails
 test_exemption_marker_bypasses_gate
 test_single_router_with_matching_bru_passes
@@ -449,5 +515,8 @@ test_no_changes_passes
 test_base_flag_detects_marker_in_merge_commit_range
 test_base_flag_no_marker_in_range_fails
 test_local_mode_marker_not_at_head_still_fails
+test_health_route_with_foundation_bru_passes
+test_health_route_without_bru_fails
+test_health_route_with_unrelated_bru_fails
 
 echo "check-bruno-gate script tests passed"
