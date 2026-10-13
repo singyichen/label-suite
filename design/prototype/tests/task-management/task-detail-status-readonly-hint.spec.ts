@@ -9,6 +9,10 @@
  * is visible with non-empty text that differs from its xxxReadonlyRoleOnly copy and mentions
  * the draft status (zh 「草稿」 / en "draft"). Draft + project_leader keeps the hint empty/hidden;
  * the role-only branch (non project_leader) is unchanged; reviewer has no edit button at all.
+ *
+ * Issue #1285 amendment: the `guideline` section is editable for project_leader in
+ * waiting_iaa_confirmation (T002), so it is excluded from the T002 disabled+hint loops
+ * (WAITING_LOCKED_SECTIONS) and its hint is covered on dry_run_in_progress via `&status=`.
  */
 import { test, expect } from '../fixtures';
 import type { Page } from '@playwright/test';
@@ -29,12 +33,17 @@ const SECTIONS = [
   { key: 'review', slug: 'review', zhRoleOnly: '目前為唯讀角色，僅 project leader 可編輯審核設定。', enRoleOnly: 'Read-only role. Only project leader can edit review settings.' },
 ] as const satisfies ReadonlyArray<{ key: string; slug: SettingsSlug; zhRoleOnly: string; enRoleOnly: string }>;
 
-async function openSection(page: Page, opts: { taskId: string; role: string; slug: SettingsSlug; lang?: Lang }) {
+/* #1285: guideline content stays editable in waiting_iaa_confirmation, so T002 loops skip it. */
+const WAITING_LOCKED_SECTIONS = SECTIONS.filter((s) => s.key !== 'guideline');
+const GUIDELINE_SECTION = SECTIONS.find((s) => s.key === 'guideline')!;
+const LOCKED_NON_DRAFT_STATUS = 'dry_run_in_progress';
+
+async function openSection(page: Page, opts: { taskId: string; role: string; slug: SettingsSlug; lang?: Lang; status?: string }) {
   const lang = opts.lang ?? 'zh';
   await page.addInitScript((value) => {
     window.localStorage.setItem('labelsuite.lang', value);
   }, lang);
-  await page.goto(`${TASK_DETAIL_URL}?task_id=${opts.taskId}&task_role=${opts.role}&tab=settings`);
+  await page.goto(`${TASK_DETAIL_URL}?task_id=${opts.taskId}&task_role=${opts.role}&tab=settings${opts.status ? `&status=${opts.status}` : ''}`);
   await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
   await openSettingsSection(page, opts.slug);
 }
@@ -43,7 +52,7 @@ const hintOf = (page: Page, key: string) => page.locator(`#${key}ReadonlyHint`);
 const editBtnOf = (page: Page, key: string) => page.locator(`#${key}EditBtn`);
 
 test.describe('Non-draft readonly hint for project_leader (issue #1125)', () => {
-  for (const s of SECTIONS) {
+  for (const s of WAITING_LOCKED_SECTIONS) {
     test(`${s.key}: project_leader on non-draft task sees a status hint next to the disabled edit button`, async ({ page }) => {
       await openSection(page, { taskId: NON_DRAFT_TASK, role: 'project_leader', slug: s.slug });
 
@@ -60,7 +69,7 @@ test.describe('Non-draft readonly hint for project_leader (issue #1125)', () => 
   for (const lang of ['zh', 'en'] as const) {
     test(`hint copy is localized (${lang}) and explains the draft-only rule`, async ({ page }) => {
       const texts: string[] = [];
-      for (const s of SECTIONS) {
+      for (const s of WAITING_LOCKED_SECTIONS) {
         await openSection(page, { taskId: NON_DRAFT_TASK, role: 'project_leader', slug: s.slug, lang });
         const hint = hintOf(page, s.key);
         await expect(hint).toBeVisible();
@@ -71,8 +80,19 @@ test.describe('Non-draft readonly hint for project_leader (issue #1125)', () => 
         else expect(text.toLowerCase()).toContain('draft');
         texts.push(text);
       }
-      // Each section names what it covers, so the five copies are distinguishable.
+      // Each section names what it covers, so the four copies are distinguishable.
       expect(new Set(texts).size).toBeGreaterThan(1);
+    });
+
+    test(`guideline hint is localized (${lang}) on a non-draft, non-waiting status (#1285)`, async ({ page }) => {
+      await openSection(page, { taskId: NON_DRAFT_TASK, role: 'project_leader', slug: GUIDELINE_SECTION.slug, lang, status: LOCKED_NON_DRAFT_STATUS });
+      await expect(editBtnOf(page, 'guideline')).toBeDisabled();
+      const hint = hintOf(page, 'guideline');
+      await expect(hint).toBeVisible();
+      const text = ((await hint.textContent()) ?? '').trim();
+      expect(text).not.toBe(lang === 'zh' ? GUIDELINE_SECTION.zhRoleOnly : GUIDELINE_SECTION.enRoleOnly);
+      if (lang === 'zh') expect(text).toContain('草稿');
+      else expect(text.toLowerCase()).toContain('draft');
     });
   }
 });

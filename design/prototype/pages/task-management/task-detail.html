@@ -6893,7 +6893,14 @@ function getTaskTypeLabel() {
   }
 
   function isGuidelineEditable() {
-    return TASK_DATA.status === 'draft' && state.taskRole === 'project_leader';
+    return (TASK_DATA.status === 'draft' || TASK_DATA.status === 'waiting_iaa_confirmation')
+      && state.taskRole === 'project_leader';
+  }
+
+  /* force_guideline stays draft-only even where the guideline content is
+     editable in waiting_iaa_confirmation (FR-014). */
+  function isForceGuidelineEditable() {
+    return TASK_DATA.status === 'draft';
   }
 
   function getGuidelineRoleFieldName(role, field) {
@@ -7038,7 +7045,10 @@ function getTaskTypeLabel() {
     var forceToggle = document.getElementById('editForceGuidelineToggle');
     if (annotatorGuidelineTextInput) annotatorGuidelineTextInput.value = state.guidelineDraft.annotatorGuidelineText;
     if (reviewerGuidelineTextInput) reviewerGuidelineTextInput.value = state.guidelineDraft.reviewerGuidelineText;
-    if (forceToggle) forceToggle.checked = state.guidelineDraft.forceGuideline;
+    if (forceToggle) {
+      forceToggle.checked = state.guidelineDraft.forceGuideline;
+      forceToggle.disabled = !isForceGuidelineEditable();
+    }
     setGuidelineEditError('');
     renderGuidelineFileList('annotator');
     renderGuidelineFileList('reviewer');
@@ -7147,7 +7157,9 @@ function getTaskTypeLabel() {
     TASK_DATA.guidelineFiles = TASK_DATA.annotatorGuidelineFiles.map(function(file) {
       return { name: file.name, type: file.type };
     });
-    TASK_DATA.forceGuideline = Boolean(state.guidelineDraft.forceGuideline);
+    if (isForceGuidelineEditable()) {
+      TASK_DATA.forceGuideline = Boolean(state.guidelineDraft.forceGuideline);
+    }
     TASK_DATA.guidelineUploaded = hasTaskGuidelineRoleContent('annotator') || hasTaskGuidelineRoleContent('reviewer');
     TASK_DATA.updatedAt = new Date().toISOString().slice(0, 16).replace('T', ' ');
     state.guidelineEditMode = false;
