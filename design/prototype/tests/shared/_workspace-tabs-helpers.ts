@@ -47,8 +47,11 @@ export function workspaceTabs(page: Page): Locator {
   return tabBar(page).getByRole('tab');
 }
 
+/* includeHidden: an inactive tab's close button is `visibility: hidden` at
+ * rest (#1280 G1); getByRole would otherwise skip it. Visibility assertions
+ * must use toBeVisible/toBeHidden/toHaveCSS explicitly. */
 export function closeButton(tab: Locator): Locator {
-  return tab.getByRole('button');
+  return tab.getByRole('button', { includeHidden: true });
 }
 
 /* Issue #1280 G1: a non-active tab's close button is `visibility: hidden`
